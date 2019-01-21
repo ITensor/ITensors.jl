@@ -1,14 +1,22 @@
 
 struct ITensor
-    inds::IndexSet
-    store::TensorStorage
-    ITensor(is::IndexSet,st::TensorStorage) = new(is,st)
+  inds::IndexSet
+  store::TensorStorage
+  ITensor(is::IndexSet,st::TensorStorage) = new(is,st)
 end
 
-ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(IndexSet(inds...),Dense{T}(dim(IndexSet(inds...))))
+function ITensor(::Type{T},inds::Index...) where {T<:Number} 
+  return ITensor(IndexSet(inds...),Dense{T}(dim(IndexSet(inds...))))
+end
+
 ITensor(is::IndexSet) = ITensor(Float64,is...)
+
 ITensor(inds::Index...) = ITensor(IndexSet(inds...))
-ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(IndexSet(inds...),Dense{S}(x,dim(IndexSet(inds...))))
+
+function ITensor(x::S,inds::Index...) where {S<:Number} 
+  return ITensor(IndexSet(inds...),Dense{S}(x,dim(IndexSet(inds...))))
+end
+
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
 
 inds(T::ITensor) = T.inds

@@ -1,7 +1,9 @@
 
 # Why do we need to do this?
 # Why not just get the extents from the indices?
-function compute_extents(r::Int,strides::Vector{Int},lastx::Int)
+function compute_extents(r::Int,
+                         strides::Vector{Int},
+                         lastx::Int)
   r==0 && return Vector{Int}()
   exts = Int[]
   tstr = 1
@@ -41,7 +43,9 @@ mutable struct CProps
   newArange::Vector{Int}
   newBrange::Vector{Int}
   newCrange::Vector{Int}
-  function CProps(ai::Vector{Int},bi::Vector{Int},ci::Vector{Int})
+  function CProps(ai::Vector{Int},
+                  bi::Vector{Int},
+                  ci::Vector{Int})
     new(ai,bi,ci,0,0,0,Vector{Int}(),Vector{Int}(),Vector{Int}(),false,false,false,1,1,1,0,
         length(ai),length(bi),length(ai),length(bi),Vector{Int}(),Vector{Int}(),Vector{Int}(),
         false,Vector{Int}(),Vector{Int}(),Vector{Int}())
