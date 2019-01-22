@@ -11,8 +11,8 @@ length(is::IndexSet) = length(is.inds)
 rank(is::IndexSet) = length(is)
 order(is::IndexSet) = length(is)
 copy(is::IndexSet) = IndexSet(copy(is.inds))
-dims(is::IndexSet) = Tuple(dim(i) for i in is)
-dim(is::IndexSet) = prod(dims(is))
+dims(is::IndexSet) = Tuple(dim(i) for i ∈ is)
+dim(is::IndexSet) = dim(is...)
 
 dag(is::IndexSet) = IndexSet(dag.(is.inds))
 
@@ -21,6 +21,38 @@ size(is::IndexSet) = size(is.inds)
 iterate(is::IndexSet,state=1) = iterate(is.inds,state)
 
 push!(is::IndexSet,i::Index) = push!(is.inds,i)
+
+function hasindex(is::IndexSet,i::Index)
+  for j ∈ is
+    i==j && return true
+  end
+  return false
+end
+
+function ==(Ais::IndexSet,Bis::IndexSet)
+  order(Ais)!=order(Bis) && throw(ErrorException("IndexSets must have the same number of Indices to be equal"))
+  for i ∈ Ais
+    !hasindex(Bis,i) && return false
+  end
+  return true
+end
+!=(Ais::IndexSet,Bis::IndexSet) = !(Ais==Bis)
+
+function issubset(A::IndexSet,B::IndexSet)
+  for i ∈ A
+    !hasindex(B,i) && return false
+  end
+  return true
+end
+
+"Output the IndexSet with Indices in B but not in A"
+function difference(B::IndexSet,A::IndexSet)
+  C = IndexSet()
+  for j ∈ B
+    !hasindex(A,j) && push!(C,j)
+  end
+  return C
+end
 
 function prime(is::IndexSet,plinc::Integer=1)
   res = copy(is)
