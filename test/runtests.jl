@@ -5,6 +5,63 @@ using ITensors,
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
+
+@testset "TagSet" begin
+    ts = TagSet("t1,t2,t3")
+    ts2 = copy(ts)
+    @test ts == ts2
+end
+
+@testset "Index" begin
+    @testset "Default Index" begin
+        i = Index()
+        @test id(i) == 0
+        @test dim(i) == 1
+        @test dir(i) == Neither
+        @test plev(i) == 0
+        @test tags(i) == TagSet("")
+    end
+    @testset "Index with dim" begin
+        i = Index(2)
+        @test id(i) != 0
+        @test dim(i) == 2
+        @test dir(i) == In
+        @test plev(i) == 0
+        @test tags(i) == TagSet("")
+    end
+    @testset "Index with all args" begin
+        i = Index(1, 2, In, 1, "Link")
+        @test id(i) == 1
+        @test dim(i) == 2
+        @test dir(i) == In
+        @test plev(i) == 1 
+        @test tags(i) == TagSet("Link")
+        j = copy(i)
+        @test id(j) == 1
+        @test dim(j) == 2
+        @test dir(j) == In
+        @test plev(j) == 1 
+        @test tags(j) == TagSet("Link")
+        @test j == i
+    end
+    @testset "prime" begin
+        i = Index(2)
+        @test plev(i) == 0
+        j = prime(i, 2)
+        @test plev(j) == 2 
+    end
+    @testset "IndexVal" begin
+        i = Index(2)
+        @test_throws ErrorException IndexVal(i, 4)
+        @test_throws ErrorException IndexVal(i, 0)
+        @test i(2) == IndexVal(i, 2)
+        @test val(IndexVal(i, 1)) == 1
+        @test ind(IndexVal(i, 1)) == i
+        @test i == IndexVal(i, 2)
+        @test IndexVal(i, 2) == i
+    end
+end
+
 @testset "ITensor, Dense{$T} storage" for T ∈ (Float64,ComplexF64)
   mi,mj,mk,ml = 2,3,4,5,6
   mα = 7
@@ -60,6 +117,16 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     @test norm(A)≈sqrt(scalar(dag(A)*A))
   end
   
+  @testset "Test add ITensors" begin
+    A = randomITensor(T,i,j,k)
+    B = randomITensor(T,k,i,j)
+    C = A+B
+    for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
+      @test C[i(ii),j(jj),k(kk)]==A[j(jj),i(ii),k(kk)]+B[i(ii),k(kk),j(jj)]
+    end
+    @test Array(permute(C,i,j,k))==Array(permute(A,i,j,k))+Array(permute(B,i,j,k))
+  end
+
   @testset "Test contract ITensors" begin
     A = randomITensor(T)
     B = randomITensor(T)
@@ -262,73 +329,13 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       end
     end
 
-  end
+  end # End contraction testset
 
-  @testset "Test add ITensors" begin
-    A = randomITensor(T,i,j,k)
-    B = randomITensor(T,k,i,j)
-    C = A+B
-    for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test C[i(ii),j(jj),k(kk)]==A[j(jj),i(ii),k(kk)]+B[i(ii),k(kk),j(jj)]
-    end
-    @test Array(permute(C,i,j,k))==Array(permute(A,i,j,k))+Array(permute(B,i,j,k))
+  @testset "Test svd of ITensor" begin
+    A = randomITensor(T,i,j,k,l)
+    U,S,V = svd(A,j,l)
+    @test A≈U*S*V
   end
 
 end
 
-
-@testset "TagSet" begin
-    ts = TagSet("t1,t2,t3")
-    ts2 = copy(ts)
-    @test ts == ts2
-end
-
-@testset "Index" begin
-    @testset "Default Index" begin
-        i = Index()
-        @test id(i) == 0
-        @test dim(i) == 1
-        @test dir(i) == Neither
-        @test plev(i) == 0
-        @test tags(i) == TagSet("")
-    end
-    @testset "Index with dim" begin
-        i = Index(2)
-        @test id(i) != 0
-        @test dim(i) == 2
-        @test dir(i) == In
-        @test plev(i) == 0
-        @test tags(i) == TagSet("")
-    end
-    @testset "Index with all args" begin
-        i = Index(1, 2, In, 1, "Link")
-        @test id(i) == 1
-        @test dim(i) == 2
-        @test dir(i) == In
-        @test plev(i) == 1 
-        @test tags(i) == TagSet("Link")
-        j = copy(i)
-        @test id(j) == 1
-        @test dim(j) == 2
-        @test dir(j) == In
-        @test plev(j) == 1 
-        @test tags(j) == TagSet("Link")
-        @test j == i
-    end
-    @testset "prime" begin
-        i = Index(2)
-        @test plev(i) == 0
-        j = prime(i, 2)
-        @test plev(j) == 2 
-    end
-    @testset "IndexVal" begin
-        i = Index(2)
-        @test_throws ErrorException IndexVal(i, 4)
-        @test_throws ErrorException IndexVal(i, 0)
-        @test i(2) == IndexVal(i, 2)
-        @test val(IndexVal(i, 1)) == 1
-        @test ind(IndexVal(i, 1)) == i
-        @test i == IndexVal(i, 2)
-        @test IndexVal(i, 2) == i
-    end
-end

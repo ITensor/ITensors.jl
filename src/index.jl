@@ -24,6 +24,11 @@ end
 
 id(i::Index) = i.id
 dim(i::Index) = i.dim
+function dim(i1::Index,inds::Index...)
+  total_dim = 1
+  total_dim *= dim(i1)*dim(inds...)
+  return total_dim
+end
 dir(i::Index) = i.dir
 plev(i::Index) = i.plev
 tags(i::Index) = i.tags
@@ -33,6 +38,8 @@ copy(i::Index) = Index(i.id,i.dim,i.dir,i.plev,copy(i.tags))
 
 dag(i::Index) = Index(id(i),dim(i),-dir(i),plev(i),tags(i))
 prime(i::Index,plinc::Int=1) = Index(id(i),dim(i),dir(i),plev(i)+1,tags(i))
+settags(i::Index,tags::String) = Index(id(i),dim(i),dir(i),plev(i),TagSet(tags))
+(i::Index)(tags::String) = settags(i,tags)
 
 # Iterating over Index I gives
 # integers from 1...dim(I)

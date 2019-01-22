@@ -10,6 +10,8 @@ import Base.length,
        Base.setindex!,
        Base.convert,
        Base.==,
+       Base.!=,
+       Base.isapprox,
        Base.+,
        Base.-,
        Base.*,
@@ -19,7 +21,10 @@ import Base.length,
        Base.size,
        Base.conj,
        Random.randn!,
-       LinearAlgebra.norm
+       Base.eltype,
+       Base.issubset,
+       LinearAlgebra.norm,
+       LinearAlgebra.svd
 
 ## Types
 export Dense,
@@ -32,11 +37,9 @@ export Dense,
        Out
 
 ## Functions
-export prime,
-       prime!,
+export prime!,
        rank,
        order,
-       dim,
        dims,
        randomITensor,
        inds,
@@ -50,10 +53,16 @@ export prime,
 
 include("tagset.jl")
 include("index.jl")
+export dim,
+       prime,
+       settags
 include("indexset.jl")
+export hasindex,
+       difference
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")
 include("storage/contract.jl")
 include("itensor.jl")
+export svd
 
 end # module
