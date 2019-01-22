@@ -20,8 +20,6 @@ struct Index
   tags::TagSet
   Index() = new(0,1,Neither,0,"")
   Index(dim::Integer,tags="") = new(rand(IDType),dim,In,0,tags)
-  Index(id::IDType,dim::Int,dir::Arrow,plev::Int,tags::TagSet) = new(id,dim,dir,plev,tags)
-  Index(i::Index) = new(i.id,i.dim,i.dir,i.plev,copy(i.tags))
 end
 
 id(i::Index) = i.id
@@ -31,7 +29,7 @@ plev(i::Index) = i.plev
 tags(i::Index) = i.tags
 
 ==(i1::Index,i2::Index) = (id(i1)==id(i2) && plev(i1)==plev(i2) && tags(i1)==tags(i2))
-copy(i::Index) = Index(i)
+copy(i::Index) = Index(i.id,i.dim,i.dir,i.plev,copy(i.tags))
 
 dag(i::Index) = Index(id(i),dim(i),-dir(i),plev(i),tags(i))
 prime(i::Index,plinc::Int=1) = Index(id(i),dim(i),dir(i),plev(i)+1,tags(i))

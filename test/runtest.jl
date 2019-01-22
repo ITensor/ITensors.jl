@@ -276,3 +276,59 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
 end
 
+
+@testset "TagSet" begin
+    ts = TagSet("t1,t2,t3")
+    ts2 = copy(ts)
+    @test ts == ts2
+end
+
+@testset "Index" begin
+    @testset "Default Index" begin
+        i = Index()
+        @test id(i) == 0
+        @test dim(i) == 1
+        @test dir(i) == Neither
+        @test plev(i) == 0
+        @test tags(i) == TagSet("")
+    end
+    @testset "Index with dim" begin
+        i = Index(2)
+        @test id(i) != 0
+        @test dim(i) == 2
+        @test dir(i) == In
+        @test plev(i) == 0
+        @test tags(i) == TagSet("")
+    end
+    @testset "Index with all args" begin
+        i = Index(1, 2, In, 1, "Link")
+        @test id(i) == 1
+        @test dim(i) == 2
+        @test dir(i) == In
+        @test plev(i) == 1 
+        @test tags(i) == TagSet("Link")
+        j = copy(i)
+        @test id(j) == 1
+        @test dim(j) == 2
+        @test dir(j) == In
+        @test plev(j) == 1 
+        @test tags(j) == TagSet("Link")
+        @test j == i
+    end
+    @testset "prime" begin
+        i = Index(2)
+        @test plev(i) == 0
+        j = prime(i, 2)
+        @test plev(j) == 2 
+    end
+    @testset "IndexVal" begin
+        i = Index(2)
+        @test_throws ErrorException IndexVal(i, 4)
+        @test_throws ErrorException IndexVal(i, 0)
+        @test i(2) == IndexVal(i, 2)
+        @test val(IndexVal(i, 1)) == 1
+        @test ind(IndexVal(i, 1)) == i
+        @test i == IndexVal(i, 2)
+        @test IndexVal(i, 2) == i
+    end
+end
