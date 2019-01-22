@@ -20,6 +20,11 @@ struct Index
   tags::TagSet
   Index() = new(0,1,Neither,0,"")
   Index(dim::Integer,tags="") = new(rand(IDType),dim,In,0,tags)
+  Index(id_::IDType,
+        dim_::Integer,
+        dir_::Arrow,
+        plev_::Integer,
+        tags_="") = new(id_,dim_,dir_,plev_,tags_)
 end
 
 id(i::Index) = i.id

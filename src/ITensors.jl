@@ -29,16 +29,20 @@ export Dense,
        IndexSet,
        ITensor,
        In,
-       Out
+       Out,
+       Neither
 
 ## Functions
 export prime,
        prime!,
+       plev,
+       tags,
        rank,
        order,
        dim,
        dims,
        randomITensor,
+       id,
        inds,
        scalar,
        permute,
