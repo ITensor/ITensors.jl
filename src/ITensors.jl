@@ -55,7 +55,15 @@ include("tagset.jl")
 include("index.jl")
 export dim,
        prime,
-       settags
+       settags,
+       id,
+       dir,
+       plev,
+       tags,
+       ind,
+       Neither,
+       In,
+       Out
 include("indexset.jl")
 export hasindex,
        difference

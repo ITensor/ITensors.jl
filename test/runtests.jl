@@ -30,7 +30,7 @@ end
         @test tags(i) == TagSet("")
     end
     @testset "Index with all args" begin
-        i = Index(1, 2, In, 1, "Link")
+        i = Index(UInt64(1), 2, In, 1, TagSet("Link"))
         @test id(i) == 1
         @test dim(i) == 2
         @test dir(i) == In

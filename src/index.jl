@@ -18,9 +18,11 @@ struct Index
   dir::Arrow
   plev::Int
   tags::TagSet
-  Index() = new(0,1,Neither,0,"")
-  Index(dim::Integer,tags="") = new(rand(IDType),dim,In,0,tags)
+  Index(id::IDType,dim::Int,dir::Arrow,plev::Int,tags::TagSet) = new(id,dim,dir,plev,tags)
 end
+
+Index() = Index(IDType(0),1,Neither,0,TagSet(""))
+Index(dim::Integer,tags="") = Index(rand(IDType),dim,In,0,TagSet(tags))
 
 id(i::Index) = i.id
 dim(i::Index) = i.dim
@@ -29,6 +31,7 @@ function dim(i1::Index,inds::Index...)
   total_dim *= dim(i1)*dim(inds...)
   return total_dim
 end
+dim() = 1
 dir(i::Index) = i.dir
 plev(i::Index) = i.plev
 tags(i::Index) = i.tags
@@ -37,7 +40,7 @@ tags(i::Index) = i.tags
 copy(i::Index) = Index(i.id,i.dim,i.dir,i.plev,copy(i.tags))
 
 dag(i::Index) = Index(id(i),dim(i),-dir(i),plev(i),tags(i))
-prime(i::Index,plinc::Int=1) = Index(id(i),dim(i),dir(i),plev(i)+1,tags(i))
+prime(i::Index,plinc::Int=1) = Index(id(i),dim(i),dir(i),plev(i)+plinc,tags(i))
 settags(i::Index,tags::String) = Index(id(i),dim(i),dir(i),plev(i),TagSet(tags))
 (i::Index)(tags::String) = settags(i,tags)
 
