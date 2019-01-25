@@ -23,6 +23,7 @@ import Base.length,
        Random.randn!,
        Base.eltype,
        Base.issubset,
+       Base.in,
        LinearAlgebra.norm,
        LinearAlgebra.svd
 

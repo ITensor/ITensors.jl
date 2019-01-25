@@ -18,8 +18,6 @@ struct Index
   dir::Arrow
   plev::Int
   tags::TagSet
-  Index() = new(0,1,Neither,0,"")
-  Index(dim::Integer,tags="") = new(rand(IDType),dim,In,0,tags)
   Index(id_::IDType,
         dim_::Integer,
         dir_::Arrow,
