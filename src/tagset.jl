@@ -8,8 +8,9 @@ end
 copy(ts::TagSet) = TagSet(ts.tags)
 
 convert(::Type{TagSet},x::String) = TagSet(x)
-convert(::Type{TagSet},x::TagSet) = TagSet(x)
+convert(::Type{TagSet},x::TagSet) = x
 
 ==(ts1::TagSet,ts2::TagSet) = (ts1.tags==ts2.tags)
 
-in(tag::String, ts::TagSet) == in(tag, ts.tags)
+in(tag::String, ts::TagSet) = in(tag, ts.tags)
+#∈(tag::String, ts::TagSet) = in(tag, ts)
