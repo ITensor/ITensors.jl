@@ -91,3 +91,33 @@ function storage_svd(Astore::T,Lis::IndexSet,Ris::IndexSet) where {T<:Dense}
   return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
 end
 
+function polar(A::Matrix)
+  U,S,V = svd(A)
+  return U*V',V*Diagonal(S)*V'
+end
+
+#TODO: make one generic function storage_factorization(Astore,Lis,Ris,factorization)
+function storage_qr(Astore::T,Lis::IndexSet,Ris::IndexSet) where {T<:Dense}
+  dim_left = dim(Lis)
+  dim_right = dim(Ris)
+  MQ,MP = qr(reshape(data(Astore),dim_left,dim_right))
+  dim_middle = min(dim_left,dim_right)
+  u = Index(dim_middle,"Link,u")
+  #Must call Matrix() on MQ since the QR decomposition outputs a sparse
+  #form of the decomposition
+  Qis,Qstore = IndexSet(Lis...,u),T(vec(Matrix(MQ)))
+  Pis,Pstore = IndexSet(u,Ris...),T(vec(Matrix(MP)))
+  return (Qis,Qstore,Pis,Pstore)
+end
+
+function storage_polar(Astore::T,Lis::IndexSet,Ris::IndexSet) where {T<:Dense}
+  dim_left = dim(Lis)
+  dim_right = dim(Ris)
+  MQ,MP = polar(reshape(data(Astore),dim_left,dim_right))
+  dim_middle = min(dim_left,dim_right)
+  u = Index(dim_middle,"Link,u")
+  Qis,Qstore = IndexSet(Lis...,u),T(vec(MQ))
+  Pis,Pstore = IndexSet(u,Ris...),T(vec(MP))
+  return (Qis,Qstore,Pis,Pstore)
+end
+

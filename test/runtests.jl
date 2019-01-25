@@ -5,7 +5,6 @@ using ITensors,
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
-
 @testset "TagSet" begin
   ts = TagSet("t3,t2,t1")
   ts2 = copy(ts)
@@ -68,8 +67,7 @@ end
 end
 
 @testset "ITensor, Dense{$T} storage" for T ∈ (Float64,ComplexF64)
-  mi,mj,mk,ml = 2,3,4,5,6
-  mα = 7
+  mi,mj,mk,ml,mα = 2,3,4,5,6,7
   i = Index(mi,"i")
   j = Index(mj,"j")
   k = Index(mk,"k")
@@ -300,10 +298,30 @@ end
       end
     end
   end # End contraction testset
-  @testset "Test svd of ITensor" begin
+  @testset "Test factorizations of an ITensor" begin
     A = randomITensor(T,i,j,k,l)
-    U,S,V = svd(A,j,l)
-    @test A≈U*S*V
-  end
-end
+    @testset "Test SVD of an ITensor" begin
+      U,S,V = svd(A,j,l)
+      u = commonindex(U,S)
+      v = commonindex(S,V)
+      @test A≈U*S*V
+      @test U*dag(prime(U,u))≈δ(T,u,prime(u)) atol=1e-14
+      @test V*dag(prime(V,v))≈δ(T,v,prime(v)) atol=1e-14
+    end
+    @testset "Test QR decomposition of an ITensor" begin
+      Q,R = qr(A,i,l)
+      q = commonindex(Q,R)
+      @test A≈Q*R
+      @test Q*dag(prime(Q,q))≈δ(T,q,prime(q)) atol=1e-14
+    end
+    @testset "Test polar decomposition of an ITensor" begin
+      U,P = polar(A,k,l)
+      u = commonindex(U,P)
+      @test A≈U*P
+      #Note: this is only satisfied when left dimensions 
+      #are greater than right dimensions
+      @test U*dag(prime(U,u))≈δ(T,u,prime(u)) atol=1e-14
+    end
+  end # End ITensor factorization testset
+end # End Dense storage test
 

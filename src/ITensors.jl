@@ -24,8 +24,10 @@ import Base.length,
        Base.eltype,
        Base.issubset,
        Base.in,
+       Base.intersect,
        LinearAlgebra.norm,
-       LinearAlgebra.svd
+       LinearAlgebra.svd,
+       LinearAlgebra.qr
 
 ## Types
 export Dense,
@@ -77,6 +79,12 @@ include("storage/tensorstorage.jl")
 include("storage/dense.jl")
 include("storage/contract.jl")
 include("itensor.jl")
-export svd
+export svd,
+       qr,
+       polar,
+       norm,
+       commonindex,
+       delta,
+       δ
 
 end # module

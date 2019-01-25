@@ -18,6 +18,18 @@ end
 
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
 
+# This is just a stand-in for a proper delta/diag storage type
+function delta(::Type{T},inds::Index...) where {T}
+  d = ITensor(zero(T),inds...)
+  minm = min(dims(d)...)
+  for i ∈ 1:minm
+    d[IndexVal.(inds,i)...] = one(T)
+  end
+  return d
+end
+delta(inds::Index...) = delta(Float64,inds...)
+const δ = delta
+
 inds(T::ITensor) = T.inds
 store(T::ITensor) = T.store
 eltype(T::ITensor) = eltype(store(T))
@@ -45,6 +57,15 @@ function setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   return setindex!(T,x,vals...)
 end
 
+function commonindex(A::ITensor,B::ITensor)
+  return commonindex(inds(A),inds(B))
+end
+
+# TODO: should this make a copy of the storage?
+function prime(A::ITensor,vargs...)
+  return ITensor(prime(inds(A),vargs...),store(A))
+end
+
 function ==(A::ITensor,B::ITensor)
   inds(A)!=inds(B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
   p = calculate_permutation(inds(B),inds(A))
@@ -54,13 +75,8 @@ function ==(A::ITensor,B::ITensor)
   return true
 end
 
-function isapprox(A::ITensor,B::ITensor)
-  inds(A)!=inds(B) && throw(ErrorException("ITensors must have the same Indices to be approximately equal"))
-  p = calculate_permutation(inds(B),inds(A))
-  for i ∈ CartesianIndices(dims(A))
-    A[Tuple(i)...]≉B[Tuple(i)[p]...] && return false
-  end
-  return true
+function isapprox(A::ITensor,B::ITensor;atol::Real=0.0,rtol::Real=Base.rtoldefault(eltype(A),eltype(B),atol))
+  return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
 end
 
 function scalar(T::ITensor)
@@ -126,4 +142,27 @@ function svd(A::ITensor,left_inds::Index...)
   Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris)
   return ITensor(Uis,Ustore),ITensor(Sis,Sstore),ITensor(Vis,Vstore)
 end
+
+function factorize(A::ITensor,left_inds::Index...;factorization=factorization)
+  Lis = IndexSet(left_inds...)
+  #TODO: make this a debug level check
+  Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+
+  Ris = difference(inds(A),Lis)
+  #TODO: check if A is already ordered properly
+  #and avoid doing this permute, since it makes a copy
+  #AND/OR use svd!() to overwrite the data of A to save memory
+  A = permute(A,Lis...,Ris...)
+  if factorization==:QR
+    Qis,Qstore,Pis,Pstore = storage_qr(store(A),Lis,Ris)
+  elseif factorization==:polar
+    Qis,Qstore,Pis,Pstore = storage_polar(store(A),Lis,Ris)
+  else
+    error("Factorization $factorization not supported")
+  end
+  return ITensor(Qis,Qstore),ITensor(Pis,Pstore)
+end
+
+qr(A::ITensor,left_inds::Index...) = factorize(A,left_inds...;factorization=:QR)
+polar(A::ITensor,left_inds::Index...) = factorize(A,left_inds...;factorization=:polar)
 

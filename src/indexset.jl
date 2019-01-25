@@ -6,7 +6,7 @@ struct IndexSet
 end
 
 getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
-setindex!(is::IndexSet,n::Integer) = setindex!(is.inds,n)
+setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
 length(is::IndexSet) = length(is.inds)
 rank(is::IndexSet) = length(is)
 order(is::IndexSet) = length(is)
@@ -38,25 +38,54 @@ function ==(Ais::IndexSet,Bis::IndexSet)
 end
 !=(Ais::IndexSet,Bis::IndexSet) = !(Ais==Bis)
 
-function issubset(A::IndexSet,B::IndexSet)
-  for i ∈ A
-    !hasindex(B,i) && return false
+function issubset(Ais::IndexSet,Bis::IndexSet)
+  for i ∈ Ais
+    !hasindex(Bis,i) && return false
   end
   return true
 end
 
-"Output the IndexSet with Indices in B but not in A"
-function difference(B::IndexSet,A::IndexSet)
-  C = IndexSet()
-  for j ∈ B
-    !hasindex(A,j) && push!(C,j)
+"Output the IndexSet with Indices in Bis but not in Ais"
+function difference(Bis::IndexSet,Ais::IndexSet)
+  Cis = IndexSet()
+  for j ∈ Bis
+    !hasindex(Ais,j) && push!(Cis,j)
   end
-  return C
+  return Cis
+end
+
+"Output the IndexSet in the intersection of Ais and Bis"
+function intersect(Ais::IndexSet,Bis::IndexSet)
+  Cis = IndexSet()
+  for i ∈ Ais
+    hasindex(Bis,i) && push!(Cis,i)
+  end
+  return Cis
+end
+
+function commonindex(Ais::IndexSet,Bis::IndexSet)
+  Cis = Ais∩Bis
+  if order(Cis)>1 throw(ErrorException("IndexSets have more than one common Index"))
+  elseif order(Cis)==1 return Cis[1]
+  end
+  return Index()
 end
 
 function prime(is::IndexSet,plinc::Integer=1)
   res = copy(is)
-  res.inds .= prime.(res,plinc)
+  for jj ∈ 1:length(res)
+    res[jj] = prime(res[jj],plinc)
+  end
+  return res
+end
+
+function prime(is::IndexSet,i::Index,plinc::Integer=1)
+  res = copy(is)
+  for jj ∈ 1:length(res)
+    if res[jj]==i
+      res[jj] = prime(res[jj],plinc)
+    end
+  end
   return res
 end
 
