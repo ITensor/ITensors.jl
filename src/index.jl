@@ -67,7 +67,11 @@ end
 
 function show(io::IO,i::Index) 
     idstr = "$(id(i) % 1000)"
-    print(io,"($(dim(i))|id=$(idstr))$(primeString(i))")
+    if length(tags(i)) > 0
+      print(io,"($(dim(i)),$(tags(i))|id=$(idstr))$(primeString(i))")
+    else
+      print(io,"($(dim(i))|id=$(idstr))$(primeString(i))")
+    end
 end
 
 struct IndexVal
