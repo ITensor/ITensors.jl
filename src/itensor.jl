@@ -132,7 +132,7 @@ end
 
 function show(io::IO,
               T::ITensor)
-  print(io,"ITensor o=$(order(T))")
+  print(io,"ITensor ord=$(order(T))")
   for i = 1:order(T)
     print(io," ",inds(T)[i])
   end
