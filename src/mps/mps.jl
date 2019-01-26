@@ -13,6 +13,8 @@ end
 length(m::MPS) = m.N_
 getindex(m::MPS, n::Integer) = getindex(m.A_,n)
 
+setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
+
 import Base.show
 function show(io::IO,
               psi::MPS)
@@ -23,3 +25,11 @@ function show(io::IO,
   end
 end
 
+function randomMPS(sites::SiteSet)
+  m = MPS(sites)
+  for i=1:length(m)
+    m[i] = randomITensor(sites[i])
+    m[i] /= norm(m[i])
+  end
+  return m
+end

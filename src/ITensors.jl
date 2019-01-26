@@ -92,6 +92,7 @@ include("mps/siteset.jl")
 export SiteSet
 
 include("mps/mps.jl")
-export MPS
+export MPS,
+       randomMPS
 
 end # module
