@@ -111,8 +111,11 @@ function add!(A::ITensor,B::ITensor)
   storage_add!(store(A),inds(A),store(B),inds(B))
 end
 
+#TODO: improve these using a storage_mult call
 *(A::ITensor,x::Number) = A*ITensor(x)
 *(x::Number,A::ITensor) = A*x
+
+/(A::ITensor,x::Number) = A*ITensor(1.0/x)
 
 -(A::ITensor) = -one(eltype(A))*A
 function +(A::ITensor,B::ITensor)
