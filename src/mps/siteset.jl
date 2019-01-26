@@ -1,6 +1,7 @@
 
 struct SiteSet
   inds::IndexSet
+  SiteSet() = new(IndexSet())
   function SiteSet(N::Integer, d::Integer)
     inds_ = IndexSet(N)
     for i=1:N
