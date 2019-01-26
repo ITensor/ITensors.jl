@@ -90,4 +90,7 @@ export svd,
 include("mps/siteset.jl")
 export SiteSet
 
+include("mps/mps.jl")
+export MPS
+
 end # module
