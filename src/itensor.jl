@@ -1,3 +1,4 @@
+import Base.show
 
 struct ITensor
   inds::IndexSet
@@ -127,6 +128,15 @@ function *(A::ITensor,B::ITensor)
   (Cis,Cstore) = storage_contract(store(A),inds(A),store(B),inds(B))
   C = ITensor(Cis,Cstore)
   return C
+end
+
+function show(io::IO,
+              T::ITensor)
+  print(io,"ITensor o=$(order(T))")
+  for i = 1:order(T)
+    print(io," ",inds(T)[i])
+  end
+  #@printf(io,"\n{%s log(scale)=%.1f}",storageTypeName(store(T)),lnum(scale(T)))
 end
 
 function svd(A::ITensor,left_inds::Index...)
