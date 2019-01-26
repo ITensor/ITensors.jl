@@ -1,6 +1,7 @@
 
 struct IndexSet
     inds::Vector{Index}
+    IndexSet(N::Integer) = new(Vector{Index}(undef,N))
     IndexSet(inds::Vector{Index}) = new(inds)
     IndexSet(inds::Index...) = new([inds...])
 end

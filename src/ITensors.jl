@@ -87,4 +87,7 @@ export svd,
        delta,
        δ
 
+include("mps/siteset.jl")
+export SiteSet
+
 end # module
