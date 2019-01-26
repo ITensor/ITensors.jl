@@ -17,9 +17,10 @@ getindex(sites::SiteSet,i::Integer) = getindex(sites.inds,i)
 import Base.show
 function show(io::IO,
               sites::SiteSet)
-  println(io,"SiteSet")
+  print(io,"SiteSet")
+  (length(sites) > 0) && print(io,"\n")
   for i=1:length(sites)
-    println(io,"$i  $(sites[i])")
+    println(io,"  $i  $(sites[i])")
   end
 end
 
