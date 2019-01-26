@@ -1,3 +1,4 @@
+import Base.show
 
 const IDType = UInt64
 
@@ -56,6 +57,18 @@ next(i::Index,n::Int) = (n,n+1)
 done(i::Index,n::Int) = (n > dim(i))
 colon(n::Int,i::Index) = range(n,dim(i))
 
+function primeString(i::Index)
+  pl = plev(i)
+  if pl == 0 return ""
+  elseif pl > 3 return "'$pl"
+  else return "'"^pl
+  end
+end
+
+function show(io::IO,i::Index) 
+    idstr = "$(id(i) % 1000)"
+    print(io,"($(dim(i))|id=$(idstr))$(primeString(i))")
+end
 
 struct IndexVal
   ind::Index
@@ -74,3 +87,6 @@ ind(iv::IndexVal) = iv.ind
 ==(i::Index,iv::IndexVal) = (i==ind(iv))
 ==(iv::IndexVal,i::Index) = (i==iv)
 
+function show(io::IO,iv::IndexVal) 
+  print(io,ind(iv)," = $(val(iv))")
+end
