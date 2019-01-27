@@ -35,7 +35,7 @@ function truncate!(P::Vector{Float64};
   if absoluteCutoff
     #Test if individual prob. weights fall below cutoff
     #rather than using *sum* of discarded weights
-    while P[n] < cutoff && n > minm
+    while P[n] <= cutoff && n > minm
       truncerr += P[n]
       n -= 1
     end
@@ -48,7 +48,7 @@ function truncate!(P::Vector{Float64};
 
     #Continue truncating until *sum* of discarded probability 
     #weight reaches cutoff reached (or m==minm)
-    while (truncerr+P[n] < cutoff*scale) && (n > minm)
+    while (truncerr+P[n] <= cutoff*scale) && (n > minm)
       truncerr += P[n]
       n -= 1
     end
@@ -60,13 +60,13 @@ function truncate!(P::Vector{Float64};
     end
   end
 
-  if n < 0
-    n = 0
+  if n < 1
+    n = 1
   end
 
   if n < origm
-    docut = (P[n]+P[n-1])/2
-    if abs(P[n]-P[n-1]) < 1E-3*P[n]
+    docut = (P[n]+P[n+1])/2
+    if abs(P[n]-P[n+1]) < 1E-3*P[n]
       docut += 1E-3*P[n]
     end
   end

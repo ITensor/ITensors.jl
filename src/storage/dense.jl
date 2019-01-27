@@ -85,14 +85,18 @@ function storage_svd(Astore::Dense{T},
                      Ris::IndexSet;
                      kwargs...
                     ) where {T}
-  dim_left = dim(Lis)
-  dim_right = dim(Ris)
-  MU,MS,MV = svd(reshape(data(Astore),dim_left,dim_right))
+  MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
 
-  truncate!(MS;kwargs...)
-  dS = length(MS)
-  MU = MU[:,1:dS]
-  MV = MV[:,1:dS]
+  sqr(x) = x^2
+  P = sqr.(MS)
+  truncate!(P;kwargs...)
+  dS = length(P)
+
+  if dS < length(MS)
+    MU = MU[:,1:dS]
+    resize!(MS,dS)
+    MV = MV[:,1:dS]
+  end
 
   u = Index(dS,"Link,u")
   #TODO: use replacetags(u,"u","v") here
@@ -101,6 +105,7 @@ function storage_svd(Astore::Dense{T},
   #TODO: make a diag storage
   Sis,Sstore = IndexSet(u,v),Dense{Float64}(vec(Matrix(Diagonal(MS))))
   Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
+
   return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
 end
 
