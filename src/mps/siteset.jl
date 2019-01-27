@@ -5,7 +5,7 @@ struct SiteSet
   function SiteSet(N::Integer, d::Integer)
     inds_ = IndexSet(N)
     for i=1:N
-      inds_[i] = Index(d)
+      inds_[i] = Index(d,"$i,Site")
     end
     new(inds_)
   end
