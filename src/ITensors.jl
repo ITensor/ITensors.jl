@@ -3,6 +3,7 @@ module ITensors
 
 using Random,
       Permutations,
+      Printf,
       LinearAlgebra
 
 import Base.adjoint,
@@ -87,9 +88,12 @@ export svd,
        qr,
        polar,
        norm,
-       commonindex,
+       commonIndex,
        delta,
        δ
+
+include("decomp.jl")
+#export truncate!
 
 include("mps/siteset.jl")
 export SiteSet

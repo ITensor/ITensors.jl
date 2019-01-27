@@ -58,8 +58,8 @@ function setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   return setindex!(T,x,vals...)
 end
 
-function commonindex(A::ITensor,B::ITensor)
-  return commonindex(inds(A),inds(B))
+function commonIndex(A::ITensor,B::ITensor)
+  return commonIndex(inds(A),inds(B))
 end
 
 # TODO: should this make a copy of the storage?
