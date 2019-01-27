@@ -13,7 +13,7 @@ function -(dir::Arrow)
   end
 end
 
-mutable struct Index
+struct Index
   id::IDType
   dim::Int
   dir::Arrow
@@ -45,8 +45,11 @@ tags(i::Index) = i.tags
 copy(i::Index) = Index(i.id,i.dim,i.dir,i.plev,copy(i.tags))
 
 dag(i::Index) = Index(id(i),dim(i),-dir(i),plev(i),tags(i))
-prime!(i::Index,plinc::Int=1) = (i.plev+=plinc; return i)
-prime(i::Index,plinc::Int=1) = (j = copy(i); prime!(j,plinc); return j)
+#prime!(i::Index,plinc::Int=1) = (i.plev+=plinc; return i)
+function prime(i::Index,inc::Int=1)
+  return Index(id(i),dim(i),dir(i),plev(i)+inc,tags(i))
+end
+adjoint(i::Index) = prime(i)
 settags(i::Index,tags::String) = Index(id(i),dim(i),dir(i),plev(i),TagSet(tags))
 (i::Index)(tags::String) = settags(i,tags)
 
