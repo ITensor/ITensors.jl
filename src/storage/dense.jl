@@ -1,7 +1,7 @@
 
 struct Dense{T} <: TensorStorage
   data::Vector{T}
-  Dense{T}(data::Vector) where {T} = new{T}(data)
+  Dense{T}(data::Vector{T}) where {T} = new{T}(data)
   Dense{T}(size::Integer) where {T} = new{T}(zeros(size))
   Dense{T}(x::Number,size::Integer) where {T} = new{T}(fill(x,size))
   Dense{T}() where {T} = new{T}(Vector{T}())
@@ -67,29 +67,40 @@ function storage_scalar(D::Dense)
   end
 end
 
-# TODO: make this storage_contract!(), where C is pre-allocated. This will allow for in-place multiplication
+# TODO: make this storage_contract!(), where C is pre-allocated. 
+#       This will allow for in-place multiplication
 # TODO: optimize the contraction logic so C doesn't get permuted?
-function storage_contract(Astore::TensorStorage,Ais::IndexSet,Bstore::TensorStorage,Bis::IndexSet)
+function storage_contract(Astore::TensorStorage,
+                          Ais::IndexSet,
+                          Bstore::TensorStorage,
+                          Bis::IndexSet)
   (Alabels,Blabels) = compute_contraction_labels(Ais,Bis)
   (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
   Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
   return (Cis,Cstore)
 end
 
-function storage_svd(Astore::T,Lis::IndexSet,Ris::IndexSet) where {T<:Dense}
+function storage_svd(Astore::Dense{T},
+                     Lis::IndexSet,
+                     Ris::IndexSet;
+                     kwargs...
+                    ) where {T}
   dim_left = dim(Lis)
   dim_right = dim(Ris)
   MU,MS,MV = svd(reshape(data(Astore),dim_left,dim_right))
 
-  #TODO: include truncation parameters as keyword arguments
-  dim_middle = min(dim_left,dim_right)
-  u = Index(dim_middle,"Link,u")
+  truncate!(MS;kwargs...)
+  dS = length(MS)
+  MU = MU[:,1:dS]
+  MV = MV[:,1:dS]
+
+  u = Index(dS,"Link,u")
   #TODO: use replacetags(u,"u","v") here
   v = u("Link,v")
-  Uis,Ustore = IndexSet(Lis...,u),T(vec(MU))
+  Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
   #TODO: make a diag storage
-  Sis,Sstore = IndexSet(u,v),T(vec(Matrix(Diagonal(MS))))
-  Vis,Vstore = IndexSet(v,Ris...),T(vec(MV'))
+  Sis,Sstore = IndexSet(u,v),Dense{Float64}(vec(Matrix(Diagonal(MS))))
+  Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
   return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
 end
 

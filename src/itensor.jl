@@ -142,7 +142,10 @@ function show(io::IO,
   #@printf(io,"\n{%s log(scale)=%.1f}",storageTypeName(store(T)),lnum(scale(T)))
 end
 
-function svd(A::ITensor,left_inds::Index...)
+function svd(A::ITensor,
+             left_inds::Index...;
+             kwargs...
+            )
   Lis = IndexSet(left_inds...)
   #TODO: make this a debug level check
   Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
@@ -152,7 +155,7 @@ function svd(A::ITensor,left_inds::Index...)
   #and avoid doing this permute, since it makes a copy
   #AND/OR use svd!() to overwrite the data of A to save memory
   A = permute(A,Lis...,Ris...)
-  Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris)
+  Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
   return ITensor(Uis,Ustore),ITensor(Sis,Sstore),ITensor(Vis,Vstore)
 end
 
