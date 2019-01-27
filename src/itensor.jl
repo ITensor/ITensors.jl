@@ -1,4 +1,3 @@
-import Base.show
 
 struct ITensor
   inds::IndexSet

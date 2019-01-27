@@ -1,4 +1,3 @@
-import Base.show
 
 const IDType = UInt64
 
