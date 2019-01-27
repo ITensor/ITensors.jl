@@ -5,7 +5,8 @@ using Random,
       Permutations,
       LinearAlgebra
 
-import Base.length,
+import Base.adjoint,
+       Base.length,
        Base.getindex,
        Base.setindex!,
        Base.convert,
@@ -20,6 +21,7 @@ import Base.length,
        Base.push!,
        Base.iterate,
        Base.size,
+       Base.show,
        Base.conj,
        Random.randn!,
        Base.eltype,
@@ -62,7 +64,8 @@ export prime,
 
 include("tagset.jl")
 include("index.jl")
-export dim,
+export adjoint,
+       dim,
        prime,
        settags,
        id,
