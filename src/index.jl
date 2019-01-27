@@ -93,6 +93,8 @@ ind(iv::IndexVal) = iv.ind
 ==(i::Index,iv::IndexVal) = (i==ind(iv))
 ==(iv::IndexVal,i::Index) = (i==iv)
 
-function show(io::IO,iv::IndexVal) 
-  print(io,ind(iv)," = $(val(iv))")
-end
+plev(iv::IndexVal) = plev(ind(iv))
+prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))
+adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
+
+show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")

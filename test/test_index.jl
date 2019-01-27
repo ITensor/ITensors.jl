@@ -36,8 +36,14 @@ using ITensors,
   @testset "prime" begin
     i = Index(2)
     @test plev(i) == 0
-    j = prime(i, 2)
-    @test plev(j) == 2 
+    i2 = prime(i, 2)
+    @test plev(i2) == 2 
+    i1 = i'
+    @test plev(i1) == 1
+    i2 = i''
+    @test plev(i2) == 2
+    i3 = i'''
+    @test plev(i3) == 3
   end
   @testset "IndexVal" begin
     i = Index(2)
@@ -48,5 +54,8 @@ using ITensors,
     @test ind(IndexVal(i, 1)) == i
     @test i == IndexVal(i, 2)
     @test IndexVal(i, 2) == i
+    @test plev(i(2)') == 1
+    @test val(i(2)') == 2
+    @test plev(prime(i(2),4)) == 4
   end
 end
