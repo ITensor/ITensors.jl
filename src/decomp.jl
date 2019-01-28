@@ -75,3 +75,42 @@ function truncate!(P::Vector{Float64};
 
   return truncerr,docut
 end
+
+function factorize(A::ITensor,left_inds::Index...;factorization=factorization)
+  Lis = IndexSet(left_inds...)
+  #TODO: make this a debug level check
+  Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+
+  Ris = difference(inds(A),Lis)
+  #TODO: check if A is already ordered properly
+  #and avoid doing this permute, since it makes a copy
+  #AND/OR use svd!() to overwrite the data of A to save memory
+  A = permute(A,Lis...,Ris...)
+  if factorization==:QR
+    Qis,Qstore,Pis,Pstore = storage_qr(store(A),Lis,Ris)
+  elseif factorization==:polar
+    Qis,Qstore,Pis,Pstore = storage_polar(store(A),Lis,Ris)
+  else
+    error("Factorization $factorization not supported")
+  end
+  return ITensor(Qis,Qstore),ITensor(Pis,Pstore)
+end
+
+qr(A::ITensor,left_inds::Index...) = factorize(A,left_inds...;factorization=:QR)
+polar(A::ITensor,left_inds::Index...) = factorize(A,left_inds...;factorization=:polar)
+function svd(A::ITensor,
+             left_inds::Index...;
+             kwargs...
+            )
+  Lis = IndexSet(left_inds...)
+  #TODO: make this a debug level check
+  Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+
+  Ris = difference(inds(A),Lis)
+  #TODO: check if A is already ordered properly
+  #and avoid doing this permute, since it makes a copy
+  #AND/OR use svd!() to overwrite the data of A to save memory
+  A = permute(A,Lis...,Ris...)
+  Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
+  return ITensor(Uis,Ustore),ITensor(Sis,Sstore),ITensor(Vis,Vstore)
+end
