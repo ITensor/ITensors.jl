@@ -146,5 +146,3 @@ function show(io::IO,
   #@printf(io,"\n{%s log(scale)=%.1f}",storageTypeName(store(T)),lnum(scale(T)))
 end
 
-
-

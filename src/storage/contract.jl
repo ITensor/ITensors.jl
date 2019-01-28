@@ -3,7 +3,7 @@
 # Why not just get the extents from the indices?
 function compute_extents(r::Int,
                          strides::Vector{Int},
-                         lastx::Int)
+                         lastx::Int)::Vector{Int}
   r==0 && return Vector{Int}()
   exts = Int[]
   tstr = 1
@@ -100,14 +100,14 @@ function compute_perms!(props::CProps)
 
 end
 
-function is_trivial_permutation(P::Vector{Int})
+function is_trivial_permutation(P::Vector{Int})::Bool
   for n = 1:length(P)
     P[n]!=n && return false
   end
   return true
 end
 
-function checkACsameord(props::CProps)
+function checkACsameord(props::CProps)::Bool
   props.Austart>=length(props.ai) && return true
   aCind = props.AtoC[props.Austart]
   for i = 1:length(props.ai)
@@ -119,7 +119,7 @@ function checkACsameord(props::CProps)
   return true
 end
 
-function checkBCsameord(props::CProps)
+function checkBCsameord(props::CProps)::Bool
   props.Bustart>=length(props.bi) && return true
   bCind = props.BtoC[props.Bustart]
   for i = 1:length(props.bi)
@@ -137,14 +137,14 @@ Atrans(props::CProps) = contractedA(props,1)
 Btrans(props::CProps) = !contractedB(props,1)
 Ctrans(props::CProps) = props.ctrans
 
-function find_index(v::Vector{Int},t)
+function find_index(v::Vector{Int},t)::Int
   for i = 1:length(v)
     v[i]==t && return i
   end
   return -1
 end
 
-function permute_extents(R::Vector{Int},P::Vector{Int})
+function permute_extents(R::Vector{Int},P::Vector{Int})::Vector{Int}
   Rb = fill(0,length(R))
   n = 1
   for pn in P
@@ -154,7 +154,10 @@ function permute_extents(R::Vector{Int},P::Vector{Int})
   return Rb
 end
 
-function compute!(props::CProps,A::Array,B::Array,C::Array)
+function compute!(props::CProps,
+                  A::Array,
+                  B::Array,
+                  C::Array)
   compute_perms!(props)
 
   #Use props.PC.size() as a check to see if we've already run this
@@ -431,7 +434,12 @@ function compute!(props::CProps,A::Array,B::Array,C::Array)
 
 end
 
-function contract!(C::Array{T},p::CProps,A::Array{T},B::Array{T},α::Tα=1.0,β::Tβ=0.0) where {T,Tα<:Number,Tβ<:Number}
+function contract!(C::Array{T},
+                   p::CProps,
+                   A::Array{T},
+                   B::Array{T},
+                   α::Tα=1.0,
+                   β::Tβ=0.0) where {T,Tα<:Number,Tβ<:Number}
 
   # TODO: This is because the permutation convention in C++ ITensor and
   # permutedims in Julia is different
@@ -529,9 +537,14 @@ function contract!(Cdata::Array,Clabels::Vector{Int},
   return
 end
 
-function contract(Cinds::IndexSet,Clabels::Vector{Int},
-                  Astore::Dense{SA},Ainds::IndexSet,Alabels::Vector{Int},
-                  Bstore::Dense{SB},Binds::IndexSet,Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+function contract(Cinds::IndexSet,
+                  Clabels::Vector{Int},
+                  Astore::Dense{SA},
+                  Ainds::IndexSet,
+                  Alabels::Vector{Int},
+                  Bstore::Dense{SB},
+                  Binds::IndexSet,
+                  Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
   Adims = dims(Ainds)
   Bdims = dims(Binds)
   Cdims = dims(Cinds)
