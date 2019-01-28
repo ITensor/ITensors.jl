@@ -5,18 +5,18 @@ function truncate!(P::Vector{Float64};
                    cutoff::Float64=0.0,
                    absoluteCutoff::Bool=false,
                    doRelCutoff::Bool=true
-                 )
+                  )::Tuple{Float64,Float64}
   origm = length(P)
   docut = 0.0
 
   if P[1]==0.0
     resize!(P,1)
-    return 0,0
+    return 0.,0.
   end
 
   if origm==1
     docut = P[1]/2
-    return 0,docut
+    return 0.,docut
   end
 
   #Zero out any negative weight
