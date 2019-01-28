@@ -96,10 +96,15 @@ include("decomp.jl")
 #export truncate!
 
 include("mps/siteset.jl")
-export SiteSet
+export SiteSet,
+       Sites
+
+include("mps/initstate.jl")
+export InitState
 
 include("mps/mps.jl")
 export MPS,
        randomMPS
+
 
 end # module
