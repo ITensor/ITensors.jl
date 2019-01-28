@@ -67,7 +67,7 @@ function prime(A::ITensor,vargs...)
   return ITensor(prime(inds(A),vargs...),store(A))
 end
 
-function ==(A::ITensor,B::ITensor)
+function ==(A::ITensor,B::ITensor)::Bool
   inds(A)!=inds(B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
   p = calculate_permutation(inds(B),inds(A))
   for i ∈ CartesianIndices(dims(A))
@@ -76,24 +76,28 @@ function ==(A::ITensor,B::ITensor)
   return true
 end
 
-function isapprox(A::ITensor,B::ITensor;atol::Real=0.0,rtol::Real=Base.rtoldefault(eltype(A),eltype(B),atol))
+function isapprox(A::ITensor,
+                  B::ITensor;
+                  atol::Real=0.0,
+                  rtol::Real=Base.rtoldefault(eltype(A),eltype(B),atol))
   return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
 end
 
 function scalar(T::ITensor)
-  if order(T)==0 || dim(T)==1
-    return storage_scalar(store(T))
-  else
+  if !(order(T)==0 || dim(T)==1)
     error("ITensor is not a scalar")
   end
+  return storage_scalar(store(T))
 end
 
 randn!(T::ITensor) = storage_randn!(store(T))
+
 function randomITensor(::Type{S},inds::Index...) where {S<:Number}
   T = ITensor(S,inds...)
   randn!(T)
   return T
 end
+
 randomITensor(inds::Index...) = randomITensor(Float64,inds...)
 
 norm(T::ITensor) = storage_norm(store(T))
