@@ -79,7 +79,6 @@ function prime(is::IndexSet,plinc::Integer=1)
   end
   return res
 end
-
 function prime(is::IndexSet,i::Index,plinc::Integer=1)
   res = copy(is)
   for jj ∈ 1:length(res)
@@ -87,6 +86,60 @@ function prime(is::IndexSet,i::Index,plinc::Integer=1)
       res[jj] = prime(res[jj],plinc)
     end
   end
+  return res
+end
+
+function setprime(is::IndexSet,plev::Int)
+  res = copy(is)
+  for jj ∈ 1:length(res)
+    res[jj] = setprime(res[jj],plev)
+  end
+  return res
+end
+
+noprime(is::IndexSet) = setprime(is,0)
+
+function mapprime(is::IndexSet,plevold::Int,plevnew::Int,imatch::Index=Index())
+  res = copy(is)
+  for jj ∈ 1:length(res)
+    if(imatch==Index() || noprime(imatch)==noprime(res[jj]))
+      plev(res[jj])==plevold && (res[jj] = setprime(res[jj],plevnew))
+    end
+  end
+  return res
+end
+
+function swapprime(is::IndexSet,plev1::Int,plev2::Int,imatch::Index=Index())
+  res = copy(is)
+  plevtemp = 7017049418157811712
+  res = mapprime(res,plev1,plevtemp,imatch)
+  res = mapprime(res,plev2,plev1,imatch)
+  res = mapprime(res,plevtemp,plev2,imatch)
+  return res
+end
+
+function addtags(is::IndexSet,tags::String)
+  res = copy(is)
+  for jj ∈ 1:length(res)
+    res[jj] = addtags(res[jj],tags)
+  end
+  return res
+end
+
+function replacetags(is::IndexSet,ts1::String,ts2::String)
+  res = copy(is)
+  for jj ∈ 1:length(res)
+    res[jj] = replacetags(res[jj],ts1,ts2)
+  end
+  return res
+end
+
+function swaptags(is::IndexSet,ts1::String,ts2::String)
+  res = copy(is)
+  tstemp = "e43efds"
+  res = replacetags(res,ts1,tstemp)
+  res = replacetags(res,ts2,ts1)
+  res = replacetags(res,tstemp,ts2)
   return res
 end
 

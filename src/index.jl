@@ -26,7 +26,7 @@ struct Index
 end
 
 Index() = Index(IDType(0),1,Neither,0,TagSet(""))
-Index(dim::Integer,tags="") = Index(rand(IDType),dim,In,0,TagSet(tags))
+Index(dim::Integer,tags::String="") = Index(rand(IDType),dim,In,0,TagSet(tags))
 
 id(i::Index) = i.id
 dim(i::Index) = i.dim
@@ -44,13 +44,30 @@ tags(i::Index) = i.tags
 copy(i::Index) = Index(i.id,i.dim,i.dir,i.plev,copy(i.tags))
 
 dag(i::Index) = Index(id(i),dim(i),-dir(i),plev(i),tags(i))
+
+function setprime(i::Index,plev::Int)
+  return Index(id(i),dim(i),dir(i),plev,tags(i))
+end
+noprime(i::Index) = setprime(i,0)
+
+addtags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),addtags(tags(i),TagSet(ts)))
+removetags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),removetags(tags(i),TagSet(ts)))
+settags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),TagSet(ts))
+
 #prime!(i::Index,plinc::Int=1) = (i.plev+=plinc; return i)
 function prime(i::Index,inc::Int=1)
   return Index(id(i),dim(i),dir(i),plev(i)+inc,tags(i))
 end
 adjoint(i::Index) = prime(i)
-settags(i::Index,tags::String) = Index(id(i),dim(i),dir(i),plev(i),TagSet(tags))
+
 (i::Index)(tags::String) = settags(i,tags)
+function replacetags(i::Index,tsold::String,tsnew::String) 
+  tagsetold = TagSet(tsold)
+  #TODO: Avoid this copy?
+  tagsetold∉tags(i) && return copy(i)
+  itags = addtags(removetags(tags(i),tagsetold),TagSet(tsnew))
+  return Index(id(i),dim(i),dir(i),plev(i),itags)
+end
 
 # Iterating over Index I gives
 # integers from 1...dim(I)

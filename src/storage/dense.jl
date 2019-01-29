@@ -109,6 +109,21 @@ function storage_svd(Astore::Dense{T},
   return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
 end
 
+function storage_eigen(Astore::T,Lis::IndexSet,Ris::IndexSet,matrixtype::Type{S},truncate::Int,tags::String) where {T<:Dense,S}
+  dim_left = dim(Lis)
+  dim_right = dim(Ris)
+  MD,MU = eigen(S(reshape(data(Astore),dim_left,dim_right)))
+
+  #TODO: include truncation parameters as keyword arguments
+  dim_middle = min(dim_left,dim_right,truncate)
+  u = Index(dim_middle,tags)
+  v = prime(u)
+  Uis,Ustore = IndexSet(Lis...,u),T(vec(MU[:,1:dim_middle]))
+  #TODO: make a diag storage
+  Dis,Dstore = IndexSet(u,v),T(vec(Matrix(Diagonal(MD[1:dim_middle]))))
+  return (Uis,Ustore,Dis,Dstore)
+end
+
 function polar(A::Matrix)
   U,S,V = svd(A)
   return U*V',V*Diagonal(S)*V'

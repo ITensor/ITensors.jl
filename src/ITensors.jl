@@ -31,7 +31,8 @@ import Base.adjoint,
        Base.intersect,
        LinearAlgebra.norm,
        LinearAlgebra.svd,
-       LinearAlgebra.qr
+       LinearAlgebra.qr,
+       LinearAlgebra.eigen
 
 ## Types
 export Dense,
@@ -46,7 +47,10 @@ export Dense,
 
 ## Functions
 export prime,
-       prime!,
+       setprime,
+       noprime,
+       mapprime,
+       swapprime,
        plev,
        tags,
        rank,
@@ -64,11 +68,15 @@ export prime,
        val
 
 include("tagset.jl")
+export addtags
 include("index.jl")
 export adjoint,
        dim,
        prime,
+       addtags,
        settags,
+       replacetags,
+       removetags,
        id,
        dir,
        plev,
@@ -79,7 +87,8 @@ export adjoint,
        Out
 include("indexset.jl")
 export hasindex,
-       difference
+       difference,
+       swaptags
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")
 include("storage/contract.jl")

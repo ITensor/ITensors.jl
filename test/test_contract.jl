@@ -1,4 +1,3 @@
-
 using ITensors,
       LinearAlgebra, # For tr()
       Combinatorics, # For permutations()

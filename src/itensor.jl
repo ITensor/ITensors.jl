@@ -2,6 +2,8 @@
 struct ITensor
   inds::IndexSet
   store::TensorStorage
+  #TODO: check that the storage is consistent with the
+  #total dimension of the indices
   ITensor(is::IndexSet,st::TensorStorage) = new(is,st)
 end
 
@@ -14,6 +16,9 @@ ITensor(inds::Index...) = ITensor(IndexSet(inds...))
 
 function ITensor(x::S,inds::Index...) where {S<:Number}
   return ITensor(IndexSet(inds...),Dense{S}(x,dim(IndexSet(inds...))))
+end
+function ITensor(A::Array{S},inds::Index...) where {S<:Number}
+  return ITensor(IndexSet(inds...),Dense{S}(A))
 end
 
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
@@ -66,6 +71,31 @@ end
 function prime(A::ITensor,vargs...)
   return ITensor(prime(inds(A),vargs...),store(A))
 end
+function setprime(A::ITensor,vargs...)
+  return ITensor(setprime(inds(A),vargs...),store(A))
+end
+function noprime(A::ITensor,vargs...)
+  return ITensor(noprime(inds(A),vargs...),store(A))
+end
+function mapprime(A::ITensor,vargs...)
+  return ITensor(mapprime(inds(A),vargs...),store(A))
+end
+function swapprime(A::ITensor,vargs...)
+  return ITensor(swapprime(inds(A),vargs...),store(A))
+end
+
+function addtags(A::ITensor,vargs...)
+  return ITensor(addtags(inds(A),vargs...),store(A))
+end
+
+function replacetags(A::ITensor,vargs...)
+  return ITensor(replacetags(inds(A),vargs...),store(A))
+end
+
+function swaptags(A::ITensor,vargs...)
+  return ITensor(swaptags(inds(A),vargs...),store(A))
+end
+
 
 function ==(A::ITensor,B::ITensor)::Bool
   inds(A)!=inds(B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
@@ -135,6 +165,21 @@ function *(A::ITensor,B::ITensor)
   (Cis,Cstore) = storage_contract(store(A),inds(A),store(B),inds(B))
   C = ITensor(Cis,Cstore)
   return C
+end
+
+function eigen(A::ITensor,left_inds::Index...;truncate::Int=100,tags::String="Link,u",matrixtype::Type{T}=Hermitian) where {T}
+  Lis = IndexSet(left_inds...)
+  #TODO: make this a debug level check
+  Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+
+  Ris = difference(inds(A),Lis)
+  #TODO: check if A is already ordered properly
+  #and avoid doing this permute, since it makes a copy
+  #AND/OR use svd!() to overwrite the data of A to save memory
+  A = permute(A,Lis...,Ris...)
+  #TODO: More of the index analysis should be moved out of storage_eigen
+  Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris,matrixtype,truncate,tags)
+  return ITensor(Uis,Ustore),ITensor(Dis,Dstore)
 end
 
 function show(io::IO,
