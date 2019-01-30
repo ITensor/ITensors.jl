@@ -83,14 +83,16 @@ end
 function storage_svd(Astore::Dense{T},
                      Lis::IndexSet,
                      Ris::IndexSet;
-                     maxm::Int=min(dim(Lis),dim(Ris)),
-                     minm::Int=1,
-                     cutoff::Float64=0.0,
-                     absoluteCutoff::Bool=false,
-                     doRelCutoff::Bool=true,
-                     utags::String="Link,u",
-                     vtags::String="Link,v"
+                     kwargs...
                     ) where {T}
+  maxm::Int = get(kwargs,:maxm,min(dim(Lis),dim(Ris)))
+  minm::Int = get(kwargs,:minm,1)
+  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
+  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
+  utags::String = get(kwargs,:utags,"Link,u")
+  vtags::String = get(kwargs,:vtags,"Link,v")
+
   MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
 
   sqr(x) = x^2

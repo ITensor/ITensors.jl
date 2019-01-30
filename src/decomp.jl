@@ -1,11 +1,13 @@
 
 function truncate!(P::Vector{Float64};
-                   maxm::Int=length(P),
-                   minm::Int=1,
-                   cutoff::Float64=0.0,
-                   absoluteCutoff::Bool=false,
-                   doRelCutoff::Bool=true
+                   kwargs...
                   )::Tuple{Float64,Float64}
+  maxm::Int = get(kwargs,:maxm,length(P))
+  minm::Int = get(kwargs,:minm,1)
+  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
+  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
+
   origm = length(P)
   docut = 0.0
 
@@ -114,3 +116,4 @@ function svd(A::ITensor,
   Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
   return ITensor(Uis,Ustore),ITensor(Sis,Sstore),ITensor(Vis,Vstore)
 end
+
