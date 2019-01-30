@@ -126,6 +126,14 @@ function addtags(is::IndexSet,tags::String)
   return res
 end
 
+function removetags(is::IndexSet,tags::String)
+  res = copy(is)
+  for jj ∈ 1:length(res)
+    res[jj] = removetags(res[jj],tags)
+  end
+  return res
+end
+
 function replacetags(is::IndexSet,ts1::String,ts2::String)
   res = copy(is)
   for jj ∈ 1:length(res)

@@ -88,6 +88,10 @@ function addtags(A::ITensor,vargs...)
   return ITensor(addtags(inds(A),vargs...),store(A))
 end
 
+function removetags(A::ITensor,vargs...)
+  return ITensor(removetags(inds(A),vargs...),store(A))
+end
+
 function replacetags(A::ITensor,vargs...)
   return ITensor(replacetags(inds(A),vargs...),store(A))
 end
