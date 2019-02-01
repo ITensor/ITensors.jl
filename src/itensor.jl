@@ -67,6 +67,8 @@ function commonIndex(A::ITensor,B::ITensor)
   return commonIndex(inds(A),inds(B))
 end
 
+hasindex(T::ITensor,I::Index) = hasindex(inds(T),I)
+
 # TODO: should this make a copy of the storage?
 function prime(A::ITensor,vargs...)
   return ITensor(prime(inds(A),vargs...),store(A))
