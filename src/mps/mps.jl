@@ -15,7 +15,6 @@ getindex(m::MPS, n::Integer) = getindex(m.A_,n)
 
 setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
 
-import Base.show
 function show(io::IO,
               psi::MPS)
   print(io,"MPS")
