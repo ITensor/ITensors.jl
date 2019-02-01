@@ -1,5 +1,6 @@
 using ITensors,
-      Test
+      Test,
+      Printf
 
 include("2d_classical_ising.jl")
 
@@ -22,6 +23,7 @@ function trg(T::ITensor,
   #Keep track of the partition function per site
   κ = 1.0
   for n = 1:nsteps
+    #@printf("Doing TRG Step %d\n",n)
     Fh1,Fh2 = factorize(T,sh[1],sv[1];maxm=χmax,tags="renorm")
     Fv1,Fv2 = factorize(T,sh[2],sv[1];maxm=χmax,tags="renorm")
     #TODO: replace this with sh[1] = findindex(Fh1,"renorm")("orig,h1")
@@ -61,9 +63,9 @@ end
   T = ising_mpo(sh,sv,β)
 
   χmax = 20
-  nsteps = 40
+  nsteps = 20
   κ = trg(T,sh,sv;χmax=χmax,nsteps=nsteps)
 
-  @test κ≈exp(-β*ising_free_energy(β)) atol=1e-6
+  @test κ≈exp(-β*ising_free_energy(β)) atol=1e-4
 end
 
