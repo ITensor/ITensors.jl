@@ -88,6 +88,15 @@ function prime(is::IndexSet,i::Index,plinc::Integer=1)
   end
   return res
 end
+function primeexcept(is::IndexSet,i::Index,plinc::Integer=1)
+  res = copy(is)
+  for jj ∈ 1:length(res)
+    if res[jj]!=i
+      res[jj] = prime(res[jj],plinc)
+    end
+  end
+  return res
+end
 
 function setprime(is::IndexSet,plev::Int)
   res = copy(is)

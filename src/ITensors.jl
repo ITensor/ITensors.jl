@@ -91,6 +91,7 @@ export adjoint,
 include("indexset.jl")
 export hasindex,
        difference,
+       primeexcept,
        swaptags
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")

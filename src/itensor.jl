@@ -73,6 +73,9 @@ hasindex(T::ITensor,I::Index) = hasindex(inds(T),I)
 function prime(A::ITensor,vargs...)
   return ITensor(prime(inds(A),vargs...),store(A))
 end
+function primeexcept(A::ITensor,vargs...)
+  return ITensor(primeexcept(inds(A),vargs...),store(A))
+end
 function setprime(A::ITensor,vargs...)
   return ITensor(setprime(inds(A),vargs...),store(A))
 end
