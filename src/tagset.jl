@@ -16,6 +16,8 @@ getindex(T::TagSet,n::Int) = T.tags[n]
 
 copy(ts::TagSet) = TagSet(ts.tags)
 
+iterate(ts::TagSet,state::Int=1) = iterate(ts.tags,state)
+
 convert(::Type{TagSet},x::String) = TagSet(x)
 convert(::Type{TagSet},x::TagSet) = x
 
