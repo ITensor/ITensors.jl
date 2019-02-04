@@ -101,7 +101,28 @@ function factorize(A::ITensor,
 end
 
 qr(A::ITensor,left_inds::Index...) = factorize(A,left_inds...;factorization=:QR)
+
 polar(A::ITensor,left_inds::Index...) = factorize(A,left_inds...;factorization=:polar)
+
+"""
+    svd(A::ITensor,
+        leftind1::Index,
+        leftind2::Index,
+        ...
+        ;kwargs...)
+
+Singular value decomposition (SVD) of an ITensor A, computed
+by treating the "left indices" provided collectively
+as a row index, and the remaining "right indices" as a
+column index (matricization of a tensor).
+
+Whether the SVD performs a trunction depends on the keyword
+arguments provided. The following keyword arguments are recognized:
+* maxm [Int]
+* minm [Int]
+* cutoff [Float64]
+* truncate [Bool]
+"""
 function svd(A::ITensor,
              left_inds::Index...;
              kwargs...
