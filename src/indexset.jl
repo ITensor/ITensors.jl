@@ -19,7 +19,7 @@ dag(is::IndexSet) = IndexSet(dag.(is.inds))
 
 # Allow iteration
 size(is::IndexSet) = size(is.inds)
-iterate(is::IndexSet,state=1) = iterate(is.inds,state)
+iterate(is::IndexSet,state::Int=1) = iterate(is.inds,state)
 
 push!(is::IndexSet,i::Index) = push!(is.inds,i)
 
