@@ -31,8 +31,8 @@ struct Sites <: SiteSet
   Sites() = new(IndexSet())
   function Sites(N::Integer, d::Integer)
     inds_ = IndexSet(N)
-    for i=1:N
-      inds_[i] = Index(d,"$i,Site")
+    for n=1:N
+      inds_[n] = Index(d,"n=$n,Site")
     end
     new(inds_)
   end
