@@ -31,6 +31,9 @@ function in(ts1::TagSet, ts2::TagSet)
   return true
 end
 
+hastags(T::TagSet,ts::TagSet) = in(ts,T)
+hastags(ts::TagSet,s::String) = in(TagSet(s),ts)
+
 #TODO: optimize this code to not
 #scan through all of the tags so many times
 function addtags(ts::TagSet,tsadd::TagSet)
