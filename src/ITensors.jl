@@ -101,7 +101,7 @@ export svd,
        qr,
        polar,
        norm,
-       commonIndex,
+       commonindex,
        delta,
        δ
 

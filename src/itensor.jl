@@ -63,8 +63,8 @@ function setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   return setindex!(T,x,vals...)
 end
 
-function commonIndex(A::ITensor,B::ITensor)
-  return commonIndex(inds(A),inds(B))
+function commonindex(A::ITensor,B::ITensor)
+  return commonindex(inds(A),inds(B))
 end
 
 hasindex(T::ITensor,I::Index) = hasindex(inds(T),I)

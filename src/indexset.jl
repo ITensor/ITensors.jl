@@ -64,7 +64,7 @@ function intersect(Ais::IndexSet,Bis::IndexSet)
   return Cis
 end
 
-function commonIndex(Ais::IndexSet,Bis::IndexSet)
+function commonindex(Ais::IndexSet,Bis::IndexSet)
   Cis = Ais∩Bis
   if order(Cis)>1 throw(ErrorException("IndexSets have more than one common Index"))
   elseif order(Cis)==1 return Cis[1]
