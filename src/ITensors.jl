@@ -117,6 +117,8 @@ export InitState
 
 include("mps/mps.jl")
 export MPS,
+       position!,
+       overlap,
        randomMPS
 
 

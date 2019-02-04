@@ -1,19 +1,31 @@
 
-struct MPS
+mutable struct MPS
   N_::Int
   A_::Vector{ITensor}
-  MPS() = new(0,Vector{ITensor}())
+  llim_::Int
+  rlim_::Int
+
+  MPS() = new(0,Vector{ITensor}(),0,0)
+
+  function MPS(N::Int, A::Vector{ITensor}, llim::Int, rlim::Int)
+    new(N,A,llim,rlim)
+  end
+  
 
   function MPS(sites::SiteSet)
     N = length(sites)
-    new(N,fill(ITensor(),N))
+    new(N,fill(ITensor(),N),0,N+1)
   end
 end
 
 length(m::MPS) = m.N_
-getindex(m::MPS, n::Integer) = getindex(m.A_,n)
+leftLim(m::MPS) = m.llim_
+rightLim(m::MPS) = m.rlim_
 
+getindex(m::MPS, n::Integer) = getindex(m.A_,n)
 setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
+
+copy(m::MPS) = MPS(m.N_,copy(m.A_),m.llim_,m.rlim_)
 
 function show(io::IO,
               psi::MPS)
@@ -24,11 +36,74 @@ function show(io::IO,
   end
 end
 
-function randomMPS(sites::SiteSet)
-  m = MPS(sites)
-  for i=1:length(m)
-    m[i] = randomITensor(sites[i])
-    m[i] /= norm(m[i])
+function linkind(psi::MPS,j::Integer) 
+  li = commonindex(psi[j],psi[j+1])
+  if isdefault(li)
+    error("linkind: no MPS link index at link $j")
   end
-  return m
+  return li
+end
+
+
+function position!(psi::MPS,
+                   j::Integer)
+  N = length(psi)
+
+  while leftLim(psi) < (j-1)
+    ll = leftLim(psi)+1
+    s = findtags(psi[ll],"Site")
+    if ll == 1
+      (Q,R) = qr(psi[ll],s)
+    else
+      li = linkind(psi,ll-1)
+      (Q,R) = qr(psi[ll],s,li)
+    end
+    psi[ll] = Q
+    psi[ll+1] *= R
+    psi.llim_ += 1
+  end
+
+  while rightLim(psi) > (j+1)
+    rl = rightLim(psi)-1
+    s = findtags(psi[rl],"Site")
+    if rl == N
+      (Q,R) = qr(psi[rl],s)
+    else
+      ri = linkind(psi,rl)
+      (Q,R) = qr(psi[rl],s,ri)
+    end
+    psi[rl] = Q
+    psi[rl-1] *= R
+    psi.rlim_ -= 1
+  end
+end
+
+function overlap(psi1::MPS,
+                 psi2::MPS)
+  N = length(psi1)
+  if length(psi2) != N
+    error("overlap: mismatched lengths $N and $(length(psi2))")
+  end
+
+  s1 = findtags(psi2[1],"Site")
+  O = psi1[1]*primeexcept(psi2[1],s1)
+  for j=2:N
+    sj = findtags(psi2[j],"Site")
+    O *= psi1[j]
+    O *= primeexcept(psi2[j],sj)
+  end
+  return O[]
+end
+
+function randomMPS(sites::SiteSet,
+                   m::Int=1)
+  psi = MPS(sites)
+  for i=1:length(psi)
+    psi[i] = randomITensor(sites[i])
+    psi[i] /= norm(psi[i])
+  end
+  if m > 1
+    error("randomMPS: currently only m==1 supported")
+  end
+  return psi
 end
