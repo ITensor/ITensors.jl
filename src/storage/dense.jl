@@ -10,6 +10,11 @@ end
 data(D::Dense) = D.data
 length(D::Dense) = length(data(D))
 eltype(D::Dense) = eltype(data(D))
+getindex(D::Dense,i::Int) = data(D)[i]
+#TODO: this should do proper promotions of the storage data
+#e.g. ComplexF64*Dense{Float64} -> Dense{ComplexF64}
+*(D::T,x::Number) where {T<:Dense} = T(x*data(D))
+*(x::Number,D::Dense) = D*x
 
 copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 
@@ -61,7 +66,7 @@ end
 
 function storage_scalar(D::Dense)
   if length(D)==1
-    return data(D)[1]
+    return D[1]
   else
     throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
   end
@@ -74,9 +79,20 @@ function storage_contract(Astore::TensorStorage,
                           Ais::IndexSet,
                           Bstore::TensorStorage,
                           Bis::IndexSet)
-  (Alabels,Blabels) = compute_contraction_labels(Ais,Bis)
-  (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
-  Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
+  if length(Ais)==0
+    Cis = Bis
+    Cstore = storage_scalar(Astore)*Bstore
+  elseif length(Bis)==0
+    Cis = Ais
+    Cstore = storage_scalar(Bstore)*Astore
+  else
+    #TODO: check for special case when Ais and Bis are disjoint sets
+    #I think we should do this analysis outside of storage_contract, at the ITensor level
+    #(since it is universal for any storage type and just analyzes in indices)
+    (Alabels,Blabels) = compute_contraction_labels(Ais,Bis)
+    (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
+    Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
+  end
   return (Cis,Cstore)
 end
 
@@ -155,9 +171,10 @@ function storage_polar(Astore::T,Lis::IndexSet,Ris::IndexSet) where {T<:Dense}
   dim_right = dim(Ris)
   MQ,MP = polar(reshape(data(Astore),dim_left,dim_right))
   dim_middle = min(dim_left,dim_right)
-  u = Index(dim_middle,"Link,u")
-  Qis,Qstore = IndexSet(Lis...,u),T(vec(MQ))
-  Pis,Pstore = IndexSet(u,Ris...),T(vec(MP))
+  #u = Index(dim_middle,"Link,u")
+  Uis = addtags(Ris,"u")
+  Qis,Qstore = IndexSet(Lis...,Uis...),T(vec(MQ))
+  Pis,Pstore = IndexSet(Uis...,Ris...),T(vec(MP))
   return (Qis,Qstore,Pis,Pstore)
 end
 

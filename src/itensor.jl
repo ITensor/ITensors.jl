@@ -7,19 +7,24 @@ struct ITensor
   ITensor(is::IndexSet,st::TensorStorage) = new(is,st)
 end
 
-function ITensor(::Type{T},inds::Index...) where {T<:Number}
-  return ITensor(IndexSet(inds...),Dense{T}(dim(IndexSet(inds...))))
+function ITensor(::Type{T},inds::IndexSet) where {T<:Number}
+  return ITensor(inds,Dense{T}(dim(inds)))
 end
+ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...))
 
 ITensor(is::IndexSet) = ITensor(Float64,is...)
 ITensor(inds::Index...) = ITensor(IndexSet(inds...))
 
-function ITensor(x::S,inds::Index...) where {S<:Number}
-  return ITensor(IndexSet(inds...),Dense{S}(x,dim(IndexSet(inds...))))
+function ITensor(x::S,inds::IndexSet) where {S<:Number}
+  return ITensor(inds,Dense{S}(x,dim(inds)))
 end
-function ITensor(A::Array{S},inds::Index...) where {S<:Number}
-  return ITensor(IndexSet(inds...),Dense{S}(A))
+ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
+
+#TODO: check that the size of the Array matches the Index dimensions
+function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
+  return ITensor(inds,Dense{S}(A))
 end
+ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
 
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
 
@@ -66,6 +71,9 @@ end
 function commonindex(A::ITensor,B::ITensor)
   return commonindex(inds(A),inds(B))
 end
+function commoninds(A::ITensor,B::ITensor)
+  return inds(A)∩inds(B)
+end
 
 hasindex(T::ITensor,I::Index) = hasindex(inds(T),I)
 
@@ -73,6 +81,7 @@ hasindex(T::ITensor,I::Index) = hasindex(inds(T),I)
 function prime(A::ITensor,vargs...)
   return ITensor(prime(inds(A),vargs...),store(A))
 end
+adjoint(A::ITensor) = prime(A)
 function primeexcept(A::ITensor,vargs...)
   return ITensor(primeexcept(inds(A),vargs...),store(A))
 end
@@ -131,23 +140,24 @@ end
 
 randn!(T::ITensor) = storage_randn!(store(T))
 
-function randomITensor(::Type{S},inds::Index...) where {S<:Number}
-  T = ITensor(S,inds...)
+function randomITensor(::Type{S},inds::IndexSet) where {S<:Number}
+  T = ITensor(S,inds)
   randn!(T)
   return T
 end
-
-randomITensor(inds::Index...) = randomITensor(Float64,inds...)
+randomITensor(::Type{S},inds::Index...) where {S<:Number} = randomITensor(S,IndexSet(inds...))
+randomITensor(inds::IndexSet) = randomITensor(Float64,inds)
+randomITensor(inds::Index...) = randomITensor(Float64,IndexSet(inds...))
 
 norm(T::ITensor) = storage_norm(store(T))
 dag(T::ITensor) = ITensor(storage_dag(store(T),inds(T))...)
 
-function permute(T::ITensor,new_inds::Index...)
+function permute(T::ITensor,permTinds::IndexSet)
   permTstore = typeof(store(T))(dim(T))
-  permTinds = IndexSet(new_inds...)
   storage_permute!(permTstore,permTinds,store(T),inds(T))
   return ITensor(permTinds,permTstore)
 end
+permute(T::ITensor,new_inds::Index...) = permute(T,IndexSet(new_inds...))
 
 function add!(A::ITensor,B::ITensor)
   storage_add!(store(A),inds(A),store(B),inds(B))

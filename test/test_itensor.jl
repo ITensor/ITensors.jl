@@ -94,11 +94,14 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
     @testset "Test polar decomposition of an ITensor" begin
       U,P = polar(A,k,l)
-      u = commonindex(U,P)
       @test A≈U*P
       #Note: this is only satisfied when left dimensions 
       #are greater than right dimensions
-      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
+      uinds = commoninds(U,P)
+      UUᵀ =  U*dag(prime(U,"u"))
+      for ii ∈ dim(uinds[1]), jj ∈ dim(uinds[2])
+        @test UUᵀ[uinds[1](ii),uinds[2](jj),prime(uinds[1])(ii),prime(uinds[2])(jj)]≈one(SType) atol=1e-14
+      end
     end
 
   end # End ITensor factorization testset

@@ -4,7 +4,8 @@ module ITensors
 using Random,
       Permutations,
       Printf,
-      LinearAlgebra
+      LinearAlgebra,
+      StaticArrays # For SmallString
 
 import Base.adjoint,
        Base.length,
@@ -18,6 +19,7 @@ import Base.adjoint,
        Base.-,
        Base.*,
        Base./,
+       Base.isless,
        Base.copy,
        Base.push!,
        Base.iterate,
@@ -67,6 +69,8 @@ export prime,
        dir,
        val
 
+#TODO: continue work on SmallString, use as Tags
+include("smallstring.jl")
 include("tagset.jl")
 export addtags,
        hastags
@@ -102,6 +106,7 @@ export svd,
        polar,
        norm,
        commonindex,
+       commoninds,
        delta,
        δ
 

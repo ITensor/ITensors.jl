@@ -79,7 +79,7 @@ function prime(is::IndexSet,plinc::Integer=1)
   end
   return res
 end
-function prime(is::IndexSet,i::Index,plinc::Integer=1)
+function prime(is::IndexSet,plinc::Integer,i::Index)
   res = copy(is)
   for jj ∈ 1:length(res)
     if res[jj]==i
@@ -88,7 +88,7 @@ function prime(is::IndexSet,i::Index,plinc::Integer=1)
   end
   return res
 end
-function primeexcept(is::IndexSet,i::Index,plinc::Integer=1)
+function primeexcept(is::IndexSet,plinc::Integer,i::Index)
   res = copy(is)
   for jj ∈ 1:length(res)
     if res[jj]!=i
@@ -97,6 +97,19 @@ function primeexcept(is::IndexSet,i::Index,plinc::Integer=1)
   end
   return res
 end
+primeexcept(is::IndexSet,i::Index) = primeexcept(is,1,i)
+prime(is::IndexSet,i::Index) = prime(is,1,i)
+function prime(is::IndexSet,plinc::Integer,ts::String)
+  res = copy(is)
+  for jj ∈ 1:length(res)
+    if ts∈tags(res[jj])
+      res[jj] = prime(res[jj],plinc)
+    end
+  end
+  return res
+end
+prime(is::IndexSet,ts::String) = prime(is,1,ts)
+adjoint(is::IndexSet) = prime(is)
 
 function setprime(is::IndexSet,plev::Int)
   res = copy(is)
@@ -127,18 +140,18 @@ function swapprime(is::IndexSet,plev1::Int,plev2::Int,imatch::Index=Index())
   return res
 end
 
-function addtags(is::IndexSet,tags::String)
+function addtags(is::IndexSet,ts::String)
   res = copy(is)
   for jj ∈ 1:length(res)
-    res[jj] = addtags(res[jj],tags)
+    res[jj] = addtags(res[jj],ts)
   end
   return res
 end
 
-function removetags(is::IndexSet,tags::String)
+function removetags(is::IndexSet,ts::String)
   res = copy(is)
   for jj ∈ 1:length(res)
-    res[jj] = removetags(res[jj],tags)
+    res[jj] = removetags(res[jj],ts)
   end
   return res
 end
