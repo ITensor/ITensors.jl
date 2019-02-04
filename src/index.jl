@@ -45,6 +45,8 @@ copy(i::Index) = Index(i.id,i.dim,i.dir,i.plev,copy(i.tags))
 
 dag(i::Index) = Index(id(i),dim(i),-dir(i),plev(i),tags(i))
 
+isdefault(i::Index) = (i==Index())
+
 function setprime(i::Index,plev::Int)
   return Index(id(i),dim(i),dir(i),plev,tags(i))
 end
@@ -53,6 +55,7 @@ noprime(i::Index) = setprime(i,0)
 addtags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),addtags(tags(i),TagSet(ts)))
 removetags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),removetags(tags(i),TagSet(ts)))
 settags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),TagSet(ts))
+hastags(i::Index,ts::Union{String,TagSet}) = hastags(tags(i),ts)
 
 #prime!(i::Index,plinc::Int=1) = (i.plev+=plinc; return i)
 function prime(i::Index,inc::Int=1)

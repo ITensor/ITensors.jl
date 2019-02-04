@@ -68,7 +68,8 @@ export prime,
        val
 
 include("tagset.jl")
-export addtags
+export addtags,
+       hastags
 include("index.jl")
 export adjoint,
        dim,
@@ -77,7 +78,9 @@ export adjoint,
        settags,
        replacetags,
        removetags,
+       hastags,
        id,
+       isdefault,
        dir,
        plev,
        tags,
