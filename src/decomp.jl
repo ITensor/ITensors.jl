@@ -78,7 +78,9 @@ function truncate!(P::Vector{Float64};
   return truncerr,docut
 end
 
-function factorize(A::ITensor,left_inds::Index...;factorization=factorization)
+function factorize(A::ITensor,
+                   left_inds::Index...;
+                   factorization=factorization)
   Lis = IndexSet(left_inds...)
   #TODO: make this a debug level check
   Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
