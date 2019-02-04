@@ -31,7 +31,7 @@ function ctmrg(T::ITensor,
     Ur21 = replacetags(swaptags(Ul12,"horiz","vert"),"x1,y2","x2,y1")
 
     # Update the links
-    l = commonIndex(Ul12,Clu22)("Link")
+    l = commonindex(Ul12,Clu22)("Link")
     for i = 1:Nx, j = 1:Ny
       lh[i,j] = addtags(l,"horiz,x$i,y$j")
       lv[i,j] = addtags(l,"vert,x$i,y$j")

@@ -67,8 +67,8 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
     @testset "Test SVD of an ITensor" begin
       U,S,V = svd(A,j,l)
-      u = commonIndex(U,S)
-      v = commonIndex(S,V)
+      u = commonindex(U,S)
+      v = commonindex(S,V)
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
@@ -87,14 +87,14 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
     @testset "Test QR decomposition of an ITensor" begin
       Q,R = qr(A,i,l)
-      q = commonIndex(Q,R)
+      q = commonindex(Q,R)
       @test A≈Q*R
       @test Q*dag(prime(Q,q))≈δ(SType,q,q') atol=1e-14
     end
 
     @testset "Test polar decomposition of an ITensor" begin
       U,P = polar(A,k,l)
-      u = commonIndex(U,P)
+      u = commonindex(U,P)
       @test A≈U*P
       #Note: this is only satisfied when left dimensions 
       #are greater than right dimensions

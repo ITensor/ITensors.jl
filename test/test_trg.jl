@@ -6,8 +6,8 @@ include("2d_classical_ising.jl")
 
 function factorize(A::ITensor,Linds::Index...;maxm::Int,tags::String)
   U,S,V = svd(A,Linds...;maxm=maxm,utags="$tags,u",vtags="$tags,v")
-  u = commonIndex(U,S)
-  v = commonIndex(S,V)
+  u = commonindex(U,S)
+  v = commonindex(S,V)
   for ss = 1:dim(u)
     S[ss,ss] = sqrt(S[ss,ss])
   end
@@ -27,9 +27,9 @@ function trg(T::ITensor,
     Fh1,Fh2 = factorize(T,sh[1],sv[1];maxm=χmax,tags="renorm")
     Fv1,Fv2 = factorize(T,sh[2],sv[1];maxm=χmax,tags="renorm")
     #TODO: replace this with sh[1] = findindex(Fh1,"renorm")("orig,h1")
-    sh[1] = commonIndex(Fh1,Fh2)("orig,h1")
+    sh[1] = commonindex(Fh1,Fh2)("orig,h1")
     sh[2] = sh[1]("orig,h2")
-    sv[1] = commonIndex(Fv1,Fv2)("orig,v1")
+    sv[1] = commonindex(Fv1,Fv2)("orig,v1")
     sv[2] = sv[1]("orig,v2")
 
     #TODO: replace this with Fh1 = addtags(Fh1,"h1","renorm"), etc.
