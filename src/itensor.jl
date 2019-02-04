@@ -176,7 +176,23 @@ function *(A::ITensor,B::ITensor)
   return C
 end
 
-function eigen(A::ITensor,left_inds::Index...;truncate::Int=100,tags::String="Link,u",matrixtype::Type{T}=Hermitian) where {T}
+function findtags(T::ITensor,
+                  tags::String)::Index
+  ts = TagSet(tags)
+  for i in inds(T)
+    if hastags(i,ts)
+      return i
+    end
+  end
+  error("findtags: ITensor has no Index with given tags: $ts")
+  return Index()
+end
+
+function eigen(A::ITensor,
+               left_inds::Index...;
+               truncate::Int=100,
+               tags::String="Link,u",
+               matrixtype::Type{T}=Hermitian) where {T}
   Lis = IndexSet(left_inds...)
   #TODO: make this a debug level check
   Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
