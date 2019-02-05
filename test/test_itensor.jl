@@ -105,11 +105,36 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     @test hasindex(A2r,l("Temp")')
     @test hasindex(A2r,l'')
 
-    A2r = replacetags(A2,"Link,2","Temp,2")
+    A2r = replacetags(A2,"Link,2","Temp,3")
     @test hasindex(A2r,s2)
     @test hasindex(A2r,l')
-    @test hasindex(A2r,l("Temp")'')
-    @test hasindex(A2r,l("Temp,2"))
+    @test hasindex(A2r,l("Temp")''')
+    @test hasindex(A2r,l("Temp,3"))
+
+    A2r = replacetags(A2,"1","5")
+    @test hasindex(A2r,s2)
+    @test hasindex(A2r,prime(l,5))
+    @test hasindex(A2r,l("Link,5"))
+    @test hasindex(A2r,l'')
+    @test hasindex(A2r,l("Link,2"))
+  end
+  @testset "prime(::ITensor,::String)" begin
+    A2p = prime(A2)
+    @test A2p==A2'
+    @test hasindex(A2p,s2')
+    @test hasindex(A2p,l'')
+    @test hasindex(A2p,l''')
+    
+    A2p = prime(A2,2)
+    A2p = A2''
+    @test hasindex(A2p,s2'')
+    @test hasindex(A2p,l''')
+    @test hasindex(A2p,l'''')
+
+    A2p = prime(A2,"s=2")
+    @test hasindex(A2p,s2')
+    @test hasindex(A2p,l')
+    @test hasindex(A2p,l'')
   end
 end
 
