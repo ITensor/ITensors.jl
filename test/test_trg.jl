@@ -23,23 +23,22 @@ function trg(T::ITensor,
   #Keep track of the partition function per site
   κ = 1.0
   for n = 1:nsteps
-    #@printf("Doing TRG Step %d\n",n)
     Fh1,Fh2 = factorize(T,sh[1],sv[1];maxm=χmax,tags="renorm")
     Fv1,Fv2 = factorize(T,sh[2],sv[1];maxm=χmax,tags="renorm")
-    #TODO: replace this with sh[1] = findindex(Fh1,"renorm")("orig,h1")
-    sh[1] = commonindex(Fh1,Fh2)("orig,h1")
+
+    # Get the new set of indices for the next renormalization step
+    sh[1] = findindex(Fh1,"renorm")("orig,h1")
     sh[2] = sh[1]("orig,h2")
-    sv[1] = commonindex(Fv1,Fv2)("orig,v1")
+    sv[1] = findindex(Fv1,"renorm")("orig,v1")
     sv[2] = sv[1]("orig,v2")
 
-    #TODO: replace this with Fh1 = addtags(Fh1,"h1","renorm"), etc.
-    Fh1 = replacetags(Fh1,"renorm","renorm,h1")
-    Fh2 = replacetags(Fh2,"renorm","renorm,h2")
-    Fv1 = replacetags(Fv1,"renorm","renorm,v1")
-    Fv2 = replacetags(Fv2,"renorm","renorm,v2")
+    Fh1 = addtags(Fh1,"h1","renorm")
+    Fh2 = addtags(Fh2,"h2","renorm")
+    Fv1 = addtags(Fv1,"v1","renorm")
+    Fv2 = addtags(Fv2,"v2","renorm")
 
-    Fv1 = replacetags(replacetags(Fv1,"orig,h2","orig,h1"),"orig,v1","orig,v2")
-    Fv2 = replacetags(replacetags(Fv2,"orig,h1","orig,h2"),"orig,v2","orig,v1")
+    Fv1 = replacetags(replacetags(Fv1,"h2","h1","orig"),"v1","v2","orig")
+    Fv2 = replacetags(replacetags(Fv2,"h1","h2","orig"),"v2","v1","orig")
 
     T = replacetags(Fv1*Fh1*Fv2*Fh2,"renorm","orig")
 

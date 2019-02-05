@@ -5,6 +5,114 @@ using ITensors,
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
+@testset "ITensor tagging and priming" begin
+  s1 = Index(2,"Site,s=1")
+  s2 = Index(2,"Site,s=2")
+  l = Index(3,"Link")
+  A1 = randomITensor(s1,l,l')
+  A2 = randomITensor(s2,l',l'')
+  @testset "findindex(::ITensor,::String)" begin
+    @test s1==findindex(A1,"Site")
+    @test s1==findindex(A1,"s=1")
+    @test s1==findindex(A1,"s=1,Site")
+    @test l==findindex(A1,"Link,0")
+    @test l'==findindex(A1,"1")
+    @test l'==findindex(A1,"Link,1")
+    @test s2==findindex(A2,"Site")
+    @test s2==findindex(A2,"s=2")
+    @test s2==findindex(A2,"Site")
+    @test s2==findindex(A2,"0")
+    @test s2==findindex(A2,"s=2,0")
+    @test s2==findindex(A2,"Site,0")
+    @test s2==findindex(A2,"s=2,Site,0")
+    @test l'==findindex(A2,"1")
+    @test l'==findindex(A2,"Link,1")
+    @test l''==findindex(A2,"2")
+    @test l''==findindex(A2,"Link,2")
+  end
+  @testset "addtags(::ITensor,::String,::String)" begin
+    A1u = addtags(A1,"u")
+    @test hasindex(A1u,s1("Site,s=1,u"))
+    @test hasindex(A1u,s1("Site,s=1,u,0"))
+    @test hasindex(A1u,l("Link,u"))
+    @test hasindex(A1u,l("Link,u,0"))
+    @test hasindex(A1u,l("Link,u")')
+    @test hasindex(A1u,l("Link,u,1"))
+
+    A1u = addtags(A1,"u","Link")
+    @test hasindex(A1u,s1)
+    @test hasindex(A1u,s1("Site,s=1"))
+    @test hasindex(A1u,s1("Site,s=1,0"))
+    @test hasindex(A1u,l("Link,u"))
+    @test hasindex(A1u,l("Link,u,0"))
+    @test hasindex(A1u,l("Link,u")')
+    @test hasindex(A1u,l("Link,u,1"))
+
+    A1u = addtags(A1,"u","0")
+    @test hasindex(A1u,s1("Site,s=1,u"))
+    @test hasindex(A1u,s1("Site,s=1,0,u"))
+    @test hasindex(A1u,l("Link,u"))
+    @test hasindex(A1u,l("Link,u,0"))
+    @test hasindex(A1u,l')
+    @test hasindex(A1u,l("Link")')
+    @test hasindex(A1u,l("1,Link"))
+
+    A1u = addtags(A1,"u","Link,0")
+    @test hasindex(A1u,s1)
+    @test hasindex(A1u,s1("Site,s=1"))
+    @test hasindex(A1u,s1("Site,s=1,0"))
+    @test hasindex(A1u,l("Link,u"))
+    @test hasindex(A1u,l("Link,u,0"))
+    @test hasindex(A1u,l')
+    @test hasindex(A1u,l("Link")')
+    @test hasindex(A1u,l("Link,1"))
+
+    A1u = addtags(A1,"u","Link,1")
+    @test hasindex(A1u,s1)
+    @test hasindex(A1u,s1("Site,s=1"))
+    @test hasindex(A1u,s1("Site,s=1,0"))
+    @test hasindex(A1u,l)
+    @test hasindex(A1u,l("Link"))
+    @test hasindex(A1u,l("Link,0"))
+    @test hasindex(A1u,l("Link,u")')
+    @test hasindex(A1u,l("Link,u,1"))
+  end
+  @testset "removetags(::ITensor,::String,::String)" begin
+    A2r = removetags(A2,"Site")
+    @test hasindex(A2r,s2("s=2"))
+    @test hasindex(A2r,l')
+    @test hasindex(A2r,l'')
+
+    A2r = removetags(A2,"Link","1")
+    @test hasindex(A2r,s2)
+    @test hasindex(A2r,l("")')
+    @test hasindex(A2r,l("1"))
+    @test hasindex(A2r,l'')
+  end
+  @testset "replacetags(::ITensor,::String,::String)" begin
+    A2r = replacetags(A2,"Site","Temp")
+    @test hasindex(A2r,s2("Temp,s=2"))
+    @test hasindex(A2r,l')
+    @test hasindex(A2r,l'')
+
+    A2r = replacetags(A2,"Link","Temp")
+    @test hasindex(A2r,s2)
+    @test hasindex(A2r,l("Temp")')
+    @test hasindex(A2r,l("Temp")'')
+
+    A2r = replacetags(A2,"Link","Temp","1")
+    @test hasindex(A2r,s2)
+    @test hasindex(A2r,l("Temp")')
+    @test hasindex(A2r,l'')
+
+    A2r = replacetags(A2,"Link,2","Temp,2")
+    @test hasindex(A2r,s2)
+    @test hasindex(A2r,l')
+    @test hasindex(A2r,l("Temp")'')
+    @test hasindex(A2r,l("Temp,2"))
+  end
+end
+
 @testset "ITensor, Dense{$SType} storage" for SType ∈ (Float64,)#,ComplexF64)
   mi,mj,mk,ml,mα = 2,3,4,5,6,7
   i = Index(mi,"i")

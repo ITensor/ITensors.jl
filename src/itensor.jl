@@ -68,6 +68,8 @@ function setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   return setindex!(T,x,vals...)
 end
 
+findindex(A::ITensor,ts::String) = findindex(inds(A),ts)
+
 function commonindex(A::ITensor,B::ITensor)
   return commonindex(inds(A),inds(B))
 end
@@ -223,6 +225,5 @@ function show(io::IO,
   for i = 1:order(T)
     print(io," ",inds(T)[i])
   end
-  #@printf(io,"\n{%s log(scale)=%.1f}",storageTypeName(store(T)),lnum(scale(T)))
 end
 

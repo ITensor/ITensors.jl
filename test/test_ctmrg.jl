@@ -20,8 +20,8 @@ function ctmrg(T::ITensor,
   Clu11 = 0.5*(Clu11+swaptags(Clu11,"vert","horiz"))
 
   Au11 = randomITensor(lh[1,1],lh[2,1],sv[1])
-  Au11 = 0.5*(Au11+swaptags(Au11,"Link,x1","Link,x2"))
-  Al11 = replacetags(swaptags(Au11,"horiz","vert"),"Link,x2,y1","Link,x1,y2")
+  Au11 = 0.5*(Au11+swaptags(Au11,"x1","x2","Link"))
+  Al11 = replacetags(swaptags(Au11,"horiz","vert"),"x2,y1","x1,y2","Link")
   
   for i = 1:nsteps
     Clu11⁽¹⁾ = Clu11*Au11*Al11*T
@@ -43,7 +43,7 @@ function ctmrg(T::ITensor,
 
     Al11 = replacetags(Al11*Ul11*T*Ul12,"x2","x1")
     Al11 = Al11*(1/norm(Al11))
-    Au11 = replacetags(swaptags(Al11,"horiz","vert"),"Link,x1,y2","Link,x2,y1")
+    Au11 = replacetags(swaptags(Al11,"horiz","vert"),"x1,y2","x2,y1","Link")
   end
   return Clu11,Al11
 end
@@ -67,20 +67,20 @@ end
   Clu11,Al11 = ctmrg(T,sh,sv;χ0=2,χmax=30,nsteps=2000)
 
   # Normalize corner matrix
-  Cru11 = replacetags(Clu11,"vert","vert,right")
-  Crd11 = replacetags(Cru11,"horiz","horiz,down")
-  Cld11 = replacetags(Clu11,"horiz","horiz,down")
+  Cru11 = addtags(Clu11,"right","vert")
+  Crd11 = addtags(Cru11,"down","horiz")
+  Cld11 = addtags(Clu11,"down","horiz")
   Clu11 = Clu11/scalar(Clu11*Cru11*Crd11*Cld11)^(1/4)
 
   # Normalize MPS tensor
-  Cru11 = replacetags(Clu11,"vert","vert,right")
-  Cld12 = replacetags(replacetags(Clu11,"y1","y2"),"horiz","horiz,down")
-  Crd12 = replacetags(replacetags(Cru11,"y1","y2"),"horiz","horiz,down")
-  Ar11 = replacetags(Al11,"vert","vert,right")
+  Cru11 = addtags(Clu11,"right","vert")
+  Cld12 = addtags(replacetags(Clu11,"y1","y2"),"down","horiz")
+  Crd12 = addtags(replacetags(Cru11,"y1","y2"),"down","horiz")
+  Ar11 = addtags(Al11,"right","vert")
   Al11 = Al11/sqrt(scalar(Clu11*Cru11*Al11*Ar11*Cld12*Crd12))
 
   # Calculate partition function per site
-  Au11 = replacetags(swaptags(Al11,"horiz","vert"),"Link,x1,y2","Link,x2,y1")
+  Au11 = replacetags(swaptags(Al11,"horiz","vert"),"x1,y2","x2,y1","Link")
   Ad12 = replacetags(Au11,"y1","y2")
   Ar21 = replacetags(Al11,"x1","x2")
   Cru21 = replacetags(Clu11,"x1","x2")

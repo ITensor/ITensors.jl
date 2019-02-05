@@ -64,6 +64,14 @@ function intersect(Ais::IndexSet,Bis::IndexSet)
   return Cis
 end
 
+function findindex(is::IndexSet,ts::String)
+  tsmatch = TagSet(ts)
+  for j ∈ is
+    tsmatch∈tags(j) && return j
+  end
+  return Index()
+end
+
 function commonindex(Ais::IndexSet,Bis::IndexSet)
   Cis = Ais∩Bis
   if order(Cis)>1 throw(ErrorException("IndexSets have more than one common Index"))
@@ -140,36 +148,36 @@ function swapprime(is::IndexSet,plev1::Int,plev2::Int,imatch::Index=Index())
   return res
 end
 
-function addtags(is::IndexSet,ts::String)
+function addtags(is::IndexSet,ts::String,tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
-    res[jj] = addtags(res[jj],ts)
+    res[jj] = addtags(res[jj],ts,tsmatch)
   end
   return res
 end
 
-function removetags(is::IndexSet,ts::String)
+function removetags(is::IndexSet,ts::String,tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
-    res[jj] = removetags(res[jj],ts)
+    res[jj] = removetags(res[jj],ts,tsmatch)
   end
   return res
 end
 
-function replacetags(is::IndexSet,ts1::String,ts2::String)
+function replacetags(is::IndexSet,ts1::String,ts2::String,tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
-    res[jj] = replacetags(res[jj],ts1,ts2)
+    res[jj] = replacetags(res[jj],ts1,ts2,tsmatch)
   end
   return res
 end
 
-function swaptags(is::IndexSet,ts1::String,ts2::String)
+function swaptags(is::IndexSet,ts1::String,ts2::String,tsmatch::String="")
   res = copy(is)
   tstemp = "e43efds"
-  res = replacetags(res,ts1,tstemp)
-  res = replacetags(res,ts2,ts1)
-  res = replacetags(res,tstemp,ts2)
+  res = replacetags(res,ts1,tstemp,tsmatch)
+  res = replacetags(res,ts2,ts1,tsmatch)
+  res = replacetags(res,tstemp,ts2,tsmatch)
   return res
 end
 

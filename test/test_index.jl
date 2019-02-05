@@ -8,7 +8,7 @@ using ITensors,
     @test dim(i) == 1
     @test dir(i) == Neither
     @test plev(i) == 0
-    @test tags(i) == TagSet("")
+    @test tags(i) == TagSet("0")
   end
   @testset "Index with dim" begin
     i = Index(2)
@@ -16,21 +16,21 @@ using ITensors,
     @test dim(i) == 2
     @test dir(i) == In
     @test plev(i) == 0
-    @test tags(i) == TagSet("")
+    @test tags(i) == TagSet("0")
   end
   @testset "Index with all args" begin
-    i = Index(UInt64(1), 2, In, 1, TagSet("Link"))
+    i = Index(UInt64(1), 2, In, TagSet("Link,1"))
     @test id(i) == 1
     @test dim(i) == 2
     @test dir(i) == In
     @test plev(i) == 1 
-    @test tags(i) == TagSet("Link")
+    @test tags(i) == TagSet("Link,1")
     j = copy(i)
     @test id(j) == 1
     @test dim(j) == 2
     @test dir(j) == In
     @test plev(j) == 1 
-    @test tags(j) == TagSet("Link")
+    @test tags(j) == TagSet("Link,1")
     @test j == i
   end
   @testset "prime" begin

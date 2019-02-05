@@ -33,11 +33,11 @@ function ising_mpo(sh::Vector{Index},sv::Vector{Index},
     Q = [exp(β*J) exp(-β*J); exp(-β*J) exp(β*J)]
     D,U = eigen(Symmetric(Q))
     √Q = U*Diagonal(sqrt.(D))*U'
-    Xh1 = ITensor(vec(√Q),sh[1],prime(sh[1]))
-    Xh2 = ITensor(vec(√Q),sh[2],prime(sh[2]))
-    Xv1 = ITensor(vec(√Q),sv[1],prime(sv[1]))
-    Xv2 = ITensor(vec(√Q),sv[2],prime(sv[2]))
-    T = noprime(T*Xh1*Xh2*Xv1*Xv2)
+    Xh1 = ITensor(vec(√Q),sh[1],sh[1]')
+    Xh2 = ITensor(vec(√Q),sh[2],sh[2]')
+    Xv1 = ITensor(vec(√Q),sv[1],sv[1]')
+    Xv2 = ITensor(vec(√Q),sv[2],sv[2]')
+    T = replacetags(T*Xh1*Xh2*Xv1*Xv2,"1","0")
   else
     sig(s) = 1.0-2.0*(s-1)
     E0 = -4.0

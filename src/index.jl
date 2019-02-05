@@ -16,17 +16,20 @@ struct Index
   id::IDType
   dim::Int
   dir::Arrow
-  plev::Int
   tags::TagSet
   Index(id::IDType,
         dim::Integer,
         dir::Arrow,
-        plev::Integer,
-        tags::TagSet) = new(id,dim,dir,plev,tags)
+        tags::TagSet) = new(id,dim,dir,tags)
 end
 
-Index() = Index(IDType(0),1,Neither,0,TagSet(""))
-Index(dim::Integer,tags::String="") = Index(rand(IDType),dim,In,0,TagSet(tags))
+Index() = Index(IDType(0),1,Neither,TagSet(String[],0))
+function Index(dim::Integer,tags::String="0")
+  ts = TagSet(tags)
+  # By default, an Index has a prime level of 0
+  tsplev = plev(ts)==-1 ? 0 : plev(ts)
+  Index(rand(IDType),dim,In,TagSet(ts.tags,tsplev))
+end
 
 id(i::Index) = i.id
 dim(i::Index) = i.dim
@@ -37,39 +40,44 @@ function dim(i1::Index,inds::Index...)
 end
 dim() = 1
 dir(i::Index) = i.dir
-plev(i::Index) = i.plev
 tags(i::Index) = i.tags
+plev(i::Index) = plev(tags(i))
 
-==(i1::Index,i2::Index) = (id(i1)==id(i2) && plev(i1)==plev(i2) && tags(i1)==tags(i2))
-copy(i::Index) = Index(i.id,i.dim,i.dir,i.plev,copy(i.tags))
+==(i1::Index,i2::Index) = (id(i1)==id(i2) && tags(i1)==tags(i2))
+copy(i::Index) = Index(i.id,i.dim,i.dir,copy(i.tags))
 
-dag(i::Index) = Index(id(i),dim(i),-dir(i),plev(i),tags(i))
+dag(i::Index) = Index(id(i),dim(i),-dir(i),tags(i))
 
 isdefault(i::Index) = (i==Index())
 
+function prime(i::Index,inc::Int=1)
+  return Index(id(i),dim(i),dir(i),prime(tags(i),inc))
+end
+adjoint(i::Index) = prime(i)
 function setprime(i::Index,plev::Int)
-  return Index(id(i),dim(i),dir(i),plev,tags(i))
+  return Index(id(i),dim(i),dir(i),setprime(tags(i),plev))
 end
 noprime(i::Index) = setprime(i,0)
 
-addtags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),addtags(tags(i),TagSet(ts)))
-removetags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),removetags(tags(i),TagSet(ts)))
-settags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),TagSet(ts))
-hastags(i::Index,ts::Union{String,TagSet}) = hastags(tags(i),ts)
-
-#prime!(i::Index,plinc::Int=1) = (i.plev+=plinc; return i)
-function prime(i::Index,inc::Int=1)
-  return Index(id(i),dim(i),dir(i),plev(i)+inc,tags(i))
+addtags(i::Index,ts::String,tsmatch::String="") = Index(id(i),dim(i),dir(i),addtags(tags(i),TagSet(ts),TagSet(tsmatch)))
+removetags(i::Index,ts::String,tsmatch::String="") = Index(id(i),dim(i),dir(i),removetags(tags(i),TagSet(ts),TagSet(tsmatch)))
+function settags(i::Index,ts::String,tsmatch::String="")
+  tagsetmatch = TagSet(tsmatch)
+  (tagsetmatch≠TagSet() && tagsetmatch≠tags(i)) && return i
+  tsnew = TagSet(ts)
+  # By default, an Index has a prime level of 0
+  tsnewplev = plev(tsnew)==-1 ? 0 : plev(tsnew)
+  Index(id(i),dim(i),dir(i),TagSet(tsnew.tags,tsnewplev))
 end
-adjoint(i::Index) = prime(i)
-
 (i::Index)(tags::String) = settags(i,tags)
-function replacetags(i::Index,tsold::String,tsnew::String) 
+hastags(i::Index,ts::Union{String,TagSet}) = hastags(tags(i),ts)
+function replacetags(i::Index,tsold::String,tsnew::String,tsmatch::String="") 
+  tagsetmatch = TagSet(tsmatch)
   tagsetold = TagSet(tsold)
   #TODO: Avoid this copy?
   tagsetold∉tags(i) && return copy(i)
-  itags = addtags(removetags(tags(i),tagsetold),TagSet(tsnew))
-  return Index(id(i),dim(i),dir(i),plev(i),itags)
+  itags = addtags(removetags(tags(i),tagsetold,tagsetmatch),TagSet(tsnew),tagsetmatch)
+  return Index(id(i),dim(i),dir(i),itags)
 end
 
 # Iterating over Index I gives
@@ -79,21 +87,13 @@ next(i::Index,n::Int) = (n,n+1)
 done(i::Index,n::Int) = (n > dim(i))
 colon(n::Int,i::Index) = range(n,dim(i))
 
-function primeString(i::Index)
-  pl = plev(i)
-  if pl == 0 return ""
-  elseif pl > 3 return "'$pl"
-  else return "'"^pl
-  end
-end
-
 function show(io::IO,i::Index) 
-    idstr = "$(id(i) % 1000)"
-    if length(tags(i)) > 0
-      print(io,"($(dim(i)),$(tags(i))|id=$(idstr))$(primeString(i))")
-    else
-      print(io,"($(dim(i))|id=$(idstr))$(primeString(i))")
-    end
+  idstr = "$(id(i) % 1000)"
+  if length(tags(i)) > 0
+    print(io,"($(dim(i)),$(tags(i))|id=$(idstr))$(primestring(tags(i)))")
+  else
+    print(io,"($(dim(i))|id=$(idstr))$(primestring(tags(i)))")
+  end
 end
 
 struct IndexVal
