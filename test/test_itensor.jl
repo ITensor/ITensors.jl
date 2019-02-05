@@ -14,39 +14,39 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
   @testset "Default" begin
     A = ITensor()
-    @test store(A) isa Dense{Nothing}
+    @test store(A) isa Dense{Nothing, Vector{Nothing}}
   end
 
   @testset "Default with indices" begin
     A = ITensor(i,j)
-    @test store(A) isa Dense{Float64}
+    @test store(A) isa Dense{Float64, Vector{Float64}}
   end
 
   @testset "Random" begin
     A = randomITensor(i,j)
-    @test store(A) isa Dense{Float64}
+    @test store(A) isa Dense{Float64, Vector{Float64}}
   end
 
   @testset "From matrix" begin
     M = [1 2; 3 4]
     A = ITensor(M,i,j)
-    @test store(A) isa Dense{Float64}
+    @test store(A) isa Dense{Int64, Matrix{Int64}}
   end
 
   @testset "Complex" begin
-    A = ITensor(Complex,i,j)
-    @test store(A) isa Dense{ComplexF64}
+    A = ITensor(ComplexF64,i,j)
+    @test store(A) isa Dense{ComplexF64, Vector{ComplexF64}}
   end
 
   @testset "Random complex" begin
-    A = randomITensor(Complex,i,j)
-    @test store(A) isa Dense{ComplexF64}
+    A = randomITensor(ComplexF32,i,j)
+    @test store(A) isa Dense{ComplexF32, Vector{ComplexF32}}
   end
 
   @testset "From complex matrix" begin
-    M = [1+2im 2; 3 4]
+    M = [1. + 2im 2.0; 3.0 4.0]
     A = ITensor(M,i,j)
-    @test store(A) isa Dense{ComplexF64}
+    @test store(A) isa Dense{ComplexF64, Matrix{ComplexF64}}
   end
 
 end
@@ -211,7 +211,8 @@ end
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)
-    @test norm(A)≈sqrt(scalar(dag(A)*A))
+    B = dag(A)*A
+    @test norm(A)≈sqrt(scalar(B))
   end
   @testset "Test add ITensors" begin
     A = randomITensor(SType,i,j,k)
@@ -242,7 +243,7 @@ end
         ii = Index(4)
         jj = Index(4)
         S = Diagonal(s)
-        T = ITensor(IndexSet(ii,jj),Dense{ComplexF64}(vec(U*S*Vh)))
+        T = ITensor(IndexSet(ii,jj),Dense{ComplexF64, Vector{ComplexF64}}(vec(U*S*Vh)))
         (U,S,Vh) = svd(T,ii;maxdim=2)
         @test norm(U*S*Vh-T)≈sqrt(s[3]^2+s[4]^2)
     end 
@@ -278,8 +279,8 @@ end # End Dense storage test
 
     S1 = TC+TR
     S2 = TR+TC
-    @test typeof(S1.store) == Dense{ComplexF64}
-    @test typeof(S2.store) == Dense{ComplexF64}
+    @test typeof(S1.store) == Dense{ComplexF64, Vector{ComplexF64}}
+    @test typeof(S2.store) == Dense{ComplexF64, Vector{ComplexF64}}
     for ii=1:dim(i),jj=1:dim(j)
       @test S1[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
       @test S2[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]

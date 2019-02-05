@@ -73,6 +73,8 @@ function davidson(A,
   AV = ITensor[A(phi)]
 
   last_lambda = NaN
+  @show inds(V[1])
+  @show inds(AV[1])
   lambda = dot(V[1],AV[1])
   q = AV[1] - lambda*V[1];
 

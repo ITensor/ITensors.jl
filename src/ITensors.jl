@@ -24,6 +24,7 @@ import Base.adjoint,
        Base.isless,
        Base.iterate,
        Base.length,
+       Base.ndims,
        Base.push!,
        Base.setindex!,
        Base.show,
@@ -82,5 +83,14 @@ include("physics/sitesets/spinhalf.jl")
 include("physics/sitesets/spinone.jl")
 include("physics/sitesets/electron.jl")
 include("physics/sitesets/tj.jl")
+
+using Pkg
+if "CuArrays" ∈ keys(Pkg.installed())
+    include("CuITensors.jl")
+    export cuITensor,
+           randomCuITensor,
+           cuMPS,
+           randomCuMPS
+end
 
 end # module

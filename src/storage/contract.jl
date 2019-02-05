@@ -1,3 +1,18 @@
+# Why do we need to do this?
+# Why not just get the extents from the indices?
+function compute_extents(r::Int,
+                         strides::Vector{Int},
+                         lastx::Int)::Vector{Int}
+  r==0 && return Vector{Int}()
+  exts = Int[]
+  tstr = 1
+  for n in 1:(r-1)
+    push!(exts,strides[n+1]/tstr)
+    tstr *= exts[n]
+  end
+  push!(exts,lastx)
+  return exts
+end
 
 mutable struct CProps
   ai::Vector{Int}
@@ -139,9 +154,9 @@ function permute_extents(R::Vector{Int},P::Vector{Int})::Vector{Int}
 end
 
 function compute!(props::CProps,
-                  A::Array,
-                  B::Array,
-                  C::Array)
+                  A::AbstractArray,
+                  B::AbstractArray,
+                  C::AbstractArray)
   compute_perms!(props)
 
   #Use props.PC.size() as a check to see if we've already run this
@@ -424,7 +439,8 @@ function contract!(C::Array{T},
                    α::T=one(T),
                    β::T=zero(T)) where {T}
 
-
+  # TODO: This is because the permutation convention in C++ ITensor and
+  # permutedims in Julia is different
   tA = 'N'
   if p.permuteA
     aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
@@ -474,12 +490,14 @@ function contract!(C::Array{T},
   if p.permuteC
     permutedims!(C,reshape(cref,p.newCrange...),p.PC)
   end
+  copyto!(C, collect(C))
   return
 end
 
+
 #TODO: this should be optimized
-function contract_scalar!(Cdata::Array,Clabels::Vector{Int},
-                          Bdata::Array,Blabels::Vector{Int},α,β)
+function contract_scalar!(Cdata::AbstractArray,Clabels::Vector{Int},
+                          Bdata::AbstractArray,Blabels::Vector{Int},α,β)
   p = calculate_permutation(Blabels,Clabels)
   if β==0
     if is_trivial_permutation(p)
@@ -518,12 +536,12 @@ end
 
 function contract(Cinds::IndexSet,
                   Clabels::Vector{Int},
-                  Astore::Dense{SA},
+                  Astore::Dense{SA, TA},
                   Ainds::IndexSet,
                   Alabels::Vector{Int},
-                  Bstore::Dense{SB},
+                  Bstore::Dense{SB, TB},
                   Binds::IndexSet,
-                  Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+                  Blabels::Vector{Int}) where {SA<:Number,SB<:Number, TA <: Array, TB <: Array}
   SC = promote_type(SA,SB)
 
   # Convert the arrays to a common type
@@ -536,7 +554,7 @@ function contract(Cinds::IndexSet,
   Cdims = dims(Cinds)
 
   # Create storage for output tensor
-  Cstore = Dense{SC}(prod(Cdims))
+  Cstore = Dense{promote_type(SA,SB), Vector{promote_type(SA,SB)}}(prod(Cdims))
 
   Adata = reshape(data(Astore),Adims)
   Bdata = reshape(data(Bstore),Bdims)

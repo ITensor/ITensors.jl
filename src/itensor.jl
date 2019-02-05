@@ -22,13 +22,13 @@ mutable struct ITensor
   ITensor(is::IndexSet,st::T) where T = new(is,st)
 end
 
-ITensor() = ITensor(IndexSet(),Dense{Nothing}())
+ITensor() = ITensor(IndexSet(),Dense{Nothing,Vector{Nothing}}())
 ITensor(is::IndexSet) = ITensor(Float64,is...)
 ITensor(inds::Index...) = ITensor(IndexSet(inds...))
 
-function ITensor(::Type{T},
-                 inds::IndexSet) where {T<:Number}
-  return ITensor(inds,Dense{float(T)}(zero(float(T)),dim(inds)))
+# ITensor c-tors
+function ITensor(::Type{T},inds::IndexSet) where {T<:Number}
+    return ITensor(inds,Dense{T, Vector{T}}(dim(inds)))
 end
 ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...))
 
@@ -39,7 +39,7 @@ end
 ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
 
 function ITensor(x::S,inds::IndexSet) where {S<:Number}
-  return ITensor(inds,Dense{float(S)}(float(x),dim(inds)))
+    return ITensor(inds,Dense{S, Vector{S}}(x,dim(inds)))
 end
 ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
@@ -48,7 +48,7 @@ function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
   if length(A) ≠ dim(inds)
     error("In ITensor(Array,IndexSet), length of Array must match total dimension of IndexSet")
   end
-  return ITensor(inds,Dense{float(S)}(float(vec(A))))
+  return ITensor(inds,Dense{S, typeof(A)}(A))
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
 
@@ -61,21 +61,22 @@ inds(T::ITensor) = T.inds
 # set operations to work with ITensors
 IndexSet(T::ITensor) = inds(T)
 
-store(T::ITensor) = T.store
+isNull(T::ITensor) = (typeof(store(T)) == Dense{Nothing} || dims(T) == ())
 
+copyto!(R::ITensor,T::ITensor) = (R = copy(T))
+
+inds(T::ITensor) = T.inds
+store(T::ITensor) = T.store
 eltype(T::ITensor) = eltype(store(T))
 
 order(T::ITensor) = order(inds(T))
-
 dims(T::ITensor) = dims(inds(T))
-
 dim(T::ITensor) = dim(inds(T))
-
-isNull(T::ITensor) = (store(T) isa Dense{Nothing})
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
 Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
+CuArray(T::ITensor) = storage_convert(CuArray,store(T),inds(T))
 
 function getindex(T::ITensor,vals::Int...) 
   if order(T) ≠ length(vals) 
@@ -201,18 +202,19 @@ function permute(T::ITensor,permTinds)
   storage_permute!(permTstore,permTis,store(T),inds(T))
   return ITensor(permTis,permTstore)
 end
-permute(T::ITensor,inds::Index...) = permute(T,IndexSet(inds...))
+permute(T::ITensor,new_inds::Index...) = permute(T,IndexSet(new_inds...))
 
-function *(A::ITensor,x::Number)
-    storeB = storage_mult(store(A), x)
-    return ITensor(inds(A),storeB)
-end
+add!(A::ITensor, B::ITensor) = storage_add!(store(A),inds(A),store(B),inds(B))
+
+#TODO: improve these using a storage_mult call
+*(A::ITensor,x::Number) = A*ITensor(x)
 *(x::Number,A::ITensor) = A*x
-#TODO: make a proper element-wise division
-/(A::ITensor,x::Number) = A*(1.0/x)
-
+function /(A::ITensor,x::Number)
+    ITensor(inds(A), (1.0/x)*store(A))
+end
 -(A::ITensor) = -one(eltype(A))*A
 function +(A::ITensor,B::ITensor)
+  #A==B && return 2*A
   C = copy(A)
   add!(C,B)
   return C
@@ -229,6 +231,8 @@ end
 #We can move the logic of getting the integer labels,
 #etc. since they are generic for all storage types
 function *(A::ITensor,B::ITensor)
+  #TODO: Add special case of A==B
+  #A==B && return ITensor(norm(A)^2)
   (Cis,Cstore) = storage_contract(store(A),inds(A),store(B),inds(B))
   C = ITensor(Cis,Cstore)
   return C
