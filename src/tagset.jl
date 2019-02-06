@@ -1,4 +1,6 @@
 
+const Tag = SmallString
+
 struct TagSet
   tags::Vector{String}
   TagSet() = new(Vector{String}())

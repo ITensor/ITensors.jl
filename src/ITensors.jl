@@ -73,7 +73,8 @@ export prime,
 include("smallstring.jl")
 include("tagset.jl")
 export addtags,
-       hastags
+       hastags,
+       Tag
 include("index.jl")
 export adjoint,
        dim,
