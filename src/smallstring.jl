@@ -3,7 +3,15 @@ struct SmallString
   data::SVector{8,UInt8}
 end
 
-SmallString(s::String) = SmallString(unsafe_wrap(Vector{UInt8},s))
+function SmallString(s::String)
+  N = length(s)
+  function g(n::Int)::UInt8
+    (n <= N) && return s[n]
+    return '\0'
+  end
+  return SmallString(ntuple(g,8))
+end
+
 String(ss::SmallString) = prod(Char.(ss.data))
 
 length(s::SmallString) = length(s.data)
