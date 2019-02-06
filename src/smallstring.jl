@@ -5,11 +5,11 @@ end
 
 function SmallString(s::String)
   N = length(s)
-  function g(n::Int)::UInt8
-    (n <= N) && return s[n]
+  function f(n::Int,N_::Int,s_::String)::UInt8
+    (n <= N_) && return s_[n]
     return '\0'
   end
-  return SmallString(ntuple(g,8))
+  return SmallString((f(1,N,s),f(2,N,s),f(3,N,s),f(4,N,s),f(5,N,s),f(6,N,s),f(7,N,s),f(8,N,s)))
 end
 
 String(ss::SmallString) = prod(Char.(ss.data))
