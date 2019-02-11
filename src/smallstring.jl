@@ -3,7 +3,7 @@ struct SmallString
   data::SVector{8,UInt8}
 end
 
-function SmallString(s::String)
+function SmallString(s::String="")
   N = length(s)
   function f(n::Int,N_::Int,s_::String)::UInt8
     (n <= N_) && return s_[n]
