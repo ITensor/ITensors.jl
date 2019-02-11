@@ -1,15 +1,15 @@
 
-struct SmallString
-  data::SVector{8,UInt8}
+function getchar(s::String,N::Int,n::Int)
+  (n <= N) && return UInt8(s[n])
+  return UInt8('\0')
 end
 
-function SmallString(s::String="")
-  N = length(s)
-  function f(n::Int,N_::Int,s_::String)::UInt8
-    (n <= N_) && return s_[n]
-    return '\0'
+struct SmallString
+  data::SVector{8,UInt8}
+  function SmallString(s::String="")
+    N = length(s)
+    return new(@SVector [getchar(s,N,i) for i = 1:8])
   end
-  return SmallString((f(1,N,s),f(2,N,s),f(3,N,s),f(4,N,s),f(5,N,s),f(6,N,s),f(7,N,s),f(8,N,s)))
 end
 
 String(ss::SmallString) = prod(Char.(ss.data))
