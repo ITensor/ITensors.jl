@@ -4,11 +4,13 @@ function getchar(s::String,N::Int,n::Int)
   return UInt8('\0')
 end
 
+const SmallSize = 8
+
 struct SmallString
-  data::SVector{8,UInt8}
+  data::SVector{SmallSize,UInt8}
   function SmallString(s::String="")
     N = length(s)
-    return new(@SVector [getchar(s,N,i) for i = 1:8])
+    return new(@SVector [getchar(s,N,i) for i = 1:SmallSize])
   end
 end
 
@@ -19,7 +21,7 @@ getindex(s::SmallString,n::Integer) = getindex(s.data,n)
  
 function cmp(a::SmallString, b::SmallString)
   return ccall(:memcmp, Int32, (Ptr{UInt8}, Ptr{UInt8}, UInt8),
-               a.data, b.data, 0x08)
+               a.data, b.data, convert(UInt8,SmallSize))
 end
 isless(a::SmallString,b::SmallString) = cmp(a, b) < 0
 
