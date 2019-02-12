@@ -179,7 +179,12 @@ end
 
 function tags(is::IndexSet,ts::AbstractString)
   if occursin("<->",ts) return swaptags(is,split(ts,"<->")...)
-  elseif occursin("->",ts) return replacetags(is,split(ts,"->")...)
+  elseif occursin("->",ts) 
+    res = copy(is)
+    for jj ∈ 1:length(res)
+      res[jj] = tags(res[jj],ts)
+    end
+    return res
   else error("Must use -> to replace tags or <-> to swap tags")
   end
   return IndexSet()

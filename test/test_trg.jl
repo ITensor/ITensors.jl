@@ -1,5 +1,8 @@
 using ITensors,
+      Random,
       Test
+
+Random.seed!(12345)
 
 include("2d_classical_ising.jl")
 
