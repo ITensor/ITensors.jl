@@ -73,23 +73,20 @@ function replacetags(i::Index,tsold::AbstractString,tsnew::AbstractString)
 end
 
 function tags(i::Index,ts::AbstractString)
-  if occursin("->",ts)
-    vts = split(ts,"->")
-    length(vts) > 2 && error("Can only use a single -> when replacing tags of an Index")
-    tsremove,tsadd = vts
-    if tsremove==""
-      return addtags(i,tsadd)
-    #TODO: notation to replace all tags?
-    #elseif tsremove=="all"
-    #  return settags(i,tsadd)
-    elseif tsadd==""
-      return removetags(i,tsremove)
-    else
-      return replacetags(i,tsremove,tsadd)
-    end
-  else error("Must use -> to replace tags of an Index")
+  vts = split(ts,"->")
+  length(vts) == 1 && error("Must use -> to replace tags of an Index")
+  length(vts) > 2 && error("Can only use a single -> when replacing tags of an Index")
+  tsremove,tsadd = vts
+  if tsremove==""
+    return addtags(i,tsadd)
+  #TODO: notation to replace all tags?
+  #elseif tsremove=="all"
+  #  ires = settags(i,tsadd)
+  elseif tsadd==""
+    return removetags(i,tsremove)
+  else
+    return replacetags(i,tsremove,tsadd)
   end
-  return Index()
 end
 
 # Iterating over Index I gives
