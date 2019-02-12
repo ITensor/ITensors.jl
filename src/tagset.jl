@@ -7,9 +7,8 @@ struct TagSet
   TagSet(tags::Vector{String}) = new(sort(tags))
 end
 
-function TagSet(tags::String)
-  vectags = split(tags,",")
-  filter!(s->s!="",vectags)
+function TagSet(tags::AbstractString)
+  vectags = split(tags,",";keepempty=false)
   return TagSet(String.(vectags))
 end
 

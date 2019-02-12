@@ -52,10 +52,10 @@ function setprime(i::Index,plev::Int)
 end
 noprime(i::Index) = setprime(i,0)
 
-addtags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),addtags(tags(i),TagSet(ts)))
-removetags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),removetags(tags(i),TagSet(ts)))
-settags(i::Index,ts::String) = Index(id(i),dim(i),dir(i),plev(i),TagSet(ts))
-hastags(i::Index,ts::Union{String,TagSet}) = hastags(tags(i),ts)
+addtags(i::Index,ts::AbstractString) = Index(id(i),dim(i),dir(i),plev(i),addtags(tags(i),TagSet(ts)))
+removetags(i::Index,ts::AbstractString) = Index(id(i),dim(i),dir(i),plev(i),removetags(tags(i),TagSet(ts)))
+settags(i::Index,ts::AbstractString) = Index(id(i),dim(i),dir(i),plev(i),TagSet(ts))
+hastags(i::Index,ts::Union{AbstractString,TagSet}) = hastags(tags(i),ts)
 
 #prime!(i::Index,plinc::Int=1) = (i.plev+=plinc; return i)
 function prime(i::Index,inc::Int=1)
@@ -63,13 +63,20 @@ function prime(i::Index,inc::Int=1)
 end
 adjoint(i::Index) = prime(i)
 
-(i::Index)(tags::String) = settags(i,tags)
-function replacetags(i::Index,tsold::String,tsnew::String) 
+#(i::Index)(tags::String) = settags(i,tags)
+function replacetags(i::Index,tsold::AbstractString,tsnew::AbstractString) 
   tagsetold = TagSet(tsold)
   #TODO: Avoid this copy?
   tagsetold∉tags(i) && return copy(i)
   itags = addtags(removetags(tags(i),tagsetold),TagSet(tsnew))
   return Index(id(i),dim(i),dir(i),plev(i),itags)
+end
+
+function tags(i::Index,ts::AbstractString)
+  if occursin("->",ts) return replacetags(i,split(ts,"->")...)
+  else error("Must use -> to replace tags or <-> to swap tags")
+  end
+  return Index()
 end
 
 # Iterating over Index I gives

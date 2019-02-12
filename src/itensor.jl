@@ -114,6 +114,9 @@ function swaptags(A::ITensor,vargs...)
   return ITensor(swaptags(inds(A),vargs...),store(A))
 end
 
+function tags(A::ITensor,vargs...)
+  return ITensor(tags(inds(A),vargs...),store(A))
+end
 
 function ==(A::ITensor,B::ITensor)::Bool
   inds(A)!=inds(B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
@@ -186,6 +189,28 @@ function *(A::ITensor,B::ITensor)
   return C
 end
 
+function _applytags!(v::Vector{ITensor},A::ITensor,ts::String,varargs...)
+  return _applytags!(v::Vector{ITensor},tags(A,ts),varargs...)
+  return v
+end
+
+function _applytags!(v::Vector{ITensor},A::ITensor,B::ITensor,varargs...)
+  push!(v,A)
+  _applytags!(v,B,varargs...)
+  return v
+end
+
+function _applytags!(v::Vector{ITensor},A::ITensor)
+  push!(v,A)
+  return v
+end
+
+function contract(A::ITensor,varargs...)
+  v = ITensor[]
+  _applytags!(v,A,varargs...)
+  return *(v...)
+end
+
 function findtags(T::ITensor,
                   tags::String)::Index
   ts = TagSet(tags)
@@ -199,22 +224,33 @@ function findtags(T::ITensor,
 end
 
 function eigen(A::ITensor,
-               left_inds::Index...;
+               left_inds::NTuple{NL,Index},
+               right_inds::NTuple{NR,Index};
                truncate::Int=100,
-               tags::String="Link,u",
-               matrixtype::Type{T}=Hermitian) where {T}
+               lefttags::String="Link,u",
+               righttags::String="Link,v",
+               matrixtype::Type{T}=Hermitian) where {T,NL,NR}
   Lis = IndexSet(left_inds...)
+  Ris = IndexSet(right_inds...)
   #TODO: make this a debug level check
-  Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+  IndexSet(left_inds...,right_inds...) ≠ inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
 
-  Ris = difference(inds(A),Lis)
   #TODO: check if A is already ordered properly
   #and avoid doing this permute, since it makes a copy
   #AND/OR use svd!() to overwrite the data of A to save memory
   A = permute(A,Lis...,Ris...)
   #TODO: More of the index analysis should be moved out of storage_eigen
-  Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris,matrixtype,truncate,tags)
+  Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris,matrixtype,truncate,lefttags,righttags)
   return ITensor(Uis,Ustore),ITensor(Dis,Dstore)
+end
+
+function eigen(A::ITensor,
+               left_tags::NTuple{NL,String},
+               right_tags::NTuple{NR,String};
+               kwargs...) where {NL,NR}
+  Linds = NTuple{NL}((findtags(A,tags) for tags ∈ left_tags))
+  Rinds = NTuple{NR}((findtags(A,tags) for tags ∈ right_tags))
+  return eigen(A,Linds,Rinds;kwargs...)
 end
 
 function show(io::IO,
@@ -223,6 +259,5 @@ function show(io::IO,
   for i = 1:order(T)
     print(io," ",inds(T)[i])
   end
-  #@printf(io,"\n{%s log(scale)=%.1f}",storageTypeName(store(T)),lnum(scale(T)))
 end
 
