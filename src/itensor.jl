@@ -212,7 +212,7 @@ function contract(A::ITensor,varargs...)
 end
 
 function findtags(T::ITensor,
-                  tags::String)::Index
+                  tags::String)
   ts = TagSet(tags)
   for i in inds(T)
     if hastags(i,ts)
@@ -221,6 +221,18 @@ function findtags(T::ITensor,
   end
   error("findtags: ITensor has no Index with given tags: $ts")
   return Index()
+end
+
+function findinds(T::ITensor,
+                  tags::String)
+  vinds = Index[]
+  ts = TagSet(tags)
+  for i in inds(T)
+    if hastags(i,ts)
+      push!(vinds,i)
+    end
+  end
+  return vinds
 end
 
 function eigen(A::ITensor,
@@ -248,9 +260,22 @@ function eigen(A::ITensor,
                left_tags::NTuple{NL,String},
                right_tags::NTuple{NR,String};
                kwargs...) where {NL,NR}
-  Linds = NTuple{NL}((findtags(A,tags) for tags ∈ left_tags))
-  Rinds = NTuple{NR}((findtags(A,tags) for tags ∈ right_tags))
-  return eigen(A,Linds,Rinds;kwargs...)
+  Linds = Index[] 
+  Rinds = Index[]
+  for tags ∈ left_tags
+    push!(Linds,findinds(A,tags)...)
+  end
+  for tags ∈ right_tags
+    push!(Rinds,findinds(A,tags)...)
+  end
+  return eigen(A,NTuple{length(Linds),Index}(Linds),NTuple{length(Rinds),Index}(Rinds);kwargs...)
+end
+
+function eigen(A::ITensor,
+               left_tags::String,
+               right_tags::String;
+               kwargs...) where {NL,NR}
+  return eigen(A,(left_tags,),(right_tags,);kwargs...)
 end
 
 function show(io::IO,

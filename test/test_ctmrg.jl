@@ -22,9 +22,10 @@ function ctmrg(T::ITensor,
                       T)
     
     ## Diagonalize the grown CTM
-    Ud,Cdr = eigen(Clu⁽¹⁾,("link,down","site,down"),
-                          ("link,right","site,right");
-                   truncate=χmax,lefttags="link,down,renorm",righttags="link,right,renorm")
+    Ud,Cdr = eigen(Clu⁽¹⁾,"down","right";
+                   truncate=χmax,
+                   lefttags="link,down,renorm",
+                   righttags="link,right,renorm")
 
     ## The renormalized CTM is the diagonal matrix of eigenvalues
     Clu = tags(Cdr,"renorm->orig",
