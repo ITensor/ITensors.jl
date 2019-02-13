@@ -1,97 +1,107 @@
 using ITensors,
+      Random,
       Test
+
+Random.seed!(12345)
 
 include("2d_classical_ising.jl")
 
 function ctmrg(T::ITensor,
-               sh::Vector{Index},
-               sv::Vector{Index};
-               χ0::Int,χmax::Int,nsteps::Int)
-  Nx,Ny = 2,2
-  l = Index(χ0,"Link")
-  lh = fill(Index(),(Nx,Ny))
-  lv = fill(Index(),(Nx,Ny))
-  for i = 1:Nx, j = 1:Ny
-    lh[i,j] = addtags(l,"horiz,x$i,y$j")
-    lv[i,j] = addtags(l,"vert,x$i,y$j")
-  end
-
-  Clu11 = randomITensor(lv[1,1],lh[1,1])
-  Clu11 = 0.5*(Clu11+swaptags(Clu11,"vert","horiz"))
-
-  Au11 = randomITensor(lh[1,1],lh[2,1],sv[1])
-  Au11 = 0.5*(Au11+swaptags(Au11,"Link,x1","Link,x2"))
-  Al11 = replacetags(swaptags(Au11,"horiz","vert"),"Link,x2,y1","Link,x1,y2")
-  
+               Clu::ITensor,
+               Al::ITensor;
+               χmax::Int,nsteps::Int)
+  tags(Clu,"link -> link,orig")
+  tags(Al,"link -> link,orig")
   for i = 1:nsteps
-    Clu11⁽¹⁾ = Clu11*Au11*Al11*T
+    ## Get the grown corner transfer matrix (CTM)
+    Au = tags(Al,"link,down -> link,left",
+                 "link,up -> link,right",
+                 "site,left -> site,up")
+    Clu⁽¹⁾ = Clu*Al*Au*T
     
-    Ul12,Clu22 = eigen(Clu11⁽¹⁾,lv[1,2],sv[2];truncate=χmax,tags="Link,vert,x2,y2")
-    Ul11 = replacetags(Ul12,"y2","y1")
-    Ur21 = replacetags(swaptags(Ul12,"horiz","vert"),"x1,y2","x2,y1")
+    ## Diagonalize the grown CTM
+    Ud,Cdr = eigen(Clu⁽¹⁾,"down","right";
+                   truncate=χmax,
+                   lefttags="link,down,renorm",
+                   righttags="link,right,renorm")
 
-    # Update the links
-    l = commonindex(Ul12,Clu22)("Link")
-    for i = 1:Nx, j = 1:Ny
-      lh[i,j] = addtags(l,"horiz,x$i,y$j")
-      lv[i,j] = addtags(l,"vert,x$i,y$j")
-    end
+    ## The renormalized CTM is the diagonal matrix of eigenvalues
+    Clu = tags(Cdr,"renorm -> orig",
+                   "down -> up",
+                   "right -> left")
+    Clu = Clu/norm(Clu)
 
-    #TODO: get this from the eigen diagonals
-    Clu11 = replacetags(Ul12*Al11*T*Clu11*Au11*Ur21,"x2,y2","x1,y1")
-    Clu11 = Clu11*(1/norm(Clu11))
-
-    Al11 = replacetags(Al11*Ul11*T*Ul12,"x2","x1")
-    Al11 = Al11*(1/norm(Al11))
-    Au11 = replacetags(swaptags(Al11,"horiz","vert"),"Link,x1,y2","Link,x2,y1")
+    ## Calculate the renormalized half row transfer matrix (HRTM)
+    Al = Al*tags(Ud,"down -> up")*T*Ud
+    Al = tags(Al,"renorm -> orig",
+                 "site,right -> site,left")
+    Al = Al/norm(Al)
   end
-  return Clu11,Al11
+  tags(Clu,"orig -> ")
+  tags(Al,"orig -> ")
+  return Clu,Al
 end
 
 @testset "ctmrg" begin
   # Make Ising model MPO
   β = 1.1*βc
   d = 2
-  s = Index(d,"Site")
-  Nx,Ny = 2,2
-  sh = fill(Index(),Nx)
-  sv = fill(Index(),Ny)
-  for i = 1:Nx
-    sh[i] = addtags(s,"horiz,x$i,y1")
-  end
-  for j = 1:Ny
-    sv[j] = addtags(s,"vert,x1,y$j")
-  end
-  T = ising_mpo(sh,sv,β)
+  s = Index(d,"site")
+  sl = tags(s," -> left")
+  sr = tags(s," -> right")
+  su = tags(s," -> up")
+  sd = tags(s," -> down")
 
-  Clu11,Al11 = ctmrg(T,sh,sv;χ0=2,χmax=30,nsteps=2000)
+  T = ising_mpo((sl,sr),(su,sd),β)
+
+  χ0 = 1
+  l = Index(χ0,"link")
+  ll = tags(l," -> left")
+  lu = tags(l," -> up")
+  ld = tags(l," -> down")
+
+  Clu = randomITensor(lu,ll)
+  Al = randomITensor(lu,ld,sl)
+
+  Clu = 0.5*(Clu+tags(Clu,"up <-> left"))
+  Al = 0.5*(Al+tags(Al,"up <-> down"))
+
+  Clu,Al = ctmrg(T,Clu,Al;χmax=30,nsteps=2000)
 
   # Normalize corner matrix
-  Cru11 = replacetags(Clu11,"vert","vert,right")
-  Crd11 = replacetags(Cru11,"horiz","horiz,down")
-  Cld11 = replacetags(Clu11,"horiz","horiz,down")
-  Clu11 = Clu11/scalar(Clu11*Cru11*Crd11*Cld11)^(1/4)
+  trC⁴ = Clu*tags(Clu,"up -> up,prime")*
+         tags(Clu," -> prime")*tags(Clu,"left -> left,prime")
+  Clu = Clu/scalar(trC⁴)^(1/4)
 
   # Normalize MPS tensor
-  Cru11 = replacetags(Clu11,"vert","vert,right")
-  Cld12 = replacetags(replacetags(Clu11,"y1","y2"),"horiz","horiz,down")
-  Crd12 = replacetags(replacetags(Cru11,"y1","y2"),"horiz","horiz,down")
-  Ar11 = replacetags(Al11,"vert","vert,right")
-  Al11 = Al11/sqrt(scalar(Clu11*Cru11*Al11*Ar11*Cld12*Crd12))
+  trA² = Clu*tags(Clu,"up -> up,prime")*Al*
+         tags(Al,"link -> link,prime")*
+         tags(Clu,"up -> down,prime","left -> left,prime")*
+         tags(Clu,"left -> left,prime","up -> down")
+  Al = Al/sqrt(scalar(trA²))
 
-  # Calculate partition function per site
-  Au11 = replacetags(swaptags(Al11,"horiz","vert"),"Link,x1,y2","Link,x2,y1")
-  Ad12 = replacetags(Au11,"y1","y2")
-  Ar21 = replacetags(Al11,"x1","x2")
-  Cru21 = replacetags(Clu11,"x1","x2")
-  Crd22 = replacetags(Cru21,"y1","y2")
-  Cld12 = replacetags(Clu11,"y1","y2")
-  κ = scalar(Al11*Clu11*Au11*T*Cld12*Cru21*Ad12*Ar21*Crd22)
+  ## Get environment tensors for a single site measurement
+  Ar = tags(Al,"site,left -> site,right",
+               "link -> link,prime")
+  Au = tags(Al,"site,left -> site,up",
+               "link,down -> link,left",
+               "link,up -> link,right")
+  Ad = tags(Au,"site,up -> site,down",
+               "link -> link,prime")
+  Cld = tags(Clu,"up -> down",
+                 "left -> left,prime")
+  Cru = tags(Clu,"left -> right",
+                 "up -> up,prime")
+  Crd = tags(Cru,"right -> right,prime",
+                 "up -> down")
+
+  ## Calculate partition function per site
+  κ = scalar(Clu*Al*Cld*Au*T*Ad*Cru*Ar*Crd)
   @test κ≈exp(-β*ising_free_energy(β))
   
-  # Calculate magnetization
-  Tsz = ising_mpo(sh,sv,β;sz=true)
-  m = scalar(Al11*Clu11*Au11*Tsz*Cld12*Cru21*Ad12*Ar21*Crd22)/κ
+  ## Calculate magnetization
+  Tsz = ising_mpo((sl,sr),(su,sd),β;sz=true)
+  m = scalar(Clu*Al*Cld*Au*Tsz*Ad*Cru*Ar*Crd)/κ
   @test abs(m)≈ising_magnetization(β)
 end
 

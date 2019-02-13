@@ -123,7 +123,7 @@ function storage_svd(Astore::Dense{T},
   end
 
   u = Index(dS,utags)
-  v = u(vtags)
+  v = settags(u,vtags)
   Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
   #TODO: make a diag storage
   Sis,Sstore = IndexSet(u,v),Dense{Float64}(vec(Matrix(Diagonal(MS))))
@@ -132,15 +132,15 @@ function storage_svd(Astore::Dense{T},
   return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
 end
 
-function storage_eigen(Astore::T,Lis::IndexSet,Ris::IndexSet,matrixtype::Type{S},truncate::Int,tags::String) where {T<:Dense,S}
+function storage_eigen(Astore::T,Lis::IndexSet,Ris::IndexSet,matrixtype::Type{S},truncate::Int,lefttags::String,righttags::String) where {T<:Dense,S}
   dim_left = dim(Lis)
   dim_right = dim(Ris)
   MD,MU = eigen(S(reshape(data(Astore),dim_left,dim_right)))
 
   #TODO: include truncation parameters as keyword arguments
   dim_middle = min(dim_left,dim_right,truncate)
-  u = Index(dim_middle,tags)
-  v = prime(u)
+  u = Index(dim_middle,lefttags)
+  v = settags(u,righttags)
   Uis,Ustore = IndexSet(Lis...,u),T(vec(MU[:,1:dim_middle]))
   #TODO: make a diag storage
   Dis,Dstore = IndexSet(u,v),T(vec(Matrix(Diagonal(MD[1:dim_middle]))))

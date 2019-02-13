@@ -1,7 +1,10 @@
 using ITensors,
       LinearAlgebra, # For tr()
       Combinatorics, # For permutations()
+      Random,        # To set a seed
       Test
+
+Random.seed!(12345)
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 

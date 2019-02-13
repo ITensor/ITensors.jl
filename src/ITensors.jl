@@ -107,8 +107,10 @@ include("itensor.jl")
 export svd,
        qr,
        polar,
+       eigen,
        norm,
        commonindex,
+       findtags,
        commoninds,
        delta,
        δ
