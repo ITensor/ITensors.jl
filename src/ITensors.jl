@@ -1,6 +1,8 @@
 
 module ITensors
 
+const Number64 = Union{Float64,ComplexF64}
+
 using Random,
       Permutations,
       Printf,

@@ -20,9 +20,9 @@ copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 
 storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
 
-function storage_getindex(Tstore::Dense,
+function storage_getindex(Tstore::Dense{T},
                           Tis::IndexSet,
-                          vals::Int...)
+                          vals::Int...)::T where {T}
   return getindex(reshape(data(Tstore),dims(Tis)),vals...)
 end
 

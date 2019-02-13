@@ -53,8 +53,8 @@ copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 convert(::Type{Array},T::ITensor) = storage_convert(Array,store(T),inds(T))
 Array(T::ITensor) = convert(Array,T::ITensor)
 
-getindex(T::ITensor) = storage_getindex(store(T),inds(T))
-getindex(T::ITensor,vals::Int...) = storage_getindex(store(T),inds(T),vals...)
+getindex(T::ITensor)::Number64 = storage_getindex(store(T),inds(T))
+getindex(T::ITensor,vals::Int...)::Number64 = storage_getindex(store(T),inds(T),vals...)
 function getindex(T::ITensor,ivs::IndexVal...)
   p = calculate_permutation(inds(T),ivs)
   vals = val.(ivs)[p]
