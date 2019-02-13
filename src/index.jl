@@ -73,6 +73,7 @@ function replacetags(i::Index,tsold::AbstractString,tsnew::AbstractString)
 end
 
 function tags(i::Index,ts::AbstractString)
+  ts = filter(x -> !isspace(x),ts)
   vts = split(ts,"->")
   length(vts) == 1 && error("Must use -> to replace tags of an Index")
   length(vts) > 2 && error("Can only use a single -> when replacing tags of an Index")

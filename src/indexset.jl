@@ -178,6 +178,8 @@ function tags(is::IndexSet,ts1::AbstractString,ts::AbstractString...)
 end
 
 function tags(is::IndexSet,ts::AbstractString)
+  # Remove white space
+  ts = filter(x -> !isspace(x),ts)
   if occursin("<->",ts) return swaptags(is,split(ts,"<->")...)
   elseif occursin("->",ts) 
     res = copy(is)

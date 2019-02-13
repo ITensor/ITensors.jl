@@ -40,20 +40,16 @@ function trg(T::ITensor;
     Fr,Fl = factorize(T,("left","up"),("right","down");maxm=χmax,tags="renorm")
     Fd,Fu = factorize(T,("right","up"),("left","down");maxm=χmax,tags="renorm")
 
-    Fl = tags(Fl,"renorm->renorm,left")
-    Fr = tags(Fr,"renorm->renorm,right")
-    Fu = tags(Fu,"renorm->renorm,up")
-    Fd = tags(Fd,"renorm->renorm,down")
+    Fl = tags(Fl,"renorm -> renorm,left")
+    Fr = tags(Fr,"renorm -> renorm,right")
+    Fu = tags(Fu,"renorm -> renorm,up")
+    Fd = tags(Fd,"renorm -> renorm,down")
 
-    T = contract(Fl,"orig,down->downleft",
-                    "orig,right->upleft",
-                 Fu,"orig,left->upleft",
-                    "orig,down->upright",
-                 Fr,"orig,up->upright",
-                    "orig,left->downright",
-                 Fd,"orig,right->downright",
-                    "orig,up->downleft")
-    T = tags(T,"renorm->orig")
+    T = tags(Fl,"orig,down -> downleft","orig,right -> upleft")*
+        tags(Fu,"orig,left -> upleft","orig,down -> upright")* 
+        tags(Fr,"orig,up -> upright","orig,left -> downright")*
+        tags(Fd,"orig,right -> downright","orig,up -> downleft")
+    T = tags(T,"renorm -> orig")
 
     trT = abs(scalar(trace(T,("left","right"),("up","down"))))
     T = T/trT
@@ -68,10 +64,10 @@ end
   β = 1.1*βc
   d = 2
   s = Index(d)
-  l = tags(s,"->left")
-  r = tags(s,"->right")
-  u = tags(s,"->up")
-  d = tags(s,"->down")
+  l = tags(s," -> left")
+  r = tags(s," -> right")
+  u = tags(s," -> up")
+  d = tags(s," -> down")
   T = ising_mpo((l,r),(u,d),β)
 
   χmax = 20

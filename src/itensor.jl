@@ -189,28 +189,6 @@ function *(A::ITensor,B::ITensor)
   return C
 end
 
-function _applytags!(v::Vector{ITensor},A::ITensor,ts::String,varargs...)
-  return _applytags!(v::Vector{ITensor},tags(A,ts),varargs...)
-  return v
-end
-
-function _applytags!(v::Vector{ITensor},A::ITensor,B::ITensor,varargs...)
-  push!(v,A)
-  _applytags!(v,B,varargs...)
-  return v
-end
-
-function _applytags!(v::Vector{ITensor},A::ITensor)
-  push!(v,A)
-  return v
-end
-
-function contract(A::ITensor,varargs...)
-  v = ITensor[]
-  _applytags!(v,A,varargs...)
-  return *(v...)
-end
-
 function findtags(T::ITensor,
                   tags::String)
   ts = TagSet(tags)
