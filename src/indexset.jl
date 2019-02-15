@@ -181,6 +181,25 @@ function swaptags(is::IndexSet,ts1::String,ts2::String,tsmatch::String="")
   return res
 end
 
+function tags(is::IndexSet,ts1::AbstractString,ts::AbstractString...)
+  tags(tags(is,ts1),ts...)
+end
+
+function tags(is::IndexSet,ts::AbstractString)
+  # Remove white space
+  ts = filter(x -> !isspace(x),ts)
+  if occursin("<->",ts) return swaptags(is,split(ts,"<->")...)
+  elseif occursin("->",ts) 
+    res = copy(is)
+    for jj ∈ 1:length(res)
+      res[jj] = tags(res[jj],ts)
+    end
+    return res
+  else error("Must use -> to replace tags or <-> to swap tags")
+  end
+  return IndexSet()
+end
+
 function calculate_permutation(set1,set2)
   l1 = length(set1)
   l2 = length(set2)

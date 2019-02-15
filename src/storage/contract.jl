@@ -52,7 +52,7 @@ mutable struct CProps
   end
 end
 
-function compute_perms!(props::CProps)
+function compute_perms!(props::CProps)::Nothing
   #Use !AtoB.empty() as a check to see if we've already run this
   length(props.AtoB)!=0 && return
 

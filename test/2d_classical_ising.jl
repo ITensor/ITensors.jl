@@ -20,7 +20,7 @@ function ising_magnetization(β::Real)
  return 0.0
 end
 
-function ising_mpo(sh::Vector{Index},sv::Vector{Index},
+function ising_mpo(sh::Tuple{Index,Index},sv::Tuple{Index,Index},
                    β::Real,J::Real=1.0;
                    sz::Bool=false,dual_lattice::Bool=true)
   d = dim(sh[1])

@@ -1,6 +1,8 @@
 
 module ITensors
 
+const Number64 = Union{Float64,ComplexF64}
+
 using Random,
       Permutations,
       Printf,
@@ -73,7 +75,8 @@ export prime,
 include("smallstring.jl")
 include("tagset.jl")
 export addtags,
-       hastags
+       hastags,
+       Tag
 include("index.jl")
 export adjoint,
        dim,
@@ -104,9 +107,11 @@ include("itensor.jl")
 export svd,
        qr,
        polar,
+       eigen,
        norm,
        findindex,
        commonindex,
+       findtags,
        commoninds,
        delta,
        δ

@@ -69,7 +69,6 @@ function settags(i::Index,ts::String,tsmatch::String="")
   tsnewplev = plev(tsnew)==-1 ? 0 : plev(tsnew)
   Index(id(i),dim(i),dir(i),TagSet(tsnew.tags,tsnewplev))
 end
-(i::Index)(tags::String) = settags(i,tags)
 hastags(i::Index,ts::Union{String,TagSet}) = hastags(tags(i),ts)
 function replacetags(i::Index,tsold::String,tsnew::String,tsmatch::String="") 
   tagsetmatch = TagSet(tsmatch)
@@ -78,6 +77,24 @@ function replacetags(i::Index,tsold::String,tsnew::String,tsmatch::String="")
   tagsetold∉tags(i) && return copy(i)
   itags = addtags(removetags(tags(i),tagsetold,tagsetmatch),TagSet(tsnew),tagsetmatch)
   return Index(id(i),dim(i),dir(i),itags)
+end
+
+function tags(i::Index,ts::AbstractString)
+  ts = filter(x -> !isspace(x),ts)
+  vts = split(ts,"->")
+  length(vts) == 1 && error("Must use -> to replace tags of an Index")
+  length(vts) > 2 && error("Can only use a single -> when replacing tags of an Index")
+  tsremove,tsadd = vts
+  if tsremove==""
+    return addtags(i,tsadd)
+  #TODO: notation to replace all tags?
+  #elseif tsremove=="all"
+  #  ires = settags(i,tsadd)
+  elseif tsadd==""
+    return removetags(i,tsremove)
+  else
+    return replacetags(i,tsremove,tsadd)
+  end
 end
 
 # Iterating over Index I gives
