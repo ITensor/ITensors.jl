@@ -31,11 +31,35 @@ function trace(A::ITensor,tags::Tuple{String,String})
   return A*δ(i1,i2)
 end
 
+"""
+trg(T::ITensor; χmax::Int, nsteps::Int) -> κ,T
+
+Perform the TRG algorithm on the partition function composed of the ITensor T.
+T is assumed to have Indices with tags "left", "right", "up", and "down".
+
+The indices of T must obey: 
+
+`findindex(T,"left") = tags(findindex(T,"right"),"right->left")`
+
+`findindex(T,"up") = tags(findindex(T,"down"),"down->up")`
+
+χmax is the maximum renormalized bond dimension.
+
+nsteps are the number of renormalization steps performed.
+
+The outputs are κ, the partition function per site, and the final renormalized
+ITensor T (also with Indices with tags "left","right","up", and "down").
+"""
 function trg(T::ITensor;
-             χmax::Int,nsteps::Int)
-  #Keep track of the partition function per site
+             χmax::Int, nsteps::Int)
+  # Check tags are correct
+  @assert findtags(T,"left") == tags(findtags(T,"right"),"right->left")
+  @assert findtags(T,"up") == tags(findtags(T,"down"),"down->up")
+  
+  # Keep track of the partition function per site
   κ = 1.0
-  T = tags(T,"->orig")
+
+  T = tags(T," -> orig")
   for n = 1:nsteps
     Fr,Fl = factorize(T,("left","up"),("right","down");maxm=χmax,tags="renorm")
     Fd,Fu = factorize(T,("right","up"),("left","down");maxm=χmax,tags="renorm")
