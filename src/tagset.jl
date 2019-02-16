@@ -8,7 +8,7 @@ struct TagSet
   TagSet(tags::Vector{String},plev::Int=-1) = new(sort(tags),plev)
 end
 
-function TagSet(tags::String)
+function TagSet(tags::AbstractString)
   vectags = split(tags,",")
   #If not specified, prime level starts at -1
   plev = -1
@@ -56,7 +56,7 @@ hastags(ts::TagSet,s::String) = in(TagSet(s),ts)
 #TODO: optimize this code to not
 #scan through all of the tags so many times
 function addtags(ts::TagSet,tsadd::TagSet,tsmatch::TagSet=TagSet())
-  (plev(ts)≥0 && plev(tsadd)≥0) && error("In addtags(), this TagSet already has a prime tag, cannot add another")
+  (plev(ts)≥0 && plev(tsadd)≥0) && error("In addtags(::TagSet,...), cannot add a prime level")
   restags = copy(ts.tags)
   resplev = ts.plev
   (tsmatch≠TagSet() && tsmatch∉ts) && return TagSet(restags,resplev)
@@ -70,13 +70,35 @@ end
 
 #TODO: optimize this function
 function removetags(ts::TagSet,tsremove::TagSet,tsmatch::TagSet=TagSet())
+  plev(tsremove)≥0 && error("In removetags(::TagSet,...), cannot remove a prime level")
   restags = copy(ts.tags)
   resplev = ts.plev
   (tsmatch≠TagSet() && tsmatch∉ts) && return TagSet(restags,resplev)
   for t in tsremove.tags
     t∈restags && deleteat!(restags,findfirst(isequal(t),restags))
   end
-  (plev(ts)≥0 && plev(ts)==plev(tsremove)) && (resplev = -1)
+  #(plev(ts)≥0 && plev(ts)==plev(tsremove)) && (resplev = -1)
+  return TagSet(restags,resplev)
+end
+
+#TODO: optimize this function
+function replacetags(ts::TagSet,tsremove::TagSet,tsadd::TagSet,tsmatch::TagSet=TagSet())
+  if (plev(tsremove)≥0 && plev(tsadd)<0) || (plev(tsremove)<0 && plev(tsadd)≥0)
+    error("In replacetags(::TagSet,...), cannot remove or add a prime level")
+  end
+  restags = copy(ts.tags)
+  resplev = ts.plev
+  (tsmatch≠TagSet() && tsmatch∉ts) && return TagSet(restags,resplev)
+  for t in tsremove.tags
+    t ∉ ts.tags && return TagSet(restags,resplev)
+  end
+  for t in tsremove.tags
+    deleteat!(restags,findfirst(isequal(t),restags))
+  end
+  for t in tsadd.tags
+    push!(restags,t)
+  end
+  (plev(ts)≥0 && plev(ts)==plev(tsremove)) && (resplev = plev(tsadd))
   return TagSet(restags,resplev)
 end
 

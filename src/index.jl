@@ -59,9 +59,9 @@ function setprime(i::Index,plev::Int)
 end
 noprime(i::Index) = setprime(i,0)
 
-addtags(i::Index,ts::String,tsmatch::String="") = Index(id(i),dim(i),dir(i),addtags(tags(i),TagSet(ts),TagSet(tsmatch)))
-removetags(i::Index,ts::String,tsmatch::String="") = Index(id(i),dim(i),dir(i),removetags(tags(i),TagSet(ts),TagSet(tsmatch)))
-function settags(i::Index,ts::String,tsmatch::String="")
+addtags(i::Index,ts::AbstractString,tsmatch::String="") = Index(id(i),dim(i),dir(i),addtags(tags(i),TagSet(ts),TagSet(tsmatch)))
+removetags(i::Index,ts::AbstractString,tsmatch::String="") = Index(id(i),dim(i),dir(i),removetags(tags(i),TagSet(ts),TagSet(tsmatch)))
+function settags(i::Index,ts::AbstractString,tsmatch::String="")
   tagsetmatch = TagSet(tsmatch)
   (tagsetmatch≠TagSet() && tagsetmatch≠tags(i)) && return i
   tsnew = TagSet(ts)
@@ -69,13 +69,15 @@ function settags(i::Index,ts::String,tsmatch::String="")
   tsnewplev = plev(tsnew)==-1 ? 0 : plev(tsnew)
   Index(id(i),dim(i),dir(i),TagSet(tsnew.tags,tsnewplev))
 end
+(i::Index)(ts::String) = settags(i,ts)
 hastags(i::Index,ts::Union{String,TagSet}) = hastags(tags(i),ts)
-function replacetags(i::Index,tsold::String,tsnew::String,tsmatch::String="") 
+function replacetags(i::Index,tsold::AbstractString,tsnew::AbstractString,tsmatch::String="") 
   tagsetmatch = TagSet(tsmatch)
+  tagsetnew = TagSet(tsnew)
   tagsetold = TagSet(tsold)
   #TODO: Avoid this copy?
   tagsetold∉tags(i) && return copy(i)
-  itags = addtags(removetags(tags(i),tagsetold,tagsetmatch),TagSet(tsnew),tagsetmatch)
+  itags = replacetags(tags(i),tagsetold,tagsetnew,tagsetmatch)
   return Index(id(i),dim(i),dir(i),itags)
 end
 

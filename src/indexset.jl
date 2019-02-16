@@ -148,7 +148,7 @@ function swapprime(is::IndexSet,plev1::Int,plev2::Int,imatch::Index=Index())
   return res
 end
 
-function addtags(is::IndexSet,ts::String,tsmatch::String="")
+function addtags(is::IndexSet,ts::AbstractString,tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
     res[jj] = addtags(res[jj],ts,tsmatch)
@@ -156,7 +156,7 @@ function addtags(is::IndexSet,ts::String,tsmatch::String="")
   return res
 end
 
-function removetags(is::IndexSet,ts::String,tsmatch::String="")
+function removetags(is::IndexSet,ts::AbstractString,tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
     res[jj] = removetags(res[jj],ts,tsmatch)
@@ -164,7 +164,7 @@ function removetags(is::IndexSet,ts::String,tsmatch::String="")
   return res
 end
 
-function replacetags(is::IndexSet,ts1::String,ts2::String,tsmatch::String="")
+function replacetags(is::IndexSet,ts1::AbstractString,ts2::AbstractString,tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
     res[jj] = replacetags(res[jj],ts1,ts2,tsmatch)
@@ -172,7 +172,7 @@ function replacetags(is::IndexSet,ts1::String,ts2::String,tsmatch::String="")
   return res
 end
 
-function swaptags(is::IndexSet,ts1::String,ts2::String,tsmatch::String="")
+function swaptags(is::IndexSet,ts1::AbstractString,ts2::AbstractString,tsmatch::String="")
   res = copy(is)
   tstemp = "e43efds"
   res = replacetags(res,ts1,tstemp,tsmatch)
