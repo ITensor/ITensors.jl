@@ -68,6 +68,8 @@ function setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   return setindex!(T,x,vals...)
 end
 
+findindex(A::ITensor,ts::String) = findindex(inds(A),ts)
+
 function commonindex(A::ITensor,B::ITensor)
   return commonindex(inds(A),inds(B))
 end
