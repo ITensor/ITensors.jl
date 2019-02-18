@@ -132,5 +132,21 @@ export MPS,
        overlap,
        randomMPS
 
+include("mps/mpo.jl")
+export MPO
+
+include("mps/sweeps.jl")
+export Sweeps,
+       nsweep,
+       maxm,
+       minm,
+       cutoff,
+       maxm!,
+       minm!,
+       cutoff!,
+       sweepnext
+
+include("mps/dmrg.jl")
+export dmrg!
 
 end # module
