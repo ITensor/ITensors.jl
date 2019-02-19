@@ -156,6 +156,7 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[j(jj),k(kk),i(ii)]==digits(SType,ii,jj,kk)
     end
+    @test_throws ErrorException A[1]
   end
   @testset "Test permute(ITensor,Index...)" begin
     A = randomITensor(SType,i,k,j)

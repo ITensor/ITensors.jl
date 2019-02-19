@@ -50,11 +50,13 @@ dim(T::ITensor) = dim(inds(T))
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
-convert(::Type{Array},T::ITensor) = storage_convert(Array,store(T),inds(T))
-Array(T::ITensor) = convert(Array,T::ITensor)
+#convert(::Type{Array},T::ITensor) = storage_convert(Array,store(T),inds(T))
+Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
 
-getindex(T::ITensor)::Number64 = storage_getindex(store(T),inds(T))
-getindex(T::ITensor,vals::Int...)::Number64 = storage_getindex(store(T),inds(T),vals...)
+function getindex(T::ITensor,vals::Int...) 
+  order(T) ≠ length(vals) && error("In getindex(::ITensor,::Int..), number of values provided ($(length(vals))) must equal order of ITensor ($(order(T)))")
+  storage_getindex(store(T),inds(T),vals...)
+end
 function getindex(T::ITensor,ivs::IndexVal...)
   p = calculate_permutation(inds(T),ivs)
   vals = val.(ivs)[p]
