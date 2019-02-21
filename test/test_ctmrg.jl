@@ -10,8 +10,8 @@ function ctmrg(T::ITensor,
                Clu::ITensor,
                Al::ITensor;
                χmax::Int,nsteps::Int)
-  tags(Clu,"link -> link,orig")
-  tags(Al,"link -> link,orig")
+  Clu = tags(Clu,"link -> link,orig")
+  Al = tags(Al,"link -> link,orig")
   for i = 1:nsteps
     ## Get the grown corner transfer matrix (CTM)
     Au = tags(Al,"link,down -> link,left",
@@ -37,8 +37,8 @@ function ctmrg(T::ITensor,
                  "site,right -> site,left")
     Al = Al/norm(Al)
   end
-  tags(Clu,"orig -> ")
-  tags(Al,"orig -> ")
+  Clu = tags(Clu,"orig -> ")
+  Al = tags(Al,"orig -> ")
   return Clu,Al
 end
 
@@ -69,30 +69,30 @@ end
   Clu,Al = ctmrg(T,Clu,Al;χmax=30,nsteps=2000)
 
   # Normalize corner matrix
-  trC⁴ = Clu*tags(Clu,"up -> up,prime")*
-         tags(Clu," -> prime")*tags(Clu,"left -> left,prime")
+  trC⁴ = Clu*tags(Clu,"up,0 -> up,1")*
+         tags(Clu,"0 -> 1")*tags(Clu,"left,0 -> left,1")
   Clu = Clu/scalar(trC⁴)^(1/4)
 
   # Normalize MPS tensor
-  trA² = Clu*tags(Clu,"up -> up,prime")*Al*
-         tags(Al,"link -> link,prime")*
-         tags(Clu,"up -> down,prime","left -> left,prime")*
-         tags(Clu,"left -> left,prime","up -> down")
+  trA² = Clu*tags(Clu,"up,0 -> up,1")*Al*
+         tags(Al,"link,0 -> link,1")*
+         tags(Clu,"up,0 -> down,1","left,0 -> left,1")*
+         tags(Clu,"left,0 -> left,1","up -> down")
   Al = Al/sqrt(scalar(trA²))
 
   ## Get environment tensors for a single site measurement
   Ar = tags(Al,"site,left -> site,right",
-               "link -> link,prime")
+               "link,0 -> link,1")
   Au = tags(Al,"site,left -> site,up",
                "link,down -> link,left",
                "link,up -> link,right")
   Ad = tags(Au,"site,up -> site,down",
-               "link -> link,prime")
+               "link,0 -> link,1")
   Cld = tags(Clu,"up -> down",
-                 "left -> left,prime")
+                 "left,0 -> left,1")
   Cru = tags(Clu,"left -> right",
-                 "up -> up,prime")
-  Crd = tags(Cru,"right -> right,prime",
+                 "up,0 -> up,1")
+  Crd = tags(Cru,"right,0 -> right,1",
                  "up -> down")
 
   ## Calculate partition function per site

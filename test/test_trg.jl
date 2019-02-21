@@ -79,7 +79,7 @@ function trg(T::ITensor;
     T = T/trT
     κ *= trT^(1.0/2^n)
   end
-  T = tags(T,"orig->")
+  T = tags(T,"orig -> ")
   return κ,T
 end
 
