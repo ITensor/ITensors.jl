@@ -6,7 +6,10 @@ Random.seed!(12345)
 
 include("2d_classical_ising.jl")
 
-function factorize(A::ITensor,Ltags::NTuple{NL,String},Rtags::NTuple{NR,String};maxm::Int,tags::String) where {NL,NR}
+function factorize(A::ITensor,
+                   Ltags::NTuple{NL,String},
+                   Rtags::NTuple{NR,String};
+                   maxm::Int,tags::String) where {NL,NR}
   Linds = NTuple{NL}((findtags(A,tags) for tags ∈ Ltags))
   Rinds = NTuple{NR}((findtags(A,tags) for tags ∈ Rtags))
   IndexSet(Linds...,Rinds...)!=inds(A) && error("Tags must match those contained by the ITensor")
