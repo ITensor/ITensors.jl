@@ -6,6 +6,7 @@ struct InitState
   sites::SiteSet
   InitState(sites::SiteSet) = new(fill("",length(sites)),sites)
   InitState(sites::SiteSet,default::LocalState) = new(fill(default,length(sites)),sites)
+  InitState(sites::SiteSet,def_vec::Vector{LocalState}) = new(def_vec, sites)
 end
 
 getindex(is::InitState,n::Integer) = getindex(is.sts,n)

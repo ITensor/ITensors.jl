@@ -12,11 +12,47 @@ mutable struct MPS
   end
   
 
-  function MPS(sites::SiteSet)
+  function MPS(sites::SiteSet) # random MPS
     N = length(sites)
     new(N,fill(ITensor(),N),0,N+1)
   end
+  function MPS(is::InitState)
+    N = length(is)
+    its = Vector{ITensor}(undef, length(is))
+    spin_sites = Vector{Site}(undef, length(is))
+    link_inds  = Vector{Index}(undef, length(is))
+    for ii in 1:N
+        i_is = is[ii]
+        i_site = site(is, ii)
+        spin_sites[ii] = i_site.dim == 2 ? SpinSite{Val{1//2}}(i_site) : SpinSite{Val{1}}(i_site)
+        spin_op = op(spin_sites[ii], i_is)
+        link_inds[ii] = Index(1, "Link,$ii")
+        s = i_site 
+        local this_it
+        if ii == 1
+            this_it = ITensor(link_inds[ii], i_site)
+            for j in 1:dim(s)
+                this_it[link_inds[ii](1), s(j)] = spin_op[s(j)]
+            end
+        elseif ii == N
+            this_it = ITensor(link_inds[ii-1], i_site)
+            for j in 1:dim(s)
+                this_it[link_inds[ii-1](1), s(j)] = spin_op[s(j)]
+            end
+        else
+            this_it = ITensor(link_inds[ii-1], link_inds[ii], i_site)
+            for j in 1:dim(s)
+                this_it[link_inds[ii-1](1), link_inds[ii](1), s(j)] = spin_op[s(j)]
+            end
+        end
+        its[ii] = this_it
+    end
+    # construct InitState from SiteSet -- is(sites, "Up")
+    new(N,its,0,2)
+  end
 end
+MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))
+MPS(s::SiteSet, opcode::String) = MPS(InitState(s, opcode))
 
 length(m::MPS) = m.N_
 leftLim(m::MPS) = m.llim_
