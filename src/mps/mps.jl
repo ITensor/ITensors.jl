@@ -16,7 +16,7 @@ mutable struct MPS
     N = length(sites)
     new(N,fill(ITensor(),N),0,N+1)
   end
-  function MPS(is::InitState)
+  function MPS(is::InitState; store_type::DataType=Float64)
     N = length(is)
     its = Vector{ITensor}(undef, length(is))
     spin_sites = Vector{Site}(undef, length(is))
@@ -25,18 +25,18 @@ mutable struct MPS
         i_is = is[ii]
         i_site = site(is, ii)
         spin_sites[ii] = i_site.dim == 2 ? SpinSite{Val{1//2}}(i_site) : SpinSite{Val{1}}(i_site)
-        spin_op = op(spin_sites[ii], i_is)
+        spin_op = op(store_type, spin_sites[ii], i_is)
         link_inds[ii] = Index(1, "Link,n=$ii")
         s = i_site 
         local this_it
         if ii == 1
-            this_it = ITensor(link_inds[ii], i_site)
+            this_it = ITensor(store_type, link_inds[ii], i_site)
             this_it[link_inds[ii](1), s[:]] = spin_op[s[:]]
         elseif ii == N
-            this_it = ITensor(link_inds[ii-1], i_site)
+            this_it = ITensor(store_type, link_inds[ii-1], i_site)
             this_it[link_inds[ii-1](1), s[:]] = spin_op[s[:]]
         else
-            this_it = ITensor(link_inds[ii-1], link_inds[ii], i_site)
+            this_it = ITensor(store_type, link_inds[ii-1], link_inds[ii], i_site)
             this_it[link_inds[ii-1](1), link_inds[ii](1), s[:]] = spin_op[s[:]]
         end
         its[ii] = this_it
@@ -45,8 +45,8 @@ mutable struct MPS
     new(N,its,0,2)
   end
 end
-MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))
-MPS(s::SiteSet, opcode::String) = MPS(InitState(s, opcode))
+MPS(N::Int, d::Int, opcode::String; store_type::DataType=Float64) = MPS(InitState(Sites(N,d), opcode), store_type=store_type)
+MPS(s::SiteSet, opcode::String; store_type::DataType=Float64) = MPS(InitState(s, opcode), store_type=store_type)
 
 length(m::MPS) = m.N_
 leftLim(m::MPS) = m.llim_

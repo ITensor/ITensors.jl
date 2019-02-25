@@ -13,7 +13,7 @@ struct MPO
     N = length(sites)
     new(N,fill(ITensor(),N))
   end
-  function MPO(sites::SiteSet, ops::Vector{String})
+  function MPO(sites::SiteSet, ops::Vector{String}; store_type::DataType=Float64)
     N = length(sites)
     its = Vector{ITensor}(undef, N)
     spin_sites = Vector{Site}(undef, N)
@@ -22,25 +22,25 @@ struct MPO
         i_is = ops[ii]
         i_site = sites[ii]
         spin_sites[ii] = i_site.dim == 2 ? SpinSite{Val{1//2}}(i_site) : SpinSite{Val{1}}(i_site)
-        spin_op = op(spin_sites[ii], i_is)
+        spin_op = op(store_type, spin_sites[ii], i_is)
         link_inds[ii] = Index(1, "Link,n=$ii")
         s = i_site 
         local this_it
         if ii == 1
-            this_it = ITensor(link_inds[ii], i_site, i_site')
+            this_it = ITensor(store_type, link_inds[ii], i_site, i_site')
             this_it[link_inds[ii](1), s[:], s'[:]] = spin_op[s[:], s'[:]]
         elseif ii == N
-            this_it = ITensor(link_inds[ii-1], i_site, i_site')
+            this_it = ITensor(store_type, link_inds[ii-1], i_site, i_site')
             this_it[link_inds[ii-1](1), s[:], s'[:]] = spin_op[s[:], s'[:]]
         else
-            this_it = ITensor(link_inds[ii-1], link_inds[ii], i_site, i_site')
+            this_it = ITensor(store_type, link_inds[ii-1], link_inds[ii], i_site, i_site')
             this_it[link_inds[ii-1](1), link_inds[ii](1), s[:], s'[:]] = spin_op[s[:], s'[:]]
         end
         its[ii] = this_it
     end
     new(N,its)
   end
-  MPO(sites::SiteSet, ops::String) = MPO(sites, fill(ops, length(sites)))
+  MPO(sites::SiteSet, ops::String; store_type::DataType = Float64) = MPO(sites, fill(ops, length(sites)), store_type=store_type)
 end
 
 length(m::MPO) = m.N_
