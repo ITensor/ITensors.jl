@@ -22,11 +22,11 @@ storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
 
 function storage_getindex(Tstore::Dense{T},
                           Tis::IndexSet,
-                          vals::Int...)::T where {T}
+                          vals::Union{Int, AbstractVector{Int}}...)::T where {T}
   return getindex(reshape(data(Tstore),dims(Tis)),vals...)
 end
 
-function storage_setindex!(Tstore::Dense,Tis::IndexSet,x::Number,vals::Int...)
+function storage_setindex!(Tstore::Dense,Tis::IndexSet,x::Union{<:Number, AbstractVector{<:Number}},vals::Union{Int, AbstractVector{Int}}...)
   return setindex!(reshape(data(Tstore),dims(Tis)),x,vals...)
 end
 

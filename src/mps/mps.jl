@@ -31,19 +31,13 @@ mutable struct MPS
         local this_it
         if ii == 1
             this_it = ITensor(link_inds[ii], i_site)
-            for j in 1:dim(s)
-                this_it[link_inds[ii](1), s(j)] = spin_op[s(j)]
-            end
+            this_it[link_inds[ii](1), s[:]] = spin_op[s[:]]
         elseif ii == N
             this_it = ITensor(link_inds[ii-1], i_site)
-            for j in 1:dim(s)
-                this_it[link_inds[ii-1](1), s(j)] = spin_op[s(j)]
-            end
+            this_it[link_inds[ii-1](1), s[:]] = spin_op[s[:]]
         else
             this_it = ITensor(link_inds[ii-1], link_inds[ii], i_site)
-            for j in 1:dim(s)
-                this_it[link_inds[ii-1](1), link_inds[ii](1), s(j)] = spin_op[s(j)]
-            end
+            this_it[link_inds[ii-1](1), link_inds[ii](1), s[:]] = spin_op[s[:]]
         end
         its[ii] = this_it
     end

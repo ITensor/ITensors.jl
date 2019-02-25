@@ -62,12 +62,18 @@ function getindex(T::ITensor,ivs::IndexVal...)
   vals = val.(ivs)[p]
   return getindex(T,vals...)
 end
+getindex(T::ITensor, ivs::Vector{IndexVal}) = [T[iv] for iv in ivs] 
 
 setindex!(T::ITensor,x::Number,vals::Int...) = storage_setindex!(store(T),inds(T),x,vals...)
 function setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   p = calculate_permutation(inds(T),ivs)
   vals = val.(ivs)[p]
   return setindex!(T,x,vals...)
+end
+function setindex!(T::ITensor,x::Vector{<:Number}, ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
+    p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
+    vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
+    storage_setindex!(store(T),inds(T),x,vals...)
 end
 
 findindex(A::ITensor,ts::String) = findindex(inds(A),ts)
