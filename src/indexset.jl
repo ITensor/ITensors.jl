@@ -200,10 +200,10 @@ function tags(is::IndexSet,ts::AbstractString)
   return IndexSet()
 end
 
-function calculate_permutation(set1,set2)
+function calculate_permutation(set1, set2)
   l1 = length(set1)
   l2 = length(set2)
-  l1==l2 || error("Mismatched input sizes in calcPerm")
+  l1==l2 || throw(DimensionMismatch("Mismatched input sizes in calcPerm: l1=$l1, l2=$l2"))
   p = zeros(Int,l1)
   for i1 = 1:l1
     for i2 = 1:l2

@@ -26,7 +26,7 @@ mutable struct MPS
         i_site = site(is, ii)
         spin_sites[ii] = i_site.dim == 2 ? SpinSite{Val{1//2}}(i_site) : SpinSite{Val{1}}(i_site)
         spin_op = op(spin_sites[ii], i_is)
-        link_inds[ii] = Index(1, "Link,$ii")
+        link_inds[ii] = Index(1, "Link,n=$ii")
         s = i_site 
         local this_it
         if ii == 1
