@@ -260,11 +260,26 @@ function eigen(A::ITensor,
   return eigen(A,(left_tags,),(right_tags,);kwargs...)
 end
 
-function show(io::IO,
-              T::ITensor)
+function show_info(io::IO,
+                   T::ITensor)
   print(io,"ITensor ord=$(order(T))")
   for i = 1:order(T)
     print(io," ",inds(T)[i])
   end
+  print(io,"\n",typeof(store(T)))
 end
+
+function show(io::IO,T::ITensor)
+  show_info(io,T)
+  print(io,"\n")
+  Base.print_array(io,reshape(data(store(T)),dims(T)))
+end
+
+function show(io::IO,
+              mime::MIME"text/plain",
+              T::ITensor)
+  show_info(io,T)
+end
+
+
 
