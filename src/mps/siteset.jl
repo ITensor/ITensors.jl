@@ -56,8 +56,122 @@ function tJSite{Val{1//2}}(n::Int)
     # index size 3 bc empty site is possible
     tJSite{Val{1//2}}(Index(rand(IDType), 3, Out, "Site,tJ,n=$n"))
 end
+struct HubbardSite{N} <: Site
+    s::Index
+    HubbardSite{N}(is::Index) where N = new{N}(is)
+end
+function HubbardSite{Val{1//2}}(n::Int)
+    # handle QN stuff later
+    # index size 4 bc empty site and doublon are possible
+    HubbardSite{Val{1//2}}(Index(rand(IDType), 4, Out, "Site,Hubbard,n=$n"))
+end
 
-function op(store_type::DataType, site::tJSite{Val{1//2}}, opname::String)
+function op(site::HubbardSite{Val{1//2}}, opname::String; store_type::DataType=Float64)
+    s = site.s
+    sP = prime(site.s)
+    Emp = site.s(1);
+    EmpP = sP(1);
+    Up = site.s(2);
+    UpP = sP(2);
+    Dn = site.s(3);
+    DnP = sP(3);
+    UpDn = site.s(4);
+    UpDnP = sP(4);
+    if opname == "Nup"
+        Nu = ITensor(store_type, dag(s), s')
+        Nu[Up, UpP] = 1.
+        Nu[UpDn, UpDnP] = 1.
+        return Nup
+    elseif opname == "Ndn"
+        Nd = ITensor(store_type, dag(s), s')
+        Nd[Dn, DnP] = 1.
+        Nd[UpDn, UpDnP] = 1.
+        return Nd
+    elseif opname == "Ntot"
+        Nt = ITensor(store_type, dag(s), s')
+        Nt[Up, UpP] = 1.
+        Nt[Dn, DnP] = 1.
+        Nt[UpDn, UpDnP] = 2.
+        return Nt
+    elseif opname == "Cup" || opname == "Aup"
+        Cu = ITensor(store_type, dag(s), s')
+        Cu[Up, EmpP] = 1.
+        Cu[UpDn, DnP] = 1.
+        return Cu
+    elseif opname == "Cdagup" || opname == "Adagup"
+        Cu = ITensor(store_type, dag(s), s')
+        Cu[Emp, UpP] = 1.
+        Cu[Dn, UpDnP] = 1.
+        return Cu
+    elseif opname == "Cdn" || opname == "Adn"
+        Cd = ITensor(store_type, dag(s), s')
+        Cd[Dn, EmpP] = 1.
+        Cd[UpDn, UpP] = 1.
+        return Cd
+    elseif opname == "Cdagdn" || opname == "Adagdn"
+        Cd = ITensor(store_type, dag(s), s')
+        Cd[Emp, DnP] = 1.
+        Cd[Up, UpDnP] = 1.
+        return Cd
+    elseif opname == "FermiPhase" || opname == "FP"
+        FP = ITensor(store_type, dag(s), s')
+        FP[Up, UpP] = -1.
+        FP[Emp, EmpP] = 1.
+        FP[Dn, DnP] = -1.
+        FP[UpDn, UpDnP] = 1.
+        return FP
+    elseif opname == "Fup"
+        FUp = ITensor(store_type, dag(s), s')
+        FUp[Emp, EmpP] = 1.
+        FUp[Up, UpP] = -1.
+        FUp[Dn, DnP] = 1.
+        FUp[UpDn, UpDnP] = -1.
+        return FUp
+    elseif opname == "Fdn"
+        FDn = ITensor(store_type, dag(s), s')
+        FDn[Emp, EmpP] = 1.
+        FDn[Up, UpP] = 1.
+        FDn[Dn, DnP] = -1.
+        FDn[UpDn, UpDnP] = -1.
+        return FDn
+    elseif opname == "Sᶻ" || opname == "Sz"
+        Sᶻ = ITensor(store_type, dag(s), s')
+        Sᶻ[Up, UpP] = 0.5
+        Sᶻ[Dn, DnP] = -0.5
+        return Sᶻ
+    elseif opname == "Sˣ" || opname == "Sx"
+        Sˣ = ITensor(store_type, dag(s), s')
+        Sˣ[Up, DnP] = 1.0
+        Sˣ[Dn, UpP] = 1.0 
+        return Sˣ
+    elseif opname == "S⁺" || opname == "Splus"
+        S⁺ = ITensor(store_type, dag(s), s')
+        S⁺[Dn, UpP] = 1.
+        return S⁺
+    elseif opname == "S⁻" || opname == "Sminus"
+        S⁻ = ITensor(store_type, dag(s), s')
+        S⁻[Up, DnP] = 1.
+        return S⁻
+    elseif opname == "Emp" || opname == "0"
+        pEmp = ITensor(store_type, s)
+        pEmp[Emp] = 1.
+        return pEmp
+    elseif opname == "Up" || opname == "↑"
+        pU = ITensor(store_type, s)
+        pU[Up] = 1.
+        return pU
+    elseif opname == "Dn" || opname == "↓"
+        pD = ITensor(store_type, s)
+        pD[Dn] = 1.
+        return pD
+    elseif opname == "UpDn" || opname == "↑↓"
+        pUD = ITensor(store_type, s)
+        pUD[UpDn] = 1.
+        return pUD
+    end
+end
+
+function op(site::tJSite{Val{1//2}}, opname::String; store_type::DataType=Float64)
     s = site.s
     sP = prime(site.s)
     Emp = site.s(1);
@@ -146,7 +260,7 @@ function op(store_type::DataType, site::tJSite{Val{1//2}}, opname::String)
     end
 end
 
-function op(store_type::DataType, site::SpinSite{Val{1//2}}, opname::String)
+function op(site::SpinSite{Val{1//2}}, opname::String; store_type::DataType=Float64)
     s = site.s
     sP = prime(site.s)
     Up = site.s(1);
@@ -200,7 +314,7 @@ function op(store_type::DataType, site::SpinSite{Val{1//2}}, opname::String)
     end
 end
 
-function op(store_type::DataType, site::SpinSite{Val{1}}, opname::String)
+function op(site::SpinSite{Val{1}}, opname::String; store_type::DataType=Float64)
     s = site.s
     sP = prime(site.s)
     Up = site.s(1);

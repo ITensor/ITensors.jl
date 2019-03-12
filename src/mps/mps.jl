@@ -19,13 +19,11 @@ mutable struct MPS
   function MPS(::Type{T}, is::InitState; store_type::DataType=Float64) where {T}
     N = length(is)
     its = Vector{ITensor}(undef, length(is))
-    spin_sites = Vector{Site}(undef, length(is))
     link_inds  = Vector{Index}(undef, length(is))
     for ii in 1:N
         i_is = is[ii]
         i_site = site(is, ii)
-        spin_sites[ii] = T(i_site)
-        spin_op = op(store_type, spin_sites[ii], i_is)
+        spin_op = op(T(i_site), i_is, store_type=store_type)
         link_inds[ii] = Index(1, "Link,n=$ii")
         s = i_site 
         local this_it

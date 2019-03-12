@@ -17,13 +17,11 @@ struct MPO
   function MPO(::Type{T}, sites::SiteSet, ops::Vector{String}; store_type::DataType=Float64) where {T}
     N = length(sites)
     its = Vector{ITensor}(undef, N)
-    spin_sites = Vector{Site}(undef, N)
     link_inds  = Vector{Index}(undef, N)
     for ii in 1:N
         i_is = ops[ii]
         i_site = sites[ii]
-        spin_sites[ii] = T(i_site)
-        spin_op = op(store_type, spin_sites[ii], i_is)
+        spin_op = op(T(i_site), i_is, store_type=store_type)
         link_inds[ii] = Index(1, "Link,n=$ii")
         s = i_site 
         local this_it
