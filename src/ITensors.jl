@@ -121,7 +121,10 @@ include("decomp.jl")
 
 include("mps/siteset.jl")
 export SiteSet,
-       Sites
+       Sites,
+       Site,
+       tJSite,
+       SpinSite
 
 include("mps/initstate.jl")
 export InitState

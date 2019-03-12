@@ -13,7 +13,8 @@ struct MPO
     N = length(sites)
     new(N,fill(ITensor(),N))
   end
-  function MPO(sites::SiteSet, ops::Vector{String}; store_type::DataType=Float64)
+  # T can be something like SpinSite{Val{1//2}}
+  function MPO(::Type{T}, sites::SiteSet, ops::Vector{String}; store_type::DataType=Float64) where {T}
     N = length(sites)
     its = Vector{ITensor}(undef, N)
     spin_sites = Vector{Site}(undef, N)
@@ -21,7 +22,7 @@ struct MPO
     for ii in 1:N
         i_is = ops[ii]
         i_site = sites[ii]
-        spin_sites[ii] = i_site.dim == 2 ? SpinSite{Val{1//2}}(i_site) : SpinSite{Val{1}}(i_site)
+        spin_sites[ii] = T(i_site)
         spin_op = op(store_type, spin_sites[ii], i_is)
         link_inds[ii] = Index(1, "Link,n=$ii")
         s = i_site 
@@ -40,7 +41,7 @@ struct MPO
     end
     new(N,its)
   end
-  MPO(sites::SiteSet, ops::String; store_type::DataType = Float64) = MPO(sites, fill(ops, length(sites)), store_type=store_type)
+  MPO(::Type{T}, sites::SiteSet, ops::String; store_type::DataType = Float64) where {T} = MPO(T, sites, fill(ops, length(sites)), store_type=store_type)
 end
 
 length(m::MPO) = m.N_

@@ -16,7 +16,7 @@ mutable struct MPS
     N = length(sites)
     new(N,fill(ITensor(),N),0,N+1)
   end
-  function MPS(is::InitState; store_type::DataType=Float64)
+  function MPS(::Type{T}, is::InitState; store_type::DataType=Float64) where {T}
     N = length(is)
     its = Vector{ITensor}(undef, length(is))
     spin_sites = Vector{Site}(undef, length(is))
@@ -24,7 +24,7 @@ mutable struct MPS
     for ii in 1:N
         i_is = is[ii]
         i_site = site(is, ii)
-        spin_sites[ii] = i_site.dim == 2 ? SpinSite{Val{1//2}}(i_site) : SpinSite{Val{1}}(i_site)
+        spin_sites[ii] = T(i_site)
         spin_op = op(store_type, spin_sites[ii], i_is)
         link_inds[ii] = Index(1, "Link,n=$ii")
         s = i_site 
