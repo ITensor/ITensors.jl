@@ -13,33 +13,41 @@ struct MPO
     N = length(sites)
     new(N,fill(ITensor(),N))
   end
+
   # T can be something like SpinSite{Val{1//2}}
-  function MPO(::Type{T}, sites::SiteSet, ops::Vector{String}; store_type::DataType=Float64) where {T}
+  function MPO(::Type{T}, 
+               sites::SiteSet, 
+               ops::Vector{String}) where {T}
     N = length(sites)
     its = Vector{ITensor}(undef, N)
-    link_inds  = Vector{Index}(undef, N)
+    links = Vector{Index}(undef, N)
     for ii in 1:N
-        i_is = ops[ii]
-        i_site = sites[ii]
-        spin_op = op(T(i_site), i_is, store_type=store_type)
-        link_inds[ii] = Index(1, "Link,n=$ii")
-        s = i_site 
+        si = sites[ii]
+        spin_op = op(T(i_site), ops[ii])
+        links[ii] = Index(1, "Link,n=$ii")
         local this_it
         if ii == 1
-            this_it = ITensor(store_type, link_inds[ii], i_site, i_site')
-            this_it[link_inds[ii](1), s[:], s'[:]] = spin_op[s[:], s'[:]]
+            this_it = ITensor(store_type, links[ii], si, si')
+            this_it[links[ii](1), s[:], s'[:]] = spin_op[si[:], si'[:]]
         elseif ii == N
-            this_it = ITensor(store_type, link_inds[ii-1], i_site, i_site')
-            this_it[link_inds[ii-1](1), s[:], s'[:]] = spin_op[s[:], s'[:]]
+            this_it = ITensor(store_type, links[ii-1], si, si')
+            this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
         else
-            this_it = ITensor(store_type, link_inds[ii-1], link_inds[ii], i_site, i_site')
-            this_it[link_inds[ii-1](1), link_inds[ii](1), s[:], s'[:]] = spin_op[s[:], s'[:]]
+            this_it = ITensor(store_type, links[ii-1], links[ii], si, si')
+            this_it[links[ii-1](1), links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
         end
         its[ii] = this_it
     end
     new(N,its)
   end
-  MPO(::Type{T}, sites::SiteSet, ops::String; store_type::DataType = Float64) where {T} = MPO(T, sites, fill(ops, length(sites)), store_type=store_type)
+
+  function MPO(::Type{T}, 
+               sites::SiteSet, 
+               ops::String; 
+               store_type::DataType = Float64) where {T}  
+    return MPO(T, sites, fill(ops, length(sites)), store_type=store_type)
+  end
+
 end
 
 length(m::MPO) = m.N_

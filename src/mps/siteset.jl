@@ -66,7 +66,8 @@ function HubbardSite{Val{1//2}}(n::Int)
     HubbardSite{Val{1//2}}(Index(rand(IDType), 4, Out, "Site,Hubbard,n=$n"))
 end
 
-function op(site::HubbardSite{Val{1//2}}, opname::String; store_type::DataType=Float64)
+function op(site::HubbardSite{Val{1//2}}, 
+            opname::String; store_type::DataType=Float64)
     s = site.s
     sP = prime(site.s)
     Emp = site.s(1);
