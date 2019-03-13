@@ -109,7 +109,7 @@ colon(n::Int,i::Index) = range(n,dim(i))
 function show(io::IO,i::Index) 
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
-    print(io,"($(dim(i)),$(tags(i))|id=$(idstr))$(primestring(tags(i)))")
+    print(io,"($(dim(i))|id=$(idstr)|$(tags(i)))$(primestring(tags(i)))")
   else
     print(io,"($(dim(i))|id=$(idstr))$(primestring(tags(i)))")
   end
