@@ -41,29 +41,32 @@ end
 inds(s::Sites) = s.inds
 
 abstract type Site end
+
 struct SpinSite{N} <: Site
     s::Index
     SpinSite{N}(is::Index) where N = new{N}(is)
 end
 SpinSite{Val{1//2}}(n::Int) = SpinSite{Val{1//2}}(Index(2, "Site,S=1/2,n=$n"))
 SpinSite{Val{1}}(n::Int) = SpinSite{Val{1}}(Index(3, "Site,S=1,n=$n"))
+
 struct tJSite{N} <: Site
-    s::Index
-    tJSite{N}(is::Index) where N = new{N}(is)
+  s::Index
+  tJSite{N}(is::Index) where N = new{N}(is)
 end
 function tJSite{Val{1//2}}(n::Int)
-    # handle QN stuff later
-    # index size 3 bc empty site is possible
-    tJSite{Val{1//2}}(Index(rand(IDType), 3, Out, "Site,tJ,n=$n"))
+  # handle QN stuff later
+  # index size 3 bc empty site is possible
+  tJSite{Val{1//2}}(Index(rand(IDType), 3, Out, "Site,tJ,n=$n"))
 end
+
 struct HubbardSite{N} <: Site
-    s::Index
-    HubbardSite{N}(is::Index) where N = new{N}(is)
+  s::Index
+  HubbardSite{N}(is::Index) where N = new{N}(is)
 end
 function HubbardSite{Val{1//2}}(n::Int)
-    # handle QN stuff later
-    # index size 4 bc empty site and doublon are possible
-    HubbardSite{Val{1//2}}(Index(rand(IDType), 4, Out, "Site,Hubbard,n=$n"))
+  # handle QN stuff later
+  # index size 4 bc empty site and doublon are possible
+  HubbardSite{Val{1//2}}(Index(rand(IDType), 4, Out, "Site,Hubbard,n=$n"))
 end
 
 function op(site::HubbardSite{Val{1//2}}, 
