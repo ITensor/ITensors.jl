@@ -1,0 +1,24 @@
+language: julia
+
+sudo: false
+
+os:
+  - linux
+  - osx
+
+julia:
+  - 1.1
+  - nightly
+ 
+allow_failures:
+  - julia: nightly
+
+notifications:
+  email: false
+
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("ITensors"; coverage=true)'
+
+after_success:
+  - julia -e 'using Pkg; cd(Pkg.dir("ITensors")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
