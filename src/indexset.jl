@@ -129,7 +129,10 @@ end
 
 noprime(is::IndexSet) = setprime(is,0)
 
-function mapprime(is::IndexSet,plevold::Int,plevnew::Int,imatch::Index=Index())
+function mapprime(is::IndexSet,
+                  plevold::Int,
+                  plevnew::Int,
+                  imatch::Index=Index())
   res = copy(is)
   for jj ∈ 1:length(res)
     if(imatch==Index() || noprime(imatch)==noprime(res[jj]))
@@ -139,7 +142,10 @@ function mapprime(is::IndexSet,plevold::Int,plevnew::Int,imatch::Index=Index())
   return res
 end
 
-function swapprime(is::IndexSet,plev1::Int,plev2::Int,imatch::Index=Index())
+function swapprime(is::IndexSet,
+                   plev1::Int,
+                   plev2::Int,
+                   imatch::Index=Index())
   res = copy(is)
   plevtemp = 7017049418157811712
   res = mapprime(res,plev1,plevtemp,imatch)
@@ -148,7 +154,9 @@ function swapprime(is::IndexSet,plev1::Int,plev2::Int,imatch::Index=Index())
   return res
 end
 
-function addtags(is::IndexSet,ts::AbstractString,tsmatch::String="")
+function addtags(is::IndexSet,
+                 ts::AbstractString,
+                 tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
     res[jj] = addtags(res[jj],ts,tsmatch)
@@ -156,7 +164,9 @@ function addtags(is::IndexSet,ts::AbstractString,tsmatch::String="")
   return res
 end
 
-function removetags(is::IndexSet,ts::AbstractString,tsmatch::String="")
+function removetags(is::IndexSet,
+                    ts::AbstractString,
+                    tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
     res[jj] = removetags(res[jj],ts,tsmatch)
@@ -164,7 +174,10 @@ function removetags(is::IndexSet,ts::AbstractString,tsmatch::String="")
   return res
 end
 
-function replacetags(is::IndexSet,ts1::AbstractString,ts2::AbstractString,tsmatch::String="")
+function replacetags(is::IndexSet,
+                     ts1::AbstractString,
+                     ts2::AbstractString,
+                     tsmatch::String="")
   res = copy(is)
   for jj ∈ 1:length(res)
     res[jj] = replacetags(res[jj],ts1,ts2,tsmatch)
@@ -172,7 +185,10 @@ function replacetags(is::IndexSet,ts1::AbstractString,ts2::AbstractString,tsmatc
   return res
 end
 
-function swaptags(is::IndexSet,ts1::AbstractString,ts2::AbstractString,tsmatch::String="")
+function swaptags(is::IndexSet,
+                  ts1::AbstractString,
+                  ts2::AbstractString,
+                  tsmatch::String="")
   res = copy(is)
   tstemp = "e43efds"
   res = replacetags(res,ts1,tstemp,tsmatch)
@@ -181,7 +197,9 @@ function swaptags(is::IndexSet,ts1::AbstractString,ts2::AbstractString,tsmatch::
   return res
 end
 
-function tags(is::IndexSet,ts1::AbstractString,ts::AbstractString...)
+function tags(is::IndexSet,
+              ts1::AbstractString,
+              ts::AbstractString...)
   tags(tags(is,ts1),ts...)
 end
 
@@ -242,8 +260,10 @@ function compute_contraction_labels(Ai::IndexSet,Bi::IndexSet)
   return (Aind,Bind)
 end
 
-function contract_inds(Ais::IndexSet,Aind,
-                       Bis::IndexSet,Bind)
+function contract_inds(Ais::IndexSet,
+                       Aind,
+                       Bis::IndexSet,
+                       Bind)
   ncont = 0
   for i in Aind
     if(i < 0) ncont += 1 end 
