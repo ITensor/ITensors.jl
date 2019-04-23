@@ -32,13 +32,16 @@ function Index(dim::Integer,tags::String="0")
 end
 
 id(i::Index) = i.id
+
+dim() = 1
 dim(i::Index) = i.dim
+
 function dim(i1::Index,inds::Index...)
   total_dim = 1
   total_dim *= dim(i1)*dim(inds...)
   return total_dim
 end
-dim() = 1
+
 dir(i::Index) = i.dir
 tags(i::Index) = i.tags
 plev(i::Index) = plev(tags(i))
@@ -59,9 +62,21 @@ function setprime(i::Index,plev::Int)
 end
 noprime(i::Index) = setprime(i,0)
 
-addtags(i::Index,ts::AbstractString,tsmatch::String="") = Index(id(i),dim(i),dir(i),addtags(tags(i),TagSet(ts),TagSet(tsmatch)))
-removetags(i::Index,ts::AbstractString,tsmatch::String="") = Index(id(i),dim(i),dir(i),removetags(tags(i),TagSet(ts),TagSet(tsmatch)))
-function settags(i::Index,ts::AbstractString,tsmatch::String="")
+function addtags(i::Index,
+                 ts::AbstractString,
+                 tsmatch::String="") 
+  return Index(id(i),dim(i),dir(i),addtags(tags(i),TagSet(ts),TagSet(tsmatch)))
+end
+
+function removetags(i::Index,
+                    ts::AbstractString,
+                    tsmatch::String="") 
+  return Index(id(i),dim(i),dir(i),removetags(tags(i),TagSet(ts),TagSet(tsmatch)))
+end
+
+function settags(i::Index,
+                 ts::AbstractString,
+                 tsmatch::String="")
   tagsetmatch = TagSet(tsmatch)
   (tagsetmatch≠TagSet() && tagsetmatch≠tags(i)) && return i
   tsnew = TagSet(ts)
@@ -69,9 +84,15 @@ function settags(i::Index,ts::AbstractString,tsmatch::String="")
   tsnewplev = plev(tsnew)==-1 ? 0 : plev(tsnew)
   Index(id(i),dim(i),dir(i),TagSet(tsnew.tags,tsnewplev))
 end
+
 (i::Index)(ts::String) = settags(i,ts)
+
 hastags(i::Index,ts::Union{String,TagSet}) = hastags(tags(i),ts)
-function replacetags(i::Index,tsold::AbstractString,tsnew::AbstractString,tsmatch::String="") 
+
+function replacetags(i::Index,
+                     tsold::AbstractString,
+                     tsnew::AbstractString,
+                     tsmatch::String="") 
   tagsetmatch = TagSet(tsmatch)
   tagsetnew = TagSet(tsnew)
   tagsetold = TagSet(tsold)
@@ -81,7 +102,8 @@ function replacetags(i::Index,tsold::AbstractString,tsnew::AbstractString,tsmatc
   return Index(id(i),dim(i),dir(i),itags)
 end
 
-function tags(i::Index,ts::AbstractString)
+function tags(i::Index,
+              ts::AbstractString)
   ts = filter(x -> !isspace(x),ts)
   vts = split(ts,"->")
   length(vts) == 1 && error("Must use -> to replace tags of an Index")
@@ -106,7 +128,8 @@ next(i::Index,n::Int) = (n,n+1)
 done(i::Index,n::Int) = (n > dim(i))
 colon(n::Int,i::Index) = range(n,dim(i))
 
-function show(io::IO,i::Index) 
+function show(io::IO,
+              i::Index) 
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
     print(io,"($(dim(i))|id=$(idstr)|$(tags(i)))$(primestring(tags(i)))")
