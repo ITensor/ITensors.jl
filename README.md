@@ -1,5 +1,5 @@
 
-ITensor is a library for rapidly developing correct and efficient
+ITensor is a library for rapidly creating correct and efficient
 tensor network algorithms. 
 
 An ITensor is a tensor whose interface 
@@ -11,4 +11,3 @@ The ITensor library also includes many composable algorithms
 for optimizing and transforming tensor networks, such as 
 operations on matrix product state and matrix product operators,
 and the DMRG algorithm.
-
