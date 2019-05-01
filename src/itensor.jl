@@ -129,10 +129,6 @@ function swaptags(A::ITensor,vargs...)
   return ITensor(swaptags(inds(A),vargs...),store(A))
 end
 
-function tags(A::ITensor,vargs...)
-  return ITensor(tags(inds(A),vargs...),store(A))
-end
-
 function ==(A::ITensor,B::ITensor)::Bool
   inds(A)!=inds(B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
   p = calculate_permutation(inds(B),inds(A))

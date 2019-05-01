@@ -10,13 +10,11 @@ function ctmrg(T::ITensor,
                Clu::ITensor,
                Al::ITensor;
                χmax::Int,nsteps::Int)
-  Clu = tags(Clu,"link -> link,orig")
-  Al = tags(Al,"link -> link,orig")
+  Clu = addtags(Clu,"orig","link")
+  Al = addtags(Al,"orig","link")
   for i = 1:nsteps
     ## Get the grown corner transfer matrix (CTM)
-    Au = tags(Al,"link,down -> link,left",
-                 "link,up -> link,right",
-                 "site,left -> site,up")
+    Au = replacetags(replacetags(replacetags(Al,"down","left","link"),"up","right","link"),"left","up","site")
     Clu⁽¹⁾ = Clu*Al*Au*T
     
     ## Diagonalize the grown CTM
@@ -26,19 +24,16 @@ function ctmrg(T::ITensor,
                    righttags="link,right,renorm")
 
     ## The renormalized CTM is the diagonal matrix of eigenvalues
-    Clu = tags(Cdr,"renorm -> orig",
-                   "down -> up",
-                   "right -> left")
+    Clu = replacetags(replacetags(replacetags(Cdr,"renorm","orig"),"down","up"),"right","left")
     Clu = Clu/norm(Clu)
 
     ## Calculate the renormalized half row transfer matrix (HRTM)
-    Al = Al*tags(Ud,"down -> up")*T*Ud
-    Al = tags(Al,"renorm -> orig",
-                 "site,right -> site,left")
+    Al = Al*replacetags(Ud,"down","up")*T*Ud
+    Al = replacetags(replacetags(Al,"renorm","orig"),"right","left","site")
     Al = Al/norm(Al)
   end
-  Clu = tags(Clu,"orig -> ")
-  Al = tags(Al,"orig -> ")
+  Clu = removetags(Clu,"orig")
+  Al = removetags(Al,"orig")
   return Clu,Al
 end
 
@@ -47,53 +42,46 @@ end
   β = 1.1*βc
   d = 2
   s = Index(d,"site")
-  sl = tags(s," -> left")
-  sr = tags(s," -> right")
-  su = tags(s," -> up")
-  sd = tags(s," -> down")
+  sl = addtags(s,"left")
+  sr = addtags(s,"right")
+  su = addtags(s,"up")
+  sd = addtags(s,"down")
 
   T = ising_mpo((sl,sr),(su,sd),β)
 
   χ0 = 1
   l = Index(χ0,"link")
-  ll = tags(l," -> left")
-  lu = tags(l," -> up")
-  ld = tags(l," -> down")
+  ll = addtags(l,"left")
+  lu = addtags(l,"up")
+  ld = addtags(l,"down")
 
   Clu = randomITensor(lu,ll)
   Al = randomITensor(lu,ld,sl)
 
-  Clu = 0.5*(Clu+tags(Clu,"up <-> left"))
-  Al = 0.5*(Al+tags(Al,"up <-> down"))
+  Clu = 0.5*(Clu+swaptags(Clu,"up","left"))
+  Al = 0.5*(Al+swaptags(Al,"up","down"))
 
   Clu,Al = ctmrg(T,Clu,Al;χmax=30,nsteps=2000)
 
   # Normalize corner matrix
-  trC⁴ = Clu*tags(Clu,"up,0 -> up,1")*
-         tags(Clu,"0 -> 1")*tags(Clu,"left,0 -> left,1")
+  trC⁴ = Clu*replacetags(Clu,"0","1","up")*
+         replacetags(Clu,"0","1")*replacetags(Clu,"0","1","left")
   Clu = Clu/scalar(trC⁴)^(1/4)
 
   # Normalize MPS tensor
-  trA² = Clu*tags(Clu,"up,0 -> up,1")*Al*
-         tags(Al,"link,0 -> link,1")*
-         tags(Clu,"up,0 -> down,1","left,0 -> left,1")*
-         tags(Clu,"left,0 -> left,1","up -> down")
+  trA² = Clu*replacetags(Clu,"0","1","up")*Al*
+         replacetags(Al,"0","1","link")*
+         replacetags(replacetags(Clu,"up,0","down,1"),"0","1","left")*
+         replacetags(replacetags(Clu,"0","1","left"),"up","down")
   Al = Al/sqrt(scalar(trA²))
 
   ## Get environment tensors for a single site measurement
-  Ar = tags(Al,"site,left -> site,right",
-               "link,0 -> link,1")
-  Au = tags(Al,"site,left -> site,up",
-               "link,down -> link,left",
-               "link,up -> link,right")
-  Ad = tags(Au,"site,up -> site,down",
-               "link,0 -> link,1")
-  Cld = tags(Clu,"up -> down",
-                 "left,0 -> left,1")
-  Cru = tags(Clu,"left -> right",
-                 "up,0 -> up,1")
-  Crd = tags(Cru,"right,0 -> right,1",
-                 "up -> down")
+  Ar = replacetags(replacetags(Al,"left","right","site"),"0","1","link")
+  Au = replacetags(replacetags(replacetags(Al,"left","up","site"),"down","left","link"),"up","right","link")
+  Ad = replacetags(replacetags(Au,"up","down","site"),"0","1","link")
+  Cld = replacetags(replacetags(Clu,"up","down"),"0","1","left")
+  Cru = replacetags(replacetags(Clu,"left","right"),"0","1","up")
+  Crd = replacetags(replacetags(Cru,"0","1","right"),"up","down")
 
   ## Calculate partition function per site
   κ = scalar(Clu*Al*Cld*Au*T*Ad*Cru*Ar*Crd)

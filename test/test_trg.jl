@@ -56,33 +56,33 @@ ITensor T (also with Indices with tags "left","right","up", and "down").
 function trg(T::ITensor;
              χmax::Int, nsteps::Int)
   # Check tags are correct
-  @assert findtags(T,"left") == tags(findtags(T,"right"),"right->left")
-  @assert findtags(T,"up") == tags(findtags(T,"down"),"down->up")
+  @assert findtags(T,"left") == replacetags(findtags(T,"right"),"right","left")
+  @assert findtags(T,"up") == replacetags(findtags(T,"down"),"down","up")
   
   # Keep track of the partition function per site
   κ = 1.0
 
-  T = tags(T," -> orig")
+  T = addtags(T,"orig")
   for n = 1:nsteps
     Fr,Fl = factorize(T,("left","up"),("right","down");maxm=χmax,tags="renorm")
     Fd,Fu = factorize(T,("right","up"),("left","down");maxm=χmax,tags="renorm")
 
-    Fl = tags(Fl,"renorm -> renorm,left")
-    Fr = tags(Fr,"renorm -> renorm,right")
-    Fu = tags(Fu,"renorm -> renorm,up")
-    Fd = tags(Fd,"renorm -> renorm,down")
+    Fl = addtags(Fl,"left","renorm")
+    Fr = addtags(Fr,"right","renorm")
+    Fu = addtags(Fu,"up","renorm")
+    Fd = addtags(Fd,"down","renorm")
 
-    T = tags(Fl,"orig,down -> downleft","orig,right -> upleft")*
-        tags(Fu,"orig,left -> upleft","orig,down -> upright")* 
-        tags(Fr,"orig,up -> upright","orig,left -> downright")*
-        tags(Fd,"orig,right -> downright","orig,up -> downleft")
-    T = tags(T,"renorm -> orig")
+    T = replacetags(replacetags(Fl,"down","downleft","orig"),"right","upleft","orig")*
+        replacetags(replacetags(Fu,"left","upleft","orig"),"down","upright","orig")* 
+        replacetags(replacetags(Fr,"up","upright","orig"),"left","downright","orig")*
+        replacetags(replacetags(Fd,"right","downright","orig"),"up","downleft","orig")
+    T = replacetags(T,"renorm","orig")
 
     trT = abs(scalar(trace(T,("left","right"),("up","down"))))
     T = T/trT
     κ *= trT^(1.0/2^n)
   end
-  T = tags(T,"orig -> ")
+  T = removetags(T,"orig")
   return κ,T
 end
 
@@ -91,10 +91,10 @@ end
   β = 1.1*βc
   d = 2
   s = Index(d)
-  l = tags(s," -> left")
-  r = tags(s," -> right")
-  u = tags(s," -> up")
-  d = tags(s," -> down")
+  l = addtags(s,"left")
+  r = addtags(s,"right")
+  u = addtags(s,"up")
+  d = addtags(s,"down")
   T = ising_mpo((l,r),(u,d),β)
 
   χmax = 20
