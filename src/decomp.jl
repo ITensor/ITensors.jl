@@ -79,13 +79,12 @@ function truncate!(P::Vector{Float64};
 end
 
 function factorize(A::ITensor,
-                   left_inds::Index...;
+                   Linds;
                    factorization=factorization)
-  Lis = IndexSet(left_inds...)
-  #TODO: make this a debug level check
-  Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+  Lis = IndexSet(Linds)
+  Lis ⊈ inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
 
-  Ris = difference(inds(A),Lis)
+  Ris = setdiff(inds(A),Lis)
   #TODO: check if A is already ordered properly
   #and avoid doing this permute, since it makes a copy
   #AND/OR use svd!() to overwrite the data of A to save memory
@@ -100,9 +99,9 @@ function factorize(A::ITensor,
   return ITensor(Qis,Qstore),ITensor(Pis,Pstore)
 end
 
-qr(A::ITensor,left_inds::Index...) = factorize(A,left_inds...;factorization=:QR)
+qr(A::ITensor,Linds) = factorize(A,Linds;factorization=:QR)
 
-polar(A::ITensor,left_inds::Index...) = factorize(A,left_inds...;factorization=:polar)
+polar(A::ITensor,Linds) = factorize(A,Linds;factorization=:polar)
 
 """
     svd(A::ITensor,
@@ -124,19 +123,40 @@ arguments provided. The following keyword arguments are recognized:
 * truncate [Bool]
 """
 function svd(A::ITensor,
-             left_inds::Index...;
+             Linds;
              kwargs...
             )
-  Lis = IndexSet(left_inds...)
-  #TODO: make this a debug level check
-  Lis⊈inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+  Lis = IndexSet(Linds)
+  Lis ⊈ inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
 
-  Ris = difference(inds(A),Lis)
+  Ris = setdiff(inds(A),Lis)
   #TODO: check if A is already ordered properly
   #and avoid doing this permute, since it makes a copy
   #AND/OR use svd!() to overwrite the data of A to save memory
   A = permute(A,Lis...,Ris...)
   Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
   return ITensor(Uis,Ustore),ITensor(Sis,Sstore),ITensor(Vis,Vstore)
+end
+
+# TODO: add a version that automatically detects the IndexSets
+# by matching based on tags
+function eigen(A::ITensor,
+               Linds,
+               Rinds;
+               truncate::Int=100,
+               lefttags::String="Link,0",
+               righttags::String="Link,1",
+               matrixtype::Type{T}=Hermitian) where {T}
+  Lis = IndexSet(Linds)
+  Ris = IndexSet(Rinds)
+  !hassameinds((Lis,Ris),A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+
+  #TODO: check if A is already ordered properly
+  #and avoid doing this permute, since it makes a copy
+  #AND/OR use svd!() to overwrite the data of A to save memory
+  A = permute(A,(Lis,Ris))
+  #TODO: More of the index analysis should be moved out of storage_eigen
+  Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris,matrixtype,truncate,lefttags,righttags)
+  return ITensor(Uis,Ustore),ITensor(Dis,Dstore)
 end
 

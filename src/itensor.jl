@@ -28,7 +28,7 @@ ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds.
 
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
 
-# This is just a stand-in for a proper delta/diag storage type
+#TODO: This is just a stand-in for a proper delta/diag storage type
 function delta(::Type{T},inds::Index...) where {T}
   d = ITensor(zero(T),inds...)
   minm = min(dims(d)...)
@@ -41,6 +41,9 @@ delta(inds::Index...) = delta(Float64,inds...)
 const δ = delta
 
 inds(T::ITensor) = T.inds
+# This constructor allows many IndexSet
+# set operations to work with ITensors
+IndexSet(T::ITensor) = inds(T)
 store(T::ITensor) = T.store
 eltype(T::ITensor) = eltype(store(T))
 
@@ -50,7 +53,6 @@ dim(T::ITensor) = dim(inds(T))
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
-#convert(::Type{Array},T::ITensor) = storage_convert(Array,store(T),inds(T))
 Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
 
 function getindex(T::ITensor,vals::Int...) 
@@ -81,34 +83,24 @@ function setindex!(T::ITensor,x::Union{<:Number, AbstractArray{<:Number}}, ivs::
     storage_setindex!(store(T),inds(T),x,vals...)
 end
 
-findindex(A::ITensor,ts::String) = findindex(inds(A),ts)
-
-function commonindex(A::ITensor,B::ITensor)
-  return commonindex(inds(A),inds(B))
-end
-function commoninds(A::ITensor,B::ITensor)
-  return inds(A)∩inds(B)
-end
-
-hasindex(T::ITensor,I::Index) = hasindex(inds(T),I)
-
 # TODO: should this make a copy of the storage?
+# Current conclusion is no, but possibly make it return
+# an ITensor{View} to indicate the ITensor has shared memory
 function prime(A::ITensor,vargs...)
   return ITensor(prime(inds(A),vargs...),store(A))
 end
 adjoint(A::ITensor) = prime(A)
-function primeexcept(A::ITensor,vargs...)
-  return ITensor(primeexcept(inds(A),vargs...),store(A))
-end
 function setprime(A::ITensor,vargs...)
   return ITensor(setprime(inds(A),vargs...),store(A))
 end
 function noprime(A::ITensor,vargs...)
   return ITensor(noprime(inds(A),vargs...),store(A))
 end
+# TODO: remove in favor of replacetags(...)
 function mapprime(A::ITensor,vargs...)
   return ITensor(mapprime(inds(A),vargs...),store(A))
 end
+# TODO: remove in favor of swaptags(...)
 function swapprime(A::ITensor,vargs...)
   return ITensor(swapprime(inds(A),vargs...),store(A))
 end
@@ -130,10 +122,10 @@ function swaptags(A::ITensor,vargs...)
 end
 
 function ==(A::ITensor,B::ITensor)::Bool
-  inds(A)!=inds(B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
+  !hassameinds(A,B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
   p = calculate_permutation(inds(B),inds(A))
   for i ∈ CartesianIndices(dims(A))
-    A[Tuple(i)...]≠B[Tuple(i)[p]...] && return false
+    A[Tuple(i)...] ≠ B[Tuple(i)[p]...] && return false
   end
   return true
 end
@@ -154,24 +146,25 @@ end
 
 randn!(T::ITensor) = storage_randn!(store(T))
 
-function randomITensor(::Type{S},inds::IndexSet) where {S<:Number}
-  T = ITensor(S,inds)
+function randomITensor(::Type{S},inds) where {S<:Number}
+  T = ITensor(S,IndexSet(inds))
   randn!(T)
   return T
 end
 randomITensor(::Type{S},inds::Index...) where {S<:Number} = randomITensor(S,IndexSet(inds...))
-randomITensor(inds::IndexSet) = randomITensor(Float64,inds)
+randomITensor(inds) = randomITensor(Float64,IndexSet(inds))
 randomITensor(inds::Index...) = randomITensor(Float64,IndexSet(inds...))
 
 norm(T::ITensor) = storage_norm(store(T))
 dag(T::ITensor) = ITensor(storage_dag(store(T),inds(T))...)
 
-function permute(T::ITensor,permTinds::IndexSet)
+function permute(T::ITensor,permTinds)
+  permTis = IndexSet(permTinds)
   permTstore = typeof(store(T))(dim(T))
-  storage_permute!(permTstore,permTinds,store(T),inds(T))
-  return ITensor(permTinds,permTstore)
+  storage_permute!(permTstore,permTis,store(T),inds(T))
+  return ITensor(permTis,permTstore)
 end
-permute(T::ITensor,new_inds::Index...) = permute(T,IndexSet(new_inds...))
+permute(T::ITensor,inds::Index...) = permute(T,IndexSet(inds...))
 
 function add!(A::ITensor,B::ITensor)
   storage_add!(store(A),inds(A),store(B),inds(B))
@@ -180,7 +173,7 @@ end
 #TODO: improve these using a storage_mult call
 *(A::ITensor,x::Number) = A*ITensor(x)
 *(x::Number,A::ITensor) = A*x
-
+#TODO: make a proper element-wise division
 /(A::ITensor,x::Number) = A*ITensor(1.0/x)
 
 -(A::ITensor) = -one(eltype(A))*A
@@ -192,79 +185,15 @@ function +(A::ITensor,B::ITensor)
 end
 -(A::ITensor,B::ITensor) = A+(-B)
 
+#TODO: Add special case of A==B
+#A==B && return ITensor(norm(A)^2)
+#TODO: Add more of the contraction logic here?
+#We can move the logic of getting the integer labels,
+#etc. since they are generic for all storage types
 function *(A::ITensor,B::ITensor)
-  #TODO: Add special case of A==B
-  #A==B && return ITensor(norm(A)^2)
   (Cis,Cstore) = storage_contract(store(A),inds(A),store(B),inds(B))
   C = ITensor(Cis,Cstore)
   return C
-end
-
-function findtags(T::ITensor,
-                  tags::String)
-  ts = TagSet(tags)
-  for i in inds(T)
-    if hastags(i,ts)
-      return i
-    end
-  end
-  error("findtags: ITensor has no Index with given tags: $ts")
-  return Index()
-end
-
-function findinds(T::ITensor,
-                  tags::String)
-  vinds = Index[]
-  ts = TagSet(tags)
-  for i in inds(T)
-    if hastags(i,ts)
-      push!(vinds,i)
-    end
-  end
-  return vinds
-end
-
-function eigen(A::ITensor,
-               left_inds::NTuple{NL,Index},
-               right_inds::NTuple{NR,Index};
-               truncate::Int=100,
-               lefttags::String="Link,u",
-               righttags::String="Link,v",
-               matrixtype::Type{T}=Hermitian) where {T,NL,NR}
-  Lis = IndexSet(left_inds...)
-  Ris = IndexSet(right_inds...)
-  #TODO: make this a debug level check
-  IndexSet(left_inds...,right_inds...) ≠ inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
-
-  #TODO: check if A is already ordered properly
-  #and avoid doing this permute, since it makes a copy
-  #AND/OR use svd!() to overwrite the data of A to save memory
-  A = permute(A,Lis...,Ris...)
-  #TODO: More of the index analysis should be moved out of storage_eigen
-  Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris,matrixtype,truncate,lefttags,righttags)
-  return ITensor(Uis,Ustore),ITensor(Dis,Dstore)
-end
-
-function eigen(A::ITensor,
-               left_tags::NTuple{NL,String},
-               right_tags::NTuple{NR,String};
-               kwargs...) where {NL,NR}
-  Linds = Index[] 
-  Rinds = Index[]
-  for tags ∈ left_tags
-    push!(Linds,findinds(A,tags)...)
-  end
-  for tags ∈ right_tags
-    push!(Rinds,findinds(A,tags)...)
-  end
-  return eigen(A,NTuple{length(Linds),Index}(Linds),NTuple{length(Rinds),Index}(Rinds);kwargs...)
-end
-
-function eigen(A::ITensor,
-               left_tags::String,
-               right_tags::String;
-               kwargs...) where {NL,NR}
-  return eigen(A,(left_tags,),(right_tags,);kwargs...)
 end
 
 function show_info(io::IO,
@@ -287,6 +216,4 @@ function show(io::IO,
               T::ITensor)
   show_info(io,T)
 end
-
-
 

@@ -18,6 +18,8 @@ getindex(D::Dense,i::Int) = data(D)[i]
 
 copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 
+outer(D1::Dense{T},D2::Dense{T}) where {T} = Dense{T}(vec(data(D1)*transpose(data(D2))))
+
 storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
 
 function storage_getindex(Tstore::Dense{T},
@@ -72,6 +74,20 @@ function storage_scalar(D::Dense)
   end
 end
 
+function is_outer(l1::Vector{Int},l2::Vector{Int})
+  for l1i in l1
+    if l1i < 0
+      return false
+    end
+  end
+  for l2i in l2
+    if l2i < 0
+      return false
+    end
+  end
+  return true
+end
+
 # TODO: make this storage_contract!(), where C is pre-allocated. 
 #       This will allow for in-place multiplication
 # TODO: optimize the contraction logic so C doesn't get permuted?
@@ -90,8 +106,13 @@ function storage_contract(Astore::TensorStorage,
     #I think we should do this analysis outside of storage_contract, at the ITensor level
     #(since it is universal for any storage type and just analyzes in indices)
     (Alabels,Blabels) = compute_contraction_labels(Ais,Bis)
-    (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
-    Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
+    if is_outer(Alabels,Blabels)
+      Cis = IndexSet(Ais,Bis)
+      Cstore = outer(Astore,Bstore)
+    else
+      (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
+      Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
+    end
   end
   return (Cis,Cstore)
 end

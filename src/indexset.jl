@@ -1,15 +1,34 @@
 
 struct IndexSet
     inds::Vector{Index}
-    IndexSet(N::Integer) = new(Vector{Index}(undef,N))
     IndexSet(inds::Vector{Index}) = new(inds)
-    IndexSet(inds::Index...) = new([inds...])
 end
+
+# Empty constructor
+IndexSet() = IndexSet(Index[])
+
+# Construct of some size
+IndexSet(N::Integer) = IndexSet(Vector{Index}(undef,N))
+
+# Construct from various sets of indices
+IndexSet(inds::Index...) = IndexSet(Index[inds...])
+IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet(inds...)
+
+# Construct from various sets of IndexSets
+IndexSet(inds::IndexSet) = inds
+IndexSet(inds::IndexSet,i::Index) = IndexSet(inds...,i)
+IndexSet(i::Index,inds::IndexSet) = IndexSet(i,inds...)
+IndexSet(inds1::IndexSet,inds2::IndexSet) = IndexSet(inds1...,inds2...)
+IndexSet(inds1::IndexSet,inds2::IndexSet,inds3::IndexSet) = IndexSet(inds1...,inds2...,inds3...)
+# TODO: how do we make arbitrary N work?
+IndexSet(inds::NTuple{N,IndexSet}) where {N} = IndexSet(inds...)
+
+# Convert to an Index if there is only one
+Index(is::IndexSet) = length(is)==1 ? is[1] : error("IndexSet has more than one Index")
 
 getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
 setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
 length(is::IndexSet) = length(is.inds)
-rank(is::IndexSet) = length(is)
 order(is::IndexSet) = length(is)
 copy(is::IndexSet) = IndexSet(copy(is.inds))
 dims(is::IndexSet) = Tuple(dim(i) for i ∈ is)
@@ -23,62 +42,73 @@ iterate(is::IndexSet,state::Int=1) = iterate(is.inds,state)
 
 push!(is::IndexSet,i::Index) = push!(is.inds,i)
 
-function hasindex(is::IndexSet,i::Index)
+# 
+# Set operations
+#
+
+function in(i::Index,inds)
+  is = IndexSet(inds)
   for j ∈ is
     i==j && return true
   end
   return false
 end
+hasindex(is,i::Index) = i ∈ is
 
-function ==(Ais::IndexSet,Bis::IndexSet)
-  order(Ais)!=order(Bis) && throw(ErrorException("IndexSets must have the same number of Indices to be equal"))
+function issubset(Ais::IndexSet,Binds)
+  Bis = IndexSet(Binds)
   for i ∈ Ais
-    !hasindex(Bis,i) && return false
+    i ∉ Bis && return false
   end
   return true
 end
-!=(Ais::IndexSet,Bis::IndexSet) = !(Ais==Bis)
+hasinds(Ais,Bis) = IndexSet(Ais) ⊆ Bis
 
-function issubset(Ais::IndexSet,Bis::IndexSet)
-  for i ∈ Ais
-    !hasindex(Bis,i) && return false
-  end
-  return true
+function issetequal(Ais::IndexSet,Binds)
+  Bis = IndexSet(Binds)
+  return Ais ⊆ Bis && length(Ais) == length(Bis)
 end
+hassameinds(Ais,Bis) = issetequal(IndexSet(Ais),Bis)
 
 "Output the IndexSet with Indices in Bis but not in Ais"
-function difference(Bis::IndexSet,Ais::IndexSet)
+function setdiff(Bis::IndexSet,Ainds)
+  Ais = IndexSet(Ainds)
   Cis = IndexSet()
   for j ∈ Bis
-    !hasindex(Ais,j) && push!(Cis,j)
+    j ∉ Ais && push!(Cis,j)
   end
   return Cis
 end
+uniqueinds(Bis,Ais) = setdiff(IndexSet(Bis),Ais)
 
 "Output the IndexSet in the intersection of Ais and Bis"
-function intersect(Ais::IndexSet,Bis::IndexSet)
+function intersect(Ais::IndexSet,Binds)
+  Bis = IndexSet(Binds)
   Cis = IndexSet()
   for i ∈ Ais
-    hasindex(Bis,i) && push!(Cis,i)
+    i ∈ Bis && push!(Cis,i)
   end
   return Cis
 end
+commoninds(Ais,Bis) = IndexSet(Ais) ∩ Bis
+commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
 
-function findindex(is::IndexSet,ts::String)
-  tsmatch = TagSet(ts)
-  for j ∈ is
-    tsmatch∈tags(j) && return j
+function findinds(inds, tags)
+  is = IndexSet(inds)
+  ts = TagSet(tags)
+  found_inds = IndexSet()
+  for i in is
+    if hastags(i,ts)
+      push!(found_inds,i)
+    end
   end
-  return Index()
+  return found_inds
 end
+findindex(inds, tags) = Index(findinds(inds,tags))
 
-function commonindex(Ais::IndexSet,Bis::IndexSet)
-  Cis = Ais∩Bis
-  if order(Cis)>1 throw(ErrorException("IndexSets have more than one common Index"))
-  elseif order(Cis)==1 return Cis[1]
-  end
-  return Index()
-end
+#
+# Tagging functions
+#
 
 function prime(is::IndexSet,plinc::Integer=1)
   res = copy(is)
@@ -87,6 +117,10 @@ function prime(is::IndexSet,plinc::Integer=1)
   end
   return res
 end
+#TODO: implement a more generic version
+#prime(is::IndexSet,plinc::Integer,match)
+#   index_positions(is,match) -> pos::Vector{Int}
+#   for p ∈ pos prime(is[p],plinc)
 function prime(is::IndexSet,plinc::Integer,i::Index)
   res = copy(is)
   for jj ∈ 1:length(res)
@@ -96,27 +130,17 @@ function prime(is::IndexSet,plinc::Integer,i::Index)
   end
   return res
 end
-function primeexcept(is::IndexSet,plinc::Integer,i::Index)
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    if res[jj]!=i
-      res[jj] = prime(res[jj],plinc)
-    end
-  end
-  return res
-end
-primeexcept(is::IndexSet,i::Index) = primeexcept(is,1,i)
 prime(is::IndexSet,i::Index) = prime(is,1,i)
-function prime(is::IndexSet,plinc::Integer,ts::String)
+function prime(is::IndexSet,plinc::Integer,ts)
   res = copy(is)
   for jj ∈ 1:length(res)
-    if ts∈tags(res[jj])
+    if TagSet(ts)∈tags(res[jj])
       res[jj] = prime(res[jj],plinc)
     end
   end
   return res
 end
-prime(is::IndexSet,ts::String) = prime(is,1,ts)
+prime(is::IndexSet,ts) = prime(is,1,ts)
 adjoint(is::IndexSet) = prime(is)
 
 function setprime(is::IndexSet,plev::Int)
@@ -247,18 +271,18 @@ function contract_inds(Ais::IndexSet,
   for i in Aind
     if(i < 0) ncont += 1 end 
   end
-  nuniq = rank(Ais)+rank(Bis)-2*ncont
+  nuniq = length(Ais)+length(Bis)-2*ncont
   Cind = zeros(Int,nuniq)
   Cis = fill(Index(),nuniq)
   u = 1
-  for i = 1:rank(Ais)
+  for i ∈ 1:length(Ais)
     if(Aind[i] > 0) 
       Cind[u] = Aind[i]; 
       Cis[u] = Ais[i]; 
       u += 1 
     end
   end
-  for i = 1:rank(Bis)
+  for i ∈ 1:length(Bis)
     if(Bind[i] > 0) 
       Cind[u] = Bind[i]; 
       Cis[u] = Bis[i]; 

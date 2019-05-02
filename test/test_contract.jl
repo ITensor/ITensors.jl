@@ -46,12 +46,12 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       CArray = transpose(Array(Ai))*Array(Bi)
       @test CArray≈scalar(C)
     end
-    #TODO: need to add back this outer product test
-    #@testset "Test contract ITensors (Vector*Vectorᵀ -> Matrix)" begin
-    #  C = Ai*Aj
-    #  CArray = Array(Ai)*transpose(Array(Aj))
-    #  @test CArray≈Array(permute(C,i,j))
-    #end
+    @testset "Test contract ITensors (Vector*Vectorᵀ -> Matrix)" begin
+      C = Ai*Aj
+      for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+        @test C[i(ii),j(jj)] ≈ Ai[i(ii)]*Aj[j(jj)]
+      end
+    end
     @testset "Test contract ITensors (Matrix*Scalar -> Matrix)" begin
       Aij = permute(Aij,i,j)
       C = Aij*A
@@ -115,6 +115,12 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       C = Aij*Ajk
       CArray = transpose(Array(Aij))*transpose(Array(Ajk))
       @test CArray≈Array(C)
+    end
+    @testset "Test contract ITensors (Matrix⊗Matrix -> 4-tensor)" begin
+      C = Aij*Akl
+      for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k), ll ∈ 1:dim(l)
+        @test C[i(ii),j(jj),k(kk),l(ll)] ≈ Aij[i(ii),j(jj)]*Akl[k(kk),l(ll)]
+      end
     end
     @testset "Test contract ITensors (3-Tensor*Scalar -> 3-Tensor)" begin
       Aijk = permute(Aijk,i,j,k)

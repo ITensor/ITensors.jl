@@ -33,6 +33,8 @@ import Base.adjoint,
        Base.issubset,
        Base.in,
        Base.intersect,
+       Base.issetequal,
+       Base.setdiff,
        LinearAlgebra.norm,
        LinearAlgebra.svd,
        LinearAlgebra.qr,
@@ -57,7 +59,6 @@ export prime,
        swapprime,
        plev,
        tags,
-       rank,
        order,
        dims,
        randomITensor,
@@ -97,9 +98,12 @@ export adjoint,
        Out
 include("indexset.jl")
 export hasindex,
-       difference,
-       primeexcept,
-       swaptags
+       swaptags,
+       hassameinds,
+       commoninds,
+       commonindex,
+       uniqueinds,
+       uniqueindex
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")
 include("storage/contract.jl")

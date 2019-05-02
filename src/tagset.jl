@@ -36,8 +36,9 @@ copy(ts::TagSet) = TagSet(copy(ts.tags),plev(ts))
 
 iterate(ts::TagSet,state::Int=1) = iterate(ts.tags,state)
 
-convert(::Type{TagSet},x::String) = TagSet(x)
-convert(::Type{TagSet},x::TagSet) = x
+# Should we define conversions?
+#convert(::Type{TagSet},x::String) = TagSet(x)
+#convert(::Type{TagSet},x::TagSet) = x
 
 ==(ts1::TagSet,ts2::TagSet) = (ts1.tags==ts2.tags && plev(ts1)==plev(ts2))
 

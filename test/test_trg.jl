@@ -7,13 +7,13 @@ Random.seed!(12345)
 include("2d_classical_ising.jl")
 
 function factorize(A::ITensor,
-                   Ltags::NTuple{NL,String},
-                   Rtags::NTuple{NR,String};
-                   maxm::Int,tags::String) where {NL,NR}
-  Linds = NTuple{NL}((findtags(A,tags) for tags ∈ Ltags))
-  Rinds = NTuple{NR}((findtags(A,tags) for tags ∈ Rtags))
-  IndexSet(Linds...,Rinds...)!=inds(A) && error("Tags must match those contained by the ITensor")
-  U,S,V = svd(A,Linds...;maxm=maxm,utags="$tags,u",vtags="$tags,v")
+                   Linds;
+                   maxm::Int,
+                   tags::String)
+  Lis = IndexSet(Linds)
+  Ris = setdiff(inds(A),Lis)
+  !issetequal(IndexSet(Lis,Ris),inds(A)) && error("Tags must match those contained by the ITensor")
+  U,S,V = svd(A,Lis;maxm=maxm,utags="$tags,u",vtags="$tags,v")
   u = commonindex(U,S)
   v = commonindex(S,V)
   for ss = 1:dim(u)
@@ -21,18 +21,19 @@ function factorize(A::ITensor,
   end
   FU = removetags(U*S,"v")
   FV = removetags(S*V,"u")
-  return FU,FV
+  l = commonindex(FU,FV)
+  return FU,FV,l
 end
 
-function trace(A::ITensor,tags1::Tuple{String,String},tags::Tuple{String,String}...)
-  return trace(trace(A,tags1),tags...)
-end
-
-function trace(A::ITensor,tags::Tuple{String,String})
-  i1 = findtags(A,tags[1])
-  i2 = findtags(A,tags[2])
-  return A*δ(i1,i2)
-end
+#function trace(A::ITensor,tags1::Tuple{String,String},tags::Tuple{String,String}...)
+#  return trace(trace(A,tags1),tags...)
+#end
+#
+#function trace(A::ITensor,tags::Tuple{String,String})
+#  i1 = findtags(A,tags[1])
+#  i2 = findtags(A,tags[2])
+#  return A*δ(i1,i2)
+#end
 
 """
 trg(T::ITensor; χmax::Int, nsteps::Int) -> κ,T
@@ -53,19 +54,28 @@ nsteps are the number of renormalization steps performed.
 The outputs are κ, the partition function per site, and the final renormalized
 ITensor T (also with Indices with tags "left","right","up", and "down").
 """
-function trg(T::ITensor;
+function trg(T::ITensor, horiz_inds, vert_inds;
              χmax::Int, nsteps::Int)
-  # Check tags are correct
-  @assert findtags(T,"left") == replacetags(findtags(T,"right"),"right","left")
-  @assert findtags(T,"up") == replacetags(findtags(T,"down"),"down","up")
-  
+
+  l = horiz_inds[1]
+  r = horiz_inds[2]
+  u = vert_inds[1]
+  d = vert_inds[2]
+
+  @assert hassameinds((l,r,u,d),T)
+
+  T = addtags(T,"orig")
+  l = addtags(l,"orig")
+  r = addtags(r,"orig")
+  u = addtags(u,"orig")
+  d = addtags(d,"orig")
+
   # Keep track of the partition function per site
   κ = 1.0
 
-  T = addtags(T,"orig")
   for n = 1:nsteps
-    Fr,Fl = factorize(T,("left","up"),("right","down");maxm=χmax,tags="renorm")
-    Fd,Fu = factorize(T,("right","up"),("left","down");maxm=χmax,tags="renorm")
+    Fr,Fl = factorize(T, (l,u); maxm=χmax, tags="renorm")
+    Fd,Fu = factorize(T, (r,u); maxm=χmax, tags="renorm")
 
     Fl = addtags(Fl,"left","renorm")
     Fr = addtags(Fr,"right","renorm")
@@ -78,12 +88,21 @@ function trg(T::ITensor;
         replacetags(replacetags(Fd,"right","downright","orig"),"up","downleft","orig")
     T = replacetags(T,"renorm","orig")
 
-    trT = abs(scalar(trace(T,("left","right"),("up","down"))))
+    l = findindex(T,"left")
+    r = findindex(T,"right")
+    u = findindex(T,"up")
+    d = findindex(T,"down")
+
+    trT = abs(scalar(T*δ(l,r)*δ(u,d)))
     T = T/trT
     κ *= trT^(1.0/2^n)
   end
   T = removetags(T,"orig")
-  return κ,T
+  l = findindex(T,"left")
+  r = findindex(T,"right")
+  u = findindex(T,"up")
+  d = findindex(T,"down")
+  return κ,T,(l,r),(u,d)
 end
 
 @testset "trg" begin
@@ -99,7 +118,7 @@ end
 
   χmax = 20
   nsteps = 20
-  κ,T = trg(T;χmax=χmax,nsteps=nsteps)
+  κ,T,(l,r),(u,d) = trg(T,(l,r),(u,d);χmax=χmax,nsteps=nsteps)
 
   @test κ≈exp(-β*ising_free_energy(β)) atol=1e-4
 end
