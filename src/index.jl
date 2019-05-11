@@ -28,7 +28,7 @@ function Index(dim::Integer,tags::String="0")
   ts = TagSet(tags)
   # By default, an Index has a prime level of 0
   tsplev = plev(ts)==-1 ? 0 : plev(ts)
-  Index(rand(IDType),dim,In,TagSet(ts.tags,tsplev))
+  Index(rand(IDType),dim,Out,TagSet(ts.tags,tsplev))
 end
 
 id(i::Index) = i.id

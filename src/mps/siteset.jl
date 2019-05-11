@@ -1,5 +1,19 @@
 
-abstract type SiteSet end
+struct SiteSet
+  inds::IndexSet
+  SiteSet() = new(IndexSet())
+  function SiteSet(N::Integer, d::Integer)
+    inds_ = IndexSet(N)
+    for n=1:N
+      inds_[n] = Index(d,"n=$n,Site")
+    end
+    new(inds_)
+  end
+end
+
+inds(s::SiteSet) = s.inds
+length(s::SiteSet) = length(inds(s))
+getindex(s::SiteSet,n::Integer) = getindex(inds(s),n)
 
 function show(io::IO,
               sites::SiteSet)
@@ -9,9 +23,6 @@ function show(io::IO,
     println(io,"  $(sites[i])")
   end
 end
-
-length(sites::SiteSet) = length(inds(sites))
-getindex(sites::SiteSet,i::Integer) = getindex(inds(sites),i)
 
 function state(sites::SiteSet,
                n::Integer,
@@ -26,51 +37,32 @@ function state(sites::SiteSet,
   return sites[1](1)
 end
 
-struct Sites <: SiteSet
-  inds::IndexSet
-  Sites() = new(IndexSet())
-  function Sites(N::Integer, d::Integer)
-    inds_ = IndexSet(N)
-    for n=1:N
-      inds_[n] = Index(d,"n=$n,Site")
-    end
-    new(inds_)
-  end
-end
-
-inds(s::Sites) = s.inds
 
 abstract type Site end
 
 struct SpinSite{N} <: Site
     s::Index
-    SpinSite{N}(is::Index) where N = new{N}(is)
+    SpinSite{N}(I::Index) where N = new{N}(I)
 end
 SpinSite{Val{1//2}}(n::Int) = SpinSite{Val{1//2}}(Index(2, "Site,S=1/2,n=$n"))
 SpinSite{Val{1}}(n::Int) = SpinSite{Val{1}}(Index(3, "Site,S=1,n=$n"))
 
 struct tJSite{N} <: Site
   s::Index
-  tJSite{N}(is::Index) where N = new{N}(is)
+  tJSite{N}(I::Index) where N = new{N}(I)
 end
 function tJSite{Val{1//2}}(n::Int)
-  # handle QN stuff later
-  # index size 3 bc empty site is possible
-  tJSite{Val{1//2}}(Index(rand(IDType), 3, Out, "Site,tJ,n=$n"))
+  tJSite{Val{1//2}}(Index(3,"Site,tJ,n=$n"))
 end
 
-struct HubbardSite{N} <: Site
+struct ElectronSite <: Site
   s::Index
-  HubbardSite{N}(is::Index) where N = new{N}(is)
+  ElectronSite(I::Index) = new(I)
 end
-function HubbardSite{Val{1//2}}(n::Int)
-  # handle QN stuff later
-  # index size 4 bc empty site and doublon are possible
-  HubbardSite{Val{1//2}}(Index(rand(IDType), 4, Out, "Site,Hubbard,n=$n"))
-end
+ElectronSite(n::Int) = ElectronSite(Index(4,"Site,Electron,n=$n"))
 
-function op(site::HubbardSite{Val{1//2}}, 
-            opname::String; store_type::DataType=Float64)
+function op(site::ElectronSite, 
+            opname::String)
     s = site.s
     sP = prime(site.s)
     Emp = site.s(1);
@@ -81,98 +73,74 @@ function op(site::HubbardSite{Val{1//2}},
     DnP = sP(3);
     UpDn = site.s(4);
     UpDnP = sP(4);
+
+    Op = ITensor(dag(s), s')
+
     if opname == "Nup"
-        Nu = ITensor(store_type, dag(s), s')
-        Nu[Up, UpP] = 1.
-        Nu[UpDn, UpDnP] = 1.
-        return Nup
+        Op[Up, UpP] = 1.
+        Op[UpDn, UpDnP] = 1.
     elseif opname == "Ndn"
-        Nd = ITensor(store_type, dag(s), s')
-        Nd[Dn, DnP] = 1.
-        Nd[UpDn, UpDnP] = 1.
-        return Nd
+        Op[Dn, DnP] = 1.
+        Op[UpDn, UpDnP] = 1.
     elseif opname == "Ntot"
-        Nt = ITensor(store_type, dag(s), s')
-        Nt[Up, UpP] = 1.
-        Nt[Dn, DnP] = 1.
-        Nt[UpDn, UpDnP] = 2.
-        return Nt
+        Op[Up, UpP] = 1.
+        Op[Dn, DnP] = 1.
+        Op[UpDn, UpDnP] = 2.
     elseif opname == "Cup" || opname == "Aup"
-        Cu = ITensor(store_type, dag(s), s')
-        Cu[Up, EmpP] = 1.
-        Cu[UpDn, DnP] = 1.
-        return Cu
+        Op[Up, EmpP] = 1.
+        Op[UpDn, DnP] = 1.
     elseif opname == "Cdagup" || opname == "Adagup"
-        Cu = ITensor(store_type, dag(s), s')
-        Cu[Emp, UpP] = 1.
-        Cu[Dn, UpDnP] = 1.
-        return Cu
+        Op[Emp, UpP] = 1.
+        Op[Dn, UpDnP] = 1.
     elseif opname == "Cdn" || opname == "Adn"
-        Cd = ITensor(store_type, dag(s), s')
-        Cd[Dn, EmpP] = 1.
-        Cd[UpDn, UpP] = 1.
-        return Cd
+        Op[Dn, EmpP] = 1.
+        Op[UpDn, UpP] = 1.
     elseif opname == "Cdagdn" || opname == "Adagdn"
-        Cd = ITensor(store_type, dag(s), s')
-        Cd[Emp, DnP] = 1.
-        Cd[Up, UpDnP] = 1.
-        return Cd
+        Op[Emp, DnP] = 1.
+        Op[Up, UpDnP] = 1.
     elseif opname == "FermiPhase" || opname == "FP"
-        FP = ITensor(store_type, dag(s), s')
-        FP[Up, UpP] = -1.
-        FP[Emp, EmpP] = 1.
-        FP[Dn, DnP] = -1.
-        FP[UpDn, UpDnP] = 1.
-        return FP
+        Op[Up, UpP] = -1.
+        Op[Emp, EmpP] = 1.
+        Op[Dn, DnP] = -1.
+        Op[UpDn, UpDnP] = 1.
     elseif opname == "Fup"
-        FUp = ITensor(store_type, dag(s), s')
-        FUp[Emp, EmpP] = 1.
-        FUp[Up, UpP] = -1.
-        FUp[Dn, DnP] = 1.
-        FUp[UpDn, UpDnP] = -1.
-        return FUp
+        Op[Emp, EmpP] = 1.
+        Op[Up, UpP] = -1.
+        Op[Dn, DnP] = 1.
+        Op[UpDn, UpDnP] = -1.
     elseif opname == "Fdn"
-        FDn = ITensor(store_type, dag(s), s')
-        FDn[Emp, EmpP] = 1.
-        FDn[Up, UpP] = 1.
-        FDn[Dn, DnP] = -1.
-        FDn[UpDn, UpDnP] = -1.
-        return FDn
+        Op[Emp, EmpP] = 1.
+        Op[Up, UpP] = 1.
+        Op[Dn, DnP] = -1.
+        Op[UpDn, UpDnP] = -1.
     elseif opname == "Sᶻ" || opname == "Sz"
-        Sᶻ = ITensor(store_type, dag(s), s')
-        Sᶻ[Up, UpP] = 0.5
-        Sᶻ[Dn, DnP] = -0.5
-        return Sᶻ
+        Op[Up, UpP] = 0.5
+        Op[Dn, DnP] = -0.5
     elseif opname == "Sˣ" || opname == "Sx"
-        Sˣ = ITensor(store_type, dag(s), s')
-        Sˣ[Up, DnP] = 1.0
-        Sˣ[Dn, UpP] = 1.0 
-        return Sˣ
+        Op[Up, DnP] = 1.0
+        Op[Dn, UpP] = 1.0 
     elseif opname == "S⁺" || opname == "Splus"
-        S⁺ = ITensor(store_type, dag(s), s')
-        S⁺[Dn, UpP] = 1.
-        return S⁺
+        Op[Dn, UpP] = 1.
     elseif opname == "S⁻" || opname == "Sminus"
-        S⁻ = ITensor(store_type, dag(s), s')
-        S⁻[Up, DnP] = 1.
-        return S⁻
+        Op[Up, DnP] = 1.
     elseif opname == "Emp" || opname == "0"
-        pEmp = ITensor(store_type, s)
+        pEmp = ITensor(s)
         pEmp[Emp] = 1.
         return pEmp
     elseif opname == "Up" || opname == "↑"
-        pU = ITensor(store_type, s)
+        pU = ITensor(s)
         pU[Up] = 1.
         return pU
     elseif opname == "Dn" || opname == "↓"
-        pD = ITensor(store_type, s)
+        pD = ITensor(s)
         pD[Dn] = 1.
         return pD
     elseif opname == "UpDn" || opname == "↑↓"
-        pUD = ITensor(store_type, s)
+        pUD = ITensor(s)
         pUD[UpDn] = 1.
         return pUD
     end
+    return Op
 end
 
 function op(site::tJSite{Val{1//2}}, opname::String; store_type::DataType=Float64)
