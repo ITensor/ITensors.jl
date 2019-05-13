@@ -27,13 +27,13 @@ struct MPO
         links[ii] = Index(1, "Link,n=$ii")
         local this_it
         if ii == 1
-            this_it = ITensor(store_type, links[ii], si, si')
+            this_it = ITensor(links[ii], si, si')
             this_it[links[ii](1), s[:], s'[:]] = spin_op[si[:], si'[:]]
         elseif ii == N
-            this_it = ITensor(store_type, links[ii-1], si, si')
+            this_it = ITensor(links[ii-1], si, si')
             this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
         else
-            this_it = ITensor(store_type, links[ii-1], links[ii], si, si')
+            this_it = ITensor(links[ii-1], links[ii], si, si')
             this_it[links[ii-1](1), links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
         end
         its[ii] = this_it
@@ -43,9 +43,8 @@ struct MPO
 
   function MPO(::Type{T}, 
                sites::SiteSet, 
-               ops::String; 
-               store_type::DataType = Float64) where {T}  
-    return MPO(T, sites, fill(ops, length(sites)), store_type=store_type)
+               ops::String)
+    return MPO(T, sites, fill(ops, length(sites)))
   end
 
 end
