@@ -5,8 +5,16 @@ struct SpinHalfSite <: Site
 end
 SpinHalfSite(n::Int) = SpinHalfSite(Index(2, "Site,S=1/2,n=$n"))
 
-function op(site::SpinHalfSite, 
-            opname::String)::ITensor
+function spinhalfs(N::Int)::SiteSet
+  sites = SiteSet(N)
+  for n=1:N
+    set(sites,n,SpinHalfSite(n))
+  end
+  return sites
+end
+
+function operator(site::SpinHalfSite, 
+                  opname::String)::ITensor
     s = site.s
     sP = prime(site.s)
     Up = s(1)
@@ -44,6 +52,8 @@ function op(site::SpinHalfSite,
         pD = ITensor(s)
         pD[Dn] = 1.
         return pD
+    else
+      error("Operator name '$opname' not recognized for SpinHalfSite")
     end
     return Op
 end

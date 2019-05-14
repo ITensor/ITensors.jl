@@ -5,8 +5,16 @@ struct tJSite <: Site
 end
 tJSite(n::Int) = tJSite(Index(3,"Site,tJ,n=$n"))
 
-function op(site::tJSite, 
-            opname::String)
+function tjs(N::Int)::SiteSet
+  sites = SiteSet(N)
+  for n=1:N
+    set(sites,n,tJSite(n))
+  end
+  return sites
+end
+
+function operator(site::tJSite, 
+                  opname::String)
     s = site.s
     sP = prime(site.s)
     Emp = s(1)
@@ -67,6 +75,8 @@ function op(site::tJSite,
         pD = ITensor(s)
         pD[Dn] = 1.
         return pD
+    else
+      error("Operator name '$opname' not recognized for SpinOneSite")
     end
     return Op
 end

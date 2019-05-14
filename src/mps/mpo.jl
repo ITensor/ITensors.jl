@@ -14,16 +14,14 @@ struct MPO
     new(N,fill(ITensor(),N))
   end
 
-  # T can be something like SpinSite{Val{1//2}}
-  function MPO(::Type{T}, 
-               sites::SiteSet, 
-               ops::Vector{String}) where {T}
+  function MPO(sites::SiteSet, 
+               ops::Vector{String})
     N = length(sites)
     its = Vector{ITensor}(undef, N)
     links = Vector{Index}(undef, N)
     for ii in 1:N
         si = sites[ii]
-        spin_op = op(T(i_site), ops[ii])
+        spin_op = op(sites, ops[ii])
         links[ii] = Index(1, "Link,n=$ii")
         local this_it
         if ii == 1
@@ -41,10 +39,9 @@ struct MPO
     new(N,its)
   end
 
-  function MPO(::Type{T}, 
-               sites::SiteSet, 
+  function MPO(sites::SiteSet, 
                ops::String)
-    return MPO(T, sites, fill(ops, length(sites)))
+    return MPO(sites, fill(ops, length(sites)))
   end
 
 end

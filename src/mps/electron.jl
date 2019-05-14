@@ -5,8 +5,16 @@ struct ElectronSite <: Site
 end
 ElectronSite(n::Int) = ElectronSite(Index(4,"Site,Electron,n=$n"))
 
-function op(site::ElectronSite, 
-            opname::String)::ITensor
+function electrons(N::Int)::SiteSet
+  sites = SiteSet(N)
+  for n=1:N
+    set(sites,n,ElectronSite(n))
+  end
+  return sites
+end
+
+function operator(site::ElectronSite, 
+                  opname::String)::ITensor
     s  = site.s
     sP = prime(site.s)
     Emp   = s(1)
@@ -83,6 +91,8 @@ function op(site::ElectronSite,
         pUD = ITensor(s)
         pUD[UpDn] = 1.
         return pUD
+    else
+      error("Operator name $opname not recognized for ElectronSite")
     end
     return Op
 end

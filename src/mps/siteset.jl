@@ -1,19 +1,56 @@
 
+abstract type Site end
+
+ind(st::Site) = st.s
+
+function operator(s::Site,opname::String)::ITensor
+  error("Operator name $opname not recognized for generic site")
+  return ITensor()
+end
+
+function op(site::Site,
+            opname::String)::ITensor
+  s = ind(site)
+  sP = s'
+
+  Op = ITensor(dag(s),sP)
+  if opname == "Id"
+    for n=1:dim(s)
+      Op[dag(s)(n),sP(n)] = 1.0
+    end
+  else
+    return operator(site,opname)
+  end
+  return Op
+end
+
+struct BasicSite <: Site
+  s::Index
+  BasicSite(i::Index) = new(i)
+end
+BasicSite(d::Int) = BasicSite(Index(d,"Site"))
+BasicSite(d::Int,n::Int) = BasicSite(Index(d,"Site,n=$n"))
+
 struct SiteSet
-  inds::IndexSet
-  SiteSet() = new(IndexSet())
+  sites::Vector{Site}
+
+  SiteSet() = new(Vector{Site}())
+
+  SiteSet(N::Integer) = new(Vector{Site}(undef,N))
+
   function SiteSet(N::Integer, d::Integer)
-    inds_ = IndexSet(N)
+    inds_ = Vector{Site}(undef,N)
     for n=1:N
-      inds_[n] = Index(d,"n=$n,Site")
+      inds_[n] = BasicSite(d,n)
     end
     new(inds_)
   end
 end
 
-inds(s::SiteSet) = s.inds
-length(s::SiteSet) = length(inds(s))
-getindex(s::SiteSet,n::Integer) = getindex(inds(s),n)
+length(s::SiteSet) = length(s.sites)
+getindex(s::SiteSet,n::Integer) = ind(s.sites[n])
+op(s::SiteSet,opname::String,n::Int) = op(s.sites[n],opname)
+set(s::SiteSet,n::Int,ns::Site) = (s.sites[n] = ns)
 
 function show(io::IO,
               sites::SiteSet)
@@ -36,7 +73,3 @@ function state(sites::SiteSet,
   error("String version of 'state' SiteSet function not defined for this site set type")
   return sites[1](1)
 end
-
-
-abstract type Site end
-

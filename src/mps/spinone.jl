@@ -5,8 +5,16 @@ struct SpinOneSite <: Site
 end
 SpinOneSite(n::Int) = SpinOneSite(Index(2, "Site,S=1,n=$n"))
 
-function op(site::SpinOneSite, 
-            opname::String)::ITensor
+function spinones(N::Int)::SiteSet
+  sites = SiteSet(N)
+  for n=1:N
+    set(sites,n,SpinOneSite(n))
+  end
+  return sites
+end
+
+function operator(site::SpinOneSite, 
+                  opname::String)::ITensor
     s = site.s
     sP = prime(site.s)
     Up = s(1)
@@ -80,6 +88,8 @@ function op(site::SpinOneSite,
         xdn[Z0] = -im*√2
         xdn[Dn] = 0.5
         return xdn
+    else
+      error("Operator name '$opname' not recognized for SpinOneSite")
     end
     return Op
 end

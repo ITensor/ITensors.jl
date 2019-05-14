@@ -124,11 +124,23 @@ include("decomp.jl")
 #export truncate!
 
 include("mps/siteset.jl")
-export SiteSet,
-       Sites,
-       Site,
-       tJSite,
-       SpinSite
+export Site,
+       BasicSite,
+       SiteSet,
+       ind,
+       op
+include("mps/spinhalf.jl")
+export SpinHalfSite,
+       spinhalfs
+include("mps/spinone.jl")
+export SpinOneSite,
+       spinones
+include("mps/electron.jl")
+export ElectronSite,
+       electrons
+include("mps/tj.jl")
+export tJSite,
+       tjs
 
 include("mps/initstate.jl")
 export InitState
