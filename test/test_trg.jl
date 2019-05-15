@@ -8,12 +8,12 @@ include("2d_classical_ising.jl")
 
 function factorize(A::ITensor,
                    Linds;
-                   maxm::Int,
+                   maxdim::Int,
                    tags::String)
   Lis = IndexSet(Linds)
   !hasinds(A,Lis) && error("Indices must be contained by the ITensor")
   Ris = uniqueinds(inds(A),Lis)
-  U,S,V = svd(A,Lis;maxm=maxm,utags="$tags,u",vtags="$tags,v")
+  U,S,V = svd(A,Lis;maxdim=maxdim,utags="$tags,u",vtags="$tags,v")
   u = commonindex(U,S)
   v = commonindex(S,V)
   for ss = 1:dim(u)
@@ -74,8 +74,8 @@ function trg(T::ITensor, horiz_inds, vert_inds;
   κ = 1.0
 
   for n = 1:nsteps
-    Fr,Fl = factorize(T, (l,u); maxm=χmax, tags="renorm")
-    Fd,Fu = factorize(T, (r,u); maxm=χmax, tags="renorm")
+    Fr,Fl = factorize(T, (l,u); maxdim=χmax, tags="renorm")
+    Fd,Fu = factorize(T, (r,u); maxdim=χmax, tags="renorm")
 
     Fl = addtags(Fl,"left","renorm")
     Fr = addtags(Fr,"right","renorm")

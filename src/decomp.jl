@@ -2,8 +2,8 @@
 function truncate!(P::Vector{Float64};
                    kwargs...
                   )::Tuple{Float64,Float64}
-  maxm::Int = get(kwargs,:maxm,length(P))
-  minm::Int = get(kwargs,:minm,1)
+  maxdim::Int = get(kwargs,:maxdim,length(P))
+  mindim::Int = get(kwargs,:mindim,1)
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
@@ -29,7 +29,7 @@ function truncate!(P::Vector{Float64};
   
   n = origm
   truncerr = 0.0
-  while n > maxm
+  while n > maxdim
     truncerr += P[n]
     n -= 1
   end
@@ -37,7 +37,7 @@ function truncate!(P::Vector{Float64};
   if absoluteCutoff
     #Test if individual prob. weights fall below cutoff
     #rather than using *sum* of discarded weights
-    while P[n] <= cutoff && n > minm
+    while P[n] <= cutoff && n > mindim
       truncerr += P[n]
       n -= 1
     end
@@ -49,8 +49,8 @@ function truncate!(P::Vector{Float64};
     end
 
     #Continue truncating until *sum* of discarded probability 
-    #weight reaches cutoff reached (or m==minm)
-    while (truncerr+P[n] <= cutoff*scale) && (n > minm)
+    #weight reaches cutoff reached (or m==mindim)
+    while (truncerr+P[n] <= cutoff*scale) && (n > mindim)
       truncerr += P[n]
       n -= 1
     end
@@ -116,8 +116,8 @@ column index (matricization of a tensor).
 
 Whether the SVD performs a trunction depends on the keyword
 arguments provided. The following keyword arguments are recognized:
-* maxm [Int]
-* minm [Int]
+* maxdim [Int]
+* mindim [Int]
 * cutoff [Float64]
 * truncate [Bool]
 """

@@ -122,8 +122,8 @@ function storage_svd(Astore::Dense{T},
                      Ris::IndexSet;
                      kwargs...
                     ) where {T}
-  maxm::Int = get(kwargs,:maxm,min(dim(Lis),dim(Ris)))
-  minm::Int = get(kwargs,:minm,1)
+  maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
+  mindim::Int = get(kwargs,:mindim,1)
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
@@ -134,7 +134,7 @@ function storage_svd(Astore::Dense{T},
 
   sqr(x) = x^2
   P = sqr.(MS)
-  truncate!(P;maxm=maxm,cutoff=cutoff,absoluteCutoff=absoluteCutoff,doRelCutoff=doRelCutoff)
+  truncate!(P;maxdim=maxdim,cutoff=cutoff,absoluteCutoff=absoluteCutoff,doRelCutoff=doRelCutoff)
   dS = length(P)
   if dS < length(MS)
     MU = MU[:,1:dS]

@@ -169,7 +169,7 @@ end
         jj = Index(4)
         S = Diagonal(s)
         T = ITensor(IndexSet(ii,jj),Dense{Float64}(vec(U*S*V')))
-        (U,S,V) = svd(T,ii;maxm=2)
+        (U,S,V) = svd(T,ii;maxdim=2)
         @test norm(U*S*V-T)≈sqrt(s[3]^2+s[4]^2)
     end 
 

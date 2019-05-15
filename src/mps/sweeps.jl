@@ -1,9 +1,9 @@
 
 mutable struct Sweeps
   nsweep::Int
-  maxm::Vector{Int}
+  maxdim::Vector{Int}
   cutoff::Vector{Float64}
-  minm::Vector{Int}
+  mindim::Vector{Int}
 
   function Sweeps(nsw::Int)
     return new(nsw,fill(1,nsw),zeros(nsw),fill(1,nsw))
@@ -13,29 +13,29 @@ end
 
 nsweep(sw::Sweeps)::Int = sw.nsweep
 
-maxm(sw::Sweeps,n::Int)::Int = sw.maxm[n]
-minm(sw::Sweeps,n::Int)::Int = sw.minm[n]
+maxdim(sw::Sweeps,n::Int)::Int = sw.maxdim[n]
+mindim(sw::Sweeps,n::Int)::Int = sw.mindim[n]
 cutoff(sw::Sweeps,n::Int)::Float64 = sw.cutoff[n]
 
-function maxm!(sw::Sweeps,maxms::Int...)::Nothing
-  Nm = length(maxms)
+function maxdim!(sw::Sweeps,maxdims::Int...)::Nothing
+  Nm = length(maxdims)
   N = min(nsweep(sw),Nm)
   for i=1:N
-    sw.maxm[i] = maxms[i]
+    sw.maxdim[i] = maxdims[i]
   end
   for i=Nm+1:nsweep(sw)
-    sw.maxm[i] = maxms[Nm]
+    sw.maxdim[i] = maxdims[Nm]
   end
 end
 
-function minm!(sw::Sweeps,minms::Int...)::Nothing
-  Nm = length(minms)
+function mindim!(sw::Sweeps,mindims::Int...)::Nothing
+  Nm = length(mindims)
   N = min(nsweep(sw),Nm)
   for i=1:N
-    sw.minm[i] = minms[i]
+    sw.mindim[i] = mindims[i]
   end
   for i=Nm+1:nsweep(sw)
-    sw.minm[i] = minms[Nm]
+    sw.mindim[i] = mindims[Nm]
   end
 end
 

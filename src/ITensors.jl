@@ -151,11 +151,11 @@ export MPO
 include("mps/sweeps.jl")
 export Sweeps,
        nsweep,
-       maxm,
-       minm,
+       maxdim,
+       mindim,
        cutoff,
-       maxm!,
-       minm!,
+       maxdim!,
+       mindim!,
        cutoff!,
        sweepnext
 
