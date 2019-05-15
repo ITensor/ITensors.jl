@@ -34,110 +34,61 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     @test l''==findindex(A2,"Link,2")
   end
   @testset "addtags(::ITensor,::String,::String)" begin
+    s1u = addtags(s1,"u")
+    lu = addtags(l,"u")
+
     A1u = addtags(A1,"u")
-    @test hasindex(A1u,s1("Site,s=1,u"))
-    @test hasindex(A1u,s1("Site,s=1,u,0"))
-    @test hasindex(A1u,l("Link,u"))
-    @test hasindex(A1u,l("Link,u,0"))
-    @test hasindex(A1u,l("Link,u")')
-    @test hasindex(A1u,l("Link,u,1"))
+    @test hasinds(A1u,s1u,lu,lu')
 
     A1u = addtags(A1,"u","Link")
-    @test hasindex(A1u,s1)
-    @test hasindex(A1u,s1("Site,s=1"))
-    @test hasindex(A1u,s1("Site,s=1,0"))
-    @test hasindex(A1u,l("Link,u"))
-    @test hasindex(A1u,l("Link,u,0"))
-    @test hasindex(A1u,l("Link,u")')
-    @test hasindex(A1u,l("Link,u,1"))
+    @test hasinds(A1u,s1,lu,lu')
 
     A1u = addtags(A1,"u","0")
-    @test hasindex(A1u,s1("Site,s=1,u"))
-    @test hasindex(A1u,s1("Site,s=1,0,u"))
-    @test hasindex(A1u,l("Link,u"))
-    @test hasindex(A1u,l("Link,u,0"))
-    @test hasindex(A1u,l')
-    @test hasindex(A1u,l("Link")')
-    @test hasindex(A1u,l("1,Link"))
+    @test hasinds(A1u,s1u,lu,l')
 
     A1u = addtags(A1,"u","Link,0")
-    @test hasindex(A1u,s1)
-    @test hasindex(A1u,s1("Site,s=1"))
-    @test hasindex(A1u,s1("Site,s=1,0"))
-    @test hasindex(A1u,l("Link,u"))
-    @test hasindex(A1u,l("Link,u,0"))
-    @test hasindex(A1u,l')
-    @test hasindex(A1u,l("Link")')
-    @test hasindex(A1u,l("Link,1"))
+    @test hasinds(A1u,s1,lu,l')
 
     A1u = addtags(A1,"u","Link,1")
-    @test hasindex(A1u,s1)
-    @test hasindex(A1u,s1("Site,s=1"))
-    @test hasindex(A1u,s1("Site,s=1,0"))
-    @test hasindex(A1u,l)
-    @test hasindex(A1u,l("Link"))
-    @test hasindex(A1u,l("Link,0"))
-    @test hasindex(A1u,l("Link,u")')
-    @test hasindex(A1u,l("Link,u,1"))
+    @test hasinds(A1u,s1,l,lu')
   end
   @testset "removetags(::ITensor,::String,::String)" begin
     A2r = removetags(A2,"Site")
-    @test hasindex(A2r,s2("s=2"))
-    @test hasindex(A2r,l')
-    @test hasindex(A2r,l'')
+    @test hasinds(A2r,removetags(s2,"Site"),l',l'')
 
     A2r = removetags(A2,"Link","1")
-    @test hasindex(A2r,s2)
-    @test hasindex(A2r,l("")')
-    @test hasindex(A2r,l("1"))
-    @test hasindex(A2r,l'')
+    @test hasinds(A2r,s2,removetags(l,"Link")',l'')
   end
   @testset "replacetags(::ITensor,::String,::String)" begin
+    s2tmp = replacetags(s2,"Site","Temp")
+    ltmp = replacetags(l,"Link","Temp")
+
     A2r = replacetags(A2,"Site","Temp")
-    @test hasindex(A2r,s2("Temp,s=2"))
-    @test hasindex(A2r,l')
-    @test hasindex(A2r,l'')
+    @test hasinds(A2r,s2tmp,l',l'')
 
     A2r = replacetags(A2,"Link","Temp")
-    @test hasindex(A2r,s2)
-    @test hasindex(A2r,l("Temp")')
-    @test hasindex(A2r,l("Temp")'')
+    @test hasinds(A2r,s2,ltmp',ltmp'')
 
     A2r = replacetags(A2,"Link","Temp","1")
-    @test hasindex(A2r,s2)
-    @test hasindex(A2r,l("Temp")')
-    @test hasindex(A2r,l'')
+    @test hasinds(A2r,s2,ltmp',l'')
 
     A2r = replacetags(A2,"Link,2","Temp,3")
-    @test hasindex(A2r,s2)
-    @test hasindex(A2r,l')
-    @test hasindex(A2r,l("Temp")''')
-    @test hasindex(A2r,l("Temp,3"))
+    @test hasinds(A2r,s2,l',ltmp''')
 
     A2r = replacetags(A2,"1","5")
-    @test hasindex(A2r,s2)
-    @test hasindex(A2r,prime(l,5))
-    @test hasindex(A2r,l("Link,5"))
-    @test hasindex(A2r,l'')
-    @test hasindex(A2r,l("Link,2"))
+    @test hasinds(A2r,s2,prime(l,5),l'')
   end
   @testset "prime(::ITensor,::String)" begin
     A2p = prime(A2)
     @test A2p==A2'
-    @test hasindex(A2p,s2')
-    @test hasindex(A2p,l'')
-    @test hasindex(A2p,l''')
+    @test hasinds(A2p,s2',l'',l''')
     
     A2p = prime(A2,2)
     A2p = A2''
-    @test hasindex(A2p,s2'')
-    @test hasindex(A2p,l''')
-    @test hasindex(A2p,l'''')
+    @test hasinds(A2p,s2'',l''',l'''')
 
     A2p = prime(A2,"s=2")
-    @test hasindex(A2p,s2')
-    @test hasindex(A2p,l')
-    @test hasindex(A2p,l'')
+    @test hasinds(A2p,s2',l',l'')
   end
 end
 

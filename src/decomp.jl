@@ -82,9 +82,8 @@ function factorize(A::ITensor,
                    Linds;
                    factorization=factorization)
   Lis = IndexSet(Linds)
-  Lis ⊈ inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
-
-  Ris = setdiff(inds(A),Lis)
+  !hasinds(A,Lis) && throw(ErrorException("Input indices must be contained in the ITensor"))
+  Ris = uniqueinds(A,Lis)
   #TODO: check if A is already ordered properly
   #and avoid doing this permute, since it makes a copy
   #AND/OR use svd!() to overwrite the data of A to save memory
@@ -127,15 +126,19 @@ function svd(A::ITensor,
              kwargs...
             )
   Lis = IndexSet(Linds)
-  Lis ⊈ inds(A) && throw(ErrorException("Input indices must be contained in the ITensor"))
-
-  Ris = setdiff(inds(A),Lis)
+  !hasinds(A,Lis) && throw(ErrorException("Input indices must be contained in the ITensor"))
+  Ris = uniqueinds(A,Lis)
   #TODO: check if A is already ordered properly
   #and avoid doing this permute, since it makes a copy
   #AND/OR use svd!() to overwrite the data of A to save memory
   A = permute(A,Lis...,Ris...)
   Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
-  return ITensor(Uis,Ustore),ITensor(Sis,Sstore),ITensor(Vis,Vstore)
+  U = ITensor(Uis,Ustore)
+  S = ITensor(Sis,Sstore)
+  V = ITensor(Vis,Vstore)
+  u = commonindex(U,S)
+  v = commonindex(S,V)
+  return U,S,V,u,v
 end
 
 # TODO: add a version that automatically detects the IndexSets

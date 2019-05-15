@@ -4,7 +4,7 @@ using ITensors,
 @testset "MPS Basics" begin
 
   N = 10
-  sites = Sites(N,2)
+  sites = SiteSet(N,2)
   psi = MPS(sites)
   @test length(psi) == N
 

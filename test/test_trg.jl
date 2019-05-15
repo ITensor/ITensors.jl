@@ -11,8 +11,8 @@ function factorize(A::ITensor,
                    maxm::Int,
                    tags::String)
   Lis = IndexSet(Linds)
-  Ris = setdiff(inds(A),Lis)
-  !issetequal(IndexSet(Lis,Ris),inds(A)) && error("Tags must match those contained by the ITensor")
+  !hasinds(A,Lis) && error("Indices must be contained by the ITensor")
+  Ris = uniqueinds(inds(A),Lis)
   U,S,V = svd(A,Lis;maxm=maxm,utags="$tags,u",vtags="$tags,v")
   u = commonindex(U,S)
   v = commonindex(S,V)

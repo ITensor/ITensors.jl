@@ -4,7 +4,7 @@ using ITensors,
 @testset "MPO Basics" begin
 
   N = 10
-  sites = Sites(N,2)
+  sites = SiteSet(N,2)
   O = MPO(sites)
   @test length(O) == N
 

@@ -8,6 +8,7 @@ struct TagSet
   TagSet(tags::Vector{String},plev::Int=-1) = new(sort(tags),plev)
 end
 
+TagSet(ts::TagSet) = ts
 function TagSet(tags::AbstractString)
   vectags = split(tags,",")
   #If not specified, prime level starts at -1
@@ -26,27 +27,25 @@ function TagSet(tags::AbstractString)
   return TagSet(String.(vectags),plev)
 end
 
-length(T::TagSet) = length(T.tags)
-getindex(T::TagSet,n::Int) = T.tags[n]
+stringtags(T::TagSet) = T.tags
 plev(T::TagSet) = T.plev
-prime(T::TagSet,plinc::Int=1) = TagSet(copy(T.tags),plev(T)+plinc)
-setprime(T::TagSet,pl::Int) = TagSet(copy(T.tags),pl::Int)
+length(T::TagSet) = length(stringtags(T))
+getindex(T::TagSet,n::Int) = stringtags(T)[n]
+copy(ts::TagSet) = TagSet(copy(stringtags(ts)),plev(ts))
 
-copy(ts::TagSet) = TagSet(copy(ts.tags),plev(ts))
+setprime(T::TagSet,pl::Int) = TagSet(copy(stringtags(T)),pl)
+prime(T::TagSet,plinc::Int) = setprime(T,plev(T)+plinc)
 
-iterate(ts::TagSet,state::Int=1) = iterate(ts.tags,state)
+iterate(ts::TagSet,state::Int=1) = iterate(stringtags(ts),state)
 
-# Should we define conversions?
-#convert(::Type{TagSet},x::String) = TagSet(x)
-#convert(::Type{TagSet},x::TagSet) = x
-
-==(ts1::TagSet,ts2::TagSet) = (ts1.tags==ts2.tags && plev(ts1)==plev(ts2))
+==(ts1::TagSet,ts2::TagSet) = (stringtags(ts1) == stringtags(ts2) && 
+                               plev(ts1) == plev(ts2))
 
 function in(ts1::TagSet, ts2::TagSet)
-  for t in ts1.tags
-    !in(t,ts2.tags) && return false
+  for t ∈ stringtags(ts1)
+    t ∉ stringtags(ts2) && return false
   end
-  (plev(ts1)≥0 && plev(ts1)≠plev(ts2)) && return false
+  (plev(ts1) ≥ 0 && plev(ts1) ≠ plev(ts2)) && return false
   return true
 end
 in(s::String, ts::TagSet) = in(TagSet(s), ts)
@@ -56,26 +55,26 @@ hastags(ts::TagSet,s::String) = in(TagSet(s),ts)
 
 #TODO: optimize this code to not
 #scan through all of the tags so many times
-function addtags(ts::TagSet,tsadd::TagSet,tsmatch::TagSet=TagSet())
-  (plev(ts)≥0 && plev(tsadd)≥0) && error("In addtags(::TagSet,...), cannot add a prime level")
-  restags = copy(ts.tags)
+function addtags(ts::TagSet, tagsadd)
+  tsadd = TagSet(tagsadd)
+  ( plev(ts) ≥ 0 && plev(tsadd) ≥ 0 ) && error("In addtags(::TagSet,...), cannot add a prime level")
+  restags = copy(stringtags(ts))
   resplev = ts.plev
-  (tsmatch≠TagSet() && tsmatch∉ts) && return TagSet(restags,resplev)
   #TODO: interface for iterating through tags
-  for t in tsadd.tags
-    t∉restags && push!(restags,t)
+  for t ∈ stringtags(tsadd)
+    t ∉ restags && push!(restags,t)
   end
-  (plev(ts)<0 && plev(tsadd)≥0) && (resplev = plev(tsadd))
+  (plev(ts) < 0 && plev(tsadd)≥0) && (resplev = plev(tsadd))
   return TagSet(restags,resplev)
 end
 
 #TODO: optimize this function
-function removetags(ts::TagSet,tsremove::TagSet,tsmatch::TagSet=TagSet())
-  plev(tsremove)≥0 && error("In removetags(::TagSet,...), cannot remove a prime level")
-  restags = copy(ts.tags)
+function removetags(ts::TagSet, tagsremove)
+  tsremove = TagSet(tagsremove)
+  plev(tsremove) ≥ 0 && error("In removetags(::TagSet,...), cannot remove a prime level")
+  restags = copy(stringtags(ts))
   resplev = ts.plev
-  (tsmatch≠TagSet() && tsmatch∉ts) && return TagSet(restags,resplev)
-  for t in tsremove.tags
+  for t in stringtags(tsremove)
     t∈restags && deleteat!(restags,findfirst(isequal(t),restags))
   end
   #(plev(ts)≥0 && plev(ts)==plev(tsremove)) && (resplev = -1)
@@ -83,20 +82,23 @@ function removetags(ts::TagSet,tsremove::TagSet,tsmatch::TagSet=TagSet())
 end
 
 #TODO: optimize this function
-function replacetags(ts::TagSet,tsremove::TagSet,tsadd::TagSet,tsmatch::TagSet=TagSet())
-  if (plev(tsremove)≥0 && plev(tsadd)<0) || (plev(tsremove)<0 && plev(tsadd)≥0)
+function replacetags(ts::TagSet, tagsremove, tagsadd)
+  tsremove = TagSet(tagsremove)
+  tsadd = TagSet(tagsadd)
+  if (plev(tsremove) ≥ 0 && plev(tsadd) < 0) || 
+     (plev(tsremove) < 0 && plev(tsadd) ≥ 0)
     error("In replacetags(::TagSet,...), cannot remove or add a prime level")
   end
-  restags = copy(ts.tags)
-  resplev = ts.plev
-  (tsmatch≠TagSet() && tsmatch∉ts) && return TagSet(restags,resplev)
-  for t in tsremove.tags
-    t ∉ ts.tags && return TagSet(restags,resplev)
+  restags = copy(stringtags(ts))
+  resplev = plev(ts)
+  (resplev ≠ plev(tsremove) && plev(tsremove) ≥ 0) && return TagSet(restags,resplev)
+  for t in stringtags(tsremove)
+    t ∉ stringtags(ts) && return TagSet(restags,resplev)
   end
-  for t in tsremove.tags
+  for t in stringtags(tsremove)
     deleteat!(restags,findfirst(isequal(t),restags))
   end
-  for t in tsadd.tags
+  for t in stringtags(tsadd)
     push!(restags,t)
   end
   (plev(ts)≥0 && plev(ts)==plev(tsremove)) && (resplev = plev(tsadd))
@@ -112,8 +114,16 @@ function primestring(ts::TagSet)
   end
 end
 
+function tagstring(T::TagSet)
+  res = ""
+  for t ∈ T
+    res *= t
+  end
+  return res
+end
+
 function show(io::IO, T::TagSet)
-  print(io,"\"")
+  print(io,"(")
   lT = length(T)
   if lT > 0
     print(io,T[1])
@@ -121,5 +131,7 @@ function show(io::IO, T::TagSet)
       print(io,",$(T[n])")
     end
   end
-  print(io,"\"")
+  print(io,")")
+  print(io,primestring(T))
 end
+

@@ -121,7 +121,7 @@ function swaptags(A::ITensor,vargs...)
   return ITensor(swaptags(inds(A),vargs...),store(A))
 end
 
-function ==(A::ITensor,B::ITensor)::Bool
+function ==(A::ITensor,B::ITensor)
   !hassameinds(A,B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
   p = calculate_permutation(inds(B),inds(A))
   for i ∈ CartesianIndices(dims(A))

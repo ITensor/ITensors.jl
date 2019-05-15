@@ -136,7 +136,6 @@ function storage_svd(Astore::Dense{T},
   P = sqr.(MS)
   truncate!(P;maxm=maxm,cutoff=cutoff,absoluteCutoff=absoluteCutoff,doRelCutoff=doRelCutoff)
   dS = length(P)
-
   if dS < length(MS)
     MU = MU[:,1:dS]
     resize!(MS,dS)

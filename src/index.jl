@@ -24,102 +24,47 @@ struct Index
 end
 
 Index() = Index(IDType(0),1,Neither,TagSet(String[],0))
-function Index(dim::Integer,tags::String="0")
+function Index(dim::Integer,tags="0")
   ts = TagSet(tags)
   # By default, an Index has a prime level of 0
-  tsplev = plev(ts)==-1 ? 0 : plev(ts)
-  Index(rand(IDType),dim,Out,TagSet(ts.tags,tsplev))
+  # A prime level less than 0 is interpreted as the
+  # prime level not being set
+  plev(ts) < 0 && (ts = setprime(ts,0))
+  Index(rand(IDType),dim,Out,ts)
 end
 
 id(i::Index) = i.id
-
-dim() = 1
 dim(i::Index) = i.dim
-
-function dim(i1::Index,inds::Index...)
-  total_dim = 1
-  total_dim *= dim(i1)*dim(inds...)
-  return total_dim
-end
-
 dir(i::Index) = i.dir
 tags(i::Index) = i.tags
 plev(i::Index) = plev(tags(i))
 
 ==(i1::Index,i2::Index) = (id(i1)==id(i2) && tags(i1)==tags(i2))
-copy(i::Index) = Index(i.id,i.dim,i.dir,copy(i.tags))
+copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
 
 dag(i::Index) = Index(id(i),dim(i),-dir(i),tags(i))
 
 isdefault(i::Index) = (i==Index())
 
-function prime(i::Index,inc::Int=1)
-  return Index(id(i),dim(i),dir(i),prime(tags(i),inc))
-end
-adjoint(i::Index) = prime(i)
-function setprime(i::Index,plev::Int)
-  return Index(id(i),dim(i),dir(i),setprime(tags(i),plev))
-end
-noprime(i::Index) = setprime(i,0)
+hastags(i::Index, ts) = hastags(tags(i),ts)
 
-function addtags(i::Index,
-                 ts::AbstractString,
-                 tsmatch::String="") 
-  return Index(id(i),dim(i),dir(i),addtags(tags(i),TagSet(ts),TagSet(tsmatch)))
-end
-
-function removetags(i::Index,
-                    ts::AbstractString,
-                    tsmatch::String="") 
-  return Index(id(i),dim(i),dir(i),removetags(tags(i),TagSet(ts),TagSet(tsmatch)))
-end
-
-function settags(i::Index,
-                 ts::AbstractString,
-                 tsmatch::String="")
-  tagsetmatch = TagSet(tsmatch)
-  (tagsetmatch≠TagSet() && tagsetmatch≠tags(i)) && return i
-  tsnew = TagSet(ts)
+function settags(i::Index, tags)
+  ts = TagSet(tags)
   # By default, an Index has a prime level of 0
-  tsnewplev = plev(tsnew)==-1 ? 0 : plev(tsnew)
-  Index(id(i),dim(i),dir(i),TagSet(tsnew.tags,tsnewplev))
+  plev(ts) < 0 && (ts = setprime(ts,0))
+  Index(id(i),dim(i),dir(i),ts)
 end
 
-(i::Index)(ts::String) = settags(i,ts)
+addtags(i::Index, ts) = settags(i, addtags(tags(i), ts))
+removetags(i::Index, ts) = settags(i, removetags(tags(i), ts))
+replacetags(i::Index, tsold, tsnew) = settags(i, replacetags(tags(i), tsold, tsnew))
 
-hastags(i::Index,ts::Union{String,TagSet}) = hastags(tags(i),ts)
+prime(i::Index, plinc = 1) = settags(i, prime(tags(i), plinc))
+setprime(i::Index, plev) = settags(i, setprime(tags(i), plev))
+noprime(i::Index) = setprime(i, 0)
 
-function replacetags(i::Index,
-                     tsold::AbstractString,
-                     tsnew::AbstractString,
-                     tsmatch::String="") 
-  tagsetmatch = TagSet(tsmatch)
-  tagsetnew = TagSet(tsnew)
-  tagsetold = TagSet(tsold)
-  #TODO: Avoid this copy?
-  tagsetold∉tags(i) && return copy(i)
-  itags = replacetags(tags(i),tagsetold,tagsetnew,tagsetmatch)
-  return Index(id(i),dim(i),dir(i),itags)
-end
-
-function tags(i::Index,
-              ts::AbstractString)
-  ts = filter(x -> !isspace(x),ts)
-  vts = split(ts,"->")
-  length(vts) == 1 && error("Must use -> to replace tags of an Index")
-  length(vts) > 2 && error("Can only use a single -> when replacing tags of an Index")
-  tsremove,tsadd = vts
-  if tsremove==""
-    return addtags(i,tsadd)
-  #TODO: notation to replace all tags?
-  #elseif tsremove=="all"
-  #  ires = settags(i,tsadd)
-  elseif tsadd==""
-    return removetags(i,tsremove)
-  else
-    return replacetags(i,tsremove,tsadd)
-  end
-end
+# To use the notation i' == prime(i)
+adjoint(i::Index) = prime(i)
 
 # Iterating over Index I gives
 # integers from 1...dim(I)
@@ -132,7 +77,7 @@ function show(io::IO,
               i::Index) 
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
-    print(io,"($(dim(i))|id=$(idstr)|$(tags(i)))$(primestring(tags(i)))")
+    print(io,"($(dim(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
   else
     print(io,"($(dim(i))|id=$(idstr))$(primestring(tags(i)))")
   end

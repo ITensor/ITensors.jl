@@ -14,7 +14,7 @@ using ITensors,
     i = Index(2)
     @test id(i) != 0
     @test dim(i) == 2
-    @test dir(i) == In
+    @test dir(i) == Out
     @test plev(i) == 0
     @test tags(i) == TagSet("0")
   end

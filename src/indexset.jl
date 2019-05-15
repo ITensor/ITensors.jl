@@ -18,10 +18,8 @@ IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet(inds...)
 IndexSet(inds::IndexSet) = inds
 IndexSet(inds::IndexSet,i::Index) = IndexSet(inds...,i)
 IndexSet(i::Index,inds::IndexSet) = IndexSet(i,inds...)
-IndexSet(inds1::IndexSet,inds2::IndexSet) = IndexSet(inds1...,inds2...)
-IndexSet(inds1::IndexSet,inds2::IndexSet,inds3::IndexSet) = IndexSet(inds1...,inds2...,inds3...)
-# TODO: how do we make arbitrary N work?
-IndexSet(inds::NTuple{N,IndexSet}) where {N} = IndexSet(inds...)
+IndexSet(is1::IndexSet,is2::IndexSet) = IndexSet(is1...,is2...)
+IndexSet(inds::NTuple{2,IndexSet}) = IndexSet(inds...)
 
 # Convert to an Index if there is only one
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("IndexSet has more than one Index")
@@ -32,7 +30,7 @@ length(is::IndexSet) = length(is.inds)
 order(is::IndexSet) = length(is)
 copy(is::IndexSet) = IndexSet(copy(is.inds))
 dims(is::IndexSet) = Tuple(dim(i) for i ∈ is)
-dim(is::IndexSet) = dim(is...)
+dim(is::IndexSet) = prod(dim.(is))
 
 dag(is::IndexSet) = IndexSet(dag.(is.inds))
 
@@ -46,58 +44,55 @@ push!(is::IndexSet,i::Index) = push!(is.inds,i)
 # Set operations
 #
 
-function in(i::Index,inds)
+function hasindex(inds,i::Index)
   is = IndexSet(inds)
   for j ∈ is
     i==j && return true
   end
   return false
 end
-hasindex(is,i::Index) = i ∈ is
 
-function issubset(Ais::IndexSet,Binds)
-  Bis = IndexSet(Binds)
+function hasinds(Binds,Ainds)
+  Ais = IndexSet(Ainds)
   for i ∈ Ais
-    i ∉ Bis && return false
+    !hasindex(Binds,i) && return false
   end
   return true
 end
-hasinds(Ais,Bis) = IndexSet(Ais) ⊆ Bis
+hasinds(Binds,Ainds::Index...) = hasinds(Binds,IndexSet(Ainds...))
 
-function issetequal(Ais::IndexSet,Binds)
+function hassameinds(Ainds,Binds)
+  Ais = IndexSet(Ainds)
   Bis = IndexSet(Binds)
-  return Ais ⊆ Bis && length(Ais) == length(Bis)
+  return hasinds(Ais,Bis) && length(Ais) == length(Bis)
 end
-hassameinds(Ais,Bis) = issetequal(IndexSet(Ais),Bis)
 
 "Output the IndexSet with Indices in Bis but not in Ais"
-function setdiff(Bis::IndexSet,Ainds)
-  Ais = IndexSet(Ainds)
-  Cis = IndexSet()
-  for j ∈ Bis
-    j ∉ Ais && push!(Cis,j)
-  end
-  return Cis
-end
-uniqueinds(Bis,Ais) = setdiff(IndexSet(Bis),Ais)
-
-"Output the IndexSet in the intersection of Ais and Bis"
-function intersect(Ais::IndexSet,Binds)
+function uniqueinds(Binds,Ainds)
   Bis = IndexSet(Binds)
   Cis = IndexSet()
-  for i ∈ Ais
-    i ∈ Bis && push!(Cis,i)
+  for j ∈ Bis
+    !hasindex(Ainds,j) && push!(Cis,j)
   end
   return Cis
 end
-commoninds(Ais,Bis) = IndexSet(Ais) ∩ Bis
+
+"Output the IndexSet in the intersection of Ais and Bis"
+function commoninds(Binds,Ainds)
+  Ais = IndexSet(Ainds)
+  Cis = IndexSet()
+  for i ∈ Ais
+    hasindex(Binds,i) && push!(Cis,i)
+  end
+  return Cis
+end
 commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
 
-function findinds(inds, tags)
+function findinds(inds,tags)
   is = IndexSet(inds)
   ts = TagSet(tags)
   found_inds = IndexSet()
-  for i in is
+  for i ∈ is
     if hastags(i,ts)
       push!(found_inds,i)
     end
@@ -106,120 +101,102 @@ function findinds(inds, tags)
 end
 findindex(inds, tags) = Index(findinds(inds,tags))
 
+# From a tag set or index set, find the positions
+# of the matching indices as a vector of integers
+indexpositions(inds, match::Nothing) = collect(1:length(inds))
+# Version for matching a tag set
+function indexpositions(inds, match::T) where {T<:Union{AbstractString,TagSet}}
+  tsmatch = TagSet(match)
+  pos = Int[]
+  for (j,I) ∈ enumerate(inds)
+    hastags(I,tsmatch) && push!(pos,j)
+  end
+  return pos
+end
+# Version for matching a collection of indices
+function indexpositions(inds, match)
+  ismatch = IndexSet(match)
+  pos = Int[]
+  for (j,I) ∈ enumerate(inds)
+    hasindex(ismatch,I) && push!(pos,j)
+  end
+  return pos
+end
+
 #
 # Tagging functions
 #
 
-function prime(is::IndexSet,plinc::Integer=1)
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    res[jj] = prime(res[jj],plinc)
+function prime!(is::IndexSet, plinc::Integer, match = nothing)
+  pos = indexpositions(is, match)
+  for jj ∈ pos
+    is[jj] = prime(is[jj],plinc)
   end
-  return res
+  return is
 end
-#TODO: implement a more generic version
-#prime(is::IndexSet,plinc::Integer,match)
-#   index_positions(is,match) -> pos::Vector{Int}
-#   for p ∈ pos prime(is[p],plinc)
-function prime(is::IndexSet,plinc::Integer,i::Index)
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    if res[jj]==i
-      res[jj] = prime(res[jj],plinc)
-    end
-  end
-  return res
-end
-prime(is::IndexSet,i::Index) = prime(is,1,i)
-function prime(is::IndexSet,plinc::Integer,ts)
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    if TagSet(ts)∈tags(res[jj])
-      res[jj] = prime(res[jj],plinc)
-    end
-  end
-  return res
-end
-prime(is::IndexSet,ts) = prime(is,1,ts)
+prime!(is::IndexSet,match=nothing) = prime(is,1,match)
+prime(is::IndexSet, vargs...) = prime!(copy(is), vargs...)
+# For is' notation
 adjoint(is::IndexSet) = prime(is)
 
-function setprime(is::IndexSet,plev::Int)
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    res[jj] = setprime(res[jj],plev)
+function setprime!(is::IndexSet, plev::Integer, match = nothing)
+  pos = indexpositions(is, match)
+  for jj ∈ pos
+    is[jj] = setprime(is[jj],plev)
   end
-  return res
+  return is
 end
+setprime(is::IndexSet, vargs...) = setprime!(copy(is), vargs...)
 
-noprime(is::IndexSet) = setprime(is,0)
+noprime!(is::IndexSet, match = nothing) = setprime(is, 0, match)
+noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
 
-function mapprime(is::IndexSet,
-                  plevold::Int,
-                  plevnew::Int,
-                  imatch::Index=Index())
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    if(imatch==Index() || noprime(imatch)==noprime(res[jj]))
-      plev(res[jj])==plevold && (res[jj] = setprime(res[jj],plevnew))
-    end
+function addtags!(is::IndexSet,
+                  tags,
+                  match = nothing)
+  pos = indexpositions(is, match)
+  for jj ∈ pos
+    is[jj] = addtags(is[jj],tags)
   end
-  return res
+  return is
 end
+addtags(is, vargs...) = addtags!(copy(is), vargs...)
 
-function swapprime(is::IndexSet,
-                   plev1::Int,
-                   plev2::Int,
-                   imatch::Index=Index())
-  res = copy(is)
-  plevtemp = 7017049418157811712
-  res = mapprime(res,plev1,plevtemp,imatch)
-  res = mapprime(res,plev2,plev1,imatch)
-  res = mapprime(res,plevtemp,plev2,imatch)
-  return res
-end
-
-function addtags(is::IndexSet,
-                 ts::AbstractString,
-                 tsmatch::String="")
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    res[jj] = addtags(res[jj],ts,tsmatch)
+function removetags!(is::IndexSet,
+                     tags,
+                     match = nothing)
+  pos = indexpositions(is, match)
+  for jj ∈ pos
+    is[jj] = removetags(is[jj],tags)
   end
-  return res
+  return is
 end
+removetags(is, vargs...) = removetags!(copy(is), vargs...)
 
-function removetags(is::IndexSet,
-                    ts::AbstractString,
-                    tsmatch::String="")
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    res[jj] = removetags(res[jj],ts,tsmatch)
+function replacetags!(is::IndexSet,
+                      tags_old, tags_new,
+                      match = nothing)
+  pos = indexpositions(is, match)
+  for jj ∈ pos
+    is[jj] = replacetags(is[jj],tags_old,tags_new)
   end
-  return res
+  return is
 end
+replacetags(is, vargs...) = replacetags!(copy(is), vargs...)
 
-function replacetags(is::IndexSet,
-                     ts1::AbstractString,
-                     ts2::AbstractString,
-                     tsmatch::String="")
-  res = copy(is)
-  for jj ∈ 1:length(res)
-    res[jj] = replacetags(res[jj],ts1,ts2,tsmatch)
-  end
-  return res
+function swaptags!(is::IndexSet,
+                   tags1, tags2,
+                   match = nothing)
+  ts1 = TagSet(tags1)
+  ts2 = TagSet(tags2)
+  tstemp = TagSet("e43efds")
+  plev(ts1) ≥ 0 && (tstemp = setprime(tstemp,431534))
+  replacetags!(is, ts1, tstemp, match)
+  replacetags!(is, ts2, ts1, match)
+  replacetags!(is, tstemp, ts2, match)
+  return is
 end
-
-function swaptags(is::IndexSet,
-                  ts1::AbstractString,
-                  ts2::AbstractString,
-                  tsmatch::String="")
-  res = copy(is)
-  tstemp = "e43efds"
-  res = replacetags(res,ts1,tstemp,tsmatch)
-  res = replacetags(res,ts2,ts1,tsmatch)
-  res = replacetags(res,tstemp,ts2,tsmatch)
-  return res
-end
+swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 
 function calculate_permutation(set1, set2)
   l1 = length(set1)
