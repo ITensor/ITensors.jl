@@ -160,7 +160,10 @@ export Sweeps,
        cutoff!,
        sweepnext
 
+include("mps/projmpo.jl")
+export ProjMPO,
+       LProj,RProj
 include("mps/dmrg.jl")
-export dmrg!
+export dmrg
 
 end # module
