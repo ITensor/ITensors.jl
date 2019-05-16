@@ -112,7 +112,8 @@ export svd,
        findtags,
        commoninds,
        delta,
-       δ
+       δ,
+       isNull
 
 include("decomp.jl")
 #export truncate!
@@ -123,16 +124,16 @@ export Site,
        SiteSet,
        ind,
        op
-include("mps/spinhalf.jl")
+include("mps/sitesets/spinhalf.jl")
 export SpinHalfSite,
        spinhalfs
-include("mps/spinone.jl")
+include("mps/sitesets/spinone.jl")
 export SpinOneSite,
        spinones
-include("mps/electron.jl")
+include("mps/sitesets/electron.jl")
 export ElectronSite,
        electrons
-include("mps/tj.jl")
+include("mps/sitesets/tj.jl")
 export tJSite,
        tjs
 

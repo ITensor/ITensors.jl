@@ -51,6 +51,8 @@ order(T::ITensor) = order(inds(T))
 dims(T::ITensor) = dims(inds(T))
 dim(T::ITensor) = dim(inds(T))
 
+isNull(T::ITensor) = (typeof(store(T)) == Dense{Nothing})
+
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
 Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
@@ -208,7 +210,9 @@ end
 function show(io::IO,T::ITensor)
   show_info(io,T)
   print(io,"\n")
-  Base.print_array(io,reshape(data(store(T)),dims(T)))
+  if !isNull(T)
+    Base.print_array(io,reshape(data(store(T)),dims(T)))
+  end
 end
 
 function show(io::IO,
