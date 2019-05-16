@@ -166,4 +166,11 @@ export ProjMPO,
 include("mps/dmrg.jl")
 export dmrg
 
+# Development folder includes helper
+# codes not intended for final release,
+# just to ease development temporarily
+include("development/heisenberg.jl")
+export setElt,
+       Heisenberg
+
 end # module
