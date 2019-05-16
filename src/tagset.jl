@@ -116,9 +116,11 @@ end
 
 function tagstring(T::TagSet)
   res = ""
-  for t ∈ T
-    res *= t
+  length(T)==0 && return res
+  for n=1:length(T)-1
+    res *= "$(T[n]),"
   end
+  res *= T[length(T)]
   return res
 end
 
