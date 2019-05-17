@@ -22,20 +22,28 @@ outer(D1::Dense{T},D2::Dense{T}) where {T} = Dense{T}(vec(data(D1)*transpose(dat
 
 storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
 
+storage_fill!(D::Dense,x::Number) = fill!(data(D),x)
+
 function storage_getindex(Tstore::Dense{T},
                           Tis::IndexSet,
                           vals::Union{Int, AbstractVector{Int}}...) where {T}
   return getindex(reshape(data(Tstore),dims(Tis)),vals...)
 end
 
-function storage_setindex!(Tstore::Dense,Tis::IndexSet,x::Union{<:Number, AbstractArray{<:Number}},vals::Union{Int, AbstractVector{Int}}...)
+function storage_setindex!(Tstore::Dense,
+                           Tis::IndexSet,
+                           x::Union{<:Number, AbstractArray{<:Number}},
+                           vals::Union{Int, AbstractVector{Int}}...)
   return setindex!(reshape(data(Tstore),dims(Tis)),x,vals...)
 end
 
 # TODO: optimize this permutation (this does an extra unnecassary permutation
 # since permutedims!() doesn't give the option to add the permutation to the original array)
 # Maybe wrap the c version?
-function storage_add!(Bstore::Dense,Bis::IndexSet,Astore::Dense,Ais::IndexSet)
+function storage_add!(Bstore::Dense,
+                      Bis::IndexSet,
+                      Astore::Dense,
+                      Ais::IndexSet)
   p = calculate_permutation(Bis,Ais)
   Adata = data(Astore)
   Bdata = data(Bstore)
@@ -50,7 +58,10 @@ end
 
 # TODO: make this a special version of storage_add!()
 # Make sure the permutation is optimized
-function storage_permute!(Bstore::Dense,Bis::IndexSet,Astore::Dense,Ais::IndexSet)
+function storage_permute!(Bstore::Dense,
+                          Bis::IndexSet,
+                          Astore::Dense,
+                          Ais::IndexSet)
   p = calculate_permutation(Bis,Ais)
   Adata = data(Astore)
   Bdata = data(Bstore)
