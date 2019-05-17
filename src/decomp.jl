@@ -125,8 +125,10 @@ function svd(A::ITensor,
              Linds;
              kwargs...
             )
-  Lis = IndexSet(Linds)
-  !hasinds(A,Lis) && throw(ErrorException("Input indices must be contained in the ITensor"))
+  Lis = IndexSet()
+  for i in Linds
+    i ∈ inds(A) && push!(Lis,i)
+  end
   Ris = uniqueinds(A,Lis)
   #TODO: check if A is already ordered properly
   #and avoid doing this permute, since it makes a copy
