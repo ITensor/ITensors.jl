@@ -7,58 +7,73 @@ mutable struct ProjMPO
   ProjMPO(H::MPO) = new(0,length(H)+1,2,H,fill(ITensor(),length(H)))
 end
 
-nsite(ph::ProjMPO) = ph.nsite
-length(ph::ProjMPO) = length(ph.H)
+nsite(pm::ProjMPO) = pm.nsite
+length(pm::ProjMPO) = length(pm.H)
 
-function LProj(ph::ProjMPO)::ITensor
-  (ph.lpos <= 0) && return ITensor()
-  return ph.LR[ph.lpos]
-end
-function RProj(ph::ProjMPO)::ITensor
-  (ph.rpos >= length(ph)+1) && return ITensor()
-  return ph.LR[ph.rpos]
+function LProj(pm::ProjMPO)::ITensor
+  (pm.lpos <= 0) && return ITensor()
+  return pm.LR[pm.lpos]
 end
 
-function makeL!(ph::ProjMPO,
+function RProj(pm::ProjMPO)::ITensor
+  (pm.rpos >= length(pm)+1) && return ITensor()
+  return pm.LR[pm.rpos]
+end
+
+function (pm::ProjMPO)(v::ITensor)
+  Hv = v
+  if !isNull(LProj(pm))
+    Hv *= LProj(pm)
+  end
+  for j=pm.lpos+1:pm.rpos-1
+    Hv *= pm.H[j]
+  end
+  if !isNull(RProj(pm))
+    Hv *= RProj(pm)
+  end
+  return Hv
+end
+
+function makeL!(pm::ProjMPO,
                 psi::MPS,
                 k::Int)
-  while ph.lpos < k
-    ll = ph.lpos
+  while pm.lpos < k
+    ll = pm.lpos
     if ll <= 0
-      ph.LR[1] = psi[1]*ph.H[1]*dag(prime(psi[1]))
-      ph.lpos = 1
+      pm.LR[1] = psi[1]*pm.H[1]*dag(prime(psi[1]))
+      pm.lpos = 1
     else
-      ph.LR[ll+1] = ph.LR[ll]*psi[ll+1]*ph.H[ll+1]*dag(prime(psi[ll+1]))
-      ph.lpos += 1
+      pm.LR[ll+1] = pm.LR[ll]*psi[ll+1]*pm.H[ll+1]*dag(prime(psi[ll+1]))
+      pm.lpos += 1
     end
   end
 end
 
-function makeR!(ph::ProjMPO,
+function makeR!(pm::ProjMPO,
                 psi::MPS,
                 k::Int)
-  N = length(ph.H)
-  while ph.rpos > k
-    rl = ph.rpos
+  N = length(pm.H)
+  while pm.rpos > k
+    rl = pm.rpos
     if rl >= N+1
-      ph.LR[N] = psi[N]*ph.H[N]*dag(prime(psi[N]))
-      ph.rpos = N
+      pm.LR[N] = psi[N]*pm.H[N]*dag(prime(psi[N]))
+      pm.rpos = N
     else
-      ph.LR[rl-1] = ph.LR[rl]*psi[rl-1]*ph.H[rl-1]*dag(prime(psi[rl-1]))
-      ph.rpos -= 1
+      pm.LR[rl-1] = pm.LR[rl]*psi[rl-1]*pm.H[rl-1]*dag(prime(psi[rl-1]))
+      pm.rpos -= 1
     end
   end
 end
 
-function position!(ph::ProjMPO,
+function position!(pm::ProjMPO,
                    psi::MPS, 
                    pos::Int)
-  makeL!(ph,psi,pos-1)
-  makeR!(ph,psi,pos+nsite(ph))
+  makeL!(pm,psi,pos-1)
+  makeR!(pm,psi,pos+nsite(pm))
 
   #These next two lines are needed 
   #when moving LProj and RProj backward
-  ph.lpos = pos-1
-  ph.rpos = pos+nsite(ph)
+  pm.lpos = pos-1
+  pm.rpos = pos+nsite(pm)
 end
 
