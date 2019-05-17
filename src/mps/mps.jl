@@ -136,3 +136,18 @@ function randomMPS(sites::SiteSet,
   end
   return psi
 end
+
+function replaceBond!(psi::MPS,
+                      b::Int,
+                      phi::ITensor,
+                      dir::String;
+                      kwargs...)
+  U,S,V,u,v = svd(phi,inds(psi[b]);kwargs...)
+  if dir=="Fromleft"
+    psi[b]   = U
+    psi[b+1] = S*V
+  elseif dir=="Fromright"
+    psi[b]   = U*S
+    psi[b+1] = V
+  end
+end

@@ -125,11 +125,13 @@ include("decomp.jl")
 #export truncate!
 
 include("mps/siteset.jl")
-export Site,
-       BasicSite,
+export BasicSite,
+       Site,
        SiteSet,
        ind,
-       op
+       op,
+       replaceBond!
+
 include("mps/sitesets/spinhalf.jl")
 export SpinHalfSite,
        spinhalfs
