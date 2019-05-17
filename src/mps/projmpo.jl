@@ -31,7 +31,7 @@ function (pm::ProjMPO)(v::ITensor)
   if !isNull(RProj(pm))
     Hv *= RProj(pm)
   end
-  return Hv
+  return noprime(Hv)
 end
 
 function makeL!(pm::ProjMPO,
