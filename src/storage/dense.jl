@@ -145,7 +145,11 @@ function storage_svd(Astore::Dense{T},
 
   sqr(x) = x^2
   P = sqr.(MS)
-  truncate!(P;maxdim=maxdim,cutoff=cutoff,absoluteCutoff=absoluteCutoff,doRelCutoff=doRelCutoff)
+  #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
+  truncate!(P;maxdim=maxdim,
+              cutoff=cutoff,
+              absoluteCutoff=absoluteCutoff,
+              doRelCutoff=doRelCutoff)
   dS = length(P)
   if dS < length(MS)
     MU = MU[:,1:dS]
