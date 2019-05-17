@@ -7,13 +7,15 @@ struct ITensor
   ITensor(is::IndexSet,st::TensorStorage) = new(is,st)
 end
 
-function ITensor(::Type{T},inds::IndexSet) where {T<:Number}
+ITensor() = ITensor(IndexSet(),Dense{Nothing}())
+ITensor(is::IndexSet) = ITensor(Float64,is...)
+ITensor(inds::Index...) = ITensor(IndexSet(inds...))
+
+function ITensor(::Type{T},
+                 inds::IndexSet) where {T<:Number}
   return ITensor(inds,Dense{T}(dim(inds)))
 end
 ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...))
-
-ITensor(is::IndexSet) = ITensor(Float64,is...)
-ITensor(inds::Index...) = ITensor(IndexSet(inds...))
 
 function ITensor(x::S,inds::IndexSet) where {S<:Number}
   return ITensor(inds,Dense{S}(x,dim(inds)))
@@ -26,102 +28,95 @@ function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
 
-ITensor() = ITensor(IndexSet(),Dense{Nothing}())
-
-#TODO: This is just a stand-in for a proper delta/diag storage type
-function delta(::Type{T},inds::Index...) where {T}
-  d = ITensor(zero(T),inds...)
-  minm = min(dims(d)...)
-  for i ∈ 1:minm
-    d[IndexVal.(inds,i)...] = one(T)
-  end
-  return d
-end
-delta(inds::Index...) = delta(Float64,inds...)
-const δ = delta
-
 inds(T::ITensor) = T.inds
+
 # This constructor allows many IndexSet
 # set operations to work with ITensors
 IndexSet(T::ITensor) = inds(T)
+
 store(T::ITensor) = T.store
+
 eltype(T::ITensor) = eltype(store(T))
 
 order(T::ITensor) = order(inds(T))
+
 dims(T::ITensor) = dims(inds(T))
+
 dim(T::ITensor) = dim(inds(T))
 
 isNull(T::ITensor) = (typeof(store(T)) == Dense{Nothing})
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
+copyto!(R::ITensor,T::ITensor) = (R = copy(T))
+
 Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
 
 function getindex(T::ITensor,vals::Int...) 
-  order(T) ≠ length(vals) && error("In getindex(::ITensor,::Int..), number of values provided ($(length(vals))) must equal order of ITensor ($(order(T)))")
+  if order(T) ≠ length(vals) 
+    error("In getindex(::ITensor,::Int..), number of \\
+           values provided ($(length(vals))) must equal \\
+           order of ITensor ($(order(T)))")
+  end
   storage_getindex(store(T),inds(T),vals...)
 end
+
 function getindex(T::ITensor,ivs::IndexVal...)
   p = calculate_permutation(inds(T),ivs)
   vals = val.(ivs)[p]
   return getindex(T,vals...)
 end
+
 function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
-    p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
-    vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
-    storage_getindex(store(T),inds(T),vals...)
+  p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
+  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
+  storage_getindex(store(T),inds(T),vals...)
 end
 
 setindex!(T::ITensor,x::Number,vals::Int...) = storage_setindex!(store(T),inds(T),x,vals...)
+
 function setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   p = calculate_permutation(inds(T),ivs)
   vals = val.(ivs)[p]
   return setindex!(T,x,vals...)
 end
-function setindex!(T::ITensor,x::Union{<:Number, AbstractArray{<:Number}}, ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
-    remap_ivs = map(x->x isa IndexVal ? x : x[1], ivs)
-    p = calculate_permutation(inds(T),remap_ivs)
-    vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
-    storage_setindex!(store(T),inds(T),x,vals...)
+
+function setindex!(T::ITensor,
+                   x::Union{<:Number, AbstractArray{<:Number}}, 
+                   ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
+  remap_ivs = map(x->x isa IndexVal ? x : x[1], ivs)
+  p = calculate_permutation(inds(T),remap_ivs)
+  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
+  storage_setindex!(store(T),inds(T),x,vals...)
 end
 
-# TODO: should this make a copy of the storage?
-# Current conclusion is no, but possibly make it return
-# an ITensor{View} to indicate the ITensor has shared memory
-function prime(A::ITensor,vargs...)
-  return ITensor(prime(inds(A),vargs...),store(A))
+function fill!(T::ITensor,
+               x::Number)
+  # TODO: automatically switch storage type if needed
+  storage_fill!(store(T),x)
 end
+
+prime(A::ITensor,vargs...)= ITensor(prime(inds(A),vargs...),store(A))
+
 adjoint(A::ITensor) = prime(A)
-function setprime(A::ITensor,vargs...)
-  return ITensor(setprime(inds(A),vargs...),store(A))
-end
-function noprime(A::ITensor,vargs...)
-  return ITensor(noprime(inds(A),vargs...),store(A))
-end
+
+setprime(A::ITensor,vargs...) = ITensor(setprime(inds(A),vargs...),store(A))
+
+noprime(A::ITensor,vargs...) = ITensor(noprime(inds(A),vargs...),store(A))
+
 # TODO: remove in favor of replacetags(...)
-function mapprime(A::ITensor,vargs...)
-  return ITensor(mapprime(inds(A),vargs...),store(A))
-end
+mapprime(A::ITensor,vargs...) = ITensor(mapprime(inds(A),vargs...),store(A))
+
 # TODO: remove in favor of swaptags(...)
-function swapprime(A::ITensor,vargs...)
-  return ITensor(swapprime(inds(A),vargs...),store(A))
-end
+swapprime(A::ITensor,vargs...) = ITensor(swapprime(inds(A),vargs...),store(A))
 
-function addtags(A::ITensor,vargs...)
-  return ITensor(addtags(inds(A),vargs...),store(A))
-end
+addtags(A::ITensor,vargs...) = ITensor(addtags(inds(A),vargs...),store(A))
 
-function removetags(A::ITensor,vargs...)
-  return ITensor(removetags(inds(A),vargs...),store(A))
-end
+removetags(A::ITensor,vargs...) = ITensor(removetags(inds(A),vargs...),store(A))
 
-function replacetags(A::ITensor,vargs...)
-  return ITensor(replacetags(inds(A),vargs...),store(A))
-end
+replacetags(A::ITensor,vargs...) = ITensor(replacetags(inds(A),vargs...),store(A))
 
-function swaptags(A::ITensor,vargs...)
-  return ITensor(swaptags(inds(A),vargs...),store(A))
-end
+swaptags(A::ITensor,vargs...) = ITensor(swaptags(inds(A),vargs...),store(A))
 
 function ==(A::ITensor,B::ITensor)
   !hassameinds(A,B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
@@ -141,6 +136,7 @@ end
 
 function scalar(T::ITensor)
   if !(order(T)==0 || dim(T)==1)
+    @show inds(T)
     error("ITensor is not a scalar")
   end
   return storage_scalar(store(T))
@@ -221,3 +217,46 @@ function show(io::IO,
   show_info(io,T)
 end
 
+function similar(T::ITensor,
+                 element_type=eltype(T))::ITensor
+  if element_type != eltype(T)
+    error("similar(::ITensor) currently only defined for same element type")
+  end
+  return copy(T)
+end
+
+function mul!(R::ITensor,
+              T::ITensor,
+              fac::Number)
+  R = copy(T)
+  R *= fac
+end
+
+rmul!(T::ITensor,fac::Number) = (T *= fac)
+
+dot(A::ITensor,B::ITensor) = scalar(dag(A)*B)
+
+function axpy!(a::Number,
+               v::ITensor,
+               w::ITensor)
+  w = a*v + w
+end
+
+function axpby!(a::Number,
+                v::ITensor,
+                b::Number,
+                w::ITensor)
+  w = a*v + b*w
+end
+
+#TODO: This is just a stand-in for a proper delta/diag storage type
+function delta(::Type{T},inds::Index...) where {T}
+  d = ITensor(zero(T),inds...)
+  minm = min(dims(d)...)
+  for i ∈ 1:minm
+    d[IndexVal.(inds,i)...] = one(T)
+  end
+  return d
+end
+delta(inds::Index...) = delta(Float64,inds...)
+const δ = delta

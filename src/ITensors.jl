@@ -1,8 +1,6 @@
 
 module ITensors
 
-const Number64 = Union{Float64,ComplexF64}
-
 using Random,
       Permutations,
       Printf,
@@ -13,7 +11,9 @@ import Base.adjoint,
        Base.conj,
        Base.convert,
        Base.copy,
+       Base.copyto!,
        Base.eltype,
+       Base.fill!,
        Base.getindex,
        Base.isapprox,
        Base.isless,
@@ -30,11 +30,16 @@ import Base.adjoint,
        Base.-,
        Base.*,
        Base./,
+       LinearAlgebra.axpby!,
+       LinearAlgebra.axpy!,
+       LinearAlgebra.dot,
+       LinearAlgebra.eigen,
        LinearAlgebra.norm,
+       LinearAlgebra.mul!,
        LinearAlgebra.svd,
+       LinearAlgebra.rmul!,
        LinearAlgebra.qr,
-       LinearAlgebra.eigen
-       Random.randn!,
+       Random.randn!
 
 ## Types
 export Dense,
