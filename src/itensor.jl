@@ -73,6 +73,8 @@ function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
   storage_getindex(store(T),inds(T),vals...)
 end
 
+getindex(T::ITensor) = scalar(T)
+
 setindex!(T::ITensor,x::Number,vals::Int...) = storage_setindex!(store(T),inds(T),x,vals...)
 
 function setindex!(T::ITensor,x::Number,ivs::IndexVal...)

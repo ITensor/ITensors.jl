@@ -69,6 +69,7 @@ export prime,
        data,
        dag,
        dir,
+       sim,
        val
 
 #TODO: continue work on SmallString, use as Tags
@@ -151,7 +152,7 @@ export InitState
 include("mps/mps.jl")
 export MPS,
        position!,
-       overlap,
+       inner,
        randomMPS
 
 include("mps/mpo.jl")
