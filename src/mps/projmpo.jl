@@ -10,6 +10,7 @@ end
 nsite(pm::ProjMPO) = pm.nsite
 length(pm::ProjMPO) = length(pm.H)
 
+
 function LProj(pm::ProjMPO)::ITensor
   (pm.lpos <= 0) && return ITensor()
   return pm.LR[pm.lpos]
@@ -32,6 +33,26 @@ function (pm::ProjMPO)(v::ITensor)
     Hv *= RProj(pm)
   end
   return noprime(Hv)
+end
+
+function size(pm::ProjMPO)::Tuple{Int,Int}
+  d = 1
+  if !isNull(LProj(pm))
+    for i in inds(LProj(pm))
+      plev(i) > 0 && (d *= dim(i))
+    end
+  end
+  for j=pm.lpos+1:pm.rpos-1
+    for i in inds(pm.H[j])
+      plev(i) > 0 && (d *= dim(i))
+    end
+  end
+  if !isNull(RProj(pm))
+    for i in inds(RProj(pm))
+      plev(i) > 0 && (d *= dim(i))
+    end
+  end
+  return (d,d)
 end
 
 function makeL!(pm::ProjMPO,

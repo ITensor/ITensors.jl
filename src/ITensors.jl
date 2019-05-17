@@ -1,6 +1,11 @@
 
 module ITensors
 
+function pause() 
+  println("(paused)")
+  readline(stdin)
+end
+
 using Random,
       Permutations,
       Printf,
@@ -124,6 +129,9 @@ export svd,
 include("decomp.jl")
 #export truncate!
 
+include("iterativesolvers.jl")
+export davidson
+
 include("mps/siteset.jl")
 export BasicSite,
        Site,
@@ -167,6 +175,7 @@ export Sweeps,
        mindim!,
        cutoff!,
        sweepnext
+
 
 include("mps/projmpo.jl")
 export ProjMPO,
