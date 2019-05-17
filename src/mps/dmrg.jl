@@ -1,3 +1,4 @@
+using KrylovKit: Lanczos, eigsolve
 
 function dmrg(H::MPO,
               psi0::MPS,
@@ -20,6 +21,15 @@ function dmrg(H::MPO,
       phi = psi[b]*psi[b+1]
 
       #phi,energy = davidson(PH,phi;kwargs...)
+      @show scalar(phi*phi)
+      Hphi = PH(phi)
+      @show inds(Hphi)
+      @show scalar(phi*Hphi)
+
+      lczos = Lanczos(krylovdim=2,maxiter=2,tol=10*eps(Float64))
+      vals, vecs, info = eigsolve(PH,phi,1,:SR,lczos)
+      @show vals
+      exit(0)
 
       #dir = ha==1 ? "Fromleft" : "Fromright"
       #replaceBond!(psi,b,phi,dir;kwargs...)
