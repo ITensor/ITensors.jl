@@ -3,7 +3,7 @@ struct SpinOneSite <: Site
     s::Index
     SpinOneSite(I::Index) = new(I)
 end
-SpinOneSite(n::Int) = SpinOneSite(Index(2, "Site,S=1,n=$n"))
+SpinOneSite(n::Int) = SpinOneSite(Index(3, "Site,S=1,n=$n"))
 
 function spinones(N::Int)::SiteSet
   sites = SiteSet(N)
