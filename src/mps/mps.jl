@@ -108,7 +108,7 @@ function position!(psi::MPS,
 end
 
 function overlap(psi1::MPS,
-                 psi2::MPS)::Number64
+                 psi2::MPS)::Number
   N = length(psi1)
   if length(psi2) != N
     error("overlap: mismatched lengths $N and $(length(psi2))")
