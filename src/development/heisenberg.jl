@@ -6,6 +6,7 @@ end
 
 function Heisenberg(sites::SiteSet)::MPO
   H = MPO(sites)
+  N = length(H)
   link = fill(Index(),N+1)
   for n=1:N+1
     link[n] = Index(5,"Link,H,n=$(n-1)")
