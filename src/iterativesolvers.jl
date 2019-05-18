@@ -8,6 +8,7 @@ function davidson(A,
   maxiter = get(kwargs,:maxiter,2)
   miniter = get(kwargs,:maxiter,1)
   errgoal = get(kwargs,:errgoal,1E-14)
+  Northo_pass = get(kwargs,:Northo_pass,2)
 
   approx0 = 1E-12
 
@@ -24,22 +25,17 @@ function davidson(A,
   V = ITensor[phi]
   AV = ITensor[A(phi)]
 
-  lambda = NaN
   last_lambda = NaN
+  lambda = dot(V[1],AV[1])
+  q = AV[1] - lambda*V[1];
 
-  M = fill(0.0,(1,1))
+  M = fill(lambda,(1,1))
 
-  iter = 0
   for ni=1:actual_maxiter+1
-    if ni == 1
-      lambda = dot(V[1],AV[1])
-      M[1,1] = lambda
-      q = AV[1] - lambda*V[1];
-    else #ni > 1
+
+    if ni > 1
       F = eigen(Hermitian(M))
       lambda = F.values[1]
-      #@show F.values
-      #@show lambda
       u = F.vectors[:,1]
       phi = u[1]*V[1]
       q = u[1]*AV[1]
@@ -57,24 +53,20 @@ function davidson(A,
 
     qnorm = norm(q)
 
-    converged = (qnorm < errgoal && abs(lambda-last_lambda) < errgoal) || (qnorm < max(approx0,errgoal*1E-3))
-
-    last_lambda = lambda
+    errgoal_reached = (qnorm < errgoal && abs(lambda-last_lambda) < errgoal)
+    small_qnorm = (qnorm < max(approx0,errgoal*1E-3))
+    converged = errgoal_reached || small_qnorm
 
     if (qnorm < 1E-20) || (converged && ni > miniter_) || (ni >= actual_maxiter)
       #@printf "done with davidson, ni=%d, qnorm=%.3E\n" ni qnorm
       break
     end
 
-    Vq = fill(0.0,ni)
-    Npass = 1
+    last_lambda = lambda
+
     pass = 1
-    tot_pass = 0
-    while pass <= Npass
-      tot_pass += 1
-      for k=1:ni
-        Vq[k] = dot(V[k],q)
-      end
+    while pass <= Northo_pass
+      Vq = [dot(V[k],q) for k=1:ni]
       for k=1:ni
         q += -Vq[k]*V[k]
       end
@@ -97,18 +89,6 @@ function davidson(A,
       newM[ni+1,k] = conj(newM[k,ni+1])
     end
     M = newM
-    #println("M = ")
-    #display(M);println()
-
-    #testM = fill(0.0,(ni+1,ni+1))
-    #for i=1:ni+1,j=1:ni+1
-    #  testM[i,j] = dot(V[i],AV[j])
-    #end
-    #println("testM = ")
-    #display(testM);println()
-
-    iter += 1
-
   end #for ni=1:actual_maxiter+1
 
   return lambda,phi
