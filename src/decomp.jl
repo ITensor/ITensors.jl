@@ -126,7 +126,7 @@ function svd(A::ITensor,
              kwargs...
             )
   Lis = IndexSet()
-  for i in Linds
+  for i in IndexSet(Linds)
     i ∈ inds(A) && push!(Lis,i)
   end
   Ris = uniqueinds(A,Lis)

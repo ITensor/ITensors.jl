@@ -42,6 +42,8 @@ plev(i::Index) = plev(tags(i))
 ==(i1::Index,i2::Index) = (id(i1)==id(i2) && tags(i1)==tags(i2))
 copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
 
+sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
+
 dag(i::Index) = Index(id(i),dim(i),-dir(i),tags(i))
 
 isdefault(i::Index) = (i==Index())
