@@ -2,13 +2,17 @@
 
 + AutoMPO
 
-## To Do
+## Misc To Do
 
 + davidson improvements
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
   - improve definitions and handling of parameters such as miniter, maxiter
 
 + Improve printing of Sweeps struct
+
+## Performance Issues
+
++ (May 19) DMRG is taking 30-40 seconds for N=100, S=1 Heisenberg chain (C++ is 9 seconds)
 
 ## Design Questions
 
