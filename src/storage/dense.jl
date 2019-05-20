@@ -2,7 +2,8 @@
 struct Dense{T} <: TensorStorage
   data::Vector{T}
   Dense{T}(data::Vector{T}) where {T} = new{T}(data)
-  Dense{T}(size::Integer) where {T} = new{T}(zeros(size))
+  #Dense{T}(size::Integer) where {T} = new{T}(zeros(T,size))
+  Dense{T}(size::Integer) where {T} = new{T}(Vector{T}(undef,size))
   Dense{T}(x::Number,size::Integer) where {T} = new{T}(fill(x,size))
   Dense{T}() where {T} = new{T}(Vector{T}())
 end

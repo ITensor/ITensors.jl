@@ -13,9 +13,15 @@ ITensor(inds::Index...) = ITensor(IndexSet(inds...))
 
 function ITensor(::Type{T},
                  inds::IndexSet) where {T<:Number}
-  return ITensor(inds,Dense{T}(dim(inds)))
+  return ITensor(inds,Dense{T}(zero(T),dim(inds)))
 end
 ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...))
+
+function ITensor(::UndefInitializer,
+                 inds::IndexSet)
+  return ITensor(inds,Dense{Float64}(undef,dim(inds)))
+end
+ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
 
 function ITensor(x::S,inds::IndexSet) where {S<:Number}
   return ITensor(inds,Dense{S}(x,dim(inds)))

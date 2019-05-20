@@ -41,7 +41,6 @@ function dmrg(H::MPO,
 
   PH = ProjMPO(H)
   position!(PH,psi0,1)
-
   energy = 0.0
 
   for sw=1:nsweep(sweeps)
