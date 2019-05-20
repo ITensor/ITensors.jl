@@ -1,0 +1,25 @@
+## Key features needed
+
++ AutoMPO
+
+## To Do
+
++ davidson improvements
+  - evaluate logic (cyclic permutation of order of steps in main for loop?)
+  - improve definitions and handling of parameters such as miniter, maxiter
+
++ Improve printing of Sweeps struct
+
+## Design Questions
+
++ Should we rename methods like storage_svd etc. to just svd?
+  Arguments for changing:
+    - could use storage objects better in generic algorithms
+      (e.g. put a Dense{Float64} object into a Krylov library routine)
+    - hard to draw line between which functions are "storage_func" or just "func"
+  Arguments for status quo:
+    - makes code more readable in some ways
+    - easier to see which methods to overload to make a new storage type
+      (but we can address this by listing such methods in the docs)
+
+
