@@ -161,7 +161,8 @@ include("mps/mps.jl")
 export MPS,
        position!,
        inner,
-       randomMPS
+       randomMPS,
+       maxDim
 
 include("mps/mpo.jl")
 export MPO

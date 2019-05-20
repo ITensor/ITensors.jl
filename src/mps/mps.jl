@@ -179,3 +179,11 @@ function replaceBond!(psi::MPS,
     psi[b+1] = V
   end
 end
+
+function maxDim(psi::MPS)
+  md = 1
+  for b=1:length(psi)-1
+    md = max(md,dim(linkind(psi,b)))
+  end
+  return md
+end
