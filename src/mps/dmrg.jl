@@ -46,7 +46,7 @@ function dmrg(H::MPO,
 
   for sw=1:nsweep(sweeps)
     for (b,ha) in sweepnext(N)
-      @printf "sw=%d ha=%d b=%d\n" sw ha b
+      #@printf "sw=%d ha=%d b=%d\n" sw ha b
 
       position!(PH,psi,b)
 
@@ -67,14 +67,15 @@ function dmrg(H::MPO,
                    mindim=mindim(sweeps,sw),
                    cutoff=cutoff(sweeps,sw))
 
-      nphi = psi[b]*psi[b+1]
-      @printf "final MPS norm = %.3f\n" norm(nphi)
+      #nphi = psi[b]*psi[b+1]
+      #@printf "final MPS norm = %.3f\n" norm(nphi)
       #@printf "final energy = %.8f\n" scalar(nphi*PH(nphi))/norm(nphi)^2
       #@printf "dim=%d\n" dim(linkind(psi,b))
 
-      @printf "sw=%d ha=%d b=%d energy=%.8f dim=%d\n" sw ha b energy dim(linkind(psi,b))
+      #@printf "sw=%d ha=%d b=%d energy=%.8f dim=%d\n" sw ha b energy dim(linkind(psi,b))
       #pause()
     end
+    @printf "After sweep %d energy=%.12f maxDim=%d\n" sw energy maxDim(psi)
   end
   return (energy,psi)
 end
