@@ -13,7 +13,11 @@ function davidson(A,
   approx0 = 1E-12
 
   nrm = norm(phi)
-  nrm < 1E-18 && (phi = randomITensor(inds(phi)))
+  if nrm < 1E-18 
+    phi = randomITensor(inds(phi))
+    nrm = norm(phi)
+  end
+  phi /= nrm
 
   maxsize = size(A)[1]
   actual_maxiter = min(maxiter,maxsize-1)
@@ -43,6 +47,9 @@ function davidson(A,
         phi += u[n]*V[n]
         q   += u[n]*AV[n]
       end
+      #phinrm = norm(phi)
+      #phi /= phinrm
+      #q /= phinrm
       q -= lambda*phi
       #Fix sign
       if real(u[1]) < 0
@@ -58,7 +65,7 @@ function davidson(A,
     converged = errgoal_reached || small_qnorm
 
     if (qnorm < 1E-20) || (converged && ni > miniter_) || (ni >= actual_maxiter)
-      #@printf "done with davidson, ni=%d, qnorm=%.3E\n" ni qnorm
+      #@printf "  done with davidson, ni=%d, qnorm=%.3E\n" ni qnorm
       break
     end
 
@@ -90,6 +97,8 @@ function davidson(A,
     end
     M = newM
   end #for ni=1:actual_maxiter+1
+
+  #phi /= norm(phi)
 
   return lambda,phi
 
