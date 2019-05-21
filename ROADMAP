@@ -1,14 +1,20 @@
-## Key features needed
-
-+ AutoMPO
-
 ## Misc To Do
 
 + davidson improvements
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
   - improve definitions and handling of parameters such as miniter, maxiter
 
-+ Improve printing of Sweeps struct
++ Improve printing of Sweeps
+
++ MPS/MPO algorithms
+
++ AutoMPO (Miles)
+
++ Boson site set
+
++ QN Index
+
++ QN block-sparse tensors (with separate block-sparse library as discussed)
 
 ## Performance Issues
 
@@ -25,5 +31,3 @@
     - makes code more readable in some ways
     - easier to see which methods to overload to make a new storage type
       (but we can address this by listing such methods in the docs)
-
-
