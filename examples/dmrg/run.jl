@@ -1,7 +1,7 @@
 using ITensors, Printf, Profile, ProfileView
 
 N = 100
-sites = spinones(N)
+sites = spinOneSites(N)
 H = Heisenberg(sites)
 psi0 = randomMPS(sites)
 sw = Sweeps(5)

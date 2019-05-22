@@ -5,7 +5,7 @@ struct tJSite <: Site
 end
 tJSite(n::Int) = tJSite(Index(3,"Site,tJ,n=$n"))
 
-function tjs(N::Int)::SiteSet
+function tjSites(N::Int)::SiteSet
   sites = SiteSet(N)
   for n=1:N
     set(sites,n,tJSite(n))

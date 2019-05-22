@@ -5,7 +5,7 @@ struct ElectronSite <: Site
 end
 ElectronSite(n::Int) = ElectronSite(Index(4,"Site,Electron,n=$n"))
 
-function electrons(N::Int)::SiteSet
+function electronSites(N::Int)::SiteSet
   sites = SiteSet(N)
   for n=1:N
     set(sites,n,ElectronSite(n))
