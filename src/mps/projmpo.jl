@@ -21,7 +21,8 @@ function RProj(pm::ProjMPO)::ITensor
   return pm.LR[pm.rpos]
 end
 
-function (pm::ProjMPO)(v::ITensor)
+function product(pm::ProjMPO,
+                 v::ITensor)::ITensor
   Hv = v
   if !isNull(LProj(pm))
     Hv *= LProj(pm)
@@ -34,6 +35,8 @@ function (pm::ProjMPO)(v::ITensor)
   end
   return noprime(Hv)
 end
+
+(pm::ProjMPO)(v::ITensor) = product(pm,v)
 
 function size(pm::ProjMPO)::Tuple{Int,Int}
   d = 1

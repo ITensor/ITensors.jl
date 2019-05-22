@@ -181,7 +181,10 @@ export Sweeps,
 
 include("mps/projmpo.jl")
 export ProjMPO,
-       LProj,RProj
+       LProj,
+       RProj,
+       product
+
 include("mps/dmrg.jl")
 export dmrg
 
