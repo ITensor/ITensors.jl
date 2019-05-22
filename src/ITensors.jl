@@ -185,6 +185,10 @@ export ProjMPO,
 include("mps/dmrg.jl")
 export dmrg
 
+include("mps/autompo.jl")
+export AutoMPO,
+       add!
+
 # Development folder includes helper
 # codes not intended for final release,
 # just to ease development temporarily
