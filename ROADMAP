@@ -22,6 +22,8 @@
 
 ## Design Questions
 
++ Use Reexport.jl to better organize modules and export commands?
+
 + Should we rename methods like storage_svd etc. to just svd?
   Arguments for changing:
     - could use storage objects better in generic algorithms
