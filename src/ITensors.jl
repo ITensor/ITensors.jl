@@ -143,16 +143,16 @@ export BasicSite,
 
 include("mps/sitesets/spinhalf.jl")
 export SpinHalfSite,
-       spinhalfs
+       spinHalfSites
 include("mps/sitesets/spinone.jl")
 export SpinOneSite,
-       spinones
+       spinOneSites
 include("mps/sitesets/electron.jl")
 export ElectronSite,
-       electrons
+       electronSites
 include("mps/sitesets/tj.jl")
 export tJSite,
-       tjs
+       tjSites
 
 include("mps/initstate.jl")
 export InitState
