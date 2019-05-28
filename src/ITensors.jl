@@ -156,7 +156,8 @@ include("mps/dmrg.jl")
 export dmrg
 
 include("mps/autompo.jl")
-export AutoMPO,
+export SiteOp,OpProd,
+       AutoMPO,
        add!
 
 # Development folder includes helper
