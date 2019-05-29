@@ -53,11 +53,15 @@ end
 ## AutoMPO                 #
 ############################
 
-struct AutoMPO
-  terms::Vector{OpProd}
-  AutoMPO() = new(OpProd[])
-end
+const MPOTerms = Vector{OpProd}
 
+struct AutoMPO
+  sites::SiteSet
+  terms::MPOTerms
+  AutoMPO() = new(MPOTerms())
+  AutoMPO(s::SiteSet) = new(sites,MPOTerms())
+end
+sites(ampo::AutoMPO) = ampo.sites
 terms(ampo::AutoMPO) = ampo.terms
 
 function add!(ampo::AutoMPO,
@@ -91,3 +95,46 @@ function show(io::IO,
     println(io,"  $term")
   end
 end
+
+###############
+###############
+
+struct MatElem{T}
+  val::T
+  ind::Tuple{Int,Int}
+end
+
+
+function partitionHTerms(sites::SiteSet,
+                         terms::MPOTerms,
+                         ; kwargs...)
+                         #::Tuple{Vector{QNBlock},Vector{IQMatEls}}
+
+  qbs = Vector{QNBlock}()
+  tempMPO = Vector{IQMatEls}()
+end
+
+#function compressMPO(sites::SiteSet,
+#                     qbs::Vector{QNBlock},
+#                     tempMPO::Vector{IQMatEls}
+#                     ; kwargs...)
+#                     #::Tuple{Vector{MPOPiece},IndexSet}
+#end
+#
+#function constructMPOTensors(sites::SiteSet,
+#                             finalMPO::Vector{MPOPiece},
+#                             links::IndexSet
+#                             ; kwargs...)::MPO
+#end
+
+
+function svdMPO(am::AutoMPO; kwargs...)::MPO
+  #qbs,tempMPO = partitionHTerms(sites(am),terms(am);kwargs...)
+  #finalMPO,links = compressMPO(sites(am),qbs,tempMPO;kwargs...)
+  #mpo = constructMPOTensors(sites(am),finalMPO,links;kwargs...)
+  #return mpo
+end
+
+
+
+
