@@ -139,7 +139,7 @@ function isapprox(A::ITensor,
                   B::ITensor;
                   atol::Real=0.0,
                   rtol::Real=Base.rtoldefault(eltype(A),eltype(B),atol))
-  return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
+    return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
 end
 
 function scalar(T::ITensor)
@@ -177,10 +177,14 @@ function add!(A::ITensor,B::ITensor)
 end
 
 #TODO: improve these using a storage_mult call
-*(A::ITensor,x::Number) = A*ITensor(x)
+function *(A::ITensor,x::Number)
+    B = copy(A)
+    storage_mult!(store(B), x)
+    return B
+end
 *(x::Number,A::ITensor) = A*x
 #TODO: make a proper element-wise division
-/(A::ITensor,x::Number) = A*ITensor(1.0/x)
+/(A::ITensor,x::Number) = A*(1.0/x)
 
 -(A::ITensor) = -one(eltype(A))*A
 function +(A::ITensor,B::ITensor)

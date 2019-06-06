@@ -57,6 +57,13 @@ function storage_add!(Bstore::Dense,
   end
 end
 
+function storage_mult!(Astore::Dense,
+                       x::Number)
+  Adata = data(Astore)
+  rmul!(Adata, x)
+end
+
+
 # TODO: make this a special version of storage_add!()
 # Make sure the permutation is optimized
 function storage_permute!(Bstore::Dense,
