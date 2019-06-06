@@ -44,6 +44,7 @@ function dmrg(H::MPO,
   energy = 0.0
 
   for sw=1:nsweep(sweeps)
+    sw_time = @elapsed begin
     for (b,ha) in sweepnext(N)
       #@printf "sw=%d ha=%d b=%d\n" sw ha b
 
@@ -74,7 +75,8 @@ function dmrg(H::MPO,
       #@printf "sw=%d ha=%d b=%d energy=%.8f dim=%d\n" sw ha b energy dim(linkind(psi,b))
       #pause()
     end
-    @printf "After sweep %d energy=%.12f maxDim=%d\n" sw energy maxDim(psi)
+    end
+    @printf "After sweep %d energy=%.12f maxDim=%d time=%.3f\n" sw energy maxDim(psi) sw_time
   end
   return (energy,psi)
 end
