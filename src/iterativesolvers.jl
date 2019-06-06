@@ -1,3 +1,6 @@
+small_eigen_t = 0.0
+orth_t = 0.0
+prod_t = 0.0
 
 function davidson(A,
                   phi0::ITensor;
@@ -27,7 +30,9 @@ function davidson(A,
   end
 
   V = ITensor[phi]
+  global prod_t += @elapsed begin
   AV = ITensor[A(phi)]
+  end
 
   last_lambda = NaN
   lambda = dot(V[1],AV[1])
@@ -41,20 +46,22 @@ function davidson(A,
       F = eigen(Hermitian(M))
       lambda = F.values[1]
       u = F.vectors[:,1]
-      phi = u[1]*V[1]
-      q = u[1]*AV[1]
-      for n=2:ni
-        phi += u[n]*V[n]
-        q   += u[n]*AV[n]
-      end
-      #phinrm = norm(phi)
-      #phi /= phinrm
-      #q /= phinrm
-      q -= lambda*phi
-      #Fix sign
-      if real(u[1]) < 0
-        phi *= -1
-        q *= -1
+      global small_eigen_t += @elapsed begin
+        phi = u[1]*V[1]
+        q = u[1]*AV[1]
+        for n=2:ni
+          phi += u[n]*V[n]
+          q   += u[n]*AV[n]
+        end
+        #phinrm = norm(phi)
+        #phi /= phinrm
+        #q /= phinrm
+        q -= lambda*phi
+        #Fix sign
+        if real(u[1]) < 0.0
+          phi *= -1
+          q *= -1
+        end
       end
     end
 
@@ -71,11 +78,11 @@ function davidson(A,
 
     last_lambda = lambda
 
+    global orth_t += @elapsed begin
     pass = 1
     while pass <= Northo_pass
-      Vq = [dot(V[k],q) for k=1:ni]
       for k=1:ni
-        q += -Vq[k]*V[k]
+        q += -dot(V[k],q)*V[k]
       end
       qnrm = norm(q)
       if qnrm < 1E-10 #orthog failure, try randomizing
@@ -85,9 +92,12 @@ function davidson(A,
       q /= qnrm
       pass += 1
     end
+    end
 
     push!(V,q)
-    push!(AV,A(q))
+    global prod_t += @elapsed begin
+      push!(AV,A(q))
+    end
 
     newM = fill(0.0,(ni+1,ni+1))
     newM[1:ni,1:ni] = M
@@ -99,6 +109,7 @@ function davidson(A,
   end #for ni=1:actual_maxiter+1
 
   #phi /= norm(phi)
+
 
   return lambda,phi
 

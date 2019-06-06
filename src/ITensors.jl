@@ -113,6 +113,7 @@ export hasindex,
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")
 include("storage/contract.jl")
+export CProps, contract!, compute!, compute_contraction_labels, contract_inds, contract
 include("itensor.jl")
 export svd,
        qr,
