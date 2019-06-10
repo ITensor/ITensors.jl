@@ -124,9 +124,9 @@ function storage_contract(Astore::TensorStorage,
       Cstore = outer(Astore,Bstore)
     else
       (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
-      global contract_t += @elapsed begin
+      global timer.contract_t += @elapsed begin
       Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
-      end
+      end; #contract_t
     end
   end
   return (Cis,Cstore)
