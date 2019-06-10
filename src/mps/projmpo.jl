@@ -28,20 +28,22 @@ R_t = 0.0
 function product(pm::ProjMPO,
                  v::ITensor)::ITensor
   Hv = v
-  global L_t += @elapsed begin
-  if !isNull(LProj(pm))
+  if isNull(LProj(pm))
+    if !isNull(RProj(pm))
+      Hv *= RProj(pm)
+    end
+    for j=pm.rpos-1:-1:pm.lpos+1
+      Hv *= pm.H[j]
+    end
+  else #if LProj is not null
     Hv *= LProj(pm)
+    for j=pm.lpos+1:pm.rpos-1
+      Hv *= pm.H[j]
+    end
+    if !isNull(RProj(pm))
+      Hv *= RProj(pm)
+    end
   end
-  end
-  global C_t += @elapsed begin
-  for j=pm.lpos+1:pm.rpos-1
-    Hv *= pm.H[j]
-  end
-  end
-  global R_t += @elapsed begin
-  if !isNull(RProj(pm))
-    Hv *= RProj(pm)
-  end end
   return noprime(Hv)
 end
 
