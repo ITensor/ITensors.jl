@@ -1,8 +1,14 @@
 LIBRARY_DIR=$(HOME)/software/itensor
 
-HEADERS=
 
+ifdef app
+APP=$(app)
+else
 APP=mult
+APP=dmrg
+endif
+
+HEADERS=
 
 CCFILES=$(APP).cc
 
