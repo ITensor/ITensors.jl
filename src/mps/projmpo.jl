@@ -21,10 +21,6 @@ function RProj(pm::ProjMPO)::ITensor
   return pm.LR[pm.rpos]
 end
 
-L_t = 0.0
-C_t = 0.0
-R_t = 0.0
-
 function product(pm::ProjMPO,
                  v::ITensor)::ITensor
   Hv = v
