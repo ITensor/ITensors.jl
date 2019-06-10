@@ -90,6 +90,7 @@ function dmrg(H::MPO,
       #@printf "sw=%d ha=%d b=%d energy=%.8f dim=%d\n" sw ha b energy dim(linkind(psi,b))
       #pause()
     end
+  end
     @printf "After sweep %d energy=%.12f maxDim=%d time=%.3f\n" sw energy maxDim(psi) sw_time
     @show phi_t
     @show eigen_t
@@ -97,7 +98,6 @@ function dmrg(H::MPO,
     @printf "sw_time = %.12f (phi_t+eigen_t+svd_t = %.12f)\n" sw_time phi_t+eigen_t+svd_t
     printTimes(timer)
     println("\n")
-  end
   end
   return (energy,psi)
 end
