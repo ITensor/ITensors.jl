@@ -1,5 +1,3 @@
-gemm_t = 0.0
-permute_t = 0.0
 
 # Why do we need to do this?
 # Why not just get the extents from the indices?
@@ -451,9 +449,10 @@ function contract!(C::Array{Float64},
 
   tA = 'N'
   if p.permuteA
-    global permute_t += @elapsed begin
+    global timer.permute_t += @elapsed begin
     aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
     end
+    global timer.permute_c += 1
     tA = 'T'
   else
     #A doesn't have to be permuted
@@ -467,7 +466,7 @@ function contract!(C::Array{Float64},
 
   tB = 'N'
   if p.permuteB
-    global permute_t += @elapsed begin
+    global timer.permute_t += @elapsed begin
     bref = reshape(permutedims(B,p.PB),p.dmid,p.dright)
     end
   else
@@ -496,15 +495,17 @@ function contract!(C::Array{Float64},
     end
   end
 
-  global gemm_t += @elapsed begin
+  global timer.gemm_t += @elapsed begin
   #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
   BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
   end
+  global timer.gemm_c += 1
 
   if p.permuteC
-    #global permute_t += @elapsed begin
+    global timer.permute_t += @elapsed begin
     permutedims!(C,reshape(cref,p.newCrange...),p.PC)
-    #end
+    end
+    global timer.permute_c += 1
   end
   return
 end
@@ -518,18 +519,17 @@ function contract_scalar!(Cdata::Array,Clabels::Vector{Int},
       Cdata .= α.*Bdata
     else
       #TODO: make an optimized permutedims!() that also scales the data
-      global permute_t += @elapsed begin
       permutedims!(Cdata,α*Bdata)
-      end
     end
   else
     if is_trivial_permutation(p)
       Cdata .= α.*Bdata .+ β.*Cdata
     else
       #TODO: make an optimized permutedims!() that also adds and scales the data
-      global permute_t += @elapsed begin
+      global timer.permute_t += @elapsed begin
       permBdata = permutedims(Bdata,p)
       end
+      global timer.permute_c += 1
       Cdata .= α.*permBdata .+ β.*Cdata
     end
   end
