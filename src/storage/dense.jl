@@ -1,3 +1,4 @@
+contract_t = 0.0
 
 struct Dense{T} <: TensorStorage
   data::Vector{T}
@@ -130,7 +131,9 @@ function storage_contract(Astore::TensorStorage,
       Cstore = outer(Astore,Bstore)
     else
       (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
+      global timer.contract_t += @elapsed begin
       Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
+      end; #contract_t
     end
   end
   return (Cis,Cstore)

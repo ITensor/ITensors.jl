@@ -52,7 +52,7 @@ function davidson(A,
       #q /= phinrm
       q -= lambda*phi
       #Fix sign
-      if real(u[1]) < 0
+      if real(u[1]) < 0.0
         phi *= -1
         q *= -1
       end
@@ -73,9 +73,8 @@ function davidson(A,
 
     pass = 1
     while pass <= Northo_pass
-      Vq = [dot(V[k],q) for k=1:ni]
       for k=1:ni
-        q += -Vq[k]*V[k]
+        q += -dot(V[k],q)*V[k]
       end
       qnrm = norm(q)
       if qnrm < 1E-10 #orthog failure, try randomizing
@@ -99,6 +98,7 @@ function davidson(A,
   end #for ni=1:actual_maxiter+1
 
   #phi /= norm(phi)
+
 
   return lambda,phi
 

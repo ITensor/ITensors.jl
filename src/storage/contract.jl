@@ -434,12 +434,12 @@ function compute!(props::CProps,
 
 end
 
-function contract!(C::Array{T},
+function contract!(C::Array{Float64},
                    p::CProps,
-                   A::Array{T},
-                   B::Array{T},
-                   α::Tα=1.0,
-                   β::Tβ=0.0) where {T,Tα<:Number,Tβ<:Number}
+                   A::Array{Float64},
+                   B::Array{Float64},
+                   α::Float64=1.0,
+                   β::Float64=0.0) #where {T,Tα<:Number,Tβ<:Number}
 
   # TODO: This is because the permutation convention in C++ ITensor and
   # permutedims in Julia is different
@@ -449,7 +449,10 @@ function contract!(C::Array{T},
 
   tA = 'N'
   if p.permuteA
+    global timer.permute_t += @elapsed begin
     aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
+    end
+    global timer.permute_c += 1
     tA = 'T'
   else
     #A doesn't have to be permuted
@@ -463,7 +466,9 @@ function contract!(C::Array{T},
 
   tB = 'N'
   if p.permuteB
+    global timer.permute_t += @elapsed begin
     bref = reshape(permutedims(B,p.PB),p.dmid,p.dright)
+    end
   else
     if Btrans(p)
       bref = reshape(B,p.dright,p.dmid)
@@ -490,10 +495,17 @@ function contract!(C::Array{T},
     end
   end
 
-  BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
+  global timer.gemm_t += @elapsed begin
+  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
+  BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
+  end
+  global timer.gemm_c += 1
 
   if p.permuteC
+    global timer.permute_t += @elapsed begin
     permutedims!(C,reshape(cref,p.newCrange...),p.PC)
+    end
+    global timer.permute_c += 1
   end
   return
 end
@@ -514,7 +526,10 @@ function contract_scalar!(Cdata::Array,Clabels::Vector{Int},
       Cdata .= α.*Bdata .+ β.*Cdata
     else
       #TODO: make an optimized permutedims!() that also adds and scales the data
+      global timer.permute_t += @elapsed begin
       permBdata = permutedims(Bdata,p)
+      end
+      global timer.permute_c += 1
       Cdata .= α.*permBdata .+ β.*Cdata
     end
   end

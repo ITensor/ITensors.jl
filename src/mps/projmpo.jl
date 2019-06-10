@@ -24,14 +24,21 @@ end
 function product(pm::ProjMPO,
                  v::ITensor)::ITensor
   Hv = v
-  if !isNull(LProj(pm))
+  if isNull(LProj(pm))
+    if !isNull(RProj(pm))
+      Hv *= RProj(pm)
+    end
+    for j=pm.rpos-1:-1:pm.lpos+1
+      Hv *= pm.H[j]
+    end
+  else #if LProj is not null
     Hv *= LProj(pm)
-  end
-  for j=pm.lpos+1:pm.rpos-1
-    Hv *= pm.H[j]
-  end
-  if !isNull(RProj(pm))
-    Hv *= RProj(pm)
+    for j=pm.lpos+1:pm.rpos-1
+      Hv *= pm.H[j]
+    end
+    if !isNull(RProj(pm))
+      Hv *= RProj(pm)
+    end
   end
   return noprime(Hv)
 end
