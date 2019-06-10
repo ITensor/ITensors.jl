@@ -46,19 +46,12 @@ function dmrg(H::MPO,
 
   for sw=1:nsweep(sweeps)
 
+    sweep_t = 0.0
     phi_t = 0.0
     eigen_t = 0.0
     svd_t = 0.0
-    sweep_t = 0.0
-    global prod_t = 0.0
-    global L_t = 0.0
-    global C_t = 0.0
-    global R_t = 0.0
-    global small_eigen_t = 0.0
-    global orth_t = 0.0
-    global contract_t = 0.0
-    global gemm_t = 0.0
-    global permute_t = 0.0
+
+    reset!(timer)
 
     sweep_t += @elapsed begin
     for (b,ha) in sweepnext(N)
@@ -101,22 +94,10 @@ function dmrg(H::MPO,
     @printf "After sweep %d energy=%.12f maxDim=%d\n" sw energy maxDim(psi)
     @show phi_t
     @show eigen_t
-    @printf "  prod_t = %.12f\n" prod_t
-    @printf "    L_t = %.12f\n" L_t
-    @printf "    C_t = %.12f\n" C_t
-    @printf "    R_t = %.12f\n" R_t
-    @printf "    Total  = %.12f (?= %.12f)\n" L_t+C_t+R_t prod_t
-    @printf "  small_eigen_t = %.12f\n" small_eigen_t
-    @printf "  orth_t = %.12f\n" orth_t
-    @printf "  Total  = %.12f (?= %.12f)\n" prod_t+small_eigen_t+orth_t eigen_t
-    @printf "contract_t = %.12f\n" contract_t
-    @printf "  gemm_t = %.12f\n" gemm_t
-    @printf "  permute_t = %.12f\n" permute_t
-    @printf "  Total  = %.12f (?= %.12f)\n" gemm_t+permute_t contract_t
     @show svd_t
     @printf "sweep_t = %.12f (phi_t+eigen_t+svd_t = %.12f)\n" sweep_t phi_t+eigen_t+svd_t
-    println()
-    println()
+    printTimes(timer)
+    println("\n")
   end
   return (energy,psi)
 end
