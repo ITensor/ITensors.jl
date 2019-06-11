@@ -1,4 +1,45 @@
 
+function get_vecs(M,V,AV,ni)
+  F = eigen(Hermitian(M))
+  lambda = F.values[1]
+  u = F.vectors[:,1]
+  phi = u[1]*V[1]
+  q = u[1]*AV[1]
+  for n=2:ni
+    #phi += u[n]*V[n]
+    add!(phi,V[n],u[n])
+    #q += u[n]*AV[n]
+    add!(q,AV[n],u[n])
+  end
+  #q -= lambda*phi
+  add!(q,phi,lambda)
+  #Fix sign
+  if real(u[1]) < 0.0
+    #phi *= -1
+    scale!(phi,-1)
+    #q *= -1
+    scale!(q,-1)
+  end
+  return lambda,phi,q
+end
+
+function orthogonalize(q,V,ni)
+  q0 = q
+  for k=1:ni
+    Vqk = dot(V[k],q0)
+    #q += -Vqk*V[k]
+    add!(q,V[k],-Vqk)
+  end
+  qnrm = norm(q)
+  if qnrm < 1E-10 #orthog failure, try randomizing
+    # TODO: put random recovery code here
+    error("orthog failure")
+  end
+  #q /= qnrm
+  scale!(q,1.0/qnrm)
+  return q
+end
+
 function davidson(A,
                   phi0::ITensor;
                   kwargs...)::Tuple{Float64,ITensor}
@@ -17,7 +58,8 @@ function davidson(A,
     phi = randomITensor(inds(phi))
     nrm = norm(phi)
   end
-  phi /= nrm
+  #phi /= nrm
+  scale!(phi,1.0/nrm)
 
   maxsize = size(A)[1]
   actual_maxiter = min(maxiter,maxsize-1)
@@ -38,24 +80,7 @@ function davidson(A,
   for ni=1:actual_maxiter+1
 
     if ni > 1
-      F = eigen(Hermitian(M))
-      lambda = F.values[1]
-      u = F.vectors[:,1]
-      phi = u[1]*V[1]
-      q = u[1]*AV[1]
-      for n=2:ni
-        phi += u[n]*V[n]
-        q   += u[n]*AV[n]
-      end
-      #phinrm = norm(phi)
-      #phi /= phinrm
-      #q /= phinrm
-      q -= lambda*phi
-      #Fix sign
-      if real(u[1]) < 0.0
-        phi *= -1
-        q *= -1
-      end
+      lambda,phi,q = get_vecs(M,V,AV,ni)
     end
 
     qnorm = norm(q)
@@ -71,18 +96,8 @@ function davidson(A,
 
     last_lambda = lambda
 
-    pass = 1
-    while pass <= Northo_pass
-      for k=1:ni
-        q += -dot(V[k],q)*V[k]
-      end
-      qnrm = norm(q)
-      if qnrm < 1E-10 #orthog failure, try randomizing
-        # TODO: put random recovery code here
-        error("orthog failure")
-      end
-      q /= qnrm
-      pass += 1
+    for pass = 1:Northo_pass
+      q = orthogonalize(q,V,ni)
     end
 
     push!(V,q)

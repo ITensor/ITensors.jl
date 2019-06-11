@@ -176,7 +176,14 @@ function add!(A::ITensor,B::ITensor)
   storage_add!(store(A),inds(A),store(B),inds(B))
 end
 
-#TODO: improve these using a storage_mult call
+function add!(A::ITensor,B::ITensor,x::Number)
+  storage_add!(store(A),inds(A),store(B),inds(B),x)
+end
+
+function scale!(A::ITensor,x::Number)
+  storage_mult!(store(A), x)  
+end
+
 function *(A::ITensor,x::Number)
     B = copy(A)
     storage_mult!(store(B), x)

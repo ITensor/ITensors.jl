@@ -85,16 +85,25 @@ end
 function storage_add!(Bstore::Dense,
                       Bis::IndexSet,
                       Astore::Dense,
-                      Ais::IndexSet)
+                      Ais::IndexSet,
+                      x::Number = 1)
   p = calculate_permutation(Bis,Ais)
   Adata = data(Astore)
   Bdata = data(Bstore)
   if is_trivial_permutation(p)
-    Bdata .+= Adata
+    if x == 1
+      Bdata .+= Adata
+    else
+      Bdata .= Bdata .+ x .* Adata
+    end
   else
     reshapeBdata = reshape(Bdata,dims(Bis))
     reshapeAdata = reshape(Adata,dims(Ais))
-    _add!(reshapeBdata,reshapeAdata,p)
+    if x == 1
+      _add!(reshapeBdata,reshapeAdata,p)
+    else
+      _add!(reshapeBdata,reshapeAdata,p,(a,b)->a+x*b)
+    end
   end
 end
 
