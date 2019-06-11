@@ -148,7 +148,7 @@ function setprime!(is::IndexSet, plev::Integer, match = nothing)
 end
 setprime(is::IndexSet, vargs...) = setprime!(copy(is), vargs...)
 
-noprime!(is::IndexSet, match = nothing) = setprime(is, 0, match)
+noprime!(is::IndexSet, match = nothing) = setprime!(is, 0, match)
 noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
 
 function addtags!(is::IndexSet,

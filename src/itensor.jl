@@ -127,7 +127,7 @@ replacetags(A::ITensor,vargs...) = ITensor(replacetags(inds(A),vargs...),store(A
 swaptags(A::ITensor,vargs...) = ITensor(swaptags(inds(A),vargs...),store(A))
 
 function ==(A::ITensor,B::ITensor)
-  !hassameinds(A,B) && throw(ErrorException("ITensors must have the same Indices to be equal"))
+  !hassameinds(A,B) && return false 
   p = calculate_permutation(inds(B),inds(A))
   for i ∈ CartesianIndices(dims(A))
     A[Tuple(i)...] ≠ B[Tuple(i)[p]...] && return false

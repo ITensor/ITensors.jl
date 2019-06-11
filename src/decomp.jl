@@ -79,9 +79,9 @@ function truncate!(P::Vector{Float64};
 end
 
 function factorize(A::ITensor,
-                   Linds;
+                   Linds...;
                    factorization=factorization)
-  Lis = IndexSet(Linds)
+  Lis = IndexSet(Linds...)
   !hasinds(A,Lis) && throw(ErrorException("Input indices must be contained in the ITensor"))
   Ris = uniqueinds(A,Lis)
   #TODO: check if A is already ordered properly
@@ -98,9 +98,9 @@ function factorize(A::ITensor,
   return ITensor(Qis,Qstore),ITensor(Pis,Pstore)
 end
 
-qr(A::ITensor,Linds) = factorize(A,Linds;factorization=:QR)
+qr(A::ITensor,Linds...) = factorize(A,Linds...;factorization=:QR)
 
-polar(A::ITensor,Linds) = factorize(A,Linds;factorization=:polar)
+polar(A::ITensor,Linds...) = factorize(A,Linds...;factorization=:polar)
 
 """
     svd(A::ITensor,

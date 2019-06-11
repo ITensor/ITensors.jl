@@ -110,7 +110,7 @@ function position!(psi::MPS,
 
   while leftLim(psi) < (j-1)
     ll = leftLim(psi)+1
-    s = findtags(psi[ll],"Site")
+    s = findindex(psi[ll],"Site")
     if ll == 1
       (Q,R) = qr(psi[ll],s)
     else
@@ -124,7 +124,7 @@ function position!(psi::MPS,
 
   while rightLim(psi) > (j+1)
     rl = rightLim(psi)-1
-    s = findtags(psi[rl],"Site")
+    s = findindex(psi[rl],"Site")
     if rl == N
       (Q,R) = qr(psi[rl],s)
     else
@@ -135,6 +135,8 @@ function position!(psi::MPS,
     psi[rl-1] *= R
     psi.rlim_ -= 1
   end
+  psi.llim_ = j-1
+  psi.rlim_ = j+1
 end
 
 function inner(psi1::MPS,
