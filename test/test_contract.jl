@@ -5,7 +5,7 @@ using ITensors,
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
-@testset "ITensor $T Contractions" for T ∈ (Float64,ComplexF64)
+@testset "ITensor $T Contractions" for T ∈ (Float64,) #ComplexF64)
   mi,mj,mk,ml,mα = 2,3,4,5,6,7
   i = Index(mi,"i")
   j = Index(mj,"j")

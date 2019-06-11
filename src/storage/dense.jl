@@ -39,9 +39,49 @@ function storage_setindex!(Tstore::Dense,
   return setindex!(reshape(data(Tstore),dims(Tis)),x,vals...)
 end
 
-# TODO: optimize this permutation (this does an extra unnecassary permutation
-# since permutedims!() doesn't give the option to add the permutation to the original array)
-# Maybe wrap the c version?
+# For use in _add!
+using Base.Cartesian: @nexprs,
+                      @ntuple,
+                      @nloops
+
+#
+# A generalized permutedims!(P,B,perm) that also allows
+# a function to be applied elementwise (defaults to addition of
+# the elements of P and the permuted elements of B)
+#
+# Based off of the permutedims! implementation in Julia's base:
+# https://github.com/JuliaLang/julia/blob/91151ab871c7e7d6689d1cfa793c12062d37d6b6/base/multidimensional.jl#L1355
+#
+@generated function _add!(P::Array{T,N},
+                          B::Array{T,N},
+                          perm,
+                          f = (x,y)->x+y) where {T,N}
+  quote
+    Base.checkdims_perm(P, B, perm)
+
+    #calculates all the strides
+    native_strides = Base.size_to_strides(1, size(B)...)
+    strides_1 = 0
+    @nexprs $N d->(strides_{d+1} = native_strides[perm[d]])
+
+    #Creates offset, because indexing starts at 1
+    offset = 1 - sum(@ntuple $N d->strides_{d+1})
+
+    ind = 1
+    @nexprs 1 d->(counts_{$N+1} = strides_{$N+1}) # a trick to set counts_($N+1)
+    @nloops($N, i, P,
+            d->(counts_d = strides_d), # PRE
+            d->(counts_{d+1} += strides_{d+1}), # POST
+            begin # BODY
+                sumc = sum(@ntuple $N d->counts_{d+1})
+                @inbounds P[ind] = f(P[ind],B[sumc+offset])
+                ind += 1
+            end)
+
+    return P
+  end
+end
+
 function storage_add!(Bstore::Dense,
                       Bis::IndexSet,
                       Astore::Dense,
@@ -53,8 +93,8 @@ function storage_add!(Bstore::Dense,
     Bdata .+= Adata
   else
     reshapeBdata = reshape(Bdata,dims(Bis))
-    permAdata = permutedims(reshape(Adata,dims(Ais)),p)
-    reshapeBdata .+= permAdata
+    reshapeAdata = reshape(Adata,dims(Ais))
+    _add!(reshapeBdata,reshapeAdata,p)
   end
 end
 
