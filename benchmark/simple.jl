@@ -20,9 +20,7 @@ function main()
   end
 
   @printf "time = %.12f\n" time
-  @printf "contract_t = %.12f\n" timer.contract_t
-  @printf "  gemm_t = %.12f (%d)\n" timer.gemm_t timer.gemm_c
-  @printf "  permute_t = %.12f\n" timer.permute_t
+  printTimes(timer)
 
 
 end; main()
