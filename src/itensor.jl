@@ -13,7 +13,7 @@ ITensor(inds::Index...) = ITensor(IndexSet(inds...))
 
 function ITensor(::Type{T},
                  inds::IndexSet) where {T<:Number}
-  return ITensor(inds,Dense{T}(zero(T),dim(inds)))
+  return ITensor(inds,Dense{float(T)}(zero(float(T)),dim(inds)))
 end
 ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...))
 
@@ -24,15 +24,18 @@ end
 ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
 
 function ITensor(x::S,inds::IndexSet) where {S<:Number}
-  return ITensor(inds,Dense{S}(x,dim(inds)))
+  return ITensor(inds,Dense{float(S)}(float(x),dim(inds)))
 end
 ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
 #TODO: check that the size of the Array matches the Index dimensions
 function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
-  return ITensor(inds,Dense{S}(A))
+  return ITensor(inds,Dense{float(S)}(float(vec(A))))
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
+
+# Convert to complex
+complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))
 
 inds(T::ITensor) = T.inds
 
@@ -50,7 +53,7 @@ dims(T::ITensor) = dims(inds(T))
 
 dim(T::ITensor) = dim(inds(T))
 
-isNull(T::ITensor) = (typeof(store(T)) == Dense{Nothing})
+isNull(T::ITensor) = (store(T) isa Dense{Nothing})
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 

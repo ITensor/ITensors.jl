@@ -8,6 +8,59 @@ Random.seed!(12345)
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
+@testset "ITensor constructors" begin
+  i = Index(2,"i")
+  j = Index(2,"j")
+
+  @testset "Default" begin
+    A = ITensor()
+    @test store(A) isa Dense{Nothing}
+  end
+
+  @testset "Default with indices" begin
+    A = ITensor(i,j)
+    @test store(A) isa Dense{Float64}
+  end
+
+  @testset "Random" begin
+    A = randomITensor(i,j)
+    @test store(A) isa Dense{Float64}
+  end
+
+  @testset "From matrix" begin
+    M = [1 2; 3 4]
+    A = ITensor(M,i,j)
+    @test store(A) isa Dense{Float64}
+  end
+
+  @testset "Complex" begin
+    A = ITensor(Complex,i,j)
+    @test store(A) isa Dense{ComplexF64}
+  end
+
+  @testset "Random complex" begin
+    A = randomITensor(Complex,i,j)
+    @test store(A) isa Dense{ComplexF64}
+  end
+
+  @testset "From complex matrix" begin
+    M = [1+2im 2; 3 4]
+    A = ITensor(M,i,j)
+    @test store(A) isa Dense{ComplexF64}
+  end
+
+end
+
+@testset "Convert to complex" begin
+  i = Index(2,"i")
+  j = Index(2,"j")
+  A = randomITensor(i,j)
+  B = complex(A)
+  for ii ∈ dim(i), jj ∈ dim(j)
+    @test complex(A[i(ii),j(jj)]) == B[i(ii),j(jj)]
+  end
+end
+
 @testset "ITensor tagging and priming" begin
   s1 = Index(2,"Site,s=1")
   s2 = Index(2,"Site,s=2")
@@ -92,7 +145,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
   end
 end
 
-@testset "ITensor, Dense{$SType} storage" for SType ∈ (Float64,)#,ComplexF64)
+@testset "ITensor, Dense{$SType} storage" for SType ∈ (Float64,ComplexF64)
   mi,mj,mk,ml,mα = 2,3,4,5,6,7
   i = Index(mi,"i")
   j = Index(mj,"j")
@@ -157,7 +210,9 @@ end
       U,S,V = svd(A,(j,l))
       u = commonindex(U,S)
       v = commonindex(S,V)
-      @test A≈U*S*V
+      # TODO: allow contraction of real and complex
+      SType==ComplexF64 && (S = complex(S))
+      @test A≈U*S*dag(V)
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
     end

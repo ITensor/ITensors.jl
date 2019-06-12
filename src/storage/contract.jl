@@ -434,12 +434,12 @@ function compute!(props::CProps,
 
 end
 
-function contract!(C::Array{Float64},
+function contract!(C::Array{T},
                    p::CProps,
-                   A::Array{Float64},
-                   B::Array{Float64},
-                   α::Float64=1.0,
-                   β::Float64=0.0) #where {T,Tα<:Number,Tβ<:Number}
+                   A::Array{T},
+                   B::Array{T},
+                   α::T=one(T),
+                   β::T=zero(T)) where {T}
 
   # TODO: This is because the permutation convention in C++ ITensor and
   # permutedims in Julia is different
@@ -536,10 +536,10 @@ function contract_scalar!(Cdata::Array,Clabels::Vector{Int},
   return
 end
 
-function contract!(Cdata::Array,Clabels::Vector{Int},
-                   Adata::Array,Alabels::Vector{Int},
-                   Bdata::Array,Blabels::Vector{Int},
-                   α::Number=1.0,β::Number=0.0)
+function contract!(Cdata::Array{T},Clabels::Vector{Int},
+                   Adata::Array{T},Alabels::Vector{Int},
+                   Bdata::Array{T},Blabels::Vector{Int},
+                   α::T=one(T),β::T=zero(T)) where {T}
   if(length(Alabels)==0)
     contract_scalar!(Cdata,Clabels,Bdata,Blabels,α*Adata[1],β)
   elseif(length(Blabels)==0)

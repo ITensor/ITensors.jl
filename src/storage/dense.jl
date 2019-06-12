@@ -18,6 +18,9 @@ getindex(D::Dense,i::Int) = data(D)[i]
 *(D::T,x::Number) where {T<:Dense} = T(x*data(D))
 *(x::Number,D::Dense) = D*x
 
+# convert to complex
+storage_complex(D::Dense{T}) where {T} = Dense{complex(T)}(complex(data(D)))
+
 copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 
 outer(D1::Dense{T},D2::Dense{T}) where {T} = Dense{T}(vec(data(D1)*transpose(data(D2))))
