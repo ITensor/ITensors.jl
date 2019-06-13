@@ -560,12 +560,19 @@ function contract(Cinds::IndexSet,
                   Bstore::Dense{SB},
                   Binds::IndexSet,
                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+  SC = promote_type(SA,SB)
+
+  # Convert the arrays to a common type
+  # since we will call BLAS
+  Astore = convert(Dense{SC},Astore)
+  Bstore = convert(Dense{SC},Bstore)
+
   Adims = dims(Ainds)
   Bdims = dims(Binds)
   Cdims = dims(Cinds)
 
   # Create storage for output tensor
-  Cstore = Dense{promote_type(SA,SB)}(prod(Cdims))
+  Cstore = Dense{SC}(prod(Cdims))
 
   Adata = reshape(data(Astore),Adims)
   Bdata = reshape(data(Bstore),Bdims)

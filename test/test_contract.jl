@@ -5,7 +5,7 @@ using ITensors,
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
-@testset "ITensor $T Contractions" for T ∈ (Float64,) #ComplexF64)
+@testset "ITensor $T Contractions" for T ∈ (Float64,ComplexF64)
   mi,mj,mk,ml,mα = 2,3,4,5,6,7
   i = Index(mi,"i")
   j = Index(mj,"j")
@@ -195,5 +195,48 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       end
     end
   end # End contraction testset
+end
+
+@testset "Contraction conversions" begin
+
+  @testset "Real scalar * Complex ITensor" begin
+    i = Index(2,"i")
+    j = Index(2,"j")
+    x = rand(Float64)
+    A = randomITensor(ComplexF64,i,j)
+    B = x*A
+    for ii ∈ dim(i), jj ∈ dim(j)
+      @test B[i(ii),j(jj)] == x*A[i(ii),j(jj)]
+    end
+  end
+  @testset "Complex scalar * Real ITensor" begin
+    i = Index(2,"i")
+    j = Index(2,"j")
+    x = rand(ComplexF64)
+    A = randomITensor(Float64,i,j)
+    B = x*A
+    for ii ∈ dim(i), jj ∈ dim(j)
+      @test B[i(ii),j(jj)] == x*A[i(ii),j(jj)]
+    end
+  end
+  @testset "Real ITensor * Complex ITensor" begin
+    i = Index(2,"i")
+    j = Index(2,"j")
+    k = Index(2,"k")
+    A = randomITensor(Float64,i,j)
+    B = randomITensor(ComplexF64,j,k)
+    C = A*B
+    @test Array(permute(C,i,k)) ≈ Array(A)*Array(B) 
+  end
+  @testset "Complex ITensor * Real ITensor" begin
+    i = Index(2,"i")
+    j = Index(2,"j")
+    k = Index(2,"k")
+    A = randomITensor(ComplexF64,i,j)
+    B = randomITensor(Float64,j,k)
+    C = A*B
+    @test Array(permute(C,i,k)) ≈ Array(A)*Array(B)
+  end
+
 end
 

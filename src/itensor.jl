@@ -30,6 +30,9 @@ ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
 #TODO: check that the size of the Array matches the Index dimensions
 function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
+  if length(A) ≠ dim(inds)
+    error("In ITensor(Array,IndexSet), length of Array must match total dimension of IndexSet")
+  end
   return ITensor(inds,Dense{float(S)}(float(vec(A))))
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
@@ -188,9 +191,8 @@ function scale!(A::ITensor,x::Number)
 end
 
 function *(A::ITensor,x::Number)
-    B = copy(A)
-    storage_mult!(store(B), x)
-    return B
+    storeB = storage_mult(store(A), x)
+    return ITensor(inds(A),storeB)
 end
 *(x::Number,A::ITensor) = A*x
 #TODO: make a proper element-wise division

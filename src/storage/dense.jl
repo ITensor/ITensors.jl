@@ -2,10 +2,9 @@ contract_t = 0.0
 
 struct Dense{T} <: TensorStorage
   data::Vector{T}
-  Dense{T}(data::Vector{T}) where {T} = new{T}(data)
-  #Dense{T}(size::Integer) where {T} = new{T}(zeros(T,size))
+  Dense{T}(data::Vector) where {T} = new{T}(convert(Vector{T},data))
   Dense{T}(size::Integer) where {T} = new{T}(Vector{T}(undef,size))
-  Dense{T}(x::Number,size::Integer) where {T} = new{T}(fill(x,size))
+  Dense{T}(x::Number,size::Integer) where {T} = new{T}(fill(convert(T,x),size))
   Dense{T}() where {T} = new{T}(Vector{T}())
 end
 
@@ -15,8 +14,10 @@ eltype(D::Dense) = eltype(data(D))
 getindex(D::Dense,i::Int) = data(D)[i]
 #TODO: this should do proper promotions of the storage data
 #e.g. ComplexF64*Dense{Float64} -> Dense{ComplexF64}
-*(D::T,x::Number) where {T<:Dense} = T(x*data(D))
+*(D::Dense{T},x::S) where {T,S<:Number} = Dense{promote_type(T,S)}(x*data(D))
 *(x::Number,D::Dense) = D*x
+
+convert(::Type{Dense{T}},D::Dense) where {T} = Dense{T}(data(D))
 
 # convert to complex
 storage_complex(D::Dense{T}) where {T} = Dense{complex(T)}(complex(data(D)))
@@ -114,6 +115,22 @@ function storage_mult!(Astore::Dense,
                        x::Number)
   Adata = data(Astore)
   rmul!(Adata, x)
+end
+
+function storage_mult(Astore::Dense,
+                      x::Number)
+  Bstore = copy(Astore)
+  storage_mult!(Bstore, x)
+  return Bstore
+end
+
+# For Real storage and complex scalar, promotion
+# of the storage is needed
+function storage_mult(Astore::Dense{T},
+                      x::S) where {T<:Real,S<:Complex}
+  Bstore = convert(Dense{promote_type(S,T)},Astore)
+  storage_mult!(Bstore, x)
+  return Bstore
 end
 
 
