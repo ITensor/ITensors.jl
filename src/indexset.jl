@@ -31,6 +31,7 @@ order(is::IndexSet) = length(is)
 copy(is::IndexSet) = IndexSet(copy(is.inds))
 dims(is::IndexSet) = Tuple(dim(i) for i ∈ is)
 dim(is::IndexSet) = prod(dim.(is))
+dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
 dag(is::IndexSet) = IndexSet(dag.(is.inds))
 
@@ -44,6 +45,7 @@ push!(is::IndexSet,i::Index) = push!(is.inds,i)
 # Set operations
 #
 
+# inds has the index i
 function hasindex(inds,i::Index)
   is = IndexSet(inds)
   for j ∈ is
@@ -52,6 +54,7 @@ function hasindex(inds,i::Index)
   return false
 end
 
+# Binds is subset of Ainds
 function hasinds(Binds,Ainds)
   Ais = IndexSet(Ainds)
   for i ∈ Ais
@@ -61,23 +64,52 @@ function hasinds(Binds,Ainds)
 end
 hasinds(Binds,Ainds::Index...) = hasinds(Binds,IndexSet(Ainds...))
 
+# Set equality (order independent)
 function hassameinds(Ainds,Binds)
   Ais = IndexSet(Ainds)
   Bis = IndexSet(Binds)
   return hasinds(Ais,Bis) && length(Ais) == length(Bis)
 end
 
-"Output the IndexSet with Indices in Bis but not in Ais"
-function uniqueinds(Binds,Ainds)
-  Bis = IndexSet(Binds)
+# Equality (order dependent)
+function ==(Ais::IndexSet,Bis::IndexSet)
+  length(Ais) ≠ length(Bis) && return false
+  for i ∈ 1:length(Ais)
+    Ais[i] ≠ Bis[i] && return false
+  end
+  return true
+end
+
+"""
+uniqueinds(Ais,Bis)
+
+Output the IndexSet with Indices in Ais but not in Bis
+"""
+function uniqueinds(Ainds,Binds)
+  Ais = IndexSet(Ainds)
   Cis = IndexSet()
-  for j ∈ Bis
-    !hasindex(Ainds,j) && push!(Cis,j)
+  for j ∈ Ais
+    !hasindex(Binds,j) && push!(Cis,j)
   end
   return Cis
 end
 
-"Output the IndexSet in the intersection of Ais and Bis"
+"""
+uniqueindex(Ainds,Binds)
+
+Output the Index in Ais but not in Bis.
+If more than one Index is found, throw an error.
+Otherwise, return a default constructed Index.
+"""
+uniqueindex(Ais,Bis) = Index(uniqueinds(Ais,Bis))
+
+setdiff(Ais::IndexSet, Bis::IndexSet) = uniqueinds(Ais,Bis)
+
+"""
+commoninds(Ais,Bis)
+
+Output the IndexSet in the intersection of Ais and Bis
+"""
 function commoninds(Binds,Ainds)
   Ais = IndexSet(Ainds)
   Cis = IndexSet()
@@ -86,8 +118,22 @@ function commoninds(Binds,Ainds)
   end
   return Cis
 end
+
+"""
+commonindex(Ais,Bis)
+
+Output the Index common to Ais and Bis.
+If more than one Index is found, throw an error.
+Otherwise, return a default constructed Index.
+"""
 commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
 
+"""
+findinds(inds,tags)
+
+Output the IndexSet containing the subset of indices
+of inds containing the tags in the input tagset.
+"""
 function findinds(inds,tags)
   is = IndexSet(inds)
   ts = TagSet(tags)
@@ -99,6 +145,13 @@ function findinds(inds,tags)
   end
   return found_inds
 end
+"""
+findinds(inds,tags)
+
+Output the Index containing the tags in the input tagset.
+If more than one Index is found, throw an error.
+Otherwise, return a default constructed Index.
+"""
 findindex(inds, tags) = Index(findinds(inds,tags))
 
 # From a tag set or index set, find the positions

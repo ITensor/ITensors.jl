@@ -3,6 +3,7 @@ using ITensors,
 
 include("test_tagset.jl")
 include("test_index.jl")
+include("test_indexset.jl")
 include("test_itensor.jl")
 include("test_contract.jl")
 include("test_trg.jl")
