@@ -210,8 +210,6 @@ end
       U,S,V = svd(A,(j,l))
       u = commonindex(U,S)
       v = commonindex(S,V)
-      # TODO: allow contraction of real and complex
-      SType==ComplexF64 && (S = complex(S))
       @test A≈U*S*dag(V)
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
