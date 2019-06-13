@@ -85,9 +85,9 @@ function dmrg(H::MPO,
       #nphi = psi[b]*psi[b+1]
       #@printf "final MPS norm = %.3f\n" norm(nphi)
       #@printf "final energy = %.8f\n" scalar(nphi*PH(nphi))/norm(nphi)^2
-      #@printf "dim=%d\n" dim(linkind(psi,b))
+      #@printf "dim=%d\n" dim(linkindex(psi,b))
 
-      #@printf "sw=%d ha=%d b=%d energy=%.8f dim=%d\n" sw ha b energy dim(linkind(psi,b))
+      #@printf "sw=%d ha=%d b=%d energy=%.8f dim=%d\n" sw ha b energy dim(linkindex(psi,b))
       #pause()
     end
   end

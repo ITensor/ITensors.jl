@@ -36,7 +36,7 @@ mutable struct MPS
         i_is = is[ii]
         i_site = site(is, ii)
         spin_op = op(T(i_site), i_is)
-        link_inds[ii] = Index(1, "Link,n=$ii")
+        link_inds[ii] = Index(1, "Link,l=$ii")
         s = i_site 
         local this_it
         if ii == 1
@@ -78,114 +78,128 @@ function dag(m::MPS)
 end
 
 function show(io::IO,
-              psi::MPS)
+              M::MPS)
   print(io,"MPS")
-  (length(psi) > 0) && print(io,"\n")
-  for i=1:length(psi)
-    println(io,"$i  $(psi[i])")
+  (length(M) > 0) && print(io,"\n")
+  for i=1:length(M)
+    println(io,"$i  $(M[i])")
   end
 end
 
-function linkind(psi::MPS,j::Integer) 
-  li = commonindex(psi[j],psi[j+1])
+function linkindex(M::MPS,j::Integer) 
+  N = length(M)
+  j ≥ length(M) && error("No link index to the right of site $j (length of MPS is $N)")
+  li = commonindex(M[j],M[j+1])
   if isdefault(li)
-    error("linkind: no MPS link index at link $j")
+    error("linkindex: no MPS link index at link $j")
   end
   return li
 end
 
-function simlinks!(m::MPS)
-  N = length(m)
+function siteindex(M::MPS,j::Integer)
+  N = length(M)
+  if j == 1
+    si = uniqueindex(M[j],M[j+1])
+  elseif j == N
+    si = uniqueindex(M[j],M[j-1])
+  else
+    si = uniqueindex(M[j],M[j-1],M[j+1])
+  end
+  return si
+end
+
+function simlinks!(M::MPS)
+  N = length(M)
   for i ∈ 1:N-1
-    l = linkind(m,i)
+    l = linkindex(M,i)
     l̃ = sim(l)
-    m[i] *= δ(l,l̃)
-    m[i+1] *= δ(l,l̃)
+    M[i] *= δ(l,l̃)
+    M[i+1] *= δ(l,l̃)
   end
 end
 
-function position!(psi::MPS,
+function position!(M::MPS,
                    j::Integer)
-  N = length(psi)
+  N = length(M)
 
-  while leftLim(psi) < (j-1)
-    ll = leftLim(psi)+1
-    s = findindex(psi[ll],"Site")
+  while leftLim(M) < (j-1)
+    ll = leftLim(M)+1
+    s = findindex(M[ll],"Site")
     if ll == 1
-      (Q,R) = qr(psi[ll],s)
+      (Q,R) = qr(M[ll],s)
     else
-      li = linkind(psi,ll-1)
-      (Q,R) = qr(psi[ll],s,li)
+      li = linkindex(M,ll-1)
+      (Q,R) = qr(M[ll],s,li)
     end
-    psi[ll] = Q
-    psi[ll+1] *= R
-    psi.llim_ += 1
+    M[ll] = Q
+    M[ll+1] *= R
+    M.llim_ += 1
   end
 
-  while rightLim(psi) > (j+1)
-    rl = rightLim(psi)-1
-    s = findindex(psi[rl],"Site")
+  while rightLim(M) > (j+1)
+    rl = rightLim(M)-1
+    s = findindex(M[rl],"Site")
     if rl == N
-      (Q,R) = qr(psi[rl],s)
+      (Q,R) = qr(M[rl],s)
     else
-      ri = linkind(psi,rl)
-      (Q,R) = qr(psi[rl],s,ri)
+      ri = linkindex(M,rl)
+      (Q,R) = qr(M[rl],s,ri)
     end
-    psi[rl] = Q
-    psi[rl-1] *= R
-    psi.rlim_ -= 1
+    M[rl] = Q
+    M[rl-1] *= R
+    M.rlim_ -= 1
   end
-  psi.llim_ = j-1
-  psi.rlim_ = j+1
+  M.llim_ = j-1
+  M.rlim_ = j+1
 end
 
-function inner(psi1::MPS,
-               psi2::MPS)::Number
-  N = length(psi1)
-  if length(psi2) != N
-    error("inner: mismatched lengths $N and $(length(psi2))")
+function inner(M1::MPS,
+               M2::MPS)::Number
+  N = length(M1)
+  if length(M2) != N
+    error("inner: mismatched lengths $N and $(length(M2))")
   end
-  psi1dag = dag(psi1)
-  simlinks!(psi1dag)
-  O = psi1dag[1]*psi2[1]
+  M1dag = dag(M1)
+  simlinks!(M1dag)
+  O = M1dag[1]*M2[1]
   for j=2:N
-    O *= psi1dag[j]*psi2[j]
+    O *= M1dag[j]*M2[j]
   end
   return O[]
 end
 
 function randomMPS(sites::SiteSet,
                    m::Int=1)
-  psi = MPS(sites)
-  for i=1:length(psi)
-    randn!(psi[i])
-    psi[i] /= norm(psi[i])
+  M = MPS(sites)
+  for i=1:length(M)
+    randn!(M[i])
+    M[i] /= norm(M[i])
   end
   if m > 1
     error("randomMPS: currently only m==1 supported")
   end
-  return psi
+  return M
 end
 
-function replaceBond!(psi::MPS,
+function replaceBond!(M::MPS,
                       b::Int,
                       phi::ITensor,
                       dir::String;
                       kwargs...)
-  U,S,V,u,v = svd(phi,inds(psi[b]);kwargs...)
+  U,S,V,u,v = svd(phi,inds(M[b]);kwargs...)
   if dir=="Fromleft"
-    psi[b]   = U
-    psi[b+1] = S*V
+    M[b]   = U
+    M[b+1] = S*V
   elseif dir=="Fromright"
-    psi[b]   = U*S
-    psi[b+1] = V
+    M[b]   = U*S
+    M[b+1] = V
   end
 end
 
-function maxDim(psi::MPS)
+function maxDim(M::MPS)
   md = 1
-  for b=1:length(psi)-1
-    md = max(md,dim(linkind(psi,b)))
+  for b=1:length(M)-1
+    md = max(md,dim(linkindex(M,b)))
   end
   return md
 end

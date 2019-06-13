@@ -164,7 +164,9 @@ export MPS,
        position!,
        inner,
        randomMPS,
-       maxDim
+       maxDim,
+       linkindex,
+       siteindex
 
 include("mps/mpo.jl")
 export MPO

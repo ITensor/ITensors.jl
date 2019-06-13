@@ -20,13 +20,18 @@ using ITensors,
   end
   @testset "Set operations" begin
     I1 = IndexSet(i,j,k)
-    I2 = IndexSet(j,k,l)
+    I2 = IndexSet(k,l)
+    I3 = IndexSet(j,l)
     @test hassameinds(I1,(k,j,i))
-    @test uniqueindex(I1,I2) == i
-    @test uniqueinds(I1,I2) == IndexSet(i)
-    @test commoninds(I1,I2) == IndexSet(j,k)
+    @test uniqueindex(I1,I2,I3) == i
+    @test uniqueinds(I1,I2) == IndexSet(i,j)
+    @test hassameinds(uniqueinds(I1,I2),(j,i))
+    @test commoninds(I1,I2) == IndexSet(k)
+    @test commonindex(I1,I2) == k
     @test commoninds(I1,(j,l)) == IndexSet(j)
     @test commonindex(I1,(j,l)) == j
+    @test commoninds(I1,(j,k)) == IndexSet(j,k)
+    @test hassameinds(commoninds(I1,(j,k,l)),(j,k))
     @test findinds(I1,"i") == IndexSet(i)
     @test findindex(I1,"j") == j
   end

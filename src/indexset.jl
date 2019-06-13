@@ -80,30 +80,41 @@ function ==(Ais::IndexSet,Bis::IndexSet)
   return true
 end
 
-"""
-uniqueinds(Ais,Bis)
+# Helper function for uniqueinds
+# Return true if the Index is not in any
+# of the input sets of indices
+function _is_unique_index(j::Index,inds...)
+  for I ∈ inds
+    hasindex(I,j) && return false
+  end
+  return true
+end
 
-Output the IndexSet with Indices in Ais but not in Bis
 """
-function uniqueinds(Ainds,Binds)
+uniqueinds(Ais,Bis...)
+
+Output the IndexSet with Indices in Ais but not in
+the IndexSets Bis.
+"""
+function uniqueinds(Ainds,Binds...)
   Ais = IndexSet(Ainds)
   Cis = IndexSet()
   for j ∈ Ais
-    !hasindex(Binds,j) && push!(Cis,j)
+    _is_unique_index(j,Binds...) && push!(Cis,j)
   end
   return Cis
 end
 
 """
-uniqueindex(Ainds,Binds)
+uniqueindex(Ais,Bis...)
 
-Output the Index in Ais but not in Bis.
+Output the Index in Ais but not in the IndexSets Bis.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-uniqueindex(Ais,Bis) = Index(uniqueinds(Ais,Bis))
+uniqueindex(Ais,Bis...) = Index(uniqueinds(Ais,Bis...))
 
-setdiff(Ais::IndexSet, Bis::IndexSet) = uniqueinds(Ais,Bis)
+setdiff(Ais::IndexSet, Bis::IndexSet...) = uniqueinds(Ais,Bis...)
 
 """
 commoninds(Ais,Bis)

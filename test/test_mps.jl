@@ -8,6 +8,10 @@ using ITensors,
   psi = MPS(sites)
   @test length(psi) == N
 
+  @test siteindex(psi,2) == sites[2]
+  @test hasindex(psi[3],linkindex(psi,2))
+  @test hasindex(psi[3],linkindex(psi,3))
+
   psi[1] = ITensor(sites[1])
   @test hasindex(psi[1],sites[1])
 
