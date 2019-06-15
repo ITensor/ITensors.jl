@@ -48,7 +48,6 @@ function dmrg(H::MPO,
     sw_time = @elapsed begin
 
     sweep_t = 0.0
-    phi_t = 0.0
     eigen_t = 0.0
     svd_t = 0.0
 
@@ -59,9 +58,7 @@ function dmrg(H::MPO,
 
       position!(PH,psi,b)
 
-      phi_t += @elapsed begin
-        phi = psi[b]*psi[b+1]
-      end
+      phi = psi[b]*psi[b+1]
       #@printf "initial phi norm = %.3f\n" norm(phi)
       #@printf "initial energy = %.8f\n" scalar(phi*PH(phi))/norm(phi)^2
 
@@ -92,10 +89,9 @@ function dmrg(H::MPO,
     end
   end
     @printf "After sweep %d energy=%.12f maxDim=%d time=%.3f\n" sw energy maxDim(psi) sw_time
-    @show phi_t
     @show eigen_t
     @show svd_t
-    @printf "sw_time = %.12f (phi_t+eigen_t+svd_t = %.12f)\n" sw_time phi_t+eigen_t+svd_t
+    @printf "sw_time = %.12f (eigen_t+svd_t = %.12f)\n" sw_time eigen_t+svd_t
     printTimes(timer)
     println("\n")
   end
