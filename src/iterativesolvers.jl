@@ -1,18 +1,20 @@
 
-function get_vecs(M,V,AV,ni)
+function get_vecs!((phi,q),M,V,AV,ni)
   F = eigen(Hermitian(M))
   lambda = F.values[1]
   u = F.vectors[:,1]
-  phi = u[1]*V[1]
-  q = u[1]*AV[1]
+  #phi = u[1]*V[1]
+  copyto!(phi,u[1],V[1])
+  #q = u[1]*AV[1]
+  copyto!(q,u[1],AV[1])
   for n=2:ni
     #phi += u[n]*V[n]
-    add!(phi,V[n],u[n])
+    add!(phi,u[n],V[n])
     #q += u[n]*AV[n]
-    add!(q,AV[n],u[n])
+    add!(q,u[n],AV[n])
   end
   #q -= lambda*phi
-  add!(q,phi,lambda)
+  add!(q,-lambda,phi)
   #Fix sign
   if real(u[1]) < 0.0
     #phi *= -1
@@ -20,15 +22,15 @@ function get_vecs(M,V,AV,ni)
     #q *= -1
     scale!(q,-1)
   end
-  return lambda,phi,q
+  return lambda
 end
 
-function orthogonalize(q,V,ni)
-  q0 = q
+function orthogonalize!(q,V,ni)
+  q0 = copy(q)
   for k=1:ni
-    Vqk = dot(V[k],q0)
-    #q += -Vqk*V[k]
-    add!(q,V[k],-Vqk)
+    Vq0k = dot(V[k],q0)
+    #q += -Vq0k*V[k]
+    add!(q,-Vq0k,V[k])
   end
   qnrm = norm(q)
   if qnrm < 1E-10 #orthog failure, try randomizing
@@ -37,7 +39,7 @@ function orthogonalize(q,V,ni)
   end
   #q /= qnrm
   scale!(q,1.0/qnrm)
-  return q
+  return 
 end
 
 function davidson(A,
@@ -68,7 +70,7 @@ function davidson(A,
     error("linear size of A and dimension of phi should match in davidson")
   end
 
-  V = ITensor[phi]
+  V = ITensor[copy(phi)]
   AV = ITensor[A(phi)]
 
   last_lambda = NaN
@@ -80,7 +82,8 @@ function davidson(A,
   for ni=1:actual_maxiter+1
 
     if ni > 1
-      lambda,phi,q = get_vecs(M,V,AV,ni)
+      #lambda,phi,q = get_vecs(M,V,AV,ni)
+      lambda = get_vecs!((phi,q),M,V,AV,ni)
     end
 
     qnorm = norm(q)
@@ -97,10 +100,10 @@ function davidson(A,
     last_lambda = lambda
 
     for pass = 1:Northo_pass
-      q = orthogonalize(q,V,ni)
+      orthogonalize!(q,V,ni)
     end
 
-    push!(V,q)
+    push!(V,copy(q))
     push!(AV,A(q))
 
     newM = fill(0.0,(ni+1,ni+1))

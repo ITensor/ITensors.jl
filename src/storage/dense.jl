@@ -111,6 +111,31 @@ function storage_add!(Bstore::Dense,
   end
 end
 
+function storage_copyto!(Bstore::Dense,
+                         Bis::IndexSet,
+                         Astore::Dense,
+                         Ais::IndexSet,
+                         x::Number = 1)
+  p = calculate_permutation(Bis,Ais)
+  Adata = data(Astore)
+  Bdata = data(Bstore)
+  if is_trivial_permutation(p)
+    if x == 1
+      Bdata .= Adata
+    else
+      Bdata .= x .* Adata
+    end
+  else
+    reshapeBdata = reshape(Bdata,dims(Bis))
+    reshapeAdata = reshape(Adata,dims(Ais))
+    if x == 1
+      _add!(reshapeBdata,reshapeAdata,p,(a,b)->b)
+    else
+      _add!(reshapeBdata,reshapeAdata,p,(a,b)->x*b)
+    end
+  end
+end
+
 function storage_mult!(Astore::Dense,
                        x::Number)
   Adata = data(Astore)

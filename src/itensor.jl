@@ -60,8 +60,6 @@ isNull(T::ITensor) = (store(T) isa Dense{Nothing})
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
-copyto!(R::ITensor,T::ITensor) = (R = copy(T))
-
 Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
 
 function getindex(T::ITensor,vals::Int...) 
@@ -178,11 +176,15 @@ function permute(T::ITensor,permTinds)
 end
 permute(T::ITensor,inds::Index...) = permute(T,IndexSet(inds...))
 
+copyto!(A::ITensor,B::ITensor) = storage_copyto!(store(A),inds(A),store(B),inds(B))
+
+copyto!(A::ITensor,x::Number,B::ITensor) = storage_copyto!(store(A),inds(A),store(B),inds(B),x)
+
 function add!(A::ITensor,B::ITensor)
   storage_add!(store(A),inds(A),store(B),inds(B))
 end
 
-function add!(A::ITensor,B::ITensor,x::Number)
+function add!(A::ITensor,x::Number,B::ITensor)
   storage_add!(store(A),inds(A),store(B),inds(B),x)
 end
 
@@ -200,12 +202,15 @@ end
 
 -(A::ITensor) = -one(eltype(A))*A
 function +(A::ITensor,B::ITensor)
-  A==B && return 2*A
   C = copy(A)
   add!(C,B)
   return C
 end
--(A::ITensor,B::ITensor) = A+(-B)
+function -(A::ITensor,B::ITensor)
+  C = copy(A)
+  add!(C,-1,B)
+  return C
+end
 
 #TODO: Add special case of A==B
 #A==B && return ITensor(norm(A)^2)
