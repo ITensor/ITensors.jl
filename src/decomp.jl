@@ -133,8 +133,14 @@ function svd(A::ITensor,
   #TODO: check if A is already ordered properly
   #and avoid doing this permute, since it makes a copy
   #AND/OR use svd!() to overwrite the data of A to save memory
-  A = permute(A,Lis...,Ris...)
-  Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
+  global timer.svd_t += @elapsed begin
+    A = permute(A,Lis...,Ris...)
+    global timer.svd_store_t += @elapsed begin
+    Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
+    end
+    global timer.svd_store_c += 1
+  end
+  global timer.svd_c += 1
   U = ITensor(Uis,Ustore)
   S = ITensor(Sis,Sstore)
   V = ITensor(Vis,Vstore)

@@ -247,7 +247,11 @@ function storage_svd(Astore::Dense{T},
   utags::String = get(kwargs,:utags,"Link,u")
   vtags::String = get(kwargs,:vtags,"Link,v")
 
+  global timer.svd_store_svd_t += @elapsed begin
   MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
+  end
+  global timer.svd_store_svd_c += 1
+
 
   sqr(x) = x^2
   P = sqr.(MS)
