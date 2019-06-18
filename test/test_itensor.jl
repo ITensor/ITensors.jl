@@ -207,23 +207,23 @@ end
     A = randomITensor(SType,i,j,k,l)
 
     @testset "Test SVD of an ITensor" begin
-      U,S,V = svd(A,(j,l))
+      U,S,Vh = svd(A,(j,l))
       u = commonindex(U,S)
-      v = commonindex(S,V)
-      @test A≈U*S*dag(V)
+      v = commonindex(S,Vh)
+      @test A≈U*S*Vh
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
-      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
+      @test Vh*dag(prime(Vh,v))≈δ(SType,v,v') atol=1e-14
     end
 
     @testset "Test SVD truncation" begin 
-        M = randn(4,4)
-        (U,s,V) = svd(M)
+        M = randn(4,4) + randn(4,4)*1.0im
+        (U,s,Vh) = svd(M)
         ii = Index(4)
         jj = Index(4)
         S = Diagonal(s)
-        T = ITensor(IndexSet(ii,jj),Dense{Float64}(vec(U*S*V')))
-        (U,S,V) = svd(T,ii;maxdim=2)
-        @test norm(U*S*V-T)≈sqrt(s[3]^2+s[4]^2)
+        T = ITensor(IndexSet(ii,jj),Dense{ComplexF64}(vec(U*S*Vh)))
+        (U,S,Vh) = svd(T,ii;maxdim=2)
+        @test norm(U*S*Vh-T)≈sqrt(s[3]^2+s[4]^2)
     end 
 
     @testset "Test QR decomposition of an ITensor" begin

@@ -13,14 +13,14 @@ function factorize(A::ITensor,
   Lis = IndexSet(Linds)
   !hasinds(A,Lis) && error("Indices must be contained by the ITensor")
   Ris = uniqueinds(inds(A),Lis)
-  U,S,V = svd(A,Lis;maxdim=maxdim,utags="$tags,u",vtags="$tags,v")
+  U,S,Vh = svd(A,Lis;maxdim=maxdim,utags="$tags,u",vtags="$tags,v")
   u = commonindex(U,S)
-  v = commonindex(S,V)
+  v = commonindex(S,Vh)
   for ss = 1:dim(u)
     S[ss,ss] = sqrt(S[ss,ss])
   end
   FU = removetags(U*S,"v")
-  FV = removetags(S*V,"u")
+  FV = removetags(S*Vh,"u")
   l = commonindex(FU,FV)
   return FU,FV,l
 end

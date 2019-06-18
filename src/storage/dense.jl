@@ -249,6 +249,7 @@ function storage_svd(Astore::Dense{T},
 
   global timer.svd_store_svd_t += @elapsed begin
   MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
+  MVh = conj!(MV)
   end
   global timer.svd_store_svd_c += 1
 
@@ -264,7 +265,7 @@ function storage_svd(Astore::Dense{T},
   if dS < length(MS)
     MU = MU[:,1:dS]
     resize!(MS,dS)
-    MV = MV[:,1:dS]
+    MVh = MVh[:,1:dS]
   end
 
   u = Index(dS,utags)
@@ -272,9 +273,9 @@ function storage_svd(Astore::Dense{T},
   Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
   #TODO: make a diag storage
   Sis,Sstore = IndexSet(u,v),Dense{Float64}(vec(Matrix(Diagonal(MS))))
-  Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
+  Vhis,Vhstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MVh)))
 
-  return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
+  return (Uis,Ustore,Sis,Sstore,Vhis,Vhstore)
 end
 
 function storage_eigen(Astore::T,Lis::IndexSet,Ris::IndexSet,matrixtype::Type{S},truncate::Int,lefttags::String,righttags::String) where {T<:Dense,S}
@@ -293,7 +294,7 @@ function storage_eigen(Astore::T,Lis::IndexSet,Ris::IndexSet,matrixtype::Type{S}
 end
 
 function polar(A::Matrix)
-  U,S,V = svd(A)
+  U,S,V = svd(A) # calls LinearAlgebra.svd()
   return U*V',V*Diagonal(S)*V'
 end
 
