@@ -137,7 +137,7 @@ function svd(A::ITensor,
   global timer.svd_t += @elapsed begin
     A = permute(A,Lis...,Ris...)
     global timer.svd_store_t += @elapsed begin
-    Uis,Ustore,Sis,Sstore,Vhis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
+    Uis,Ustore,Sis,Sstore,Vhis,Vhstore = storage_svd(store(A),Lis,Ris;kwargs...)
     end
     global timer.svd_store_c += 1
   end
