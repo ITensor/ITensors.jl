@@ -11,7 +11,7 @@ function main()
   maxdim!(sw,10,20,100,100,200)
   cutoff!(sw,1E-10)
   println("Starting DMRG")
-  energy,psi = @time dmrg(H,psi,sw,maxiter=3)
+  energy,psi = @time dmrg(H,psi,sw,maxiter=2)
   @printf "Final energy = %.12f\n" energy
 end
 main()

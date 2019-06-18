@@ -51,7 +51,7 @@ function davidson(A,
   maxiter = get(kwargs,:maxiter,2)
   miniter = get(kwargs,:maxiter,1)
   errgoal = get(kwargs,:errgoal,1E-14)
-  Northo_pass = get(kwargs,:Northo_pass,2)
+  Northo_pass = get(kwargs,:Northo_pass,1)
 
   approx0 = 1E-12
 
@@ -60,7 +60,6 @@ function davidson(A,
     phi = randomITensor(inds(phi))
     nrm = norm(phi)
   end
-  #phi /= nrm
   scale!(phi,1.0/nrm)
 
   maxsize = size(A)[1]
@@ -79,24 +78,7 @@ function davidson(A,
 
   M = fill(lambda,(1,1))
 
-  for ni=1:actual_maxiter+1
-
-    if ni > 1
-      lambda = get_vecs!((phi,q),M,V,AV,ni)
-    end
-
-    qnorm = norm(q)
-
-    errgoal_reached = (qnorm < errgoal && abs(lambda-last_lambda) < errgoal)
-    small_qnorm = (qnorm < max(approx0,errgoal*1E-3))
-    converged = errgoal_reached || small_qnorm
-
-    if (qnorm < 1E-20) || (converged && ni > miniter_) || (ni >= actual_maxiter)
-      #@printf "  done with davidson, ni=%d, qnorm=%.3E\n" ni qnorm
-      break
-    end
-
-    last_lambda = lambda
+  for ni=1:actual_maxiter
 
     for pass = 1:Northo_pass
       orthogonalize!(q,V,ni)
@@ -112,6 +94,21 @@ function davidson(A,
       newM[ni+1,k] = conj(newM[k,ni+1])
     end
     M = newM
+
+    lambda = get_vecs!((phi,q),M,V,AV,ni+1)
+
+    qnorm = norm(q)
+
+    errgoal_reached = (qnorm < errgoal && abs(lambda-last_lambda) < errgoal)
+    small_qnorm = (qnorm < max(approx0,errgoal*1E-3))
+    converged = errgoal_reached || small_qnorm
+
+    if (qnorm < 1E-20) || (converged && ni > miniter_) #|| (ni >= actual_maxiter)
+      #@printf "  done with davidson, ni=%d, qnorm=%.3E\n" ni qnorm
+      break
+    end
+
+    last_lambda = lambda
 
   end #for ni=1:actual_maxiter+1
 

@@ -186,13 +186,13 @@ function replaceBond!(M::MPS,
                       phi::ITensor,
                       dir::String;
                       kwargs...)
-  U,S,V,u,v = svd(phi,inds(M[b]);kwargs...)
+  U,S,Vh,u,v = svd(phi,inds(M[b]);kwargs...)
   if dir=="Fromleft"
     M[b]   = U
-    M[b+1] = S*V
+    M[b+1] = S*Vh
   elseif dir=="Fromright"
     M[b]   = U*S
-    M[b+1] = V
+    M[b+1] = Vh
   end
 end
 

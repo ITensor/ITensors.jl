@@ -22,7 +22,7 @@ IndexSet(is1::IndexSet,is2::IndexSet) = IndexSet(is1...,is2...)
 IndexSet(inds::NTuple{2,IndexSet}) = IndexSet(inds...)
 
 # Convert to an Index if there is only one
-Index(is::IndexSet) = length(is)==1 ? is[1] : error("IndexSet has more than one Index")
+Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
 
 getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
 setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
