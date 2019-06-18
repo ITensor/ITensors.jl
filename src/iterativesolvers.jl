@@ -82,7 +82,6 @@ function davidson(A,
   for ni=1:actual_maxiter+1
 
     if ni > 1
-      #lambda,phi,q = get_vecs(M,V,AV,ni)
       lambda = get_vecs!((phi,q),M,V,AV,ni)
     end
 
@@ -113,10 +112,8 @@ function davidson(A,
       newM[ni+1,k] = conj(newM[k,ni+1])
     end
     M = newM
+
   end #for ni=1:actual_maxiter+1
-
-  #phi /= norm(phi)
-
 
   return lambda,phi
 
