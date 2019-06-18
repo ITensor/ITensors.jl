@@ -9,8 +9,11 @@ struct TagSet
 end
 
 TagSet(ts::TagSet) = ts
+
 function TagSet(tags::AbstractString)
   vectags = split(tags,",")
+  #Remove all whitespace when creating a tag
+  vectags = filter.(x ->!isspace(x),vectags)
   #If not specified, prime level starts at -1
   plev = -1
   plev_position = -1
@@ -27,27 +30,28 @@ function TagSet(tags::AbstractString)
   return TagSet(String.(vectags),plev)
 end
 
-stringtags(T::TagSet) = T.tags
+tags(T::TagSet) = T.tags
 plev(T::TagSet) = T.plev
-length(T::TagSet) = length(stringtags(T))
-getindex(T::TagSet,n::Int) = stringtags(T)[n]
-copy(ts::TagSet) = TagSet(copy(stringtags(ts)),plev(ts))
+length(T::TagSet) = length(tags(T))
+getindex(T::TagSet,n::Int) = tags(T)[n]
+copy(ts::TagSet) = TagSet(copy(tags(ts)),plev(ts))
 
-setprime(T::TagSet,pl::Int) = TagSet(copy(stringtags(T)),pl)
+setprime(T::TagSet,pl::Int) = TagSet(copy(tags(T)),pl)
 prime(T::TagSet,plinc::Int) = setprime(T,plev(T)+plinc)
 
-iterate(ts::TagSet,state::Int=1) = iterate(stringtags(ts),state)
+iterate(ts::TagSet,state::Int=1) = iterate(tags(ts),state)
 
-==(ts1::TagSet,ts2::TagSet) = (stringtags(ts1) == stringtags(ts2) && 
+==(ts1::TagSet,ts2::TagSet) = (tags(ts1) == tags(ts2) && 
                                plev(ts1) == plev(ts2))
 
 function in(ts1::TagSet, ts2::TagSet)
-  for t ∈ stringtags(ts1)
-    t ∉ stringtags(ts2) && return false
+  for t in tags(ts1)
+    t ∉ tags(ts2) && return false
   end
   (plev(ts1) ≥ 0 && plev(ts1) ≠ plev(ts2)) && return false
   return true
 end
+
 in(s::String, ts::TagSet) = in(TagSet(s), ts)
 
 hastags(T::TagSet,ts::TagSet) = in(ts,T)
@@ -58,10 +62,10 @@ hastags(ts::TagSet,s::String) = in(TagSet(s),ts)
 function addtags(ts::TagSet, tagsadd)
   tsadd = TagSet(tagsadd)
   ( plev(ts) ≥ 0 && plev(tsadd) ≥ 0 ) && error("In addtags(::TagSet,...), cannot add a prime level")
-  restags = copy(stringtags(ts))
+  restags = copy(tags(ts))
   resplev = ts.plev
   #TODO: interface for iterating through tags
-  for t ∈ stringtags(tsadd)
+  for t ∈ tags(tsadd)
     t ∉ restags && push!(restags,t)
   end
   (plev(ts) < 0 && plev(tsadd)≥0) && (resplev = plev(tsadd))
@@ -72,9 +76,9 @@ end
 function removetags(ts::TagSet, tagsremove)
   tsremove = TagSet(tagsremove)
   plev(tsremove) ≥ 0 && error("In removetags(::TagSet,...), cannot remove a prime level")
-  restags = copy(stringtags(ts))
+  restags = copy(tags(ts))
   resplev = ts.plev
-  for t in stringtags(tsremove)
+  for t in tags(tsremove)
     t∈restags && deleteat!(restags,findfirst(isequal(t),restags))
   end
   #(plev(ts)≥0 && plev(ts)==plev(tsremove)) && (resplev = -1)
@@ -89,16 +93,16 @@ function replacetags(ts::TagSet, tagsremove, tagsadd)
      (plev(tsremove) < 0 && plev(tsadd) ≥ 0)
     error("In replacetags(::TagSet,...), cannot remove or add a prime level")
   end
-  restags = copy(stringtags(ts))
+  restags = copy(tags(ts))
   resplev = plev(ts)
   (resplev ≠ plev(tsremove) && plev(tsremove) ≥ 0) && return TagSet(restags,resplev)
-  for t in stringtags(tsremove)
-    t ∉ stringtags(ts) && return TagSet(restags,resplev)
+  for t in tags(tsremove)
+    t ∉ tags(ts) && return TagSet(restags,resplev)
   end
-  for t in stringtags(tsremove)
+  for t in tags(tsremove)
     deleteat!(restags,findfirst(isequal(t),restags))
   end
-  for t in stringtags(tsadd)
+  for t in tags(tsadd)
     push!(restags,t)
   end
   (plev(ts)≥0 && plev(ts)==plev(tsremove)) && (resplev = plev(tsadd))
@@ -137,3 +141,6 @@ function show(io::IO, T::TagSet)
   print(io,primestring(T))
 end
 
+export addtags,
+       hastags,
+       Tag

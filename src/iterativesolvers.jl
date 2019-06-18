@@ -60,7 +60,6 @@ function davidson(A,
     phi = randomITensor(inds(phi))
     nrm = norm(phi)
   end
-  #phi /= nrm
   scale!(phi,1.0/nrm)
 
   maxsize = size(A)[1]

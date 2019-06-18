@@ -20,6 +20,7 @@ import Base.adjoint,
        Base.eltype,
        Base.fill!,
        Base.getindex,
+       Base.in,
        Base.isapprox,
        Base.isless,
        Base.iterate,
@@ -82,10 +83,9 @@ export prime,
 
 #TODO: continue work on SmallString, use as Tags
 include("smallstring.jl")
+
 include("tagset.jl")
-export addtags,
-       hastags,
-       Tag
+
 include("index.jl")
 export adjoint,
        dim,
@@ -206,8 +206,6 @@ export AutoMPO,
 # codes not intended for final release,
 # just to ease development temporarily
 include("development/heisenberg.jl")
-export setElt,
-       Heisenberg
 
 mutable struct Timers
   contract_t::Float64
