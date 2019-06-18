@@ -141,3 +141,6 @@ function show(io::IO, T::TagSet)
   print(io,primestring(T))
 end
 
+export addtags,
+       hastags,
+       Tag

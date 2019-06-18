@@ -83,10 +83,9 @@ export prime,
 
 #TODO: continue work on SmallString, use as Tags
 include("smallstring.jl")
+
 include("tagset.jl")
-export addtags,
-       hastags,
-       Tag
+
 include("index.jl")
 export adjoint,
        dim,
