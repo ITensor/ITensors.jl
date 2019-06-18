@@ -13,5 +13,6 @@ function main()
   println("Starting DMRG")
   energy,psi = @time dmrg(H,psi,sw,maxiter=2)
   @printf "Final energy = %.12f\n" energy
+  @show inner(psi,H,psi)
 end
 main()

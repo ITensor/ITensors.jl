@@ -11,7 +11,7 @@ mutable struct MPS
     new(N,A,llim,rlim)
   end
   
-  function MPS(sites::SiteSet)
+  function MPS(sites)
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
@@ -58,6 +58,15 @@ end
 MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))
 MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
 MPS(s::SiteSet, opcode::String) = MPS(InitState(s, opcode))
+
+function randomMPS(sites)
+  M = MPS(sites)
+  for i=1:length(M)
+    randn!(M[i])
+    normalize!(M[i])
+  end
+  return M
+end
 
 length(m::MPS) = m.N_
 leftLim(m::MPS) = m.llim_
@@ -108,14 +117,22 @@ function siteindex(M::MPS,j::Integer)
   return si
 end
 
-function simlinks!(M::MPS)
+function siteinds(M::MPS)
   N = length(M)
-  for i ∈ 1:N-1
-    l = linkindex(M,i)
-    l̃ = sim(l)
-    M[i] *= δ(l,l̃)
-    M[i+1] *= δ(l,l̃)
+  is = IndexSet(N)
+  for j in 1:N
+    is[j] = siteindex(M,j)
   end
+  return is
+end
+
+function replacesites!(M::MPS,sites)
+  N = length(M)
+  for j in 1:N
+    sj = siteindex(M,j)
+    replaceindex!(M[j],sj,sites[j])
+  end
+  return M
 end
 
 function position!(M::MPS,
@@ -166,19 +183,6 @@ function inner(M1::MPS,
     O *= M1dag[j]*M2[j]
   end
   return O[]
-end
-
-function randomMPS(sites::SiteSet,
-                   m::Int=1)
-  M = MPS(sites)
-  for i=1:length(M)
-    randn!(M[i])
-    M[i] /= norm(M[i])
-  end
-  if m > 1
-    error("randomMPS: currently only m==1 supported")
-  end
-  return M
 end
 
 function replaceBond!(M::MPS,

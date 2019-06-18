@@ -23,4 +23,25 @@ using ITensors,
     @test norm(phi[4])≈1.0
   end
 
+  @testset "inner different MPS" begin
+    phi = randomMPS(sites)
+    psi = randomMPS(sites)
+    phipsi = dag(phi[1])*psi[1]
+    for j = 2:N
+      phipsi *= dag(phi[j])*psi[j]
+    end
+    @test phipsi[] ≈ inner(phi,psi)
+  end
+
+  @testset "inner same MPS" begin
+    psi = randomMPS(sites)
+    psidag = dag(psi)
+    primelinks!(psidag)
+    psipsi = psidag[1]*psi[1]
+    for j = 2:N
+      psipsi *= psidag[j]*psi[j]
+    end
+    @test psipsi[] ≈ inner(psi,psi)
+  end
+
 end

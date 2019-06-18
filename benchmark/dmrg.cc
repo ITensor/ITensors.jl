@@ -34,5 +34,7 @@ main()
 
     auto [energy,psi] = dmrg(H,psi0,sweeps,"Quiet");
 
+    PrintData(inner(psi,H,psi));
+
     return 0;
     }

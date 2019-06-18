@@ -127,6 +127,7 @@ export svd,
        norm,
        delta,
        δ,
+       replaceindex!,
        isNull
 
 include("decomp.jl")
@@ -162,14 +163,19 @@ export InitState
 include("mps/mps.jl")
 export MPS,
        position!,
+       prime!,
+       primelinks!,
+       simlinks!,
        inner,
        randomMPS,
        maxDim,
        linkindex,
-       siteindex
+       siteindex,
+       siteinds
 
 include("mps/mpo.jl")
-export MPO
+export MPO,
+       randomMPO
 
 include("mps/sweeps.jl")
 export Sweeps,

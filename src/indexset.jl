@@ -170,22 +170,26 @@ findindex(inds, tags) = Index(findinds(inds,tags))
 indexpositions(inds, match::Nothing) = collect(1:length(inds))
 # Version for matching a tag set
 function indexpositions(inds, match::T) where {T<:Union{AbstractString,TagSet}}
+  is = IndexSet(inds)
   tsmatch = TagSet(match)
   pos = Int[]
-  for (j,I) ∈ enumerate(inds)
+  for (j,I) ∈ enumerate(is)
     hastags(I,tsmatch) && push!(pos,j)
   end
   return pos
 end
 # Version for matching a collection of indices
 function indexpositions(inds, match)
+  is = IndexSet(inds)
   ismatch = IndexSet(match)
   pos = Int[]
-  for (j,I) ∈ enumerate(inds)
+  for (j,I) ∈ enumerate(is)
     hasindex(ismatch,I) && push!(pos,j)
   end
   return pos
 end
+# Version for matching a list of indices
+indexpositions(inds, match_inds::Index...) = indexpositions(inds, IndexSet(match_inds...))
 
 #
 # Tagging functions
@@ -198,7 +202,7 @@ function prime!(is::IndexSet, plinc::Integer, match = nothing)
   end
   return is
 end
-prime!(is::IndexSet,match=nothing) = prime(is,1,match)
+prime!(is::IndexSet,match=nothing) = prime!(is,1,match)
 prime(is::IndexSet, vargs...) = prime!(copy(is), vargs...)
 # For is' notation
 adjoint(is::IndexSet) = prime(is)

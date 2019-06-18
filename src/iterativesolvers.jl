@@ -4,9 +4,9 @@ function get_vecs!((phi,q),M,V,AV,ni)
   lambda = F.values[1]
   u = F.vectors[:,1]
   #phi = u[1]*V[1]
-  copyto!(phi,u[1],V[1])
+  mul!(phi,u[1],V[1])
   #q = u[1]*AV[1]
-  copyto!(q,u[1],AV[1])
+  mul!(q,u[1],AV[1])
   for n=2:ni
     #phi += u[n]*V[n]
     add!(phi,u[n],V[n])
@@ -81,6 +81,19 @@ function davidson(A,
 
   for ni=1:actual_maxiter
 
+    qnorm = norm(q)
+
+    errgoal_reached = (qnorm < errgoal && abs(lambda-last_lambda) < errgoal)
+    small_qnorm = (qnorm < max(approx0,errgoal*1E-3))
+    converged = errgoal_reached || small_qnorm
+
+    if (qnorm < 1E-20) || (converged && ni > miniter_) #|| (ni >= actual_maxiter)
+      #@printf "  done with davidson, ni=%d, qnorm=%.3E\n" ni qnorm
+      break
+    end
+
+    last_lambda = lambda
+
     for pass = 1:Northo_pass
       orthogonalize!(q,V,ni)
     end
@@ -97,19 +110,6 @@ function davidson(A,
     M = newM
 
     lambda = get_vecs!((phi,q),M,V,AV,ni+1)
-
-    qnorm = norm(q)
-
-    errgoal_reached = (qnorm < errgoal && abs(lambda-last_lambda) < errgoal)
-    small_qnorm = (qnorm < max(approx0,errgoal*1E-3))
-    converged = errgoal_reached || small_qnorm
-
-    if (qnorm < 1E-20) || (converged && ni > miniter_) #|| (ni >= actual_maxiter)
-      #@printf "  done with davidson, ni=%d, qnorm=%.3E\n" ni qnorm
-      break
-    end
-
-    last_lambda = lambda
 
   end #for ni=1:actual_maxiter+1
 

@@ -137,7 +137,7 @@ function svd(A::ITensor,
   global timer.svd_t += @elapsed begin
     A = permute(A,Lis...,Ris...)
     global timer.svd_store_t += @elapsed begin
-    Uis,Ustore,Sis,Sstore,Vhis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
+    Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
     end
     global timer.svd_store_c += 1
   end
@@ -145,10 +145,10 @@ function svd(A::ITensor,
   global timer.svd_c += 1
   U = ITensor(Uis,Ustore)
   S = ITensor(Sis,Sstore)
-  Vh = ITensor(Vhis,Vhstore)
+  V = ITensor(Vis,Vstore)
   u = commonindex(U,S)
-  v = commonindex(S,Vh)
-  return U,S,Vh,u,v
+  v = commonindex(S,V)
+  return U,S,V,u,v
 end
 
 # TODO: add a version that automatically detects the IndexSets

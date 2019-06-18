@@ -80,7 +80,7 @@ end
 function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
   p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
   vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
-  storage_getindex(store(T),inds(T),vals...)
+  return storage_getindex(store(T),inds(T),vals...)
 end
 
 getindex(T::ITensor) = scalar(T)
@@ -100,15 +100,24 @@ function setindex!(T::ITensor,
   p = calculate_permutation(inds(T),remap_ivs)
   vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
   storage_setindex!(store(T),inds(T),x,vals...)
+  return T
 end
 
 function fill!(T::ITensor,
                x::Number)
   # TODO: automatically switch storage type if needed
   storage_fill!(store(T),x)
+  return T
+end
+
+function replaceindex!(A::ITensor,i::Index,j::Index)
+  pos = indexpositions(A,i)
+  inds(A)[pos[1]] = j
+  return A
 end
 
 prime(A::ITensor,vargs...)= ITensor(prime(inds(A),vargs...),store(A))
+prime!(A::ITensor,vargs...)= ( prime!(inds(A),vargs...); return A )
 
 adjoint(A::ITensor) = prime(A)
 
@@ -154,7 +163,10 @@ function scalar(T::ITensor)
   return storage_scalar(store(T))
 end
 
-randn!(T::ITensor) = storage_randn!(store(T))
+function randn!(T::ITensor)
+  storage_randn!(store(T))
+  return T
+end
 
 function randomITensor(::Type{S},inds) where {S<:Number}
   T = ITensor(S,IndexSet(inds))
@@ -175,22 +187,6 @@ function permute(T::ITensor,permTinds)
   return ITensor(permTis,permTstore)
 end
 permute(T::ITensor,inds::Index...) = permute(T,IndexSet(inds...))
-
-copyto!(A::ITensor,B::ITensor) = storage_copyto!(store(A),inds(A),store(B),inds(B))
-
-copyto!(A::ITensor,x::Number,B::ITensor) = storage_copyto!(store(A),inds(A),store(B),inds(B),x)
-
-function add!(A::ITensor,B::ITensor)
-  storage_add!(store(A),inds(A),store(B),inds(B))
-end
-
-function add!(A::ITensor,x::Number,B::ITensor)
-  storage_add!(store(A),inds(A),store(B),inds(B),x)
-end
-
-function scale!(A::ITensor,x::Number)
-  storage_mult!(store(A), x)  
-end
 
 function *(A::ITensor,x::Number)
     storeB = storage_mult(store(A), x)
@@ -223,6 +219,127 @@ function *(A::ITensor,B::ITensor)
   return C
 end
 
+dot(A::ITensor,B::ITensor) = scalar(dag(A)*B)
+
+#######################################################################
+#
+# In-place operations
+#
+
+"""
+normalize!(T::ITensor)
+
+Normalize an ITensor in-place, such that norm(T)==1.
+"""
+normalize!(T::ITensor) = scale!(T,1/norm(T))
+
+"""
+copyto!(B::ITensor, A::ITensor)
+
+Copy the contents of ITensor A into ITensor B.
+
+B .= A
+"""
+function copyto!(A::ITensor,B::ITensor)
+  storage_copyto!(store(A),inds(A),store(B),inds(B))
+  return A
+end
+
+"""
+add!(B::ITensor, A::ITensor)
+
+Add ITensors B and A and store the result in B.
+
+B .+= A
+"""
+function add!(A::ITensor,B::ITensor)
+  storage_add!(store(A),inds(A),store(B),inds(B))
+  return A
+end
+
+"""
+add!(B::ITensor,α::Number,A::ITensor)
+
+Add ITensors B and α*A and store the result in B.
+
+B .+= α .* A
+"""
+function add!(A::ITensor,x::Number,B::ITensor)
+  storage_add!(store(A),inds(A),store(B),inds(B),x)
+  return A
+end
+
+"""
+add!(C::ITensor,α::Number,A::ITensor,β::Number,B::ITensor)
+
+Add ITensors α*A and β*B and store the result in C.
+
+C .= α .* A .+ β .* B
+"""
+function add!(A::ITensor,y::Number,x::Number,B::ITensor)
+  storage_add!(store(A),inds(A),y,store(B),inds(B),x)
+  return A
+end
+
+"""
+axpy!(a::Number,v::ITensor,w::ITensor)
+
+w .+= a .* v
+"""
+axpy!(a::Number,v::ITensor,w::ITensor) = add!(w,a,v)
+
+# This is not implemented correctly
+#"""
+#w .= a .* v + b .* w
+#"""
+#axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = add!(w,b,w,a,v)
+
+"""
+scale!(A::ITensor,x::Number)
+
+Scale the ITensor A by x in-place.
+
+A .*= x
+"""
+function scale!(A::ITensor,x::Number)
+  storage_mult!(store(A), x)
+  return A
+end
+
+"""
+mul!(A::ITensor,x::Number,B::ITensor)
+
+Multiply ITensor B with x and store the result in A.
+
+A .*= x .* B
+"""
+function mul!(A::ITensor,x::Number,B::ITensor)
+  storage_copyto!(store(A),inds(A),store(B),inds(B),x)
+  return A
+end
+mul!(R::ITensor,T::ITensor,fac::Number) = mul!(R,fac,T)
+
+rmul!(T::ITensor,fac::Number) = scale!(T,fac)
+
+#TODO: This is just a stand-in for a proper delta/diag storage type
+"""
+delta(::Type{T},inds::Index...)
+
+Make a diagonal ITensor with all diagonal elements 1.
+
+WARNING: This is just a stand-in for a proper delta/diag storage type
+"""
+function delta(::Type{T},inds::Index...) where {T}
+  d = ITensor(zero(T),inds...)
+  minm = min(dims(d)...)
+  for i ∈ 1:minm
+    d[IndexVal.(inds,i)...] = one(T)
+  end
+  return d
+end
+delta(inds::Index...) = delta(Float64,inds...)
+const δ = delta
+
 function show_info(io::IO,
                    T::ITensor)
   print(io,"ITensor ord=$(order(T))")
@@ -254,38 +371,3 @@ function similar(T::ITensor,
   return copy(T)
 end
 
-function mul!(R::ITensor,
-              T::ITensor,
-              fac::Number)
-  R = copy(T)
-  R *= fac
-end
-
-rmul!(T::ITensor,fac::Number) = (T *= fac)
-
-dot(A::ITensor,B::ITensor) = scalar(dag(A)*B)
-
-function axpy!(a::Number,
-               v::ITensor,
-               w::ITensor)
-  w = a*v + w
-end
-
-function axpby!(a::Number,
-                v::ITensor,
-                b::Number,
-                w::ITensor)
-  w = a*v + b*w
-end
-
-#TODO: This is just a stand-in for a proper delta/diag storage type
-function delta(::Type{T},inds::Index...) where {T}
-  d = ITensor(zero(T),inds...)
-  minm = min(dims(d)...)
-  for i ∈ 1:minm
-    d[IndexVal.(inds,i)...] = one(T)
-  end
-  return d
-end
-delta(inds::Index...) = delta(Float64,inds...)
-const δ = delta
