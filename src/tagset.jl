@@ -12,6 +12,8 @@ TagSet(ts::TagSet) = ts
 
 function TagSet(tags::AbstractString)
   vectags = split(tags,",")
+  #Remove all whitespace when creating a tag
+  vectags = filter.(x ->!isspace(x),vectags)
   #If not specified, prime level starts at -1
   plev = -1
   plev_position = -1
@@ -43,12 +45,13 @@ iterate(ts::TagSet,state::Int=1) = iterate(tags(ts),state)
                                plev(ts1) == plev(ts2))
 
 function in(ts1::TagSet, ts2::TagSet)
-  for t ∈ tags(ts1)
+  for t in tags(ts1)
     t ∉ tags(ts2) && return false
   end
   (plev(ts1) ≥ 0 && plev(ts1) ≠ plev(ts2)) && return false
   return true
 end
+
 in(s::String, ts::TagSet) = in(TagSet(s), ts)
 
 hastags(T::TagSet,ts::TagSet) = in(ts,T)
