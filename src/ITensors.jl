@@ -200,8 +200,6 @@ export AutoMPO,
 # codes not intended for final release,
 # just to ease development temporarily
 include("development/heisenberg.jl")
-export setElt,
-       Heisenberg
 
 mutable struct Timers
   contract_t::Float64

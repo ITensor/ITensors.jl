@@ -1,3 +1,6 @@
+export setElt,
+       Heisenberg
+
 function setElt(iv::IndexVal)::ITensor
   T = ITensor(ind(iv))
   T[iv] = 1.0
