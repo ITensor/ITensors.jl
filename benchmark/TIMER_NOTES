@@ -6,6 +6,7 @@ contract_t (all contractions at low level) = 30
 gemm_t = 31
 permute_t = 32
 
+svd_t = 40
 
 --------------
 
