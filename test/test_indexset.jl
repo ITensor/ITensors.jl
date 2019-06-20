@@ -35,4 +35,12 @@ using ITensors,
     @test findinds(I1,"i") == IndexSet(i)
     @test findindex(I1,"j") == j
   end
+  @testset "commoninds index ordering" begin
+    I = IndexSet(i,k,j)
+    J = IndexSet(j,l,i)
+    # Test that commoninds respects the ordering
+    # of the indices in the first IndexSet
+    @test commoninds(I,J) == IndexSet(i,j)
+    @test commoninds(J,I) == IndexSet(j,i)
+  end
 end

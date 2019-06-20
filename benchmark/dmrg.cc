@@ -27,7 +27,7 @@ main()
 
     auto sweeps = Sweeps(5);
     sweeps.maxdim() = 10,20,100,100,200;
-    sweeps.cutoff() = 1E-10;
+    sweeps.cutoff() = 1E-11;
     sweeps.niter() = 2;
     sweeps.noise() = 1E-7,1E-8,0.0;
     println(sweeps);

@@ -1,3 +1,4 @@
+export davidson
 
 function get_vecs!((phi,q),M,V,AV,ni)
   F = eigen(Hermitian(M))

@@ -6,35 +6,6 @@ Random.seed!(12345)
 
 include("2d_classical_ising.jl")
 
-function factorize(A::ITensor,
-                   Linds;
-                   maxdim::Int,
-                   tags::String)
-  Lis = IndexSet(Linds)
-  !hasinds(A,Lis) && error("Indices must be contained by the ITensor")
-  Ris = uniqueinds(inds(A),Lis)
-  U,S,Vh = svd(A,Lis;maxdim=maxdim,utags="$tags,u",vtags="$tags,v")
-  u = commonindex(U,S)
-  v = commonindex(S,Vh)
-  for ss = 1:dim(u)
-    S[ss,ss] = sqrt(S[ss,ss])
-  end
-  FU = removetags(U*S,"v")
-  FV = removetags(S*Vh,"u")
-  l = commonindex(FU,FV)
-  return FU,FV,l
-end
-
-#function trace(A::ITensor,tags1::Tuple{String,String},tags::Tuple{String,String}...)
-#  return trace(trace(A,tags1),tags...)
-#end
-#
-#function trace(A::ITensor,tags::Tuple{String,String})
-#  i1 = findtags(A,tags[1])
-#  i2 = findtags(A,tags[2])
-#  return A*δ(i1,i2)
-#end
-
 """
 trg(T::ITensor; χmax::Int, nsteps::Int) -> κ,T
 

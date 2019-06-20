@@ -1,3 +1,15 @@
+export hasindex,
+       hasinds,
+       hassameinds,
+       findindex,
+       findinds,
+       swaptags,
+       swapprime,
+       mapprime,
+       commoninds,
+       commonindex,
+       uniqueinds,
+       uniqueindex
 
 struct IndexSet
     inds::Vector{Index}
@@ -71,7 +83,11 @@ function hassameinds(Ainds,Binds)
   return hasinds(Ais,Bis) && length(Ais) == length(Bis)
 end
 
-# Equality (order dependent)
+"""
+==(is1::IndexSet, is2::IndexSet)
+
+IndexSet quality (order dependent)
+"""
 function ==(Ais::IndexSet,Bis::IndexSet)
   length(Ais) ≠ length(Bis) && return false
   for i ∈ 1:length(Ais)
@@ -121,7 +137,7 @@ commoninds(Ais,Bis)
 
 Output the IndexSet in the intersection of Ais and Bis
 """
-function commoninds(Binds,Ainds)
+function commoninds(Ainds,Binds)
   Ais = IndexSet(Ainds)
   Cis = IndexSet()
   for i ∈ Ais
@@ -229,6 +245,17 @@ function addtags!(is::IndexSet,
   return is
 end
 addtags(is, vargs...) = addtags!(copy(is), vargs...)
+
+function settags!(is::IndexSet,
+                  ts,
+                  match = nothing)
+  pos = indexpositions(is, match)
+  for jj ∈ pos
+    is[jj] = settags(is[jj],ts)
+  end
+  return is
+end
+settags(is, vargs...) = settags!(copy(is), vargs...)
 
 function removetags!(is::IndexSet,
                      tags,

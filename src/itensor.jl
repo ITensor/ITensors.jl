@@ -1,3 +1,8 @@
+export norm,
+       delta,
+       δ,
+       replaceindex!,
+       isNull
 
 struct ITensor
   inds::IndexSet
@@ -125,10 +130,8 @@ setprime(A::ITensor,vargs...) = ITensor(setprime(inds(A),vargs...),store(A))
 
 noprime(A::ITensor,vargs...) = ITensor(noprime(inds(A),vargs...),store(A))
 
-# TODO: remove in favor of replacetags(...)
 mapprime(A::ITensor,vargs...) = ITensor(mapprime(inds(A),vargs...),store(A))
 
-# TODO: remove in favor of swaptags(...)
 swapprime(A::ITensor,vargs...) = ITensor(swapprime(inds(A),vargs...),store(A))
 
 addtags(A::ITensor,vargs...) = ITensor(addtags(inds(A),vargs...),store(A))
@@ -136,6 +139,8 @@ addtags(A::ITensor,vargs...) = ITensor(addtags(inds(A),vargs...),store(A))
 removetags(A::ITensor,vargs...) = ITensor(removetags(inds(A),vargs...),store(A))
 
 replacetags(A::ITensor,vargs...) = ITensor(replacetags(inds(A),vargs...),store(A))
+
+settags(A::ITensor,vargs...) = ITensor(settags(inds(A),vargs...),store(A))
 
 swaptags(A::ITensor,vargs...) = ITensor(swaptags(inds(A),vargs...),store(A))
 

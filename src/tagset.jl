@@ -30,6 +30,8 @@ function TagSet(tags::AbstractString)
   return TagSet(String.(vectags),plev)
 end
 
+convert(::Type{TagSet}, str::String) = TagSet(str)
+
 tags(T::TagSet) = T.tags
 plev(T::TagSet) = T.plev
 length(T::TagSet) = length(tags(T))
@@ -37,12 +39,24 @@ getindex(T::TagSet,n::Int) = tags(T)[n]
 copy(ts::TagSet) = TagSet(copy(tags(ts)),plev(ts))
 
 setprime(T::TagSet,pl::Int) = TagSet(copy(tags(T)),pl)
-prime(T::TagSet,plinc::Int) = setprime(T,plev(T)+plinc)
+function prime(T::TagSet,plinc::Int=1)
+  if plev(T) < 0
+    return setprime(T,plinc)
+  else
+    return setprime(T,plev(T)+plinc)
+  end
+end
 
 iterate(ts::TagSet,state::Int=1) = iterate(tags(ts),state)
 
-==(ts1::TagSet,ts2::TagSet) = (tags(ts1) == tags(ts2) && 
-                               plev(ts1) == plev(ts2))
+import Base.==
+function ==(ts1::TagSet,ts2::TagSet)
+  plev(ts1) ≠ plev(ts2) && return false
+  for n = 1:length(ts1)
+    @inbounds tags(ts1)[n] ≠ tags(ts2)[n] && return false
+  end
+  return true
+end
 
 function in(ts1::TagSet, ts2::TagSet)
   for t in tags(ts1)
@@ -120,7 +134,7 @@ end
 
 function tagstring(T::TagSet)
   res = ""
-  length(T)==0 && return res
+  length(T) == 0 && return res
   for n=1:length(T)-1
     res *= "$(T[n]),"
   end

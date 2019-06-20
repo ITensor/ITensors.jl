@@ -1,7 +1,11 @@
+export svd,
+       qr,
+       polar,
+       eigen,
+       factorize
 
 function truncate!(P::Vector{Float64};
-                   kwargs...
-                  )::Tuple{Float64,Float64}
+                   kwargs...)::Tuple{Float64,Float64}
   maxdim::Int = get(kwargs,:maxdim,length(P))
   mindim::Int = get(kwargs,:mindim,1)
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
@@ -78,30 +82,37 @@ function truncate!(P::Vector{Float64};
   return truncerr,docut
 end
 
-function factorize(A::ITensor,
-                   Linds...;
-                   factorization=factorization)
-  Lis = IndexSet(Linds...)
-  !hasinds(A,Lis) && throw(ErrorException("Input indices must be contained in the ITensor"))
-  Ris = uniqueinds(A,Lis)
-  #TODO: check if A is already ordered properly
-  #and avoid doing this permute, since it makes a copy
-  #AND/OR use svd!() to overwrite the data of A to save memory
-  A = permute(A,Lis...,Ris...)
-  if factorization==:QR
-    Qis,Qstore,Pis,Pstore = storage_qr(store(A),Lis,Ris)
-  elseif factorization==:polar
-    Qis,Qstore,Pis,Pstore = storage_polar(store(A),Lis,Ris)
-  else
-    error("Factorization $factorization not supported")
+function _permute_for_factorize(A::ITensor,
+                                Linds...)
+  Ais = inds(A)
+  Lis_orig = IndexSet(Linds...)
+  Lis = commoninds(Ais,Lis_orig)
+  Ris = uniqueinds(Ais,Lis)
+  Ais_perm = IndexSet(Lis...,Ris...)
+  # TODO: check if hassameinds(Lis,Ais[1:length(Lis)])
+  # so that a permute can be avoided
+  if inds(A) ≠ Ais_perm
+    A = permute(A,Ais_perm)
   end
+  return A,Lis,Ris
+end
+
+import LinearAlgebra.qr
+function qr(A::ITensor,
+            Linds...)
+  A,Lis,Ris = _permute_for_factorize(A,Linds...)
+  Qis,Qstore,Pis,Pstore = storage_qr(store(A),Lis,Ris)
   return ITensor(Qis,Qstore),ITensor(Pis,Pstore)
 end
 
-qr(A::ITensor,Linds...) = factorize(A,Linds...;factorization=:QR)
+function polar(A::ITensor,
+               Linds...)
+  A,Lis,Ris = _permute_for_factorize(A,Linds...)
+  Qis,Qstore,Pis,Pstore = storage_polar(store(A),Lis,Ris)
+  return ITensor(Qis,Qstore),ITensor(Pis,Pstore)
+end
 
-polar(A::ITensor,Linds...) = factorize(A,Linds...;factorization=:polar)
-
+import LinearAlgebra.svd
 """
     svd(A::ITensor,
         leftind1::Index,
@@ -122,27 +133,17 @@ arguments provided. The following keyword arguments are recognized:
 * truncate [Bool]
 """
 function svd(A::ITensor,
-             Linds;
-             kwargs...
-            )
-  Lis = IndexSet()
-  for i in IndexSet(Linds)
-    i ∈ inds(A) && push!(Lis,i)
-  end
-  Ris = uniqueinds(A,Lis)
-  #TODO: check if A is already ordered properly
-  #and avoid doing this permute, since it makes a copy
-  #AND/OR use svd!() to overwrite the data of A to save memory
-
+             Linds...;
+             kwargs...)
   global timer.svd_t += @elapsed begin
-    A = permute(A,Lis...,Ris...)
+    A,Lis,Ris = _permute_for_factorize(A,Linds...)
     global timer.svd_store_t += @elapsed begin
     Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
     end
     global timer.svd_store_c += 1
   end
-  
   global timer.svd_c += 1
+
   U = ITensor(Uis,Ustore)
   S = ITensor(Sis,Sstore)
   V = ITensor(Vis,Vstore)
@@ -151,25 +152,114 @@ function svd(A::ITensor,
   return U,S,V,u,v
 end
 
+function _factorize_center(A::ITensor,
+                           Linds...;
+                           kwargs...)
+  tags::TagSet = get(kwargs,:tags,"Link,u")
+  U,S,V = svd(A,Linds...;kwargs...)
+  u = commonindex(U,S)
+  v = commonindex(S,V)
+  for ss = 1:dim(u)
+    S[ss,ss] = sqrt(S[ss,ss])
+  end
+  FU = settags(U*S,tags,v)
+  FV = settags(S*V,tags,u)
+  return FU,FV,commonindex(FU,FV)
+end
+
+function _factorize_from_left_svd(A::ITensor,
+                                  Linds...;
+                                  kwargs...)
+  tags::TagSet = get(kwargs,:tags,"Link,u")
+  U,S,V = svd(A,Linds...;kwargs...)
+  u = commonindex(U,S)
+  FU = settags(U,tags,u)
+  FV = settags(S*V,tags,u)
+  return FU,FV,commonindex(FU,FV)
+end
+
+function _factorize_from_right_svd(A::ITensor,
+                                   Linds...; 
+                                   kwargs...)
+  tags::TagSet = get(kwargs,:tags,"Link,u")
+  U,S,V = svd(A,Linds...;kwargs...)
+  v = commonindex(S,V)
+  FU = settags(U*S,tags,v)
+  FV = settags(V,tags,v)
+  return FU,FV,commonindex(FU,FV)
+end
+
+function _factorize_from_left_eigen(A::ITensor,
+                                    Linds...; 
+                                    kwargs...)
+  A,Lis,Ris = _permute_for_factorize(A,Linds...)
+  A² = A*prime(dag(A),Lis)
+  FU,D = eigen(A²,Lis,prime(Lis);kwargs...)
+  FV = dag(FU)*A
+  return FU,FV,commonindex(FU,FV)
+end
+
+function _factorize_from_right_eigen(A::ITensor,
+                                     Linds...; 
+                                     kwargs...)
+  A,Lis,Ris = _permute_for_factorize(A,Linds...)
+  A² = A*prime(dag(A),Ris)
+  FV,D = eigen(A²,Ris,prime(Ris); kwargs...)
+  FU = A*dag(FV)
+  return FU,FV,commonindex(FU,FV)
+end
+
+import LinearAlgebra.factorize
+"""
+factorize(A::ITensor, Linds...; dir = "center", which_factorization = "svd", cutoff = 0.0)
+
+Do a low rank factorization of A either using an SVD or an eigendecomposition of A'A or AA'.
+"""
+function factorize(A::ITensor,
+                   Linds...;
+                   kwargs...)
+  dir::String = get(kwargs,:dir,"center")
+  if dir == "center"
+    return _factorize_center(A,Linds...;kwargs...)
+  end
+  which_factorization::String = get(kwargs,:which_factorization,"svd")
+  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  use_eigen = false
+  if which_factorization == "eigen" || (which_factorization == "automatic" && cutoff > 1e-12)
+    use_eigen = true
+  end
+  if dir == "fromleft"
+    if use_eigen
+      return _factorize_from_left_eigen(A,Linds...;kwargs...)
+    else
+      return _factorize_from_left_svd(A,Linds...;kwargs...)
+    end
+  elseif dir == "fromright"
+    if use_eigen
+      return _factorize_from_right_eigen(A,Linds...;kwargs...)
+    else
+      return _factorize_from_right_svd(A,Linds...;kwargs...)
+    end
+  end
+  error("In factorize, no dir = $dir supported. Use center, fromleft or fromright.")
+end
+
 # TODO: add a version that automatically detects the IndexSets
 # by matching based on tags
+import LinearAlgebra.eigen
 function eigen(A::ITensor,
                Linds,
                Rinds;
-               truncate::Int=100,
-               lefttags::String="Link,0",
-               righttags::String="Link,1",
-               matrixtype::Type{T}=Hermitian) where {T}
+               kwargs...)
   Lis = IndexSet(Linds)
   Ris = IndexSet(Rinds)
-  !hassameinds((Lis,Ris),A) && throw(ErrorException("Input indices must be contained in the ITensor"))
-
-  #TODO: check if A is already ordered properly
-  #and avoid doing this permute, since it makes a copy
-  #AND/OR use svd!() to overwrite the data of A to save memory
-  A = permute(A,(Lis,Ris))
+  Ais_perm = IndexSet(Lis...,Ris...)
+  !hassameinds(Ais_perm,A) && throw(ErrorException("Input indices must be contained in the ITensor"))
+  if inds(A) ≠ Ais_perm
+    A = permute(A,Ais_perm)
+  end
   #TODO: More of the index analysis should be moved out of storage_eigen
-  Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris,matrixtype,truncate,lefttags,righttags)
+  Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris; kwargs...)
   return ITensor(Uis,Ustore),ITensor(Dis,Dstore)
 end
 

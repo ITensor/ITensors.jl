@@ -30,7 +30,6 @@ import Base.adjoint,
        Base.show,
        Base.similar,
        Base.size,
-       Base.==,
        Base.!=,
        Base.+,
        Base.-,
@@ -42,12 +41,9 @@ import Base.adjoint,
        LinearAlgebra.axpby!,
        LinearAlgebra.axpy!,
        LinearAlgebra.dot,
-       LinearAlgebra.eigen,
        LinearAlgebra.norm,
        LinearAlgebra.mul!,
-       LinearAlgebra.svd,
        LinearAlgebra.rmul!,
-       LinearAlgebra.qr,
        Random.randn!
 
 ## Types
@@ -83,59 +79,20 @@ export prime,
 
 #TODO: continue work on SmallString, use as Tags
 include("smallstring.jl")
-
 include("tagset.jl")
-
 include("index.jl")
-export adjoint,
-       dim,
-       prime,
-       addtags,
-       settags,
-       replacetags,
-       removetags,
-       hastags,
-       id,
-       isdefault,
-       dir,
-       plev,
-       tags,
-       ind,
-       Neither,
-       In,
-       Out
 include("indexset.jl")
-export hasindex,
-       hasinds,
-       hassameinds,
-       findindex,
-       findinds,
-       swaptags,
-       commoninds,
-       commonindex,
-       uniqueinds,
-       uniqueindex
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")
 include("storage/contract.jl")
-export CProps, contract!, compute!, compute_contraction_labels, contract_inds, contract
+#export CProps, contract!, compute!, compute_contraction_labels, contract_inds, contract
 include("itensor.jl")
-export svd,
-       qr,
-       polar,
-       eigen,
-       norm,
-       delta,
-       δ,
-       replaceindex!,
-       isNull
-
 include("decomp.jl")
-#export truncate!
-
 include("iterativesolvers.jl")
-export davidson
 
+###########################################################
+# MPS/MPO
+#
 include("mps/siteset.jl")
 export BasicSite,
        Site,

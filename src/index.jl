@@ -1,3 +1,20 @@
+export adjoint,
+       dim,
+       prime,
+       addtags,
+       settags,
+       replacetags,
+       removetags,
+       hastags,
+       id,
+       isdefault,
+       dir,
+       plev,
+       tags,
+       ind,
+       Neither,
+       In,
+       Out
 
 const IDType = UInt64
 
@@ -39,7 +56,16 @@ dir(i::Index) = i.dir
 tags(i::Index) = i.tags
 plev(i::Index) = plev(tags(i))
 
-==(i1::Index,i2::Index) = (id(i1)==id(i2) && tags(i1)==tags(i2))
+"""
+==(i1::Index, i1::Index)
+
+Compare indices for equality. First the id's are compared,
+then the prime levels are compared, and finally that
+tags are compared.
+"""
+function ==(i1::Index,i2::Index)
+  return id(i1) == id(i2) && tags(i1) == tags(i2)
+end
 copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
 
 sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
@@ -50,8 +76,8 @@ isdefault(i::Index) = (i==Index())
 
 hastags(i::Index, ts) = hastags(tags(i),ts)
 
-function settags(i::Index, tags)
-  ts = TagSet(tags)
+function settags(i::Index, strts)
+  ts = TagSet(strts)
   # By default, an Index has a prime level of 0
   plev(ts) < 0 && (ts = setprime(ts,0))
   Index(id(i),dim(i),dir(i),ts)

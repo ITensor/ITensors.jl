@@ -237,8 +237,7 @@ end
 function storage_svd(Astore::Dense{T},
                      Lis::IndexSet,
                      Ris::IndexSet;
-                     kwargs...
-                    ) where {T}
+                     kwargs...) where {T}
   maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
   mindim::Int = get(kwargs,:mindim,1)
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
@@ -249,13 +248,11 @@ function storage_svd(Astore::Dense{T},
 
   global timer.svd_store_svd_t += @elapsed begin
   MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
-  MVh = conj!(MV)
+  MV = conj!(MV)
   end
   global timer.svd_store_svd_c += 1
 
-
-  sqr(x) = x^2
-  P = sqr.(MS)
+  P = MS.^2
   #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
   truncate!(P;maxdim=maxdim,
               cutoff=cutoff,
@@ -265,7 +262,7 @@ function storage_svd(Astore::Dense{T},
   if dS < length(MS)
     MU = MU[:,1:dS]
     resize!(MS,dS)
-    MVh = MVh[:,1:dS]
+    MV = MV[:,1:dS]
   end
 
   u = Index(dS,utags)
@@ -273,23 +270,49 @@ function storage_svd(Astore::Dense{T},
   Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
   #TODO: make a diag storage
   Sis,Sstore = IndexSet(u,v),Dense{Float64}(vec(Matrix(Diagonal(MS))))
-  Vhis,Vhstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MVh)))
+  Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
 
-  return (Uis,Ustore,Sis,Sstore,Vhis,Vhstore)
+  return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
 end
 
-function storage_eigen(Astore::T,Lis::IndexSet,Ris::IndexSet,matrixtype::Type{S},truncate::Int,lefttags::String,righttags::String) where {T<:Dense,S}
+function storage_eigen(Astore::Dense{T},
+                       Lis::IndexSet,
+                       Ris::IndexSet;
+                       kwargs...) where {T}
+  maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
+  mindim::Int = get(kwargs,:mindim,1)
+  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
+  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
+  tags::TagSet = get(kwargs,:lefttags,"Link,u")
+  lefttags::TagSet = get(kwargs,:lefttags,tags)
+  righttags::TagSet = get(kwargs,:righttags,prime(lefttags))
+
   dim_left = dim(Lis)
   dim_right = dim(Ris)
-  MD,MU = eigen(S(reshape(data(Astore),dim_left,dim_right)))
+  MD,MU = eigen(Hermitian(reshape(data(Astore),dim_left,dim_right)))
+
+  # Sort by largest to smallest eigenvalues
+  p = sortperm(MD; rev = true)
+  MD = MD[p]
+  MU = MU[:,p]
+
+  #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
+  truncate!(MD;maxdim=maxdim,
+              cutoff=cutoff,
+              absoluteCutoff=absoluteCutoff,
+              doRelCutoff=doRelCutoff)
+  dD = length(MD)
+  if dD < size(MU,2)
+    MU = MU[:,1:dD]
+  end
 
   #TODO: include truncation parameters as keyword arguments
-  dim_middle = min(dim_left,dim_right,truncate)
-  u = Index(dim_middle,lefttags)
+  u = Index(dD,lefttags)
   v = settags(u,righttags)
-  Uis,Ustore = IndexSet(Lis...,u),T(vec(MU[:,1:dim_middle]))
+  Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
   #TODO: make a diag storage
-  Dis,Dstore = IndexSet(u,v),T(vec(Matrix(Diagonal(MD[1:dim_middle]))))
+  Dis,Dstore = IndexSet(u,v),Dense{T}(vec(Matrix(Diagonal(MD))))
   return (Uis,Ustore,Dis,Dstore)
 end
 
@@ -298,29 +321,33 @@ function polar(A::Matrix)
   return U*V',V*Diagonal(S)*V'
 end
 
-#TODO: make one generic function storage_factorization(Astore,Lis,Ris,factorization)
-function storage_qr(Astore::T,Lis::IndexSet,Ris::IndexSet) where {T<:Dense}
+function storage_qr(Astore::Dense{T},
+                    Lis::IndexSet,
+                    Ris::IndexSet;
+                    kwargs...) where {T}
+  tags::TagSet = get(kwargs,:tags,"Link,u")
   dim_left = dim(Lis)
   dim_right = dim(Ris)
   MQ,MP = qr(reshape(data(Astore),dim_left,dim_right))
   dim_middle = min(dim_left,dim_right)
-  u = Index(dim_middle,"Link,u")
+  u = Index(dim_middle,tags)
   #Must call Matrix() on MQ since the QR decomposition outputs a sparse
   #form of the decomposition
-  Qis,Qstore = IndexSet(Lis...,u),T(vec(Matrix(MQ)))
-  Pis,Pstore = IndexSet(u,Ris...),T(vec(Matrix(MP)))
+  Qis,Qstore = IndexSet(Lis...,u),Dense{T}(vec(Matrix(MQ)))
+  Pis,Pstore = IndexSet(u,Ris...),Dense{T}(vec(Matrix(MP)))
   return (Qis,Qstore,Pis,Pstore)
 end
 
-function storage_polar(Astore::T,Lis::IndexSet,Ris::IndexSet) where {T<:Dense}
+function storage_polar(Astore::Dense{T},
+                       Lis::IndexSet,
+                       Ris::IndexSet) where {T}
   dim_left = dim(Lis)
   dim_right = dim(Ris)
   MQ,MP = polar(reshape(data(Astore),dim_left,dim_right))
   dim_middle = min(dim_left,dim_right)
-  #u = Index(dim_middle,"Link,u")
-  Uis = addtags(Ris,"u")
-  Qis,Qstore = IndexSet(Lis...,Uis...),T(vec(MQ))
-  Pis,Pstore = IndexSet(Uis...,Ris...),T(vec(MP))
+  Uis = prime(Ris)
+  Qis,Qstore = IndexSet(Lis...,Uis...),Dense{T}(vec(MQ))
+  Pis,Pstore = IndexSet(Uis...,Ris...),Dense{T}(vec(MP))
   return (Qis,Qstore,Pis,Pstore)
 end
 

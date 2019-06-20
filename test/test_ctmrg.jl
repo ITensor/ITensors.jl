@@ -23,7 +23,7 @@ function ctmrg(T::ITensor,
     lr = findindex(Clu⁽¹⁾, "link,right")
     sr = findindex(Clu⁽¹⁾, "site,right")
     Ud,Cdr = eigen(Clu⁽¹⁾, (ld,sd), (lr,sr);
-                   truncate=χmax,
+                   maxdim=χmax,
                    lefttags="link,down,renorm",
                    righttags="link,right,renorm")
 

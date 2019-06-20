@@ -187,17 +187,11 @@ end
 
 function replaceBond!(M::MPS,
                       b::Int,
-                      phi::ITensor,
-                      dir::String;
+                      phi::ITensor;
                       kwargs...)
-  U,S,Vh,u,v = svd(phi,inds(M[b]);kwargs...)
-  if dir=="Fromleft"
-    M[b]   = U
-    M[b+1] = S*Vh
-  elseif dir=="Fromright"
-    M[b]   = U*S
-    M[b+1] = Vh
-  end
+  FU,FV = factorize(phi,inds(M[b]); which_factorization="automatic", kwargs...)
+  M[b]   = FU
+  M[b+1] = FV
 end
 
 function maxDim(M::MPS)

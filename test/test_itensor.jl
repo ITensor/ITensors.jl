@@ -239,7 +239,7 @@ end
       #Note: this is only satisfied when left dimensions 
       #are greater than right dimensions
       uinds = commoninds(U,P)
-      UUᵀ =  U*dag(prime(U,"u"))
+      UUᵀ =  U*dag(prime(U,uinds))
       for ii ∈ dim(uinds[1]), jj ∈ dim(uinds[2])
         @test UUᵀ[uinds[1](ii),uinds[2](jj),prime(uinds[1])(ii),prime(uinds[2])(jj)]≈one(SType) atol=1e-14
       end

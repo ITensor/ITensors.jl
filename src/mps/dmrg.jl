@@ -36,9 +36,10 @@ function dmrg(H::MPO,
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)::Tuple{Float64,MPS}
+  which_factorization::String = get(kwargs,:which_factorization,"automatic")
+
   psi = copy(psi0)
   N = length(psi)
-
 
   PH = ProjMPO(H)
   position!(PH,psi0,1)
@@ -72,11 +73,13 @@ function dmrg(H::MPO,
       #@printf "check phi energy = %.8f\n" scalar(phi*PH(phi))/norm(phi)^2
 
       svd_t += @elapsed begin
-      dir = ha==1 ? "Fromleft" : "Fromright"
-      replaceBond!(psi,b,phi,dir;
+      dir = ha==1 ? "fromleft" : "fromright"
+      replaceBond!(psi,b,phi;
                    maxdim=maxdim(sweeps,sw),
                    mindim=mindim(sweeps,sw),
-                   cutoff=cutoff(sweeps,sw))
+                   cutoff=cutoff(sweeps,sw),
+                   dir=dir,
+                   which_factorization=which_factorization)
       end
 
       #nphi = psi[b]*psi[b+1]
