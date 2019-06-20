@@ -32,3 +32,12 @@
     - makes code more readable in some ways
     - easier to see which methods to overload to make a new storage type
       (but we can address this by listing such methods in the docs)
+
+## Optimization Ideas
+
++ Mimic "small vector" / "InfArray" optimization used in C++ ITensor.
+  This optimization makes IndexSets not allocate on the heap until 
+  the number of indices exceeds a certain size. Use a stack-allocated / non-allocating
+  fixed-size array or tuple to hold indices below that size.
+
+
