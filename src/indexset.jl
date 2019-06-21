@@ -12,7 +12,8 @@ export hasindex,
        uniqueindex
 
 struct IndexSet
-    inds::Vector{Index}
+    #inds::Vector{Index}
+    inds::SmallArray{Index}
     IndexSet(inds::Vector{Index}) = new(inds)
 end
 
@@ -42,10 +43,24 @@ length(is::IndexSet) = length(is.inds)
 order(is::IndexSet) = length(is)
 copy(is::IndexSet) = IndexSet(copy(is.inds))
 dims(is::IndexSet) = Tuple(dim(i) for i ∈ is)
-dim(is::IndexSet) = prod(dim.(is))
+#dim(is::IndexSet) = prod(dim.(is))
+function dim(is::IndexSet)
+  d = 1
+  for n=1:length(is)
+    d *= dim(is[n])
+  end
+  return d
+end
 dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
-dag(is::IndexSet) = IndexSet(dag.(is.inds))
+#dag(is::IndexSet) = IndexSet(dag.(is.inds))
+function dag(is::IndexSet)
+  dis = copy(is)
+  for n=1:length(dis)
+    dis[n] = dag(is[n])
+  end
+  return dis
+end
 
 # Allow iteration
 size(is::IndexSet) = size(is.inds)

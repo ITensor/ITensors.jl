@@ -77,10 +77,12 @@ export prime,
        sim,
        val
 
+
 #TODO: continue work on SmallString, use as Tags
 include("smallstring.jl")
 include("tagset.jl")
 include("index.jl")
+include("development/smallarray.jl")
 include("indexset.jl")
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")
