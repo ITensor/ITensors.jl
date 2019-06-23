@@ -2,7 +2,9 @@ export SmallArray,_def
 
 #
 # Ideas to improve:
-#  - just make the storage Union{Tuple,Vector}
+#  - make immutable by switching currently mutating functions
+#    to just create a new SmallArray instance and return that
+#  - just make the storage Union{Tuple,Vector} ?
 #  - put an "internal reference" that points to tstore or vstore,
 #    may be same as using Union
 #  - any value or possibility of making immutable?
