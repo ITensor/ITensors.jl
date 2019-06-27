@@ -40,7 +40,7 @@ struct Index
         tags::TagSet) = new(id,dim,dir,tags)
 end
 
-Index() = Index(IDType(0),1,Neither,TagSet(String[],0))
+Index() = Index(IDType(0),1,Neither,TagSet("0"))
 function Index(dim::Integer,tags="0")
   ts = TagSet(tags)
   # By default, an Index has a prime level of 0

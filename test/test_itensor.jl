@@ -151,7 +151,7 @@ end
   j = Index(mj,"j")
   k = Index(mk,"k")
   l = Index(ml,"l")
-  α = Index(mα,"α") 
+  α = Index(mα,"alpha")
   @testset "Set and get values with IndexVals" begin
     A = ITensor(SType,i,j,k)
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)

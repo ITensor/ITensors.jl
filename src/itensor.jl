@@ -9,7 +9,7 @@ struct ITensor
   store::TensorStorage
   #TODO: check that the storage is consistent with the
   #total dimension of the indices
-  ITensor(is::IndexSet,st::TensorStorage) = new(is,st)
+  ITensor(is::IndexSet,st::T) where T = new(is,st)
 end
 
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())

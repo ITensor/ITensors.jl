@@ -11,7 +11,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
   j = Index(mj,"j")
   k = Index(mk,"k")
   l = Index(ml,"l")
-  α = Index(mα,"α") 
+  α = Index(mα,"alpha") 
   @testset "Test contract ITensors" begin
     A = randomITensor(T)
     B = randomITensor(T)
