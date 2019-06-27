@@ -238,5 +238,24 @@ end
     @test Array(permute(C,i,k)) ≈ Array(A)*Array(B)
   end
 
+  @testset "Outer Product Real ITensor * Complex ITensor" begin
+    i = Index(2, "i")
+    j = Index(2, "j")
+    A = randomITensor(Float64, i)
+    B = randomITensor(ComplexF64, j)
+    C = A*B
+    @test Array(permute(C, i, j)) ≈ kron(Array(A), transpose(Array(B)))
+  end 
+
+  @testset "Outer Product: Complex ITensor * Real ITensor" begin
+    i = Index(2, "i")
+    j = Index(2, "j")
+    A = randomITensor(ComplexF64, i)
+    B = randomITensor(Float64, j)
+    C = A*B
+    @test Array(permute(C, i, j)) ≈ kron(Array(A), transpose(Array(B)))
+  end 
+
+
 end
 
