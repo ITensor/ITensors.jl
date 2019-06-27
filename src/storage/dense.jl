@@ -24,7 +24,7 @@ storage_complex(D::Dense{T}) where {T} = Dense{complex(T)}(complex(data(D)))
 
 copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 
-outer(D1::Dense{T},D2::Dense{T}) where {T} = Dense{T}(vec(data(D1)*transpose(data(D2))))
+outer(D1::Dense{T},D2::Dense{S}) where {T, S <:Number} = Dense{promote_type(T,S)}(vec(data(D1)*transpose(data(D2))))
 
 storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
 
