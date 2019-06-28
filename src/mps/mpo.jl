@@ -85,11 +85,11 @@ copy(m::MPO) = MPO(m.N_,copy(m.A_))
 function siteindex(A::MPO,x::MPS,j::Integer)
   N = length(A)
   if j == 1
-    si = uniqueindex(A[j],A[j+1],x[j])
+    si = uniqueindex(A[j],(A[j+1],x[j]))
   elseif j == N
-    si = uniqueindex(A[j],A[j-1],x[j])
+    si = uniqueindex(A[j],(A[j-1],x[j]))
   else
-    si = uniqueindex(A[j],A[j-1],A[j+1],x[j])
+    si = uniqueindex(A[j],(A[j-1],A[j+1],x[j]))
   end
   return si
 end

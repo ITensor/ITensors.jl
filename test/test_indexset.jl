@@ -23,7 +23,7 @@ using ITensors,
     I2 = IndexSet(k,l)
     I3 = IndexSet(j,l)
     @test hassameinds(I1,(k,j,i))
-    @test uniqueindex(I1,I2,I3) == i
+    @test uniqueindex(I1,(I2,I3)) == i
     @test uniqueinds(I1,I2) == IndexSet(i,j)
     @test hassameinds(uniqueinds(I1,I2),(j,i))
     @test commoninds(I1,I2) == IndexSet(k)

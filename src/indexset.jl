@@ -99,12 +99,18 @@ end
 # Helper function for uniqueinds
 # Return true if the Index is not in any
 # of the input sets of indices
-function _is_unique_index(j::Index,inds...)
-  for I ∈ inds
+function _is_unique_index(j::Index,inds::T) where {T<:Tuple}
+  for I in inds
     hasindex(I,j) && return false
   end
   return true
 end
+# Version taking one ITensor or IndexSet
+function _is_unique_index(j::Index,inds)
+  hasindex(inds,j) && return false
+  return true
+end
+
 
 """
 uniqueinds(Ais,Bis...)
@@ -112,25 +118,36 @@ uniqueinds(Ais,Bis...)
 Output the IndexSet with Indices in Ais but not in
 the IndexSets Bis.
 """
-function uniqueinds(Ainds,Binds...)
+function uniqueinds(Ainds,Binds)
   Ais = IndexSet(Ainds)
   Cis = IndexSet()
   for j ∈ Ais
-    _is_unique_index(j,Binds...) && push!(Cis,j)
+    _is_unique_index(j,Binds) && push!(Cis,j)
   end
   return Cis
 end
 
 """
-uniqueindex(Ais,Bis...)
+uniqueindex(Ais,Bis)
 
 Output the Index in Ais but not in the IndexSets Bis.
-If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
-"""
-uniqueindex(Ais,Bis...) = Index(uniqueinds(Ais,Bis...))
 
-setdiff(Ais::IndexSet, Bis::IndexSet...) = uniqueinds(Ais,Bis...)
+In the future, this may throw an error if more than 
+one Index is found.
+"""
+function uniqueindex(Ainds,Binds)
+  Ais = IndexSet(Ainds)
+  for j ∈ Ais
+    _is_unique_index(j,Binds) && return j
+  end
+  return Index()
+end
+# This version can check for repeats, but is a bit
+# slower because of IndexSet allocation
+#uniqueindex(Ais,Bis) = Index(uniqueinds(Ais,Bis)) 
+
+setdiff(Ais::IndexSet,Bis) = uniqueinds(Ais,Bis)
 
 """
 commoninds(Ais,Bis)
@@ -153,7 +170,15 @@ Output the Index common to Ais and Bis.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
+function commonindex(Ainds,Binds)
+  Ais = IndexSet(Ainds)
+  for i ∈ Ais
+    hasindex(Binds,i) && return i
+  end
+  return return Index()
+end
+# This version checks if there are more than one indices
+#commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
 
 """
 findinds(inds,tags)
@@ -173,13 +198,24 @@ function findinds(inds,tags)
   return found_inds
 end
 """
-findinds(inds,tags)
+findindex(inds,tags)
 
 Output the Index containing the tags in the input tagset.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-findindex(inds, tags) = Index(findinds(inds,tags))
+function findindex(inds,tags)
+  is = IndexSet(inds)
+  ts = TagSet(tags)
+  for i ∈ is
+    if hastags(i,ts)
+      return i
+    end
+  end
+  return Index()
+end
+# This version checks if there are more than one indices
+#findindex(inds, tags) = Index(findinds(inds,tags))
 
 # From a tag set or index set, find the positions
 # of the matching indices as a vector of integers
