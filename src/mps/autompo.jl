@@ -57,13 +57,10 @@ end
 ## AutoMPO                 #
 ############################
 
-const MPOTerms = Vector{OpProd}
-
 struct AutoMPO
   sites::SiteSet
-  terms::MPOTerms
-  AutoMPO() = new(MPOTerms())
-  AutoMPO(s::SiteSet) = new(sites,MPOTerms())
+  terms::Vector{OpProd}
+  AutoMPO(s::SiteSet) = new(s,Vector{OpProd}())
 end
 sites(ampo::AutoMPO) = ampo.sites
 terms(ampo::AutoMPO) = ampo.terms
@@ -110,7 +107,7 @@ end
 
 
 function partitionHTerms(sites::SiteSet,
-                         terms::MPOTerms,
+                         terms::Vector{OpProd},
                          ; kwargs...)
                          #::Tuple{Vector{QNBlock},Vector{IQMatEls}}
 
