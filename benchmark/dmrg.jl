@@ -1,6 +1,5 @@
-using ITensors,
-      LinearAlgebra,
-      Printf
+using ITensors
+using Printf
 
 function main()
   N = 100
