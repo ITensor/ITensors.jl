@@ -1,3 +1,9 @@
+export Site,
+       ind,
+       op,
+       BasicSite,
+       SiteSet,
+       replaceBond!
 
 abstract type Site end
 

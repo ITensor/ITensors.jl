@@ -94,12 +94,6 @@ include("iterativesolvers.jl")
 # MPS/MPO
 #
 include("mps/siteset.jl")
-export BasicSite,
-       Site,
-       SiteSet,
-       ind,
-       op,
-       replaceBond!
 
 include("mps/sitesets/spinhalf.jl")
 export SpinHalfSite,
