@@ -1,3 +1,7 @@
+export SiteOp,
+       OpProd,
+       AutoMPO,
+       add!
 
 ###########################
 # SiteOp                  # 
