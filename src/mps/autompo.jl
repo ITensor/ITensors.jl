@@ -6,6 +6,8 @@ export SiteOp,
        add!,
        toMPO
 
+import LinearAlgebra.svd
+
 ###########################
 # SiteOp                  # 
 ###########################
@@ -52,11 +54,15 @@ coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
 length(op::MPOTerm) = length(op.ops)
 
-MPOTerm(c::Number,op1::String,i1::Int) = MPOTerm(convert(Coef,c),[SiteOp(op,i)])
+function MPOTerm(c::Number,
+                 op1::String,
+                 i1::Int) 
+  return MPOTerm(convert(Coef,c),[SiteOp(op1,i1)])
+end
 
 function MPOTerm(c::Number,
-                op1::String,i1::Int,
-                op2::String,i2::Int)
+                 op1::String,i1::Int,
+                 op2::String,i2::Int)
   return MPOTerm(convert(Coef,c),[SiteOp(op1,i1),SiteOp(op2,i2)])
 end
 
@@ -130,6 +136,20 @@ struct MatElem{T}
   val::T
 end
 
+function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
+  nr = 0
+  nc = 0
+  for el in els
+    nr = max(nr,el.row)
+    nc = max(nr,el.col)
+  end
+  M = zeros(T,nr,nc)
+  for el in els
+    M[el.row,el.col] = el.val
+  end
+  return M
+end
+
 mutable struct MPOBlock{T}
   leftmap::Vector{OpTerm}
   rightmap::Vector{OpTerm}
@@ -144,12 +164,11 @@ end
 
 function posInLink!(linkmap::Vector{OpTerm},
                     op::OpTerm)::Int
-  ll = length(linkmap)
-  for n=1:ll
+  for n=1:length(linkmap)
     (linkmap[n]==op) && return n
   end
   push!(linkmap,op)
-  return ll
+  return length(linkmap)
 end
 
 function partitionHTerms(sites::SiteSet,
@@ -198,14 +217,34 @@ function partitionHTerms(sites::SiteSet,
   return blocks,tempMPO
 end
 
+
 function compressMPO(sites::SiteSet,
                      qbs::Vector{MPOBlock{val_type}},
                      tempMPO::Vector{Set{MatElem{MPOTerm}}}
-                     ; kwargs...) 
-                     where {val_type}
+                     ; kwargs...) where {val_type}
   N = length(sites)
-  finalMPO = Dict{OpTerm,Matrix{Float64}}()
+
+  finalMPO = Dict{OpTerm,Matrix{val_type}}()
   links = fill(Index(),N+1)
+  links[1] = Index(2,"Link,n=1")
+
+  mindim::Int = get(kwargs,:mindim,1)
+  maxdim::Int = get(kwargs,:maxdim,10000)
+  cutoff::Float64 = get(kwargs,:cutoff,1E-13)
+
+  V_n = Matrix{val_type}(undef,1,1)
+
+  for n=1:N
+    M = toMatrix(qbs[n].mat_els)
+    @show M
+    U,S,V = svd(M)
+    P = S.^2
+    truncate!(P;maxdim=maxdim,cutoff=cutoff,mindim=mindim)
+    dim = length(P)
+    nc = size(M,2)
+    V_npp = Matrix{val_type}(V[1:nc,1:dim])
+    @show dim
+  end
 
   return finalMPO,links
 end
