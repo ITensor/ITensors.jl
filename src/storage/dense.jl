@@ -86,11 +86,11 @@ using Base.Cartesian: @nexprs,
   end
 end
 
-function storage_add!(Bstore::Dense,
-                      Bis::IndexSet,
-                      Astore::Dense,
-                      Ais::IndexSet,
-                      x::Number = 1)
+function add!(Bstore::Dense,
+              Bis::IndexSet,
+              Astore::Dense,
+              Ais::IndexSet,
+              x::Number = 1)
   p = calculate_permutation(Bis,Ais)
   Adata = data(Astore)
   Bdata = data(Bstore)
@@ -109,6 +109,20 @@ function storage_add!(Bstore::Dense,
       _add!(reshapeBdata,reshapeAdata,p,(a,b)->a+x*b)
     end
   end
+end
+
+function storage_add!(Bstore::Dense{BT},
+                      Bis::IndexSet,
+                      Astore::Dense{AT},
+                      Ais::IndexSet,
+                      x::Number = 1) where {BT,AT}
+  if (BT==AT) || (BT==ComplexF64)
+    add!(Bstore,Bis,Astore,Ais)
+    return Bstore
+  end
+  Nstore = storage_complex(Bstore)
+  add!(Nstore,Bis,Astore,Ais)
+  return Nstore
 end
 
 function storage_copyto!(Bstore::Dense,
@@ -254,7 +268,8 @@ function storage_svd(Astore::Dense{T},
 
   P = MS.^2
   #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
-  truncate!(P;maxdim=maxdim,
+  truncate!(P;mindim=mindim,
+              maxdim=maxdim,
               cutoff=cutoff,
               absoluteCutoff=absoluteCutoff,
               doRelCutoff=doRelCutoff)
