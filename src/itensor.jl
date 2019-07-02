@@ -157,7 +157,7 @@ function isapprox(A::ITensor,
                   B::ITensor;
                   atol::Real=0.0,
                   rtol::Real=Base.rtoldefault(eltype(A),eltype(B),atol))
-    return norm(A*one(eltype(B))-B) <= atol + rtol*max(norm(A),norm(B))
+    return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
 end
 
 function scalar(T::ITensor)

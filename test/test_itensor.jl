@@ -1,4 +1,5 @@
-using ITensors,
+include("./../src/ITensors.jl")
+using .ITensors,
       LinearAlgebra, # For tr()
       Combinatorics, # For permutations()
       Random,        # To set a seed
@@ -60,6 +61,18 @@ end
     @test complex(A[i(ii),j(jj)]) == B[i(ii),j(jj)]
   end
 end
+
+@testset "Test isapprox for ITensors" begin
+        m,n = rand(0:20,2)
+        i = Index(m)
+        j = Index(n)
+        realData = rand(m,n)
+        complexData = realData+ zeros(m,n)*1im
+        A = ITensor(realData, i,j)
+        B = ITensor(complexData, i,j)
+        @test A≈B
+        @test B≈A
+    end
 
 @testset "ITensor tagging and priming" begin
   s1 = Index(2,"Site,s=1")
@@ -244,6 +257,5 @@ end
         @test UUᵀ[uinds[1](ii),uinds[2](jj),prime(uinds[1])(ii),prime(uinds[2])(jj)]≈one(SType) atol=1e-14
       end
     end
-
   end # End ITensor factorization testset
 end # End Dense storage test
