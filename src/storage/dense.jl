@@ -254,7 +254,8 @@ function storage_svd(Astore::Dense{T},
 
   P = MS.^2
   #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
-  truncate!(P;maxdim=maxdim,
+  truncate!(P;mindim=mindim,
+              maxdim=maxdim,
               cutoff=cutoff,
               absoluteCutoff=absoluteCutoff,
               doRelCutoff=doRelCutoff)
