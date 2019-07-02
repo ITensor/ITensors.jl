@@ -2,6 +2,7 @@ export SiteOp,
        OpTerm,
        MPOTerm,
        AutoMPO,
+       terms,
        add!,
        toMPO
 
@@ -123,19 +124,23 @@ end
 ###############
 ###############
 
-struct MatElem
+struct MatElem{T}
   row::Int
   col::Int
-  val::ComplexF64
+  val::T
 end
 
-mutable struct MPOBlock
+mutable struct MPOBlock{T}
   leftmap::Vector{OpTerm}
   rightmap::Vector{OpTerm}
-  matels::Vector{MatElem}
-end
-MPOBlock() = MPOBlock(Vector{OpTerm}(),Vector{OpTerm}(),Vector{MatElem}())
+  mat_els::Vector{MatElem{T}}
 
+  function MPOBlock{T}() where {T}
+    return new{T}(Vector{OpTerm}(),
+                  Vector{OpTerm}(),
+                  Vector{MatElem{T}}())
+  end
+end
 
 function posInLink!(linkmap::Vector{OpTerm},
                     op::OpTerm)::Int
@@ -147,28 +152,14 @@ function posInLink!(linkmap::Vector{OpTerm},
   return ll
 end
 
-struct MPOMatElem
-  row::Int
-  col::Int
-  val::MPOTerm
-end
-
-function pushUnique!(vec::Vector{T},
-                     x::T) where T
-  for n=1:length(vec)
-    (vec[n]==x) && return
-  end
-  push!(vec,x)
-end
-
-
 function partitionHTerms(sites::SiteSet,
                          terms::Vector{MPOTerm},
+                         val_type::Union{Type{Float64},Type{ComplexF64}}
                          ; kwargs...)
   N = length(sites)
 
-  blocks = fill(MPOBlock(),N)
-  tempMPO = fill(Vector{MPOMatElem}(),N)
+  blocks = fill(MPOBlock{val_type}(),N)
+  tempMPO = fill(Set(MatElem{MPOTerm}[]),N)
 
   for term in terms 
     #@show term
@@ -196,24 +187,30 @@ function partitionHTerms(sites::SiteSet,
           b_col = posInLink!(rightblock.rightmap,right)
         end
         l = posInLink!(leftblock.leftmap,left)
-        push!(leftblock.matels,MatElem(l,b_row,coef(term)))
+        push!(leftblock.mat_els,MatElem(l,b_row,convert(val_type,coef(term))))
       end
 
-      el = MPOMatElem(b_row,b_col,MPOTerm(coef(term),onsite))
-      pushUnique!(tempMPO[n],el)
+      c = (b_row == -1) ? coef(term) : ComplexF64(1.,0.)
+      el = MatElem(b_row,b_col,MPOTerm(c,onsite))
+      push!(tempMPO[n],el)
     end
   end
-
   return blocks,tempMPO
 end
 
-#function compressMPO(sites::SiteSet,
-#                     qbs::Vector{QNBlock},
-#                     tempMPO::Vector{IQMatEls}
-#                     ; kwargs...)
-#                     #::Tuple{Vector{MPOPiece},IndexSet}
-#end
-#
+function compressMPO(sites::SiteSet,
+                     qbs::Vector{MPOBlock{val_type}},
+                     tempMPO::Vector{Set{MatElem{MPOTerm}}}
+                     ; kwargs...) 
+                     where {val_type}
+  N = length(sites)
+  finalMPO = Dict{OpTerm,Matrix{Float64}}()
+  links = fill(Index(),N+1)
+
+  return finalMPO,links
+end
+
+ 
 #function constructMPOTensors(sites::SiteSet,
 #                             finalMPO::Vector{MPOPiece},
 #                             links::IndexSet
@@ -221,15 +218,24 @@ end
 #end
 
 
-function svdMPO(am::AutoMPO; kwargs...)
-  blocks,tempMPO = partitionHTerms(sites(am),terms(am);kwargs...)
-  #finalMPO,links = compressMPO(sites(am),blocks,tempMPO;kwargs...)
-  #mpo = constructMPOTensors(sites(am),finalMPO,links;kwargs...)
+function svdMPO(ampo::AutoMPO; kwargs...)
+
+  val_type = Float64
+  for t in terms(ampo) 
+    if imag(coef(t)) != 0.0
+      val_type = ComplexF64
+      break
+    end
+  end
+
+  blocks,tempMPO = partitionHTerms(sites(ampo),terms(ampo),val_type;kwargs...)
+  finalMPO,links = compressMPO(sites(ampo),blocks,tempMPO;kwargs...)
+  #mpo = constructMPOTensors(sites(ampo),finalMPO,links;kwargs...)
   #return mpo
   return MPO()
 end
 
-function toMPO(am::AutoMPO; kwargs...)::MPO
-  return svdMPO(am;kwargs...)
+function toMPO(ampo::AutoMPO; kwargs...)::MPO
+  return svdMPO(ampo;kwargs...)
 end
 
