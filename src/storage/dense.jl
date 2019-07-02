@@ -111,11 +111,11 @@ function add!(Bstore::Dense,
   end
 end
 
-function storage_add(Bstore::Dense{BT},
-                     Bis::IndexSet,
-                     Astore::Dense{AT},
-                     Ais::IndexSet,
-                     x::Number = 1) where {BT,AT}
+function storage_add!(Bstore::Dense{BT},
+                      Bis::IndexSet,
+                      Astore::Dense{AT},
+                      Ais::IndexSet,
+                      x::Number = 1) where {BT,AT}
   if (BT==AT) || (BT==ComplexF64)
     add!(Bstore,Bis,Astore,Ais)
     return Bstore
