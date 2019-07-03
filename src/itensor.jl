@@ -4,7 +4,7 @@ export norm,
        replaceindex!,
        isNull
 
-struct ITensor
+mutable struct ITensor
   inds::IndexSet
   store::TensorStorage
   #TODO: check that the storage is consistent with the
@@ -257,9 +257,8 @@ Add ITensors B and A and store the result in B.
 
 B .+= A
 """
-function add!(A::ITensor,B::ITensor)
-  storage_add!(store(A),inds(A),store(B),inds(B))
-  return A
+function add!(B::ITensor,A::ITensor)
+  B.store = storage_add!(store(B),inds(B),store(A),inds(A))
 end
 
 """
@@ -270,7 +269,7 @@ Add ITensors B and α*A and store the result in B.
 B .+= α .* A
 """
 function add!(A::ITensor,x::Number,B::ITensor)
-  storage_add!(store(A),inds(A),store(B),inds(B),x)
+  A.store = storage_add!(store(A),inds(A),store(B),inds(B),x)
   return A
 end
 
@@ -282,7 +281,7 @@ Add ITensors α*A and β*B and store the result in C.
 C .= α .* A .+ β .* B
 """
 function add!(A::ITensor,y::Number,x::Number,B::ITensor)
-  storage_add!(store(A),inds(A),y,store(B),inds(B),x)
+  A.store = storage_add!(store(A),inds(A),y,store(B),inds(B),x)
   return A
 end
 
