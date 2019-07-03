@@ -18,7 +18,7 @@ struct SiteOp
 end
 name(s::SiteOp) = s.name
 site(s::SiteOp) = s.site
-show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
+Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
 
 ###########################
 # OpTerm                  # 
@@ -66,7 +66,7 @@ function MPOTerm(c::Number,
   return MPOTerm(convert(Coef,c),[SiteOp(op1,i1),SiteOp(op2,i2)])
 end
 
-function show(io::IO,
+function Base.show(io::IO,
               op::MPOTerm) 
   c = coef(op)
   if c != 1.0+0.0im
@@ -79,7 +79,7 @@ function show(io::IO,
     end
   end
   for o in ops(op)
-    print(io,"\"$(name(o))\"($(site(o))) ")
+    print(io,"\"$(name(o))\"($(site(o)))")
   end
 end
 
@@ -136,6 +136,10 @@ struct MatElem{T}
   val::T
 end
 
+function Base.show(io::IO,m::MatElem)
+  print(io,"($(m.row),$(m.col),$(m.val))")
+end
+
 function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
   nr = 0
   nc = 0
@@ -162,6 +166,18 @@ mutable struct MPOBlock{T}
   end
 end
 
+function Base.show(io::IO,block::MPOBlock)
+  print(io,"\nleftmap: ")
+  println(io,block.leftmap)
+  print(io,"rightmap: ")
+  println(io,block.rightmap)
+  print(io,"mat_els: [")
+  for el in block.mat_els
+    print(io,el)
+  end
+  print(io,"]")
+end
+
 function posInLink!(linkmap::Vector{OpTerm},
                     op::OpTerm)::Int
   for n=1:length(linkmap)
@@ -171,18 +187,23 @@ function posInLink!(linkmap::Vector{OpTerm},
   return length(linkmap)
 end
 
+#
+# Improvement ideas:
+# - rename tempMPO to "onsiteOps" or similar
+#
+
 function partitionHTerms(sites::SiteSet,
                          terms::Vector{MPOTerm},
                          val_type::Union{Type{Float64},Type{ComplexF64}}
                          ; kwargs...)
   N = length(sites)
 
-  blocks = fill(MPOBlock{val_type}(),N)
-  tempMPO = fill(Set(MatElem{MPOTerm}[]),N)
+  blocks = [MPOBlock{val_type}() for n=1:N]
+  tempMPO = [Set(MatElem{MPOTerm}[]) for n=1:N]
 
   for term in terms 
-    #@show term
     for n=ops(term)[1].site:ops(term)[end].site
+      println("n = $n")
       left::OpTerm   = filter(t->(t.site < n),ops(term))
       onsite::OpTerm = filter(t->(t.site == n),ops(term))
       right::OpTerm  = filter(t->(t.site > n),ops(term))
@@ -190,7 +211,6 @@ function partitionHTerms(sites::SiteSet,
       b_row = -1
       b_col = -1
 
-      #println("  n = $n")
       rightblock = blocks[n]
 
       if isempty(left)
@@ -202,11 +222,13 @@ function partitionHTerms(sites::SiteSet,
         if isempty(right)
           b_row = posInLink!(leftblock.rightmap,onsite)
         else
+          @show mult(onsite,right)
           b_row = posInLink!(leftblock.rightmap,mult(onsite,right))
           b_col = posInLink!(rightblock.rightmap,right)
         end
         l = posInLink!(leftblock.leftmap,left)
-        push!(leftblock.mat_els,MatElem(l,b_row,convert(val_type,coef(term))))
+        c = convert(val_type,coef(term))
+        push!(leftblock.mat_els,MatElem(l,b_row,c))
       end
 
       c = (b_row == -1) ? coef(term) : ComplexF64(1.,0.)
@@ -214,39 +236,119 @@ function partitionHTerms(sites::SiteSet,
       push!(tempMPO[n],el)
     end
   end
+  for n=1:N
+    println("n = $n")
+    @show blocks[n]
+    println()
+    @show tempMPO[n]
+    println()
+  end
   return blocks,tempMPO
 end
 
+#force_type(::Type{Float64},x::Float64) = x
+#force_type(::Type{Float64},x::ComplexF64) = real(x)
+#force_type(::Type{ComplexF64},x::Number) = convert(ComplexF64,x)
 
 function compressMPO(sites::SiteSet,
                      qbs::Vector{MPOBlock{val_type}},
                      tempMPO::Vector{Set{MatElem{MPOTerm}}}
                      ; kwargs...) where {val_type}
-  N = length(sites)
-
-  finalMPO = Dict{OpTerm,Matrix{val_type}}()
-  links = fill(Index(),N+1)
-  links[1] = Index(2,"Link,n=1")
 
   mindim::Int = get(kwargs,:mindim,1)
   maxdim::Int = get(kwargs,:maxdim,10000)
   cutoff::Float64 = get(kwargs,:cutoff,1E-13)
 
+  N = length(sites)
+
+  finalMPO = [Dict{OpTerm,Matrix{val_type}}() for n=1:N]
+  link0 = Index(2,"Link,n=0")
+  links = fill(Index(),N)
+
   V_n = Matrix{val_type}(undef,1,1)
+  V_npp = Matrix{val_type}(undef,1,1)
+
+  # Constants which define MPO start/end scheme
+  rowShift = 2
+  colShift = 2
+  startState = 2
+  endState = 1
 
   for n=1:N
-    M = toMatrix(qbs[n].mat_els)
-    @show M
-    U,S,V = svd(M)
-    P = S.^2
-    truncate!(P;maxdim=maxdim,cutoff=cutoff,mindim=mindim)
-    dim = length(P)
-    nc = size(M,2)
-    V_npp = Matrix{val_type}(V[1:nc,1:dim])
-    @show dim
+    println("\n\nn = $n\n~~~~~~~~~~~~~~~~\n\n")
+    @show qbs[n]
+    @show qbs[n].mat_els
+    tdim = 0
+    if !isempty(qbs[n].mat_els)
+      M = toMatrix(qbs[n].mat_els)
+      @show size(M)
+      U,S,V = svd(M)
+      P = S.^2
+      truncate!(P;maxdim=maxdim,cutoff=cutoff,mindim=mindim)
+      tdim = length(P)
+      nc = size(M,2)
+      V_npp = Matrix{val_type}(V[1:nc,1:tdim])
+    end
+    links[n] = Index(2+tdim,"Link,n=$n")
+
+    fm = finalMPO[n]
+    ll = (n==1) ? link0 : links[n-1]
+    rl = links[n]
+
+    @show dim(ll)
+    @show dim(rl)
+
+    idTerm = [SiteOp("Id",n)]
+    fm[idTerm] = zeros(val_type,dim(ll),dim(rl))
+    Mid = fm[idTerm]
+    Mid[1,1] = 1.0
+    Mid[2,2] = 1.0
+
+    for el in tempMPO[n]
+      b_row = el.row
+      b_col = el.col
+      t = el.val
+      (abs(coef(t)) < eps()) && continue
+      if !haskey(fm,ops(t)) 
+        fm[ops(t)] = zeros(val_type,dim(ll),dim(rl))
+      end
+      M = fm[ops(t)]
+      ct = convert(val_type,coef(t))
+      @show t
+      @show b_row
+      @show b_col
+      @show size(V_n)
+      @show size(V_npp)
+      if b_row==-1 && b_col==-1 #onsite term
+        M[startState,endState] += ct
+      elseif b_row==-1 #term starting on site n
+        for c=1:size(V_npp,2)
+          z = ct*V_npp[b_col,c]
+          M[startState,colShift+c] += z
+        end
+      elseif b_col==-1 #term ending on site n
+        for r=1:size(V_n,2)
+          z = ct*conj(V_n[b_row,r])
+          M[rowShift+r,endState] += z
+        end
+      else
+        for r=1:size(V_n,2),c=1:size(V_npp,2)
+          z = ct*conj(V_n[b_row,r])*V_npp[b_col,c]
+          M[rowShift+r,colShift+c] += z
+        end
+      end
+    end
+
+    V_n = V_npp
   end
 
-  return finalMPO,links
+  println("\n\nfinalMPO:\n")
+  for (n,fm) in enumerate(finalMPO)
+    @show n
+    @show fm
+  end
+  
+  return finalMPO,link0,links
 end
 
  
@@ -268,7 +370,7 @@ function svdMPO(ampo::AutoMPO; kwargs...)
   end
 
   blocks,tempMPO = partitionHTerms(sites(ampo),terms(ampo),val_type;kwargs...)
-  finalMPO,links = compressMPO(sites(ampo),blocks,tempMPO;kwargs...)
+  finalMPO,link0,links = compressMPO(sites(ampo),blocks,tempMPO;kwargs...)
   #mpo = constructMPOTensors(sites(ampo),finalMPO,links;kwargs...)
   #return mpo
   return MPO()
