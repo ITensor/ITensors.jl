@@ -116,12 +116,13 @@ function storage_add!(Bstore::Dense{BT},
                       Astore::Dense{AT},
                       Ais::IndexSet,
                       x::Number = 1) where {BT,AT}
-  if (BT==AT) || (BT==ComplexF64)
-    add!(Bstore,Bis,Astore,Ais)
+  NT = promote_type(AT,BT)
+  if NT == BT
+    add!(Bstore,Bis,Astore,Ais, x)
     return Bstore
   end
-  Nstore = storage_complex(Bstore)
-  add!(Nstore,Bis,Astore,Ais)
+  Nstore = Dense{NT}(convert(Array{NT}, data(Bstore)))
+  add!(Nstore,Bis,Astore,Ais, x)
   return Nstore
 end
 
