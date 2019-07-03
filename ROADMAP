@@ -41,3 +41,7 @@
   fixed-size array or tuple to hold indices below that size.
 
 
+## Final Release Checks
+
++ Make sure installation is clean on a brand new Julia install (no libraries at all)
++ Reduce dependencies (Combinatorics requires ImageMagick??)
