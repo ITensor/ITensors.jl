@@ -121,7 +121,7 @@ function storage_add!(Bstore::Dense{BT},
     add!(Bstore,Bis,Astore,Ais, x)
     return Bstore
   end
-  Nstore = Dense{NT}(convert(Array{NT}, data(Bstore)))
+  Nstore = convert(Dense{NT},Bstore)
   add!(Nstore,Bis,Astore,Ais, x)
   return Nstore
 end
