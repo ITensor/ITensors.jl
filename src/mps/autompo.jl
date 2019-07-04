@@ -231,7 +231,7 @@ function partitionHTerms(sites::SiteSet,
         push!(leftblock.mat_els,MatElem(l,b_row,c))
       end
 
-      c = (b_row == -1) ? coef(term) : ComplexF64(1.,0.)
+      c::ComplexF64 = (b_row == -1) ? coef(term) : ComplexF64(1.,0.)
       el = MatElem(b_row,b_col,MPOTerm(c,onsite))
       push!(tempMPO[n],el)
     end
@@ -246,10 +246,6 @@ function partitionHTerms(sites::SiteSet,
   return blocks,tempMPO
 end
 
-#force_type(::Type{Float64},x::Float64) = x
-#force_type(::Type{Float64},x::ComplexF64) = real(x)
-#force_type(::Type{ComplexF64},x::Number) = convert(ComplexF64,x)
-
 function compressMPO(sites::SiteSet,
                      qbs::Vector{MPOBlock{val_type}},
                      tempMPO::Vector{Set{MatElem{MPOTerm}}}
@@ -262,8 +258,8 @@ function compressMPO(sites::SiteSet,
   N = length(sites)
 
   finalMPO = [Dict{OpTerm,Matrix{val_type}}() for n=1:N]
-  link0 = Index(2,"Link,n=0")
-  links = fill(Index(),N)
+  links = Dict{Int,Index}()
+  links[0] = Index(2,"Link,n=0")
 
   V_n = Matrix{val_type}(undef,1,1)
   V_npp = Matrix{val_type}(undef,1,1)
@@ -292,11 +288,8 @@ function compressMPO(sites::SiteSet,
     links[n] = Index(2+tdim,"Link,n=$n")
 
     fm = finalMPO[n]
-    ll = (n==1) ? link0 : links[n-1]
+    ll = links[n-1]
     rl = links[n]
-
-    @show dim(ll)
-    @show dim(rl)
 
     idTerm = [SiteOp("Id",n)]
     fm[idTerm] = zeros(val_type,dim(ll),dim(rl))
@@ -348,7 +341,7 @@ function compressMPO(sites::SiteSet,
     @show fm
   end
   
-  return finalMPO,link0,links
+  return finalMPO,links
 end
 
  
@@ -370,7 +363,7 @@ function svdMPO(ampo::AutoMPO; kwargs...)
   end
 
   blocks,tempMPO = partitionHTerms(sites(ampo),terms(ampo),val_type;kwargs...)
-  finalMPO,link0,links = compressMPO(sites(ampo),blocks,tempMPO;kwargs...)
+  finalMPO,links = compressMPO(sites(ampo),blocks,tempMPO;kwargs...)
   #mpo = constructMPOTensors(sites(ampo),finalMPO,links;kwargs...)
   #return mpo
   return MPO()
