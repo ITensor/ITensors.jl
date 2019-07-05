@@ -71,6 +71,10 @@ end
         B = ITensor(complexData, i,j)
         @test A≈B
         @test B≈A
+        realDataT = Array(transpose(realData))
+        A = ITensor(realDataT, j,i)
+        @test A≈B
+        @test B≈A
     end
 
 @testset "ITensor tagging and priming" begin
