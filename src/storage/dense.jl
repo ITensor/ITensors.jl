@@ -57,9 +57,9 @@ using Base.Cartesian: @nexprs,
 # https://github.com/JuliaLang/julia/blob/91151ab871c7e7d6689d1cfa793c12062d37d6b6/base/multidimensional.jl#L1355
 #
 @generated function _add!(P::Array{T,N},
-                          B::Array{T,N},
+                          B::Array{S,N},
                           perm,
-                          f = (x,y)->x+y) where {T,N}
+                          f = (x,y)->x+y) where {T,S,N}
   quote
     Base.checkdims_perm(P, B, perm)
 
