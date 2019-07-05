@@ -189,7 +189,12 @@ end
 
 #
 # Improvement ideas:
-# - rename tempMPO to "onsiteOps" or similar
+# - take leftmap & rightmap out of blocks
+# - replace blocks/MPOBlock with just Vector{Vector{MatElem{val_type}}}
+#   and call something like coefMats (it is the h^n_{a,b} matrix from Nakatani)
+# - tempMPO is the uncompressed MPO from Naktani, or part of it (A blocks)
+# - make actual MPO straightaway in compressMPO? or still have
+#   separate constructMPOTensors function?
 #
 
 function partitionHTerms(sites::SiteSet,
