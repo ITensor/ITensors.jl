@@ -1,5 +1,4 @@
 export SiteOp,
-       OpTerm,
        MPOTerm,
        AutoMPO,
        terms,
@@ -25,30 +24,15 @@ Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
 ###########################
 
 const OpTerm = Vector{SiteOp}
-#struct OpTerm
-#  ops::Vector{SiteOp}
-#end
-#ops(t::OpTerm) = t.ops
-#
-#function ==(t1::OpTerm,
-#            t2::OpTerm)::Bool
-#  t1l = length(t1)
-#  (t1l != length(t2)) && return false
-#  for n=1:t1l
-#    (t1[n] != t2[n]) && return false
-#  end
-#  return true
-#end
 
 ###########################
 # MPOTerm                 # 
 ###########################
 
-const Coef = ComplexF64
 
 struct MPOTerm
-  coef::Coef
-  ops::Vector{SiteOp}
+  coef::ComplexF64
+  ops::OpTerm
 end
 coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
@@ -57,13 +41,13 @@ length(op::MPOTerm) = length(op.ops)
 function MPOTerm(c::Number,
                  op1::String,
                  i1::Int) 
-  return MPOTerm(convert(Coef,c),[SiteOp(op1,i1)])
+  return MPOTerm(convert(ComplexF64,c),[SiteOp(op1,i1)])
 end
 
 function MPOTerm(c::Number,
                  op1::String,i1::Int,
                  op2::String,i2::Int)
-  return MPOTerm(convert(Coef,c),[SiteOp(op1,i1),SiteOp(op2,i2)])
+  return MPOTerm(convert(ComplexF64,c),[SiteOp(op1,i1),SiteOp(op2,i2)])
 end
 
 function Base.show(io::IO,
@@ -127,8 +111,9 @@ function show(io::IO,
   end
 end
 
-###############
-###############
+##################################
+# MatElem (simple sparse matrix) #
+##################################
 
 struct MatElem{T}
   row::Int
@@ -153,6 +138,10 @@ function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
   end
   return M
 end
+
+##################################
+# MPOBlock                       #
+##################################
 
 mutable struct MPOBlock{T}
   leftmap::Vector{OpTerm}
@@ -190,9 +179,11 @@ end
 #
 # Improvement ideas:
 # - take leftmap & rightmap out of blocks
-# - replace blocks/MPOBlock with just Vector{Vector{MatElem{val_type}}}
-#   and call something like coefMats (it is the h^n_{a,b} matrix from Nakatani)
-# - tempMPO is the uncompressed MPO from Naktani, or part of it (A blocks)
+#   maybe just a single "bondmap", no left/right distinction
+# - do a "dry run" making left/right/bondmap to determine h_{ab}
+#   (blocks) and tempMPO matrix sizes, then use dense matrices for these
+# - rename "blocks" to something like "coefMats"
+#   (it is just the h^n_{a,b} matrix from Nakatani)
 # - make actual MPO straightaway in compressMPO? or still have
 #   separate constructMPOTensors function?
 #
@@ -356,17 +347,15 @@ end
 #                             ; kwargs...)::MPO
 #end
 
+function determineValType(ampo::AutoMPO)
+  for t in terms(ampo) 
+    (!isreal(coef(t))) && return ComplexF64
+  end
+  return Float64
+end
 
 function svdMPO(ampo::AutoMPO; kwargs...)
-
-  val_type = Float64
-  for t in terms(ampo) 
-    if imag(coef(t)) != 0.0
-      val_type = ComplexF64
-      break
-    end
-  end
-
+  val_type = determineValType(ampo)
   blocks,tempMPO = partitionHTerms(sites(ampo),terms(ampo),val_type;kwargs...)
   finalMPO,links = compressMPO(sites(ampo),blocks,tempMPO;kwargs...)
   #mpo = constructMPOTensors(sites(ampo),finalMPO,links;kwargs...)
