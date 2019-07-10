@@ -234,11 +234,13 @@ function partitionHTerms(sites::SiteSet,
   end
   for n=1:N
     println("n = $n")
-    @show blocks[n]
-    println()
-    @show tempMPO[n]
+    @show blocks[n].leftmap
+    @show blocks[n].rightmap
+    #println()
+    #@show tempMPO[n]
     println()
   end
+  exit(0)
   return blocks,tempMPO
 end
 
