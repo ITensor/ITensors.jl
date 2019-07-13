@@ -7,15 +7,18 @@ mutable struct MPS
 
   MPS() = new(0,Vector{ITensor}(),0,0)
 
-  function MPS(N::Int, A::Vector{ITensor}, llim::Int, rlim::Int)
+  function MPS(N::Int, 
+               A::Vector{ITensor}, 
+               llim::Int=0, 
+               rlim::Int=N+1)
     new(N,A,llim,rlim)
   end
   
   function MPS(sites)
     N = length(sites)
     v = Vector{ITensor}(undef, N)
-    l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
-    for ii in 1:N
+    l = [Index(1, "Link,l=$ii") for ii=1:N-1]
+    for ii=1:N
       s = sites[ii]
       if ii == 1
         v[ii] = ITensor(l[ii], s)
@@ -25,14 +28,14 @@ mutable struct MPS
         v[ii] = ITensor(l[ii-1], l[ii], s)
       end
     end
-    new(N,v,0,N+1)
+    new(N,v)
   end
 
   function MPS(::Type{T}, is::InitState) where {T}
     N = length(is)
     its = Vector{ITensor}(undef, length(is))
     link_inds  = Vector{Index}(undef, length(is))
-    for ii in 1:N
+    for ii=1:N
         i_is = is[ii]
         i_site = site(is, ii)
         spin_op = op(T(i_site), i_is)
@@ -80,7 +83,7 @@ copy(m::MPS) = MPS(m.N_,copy(m.A_),m.llim_,m.rlim_)
 function dag(m::MPS)
   N = length(m)
   mdag = MPS(N)
-  for i ∈ 1:N
+  for i=1:N
     mdag[i] = dag(m[i])
   end
   return mdag
@@ -120,7 +123,7 @@ end
 function siteinds(M::MPS)
   N = length(M)
   is = IndexSet(N)
-  for j in 1:N
+  for j=1:N
     is[j] = siteindex(M,j)
   end
   return is
@@ -128,7 +131,7 @@ end
 
 function replacesites!(M::MPS,sites)
   N = length(M)
-  for j in 1:N
+  for j=1:N
     sj = siteindex(M,j)
     replaceindex!(M[j],sj,sites[j])
   end
