@@ -151,11 +151,6 @@ export dmrg
 
 include("mps/autompo.jl")
 
-# Development folder includes helper
-# codes not intended for final release,
-# just to ease development temporarily
-include("development/heisenberg.jl")
-
 mutable struct Timers
   contract_t::Float64
   contract_c::Int
