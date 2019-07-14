@@ -2,7 +2,8 @@ export norm,
        delta,
        δ,
        replaceindex!,
-       isNull
+       isNull,
+       normalize!
 
 mutable struct ITensor
   inds::IndexSet
