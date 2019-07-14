@@ -8,13 +8,13 @@
 
 + MPS/MPO algorithms
 
-+ AutoMPO (Miles)
-
 + Boson site set
 
 + QN Index
 
 + QN block-sparse tensors (with separate block-sparse library as discussed)
+
++ QN version of AutoMPO
 
 ## Performance Issues
 
