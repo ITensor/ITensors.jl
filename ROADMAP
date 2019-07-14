@@ -10,11 +10,18 @@
 
 + Boson site set
 
++ Fancier AutoMPO interface
+  Ideas:
+  1. ampo += "J Sz_{i} Sz_{i+1}" (using Meta.parse and eval)
+  2. ampo += J*"Sz"(i)*"Sz"(i+1) (using operator overloading)
+  3. define a macro @autompo or similar
+
 + QN Index
 
 + QN block-sparse tensors (with separate block-sparse library as discussed)
 
 + QN version of AutoMPO
+
 
 ## Performance Issues
 
