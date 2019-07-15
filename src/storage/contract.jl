@@ -1,20 +1,4 @@
 
-# Why do we need to do this?
-# Why not just get the extents from the indices?
-function compute_extents(r::Int,
-                         strides::Vector{Int},
-                         lastx::Int)::Vector{Int}
-  r==0 && return Vector{Int}()
-  exts = Int[]
-  tstr = 1
-  for n in 1:(r-1)
-    push!(exts,strides[n+1]/tstr)
-    tstr *= exts[n]
-  end
-  push!(exts,lastx)
-  return exts
-end
-
 mutable struct CProps
   ai::Vector{Int}
   bi::Vector{Int}
@@ -167,7 +151,6 @@ function compute!(props::CProps,
   rb = length(props.bi)
   rc = length(props.ci)
 
-  # props.PC = Permutation(rc)
   props.PC = fill(0,rc)
 
   props.dleft = 1
@@ -177,7 +160,7 @@ function compute!(props::CProps,
   for i = 1:ra
     if !contractedA(props,i)
       props.dleft *= size(A,i)
-      props.PC[c] = props.AtoC[i]
+      props.PC[props.AtoC[i]] = c
       c += 1
     else
       props.dmid *= size(A,i)
@@ -186,7 +169,7 @@ function compute!(props::CProps,
   for j = 1:rb
     if !contractedB(props,j)
       props.dright *= size(B,j)
-      props.PC[c] = props.BtoC[j]
+      props.PC[props.BtoC[j]] = c
       c += 1
     end
   end
@@ -276,7 +259,7 @@ function compute!(props::CProps,
       while !contractedB(props,bind) bind += 1 end
       j = find_index(props.ai,props.bi[bind])
       newi += 1
-      props.PA[j] = newi #+1
+      props.PA[newi] = j
       bind += 1
     end
     #Reset p.AtoC:
@@ -288,7 +271,7 @@ function compute!(props::CProps,
       j = find_index(props.ai,props.ci[k])
       if j!=-1
         props.AtoC[newi] = k
-        props.PA[j] = newi+1
+        props.PA[newi+1] = j
         newi += 1
       end
       newi==ra && break
@@ -323,7 +306,7 @@ function compute!(props::CProps,
       #TODO: check this is correct for 1-indexing
       while newi < props.ncont
         while !contractedB(props,i) i += 1 end
-        props.PB[i] = newi+1
+        props.PB[newi+1] = i
         i += 1
         newi += 1
       end
@@ -335,7 +318,7 @@ function compute!(props::CProps,
         while !contractedA(props,aind) aind += 1 end
         j = find_index(props.bi,props.ai[aind])
         newi += 1
-        props.PB[j] = newi
+        props.PB[newi] = j
         aind += 1
       end
     end
@@ -347,7 +330,7 @@ function compute!(props::CProps,
       j = find_index(props.bi,props.ci[k])
       if j!=-1
         props.BtoC[newi] = k
-        props.PB[j] = newi+1
+        props.PB[newi+1] = j
         newi += 1
       end
       newi==rb && break
@@ -370,14 +353,14 @@ function compute!(props::CProps,
     #TODO: check this is correct for 1-indexing
     for i = 1:ra
       if !contractedA(props,i)
-        props.PC[c] = props.AtoC[i]
+        props.PC[props.AtoC[i]] = c
         c += 1
       end
     end
     #TODO: check this is correct for 1-indexing
     for j = 1:rb
       if !contractedB(props,j)
-        props.PC[c] = props.BtoC[j]
+        props.PC[props.BtoC[j]] = c
         c += 1
       end
     end
@@ -441,11 +424,6 @@ function contract!(C::Array{T},
                    α::T=one(T),
                    β::T=zero(T)) where {T}
 
-  # TODO: This is because the permutation convention in C++ ITensor and
-  # permutedims in Julia is different
-  p.PA = inv(Permutation(p.PA)).data
-  p.PB = inv(Permutation(p.PB)).data
-  p.PC = inv(Permutation(p.PC)).data
 
   tA = 'N'
   if p.permuteA

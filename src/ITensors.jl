@@ -7,7 +7,6 @@ function pause()
 end
 
 using Random,
-      Permutations,
       Printf,
       LinearAlgebra,
       StaticArrays # For SmallString
