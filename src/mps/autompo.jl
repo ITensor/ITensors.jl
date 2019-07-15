@@ -23,6 +23,7 @@ end
 name(s::SiteOp) = s.name
 site(s::SiteOp) = s.site
 Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
+Base.isless(s1::SiteOp,s2::SiteOp) = (s1.site < s2.site)
 
 ###########################
 # OpTerm                  # 
@@ -169,12 +170,12 @@ function multSiteOps(A::ITensor,
   return mapprime(R,2,1)
 end
 
-function computeProd(sites::SiteSet,
-                     ops::OpTerm)::ITensor
+function computeSiteProd(sites::SiteSet,
+                         ops::OpTerm)::ITensor
   i = ops[1].site
   T = op(sites,ops[1].name,i)
   for j=2:length(ops)
-    (ops[j].i != i) && error("Mismatch of site number in computeProd")
+    (ops[j].i != i) && error("Mismatch of site number in computeSiteProd")
     opj = op(sites,ops[j].name,i)
     T = multSiteOps(T,opj)
   end
@@ -313,7 +314,7 @@ function svdMPO(ampo::AutoMPO;
     H[n] = ITensor(dag(s),s',ll,rl)
     for (op,M) in finalMPO
       T = ITensor(M,ll,rl)
-      H[n] += T*computeProd(sites(ampo),op)
+      H[n] += T*computeSiteProd(sites(ampo),op)
     end
 
   end
@@ -330,8 +331,14 @@ function svdMPO(ampo::AutoMPO;
   return H
 end
 
+function sortEachTerm!(ampo::AutoMPO)
+  for t in terms(ampo)
+    sort!(ops(t),alg=InsertionSort)
+  end
+end
 
 function toMPO(ampo::AutoMPO; 
                kwargs...)::MPO
+  sortEachTerm!(ampo)
   return svdMPO(ampo;kwargs...)
 end
