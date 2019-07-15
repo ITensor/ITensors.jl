@@ -15,12 +15,13 @@ function main()
 
   psi = randomMPS(sites)
 
-  sw = Sweeps(5)
-  maxdim!(sw,10,20,100,100,200)
-  cutoff!(sw,1E-11)
+  sweeps = Sweeps(5)
+  maxdim!(sweeps,10,20,100,100,200)
+  cutoff!(sweeps,1E-11)
+  @show sweeps
 
   println("Starting DMRG")
-  energy,psi = @time dmrg(H,psi,sw,maxiter=2)
+  energy,psi = @time dmrg(H,psi,sweeps,maxiter=2)
   @printf "Final energy = %.12f\n" energy
   @show inner(psi,H,psi)
 end

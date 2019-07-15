@@ -90,8 +90,8 @@ end
 
 function Base.show(io::IO,
                    sw::Sweeps)
-  println(io,"Sweeps:")
+  println(io,"Sweeps")
   for n=1:nsweep(sw)
-    @printf(io,"  %d cutoff=%.1E, maxdim=%d, mindim=%d\n",n,cutoff(sw,n),maxdim(sw,n),mindim(sw,n))
+    @printf(io,"%d cutoff=%.1E, maxdim=%d, mindim=%d\n",n,cutoff(sw,n),maxdim(sw,n),mindim(sw,n))
   end
 end
