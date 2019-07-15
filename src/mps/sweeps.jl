@@ -1,3 +1,12 @@
+export Sweeps,
+       nsweep,
+       maxdim,
+       mindim,
+       cutoff,
+       maxdim!,
+       mindim!,
+       cutoff!,
+       sweepnext
 
 mutable struct Sweeps
   nsweep::Int
@@ -12,6 +21,7 @@ mutable struct Sweeps
 end
 
 nsweep(sw::Sweeps)::Int = sw.nsweep
+length(sw::Sweeps)::Int = sw.nsweep
 
 maxdim(sw::Sweeps,n::Int)::Int = sw.maxdim[n]
 mindim(sw::Sweeps,n::Int)::Int = sw.mindim[n]
@@ -78,23 +88,10 @@ function iterate(sn::SweepNext,state=(0,1))
   return ((new_b,new_ha),(new_b,new_ha))
 end
 
-#function sweepnext(b::Int,
-#                   ha::Int,
-#                   N::Int)::Tuple{Int,Int,Bool}
-#  if ha==1
-#    inc = 1
-#    bstop = N
-#  else
-#    inc = -1
-#    bstop = 0
-#  end
-#  new_b = b+inc
-#  new_ha = ha
-#  done = false
-#  if new_b==bstop
-#    new_b -= inc
-#    new_ha += 1
-#    (ha==2) && (done = true)
-#  end
-#  return (new_b,new_ha,done)
-#end
+function Base.show(io::IO,
+                   sw::Sweeps)
+  println(io,"Sweeps:")
+  for n=1:nsweep(sw)
+    @printf(io,"  %d cutoff=%.1E, maxdim=%d, mindim=%d\n",n,cutoff(sw,n),maxdim(sw,n),mindim(sw,n))
+  end
+end

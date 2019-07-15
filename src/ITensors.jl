@@ -129,16 +129,6 @@ export MPO,
        randomMPO
 
 include("mps/sweeps.jl")
-export Sweeps,
-       nsweep,
-       maxdim,
-       mindim,
-       cutoff,
-       maxdim!,
-       mindim!,
-       cutoff!,
-       sweepnext
-
 
 include("mps/projmpo.jl")
 export ProjMPO,
