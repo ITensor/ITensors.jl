@@ -109,19 +109,19 @@ end
     @test Oa ≈ Oe
   end
 
-  #@testset "Ising-Different Order" begin
-  #  sites = spinHalfSites(N)
-  #  ampo = AutoMPO(sites)
-  #  for j=1:N-1
-  #    add!(ampo,"Sz",j+1,"Sz",j)
-  #  end
-  #  Ha = toMPO(ampo)
-  #  He = isingMPO(sites)
-  #  psi = makeRandomMPS(sites)
-  #  Oa = inner(psi,Ha,psi)
-  #  Oe = inner(psi,He,psi)
-  #  @test Oa ≈ Oe
-  #end
+  @testset "Ising-Different Order" begin
+    sites = spinHalfSites(N)
+    ampo = AutoMPO(sites)
+    for j=1:N-1
+      add!(ampo,"Sz",j+1,"Sz",j)
+    end
+    Ha = toMPO(ampo)
+    He = isingMPO(sites)
+    psi = makeRandomMPS(sites)
+    Oa = inner(psi,Ha,psi)
+    Oe = inner(psi,He,psi)
+    @test Oa ≈ Oe
+  end
 
   @testset "Heisenberg" begin
     sites = spinHalfSites(N)
