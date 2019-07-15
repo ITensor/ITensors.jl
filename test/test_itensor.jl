@@ -262,3 +262,25 @@ end
     end
   end # End ITensor factorization testset
 end # End Dense storage test
+
+@testset "Converting Real and Complex Storage" begin
+
+  @testset "Add Real and Complex" begin
+    i = Index(2,"i")
+    j = Index(2,"j")
+    TC = randomITensor(ComplexF64,i,j)
+    TR = randomITensor(Float64,i,j)
+
+    S1 = TC+TR
+    S2 = TR+TC
+    @test typeof(S1.store) == Dense{ComplexF64}
+    @test typeof(S2.store) == Dense{ComplexF64}
+    for ii=1:dim(i),jj=1:dim(j)
+      @test S1[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
+      @test S2[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
+    end
+  end
+
+end
+
+
