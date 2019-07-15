@@ -84,6 +84,17 @@ end
 
   N = 10
 
+  @testset "Single creation op" begin
+    sites = electronSites(N)
+    ampo = AutoMPO(sites)
+    add!(ampo,"Cdagup",3)
+    W = toMPO(ampo)
+    psi = makeRandomMPS(sites)
+    cdu_psi = copy(psi)
+    cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
+    @test inner(psi,W,psi) ≈ inner(cdu_psi,psi)
+  end
+
   @testset "Ising" begin
     sites = spinHalfSites(N)
     ampo = AutoMPO(sites)
