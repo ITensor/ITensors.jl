@@ -4,8 +4,6 @@ export SiteOp,
        terms,
        add!,
        toMPO
-       #multSiteOps, #debug
-       #MatElem #debug
 
 import LinearAlgebra.svd
 
@@ -31,7 +29,6 @@ mult(t1::OpTerm,t2::OpTerm) = isempty(t2) ? t1 : vcat(t1,t2)
 ###########################
 # MPOTerm                 # 
 ###########################
-
 
 struct MPOTerm
   coef::ComplexF64
@@ -144,6 +141,7 @@ end
 
 function posInLink!(linkmap::Vector{OpTerm},
                     op::OpTerm)::Int
+  isempty(op) && return -1
   for n=1:length(linkmap)
     (linkmap[n]==op) && return n
   end
@@ -172,7 +170,6 @@ function partitionHTerms(sites::SiteSet,
 
   for term in terms 
     for n=ops(term)[1].site:ops(term)[end].site
-      #println("n = $n")
       left::OpTerm   = filter(t->(t.site < n),ops(term))
       onsite::OpTerm = filter(t->(t.site == n),ops(term))
       right::OpTerm  = filter(t->(t.site > n),ops(term))
@@ -187,12 +184,7 @@ function partitionHTerms(sites::SiteSet,
       end
 
       A_row = bond_col
-      if isempty(right)
-        A_col = -1
-      else
-        A_col = posInLink!(rightmap[n],right)
-      end
-
+      A_col = posInLink!(rightmap[n],right)
       site_coef = 1.0+0.0im
       if A_row == -1
         site_coef = coef(term)
