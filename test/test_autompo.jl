@@ -52,7 +52,8 @@ function isingMPO(sites::SiteSet)::MPO
   return H
 end
 
-function heisenbergMPO(sites::SiteSet)::MPO
+function heisenbergMPO(sites::SiteSet,
+                       h::Vector{Float64})::MPO
   H = MPO(sites)
   N = length(H)
   link = fill(Index(),N+1)
@@ -72,6 +73,7 @@ function heisenbergMPO(sites::SiteSet)::MPO
     H[n] += setElt(ll[5])*setElt(rl[2])*op(sites,"S-",n)*0.5
     H[n] += setElt(ll[5])*setElt(rl[3])*op(sites,"S+",n)*0.5
     H[n] += setElt(ll[5])*setElt(rl[4])*op(sites,"Sz",n)
+    H[n] += setElt(ll[5])*setElt(rl[1])*op(sites,"Sz",n)*h[n]
   end
   H[1] *= setElt(link[1][5])
   H[N] *= setElt(link[N+1][1])
@@ -99,13 +101,16 @@ end
   @testset "Heisenberg" begin
     sites = spinHalfSites(N)
     ampo = AutoMPO(sites)
+    h = rand(N) #random magnetic fields
     for j=1:N-1
       add!(ampo,"Sz",j,"Sz",j+1)
       add!(ampo,0.5,"S+",j,"S-",j+1)
       add!(ampo,0.5,"S-",j,"S+",j+1)
+      add!(ampo,h[j],"Sz",j)
     end
+    add!(ampo,h[N],"Sz",N)
     Ha = toMPO(ampo)
-    He = heisenbergMPO(sites)
+    He = heisenbergMPO(sites,h)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
     Oe = inner(psi,He,psi)
