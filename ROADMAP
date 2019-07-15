@@ -26,6 +26,8 @@
 
 + QN version of AutoMPO
 
++ Split site sets, AutoMPO into separate ITensor physics package?
+
 
 ## Performance Issues
 
