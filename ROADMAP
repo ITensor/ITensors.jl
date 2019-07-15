@@ -4,6 +4,12 @@
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
   - improve definitions and handling of parameters such as miniter, maxiter
 
++ Reduce dependencies 
+  - Permutations (let's remove)
+  - KrylovKit (let's remove)
+  - Combinatorics (requires ImageMagick; let's move to test-only dependency or remove)
+  - QuadGK (let's move to test-only)
+
 + MPS/MPO algorithms
 
 + Boson site set
@@ -45,4 +51,4 @@
 ## Final Release Checks
 
 + Make sure installation is clean on a brand new Julia install (no libraries at all)
-+ Reduce dependencies (Combinatorics requires ImageMagick??)
++ Ensure dependencies are the true minimum amount
