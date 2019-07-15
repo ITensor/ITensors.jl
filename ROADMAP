@@ -4,9 +4,9 @@
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
   - improve definitions and handling of parameters such as miniter, maxiter
 
-+ Improve printing of Sweeps
-
 + MPS/MPO algorithms
+
++ Improve printing of Sweeps
 
 + Boson site set
 
@@ -27,9 +27,6 @@
 
 ## Design Questions
 
-+ Use Reexport.jl to better organize modules and export commands?
-  Does it lead to faster loading / JIT times?
-
 + Should we rename methods like storage_svd etc. to just svd?
   Arguments for changing:
     - could use storage objects better in generic algorithms
@@ -46,7 +43,6 @@
   This optimization makes IndexSets not allocate on the heap until 
   the number of indices exceeds a certain size. Use a stack-allocated / non-allocating
   fixed-size array or tuple to hold indices below that size.
-
 
 ## Final Release Checks
 
