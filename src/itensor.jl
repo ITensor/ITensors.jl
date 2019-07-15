@@ -1,9 +1,17 @@
-export norm,
+export ITensor,
+       norm,
        delta,
+       dims,
        δ,
        replaceindex!,
+       inds,
        isNull,
-       normalize!
+       normalize!,
+       order,
+       permute,
+       randomITensor,
+       scalar,
+       store
 
 mutable struct ITensor
   inds::IndexSet

@@ -1,3 +1,5 @@
+export dmrg
+
 #using KrylovKit: Lanczos, eigsolve
 
 

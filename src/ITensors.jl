@@ -46,36 +46,6 @@ import Base.adjoint,
        LinearAlgebra.rmul!,
        Random.randn!
 
-## Types
-export Dense,
-       TagSet,
-       Index,
-       IndexVal,
-       IndexSet,
-       ITensor,
-       In,
-       Out,
-       Neither
-
-## Functions
-export prime,
-       setprime,
-       noprime,
-       plev,
-       tags,
-       order,
-       dims,
-       randomITensor,
-       id,
-       inds,
-       scalar,
-       permute,
-       store,
-       data,
-       dag,
-       dir,
-       sim,
-       val
 
 #TODO: continue work on SmallString, use as Tags
 include("smallstring.jl")
@@ -94,51 +64,16 @@ include("iterativesolvers.jl")
 # MPS/MPO
 #
 include("mps/siteset.jl")
-
 include("mps/sitesets/spinhalf.jl")
-export SpinHalfSite,
-       spinHalfSites
 include("mps/sitesets/spinone.jl")
-export SpinOneSite,
-       spinOneSites
 include("mps/sitesets/electron.jl")
-export ElectronSite,
-       electronSites
 include("mps/sitesets/tj.jl")
-export tJSite,
-       tjSites
-
 include("mps/initstate.jl")
-export InitState
-
 include("mps/mps.jl")
-export MPS,
-       position!,
-       prime!,
-       primelinks!,
-       simlinks!,
-       inner,
-       randomMPS,
-       maxDim,
-       linkindex,
-       siteindex,
-       siteinds
-
 include("mps/mpo.jl")
-export MPO,
-       randomMPO
-
 include("mps/sweeps.jl")
-
 include("mps/projmpo.jl")
-export ProjMPO,
-       LProj,
-       RProj,
-       product
-
 include("mps/dmrg.jl")
-export dmrg
-
 include("mps/autompo.jl")
 
 mutable struct Timers

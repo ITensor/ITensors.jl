@@ -1,3 +1,14 @@
+export MPS,
+       position!,
+       prime!,
+       primelinks!,
+       simlinks!,
+       inner,
+       randomMPS,
+       maxDim,
+       linkindex,
+       siteindex,
+       siteinds
 
 mutable struct MPS
   N_::Int

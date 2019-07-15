@@ -1,3 +1,5 @@
+export SpinHalfSite,
+       spinHalfSites
 
 struct SpinHalfSite <: Site
     s::Index

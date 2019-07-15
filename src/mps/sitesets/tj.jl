@@ -1,3 +1,5 @@
+export tJSite,
+       tjSites
 
 struct tJSite <: Site
   s::Index

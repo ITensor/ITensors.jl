@@ -1,3 +1,5 @@
+export Dense
+
 contract_t = 0.0
 
 struct Dense{T} <: TensorStorage

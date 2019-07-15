@@ -1,3 +1,4 @@
+export data
 
 abstract type TensorStorage end
 

@@ -1,6 +1,10 @@
-export adjoint,
+export Index,
+       IndexVal,
+       adjoint,
+       dag,
        dim,
        prime,
+       noprime,
        addtags,
        settags,
        replacetags,
@@ -12,9 +16,12 @@ export adjoint,
        plev,
        tags,
        ind,
+       setprime,
+       sim,
        Neither,
        In,
-       Out
+       Out,
+       val
 
 const IDType = UInt64
 

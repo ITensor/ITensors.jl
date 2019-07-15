@@ -1,3 +1,5 @@
+export SpinOneSite,
+       spinOneSites
 
 struct SpinOneSite <: Site
     s::Index

@@ -1,3 +1,4 @@
+export TagSet
 
 const Tag = SmallString
 const MTagStorage = MSmallStringStorage # A mutable tag storage

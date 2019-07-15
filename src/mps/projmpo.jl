@@ -1,3 +1,8 @@
+export ProjMPO,
+       LProj,
+       RProj,
+       product
+
 mutable struct ProjMPO
   lpos::Int
   rpos::Int

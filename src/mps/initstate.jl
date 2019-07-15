@@ -1,3 +1,4 @@
+export InitState
 
 const LocalState = Union{Int,String}
 

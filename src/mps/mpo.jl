@@ -1,3 +1,5 @@
+export MPO,
+       randomMPO
 
 struct MPO
   N_::Int

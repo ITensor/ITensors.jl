@@ -1,4 +1,5 @@
-export hasindex,
+export IndexSet,
+       hasindex,
        hasinds,
        hassameinds,
        findindex,

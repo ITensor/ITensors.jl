@@ -1,3 +1,5 @@
+export ElectronSite,
+       electronSites
 
 struct ElectronSite <: Site
   s::Index
