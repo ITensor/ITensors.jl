@@ -109,6 +109,7 @@ end
       add!(ampo,h[j],"Sz",j)
     end
     add!(ampo,h[N],"Sz",N)
+
     Ha = toMPO(ampo)
     He = heisenbergMPO(sites,h)
     psi = makeRandomMPS(sites)
