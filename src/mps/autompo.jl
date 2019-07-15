@@ -1,3 +1,8 @@
+#
+# Optimizations:
+#  - replace leftmap, rightmap with Dicts
+# 
+
 export SiteOp,
        MPOTerm,
        AutoMPO,
@@ -163,13 +168,20 @@ function partitionHTerms(sites::SiteSet,
 
   ValType = determineValType(terms)
 
-  leftmap = [OpTerm[] for n=1:N]
-  rightmap = [OpTerm[] for n=1:N]
   bond_coefs = [MatElem{ValType}[] for n=1:N]
   tempMPO = [Set(MatElem{MPOTerm}[]) for n=1:N]
 
-  for term in terms 
-    for n=ops(term)[1].site:ops(term)[end].site
+  crosses_bond(t::MPOTerm,n::Int) = (ops(t)[1].site <= n <= ops(t)[end].site)
+
+  rightmap = OpTerm[]
+  next_rightmap = OpTerm[]
+  
+  for n=1:N
+
+    leftmap = OpTerm[]
+    for term in terms 
+      crosses_bond(term,n) || continue
+
       left::OpTerm   = filter(t->(t.site < n),ops(term))
       onsite::OpTerm = filter(t->(t.site == n),ops(term))
       right::OpTerm  = filter(t->(t.site > n),ops(term))
@@ -177,14 +189,14 @@ function partitionHTerms(sites::SiteSet,
       bond_row = -1
       bond_col = -1
       if !isempty(left)
-        bond_row = posInLink!(leftmap[n-1],left)
-        bond_col = posInLink!(rightmap[n-1],mult(onsite,right))
+        bond_row = posInLink!(leftmap,left)
+        bond_col = posInLink!(rightmap,mult(onsite,right))
         bond_coef = convert(ValType,coef(term))
         push!(bond_coefs[n-1],MatElem(bond_row,bond_col,bond_coef))
       end
 
       A_row = bond_col
-      A_col = posInLink!(rightmap[n],right)
+      A_col = posInLink!(next_rightmap,right)
       site_coef = 1.0+0.0im
       if A_row == -1
         site_coef = coef(term)
@@ -192,18 +204,10 @@ function partitionHTerms(sites::SiteSet,
       el = MatElem(A_row,A_col,MPOTerm(site_coef,onsite))
       push!(tempMPO[n],el)
     end
+    rightmap = next_rightmap
+    next_rightmap = OpTerm[]
 
   end
-
-  #for n=1:N
-  #  println("n = $n")
-  #  @show leftmap[n]
-  #  @show rightmap[n]
-  #  println()
-  #  @show tempMPO[n]
-  #  println()
-  #end
-  #exit(0)
 
   return bond_coefs,tempMPO
 end
@@ -254,7 +258,6 @@ function compressMPO(sites::SiteSet,
   H = MPO(sites)
 
   for n=1:N
-    #println("\n\nn = $n\n~~~~~~~~~~~~~~~~\n\n")
     tdim = 0
     if !isempty(bond_coefs[n])
       M = toMatrix(bond_coefs[n])
