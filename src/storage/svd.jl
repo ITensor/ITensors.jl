@@ -45,7 +45,10 @@ function recursiveSVD(M::AbstractMatrix{T}) where {T}
   Mr,Mc = size(M)
 
   if Mr > Mc
-    return recursiveSVD(transpose(M))
+    V,S,U = recursiveSVD(transpose(M))
+    conj!(U)
+    conj!(V)
+    return U,S,V
   end
 
   #rho = BLAS.gemm('N','T',-1.0,M,M) #negative to sort eigenvalues greatest to smallest

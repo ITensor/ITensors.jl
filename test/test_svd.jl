@@ -27,13 +27,21 @@ using ITensors,
   end
 
   @testset "Real Matrix" begin
-    M = rand(10,10)
+    M = rand(10,20)
+    U,S,V = recursiveSVD(M)
+    @test norm(U*Diagonal(S)*V'-M) < 1E-13
+
+    M = rand(20,10)
     U,S,V = recursiveSVD(M)
     @test norm(U*Diagonal(S)*V'-M) < 1E-13
   end
 
   @testset "Cplx Matrix" begin
-    M = rand(ComplexF64,10,10)
+    M = rand(ComplexF64,10,15)
+    U,S,V = recursiveSVD(M)
+    @test norm(U*Diagonal(S)*V'-M) < 1E-13
+
+    M = rand(ComplexF64,15,10)
     U,S,V = recursiveSVD(M)
     @test norm(U*Diagonal(S)*V'-M) < 1E-13
   end
