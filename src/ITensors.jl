@@ -43,6 +43,7 @@ import Base.adjoint,
        LinearAlgebra.norm,
        LinearAlgebra.mul!,
        LinearAlgebra.rmul!,
+       LinearAlgebra.normalize!,
        Random.randn!
 
 
