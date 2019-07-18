@@ -262,10 +262,17 @@ function storage_svd(Astore::Dense{T},
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
   utags::String = get(kwargs,:utags,"Link,u")
   vtags::String = get(kwargs,:vtags,"Link,v")
+  fastSVD::Bool = get(kwargs,:fastSVD,false)
 
   global timer.svd_store_svd_t += @elapsed begin
-  MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
-  MV = conj!(MV)
+
+    if fastSVD
+      MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
+    else
+      MU,MS,MV = recursiveSVD(reshape(data(Astore),dim(Lis),dim(Ris)))
+    end
+    MV = conj!(MV)
+
   end
   global timer.svd_store_svd_c += 1
 
