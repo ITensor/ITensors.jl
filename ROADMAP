@@ -3,6 +3,8 @@
 + Finish recursive step of recursiveSVD function; test accuracy
   (Also try V-normalization idea for optimizing)
 
++ Read/write of ITensors and other objects, using HDF5 format
+
 + davidson improvements
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
   - improve definitions and handling of parameters such as miniter, maxiter
