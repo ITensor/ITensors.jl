@@ -11,3 +11,6 @@ The ITensor library also includes composable and extensible
 algorithms for optimizing and transforming tensor networks, such as 
 matrix product state and matrix product operators, such as
 the DMRG algorithm.
+
+Development of ITensor is supported by the Simons Foundation 
+through the Flatiron Institute.
