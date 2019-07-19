@@ -1,9 +1,14 @@
 ## Misc To Do
 
++ Finish prime & tag methods
+  - mapPrime
+
 + Finish recursive step of recursiveSVD function; test accuracy
   (Also try V-normalization idea for optimizing)
 
 + Read/write of ITensors and other objects, using HDF5 format
+
++ Combiner storage for ITensor. Should be easy for Dense case.
 
 + davidson improvements
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
@@ -12,14 +17,23 @@
 + Reduce dependencies 
   - Permutations (let's remove)
   - KrylovKit (let's remove)
-  - Combinatorics (requires ImageMagick; let's move to test-only dependency or remove)
+  - Combinatorics (requires ImageMagick(!); let's move to test-only dependency or remove)
   - QuadGK (let's move to test-only)
 
 + MPS/MPO algorithms
+  - sum
+  - applyMPO
+  - errorMPOProd
+  - multMPO (renamed from nmultMPO, or provide a wrapper for convenience)
+
++ Additional DMRG algorithms:
+  - Vector of MPOs
+  - orthogonalize against previous MPS
+  - supply boundary environment tensors
 
 + Boson site set
-
-+ Fancier AutoMPO interface
+ 
++ Fancier AutoMPO interface?
   Ideas:
   1. ampo += "J Sz_{i} Sz_{i+1}" (using Meta.parse and eval)
   2. ampo += J*"Sz"(i)*"Sz"(i+1) (using operator overloading)
@@ -31,7 +45,9 @@
 
 + QN version of AutoMPO
 
-+ Split site sets, AutoMPO into separate ITensor physics package?
++ Move AutoMPO & physics site sets into separate ITensor physics package?
+
++ Slicing of ITensors
 
 
 ## Performance Issues
