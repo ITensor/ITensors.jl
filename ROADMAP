@@ -1,5 +1,8 @@
 ## Misc To Do
 
++ Finish recursive step of recursiveSVD function; test accuracy
+  (Also try V-normalization idea for optimizing)
+
 + davidson improvements
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
   - improve definitions and handling of parameters such as miniter, maxiter
