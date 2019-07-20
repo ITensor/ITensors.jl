@@ -1,5 +1,8 @@
 using ITensors
 using Printf
+#using Logging
+##Set global logging level to Debug to show timers
+#global_logger(SimpleLogger(stdout, Logging.Debug))
 
 function main()
   N = 100
