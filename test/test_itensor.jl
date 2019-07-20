@@ -159,6 +159,11 @@ end
     A2p = prime(A2,"s=2")
     @test hasinds(A2p,s2',l',l'')
   end
+
+  @testset "mapprime" begin
+    @test hasinds(mapprime(A2,1,7),s2,l^7,l'')
+    @test hasinds(mapprime(A2,0,1),s2',l',l'')
+  end
 end
 
 @testset "ITensor, Dense{$SType} storage" for SType ∈ (Float64,ComplexF64)

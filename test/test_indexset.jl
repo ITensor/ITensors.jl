@@ -43,4 +43,16 @@ using ITensors,
     @test commoninds(I,J) == IndexSet(i,j)
     @test commoninds(J,I) == IndexSet(j,i)
   end
+
+  @testset "mapprime" begin
+    I = IndexSet(i',k'',j)
+    @test mapprime(I,1,5) == IndexSet(i^5,k'',j)
+    @test mapprime(I,2,0) == IndexSet(i',k,j)
+
+    J = IndexSet(i,j,k')
+    @test mapprime(J,0,2) == IndexSet(i'',j'',k')
+
+    mapprime!(J,1,5)
+    @test J == IndexSet(i,j,k^5)
+  end
 end
