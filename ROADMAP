@@ -1,9 +1,11 @@
 ## Misc To Do
 
++ Alphabetize export statements
+
 + Finish prime & tag methods
 
 + Unit tests for AutoMPO
-  - more than one on-site operator
+  X more than one on-site operator
   - more than 2-site operators
 
 + Finish recursive step of recursiveSVD function; test accuracy

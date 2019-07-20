@@ -53,7 +53,8 @@ function isingMPO(sites::SiteSet)::MPO
 end
 
 function heisenbergMPO(sites::SiteSet,
-                       h::Vector{Float64})::MPO
+                       h::Vector{Float64},
+                       onsite::String="Sz")::MPO
   H = MPO(sites)
   N = length(H)
   link = fill(Index(),N+1)
@@ -73,7 +74,7 @@ function heisenbergMPO(sites::SiteSet,
     H[n] += setElt(ll[5])*setElt(rl[2])*op(sites,"S-",n)*0.5
     H[n] += setElt(ll[5])*setElt(rl[3])*op(sites,"S+",n)*0.5
     H[n] += setElt(ll[5])*setElt(rl[4])*op(sites,"Sz",n)
-    H[n] += setElt(ll[5])*setElt(rl[1])*op(sites,"Sz",n)*h[n]
+    H[n] += setElt(ll[5])*setElt(rl[1])*op(sites,onsite,n)*h[n]
   end
   H[1] *= setElt(link[1][5])
   H[N] *= setElt(link[N+1][1])
@@ -137,6 +138,25 @@ end
 
     Ha = toMPO(ampo)
     He = heisenbergMPO(sites,h)
+    psi = makeRandomMPS(sites)
+    Oa = inner(psi,Ha,psi)
+    Oe = inner(psi,He,psi)
+    @test Oa ≈ Oe
+  end
+
+  @testset "Multiple Onsite Ops" begin
+    sites = spinOneSites(N)
+    ampo = AutoMPO(sites)
+    for j=1:N-1
+      add!(ampo,"Sz",j,"Sz",j+1)
+      add!(ampo,0.5,"S+",j,"S-",j+1)
+      add!(ampo,0.5,"S-",j,"S+",j+1)
+    end
+    for j=1:N
+      add!(ampo,"Sz*Sz",j)
+    end
+    Ha = toMPO(ampo)
+    He = heisenbergMPO(sites,ones(N),"Sz*Sz")
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
     Oe = inner(psi,He,psi)
