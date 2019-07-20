@@ -1,7 +1,10 @@
 ## Misc To Do
 
 + Finish prime & tag methods
-  - mapPrime
+
++ Unit tests for AutoMPO
+  - more than one on-site operator
+  - more than 2-site operators
 
 + Finish recursive step of recursiveSVD function; test accuracy
   (Also try V-normalization idea for optimizing)
@@ -44,6 +47,8 @@
 + QN block-sparse tensors (with separate block-sparse library as discussed)
 
 + QN version of AutoMPO
+
++ Fermion support for AutoMPO (possibly through auto fermionic signs)
 
 + Move AutoMPO & physics site sets into separate ITensor physics package?
 

@@ -7,6 +7,7 @@ export IndexSet,
        swaptags,
        swapprime,
        mapprime,
+       mapprime!,
        commoninds,
        commonindex,
        uniqueinds,
@@ -271,6 +272,27 @@ setprime(is::IndexSet, vargs...) = setprime!(copy(is), vargs...)
 
 noprime!(is::IndexSet, match = nothing) = setprime!(is, 0, match)
 noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
+
+function mapprime!(is::IndexSet,
+                   plold::Integer,
+                   plnew::Integer,
+                   match = nothing)
+  pos = indexpositions(is,match)
+  for n in pos
+    if plev(is[n])==plold 
+      is[n] = setprime(is[n],plnew)
+    end
+  end
+  return is
+end
+
+function mapprime(is::IndexSet,
+                  plold::Integer,
+                  plnew::Integer,
+                  match=nothing)
+  return mapprime!(copy(is),plold,plnew,match)
+end
+
 
 function addtags!(is::IndexSet,
                   tags,
