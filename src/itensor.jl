@@ -17,7 +17,7 @@ mutable struct ITensor
   inds::IndexSet
   store::TensorStorage
   #TODO: check that the storage is consistent with the
-  #total dimension of the indices
+  #total dimension of the indices (possibly only in debug mode);
   ITensor(is::IndexSet,st::T) where T = new(is,st)
 end
 
