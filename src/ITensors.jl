@@ -34,6 +34,7 @@ import Base.adjoint,
        Base.-,
        Base.*,
        Base./,
+       Base.^,
        Base.complex,
        Base.setdiff,  # Since setdiff doesn't 
                       # work with IndexSet, overload it

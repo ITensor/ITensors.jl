@@ -99,7 +99,10 @@ setprime(i::Index, plev) = settags(i, setprime(tags(i), plev))
 noprime(i::Index) = setprime(i, 0)
 
 # To use the notation i' == prime(i)
-adjoint(i::Index) = prime(i)
+Base.adjoint(i::Index) = prime(i)
+
+# To use the notation i^5 == prime(i,5)
+^(i::Index,pl::Integer) = prime(i,pl)
 
 # Iterating over Index I gives
 # integers from 1...dim(I)
