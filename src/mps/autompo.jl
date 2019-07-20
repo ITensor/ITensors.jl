@@ -167,7 +167,7 @@ function computeSiteProd(sites::SiteSet,
   i = ops[1].site
   T = op(sites,ops[1].name,i)
   for j=2:length(ops)
-    (ops[j].i != i) && error("Mismatch of site number in computeSiteProd")
+    (ops[j].site != i) && error("Mismatch of site number in computeSiteProd")
     opj = op(sites,ops[j].name,i)
     T = multSiteOps(T,opj)
   end

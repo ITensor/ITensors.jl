@@ -146,21 +146,35 @@ end
 
   @testset "Multiple Onsite Ops" begin
     sites = spinOneSites(N)
-    ampo = AutoMPO(sites)
+    ampo1 = AutoMPO(sites)
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      add!(ampo1,"Sz",j,"Sz",j+1)
+      add!(ampo1,0.5,"S+",j,"S-",j+1)
+      add!(ampo1,0.5,"S-",j,"S+",j+1)
     end
     for j=1:N
-      add!(ampo,"Sz*Sz",j)
+      add!(ampo1,"Sz*Sz",j)
     end
-    Ha = toMPO(ampo)
+    Ha1 = toMPO(ampo1)
+
+    ampo2 = AutoMPO(sites)
+    for j=1:N-1
+      add!(ampo2,"Sz",j,"Sz",j+1)
+      add!(ampo2,0.5,"S+",j,"S-",j+1)
+      add!(ampo2,0.5,"S-",j,"S+",j+1)
+    end
+    for j=1:N
+      add!(ampo2,"Sz",j,"Sz",j)
+    end
+    Ha2 = toMPO(ampo2)
+
     He = heisenbergMPO(sites,ones(N),"Sz*Sz")
     psi = makeRandomMPS(sites)
-    Oa = inner(psi,Ha,psi)
     Oe = inner(psi,He,psi)
-    @test Oa ≈ Oe
+    Oa1 = inner(psi,Ha1,psi)
+    @test Oa1 ≈ Oe
+    Oa2 = inner(psi,Ha2,psi)
+    @test Oa2 ≈ Oe
   end
 
 end
