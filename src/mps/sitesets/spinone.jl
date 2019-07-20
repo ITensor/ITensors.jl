@@ -16,7 +16,7 @@ function spinOneSites(N::Int)::SiteSet
 end
 
 function operator(site::SpinOneSite, 
-                  opname::String)::ITensor
+                  opname::AbstractString)::ITensor
     s = site.s
     sP = prime(site.s)
     Up = s(1)

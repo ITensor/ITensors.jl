@@ -16,7 +16,7 @@ function spinHalfSites(N::Int)::SiteSet
 end
 
 function operator(site::SpinHalfSite, 
-                  opname::String)::ITensor
+                  opname::AbstractString)::ITensor
     s = site.s
     sP = prime(site.s)
     Up = s(1)

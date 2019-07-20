@@ -162,14 +162,6 @@ function determineValType(terms::Vector{MPOTerm})
   return Float64
 end
 
-function multSiteOps(A::ITensor,
-                     B::ITensor)::ITensor
-  R = copy(A)
-  prime!(R,"Site")
-  R *= B
-  return mapprime(R,2,1)
-end
-
 function computeSiteProd(sites::SiteSet,
                          ops::OpTerm)::ITensor
   i = ops[1].site

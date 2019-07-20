@@ -16,7 +16,7 @@ function electronSites(N::Int)::SiteSet
 end
 
 function operator(site::ElectronSite, 
-                  opname::String)::ITensor
+                  opname::AbstractString)::ITensor
     s  = site.s
     sP = prime(site.s)
     Emp   = s(1)

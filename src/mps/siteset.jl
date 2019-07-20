@@ -15,9 +15,11 @@ function operator(s::Site,opname::String)::ITensor
 end
 
 function op(site::Site,
-            opname::String)::ITensor
+            opname::AbstractString)::ITensor
   s = ind(site)
   sP = s'
+
+  opname = strip(opname)
 
   Op = ITensor(dag(s),sP)
   if opname == "Id"
@@ -25,6 +27,12 @@ function op(site::Site,
       Op[dag(s)(n),sP(n)] = 1.0
     end
   else
+    starpos = findfirst("*",opname)
+    if !isnothing(starpos)
+      op1 = opname[1:starpos.start-1]
+      op2 = opname[starpos.start+1:end]
+      return multSiteOps(op(site,op1),op(site,op2))
+    end
     return operator(site,opname)
   end
   return Op

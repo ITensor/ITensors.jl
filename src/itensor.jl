@@ -7,6 +7,7 @@ export ITensor,
        inds,
        isNull,
        normalize!,
+       multSiteOps,
        order,
        permute,
        randomITensor,
@@ -382,5 +383,13 @@ function similar(T::ITensor,
     error("similar(::ITensor) currently only defined for same element type")
   end
   return copy(T)
+end
+
+function multSiteOps(A::ITensor,
+                     B::ITensor)::ITensor
+  R = copy(A)
+  prime!(R,"Site")
+  R *= B
+  return mapprime(R,2,1)
 end
 
