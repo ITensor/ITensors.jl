@@ -135,14 +135,8 @@ arguments provided. The following keyword arguments are recognized:
 function svd(A::ITensor,
              Linds...;
              kwargs...)
-  global timer.svd_t += @elapsed begin
-    A,Lis,Ris = _permute_for_factorize(A,Linds...)
-    global timer.svd_store_t += @elapsed begin
-    Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
-    end
-    global timer.svd_store_c += 1
-  end
-  global timer.svd_c += 1
+  A,Lis,Ris = _permute_for_factorize(A,Linds...)
+  Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
 
   U = ITensor(Uis,Ustore)
   S = ITensor(Sis,Sstore)

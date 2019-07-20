@@ -242,10 +242,7 @@ function storage_contract(Astore::TensorStorage,
       Cstore = outer(Astore,Bstore)
     else
       (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
-      global timer.contract_t += @elapsed begin
       Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
-      end; #contract_t
-      global timer.contract_c += 1
     end
   end
   return (Cis,Cstore)
@@ -264,17 +261,12 @@ function storage_svd(Astore::Dense{T},
   vtags::String = get(kwargs,:vtags,"Link,v")
   fastSVD::Bool = get(kwargs,:fastSVD,false)
 
-  global timer.svd_store_svd_t += @elapsed begin
-
-    if fastSVD
-      MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
-    else
-      MU,MS,MV = recursiveSVD(reshape(data(Astore),dim(Lis),dim(Ris)))
-    end
-    MV = conj!(MV)
-
+  if fastSVD
+    MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
+  else
+    MU,MS,MV = recursiveSVD(reshape(data(Astore),dim(Lis),dim(Ris)))
   end
-  global timer.svd_store_svd_c += 1
+  MV = conj!(MV)
 
   P = MS.^2
   #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
