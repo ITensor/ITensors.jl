@@ -56,6 +56,24 @@ function MPOTerm(c::Number,
   return MPOTerm(convert(ComplexF64,c),[SiteOp(op1,i1),SiteOp(op2,i2)])
 end
 
+function MPOTerm(c::Number,
+                 op1::String,i1::Int,
+                 op2::String,i2::Int,
+                 ops...)
+  vop = OpTerm(undef,2+div(length(ops),2))
+  vop[1] = SiteOp(op1,i1)
+  vop[2] = SiteOp(op2,i2)
+  for n=1:2:length(ops)
+    vop[2+n] = SiteOp(ops[n],ops[n+1])
+  end
+  return MPOTerm(convert(ComplexF64,c),vop)
+end
+
+function MPOTerm(c::Number,
+                 ops::OpTerm)
+  return MPOTerm(convert(ComplexF64,c),ops)
+end
+
 function Base.show(io::IO,
               op::MPOTerm) 
   c = coef(op)
@@ -108,6 +126,22 @@ function add!(ampo::AutoMPO,
               op2::String, i2::Int)
   push!(terms(ampo),MPOTerm(coef,op1,i1,op2,i2))
 end
+
+function add!(ampo::AutoMPO,
+              op1::String, i1::Int,
+              op2::String, i2::Int,
+              ops...)
+  push!(terms(ampo),MPOTerm(1.0,op1,i1,op2,i2,ops...))
+end
+
+function add!(ampo::AutoMPO,
+              coef::Number,
+              op1::String, i1::Int,
+              op2::String, i2::Int,
+              ops...)
+  push!(terms(ampo),MPOTerm(coef,op1,i1,op2,i2,ops...))
+end
+
 
 function show(io::IO,
               ampo::AutoMPO) 
