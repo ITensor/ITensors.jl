@@ -133,6 +133,14 @@ function simlinks!(M::T) where {T <: Union{MPS,MPO}}
   end
 end
 
+function maxDim(M::T) where {T <: Union{MPS,MPO}}
+  md = 1
+  for b=1:length(M)-1
+    md = max(md,dim(linkindex(M,b)))
+  end
+  return md
+end
+
 function show(io::IO,
               W::MPO)
   print(io,"MPO")

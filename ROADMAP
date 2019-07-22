@@ -1,12 +1,10 @@
 ## Misc To Do
 
++ Fix maxDim for MPOs
+
 + Alphabetize export statements
 
 + Finish prime & tag methods
-
-+ Unit tests for AutoMPO
-  X more than one on-site operator
-  - more than 2-site operators
 
 + Finish recursive step of recursiveSVD function; test accuracy
   (Also try V-normalization idea for optimizing)

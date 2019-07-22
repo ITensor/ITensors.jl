@@ -208,10 +208,3 @@ function replaceBond!(M::MPS,
   M[b+1] = FV
 end
 
-function maxDim(M::MPS)
-  md = 1
-  for b=1:length(M)-1
-    md = max(md,dim(linkindex(M,b)))
-  end
-  return md
-end

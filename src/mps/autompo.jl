@@ -1,6 +1,6 @@
 #
 # Optimizations:
-#  - replace leftmap, rightmap with Dicts
+#  - replace leftmap, rightmap with sorted vectors
 # 
 
 export SiteOp,
@@ -8,7 +8,10 @@ export SiteOp,
        AutoMPO,
        terms,
        add!,
-       toMPO
+       toMPO,
+       MPOTerm,
+       MatElem,
+       SiteOp
 
 import LinearAlgebra.svd
 
@@ -23,7 +26,13 @@ end
 name(s::SiteOp) = s.name
 site(s::SiteOp) = s.site
 Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
-Base.isless(s1::SiteOp,s2::SiteOp) = (s1.site < s2.site)
+
+function Base.isless(s1::SiteOp,s2::SiteOp)::Bool
+  if site(s1) < site(s2)
+    return true
+  end
+  return name(s1) < name(s2)
+end
 
 ###########################
 # OpTerm                  # 
@@ -43,6 +52,17 @@ end
 coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
 length(op::MPOTerm) = length(op.ops)
+
+function ==(t1::MPOTerm,t2::MPOTerm)
+  return (t1.ops==t2.ops && isapprox(t1.coef,t2.coef))
+end
+
+function Base.isless(t1::MPOTerm,t2::MPOTerm)::Bool
+  if !isapprox(coef(t1),coef(t2))
+    return coef(t1) < coef(t2)
+  end
+  return ops(t1) < ops(t2)
+end
 
 function MPOTerm(c::Number,
                  op1::String,
@@ -179,6 +199,19 @@ function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
   return M
 end
 
+function ==(m1::MatElem{T},m2::MatElem{T})::Bool where {T}
+  return (m1.row==m2.row && m1.col==m2.col && m1.val==m2.val)
+end
+
+function Base.isless(m1::MatElem{T},m2::MatElem{T})::Bool where {T}
+  if m1.row != m2.row
+    return m1.row < m2.row
+  elseif m1.col != m2.col
+    return m1.col < m2.col
+  end
+  return m1.val < m2.val
+end
+
 function posInLink!(linkmap::Vector{OpTerm},
                     op::OpTerm)::Int
   isempty(op) && return -1
@@ -208,6 +241,27 @@ function computeSiteProd(sites::SiteSet,
   return T
 end
 
+
+function remove_dups!(v::Vector{T}) where {T}
+  N = length(v)
+  (N==0) && return
+  sort!(v)
+  n = 1
+  u = 2
+  while u <= N
+    while u < N && v[u]==v[n] 
+      u += 1
+    end
+    if v[u] != v[n]
+      v[n+1] = v[u]
+      n += 1
+    end
+    u += 1
+  end
+  resize!(v,n)
+  return
+end
+
 function svdMPO(ampo::AutoMPO; 
                 kwargs...)::MPO
 
@@ -220,7 +274,7 @@ function svdMPO(ampo::AutoMPO;
   ValType = determineValType(terms(ampo))
 
   Vs = [Matrix{ValType}(undef,1,1) for n=1:N]
-  tempMPO = [Set(MatElem{MPOTerm}[]) for n=1:N]
+  tempMPO = [MatElem{MPOTerm}[] for n=1:N]
 
   crosses_bond(t::MPOTerm,n::Int) = (ops(t)[1].site <= n <= ops(t)[end].site)
 
@@ -254,11 +308,14 @@ function svdMPO(ampo::AutoMPO;
       if A_row == -1
         site_coef = coef(term)
       end
+      isempty(onsite) && push!(onsite,SiteOp("Id",n))
       el = MatElem(A_row,A_col,MPOTerm(site_coef,onsite))
       push!(tempMPO[n],el)
     end
     rightmap = next_rightmap
     next_rightmap = OpTerm[]
+
+    remove_dups!(tempMPO[n])
 
     if n > 1 && !isempty(leftbond_coefs)
       M = toMatrix(leftbond_coefs)
@@ -304,16 +361,15 @@ function svdMPO(ampo::AutoMPO;
     idM[1,1] = 1.0
     idM[2,2] = 1.0
 
+    defaultMat() = zeros(ValType,dim(ll),dim(rl))
+
     for el in tempMPO[n]
       A_row = el.row
       A_col = el.col
       t = el.val
       (abs(coef(t)) > eps()) || continue
 
-      if !haskey(finalMPO,ops(t)) 
-        finalMPO[ops(t)] = zeros(ValType,dim(ll),dim(rl))
-      end
-      M = finalMPO[ops(t)]
+      M = get!(finalMPO,ops(t),defaultMat())
 
       ct = convert(ValType,coef(t))
       if A_row==-1 && A_col==-1 #onsite term
@@ -358,8 +414,9 @@ function svdMPO(ampo::AutoMPO;
 end
 
 function sortEachTerm!(ampo::AutoMPO)
+  isless_site(o1::SiteOp,o2::SiteOp) = (site(o1)<site(o2))
   for t in terms(ampo)
-    sort!(ops(t),alg=InsertionSort)
+    sort!(ops(t),alg=InsertionSort,lt=isless_site)
   end
 end
 
