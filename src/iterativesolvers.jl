@@ -26,7 +26,7 @@ function get_vecs!((phi,q),M,V,AV,ni)
   return lambda
 end
 
-function orthogonalize!(q,V,ni)
+function orthogonalize!(q::ITensor,V,ni)
   q0 = copy(q)
   for k=1:ni
     Vq0k = dot(V[k],q0)
@@ -35,10 +35,9 @@ function orthogonalize!(q,V,ni)
   end
   qnrm = norm(q)
   if qnrm < 1E-10 #orthog failure, try randomizing
-    # TODO: put random recovery code here
-    error("orthog failure")
+    randn!(q)
+    qnrm = norm(q)
   end
-  #q /= qnrm
   scale!(q,1.0/qnrm)
   return 
 end
@@ -87,7 +86,7 @@ function davidson(A,
     small_qnorm = (qnorm < max(approx0,errgoal*1E-3))
     converged = errgoal_reached || small_qnorm
 
-    if (qnorm < 1E-20) || (converged && ni > miniter_) #|| (ni >= actual_maxiter)
+    if (qnorm < 1E-20) || (converged && ni > miniter) #|| (ni >= actual_maxiter)
       #@printf "  done with davidson, ni=%d, qnorm=%.3E\n" ni qnorm
       break
     end
