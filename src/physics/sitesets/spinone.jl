@@ -7,7 +7,7 @@ struct SpinOneSite <: Site
 end
 SpinOneSite(n::Int) = SpinOneSite(Index(3, "Site,S=1,n=$n"))
 
-function spinOneSites(N::Int)::SiteSet
+function spinOneSites(N::Int;kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
     set(sites,n,SpinOneSite(n))

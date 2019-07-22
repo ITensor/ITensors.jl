@@ -7,7 +7,7 @@ struct SpinHalfSite <: Site
 end
 SpinHalfSite(n::Int) = SpinHalfSite(Index(2, "Site,S=1/2,n=$n"))
 
-function spinHalfSites(N::Int)::SiteSet
+function spinHalfSites(N::Int;kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
     set(sites,n,SpinHalfSite(n))
