@@ -66,10 +66,6 @@ include("iterativesolvers.jl")
 # MPS/MPO
 #
 include("mps/siteset.jl")
-include("mps/sitesets/spinhalf.jl")
-include("mps/sitesets/spinone.jl")
-include("mps/sitesets/electron.jl")
-include("mps/sitesets/tj.jl")
 include("mps/initstate.jl")
 include("mps/mps.jl")
 include("mps/mpo.jl")
@@ -78,5 +74,13 @@ include("mps/projmpo.jl")
 include("mps/dmrg.jl")
 include("mps/autompo.jl")
 
+###########################################################
+# Physics
+#
+include("physics/lattices.jl")
+include("physics/sitesets/spinhalf.jl")
+include("physics/sitesets/spinone.jl")
+include("physics/sitesets/electron.jl")
+include("physics/sitesets/tj.jl")
 
 end # module
