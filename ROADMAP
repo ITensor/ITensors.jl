@@ -1,5 +1,7 @@
 ## Misc To Do
 
++ Add noise term support to DMRG
+
 + Add docstrings (see mps/dmrg.jl for an example)
 
 + Add copyright notice on top of files (see C++ version)
