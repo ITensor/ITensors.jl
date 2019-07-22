@@ -1,3 +1,5 @@
+PLEASE NOTE THIS IS PRE-RELEASE SOFTWARE FOR PREVIEW PURPOSES ONLY
+IT IS SUBJECT TO BREAKING CHANGES AND NOT YET SUPPORTED
 
 ITensors is a library for rapidly creating correct and efficient
 tensor network algorithms. 
