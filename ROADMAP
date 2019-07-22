@@ -1,5 +1,12 @@
 ## Misc To Do
 
+? Replace InitState with just a Vector{String}?
+  state = fill("Up",N)
+  for n=1:N
+    state[n] = isodd(n) ? "Up" : "Dn"
+  end
+  psi = MPS(state)
+
 + Finish added `state` functions for physics site sets (see SpinHalf)
 
 + Add noise term support to DMRG
