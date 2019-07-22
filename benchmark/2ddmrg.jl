@@ -7,7 +7,9 @@ function main()
   N = Nx*Ny
 
   sites = spinHalfSites(N;conserveQNs=false)
+
   lattice = squareLattice(Nx,Ny,yperiodic=false)
+
   ampo = AutoMPO(sites)
   for b in lattice
     add!(ampo,0.5,"S+",b.s1,"S-",b.s2)
@@ -18,11 +20,7 @@ function main()
 
   state = InitState(sites)
   for n=1:N
-    if isodd(n)
-      state[n] = "Up"
-    else
-      state[n] = "Dn"
-    end
+    state[n] = isodd(n) ? "Up" : "Dn"
   end
   psi0 = MPS(state)
 
