@@ -15,6 +15,20 @@ function spinHalfSites(N::Int;kwargs...)::SiteSet
   return sites
 end
 
+state(site::SpinHalfSite,st::Integer) = site.s(st)
+
+function state(site::SpinHalfSite,
+               st::String)::IndexVal
+  if st == "Up" || st == "↑"
+    return site.s(1)
+  elseif st == "Dn" || st == "↓"
+    return site.s(2)
+  else
+    error("State string \"$st\" not recognized for SpinHalfSite")
+  end
+  return site.s(1)
+end
+
 function operator(site::SpinHalfSite, 
                   opname::AbstractString)::ITensor
     s = site.s

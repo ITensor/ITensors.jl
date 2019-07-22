@@ -1,5 +1,7 @@
 ## Misc To Do
 
++ Finish added `state` functions for physics site sets (see SpinHalf)
+
 + Add noise term support to DMRG
 
 + Add docstrings (see mps/dmrg.jl for an example)

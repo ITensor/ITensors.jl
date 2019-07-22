@@ -44,25 +44,24 @@ mutable struct MPS
 
   function MPS(is::InitState)
     N = length(is)
-    its = Vector{ITensor}(undef,N)
+    As = Vector{ITensor}(undef,N)
     links  = Vector{Index}(undef,N)
     for n=1:N
-        s = sites(is)[n]
-        state = op(sites(is),is[n],n)
-        links[n] = Index(1, "Link,l=$n")
-        if n == 1
-          A = ITensor(links[n],s)
-          A[links[n](1),s[:]] = state[s[:]]
-        elseif n == N
-          A = ITensor(links[n-1],s)
-          A[links[n-1](1), s[:]] = state[s[:]]
-        else
-          A = ITensor(links[n-1],links[n],s)
-          A[links[n-1](1),links[n](1),s[:]] = state[s[:]]
-        end
-        its[n] = A
+      s = sites(is)[n]
+      links[n] = Index(1,"Link,l=$n")
+      if n == 1
+        A = ITensor(s,links[n])
+        A[state(is,n),links[n](1)] = 1.0
+      elseif n == N
+        A = ITensor(links[n-1],s)
+        A[links[n-1](1),state(is,n)] = 1.0
+      else
+        A = ITensor(links[n-1],links[n],s)
+        A[links[n-1](1),state(is,n),links[n](1)] = 1.0
+      end
+      As[n] = A
     end
-    new(N,its,0,2)
+    new(N,As,0,2)
   end
 end
 MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))

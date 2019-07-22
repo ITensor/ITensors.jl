@@ -13,9 +13,9 @@ end
 getindex(is::InitState,n::Integer) = getindex(is.sts,n)
 setindex!(is::InitState,i::LocalState,n::Integer) = setindex!(is.sts,i,n)
 
-sites(is::InitState) = is.sites
-site(is::InitState,n::Integer) = is.sites[n]
-state(is::InitState,n::Integer)::IndexVal = state(site(is,n),sts[n])
+sites(is::InitState)::SiteSet = is.sites
+site(is::InitState,n::Integer)::Site = site(is.sites,n)
+state(is::InitState,n::Integer)::IndexVal = state(site(is,n),is.sts[n])
 
 length(is::InitState) = length(is.sts)
 

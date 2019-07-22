@@ -1,6 +1,8 @@
 export Site,
        ind,
        op,
+       site,
+       state,
        BasicSite,
        SiteSet,
        replaceBond!
@@ -65,6 +67,7 @@ length(s::SiteSet) = length(s.sites)
 getindex(s::SiteSet,n::Integer) = ind(s.sites[n])
 op(s::SiteSet,opname::String,n::Int) = op(s.sites[n],opname)
 set(s::SiteSet,n::Int,ns::Site) = (s.sites[n] = ns)
+site(s::SiteSet,n::Int) = s.sites[n]
 
 function show(io::IO,
               sites::SiteSet)
@@ -75,15 +78,8 @@ function show(io::IO,
   end
 end
 
-function state(sites::SiteSet,
+function state(sset::SiteSet,
                n::Integer,
-               st::Integer)::IndexVal
-  return sites[n](st)
-end
-
-function state(sites::SiteSet,
-               n::Integer,
-               st::String)::IndexVal
-  error("String version of 'state' SiteSet function not defined for this site set type")
-  return sites[1](1)
+               st::Union{Integer,String})::IndexVal
+  return state(sset.sites[n],st)
 end
