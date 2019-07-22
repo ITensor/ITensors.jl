@@ -4,6 +4,8 @@
 
 + Add copyright notice on top of files (see C++ version)
 
++ Add square and triangular lattice helper functions
+
 + Fix maxDim for MPOs
 
 + Alphabetize export statements
