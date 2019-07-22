@@ -23,9 +23,7 @@ function main()
   cutoff!(sweeps,1E-11)
   @show sweeps
 
-  println("Starting DMRG")
   energy,psi = @time dmrg(H,psi,sweeps,maxiter=2)
   @printf "Final energy = %.12f\n" energy
-  @show inner(psi,H,psi)
 end
 main()
