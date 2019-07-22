@@ -25,7 +25,7 @@ mutable struct MPS
     new(N,A,llim,rlim)
   end
   
-  function MPS(sites)
+  function MPS(sites::SiteSet)
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii=1:N-1]
@@ -42,30 +42,26 @@ mutable struct MPS
     new(N,v)
   end
 
-  function MPS(::Type{T}, is::InitState) where {T}
+  function MPS(is::InitState)
     N = length(is)
-    its = Vector{ITensor}(undef, length(is))
-    link_inds  = Vector{Index}(undef, length(is))
-    for ii=1:N
-        i_is = is[ii]
-        i_site = site(is, ii)
-        spin_op = op(T(i_site), i_is)
-        link_inds[ii] = Index(1, "Link,l=$ii")
-        s = i_site 
-        local this_it
-        if ii == 1
-            this_it = ITensor(link_inds[ii], i_site)
-            this_it[link_inds[ii](1), s[:]] = spin_op[s[:]]
-        elseif ii == N
-            this_it = ITensor(link_inds[ii-1], i_site)
-            this_it[link_inds[ii-1](1), s[:]] = spin_op[s[:]]
+    its = Vector{ITensor}(undef,N)
+    links  = Vector{Index}(undef,N)
+    for n=1:N
+        s = sites(is)[n]
+        state = op(sites(is),is[n],n)
+        links[n] = Index(1, "Link,l=$n")
+        if n == 1
+          A = ITensor(links[n],s)
+          A[links[n](1),s[:]] = state[s[:]]
+        elseif n == N
+          A = ITensor(links[n-1],s)
+          A[links[n-1](1), s[:]] = state[s[:]]
         else
-            this_it = ITensor(link_inds[ii-1], link_inds[ii], i_site)
-            this_it[link_inds[ii-1](1), link_inds[ii](1), s[:]] = spin_op[s[:]]
+          A = ITensor(links[n-1],links[n],s)
+          A[links[n-1](1),links[n](1),s[:]] = state[s[:]]
         end
-        its[ii] = this_it
+        its[n] = A
     end
-    # construct InitState from SiteSet -- is(sites, "Up")
     new(N,its,0,2)
   end
 end
