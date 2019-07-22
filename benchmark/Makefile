@@ -6,6 +6,7 @@ APP=$(app)
 else
 APP=mult
 APP=dmrg
+APP=2ddmrg
 endif
 
 HEADERS=
