@@ -5,6 +5,7 @@ using Printf
 # For the Heisenberg model in one dimension
 # H = J ∑ᵢ(SᶻᵢSᶻᵢ₊₁ + SˣᵢSˣᵢ₊₁ + SʸᵢSʸᵢ₊₁ )
 #   = J ∑ᵢ[SᶻᵢSᶻᵢ₊₁ + ½(S⁺ᵢS⁻ᵢ₊₁ + S⁻ᵢS⁺ᵢ₊₁)]
+# We'll work in units where J=1
 let
   N = 100                             # Number of sites
   sites = spinOneSites(N)             # Create a 1D, N site lattice of spin 1 degrees of freedom
