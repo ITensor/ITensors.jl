@@ -63,6 +63,14 @@ struct Index
 end
 
 Index() = Index(IDType(0),1,Neither,TagSet("0"))
+
+"""
+    Index(dim::Integer, tags="0")
+Create an `Index` with a unique `id` and a tagset given by `tags`.
+
+Example: create a two dimensional index with tag `l`:
+    Index(2, "l")
+"""
 function Index(dim::Integer,tags="0")
   ts = TagSet(tags)
   # By default, an Index has a prime level of 0
@@ -88,12 +96,29 @@ tags are compared.
 function ==(i1::Index,i2::Index)
   return id(i1) == id(i2) && tags(i1) == tags(i2)
 end
+
+"""
+    copy(i::Index)
+Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
+"""
 copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
 
+"""
+    sim(i::Index)
+Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
+"""
 sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
 
+"""
+    dag(i::Index)
+Copy an index `i` and reverse it's direction
+"""
 dag(i::Index) = Index(id(i),dim(i),-dir(i),tags(i))
 
+"""
+    isdefault(i::Index)
+Check if an `Index` `i` was created with the default options.
+"""
 isdefault(i::Index) = (i==Index())
 
 hastags(i::Index, ts) = hastags(tags(i),ts)
@@ -113,7 +138,6 @@ prime(i::Index, plinc = 1) = settags(i, prime(tags(i), plinc))
 setprime(i::Index, plev) = settags(i, setprime(tags(i), plev))
 noprime(i::Index) = setprime(i, 0)
 
-# To use the notation i' == prime(i)
 Base.adjoint(i::Index) = prime(i)
 
 # To use the notation i^5 == prime(i,5)
