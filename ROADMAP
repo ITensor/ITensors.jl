@@ -96,5 +96,6 @@
 
 ## Final Release Checks
 
++ Apply license text to all source files (see appendix of LICENSE file)
 + Make sure installation is clean on a brand new Julia install (no libraries at all)
 + Ensure dependencies are the true minimum amount
