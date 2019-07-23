@@ -9,6 +9,7 @@ function main()
   sites = spinHalfSites(N;conserveQNs=false)
 
   lattice = squareLattice(Nx,Ny,yperiodic=false)
+  #lattice = triangularLattice(Nx,Ny,yperiodic=false)
 
   ampo = AutoMPO(sites)
   for b in lattice

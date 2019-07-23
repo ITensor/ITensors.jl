@@ -1,6 +1,7 @@
 export LatticeBond,
        Lattice,
-       squareLattice
+       squareLattice,
+       triangularLattice
 
 struct LatticeBond
   s1::Int
@@ -10,6 +11,10 @@ struct LatticeBond
   x2::Float64
   y2::Float64
   type::String
+end
+
+function LatticeBond(s1::Int,s2::Int)
+  return LatticeBond(s1,s2,0.0,0.0,0.0,0.0,"")
 end
 
 function LatticeBond(s1::Int,s2::Int,
@@ -49,3 +54,39 @@ function squareLattice(Nx::Int,
   return latt
 end
 
+function triangularLattice(Nx::Int,
+                           Ny::Int;
+                           kwargs...)::Lattice
+  yperiodic = get(kwargs,:yperiodic,false)
+  yperiodic = yperiodic && (Ny > 2)
+  N = Nx*Ny
+  Nbond = 3N-2Ny + (yperiodic ? 0 : -2Nx+1)
+  latt = Lattice(undef,Nbond)
+  b = 0
+  for n=1:N
+    x = div(n-1,Ny)+1
+    y = mod(n-1,Ny)+1
+
+    # x-direction bonds
+    if x < Nx
+      latt[b+=1] = LatticeBond(n,n+Ny)
+    end
+
+    # 2d bonds
+    if Ny > 1
+      # vertical / y-periodic diagonal bond
+      if (n+1 <= N) && ((y < Ny) || yperiodic)
+        latt[b+=1] = LatticeBond(n,n+1);
+      end
+      # periodic vertical bond
+      if yperiodic && y==1
+        latt[b+=1] = LatticeBond(n,n+Ny-1)
+      end
+      # diagonal bonds
+      if x < Nx && y < Ny
+        latt[b+=1] = LatticeBond(n,n+Ny+1)
+      end
+    end
+  end
+  return latt
+end

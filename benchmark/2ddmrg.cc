@@ -13,6 +13,7 @@ main()
     auto sites = SpinHalf(N,{"ConserveQNs=",false});
 
     auto lattice = squareLattice(Nx,Ny,{"YPeriodic=",yperiodic});
+    //auto lattice = triangularLattice(Nx,Ny,{"YPeriodic=",yperiodic});
 
     auto ampo = AutoMPO(sites);
     for(auto b : lattice)
