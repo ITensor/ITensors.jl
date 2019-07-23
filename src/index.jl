@@ -25,9 +25,17 @@ export Index,
 
 const IDType = UInt64
 
-# Arrow direction
+"""
+   Arrow
+`enum` type that can take three values: `In`, `Out`, or `Neither`, representing a directionality
+associated with an index, i.e. the index leg is directed into or out of a given tensor
+"""
 @enum Arrow In=-1 Out=1 Neither=0
 
+"""
+    -(dir::Arrow)
+Reverse direction of a directed `Arrow`. Will throw an error for an input of `Neither`.
+"""
 function -(dir::Arrow)
   if dir==Neither
     error("Cannot reverse direction of Arrow direction 'Neither'")
@@ -36,15 +44,22 @@ function -(dir::Arrow)
   end
 end
 
+"""
+An `Index` represents a single tensor index with fixed dimension `dim`. Copies of an Index compare equal unless their 
+`tags` are different.
+
+An Index carries a `TagSet`, a set of tags which are small strings that specify properties of the `Index` to help 
+distinguish it from other Indices. There is a special tag which is referred to as the integer tag or prime 
+level which can be incremented or decremented with special priming functions.
+
+Internally, an `Index` has a fixed `id` number, which is how the ITensor library knows two indices are copies of a 
+single original `Index`. `Index` objects must have the same `id`, as well as the `tags` to compare equal.
+"""
 struct Index
   id::IDType
   dim::Int
   dir::Arrow
   tags::TagSet
-  Index(id::IDType,
-        dim::Integer,
-        dir::Arrow,
-        tags::TagSet) = new(id,dim,dir,tags)
 end
 
 Index() = Index(IDType(0),1,Neither,TagSet("0"))
