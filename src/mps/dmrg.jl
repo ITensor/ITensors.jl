@@ -26,7 +26,6 @@ function dmrg(H::MPO,
       position!(PH,psi,b)
 
       phi = psi[b]*psi[b+1]
-
       energy,phi = davidson(PH,phi;kwargs...)
 
       dir = ha==1 ? "fromleft" : "fromright"

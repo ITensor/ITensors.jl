@@ -33,7 +33,7 @@ function storage_complex(D::Dense{T, S}) where {T, S}
 end
 copy(D::Dense{T, S}) where {T, S} = Dense{T, S}(copy(data(D)))
 
-outer(D1::Dense{T, S},D2::Dense{T, S}) where {T, S} = Dense{T, S}(vec(data(D1)*transpose(data(D2))))
+outer(D1::Dense{T, S},D2::Dense{T, S}) where {T, S} = Dense{T, S}(vec(data(D1))*transpose(vec(data(D2))))
 
 storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
 
@@ -95,11 +95,11 @@ using Base.Cartesian: @nexprs,
   end
 end
 
-function add!(Bstore::Dense,
+function add!(Bstore::Dense{S, TB},
               Bis::IndexSet,
-              Astore::Dense,
+              Astore::Dense{S, TA},
               Ais::IndexSet,
-              x::Number = 1)
+              x::Number = 1) where {TA<:Array, TB<:Array, S}
   p = calculate_permutation(Bis,Ais)
   Adata = data(Astore)
   Bdata = data(Bstore)
@@ -124,11 +124,11 @@ function storage_add!(Bstore::Dense{BT, B},
                       Bis::IndexSet,
                       Astore::Dense{AT, A},
                       Ais::IndexSet,
-                      x::Number = 1) where {BT,B,AT,A}
+                      x::Number = 1) where {BT,B<:Array,AT,A<:Array}
   NT = promote_type(AT,BT)
   N = promote_type(A,B)
   if NT == BT
-    add!(Bstore,Bis,Astore,Ais, x)
+      add!(Bstore,Bis,Astore,Ais, x)
     return Bstore
   end
   Nstore = convert(Dense{NT,N},Bstore)
@@ -327,13 +327,13 @@ function storage_eigen(Astore::Dense{S, T},
 
   dim_left = dim(Lis)
   dim_right = dim(Ris)
-  MD,MU = eigen(Hermitian(reshape(data(Astore),dim_left,dim_right)))
+  H = Hermitian(reshape(data(Astore),dim_left,dim_right))
+  MD,MU = eigen(H)
 
   # Sort by largest to smallest eigenvalues
   p = sortperm(MD; rev = true)
   MD = MD[p]
   MU = MU[:,p]
-
   #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
   truncate!(MD;maxdim=maxdim,
               cutoff=cutoff,
@@ -343,11 +343,10 @@ function storage_eigen(Astore::Dense{S, T},
   if dD < size(MU,2)
     MU = MU[:,1:dD]
   end
-
   #TODO: include truncation parameters as keyword arguments
   u = Index(dD,lefttags)
   v = settags(u,righttags)
-  Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
+  Uis,Ustore = IndexSet(Lis...,u),Dense{S, T}(vec(MU))
   #TODO: make a diag storage
   Dis,Dstore = IndexSet(u,v),Dense{S, T}(vec(Matrix(Diagonal(MD))))
   return (Uis,Ustore,Dis,Dstore)

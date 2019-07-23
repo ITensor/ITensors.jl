@@ -55,15 +55,11 @@ ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds.
 # Convert to complex
 complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))
 
-inds(T::ITensor) = T.inds
-
 # This constructor allows many IndexSet
 # set operations to work with ITensors
 IndexSet(T::ITensor) = inds(T)
 
 isNull(T::ITensor) = (typeof(store(T)) == Dense{Nothing} || dims(T) == ())
-
-copyto!(R::ITensor,T::ITensor) = (R = copy(T))
 
 inds(T::ITensor) = T.inds
 store(T::ITensor) = T.store
@@ -71,6 +67,7 @@ eltype(T::ITensor) = eltype(store(T))
 
 order(T::ITensor) = order(inds(T))
 dims(T::ITensor) = dims(inds(T))
+Base.size(T::ITensor) = dims(inds(T))
 dim(T::ITensor) = dim(inds(T))
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
@@ -204,10 +201,12 @@ function permute(T::ITensor,permTinds)
 end
 permute(T::ITensor,new_inds::Index...) = permute(T,IndexSet(new_inds...))
 
-add!(A::ITensor, B::ITensor) = storage_add!(store(A),inds(A),store(B),inds(B))
-
 #TODO: improve these using a storage_mult call
-*(A::ITensor,x::Number) = A*ITensor(x)
+function *(A::ITensor,x::Number)
+    Astore = store(A)
+    Astore = Astore*x
+    return ITensor(inds(A), Astore)
+end
 *(x::Number,A::ITensor) = A*x
 function /(A::ITensor,x::Number)
     ITensor(inds(A), (1.0/x)*store(A))

@@ -18,7 +18,7 @@ function main()
 
   psi = randomMPS(sites)
 
-  sweeps = Sweeps(5)
+  sweeps = Sweeps(1)
   maxdim!(sweeps,10,20,100,100,200)
   cutoff!(sweeps,1E-11)
   @show sweeps

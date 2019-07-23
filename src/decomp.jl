@@ -52,13 +52,17 @@ function truncate!(P::Vector{Float64};
       (scale==0.0) && (scale = 1.0)
     end
 
+    #@show P, truncerr
+    #@show length(P)
     #Continue truncating until *sum* of discarded probability 
     #weight reaches cutoff reached (or m==mindim)
     while (truncerr+P[n] <= cutoff*scale) && (n > mindim)
       truncerr += P[n]
       n -= 1
     end
-
+    #@show n, truncerr 
+    #println()
+    #println()
     if scale==0.0
       truncerr = 0.0
     else
@@ -69,7 +73,6 @@ function truncate!(P::Vector{Float64};
   if n < 1
     n = 1
   end
-
   if n < origm
     docut = (P[n]+P[n+1])/2
     if abs(P[n]-P[n+1]) < 1E-3*P[n]

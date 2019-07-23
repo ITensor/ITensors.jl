@@ -31,7 +31,9 @@ function orthogonalize!(q::ITensor,V,ni)
   for k=1:ni
     Vq0k = dot(V[k],q0)
     #q += -Vq0k*V[k]
-    add!(q,-Vq0k,V[k])
+    if( abs(Vq0k) < 1e-12 )
+        add!(q,-Vq0k,V[k])
+    end
   end
   qnrm = norm(q)
   if qnrm < 1E-10 #orthog failure, try randomizing
@@ -73,11 +75,8 @@ function davidson(A,
   AV = ITensor[A(phi)]
 
   last_lambda = NaN
-  @show inds(V[1])
-  @show inds(AV[1])
   lambda = dot(V[1],AV[1])
-  q = AV[1] - lambda*V[1];
-
+  q = AV[1] -lambda*V[1]
   M = fill(lambda,(1,1))
 
   for ni=1:actual_maxiter

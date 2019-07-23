@@ -15,6 +15,20 @@ function spinOneSites(N::Int;kwargs...)::SiteSet
   return sites
 end
 
+function state(site::SpinOneSite,
+               st::String)::IndexVal
+  if st == "Xup" || st == "↑"
+    return site.s(1)
+  elseif st == "Xdn" || st == "↓"
+    return site.s(3)
+  elseif st == "Xz0" || st == "0"
+    return site.s(2)
+  else
+    error("State string \"$st\" not recognized for SpinOneSite")
+  end
+  return site.s(1)
+end
+
 function operator(site::SpinOneSite, 
                   opname::AbstractString)::ITensor
     s = site.s
