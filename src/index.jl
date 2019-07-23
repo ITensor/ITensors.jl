@@ -25,9 +25,17 @@ export Index,
 
 const IDType = UInt64
 
-# Arrow direction
+"""
+   Arrow
+`enum` type that can take three values: `In`, `Out`, or `Neither`, representing a directionality
+associated with an index, i.e. the index leg is directed into or out of a given tensor
+"""
 @enum Arrow In=-1 Out=1 Neither=0
 
+"""
+    -(dir::Arrow)
+Reverse direction of a directed `Arrow`. Will throw an error for an input of `Neither`.
+"""
 function -(dir::Arrow)
   if dir==Neither
     error("Cannot reverse direction of Arrow direction 'Neither'")
@@ -36,18 +44,33 @@ function -(dir::Arrow)
   end
 end
 
+"""
+An `Index` represents a single tensor index with fixed dimension `dim`. Copies of an Index compare equal unless their 
+`tags` are different.
+
+An Index carries a `TagSet`, a set of tags which are small strings that specify properties of the `Index` to help 
+distinguish it from other Indices. There is a special tag which is referred to as the integer tag or prime 
+level which can be incremented or decremented with special priming functions.
+
+Internally, an `Index` has a fixed `id` number, which is how the ITensor library knows two indices are copies of a 
+single original `Index`. `Index` objects must have the same `id`, as well as the `tags` to compare equal.
+"""
 struct Index
   id::IDType
   dim::Int
   dir::Arrow
   tags::TagSet
-  Index(id::IDType,
-        dim::Integer,
-        dir::Arrow,
-        tags::TagSet) = new(id,dim,dir,tags)
 end
 
 Index() = Index(IDType(0),1,Neither,TagSet("0"))
+
+"""
+    Index(dim::Integer, tags="0")
+Create an `Index` with a unique `id` and a tagset given by `tags`.
+
+Example: create a two dimensional index with tag `l`:
+    Index(2, "l")
+"""
 function Index(dim::Integer,tags="0")
   ts = TagSet(tags)
   # By default, an Index has a prime level of 0
@@ -73,12 +96,29 @@ tags are compared.
 function ==(i1::Index,i2::Index)
   return id(i1) == id(i2) && tags(i1) == tags(i2)
 end
+
+"""
+    copy(i::Index)
+Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
+"""
 copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
 
+"""
+    sim(i::Index)
+Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
+"""
 sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
 
+"""
+    dag(i::Index)
+Copy an index `i` and reverse it's direction
+"""
 dag(i::Index) = Index(id(i),dim(i),-dir(i),tags(i))
 
+"""
+    isdefault(i::Index)
+Check if an `Index` `i` was created with the default options.
+"""
 isdefault(i::Index) = (i==Index())
 
 hastags(i::Index, ts) = hastags(tags(i),ts)
@@ -98,7 +138,6 @@ prime(i::Index, plinc = 1) = settags(i, prime(tags(i), plinc))
 setprime(i::Index, plev) = settags(i, setprime(tags(i), plev))
 noprime(i::Index) = setprime(i, 0)
 
-# To use the notation i' == prime(i)
 Base.adjoint(i::Index) = prime(i)
 
 # To use the notation i^5 == prime(i,5)
