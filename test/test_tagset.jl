@@ -30,5 +30,10 @@ using ITensors,
     ts2 = TagSet("x,z")
     @test removetags(ts1,"y") == ts2
   end
+  @testset "Tag too long" begin
+    @test_throws ErrorException TagSet("ijklmnopq")
+    @test_throws ErrorException TagSet("abcd,ijklmnopq")
+    @test_throws ErrorException TagSet("ijklmnopqr,abcd")
+  end
 end
 

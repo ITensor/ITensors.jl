@@ -90,7 +90,8 @@ function TagSet(str::AbstractString)
         reset!(current_tag,nchar)
         nchar = 0
       end
-    elseif current_char ≠ ' '
+    elseif current_char ≠ ' ' # TagSet constructor ignores whitespace
+      nchar == maxTagLength && error("Currently, tags can only have up to $maxTagLength characters")
       nchar += 1
       @inbounds current_tag[nchar] = current_char
     end

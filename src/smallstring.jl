@@ -1,8 +1,9 @@
 
 const IntChar = UInt8
 const IntSmallString = UInt64
-const SmallStringStorage = SVector{8,IntChar}
-const MSmallStringStorage = MVector{8,IntChar} # Mutable SmallString storage
+const maxTagLength = 8
+const SmallStringStorage = SVector{maxTagLength,IntChar}
+const MSmallStringStorage = MVector{maxTagLength,IntChar} # Mutable SmallString storage
 
 struct SmallString
   data::SmallStringStorage

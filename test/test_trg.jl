@@ -53,10 +53,10 @@ function trg(T::ITensor, horiz_inds, vert_inds;
     Fu = addtags(Fu,"up","renorm")
     Fd = addtags(Fd,"down","renorm")
 
-    T = replacetags(replacetags(Fl,"down","downleft","orig"),"right","upleft","orig")*
+    T = replacetags(replacetags(Fl,"down","dnleft","orig"),"right","upleft","orig")*
         replacetags(replacetags(Fu,"left","upleft","orig"),"down","upright","orig")* 
-        replacetags(replacetags(Fr,"up","upright","orig"),"left","downright","orig")*
-        replacetags(replacetags(Fd,"right","downright","orig"),"up","downleft","orig")
+        replacetags(replacetags(Fr,"up","upright","orig"),"left","dnright","orig")*
+        replacetags(replacetags(Fd,"right","dnright","orig"),"up","dnleft","orig")
     T = replacetags(T,"renorm","orig")
 
     l = findindex(T,"left")
