@@ -1,5 +1,13 @@
 ## Misc To Do
 
++ Reduce dependencies 
+  - Permutations (let's remove)
+  - KrylovKit (let's remove)
+  - Combinatorics (requires ImageMagick(!); let's move to test-only dependency or remove)
+  - QuadGK (let's move to test-only)
+
++ Fix maxDim for MPOs
+
 ? Replace InitState with just a Vector{String}?
   state = fill("Up",N)
   for n=1:N
@@ -7,7 +15,7 @@
   end
   psi = MPS(state)
 
-+ Finish added `state` functions for physics site sets (see SpinHalf)
++ Finish adding `state` functions for physics site sets (see SpinHalf)
 
 + Add noise term support to DMRG
 
@@ -16,8 +24,6 @@
 + Add copyright notice on top of files (see C++ version)
 
 + Add square and triangular lattice helper functions
-
-+ Fix maxDim for MPOs
 
 + Alphabetize export statements
 
@@ -30,12 +36,6 @@
 + davidson improvements
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
   - improve definitions and handling of parameters such as miniter, maxiter
-
-+ Reduce dependencies 
-  - Permutations (let's remove)
-  - KrylovKit (let's remove)
-  - Combinatorics (requires ImageMagick(!); let's move to test-only dependency or remove)
-  - QuadGK (let's move to test-only)
 
 + MPS/MPO algorithms
   - sum
