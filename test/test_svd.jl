@@ -1,6 +1,7 @@
 using ITensors,
       Test,
-      Random
+      Random,
+      LinearAlgebra
 
 @testset "SVD Algorithms" begin
 
