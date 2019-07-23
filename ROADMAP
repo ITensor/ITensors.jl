@@ -23,9 +23,6 @@
 
 + Finish prime & tag methods
 
-+ Finish recursive step of recursiveSVD function; test accuracy
-  (Also try V-normalization idea for optimizing)
-
 + Read/write of ITensors and other objects, using HDF5 format
 
 + Combiner storage for ITensor. Should be easy for Dense case.

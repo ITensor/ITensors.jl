@@ -35,13 +35,29 @@ function orthog!(M::AbstractMatrix{T};
 end
 
 function pos_sqrt(x::Float64)::Float64
-  if x < 0.0
-    return 0.0
-  end
+  (x < 0.0) && return 0.0
   return sqrt(x)
 end
 
-function recursiveSVD(M::AbstractMatrix{T}) where {T}
+function checkSVDDone(S::Vector{T},
+                      thresh::Float64) where {T}
+  N = length(S)
+  (N <= 1 || thresh < 0.0) && return (true,1)
+  S1t = S[1]*thresh
+  start = 2
+  while start <= N
+    (S[start] < S1t) && break
+    start += 1
+  end
+  if start >= N
+    return (true,N)
+  end
+  return (false,start)
+end
+
+function recursiveSVD(M::AbstractMatrix{T};
+                      thresh::Float64=1E-3,
+                      north_pass::Int=2) where {T}
   Mr,Mc = size(M)
 
   if Mr > Mc
@@ -55,12 +71,29 @@ function recursiveSVD(M::AbstractMatrix{T}) where {T}
   rho = -M*M' #negative to sort eigenvalues in decreasing order
   D,U = eigen(Hermitian(rho),1:size(rho,1))
 
-  for n=1:length(D)
+  Nd = length(D)
+  for n=1:Nd
     D[n] = pos_sqrt(-D[n])
   end
 
   V = M'*U
-  orthog!(V,npass=2)
+  orthog!(V,npass=north_pass)
 
+  (done,start) = checkSVDDone(D,thresh)
+
+  done && return U,D,V
+
+  u = view(U,:,start:Nd)
+  v = view(V,:,start:Nd)
+
+  b = u'*(M*v)
+  bu,bd,bv = recursiveSVD(b,
+                          thresh=thresh,
+                          north_pass=north_pass)
+
+  u .= u*bu
+  v .= v*bv
+  view(D,start:Nd) .= bd
+  
   return U,D,V
 end
