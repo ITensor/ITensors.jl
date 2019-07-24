@@ -20,6 +20,43 @@ through the Flatiron Institute.
 
 ## Code Examples
 
+### ITensor Basic Overview
+
+Here is a basic intro overview of making 
+ITensors, setting some elements, contracting, and adding
+ITensors. See further examples below for detailed
+detailed examples of these operations and more.
+
+```Julia
+using ITensors
+let
+  i = Index(3,"i")
+  j = Index(5,"j")
+  k = Index(4,"k")
+  l = Index(7,"l")
+
+  A = ITensor(i,j,k)
+  B = ITensor(j,l)
+
+  A[i(1),j(1),k(1)] = 11.1
+  A[i(2),j(1),k(2)] = 21.2
+  A[i(3),j(1),k(1)] = 31.1
+  # ...
+
+  # contract over index j
+  C = A*B
+
+  @show hasinds(C,i,k,l) # == true
+
+  D = randomITensor(k,j,i)
+
+  # add two ITensors
+  R = A+D
+
+end
+
+```
+
 ### Making Tensor Indices
 
 Before making an ITensor, you have to define its indices.
