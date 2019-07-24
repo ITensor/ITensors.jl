@@ -10,6 +10,12 @@ using ITensors,
   j = Index(jdim,"j")
   k = Index(kdim,"k")
   l = Index(ldim,"l")
+  @testset "show" begin
+      indices = (i, j, k, l)
+      indset = IndexSet(indices)
+      inner = sprint.(show, indices)
+      @test sprint(show, indset) == string("IndexSet(", join(inner, ", "), ")")
+  end
   @testset "Index dimensions" begin
     I = IndexSet(i,j,k)
     @test dim(I) == idim*jdim*kdim
