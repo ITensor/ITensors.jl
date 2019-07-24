@@ -71,9 +71,9 @@ dims(T::ITensor) = dims(inds(T))
 
 dim(T::ITensor) = dim(inds(T))
 
-Base.ndims(A::ITensor) = order(inds(T))
-size(A::ITensor) = dims(inds(T))
-size(A::ITensor, d) = d in 1:ndims(A) ? dim(inds(T)[d]) : 
+Base.ndims(A::ITensor) = order(inds(A))
+size(A::ITensor) = dims(inds(A))
+size(A::ITensor, d) = d in 1:ndims(A) ? dim(inds(A)[d]) : 
   d>0 ? 1 : error("arraysize: dimension out of range")
 
 isNull(T::ITensor) = (store(T) isa Dense{Nothing})
