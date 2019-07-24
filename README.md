@@ -29,7 +29,7 @@ let
   j = Index(10)
   M = randomITensor(i,j)
   U,S,V = svd(M)
-  @show norm(M - U*S*V)
+  @show norm(M - U*S*V) # ≈ 0.0
 end
 ```
 
