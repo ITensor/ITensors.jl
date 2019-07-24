@@ -6,16 +6,17 @@ export svd,
 
 function truncate!(P::Vector{Float64};
                    kwargs...)::Tuple{Float64,Float64}
-  maxdim::Int = get(kwargs,:maxdim,length(P))
-  mindim::Int = get(kwargs,:mindim,1)
-  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  maxdim::Int = min(get(kwargs,:maxdim,length(P)), length(P))
+  mindim::Int = max(get(kwargs,:mindim,1), 1)
+  cutoff::Float64 = max(get(kwargs,:cutoff,0.0), 0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
 
   origm = length(P)
   docut = 0.0
 
-  if P[1]==0.0
+  if P[1]<=0.0
+    P[1] = 0.0
     resize!(P,1)
     return 0.,0.
   end
@@ -59,11 +60,7 @@ function truncate!(P::Vector{Float64};
       n -= 1
     end
 
-    if scale==0.0
-      truncerr = 0.0
-    else
-      truncerr /= scale
-    end
+    truncerr /= scale
   end
 
   if n < 1
@@ -127,10 +124,14 @@ column index (matricization of a tensor).
 
 Whether the SVD performs a trunction depends on the keyword
 arguments provided. The following keyword arguments are recognized:
-* maxdim [Int]
-* mindim [Int]
-* cutoff [Float64]
-* truncate [Bool]
+* `maxdim` [Int]
+* `mindim` [Int]
+* `cutoff` [Float64]
+* `absoluteCutoff` [Bool] Default value: false.
+* `doRelCutoff` [Bool] Default value: true.
+* `utags` [String] Default value: "Link,u".
+* `vtags` [String] Default value: "Link,v".
+* `fastSVD` [Bool] Defaut value: false.
 """
 function svd(A::ITensor,
              Linds...;
