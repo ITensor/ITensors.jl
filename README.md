@@ -40,3 +40,29 @@ let
 end
 ```
 
+### Singular Value Decomposition (SVD) of a Tensor
+
+In this example, we create a random 4x4x4x4 tensor 
+and compute its SVD, temporarily treating the first
+and third indices as the "row" index and the second
+and fourth indices as the "column" index for the purposes
+of the SVD. The resulting factors can 
+be simply multiplied back together using the
+ITensor `*` operation, which automatically recognizes
+the matching indices between U and S, and between S and V
+and contracts (sums over) them.
+
+```Julia
+using ITensors
+let
+  i = Index(4,"i")
+  j = Index(4,"j")
+  k = Index(4,"k")
+  l = Index(4,"l")
+  T = randomITensor(i,j,k,l)
+  U,S,V = svd(T,(i,k))
+  @show inds(U)
+  @show inds(V)
+  @show norm(T - U*S*V)   # ≈ 0.0
+end
+```
