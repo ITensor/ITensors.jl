@@ -183,13 +183,15 @@ function randn!(T::ITensor)
   return T
 end
 
-function randomITensor(::Type{S},inds) where {S<:Number}
+const Indices = Union{IndexSet,Tuple{Vararg{Index}}}
+
+function randomITensor(::Type{S},inds::Indices) where {S<:Number}
   T = ITensor(S,IndexSet(inds))
   randn!(T)
   return T
 end
 randomITensor(::Type{S},inds::Index...) where {S<:Number} = randomITensor(S,IndexSet(inds...))
-randomITensor(inds) = randomITensor(Float64,IndexSet(inds))
+randomITensor(inds::Indices) = randomITensor(Float64,IndexSet(inds))
 randomITensor(inds::Index...) = randomITensor(Float64,IndexSet(inds...))
 
 norm(T::ITensor) = storage_norm(store(T))
