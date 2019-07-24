@@ -203,8 +203,8 @@ randomITensor(inds::Index...) = randomITensor(Float64,IndexSet(inds...))
 
 Base.randn(inds::Indices) = randomITensor(Float64,IndexSet(inds))
 Base.randn(inds::Index...) = randomITensor(Float64,IndexSet(inds...))
-Base.randn(T::Type, inds::Indices) = randomITensor(Float64,IndexSet(inds))
-Base.randn(T::Type, inds::Index...) = randomITensor(Float64,IndexSet(inds...))
+Base.randn(T::Type, inds::Indices) = randomITensor(T,IndexSet(inds))
+Base.randn(T::Type, inds::Index...) = randomITensor(T,IndexSet(inds...))
 
 norm(T::ITensor) = storage_norm(store(T))
 dag(T::ITensor) = ITensor(storage_dag(store(T),inds(T))...)
