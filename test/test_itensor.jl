@@ -1,6 +1,5 @@
 using ITensors,
       LinearAlgebra, # For tr()
-      Combinatorics, # For permutations()
       Random,        # To set a seed
       Test
 
