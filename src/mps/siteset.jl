@@ -68,6 +68,7 @@ getindex(s::SiteSet,n::Integer) = ind(s.sites[n])
 op(s::SiteSet,opname::String,n::Int) = op(s.sites[n],opname)
 set(s::SiteSet,n::Int,ns::Site) = (s.sites[n] = ns)
 site(s::SiteSet,n::Int) = s.sites[n]
+eachindex(s::SiteSet) = eachindex(s.sites)
 
 function show(io::IO,
               sites::SiteSet)

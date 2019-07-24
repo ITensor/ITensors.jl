@@ -29,7 +29,7 @@ mutable struct MPS
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii=1:N-1]
-    @inbounds for ii=1:N
+    @inbounds for ii in eachindex(sites)
       s = sites[ii]
       if ii == 1
         v[ii] = ITensor(l[ii], s)
@@ -46,7 +46,7 @@ mutable struct MPS
     N = length(is)
     As = Vector{ITensor}(undef,N)
     links  = Vector{Index}(undef,N)
-    @inbounds for n=1:N
+    @inbounds for n in eachindex(is)
       s = sites(is)[n]
       links[n] = Index(1,"Link,l=$n")
       if n == 1
@@ -70,7 +70,7 @@ MPS(s::SiteSet, opcode::String) = MPS(InitState(s, opcode))
 
 function randomMPS(sites)
   M = MPS(sites)
-  @inbounds for i=1:length(M)
+  @inbounds for i ∈ eachindex(sites)
     randn!(M[i])
     normalize!(M[i])
   end
@@ -86,6 +86,8 @@ setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
 
 copy(m::MPS) = MPS(m.N_,copy(m.A_),m.llim_,m.rlim_)
 
+eachindex(m::MPS) = 1:length(m)
+
 
 """
     dag(m::MPS)
@@ -95,18 +97,17 @@ Hermitian conjugation of a matrix product state `m`.
 function dag(m::MPS)
   N = length(m)
   mdag = MPS(N)
-  @inbounds for i=1:N
+  @inbounds for i ∈ eachindex(m)
     mdag[i] = dag(m[i])
   end
   return mdag
 end
 
-function show(io::IO,
-              M::MPS)
+function show(io::IO, M::MPS)
   print(io,"MPS")
   (length(M) > 0) && print(io,"\n")
-  @inbounds for i=1:length(M)
-    println(io,"$i  $(M[i])")
+  @inbounds for (i, m) ∈ eachindex(M)
+    println(io,"$i  $m")
   end
 end
 
@@ -135,7 +136,7 @@ end
 function siteinds(M::MPS)
   N = length(M)
   is = IndexSet(N)
-  @inbounds for j=1:N
+  @inbounds for j ∈ eachindex(M)
     is[j] = siteindex(M,j)
   end
   return is
@@ -143,7 +144,7 @@ end
 
 function replacesites!(M::MPS,sites)
   N = length(M)
-  @inbounds for j=1:N
+  @inbounds for j in eachindex(M)
     sj = siteindex(M,j)
     replaceindex!(M[j],sj,sites[j])
   end
@@ -186,8 +187,12 @@ function position!(M::MPS,
 end
 
 
-function inner(M1::MPS,
-               M2::MPS)::Number
+"""
+inner(ψ::MPS, ϕ::MPS)
+
+Compute <ψ|ϕ>
+"""
+function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
     error("inner: mismatched lengths $N and $(length(M2))")
@@ -195,14 +200,11 @@ function inner(M1::MPS,
   M1dag = dag(M1)
   simlinks!(M1dag)
   O = M1dag[1]*M2[1]
-  @inbounds for j=2:N
+  @inbounds for j ∈ eachindex(M1)[2:end]
     O *= M1dag[j]*M2[j]
   end
   return O[]
 end
-
-# reduce(*, )
-
 
 function replaceBond!(M::MPS,
                       b::Int,
