@@ -1,15 +1,20 @@
-using ITensors,
-      Test
+using ITensors, Test
 
-include("test_tagset.jl")
-include("test_index.jl")
-include("test_indexset.jl")
-include("test_itensor.jl")
-include("test_contract.jl")
-include("test_trg.jl")
-include("test_ctmrg.jl")
-include("test_siteset.jl")
-include("test_mps.jl")
-include("test_mpo.jl")
-include("test_autompo.jl")
-include("test_svd.jl")
+@testset "Itensors.jl" begin
+    @testset "$filename" for filename in (
+        "test_tagset.jl",
+        "test_index.jl",
+        "test_indexset.jl",
+        "test_itensor.jl",
+        "test_contract.jl",
+        "test_trg.jl",
+        "test_ctmrg.jl",
+        "test_siteset.jl",
+        "test_mps.jl",
+        "test_mpo.jl",
+        "test_autompo.jl",
+        "test_svd.jl",
+    )
+        include(filename)
+    end
+end
