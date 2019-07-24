@@ -1,5 +1,7 @@
 ## Misc To Do
 
++ Improve printing of IndexSet
+
 + Reduce dependencies 
   - Permutations (let's remove)
   - KrylovKit (let's remove)
