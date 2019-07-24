@@ -71,11 +71,18 @@ dims(T::ITensor) = dims(inds(T))
 
 dim(T::ITensor) = dim(inds(T))
 
+Base.ndims(A::ITensor) = order(inds(T))
+size(A::ITensor) = dims(inds(T))
+size(A::ITensor, d) = d in 1:ndims(A) ? dim(inds(T)[d]) : 
+  d>0 ? 1 : error("arraysize: dimension out of range")
+
 isNull(T::ITensor) = (store(T) isa Dense{Nothing})
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
 Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
+Base.Matrix(A::ITensor) = ndims(A) == 2 ? Array(A) : error("expected ndims=2")
+Base.Vector(A::ITensor) = ndims(A) == 1 ? Array(A) : error("expected ndims=1")
 
 function getindex(T::ITensor,vals::Int...) 
   if order(T) ≠ length(vals) 
@@ -193,6 +200,11 @@ end
 randomITensor(::Type{S},inds::Index...) where {S<:Number} = randomITensor(S,IndexSet(inds...))
 randomITensor(inds::Indices) = randomITensor(Float64,IndexSet(inds))
 randomITensor(inds::Index...) = randomITensor(Float64,IndexSet(inds...))
+
+Base.randn(inds::Indices) = randomITensor(Float64,IndexSet(inds))
+Base.randn(inds::Index...) = randomITensor(Float64,IndexSet(inds...))
+Base.randn(T::Type, inds::Indices) = randomITensor(Float64,IndexSet(inds))
+Base.randn(T::Type, inds::Index...) = randomITensor(Float64,IndexSet(inds...))
 
 norm(T::ITensor) = storage_norm(store(T))
 dag(T::ITensor) = ITensor(storage_dag(store(T),inds(T))...)
