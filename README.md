@@ -20,7 +20,7 @@ through the Flatiron Institute.
 
 ## Code Examples
 
-## Making Tensor Indices
+### Making Tensor Indices
 
 Before making an ITensor, you have to define its indices.
 Tensor indices in ITensors.jl are themselves objects that 
