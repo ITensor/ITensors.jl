@@ -17,3 +17,19 @@ the DMRG algorithm.
 
 Development of ITensor is supported by the Simons Foundation 
 through the Flatiron Institute.
+
+## Code Examples
+
+### Singular Value Decomposition (SVD) of a Matrix
+
+```Julia
+using ITensors
+let
+  i = Index(10)
+  j = Index(10)
+  M = randomITensor(i,j)
+  U,S,V = svd(M)
+  @show norm(M - U*S*V)
+end
+```
+
