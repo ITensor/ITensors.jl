@@ -20,7 +20,7 @@ through the Flatiron Institute.
 
 ## Code Examples
 
-### ITensor Basic Overview
+### Basic Overview
 
 Here is a basic intro overview of making 
 ITensors, setting some elements, contracting, and adding
