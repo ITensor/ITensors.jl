@@ -22,14 +22,21 @@ through the Flatiron Institute.
 
 ### Singular Value Decomposition (SVD) of a Matrix
 
+In this example, we create a random 10x20 matrix 
+and compute its SVD. The resulting factors can 
+be simply multiplied back together using the
+ITensor `*` operation, which automatically recognizes
+the matching indices between U and S, and between S and V
+and contracts (sums over) them.
+
 ```Julia
 using ITensors
 let
-  i = Index(10)
-  j = Index(10)
-  M = randomITensor(i,j)
-  U,S,V = svd(M)
-  @show norm(M - U*S*V) # ≈ 0.0
+  i = Index(10)           # index of dimension 10
+  j = Index(20)           # index of dimension 20
+  M = randomITensor(i,j)  # random matrix, indices i,j
+  U,S,V = svd(M)          # compute SVD
+  @show norm(M - U*S*V)   # ≈ 0.0
 end
 ```
 
