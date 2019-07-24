@@ -38,6 +38,12 @@ IndexSet(inds::NTuple{2,IndexSet}) = IndexSet(inds...)
 # Convert to an Index if there is only one
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
 
+function Base.show(io::IO, indset::IndexSet)
+  print(io, "IndexSet(")
+  join(io, (sprint(show, ind) for ind in indset.inds), ", ")
+  print(io, ')')
+end
+
 getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
 setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
 length(is::IndexSet) = length(is.inds)
