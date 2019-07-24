@@ -15,7 +15,7 @@ struct MPO
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
-    for ii in 1:N
+    @inbounds for ii in 1:N
       s = sites[ii]
       sp = prime(s)
       if ii == 1
@@ -34,7 +34,7 @@ struct MPO
     N = length(sites)
     its = Vector{ITensor}(undef, N)
     links = Vector{Index}(undef, N)
-    for ii in 1:N
+    @inbounds for ii in 1:N
         si = sites[ii]
         spin_op = op(sites, ops[ii])
         links[ii] = Index(1, "Link,n=$ii")
@@ -64,7 +64,7 @@ end
 function randomMPO(sites,
                    m::Int=1)
   M = MPO(sites)
-  for i=1:length(M)
+  @inbounds for i=1:length(M)
     randn!(M[i])
     normalize!(M[i])
   end
@@ -99,7 +99,7 @@ end
 function siteinds(A::MPO,x::MPS)
   N = length(A)
   is = IndexSet(N)
-  for j in 1:N
+  @inbounds for j in 1:N
     is[j] = siteindex(A,x,j)
   end
   return is
@@ -107,14 +107,14 @@ end
 
 function prime!(M::T,vargs...) where {T <: Union{MPS,MPO}}
   N = length(M)
-  for i ∈ 1:N
+  @inbounds for i ∈ 1:N
     prime!(M[i],vargs...)
   end
 end
 
 function primelinks!(M::T, plinc::Integer = 1) where {T <: Union{MPS,MPO}}
   N = length(M)
-  for i ∈ 1:N-1
+  @inbounds for i ∈ 1:N-1
     l = linkindex(M,i)
     prime!(M[i],plinc,l)
     prime!(M[i+1],plinc,l)
@@ -123,7 +123,7 @@ end
 
 function simlinks!(M::T) where {T <: Union{MPS,MPO}}
   N = length(M)
-  for i ∈ 1:N-1
+  @inbounds for i ∈ 1:N-1
     l = linkindex(M,i)
     l̃ = sim(l)
     #M[i] *= δ(l,l̃)
@@ -145,7 +145,7 @@ function show(io::IO,
               W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  for i=1:length(W)
+  @inbounds for i=1:length(W)
     println(io,"$i  $(W[i])")
   end
 end
@@ -167,7 +167,7 @@ function inner(y::MPS,
   sAx = siteinds(A,x)
   replacesites!(ydag,sAx)
   O = ydag[1]*A[1]*x[1]
-  for j=2:N
+  @inbounds for j=2:N
     O = O*ydag[j]*A[j]*x[j]
   end
   return O[]
