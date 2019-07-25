@@ -208,15 +208,19 @@ end
 /(A::ITensor,x::Number) = A*(1.0/x)
 
 -(A::ITensor) = -one(eltype(A))*A
-function +(A::ITensor,B::ITensor)
-  C = copy(A)
-  add!(C,B)
-  return C
-end
-function -(A::ITensor,B::ITensor)
-  C = copy(A)
-  add!(C,-1,B)
-  return C
+
+
++(A::ITensor,B::ITensor) = add!(copy_promote(A, B),B)
+-(A::ITensor,B::ITensor) = add!(copy_promote(A, B),-1,B)
+
+function copy_promote(A::ITensor,B::ITensor)
+  if eltype(A) == eltype(B)
+    C = copy(A)
+  else
+    CT = promote_type(eltype(A),eltype(B))
+    C = ITensor(inds(A), convert(Dense{CT}, store(A))) # TODO promote_type on storage?
+  end
+  C
 end
 
 #TODO: Add special case of A==B
@@ -264,7 +268,8 @@ Add ITensors B and A and store the result in B.
 B .+= A
 """
 function add!(B::ITensor,A::ITensor)
-  B.store = storage_add!(store(B),inds(B),store(A),inds(A))
+    B.store = storage_add!(store(B),inds(B),store(A),inds(A))
+    B
 end
 
 """
