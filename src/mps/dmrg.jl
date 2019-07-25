@@ -14,6 +14,7 @@ function dmrg(H::MPO,
   position!(PH,psi0,1)
   energy = 0.0
 
+  quiet::Bool = get(kwargs,:quiet,false)
   for sw=1:nsweep(sweeps)
     sw_time = @elapsed begin
 
@@ -38,7 +39,7 @@ function dmrg(H::MPO,
                    which_factorization=which_factorization)
     end
     end
-    @printf "After sweep %d energy=%.12f maxDim=%d time=%.3f\n" sw energy maxDim(psi) sw_time
+    !quiet && @printf "After sweep %d energy=%.12f maxDim=%d time=%.3f\n" sw energy maxDim(psi) sw_time
     @debug printTimes(timer)
   end
   return (energy,psi)
