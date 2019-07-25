@@ -11,6 +11,8 @@ abstract type Site end
 
 ind(st::Site) = st.s
 
+state(site::Site,n::Integer) = ind(site)(n)
+
 function operator(s::Site,opname::String)::ITensor
   error("Operator name $opname not recognized for generic site")
   return ITensor()
@@ -68,6 +70,7 @@ getindex(s::SiteSet,n::Integer) = ind(s.sites[n])
 op(s::SiteSet,opname::String,n::Int) = op(s.sites[n],opname)
 set(s::SiteSet,n::Int,ns::Site) = (s.sites[n] = ns)
 site(s::SiteSet,n::Int) = s.sites[n]
+eachindex(s::SiteSet) = eachindex(s.sites)
 
 function show(io::IO,
               sites::SiteSet)

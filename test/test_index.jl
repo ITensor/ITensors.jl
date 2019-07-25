@@ -1,6 +1,8 @@
 using ITensors,
       Test
 
+import ITensors: In,Out,Neither
+
 @testset "Index" begin
   @testset "Default Index" begin
     i = Index()

@@ -1,5 +1,5 @@
 export tJSite,
-       tjSites
+       tJSites
 
 struct tJSite <: Site
   s::Index
@@ -7,7 +7,7 @@ struct tJSite <: Site
 end
 tJSite(n::Int) = tJSite(Index(3,"Site,tJ,n=$n"))
 
-function tjSites(N::Int;kwargs...)::SiteSet
+function tJSites(N::Int;kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
     set(sites,n,tJSite(n))
@@ -78,7 +78,7 @@ function operator(site::tJSite,
     pD[Dn] = 1.
     return pD
   else
-    error("Operator name '$opname' not recognized for SpinOneSite")
+      throw(ArgumentError("Operator name '$opname' not recognized for SpinOneSite"))
   end
   return Op
 end

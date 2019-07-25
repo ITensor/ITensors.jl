@@ -1,6 +1,6 @@
 using ITensors, Test
 
-@testset "Itensors.jl" begin
+@testset "ITensors.jl" begin
     @testset "$filename" for filename in (
         "test_tagset.jl",
         "test_index.jl",
@@ -9,6 +9,7 @@ using ITensors, Test
         "test_contract.jl",
         "test_trg.jl",
         "test_ctmrg.jl",
+        "test_dmrg.jl",
         "test_siteset.jl",
         "test_mps.jl",
         "test_mpo.jl",

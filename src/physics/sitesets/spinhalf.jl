@@ -15,8 +15,6 @@ function spinHalfSites(N::Int;kwargs...)::SiteSet
   return sites
 end
 
-state(site::SpinHalfSite,st::Integer) = site.s(st)
-
 function state(site::SpinHalfSite,
                st::String)::IndexVal
   if st == "Up" || st == "↑"
@@ -24,7 +22,7 @@ function state(site::SpinHalfSite,
   elseif st == "Dn" || st == "↓"
     return site.s(2)
   else
-    error("State string \"$st\" not recognized for SpinHalfSite")
+    throw(ArgumentError("State string \"$st\" not recognized for SpinHalfSite"))
   end
   return site.s(1)
 end
@@ -51,6 +49,7 @@ function operator(site::SpinHalfSite,
         Op[Up, DnP] = -0.5
         Op[Dn, UpP] = 0.5
     elseif opname == "Sʸ" || opname == "Sy"
+        Op = complex(Op) 
         Op[Up, DnP] = 0.5*im
         Op[Dn, UpP] = -0.5*im
     elseif opname == "Sᶻ" || opname == "Sz"
@@ -69,7 +68,7 @@ function operator(site::SpinHalfSite,
         pD[Dn] = 1.
         return pD
     else
-      error("Operator name '$opname' not recognized for SpinHalfSite")
+        throw(ArgumentError("Operator name '$opname' not recognized for SpinHalfSite"))
     end
     return Op
 end

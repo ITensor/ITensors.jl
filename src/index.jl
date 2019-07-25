@@ -18,9 +18,6 @@ export Index,
        ind,
        setprime,
        sim,
-       Neither,
-       In,
-       Out,
        val
 
 const IDType = UInt64

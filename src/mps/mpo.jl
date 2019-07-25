@@ -15,7 +15,7 @@ struct MPO
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
-    for ii in 1:N
+    @inbounds for ii ∈ eachindex(sites)
       s = sites[ii]
       sp = prime(s)
       if ii == 1
@@ -34,7 +34,7 @@ struct MPO
     N = length(sites)
     its = Vector{ITensor}(undef, N)
     links = Vector{Index}(undef, N)
-    for ii in 1:N
+    @inbounds for ii ∈ eachindex(sites)
         si = sites[ii]
         spin_op = op(sites, ops[ii])
         links[ii] = Index(1, "Link,n=$ii")
@@ -64,7 +64,7 @@ end
 function randomMPO(sites,
                    m::Int=1)
   M = MPO(sites)
-  for i=1:length(M)
+  @inbounds for i ∈ eachindex(sites)
     randn!(M[i])
     normalize!(M[i])
   end
@@ -80,6 +80,8 @@ getindex(m::MPO, n::Integer) = getindex(m.A_,n)
 setindex!(m::MPO,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
 
 copy(m::MPO) = MPO(m.N_,copy(m.A_))
+
+eachindex(m::MPO) = 1:length(m)
 
 # TODO: optimize finding the index a little bit
 # First do: scom = commonindex(A[j],x[j])
@@ -97,24 +99,21 @@ function siteindex(A::MPO,x::MPS,j::Integer)
 end
 
 function siteinds(A::MPO,x::MPS)
-  N = length(A)
-  is = IndexSet(N)
-  for j in 1:N
+  is = IndexSet(length(A))
+  @inbounds for j in eachindex(A)
     is[j] = siteindex(A,x,j)
   end
   return is
 end
 
 function prime!(M::T,vargs...) where {T <: Union{MPS,MPO}}
-  N = length(M)
-  for i ∈ 1:N
+  @inbounds for i ∈ eachindex(M)
     prime!(M[i],vargs...)
   end
 end
 
 function primelinks!(M::T, plinc::Integer = 1) where {T <: Union{MPS,MPO}}
-  N = length(M)
-  for i ∈ 1:N-1
+  @inbounds for i ∈ eachindex(M)[1:end-1]
     l = linkindex(M,i)
     prime!(M[i],plinc,l)
     prime!(M[i+1],plinc,l)
@@ -122,8 +121,7 @@ function primelinks!(M::T, plinc::Integer = 1) where {T <: Union{MPS,MPO}}
 end
 
 function simlinks!(M::T) where {T <: Union{MPS,MPO}}
-  N = length(M)
-  for i ∈ 1:N-1
+  @inbounds for i ∈ eachindex(M)[1:end-1]
     l = linkindex(M,i)
     l̃ = sim(l)
     #M[i] *= δ(l,l̃)
@@ -134,19 +132,18 @@ function simlinks!(M::T) where {T <: Union{MPS,MPO}}
 end
 
 function maxDim(M::T) where {T <: Union{MPS,MPO}}
-  md = 1
-  for b=1:length(M)-1
+  local mb
+  for b ∈ eachindex(M)[1:end-1] 
     md = max(md,dim(linkindex(M,b)))
   end
-  return md
+  md
 end
 
-function show(io::IO,
-              W::MPO)
+function show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  for i=1:length(W)
-    println(io,"$i  $(W[i])")
+  @inbounds for (i, w) ∈ enumerate(W)
+    println(io,"$i  $w")
   end
 end
 
@@ -167,7 +164,7 @@ function inner(y::MPS,
   sAx = siteinds(A,x)
   replacesites!(ydag,sAx)
   O = ydag[1]*A[1]*x[1]
-  for j=2:N
+  @inbounds for j ∈ eachindex(y)[2:end]
     O = O*ydag[j]*A[j]*x[j]
   end
   return O[]

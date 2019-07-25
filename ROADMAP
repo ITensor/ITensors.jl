@@ -1,12 +1,13 @@
 ## Misc To Do
 
+
++ Could ITensor getindex, setindex! be simplified?
+  - map expression is a bit hard to parse
+  - could args be IndexVal... instead of Union{IndexVal,AbstractVector{IndexVal}...}?
+
 + Improve printing of IndexSet
 
-+ Reduce dependencies 
-  - Permutations (let's remove)
-  - KrylovKit (let's remove)
-  - Combinatorics (requires ImageMagick(!); let's move to test-only dependency or remove)
-  - QuadGK (let's move to test-only)
++ Reduce dependencies
 
 + Fix maxDim for MPOs
 

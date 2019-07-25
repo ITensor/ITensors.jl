@@ -65,7 +65,7 @@ function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   return plnew, ntags
 end
 
-isnull(v::MTagStorage) = v[0] == IntChar(0)
+isNull(v::MTagStorage) = v[0] == IntChar(0)
 
 function reset!(v::MTagStorage, nchar::Int)
   for i = 1:nchar

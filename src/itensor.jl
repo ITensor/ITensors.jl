@@ -34,7 +34,7 @@ ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...
 
 function ITensor(::UndefInitializer,
                  inds::IndexSet)
-  return ITensor(inds,Dense{Float64}(undef,dim(inds)))
+  return ITensor(inds,Dense{Float64}(Vector{Float64}(undef,dim(inds))))
 end
 ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
 
@@ -45,9 +45,7 @@ ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
 #TODO: check that the size of the Array matches the Index dimensions
 function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
-  if length(A) ≠ dim(inds)
-    error("In ITensor(Array,IndexSet), length of Array must match total dimension of IndexSet")
-  end
+    length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   return ITensor(inds,Dense{float(S)}(float(vec(A))))
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
@@ -117,7 +115,7 @@ end
 
 function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
   p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
-  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
+  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
   return storage_getindex(store(T),inds(T),vals...)
 end
 
@@ -136,7 +134,7 @@ function setindex!(T::ITensor,
                    ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
   remap_ivs = map(x->x isa IndexVal ? x : x[1], ivs)
   p = calculate_permutation(inds(T),remap_ivs)
-  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
+  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
   storage_setindex!(store(T),inds(T),x,vals...)
   return T
 end
@@ -195,10 +193,7 @@ function isapprox(A::ITensor,
 end
 
 function scalar(T::ITensor)
-  if !(order(T)==0 || dim(T)==1)
-    @show inds(T)
-    error("ITensor is not a scalar")
-  end
+  !(order(T)==0 || dim(T)==1) && throw(ArgumentError("ITensor with inds $(inds(T)) is not a scalar"))
   return storage_scalar(store(T))
 end
 
@@ -307,15 +302,15 @@ function add!(A::ITensor,x::Number,B::ITensor)
 end
 
 """
-    add!(C::ITensor, α::Number, A::ITensor, β::Number, B::ITensor)
+    add!(A::ITensor, α::Number, β::Number, B::ITensor)
 
-Add ITensors α*A and β*B and store the result in C.
+Add ITensors α*A and β*B and store the result in A.
 ```
-C .= α .* A .+ β .* B
+A .= α .* A .+ β .* B
 ```
 """
 function add!(A::ITensor,y::Number,x::Number,B::ITensor)
-  A.store = storage_add!(store(A),inds(A),y,store(B),inds(B),x)
+  A.store = storage_add!(y*store(A),inds(A),store(B),inds(B),x)
   return A
 end
 
