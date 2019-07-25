@@ -120,9 +120,9 @@ let
   k = Index(4,"k")
   l = Index(4,"l")
   T = randomITensor(i,j,k,l)
-  U,S,V = svd(T,(i,k))
-  @show inds(U)
-  @show inds(V)
+  U,S,V = svd(T,i,k)
+  @show hasinds(U,i,k) # == true
+  @show hasinds(V,j,l) # == true
   @show norm(T - U*S*V)   # ≈ 0.0
 end
 ```
