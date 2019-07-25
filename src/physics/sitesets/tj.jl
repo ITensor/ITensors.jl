@@ -78,7 +78,7 @@ function operator(site::tJSite,
     pD[Dn] = 1.
     return pD
   else
-    error("Operator name '$opname' not recognized for SpinOneSite")
+      throw(ArgumentError("Operator name '$opname' not recognized for SpinOneSite"))
   end
   return Op
 end

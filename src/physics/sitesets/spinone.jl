@@ -40,6 +40,7 @@ function operator(site::SpinOneSite,
         Op[Z0, DnP] = im*√2
         Op[Dn, Z0P] = im*√2
     elseif opname == "iSʸ" || opname == "iSy"
+        Op = complex(Op) 
         Op[Up, Z0P] = -im*√2
         Op[Z0, UpP] = im*√2
         Op[Z0, DnP] = -im*√2
@@ -91,7 +92,7 @@ function operator(site::SpinOneSite,
         xdn[Dn] = 0.5
         return xdn
     else
-      error("Operator name '$opname' not recognized for SpinOneSite")
+        throw(ArgumentError("Operator name '$opname' not recognized for SpinOneSite"))
     end
     return Op
 end

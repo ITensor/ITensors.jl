@@ -94,7 +94,7 @@ function operator(site::ElectronSite,
         pUD[UpDn] = 1.
         return pUD
     else
-      error("Operator name $opname not recognized for ElectronSite")
+        throw(ArgumentError("Operator name $opname not recognized for ElectronSite"))
     end
     return Op
 end
