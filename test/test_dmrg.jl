@@ -15,7 +15,9 @@ using ITensors, Test
   psi = randomMPS(sites)
 
   sweeps = Sweeps(5)
-  maxdim!(sweeps,10,20,100,100,200)
+  @test length(sweeps) == 5
+  maxdim!(sweeps,10,20,100,100)
+  mindim!(sweeps,1,10,20,20)
   cutoff!(sweeps,1E-11)
   energy,psi = dmrg(H,psi,sweeps,maxiter=2,quiet=true)
   @test energy ≈ -138.94 rtol=1e-3
