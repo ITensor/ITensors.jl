@@ -13,10 +13,7 @@ ind(st::Site) = st.s
 
 state(site::Site,n::Integer) = ind(site)(n)
 
-function operator(s::Site,opname::String)::ITensor
-  error("Operator name $opname not recognized for generic site")
-  return ITensor()
-end
+operator(s::Site,opname::String)::ITensor = throw(ArgumentError("Operator name $opname not recognized for generic site"))
 
 function op(site::Site,
             opname::AbstractString)::ITensor
