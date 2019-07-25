@@ -10,6 +10,7 @@ using ITensors,
   @test hastags(ts,"t3")
   @test hastags(ts,"t3,t1")
   @test !hastags(ts,"t4")
+  @test TagSet(ts) === ts
 
   t1 = TagSet("t1")
   t2 = TagSet("t2")
