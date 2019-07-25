@@ -11,6 +11,8 @@ abstract type Site end
 
 ind(st::Site) = st.s
 
+state(site::Site,n::Integer) = ind(site)(n)
+
 function operator(s::Site,opname::String)::ITensor
   error("Operator name $opname not recognized for generic site")
   return ITensor()

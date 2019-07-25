@@ -15,8 +15,6 @@ function spinHalfSites(N::Int;kwargs...)::SiteSet
   return sites
 end
 
-state(site::SpinHalfSite,st::Integer) = site.s(st)
-
 function state(site::SpinHalfSite,
                st::String)::IndexVal
   if st == "Up" || st == "↑"
