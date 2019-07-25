@@ -7,7 +7,7 @@ struct MPO{T}
 
   MPO() = new{Dense{Nothing}}(0,Vector{ITensor{Dense{Nothing}}}())
 
-  function MPO(N::Int, A::Vector{ITensor{T}})
+  function MPO(N::Int, A::Vector{ITensor{T}}) where {T}
     new{T}(N,A)
   end
 
