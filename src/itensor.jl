@@ -92,7 +92,7 @@ end
 
 function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
   p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
-  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
+  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
   return storage_getindex(store(T),inds(T),vals...)
 end
 
@@ -111,7 +111,7 @@ function setindex!(T::ITensor,
                    ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
   remap_ivs = map(x->x isa IndexVal ? x : x[1], ivs)
   p = calculate_permutation(inds(T),remap_ivs)
-  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs)
+  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
   storage_setindex!(store(T),inds(T),x,vals...)
   return T
 end
@@ -281,14 +281,14 @@ function add!(A::ITensor,x::Number,B::ITensor)
 end
 
 """
-add!(C::ITensor,α::Number,A::ITensor,β::Number,B::ITensor)
+add!(A::ITensor, α::Number, β::Number, B::ITensor)
 
-Add ITensors α*A and β*B and store the result in C.
+Add ITensors α*A and β*B and store the result in A.
 
-C .= α .* A .+ β .* B
+A .= α .* A .+ β .* B
 """
 function add!(A::ITensor,y::Number,x::Number,B::ITensor)
-  A.store = storage_add!(store(A),inds(A),y,store(B),inds(B),x)
+  A.store = storage_add!(y*store(A),inds(A),store(B),inds(B),x)
   return A
 end
 
@@ -322,7 +322,7 @@ mul!(A::ITensor,x::Number,B::ITensor)
 
 Multiply ITensor B with x and store the result in A.
 
-A .*= x .* B
+A .= x .* B
 """
 function mul!(A::ITensor,x::Number,B::ITensor)
   storage_copyto!(store(A),inds(A),store(B),inds(B),x)
