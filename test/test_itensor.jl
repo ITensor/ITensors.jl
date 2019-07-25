@@ -107,7 +107,7 @@ end
   j = Index(2,"j")
   M = [1 2; 3 4]
   A = ITensor(M,i,j)
-  N = 2*M 
+  N = 2*M
   B = ITensor(N,i,j)
   copyto!(A, B)
   @test A == B
@@ -119,7 +119,7 @@ end
   j = Index(2,"j")
   M = [1 2; 3 4]
   A = ITensor(M,i,j)
-  @test -A == ITensor(-M, i, j) 
+  @test -A == ITensor(-M, i, j)
 end
 
 @testset "dot" begin
@@ -138,13 +138,13 @@ end
   A = ITensor(a,i)
   B = ITensor(b,i)
   c = [5.0; 8.0]
-  @test axpy!(2.0, A, B) == ITensor(c, i) 
+  @test axpy!(2.0, A, B) == ITensor(c, i)
   a = [1.0; 2.0]
   b = [3.0; 4.0]
   A = ITensor(a,i)
   B = ITensor(b,i)
   c = [8.0; 12.0]
-  @test add!(A, 2.0, 2.0, B) == ITensor(c, i) 
+  @test add!(A, 2.0, 2.0, B) == ITensor(c, i)
 end
 
 @testset "mul! and rmul!" begin
@@ -163,7 +163,7 @@ end
   a = [1.0; 2.0]
   A = ITensor(a,i)
   s = split(sprint(show, A), '\n')
-  @test s[1] == "ITensor ord=1 " * sprint(show, i)
+  @test s[1] == "ITensor ord=1 " * sprint(show, i) * " "
   @test s[2] == "Dense{Float64}"
   @test s[3] == " 1.0"
   @test s[4] == " 2.0"
