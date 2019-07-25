@@ -329,9 +329,9 @@ axpy!(a::Number,v::ITensor,w::ITensor) = add!(w,a,v)
 #axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = add!(w,b,w,a,v)
 
 """
-    scale!(A::ITensor,x::Number)
+    scale!(A::ITensor,x::Number) = rmul!(A,x)
 
-Scale the ITensor A by x in-place.
+Scale the ITensor A by x in-place. May also be written `rmul!`.
 ```
 A .*= x
 ```
@@ -344,10 +344,8 @@ end
 """
     mul!(A::ITensor,x::Number,B::ITensor)
 
-Scalar multiplication of ITensors A and B with x, and store the result in A.
-```
-A .*= x .* B
-```
+Scalar multiplication of ITensor B with x, and store the result in A.
+Like `A .= x .* B`, and equivalent to `add!(A, 0, x, B)`.
 """
 function mul!(A::ITensor,x::Number,B::ITensor)
   storage_copyto!(store(A),inds(A),store(B),inds(B),x)

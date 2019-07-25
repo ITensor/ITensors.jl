@@ -152,10 +152,10 @@ end
   a = [1.0; 2.0]
   b = [2.0; 4.0]
   A = ITensor(a,i)
-  A2 = copy(A)
+  A2, A3 = copy(A), copy(A)
   B = ITensor(b,i)
-  @test mul!(A2, A, 2.0) == B
-  @test rmul!(A, 2.0) == B
+  @test mul!(A2, A, 2.0) == B == ITensors.add!(A2, 0, 2, A)
+  @test rmul!(A, 2.0) == B == ITensors.scale!(A3, 2)
 end
 
 @testset "show" begin
