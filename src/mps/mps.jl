@@ -10,19 +10,19 @@ export MPS,
        siteindex,
        siteinds
 
-mutable struct MPS
+mutable struct MPS{T}
   N_::Int
-  A_::Vector{ITensor}
+  A_::Vector{ITensor{T}}
   llim_::Int
   rlim_::Int
 
-  MPS() = new(0,Vector{ITensor}(),0,0)
+  MPS() = new{Dense{Nothing}}(0,Vector{ITensorDense{Nothing}}(),0,0)
 
   function MPS(N::Int, 
-               A::Vector{ITensor}, 
+               A::Vector{ITensor{T}}, 
                llim::Int=0, 
-               rlim::Int=N+1)
-    new(N,A,llim,rlim)
+               rlim::Int=N+1) where {T}
+    new{T}(N,A,llim,rlim)
   end
   
   function MPS(sites::SiteSet)
@@ -39,7 +39,7 @@ mutable struct MPS
         v[ii] = ITensor(l[ii-1], l[ii], s)
       end
     end
-    new(N,v)
+    new{typeof(v[1].store)}(N,v)
   end
 
   function MPS(is::InitState)
@@ -61,7 +61,7 @@ mutable struct MPS
       end
       As[n] = A
     end
-    new(N,As,0,2)
+    new{typeof(As[1].store)}(N,As,0,2)
   end
 end
 MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))

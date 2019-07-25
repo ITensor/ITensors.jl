@@ -1,14 +1,14 @@
 export MPO,
        randomMPO
 
-struct MPO
+struct MPO{T}
   N_::Int
-  A_::Vector{ITensor}
+  A_::Vector{ITensor{T}}
 
-  MPO() = new(0,Vector{ITensor}())
+  MPO() = new{Dense{Nothing}}(0,Vector{ITensor{Dense{Nothing}}}())
 
-  function MPO(N::Int, A::Vector{ITensor})
-    new(N,A)
+  function MPO(N::Int, A::Vector{ITensor{T}})
+    new{T}(N,A)
   end
 
   function MPO(sites)
@@ -26,7 +26,7 @@ struct MPO
         v[ii] = ITensor(l[ii-1], s, sp, l[ii])
       end
     end
-    new(N,v)
+    new{store(v[1])}(N,v)
   end
  
   function MPO(sites::SiteSet, 
@@ -51,12 +51,12 @@ struct MPO
         end
         its[ii] = this_it
     end
-    new(N,its)
+    new{store(its)}(N,its)
   end
 
   function MPO(sites::SiteSet, 
                ops::String)
-    return MPO(sites, fill(ops, length(sites)))
+      MPO(sites, fill(ops, length(sites)))
   end
 
 end
