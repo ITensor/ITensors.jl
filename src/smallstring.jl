@@ -34,7 +34,7 @@ function Base.setindex(s::SmallString,val,n::Integer)
   return SmallString(setindex(s.data,val,n),len)
 end
 
-isnull(s::SmallString) = @inbounds s[1] == IntChar(0)
+isNull(s::SmallString) = @inbounds s[1] == IntChar(0)
 
 function StaticArrays.push(s::SmallString,val)
   len = length(s)
