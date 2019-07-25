@@ -34,7 +34,7 @@ ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...
 
 function ITensor(::UndefInitializer,
                  inds::IndexSet)
-  return ITensor(inds,Dense{Float64}(undef,dim(inds)))
+  return ITensor(inds,Dense{Float64}(Vector{Float64}(undef,dim(inds))))
 end
 ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
 
@@ -45,9 +45,7 @@ ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
 #TODO: check that the size of the Array matches the Index dimensions
 function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
-  if length(A) ≠ dim(inds)
-    error("In ITensor(Array,IndexSet), length of Array must match total dimension of IndexSet")
-  end
+    length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   return ITensor(inds,Dense{float(S)}(float(vec(A))))
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
@@ -171,10 +169,7 @@ function isapprox(A::ITensor,
 end
 
 function scalar(T::ITensor)
-  if !(order(T)==0 || dim(T)==1)
-    @show inds(T)
-    error("ITensor is not a scalar")
-  end
+  !(order(T)==0 || dim(T)==1) && throw(ArgumentError("ITensor with inds $(inds(T)) is not a scalar"))
   return storage_scalar(store(T))
 end
 

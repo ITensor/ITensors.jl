@@ -14,22 +14,33 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
   @testset "Default" begin
     A = ITensor()
     @test store(A) isa Dense{Nothing}
+    @test isNull(A)
+  end
+
+  @testset "Undef with index" begin
+    A = ITensor(undef, i)
+    @test store(A) isa Dense{Float64}
+    @test !isNull(A)
   end
 
   @testset "Default with indices" begin
     A = ITensor(i,j)
     @test store(A) isa Dense{Float64}
+    @test !isNull(A)
   end
 
   @testset "Random" begin
     A = randomITensor(i,j)
     @test store(A) isa Dense{Float64}
+    @test !isNull(A)
   end
 
   @testset "From matrix" begin
     M = [1 2; 3 4]
     A = ITensor(M,i,j)
     @test store(A) isa Dense{Float64}
+    M = [1 2 3; 4 5 6]
+    @test_throws DimensionMismatch ITensor(M,i,j)
   end
 
   @testset "Complex" begin
@@ -58,6 +69,34 @@ end
   for ii ∈ dim(i), jj ∈ dim(j)
     @test complex(A[i(ii),j(jj)]) == B[i(ii),j(jj)]
   end
+end
+
+@testset "fill!" begin
+  i = Index(2,"i")
+  j = Index(2,"j")
+  A = randomITensor(i,j)
+  fill!(A, 1.0)
+  @test all(data(store(A)) .== 1.0)
+end
+
+@testset "copyto!" begin
+  i = Index(2,"i")
+  j = Index(2,"j")
+  M = [1 2; 3 4]
+  A = ITensor(M,i,j)
+  N = 2*M 
+  B = ITensor(N,i,j)
+  copyto!(A, B)
+  @test A == B
+  @test data(store(A)) == vec(N)
+end
+
+@testset "Unary -" begin
+  i = Index(2,"i")
+  j = Index(2,"j")
+  M = [1 2; 3 4]
+  A = ITensor(M,i,j)
+  @test -A == ITensor(-M, i, j) 
 end
 
 @testset "Test isapprox for ITensors" begin
@@ -207,6 +246,8 @@ end
     x = SType(34)
     A = ITensor(x)
     @test x==scalar(A)
+    A = ITensor(SType,i,j,k)
+    @test_throws ArgumentError scalar(A)
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)
