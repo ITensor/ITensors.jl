@@ -183,7 +183,7 @@ function commonindex(Ainds,Binds)
   for i ∈ Ais
     hasindex(Binds,i) && return i
   end
-  return return Index()
+  return Index()
 end
 # This version checks if there are more than one indices
 #commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
