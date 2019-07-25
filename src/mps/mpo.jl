@@ -36,12 +36,12 @@ struct MPO
     links = Vector{Index}(undef, N)
     @inbounds for ii ∈ eachindex(sites)
         si = sites[ii]
-        spin_op = op(sites, ops[ii])
+        spin_op = op(sites, ops[ii], ii)
         links[ii] = Index(1, "Link,n=$ii")
         local this_it
         if ii == 1
             this_it = ITensor(links[ii], si, si')
-            this_it[links[ii](1), s[:], s'[:]] = spin_op[si[:], si'[:]]
+            this_it[links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
         elseif ii == N
             this_it = ITensor(links[ii-1], si, si')
             this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
@@ -132,7 +132,7 @@ function simlinks!(M::T) where {T <: Union{MPS,MPO}}
 end
 
 function maxDim(M::T) where {T <: Union{MPS,MPO}}
-  local mb
+  md = 0
   for b ∈ eachindex(M)[1:end-1] 
     md = max(md,dim(linkindex(M,b)))
   end
@@ -142,9 +142,19 @@ end
 function show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  @inbounds for (i, w) ∈ enumerate(W)
+  @inbounds for (i, w) ∈ enumerate(inds.(W.A_))
     println(io,"$i  $w")
   end
+end
+
+function linkindex(M::MPO,j::Integer) 
+  N = length(M)
+  j ≥ length(M) && error("No link index to the right of site $j (length of MPO is $N)")
+  li = commonindex(M[j],M[j+1])
+  if isdefault(li)
+    error("linkindex: no MPO link index at link $j")
+  end
+  return li
 end
 
 """
@@ -157,7 +167,7 @@ function inner(y::MPS,
                x::MPS)::Number
   N = length(A)
   if length(y) != N || length(x) != N
-    error("inner: mismatched lengths $N and $(length(x)) or $(length(y))")
+      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
   end
   ydag = dag(y)
   simlinks!(ydag)
