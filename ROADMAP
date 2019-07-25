@@ -2,11 +2,7 @@
 
 + Improve printing of IndexSet
 
-+ Reduce dependencies 
-  - Permutations (let's remove)
-  - KrylovKit (let's remove)
-  - Combinatorics (requires ImageMagick(!); let's move to test-only dependency or remove)
-  - QuadGK (let's move to test-only)
++ Reduce dependencies
 
 + Fix maxDim for MPOs
 
