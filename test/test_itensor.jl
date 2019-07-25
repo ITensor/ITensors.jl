@@ -71,6 +71,15 @@ end
   end
 end
 
+@testset "similar" begin
+  i = Index(2,"i")
+  j = Index(2,"j")
+  A = randomITensor(i,j)
+  B = similar(A)
+  @test inds(B) == inds(A)
+  @test_throws ErrorException similar(A, ComplexF32)
+end
+
 @testset "fill!" begin
   i = Index(2,"i")
   j = Index(2,"j")
@@ -97,6 +106,53 @@ end
   M = [1 2; 3 4]
   A = ITensor(M,i,j)
   @test -A == ITensor(-M, i, j) 
+end
+
+@testset "dot" begin
+  i = Index(2,"i")
+  a = [1.0; 2.0]
+  b = [3.0; 4.0]
+  A = ITensor(a,i)
+  B = ITensor(b,i)
+  @test dot(A, B) == 11.0
+end
+
+@testset "add and axpy" begin
+  i = Index(2,"i")
+  a = [1.0; 2.0]
+  b = [3.0; 4.0]
+  A = ITensor(a,i)
+  B = ITensor(b,i)
+  c = [5.0; 8.0]
+  @test axpy!(2.0, A, B) == ITensor(c, i) 
+  a = [1.0; 2.0]
+  b = [3.0; 4.0]
+  A = ITensor(a,i)
+  B = ITensor(b,i)
+  c = [8.0; 12.0]
+  @test add!(A, 2.0, 2.0, B) == ITensor(c, i) 
+end
+
+@testset "mul! and rmul!" begin
+  i = Index(2,"i")
+  a = [1.0; 2.0]
+  b = [2.0; 4.0]
+  A = ITensor(a,i)
+  A2 = copy(A)
+  B = ITensor(b,i)
+  @test mul!(A2, A, 2.0) == B
+  @test rmul!(A, 2.0) == B
+end
+
+@testset "show" begin
+  i = Index(2,"i")
+  a = [1.0; 2.0]
+  A = ITensor(a,i)
+  s = split(sprint(show, A), '\n')
+  @test s[1] == "ITensor ord=1 " * sprint(show, i)
+  @test s[2] == "Dense{Float64}"
+  @test s[3] == " 1.0"
+  @test s[4] == " 2.0"
 end
 
 @testset "Test isapprox for ITensors" begin
@@ -229,6 +285,22 @@ end
     @test i==inds(permA)[3]
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[k(kk),i(ii),j(jj)]==permA[i(ii),j(jj),k(kk)]
+    end
+    for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
+      @test A[k(kk),i(ii),j(jj)]==permA[i(ii),j(jj),k(kk)]
+    end
+    @testset "getindex and setindex with vector of IndexVals" begin
+        k_inds = [k(kk) for kk ∈ 1:dim(k)]
+        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+          @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
+        end
+        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+            A[k_inds,i(ii),j(jj)]=collect(1:length(k_inds))
+        end
+        permA = permute(A,k,j,i)
+        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+          @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
+        end
     end
   end
   @testset "Set and get values with Ints" begin
