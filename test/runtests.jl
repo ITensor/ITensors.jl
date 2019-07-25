@@ -3,6 +3,7 @@ using ITensors, Test
 @testset "ITensors.jl" begin
     @testset "$filename" for filename in (
         "test_tagset.jl",
+        "test_smallstring.jl",
         "test_index.jl",
         "test_indexset.jl",
         "test_itensor.jl",
