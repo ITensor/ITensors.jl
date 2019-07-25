@@ -19,4 +19,8 @@ using ITensors, Test
   cutoff!(sweeps,1E-11)
   energy,psi = dmrg(H,psi,sweeps,maxiter=2,quiet=true)
   @test energy ≈ -138.94 rtol=1e-3
+  # test with SVD too! 
+  psi = randomMPS(sites)
+  energy,psi = dmrg(H,psi,sweeps,maxiter=2,quiet=true,factorization="svd")
+  @test energy ≈ -138.94 rtol=1e-3
 end
