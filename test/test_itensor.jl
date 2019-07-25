@@ -24,12 +24,23 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
   @testset "Random" begin
     A = randomITensor(i,j)
     @test store(A) isa Dense{Float64}
+    @test ndims(A) == order(A) == 2 == length(inds(A))
+    @test size(A) == dims(A) == (2,2)
+    @test length(A) == dim(A) == 4 == prod(size(A))
   end
 
   @testset "From matrix" begin
     M = [1 2; 3 4]
     A = ITensor(M,i,j)
     @test store(A) isa Dense{Float64}
+
+    @test M == Matrix(A)
+    @test_throws DimensionMismatch Vector(A)
+
+    @test size(A,1) == size(M,1) == 2
+    @test size(A,3) == size(M,3) == 1
+    @test_throws ErrorException size(A,0)
+    @test_throws ErrorException size(M,0)
   end
 
   @testset "Complex" begin
@@ -150,7 +161,7 @@ end
     A2p = prime(A2)
     @test A2p==A2'
     @test hasinds(A2p,s2',l'',l''')
-    
+
     A2p = prime(A2,2)
     A2p = A2''
     @test hasinds(A2p,s2'',l''',l'''')
@@ -235,7 +246,7 @@ end
       @test Vh*dag(prime(Vh,v))≈δ(SType,v,v') atol=1e-14
     end
 
-    @testset "Test SVD truncation" begin 
+    @testset "Test SVD truncation" begin
         M = randn(4,4) + randn(4,4)*1.0im
         (U,s,Vh) = svd(M)
         ii = Index(4)
@@ -244,7 +255,7 @@ end
         T = ITensor(IndexSet(ii,jj),Dense{ComplexF64}(vec(U*S*Vh)))
         (U,S,Vh) = svd(T,ii;maxdim=2)
         @test norm(U*S*Vh-T)≈sqrt(s[3]^2+s[4]^2)
-    end 
+    end
 
     @testset "Test QR decomposition of an ITensor" begin
       Q,R = qr(A,(i,l))
@@ -256,7 +267,7 @@ end
     @testset "Test polar decomposition of an ITensor" begin
       U,P = polar(A,(k,l))
       @test A≈U*P
-      #Note: this is only satisfied when left dimensions 
+      #Note: this is only satisfied when left dimensions
       #are greater than right dimensions
       uinds = commoninds(U,P)
       UUᵀ =  U*dag(prime(U,uinds))

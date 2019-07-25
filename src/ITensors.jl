@@ -1,7 +1,7 @@
 
 module ITensors
 
-function pause() 
+function pause()
   println("(paused)")
   readline(stdin)
 end
@@ -27,8 +27,10 @@ import Base.adjoint,
        Base.push!,
        Base.setindex!,
        Base.show,
+       Base.summary,
        Base.similar,
        Base.size,
+       Base.ndims,
        Base.!=,
        Base.+,
        Base.-,
@@ -36,7 +38,7 @@ import Base.adjoint,
        Base./,
        Base.^,
        Base.complex,
-       Base.setdiff,  # Since setdiff doesn't 
+       Base.setdiff,  # Since setdiff doesn't
                       # work with IndexSet, overload it
        LinearAlgebra.axpby!,
        LinearAlgebra.axpy!,
