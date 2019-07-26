@@ -1,38 +1,36 @@
 export MPO,
        randomMPO
 
-struct MPO
-  N_::Int
-  A_::Vector{ITensor}
+struct MPO{T <: ITensor}
+    N_::Int
+    A_::Vector{T}
+    MPO{T}(N::Int, A::Vector{ITensor{<:TensorStorage}})                           = new{T}(N, A)
+    MPO(N::Int, A::Vector{{ITensor{<:TensorStorage}}}) where {T <: TensorStorage} = new{TensorStorage}(N, A)
+end
 
-  MPO() = new(0,Vector{ITensor}())
+MPO() = MPO(0,Vector{ITensor{TensorStorage}}())
 
-  function MPO(N::Int, A::Vector{ITensor})
-    new(N,A)
-  end
-
-  function MPO(sites)
+function MPO(sites)
     N = length(sites)
-    v = Vector{ITensor}(undef, N)
+    v = Vector{ITensor{TensorStorage}}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
     @inbounds for ii ∈ eachindex(sites)
-      s = sites[ii]
-      sp = prime(s)
-      if ii == 1
-        v[ii] = ITensor(s, sp, l[ii])
-      elseif ii == N
-        v[ii] = ITensor(l[ii-1], s, sp)
-      else
-        v[ii] = ITensor(l[ii-1], s, sp, l[ii])
-      end
+        s = sites[ii]
+        sp = prime(s)
+        if ii == 1
+            v[ii] = ITensor(s, sp, l[ii])
+        elseif ii == N
+            v[ii] = ITensor(l[ii-1], s, sp)
+        else
+            v[ii] = ITensor(l[ii-1], s, sp, l[ii])
+        end
     end
     new(N,v)
-  end
- 
-  function MPO(sites::SiteSet, 
-               ops::Vector{String})
+end
+
+function MPO(sites::SiteSet, ops::Vector{String})
     N = length(sites)
-    its = Vector{ITensor}(undef, N)
+    its = Vector{ITensor{TensorStorage}}(undef, N)
     links = Vector{Index}(undef, N)
     @inbounds for ii ∈ eachindex(sites)
         si = sites[ii]
@@ -51,14 +49,11 @@ struct MPO
         end
         its[ii] = this_it
     end
-    new(N,its)
-  end
+    MPO(N,its)
+end
 
-  function MPO(sites::SiteSet, 
-               ops::String)
-    return MPO(sites, fill(ops, length(sites)))
-  end
-
+function MPO(sites::SiteSet, ops::String)
+    MPO(sites, fill(ops, length(sites)))
 end
 
 function randomMPO(sites,
