@@ -14,12 +14,13 @@ export ITensor,
        scalar,
        store
 
-mutable struct ITensor
-  inds::IndexSet
-  store::TensorStorage
-  #TODO: check that the storage is consistent with the
-  #total dimension of the indices (possibly only in debug mode);
-  ITensor(is::IndexSet,st::T) where T = new(is,st)
+mutable struct ITensor{T <: TensorStorage}
+    inds::IndexSet
+    store::T
+    #TODO: check that the storage is consistent with the
+    #total dimension of the indices (possibly only in debug mode);
+    ITensor(is::IndexSet, st::TensorStorage)                             = new(is,st)
+    ITensor{T}(is::IndexSet, st::TensorStorage) where {T<:TensorStorage} = new{T}(is, st)
 end
 
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
