@@ -98,6 +98,11 @@ end
   copyto!(A, B)
   @test A == B
   @test data(store(A)) == vec(N)
+  A = ITensor(M,i,j)
+  B = ITensor(N,j,i)
+  copyto!(A, B)
+  @test A == B
+  @test data(store(A)) == vec(transpose(N))
 end
 
 @testset "Unary -" begin
@@ -320,6 +325,8 @@ end
     @test x==scalar(A)
     A = ITensor(SType,i,j,k)
     @test_throws ArgumentError scalar(A)
+    # test the storage_scalar error throw
+    @test_throws ErrorException ITensor.storage_scalar(Dense{Float64}(rand(10)))
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)
