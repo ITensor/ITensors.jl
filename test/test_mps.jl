@@ -7,6 +7,11 @@ using ITensors,
   sites = SiteSet(N,2)
   psi = MPS(sites)
   @test length(psi) == N
+  @test length(MPS()) == 0
+
+  str = split(sprint(show, psi), '\n')
+  @test str[1] == "MPS"
+  @test length(str) == length(psi) + 2
 
   @test siteindex(psi,2) == sites[2]
   @test hasindex(psi[3],linkindex(psi,2))
@@ -31,6 +36,10 @@ using ITensors,
       phipsi *= dag(phi[j])*psi[j]
     end
     @test phipsi[] ≈ inner(phi,psi)
+ 
+    badsites = SiteSet(N+1,2)
+    badpsi = randomMPS(badsites)
+    @test_throws DimensionMismatch inner(phi,badpsi)
   end
 
   @testset "inner same MPS" begin
@@ -44,4 +53,16 @@ using ITensors,
     @test psipsi[] ≈ inner(psi,psi)
   end
 
+  sites = spinHalfSites(N)
+  psi = MPS(sites)
+  @test length(psi) == N # just make sure this works
+  @test length(siteinds(psi)) == N
+
+  psi = randomMPS(sites)
+  position!(psi, N-1)
+  @test ITensors.leftLim(psi) == N-2
+  @test ITensors.rightLim(psi) == N
+  position!(psi, 2)
+  @test ITensors.leftLim(psi) == 1
+  @test ITensors.rightLim(psi) == 3
 end

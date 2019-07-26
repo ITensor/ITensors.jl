@@ -74,6 +74,8 @@ function randomMPS(sites)
     randn!(M[i])
     normalize!(M[i])
   end
+  M.llim_ = 1
+  M.rlim_ = length(M)
   return M
 end
 
@@ -106,7 +108,7 @@ end
 function show(io::IO, M::MPS)
   print(io,"MPS")
   (length(M) > 0) && print(io,"\n")
-  @inbounds for (i, m) ∈ eachindex(M)
+  @inbounds for (i, m) ∈ enumerate(inds.(M.A_))
     println(io,"$i  $m")
   end
 end
@@ -154,7 +156,6 @@ end
 function position!(M::MPS,
                    j::Integer)
   N = length(M)
-
   while leftLim(M) < (j-1)
     ll = leftLim(M)+1
     s = findindex(M[ll],"Site")
@@ -195,7 +196,7 @@ Compute <ψ|ϕ>
 function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
-    error("inner: mismatched lengths $N and $(length(M2))")
+      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
   end
   M1dag = dag(M1)
   simlinks!(M1dag)

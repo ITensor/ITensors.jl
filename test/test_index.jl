@@ -9,6 +9,7 @@ import ITensors: In,Out,Neither
     @test id(i) == 0
     @test dim(i) == 1
     @test dir(i) == Neither
+    @test_throws ArgumentError -dir(i)
     @test plev(i) == 0
     @test tags(i) == TagSet("0")
   end
@@ -46,6 +47,8 @@ import ITensors: In,Out,Neither
     @test plev(i2) == 2
     i3 = i'''
     @test plev(i3) == 3
+    i0 = noprime(i)
+    @test plev(i0) == 0
   end
   @testset "IndexVal" begin
     i = Index(2)
@@ -59,5 +62,7 @@ import ITensors: In,Out,Neither
     @test plev(i(2)') == 1
     @test val(i(2)') == 2
     @test plev(prime(i(2),4)) == 4
+    @test i[:] == [i(1); i(2)]
+    @test sprint(show, i(2)) == sprint(show, i)*"=2"
   end
 end
