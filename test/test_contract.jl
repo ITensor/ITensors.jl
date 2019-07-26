@@ -12,6 +12,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
   k = Index(mk,"k")
   l = Index(ml,"l")
   α = Index(mα,"alpha") 
+  β = Index(mα,"beta") 
   @testset "Test contract ITensors" begin
     A = randomITensor(T)
     B = randomITensor(T)
@@ -29,6 +30,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     Aikl = randomITensor(T,i,k,l)
     Aklα = randomITensor(T,k,l,α)
     Aijkl = randomITensor(T,i,j,k,l)
+    Akalb = randomITensor(T,k,α,l,β)
     @testset "Test contract ITensor (Scalar*Scalar -> Scalar)" begin
       C = A*B
       @test scalar(C)≈scalar(A)*scalar(B)
@@ -193,6 +195,35 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
         CArray = reshape(reshape(Array(permute(Aklα,α,k,l)),dim(α),dim(k)*dim(l))*reshape(Array(permute(Aijkl,k,l,i,j)),dim(k)*dim(l),dim(i)*dim(j)),dim(α),dim(i),dim(j))
         @test CArray≈Array(permute(C,α,i,j))
       end
+    end
+    @testset "Explicitly test storage_contract" begin # in anticipation of in-place w/ prealloced C
+      Cinds = IndexSet(l, i) # permuted C
+      Cstore = Vector{Float64}(undef, dim(i)*dim(l))
+      Ais = inds(Aijk)
+      Bis = inds(Ajkl)
+      (Alabels,Blabels) = ITensors.compute_contraction_labels(Ais, Bis)
+      (Cis,Clabels) = ITensors.contract_inds(Ais,Alabels,Bis,Blabels)
+      Astore = copy(store(Aijk))
+      Bstore = copy(store(Ajkl))
+      Cstore = ITensors.contract(Cinds,reverse(Clabels),Astore,Ais,Alabels,Bstore,Bis,Blabels)
+      C = ITensor(Cinds, Cstore)
+      if !Sys.isapple()
+          @test_broken C == Aijk*Ajkl
+      else
+          @test C == Aijk*Ajkl
+      end
+      # something we can't just do with B^T A^T 
+      Cinds = IndexSet(α, β, i, j) # permuted C
+      Cstore = Vector{Float64}(undef, prod(dims(Cinds)))
+      Ais = inds(Aijkl)
+      Bis = inds(Akalb)
+      (Alabels,Blabels) = ITensors.compute_contraction_labels(Ais, Bis)
+      (Cis,Clabels) = ITensors.contract_inds(Ais,Alabels,Bis,Blabels)
+      Astore = copy(store(Aijkl))
+      Bstore = copy(store(Akalb))
+      Cstore = ITensors.contract(Cinds,reverse(Clabels),Astore,Ais,Alabels,Bstore,Bis,Blabels)
+      C = ITensor(Cinds, Cstore)
+      @test_broken C == permute(Aijkl*Akalb, Cinds)
     end
   end # End contraction testset
 end

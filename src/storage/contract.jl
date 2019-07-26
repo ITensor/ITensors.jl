@@ -143,7 +143,6 @@ function compute!(props::CProps,
                   B::Array,
                   C::Array)
   compute_perms!(props)
-
   #Use props.PC.size() as a check to see if we've already run this
   length(props.PC)!=0 && return
 
@@ -234,7 +233,7 @@ function compute!(props::CProps,
   end
 
   if props.permuteC && !(props.permuteA && props.permuteB)
-    PCost(d::Real) = d*d
+      PCost(d::Real) = d*d
     #Could avoid permuting C if
     #permute both A and B, worth it?
     pCcost = PCost(props.dleft*props.dright)
@@ -291,7 +290,7 @@ function compute!(props::CProps,
     props.newArange = permute_extents([size(A)...],props.PA)
   end
 
-  if(props.permuteB)
+  if props.permuteB
     props.PB = fill(0,rb)
     #TODO: check this is correct for 1-indexing
     newi = 0 #1
@@ -373,7 +372,7 @@ function compute!(props::CProps,
       #at best indices from B precede those from A (on result C)
       #so if both sets remain in same order on C 
       #just need to transpose C, not permute it
-      if  checkBCsameord(props) && checkACsameord(props)
+      if checkBCsameord(props) && checkACsameord(props)
         props.ctrans = true
         props.permuteC = false
       end
@@ -414,7 +413,6 @@ function compute!(props::CProps,
     end
     props.newCrange = Rb
   end
-
 end
 
 function contract!(C::Array{T},
@@ -455,22 +453,22 @@ function contract!(C::Array{T},
     cref = reshape(copy(C),p.dleft,p.dright)
   else
     if Ctrans(p)
-      cref = reshape(C,p.dleft,p.dright)
-      if tA=='N' && tB=='N'
-        (aref,bref) = (bref,aref)
-        tA = tB = 'T'
-      elseif tA=='T' && tB=='T'
-        (aref,bref) = (bref,aref)
-        tA = tB = 'N'
+      if tA == tB
+          cref = reshape(C,p.dright,p.dleft)
+          (aref,bref) = (bref,aref)
+          if tA=='N' && tB=='N'
+            tA = tB = 'T'
+          elseif tA=='T' && tB=='T'
+            tA = tB = 'N'
+          end 
+      else
+          cref = reshape(C,p.dleft,p.dright)
       end
     else
       cref = reshape(C,p.dleft,p.dright)
     end
   end
-
-  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
   BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
-
   if p.permuteC
     permutedims!(C,reshape(cref,p.newCrange...),p.PC)
   end
