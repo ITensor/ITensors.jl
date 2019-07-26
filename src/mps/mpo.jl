@@ -4,8 +4,8 @@ export MPO,
 struct MPO{T <: ITensor}
     N_::Int
     A_::Vector{T}
-    MPO{T}(N::Int, A::Vector{ITensor{<:TensorStorage}})                           = new{T}(N, A)
-    MPO(N::Int,    A::Vector{ITensor{<:TensorStorage}}) where {T <: TensorStorage} = new{TensorStorage}(N, A)
+    MPO{T}(N::Int, A::Vector{ITensor{<:TensorStorage}}) where {T <: TensorStorage} = new{T}(N, A)
+    MPO(N::Int,    A::Vector{ITensor{<:TensorStorage}})                            = new{TensorStorage}(N, A)
 end
 
 MPO() = MPO(0,Vector{ITensor{TensorStorage}}())
