@@ -46,14 +46,14 @@ let
   # ...
 
   # contract over index j
-  C = A*B
+  C = A * B
 
   @show hasinds(C,i,k,l) # == true
 
   D = randomITensor(k,j,i)
 
   # add two ITensors
-  R = A+D
+  R = A + D
 
 end
 
@@ -73,7 +73,7 @@ let
 
   j = Index(5,"j") # Index with a tag "j"
 
-  s = Index(2,"Site,n=1") # Index with two tags,
+  s = Index(2,"n=1,Site") # Index with two tags,
                           # "Site" and "n=1"
   @show hastags(s,"Site") # hasTags(s,"Site") = true
   @show hastags(s,"n=1")  # hasTags(s,"n=1") = true
@@ -104,8 +104,8 @@ end
 
 In this example, we create a random 4x4x4x4 tensor 
 and compute its SVD, temporarily treating the first
-and third indices as the "row" index and the second
-and fourth indices as the "column" index for the purposes
+and third indices (i and k) as the "row" index and the second
+and fourth indices (j and l) as the "column" index for the purposes
 of the SVD. The resulting factors can 
 be simply multiplied back together using the
 ITensor `*` operation, which automatically recognizes

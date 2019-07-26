@@ -268,8 +268,8 @@ Add ITensors B and A and store the result in B.
 B .+= A
 """
 function add!(B::ITensor,A::ITensor)
-    B.store = storage_add!(store(B),inds(B),store(A),inds(A))
-    B
+  B.store = storage_add!(store(B),inds(B),store(A),inds(A))
+  return B
 end
 
 """

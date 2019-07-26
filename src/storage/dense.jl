@@ -198,11 +198,8 @@ function storage_dag(Astore::Dense,Ais::IndexSet)
 end
 
 function storage_scalar(D::Dense)
-  if length(D)==1
-    return D[1]
-  else
-    throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
-  end
+  length(D)==1 && return D[1]
+  throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
 end
 
 function is_outer(l1::Vector{Int},l2::Vector{Int})
