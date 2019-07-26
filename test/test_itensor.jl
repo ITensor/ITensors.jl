@@ -271,6 +271,13 @@ end
     @test hasinds(mapprime(A2,1,7),s2,l^7,l'')
     @test hasinds(mapprime(A2,0,1),s2',l',l'')
   end
+  @testset "setprime" begin
+    @test hasinds(setprime(A2,2,s2),s2'',l',l'')
+    @test hasinds(setprime(A2,0,l''),s2,l',l)
+  end
+  @testset "swapprime" begin
+    @test hasinds(swapprime(A2,l'',s2),s2'',l',l)
+  end
 end
 
 @testset "ITensor, Dense{$SType} storage" for SType ∈ (Float64,ComplexF64)

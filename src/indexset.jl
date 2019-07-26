@@ -279,6 +279,16 @@ setprime(is::IndexSet, vargs...) = setprime!(copy(is), vargs...)
 noprime!(is::IndexSet, match = nothing) = setprime!(is, 0, match)
 noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
 
+function swapprime!(is::IndexSet, vargs...) 
+  pos = indexpositions(is,vargs)
+  plevs = reverse(plev.(is))
+  for n in pos
+    is[n] = setprime(is[n],plevs[n])
+  end
+  return is
+end
+swapprime(is::IndexSet, vargs...) = swapprime!(copy(is), vargs...)
+
 function mapprime!(is::IndexSet,
                    plold::Integer,
                    plnew::Integer,
