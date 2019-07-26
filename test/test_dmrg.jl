@@ -23,6 +23,6 @@ using ITensors, Test
   @test energy ≈ -138.94 rtol=1e-3
   # test with SVD too! 
   psi = randomMPS(sites)
-  energy,psi = dmrg(H,psi,sweeps,maxiter=2,quiet=true,factorization="svd")
+  energy,psi = dmrg(H,psi,sweeps,maxiter=2,quiet=true,which_factorization="svd")
   @test energy ≈ -138.94 rtol=1e-3
 end
