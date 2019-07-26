@@ -18,7 +18,8 @@ export Index,
        ind,
        setprime,
        sim,
-       val
+       val,
+       @indices
 
 const IDType = UInt64
 
@@ -179,3 +180,15 @@ prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))
 adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
 
 show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
+
+function indicem(xs::Symbol...)
+  ex = Expr(:block)
+  for (k, x) in enumerate(xs)
+    push!(ex.args, :($(esc(x)) = Index($k, $(string(x)))))
+  end
+  return ex
+end
+
+macro indices(xs...)
+  return indicem(xs...)
+end
