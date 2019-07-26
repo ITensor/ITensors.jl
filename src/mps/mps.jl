@@ -22,14 +22,14 @@ mutable struct MPS{T <: TensorStorage}
     MPS{T}(N_::Int,
            A_::Vector{ITensor{<:TensorStorage}},
            llim_::Int=0,
-           rlim_::Int=N+1) where {T <: TensorStorage} = new{TensorStorage}(N_, A_, llim_, rlim_)
+           rlim_::Int=N+1) where {T <: TensorStorage} = new{T}(N_, A_, llim_, rlim_)
 end
 
-MPS() = MPS(0,Vector{ITensor}(),0,0)
+MPS() = MPS(0,Vector{ITensor{<:TensorStorage}}(),0,0)
 
 function MPS(sites::SiteSet)
     N = length(sites)
-    v = Vector{ITensor}(undef, N)
+    v = Vector{ITensor{<:TensorStorage}}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii=1:N-1]
     @inbounds for ii in eachindex(sites)
         s = sites[ii]
@@ -46,7 +46,7 @@ end
 
 function MPS(is::InitState)
     N = length(is)
-    As = Vector{ITensor}(undef,N)
+    As = Vector{ITensor{<:TensorStorage}}(undef,N)
     links  = Vector{Index}(undef,N)
     @inbounds for n in eachindex(is)
         s = sites(is)[n]
@@ -67,7 +67,7 @@ function MPS(is::InitState)
 end
 
 MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))
-MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
+MPS(N::Int) = MPS(N,Vector{ITensor{<:TensorStorage}}(undef,N),0,N+1)
 MPS(s::SiteSet, opcode::String) = MPS(InitState(s, opcode))
 
 function randomMPS(sites)
