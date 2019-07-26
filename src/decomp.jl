@@ -236,7 +236,7 @@ function factorize(A::ITensor,
       return _factorize_from_right_svd(A,Linds...;kwargs...)
     end
   end
-  error("In factorize, no dir = $dir supported. Use center, fromleft or fromright.")
+  throw(ArgumentError("In factorize, no dir = $dir supported. Use center, fromleft or fromright."))
 end
 
 # TODO: add a version that automatically detects the IndexSets
