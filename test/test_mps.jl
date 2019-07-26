@@ -62,4 +62,7 @@ using ITensors,
   position!(psi, N-1)
   @test ITensors.leftLim(psi) == N-2
   @test ITensors.rightLim(psi) == N
+  position!(psi, 2)
+  @test ITensors.leftLim(psi) == 1
+  @test ITensors.rightLim(psi) == 3
 end
