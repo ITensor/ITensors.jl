@@ -10,60 +10,62 @@ export MPS,
        siteindex,
        siteinds
 
-mutable struct MPS
-  N_::Int
-  A_::Vector{ITensor}
-  llim_::Int
-  rlim_::Int
+mutable struct MPS{T <: TensorStorage}
+    N_::Int
+    A_::Vector{ITensor{T}}
+    llim_::Int
+    rlim_::Int
+    MPS(N_::Int,
+        A_::Vector{ITensor{<:TensorStorage}},
+        llim_::Int=0,
+        rlim_::Int=N+1) = new{TensorStorage}(N_, A_, llim_, rlim_)
+    MPS{T}(N_::Int,
+           A_::Vector{ITensor{<:TensorStorage}},
+           llim_::Int=0,
+           rlim_::Int=N+1) where {T <: TensorStorage} = new{TensorStorage}(N_, A_, llim_, rlim_)
+end
 
-  MPS() = new(0,Vector{ITensor}(),0,0)
+MPS() = MPS(0,Vector{ITensor}(),0,0)
 
-  function MPS(N::Int, 
-               A::Vector{ITensor}, 
-               llim::Int=0, 
-               rlim::Int=N+1)
-    new(N,A,llim,rlim)
-  end
-  
-  function MPS(sites::SiteSet)
+function MPS(sites::SiteSet)
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii=1:N-1]
     @inbounds for ii in eachindex(sites)
-      s = sites[ii]
-      if ii == 1
-        v[ii] = ITensor(l[ii], s)
-      elseif ii == N
-        v[ii] = ITensor(l[ii-1], s)
-      else
-        v[ii] = ITensor(l[ii-1], l[ii], s)
-      end
+        s = sites[ii]
+        if ii == 1
+            v[ii] = ITensor(l[ii], s)
+        elseif ii == N
+            v[ii] = ITensor(l[ii-1], s)
+        else
+            v[ii] = ITensor(l[ii-1], l[ii], s)
+        end
     end
-    new(N,v)
-  end
+    MPS(N,v)
+end
 
-  function MPS(is::InitState)
+function MPS(is::InitState)
     N = length(is)
     As = Vector{ITensor}(undef,N)
     links  = Vector{Index}(undef,N)
     @inbounds for n in eachindex(is)
-      s = sites(is)[n]
-      links[n] = Index(1,"Link,l=$n")
-      if n == 1
-        A = ITensor(s,links[n])
-        A[state(is,n),links[n](1)] = 1.0
-      elseif n == N
-        A = ITensor(links[n-1],s)
-        A[links[n-1](1),state(is,n)] = 1.0
-      else
-        A = ITensor(links[n-1],links[n],s)
-        A[links[n-1](1),state(is,n),links[n](1)] = 1.0
-      end
-      As[n] = A
+        s = sites(is)[n]
+        links[n] = Index(1,"Link,l=$n")
+        if n == 1
+            A = ITensor(s,links[n])
+            A[state(is,n),links[n](1)] = 1.0
+        elseif n == N
+            A = ITensor(links[n-1],s)
+            A[links[n-1](1),state(is,n)] = 1.0
+        else
+            A = ITensor(links[n-1],links[n],s)
+            A[links[n-1](1),state(is,n),links[n](1)] = 1.0
+        end
+        As[n] = A
     end
-    new(N,As,0,2)
-  end
+    MPS(N,As,0,2)
 end
+
 MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))
 MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
 MPS(s::SiteSet, opcode::String) = MPS(InitState(s, opcode))
