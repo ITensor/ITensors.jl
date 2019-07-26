@@ -147,6 +147,14 @@ end
   B = ITensor(b,i)
   @test mul!(A2, A, 2.0) == B
   @test rmul!(A, 2.0) == B
+  i = Index(2,"i")
+  j = Index(2,"j")
+  M = [1 2; 3 4]
+  A = ITensor(M,i,j)
+  N = 2*M 
+  B = ITensor(N,j,i)
+  @test data(store(mul!(B, A, 2.0))) == 2.0*vec(transpose(M))
+
 end
 
 @testset "show" begin
@@ -326,7 +334,8 @@ end
     A = ITensor(SType,i,j,k)
     @test_throws ArgumentError scalar(A)
     # test the storage_scalar error throw
-    @test_throws ErrorException ITensor.storage_scalar(Dense{Float64}(rand(10)))
+    ds = Dense{Float64}(rand(10))
+    @test_throws ErrorException ITensor.storage_scalar(ds)
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)
