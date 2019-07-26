@@ -19,7 +19,7 @@ mutable struct ITensor{T <: TensorStorage}
     store::T
     #TODO: check that the storage is consistent with the
     #total dimension of the indices (possibly only in debug mode);
-    ITensor(is::IndexSet, st::TensorStorage)                             = new(is,st)
+    ITensor(is::IndexSet, st::TensorStorage)                             = new{TensorStorage}(is,st)
     ITensor{T}(is::IndexSet, st::TensorStorage) where {T<:TensorStorage} = new{T}(is, st)
 end
 
