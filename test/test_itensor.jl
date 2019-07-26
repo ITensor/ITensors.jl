@@ -130,12 +130,14 @@ end
   B = ITensor(b,i)
   c = [5.0; 8.0]
   @test axpy!(2.0, A, B) == ITensor(c, i) 
+  @test A + B == ITensor([4.0; 6.0], i)
   a = [1.0; 2.0]
   b = [3.0; 4.0]
   A = ITensor(a,i)
   B = ITensor(b,i)
   c = [8.0; 12.0]
   @test add!(A, 2.0, 2.0, B) == ITensor(c, i) 
+  
 end
 
 @testset "mul! and rmul!" begin
