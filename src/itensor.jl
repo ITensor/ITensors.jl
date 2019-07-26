@@ -15,10 +15,12 @@ export ITensor,
        store
 
 mutable struct ITensor{T <: TensorStorage}
-  inds::IndexSet
-  store::T
-  #TODO: check that the storage is consistent with the
-  #total dimension of the indices (possibly only in debug mode);
+    inds::IndexSet
+    store::T
+    #TODO: check that the storage is consistent with the
+    #total dimension of the indices (possibly only in debug mode);
+    ITensor{T}(inds, store) = new{T}(inds, store)
+    ITensor(inds, store)    = new{TensorStorage}(inds, store)
 end
 
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
@@ -48,6 +50,8 @@ function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
   return ITensor(inds,Dense{float(S)}(float(vec(A))))
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
+
+
 
 # Convert to complex
 complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))
