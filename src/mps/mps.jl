@@ -87,23 +87,10 @@ getindex(m::MPS, n::Integer) = getindex(m.A_,n)
 setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
 
 copy(m::MPS) = MPS(m.N_,copy(m.A_),m.llim_,m.rlim_)
+similar(m::MPS) = MPS(m.N_, similar(m.A_), 0, m.N_)
 
 eachindex(m::MPS) = 1:length(m)
 
-
-"""
-    dag(m::MPS)
-
-Hermitian conjugation of a matrix product state `m`.
-"""
-function dag(m::MPS)
-  N = length(m)
-  mdag = MPS(N)
-  @inbounds for i ∈ eachindex(m)
-    mdag[i] = dag(m[i])
-  end
-  return mdag
-end
 
 function show(io::IO, M::MPS)
   print(io,"MPS")
