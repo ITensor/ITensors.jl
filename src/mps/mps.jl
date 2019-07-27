@@ -67,7 +67,7 @@ function MPS(is::InitState)
 end
 
 MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))
-MPS(N::Int) = MPS(N,Vector{ITensor{<:TensorStorage}}(undef,N),0,N+1)
+MPS(N::Int) = MPS(N,Vector{ITensor{TensorStorage}}(undef, N),0,N+1)
 MPS(s::SiteSet, opcode::String) = MPS(InitState(s, opcode))
 
 function randomMPS(sites)

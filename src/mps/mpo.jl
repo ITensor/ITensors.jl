@@ -1,14 +1,14 @@
 export MPO,
        randomMPO
 
-struct MPO{T <: ITensor}
+struct MPO{T <: TensorStorage}
     N_::Int
     A_::Vector{ITensor{T}}
     MPO{T}(N::Int, A::Vector{ITensor{T}}) where {T <: TensorStorage} = new{T}(N, A)
     MPO(N::Int,    A::Vector{<:ITensor}) = new{TensorStorage}(N, A)
 end
 
-MPO() = MPO(0,Vector{<:ITensor}())
+MPO() = MPO(0,Vector{ITensor{TensorStorage}}())
 
 function MPO(sites)
     N = length(sites)
