@@ -34,15 +34,15 @@ using ITensors
 let
   i = Index(3,"i")
   j = Index(5,"j")
-  k = Index(4,"k")
-  l = Index(7,"l")
+  k = Index(4,"MyTagA,k")
+  l = Index(7,"l,MyTagB")
 
   A = ITensor(i,j,k)
   B = ITensor(j,l)
 
   A[i(1),j(1),k(1)] = 11.1
   A[i(2),j(1),k(2)] = 21.2
-  A[i(3),j(1),k(1)] = 31.1
+  A[k(1),i(3),j(1)] = 31.1
   # ...
 
   # contract over index j
