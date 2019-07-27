@@ -3,12 +3,12 @@ export MPO,
 
 struct MPO{T <: ITensor}
     N_::Int
-    A_::Vector{T}
-    MPO{T}(N::Int, A::Vector{ITensor{<:TensorStorage}}) where {T <: TensorStorage} = new{T}(N, A)
-    MPO(N::Int,    A::Vector{ITensor{<:TensorStorage}})                            = new{TensorStorage}(N, A)
+    A_::Vector{ITensor{T}}
+    MPO{T}(N::Int, A::Vector{ITensor{T}}) where {T <: TensorStorage} = new{T}(N, A)
+    MPO(N::Int,    A::Vector{<:ITensor}) = new{TensorStorage}(N, A)
 end
 
-MPO() = MPO(0,Vector{ITensor{TensorStorage}}())
+MPO() = MPO(0,Vector{<:ITensor}())
 
 function MPO(sites)
     N = length(sites)
