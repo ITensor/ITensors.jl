@@ -34,8 +34,8 @@ using ITensors
 let
   i = Index(3,"i")
   j = Index(5,"j")
-  k = Index(4,"MyTagA,k")
-  l = Index(7,"l,MyTagB")
+  k = Index(4,"MyTagA, k")
+  l = Index(7,"l, MyTagB")
 
   A = ITensor(i,j,k)
   B = ITensor(j,l)
