@@ -15,14 +15,14 @@ mutable struct MPS{T <: TensorStorage}
     A_::Vector{ITensor{T}}
     llim_::Int
     rlim_::Int
-    MPS(N_::Int,
-        A_::Vector{ITensor{<:TensorStorage}},
-        llim_::Int=0,
-        rlim_::Int=N+1) = new{TensorStorage}(N_, A_, llim_, rlim_)
-    MPS{T}(N_::Int,
-           A_::Vector{ITensor{<:TensorStorage}},
-           llim_::Int=0,
-           rlim_::Int=N+1) where {T <: TensorStorage} = new{T}(N_, A_, llim_, rlim_)
+    MPS(N::Int,
+        A::Vector{ITensor{<:TensorStorage}},
+        llim::Int=0,
+        rlim::Int=N+1) = new{TensorStorage}(N, A, llim, rlim)
+    MPS{T}(N::Int,
+           A::Vector{ITensor{<:TensorStorage}},
+           llim::Int=0,
+           rlim::Int=N+1) where {T <: TensorStorage} = new{T}(N, A, llim, rlim)
 end
 
 MPS() = MPS(0,Vector{ITensor{<:TensorStorage}}(),0,0)
