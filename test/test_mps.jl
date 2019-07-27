@@ -54,9 +54,11 @@ using ITensors,
   end
 
   @testset "Parametric constructor" begin
-    ψ = MPS{Dense{Float64}}(sites)
+    ϕ = MPS(sites)
+    ψ = MPS{Dense{Float64}}(ϕ)
     param(::MPS{T}) where {T} = T
-    @test typeof(store(ψ)) == param(ψ)
+    @test eltype(ψ.A_) == ITensor{param(ψ)}
+    @test MPS{ITensors.TensorStorage}(ψ) == ϕ
   end
 
     

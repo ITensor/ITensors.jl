@@ -40,9 +40,11 @@ using ITensors,
   end
 
   @testset "Parametric constructor" begin
-    O = MPO{Dense{Float64}}(sites)
+    O1 = MPO(sites)
+    O  = MPO{Dense{Float64}}(O1)
     param(::MPO{T}) where {T} = T
-    @test typeof(store(O)) == param(O)
+    @test eltype(O.A_) == ITensor{param(O)}
+    @test MPO{ITensors.TensorStorage}(O) == O1
   end
     
   sites = spinHalfSites(N)

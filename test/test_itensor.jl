@@ -60,8 +60,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
   end
 
   @testset "Parametric" begin
-    M = [1 2; 3 4]
-    A = ITensor{Dense{Float64}}(M, i, j)
+    A = ITensor{Dense{ComplexF64}}(randomITensor(Complex, i, j))
     param(::ITensor{T}) where {T} = T  
     @test typeof(store(A)) == param(A)
   end

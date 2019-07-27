@@ -25,6 +25,8 @@ mutable struct MPS{T <: TensorStorage}
            rlim::Int=N+1) where {T <: TensorStorage} = new{T}(N, A, llim, rlim)
 end
 
+MPS{T}(ψ::MPS) where {T} = MPS{T}(ψ.N_, Vector{ITensor{T}}(ψ.A_), ψ.llim_, ψ.rlim_)
+
 MPS() = MPS(0,Vector{ITensor{<:TensorStorage}}(),0,0)
 
 function MPS(sites::SiteSet)
@@ -91,6 +93,8 @@ setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
 copy(m::MPS) = MPS(m.N_,copy(m.A_),m.llim_,m.rlim_)
 
 eachindex(m::MPS) = 1:length(m)
+
+(==)(m::MPS, n::MPS) = (m.N_ == n.N_) && (m.A_ == n.A_) && (m.llim_ == n.llim_) && (m.rlim_ == n.rlim_) 
 
 
 """

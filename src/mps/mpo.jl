@@ -8,6 +8,8 @@ struct MPO{T <: TensorStorage}
     MPO(N::Int,    A::Vector{<:ITensor}) = new{TensorStorage}(N, A)
 end
 
+MPO{T}(M::MPO) where {T} = MPO{T}(M.N_, Vector{ITensor{T}}(M.A_))
+
 MPO() = MPO(0,Vector{ITensor{TensorStorage}}())
 
 function MPO(sites)
@@ -77,6 +79,9 @@ setindex!(m::MPO,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
 copy(m::MPO) = MPO(m.N_,copy(m.A_))
 
 eachindex(m::MPO) = 1:length(m)
+
+(==)(m::MPO, n::MPO) = (m.N_ == n.N_) && (m.A_ == n.A_)
+
 
 # TODO: optimize finding the index a little bit
 # First do: scom = commonindex(A[j],x[j])

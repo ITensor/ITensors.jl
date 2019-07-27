@@ -23,6 +23,8 @@ mutable struct ITensor{T <: TensorStorage}
     ITensor{T}(is::IndexSet, st::TensorStorage) where {T<:TensorStorage} = new{T}(is, st)
 end
 
+ITensor{S}(T::ITensor) where {S} = ITensor{S}(inds(T), store(T))
+
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
 ITensor(is::IndexSet) = ITensor(Float64,is...)
 ITensor(inds::Index...) = ITensor(IndexSet(inds...))
@@ -50,6 +52,17 @@ function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
   return ITensor(inds,Dense{float(S)}(float(vec(A))))
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
+
+
+function convert(::Type{ITensor{S}}, T::ITensor{S′}) where {S, S′}
+    ITensor{S}(inds(T), convert(S, copy(T.store)))
+end
+
+function convert(::Type{ITensor{TensorStorage}}, T::ITensor{S}) where {S}
+    ITensor(inds(T), copy(T.store))
+end
+
+
 
 # Convert to complex
 complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))
