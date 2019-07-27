@@ -59,6 +59,12 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     @test store(A) isa Dense{ComplexF64}
   end
 
+  @testset "Parametric" begin
+    M = [1 2; 3 4]
+    A = ITensor{Dense{Float64}}(M, i, j)
+    param(::ITensor{T}) where {T} = T  
+    @test typeof(store(A)) == param(A)
+  end
 end
 
 @testset "Convert to complex" begin

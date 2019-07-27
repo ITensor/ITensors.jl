@@ -38,7 +38,13 @@ using ITensors,
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi,K,badpsi)
   end
-  
+
+  @testset "Parametric constructor" begin
+    O = MPO{Dense{Float64}}(sites)
+    param(::MPO{T}) where {T} = T
+    @test typeof(store(O)) == param(O)
+  end
+    
   sites = spinHalfSites(N)
   O = MPO(sites,"Sz")
   @test length(O) == N # just make sure this works

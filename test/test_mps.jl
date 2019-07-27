@@ -53,6 +53,13 @@ using ITensors,
     @test psipsi[] ≈ inner(psi,psi)
   end
 
+  @testset "Parametric constructor" begin
+    ψ = MPS{Dense{Float64}}(sites)
+    param(::MPS{T}) where {T} = T
+    @test typeof(store(ψ)) == param(ψ)
+  end
+
+    
   sites = spinHalfSites(N)
   psi = MPS(sites)
   @test length(psi) == N # just make sure this works
