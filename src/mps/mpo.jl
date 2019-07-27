@@ -25,7 +25,7 @@ function MPO(sites)
             v[ii] = ITensor(l[ii-1], s, sp, l[ii])
         end
     end
-    new(N,v)
+    MPO(N,v)
 end
 
 function MPO(sites::SiteSet, ops::Vector{String})
