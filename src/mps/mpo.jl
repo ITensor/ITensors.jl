@@ -1,15 +1,18 @@
 export MPO,
        randomMPO,
-       applyMPO 
+       applyMPO,
+       nmultMPO
 
-struct MPO
+mutable struct MPO
   N_::Int
   A_::Vector{ITensor}
+  llim_::Int
+  rlim_::Int
 
-  MPO() = new(0,Vector{ITensor}())
+  MPO() = new(0,Vector{ITensor}(), 0, 0)
 
-  function MPO(N::Int, A::Vector{ITensor})
-    new(N,A)
+  function MPO(N::Int, A::Vector{ITensor}, llim::Int=0, rlim::Int=N+1)
+    new(N, A, llim, rlim)
   end
 
   function MPO(sites::SiteSet)
@@ -27,7 +30,7 @@ struct MPO
         v[ii] = ITensor(l[ii-1], s, sp, l[ii])
       end
     end
-    new(N,v)
+    new(N,v,0,N+1)
   end
  
   function MPO(sites::SiteSet, 
@@ -52,19 +55,14 @@ struct MPO
         end
         its[ii] = this_it
     end
-    new(N,its)
+    new(N,its,0,N+1)
   end
 
-  function MPO(sites::SiteSet, 
-               ops::String)
-    return MPO(sites, fill(ops, length(sites)))
-  end
-
+  MPO(sites::SiteSet, ops::String) = MPO(sites, fill(ops, length(sites)))
 end
 MPO(N::Int) = MPO(N,Vector{ITensor}(undef,N))
 
-function randomMPO(sites,
-                   m::Int=1)
+function randomMPO(sites, m::Int=1)
   M = MPO(sites)
   @inbounds for i ∈ eachindex(sites)
     randn!(M[i])
@@ -75,11 +73,14 @@ function randomMPO(sites,
 end
 
 length(m::MPO) = m.N_
+leftLim(m::MPO) = m.llim_
+rightLim(m::MPO) = m.rlim_
 
 getindex(m::MPO, n::Integer) = getindex(m.A_,n)
 setindex!(m::MPO,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
 
 copy(m::MPO) = MPO(m.N_,copy(m.A_))
+similar(m::MPO) = MPO(m.N_, similar(m.A_), 0, m.N_)
 
 eachindex(m::MPO) = 1:length(m)
 
@@ -173,6 +174,40 @@ function linkindex(M::MPO,j::Integer)
   return li
 end
 
+function position!(M::MPO,
+                   j::Integer)
+  N = length(M)
+  while leftLim(M) < (j-1)
+    ll = leftLim(M)+1
+    s = findinds(M[ll],"Site")
+    if ll == 1
+      (Q,R) = qr(M[ll],s)
+    else
+      li = linkindex(M,ll-1)
+      (Q,R) = qr(M[ll],s,li)
+    end
+    M[ll] = Q
+    M[ll+1] *= R
+    M.llim_ += 1
+  end
+
+  while rightLim(M) > (j+1)
+    rl = rightLim(M)-1
+    s = findinds(M[rl],"Site")
+    if rl == N
+      (Q,R) = qr(M[rl],s)
+    else
+      ri = linkindex(M,rl)
+      (Q,R) = qr(M[rl],s,ri)
+    end
+    M[rl] = Q
+    M[rl-1] *= R
+    M.rlim_ -= 1
+  end
+  M.llim_ = j-1
+  M.rlim_ = j+1
+end
+
 """
 inner(y::MPS, A::MPO, x::MPS)
 
@@ -257,4 +292,67 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     psi_out.llim_ = 0
     psi_out.rlim_ = 2
     return psi_out
+end
+
+function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
+    cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
+    resp_degen::Bool = get(kwargs, :respect_degenerate, true) 
+    maxdim::Int = get(kwargs,:maxdim,max(maxDim(A), maxDim(B)))
+    mindim::Int = max(get(kwargs,:mindim,1), 1)
+    n = length(A)
+    n != length(B) && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
+    A_ = copy(A)
+    position!(A_, 1)
+    B_ = copy(B)
+    position!(B_, 1)
+
+    links_A = findinds.(A.A_, "Link")
+    links_B = findinds.(B.A_, "Link")
+
+    for i in 1:n
+        if length(commoninds(findinds(A_[i], "Site"), findinds(B_[i], "Site"))) == 2
+            A_[i] = prime(A_[i], "Site")
+        end
+    end
+    res = similar(A_)
+    # otherwise we will end up modifying the elements of A!
+    res.A_ = deepcopy(A_.A_)
+    # need to reindex link indices of res
+    for i in 1:n-1
+        ci = commonindex(res[i], res[i+1])
+        new_ci = Index(dim(ci), tags(ci))
+        replaceindex!(res[i], ci, new_ci)
+        replaceindex!(res[i+1], ci, new_ci)
+        @assert commonindex(res[i], res[i+1]) != commonindex(A[i], A[i+1])
+    end
+    sites_A = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(A_.A_, B_.A_)]
+    sites_B = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(B_.A_, A_.A_)]
+    res[1] = ITensor(sites_A[1], sites_B[1], commonindex(res[1], res[2]))
+    for i in 1:n-2
+        if i == 1
+            clust = A_[i] * B_[i]
+        else
+            clust = nfork * A_[i] * B_[i]
+        end
+        lA = commonindex(A_.A_[i], A_.A_[i+1])
+        lB = commonindex(B_.A_[i], B_.A_[i+1])
+        nfork = ITensor(lA, lB, commonindex(res[i], res[i+1]))
+        res[i], nfork = factorize(mapprime(clust, 2, 1), inds(res[i]), dir="fromleft", tags=tags(lA), cutoff=cutoff, maxdim=maxdim, mindim=mindim)
+        mid = dag(commonindex(res[i], nfork))
+        res[i+1] = ITensor(mid, sites_A[i+1], sites_B[i+1], commonindex(res[i+1], res[i+2]))
+    end
+    clust = nfork * A_[n-1] * B_[n-1]
+    nfork = clust * A_[n] * B_[n]
+
+    # in case we primed A
+    A_ind = uniqueindex(findinds(A_[n-1], "Site"), findinds(B_[n-1], "Site"))
+    Lis = IndexSet(A_ind, sites_B[n-1], commonindex(res[n-2], res[n-1]))
+    U, V, ci = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(n-1)",maxdim=maxdim,mindim=mindim)
+    res[n-1] = U
+    res[n] = V
+    position!(res, 1)
+    for i in 1:n
+        res[i] = mapprime(res[i], 2, 1)
+    end
+    return res
 end

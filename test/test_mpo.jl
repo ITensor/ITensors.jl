@@ -52,6 +52,21 @@ using ITensors,
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch applyMPO(K,badpsi)
   end
+
+  @testset "nmultMPO" begin
+    psi = randomMPS(sites)
+    K = randomMPO(sites)
+    L = randomMPO(sites)
+    @test maxDim(K) == 1
+    @test maxDim(L) == 1
+    KL = nmultMPO(K, L)
+    psi_kl_out = applyMPO(K, applyMPO(L, psi))
+    @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out)
+
+    badsites = SiteSet(N+1,2)
+    badL = randomMPO(badsites)
+    @test_throws DimensionMismatch nmultMPO(K,badL)
+  end
   
   sites = spinHalfSites(N)
   O = MPO(sites,"Sz")

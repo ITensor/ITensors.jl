@@ -39,7 +39,7 @@ mutable struct MPS
         v[ii] = ITensor(l[ii-1], l[ii], s)
       end
     end
-    new(N,v)
+    new(N,v,0,N+1)
   end
 
   function MPS(is::InitState)

@@ -9,7 +9,7 @@ import ITensors: In,Out,Neither
     @test id(i) == 0
     @test dim(i) == 1
     @test dir(i) == Neither
-    @test_throws ArgumentError -dir(i)
+    @test -dir(i) == Neither
     @test plev(i) == 0
     @test tags(i) == TagSet("0")
   end
