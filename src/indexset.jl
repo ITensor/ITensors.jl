@@ -6,6 +6,7 @@ export IndexSet,
        findinds,
        swaptags,
        swapprime,
+       swapprime!,
        mapprime,
        mapprime!,
        commoninds,
@@ -228,6 +229,7 @@ end
 # From a tag set or index set, find the positions
 # of the matching indices as a vector of integers
 indexpositions(inds, match::Nothing) = collect(1:length(inds))
+indexpositions(inds, match::Tuple{}) = collect(1:length(inds))
 # Version for matching a tag set
 function indexpositions(inds, match::T) where {T<:Union{AbstractString,TagSet}}
   is = IndexSet(inds)
@@ -278,6 +280,21 @@ setprime(is::IndexSet, vargs...) = setprime!(copy(is), vargs...)
 
 noprime!(is::IndexSet, match = nothing) = setprime!(is, 0, match)
 noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
+
+function swapprime!(is::IndexSet, 
+                    pl1::Int,
+                    pl2::Int,
+                    vargs...) 
+  pos = indexpositions(is,vargs)
+  for n in pos
+    if plev(is[n])==pl1
+      is[n] = setprime(is[n],pl2)
+    end
+  end
+  return is
+end
+
+swapprime(is::IndexSet,pl1::Int,pl2::Int,vargs...) = swapprime!(copy(is),pl1,pl2,vargs...)
 
 function mapprime!(is::IndexSet,
                    plold::Integer,

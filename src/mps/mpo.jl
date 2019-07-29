@@ -1,5 +1,6 @@
 export MPO,
-       randomMPO
+       randomMPO,
+       applyMPO 
 
 struct MPO{T <: TensorStorage}
     N_::Int
@@ -12,7 +13,8 @@ MPO{T}(M::MPO) where {T} = MPO{T}(M.N_, Vector{ITensor{T}}(M.A_))
 
 MPO() = MPO(0,Vector{ITensor{TensorStorage}}())
 
-function MPO(sites)
+
+function MPO(sites::SiteSet)
     N = length(sites)
     v = Vector{ITensor{TensorStorage}}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
@@ -57,6 +59,7 @@ end
 function MPO(sites::SiteSet, ops::String)
     MPO(sites, fill(ops, length(sites)))
 end
+MPO(N::Int) = MPO(N,Vector{ITensor}(undef,N))
 
 function randomMPO(sites,
                    m::Int=1)
@@ -65,9 +68,7 @@ function randomMPO(sites,
     randn!(M[i])
     normalize!(M[i])
   end
-  if m > 1
-    error("randomMPS: currently only m==1 supported")
-  end
+  m > 1 && throw(ArgumentError("randomMPO: currently only m==1 supported"))
   return M
 end
 
@@ -104,6 +105,22 @@ function siteinds(A::MPO,x::MPS)
     is[j] = siteindex(A,x,j)
   end
   return is
+end
+
+"""
+    dag(m::MPS)
+    dag(m::MPO)
+
+Hermitian conjugation of a matrix product state or operator `m`.
+"""
+
+function dag(m::T) where {T <: Union{MPS, MPO}}
+  N = length(m)
+  mdag = T(N)
+  @inbounds for i ∈ eachindex(m)
+    mdag[i] = dag(m[i])
+  end
+  return mdag
 end
 
 function prime!(M::T,vargs...) where {T <: Union{MPS,MPO}}
@@ -180,3 +197,65 @@ function inner(y::MPS,
   return O[]
 end
 
+function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS
+    method = get(kwargs, :method, "DensityMatrix")
+    if method == "DensityMatrix"
+        return densityMatrixApplyMPO(A, psi, kwargs...)
+    end
+    throw(ArgumentError("Method $method not supported"))
+end
+
+function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
+    n = length(A)
+    n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
+    psi_out = similar(psi)
+    cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
+    maxdim::Int = get(kwargs,:maxdim,maxDim(psi))
+    mindim::Int = max(get(kwargs,:mindim,1), 1)
+    normalize::Bool = get(kwargs, :normalize, false) 
+
+    all(x->x!=Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
+    rand_plev = 14741
+
+    psi_c = dag(copy(psi))
+    prime!(psi_c, rand_plev)
+    A_c = dag(copy(A))
+    prime!(A_c, rand_plev)
+
+    for j in 1:n-1
+        unique_site_ind = setdiff(findinds(A_c[j], "Site"), findindex(psi_c[j], "Site"))[1]
+        A_c[j] = setprime(A_c[j], 1, unique_site_ind)
+    end
+    E = Vector{ITensor}(undef, n-1)
+    E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
+    for j in 2:n-1
+        E[j] = E[j-1]*psi[j]*A[j]*A_c[j]*psi_c[j]
+    end
+    O = psi[n] * A[n]
+    ρ = E[n-1] * O * dag(prime(O, rand_plev))
+    ts = tags(commonindex(psi[n], psi[n-1]))
+    Lis = findinds(ρ, "n=$n,1")
+    Ris = uniqueinds(ρ, Lis)
+    FU, D = eigen(ρ, Lis, Ris, tags=ts)
+    psi_out[n] = setprime(dag(FU), 0, "Site")
+    O = O * FU * psi[n-1] * A[n-1]
+    O = prime(O, -1, "Site")
+    for j in reverse(2:n-1)
+        dO = prime(dag(O), rand_plev)
+        ρ = E[j-1] * O * dO
+        ts = tags(commonindex(psi[j], psi[j-1]))
+        Lis = findinds(ρ, "0")
+        Ris = uniqueinds(ρ, Lis)
+        FU, D = eigen(ρ, Lis, Ris, tags=ts)
+        psi_out[j] = dag(FU)
+        O = O * FU * psi[j-1] * A[j-1]
+        O = prime(O, -1, "Site")
+    end
+    if normalize
+        O /= norm(O)
+    end
+    psi_out[1] = O
+    psi_out.llim_ = 0
+    psi_out.rlim_ = 2
+    return psi_out
+end
