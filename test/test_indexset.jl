@@ -100,4 +100,23 @@ using ITensors,
     @test i ∈ J
     @test j ∈ J
   end
+  @testset "swapprime" begin
+    I = IndexSet(i,j)
+    @test swapprime(I,0,1) == IndexSet(i',j')
+    @test swapprime(I,0,4) == IndexSet(i^4,j^4)
+    I = IndexSet(i,j'')
+    @test swapprime(I,2,0) == IndexSet(i,j)
+    I = IndexSet(i,j'',k,l)
+    @test swapprime(I,2,0) == IndexSet(i,j,k,l)
+    I = IndexSet(i,k'',j'')
+    @test swapprime(I,2,1) == IndexSet(i,k',j')
+    # In-place version:
+    I = IndexSet(i,k'',j''')
+    swapprime!(I,2,0)
+    @test I == IndexSet(i,k,j''')
+    # With tags specified:
+    I = IndexSet(i,k,j)
+    @test swapprime(I,0,1,"i") == IndexSet(i',k,j)
+    @test swapprime(I,0,1,"j") == IndexSet(i,k,j')
+  end
 end

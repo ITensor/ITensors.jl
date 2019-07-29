@@ -228,6 +228,7 @@ end
 
 # From a tag set or index set, find the positions
 # of the matching indices as a vector of integers
+indexpositions(inds) = collect(1:length(inds))
 indexpositions(inds, match::Nothing) = collect(1:length(inds))
 indexpositions(inds, match::Tuple{}) = collect(1:length(inds))
 # Version for matching a tag set
@@ -285,7 +286,7 @@ function swapprime!(is::IndexSet,
                     pl1::Int,
                     pl2::Int,
                     vargs...) 
-  pos = indexpositions(is,vargs)
+  pos = indexpositions(is,vargs...)
   for n in pos
     if plev(is[n])==pl1
       is[n] = setprime(is[n],pl2)
