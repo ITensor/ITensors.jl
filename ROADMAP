@@ -86,6 +86,10 @@
   the number of indices exceeds a certain size. Use a stack-allocated / non-allocating
   fixed-size array or tuple to hold indices below that size.
 
++ Instead of indexpositions returning a Vector{Int}, it could 
+  act like a generator in python. (In Julia how is this implemented?
+  Do you return an iterable struct?)
+
 ## Final Release Checks
 
 + Apply license text to all source files (see appendix of LICENSE file)
