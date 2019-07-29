@@ -6,6 +6,7 @@ export IndexSet,
        findinds,
        swaptags,
        swapprime,
+       swapprime!,
        mapprime,
        mapprime!,
        commoninds,
@@ -280,15 +281,20 @@ setprime(is::IndexSet, vargs...) = setprime!(copy(is), vargs...)
 noprime!(is::IndexSet, match = nothing) = setprime!(is, 0, match)
 noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
 
-function swapprime!(is::IndexSet, vargs...) 
+function swapprime!(is::IndexSet, 
+                    pl1::Int,
+                    pl2::Int,
+                    vargs...) 
   pos = indexpositions(is,vargs)
-  plevs = reverse(plev.(is))
   for n in pos
-    is[n] = setprime(is[n],plevs[n])
+    if plev(is[n])==pl1
+      is[n] = setprime(is[n],pl2)
+    end
   end
   return is
 end
-swapprime(is::IndexSet, vargs...) = swapprime!(copy(is), vargs...)
+
+swapprime(is::IndexSet,pl1::Int,pl2::Int,vargs...) = swapprime!(copy(is),pl1,pl2,vargs...)
 
 function mapprime!(is::IndexSet,
                    plold::Integer,
