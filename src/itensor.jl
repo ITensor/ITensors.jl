@@ -75,6 +75,8 @@ copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
 Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
 
+Array(T::ITensor,ninds::Index...) = storage_convert(Array,store(T),inds(T),IndexSet(ninds))
+
 function getindex(T::ITensor,vals::Int...) 
   if order(T) ≠ length(vals) 
     error("In getindex(::ITensor,::Int..), number of \\
