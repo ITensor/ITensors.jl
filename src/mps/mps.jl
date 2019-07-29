@@ -26,6 +26,8 @@ mutable struct MPS{T <: TensorStorage}
 end
 
 MPS{T}(ψ::MPS) where {T} = MPS{T}(ψ.N_, Vector{ITensor{T}}(ψ.A_), ψ.llim_, ψ.rlim_)
+MPS{TensorStorage}(ψ::MPS) = MPS(ψ.N_, Vector{ITensor{TensorStorage}}(ψ.A_), ψ.llim_, ψ.rlim_)
+MPS{TensorStorage}(args...) = MPS(args...)
 
 MPS() = MPS(0,Vector{ITensor{<:TensorStorage}}(),0,0)
 

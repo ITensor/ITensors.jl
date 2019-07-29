@@ -10,6 +10,8 @@ struct MPO{T <: TensorStorage}
 end
 
 MPO{T}(M::MPO) where {T} = MPO{T}(M.N_, Vector{ITensor{T}}(M.A_))
+MPO{TensorStorage}(M::MPO) = MPO(M.N_, Vector{ITensor{TensorStorage}}(M.A_))
+MPO{TensorStorage}(args...) = MPO(args...)
 
 MPO() = MPO(0,Vector{ITensor{TensorStorage}}())
 
@@ -59,7 +61,7 @@ end
 function MPO(sites::SiteSet, ops::String)
     MPO(sites, fill(ops, length(sites)))
 end
-MPO(N::Int) = MPO(N,Vector{ITensor}(undef,N))
+MPO(N::Int) = MPO(N, Vector{ITensor{TensorStorage}}(undef,N))
 
 function randomMPO(sites,
                    m::Int=1)
