@@ -20,7 +20,13 @@ using ITensors,
   P = copy(O)
   @test hasindex(P[1],sites[1])
   @test hasindex(P[1],prime(sites[1]))
-
+  
+  @testset "add" begin
+    K = randomMPO(sites)
+    L = randomMPO(sites)
+    M = K + L
+    @test length(M) == N
+  end
   @testset "inner" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
