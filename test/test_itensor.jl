@@ -278,7 +278,7 @@ end
     @test hasinds(setprime(A2,0,l''),s2,l',l)
   end
   @testset "swapprime" begin
-    @test hasinds(swapprime(A2,l'',s2),s2'',l',l)
+    @test hasinds(swapprime(A2,1,3),l''',s2,l'')
   end
 end
 
