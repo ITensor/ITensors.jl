@@ -19,6 +19,13 @@ using ITensors, Test
   maxdim!(sweeps,10,20,100,100)
   mindim!(sweeps,1,10,20,20)
   cutoff!(sweeps,1E-11)
+  str = split(sprint(show, sweeps), '\n')
+  @test str[1] == "Sweeps"
+  @test str[2] == "1 cutoff=1.0E-11, maxdim=10, mindim=1"
+  @test str[3] == "2 cutoff=1.0E-11, maxdim=20, mindim=10"
+  @test str[4] == "3 cutoff=1.0E-11, maxdim=100, mindim=20"
+  @test str[5] == "4 cutoff=1.0E-11, maxdim=100, mindim=20"
+  @test str[6] == "5 cutoff=1.0E-11, maxdim=100, mindim=20"
   energy,psi = dmrg(H,psi,sweeps,maxiter=2,quiet=true)
   @test energy ≈ -138.94 rtol=1e-3
   # test with SVD too! 
