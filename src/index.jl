@@ -31,7 +31,7 @@ associated with an index, i.e. the index leg is directed into or out of a given 
 
 """
     -(dir::Arrow)
-Reverse direction of a directed `Arrow`. Will throw an error for an input of `Neither`.
+Reverse direction of a directed `Arrow`.
 """
 function -(dir::Arrow)
   dir==Neither && return Neither #throw(ArgumentError("Cannot reverse direction of Arrow direction 'Neither'"))

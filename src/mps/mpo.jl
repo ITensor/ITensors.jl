@@ -73,14 +73,22 @@ function randomMPO(sites, m::Int=1)
 end
 
 length(m::MPO) = m.N_
+tensors(m::MPO) = m.A_
 leftLim(m::MPO) = m.llim_
 rightLim(m::MPO) = m.rlim_
 
-getindex(m::MPO, n::Integer) = getindex(m.A_,n)
-setindex!(m::MPO,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
+getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
+setindex!(m::MPO, T::ITensor, n::Integer) = setindex!(tensors(m), T, n)
 
-copy(m::MPO) = MPO(m.N_,copy(m.A_))
-similar(m::MPO) = MPO(m.N_, similar(m.A_), 0, m.N_)
+copy(m::MPO) = MPO(m.N_, copy(tensors(m)))
+similar(m::MPO) = MPO(m.N_, similar(tensors(m)), 0, m.N_)
+
+function deepcopy(m::T) where {T <: Union{MPO,MPS}}
+    res = similar(m)
+    # otherwise we will end up modifying the elements of A!
+    res.A_ = deepcopy(tensors(m))
+    return res
+end
 
 eachindex(m::MPO) = 1:length(m)
 
@@ -159,7 +167,7 @@ end
 function show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  @inbounds for (i, w) ∈ enumerate(inds.(W.A_))
+  @inbounds for (i, w) ∈ enumerate(inds.(tensors(W)))
     println(io,"$i  $w")
   end
 end
@@ -314,10 +322,7 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
             A_[i] = prime(A_[i], "Site")
         end
     end
-    res = similar(A_)
-    # otherwise we will end up modifying the elements of A!
-    res.A_ = deepcopy(A_.A_)
-    # need to reindex link indices of res
+    res = deepcopy(A_)
     for i in 1:n-1
         ci = commonindex(res[i], res[i+1])
         new_ci = Index(dim(ci), tags(ci))
@@ -325,8 +330,8 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
         replaceindex!(res[i+1], ci, new_ci)
         @assert commonindex(res[i], res[i+1]) != commonindex(A[i], A[i+1])
     end
-    sites_A = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(A_.A_, B_.A_)]
-    sites_B = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(B_.A_, A_.A_)]
+    sites_A = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(tensors(A_), tensors(B_))]
+    sites_B = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(tensors(B_), tensors(A_))]
     res[1] = ITensor(sites_A[1], sites_B[1], commonindex(res[1], res[2]))
     for i in 1:n-2
         if i == 1
@@ -334,8 +339,8 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
         else
             clust = nfork * A_[i] * B_[i]
         end
-        lA = commonindex(A_.A_[i], A_.A_[i+1])
-        lB = commonindex(B_.A_[i], B_.A_[i+1])
+        lA = commonindex(A_[i], A_[i+1])
+        lB = commonindex(B_[i], B_[i+1])
         nfork = ITensor(lA, lB, commonindex(res[i], res[i+1]))
         res[i], nfork = factorize(mapprime(clust, 2, 1), inds(res[i]), dir="fromleft", tags=tags(lA), cutoff=cutoff, maxdim=maxdim, mindim=mindim)
         mid = dag(commonindex(res[i], nfork))
