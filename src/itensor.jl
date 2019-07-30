@@ -11,6 +11,7 @@ export ITensor,
        order,
        permute,
        randomITensor,
+       diagITensor,
        scalar,
        store
 
@@ -59,8 +60,8 @@ ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds.
 #
 
 diagITensor() = ITensor(IndexSet(),Diag{Nothing}())
-diagITensor(is::IndexSet) = ITensor(Float64,is...)
-diagITensor(inds::Index...) = ITensor(IndexSet(inds...))
+diagITensor(is::IndexSet) = ITensor(is,Diag{Float64}(zero(Float64),minDim(is)))
+diagITensor(inds::Index...) = diagITensor(IndexSet(inds...))
 
 function diagITensor(::Type{T},
                      inds::IndexSet) where {T<:Number}
@@ -378,11 +379,13 @@ function show_info(io::IO,
   print(io,"\n",typeof(store(T)))
 end
 
+# TODO: make a specialized printing from Diag
+# that emphasizes the missing elements
 function show(io::IO,T::ITensor)
   show_info(io,T)
   print(io,"\n")
   if !isNull(T)
-    Base.print_array(io,reshape(data(store(T)),dims(T)))
+    Base.print_array(io,Array(T))
   end
 end
 

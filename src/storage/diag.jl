@@ -28,7 +28,13 @@ copy(D::Diag{T}) where {T} = Diag{T}(copy(data(D)))
 #outer(D1::Diag{T},D2::Diag{S}) where {T, S <:Number} = Diag{promote_type(T,S)}(vec(data(D1)*transpose(data(D2))))
 
 # TODO: convert to an array by setting the diagonal elements
-#storage_convert(::Type{Array},D::Diag,is::IndexSet) = reshape(data(D),dims(is))
+function storage_convert(::Type{Array},D::Diag,is::IndexSet)
+  A = zeros(eltype(D),dims(is))
+  for i = 1:minDim(is)
+    A[fill(i,length(is))...] = data(D)[i]
+  end
+  return A
+end
 
 storage_fill!(D::Diag,x::Number) = fill!(data(D),x)
 
@@ -37,7 +43,11 @@ storage_fill!(D::Diag,x::Number) = fill!(data(D),x)
 function storage_getindex(Tstore::Diag{T},
                           Tis::IndexSet,
                           vals::Union{Int, AbstractVector{Int}}...) where {T}
-  return getindex(reshape(data(Tstore),dims(Tis)),vals...)
+  if all(y->y==vals[1],vals)
+    return getindex(data(Tstore),vals[1])
+  else
+    return zero(T)
+  end
 end
 
 # TODO: only set diagonal elements
@@ -46,7 +56,8 @@ function storage_setindex!(Tstore::Diag,
                            Tis::IndexSet,
                            x::Union{<:Number, AbstractArray{<:Number}},
                            vals::Union{Int, AbstractVector{Int}}...)
-  return setindex!(reshape(data(Tstore),dims(Tis)),x,vals...)
+  all(y->y==vals[1],vals) || error("Cannot set off-diagonal element of Diag storage")
+  return setindex!(data(Tstore),x,vals[1])
 end
 
 # TODO: implement this

@@ -11,7 +11,9 @@ export IndexSet,
        commoninds,
        commonindex,
        uniqueinds,
-       uniqueindex
+       uniqueindex,
+       minDim,
+       maxDim
 
 struct IndexSet
     inds::Vector{Index}
@@ -60,6 +62,32 @@ size(is::IndexSet) = size(is.inds)
 iterate(is::IndexSet,state::Int=1) = iterate(is.inds,state)
 
 push!(is::IndexSet,i::Index) = push!(is.inds,i)
+
+"""
+minDim(is::IndexSet)
+
+Get the minimum dimension of the indices in the index set.
+"""
+function minDim(is::IndexSet)
+  md = dim(is[1])
+  for n ∈ 2:length(is)
+    md = min(md,dim(is[n]))
+  end
+  return md
+end
+
+"""
+maxDim(is::IndexSet)
+
+Get the maximum dimension of the indices in the index set.
+"""
+function maxDim(is::IndexSet)
+  md = dim(is[1])
+  for n ∈ 2:length(is)
+    md = max(md,dim(is[n]))
+  end
+  return md
+end
 
 # 
 # Set operations

@@ -131,6 +131,12 @@ function simlinks!(M::T) where {T <: Union{MPS,MPO}}
   end
 end
 
+"""
+maxDim(M::MPS)
+maxDim(M::MPO)
+
+Get the maximum link dimension of the MPS or MPO.
+"""
 function maxDim(M::T) where {T <: Union{MPS,MPO}}
   md = 0
   for b ∈ eachindex(M)[1:end-1] 
