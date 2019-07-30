@@ -22,6 +22,8 @@ export Index,
 
 const IDType = UInt64
 
+const __id_count__ = Ref(zero(UInt64))
+
 """
    Arrow
 `enum` type that can take three values: `In`, `Out`, or `Neither`, representing a directionality
@@ -71,7 +73,9 @@ function Index(dim::Integer,tags="0")
   # A prime level less than 0 is interpreted as the
   # prime level not being set
   plev(ts) < 0 && (ts = setprime(ts,0))
-  Index(rand(IDType),dim,Out,ts)
+  global __id_count__
+  __id_count__.x += 1
+  Index(__id_count__.x,dim,Out,ts)
 end
 
 id(i::Index) = i.id
