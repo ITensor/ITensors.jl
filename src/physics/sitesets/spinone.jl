@@ -35,21 +35,21 @@ function operator(site::SpinOneSite,
         Op[Up, Z0P] = √2 
         Op[Z0, DnP] = √2 
     elseif opname == "Sˣ" || opname == "Sx"
-        Op[Up, Z0P] = im*√2
-        Op[Z0, UpP] = im*√2
-        Op[Z0, DnP] = im*√2
-        Op[Dn, Z0P] = im*√2
+        Op[Up, Z0P] = 1.0/√2
+        Op[Z0, UpP] = 1.0/√2
+        Op[Z0, DnP] = 1.0/√2
+        Op[Dn, Z0P] = 1.0/√2
     elseif opname == "iSʸ" || opname == "iSy"
-        Op = complex(Op) 
-        Op[Up, Z0P] = -im*√2
-        Op[Z0, UpP] = im*√2
-        Op[Z0, DnP] = -im*√2
-        Op[Dn, Z0P] = im*√2
+        Op[Up, Z0P] = -1.0/√2
+        Op[Z0, UpP] = +1.0/√2
+        Op[Z0, DnP] = -1.0/√2
+        Op[Dn, Z0P] = +1.0/√2
     elseif opname == "Sʸ" || opname == "Sy"
-        Op[Up, Z0P] = -√2
-        Op[Z0, UpP] = √2
-        Op[Z0, DnP] = -√2
-        Op[Dn, Z0P] = √2
+        Op = complex(Op) 
+        Op[Up, Z0P] = +1.0/√2im
+        Op[Z0, UpP] = -1.0/√2im
+        Op[Z0, DnP] = +1.0/√2im
+        Op[Dn, Z0P] = -1.0/√2im
     elseif opname == "Sᶻ" || opname == "Sz"
         Op[Up, UpP] = 1.0 
         Op[Dn, DnP] = -1.0
@@ -75,18 +75,18 @@ function operator(site::SpinOneSite,
     elseif opname == "projDn"
         Op[Dn, DnP] = 1.
     elseif opname == "XUp"
-        xup = ITensor(s)
+        xup = ITensor(ComplexF64,s)
         xup[Up] = 0.5
         xup[Z0] = im*√2
         xup[Dn] = 0.5
         return xup
     elseif opname == "XZ0"
-        xZ0 = ITensor(s)
+        xZ0 = ITensor(ComplexF64,s)
         xZ0[Up] = im*√2
         xZ0[Dn] = -im*√2
         return xZ0
     elseif opname == "XDn"
-        xdn = ITensor(s)
+        xdn = ITensor(ComplexF64,s)
         xdn[Up] = 0.5
         xdn[Z0] = -im*√2
         xdn[Dn] = 0.5
