@@ -39,7 +39,7 @@ mutable struct MPS
         v[ii] = ITensor(l[ii-1], l[ii], s)
       end
     end
-    new(N,v)
+    new(N,v,0,N+1)
   end
 
   function MPS(is::InitState)
@@ -80,14 +80,15 @@ function randomMPS(sites)
 end
 
 length(m::MPS) = m.N_
+tensors(m::MPS) = m.A_
 leftLim(m::MPS) = m.llim_
 rightLim(m::MPS) = m.rlim_
 
-getindex(m::MPS, n::Integer) = getindex(m.A_,n)
-setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
+getindex(m::MPS, n::Integer) = getindex(tensors(m),n)
+setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(tensors(m),T,n)
 
-copy(m::MPS) = MPS(m.N_,copy(m.A_),m.llim_,m.rlim_)
-similar(m::MPS) = MPS(m.N_, similar(m.A_), 0, m.N_)
+copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
+similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
 
 eachindex(m::MPS) = 1:length(m)
 
@@ -95,8 +96,8 @@ eachindex(m::MPS) = 1:length(m)
 function show(io::IO, M::MPS)
   print(io,"MPS")
   (length(M) > 0) && print(io,"\n")
-  @inbounds for (i, m) ∈ enumerate(inds.(M.A_))
-    println(io,"$i  $m")
+  @inbounds for (i, A) ∈ enumerate(tensors(M))
+    println(io,"$i  $(inds(A))")
   end
 end
 
