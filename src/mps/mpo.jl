@@ -167,8 +167,8 @@ end
 function show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  @inbounds for (i, w) ∈ enumerate(inds.(tensors(W)))
-    println(io,"$i  $w")
+  @inbounds for (i, A) ∈ enumerate(tensors(W))
+    println(io,"$i  $(inds(A))")
   end
 end
 
