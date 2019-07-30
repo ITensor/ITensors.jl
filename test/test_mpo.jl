@@ -21,12 +21,6 @@ using ITensors,
   @test hasindex(P[1],sites[1])
   @test hasindex(P[1],prime(sites[1]))
   
-  @testset "add" begin
-    K = randomMPO(sites)
-    L = randomMPO(sites)
-    M = K + L
-    @test length(M) == N
-  end
   @testset "inner" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
@@ -57,6 +51,17 @@ using ITensors,
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch applyMPO(K,badpsi)
+  end
+  @testset "add" begin
+    shsites = spinHalfSites(N)
+    K = randomMPO(shsites)
+    L = randomMPO(shsites)
+    M = sum(K, L)
+    @test length(M) == N
+    psi = randomMPS(shsites)
+    k_psi = applyMPO(K, psi)
+    l_psi = applyMPO(L, psi)
+    @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi)
   end
 
   @testset "nmultMPO" begin

@@ -239,8 +239,8 @@ function inner(y::MPS,
   return O[]
 end
 
-function plussers(left_ind::Index, right_ind::Index, sum_ind::Index, left_tensor::ITensor, right_tensor::ITensor)
-    if dir(left_ind) == dir(right_ind) == Neither
+function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
+    #if dir(left_ind) == dir(right_ind) == Neither
         total_dim    = dim(left_ind) + dim(right_ind)
         total_dim    = max(total_dim, 1)
         left_tensor  = δ(left_ind, sum_ind)
@@ -248,29 +248,31 @@ function plussers(left_ind::Index, right_ind::Index, sum_ind::Index, left_tensor
         for i in 1:dim(right_ind)
             right_tensor[right_ind(i), sum_ind(dim(left_ind) + i)] = 1
         end
-        return
-    else
-        throw(ArgumentError("support for adding MPOs with defined quantum numbers not implemented yet."))
-    end
+        return left_tensor, right_tensor
+    #else # tensors have QNs
+    #    throw(ArgumentError("support for adding MPOs with defined quantum numbers not implemented yet."))
+    #end
 end
 
-function (+)(A::MPO, B::MPO)::MPO
-    n = length(A)
-    length(B) == n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
-    position!(A, 1)
-    position!(B, 1)
+function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
+    n = A.N_ 
+    length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
+    position!(A, 1, kwargs...)
+    position!(B, 1, kwargs...)
     C = similar(A)
     rand_plev = 13124
-    lAs = linkInds(A)
+    lAs = [linkindex(A, i) for i in 1:n-1]
     prime!(A, rand_plev, "Link")
 
-    first  = Vector{ITensor}(undef, n)
-    second = Vector{ITensor}(undef, n)
+    first  = fill(ITensor(), n)
+    second = fill(ITensor(), n)
     for i in 1:n-1
-        lA = linkIndex(A, i)
-        lB = linkIndex(B, i)
-        r = Index()
-        plussers(lA, lB, r, first[i], second[i])
+        lA = linkindex(A, i)
+        lB = linkindex(B, i)
+        r = Index(dim(lA) + dim(lB), tags(lA))
+        f, s = plussers(lA, lB, r)
+        first[i] = f
+        second[i] = s
     end
     C[1] = A[1] * first[1] + B[1] * second[1]
     for i in 2:n-1
@@ -278,7 +280,7 @@ function (+)(A::MPO, B::MPO)::MPO
     end
     C[n] = dag(first[n-1]) * A[n] + dag(second[n-1]) * B[n]
     prime!(C, -rand_plev, "Link")
-    position!(C, 1)
+    position!(C, 1, kwargs...)
     return C
 end
 
