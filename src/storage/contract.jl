@@ -1,4 +1,21 @@
 
+# Check if the contraction is an outer product
+# (none of the labels are negative)
+function is_outer(l1::Vector{Int},l2::Vector{Int})
+  for l1i in l1
+    if l1i < 0
+      return false
+    end
+  end
+  # I think this one is not necessary
+  for l2i in l2
+    if l2i < 0
+      return false
+    end
+  end
+  return true
+end
+
 mutable struct CProps
   ai::Vector{Int}
   bi::Vector{Int}

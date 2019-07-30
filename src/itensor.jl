@@ -22,6 +22,10 @@ mutable struct ITensor
   ITensor(is::IndexSet,st::T) where T = new(is,st)
 end
 
+#
+# Dense ITensor constructors
+#
+
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
 ITensor(is::IndexSet) = ITensor(Float64,is...)
 ITensor(inds::Index...) = ITensor(IndexSet(inds...))
@@ -49,6 +53,20 @@ function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
   return ITensor(inds,Dense{float(S)}(float(vec(A))))
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
+
+#
+# Diag ITensor constructors
+#
+
+diagITensor() = ITensor(IndexSet(),Diag{Nothing}())
+diagITensor(is::IndexSet) = ITensor(Float64,is...)
+diagITensor(inds::Index...) = ITensor(IndexSet(inds...))
+
+function diagITensor(::Type{T},
+                     inds::IndexSet) where {T<:Number}
+  return diagITensor(inds,Diag{float(T)}(zero(float(T)),dim(inds)))
+end
+diagITensor(::Type{T},inds::Index...) where {T<:Number} = diagITensor(T,IndexSet(inds...))
 
 # Convert to complex
 complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))

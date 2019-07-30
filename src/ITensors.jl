@@ -56,6 +56,7 @@ include("index.jl")
 include("indexset.jl")
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")
+include("storage/diag.jl")
 include("storage/contract.jl")
 include("storage/svd.jl")
 #export CProps, contract!, compute!, compute_contraction_labels, contract_inds, contract

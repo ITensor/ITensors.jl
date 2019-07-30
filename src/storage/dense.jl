@@ -202,49 +202,6 @@ function storage_scalar(D::Dense)
   throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
 end
 
-function is_outer(l1::Vector{Int},l2::Vector{Int})
-  for l1i in l1
-    if l1i < 0
-      return false
-    end
-  end
-  for l2i in l2
-    if l2i < 0
-      return false
-    end
-  end
-  return true
-end
-
-# TODO: make this storage_contract!(), where C is pre-allocated. 
-#       This will allow for in-place multiplication
-# TODO: optimize the contraction logic so C doesn't get permuted?
-function storage_contract(Astore::TensorStorage,
-                          Ais::IndexSet,
-                          Bstore::TensorStorage,
-                          Bis::IndexSet)
-  if length(Ais)==0
-    Cis = Bis
-    Cstore = storage_scalar(Astore)*Bstore
-  elseif length(Bis)==0
-    Cis = Ais
-    Cstore = storage_scalar(Bstore)*Astore
-  else
-    #TODO: check for special case when Ais and Bis are disjoint sets
-    #I think we should do this analysis outside of storage_contract, at the ITensor level
-    #(since it is universal for any storage type and just analyzes in indices)
-    (Alabels,Blabels) = compute_contraction_labels(Ais,Bis)
-    if is_outer(Alabels,Blabels)
-      Cis = IndexSet(Ais,Bis)
-      Cstore = outer(Astore,Bstore)
-    else
-      (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
-      Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
-    end
-  end
-  return (Cis,Cstore)
-end
-
 function storage_svd(Astore::Dense{T},
                      Lis::IndexSet,
                      Ris::IndexSet;
