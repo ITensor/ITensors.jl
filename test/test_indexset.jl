@@ -83,4 +83,21 @@ using ITensors,
     I = IndexSet(i, j)
     @test ITensors.compute_strides(I) == [1, idim]
   end
+  @testset "setprime" begin
+    I = IndexSet(i, j)
+    J = setprime(I, 2, i)
+    @test i'' ∈ J
+  end
+  @testset "prime" begin
+    I = IndexSet(i, j)
+    J = prime(I, j)
+    @test i ∈ J
+    @test j' ∈ J
+  end
+  @testset "noprime" begin
+    I = IndexSet(i'', j')
+    J = noprime(I)
+    @test i ∈ J
+    @test j ∈ J
+  end
 end

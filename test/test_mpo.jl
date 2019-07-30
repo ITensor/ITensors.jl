@@ -3,7 +3,7 @@ using ITensors,
 
 @testset "MPO Basics" begin
 
-  N = 10
+  N = 4 
   sites = SiteSet(N,2)
   @test length(MPO()) == 0
   O = MPO(sites)
@@ -39,9 +39,38 @@ using ITensors,
     @test_throws DimensionMismatch inner(phi,K,badpsi)
   end
   
+  @testset "applyMPO" begin
+    phi = randomMPS(sites)
+    K = randomMPO(sites)
+    @test maxDim(K) == 1
+    psi = randomMPS(sites)
+    psi_out = applyMPO(K, psi)
+    @test inner(phi,psi_out) ≈ inner(phi,K,psi)
+    @test_throws ArgumentError applyMPO(K, psi, method="fakemethod")
+
+    badsites = SiteSet(N+1,2)
+    badpsi = randomMPS(badsites)
+    @test_throws DimensionMismatch applyMPO(K,badpsi)
+  end
+
+  @testset "nmultMPO" begin
+    psi = randomMPS(sites)
+    K = randomMPO(sites)
+    L = randomMPO(sites)
+    @test maxDim(K) == 1
+    @test maxDim(L) == 1
+    KL = nmultMPO(K, L)
+    psi_kl_out = applyMPO(K, applyMPO(L, psi))
+    @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out)
+
+    badsites = SiteSet(N+1,2)
+    badL = randomMPO(badsites)
+    @test_throws DimensionMismatch nmultMPO(K,badL)
+  end
+  
   sites = spinHalfSites(N)
   O = MPO(sites,"Sz")
   @test length(O) == N # just make sure this works
  
-  @test_throws ErrorException randomMPO(sites, 2)
+  @test_throws ArgumentError randomMPO(sites, 2)
 end
