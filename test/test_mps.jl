@@ -53,6 +53,14 @@ using ITensors,
     @test psipsi[] ≈ inner(psi,psi)
   end
 
+  @testset "add MPS" begin
+    psi = randomMPS(sites)
+    phi = similar(psi)
+    phi.A_ = deepcopy(psi.A_)
+    xi = sum(psi, phi)
+    @test inner(xi, xi) ≈ 4.0 * inner(psi, psi) 
+  end
+
   sites = spinHalfSites(N)
   psi = MPS(sites)
   @test length(psi) == N # just make sure this works

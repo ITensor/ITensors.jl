@@ -175,7 +175,6 @@ function position!(M::MPS,
   M.rlim_ = j+1
 end
 
-
 """
 inner(ψ::MPS, ϕ::MPS)
 

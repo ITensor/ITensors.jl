@@ -239,6 +239,51 @@ function inner(y::MPS,
   return O[]
 end
 
+function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
+    #if dir(left_ind) == dir(right_ind) == Neither
+        total_dim    = dim(left_ind) + dim(right_ind)
+        total_dim    = max(total_dim, 1)
+        left_tensor  = δ(left_ind, sum_ind)
+        right_tensor = ITensor(right_ind, sum_ind)
+        for i in 1:dim(right_ind)
+            right_tensor[right_ind(i), sum_ind(dim(left_ind) + i)] = 1
+        end
+        return left_tensor, right_tensor
+    #else # tensors have QNs
+    #    throw(ArgumentError("support for adding MPOs with defined quantum numbers not implemented yet."))
+    #end
+end
+
+function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
+    n = A.N_ 
+    length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
+    position!(A, 1, kwargs...)
+    position!(B, 1, kwargs...)
+    C = similar(A)
+    rand_plev = 13124
+    lAs = [linkindex(A, i) for i in 1:n-1]
+    prime!(A, rand_plev, "Link")
+
+    first  = fill(ITensor(), n)
+    second = fill(ITensor(), n)
+    for i in 1:n-1
+        lA = linkindex(A, i)
+        lB = linkindex(B, i)
+        r = Index(dim(lA) + dim(lB), tags(lA))
+        f, s = plussers(lA, lB, r)
+        first[i] = f
+        second[i] = s
+    end
+    C[1] = A[1] * first[1] + B[1] * second[1]
+    for i in 2:n-1
+        C[i] = dag(first[i-1]) * A[i] * first[i] + dag(second[i-1]) * B[i] * second[i]
+    end
+    C[n] = dag(first[n-1]) * A[n] + dag(second[n-1]) * B[n]
+    prime!(C, -rand_plev, "Link")
+    position!(C, 1, kwargs...)
+    return C
+end
+
 function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     method = get(kwargs, :method, "DensityMatrix")
     if method == "DensityMatrix"
