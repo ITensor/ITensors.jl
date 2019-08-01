@@ -353,8 +353,8 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     resp_degen::Bool = get(kwargs, :respect_degenerate, true) 
     maxdim::Int = get(kwargs,:maxdim,maxLinkDim(A)*maxLinkDim(B))
     mindim::Int = max(get(kwargs,:mindim,1), 1)
-    n = length(A)
-    n != length(B) && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
+    N = length(A)
+    N != length(B) && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
     A_ = copy(A)
     position!(A_, 1)
     B_ = copy(B)
@@ -363,13 +363,13 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     links_A = findinds.(A.A_, "Link")
     links_B = findinds.(B.A_, "Link")
 
-    for i in 1:n
+    for i in 1:N
         if length(commoninds(findinds(A_[i], "Site"), findinds(B_[i], "Site"))) == 2
             A_[i] = prime(A_[i], "Site")
         end
     end
     res = deepcopy(A_)
-    for i in 1:n-1
+    for i in 1:N-1
         ci = commonindex(res[i], res[i+1])
         new_ci = Index(dim(ci), tags(ci))
         replaceindex!(res[i], ci, new_ci)
@@ -379,7 +379,7 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     sites_A = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(tensors(A_), tensors(B_))]
     sites_B = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(tensors(B_), tensors(A_))]
     res[1] = ITensor(sites_A[1], sites_B[1], commonindex(res[1], res[2]))
-    for i in 1:n-2
+    for i in 1:N-2
         if i == 1
             clust = A_[i] * B_[i]
         else
@@ -388,21 +388,21 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
         lA = commonindex(A_[i], A_[i+1])
         lB = commonindex(B_[i], B_[i+1])
         nfork = ITensor(lA, lB, commonindex(res[i], res[i+1]))
-        res[i], nfork = factorize(mapprime(clust, 2, 1), inds(res[i]), dir="fromleft", tags=tags(lA), cutoff=cutoff, maxdim=maxdim, mindim=mindim)
+        res[i], nfork = factorize(mapprime(clust,2,1), inds(res[i]), dir="fromleft", tags=tags(lA), cutoff=cutoff, maxdim=maxdim, mindim=mindim)
         mid = dag(commonindex(res[i], nfork))
         res[i+1] = ITensor(mid, sites_A[i+1], sites_B[i+1], commonindex(res[i+1], res[i+2]))
     end
-    clust = nfork * A_[n-1] * B_[n-1]
-    nfork = clust * A_[n] * B_[n]
+    clust = nfork * A_[N-1] * B_[N-1]
+    nfork = clust * A_[N] * B_[N]
 
     # in case we primed A
-    A_ind = uniqueindex(findinds(A_[n-1], "Site"), findinds(B_[n-1], "Site"))
-    Lis = IndexSet(A_ind, sites_B[n-1], commonindex(res[n-2], res[n-1]))
-    U, V, ci = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(n-1)",maxdim=maxdim,mindim=mindim)
-    res[n-1] = U
-    res[n] = V
+    A_ind = uniqueindex(findinds(A_[N-1], "Site"), findinds(B_[N-1], "Site"))
+    Lis = IndexSet(A_ind, sites_B[N-1], commonindex(res[N-2], res[N-1]))
+    U, V, ci = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(N-1)",maxdim=maxdim,mindim=mindim)
+    res[N-1] = U
+    res[N] = V
     position!(res, 1)
-    for i in 1:n
+    for i in 1:N
         res[i] = mapprime(res[i], 2, 1)
     end
     return res
