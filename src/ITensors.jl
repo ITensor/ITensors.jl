@@ -69,7 +69,6 @@ include("iterativesolvers.jl")
 # MPS/MPO
 #
 include("mps/siteset.jl")
-include("mps/initstate.jl")
 include("mps/mps.jl")
 include("mps/mpo.jl")
 include("mps/sweeps.jl")
