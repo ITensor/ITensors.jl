@@ -20,7 +20,36 @@ using ITensors,
   psi[1] = ITensor(sites[1])
   @test hasindex(psi[1],sites[1])
 
-  @testset "RandomMPS" begin
+  @testset "productMPS" begin
+    @testset "vector of string input" begin
+      sites = spinHalfSites(N)
+      state = fill("",N)
+      for j=1:N
+        state[j] = isodd(j) ? "Up" : "Dn"
+      end
+      psi = productMPS(sites,state)
+      for j=1:N
+        sign = isodd(j) ? +1.0 : -1.0
+        @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
+      end
+    end
+
+    @testset "vector of int input" begin
+      sites = spinHalfSites(N)
+      state = fill(0,N)
+      for j=1:N
+        state[j] = isodd(j) ? 1 : 2
+      end
+      psi = productMPS(sites,state)
+      for j=1:N
+        sign = isodd(j) ? +1.0 : -1.0
+        @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
+      end
+    end
+
+  end
+
+  @testset "randomMPS" begin
     phi = randomMPS(sites)
     @test hasindex(phi[1],sites[1])
     @test norm(phi[1])≈1.0
