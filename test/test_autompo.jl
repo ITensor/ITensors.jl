@@ -147,7 +147,7 @@ end
 
   N = 10
 
-  @testset "MPOTerm" begin
+  @testset "Show MPOTerm" begin
     sites = spinHalfSites(N)
     ampo = AutoMPO(sites)
     add!(ampo,"Sz",1,"Sz",2)
