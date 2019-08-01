@@ -1,11 +1,6 @@
 
 module ITensors
 
-function pause() 
-  println("(paused)")
-  readline(stdin)
-end
-
 using Random,
       Printf,
       LinearAlgebra,
