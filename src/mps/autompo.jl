@@ -88,10 +88,10 @@ function MPOTerm(c::Number,
   return MPOTerm(convert(ComplexF64,c),vop)
 end
 
-function MPOTerm(c::Number,
-                 ops::OpTerm)
-  return MPOTerm(convert(ComplexF64,c),ops)
-end
+#function MPOTerm(c::Number,
+#                 ops::OpTerm)
+#  return MPOTerm(convert(ComplexF64,c),ops)
+#end
 
 function Base.show(io::IO,
               op::MPOTerm) 
