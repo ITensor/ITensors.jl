@@ -12,6 +12,7 @@ using ITensors,
     @test hastags(ind(s),"n=3")
 
     @test val(state(s,2)) == 2
+    @test_throws ArgumentError state(s, "Fake")
   end
 
   @testset "Spin Half SiteSet" begin
@@ -110,6 +111,14 @@ using ITensors,
     @test Sp3 ≈ [0. 0 0 0; 0 0 1 0; 0 0 0 0; 0 0 0 0]
     Sm3 = Array(op(s,"S-",3),s[3]',s[3]) 
     @test Sm3 ≈ [0. 0 0 0; 0 0 0 0; 0 1 0 0; 0 0 0 0]
+    Sem = Array(op(s,"Emp",3),s[3])
+    @test Sem ≈ [1.0; 0.0; 0.0; 0.0]
+    Sup = Array(op(s,"Up",3),s[3])
+    @test Sup ≈ [0.0; 1.0; 0.0; 0.0]
+    Sdn = Array(op(s,"Dn",3),s[3])
+    @test Sdn ≈ [0.0; 0.0; 1.0; 0.0]
+    Supdn = Array(op(s,"UpDn",3),s[3])
+    @test Supdn ≈ [0.0; 0.0; 0.0; 1.0]
   end
 
   @testset "tJ Site" begin
