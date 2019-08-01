@@ -147,6 +147,13 @@ end
 
   N = 10
 
+  @testset "MPOTerm" begin
+    sites = spinHalfSites(N)
+    ampo = AutoMPO(sites)
+    add!(ampo,"Sz",1,"Sz",2)
+    @test sprint(show,terms(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
+  end
+
   @testset "Single creation op" begin
     sites = electronSites(N)
     ampo = AutoMPO(sites)
