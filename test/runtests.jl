@@ -12,6 +12,7 @@ using ITensors, Test
         "test_ctmrg.jl",
         "test_dmrg.jl",
         "test_siteset.jl",
+        "test_phys_sitesets.jl",
         "test_decomp.jl",
         "test_lattices.jl",
         "test_mps.jl",

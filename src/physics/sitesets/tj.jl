@@ -27,7 +27,6 @@ function operator(site::tJSite,
   DnP = sP(3)
 
   Op = ITensor(dag(s), s')
-
   if opname == "Nup"
     Op[Up, UpP] = 1.
   elseif opname == "Ndn"
