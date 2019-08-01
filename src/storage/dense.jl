@@ -202,6 +202,36 @@ function storage_scalar(D::Dense)
   throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
 end
 
+function contract(Cinds::IndexSet,
+                  Clabels::Vector{Int},
+                  Astore::Dense{SA},
+                  Ainds::IndexSet,
+                  Alabels::Vector{Int},
+                  Bstore::Dense{SB},
+                  Binds::IndexSet,
+                  Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+  SC = promote_type(SA,SB)
+
+  # Convert the arrays to a common type
+  # since we will call BLAS
+  Astore = convert(Dense{SC},Astore)
+  Bstore = convert(Dense{SC},Bstore)
+
+  Adims = dims(Ainds)
+  Bdims = dims(Binds)
+  Cdims = dims(Cinds)
+
+  # Create storage for output tensor
+  Cstore = Dense{SC}(prod(Cdims))
+
+  Adata = reshape(data(Astore),Adims)
+  Bdata = reshape(data(Bstore),Bdims)
+  Cdata = reshape(data(Cstore),Cdims)
+
+  contract!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
+  return Cstore
+end
+
 function storage_svd(Astore::Dense{T},
                      Lis::IndexSet,
                      Ris::IndexSet;

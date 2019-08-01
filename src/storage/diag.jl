@@ -2,7 +2,7 @@ export Diag
 
 struct Diag{T} <: TensorStorage
   data::Vector{T}
-  Diag{T}(data::Vector) where {T} = new{T}(convert(Vector{T},data))
+  Diag{T}(data::Vector) where {T} = new{T}(data)
   Diag{T}(size::Integer) where {T} = new{T}(Vector{T}(undef,size))
   Diag{T}(x::Number,size::Integer) where {T} = new{T}(fill(convert(T,x),size))
   Diag{T}() where {T} = new{T}(Vector{T}())
@@ -17,7 +17,10 @@ getindex(D::Diag,i::Int) = data(D)[i]
 *(D::Diag{T},x::S) where {T,S<:Number} = Dense{promote_type(T,S)}(x*data(D))
 *(x::Number,D::Diag) = D*x
 
-convert(::Type{Diag{T}},D::Diag) where {T} = Diag{T}(data(D))
+convert(::Type{Diag{T}},D::Diag) where T = Diag{T}(data(D))
+
+# convert to Dense
+storage_dense(D::Diag{T},is::IndexSet) where T = Dense{T}(vec(storage_convert(Array,D,is)))
 
 # convert to complex
 storage_complex(D::Diag{T}) where {T} = Diag{complex(T)}(complex(data(D)))
@@ -27,9 +30,9 @@ copy(D::Diag{T}) where {T} = Diag{T}(copy(data(D)))
 # TODO: implement this
 #outer(D1::Diag{T},D2::Diag{S}) where {T, S <:Number} = Diag{promote_type(T,S)}(vec(data(D1)*transpose(data(D2))))
 
-# TODO: convert to an array by setting the diagonal elements
-function storage_convert(::Type{Array},D::Diag,is::IndexSet)
-  A = zeros(eltype(D),dims(is))
+# Convert to an array by setting the diagonal elements
+function storage_convert(::Type{Array},D::Diag{T},is::IndexSet) where T
+  A = zeros(T,dims(is))
   for i = 1:minDim(is)
     A[fill(i,length(is))...] = data(D)[i]
   end
@@ -38,8 +41,8 @@ end
 
 storage_fill!(D::Diag,x::Number) = fill!(data(D),x)
 
-# TODO: only get diagonal elements
-# Should it give zero for off-diagonal elements?
+# Get diagonal elements
+# Gives zero for off-diagonal elements
 function storage_getindex(Tstore::Diag{T},
                           Tis::IndexSet,
                           vals::Union{Int, AbstractVector{Int}}...) where {T}
@@ -50,7 +53,7 @@ function storage_getindex(Tstore::Diag{T},
   end
 end
 
-# TODO: only set diagonal elements
+# Set diagonal elements
 # Throw error for off-diagonal
 function storage_setindex!(Tstore::Diag,
                            Tis::IndexSet,
@@ -144,6 +147,7 @@ function storage_mult(Astore::Diag,
   return Bstore
 end
 
+# TODO: Move to tensorstorage.jl?
 # For Real storage and complex scalar, promotion
 # of the storage is needed
 function storage_mult(Astore::Diag{T},
@@ -180,6 +184,101 @@ end
 function storage_scalar(D::Diag)
   length(D)==1 && return D[1]
   throw(ErrorException("Cannot convert Diag -> Number for length of data greater than 1"))
+end
+
+# Contract function for Diag*Dense
+function contract(Cinds::IndexSet,
+                  Clabels::Vector{Int},
+                  Astore::Diag{SA},
+                  Ainds::IndexSet,
+                  Alabels::Vector{Int},
+                  Bstore::Dense{SB},
+                  Binds::IndexSet,
+                  Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+  SC = promote_type(SA,SB)
+
+  # Convert the arrays to a common type
+  # since we will call BLAS
+  Astore = convert(Diag{SC},Astore)
+  Bstore = convert(Dense{SC},Bstore)
+
+  Adims = dims(Ainds)
+  Bdims = dims(Binds)
+  Cdims = dims(Cinds)
+
+  # Create storage for output tensor
+  Cstore = Dense{SC}(prod(Cdims))
+
+  # This seems unnecessary, and makes this function
+  # non-generic. I think Dense should already store
+  # the properly-shaped data (and be parametrized by the
+  # order, and maybe store the size?)
+  Adata = data(Astore)
+  Bdata = reshape(data(Bstore),Bdims)
+  Cdata = reshape(data(Cstore),Cdims)
+
+  contract_diag_dense!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
+  return Cstore
+end
+
+function contract_diag_dense!(Cdata::Array{T},Clabels::Vector{Int},
+                              Adata::Vector{T},Alabels::Vector{Int},
+                              Bdata::Array{T},Blabels::Vector{Int},
+                              α::T=one(T),β::T=zero(T)) where T
+  if(length(Alabels)==0)
+    contract_scalar!(Cdata,Clabels,Bdata,Blabels,α*Adata[1],β)
+  elseif(length(Blabels)==0)
+    contract_scalar!(Cdata,Clabels,Adata,Alabels,α*Bdata[1],β)
+  else
+    _contract_diag_dense!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels,α,β)
+  end
+  return
+end
+
+function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
+                               Adata::Vector{T},Alabels::Vector{Int},
+                               Bdata::Array{T,NB},Blabels::Vector{Int},
+                               α::T,β::T) where {T,NB,NC}
+  @show Alabels
+  @show Blabels
+  @show Clabels
+
+  if all(i -> i < 0, Blabels)  # If all of B is contracted
+    dim = minimum(size(Bdata))
+    if length(Clabels) == 0
+      # all indices are summed over, just add the product of the diagonal
+      # elements of A and B
+      for i = 1:dim
+        Cdata[1] += Adata[i]*Bdata[ntuple(_->i,Val(NB))...]
+      end
+    else
+      # not all indices are summed over, set the diagonals of the result
+      # to the product of the diagonals of A and B
+      # TODO: should we make this return a Diag storage?
+      for i = 1:dim
+        Cdata[ntuple(_->i,Val(NC))...] = Adata[i]*Bdata[ntuple(_->i,Val(NB))...]
+      end
+    end
+  else
+    println("Not all of B is contracted")
+    # uncontracted dim of A = 1
+    # uncontracted dim of B = 2
+    num_con = sum(i -> i < 0, Alabels)
+    num_nonconA = sum(i -> i > 0, Alabels)
+    num_nonconB = sum(i -> i > 0, Blabels)
+
+    @show num_con
+    @show num_nonconA
+    @show num_nonconB
+
+    # TODO: permute the inds properly
+    indsB = ntuple(_->:,num_nonconB)
+    for i = 1:size(Adata,1)
+      indscon = ntuple(_->i,num_con)
+      indsA = ntuple(_->i,num_nonconA)
+      Cdata[indsA...,indsB...] = Adata[i]*view(Bdata,indscon...,indsB...)
+    end
+  end
 end
 
 ## TODO: maybe we can do a special case for matrix, and

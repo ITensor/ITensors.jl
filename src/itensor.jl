@@ -13,7 +13,8 @@ export ITensor,
        randomITensor,
        diagITensor,
        scalar,
-       store
+       store,
+       dense
 
 mutable struct ITensor
   inds::IndexSet
@@ -59,18 +60,74 @@ ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds.
 # Diag ITensor constructors
 #
 
-diagITensor() = ITensor(IndexSet(),Diag{Nothing}())
-diagITensor(is::IndexSet) = ITensor(is,Diag{Float64}(zero(Float64),minDim(is)))
-diagITensor(inds::Index...) = diagITensor(IndexSet(inds...))
+"""
+diagITensor(::Type{T}, is::IndexSet)
 
+Make an ITensor with Diag storage with element type T.
+"""
 function diagITensor(::Type{T},
-                     inds::IndexSet) where {T<:Number}
-  return diagITensor(inds,Diag{float(T)}(zero(float(T)),dim(inds)))
+                     is::IndexSet) where {T<:Number}
+  return ITensor(is,Diag{T}(zero(T),minDim(is)))
 end
+
+"""
+diagITensor(::Type{T}, is::Index...)
+
+Make an ITensor with Diag storage with element type T.
+"""
 diagITensor(::Type{T},inds::Index...) where {T<:Number} = diagITensor(T,IndexSet(inds...))
 
-# Convert to complex
-complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))
+"""
+diagITensor(v::Vector{T}, is::IndexSet)
+
+Make an ITensor with Diag storage with element type float(T) with elements
+from Vector v.
+"""
+function diagITensor(v::Vector{T},
+                     is::IndexSet) where {T<:Number}
+  length(v) ≠ minDim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
+  return ITensor(is,Diag{float(T)}(v))
+end
+
+"""
+diagITensor(v::Vector{T}, is::Index...)
+
+Make an ITensor with Diag storage with element type float(T) with elements
+from Vector v.
+"""
+function diagITensor(v::Vector{T},
+                     is::Index...) where {T<:Number}
+  return diagITensor(v,IndexSet(is...))
+end
+
+"""
+diagITensor(is::IndexSet)
+
+Make an ITensor with Diag storage with element type Float64.
+"""
+diagITensor(is::IndexSet) = ITensor(is,Diag{Float64}(zero(Float64),minDim(is)))
+
+"""
+diagITensor(is::Index...)
+
+Make an ITensor with Diag storage with element type Float64.
+"""
+diagITensor(inds::Index...) = diagITensor(IndexSet(inds...))
+
+"""
+dense(T::ITensor)
+
+Make a copy of the ITensor where the storage is the dense version.
+For example, an ITensor with Diag storage will become Dense storage.
+"""
+dense(T::ITensor) = ITensor(inds(T),storage_dense(store(T),inds(T)))
+
+"""
+complex(T::ITensor)
+
+Convert to the complex version of the storage.
+"""
+Base.complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))
 
 inds(T::ITensor) = T.inds
 

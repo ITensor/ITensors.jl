@@ -11,6 +11,7 @@ using Random,
       LinearAlgebra,
       StaticArrays # For SmallString
 
+# TODO: move imports to individual files
 import Base.adjoint,
        Base.conj,
        Base.convert,
@@ -36,7 +37,6 @@ import Base.adjoint,
        Base.*,
        Base./,
        Base.^,
-       Base.complex,
        Base.setdiff,  # Since setdiff doesn't 
                       # work with IndexSet, overload it
        LinearAlgebra.axpby!,
@@ -48,8 +48,6 @@ import Base.adjoint,
        LinearAlgebra.normalize!,
        Random.randn!
 
-
-#TODO: continue work on SmallString, use as Tags
 include("smallstring.jl")
 include("tagset.jl")
 include("index.jl")
@@ -59,7 +57,6 @@ include("storage/dense.jl")
 include("storage/diag.jl")
 include("storage/contract.jl")
 include("storage/svd.jl")
-#export CProps, contract!, compute!, compute_contraction_labels, contract_inds, contract
 include("itensor.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
