@@ -20,6 +20,7 @@ using ITensors,
     Sz5 = op(s,"Sz",5)
     @test hasinds(Sz5,s[5]',s[5])
      
+    @test_throws ArgumentError op(s, "Fake", 2)
     @test Array(op(s,"S+",3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
     @test Array(op(s,"S-",4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
     @test Array(op(s,"Sx",2),s[2]',s[2])  ≈ [ 0.0  0.5; 0.5  0.0]
@@ -47,6 +48,7 @@ using ITensors,
     Sz5 = op(s,"Sz",5)
     @test hasinds(Sz5,s[5]',s[5])
      
+    @test_throws ArgumentError op(s, "Fake", 2)
     @test Array(op(s,"S+",3),s[3]',s[3]) ≈ [ 0 √2 0; 0 0 √2; 0 0 0]
     @test Array(op(s,"S-",3),s[3]',s[3]) ≈ [ 0 0 0; √2 0 0; 0.0 √2 0]
     @test Array(op(s,"Sx",3),s[3]',s[3]) ≈ [ 0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
@@ -79,6 +81,7 @@ using ITensors,
     Nup5 = op(s,"Nup",5)
     @test hasinds(Nup5,s[5]',s[5])
      
+    @test_throws ArgumentError op(s, "Fake", 2)
     Nup3 = Array(op(s,"Nup",3),s[3]',s[3]) 
     @test Nup3 ≈ [0. 0 0 0; 0 1 0 0; 0 0 0 0; 0 0 0 1]
     Ndn3 = Array(op(s,"Ndn",3),s[3]',s[3]) 
@@ -120,8 +123,14 @@ using ITensors,
 
   @testset "tJ SiteSet" begin
     sites = tJSites(N)
-     
+
+    @test_throws ArgumentError op(sites, "Fake", 2)
     Nup_2 = op(sites,"Nup",2)
     @test Nup_2[2,2] ≈ 1.0
+    Ndn_2 = op(sites,"Ndn",2)
+    @test Ndn_2[3,3] ≈ 1.0
+    Ntot_2 = op(sites,"Ntot",2)
+    @test Ntot_2[2,2] ≈ 1.0
+    @test Ntot_2[3,3] ≈ 1.0
   end
 end
