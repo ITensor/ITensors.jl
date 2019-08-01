@@ -24,7 +24,7 @@ using ITensors,
   @testset "inner" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
-    @test maxDim(K) == 1
+    @test maxLinkDim(K) == 1
     psi = randomMPS(sites)
     phidag = dag(phi)
     prime!(phidag)
@@ -42,7 +42,7 @@ using ITensors,
   @testset "applyMPO" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
-    @test maxDim(K) == 1
+    @test maxLinkDim(K) == 1
     psi = randomMPS(sites)
     psi_out = applyMPO(K, psi)
     @test inner(phi,psi_out) ≈ inner(phi,K,psi)
@@ -68,8 +68,8 @@ using ITensors,
     psi = randomMPS(sites)
     K = randomMPO(sites)
     L = randomMPO(sites)
-    @test maxDim(K) == 1
-    @test maxDim(L) == 1
+    @test maxLinkDim(K) == 1
+    @test maxLinkDim(L) == 1
     KL = nmultMPO(K, L)
     psi_kl_out = applyMPO(K, applyMPO(L, psi))
     @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out)

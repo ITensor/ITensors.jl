@@ -1,7 +1,8 @@
 export MPO,
        randomMPO,
        applyMPO,
-       nmultMPO
+       nmultMPO,
+       maxLinkDim
 
 mutable struct MPO
   N_::Int
@@ -156,7 +157,7 @@ function simlinks!(M::T) where {T <: Union{MPS,MPO}}
   end
 end
 
-function maxDim(M::T) where {T <: Union{MPS,MPO}}
+function maxLinkDim(M::T) where {T <: Union{MPS,MPO}}
   md = 0
   for b ∈ eachindex(M)[1:end-1] 
     md = max(md,dim(linkindex(M,b)))
@@ -297,7 +298,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
     psi_out = similar(psi)
     cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
-    maxdim::Int = get(kwargs,:maxdim,maxDim(psi))
+    maxdim::Int = get(kwargs,:maxdim,maxLinkDim(psi))
     mindim::Int = max(get(kwargs,:mindim,1), 1)
     normalize::Bool = get(kwargs, :normalize, false) 
 
@@ -350,7 +351,7 @@ end
 function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
     resp_degen::Bool = get(kwargs, :respect_degenerate, true) 
-    maxdim::Int = get(kwargs,:maxdim,max(maxDim(A), maxDim(B)))
+    maxdim::Int = get(kwargs,:maxdim,maxLinkDim(A)*maxLinkDim(B))
     mindim::Int = max(get(kwargs,:mindim,1), 1)
     n = length(A)
     n != length(B) && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
