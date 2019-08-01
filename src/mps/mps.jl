@@ -34,14 +34,14 @@ function MPS(sites::SiteSet)
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
-  @inbounds for ii in eachindex(sites)
+  for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
       v[ii] = ITensor(l[ii], s)
     elseif ii == N
       v[ii] = ITensor(l[ii-1], s)
     else
-      v[ii] = ITensor(l[ii-1], l[ii], s)
+      v[ii] = ITensor(l[ii-1],s,l[ii])
     end
   end
   return MPS(N,v,0,N+1)
@@ -99,7 +99,7 @@ function productMPS(sites::SiteSet,
       A = ITensor(links[n-1],s)
       A[links[n-1](1),state(sites,n,is[n])] = 1.0
     else
-      A = ITensor(links[n-1],links[n],s)
+      A = ITensor(links[n-1],s,links[n])
       A[links[n-1](1),state(sites,n,is[n]),links[n](1)] = 1.0
     end
     As[n] = A
