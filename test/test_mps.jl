@@ -32,6 +32,7 @@ using ITensors,
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
       end
+      @test_throws DimensionMismatch productMPS(sites, fill("", N - 1))
     end
 
     @testset "vector of int input" begin
@@ -102,4 +103,11 @@ using ITensors,
   position!(psi, 2)
   @test ITensors.leftLim(psi) == 1
   @test ITensors.rightLim(psi) == 3
+  psi = randomMPS(sites)
+  psi.rlim_ = N+1 # do this to test qr from rightmost tensor
+  position!(psi, div(N, 2))
+  @test ITensors.leftLim(psi) == div(N, 2) - 1
+  @test ITensors.rightLim(psi) == div(N, 2) + 1
+
+  @test_throws ErrorException linkindex(MPS(N, fill(ITensor(), N), 0, N + 1), 1)
 end
