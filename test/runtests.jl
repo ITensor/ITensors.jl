@@ -19,6 +19,7 @@ using ITensors, Test
         "test_autompo.jl",
         "test_svd.jl",
     )
-        include(filename)
+      println("Running $filename")
+      include(filename)
     end
 end
