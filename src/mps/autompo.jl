@@ -27,12 +27,12 @@ name(s::SiteOp) = s.name
 site(s::SiteOp) = s.site
 Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
 
-function Base.isless(s1::SiteOp,s2::SiteOp)::Bool
-  if site(s1) < site(s2)
-    return true
-  end
-  return name(s1) < name(s2)
-end
+#function Base.isless(s1::SiteOp,s2::SiteOp)::Bool
+#  if site(s1) < site(s2)
+#    return true
+#  end
+#  return name(s1) < name(s2)
+#end
 
 ###########################
 # OpTerm                  # 
@@ -51,7 +51,6 @@ struct MPOTerm
 end
 coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
-length(op::MPOTerm) = length(op.ops)
 
 function ==(t1::MPOTerm,t2::MPOTerm)
   return (t1.ops==t2.ops && isapprox(t1.coef,t2.coef))
@@ -89,10 +88,10 @@ function MPOTerm(c::Number,
   return MPOTerm(convert(ComplexF64,c),vop)
 end
 
-function MPOTerm(c::Number,
-                 ops::OpTerm)
-  return MPOTerm(convert(ComplexF64,c),ops)
-end
+#function MPOTerm(c::Number,
+#                 ops::OpTerm)
+#  return MPOTerm(convert(ComplexF64,c),ops)
+#end
 
 function Base.show(io::IO,
               op::MPOTerm) 
@@ -181,9 +180,9 @@ struct MatElem{T}
   val::T
 end
 
-function Base.show(io::IO,m::MatElem)
-  print(io,"($(m.row),$(m.col),$(m.val))")
-end
+#function Base.show(io::IO,m::MatElem)
+#  print(io,"($(m.row),$(m.col),$(m.val))")
+#end
 
 function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
   nr = 0
