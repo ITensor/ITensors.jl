@@ -80,6 +80,6 @@ end
 
 function state(sset::SiteSet,
                n::Integer,
-               st::Union{Integer,String})::IndexVal
+               st::Union{Int,String})::IndexVal
   return state(sset.sites[n],st)
 end
