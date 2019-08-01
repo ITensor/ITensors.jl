@@ -2,8 +2,7 @@ using ITensors,
       Test
 
 @testset "MPO Basics" begin
-
-  N = 4 
+  N = 6
   sites = SiteSet(N,2)
   @test length(MPO()) == 0
   O = MPO(sites)
@@ -20,7 +19,18 @@ using ITensors,
   P = copy(O)
   @test hasindex(P[1],sites[1])
   @test hasindex(P[1],prime(sites[1]))
-  
+
+  @testset "position" begin
+    phi = randomMPS(sites)
+    K = randomMPO(sites)
+    position!(phi, 1)
+    position!(K, 1)
+    orig_inner = inner(phi, K, phi) 
+    position!(phi, div(N, 2))
+    position!(K, div(N, 2))
+    @test inner(phi, K, phi) ≈ orig_inner
+  end
+
   @testset "inner" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
@@ -84,4 +94,5 @@ using ITensors,
   @test length(O) == N # just make sure this works
  
   @test_throws ArgumentError randomMPO(sites, 2)
+  @test_throws ErrorException linkindex(MPO(N, fill(ITensor(), N), 0, N + 1), 1)
 end
