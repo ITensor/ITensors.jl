@@ -28,6 +28,8 @@ function op(site::Site,
       Op[dag(s)(n),sP(n)] = 1.0
     end
   else
+    # Interpret operator names joined by *
+    # as acting on the same site
     starpos = findfirst("*",opname)
     if !isnothing(starpos)
       op1 = opname[1:starpos.start-1]
