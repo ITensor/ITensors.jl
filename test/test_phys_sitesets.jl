@@ -122,15 +122,43 @@ using ITensors,
   end
 
   @testset "tJ SiteSet" begin
-    sites = tJSites(N)
+    s = tJSites(N)
 
-    @test_throws ArgumentError op(sites, "Fake", 2)
-    Nup_2 = op(sites,"Nup",2)
+    @test_throws ArgumentError op(s, "Fake", 2)
+    Nup_2 = op(s,"Nup",2)
     @test Nup_2[2,2] ≈ 1.0
-    Ndn_2 = op(sites,"Ndn",2)
+    Ndn_2 = op(s,"Ndn",2)
     @test Ndn_2[3,3] ≈ 1.0
-    Ntot_2 = op(sites,"Ntot",2)
+    Ntot_2 = op(s,"Ntot",2)
     @test Ntot_2[2,2] ≈ 1.0
     @test Ntot_2[3,3] ≈ 1.0
+    Cup3 = Array(op(s,"Cup",3),s[3]',s[3]) 
+    @test Cup3 ≈ [0. 1 0; 0 0 0; 0 0 0]
+    Cdup3 = Array(op(s,"Cdagup",3),s[3]',s[3]) 
+    @test Cdup3 ≈ [0 0 0; 1. 0 0; 0 0 0]
+    Cdn3 = Array(op(s,"Cdn",3),s[3]',s[3]) 
+    @test Cdn3 ≈ [0. 0. 1; 0 0 0; 0 0 0]
+    Cddn3 = Array(op(s,"Cdagdn",3),s[3]',s[3]) 
+    @test Cddn3 ≈ [0 0 0; 0. 0 0; 1 0 0]
+    FP3 = Array(op(s,"FP",3),s[3]',s[3]) 
+    @test FP3 ≈ [1.0 0. 0; 0 -1.0 0; 0 0 -1.0]
+    Fup3 = Array(op(s,"Fup",3),s[3]',s[3]) 
+    @test Fup3 ≈ [1.0 0. 0; 0 -1.0 0; 0 0 1.0]
+    Fdn3 = Array(op(s,"Fdn",3),s[3]',s[3]) 
+    @test Fdn3 ≈ [1.0 0. 0; 0 1.0 0; 0 0 -1.0]
+    Sz3 = Array(op(s,"Sz",3),s[3]',s[3]) 
+    @test Sz3 ≈ [0.0 0. 0; 0 0.5 0; 0 0 -0.5]
+    Sx3 = Array(op(s,"Sx",3),s[3]',s[3]) 
+    @test Sx3 ≈ [0.0 0. 0; 0 0 1; 0 1 0]
+    Sp3 = Array(op(s,"Splus",3),s[3]',s[3]) 
+    @test Sp3 ≈ [0.0 0. 0; 0 0 1.0; 0 0 0]
+    Sm3 = Array(op(s,"Sminus",3),s[3]',s[3]) 
+    @test Sm3 ≈ [0.0 0. 0; 0 0 0; 0 1.0 0]
+    Up3 = Array(op(s,"Up",3),s[3]) 
+    @test Up3 ≈ [0.0; 1.0; 0]
+    Dn3 = Array(op(s,"Dn",3),s[3]) 
+    @test Dn3 ≈ [0.0; 0.0; 1.0]
+    Em3 = Array(op(s,"Emp",3),s[3]) 
+    @test Em3 ≈ [1.0; 0.0; 0.0]
   end
 end
