@@ -126,3 +126,49 @@ let
   @show norm(T - U*S*V)   # ≈ 0.0
 end
 ```
+
+### DMRG Calculation
+
+DMRG is an iterative algorithm for finding the dominant
+eigenvector of an exponentially large, Hermitian matrix.
+It originates in physics with the purpose of finding
+eigenvectors of Hamiltonian (energy) matrices which model
+the behavior of quantum systems.
+
+```Julia
+using ITensors
+using Printf
+
+let
+  N = 100
+  # Create N spin-one (dimension 3) indices
+  sites = spinOneSites(N)
+
+  # Input operator terms which define 
+  # a Hamiltonian matrix
+  ampo = AutoMPO(sites)
+  for j=1:N-1
+      add!(ampo,"Sz",j,"Sz",j+1)
+      add!(ampo,0.5,"S+",j,"S-",j+1)
+      add!(ampo,0.5,"S-",j,"S+",j+1)
+  end
+  # Convert these terms to an MPO tensor network
+  H = toMPO(ampo)
+
+  # Create an initial random matrix product state
+  psi0 = randomMPS(sites)
+
+  # Plan to do 5 passes or 'sweeps' of DMRG:
+  sweeps = Sweeps(5)
+  # Set maximum MPS internal dimensions for each sweep
+  maxdim!(sweeps, 10,20,100,100,200)
+  # Set maximum truncation error allowed when adapting bond dimensions
+  cutoff!(sweeps, 1E-10)
+  @show sweeps
+
+  # Run the DMRG algorithm, returning energy (dominant eigenvalue)
+  # and optimized MPS
+  energy, psi = dmrg(H,psi0, sweeps)
+  @printf("Final energy = %.12f\n",energy)
+end
+```
