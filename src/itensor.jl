@@ -93,6 +93,8 @@ isNull(T::ITensor) = (store(T) isa Dense{Nothing})
 
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
+Array(T::ITensor) = storage_convert(Array,store(T),inds(T))
+
 Array(T::ITensor,ninds::Index...) = storage_convert(Array,store(T),inds(T),IndexSet(ninds))
 
 function Matrix(A::ITensor,i1::Index,i2::Index)  
@@ -101,6 +103,8 @@ function Matrix(A::ITensor,i1::Index,i2::Index)
   end
   return Array(A,i1,i2)
 end
+
+Matrix(A::ITensor) = Matrix(A,inds(A)...)
 
 function Vector(A::ITensor)
   if ndims(A) != 1
