@@ -35,7 +35,6 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
     @test size(A) == dims(A) == (2,2)
-    @test length(A) == dim(A) == 4 == prod(size(A))
 
     @test !isNull(A)
   end

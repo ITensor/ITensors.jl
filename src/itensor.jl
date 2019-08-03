@@ -78,7 +78,6 @@ ndims(T::ITensor) = order(inds(T))
 The total number of entries, `prod(size(A))`.
 """
 dim(T::ITensor) = dim(inds(T))
-length(T::ITensor) = dim(inds(T))
 
 """
     dims(A::ITensor) = size(A)
