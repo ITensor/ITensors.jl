@@ -51,7 +51,7 @@ function cast_to_uint64(a)
   return ntoh(unsafe_load(convert(Ptr{IntSmallString},pointer_from_objref(MSmallStringStorage(a)))))
 end
 
-isint(i::IntSmallString) = isint(SmallString(i))
+#isint(i::IntSmallString) = isint(SmallString(i))
 
 function isint(s::SmallString)
   ndigits = 1
@@ -65,7 +65,7 @@ function isint(s::SmallString)
   return true
 end
 
-Base.parse(::Type{Int}, i::IntSmallString) = parse(Int,SmallString(i))
+#Base.parse(::Type{Int}, i::IntSmallString) = parse(Int,SmallString(i))
 
 function Base.parse(::Type{Int}, s::SmallString)
   n = length(s)
