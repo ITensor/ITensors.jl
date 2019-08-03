@@ -137,38 +137,38 @@ the behavior of quantum systems.
 
 ```Julia
 using ITensors
-using Printf
 
 let
+  # Create 100 spin-one (dimension 3) indices
   N = 100
-  # Create N spin-one (dimension 3) indices
   sites = spinOneSites(N)
 
   # Input operator terms which define 
-  # a Hamiltonian matrix
+  # a Hamiltonian matrix, and convert
+  # these terms to an MPO tensor network
   ampo = AutoMPO(sites)
   for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+    add!(ampo,"Sz",j,"Sz",j+1)
+    add!(ampo,0.5,"S+",j,"S-",j+1)
+    add!(ampo,0.5,"S-",j,"S+",j+1)
   end
-  # Convert these terms to an MPO tensor network
   H = toMPO(ampo)
 
   # Create an initial random matrix product state
   psi0 = randomMPS(sites)
 
-  # Plan to do 5 passes or 'sweeps' of DMRG:
+  # Plan to do 5 passes or 'sweeps' of DMRG,
+  # setting maximum MPS internal dimensions 
+  # for each sweep and maximum truncation cutoff
+  # used when adapting internal dimensions:
   sweeps = Sweeps(5)
-  # Set maximum MPS internal dimensions for each sweep
   maxdim!(sweeps, 10,20,100,100,200)
-  # Set maximum truncation error allowed when adapting bond dimensions
   cutoff!(sweeps, 1E-10)
   @show sweeps
 
-  # Run the DMRG algorithm, returning energy (dominant eigenvalue)
-  # and optimized MPS
+  # Run the DMRG algorithm, returning energy 
+  # (dominant eigenvalue) and optimized MPS
   energy, psi = dmrg(H,psi0, sweeps)
-  @printf("Final energy = %.12f\n",energy)
+  println("Final energy = $energy")
 end
 ```
