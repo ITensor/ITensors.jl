@@ -44,7 +44,8 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     A = ITensor(M,i,j)
     @test store(A) isa Dense{Float64}
 
-    @test M == Matrix(A)
+    @test M ≈ Matrix(A,i,j)
+    @test M' ≈ Matrix(A,j,i)
     @test_throws DimensionMismatch Vector(A)
 
     @test size(A,1) == size(M,1) == 2

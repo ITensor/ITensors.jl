@@ -94,10 +94,20 @@ isNull(T::ITensor) = (store(T) isa Dense{Nothing})
 copy(T::ITensor) = ITensor(copy(inds(T)),copy(store(T)))
 
 Array(T::ITensor,ninds::Index...) = storage_convert(Array,store(T),inds(T),IndexSet(ninds))
-Matrix(A::ITensor) = ndims(A) == 2 ? Array(A) :
-  throw(DimensionMismatch("Matrix() expected a 2-index ITensor"))
-Vector(A::ITensor) = ndims(A) == 1 ? Array(A) :
-  throw(DimensionMismatch("Vector() expected a 1-index ITensor"))
+
+function Matrix(A::ITensor,i1::Index,i2::Index)  
+  if ndims(A) != 2
+    throw(DimensionMismatch("Matrix() expected a 2-index ITensor"))
+  end
+  return Array(A,i1,i2)
+end
+
+function Vector(A::ITensor)
+  if ndims(A) != 1
+    throw(DimensionMismatch("Vector() expected a 1-index ITensor"))
+  end
+  return Array(A,inds(A)...)
+end
 
 function getindex(T::ITensor,vals::Int...) 
   if order(T) ≠ length(vals) 
