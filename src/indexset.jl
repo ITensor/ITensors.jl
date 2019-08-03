@@ -19,6 +19,8 @@ struct IndexSet
     IndexSet(inds::Vector{Index}) = new(inds)
 end
 
+inds(is::IndexSet) = is.inds
+
 # Empty constructor
 IndexSet() = IndexSet(Index[])
 
@@ -226,6 +228,16 @@ function findindex(inds,tags)
 end
 # This version checks if there are more than one indices
 #findindex(inds, tags) = Index(findinds(inds,tags))
+
+function findindex(is::IndexSet,
+                   i::Index)::Int
+  for (n,j) in enumerate(is)
+    if i==j
+      return n
+    end
+  end
+  return 0
+end
 
 # From a tag set or index set, find the positions
 # of the matching indices as a vector of integers
