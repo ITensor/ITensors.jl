@@ -228,9 +228,9 @@ end
 # TODO: make this storage_contract!(), where C is pre-allocated. 
 #       This will allow for in-place multiplication
 # TODO: optimize the contraction logic so C doesn't get permuted?
-function storage_contract(Astore::TensorStorage,
+function storage_contract(Astore::Dense,
                           Ais::IndexSet,
-                          Bstore::TensorStorage,
+                          Bstore::Dense,
                           Bis::IndexSet)
   if length(Ais)==0
     Cis = Bis
