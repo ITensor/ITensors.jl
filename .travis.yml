@@ -5,6 +5,7 @@ sudo: false
 os:
   - linux
   - osx
+  - windows
 
 julia:
   - 1.1
@@ -21,4 +22,4 @@ notifications:
 ##- julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("ITensors"; coverage=true)'
 
 after_success:
-  - julia --inline=no -e 'using Pkg; cd(Pkg.dir("ITensors")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'using Pkg; cd(Pkg.dir("ITensors")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
