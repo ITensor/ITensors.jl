@@ -54,7 +54,7 @@ using ITensors,
     K = randomMPO(sites)
     @test maxLinkDim(K) == 1
     psi = randomMPS(sites)
-    psi_out = applyMPO(K, psi)
+    psi_out = applyMPO(K, psi,maxdim=1)
     @test inner(phi,psi_out) ≈ inner(phi,K,psi)
     @test_throws ArgumentError applyMPO(K, psi, method="fakemethod")
 
@@ -69,9 +69,9 @@ using ITensors,
     M = sum(K, L)
     @test length(M) == N
     psi = randomMPS(shsites)
-    k_psi = applyMPO(K, psi)
-    l_psi = applyMPO(L, psi)
-    @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi)
+    k_psi = applyMPO(K, psi, maxdim=1)
+    l_psi = applyMPO(L, psi, maxdim=1)
+    @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
   end
 
   @testset "nmultMPO" begin
@@ -80,9 +80,9 @@ using ITensors,
     L = randomMPO(sites)
     @test maxLinkDim(K) == 1
     @test maxLinkDim(L) == 1
-    KL = nmultMPO(K, L)
-    psi_kl_out = applyMPO(K, applyMPO(L, psi))
-    @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out)
+    KL = nmultMPO(K, L, maxdim=1)
+    psi_kl_out = applyMPO(K, applyMPO(L, psi, maxdim=1), maxdim=1)
+    @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
 
     badsites = SiteSet(N+1,2)
     badL = randomMPO(badsites)
