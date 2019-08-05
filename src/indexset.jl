@@ -71,8 +71,11 @@ push!(is::IndexSet,i::Index) = push!(is.inds,i)
 minDim(is::IndexSet)
 
 Get the minimum dimension of the indices in the index set.
+
+Returns 1 if the IndexSet is empty.
 """
 function minDim(is::IndexSet)
+  length(is) == 0 && (return 1)
   md = dim(is[1])
   for n ∈ 2:length(is)
     md = min(md,dim(is[n]))
@@ -84,8 +87,11 @@ end
 maxDim(is::IndexSet)
 
 Get the maximum dimension of the indices in the index set.
+
+Returns 1 if the IndexSet is empty.
 """
 function maxDim(is::IndexSet)
+  length(is) == 0 && (return 1)
   md = dim(is[1])
   for n ∈ 2:length(is)
     md = max(md,dim(is[n]))

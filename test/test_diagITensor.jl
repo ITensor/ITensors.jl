@@ -6,7 +6,7 @@ using ITensors,
 Random.seed!(12345)
 
 @testset "diagITensor" begin
-  d = 2
+  d = 3
   i = Index(d,"i")
   j = Index(d,"j")
   k = Index(d,"k")
@@ -18,6 +18,7 @@ Random.seed!(12345)
   q = Index(d,"q")
 
   v = [1:d...]
+  vr = randn(d)
 
   @testset "Zero constructor (order 2)" begin
     D = diagITensor(i,j)
@@ -126,10 +127,49 @@ Random.seed!(12345)
     @test store(T) isa Dense{Float64}
     for ii = 1:d, jj = 1:d, kk = 1:d
       if ii == jj == kk
-        @test T[i(ii),j(jj),k(kk)] == ii
+        @test T[ii,ii,ii] == ii
       else
         @test T[i(ii),j(jj),k(kk)] == 0.0
       end
+    end
+  end
+
+  @testset "Add (Diag+Diag)" begin
+    v1 = randn(d)
+    v2 = randn(d)
+    D1 = diagITensor(v1,i,j,k)
+    D2 = diagITensor(v2,i,j,k)
+
+    v3 = v1 + v2
+    D3 = D1 + D2
+
+    @test D3 ≈ dense(D1) + dense(D2) 
+    for ii = 1:d
+      @test D3[ii,ii,ii] == v3[ii]
+    end
+  end
+
+  @testset "Add (Diag+Dense)" begin
+    D = diagITensor(vr,i,j,k)
+    A = randomITensor(k,j,i)
+
+    R = D + A
+
+    @test R ≈ dense(D) + A
+    for ii = 1:d
+      @test R[ii,ii,ii] ≈ D[ii,ii,ii] + A[ii,ii,ii]
+    end
+  end
+
+  @testset "Add (Dense+Diag)" begin
+    D = diagITensor(vr,i,j,k)
+    A = randomITensor(i,k,j)
+
+    R = A + D
+
+    @test R ≈ dense(D) + A
+    for ii = 1:d
+      @test R[ii,ii,ii] ≈ D[ii,ii,ii] + A[ii,ii,ii]
     end
   end
 
@@ -155,6 +195,22 @@ Random.seed!(12345)
 
     @test D*A == dense(D)*A
     @test A*D == dense(D)*A
+  end
+
+  @testset "Contraction Diag*Diag (all contracted)" begin
+    D1 = diagITensor(v,l,i,k,j)
+    D2 = diagITensor(vr,j,l,i,k)
+
+    @test D1*D2 ≈ dense(D1)*dense(D2)
+    @test D2*D1 ≈ dense(D1)*dense(D2)
+  end
+
+  @testset "Contraction Diag*Diag (all contracted)" begin
+    D1 = diagITensor(v,l,i,k,j)
+    D2 = diagITensor(vr,m,k,n,l)
+
+    @test D1*D2 ≈ dense(D1)*dense(D2)
+    @test D2*D1 ≈ dense(D1)*dense(D2)
   end
 
 end

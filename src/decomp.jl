@@ -79,6 +79,9 @@ function truncate!(P::Vector{Float64};
   return truncerr,docut
 end
 
+# Take ITensor A, permute the storage so that
+# Linds are in front, return the permuted A
+# and the new left and right indices
 function _permute_for_factorize(A::ITensor,
                                 Linds...)
   Ais = inds(A)
@@ -99,14 +102,18 @@ function qr(A::ITensor,
             Linds...)
   A,Lis,Ris = _permute_for_factorize(A,Linds...)
   Qis,Qstore,Pis,Pstore = storage_qr(store(A),Lis,Ris)
-  return ITensor(Qis,Qstore),ITensor(Pis,Pstore)
+  Q = ITensor(Qis,Qstore)
+  R = ITensor(Pis,Pstore)
+  return Q,R,commonindex(Q,R)
 end
 
 function polar(A::ITensor,
                Linds...)
   A,Lis,Ris = _permute_for_factorize(A,Linds...)
   Qis,Qstore,Pis,Pstore = storage_polar(store(A),Lis,Ris)
-  return ITensor(Qis,Qstore),ITensor(Pis,Pstore)
+  Q = ITensor(Qis,Qstore)
+  P = ITensor(Pis,Pstore)
+  return Q,P,commoninds(Q,P)
 end
 
 import LinearAlgebra.svd
@@ -240,7 +247,7 @@ function factorize(A::ITensor,
 end
 
 # TODO: add a version that automatically detects the IndexSets
-# by matching based on tags
+# by matching based on tags (default to matching 0 and 1 primed indices)
 import LinearAlgebra.eigen
 function eigen(A::ITensor,
                Linds,
@@ -255,6 +262,8 @@ function eigen(A::ITensor,
   end
   #TODO: More of the index analysis should be moved out of storage_eigen
   Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris; kwargs...)
-  return ITensor(Uis,Ustore),ITensor(Dis,Dstore)
+  U = ITensor(Uis,Ustore)
+  D = ITensor(Dis,Dstore)
+  return U,D,commonindex(U,D)
 end
 
