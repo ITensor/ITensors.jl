@@ -13,8 +13,10 @@ export ITensor,
        order,
        permute,
        randomITensor,
+       diagITensor,
        scalar,
-       store
+       store,
+       dense
 
 mutable struct ITensor
   inds::IndexSet
@@ -23,6 +25,10 @@ mutable struct ITensor
   #total dimension of the indices (possibly only in debug mode);
   ITensor(is::IndexSet,st::T) where T = new(is,st)
 end
+
+#
+# Dense ITensor constructors
+#
 
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
 ITensor(is::IndexSet) = ITensor(Float64,is...)
@@ -52,8 +58,90 @@ function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
 
-# Convert to complex
-complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))
+#
+# Diag ITensor constructors
+#
+
+"""
+diagITensor(::Type{T}, is::IndexSet)
+
+Make a sparse ITensor of element type T with non-zero elements 
+only along the diagonal. Defaults to having `zero(T)` along the diagonal.
+The storage will have Diag type.
+"""
+function diagITensor(::Type{T},
+                     is::IndexSet) where {T<:Number}
+  return ITensor(is,Diag{T}(zero(T),minDim(is)))
+end
+
+"""
+diagITensor(::Type{T}, is::Index...)
+
+Make a sparse ITensor of element type T with non-zero elements 
+only along the diagonal. Defaults to having `zero(T)` along the diagonal.
+The storage will have Diag type.
+"""
+diagITensor(::Type{T},inds::Index...) where {T<:Number} = diagITensor(T,IndexSet(inds...))
+
+"""
+diagITensor(v::Vector{T}, is::IndexSet)
+
+Make a sparse ITensor with non-zero elements only along the diagonal. 
+The diagonal elements will be set to the values stored in `v` and 
+the ITensor will have element type `float(T)`.
+The storage will have Diag type.
+"""
+function diagITensor(v::Vector{T},
+                     is::IndexSet) where {T<:Number}
+  length(v) ≠ minDim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
+  return ITensor(is,Diag{float(T)}(v))
+end
+
+"""
+diagITensor(v::Vector{T}, is::Index...)
+
+Make a sparse ITensor with non-zero elements only along the diagonal. 
+The diagonal elements will be set to the values stored in `v` and 
+the ITensor will have element type `float(T)`.
+The storage will have Diag type.
+"""
+function diagITensor(v::Vector{T},
+                     is::Index...) where {T<:Number}
+  return diagITensor(v,IndexSet(is...))
+end
+
+"""
+diagITensor(is::IndexSet)
+
+Make a sparse ITensor of element type Float64 with non-zero elements 
+only along the diagonal. Defaults to storing zeros along the diagonal.
+The storage will have Diag type.
+"""
+diagITensor(is::IndexSet) = ITensor(is,Diag{Float64}(zero(Float64),minDim(is)))
+
+"""
+diagITensor(is::Index...)
+
+Make a sparse ITensor of element type Float64 with non-zero elements 
+only along the diagonal. Defaults to storing zeros along the diagonal.
+The storage will have Diag type.
+"""
+diagITensor(inds::Index...) = diagITensor(IndexSet(inds...))
+
+"""
+dense(T::ITensor)
+
+Make a copy of the ITensor where the storage is the dense version.
+For example, an ITensor with Diag storage will become Dense storage.
+"""
+dense(T::ITensor) = ITensor(inds(T),storage_dense(store(T),inds(T)))
+
+"""
+complex(T::ITensor)
+
+Convert to the complex version of the storage.
+"""
+Base.complex(T::ITensor) = ITensor(inds(T),storage_complex(store(T)))
 
 inds(T::ITensor) = T.inds
 store(T::ITensor) = T.store
@@ -409,11 +497,13 @@ function summary(io::IO,
   print(io," \n",typeof(store(T)))
 end
 
+# TODO: make a specialized printing from Diag
+# that emphasizes the missing elements
 function show(io::IO,T::ITensor)
   summary(io,T)
   print(io,"\n")
   if !isNull(T)
-    Base.print_array(io,reshape(data(store(T)),dims(T)))
+    Base.print_array(io,Array(T))
   end
 end
 

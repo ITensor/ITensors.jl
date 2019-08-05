@@ -1,4 +1,21 @@
 
+# Check if the contraction is an outer product
+# (none of the labels are negative)
+function is_outer(l1::Vector{Int},l2::Vector{Int})
+  for l1i in l1
+    if l1i < 0
+      return false
+    end
+  end
+  # I think this one is not necessary
+  for l2i in l2
+    if l2i < 0
+      return false
+    end
+  end
+  return true
+end
+
 mutable struct CProps
   ai::Vector{Int}
   bi::Vector{Int}
@@ -121,6 +138,8 @@ Atrans(props::CProps) = contractedA(props,1)
 Btrans(props::CProps) = !contractedB(props,1)
 Ctrans(props::CProps) = props.ctrans
 
+# TODO: replace find_index(v,t) with built in Julia function:
+# findfirst(==(t), v)
 function find_index(v::Vector{Int},t)::Int
   for i = 1:length(v)
     v[i]==t && return i
@@ -423,8 +442,6 @@ function contract!(C::Array{T},
                    B::Array{T},
                    α::T=one(T),
                    β::T=zero(T)) where {T}
-
-
   tA = 'N'
   if p.permuteA
     aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
@@ -451,6 +468,7 @@ function contract!(C::Array{T},
     end
   end
 
+  # TODO: this logic may be wrong
   if p.permuteC
     cref = reshape(copy(C),p.dleft,p.dright)
   else
@@ -514,35 +532,5 @@ function contract!(Cdata::Array{T},Clabels::Vector{Int},
     contract!(Cdata,props,Adata,Bdata,α,β)
   end
   return
-end
-
-function contract(Cinds::IndexSet,
-                  Clabels::Vector{Int},
-                  Astore::Dense{SA},
-                  Ainds::IndexSet,
-                  Alabels::Vector{Int},
-                  Bstore::Dense{SB},
-                  Binds::IndexSet,
-                  Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
-  SC = promote_type(SA,SB)
-
-  # Convert the arrays to a common type
-  # since we will call BLAS
-  Astore = convert(Dense{SC},Astore)
-  Bstore = convert(Dense{SC},Bstore)
-
-  Adims = dims(Ainds)
-  Bdims = dims(Binds)
-  Cdims = dims(Cinds)
-
-  # Create storage for output tensor
-  Cstore = Dense{SC}(prod(Cdims))
-
-  Adata = reshape(data(Astore),Adims)
-  Bdata = reshape(data(Bstore),Bdims)
-  Cdata = reshape(data(Cstore),Cdims)
-
-  contract!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
-  return Cstore
 end
 
