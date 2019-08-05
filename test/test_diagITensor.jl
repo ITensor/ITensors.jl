@@ -6,89 +6,156 @@ using ITensors,
 Random.seed!(12345)
 
 @testset "diagITensor" begin
-  i = Index(2,"i")
-  j = Index(2,"j")
-  k = Index(2,"k")
+  d = 2
+  i = Index(d,"i")
+  j = Index(d,"j")
+  k = Index(d,"k")
+  l = Index(d,"l")
+  m = Index(d,"m")
+  n = Index(d,"n")
+  o = Index(d,"o")
+  p = Index(d,"p")
+  q = Index(d,"q")
 
-  @testset "Zero constructor" begin
-    d = diagITensor(i,j)
+  v = [1:d...]
 
-    @test eltype(d) == Float64
-    @test d[i(1),j(1)] == 0.0
-    @test d[i(2),j(2)] == 0.0
-    @test d[i(1),j(2)] == 0.0
-    @test d[i(2),j(1)] == 0.0
+  @testset "Zero constructor (order 2)" begin
+    D = diagITensor(i,j)
+
+    @test eltype(D) == Float64
+    for ii = 1:d, jj = 1:d
+      if ii == jj
+        @test D[i(ii),j(jj)] == 0.0
+      else
+        @test D[i(ii),j(jj)] == 0.0
+      end
+    end
   end
 
-  @testset "Zero constructor" begin
-    d = diagITensor(ComplexF64,i,j)
+  @testset "Zero constructor (order 3)" begin
+    D = diagITensor(i,j,k)
 
-    @test eltype(d) == ComplexF64
-    @test d[i(1),j(1)] == complex(0.0)
-    @test d[i(2),j(2)] == complex(0.0)
-    @test d[i(1),j(2)] == complex(0.0)
-    @test d[i(2),j(1)] == complex(0.0)
+    @test eltype(D) == Float64
+    for ii = 1:d, jj = 1:d, kk = 1:d
+      if ii == jj == kk
+        @test D[i(ii),j(jj),k(kk)] == 0.0
+      else
+        @test D[i(ii),j(jj),k(kk)] == 0.0
+      end
+    end
   end
 
-  @testset "Diagonal constructor" begin
-    d = diagITensor([1,2],i,j)
+  @testset "Zero constructor (complex)" begin
+    D = diagITensor(ComplexF64,i,j)
 
-    @test eltype(d) == Float64
-    @test d[i(1),j(1)] == 1.0
-    @test d[i(2),j(2)] == 2.0
-    @test d[i(1),j(2)] == 0.0
-    @test d[i(2),j(1)] == 0.0
+    @test eltype(D) == ComplexF64
+    for ii = 1:d, jj = 1:d
+      if ii == jj
+        @test D[i(ii),j(jj)] == complex(0.0)
+      else
+        @test D[i(ii),j(jj)] == complex(0.0)
+      end
+    end
   end
 
-  @testset "Diagonal constructor" begin
-    d = diagITensor([1+1im,2+2im],i,j)
+  @testset "Diagonal constructor (order 2)" begin
+    D = diagITensor(v,i,j)
 
-    @test eltype(d) == ComplexF64
-    @test d[i(1),j(1)] == 1.0+1.0im
-    @test d[i(2),j(2)] == 2.0+2.0im
-    @test d[i(1),j(2)] == complex(0.0)
-    @test d[i(2),j(1)] == complex(0.0)
+    @test eltype(D) == Float64
+    for ii = 1:d, jj = 1:d
+      if ii == jj
+        @test D[i(ii),j(jj)] == v[ii]
+      else
+        @test D[i(ii),j(jj)] == 0.0
+      end
+    end
+  end
+
+  @testset "Diagonal constructor (order 3)" begin
+    D = diagITensor(v,i,j,k)
+
+    @test eltype(D) == Float64
+    for ii = 1:d, jj = 1:d, kk = 1:d
+      if ii == jj == kk
+        @test D[i(ii),j(jj),k(kk)] == v[ii]
+      else
+        @test D[i(ii),j(jj),k(kk)] == 0.0
+      end
+    end
+  end
+
+  @testset "Diagonal constructor (complex)" begin
+    vc = v+im*v
+    D = diagITensor(vc,i,j,k)
+
+    @test eltype(D) == ComplexF64
+    for ii = 1:d, jj = 1:d, kk = 1:d
+      if ii == jj == kk
+        @test D[i(ii),j(jj),k(kk)] == vc[ii]
+      else
+        @test D[i(ii),j(jj),k(kk)] == complex(0.0)
+      end
+    end
   end
 
   @testset "Set elements" begin
-    d = diagITensor(i,j)
+    D = diagITensor(i,j,k)
 
-    d[i(1),j(1)] = 1.0
-    d[i(2),j(2)] = 2.0
+    for ii = 1:d
+      D[i(ii),j(ii),k(ii)] = ii
+    end
 
-    @test d[i(1),j(1)] == 1.0
-    @test d[i(2),j(2)] == 2.0
-    @test d[i(1),j(2)] == 0.0
-    @test d[i(2),j(1)] == 0.0
+    @test eltype(D) == Float64
+    for ii = 1:d, jj = 1:d, kk = 1:d
+      if ii == jj == kk
+        @test D[i(ii),j(jj),k(kk)] == ii
+      else
+        @test D[i(ii),j(jj),k(kk)] == 0.0
+      end
+    end
 
-    @test_throws ErrorException d[i(2),j(1)] = 0.0
-    @test_throws ErrorException d[i(1),j(2)] = 0.0
+    # Can't set off-diagonal elements
+    @test_throws ErrorException D[i(2),j(1),k(1)] = 0.0
+    @test_throws ErrorException D[i(1),j(2),k(1)] = 0.0
   end
 
   @testset "Convert to dense" begin
-    d = diagITensor([1,2],i,j,k)
-    t = dense(d)
+    D = diagITensor(v,i,j,k)
+    T = dense(D)
     
-    @test store(t) isa Dense{Float64}
-    @test t[i(1),j(1),k(1)] == 1.0
-    @test t[i(2),j(2),k(2)] == 2.0
-    @test t[i(1),j(2),k(1)] == 0.0
-    @test t[i(2),j(1),k(1)] == 0.0
+    @test store(T) isa Dense{Float64}
+    for ii = 1:d, jj = 1:d, kk = 1:d
+      if ii == jj == kk
+        @test T[i(ii),j(jj),k(kk)] == ii
+      else
+        @test T[i(ii),j(jj),k(kk)] == 0.0
+      end
+    end
   end
 
   @testset "Contraction (all contracted)" begin
-    D = diagITensor([1,2],i,j,k)
-    A = randomITensor(i,j,k)
+    D = diagITensor(v,i,j,k)
+    A = randomITensor(j,k,i)
     
     @test D*A == dense(D)*A
+    @test A*D == dense(D)*A
   end
+
   @testset "Contraction (all dense contracted)" begin
-    D = diagITensor([1,2],i,j,k)
+    D = diagITensor(v,j,k,i)
     A = randomITensor(i,j)
     
     @test D*A == dense(D)*A
+    @test A*D == dense(D)*A
   end
 
+  @testset "Contraction Diag*Dense (general)" begin
+    D = diagITensor(v,l,i,k,j)
+    A = randomITensor(m,k,n,l)
+
+    @test D*A == dense(D)*A
+    @test A*D == dense(D)*A
+  end
 
 end
 

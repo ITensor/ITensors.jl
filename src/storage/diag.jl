@@ -207,7 +207,9 @@ function contract(Cinds::IndexSet,
   Cdims = dims(Cinds)
 
   # Create storage for output tensor
-  Cstore = Dense{SC}(prod(Cdims))
+  # This needs to be filled with zeros, since in general
+  # the output of Diag*Dense will be sparse
+  Cstore = Dense{SC}(0,prod(Cdims))
 
   # This seems unnecessary, and makes this function
   # non-generic. I think Dense should already store
@@ -219,6 +221,19 @@ function contract(Cinds::IndexSet,
 
   contract_diag_dense!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
   return Cstore
+end
+
+function contract(Cinds::IndexSet,
+                  Clabels::Vector{Int},
+                  Astore::Dense,
+                  Ainds::IndexSet,
+                  Alabels::Vector{Int},
+                  Bstore::Diag,
+                  Binds::IndexSet,
+                  Blabels::Vector{Int})
+  return contract(Cinds,Clabels,
+                  Bstore,Binds,Blabels,
+                  Astore,Ainds,Alabels)
 end
 
 function contract_diag_dense!(Cdata::Array{T},Clabels::Vector{Int},
@@ -239,10 +254,6 @@ function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
                                Adata::Vector{T},Alabels::Vector{Int},
                                Bdata::Array{T,NB},Blabels::Vector{Int},
                                α::T,β::T) where {T,NB,NC}
-  @show Alabels
-  @show Blabels
-  @show Clabels
-
   if all(i -> i < 0, Blabels)  # If all of B is contracted
     dim = minimum(size(Bdata))
     if length(Clabels) == 0
@@ -260,23 +271,62 @@ function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
       end
     end
   else
-    println("Not all of B is contracted")
-    # uncontracted dim of A = 1
-    # uncontracted dim of B = 2
-    num_con = sum(i -> i < 0, Alabels)
-    num_nonconA = sum(i -> i > 0, Alabels)
-    num_nonconB = sum(i -> i > 0, Blabels)
+    astarts = zeros(Int,length(Alabels))
+    bstart = 0
+    cstart = 0
+    b_cstride = 0
+    nbu = 0
+    for ib = 1:length(Blabels)
+      ia = findfirst(==(Blabels[ib]),Alabels)
+      if(!isnothing(ia))
+        b_cstride += stride(Bdata,ib)
+        bstart += astarts[ia]*stride(Bdata,ib)
+      else
+        nbu += 1
+      end
+    end
 
-    @show num_con
-    @show num_nonconA
-    @show num_nonconB
+    c_cstride = 0
+    for ic = 1:length(Clabels)
+      ia = findfirst(==(Clabels[ic]),Alabels)
+      if(!isnothing(ia))
+        c_cstride += stride(Cdata,ic)
+        cstart += astarts[ia]*stride(Cdata,ic)
+      end
+    end
 
-    # TODO: permute the inds properly
-    indsB = ntuple(_->:,num_nonconB)
-    for i = 1:size(Adata,1)
-      indscon = ntuple(_->i,num_con)
-      indsA = ntuple(_->i,num_nonconA)
-      Cdata[indsA...,indsB...] = Adata[i]*view(Bdata,indscon...,indsB...)
+    # strides of the uncontracted dimensions of
+    # Bdata
+    bustride = zeros(Int,nbu)
+    custride = zeros(Int,nbu)
+    # size of the uncontracted dimensions of
+    # Bdata, to be used in CartesianIndices
+    busize = zeros(Int,nbu)
+    n = 1
+    for ib = 1:length(Blabels)
+      if Blabels[ib] > 0
+        bustride[n] = stride(Bdata,ib)
+        busize[n] = size(Bdata,ib)
+        ic = findfirst(==(Blabels[ib]),Clabels)
+        custride[n] = stride(Cdata,ic)
+        n += 1
+      end
+    end
+
+    boffset_orig = 1-sum(strides(Bdata))
+    coffset_orig = 1-sum(strides(Cdata))
+    cartesian_inds = CartesianIndices(Tuple(busize))
+    for inds in cartesian_inds
+      boffset = boffset_orig
+      coffset = coffset_orig
+      for i in 1:nbu
+        ii = inds[i]
+        boffset += ii*bustride[i]
+        coffset += ii*custride[i]
+      end
+      for j in 1:length(Adata)
+        Cdata[cstart+j*c_cstride+coffset] += Adata[j]*Bdata[bstart+j*b_cstride+boffset]
+      end
     end
   end
 end

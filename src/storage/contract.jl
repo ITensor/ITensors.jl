@@ -138,6 +138,8 @@ Atrans(props::CProps) = contractedA(props,1)
 Btrans(props::CProps) = !contractedB(props,1)
 Ctrans(props::CProps) = props.ctrans
 
+# TODO: replace find_index(v,t) with built in Julia function:
+# findfirst(==(t), v)
 function find_index(v::Vector{Int},t)::Int
   for i = 1:length(v)
     v[i]==t && return i
