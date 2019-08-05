@@ -65,7 +65,9 @@ ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds.
 """
 diagITensor(::Type{T}, is::IndexSet)
 
-Make an ITensor with Diag storage with element type T.
+Make a sparse ITensor of element type T with non-zero elements 
+only along the diagonal. Defaults to having `zero(T)` along the diagonal.
+The storage will have Diag type.
 """
 function diagITensor(::Type{T},
                      is::IndexSet) where {T<:Number}
@@ -75,15 +77,19 @@ end
 """
 diagITensor(::Type{T}, is::Index...)
 
-Make an ITensor with Diag storage with element type T.
+Make a sparse ITensor of element type T with non-zero elements 
+only along the diagonal. Defaults to having `zero(T)` along the diagonal.
+The storage will have Diag type.
 """
 diagITensor(::Type{T},inds::Index...) where {T<:Number} = diagITensor(T,IndexSet(inds...))
 
 """
 diagITensor(v::Vector{T}, is::IndexSet)
 
-Make an ITensor with Diag storage with element type float(T) with elements
-from Vector v.
+Make a sparse ITensor with non-zero elements only along the diagonal. 
+The diagonal elements will be set to the values stored in `v` and 
+the ITensor will have element type `float(T)`.
+The storage will have Diag type.
 """
 function diagITensor(v::Vector{T},
                      is::IndexSet) where {T<:Number}
@@ -94,8 +100,10 @@ end
 """
 diagITensor(v::Vector{T}, is::Index...)
 
-Make an ITensor with Diag storage with element type float(T) with elements
-from Vector v.
+Make a sparse ITensor with non-zero elements only along the diagonal. 
+The diagonal elements will be set to the values stored in `v` and 
+the ITensor will have element type `float(T)`.
+The storage will have Diag type.
 """
 function diagITensor(v::Vector{T},
                      is::Index...) where {T<:Number}
@@ -105,14 +113,18 @@ end
 """
 diagITensor(is::IndexSet)
 
-Make an ITensor with Diag storage with element type Float64.
+Make a sparse ITensor of element type Float64 with non-zero elements 
+only along the diagonal. Defaults to storing zeros along the diagonal.
+The storage will have Diag type.
 """
 diagITensor(is::IndexSet) = ITensor(is,Diag{Float64}(zero(Float64),minDim(is)))
 
 """
 diagITensor(is::Index...)
 
-Make an ITensor with Diag storage with element type Float64.
+Make a sparse ITensor of element type Float64 with non-zero elements 
+only along the diagonal. Defaults to storing zeros along the diagonal.
+The storage will have Diag type.
 """
 diagITensor(inds::Index...) = diagITensor(IndexSet(inds...))
 

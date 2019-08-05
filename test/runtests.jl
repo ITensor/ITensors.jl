@@ -8,6 +8,7 @@ using ITensors, Test
         "test_indexset.jl",
         "test_itensor.jl",
         "test_contract.jl",
+        "test_diagITensor.jl",
         "test_combiner.jl",
         "test_trg.jl",
         "test_ctmrg.jl",
