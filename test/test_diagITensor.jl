@@ -177,24 +177,24 @@ Random.seed!(12345)
     D = diagITensor(v,i,j,k)
     A = randomITensor(j,k,i)
     
-    @test D*A == dense(D)*A
-    @test A*D == dense(D)*A
+    @test D*A ≈ dense(D)*A
+    @test A*D ≈ dense(D)*A
   end
 
   @testset "Contraction (all dense contracted)" begin
     D = diagITensor(v,j,k,i)
     A = randomITensor(i,j)
     
-    @test D*A == dense(D)*A
-    @test A*D == dense(D)*A
+    @test D*A ≈ dense(D)*A
+    @test A*D ≈ dense(D)*A
   end
 
   @testset "Contraction Diag*Dense (general)" begin
     D = diagITensor(v,l,i,k,j)
     A = randomITensor(m,k,n,l)
 
-    @test D*A == dense(D)*A
-    @test A*D == dense(D)*A
+    @test D*A ≈ dense(D)*A
+    @test A*D ≈ dense(D)*A
   end
 
   @testset "Contraction Diag*Diag (all contracted)" begin
