@@ -147,6 +147,22 @@ end
 
   N = 10
 
+  @testset "Show MPOTerm" begin
+    sites = spinHalfSites(N)
+    ampo = AutoMPO(sites)
+    add!(ampo,"Sz",1,"Sz",2)
+    @test sprint(show,terms(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
+  end
+
+  @testset "Show AutoMPO" begin
+    sites = spinHalfSites(N)
+    ampo = AutoMPO(sites)
+    add!(ampo,"Sz",1,"Sz",2)
+    add!(ampo,"Sz",2,"Sz",3)
+    expected_string = "AutoMPO:\n  \"Sz\"(1)\"Sz\"(2)\n  \"Sz\"(2)\"Sz\"(3)\n"
+    @test sprint(show,ampo) == expected_string
+  end
+
   @testset "Single creation op" begin
     sites = electronSites(N)
     ampo = AutoMPO(sites)
@@ -244,7 +260,10 @@ end
   @testset "Three-site ops" begin
     sites = spinHalfSites(N)
     ampo = AutoMPO(sites)
-    for j=1:N-2
+    # To test version of add! taking a coefficient
+    add!(ampo,1.0,"Sz",1,"Sz",2,"Sz",3)
+    @test length(terms(ampo)) == 1
+    for j=2:N-2
       add!(ampo,"Sz",j,"Sz",j+1,"Sz",j+2)
     end
     h = ones(N)

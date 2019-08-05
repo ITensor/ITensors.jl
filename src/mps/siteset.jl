@@ -28,6 +28,8 @@ function op(site::Site,
       Op[dag(s)(n),sP(n)] = 1.0
     end
   else
+    # Interpret operator names joined by *
+    # as acting on the same site
     starpos = findfirst("*",opname)
     if !isnothing(starpos)
       op1 = opname[1:starpos.start-1]
@@ -80,6 +82,6 @@ end
 
 function state(sset::SiteSet,
                n::Integer,
-               st::Union{Integer,String})::IndexVal
+               st::Union{Int,String})::IndexVal
   return state(sset.sites[n],st)
 end

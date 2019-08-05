@@ -30,6 +30,15 @@ outer(D1::Dense{T},D2::Dense{S}) where {T, S <:Number} = Dense{promote_type(T,S)
 
 storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
 
+function storage_convert(::Type{Array},
+                         D::Dense,
+                         ois::IndexSet,
+                         nis::IndexSet)
+  P = calculate_permutation(nis,ois)
+  A = reshape(data(D),dims(ois))
+  return permutedims(A,P)
+end
+
 storage_fill!(D::Dense,x::Number) = fill!(data(D),x)
 
 function storage_getindex(Tstore::Dense{T},
@@ -230,6 +239,7 @@ function contract(Cinds::IndexSet,
 
   contract!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
   return Cstore
+
 end
 
 function storage_svd(Astore::Dense{T},

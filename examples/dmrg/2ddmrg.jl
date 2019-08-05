@@ -1,6 +1,6 @@
 using ITensors
 
-function main()
+let
   Ny = 6
   Nx = 12
 
@@ -18,11 +18,8 @@ function main()
   end
   H = toMPO(ampo)
 
-  state = InitState(sites)
-  for n=1:N
-    state[n] = isodd(n) ? "Up" : "Dn"
-  end
-  psi0 = MPS(state)
+  state = [isodd(n) ? "Up" : "Dn" for n=1:N]
+  psi0 = productMPS(sites,state)
 
   sweeps = Sweeps(10)
   maxdim!(sweeps,10,20,100,100,200,400,800)
@@ -32,4 +29,3 @@ function main()
   energy,psi = dmrg(H,psi0,sweeps)
 
 end
-main()

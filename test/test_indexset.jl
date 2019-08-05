@@ -11,10 +11,8 @@ using ITensors,
   k = Index(kdim,"k")
   l = Index(ldim,"l")
   @testset "show" begin
-      indices = (i, j, k, l)
-      indset = IndexSet(indices)
-      inner = sprint.(show, indices)
-      @test sprint(show, indset) == string("IndexSet(", join(inner, ", "), ")")
+    indset = IndexSet(i,j,k)
+    @test length(sprint(show, indset)) > 1
   end
   @testset "Basic ctors" begin
     I = IndexSet(i,j,k)
@@ -82,5 +80,41 @@ using ITensors,
   @testset "compute_strides" begin
     I = IndexSet(i, j)
     @test ITensors.compute_strides(I) == [1, idim]
+  end
+  @testset "setprime" begin
+    I = IndexSet(i, j)
+    J = setprime(I, 2, i)
+    @test i'' ∈ J
+  end
+  @testset "prime" begin
+    I = IndexSet(i, j)
+    J = prime(I, j)
+    @test i ∈ J
+    @test j' ∈ J
+  end
+  @testset "noprime" begin
+    I = IndexSet(i'', j')
+    J = noprime(I)
+    @test i ∈ J
+    @test j ∈ J
+  end
+  @testset "swapprime" begin
+    I = IndexSet(i,j)
+    @test swapprime(I,0,1) == IndexSet(i',j')
+    @test swapprime(I,0,4) == IndexSet(i^4,j^4)
+    I = IndexSet(i,j'')
+    @test swapprime(I,2,0) == IndexSet(i,j)
+    I = IndexSet(i,j'',k,l)
+    @test swapprime(I,2,0) == IndexSet(i,j,k,l)
+    I = IndexSet(i,k'',j'')
+    @test swapprime(I,2,1) == IndexSet(i,k',j')
+    # In-place version:
+    I = IndexSet(i,k'',j''')
+    swapprime!(I,2,0)
+    @test I == IndexSet(i,k,j''')
+    # With tags specified:
+    I = IndexSet(i,k,j)
+    @test swapprime(I,0,1,"i") == IndexSet(i',k,j)
+    @test swapprime(I,0,1,"j") == IndexSet(i,k,j')
   end
 end

@@ -1,10 +1,4 @@
-
 module ITensors
-
-function pause() 
-  println("(paused)")
-  readline(stdin)
-end
 
 using Random,
       Printf,
@@ -16,6 +10,7 @@ import Base.adjoint,
        Base.conj,
        Base.convert,
        Base.copy,
+       Base.deepcopy,
        Base.copyto!,
        Base.eltype,
        Base.fill!,
@@ -29,8 +24,11 @@ import Base.adjoint,
        Base.setindex!,
        Base.eachindex,
        Base.show,
+       Base.sum,
+       Base.summary,
        Base.similar,
        Base.size,
+       Base.ndims,
        Base.!=,
        Base.+,
        Base.-,
@@ -55,6 +53,7 @@ include("indexset.jl")
 include("storage/tensorstorage.jl")
 include("storage/dense.jl")
 include("storage/diag.jl")
+include("storage/combiner.jl")
 include("storage/contract.jl")
 include("storage/svd.jl")
 include("itensor.jl")
@@ -65,7 +64,6 @@ include("iterativesolvers.jl")
 # MPS/MPO
 #
 include("mps/siteset.jl")
-include("mps/initstate.jl")
 include("mps/mps.jl")
 include("mps/mpo.jl")
 include("mps/sweeps.jl")

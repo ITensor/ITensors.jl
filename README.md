@@ -34,15 +34,15 @@ using ITensors
 let
   i = Index(3,"i")
   j = Index(5,"j")
-  k = Index(4,"k")
-  l = Index(7,"l")
+  k = Index(4,"MyTagA, k")
+  l = Index(7,"l, MyTagB")
 
   A = ITensor(i,j,k)
   B = ITensor(j,l)
 
   A[i(1),j(1),k(1)] = 11.1
   A[i(2),j(1),k(2)] = 21.2
-  A[i(3),j(1),k(1)] = 31.1
+  A[k(1),i(3),j(1)] = 31.1  # can provide Index values in any order
   # ...
 
   # contract over index j
@@ -124,5 +124,51 @@ let
   @show hasinds(U,i,k) # == true
   @show hasinds(V,j,l) # == true
   @show norm(T - U*S*V)   # ≈ 0.0
+end
+```
+
+### DMRG Calculation
+
+DMRG is an iterative algorithm for finding the dominant
+eigenvector of an exponentially large, Hermitian matrix.
+It originates in physics with the purpose of finding
+eigenvectors of Hamiltonian (energy) matrices which model
+the behavior of quantum systems.
+
+```Julia
+using ITensors
+
+let
+  # Create 100 spin-one (dimension 3) indices
+  N = 100
+  sites = spinOneSites(N)
+
+  # Input operator terms which define 
+  # a Hamiltonian matrix, and convert
+  # these terms to an MPO tensor network
+  ampo = AutoMPO(sites)
+  for j=1:N-1
+    add!(ampo,"Sz",j,"Sz",j+1)
+    add!(ampo,0.5,"S+",j,"S-",j+1)
+    add!(ampo,0.5,"S-",j,"S+",j+1)
+  end
+  H = toMPO(ampo)
+
+  # Create an initial random matrix product state
+  psi0 = randomMPS(sites)
+
+  # Plan to do 5 passes or 'sweeps' of DMRG,
+  # setting maximum MPS internal dimensions 
+  # for each sweep and maximum truncation cutoff
+  # used when adapting internal dimensions:
+  sweeps = Sweeps(5)
+  maxdim!(sweeps, 10,20,100,100,200)
+  cutoff!(sweeps, 1E-10)
+  @show sweeps
+
+  # Run the DMRG algorithm, returning energy 
+  # (dominant eigenvalue) and optimized MPS
+  energy, psi = dmrg(H,psi0, sweeps)
+  println("Final energy = $energy")
 end
 ```

@@ -27,7 +27,6 @@ function operator(site::tJSite,
   DnP = sP(3)
 
   Op = ITensor(dag(s), s')
-
   if opname == "Nup"
     Op[Up, UpP] = 1.
   elseif opname == "Ndn"
@@ -78,7 +77,7 @@ function operator(site::tJSite,
     pD[Dn] = 1.
     return pD
   else
-      throw(ArgumentError("Operator name '$opname' not recognized for SpinOneSite"))
+      throw(ArgumentError("Operator name '$opname' not recognized for tJSite"))
   end
   return Op
 end

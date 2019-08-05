@@ -4,11 +4,13 @@ export MPS,
        primelinks!,
        simlinks!,
        inner,
+       productMPS,
        randomMPS,
        maxDim,
        linkindex,
        siteindex,
        siteinds
+
 
 mutable struct MPS
   N_::Int
@@ -18,59 +20,57 @@ mutable struct MPS
 
   MPS() = new(0,Vector{ITensor}(),0,0)
 
+  MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
+
   function MPS(N::Int, 
                A::Vector{ITensor}, 
                llim::Int=0, 
                rlim::Int=N+1)
     new(N,A,llim,rlim)
   end
-  
-  function MPS(sites::SiteSet)
-    N = length(sites)
-    v = Vector{ITensor}(undef, N)
-    l = [Index(1, "Link,l=$ii") for ii=1:N-1]
-    @inbounds for ii in eachindex(sites)
-      s = sites[ii]
-      if ii == 1
-        v[ii] = ITensor(l[ii], s)
-      elseif ii == N
-        v[ii] = ITensor(l[ii-1], s)
-      else
-        v[ii] = ITensor(l[ii-1], l[ii], s)
-      end
-    end
-    new(N,v)
-  end
+end
 
-  function MPS(is::InitState)
-    N = length(is)
-    As = Vector{ITensor}(undef,N)
-    links  = Vector{Index}(undef,N)
-    @inbounds for n in eachindex(is)
-      s = sites(is)[n]
-      links[n] = Index(1,"Link,l=$n")
-      if n == 1
-        A = ITensor(s,links[n])
-        A[state(is,n),links[n](1)] = 1.0
-      elseif n == N
-        A = ITensor(links[n-1],s)
-        A[links[n-1](1),state(is,n)] = 1.0
-      else
-        A = ITensor(links[n-1],links[n],s)
-        A[links[n-1](1),state(is,n),links[n](1)] = 1.0
-      end
-      As[n] = A
+function MPS(sites::SiteSet)
+  N = length(sites)
+  v = Vector{ITensor}(undef, N)
+  l = [Index(1, "Link,l=$ii") for ii=1:N-1]
+  for ii in eachindex(sites)
+    s = sites[ii]
+    if ii == 1
+      v[ii] = ITensor(l[ii], s)
+    elseif ii == N
+      v[ii] = ITensor(l[ii-1], s)
+    else
+      v[ii] = ITensor(l[ii-1],s,l[ii])
     end
-    new(N,As,0,2)
+  end
+  return MPS(N,v,0,N+1)
+end
+
+length(m::MPS) = m.N_
+tensors(m::MPS) = m.A_
+leftLim(m::MPS) = m.llim_
+rightLim(m::MPS) = m.rlim_
+
+getindex(m::MPS, n::Integer) = getindex(tensors(m),n)
+setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(tensors(m),T,n)
+
+copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
+similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
+
+eachindex(m::MPS) = 1:length(m)
+
+function show(io::IO, M::MPS)
+  print(io,"MPS")
+  (length(M) > 0) && print(io,"\n")
+  for (i, A) ∈ enumerate(tensors(M))
+    println(io,"$i  $(inds(A))")
   end
 end
-MPS(N::Int, d::Int, opcode::String) = MPS(InitState(Sites(N,d), opcode))
-MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
-MPS(s::SiteSet, opcode::String) = MPS(InitState(s, opcode))
 
 function randomMPS(sites)
   M = MPS(sites)
-  @inbounds for i ∈ eachindex(sites)
+  for i in eachindex(sites)
     randn!(M[i])
     normalize!(M[i])
   end
@@ -79,38 +79,32 @@ function randomMPS(sites)
   return M
 end
 
-length(m::MPS) = m.N_
-leftLim(m::MPS) = m.llim_
-rightLim(m::MPS) = m.rlim_
+const InitState = Union{Vector{String},Vector{Int}}
 
-getindex(m::MPS, n::Integer) = getindex(m.A_,n)
-setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(m.A_,T,n)
-
-copy(m::MPS) = MPS(m.N_,copy(m.A_),m.llim_,m.rlim_)
-
-eachindex(m::MPS) = 1:length(m)
-
-
-"""
-    dag(m::MPS)
-
-Hermitian conjugation of a matrix product state `m`.
-"""
-function dag(m::MPS)
-  N = length(m)
-  mdag = MPS(N)
-  @inbounds for i ∈ eachindex(m)
-    mdag[i] = dag(m[i])
+function productMPS(sites::SiteSet,
+                    is::InitState)
+  N = length(sites)
+  if N != length(is)
+    throw(DimensionMismatch("Site Set and InitState sizes don't match"))
   end
-  return mdag
-end
-
-function show(io::IO, M::MPS)
-  print(io,"MPS")
-  (length(M) > 0) && print(io,"\n")
-  @inbounds for (i, m) ∈ enumerate(inds.(M.A_))
-    println(io,"$i  $m")
+  As = Vector{ITensor}(undef,N)
+  links  = Vector{Index}(undef,N)
+  for n in eachindex(is)
+    s = sites[n]
+    links[n] = Index(1,"Link,l=$n")
+    if n == 1
+      A = ITensor(s,links[n])
+      A[state(sites,n,is[n]),links[n](1)] = 1.0
+    elseif n == N
+      A = ITensor(links[n-1],s)
+      A[links[n-1](1),state(sites,n,is[n])] = 1.0
+    else
+      A = ITensor(links[n-1],s,links[n])
+      A[links[n-1](1),state(sites,n,is[n]),links[n](1)] = 1.0
+    end
+    As[n] = A
   end
+  return MPS(N,As,0,2)
 end
 
 function linkindex(M::MPS,j::Integer) 
@@ -138,15 +132,14 @@ end
 function siteinds(M::MPS)
   N = length(M)
   is = IndexSet(N)
-  @inbounds for j ∈ eachindex(M)
+  for j in eachindex(M)
     is[j] = siteindex(M,j)
   end
   return is
 end
 
 function replacesites!(M::MPS,sites)
-  N = length(M)
-  @inbounds for j in eachindex(M)
+  for j in eachindex(M)
     sj = siteindex(M,j)
     replaceindex!(M[j],sj,sites[j])
   end
@@ -187,11 +180,10 @@ function position!(M::MPS,
   M.rlim_ = j+1
 end
 
-
 """
-inner(ψ::MPS, ϕ::MPS)
+inner(psi::MPS, phi::MPS)
 
-Compute <ψ|ϕ>
+Compute <psi|phi>
 """
 function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)

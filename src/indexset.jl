@@ -6,6 +6,7 @@ export IndexSet,
        findinds,
        swaptags,
        swapprime,
+       swapprime!,
        mapprime,
        mapprime!,
        commoninds,
@@ -19,6 +20,8 @@ struct IndexSet
     inds::Vector{Index}
     IndexSet(inds::Vector{Index}) = new(inds)
 end
+
+inds(is::IndexSet) = is.inds
 
 # Empty constructor
 IndexSet() = IndexSet(Index[])
@@ -40,10 +43,11 @@ IndexSet(inds::NTuple{2,IndexSet}) = IndexSet(inds...)
 # Convert to an Index if there is only one
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
 
-function Base.show(io::IO, indset::IndexSet)
-  print(io, "IndexSet(")
-  join(io, (sprint(show, ind) for ind in indset.inds), ", ")
-  print(io, ')')
+function Base.show(io::IO, is::IndexSet)
+  for i in is.inds
+    print(io,i)
+    print(io," ")
+  end
 end
 
 getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
@@ -253,9 +257,21 @@ end
 # This version checks if there are more than one indices
 #findindex(inds, tags) = Index(findinds(inds,tags))
 
+function findindex(is::IndexSet,
+                   i::Index)::Int
+  for (n,j) in enumerate(is)
+    if i==j
+      return n
+    end
+  end
+  return 0
+end
+
 # From a tag set or index set, find the positions
 # of the matching indices as a vector of integers
+indexpositions(inds) = collect(1:length(inds))
 indexpositions(inds, match::Nothing) = collect(1:length(inds))
+indexpositions(inds, match::Tuple{}) = collect(1:length(inds))
 # Version for matching a tag set
 function indexpositions(inds, match::T) where {T<:Union{AbstractString,TagSet}}
   is = IndexSet(inds)
@@ -306,6 +322,21 @@ setprime(is::IndexSet, vargs...) = setprime!(copy(is), vargs...)
 
 noprime!(is::IndexSet, match = nothing) = setprime!(is, 0, match)
 noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
+
+function swapprime!(is::IndexSet, 
+                    pl1::Int,
+                    pl2::Int,
+                    vargs...) 
+  pos = indexpositions(is,vargs...)
+  for n in pos
+    if plev(is[n])==pl1
+      is[n] = setprime(is[n],pl2)
+    end
+  end
+  return is
+end
+
+swapprime(is::IndexSet,pl1::Int,pl2::Int,vargs...) = swapprime!(copy(is),pl1,pl2,vargs...)
 
 function mapprime!(is::IndexSet,
                    plold::Integer,
