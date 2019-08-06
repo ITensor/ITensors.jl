@@ -129,6 +129,32 @@ The storage will have Diag type.
 diagITensor(inds::Index...) = diagITensor(IndexSet(inds...))
 
 """
+diagITensor(x::T, is::IndexSet) where {T<:Number}
+
+Make a sparse ITensor with non-zero elements only along the diagonal. 
+The diagonal elements will be set to the value `x` and
+the ITensor will have element type `float(T)`.
+The storage will have Diag type.
+"""
+function diagITensor(x::T,
+                     is::IndexSet) where {T<:Number}
+  return ITensor(is,Diag{float(T)}(fill(float(x),minDim(is))))
+end
+
+"""
+diagITensor(x::T, is::Index...) where {T<:Number}
+
+Make a sparse ITensor with non-zero elements only along the diagonal. 
+The diagonal elements will be set to the value `x` and
+the ITensor will have element type `float(T)`.
+The storage will have Diag type.
+"""
+function diagITensor(x::T,
+                     is::Index...) where {T<:Number}
+  return diagITensor(x,IndexSet(is...))
+end
+
+"""
 dense(T::ITensor)
 
 Make a copy of the ITensor where the storage is the dense version.
@@ -406,11 +432,17 @@ B .+= α .* A
 ```
 """
 function add!(B::ITensor,A::ITensor)
+  # TODO: is replacing the storage entirely the best way
+  # to do this logic? Is this worse in the case that
+  # the storage type stays the same?
   B.store = storage_add!(store(B),inds(B),store(A),inds(A))
   return B
 end
 
 function add!(A::ITensor,x::Number,B::ITensor)
+  # TODO: is replacing the storage entirely the best way
+  # to do this logic? Is this worse in the case that
+  # the storage type stays the same?
   A.store = storage_add!(store(A),inds(A),store(B),inds(B),x)
   return A
 end
@@ -424,6 +456,9 @@ A .= α .* A .+ β .* B
 ```
 """
 function add!(A::ITensor,y::Number,x::Number,B::ITensor)
+  # TODO: is replacing the storage entirely the best way
+  # to do this logic? Is this worse in the case that
+  # the storage type stays the same?
   A.store = storage_add!(y*store(A),inds(A),store(B),inds(B),x)
   return A
 end
@@ -469,21 +504,13 @@ mul!(R::ITensor,T::ITensor,fac::Number) = mul!(R,fac,T)
 
 rmul!(T::ITensor,fac::Number) = scale!(T,fac)
 
-#TODO: This is just a stand-in for a proper delta/diag storage type
 """
     delta(::Type{T},inds::Index...)
 
 Make a diagonal ITensor with all diagonal elements 1.
-
-WARNING: This is just a stand-in for a proper delta/diag storage type
 """
 function delta(::Type{T},inds::Index...) where {T}
-  d = ITensor(zero(T),inds...)
-  minm = min(dims(d)...)
-  for i ∈ 1:minm
-    d[IndexVal.(inds,i)...] = one(T)
-  end
-  return d
+  return diagITensor(one(T),inds...)
 end
 delta(inds::Index...) = delta(Float64,inds...)
 const δ = delta

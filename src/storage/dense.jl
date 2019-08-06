@@ -280,7 +280,7 @@ function storage_svd(Astore::Dense{T},
   v = settags(u,vtags)
   Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
   #TODO: make a diag storage
-  Sis,Sstore = IndexSet(u,v),Dense{Float64}(vec(Matrix(Diagonal(MS))))
+  Sis,Sstore = IndexSet(u,v),Diag{Float64}(MS)
   Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
 
   return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
@@ -322,11 +322,13 @@ function storage_eigen(Astore::Dense{T},
   u = Index(dD,lefttags)
   v = settags(u,righttags)
   Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
-  #TODO: make a diag storage
-  Dis,Dstore = IndexSet(u,v),Dense{T}(vec(Matrix(Diagonal(MD))))
+  Dis,Dstore = IndexSet(u,v),Diag{Float64}(MD)
   return (Uis,Ustore,Dis,Dstore)
 end
 
+# TODO: move this to a general "linear_algebra.jl" file?
+# i.e. a common place for custom linear algebra functionality
+# for matrices
 function polar(A::Matrix)
   U,S,V = svd(A) # calls LinearAlgebra.svd()
   return U*V',V*Diagonal(S)*V'

@@ -379,12 +379,11 @@ end
     A = randomITensor(SType,i,j,k,l)
 
     @testset "Test SVD of an ITensor" begin
-      U,S,Vh = svd(A,(j,l))
-      u = commonindex(U,S)
-      v = commonindex(S,Vh)
-      @test A≈U*S*Vh
+      U,S,V,u,v = svd(A,(j,l))
+      @test store(S) isa Diag{Float64}
+      @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
-      @test Vh*dag(prime(Vh,v))≈δ(SType,v,v') atol=1e-14
+      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
     end
 
     @testset "Test SVD truncation" begin
@@ -399,23 +398,31 @@ end
     end
 
     @testset "Test QR decomposition of an ITensor" begin
-      Q,R = qr(A,(i,l))
+      Q,R,q = qr(A,(i,l))
       q = commonindex(Q,R)
       @test A≈Q*R
       @test Q*dag(prime(Q,q))≈δ(SType,q,q') atol=1e-14
     end
 
     @testset "Test polar decomposition of an ITensor" begin
-      U,P = polar(A,(k,l))
+      U,P,u = polar(A,(k,l))
       @test A≈U*P
       #Note: this is only satisfied when left dimensions
       #are greater than right dimensions
-      uinds = commoninds(U,P)
-      UUᵀ =  U*dag(prime(U,uinds))
-      for ii ∈ dim(uinds[1]), jj ∈ dim(uinds[2])
-        @test UUᵀ[uinds[1](ii),uinds[2](jj),prime(uinds[1])(ii),prime(uinds[2])(jj)]≈one(SType) atol=1e-14
+      UUᵀ =  U*dag(prime(U,u))
+      for ii ∈ dim(u[1]), jj ∈ dim(u[2])
+        @test UUᵀ[u[1](ii),u[2](jj),u[1]'(ii),u[2]'(jj)]≈one(SType) atol=1e-14
       end
     end
+
+    # TODO: need to implement swapInds
+    #@testset "Test eigen decomposition of an ITensor" begin
+    #  A = A + swapInds(dag(A),(i,k),(j,l))
+    #  U,D,u = eigen(A,(i,k),(j,l))
+    #  @test A≈U*D*prime(dag(U))
+    #  UUᵀ =  U*prime(dag(U),u)
+    #  @test UUᴴ ≈ δ(u,u') atol=1e-14
+    #end
   end # End ITensor factorization testset
 end # End Dense storage test
 
