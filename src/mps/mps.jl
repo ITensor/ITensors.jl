@@ -146,17 +146,26 @@ function replacesites!(M::MPS,sites)
   return M
 end
 
-function position!(M::MPS,
-                   j::Integer)
+function position!(M::MPS, j::Integer; kwargs...)
+  default_method = (rightLim(M) - leftLim(M) > 2) ? "qr" : "svd"
+  method = get(kwargs, :which_factorization, default_method)
   N = length(M)
   while leftLim(M) < (j-1)
     ll = leftLim(M)+1
     s = findindex(M[ll],"Site")
     if ll == 1
-      (Q,R) = qr(M[ll],s)
+      if method == "svd"
+          (Q,R,ci) = factorize(M[ll],s; which_factorization="svd", dir="fromleft", kwargs...)
+      else
+          Q, R = qr(M[ll], s; kwargs...)
+      end
     else
       li = linkindex(M,ll-1)
-      (Q,R) = qr(M[ll],s,li)
+      if method == "svd"
+          (Q,R,ci) = factorize(M[ll],s,li; which_factorization="svd", dir="fromleft", kwargs...)
+      else
+          Q, R = qr(M[ll], s, li; kwargs...)
+      end
     end
     M[ll] = Q
     M[ll+1] *= R
@@ -167,10 +176,18 @@ function position!(M::MPS,
     rl = rightLim(M)-1
     s = findindex(M[rl],"Site")
     if rl == N
-      (Q,R) = qr(M[rl],s)
+      if method == "svd"
+          (Q,R,ci) = factorize(M[rl],s; which_factorization="svd", dir="fromright", kwargs...)
+      else
+          Q, R = qr(M[rl], s; kwargs...)
+      end
     else
       ri = linkindex(M,rl)
-      (Q,R) = qr(M[rl],s,ri)
+      if method == "svd"
+          (Q,R,ci) = factorize(M[rl],s,ri; which_factorization="svd", dir="fromright", kwargs...)
+      else
+          Q, R = qr(M[rl], s, ri; kwargs...)
+      end
     end
     M[rl] = Q
     M[rl-1] *= R

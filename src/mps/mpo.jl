@@ -189,17 +189,26 @@ function linkindex(M::MPO,j::Integer)
   return li
 end
 
-function position!(M::MPO,
-                   j::Integer)
+function position!(M::MPO, j::Integer; kwargs...)
+  default_method = (rightLim(M) - leftLim(M) > 2) ? "qr" : "svd"
+  method = get(kwargs, :which_factorization, default_method)
   N = length(M)
   while leftLim(M) < (j-1)
     ll = leftLim(M)+1
     s = findinds(M[ll],"Site")
     if ll == 1
-      (Q,R) = qr(M[ll],s)
+      if method == "svd"
+          (Q,R,ci) = factorize(M[ll],s; which_factorization="svd", dir="fromleft", kwargs...)
+      else
+          Q, R = qr(M[ll], s; kwargs...)
+      end
     else
       li = linkindex(M,ll-1)
-      (Q,R) = qr(M[ll],s,li)
+      if method == "svd"
+          (Q,R,ci) = factorize(M[ll],s,li; which_factorization="svd", dir="fromleft", kwargs...)
+      else
+          Q, R = qr(M[ll], s, li; kwargs...)
+      end
     end
     M[ll] = Q
     M[ll+1] *= R
@@ -210,10 +219,18 @@ function position!(M::MPO,
     rl = rightLim(M)-1
     s = findinds(M[rl],"Site")
     if rl == N
-      (Q,R) = qr(M[rl],s)
+      if method == "svd"
+          (Q,R,ci) = factorize(M[rl],s; which_factorization="svd", dir="fromright", kwargs...)
+      else
+          Q, R = qr(M[rl], s; kwargs...)
+      end
     else
       ri = linkindex(M,rl)
-      (Q,R) = qr(M[rl],s,ri)
+      if method == "svd"
+          (Q,R,ci) = factorize(M[rl],s,ri; which_factorization="svd", dir="fromright", kwargs...)
+      else
+          Q, R = qr(M[rl], s, ri; kwargs...)
+      end
     end
     M[rl] = Q
     M[rl-1] *= R
@@ -264,8 +281,8 @@ end
 function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     n = A.N_ 
     length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
-    position!(A, 1, kwargs...)
-    position!(B, 1, kwargs...)
+    position!(A, 1; kwargs...)
+    position!(B, 1; kwargs...)
     C = similar(A)
     rand_plev = 13124
     lAs = [linkindex(A, i) for i in 1:n-1]
@@ -276,9 +293,9 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     for i in 1:n-1
         lA = linkindex(A, i)
         lB = linkindex(B, i)
-        r = Index(dim(lA) + dim(lB), tags(lA))
+        r  = Index(dim(lA) + dim(lB), tags(lA))
         f, s = plussers(lA, lB, r)
-        first[i] = f
+        first[i]  = f
         second[i] = s
     end
     C[1] = A[1] * first[1] + B[1] * second[1]
@@ -287,7 +304,7 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     end
     C[n] = dag(first[n-1]) * A[n] + dag(second[n-1]) * B[n]
     prime!(C, -rand_plev, "Link")
-    position!(C, 1, kwargs...)
+    position!(C, 1; kwargs...)
     return C
 end
 
@@ -310,15 +327,14 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
 
     all(x->x!=Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
     rand_plev = 14741
-
     psi_c = dag(copy(psi))
     A_c   = dag(copy(A))
     prime!(psi_c, rand_plev)
     prime!(A_c, rand_plev)
-
     for j in 1:n-1
         unique_site_ind = setdiff(findinds(A_c[j], "Site"), findindex(psi_c[j], "Site"))[1]
-        A_c[j] = setprime(A_c[j], 1, unique_site_ind)
+        pl = id(unique_site_ind) == id(commonindex(A_c[j], psi_c[j])) ? 1 : 0
+        A_c[j] = setprime(A_c[j], pl, unique_site_ind)
     end
     E = Vector{ITensor}(undef, n-1)
     E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
