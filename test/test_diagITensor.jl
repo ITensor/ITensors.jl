@@ -1,9 +1,6 @@
 using ITensors,
       LinearAlgebra, # For tr()
-      Random,        # To set a seed
       Test
-
-Random.seed!(12345)
 
 @testset "diagITensor" begin
   d = 3

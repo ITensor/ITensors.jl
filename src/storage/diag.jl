@@ -436,6 +436,10 @@ function _contract_diag_diag!(Cdata::Vector{T},Clabels::Vector{Int},
     # all indices are summed over, just add the product of the diagonal
     # elements of A and B
     dim = length(Adata)  # == length(Bdata)
+    # Need to set to zero since
+    # Cdata is originally uninitialized memory
+    # (so causes random output)
+    Cdata[1] = zero(T)
     for i = 1:dim
       Cdata[1] += Adata[i]*Bdata[i]
     end
