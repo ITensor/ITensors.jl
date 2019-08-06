@@ -2,8 +2,6 @@ using ITensors,
       Random,
       Test
 
-Random.seed!(12345)
-
 include("2d_classical_ising.jl")
 
 function ctmrg(T::ITensor,
@@ -59,11 +57,14 @@ end
   lu = addtags(l,"up")
   ld = addtags(l,"down")
 
-  Clu = randomITensor(lu,ll)
-  Al = randomITensor(lu,ld,sl)
+  # Initial CTM
+  Clu = ITensor(lu,ll)
+  Clu[1,1] = 1.0
 
-  Clu = 0.5*(Clu+swaptags(Clu,"up","left"))
-  Al = 0.5*(Al+swaptags(Al,"up","down"))
+  # Initial HRTM
+  Al = ITensor(lu,ld,sl)
+  Al[lu(1),ld(1),sl(1)] = 1.0
+  Al[lu(1),ld(1),sl(2)] = 0.0
 
   Clu,Al = ctmrg(T,Clu,Al;χmax=30,nsteps=2000)
 
