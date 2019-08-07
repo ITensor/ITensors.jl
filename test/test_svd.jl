@@ -46,5 +46,20 @@ using ITensors,
     U,S,V = recursiveSVD(M)
     @test norm(U*Diagonal(S)*V'-M) < 1E-13
   end
-
+  @testset "set random number generator" begin
+    i = Index(4)
+    j = Index(4)
+    A = randomITensor(i,j)
+    u,s,v = svd(A,i)
+    s[3,3] = 0
+    s[4,4] = 0
+    A = u*s*v
+    rng1 = MersenneTwister(1)
+    rng2 = MersenneTwister(1)
+    u1,s1,v1 = svd(A,i; rng = rng1)
+    u2,s2,v2 = svd(A,i; rng = rng2)
+    @test u1.store.data == u2.store.data
+    @test s1.store.data == s2.store.data
+    @test v1.store.data == v2.store.data
+  end
 end

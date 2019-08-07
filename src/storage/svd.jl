@@ -2,14 +2,14 @@ export orthog!,
        recursiveSVD
 
 function orthog!(M::AbstractMatrix{T};
-                 npass::Int=2) where {T}
+                 npass::Int=2, rng::MersenneTwister= Random.GLOBAL_RNG) where {T}
   nkeep = min(size(M)...)
   dots = zeros(T,nkeep)
   for i=1:nkeep
     coli = view(M,:,i)
     nrm = norm(coli)
     if nrm < 1E-10
-      rand!(coli)
+      rand!(rng, coli)
       nrm = norm(coli)
     end
     coli ./= nrm
@@ -26,7 +26,7 @@ function orthog!(M::AbstractMatrix{T};
         pass = pass-1
       end
       if nrm < 1E-10
-        rand!(coli)
+        rand!(rng, coli)
         nrm = norm(coli)
       end
       coli ./= nrm
@@ -57,11 +57,12 @@ end
 
 function recursiveSVD(M::AbstractMatrix{T};
                       thresh::Float64=1E-3,
-                      north_pass::Int=2) where {T}
+                      north_pass::Int=2, 
+                      rng::MersenneTwister=Random.GLOBAL_RNG) where {T}
   Mr,Mc = size(M)
 
   if Mr > Mc
-    V,S,U = recursiveSVD(transpose(M))
+    V,S,U = recursiveSVD(transpose(M), rng=rng)
     conj!(U)
     conj!(V)
     return U,S,V
@@ -77,7 +78,7 @@ function recursiveSVD(M::AbstractMatrix{T};
   end
 
   V = M'*U
-  orthog!(V,npass=north_pass)
+  orthog!(V,npass=north_pass, rng=rng)
 
   (done,start) = checkSVDDone(D,thresh)
 
@@ -89,7 +90,7 @@ function recursiveSVD(M::AbstractMatrix{T};
   b = u'*(M*v)
   bu,bd,bv = recursiveSVD(b,
                           thresh=thresh,
-                          north_pass=north_pass)
+                          north_pass=north_pass, rng = rng)
 
   u .= u*bu
   v .= v*bv
