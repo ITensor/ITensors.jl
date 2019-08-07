@@ -2,7 +2,7 @@ export orthog!,
        recursiveSVD
 
 function orthog!(M::AbstractMatrix{T};
-                 npass::Int=2, rng::MersenneTwister= Random.GLOBAL_RNG) where {T}
+                 npass::Int=2, rng::AbstractRNG= Random.GLOBAL_RNG) where {T}
   nkeep = min(size(M)...)
   dots = zeros(T,nkeep)
   for i=1:nkeep
@@ -58,7 +58,7 @@ end
 function recursiveSVD(M::AbstractMatrix{T};
                       thresh::Float64=1E-3,
                       north_pass::Int=2, 
-                      rng::MersenneTwister=Random.GLOBAL_RNG) where {T}
+                      rng::AbstractRNG=Random.GLOBAL_RNG) where {T}
   Mr,Mc = size(M)
 
   if Mr > Mc

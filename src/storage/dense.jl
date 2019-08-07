@@ -254,7 +254,7 @@ function storage_svd(Astore::Dense{T},
   utags::String = get(kwargs,:utags,"Link,u")
   vtags::String = get(kwargs,:vtags,"Link,v")
   fastSVD::Bool = get(kwargs,:fastSVD,false)
-  svdrng::MersenneTwister = get(kwargs, :rng, Random.GLOBAL_RNG)
+  svdrng::AbstractRNG = get(kwargs, :rng, Random.GLOBAL_RNG)
   if fastSVD
     MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
   else
