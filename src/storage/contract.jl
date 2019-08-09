@@ -436,12 +436,12 @@ function compute!(props::CProps,
 
 end
 
-function contract!(C::Array{T},
-                   p::CProps,
-                   A::Array{T},
-                   B::Array{T},
-                   α::T=one(T),
-                   β::T=zero(T)) where {T}
+function _contract_dense_dense!(C::Array{T},
+                                p::CProps,
+                                A::Array{T},
+                                B::Array{T},
+                                α::T=one(T),
+                                β::T=zero(T)) where {T}
   tA = 'N'
   if p.permuteA
     aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
@@ -496,8 +496,8 @@ function contract!(C::Array{T},
 end
 
 #TODO: this should be optimized
-function contract_scalar!(Cdata::Array,Clabels::Vector{Int},
-                          Bdata::Array,Blabels::Vector{Int},α,β)
+function _contract_scalar!(Cdata::Array,Clabels::Vector{Int},
+                           Bdata::Array,Blabels::Vector{Int},α,β)
   p = calculate_permutation(Blabels,Clabels)
   if β==0
     if is_trivial_permutation(p)
@@ -518,19 +518,19 @@ function contract_scalar!(Cdata::Array,Clabels::Vector{Int},
   return
 end
 
-function contract!(Cdata::Array{T},Clabels::Vector{Int},
-                   Adata::Array{T},Alabels::Vector{Int},
-                   Bdata::Array{T},Blabels::Vector{Int},
-                   α::T=one(T),β::T=zero(T)) where {T}
-  if(length(Alabels)==0)
-    contract_scalar!(Cdata,Clabels,Bdata,Blabels,α*Adata[1],β)
-  elseif(length(Blabels)==0)
-    contract_scalar!(Cdata,Clabels,Adata,Alabels,α*Bdata[1],β)
-  else
-    props = CProps(Alabels,Blabels,Clabels)
-    compute!(props,Adata,Bdata,Cdata)
-    contract!(Cdata,props,Adata,Bdata,α,β)
-  end
-  return
-end
+#function contract!(Cdata::Array{T},Clabels::Vector{Int},
+#                   Adata::Array{T},Alabels::Vector{Int},
+#                   Bdata::Array{T},Blabels::Vector{Int},
+#                   α::T=one(T),β::T=zero(T)) where {T}
+#  if(length(Alabels)==0)
+#    contract_scalar!(Cdata,Clabels,Bdata,Blabels,α*Adata[1],β)
+#  elseif(length(Blabels)==0)
+#    contract_scalar!(Cdata,Clabels,Adata,Alabels,α*Bdata[1],β)
+#  else
+#    props = CProps(Alabels,Blabels,Clabels)
+#    compute!(props,Adata,Bdata,Cdata)
+#    contract!(Cdata,props,Adata,Bdata,α,β)
+#  end
+#  return
+#end
 

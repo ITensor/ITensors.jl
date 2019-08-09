@@ -380,7 +380,7 @@ end
 
     @testset "Test SVD of an ITensor" begin
       U,S,V,u,v = svd(A,(j,l))
-      @test store(S) isa Diag{Float64}
+      @test store(S) isa Diag{Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14

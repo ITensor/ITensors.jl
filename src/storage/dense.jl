@@ -13,20 +13,27 @@ end
 data(D::Dense) = D.data
 length(D::Dense) = length(data(D))
 eltype(D::Dense) = eltype(data(D))
-getindex(D::Dense,i::Int) = data(D)[i]
+Base.getindex(D::Dense,i::Integer) = getindex(data(D),i)
+Base.setindex!(D::Dense,x,i::Integer) = setindex!(data(D),x,i)
 #TODO: this should do proper promotions of the storage data
 #e.g. ComplexF64*Dense{Float64} -> Dense{ComplexF64}
 *(D::Dense{T},x::S) where {T,S<:Number} = Dense{promote_type(T,S)}(x*data(D))
 *(x::Number,D::Dense) = D*x
 
+Base.promote_type(::Type{Dense{T1}},::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
+
 convert(::Type{Dense{T}},D::Dense) where {T} = Dense{T}(data(D))
+
+storage_convert(::Type{Dense{T}},D::Dense,is::IndexSet) where {T} = convert(Dense{T},D)
 
 # convert to complex
 storage_complex(D::Dense{T}) where {T} = Dense{complex(T)}(complex(data(D)))
 
 copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 
-outer(D1::Dense{T},D2::Dense{S}) where {T, S <:Number} = Dense{promote_type(T,S)}(vec(data(D1)*transpose(data(D2))))
+function storage_outer(D1::Dense{T},is1::IndexSet,D2::Dense{S},is2::IndexSet) where {T, S <:Number}
+  return Dense{promote_type(T,S)}(vec(data(D1)*transpose(data(D2)))),IndexSet(is1,is2)
+end
 
 storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
 
@@ -97,11 +104,11 @@ using Base.Cartesian: @nexprs,
   end
 end
 
-function add!(Bstore::Dense,
-              Bis::IndexSet,
-              Astore::Dense,
-              Ais::IndexSet,
-              x::Number = 1)
+function _add!(Bstore::Dense,
+               Bis::IndexSet,
+               Astore::Dense,
+               Ais::IndexSet,
+               x::Number = 1)
   p = calculate_permutation(Bis,Ais)
   Adata = data(Astore)
   Bdata = data(Bstore)
@@ -120,21 +127,6 @@ function add!(Bstore::Dense,
       _add!(reshapeBdata,reshapeAdata,p,(a,b)->a+x*b)
     end
   end
-end
-
-function storage_add!(Bstore::Dense{BT},
-                      Bis::IndexSet,
-                      Astore::Dense{AT},
-                      Ais::IndexSet,
-                      x::Number = 1) where {BT,AT}
-  NT = promote_type(AT,BT)
-  if NT == BT
-    add!(Bstore,Bis,Astore,Ais, x)
-    return Bstore
-  end
-  Nstore = convert(Dense{NT},Bstore)
-  add!(Nstore,Bis,Astore,Ais, x)
-  return Nstore
 end
 
 function storage_copyto!(Bstore::Dense,
@@ -187,10 +179,8 @@ end
 
 # TODO: make this a special version of storage_add!()
 # Make sure the permutation is optimized
-function storage_permute!(Bstore::Dense,
-                          Bis::IndexSet,
-                          Astore::Dense,
-                          Ais::IndexSet)
+function storage_permute!(Bstore::Dense, Bis::IndexSet,
+                          Astore::Dense, Ais::IndexSet)
   p = calculate_permutation(Bis,Ais)
   Adata = data(Astore)
   Bdata = data(Bstore)
@@ -211,14 +201,9 @@ function storage_scalar(D::Dense)
   throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
 end
 
-function contract(Cinds::IndexSet,
-                  Clabels::Vector{Int},
-                  Astore::Dense{SA},
-                  Ainds::IndexSet,
-                  Alabels::Vector{Int},
-                  Bstore::Dense{SB},
-                  Binds::IndexSet,
-                  Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+function _contract(Cinds::IndexSet, Clabels::Vector{Int},
+                   Astore::Dense{SA}, Ainds::IndexSet, Alabels::Vector{Int},
+                   Bstore::Dense{SB}, Binds::IndexSet, Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
   SC = promote_type(SA,SB)
 
   # Convert the arrays to a common type
@@ -237,9 +222,17 @@ function contract(Cinds::IndexSet,
   Bdata = reshape(data(Bstore),Bdims)
   Cdata = reshape(data(Cstore),Cdims)
 
-  contract!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
-  return Cstore
+  if(length(Alabels)==0)
+    contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
+  elseif(length(Blabels)==0)
+    contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
+  else
+    props = CProps(Alabels,Blabels,Clabels)
+    compute!(props,Adata,Bdata,Cdata)
+    _contract_dense_dense!(Cdata,props,Adata,Bdata)
+  end
 
+  return Cstore
 end
 
 function storage_svd(Astore::Dense{T},
@@ -280,7 +273,7 @@ function storage_svd(Astore::Dense{T},
   v = settags(u,vtags)
   Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
   #TODO: make a diag storage
-  Sis,Sstore = IndexSet(u,v),Diag{Float64}(MS)
+  Sis,Sstore = IndexSet(u,v),Diag{Vector{Float64}}(MS)
   Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
 
   return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
@@ -322,7 +315,7 @@ function storage_eigen(Astore::Dense{T},
   u = Index(dD,lefttags)
   v = settags(u,righttags)
   Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
-  Dis,Dstore = IndexSet(u,v),Diag{Float64}(MD)
+  Dis,Dstore = IndexSet(u,v),Diag{Vector{Float64}}(MD)
   return (Uis,Ustore,Dis,Dstore)
 end
 

@@ -34,13 +34,34 @@ function storage_contract(Astore::TensorStorage,
     #(since it is universal for any storage type and just analyzes in indices)
     (Alabels,Blabels) = compute_contraction_labels(Ais,Bis)
     if is_outer(Alabels,Blabels)
-      Cis = IndexSet(Ais,Bis)
-      Cstore = outer(Astore,Bstore)
+      Cstore,Cis = storage_outer(Astore,Ais,Bstore,Bis)
     else
       (Cis,Clabels) = contract_inds(Ais,Alabels,Bis,Blabels)
-      Cstore = contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
+      Cstore = _contract(Cis,Clabels,Astore,Ais,Alabels,Bstore,Bis,Blabels)
     end
   end
   return (Cis,Cstore)
+end
+
+# Generic outer function that handles proper
+# storage promotion
+# TODO: should this handle promotion with storage
+# type switching?
+# TODO: we should combine all of the storage_add!
+# outer wrappers into a single call that promotes
+# based on the storage type, i.e. promote_type(Dense,Diag) -> Dense
+function storage_add!(Bstore::BT,
+                      Bis::IndexSet,
+                      Astore::AT,
+                      Ais::IndexSet,
+                      x::Number = 1) where {BT<:TensorStorage,AT<:TensorStorage}
+  NT = promote_type(AT,BT)
+  if NT == BT
+    _add!(Bstore,Bis,Astore,Ais, x)
+    return Bstore
+  end
+  Nstore = storage_convert(NT,Bstore,Bis)
+  _add!(Nstore,Bis,Astore,Ais, x)
+  return Nstore
 end
 

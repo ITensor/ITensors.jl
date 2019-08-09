@@ -135,7 +135,7 @@ using ITensors,
     v1 = randn(d)
     v2 = randn(d)
     D1 = diagITensor(v1,i,j,k)
-    D2 = diagITensor(v2,i,j,k)
+    D2 = diagITensor(v2,k,i,j)
 
     v3 = v1 + v2
     D3 = D1 + D2
@@ -144,6 +144,17 @@ using ITensors,
     for ii = 1:d
       @test D3[ii,ii,ii] == v3[ii]
     end
+  end
+
+  @testset "Add (Diag uniform + Diag uniform)" begin
+    v1 = randn(d)
+    v2 = randn(d)
+    D1 = δ(i,j,k)
+    D2 = δ(k,i,j)
+
+    D3 = D1 + D2
+
+    @test D3 ≈ dense(D1) + dense(D2)
   end
 
   @testset "Add (Diag+Dense)" begin
@@ -208,6 +219,27 @@ using ITensors,
 
     @test D1*D2 ≈ dense(D1)*dense(D2)
     @test D2*D1 ≈ dense(D1)*dense(D2)
+  end
+
+  @testset "Contraction Diag*Diag (no contracted)" begin
+    D1 = diagITensor(v,i,j)
+    D2 = diagITensor(vr,k,l)
+
+    @test D1*D2 ≈ dense(D1)*dense(D2)
+    @test D2*D1 ≈ dense(D1)*dense(D2)
+  end
+
+  @testset "Contraction Diag*Scalar" begin
+    D = diagITensor(v,i,j)
+    x = 2.0
+
+    @test x*D ≈ x*dense(D)
+    @test D*x ≈ x*dense(D)
+
+    xc = 2 + 3im
+
+    @test xc*D ≈ xc*dense(D)
+    @test D*xc ≈ xc*dense(D)
   end
 
 end
