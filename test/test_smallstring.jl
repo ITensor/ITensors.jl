@@ -33,7 +33,16 @@ import ITensors.SmallString, ITensors.IntChar, ITensors.push
       t = push(s, IntChar(2))
       @test u < t
   end
-
+      
+  @testset "convert to integer" begin
+      s = SmallString()
+      s = push(s, '2')
+      s = push(s, '6')
+      s = push(s, '7')
+      i = parse(Int, s)
+      @test i == 267
+  end
+      
   @testset "Convert to String" begin
     s = SmallString()
     s = push(s, 'a')
