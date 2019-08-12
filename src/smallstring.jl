@@ -71,7 +71,7 @@ function Base.parse(::Type{Int}, s::SmallString)
   n = length(s)
   int = 0
   for j = 1:n
-    int = int*10 + parse(Int,Char(s[j]))
+    int = int*10 + (s[j] - 0x30)  # 0x30 === UInt8('0'), '9'-'0' == 9
   end
   return int
 end
