@@ -6,7 +6,7 @@ export MPS,
        inner,
        productMPS,
        randomMPS,
-       maxDim,
+       maxLinkDim,
        linkindex,
        siteindex,
        siteinds
