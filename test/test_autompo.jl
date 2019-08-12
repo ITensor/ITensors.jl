@@ -300,7 +300,7 @@ end
     Oa = inner(psi,Ha,psi)
     Oe = inner(psi,He,psi)
     @test Oa ≈ Oe
-    #@test maxDim(Ha) == 8
+    #@test maxLinkDim(Ha) == 8
   end
 
 end
