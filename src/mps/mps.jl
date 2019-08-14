@@ -203,10 +203,11 @@ function replaceBond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  FU,FV,u = factorize(phi,inds(M[b]); which_factorization="automatic", kwargs...)
-  replacetags!(FU,tags(u),tags(linkindex(M,b)), u)
-  replacetags!(FV,tags(u),tags(linkindex(M,b)), u)
+  FU,FV = factorize(phi,inds(M[b]); which_factorization="automatic",
+                        tags=tags(linkindex(M,b)), kwargs...)
   M[b]   = FU
   M[b+1] = FV
 end
+
+
 
