@@ -110,4 +110,10 @@ using ITensors,
   @test ITensors.rightLim(psi) == div(N, 2) + 1
 
   @test_throws ErrorException linkindex(MPS(N, fill(ITensor(), N), 0, N + 1), 1)
+
+  # make sure factorization preserves the bond index tags
+  phi = psi[1]*psi[2]
+  bondindtags = tags(linkindex(psi,1))
+  replaceBond!(psi,1,phi)
+  @test tags(linkindex(psi,1)) == bondindtags
 end
