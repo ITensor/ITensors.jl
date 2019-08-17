@@ -18,13 +18,13 @@ struct TagSet
   TagSet(tags::TagSetStorage,plev::Int,len::Int) = new(tags,plev,len)
 end
 
-function TagSet(tags::TagSetStorage,plev::Int=-1)
-  len = 0
-  while tags[len+1] ≠ IntTag(0)
-    len += 1
-  end
-  TagSet(tags,plev,len)
-end
+#function TagSet(tags::TagSetStorage,plev::Int=-1)
+#  len = 0
+#  while tags[len+1] ≠ IntTag(0)
+#    len += 1
+#  end
+#  TagSet(tags,plev,len)
+#end
 
 TagSet(ts::TagSet) = ts
 
@@ -65,7 +65,7 @@ function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   return plnew, ntags
 end
 
-isNull(v::MTagStorage) = v[0] == IntChar(0)
+#isNull(v::MTagStorage) = v[0] == IntChar(0)
 
 function reset!(v::MTagStorage, nchar::Int)
   for i = 1:nchar
@@ -109,7 +109,7 @@ tags(T::TagSet) = T.tags
 plev(T::TagSet) = T.plev
 Base.length(T::TagSet) = T.length
 Base.getindex(T::TagSet,n::Int) = getindex(tags(T),n)
-Base.setindex(T::TagSet,val,n::Int) = TagSet(setindex(tags(T),val,n),plev(T),length(T))
+#Base.setindex!(T::TagSet,val,n::Int) = TagSet(setindex(tags(T),val,n),plev(T),length(T))
 Base.copy(ts::TagSet) = TagSet(tags(ts),plev(ts),length(ts))
 
 setprime(ts::TagSet,pl::Int) = TagSet(tags(ts),pl,length(ts))
