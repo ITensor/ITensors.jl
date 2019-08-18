@@ -17,8 +17,7 @@ algorithms for optimizing and transforming tensor networks, such as
 matrix product state and matrix product operators, such as
 the DMRG algorithm.
 
-Development of ITensor is supported by the Simons Foundation 
-through the Flatiron Institute.
+Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
 ## Code Examples
 
