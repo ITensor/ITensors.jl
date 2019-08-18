@@ -1,29 +1,16 @@
 ## Misc To Do
 
-+ Could ITensor getindex, setindex! be simplified?
-  - map expression is a bit hard to parse
-  - could args be IndexVal... instead of Union{IndexVal,AbstractVector{IndexVal}...}?
-
-+ Reduce dependencies
-
-? Replace InitState with just a Vector{String}?
-  state = fill("Up",N)
-  for n=1:N
-    state[n] = isodd(n) ? "Up" : "Dn"
-  end
-  psi = MPS(state)
-  
-+ Add noise term support to DMRG
++ Read/write of ITensors and other objects, using HDF5 format
 
 + Add docstrings (see mps/dmrg.jl for an example)
 
++ Could ITensor getindex, setindex! be simplified?
+  - map expression is a bit hard to parse
+  - could args be IndexVal... instead of Union{IndexVal,AbstractVector{IndexVal}...}?
+  
++ Add noise term support to DMRG
+
 + Add copyright notice on top of files (see C++ version)
-
-+ Finish prime & tag methods
-
-+ Read/write of ITensors and other objects, using HDF5 format
-
-+ Combiner storage for ITensor. Should be easy for Dense case.
 
 + davidson improvements
   - evaluate logic (cyclic permutation of order of steps in main for loop?)
