@@ -10,6 +10,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 @testset "ITensor constructors" begin
   i = Index(2,"i")
   j = Index(2,"j")
+  k = Index(2,"k")
 
   @testset "Default" begin
     A = ITensor()
@@ -37,6 +38,12 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     @test size(A) == dims(A) == (2,2)
 
     @test !isNull(A)
+
+    B = randomITensor(IndexSet(i,j))
+    @test store(B) isa Dense{Float64}
+    @test ndims(B) == order(B) == 2 == length(inds(B))
+    @test size(B) == dims(B) == (2,2)
+    @test !isNull(B)
   end
 
   @testset "From matrix" begin
@@ -55,6 +62,35 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
     M = [1 2 3; 4 5 6]
     @test_throws DimensionMismatch ITensor(M,i,j)
+  end
+
+  @testset "To Matrix" begin
+    TM = randomITensor(i,j)
+
+    M1 = Matrix(TM)
+    for ni in i, nj in j
+      @test M1[ni,nj] ≈ TM[i(ni),j(nj)]
+    end
+
+    M2 = Matrix(TM,j,i)
+    for ni in i, nj in j
+      @test M2[nj,ni] ≈ TM[i(ni),j(nj)]
+    end
+
+    T3 = randomITensor(i,j,k)
+    @test_throws DimensionMismatch Matrix(T3,i,j)
+  end
+
+  @testset "To Vector" begin
+    TV = randomITensor(i)
+
+    V = Vector(TV)
+    for ni in i
+      @test V[ni] ≈ TV[i(ni)]
+    end
+
+    T2 = randomITensor(i,j)
+    @test_throws DimensionMismatch Vector(T2)
   end
 
   @testset "Complex" begin
@@ -269,6 +305,11 @@ end
 
     A2r = replacetags(A2,"1","5")
     @test hasinds(A2r,s2,prime(l,5),l'')
+
+    #In-place version
+    cA2 = copy(A2)
+    replacetags!(cA2,"1","5")
+    @test hasinds(cA2,s2,prime(l,5),l'')
   end
   @testset "prime(::ITensor,::String)" begin
     A2p = prime(A2)

@@ -20,6 +20,7 @@ using ITensors,
     @test l ∈ IndexSet(I, l) 
     @test l ∈ IndexSet(l, I)
     @test l ∈ IndexSet( (I, IndexSet(l)) )
+    @test size(I) == (3,)
   end
   @testset "Convert to Index" begin
     @test Index(IndexSet(i)) === i
@@ -32,6 +33,8 @@ using ITensors,
     @test dim(I,1) == idim
     @test dim(I,2) == jdim
     @test dim(I,3) == kdim
+
+    @test maxDim(I) == max(idim,jdim,kdim)
   end
   @testset "Set operations" begin
     I1 = IndexSet(i,j,k)
@@ -53,6 +56,10 @@ using ITensors,
     @test findinds(I1,"i") == IndexSet(i)
     @test findindex(I1,"j") == j
     @test findindex(I1,"l") == Index()
+    @test findindex(I1,i) == 1
+    @test findindex(I1,j) == 2
+    @test findindex(I1,k) == 3
+    @test findindex(I1,Index(2)) == 0
   end
   @testset "commoninds index ordering" begin
     I = IndexSet(i,k,j)
@@ -116,5 +123,15 @@ using ITensors,
     I = IndexSet(i,k,j)
     @test swapprime(I,0,1,"i") == IndexSet(i',k,j)
     @test swapprime(I,0,1,"j") == IndexSet(i,k,j')
+  end
+  @testset "swaptags" begin
+    i1 = Index(2,"Site,A")
+    i2 = Index(2,"Site,B")
+    is = IndexSet(i1,i2)
+    sis = swaptags(is,"Site","Link")
+    for j in sis
+      @test !hastags(j,"Site")
+      @test hastags(j,"Link")
+    end
   end
 end

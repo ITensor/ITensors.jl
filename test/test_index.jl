@@ -65,4 +65,12 @@ import ITensors: In,Out,Neither
     @test i[:] == [i(1); i(2)]
     @test sprint(show, i(2)) == sprint(show, i)*"=2"
   end
+  @testset "Iteration" begin
+    i = Index(10)
+    c = 1
+    for n in i
+      @test n == c
+      c += 1
+    end
+  end
 end

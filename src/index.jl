@@ -8,6 +8,7 @@ export Index,
        addtags,
        settags,
        replacetags,
+       replacetags!,
        removetags,
        hastags,
        id,
@@ -139,9 +140,11 @@ Base.adjoint(i::Index) = prime(i)
 
 # Iterating over Index I gives
 # integers from 1...dim(I)
-start(i::Index) = 1
-next(i::Index,n::Int) = (n,n+1)
-done(i::Index,n::Int) = (n > dim(i))
+function iterate(i::Index,state::Int=1)
+  (state > dim(i)) && return nothing
+  return (state,state+1)
+end
+
 colon(n::Int,i::Index) = range(n,dim(i))
 
 function show(io::IO,
