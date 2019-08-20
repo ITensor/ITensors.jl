@@ -120,7 +120,7 @@ using ITensors,
     @test tags(linkindex(psi,1)) == bondindtags
 
     # check that replaceBond! updates llim_ and rlim_ properly
-    position!(psi,5)
+    orthogonalize!(psi,5)
     phi = psi[5]*psi[6]
     replaceBond!(psi,5,phi, dir="fromleft")
     @test ITensors.leftLim(psi)==5

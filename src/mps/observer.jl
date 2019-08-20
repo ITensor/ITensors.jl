@@ -78,9 +78,9 @@ function measure!(obs::DMRGObserver, psi::MPS, si::DMRGStepInfo)
     # when sweeping left the orthogonality center is located at site n= bond(si) after the bond update.
     # We want to measure at n=bond(si)+1 because there the tensor has been
     # already fully updated (by the right and left pass of the sweep).
-    position!(psi,bond(si)+1)
+    orthogonalize!(psi,bond(si)+1)
     _measure_local_ops!(obs,psi,bond(si)+1)
-    position!(psi,bond(si))
+    orthogonalize!(psi,bond(si))
 
     if bond(si)==1
       push!(obs.energies, getenergy(si))
