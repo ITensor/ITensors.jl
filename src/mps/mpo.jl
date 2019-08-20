@@ -487,9 +487,9 @@ function truncate!(M::Union{MPS,MPO}; kwargs...)
   # Perform truncations in a right-to-left sweep
   for j in reverse(2:N)
     rinds = uniqueinds(M[j],M[j-1])
-    U,R = factorize(M[j],rinds;kwargs...)
+    U,S,V = svd(M[j],rinds;kwargs...)
     M[j] = U
-    M[j-1] *= R
+    M[j-1] *= (S*V)
     setRightLim!(M,j)
   end
 
