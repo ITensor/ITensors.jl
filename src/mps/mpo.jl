@@ -2,7 +2,9 @@ export MPO,
        randomMPO,
        applyMPO,
        nmultMPO,
-       maxLinkDim
+       maxLinkDim,
+       position!,
+       truncate!
 
 mutable struct MPO
   N_::Int
@@ -474,6 +476,25 @@ function position!(M::Union{MPS,MPO},
   end
 end
 
+function truncate!(M::Union{MPS,MPO}; kwargs...)
+
+  N = length(M)
+
+  # Left-orthogonalize all tensors to make
+  # truncations controlled
+  position!(M,N)
+
+  # Perform truncations in a right-to-left sweep
+  for j in reverse(2:N)
+    rinds = uniqueinds(M[j],M[j-1])
+    U,R = factorize(M[j],rinds;kwargs...)
+    M[j] = U
+    M[j-1] *= R
+    setRightLim!(M,j)
+  end
+
+end
+
 @doc """
 position!(M::MPS, j::Int)
 
@@ -488,3 +509,17 @@ position!(W::MPO, j::Int)
 
 Move the gauge position of an MPO to site j.
 """ position!
+
+@doc """
+truncate!(M::MPS;kwargs...)
+
+Perform a truncation of all bonds of an MPS,
+using the truncation parameters (cutoff,maxdim, etc.)
+provided as keyword arguments.
+
+truncate!(M::MPO;kwargs...)
+
+Perform a truncation of all bonds of an MPO,
+using the truncation parameters (cutoff,maxdim, etc.)
+provided as keyword arguments.
+""" truncate!

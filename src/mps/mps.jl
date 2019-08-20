@@ -1,5 +1,4 @@
 export MPS,
-       position!,
        prime!,
        primelinks!,
        simlinks!,
