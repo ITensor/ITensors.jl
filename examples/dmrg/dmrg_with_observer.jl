@@ -5,18 +5,18 @@ using ITensors
 
 
 """
-get MPO of transverse field Ising model Hamiltonian with field strength h
-"""
+  get MPO of transverse field Ising model Hamiltonian with field strength h
+  """
 function tfimMPO(h,sites)
-    # Input operator terms which define a Hamiltonian
-    ampo = AutoMPO(sites)
-    for j=1:length(sites)-1
-        add!(ampo,-1.,"Sz",j,"Sz",j+1)
-        add!(ampo,h,"Sx",j)
-    end
-    add!(ampo,h,"Sx",length(sites))
-    # Convert these terms to an MPO tensor network
-    return toMPO(ampo)
+  # Input operator terms which define a Hamiltonian
+  ampo = AutoMPO(sites)
+  for j=1:length(sites)-1
+    add!(ampo,-1.,"Sz",j,"Sz",j+1)
+    add!(ampo,h,"Sx",j)
+  end
+  add!(ampo,h,"Sx",length(sites))
+  # Convert these terms to an MPO tensor network
+  return toMPO(ampo)
 end
 
 N = 100
@@ -45,7 +45,7 @@ println("================================")
 energy, psi = dmrg(tfimMPO(0.1,sites),psi0, sweeps,observer=observer)
 
 for (i,Szs) in enumerate(measurements(observer)["Sz"])
-    println("magnetization after sweep $i = ", sum(Szs)/N)
+  println("magnetization after sweep $i = ", sum(Szs)/N)
 end
 
 
@@ -55,7 +55,7 @@ observer= DMRGObserver(["Sz"],sites,1e-6)
 energy, psi = dmrg(tfimMPO(1.,sites),psi0, sweeps,observer=observer)
 
 for (i,Szs) in enumerate(measurements(observer)["Sz"])
-    println("magnetization after sweep $i = ", sum(Szs)/N)
+  println("magnetization after sweep $i = ", sum(Szs)/N)
 end
 
 println("\nRunning DMRG for TFIM with h=5.")
@@ -64,5 +64,5 @@ observer= DMRGObserver(["Sz","Sx"],sites,1e-6)
 energy, psi = dmrg(tfimMPO(5.,sites),psi0, sweeps,observer=observer)
 
 for (i,Sxs) in enumerate(measurements(observer)["Sx"])
-    println("<Sˣ> after sweep $i = ", sum(Sxs)/N)
+  println("<Sˣ> after sweep $i = ", sum(Sxs)/N)
 end
