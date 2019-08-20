@@ -97,15 +97,15 @@ using ITensors,
   @test length(siteinds(psi)) == N
 
   psi = randomMPS(sites)
-  position!(psi, N-1)
+  orthogonalize!(psi, N-1)
   @test ITensors.leftLim(psi) == N-2
   @test ITensors.rightLim(psi) == N
-  position!(psi, 2)
+  orthogonalize!(psi, 2)
   @test ITensors.leftLim(psi) == 1
   @test ITensors.rightLim(psi) == 3
   psi = randomMPS(sites)
   psi.rlim_ = N+1 # do this to test qr from rightmost tensor
-  position!(psi, div(N, 2))
+  orthogonalize!(psi, div(N, 2))
   @test ITensors.leftLim(psi) == div(N, 2) - 1
   @test ITensors.rightLim(psi) == div(N, 2) + 1
 
@@ -136,10 +136,10 @@ end
 
   N = 30
 
-  @testset "position! method" begin
+  @testset "orthogonalize! method" begin
     c = 12
     M = basicRandomMPS(N)
-    position!(M,c)
+    orthogonalize!(M,c)
 
     @test leftLim(M) == c-1
     @test rightLim(M) == c+1
