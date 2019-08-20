@@ -52,8 +52,20 @@ tensors(m::MPS) = m.A_
 leftLim(m::MPS) = m.llim_
 rightLim(m::MPS) = m.rlim_
 
-getindex(m::MPS, n::Integer) = getindex(tensors(m),n)
-setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(tensors(m),T,n)
+function setLeftLim!(m::MPS,new_ll::Int) 
+  m.llim_ = new_ll
+end
+
+function setRightLim!(m::MPS,new_rl::Int) 
+  m.rlim_ = new_rl
+end
+
+getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
+function setindex!(M::MPS,T::ITensor,n::Integer) 
+  (n <= leftLim(M)) && setLeftLim!(M,n-1)
+  (n >= rightLim(M)) && setRightLim!(M,n+1)
+  setindex!(tensors(M),T,n)
+end
 
 copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
 similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
