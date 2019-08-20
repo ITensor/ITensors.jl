@@ -39,17 +39,20 @@ function dmrg(H::MPO,
                    which_factorization=which_factorization)
     end
     end
-    !quiet && @printf "After sweep %d energy=%.12f maxDim=%d time=%.3f\n" sw energy maxLinkDim(psi) sw_time
-    @debug printTimes(timer)
+    if !quiet
+      @printf("After sweep %d energy=%.12f maxLinkDim=%d time=%.3f\n",sw,energy,maxLinkDim(psi),sw_time)
+    end
   end
   return (energy,psi)
 end
 
 @doc """ 
-Use the density matrix renormalization group (DMRG) algorithm to
-optimize a matrix product state (MPS) to be the eigenvector
-of the Hermitian matrix product operator (MPO) H with minimal 
-eigenvalue.
+dmrg(H::MPO,psi0::MPS,sweeps::Sweeps;kwargs...)::Tuple{Float64,MPS}
+
+Optimize a matrix product state (MPS) to be the eigenvector
+of the Hermitian matrix product operator (MPO) H with minimal
+eigenvalue using the density matrix renormalization group 
+(DMRG) algorithm.
 
 Inputs:
 * `H::MPO` - a Hermitian MPO
@@ -59,5 +62,4 @@ Inputs:
 Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
-
 """ dmrg
