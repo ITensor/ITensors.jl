@@ -97,15 +97,15 @@ using ITensors,
   @test length(siteinds(psi)) == N
 
   psi = randomMPS(sites)
-  position!(psi, N-1)
+  orthogonalize!(psi, N-1)
   @test ITensors.leftLim(psi) == N-2
   @test ITensors.rightLim(psi) == N
-  position!(psi, 2)
+  orthogonalize!(psi, 2)
   @test ITensors.leftLim(psi) == 1
   @test ITensors.rightLim(psi) == 3
   psi = randomMPS(sites)
   psi.rlim_ = N+1 # do this to test qr from rightmost tensor
-  position!(psi, div(N, 2))
+  orthogonalize!(psi, div(N, 2))
   @test ITensors.leftLim(psi) == div(N, 2) - 1
   @test ITensors.rightLim(psi) == div(N, 2) + 1
 
@@ -116,4 +116,75 @@ using ITensors,
   bondindtags = tags(linkindex(psi,1))
   replaceBond!(psi,1,phi)
   @test tags(linkindex(psi,1)) == bondindtags
+end
+
+# Helper function for making MPS
+function basicRandomMPS(N::Int;dim=4)
+  sites = SiteSet(N,2)
+  M = MPS(sites)
+  links = [Index(dim,"n=$(n-1),Link") for n=1:N+1]
+  for n=1:N
+    M[n] = randomITensor(links[n],sites[n],links[n+1])
+  end
+  M[1] *= delta(links[1])
+  M[N] *= delta(links[N+1])
+  M[1] /= sqrt(inner(M,M))
+  return M
+end
+
+@testset "MPS gauging and truncation" begin
+
+  N = 30
+
+  @testset "orthogonalize! method" begin
+    c = 12
+    M = basicRandomMPS(N)
+    orthogonalize!(M,c)
+
+    @test leftLim(M) == c-1
+    @test rightLim(M) == c+1
+
+    # Test for left-orthogonality
+    L = M[1]*prime(M[1],"Link")
+    l = linkindex(M,1)
+    @test norm(L-delta(l,l')) < 1E-12
+    for j=2:c-1
+      L = L*M[j]*prime(M[j],"Link")
+      l = linkindex(M,j)
+      @test norm(L-delta(l,l')) < 1E-12
+    end
+
+    # Test for right-orthogonality
+    R = M[N]*prime(M[N],"Link")
+    r = linkindex(M,N-1)
+    @test norm(R-delta(r,r')) < 1E-12
+    for j in reverse(c+1:N-1)
+      R = R*M[j]*prime(M[j],"Link")
+      r = linkindex(M,j-1)
+      @test norm(R-delta(r,r')) < 1E-12
+    end
+
+    @test norm(M[c]) ≈ 1.0
+  end
+
+  @testset "truncate! method" begin
+    M = basicRandomMPS(N;dim=10)
+    M0 = copy(M)
+    truncate!(M;maxdim=5)
+
+    @test rightLim(M) == 2
+
+    # Test for right-orthogonality
+    R = M[N]*prime(M[N],"Link")
+    r = linkindex(M,N-1)
+    @test norm(R-delta(r,r')) < 1E-12
+    for j in reverse(2:N-1)
+      R = R*M[j]*prime(M[j],"Link")
+      r = linkindex(M,j-1)
+      @test norm(R-delta(r,r')) < 1E-12
+    end
+
+    @test inner(M,M0) > 0.1
+  end
+
 end

@@ -2,7 +2,9 @@ export MPO,
        randomMPO,
        applyMPO,
        nmultMPO,
-       maxLinkDim
+       maxLinkDim,
+       orthogonalize!,
+       truncate!
 
 mutable struct MPO
   N_::Int
@@ -202,56 +204,6 @@ function linkindex(M::MPO,j::Integer)
   return li
 end
 
-#function position!(M::MPO, j::Integer; kwargs...)
-#  default_method = (rightLim(M) - leftLim(M) > 2) ? "qr" : "svd"
-#  method = get(kwargs, :which_factorization, default_method)
-#  N = length(M)
-#  while leftLim(M) < (j-1)
-#    ll = leftLim(M)+1
-#    s = findinds(M[ll],"Site")
-#    if ll == 1
-#      if method == "svd"
-#          (Q,R,ci) = factorize(M[ll],s; which_factorization="svd", dir="fromleft", kwargs...)
-#      else
-#          Q, R = qr(M[ll], s; kwargs...)
-#      end
-#    else
-#      li = linkindex(M,ll-1)
-#      if method == "svd"
-#          (Q,R,ci) = factorize(M[ll],s,li; which_factorization="svd", dir="fromleft", kwargs...)
-#      else
-#          Q, R = qr(M[ll], s, li; kwargs...)
-#      end
-#    end
-#    M[ll] = Q
-#    M[ll+1] *= R
-#    M.llim_ += 1
-#  end
-#
-#  while rightLim(M) > (j+1)
-#    rl = rightLim(M)-1
-#    s = findinds(M[rl],"Site")
-#    if rl == N
-#      if method == "svd"
-#          (Q,R,ci) = factorize(M[rl],s; which_factorization="svd", dir="fromright", kwargs...)
-#      else
-#          Q, R = qr(M[rl], s; kwargs...)
-#      end
-#    else
-#      ri = linkindex(M,rl)
-#      if method == "svd"
-#          (Q,R,ci) = factorize(M[rl],s,ri; which_factorization="svd", dir="fromright", kwargs...)
-#      else
-#          Q, R = qr(M[rl], s, ri; kwargs...)
-#      end
-#    end
-#    M[rl] = Q
-#    M[rl-1] *= R
-#    M.rlim_ -= 1
-#  end
-#  M.llim_ = j-1
-#  M.rlim_ = j+1
-#end
 
 """
 inner(y::MPS, A::MPO, x::MPS)
@@ -294,8 +246,8 @@ end
 function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     n = A.N_ 
     length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
-    position!(A, 1; kwargs...)
-    position!(B, 1; kwargs...)
+    orthogonalize!(A, 1; kwargs...)
+    orthogonalize!(B, 1; kwargs...)
     C = similar(A)
     rand_plev = 13124
     lAs = [linkindex(A, i) for i in 1:n-1]
@@ -317,7 +269,7 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     end
     C[n] = dag(first[n-1]) * A[n] + dag(second[n-1]) * B[n]
     prime!(C, -rand_plev, "Link")
-    position!(C, 1; kwargs...)
+    truncate!(C; kwargs...)
     return C
 end
 
@@ -391,9 +343,9 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     N = length(A)
     N != length(B) && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
     A_ = copy(A)
-    position!(A_, 1)
+    orthogonalize!(A_, 1)
     B_ = copy(B)
-    position!(B_, 1)
+    orthogonalize!(B_, 1)
 
     links_A = findinds.(A.A_, "Link")
     links_B = findinds.(B.A_, "Link")
@@ -436,15 +388,16 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     U, V, ci = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(N-1)",maxdim=maxdim,mindim=mindim)
     res[N-1] = U
     res[N] = V
-    position!(res, 1)
+    truncate!(res;kwargs...)
     for i in 1:N
         res[i] = mapprime(res[i], 2, 1)
     end
     return res
 end
 
-function position!(M::Union{MPS,MPO}, 
-                   j::Int)
+function orthogonalize!(M::Union{MPS,MPO}, 
+                        j::Int; 
+                        kwargs...)
   while leftLim(M) < (j-1)
     (leftLim(M) < 0) && setLeftLim!(M,0)
     b = leftLim(M)+1
@@ -474,17 +427,50 @@ function position!(M::Union{MPS,MPO},
   end
 end
 
-@doc """
-position!(M::MPS, j::Int)
+function truncate!(M::Union{MPS,MPO}; kwargs...)
 
-Move the gauge position, or orthogonality center, 
-to site j of an MPS. No observable property of 
-the MPS will be changed, and no truncation of the 
+  N = length(M)
+
+  # Left-orthogonalize all tensors to make
+  # truncations controlled
+  orthogonalize!(M,N)
+
+  # Perform truncations in a right-to-left sweep
+  for j in reverse(2:N)
+    rinds = uniqueinds(M[j],M[j-1])
+    U,S,V = svd(M[j],rinds;kwargs...)
+    M[j] = U
+    M[j-1] *= (S*V)
+    setRightLim!(M,j)
+  end
+
+end
+
+@doc """
+orthogonalize!(M::MPS, j::Int; kwargs...)
+
+Move the orthogonality center of the MPS
+to site j. No observable property of the
+MPS will be changed, and no truncation of the 
 bond indices is performed. Afterward, tensors 
 1,2,...,j-1 will be left-orthogonal and tensors 
 j+1,j+2,...,N will be right-orthogonal.
 
-position!(W::MPO, j::Int)
+orthogonalize!(W::MPO, j::Int; kwargs...)
 
-Move the gauge position of an MPO to site j.
-""" position!
+Move the orthogonality center of an MPO to site j.
+""" orthogonalize!
+
+@doc """
+truncate!(M::MPS; kwargs...)
+
+Perform a truncation of all bonds of an MPS,
+using the truncation parameters (cutoff,maxdim, etc.)
+provided as keyword arguments.
+
+truncate!(M::MPO; kwargs...)
+
+Perform a truncation of all bonds of an MPO,
+using the truncation parameters (cutoff,maxdim, etc.)
+provided as keyword arguments.
+""" truncate!
