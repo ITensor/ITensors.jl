@@ -18,6 +18,7 @@ export ITensor,
        store,
        dense
 
+
 mutable struct ITensor
   inds::IndexSet
   store::TensorStorage
@@ -393,6 +394,9 @@ end
 function *(A::ITensor,B::ITensor)
   (Cis,Cstore) = storage_contract(store(A),inds(A),store(B),inds(B))
   C = ITensor(Cis,Cstore)
+  if warnTensorOrder > 0 && order(C) >= warnTensorOrder
+    println("Warning: contraction resulted in ITensor with $(order(C)) indices")
+  end
   return C
 end
 
