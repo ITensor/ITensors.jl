@@ -301,6 +301,8 @@ removetags(A::ITensor,vargs...) = ITensor(removetags(inds(A),vargs...),store(A))
 
 replacetags(A::ITensor,vargs...) = ITensor(replacetags(inds(A),vargs...),store(A))
 
+replacetags!(A::ITensor,vargs...) = replacetags!(A.inds,vargs...)
+
 settags(A::ITensor,vargs...) = ITensor(settags(inds(A),vargs...),store(A))
 
 swaptags(A::ITensor,vargs...) = ITensor(swaptags(inds(A),vargs...),store(A))
