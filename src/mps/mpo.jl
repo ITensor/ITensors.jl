@@ -78,8 +78,21 @@ tensors(m::MPO) = m.A_
 leftLim(m::MPO) = m.llim_
 rightLim(m::MPO) = m.rlim_
 
+function setLeftLim!(m::MPO,new_ll::Int) 
+  m.llim_ = new_ll
+end
+
+function setRightLim!(m::MPO,new_rl::Int) 
+  m.rlim_ = new_rl
+end
+
 getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
-setindex!(m::MPO, T::ITensor, n::Integer) = setindex!(tensors(m), T, n)
+
+function setindex!(M::MPO,T::ITensor,n::Integer) 
+  (n <= leftLim(M)) && setLeftLim!(M,n-1)
+  (n >= rightLim(M)) && setRightLim!(M,n+1)
+  setindex!(tensors(M),T,n)
+end
 
 copy(m::MPO) = MPO(m.N_, copy(tensors(m)))
 similar(m::MPO) = MPO(m.N_, similar(tensors(m)), 0, m.N_)
@@ -189,56 +202,56 @@ function linkindex(M::MPO,j::Integer)
   return li
 end
 
-function position!(M::MPO, j::Integer; kwargs...)
-  default_method = (rightLim(M) - leftLim(M) > 2) ? "qr" : "svd"
-  method = get(kwargs, :which_factorization, default_method)
-  N = length(M)
-  while leftLim(M) < (j-1)
-    ll = leftLim(M)+1
-    s = findinds(M[ll],"Site")
-    if ll == 1
-      if method == "svd"
-          (Q,R,ci) = factorize(M[ll],s; which_factorization="svd", dir="fromleft", kwargs...)
-      else
-          Q, R = qr(M[ll], s; kwargs...)
-      end
-    else
-      li = linkindex(M,ll-1)
-      if method == "svd"
-          (Q,R,ci) = factorize(M[ll],s,li; which_factorization="svd", dir="fromleft", kwargs...)
-      else
-          Q, R = qr(M[ll], s, li; kwargs...)
-      end
-    end
-    M[ll] = Q
-    M[ll+1] *= R
-    M.llim_ += 1
-  end
-
-  while rightLim(M) > (j+1)
-    rl = rightLim(M)-1
-    s = findinds(M[rl],"Site")
-    if rl == N
-      if method == "svd"
-          (Q,R,ci) = factorize(M[rl],s; which_factorization="svd", dir="fromright", kwargs...)
-      else
-          Q, R = qr(M[rl], s; kwargs...)
-      end
-    else
-      ri = linkindex(M,rl)
-      if method == "svd"
-          (Q,R,ci) = factorize(M[rl],s,ri; which_factorization="svd", dir="fromright", kwargs...)
-      else
-          Q, R = qr(M[rl], s, ri; kwargs...)
-      end
-    end
-    M[rl] = Q
-    M[rl-1] *= R
-    M.rlim_ -= 1
-  end
-  M.llim_ = j-1
-  M.rlim_ = j+1
-end
+#function position!(M::MPO, j::Integer; kwargs...)
+#  default_method = (rightLim(M) - leftLim(M) > 2) ? "qr" : "svd"
+#  method = get(kwargs, :which_factorization, default_method)
+#  N = length(M)
+#  while leftLim(M) < (j-1)
+#    ll = leftLim(M)+1
+#    s = findinds(M[ll],"Site")
+#    if ll == 1
+#      if method == "svd"
+#          (Q,R,ci) = factorize(M[ll],s; which_factorization="svd", dir="fromleft", kwargs...)
+#      else
+#          Q, R = qr(M[ll], s; kwargs...)
+#      end
+#    else
+#      li = linkindex(M,ll-1)
+#      if method == "svd"
+#          (Q,R,ci) = factorize(M[ll],s,li; which_factorization="svd", dir="fromleft", kwargs...)
+#      else
+#          Q, R = qr(M[ll], s, li; kwargs...)
+#      end
+#    end
+#    M[ll] = Q
+#    M[ll+1] *= R
+#    M.llim_ += 1
+#  end
+#
+#  while rightLim(M) > (j+1)
+#    rl = rightLim(M)-1
+#    s = findinds(M[rl],"Site")
+#    if rl == N
+#      if method == "svd"
+#          (Q,R,ci) = factorize(M[rl],s; which_factorization="svd", dir="fromright", kwargs...)
+#      else
+#          Q, R = qr(M[rl], s; kwargs...)
+#      end
+#    else
+#      ri = linkindex(M,rl)
+#      if method == "svd"
+#          (Q,R,ci) = factorize(M[rl],s,ri; which_factorization="svd", dir="fromright", kwargs...)
+#      else
+#          Q, R = qr(M[rl], s, ri; kwargs...)
+#      end
+#    end
+#    M[rl] = Q
+#    M[rl-1] *= R
+#    M.rlim_ -= 1
+#  end
+#  M.llim_ = j-1
+#  M.rlim_ = j+1
+#end
 
 """
 inner(y::MPS, A::MPO, x::MPS)

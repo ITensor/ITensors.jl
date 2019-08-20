@@ -61,6 +61,7 @@ function setRightLim!(m::MPS,new_rl::Int)
 end
 
 getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
+
 function setindex!(M::MPS,T::ITensor,n::Integer) 
   (n <= leftLim(M)) && setLeftLim!(M,n-1)
   (n >= rightLim(M)) && setRightLim!(M,n+1)
@@ -158,7 +159,7 @@ function replacesites!(M::MPS,sites)
   return M
 end
 
-function position!(M::MPS, 
+function position!(M::Union{MPS,MPO}, 
                    j::Int)
 
   while leftLim(M) < (j-1)
