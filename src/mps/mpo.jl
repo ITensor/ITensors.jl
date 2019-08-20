@@ -78,8 +78,21 @@ tensors(m::MPO) = m.A_
 leftLim(m::MPO) = m.llim_
 rightLim(m::MPO) = m.rlim_
 
+function setLeftLim!(m::MPO,new_ll::Int) 
+  m.llim_ = new_ll
+end
+
+function setRightLim!(m::MPO,new_rl::Int) 
+  m.rlim_ = new_rl
+end
+
 getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
-setindex!(m::MPO, T::ITensor, n::Integer) = setindex!(tensors(m), T, n)
+
+function setindex!(M::MPO,T::ITensor,n::Integer) 
+  (n <= leftLim(M)) && setLeftLim!(M,n-1)
+  (n >= rightLim(M)) && setRightLim!(M,n+1)
+  setindex!(tensors(M),T,n)
+end
 
 copy(m::MPO) = MPO(m.N_, copy(tensors(m)))
 similar(m::MPO) = MPO(m.N_, similar(tensors(m)), 0, m.N_)
@@ -189,39 +202,56 @@ function linkindex(M::MPO,j::Integer)
   return li
 end
 
-function position!(M::MPO,
-                   j::Integer)
-  N = length(M)
-  while leftLim(M) < (j-1)
-    ll = leftLim(M)+1
-    s = findinds(M[ll],"Site")
-    if ll == 1
-      (Q,R) = qr(M[ll],s)
-    else
-      li = linkindex(M,ll-1)
-      (Q,R) = qr(M[ll],s,li)
-    end
-    M[ll] = Q
-    M[ll+1] *= R
-    M.llim_ += 1
-  end
-
-  while rightLim(M) > (j+1)
-    rl = rightLim(M)-1
-    s = findinds(M[rl],"Site")
-    if rl == N
-      (Q,R) = qr(M[rl],s)
-    else
-      ri = linkindex(M,rl)
-      (Q,R) = qr(M[rl],s,ri)
-    end
-    M[rl] = Q
-    M[rl-1] *= R
-    M.rlim_ -= 1
-  end
-  M.llim_ = j-1
-  M.rlim_ = j+1
-end
+#function position!(M::MPO, j::Integer; kwargs...)
+#  default_method = (rightLim(M) - leftLim(M) > 2) ? "qr" : "svd"
+#  method = get(kwargs, :which_factorization, default_method)
+#  N = length(M)
+#  while leftLim(M) < (j-1)
+#    ll = leftLim(M)+1
+#    s = findinds(M[ll],"Site")
+#    if ll == 1
+#      if method == "svd"
+#          (Q,R,ci) = factorize(M[ll],s; which_factorization="svd", dir="fromleft", kwargs...)
+#      else
+#          Q, R = qr(M[ll], s; kwargs...)
+#      end
+#    else
+#      li = linkindex(M,ll-1)
+#      if method == "svd"
+#          (Q,R,ci) = factorize(M[ll],s,li; which_factorization="svd", dir="fromleft", kwargs...)
+#      else
+#          Q, R = qr(M[ll], s, li; kwargs...)
+#      end
+#    end
+#    M[ll] = Q
+#    M[ll+1] *= R
+#    M.llim_ += 1
+#  end
+#
+#  while rightLim(M) > (j+1)
+#    rl = rightLim(M)-1
+#    s = findinds(M[rl],"Site")
+#    if rl == N
+#      if method == "svd"
+#          (Q,R,ci) = factorize(M[rl],s; which_factorization="svd", dir="fromright", kwargs...)
+#      else
+#          Q, R = qr(M[rl], s; kwargs...)
+#      end
+#    else
+#      ri = linkindex(M,rl)
+#      if method == "svd"
+#          (Q,R,ci) = factorize(M[rl],s,ri; which_factorization="svd", dir="fromright", kwargs...)
+#      else
+#          Q, R = qr(M[rl], s, ri; kwargs...)
+#      end
+#    end
+#    M[rl] = Q
+#    M[rl-1] *= R
+#    M.rlim_ -= 1
+#  end
+#  M.llim_ = j-1
+#  M.rlim_ = j+1
+#end
 
 """
 inner(y::MPS, A::MPO, x::MPS)
@@ -264,8 +294,8 @@ end
 function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     n = A.N_ 
     length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
-    position!(A, 1, kwargs...)
-    position!(B, 1, kwargs...)
+    position!(A, 1; kwargs...)
+    position!(B, 1; kwargs...)
     C = similar(A)
     rand_plev = 13124
     lAs = [linkindex(A, i) for i in 1:n-1]
@@ -276,9 +306,9 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     for i in 1:n-1
         lA = linkindex(A, i)
         lB = linkindex(B, i)
-        r = Index(dim(lA) + dim(lB), tags(lA))
+        r  = Index(dim(lA) + dim(lB), tags(lA))
         f, s = plussers(lA, lB, r)
-        first[i] = f
+        first[i]  = f
         second[i] = s
     end
     C[1] = A[1] * first[1] + B[1] * second[1]
@@ -287,7 +317,7 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     end
     C[n] = dag(first[n-1]) * A[n] + dag(second[n-1]) * B[n]
     prime!(C, -rand_plev, "Link")
-    position!(C, 1, kwargs...)
+    position!(C, 1; kwargs...)
     return C
 end
 
@@ -310,15 +340,14 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
 
     all(x->x!=Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
     rand_plev = 14741
-
     psi_c = dag(copy(psi))
     A_c   = dag(copy(A))
     prime!(psi_c, rand_plev)
     prime!(A_c, rand_plev)
-
     for j in 1:n-1
         unique_site_ind = setdiff(findinds(A_c[j], "Site"), findindex(psi_c[j], "Site"))[1]
-        A_c[j] = setprime(A_c[j], 1, unique_site_ind)
+        pl = id(unique_site_ind) == id(commonindex(A_c[j], psi_c[j])) ? 1 : 0
+        A_c[j] = setprime(A_c[j], pl, unique_site_ind)
     end
     E = Vector{ITensor}(undef, n-1)
     E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
@@ -413,3 +442,49 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     end
     return res
 end
+
+function position!(M::Union{MPS,MPO}, 
+                   j::Int)
+  while leftLim(M) < (j-1)
+    (leftLim(M) < 0) && setLeftLim!(M,0)
+    b = leftLim(M)+1
+    linds = uniqueinds(M[b],M[b+1])
+    Q,R = qr(M[b], linds)
+    M[b] = Q
+    M[b+1] *= R
+    setLeftLim!(M,b)
+    if rightLim(M) < leftLim(M)+2
+      setRightLim!(M,leftLim(M)+2)
+    end
+  end
+
+  N = length(M)
+
+  while rightLim(M) > (j+1)
+    (rightLim(M) > (N+1)) && setRightLim!(M,N+1)
+    b = rightLim(M)-2
+    rinds = uniqueinds(M[b+1],M[b])
+    Q,R = qr(M[b+1], rinds)
+    M[b+1] = Q
+    M[b] *= R
+    setRightLim!(M,b+1)
+    if leftLim(M) > rightLim(M)-2
+      setLeftLim!(M,rightLim(M)-2)
+    end
+  end
+end
+
+@doc """
+position!(M::MPS, j::Int)
+
+Move the gauge position, or orthogonality center, 
+to site j of an MPS. No observable property of 
+the MPS will be changed, and no truncation of the 
+bond indices is performed. Afterward, tensors 
+1,2,...,j-1 will be left-orthogonal and tensors 
+j+1,j+2,...,N will be right-orthogonal.
+
+position!(W::MPO, j::Int)
+
+Move the gauge position of an MPO to site j.
+""" position!
