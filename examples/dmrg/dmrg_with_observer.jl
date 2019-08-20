@@ -32,7 +32,7 @@ cutoff!(sweeps, 1E-10)
 create observer which will measure Sᶻ at each
 site during the dmrg sweeps and track energies after each sweep.
 in addition it will stop the computation if energy converges within
-1e-8 tolerance
+1e-6 tolerance
 =#
 observer= DMRGObserver(["Sz"],sites,1e-6)
 
