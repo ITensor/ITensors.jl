@@ -158,62 +158,39 @@ function replacesites!(M::MPS,sites)
   return M
 end
 
-function position!(M::MPS, j::Integer; kwargs...)
-  default_method = (rightLim(M) - leftLim(M) > 2) ? "qr" : "svd"
-  method = get(kwargs, :which_factorization, default_method)
-  N = length(M)
+function position!(M::MPS, 
+                   j::Int)
+
   while leftLim(M) < (j-1)
-    ll = leftLim(M)+1
-    s = findindex(M[ll],"Site")
-    if ll == 1
-      if method == "svd"
-          (Q,R,ci) = factorize(M[ll],s; which_factorization="svd", dir="fromleft", kwargs...)
-      else
-          Q, R = qr(M[ll], s; kwargs...)
-      end
-    else
-      li = linkindex(M,ll-1)
-      if method == "svd"
-          (Q,R,ci) = factorize(M[ll],s,li; which_factorization="svd", dir="fromleft", kwargs...)
-      else
-          Q, R = qr(M[ll], s, li; kwargs...)
-      end
+    (leftLim(M) < 0) && setLeftLim!(M,0)
+    b = leftLim(M)+1
+    linds = uniqueinds(M[b],M[b+1])
+    Q,R = qr(M[b], linds)
+    M[b] = Q
+    M[b+1] *= R
+    setLeftLim!(M,b)
+    if rightLim(M) < leftLim(M)+2
+      setRightLim!(M,leftLim(M)+2)
     end
-    M[ll] = Q
-    M[ll+1] *= R
-    M.llim_ += 1
   end
+
+  N = length(M)
 
   while rightLim(M) > (j+1)
-    rl = rightLim(M)-1
-    s = findindex(M[rl],"Site")
-    if rl == N
-      if method == "svd"
-          (Q,R,ci) = factorize(M[rl],s; which_factorization="svd", dir="fromright", kwargs...)
-      else
-          Q, R = qr(M[rl], s; kwargs...)
-      end
-    else
-      ri = linkindex(M,rl)
-      if method == "svd"
-          (Q,R,ci) = factorize(M[rl],s,ri; which_factorization="svd", dir="fromright", kwargs...)
-      else
-          Q, R = qr(M[rl], s, ri; kwargs...)
-      end
+    (rightLim(M) > (N+1)) && setRightLim!(M,N+1)
+    b = rightLim(M)-2
+    rinds = uniqueinds(M[b+1],M[b])
+    Q,R = qr(M[b+1], rinds)
+    M[b+1] = Q
+    M[b] *= R
+    setRightLim!(M,b+1)
+    if leftLim(M) > rightLim(M)-2
+      setLeftLim!(M,rightLim(M)-2)
     end
-    M[rl] = Q
-    M[rl-1] *= R
-    M.rlim_ -= 1
   end
-  M.llim_ = j-1
-  M.rlim_ = j+1
+
 end
 
-"""
-inner(psi::MPS, phi::MPS)
-
-Compute <psi|phi>
-"""
 function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
@@ -237,3 +214,21 @@ function replaceBond!(M::MPS,
   M[b+1] = FV
 end
 
+
+@doc """
+inner(psi::MPS, phi::MPS)
+
+Compute <psi|phi>
+""" inner
+
+
+@doc """
+position!(M::MPS, j::Int)
+
+Move the gauge position, or orthogonality center, 
+to site j of the MPS. No observable property of 
+the MPS will be changed, and no truncation of the 
+bond indices is performed. Afterward, tensors 
+1,2,...,j-1 will be left-orthogonal and tensors 
+j+1,j+2,...,N will be right-orthogonal.
+""" position!
