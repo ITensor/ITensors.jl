@@ -337,6 +337,27 @@ end
   end
 end
 
+@testset "Converting Real and Complex Storage" begin
+
+  @testset "Add Real and Complex" begin
+    i = Index(2,"i")
+    j = Index(2,"j")
+    TC = randomITensor(ComplexF64,i,j)
+    TR = randomITensor(Float64,i,j)
+
+    S1 = TC+TR
+    S2 = TR+TC
+    @test typeof(S1.store) == Dense{ComplexF64}
+    @test typeof(S2.store) == Dense{ComplexF64}
+    for ii=1:dim(i),jj=1:dim(j)
+      @test S1[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
+      @test S2[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
+    end
+  end
+
+end
+
+
 @testset "ITensor, Dense{$SType} storage" for SType ∈ (Float64,ComplexF64)
   mi,mj,mk,ml,mα = 2,3,4,5,6,7
   i = Index(mi,"i")
@@ -422,7 +443,7 @@ end
     @testset "Test SVD of an ITensor" begin
       U,S,V,u,v = svd(A,(j,l))
       @test store(S) isa Diag{Float64}
-      @test A≈U*S*V
+      @test A≈(U*S)*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
     end
@@ -435,7 +456,7 @@ end
         S = Diagonal(s)
         T = ITensor(IndexSet(ii,jj),Dense{ComplexF64}(vec(U*S*Vh)))
         (U,S,Vh) = svd(T,ii;maxdim=2)
-        @test norm(U*S*Vh-T)≈sqrt(s[3]^2+s[4]^2)
+        @test norm((U*S)*Vh-T)≈sqrt(s[3]^2+s[4]^2)
     end
 
     @testset "Test QR decomposition of an ITensor" begin
@@ -466,25 +487,5 @@ end
     #end
   end # End ITensor factorization testset
 end # End Dense storage test
-
-@testset "Converting Real and Complex Storage" begin
-
-  @testset "Add Real and Complex" begin
-    i = Index(2,"i")
-    j = Index(2,"j")
-    TC = randomITensor(ComplexF64,i,j)
-    TR = randomITensor(Float64,i,j)
-
-    S1 = TC+TR
-    S2 = TR+TC
-    @test typeof(S1.store) == Dense{ComplexF64}
-    @test typeof(S2.store) == Dense{ComplexF64}
-    for ii=1:dim(i),jj=1:dim(j)
-      @test S1[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
-      @test S2[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
-    end
-  end
-
-end
 
 
