@@ -50,7 +50,7 @@ import Base.adjoint,
 #####################################
 # Global Variables
 
-const warnTensorOrder::Int = 10
+const warnTensorOrder = 10
 
 #####################################
 
