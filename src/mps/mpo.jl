@@ -442,3 +442,49 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     end
     return res
 end
+
+function position!(M::Union{MPS,MPO}, 
+                   j::Int)
+  while leftLim(M) < (j-1)
+    (leftLim(M) < 0) && setLeftLim!(M,0)
+    b = leftLim(M)+1
+    linds = uniqueinds(M[b],M[b+1])
+    Q,R = qr(M[b], linds)
+    M[b] = Q
+    M[b+1] *= R
+    setLeftLim!(M,b)
+    if rightLim(M) < leftLim(M)+2
+      setRightLim!(M,leftLim(M)+2)
+    end
+  end
+
+  N = length(M)
+
+  while rightLim(M) > (j+1)
+    (rightLim(M) > (N+1)) && setRightLim!(M,N+1)
+    b = rightLim(M)-2
+    rinds = uniqueinds(M[b+1],M[b])
+    Q,R = qr(M[b+1], rinds)
+    M[b+1] = Q
+    M[b] *= R
+    setRightLim!(M,b+1)
+    if leftLim(M) > rightLim(M)-2
+      setLeftLim!(M,rightLim(M)-2)
+    end
+  end
+end
+
+@doc """
+position!(M::MPS, j::Int)
+
+Move the gauge position, or orthogonality center, 
+to site j of an MPS. No observable property of 
+the MPS will be changed, and no truncation of the 
+bond indices is performed. Afterward, tensors 
+1,2,...,j-1 will be left-orthogonal and tensors 
+j+1,j+2,...,N will be right-orthogonal.
+
+position!(W::MPO, j::Int)
+
+Move the gauge position of an MPO to site j.
+""" position!
