@@ -159,7 +159,6 @@ function replacesites!(M::MPS,sites)
   return M
 end
 
-
 function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
@@ -168,8 +167,8 @@ function inner(M1::MPS, M2::MPS)::Number
   M1dag = dag(M1)
   simlinks!(M1dag)
   O = M1dag[1]*M2[1]
-  @inbounds for j ∈ eachindex(M1)[2:end]
-    O *= M1dag[j]*M2[j]
+  for j in eachindex(M1)[2:end]
+    O = (O*M1dag[j])*M2[j]
   end
   return O[]
 end
