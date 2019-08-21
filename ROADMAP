@@ -1,7 +1,5 @@
 ## Misc To Do
 
-+ Add truncate! function to globally truncate MPS
-
 + Read/write of ITensors and other objects, using HDF5 format
 
 + Add docstrings (see mps/dmrg.jl for an example)
