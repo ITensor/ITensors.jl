@@ -17,10 +17,8 @@
   - improve definitions and handling of parameters such as miniter, maxiter
 
 + MPS/MPO algorithms
-  - sum
-  - applyMPO
   - errorMPOProd
-  - multMPO (renamed from nmultMPO, or provide a wrapper for convenience)
+  - rename nmultMPO to multMPO
 
 + Additional DMRG algorithms:
   - Vector of MPOs
@@ -28,12 +26,6 @@
   - supply boundary environment tensors
 
 + Boson site set
- 
-+ Fancier AutoMPO interface?
-  Ideas:
-  1. ampo += "J Sz_{i} Sz_{i+1}" (using Meta.parse and eval)
-  2. ampo += J*"Sz"(i)*"Sz"(i+1) (using operator overloading)
-  3. define a macro @autompo or similar
 
 + QN Index
 
@@ -44,6 +36,12 @@
 + Fermion support for AutoMPO (possibly through auto fermionic signs)
 
 + Move AutoMPO & physics site sets into separate ITensor physics package?
+
++ Fancier AutoMPO interface?
+  Ideas:
+  1. ampo += "J Sz_{i} Sz_{i+1}" (using Meta.parse and eval)
+  2. ampo += J*"Sz"(i)*"Sz"(i+1) (using operator overloading)
+  3. define a macro @autompo or similar
 
 + Slicing of ITensors
 
