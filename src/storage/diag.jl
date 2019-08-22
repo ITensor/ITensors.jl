@@ -83,13 +83,24 @@ end
 
 storage_fill!(D::Diag,x::Number) = fill!(data(D),x)
 
+function diag_getindex(Tstore::Diag{<:AbstractVector},
+                       val::Int)
+  return getindex(data(Tstore),val)
+end
+
+# Uniform case
+function diag_getindex(Tstore::Diag{<:Number},
+                       val::Int)
+  return data(Tstore)
+end
+
 # Get diagonal elements
 # Gives zero for off-diagonal elements
 function storage_getindex(Tstore::Diag{T},
                           Tis::IndexSet,
                           vals::Union{Int, AbstractVector{Int}}...) where {T}
-  if all(y->y==vals[1],vals)
-    return getindex(data(Tstore),vals[1])
+  if all(==(vals[1]),vals)
+    return diag_getindex(Tstore,vals[1])
   else
     return zero(eltype(T))
   end
@@ -97,12 +108,19 @@ end
 
 # Set diagonal elements
 # Throw error for off-diagonal
-function storage_setindex!(Tstore::Diag,
+function storage_setindex!(Tstore::Diag{<:AbstractVector},
                            Tis::IndexSet,
                            x::Union{<:Number, AbstractArray{<:Number}},
                            vals::Union{Int, AbstractVector{Int}}...)
   all(y->y==vals[1],vals) || error("Cannot set off-diagonal element of Diag storage")
   return setindex!(data(Tstore),x,vals[1])
+end
+
+function storage_setindex!(Tstore::Diag{<:Number},
+                           Tis::IndexSet,
+                           x::Union{<:Number, AbstractArray{<:Number}},
+                           vals::Union{Int, AbstractVector{Int}}...)
+  error("Cannot set elements of a uniform Diag storage")
 end
 
 # Add generic Diag's in-place
@@ -320,6 +338,21 @@ function _contract(Cinds::IndexSet,
     _contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
   elseif(length(Blabels)==0)
     _contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
+  elseif(length(Alabels)==2 && length(Clabels)==length(Blabels))
+    # This is just a replacement of the indices
+    # TODO: This logic should be higher up
+    for i = 1:length(Clabels)
+      if Blabels[i] > 0
+        Cinds[i] = Binds[i]
+      else
+        if Alabels[1] > 0
+          Cinds[i] = Ainds[1]
+        else
+          Cinds[i] = Ainds[2]
+        end
+      end
+    end
+    Cdata .= Adata .* Bdata
   else
     _contract_diag_dense!(Cstore,Cinds,Clabels,
                           Astore,Ainds,Alabels,
@@ -375,30 +408,47 @@ function _contract(Cinds::IndexSet,
   return Cstore
 end
 
-## This is generic, push it up to the ITensor level?
-#function _contract_diag_dense!(Cdata::Array{T},Clabels::Vector{Int},
-#                               Adata::Vector{T},Alabels::Vector{Int},
-#                               Bdata::Array{T},Blabels::Vector{Int},
-#                               α::T=one(T),β::T=zero(T)) where T
-#  if(length(Alabels)==0)
-#    _contract_scalar!(Cdata,Clabels,Bdata,Blabels,α*Adata[1],β)
-#  elseif(length(Blabels)==0)
-#    _contract_scalar!(Cdata,Clabels,Adata,Alabels,α*Bdata[1],β)
-#  else
-#    _contract_diag_dense!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels,α,β)
-#  end
-#  return
-#end
+# Contract function for Diag uniform * Diag uniform
+function _contract(Cinds::IndexSet,
+                   Clabels::Vector{Int},
+                   Astore::Diag{SA},
+                   Ainds::IndexSet,
+                   Alabels::Vector{Int},
+                   Bstore::Diag{SB},
+                   Binds::IndexSet,
+                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+  SC = promote_type(SA,SB)
 
-## This is generic, push it up to the ITensor level?
-#function _contract_diag_diag!(Cdata::Vector{T},Clabels::Vector{Int},
-#                              Adata::Vector{T},Alabels::Vector{Int},
-#                              Bdata::Vector{T},Blabels::Vector{Int},
-#                              α::T=one(T),β::T=zero(T)) where T
-#    _contract_diag_diag!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels,α,β)
-#  end
-#  return
-#end
+  # Convert the arrays to a common type
+  # since we will call BLAS
+  Astore = convert(Diag{SC},Astore)
+  Bstore = convert(Diag{SC},Bstore)
+  Cstore = Diag{SC}(minDim(Cinds))
+
+  Adata = data(Astore)
+  Bdata = data(Bstore)
+  Cdata = data(Cstore)
+
+  if length(Clabels) == 0  # If all indices of A and B are contracted
+    # all indices are summed over, just add the product of the diagonal
+    # elements of A and B
+    dim = minimum(dims(Ainds)) # == length(Bdata)
+    # Need to set to zero since
+    # Cdata is originally uninitialized memory
+    # (so causes random output)
+    Cdata = zero(SC)
+    for i = 1:dim
+      Cdata += Adata*Bdata
+    end
+  else
+    # not all indices are summed over, set the diagonals of the result
+    # to the product of the diagonals of A and B
+    Cdata = Adata*Bdata
+  end
+
+  Cstore.data = Cdata
+  return Cstore
+end
 
 function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
                                Adata::Vector{T},Alabels::Vector{Int},
@@ -484,13 +534,13 @@ function _contract_diag_dense!(Cstore::Dense,Cinds,Clabels::Vector{Int},
                                Astore::Diag{TA},Ainds,Alabels::Vector{Int},
                                Bstore::Dense,Binds,Blabels::Vector{Int}) where {TA<:Number}
   if all(i -> i < 0, Blabels)  # If all of B is contracted
-    dim = minimum(size(Binds)) #minimum(size(Bstore))
+    dims = size(Binds)
+    dim = minimum(dims)
+    rB = reshape(data(Bstore),dims)
     if length(Clabels) == 0
       # all indices are summed over, just add the product of the diagonal
       # elements of A and B
-      dims = size(Binds)
       # TODO: replace this with manual strides
-      rB = reshape(data(Bstore),dims)
       for i = 1:dim
         Cstore[1] += Astore[i]*rB[ntuple(_->i,length(Binds))...]
       end
@@ -593,6 +643,31 @@ function _contract_diag_diag!(Cdata::Vector{T},Clabels::Vector{Int},
     end
   end
 end
+
+## Maybe this works for uniform storage as well
+#function _contract_diag_diag!(Cdata::T,Clabels::Vector{Int},
+#                              Adata::T,Alabels::Vector{Int},
+#                              Bdata::T,Blabels::Vector{Int}) where T
+#  if length(Clabels) == 0  # If all indices of A and B are contracted
+#    # all indices are summed over, just add the product of the diagonal
+#    # elements of A and B
+#    dim = length(Adata)  # == length(Bdata)
+#    # Need to set to zero since
+#    # Cdata is originally uninitialized memory
+#    # (so causes random output)
+#    Cdata[1] = zero(T)
+#    for i = 1:dim
+#      Cdata[1] += Adata[i]*Bdata[i]
+#    end
+#  else
+#    dim = min(length(Adata),length(Bdata))
+#    # not all indices are summed over, set the diagonals of the result
+#    # to the product of the diagonals of A and B
+#    for i = 1:dim
+#      Cdata[i] = Adata[i]*Bdata[i]
+#    end
+#  end
+#end
 
 ## TODO: maybe we can do a special case for matrix, and
 ## otherwise turn it into an array

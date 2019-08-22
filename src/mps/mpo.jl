@@ -158,8 +158,8 @@ function simlinks!(M::T) where {T <: Union{MPS,MPO}}
 end
 
 """
-maxDim(M::MPS)
-maxDim(M::MPO)
+maxLinkDim(M::MPS)
+maxLinkDim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
 """
