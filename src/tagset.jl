@@ -1,4 +1,7 @@
-export TagSet
+export TagSet,
+       addtags,
+       hastags,
+       Tag
 
 const Tag = SmallString
 const MTagStorage = MSmallStringStorage # A mutable tag storage
@@ -56,8 +59,11 @@ function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   t = Tag(tag)
   if length(t) > 0
     if isint(t)
-      plev ≠ -1 && error("You can only make a TagSet with one prime level/integer tag.")
-      plnew = parse(Int,t)
+      error("""Cannot use a bare integer as a tag.
+            If you are looking to set the prime level, use the syntax ("x",1)
+            (instead of "x,1")""")
+      #plev ≥ 0 && error("You can only make a TagSet with one prime level/integer tag.")
+      #plnew = parse(Int,t)
     else
       ntags = _addtag_ordered!(ts, ntags, tag)  
     end
@@ -103,6 +109,11 @@ function TagSet(str::AbstractString)
   return TagSet(TagSetStorage(ts),plev,ntags)
 end
 
+function TagSet((str,plev)::Tuple{<:AbstractString,<:Integer})
+  ts = TagSet(str)
+  return setprime(ts,plev)
+end
+
 convert(::Type{TagSet}, str::String) = TagSet(str)
 
 tags(T::TagSet) = T.tags
@@ -112,9 +123,13 @@ Base.getindex(T::TagSet,n::Int) = getindex(tags(T),n)
 #Base.setindex!(T::TagSet,val,n::Int) = TagSet(setindex(tags(T),val,n),plev(T),length(T))
 Base.copy(ts::TagSet) = TagSet(tags(ts),plev(ts),length(ts))
 
+# A TagSet is considered to have a prime level if
+# the prime level is greater than or equal to zero
+hasplev(ts::TagSet) = (plev(ts) ≥ 0)
+
 setprime(ts::TagSet,pl::Int) = TagSet(tags(ts),pl,length(ts))
 function prime(T::TagSet,plinc::Int=1)
-  if plev(T) < 0
+  if !hasplev(T)
     return setprime(T,plinc)
   else
     return setprime(T,plev(T)+plinc)
@@ -151,7 +166,7 @@ end
 
 function hastags(ts2::TagSet, tags1)
   ts1 = TagSet(tags1)
-  (plev(ts1) ≥ 0 && plev(ts1) ≠ plev(ts2)) && return false
+  (hasplev(ts1) && plev(ts1) ≠ plev(ts2)) && return false
   l1 = length(ts1)
   l2 = length(ts2)
   l1 > l2 && return false
@@ -163,14 +178,16 @@ end
 
 function addtags(ts::TagSet, tagsadd)
   tsadd = TagSet(tagsadd)
-  ( plev(ts) ≥ 0 && plev(tsadd) ≥ 0 ) && error("In addtags(::TagSet,...), cannot add a prime level")
+  (hasplev(ts) && hasplev(tsadd)) && error("In addtags(::TagSet,...), cannot add a prime level")
   res_ts = MVector(tags(ts))
   res_plev = plev(ts)
   ntags = length(ts)
   for n = 1:length(tsadd)
     @inbounds ntags = _addtag_ordered!(res_ts, ntags, tsadd[n])
   end
-  (plev(ts) < 0 && plev(tsadd)≥0) && (res_plev = plev(tsadd))
+  if !hasplev(ts) && hasplev(tsadd)
+    res_plev = plev(tsadd)
+  end
   return TagSet(TagSetStorage(res_ts),res_plev,ntags)
 end
 
@@ -190,7 +207,7 @@ end
 #TODO: optimize this function
 function removetags(ts::TagSet, tagsremove)
   tsremove = TagSet(tagsremove)
-  plev(tsremove) ≥ 0 && error("In removetags(::TagSet,...), cannot remove a prime level")
+  hasplev(tsremove) && error("In removetags(::TagSet,...), cannot remove a prime level")
   res_ts = MVector(tags(ts))
   res_plev = plev(ts)
   ntags = length(ts)
@@ -204,15 +221,14 @@ end
 function replacetags(ts::TagSet, tagsremove, tagsadd)
   tsremove = TagSet(tagsremove)
   tsadd = TagSet(tagsadd)
-  if (plev(tsremove) ≥ 0 && plev(tsadd) < 0) || 
-     (plev(tsremove) < 0 && plev(tsadd) ≥ 0)
+  if hasplev(tsremove) != hasplev(tsadd)
     error("In replacetags(::TagSet,...), cannot remove or add a prime level")
   end
   res_ts = MVector(tags(ts))
   res_plev = plev(ts)
   ntags = length(ts)
   # The TagSet must have the same prime level as the one being replaced
-  (res_plev ≠ plev(tsremove) && plev(tsremove) ≥ 0) && return ts
+  (hasplev(tsremove) && (res_plev≠plev(tsremove))) && return ts
   # The TagSet must have the tags to be replaced
   !hastags(ts,tsremove) && return ts
   for n = 1:length(tsremove)
@@ -221,16 +237,23 @@ function replacetags(ts::TagSet, tagsremove, tagsadd)
   for n = 1:length(tsadd)
     @inbounds ntags = _addtag_ordered!(res_ts, ntags, tsadd[n])
   end
-  (plev(ts)≥0 && plev(ts)==plev(tsremove)) && (res_plev = plev(tsadd))
+  if hasplev(ts) && (plev(ts)==plev(tsremove))
+    res_plev = plev(tsadd)
+  end
   return TagSet(TagSetStorage(res_ts),res_plev,ntags)
 end
 
 function primestring(ts::TagSet)
+  if !hasplev(ts)
+    return " (warning: no prime level)"
+  end
   pl = plev(ts)
-  if pl<0 return " (warning: no prime level)"
-  elseif pl==0 return ""
-  elseif pl > 3 return "'$pl"
-  else return "'"^pl
+  if pl==0
+    return ""
+  elseif pl > 3
+    return "'$pl"
+  else
+    return "'"^pl
   end
 end
 
@@ -257,6 +280,3 @@ function show(io::IO, T::TagSet)
   print(io,primestring(T))
 end
 
-export addtags,
-       hastags,
-       Tag
