@@ -17,8 +17,7 @@ algorithms for optimizing and transforming tensor networks, such as
 matrix product state and matrix product operators, such as
 the DMRG algorithm.
 
-Development of ITensor is supported by the Simons Foundation 
-through the Flatiron Institute.
+Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
 ## Code Examples
 
@@ -32,10 +31,10 @@ detailed examples of these operations and more.
 ```Julia
 using ITensors
 let
-  i = Index(3,"i")
-  j = Index(5,"j")
-  k = Index(4,"MyTagA, k")
-  l = Index(7,"l, MyTagB")
+  i = Index(3)
+  j = Index(5,"MyTag")
+  k = Index(4,"Link,n=1")
+  l = Index(7,"Site")
 
   A = ITensor(i,j,k)
   B = ITensor(j,l)

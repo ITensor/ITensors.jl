@@ -18,6 +18,7 @@ export ITensor,
        store,
        dense
 
+
 mutable struct ITensor
   inds::IndexSet
   store::TensorStorage
@@ -324,6 +325,8 @@ removetags(A::ITensor,vargs...) = ITensor(removetags(inds(A),vargs...),store(A))
 
 replacetags(A::ITensor,vargs...) = ITensor(replacetags(inds(A),vargs...),store(A))
 
+replacetags!(A::ITensor,vargs...) = replacetags!(A.inds,vargs...)
+
 settags(A::ITensor,vargs...) = ITensor(settags(inds(A),vargs...),store(A))
 
 swaptags(A::ITensor,vargs...) = ITensor(swaptags(inds(A),vargs...),store(A))
@@ -414,6 +417,9 @@ end
 function *(A::ITensor,B::ITensor)
   (Cis,Cstore) = storage_contract(store(A),inds(A),store(B),inds(B))
   C = ITensor(Cis,Cstore)
+  if warnTensorOrder > 0 && order(C) >= warnTensorOrder
+    println("Warning: contraction resulted in ITensor with $(order(C)) indices")
+  end
   return C
 end
 

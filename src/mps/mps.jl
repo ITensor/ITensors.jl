@@ -1,12 +1,13 @@
 export MPS,
-       position!,
+       leftLim,
        prime!,
        primelinks!,
        simlinks!,
        inner,
        productMPS,
        randomMPS,
-       maxDim,
+       rightLim,
+       maxLinkDim,
        linkindex,
        siteindex,
        siteinds
@@ -52,8 +53,21 @@ tensors(m::MPS) = m.A_
 leftLim(m::MPS) = m.llim_
 rightLim(m::MPS) = m.rlim_
 
-getindex(m::MPS, n::Integer) = getindex(tensors(m),n)
-setindex!(m::MPS,T::ITensor,n::Integer) = setindex!(tensors(m),T,n)
+function setLeftLim!(m::MPS,new_ll::Int) 
+  m.llim_ = new_ll
+end
+
+function setRightLim!(m::MPS,new_rl::Int) 
+  m.rlim_ = new_rl
+end
+
+getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
+
+function setindex!(M::MPS,T::ITensor,n::Integer) 
+  (n <= leftLim(M)) && setLeftLim!(M,n-1)
+  (n >= rightLim(M)) && setRightLim!(M,n+1)
+  setindex!(tensors(M),T,n)
+end
 
 copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
 similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
@@ -146,45 +160,6 @@ function replacesites!(M::MPS,sites)
   return M
 end
 
-function position!(M::MPS,
-                   j::Integer)
-  N = length(M)
-  while leftLim(M) < (j-1)
-    ll = leftLim(M)+1
-    s = findindex(M[ll],"Site")
-    if ll == 1
-      (Q,R) = qr(M[ll],s)
-    else
-      li = linkindex(M,ll-1)
-      (Q,R) = qr(M[ll],s,li)
-    end
-    M[ll] = Q
-    M[ll+1] *= R
-    M.llim_ += 1
-  end
-
-  while rightLim(M) > (j+1)
-    rl = rightLim(M)-1
-    s = findindex(M[rl],"Site")
-    if rl == N
-      (Q,R) = qr(M[rl],s)
-    else
-      ri = linkindex(M,rl)
-      (Q,R) = qr(M[rl],s,ri)
-    end
-    M[rl] = Q
-    M[rl-1] *= R
-    M.rlim_ -= 1
-  end
-  M.llim_ = j-1
-  M.rlim_ = j+1
-end
-
-"""
-inner(psi::MPS, phi::MPS)
-
-Compute <psi|phi>
-"""
 function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
@@ -193,8 +168,8 @@ function inner(M1::MPS, M2::MPS)::Number
   M1dag = dag(M1)
   simlinks!(M1dag)
   O = M1dag[1]*M2[1]
-  @inbounds for j ∈ eachindex(M1)[2:end]
-    O *= M1dag[j]*M2[j]
+  for j in eachindex(M1)[2:end]
+    O = (O*M1dag[j])*M2[j]
   end
   return O[]
 end
@@ -203,8 +178,17 @@ function replaceBond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  FU,FV = factorize(phi,inds(M[b]); which_factorization="automatic", kwargs...)
+  FU,FV = factorize(phi,inds(M[b]); which_factorization="automatic",
+                        tags=tags(linkindex(M,b)), kwargs...)
   M[b]   = FU
   M[b+1] = FV
 end
+
+
+@doc """
+inner(psi::MPS, phi::MPS)
+
+Compute <psi|phi>
+""" inner
+
 

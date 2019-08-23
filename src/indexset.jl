@@ -5,6 +5,7 @@ export IndexSet,
        findindex,
        findinds,
        swaptags,
+       swaptags!,
        swapprime,
        swapprime!,
        mapprime,
@@ -288,7 +289,7 @@ end
 # of the matching indices as a vector of integers
 indexpositions(inds) = collect(1:length(inds))
 indexpositions(inds, match::Nothing) = collect(1:length(inds))
-indexpositions(inds, match::Tuple{}) = collect(1:length(inds))
+#indexpositions(inds, match::Tuple{}) = collect(1:length(inds))
 # Version for matching a tag set
 function indexpositions(inds, match::T) where {T<:Union{AbstractString,TagSet}}
   is = IndexSet(inds)
