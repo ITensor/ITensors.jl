@@ -345,6 +345,14 @@ using ITensors,
       @test A*D ≈ dense(D)*A
     end
 
+    @testset "Contraction (Diag uniform * Dense, replace index 2)" begin
+      D = δ(k,i)
+      A = randomITensor(m,n,k,l)
+
+      @test D*A ≈ dense(D)*A
+      @test A*D ≈ dense(D)*A
+    end
+
     @testset "Contraction (Diag uniform * Diag uniform, all contracted)" begin
       D1 = δ(l,i,k,j)
       D2 = δ(j,l,i,k)
