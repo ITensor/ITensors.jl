@@ -232,7 +232,11 @@ function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
     #if dir(left_ind) == dir(right_ind) == Neither
         total_dim    = dim(left_ind) + dim(right_ind)
         total_dim    = max(total_dim, 1)
-        left_tensor  = δ(left_ind, sum_ind)
+        # TODO: I am not sure if we should be using delta
+        # tensors for this purpose? I think we should consider
+        # not allowing them to be made with different index sizes
+        #left_tensor  = δ(left_ind, sum_ind)
+        left_tensor  = diagITensor(1.0,left_ind, sum_ind)
         right_tensor = ITensor(right_ind, sum_ind)
         for i in 1:dim(right_ind)
             right_tensor[right_ind(i), sum_ind(dim(left_ind) + i)] = 1

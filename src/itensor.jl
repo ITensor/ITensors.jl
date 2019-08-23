@@ -3,7 +3,6 @@ export ITensor,
        combiner,
        combinedindex,
        delta,
-       dims,
        δ,
        replaceindex!,
        inds,
@@ -72,7 +71,7 @@ The storage will have Diag type.
 """
 function diagITensor(::Type{T},
                      is::IndexSet) where {T<:Number}
-  return ITensor(is,Diag{T}(zero(T),minDim(is)))
+  return ITensor(is,Diag{Vector{T}}(zero(T),minDim(is)))
 end
 
 """
@@ -95,7 +94,7 @@ The storage will have Diag type.
 function diagITensor(v::Vector{T},
                      is::IndexSet) where {T<:Number}
   length(v) ≠ minDim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
-  return ITensor(is,Diag{float(T)}(v))
+  return ITensor(is,Diag{Vector{float(T)}}(v))
 end
 
 """
@@ -118,7 +117,7 @@ Make a sparse ITensor of element type Float64 with non-zero elements
 only along the diagonal. Defaults to storing zeros along the diagonal.
 The storage will have Diag type.
 """
-diagITensor(is::IndexSet) = ITensor(is,Diag{Float64}(zero(Float64),minDim(is)))
+diagITensor(is::IndexSet) = ITensor(is,Diag{Vector{Float64}}(zero(Float64),minDim(is)))
 
 """
 diagITensor(is::Index...)
@@ -139,7 +138,7 @@ The storage will have Diag type.
 """
 function diagITensor(x::T,
                      is::IndexSet) where {T<:Number}
-  return ITensor(is,Diag{float(T)}(fill(float(x),minDim(is))))
+  return ITensor(is,Diag{Vector{float(T)}}(float(x),minDim(is)))
 end
 
 """
@@ -154,6 +153,29 @@ function diagITensor(x::T,
                      is::Index...) where {T<:Number}
   return diagITensor(x,IndexSet(is...))
 end
+
+"""
+    delta(::Type{T},inds::IndexSet)
+
+Make a diagonal ITensor with all diagonal elements 1.
+"""
+function delta(::Type{T},is::IndexSet) where {T}
+  return ITensor(is,Diag{float(T)}(one(T)))
+end
+
+"""
+    delta(::Type{T},inds::Index...)
+
+Make a diagonal ITensor with all diagonal elements 1.
+"""
+function delta(::Type{T},is::Index...) where {T}
+  return delta(T,IndexSet(is...))
+end
+
+delta(is::IndexSet) = delta(Float64,is)
+
+delta(is::Index...) = delta(IndexSet(is...))
+const δ = delta
 
 """
 dense(T::ITensor)
@@ -509,17 +531,6 @@ end
 mul!(R::ITensor,T::ITensor,fac::Number) = mul!(R,fac,T)
 
 rmul!(T::ITensor,fac::Number) = scale!(T,fac)
-
-"""
-    delta(::Type{T},inds::Index...)
-
-Make a diagonal ITensor with all diagonal elements 1.
-"""
-function delta(::Type{T},inds::Index...) where {T}
-  return diagITensor(one(T),inds...)
-end
-delta(inds::Index...) = delta(Float64,inds...)
-const δ = delta
 
 function summary(io::IO,
                    T::ITensor)
