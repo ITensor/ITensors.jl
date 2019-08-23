@@ -10,6 +10,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 @testset "ITensor constructors" begin
   i = Index(2,"i")
   j = Index(2,"j")
+  k = Index(2,"k")
 
   @testset "Default" begin
     A = ITensor()
@@ -37,6 +38,12 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     @test size(A) == dims(A) == (2,2)
 
     @test !isNull(A)
+
+    B = randomITensor(IndexSet(i,j))
+    @test store(B) isa Dense{Float64}
+    @test ndims(B) == order(B) == 2 == length(inds(B))
+    @test size(B) == dims(B) == (2,2)
+    @test !isNull(B)
   end
 
   @testset "From matrix" begin
@@ -55,6 +62,35 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
     M = [1 2 3; 4 5 6]
     @test_throws DimensionMismatch ITensor(M,i,j)
+  end
+
+  @testset "To Matrix" begin
+    TM = randomITensor(i,j)
+
+    M1 = Matrix(TM)
+    for ni in i, nj in j
+      @test M1[ni,nj] ≈ TM[i(ni),j(nj)]
+    end
+
+    M2 = Matrix(TM,j,i)
+    for ni in i, nj in j
+      @test M2[nj,ni] ≈ TM[i(ni),j(nj)]
+    end
+
+    T3 = randomITensor(i,j,k)
+    @test_throws DimensionMismatch Matrix(T3,i,j)
+  end
+
+  @testset "To Vector" begin
+    TV = randomITensor(i)
+
+    V = Vector(TV)
+    for ni in i
+      @test V[ni] ≈ TV[i(ni)]
+    end
+
+    T2 = randomITensor(i,j)
+    @test_throws DimensionMismatch Vector(T2)
   end
 
   @testset "Complex" begin
@@ -269,6 +305,11 @@ end
 
     A2r = replacetags(A2,"1","5")
     @test hasinds(A2r,s2,prime(l,5),l'')
+
+    #In-place version
+    cA2 = copy(A2)
+    replacetags!(cA2,"1","5")
+    @test hasinds(cA2,s2,prime(l,5),l'')
   end
   @testset "prime(::ITensor,::String)" begin
     A2p = prime(A2)
@@ -295,6 +336,27 @@ end
     @test hasinds(swapprime(A2,1,3),l''',s2,l'')
   end
 end
+
+@testset "Converting Real and Complex Storage" begin
+
+  @testset "Add Real and Complex" begin
+    i = Index(2,"i")
+    j = Index(2,"j")
+    TC = randomITensor(ComplexF64,i,j)
+    TR = randomITensor(Float64,i,j)
+
+    S1 = TC+TR
+    S2 = TR+TC
+    @test typeof(S1.store) == Dense{ComplexF64}
+    @test typeof(S2.store) == Dense{ComplexF64}
+    for ii=1:dim(i),jj=1:dim(j)
+      @test S1[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
+      @test S2[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
+    end
+  end
+
+end
+
 
 @testset "ITensor, Dense{$SType} storage" for SType ∈ (Float64,ComplexF64)
   mi,mj,mk,ml,mα = 2,3,4,5,6,7
@@ -394,7 +456,7 @@ end
         S = Diagonal(s)
         T = ITensor(IndexSet(ii,jj),Dense{ComplexF64}(vec(U*S*Vh)))
         (U,S,Vh) = svd(T,ii;maxdim=2)
-        @test norm(U*S*Vh-T)≈sqrt(s[3]^2+s[4]^2)
+        @test norm((U*S)*Vh-T)≈sqrt(s[3]^2+s[4]^2)
     end
 
     @testset "Test QR decomposition of an ITensor" begin
@@ -425,25 +487,5 @@ end
     #end
   end # End ITensor factorization testset
 end # End Dense storage test
-
-@testset "Converting Real and Complex Storage" begin
-
-  @testset "Add Real and Complex" begin
-    i = Index(2,"i")
-    j = Index(2,"j")
-    TC = randomITensor(ComplexF64,i,j)
-    TR = randomITensor(Float64,i,j)
-
-    S1 = TC+TR
-    S2 = TR+TC
-    @test typeof(S1.store) == Dense{ComplexF64}
-    @test typeof(S2.store) == Dense{ComplexF64}
-    for ii=1:dim(i),jj=1:dim(j)
-      @test S1[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
-      @test S2[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
-    end
-  end
-
-end
 
 

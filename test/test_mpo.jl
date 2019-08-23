@@ -20,14 +20,14 @@ using ITensors,
   @test hasindex(P[1],sites[1])
   @test hasindex(P[1],prime(sites[1]))
 
-  @testset "position" begin
+  @testset "orthogonalize" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
-    position!(phi, 1)
-    position!(K, 1)
+    orthogonalize!(phi, 1)
+    orthogonalize!(K, 1)
     orig_inner = inner(phi, K, phi) 
-    position!(phi, div(N, 2))
-    position!(K, div(N, 2))
+    orthogonalize!(phi, div(N, 2))
+    orthogonalize!(K, div(N, 2))
     @test inner(phi, K, phi) ≈ orig_inner
   end
 

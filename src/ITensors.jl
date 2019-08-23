@@ -46,6 +46,14 @@ import Base.adjoint,
        LinearAlgebra.normalize!,
        Random.randn!
 
+
+#####################################
+# Global Variables
+
+const warnTensorOrder = 10
+
+#####################################
+
 include("smallstring.jl")
 include("tagset.jl")
 include("index.jl")
