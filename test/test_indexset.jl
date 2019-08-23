@@ -14,13 +14,14 @@ using ITensors,
     indset = IndexSet(i,j,k)
     @test length(sprint(show, indset)) > 1
   end
-  @testset "Basic ctors" begin
+  @testset "Basic constructors" begin
     I = IndexSet(i,j,k)
     @test IndexSet(I) === I
     @test l ∈ IndexSet(I, l) 
     @test l ∈ IndexSet(l, I)
     @test l ∈ IndexSet( (I, IndexSet(l)) )
-    @test size(I) == (3,)
+    #TODO: what should size(::IndexSet) do?
+    #@test size(I) == (3,)
   end
   @testset "Convert to Index" begin
     @test Index(IndexSet(i)) === i

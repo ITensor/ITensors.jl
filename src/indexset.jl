@@ -14,7 +14,6 @@ export IndexSet,
        commonindex,
        uniqueinds,
        uniqueindex,
-       dim,
        dims,
        minDim,
        maxDim
@@ -62,9 +61,10 @@ dims(is::IndexSet) = Tuple(dim(i) for i ∈ is)
 dim(is::IndexSet) = prod(dim.(is))
 dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
-# overload size to get dimensions
-Base.size(is::IndexSet) = dims(is)
-Base.size(is::IndexSet,pos::Integer) = dim(is,pos)
+# TODO: what should size(::IndexSet) do?
+#size(is::IndexSet) = size(is.inds)
+#Base.size(is::IndexSet) = dims(is)
+#Base.size(is::IndexSet,pos::Integer) = dim(is,pos)
 
 # Optimize this (right own function that extracts dimensions
 # with a function)
@@ -74,7 +74,6 @@ Base.stride(is::IndexSet,k::Integer) = strides(is)[k]
 dag(is::IndexSet) = IndexSet(dag.(is.inds))
 
 # Allow iteration
-#size(is::IndexSet) = size(is.inds)
 iterate(is::IndexSet,state::Int=1) = iterate(is.inds,state)
 
 push!(is::IndexSet,i::Index) = push!(is.inds,i)

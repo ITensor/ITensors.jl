@@ -432,12 +432,12 @@ function _contract(Cinds::IndexSet,
   if length(Clabels) == 0  # If all indices of A and B are contracted
     # all indices are summed over, just add the product of the diagonal
     # elements of A and B
-    dim = minimum(dims(Ainds)) # == length(Bdata)
+    min_dim = minimum(dims(Ainds)) # == length(Bdata)
     # Need to set to zero since
     # Cdata is originally uninitialized memory
     # (so causes random output)
     Cdata = zero(SC)
-    for i = 1:dim
+    for i = 1:min_dim
       Cdata += Adata*Bdata
     end
   else
@@ -454,18 +454,18 @@ function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
                                Adata::Vector{T},Alabels::Vector{Int},
                                Bdata::Array{T,NB},Blabels::Vector{Int}) where {T,NB,NC}
   if all(i -> i < 0, Blabels)  # If all of B is contracted
-    dim = minimum(size(Bdata))
+    min_dim = minimum(size(Bdata))
     if length(Clabels) == 0
       # all indices are summed over, just add the product of the diagonal
       # elements of A and B
-      for i = 1:dim
+      for i = 1:min_dim
         Cdata[1] += Adata[i]*Bdata[ntuple(_->i,Val(NB))...]
       end
     else
       # not all indices are summed over, set the diagonals of the result
       # to the product of the diagonals of A and B
       # TODO: should we make this return a Diag storage?
-      for i = 1:dim
+      for i = 1:min_dim
         Cdata[ntuple(_->i,Val(NC))...] = Adata[i]*Bdata[ntuple(_->i,Val(NB))...]
       end
     end
@@ -534,21 +534,21 @@ function _contract_diag_dense!(Cstore::Dense,Cinds,Clabels::Vector{Int},
                                Astore::Diag{TA},Ainds,Alabels::Vector{Int},
                                Bstore::Dense,Binds,Blabels::Vector{Int}) where {TA<:Number}
   if all(i -> i < 0, Blabels)  # If all of B is contracted
-    dims = size(Binds)
-    dim = minimum(dims)
-    rB = reshape(data(Bstore),dims)
+    Bdims = dims(Binds)
+    min_dim = minimum(Bdims)
+    rB = reshape(data(Bstore),Bdims)
     if length(Clabels) == 0
       # all indices are summed over, just add the product of the diagonal
       # elements of A and B
       # TODO: replace this with manual strides
-      for i = 1:dim
+      for i = 1:min_dim
         Cstore[1] += Astore[i]*rB[ntuple(_->i,length(Binds))...]
       end
     else
       # not all indices are summed over, set the diagonals of the result
       # to the product of the diagonals of A and B
       # TODO: should we make this return a Diag storage?
-      for i = 1:dim
+      for i = 1:min_dim
         Cstore[ntuple(_->i,length(Cinds))...] = Astore[i]*rB[ntuple(_->i,length(Binds))...]
       end
     end
@@ -592,14 +592,14 @@ function _contract_diag_dense!(Cstore::Dense,Cinds,Clabels::Vector{Int},
     for ib = 1:length(Blabels)
       if Blabels[ib] > 0
         bustride[n] = stride(Binds,ib)
-        busize[n] = size(Binds,ib) #size(Bstore,ib)
+        busize[n] = dim(Binds,ib) #size(Bstore,ib)
         ic = findfirst(==(Blabels[ib]),Clabels)
         custride[n] = stride(Cinds,ic)
         n += 1
       end
     end
 
-    dim = minimum(size(Binds))
+    min_dim = minimum(dims(Binds))
     boffset_orig = 1-sum(strides(Binds))
     coffset_orig = 1-sum(strides(Cinds))
     cartesian_inds = CartesianIndices(Tuple(busize))
@@ -611,7 +611,7 @@ function _contract_diag_dense!(Cstore::Dense,Cinds,Clabels::Vector{Int},
         boffset += ii*bustride[i]
         coffset += ii*custride[i]
       end
-      for j in 1:dim
+      for j in 1:min_dim
         Cstore[cstart+j*c_cstride+coffset] += Astore[j]*Bstore[bstart+j*b_cstride+boffset]
       end
     end
@@ -626,174 +626,21 @@ function _contract_diag_diag!(Cdata::Vector{T},Clabels::Vector{Int},
   if length(Clabels) == 0  # If all indices of A and B are contracted
     # all indices are summed over, just add the product of the diagonal
     # elements of A and B
-    dim = length(Adata)  # == length(Bdata)
+    Adim = length(Adata)  # == length(Bdata)
     # Need to set to zero since
     # Cdata is originally uninitialized memory
     # (so causes random output)
     Cdata[1] = zero(T)
-    for i = 1:dim
+    for i = 1:Adim
       Cdata[1] += Adata[i]*Bdata[i]
     end
   else
-    dim = min(length(Adata),length(Bdata))
+    min_dim = min(length(Adata),length(Bdata))
     # not all indices are summed over, set the diagonals of the result
     # to the product of the diagonals of A and B
-    for i = 1:dim
+    for i = 1:min_dim
       Cdata[i] = Adata[i]*Bdata[i]
     end
   end
 end
-
-## Maybe this works for uniform storage as well
-#function _contract_diag_diag!(Cdata::T,Clabels::Vector{Int},
-#                              Adata::T,Alabels::Vector{Int},
-#                              Bdata::T,Blabels::Vector{Int}) where T
-#  if length(Clabels) == 0  # If all indices of A and B are contracted
-#    # all indices are summed over, just add the product of the diagonal
-#    # elements of A and B
-#    dim = length(Adata)  # == length(Bdata)
-#    # Need to set to zero since
-#    # Cdata is originally uninitialized memory
-#    # (so causes random output)
-#    Cdata[1] = zero(T)
-#    for i = 1:dim
-#      Cdata[1] += Adata[i]*Bdata[i]
-#    end
-#  else
-#    dim = min(length(Adata),length(Bdata))
-#    # not all indices are summed over, set the diagonals of the result
-#    # to the product of the diagonals of A and B
-#    for i = 1:dim
-#      Cdata[i] = Adata[i]*Bdata[i]
-#    end
-#  end
-#end
-
-## TODO: maybe we can do a special case for matrix, and
-## otherwise turn it into an array
-#function storage_svd(Astore::Diag{T},
-#                     Lis::IndexSet,
-#                     Ris::IndexSet;
-#                     kwargs...) where {T}
-#  maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
-#  mindim::Int = get(kwargs,:mindim,1)
-#  cutoff::Float64 = get(kwargs,:cutoff,0.0)
-#  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
-#  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-#  utags::String = get(kwargs,:utags,"Link,u")
-#  vtags::String = get(kwargs,:vtags,"Link,v")
-#  fastSVD::Bool = get(kwargs,:fastSVD,false)
-#
-#  if fastSVD
-#    MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
-#  else
-#    MU,MS,MV = recursiveSVD(reshape(data(Astore),dim(Lis),dim(Ris)))
-#  end
-#  MV = conj!(MV)
-#
-#  P = MS.^2
-#  #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
-#  truncate!(P;mindim=mindim,
-#              maxdim=maxdim,
-#              cutoff=cutoff,
-#              absoluteCutoff=absoluteCutoff,
-#              doRelCutoff=doRelCutoff)
-#  dS = length(P)
-#  if dS < length(MS)
-#    MU = MU[:,1:dS]
-#    resize!(MS,dS)
-#    MV = MV[:,1:dS]
-#  end
-#
-#  u = Index(dS,utags)
-#  v = settags(u,vtags)
-#  Uis,Ustore = IndexSet(Lis...,u),Diag{T}(vec(MU))
-#  #TODO: make a diag storage
-#  Sis,Sstore = IndexSet(u,v),Diag{Float64}(vec(Matrix(Diagonal(MS))))
-#  Vis,Vstore = IndexSet(Ris...,v),Diag{T}(Vector{T}(vec(MV)))
-#
-#  return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
-#end
-#
-## TODO: maybe we can do a special case for matrix, and
-## otherwise turn it into an array
-#function storage_eigen(Astore::Diag{T},
-#                       Lis::IndexSet,
-#                       Ris::IndexSet;
-#                       kwargs...) where {T}
-#  maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
-#  mindim::Int = get(kwargs,:mindim,1)
-#  cutoff::Float64 = get(kwargs,:cutoff,0.0)
-#  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
-#  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-#  tags::TagSet = get(kwargs,:lefttags,"Link,u")
-#  lefttags::TagSet = get(kwargs,:lefttags,tags)
-#  righttags::TagSet = get(kwargs,:righttags,prime(lefttags))
-#
-#  dim_left = dim(Lis)
-#  dim_right = dim(Ris)
-#  MD,MU = eigen(Hermitian(reshape(data(Astore),dim_left,dim_right)))
-#
-#  # Sort by largest to smallest eigenvalues
-#  p = sortperm(MD; rev = true)
-#  MD = MD[p]
-#  MU = MU[:,p]
-#
-#  #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
-#  truncate!(MD;maxdim=maxdim,
-#              cutoff=cutoff,
-#              absoluteCutoff=absoluteCutoff,
-#              doRelCutoff=doRelCutoff)
-#  dD = length(MD)
-#  if dD < size(MU,2)
-#    MU = MU[:,1:dD]
-#  end
-#
-#  #TODO: include truncation parameters as keyword arguments
-#  u = Index(dD,lefttags)
-#  v = settags(u,righttags)
-#  Uis,Ustore = IndexSet(Lis...,u),Diag{T}(vec(MU))
-#  #TODO: make a diag storage
-#  Dis,Dstore = IndexSet(u,v),Diag{T}(vec(Matrix(Diagonal(MD))))
-#  return (Uis,Ustore,Dis,Dstore)
-#end
-#
-#function polar(A::Matrix)
-#  U,S,V = svd(A) # calls LinearAlgebra.svd()
-#  return U*V',V*Diagonal(S)*V'
-#end
-#
-## TODO: maybe we can do a special case for matrix, and
-## otherwise turn it into an array
-#function storage_qr(Astore::Diag{T},
-#                    Lis::IndexSet,
-#                    Ris::IndexSet;
-#                    kwargs...) where {T}
-#  tags::TagSet = get(kwargs,:tags,"Link,u")
-#  dim_left = dim(Lis)
-#  dim_right = dim(Ris)
-#  MQ,MP = qr(reshape(data(Astore),dim_left,dim_right))
-#  dim_middle = min(dim_left,dim_right)
-#  u = Index(dim_middle,tags)
-#  #Must call Matrix() on MQ since the QR decomposition outputs a sparse
-#  #form of the decomposition
-#  Qis,Qstore = IndexSet(Lis...,u),Dense{T}(vec(Matrix(MQ)))
-#  Pis,Pstore = IndexSet(u,Ris...),Dense{T}(vec(Matrix(MP)))
-#  return (Qis,Qstore,Pis,Pstore)
-#end
-#
-## TODO: maybe we can do a special case for matrix, and
-## otherwise turn it into an array
-#function storage_polar(Astore::Diag{T},
-#                       Lis::IndexSet,
-#                       Ris::IndexSet) where {T}
-#  dim_left = dim(Lis)
-#  dim_right = dim(Ris)
-#  MQ,MP = polar(reshape(data(Astore),dim_left,dim_right))
-#  dim_middle = min(dim_left,dim_right)
-#  Uis = prime(Ris)
-#  Qis,Qstore = IndexSet(Lis...,Uis...),Dense{T}(vec(MQ))
-#  Pis,Pstore = IndexSet(Uis...,Ris...),Dense{T}(vec(MP))
-#  return (Qis,Qstore,Pis,Pstore)
-#end
 
