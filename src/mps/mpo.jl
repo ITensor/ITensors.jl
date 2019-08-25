@@ -228,6 +228,36 @@ function inner(y::MPS,
   return O[]
 end
 
+"""
+inner(B::MPO, y::MPS, A::MPO, x::MPS)
+
+Compute <By|A|x>
+"""
+function inner(B::MPO,
+               y::MPS,
+               A::MPO,
+               x::MPS)::Number
+  N = length(B)
+  if length(y) != N || length(x) != N || length(A) != N
+      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y)) or $(length(A))"))
+  end
+  ydag = dag(y)
+  prime!(ydag, 2)
+  Bdag = dag(B)
+  prime!(Bdag)
+  # Swap prime levels 1 -> 2 and 2 -> 1.
+  @inbounds for j ∈ eachindex(Bdag)
+    swapprime!(inds(Bdag[j]),2,3)
+    swapprime!(inds(Bdag[j]),1,2)
+    swapprime!(inds(Bdag[j]),3,1)
+  end
+  O = ydag[1]*Bdag[1]*A[1]*x[1]
+  @inbounds for j ∈ eachindex(y)[2:end]
+    O = O*ydag[j]*Bdag[j]*A[j]*x[j]
+  end
+  return O[]
+end
+
 function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
     #if dir(left_ind) == dir(right_ind) == Neither
         total_dim    = dim(left_ind) + dim(right_ind)

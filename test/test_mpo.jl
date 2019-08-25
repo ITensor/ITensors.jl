@@ -31,7 +31,7 @@ using ITensors,
     @test inner(phi, K, phi) ≈ orig_inner
   end
 
-  @testset "inner" begin
+  @testset "inner <y|A|x>" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
     @test maxLinkDim(K) == 1
@@ -48,7 +48,34 @@ using ITensors,
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi,K,badpsi)
   end
-  
+
+  @testset "inner <By|A|x>" begin
+    phi = randomMPS(sites)
+    K = randomMPO(sites)
+    J = randomMPO(sites)
+    @test maxLinkDim(K) == 1
+    @test maxLinkDim(J) == 1
+    psi = randomMPS(sites)
+    phidag = dag(phi)
+    prime!(phidag, 2)
+    Jdag = dag(J)
+    prime!(Jdag)
+    @inbounds for j ∈ eachindex(Jdag)
+      swapprime!(inds(Jdag[j]),2,3)
+      swapprime!(inds(Jdag[j]),1,2)
+      swapprime!(inds(Jdag[j]),3,1)
+    end
+    phiJdagKpsi = phidag[1]*Jdag[1]*K[1]*psi[1]
+    @inbounds for j ∈ eachindex(psi)[2:end]
+      phiJdagKpsi = phiJdagKpsi*phidag[j]*Jdag[j]*K[j]*psi[j]
+    end
+    @test phiJdagKpsi[] ≈ inner(J,phi,K,psi)
+
+    badsites = SiteSet(N+1,2)
+    badpsi = randomMPS(badsites)
+    @test_throws DimensionMismatch inner(J,phi,K,badpsi)
+  end
+
   @testset "applyMPO" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
@@ -88,11 +115,11 @@ using ITensors,
     badL = randomMPO(badsites)
     @test_throws DimensionMismatch nmultMPO(K,badL)
   end
-  
+
   sites = spinHalfSites(N)
   O = MPO(sites,"Sz")
   @test length(O) == N # just make sure this works
- 
+
   @test_throws ArgumentError randomMPO(sites, 2)
   @test_throws ErrorException linkindex(MPO(N, fill(ITensor(), N), 0, N + 1), 1)
 end
