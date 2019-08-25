@@ -2,6 +2,7 @@ export MPO,
        randomMPO,
        applyMPO,
        nmultMPO,
+       errMPOProd,
        maxLinkDim,
        orthogonalize!,
        truncate!
@@ -256,6 +257,20 @@ function inner(B::MPO,
     O = O*ydag[j]*Bdag[j]*A[j]*x[j]
   end
   return O[]
+end
+
+
+"""
+errMPOProd(y::MPS, A::MPO, x::MPS)
+
+Compute the distance || |y> - A|x> ||^2.
+"""
+function errMPOProd(y::MPS, A::MPO, x::MPS)
+  N = length(A)
+  if length(y) != N || length(x) != N
+      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
+  end
+  return real(inner(y,y) - 2*inner(y,A,x) + inner(A,x,A,x))
 end
 
 function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)

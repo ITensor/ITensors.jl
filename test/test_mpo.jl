@@ -76,6 +76,19 @@ using ITensors,
     @test_throws DimensionMismatch inner(J,phi,K,badpsi)
   end
 
+  @testset "errMPOProd" begin
+    phi = randomMPS(sites)
+    K = randomMPO(sites)
+    @test maxLinkDim(K) == 1
+    psi = randomMPS(sites)
+    dist = real(inner(phi,phi) - 2*inner(phi,K,psi) + inner(K,psi,K,psi))
+    @test dist ≈ errMPOProd(phi,K,psi)
+
+    badsites = SiteSet(N+1,2)
+    badpsi = randomMPS(badsites)
+    @test_throws DimensionMismatch errMPOProd(phi,K,badpsi)
+  end
+
   @testset "applyMPO" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
