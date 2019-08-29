@@ -81,6 +81,11 @@ dir(i::Index) = i.dir
 tags(i::Index) = i.tags
 plev(i::Index) = plev(tags(i))
 
+# Overload for use in AbstractArray interface for Tensor
+#Base.length(i::Index) = dim(i)
+#Base.UnitRange(i::Index) = 1:dim(i)
+#Base.checkindex(::Type{Bool}, i::Index, val::Int64) = (val ≤ dim(i) && val ≥ 1)
+
 """
 ==(i1::Index, i1::Index)
 

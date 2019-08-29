@@ -7,6 +7,8 @@ Random.seed!(12345)
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
+@testset "Dense ITensor basic functionality" begin
+
 @testset "ITensor constructors" begin
   i = Index(2,"i")
   j = Index(2,"j")
@@ -127,7 +129,8 @@ end
   A = randomITensor(i,j)
   B = similar(A)
   @test inds(B) == inds(A)
-  @test_throws ErrorException similar(A, ComplexF32)
+  Ac = similar(A, ComplexF32)
+  @test store(Ac) isa Dense{ComplexF32}
 end
 
 @testset "fill!" begin
@@ -387,17 +390,18 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[k(kk),i(ii),j(jj)]==permA[i(ii),j(jj),k(kk)]
     end
+    # TODO: why do we need this? can't we just splat?
     @testset "getindex and setindex with vector of IndexVals" begin
         k_inds = [k(kk) for kk ∈ 1:dim(k)]
         for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-          @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
+          @test A[k_inds...,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
         end
         for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-            A[k_inds,i(ii),j(jj)]=collect(1:length(k_inds))
+            A[k_inds...,i(ii),j(jj)]=collect(1:length(k_inds))
         end
         permA = permute(A,k,j,i)
         for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-          @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
+          @test A[k_inds...,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
         end
     end
   end
@@ -488,4 +492,5 @@ end
   end # End ITensor factorization testset
 end # End Dense storage test
 
+end # End Dense ITensor basic functionality
 

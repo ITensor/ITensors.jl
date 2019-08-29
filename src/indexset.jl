@@ -16,24 +16,31 @@ export IndexSet,
        uniqueindex,
        dims,
        minDim,
-       maxDim
+       maxDim,
+       push,
+       permute
 
-struct IndexSet
-    inds::Vector{Index}
-    IndexSet(inds::Vector{Index}) = new(inds)
+struct IndexSet{N}
+  inds::MVector{N,Index}
+  IndexSet(inds::MVector{N,Index}) where {N} = new{N}(inds)
+  IndexSet(inds::NTuple{N,Index}) where {N} = new{N}(inds)
 end
 
 inds(is::IndexSet) = is.inds
 
+function permute(is::IndexSet{N},perm) where {N}
+  indsp = ntuple(i->is[perm[i]], Val(N))
+  return IndexSet(indsp)
+end
+
 # Empty constructor
-IndexSet() = IndexSet(Index[])
+IndexSet() = IndexSet(())
 
 # Construct of some size
-IndexSet(N::Integer) = IndexSet(Vector{Index}(undef,N))
+IndexSet(::Val{N}) where {N} = IndexSet(ntuple(_->Index(),Val(N)))
 
 # Construct from various sets of indices
-IndexSet(inds::Index...) = IndexSet(Index[inds...])
-IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet(inds...)
+IndexSet(inds::Vararg{Index,N}) where {N} = IndexSet(inds)
 
 # Construct from various sets of IndexSets
 IndexSet(inds::IndexSet) = inds
@@ -57,7 +64,7 @@ setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
 length(is::IndexSet) = length(is.inds)
 order(is::IndexSet) = length(is)
 copy(is::IndexSet) = IndexSet(copy(is.inds))
-dims(is::IndexSet) = Tuple(dim(i) for i ∈ is)
+dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 dim(is::IndexSet) = prod(dim.(is))
 dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
@@ -74,9 +81,10 @@ Base.stride(is::IndexSet,k::Integer) = strides(is)[k]
 dag(is::IndexSet) = IndexSet(dag.(is.inds))
 
 # Allow iteration
-iterate(is::IndexSet,state::Int=1) = iterate(is.inds,state)
+Base.iterate(is::IndexSet{N},state::Int=1) where {N} = state > N ? nothing : (is[state], state+1)
 
-push!(is::IndexSet,i::Index) = push!(is.inds,i)
+#push!(is::IndexSet,i::Index) = push!(is.inds,i)
+StaticArrays.push(is::IndexSet,i::Index) = push(is.inds,i)
 
 """
 minDim(is::IndexSet)
@@ -434,7 +442,7 @@ function swaptags!(is::IndexSet,
 end
 swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 
-function calculate_permutation(set1, set2)
+function getperm(set1, set2)
   l1 = length(set1)
   l2 = length(set2)
   l1==l2 || throw(DimensionMismatch("Mismatched input sizes in calcPerm: l1=$l1, l2=$l2"))
@@ -451,9 +459,9 @@ function calculate_permutation(set1, set2)
   return p
 end
 
-function compute_contraction_labels(Ai::IndexSet,Bi::IndexSet)
-  rA = order(Ai)
-  rB = order(Bi)
+function compute_contraction_labels(Ai,Bi)
+  rA = length(Ai)
+  rB = length(Bi)
   Aind = zeros(Int,rA)
   Bind = zeros(Int,rB)
 

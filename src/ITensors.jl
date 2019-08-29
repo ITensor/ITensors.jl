@@ -53,17 +53,24 @@ import Base.adjoint,
 const warnTensorOrder = 10
 
 #####################################
+# Helper functionality
+#
+
+include("sets.jl")
+
+#####################################
 
 include("smallstring.jl")
 include("tagset.jl")
 include("index.jl")
 include("indexset.jl")
-include("storage/tensorstorage.jl")
-include("storage/dense.jl")
-include("storage/diag.jl")
-include("storage/combiner.jl")
-include("storage/contract.jl")
-include("storage/svd.jl")
+include("tensor/tensor.jl")
+include("tensor/tensorstorage.jl")
+include("tensor/dense.jl")
+include("tensor/diag.jl")
+include("tensor/combiner.jl")
+include("tensor/contract.jl")
+include("tensor/svd.jl")
 include("itensor.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
