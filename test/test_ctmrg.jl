@@ -30,7 +30,8 @@ function ctmrg(T::ITensor,
     Clu = Clu/norm(Clu)
 
     ## Calculate the renormalized half row transfer matrix (HRTM)
-    Al = Al*replacetags(Ud,"down","up")*T*Ud
+    Uu = replacetags(Ud,"down","up")
+    Al = Al*Uu*T*Ud
     Al = replacetags(replacetags(Al,"renorm","orig"),"right","left","site")
     Al = Al/norm(Al)
   end
@@ -69,24 +70,24 @@ end
   Clu,Al = ctmrg(T,Clu,Al;χmax=30,nsteps=2000)
 
   # Normalize corner matrix
-  trC⁴ = Clu*replacetags(Clu,"0","1","up")*
-         replacetags(Clu,"0","1")*replacetags(Clu,"0","1","left")
+  trC⁴ = Clu*mapprime(Clu,0,1,"up")*
+         mapprime(Clu,0,1)*mapprime(Clu,0,1,"left")
   Clu = Clu/scalar(trC⁴)^(1/4)
 
   # Normalize MPS tensor
-  trA² = Clu*replacetags(Clu,"0","1","up")*Al*
-         replacetags(Al,"0","1","link")*
-         replacetags(replacetags(Clu,"up,0","down,1"),"0","1","left")*
-         replacetags(replacetags(Clu,"0","1","left"),"up","down")
+  trA² = Clu*mapprime(Clu,0,1,"up")*Al*
+         mapprime(Al,0,1,"link")*
+         mapprime(replacetags(Clu,("up",0),("down",1)),0,1,"left")*
+         replacetags(mapprime(Clu,0,1,"left"),"up","down")
   Al = Al/sqrt(scalar(trA²))
 
   ## Get environment tensors for a single site measurement
-  Ar = replacetags(replacetags(Al,"left","right","site"),"0","1","link")
+  Ar = mapprime(replacetags(Al,"left","right","site"),0,1,"link")
   Au = replacetags(replacetags(replacetags(Al,"left","up","site"),"down","left","link"),"up","right","link")
-  Ad = replacetags(replacetags(Au,"up","down","site"),"0","1","link")
-  Cld = replacetags(replacetags(Clu,"up","down"),"0","1","left")
-  Cru = replacetags(replacetags(Clu,"left","right"),"0","1","up")
-  Crd = replacetags(replacetags(Cru,"0","1","right"),"up","down")
+  Ad  = mapprime(replacetags(Au,"up","down","site"),0,1,"link")
+  Cld = mapprime(replacetags(Clu,"up","down"),0,1,"left")
+  Cru = mapprime(replacetags(Clu,"left","right"),0,1,"up")
+  Crd = replacetags(mapprime(Cru,0,1,"right"),"up","down")
 
   ## Calculate partition function per site
   κ = scalar(Clu*Al*Cld*Au*T*Ad*Cru*Ar*Crd)

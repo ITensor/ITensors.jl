@@ -246,20 +246,20 @@ end
     @test s1==findindex(A1,"Site")
     @test s1==findindex(A1,"s=1")
     @test s1==findindex(A1,"s=1,Site")
-    @test l==findindex(A1,"Link,0")
-    @test l'==findindex(A1,"1")
-    @test l'==findindex(A1,"Link,1")
+    @test l==findindex(A1,("Link",0))
+    @test l'==findindex(A1,("",1))
+    @test l'==findindex(A1,("Link",1))
     @test s2==findindex(A2,"Site")
     @test s2==findindex(A2,"s=2")
     @test s2==findindex(A2,"Site")
-    @test s2==findindex(A2,"0")
-    @test s2==findindex(A2,"s=2,0")
-    @test s2==findindex(A2,"Site,0")
-    @test s2==findindex(A2,"s=2,Site,0")
-    @test l'==findindex(A2,"1")
-    @test l'==findindex(A2,"Link,1")
-    @test l''==findindex(A2,"2")
-    @test l''==findindex(A2,"Link,2")
+    @test s2==findindex(A2,("",0))
+    @test s2==findindex(A2,("s=2",0))
+    @test s2==findindex(A2,("Site",0))
+    @test s2==findindex(A2,("s=2,Site",0))
+    @test l'==findindex(A2,("",1))
+    @test l'==findindex(A2,("Link",1))
+    @test l''==findindex(A2,("",2))
+    @test l''==findindex(A2,("Link",2))
   end
   @testset "addtags(::ITensor,::String,::String)" begin
     s1u = addtags(s1,"u")
@@ -271,20 +271,20 @@ end
     A1u = addtags(A1,"u","Link")
     @test hasinds(A1u,s1,lu,lu')
 
-    A1u = addtags(A1,"u","0")
+    A1u = addtags(A1,"u",("",0))
     @test hasinds(A1u,s1u,lu,l')
 
-    A1u = addtags(A1,"u","Link,0")
+    A1u = addtags(A1,"u",("Link",0))
     @test hasinds(A1u,s1,lu,l')
 
-    A1u = addtags(A1,"u","Link,1")
+    A1u = addtags(A1,"u",("Link",1))
     @test hasinds(A1u,s1,l,lu')
   end
   @testset "removetags(::ITensor,::String,::String)" begin
     A2r = removetags(A2,"Site")
     @test hasinds(A2r,removetags(s2,"Site"),l',l'')
 
-    A2r = removetags(A2,"Link","1")
+    A2r = removetags(A2,"Link",("",1))
     @test hasinds(A2r,s2,removetags(l,"Link")',l'')
   end
   @testset "replacetags(::ITensor,::String,::String)" begin
@@ -297,18 +297,18 @@ end
     A2r = replacetags(A2,"Link","Temp")
     @test hasinds(A2r,s2,ltmp',ltmp'')
 
-    A2r = replacetags(A2,"Link","Temp","1")
+    A2r = replacetags(A2,"Link","Temp",("",1))
     @test hasinds(A2r,s2,ltmp',l'')
 
-    A2r = replacetags(A2,"Link,2","Temp,3")
+    A2r = replacetags(A2,("Link",2),("Temp",3))
     @test hasinds(A2r,s2,l',ltmp''')
 
-    A2r = replacetags(A2,"1","5")
+    A2r = replacetags(A2,("",1),("",5))
     @test hasinds(A2r,s2,prime(l,5),l'')
 
     #In-place version
     cA2 = copy(A2)
-    replacetags!(cA2,"1","5")
+    replacetags!(cA2,("",1),("",5))
     @test hasinds(cA2,s2,prime(l,5),l'')
   end
   @testset "prime(::ITensor,::String)" begin
