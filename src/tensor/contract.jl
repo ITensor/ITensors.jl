@@ -1,20 +1,20 @@
 
-# Check if the contraction is an outer product
-# (none of the labels are negative)
-function is_outer(l1::Vector{Int},l2::Vector{Int})
-  for l1i in l1
-    if l1i < 0
-      return false
-    end
-  end
-  # I think this one is not necessary
-  for l2i in l2
-    if l2i < 0
-      return false
-    end
-  end
-  return true
-end
+## Check if the contraction is an outer product
+## (none of the labels are negative)
+#function is_outer(l1::Vector{Int},l2::Vector{Int})
+#  for l1i in l1
+#    if l1i < 0
+#      return false
+#    end
+#  end
+#  # I think this one is not necessary
+#  for l2i in l2
+#    if l2i < 0
+#      return false
+#    end
+#  end
+#  return true
+#end
 
 mutable struct CProps
   ai::Vector{Int}
@@ -158,9 +158,9 @@ function permute_extents(R::Vector{Int},P::Vector{Int})::Vector{Int}
 end
 
 function compute!(props::CProps,
-                  A::Array,
-                  B::Array,
-                  C::Array)
+                  A,
+                  B,
+                  C)
   compute_perms!(props)
 
   #Use props.PC.size() as a check to see if we've already run this
@@ -436,64 +436,64 @@ function compute!(props::CProps,
 
 end
 
-function _contract_dense_dense!(C::Array{T},
-                                p::CProps,
-                                A::Array{T},
-                                B::Array{T},
-                                α::T=one(T),
-                                β::T=zero(T)) where {T}
-  tA = 'N'
-  if p.permuteA
-    aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
-    tA = 'T'
-  else
-    #A doesn't have to be permuted
-    if Atrans(p)
-      aref = reshape(A,p.dmid,p.dleft)
-      tA = 'T'
-    else
-      aref = reshape(A,p.dleft,p.dmid)
-    end
-  end
-
-  tB = 'N'
-  if p.permuteB
-    bref = reshape(permutedims(B,p.PB),p.dmid,p.dright)
-  else
-    if Btrans(p)
-      bref = reshape(B,p.dright,p.dmid)
-      tB = 'T'
-    else
-      bref = reshape(B,p.dmid,p.dright)
-    end
-  end
-
-  # TODO: this logic may be wrong
-  if p.permuteC
-    cref = reshape(copy(C),p.dleft,p.dright)
-  else
-    if Ctrans(p)
-      cref = reshape(C,p.dleft,p.dright)
-      if tA=='N' && tB=='N'
-        (aref,bref) = (bref,aref)
-        tA = tB = 'T'
-      elseif tA=='T' && tB=='T'
-        (aref,bref) = (bref,aref)
-        tA = tB = 'N'
-      end
-    else
-      cref = reshape(C,p.dleft,p.dright)
-    end
-  end
-
-  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
-  BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
-
-  if p.permuteC
-    permutedims!(C,reshape(cref,p.newCrange...),p.PC)
-  end
-  return
-end
+#function _contract_dense_dense!(C::Array{T},
+#                                p::CProps,
+#                                A::Array{T},
+#                                B::Array{T},
+#                                α::T=one(T),
+#                                β::T=zero(T)) where {T}
+#  tA = 'N'
+#  if p.permuteA
+#    aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
+#    tA = 'T'
+#  else
+#    #A doesn't have to be permuted
+#    if Atrans(p)
+#      aref = reshape(A,p.dmid,p.dleft)
+#      tA = 'T'
+#    else
+#      aref = reshape(A,p.dleft,p.dmid)
+#    end
+#  end
+#
+#  tB = 'N'
+#  if p.permuteB
+#    bref = reshape(permutedims(B,p.PB),p.dmid,p.dright)
+#  else
+#    if Btrans(p)
+#      bref = reshape(B,p.dright,p.dmid)
+#      tB = 'T'
+#    else
+#      bref = reshape(B,p.dmid,p.dright)
+#    end
+#  end
+#
+#  # TODO: this logic may be wrong
+#  if p.permuteC
+#    cref = reshape(copy(C),p.dleft,p.dright)
+#  else
+#    if Ctrans(p)
+#      cref = reshape(C,p.dleft,p.dright)
+#      if tA=='N' && tB=='N'
+#        (aref,bref) = (bref,aref)
+#        tA = tB = 'T'
+#      elseif tA=='T' && tB=='T'
+#        (aref,bref) = (bref,aref)
+#        tA = tB = 'N'
+#      end
+#    else
+#      cref = reshape(C,p.dleft,p.dright)
+#    end
+#  end
+#
+#  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
+#  BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
+#
+#  if p.permuteC
+#    permutedims!(C,reshape(cref,p.newCrange...),p.PC)
+#  end
+#  return
+#end
 
 #TODO: this should be optimized
 function _contract_scalar!(Cdata::Array,Clabels::Vector{Int},

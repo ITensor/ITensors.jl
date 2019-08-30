@@ -282,7 +282,67 @@ function _contract!(R::Tensor{ElR,NR,<:Dense},labelsR,
                     T2::Tensor{ElT2,N2,<:Dense},labelsT2) where {ElR,ElT1,ElT2,NR,N1,N2}
   props = CProps(labelsT1,labelsT2,labelsR)
   compute!(props,T1,T2,R)
-  _contract_dense_dense!(R,props,T1,T2)
+  _contract_dense_dense!(Array(R),props,Array(T1),Array(T2))
+  return R
+end
+
+function _contract_dense_dense!(C::Array{T},
+                                p::CProps,
+                                A::Array{T},
+                                B::Array{T},
+                                α::T=one(T),
+                                β::T=zero(T)) where {T}
+  tA = 'N'
+  if p.permuteA
+    aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
+    tA = 'T'
+  else
+    #A doesn't have to be permuted
+    if Atrans(p)
+      aref = reshape(A,p.dmid,p.dleft)
+      tA = 'T'
+    else
+      aref = reshape(A,p.dleft,p.dmid)
+    end
+  end
+
+  tB = 'N'
+  if p.permuteB
+    bref = reshape(permutedims(B,p.PB),p.dmid,p.dright)
+  else
+    if Btrans(p)
+      bref = reshape(B,p.dright,p.dmid)
+      tB = 'T'
+    else
+      bref = reshape(B,p.dmid,p.dright)
+    end
+  end
+
+  # TODO: this logic may be wrong
+  if p.permuteC
+    cref = reshape(copy(C),p.dleft,p.dright)
+  else
+    if Ctrans(p)
+      cref = reshape(C,p.dleft,p.dright)
+      if tA=='N' && tB=='N'
+        (aref,bref) = (bref,aref)
+        tA = tB = 'T'
+      elseif tA=='T' && tB=='T'
+        (aref,bref) = (bref,aref)
+        tA = tB = 'N'
+      end
+    else
+      cref = reshape(C,p.dleft,p.dright)
+    end
+  end
+
+  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
+  BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
+
+  if p.permuteC
+    permutedims!(C,reshape(cref,p.newCrange...),p.PC)
+  end
+  return
 end
 
 #function _contract(Cinds::IndexSet, Clabels::Vector{Int},
