@@ -15,10 +15,16 @@ data(D::Dense) = D.data
 # Convenient functions for Dense storage type
 Base.getindex(D::Dense,i::Integer) = data(D)[i]
 Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
-Base.similar(D::Dense) = Dense(similar(data(D)))
-Base.similar(D::Dense,::Type{S}) where {S} = Dense(similar(data(D),S))
+
+Base.similar(D::Dense{T}) where {T} = Dense{T}(length(D))
+Base.similar(D::Dense{T},dims) where {T} = Dense{T}(dim(dims))
+Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(dim(dims))
+Base.similar(D::Dense{T},::Type{S}) where {T,S} = Dense{S}(length(D))
 Base.copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
+
 Base.eltype(D::Dense{T}) where {T} = eltype(T)
+# This is necessary since for some reason inference doesn't work
+# with the more general definition (eltype(Nothing) === Any)
 Base.eltype(D::Dense{Nothing}) = Nothing
 Base.eltype(::Type{Dense{T}}) where {T} = eltype(T)
 #Base.length(D::Dense) = length(data(D))
@@ -30,9 +36,8 @@ Base.setindex!(T::Tensor{ElT,N,StoreT},v,i::Integer) where {ElT,N,StoreT<:Dense}
 
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
-function Base.Array(T::Tensor{ElT,N,StoreT}) where {ElT,N,StoreT<:Dense}
-  return reshape(data(store(T)),dims(inds(T)))
-end
+Base.Array(T::Tensor) = reshape(data(store(T)),dims(inds(T)))
+Base.Vector(T::Tensor) = vec(Array(T))
 
 function Base.permutedims!(T1::Tensor{ElT1,N,StoreT1},
                            T2::Tensor{ElT2,N,StoreT2},
@@ -89,6 +94,11 @@ using Base.Cartesian: @nexprs,
     return TP
   end
 end
+
+function outer(T1::Tensor,T2::Tensor)
+  return Tensor(Dense(vec(Vector(T1)*transpose(Vector(T2)))),union(inds(T1),inds(T2)))
+end
+const ⊗ = outer
 
 # Do we actually need all of these?
 #TODO: this should do proper promotions of the storage data
@@ -231,25 +241,30 @@ end
 #  throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
 #end
 
+function contract(T1::Tensor{ElT1,N1,<:Dense},labelsT1,
+                  T2::Tensor{ElT2,N2,<:Dense},labelsT2) where {ElT1,ElT2,N1,N2}
+  indsR,labelsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2)
+  R = similar(promote_type(typeof(T1),typeof(T2)),indsR)
+  contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
+  return R
+end
+
 function contract!(R::Tensor{ElR,NR,<:Dense},labelsR,
-                   T1::Tensor{ElT1,N1,<:Dense},labels1,
-                   T2::Tensor{ElT2,N2,<:Dense},labels2) where {ElR,ElT1,ElT2,NR,N1,N2}
+                   T1::Tensor{ElT1,N1,<:Dense},labelsT1,
+                   T2::Tensor{ElT2,N2,<:Dense},labelsT2) where {ElR,ElT1,ElT2,NR,N1,N2}
   if N1==0
     # TODO: replace with an add! function?
     # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
-    perm = getperm(labelsR,labels2)
+    perm = getperm(labelsR,labelsT2)
     permutedims!(R,T2,perm,(r,t2)->T1[]*t2)
   elseif N2==0
-    perm = getperm(labelsR,labels1)
+    perm = getperm(labelsR,labelsT1)
     permutedims!(R,T1,perm,(r,t1)->T2[]*t1)
-  elseif isdisjoint(labels1,labels2)
-    # TODO: replace with a lazy kron?
-    # Can this be done with one operation that permutes T1 and T2
-    # and overwrites R?
+  elseif isdisjoint(labelsT1,labelsT2)
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
-    Rp = kron(T1,T2)
-    labelsRp = union(labels1,labels2)
+    Rp = T1⊗T2
+    labelsRp = union(labelsT1,labelsT2)
     perm = getperm(labelsR,labelsRp)
     if !istrivial(perm)
       permutedims!(R,Rp,perm)
@@ -263,9 +278,11 @@ function contract!(R::Tensor{ElR,NR,<:Dense},labelsR,
 end
 
 function _contract!(R::Tensor{ElR,NR,<:Dense},labelsR,
-                    T1::Tensor{ElT1,N1,<:Dense},labels1,
-                    T2::Tensor{ElT2,N2,<:Dense},labels2) where {ElR,ElT1,ElT2,NR,N1,N2}
-  error("_contract!(...) not yet implemented")
+                    T1::Tensor{ElT1,N1,<:Dense},labelsT1,
+                    T2::Tensor{ElT2,N2,<:Dense},labelsT2) where {ElR,ElT1,ElT2,NR,N1,N2}
+  props = CProps(labelsT1,labelsT2,labelsR)
+  compute!(props,T1,T2,R)
+  _contract_dense_dense!(R,props,T1,T2)
 end
 
 #function _contract(Cinds::IndexSet, Clabels::Vector{Int},

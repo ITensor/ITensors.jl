@@ -8,7 +8,7 @@ Tensor{StoreT,IndsT}
 A plain old tensor (with order independent
 interface and no assumption of labels)
 """
-struct Tensor{T,N,StoreT,IndsT} <: AbstractArray{T,N}
+struct Tensor{ElT,N,StoreT,IndsT} <: AbstractArray{ElT,N}
   store::StoreT
   inds::IndsT
   function Tensor(store::StoreT,inds::IndsT) where {StoreT,IndsT}
@@ -23,6 +23,7 @@ inds(T::Tensor) = T.inds
 #Base.axes(T::Tensor) = Tuple(inds(T))
 
 dims(ds::Dims) = ds
+dim(ds::Dims) = prod(ds)
 
 # The size is obtained from the indices
 function Base.size(T::Tensor{StoreT,IndsT}) where {StoreT,IndsT}
@@ -31,10 +32,17 @@ end
 
 Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 
+function Base.similar(T::Type{Tensor{ElT,N,StoreT,IndsT}},dims) where {ElT,N,StoreT,IndsT}
+  return Tensor(similar(StoreT,dims),dims)
+end
+#Base.similar(T::Type{<:Tensor},::Type{S}) where {S} = Tensor(similar(store(T),S),inds(T))
+#Base.similar(T::Type{<:Tensor},::Type{S},dims) where {S} = Tensor(similar(store(T),S),dims)
+
+# TODO: implement these versions
 Base.similar(T::Tensor) = Tensor(similar(store(T)),inds(T))
-Base.similar(T::Tensor,dims) where {S} = Tensor(similar(store(T)),dims)
-Base.similar(T::Tensor,::Type{S}) where {S} = Tensor(similar(store(T),S),inds(T))
-Base.similar(T::Tensor,::Type{S},dims) where {S} = Tensor(similar(store(T),S),dims)
+Base.similar(T::Tensor,dims) = Tensor(similar(store(T),dims),dims)
+#Base.similar(T::Tensor,::Type{S}) where {S} = Tensor(similar(store(T),S),inds(T))
+#Base.similar(T::Tensor,::Type{S},dims) where {S} = Tensor(similar(store(T),S),dims)
 
 Base.BroadcastStyle(::Type{T}) where {T<:Tensor} = Broadcast.ArrayStyle{T}()
 
