@@ -352,7 +352,9 @@ function _contract(Cinds::IndexSet,
         end
       end
     end
-    Cdata .= Adata .* Bdata
+    Cvec = vec(Cdata)
+    Bvec = vec(Bdata)
+    Cvec .= Adata .* Bvec
   else
     _contract_diag_dense!(Cstore,Cinds,Clabels,
                           Astore,Ainds,Alabels,
@@ -599,7 +601,7 @@ function _contract_diag_dense!(Cstore::Dense,Cinds,Clabels::Vector{Int},
       end
     end
 
-    min_dim = minimum(dims(Binds))
+    min_dim = minimum(dims(Ainds))
     boffset_orig = 1-sum(strides(Binds))
     coffset_orig = 1-sum(strides(Cinds))
     cartesian_inds = CartesianIndices(Tuple(busize))
