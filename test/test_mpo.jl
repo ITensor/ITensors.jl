@@ -106,6 +106,10 @@ using ITensors,
                         /inner(K,psi,K,psi)))
     @test dist ≈ errorMPOProd(phi,K,psi)
 
+    # Apply K to phi and check that errorMPOProd is close to 0.
+    Kphi = applyMPO(K, phi, maxdim=1)
+    @test errorMPOProd(Kphi, K, phi) ≈ 0. atol=1e-6
+
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch errorMPOProd(phi,K,badpsi)
