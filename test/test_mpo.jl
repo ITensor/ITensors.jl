@@ -44,6 +44,16 @@ using ITensors,
     end
     @test phiKpsi[] ≈ inner(phi,K,psi)
 
+    # Do contraction manually.
+    O = 1.
+    for j ∈ eachindex(phi)
+        psij = reshape(Array(psi[j]),2)
+        phij = reshape(Array(phi[j]),2)
+        Kj = reshape(Array(K[j]),2,2)
+        O *= (phij'*transpose(Kj)*psij)[]
+    end
+    @test O ≈ inner(phi,K,psi)
+
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi,K,badpsi)
@@ -70,6 +80,17 @@ using ITensors,
       phiJdagKpsi = phiJdagKpsi*phidag[j]*Jdag[j]*K[j]*psi[j]
     end
     @test phiJdagKpsi[] ≈ inner(J,phi,K,psi)
+
+    # Do contraction manually.
+    O = 1.
+    for j ∈ eachindex(phi)
+        psij = reshape(Array(psi[j]),2)
+        phij = reshape(Array(phi[j]),2)
+        Kj = reshape(Array(K[j]),2,2)
+        Jj = reshape(Array(J[j]),2,2)
+        O *= ((transpose(Jj)*phij)'*transpose(Kj)*psij)[]
+    end
+    @test O ≈ inner(J,phi,K,psi)
 
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
