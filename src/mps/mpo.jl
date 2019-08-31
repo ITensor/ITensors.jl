@@ -2,7 +2,7 @@ export MPO,
        randomMPO,
        applyMPO,
        nmultMPO,
-       errMPOProd,
+       errorMPOProd,
        maxLinkDim,
        orthogonalize!,
        truncate!
@@ -36,8 +36,8 @@ mutable struct MPO
     end
     new(N,v,0,N+1)
   end
- 
-  function MPO(sites::SiteSet, 
+
+  function MPO(sites::SiteSet,
                ops::Vector{String})
     N = length(sites)
     its = Vector{ITensor}(undef, N)
@@ -81,17 +81,17 @@ tensors(m::MPO) = m.A_
 leftLim(m::MPO) = m.llim_
 rightLim(m::MPO) = m.rlim_
 
-function setLeftLim!(m::MPO,new_ll::Int) 
+function setLeftLim!(m::MPO,new_ll::Int)
   m.llim_ = new_ll
 end
 
-function setRightLim!(m::MPO,new_rl::Int) 
+function setRightLim!(m::MPO,new_rl::Int)
   m.rlim_ = new_rl
 end
 
 getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
 
-function setindex!(M::MPO,T::ITensor,n::Integer) 
+function setindex!(M::MPO,T::ITensor,n::Integer)
   (n <= leftLim(M)) && setLeftLim!(M,n-1)
   (n >= rightLim(M)) && setRightLim!(M,n+1)
   setindex!(tensors(M),T,n)
@@ -181,7 +181,7 @@ Get the maximum link dimension of the MPS or MPO.
 """
 function maxLinkDim(M::T) where {T <: Union{MPS,MPO}}
   md = 0
-  for b ∈ eachindex(M)[1:end-1] 
+  for b ∈ eachindex(M)[1:end-1]
     md = max(md,dim(linkindex(M,b)))
   end
   md
@@ -195,7 +195,7 @@ function show(io::IO, W::MPO)
   end
 end
 
-function linkindex(M::MPO,j::Integer) 
+function linkindex(M::MPO,j::Integer)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPO is $N)")
   li = commonindex(M[j],M[j+1])
@@ -261,16 +261,17 @@ end
 
 
 """
-errMPOProd(y::MPS, A::MPO, x::MPS)
+errorMPOProd(y::MPS, A::MPO, x::MPS)
 
-Compute the distance || |y> - A|x> ||^2.
+Compute the distance between A|x> and an approximation MPS y:
+| |y> - A|x> |/| A|x> | = √(1 + (<y|y> - 2*real(<y|A|x>))/<Ax|A|x>)
 """
-function errMPOProd(y::MPS, A::MPO, x::MPS)
+function errorMPOProd(y::MPS, A::MPO, x::MPS)
   N = length(A)
   if length(y) != N || length(x) != N
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
   end
-  return real(inner(y,y) - 2*inner(y,A,x) + inner(A,x,A,x))
+  return sqrt(abs(1. + (inner(y,y) - 2*real(inner(y,A,x)))/inner(A,x,A,x)))
 end
 
 function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
@@ -293,7 +294,7 @@ function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
 end
 
 function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
-    n = A.N_ 
+    n = A.N_
     length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
     orthogonalize!(A, 1; kwargs...)
     orthogonalize!(B, 1; kwargs...)
@@ -337,7 +338,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
     maxdim::Int = get(kwargs,:maxdim,maxLinkDim(psi))
     mindim::Int = max(get(kwargs,:mindim,1), 1)
-    normalize::Bool = get(kwargs, :normalize, false) 
+    normalize::Bool = get(kwargs, :normalize, false)
 
     all(x->x!=Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
     rand_plev = 14741
@@ -368,7 +369,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
         dO  = prime(dag(O), rand_plev)
         ρ   = E[j-1] * O * dO
         ts  = tags(commonindex(psi[j], psi[j-1]))
-        Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
+        Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1]))
         Ris = uniqueinds(ρ, Lis)
         FU, D = eigen(ρ, Lis, Ris; tags=ts, kwargs...)
         psi_out[j] = dag(FU)
@@ -386,7 +387,7 @@ end
 
 function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
-    resp_degen::Bool = get(kwargs, :respect_degenerate, true) 
+    resp_degen::Bool = get(kwargs, :respect_degenerate, true)
     maxdim::Int = get(kwargs,:maxdim,maxLinkDim(A)*maxLinkDim(B))
     mindim::Int = max(get(kwargs,:mindim,1), 1)
     N = length(A)
@@ -444,8 +445,8 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     return res
 end
 
-function orthogonalize!(M::Union{MPS,MPO}, 
-                        j::Int; 
+function orthogonalize!(M::Union{MPS,MPO},
+                        j::Int;
                         kwargs...)
   while leftLim(M) < (j-1)
     (leftLim(M) < 0) && setLeftLim!(M,0)
@@ -500,9 +501,9 @@ orthogonalize!(M::MPS, j::Int; kwargs...)
 
 Move the orthogonality center of the MPS
 to site j. No observable property of the
-MPS will be changed, and no truncation of the 
-bond indices is performed. Afterward, tensors 
-1,2,...,j-1 will be left-orthogonal and tensors 
+MPS will be changed, and no truncation of the
+bond indices is performed. Afterward, tensors
+1,2,...,j-1 will be left-orthogonal and tensors
 j+1,j+2,...,N will be right-orthogonal.
 
 orthogonalize!(W::MPO, j::Int; kwargs...)

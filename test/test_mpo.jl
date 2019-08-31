@@ -25,7 +25,7 @@ using ITensors,
     K = randomMPO(sites)
     orthogonalize!(phi, 1)
     orthogonalize!(K, 1)
-    orig_inner = inner(phi, K, phi) 
+    orig_inner = inner(phi, K, phi)
     orthogonalize!(phi, div(N, 2))
     orthogonalize!(K, div(N, 2))
     @test inner(phi, K, phi) ≈ orig_inner
@@ -76,17 +76,18 @@ using ITensors,
     @test_throws DimensionMismatch inner(J,phi,K,badpsi)
   end
 
-  @testset "errMPOProd" begin
+  @testset "errorMPOProd" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
     @test maxLinkDim(K) == 1
     psi = randomMPS(sites)
-    dist = real(inner(phi,phi) - 2*inner(phi,K,psi) + inner(K,psi,K,psi))
-    @test dist ≈ errMPOProd(phi,K,psi)
+    dist = sqrt(abs(1 + (inner(phi,phi) - 2*real(inner(phi,K,psi)))
+                        /inner(K,psi,K,psi)))
+    @test dist ≈ errorMPOProd(phi,K,psi)
 
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
-    @test_throws DimensionMismatch errMPOProd(phi,K,badpsi)
+    @test_throws DimensionMismatch errorMPOProd(phi,K,badpsi)
   end
 
   @testset "applyMPO" begin
