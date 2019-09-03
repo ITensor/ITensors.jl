@@ -5,17 +5,21 @@ using ITensors,
 
   N = 10
 
-  #@testset "Spin Half Site" begin
-  #  s = SpinHalfSite(3)
-  #  @test hastags(ind(s),"Site")
-  #  @test hastags(ind(s),"S=1/2")
-  #  @test hastags(ind(s),"n=3")
+  @testset "Spin Half Site" begin
+    s = SpinHalfSite()
+    @test hastags(defaultTags(s,3),"Site")
+    @test hastags(defaultTags(s,3),"S=1/2")
+    @test hastags(defaultTags(s,3),"n=3")
 
-  #  @test val(state(s,2)) == 2
-  #  @test_throws ArgumentError state(s, "Fake")
-  #end
+    @test dim(s) == 2
+
+    @test_throws ArgumentError state(Index(),s,"Fake")
+  end
 
   @testset "Spin Half SiteSet" begin
+
+    @test dim(SpinHalfSite()) == 3
+
     s = spinHalfSites(N)
 
     Sz5 = op(s,"Sz",5)
@@ -34,14 +38,14 @@ using ITensors,
     @test Array(op(s,"Dn",2),s[2])  ≈ [0.0,1.0]
   end
 
-  #@testset "Spin One Site" begin
-  #  s = SpinOneSite(4)
-  #  @test hastags(ind(s),"Site")
-  #  @test hastags(ind(s),"S=1")
-  #  @test hastags(ind(s),"n=4")
+  @testset "Spin One Site" begin
+    s = SpinOneSite()
+    @test hastags(defaultTags(s,4),"Site")
+    @test hastags(defaultTags(s,4),"S=1")
+    @test hastags(defaultTags(s,4),"n=4")
 
-  #  @test val(state(s,3)) == 3
-  #end
+    @test dim(s) == 3
+  end
 
   @testset "Spin One SiteSet" begin
     s = spinOneSites(N)
@@ -67,14 +71,14 @@ using ITensors,
     @test Array(op(s,"XDn",2),s[2]) ≈ [0.5,-im*√2,0.5]
   end
 
-  #@testset "Electron Site" begin
-  #  s = ElectronSite(5)
-  #  @test hastags(ind(s),"Site")
-  #  @test hastags(ind(s),"Electron")
-  #  @test hastags(ind(s),"n=5")
+  @testset "Electron Site" begin
+    s = ElectronSite()
+    @test hastags(defaultTags(s,5),"Site")
+    @test hastags(defaultTags(s,5),"Electron")
+    @test hastags(defaultTags(s,5),"n=5")
 
-  #  @test val(state(s,4)) == 4
-  #end
+    @test dim(s) == 4
+  end
 
   @testset "Electron SiteSet" begin
     s = electronSites(N)
@@ -121,14 +125,14 @@ using ITensors,
     @test Supdn ≈ [0.0; 0.0; 0.0; 1.0]
   end
 
-  #@testset "tJ Site" begin
-  #  s = tJSite(5)
-  #  @test hastags(ind(s),"Site")
-  #  @test hastags(ind(s),"tJ")
-  #  @test hastags(ind(s),"n=5")
+  @testset "tJ Site" begin
+    s = tJSite()
+    @test hastags(defaultTags(s,5),"Site")
+    @test hastags(defaultTags(s,5),"tJ")
+    @test hastags(defaultTags(s,5),"n=5")
 
-  #  @test val(state(s,3)) == 3
-  #end
+    @test dim(s) == 3
+  end
 
   @testset "tJ SiteSet" begin
     s = tJSites(N)
