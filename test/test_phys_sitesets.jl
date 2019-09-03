@@ -17,9 +17,6 @@ using ITensors,
   end
 
   @testset "Spin Half SiteSet" begin
-
-    @test dim(SpinHalfSite()) == 3
-
     s = spinHalfSites(N)
 
     Sz5 = op(s,"Sz",5)
