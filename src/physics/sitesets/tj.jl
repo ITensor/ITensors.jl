@@ -1,24 +1,23 @@
 export tJSite,
        tJSites
 
-struct tJSite <: Site
-  s::Index
-  tJSite(I::Index) = new(I)
-end
-tJSite(n::Int) = tJSite(Index(3,"Site,tJ,n=$n"))
+struct tJSite <: Site end
+
+dim(::tJSite) = 3
+defaultTags(::tJSite,n::Int) = TagSet("Site,tJ,n=$n")
 
 function tJSites(N::Int;kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
-    set(sites,n,tJSite(n))
+    setSite!(sites,n,tJSite())
   end
   return sites
 end
 
-function operator(site::tJSite, 
-                  opname::AbstractString)
-  s = site.s
-  sP = prime(site.s)
+function operator(s::Index,
+                  site::tJSite, 
+                  opname::AbstractString)::ITensor
+  sP = prime(s)
   Emp = s(1)
   EmpP = sP(1)
   Up = s(2)
@@ -77,7 +76,7 @@ function operator(site::tJSite,
     pD[Dn] = 1.
     return pD
   else
-      throw(ArgumentError("Operator name '$opname' not recognized for tJSite"))
+    throw(ArgumentError("Operator name '$opname' not recognized for tJSite"))
   end
   return Op
 end

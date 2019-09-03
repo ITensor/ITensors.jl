@@ -2,35 +2,36 @@ export SpinHalfSite,
        spinHalfSites
 
 struct SpinHalfSite <: Site
-    s::Index
-    SpinHalfSite(I::Index) = new(I)
 end
-SpinHalfSite(n::Int) = SpinHalfSite(Index(2, "Site,S=1/2,n=$n"))
+
+dim(::SpinHalfSite) = 2
+
+defaultTags(::SpinHalfSite,n::Int) = TagSet("Site,S=1/2,n=$n")
 
 function spinHalfSites(N::Int;kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
-    set(sites,n,SpinHalfSite(n))
+    setSite!(sites,n,SpinHalfSite())
   end
   return sites
 end
 
-function state(site::SpinHalfSite,
-               st::String)::IndexVal
+function state(s::Index,
+               site::SpinHalfSite,
+               st::String)
   if st == "Up" || st == "↑"
-    return site.s(1)
+    return s(1)
   elseif st == "Dn" || st == "↓"
-    return site.s(2)
+    return s(2)
   else
     throw(ArgumentError("State string \"$st\" not recognized for SpinHalfSite"))
   end
-  return site.s(1)
 end
 
-function operator(site::SpinHalfSite, 
+function operator(s::Index,
+                  site::SpinHalfSite, 
                   opname::AbstractString)::ITensor
-    s = site.s
-    sP = prime(site.s)
+    sP = prime(s)
     Up = s(1)
     UpP = sP(1)
     Dn = s(2)
@@ -39,36 +40,36 @@ function operator(site::SpinHalfSite,
     Op = ITensor(dag(s), s')
 
     if opname == "S⁺" || opname == "Splus" || opname == "S+"
-        Op[Dn, UpP] = 1.
+      Op[Dn, UpP] = 1.
     elseif opname == "S⁻" || opname == "Sminus" || opname == "S-"
-        Op[Up, DnP] = 1.
+      Op[Up, DnP] = 1.
     elseif opname == "Sˣ" || opname == "Sx"
-        Op[Up, DnP] = 0.5
-        Op[Dn, UpP] = 0.5
+      Op[Up, DnP] = 0.5
+      Op[Dn, UpP] = 0.5
     elseif opname == "iSʸ" || opname == "iSy"
-        Op[Up, DnP] = -0.5
-        Op[Dn, UpP] = 0.5
+       Op[Up, DnP] = -0.5
+       Op[Dn, UpP] = 0.5
     elseif opname == "Sʸ" || opname == "Sy"
-        Op = complex(Op) 
-        Op[Up, DnP] = 0.5*im
-        Op[Dn, UpP] = -0.5*im
+       Op = complex(Op) 
+       Op[Up, DnP] = 0.5*im
+       Op[Dn, UpP] = -0.5*im
     elseif opname == "Sᶻ" || opname == "Sz"
-        Op[Up, UpP] = 0.5
-        Op[Dn, DnP] = -0.5
+       Op[Up, UpP] = 0.5
+       Op[Dn, DnP] = -0.5
     elseif opname == "projUp"
-        Op[Up, UpP] = 1.
+       Op[Up, UpP] = 1.
     elseif opname == "projDn"
-        Op[Dn, DnP] = 1.
+      Op[Dn, DnP] = 1.
     elseif opname == "Up" || opname == "↑"
-        pU = ITensor(s)
-        pU[Up] = 1.
-        return pU
+      pU = ITensor(s)
+      pU[Up] = 1.
+      return pU
     elseif opname == "Dn" || opname == "↓"
-        pD = ITensor(s)
-        pD[Dn] = 1.
-        return pD
+      pD = ITensor(s)
+      pD[Dn] = 1.
+      return pD
     else
-        throw(ArgumentError("Operator name '$opname' not recognized for SpinHalfSite"))
+      throw(ArgumentError("Operator name '$opname' not recognized for SpinHalfSite"))
     end
     return Op
 end
