@@ -70,7 +70,7 @@ function op(sset::SiteSet,
       op2 = opname[starpos.start+1:end]
       return multSiteOps(op(sset,op1,n),op(sset,op2,n))
     end
-    return operator(s,siteType(sset,n),opname)
+    return op(s,siteType(sset,n),opname)
   end
   return Op
 end

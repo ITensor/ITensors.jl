@@ -14,9 +14,9 @@ function tJSites(N::Int;kwargs...)::SiteSet
   return sites
 end
 
-function operator(s::Index,
-                  site::tJSite, 
-                  opname::AbstractString)::ITensor
+function op(s::Index,
+            site::tJSite, 
+            opname::AbstractString)::ITensor
   sP = prime(s)
   Emp = s(1)
   EmpP = sP(1)
