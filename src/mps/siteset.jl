@@ -11,10 +11,9 @@ abstract type Site end
 
 state(s::Index,::Site,n::Int)::IndexVal = s(n)
 
-#defaultTags(::Site) = TagSet("Site")
 defaultTags(::Site,n::Int) = TagSet("Site,n=$n")
 
-dim(::Site) = nothing
+dim(::Site) = throw(ErrorException("method dim not defined for abstract Site type"))
 
 
 struct BasicSite <: Site end
