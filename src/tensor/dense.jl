@@ -3,10 +3,10 @@ export Dense
 struct Dense{T} <: TensorStorage
   data::Vector{T}
   Dense{T}(data::Vector) where {T} = new{T}(convert(Vector{T},data))
-  Dense(data::Vector{T}) where {T} = new{T}(data)
-  Dense{T}(size::Integer) where {T} = new{T}(Vector{T}(undef,size))
-  Dense{T}(x::Number,size::Integer) where {T} = new{T}(fill(T(x),size))
-  Dense(x::T,size::Integer) where {T<:Number} = new{T}(fill(T,size))
+  #Dense(data::Vector{T}) where {T} = new{T}(data)
+  #Dense{T}(size::Integer) where {T} = new{T}(Vector{T}(undef,size))
+  #Dense{T}(x::Number,size::Integer) where {T} = new{T}(fill(T(x),size))
+  #Dense(x::T,size::Integer) where {T<:Number} = new{T}(fill(T,size))
   Dense{T}() where {T} = new{T}(Vector{T}())
 end
 
@@ -16,38 +16,43 @@ data(D::Dense) = D.data
 Base.getindex(D::Dense,i::Integer) = data(D)[i]
 Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
 
-Base.similar(D::Dense{T}) where {T} = Dense{T}(length(D))
-Base.similar(D::Dense{T},dims) where {T} = Dense{T}(dim(dims))
-Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(dim(dims))
-Base.similar(D::Dense{T},::Type{S}) where {T,S} = Dense{S}(length(D))
+Base.similar(D::Dense{T}) where {T} = Dense{T}(similar(data(D)))
+Base.similar(D::Dense{T},dims) where {T} = Dense{T}(similar(data(D),dim(dims)))
+Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(similar(Vector{T},dim(dims)))
+Base.similar(D::Dense,::Type{T}) where {T} = Dense{T}(similar(data(D),T))
 Base.copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 
-Base.eltype(D::Dense{T}) where {T} = eltype(T)
+Base.eltype(::Dense{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
 # with the more general definition (eltype(Nothing) === Any)
-Base.eltype(D::Dense{Nothing}) = Nothing
+Base.eltype(::Dense{Nothing}) = Nothing
 Base.eltype(::Type{Dense{T}}) where {T} = eltype(T)
 #Base.length(D::Dense) = length(data(D))
 
+Base.promote_rule(::Type{Dense{T1}},::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
+Base.convert(::Type{Dense{R}},D::Dense) where {R} = Dense{R}(convert(Vector{R},data(D)))
+
+const DenseTensor{El,N,Inds} = Tensor{El,N,<:Dense,Inds}
+
 # Basic functionality for AbstractArray interface
-Base.IndexStyle(::Type{T}) where {T<:Tensor{ElT,N,StoreT}} where {ElT,N,StoreT<:Dense} = IndexLinear()
-Base.getindex(T::Tensor{ElT,N,StoreT},i::Integer) where {ElT,N,StoreT<:Dense} = store(T)[i]
-Base.setindex!(T::Tensor{ElT,N,StoreT},v,i::Integer) where {ElT,N,StoreT<:Dense} = (store(T)[i] = v)
+Base.IndexStyle(::Type{TensorT}) where {TensorT<:DenseTensor} = IndexLinear()
+Base.getindex(T::DenseTensor,i::Integer) = store(T)[i]
+Base.setindex!(T::DenseTensor,v,i::Integer) = (store(T)[i] = v)
 
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
-Base.Array(T::Tensor) = reshape(data(store(T)),dims(inds(T)))
-Base.Vector(T::Tensor) = vec(Array(T))
+Base.Array(T::DenseTensor) = reshape(data(store(T)),dims(inds(T)))
+Base.Vector(T::DenseTensor) = vec(Array(T))
 
-function Base.permutedims!(T1::Tensor{ElT1,N,StoreT1},
-                           T2::Tensor{ElT2,N,StoreT2},
-                           perm) where {ElT1,ElT2,N,StoreT1<:Dense,StoreT2<:Dense}
+function Base.permutedims!(T1::DenseTensor{<:Number,N},
+                           T2::DenseTensor{<:Number,N},
+                           perm) where {N}
   permutedims!(Array(T1),Array(T2),perm)
   return T1
 end
 
-function Base.permutedims(T::Tensor{ElT,N,StoreT},
-                          perm) where {ElT,N,StoreT<:Dense}
+function Base.permutedims(T::DenseTensor,
+                          perm)
   Tp = similar(T,permute(inds(T),perm))
   permutedims!(Tp,T,perm)
   return Tp
@@ -65,10 +70,10 @@ using Base.Cartesian: @nexprs,
 # Based off of the permutedims! implementation in Julia's base:
 # https://github.com/JuliaLang/julia/blob/91151ab871c7e7d6689d1cfa793c12062d37d6b6/base/multidimensional.jl#L1355
 #
-@generated function Base.permutedims!(TP::Tensor{ElTP,N,<:Dense},
-                                      T::Tensor{ElT,N,<:Dense},
+@generated function Base.permutedims!(TP::DenseTensor{<:Number,N},
+                                      T::DenseTensor{<:Number,N},
                                       perm,
-                                      f::Function) where {ElTP,ElT,N}
+                                      f::Function) where {N}
   quote
     Base.checkdims_perm(TP, T, perm)
 
@@ -95,7 +100,7 @@ using Base.Cartesian: @nexprs,
   end
 end
 
-function outer(T1::Tensor,T2::Tensor)
+function outer(T1::DenseTensor,T2::DenseTensor)
   return Tensor(Dense(vec(Vector(T1)*transpose(Vector(T2)))),union(inds(T1),inds(T2)))
 end
 const ⊗ = outer
@@ -241,17 +246,17 @@ const ⊗ = outer
 #  throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
 #end
 
-function contract(T1::Tensor{ElT1,N1,<:Dense},labelsT1,
-                  T2::Tensor{ElT2,N2,<:Dense},labelsT2) where {ElT1,ElT2,N1,N2}
+function contract(T1::DenseTensor,labelsT1,
+                  T2::DenseTensor,labelsT2)
   indsR,labelsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2)
   R = similar(promote_type(typeof(T1),typeof(T2)),indsR)
   contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
   return R
 end
 
-function contract!(R::Tensor{ElR,NR,<:Dense},labelsR,
-                   T1::Tensor{ElT1,N1,<:Dense},labelsT1,
-                   T2::Tensor{ElT2,N2,<:Dense},labelsT2) where {ElR,ElT1,ElT2,NR,N1,N2}
+function contract!(R::DenseTensor,labelsR,
+                   T1::DenseTensor{<:Number,N1},labelsT1,
+                   T2::DenseTensor{<:Number,N2},labelsT2) where {N1,N2}
   if N1==0
     # TODO: replace with an add! function?
     # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
@@ -277,17 +282,17 @@ function contract!(R::Tensor{ElR,NR,<:Dense},labelsR,
   return R
 end
 
-function _contract!(R::Tensor{ElR,NR,<:Dense},labelsR,
-                    T1::Tensor{ElT1,N1,<:Dense},labelsT1,
-                    T2::Tensor{ElT2,N2,<:Dense},labelsT2) where {ElR,ElT1,ElT2,NR,N1,N2}
-  props = CProps(labelsT1,labelsT2,labelsR)
-  compute!(props,T1,T2,R)
+function _contract!(R::DenseTensor,labelsR,
+                    T1::DenseTensor,labelsT1,
+                    T2::DenseTensor,labelsT2)
+  props = ContractionProperties(labelsT1,labelsT2,labelsR)
+  compute_contraction_properties!(props,T1,T2,R)
   _contract_dense_dense!(Array(R),props,Array(T1),Array(T2))
   return R
 end
 
 function _contract_dense_dense!(C::Array{T},
-                                p::CProps,
+                                p::ContractionProperties,
                                 A::Array{T},
                                 B::Array{T},
                                 α::T=one(T),
@@ -345,6 +350,28 @@ function _contract_dense_dense!(C::Array{T},
   return
 end
 
+function _contract_scalar!(Cdata::Array,Clabels::Vector{Int},
+                           Bdata::Array,Blabels::Vector{Int},α,β)
+  p = calculate_permutation(Blabels,Clabels)
+  if β==0
+    if is_trivial_permutation(p)
+      Cdata .= α.*Bdata
+    else
+      #TODO: make an optimized permutedims!() that also scales the data
+      permutedims!(Cdata,α*Bdata)
+    end
+  else
+    if is_trivial_permutation(p)
+      Cdata .= α.*Bdata .+ β.*Cdata
+    else
+      #TODO: make an optimized permutedims!() that also adds and scales the data
+      permBdata = permutedims(Bdata,p)
+      Cdata .= α.*permBdata .+ β.*Cdata
+    end
+  end
+  return
+end
+
 #function _contract(Cinds::IndexSet, Clabels::Vector{Int},
 #                   Astore::Dense{SA}, Ainds::IndexSet, Alabels::Vector{Int},
 #                   Bstore::Dense{SB}, Binds::IndexSet, Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
@@ -371,33 +398,66 @@ end
 #  elseif(length(Blabels)==0)
 #    contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
 #  else
-#    props = CProps(Alabels,Blabels,Clabels)
-#    compute!(props,Adata,Bdata,Cdata)
+#    props = ContractionProperties(Alabels,Blabels,Clabels)
+#    compute_contraction_properties!(props,Adata,Bdata,Cdata)
 #    _contract_dense_dense!(Cdata,props,Adata,Bdata)
 #  end
 #
 #  return Cstore
 #end
 
-function storage_svd(Astore::Dense{T},
-                     Lis::IndexSet,
-                     Ris::IndexSet;
-                     kwargs...) where {T}
+# Combine a bunch of tuples
+@inline tuplejoin(x) = x
+@inline tuplejoin(x, y) = (x..., y...)
+@inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
+
+# TODO: write this function
+function permutereshape(T::DenseTensor,pos::NTuple{N,NTuple{<:Any,Int}}) where {N}
+  perm = tuplejoin(pos...)
+  if !is_trivial_permutation(perm)
+    T = permutedims(T,perm)
+  end
+  @show pos
+  @show perm
+  @show prod.(pos)
+  #newdims = dims(T)[perm]
+  Tr = reshape(T,prod.(pos))
+  return Tr
+end
+
+function LinearAlgebra.svd(T::DenseTensor{<:Number,N},
+                           Lpos::NTuple{NL,<:Integer},
+                           Rpos::NTuple{NR,<:Integer};
+                           kwargs...) where {N,NL,NR}
+  NL+NR≠N && error("Index positions ($NL and $NR) must add up to order of Tensor ($N)")
+  M = permutereshape(T,(Lpos,Rpos))
+  UM,S,VM = svd(M;kwargs...)
+  u = ind(UM,2)
+  v = ind(VM,1)
+  Uinds = push(inds(T)[Lpos],u)
+  Vinds = push(inds(T)[Rpos],v)
+  U = reshape(UM,Uinds)
+  V = reshape(VM,Vinds)
+  return U,S,V
+end
+
+function LinearAlgebra.svd(T::DenseTensor{<:Number,2,IndsT},
+                           kwargs...) where {IndsT}
   maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
   mindim::Int = get(kwargs,:mindim,1)
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  utags::String = get(kwargs,:utags,"Link,u")
-  vtags::String = get(kwargs,:vtags,"Link,v")
+  #utags::String = get(kwargs,:utags,"Link,u")
+  #vtags::String = get(kwargs,:vtags,"Link,v")
   fastSVD::Bool = get(kwargs,:fastSVD,false)
 
   if fastSVD
-    MU,MS,MV = svd(reshape(data(Astore),dim(Lis),dim(Ris)))
+    MU,MS,MV = svd(Matrix(T))
   else
-    MU,MS,MV = recursiveSVD(reshape(data(Astore),dim(Lis),dim(Ris)))
+    MU,MS,MV = recursiveSVD(Matrix(T))
   end
-  MV = conj!(MV)
+  conj!(MV)
 
   P = MS.^2
   #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
@@ -413,91 +473,94 @@ function storage_svd(Astore::Dense{T},
     MV = MV[:,1:dS]
   end
 
-  u = Index(dS,utags)
-  v = settags(u,vtags)
-  Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
+  # Make the new indices to go onto U and V
+  u = eltype(IndsT)(dS)
+  v = eltype(IndsT)(dS)
+
+  Uinds = push(ind(T,1),u)
+  Vinds = push(ind(T,2),v)
+
+  U = Tensor(Dense{T}(vec(MU)),Uinds)
+  S = Tensor(Diag{Vector{Float64}}(MS),IndsT(u,v))
+  V = Tensor(Dense{T}(vec(MV)),Vinds)
+
+  #u = Index(dS,utags)
+  #v = settags(u,vtags)
+  #Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
   #TODO: make a diag storage
-  Sis,Sstore = IndexSet(u,v),Diag{Vector{Float64}}(MS)
-  Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
+  #Sis,Sstore = IndexSet(u,v),Diag{Vector{Float64}}(MS)
+  #Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
 
-  return (Uis,Ustore,Sis,Sstore,Vis,Vstore)
+  return U,S,V
 end
 
-function storage_eigen(Astore::Dense{T},
-                       Lis::IndexSet,
-                       Ris::IndexSet;
-                       kwargs...) where {T}
-  maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
-  mindim::Int = get(kwargs,:mindim,1)
-  cutoff::Float64 = get(kwargs,:cutoff,0.0)
-  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
-  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  tags::TagSet = get(kwargs,:lefttags,"Link,u")
-  lefttags::TagSet = get(kwargs,:lefttags,tags)
-  righttags::TagSet = get(kwargs,:righttags,prime(lefttags))
+#function storage_eigen(Astore::Dense{T},
+#                       Lis::IndexSet,
+#                       Ris::IndexSet;
+#                       kwargs...) where {T}
+#  maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
+#  mindim::Int = get(kwargs,:mindim,1)
+#  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+#  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
+#  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
+#  tags::TagSet = get(kwargs,:lefttags,"Link,u")
+#  lefttags::TagSet = get(kwargs,:lefttags,tags)
+#  righttags::TagSet = get(kwargs,:righttags,prime(lefttags))
+#
+#  dim_left = dim(Lis)
+#  dim_right = dim(Ris)
+#  MD,MU = eigen(Hermitian(reshape(data(Astore),dim_left,dim_right)))
+#
+#  # Sort by largest to smallest eigenvalues
+#  p = sortperm(MD; rev = true)
+#  MD = MD[p]
+#  MU = MU[:,p]
+#
+#  #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
+#  truncate!(MD;maxdim=maxdim,
+#              cutoff=cutoff,
+#              absoluteCutoff=absoluteCutoff,
+#              doRelCutoff=doRelCutoff)
+#  dD = length(MD)
+#  if dD < size(MU,2)
+#    MU = MU[:,1:dD]
+#  end
+#
+#  #TODO: include truncation parameters as keyword arguments
+#  u = Index(dD,lefttags)
+#  v = settags(u,righttags)
+#  Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
+#  Dis,Dstore = IndexSet(u,v),Diag{Vector{Float64}}(MD)
+#  return (Uis,Ustore,Dis,Dstore)
+#end
 
-  dim_left = dim(Lis)
-  dim_right = dim(Ris)
-  MD,MU = eigen(Hermitian(reshape(data(Astore),dim_left,dim_right)))
-
-  # Sort by largest to smallest eigenvalues
-  p = sortperm(MD; rev = true)
-  MD = MD[p]
-  MU = MU[:,p]
-
-  #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
-  truncate!(MD;maxdim=maxdim,
-              cutoff=cutoff,
-              absoluteCutoff=absoluteCutoff,
-              doRelCutoff=doRelCutoff)
-  dD = length(MD)
-  if dD < size(MU,2)
-    MU = MU[:,1:dD]
-  end
-
-  #TODO: include truncation parameters as keyword arguments
-  u = Index(dD,lefttags)
-  v = settags(u,righttags)
-  Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
-  Dis,Dstore = IndexSet(u,v),Diag{Vector{Float64}}(MD)
-  return (Uis,Ustore,Dis,Dstore)
-end
-
-# TODO: move this to a general "linear_algebra.jl" file?
-# i.e. a common place for custom linear algebra functionality
-# for matrices
-function polar(A::Matrix)
-  U,S,V = svd(A) # calls LinearAlgebra.svd()
-  return U*V',V*Diagonal(S)*V'
-end
-
-function storage_qr(Astore::Dense{T},
-                    Lis::IndexSet,
-                    Ris::IndexSet;
-                    kwargs...) where {T}
-  tags::TagSet = get(kwargs,:tags,"Link,u")
-  dim_left = dim(Lis)
-  dim_right = dim(Ris)
-  MQ,MP = qr(reshape(data(Astore),dim_left,dim_right))
-  dim_middle = min(dim_left,dim_right)
-  u = Index(dim_middle,tags)
-  #Must call Matrix() on MQ since the QR decomposition outputs a sparse
-  #form of the decomposition
-  Qis,Qstore = IndexSet(Lis...,u),Dense{T}(vec(Matrix(MQ)))
-  Pis,Pstore = IndexSet(u,Ris...),Dense{T}(vec(Matrix(MP)))
-  return (Qis,Qstore,Pis,Pstore)
-end
-
-function storage_polar(Astore::Dense{T},
-                       Lis::IndexSet,
-                       Ris::IndexSet) where {T}
-  dim_left = dim(Lis)
-  dim_right = dim(Ris)
-  MQ,MP = polar(reshape(data(Astore),dim_left,dim_right))
-  dim_middle = min(dim_left,dim_right)
-  Uis = prime(Ris)
-  Qis,Qstore = IndexSet(Lis...,Uis...),Dense{T}(vec(MQ))
-  Pis,Pstore = IndexSet(Uis...,Ris...),Dense{T}(vec(MP))
-  return (Qis,Qstore,Pis,Pstore)
-end
+#function storage_qr(Astore::Dense{T},
+#                    Lis::IndexSet,
+#                    Ris::IndexSet;
+#                    kwargs...) where {T}
+#  tags::TagSet = get(kwargs,:tags,"Link,u")
+#  dim_left = dim(Lis)
+#  dim_right = dim(Ris)
+#  MQ,MP = qr(reshape(data(Astore),dim_left,dim_right))
+#  dim_middle = min(dim_left,dim_right)
+#  u = Index(dim_middle,tags)
+#  #Must call Matrix() on MQ since the QR decomposition outputs a sparse
+#  #form of the decomposition
+#  Qis,Qstore = IndexSet(Lis...,u),Dense{T}(vec(Matrix(MQ)))
+#  Pis,Pstore = IndexSet(u,Ris...),Dense{T}(vec(Matrix(MP)))
+#  return (Qis,Qstore,Pis,Pstore)
+#end
+#
+#function storage_polar(Astore::Dense{T},
+#                       Lis::IndexSet,
+#                       Ris::IndexSet) where {T}
+#  dim_left = dim(Lis)
+#  dim_right = dim(Ris)
+#  MQ,MP = polar(reshape(data(Astore),dim_left,dim_right))
+#  dim_middle = min(dim_left,dim_right)
+#  Uis = prime(Ris)
+#  Qis,Qstore = IndexSet(Lis...,Uis...),Dense{T}(vec(MQ))
+#  Pis,Pstore = IndexSet(Uis...,Ris...),Dense{T}(vec(MP))
+#  return (Qis,Qstore,Pis,Pstore)
+#end
 

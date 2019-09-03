@@ -18,6 +18,7 @@ end
 
 store(T::Tensor) = T.store
 inds(T::Tensor) = T.inds
+ind(T::Tensor,j::Integer) = inds(T)[j]
 
 # This function is used in the AbstractArray interface
 #Base.axes(T::Tensor) = Tuple(inds(T))
@@ -41,8 +42,18 @@ end
 # TODO: implement these versions
 Base.similar(T::Tensor) = Tensor(similar(store(T)),inds(T))
 Base.similar(T::Tensor,dims) = Tensor(similar(store(T),dims),dims)
-#Base.similar(T::Tensor,::Type{S}) where {S} = Tensor(similar(store(T),S),inds(T))
-#Base.similar(T::Tensor,::Type{S},dims) where {S} = Tensor(similar(store(T),S),dims)
+Base.similar(T::Tensor,::Type{S}) where {S} = Tensor(similar(store(T),S),inds(T))
+Base.similar(T::Tensor,::Type{S},dims) where {S} = Tensor(similar(store(T),S),dims)
+
+function Base.convert(::Type{Tensor{ElR,N,StoreR,Inds}},
+                      T::Tensor{ElT,N,StoreT,Inds}) where {ElR,ElT,N,StoreR,StoreT,Inds}
+  return Tensor(convert(StoreR,store(T)),inds(T))
+end
+
+function Base.promote_rule(::Type{Tensor{ElT1,N,StoreT1,Inds}},
+                           ::Type{Tensor{ElT2,N,StoreT2,Inds}}) where {ElT1,ElT2,N,StoreT1,StoreT2,Inds}
+  return Tensor{promote_type(ElT1,ElT2),N,promote_type(StoreT1,StoreT2),Inds}
+end
 
 Base.BroadcastStyle(::Type{T}) where {T<:Tensor} = Broadcast.ArrayStyle{T}()
 

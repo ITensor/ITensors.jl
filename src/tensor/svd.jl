@@ -39,8 +39,8 @@ function pos_sqrt(x::Float64)::Float64
   return sqrt(x)
 end
 
-function checkSVDDone(S::Vector{T},
-                      thresh::Float64) where {T}
+function checkSVDDone(S::Vector,
+                      thresh::Float64)
   N = length(S)
   (N <= 1 || thresh < 0.0) && return (true,1)
   S1t = S[1]*thresh
@@ -55,9 +55,9 @@ function checkSVDDone(S::Vector{T},
   return (false,start)
 end
 
-function recursiveSVD(M::AbstractMatrix{T};
+function recursiveSVD(M::AbstractMatrix;
                       thresh::Float64=1E-3,
-                      north_pass::Int=2) where {T}
+                      north_pass::Int=2)
   Mr,Mc = size(M)
 
   if Mr > Mc
@@ -97,3 +97,10 @@ function recursiveSVD(M::AbstractMatrix{T};
   
   return U,D,V
 end
+
+# TODO: maybe move to another location?
+function polar(M::AbstractMatrix)
+  U,S,V = svd(M) # calls LinearAlgebra.svd()
+  return U*V',V*Diagonal(S)*V'
+end
+

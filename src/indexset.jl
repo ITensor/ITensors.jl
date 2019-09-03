@@ -22,16 +22,13 @@ export IndexSet,
 
 struct IndexSet{N}
   inds::MVector{N,Index}
-  IndexSet(inds::MVector{N,Index}) where {N} = new{N}(inds)
-  IndexSet(inds::NTuple{N,Index}) where {N} = new{N}(inds)
+  IndexSet{N}(inds::MVector{N,Index}) where {N} = new{N}(inds)
+  IndexSet{N}(inds::NTuple{N,Index}) where {N} = new{N}(inds)
 end
+IndexSet(inds::MVector{N,Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
 
 inds(is::IndexSet) = is.inds
-
-function permute(is::IndexSet{N},perm) where {N}
-  indsp = ntuple(i->is[perm[i]], Val(N))
-  return IndexSet(indsp)
-end
 
 # Empty constructor
 IndexSet() = IndexSet(())
@@ -59,11 +56,11 @@ function Base.show(io::IO, is::IndexSet)
   end
 end
 
-getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
-setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
-length(is::IndexSet) = length(is.inds)
+Base.getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
+Base.setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
+Base.length(is::IndexSet) = length(is.inds)
 order(is::IndexSet) = length(is)
-copy(is::IndexSet) = IndexSet(copy(is.inds))
+Base.copy(is::IndexSet) = IndexSet(copy(is.inds))
 dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 dim(is::IndexSet) = prod(dim.(is))
 dim(is::IndexSet,pos::Integer) = dim(is[pos])
@@ -83,8 +80,13 @@ dag(is::IndexSet) = IndexSet(dag.(is.inds))
 # Allow iteration
 Base.iterate(is::IndexSet{N},state::Int=1) where {N} = state > N ? nothing : (is[state], state+1)
 
+Base.eltype(is::IndexSet) = Index
+
+# Needed for findfirst (I think)
+Base.keys(is::IndexSet{N}) where {N} = 1:N
+
 #push!(is::IndexSet,i::Index) = push!(is.inds,i)
-StaticArrays.push(is::IndexSet,i::Index) = push(is.inds,i)
+StaticArrays.push(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(push(is.inds,i))
 
 """
 minDim(is::IndexSet)
@@ -187,7 +189,7 @@ function uniqueinds(Ainds,Binds)
   Ais = IndexSet(Ainds)
   Cis = IndexSet()
   for j ∈ Ais
-    _is_unique_index(j,Binds) && push!(Cis,j)
+    _is_unique_index(j,Binds) && (Cis = push(Cis,j))
   end
   return Cis
 end
@@ -223,7 +225,7 @@ function commoninds(Ainds,Binds)
   Ais = IndexSet(Ainds)
   Cis = IndexSet()
   for i ∈ Ais
-    hasindex(Binds,i) && push!(Cis,i)
+    hasindex(Binds,i) && (Cis = push(Cis,i))
   end
   return Cis
 end
@@ -257,7 +259,7 @@ function findinds(inds,tags)
   found_inds = IndexSet()
   for i ∈ is
     if hastags(i,ts)
-      push!(found_inds,i)
+      found_inds = push(found_inds,i)
     end
   end
   return found_inds
@@ -277,13 +279,16 @@ function findindex(inds,tags)
       return i
     end
   end
+  # TODO: should this return `nothing` if no Index is found?
   return Index()
 end
 # This version checks if there are more than one indices
 #findindex(inds, tags) = Index(findinds(inds,tags))
 
-function findindex(is::IndexSet,
-                   i::Index)::Int
+# TODO: Should this return `nothing` like `findfirst`?
+# Should this just use `findfirst`?
+function indexposition(is::IndexSet,
+                       i::Index)::Int
   for (n,j) in enumerate(is)
     if i==j
       return n
@@ -433,6 +438,8 @@ function swaptags!(is::IndexSet,
                    match = nothing)
   ts1 = TagSet(tags1)
   ts2 = TagSet(tags2)
+  # TODO: add debug check that this "random" tag
+  # doesn't clash with ts1 or ts2
   tstemp = TagSet("e43efds")
   plev(ts1) ≥ 0 && (tstemp = setprime(tstemp,431534))
   replacetags!(is, ts1, tstemp, match)
@@ -442,22 +449,9 @@ function swaptags!(is::IndexSet,
 end
 swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 
-function getperm(set1, set2)
-  l1 = length(set1)
-  l2 = length(set2)
-  l1==l2 || throw(DimensionMismatch("Mismatched input sizes in calcPerm: l1=$l1, l2=$l2"))
-  p = zeros(Int,l1)
-  for i1 = 1:l1
-    for i2 = 1:l2
-      if set1[i1]==set2[i2]
-        p[i1] = i2
-        break
-      end
-    end #i2
-    p[i1]!=0 || error("Sets aren't permutations of each other")
-  end #i1
-  return p
-end
+#
+# Helper functions for contracting ITensors
+#
 
 function compute_contraction_labels(Ai,Bi)
   rA = length(Ai)
@@ -513,6 +507,10 @@ function contract_inds(Ais::IndexSet,
   return (IndexSet(Cis...),Cind)
 end
 
+# TODO: implement this in terms of a tuple,
+# overload Base.strides and implement strides(inds,j)
+# to get the jth stride
+# TODO: should the IndexSet store the strides?
 function compute_strides(inds::IndexSet)
   r = order(inds)
   stride = zeros(Int, r)
@@ -522,5 +520,70 @@ function compute_strides(inds::IndexSet)
     s *= dim(inds[i])
   end
   return stride
+end
+
+#
+# More general set functions
+#
+
+function permute(is::IndexSet{N},perm) where {N}
+  indsp = ntuple(i->is[perm[i]], Val(N))
+  return IndexSet(indsp)
+end
+
+"""
+getperm(col1,col2)
+
+Get the permutation that takes collection 2 to collection 1,
+such that col2[p].==col1
+"""
+function getperm(set1, set2)
+  l1 = length(set1)
+  l2 = length(set2)
+  l1==l2 || throw(DimensionMismatch("Mismatched input sizes in calcPerm: l1=$l1, l2=$l2"))
+  p = zeros(Int,l1)
+  for i1 = 1:l1
+    for i2 = 1:l2
+      if set1[i1]==set2[i2]
+        p[i1] = i2
+        break
+      end
+    end #i2
+    p[i1]!=0 || error("Sets aren't permutations of each other")
+  end #i1
+  return p
+end
+
+"""
+Determine if s1 and s2 have no overlapping elements.
+"""
+function isdisjoint(s1,s2)
+  for i1 ∈ 1:length(s1)
+    for i2 ∈ 1:length(s2)
+      s1[i1] == s2[i2] && return false
+    end
+  end
+  return true
+end
+
+"""
+Determine if P is a trivial permutation. Errors if P is not a valid
+permutation.
+"""
+function is_trivial_permutation(P)
+  isperm(P) || error("Input is not a permutation")
+  N = length(P)
+  for n = 1:N
+    P[n]!=n && return false
+  end
+  return true
+end
+
+function decomp_permutation(s::IndexSet{N},s1::IndexSet{N1},s2::IndexSet{N2}) where {N1,N2,N}
+  N1+N2≠N && error("Size of partial sets don't match with total set")
+  perm1 = ntuple(i->findfirst(==(s1[i]),s),Val(N1))
+  perm2 = ntuple(i->findfirst(==(s2[i]),s),Val(N2))
+  isperm((perm1...,perm2...)) || error("Combined permutations are $((perm1...,perm2...)), not a valid permutation")
+  return perm1,perm2
 end
 

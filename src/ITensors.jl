@@ -49,28 +49,33 @@ import Base.adjoint,
 
 #####################################
 # Global Variables
-
+#
 const warnTensorOrder = 10
 
 #####################################
-# Helper functionality
+# Index and IndexSet
 #
-
-include("sets.jl")
-
-#####################################
-
+# TODO: load these after Tensor functions
 include("smallstring.jl")
 include("tagset.jl")
 include("index.jl")
 include("indexset.jl")
+
+#####################################
+# Tensor
+#
 include("tensor/tensor.jl")
 include("tensor/tensorstorage.jl")
-include("tensor/contract.jl")
+include("tensor/contraction_logic.jl")
 include("tensor/dense.jl")
 include("tensor/diag.jl")
 include("tensor/combiner.jl")
+include("tensor/truncate.jl")
 include("tensor/svd.jl")
+
+#####################################
+# ITensor
+#
 include("itensor.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
@@ -95,4 +100,4 @@ include("physics/sitesets/spinone.jl")
 include("physics/sitesets/electron.jl")
 include("physics/sitesets/tj.jl")
 
-end # module
+end # module ITensors

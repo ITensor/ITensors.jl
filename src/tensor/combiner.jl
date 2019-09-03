@@ -10,7 +10,7 @@ function storage_contract(CSstore::CombinerStorage,
                           dis::IndexSet)
   cind = Cis[1]
   if hasindex(dis, cind) # has combined index, uncombine
-    cpos = findindex(dis,cind)
+    cpos = indexposition(dis,cind)
     dinds = inds(dis)
     Cinds = inds(Cis)
     Nis = IndexSet(vcat(dinds[1:cpos-1], Cinds[2:end], dinds[cpos+1:end]))
@@ -18,8 +18,8 @@ function storage_contract(CSstore::CombinerStorage,
   else # lacks combined index, combine
     # dis doesn't have cind, replace
     # Cis[1], Cis[2], ... with cind, may need to permute
-    j_1_pos = findindex(dis,Cis[2])
-    if j_1_pos < 1 
+    j_1_pos = indexposition(dis,Cis[2])
+    if j_1_pos === nothing
       throw(ArgumentError("tensor missing index $(Cis[2]) in combiner-tensor product"))
     end
 
@@ -46,8 +46,8 @@ function storage_contract(CSstore::CombinerStorage,
       # permute combined indices to the front, in same order as in Cis:
       ni = 1
       for c in 2:length(Cis)
-        j = findindex(dis, Cis[c])
-        if j < 1 
+        j = indexposition(dis, Cis[c])
+        if j === nothing
           throw(ArgumentError("tensor missing index $(Cis[c]) in combiner-tensor product"))
         end
         P[j] = ni

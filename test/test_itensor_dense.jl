@@ -376,7 +376,7 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[j(jj),k(kk),i(ii)]==digits(SType,ii,jj,kk)
     end
-    @test_throws ErrorException A[1]
+    @test_throws MethodError A[1]
   end
   @testset "Test permute(ITensor,Index...)" begin
     A = randomITensor(SType,i,k,j)
@@ -390,20 +390,21 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[k(kk),i(ii),j(jj)]==permA[i(ii),j(jj),k(kk)]
     end
-    # TODO: why do we need this? can't we just splat?
-    @testset "getindex and setindex with vector of IndexVals" begin
-        k_inds = [k(kk) for kk ∈ 1:dim(k)]
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-          @test A[k_inds...,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
-        end
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-            A[k_inds...,i(ii),j(jj)]=collect(1:length(k_inds))
-        end
-        permA = permute(A,k,j,i)
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-          @test A[k_inds...,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
-        end
-    end
+    # TODO: I think this was doing slicing, but what is the output
+    # of slicing an ITensor?
+    #@testset "getindex and setindex with vector of IndexVals" begin
+    #    k_inds = [k(kk) for kk ∈ 1:dim(k)]
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #      @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
+    #    end
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #        A[k_inds,i(ii),j(jj)]=collect(1:length(k_inds))
+    #    end
+    #    permA = permute(A,k,j,i)
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #      @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
+    #    end
+    #end
   end
   @testset "Set and get values with Ints" begin
     A = ITensor(SType,i,j,k)
@@ -421,10 +422,7 @@ end
     A = ITensor(x)
     @test x==scalar(A)
     A = ITensor(SType,i,j,k)
-    @test_throws ArgumentError scalar(A)
-    # test the storage_scalar error throw
-    ds = Dense{Float64}(rand(10))
-    @test_throws ErrorException ITensor.storage_scalar(ds)
+    @test_throws BoundsError scalar(A)
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)
@@ -454,13 +452,11 @@ end
 
     @testset "Test SVD truncation" begin
         M = randn(4,4) + randn(4,4)*1.0im
-        (U,s,Vh) = svd(M)
         ii = Index(4)
         jj = Index(4)
-        S = Diagonal(s)
-        T = ITensor(IndexSet(ii,jj),Dense{ComplexF64}(vec(U*S*Vh)))
-        (U,S,Vh) = svd(T,ii;maxdim=2)
-        @test norm((U*S)*Vh-T)≈sqrt(s[3]^2+s[4]^2)
+        T = ITensor(Dense{ComplexF64}(vec(M)),IndexSet(ii,jj))
+        U,S,V = svd(T,ii;maxdim=2)
+        @test norm(U*S*V-T)≈sqrt(s[3]^2+s[4]^2)
     end
 
     @testset "Test QR decomposition of an ITensor" begin
