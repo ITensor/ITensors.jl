@@ -44,7 +44,8 @@ siteType(s::SiteSet,n::Int) = s.store[n][2]
 eachindex(s::SiteSet) = eachindex(s.store)
 
 function setSite!(sset::SiteSet,n::Int,s::Site)
-  sset.store[n] = (Index(dim(s),defaultTags(s,n)),s)
+  i = Index(dim(s),defaultTags(s,n))
+  sset.store[n] = (i,s)
 end
 
 function op(sset::SiteSet,
