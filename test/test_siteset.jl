@@ -28,6 +28,5 @@ using ITensors,
     SySy = op(sites,"Sy * Sy",2)
     @test SySy ≈ multSiteOps(Sy,Sy)
   end
-  @test_throws ArgumentError ITensors.operator(ITensors.BasicSite(2), "aiodhfaiohf")
   @test length(SiteSet()) == 0
 end
