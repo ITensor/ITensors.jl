@@ -7,7 +7,7 @@ function dmrg(H::MPO,
               kwargs...)::Tuple{Float64,MPS}
 
   which_factorization::String = get(kwargs,:which_factorization,"automatic")
-  obs = get(kwargs, :observer, NoObserver() )
+  obs = get(kwargs,:observer, NoObserver())
 
   psi = copy(psi0)
   N = length(psi)
@@ -39,7 +39,9 @@ function dmrg(H::MPO,
                    cutoff=cutoff(sweeps,sw),
                    dir=dir,
                    which_factorization=which_factorization)
+
       measure!(obs,psi,DMRGStepInfo(ha==2,b,sw,energy))
+
     end
     end
     if !quiet
