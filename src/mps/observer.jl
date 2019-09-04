@@ -39,8 +39,8 @@ end
 const DMRGMeasurement = Vector{Vector{Float64}}
 
 struct DMRGObserver <: Observer
-  ops_::Vector{String}
-  sites_::SiteSet
+  ops::Vector{String}
+  sites::SiteSet
   measurements::Dict{String,DMRGMeasurement}
   energies::Vector{Float64}
   etol::Float64
@@ -62,13 +62,14 @@ end
 
 measurements(o::DMRGObserver) = o.measurements
 energies(o::DMRGObserver) = o.energies
-op(obs::DMRGObserver,O,i) = op(obs.sites_,O,i)
+sites(obs::DMRGObserver) = obs.sites
+ops(obs::DMRGObserver) = obs.ops
 
-function measure_local_ops!(obs::DMRGObserver,
-                             psi::MPS,
-                             i::Int)
-  for o in obs.ops_
-    m = dot(prime(psi[i],"Site"), op(obs,o,i)*psi[i])
+function measureLocalOps!(obs::DMRGObserver,
+                          psi::MPS,
+                          i::Int)
+  for o in ops(obs)
+    m = dot(prime(psi[i],"Site"), op(sites(obs),o,i)*psi[i])
     imag(m)>1e-8 && (@warn "encountered finite imaginary part when measuring $o")
     measurements(obs)[o][end][i]=real(m)
   end
@@ -79,7 +80,7 @@ function measure!(obs::DMRGObserver,
                   si::DMRGStepInfo)
   if sweepdir(si)=="left"
     if bond(si)==length(psi)-1
-      for o in obs.ops_
+      for o in ops(obs)
         push!(measurements(obs)[o],zeros(length(psi)))
       end
     end
@@ -88,12 +89,12 @@ function measure!(obs::DMRGObserver,
     # We want to measure at n=bond(si)+1 because there the tensor has been
     # already fully updated (by the right and left pass of the sweep).
     orthogonalize!(psi,bond(si)+1)
-    measure_local_ops!(obs,psi,bond(si)+1)
+    measureLocalOps!(obs,psi,bond(si)+1)
     orthogonalize!(psi,bond(si))
 
     if bond(si)==1
       push!(energies(obs), getenergy(si))
-      measure_local_ops!(obs,psi,bond(si))
+      measureLocalOps!(obs,psi,bond(si))
     end
   end
 end
