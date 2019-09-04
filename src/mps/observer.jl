@@ -1,6 +1,6 @@
 export AbstractObserver,
        measure!,
-       checkdone,
+       checkdone!,
        NoObserver,
        DMRGObserver, 
        measurements,
@@ -10,7 +10,7 @@ export AbstractObserver,
 abstract type AbstractObserver end
 
 measure!(o::AbstractObserver; kwargs...) = nothing
-checkdone(o::AbstractObserver; kwargs...) = false
+checkdone!(o::AbstractObserver; kwargs...) = false
 
 struct NoObserver <: AbstractObserver
 end
@@ -84,7 +84,7 @@ function measure!(obs::DMRGObserver;
   end
 end
 
-function checkdone(o::DMRGObserver; kwargs...)
+function checkdone!(o::DMRGObserver; kwargs...)
   quiet = get(kwargs,:quiet,false)
   if (length(energies(o)) > o.minsweeps &&
       abs(energies(o)[end] - energies(o)[end-1]) < o.etol)
