@@ -143,14 +143,20 @@ arguments provided. The following keyword arguments are recognized:
 function svd(A::ITensor,
              Linds...;
              kwargs...)
+  utags::TagSet = get(kwargs,:utags,"Link,u")
+  vtags::TagSet = get(kwargs,:vtags,"Link,v")
   A,Lis,Ris = _permute_for_factorize(A,Linds...)
   Lpos,Rpos = decomp_permutation(inds(A),Lis,Ris)
   TU,TS,TV = svd(Tensor(A),Lpos,Rpos;kwargs...)
-  #Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
-
   U,S,V = ITensor(TU),ITensor(TS),ITensor(TV)
   u = commonindex(U,S)
   v = commonindex(S,V)
+  settags!(U,utags,u)
+  settags!(S,utags,u)
+  settags!(S,vtags,v)
+  settags!(V,vtags,v)
+  u = settags(u,utags)
+  v = settags(v,vtags)
   return U,S,V,u,v
 end
 

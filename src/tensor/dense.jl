@@ -39,6 +39,23 @@ Base.IndexStyle(::Type{TensorT}) where {TensorT<:DenseTensor} = IndexLinear()
 Base.getindex(T::DenseTensor,i::Integer) = store(T)[i]
 Base.setindex!(T::DenseTensor,v,i::Integer) = (store(T)[i] = v)
 
+function Base.convert(::Type{Tensor{ElR,NR,StoreR,IndsR}},
+                      T::Tensor{ElT,NT,StoreT,IndsT}) where {ElR,NR,StoreR<:Dense,IndsR,
+                                                             ElT,NT,StoreT<:Dense,IndsT}
+  return Tensor(convert(StoreR,store(T)),inds(T))
+end
+
+# Reshape a DenseTensor using the specified dimensions
+function Base.reshape(T::DenseTensor,dims)
+  dim(T)==dim(dims) || error("Total new dimension must be the same as the old dimension")
+  return Tensor(store(T),dims)
+end
+# This version fixes method ambiguity with AbstractArray reshape
+function Base.reshape(T::DenseTensor,dims::Dims)
+  dim(T)==dim(dims) || error("Total new dimension must be the same as the old dimension")
+  return Tensor(store(T),dims)
+end
+
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
 Base.Array(T::DenseTensor) = reshape(data(store(T)),dims(inds(T)))
@@ -412,44 +429,79 @@ end
 @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
 
 # TODO: write this function
-function permutereshape(T::DenseTensor,pos::NTuple{N,NTuple{<:Any,Int}}) where {N}
+"""
+combinedims(T::Tensor,pos)
+
+Takes a permutation that is split up into tuples. Index positions
+within the tuples are combined.
+
+For example:
+
+permute_reshape(T,(3,2),1)
+
+First T is permuted as `permutedims(3,2,1)`, then reshaped such
+that the original indices 3 and 2 are combined.
+"""
+function permute_reshape(T::DenseTensor{ElT,NT,IndsT},pos::Vararg{<:Any,N}) where {ElT,NT,IndsT,N}
   perm = tuplejoin(pos...)
+  dimsT = dims(T)
+  indsT = inds(T)
   if !is_trivial_permutation(perm)
     T = permutedims(T,perm)
   end
-  @show pos
-  @show perm
-  @show prod.(pos)
-  #newdims = dims(T)[perm]
-  Tr = reshape(T,prod.(pos))
-  return Tr
+  N==NT && return T
+  newdims = MVector(ntuple(_->eltype(IndsT)(1),Val(N)))
+  for i ∈ 1:N
+    if length(pos[i])==1
+      # No reshape needed, just use the
+      # original index
+      newdims[i] = indsT[pos[i][1]]
+    else
+      newdim_i = 1
+      for p ∈ pos[i]
+        newdim_i *= dimsT[p]
+      end
+      newdims[i] = eltype(IndsT)(newdim_i)
+    end
+  end
+  newinds = base_type(IndsT)(Tuple(newdims))
+  return reshape(T,newinds)
 end
 
-function LinearAlgebra.svd(T::DenseTensor{<:Number,N},
-                           Lpos::NTuple{NL,<:Integer},
-                           Rpos::NTuple{NR,<:Integer};
-                           kwargs...) where {N,NL,NR}
+# svd of an order-n tensor according to positions Lpos
+# and Rpos
+function LinearAlgebra.svd(T::DenseTensor{<:Number,N,IndsT},
+                           Lpos::NTuple{NL,Int},
+                           Rpos::NTuple{NR,Int};
+                           kwargs...) where {N,IndsT,NL,NR}
   NL+NR≠N && error("Index positions ($NL and $NR) must add up to order of Tensor ($N)")
-  M = permutereshape(T,(Lpos,Rpos))
+  isperm(tuplejoin(Lpos,Rpos)) || error("Index positions must be a permutation")
+  M = permute_reshape(T,Lpos,Rpos)
   UM,S,VM = svd(M;kwargs...)
   u = ind(UM,2)
-  v = ind(VM,1)
-  Uinds = push(inds(T)[Lpos],u)
-  Vinds = push(inds(T)[Rpos],v)
+  v = ind(VM,2)
+  
+  Linds = base_type(IndsT)(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Uinds = push(Linds,u)
+
+  # TODO: do these positions need to be reversed?
+  Rinds = base_type(IndsT)(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
+  Vinds = push(Rinds,v)
+
   U = reshape(UM,Uinds)
   V = reshape(VM,Vinds)
+
   return U,S,V
 end
 
-function LinearAlgebra.svd(T::DenseTensor{<:Number,2,IndsT},
-                           kwargs...) where {IndsT}
-  maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
+# svd of an order-2 tensor
+function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
+                           kwargs...) where {ElT,IndsT}
+  maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
   mindim::Int = get(kwargs,:mindim,1)
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  #utags::String = get(kwargs,:utags,"Link,u")
-  #vtags::String = get(kwargs,:vtags,"Link,v")
   fastSVD::Bool = get(kwargs,:fastSVD,false)
 
   if fastSVD
@@ -477,12 +529,13 @@ function LinearAlgebra.svd(T::DenseTensor{<:Number,2,IndsT},
   u = eltype(IndsT)(dS)
   v = eltype(IndsT)(dS)
 
-  Uinds = push(ind(T,1),u)
-  Vinds = push(ind(T,2),v)
+  Uinds = IndsT((ind(T,1),u))
+  Sinds = IndsT((u,v))
+  Vinds = IndsT((ind(T,2),v))
 
-  U = Tensor(Dense{T}(vec(MU)),Uinds)
-  S = Tensor(Diag{Vector{Float64}}(MS),IndsT(u,v))
-  V = Tensor(Dense{T}(vec(MV)),Vinds)
+  U = Tensor(Dense{ElT}(vec(MU)),Uinds)
+  S = Tensor(Diag{Vector{Float64}}(MS),Sinds)
+  V = Tensor(Dense{ElT}(vec(MV)),Vinds)
 
   #u = Index(dS,utags)
   #v = settags(u,vtags)

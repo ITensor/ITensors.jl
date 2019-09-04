@@ -224,20 +224,19 @@ end
 end
 
 @testset "Test isapprox for ITensors" begin
-        m,n = rand(0:20,2)
-        i = Index(m)
-        j = Index(n)
-        realData = rand(m,n)
-        complexData = realData+ zeros(m,n)*1im
-        A = ITensor(realData, i,j)
-        B = ITensor(complexData, i,j)
-        @test A≈B
-        @test B≈A
-        realDataT = Array(transpose(realData))
-        A = ITensor(realDataT, j,i)
-        @test A≈B
-        @test B≈A
-    end
+  m,n = rand(0:20,2)
+  i = Index(m)
+  j = Index(n)
+  realData = rand(m,n)
+  complexData = complex(realData)
+  A = ITensor(realData, i,j)
+  B = ITensor(complexData, i,j)
+  @test A≈B
+  @test B≈A
+  A = permute(A,j,i)
+  @test A≈B
+  @test B≈A
+end
 
 @testset "ITensor tagging and priming" begin
   s1 = Index(2,"Site,s=1")
@@ -451,10 +450,9 @@ end
     end
 
     @testset "Test SVD truncation" begin
-        M = randn(4,4) + randn(4,4)*1.0im
         ii = Index(4)
         jj = Index(4)
-        T = ITensor(Dense{ComplexF64}(vec(M)),IndexSet(ii,jj))
+        T = randomITensor(ComplexF64,ii,jj)
         U,S,V = svd(T,ii;maxdim=2)
         @test norm(U*S*V-T)≈sqrt(s[3]^2+s[4]^2)
     end
@@ -477,15 +475,17 @@ end
       end
     end
 
-    # TODO: need to implement swapInds
-    #@testset "Test eigen decomposition of an ITensor" begin
-    #  A = A + swapInds(dag(A),(i,k),(j,l))
-    #  U,D,u = eigen(A,(i,k),(j,l))
-    #  @test A≈U*D*prime(dag(U))
-    #  UUᵀ =  U*prime(dag(U),u)
-    #  @test UUᴴ ≈ δ(u,u') atol=1e-14
-    #end
+    @testset "Test eigen decomposition of an ITensor" begin
+      T = randomITensor(i,j,i',j')
+      T = T + swapprime(dag(T),0,1)
+      U,D,u = eigen(T)
+      @test A≈U*D*prime(dag(U))
+      UUᵀ =  U*prime(dag(U),u)
+      @test UUᴴ ≈ δ(u,u') atol=1e-14
+    end
+
   end # End ITensor factorization testset
+
 end # End Dense storage test
 
 end # End Dense ITensor basic functionality

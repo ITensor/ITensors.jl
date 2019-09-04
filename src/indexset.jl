@@ -30,6 +30,12 @@ IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
 
 inds(is::IndexSet) = is.inds
 
+# This is to help with some generic programming in the Tensor
+# code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
+# only known thing for dispatch is a concrete type such
+# as IndexSet{4})
+base_type(::Type{T}) where {T<:IndexSet} = IndexSet
+
 # Empty constructor
 IndexSet() = IndexSet(())
 
@@ -80,7 +86,8 @@ dag(is::IndexSet) = IndexSet(dag.(is.inds))
 # Allow iteration
 Base.iterate(is::IndexSet{N},state::Int=1) where {N} = state > N ? nothing : (is[state], state+1)
 
-Base.eltype(is::IndexSet) = Index
+Base.eltype(is::Type{<:IndexSet}) = Index
+Base.eltype(is::IndexSet) = eltype(typeof(is))
 
 # Needed for findfirst (I think)
 Base.keys(is::IndexSet{N}) where {N} = 1:N
@@ -361,6 +368,8 @@ function swapprime!(is::IndexSet,
   for n in pos
     if plev(is[n])==pl1
       is[n] = setprime(is[n],pl2)
+    elseif plev(is[n])==pl2
+      is[n] = setprime(is[n],pl1)
     end
   end
   return is
@@ -433,6 +442,8 @@ function replacetags!(is::IndexSet,
 end
 replacetags(is, vargs...) = replacetags!(copy(is), vargs...)
 
+# TODO: write more efficient version in terms
+# of indexpositions like swapprime!
 function swaptags!(is::IndexSet,
                    tags1, tags2,
                    match = nothing)
@@ -531,6 +542,14 @@ function permute(is::IndexSet{N},perm) where {N}
   return IndexSet(indsp)
 end
 
+# Permute some other type by perm
+# (for example, tuple, MVector, etc.)
+# as long as the constructor accepts a tuple
+function permute(is::T,perm) where {T}
+  indsp = ntuple(i->is[perm[i]], Val(length(is)))
+  return T(indsp)
+end
+
 """
 getperm(col1,col2)
 
@@ -572,6 +591,7 @@ permutation.
 """
 function is_trivial_permutation(P)
   isperm(P) || error("Input is not a permutation")
+  # TODO: use `all(n->P[n]==n,1:length(P))`?
   N = length(P)
   for n = 1:N
     P[n]!=n && return false

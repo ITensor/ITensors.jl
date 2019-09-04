@@ -316,11 +316,11 @@ end
 #   f!(A::ITensor,vargs...) = ( f!(inds(A),vargs...); return A )
 # end
 
-prime(A::ITensor,vargs...)= ITensor(store(A),prime(inds(A),vargs...))
+# TODO: implement more in-place versions
 
 prime!(A::ITensor,vargs...)= ( prime!(inds(A),vargs...); return A )
-
-adjoint(A::ITensor) = prime(A)
+prime(A::ITensor,vargs...)= ITensor(store(A),prime(inds(A),vargs...))
+Base.adjoint(A::ITensor) = prime(A)
 
 setprime(A::ITensor,vargs...) = ITensor(store(A),setprime(inds(A),vargs...))
 
@@ -334,11 +334,11 @@ addtags(A::ITensor,vargs...) = ITensor(store(A),addtags(inds(A),vargs...))
 
 removetags(A::ITensor,vargs...) = ITensor(store(A),removetags(inds(A),vargs...))
 
+replacetags!(A::ITensor,vargs...) = ( replacetags!(inds(A),vargs...); return A )
 replacetags(A::ITensor,vargs...) = ITensor(store(A),replacetags(inds(A),vargs...))
 
-replacetags!(A::ITensor,vargs...) = ( replacetags!(inds(A),vargs...); return A )
-
-settags(A::ITensor,vargs...) = ITensor(store(A),settags(inds(A),vargs...))
+settags!(A::ITensor,vargs...) = ( settags!(inds(A),vargs...); return A )
+settags(A::ITensor,vargs...) = ITensor(store(A),settags(inds(A)))
 
 swaptags(A::ITensor,vargs...) = ITensor(store(A),swaptags(inds(A),vargs...))
 

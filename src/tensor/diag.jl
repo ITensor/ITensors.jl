@@ -16,7 +16,8 @@ mutable struct Diag{T} <: TensorStorage
 end
 
 data(D::Diag) = D.data
-eltype(D::Diag) = eltype(data(D))
+Base.eltype(::Diag{T}) where {T} = eltype(T)
+Base.eltype(::Type{Diag{T}}) where {T} = eltype(T)
 getindex(D::Diag{T},i::Int) where {T<:AbstractVector}= data(D)[i]
 # Version of getindex for uniform (scalar) storage
 getindex(D::Diag{T},i::Int) where {T<:Number} = data(D)
