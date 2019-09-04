@@ -8,6 +8,7 @@ function dmrg(H::MPO,
 
   which_factorization::String = get(kwargs,:which_factorization,"automatic")
   obs = get(kwargs,:observer, NoObserver())
+  quiet::Bool = get(kwargs,:quiet,false)
 
   psi = copy(psi0)
   N = length(psi)
@@ -16,7 +17,6 @@ function dmrg(H::MPO,
   position!(PH,psi0,1)
   energy = 0.0
 
-  quiet::Bool = get(kwargs,:quiet,false)
   for sw=1:nsweep(sweeps)
     sw_time = @elapsed begin
 
@@ -35,11 +35,12 @@ function dmrg(H::MPO,
                    dir=dir,
                    which_factorization=which_factorization)
 
-      measure!(obs,psi;energy=energy,
-                       bond=b,
-                       sweep=sw,
-                       half_sweep=ha,
-                       quiet=quiet)
+      measure!(obs;energy=energy,
+                   psi=psi,
+                   bond=b,
+                   sweep=sw,
+                   half_sweep=ha,
+                   quiet=quiet)
     end
     end
     if !quiet

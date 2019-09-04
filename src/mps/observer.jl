@@ -54,12 +54,12 @@ function measureLocalOps!(obs::DMRGObserver,
   end
 end
 
-function measure!(obs::DMRGObserver, 
-                  psi::MPS;
+function measure!(obs::DMRGObserver;
                   kwargs...)
   half_sweep = kwargs[:half_sweep]
   b = kwargs[:bond]
   energy = kwargs[:energy]
+  psi = kwargs[:psi]
 
   if half_sweep==2 
     N = length(psi)
