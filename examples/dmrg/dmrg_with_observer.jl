@@ -76,6 +76,7 @@ let
     for (i,Szs) in enumerate(measurements(Sz_Sx_observer)["Sz"])
       println("<Σ Sz> after sweep $i = ", sum(Szs)/N)
     end
+    println()
     for (i,Sxs) in enumerate(measurements(Sz_Sx_observer)["Sx"])
       println("<Σ Sx> after sweep $i = ", sum(Sxs)/N)
     end
