@@ -67,14 +67,14 @@ end
 
 #Base.parse(::Type{Int}, i::IntSmallString) = parse(Int,SmallString(i))
 
-function Base.parse(::Type{Int}, s::SmallString)
-  n = length(s)
-  int = 0
-  for j = 1:n
-    int = int*10 + parse(Int,Char(s[j]))
-  end
-  return int
-end
+#function Base.parse(::Type{Int}, s::SmallString)
+#  n = length(s)
+#  int = 0
+#  for j = 1:n
+#    int = int*10 + parse(Int,Char(s[j]))
+#  end
+#  return int
+#end
 
 # Here we use the StaticArrays comparison
 Base.:(==)(s1::SmallString,s2::SmallString) = (s1.data == s2.data)

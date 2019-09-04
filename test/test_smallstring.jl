@@ -62,5 +62,20 @@ import ITensors.SmallString,
     @test isint(s) == false
   end
 
+  @testset "isless" begin
+    s1 = SmallString() 
+    s1=push(s1,'a') 
+    s1=push(s1,'b')
+
+    s2 = SmallString() 
+    s2=push(s2,'x') 
+    s2=push(s2,'y')
+
+    @test isless(s1,s2) == true
+    @test isless(s2,s1) == false
+    @test isless(s1,s1) == false
+    @test isless(s2,s2) == false
+  end
+
 end
 
