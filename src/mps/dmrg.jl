@@ -46,7 +46,7 @@ function dmrg(H::MPO,
     if !quiet
       @printf("After sweep %d energy=%.12f maxLinkDim=%d time=%.3f\n",sw,energy,maxLinkDim(psi),sw_time)
     end
-    checkdone(obs;quiet=quiet) && break
+    checkdone!(obs;quiet=quiet) && break
   end
   return (energy,psi)
 end
