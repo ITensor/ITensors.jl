@@ -26,7 +26,7 @@ let
   psi0 = randomMPS(sites)
 
   # define parameters for DMRG sweeps
-  sweeps = Sweeps(5)
+  sweeps = Sweeps(15)
   maxdim!(sweeps, 10,20,100,100,200)
   cutoff!(sweeps, 1E-10)
 
@@ -34,38 +34,50 @@ let
   create observer which will measure Sᶻ at each
   site during the dmrg sweeps and track energies after each sweep.
   in addition it will stop the computation if energy converges within
-  1e-6 tolerance
+  1E-7 tolerance
   =#
-  observer= DMRGObserver(["Sz"],sites,1e-6)
+  let
+    Sz_observer = DMRGObserver(["Sz"],sites,1E-7)
 
-  # we will now run DMRG calculation for different values
-  # of the transverse field and check how local observables
-  # converge to their ground state values
+    # we will now run DMRG calculation for different values
+    # of the transverse field and check how local observables
+    # converge to their ground state values
 
-  println("Running DMRG for TFIM with h=0.1")
-  println("================================")
-  energy, psi = dmrg(tfimMPO(sites,0.1),psi0, sweeps,observer=observer)
+    println("Running DMRG for TFIM with h=0.1")
+    println("================================")
+    H = tfimMPO(sites,0.1)
+    energy, psi = dmrg(H,psi0,sweeps,observer=Sz_observer)
 
-  for (i,Szs) in enumerate(measurements(observer)["Sz"])
-    println("magnetization after sweep $i = ", sum(Szs)/N)
+    for (i,Szs) in enumerate(measurements(Sz_observer)["Sz"])
+      println("<Σ Sz> after sweep $i = ", sum(Szs)/N)
+    end
   end
 
 
-  println("\nRunning DMRG for TFIM with h=1")
-  println("================================")
-  observer= DMRGObserver(["Sz"],sites,1e-6)
-  energy, psi = dmrg(tfimMPO(sites,1.0),psi0, sweeps,observer=observer)
+  let
+    println("\nRunning DMRG for TFIM with h=0.5 (critical point)")
+    println("================================")
+    Sz_observer= DMRGObserver(["Sz"],sites,1E-7)
+    H = tfimMPO(sites,0.5)
+    energy, psi = dmrg(H,psi0,sweeps,observer=Sz_observer)
 
-  for (i,Szs) in enumerate(measurements(observer)["Sz"])
-    println("magnetization after sweep $i = ", sum(Szs)/N)
+    for (i,Szs) in enumerate(measurements(Sz_observer)["Sz"])
+      println("<Σ Sz> after sweep $i = ", sum(Szs)/N)
+    end
   end
 
-  println("\nRunning DMRG for TFIM with h=5.")
-  println("================================")
-  observer= DMRGObserver(["Sz","Sx"],sites,1e-6)
-  energy, psi = dmrg(tfimMPO(sites,5.0),psi0, sweeps,observer=observer)
+  let
+    println("\nRunning DMRG for TFIM with h=5.")
+    println("================================")
+    Sz_Sx_observer= DMRGObserver(["Sz","Sx"],sites,1E-7)
+    H = tfimMPO(sites,5.0)
+    energy, psi = dmrg(H,psi0,sweeps,observer=Sz_Sx_observer)
 
-  for (i,Sxs) in enumerate(measurements(observer)["Sx"])
-    println("<Sˣ> after sweep $i = ", sum(Sxs)/N)
+    for (i,Szs) in enumerate(measurements(Sz_Sx_observer)["Sz"])
+      println("<Σ Sz> after sweep $i = ", sum(Szs)/N)
+    end
+    for (i,Sxs) in enumerate(measurements(Sz_Sx_observer)["Sx"])
+      println("<Σ Sx> after sweep $i = ", sum(Sxs)/N)
+    end
   end
 end
