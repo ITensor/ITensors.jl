@@ -1,6 +1,6 @@
 using ITensors, Test
 
-@testset "basic DMRG" begin
+@testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
     N = 100
     sites = spinOneSites(N)
@@ -85,8 +85,7 @@ using ITensors, Test
     @test energies(observer)[end]==E
 
     orthogonalize!(psi,1)
-    m = dag(prime(psi[ 1 ],"Site"))*(op(sites, "Sz", 1)*psi[1]) |> scalar
+    m = scalar(dag(psi[1])*noprime(op(sites, "Sz", 1)*psi[1]))
     @test measurements(observer)["Sz"][end][1] ≈ m
-
   end
 end
