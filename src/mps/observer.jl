@@ -1,44 +1,23 @@
-export DMRGObserver, 
-       measurements, 
+export AbstractObserver,
+       measure!,
+       checkdone,
+       NoObserver,
+       DMRGObserver, 
+       measurements,
        energies
 
-"""
-  DMRGStepInfo
-  Container for passing information about
-  DMRG step to an observer object.
 
-  # Fields:
-  - dir::Bool - `false` if sweeping is currently towards the right (forward part of sweep)
-                 and `true` otherwise
-  - sweepnum::Int - current sweep number
-  - energy::Float64 - current variational energy
-  - bond::Int - last bond on which DMRG update was performed
-"""
-struct DMRGStepInfo
-  dir::Bool
-  bond::Int64
-  sweepnum::Int64
-  energy::Float64
-  # TODO: also need to pass here truncerr and singular values
-  # once those are returned from replaceBond!
-end
+abstract type AbstractObserver end
 
-sweepdir(si::DMRGStepInfo) = (si.dir ? "left" : "right")
-sweepnum(si::DMRGStepInfo) = si.sweepnum
-getenergy(si::DMRGStepInfo) = si.energy
-bond(si::DMRGStepInfo) = si.bond
+measure!(o::AbstractObserver; kwargs...) = nothing
+checkdone(o::AbstractObserver; kwargs...) = false
 
-abstract type Observer end
-
-measure!(o::Observer, args...) = nothing
-checkdone(o::Observer, args...; kwargs...) = false
-
-struct NoObserver <: Observer
+struct NoObserver <: AbstractObserver
 end
 
 const DMRGMeasurement = Vector{Vector{Float64}}
 
-struct DMRGObserver <: Observer
+struct DMRGObserver <: AbstractObserver
   ops::Vector{String}
   sites::SiteSet
   measurements::Dict{String,DMRGMeasurement}
@@ -66,40 +45,47 @@ sites(obs::DMRGObserver) = obs.sites
 ops(obs::DMRGObserver) = obs.ops
 
 function measureLocalOps!(obs::DMRGObserver,
-                          psi::MPS,
+                          wf::ITensor,
                           i::Int)
   for o in ops(obs)
-    m = dot(prime(psi[i],"Site"), op(sites(obs),o,i)*psi[i])
+    m = dot(wf, noprime(op(sites(obs),o,i)*wf))
     imag(m)>1e-8 && (@warn "encountered finite imaginary part when measuring $o")
     measurements(obs)[o][end][i]=real(m)
   end
 end
 
 function measure!(obs::DMRGObserver, 
-                  psi::MPS, 
-                  si::DMRGStepInfo)
-  if sweepdir(si)=="left"
-    if bond(si)==length(psi)-1
+                  psi::MPS;
+                  kwargs...)
+  half_sweep = kwargs[:half_sweep]
+  b = kwargs[:bond]
+  energy = kwargs[:energy]
+
+  if half_sweep==2 
+    N = length(psi)
+
+    if b==N-1
       for o in ops(obs)
-        push!(measurements(obs)[o],zeros(length(psi)))
+        push!(measurements(obs)[o],zeros(N))
       end
     end
-    # when sweeping left the orthogonality center is located 
-    # at site n=bond(si) after the bond update.
-    # We want to measure at n=bond(si)+1 because there the tensor has been
-    # already fully updated (by the right and left pass of the sweep).
-    orthogonalize!(psi,bond(si)+1)
-    measureLocalOps!(obs,psi,bond(si)+1)
-    orthogonalize!(psi,bond(si))
 
-    if bond(si)==1
-      push!(energies(obs), getenergy(si))
-      measureLocalOps!(obs,psi,bond(si))
+    # when sweeping left the orthogonality center is located 
+    # at site n=b after the bond update.
+    # We want to measure at n=b+1 because there the tensor has been
+    # already fully updated (by the right and left pass of the sweep).
+    wf = psi[b]*psi[b+1]
+    measureLocalOps!(obs,wf,b+1)
+
+    if b==1
+      push!(energies(obs), energy)
+      measureLocalOps!(obs,wf,b)
     end
   end
 end
 
-function checkdone(o::DMRGObserver; quiet=false)
+function checkdone(o::DMRGObserver; kwargs...)
+  quiet = get(kwargs,:quiet,false)
   if (length(energies(o)) > o.minsweeps &&
       abs(energies(o)[end] - energies(o)[end-1]) < o.etol)
     !quiet && println("Energy difference less than $(o.etol), stopping DMRG")

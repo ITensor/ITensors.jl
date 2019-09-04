@@ -20,11 +20,6 @@ function dmrg(H::MPO,
   for sw=1:nsweep(sweeps)
     sw_time = @elapsed begin
 
-    @debug begin
-      reset!(timer)
-      println("\n\n~~~ This is sweep $sw ~~~\n\n")
-    end
-
     for (b,ha) in sweepnext(N)
       position!(PH,psi,b)
 
@@ -40,15 +35,17 @@ function dmrg(H::MPO,
                    dir=dir,
                    which_factorization=which_factorization)
 
-      measure!(obs,psi,DMRGStepInfo(ha==2,b,sw,energy))
-
+      measure!(obs,psi;energy=energy,
+                       bond=b,
+                       sweep=sw,
+                       half_sweep=ha,
+                       quiet=quiet)
     end
     end
     if !quiet
       @printf("After sweep %d energy=%.12f maxLinkDim=%d time=%.3f\n",sw,energy,maxLinkDim(psi),sw_time)
     end
-    @debug printTimes(timer)
-    checkdone(obs,quiet=quiet) && break
+    checkdone(obs;quiet=quiet) && break
   end
   return (energy,psi)
 end
