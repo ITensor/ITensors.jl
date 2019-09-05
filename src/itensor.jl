@@ -269,7 +269,7 @@ function Base.getindex(T::ITensor{N},ivs::Vararg{IndexVal,N}) where {N}
   return T[vals...]
 end
 
-# TODO: what is this?
+# TODO: what is this doing?
 #function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
 #  p = getperm(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
 #  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
@@ -286,6 +286,7 @@ function Base.setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   return T[vals...] = x
 end
 
+# TODO: what was this doing?
 #function setindex!(T::ITensor,
 #                   x::Union{<:Number, AbstractArray{<:Number}},
 #                   ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
@@ -307,6 +308,16 @@ end
 function replaceindex!(A::ITensor,i::Index,j::Index)
   pos = indexpositions(A,i)
   inds(A)[pos[1]] = j
+  return A
+end
+
+function replaceinds!(A::ITensor,inds1,inds2)
+  is1 = IndexSet(inds1)
+  is2 = IndexSet(inds2)
+  pos = indexpositions(A,is1)
+  for (j,p) ∈ enumerate(pos)
+    inds(A)[p] = is2[j]
+  end
   return A
 end
 
@@ -360,6 +371,9 @@ function Base.isapprox(A::ITensor,
     return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
 end
 
+# TODO: bring this back or just use T[]?
+# I think T[] may not be generic, since it may only work if order(T)==0
+# so it may be nice to have a seperate scalar(T) for when dim(T)==1
 #function scalar(T::ITensor)
 #  !(order(T)==0 || dim(T)==1) && throw(ArgumentError("ITensor with inds $(inds(T)) is not a scalar"))
 #  return scalar(Tensor(store(T),inds(T)))
@@ -425,14 +439,8 @@ end
 
 function *(A::ITensor,B::ITensor)
   (Alabels,Blabels) = compute_contraction_labels(inds(A),inds(B))
-  # TODO: implement contract
   CT = contract(Tensor(A),Alabels,Tensor(B),Blabels)
   C = ITensor(CT)
-
-  # OLD INTERFACE
-  ###(Cis,Cstore) = storage_contract(store(A),inds(A),store(B),inds(B))
-  ###C = ITensor(Cis,Cstore)
-
   if warnTensorOrder > 0 && order(C) >= warnTensorOrder
     println("Warning: contraction resulted in ITensor with $(order(C)) indices")
   end

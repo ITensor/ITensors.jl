@@ -1,12 +1,12 @@
 export Dense
 
+#
+# Dense storage
+#
+
 struct Dense{T} <: TensorStorage
   data::Vector{T}
   Dense{T}(data::Vector) where {T} = new{T}(convert(Vector{T},data))
-  #Dense(data::Vector{T}) where {T} = new{T}(data)
-  #Dense{T}(size::Integer) where {T} = new{T}(Vector{T}(undef,size))
-  #Dense{T}(x::Number,size::Integer) where {T} = new{T}(fill(T(x),size))
-  #Dense(x::T,size::Integer) where {T<:Number} = new{T}(fill(T,size))
   Dense{T}() where {T} = new{T}(Vector{T}())
 end
 
@@ -31,6 +31,10 @@ Base.eltype(::Type{Dense{T}}) where {T} = eltype(T)
 
 Base.promote_rule(::Type{Dense{T1}},::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
 Base.convert(::Type{Dense{R}},D::Dense) where {R} = Dense{R}(convert(Vector{R},data(D)))
+
+#
+# DenseTensor (Tensor using Dense storage)
+#
 
 const DenseTensor{El,N,Inds} = Tensor{El,N,<:Dense,Inds}
 
@@ -83,6 +87,7 @@ using Base.Cartesian: @nexprs,
 #
 # A generalized permutedims!(P,B,perm) that also allows
 # a function to be applied elementwise
+# TODO: benchmark to make sure it is similar to Base.permutedims!
 #
 # Based off of the permutedims! implementation in Julia's base:
 # https://github.com/JuliaLang/julia/blob/91151ab871c7e7d6689d1cfa793c12062d37d6b6/base/multidimensional.jl#L1355
@@ -122,147 +127,6 @@ function outer(T1::DenseTensor,T2::DenseTensor)
 end
 const ⊗ = outer
 
-# Do we actually need all of these?
-#TODO: this should do proper promotions of the storage data
-#e.g. ComplexF64*Dense{Float64} -> Dense{ComplexF64}
-#*(D::Dense{T},x::S) where {T,S<:Number} = Dense{promote_type(T,S)}(x*data(D))
-#*(x::Number,D::Dense) = D*x
-
-#Base.promote_type(::Type{Dense{T1}},::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
-
-#convert(::Type{Dense{T}},D::Dense) where {T} = Dense{T}(data(D))
-
-#storage_convert(::Type{Dense{T}},D::Dense,is::IndexSet) where {T} = convert(Dense{T},D)
-
-# convert to complex
-#storage_complex(D::Dense{T}) where {T} = Dense{complex(T)}(complex(data(D)))
-
-#function storage_outer(D1::Dense{T},is1::IndexSet,D2::Dense{S},is2::IndexSet) where {T, S <:Number}
-#  return Dense{promote_type(T,S)}(vec(data(D1)*transpose(data(D2)))),IndexSet(is1,is2)
-#end
-
-#storage_convert(::Type{Array},D::Dense,is::IndexSet) = reshape(data(D),dims(is))
-
-#function storage_convert(::Type{Array},
-#                         D::Dense,
-#                         ois::IndexSet,
-#                         nis::IndexSet)
-#  P = calculate_permutation(nis,ois)
-#  A = reshape(data(D),dims(ois))
-#  return permutedims(A,P)
-#end
-
-#storage_fill!(D::Dense,x::Number) = fill!(data(D),x)
-#
-#function storage_getindex(Tstore::Dense{T},
-#                          Tis::IndexSet,
-#                          vals::Union{Int, AbstractVector{Int}}...) where {T}
-#  return getindex(reshape(data(Tstore),dims(Tis)),vals...)
-#end
-#
-#function storage_setindex!(Tstore::Dense,
-#                           Tis::IndexSet,
-#                           x::Union{<:Number, AbstractArray{<:Number}},
-#                           vals::Union{Int, AbstractVector{Int}}...)
-#  return setindex!(reshape(data(Tstore),dims(Tis)),x,vals...)
-#end
-
-#function _add!(Bstore::Dense,
-#               Bis::IndexSet,
-#               Astore::Dense,
-#               Ais::IndexSet,
-#               x::Number = 1)
-#  p = getperm(Bis,Ais)
-#  Adata = data(Astore)
-#  Bdata = data(Bstore)
-#  if is_trivial_permutation(p)
-#    if x == 1
-#      Bdata .+= Adata
-#    else
-#      Bdata .= Bdata .+ x .* Adata
-#    end
-#  else
-#    reshapeBdata = reshape(Bdata,dims(Bis))
-#    reshapeAdata = reshape(Adata,dims(Ais))
-#    if x == 1
-#      _add!(reshapeBdata,reshapeAdata,p)
-#    else
-#      _add!(reshapeBdata,reshapeAdata,p,(a,b)->a+x*b)
-#    end
-#  end
-#end
-
-#function storage_copyto!(Bstore::Dense,
-#                         Bis::IndexSet,
-#                         Astore::Dense,
-#                         Ais::IndexSet,
-#                         x::Number = 1)
-#  p = getperm(Bis,Ais)
-#  Adata = data(Astore)
-#  Bdata = data(Bstore)
-#  if is_trivial_permutation(p)
-#    if x == 1
-#      Bdata .= Adata
-#    else
-#      Bdata .= x .* Adata
-#    end
-#  else
-#    reshapeBdata = reshape(Bdata,dims(Bis))
-#    reshapeAdata = reshape(Adata,dims(Ais))
-#    if x == 1
-#      _add!(reshapeBdata,reshapeAdata,p,(a,b)->b)
-#    else
-#      _add!(reshapeBdata,reshapeAdata,p,(a,b)->x*b)
-#    end
-#  end
-#end
-
-#function storage_mult!(Astore::Dense,
-#                       x::Number)
-#  Adata = data(Astore)
-#  rmul!(Adata, x)
-#end
-
-#function storage_mult(Astore::Dense,
-#                      x::Number)
-#  Bstore = copy(Astore)
-#  storage_mult!(Bstore, x)
-#  return Bstore
-#end
-
-# For Real storage and complex scalar, promotion
-# of the storage is needed
-#function storage_mult(Astore::Dense{T},
-#                      x::S) where {T<:Real,S<:Complex}
-#  Bstore = convert(Dense{promote_type(S,T)},Astore)
-#  storage_mult!(Bstore, x)
-#  return Bstore
-#end
-
-## TODO: make this a special version of storage_add!()
-## Make sure the permutation is optimized
-#function storage_permute!(Bstore::Dense, Bis::IndexSet,
-#                          Astore::Dense, Ais::IndexSet)
-#  p = calculate_permutation(Bis,Ais)
-#  Adata = data(Astore)
-#  Bdata = data(Bstore)
-#  if is_trivial_permutation(p)
-#    Bdata .= Adata
-#  else
-#    reshapeBdata = reshape(Bdata,dims(Bis))
-#    permutedims!(reshapeBdata,reshape(Adata,dims(Ais)),p)
-#  end
-#end
-
-#function storage_dag(Astore::Dense,Ais::IndexSet)
-#  return dag(Ais),storage_conj(Astore)
-#end
-
-#function storage_scalar(D::Dense)
-#  length(D)==1 && return D[1]
-#  throw(ErrorException("Cannot convert Dense -> Number for length of data greater than 1"))
-#end
-
 function contract(T1::DenseTensor,labelsT1,
                   T2::DenseTensor,labelsT2)
   indsR,labelsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2)
@@ -299,6 +163,9 @@ function contract!(R::DenseTensor,labelsR,
   return R
 end
 
+# TODO: make sure this is doing type promotion correctly
+# since we are calling BLAS (need to promote T1 and T2 to
+# the same types)
 function _contract!(R::DenseTensor,labelsR,
                     T1::DenseTensor,labelsT1,
                     T2::DenseTensor,labelsT2)
@@ -308,6 +175,8 @@ function _contract!(R::DenseTensor,labelsR,
   return R
 end
 
+# TODO: move this directly into contract? Or write the signature
+# in terms of Tensor (so that it can be used in block sparse contractions)
 function _contract_dense_dense!(C::Array{T},
                                 p::ContractionProperties,
                                 A::Array{T},
@@ -367,63 +236,8 @@ function _contract_dense_dense!(C::Array{T},
   return
 end
 
-function _contract_scalar!(Cdata::Array,Clabels::Vector{Int},
-                           Bdata::Array,Blabels::Vector{Int},α,β)
-  p = calculate_permutation(Blabels,Clabels)
-  if β==0
-    if is_trivial_permutation(p)
-      Cdata .= α.*Bdata
-    else
-      #TODO: make an optimized permutedims!() that also scales the data
-      permutedims!(Cdata,α*Bdata)
-    end
-  else
-    if is_trivial_permutation(p)
-      Cdata .= α.*Bdata .+ β.*Cdata
-    else
-      #TODO: make an optimized permutedims!() that also adds and scales the data
-      permBdata = permutedims(Bdata,p)
-      Cdata .= α.*permBdata .+ β.*Cdata
-    end
-  end
-  return
-end
-
-#function _contract(Cinds::IndexSet, Clabels::Vector{Int},
-#                   Astore::Dense{SA}, Ainds::IndexSet, Alabels::Vector{Int},
-#                   Bstore::Dense{SB}, Binds::IndexSet, Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
-#  SC = promote_type(SA,SB)
-#
-#  # Convert the arrays to a common type
-#  # since we will call BLAS
-#  Astore = convert(Dense{SC},Astore)
-#  Bstore = convert(Dense{SC},Bstore)
-#
-#  Adims = dims(Ainds)
-#  Bdims = dims(Binds)
-#  Cdims = dims(Cinds)
-#
-#  # Create storage for output tensor
-#  Cstore = Dense{SC}(prod(Cdims))
-#
-#  Adata = reshape(data(Astore),Adims)
-#  Bdata = reshape(data(Bstore),Bdims)
-#  Cdata = reshape(data(Cstore),Cdims)
-#
-#  if(length(Alabels)==0)
-#    contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
-#  elseif(length(Blabels)==0)
-#    contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
-#  else
-#    props = ContractionProperties(Alabels,Blabels,Clabels)
-#    compute_contraction_properties!(props,Adata,Bdata,Cdata)
-#    _contract_dense_dense!(Cdata,props,Adata,Bdata)
-#  end
-#
-#  return Cstore
-#end
-
 # Combine a bunch of tuples
+# TODO: move this functionality to IndexSet, combine with unioninds?
 @inline tuplejoin(x) = x
 @inline tuplejoin(x, y) = (x..., y...)
 @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
@@ -444,6 +258,10 @@ that the original indices 3 and 2 are combined.
 """
 function permute_reshape(T::DenseTensor{ElT,NT,IndsT},pos::Vararg{<:Any,N}) where {ElT,NT,IndsT,N}
   perm = tuplejoin(pos...)
+
+  length(perm)≠NT && error("Index positions must add up to order of Tensor ($N)")
+  isperm(perm) || error("Index positions must be a permutation")
+
   dimsT = dims(T)
   indsT = inds(T)
   if !is_trivial_permutation(perm)
@@ -464,7 +282,7 @@ function permute_reshape(T::DenseTensor{ElT,NT,IndsT},pos::Vararg{<:Any,N}) wher
       newdims[i] = eltype(IndsT)(newdim_i)
     end
   end
-  newinds = base_type(IndsT)(Tuple(newdims))
+  newinds = similar_type(IndsT,Val(N))(Tuple(newdims))
   return reshape(T,newinds)
 end
 
@@ -474,18 +292,16 @@ function LinearAlgebra.svd(T::DenseTensor{<:Number,N,IndsT},
                            Lpos::NTuple{NL,Int},
                            Rpos::NTuple{NR,Int};
                            kwargs...) where {N,IndsT,NL,NR}
-  NL+NR≠N && error("Index positions ($NL and $NR) must add up to order of Tensor ($N)")
-  isperm(tuplejoin(Lpos,Rpos)) || error("Index positions must be a permutation")
   M = permute_reshape(T,Lpos,Rpos)
   UM,S,VM = svd(M;kwargs...)
   u = ind(UM,2)
   v = ind(VM,2)
   
-  Linds = base_type(IndsT)(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
   Uinds = push(Linds,u)
 
   # TODO: do these positions need to be reversed?
-  Rinds = base_type(IndsT)(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
+  Rinds = similar_type(IndsT,Val(NR))(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
   Vinds = push(Rinds,v)
 
   U = reshape(UM,Uinds)
@@ -512,7 +328,6 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   conj!(MV)
 
   P = MS.^2
-  #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
   truncate!(P;mindim=mindim,
               maxdim=maxdim,
               cutoff=cutoff,
@@ -528,92 +343,132 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   # Make the new indices to go onto U and V
   u = eltype(IndsT)(dS)
   v = eltype(IndsT)(dS)
-
   Uinds = IndsT((ind(T,1),u))
   Sinds = IndsT((u,v))
   Vinds = IndsT((ind(T,2),v))
-
   U = Tensor(Dense{ElT}(vec(MU)),Uinds)
-  S = Tensor(Diag{Vector{Float64}}(MS),Sinds)
+  S = Tensor(Diag{Vector{real(ElT)}}(MS),Sinds)
   V = Tensor(Dense{ElT}(vec(MV)),Vinds)
-
-  #u = Index(dS,utags)
-  #v = settags(u,vtags)
-  #Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
-  #TODO: make a diag storage
-  #Sis,Sstore = IndexSet(u,v),Diag{Vector{Float64}}(MS)
-  #Vis,Vstore = IndexSet(Ris...,v),Dense{T}(Vector{T}(vec(MV)))
-
   return U,S,V
 end
 
-#function storage_eigen(Astore::Dense{T},
-#                       Lis::IndexSet,
-#                       Ris::IndexSet;
-#                       kwargs...) where {T}
-#  maxdim::Int = get(kwargs,:maxdim,min(dim(Lis),dim(Ris)))
-#  mindim::Int = get(kwargs,:mindim,1)
-#  cutoff::Float64 = get(kwargs,:cutoff,0.0)
-#  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
-#  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-#  tags::TagSet = get(kwargs,:lefttags,"Link,u")
-#  lefttags::TagSet = get(kwargs,:lefttags,tags)
-#  righttags::TagSet = get(kwargs,:righttags,prime(lefttags))
-#
-#  dim_left = dim(Lis)
-#  dim_right = dim(Ris)
-#  MD,MU = eigen(Hermitian(reshape(data(Astore),dim_left,dim_right)))
-#
-#  # Sort by largest to smallest eigenvalues
-#  p = sortperm(MD; rev = true)
-#  MD = MD[p]
-#  MU = MU[:,p]
-#
-#  #@printf "  Truncating with maxdim=%d cutoff=%.3E\n" maxdim cutoff
-#  truncate!(MD;maxdim=maxdim,
-#              cutoff=cutoff,
-#              absoluteCutoff=absoluteCutoff,
-#              doRelCutoff=doRelCutoff)
-#  dD = length(MD)
-#  if dD < size(MU,2)
-#    MU = MU[:,1:dD]
-#  end
-#
-#  #TODO: include truncation parameters as keyword arguments
-#  u = Index(dD,lefttags)
-#  v = settags(u,righttags)
-#  Uis,Ustore = IndexSet(Lis...,u),Dense{T}(vec(MU))
-#  Dis,Dstore = IndexSet(u,v),Diag{Vector{Float64}}(MD)
-#  return (Uis,Ustore,Dis,Dstore)
-#end
+# eigendecomposition of an order-n tensor according to positions Lpos
+# and Rpos
+function eigenHermitian(T::DenseTensor{<:Number,N,IndsT},
+                        Lpos::NTuple{NL,Int},
+                        Rpos::NTuple{NR,Int};
+                        kwargs...) where {N,IndsT,NL,NR}
+  M = permute_reshape(T,Lpos,Rpos)
+  UM,D = eigenHermitian(M;kwargs...)
+  u = ind(UM,2)
+  Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Uinds = push(Linds,u)
+  U = reshape(UM,Uinds)
+  return U,D
+end
 
-#function storage_qr(Astore::Dense{T},
-#                    Lis::IndexSet,
-#                    Ris::IndexSet;
-#                    kwargs...) where {T}
-#  tags::TagSet = get(kwargs,:tags,"Link,u")
-#  dim_left = dim(Lis)
-#  dim_right = dim(Ris)
-#  MQ,MP = qr(reshape(data(Astore),dim_left,dim_right))
-#  dim_middle = min(dim_left,dim_right)
-#  u = Index(dim_middle,tags)
-#  #Must call Matrix() on MQ since the QR decomposition outputs a sparse
-#  #form of the decomposition
-#  Qis,Qstore = IndexSet(Lis...,u),Dense{T}(vec(Matrix(MQ)))
-#  Pis,Pstore = IndexSet(u,Ris...),Dense{T}(vec(Matrix(MP)))
-#  return (Qis,Qstore,Pis,Pstore)
-#end
-#
-#function storage_polar(Astore::Dense{T},
-#                       Lis::IndexSet,
-#                       Ris::IndexSet) where {T}
-#  dim_left = dim(Lis)
-#  dim_right = dim(Ris)
-#  MQ,MP = polar(reshape(data(Astore),dim_left,dim_right))
-#  dim_middle = min(dim_left,dim_right)
-#  Uis = prime(Ris)
-#  Qis,Qstore = IndexSet(Lis...,Uis...),Dense{T}(vec(MQ))
-#  Pis,Pstore = IndexSet(Uis...,Ris...),Dense{T}(vec(MP))
-#  return (Qis,Qstore,Pis,Pstore)
-#end
+function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
+                        kwargs...) where {ElT,IndsT}
+  maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
+  mindim::Int = get(kwargs,:mindim,1)
+  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
+  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
+  #tags::TagSet = get(kwargs,:lefttags,"Link,u")
+  #lefttags::TagSet = get(kwargs,:lefttags,tags)
+  #righttags::TagSet = get(kwargs,:righttags,prime(lefttags))
+
+  DM,UM = eigen(Hermitian(Matrix(T)))
+
+  # Sort by largest to smallest eigenvalues
+  p = sortperm(DM; rev = true)
+  DM = DM[p]
+  UM = UM[:,p]
+
+  truncate!(DM;maxdim=maxdim,
+               cutoff=cutoff,
+               absoluteCutoff=absoluteCutoff,
+               doRelCutoff=doRelCutoff)
+  dD = length(DM)
+  if dD < size(UM,2)
+    UM = UM[:,1:dD]
+  end
+
+  # Make the new indices to go onto U and V
+  u = eltype(IndsT)(dD)
+  v = eltype(IndsT)(dD)
+  Uinds = IndsT((ind(T,1),u))
+  Dinds = IndsT((u,v))
+  U = Tensor(Dense{ElT}(vec(UM)),Uinds)
+  D = Tensor(Diag{Vector{real(ElT)}}(DM),Dinds)
+  return U,D
+end
+
+# qr decomposition of an order-n tensor according to positions Lpos
+# and Rpos
+function LinearAlgebra.qr(T::DenseTensor{<:Number,N,IndsT},
+                          Lpos::NTuple{NL,Int},
+                          Rpos::NTuple{NR,Int}) where {N,IndsT,NL,NR}
+  M = permute_reshape(T,Lpos,Rpos)
+  QM,RM = qr(M)
+  q = ind(QM,2)
+  r = ind(RM,1)
+  Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Qinds = push(Linds,q)
+  Q = reshape(QM,Qinds)
+  Rinds = similar_type(IndsT,Val(NR))(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
+  Rinds = pushfirst(Rinds,r)
+  R = reshape(RM,Rinds)
+  return Q,R
+end
+
+function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT};
+                          kwargs...) where {ElT,IndsT}
+  QM,RM = qr(Matrix(T))
+  dim = size(QM,2) 
+  # Make the new indices to go onto Q and R
+  q = eltype(IndsT)(dim)
+  Qinds = IndsT((ind(T,1),q))
+  Rinds = IndsT((q,ind(T,2)))
+  Q = Tensor(Dense{ElT}(vec(Matrix(QM))),Qinds)
+  R = Tensor(Dense{ElT}(vec(Matrix(RM))),Rinds)
+  return Q,R
+end
+
+# polar decomposition of an order-n tensor according to positions Lpos
+# and Rpos
+function polar(T::DenseTensor{<:Number,N,IndsT},
+               Lpos::NTuple{NL,Int},
+               Rpos::NTuple{NR,Int}) where {N,IndsT,NL,NR}
+  M = permute_reshape(T,Lpos,Rpos)
+  UM,PM = polar(M)
+
+  Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Rinds = similar_type(IndsT,Val(NR))(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
+
+  # Use sim to create "similar" indices, in case
+  # the indices have identifiers. If not this should
+  # act as an identity operator
+  Rinds_sim = sim(Rinds)
+
+  Uinds = unioninds(Linds,Rinds_sim)
+  Pinds = unioninds(Rinds_sim,Rinds)
+
+  U = reshape(UM,Uinds)
+  P = reshape(PM,Pinds)
+  return U,P
+end
+
+function polar(T::DenseTensor{ElT,2,IndsT};
+               kwargs...) where {ElT,IndsT}
+  QM,RM = polar(Matrix(T))
+  dim = size(QM,2)
+  # Make the new indices to go onto Q and R
+  q = eltype(IndsT)(dim)
+  Qinds = IndsT((ind(T,1),q))
+  Rinds = IndsT((q,ind(T,2)))
+  Q = Tensor(Dense{ElT}(vec(Matrix(QM))),Qinds)
+  R = Tensor(Dense{ElT}(vec(Matrix(RM))),Rinds)
+  return Q,R
+end
 

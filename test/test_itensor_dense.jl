@@ -470,15 +470,24 @@ end
       #Note: this is only satisfied when left dimensions
       #are greater than right dimensions
       UUᵀ =  U*dag(prime(U,u))
-      for ii ∈ dim(u[1]), jj ∈ dim(u[2])
-        @test UUᵀ[u[1](ii),u[2](jj),u[1]'(ii),u[2]'(jj)]≈one(SType) atol=1e-14
+
+      # TODO: use a combiner to combine the u indices to make
+      # this test simpler
+      for ii ∈ 1:dim(u[1]), jj ∈ 1:dim(u[2]), iip ∈ 1:dim(u[1]), jjp ∈ 1:dim(u[2])
+        val = UUᵀ[u[1](ii),u[2](jj),u[1]'(iip),u[2]'(jjp)]
+        if ii==iip && jj==jjp
+          @test val≈one(SType) atol=1e-14
+        else
+          @test val≈zero(SType) atol=1e-14
+        end
       end
     end
 
-    @testset "Test eigen decomposition of an ITensor" begin
-      T = randomITensor(i,j,i',j')
+    @testset "Test Hermitian eigendecomposition of an ITensor" begin
+      is = IndexSet(i,j)
+      T = randomITensor(is...,prime(is)...)
       T = T + swapprime(dag(T),0,1)
-      U,D,u = eigen(T)
+      U,D,u = eigenHermitian(T)
       @test A≈U*D*prime(dag(U))
       UUᵀ =  U*prime(dag(U),u)
       @test UUᴴ ≈ δ(u,u') atol=1e-14

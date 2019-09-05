@@ -30,12 +30,6 @@ IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
 
 inds(is::IndexSet) = is.inds
 
-# This is to help with some generic programming in the Tensor
-# code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
-# only known thing for dispatch is a concrete type such
-# as IndexSet{4})
-base_type(::Type{T}) where {T<:IndexSet} = IndexSet
-
 # Empty constructor
 IndexSet() = IndexSet(())
 
@@ -43,13 +37,18 @@ IndexSet() = IndexSet(())
 IndexSet(::Val{N}) where {N} = IndexSet(ntuple(_->Index(),Val(N)))
 
 # Construct from various sets of indices
-IndexSet(inds::Vararg{Index,N}) where {N} = IndexSet(inds)
+IndexSet(inds::Vararg{Index,N}) where {N} = IndexSet{N}(NTuple{N,Index}(inds))
+IndexSet{N}(inds::Vararg{Index,N}) where {N} = IndexSet{N}(NTuple{N,Index}(inds))
 
 # Construct from various sets of IndexSets
 IndexSet(inds::IndexSet) = inds
 IndexSet(inds::IndexSet,i::Index) = IndexSet(inds...,i)
 IndexSet(i::Index,inds::IndexSet) = IndexSet(i,inds...)
 IndexSet(is1::IndexSet,is2::IndexSet) = IndexSet(is1...,is2...)
+
+# TODO: make a version that accepts an arbitrary set of IndexSets
+# as well as mixtures of seperate Indices and Tuples of Indices.
+# Look at jointuples in the DenseTensor decomposition logic.
 IndexSet(inds::NTuple{2,IndexSet}) = IndexSet(inds...)
 
 # Convert to an Index if there is only one
@@ -71,11 +70,6 @@ dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 dim(is::IndexSet) = prod(dim.(is))
 dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
-# TODO: what should size(::IndexSet) do?
-#size(is::IndexSet) = size(is.inds)
-#Base.size(is::IndexSet) = dims(is)
-#Base.size(is::IndexSet,pos::Integer) = dim(is,pos)
-
 # Optimize this (right own function that extracts dimensions
 # with a function)
 Base.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
@@ -92,8 +86,18 @@ Base.eltype(is::IndexSet) = eltype(typeof(is))
 # Needed for findfirst (I think)
 Base.keys(is::IndexSet{N}) where {N} = 1:N
 
-#push!(is::IndexSet,i::Index) = push!(is.inds,i)
 StaticArrays.push(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(push(is.inds,i))
+StaticArrays.pushfirst(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(pushfirst(is.inds,i))
+
+unioninds(is1::IndexSet{N1},is2::IndexSet{N2}) where {N1,N2} = IndexSet{N1+N2}(is1...,is2...)
+
+# This is to help with some generic programming in the Tensor
+# code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
+# only known thing for dispatch is a concrete type such
+# as IndexSet{4})
+StaticArrays.similar_type(::Type{IndsT},::Val{N}) where {IndsT<:IndexSet,N} = IndexSet{N}
+
+sim(is::IndexSet{N}) where {N} = IndexSet{N}(ntuple(i->sim(is[i]),Val(N)))
 
 """
 minDim(is::IndexSet)
@@ -557,6 +561,7 @@ Get the permutation that takes collection 2 to collection 1,
 such that col2[p].==col1
 """
 function getperm(set1, set2)
+  # TODO: use perm = ntuple(i->findfirst(==(set2[i]),set1),Val(N))
   l1 = length(set1)
   l2 = length(set2)
   l1==l2 || throw(DimensionMismatch("Mismatched input sizes in calcPerm: l1=$l1, l2=$l2"))
@@ -571,6 +576,19 @@ function getperm(set1, set2)
     p[i1]!=0 || error("Sets aren't permutations of each other")
   end #i1
   return p
+end
+
+"""
+getperm(col1,col2,col3)
+
+Get the permutations that takes collections 2 and 3 to collection 1.
+"""
+function getperms(s::IndexSet{N},s1::IndexSet{N1},s2::IndexSet{N2}) where {N1,N2,N}
+  N1+N2≠N && error("Size of partial sets don't match with total set")
+  perm1 = ntuple(i->findfirst(==(s1[i]),s),Val(N1))
+  perm2 = ntuple(i->findfirst(==(s2[i]),s),Val(N2))
+  isperm((perm1...,perm2...)) || error("Combined permutations are $((perm1...,perm2...)), not a valid permutation")
+  return perm1,perm2
 end
 
 """
@@ -597,13 +615,5 @@ function is_trivial_permutation(P)
     P[n]!=n && return false
   end
   return true
-end
-
-function decomp_permutation(s::IndexSet{N},s1::IndexSet{N1},s2::IndexSet{N2}) where {N1,N2,N}
-  N1+N2≠N && error("Size of partial sets don't match with total set")
-  perm1 = ntuple(i->findfirst(==(s1[i]),s),Val(N1))
-  perm2 = ntuple(i->findfirst(==(s2[i]),s),Val(N2))
-  isperm((perm1...,perm2...)) || error("Combined permutations are $((perm1...,perm2...)), not a valid permutation")
-  return perm1,perm2
 end
 
