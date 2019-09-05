@@ -54,8 +54,11 @@ using ITensors,
     K = randomMPO(sites)
     @test maxLinkDim(K) == 1
     psi = randomMPS(sites)
-    psi_out = applyMPO(K, psi,maxdim=1)
-    @test inner(phi,psi_out) ≈ inner(phi,K,psi)
+    psi_out = applyMPO(K, psi, maxdim=1)
+    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
+    psi = randomMPS(sites)
+    psi_out = applyMPO(K, psi, maxdim=1, method="Fit")
+    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
     @test_throws ArgumentError applyMPO(K, psi, method="fakemethod")
 
     badsites = SiteSet(N+1,2)

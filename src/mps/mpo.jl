@@ -279,10 +279,53 @@ end
 
 function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     method = get(kwargs, :method, "DensityMatrix")
-    if method == "DensityMatrix"
-        return densityMatrixApplyMPO(A, psi; kwargs...)
-    end
+    method == "DensityMatrix" && return densityMatrixApplyMPO(A, psi; kwargs...)
+    method == "Fit"           && return fitApplyMPO(A, psi; kwargs...)
     throw(ArgumentError("Method $method not supported"))
+end
+
+function fitApplyMPO(A::MPO, psi::MPS, guess_psi::MPS; kwargs...)::MPS
+    N  = length(A)
+    N != length(psi) && throw(DimensionMismatch("lengths of MPO ($N) and MPS ($(length(psi))) do not match"))
+    nsweeps::Int    = get(kwargs, :nsweep, 1)
+    factor::Float64 = get(kwargs, :factor, 1.0)
+
+    guess_psi = dag(guess_psi)
+    orthogonalize!(guess_psi, 1; kwargs...)
+
+    E = [ITensor(1.0) for ii in 1:N + 2]
+    E[N+1] = psi[N] * A[N] * guess_psi[N]
+    for ii in reverse(2:N-1)
+        E[ii+1] = E[ii+2] * psi[ii] * A[ii] * guess_psi[ii] 
+    end
+    for ii in 1:N
+        guess_psi[ii] = noprime(guess_psi[ii])
+    end
+    @inbounds for sweep in 1:nsweeps
+        for (b, ha) in sweepnext(N)
+            left_wf_A  = E[b] * psi[b] * A[b]
+            right_wf_A = E[b + 3] * psi[b + 1] * A[b + 1]
+            wf_A       = factor * left_wf_A * right_wf_A
+            localH     = E[b] * A[b] * A[b+1] * E[b + 3]
+            wf_A       = noprime(dag(wf_A))
+            dir        = ha == 1 ? "fromleft" : "fromright"
+            replaceBond!(guess_psi, b, wf_A; dir=dir, kwargs...)
+            if ha == 1
+                E[b+1] = noprime(left_wf_A) * guess_psi[b]
+            else
+                E[b+2] = noprime(right_wf_A) * guess_psi[b+1]
+            end
+            ha > 2 && break
+        end
+    end
+    return dag(guess_psi)
+end
+
+function fitApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
+    guess_psi = deepcopy(psi)
+    sis = [uniqueindex(findinds(A[i], "Site"), findinds(psi[i], "Site")) for i in 1:length(psi)]
+    replacesites!(guess_psi, sis)
+    return fitApplyMPO(A, psi, guess_psi; kwargs...)
 end
 
 function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
@@ -404,10 +447,10 @@ function orthogonalize!(M::Union{MPS,MPO},
                         kwargs...)
   while leftLim(M) < (j-1)
     (leftLim(M) < 0) && setLeftLim!(M,0)
-    b = leftLim(M)+1
-    linds = uniqueinds(M[b],M[b+1])
-    Q,R = qr(M[b], linds)
-    M[b] = Q
+    b       = leftLim(M)+1
+    linds   = uniqueinds(M[b],M[b+1])
+    Q,R     = qr(M[b], linds)
+    M[b]    = Q
     M[b+1] *= R
     setLeftLim!(M,b)
     if rightLim(M) < leftLim(M)+2

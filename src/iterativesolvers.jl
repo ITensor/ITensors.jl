@@ -65,16 +65,14 @@ function davidson(A,
   maxsize = size(A)[1]
   actual_maxiter = min(maxiter,maxsize-1)
 
-  if dim(inds(phi)) != maxsize
-    error("linear size of A and dimension of phi should match in davidson")
-  end
+  dim(inds(phi)) != maxsize && throw(DimensionMismatch("linear size of A ($maxsize) and dimension of phi $(dim(inds(phi))) should match in davidson"))
 
   V = ITensor[copy(phi)]
-  AV = ITensor[A(phi)]
+  AV = ITensor[noprime(A*phi)]
 
   last_lambda = NaN
   lambda = dot(V[1],AV[1])
-  q = AV[1] - lambda*V[1];
+  q = AV[1] - lambda*V[1]
 
   M = fill(lambda,(1,1))
 
@@ -98,7 +96,7 @@ function davidson(A,
     end
 
     push!(V,copy(q))
-    push!(AV,A(q))
+    push!(AV,noprime(A*q))
 
     newM = fill(0.0,(ni+1,ni+1))
     newM[1:ni,1:ni] = M

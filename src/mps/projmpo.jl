@@ -48,7 +48,8 @@ function product(pm::ProjMPO,
   return noprime(Hv)
 end
 
-(pm::ProjMPO)(v::ITensor) = product(pm,v)
+(pm::ProjMPO)(v::ITensor)  = product(pm,v)
+*(pm::ProjMPO, v::ITensor) = product(pm,v)
 
 function size(pm::ProjMPO)::Tuple{Int,Int}
   d = 1
