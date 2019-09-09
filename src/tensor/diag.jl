@@ -2,62 +2,99 @@ export Diag
 
 # Diag can have either Vector storage, in which case
 # it is a general Diag tensor, or scalar storage,
-# in which case it has a uniform value
-mutable struct Diag{T} <: TensorStorage
+# in which case the diagonal has a uniform value
+struct Diag{T} <: TensorStorage
   data::T
-  Diag{T}(data::Vector) where {T<:AbstractVector} = new{T}(data)
-  Diag{T}(size::Integer) where {T<:AbstractVector{S}} where S = new{T}(Vector{S}(undef,size))
-  Diag{T}(x::Number,size::Integer) where {T<:AbstractVector} = new{T}(fill(convert(eltype(T),x),size))
+  Diag{T}(data) where {T} = new{T}(data)
+  #Diag{T}(data) where {T<:Number} = new{T}(convert(T,x))
+  #Diag{T}(size::Integer) where {T<:AbstractVector{S}} where S = new{T}(Vector{S}(undef,size))
+  #Diag{T}(x::Number,size::Integer) where {T<:AbstractVector} = new{T}(fill(convert(eltype(T),x),size))
   #Diag{T}() where {T} = new{T}(Vector{T}())
   # Make a uniform Diag storage
-  Diag{T}(x::Number) where {T<:Number} = new{T}(convert(T,x))
   # Determine the storage type parameter from the input
-  Diag(data::T) where T = new{T}(data)
+  #Diag(data::T) where T = new{T}(data)
 end
 
 data(D::Diag) = D.data
+
+const NonuniformDiag{T} = Diag{T} where {T<:AbstractVector}
+const UniformDiag{T} = Diag{T} where {T<:Number}
+
+Base.getindex(D::NonuniformDiag,i::Int)= data(D)[i]
+Base.getindex(D::UniformDiag,i::Int) = data(D)
+
+Base.setindex!(D::Diag,val,i::Int)= (data(D)[i] = val)
+Base.setindex!(D::UniformDiag,val,i::Int)= error("Cannot set elements of a uniform Diag storage")
+
+# convert to complex
+# TODO: this could be a generic TensorStorage function
+Base.complex(D::Diag{T}) where {T} = Diag{complex(T)}(complex(data(D)))
+
+Base.copy(D::Diag{T}) where {T} = Diag{T}(copy(data(D)))
+
 Base.eltype(::Diag{T}) where {T} = eltype(T)
 Base.eltype(::Type{Diag{T}}) where {T} = eltype(T)
-getindex(D::Diag{T},i::Int) where {T<:AbstractVector}= data(D)[i]
-# Version of getindex for uniform (scalar) storage
-getindex(D::Diag{T},i::Int) where {T<:Number} = data(D)
-*(D::Diag{T},x::S) where {T<:AbstractVector,S<:Number} = Dense{promote_type(eltype(D),S)}(x*data(D))
-*(x::Number,D::Diag) = D*x
+
+# Deal with uniform Diag conversion
+Base.convert(::Type{Diag{T}},D::Diag) where T = Diag{T}(data(D))
+
+#*(D::Diag{T},x::S) where {T<:AbstractVector,S<:Number} = Dense{promote_type(eltype(D),S)}(x*data(D))
+#*(x::Number,D::Diag) = D*x
 
 #
 # Type promotions involving Diag
 # Useful for knowing how conversions should work when adding and contracting
 #
 
-Base.promote_type(::Type{Diag{T1}},::Type{Diag{T2}}) where {T1<:AbstractVector,T2<:AbstractVector} = Diag{promote_type(T1,T2)}
+Base.promote_rule(::Type{Diag{T1}},::Type{Diag{T2}}) where 
+  {T1,T2} = Diag{promote_type(T1,T2)}
 
-Base.promote_type(::Type{Diag{T1}},::Type{Diag{T2}}) where {T1<:Number,T2<:Number} = Diag{promote_type(T1,T2)}
+# TODO: how do we make this work more generally for T2<:AbstractVector{S2}?
+# Make a similar_type(AbstractVector{S2},T1) -> AbstractVector{T1} function?
+Base.promote_rule(::Type{UniformDiag{T1}},::Type{NonuniformDiag{T2}}) where 
+  {T1,T2<:Vector{S2}} where S2 = Diag{Vector{promote_type(T1,S2)}}
 
-Base.promote_type(::Type{Diag{T1}},::Type{Diag{T2}}) where {T1<:Number,T2<:Vector{S2}} where S2 = Diag{Vector{promote_type(T1,S2)}}
+Base.promote_rule(::Type{Dense{T1}},::Type{Diag{T2}}) where 
+  {T1,T2} = Dense{promote_type(T1,eltype(T2))}
 
-Base.promote_type(::Type{Diag{T1}},::Type{Diag{T2}}) where {T1<:Vector{S1},T2<:Number} where S1 = promote_type(Diag{T2},Diag{T1})
+const DiagTensor{El,N,Inds} = Tensor{El,N,<:Diag,Inds}
+const NonuniformDiagTensor{El,N,Inds} = Tensor{El,N,<:NonuniformDiag,Inds}
+const UniformDiagTensor{El,N,Inds} = Tensor{El,N,<:UniformDiag,Inds}
 
-Base.promote_type(::Type{Dense{T1}},::Type{Diag{T2}}) where {T1<:Number,T2<:Vector{S2}} where S2 = Dense{promote_type(T1,S2)}
+Base.IndexStyle(::Type{TensorT}) where {TensorT<:DiagTensor} = IndexCartesian()
 
-Base.promote_type(::Type{Dense{T1}},::Type{Diag{T2}}) where {T1<:Number,T2<:Number} = Dense{promote_type(T1,T2)}
-
-Base.promote_type(::Type{Diag{T1}},::Type{Dense{T2}}) where {T1,T2} = promote_type(Dense{T2},Diag{T1})
-
-# TODO: define length for Diag, should this be 
-# the length of the diagonal
-# or the product of the tensor dimensions?
-# How is the length defined for scalar storage?
-length(D::Diag{T}) where {T<:AbstractVector} = length(data(D))
-
-# convert to Dense
-function storage_dense(D::Diag,is::IndexSet)
-  return Dense{eltype(D)}(vec(storage_convert(Array,D,is)))
+# TODO: this needs to be better (promote element type, check order compatibility,
+# etc.
+function Base.convert(::Type{TensorT}, T::DiagTensor{ElT,N,IndsT}) where 
+  {TensorT<:Tensor{ElT,N,<:Dense,IndsT}} where {ElT,N,IndsT}
+  return dense(T)
 end
 
-# convert to complex
-storage_complex(D::Diag) = Diag(complex(data(D)))
+diag_length(T::DiagTensor) = minimum(dims(T))
 
-copy(D::Diag{T}) where {T} = Diag{T}(copy(data(D)))
+function Base.getindex(T::DiagTensor{ElT,N},inds::Vararg{Int,N}) where {ElT,N}
+  if all(==(inds[1]),inds)
+    return store(T)[inds[1]]
+  else
+    return zero(eltype(ElT))
+  end
+end
+
+# Set diagonal elements
+# Throw error for off-diagonal
+function Base.setindex!(T::DiagTensor{<:Number,N},val,inds::Vararg{Int,N}) where {N}
+  all(==(inds[1]),inds) || error("Cannot set off-diagonal element of Diag storage")
+  return store(T)[inds[1]] = val
+end
+
+function Base.setindex!(T::UniformDiagTensor{<:Number,N},val,inds::Vararg{Int,N}) where {N}
+  error("Cannot set elements of a uniform Diag storage")
+end
+
+# convert to Dense
+function dense(D::DiagTensor)
+  return Tensor(Dense{eltype(D)}(vec(Array(D))),inds(D))
+end
 
 # TODO: implement this in a sparse way
 # For now, we will just make them dense since the output is dense anyway
@@ -76,53 +113,51 @@ function storage_convert(::Type{Array},D::Diag,is::IndexSet)
   return A
 end
 
-Base.convert(::Type{Diag{T}},D::Diag) where T = Diag{T}(data(D))
-
-function storage_convert(::Type{Dense{T}},D::Diag,is::IndexSet) where T
-  return Dense{T}(vec(storage_convert(Array,D,is)))
-end
+#function storage_convert(::Type{Dense{T}},D::Diag,is::IndexSet) where T
+#  return Dense{T}(vec(storage_convert(Array,D,is)))
+#end
 
 storage_fill!(D::Diag,x::Number) = fill!(data(D),x)
 
-function diag_getindex(Tstore::Diag{<:AbstractVector},
-                       val::Int)
-  return getindex(data(Tstore),val)
-end
+#function diag_getindex(Tstore::Diag{<:AbstractVector},
+#                       val::Int)
+#  return getindex(data(Tstore),val)
+#end
 
 # Uniform case
-function diag_getindex(Tstore::Diag{<:Number},
-                       val::Int)
-  return data(Tstore)
-end
+#function diag_getindex(Tstore::Diag{<:Number},
+#                       val::Int)
+#  return data(Tstore)
+#end
 
 # Get diagonal elements
 # Gives zero for off-diagonal elements
-function storage_getindex(Tstore::Diag{T},
-                          Tis::IndexSet,
-                          vals::Union{Int, AbstractVector{Int}}...) where {T}
-  if all(==(vals[1]),vals)
-    return diag_getindex(Tstore,vals[1])
-  else
-    return zero(eltype(T))
-  end
-end
+#function storage_getindex(Tstore::Diag{T},
+#                          Tis::IndexSet,
+#                          vals::Union{Int, AbstractVector{Int}}...) where {T}
+#  if all(==(vals[1]),vals)
+#    return diag_getindex(Tstore,vals[1])
+#  else
+#    return zero(eltype(T))
+#  end
+#end
 
 # Set diagonal elements
 # Throw error for off-diagonal
-function storage_setindex!(Tstore::Diag{<:AbstractVector},
-                           Tis::IndexSet,
-                           x::Union{<:Number, AbstractArray{<:Number}},
-                           vals::Union{Int, AbstractVector{Int}}...)
-  all(y->y==vals[1],vals) || error("Cannot set off-diagonal element of Diag storage")
-  return setindex!(data(Tstore),x,vals[1])
-end
-
-function storage_setindex!(Tstore::Diag{<:Number},
-                           Tis::IndexSet,
-                           x::Union{<:Number, AbstractArray{<:Number}},
-                           vals::Union{Int, AbstractVector{Int}}...)
-  error("Cannot set elements of a uniform Diag storage")
-end
+#function storage_setindex!(Tstore::Diag{<:AbstractVector},
+#                           Tis::IndexSet,
+#                           x::Union{<:Number, AbstractArray{<:Number}},
+#                           vals::Union{Int, AbstractVector{Int}}...)
+#  all(y->y==vals[1],vals) || error("Cannot set off-diagonal element of Diag storage")
+#  return setindex!(data(Tstore),x,vals[1])
+#end
+#
+#function storage_setindex!(Tstore::Diag{<:Number},
+#                           Tis::IndexSet,
+#                           x::Union{<:Number, AbstractArray{<:Number}},
+#                           vals::Union{Int, AbstractVector{Int}}...)
+#  error("Cannot set elements of a uniform Diag storage")
+#end
 
 # Add generic Diag's in-place
 function _add!(Bstore::Diag,
@@ -225,22 +260,48 @@ function storage_mult(Astore::Diag{T},
   return Diag(Bdata)
 end
 
+function Base.permutedims!(R::DiagTensor{<:Number,N},
+                           T::DiagTensor{<:Number,N},
+                           perm::NTuple{N,Int},f::Function=(r,t)->t) where {N}
+  for i=1:diag_length(R)
+    diag_inds = CartesianIndex{N}(ntuple(_->i,Val(N)))
+    @inbounds R[diag_inds] = f(R[diag_inds],T[diag_inds])
+  end
+  return R
+end
+
+# Version that may overwrite in-place or may return the result
+function permutedims!!(R::NonuniformDiagTensor{<:Number,N},
+                       T::NonuniformDiagTensor{<:Number,N},
+                       perm::NTuple{N,Int},f::Function=(r,t)->t) where {N}
+  permutedims!(R,T,perm,f)
+  return R
+end
+
+function permutedims!!(R::UniformDiagTensor{ElR,N},
+                       T::UniformDiagTensor{ElT,N},
+                       perm::NTuple{N,Int},f::Function=(r,t)->t) where {ElR,ElT,N}
+  diag_inds = CartesianIndex(ntuple(_->1,Val(N)))
+  R = Tensor(Diag{promote_type(ElR,ElT)}(R[diag_inds]+T[diag_inds]),inds(R))
+  return R
+end
+
 # TODO: make this a special version of storage_add!()
 # This shouldn't do anything to the data
-function storage_permute!(Bstore::Diag,
-                          Bis::IndexSet,
-                          Astore::Diag,
-                          Ais::IndexSet)
-  p = calculate_permutation(Bis,Ais)
-  Adata = data(Astore)
-  Bdata = data(Bstore)
-  if is_trivial_permutation(p)
-    Bdata .= Adata
-  else
-    reshapeBdata = reshape(Bdata,dims(Bis))
-    permutedims!(reshapeBdata,reshape(Adata,dims(Ais)),p)
-  end
-end
+#function storage_permute!(Bstore::Diag,
+#                          Bis::IndexSet,
+#                          Astore::Diag,
+#                          Ais::IndexSet)
+#  p = calculate_permutation(Bis,Ais)
+#  Adata = data(Astore)
+#  Bdata = data(Bstore)
+#  if is_trivial_permutation(p)
+#    Bdata .= Adata
+#  else
+#    reshapeBdata = reshape(Bdata,dims(Bis))
+#    permutedims!(reshapeBdata,reshape(Adata,dims(Ais)),p)
+#  end
+#end
 
 # TODO: move this to tensorstorage.jl?
 function storage_dag(Astore::Diag,Ais::IndexSet)

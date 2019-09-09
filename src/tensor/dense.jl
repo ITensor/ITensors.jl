@@ -6,7 +6,7 @@ export Dense
 
 struct Dense{T} <: TensorStorage
   data::Vector{T}
-  Dense{T}(data::Vector) where {T} = new{T}(convert(Vector{T},data))
+  Dense{T}(data) where {T} = new{T}(convert(Vector{T},data))
   Dense{T}() where {T} = new{T}(Vector{T}())
 end
 
@@ -22,12 +22,15 @@ Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(similar(Vector{T},dim(d
 Base.similar(D::Dense,::Type{T}) where {T} = Dense{T}(similar(data(D),T))
 Base.copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 
+# convert to complex
+# TODO: this could be a generic TensorStorage function
+Base.complex(D::Dense{T}) where {T} = Dense{complex(T)}(complex(data(D)))
+
 Base.eltype(::Dense{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
 # with the more general definition (eltype(Nothing) === Any)
 Base.eltype(::Dense{Nothing}) = Nothing
 Base.eltype(::Type{Dense{T}}) where {T} = eltype(T)
-#Base.length(D::Dense) = length(data(D))
 
 Base.promote_rule(::Type{Dense{T1}},::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
 Base.convert(::Type{Dense{R}},D::Dense) where {R} = Dense{R}(convert(Vector{R},data(D)))
@@ -43,9 +46,8 @@ Base.IndexStyle(::Type{TensorT}) where {TensorT<:DenseTensor} = IndexLinear()
 Base.getindex(T::DenseTensor,i::Integer) = store(T)[i]
 Base.setindex!(T::DenseTensor,v,i::Integer) = (store(T)[i] = v)
 
-function Base.convert(::Type{Tensor{ElR,NR,StoreR,IndsR}},
-                      T::Tensor{ElT,NT,StoreT,IndsT}) where {ElR,NR,StoreR<:Dense,IndsR,
-                                                             ElT,NT,StoreT<:Dense,IndsT}
+function Base.convert(::Type{Tensor{<:Number,<:Any,StoreR}},
+                      T::DenseTensor{<:Number,<:Any}) where {StoreR<:Dense}
   return Tensor(convert(StoreR,store(T)),inds(T))
 end
 
@@ -63,17 +65,29 @@ end
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
 Base.Array(T::DenseTensor) = reshape(data(store(T)),dims(inds(T)))
-Base.Vector(T::DenseTensor) = vec(Array(T))
+Base.Matrix(T::DenseTensor{<:Number,2}) = Array(T)
+Base.Vector(T::DenseTensor{<:Number,1}) = Array(T)
 
-function Base.permutedims!(T1::DenseTensor{<:Number,N},
-                           T2::DenseTensor{<:Number,N},
-                           perm) where {N}
-  permutedims!(Array(T1),Array(T2),perm)
-  return T1
+# TODO: call permutedims!(R,T,perm,(r,t)->t)?
+function Base.permutedims!(R::DenseTensor{<:Number,N},
+                           T::DenseTensor{<:Number,N},
+                           perm::NTuple{N,Int}) where {N}
+  permutedims!(Array(R),Array(T),perm)
+  return R
 end
 
-function Base.permutedims(T::DenseTensor,
-                          perm)
+# Version that may overwrite the result or promote
+# and return the result
+function permutedims!!(R::DenseTensor{<:Number,N},
+                       T::DenseTensor{<:Number,N},
+                       perm::NTuple{N,Int},f=(r,t)->t) where {N}
+  permutedims!(R,T,perm,f)
+  return R
+end
+
+# TODO: move to tensor.jl?
+function Base.permutedims(T::Tensor{<:Number,N},
+                          perm::NTuple{N,Int}) where {N}
   Tp = similar(T,permute(inds(T),perm))
   permutedims!(Tp,T,perm)
   return Tp
@@ -242,9 +256,8 @@ end
 @inline tuplejoin(x, y) = (x..., y...)
 @inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
 
-# TODO: write this function
 """
-combinedims(T::Tensor,pos)
+permute_reshape(T::Tensor,pos)
 
 Takes a permutation that is split up into tuples. Index positions
 within the tuples are combined.

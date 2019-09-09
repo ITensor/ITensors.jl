@@ -40,6 +40,8 @@ Base.size(T::Tensor) = dims(T)
 
 Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 
+Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
+
 function Base.similar(::Type{T},dims) where {T<:Tensor{<:Any,<:Any,StoreT}} where {StoreT}
   return Tensor(similar(StoreT,dims),dims)
 end

@@ -24,8 +24,9 @@ mutable struct ITensor{N}
   inds::IndexSet{N}
   #TODO: check that the storage is consistent with the
   #total dimension of the indices (possibly only in debug mode);
-  ITensor(st,is::IndexSet{N}) where {N} = new{N}(st,is)
+  ITensor{N}(st,is::IndexSet{N}) where {N} = new{N}(st,is)
 end
+ITensor(st,is::IndexSet{N}) where {N} = ITensor{N}(st,is)
 
 inds(T::ITensor) = T.inds
 store(T::ITensor) = T.store
@@ -39,11 +40,13 @@ setstore!(T::ITensor,st::TensorStorage) = (T.store = st)
 #
 
 ITensor(T::Tensor) = ITensor(store(T),inds(T))
+ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor(store(T),inds(T))
 
 ITensor() = ITensor(Dense{Nothing}(),IndexSet())
 ITensor(is::IndexSet) = ITensor(Float64,is...)
 ITensor(inds::Index...) = ITensor(IndexSet(inds...))
 
+# TODO: add versions where the types can be specified
 Tensor(A::ITensor) = Tensor(store(A),inds(A))
 
 function ITensor(::Type{T},
@@ -83,7 +86,7 @@ The storage will have Diag type.
 """
 function diagITensor(::Type{T},
                      is::IndexSet) where {T<:Number}
-  return ITensor(Diag{Vector{T}}(zero(T),minDim(is)),is)
+  return ITensor(Diag{Vector{T}}(zeros(T,minDim(is))),is)
 end
 
 """
@@ -129,7 +132,7 @@ Make a sparse ITensor of element type Float64 with non-zero elements
 only along the diagonal. Defaults to storing zeros along the diagonal.
 The storage will have Diag type.
 """
-diagITensor(is::IndexSet) = ITensor(Diag{Vector{Float64}}(zero(Float64),minDim(is)),is)
+diagITensor(is::IndexSet) = diagITensor(Float64,is)
 
 """
 diagITensor(is::Index...)
@@ -150,7 +153,7 @@ The storage will have Diag type.
 """
 function diagITensor(x::T,
                      is::IndexSet) where {T<:Number}
-  return ITensor(Diag{Vector{float(T)}}(float(x),minDim(is)),is)
+  return ITensor(Diag{Vector{float(T)}}(fill(float(x),minDim(is))),is)
 end
 
 """
@@ -239,8 +242,9 @@ Base.size(A::ITensor{N}, d::Int) where {N} = d in 1:N ? dim(inds(A)[d]) :
 
 isNull(T::ITensor) = (eltype(T) === Nothing)
 
-Base.copy(T::ITensor) = ITensor(copy(Tensor(T)))
+Base.copy(T::ITensor{N}) where {N} = ITensor{N}(copy(Tensor(T)))::ITensor{N}
 
+# TODO: make versions where the element type can be specified
 Base.Array(T::ITensor) = Array(Tensor(T))
 
 Base.Matrix(T::ITensor{N}) where {N} = (N==2 ? Array(Tensor(T)) : throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix")))
@@ -490,8 +494,12 @@ add!(R::ITensor,T::ITensor) = add!(R,1,T)
 function add!(R::ITensor{N},α::Number,T::ITensor{N}) where {N}
   perm = getperm(inds(R),inds(T))
   TR,TT = Tensor(R),Tensor(T)
+
+  # TODO: make this into a permutedims!?(Tensor,Tensor,perm,f) function?
+  # Include type promotion from α
   TR = convert(promote_type(typeof(TR),typeof(TT)),TR)
-  TR = permutedims!(TR,TT,perm,(r,t)->r+α*t)
+  TR = permutedims!!(TR,TT,perm,(r,t)->r+α*t)
+
   setstore!(R,store(TR))
   setinds!(R,inds(TR))
   return R

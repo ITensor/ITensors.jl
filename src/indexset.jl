@@ -578,6 +578,10 @@ function getperm(set1, set2)
   return p
 end
 
+function getperm(s1::IndexSet{N},s2::IndexSet{N}) where {N}
+  return ntuple(i->findfirst(==(s2[i]),s1),Val(N))
+end
+
 """
 getperm(col1,col2,col3)
 
