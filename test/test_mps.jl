@@ -116,8 +116,11 @@ using ITensors,
     psi = randomMPS(sites)
     phi = psi[1]*psi[2]
     bondindtags = tags(linkindex(psi,1))
-    replaceBond!(psi,1,phi)
-    @test tags(linkindex(psi,1)) == bondindtags
+
+    for which in ["svd","eigen"], dir in ["center","fromleft","fromright"]
+      replaceBond!(psi,1,phi, which_factorization=which, dir=dir)
+      @test tags(linkindex(psi,1)) == bondindtags
+    end
 
     # check that replaceBond! updates llim_ and rlim_ properly
     orthogonalize!(psi,5)

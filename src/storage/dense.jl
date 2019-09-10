@@ -288,7 +288,7 @@ function storage_eigen(Astore::Dense{T},
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  tags = TagSet(get(kwargs,:lefttags,"Link,u"))
+  tags = TagSet(get(kwargs,:tags,"Link,u"))
   lefttags = TagSet(get(kwargs,:lefttags,tags))
   righttags = TagSet(get(kwargs,:righttags,prime(lefttags)))
 
