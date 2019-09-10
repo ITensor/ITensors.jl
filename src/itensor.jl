@@ -269,7 +269,7 @@ Base.getindex(T::ITensor{N},vals::Vararg{Int,N}) where {N} = Tensor(T)[vals...]
 
 function Base.getindex(T::ITensor{N},ivs::Vararg{IndexVal,N}) where {N}
   p = getperm(inds(T),ivs)
-  vals = val.(ivs)[p]
+  vals = permute(val.(ivs),p)
   return T[vals...]
 end
 
@@ -286,7 +286,7 @@ Base.setindex!(T::ITensor{N},x::Number,vals::Vararg{Int,N}) where {N} = (Tensor(
 
 function Base.setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   p = getperm(inds(T),ivs)
-  vals = val.(ivs)[p]
+  vals = permute(val.(ivs),p)
   return T[vals...] = x
 end
 
@@ -358,15 +358,7 @@ settags(A::ITensor,vargs...) = ITensor(store(A),settags(inds(A)))
 swaptags(A::ITensor,vargs...) = ITensor(store(A),swaptags(inds(A),vargs...))
 
 # TODO: implement in a better way (more generically for other storage)
-function Base.:(==)(A::ITensor,B::ITensor)
-  !hassameinds(A,B) && return false
-  #IndexVal.(inds(A),Tuple(i))
-  p = getperm(inds(B),inds(A))
-  for i ∈ CartesianIndices(dims(A))
-    A[Tuple(i)...] ≠ B[Tuple(i)[p]...] && return false
-  end
-  return true
-end
+Base.:(==)(A::ITensor,B::ITensor) = (norm(A-B) == zero(promote_type(eltype(A),eltype(B))))
 
 function Base.isapprox(A::ITensor,
                        B::ITensor;

@@ -24,6 +24,8 @@ struct IndexSet{N}
   inds::MVector{N,Index}
   IndexSet{N}(inds::MVector{N,Index}) where {N} = new{N}(inds)
   IndexSet{N}(inds::NTuple{N,Index}) where {N} = new{N}(inds)
+  IndexSet{0}() = new{0}(())
+  IndexSet{0}(::Tuple{}) = new{0}(())
 end
 IndexSet(inds::MVector{N,Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
@@ -31,14 +33,20 @@ IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
 inds(is::IndexSet) = is.inds
 
 # Empty constructor
-IndexSet() = IndexSet(())
+IndexSet() = IndexSet{0}()
+IndexSet(::Tuple{}) = IndexSet()
 
 # Construct of some size
 IndexSet(::Val{N}) where {N} = IndexSet(ntuple(_->Index(),Val(N)))
 
 # Construct from various sets of indices
-IndexSet(inds::Vararg{Index,N}) where {N} = IndexSet{N}(NTuple{N,Index}(inds))
 IndexSet{N}(inds::Vararg{Index,N}) where {N} = IndexSet{N}(NTuple{N,Index}(inds))
+IndexSet(inds::Vararg{Index,N}) where {N} = IndexSet{N}(inds...)
+
+IndexSet{N}(ivs::NTuple{N,IndexVal}) where {N} = IndexSet{N}(ntuple(i->ind(ivs[i]),Val(N)))
+IndexSet(ivs::NTuple{N,IndexVal}) where {N} = IndexSet{N}(ivs)
+IndexSet{N}(ivs::Vararg{IndexVal,N}) where {N} = IndexSet{N}(tuple(ivs...))
+IndexSet(ivs::Vararg{IndexVal,N}) where {N} = IndexSet{N}(tuple(ivs...))
 
 # Construct from various sets of IndexSets
 IndexSet(inds::IndexSet) = inds
@@ -560,26 +568,12 @@ getperm(col1,col2)
 Get the permutation that takes collection 2 to collection 1,
 such that col2[p].==col1
 """
-function getperm(set1, set2)
-  # TODO: use perm = ntuple(i->findfirst(==(set2[i]),set1),Val(N))
-  l1 = length(set1)
-  l2 = length(set2)
-  l1==l2 || throw(DimensionMismatch("Mismatched input sizes in calcPerm: l1=$l1, l2=$l2"))
-  p = zeros(Int,l1)
-  for i1 = 1:l1
-    for i2 = 1:l2
-      if set1[i1]==set2[i2]
-        p[i1] = i2
-        break
-      end
-    end #i2
-    p[i1]!=0 || error("Sets aren't permutations of each other")
-  end #i1
-  return p
+function getperm(s1,s2)
+  return _getperm(IndexSet(s1),IndexSet(s2))
 end
 
-function getperm(s1::IndexSet{N},s2::IndexSet{N}) where {N}
-  return ntuple(i->findfirst(==(s2[i]),s1),Val(N))
+function _getperm(s1::IndexSet{N},s2::IndexSet{N}) where {N}
+  return ntuple(i->findfirst(==(s1[i]),s2),Val(N))
 end
 
 """

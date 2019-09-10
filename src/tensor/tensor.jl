@@ -25,6 +25,10 @@ ind(T::Tensor,j::Integer) = inds(T)[j]
 dims(ds::Dims) = ds
 dim(ds::Dims) = prod(ds)
 
+# This may be a bad idea to overload?
+# Type piracy?
+Base.strides(is::Dims) = Base.size_to_strides(1, dims(is)...)
+
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct a Tuple(::NTuple{N,Int}) where the 
 # only known thing for dispatch is a concrete type such

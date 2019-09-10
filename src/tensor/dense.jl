@@ -46,8 +46,16 @@ Base.IndexStyle(::Type{TensorT}) where {TensorT<:DenseTensor} = IndexLinear()
 Base.getindex(T::DenseTensor,i::Integer) = store(T)[i]
 Base.setindex!(T::DenseTensor,v,i::Integer) = (store(T)[i] = v)
 
-function Base.convert(::Type{Tensor{<:Number,<:Any,StoreR}},
-                      T::DenseTensor{<:Number,<:Any}) where {StoreR<:Dense}
+Base.strides(T::DenseTensor) = strides(inds(T))
+
+# Needed for passing Tensor{T,2} to BLAS
+function Base.unsafe_convert(::Type{Ptr{ElT}},T::DenseTensor{ElT}) where {ElT}
+  return Base.unsafe_convert(Ptr{ElT},data(store(T)))
+end
+
+function Base.convert(::Type{TensorR},
+                      T::DenseTensor{ElT,N}) where {TensorR<:Tensor{ElR,N,StoreR}} where 
+                                                   {ElR,ElT,N,StoreR<:Dense}
   return Tensor(convert(StoreR,store(T)),inds(T))
 end
 
@@ -185,50 +193,48 @@ function _contract!(R::DenseTensor,labelsR,
                     T2::DenseTensor,labelsT2)
   props = ContractionProperties(labelsT1,labelsT2,labelsR)
   compute_contraction_properties!(props,T1,T2,R)
-  _contract_dense_dense!(Array(R),props,Array(T1),Array(T2))
+  _contract!(R,T1,T2,props)
   return R
 end
 
-# TODO: move this directly into contract? Or write the signature
-# in terms of Tensor (so that it can be used in block sparse contractions)
-function _contract_dense_dense!(C::Array{T},
-                                p::ContractionProperties,
-                                A::Array{T},
-                                B::Array{T},
-                                α::T=one(T),
-                                β::T=zero(T)) where {T}
+function _contract!(C::DenseTensor{T},
+                    A::DenseTensor{T},
+                    B::DenseTensor{T},
+                    props::ContractionProperties,
+                    α::T=one(T),
+                    β::T=zero(T)) where {T}
   tA = 'N'
-  if p.permuteA
-    aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
+  if props.permuteA
+    aref = reshape(permutedims(A,props.PA),props.dmid,props.dleft)
     tA = 'T'
   else
     #A doesn't have to be permuted
-    if Atrans(p)
-      aref = reshape(A,p.dmid,p.dleft)
+    if Atrans(props)
+      aref = reshape(A,props.dmid,props.dleft)
       tA = 'T'
     else
-      aref = reshape(A,p.dleft,p.dmid)
+      aref = reshape(A,props.dleft,props.dmid)
     end
   end
 
   tB = 'N'
-  if p.permuteB
-    bref = reshape(permutedims(B,p.PB),p.dmid,p.dright)
+  if props.permuteB
+    bref = reshape(permutedims(B,props.PB),props.dmid,props.dright)
   else
-    if Btrans(p)
-      bref = reshape(B,p.dright,p.dmid)
+    if Btrans(props)
+      bref = reshape(B,props.dright,props.dmid)
       tB = 'T'
     else
-      bref = reshape(B,p.dmid,p.dright)
+      bref = reshape(B,props.dmid,props.dright)
     end
   end
 
   # TODO: this logic may be wrong
-  if p.permuteC
-    cref = reshape(copy(C),p.dleft,p.dright)
+  if props.permuteC
+    cref = reshape(copy(C),props.dleft,props.dright)
   else
-    if Ctrans(p)
-      cref = reshape(C,p.dleft,p.dright)
+    if Ctrans(props)
+      cref = reshape(C,props.dleft,props.dright)
       if tA=='N' && tB=='N'
         (aref,bref) = (bref,aref)
         tA = tB = 'T'
@@ -237,17 +243,17 @@ function _contract_dense_dense!(C::Array{T},
         tA = tB = 'N'
       end
     else
-      cref = reshape(C,p.dleft,p.dright)
+      cref = reshape(C,props.dleft,props.dright)
     end
   end
 
   #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
   BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
 
-  if p.permuteC
-    permutedims!(C,reshape(cref,p.newCrange...),p.PC)
+  if props.permuteC
+    permutedims!(C,reshape(cref,props.newCrange...),props.PC)
   end
-  return
+  return C
 end
 
 # Combine a bunch of tuples

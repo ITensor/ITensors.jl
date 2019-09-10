@@ -36,7 +36,10 @@ Base.eltype(::Diag{T}) where {T} = eltype(T)
 Base.eltype(::Type{Diag{T}}) where {T} = eltype(T)
 
 # Deal with uniform Diag conversion
-Base.convert(::Type{Diag{T}},D::Diag) where T = Diag{T}(data(D))
+Base.convert(::Type{StorageT},D::Diag) where {StorageT<:Diag{T}} where {T} = Diag{T}(data(D))
+
+Base.similar(D::Diag{T}) where {T} = Diag{T}(similar(data(D)))
+Base.similar(D::UniformDiag{T}) where {T<:Number} = Diag{T}(zero(T))
 
 #*(D::Diag{T},x::S) where {T<:AbstractVector,S<:Number} = Dense{promote_type(eltype(D),S)}(x*data(D))
 #*(x::Number,D::Diag) = D*x
@@ -65,8 +68,8 @@ Base.IndexStyle(::Type{TensorT}) where {TensorT<:DiagTensor} = IndexCartesian()
 
 # TODO: this needs to be better (promote element type, check order compatibility,
 # etc.
-function Base.convert(::Type{TensorT}, T::DiagTensor{ElT,N,IndsT}) where 
-  {TensorT<:Tensor{ElT,N,<:Dense,IndsT}} where {ElT,N,IndsT}
+function Base.convert(::Type{TensorT}, T::DiagTensor{ElT,N}) where 
+  {TensorT<:Tensor{ElT,N,<:Dense}} where {ElT,N}
   return dense(T)
 end
 
@@ -160,64 +163,64 @@ storage_fill!(D::Diag,x::Number) = fill!(data(D),x)
 #end
 
 # Add generic Diag's in-place
-function _add!(Bstore::Diag,
-               Bis::IndexSet,
-               Astore::Diag,
-               Ais::IndexSet,
-               x::Number = 1)
-  # This is just used to check if the index sets
-  # are permutations of each other, maybe
-  # this should be at the ITensor level
-  p = calculate_permutation(Bis,Ais)
-  Adata = data(Astore)
-  Bdata = data(Bstore)
-  if x == 1 
-    Bdata .+= Adata
-  else
-    Bdata .+= x .* Adata
-  end
-end
+#function _add!(Bstore::Diag,
+#               Bis::IndexSet,
+#               Astore::Diag,
+#               Ais::IndexSet,
+#               x::Number = 1)
+#  # This is just used to check if the index sets
+#  # are permutations of each other, maybe
+#  # this should be at the ITensor level
+#  p = calculate_permutation(Bis,Ais)
+#  Adata = data(Astore)
+#  Bdata = data(Bstore)
+#  if x == 1 
+#    Bdata .+= Adata
+#  else
+#    Bdata .+= x .* Adata
+#  end
+#end
 
 # Uniform Diag case
-function _add!(Bstore::Diag{BT},
-               Bis::IndexSet,
-               Astore::Diag{AT},
-               Ais::IndexSet,
-               x::Number = 1) where {BT<:Number,AT<:Number}
-  # This is just used to check if the index sets
-  # are permutations of each other, maybe
-  # this should be at the ITensor level
-  p = calculate_permutation(Bis,Ais)
-  if x == 1
-    Bstore.data += data(Astore)
-  else
-    Bstore.data += x * data(Astore)
-  end
-end
+#function _add!(Bstore::Diag{BT},
+#               Bis::IndexSet,
+#               Astore::Diag{AT},
+#               Ais::IndexSet,
+#               x::Number = 1) where {BT<:Number,AT<:Number}
+#  # This is just used to check if the index sets
+#  # are permutations of each other, maybe
+#  # this should be at the ITensor level
+#  p = calculate_permutation(Bis,Ais)
+#  if x == 1
+#    Bstore.data += data(Astore)
+#  else
+#    Bstore.data += x * data(Astore)
+#  end
+#end
 
-function _add!(Bstore::Dense,
-               Bis::IndexSet,
-               Astore::Diag,
-               Ais::IndexSet,
-               x::Number = 1)
-  # This is just used to check if the index sets
-  # are permutations of each other
-  p = calculate_permutation(Bis,Ais)
-  Bdata = data(Bstore)
-  mindim = minDim(Bis)
-  reshapeBdata = reshape(Bdata,dims(Bis))
-  if x == 1
-    for ii = 1:mindim
-      # TODO: this should be optimized, maybe use
-      # strides instead of reshape?
-      reshapeBdata[fill(ii,order(Bis))...] += Astore[ii]
-    end
-  else
-    for ii = 1:mindim
-      reshapeBdata[fill(ii,order(Bis))...] += x*Astore[ii]
-    end
-  end
-end
+#function _add!(Bstore::Dense,
+#               Bis::IndexSet,
+#               Astore::Diag,
+#               Ais::IndexSet,
+#               x::Number = 1)
+#  # This is just used to check if the index sets
+#  # are permutations of each other
+#  p = calculate_permutation(Bis,Ais)
+#  Bdata = data(Bstore)
+#  mindim = minDim(Bis)
+#  reshapeBdata = reshape(Bdata,dims(Bis))
+#  if x == 1
+#    for ii = 1:mindim
+#      # TODO: this should be optimized, maybe use
+#      # strides instead of reshape?
+#      reshapeBdata[fill(ii,order(Bis))...] += Astore[ii]
+#    end
+#  else
+#    for ii = 1:mindim
+#      reshapeBdata[fill(ii,order(Bis))...] += x*Astore[ii]
+#    end
+#  end
+#end
 
 # TODO: implement this
 # This should not require any permutation
@@ -263,6 +266,7 @@ end
 function Base.permutedims!(R::DiagTensor{<:Number,N},
                            T::DiagTensor{<:Number,N},
                            perm::NTuple{N,Int},f::Function=(r,t)->t) where {N}
+  # TODO: check that inds(R)==permute(inds(T),perm)?
   for i=1:diag_length(R)
     diag_inds = CartesianIndex{N}(ntuple(_->i,Val(N)))
     @inbounds R[diag_inds] = f(R[diag_inds],T[diag_inds])
@@ -270,19 +274,54 @@ function Base.permutedims!(R::DiagTensor{<:Number,N},
   return R
 end
 
+function Base.permutedims(T::DiagTensor{<:Number,N},
+                          perm::NTuple{N,Int},f::Function=identity) where {N}
+  R = similar(T,permute(inds(T),perm))
+  permutedims!(R,T,perm,f)
+  return R
+end
+
+function Base.permutedims(T::UniformDiagTensor{ElT,N},
+                          perm::NTuple{N,Int},
+                          f::Function=identity) where {ElR,ElT,N}
+  diag_inds = CartesianIndex(ntuple(_->1,Val(N)))
+  R = Tensor(Diag{promote_type(ElR,ElT)}(f(T[diag_inds])),permute(inds(T),perm))
+  return R
+end
+
 # Version that may overwrite in-place or may return the result
 function permutedims!!(R::NonuniformDiagTensor{<:Number,N},
                        T::NonuniformDiagTensor{<:Number,N},
-                       perm::NTuple{N,Int},f::Function=(r,t)->t) where {N}
+                       perm::NTuple{N,Int},
+                       f::Function=(r,t)->t) where {N}
   permutedims!(R,T,perm,f)
   return R
 end
 
 function permutedims!!(R::UniformDiagTensor{ElR,N},
                        T::UniformDiagTensor{ElT,N},
-                       perm::NTuple{N,Int},f::Function=(r,t)->t) where {ElR,ElT,N}
+                       perm::NTuple{N,Int},
+                       f::Function=(r,t)->t) where {ElR,ElT,N}
   diag_inds = CartesianIndex(ntuple(_->1,Val(N)))
-  R = Tensor(Diag{promote_type(ElR,ElT)}(R[diag_inds]+T[diag_inds]),inds(R))
+  R = Tensor(Diag{promote_type(ElR,ElT)}(f(R[diag_inds],T[diag_inds])),inds(R))
+  return R
+end
+
+function Base.permutedims!(R::DenseTensor{ElR,N},
+                           T::DiagTensor{ElT,N},
+                           perm::NTuple{N,Int},
+                           f::Function = (r,t)->t) where {ElR,ElT,N}
+  for i = 1:diag_length(T)
+    diag_inds = CartesianIndex(ntuple(_->i,Val(N)))
+    @inbounds R[diag_inds] = f(R[diag_inds],T[diag_inds])
+  end
+  return R
+end
+
+function permutedims!!(R::DenseTensor{ElR,N},
+                       T::DiagTensor{ElT,N},
+                       perm::NTuple{N,Int},f::Function=(r,t)->t) where {ElR,ElT,N}
+  permutedims!(R,T,perm,f)
   return R
 end
 

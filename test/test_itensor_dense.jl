@@ -5,7 +5,7 @@ using ITensors,
 
 Random.seed!(12345)
 
-digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
+digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
 
 @testset "Dense ITensor basic functionality" begin
 
