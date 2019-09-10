@@ -67,8 +67,16 @@ Base.similar(T::Tensor,::Type{S},dims::Dims) where {S} = Tensor(similar(store(T)
 #  return Tensor(convert(StoreR,store(T)),copy(inds(T)))
 #end
 
+function Base.promote_rule(::Type{TensorT1},
+                           ::Type{TensorT2}) where 
+  {TensorT1<:Tensor{ElT1,N1,StoreT1},TensorT2<:Tensor{ElT2,N2,StoreT2}} where 
+  {ElT1,ElT2,N1,N2,StoreT1,StoreT2}
+  return Tensor{promote_type(ElT1,ElT2),N3,promote_type(StoreT1,StoreT2)} where {N3}
+end
+
 function Base.promote_rule(::Type{Tensor{ElT1,N,StoreT1,Inds}},
-                           ::Type{Tensor{ElT2,N,StoreT2,Inds}}) where {ElT1,ElT2,N,StoreT1,StoreT2,Inds}
+                           ::Type{Tensor{ElT2,N,StoreT2,Inds}}) where {ElT1,ElT2,N,
+                                                                       StoreT1,StoreT2,Inds}
   return Tensor{promote_type(ElT1,ElT2),N,promote_type(StoreT1,StoreT2),Inds}
 end
 

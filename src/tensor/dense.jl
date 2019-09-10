@@ -149,8 +149,9 @@ function outer(T1::DenseTensor,T2::DenseTensor)
 end
 const ⊗ = outer
 
-function contract(T1::DenseTensor,labelsT1,
-                  T2::DenseTensor,labelsT2)
+# TODO: move to tensor.jl?
+function contract(T1::Tensor,labelsT1,
+                  T2::Tensor,labelsT2)
   indsR,labelsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2)
   R = similar(promote_type(typeof(T1),typeof(T2)),indsR)
   contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
