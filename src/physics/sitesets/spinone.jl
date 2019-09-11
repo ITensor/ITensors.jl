@@ -1,7 +1,7 @@
 export SpinOneSite,
        spinOneSites
 
-struct SpinOneSite <: Site end
+struct SpinOneSite <: AbstractSite end
 
 defaultTags(::SpinOneSite,n::Int) = TagSet("Site,S=1,n=$n")
 

@@ -1,7 +1,7 @@
 export ElectronSite,
        electronSites
 
-struct ElectronSite <: Site
+struct ElectronSite <: AbstractSite
 end
 
 dim(::ElectronSite) = 4

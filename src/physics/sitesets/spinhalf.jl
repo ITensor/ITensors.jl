@@ -1,7 +1,7 @@
 export SpinHalfSite,
        spinHalfSites
 
-struct SpinHalfSite <: Site
+struct SpinHalfSite <: AbstractSite
 end
 
 dim(::SpinHalfSite) = 2

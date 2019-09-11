@@ -1,7 +1,7 @@
 export tJSite,
        tJSites
 
-struct tJSite <: Site end
+struct tJSite <: AbstractSite end
 
 dim(::tJSite) = 3
 defaultTags(::tJSite,n::Int) = TagSet("Site,tJ,n=$n")

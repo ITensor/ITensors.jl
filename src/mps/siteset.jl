@@ -1,4 +1,4 @@
-export Site,
+export AbstractSite,
        defaultTags,
        dim,
        ind,
@@ -10,19 +10,19 @@ export Site,
        SiteSet,
        replaceBond!
 
-abstract type Site end
+abstract type AbstractSite end
 
-state(s::Index,::Site,n::Int)::IndexVal = s(n)
+state(s::Index,::AbstractSite,n::Int)::IndexVal = s(n)
 
-defaultTags(::Site,n::Int) = TagSet("Site,n=$n")
+defaultTags(::AbstractSite,n::Int) = TagSet("Site,n=$n")
 
-dim(::Site) = throw(ErrorException("method dim not defined for abstract Site type"))
-
-
-struct BasicSite <: Site end
+dim(::AbstractSite) = throw(ErrorException("method dim not defined for AbstractSite type"))
 
 
-const SiteSetStorage = Vector{Tuple{Index,Site}}
+struct BasicSite <: AbstractSite end
+
+
+const SiteSetStorage = Vector{Tuple{Index,AbstractSite}}
 
 struct SiteSet
   store::SiteSetStorage
@@ -46,7 +46,7 @@ getindex(s::SiteSet,n::Integer)::Index = s.store[n][1]
 siteType(s::SiteSet,n::Int) = s.store[n][2]
 eachindex(s::SiteSet) = eachindex(s.store)
 
-function setSite!(sset::SiteSet,n::Int,s::Site)
+function setSite!(sset::SiteSet,n::Int,s::AbstractSite)
   i = Index(dim(s),defaultTags(s,n))
   sset.store[n] = (i,s)
 end
