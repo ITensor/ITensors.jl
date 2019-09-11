@@ -5,6 +5,7 @@ export AbstractSite,
        op,
        setSite!,
        site,
+       siteType,
        state,
        BasicSite,
        SiteSet,
@@ -12,17 +13,17 @@ export AbstractSite,
 
 abstract type AbstractSite end
 
-state(s::Index,::AbstractSite,n::Int)::IndexVal = s(n)
+state(::Type{<:AbstractSite},s::Index,n::Int)::IndexVal = s(n)
 
-defaultTags(::AbstractSite,n::Int) = TagSet("Site,n=$n")
+defaultTags(::Type{<:AbstractSite},n::Int) = TagSet("Site,n=$n")
 
-dim(::AbstractSite) = throw(ErrorException("method dim not defined for AbstractSite type"))
+dim(::Type{<:AbstractSite}) = throw(ErrorException("method dim not defined for AbstractSite type"))
 
 
 struct BasicSite <: AbstractSite end
 
 
-const SiteSetStorage = Vector{Tuple{Index,AbstractSite}}
+const SiteSetStorage = Vector{Tuple{Index,Type{<:AbstractSite}}}
 
 struct SiteSet
   store::SiteSetStorage
@@ -34,8 +35,8 @@ struct SiteSet
   function SiteSet(N::Integer, d::Integer)
     store_ = SiteSetStorage(undef,N)
     for n=1:N
-      ts = defaultTags(BasicSite(),n)
-      store_[n] = (Index(d,ts),BasicSite())
+      ts = defaultTags(BasicSite,n)
+      store_[n] = (Index(d,ts),BasicSite)
     end
     new(store_)
   end
@@ -46,9 +47,11 @@ getindex(s::SiteSet,n::Integer)::Index = s.store[n][1]
 siteType(s::SiteSet,n::Int) = s.store[n][2]
 eachindex(s::SiteSet) = eachindex(s.store)
 
-function setSite!(sset::SiteSet,n::Int,s::AbstractSite)
-  i = Index(dim(s),defaultTags(s,n))
-  sset.store[n] = (i,s)
+function setSite!(sset::SiteSet,
+                  n::Int,
+                  st::Type{<:AbstractSite})
+  i = Index(dim(st),defaultTags(st,n))
+  sset.store[n] = (i,st)
 end
 
 function op(sset::SiteSet,
@@ -73,7 +76,7 @@ function op(sset::SiteSet,
       op2 = opname[starpos.start+1:end]
       return multSiteOps(op(sset,op1,n),op(sset,op2,n))
     end
-    return op(s,siteType(sset,n),opname)
+    return op(siteType(sset,n),s,opname)
   end
   return Op
 end
@@ -83,12 +86,12 @@ function show(io::IO,
   print(io,"SiteSet")
   (length(sset) > 0) && print(io,"\n")
   for i=1:length(sset)
-    println(io,"  $(sset[i]) $(typeof(siteType(sset,i)))")
+    println(io,"  $(sset[i]) $(siteType(sset,i))")
   end
 end
 
 function state(sset::SiteSet,
                n::Integer,
                st::Union{Int,String})::IndexVal
-  return state(sset[n],siteType(sset,n),st)
+  return state(siteType(sset,n),sset[n],st)
 end

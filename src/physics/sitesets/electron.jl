@@ -4,19 +4,19 @@ export ElectronSite,
 struct ElectronSite <: AbstractSite
 end
 
-dim(::ElectronSite) = 4
-defaultTags(::ElectronSite,n::Int) = TagSet("Site,Electron,n=$n")
+dim(::Type{ElectronSite}) = 4
+defaultTags(::Type{ElectronSite}, n::Int) = TagSet("Site,Electron,n=$n")
 
-function electronSites(N::Int;kwargs...)::SiteSet
+function electronSites(N::Int; kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
-    setSite!(sites,n,ElectronSite())
+    setSite!(sites,n,ElectronSite)
   end
   return sites
 end
 
-function op(s::Index,
-            site::ElectronSite, 
+function op(::Type{ElectronSite},
+            s::Index,
             opname::AbstractString)::ITensor
   sP = prime(s)
   Emp   = s(1)

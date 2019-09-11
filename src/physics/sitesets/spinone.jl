@@ -3,20 +3,20 @@ export SpinOneSite,
 
 struct SpinOneSite <: AbstractSite end
 
-defaultTags(::SpinOneSite,n::Int) = TagSet("Site,S=1,n=$n")
+defaultTags(::Type{SpinOneSite}, n::Int) = TagSet("Site,S=1,n=$n")
 
-dim(::SpinOneSite) = 3
+dim(::Type{SpinOneSite}) = 3
 
-function spinOneSites(N::Int;kwargs...)::SiteSet
+function spinOneSites(N::Int; kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
-    setSite!(sites,n,SpinOneSite())
+    setSite!(sites,n,SpinOneSite)
   end
   return sites
 end
 
-function op(s::Index,
-            site::SpinOneSite, 
+function op(::Type{SpinOneSite},
+            s::Index,
             opname::AbstractString)::ITensor
   sP = prime(s)
   Up = s(1)

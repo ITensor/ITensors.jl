@@ -3,19 +3,19 @@ export tJSite,
 
 struct tJSite <: AbstractSite end
 
-dim(::tJSite) = 3
-defaultTags(::tJSite,n::Int) = TagSet("Site,tJ,n=$n")
+dim(::Type{tJSite}) = 3
+defaultTags(::Type{tJSite}, n::Int) = TagSet("Site,tJ,n=$n")
 
-function tJSites(N::Int;kwargs...)::SiteSet
+function tJSites(N::Int; kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
-    setSite!(sites,n,tJSite())
+    setSite!(sites,n,tJSite)
   end
   return sites
 end
 
-function op(s::Index,
-            site::tJSite, 
+function op(::Type{tJSite},
+            s::Index,
             opname::AbstractString)::ITensor
   sP = prime(s)
   Emp = s(1)

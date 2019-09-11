@@ -5,6 +5,21 @@ using ITensors,
 
   N = 10
 
+  @testset "Basic SiteSet" begin
+    sites = SiteSet(N,2)
+
+    @test length(sites) == N
+
+    @test sites[1] isa Index
+    @test dim(sites[2]) == 2
+    @test state(sites,3,2) == sites[3](2)
+
+    @test siteType(sites,1) isa Type{<:AbstractSite}
+    @test siteType(sites,1) == BasicSite
+
+    @test length(sprint(show,sites)) > 1
+  end
+
   @testset "Star in operator strings" begin
     sites = spinHalfSites(N)
     @test_throws ArgumentError op(sites, "Sp", 1)

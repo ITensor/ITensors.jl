@@ -1,23 +1,22 @@
 export SpinHalfSite,
        spinHalfSites
 
-struct SpinHalfSite <: AbstractSite
-end
+struct SpinHalfSite <: AbstractSite end
 
-dim(::SpinHalfSite) = 2
+dim(::Type{SpinHalfSite}) = 2
 
-defaultTags(::SpinHalfSite,n::Int) = TagSet("Site,S=1/2,n=$n")
+defaultTags(::Type{SpinHalfSite},n::Int) = TagSet("Site,S=1/2,n=$n")
 
-function spinHalfSites(N::Int;kwargs...)::SiteSet
+function spinHalfSites(N::Int; kwargs...)::SiteSet
   sites = SiteSet(N)
   for n=1:N
-    setSite!(sites,n,SpinHalfSite())
+    setSite!(sites,n,SpinHalfSite)
   end
   return sites
 end
 
-function state(s::Index,
-               site::SpinHalfSite,
+function state(::Type{SpinHalfSite},
+               s::Index,
                st::String)
   if st == "Up" || st == "↑"
     return s(1)
@@ -28,8 +27,8 @@ function state(s::Index,
   end
 end
 
-function op(s::Index,
-            site::SpinHalfSite, 
+function op(::Type{SpinHalfSite},
+            s::Index,
             opname::AbstractString)::ITensor
   sP = prime(s)
   Up = s(1)
