@@ -4,7 +4,7 @@ using ITensors,
 @testset "MPS Basics" begin
 
   N = 10
-  sites = SiteSet(N,2)
+  sites = [Index(2,"Site") for n=1:N]
   psi = MPS(sites)
   @test length(psi) == N
   @test length(MPS()) == 0
@@ -67,7 +67,7 @@ using ITensors,
     end
     @test phipsi[] ≈ inner(phi,psi)
  
-    badsites = SiteSet(N+1,2)
+    badsites = [Index(2) for n=1:N+1]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi,badpsi)
   end
@@ -120,7 +120,7 @@ end
 
 # Helper function for making MPS
 function basicRandomMPS(N::Int;dim=4)
-  sites = SiteSet(N,2)
+  sites = [Index(2,"Site") for n=1:N]
   M = MPS(sites)
   links = [Index(dim,"n=$(n-1),Link") for n=1:N+1]
   for n=1:N
