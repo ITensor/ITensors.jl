@@ -84,11 +84,11 @@ function state(sset::SiteSet,
                j::Integer,
                str::String)::IndexVal
   sn = state(siteType(sset,j),str)
-  return sset[n](sn)
+  return sset[j](sn)
 end
 
 function state(sset::SiteSet,
                j::Integer,
                st::Integer)::IndexVal
-  return sset[n](st)
+  return sset[j](st)
 end
