@@ -7,12 +7,17 @@ defaultTags(::Type{SpinOneSite}, n::Int) = TagSet("Site,S=1,n=$n")
 
 dim(::Type{SpinOneSite}) = 3
 
-function spinOneSites(N::Int; kwargs...)::SiteSet
-  sites = SiteSet(N)
-  for n=1:N
-    setSite!(sites,n,SpinOneSite)
+function state(::Type{SpinOneSite},
+               st::String)
+  if st == "Up" || st == "↑"
+    return 1
+  elseif st == "Z0" || st == "0"
+    return 2
+  elseif st == "Dn" || st == "↓"
+    return 3
   end
-  return sites
+  throw(ArgumentError("State string \"$st\" not recognized for SpinOneSite"))
+  return 0
 end
 
 function op(::Type{SpinOneSite},
@@ -95,4 +100,12 @@ function op(::Type{SpinOneSite},
     throw(ArgumentError("Operator name '$opname' not recognized for SpinOneSite"))
   end
   return Op
+end
+
+function spinOneSites(N::Int; kwargs...)::SiteSet
+  sites = SiteSet(N)
+  for n=1:N
+    setSite!(sites,n,SpinOneSite)
+  end
+  return sites
 end

@@ -7,24 +7,15 @@ dim(::Type{SpinHalfSite}) = 2
 
 defaultTags(::Type{SpinHalfSite},n::Int) = TagSet("Site,S=1/2,n=$n")
 
-function spinHalfSites(N::Int; kwargs...)::SiteSet
-  sites = SiteSet(N)
-  for n=1:N
-    setSite!(sites,n,SpinHalfSite)
-  end
-  return sites
-end
-
 function state(::Type{SpinHalfSite},
-               s::Index,
                st::String)
   if st == "Up" || st == "↑"
-    return s(1)
+    return 1
   elseif st == "Dn" || st == "↓"
-    return s(2)
-  else
-    throw(ArgumentError("State string \"$st\" not recognized for SpinHalfSite"))
+    return 2
   end
+  throw(ArgumentError("State string \"$st\" not recognized for SpinHalfSite"))
+  return 0
 end
 
 function op(::Type{SpinHalfSite},
@@ -71,4 +62,12 @@ function op(::Type{SpinHalfSite},
     throw(ArgumentError("Operator name '$opname' not recognized for SpinHalfSite"))
   end
   return Op
+end
+
+function spinHalfSites(N::Int; kwargs...)::SiteSet
+  sites = SiteSet(N)
+  for n=1:N
+    setSite!(sites,n,SpinHalfSite)
+  end
+  return sites
 end

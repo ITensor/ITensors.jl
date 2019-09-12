@@ -13,7 +13,7 @@ using ITensors,
 
     @test dim(s) == 2
 
-    @test_throws ArgumentError state(s,Index(),"Fake")
+    @test_throws ArgumentError state(s,"Fake")
   end
 
   @testset "Spin Half SiteSet" begin
@@ -39,7 +39,6 @@ using ITensors,
     s = SpinOneSite
     @test hastags(defaultTags(s,4),"Site")
     @test hastags(defaultTags(s,4),"S=1")
-    @test hastags(defaultTags(s,4),"n=4")
 
     @test dim(s) == 3
   end

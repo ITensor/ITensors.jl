@@ -5,14 +5,22 @@ struct ElectronSite <: AbstractSite
 end
 
 dim(::Type{ElectronSite}) = 4
+
 defaultTags(::Type{ElectronSite}, n::Int) = TagSet("Site,Electron,n=$n")
 
-function electronSites(N::Int; kwargs...)::SiteSet
-  sites = SiteSet(N)
-  for n=1:N
-    setSite!(sites,n,ElectronSite)
+function state(::Type{ElectronSite},
+               st::String)
+  if st == "Emp" || st == "0"
+    return 1
+  elseif st == "Up" || st == "↑"
+    return 2
+  elseif st == "Dn" || st == "↓"
+    return 3
+  elseif st == "UpDn" || st == "↑↓"
+    return 4
   end
-  return sites
+  throw(ArgumentError("State string \"$st\" not recognized for ElectronSite"))
+  return 0
 end
 
 function op(::Type{ElectronSite},
@@ -97,4 +105,12 @@ function op(::Type{ElectronSite},
     throw(ArgumentError("Operator name $opname not recognized for ElectronSite"))
   end
   return Op
+end
+
+function electronSites(N::Int; kwargs...)::SiteSet
+  sites = SiteSet(N)
+  for n=1:N
+    setSite!(sites,n,ElectronSite)
+  end
+  return sites
 end
