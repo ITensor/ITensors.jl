@@ -9,6 +9,7 @@ export ITensor,
        isNull,
        scale!,
        normalize!,
+       randn!,
        multSiteOps,
        order,
        permute,
@@ -17,7 +18,6 @@ export ITensor,
        scalar,
        store,
        dense
-
 
 mutable struct ITensor{N}
   store::TensorStorage
@@ -487,7 +487,6 @@ function add!(R::ITensor{N},α::Number,T::ITensor{N}) where {N}
   perm = getperm(inds(R),inds(T))
   TR,TT = Tensor(R),Tensor(T)
 
-  # TODO: make this into a permutedims!?(Tensor,Tensor,perm,f) function?
   # Include type promotion from α
   TR = convert(promote_type(typeof(TR),typeof(TT)),TR)
   TR = permutedims!!(TR,TT,perm,(r,t)->r+α*t)

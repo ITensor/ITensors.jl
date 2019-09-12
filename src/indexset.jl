@@ -37,7 +37,8 @@ IndexSet() = IndexSet{0}()
 IndexSet(::Tuple{}) = IndexSet()
 
 # Construct of some size
-IndexSet(::Val{N}) where {N} = IndexSet(ntuple(_->Index(),Val(N)))
+IndexSet{N}() where {N} = IndexSet{N}(ntuple(_->Index(),Val(N)))
+IndexSet(::Val{N}) where {N} = IndexSet{N}()
 
 # Construct from various sets of indices
 IndexSet{N}(inds::Vararg{Index,N}) where {N} = IndexSet{N}(NTuple{N,Index}(inds))
@@ -476,11 +477,11 @@ swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 # Helper functions for contracting ITensors
 #
 
-function compute_contraction_labels(Ai,Bi)
+function compute_contraction_labels(Ai::IndexSet{N1},Bi::IndexSet{N2}) where {N1,N2}
   rA = length(Ai)
   rB = length(Bi)
-  Aind = zeros(Int,rA)
-  Bind = zeros(Int,rB)
+  Aind = MVector{N1}(ntuple(_->0,Val(N1)))
+  Bind = MVector{N2}(ntuple(_->0,Val(N2)))
 
   ncont = 0
   for i = 1:rA, j = 1:rB
@@ -498,20 +499,20 @@ function compute_contraction_labels(Ai,Bi)
     if(Bind[j]==0) Bind[j] = (u+=1) end
   end
 
-  return (Aind,Bind)
+  return (NTuple{N1,Int}(Aind),NTuple{N2,Int}(Bind))
 end
 
-function contract_inds(Ais::IndexSet,
-                       Aind,
-                       Bis::IndexSet,
-                       Bind)
+function contract_inds(Ais::IndexSet{N1},
+                       Aind::NTuple{N1,Int},
+                       Bis::IndexSet{N2},
+                       Bind::NTuple{N2,Int}) where {N1,N2}
   ncont = 0
   for i in Aind
     if(i < 0) ncont += 1 end 
   end
-  nuniq = length(Ais)+length(Bis)-2*ncont
-  Cind = zeros(Int,nuniq)
-  Cis = fill(Index(),nuniq)
+  NR = N1+N2-2*ncont
+  Cind = MVector{NR,Int}(ntuple(_->0,Val(NR))) #zeros(Int,NR)
+  Cis = IndexSet{NR}() #fill(Index(),NR)
   u = 1
   for i ∈ 1:length(Ais)
     if(Aind[i] > 0) 
@@ -527,7 +528,7 @@ function contract_inds(Ais::IndexSet,
       u += 1 
     end
   end
-  return (IndexSet(Cis...),Cind)
+  return (Cis,NTuple{NR,Int}(Cind))
 end
 
 # TODO: implement this in terms of a tuple,
@@ -568,11 +569,7 @@ getperm(col1,col2)
 Get the permutation that takes collection 2 to collection 1,
 such that col2[p].==col1
 """
-function getperm(s1,s2)
-  return _getperm(IndexSet(s1),IndexSet(s2))
-end
-
-function _getperm(s1::IndexSet{N},s2::IndexSet{N}) where {N}
+function getperm(s1::Union{IndexSet{N},NTuple{N}}, s2::Union{IndexSet{N},NTuple{N}}) where {N}
   return ntuple(i->findfirst(==(s1[i]),s2),Val(N))
 end
 

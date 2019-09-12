@@ -1,25 +1,8 @@
 
-## Check if the contraction is an outer product
-## (none of the labels are negative)
-#function is_outer(l1::Vector{Int},l2::Vector{Int})
-#  for l1i in l1
-#    if l1i < 0
-#      return false
-#    end
-#  end
-#  # I think this one is not necessary
-#  for l2i in l2
-#    if l2i < 0
-#      return false
-#    end
-#  end
-#  return true
-#end
-
-mutable struct ContractionProperties
-  ai::Vector{Int}
-  bi::Vector{Int}
-  ci::Vector{Int}
+mutable struct ContractionProperties{Na,Nb,Nc}
+  ai::NTuple{Na,Int}
+  bi::NTuple{Nb,Int}
+  ci::NTuple{Nc,Int}
   nactiveA::Int 
   nactiveB::Int 
   nactiveC::Int
@@ -44,16 +27,14 @@ mutable struct ContractionProperties
   newArange::Vector{Int}
   newBrange::Vector{Int}
   newCrange::Vector{Int}
-  function ContractionProperties(ai::Vector{Int},
-                                 bi::Vector{Int},
-                                 ci::Vector{Int})
-    new(ai,bi,ci,0,0,0,Vector{Int}(),Vector{Int}(),Vector{Int}(),false,false,false,1,1,1,0,
+  function ContractionProperties(ai::NTuple{Na,Int},bi::NTuple{Nb,Int},ci::NTuple{Nc,Int}) where {Na,Nb,Nc}
+    new{Na,Nb,Nc}(ai,bi,ci,0,0,0,Vector{Int}(),Vector{Int}(),Vector{Int}(),false,false,false,1,1,1,0,
         length(ai),length(bi),length(ai),length(bi),Vector{Int}(),Vector{Int}(),Vector{Int}(),
         false,Vector{Int}(),Vector{Int}(),Vector{Int}())
   end
 end
 
-function compute_perms!(props::ContractionProperties)::Nothing
+function compute_perms!(props::ContractionProperties)
   #Use !AtoB.empty() as a check to see if we've already run this
   length(props.AtoB)!=0 && return
 
@@ -101,13 +82,6 @@ function compute_perms!(props::ContractionProperties)::Nothing
 
 end
 
-#function is_trivial_permutation(P::Vector{Int})::Bool
-#  for n = 1:length(P)
-#    P[n]!=n && return false
-#  end
-#  return true
-#end
-
 function checkACsameord(props::ContractionProperties)::Bool
   props.Austart>=length(props.ai) && return true
   aCind = props.AtoC[props.Austart]
@@ -137,25 +111,6 @@ contractedB(props::ContractionProperties,i::Int) = (props.BtoC[i]<1)
 Atrans(props::ContractionProperties) = contractedA(props,1)
 Btrans(props::ContractionProperties) = !contractedB(props,1)
 Ctrans(props::ContractionProperties) = props.ctrans
-
-# TODO: replace find_index(v,t) with built in Julia function:
-# findfirst(==(t), v)
-#function find_index(v::Vector{Int},t)::Int
-#  for i = 1:length(v)
-#    v[i]==t && return i
-#  end
-#  return -1
-#end
-
-#function permute_extents(R::Vector{Int},P::Vector{Int})::Vector{Int}
-#  Rb = fill(0,length(R))
-#  n = 1
-#  for pn in P
-#    Rb[pn] = R[n]
-#    n += 1
-#  end
-#  return Rb
-#end
 
 function compute_contraction_properties!(props::ContractionProperties, A, B, C)
   compute_perms!(props)
@@ -287,7 +242,7 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
     for k = 1:rc
       #j = find_index(props.ai,props.ci[k])
       j = findfirst(==(props.ci[k]),props.ai)
-      if j!=-1
+      if j!==nothing
         props.AtoC[newi] = k
         props.PA[newi+1] = j
         newi += 1
@@ -349,7 +304,7 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
     for k = 1:rc
       #j = find_index(props.bi,props.ci[k])
       j = findfirst(==(props.ci[k]),props.bi)
-      if j!=-1
+      if j!==nothing
         props.BtoC[newi] = k
         props.PB[newi+1] = j
         newi += 1

@@ -1,4 +1,6 @@
-export Dense
+export Dense,
+       outer,
+       ⊗
 
 #
 # Dense storage
@@ -21,6 +23,7 @@ Base.similar(D::Dense{T},dims) where {T} = Dense{T}(similar(data(D),dim(dims)))
 Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(similar(Vector{T},dim(dims)))
 Base.similar(D::Dense,::Type{T}) where {T} = Dense{T}(similar(data(D),T))
 Base.copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
+Base.copyto!(D1::Dense,D2::Dense) = copyto!(data(D1),data(D2))
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
@@ -39,7 +42,7 @@ Base.convert(::Type{Dense{R}},D::Dense) where {R} = Dense{R}(convert(Vector{R},d
 # DenseTensor (Tensor using Dense storage)
 #
 
-const DenseTensor{El,N,Inds} = Tensor{El,N,<:Dense,Inds}
+const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Dense}
 
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{TensorT}) where {TensorT<:DenseTensor} = IndexLinear()
@@ -143,24 +146,37 @@ using Base.Cartesian: @nexprs,
     return TP
   end
 end
+function Base.permutedims!(TP::DenseTensor{<:Number,0},
+                           T::DenseTensor{<:Number,0},
+                           perm,
+                           f::Function)
+  TP[] = f(TP[],T[])
+  return TP
+end
 
-function outer(T1::DenseTensor,T2::DenseTensor)
-  return Tensor(Dense(vec(Vector(T1)*transpose(Vector(T2)))),union(inds(T1),inds(T2)))
+function outer(T1::DenseTensor{ElT1},T2::DenseTensor{ElT2}) where {ElT1,ElT2}
+  array_outer = vec(Array(T1))*transpose(vec(Array(T2)))
+  inds_outer = unioninds(inds(T1),inds(T2))
+  return Tensor(Dense{promote_type(ElT1,ElT2)}(vec(array_outer)),inds_outer)
 end
 const ⊗ = outer
 
 # TODO: move to tensor.jl?
-function contract(T1::Tensor,labelsT1,
-                  T2::Tensor,labelsT2)
+function contract(T1::Tensor{<:Number,N1},labelsT1,
+                  T2::Tensor{<:Number,N2},labelsT2) where {N1,N2}
   indsR,labelsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2)
-  R = similar(promote_type(typeof(T1),typeof(T2)),indsR)
-  contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
+  if N1+N2==length(indsR)
+    R = T1⊗T2
+  else
+    R = similar(promote_type(typeof(T1),typeof(T2)),indsR)
+    contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
+  end
   return R
 end
 
-function contract!(R::DenseTensor,labelsR,
-                   T1::DenseTensor{<:Number,N1},labelsT1,
-                   T2::DenseTensor{<:Number,N2},labelsT2) where {N1,N2}
+function contract!(R::Tensor{<:Number,NR},labelsR::NTuple{NR,Int},
+                   T1::Tensor{<:Number,N1},labelsT1::NTuple{N1,Int},
+                   T2::Tensor{<:Number,N2},labelsT2::NTuple{N2,Int}) where {NR,N1,N2}
   if N1==0
     # TODO: replace with an add! function?
     # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
@@ -169,13 +185,14 @@ function contract!(R::DenseTensor,labelsR,
   elseif N2==0
     perm = getperm(labelsR,labelsT1)
     permutedims!(R,T1,perm,(r,t1)->T2[]*t1)
-  elseif isdisjoint(labelsT1,labelsT2)
+  elseif N1+N2==NR
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
+    # TODO: implement the in-place version directly
     Rp = T1⊗T2
-    labelsRp = union(labelsT1,labelsT2)
+    labelsRp = unioninds(labelsT1,labelsT2)
     perm = getperm(labelsR,labelsRp)
-    if !istrivial(perm)
+    if !is_trivial_permutation(perm)
       permutedims!(R,Rp,perm)
     else
       copyto!(R,Rp)
@@ -185,6 +202,8 @@ function contract!(R::DenseTensor,labelsR,
   end
   return R
 end
+
+Base.copyto!(R::Tensor,T::Tensor) = copyto!(store(R),store(T))
 
 # TODO: make sure this is doing type promotion correctly
 # since we are calling BLAS (need to promote T1 and T2 to
@@ -198,15 +217,15 @@ function _contract!(R::DenseTensor,labelsR,
   return R
 end
 
-function _contract!(C::DenseTensor{T},
-                    A::DenseTensor{T},
-                    B::DenseTensor{T},
+function _contract!(C::DenseTensor{T,NC},
+                    A::DenseTensor{T,NA},
+                    B::DenseTensor{T,NB},
                     props::ContractionProperties,
                     α::T=one(T),
-                    β::T=zero(T)) where {T}
+                    β::T=zero(T)) where {T,NC,NA,NB}
   tA = 'N'
   if props.permuteA
-    aref = reshape(permutedims(A,props.PA),props.dmid,props.dleft)
+    aref = reshape(permutedims(A,NTuple{NA,Int}(props.PA)),props.dmid,props.dleft)
     tA = 'T'
   else
     #A doesn't have to be permuted
@@ -220,7 +239,7 @@ function _contract!(C::DenseTensor{T},
 
   tB = 'N'
   if props.permuteB
-    bref = reshape(permutedims(B,props.PB),props.dmid,props.dright)
+    bref = reshape(permutedims(B,NTuple{NB,Int}(props.PB)),props.dmid,props.dright)
   else
     if Btrans(props)
       bref = reshape(B,props.dright,props.dmid)
@@ -249,10 +268,13 @@ function _contract!(C::DenseTensor{T},
   end
 
   #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
+
+  # TODO: make sure this is fast with Tensor{ElT,2}, or
+  # convert aref and bref to Matrix
   BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
 
   if props.permuteC
-    permutedims!(C,reshape(cref,props.newCrange...),props.PC)
+    permutedims!(C,reshape(cref,props.newCrange...),NTuple{NC,Int}(props.PC))
   end
   return C
 end

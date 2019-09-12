@@ -35,7 +35,7 @@ Base.strides(is::Dims) = Base.size_to_strides(1, dims(is)...)
 # as Dims{4})
 StaticArrays.similar_type(::Type{IndsT},::Val{N}) where {IndsT<:Dims,N} = Dims{N}
 
-unioninds(is1::Dims{N1},is2::Dims{N2}) where {N1,N2} = Dims{N1+N2}(is1...,is2...)
+unioninds(is1::Dims{N1},is2::Dims{N2}) where {N1,N2} = Dims{N1+N2}((is1...,is2...))
 
 # The size is obtained from the indices
 dims(T::Tensor) = dims(inds(T))

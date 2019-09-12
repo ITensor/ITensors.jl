@@ -36,10 +36,13 @@ Base.eltype(::Diag{T}) where {T} = eltype(T)
 Base.eltype(::Type{Diag{T}}) where {T} = eltype(T)
 
 # Deal with uniform Diag conversion
-Base.convert(::Type{StorageT},D::Diag) where {StorageT<:Diag{T}} where {T} = Diag{T}(data(D))
+Base.convert(::Type{<:Diag{T}},D::Diag) where {T} = Diag{T}(data(D))
 
 Base.similar(D::Diag{T}) where {T} = Diag{T}(similar(data(D)))
+Base.similar(D::Diag{T},inds) where {T} = Diag{T}(similar(data(D),minimum(dims(inds))))
+Base.similar(D::Type{<:NonuniformDiag{T}},inds) where {T} = Diag{T}(similar(T,length(inds)==0 ? 1 : minimum(dims(inds))))
 Base.similar(D::UniformDiag{T}) where {T<:Number} = Diag{T}(zero(T))
+Base.similar(::Type{<:UniformDiag{T}},inds) where {T<:Number} = Diag{T}(zero(T))
 
 #*(D::Diag{T},x::S) where {T<:AbstractVector,S<:Number} = Dense{promote_type(eltype(D),S)}(x*data(D))
 #*(x::Number,D::Diag) = D*x
@@ -60,21 +63,35 @@ Base.promote_rule(::Type{UniformDiag{T1}},::Type{NonuniformDiag{T2}}) where
 Base.promote_rule(::Type{Dense{T1}},::Type{Diag{T2}}) where 
   {T1,T2} = Dense{promote_type(T1,eltype(T2))}
 
-const DiagTensor{El,N,Inds} = Tensor{El,N,<:Diag,Inds}
-const NonuniformDiagTensor{El,N,Inds} = Tensor{El,N,<:NonuniformDiag,Inds}
-const UniformDiagTensor{El,N,Inds} = Tensor{El,N,<:UniformDiag,Inds}
+const DiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Diag}
+const NonuniformDiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where 
+                                               {StoreT<:NonuniformDiag}
+const UniformDiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where 
+                                               {StoreT<:UniformDiag}
 
 Base.IndexStyle(::Type{TensorT}) where {TensorT<:DiagTensor} = IndexCartesian()
 
 # TODO: this needs to be better (promote element type, check order compatibility,
 # etc.
-function Base.convert(::Type{TensorT}, T::DiagTensor{ElT,N}) where 
-  {TensorT<:Tensor{ElT,N,<:Dense}} where {ElT,N}
+function Base.convert(::Type{<:Tensor{ElT,N,<:Dense}}, T::DiagTensor{ElT,N}) where {ElT,N}
   return dense(T)
 end
 
-diag_length(T::DiagTensor) = minimum(dims(T))
+function Base.Array(T::DiagTensor{ElT,N}) where {ElT,N}
+  A = zeros(ElT,dims(T))
+  for i = 1:diag_length(T)
+    diag_inds = CartesianIndex{N}(ntuple(_->i,Val(N)))    
+    A[diag_inds] = T[diag_inds]
+  end
+  return A
+end
+Base.Matrix(T::DiagTensor{<:Number,2}) = Array(T)
+Base.Vector(T::DiagTensor{<:Number,1}) = Array(T)
 
+diag_length(T::DiagTensor) = minimum(dims(T))
+diag_length(T::DiagTensor{<:Number,0}) = 1
+
+# Add a get_diagindex(T::DiagTensor,ind::Int) function to avoid checking the input
 function Base.getindex(T::DiagTensor{ElT,N},inds::Vararg{Int,N}) where {ElT,N}
   if all(==(inds[1]),inds)
     return store(T)[inds[1]]
@@ -82,6 +99,8 @@ function Base.getindex(T::DiagTensor{ElT,N},inds::Vararg{Int,N}) where {ElT,N}
     return zero(eltype(ElT))
   end
 end
+Base.getindex(T::DiagTensor{<:Number,1},ind::Int) = store(T)[ind]
+Base.getindex(T::DiagTensor{<:Number,0}) = store(T)[1]
 
 # Set diagonal elements
 # Throw error for off-diagonal
@@ -89,6 +108,8 @@ function Base.setindex!(T::DiagTensor{<:Number,N},val,inds::Vararg{Int,N}) where
   all(==(inds[1]),inds) || error("Cannot set off-diagonal element of Diag storage")
   return store(T)[inds[1]] = val
 end
+Base.setindex!(T::DiagTensor{<:Number,1},val,ind::Int) = ( store(T)[ind] = val )
+Base.setindex!(T::DiagTensor{<:Number,0},val) = ( store(T)[1] = val )
 
 function Base.setindex!(T::UniformDiagTensor{<:Number,N},val,inds::Vararg{Int,N}) where {N}
   error("Cannot set elements of a uniform Diag storage")
@@ -99,22 +120,33 @@ function dense(D::DiagTensor)
   return Tensor(Dense{eltype(D)}(vec(Array(D))),inds(D))
 end
 
-# TODO: implement this in a sparse way
-# For now, we will just make them dense since the output is dense anyway
-function storage_outer(D1::Diag{T1},is1::IndexSet,D2::Diag{T2},is2::IndexSet) where {T1,T2}
-  A1 = storage_dense(D1,is1)
-  A2 = storage_dense(D2,is2)
-  return storage_outer(A1,is1,A2,is2)
+function outer(T1::DiagTensor{ElT1,N1},T2::DiagTensor{ElT2,N2}) where {ElT1,ElT2,N1,N2}
+  indsR = unioninds(inds(T1),inds(T2))
+  R = Tensor(Dense{promote_type(ElT1,ElT2)}(zeros(dim(indsR))),indsR)
+  for i1 = 1:diag_length(T1), i2 = 1:diag_length(T2)
+    diag_inds1 = CartesianIndex{N1}(ntuple(_->i1,Val(N1)))
+    diag_inds2 = CartesianIndex{N2}(ntuple(_->i2,Val(N2)))
+    indsR = CartesianIndex{N1+N2}(ntuple(r -> r ≤ N1 ? i1 : i2, Val(N1+N2)))
+    R[indsR] = T1[diag_inds1]*T2[diag_inds2]
+  end
+  return R
 end
 
+# For now, we will just make them dense since the output is dense anyway
+#function storage_outer(D1::Diag{T1},is1::IndexSet,D2::Diag{T2},is2::IndexSet) where {T1,T2}
+#  A1 = storage_dense(D1,is1)
+#  A2 = storage_dense(D2,is2)
+#  return storage_outer(A1,is1,A2,is2)
+#end
+
 # Convert to an array by setting the diagonal elements
-function storage_convert(::Type{Array},D::Diag,is::IndexSet)
-  A = zeros(eltype(D),dims(is))
-  for i = 1:minDim(is)
-    A[fill(i,length(is))...] = D[i]
-  end
-  return A
-end
+#function storage_convert(::Type{Array},D::Diag,is::IndexSet)
+#  A = zeros(eltype(D),dims(is))
+#  for i = 1:minDim(is)
+#    A[fill(i,length(is))...] = D[i]
+#  end
+#  return A
+#end
 
 #function storage_convert(::Type{Dense{T}},D::Diag,is::IndexSet) where T
 #  return Dense{T}(vec(storage_convert(Array,D,is)))
@@ -323,6 +355,34 @@ function permutedims!!(R::DenseTensor{ElR,N},
                        perm::NTuple{N,Int},f::Function=(r,t)->t) where {ElR,ElT,N}
   permutedims!(R,T,perm,f)
   return R
+end
+
+function _contract!(R::DiagTensor{ElR,NR},labelsR,
+                    T1::DiagTensor{<:Number,N1},labelsT1,
+                    T2::DiagTensor{<:Number,N2},labelsT2) where {ElR,NR,N1,N2}
+  if NR==0  # If all indices of A and B are contracted
+    # all indices are summed over, just add the product of the diagonal
+    # elements of A and B
+    # Need to set to zero since
+    # Cdata is originally uninitialized memory
+    # (so causes random output)
+    
+    R[1] = zero(ElR)
+    for i = 1:diag_length(T1)
+      diag_inds = CartesianIndex{N1}(ntuple(_->i,Val(N1)))
+      R[1] += T1[diag_inds]*T2[diag_inds]
+    end
+  else
+    min_dim = min(diag_length(T1),diag_length(T2))
+    # not all indices are summed over, set the diagonals of the result
+    # to the product of the diagonals of A and B
+    for i = 1:min_dim
+      diag_inds_R = CartesianIndex{NR}(ntuple(_->i,Val(NR)))
+      diag_inds_T1 = CartesianIndex{N1}(ntuple(_->i,Val(N1)))
+      diag_inds_T2 = CartesianIndex{N2}(ntuple(_->i,Val(N2)))
+      R[diag_inds_R] = T1[diag_inds_T1]*T2[diag_inds_T2]
+    end
+  end
 end
 
 # TODO: make this a special version of storage_add!()
@@ -721,27 +781,27 @@ end
 
 
 # Maybe this works for uniform storage as well
-function _contract_diag_diag!(Cdata::Vector{T},Clabels::Vector{Int},
-                              Adata::Vector{T},Alabels::Vector{Int},
-                              Bdata::Vector{T},Blabels::Vector{Int}) where T
-  if length(Clabels) == 0  # If all indices of A and B are contracted
-    # all indices are summed over, just add the product of the diagonal
-    # elements of A and B
-    Adim = length(Adata)  # == length(Bdata)
-    # Need to set to zero since
-    # Cdata is originally uninitialized memory
-    # (so causes random output)
-    Cdata[1] = zero(T)
-    for i = 1:Adim
-      Cdata[1] += Adata[i]*Bdata[i]
-    end
-  else
-    min_dim = min(length(Adata),length(Bdata))
-    # not all indices are summed over, set the diagonals of the result
-    # to the product of the diagonals of A and B
-    for i = 1:min_dim
-      Cdata[i] = Adata[i]*Bdata[i]
-    end
-  end
-end
+#function _contract_diag_diag!(Cdata::Vector{T},Clabels::Vector{Int},
+#                              Adata::Vector{T},Alabels::Vector{Int},
+#                              Bdata::Vector{T},Blabels::Vector{Int}) where T
+#  if length(Clabels) == 0  # If all indices of A and B are contracted
+#    # all indices are summed over, just add the product of the diagonal
+#    # elements of A and B
+#    Adim = length(Adata)  # == length(Bdata)
+#    # Need to set to zero since
+#    # Cdata is originally uninitialized memory
+#    # (so causes random output)
+#    Cdata[1] = zero(T)
+#    for i = 1:Adim
+#      Cdata[1] += Adata[i]*Bdata[i]
+#    end
+#  else
+#    min_dim = min(length(Adata),length(Bdata))
+#    # not all indices are summed over, set the diagonals of the result
+#    # to the product of the diagonals of A and B
+#    for i = 1:min_dim
+#      Cdata[i] = Adata[i]*Bdata[i]
+#    end
+#  end
+#end
 
