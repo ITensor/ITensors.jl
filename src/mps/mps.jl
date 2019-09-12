@@ -31,7 +31,7 @@ mutable struct MPS
   end
 end
 
-function MPS(sites::SiteSet)
+function MPS(sites)
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
