@@ -7,20 +7,18 @@ export AbstractSite,
        site,
        siteType,
        state,
-       BasicSite,
        SiteSet,
        replaceBond!
 
 abstract type AbstractSite end
 
-state(::Type{<:AbstractSite},s::Index,n::Int)::IndexVal = s(n)
+function state(::Type{<:AbstractSite},s::Index,str::String)::IndexVal  
+  throw(ErrorException("method state accepting String not defined for AbstractSite type"))
+end
 
 defaultTags(::Type{<:AbstractSite},n::Int) = TagSet("Site,n=$n")
 
 dim(::Type{<:AbstractSite}) = throw(ErrorException("method dim not defined for AbstractSite type"))
-
-
-struct BasicSite <: AbstractSite end
 
 
 const SiteSetStorage = Vector{Tuple{Index,Type{<:AbstractSite}}}
@@ -32,14 +30,6 @@ struct SiteSet
 
   SiteSet(N::Integer) = new(SiteSetStorage(undef,N))
 
-  function SiteSet(N::Integer, d::Integer)
-    store_ = SiteSetStorage(undef,N)
-    for n=1:N
-      ts = defaultTags(BasicSite,n)
-      store_[n] = (Index(d,ts),BasicSite)
-    end
-    new(store_)
-  end
 end
 
 length(s::SiteSet) = length(s.store)
@@ -91,7 +81,14 @@ function show(io::IO,
 end
 
 function state(sset::SiteSet,
-               n::Integer,
-               st::Union{Int,String})::IndexVal
-  return state(siteType(sset,n),sset[n],st)
+               j::Integer,
+               str::String)::IndexVal
+  sn = state(siteType(sset,j),str)
+  return sset[n](sn)
+end
+
+function state(sset::SiteSet,
+               j::Integer,
+               st::Integer)::IndexVal
+  return sset[n](st)
 end
