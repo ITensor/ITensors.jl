@@ -93,42 +93,44 @@ function randomMPS(sites)
   return M
 end
 
-const InitState = Union{Vector{String},Vector{Int}}
-
-function productMPS(site_inds,
-                    states::Vector{Int})
-  N = length(sites)
-  if N != length(is)
-    throw(DimensionMismatch("Number of sites and and initial state lengths don't match"))
-  end
+function productMPS(states::Vector{IndexVal})
+  N = length(states)
   As = Vector{ITensor}(undef,N)
   links  = Vector{Index}(undef,N)
-  for n in eachindex(is)
-    s = site_inds[n]
-    sn = states[n]
+  for n=1:N
+    s = ind(states[n])
     links[n] = Index(1,"Link,l=$n")
     if n == 1
       A = ITensor(s,links[n])
-      A[s[sn],links[n](1)] = 1.0
+      A[states[n],links[n](1)] = 1.0
     elseif n == N
       A = ITensor(links[n-1],s)
-      A[links[n-1](1),s[sn]] = 1.0
+      A[links[n-1](1),states[n]] = 1.0
     else
       A = ITensor(links[n-1],s,links[n])
-      A[links[n-1](1),s[sn],links[n](1)] = 1.0
+      A[links[n-1](1),states[n],links[n](1)] = 1.0
     end
     As[n] = A
   end
   return MPS(N,As,0,2)
 end
 
+function productMPS(site_inds,
+                    states::Vector{Int})
+  if length(site_inds) != length(states)
+    throw(DimensionMismatch("Number of sites and and initial states don't match"))
+  end
+  ivs = [site_inds[n](states[n]) for n=1:length(site_inds)]
+  return productMPS(ivs)
+end
+
 function productMPS(sites::SiteSet,
                     states::Vector{String})
   if length(sites) != length(states)
-    throw(DimensionMismatch("Number of sites and and initial state lengths don't match"))
+    throw(DimensionMismatch("Number of sites and and initial states don't match"))
   end
-  istates = [state(sites,n,states[n]) for n=1:length(sites)]
-  return productMPS(sites,istates)
+  ivs = [state(sites,n,states[n]) for n=1:length(sites)]
+  return productMPS(ivs)
 end
 
 function linkindex(M::MPS,j::Integer) 
