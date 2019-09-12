@@ -99,7 +99,7 @@ function productMPS(sites::SiteSet,
                     is::InitState)
   N = length(sites)
   if N != length(is)
-    throw(DimensionMismatch("Site Set and InitState sizes don't match"))
+    throw(DimensionMismatch("Number of sites and and initial state lengths don't match"))
   end
   As = Vector{ITensor}(undef,N)
   links  = Vector{Index}(undef,N)
