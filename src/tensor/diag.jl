@@ -33,7 +33,7 @@ Base.complex(D::Diag{T}) where {T} = Diag{complex(T)}(complex(data(D)))
 Base.copy(D::Diag{T}) where {T} = Diag{T}(copy(data(D)))
 
 Base.eltype(::Diag{T}) where {T} = eltype(T)
-Base.eltype(::Type{Diag{T}}) where {T} = eltype(T)
+Base.eltype(::Type{<:Diag{T}}) where {T} = eltype(T)
 
 # Deal with uniform Diag conversion
 Base.convert(::Type{<:Diag{T}},D::Diag) where {T} = Diag{T}(data(D))
@@ -52,15 +52,18 @@ Base.similar(::Type{<:UniformDiag{T}},inds) where {T<:Number} = Diag{T}(zero(T))
 # Useful for knowing how conversions should work when adding and contracting
 #
 
-Base.promote_rule(::Type{Diag{T1}},::Type{Diag{T2}}) where 
-  {T1,T2} = Diag{promote_type(T1,T2)}
+Base.promote_rule(::Type{<:UniformDiag{T1}},::Type{<:UniformDiag{T2}}) where 
+  {T1<:Number,T2<:Number} = Diag{promote_type(T1,T2)}
+
+Base.promote_rule(::Type{<:NonuniformDiag{T1}},::Type{<:NonuniformDiag{T2}}) where 
+  {T1<:AbstractVector,T2<:AbstractVector} = Diag{promote_type(T1,T2)}
 
 # TODO: how do we make this work more generally for T2<:AbstractVector{S2}?
 # Make a similar_type(AbstractVector{S2},T1) -> AbstractVector{T1} function?
-Base.promote_rule(::Type{UniformDiag{T1}},::Type{NonuniformDiag{T2}}) where 
-  {T1,T2<:Vector{S2}} where S2 = Diag{Vector{promote_type(T1,S2)}}
+Base.promote_rule(::Type{<:UniformDiag{T1}},::Type{<:NonuniformDiag{T2}}) where 
+  {T1<:Number,T2<:Vector{S2}} where S2 = Diag{Vector{promote_type(T1,S2)}}
 
-Base.promote_rule(::Type{Dense{T1}},::Type{Diag{T2}}) where 
+Base.promote_rule(::Type{<:Dense{T1}},::Type{<:Diag{T2}}) where 
   {T1,T2} = Dense{promote_type(T1,eltype(T2))}
 
 const DiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Diag}
@@ -69,7 +72,7 @@ const NonuniformDiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} wher
 const UniformDiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where 
                                                {StoreT<:UniformDiag}
 
-Base.IndexStyle(::Type{TensorT}) where {TensorT<:DiagTensor} = IndexCartesian()
+Base.IndexStyle(::Type{<:DiagTensor}) = IndexCartesian()
 
 # TODO: this needs to be better (promote element type, check order compatibility,
 # etc.
@@ -120,15 +123,23 @@ function dense(D::DiagTensor)
   return Tensor(Dense{eltype(D)}(vec(Array(D))),inds(D))
 end
 
-function outer(T1::DiagTensor{ElT1,N1},T2::DiagTensor{ElT2,N2}) where {ElT1,ElT2,N1,N2}
-  indsR = unioninds(inds(T1),inds(T2))
-  R = Tensor(Dense{promote_type(ElT1,ElT2)}(zeros(dim(indsR))),indsR)
+function outer!(R::DenseTensor{<:Number,NR},
+                T1::DiagTensor{<:Number,N1},
+                T2::DiagTensor{<:Number,N2}) where {NR,N1,N2}
   for i1 = 1:diag_length(T1), i2 = 1:diag_length(T2)
     diag_inds1 = CartesianIndex{N1}(ntuple(_->i1,Val(N1)))
     diag_inds2 = CartesianIndex{N2}(ntuple(_->i2,Val(N2)))
-    indsR = CartesianIndex{N1+N2}(ntuple(r -> r ≤ N1 ? i1 : i2, Val(N1+N2)))
+    indsR = CartesianIndex{NR}(ntuple(r -> r ≤ N1 ? i1 : i2, Val(NR)))
     R[indsR] = T1[diag_inds1]*T2[diag_inds2]
   end
+  return R
+end
+
+# Right an in-place version
+function outer(T1::DiagTensor{ElT1,N1},T2::DiagTensor{ElT2,N2}) where {ElT1,ElT2,N1,N2}
+  indsR = unioninds(inds(T1),inds(T2))
+  R = Tensor(Dense{promote_type(ElT1,ElT2)}(zeros(dim(indsR))),indsR)
+  outer!(R,T1,T2)
   return R
 end
 

@@ -489,7 +489,7 @@ end
       T = T + swapprime(dag(T),0,1)
       U,D,u = eigenHermitian(T)
       @test A≈U*D*prime(dag(U))
-      UUᵀ =  U*prime(dag(U),u)
+      UUᴴ =  U*prime(dag(U),u)
       @test UUᴴ ≈ δ(u,u') atol=1e-14
     end
 

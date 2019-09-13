@@ -63,6 +63,7 @@ function Base.convert(::Type{TensorR},
 end
 
 # Reshape a DenseTensor using the specified dimensions
+# This returns a view into the same Tensor data
 function Base.reshape(T::DenseTensor,dims)
   dim(T)==dim(dims) || error("Total new dimension must be the same as the old dimension")
   return Tensor(store(T),dims)
@@ -71,6 +72,9 @@ end
 function Base.reshape(T::DenseTensor,dims::Dims)
   dim(T)==dim(dims) || error("Total new dimension must be the same as the old dimension")
   return Tensor(store(T),dims)
+end
+function Base.reshape(T::DenseTensor,dims::Int...)
+  return Tensor(store(T),tuple(dims...))
 end
 
 # Create an Array that is a view of the Dense Tensor
@@ -152,6 +156,17 @@ function Base.permutedims!(TP::DenseTensor{<:Number,0},
                            f::Function)
   TP[] = f(TP[],T[])
   return TP
+end
+
+function outer!(R::DenseTensor,T1::DenseTensor,T2::DenseTensor)
+  # TODO: make vec(::Tensor) work? Would this be a view? What
+  # happens to sparse tensors like Diag?
+  v1 = vec(T1)
+  v2 = vec(T2)
+  R .= zero(ElR)
+  RM = reshape(R,dim(v1),dim(v2))
+  BLAS.ger!(one(ElR),v1,v2,R)
+  return R
 end
 
 function outer(T1::DenseTensor{ElT1},T2::DenseTensor{ElT2}) where {ElT1,ElT2}

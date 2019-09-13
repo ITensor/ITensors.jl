@@ -28,6 +28,7 @@ dim(ds::Dims) = prod(ds)
 # This may be a bad idea to overload?
 # Type piracy?
 Base.strides(is::Dims) = Base.size_to_strides(1, dims(is)...)
+Base.copy(ds::Dims) = ds
 
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct a Tuple(::NTuple{N,Int}) where the 
