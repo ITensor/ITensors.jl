@@ -39,10 +39,17 @@ Base.eltype(::Type{<:Diag{T}}) where {T} = eltype(T)
 Base.convert(::Type{<:Diag{T}},D::Diag) where {T} = Diag{T}(data(D))
 
 Base.similar(D::Diag{T}) where {T} = Diag{T}(similar(data(D)))
+
+# TODO: write in terms of ::Int, not inds
 Base.similar(D::Diag{T},inds) where {T} = Diag{T}(similar(data(D),minimum(dims(inds))))
 Base.similar(D::Type{<:NonuniformDiag{T}},inds) where {T} = Diag{T}(similar(T,length(inds)==0 ? 1 : minimum(dims(inds))))
+
 Base.similar(D::UniformDiag{T}) where {T<:Number} = Diag{T}(zero(T))
 Base.similar(::Type{<:UniformDiag{T}},inds) where {T<:Number} = Diag{T}(zero(T))
+
+# TODO: make this work for other storage besides Vector
+Base.zeros(::Type{Diag{T}},dim::Int64) where {T<:AbstractVector} = Diag{T}(zeros(eltype(T),dim))
+Base.zeros(::Type{Diag{T}},dim::Int64) where {T<:Number} = Diag{T}(zero(T))
 
 #*(D::Diag{T},x::S) where {T<:AbstractVector,S<:Number} = Dense{promote_type(eltype(D),S)}(x*data(D))
 #*(x::Number,D::Diag) = D*x
@@ -66,6 +73,9 @@ Base.promote_rule(::Type{<:UniformDiag{T1}},::Type{<:NonuniformDiag{T2}}) where
 Base.promote_rule(::Type{<:Dense{T1}},::Type{<:Diag{T2}}) where 
   {T1,T2} = Dense{promote_type(T1,eltype(T2))}
 
+# Convert a Diag storage type to the closest Dense storage type
+dense(::Type{<:Diag{T}}) where {T} = Dense{eltype(T)}
+
 const DiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Diag}
 const NonuniformDiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where 
                                                {StoreT<:NonuniformDiag}
@@ -79,6 +89,49 @@ Base.IndexStyle(::Type{<:DiagTensor}) = IndexCartesian()
 function Base.convert(::Type{<:Tensor{ElT,N,<:Dense}}, T::DiagTensor{ElT,N}) where {ElT,N}
   return dense(T)
 end
+
+
+# These are rules for determining the output of a pairwise contraction of Tensors
+# (given the indices of the output tensors)
+function contraction_output_type(TensorT1::Type{<:DiagTensor},
+                                 TensorT2::Type{<:DenseTensor},
+                                 indsR)
+  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+end
+contraction_output_type(TensorT1::Type{<:DenseTensor},
+                        TensorT2::Type{<:DiagTensor},
+                        indsR) = contraction_output_type(TensorT2,TensorT1,indsR)
+
+# This performs the logic that DiagTensor*DiagTensor -> DiagTensor if it is not an outer
+# product but -> DenseTensor if it is
+# TODO: if the tensors are both order 2 (or less), or if there is an Index replacement,
+# then they remain diagonal. Should we limit DiagTensor*DiagTensor to cases that
+# result in a DiagTensor, for efficiency and type stability? What about a general
+# SparseTensor result?
+function contraction_output_type(TensorT1::Type{<:DiagTensor{<:Number,N1}},
+                                 TensorT2::Type{<:DiagTensor{<:Number,N2}},
+                                 indsR) where {N1,N2}
+  if ValLength(indsR)===Val(N1+N2)   # Turn into is_outer(inds1,inds2,indsR) function? How
+                                     # does type inference work with arithmatic of compile time values?
+    return similar_type(dense(promote_type(TensorT1,TensorT2)),indsR)
+  end
+  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+end
+
+# TODO: move to tensor.jl?
+zero_contraction_output(TensorT1::Type{<:Tensor},TensorT2::Type{<:Tensor},indsR) = zeros(contraction_output_type(TensorT1,TensorT2,typeof(indsR)),indsR)
+
+function contraction_output(TensorT1::Type{<:DiagTensor},
+                            TensorT2::Type{<:DiagTensor},
+                            indsR)
+  return zero_contraction_output(TensorT1,TensorT2,indsR)
+end
+function contraction_output(TensorT1::Type{<:DiagTensor},
+                            TensorT2::Type{<:Tensor},
+                            indsR)
+  return zero_contraction_output(TensorT1,TensorT2,indsR)
+end
+contraction_output(TensorT1::Type{<:Tensor},TensorT2::Type{<:DiagTensor},indsR) = contraction_output(TensorT2,TensorT1,indsR)
 
 function Base.Array(T::DiagTensor{ElT,N}) where {ElT,N}
   A = zeros(ElT,dims(T))
@@ -121,6 +174,10 @@ end
 # convert to Dense
 function dense(D::DiagTensor)
   return Tensor(Dense{eltype(D)}(vec(Array(D))),inds(D))
+end
+
+function dense(::Type{<:DiagTensor{ElT,N,StoreT,IndsT}}) where {ElT,N,StoreT,IndsT}
+  return Tensor{ElT,N,dense(StoreT),IndsT}
 end
 
 function outer!(R::DenseTensor{<:Number,NR},
@@ -429,216 +486,222 @@ function storage_scalar(D::Diag{T}) where {T<:Number}
 end
 
 # Contract function for Diag*Dense
-function _contract(Cinds::IndexSet,
-                   Clabels::Vector{Int},
-                   Astore::Diag{Vector{SA}},
-                   Ainds::IndexSet,
-                   Alabels::Vector{Int},
-                   Bstore::Dense{SB},
-                   Binds::IndexSet,
-                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
-  SC = promote_type(SA,SB)
-
-  # Convert the arrays to a common type
-  # since we will call BLAS
-  Astore = convert(Diag{Vector{SC}},Astore)
-  Bstore = convert(Dense{SC},Bstore)
-
-  Adims = dims(Ainds)
-  Bdims = dims(Binds)
-  Cdims = dims(Cinds)
-
-  # Create storage for output tensor
-  # This needs to be filled with zeros, since in general
-  # the output of Diag*Dense will be sparse
-  Cstore = Dense{SC}(zero(SC),prod(Cdims))
-
-  # This seems unnecessary, and makes this function
-  # non-generic. I think Dense should already store
-  # the properly-shaped data (and be parametrized by the
-  # order, and maybe store the size?)
-  Adata = data(Astore)
-  Bdata = reshape(data(Bstore),Bdims)
-  Cdata = reshape(data(Cstore),Cdims)
-
-  # Functions to do the contraction
-  if(length(Alabels)==0)
-    _contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
-  elseif(length(Blabels)==0)
-    _contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
-  else
-    _contract_diag_dense!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
-  end
-
-  return Cstore
-end
+#function _contract(Cinds::IndexSet,
+#                   Clabels::Vector{Int},
+#                   Astore::Diag{Vector{SA}},
+#                   Ainds::IndexSet,
+#                   Alabels::Vector{Int},
+#                   Bstore::Dense{SB},
+#                   Binds::IndexSet,
+#                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+#  SC = promote_type(SA,SB)
+#
+#  # Convert the arrays to a common type
+#  # since we will call BLAS
+#  Astore = convert(Diag{Vector{SC}},Astore)
+#  Bstore = convert(Dense{SC},Bstore)
+#
+#  Adims = dims(Ainds)
+#  Bdims = dims(Binds)
+#  Cdims = dims(Cinds)
+#
+#  # Create storage for output tensor
+#  # This needs to be filled with zeros, since in general
+#  # the output of Diag*Dense will be sparse
+#  Cstore = Dense{SC}(zero(SC),prod(Cdims))
+#
+#  # This seems unnecessary, and makes this function
+#  # non-generic. I think Dense should already store
+#  # the properly-shaped data (and be parametrized by the
+#  # order, and maybe store the size?)
+#  Adata = data(Astore)
+#  Bdata = reshape(data(Bstore),Bdims)
+#  Cdata = reshape(data(Cstore),Cdims)
+#
+#  # Functions to do the contraction
+#  if(length(Alabels)==0)
+#    _contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
+#  elseif(length(Blabels)==0)
+#    _contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
+#  else
+#    _contract_diag_dense!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
+#  end
+#
+#  return Cstore
+#end
 
 # Contract function for Diag uniform * Dense
-function _contract(Cinds::IndexSet,
-                   Clabels::Vector{Int},
-                   Astore::Diag{SA},
-                   Ainds::IndexSet,
-                   Alabels::Vector{Int},
-                   Bstore::Dense{SB},
-                   Binds::IndexSet,
-                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
-  SC = promote_type(SA,SB)
-
-  # Convert the arrays to a common type
-  # since we will call BLAS
-  #Astore = convert(Diag{SC},Astore)
-  #Bstore = convert(Dense{SC},Bstore)
-
-  Bdims = dims(Binds)
-  Cdims = dims(Cinds)
-
-  # Create storage for output tensor
-  # This needs to be filled with zeros, since in general
-  # the output of Diag*Dense will be sparse
-  Cstore = Dense{SC}(zero(SC),prod(Cdims))
-
-  # This seems unnecessary, and makes this function
-  # non-generic. I think Dense should already store
-  # the properly-shaped data (and be parametrized by the
-  # order, and maybe store the size?)
-  Adata = data(Astore)
-  Bdata = reshape(data(Bstore),Bdims)
-  Cdata = reshape(data(Cstore),Cdims)
-
-  # Functions to do the contraction
-  if(length(Alabels)==0)
-    _contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
-  elseif(length(Blabels)==0)
-    _contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
-  elseif(length(Alabels)==2 && length(Clabels)==length(Blabels))
-    # This is just a replacement of the indices
-    # TODO: This logic should be higher up
-    for i = 1:length(Clabels)
-      if Blabels[i] > 0
-        Cinds[i] = Binds[i]
-      else
-        if Alabels[1] > 0
-          Cinds[i] = Ainds[1]
-        else
-          Cinds[i] = Ainds[2]
-        end
-      end
-    end
-    Cdata .= Adata .* Bdata
-  else
-    _contract_diag_dense!(Cstore,Cinds,Clabels,
-                          Astore,Ainds,Alabels,
-                          Bstore,Binds,Blabels)
-  end
-
-  return Cstore
-end
+#function _contract(Cinds::IndexSet,
+#                   Clabels::Vector{Int},
+#                   Astore::Diag{SA},
+#                   Ainds::IndexSet,
+#                   Alabels::Vector{Int},
+#                   Bstore::Dense{SB},
+#                   Binds::IndexSet,
+#                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+#  SC = promote_type(SA,SB)
+#
+#  # Convert the arrays to a common type
+#  # since we will call BLAS
+#  #Astore = convert(Diag{SC},Astore)
+#  #Bstore = convert(Dense{SC},Bstore)
+#
+#  Bdims = dims(Binds)
+#  Cdims = dims(Cinds)
+#
+#  # Create storage for output tensor
+#  # This needs to be filled with zeros, since in general
+#  # the output of Diag*Dense will be sparse
+#  Cstore = Dense{SC}(zero(SC),prod(Cdims))
+#
+#  # This seems unnecessary, and makes this function
+#  # non-generic. I think Dense should already store
+#  # the properly-shaped data (and be parametrized by the
+#  # order, and maybe store the size?)
+#  Adata = data(Astore)
+#  Bdata = reshape(data(Bstore),Bdims)
+#  Cdata = reshape(data(Cstore),Cdims)
+#
+#  # Functions to do the contraction
+#  if(length(Alabels)==0)
+#    _contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
+#  elseif(length(Blabels)==0)
+#    _contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
+#  elseif(length(Alabels)==2 && length(Clabels)==length(Blabels))
+#    # This is just a replacement of the indices
+#    # TODO: This logic should be higher up
+#    for i = 1:length(Clabels)
+#      if Blabels[i] > 0
+#        Cinds[i] = Binds[i]
+#      else
+#        if Alabels[1] > 0
+#          Cinds[i] = Ainds[1]
+#        else
+#          Cinds[i] = Ainds[2]
+#        end
+#      end
+#    end
+#    Cdata .= Adata .* Bdata
+#  else
+#    _contract_diag_dense!(Cstore,Cinds,Clabels,
+#                          Astore,Ainds,Alabels,
+#                          Bstore,Binds,Blabels)
+#  end
+#
+#  return Cstore
+#end
 
 # Contract function for Dense*Diag (calls Diag*Dense)
-function _contract(Cinds::IndexSet,
-                   Clabels::Vector{Int},
-                   Astore::Dense,
-                   Ainds::IndexSet,
-                   Alabels::Vector{Int},
-                   Bstore::Diag,
-                   Binds::IndexSet,
-                   Blabels::Vector{Int})
-  return _contract(Cinds,Clabels,
-                   Bstore,Binds,Blabels,
-                   Astore,Ainds,Alabels)
-end
+#function _contract(Cinds::IndexSet,
+#                   Clabels::Vector{Int},
+#                   Astore::Dense,
+#                   Ainds::IndexSet,
+#                   Alabels::Vector{Int},
+#                   Bstore::Diag,
+#                   Binds::IndexSet,
+#                   Blabels::Vector{Int})
+#  return _contract(Cinds,Clabels,
+#                   Bstore,Binds,Blabels,
+#                   Astore,Ainds,Alabels)
+#end
 
 # Contract function for Diag*Diag
-function _contract(Cinds::IndexSet,
-                   Clabels::Vector{Int},
-                   Astore::Diag{Vector{SA}},
-                   Ainds::IndexSet,
-                   Alabels::Vector{Int},
-                   Bstore::Diag{Vector{SB}},
-                   Binds::IndexSet,
-                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
-  SC = promote_type(SA,SB)
-
-  # Convert the arrays to a common type
-  # since we will call BLAS
-  Astore = convert(Diag{Vector{SC}},Astore)
-  Bstore = convert(Diag{Vector{SC}},Bstore)
-  Cstore = Diag{Vector{SC}}(minDim(Cinds))
-
-  Adata = data(Astore)
-  Bdata = data(Bstore)
-  Cdata = data(Cstore)
-
-  if(length(Alabels)==0)
-    _contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
-  elseif(length(Blabels)==0)
-    _contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
-  else
-    _contract_diag_diag!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
-  end
-
-  return Cstore
-end
+#function _contract(Cinds::IndexSet,
+#                   Clabels::Vector{Int},
+#                   Astore::Diag{Vector{SA}},
+#                   Ainds::IndexSet,
+#                   Alabels::Vector{Int},
+#                   Bstore::Diag{Vector{SB}},
+#                   Binds::IndexSet,
+#                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+#  SC = promote_type(SA,SB)
+#
+#  # Convert the arrays to a common type
+#  # since we will call BLAS
+#  Astore = convert(Diag{Vector{SC}},Astore)
+#  Bstore = convert(Diag{Vector{SC}},Bstore)
+#  Cstore = Diag{Vector{SC}}(minDim(Cinds))
+#
+#  Adata = data(Astore)
+#  Bdata = data(Bstore)
+#  Cdata = data(Cstore)
+#
+#  if(length(Alabels)==0)
+#    _contract_scalar!(Cdata,Clabels,Bdata,Blabels,Adata[1])
+#  elseif(length(Blabels)==0)
+#    _contract_scalar!(Cdata,Clabels,Adata,Alabels,Bdata[1])
+#  else
+#    _contract_diag_diag!(Cdata,Clabels,Adata,Alabels,Bdata,Blabels)
+#  end
+#
+#  return Cstore
+#end
 
 # Contract function for Diag uniform * Diag uniform
-function _contract(Cinds::IndexSet,
-                   Clabels::Vector{Int},
-                   Astore::Diag{SA},
-                   Ainds::IndexSet,
-                   Alabels::Vector{Int},
-                   Bstore::Diag{SB},
-                   Binds::IndexSet,
-                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
-  SC = promote_type(SA,SB)
+#function _contract(Cinds::IndexSet,
+#                   Clabels::Vector{Int},
+#                   Astore::Diag{SA},
+#                   Ainds::IndexSet,
+#                   Alabels::Vector{Int},
+#                   Bstore::Diag{SB},
+#                   Binds::IndexSet,
+#                   Blabels::Vector{Int}) where {SA<:Number,SB<:Number}
+#  SC = promote_type(SA,SB)
+#
+#  # Convert the arrays to a common type
+#  # since we will call BLAS
+#  Astore = convert(Diag{SC},Astore)
+#  Bstore = convert(Diag{SC},Bstore)
+#  Cstore = Diag{SC}(minDim(Cinds))
+#
+#  Adata = data(Astore)
+#  Bdata = data(Bstore)
+#  Cdata = data(Cstore)
+#
+#  if length(Clabels) == 0  # If all indices of A and B are contracted
+#    # all indices are summed over, just add the product of the diagonal
+#    # elements of A and B
+#    min_dim = minimum(dims(Ainds)) # == length(Bdata)
+#    # Need to set to zero since
+#    # Cdata is originally uninitialized memory
+#    # (so causes random output)
+#    Cdata = zero(SC)
+#    for i = 1:min_dim
+#      Cdata += Adata*Bdata
+#    end
+#  else
+#    # not all indices are summed over, set the diagonals of the result
+#    # to the product of the diagonals of A and B
+#    Cdata = Adata*Bdata
+#  end
+#
+#  Cstore.data = Cdata
+#  return Cstore
+#end
 
-  # Convert the arrays to a common type
-  # since we will call BLAS
-  Astore = convert(Diag{SC},Astore)
-  Bstore = convert(Diag{SC},Bstore)
-  Cstore = Diag{SC}(minDim(Cinds))
-
-  Adata = data(Astore)
-  Bdata = data(Bstore)
-  Cdata = data(Cstore)
-
-  if length(Clabels) == 0  # If all indices of A and B are contracted
-    # all indices are summed over, just add the product of the diagonal
-    # elements of A and B
-    min_dim = minimum(dims(Ainds)) # == length(Bdata)
-    # Need to set to zero since
-    # Cdata is originally uninitialized memory
-    # (so causes random output)
-    Cdata = zero(SC)
-    for i = 1:min_dim
-      Cdata += Adata*Bdata
-    end
-  else
-    # not all indices are summed over, set the diagonals of the result
-    # to the product of the diagonals of A and B
-    Cdata = Adata*Bdata
-  end
-
-  Cstore.data = Cdata
-  return Cstore
-end
-
-function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
-                               Adata::Vector{T},Alabels::Vector{Int},
-                               Bdata::Array{T,NB},Blabels::Vector{Int}) where {T,NB,NC}
+function _contract!(C::DenseTensor{ElC,NC},Clabels,
+                    A::DiagTensor{ElA,NA},Alabels,
+                    B::DenseTensor{ElB,NB},Blabels) where {ElA,NA,ElB,NB,ElC,NC}
   if all(i -> i < 0, Blabels)  # If all of B is contracted
-    min_dim = minimum(size(Bdata))
+                               # Can rewrite NC+NB==NA
+    min_dim = minimum(dims(B))
     if length(Clabels) == 0
       # all indices are summed over, just add the product of the diagonal
       # elements of A and B
       for i = 1:min_dim
-        Cdata[1] += Adata[i]*Bdata[ntuple(_->i,Val(NB))...]
+        diag_inds_A = CartesianIndex{NA}(ntuple(_->i,Val(NA)))
+        diag_inds_B = CartesianIndex{NB}(ntuple(_->i,Val(NB)))
+        C[1] += A[diag_inds_A]*B[diag_inds_B]
       end
     else
       # not all indices are summed over, set the diagonals of the result
       # to the product of the diagonals of A and B
       # TODO: should we make this return a Diag storage?
       for i = 1:min_dim
-        Cdata[ntuple(_->i,Val(NC))...] = Adata[i]*Bdata[ntuple(_->i,Val(NB))...]
+        diag_inds_A = CartesianIndex{NA}(ntuple(_->i,Val(NA)))
+        diag_inds_B = CartesianIndex{NB}(ntuple(_->i,Val(NB)))
+        diag_inds_C = CartesianIndex{NC}(ntuple(_->i,Val(NC)))
+        C[diag_inds_C] = A[diag_inds_A]*B[diag_inds_B]
       end
     end
   else
@@ -650,8 +713,8 @@ function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
     for ib = 1:length(Blabels)
       ia = findfirst(==(Blabels[ib]),Alabels)
       if(!isnothing(ia))
-        b_cstride += stride(Bdata,ib)
-        bstart += astarts[ia]*stride(Bdata,ib)
+        b_cstride += stride(B,ib)
+        bstart += astarts[ia]*stride(B,ib)
       else
         nbu += 1
       end
@@ -661,31 +724,31 @@ function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
     for ic = 1:length(Clabels)
       ia = findfirst(==(Clabels[ic]),Alabels)
       if(!isnothing(ia))
-        c_cstride += stride(Cdata,ic)
-        cstart += astarts[ia]*stride(Cdata,ic)
+        c_cstride += stride(C,ic)
+        cstart += astarts[ia]*stride(C,ic)
       end
     end
 
     # strides of the uncontracted dimensions of
-    # Bdata
+    # B
     bustride = zeros(Int,nbu)
     custride = zeros(Int,nbu)
     # size of the uncontracted dimensions of
-    # Bdata, to be used in CartesianIndices
+    # B, to be used in CartesianIndices
     busize = zeros(Int,nbu)
     n = 1
     for ib = 1:length(Blabels)
       if Blabels[ib] > 0
-        bustride[n] = stride(Bdata,ib)
-        busize[n] = size(Bdata,ib)
+        bustride[n] = stride(B,ib)
+        busize[n] = size(B,ib)
         ic = findfirst(==(Blabels[ib]),Clabels)
-        custride[n] = stride(Cdata,ic)
+        custride[n] = stride(C,ic)
         n += 1
       end
     end
 
-    boffset_orig = 1-sum(strides(Bdata))
-    coffset_orig = 1-sum(strides(Cdata))
+    boffset_orig = 1-sum(strides(B))
+    coffset_orig = 1-sum(strides(C))
     cartesian_inds = CartesianIndices(Tuple(busize))
     for inds in cartesian_inds
       boffset = boffset_orig
@@ -695,12 +758,94 @@ function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
         boffset += ii*bustride[i]
         coffset += ii*custride[i]
       end
-      for j in 1:length(Adata)
-        Cdata[cstart+j*c_cstride+coffset] += Adata[j]*Bdata[bstart+j*b_cstride+boffset]
+      for j in 1:diag_length(A)
+        diag_inds_A = CartesianIndex{NA}(ntuple(_->j,Val(NA)))
+        C[cstart+j*c_cstride+coffset] += A[diag_inds_A]*B[bstart+j*b_cstride+boffset]
       end
     end
   end
 end
+_contract!(C::DenseTensor,Clabels,A::DenseTensor,Alabels,B::DiagTensor,Blabels) = _contract!(C,Clabels,B,Blabels,A,Alabels)
+
+#function _contract_diag_dense!(Cdata::Array{T,NC},Clabels::Vector{Int},
+#                               Adata::Vector{T},Alabels::Vector{Int},
+#                               Bdata::Array{T,NB},Blabels::Vector{Int}) where {T,NB,NC}
+#  if all(i -> i < 0, Blabels)  # If all of B is contracted
+#    min_dim = minimum(size(Bdata))
+#    if length(Clabels) == 0
+#      # all indices are summed over, just add the product of the diagonal
+#      # elements of A and B
+#      for i = 1:min_dim
+#        Cdata[1] += Adata[i]*Bdata[ntuple(_->i,Val(NB))...]
+#      end
+#    else
+#      # not all indices are summed over, set the diagonals of the result
+#      # to the product of the diagonals of A and B
+#      # TODO: should we make this return a Diag storage?
+#      for i = 1:min_dim
+#        Cdata[ntuple(_->i,Val(NC))...] = Adata[i]*Bdata[ntuple(_->i,Val(NB))...]
+#      end
+#    end
+#  else
+#    astarts = zeros(Int,length(Alabels))
+#    bstart = 0
+#    cstart = 0
+#    b_cstride = 0
+#    nbu = 0
+#    for ib = 1:length(Blabels)
+#      ia = findfirst(==(Blabels[ib]),Alabels)
+#      if(!isnothing(ia))
+#        b_cstride += stride(Bdata,ib)
+#        bstart += astarts[ia]*stride(Bdata,ib)
+#      else
+#        nbu += 1
+#      end
+#    end
+#
+#    c_cstride = 0
+#    for ic = 1:length(Clabels)
+#      ia = findfirst(==(Clabels[ic]),Alabels)
+#      if(!isnothing(ia))
+#        c_cstride += stride(Cdata,ic)
+#        cstart += astarts[ia]*stride(Cdata,ic)
+#      end
+#    end
+#
+#    # strides of the uncontracted dimensions of
+#    # Bdata
+#    bustride = zeros(Int,nbu)
+#    custride = zeros(Int,nbu)
+#    # size of the uncontracted dimensions of
+#    # Bdata, to be used in CartesianIndices
+#    busize = zeros(Int,nbu)
+#    n = 1
+#    for ib = 1:length(Blabels)
+#      if Blabels[ib] > 0
+#        bustride[n] = stride(Bdata,ib)
+#        busize[n] = size(Bdata,ib)
+#        ic = findfirst(==(Blabels[ib]),Clabels)
+#        custride[n] = stride(Cdata,ic)
+#        n += 1
+#      end
+#    end
+#
+#    boffset_orig = 1-sum(strides(Bdata))
+#    coffset_orig = 1-sum(strides(Cdata))
+#    cartesian_inds = CartesianIndices(Tuple(busize))
+#    for inds in cartesian_inds
+#      boffset = boffset_orig
+#      coffset = coffset_orig
+#      for i in 1:nbu
+#        ii = inds[i]
+#        boffset += ii*bustride[i]
+#        coffset += ii*custride[i]
+#      end
+#      for j in 1:length(Adata)
+#        Cdata[cstart+j*c_cstride+coffset] += Adata[j]*Bdata[bstart+j*b_cstride+boffset]
+#      end
+#    end
+#  end
+#end
 
 function _contract_diag_dense!(Cstore::Dense,Cinds,Clabels::Vector{Int},
                                Astore::Diag{TA},Ainds,Alabels::Vector{Int},

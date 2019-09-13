@@ -19,11 +19,18 @@ Base.getindex(D::Dense,i::Integer) = data(D)[i]
 Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
 
 Base.similar(D::Dense{T}) where {T} = Dense{T}(similar(data(D)))
+
+# TODO: make this just take Int, the length of the data
 Base.similar(D::Dense{T},dims) where {T} = Dense{T}(similar(data(D),dim(dims)))
+
+# TODO: make this just take Int, the length of the data
 Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(similar(Vector{T},dim(dims)))
+
 Base.similar(D::Dense,::Type{T}) where {T} = Dense{T}(similar(data(D),T))
 Base.copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 Base.copyto!(D1::Dense,D2::Dense) = copyto!(data(D1),data(D2))
+
+Base.zeros(::Type{Dense{T}},dim::Int) where {T} = Dense{T}(zeros(T,dim))
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
@@ -176,16 +183,30 @@ function outer(T1::DenseTensor{ElT1},T2::DenseTensor{ElT2}) where {ElT1,ElT2}
 end
 const ⊗ = outer
 
+function contraction_output_type(TensorT1::Type{<:DenseTensor},
+                                 TensorT2::Type{<:DenseTensor},
+                                 indsR)
+  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+end
+
+function contraction_output(TensorT1::Type{<:DenseTensor},
+                            TensorT2::Type{<:DenseTensor},
+                            indsR)
+  return similar(contraction_output_type(TensorT1,TensorT2,indsR),indsR)
+end
+
 # TODO: move to tensor.jl?
 function contract(T1::Tensor{<:Number,N1},labelsT1,
                   T2::Tensor{<:Number,N2},labelsT2) where {N1,N2}
   indsR,labelsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2)
-  if N1+N2==length(indsR)
-    R = T1⊗T2
-  else
-    R = similar(promote_type(typeof(T1),typeof(T2)),indsR)
-    contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
-  end
+  #if N1+N2==length(indsR)
+  #  R = T1⊗T2
+  #else
+  R = contraction_output(typeof(T1),typeof(T2),indsR)
+  #R = similar(contraction_output_type(typeof(T1),typeof(T2),Val{length(indsR)}),indsR)
+  #R = similar(promote_type(typeof(T1),typeof(T2)),indsR)
+  contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
+  #end
   return R
 end
 
@@ -204,13 +225,11 @@ function contract!(R::Tensor{<:Number,NR},labelsR::NTuple{NR,Int},
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
-    Rp = T1⊗T2
+    outer!(R,T1,T2)
     labelsRp = unioninds(labelsT1,labelsT2)
     perm = getperm(labelsR,labelsRp)
     if !is_trivial_permutation(perm)
-      permutedims!(R,Rp,perm)
-    else
-      copyto!(R,Rp)
+      permutedims!(R,copy(R),perm)
     end
   else
     _contract!(R,labelsR,T1,labelsT1,T2,labelsT2)

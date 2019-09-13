@@ -454,6 +454,7 @@ end
         jj = Index(4)
         T = randomITensor(ComplexF64,ii,jj)
         U,S,V = svd(T,ii;maxdim=2)
+        u,s,v = svd(Matrix(T))
         @test norm(U*S*V-T)≈sqrt(s[3]^2+s[4]^2)
     end
 
@@ -488,7 +489,7 @@ end
       T = randomITensor(is...,prime(is)...)
       T = T + swapprime(dag(T),0,1)
       U,D,u = eigenHermitian(T)
-      @test A≈U*D*prime(dag(U))
+      @test T ≈ U*D*prime(dag(U))
       UUᴴ =  U*prime(dag(U),u)
       @test UUᴴ ≈ δ(u,u') atol=1e-14
     end

@@ -55,6 +55,12 @@ IndexSet(inds::IndexSet,i::Index) = IndexSet(inds...,i)
 IndexSet(i::Index,inds::IndexSet) = IndexSet(i,inds...)
 IndexSet(is1::IndexSet,is2::IndexSet) = IndexSet(is1...,is2...)
 
+# This is used in type promotion in the Tensor contraction code
+Base.promote_rule(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
+
+ValLength(::Type{IndexSet{N}}) where {N} = Val{N}
+ValLength(::IndexSet{N}) where {N} = Val(N)
+
 # TODO: make a version that accepts an arbitrary set of IndexSets
 # as well as mixtures of seperate Indices and Tuples of Indices.
 # Look at jointuples in the DenseTensor decomposition logic.
@@ -72,7 +78,8 @@ end
 
 Base.getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
 Base.setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
-Base.length(is::IndexSet) = length(is.inds)
+Base.length(is::IndexSet{N}) where {N} = N
+Base.length(::Type{IndexSet{N}}) where {N} = N
 order(is::IndexSet) = length(is)
 Base.copy(is::IndexSet) = IndexSet(copy(is.inds))
 dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))

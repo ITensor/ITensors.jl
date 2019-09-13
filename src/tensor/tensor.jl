@@ -30,6 +30,11 @@ dim(ds::Dims) = prod(ds)
 Base.strides(is::Dims) = Base.size_to_strides(1, dims(is)...)
 Base.copy(ds::Dims) = ds
 
+Base.promote_rule(::Type{<:Dims},::Type{Val{N}}) where {N} = Dims{N}
+
+ValLength(::Type{Dims{N}}) where {N} = Val{N}
+ValLength(::Dims{N}) where {N} = Val(N)
+
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct a Tuple(::NTuple{N,Int}) where the 
 # only known thing for dispatch is a concrete type such
@@ -68,10 +73,12 @@ Base.similar(T::Tensor,::Type{S},dims::Dims) where {S} = Tensor(similar(store(T)
 #  return Tensor(convert(StoreR,store(T)),copy(inds(T)))
 #end
 
-function Base.promote_rule(::Type{TensorT1},
-                           ::Type{TensorT2}) where 
-  {TensorT1<:Tensor{ElT1,N1,StoreT1},TensorT2<:Tensor{ElT2,N2,StoreT2}} where 
-  {ElT1,ElT2,N1,N2,StoreT1,StoreT2}
+function Base.zeros(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},inds::IndsT) where {ElT,N,StoreT,IndsT}
+  return Tensor(zeros(StoreT,dim(inds)),inds)
+end
+
+function Base.promote_rule(::Type{<:Tensor{ElT1,N1,StoreT1}},
+                           ::Type{<:Tensor{ElT2,N2,StoreT2}}) where {ElT1,ElT2,N1,N2,StoreT1,StoreT2}
   return Tensor{promote_type(ElT1,ElT2),N3,promote_type(StoreT1,StoreT2)} where {N3}
 end
 
@@ -79,6 +86,14 @@ function Base.promote_rule(::Type{Tensor{ElT1,N,StoreT1,Inds}},
                            ::Type{Tensor{ElT2,N,StoreT2,Inds}}) where {ElT1,ElT2,N,
                                                                        StoreT1,StoreT2,Inds}
   return Tensor{promote_type(ElT1,ElT2),N,promote_type(StoreT1,StoreT2),Inds}
+end
+
+#function Base.promote_rule(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Type{IndsR}) where {N,ElT,StoreT,IndsR}
+#  return Tensor{ElT,length(IndsR),StoreT,IndsR}
+#end
+
+function StaticArrays.similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},indsR) where {N,ElT,StoreT}
+  return Tensor{ElT,length(indsR),StoreT,typeof(indsR)}
 end
 
 Base.BroadcastStyle(::Type{T}) where {T<:Tensor} = Broadcast.ArrayStyle{T}()
