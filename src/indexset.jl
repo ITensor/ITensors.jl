@@ -52,7 +52,7 @@ function Base.show(io::IO, is::IndexSet)
   end
 end
 
-getindex(is::IndexSet,n::Any) = getindex(is.inds,Any)
+getindex(is::IndexSet,n::Any) = getindex(is.inds,n)
 setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
 lastindex(is :: IndexSet) = lastindex(is.inds)
 length(is::IndexSet) = length(is.inds)
