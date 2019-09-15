@@ -1,3 +1,5 @@
+export push,
+       setindex
 
 const IntChar = UInt8
 const IntSmallString = UInt64
@@ -5,40 +7,51 @@ const maxTagLength = 8
 const SmallStringStorage = SVector{maxTagLength,IntChar}
 const MSmallStringStorage = MVector{maxTagLength,IntChar} # Mutable SmallString storage
 
+function initSmallStringStore()
+  return SmallStringStorage(ntuple(_->IntChar(0),Val(length(SmallStringStorage))))
+end
+
 struct SmallString
   data::SmallStringStorage
-  length::Int
-  SmallString(sv::SmallStringStorage,l::Int) = new(sv,l)
+
+  SmallString(sv::SmallStringStorage) = new(sv)
+
   function SmallString()
-    sv = SmallStringStorage(ntuple(_ -> IntChar(0),Val(length(SmallStringStorage))))
-    return new(sv, 0)
+    sv = initSmallStringStore()
+    return new(sv)
+  end
+
+  function SmallString(str::String)
+    sv = initSmallStringStore()
+    n = 1
+    while n <= length(str) && n <= maxTagLength
+      sv = setindex(sv,IntChar(str[n]),n)
+      n += 1
+    end
+    return new(sv)
   end
 end
 
-function SmallString(sv::SmallStringStorage)
-  sv[1] == IntChar(0) && return SmallString(sv,0)
-  len = 1
-  while len < length(SmallStringStorage) && @inbounds sv[len+1] ≠ IntChar(0)
-    len += 1
-  end
-  SmallString(sv,len)
-end
+#Base.length(s::SmallString) = s.length
 
-Base.length(s::SmallString) = s.length
 Base.getindex(s::SmallString,n::Integer) = getindex(s.data,n)
+
 function Base.setindex(s::SmallString,val,n::Integer)
-  len = length(s)
-  if n > len
-    len = n
-  end
-  return SmallString(setindex(s.data,val,n),len)
+  return SmallString(setindex(s.data,val,n))
 end
 
 isNull(s::SmallString) = @inbounds s[1] == IntChar(0)
 
 function StaticArrays.push(s::SmallString,val)
-  len = length(s)
-  return SmallString(setindex(s.data,val,len+1),len+1)
+  newlen = 1
+  while newlen <= maxTagLength && s[newlen] != IntChar(0)
+    newlen += 1
+  end
+  if newlen > maxTagLength
+    throw(ErrorException("push!: SmallString already at maximum length"))
+  end
+  icval = convert(IntChar,val)
+  return SmallString(setindex(s.data,icval,newlen))
 end
 
 # Cast to SmallString:
@@ -53,14 +66,12 @@ end
 
 #isint(i::IntSmallString) = isint(SmallString(i))
 
-function isint(s::SmallString)
+function isint(s::SmallString)::Bool
   ndigits = 1
-  cur_char = Char(s[ndigits])
-  !isdigit(cur_char) && return false
-  while ndigits < length(s)
-    ndigits += 1
+  while ndigits <= maxTagLength && s[ndigits] != IntChar(0)
     cur_char = Char(s[ndigits])
     !isdigit(cur_char) && return false
+    ndigits += 1
   end
   return true
 end
@@ -99,15 +110,20 @@ Base.isless(s1::SmallString,s2::SmallString) = isless(s1.data,s2.data)
 
 function Base.String(s::SmallString)
   res = ""
-  for n=1:length(s)
+  n = 1
+  while n <= maxTagLength && s[n] != IntChar(0)
     res *= Char(s[n])
+    n += 1
   end
   return res
 end
 
+Base.convert(::Type{String}, s::SmallString) = String(s)
+
 function Base.show(io::IO, s::SmallString)
-  for n=1:length(s)
+  n = 1
+  while n <= maxTagLength && s[n] != IntChar(0)
     print(io,Char(s[n]))
+    n += 1
   end
 end
-

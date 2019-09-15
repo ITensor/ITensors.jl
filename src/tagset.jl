@@ -57,7 +57,7 @@ end
 function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   plnew = plev
   t = Tag(tag)
-  if length(t) > 0
+  if !isNull(t)
     if isint(t)
       error("""Cannot use a bare integer as a tag.
             If you are looking to set the prime level, use the syntax ("x",1)
