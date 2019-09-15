@@ -119,7 +119,7 @@ convert(::Type{TagSet}, str::String) = TagSet(str)
 tags(T::TagSet) = T.tags
 plev(T::TagSet) = T.plev
 Base.length(T::TagSet) = T.length
-Base.getindex(T::TagSet,n::Int) = getindex(tags(T),n)
+Base.getindex(T::TagSet,n::Int) = Tag(getindex(tags(T),n))
 #Base.setindex!(T::TagSet,val,n::Int) = TagSet(setindex(tags(T),val,n),plev(T),length(T))
 Base.copy(ts::TagSet) = TagSet(tags(ts),plev(ts),length(ts))
 
@@ -155,11 +155,11 @@ function ==(ts1::TagSet,ts2::TagSet)
   return cast_to_uint128(tags(ts1)) == cast_to_uint128(tags(ts2))
 end
 
-function hastag(ts::TagSet, t::IntTag)
+function hastag(ts::TagSet, tag)
   l = length(ts)
   l < 1 && return false
   for n = 1:l
-    @inbounds t == ts[n] && return true
+    @inbounds Tag(tag) == ts[n] && return true
   end
   return false
 end
@@ -191,9 +191,9 @@ function addtags(ts::TagSet, tagsadd)
   return TagSet(TagSetStorage(res_ts),res_plev,ntags)
 end
 
-function _removetag!(ts::MTagSetStorage, ntags::Int, t::IntTag)
+function _removetag!(ts::MTagSetStorage, ntags::Int, t::Tag)
   for n = 1:ntags
-    if @inbounds ts[n] == t
+    if @inbounds Tag(ts[n]) == t
       for j = n:ntags-1
         @inbounds ts[j] = ts[j+1]
       end
@@ -211,7 +211,7 @@ function removetags(ts::TagSet, tagsremove)
   res_ts = MVector(tags(ts))
   res_plev = plev(ts)
   ntags = length(ts)
-  for n = 1:length(tsremove)
+  for n=1:length(tsremove)
     @inbounds ntags = _removetag!(res_ts, ntags, tsremove[n])
   end
   return TagSet(TagSetStorage(res_ts),res_plev,ntags)
@@ -271,9 +271,9 @@ function show(io::IO, T::TagSet)
   print(io,"(")
   lT = length(T)
   if lT > 0
-    print(io,Tag(T[1]))
+    print(io,T[1])
     for n=2:lT
-      print(io,",$(Tag(T[n]))")
+      print(io,",$(T[n])")
     end
   end
   print(io,")")
