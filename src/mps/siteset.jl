@@ -1,23 +1,53 @@
-export Site,
+export AbstractSite,
+       defaultTags,
+       dim,
        ind,
        op,
+       setSite!,
        site,
+       siteType,
        state,
-       BasicSite,
        SiteSet,
        replaceBond!
 
-abstract type Site end
+abstract type AbstractSite end
 
-ind(st::Site) = st.s
+function state(::Type{<:AbstractSite},s::Index,str::String)::IndexVal  
+  throw(ErrorException("method state accepting String not defined for AbstractSite type"))
+end
 
-state(site::Site,n::Integer) = ind(site)(n)
+defaultTags(::Type{<:AbstractSite},n::Int) = TagSet("Site,n=$n")
 
-operator(s::Site,opname::String)::ITensor = throw(ArgumentError("Operator name $opname not recognized for generic site"))
+dim(::Type{<:AbstractSite}) = throw(ErrorException("method dim not defined for AbstractSite type"))
 
-function op(site::Site,
-            opname::AbstractString)::ITensor
-  s = ind(site)
+
+const SiteSetStorage = Vector{Tuple{Index,Type{<:AbstractSite}}}
+
+struct SiteSet
+  store::SiteSetStorage
+
+  SiteSet() = new(SiteSetStorage())
+
+  SiteSet(N::Integer) = new(SiteSetStorage(undef,N))
+
+end
+
+length(s::SiteSet) = length(s.store)
+getindex(s::SiteSet,n::Integer)::Index = s.store[n][1]
+siteType(s::SiteSet,n::Int) = s.store[n][2]
+eachindex(s::SiteSet) = eachindex(s.store)
+
+function setSite!(sset::SiteSet,
+                  n::Int,
+                  st::Type{<:AbstractSite})
+  i = Index(dim(st),defaultTags(st,n))
+  sset.store[n] = (i,st)
+end
+
+function op(sset::SiteSet,
+            opname::AbstractString,
+            n::Int)::ITensor
+  s = sset[n]
   sP = s'
 
   opname = strip(opname)
@@ -34,54 +64,31 @@ function op(site::Site,
     if !isnothing(starpos)
       op1 = opname[1:starpos.start-1]
       op2 = opname[starpos.start+1:end]
-      return multSiteOps(op(site,op1),op(site,op2))
+      return multSiteOps(op(sset,op1,n),op(sset,op2,n))
     end
-    return operator(site,opname)
+    return op(siteType(sset,n),s,opname)
   end
   return Op
 end
 
-struct BasicSite <: Site
-  s::Index
-  BasicSite(i::Index) = new(i)
-end
-BasicSite(d::Int) = BasicSite(Index(d,"Site"))
-BasicSite(d::Int,n::Int) = BasicSite(Index(d,"Site,n=$n"))
-
-struct SiteSet
-  sites::Vector{Site}
-
-  SiteSet() = new(Vector{Site}())
-
-  SiteSet(N::Integer) = new(Vector{Site}(undef,N))
-
-  function SiteSet(N::Integer, d::Integer)
-    inds_ = Vector{Site}(undef,N)
-    for n=1:N
-      inds_[n] = BasicSite(d,n)
-    end
-    new(inds_)
-  end
-end
-
-length(s::SiteSet) = length(s.sites)
-getindex(s::SiteSet,n::Integer) = ind(s.sites[n])
-op(s::SiteSet,opname::String,n::Int) = op(s.sites[n],opname)
-set(s::SiteSet,n::Int,ns::Site) = (s.sites[n] = ns)
-site(s::SiteSet,n::Int) = s.sites[n]
-eachindex(s::SiteSet) = eachindex(s.sites)
-
 function show(io::IO,
-              sites::SiteSet)
+              sset::SiteSet)
   print(io,"SiteSet")
-  (length(sites) > 0) && print(io,"\n")
-  for i=1:length(sites)
-    println(io,"  $(sites[i])")
+  (length(sset) > 0) && print(io,"\n")
+  for i=1:length(sset)
+    println(io,"  $(sset[i]) $(siteType(sset,i))")
   end
 end
 
 function state(sset::SiteSet,
-               n::Integer,
-               st::Union{Int,String})::IndexVal
-  return state(sset.sites[n],st)
+               j::Integer,
+               str::String)::IndexVal
+  sn = state(siteType(sset,j),str)
+  return sset[j](sn)
+end
+
+function state(sset::SiteSet,
+               j::Integer,
+               st::Integer)::IndexVal
+  return sset[j](st)
 end

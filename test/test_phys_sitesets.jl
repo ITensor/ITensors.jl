@@ -6,13 +6,14 @@ using ITensors,
   N = 10
 
   @testset "Spin Half Site" begin
-    s = SpinHalfSite(3)
-    @test hastags(ind(s),"Site")
-    @test hastags(ind(s),"S=1/2")
-    @test hastags(ind(s),"n=3")
+    s = SpinHalfSite
+    @test hastags(defaultTags(s,3),"Site")
+    @test hastags(defaultTags(s,3),"S=1/2")
+    @test hastags(defaultTags(s,3),"n=3")
 
-    @test val(state(s,2)) == 2
-    @test_throws ArgumentError state(s, "Fake")
+    @test dim(s) == 2
+
+    @test_throws ArgumentError state(s,"Fake")
   end
 
   @testset "Spin Half SiteSet" begin
@@ -35,12 +36,11 @@ using ITensors,
   end
 
   @testset "Spin One Site" begin
-    s = SpinOneSite(4)
-    @test hastags(ind(s),"Site")
-    @test hastags(ind(s),"S=1")
-    @test hastags(ind(s),"n=4")
+    s = SpinOneSite
+    @test hastags(defaultTags(s,4),"Site")
+    @test hastags(defaultTags(s,4),"S=1")
 
-    @test val(state(s,3)) == 3
+    @test dim(s) == 3
   end
 
   @testset "Spin One SiteSet" begin
@@ -68,12 +68,12 @@ using ITensors,
   end
 
   @testset "Electron Site" begin
-    s = ElectronSite(5)
-    @test hastags(ind(s),"Site")
-    @test hastags(ind(s),"Electron")
-    @test hastags(ind(s),"n=5")
+    s = ElectronSite
+    @test hastags(defaultTags(s,5),"Site")
+    @test hastags(defaultTags(s,5),"Electron")
+    @test hastags(defaultTags(s,5),"n=5")
 
-    @test val(state(s,4)) == 4
+    @test dim(s) == 4
   end
 
   @testset "Electron SiteSet" begin
@@ -122,12 +122,12 @@ using ITensors,
   end
 
   @testset "tJ Site" begin
-    s = tJSite(5)
-    @test hastags(ind(s),"Site")
-    @test hastags(ind(s),"tJ")
-    @test hastags(ind(s),"n=5")
+    s = tJSite
+    @test hastags(defaultTags(s,5),"Site")
+    @test hastags(defaultTags(s,5),"tJ")
+    @test hastags(defaultTags(s,5),"n=5")
 
-    @test val(state(s,3)) == 3
+    @test dim(s) == 3
   end
 
   @testset "tJ SiteSet" begin
