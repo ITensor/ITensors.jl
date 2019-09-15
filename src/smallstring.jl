@@ -1,4 +1,5 @@
-export push,
+export convert,
+       push,
        setindex
 
 const IntChar = UInt8
@@ -31,6 +32,8 @@ struct SmallString
     return new(sv)
   end
 end
+
+SmallString(s::SmallString) = SmallString(s.data)
 
 #Base.length(s::SmallString) = s.length
 
