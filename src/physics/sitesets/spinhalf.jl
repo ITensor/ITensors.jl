@@ -1,24 +1,13 @@
 export SpinHalfSite,
        spinHalfSites
 
-struct SpinHalfSite <: AbstractSite end
-
-dim(::Type{SpinHalfSite}) = 2
-
-defaultTags(::Type{SpinHalfSite},n::Int) = TagSet("Site,S=1/2,n=$n")
-
-function state(::Type{SpinHalfSite},
-               st::String)
-  if st == "Up" || st == "↑"
-    return 1
-  elseif st == "Dn" || st == "↓"
-    return 2
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for SpinHalfSite"))
-  return 0
+function spinHalfSites(N::Int; kwargs...)
+  return [Index(2,"Site,SpinHalf,n=$n") for n=1:N]
 end
 
-function op(::Type{SpinHalfSite},
+const SpinHalfSite = makeTagType("SpinHalf")
+
+function op(::SpinHalfSite,
             s::Index,
             opname::AbstractString)::ITensor
   sP = prime(s)
@@ -64,10 +53,13 @@ function op(::Type{SpinHalfSite},
   return Op
 end
 
-function spinHalfSites(N::Int; kwargs...)::SiteSet
-  sites = SiteSet(N)
-  for n=1:N
-    setSite!(sites,n,SpinHalfSite)
+function state(::SpinHalfSite,
+               st::AbstractString)
+  if st == "Up" || st == "↑"
+    return 1
+  elseif st == "Dn" || st == "↓"
+    return 2
   end
-  return sites
+  throw(ArgumentError("State string \"$st\" not recognized for SpinHalfSite"))
+  return 0
 end

@@ -5,12 +5,6 @@ using ITensors,
 
   N = 10
 
-  @testset "Basic SiteSet" begin
-    sites = SiteSet(N)
-
-    @test length(sites) == N
-  end
-
   @testset "Star in operator strings" begin
     sites = spinHalfSites(N)
     @test_throws ArgumentError op(sites, "Sp", 1)
@@ -21,9 +15,6 @@ using ITensors,
     Sy = op(sites,"Sy",2)
     SySy = op(sites,"Sy * Sy",2)
     @test SySy ≈ multSiteOps(Sy,Sy)
-    str = split(sprint(show, sites), '\n')
-    @test str[1] == "SiteSet"
-    @test length(str) == N + 2
 
     sites = spinOneSites(N)
     @test_throws ArgumentError op(sites, "Sp", 1)
@@ -34,5 +25,4 @@ using ITensors,
     SySy = op(sites,"Sy * Sy",2)
     @test SySy ≈ multSiteOps(Sy,Sy)
   end
-  @test length(SiteSet()) == 0
 end

@@ -1,29 +1,13 @@
 export ElectronSite,
        electronSites
 
-struct ElectronSite <: AbstractSite
+function electronSites(N::Int; kwargs...)
+  return [Index(4,"Site,Electron,n=$n") for n=1:N]
 end
 
-dim(::Type{ElectronSite}) = 4
+const ElectronSite = makeTagType("Electron")
 
-defaultTags(::Type{ElectronSite}, n::Int) = TagSet("Site,Electron,n=$n")
-
-function state(::Type{ElectronSite},
-               st::String)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Up" || st == "↑"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  elseif st == "UpDn" || st == "↑↓"
-    return 4
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for ElectronSite"))
-  return 0
-end
-
-function op(::Type{ElectronSite},
+function op(::ElectronSite,
             s::Index,
             opname::AbstractString)::ITensor
   sP = prime(s)
@@ -107,10 +91,18 @@ function op(::Type{ElectronSite},
   return Op
 end
 
-function electronSites(N::Int; kwargs...)::SiteSet
-  sites = SiteSet(N)
-  for n=1:N
-    setSite!(sites,n,ElectronSite)
+function state(::ElectronSite,
+               st::AbstractString)
+  if st == "Emp" || st == "0"
+    return 1
+  elseif st == "Up" || st == "↑"
+    return 2
+  elseif st == "Dn" || st == "↓"
+    return 3
+  elseif st == "UpDn" || st == "↑↓"
+    return 4
   end
-  return sites
+  throw(ArgumentError("State string \"$st\" not recognized for ElectronSite"))
+  return 0
 end
+

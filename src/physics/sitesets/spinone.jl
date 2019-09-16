@@ -1,26 +1,13 @@
 export SpinOneSite,
        spinOneSites
 
-struct SpinOneSite <: AbstractSite end
-
-defaultTags(::Type{SpinOneSite}, n::Int) = TagSet("Site,S=1,n=$n")
-
-dim(::Type{SpinOneSite}) = 3
-
-function state(::Type{SpinOneSite},
-               st::String)
-  if st == "Up" || st == "↑"
-    return 1
-  elseif st == "Z0" || st == "0"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for SpinOneSite"))
-  return 0
+function spinOneSites(N::Int; kwargs...)
+  return [Index(3,"Site,SpinOne,n=$n") for n=1:N]
 end
 
-function op(::Type{SpinOneSite},
+const SpinOneSite = makeTagType("SpinOne")
+
+function op(::SpinOneSite,
             s::Index,
             opname::AbstractString)::ITensor
   sP = prime(s)
@@ -102,10 +89,3 @@ function op(::Type{SpinOneSite},
   return Op
 end
 
-function spinOneSites(N::Int; kwargs...)::SiteSet
-  sites = SiteSet(N)
-  for n=1:N
-    setSite!(sites,n,SpinOneSite)
-  end
-  return sites
-end

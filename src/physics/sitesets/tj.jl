@@ -1,26 +1,13 @@
 export tJSite,
        tJSites
 
-struct tJSite <: AbstractSite end
-
-dim(::Type{tJSite}) = 3
-
-defaultTags(::Type{tJSite}, n::Int) = TagSet("Site,tJ,n=$n")
-
-function state(::Type{tJSite},
-               st::String)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Up" || st == "↑"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for tJSite"))
-  return 0
+function tJSites(N::Int; kwargs...)
+  return [Index(3,"Site,tJ,n=$n") for n=1:N]
 end
 
-function op(::Type{tJSite},
+const tJSite = makeTagType("tJ")
+
+function op(::tJSite,
             s::Index,
             opname::AbstractString)::ITensor
   sP = prime(s)
@@ -87,10 +74,3 @@ function op(::Type{tJSite},
   return Op
 end
 
-function tJSites(N::Int; kwargs...)::SiteSet
-  sites = SiteSet(N)
-  for n=1:N
-    setSite!(sites,n,tJSite)
-  end
-  return sites
-end

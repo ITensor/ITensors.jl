@@ -5,17 +5,6 @@ using ITensors,
 
   N = 10
 
-  @testset "Spin Half Site" begin
-    s = SpinHalfSite
-    @test hastags(defaultTags(s,3),"Site")
-    @test hastags(defaultTags(s,3),"S=1/2")
-    @test hastags(defaultTags(s,3),"n=3")
-
-    @test dim(s) == 2
-
-    @test_throws ArgumentError state(s,"Fake")
-  end
-
   @testset "Spin Half SiteSet" begin
     s = spinHalfSites(N)
 
@@ -33,14 +22,6 @@ using ITensors,
     @test Array(op(s,"projDn",2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
     @test Array(op(s,"Up",2),s[2])  ≈ [1.0,0.0]
     @test Array(op(s,"Dn",2),s[2])  ≈ [0.0,1.0]
-  end
-
-  @testset "Spin One Site" begin
-    s = SpinOneSite
-    @test hastags(defaultTags(s,4),"Site")
-    @test hastags(defaultTags(s,4),"S=1")
-
-    @test dim(s) == 3
   end
 
   @testset "Spin One SiteSet" begin
@@ -65,15 +46,6 @@ using ITensors,
     @test Array(op(s,"XUp",2),s[2]) ≈ [0.5,im*√2,0.5]
     @test Array(op(s,"XZ0",2),s[2]) ≈ [im*√2,0,-im*√2]
     @test Array(op(s,"XDn",2),s[2]) ≈ [0.5,-im*√2,0.5]
-  end
-
-  @testset "Electron Site" begin
-    s = ElectronSite
-    @test hastags(defaultTags(s,5),"Site")
-    @test hastags(defaultTags(s,5),"Electron")
-    @test hastags(defaultTags(s,5),"n=5")
-
-    @test dim(s) == 4
   end
 
   @testset "Electron SiteSet" begin
@@ -119,15 +91,6 @@ using ITensors,
     @test Sdn ≈ [0.0; 0.0; 1.0; 0.0]
     Supdn = Array(op(s,"UpDn",3),s[3])
     @test Supdn ≈ [0.0; 0.0; 0.0; 1.0]
-  end
-
-  @testset "tJ Site" begin
-    s = tJSite
-    @test hastags(defaultTags(s,5),"Site")
-    @test hastags(defaultTags(s,5),"tJ")
-    @test hastags(defaultTags(s,5),"n=5")
-
-    @test dim(s) == 3
   end
 
   @testset "tJ SiteSet" begin
