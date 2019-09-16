@@ -4,6 +4,7 @@ export ITensor,
        combinedindex,
        delta,
        δ,
+       exp,
        replaceindex!,
        inds,
        isNull,
@@ -423,6 +424,24 @@ function *(A::ITensor,B::ITensor)
 end
 
 dot(A::ITensor,B::ITensor) = scalar(dag(A)*B)
+
+import LinearAlgebra.exp
+
+"""
+    exp(A::ITensor, Lis::IndexSet)
+Compute the exponent of the tensor `A` by treating it as a matrix ``A_{lr}`` with
+the left index `l` running over all indices in `Lis` and `r` running over all
+indices not in `Lis`. Must have `dim(Lis) == dim(inds(A))/dim(Lis)` for the exponentiation to
+be defined.
+"""
+function exp(A::ITensor, Lis::IndexSet)
+  (dim(Lis) == dim(inds(A))/dim(Lis)) || throw(DimensionMismatch("dimension of the left index set `Lis` must be
+                                                                       equal to `dim(inds(A))/dim(Lis)`"))
+  A, Lis, Ris = _permute_for_factorize(A,Lis)
+  expAs = storage_exp(store(A), Lis,Ris)
+  return ITensor(inds(A),expAs)
+end
+
 
 #######################################################################
 #
