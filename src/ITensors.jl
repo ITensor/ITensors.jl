@@ -37,6 +37,7 @@ import Base.adjoint,
        Base.^,
        Base.setdiff,  # Since setdiff doesn't 
                       # work with IndexSet, overload it
+       Base.lastindex,
        LinearAlgebra.axpby!,
        LinearAlgebra.axpy!,
        LinearAlgebra.dot,
