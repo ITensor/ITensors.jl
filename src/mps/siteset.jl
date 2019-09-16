@@ -1,53 +1,25 @@
-export AbstractSite,
-       defaultTags,
-       dim,
-       ind,
+export makeTagType,
        op,
-       setSite!,
-       site,
-       siteType,
-       state,
-       SiteSet,
-       replaceBond!
+       state
 
-abstract type AbstractSite end
-
-function state(::Type{<:AbstractSite},s::Index,str::String)::IndexVal  
-  throw(ErrorException("method state accepting String not defined for AbstractSite type"))
+function makeTagType(t)
+  tag = Tag(t)
+  return Val{tag}
 end
 
-defaultTags(::Type{<:AbstractSite},n::Int) = TagSet("Site,n=$n")
-
-dim(::Type{<:AbstractSite}) = throw(ErrorException("method dim not defined for AbstractSite type"))
-
-
-const SiteSetStorage = Vector{Tuple{Index,Type{<:AbstractSite}}}
-
-struct SiteSet
-  store::SiteSetStorage
-
-  SiteSet() = new(SiteSetStorage())
-
-  SiteSet(N::Integer) = new(SiteSetStorage(undef,N))
-
+function _call_op(s::Index,
+                  opname::AbstractString)
+  for n=1:length(tags(s))
+    TType = Val{tags(s)[n]}
+    if hasmethod(op,Tuple{TType,Index,AbstractString})
+      return op(TType(),s,opname)
+    end
+  end
+  error("Overload of `op` function not found for Index tags $ts")
 end
 
-length(s::SiteSet) = length(s.store)
-getindex(s::SiteSet,n::Integer)::Index = s.store[n][1]
-siteType(s::SiteSet,n::Int) = s.store[n][2]
-eachindex(s::SiteSet) = eachindex(s.store)
-
-function setSite!(sset::SiteSet,
-                  n::Int,
-                  st::Type{<:AbstractSite})
-  i = Index(dim(st),defaultTags(st,n))
-  sset.store[n] = (i,st)
-end
-
-function op(sset::SiteSet,
-            opname::AbstractString,
-            n::Int)::ITensor
-  s = sset[n]
+function op(s::Index,
+            opname::AbstractString)::ITensor
   sP = s'
 
   opname = strip(opname)
@@ -64,31 +36,44 @@ function op(sset::SiteSet,
     if !isnothing(starpos)
       op1 = opname[1:starpos.start-1]
       op2 = opname[starpos.start+1:end]
-      return multSiteOps(op(sset,op1,n),op(sset,op2,n))
+      return multSiteOps(op(s,op1),op(s,op2))
     end
-    return op(siteType(sset,n),s,opname)
+    return _call_op(s,opname)
   end
   return Op
 end
 
+function op(s::Vector{Index},
+            opname::AbstractString,
+            n::Int)::ITensor
+  return op(s[n],opname)
+end
+
 function show(io::IO,
-              sset::SiteSet)
-  print(io,"SiteSet")
-  (length(sset) > 0) && print(io,"\n")
-  for i=1:length(sset)
-    println(io,"  $(sset[i]) $(siteType(sset,i))")
+              inds::Vector{Index})
+  (length(inds) > 0) && print(io,"\n")
+  for i=1:length(inds)
+    println(io,"  $(inds[i])")
   end
 end
 
-function state(sset::SiteSet,
-               j::Integer,
+state(s::Index,n::Integer) = s[n]
+
+function state(s::Index,
                str::String)::IndexVal
-  sn = state(siteType(sset,j),str)
-  return sset[j](sn)
+  for n=1:length(tags(s))
+    TType = Val{tags(s)[n]}
+    if hasmethod(state,Tuple{TType,AbstractString})
+      sn = state(TType(),str)
+      return s[sn]
+    end
+  end
+  error("Overload of `state` function not found for Index tags $ts")
+  return IndexVal()
 end
 
-function state(sset::SiteSet,
+function state(sset::Vector{Index},
                j::Integer,
-               st::Integer)::IndexVal
-  return sset[j](st)
+               st)::IndexVal
+  return state(sset[j],st)
 end
