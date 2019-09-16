@@ -40,7 +40,7 @@ end
 
 MPO(N::Int) = MPO(N,Vector{ITensor}(undef,N))
 
-function MPO(sites::SiteSet, 
+function MPO(sites,
              ops::Vector{String})
   N = length(sites)
   its = Vector{ITensor}(undef, N)
@@ -65,7 +65,7 @@ function MPO(sites::SiteSet,
   MPO(N,its)
 end
 
-MPO(sites::SiteSet, ops::String) = MPO(sites, fill(ops, length(sites)))
+MPO(sites, ops::String) = MPO(sites, fill(ops, length(sites)))
 
 function randomMPO(sites, m::Int=1)
   M = MPO(sites)

@@ -8,8 +8,8 @@ function setElt(iv::IndexVal)::ITensor
   return T
 end
 
-function makeRandomMPS(sites::SiteSet,
-                     chi::Int=4)::MPS
+function makeRandomMPS(sites,
+                       chi::Int=4)::MPS
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(chi, "Link,l=$n") for n=1:N-1]
@@ -28,7 +28,7 @@ function makeRandomMPS(sites::SiteSet,
   return MPS(N,v,0,N+1)
 end
 
-function isingMPO(sites::SiteSet)::MPO
+function isingMPO(sites)::MPO
   H = MPO(sites)
   N = length(H)
   link = fill(Index(),N+1)
@@ -52,7 +52,7 @@ function isingMPO(sites::SiteSet)::MPO
   return H
 end
 
-function heisenbergMPO(sites::SiteSet,
+function heisenbergMPO(sites,
                        h::Vector{Float64},
                        onsite::String="Sz")::MPO
   H = MPO(sites)
@@ -81,7 +81,7 @@ function heisenbergMPO(sites::SiteSet,
   return H
 end
 
-function NNheisenbergMPO(sites::SiteSet,
+function NNheisenbergMPO(sites,
                          J1::Float64,
                          J2::Float64)::MPO
   H = MPO(sites)
@@ -118,7 +118,7 @@ function NNheisenbergMPO(sites::SiteSet,
   return H
 end
 
-function threeSiteIsingMPO(sites::SiteSet,
+function threeSiteIsingMPO(sites,
                            h::Vector{Float64})::MPO
   H = MPO(sites)
   N = length(H)
@@ -148,15 +148,13 @@ end
   N = 10
 
   @testset "Show MPOTerm" begin
-    sites = spinHalfSites(N)
-    ampo = AutoMPO(sites)
+    ampo = AutoMPO()
     add!(ampo,"Sz",1,"Sz",2)
     @test sprint(show,terms(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
   end
 
   @testset "Show AutoMPO" begin
-    sites = spinHalfSites(N)
-    ampo = AutoMPO(sites)
+    ampo = AutoMPO()
     add!(ampo,"Sz",1,"Sz",2)
     add!(ampo,"Sz",2,"Sz",3)
     expected_string = "AutoMPO:\n  \"Sz\"(1)\"Sz\"(2)\n  \"Sz\"(2)\"Sz\"(3)\n"
@@ -164,10 +162,10 @@ end
   end
 
   @testset "Single creation op" begin
-    sites = electronSites(N)
-    ampo = AutoMPO(sites)
+    ampo = AutoMPO()
     add!(ampo,"Cdagup",3)
-    W = toMPO(ampo)
+    sites = electronSites(N)
+    W = toMPO(ampo,sites)
     psi = makeRandomMPS(sites)
     cdu_psi = copy(psi)
     cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
@@ -175,12 +173,12 @@ end
   end
 
   @testset "Ising" begin
-    sites = spinHalfSites(N)
-    ampo = AutoMPO(sites)
+    ampo = AutoMPO()
     for j=1:N-1
       add!(ampo,"Sz",j,"Sz",j+1)
     end
-    Ha = toMPO(ampo)
+    sites = spinHalfSites(N)
+    Ha = toMPO(ampo,sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -189,12 +187,12 @@ end
   end
 
   @testset "Ising-Different Order" begin
-    sites = spinHalfSites(N)
-    ampo = AutoMPO(sites)
+    ampo = AutoMPO()
     for j=1:N-1
       add!(ampo,"Sz",j+1,"Sz",j)
     end
-    Ha = toMPO(ampo)
+    sites = spinHalfSites(N)
+    Ha = toMPO(ampo,sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -203,8 +201,7 @@ end
   end
 
   @testset "Heisenberg" begin
-    sites = spinHalfSites(N)
-    ampo = AutoMPO(sites)
+    ampo = AutoMPO()
     h = rand(N) #random magnetic fields
     for j=1:N-1
       add!(ampo,"Sz",j,"Sz",j+1)
@@ -215,7 +212,8 @@ end
       add!(ampo,h[j],"Sz",j)
     end
 
-    Ha = toMPO(ampo)
+    sites = spinHalfSites(N)
+    Ha = toMPO(ampo,sites)
     He = heisenbergMPO(sites,h)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -226,7 +224,7 @@ end
 
   @testset "Multiple Onsite Ops" begin
     sites = spinOneSites(N)
-    ampo1 = AutoMPO(sites)
+    ampo1 = AutoMPO()
     for j=1:N-1
       add!(ampo1,"Sz",j,"Sz",j+1)
       add!(ampo1,0.5,"S+",j,"S-",j+1)
@@ -235,9 +233,9 @@ end
     for j=1:N
       add!(ampo1,"Sz*Sz",j)
     end
-    Ha1 = toMPO(ampo1)
+    Ha1 = toMPO(ampo1,sites)
 
-    ampo2 = AutoMPO(sites)
+    ampo2 = AutoMPO()
     for j=1:N-1
       add!(ampo2,"Sz",j,"Sz",j+1)
       add!(ampo2,0.5,"S+",j,"S-",j+1)
@@ -246,7 +244,7 @@ end
     for j=1:N
       add!(ampo2,"Sz",j,"Sz",j)
     end
-    Ha2 = toMPO(ampo2)
+    Ha2 = toMPO(ampo2,sites)
 
     He = heisenbergMPO(sites,ones(N),"Sz*Sz")
     psi = makeRandomMPS(sites)
@@ -258,8 +256,7 @@ end
   end
 
   @testset "Three-site ops" begin
-    sites = spinHalfSites(N)
-    ampo = AutoMPO(sites)
+    ampo = AutoMPO()
     # To test version of add! taking a coefficient
     add!(ampo,1.0,"Sz",1,"Sz",2,"Sz",3)
     @test length(terms(ampo)) == 1
@@ -270,7 +267,8 @@ end
     for j=1:N
       add!(ampo,h[j],"Sx",j)
     end
-    Ha = toMPO(ampo)
+    sites = spinHalfSites(N)
+    Ha = toMPO(ampo,sites)
     He = threeSiteIsingMPO(sites,h)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -279,8 +277,7 @@ end
   end
 
   @testset "Next-neighbor Heisenberg" begin
-    sites = spinHalfSites(N)
-    ampo = AutoMPO(sites)
+    ampo = AutoMPO()
     J1 = 1.0
     J2 = 0.5
     for j=1:N-1
@@ -293,7 +290,8 @@ end
       add!(ampo,J2*0.5,"S+",j,"S-",j+2)
       add!(ampo,J2*0.5,"S-",j,"S+",j+2)
     end
-    Ha = toMPO(ampo)
+    sites = spinHalfSites(N)
+    Ha = toMPO(ampo,sites)
 
     He = NNheisenbergMPO(sites,J1,J2)
     psi = makeRandomMPS(sites)

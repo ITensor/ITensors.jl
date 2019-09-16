@@ -115,11 +115,9 @@ end
 ############################
 
 struct AutoMPO
-  sites::SiteSet
   terms::Vector{MPOTerm}
-  AutoMPO(s::SiteSet) = new(s,Vector{MPOTerm}())
+  AutoMPO() = new(Vector{MPOTerm}())
 end
-sites(ampo::AutoMPO) = ampo.sites
 terms(ampo::AutoMPO) = ampo.terms
 
 function add!(ampo::AutoMPO,
@@ -228,13 +226,13 @@ function determineValType(terms::Vector{MPOTerm})
   return Float64
 end
 
-function computeSiteProd(sites::SiteSet,
+function computeSiteProd(sites,
                          ops::OpTerm)::ITensor
   i = ops[1].site
-  T = op(sites,ops[1].name,i)
+  T = op(sites[i],ops[1].name)
   for j=2:length(ops)
     (ops[j].site != i) && error("Mismatch of site number in computeSiteProd")
-    opj = op(sites,ops[j].name,i)
+    opj = op(sites[i],ops[j].name)
     T = multSiteOps(T,opj)
   end
   return T
@@ -261,14 +259,15 @@ function remove_dups!(v::Vector{T}) where {T}
   return
 end
 
-function svdMPO(ampo::AutoMPO; 
+function svdMPO(ampo::AutoMPO,
+                sites; 
                 kwargs...)::MPO
 
   mindim::Int = get(kwargs,:mindim,1)
   maxdim::Int = get(kwargs,:maxdim,10000)
   cutoff::Float64 = get(kwargs,:cutoff,1E-13)
 
-  N = length(sites(ampo))
+  N = length(sites)
 
   ValType = determineValType(terms(ampo))
 
@@ -331,7 +330,7 @@ function svdMPO(ampo::AutoMPO;
   llinks = [Index() for n=1:N+1]
   llinks[1] = Index(2,"Link,n=0")
 
-  H = MPO(sites(ampo))
+  H = MPO(sites)
 
   # Constants which define MPO start/end scheme
   rowShift = 2
@@ -391,11 +390,11 @@ function svdMPO(ampo::AutoMPO;
       end
     end
 
-    s = sites(ampo)[n]
+    s = sites[n]
     H[n] = ITensor(dag(s),s',ll,rl)
     for (op,M) in finalMPO
       T = ITensor(M,ll,rl)
-      H[n] += T*computeSiteProd(sites(ampo),op)
+      H[n] += T*computeSiteProd(sites,op)
     end
 
   end
@@ -419,8 +418,9 @@ function sortEachTerm!(ampo::AutoMPO)
   end
 end
 
-function toMPO(ampo::AutoMPO; 
+function toMPO(ampo::AutoMPO,
+               sites;
                kwargs...)::MPO
   sortEachTerm!(ampo)
-  return svdMPO(ampo;kwargs...)
+  return svdMPO(ampo,sites;kwargs...)
 end
