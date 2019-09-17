@@ -191,6 +191,17 @@ end
   Aexp_from_mat = ITensor(reshape(Amatexp,2,2,2,2), s1,s2,i1,i2)
   @test Aexp ≈ Aexp_from_mat
 
+  #test exponentiation when hermitian=true is used
+  Amat = reshape(Amat, 4,4)
+  Amat = reshape( Amat + Amat' + randn(4,4)*1e-10 , 2,2,2,2)
+  A = ITensor(Amat, i1,i2,s1,s2)
+  Aexp = exp(A,IndexSet(i1,i2), hermitian=true)
+  Amatexp = Array(reshape( exp(Hermitian(reshape(Amat,4,4))), 2,2,2,2))
+  Aexp_from_mat = ITensor(Amatexp, i1,i2,s1,s2)
+  @test Aexp ≈ Aexp_from_mat
+
+
+
   @test_throws DimensionMismatch exp(A,IndexSet(s1))
 
 end

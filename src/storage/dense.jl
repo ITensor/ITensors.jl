@@ -357,7 +357,8 @@ function storage_polar(Astore::Dense{T},
   return (Qis,Qstore,Pis,Pstore)
 end
 
-function storage_exp(As::Dense{T}, Lis,Ris) where {T}
-  expAdata = exp( reshape(data(As),dim(Lis),dim(Ris)) )
+function storage_exp(As::Dense{T}, Lis,Ris; hermitian=false) where {T}
+  expAdata = ( hermitian ? Array(exp(Hermitian(reshape(data(As),dim(Lis),dim(Ris))))) :
+                           exp(reshape(data(As),dim(Lis),dim(Ris))) )
   return Dense{T}(vec(expAdata))
 end
