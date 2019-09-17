@@ -1,7 +1,7 @@
 using ITensors,
       Test
 
-@testset "SiteSet" begin
+@testset "Site Types" begin
 
   N = 10
 
