@@ -122,7 +122,7 @@ function _factorize_from_left_eigen(A::ITensor,
                                     kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
-  FU,D = eigen(A²,Lis,prime(Lis);kwargs...)
+  FU,D = eigenHermitian(A²,Lis,prime(Lis);kwargs...)
   FV = dag(FU)*A
   return FU,FV,commonindex(FU,FV)
 end
@@ -132,7 +132,7 @@ function _factorize_from_right_eigen(A::ITensor,
                                      kwargs...)
   Ris = uniqueinds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
-  FV,D = eigen(A²,Ris,prime(Ris); kwargs...)
+  FV,D = eigenHermitian(A²,Ris,prime(Ris); kwargs...)
   FU = A*dag(FV)
   return FU,FV,commonindex(FU,FV)
 end
@@ -177,18 +177,20 @@ function eigenHermitian(A::ITensor,
                         Rinds=prime(IndexSet(Linds));
                         kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
+  lefttags::TagSet = get(kwargs,:lefttags,tags)
+  righttags::TagSet = get(kwargs,:righttags,prime(tags))
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,DT = eigenHermitian(Tensor(A),Lpos,Rpos)
+  UT,DT = eigenHermitian(Tensor(A),Lpos,Rpos;kwargs...)
   U,D = ITensor(UT),ITensor(DT)
   u = commonindex(U,D)
-  settags!(U,tags,u)
-  settags!(D,tags,u)
-  u = settags(u,tags)
+  settags!(U,lefttags,u)
+  settags!(D,lefttags,u)
+  u = settags(u,lefttags)
   v = uniqueindex(D,U)
-  D *= δ(v,u')
-  return U,D,u
+  D *= δ(v,settags(u,righttags))
+  return U,D,u,v
 end
 
 import LinearAlgebra.eigen
@@ -200,7 +202,7 @@ function eigen(A::ITensor,
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,DT = eigen(Tensor(A),Lpos,Rpos)
+  UT,DT = eigen(Tensor(A),Lpos,Rpos;kwargs...)
   U,D = ITensor(UT),ITensor(DT)
   u = commonindex(U,D)
   settags!(U,tags,u)

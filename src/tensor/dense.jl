@@ -42,8 +42,16 @@ Base.eltype(::Dense{T}) where {T} = eltype(T)
 Base.eltype(::Dense{Nothing}) = Nothing
 Base.eltype(::Type{Dense{T}}) where {T} = eltype(T)
 
-Base.promote_rule(::Type{Dense{T1}},::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
-Base.convert(::Type{Dense{R}},D::Dense) where {R} = Dense{R}(convert(Vector{R},data(D)))
+Base.promote_rule(::Type{Dense{T1}},
+                  ::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
+Base.convert(::Type{Dense{R}},
+             D::Dense) where {R} = Dense{R}(convert(Vector{R},data(D)))
+
+function Base.:*(D::Dense{<:El},x::S) where {El<:Number,S<:Number}
+  return Dense{promote_type(El,S)}(x*data(D))
+end
+
+Base.:*(x::Number,D::Dense) = D*x
 
 #
 # DenseTensor (Tensor using Dense storage)
@@ -56,6 +64,16 @@ Base.IndexStyle(::Type{TensorT}) where {TensorT<:DenseTensor} = IndexLinear()
 Base.getindex(T::DenseTensor,i::Integer) = store(T)[i]
 Base.setindex!(T::DenseTensor,v,i::Integer) = (store(T)[i] = v)
 
+# Get the specified value on the diagonal
+function getdiag(T::DenseTensor{<:Number,N},ind::Int) where {N}
+  return T[CartesianIndex(ntuple(_->ind,Val(N)))]
+end
+
+# Set the specified value on the diagonal
+function setdiag!(T::DenseTensor{<:Number,N},val,ind::Int) where {N}
+  T[CartesianIndex(ntuple(_->ind,Val(N)))] = val
+end
+
 Base.strides(T::DenseTensor) = strides(inds(T))
 
 # Needed for passing Tensor{T,2} to BLAS
@@ -63,9 +81,9 @@ function Base.unsafe_convert(::Type{Ptr{ElT}},T::DenseTensor{ElT}) where {ElT}
   return Base.unsafe_convert(Ptr{ElT},data(store(T)))
 end
 
-function Base.convert(::Type{TensorR},
-                      T::DenseTensor{ElT,N}) where {TensorR<:Tensor{ElR,N,StoreR}} where 
-                                                   {ElR,ElT,N,StoreR<:Dense}
+# Convert a Dense Tensor to a Tensor with the specified storage
+function Base.convert(::Type{<:Tensor{<:Any,<:Any,StoreR}},
+                      T::DenseTensor) where {StoreR}
   return Tensor(convert(StoreR,store(T)),inds(T))
 end
 
@@ -100,9 +118,11 @@ end
 
 # Version that may overwrite the result or promote
 # and return the result
-function permutedims!!(R::DenseTensor{<:Number,N},
-                       T::DenseTensor{<:Number,N},
-                       perm::NTuple{N,Int},f=(r,t)->t) where {N}
+# TODO: move to tensor.jl?
+function permutedims!!(R::Tensor,
+                       T::Tensor,
+                       perm::NTuple{N,Int},
+                       f=(r,t)->t) where {N}
   permutedims!(R,T,perm,f)
   return R
 end
@@ -111,9 +131,16 @@ end
 function Base.permutedims(T::Tensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
   Tp = similar(T,permute(inds(T),perm))
-  permutedims!(Tp,T,perm)
+  Tp = permutedims!!(Tp,T,perm)
   return Tp
 end
+
+# TODO: move to tensor.jl?
+function Base.:*(x::Number,
+                 T::Tensor)
+  return Tensor(x*store(T),inds(T))
+end
+Base.:*(T::Tensor, x::Number) = x*T
 
 # For use in custom permutedims!
 using Base.Cartesian: @nexprs,
@@ -165,18 +192,26 @@ function Base.permutedims!(TP::DenseTensor{<:Number,0},
   return TP
 end
 
-function outer!(R::DenseTensor,T1::DenseTensor,T2::DenseTensor)
-  # TODO: make vec(::Tensor) work? Would this be a view? What
-  # happens to sparse tensors like Diag?
+function outer!(R::DenseTensor,
+                T1::DenseTensor,
+                T2::DenseTensor)
   v1 = vec(T1)
   v2 = vec(T2)
-  R .= zero(ElR)
   RM = reshape(R,dim(v1),dim(v2))
-  BLAS.ger!(one(ElR),v1,v2,R)
+  RM .= v1 .* transpose(v2)
   return R
 end
 
-function outer(T1::DenseTensor{ElT1},T2::DenseTensor{ElT2}) where {ElT1,ElT2}
+function outer!!(R::Tensor,
+                 T1::Tensor,
+                 T2::Tensor)
+  outer!(R,T1,T2)
+  return R
+end
+
+# TODO: call outer!!, make this generic
+function outer(T1::DenseTensor{ElT1},
+               T2::DenseTensor{ElT2}) where {ElT1,ElT2}
   array_outer = vec(Array(T1))*transpose(vec(Array(T2)))
   inds_outer = unioninds(inds(T1),inds(T2))
   return Tensor(Dense{promote_type(ElT1,ElT2)}(vec(array_outer)),inds_outer)
@@ -196,67 +231,86 @@ function contraction_output(TensorT1::Type{<:DenseTensor},
 end
 
 # TODO: move to tensor.jl?
-function contract(T1::Tensor{<:Number,N1},labelsT1,
-                  T2::Tensor{<:Number,N2},labelsT2) where {N1,N2}
+function contract(T1::Tensor{<:Any,N1},
+                  labelsT1,
+                  T2::Tensor{<:Any,N2},
+                  labelsT2) where {N1,N2}
   indsR,labelsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2)
-  #if N1+N2==length(indsR)
-  #  R = T1⊗T2
-  #else
   R = contraction_output(typeof(T1),typeof(T2),indsR)
-  #R = similar(contraction_output_type(typeof(T1),typeof(T2),Val{length(indsR)}),indsR)
-  #R = similar(promote_type(typeof(T1),typeof(T2)),indsR)
-  contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
-  #end
+  # contract!! version here since the output R may not
+  # be mutable (like UniformDiag)
+  R = contract!!(R,labelsR,T1,labelsT1,T2,labelsT2)
   return R
 end
 
-function contract!(R::Tensor{<:Number,NR},labelsR::NTuple{NR,Int},
-                   T1::Tensor{<:Number,N1},labelsT1::NTuple{N1,Int},
-                   T2::Tensor{<:Number,N2},labelsT2::NTuple{N2,Int}) where {NR,N1,N2}
+# Move to tensor.jl? Is this generic for all storage types?
+function contract!!(R::Tensor{<:Number,NR},
+                    labelsR::NTuple{NR},
+                    T1::Tensor{<:Number,N1},
+                    labelsT1::NTuple{N1},
+                    T2::Tensor{<:Number,N2},
+                    labelsT2::NTuple{N2}) where {NR,N1,N2}
   if N1==0
     # TODO: replace with an add! function?
     # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
     perm = getperm(labelsR,labelsT2)
-    permutedims!(R,T2,perm,(r,t2)->T1[]*t2)
+    R = permutedims!!(R,T2,perm,(r,t2)->T1[]*t2)
   elseif N2==0
     perm = getperm(labelsR,labelsT1)
-    permutedims!(R,T1,perm,(r,t1)->T2[]*t1)
+    R = permutedims!!(R,T1,perm,(r,t1)->T2[]*t1)
   elseif N1+N2==NR
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
-    outer!(R,T1,T2)
+    R = outer!!(R,T1,T2)
     labelsRp = unioninds(labelsT1,labelsT2)
     perm = getperm(labelsR,labelsRp)
     if !is_trivial_permutation(perm)
-      permutedims!(R,copy(R),perm)
+      R = permutedims!!(R,copy(R),perm)
     end
   else
-    _contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
+    R = _contract!!(R,labelsR,T1,labelsT1,T2,labelsT2)
   end
   return R
 end
 
 Base.copyto!(R::Tensor,T::Tensor) = copyto!(store(R),store(T))
 
+# Move to tensor.jl? Overload this function
+# for immutable storage types
+function _contract!!(R::Tensor,labelsR,
+                     T1::Tensor,labelsT1,
+                     T2::Tensor,labelsT2)
+  _contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
+  return R
+end
+
 # TODO: make sure this is doing type promotion correctly
 # since we are calling BLAS (need to promote T1 and T2 to
 # the same types)
-function _contract!(R::DenseTensor,labelsR,
-                    T1::DenseTensor,labelsT1,
-                    T2::DenseTensor,labelsT2)
+function _contract!(R::DenseTensor,
+                    labelsR,
+                    T1::Tensor{<:Number,<:Any,StoreT1},
+                    labelsT1,
+                    T2::Tensor{<:Number,<:Any,StoreT2},
+                    labelsT2) where {StoreT1<:Dense,StoreT2<:Dense}
   props = ContractionProperties(labelsT1,labelsT2,labelsR)
   compute_contraction_properties!(props,T1,T2,R)
+
+  # We do type promotion here for BLAS (to ensure
+  # we contract DenseComplex*DenseComplex)
+  if StoreT1 !== StoreT2
+    T1,T2 = promote(T1,T2)
+  end
+
   _contract!(R,T1,T2,props)
   return R
 end
 
-function _contract!(C::DenseTensor{T,NC},
-                    A::DenseTensor{T,NA},
-                    B::DenseTensor{T,NB},
-                    props::ContractionProperties,
-                    α::T=one(T),
-                    β::T=zero(T)) where {T,NC,NA,NB}
+function _contract!(C::DenseTensor{El,NC},
+                    A::DenseTensor{El,NA},
+                    B::DenseTensor{El,NB},
+                    props::ContractionProperties) where {El,NC,NA,NB}
   tA = 'N'
   if props.permuteA
     aref = reshape(permutedims(A,NTuple{NA,Int}(props.PA)),props.dmid,props.dleft)
@@ -285,6 +339,8 @@ function _contract!(C::DenseTensor{T,NC},
 
   # TODO: this logic may be wrong
   if props.permuteC
+    # Need to copy here since we will be permuting
+    # into C later
     cref = reshape(copy(C),props.dleft,props.dright)
   else
     if Ctrans(props)
@@ -305,7 +361,7 @@ function _contract!(C::DenseTensor{T,NC},
 
   # TODO: make sure this is fast with Tensor{ElT,2}, or
   # convert aref and bref to Matrix
-  BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
+  BLAS.gemm!(tA,tB,one(El),aref,bref,zero(El),cref)
 
   if props.permuteC
     permutedims!(C,reshape(cref,props.newCrange...),NTuple{NC,Int}(props.PC))
@@ -445,14 +501,12 @@ end
 
 function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
                         kwargs...) where {ElT,IndsT}
+  truncate::Bool = get(kwargs,:truncate,false)
   maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
   mindim::Int = get(kwargs,:mindim,1)
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  #tags::TagSet = get(kwargs,:lefttags,"Link,u")
-  #lefttags::TagSet = get(kwargs,:lefttags,tags)
-  #righttags::TagSet = get(kwargs,:righttags,prime(lefttags))
 
   DM,UM = eigen(Hermitian(Matrix(T)))
 
@@ -461,13 +515,17 @@ function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
   DM = DM[p]
   UM = UM[:,p]
 
-  truncate!(DM;maxdim=maxdim,
-               cutoff=cutoff,
-               absoluteCutoff=absoluteCutoff,
-               doRelCutoff=doRelCutoff)
-  dD = length(DM)
-  if dD < size(UM,2)
-    UM = UM[:,1:dD]
+  if truncate
+    truncate!(DM;maxdim=maxdim,
+                 cutoff=cutoff,
+                 absoluteCutoff=absoluteCutoff,
+                 doRelCutoff=doRelCutoff)
+    dD = length(DM)
+    if dD < size(UM,2)
+      UM = UM[:,1:dD]
+    end
+  else
+    dD = length(DM)
   end
 
   # Make the new indices to go onto U and V

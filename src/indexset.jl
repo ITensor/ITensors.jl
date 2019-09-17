@@ -4,6 +4,7 @@ export IndexSet,
        hassameinds,
        findindex,
        findinds,
+       indexposition,
        swaptags,
        swaptags!,
        swapprime,
@@ -235,7 +236,7 @@ function uniqueindex(Ainds,Binds)
   for j ∈ Ais
     _is_unique_index(j,Binds) && return j
   end
-  return Index()
+  return nothing
 end
 # This version can check for repeats, but is a bit
 # slower because of IndexSet allocation
@@ -269,7 +270,7 @@ function commonindex(Ainds,Binds)
   for i ∈ Ais
     hasindex(Binds,i) && return i
   end
-  return Index()
+  return nothing
 end
 # This version checks if there are more than one indices
 #commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
@@ -307,7 +308,7 @@ function findindex(inds,tags)
     end
   end
   # TODO: should this return `nothing` if no Index is found?
-  return Index()
+  return nothing
 end
 # This version checks if there are more than one indices
 #findindex(inds, tags) = Index(findinds(inds,tags))
@@ -315,13 +316,13 @@ end
 # TODO: Should this return `nothing` like `findfirst`?
 # Should this just use `findfirst`?
 function indexposition(is::IndexSet,
-                       i::Index)::Int
+                       i::Index)
   for (n,j) in enumerate(is)
     if i==j
       return n
     end
   end
-  return 0
+  return nothing
 end
 
 # From a tag set or index set, find the positions
@@ -484,11 +485,12 @@ swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 # Helper functions for contracting ITensors
 #
 
-function compute_contraction_labels(Ai::IndexSet{N1},Bi::IndexSet{N2}) where {N1,N2}
+function compute_contraction_labels(Ai::IndexSet{N1},
+                                    Bi::IndexSet{N2}) where {N1,N2}
   rA = length(Ai)
   rB = length(Bi)
-  Aind = MVector{N1}(ntuple(_->0,Val(N1)))
-  Bind = MVector{N2}(ntuple(_->0,Val(N2)))
+  Aind = MVector{N1,Int}(ntuple(_->0,Val(N1)))
+  Bind = MVector{N2,Int}(ntuple(_->0,Val(N2)))
 
   ncont = 0
   for i = 1:rA, j = 1:rB

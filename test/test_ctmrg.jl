@@ -11,27 +11,38 @@ function ctmrg(T::ITensor,
   Clu = addtags(Clu,"orig","link")
   Al = addtags(Al,"orig","link")
   for i = 1:nsteps
+
     ## Get the grown corner transfer matrix (CTM)
-    Au = replacetags(replacetags(replacetags(Al,"down","left","link"),"up","right","link"),"left","up","site")
+    Au = replacetags(Al,"down,link","left,link")
+    Au = replacetags(Au,"up,link","right,link")
+    Au = replacetags(Au,"left,site","up,site")
+
     Clu⁽¹⁾ = Clu*Al*Au*T
-    
+
     ## Diagonalize the grown CTM
-    ld = findindex(Clu⁽¹⁾, "link,down")
-    sd = findindex(Clu⁽¹⁾, "site,down")
-    lr = findindex(Clu⁽¹⁾, "link,right")
-    sr = findindex(Clu⁽¹⁾, "site,right")
-    Ud,Cdr = eigen(Clu⁽¹⁾, (ld,sd), (lr,sr);
-                   maxdim=χmax,
-                   lefttags="link,down,renorm",
-                   righttags="link,right,renorm")
+    ld = findindex(Clu⁽¹⁾,"link,down")
+    sd = findindex(Clu⁽¹⁾,"site,down")
+    lr = findindex(Clu⁽¹⁾,"link,right")
+    sr = findindex(Clu⁽¹⁾,"site,right")
+
+    Ud,Cdr = eigenHermitian(Clu⁽¹⁾, (ld,sd), (lr,sr);
+                            maxdim=χmax,
+                            lefttags="link,down,renorm",
+                            righttags="link,right,renorm",
+                            truncate=true)
 
     ## The renormalized CTM is the diagonal matrix of eigenvalues
-    Clu = replacetags(replacetags(replacetags(Cdr,"renorm","orig"),"down","up"),"right","left")
+    Clu = replacetags(Cdr,"renorm","orig")
+    Clu = replacetags(Clu,"down","up")
+    Clu = replacetags(Clu,"right","left")
     Clu = Clu/norm(Clu)
 
     ## Calculate the renormalized half row transfer matrix (HRTM)
-    Al = Al*replacetags(Ud,"down","up")*T*Ud
-    Al = replacetags(replacetags(Al,"renorm","orig"),"right","left","site")
+    Uu = replacetags(Ud,"down","up")
+
+    Al = Al*Uu*T*Ud
+    Al = replacetags(Al,"renorm","orig")
+    Al = replacetags(Al,"right,site","left,site")
     Al = Al/norm(Al)
   end
   Clu = removetags(Clu,"orig")

@@ -43,24 +43,24 @@ using ITensors,
     I3 = IndexSet(j,l)
     @test hassameinds(I1,(k,j,i))
     @test uniqueindex(I1,(I2,I3)) == i
-    @test uniqueindex(I1,IndexSet(k, j, i)) == Index()
+    @test uniqueindex(I1,IndexSet(k, j, i)) === nothing
     @test uniqueinds(I1,I2) == IndexSet(i,j)
     @test setdiff(I1,I2) == IndexSet(i,j)
     @test hassameinds(uniqueinds(I1,I2),(j,i))
     @test commoninds(I1,I2) == IndexSet(k)
     @test commonindex(I1,I2) == k
-    @test commonindex(I1,IndexSet(l)) == Index()
+    @test commonindex(I1,IndexSet(l)) === nothing
     @test commoninds(I1,(j,l)) == IndexSet(j)
     @test commonindex(I1,(j,l)) == j
     @test commoninds(I1,(j,k)) == IndexSet(j,k)
     @test hassameinds(commoninds(I1,(j,k,l)),(j,k))
     @test findinds(I1,"i") == IndexSet(i)
     @test findindex(I1,"j") == j
-    @test findindex(I1,"l") == Index()
-    @test findindex(I1,i) == 1
-    @test findindex(I1,j) == 2
-    @test findindex(I1,k) == 3
-    @test findindex(I1,Index(2)) == 0
+    @test findindex(I1,"l") === nothing
+    @test indexposition(I1,i) == 1
+    @test indexposition(I1,j) == 2
+    @test indexposition(I1,k) == 3
+    @test indexposition(I1,Index(2)) === nothing
   end
   @testset "commoninds index ordering" begin
     I = IndexSet(i,k,j)
@@ -111,15 +111,15 @@ using ITensors,
     @test swapprime(I,0,1) == IndexSet(i',j')
     @test swapprime(I,0,4) == IndexSet(i^4,j^4)
     I = IndexSet(i,j'')
-    @test swapprime(I,2,0) == IndexSet(i,j)
+    @test swapprime(I,2,0) == IndexSet(i'',j)
     I = IndexSet(i,j'',k,l)
-    @test swapprime(I,2,0) == IndexSet(i,j,k,l)
+    @test swapprime(I,2,0) == IndexSet(i'',j,k'',l'')
     I = IndexSet(i,k'',j'')
     @test swapprime(I,2,1) == IndexSet(i,k',j')
     # In-place version:
     I = IndexSet(i,k'',j''')
     swapprime!(I,2,0)
-    @test I == IndexSet(i,k,j''')
+    @test I == IndexSet(i'',k,j''')
     # With tags specified:
     I = IndexSet(i,k,j)
     @test swapprime(I,0,1,"i") == IndexSet(i',k,j)

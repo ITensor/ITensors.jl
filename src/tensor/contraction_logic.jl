@@ -242,7 +242,7 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
     for k = 1:rc
       #j = find_index(props.ai,props.ci[k])
       j = findfirst(==(props.ci[k]),props.ai)
-      if j!==nothing
+      if !isnothing(j)
         props.AtoC[newi] = k
         props.PA[newi+1] = j
         newi += 1
@@ -304,7 +304,7 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
     for k = 1:rc
       #j = find_index(props.bi,props.ci[k])
       j = findfirst(==(props.ci[k]),props.bi)
-      if j!==nothing
+      if !isnothing(j)
         props.BtoC[newi] = k
         props.PB[newi+1] = j
         newi += 1

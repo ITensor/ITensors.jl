@@ -245,6 +245,7 @@ isNull(T::ITensor) = (eltype(T) === Nothing)
 Base.copy(T::ITensor{N}) where {N} = ITensor{N}(copy(Tensor(T)))::ITensor{N}
 
 # TODO: make versions where the element type can be specified
+# Should this be array? (Version that makes a view)
 Base.Array(T::ITensor) = Array(Tensor(T))
 
 Base.Matrix(T::ITensor{N}) where {N} = (N==2 ? Array(Tensor(T)) : throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix")))
@@ -353,7 +354,7 @@ replacetags!(A::ITensor,vargs...) = ( replacetags!(inds(A),vargs...); return A )
 replacetags(A::ITensor,vargs...) = ITensor(store(A),replacetags(inds(A),vargs...))
 
 settags!(A::ITensor,vargs...) = ( settags!(inds(A),vargs...); return A )
-settags(A::ITensor,vargs...) = ITensor(store(A),settags(inds(A)))
+settags(A::ITensor,vargs...) = ITensor(store(A),settags(inds(A),vargs...))
 
 swaptags(A::ITensor,vargs...) = ITensor(store(A),swaptags(inds(A),vargs...))
 
@@ -394,11 +395,11 @@ function combiner(inds::IndexSet; kwargs...)
     tags = get(kwargs, :tags, "CMB,Link")
     new_ind = Index(prod(dims(inds)), tags)
     new_is = IndexSet(new_ind, inds)
-    return ITensor(new_is, CombinerStorage(new_ind))
+    return ITensor(Combiner(),new_is),new_ind
 end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
 
-combinedindex(T::ITensor) = store(T) isa CombinerStorage ? store(T).ci : Index()
+combinedindex(T::ITensor) = store(T) isa Combiner ? store(T).ci : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(Tensor(T))
 
@@ -484,16 +485,7 @@ B .+= α .* A
 add!(R::ITensor,T::ITensor) = add!(R,1,T)
 
 function add!(R::ITensor{N},α::Number,T::ITensor{N}) where {N}
-  perm = getperm(inds(R),inds(T))
-  TR,TT = Tensor(R),Tensor(T)
-
-  # Include type promotion from α
-  TR = convert(promote_type(typeof(TR),typeof(TT)),TR)
-  TR = permutedims!!(TR,TT,perm,(r,t)->r+α*t)
-
-  setstore!(R,store(TR))
-  setinds!(R,inds(TR))
-  return R
+  return apply!(R,T,(r,t)->r+α*t)
 end
 
 """
@@ -505,9 +497,20 @@ A .= α .* A .+ β .* B
 ```
 """
 function add!(R::ITensor{N},αr::Number,αt::Number,T::ITensor{N}) where {N}
+  return apply!(R,T,(r,t)->αr*r+αt*t)
+end
+
+function apply!(R::ITensor{N},T::ITensor{N},f::Function) where {N}
   perm = getperm(inds(R),inds(T))
-  TR = permutedims!(Tensor(R),Tensor(T),perm,(r,t)->αr*r+αt*t)
-  return ITensor(TR)
+  TR,TT = Tensor(R),Tensor(T)
+
+  # TODO: Include type promotion from α
+  TR = convert(promote_type(typeof(TR),typeof(TT)),TR)
+  TR = permutedims!!(TR,TT,perm,f)
+
+  setstore!(R,store(TR))
+  setinds!(R,inds(TR))
+  return R
 end
 
 """
