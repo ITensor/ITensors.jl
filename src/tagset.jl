@@ -65,7 +65,7 @@ function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
       #plev ≥ 0 && error("You can only make a TagSet with one prime level/integer tag.")
       #plnew = parse(Int,t)
     else
-      ntags = _addtag_ordered!(ts, ntags, tag)  
+      ntags = _addtag_ordered!(ts, ntags,IntSmallString(tag))  
     end
   end
   return plnew, ntags
@@ -183,7 +183,7 @@ function addtags(ts::TagSet, tagsadd)
   res_plev = plev(ts)
   ntags = length(ts)
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags, tsadd[n])
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntSmallString(tsadd[n]))
   end
   if !hasplev(ts) && hasplev(tsadd)
     res_plev = plev(tsadd)
@@ -235,7 +235,7 @@ function replacetags(ts::TagSet, tagsremove, tagsadd)
     @inbounds ntags = _removetag!(res_ts, ntags, tsremove[n])
   end
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags, tsadd[n])
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntSmallString(tsadd[n]))
   end
   if hasplev(ts) && (plev(ts)==plev(tsremove))
     res_plev = plev(tsadd)
