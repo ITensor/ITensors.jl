@@ -67,7 +67,7 @@ function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
       #plev ≥ 0 && error("You can only make a TagSet with one prime level/integer tag.")
       #plnew = parse(Int,t)
     else
-      ntags = _addtag_ordered!(ts, ntags,IntSmallString(tag))  
+      ntags = _addtag_ordered!(ts, ntags,tag)  
     end
   end
   return plnew, ntags
