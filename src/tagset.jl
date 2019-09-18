@@ -90,20 +90,20 @@ function TagSet(str::AbstractString)
   for n = 1:length(str)
     @inbounds current_char = str[n]
     if current_char == ','
-      if nchar ≠ 0
+      if nchar != 0
         plev, ntags = _addtag!(ts,plev,ntags,cast_to_uint64(current_tag))
         # Reset the current tag
         reset!(current_tag,nchar)
         nchar = 0
       end
-    elseif current_char ≠ ' ' # TagSet constructor ignores whitespace
+    elseif current_char != ' ' # TagSet constructor ignores whitespace
       nchar == maxTagLength && error("Currently, tags can only have up to $maxTagLength characters")
       nchar += 1
       @inbounds current_tag[nchar] = current_char
     end
   end
   # Store the final tag
-  if nchar ≠ 0
+  if nchar != 0
     plev, ntags = _addtag!(ts,plev,ntags,cast_to_uint64(current_tag))
   end
   return TagSet(TagSetStorage(ts),plev,ntags)
