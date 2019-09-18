@@ -6,8 +6,9 @@ export TagSet,
 const Tag = SmallString
 const MTagStorage = MSmallStringStorage # A mutable tag storage
 const IntTag = IntSmallString  # An integer that can be cast to a Tag
-const TagSetStorage = SVector{4,IntTag}
-const MTagSetStorage = MVector{4,IntTag}  # A mutable tag storage
+const maxTags = 4
+const TagSetStorage = SVector{maxTags,IntTag}
+const MTagSetStorage = MVector{maxTags,IntTag}  # A mutable tag storage
 
 struct TagSet
   tags::TagSetStorage
@@ -81,9 +82,9 @@ end
 
 function TagSet(str::AbstractString)
   # Mutable fixed-size vector as temporary Tag storage
-  current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(8)))
+  current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
   # Mutable fixed-size vector as temporary TagSet storage
-  ts = MTagSetStorage(ntuple(_ -> IntTag(0),Val(4)))
+  ts = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
   nchar = 0
   ntags = 0
   plev = -1
@@ -177,6 +178,9 @@ function hastags(ts2::TagSet, tags1)
 end
 
 function addtags(ts::TagSet, tagsadd)
+  if length(ts) == maxTags
+    throw(ErrorException("Cannot add tag: TagSet already maximum size"))
+  end
   tsadd = TagSet(tagsadd)
   (hasplev(ts) && hasplev(tsadd)) && error("In addtags(::TagSet,...), cannot add a prime level")
   res_ts = MVector(tags(ts))
