@@ -4,6 +4,7 @@ export TagSet,
        Tag
 
 const Tag = SmallString
+const maxTagLength = smallLength
 const MTagStorage = MSmallStringStorage # A mutable tag storage
 const IntTag = IntSmallString  # An integer that can be cast to a Tag
 const maxTags = 4
