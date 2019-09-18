@@ -47,7 +47,7 @@ function StaticArrays.push(s::SmallString,val)
     newlen += 1
   end
   if newlen > smallLength
-    throw(ErrorException("push!: SmallString already at maximum length"))
+    throw(ErrorException("push: SmallString already at maximum length"))
   end
   icval = convert(IntChar,val)
   return SmallString(setindex(s.data,icval,newlen))
