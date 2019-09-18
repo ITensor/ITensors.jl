@@ -57,14 +57,20 @@ function StaticArrays.push(s::SmallString,val)
   return SmallString(setindex(s.data,icval,newlen))
 end
 
-# Cast to SmallString:
 function SmallString(i::IntSmallString)
-  SmallString(unsafe_load(convert(Ptr{SmallStringStorage},pointer_from_objref(MVector{1,IntSmallString}(ntoh(i))))))
+  mut_is = MVector{1,IntSmallString}(ntoh(i))
+  p = convert(Ptr{SmallStringStorage},pointer_from_objref(mut_is))
+  return SmallString(unsafe_load(p))
 end
 
-# Cast to IntSmallString:
-function cast_to_uint64(a)
-  return ntoh(unsafe_load(convert(Ptr{IntSmallString},pointer_from_objref(MSmallStringStorage(a)))))
+function cast_to_uint64(store)
+  mut_store = MSmallStringStorage(store)
+  storage_begin = convert(Ptr{IntSmallString},pointer_from_objref(mut_store))
+  return ntoh(unsafe_load(storage_begin))
+end
+
+function IntSmallString(s::SmallString)
+  return cast_to_uint64(s.data)
 end
 
 #isint(i::IntSmallString) = isint(SmallString(i))
@@ -121,7 +127,7 @@ function Base.String(s::SmallString)
   return res
 end
 
-Base.convert(::Type{String}, s::SmallString) = String(s)
+#Base.convert(::Type{String}, s::SmallString) = String(s)
 
 function Base.show(io::IO, s::SmallString)
   n = 1
