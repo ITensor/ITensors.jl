@@ -288,16 +288,15 @@ end
 function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     n = length(A)
     n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
-    psi_out = similar(psi)
+    psi_out         = similar(psi)
     cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
-    maxdim::Int = get(kwargs,:maxdim,maxLinkDim(psi))
-    mindim::Int = max(get(kwargs,:mindim,1), 1)
+    maxdim::Int     = get(kwargs,:maxdim,maxLinkDim(psi))
+    mindim::Int     = max(get(kwargs,:mindim,1), 1)
     normalize::Bool = get(kwargs, :normalize, false) 
-
-    all(x->x!=Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
+    all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
     rand_plev = 14741
-    psi_c = dag(copy(psi))
-    A_c   = dag(copy(A))
+    psi_c     = dag(deepcopy(psi))
+    A_c       = dag(deepcopy(A))
     prime!(psi_c, rand_plev)
     prime!(A_c, rand_plev)
     for j in 1:n-1
@@ -310,30 +309,29 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     for j in 2:n-1
         E[j] = E[j-1]*psi[j]*A[j]*A_c[j]*psi_c[j]
     end
-    O     = psi[n] * A[n]
-    ρ     = E[n-1] * O * dag(prime(O, rand_plev))
-    ts    = tags(commonindex(psi[n], psi[n-1]))
-    Lis   = commonindex(ρ, A[n])
-    Ris   = uniqueinds(ρ, Lis)
-    FU, D = eigen(ρ, Lis, Ris; tags=ts, kwargs...)
-    psi_out[n] = setprime(dag(FU), 0, "Site")
-    O     = O * FU * psi[n-1] * A[n-1]
-    O     = prime(O, -1, "Site")
+    O          = prime(psi[n] * A[n], -1, "Site")
+    ρ          = E[n-1] * O * dag(prime(O, rand_plev))
+    ts         = tags(commonindex(psi[n], psi[n-1]))
+    Lis        = commonindex(ρ, A[n])
+    FU, D      = eigen(ρ, Lis, prime(Lis, rand_plev); utags=ts, maxdim=maxdim, cutoff=cutoff)
+    FU         = setprime(FU, 0, "Site")
+    psi_out[n] = copy(dag(FU))
+    O          = O * FU * psi[n-1] * A[n-1]
+    O          = prime(O, -1, "Site")
     for j in reverse(2:n-1)
-        dO  = prime(dag(O), rand_plev)
-        ρ   = E[j-1] * O * dO
-        ts  = tags(commonindex(psi[j], psi[j-1]))
-        Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
-        Ris = uniqueinds(ρ, Lis)
-        FU, D = eigen(ρ, Lis, Ris; tags=ts, kwargs...)
-        psi_out[j] = dag(FU)
-        O = O * FU * psi[j-1] * A[j-1]
-        O = prime(O, -1, "Site")
+        ρ     = E[j-1] * O * prime(dag(O), rand_plev)
+        ts    = tags(commonindex(psi[j], psi[j-1]))
+        Lis   = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
+        FU, D = eigen(ρ, Lis, prime(Lis, rand_plev); utags=ts, maxdim=maxdim, cutoff=cutoff)
+        FU    = setprime(FU, 0, "Site")
+        psi_out[j] = copy(dag(FU))
+        O     = O * FU * psi[j-1] * A[j-1]
+        O     = prime(O, -1, "Site")
     end
     if normalize
         O /= norm(O)
     end
-    psi_out[1] = O
+    psi_out[1]    = copy(O)
     psi_out.llim_ = 0
     psi_out.rlim_ = 2
     return psi_out
