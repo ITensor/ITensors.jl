@@ -1,6 +1,8 @@
 using ITensors,
       Test
 
+include("util.jl")
+
 @testset "MPO Basics" begin
   N = 6
   sites = SiteSet(N,2)
@@ -87,42 +89,44 @@ using ITensors,
         for j = 2:N
           phiKpsi *= phidag[j]*K[j]*psi[j]
         end
-        @test phiKpsi[] ≈ inner(phi,K,psi)
+        @test scalar(phiKpsi) ≈ inner(phi,K,psi)
     end
   end
 
   @testset "inner <By|A|x>" begin
-    phi = randomMPS(sites)
-    K = randomMPO(sites)
-    J = randomMPO(sites)
-    @test maxLinkDim(K) == 1
-    @test maxLinkDim(J) == 1
-    psi = randomMPS(sites)
+    phi = makeRandomMPS(sites)
+
+    K = makeRandomMPO(sites,chi=2)
+    J = makeRandomMPO(sites,chi=2)
+
+    psi = makeRandomMPS(sites)
     phidag = dag(phi)
     prime!(phidag, 2)
     Jdag = dag(J)
     prime!(Jdag)
-    @inbounds for j ∈ eachindex(Jdag)
+    for j ∈ eachindex(Jdag)
       swapprime!(inds(Jdag[j]),2,3)
       swapprime!(inds(Jdag[j]),1,2)
       swapprime!(inds(Jdag[j]),3,1)
     end
+
     phiJdagKpsi = phidag[1]*Jdag[1]*K[1]*psi[1]
-    @inbounds for j ∈ eachindex(psi)[2:end]
+    for j ∈ eachindex(psi)[2:end]
       phiJdagKpsi = phiJdagKpsi*phidag[j]*Jdag[j]*K[j]*psi[j]
     end
-    @test phiJdagKpsi[] ≈ inner(J,phi,K,psi)
 
-    # Do contraction manually.
-    O = 1.
-    for j ∈ eachindex(phi)
-        psij = reshape(Array(psi[j]),2)
-        phij = reshape(Array(phi[j]),2)
-        Kj = reshape(Array(K[j]),2,2)
-        Jj = reshape(Array(J[j]),2,2)
-        O *= ((transpose(Jj)*phij)'*transpose(Kj)*psij)[]
-    end
-    @test O ≈ inner(J,phi,K,psi)
+    @test scalar(phiJdagKpsi) ≈ inner(J,phi,K,psi)
+
+    ## Do contraction manually.
+    #O = 1.
+    #for j ∈ eachindex(phi)
+    #    psij = reshape(Array(psi[j]),2)
+    #    phij = reshape(Array(phi[j]),2)
+    #    Kj = reshape(Array(K[j]),2,2)
+    #    Jj = reshape(Array(J[j]),2,2)
+    #    O *= ((transpose(Jj)*phij)'*transpose(Kj)*psij)[]
+    #end
+    #@test O ≈ inner(J,phi,K,psi)
 
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
@@ -130,17 +134,18 @@ using ITensors,
   end
 
   @testset "errorMPOProd" begin
-    phi = randomMPS(sites)
-    K = randomMPO(sites)
-    @test maxLinkDim(K) == 1
-    psi = randomMPS(sites)
+    phi = makeRandomMPS(sites)
+    K = makeRandomMPO(sites,chi=2)
+
+    psi = makeRandomMPS(sites)
+
     dist = sqrt(abs(1 + (inner(phi,phi) - 2*real(inner(phi,K,psi)))
                         /inner(K,psi,K,psi)))
     @test dist ≈ errorMPOProd(phi,K,psi)
 
     # Apply K to phi and check that errorMPOProd is close to 0.
-    Kphi = applyMPO(K, phi, maxdim=1)
-    @test errorMPOProd(Kphi, K, phi) ≈ 0. atol=1e-6
+    Kphi = applyMPO(K,phi;method="naive", cutoff=1E-8)
+    @test errorMPOProd(Kphi, K, phi) ≈ 0. atol=1e-4
 
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
