@@ -49,6 +49,10 @@ import ITensors.SmallString,
 
     s = SmallString("abc")
     @test isint(s) == false
+
+    # Test maximum length
+    s = SmallString("12345678")
+    @test isint(s) == true
   end
 
   @testset "isless" begin
@@ -58,6 +62,18 @@ import ITensors.SmallString,
     @test isless(s2,s1) == false
     @test isless(s1,s1) == false
     @test isless(s2,s2) == false
+  end
+
+  @testset "show" begin
+    t = Tag("")
+    @test sprint(show,t) == ""
+
+    t = Tag("Red")
+    @test sprint(show,t) == "Red"
+
+    # Make sure to test maximum length tag
+    t = Tag("Electron")
+    @test sprint(show,t) == "Electron"
   end
 
 end

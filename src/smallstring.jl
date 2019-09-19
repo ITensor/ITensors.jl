@@ -43,7 +43,7 @@ isNull(s::SmallString) = @inbounds s[1] == IntChar(0)
 
 #function StaticArrays.push(s::SmallString,val)
 #  newlen = 1
-#  while s[newlen] != IntChar(0) && newlen <= smallLength
+#  while newlen <= smallLength && s[newlen] != IntChar(0)
 #    newlen += 1
 #  end
 #  if newlen > smallLength
@@ -73,7 +73,7 @@ end
 
 function isint(s::SmallString)::Bool
   ndigits = 1
-  while s[ndigits] != IntChar(0) && ndigits <= smallLength
+  while ndigits <= smallLength && s[ndigits] != IntChar(0)
     cur_char = Char(s[ndigits])
     !isdigit(cur_char) && return false
     ndigits += 1
@@ -116,7 +116,7 @@ Base.isless(s1::SmallString,s2::SmallString) = isless(s1.data,s2.data)
 #function Base.String(s::SmallString)
 #  res = ""
 #  n = 1
-#  while s[n] != IntChar(0) && n <= smallLength
+#  while n <= smallLength && s[n] != IntChar(0)
 #    res *= Char(s[n])
 #    n += 1
 #  end
@@ -127,7 +127,7 @@ Base.isless(s1::SmallString,s2::SmallString) = isless(s1.data,s2.data)
 
 function Base.show(io::IO, s::SmallString)
   n = 1
-  while s[n] != IntChar(0) && n <= smallLength
+  while n <= smallLength && s[n] != IntChar(0)
     print(io,Char(s[n]))
     n += 1
   end
