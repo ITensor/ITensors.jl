@@ -324,11 +324,13 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
 end
 
 function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS
-    method = get(kwargs, :method, "DensityMatrix")
-    if method == "DensityMatrix"
-        return densityMatrixApplyMPO(A, psi; kwargs...)
-    end
-    throw(ArgumentError("Method $method not supported"))
+  method = get(kwargs, :method, "DensityMatrix")
+  if method == "DensityMatrix" || method == "densitymatrix"
+    return densityMatrixApplyMPO(A, psi; kwargs...)
+  elseif method == "naive" || method == "Naive"
+    return naiveApplyMPO(A, psi; kwargs...)
+  end
+  throw(ArgumentError("Method $method not supported"))
 end
 
 function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
@@ -383,6 +385,30 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     psi_out.llim_ = 0
     psi_out.rlim_ = 2
     return psi_out
+end
+
+function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
+  N = length(A)
+  if N != length(psi) 
+    throw(DimensionMismatch("lengths of MPO ($N) and MPS ($(length(psi))) do not match"))
+  end
+
+  psi_out = MPS(N)
+  for j=1:N
+    psi_out[j] = noprime(A[j]*psi[j])
+  end
+
+  for b=1:(N-1)
+    Al = commonindex(A[b],A[b+1])
+    pl = commonindex(psi[b],psi[b+1])
+    C = combiner(Al,pl)
+    psi_out[b] *= C
+    psi_out[b+1] *= C
+  end
+
+  truncate!(psi_out;kwargs...)
+
+  return psi_out
 end
 
 function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
