@@ -7,6 +7,19 @@ end
 
 const tJSite = makeTagType("tJ")
 
+function state(::tJSite,
+               st::AbstractString)
+  if st == "0" || st == "Emp"
+    return 1
+  elseif st == "Up" || st == "↑"
+    return 2
+  elseif st == "Dn" || st == "↓"
+    return 3
+  end
+  throw(ArgumentError("State string \"$st\" not recognized for tJ site"))
+  return 0
+end
+
 function op(::tJSite,
             s::Index,
             opname::AbstractString)::ITensor

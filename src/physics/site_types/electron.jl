@@ -7,6 +7,21 @@ end
 
 const ElectronSite = makeTagType("Electron")
 
+function state(::ElectronSite,
+               st::AbstractString)
+  if st == "0" || st == "Emp"
+    return 1
+  elseif st == "Up" || st == "↑"
+    return 2
+  elseif st == "Dn" || st == "↓"
+    return 3
+  elseif st == "UpDn" || st == "↑↓"
+    return 4
+  end
+  throw(ArgumentError("State string \"$st\" not recognized for Electron site"))
+  return 0
+end
+
 function op(::ElectronSite,
             s::Index,
             opname::AbstractString)::ITensor
@@ -90,19 +105,3 @@ function op(::ElectronSite,
   end
   return Op
 end
-
-function state(::ElectronSite,
-               st::AbstractString)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Up" || st == "↑"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  elseif st == "UpDn" || st == "↑↓"
-    return 4
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for ElectronSite"))
-  return 0
-end
-

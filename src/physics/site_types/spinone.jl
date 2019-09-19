@@ -7,6 +7,19 @@ end
 
 const SpinOneSite = makeTagType("SpinOne")
 
+function state(::SpinOneSite,
+               st::AbstractString)
+  if st == "Up" || st == "↑"
+    return 1
+  elseif st == "Z0" || st == "0"
+    return 2
+  elseif st == "Dn" || st == "↓"
+    return 3
+  end
+  throw(ArgumentError("State string \"$st\" not recognized for SpinOne site"))
+  return 0
+end
+
 function op(::SpinOneSite,
             s::Index,
             opname::AbstractString)::ITensor

@@ -7,6 +7,17 @@ end
 
 const SpinHalfSite = makeTagType("SpinHalf")
 
+function state(::SpinHalfSite,
+               st::AbstractString)
+  if st == "Up" || st == "↑"
+    return 1
+  elseif st == "Dn" || st == "↓"
+    return 2
+  end
+  throw(ArgumentError("State string \"$st\" not recognized for SpinHalf site"))
+  return 0
+end
+
 function op(::SpinHalfSite,
             s::Index,
             opname::AbstractString)::ITensor
@@ -53,13 +64,3 @@ function op(::SpinHalfSite,
   return Op
 end
 
-function state(::SpinHalfSite,
-               st::AbstractString)
-  if st == "Up" || st == "↑"
-    return 1
-  elseif st == "Dn" || st == "↓"
-    return 2
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for SpinHalfSite"))
-  return 0
-end

@@ -1,12 +1,16 @@
 using ITensors,
       Test
 
-@testset "Physics SiteSets" begin
+@testset "Physics Sites" begin
 
   N = 10
 
-  @testset "Spin Half SiteSet" begin
+  @testset "Spin Half sites" begin
     s = spinHalfSites(N)
+
+    @test state(s[1],"Up") == s[1](1)
+    @test state(s[1],"Dn") == s[1](2)
+    @test_throws ArgumentError state(s[1],"Fake")
 
     Sz5 = op(s,"Sz",5)
     @test hasinds(Sz5,s[5]',s[5])
@@ -24,8 +28,13 @@ using ITensors,
     @test Array(op(s,"Dn",2),s[2])  ≈ [0.0,1.0]
   end
 
-  @testset "Spin One SiteSet" begin
+  @testset "Spin One sites" begin
     s = spinOneSites(N)
+
+    @test state(s[1],"Up") == s[1](1)
+    @test state(s[1],"0")  == s[1](2)
+    @test state(s[1],"Dn") == s[1](3)
+    @test_throws ArgumentError state(s[1],"Fake")
 
     Sz5 = op(s,"Sz",5)
     @test hasinds(Sz5,s[5]',s[5])
@@ -48,8 +57,14 @@ using ITensors,
     @test Array(op(s,"XDn",2),s[2]) ≈ [0.5,-im*√2,0.5]
   end
 
-  @testset "Electron SiteSet" begin
+  @testset "Electron sites" begin
     s = electronSites(N)
+
+    @test state(s[1],"0")    == s[1](1)
+    @test state(s[1],"Up")   == s[1](2)
+    @test state(s[1],"Dn")   == s[1](3)
+    @test state(s[1],"UpDn") == s[1](4)
+    @test_throws ArgumentError state(s[1],"Fake")
 
     Nup5 = op(s,"Nup",5)
     @test hasinds(Nup5,s[5]',s[5])
@@ -93,8 +108,13 @@ using ITensors,
     @test Supdn ≈ [0.0; 0.0; 0.0; 1.0]
   end
 
-  @testset "tJ SiteSet" begin
+  @testset "tJ sites" begin
     s = tJSites(N)
+
+    @test state(s[1],"0")    == s[1](1)
+    @test state(s[1],"Up")   == s[1](2)
+    @test state(s[1],"Dn")   == s[1](3)
+    @test_throws ArgumentError state(s[1],"Fake")
 
     @test_throws ArgumentError op(s, "Fake", 2)
     Nup_2 = op(s,"Nup",2)
