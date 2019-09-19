@@ -1,7 +1,10 @@
 using ITensors,
       Test
 
-import ITensors.SmallString, ITensors.IntChar, ITensors.push
+import ITensors.SmallString, 
+       ITensors.IntChar, 
+       ITensors.push,
+       ITensors.isint
 
 @testset "SmallString" begin
   @testset "ctors" begin
@@ -43,6 +46,35 @@ import ITensors.SmallString, ITensors.IntChar, ITensors.push
     for n=1:length(s)
       @test convert(Char,s[n]) == sg[n]
     end
+  end
+
+  @testset "isint" begin
+    i = SmallString()
+    i = push(i, '1')
+    i = push(i, '2')
+    i = push(i, '3')
+    @test isint(i) == true
+
+    s = SmallString()
+    s = push(s, 'a')
+    s = push(s, 'b')
+    s = push(s, 'c')
+    @test isint(s) == false
+  end
+
+  @testset "isless" begin
+    s1 = SmallString() 
+    s1=push(s1,'a') 
+    s1=push(s1,'b')
+
+    s2 = SmallString() 
+    s2=push(s2,'x') 
+    s2=push(s2,'y')
+
+    @test isless(s1,s2) == true
+    @test isless(s2,s1) == false
+    @test isless(s1,s1) == false
+    @test isless(s2,s2) == false
   end
 
 end

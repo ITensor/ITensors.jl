@@ -15,7 +15,6 @@ using ITensors,
   O[1] = ITensor(sites[1], prime(sites[1]))
   @test hasindex(O[1],sites[1])
   @test hasindex(O[1],prime(sites[1]))
-
   P = copy(O)
   @test hasindex(P[1],sites[1])
   @test hasindex(P[1],prime(sites[1]))
@@ -57,6 +56,39 @@ using ITensors,
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi,K,badpsi)
+    
+    # make bigger random MPO...
+    for link_dim in 2:5
+        mpo_tensors  = [ITensor() for ii in 1:N]
+        mps_tensors  = [ITensor() for ii in 1:N]
+        mps_tensors2 = [ITensor() for ii in 1:N]
+        mpo_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:N-1]
+        mps_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:N-1]
+        mpo_tensors[1] = randomITensor(mpo_link_inds[1], sites[1], sites[1]') 
+        mps_tensors[1] = randomITensor(mps_link_inds[1], sites[1]) 
+        mps_tensors2[1] = randomITensor(mps_link_inds[1], sites[1]) 
+        for ii in 2:N-1
+            mpo_tensors[ii] = randomITensor(mpo_link_inds[ii], mpo_link_inds[ii-1], sites[ii], sites[ii]') 
+            mps_tensors[ii] = randomITensor(mps_link_inds[ii], mps_link_inds[ii-1], sites[ii]) 
+            mps_tensors2[ii] = randomITensor(mps_link_inds[ii], mps_link_inds[ii-1], sites[ii]) 
+        end
+        mpo_tensors[N] = randomITensor(mpo_link_inds[N-1], sites[N], sites[N]')
+        mps_tensors[N] = randomITensor(mps_link_inds[N-1], sites[N])
+        mps_tensors2[N] = randomITensor(mps_link_inds[N-1], sites[N])
+        K   = MPO(N, mpo_tensors, 0, N+1)
+        psi = MPS(N, mps_tensors, 0, N+1)
+        phi = MPS(N, mps_tensors2, 0, N+1)
+        orthogonalize!(psi, 1; maxdim=link_dim)
+        orthogonalize!(K, 1; maxdim=link_dim)
+        orthogonalize!(phi, 1; normalize=true, maxdim=link_dim)
+        phidag = dag(phi)
+        prime!(phidag)
+        phiKpsi = phidag[1]*K[1]*psi[1]
+        for j = 2:N
+          phiKpsi *= phidag[j]*K[j]*psi[j]
+        end
+        @test phiKpsi[] ≈ inner(phi,K,psi)
+    end
   end
 
   @testset "inner <By|A|x>" begin
@@ -117,7 +149,7 @@ using ITensors,
 
   @testset "applyMPO" begin
     phi = randomMPS(sites)
-    K = randomMPO(sites)
+    K   = randomMPO(sites)
     @test maxLinkDim(K) == 1
     psi = randomMPS(sites)
     psi_out = applyMPO(K, psi,maxdim=1)
@@ -127,6 +159,34 @@ using ITensors,
     badsites = SiteSet(N+1,2)
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch applyMPO(K,badpsi)
+
+    # make bigger random MPO...
+    for link_dim in 2:5
+        mpo_tensors  = [ITensor() for ii in 1:N]
+        mps_tensors  = [ITensor() for ii in 1:N]
+        mps_tensors2 = [ITensor() for ii in 1:N]
+        mpo_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:N-1]
+        mps_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:N-1]
+        mpo_tensors[1] = randomITensor(mpo_link_inds[1], sites[1], sites[1]') 
+        mps_tensors[1] = randomITensor(mps_link_inds[1], sites[1]) 
+        mps_tensors2[1] = randomITensor(mps_link_inds[1], sites[1]) 
+        for ii in 2:N-1
+            mpo_tensors[ii] = randomITensor(mpo_link_inds[ii], mpo_link_inds[ii-1], sites[ii], sites[ii]') 
+            mps_tensors[ii] = randomITensor(mps_link_inds[ii], mps_link_inds[ii-1], sites[ii]) 
+            mps_tensors2[ii] = randomITensor(mps_link_inds[ii], mps_link_inds[ii-1], sites[ii]) 
+        end
+        mpo_tensors[N] = randomITensor(mpo_link_inds[N-1], sites[N], sites[N]')
+        mps_tensors[N] = randomITensor(mps_link_inds[N-1], sites[N])
+        mps_tensors2[N] = randomITensor(mps_link_inds[N-1], sites[N])
+        K   = MPO(N, mpo_tensors, 0, N+1)
+        psi = MPS(N, mps_tensors, 0, N+1)
+        phi = MPS(N, mps_tensors2, 0, N+1)
+        orthogonalize!(psi, 1; maxdim=link_dim)
+        orthogonalize!(K, 1; maxdim=link_dim)
+        orthogonalize!(phi, 1; normalize=true, maxdim=link_dim)
+        psi_out = applyMPO(deepcopy(K), deepcopy(psi); maxdim=10*link_dim, cutoff=0.0)
+        @test inner(phi, psi_out) ≈ inner(phi, K, psi)
+    end
   end
   @testset "add" begin
     shsites = spinHalfSites(N)

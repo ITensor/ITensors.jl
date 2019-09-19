@@ -244,8 +244,8 @@ function storage_svd(Astore::Dense{T},
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  utags::String = get(kwargs,:utags,"Link,u")
-  vtags::String = get(kwargs,:vtags,"Link,v")
+  utags = TagSet(get(kwargs,:utags,"Link,u"))
+  vtags = TagSet(get(kwargs,:vtags,"Link,v"))
   fastSVD::Bool = get(kwargs,:fastSVD,false)
 
   if fastSVD
@@ -288,9 +288,9 @@ function storage_eigen(Astore::Dense{T},
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  tags::TagSet = get(kwargs,:lefttags,"Link,u")
-  lefttags::TagSet = get(kwargs,:lefttags,tags)
-  righttags::TagSet = get(kwargs,:righttags,prime(lefttags))
+  tags = TagSet(get(kwargs,:lefttags,"Link,u"))
+  lefttags = TagSet(get(kwargs,:lefttags,tags))
+  righttags = TagSet(get(kwargs,:righttags,prime(lefttags)))
 
   dim_left = dim(Lis)
   dim_right = dim(Ris)
@@ -331,7 +331,7 @@ function storage_qr(Astore::Dense{T},
                     Lis::IndexSet,
                     Ris::IndexSet;
                     kwargs...) where {T}
-  tags::TagSet = get(kwargs,:tags,"Link,u")
+  tags = TagSet(get(kwargs,:tags,"Link,u"))
   dim_left = dim(Lis)
   dim_right = dim(Ris)
   MQ,MP = qr(reshape(data(Astore),dim_left,dim_right))
@@ -357,3 +357,8 @@ function storage_polar(Astore::Dense{T},
   return (Qis,Qstore,Pis,Pstore)
 end
 
+function storage_exp(As::Dense{T}, Lis,Ris; hermitian=false) where {T}
+  expAdata = ( hermitian ? Array(exp(Hermitian(reshape(data(As),dim(Lis),dim(Ris))))) :
+                           exp(reshape(data(As),dim(Lis),dim(Ris))) )
+  return Dense{T}(vec(expAdata))
+end

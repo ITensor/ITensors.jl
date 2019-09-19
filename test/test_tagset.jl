@@ -48,6 +48,10 @@ using ITensors,
     @test_throws ErrorException TagSet("ijklmnopqr,abcd")
   end
 
+  @testset "Check for Integer Tags" begin
+    @test_throws ErrorException TagSet("123")
+  end
+
   @testset "Show TagSet" begin
     ts = TagSet("Site,n=2")
     @test length(sprint(show,ts)) > 1

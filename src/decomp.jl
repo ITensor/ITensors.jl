@@ -195,9 +195,9 @@ function _factorize_from_left_eigen(A::ITensor,
                                     Linds...; 
                                     kwargs...)
   A,Lis,Ris = _permute_for_factorize(A,Linds...)
-  A² = A*prime(dag(A),Lis)
-  FU,D = eigen(A²,Lis,prime(Lis);kwargs...)
-  FV = dag(FU)*A
+  A²    = A*prime(dag(A),Lis)
+  FU, D = eigen(A²,Lis,prime(Lis); kwargs...)
+  FV    = dag(FU)*A
   return FU,FV,commonindex(FU,FV)
 end
 
@@ -205,9 +205,9 @@ function _factorize_from_right_eigen(A::ITensor,
                                      Linds...; 
                                      kwargs...)
   A,Lis,Ris = _permute_for_factorize(A,Linds...)
-  A² = A*prime(dag(A),Ris)
+  A²   = A*prime(dag(A),Ris)
   FV,D = eigen(A²,Ris,prime(Ris); kwargs...)
-  FU = A*dag(FV)
+  FU   = A*dag(FV)
   return FU,FV,commonindex(FU,FV)
 end
 
