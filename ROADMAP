@@ -2,6 +2,7 @@
 
 Bug: UInt64 == Tag runs, but doesn't work properly. Should it even run?
 
+
 + Rename Davidson function if not using the diagonal preconditioner.
 
 + Further optimization of SmallString & TagSet
