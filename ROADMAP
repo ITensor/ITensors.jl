@@ -1,10 +1,13 @@
 ## Misc To Do
 
-Bug: UInt64 == Tag runs, but doesn't work properly
+Bug: UInt64 == Tag runs, but doesn't work properly. Should it even run?
 
-+ Check TagSet functions aren't doing unnecessary conversions
-  of Tags to UInt64s and of Strings to Tags
-  (Perhaps change TagSet to just store Tag instead of IntTag)
+
++ Rename Davidson function if not using the diagonal preconditioner.
+
++ Further optimization of SmallString & TagSet
+  - ensure extra conversions aren't happening
+  - could convert(IntSmallString,SmallString) generate more efficient assembly?
 
 + Read/write of ITensors and other objects, using HDF5 format
 

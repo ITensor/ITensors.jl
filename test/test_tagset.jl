@@ -56,5 +56,27 @@ using ITensors,
     ts = TagSet("Site,n=2")
     @test length(sprint(show,ts)) > 1
   end
+
+  @testset "addtags" begin
+    ts = TagSet("Blue")
+    @test hastags(ts,"Blue")
+
+    ts = addtags(ts,"Red")
+    @test hastags(ts,"Blue")
+    @test hastags(ts,"Red")
+
+    ts = addtags(ts,"Green")
+    @test hastags(ts,"Blue")
+    @test hastags(ts,"Red")
+    @test hastags(ts,"Green")
+
+    ts = addtags(ts,"Yellow")
+    @test hastags(ts,"Blue")
+    @test hastags(ts,"Red")
+    @test hastags(ts,"Green")
+    @test hastags(ts,"Yellow")
+
+    @test_throws ErrorException addtags(ts,"Orange")
+  end
 end
 

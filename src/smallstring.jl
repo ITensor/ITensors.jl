@@ -1,16 +1,12 @@
 export convert,
-       push,
+       #push,
        setindex
 
 const IntChar = UInt8
 const IntSmallString = UInt64
-const maxTagLength = 8
-const SmallStringStorage = SVector{maxTagLength,IntChar}
-const MSmallStringStorage = MVector{maxTagLength,IntChar} # Mutable SmallString storage
-
-function initSmallStringStore()
-  return SmallStringStorage(ntuple(_->IntChar(0),Val(length(SmallStringStorage))))
-end
+const smallLength = 8
+const SmallStringStorage = SVector{smallLength,IntChar}
+const MSmallStringStorage = MVector{smallLength,IntChar} # Mutable SmallString storage
 
 struct SmallString
   data::SmallStringStorage
@@ -18,19 +14,19 @@ struct SmallString
   SmallString(sv::SmallStringStorage) = new(sv)
 
   function SmallString()
-    sv = initSmallStringStore()
-    return new(sv)
+    store = SmallStringStorage(ntuple(_->IntChar(0),Val(smallLength)))
+    return new(store)
   end
 
-  function SmallString(str::String)
-    sv = initSmallStringStore()
-    n = 1
-    while n <= length(str) && n <= maxTagLength
-      sv = setindex(sv,IntChar(str[n]),n)
-      n += 1
-    end
-    return new(sv)
+end
+
+function SmallString(str::String)
+  mstore = MSmallStringStorage(ntuple(_->IntChar(0),Val(smallLength)))
+  lastchar = min(length(str),smallLength)
+  for n=1:lastchar
+    mstore[n] = IntChar(str[n])
   end
+  return SmallString(SmallStringStorage(mstore))
 end
 
 SmallString(s::SmallString) = SmallString(s.data)
@@ -45,33 +41,39 @@ end
 
 isNull(s::SmallString) = @inbounds s[1] == IntChar(0)
 
-function StaticArrays.push(s::SmallString,val)
-  newlen = 1
-  while newlen <= maxTagLength && s[newlen] != IntChar(0)
-    newlen += 1
-  end
-  if newlen > maxTagLength
-    throw(ErrorException("push!: SmallString already at maximum length"))
-  end
-  icval = convert(IntChar,val)
-  return SmallString(setindex(s.data,icval,newlen))
-end
+#function StaticArrays.push(s::SmallString,val)
+#  newlen = 1
+#  while s[newlen] != IntChar(0) && newlen <= smallLength
+#    newlen += 1
+#  end
+#  if newlen > smallLength
+#    throw(ErrorException("push: SmallString already at maximum length"))
+#  end
+#  icval = convert(IntChar,val)
+#  return SmallString(setindex(s.data,icval,newlen))
+#end
 
-# Cast to SmallString:
 function SmallString(i::IntSmallString)
-  SmallString(unsafe_load(convert(Ptr{SmallStringStorage},pointer_from_objref(MVector{1,IntSmallString}(ntoh(i))))))
+  mut_is = MVector{1,IntSmallString}(ntoh(i))
+  p = convert(Ptr{SmallStringStorage},pointer_from_objref(mut_is))
+  return SmallString(unsafe_load(p))
 end
 
-# Cast to IntSmallString:
-function cast_to_uint64(a)
-  return ntoh(unsafe_load(convert(Ptr{IntSmallString},pointer_from_objref(MSmallStringStorage(a)))))
+function cast_to_uint64(store)
+  mut_store = MSmallStringStorage(store)
+  storage_begin = convert(Ptr{IntSmallString},pointer_from_objref(mut_store))
+  return ntoh(unsafe_load(storage_begin))
+end
+
+function IntSmallString(s::SmallString)
+  return cast_to_uint64(s.data)
 end
 
 #isint(i::IntSmallString) = isint(SmallString(i))
 
 function isint(s::SmallString)::Bool
   ndigits = 1
-  while ndigits <= maxTagLength && s[ndigits] != IntChar(0)
+  while s[ndigits] != IntChar(0) && ndigits <= smallLength
     cur_char = Char(s[ndigits])
     !isdigit(cur_char) && return false
     ndigits += 1
@@ -111,21 +113,21 @@ Base.isless(s1::SmallString,s2::SmallString) = isless(s1.data,s2.data)
 
 #######################################################
 
-function Base.String(s::SmallString)
-  res = ""
-  n = 1
-  while n <= maxTagLength && s[n] != IntChar(0)
-    res *= Char(s[n])
-    n += 1
-  end
-  return res
-end
+#function Base.String(s::SmallString)
+#  res = ""
+#  n = 1
+#  while s[n] != IntChar(0) && n <= smallLength
+#    res *= Char(s[n])
+#    n += 1
+#  end
+#  return res
+#end
 
-Base.convert(::Type{String}, s::SmallString) = String(s)
+#Base.convert(::Type{String}, s::SmallString) = String(s)
 
 function Base.show(io::IO, s::SmallString)
   n = 1
-  while n <= maxTagLength && s[n] != IntChar(0)
+  while s[n] != IntChar(0) && n <= smallLength
     print(io,Char(s[n]))
     n += 1
   end
