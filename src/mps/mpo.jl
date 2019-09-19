@@ -14,7 +14,7 @@ mutable struct MPO
 
   MPO() = new(0,Vector{ITensor}(), 0, 0)
 
-  function MPO(N::Int, A::Vector{ITensor}, llim::Int=0, rlim::Int=N+1)
+  function MPO(N::Int, A::Vector{<:ITensor}, llim::Int=0, rlim::Int=N+1)
     new(N, A, llim, rlim)
   end
 
@@ -43,18 +43,25 @@ mutable struct MPO
     links = Vector{Index}(undef, N)
     @inbounds for ii ∈ eachindex(sites)
         si = sites[ii]
+        dimi = dim(si)
         spin_op = op(sites, ops[ii], ii)
         links[ii] = Index(1, "Link,n=$ii")
         local this_it
         if ii == 1
             this_it = ITensor(links[ii], si, si')
-            this_it[links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+            for i = 1:dimi, j = 1:dimi
+              this_it[links[ii](1), si(i), si'(j)] = spin_op[si(i), si'(j)]
+            end
         elseif ii == N
             this_it = ITensor(links[ii-1], si, si')
-            this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+            for i = 1:dimi, j = 1:dimi
+              this_it[links[ii-1](1), si(i), si'(j)] = spin_op[si(i), si'(j)]
+            end
         else
             this_it = ITensor(links[ii-1], links[ii], si, si')
-            this_it[links[ii-1](1), links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+            for i = 1:dimi, j = 1:dimi
+              this_it[links[ii-1](1), links[ii](1), si(i), si'(j)] = spin_op[si(i), si'(j)]
+            end
         end
         its[ii] = this_it
     end
@@ -123,13 +130,7 @@ function siteindex(A::MPO,x::MPS,j::Integer)
   return si
 end
 
-function siteinds(A::MPO,x::MPS)
-  is = IndexSet(length(A))
-  @inbounds for j in eachindex(A)
-    is[j] = siteindex(A,x,j)
-  end
-  return is
-end
+siteinds(A::MPO,x::MPS) = [siteindex(A,x,j) for j ∈ 1:length(A)]
 
 """
     dag(m::MPS)
@@ -198,7 +199,7 @@ function linkindex(M::MPO,j::Integer)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPO is $N)")
   li = commonindex(M[j],M[j+1])
-  if isdefault(li)
+  if isnothing(li)
     error("linkindex: no MPO link index at link $j")
   end
   return li

@@ -511,6 +511,8 @@ function compute_contraction_labels(Ai::IndexSet{N1},
   return (NTuple{N1,Int}(Aind),NTuple{N2,Int}(Bind))
 end
 
+# Move this to tensor, since this logic is different
+# for contracting different kinds of storage
 function contract_inds(Ais::IndexSet{N1},
                        Aind::NTuple{N1,Int},
                        Bis::IndexSet{N2},

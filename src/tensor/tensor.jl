@@ -20,6 +20,10 @@ store(T::Tensor) = T.store
 inds(T::Tensor) = T.inds
 ind(T::Tensor,j::Integer) = inds(T)[j]
 
+#
+# Tools for working with Dims/Tuples
+#
+
 # dim and dims are used in the Tensor interface, overload 
 # base Dims here
 dims(ds::Dims) = ds
@@ -42,6 +46,22 @@ ValLength(::Dims{N}) where {N} = Val(N)
 StaticArrays.similar_type(::Type{IndsT},::Val{N}) where {IndsT<:Dims,N} = Dims{N}
 
 unioninds(is1::Dims{N1},is2::Dims{N2}) where {N1,N2} = Dims{N1+N2}((is1...,is2...))
+
+function deleteat(t::NTuple{N},pos::Int) where {N}
+  return ntuple(i -> i < pos ? t[i] : t[i+1],Val(N-1))
+end
+
+function insertat(t::NTuple{N},
+                  val::NTuple{M},
+                  pos::Int) where {N,M}
+  return ntuple(i -> i < pos ? t[i] :
+                ( i > pos+M-1 ? t[i-1] : 
+                 val[i-pos+1] ), Val(N+M-1))
+end
+
+#
+# Generic Tensor functions
+#
 
 # The size is obtained from the indices
 dims(T::Tensor) = dims(inds(T))

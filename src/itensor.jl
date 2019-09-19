@@ -268,16 +268,18 @@ end
 
 Base.getindex(T::ITensor{N},vals::Vararg{Int,N}) where {N} = Tensor(T)[vals...]
 
-function Base.getindex(T::ITensor{N},ivs::Vararg{IndexVal,N}) where {N}
+function Base.getindex(T::ITensor{N},
+                       ivs::Vararg{IndexVal,N}) where {N}
   p = getperm(inds(T),ivs)
   vals = permute(val.(ivs),p)
   return T[vals...]
 end
 
-# TODO: what is this doing?
-#function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
-#  p = getperm(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
-#  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
+# TODO: we should figure out if this is how we want to do
+# slicing
+#function getindex(T::ITensor,ivs::AbstractVector{IndexVal}...)
+#  p = getperm(inds(T),map(x->x[1], ivs))
+#  vals = map(x->val.(x), ivs[[p...]])
 #  return Tensor(store(T),inds(T))[vals...]
 #end
 

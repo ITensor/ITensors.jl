@@ -69,14 +69,16 @@ function svd(A::ITensor,
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   UT,ST,VT = svd(Tensor(A),Lpos,Rpos;kwargs...)
   U,S,V = ITensor(UT),ITensor(ST),ITensor(VT)
-  u = commonindex(U,S)
-  v = commonindex(S,V)
-  settags!(U,utags,u)
-  settags!(S,utags,u)
-  settags!(S,vtags,v)
-  settags!(V,vtags,v)
-  u = settags(u,utags)
-  v = settags(v,vtags)
+  u₀ = commonindex(U,S)
+  v₀ = commonindex(S,V)
+
+  u = settags(u₀,utags)
+  v = settags(u₀,vtags)
+
+  U *= δ(dag(u₀),u)
+  S = δ(dag(u₀),u)*S*δ(dag(v₀),v)
+  V *= δ(dag(v₀),v)
+
   return U,S,V,u,v
 end
 

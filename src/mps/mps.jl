@@ -24,7 +24,7 @@ mutable struct MPS
   MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
 
   function MPS(N::Int, 
-               A::Vector{ITensor}, 
+               A::Vector{<:ITensor}, 
                llim::Int=0, 
                rlim::Int=N+1)
     new(N,A,llim,rlim)

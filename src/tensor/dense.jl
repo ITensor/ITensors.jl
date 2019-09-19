@@ -235,7 +235,10 @@ function contract(T1::Tensor{<:Any,N1},
                   labelsT1,
                   T2::Tensor{<:Any,N2},
                   labelsT2) where {N1,N2}
-  indsR,labelsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2)
+  # TODO: put the contract_inds logic into contraction_output,
+  # call like R = contraction_ouput(T1,labelsT1,T2,labelsT2)
+  indsR,labelsR = contract_inds(inds(T1),labelsT1,
+                                inds(T2),labelsT2)
   R = contraction_output(typeof(T1),typeof(T2),indsR)
   # contract!! version here since the output R may not
   # be mutable (like UniformDiag)

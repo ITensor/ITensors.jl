@@ -1,10 +1,12 @@
 using ITensors, Test
 using Combinatorics: permutations
 
+@testset "Combiner" begin
+
 i = Index(2,"i")
-j = Index(2,"j")
-k = Index(2,"k")
-l = Index(2,"l")
+j = Index(3,"j")
+k = Index(4,"k")
+l = Index(5,"l")
 
 A = randomITensor(i, j, k, l)
 
@@ -12,11 +14,11 @@ A = randomITensor(i, j, k, l)
     for inds_ij ∈ permutations([i,j])
         C,c = combiner(inds_ij...)
         B = A*C
-        @test hasinds(B, l, k)
+        @test hasinds(B, l, k, c)
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
     for inds_il ∈ permutations([i,l])
         C,c = combiner(inds_il...)
@@ -25,7 +27,7 @@ A = randomITensor(i, j, k, l)
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
     for inds_ik ∈ permutations([i,k])
         C,c = combiner(inds_ik...)
@@ -34,7 +36,7 @@ A = randomITensor(i, j, k, l)
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
     for inds_jk ∈ permutations([j,k])
         C,c = combiner(inds_jk...)
@@ -43,7 +45,7 @@ A = randomITensor(i, j, k, l)
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
     for inds_jl ∈ permutations([j,l])
         C,c = combiner(inds_jl...)
@@ -52,7 +54,7 @@ A = randomITensor(i, j, k, l)
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
     for inds_kl ∈ permutations([k,l])
         C,c = combiner(inds_kl...)
@@ -61,7 +63,7 @@ A = randomITensor(i, j, k, l)
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
 end
 
@@ -73,7 +75,7 @@ end
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
     for inds_ijk ∈ permutations([i,j,k])
         C,c = combiner(inds_ijk...)
@@ -82,7 +84,7 @@ end
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
     for inds_jkl ∈ permutations([j,k,l])
         C,c = combiner(inds_jkl...)
@@ -91,6 +93,9 @@ end
         @test c == commonindex(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
-        @test Array(permute(D, i, j, k, l)) == Array(A)
+        @test D ≈ A
     end
 end
+
+end
+
