@@ -9,13 +9,22 @@ end
 
 function _call_op(s::Index,
                   opname::AbstractString)
+  use_tag = 0
+  nfound = 0
   for n=1:length(tags(s))
     TType = Val{tags(s)[n]}
     if hasmethod(op,Tuple{TType,Index,AbstractString})
-      return op(TType(),s,opname)
+      use_tag = n
+      nfound += 1
     end
   end
-  error("Overload of `op` function not found for Index tags $ts")
+  if nfound == 0
+    error("Overload of \"op\" function not found for Index tags $(tags(s))")
+  elseif nfound > 1
+    error("Multiple tags from $(tags(s)) overload the function \"op\"")
+  end
+  TType = Val{tags(s)[use_tag]}
+  return op(TType(),s,opname)
 end
 
 function op(s::Index,
@@ -61,15 +70,23 @@ state(s::Index,n::Integer) = s[n]
 
 function state(s::Index,
                str::String)::IndexVal
+  use_tag = 0
+  nfound = 0
   for n=1:length(tags(s))
     TType = Val{tags(s)[n]}
     if hasmethod(state,Tuple{TType,AbstractString})
-      sn = state(TType(),str)
-      return s[sn]
+      use_tag = n
+      nfound += 1
     end
   end
-  error("Overload of `state` function not found for Index tags $ts")
-  return IndexVal()
+  if nfound == 0
+    error("Overload of \"state\" function not found for Index tags $(tags(s))")
+  elseif nfound > 1
+    error("Multiple tags from $(tags(s)) overload the function \"state\"")
+  end
+  TType = Val{tags(s)[use_tag]}
+  sn = state(TType(),str)
+  return s[sn]
 end
 
 function state(sset::Vector{Index},
