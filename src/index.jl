@@ -190,7 +190,9 @@ function Base.read(io::IO,::Type{Index}; kwargs...)
     tags = read(io,TagSet;kwargs...)
     id = read(io,IDType)
     dim = convert(Int64,read(io,Int32))
-    dir = read(io,Arrow)
+    dir_int = read(io,Int32)
+    dir = dir_int < 0 ? In : Out
+    read(io,8) # Read default IQIndexDat size, 8 bytes
     i = Index(id,dim,dir,tags)
   else
     throw(ArgumentError("read Index: format=$format not supported"))
