@@ -228,7 +228,6 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
     bind = props.Bcstart
     for i = 1:props.ncont
       while !contractedB(props,bind) bind += 1 end
-      #j = find_index(props.ai,props.bi[bind])
       j = findfirst(==(props.bi[bind]),props.ai)
       newi += 1
       props.PA[newi] = j
@@ -240,7 +239,6 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
     #appear in same order as on C
     #TODO: check this is correct for 1-indexing
     for k = 1:rc
-      #j = find_index(props.ai,props.ci[k])
       j = findfirst(==(props.ci[k]),props.ai)
       if !isnothing(j)
         props.AtoC[newi] = k
@@ -290,7 +288,6 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
       aind = props.Acstart
       for i = 0:(props.ncont-1)
         while !contractedA(props,aind) aind += 1 end
-        #j = find_index(props.bi,props.ai[aind])
         j = findfirst(==(props.ai[aind]),props.bi)
         newi += 1
         props.PB[newi] = j
@@ -302,7 +299,6 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
     #Permute uncontracted indices to
     #appear in same order as on C
     for k = 1:rc
-      #j = find_index(props.bi,props.ci[k])
       j = findfirst(==(props.ci[k]),props.bi)
       if !isnothing(j)
         props.BtoC[newi] = k
@@ -393,102 +389,4 @@ function compute_contraction_properties!(props::ContractionProperties, A, B, C)
   end
 
 end
-
-#function _contract_dense_dense!(C::Array{T},
-#                                p::CProps,
-#                                A::Array{T},
-#                                B::Array{T},
-#                                α::T=one(T),
-#                                β::T=zero(T)) where {T}
-#  tA = 'N'
-#  if p.permuteA
-#    aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
-#    tA = 'T'
-#  else
-#    #A doesn't have to be permuted
-#    if Atrans(p)
-#      aref = reshape(A,p.dmid,p.dleft)
-#      tA = 'T'
-#    else
-#      aref = reshape(A,p.dleft,p.dmid)
-#    end
-#  end
-#
-#  tB = 'N'
-#  if p.permuteB
-#    bref = reshape(permutedims(B,p.PB),p.dmid,p.dright)
-#  else
-#    if Btrans(p)
-#      bref = reshape(B,p.dright,p.dmid)
-#      tB = 'T'
-#    else
-#      bref = reshape(B,p.dmid,p.dright)
-#    end
-#  end
-#
-#  # TODO: this logic may be wrong
-#  if p.permuteC
-#    cref = reshape(copy(C),p.dleft,p.dright)
-#  else
-#    if Ctrans(p)
-#      cref = reshape(C,p.dleft,p.dright)
-#      if tA=='N' && tB=='N'
-#        (aref,bref) = (bref,aref)
-#        tA = tB = 'T'
-#      elseif tA=='T' && tB=='T'
-#        (aref,bref) = (bref,aref)
-#        tA = tB = 'N'
-#      end
-#    else
-#      cref = reshape(C,p.dleft,p.dright)
-#    end
-#  end
-#
-#  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
-#  BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
-#
-#  if p.permuteC
-#    permutedims!(C,reshape(cref,p.newCrange...),p.PC)
-#  end
-#  return
-#end
-
-#TODO: this should be optimized
-#function _contract_scalar!(Cdata::Array,Clabels::Vector{Int},
-#                           Bdata::Array,Blabels::Vector{Int},α,β)
-#  p = calculate_permutation(Blabels,Clabels)
-#  if β==0
-#    if is_trivial_permutation(p)
-#      Cdata .= α.*Bdata
-#    else
-#      #TODO: make an optimized permutedims!() that also scales the data
-#      permutedims!(Cdata,α*Bdata)
-#    end
-#  else
-#    if is_trivial_permutation(p)
-#      Cdata .= α.*Bdata .+ β.*Cdata
-#    else
-#      #TODO: make an optimized permutedims!() that also adds and scales the data
-#      permBdata = permutedims(Bdata,p)
-#      Cdata .= α.*permBdata .+ β.*Cdata
-#    end
-#  end
-#  return
-#end
-
-#function contract!(Cdata::Array{T},Clabels::Vector{Int},
-#                   Adata::Array{T},Alabels::Vector{Int},
-#                   Bdata::Array{T},Blabels::Vector{Int},
-#                   α::T=one(T),β::T=zero(T)) where {T}
-#  if(length(Alabels)==0)
-#    contract_scalar!(Cdata,Clabels,Bdata,Blabels,α*Adata[1],β)
-#  elseif(length(Blabels)==0)
-#    contract_scalar!(Cdata,Clabels,Adata,Alabels,α*Bdata[1],β)
-#  else
-#    props = CProps(Alabels,Blabels,Clabels)
-#    compute!(props,Adata,Bdata,Cdata)
-#    contract!(Cdata,props,Adata,Bdata,α,β)
-#  end
-#  return
-#end
 
