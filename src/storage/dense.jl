@@ -362,3 +362,15 @@ function storage_exp(As::Dense{T}, Lis,Ris; hermitian=false) where {T}
                            exp(reshape(data(As),dim(Lis),dim(Ris))) )
   return Dense{T}(vec(expAdata))
 end
+
+function Base.read(io::IO,::Type{Dense{T}};kwargs...) where {T}
+  format = get(kwargs,:format,"hdf5")
+  if format=="cpp"
+    size = read(io,UInt64)
+    D = Dense{T}(size)
+    read!(io,D.data)
+  else
+    throw(ArgumentError("read ITensor: format=$format not supported"))
+  end
+  return D
+end
