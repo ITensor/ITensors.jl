@@ -153,4 +153,42 @@ using ITensors,
     Em3 = Array(op(s,"Emp",3),s[3]) 
     @test Em3 ≈ [1.0; 0.0; 0.0]
   end
+
+end
+
+
+const MySite = makeTagType("MySite")
+
+@testset "Custom Site Tag Type" begin
+
+  function ITensors.op(::MySite,s::Index,opname::AbstractString)
+    Op = ITensor(s,s')
+    if opname=="MyOp"
+      Op[s(1),s'(1)] = 11
+      Op[s(1),s'(2)] = 12
+      Op[s(2),s'(1)] = 21
+      Op[s(2),s'(2)] = 22
+    end
+    return Op
+  end
+
+  function ITensors.state(::MySite,statename::AbstractString)
+    if statename == "One"
+      return 1
+    elseif statename == "Two"
+      return 2
+    end
+  end
+
+  i = Index(2,"MySite")
+
+  expectedOp = ITensor(i,i')
+  expectedOp[i(1),i'(1)] = 11
+  expectedOp[i(1),i'(2)] = 12
+  expectedOp[i(2),i'(1)] = 21
+  expectedOp[i(2),i'(2)] = 22
+  @test norm(op(i,"MyOp")-expectedOp) < 1E-10
+
+  @test state(i,"One") == i(1)
+  @test state(i,"Two") == i(2)
 end
