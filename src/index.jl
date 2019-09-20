@@ -182,3 +182,18 @@ prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))
 adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
 
 show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
+
+function Base.read(io::IO,::Type{Index}; kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  i = Index()
+  if format=="cpp"
+    tags = read(io,TagSet;kwargs...)
+    id = read(io,IDType)
+    dim = convert(Int64,read(io,Int32))
+    dir = read(io,Arrow)
+    i = Index(id,dim,dir,tags)
+  else
+    throw(ArgumentError("read Index: format=$format not supported"))
+  end
+  return i
+end
