@@ -1,4 +1,3 @@
-export Combiner
 
 struct CombinerStorage <: TensorStorage
   ci::Index
