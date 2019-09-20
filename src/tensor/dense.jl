@@ -550,8 +550,10 @@ function LinearAlgebra.qr(T::DenseTensor{<:Number,N,IndsT},
   QM,RM = qr(M)
   q = ind(QM,2)
   r = ind(RM,1)
+  # TODO: simplify this by permuting inds(T) by (Lpos,Rpos)
+  # then grab Linds,Rinds
   Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
-  Qinds = push(Linds,q)
+  Qinds = push(Linds,r)
   Q = reshape(QM,Qinds)
   Rinds = similar_type(IndsT,Val(NR))(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
   Rinds = pushfirst(Rinds,r)
@@ -561,10 +563,12 @@ end
 
 function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT};
                           kwargs...) where {ElT,IndsT}
+  # TODO: just call qr on T directly (make sure
+  # that is fast)
   QM,RM = qr(Matrix(T))
-  dim = size(QM,2) 
   # Make the new indices to go onto Q and R
-  q = eltype(IndsT)(dim)
+  q,r = inds(T)
+  q = dim(q) < dim(r) ? sim(q) : sim(r)
   Qinds = IndsT((ind(T,1),q))
   Rinds = IndsT((q,ind(T,2)))
   Q = Tensor(Dense{ElT}(vec(Matrix(QM))),Qinds)

@@ -181,7 +181,7 @@ function eigenHermitian(A::ITensor,
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
   lefttags::TagSet = get(kwargs,:lefttags,tags)
   righttags::TagSet = get(kwargs,:righttags,prime(tags))
-  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Lis = commoninds(inds(A),IndexSet(Linds))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   UT,DT = eigenHermitian(Tensor(A),Lpos,Rpos;kwargs...)
@@ -201,7 +201,7 @@ function eigen(A::ITensor,
                Rinds=prime(IndexSet(Linds));
                kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
-  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Lis = commoninds(inds(A),IndexSet(Linds))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   UT,DT = eigen(Tensor(A),Lpos,Rpos;kwargs...)

@@ -258,8 +258,8 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     lAs = [linkindex(A, i) for i in 1:n-1]
     prime!(A, rand_plev, "Link")
 
-    first  = fill(ITensor(), n)
-    second = fill(ITensor(), n)
+    first  = Vector{ITensor{2}}(undef,n-1)
+    second = Vector{ITensor{2}}(undef,n-1)
     for i in 1:n-1
         lA = linkindex(A, i)
         lB = linkindex(B, i)
@@ -316,7 +316,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     ts    = tags(commonindex(psi[n], psi[n-1]))
     Lis   = commonindex(ρ, A[n])
     Ris   = uniqueinds(ρ, Lis)
-    FU, D = eigen(ρ, Lis, Ris; tags=ts, kwargs...)
+    FU, D = eigenHermitian(ρ, Lis, Ris; tags=ts, kwargs...)
     psi_out[n] = setprime(dag(FU), 0, "Site")
     O     = O * FU * psi[n-1] * A[n-1]
     O     = prime(O, -1, "Site")
@@ -326,7 +326,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
         ts  = tags(commonindex(psi[j], psi[j-1]))
         Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
         Ris = uniqueinds(ρ, Lis)
-        FU, D = eigen(ρ, Lis, Ris; tags=ts, kwargs...)
+        FU, D = eigenHermitian(ρ, Lis, Ris; tags=ts, kwargs...)
         psi_out[j] = dag(FU)
         O = O * FU * psi[j-1] * A[j-1]
         O = prime(O, -1, "Site")
