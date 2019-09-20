@@ -8,8 +8,6 @@ struct Diag{T} <: TensorStorage
   Diag{T}(data) where {T} = new{T}(data)
 end
 
-data(D::Diag) = D.data
-
 const NonuniformDiag{T} = Diag{T} where {T<:AbstractVector}
 const UniformDiag{T} = Diag{T} where {T<:Number}
 

@@ -12,8 +12,6 @@ struct Dense{T} <: TensorStorage
   Dense{T}() where {T} = new{T}(Vector{T}())
 end
 
-data(D::Dense) = D.data
-
 # Convenient functions for Dense storage type
 Base.getindex(D::Dense,i::Integer) = data(D)[i]
 Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)

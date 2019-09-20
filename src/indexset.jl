@@ -623,3 +623,45 @@ function is_trivial_permutation(P)
   return true
 end
 
+function count_unique(labelsT1,labelsT2)
+  count = 0
+  for l1 ∈ labelsT1
+    l1 ∉ labelsT2 && (count += 1)
+  end
+  return count
+end
+
+function count_common(labelsT1,labelsT2)
+  count = 0
+  for l1 ∈ labelsT1
+    l1 ∈ labelsT2 && (count += 1)
+  end
+  return count
+end
+
+function intersect_positions(labelsT1,labelsT2)
+  for i1 = 1:length(labelsT1)
+    for i2 = 1:length(labelsT2)
+      if labelsT1[i1] == labelsT2[i2]
+        return i1,i2
+      end
+    end
+  end
+  return nothing
+end
+
+function is_replacement(labelsT1,labelsT2)
+  return count_unique(labelsT1,labelsT2) == 1 &&
+         count_common(labelsT1,labelsT2) == 1
+end
+
+function is_combiner(labelsT1,labelsT2)
+  return count_unique(labelsT1,labelsT2) == 1 &&
+         count_common(labelsT1,labelsT2) > 1
+end
+
+function is_uncombiner(labelsT1,labelsT2)
+  return count_unique(labelsT1,labelsT2) > 1 &&
+         count_common(labelsT1,labelsT2) == 1
+end
+
