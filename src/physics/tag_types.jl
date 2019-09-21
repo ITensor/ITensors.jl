@@ -31,27 +31,27 @@ end
 function op(s::Index,
             opname::AbstractString;
             kwargs...)::ITensor
-  sP = s'
 
   opname = strip(opname)
 
-  Op = ITensor(dag(s),sP)
   if opname == "Id"
+    Op = ITensor(dag(s),s')
     for n=1:dim(s)
-      Op[dag(s)(n),sP(n)] = 1.0
+      Op[dag(s)(n),s'(n)] = 1.0
     end
-  else
-    # Interpret operator names joined by *
-    # as acting on the same site
-    starpos = findfirst("*",opname)
-    if !isnothing(starpos)
-      op1 = opname[1:starpos.start-1]
-      op2 = opname[starpos.start+1:end]
-      return multSiteOps(op(s,op1;kwargs...),op(s,op2;kwargs...))
-    end
-    return _call_op(s,opname;kwargs...)
+    return Op
   end
-  return Op
+
+  # Interpret operator names joined by *
+  # as acting sequentially on the same site
+  starpos = findfirst("*",opname)
+  if !isnothing(starpos)
+    op1 = opname[1:starpos.start-1]
+    op2 = opname[starpos.start+1:end]
+    return multSiteOps(op(s,op1;kwargs...),op(s,op2;kwargs...))
+  end
+
+  return _call_op(s,opname;kwargs...)
 end
 
 function op(s::Vector{Index},
