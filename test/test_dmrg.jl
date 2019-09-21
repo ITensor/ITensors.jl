@@ -1,6 +1,6 @@
 using ITensors, Test
 
-@testset "basic DMRG" begin
+@testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
     N = 100
     sites = spinOneSites(N)
@@ -56,5 +56,36 @@ using ITensors, Test
     # with open boundary conditions at criticality
     energy_exact = 0.25 - 0.25/sin(π/(2*(2*N+1)))
     energy ≈ energy_exact
+  end
+
+  @testset "DMRGObserver" begin
+    N = 10
+    sites = spinHalfSites(N)
+    ψ0 = randomMPS(sites)
+
+    ampo = AutoMPO(sites)
+    for j = 1:N
+      j < N && add!(ampo,-1.0,"Sz",j,"Sz",j+1)
+      add!(ampo,-0.2,"Sx",j)
+    end
+    H = toMPO(ampo)
+
+    sweeps = Sweeps(5)
+    maxdim!(sweeps,10)
+    cutoff!(sweeps,1E-12)
+
+    observer = DMRGObserver(["Sz","Sx"], sites)
+
+    E,psi = dmrg(H,ψ0,sweeps,observer=observer,quiet=true)
+    @test length(measurements(observer)["Sz"])==5
+    @test length(measurements(observer)["Sx"])==5
+    @test all(length.(measurements(observer)["Sz"]) .== N)
+    @test all(length.(measurements(observer)["Sx"]) .== N)
+    @test length(energies(observer))==5
+    @test energies(observer)[end]==E
+
+    orthogonalize!(psi,1)
+    m = scalar(dag(psi[1])*noprime(op(sites, "Sz", 1)*psi[1]))
+    @test measurements(observer)["Sz"][end][1] ≈ m
   end
 end

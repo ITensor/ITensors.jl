@@ -337,6 +337,20 @@ using ITensors,
       @test A*D ≈ dense(D)*A
     end
 
+    @testset "Contraction with different bond dimensions" begin
+      idim = 3
+      mdim = 2
+    
+      i = Index(idim,"i")
+      m = Index(mdim,"m")
+    
+      A = randomITensor(i, i', m)
+      D = δ(i,i')
+
+      @test D*A ≈ dense(D)*A
+      @test A*D ≈ dense(D)*A
+    end
+
     @testset "Contraction (Diag uniform * Dense, replace index)" begin
       D = δ(i,k)
       A = randomITensor(m,k,n,l)

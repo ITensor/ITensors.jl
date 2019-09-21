@@ -1,11 +1,14 @@
 export dmrg
 
+
 function dmrg(H::MPO,
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)::Tuple{Float64,MPS}
 
   which_factorization::String = get(kwargs,:which_factorization,"automatic")
+  obs = get(kwargs,:observer, NoObserver())
+  quiet::Bool = get(kwargs,:quiet,false)
 
   psi = copy(psi0)
   N = length(psi)
@@ -14,14 +17,8 @@ function dmrg(H::MPO,
   position!(PH,psi0,1)
   energy = 0.0
 
-  quiet::Bool = get(kwargs,:quiet,false)
   for sw=1:nsweep(sweeps)
     sw_time = @elapsed begin
-
-    @debug begin
-      reset!(timer)
-      println("\n\n~~~ This is sweep $sw ~~~\n\n")
-    end
 
     for (b,ha) in sweepnext(N)
       position!(PH,psi,b)
@@ -37,16 +34,24 @@ function dmrg(H::MPO,
                    cutoff=cutoff(sweeps,sw),
                    dir=dir,
                    which_factorization=which_factorization)
+
+      measure!(obs;energy=energy,
+                   psi=psi,
+                   bond=b,
+                   sweep=sw,
+                   half_sweep=ha,
+                   quiet=quiet)
     end
     end
     if !quiet
       @printf("After sweep %d energy=%.12f maxLinkDim=%d time=%.3f\n",sw,energy,maxLinkDim(psi),sw_time)
     end
+    checkdone!(obs;quiet=quiet) && break
   end
   return (energy,psi)
 end
 
-@doc """ 
+@doc """
 dmrg(H::MPO,psi0::MPS,sweeps::Sweeps;kwargs...)::Tuple{Float64,MPS}
 
 Optimize a matrix product state (MPS) to be the eigenvector

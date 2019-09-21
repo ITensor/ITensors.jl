@@ -37,7 +37,7 @@ function ising_mpo(sh::Tuple{Index,Index},sv::Tuple{Index,Index},
     Xh2 = ITensor(vec(√Q),sh[2],sh[2]')
     Xv1 = ITensor(vec(√Q),sv[1],sv[1]')
     Xv2 = ITensor(vec(√Q),sv[2],sv[2]')
-    T = replacetags(T*Xh1*Xh2*Xv1*Xv2,"1","0")
+    T = noprime(T*Xh1*Xh2*Xv1*Xv2)
   else
     sig(s) = 1.0-2.0*(s-1)
     E0 = -4.0

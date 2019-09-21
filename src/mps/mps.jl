@@ -177,6 +177,15 @@ function replaceBond!(M::MPS,
                         tags=tags(linkindex(M,b)), kwargs...)
   M[b]   = FU
   M[b+1] = FV
+
+  dir = get(kwargs,:dir,"center")
+  if dir=="fromright"
+    M.llim_ ==b && (M.llim_ -= 1)
+    M.rlim_ == b+2 && (M.rlim_ -= 1)
+  elseif dir=="fromleft"
+    M.llim_ == b-1 && (M.llim_ += 1)
+    M.rlim_ == b+1 && (M.rlim_ += 1)
+  end
 end
 
 

@@ -68,14 +68,14 @@ carry extra information beyond just their dimension.
 using ITensors
 let
   i = Index(3)     # Index of dimension 3
-  @show dim(i)     # i = 3
+  @show dim(i)     # dim(i) = 3
 
   j = Index(5,"j") # Index with a tag "j"
 
   s = Index(2,"n=1,Site") # Index with two tags,
                           # "Site" and "n=1"
-  @show hastags(s,"Site") # hasTags(s,"Site") = true
-  @show hastags(s,"n=1")  # hasTags(s,"n=1") = true
+  @show hastags(s,"Site") # hastags(s,"Site") = true
+  @show hastags(s,"n=1")  # hastags(s,"n=1") = true
 end
 ```
 

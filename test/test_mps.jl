@@ -111,11 +111,34 @@ using ITensors,
 
   @test_throws ErrorException linkindex(MPS(N, fill(ITensor(), N), 0, N + 1), 1)
 
+  @testset "replaceBond!" begin
   # make sure factorization preserves the bond index tags
-  phi = psi[1]*psi[2]
-  bondindtags = tags(linkindex(psi,1))
-  replaceBond!(psi,1,phi)
-  @test tags(linkindex(psi,1)) == bondindtags
+    psi = randomMPS(sites)
+    phi = psi[1]*psi[2]
+    bondindtags = tags(linkindex(psi,1))
+    replaceBond!(psi,1,phi)
+    @test tags(linkindex(psi,1)) == bondindtags
+
+    # check that replaceBond! updates llim_ and rlim_ properly
+    orthogonalize!(psi,5)
+    phi = psi[5]*psi[6]
+    replaceBond!(psi,5,phi, dir="fromleft")
+    @test ITensors.leftLim(psi)==5
+    @test ITensors.rightLim(psi)==7
+
+    phi = psi[5]*psi[6]
+    replaceBond!(psi,5,phi,dir="fromright")
+    @test ITensors.leftLim(psi)==4
+    @test ITensors.rightLim(psi)==6
+
+    psi.llim_ = 3
+    psi.rlim_ = 7
+    phi = psi[5]*psi[6]
+    replaceBond!(psi,5,phi,dir="fromleft")
+    @test ITensors.leftLim(psi)==3
+    @test ITensors.rightLim(psi)==7
+  end
+
 end
 
 # Helper function for making MPS

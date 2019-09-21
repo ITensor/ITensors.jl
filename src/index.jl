@@ -57,21 +57,21 @@ struct Index
   tags::TagSet
 end
 
-Index() = Index(IDType(0),1,Neither,TagSet("0"))
+Index() = Index(IDType(0),1,Neither,TagSet(("",0)))
 
 """
-    Index(dim::Integer, tags="0")
+  Index(dim::Integer, tags=("",0))
 Create an `Index` with a unique `id` and a tagset given by `tags`.
 
 Example: create a two dimensional index with tag `l`:
     Index(2, "l")
 """
-function Index(dim::Integer,tags="0")
+function Index(dim::Integer,tags=("",0))
   ts = TagSet(tags)
   # By default, an Index has a prime level of 0
   # A prime level less than 0 is interpreted as the
   # prime level not being set
-  plev(ts) < 0 && (ts = setprime(ts,0))
+  !hasplev(ts) && (ts = setprime(ts,0))
   Index(rand(IDType),dim,Out,ts)
 end
 
@@ -126,7 +126,7 @@ hastags(i::Index, ts) = hastags(tags(i),ts)
 function settags(i::Index, strts)
   ts = TagSet(strts)
   # By default, an Index has a prime level of 0
-  plev(ts) < 0 && (ts = setprime(ts,0))
+  !hasplev(ts) && (ts = setprime(ts,0))
   Index(id(i),dim(i),dir(i),ts)
 end
 
