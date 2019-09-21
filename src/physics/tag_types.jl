@@ -61,14 +61,6 @@ function op(s::Vector{Index},
   return op(s[n],opname;kwargs...)
 end
 
-function show(io::IO,
-              inds::Vector{Index})
-  (length(inds) > 0) && print(io,"\n")
-  for i=1:length(inds)
-    println(io,"  $(inds[i])")
-  end
-end
-
 state(s::Index,n::Integer) = s[n]
 
 function state(s::Index,
