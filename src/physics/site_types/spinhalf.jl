@@ -20,7 +20,7 @@ end
 
 function op(::SpinHalfSite,
             s::Index,
-            opname::AbstractString)::ITensor
+            opname::AbstractString;kwargs...)::ITensor
   sP = prime(s)
   Up = s(1)
   UpP = sP(1)
@@ -63,4 +63,3 @@ function op(::SpinHalfSite,
   end
   return Op
 end
-

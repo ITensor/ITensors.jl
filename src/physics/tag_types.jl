@@ -8,7 +8,8 @@ function makeTagType(t)
 end
 
 function _call_op(s::Index,
-                  opname::AbstractString)
+                  opname::AbstractString;
+                  kwargs...)
   use_tag = 0
   nfound = 0
   for n=1:length(tags(s))
@@ -24,11 +25,12 @@ function _call_op(s::Index,
     error("Multiple tags from $(tags(s)) overload the function \"op\"")
   end
   TType = Val{tags(s)[use_tag]}
-  return op(TType(),s,opname)
+  return op(TType(),s,opname;kwargs...)
 end
 
 function op(s::Index,
-            opname::AbstractString)::ITensor
+            opname::AbstractString;
+            kwargs...)::ITensor
   sP = s'
 
   opname = strip(opname)
@@ -47,15 +49,16 @@ function op(s::Index,
       op2 = opname[starpos.start+1:end]
       return multSiteOps(op(s,op1),op(s,op2))
     end
-    return _call_op(s,opname)
+    return _call_op(s,opname;kwargs...)
   end
   return Op
 end
 
 function op(s::Vector{Index},
             opname::AbstractString,
-            n::Int)::ITensor
-  return op(s[n],opname)
+            n::Int;
+            kwargs...)::ITensor
+  return op(s[n],opname;kwargs...)
 end
 
 function show(io::IO,
