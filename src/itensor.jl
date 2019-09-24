@@ -265,9 +265,14 @@ function getindex(T::ITensor,ivs...)
   return getindex(T,vals...)
 end
 
-function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
-  p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
-  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
+#function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
+#  p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
+#  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
+#  return storage_getindex(store(T),inds(T),vals...)
+#end
+function getindex(T::ITensor,ivs::AbstractVector{IndexVal}...)
+  p = calculate_permutation(inds(T),map(x-> x[1], ivs))
+  vals = map(x->val.(x), ivs[p])
   return storage_getindex(store(T),inds(T),vals...)
 end
 
@@ -280,12 +285,21 @@ function setindex!(T::ITensor,x::Number,ivs...)
   return setindex!(T,x,vals...)
 end
 
+#function setindex!(T::ITensor,
+#                   x::Union{<:Number, AbstractArray{<:Number}},
+#                   ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
+#  remap_ivs = map(x->x isa IndexVal ? x : x[1], ivs)
+#  p = calculate_permutation(inds(T),remap_ivs)
+#  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
+#  storage_setindex!(store(T),inds(T),x,vals...)
+#  return T
+#end
 function setindex!(T::ITensor,
                    x::Union{<:Number, AbstractArray{<:Number}},
-                   ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
-  remap_ivs = map(x->x isa IndexVal ? x : x[1], ivs)
+                   ivs::AbstractVector{IndexVal}...)
+  remap_ivs = map(x->x[1], ivs)
   p = calculate_permutation(inds(T),remap_ivs)
-  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
+  vals = map(x->val.(x), ivs[p])
   storage_setindex!(store(T),inds(T),x,vals...)
   return T
 end

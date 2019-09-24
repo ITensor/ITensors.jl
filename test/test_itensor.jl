@@ -422,19 +422,19 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[k(kk),i(ii),j(jj)]==permA[i(ii),j(jj),k(kk)]
     end
-    @testset "getindex and setindex with vector of IndexVals" begin
-        k_inds = [k(kk) for kk ∈ 1:dim(k)]
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-          @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
-        end
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-            A[k_inds,i(ii),j(jj)]=collect(1:length(k_inds))
-        end
-        permA = permute(A,k,j,i)
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-          @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
-        end
-    end
+    #@testset "getindex and setindex with vector of IndexVals" begin
+    #    k_inds = [k(kk) for kk ∈ 1:dim(k)]
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #      @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
+    #    end
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #        A[k_inds,i(ii),j(jj)]=collect(1:length(k_inds))
+    #    end
+    #    permA = permute(A,k,j,i)
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #      @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
+    #    end
+    #end
   end
   @testset "Set and get values with Ints" begin
     A = ITensor(SType,i,j,k)
