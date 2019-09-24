@@ -123,18 +123,21 @@ terms(ampo::AutoMPO) = ampo.terms
 function add!(ampo::AutoMPO,
               op::String, i::Int)
   push!(terms(ampo),MPOTerm(1.0,op,i))
+  return
 end
 
 function add!(ampo::AutoMPO,
               coef::Number,
               op::String, i::Int)
   push!(terms(ampo),MPOTerm(coef,op,i))
+  return
 end
 
 function add!(ampo::AutoMPO,
               op1::String, i1::Int,
               op2::String, i2::Int)
   push!(terms(ampo),MPOTerm(1.0,op1,i1,op2,i2))
+  return
 end
 
 function add!(ampo::AutoMPO,
@@ -142,6 +145,7 @@ function add!(ampo::AutoMPO,
               op1::String, i1::Int,
               op2::String, i2::Int)
   push!(terms(ampo),MPOTerm(coef,op1,i1,op2,i2))
+  return
 end
 
 function add!(ampo::AutoMPO,
@@ -149,6 +153,7 @@ function add!(ampo::AutoMPO,
               op2::String, i2::Int,
               ops...)
   push!(terms(ampo),MPOTerm(1.0,op1,i1,op2,i2,ops...))
+  return
 end
 
 function add!(ampo::AutoMPO,
@@ -157,6 +162,7 @@ function add!(ampo::AutoMPO,
               op2::String, i2::Int,
               ops...)
   push!(terms(ampo),MPOTerm(coef,op1,i1,op2,i2,ops...))
+  return
 end
 
 
@@ -424,3 +430,5 @@ function toMPO(ampo::AutoMPO,
   sortEachTerm!(ampo)
   return svdMPO(ampo,sites;kwargs...)
 end
+
+MPO(ampo::AutoMPO,sites;kwargs...) = toMPO(ampo,sites;kwargs...)
