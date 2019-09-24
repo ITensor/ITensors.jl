@@ -260,9 +260,8 @@ function getindex(T::ITensor,vals::Int...)
   storage_getindex(store(T),inds(T),vals...)
 end
 
-function getindex(T::ITensor,ivs::IndexVal...)
-  p = calculate_permutation(inds(T),ivs)
-  vals = val.(ivs)[p]
+function getindex(T::ITensor,ivs...)
+  vals = permute_map(inds(T),ivs,iv -> val(iv))
   return getindex(T,vals...)
 end
 
@@ -276,9 +275,8 @@ getindex(T::ITensor) = scalar(T)
 
 setindex!(T::ITensor,x::Number,vals::Int...) = storage_setindex!(store(T),inds(T),x,vals...)
 
-function setindex!(T::ITensor,x::Number,ivs::IndexVal...)
-  p = calculate_permutation(inds(T),ivs)
-  vals = val.(ivs)[p]
+function setindex!(T::ITensor,x::Number,ivs...)
+  vals = permute_map(inds(T),ivs,iv -> val(iv))
   return setindex!(T,x,vals...)
 end
 
