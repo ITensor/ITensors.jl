@@ -453,6 +453,25 @@ function calculate_permutation(set1, set2)
   return p
 end
 
+function permute_map(set1, set2, map)
+  L1 = length(set1)
+  L2 = length(set2)
+  L1==L2 || throw(DimensionMismatch("Mismatched input sizes in permute_map: l1=$l1, l2=$l2"))
+  res = zeros(Int,L1)
+  for i1 = 1:L1 
+    found = false
+    for i2 = 1:L2
+      if set1[i1]==set2[i2]
+        res[i1] = map(set2[i2])
+        found = true
+        break
+      end
+    end
+    !found && error("Sets aren't permutations of each other")
+  end
+  return res
+end
+
 function compute_contraction_labels(Ai::IndexSet,Bi::IndexSet)
   rA = order(Ai)
   rB = order(Bi)
