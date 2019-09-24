@@ -1,22 +1,16 @@
 using ITensors,
       Test
 
-@testset "Physics SiteSets" begin
+@testset "Physics Sites" begin
 
   N = 10
 
-  @testset "Spin Half Site" begin
-    s = SpinHalfSite(3)
-    @test hastags(ind(s),"Site")
-    @test hastags(ind(s),"S=1/2")
-    @test hastags(ind(s),"n=3")
-
-    @test val(state(s,2)) == 2
-    @test_throws ArgumentError state(s, "Fake")
-  end
-
-  @testset "Spin Half SiteSet" begin
+  @testset "Spin Half sites" begin
     s = spinHalfSites(N)
+
+    @test state(s[1],"Up") == s[1](1)
+    @test state(s[1],"Dn") == s[1](2)
+    @test_throws ArgumentError state(s[1],"Fake")
 
     Sz5 = op(s,"Sz",5)
     @test hasinds(Sz5,s[5]',s[5])
@@ -34,17 +28,13 @@ using ITensors,
     @test Array(op(s,"Dn",2),s[2])  ≈ [0.0,1.0]
   end
 
-  @testset "Spin One Site" begin
-    s = SpinOneSite(4)
-    @test hastags(ind(s),"Site")
-    @test hastags(ind(s),"S=1")
-    @test hastags(ind(s),"n=4")
-
-    @test val(state(s,3)) == 3
-  end
-
-  @testset "Spin One SiteSet" begin
+  @testset "Spin One sites" begin
     s = spinOneSites(N)
+
+    @test state(s[1],"Up") == s[1](1)
+    @test state(s[1],"0")  == s[1](2)
+    @test state(s[1],"Dn") == s[1](3)
+    @test_throws ArgumentError state(s[1],"Fake")
 
     Sz5 = op(s,"Sz",5)
     @test hasinds(Sz5,s[5]',s[5])
@@ -67,17 +57,14 @@ using ITensors,
     @test Array(op(s,"XDn",2),s[2]) ≈ [0.5,-im*√2,0.5]
   end
 
-  @testset "Electron Site" begin
-    s = ElectronSite(5)
-    @test hastags(ind(s),"Site")
-    @test hastags(ind(s),"Electron")
-    @test hastags(ind(s),"n=5")
-
-    @test val(state(s,4)) == 4
-  end
-
-  @testset "Electron SiteSet" begin
+  @testset "Electron sites" begin
     s = electronSites(N)
+
+    @test state(s[1],"0")    == s[1](1)
+    @test state(s[1],"Up")   == s[1](2)
+    @test state(s[1],"Dn")   == s[1](3)
+    @test state(s[1],"UpDn") == s[1](4)
+    @test_throws ArgumentError state(s[1],"Fake")
 
     Nup5 = op(s,"Nup",5)
     @test hasinds(Nup5,s[5]',s[5])
@@ -121,17 +108,13 @@ using ITensors,
     @test Supdn ≈ [0.0; 0.0; 0.0; 1.0]
   end
 
-  @testset "tJ Site" begin
-    s = tJSite(5)
-    @test hastags(ind(s),"Site")
-    @test hastags(ind(s),"tJ")
-    @test hastags(ind(s),"n=5")
-
-    @test val(state(s,3)) == 3
-  end
-
-  @testset "tJ SiteSet" begin
+  @testset "tJ sites" begin
     s = tJSites(N)
+
+    @test state(s[1],"0")    == s[1](1)
+    @test state(s[1],"Up")   == s[1](2)
+    @test state(s[1],"Dn")   == s[1](3)
+    @test_throws ArgumentError state(s[1],"Fake")
 
     @test_throws ArgumentError op(s, "Fake", 2)
     Nup_2 = op(s,"Nup",2)
@@ -170,4 +153,42 @@ using ITensors,
     Em3 = Array(op(s,"Emp",3),s[3]) 
     @test Em3 ≈ [1.0; 0.0; 0.0]
   end
+
+end
+
+
+const MySite = makeTagType("MySite")
+
+@testset "Custom Site Tag Type" begin
+
+  function ITensors.op(::MySite,s::Index,opname::AbstractString)
+    Op = ITensor(s,s')
+    if opname=="MyOp"
+      Op[s(1),s'(1)] = 11
+      Op[s(1),s'(2)] = 12
+      Op[s(2),s'(1)] = 21
+      Op[s(2),s'(2)] = 22
+    end
+    return Op
+  end
+
+  function ITensors.state(::MySite,statename::AbstractString)
+    if statename == "One"
+      return 1
+    elseif statename == "Two"
+      return 2
+    end
+  end
+
+  i = Index(2,"MySite")
+
+  expectedOp = ITensor(i,i')
+  expectedOp[i(1),i'(1)] = 11
+  expectedOp[i(1),i'(2)] = 12
+  expectedOp[i(2),i'(1)] = 21
+  expectedOp[i(2),i'(2)] = 22
+  @test norm(op(i,"MyOp")-expectedOp) < 1E-10
+
+  @test state(i,"One") == i(1)
+  @test state(i,"Two") == i(2)
 end

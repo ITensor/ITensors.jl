@@ -6,6 +6,7 @@ export MPS,
        inner,
        productMPS,
        randomMPS,
+       replaceBond!,
        rightLim,
        maxLinkDim,
        linkindex,
@@ -31,7 +32,7 @@ mutable struct MPS
   end
 end
 
-function MPS(sites::SiteSet)
+function MPS(sites)
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
@@ -93,32 +94,35 @@ function randomMPS(sites)
   return M
 end
 
-const InitState = Union{Vector{String},Vector{Int}}
-
-function productMPS(sites::SiteSet,
-                    is::InitState)
-  N = length(sites)
-  if N != length(is)
-    throw(DimensionMismatch("Site Set and InitState sizes don't match"))
-  end
+function productMPS(ivals::Vector{IndexVal})
+  N = length(ivals)
   As = Vector{ITensor}(undef,N)
   links  = Vector{Index}(undef,N)
-  for n in eachindex(is)
-    s = sites[n]
+  for n=1:N
+    s = ind(ivals[n])
     links[n] = Index(1,"Link,l=$n")
     if n == 1
       A = ITensor(s,links[n])
-      A[state(sites,n,is[n]),links[n](1)] = 1.0
+      A[ivals[n],links[n](1)] = 1.0
     elseif n == N
       A = ITensor(links[n-1],s)
-      A[links[n-1](1),state(sites,n,is[n])] = 1.0
+      A[links[n-1](1),ivals[n]] = 1.0
     else
       A = ITensor(links[n-1],s,links[n])
-      A[links[n-1](1),state(sites,n,is[n]),links[n](1)] = 1.0
+      A[links[n-1](1),ivals[n],links[n](1)] = 1.0
     end
     As[n] = A
   end
   return MPS(N,As,0,2)
+end
+
+function productMPS(sites,
+                    states)
+  if length(sites) != length(states)
+    throw(DimensionMismatch("Number of sites and and initial states don't match"))
+  end
+  ivals = [state(sites[n],states[n]) for n=1:length(sites)]
+  return productMPS(ivals)
 end
 
 function linkindex(M::MPS,j::Integer) 

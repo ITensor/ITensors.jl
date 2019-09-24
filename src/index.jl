@@ -166,6 +166,9 @@ struct IndexVal
     return new(i,n)
   end
 end
+
+IndexVal() = IndexVal(Index(),1)
+
 getindex(i::Index, j::Int) = IndexVal(i, j)
 getindex(i::Index, c::Colon) = [IndexVal(i, j) for j in 1:dim(i)]
 

@@ -5,7 +5,7 @@ include("util.jl")
 
 @testset "MPO Basics" begin
   N = 6
-  sites = SiteSet(N,2)
+  sites = [Index(2,"Site") for n=1:N]
   @test length(MPO()) == 0
   O = MPO(sites)
   @test length(O) == N
@@ -45,17 +45,7 @@ include("util.jl")
     end
     @test phiKpsi[] ≈ inner(phi,K,psi)
 
-    # Do contraction manually.
-    O = 1.
-    for j ∈ eachindex(phi)
-        psij = reshape(Array(psi[j]),2)
-        phij = reshape(Array(phi[j]),2)
-        Kj = reshape(Array(K[j]),2,2)
-        O *= (phij'*transpose(Kj)*psij)[]
-    end
-    @test O ≈ inner(phi,K,psi)
-
-    badsites = SiteSet(N+1,2)
+    badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi,K,badpsi)
     
@@ -128,7 +118,7 @@ include("util.jl")
     #end
     #@test O ≈ inner(J,phi,K,psi)
 
-    badsites = SiteSet(N+1,2)
+    badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(J,phi,K,badpsi)
   end
@@ -147,7 +137,7 @@ include("util.jl")
     Kphi = applyMPO(K,phi;method="naive", cutoff=1E-8)
     @test errorMPOProd(Kphi, K, phi) ≈ 0. atol=1e-4
 
-    badsites = SiteSet(N+1,2)
+    badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch errorMPOProd(phi,K,badpsi)
   end
@@ -161,7 +151,7 @@ include("util.jl")
     @test inner(phi,psi_out) ≈ inner(phi,K,psi)
     @test_throws ArgumentError applyMPO(K, psi, method="fakemethod")
 
-    badsites = SiteSet(N+1,2)
+    badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch applyMPO(K,badpsi)
 
@@ -215,7 +205,7 @@ include("util.jl")
     psi_kl_out = applyMPO(K, applyMPO(L, psi, maxdim=1), maxdim=1)
     @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
 
-    badsites = SiteSet(N+1,2)
+    badsites = [Index(2,"Site") for n=1:N+1]
     badL = randomMPO(badsites)
     @test_throws DimensionMismatch nmultMPO(K,badL)
   end

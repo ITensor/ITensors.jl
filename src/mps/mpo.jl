@@ -19,11 +19,11 @@ mutable struct MPO
     new(N, A, llim, rlim)
   end
 
-  function MPO(sites::SiteSet)
+  function MPO(sites)
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
-    @inbounds for ii ∈ eachindex(sites)
+    for ii ∈ eachindex(sites)
       s = sites[ii]
       sp = prime(s)
       if ii == 1
@@ -36,39 +36,41 @@ mutable struct MPO
     end
     new(N,v,0,N+1)
   end
-
-  function MPO(sites::SiteSet,
-               ops::Vector{String})
-    N = length(sites)
-    its = Vector{ITensor}(undef, N)
-    links = Vector{Index}(undef, N)
-    @inbounds for ii ∈ eachindex(sites)
-        si = sites[ii]
-        spin_op = op(sites, ops[ii], ii)
-        links[ii] = Index(1, "Link,n=$ii")
-        local this_it
-        if ii == 1
-            this_it = ITensor(links[ii], si, si')
-            this_it[links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
-        elseif ii == N
-            this_it = ITensor(links[ii-1], si, si')
-            this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
-        else
-            this_it = ITensor(links[ii-1], links[ii], si, si')
-            this_it[links[ii-1](1), links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
-        end
-        its[ii] = this_it
-    end
-    new(N,its,0,N+1)
-  end
-
-  MPO(sites::SiteSet, ops::String) = MPO(sites, fill(ops, length(sites)))
+ 
 end
+
 MPO(N::Int) = MPO(N,Vector{ITensor}(undef,N))
+
+function MPO(sites,
+             ops::Vector{String})
+  N = length(sites)
+  its = Vector{ITensor}(undef, N)
+  links = Vector{Index}(undef, N)
+  for ii ∈ eachindex(sites)
+    si = sites[ii]
+    spin_op = op(sites, ops[ii], ii)
+    links[ii] = Index(1, "Link,n=$ii")
+    local this_it
+    if ii == 1
+      this_it = ITensor(links[ii], si, si')
+      this_it[links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+    elseif ii == N
+      this_it = ITensor(links[ii-1], si, si')
+      this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+    else
+      this_it = ITensor(links[ii-1], links[ii], si, si')
+      this_it[links[ii-1](1), links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+    end
+    its[ii] = this_it
+  end
+  MPO(N,its)
+end
+
+MPO(sites, ops::String) = MPO(sites, fill(ops, length(sites)))
 
 function randomMPO(sites, m::Int=1)
   M = MPO(sites)
-  @inbounds for i ∈ eachindex(sites)
+  for i ∈ eachindex(sites)
     randn!(M[i])
     normalize!(M[i])
   end

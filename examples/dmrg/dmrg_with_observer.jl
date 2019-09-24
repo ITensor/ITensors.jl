@@ -7,17 +7,18 @@ using ITensors
 """
   Get MPO of transverse field Ising model Hamiltonian with field strength h
 """
-function tfimMPO(sites::SiteSet,
+function tfimMPO(sites,
                  h::Float64)
   # Input operator terms which define a Hamiltonian
-  ampo = AutoMPO(sites)
-  for j=1:length(sites)-1
+  N = length(sites)
+  ampo = AutoMPO()
+  for j=1:N-1
     add!(ampo,-1.,"Sz",j,"Sz",j+1)
     add!(ampo,h,"Sx",j)
   end
-  add!(ampo,h,"Sx",length(sites))
+  add!(ampo,h,"Sx",N)
   # Convert these terms to an MPO tensor network
-  return toMPO(ampo)
+  return toMPO(ampo,sites)
 end
 
 let
