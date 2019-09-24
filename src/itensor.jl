@@ -260,19 +260,16 @@ function getindex(T::ITensor,vals::Int...)
   storage_getindex(store(T),inds(T),vals...)
 end
 
-function getindex(T::ITensor,ivs...)
+function getindex(T::ITensor,
+                  ivs::Union{IndexVal,Pair{Index,Int}}...)
   vals = permute_map(inds(T),ivs,iv -> val(iv))
   return getindex(T,vals...)
 end
 
-#function getindex(T::ITensor,ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
-#  p = calculate_permutation(inds(T),map(x->x isa IndexVal ? x : x[1], ivs))
-#  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
-#  return storage_getindex(store(T),inds(T),vals...)
-#end
-function getindex(T::ITensor,ivs::AbstractVector{IndexVal}...)
-  p = calculate_permutation(inds(T),map(x-> x[1], ivs))
-  vals = map(x->val.(x), ivs[p])
+function getindex(T::ITensor,
+                  ivs...)
+  p = calculate_permutation(inds(T),map(x->ind(x), ivs))
+  vals = map(x->val(x), ivs[p])
   return storage_getindex(store(T),inds(T),vals...)
 end
 
@@ -280,26 +277,19 @@ getindex(T::ITensor) = scalar(T)
 
 setindex!(T::ITensor,x::Number,vals::Int...) = storage_setindex!(store(T),inds(T),x,vals...)
 
-function setindex!(T::ITensor,x::Number,ivs...)
+function setindex!(T::ITensor,
+                   x::Number,
+                   ivs::Union{IndexVal,Pair{Index,Int}}...)
   vals = permute_map(inds(T),ivs,iv -> val(iv))
   return setindex!(T,x,vals...)
 end
 
-#function setindex!(T::ITensor,
-#                   x::Union{<:Number, AbstractArray{<:Number}},
-#                   ivs::Union{IndexVal, AbstractVector{IndexVal}}...)
-#  remap_ivs = map(x->x isa IndexVal ? x : x[1], ivs)
-#  p = calculate_permutation(inds(T),remap_ivs)
-#  vals = map(x->x isa IndexVal ? val(x) : val.(x), ivs[p])
-#  storage_setindex!(store(T),inds(T),x,vals...)
-#  return T
-#end
 function setindex!(T::ITensor,
                    x::Union{<:Number, AbstractArray{<:Number}},
-                   ivs::AbstractVector{IndexVal}...)
-  remap_ivs = map(x->x[1], ivs)
+                   ivs...)
+  remap_ivs = map(x->ind(x), ivs)
   p = calculate_permutation(inds(T),remap_ivs)
-  vals = map(x->val.(x), ivs[p])
+  vals = map(x->val(x), ivs[p])
   storage_setindex!(store(T),inds(T),x,vals...)
   return T
 end

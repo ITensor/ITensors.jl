@@ -177,9 +177,13 @@ ind(iv::IndexVal) = iv.ind
 ==(i::Index,iv::IndexVal) = (i==ind(iv))
 ==(iv::IndexVal,i::Index) = (i==iv)
 
-==(i::Index,pin::Pair{Index,Int}) = (i==pin.first)
-==(pin::Pair{Index,Int},i::Index) = (i==pin)
+ind(pin::Pair{Index,Int}) = pin.first
 val(pin::Pair{Index,Int}) = pin.second
+==(i::Index,pin::Pair{Index,Int}) = (i==ind(pin))
+==(pin::Pair{Index,Int},i::Index) = (i==pin)
+
+ind(v::AbstractVector{IndexVal}) = ind(v[1])
+val(v::AbstractVector{IndexVal}) = val.(v)
 
 plev(iv::IndexVal) = plev(ind(iv))
 prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))
@@ -190,3 +194,4 @@ show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
 function IndexVal(ivp::Pair{Index,Int})
   return IndexVal(ivp.first,ivp.second)
 end
+
