@@ -177,8 +177,16 @@ ind(iv::IndexVal) = iv.ind
 ==(i::Index,iv::IndexVal) = (i==ind(iv))
 ==(iv::IndexVal,i::Index) = (i==iv)
 
+==(i::Index,pin::Pair{Index,Int}) = (i==pin.first)
+==(pin::Pair{Index,Int},i::Index) = (i==pin)
+val(pin::Pair{Index,Int}) = pin.second
+
 plev(iv::IndexVal) = plev(ind(iv))
 prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))
 adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
 
 show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
+
+function IndexVal(ivp::Pair{Index,Int})
+  return IndexVal(ivp.first,ivp.second)
+end
