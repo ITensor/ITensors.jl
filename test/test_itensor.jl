@@ -447,6 +447,15 @@ end
       @test A[ii,jj,kk]==digits(SType,ii,jj,kk)
     end
   end
+  @testset "Set and get values with Index=>Int pairs" begin
+    A = ITensor(SType,i,j,k)
+    for ii = 1:dim(i), jj = 1:dim(j), kk = 1:dim(k)
+      A[k=>kk,i=>ii,j=>jj] = digits(SType,ii,jj,kk)
+    end
+    for ii = 1:dim(i), jj = 1:dim(j), kk = 1:dim(k)
+      @test A[i=>ii,j=>jj,k=>kk]==digits(SType,ii,jj,kk)
+    end
+  end
   @testset "Test scalar(ITensor)" begin
     x = SType(34)
     A = ITensor(x)
