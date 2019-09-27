@@ -13,7 +13,7 @@ struct QNVal
 
   QNVal() = new(SmallString(),0,0)
 
-  function QNVal(name::String,v::Int,m::Int=1)
+  function QNVal(name,v::Int,m::Int=1)
     am = abs(m)
     if am > 1
       new(SmallString(name),mod(v,am),m)
@@ -70,7 +70,8 @@ function QN(qvs...)
   for (n,qv) in enumerate(qvs)
     m[n] = QNVal(qv...)
   end
-  sort!(m;by=name,rev=true)
+  Nvals = length(qvs)
+  sort!(m[1:Nvals];by=name,alg=InsertionSort)
   for n=1:(length(qvs)-1)
     if name(m[n])==name(m[n+1])
       error("Duplicate name \"$(name(m[n]))\" in QN")
@@ -87,7 +88,6 @@ function val(q::QN,name_)
   name(q[2]) == sname && return val(q[2])
   name(q[3]) == sname && return val(q[3])
   name(q[4]) == sname && return val(q[4])
-  error("QN does not have sector with name \"$name\"")
   return 0
 end
 
@@ -97,7 +97,6 @@ function modulus(q::QN,name_)
   name(q[2]) == sname && return modulus(q[2])
   name(q[3]) == sname && return modulus(q[3])
   name(q[4]) == sname && return modulus(q[4])
-  error("QN does not have sector with name \"$name\"")
   return 0
 end
 
@@ -116,7 +115,7 @@ function combineQNs(a::QN,b::QN,operation)
         ma[na] = b[nb]
         break
       elseif name(ma[na]) == bname
-        #println("Case 2")
+        #println("Case 2 for $bname")
         ma[na] = operation(ma[na],b[nb])
         break
       elseif (bname < aname) && (na==1 || bname > name(ma[na-1]))
@@ -143,13 +142,13 @@ end
 
 
 function Base.:(==)(a::QN,b::QN)
-  function valsMatch(a::QN,b::QN)
-    for av in a.store
-      val(av) == 0 && continue
+  function valsMatch(x::QN,y::QN)
+    for xv in x.store
+      val(xv) == 0 && continue
       found = false
-      for bv in b.store
-        name(bv)!=name(av) && continue
-        val(bv)!=val(av) && return false
+      for yv in y.store
+        name(yv)!=name(xv) && continue
+        val(yv)!=val(xv) && return false
         found = true
       end
       found || return false
@@ -158,6 +157,52 @@ function Base.:(==)(a::QN,b::QN)
   end
 
   return valsMatch(a,b) && valsMatch(b,a)
+end
+
+function Base.:(<)(qa::QN,qb::QN)
+  a = 1
+  b = 1
+  while a<=maxQNs && b<=maxQNs && (isActive(qa[a])||isActive(qb[b]))
+    aval = val(qa[a])
+    bval = val(qb[b])
+    if !isActive(qa[a])
+      if 0 == bval
+        b += 1
+        continue
+      end
+      return 0 < bval
+    elseif !isActive(qb[b])
+      if 0 == aval
+        a += 1
+        continue
+      end
+      return aval < 0
+    else # both are active
+      aname = name(qa[a])
+      bname = name(qb[b])
+      if aname == bname
+        if aval == bval
+          a += 1
+          b += 1
+          continue
+        end
+        return aval < bval
+      elseif aname < bname
+        if aval == 0
+          a += 1
+          continue
+        end
+        return aval < 0
+      else # bname < aname
+        if 0 == bval
+          b += 1
+          continue
+        end
+        return 0 < bval
+      end
+    end
+  end
+  return false
 end
 
 function Base.show(io::IO,q::QN)
