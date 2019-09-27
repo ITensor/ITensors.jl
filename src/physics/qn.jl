@@ -3,14 +3,16 @@ export QNVal,
        name,
        val,
        modulus,
-       isActive
+       isActive,
+       isFermionic
 
 const QNVal = Tuple{SmallString,Int,Int}
 
 name(qv::QNVal) = qv[1]
 val(qv::QNVal) = qv[2]
 modulus(qv::QNVal) = qv[3]
-isActive(qv::QNVal) = (mod(qv) != 0)
+isActive(qv::QNVal) = (modulus(qv) != 0)
+isFermionic(qv::QNVal) = (modulus(qv) < 0)
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 
 function Base.:+(qv1::QNVal,qv2::QNVal) 
@@ -27,6 +29,7 @@ function Base.:+(qv1::QNVal,qv2::QNVal)
   return (name(qv1),Base.mod(val(qv1)+val(qv2),abs(m1)),m1)
 end
 
+QNVal() = (SmallString(),0,0)
 QNVal(t::Tuple{String,Int,Int}) = (SmallString(t[1]),t[2],t[3])
 QNVal(t::Tuple{String,Int}) = (SmallString(t[1]),t[2],1)
 
