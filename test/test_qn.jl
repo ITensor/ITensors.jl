@@ -3,6 +3,7 @@ using ITensors,
 import ITensors.SmallString
 
 @testset "QN" begin
+
   @testset "QNVal Basics" begin
     qv = QNVal()
     @test !isActive(qv)
@@ -25,4 +26,26 @@ import ITensors.SmallString
     @test modulus(qv) == -1
     @test isFermionic(qv)
   end
+
+  @testset "QN Basics" begin
+    q = QN()
+    @test length(sprint(show,q)) > 1
+
+    q = QN(("Sz",1))
+    @test length(sprint(show,q)) > 1
+    @test isActive(q[1])
+    @test val(q,"Sz") == 1
+
+    q = QN(("A",1),("B",2))
+    @test isActive(q[1])
+    @test isActive(q[2])
+    @test val(q,"A") == 1
+    @test val(q,"B") == 2
+
+    q = QN(("B",2),("A",1))
+    @test val(q,"A") == 1
+    @test val(q,"B") == 2
+  end
+
+
 end
