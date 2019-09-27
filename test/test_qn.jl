@@ -41,6 +41,8 @@ import ITensors.SmallString
     @test isActive(q[2])
     @test val(q,"A") == 1
     @test val(q,"B") == 2
+    @test modulus(q,"A") == 1
+    @test modulus(q,"B") == 1
 
     q = QN(("B",2),("A",1))
     @test val(q,"A") == 1
