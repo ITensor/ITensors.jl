@@ -141,6 +141,25 @@ function Base.:-(a::QN,b::QN)
   return combineQNs(a,b,-)
 end
 
+
+function Base.:(==)(a::QN,b::QN)
+  function valsMatch(a::QN,b::QN)
+    for av in a.store
+      val(av) == 0 && continue
+      found = false
+      for bv in b.store
+        name(bv)!=name(av) && continue
+        val(bv)!=val(av) && return false
+        found = true
+      end
+      found || return false
+    end
+    return true
+  end
+
+  return valsMatch(a,b) && valsMatch(b,a)
+end
+
 function Base.show(io::IO,q::QN)
   print(io,"QN(")
   for n=1:maxQNs

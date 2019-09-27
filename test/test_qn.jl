@@ -49,5 +49,8 @@ import ITensors.SmallString
     @test val(q,"B") == 2
   end
 
+  @testset "Comparison" begin
+    @test QN() == QN()
+  end
 
 end
