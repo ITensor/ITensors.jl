@@ -66,6 +66,8 @@ end
 
 sweepnext(N::Int)::SweepNext = SweepNext(N)
 
+import Base.iterate
+
 function iterate(sn::SweepNext,state=(0,1))
   b,ha = state
   if ha==1
