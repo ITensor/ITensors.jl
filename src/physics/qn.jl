@@ -111,17 +111,13 @@ function combineQNs(a::QN,b::QN,operation)
     for na=1:maxQNs
       aname = name(a[na])
       if !isActive(ma[na])
-        #println("Case 1")
         ma[na] = b[nb]
         break
       elseif name(ma[na]) == bname
-        #println("Case 2 for $bname")
         ma[na] = operation(ma[na],b[nb])
         break
       elseif (bname < aname) && (na==1 || bname > name(ma[na-1]))
-        #println("Case 3")
         for j=maxQNs:-1:(na+1)
-          #println("  Moving \"$(name(ma[j-1]))\" from $(j-1)->$j")
           ma[j] = ma[j-1]
         end
         ma[na] = b[nb]
