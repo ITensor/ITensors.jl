@@ -83,10 +83,12 @@ include("mps/dmrg.jl")
 #
 include("physics/tag_types.jl")
 include("physics/lattices.jl")
+include("physics/qn.jl")
 include("physics/site_types/spinhalf.jl")
 include("physics/site_types/spinone.jl")
 include("physics/site_types/electron.jl")
 include("physics/site_types/tj.jl")
 include("physics/autompo.jl")
+
 
 end # module
