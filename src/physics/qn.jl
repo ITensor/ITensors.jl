@@ -67,28 +67,34 @@ end
 Base.getindex(q::QN,n::Int) = getindex(q.store,n)
 
 function Base.:+(a::QN,b::QN)
-  isActive(b[1]) || return
+  !isActive(b[1]) && return a
 
   ma = MQNStorage(a.store)
 
   for nb=1:maxQNs
+    !isActive(b[nb]) && break
     bname = name(b[nb])
     for na=1:maxQNs
       aname = name(a[na])
       if !isActive(ma[na])
-        ma[na] = bname
+        #println("Case 1")
+        ma[na] = b[nb]
         break
       elseif name(ma[na]) == bname
+        #println("Case 2")
         ma[na] += b[nb]
         break
-      else bname < aname && (n==1 || bname > name(ma[na-1]))
-        for j=maxQNs-1:-1:(na+1)
+      elseif (bname < aname) && (na==1 || bname > name(ma[na-1]))
+        #println("Case 3")
+        for j=maxQNs:-1:(na+1)
+          #println("  Moving \"$(name(ma[j-1]))\" from $(j-1)->$j")
           ma[j] = ma[j-1]
         end
         ma[na] = b[nb]
+        break
       end
     end
   end
-
+  return QN(QNStorage(ma))
 end
 
