@@ -180,25 +180,25 @@ function Base.:(<)(qa::QN,qb::QN)
     else # both are active
       aname = name(qa[a])
       bname = name(qb[b])
-      if aname == bname
+      if aname < bname
+        if aval == 0
+          a += 1
+          continue
+        end
+        return aval < 0
+      elseif bname < aname
+        if 0 == bval
+          b += 1
+          continue
+        end
+        return 0 < bval
+      else  # aname == bname
         if aval == bval
           a += 1
           b += 1
           continue
         end
         return aval < bval
-      elseif aname < bname
-        if aval == 0
-          a += 1
-          continue
-        end
-        return aval < 0
-      else # bname < aname
-        if 0 == bval
-          b += 1
-          continue
-        end
-        return 0 < bval
       end
     end
   end
