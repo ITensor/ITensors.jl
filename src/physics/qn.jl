@@ -6,14 +6,30 @@ export QNVal,
        isActive,
        isFermionic
 
-const QNVal = Tuple{SmallString,Int,Int}
+struct QNVal 
+  name::SmallString
+  val::Int
+  modulus::Int
 
-name(qv::QNVal) = qv[1]
-val(qv::QNVal) = qv[2]
-modulus(qv::QNVal) = qv[3]
+  QNVal() = new(SmallString(),0,0)
+
+  function QNVal(name::String,v::Int,m::Int=1)
+    am = abs(m)
+    if am > 1
+      new(SmallString(name),mod(v,am),m)
+    end
+    new(SmallString(name),v,m)
+  end
+
+end
+
+name(qv::QNVal) = qv.name
+val(qv::QNVal) = qv.val
+modulus(qv::QNVal) = qv.modulus
 isActive(qv::QNVal) = (modulus(qv) != 0)
 isFermionic(qv::QNVal) = (modulus(qv) < 0)
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
+Base.:-(qv::QNVal) =  QNVal(name(qv),-val(qv),modulus(qv))
 
 function pm(qv1::QNVal,qv2::QNVal,fac::Int) 
   if name(qv1) != name(qv2)
@@ -24,19 +40,15 @@ function pm(qv1::QNVal,qv2::QNVal,fac::Int)
   end
   m1 = modulus(qv1)
   if m1 == 1
-    return (name(qv1),val(qv1)+fac*val(qv2),1)
+    return QNVal(name(qv1),val(qv1)+fac*val(qv2),1)
   end
-  return (name(qv1),Base.mod(val(qv1)+fac*val(qv2),abs(m1)),m1)
+  return QNVal(name(qv1),Base.mod(val(qv1)+fac*val(qv2),abs(m1)),m1)
 end
 
 Base.:+(qv1::QNVal,qv2::QNVal) = pm(qv1,qv2,+1)
 Base.:-(qv1::QNVal,qv2::QNVal) = pm(qv1,qv2,-1)
 
-QNVal() = (SmallString(),0,0)
-QNVal(t::Tuple{String,Int,Int}) = (SmallString(t[1]),t[2],t[3])
-QNVal(t::Tuple{String,Int}) = (SmallString(t[1]),t[2],1)
-
-const ZeroVal = (SmallString(),0,0)
+const ZeroVal = QNVal()
 
 const maxQNs = 4
 const QNStorage = SVector{maxQNs,QNVal}
@@ -56,7 +68,7 @@ end
 function QN(qvs...)
   m = MQNStorage(ntuple(_->ZeroVal,Val(maxQNs)))
   for (n,qv) in enumerate(qvs)
-    m[n] = QNVal(qv)
+    m[n] = QNVal(qv...)
   end
   sort!(m;by=name,rev=true)
   for n=1:(length(qvs)-1)
