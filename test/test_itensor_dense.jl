@@ -53,9 +53,9 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     A = ITensor(M,i,j)
     @test store(A) isa Dense{Float64}
 
-    @test M ≈ Matrix(A,i,j)
-    @test M' ≈ Matrix(A,j,i)
-    @test_throws DimensionMismatch Vector(A)
+    @test M ≈ matrix(A,i,j)
+    @test M' ≈ matrix(A,j,i)
+    @test_throws DimensionMismatch vector(A)
 
     @test size(A,1) == size(M,1) == 2
     @test size(A,3) == size(M,3) == 1
@@ -69,30 +69,30 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
   @testset "To Matrix" begin
     TM = randomITensor(i,j)
 
-    M1 = Matrix(TM)
+    M1 = matrix(TM)
     for ni in i, nj in j
       @test M1[ni,nj] ≈ TM[i(ni),j(nj)]
     end
 
-    M2 = Matrix(TM,j,i)
+    M2 = matrix(TM,j,i)
     for ni in i, nj in j
       @test M2[nj,ni] ≈ TM[i(ni),j(nj)]
     end
 
     T3 = randomITensor(i,j,k)
-    @test_throws DimensionMismatch Matrix(T3,i,j)
+    @test_throws DimensionMismatch matrix(T3,i,j)
   end
 
   @testset "To Vector" begin
     TV = randomITensor(i)
 
-    V = Vector(TV)
+    V = vector(TV)
     for ni in i
       @test V[ni] ≈ TV[i(ni)]
     end
 
     T2 = randomITensor(i,j)
-    @test_throws DimensionMismatch Vector(T2)
+    @test_throws DimensionMismatch vector(T2)
   end
 
   @testset "Complex" begin
@@ -181,32 +181,27 @@ end
   i1 = Index(2,"i1")
   i2 = Index(2,"i2")
   Amat = rand(2,2,2,2)
-  A = ITensor(Amat, i1,i2,s1,s2)
+  A = ITensor(Amat,i1,i2,s1,s2)
 
-  Aexp = exp(A,IndexSet(i1,i2))
-  Amatexp = reshape( exp(reshape(Amat,4,4)), 2,2,2,2)
-  Aexp_from_mat = ITensor(Amatexp, i1,i2,s1,s2)
+  Aexp = exp(A,(i1,i2),(s1,s2))
+  Amatexp = reshape(exp(reshape(Amat,4,4)),2,2,2,2)
+  Aexp_from_mat = ITensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
 
   #test that exponentiation works when indices need to be permuted
-  Aexp = exp(A,IndexSet(s1,s2))
-  Amatexp = Array( exp(  reshape(Amat,4,4))' )
-  Aexp_from_mat = ITensor(reshape(Amatexp,2,2,2,2), s1,s2,i1,i2)
+  Aexp = exp(A,(s1,s2),(i1,i2))
+  Amatexp = Matrix(exp(reshape(Amat,4,4))')
+  Aexp_from_mat = ITensor(reshape(Amatexp,2,2,2,2),s1,s2,i1,i2)
   @test Aexp ≈ Aexp_from_mat
 
   #test exponentiation when hermitian=true is used
   Amat = reshape(Amat, 4,4)
-  Amat = reshape( Amat + Amat' + randn(4,4)*1e-10 , 2,2,2,2)
-  A = ITensor(Amat, i1,i2,s1,s2)
-  Aexp = exp(A,IndexSet(i1,i2), hermitian=true)
-  Amatexp = Array(reshape( exp(Hermitian(reshape(Amat,4,4))), 2,2,2,2))
-  Aexp_from_mat = ITensor(Amatexp, i1,i2,s1,s2)
+  Amat = reshape(Amat+Amat'+randn(4,4)*1e-10,2,2,2,2)
+  A = ITensor(Amat,i1,i2,s1,s2)
+  Aexp = exp(A,(i1,i2),(s1,s2),ishermitian=true)
+  Amatexp = reshape(Matrix(exp(Hermitian(reshape(Amat,4,4)))),2,2,2,2)
+  Aexp_from_mat = ITensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
-
-
-
-  @test_throws DimensionMismatch exp(A,IndexSet(s1))
-
 end
 
 
@@ -469,7 +464,7 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test C[i(ii),j(jj),k(kk)]==A[j(jj),i(ii),k(kk)]+B[i(ii),k(kk),j(jj)]
     end
-    @test Array(permute(C,i,j,k))==Array(permute(A,i,j,k))+Array(permute(B,i,j,k))
+    @test array(permute(C,i,j,k))==array(permute(A,i,j,k))+array(permute(B,i,j,k))
   end
 
   @testset "Test factorizations of an ITensor" begin
@@ -489,7 +484,7 @@ end
         jj = Index(4)
         T = randomITensor(ComplexF64,ii,jj)
         U,S,V = svd(T,ii;maxdim=2)
-        u,s,v = svd(Matrix(T))
+        u,s,v = svd(matrix(T))
         @test norm(U*S*V-T)≈sqrt(s[3]^2+s[4]^2)
     end
 

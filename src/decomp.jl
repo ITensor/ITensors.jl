@@ -10,7 +10,7 @@ function qr(A::ITensor,
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  QT,RT = qr(Tensor(A),Lpos,Rpos)
+  QT,RT = qr(tensor(A),Lpos,Rpos)
   Q,R = ITensor(QT),ITensor(RT)
   q = commonindex(Q,R)
   settags!(Q,tags,q)
@@ -26,7 +26,7 @@ function polar(A::ITensor,
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,PT = polar(Tensor(A),Lpos,Rpos)
+  UT,PT = polar(tensor(A),Lpos,Rpos)
   U,P = ITensor(UT),ITensor(PT)
   u = commoninds(U,P)
   p = uniqueinds(P,U)
@@ -67,7 +67,7 @@ function svd(A::ITensor,
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,ST,VT = svd(Tensor(A),Lpos,Rpos;kwargs...)
+  UT,ST,VT = svd(tensor(A),Lpos,Rpos;kwargs...)
   U,S,V = ITensor(UT),ITensor(ST),ITensor(VT)
   u₀ = commonindex(U,S)
   v₀ = commonindex(S,V)
@@ -175,7 +175,7 @@ function factorize(A::ITensor,
 end
 
 function eigenHermitian(A::ITensor,
-                        Linds=findinds(A,"0"),
+                        Linds=findinds(A,("",0)),
                         Rinds=prime(IndexSet(Linds));
                         kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
@@ -184,7 +184,7 @@ function eigenHermitian(A::ITensor,
   Lis = commoninds(inds(A),IndexSet(Linds))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,DT = eigenHermitian(Tensor(A),Lpos,Rpos;kwargs...)
+  UT,DT = eigenHermitian(tensor(A),Lpos,Rpos;kwargs...)
   U,D = ITensor(UT),ITensor(DT)
   u = commonindex(U,D)
   settags!(U,lefttags,u)
@@ -197,14 +197,14 @@ end
 
 import LinearAlgebra.eigen
 function eigen(A::ITensor,
-               Linds=findinds(A,"0"),
+               Linds=findinds(A,("",0)),
                Rinds=prime(IndexSet(Linds));
                kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
   Lis = commoninds(inds(A),IndexSet(Linds))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,DT = eigen(Tensor(A),Lpos,Rpos;kwargs...)
+  UT,DT = eigen(tensor(A),Lpos,Rpos;kwargs...)
   U,D = ITensor(UT),ITensor(DT)
   u = commonindex(U,D)
   settags!(U,tags,u)

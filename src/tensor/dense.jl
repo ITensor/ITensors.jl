@@ -58,9 +58,17 @@ Base.:*(x::Number,D::Dense) = D*x
 const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Dense}
 
 # Basic functionality for AbstractArray interface
-Base.IndexStyle(::Type{TensorT}) where {TensorT<:DenseTensor} = IndexLinear()
-Base.getindex(T::DenseTensor,i::Integer) = store(T)[i]
-Base.setindex!(T::DenseTensor,v,i::Integer) = (store(T)[i] = v)
+Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
+Base.getindex(T::DenseTensor,i::Int) = store(T)[i]
+Base.setindex!(T::DenseTensor,v,i::Int) = (store(T)[i] = v)
+
+# How does Julia map from IndexCartesian to IndexLinear?
+#Base.getindex(T::DenseTensor{<:Number,N},
+#              i::Vararg{Int,N}) where {N} = 
+#store(T)[sum(i.*strides(T))+1-sum(strides(T))]
+#Base.setindex!(T::DenseTensor{<:Number,N},
+#               v,i::Vararg{Int,N}) where {N} = 
+#(store(T)[sum(i.*strides(T))+1-sum(strides(T))] = v)
 
 # Get the specified value on the diagonal
 function getdiag(T::DenseTensor{<:Number,N},ind::Int) where {N}
@@ -72,10 +80,12 @@ function setdiag!(T::DenseTensor{<:Number,N},val,ind::Int) where {N}
   T[CartesianIndex(ntuple(_->ind,Val(N)))] = val
 end
 
+# This is for BLAS/LAPACK
 Base.strides(T::DenseTensor) = strides(inds(T))
 
-# Needed for passing Tensor{T,2} to BLAS
-function Base.unsafe_convert(::Type{Ptr{ElT}},T::DenseTensor{ElT}) where {ElT}
+# Needed for passing Tensor{T,2} to BLAS/LAPACK
+function Base.unsafe_convert(::Type{Ptr{ElT}},
+                             T::DenseTensor{ElT}) where {ElT}
   return Base.unsafe_convert(Ptr{ElT},data(store(T)))
 end
 
@@ -102,15 +112,15 @@ end
 
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
-Base.Array(T::DenseTensor) = reshape(data(store(T)),dims(inds(T)))
-Base.Matrix(T::DenseTensor{<:Number,2}) = Array(T)
-Base.Vector(T::DenseTensor{<:Number,1}) = Array(T)
+array(T::DenseTensor) = reshape(data(store(T)),dims(inds(T)))
+matrix(T::DenseTensor{<:Number,2}) = array(T)
+vector(T::DenseTensor{<:Number,1}) = array(T)
 
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function Base.permutedims!(R::DenseTensor{<:Number,N},
                            T::DenseTensor{<:Number,N},
                            perm::NTuple{N,Int}) where {N}
-  permutedims!(Array(R),Array(T),perm)
+  permutedims!(array(R),array(T),perm)
   return R
 end
 
@@ -210,7 +220,7 @@ end
 # TODO: call outer!!, make this generic
 function outer(T1::DenseTensor{ElT1},
                T2::DenseTensor{ElT2}) where {ElT1,ElT2}
-  array_outer = vec(Array(T1))*transpose(vec(Array(T2)))
+  array_outer = vec(array(T1))*transpose(vec(array(T2)))
   inds_outer = unioninds(inds(T1),inds(T2))
   return Tensor(Dense{promote_type(ElT1,ElT2)}(vec(array_outer)),inds_outer)
 end
@@ -314,27 +324,27 @@ function _contract!(C::DenseTensor{El,NC},
                     props::ContractionProperties) where {El,NC,NA,NB}
   tA = 'N'
   if props.permuteA
-    aref = reshape(permutedims(A,NTuple{NA,Int}(props.PA)),props.dmid,props.dleft)
+    AM = reshape(permutedims(A,NTuple{NA,Int}(props.PA)),props.dmid,props.dleft)
     tA = 'T'
   else
     #A doesn't have to be permuted
     if Atrans(props)
-      aref = reshape(A,props.dmid,props.dleft)
+      AM = reshape(A,props.dmid,props.dleft)
       tA = 'T'
     else
-      aref = reshape(A,props.dleft,props.dmid)
+      AM = reshape(A,props.dleft,props.dmid)
     end
   end
 
   tB = 'N'
   if props.permuteB
-    bref = reshape(permutedims(B,NTuple{NB,Int}(props.PB)),props.dmid,props.dright)
+    BM = reshape(permutedims(B,NTuple{NB,Int}(props.PB)),props.dmid,props.dright)
   else
     if Btrans(props)
-      bref = reshape(B,props.dright,props.dmid)
+      BM = reshape(B,props.dright,props.dmid)
       tB = 'T'
     else
-      bref = reshape(B,props.dmid,props.dright)
+      BM = reshape(B,props.dmid,props.dright)
     end
   end
 
@@ -342,30 +352,31 @@ function _contract!(C::DenseTensor{El,NC},
   if props.permuteC
     # Need to copy here since we will be permuting
     # into C later
-    cref = reshape(copy(C),props.dleft,props.dright)
+    CM = reshape(copy(C),props.dleft,props.dright)
   else
     if Ctrans(props)
-      cref = reshape(C,props.dleft,props.dright)
+      CM = reshape(C,props.dleft,props.dright)
       if tA=='N' && tB=='N'
-        (aref,bref) = (bref,aref)
+        (AM,BM) = (BM,AM)
         tA = tB = 'T'
       elseif tA=='T' && tB=='T'
-        (aref,bref) = (bref,aref)
+        (AM,BM) = (BM,AM)
         tA = tB = 'N'
       end
     else
-      cref = reshape(C,props.dleft,props.dright)
+      CM = reshape(C,props.dleft,props.dright)
     end
   end
 
-  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
+  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),AM,BM,promote_type(T,Tβ)(β),CM)
 
   # TODO: make sure this is fast with Tensor{ElT,2}, or
-  # convert aref and bref to Matrix
-  BLAS.gemm!(tA,tB,one(El),aref,bref,zero(El),cref)
+  # convert AM and BM to Matrix
+  BLAS.gemm!(tA,tB,one(El),AM,BM,zero(El),CM)
 
   if props.permuteC
-    permutedims!(C,reshape(cref,props.newCrange...),NTuple{NC,Int}(props.PC))
+    permutedims!(C,reshape(CM,props.newCrange...),
+                 NTuple{NC,Int}(props.PC))
   end
   return C
 end
@@ -454,9 +465,9 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   fastSVD::Bool = get(kwargs,:fastSVD,false)
 
   if fastSVD
-    MU,MS,MV = svd(Matrix(T))
+    MU,MS,MV = svd(matrix(T))
   else
-    MU,MS,MV = recursiveSVD(Matrix(T))
+    MU,MS,MV = recursiveSVD(matrix(T))
   end
   conj!(MV)
 
@@ -509,7 +520,7 @@ function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
 
-  DM,UM = eigen(Hermitian(Matrix(T)))
+  DM,UM = eigen(Hermitian(matrix(T)))
 
   # Sort by largest to smallest eigenvalues
   p = sortperm(DM; rev = true)
@@ -563,14 +574,14 @@ function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT};
                           kwargs...) where {ElT,IndsT}
   # TODO: just call qr on T directly (make sure
   # that is fast)
-  QM,RM = qr(Matrix(T))
+  QM,RM = qr(matrix(T))
   # Make the new indices to go onto Q and R
   q,r = inds(T)
   q = dim(q) < dim(r) ? sim(q) : sim(r)
   Qinds = IndsT((ind(T,1),q))
   Rinds = IndsT((q,ind(T,2)))
   Q = Tensor(Dense{ElT}(vec(Matrix(QM))),Qinds)
-  R = Tensor(Dense{ElT}(vec(Matrix(RM))),Rinds)
+  R = Tensor(Dense{ElT}(vec(RM)),Rinds)
   return Q,R
 end
 
@@ -600,14 +611,29 @@ end
 
 function polar(T::DenseTensor{ElT,2,IndsT};
                kwargs...) where {ElT,IndsT}
-  QM,RM = polar(Matrix(T))
+  QM,RM = polar(matrix(T))
   dim = size(QM,2)
   # Make the new indices to go onto Q and R
   q = eltype(IndsT)(dim)
+  # TODO: use push/pushfirst instead of a constructor
+  # call here
   Qinds = IndsT((ind(T,1),q))
   Rinds = IndsT((q,ind(T,2)))
-  Q = Tensor(Dense{ElT}(vec(Matrix(QM))),Qinds)
-  R = Tensor(Dense{ElT}(vec(Matrix(RM))),Rinds)
+  Q = Tensor(Dense{ElT}(vec(QM)),Qinds)
+  R = Tensor(Dense{ElT}(vec(RM)),Rinds)
   return Q,R
+end
+
+function LinearAlgebra.exp(T::DenseTensor{ElT,N,IndsT},
+                           Lpos::NTuple{NL,Int},
+                           Rpos::NTuple{NR,Int};
+                           ishermitian::Bool=false) where {ElT,N,IndsT,NL,NR}
+  M = permute_reshape(T,Lpos,Rpos)
+  if ishermitian
+    expM = exp(Hermitian(matrix(M)))
+  else
+    expM = exp(matrix(M))
+  end
+  return Tensor(Dense{ElT}(vec(expM)),permute(inds(T),(Lpos...,Rpos...)))
 end
 

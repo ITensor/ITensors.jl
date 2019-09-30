@@ -403,7 +403,7 @@ function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   for b=1:(N-1)
     Al = commonindex(A[b],A[b+1])
     pl = commonindex(psi[b],psi[b+1])
-    C = combiner(Al,pl)
+    C,_ = combiner(Al,pl)
     psi_out[b] *= C
     psi_out[b+1] *= C
   end

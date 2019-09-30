@@ -11,8 +11,9 @@ interface and no assumption of labels)
 struct Tensor{ElT,N,StoreT,IndsT} <: AbstractArray{ElT,N}
   store::StoreT
   inds::IndsT
+  # The resulting Tensor is a view into the input data
   function Tensor(store::StoreT,inds::IndsT) where {StoreT,IndsT}
-    new{eltype(StoreT),length(inds),StoreT,IndsT}(store,inds)
+    new{eltype(StoreT),length(IndsT),StoreT,IndsT}(store,inds)
   end
 end
 
@@ -29,23 +30,29 @@ ind(T::Tensor,j::Integer) = inds(T)[j]
 dims(ds::Dims) = ds
 dim(ds::Dims) = prod(ds)
 
+Base.length(ds::Type{<:Dims{N}}) where {N} = N
+
 # This may be a bad idea to overload?
 # Type piracy?
 Base.strides(is::Dims) = Base.size_to_strides(1, dims(is)...)
 Base.copy(ds::Dims) = ds
 
-Base.promote_rule(::Type{<:Dims},::Type{Val{N}}) where {N} = Dims{N}
+## TODO: should this be StaticArrays.similar_type?
+#Base.promote_rule(::Type{<:Dims},
+#                  ::Type{Val{N}}) where {N} = Dims{N}
 
 ValLength(::Type{Dims{N}}) where {N} = Val{N}
-ValLength(::Dims{N}) where {N} = Val(N)
+ValLength(::Dims{N}) where {N} = Val{N}()
 
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct a Tuple(::NTuple{N,Int}) where the 
 # only known thing for dispatch is a concrete type such
 # as Dims{4})
-StaticArrays.similar_type(::Type{IndsT},::Val{N}) where {IndsT<:Dims,N} = Dims{N}
+StaticArrays.similar_type(::Type{<:Dims},
+                          ::Type{Val{N}}) where {N} = Dims{N}
 
-unioninds(is1::Dims{N1},is2::Dims{N2}) where {N1,N2} = Dims{N1+N2}((is1...,is2...))
+unioninds(is1::Dims{N1},
+          is2::Dims{N2}) where {N1,N2} = Dims{N1+N2}((is1...,is2...))
 
 function deleteat(t::NTuple{N},pos::Int) where {N}
   return ntuple(i -> i < pos ? t[i] : t[i+1],Val(N-1))
