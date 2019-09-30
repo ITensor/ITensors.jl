@@ -84,19 +84,17 @@ Base.getindex(q::QN,n::Int) = getindex(q.store,n)
 
 function val(q::QN,name_)
   sname = SmallString(name_)
-  name(q[1]) == sname && return val(q[1])
-  name(q[2]) == sname && return val(q[2])
-  name(q[3]) == sname && return val(q[3])
-  name(q[4]) == sname && return val(q[4])
+  for n=1:maxQNs
+    name(q[n]) == sname && return val(q[n])
+  end
   return 0
 end
 
 function modulus(q::QN,name_)
   sname = SmallString(name_)
-  name(q[1]) == sname && return modulus(q[1])
-  name(q[2]) == sname && return modulus(q[2])
-  name(q[3]) == sname && return modulus(q[3])
-  name(q[4]) == sname && return modulus(q[4])
+  for n=1:maxQNs
+    name(q[n]) == sname && return modulus(q[n])
+  end
   return 0
 end
 
