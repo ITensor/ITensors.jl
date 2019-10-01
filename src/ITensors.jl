@@ -3,7 +3,8 @@ module ITensors
 using Random,
       Printf,
       LinearAlgebra,
-      StaticArrays # For SmallString
+      StaticArrays,
+      TimerOutputs
 
 # TODO: move imports to individual files
 import Base.adjoint,
@@ -51,6 +52,7 @@ import Base.adjoint,
 # Global Variables
 #
 const warnTensorOrder = 10
+const to = TimerOutput()
 
 #####################################
 # Index and IndexSet
@@ -68,6 +70,7 @@ include("tensor/tensor.jl")
 include("tensor/tensorstorage.jl")
 include("tensor/contraction_logic.jl")
 include("tensor/dense.jl")
+include("tensor/linearalgebra.jl")
 include("tensor/diag.jl")
 include("tensor/combiner.jl")
 include("tensor/truncate.jl")

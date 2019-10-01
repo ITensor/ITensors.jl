@@ -124,7 +124,8 @@ function _factorize_from_left_eigen(A::ITensor,
                                     kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
-  FU,D = eigenHermitian(A²,Lis,prime(Lis);kwargs...)
+  FU,D = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true,
+                                           kwargs...)
   FV = dag(FU)*A
   return FU,FV,commonindex(FU,FV)
 end
@@ -134,7 +135,8 @@ function _factorize_from_right_eigen(A::ITensor,
                                      kwargs...)
   Ris = uniqueinds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
-  FV,D = eigenHermitian(A²,Ris,prime(Ris); kwargs...)
+  FV,D = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true,
+                                           kwargs...)
   FU = A*dag(FV)
   return FU,FV,commonindex(FU,FV)
 end

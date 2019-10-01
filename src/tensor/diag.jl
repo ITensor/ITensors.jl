@@ -135,11 +135,11 @@ function contraction_output(TensorT1::Type{<:DiagTensor},
   return zero_contraction_output(TensorT1,TensorT2,indsR)
 end
 
-function Base.Array(T::DiagTensor{ElT,N}) where {ElT,N}
-  return Array(dense(T))
+function array(T::DiagTensor{ElT,N}) where {ElT,N}
+  return array(dense(T))
 end
-Base.Matrix(T::DiagTensor{<:Number,2}) = Array(T)
-Base.Vector(T::DiagTensor{<:Number,1}) = Array(T)
+matrix(T::DiagTensor{<:Number,2}) = array(T)
+vector(T::DiagTensor{<:Number,1}) = array(T)
 
 diag_length(T::DiagTensor) = minimum(dims(T))
 diag_length(T::DiagTensor{<:Number,0}) = 1

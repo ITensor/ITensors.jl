@@ -515,33 +515,34 @@ end
 
 # Move this to tensor, since this logic is different
 # for contracting different kinds of storage
+# Also, generalize this to not just use IndexSet
 function contract_inds(Ais::IndexSet{N1},
-                       Aind::NTuple{N1,Int},
+                       Alabel::NTuple{N1,Int},
                        Bis::IndexSet{N2},
-                       Bind::NTuple{N2,Int}) where {N1,N2}
+                       Blabel::NTuple{N2,Int}) where {N1,N2}
   ncont = 0
-  for i in Aind
-    if(i < 0) ncont += 1 end 
+  for i in Alabel
+    i < 0 && (ncont += 1)
   end
   NR = N1+N2-2*ncont
-  Cind = MVector{NR,Int}(ntuple(_->0,Val(NR))) #zeros(Int,NR)
-  Cis = IndexSet{NR}() #fill(Index(),NR)
+  Clabel = Vector{Int}(undef,NR)
+  Cis = Vector{Index}(undef,NR)
   u = 1
-  for i ∈ 1:length(Ais)
-    if(Aind[i] > 0) 
-      Cind[u] = Aind[i]; 
+  @inbounds for i ∈ 1:N1
+    if(Alabel[i] > 0) 
+      Clabel[u] = Alabel[i]; 
       Cis[u] = Ais[i]; 
       u += 1 
     end
   end
-  for i ∈ 1:length(Bis)
-    if(Bind[i] > 0) 
-      Cind[u] = Bind[i]; 
+  @inbounds for i ∈ 1:N2
+    if(Blabel[i] > 0) 
+      Clabel[u] = Blabel[i]; 
       Cis[u] = Bis[i]; 
       u += 1 
     end
   end
-  return (Cis,NTuple{NR,Int}(Cind))
+  return IndexSet{NR}(Cis...),NTuple{NR,Int}(Clabel)
 end
 
 # TODO: implement this in terms of a tuple,

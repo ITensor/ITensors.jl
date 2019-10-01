@@ -1,14 +1,14 @@
 
-mutable struct ContractionProperties{Na,Nb,Nc}
-  ai::NTuple{Na,Int}
-  bi::NTuple{Nb,Int}
-  ci::NTuple{Nc,Int}
+mutable struct ContractionProperties{NA,NB,NC}
+  ai::NTuple{NA,Int}
+  bi::NTuple{NB,Int}
+  ci::NTuple{NC,Int}
   nactiveA::Int 
   nactiveB::Int 
   nactiveC::Int
-  AtoB::Vector{Int}
-  AtoC::Vector{Int}
-  BtoC::Vector{Int}
+  AtoB::MVector{NA,Int}
+  AtoC::MVector{NA,Int}
+  BtoC::MVector{NB,Int}
   permuteA::Bool
   permuteB::Bool
   permuteC::Bool
@@ -27,26 +27,28 @@ mutable struct ContractionProperties{Na,Nb,Nc}
   newArange::Vector{Int}
   newBrange::Vector{Int}
   newCrange::Vector{Int}
-  function ContractionProperties(ai::NTuple{Na,Int},bi::NTuple{Nb,Int},ci::NTuple{Nc,Int}) where {Na,Nb,Nc}
-    new{Na,Nb,Nc}(ai,bi,ci,0,0,0,Vector{Int}(),Vector{Int}(),Vector{Int}(),false,false,false,1,1,1,0,
-        length(ai),length(bi),length(ai),length(bi),Vector{Int}(),Vector{Int}(),Vector{Int}(),
-        false,Vector{Int}(),Vector{Int}(),Vector{Int}())
+  function ContractionProperties(ai::NTuple{NA,Int},
+                                 bi::NTuple{NB,Int},
+                                 ci::NTuple{NC,Int}) where {NA,NB,NC}
+    new{NA,NB,NC}(ai,bi,ci,0,0,0,
+                  ntuple(_->0,NA),ntuple(_->0,NA),ntuple(_->0,NB),
+                  false,false,false,1,1,1,0,
+                  NA,NB,NA,NB,
+                  Vector{Int}(),Vector{Int}(),Vector{Int}(),
+                  false,
+                  Vector{Int}(),Vector{Int}(),Vector{Int}())
   end
 end
 
-function compute_perms!(props::ContractionProperties)
-  #Use !AtoB.empty() as a check to see if we've already run this
-  length(props.AtoB)!=0 && return
+function compute_perms!(props::ContractionProperties{NA,NB,NC}) where 
+                                                           {NA,NB,NC}
+  #length(props.AtoB)!=0 && return
 
-  na = length(props.ai)
-  nb = length(props.bi)
-  nc = length(props.ci)
-
-  props.AtoB = fill(0,na)
-  props.AtoC = fill(0,na)
-  props.BtoC = fill(0,nb)
-  for i = 1:na
-    for j = 1:nb
+  #props.AtoB = fill(0,NA)
+  #props.AtoC = fill(0,NA)
+  #props.BtoC = fill(0,NB)
+  for i = 1:NA
+    for j = 1:NB
       if props.ai[i]==props.bi[j]
         props.ncont += 1
         #TODO: check this if this should be i,j or i-1,j-1 (0-index or 1-index)
@@ -58,8 +60,8 @@ function compute_perms!(props::ContractionProperties)
     end
   end
 
-  for i = 1:na
-    for k = 1:nc
+  for i = 1:NA
+    for k = 1:NC
       if props.ai[i]==props.ci[k]
         #TODO: check this if this should be i,j or i-1,j-1 (0-index or 1-index)
         i<=props.Austart && (props.Austart = i)
@@ -69,8 +71,8 @@ function compute_perms!(props::ContractionProperties)
     end
   end
 
-  for j = 1:nb
-    for k = 1:nc
+  for j = 1:NB
+    for k = 1:NC
       if props.bi[j]==props.ci[k]
         #TODO: check this if this should be i,j or i-1,j-1 (0-index or 1-index)
         j<=props.Bustart && (props.Bustart = j)
@@ -112,15 +114,16 @@ Atrans(props::ContractionProperties) = contractedA(props,1)
 Btrans(props::ContractionProperties) = !contractedB(props,1)
 Ctrans(props::ContractionProperties) = props.ctrans
 
-function compute_contraction_properties!(props::ContractionProperties, A, B, C)
+function compute_contraction_properties!(props::ContractionProperties{NA,NB,NC},
+                                         A,B,C) where {NA,NB,NC}
   compute_perms!(props)
 
   #Use props.PC.size() as a check to see if we've already run this
   length(props.PC)!=0 && return
 
-  ra = length(props.ai)
-  rb = length(props.bi)
-  rc = length(props.ci)
+  ra = NA #length(props.ai)
+  rb = NB #length(props.bi)
+  rc = NC #length(props.ci)
 
   props.PC = fill(0,rc)
 

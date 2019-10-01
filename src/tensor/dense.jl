@@ -372,7 +372,9 @@ function _contract!(C::DenseTensor{El,NC},
 
   # TODO: make sure this is fast with Tensor{ElT,2}, or
   # convert AM and BM to Matrix
-  BLAS.gemm!(tA,tB,one(El),AM,BM,zero(El),CM)
+  BLAS.gemm!(tA,tB,one(El),
+             AM,BM,
+             zero(El),CM)
 
   if props.permuteC
     permutedims!(C,reshape(CM,props.newCrange...),
@@ -454,50 +456,8 @@ function LinearAlgebra.svd(T::DenseTensor{<:Number,N,IndsT},
   return U,S,V
 end
 
-# svd of an order-2 tensor
-function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
-                           kwargs...) where {ElT,IndsT}
-  maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
-  mindim::Int = get(kwargs,:mindim,1)
-  cutoff::Float64 = get(kwargs,:cutoff,0.0)
-  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
-  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  fastSVD::Bool = get(kwargs,:fastSVD,false)
-
-  if fastSVD
-    MU,MS,MV = svd(matrix(T))
-  else
-    MU,MS,MV = recursiveSVD(matrix(T))
-  end
-  conj!(MV)
-
-  P = MS.^2
-  truncate!(P;mindim=mindim,
-              maxdim=maxdim,
-              cutoff=cutoff,
-              absoluteCutoff=absoluteCutoff,
-              doRelCutoff=doRelCutoff)
-  dS = length(P)
-  if dS < length(MS)
-    MU = MU[:,1:dS]
-    resize!(MS,dS)
-    MV = MV[:,1:dS]
-  end
-
-  # Make the new indices to go onto U and V
-  u = eltype(IndsT)(dS)
-  v = eltype(IndsT)(dS)
-  Uinds = IndsT((ind(T,1),u))
-  Sinds = IndsT((u,v))
-  Vinds = IndsT((ind(T,2),v))
-  U = Tensor(Dense{ElT}(vec(MU)),Uinds)
-  S = Tensor(Diag{Vector{real(ElT)}}(MS),Sinds)
-  V = Tensor(Dense{ElT}(vec(MV)),Vinds)
-  return U,S,V
-end
-
-# eigendecomposition of an order-n tensor according to positions Lpos
-# and Rpos
+# eigendecomposition of an order-n tensor according to 
+# positions Lpos and Rpos
 function eigenHermitian(T::DenseTensor{<:Number,N,IndsT},
                         Lpos::NTuple{NL,Int},
                         Rpos::NTuple{NR,Int};
@@ -511,47 +471,8 @@ function eigenHermitian(T::DenseTensor{<:Number,N,IndsT},
   return U,D
 end
 
-function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
-                        kwargs...) where {ElT,IndsT}
-  truncate::Bool = get(kwargs,:truncate,false)
-  maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
-  mindim::Int = get(kwargs,:mindim,1)
-  cutoff::Float64 = get(kwargs,:cutoff,0.0)
-  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
-  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-
-  DM,UM = eigen(Hermitian(matrix(T)))
-
-  # Sort by largest to smallest eigenvalues
-  p = sortperm(DM; rev = true)
-  DM = DM[p]
-  UM = UM[:,p]
-
-  if truncate
-    truncate!(DM;maxdim=maxdim,
-                 cutoff=cutoff,
-                 absoluteCutoff=absoluteCutoff,
-                 doRelCutoff=doRelCutoff)
-    dD = length(DM)
-    if dD < size(UM,2)
-      UM = UM[:,1:dD]
-    end
-  else
-    dD = length(DM)
-  end
-
-  # Make the new indices to go onto U and V
-  u = eltype(IndsT)(dD)
-  v = eltype(IndsT)(dD)
-  Uinds = IndsT((ind(T,1),u))
-  Dinds = IndsT((u,v))
-  U = Tensor(Dense{ElT}(vec(UM)),Uinds)
-  D = Tensor(Diag{Vector{real(ElT)}}(DM),Dinds)
-  return U,D
-end
-
-# qr decomposition of an order-n tensor according to positions Lpos
-# and Rpos
+# qr decomposition of an order-n tensor according to 
+# positions Lpos and Rpos
 function LinearAlgebra.qr(T::DenseTensor{<:Number,N,IndsT},
                           Lpos::NTuple{NL,Int},
                           Rpos::NTuple{NR,Int}) where {N,IndsT,NL,NR}
@@ -570,21 +491,6 @@ function LinearAlgebra.qr(T::DenseTensor{<:Number,N,IndsT},
   return Q,R
 end
 
-function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT};
-                          kwargs...) where {ElT,IndsT}
-  # TODO: just call qr on T directly (make sure
-  # that is fast)
-  QM,RM = qr(matrix(T))
-  # Make the new indices to go onto Q and R
-  q,r = inds(T)
-  q = dim(q) < dim(r) ? sim(q) : sim(r)
-  Qinds = IndsT((ind(T,1),q))
-  Rinds = IndsT((q,ind(T,2)))
-  Q = Tensor(Dense{ElT}(vec(Matrix(QM))),Qinds)
-  R = Tensor(Dense{ElT}(vec(RM)),Rinds)
-  return Q,R
-end
-
 # polar decomposition of an order-n tensor according to positions Lpos
 # and Rpos
 function polar(T::DenseTensor{<:Number,N,IndsT},
@@ -593,6 +499,7 @@ function polar(T::DenseTensor{<:Number,N,IndsT},
   M = permute_reshape(T,Lpos,Rpos)
   UM,PM = polar(M)
 
+  # TODO: turn these into functions
   Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
   Rinds = similar_type(IndsT,Val(NR))(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
 
@@ -609,31 +516,19 @@ function polar(T::DenseTensor{<:Number,N,IndsT},
   return U,P
 end
 
-function polar(T::DenseTensor{ElT,2,IndsT};
-               kwargs...) where {ElT,IndsT}
-  QM,RM = polar(matrix(T))
-  dim = size(QM,2)
-  # Make the new indices to go onto Q and R
-  q = eltype(IndsT)(dim)
-  # TODO: use push/pushfirst instead of a constructor
-  # call here
-  Qinds = IndsT((ind(T,1),q))
-  Rinds = IndsT((q,ind(T,2)))
-  Q = Tensor(Dense{ElT}(vec(QM)),Qinds)
-  R = Tensor(Dense{ElT}(vec(RM)),Rinds)
-  return Q,R
-end
-
-function LinearAlgebra.exp(T::DenseTensor{ElT,N,IndsT},
+function LinearAlgebra.exp(T::DenseTensor{ElT,N},
                            Lpos::NTuple{NL,Int},
                            Rpos::NTuple{NR,Int};
-                           ishermitian::Bool=false) where {ElT,N,IndsT,NL,NR}
+                           ishermitian::Bool=false) where {ElT,N,
+                                                           NL,NR}
   M = permute_reshape(T,Lpos,Rpos)
+  indsTp = permute(inds(T),(Lpos...,Rpos...))
   if ishermitian
     expM = exp(Hermitian(matrix(M)))
+    return Tensor(Dense{ElT}(vec(expM)),indsTp)
   else
-    expM = exp(matrix(M))
+    expM = exp(M)
+    return reshape(expM,indsTp)
   end
-  return Tensor(Dense{ElT}(vec(expM)),permute(inds(T),(Lpos...,Rpos...)))
 end
 

@@ -26,6 +26,7 @@ function ctmrg(T::ITensor,
     sr = findindex(Clu⁽¹⁾,"site,right")
 
     Ud,Cdr = eigenHermitian(Clu⁽¹⁾, (ld,sd), (lr,sr);
+                            ispossemidef=true,
                             maxdim=χmax,
                             lefttags="link,down,renorm",
                             righttags="link,right,renorm",
