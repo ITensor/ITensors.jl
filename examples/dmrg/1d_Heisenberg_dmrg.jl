@@ -10,8 +10,9 @@ using Printf
 let
   N = 100                             
   # Create N spin-one degrees of freedom
-  #sites = spinOneSites(N)
-  sites = spinHalfSites(N)
+  sites = spinOneSites(N)
+  # Alternatively can make spin-half sites instead
+  #sites = spinHalfSites(N)
 
   # Input operator terms which define a Hamiltonian
   ampo = AutoMPO()
@@ -21,13 +22,7 @@ let
       add!(ampo,0.5,"S-",j,"S+",j+1)
   end
   # Convert these terms to an MPO tensor network
-  println("Calling toMPO, first time")
   H = toMPO(ampo,sites)
-  println("done")
-
-  println("Calling toMPO, second time")
-  HH = toMPO(ampo,sites)
-  println("done")
 
   # Create an initial random matrix product state
   psi0 = randomMPS(sites)
