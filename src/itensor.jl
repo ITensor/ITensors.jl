@@ -635,3 +635,39 @@ function multSiteOps(A::ITensor,
   return mapprime(R,2,1)
 end
 
+function readCpp!(T::ITensor;kwargs...)
+  T.inds = read(io,IndexSet;kwargs...)
+  read(io,12) # ignore scale factor
+  storage_type = read(io,Int32) # see StorageType enum above
+  if storage_type==0 # Null
+    T.store = Dense{Nothing}()
+  elseif storage_type==1  # DenseReal
+    T.store = read(io,Dense{Float64};kwargs...)
+  elseif storage_type==2  # DenseCplx
+    T.store = read(io,Dense{ComplexF64};kwargs...)
+  elseif storage_type==3  # Combiner
+    T.store = CombinerStorage(T.inds[1])
+  #elseif storage_type==4  # DiagReal
+  #elseif storage_type==5  # DiagCplx
+  #elseif storage_type==6  # QDenseReal
+  #elseif storage_type==7  # QDenseCplx
+  #elseif storage_type==8  # QCombiner
+  #elseif storage_type==9  # QDiagReal
+  #elseif storage_type==10 # QDiagCplx
+  #elseif storage_type==11 # ScalarReal
+  #elseif storage_type==12 # ScalarCplx
+  else
+    throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
+  end
+end
+
+function Base.read(io::IO,::Type{ITensor};kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  T = ITensor()
+  if format=="cpp"
+    readCpp!(T;kwargs...)
+  else
+    throw(ArgumentError("read ITensor: format=$format not supported"))
+  end
+  return T
+end

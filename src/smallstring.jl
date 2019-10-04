@@ -1,6 +1,6 @@
 export convert,
-       #push,
-       setindex
+       setindex,
+       read
 
 const IntChar = UInt8
 const IntSmallString = UInt64
@@ -131,4 +131,18 @@ function Base.show(io::IO, s::SmallString)
     print(io,Char(s[n]))
     n += 1
   end
+end
+
+function Base.read(io::IO,::Type{SmallString}; kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  s = SmallString()
+  if format=="cpp"
+    for n=1:7
+      c = read(io,Char)
+      s = setindex(s,c,n)
+    end
+  else
+    throw(ArgumentError("read SmallString: format=$format not supported"))
+  end
+  return s
 end
