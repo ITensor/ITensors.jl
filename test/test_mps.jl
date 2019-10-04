@@ -230,6 +230,21 @@ end
     for n=1:N
       @test 1 <= s[n] <= 3
     end
+
+    # Throws becase not orthogonalized to site 1:
+    orthogonalize!(psi,3)
+    @test_throws ErrorException sample(psi)
+
+    # Throws becase not normalized
+    orthogonalize!(psi,1)
+    psi[1] *= (5.0/norm(psi[1]))
+    @test_throws ErrorException sample(psi)
+
+    # Works when ortho & normalized:
+    orthogonalize!(psi,1)
+    psi[1] *= (1.0/norm(psi[1]))
+    s = sample(psi)
+    @test length(s) == N
   end
 
 end
