@@ -635,7 +635,7 @@ function multSiteOps(A::ITensor,
   return mapprime(R,2,1)
 end
 
-function readCpp!(T::ITensor;kwargs...)
+function readCpp!(io::IO,T::ITensor;kwargs...)
   T.inds = read(io,IndexSet;kwargs...)
   read(io,12) # ignore scale factor
   storage_type = read(io,Int32) # see StorageType enum above
@@ -665,7 +665,7 @@ function Base.read(io::IO,::Type{ITensor};kwargs...)
   format = get(kwargs,:format,"hdf5")
   T = ITensor()
   if format=="cpp"
-    readCpp!(T;kwargs...)
+    readCpp!(io,T;kwargs...)
   else
     throw(ArgumentError("read ITensor: format=$format not supported"))
   end
