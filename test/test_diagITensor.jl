@@ -97,6 +97,16 @@ using ITensors,
         end
       end
     end
+    
+    @testset "fill!" begin
+      D = diagITensor(ones(d), i,j,k)
+      D = fill!(D, 2.0)
+      for ii = 1:d
+        @test D[i(ii),j(ii),k(ii)] == 2.0
+      end
+
+      @test eltype(D) == Float64
+    end
 
     @testset "Set elements" begin
       D = diagITensor(i,j,k)
