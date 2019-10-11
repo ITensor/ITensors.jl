@@ -145,13 +145,13 @@ let
   # Input operator terms which define 
   # a Hamiltonian matrix, and convert
   # these terms to an MPO tensor network
-  ampo = AutoMPO(sites)
+  ampo = AutoMPO()
   for j=1:N-1
     add!(ampo,"Sz",j,"Sz",j+1)
     add!(ampo,0.5,"S+",j,"S-",j+1)
     add!(ampo,0.5,"S-",j,"S+",j+1)
   end
-  H = toMPO(ampo)
+  H = MPO(ampo,sites)
 
   # Create an initial random matrix product state
   psi0 = randomMPS(sites)

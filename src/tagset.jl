@@ -4,10 +4,12 @@ export TagSet,
        Tag
 
 const Tag = SmallString
+const maxTagLength = smallLength
 const MTagStorage = MSmallStringStorage # A mutable tag storage
 const IntTag = IntSmallString  # An integer that can be cast to a Tag
-const TagSetStorage = SVector{4,IntTag}
-const MTagSetStorage = MVector{4,IntTag}  # A mutable tag storage
+const maxTags = 4
+const TagSetStorage = SVector{maxTags,IntTag}
+const MTagSetStorage = MVector{maxTags,IntTag}  # A mutable tag storage
 
 struct TagSet
   tags::TagSetStorage
@@ -57,7 +59,7 @@ end
 function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   plnew = plev
   t = Tag(tag)
-  if length(t) > 0
+  if !isNull(t)
     if isint(t)
       error("""Cannot use a bare integer as a tag.
             If you are looking to set the prime level, use the syntax ("x",1)
@@ -65,7 +67,7 @@ function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
       #plev ≥ 0 && error("You can only make a TagSet with one prime level/integer tag.")
       #plnew = parse(Int,t)
     else
-      ntags = _addtag_ordered!(ts, ntags, tag)  
+      ntags = _addtag_ordered!(ts, ntags,tag)  
     end
   end
   return plnew, ntags
@@ -81,29 +83,29 @@ end
 
 function TagSet(str::AbstractString)
   # Mutable fixed-size vector as temporary Tag storage
-  current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(8)))
+  current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
   # Mutable fixed-size vector as temporary TagSet storage
-  ts = MTagSetStorage(ntuple(_ -> IntTag(0),Val(4)))
+  ts = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
   nchar = 0
   ntags = 0
   plev = -1
   for n = 1:length(str)
     @inbounds current_char = str[n]
     if current_char == ','
-      if nchar ≠ 0
+      if nchar != 0
         plev, ntags = _addtag!(ts,plev,ntags,cast_to_uint64(current_tag))
         # Reset the current tag
         reset!(current_tag,nchar)
         nchar = 0
       end
-    elseif current_char ≠ ' ' # TagSet constructor ignores whitespace
+    elseif current_char != ' ' # TagSet constructor ignores whitespace
       nchar == maxTagLength && error("Currently, tags can only have up to $maxTagLength characters")
       nchar += 1
       @inbounds current_tag[nchar] = current_char
     end
   end
   # Store the final tag
-  if nchar ≠ 0
+  if nchar != 0
     plev, ntags = _addtag!(ts,plev,ntags,cast_to_uint64(current_tag))
   end
   return TagSet(TagSetStorage(ts),plev,ntags)
@@ -119,7 +121,7 @@ convert(::Type{TagSet}, str::String) = TagSet(str)
 tags(T::TagSet) = T.tags
 plev(T::TagSet) = T.plev
 Base.length(T::TagSet) = T.length
-Base.getindex(T::TagSet,n::Int) = getindex(tags(T),n)
+Base.getindex(T::TagSet,n::Int) = Tag(getindex(tags(T),n))
 #Base.setindex!(T::TagSet,val,n::Int) = TagSet(setindex(tags(T),val,n),plev(T),length(T))
 Base.copy(ts::TagSet) = TagSet(tags(ts),plev(ts),length(ts))
 
@@ -155,11 +157,11 @@ function ==(ts1::TagSet,ts2::TagSet)
   return cast_to_uint128(tags(ts1)) == cast_to_uint128(tags(ts2))
 end
 
-function hastag(ts::TagSet, t::IntTag)
+function hastag(ts::TagSet, tag)
   l = length(ts)
   l < 1 && return false
   for n = 1:l
-    @inbounds t == ts[n] && return true
+    @inbounds Tag(tag) == ts[n] && return true
   end
   return false
 end
@@ -177,13 +179,16 @@ function hastags(ts2::TagSet, tags1)
 end
 
 function addtags(ts::TagSet, tagsadd)
+  if length(ts) == maxTags
+    throw(ErrorException("Cannot add tag: TagSet already maximum size"))
+  end
   tsadd = TagSet(tagsadd)
   (hasplev(ts) && hasplev(tsadd)) && error("In addtags(::TagSet,...), cannot add a prime level")
   res_ts = MVector(tags(ts))
   res_plev = plev(ts)
   ntags = length(ts)
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags, tsadd[n])
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntSmallString(tsadd[n]))
   end
   if !hasplev(ts) && hasplev(tsadd)
     res_plev = plev(tsadd)
@@ -191,9 +196,9 @@ function addtags(ts::TagSet, tagsadd)
   return TagSet(TagSetStorage(res_ts),res_plev,ntags)
 end
 
-function _removetag!(ts::MTagSetStorage, ntags::Int, t::IntTag)
+function _removetag!(ts::MTagSetStorage, ntags::Int, t::Tag)
   for n = 1:ntags
-    if @inbounds ts[n] == t
+    if @inbounds Tag(ts[n]) == t
       for j = n:ntags-1
         @inbounds ts[j] = ts[j+1]
       end
@@ -211,7 +216,7 @@ function removetags(ts::TagSet, tagsremove)
   res_ts = MVector(tags(ts))
   res_plev = plev(ts)
   ntags = length(ts)
-  for n = 1:length(tsremove)
+  for n=1:length(tsremove)
     @inbounds ntags = _removetag!(res_ts, ntags, tsremove[n])
   end
   return TagSet(TagSetStorage(res_ts),res_plev,ntags)
@@ -235,7 +240,7 @@ function replacetags(ts::TagSet, tagsremove, tagsadd)
     @inbounds ntags = _removetag!(res_ts, ntags, tsremove[n])
   end
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags, tsadd[n])
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntSmallString(tsadd[n]))
   end
   if hasplev(ts) && (plev(ts)==plev(tsremove))
     res_plev = plev(tsadd)
@@ -271,12 +276,31 @@ function show(io::IO, T::TagSet)
   print(io,"(")
   lT = length(T)
   if lT > 0
-    print(io,Tag(T[1]))
+    print(io,T[1])
     for n=2:lT
-      print(io,",$(Tag(T[n]))")
+      print(io,",$(T[n])")
     end
   end
   print(io,")")
   print(io,primestring(T))
 end
 
+function Base.read(io::IO,::Type{TagSet}; kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  ts = TagSet()
+  if format=="cpp"
+    mstore = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
+    ntags = 0
+    for n=1:4
+      t = read(io,Tag;kwargs...)
+      if t != Tag()
+        ntags = _addtag_ordered!(mstore,ntags,IntSmallString(t))
+      end
+    end
+    plev = convert(Int,read(io,Int32))
+    ts = TagSet(TagSetStorage(mstore),plev,ntags)
+  else
+    throw(ArgumentError("read TagSet: format=$format not supported"))
+  end
+  return ts
+end

@@ -4,6 +4,7 @@ export ITensor,
        combinedindex,
        delta,
        δ,
+       exp,
        replaceindex!,
        inds,
        isNull,
@@ -18,6 +19,15 @@ export ITensor,
        dense
 
 
+"""
+An ITensor is a tensor whose interface is 
+independent of its memory layout. Therefore
+it is not necessary to know the ordering
+of an ITensor's indices, only which indices
+an ITensor has. Operations like contraction
+and addition of ITensors automatically
+handle any memory permutations.
+"""
 mutable struct ITensor
   inds::IndexSet
   store::TensorStorage
@@ -29,10 +39,23 @@ end
 #
 # Dense ITensor constructors
 #
-
 ITensor() = ITensor(IndexSet(),Dense{Nothing}())
-ITensor(is::IndexSet) = ITensor(Float64,is...)
+
+"""
+    ITensor(i,j,...)
+
+Construct an ITensor having indices
+`i`, `j`, ... which are all of type Index
+"""
 ITensor(inds::Index...) = ITensor(IndexSet(inds...))
+
+"""
+    ITensor(iset::IndexSet)
+
+Construct an ITensor having indices
+given by the IndexSet `iset`
+"""
+ITensor(is::IndexSet) = ITensor(Float64,is...)
 
 function ITensor(::Type{T},
                  inds::IndexSet) where {T<:Number}
@@ -49,6 +72,17 @@ ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
 function ITensor(x::S,inds::IndexSet) where {S<:Number}
   return ITensor(inds,Dense{float(S)}(float(x),dim(inds)))
 end
+
+"""
+    ITensor(x)
+
+Construct a scalar ITensor with value `x`.
+
+    ITensor(x,i,j,...)
+
+Construct an ITensor with indices `i`,`j`,...
+and all elements set to `x`.
+"""
 ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
 #TODO: check that the size of the Array matches the Index dimensions
@@ -373,10 +407,10 @@ randomITensor(inds::Indices) = randomITensor(Float64,IndexSet(inds))
 randomITensor(inds::Index...) = randomITensor(Float64,IndexSet(inds...))
 
 function combiner(inds::IndexSet; kwargs...)
-    tags = get(kwargs, :tags, "CMB,Link")
-    new_ind = Index(prod(dims(inds)), tags)
-    new_is = IndexSet(new_ind, inds)
-    return ITensor(new_is, CombinerStorage(new_ind))
+  tags = get(kwargs, :tags, "CMB,Link")
+  new_ind = Index(prod(dims(inds)), tags)
+  new_is = IndexSet(new_ind, inds)
+  return ITensor(new_is, CombinerStorage(new_ind))
 end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
 
@@ -394,8 +428,8 @@ end
 permute(T::ITensor,inds::Index...) = permute(T,IndexSet(inds...))
 
 function *(A::ITensor,x::Number)
-    storeB = storage_mult(store(A), x)
-    return ITensor(inds(A),storeB)
+  storeB = storage_mult(store(A), x)
+  return ITensor(inds(A),storeB)
 end
 *(x::Number,A::ITensor) = A*x
 #TODO: make a proper element-wise division
@@ -428,6 +462,29 @@ function *(A::ITensor,B::ITensor)
 end
 
 dot(A::ITensor,B::ITensor) = scalar(dag(A)*B)
+
+import LinearAlgebra.exp
+
+"""
+    exp(A::ITensor, Lis::IndexSet; hermitian = false)
+
+Compute the exponential of the tensor `A` by treating it as a matrix ``A_{lr}`` with
+the left index `l` running over all indices in `Lis` and `r` running over all
+indices not in `Lis`. Must have `dim(Lis) == dim(inds(A))/dim(Lis)` for the exponentiation to
+be defined.
+When `hermitian=true` the exponential of `Hermitian(reshape(A, dim(Lis), :))` is
+computed internally.
+"""
+function exp(A::ITensor, Lis::IndexSet; hermitian = false)
+  if dim(Lis) != dim(inds(A))/dim(Lis) 
+    throw(DimensionMismatch("dimension of the left index set `Lis` must be equal to `dim(inds(A))/dim(Lis)`"))
+  end
+  A, Lis, Ris = _permute_for_factorize(A,Lis)
+  expAs = storage_exp(store(A), Lis,Ris, hermitian = hermitian)
+  return ITensor(inds(A),expAs)
+end
+
+expHermitian(A::ITensor,Lis::IndexSet) = exp(A,Lis, hermitian=true)
 
 #######################################################################
 #
@@ -578,3 +635,39 @@ function multSiteOps(A::ITensor,
   return mapprime(R,2,1)
 end
 
+function readCpp!(io::IO,T::ITensor;kwargs...)
+  T.inds = read(io,IndexSet;kwargs...)
+  read(io,12) # ignore scale factor
+  storage_type = read(io,Int32) # see StorageType enum above
+  if storage_type==0 # Null
+    T.store = Dense{Nothing}()
+  elseif storage_type==1  # DenseReal
+    T.store = read(io,Dense{Float64};kwargs...)
+  elseif storage_type==2  # DenseCplx
+    T.store = read(io,Dense{ComplexF64};kwargs...)
+  elseif storage_type==3  # Combiner
+    T.store = CombinerStorage(T.inds[1])
+  #elseif storage_type==4  # DiagReal
+  #elseif storage_type==5  # DiagCplx
+  #elseif storage_type==6  # QDenseReal
+  #elseif storage_type==7  # QDenseCplx
+  #elseif storage_type==8  # QCombiner
+  #elseif storage_type==9  # QDiagReal
+  #elseif storage_type==10 # QDiagCplx
+  #elseif storage_type==11 # ScalarReal
+  #elseif storage_type==12 # ScalarCplx
+  else
+    throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
+  end
+end
+
+function Base.read(io::IO,::Type{ITensor};kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  T = ITensor()
+  if format=="cpp"
+    readCpp!(io,T;kwargs...)
+  else
+    throw(ArgumentError("read ITensor: format=$format not supported"))
+  end
+  return T
+end

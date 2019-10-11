@@ -2,6 +2,7 @@ export MPO,
        randomMPO,
        applyMPO,
        nmultMPO,
+       errorMPOProd,
        maxLinkDim,
        orthogonalize!,
        truncate!
@@ -18,11 +19,11 @@ mutable struct MPO
     new(N, A, llim, rlim)
   end
 
-  function MPO(sites::SiteSet)
+  function MPO(sites)
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
-    @inbounds for ii ∈ eachindex(sites)
+    for ii ∈ eachindex(sites)
       s = sites[ii]
       sp = prime(s)
       if ii == 1
@@ -36,38 +37,40 @@ mutable struct MPO
     new(N,v,0,N+1)
   end
  
-  function MPO(sites::SiteSet, 
-               ops::Vector{String})
-    N = length(sites)
-    its = Vector{ITensor}(undef, N)
-    links = Vector{Index}(undef, N)
-    @inbounds for ii ∈ eachindex(sites)
-        si = sites[ii]
-        spin_op = op(sites, ops[ii], ii)
-        links[ii] = Index(1, "Link,n=$ii")
-        local this_it
-        if ii == 1
-            this_it = ITensor(links[ii], si, si')
-            this_it[links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
-        elseif ii == N
-            this_it = ITensor(links[ii-1], si, si')
-            this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
-        else
-            this_it = ITensor(links[ii-1], links[ii], si, si')
-            this_it[links[ii-1](1), links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
-        end
-        its[ii] = this_it
-    end
-    new(N,its,0,N+1)
-  end
-
-  MPO(sites::SiteSet, ops::String) = MPO(sites, fill(ops, length(sites)))
 end
+
 MPO(N::Int) = MPO(N,Vector{ITensor}(undef,N))
+
+function MPO(sites,
+             ops::Vector{String})
+  N = length(sites)
+  its = Vector{ITensor}(undef, N)
+  links = Vector{Index}(undef, N)
+  for ii ∈ eachindex(sites)
+    si = sites[ii]
+    spin_op = op(sites, ops[ii], ii)
+    links[ii] = Index(1, "Link,n=$ii")
+    local this_it
+    if ii == 1
+      this_it = ITensor(links[ii], si, si')
+      this_it[links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+    elseif ii == N
+      this_it = ITensor(links[ii-1], si, si')
+      this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+    else
+      this_it = ITensor(links[ii-1], links[ii], si, si')
+      this_it[links[ii-1](1), links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+    end
+    its[ii] = this_it
+  end
+  MPO(N,its)
+end
+
+MPO(sites, ops::String) = MPO(sites, fill(ops, length(sites)))
 
 function randomMPO(sites, m::Int=1)
   M = MPO(sites)
-  @inbounds for i ∈ eachindex(sites)
+  for i ∈ eachindex(sites)
     randn!(M[i])
     normalize!(M[i])
   end
@@ -80,17 +83,17 @@ tensors(m::MPO) = m.A_
 leftLim(m::MPO) = m.llim_
 rightLim(m::MPO) = m.rlim_
 
-function setLeftLim!(m::MPO,new_ll::Int) 
+function setLeftLim!(m::MPO,new_ll::Int)
   m.llim_ = new_ll
 end
 
-function setRightLim!(m::MPO,new_rl::Int) 
+function setRightLim!(m::MPO,new_rl::Int)
   m.rlim_ = new_rl
 end
 
 getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
 
-function setindex!(M::MPO,T::ITensor,n::Integer) 
+function setindex!(M::MPO,T::ITensor,n::Integer)
   (n <= leftLim(M)) && setLeftLim!(M,n-1)
   (n >= rightLim(M)) && setRightLim!(M,n+1)
   setindex!(tensors(M),T,n)
@@ -180,7 +183,7 @@ Get the maximum link dimension of the MPS or MPO.
 """
 function maxLinkDim(M::T) where {T <: Union{MPS,MPO}}
   md = 0
-  for b ∈ eachindex(M)[1:end-1] 
+  for b ∈ eachindex(M)[1:end-1]
     md = max(md,dim(linkindex(M,b)))
   end
   md
@@ -194,7 +197,7 @@ function show(io::IO, W::MPO)
   end
 end
 
-function linkindex(M::MPO,j::Integer) 
+function linkindex(M::MPO,j::Integer)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPO is $N)")
   li = commonindex(M[j],M[j+1])
@@ -228,6 +231,51 @@ function inner(y::MPS,
   return O[]
 end
 
+"""
+inner(B::MPO, y::MPS, A::MPO, x::MPS)
+
+Compute <By|A|x>
+"""
+function inner(B::MPO,
+               y::MPS,
+               A::MPO,
+               x::MPS)::Number
+  N = length(B)
+  if length(y) != N || length(x) != N || length(A) != N
+      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y)) or $(length(A))"))
+  end
+  ydag = dag(y)
+  prime!(ydag, 2)
+  Bdag = dag(B)
+  prime!(Bdag)
+  # Swap prime levels 1 -> 2 and 2 -> 1.
+  @inbounds for j ∈ eachindex(Bdag)
+    swapprime!(inds(Bdag[j]),2,3)
+    swapprime!(inds(Bdag[j]),1,2)
+    swapprime!(inds(Bdag[j]),3,1)
+  end
+  O = ydag[1]*Bdag[1]*A[1]*x[1]
+  @inbounds for j ∈ eachindex(y)[2:end]
+    O = O*ydag[j]*Bdag[j]*A[j]*x[j]
+  end
+  return O[]
+end
+
+
+"""
+errorMPOProd(y::MPS, A::MPO, x::MPS)
+
+Compute the distance between A|x> and an approximation MPS y:
+| |y> - A|x> |/| A|x> | = √(1 + (<y|y> - 2*real(<y|A|x>))/<Ax|A|x>)
+"""
+function errorMPOProd(y::MPS, A::MPO, x::MPS)
+  N = length(A)
+  if length(y) != N || length(x) != N
+      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
+  end
+  return sqrt(abs(1. + (inner(y,y) - 2*real(inner(y,A,x)))/inner(A,x,A,x)))
+end
+
 function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
     #if dir(left_ind) == dir(right_ind) == Neither
         total_dim    = dim(left_ind) + dim(right_ind)
@@ -248,7 +296,7 @@ function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
 end
 
 function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
-    n = A.N_ 
+    n = A.N_
     length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
     orthogonalize!(A, 1; kwargs...)
     orthogonalize!(B, 1; kwargs...)
@@ -278,26 +326,29 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
 end
 
 function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS
-    method = get(kwargs, :method, "DensityMatrix")
-    if method == "DensityMatrix"
-        return densityMatrixApplyMPO(A, psi; kwargs...)
-    end
-    throw(ArgumentError("Method $method not supported"))
+  method = get(kwargs, :method, "DensityMatrix")
+  if method == "DensityMatrix" || method == "densitymatrix"
+    return densityMatrixApplyMPO(A, psi; kwargs...)
+  elseif method == "naive" || method == "Naive"
+    return naiveApplyMPO(A, psi; kwargs...)
+  end
+  throw(ArgumentError("Method $method not supported"))
 end
 
 function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     n = length(A)
     n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
-    psi_out = similar(psi)
+    psi_out         = similar(psi)
     cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
-    maxdim::Int = get(kwargs,:maxdim,maxLinkDim(psi))
-    mindim::Int = max(get(kwargs,:mindim,1), 1)
-    normalize::Bool = get(kwargs, :normalize, false) 
 
-    all(x->x!=Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
+    maxdim::Int     = get(kwargs,:maxdim,maxLinkDim(psi))
+    mindim::Int     = max(get(kwargs,:mindim,1), 1)
+    normalize::Bool = get(kwargs, :normalize, false) 
+    all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
+
     rand_plev = 14741
-    psi_c = dag(copy(psi))
-    A_c   = dag(copy(A))
+    psi_c     = dag(deepcopy(psi))
+    A_c       = dag(deepcopy(A))
     prime!(psi_c, rand_plev)
     prime!(A_c, rand_plev)
     for j in 1:n-1
@@ -310,38 +361,61 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     for j in 2:n-1
         E[j] = E[j-1]*psi[j]*A[j]*A_c[j]*psi_c[j]
     end
-    O     = psi[n] * A[n]
-    ρ     = E[n-1] * O * dag(prime(O, rand_plev))
-    ts    = tags(commonindex(psi[n], psi[n-1]))
-    Lis   = commonindex(ρ, A[n])
-    Ris   = uniqueinds(ρ, Lis)
-    FU, D = eigen(ρ, Lis, Ris; tags=ts, kwargs...)
-    psi_out[n] = setprime(dag(FU), 0, "Site")
-    O     = O * FU * psi[n-1] * A[n-1]
-    O     = prime(O, -1, "Site")
+    O          = prime(psi[n] * A[n], -1, "Site")
+    ρ          = E[n-1] * O * dag(prime(O, rand_plev))
+    ts         = tags(commonindex(psi[n], psi[n-1]))
+    Lis        = commonindex(ρ, A[n])
+    FU, D      = eigen(ρ, Lis, prime(Lis, rand_plev); utags=ts, maxdim=maxdim, cutoff=cutoff)
+    FU         = setprime(FU, 0, "Site")
+    psi_out[n] = copy(dag(FU))
+    O          = O * FU * psi[n-1] * A[n-1]
+    O          = prime(O, -1, "Site")
     for j in reverse(2:n-1)
-        dO  = prime(dag(O), rand_plev)
-        ρ   = E[j-1] * O * dO
-        ts  = tags(commonindex(psi[j], psi[j-1]))
-        Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
-        Ris = uniqueinds(ρ, Lis)
-        FU, D = eigen(ρ, Lis, Ris; tags=ts, kwargs...)
-        psi_out[j] = dag(FU)
-        O = O * FU * psi[j-1] * A[j-1]
-        O = prime(O, -1, "Site")
+        ρ     = E[j-1] * O * prime(dag(O), rand_plev)
+        ts    = tags(commonindex(psi[j], psi[j-1]))
+        Lis   = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
+        FU, D = eigen(ρ, Lis, prime(Lis, rand_plev); utags=ts, maxdim=maxdim, cutoff=cutoff)
+        FU    = setprime(FU, 0, "Site")
+        psi_out[j] = copy(dag(FU))
+        O     = O * FU * psi[j-1] * A[j-1]
+        O     = prime(O, -1, "Site")
     end
     if normalize
         O /= norm(O)
     end
-    psi_out[1] = O
+    psi_out[1]    = copy(O)
     psi_out.llim_ = 0
     psi_out.rlim_ = 2
     return psi_out
 end
 
+function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
+  N = length(A)
+  if N != length(psi) 
+    throw(DimensionMismatch("lengths of MPO ($N) and MPS ($(length(psi))) do not match"))
+  end
+
+  psi_out = MPS(N)
+  for j=1:N
+    psi_out[j] = noprime(A[j]*psi[j])
+  end
+
+  for b=1:(N-1)
+    Al = commonindex(A[b],A[b+1])
+    pl = commonindex(psi[b],psi[b+1])
+    C = combiner(Al,pl)
+    psi_out[b] *= C
+    psi_out[b+1] *= C
+  end
+
+  truncate!(psi_out;kwargs...)
+
+  return psi_out
+end
+
 function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
-    resp_degen::Bool = get(kwargs, :respect_degenerate, true) 
+    resp_degen::Bool = get(kwargs, :respect_degenerate, true)
     maxdim::Int = get(kwargs,:maxdim,maxLinkDim(A)*maxLinkDim(B))
     mindim::Int = max(get(kwargs,:mindim,1), 1)
     N = length(A)
@@ -399,8 +473,8 @@ function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
     return res
 end
 
-function orthogonalize!(M::Union{MPS,MPO}, 
-                        j::Int; 
+function orthogonalize!(M::Union{MPS,MPO},
+                        j::Int;
                         kwargs...)
   while leftLim(M) < (j-1)
     (leftLim(M) < 0) && setLeftLim!(M,0)
@@ -455,9 +529,9 @@ orthogonalize!(M::MPS, j::Int; kwargs...)
 
 Move the orthogonality center of the MPS
 to site j. No observable property of the
-MPS will be changed, and no truncation of the 
-bond indices is performed. Afterward, tensors 
-1,2,...,j-1 will be left-orthogonal and tensors 
+MPS will be changed, and no truncation of the
+bond indices is performed. Afterward, tensors
+1,2,...,j-1 will be left-orthogonal and tensors
 j+1,j+2,...,N will be right-orthogonal.
 
 orthogonalize!(W::MPO, j::Int; kwargs...)

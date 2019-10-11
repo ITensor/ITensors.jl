@@ -20,8 +20,8 @@ export IndexSet,
        maxDim
 
 struct IndexSet
-    inds::Vector{Index}
-    IndexSet(inds::Vector{Index}) = new(inds)
+  inds::Vector{Index}
+  IndexSet(inds::Vector{Index}) = new(inds)
 end
 
 inds(is::IndexSet) = is.inds
@@ -53,7 +53,7 @@ function Base.show(io::IO, is::IndexSet)
   end
 end
 
-getindex(is::IndexSet,n::Any) = getindex(is.inds,n)
+getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
 setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
 lastindex(is :: IndexSet) = lastindex(is.inds)
 length(is::IndexSet) = length(is.inds)
@@ -520,3 +520,19 @@ function compute_strides(inds::IndexSet)
   return stride
 end
 
+function Base.read(io::IO,::Type{IndexSet};kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  is = IndexSet()
+  if format=="cpp"
+    size = read(io,Int)
+    resize!(is.inds,size)
+    for n=1:size
+      i = read(io,Index;kwargs...)
+      stride = read(io,UInt64)
+      is.inds[n] = i
+    end
+  else
+    throw(ArgumentError("read IndexSet: format=$format not supported"))
+  end
+  return is
+end

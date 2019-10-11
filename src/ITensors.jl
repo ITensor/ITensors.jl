@@ -56,6 +56,7 @@ const warnTensorOrder = 10
 #####################################
 
 include("smallstring.jl")
+include("readwrite.jl")
 include("tagset.jl")
 include("index.jl")
 include("indexset.jl")
@@ -72,22 +73,22 @@ include("iterativesolvers.jl")
 ###########################################################
 # MPS/MPO
 #
-include("mps/siteset.jl")
 include("mps/mps.jl")
 include("mps/mpo.jl")
 include("mps/sweeps.jl")
 include("mps/projmpo.jl")
 include("mps/observer.jl")
 include("mps/dmrg.jl")
-include("mps/autompo.jl")
 
 ###########################################################
 # Physics
 #
+include("physics/tag_types.jl")
 include("physics/lattices.jl")
-include("physics/sitesets/spinhalf.jl")
-include("physics/sitesets/spinone.jl")
-include("physics/sitesets/electron.jl")
-include("physics/sitesets/tj.jl")
+include("physics/site_types/spinhalf.jl")
+include("physics/site_types/spinone.jl")
+include("physics/site_types/electron.jl")
+include("physics/site_types/tj.jl")
+include("physics/autompo.jl")
 
 end # module

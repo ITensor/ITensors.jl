@@ -1,10 +1,12 @@
 using ITensors,
       Test
 
+include("util.jl")
+
 @testset "MPS Basics" begin
 
   N = 10
-  sites = SiteSet(N,2)
+  sites = [Index(2,"Site") for n=1:N]
   psi = MPS(sites)
   @test length(psi) == N
   @test length(MPS()) == 0
@@ -67,7 +69,7 @@ using ITensors,
     end
     @test phipsi[] ≈ inner(phi,psi)
  
-    badsites = SiteSet(N+1,2)
+    badsites = [Index(2) for n=1:N+1]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi,badpsi)
   end
@@ -143,7 +145,7 @@ end
 
 # Helper function for making MPS
 function basicRandomMPS(N::Int;dim=4)
-  sites = SiteSet(N,2)
+  sites = [Index(2,"Site") for n=1:N]
   M = MPS(sites)
   links = [Index(dim,"n=$(n-1),Link") for n=1:N+1]
   for n=1:N
@@ -208,6 +210,41 @@ end
     end
 
     @test inner(M,M0) > 0.1
+  end
+
+
+end
+
+@testset "Other MPS methods" begin
+
+  @testset "sample! method" begin
+    N = 10
+    sites = [Index(3,"Site,n=$n") for n=1:N]
+    psi = makeRandomMPS(sites,chi=3)
+    nrm2 = inner(psi,psi)
+    psi[1] *= (1.0/sqrt(nrm2))
+
+    s = sample!(psi)
+
+    @test length(s) == N
+    for n=1:N
+      @test 1 <= s[n] <= 3
+    end
+
+    # Throws becase not orthogonalized to site 1:
+    orthogonalize!(psi,3)
+    @test_throws ErrorException sample(psi)
+
+    # Throws becase not normalized
+    orthogonalize!(psi,1)
+    psi[1] *= (5.0/norm(psi[1]))
+    @test_throws ErrorException sample(psi)
+
+    # Works when ortho & normalized:
+    orthogonalize!(psi,1)
+    psi[1] *= (1.0/norm(psi[1]))
+    s = sample(psi)
+    @test length(s) == N
   end
 
 end
