@@ -359,7 +359,7 @@ end
 const Indices = Union{IndexSet,Tuple{Vararg{Index}}}
 
 """
-randomITensor([S,] inds)
+    randomITensor([S,] inds)
 
 Construct an ITensor with type S (default Float64) and indices inds, whose elements are normally distributed random numbers.
 """
