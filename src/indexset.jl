@@ -348,8 +348,7 @@ function swapprime!(is::IndexSet,
                     pl1::Int,
                     pl2::Int,
                     match = nothing)
-  pl3 = maximum(plev.(is)) + 1
-
+  pl3 = maximum(plev.(is) ∪ [pl1, pl2]) + 1
   mapprime!(is, pl2, pl3, match)
   mapprime!(is, pl1, pl2, match)
   mapprime!(is, pl3, pl1, match)
