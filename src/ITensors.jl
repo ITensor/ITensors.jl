@@ -52,7 +52,7 @@ import Base.adjoint,
 # Global Variables
 #
 const warnTensorOrder = 10
-const to = TimerOutput()
+const GLOBAL_TIMER = TimerOutput()
 
 #####################################
 # Index and IndexSet

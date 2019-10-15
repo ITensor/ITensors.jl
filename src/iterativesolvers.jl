@@ -42,6 +42,16 @@ function orthogonalize!(q::ITensor,V,ni)
   return 
 end
 
+function expand_krylov_space(M::Matrix,V,AV,ni)
+    newM = fill(0.0,(ni+1,ni+1))
+    newM[1:ni,1:ni] = M
+    for k=1:ni+1
+      newM[k,ni+1] = dot(V[k],AV[ni+1])
+      newM[ni+1,k] = conj(newM[k,ni+1])
+    end
+    return newM
+end
+
 function davidson(A,
                   phi0::ITensor;
                   kwargs...)::Tuple{Float64,ITensor}
@@ -69,8 +79,12 @@ function davidson(A,
     error("linear size of A and dimension of phi should match in davidson")
   end
 
+@timeit_debug GLOBAL_TIMER "A(q)" begin
+  Aphi = A(phi)
+end
+
   V = ITensor[copy(phi)]
-  AV = ITensor[A(phi)]
+  AV = ITensor[Aphi]
 
   last_lambda = NaN
   lambda = dot(V[1],AV[1])
@@ -93,22 +107,26 @@ function davidson(A,
 
     last_lambda = lambda
 
+@timeit_debug GLOBAL_TIMER "orthogonalize!" begin
     for pass = 1:Northo_pass
       orthogonalize!(q,V,ni)
     end
+end
+
+@timeit_debug GLOBAL_TIMER "A(q)" begin
+    Aq = A(q)
+end
 
     push!(V,copy(q))
-    push!(AV,A(q))
+    push!(AV,Aq)
 
-    newM = fill(0.0,(ni+1,ni+1))
-    newM[1:ni,1:ni] = M
-    for k=1:ni+1
-      newM[k,ni+1] = dot(V[k],AV[ni+1])
-      newM[ni+1,k] = conj(newM[k,ni+1])
-    end
-    M = newM
+@timeit_debug GLOBAL_TIMER "expand_krylov_space" begin
+    M = expand_krylov_space(M,V,AV,ni)
+end
 
+@timeit_debug GLOBAL_TIMER "get_vecs!" begin
     lambda = get_vecs!((phi,q),M,V,AV,ni+1)
+end
 
   end #for ni=1:actual_maxiter+1
 
