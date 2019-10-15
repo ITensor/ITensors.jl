@@ -124,6 +124,14 @@ vector(T::DenseTensor{<:Number,1}) = array(T)
 #  return R
 #end
 
+function scale!(T::DenseTensor,
+                α::Number)
+  A = array(T)
+  # This is faster than A .*= α
+  rmul!(A,α)
+  return T
+end
+
 # Version that may overwrite the result or promote
 # and return the result
 # TODO: move to tensor.jl?

@@ -573,7 +573,7 @@ A .*= x
 """
 function scale!(T::ITensor,x::Number)
   TT = tensor(T)
-  TT .*= x
+  scale!(TT,x)
   return T
 end
 rmul!(T::ITensor,fac::Number) = scale!(T,fac)
