@@ -44,12 +44,12 @@ setstore!(T::ITensor,st::TensorStorage) = (T.store = st)
 # Dense ITensor constructors
 #
 
-ITensor(T::Tensor) = ITensor(store(T),inds(T))
-ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor(store(T),inds(T))
+ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
+ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
 
-ITensor() = ITensor(Dense{Nothing}(),IndexSet())
+ITensor() = ITensor{0}(Dense{Nothing}(),IndexSet())
 ITensor(is::IndexSet) = ITensor(Float64,is...)
-ITensor(inds::Index...) = ITensor(IndexSet(inds...))
+ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet{N}(inds...))
 
 # Convert the ITensor to a Tensor that shares the same
 # data and indices as the ITensor
@@ -58,26 +58,26 @@ ITensor(inds::Index...) = ITensor(IndexSet(inds...))
 tensor(A::ITensor) = Tensor(store(A),inds(A))
 
 function ITensor(::Type{T},
-                 inds::IndexSet) where {T<:Number}
-  return ITensor(Dense{float(T)}(zeros(float(T),dim(inds))),inds)
+                 inds::IndexSet{N}) where {T<:Number,N}
+  return ITensor{N}(Dense{float(T)}(zeros(float(T),dim(inds))),inds)
 end
 ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...))
 
 function ITensor(::UndefInitializer,
-                 inds::IndexSet)
-  return ITensor(Dense{Float64}(Vector{Float64}(undef,dim(inds))),inds)
+                 inds::IndexSet{N}) where {N}
+  return ITensor{N}(Dense{Float64}(Vector{Float64}(undef,dim(inds))),inds)
 end
 ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
 
-function ITensor(x::S,inds::IndexSet) where {S<:Number}
-  return ITensor(Dense{float(S)}(fill(float(x),dim(inds))),inds)
+function ITensor(x::S,inds::IndexSet{N}) where {S<:Number,N}
+  return ITensor{N}(Dense{float(S)}(fill(float(x),dim(inds))),inds)
 end
 ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
 #TODO: check that the size of the Array matches the Index dimensions
-function ITensor(A::Array{S},inds::IndexSet) where {S<:Number}
-    length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
-  return ITensor(Dense{float(S)}(float(vec(A))),inds)
+function ITensor(A::Array{S,N},inds::IndexSet{N}) where {S<:Number,N}
+  length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
+  return ITensor{N}(Dense{float(S)}(float(vec(A))),inds)
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
 
@@ -93,8 +93,8 @@ only along the diagonal. Defaults to having `zero(T)` along the diagonal.
 The storage will have Diag type.
 """
 function diagITensor(::Type{T},
-                     is::IndexSet) where {T<:Number}
-  return ITensor(Diag{Vector{T}}(zeros(T,minDim(is))),is)
+                     is::IndexSet{N}) where {T<:Number,N}
+  return ITensor{N}(Diag{Vector{T}}(zeros(T,minDim(is))),is)
 end
 
 """
@@ -272,7 +272,7 @@ function matrix(T::ITensor{N},i1::Index,i2::Index) where {N}
   return array(T,i1,i2)
 end
 
-Base.getindex(T::ITensor{N},vals::Vararg{Int,N}) where {N} = tensor(T)[vals...]
+Base.getindex(T::ITensor{N},vals::Vararg{Int,N}) where {N} = tensor(T)[vals...]::Number
 
 function Base.getindex(T::ITensor{N},
                        ivs::Vararg{IndexVal,N}) where {N}
