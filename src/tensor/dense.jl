@@ -117,12 +117,12 @@ matrix(T::DenseTensor{<:Number,2}) = array(T)
 vector(T::DenseTensor{<:Number,1}) = array(T)
 
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
-function Base.permutedims!(R::DenseTensor{<:Number,N},
-                           T::DenseTensor{<:Number,N},
-                           perm::NTuple{N,Int}) where {N}
-  permutedims!(array(R),array(T),perm)
-  return R
-end
+#function Base.permutedims!(R::DenseTensor{<:Number,N},
+#                           T::DenseTensor{<:Number,N},
+#                           perm::NTuple{N,Int}) where {N}
+#  permutedims!(array(R),array(T),perm)
+#  return R
+#end
 
 # Version that may overwrite the result or promote
 # and return the result
@@ -163,11 +163,13 @@ using Base.Cartesian: @nexprs,
 # Based off of the permutedims! implementation in Julia's base:
 # https://github.com/JuliaLang/julia/blob/91151ab871c7e7d6689d1cfa793c12062d37d6b6/base/multidimensional.jl#L1355
 #
-@generated function Base.permutedims!(TP::DenseTensor{<:Number,N},
-                                      T::DenseTensor{<:Number,N},
+@generated function Base.permutedims!(TTP::DenseTensor{<:Number,N},
+                                      TT::DenseTensor{<:Number,N},
                                       perm,
                                       f::Function) where {N}
   quote
+    TP = array(TTP)
+    T = array(TT)
     Base.checkdims_perm(TP, T, perm)
 
     #calculates all the strides
@@ -189,7 +191,7 @@ using Base.Cartesian: @nexprs,
                 ind += 1
             end)
 
-    return TP
+    return TTP
   end
 end
 function Base.permutedims!(TP::DenseTensor{<:Number,0},
