@@ -117,12 +117,12 @@ matrix(T::DenseTensor{<:Number,2}) = array(T)
 vector(T::DenseTensor{<:Number,1}) = array(T)
 
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
-#function Base.permutedims!(R::DenseTensor{<:Number,N},
-#                           T::DenseTensor{<:Number,N},
-#                           perm::NTuple{N,Int}) where {N}
-#  permutedims!(array(R),array(T),perm)
-#  return R
-#end
+function Base.permutedims!(R::DenseTensor{<:Number,N},
+                           T::DenseTensor{<:Number,N},
+                           perm::NTuple{N,Int}) where {N}
+  permutedims!(array(R),array(T),perm)
+  return R
+end
 
 function scale!(T::DenseTensor,
                 α::Number)
@@ -139,7 +139,13 @@ function permutedims!!(R::Tensor,
                        T::Tensor,
                        perm::NTuple{N,Int},
                        f=(r,t)->t) where {N}
-  permutedims!(R,T,perm,f)
+  if !is_trivial_permutation(perm)
+    permutedims!(R,T,perm,f)
+  else
+    RA = array(R)
+    TA = array(T)
+    RA .= f.(RA,TA)
+  end
   return R
 end
 
@@ -295,6 +301,7 @@ function contract!!(R::Tensor{<:Number,NR},
   return R
 end
 
+# TODO: move to tensor.jl?
 Base.copyto!(R::Tensor,T::Tensor) = copyto!(store(R),store(T))
 
 # Move to tensor.jl? Overload this function
@@ -328,10 +335,14 @@ function _contract!(R::DenseTensor,
   return R
 end
 
-function _contract!(C::DenseTensor{El,NC},
-                    A::DenseTensor{El,NA},
-                    B::DenseTensor{El,NB},
+function _contract!(CT::DenseTensor{El,NC},
+                    AT::DenseTensor{El,NA},
+                    BT::DenseTensor{El,NB},
                     props::ContractionProperties) where {El,NC,NA,NB}
+  C = array(CT)
+  A = array(AT)
+  B = array(BT)
+
   tA = 'N'
   if props.permuteA
     AM = reshape(permutedims(A,NTuple{NA,Int}(props.PA)),props.dmid,props.dleft)
