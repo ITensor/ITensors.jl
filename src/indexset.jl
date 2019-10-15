@@ -346,14 +346,11 @@ noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
 function swapprime!(is::IndexSet, 
                     pl1::Int,
                     pl2::Int,
-                    vargs...) 
-  pos = indexpositions(is,vargs...)
-  for n in pos
-    if plev(is[n])==pl1
-      is[n] = setprime(is[n],pl2)
-    end
-  end
-  return is
+                    match = nothing)
+  pl3 = maximum(plev.(is) ∪ [pl1, pl2]) + 1
+  mapprime!(is, pl2, pl3, match)
+  mapprime!(is, pl1, pl2, match)
+  mapprime!(is, pl3, pl1, match)
 end
 
 swapprime(is::IndexSet,pl1::Int,pl2::Int,vargs...) = swapprime!(copy(is),pl1,pl2,vargs...)
