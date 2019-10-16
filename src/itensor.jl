@@ -24,6 +24,15 @@ export ITensor,
        store,
        dense
 
+"""
+An ITensor is a tensor whose interface is 
+independent of its memory layout. Therefore
+it is not necessary to know the ordering
+of an ITensor's indices, only which indices
+an ITensor has. Operations like contraction
+and addition of ITensors automatically
+handle any memory permutations.
+"""
 mutable struct ITensor{N}
   store::TensorStorage
   inds::IndexSet{N}
@@ -47,15 +56,21 @@ setstore!(T::ITensor,st::TensorStorage) = (T.store = st)
 ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
 ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
 
-ITensor() = ITensor{0}(Dense{Nothing}(),IndexSet())
-ITensor(is::IndexSet) = ITensor(Float64,is...)
-ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet{N}(inds...))
-
 # Convert the ITensor to a Tensor that shares the same
 # data and indices as the ITensor
 # TODO: should we define a `convert(::Type{<:Tensor},::ITensor)`
 # method?
 tensor(A::ITensor) = Tensor(store(A),inds(A))
+
+"""
+    ITensor(iset::IndexSet)
+
+Construct an ITensor having indices
+given by the IndexSet `iset`
+"""
+ITensor(is::IndexSet) = ITensor(Float64,is)
+ITensor() = ITensor{0}(Dense{Nothing}(),IndexSet())
+ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet{N}(inds...))
 
 function ITensor(::Type{T},
                  inds::IndexSet{N}) where {T<:Number,N}
@@ -72,6 +87,17 @@ ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
 function ITensor(x::S,inds::IndexSet{N}) where {S<:Number,N}
   return ITensor{N}(Dense{float(S)}(fill(float(x),dim(inds))),inds)
 end
+
+"""
+    ITensor(x)
+
+Construct a scalar ITensor with value `x`.
+
+    ITensor(x,i,j,...)
+
+Construct an ITensor with indices `i`,`j`,...
+and all elements set to `x`.
+"""
 ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
 function ITensor(A::Array{S},inds::IndexSet{N}) where {S<:Number,N}
@@ -312,7 +338,7 @@ end
 function Base.fill!(T::ITensor,
                     x::Number)
   # TODO: automatically switch storage type if needed?
-  tensor(T) .= x
+  fill!(tensor(T),x)
   return T
 end
 
@@ -389,6 +415,11 @@ end
 
 const Indices = Union{IndexSet,Tuple{Vararg{Index}}}
 
+"""
+    randomITensor([S,] inds)
+
+Construct an ITensor with type S (default Float64) and indices inds, whose elements are normally distributed random numbers.
+"""
 function randomITensor(::Type{S},
                        inds::Indices) where {S<:Number}
   T = ITensor(S,IndexSet(inds))
@@ -405,10 +436,10 @@ randomITensor(inds::Index...) = randomITensor(Float64,
                                               IndexSet(inds...))
 
 function combiner(inds::IndexSet; kwargs...)
-    tags = get(kwargs, :tags, "CMB,Link")
-    new_ind = Index(prod(dims(inds)), tags)
-    new_is = IndexSet(new_ind, inds)
-    return ITensor(Combiner(),new_is),new_ind
+  tags = get(kwargs, :tags, "CMB,Link")
+  new_ind = Index(prod(dims(inds)), tags)
+  new_is = IndexSet(new_ind, inds)
+  return ITensor(Combiner(),new_is),new_ind
 end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
 
@@ -461,6 +492,7 @@ LinearAlgebra.dot(A::ITensor,B::ITensor) = (dag(A)*B)[]
 
 """
     exp(A::ITensor, Lis::IndexSet; hermitian = false)
+
 Compute the exponential of the tensor `A` by treating it as a matrix ``A_{lr}`` with
 the left index `l` running over all indices in `Lis` and `r` running over all
 indices not in `Lis`. Must have `dim(Lis) == dim(inds(A))/dim(Lis)` for the exponentiation to
@@ -478,8 +510,7 @@ function LinearAlgebra.exp(A::ITensor,
   return ITensor(expAT)
 end
 
-
-expHermitian(A::ITensor,Lis::IndexSet) = exp(A,Lis, hermitian=true)
+expHermitian(A::ITensor,Linds,Rinds) = exp(A,Linds,Rinds;ishermitian=true)
 
 #######################################################################
 #
@@ -623,3 +654,39 @@ function multSiteOps(A::ITensor,
   return mapprime(R,2,1)
 end
 
+function readCpp!(io::IO,T::ITensor;kwargs...)
+  T.inds = read(io,IndexSet;kwargs...)
+  read(io,12) # ignore scale factor
+  storage_type = read(io,Int32) # see StorageType enum above
+  if storage_type==0 # Null
+    T.store = Dense{Nothing}()
+  elseif storage_type==1  # DenseReal
+    T.store = read(io,Dense{Float64};kwargs...)
+  elseif storage_type==2  # DenseCplx
+    T.store = read(io,Dense{ComplexF64};kwargs...)
+  elseif storage_type==3  # Combiner
+    T.store = CombinerStorage(T.inds[1])
+  #elseif storage_type==4  # DiagReal
+  #elseif storage_type==5  # DiagCplx
+  #elseif storage_type==6  # QDenseReal
+  #elseif storage_type==7  # QDenseCplx
+  #elseif storage_type==8  # QCombiner
+  #elseif storage_type==9  # QDiagReal
+  #elseif storage_type==10 # QDiagCplx
+  #elseif storage_type==11 # ScalarReal
+  #elseif storage_type==12 # ScalarCplx
+  else
+    throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
+  end
+end
+
+function Base.read(io::IO,::Type{ITensor};kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  T = ITensor()
+  if format=="cpp"
+    readCpp!(io,T;kwargs...)
+  else
+    throw(ArgumentError("read ITensor: format=$format not supported"))
+  end
+  return T
+end

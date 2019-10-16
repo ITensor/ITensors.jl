@@ -11,11 +11,13 @@ end
 const NonuniformDiag{T} = Diag{T} where {T<:AbstractVector}
 const UniformDiag{T} = Diag{T} where {T<:Number}
 
-Base.getindex(D::NonuniformDiag,i::Int)= data(D)[i]
+Base.@propagate_inbounds Base.getindex(D::NonuniformDiag,i::Int)= data(D)[i]
 Base.getindex(D::UniformDiag,i::Int) = data(D)
 
-Base.setindex!(D::Diag,val,i::Int)= (data(D)[i] = val)
+Base.@propagate_inbounds Base.setindex!(D::Diag,val,i::Int)= (data(D)[i] = val)
 Base.setindex!(D::UniformDiag,val,i::Int)= error("Cannot set elements of a uniform Diag storage")
+
+Base.fill!(D::Diag,v) = fill!(data(D),v)
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
@@ -150,29 +152,32 @@ setdiag!(T::DiagTensor,val,ind::Int) = (store(T)[ind] = val)
 
 setdiag(T::DiagTensor,val::ElR,ind::Int) where {ElR} = Tensor(Diag{ElR}(val),inds(T))
 
-function Base.getindex(T::DiagTensor{ElT,N},inds::Vararg{Int,N}) where {ElT,N}
+Base.@propagate_inbounds function Base.getindex(T::DiagTensor{ElT,N},inds::Vararg{Int,N}) where {ElT,N}
   if all(==(inds[1]),inds)
     return store(T)[inds[1]]
   else
     return zero(eltype(ElT))
   end
 end
-Base.getindex(T::DiagTensor{<:Number,1},ind::Int) = store(T)[ind]
-Base.getindex(T::DiagTensor{<:Number,0}) = store(T)[1]
+Base.@propagate_inbounds Base.getindex(T::DiagTensor{<:Number,1},ind::Int) = store(T)[ind]
+Base.@propagate_inbounds Base.getindex(T::DiagTensor{<:Number,0}) = store(T)[1]
 
 # Set diagonal elements
 # Throw error for off-diagonal
-function Base.setindex!(T::DiagTensor{<:Number,N},
-                        val,inds::Vararg{Int,N}) where {N}
+Base.@propagate_inbounds function Base.setindex!(T::DiagTensor{<:Number,N},
+                                            val,inds::Vararg{Int,N}) where {N}
   all(==(inds[1]),inds) || error("Cannot set off-diagonal element of Diag storage")
   return store(T)[inds[1]] = val
 end
-Base.setindex!(T::DiagTensor{<:Number,1},val,ind::Int) = ( store(T)[ind] = val )
-Base.setindex!(T::DiagTensor{<:Number,0},val) = ( store(T)[1] = val )
+Base.@propagate_inbounds Base.setindex!(T::DiagTensor{<:Number,1},val,ind::Int) = ( store(T)[ind] = val )
+Base.@propagate_inbounds Base.setindex!(T::DiagTensor{<:Number,0},val) = ( store(T)[1] = val )
 
 function Base.setindex!(T::UniformDiagTensor{<:Number,N},val,inds::Vararg{Int,N}) where {N}
   error("Cannot set elements of a uniform Diag storage")
 end
+
+# TODO: make a fill!! that works for uniform and non-uniform
+Base.fill!(T::DiagTensor,v) = fill!(store(T),v)
 
 function dense(::Type{<:Tensor{ElT,N,StoreT,IndsT}}) where {ElT,N,
                                                             StoreT<:Diag,IndsT}

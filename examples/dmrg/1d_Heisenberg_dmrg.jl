@@ -11,16 +11,18 @@ let
   N = 100                             
   # Create N spin-one degrees of freedom
   sites = spinOneSites(N)
+  # Alternatively can make spin-half sites instead
+  #sites = spinHalfSites(N)
 
   # Input operator terms which define a Hamiltonian
-  ampo = AutoMPO(sites)
+  ampo = AutoMPO()
   for j=1:N-1
       add!(ampo,"Sz",j,"Sz",j+1)
       add!(ampo,0.5,"S+",j,"S-",j+1)
       add!(ampo,0.5,"S-",j,"S+",j+1)
   end
   # Convert these terms to an MPO tensor network
-  H = toMPO(ampo)            
+  H = toMPO(ampo,sites)
 
   # Create an initial random matrix product state
   psi0 = randomMPS(sites)

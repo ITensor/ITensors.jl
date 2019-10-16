@@ -10,13 +10,13 @@ let
 
   lattice = squareLattice(Nx,Ny,yperiodic=false)
 
-  ampo = AutoMPO(sites)
+  ampo = AutoMPO()
   for b in lattice
     add!(ampo,0.5,"S+",b.s1,"S-",b.s2)
     add!(ampo,0.5,"S-",b.s1,"S+",b.s2)
     add!(ampo,    "Sz",b.s1,"Sz",b.s2)
   end
-  H = toMPO(ampo)
+  H = toMPO(ampo,sites)
 
   state = [isodd(n) ? "Up" : "Dn" for n=1:N]
   psi0 = productMPS(sites,state)

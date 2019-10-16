@@ -13,8 +13,8 @@ struct Dense{T} <: TensorStorage
 end
 
 # Convenient functions for Dense storage type
-Base.getindex(D::Dense,i::Integer) = data(D)[i]
-Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
+Base.@propagate_inbounds Base.getindex(D::Dense,i::Integer) = data(D)[i]
+Base.@propagate_inbounds Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
 
 Base.similar(D::Dense{T}) where {T} = Dense{T}(similar(data(D)))
 
@@ -27,6 +27,8 @@ Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(similar(Vector{T},dim(d
 Base.similar(D::Dense,::Type{T}) where {T} = Dense{T}(similar(data(D),T))
 Base.copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
 Base.copyto!(D1::Dense,D2::Dense) = copyto!(data(D1),data(D2))
+
+Base.fill!(D::Dense,v) = fill!(data(D),v)
 
 Base.zeros(::Type{Dense{T}},dim::Int) where {T} = Dense{T}(zeros(T,dim))
 
@@ -59,8 +61,10 @@ const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT
 
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
-Base.getindex(T::DenseTensor,i::Int) = store(T)[i]
-Base.setindex!(T::DenseTensor,v,i::Int) = (store(T)[i] = v)
+Base.@propagate_inbounds Base.getindex(T::DenseTensor,i::Int) = store(T)[i]
+Base.@propagate_inbounds Base.setindex!(T::DenseTensor,v,i::Int) = (store(T)[i] = v)
+
+Base.fill!(T::DenseTensor,v) = fill!(store(T),v)
 
 # How does Julia map from IndexCartesian to IndexLinear?
 #Base.getindex(T::DenseTensor{<:Number,N},

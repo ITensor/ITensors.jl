@@ -97,6 +97,16 @@ using ITensors,
         end
       end
     end
+    
+    @testset "fill!" begin
+      D = diagITensor(ones(d), i,j,k)
+      D = fill!(D, 2.0)
+      for ii = 1:d
+        @test D[i(ii),j(ii),k(ii)] == 2.0
+      end
+
+      @test eltype(D) == Float64
+    end
 
     @testset "Set elements" begin
       D = diagITensor(i,j,k)
@@ -147,10 +157,23 @@ using ITensors,
         @test D3[ii,ii,ii] == v3[ii]
       end
     end
-
-    @testset "Add (Diag uniform + Diag uniform)" begin
+    
+    @testset "Add ( number * Diag + Diag)" begin
       v1 = randn(d)
       v2 = randn(d)
+      D1 = Float32(2.0) * diagITensor(v1,i,j,k)
+      D2 = diagITensor(v2,k,i,j)
+
+      v3 = 2*v1 + v2
+      D3 = D1 + D2
+
+      @test D3 ≈ dense(D1) + dense(D2) 
+      for ii = 1:d
+        @test D3[ii,ii,ii] == v3[ii]
+      end
+    end
+
+    @testset "Add (Diag uniform + Diag uniform)" begin
       D1 = δ(i,j,k)
       D2 = δ(k,i,j)
 
@@ -186,6 +209,20 @@ using ITensors,
     @testset "Contraction (all contracted)" begin
       D = diagITensor(v,i,j,k)
       A = randomITensor(j,k,i)
+      
+      @test D*A ≈ dense(D)*A
+      @test A*D ≈ dense(D)*A
+    end
+    
+    @testset "Contraction (all contracted) with different types" begin
+      D = diagITensor(v,i,j,k)
+      A = randomITensor(Float32, j,k,i)
+      
+      @test D*A ≈ dense(D)*A
+      @test A*D ≈ dense(D)*A
+      
+      D = diagITensor(v,i,j,k)
+      A = randomITensor(ComplexF32, j,k,i)
       
       @test D*A ≈ dense(D)*A
       @test A*D ≈ dense(D)*A

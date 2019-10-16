@@ -124,6 +124,10 @@ using ITensors,
     I = IndexSet(i,k,j)
     @test swapprime(I,0,1,"i") == IndexSet(i',k,j)
     @test swapprime(I,0,1,"j") == IndexSet(i,k,j')
+      
+    I = IndexSet(i,i',j)
+    @test swapprime(I,0,1,"i") == IndexSet(i',i,j)
+    @test swapprime(I,0,1,"j") == IndexSet(i,i',j')
   end
   @testset "swaptags" begin
     i1 = Index(2,"Site,A")

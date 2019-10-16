@@ -1,22 +1,13 @@
 ## Misc To Do
 
-Bug: UInt64 == Tag runs, but doesn't work properly. Should it even run?
-
+? Bug: UInt64 == Tag runs, but doesn't work properly. Should it even run?
 
 + Rename Davidson function if not using the diagonal preconditioner.
-
-+ Further optimization of SmallString & TagSet
-  - ensure extra conversions aren't happening
-  - could convert(IntSmallString,SmallString) generate more efficient assembly?
 
 + Read/write of ITensors and other objects, using HDF5 format
 
 + Add docstrings (see mps/dmrg.jl for an example)
 
-+ Could ITensor getindex, setindex! be simplified?
-  - map expression is a bit hard to parse
-  - could args be IndexVal... instead of Union{IndexVal,AbstractVector{IndexVal}...}?
-  
 + Add noise term support to DMRG
 
 + Add copyright notice on top of files (see C++ version)
@@ -26,7 +17,6 @@ Bug: UInt64 == Tag runs, but doesn't work properly. Should it even run?
   - improve definitions and handling of parameters such as miniter, maxiter
 
 + MPS/MPO algorithms
-  - errorMPOProd
   - rename nmultMPO to multMPO
 
 + Additional DMRG algorithms:
@@ -45,12 +35,6 @@ Bug: UInt64 == Tag runs, but doesn't work properly. Should it even run?
 + Fermion support for AutoMPO (possibly through auto fermionic signs)
 
 + Move AutoMPO & physics site sets into separate ITensor physics package?
-
-+ Fancier AutoMPO interface?
-  Ideas:
-  1. ampo += "J Sz_{i} Sz_{i+1}" (using Meta.parse and eval)
-  2. ampo += J*"Sz"(i)*"Sz"(i+1) (using operator overloading)
-  3. define a macro @autompo or similar
 
 + Slicing of ITensors
 

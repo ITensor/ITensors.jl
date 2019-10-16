@@ -1,4 +1,6 @@
 export MPS,
+       sample,
+       sample!,
        leftLim,
        prime!,
        primelinks!,
@@ -6,6 +8,7 @@ export MPS,
        inner,
        productMPS,
        randomMPS,
+       replaceBond!,
        rightLim,
        maxLinkDim,
        linkindex,
@@ -31,7 +34,7 @@ mutable struct MPS
   end
 end
 
-function MPS(sites::SiteSet)
+function MPS(sites)
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
@@ -59,6 +62,13 @@ end
 
 function setRightLim!(m::MPS,new_rl::Int) 
   m.rlim_ = new_rl
+end
+
+isOrtho(m::MPS) = (leftLim(m)+1 == rightLim(m)-1)
+
+function orthoCenter(m::MPS)
+  !isOrtho(m) && error("MPS has no well-defined orthogonality center")
+  return leftLim(m)+1
 end
 
 getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
@@ -93,32 +103,35 @@ function randomMPS(sites)
   return M
 end
 
-const InitState = Union{Vector{String},Vector{Int}}
-
-function productMPS(sites::SiteSet,
-                    is::InitState)
-  N = length(sites)
-  if N != length(is)
-    throw(DimensionMismatch("Site Set and InitState sizes don't match"))
-  end
+function productMPS(ivals::Vector{IndexVal})
+  N = length(ivals)
   As = Vector{ITensor}(undef,N)
   links  = Vector{Index}(undef,N)
-  for n in eachindex(is)
-    s = sites[n]
+  for n=1:N
+    s = ind(ivals[n])
     links[n] = Index(1,"Link,l=$n")
     if n == 1
       A = ITensor(s,links[n])
-      A[state(sites,n,is[n]),links[n](1)] = 1.0
+      A[ivals[n],links[n](1)] = 1.0
     elseif n == N
       A = ITensor(links[n-1],s)
-      A[links[n-1](1),state(sites,n,is[n])] = 1.0
+      A[links[n-1](1),ivals[n]] = 1.0
     else
       A = ITensor(links[n-1],s,links[n])
-      A[links[n-1](1),state(sites,n,is[n]),links[n](1)] = 1.0
+      A[links[n-1](1),ivals[n],links[n](1)] = 1.0
     end
     As[n] = A
   end
   return MPS(N,As,0,2)
+end
+
+function productMPS(sites,
+                    states)
+  if length(sites) != length(states)
+    throw(DimensionMismatch("Number of sites and and initial states don't match"))
+  end
+  ivals = [state(sites[n],states[n]) for n=1:length(sites)]
+  return productMPS(ivals)
 end
 
 function linkindex(M::MPS,j::Integer) 
@@ -186,6 +199,78 @@ function replaceBond!(M::MPS,
     M.llim_ == b-1 && (M.llim_ += 1)
     M.rlim_ == b+1 && (M.rlim_ += 1)
   end
+end
+
+"""
+    sample!(m::MPS)
+
+Given a normalized MPS m, returns a `Vector{Int}` 
+of `length(m)` corresponding to one sample 
+of the probability distribution defined by 
+squaring the components of the tensor
+that the MPS represents. If the MPS does
+not have an orthogonality center, 
+orthogonalize!(m,1) will be called before
+computing the sample.
+"""
+function sample!(m::MPS)
+  orthogonalize!(m,1)
+  return sample(m)
+end
+
+"""
+    sample(m::MPS)
+
+Given a normalized MPS m with `orthoCenter(m)==1`,
+returns a `Vector{Int}` of `length(m)`
+corresponding to one sample of the
+probability distribution defined by 
+squaring the components of the tensor
+that the MPS represents
+"""
+function sample(m::MPS)
+  N = length(m)
+
+  if orthoCenter(m) != 1
+    error("sample: MPS m must have orthoCenter(m)==1")
+  end
+  if abs(1.0-norm(m[1])) > 1E-8
+    error("sample: MPS is not normalized, norm=$(norm(m[1]))")
+  end
+
+  result = zeros(Int,N)
+  A = m[1]
+
+  for j=1:N
+    s = siteindex(m,j)
+    d = dim(s)
+    # Compute the probability of each state
+    # one-by-one and stop when the random
+    # number r is below the total prob so far
+    pdisc = 0.0
+    r = rand()
+    # Will need n,An, and pn below
+    n = 1
+    An = ITensor()
+    pn = 0.0
+    while n <= d
+      projn = ITensor(s)
+      projn[s[n]] = 1.0
+      An = A*projn
+      pn = scalar(dag(An)*An)
+      pdisc += pn
+      (r < pdisc) && break
+      n += 1
+    end
+
+    result[j] = n
+
+    if j < N
+      A = m[j+1]*An
+      A *= (1.0/sqrt(pn))
+    end
+  end
+  return result
 end
 
 

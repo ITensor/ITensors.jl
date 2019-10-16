@@ -24,6 +24,7 @@ export IndexSet,
 struct IndexSet{N}
   inds::MVector{N,Index}
   IndexSet{N}(inds::MVector{N,Index}) where {N} = new{N}(inds)
+  IndexSet{0}(::MVector{0}) = new{0}(())
   IndexSet{N}(inds::NTuple{N,Index}) where {N} = new{N}(inds)
   IndexSet{0}() = new{0}(())
   IndexSet{0}(::Tuple{}) = new{0}(())
@@ -36,6 +37,7 @@ inds(is::IndexSet) = is.inds
 # Empty constructor
 IndexSet() = IndexSet{0}()
 IndexSet(::Tuple{}) = IndexSet()
+IndexSet(::MVector{0}) = IndexSet()
 
 # Construct of some size
 IndexSet{N}() where {N} = IndexSet{N}(ntuple(_->Index(),Val(N)))
@@ -668,3 +670,19 @@ function is_uncombiner(labelsT1,labelsT2)
          count_common(labelsT1,labelsT2) == 1
 end
 
+function Base.read(io::IO,::Type{IndexSet};kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  is = IndexSet()
+  if format=="cpp"
+    size = read(io,Int)
+    resize!(is.inds,size)
+    for n=1:size
+      i = read(io,Index;kwargs...)
+      stride = read(io,UInt64)
+      is.inds[n] = i
+    end
+  else
+    throw(ArgumentError("read IndexSet: format=$format not supported"))
+  end
+  return is
+end

@@ -1,7 +1,7 @@
 using ITensors,
       Random
 
-function makeRandomMPS(sites::SiteSet;
+function makeRandomMPS(sites;
                        chi::Int=4)::MPS
   N = length(sites)
   v = Vector{ITensor}(undef, N)
@@ -21,7 +21,7 @@ function makeRandomMPS(sites::SiteSet;
   return MPS(N,v,0,N+1)
 end
 
-function makeRandomMPO(sites::SiteSet;
+function makeRandomMPO(sites;
                        chi::Int=4)::MPO
   N = length(sites)
   v = Vector{ITensor}(undef, N)
