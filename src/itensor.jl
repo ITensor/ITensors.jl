@@ -74,8 +74,7 @@ function ITensor(x::S,inds::IndexSet{N}) where {S<:Number,N}
 end
 ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
-#TODO: check that the size of the Array matches the Index dimensions
-function ITensor(A::Array{S,N},inds::IndexSet{N}) where {S<:Number,N}
+function ITensor(A::Array{S},inds::IndexSet{N}) where {S<:Number,N}
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   return ITensor{N}(Dense{float(S)}(float(vec(A))),inds)
 end
