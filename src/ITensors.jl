@@ -75,6 +75,7 @@ include("tensor/dense.jl")
 include("tensor/linearalgebra.jl")
 include("tensor/diag.jl")
 include("tensor/combiner.jl")
+include("tensor/blocksparse.jl")
 include("tensor/truncate.jl")
 include("tensor/svd.jl")
 
