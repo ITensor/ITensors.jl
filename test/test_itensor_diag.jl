@@ -252,7 +252,7 @@ using ITensors,
       @test D2*D1 ≈ dense(D1)*dense(D2)
     end
 
-    @testset "Contraction Diag*Diag (all contracted)" begin
+    @testset "Contraction Diag*Diag (general)" begin
       D1 = diagITensor(v,l,i,k,j)
       D2 = diagITensor(vr,m,k,n,l)
 

@@ -3,7 +3,8 @@ module ITensors
 using Random,
       Printf,
       LinearAlgebra,
-      StaticArrays # For SmallString
+      StaticArrays,
+      TimerOutputs
 
 # TODO: move imports to individual files
 import Base.adjoint,
@@ -50,22 +51,36 @@ import Base.adjoint,
 
 #####################################
 # Global Variables
-
+#
 const warnTensorOrder = 10
+const GLOBAL_TIMER = TimerOutput()
 
 #####################################
-
+# Index and IndexSet
+#
+# TODO: load these after Tensor functions
 include("smallstring.jl")
 include("readwrite.jl")
 include("tagset.jl")
 include("index.jl")
 include("indexset.jl")
-include("storage/tensorstorage.jl")
-include("storage/dense.jl")
-include("storage/diag.jl")
-include("storage/combiner.jl")
-include("storage/contract.jl")
-include("storage/svd.jl")
+
+#####################################
+# Tensor
+#
+include("tensor/tensor.jl")
+include("tensor/tensorstorage.jl")
+include("tensor/contraction_logic.jl")
+include("tensor/dense.jl")
+include("tensor/linearalgebra.jl")
+include("tensor/diag.jl")
+include("tensor/combiner.jl")
+include("tensor/truncate.jl")
+include("tensor/svd.jl")
+
+#####################################
+# ITensor
+#
 include("itensor.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
@@ -91,4 +106,4 @@ include("physics/site_types/electron.jl")
 include("physics/site_types/tj.jl")
 include("physics/autompo.jl")
 
-end # module
+end # module ITensors

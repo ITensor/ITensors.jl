@@ -105,6 +105,11 @@ Obtain the prime level of an Index
 """
 plev(i::Index) = plev(tags(i))
 
+# Overload for use in AbstractArray interface for Tensor
+#Base.length(i::Index) = dim(i)
+#Base.UnitRange(i::Index) = 1:dim(i)
+#Base.checkindex(::Type{Bool}, i::Index, val::Int64) = (val ≤ dim(i) && val ≥ 1)
+
 """
 ==(i1::Index, i1::Index)
 
@@ -258,7 +263,7 @@ end
 IndexVal() = IndexVal(Index(),1)
 
 getindex(i::Index, j::Int) = IndexVal(i, j)
-getindex(i::Index, c::Colon) = [IndexVal(i, j) for j in 1:dim(i)]
+#getindex(i::Index, c::Colon) = [IndexVal(i, j) for j in 1:dim(i)]
 
 (i::Index)(n::Int) = IndexVal(i,n)
 

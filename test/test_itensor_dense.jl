@@ -5,7 +5,9 @@ using ITensors,
 
 Random.seed!(12345)
 
-digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
+digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
+
+@testset "Dense ITensor basic functionality" begin
 
 @testset "ITensor constructors" begin
   i = Index(2,"i")
@@ -51,9 +53,9 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     A = ITensor(M,i,j)
     @test store(A) isa Dense{Float64}
 
-    @test M ≈ Matrix(A,i,j)
-    @test M' ≈ Matrix(A,j,i)
-    @test_throws DimensionMismatch Vector(A)
+    @test M ≈ matrix(A,i,j)
+    @test M' ≈ matrix(A,j,i)
+    @test_throws DimensionMismatch vector(A)
 
     @test size(A,1) == size(M,1) == 2
     @test size(A,3) == size(M,3) == 1
@@ -67,30 +69,30 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
   @testset "To Matrix" begin
     TM = randomITensor(i,j)
 
-    M1 = Matrix(TM)
+    M1 = matrix(TM)
     for ni in i, nj in j
       @test M1[ni,nj] ≈ TM[i(ni),j(nj)]
     end
 
-    M2 = Matrix(TM,j,i)
+    M2 = matrix(TM,j,i)
     for ni in i, nj in j
       @test M2[nj,ni] ≈ TM[i(ni),j(nj)]
     end
 
     T3 = randomITensor(i,j,k)
-    @test_throws DimensionMismatch Matrix(T3,i,j)
+    @test_throws DimensionMismatch matrix(T3,i,j)
   end
 
   @testset "To Vector" begin
     TV = randomITensor(i)
 
-    V = Vector(TV)
+    V = vector(TV)
     for ni in i
       @test V[ni] ≈ TV[i(ni)]
     end
 
     T2 = randomITensor(i,j)
-    @test_throws DimensionMismatch Vector(T2)
+    @test_throws DimensionMismatch vector(T2)
   end
 
   @testset "Complex" begin
@@ -127,7 +129,8 @@ end
   A = randomITensor(i,j)
   B = similar(A)
   @test inds(B) == inds(A)
-  @test_throws ErrorException similar(A, ComplexF32)
+  Ac = similar(A, ComplexF32)
+  @test store(Ac) isa Dense{ComplexF32}
 end
 
 @testset "fill!" begin
@@ -178,32 +181,28 @@ end
   i1 = Index(2,"i1")
   i2 = Index(2,"i2")
   Amat = rand(2,2,2,2)
-  A = ITensor(Amat, i1,i2,s1,s2)
+  A = ITensor(Amat,i1,i2,s1,s2)
 
-  Aexp = exp(A,IndexSet(i1,i2))
-  Amatexp = reshape( exp(reshape(Amat,4,4)), 2,2,2,2)
-  Aexp_from_mat = ITensor(Amatexp, i1,i2,s1,s2)
+  Aexp = exp(A,(i1,i2),(s1,s2))
+  Amatexp = reshape(exp(reshape(Amat,4,4)),2,2,2,2)
+  Aexp_from_mat = ITensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
 
   #test that exponentiation works when indices need to be permuted
-  Aexp = exp(A,IndexSet(s1,s2))
-  Amatexp = Array( exp(  reshape(Amat,4,4))' )
-  Aexp_from_mat = ITensor(reshape(Amatexp,2,2,2,2), s1,s2,i1,i2)
+  Aexp = exp(A,(s1,s2),(i1,i2))
+  Amatexp = Matrix(exp(reshape(Amat,4,4))')
+  Aexp_from_mat = ITensor(reshape(Amatexp,2,2,2,2),s1,s2,i1,i2)
   @test Aexp ≈ Aexp_from_mat
 
   #test exponentiation when hermitian=true is used
   Amat = reshape(Amat, 4,4)
-  Amat = reshape( Amat + Amat' + randn(4,4)*1e-10 , 2,2,2,2)
-  A = ITensor(Amat, i1,i2,s1,s2)
-  Aexp = exp(A,IndexSet(i1,i2), hermitian=true)
-  Amatexp = Array(reshape( exp(Hermitian(reshape(Amat,4,4))), 2,2,2,2))
-  Aexp_from_mat = ITensor(Amatexp, i1,i2,s1,s2)
+  Amat = reshape(Amat+Amat'+randn(4,4)*1e-10,2,2,2,2)
+  A = ITensor(Amat,i1,i2,s1,s2)
+  Aexp = exp(A,(i1,i2),(s1,s2),ishermitian=true)
+  Amatexp = reshape(parent(exp(Hermitian(reshape(Amat,4,4)))),
+                    2,2,2,2)
+  Aexp_from_mat = ITensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
-
-
-
-  @test_throws DimensionMismatch exp(A,IndexSet(s1))
-
 end
 
 
@@ -256,20 +255,19 @@ end
 end
 
 @testset "Test isapprox for ITensors" begin
-        m,n = rand(0:20,2)
-        i = Index(m)
-        j = Index(n)
-        realData = rand(m,n)
-        complexData = realData+ zeros(m,n)*1im
-        A = ITensor(realData, i,j)
-        B = ITensor(complexData, i,j)
-        @test A≈B
-        @test B≈A
-        realDataT = Array(transpose(realData))
-        A = ITensor(realDataT, j,i)
-        @test A≈B
-        @test B≈A
-    end
+  m,n = rand(0:20,2)
+  i = Index(m)
+  j = Index(n)
+  realData = rand(m,n)
+  complexData = complex(realData)
+  A = ITensor(realData, i,j)
+  B = ITensor(complexData, i,j)
+  @test A≈B
+  @test B≈A
+  A = permute(A,j,i)
+  @test A≈B
+  @test B≈A
+end
 
 @testset "ITensor tagging and priming" begin
   s1 = Index(2,"Site,s=1")
@@ -408,7 +406,7 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[j(jj),k(kk),i(ii)]==digits(SType,ii,jj,kk)
     end
-    @test_throws ErrorException A[1]
+    @test_throws MethodError A[1]
   end
   @testset "Test permute(ITensor,Index...)" begin
     A = randomITensor(SType,i,k,j)
@@ -422,19 +420,21 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[k(kk),i(ii),j(jj)]==permA[i(ii),j(jj),k(kk)]
     end
-    @testset "getindex and setindex with vector of IndexVals" begin
-        k_inds = [k(kk) for kk ∈ 1:dim(k)]
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-          @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
-        end
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-            A[k_inds,i(ii),j(jj)]=collect(1:length(k_inds))
-        end
-        permA = permute(A,k,j,i)
-        for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-          @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds]
-        end
-    end
+    # TODO: I think this was doing slicing, but what is the output
+    # of slicing an ITensor?
+    #@testset "getindex and setindex with vector of IndexVals" begin
+    #    k_inds = [k(kk) for kk ∈ 1:dim(k)]
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #      @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
+    #    end
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #        A[k_inds,i(ii),j(jj)]=collect(1:length(k_inds))
+    #    end
+    #    permA = permute(A,k,j,i)
+    #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
+    #      @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
+    #    end
+    #end
   end
   @testset "Set and get values with Ints" begin
     A = ITensor(SType,i,j,k)
@@ -452,10 +452,7 @@ end
     A = ITensor(x)
     @test x==scalar(A)
     A = ITensor(SType,i,j,k)
-    @test_throws ArgumentError scalar(A)
-    # test the storage_scalar error throw
-    ds = Dense{Float64}(rand(10))
-    @test_throws ErrorException ITensor.storage_scalar(ds)
+    @test_throws BoundsError scalar(A)
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)
@@ -468,7 +465,7 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test C[i(ii),j(jj),k(kk)]==A[j(jj),i(ii),k(kk)]+B[i(ii),k(kk),j(jj)]
     end
-    @test Array(permute(C,i,j,k))==Array(permute(A,i,j,k))+Array(permute(B,i,j,k))
+    @test array(permute(C,i,j,k))==array(permute(A,i,j,k))+array(permute(B,i,j,k))
   end
 
   @testset "Test factorizations of an ITensor" begin
@@ -484,14 +481,12 @@ end
     end
 
     @testset "Test SVD truncation" begin
-        M = randn(4,4) + randn(4,4)*1.0im
-        (U,s,Vh) = svd(M)
         ii = Index(4)
         jj = Index(4)
-        S = Diagonal(s)
-        T = ITensor(IndexSet(ii,jj),Dense{ComplexF64}(vec(U*S*Vh)))
-        (U,S,Vh) = svd(T,ii;maxdim=2)
-        @test norm((U*S)*Vh-T)≈sqrt(s[3]^2+s[4]^2)
+        T = randomITensor(ComplexF64,ii,jj)
+        U,S,V = svd(T,ii;maxdim=2)
+        u,s,v = svd(matrix(T))
+        @test norm(U*S*V-T)≈sqrt(s[3]^2+s[4]^2)
     end
 
     @testset "Test QR decomposition of an ITensor" begin
@@ -507,20 +502,32 @@ end
       #Note: this is only satisfied when left dimensions
       #are greater than right dimensions
       UUᵀ =  U*dag(prime(U,u))
-      for ii ∈ dim(u[1]), jj ∈ dim(u[2])
-        @test UUᵀ[u[1](ii),u[2](jj),u[1]'(ii),u[2]'(jj)]≈one(SType) atol=1e-14
+
+      # TODO: use a combiner to combine the u indices to make
+      # this test simpler
+      for ii ∈ 1:dim(u[1]), jj ∈ 1:dim(u[2]), iip ∈ 1:dim(u[1]), jjp ∈ 1:dim(u[2])
+        val = UUᵀ[u[1](ii),u[2](jj),u[1]'(iip),u[2]'(jjp)]
+        if ii==iip && jj==jjp
+          @test val≈one(SType) atol=1e-14
+        else
+          @test val≈zero(SType) atol=1e-14
+        end
       end
     end
 
-    # TODO: need to implement swapInds
-    #@testset "Test eigen decomposition of an ITensor" begin
-    #  A = A + swapInds(dag(A),(i,k),(j,l))
-    #  U,D,u = eigen(A,(i,k),(j,l))
-    #  @test A≈U*D*prime(dag(U))
-    #  UUᵀ =  U*prime(dag(U),u)
-    #  @test UUᴴ ≈ δ(u,u') atol=1e-14
-    #end
+    @testset "Test Hermitian eigendecomposition of an ITensor" begin
+      is = IndexSet(i,j)
+      T = randomITensor(is...,prime(is)...)
+      T = T + swapprime(dag(T),0,1)
+      U,D,u = eigenHermitian(T)
+      @test T ≈ U*D*prime(dag(U))
+      UUᴴ =  U*prime(dag(U),u)
+      @test UUᴴ ≈ δ(u,u') atol=1e-14
+    end
+
   end # End ITensor factorization testset
+
 end # End Dense storage test
 
+end # End Dense ITensor basic functionality
 

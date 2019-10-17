@@ -27,7 +27,7 @@ mutable struct MPS
   MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
 
   function MPS(N::Int, 
-               A::Vector{ITensor}, 
+               A::Vector{<:ITensor}, 
                llim::Int=0, 
                rlim::Int=N+1)
     new(N,A,llim,rlim)
@@ -138,7 +138,7 @@ function linkindex(M::MPS,j::Integer)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPS is $N)")
   li = commonindex(M[j],M[j+1])
-  if isdefault(li)
+  if isnothing(li)
     error("linkindex: no MPS link index at link $j")
   end
   return li
@@ -157,12 +157,7 @@ function siteindex(M::MPS,j::Integer)
 end
 
 function siteinds(M::MPS)
-  N = length(M)
-  is = IndexSet(N)
-  for j in eachindex(M)
-    is[j] = siteindex(M,j)
-  end
-  return is
+  return [siteindex(M,j) for j in 1:length(M)]
 end
 
 function replacesites!(M::MPS,sites)
