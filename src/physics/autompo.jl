@@ -82,8 +82,8 @@ function MPOTerm(c::Number,
   vop = OpTerm(undef,2+div(length(ops),2))
   vop[1] = SiteOp(op1,i1)
   vop[2] = SiteOp(op2,i2)
-  for n=1:2:length(ops)
-    vop[2+n] = SiteOp(ops[n],ops[n+1])
+  for n = 1:div(length(ops),2)
+    vop[2+n] = SiteOp(ops[2*n-1],ops[2*n])
   end
   return MPOTerm(convert(ComplexF64,c),vop)
 end

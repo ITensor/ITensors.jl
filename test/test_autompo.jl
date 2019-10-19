@@ -126,6 +126,30 @@ function threeSiteIsingMPO(sites,
   return H
 end
 
+function fourSiteIsingMPO(sites)::MPO
+  H = MPO(sites)
+  N = length(H)
+  link = fill(Index(),N+1)
+  for n=1:N+1
+    link[n] = Index(5,"Link,l=$(n-1)")
+  end
+  for n=1:N
+    s = sites[n]
+    ll = link[n]
+    rl = link[n+1]
+    H[n] = ITensor(ll,s,s',rl)
+    H[n] += setElt(ll[1])*setElt(rl[1])*op(sites,"Id",n)
+    H[n] += setElt(ll[5])*setElt(rl[5])*op(sites,"Id",n)
+    H[n] += setElt(ll[2])*setElt(rl[1])*op(sites,"Sz",n)
+    H[n] += setElt(ll[3])*setElt(rl[2])*op(sites,"Sz",n)
+    H[n] += setElt(ll[4])*setElt(rl[3])*op(sites,"Sz",n)
+    H[n] += setElt(ll[5])*setElt(rl[4])*op(sites,"Sz",n)
+  end
+  H[1] *= setElt(link[1][5])
+  H[N] *= setElt(link[N+1][1])
+  return H
+end
+
 @testset "AutoMPO" begin
 
   N = 10
@@ -253,6 +277,20 @@ end
     sites = spinHalfSites(N)
     Ha = toMPO(ampo,sites)
     He = threeSiteIsingMPO(sites,h)
+    psi = makeRandomMPS(sites)
+    Oa = inner(psi,Ha,psi)
+    Oe = inner(psi,He,psi)
+    @test Oa ≈ Oe
+  end
+
+  @testset "Four-site ops" begin
+    ampo = AutoMPO()
+    for j=1:N-3
+      add!(ampo,"Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3)
+    end
+    sites = spinHalfSites(N)
+    Ha = toMPO(ampo,sites)
+    He = fourSiteIsingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
     Oe = inner(psi,He,psi)
