@@ -15,7 +15,7 @@ mutable struct MPO
 
   MPO() = new(0,Vector{ITensor}(), 0, 0)
 
-  function MPO(N::Int, A::Vector{ITensor}, llim::Int=0, rlim::Int=N+1)
+  function MPO(N::Int, A::Vector{<:ITensor}, llim::Int=0, rlim::Int=N+1)
     new(N, A, llim, rlim)
   end
 
@@ -48,18 +48,25 @@ function MPO(sites,
   links = Vector{Index}(undef, N)
   for ii ∈ eachindex(sites)
     si = sites[ii]
+    d = dim(si)
     spin_op = op(sites, ops[ii], ii)
     links[ii] = Index(1, "Link,n=$ii")
     local this_it
     if ii == 1
       this_it = ITensor(links[ii], si, si')
-      this_it[links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+      for jj in 1:d, jjp in 1:d
+        this_it[links[ii](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
+      end
     elseif ii == N
       this_it = ITensor(links[ii-1], si, si')
-      this_it[links[ii-1](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+      for jj in 1:d, jjp in 1:d
+        this_it[links[ii-1](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
+      end
     else
       this_it = ITensor(links[ii-1], links[ii], si, si')
-      this_it[links[ii-1](1), links[ii](1), si[:], si'[:]] = spin_op[si[:], si'[:]]
+      for jj in 1:d, jjp in 1:d
+        this_it[links[ii-1](1), links[ii](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
+      end
     end
     its[ii] = this_it
   end
@@ -126,13 +133,7 @@ function siteindex(A::MPO,x::MPS,j::Integer)
   return si
 end
 
-function siteinds(A::MPO,x::MPS)
-  is = IndexSet(length(A))
-  @inbounds for j in eachindex(A)
-    is[j] = siteindex(A,x,j)
-  end
-  return is
-end
+siteinds(A::MPO,x::MPS) = [siteindex(A,x,j) for j ∈ 1:length(A)]
 
 """
     dag(m::MPS)
@@ -201,7 +202,7 @@ function linkindex(M::MPO,j::Integer)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPO is $N)")
   li = commonindex(M[j],M[j+1])
-  if isdefault(li)
+  if isnothing(li)
     error("linkindex: no MPO link index at link $j")
   end
   return li
@@ -305,8 +306,8 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     lAs = [linkindex(A, i) for i in 1:n-1]
     prime!(A, rand_plev, "Link")
 
-    first  = fill(ITensor(), n)
-    second = fill(ITensor(), n)
+    first  = Vector{ITensor{2}}(undef,n-1)
+    second = Vector{ITensor{2}}(undef,n-1)
     for i in 1:n-1
         lA = linkindex(A, i)
         lB = linkindex(B, i)
@@ -361,24 +362,29 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     for j in 2:n-1
         E[j] = E[j-1]*psi[j]*A[j]*A_c[j]*psi_c[j]
     end
-    O          = prime(psi[n] * A[n], -1, "Site")
-    ρ          = E[n-1] * O * dag(prime(O, rand_plev))
-    ts         = tags(commonindex(psi[n], psi[n-1]))
-    Lis        = commonindex(ρ, A[n])
-    FU, D      = eigen(ρ, Lis, prime(Lis, rand_plev); utags=ts, maxdim=maxdim, cutoff=cutoff)
-    FU         = setprime(FU, 0, "Site")
-    psi_out[n] = copy(dag(FU))
-    O          = O * FU * psi[n-1] * A[n-1]
-    O          = prime(O, -1, "Site")
+    O     = psi[n] * A[n]
+    ρ     = E[n-1] * O * dag(prime(O, rand_plev))
+    ts    = tags(commonindex(psi[n], psi[n-1]))
+    Lis   = commonindex(ρ, A[n])
+    Ris   = uniqueinds(ρ, Lis)
+    FU, D = eigenHermitian(ρ, Lis, Ris; ispossemidef=true, 
+                                        tags=ts, 
+                                        kwargs...)
+    psi_out[n] = setprime(dag(FU), 0, "Site")
+    O     = O * FU * psi[n-1] * A[n-1]
+    O     = prime(O, -1, "Site")
     for j in reverse(2:n-1)
-        ρ     = E[j-1] * O * prime(dag(O), rand_plev)
-        ts    = tags(commonindex(psi[j], psi[j-1]))
-        Lis   = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
-        FU, D = eigen(ρ, Lis, prime(Lis, rand_plev); utags=ts, maxdim=maxdim, cutoff=cutoff)
-        FU    = setprime(FU, 0, "Site")
-        psi_out[j] = copy(dag(FU))
-        O     = O * FU * psi[j-1] * A[j-1]
-        O     = prime(O, -1, "Site")
+        dO  = prime(dag(O), rand_plev)
+        ρ   = E[j-1] * O * dO
+        ts  = tags(commonindex(psi[j], psi[j-1]))
+        Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
+        Ris = uniqueinds(ρ, Lis)
+        FU, D = eigenHermitian(ρ, Lis, Ris; ispossemidef=true,
+                                            tags=ts, 
+                                            kwargs...)
+        psi_out[j] = dag(FU)
+        O = O * FU * psi[j-1] * A[j-1]
+        O = prime(O, -1, "Site")
     end
     if normalize
         O /= norm(O)
@@ -403,7 +409,7 @@ function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   for b=1:(N-1)
     Al = commonindex(A[b],A[b+1])
     pl = commonindex(psi[b],psi[b+1])
-    C = combiner(Al,pl)
+    C,_ = combiner(Al,pl)
     psi_out[b] *= C
     psi_out[b+1] *= C
   end

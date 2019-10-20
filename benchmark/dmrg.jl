@@ -8,13 +8,13 @@ function main()
   N = 100
   sites = spinOneSites(N)
 
-  ampo = AutoMPO(sites)
+  ampo = AutoMPO()
   for j=1:N-1
     add!(ampo,"Sz",j,"Sz",j+1)
     add!(ampo,0.5,"S+",j,"S-",j+1)
     add!(ampo,0.5,"S-",j,"S+",j+1)
   end
-  H = toMPO(ampo)
+  H = toMPO(ampo,sites)
 
   psi = randomMPS(sites)
 

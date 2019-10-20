@@ -1,119 +1,38 @@
-export svd,
-       qr,
-       polar,
-       eigen,
+export polar,
+       eigenHermitian,
        factorize
-
-function truncate!(P::Vector{Float64};
-                   kwargs...)::Tuple{Float64,Float64}
-  maxdim::Int = min(get(kwargs,:maxdim,length(P)), length(P))
-  mindim::Int = max(get(kwargs,:mindim,1), 1)
-  cutoff::Float64 = max(get(kwargs,:cutoff,0.0), 0.0)
-  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
-  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-
-  origm = length(P)
-  docut = 0.0
-
-  if P[1]<=0.0
-    P[1] = 0.0
-    resize!(P,1)
-    return 0.,0.
-  end
-
-  if origm==1
-    docut = P[1]/2
-    return 0.,docut
-  end
-
-  #Zero out any negative weight
-  for n=origm:-1:1
-    (P[n] >= 0.0) && break
-    P[n] = 0.0
-  end
-  
-  n = origm
-  truncerr = 0.0
-  while n > maxdim
-    truncerr += P[n]
-    n -= 1
-  end
-
-  if absoluteCutoff
-    #Test if individual prob. weights fall below cutoff
-    #rather than using *sum* of discarded weights
-    while P[n] <= cutoff && n > mindim
-      truncerr += P[n]
-      n -= 1
-    end
-  else
-    scale = 1.0
-    if doRelCutoff
-      scale = sum(P)
-      (scale==0.0) && (scale = 1.0)
-    end
-
-    #Continue truncating until *sum* of discarded probability 
-    #weight reaches cutoff reached (or m==mindim)
-    while (truncerr+P[n] <= cutoff*scale) && (n > mindim)
-      truncerr += P[n]
-      n -= 1
-    end
-
-    truncerr /= scale
-  end
-
-  if n < 1
-    n = 1
-  end
-
-  if n < origm
-    docut = (P[n]+P[n+1])/2
-    if abs(P[n]-P[n+1]) < 1E-3*P[n]
-      docut += 1E-3*P[n]
-    end
-  end
-
-  resize!(P,n)
-
-  return truncerr,docut
-end
-
-# Take ITensor A, permute the storage so that
-# Linds are in front, return the permuted A
-# and the new left and right indices
-function _permute_for_factorize(A::ITensor,
-                                Linds...)
-  Ais = inds(A)
-  Lis_orig = IndexSet(Linds...)
-  Lis = commoninds(Ais,Lis_orig)
-  Ris = uniqueinds(Ais,Lis)
-  Ais_perm = IndexSet(Lis...,Ris...)
-  # TODO: check if hassameinds(Lis,Ais[1:length(Lis)])
-  # so that a permute can be avoided
-  if inds(A) ≠ Ais_perm
-    A = permute(A,Ais_perm)
-  end
-  return A,Lis,Ris
-end
 
 import LinearAlgebra.qr
 function qr(A::ITensor,
-            Linds...)
-  A,Lis,Ris = _permute_for_factorize(A,Linds...)
-  Qis,Qstore,Pis,Pstore = storage_qr(store(A),Lis,Ris)
-  Q = ITensor(Qis,Qstore)
-  R = ITensor(Pis,Pstore)
-  return Q,R,commonindex(Q,R)
+            Linds...;
+            kwargs...)
+  tags::TagSet = get(kwargs,:tags,"Link,qr")
+  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Ris = uniqueinds(inds(A),Lis)
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  QT,RT = qr(tensor(A),Lpos,Rpos)
+  Q,R = ITensor(QT),ITensor(RT)
+  q = commonindex(Q,R)
+  settags!(Q,tags,q)
+  settags!(R,tags,q)
+  q = settags(q,tags)
+  return Q,R,q
 end
 
+# TODO: allow custom tags in internal indices?
 function polar(A::ITensor,
-               Linds...)
-  A,Lis,Ris = _permute_for_factorize(A,Linds...)
-  Qis,Qstore,Pis,Pstore = storage_polar(store(A),Lis,Ris)
-  Q = ITensor(Qis,Qstore)
-  P = ITensor(Pis,Pstore)
-  return Q,P,commoninds(Q,P)
+               Linds...;
+               kwargs...)
+  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Ris = uniqueinds(inds(A),Lis)
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  UT,PT = polar(tensor(A),Lpos,Rpos)
+  U,P = ITensor(UT),ITensor(PT)
+  u = commoninds(U,P)
+  p = uniqueinds(P,U)
+  replaceinds!(U,u,p')
+  replaceinds!(P,u,p')
+  return U,P,commoninds(U,P)
 end
 
 import LinearAlgebra.svd
@@ -143,14 +62,23 @@ arguments provided. The following keyword arguments are recognized:
 function svd(A::ITensor,
              Linds...;
              kwargs...)
-  A,Lis,Ris = _permute_for_factorize(A,Linds...)
-  Uis,Ustore,Sis,Sstore,Vis,Vstore = storage_svd(store(A),Lis,Ris;kwargs...)
+  utags::TagSet = get(kwargs,:utags,"Link,u")
+  vtags::TagSet = get(kwargs,:vtags,"Link,v")
+  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Ris = uniqueinds(inds(A),Lis)
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  UT,ST,VT = svd(tensor(A),Lpos,Rpos;kwargs...)
+  U,S,V = ITensor(UT),ITensor(ST),ITensor(VT)
+  u₀ = commonindex(U,S)
+  v₀ = commonindex(S,V)
 
-  U = ITensor(Uis,Ustore)
-  S = ITensor(Sis,Sstore)
-  V = ITensor(Vis,Vstore)
-  u = commonindex(U,S)
-  v = commonindex(S,V)
+  u = settags(u₀,utags)
+  v = settags(u₀,vtags)
+
+  U *= δ(dag(u₀),u)
+  S = δ(dag(u₀),u)*S*δ(dag(v₀),v)
+  V *= δ(dag(v₀),v)
+
   return U,S,V,u,v
 end
 
@@ -194,20 +122,22 @@ end
 function _factorize_from_left_eigen(A::ITensor,
                                     Linds...; 
                                     kwargs...)
-  A,Lis,Ris = _permute_for_factorize(A,Linds...)
-  A²    = A*prime(dag(A),Lis)
-  FU, D = eigen(A²,Lis,prime(Lis); kwargs...)
-  FV    = dag(FU)*A
+  Lis = commoninds(inds(A),IndexSet(Linds...))
+  A² = A*prime(dag(A),Lis)
+  FU,D = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true,
+                                           kwargs...)
+  FV = dag(FU)*A
   return FU,FV,commonindex(FU,FV)
 end
 
 function _factorize_from_right_eigen(A::ITensor,
                                      Linds...; 
                                      kwargs...)
-  A,Lis,Ris = _permute_for_factorize(A,Linds...)
-  A²   = A*prime(dag(A),Ris)
-  FV,D = eigen(A²,Ris,prime(Ris); kwargs...)
-  FU   = A*dag(FV)
+  Ris = uniqueinds(inds(A),IndexSet(Linds...))
+  A² = A*prime(dag(A),Ris)
+  FV,D = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true,
+                                           kwargs...)
+  FU = A*dag(FV)
   return FU,FV,commonindex(FU,FV)
 end
 
@@ -246,24 +176,44 @@ function factorize(A::ITensor,
   throw(ArgumentError("In factorize, no dir = $dir supported. Use center, fromleft or fromright."))
 end
 
-# TODO: add a version that automatically detects the IndexSets
-# by matching based on tags (default to matching 0 and 1 primed indices)
+function eigenHermitian(A::ITensor,
+                        Linds=findinds(A,("",0)),
+                        Rinds=prime(IndexSet(Linds));
+                        kwargs...)
+  tags::TagSet = get(kwargs,:tags,"Link,eigen")
+  lefttags::TagSet = get(kwargs,:lefttags,tags)
+  righttags::TagSet = get(kwargs,:righttags,prime(tags))
+  Lis = commoninds(inds(A),IndexSet(Linds))
+  Ris = uniqueinds(inds(A),Lis)
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  UT,DT = eigenHermitian(tensor(A),Lpos,Rpos;kwargs...)
+  U,D = ITensor(UT),ITensor(DT)
+  u = commonindex(U,D)
+  settags!(U,lefttags,u)
+  settags!(D,lefttags,u)
+  u = settags(u,lefttags)
+  v = uniqueindex(D,U)
+  D *= δ(v,settags(u,righttags))
+  return U,D,u,v
+end
+
 import LinearAlgebra.eigen
 function eigen(A::ITensor,
-               Linds,
-               Rinds;
+               Linds=findinds(A,("",0)),
+               Rinds=prime(IndexSet(Linds));
                kwargs...)
-  Lis = IndexSet(Linds)
-  Ris = IndexSet(Rinds)
-  Ais_perm = IndexSet(Lis...,Ris...)
-  !hassameinds(Ais_perm,A) && throw(ErrorException("Input indices must be contained in the ITensor"))
-  if inds(A) ≠ Ais_perm
-    A = permute(A,Ais_perm)
-  end
-  #TODO: More of the index analysis should be moved out of storage_eigen
-  Uis,Ustore,Dis,Dstore = storage_eigen(store(A),Lis,Ris; kwargs...)
-  U = ITensor(Uis,Ustore)
-  D = ITensor(Dis,Dstore)
-  return U,D,commonindex(U,D)
+  tags::TagSet = get(kwargs,:tags,"Link,eigen")
+  Lis = commoninds(inds(A),IndexSet(Linds))
+  Ris = uniqueinds(inds(A),Lis)
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  UT,DT = eigen(tensor(A),Lpos,Rpos;kwargs...)
+  U,D = ITensor(UT),ITensor(DT)
+  u = commonindex(U,D)
+  settags!(U,tags,u)
+  settags!(D,tags,u)
+  u = settags(u,tags)
+  v = uniqueindex(D,U)
+  D *= δ(v,u')
+  return U,D,u
 end
 

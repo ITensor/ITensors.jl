@@ -53,10 +53,16 @@ function trg(T::ITensor, horiz_inds, vert_inds;
     Fu = addtags(Fu,"up","renorm")
     Fd = addtags(Fd,"down","renorm")
 
-    T = replacetags(replacetags(Fl,"down","dnleft","orig"),"right","upleft","orig")*
-        replacetags(replacetags(Fu,"left","upleft","orig"),"down","upright","orig")* 
-        replacetags(replacetags(Fr,"up","upright","orig"),"left","dnright","orig")*
-        replacetags(replacetags(Fd,"right","dnright","orig"),"up","dnleft","orig")
+    Fl = replacetags(replacetags(Fl,"down","dnleft","orig"),
+                                    "right","upleft","orig")
+    Fu = replacetags(replacetags(Fu,"left","upleft","orig"),
+                                    "down","upright","orig")
+    Fr = replacetags(replacetags(Fr,"up","upright","orig"),
+                                    "left","dnright","orig")
+    Fd = replacetags(replacetags(Fd,"right","dnright","orig"),
+                                    "up","dnleft","orig")
+
+    T = Fl*Fu*Fr*Fd
     T = replacetags(T,"renorm","orig")
 
     l = findindex(T,"left")
@@ -64,7 +70,7 @@ function trg(T::ITensor, horiz_inds, vert_inds;
     u = findindex(T,"up")
     d = findindex(T,"down")
 
-    trT = abs(scalar(T*δ(l,r)*δ(u,d)))
+    trT = abs((T*δ(l,r)*δ(u,d))[])
     T = T/trT
     κ *= trT^(1.0/2^n)
   end

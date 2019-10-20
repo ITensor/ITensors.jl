@@ -51,9 +51,9 @@ include("util.jl")
     
     # make bigger random MPO...
     for link_dim in 2:5
-        mpo_tensors  = [ITensor() for ii in 1:N]
-        mps_tensors  = [ITensor() for ii in 1:N]
-        mps_tensors2 = [ITensor() for ii in 1:N]
+        mpo_tensors  = ITensor[ITensor() for ii in 1:N]
+        mps_tensors  = ITensor[ITensor() for ii in 1:N]
+        mps_tensors2 = ITensor[ITensor() for ii in 1:N]
         mpo_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:N-1]
         mps_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:N-1]
         mpo_tensors[1] = randomITensor(mpo_link_inds[1], sites[1], sites[1]') 
@@ -110,10 +110,10 @@ include("util.jl")
     ## Do contraction manually.
     #O = 1.
     #for j ∈ eachindex(phi)
-    #    psij = reshape(Array(psi[j]),2)
-    #    phij = reshape(Array(phi[j]),2)
-    #    Kj = reshape(Array(K[j]),2,2)
-    #    Jj = reshape(Array(J[j]),2,2)
+    #    psij = reshape(array(psi[j]),2)
+    #    phij = reshape(array(phi[j]),2)
+    #    Kj = reshape(array(K[j]),2,2)
+    #    Jj = reshape(array(J[j]),2,2)
     #    O *= ((transpose(Jj)*phij)'*transpose(Kj)*psij)[]
     #end
     #@test O ≈ inner(J,phi,K,psi)
@@ -133,12 +133,13 @@ include("util.jl")
                         /inner(K,psi,K,psi)))
     @test dist ≈ errorMPOProd(phi,K,psi)
 
+    badsites = [Index(2,"Site") for n=1:N+1]
+    badpsi = randomMPS(badsites)
     # Apply K to phi and check that errorMPOProd is close to 0.
     Kphi = applyMPO(K,phi;method="naive", cutoff=1E-8)
     @test errorMPOProd(Kphi, K, phi) ≈ 0. atol=1e-4
 
-    badsites = [Index(2,"Site") for n=1:N+1]
-    badpsi = randomMPS(badsites)
+    @test_throws DimensionMismatch applyMPO(K,badpsi;method="naive", cutoff=1E-8)
     @test_throws DimensionMismatch errorMPOProd(phi,K,badpsi)
   end
 
@@ -157,9 +158,9 @@ include("util.jl")
 
     # make bigger random MPO...
     for link_dim in 2:5
-        mpo_tensors  = [ITensor() for ii in 1:N]
-        mps_tensors  = [ITensor() for ii in 1:N]
-        mps_tensors2 = [ITensor() for ii in 1:N]
+        mpo_tensors  = ITensor[ITensor() for ii in 1:N]
+        mps_tensors  = ITensor[ITensor() for ii in 1:N]
+        mps_tensors2 = ITensor[ITensor() for ii in 1:N]
         mpo_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:N-1]
         mps_link_inds = [Index(link_dim, "r$ii,Link") for ii in 1:N-1]
         mpo_tensors[1] = randomITensor(mpo_link_inds[1], sites[1], sites[1]') 

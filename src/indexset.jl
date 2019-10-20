@@ -4,6 +4,7 @@ export IndexSet,
        hassameinds,
        findindex,
        findinds,
+       indexposition,
        swaptags,
        swaptags!,
        swapprime,
@@ -16,30 +17,56 @@ export IndexSet,
        uniqueindex,
        dims,
        minDim,
-       maxDim
+       maxDim,
+       push,
+       permute
 
-struct IndexSet
-    inds::Vector{Index}
-    IndexSet(inds::Vector{Index}) = new(inds)
+struct IndexSet{N}
+  inds::MVector{N,Index}
+  IndexSet{N}(inds::MVector{N,Index}) where {N} = new{N}(inds)
+  IndexSet{0}(::MVector{0}) = new{0}(())
+  IndexSet{N}(inds::NTuple{N,Index}) where {N} = new{N}(inds)
+  IndexSet{0}() = new{0}(())
+  IndexSet{0}(::Tuple{}) = new{0}(())
 end
+IndexSet(inds::MVector{N,Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
 
 inds(is::IndexSet) = is.inds
 
 # Empty constructor
-IndexSet() = IndexSet(Index[])
+IndexSet() = IndexSet{0}()
+IndexSet(::Tuple{}) = IndexSet()
+IndexSet(::MVector{0}) = IndexSet()
 
 # Construct of some size
-IndexSet(N::Integer) = IndexSet(Vector{Index}(undef,N))
+IndexSet{N}() where {N} = IndexSet{N}(ntuple(_->Index(),Val(N)))
+IndexSet(::Val{N}) where {N} = IndexSet{N}()
 
 # Construct from various sets of indices
-IndexSet(inds::Index...) = IndexSet(Index[inds...])
-IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet(inds...)
+IndexSet{N}(inds::Vararg{Index,N}) where {N} = IndexSet{N}(NTuple{N,Index}(inds))
+IndexSet(inds::Vararg{Index,N}) where {N} = IndexSet{N}(inds...)
+
+IndexSet{N}(ivs::NTuple{N,IndexVal}) where {N} = IndexSet{N}(ntuple(i->ind(ivs[i]),Val(N)))
+IndexSet(ivs::NTuple{N,IndexVal}) where {N} = IndexSet{N}(ivs)
+IndexSet{N}(ivs::Vararg{IndexVal,N}) where {N} = IndexSet{N}(tuple(ivs...))
+IndexSet(ivs::Vararg{IndexVal,N}) where {N} = IndexSet{N}(tuple(ivs...))
 
 # Construct from various sets of IndexSets
 IndexSet(inds::IndexSet) = inds
 IndexSet(inds::IndexSet,i::Index) = IndexSet(inds...,i)
 IndexSet(i::Index,inds::IndexSet) = IndexSet(i,inds...)
 IndexSet(is1::IndexSet,is2::IndexSet) = IndexSet(is1...,is2...)
+
+# This is used in type promotion in the Tensor contraction code
+Base.promote_rule(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
+
+ValLength(::Type{IndexSet{N}}) where {N} = Val{N}
+ValLength(::IndexSet{N}) where {N} = Val(N)
+
+# TODO: make a version that accepts an arbitrary set of IndexSets
+# as well as mixtures of seperate Indices and Tuples of Indices.
+# Look at jointuples in the DenseTensor decomposition logic.
 IndexSet(inds::NTuple{2,IndexSet}) = IndexSet(inds...)
 
 # Convert to an Index if there is only one
@@ -52,19 +79,15 @@ function Base.show(io::IO, is::IndexSet)
   end
 end
 
-getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
-setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
-length(is::IndexSet) = length(is.inds)
+Base.getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
+Base.setindex!(is::IndexSet,i::Index,n::Integer) = setindex!(is.inds,i,n)
+Base.length(is::IndexSet{N}) where {N} = N
+Base.length(::Type{IndexSet{N}}) where {N} = N
 order(is::IndexSet) = length(is)
-copy(is::IndexSet) = IndexSet(copy(is.inds))
-dims(is::IndexSet) = Tuple(dim(i) for i ∈ is)
+Base.copy(is::IndexSet) = IndexSet(copy(is.inds))
+dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 dim(is::IndexSet) = prod(dim.(is))
 dim(is::IndexSet,pos::Integer) = dim(is[pos])
-
-# TODO: what should size(::IndexSet) do?
-#size(is::IndexSet) = size(is.inds)
-#Base.size(is::IndexSet) = dims(is)
-#Base.size(is::IndexSet,pos::Integer) = dim(is,pos)
 
 # Optimize this (right own function that extracts dimensions
 # with a function)
@@ -74,9 +97,26 @@ Base.stride(is::IndexSet,k::Integer) = strides(is)[k]
 dag(is::IndexSet) = IndexSet(dag.(is.inds))
 
 # Allow iteration
-iterate(is::IndexSet,state::Int=1) = iterate(is.inds,state)
+Base.iterate(is::IndexSet{N},state::Int=1) where {N} = state > N ? nothing : (is[state], state+1)
 
-push!(is::IndexSet,i::Index) = push!(is.inds,i)
+Base.eltype(is::Type{<:IndexSet}) = Index
+Base.eltype(is::IndexSet) = eltype(typeof(is))
+
+# Needed for findfirst (I think)
+Base.keys(is::IndexSet{N}) where {N} = 1:N
+
+StaticArrays.push(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(push(is.inds,i))
+StaticArrays.pushfirst(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(pushfirst(is.inds,i))
+
+unioninds(is1::IndexSet{N1},is2::IndexSet{N2}) where {N1,N2} = IndexSet{N1+N2}(is1...,is2...)
+
+# This is to help with some generic programming in the Tensor
+# code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
+# only known thing for dispatch is a concrete type such
+# as IndexSet{4})
+StaticArrays.similar_type(::Type{IndsT},::Val{N}) where {IndsT<:IndexSet,N} = IndexSet{N}
+
+sim(is::IndexSet{N}) where {N} = IndexSet{N}(ntuple(i->sim(is[i]),Val(N)))
 
 """
 minDim(is::IndexSet)
@@ -179,7 +219,7 @@ function uniqueinds(Ainds,Binds)
   Ais = IndexSet(Ainds)
   Cis = IndexSet()
   for j ∈ Ais
-    _is_unique_index(j,Binds) && push!(Cis,j)
+    _is_unique_index(j,Binds) && (Cis = push(Cis,j))
   end
   return Cis
 end
@@ -198,7 +238,7 @@ function uniqueindex(Ainds,Binds)
   for j ∈ Ais
     _is_unique_index(j,Binds) && return j
   end
-  return Index()
+  return nothing
 end
 # This version can check for repeats, but is a bit
 # slower because of IndexSet allocation
@@ -215,7 +255,7 @@ function commoninds(Ainds,Binds)
   Ais = IndexSet(Ainds)
   Cis = IndexSet()
   for i ∈ Ais
-    hasindex(Binds,i) && push!(Cis,i)
+    hasindex(Binds,i) && (Cis = push(Cis,i))
   end
   return Cis
 end
@@ -232,7 +272,7 @@ function commonindex(Ainds,Binds)
   for i ∈ Ais
     hasindex(Binds,i) && return i
   end
-  return Index()
+  return nothing
 end
 # This version checks if there are more than one indices
 #commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
@@ -249,7 +289,7 @@ function findinds(inds,tags)
   found_inds = IndexSet()
   for i ∈ is
     if hastags(i,ts)
-      push!(found_inds,i)
+      found_inds = push(found_inds,i)
     end
   end
   return found_inds
@@ -269,19 +309,22 @@ function findindex(inds,tags)
       return i
     end
   end
-  return Index()
+  # TODO: should this return `nothing` if no Index is found?
+  return nothing
 end
 # This version checks if there are more than one indices
 #findindex(inds, tags) = Index(findinds(inds,tags))
 
-function findindex(is::IndexSet,
-                   i::Index)::Int
+# TODO: Should this return `nothing` like `findfirst`?
+# Should this just use `findfirst`?
+function indexposition(is::IndexSet,
+                       i::Index)
   for (n,j) in enumerate(is)
     if i==j
       return n
     end
   end
-  return 0
+  return nothing
 end
 
 # From a tag set or index set, find the positions
@@ -350,6 +393,8 @@ function swapprime!(is::IndexSet,
   for n in pos
     if plev(is[n])==pl1
       is[n] = setprime(is[n],pl2)
+    elseif plev(is[n])==pl2
+      is[n] = setprime(is[n],pl1)
     end
   end
   return is
@@ -422,11 +467,15 @@ function replacetags!(is::IndexSet,
 end
 replacetags(is, vargs...) = replacetags!(copy(is), vargs...)
 
+# TODO: write more efficient version in terms
+# of indexpositions like swapprime!
 function swaptags!(is::IndexSet,
                    tags1, tags2,
                    match = nothing)
   ts1 = TagSet(tags1)
   ts2 = TagSet(tags2)
+  # TODO: add debug check that this "random" tag
+  # doesn't clash with ts1 or ts2
   tstemp = TagSet("e43efds")
   plev(ts1) ≥ 0 && (tstemp = setprime(tstemp,431534))
   replacetags!(is, ts1, tstemp, match)
@@ -436,28 +485,16 @@ function swaptags!(is::IndexSet,
 end
 swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 
-function calculate_permutation(set1, set2)
-  l1 = length(set1)
-  l2 = length(set2)
-  l1==l2 || throw(DimensionMismatch("Mismatched input sizes in calcPerm: l1=$l1, l2=$l2"))
-  p = zeros(Int,l1)
-  for i1 = 1:l1
-    for i2 = 1:l2
-      if set1[i1]==set2[i2]
-        p[i1] = i2
-        break
-      end
-    end #i2
-    p[i1]!=0 || error("Sets aren't permutations of each other")
-  end #i1
-  return p
-end
+#
+# Helper functions for contracting ITensors
+#
 
-function compute_contraction_labels(Ai::IndexSet,Bi::IndexSet)
-  rA = order(Ai)
-  rB = order(Bi)
-  Aind = zeros(Int,rA)
-  Bind = zeros(Int,rB)
+function compute_contraction_labels(Ai::IndexSet{N1},
+                                    Bi::IndexSet{N2}) where {N1,N2}
+  rA = length(Ai)
+  rB = length(Bi)
+  Aind = MVector{N1,Int}(ntuple(_->0,Val(N1)))
+  Bind = MVector{N2,Int}(ntuple(_->0,Val(N2)))
 
   ncont = 0
   for i = 1:rA, j = 1:rB
@@ -475,38 +512,45 @@ function compute_contraction_labels(Ai::IndexSet,Bi::IndexSet)
     if(Bind[j]==0) Bind[j] = (u+=1) end
   end
 
-  return (Aind,Bind)
+  return (NTuple{N1,Int}(Aind),NTuple{N2,Int}(Bind))
 end
 
-function contract_inds(Ais::IndexSet,
-                       Aind,
-                       Bis::IndexSet,
-                       Bind)
+# Move this to tensor, since this logic is different
+# for contracting different kinds of storage
+# Also, generalize this to not just use IndexSet
+function contract_inds(Ais::IndexSet{N1},
+                       Alabel::NTuple{N1,Int},
+                       Bis::IndexSet{N2},
+                       Blabel::NTuple{N2,Int}) where {N1,N2}
   ncont = 0
-  for i in Aind
-    if(i < 0) ncont += 1 end 
+  for i in Alabel
+    i < 0 && (ncont += 1)
   end
-  nuniq = length(Ais)+length(Bis)-2*ncont
-  Cind = zeros(Int,nuniq)
-  Cis = fill(Index(),nuniq)
+  NR = N1+N2-2*ncont
+  Clabel = Vector{Int}(undef,NR)
+  Cis = Vector{Index}(undef,NR)
   u = 1
-  for i ∈ 1:length(Ais)
-    if(Aind[i] > 0) 
-      Cind[u] = Aind[i]; 
+  @inbounds for i ∈ 1:N1
+    if(Alabel[i] > 0) 
+      Clabel[u] = Alabel[i]; 
       Cis[u] = Ais[i]; 
       u += 1 
     end
   end
-  for i ∈ 1:length(Bis)
-    if(Bind[i] > 0) 
-      Cind[u] = Bind[i]; 
+  @inbounds for i ∈ 1:N2
+    if(Blabel[i] > 0) 
+      Clabel[u] = Blabel[i]; 
       Cis[u] = Bis[i]; 
       u += 1 
     end
   end
-  return (IndexSet(Cis...),Cind)
+  return IndexSet{NR}(Cis...),NTuple{NR,Int}(Clabel)
 end
 
+# TODO: implement this in terms of a tuple,
+# overload Base.strides and implement strides(inds,j)
+# to get the jth stride
+# TODO: should the IndexSet store the strides?
 function compute_strides(inds::IndexSet)
   r = order(inds)
   stride = zeros(Int, r)
@@ -518,3 +562,127 @@ function compute_strides(inds::IndexSet)
   return stride
 end
 
+#
+# More general set functions
+#
+
+function permute(is::IndexSet{N},perm) where {N}
+  indsp = ntuple(i->is[perm[i]], Val(N))
+  return IndexSet(indsp)
+end
+
+# Permute some other type by perm
+# (for example, tuple, MVector, etc.)
+# as long as the constructor accepts a tuple
+function permute(is::T,perm) where {T}
+  indsp = ntuple(i->is[perm[i]], Val(length(is)))
+  return T(indsp)
+end
+
+"""
+getperm(col1,col2)
+
+Get the permutation that takes collection 2 to collection 1,
+such that col2[p].==col1
+"""
+function getperm(s1::Union{IndexSet{N},NTuple{N}}, s2::Union{IndexSet{N},NTuple{N}}) where {N}
+  return ntuple(i->findfirst(==(s1[i]),s2),Val(N))
+end
+
+"""
+getperm(col1,col2,col3)
+
+Get the permutations that takes collections 2 and 3 to collection 1.
+"""
+function getperms(s::IndexSet{N},s1::IndexSet{N1},s2::IndexSet{N2}) where {N1,N2,N}
+  N1+N2≠N && error("Size of partial sets don't match with total set")
+  perm1 = ntuple(i->findfirst(==(s1[i]),s),Val(N1))
+  perm2 = ntuple(i->findfirst(==(s2[i]),s),Val(N2))
+  isperm((perm1...,perm2...)) || error("Combined permutations are $((perm1...,perm2...)), not a valid permutation")
+  return perm1,perm2
+end
+
+"""
+Determine if s1 and s2 have no overlapping elements.
+"""
+function isdisjoint(s1,s2)
+  for i1 ∈ 1:length(s1)
+    for i2 ∈ 1:length(s2)
+      s1[i1] == s2[i2] && return false
+    end
+  end
+  return true
+end
+
+"""
+Determine if P is a trivial permutation. Errors if P is not a valid
+permutation.
+"""
+function is_trivial_permutation(P)
+  isperm(P) || error("Input is not a permutation")
+  # TODO: use `all(n->P[n]==n,1:length(P))`?
+  N = length(P)
+  for n = 1:N
+    P[n]!=n && return false
+  end
+  return true
+end
+
+function count_unique(labelsT1,labelsT2)
+  count = 0
+  for l1 ∈ labelsT1
+    l1 ∉ labelsT2 && (count += 1)
+  end
+  return count
+end
+
+function count_common(labelsT1,labelsT2)
+  count = 0
+  for l1 ∈ labelsT1
+    l1 ∈ labelsT2 && (count += 1)
+  end
+  return count
+end
+
+function intersect_positions(labelsT1,labelsT2)
+  for i1 = 1:length(labelsT1)
+    for i2 = 1:length(labelsT2)
+      if labelsT1[i1] == labelsT2[i2]
+        return i1,i2
+      end
+    end
+  end
+  return nothing
+end
+
+function is_replacement(labelsT1,labelsT2)
+  return count_unique(labelsT1,labelsT2) == 1 &&
+         count_common(labelsT1,labelsT2) == 1
+end
+
+function is_combiner(labelsT1,labelsT2)
+  return count_unique(labelsT1,labelsT2) == 1 &&
+         count_common(labelsT1,labelsT2) > 1
+end
+
+function is_uncombiner(labelsT1,labelsT2)
+  return count_unique(labelsT1,labelsT2) > 1 &&
+         count_common(labelsT1,labelsT2) == 1
+end
+
+function Base.read(io::IO,::Type{IndexSet};kwargs...)
+  format = get(kwargs,:format,"hdf5")
+  is = IndexSet()
+  if format=="cpp"
+    size = read(io,Int)
+    resize!(is.inds,size)
+    for n=1:size
+      i = read(io,Index;kwargs...)
+      stride = read(io,UInt64)
+      is.inds[n] = i
+    end
+  else
+    throw(ArgumentError("read IndexSet: format=$format not supported"))
+  end
+  return is
+end

@@ -1,31 +1,14 @@
 
-# Check if the contraction is an outer product
-# (none of the labels are negative)
-function is_outer(l1::Vector{Int},l2::Vector{Int})
-  for l1i in l1
-    if l1i < 0
-      return false
-    end
-  end
-  # I think this one is not necessary
-  for l2i in l2
-    if l2i < 0
-      return false
-    end
-  end
-  return true
-end
-
-mutable struct CProps
-  ai::Vector{Int}
-  bi::Vector{Int}
-  ci::Vector{Int}
+mutable struct ContractionProperties{NA,NB,NC}
+  ai::NTuple{NA,Int}
+  bi::NTuple{NB,Int}
+  ci::NTuple{NC,Int}
   nactiveA::Int 
   nactiveB::Int 
   nactiveC::Int
-  AtoB::Vector{Int}
-  AtoC::Vector{Int}
-  BtoC::Vector{Int}
+  AtoB::MVector{NA,Int}
+  AtoC::MVector{NA,Int}
+  BtoC::MVector{NB,Int}
   permuteA::Bool
   permuteB::Bool
   permuteC::Bool
@@ -44,28 +27,28 @@ mutable struct CProps
   newArange::Vector{Int}
   newBrange::Vector{Int}
   newCrange::Vector{Int}
-  function CProps(ai::Vector{Int},
-                  bi::Vector{Int},
-                  ci::Vector{Int})
-    new(ai,bi,ci,0,0,0,Vector{Int}(),Vector{Int}(),Vector{Int}(),false,false,false,1,1,1,0,
-        length(ai),length(bi),length(ai),length(bi),Vector{Int}(),Vector{Int}(),Vector{Int}(),
-        false,Vector{Int}(),Vector{Int}(),Vector{Int}())
+  function ContractionProperties(ai::NTuple{NA,Int},
+                                 bi::NTuple{NB,Int},
+                                 ci::NTuple{NC,Int}) where {NA,NB,NC}
+    new{NA,NB,NC}(ai,bi,ci,0,0,0,
+                  ntuple(_->0,NA),ntuple(_->0,NA),ntuple(_->0,NB),
+                  false,false,false,1,1,1,0,
+                  NA,NB,NA,NB,
+                  Vector{Int}(),Vector{Int}(),Vector{Int}(),
+                  false,
+                  Vector{Int}(),Vector{Int}(),Vector{Int}())
   end
 end
 
-function compute_perms!(props::CProps)::Nothing
-  #Use !AtoB.empty() as a check to see if we've already run this
-  length(props.AtoB)!=0 && return
+function compute_perms!(props::ContractionProperties{NA,NB,NC}) where 
+                                                           {NA,NB,NC}
+  #length(props.AtoB)!=0 && return
 
-  na = length(props.ai)
-  nb = length(props.bi)
-  nc = length(props.ci)
-
-  props.AtoB = fill(0,na)
-  props.AtoC = fill(0,na)
-  props.BtoC = fill(0,nb)
-  for i = 1:na
-    for j = 1:nb
+  #props.AtoB = fill(0,NA)
+  #props.AtoC = fill(0,NA)
+  #props.BtoC = fill(0,NB)
+  for i = 1:NA
+    for j = 1:NB
       if props.ai[i]==props.bi[j]
         props.ncont += 1
         #TODO: check this if this should be i,j or i-1,j-1 (0-index or 1-index)
@@ -77,8 +60,8 @@ function compute_perms!(props::CProps)::Nothing
     end
   end
 
-  for i = 1:na
-    for k = 1:nc
+  for i = 1:NA
+    for k = 1:NC
       if props.ai[i]==props.ci[k]
         #TODO: check this if this should be i,j or i-1,j-1 (0-index or 1-index)
         i<=props.Austart && (props.Austart = i)
@@ -88,8 +71,8 @@ function compute_perms!(props::CProps)::Nothing
     end
   end
 
-  for j = 1:nb
-    for k = 1:nc
+  for j = 1:NB
+    for k = 1:NC
       if props.bi[j]==props.ci[k]
         #TODO: check this if this should be i,j or i-1,j-1 (0-index or 1-index)
         j<=props.Bustart && (props.Bustart = j)
@@ -101,14 +84,7 @@ function compute_perms!(props::CProps)::Nothing
 
 end
 
-function is_trivial_permutation(P::Vector{Int})::Bool
-  for n = 1:length(P)
-    P[n]!=n && return false
-  end
-  return true
-end
-
-function checkACsameord(props::CProps)::Bool
+function checkACsameord(props::ContractionProperties)::Bool
   props.Austart>=length(props.ai) && return true
   aCind = props.AtoC[props.Austart]
   for i = 1:length(props.ai)
@@ -120,7 +96,7 @@ function checkACsameord(props::CProps)::Bool
   return true
 end
 
-function checkBCsameord(props::CProps)::Bool
+function checkBCsameord(props::ContractionProperties)::Bool
   props.Bustart>=length(props.bi) && return true
   bCind = props.BtoC[props.Bustart]
   for i = 1:length(props.bi)
@@ -132,43 +108,22 @@ function checkBCsameord(props::CProps)::Bool
   return true
 end
 
-contractedA(props::CProps,i::Int) = (props.AtoC[i]<1)
-contractedB(props::CProps,i::Int) = (props.BtoC[i]<1)
-Atrans(props::CProps) = contractedA(props,1)
-Btrans(props::CProps) = !contractedB(props,1)
-Ctrans(props::CProps) = props.ctrans
+contractedA(props::ContractionProperties,i::Int) = (props.AtoC[i]<1)
+contractedB(props::ContractionProperties,i::Int) = (props.BtoC[i]<1)
+Atrans(props::ContractionProperties) = contractedA(props,1)
+Btrans(props::ContractionProperties) = !contractedB(props,1)
+Ctrans(props::ContractionProperties) = props.ctrans
 
-# TODO: replace find_index(v,t) with built in Julia function:
-# findfirst(==(t), v)
-function find_index(v::Vector{Int},t)::Int
-  for i = 1:length(v)
-    v[i]==t && return i
-  end
-  return -1
-end
-
-function permute_extents(R::Vector{Int},P::Vector{Int})::Vector{Int}
-  Rb = fill(0,length(R))
-  n = 1
-  for pn in P
-    Rb[pn] = R[n]
-    n += 1
-  end
-  return Rb
-end
-
-function compute!(props::CProps,
-                  A::Array,
-                  B::Array,
-                  C::Array)
+function compute_contraction_properties!(props::ContractionProperties{NA,NB,NC},
+                                         A,B,C) where {NA,NB,NC}
   compute_perms!(props)
 
   #Use props.PC.size() as a check to see if we've already run this
   length(props.PC)!=0 && return
 
-  ra = length(props.ai)
-  rb = length(props.bi)
-  rc = length(props.ci)
+  ra = NA #length(props.ai)
+  rb = NB #length(props.bi)
+  rc = NC #length(props.ci)
 
   props.PC = fill(0,rc)
 
@@ -276,7 +231,7 @@ function compute!(props::CProps,
     bind = props.Bcstart
     for i = 1:props.ncont
       while !contractedB(props,bind) bind += 1 end
-      j = find_index(props.ai,props.bi[bind])
+      j = findfirst(==(props.bi[bind]),props.ai)
       newi += 1
       props.PA[newi] = j
       bind += 1
@@ -287,8 +242,8 @@ function compute!(props::CProps,
     #appear in same order as on C
     #TODO: check this is correct for 1-indexing
     for k = 1:rc
-      j = find_index(props.ai,props.ci[k])
-      if j!=-1
+      j = findfirst(==(props.ci[k]),props.ai)
+      if !isnothing(j)
         props.AtoC[newi] = k
         props.PA[newi+1] = j
         newi += 1
@@ -307,7 +262,8 @@ function compute!(props::CProps,
     else
       props.Austart = min(i,props.Austart)
     end
-    props.newArange = permute_extents([size(A)...],props.PA)
+    #props.newArange = permute_extents([size(A)...],props.PA)
+    props.newArange = [size(A)...][props.PA]
   end
 
   if(props.permuteB)
@@ -335,7 +291,7 @@ function compute!(props::CProps,
       aind = props.Acstart
       for i = 0:(props.ncont-1)
         while !contractedA(props,aind) aind += 1 end
-        j = find_index(props.bi,props.ai[aind])
+        j = findfirst(==(props.ai[aind]),props.bi)
         newi += 1
         props.PB[newi] = j
         aind += 1
@@ -346,8 +302,8 @@ function compute!(props::CProps,
     #Permute uncontracted indices to
     #appear in same order as on C
     for k = 1:rc
-      j = find_index(props.bi,props.ci[k])
-      if j!=-1
+      j = findfirst(==(props.ci[k]),props.bi)
+      if !isnothing(j)
         props.BtoC[newi] = k
         props.PB[newi+1] = j
         newi += 1
@@ -363,7 +319,8 @@ function compute!(props::CProps,
           props.Bustart = min(i,props.Bustart)
       end
     end
-    props.newBrange = permute_extents([size(B)...],props.PB)
+    #props.newBrange = permute_extents([size(B)...],props.PB)
+    props.newBrange = [size(B)...][props.PB]
   end
 
   if props.permuteA || props.permuteB
@@ -435,102 +392,4 @@ function compute!(props::CProps,
   end
 
 end
-
-function _contract_dense_dense!(C::Array{T},
-                                p::CProps,
-                                A::Array{T},
-                                B::Array{T},
-                                α::T=one(T),
-                                β::T=zero(T)) where {T}
-  tA = 'N'
-  if p.permuteA
-    aref = reshape(permutedims(A,p.PA),p.dmid,p.dleft)
-    tA = 'T'
-  else
-    #A doesn't have to be permuted
-    if Atrans(p)
-      aref = reshape(A,p.dmid,p.dleft)
-      tA = 'T'
-    else
-      aref = reshape(A,p.dleft,p.dmid)
-    end
-  end
-
-  tB = 'N'
-  if p.permuteB
-    bref = reshape(permutedims(B,p.PB),p.dmid,p.dright)
-  else
-    if Btrans(p)
-      bref = reshape(B,p.dright,p.dmid)
-      tB = 'T'
-    else
-      bref = reshape(B,p.dmid,p.dright)
-    end
-  end
-
-  # TODO: this logic may be wrong
-  if p.permuteC
-    cref = reshape(copy(C),p.dleft,p.dright)
-  else
-    if Ctrans(p)
-      cref = reshape(C,p.dleft,p.dright)
-      if tA=='N' && tB=='N'
-        (aref,bref) = (bref,aref)
-        tA = tB = 'T'
-      elseif tA=='T' && tB=='T'
-        (aref,bref) = (bref,aref)
-        tA = tB = 'N'
-      end
-    else
-      cref = reshape(C,p.dleft,p.dright)
-    end
-  end
-
-  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),aref,bref,promote_type(T,Tβ)(β),cref)
-  BLAS.gemm!(tA,tB,α,aref,bref,β,cref)
-
-  if p.permuteC
-    permutedims!(C,reshape(cref,p.newCrange...),p.PC)
-  end
-  return
-end
-
-#TODO: this should be optimized
-function _contract_scalar!(Cdata::Array,Clabels::Vector{Int},
-                           Bdata::Array,Blabels::Vector{Int},α,β)
-  p = calculate_permutation(Blabels,Clabels)
-  if β==0
-    if is_trivial_permutation(p)
-      Cdata .= α.*Bdata
-    else
-      #TODO: make an optimized permutedims!() that also scales the data
-      permutedims!(Cdata,α*Bdata)
-    end
-  else
-    if is_trivial_permutation(p)
-      Cdata .= α.*Bdata .+ β.*Cdata
-    else
-      #TODO: make an optimized permutedims!() that also adds and scales the data
-      permBdata = permutedims(Bdata,p)
-      Cdata .= α.*permBdata .+ β.*Cdata
-    end
-  end
-  return
-end
-
-#function contract!(Cdata::Array{T},Clabels::Vector{Int},
-#                   Adata::Array{T},Alabels::Vector{Int},
-#                   Bdata::Array{T},Blabels::Vector{Int},
-#                   α::T=one(T),β::T=zero(T)) where {T}
-#  if(length(Alabels)==0)
-#    contract_scalar!(Cdata,Clabels,Bdata,Blabels,α*Adata[1],β)
-#  elseif(length(Blabels)==0)
-#    contract_scalar!(Cdata,Clabels,Adata,Alabels,α*Bdata[1],β)
-#  else
-#    props = CProps(Alabels,Blabels,Clabels)
-#    compute!(props,Adata,Bdata,Cdata)
-#    contract!(Cdata,props,Adata,Bdata,α,β)
-#  end
-#  return
-#end
 

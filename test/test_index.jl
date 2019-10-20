@@ -47,6 +47,8 @@ import ITensors: In,Out,Neither
     @test plev(i2) == 2
     i3 = i'''
     @test plev(i3) == 3
+    i6 = i^6
+    @test plev(i6) == 6
     i0 = noprime(i)
     @test plev(i0) == 0
   end
@@ -62,7 +64,7 @@ import ITensors: In,Out,Neither
     @test plev(i(2)') == 1
     @test val(i(2)') == 2
     @test plev(prime(i(2),4)) == 4
-    @test i[:] == [i(1); i(2)]
+    #@test i[:] == [i(1); i(2)]
     @test sprint(show, i(2)) == sprint(show, i)*"=2"
 
     @test IndexVal() == IndexVal(Index(),1)
