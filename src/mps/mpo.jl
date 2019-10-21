@@ -19,7 +19,7 @@ mutable struct MPO
     new(N, A, llim, rlim)
   end
 
-  function MPO(sites)
+  function MPO(sites::Vector{Index})
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]

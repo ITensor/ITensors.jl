@@ -425,10 +425,10 @@ function sortEachTerm!(ampo::AutoMPO)
 end
 
 function toMPO(ampo::AutoMPO,
-               sites;
+               sites::Vector{Index};
                kwargs...)::MPO
   sortEachTerm!(ampo)
   return svdMPO(ampo,sites;kwargs...)
 end
 
-MPO(ampo::AutoMPO,sites;kwargs...) = toMPO(ampo,sites;kwargs...)
+MPO(ampo::AutoMPO,sites::Vector{Index};kwargs...) = toMPO(ampo,sites;kwargs...)
