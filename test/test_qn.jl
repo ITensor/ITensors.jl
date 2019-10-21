@@ -36,6 +36,17 @@ import ITensors.SmallString
     @test isActive(q[1])
     @test val(q,"Sz") == 1
 
+    q = QN("Sz",1)
+    @test length(sprint(show,q)) > 1
+    @test isActive(q[1])
+    @test val(q,"Sz") == 1
+
+    q = QN("P",1,2)
+    @test length(sprint(show,q)) > 1
+    @test isActive(q[1])
+    @test val(q,"P") == 1
+    @test modulus(q,"P") == 2
+
     q = QN(("A",1),("B",2))
     @test isActive(q[1])
     @test isActive(q[2])

@@ -80,6 +80,8 @@ function QN(qvs...)
   return QN(QNStorage(m))
 end
 
+QN(name,val::Int,modulus::Int=1) = QN((name,val,modulus))
+
 Base.getindex(q::QN,n::Int) = getindex(q.store,n)
 
 function val(q::QN,name_)
