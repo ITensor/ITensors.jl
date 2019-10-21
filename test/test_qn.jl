@@ -62,24 +62,24 @@ import ITensors.SmallString
 
   @testset "Comparison" begin
     @test QN() == QN()
-    @test QN(("A",1)) == QN(("A",1))
+    @test QN("A",1) == QN("A",1)
     @test QN(("A",1),("B",3)) == QN(("A",1),("B",3))
     @test QN(("A",1),("B",3)) == QN(("B",3),("A",1))
 
     # Zero value and missing sector treated the same:
-    @test QN(("A",0),("B",3)) == QN(("B",3))
-    @test QN(("B",3),("A",0)) == QN(("B",3))
+    @test QN(("A",0),("B",3)) == QN("B",3)
+    @test QN(("B",3),("A",0)) == QN("B",3)
   end
 
   @testset "Arithmetic" begin
-    @test QN(("Sz",1)) + QN() == QN(("Sz",1))
-    @test QN(("Sz",1)) + QN(("Sz",2)) == QN(("Sz",3))
-    @test QN(("Sz",1)) + QN(("Sz",-2)) == QN(("Sz",-1))
+    @test QN("Sz",1) + QN() == QN("Sz",1)
+    @test QN("Sz",1) + QN("Sz",2) == QN("Sz",3)
+    @test QN("Sz",1) + QN("Sz",-2) == QN("Sz",-1)
 
     @test QN(("A",1),("Sz",0)) + QN(("A",0),("Sz",1)) == QN(("A",1),("Sz",1))
 
-    @test QN(("P",0,2)) + QN(("P",1,2)) == QN(("P",1,2))
-    @test QN(("P",1,2)) + QN(("P",1,2)) == QN(("P",0,2))
+    @test QN("P",0,2) + QN("P",1,2) == QN("P",1,2)
+    @test QN("P",1,2) + QN("P",1,2) == QN("P",0,2)
   end
 
   @testset "Ordering" begin
