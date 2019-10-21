@@ -2,10 +2,10 @@ export SpinHalfSite,
        spinHalfSites
 
 function spinHalfSites(N::Int; kwargs...)
-  return [Index(2,"Site,SpinHalf,n=$n") for n=1:N]
+  return [Index(2,"Site,S=1/2,n=$n") for n=1:N]
 end
 
-const SpinHalfSite = makeTagType("SpinHalf")
+const SpinHalfSite = Union{makeTagType("S=1/2"),makeTagType("SpinHalf")}
 
 function state(::SpinHalfSite,
                st::AbstractString)
