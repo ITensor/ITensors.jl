@@ -1,6 +1,23 @@
 export Tensor,
        inds,
-       store
+       store,
+       data
+
+# TODO: make into:
+# abstract type TensorStorage{El} end <: AbstractVector{El}
+abstract type TensorStorage end
+
+data(S::TensorStorage) = S.data
+
+Base.@propagate_inbounds Base.getindex(S::TensorStorage,
+                                       i::Integer) = getindex(data(S),i)
+Base.@propagate_inbounds Base.setindex!(S::TensorStorage,v,
+                                        i::Integer) = setindex!(data(S),v,i)
+
+Random.randn!(S::TensorStorage) = randn!(data(S))
+Base.fill!(S::TensorStorage,v) = fill!(data(S),v)
+
+Base.convert(::Type{T},D::T) where {T<:TensorStorage} = D
 
 """
 Tensor{StoreT,IndsT}
@@ -8,11 +25,11 @@ Tensor{StoreT,IndsT}
 A plain old tensor (with order independent
 interface and no assumption of labels)
 """
-struct Tensor{ElT,N,StoreT,IndsT} <: AbstractArray{ElT,N}
+struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   store::StoreT
   inds::IndsT
   # The resulting Tensor is a view into the input data
-  function Tensor(store::StoreT,inds::IndsT) where {StoreT,IndsT}
+  function Tensor(store::StoreT,inds::IndsT) where {StoreT<:TensorStorage,IndsT}
     new{eltype(StoreT),length(IndsT),StoreT,IndsT}(store,inds)
   end
 end
@@ -32,10 +49,54 @@ dim(ds::Dims) = prod(ds)
 
 Base.length(ds::Type{<:Dims{N}}) where {N} = N
 
+# Used for BlockSparse Tensors
+const BlockDims{N} = NTuple{N,NTuple{<:Any,Int}}
+
+Base.length(ds::Type{<:BlockDims{N}}) where {N} = N
+
 # This may be a bad idea to overload?
 # Type piracy?
 Base.strides(is::Dims) = Base.size_to_strides(1, dims(is)...)
 Base.copy(ds::Dims) = ds
+
+function dims(ds::BlockDims{N}) where {N}
+  return ntuple(i->sum(ds[i]),Val(N))
+end
+function dim(ds::BlockDims{N}) where {N}
+  return prod(dims(ds))
+end
+
+# A tuple of the number of blocks in each
+# dimension
+function nblocks(inds::BlockDims{N}) where {N}
+  return ntuple(dim->length(inds[dim]),Val(N))
+end
+
+# Version taking CartestianIndex
+function blockdims(inds::BlockDims{N},
+                   loc) where {N}
+  return ntuple(dim->inds[dim][loc[dim]],Val(N))
+end
+
+function blockindex(inds::BlockDims{N},
+                      loc::Int) where {N}
+  cartesian_loc = CartesianIndices(nblocks(inds))[loc]
+  return Tuple(cartesian_loc)
+end
+
+# Version taking LinearIndex
+function blockdims(inds::BlockDims{N},
+                   loc::Int) where {N}
+  # TODO: do this without conversion to CartesianIndex?
+  # That may involve division and be slow?
+  cartesian_loc = CartesianIndices(nblocks(inds))[loc]
+  return ntuple(dim->inds[dim][cartesian_loc[dim]],Val(N))
+end
+
+function blockdim(inds::BlockDims{N},
+                  loc) where {N}
+  return prod(blockdims(inds,loc))
+end
 
 ## TODO: should this be StaticArrays.similar_type?
 #Base.promote_rule(::Type{<:Dims},
@@ -78,6 +139,8 @@ Base.size(T::Tensor) = dims(T)
 Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 
 Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
+
+Random.randn!(T::Tensor) = (randn!(store(T)); return T)
 
 function Base.similar(::Type{T},dims) where {T<:Tensor{<:Any,<:Any,StoreT}} where {StoreT}
   return Tensor(similar(StoreT,dims),dims)

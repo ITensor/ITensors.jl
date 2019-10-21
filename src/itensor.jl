@@ -632,7 +632,7 @@ function Base.show(io::IO,T::ITensor)
   summary(io,T)
   print(io,"\n")
   if !isNull(T)
-    Base.print_array(io,array(T))
+    Base.show(io,MIME"text/plain"(),tensor(T))
   end
 end
 

@@ -45,8 +45,7 @@ import Base.adjoint,
        LinearAlgebra.norm,
        LinearAlgebra.mul!,
        LinearAlgebra.rmul!,
-       LinearAlgebra.normalize!,
-       Random.randn!
+       LinearAlgebra.normalize!
 
 
 #####################################
@@ -58,7 +57,7 @@ const GLOBAL_TIMER = TimerOutput()
 #####################################
 # Index and IndexSet
 #
-# TODO: load these after Tensor functions
+# TODO: load these after Tensor files
 include("smallstring.jl")
 include("readwrite.jl")
 include("tagset.jl")
@@ -69,7 +68,6 @@ include("indexset.jl")
 # Tensor
 #
 include("tensor/tensor.jl")
-include("tensor/tensorstorage.jl")
 include("tensor/contraction_logic.jl")
 include("tensor/dense.jl")
 include("tensor/linearalgebra.jl")

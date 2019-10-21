@@ -152,7 +152,8 @@ setdiag!(T::DiagTensor,val,ind::Int) = (store(T)[ind] = val)
 
 setdiag(T::DiagTensor,val::ElR,ind::Int) where {ElR} = Tensor(Diag{ElR}(val),inds(T))
 
-Base.@propagate_inbounds function Base.getindex(T::DiagTensor{ElT,N},inds::Vararg{Int,N}) where {ElT,N}
+Base.@propagate_inbounds function Base.getindex(T::DiagTensor{ElT,N},
+                                                inds::Vararg{Int,N}) where {ElT,N}
   if all(==(inds[1]),inds)
     return store(T)[inds[1]]
   else
@@ -165,7 +166,7 @@ Base.@propagate_inbounds Base.getindex(T::DiagTensor{<:Number,0}) = store(T)[1]
 # Set diagonal elements
 # Throw error for off-diagonal
 Base.@propagate_inbounds function Base.setindex!(T::DiagTensor{<:Number,N},
-                                            val,inds::Vararg{Int,N}) where {N}
+                                                 val,inds::Vararg{Int,N}) where {N}
   all(==(inds[1]),inds) || error("Cannot set off-diagonal element of Diag storage")
   return store(T)[inds[1]] = val
 end
