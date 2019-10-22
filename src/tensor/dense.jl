@@ -6,51 +6,50 @@ export Dense,
 # Dense storage
 #
 
-struct Dense{T} <: TensorStorage
-  data::Vector{T}
-  Dense{T}(data) where {T} = new{T}(convert(Vector{T},data))
-  Dense{T}() where {T} = new{T}(Vector{T}())
+struct Dense{ElT,VecT<:AbstractVector} <: TensorStorage{ElT}
+  data::VecT
+  Dense(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = new{ElT,VecT}(data)
 end
+
+function Dense{ElR}(data::VecT) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
+  ElT == ElR ? Dense(data) : Dense(ElR.(data))
+end
+Dense{ElT}() where {ElT} = Dense(ElT[])
 
 # Convenient functions for Dense storage type
 Base.@propagate_inbounds Base.getindex(D::Dense,i::Integer) = data(D)[i]
 Base.@propagate_inbounds Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
 
-Base.similar(D::Dense{T}) where {T} = Dense{T}(similar(data(D)))
+Base.similar(D::Dense) = Dense(similar(data(D)))
 
-# TODO: make this just take Int, the length of the data
-Base.similar(D::Dense{T},dims) where {T} = Dense{T}(similar(data(D),dim(dims)))
+Base.similar(D::Dense,length::Int) = Dense(similar(data(D),length))
+Base.similar(::Type{<:Dense{ElT,VecT}},length::Int) where {ElT,VecT} = Dense(similar(VecT,length))
 
-# TODO: make this just take Int, the length of the data
-Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(similar(Vector{T},dim(dims)))
-
-Base.similar(D::Dense,::Type{T}) where {T} = Dense{T}(similar(data(D),T))
-Base.copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
+Base.similar(D::Dense,::Type{T}) where {T<:Number} = Dense(similar(data(D),T))
+Base.copy(D::Dense) = Dense(copy(data(D)))
 Base.copyto!(D1::Dense,D2::Dense) = copyto!(data(D1),data(D2))
 
 Base.fill!(D::Dense,v) = fill!(data(D),v)
 
-Base.zeros(::Type{Dense{T}},dim::Int) where {T} = Dense{T}(zeros(T,dim))
+# TODO: should this do something different for SubArray?
+Base.zeros(::Type{<:Dense{ElT}},dim::Int) where {ElT} = Dense(zeros(ElT,dim))
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
-Base.complex(D::Dense{T}) where {T} = Dense{complex(T)}(complex(data(D)))
+Base.complex(D::Dense) = Dense(complex(data(D)))
 
-Base.eltype(::Dense{T}) where {T} = eltype(T)
+Base.eltype(::Dense{ElT}) where {ElT} = ElT
 # This is necessary since for some reason inference doesn't work
 # with the more general definition (eltype(Nothing) === Any)
 Base.eltype(::Dense{Nothing}) = Nothing
-Base.eltype(::Type{Dense{T}}) where {T} = eltype(T)
+Base.eltype(::Type{<:Dense{ElT}}) where {ElT} = ElT
 
-Base.promote_rule(::Type{Dense{T1}},
-                  ::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
-Base.convert(::Type{Dense{R}},
-             D::Dense) where {R} = Dense{R}(convert(Vector{R},data(D)))
+Base.promote_rule(::Type{<:Dense{ElT1,VecT1}},
+                  ::Type{<:Dense{ElT2,VecT2}}) where {ElT1,VecT1,ElT2,VecT2} = Dense{promote_type(ElT1,ElT2),promote_type(VecT1,VecT2)}
+Base.convert(::Type{<:Dense{ElR,VecR}},
+             D::Dense) where {ElR,VecR} = Dense(convert(VecR,data(D)))
 
-function Base.:*(D::Dense{<:El},x::S) where {El<:Number,S<:Number}
-  return Dense{promote_type(El,S)}(x*data(D))
-end
-
+Base.:*(D::Dense,x::Number) = Dense(x*data(D))
 Base.:*(x::Number,D::Dense) = D*x
 
 #

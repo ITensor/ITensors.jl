@@ -249,9 +249,10 @@ end
   A = ITensor(a,i)
   s = split(sprint(show, A), '\n')
   @test s[1] == "ITensor ord=1 " * sprint(show, i) * " "
-  @test s[2] == "Dense{Float64}"
-  @test s[3] == " 1.0"
-  @test s[4] == " 2.0"
+  @test s[2] == "Dense{Float64,Array{Float64,1}}"
+  @test s[3] == "2-element Tensor{Float64,1,Dense{Float64,Array{Float64,1}},IndexSet{1}}:"
+  @test s[4] == " 1.0"
+  @test s[5] == " 2.0"
 end
 
 @testset "Test isapprox for ITensors" begin
@@ -380,8 +381,8 @@ end
 
     S1 = TC+TR
     S2 = TR+TC
-    @test typeof(S1.store) == Dense{ComplexF64}
-    @test typeof(S2.store) == Dense{ComplexF64}
+    @test typeof(S1.store) == Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(S2.store) == Dense{ComplexF64,Vector{ComplexF64}}
     for ii=1:dim(i),jj=1:dim(j)
       @test S1[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
       @test S2[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
@@ -474,7 +475,7 @@ end
 
     @testset "Test SVD of an ITensor" begin
       U,S,V,u,v = svd(A,(j,l))
-      @test store(S) isa Diag{Vector{Float64}}
+      @test store(S) isa Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14

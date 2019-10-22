@@ -5,7 +5,7 @@ export Tensor,
 
 # TODO: make into:
 # abstract type TensorStorage{El} end <: AbstractVector{El}
-abstract type TensorStorage end
+abstract type TensorStorage{ElT} end
 
 data(S::TensorStorage) = S.data
 
@@ -29,8 +29,8 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   store::StoreT
   inds::IndsT
   # The resulting Tensor is a view into the input data
-  function Tensor(store::StoreT,inds::IndsT) where {StoreT<:TensorStorage,IndsT}
-    new{eltype(StoreT),length(IndsT),StoreT,IndsT}(store,inds)
+  function Tensor(store::StoreT,inds::IndsT) where {StoreT<:TensorStorage{ElT},IndsT} where {ElT}
+    new{ElT,length(IndsT),StoreT,IndsT}(store,inds)
   end
 end
 
@@ -45,6 +45,8 @@ ind(T::Tensor,j::Integer) = inds(T)[j]
 # dim and dims are used in the Tensor interface, overload 
 # base Dims here
 dims(ds::Dims) = ds
+dense(ds::Dims) = dims(ds)
+dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
 dim(ds::Dims) = prod(ds)
 
 Base.length(ds::Type{<:Dims{N}}) where {N} = N
@@ -54,9 +56,14 @@ const BlockDims{N} = NTuple{N,NTuple{<:Any,Int}}
 
 Base.length(ds::Type{<:BlockDims{N}}) where {N} = N
 
+# Make the "dense" version of the indices
+# For indices with QNs, this means removing the QNs
+dense(ds::BlockDims) = dims(ds)
+dense(::Type{BlockDims{N}}) where {N} = Dims{N}
+
 # This may be a bad idea to overload?
 # Type piracy?
-Base.strides(is::Dims) = Base.size_to_strides(1, dims(is)...)
+Base.strides(ds::Dims) = Base.size_to_strides(1, dims(ds)...)
 Base.copy(ds::Dims) = ds
 
 function dims(ds::BlockDims{N}) where {N}
@@ -79,7 +86,7 @@ function blockdims(inds::BlockDims{N},
 end
 
 function blockindex(inds::BlockDims{N},
-                      loc::Int) where {N}
+                    loc::Int) where {N}
   cartesian_loc = CartesianIndices(nblocks(inds))[loc]
   return Tuple(cartesian_loc)
 end
@@ -142,28 +149,28 @@ Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
 Random.randn!(T::Tensor) = (randn!(store(T)); return T)
 
-function Base.similar(::Type{T},dims) where {T<:Tensor{<:Any,<:Any,StoreT}} where {StoreT}
-  return Tensor(similar(StoreT,dims),dims)
+function Base.similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
+  return Tensor(similar(StoreT,dim(dims)),dims)
 end
 # TODO: make sure these are implemented correctly
 #Base.similar(T::Type{<:Tensor},::Type{S}) where {S} = Tensor(similar(store(T),S),inds(T))
 #Base.similar(T::Type{<:Tensor},::Type{S},dims) where {S} = Tensor(similar(store(T),S),dims)
 
 Base.similar(T::Tensor) = Tensor(similar(store(T)),copy(inds(T)))
-Base.similar(T::Tensor,dims) = Tensor(similar(store(T),dims),dims)
+Base.similar(T::Tensor,dims) = Tensor(similar(store(T),dim(dims)),dims)
 # To handle method ambiguity with AbstractArray
-Base.similar(T::Tensor,dims::Dims) = Tensor(similar(store(T),dims),dims)
-Base.similar(T::Tensor,::Type{S}) where {S} = Tensor(similar(store(T),S),copy(inds(T)))
-Base.similar(T::Tensor,::Type{S},dims) where {S} = Tensor(similar(store(T),S),dims)
+Base.similar(T::Tensor,dims::Dims) = Tensor(similar(store(T),dim(dims)),dims)
+Base.similar(T::Tensor,::Type{S}) where {S<:Number} = Tensor(similar(store(T),S),copy(inds(T)))
+Base.similar(T::Tensor,::Type{S},dims) where {S<:Number} = Tensor(similar(store(T),S,dim(dims)),dims)
 # To handle method ambiguity with AbstractArray
-Base.similar(T::Tensor,::Type{S},dims::Dims) where {S} = Tensor(similar(store(T),S),dims)
+Base.similar(T::Tensor,::Type{S},dims::Dims) where {S<:Number} = Tensor(similar(store(T),S,dim(dims)),dims)
 
 #function Base.convert(::Type{Tensor{<:Number,N,StoreR,Inds}},
 #                      T::Tensor{<:Number,N,<:Any,Inds}) where {N,Inds,StoreR}
 #  return Tensor(convert(StoreR,store(T)),copy(inds(T)))
 #end
 
-function Base.zeros(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},inds::IndsT) where {ElT,N,StoreT,IndsT}
+function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},inds) where {ElT,N,StoreT}
   return Tensor(zeros(StoreT,dim(inds)),inds)
 end
 
@@ -181,6 +188,12 @@ end
 #function Base.promote_rule(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Type{IndsR}) where {N,ElT,StoreT,IndsR}
 #  return Tensor{ElT,length(IndsR),StoreT,IndsR}
 #end
+
+# Convert the tensor type to the closest dense
+# type
+function dense(::Type{<:Tensor{ElT,N,StoreT,IndsT}}) where {ElT,N,StoreT,IndsT}
+  return Tensor{ElT,N,dense(StoreT),dense(IndsT)}
+end
 
 function StaticArrays.similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},indsR) where {N,ElT,StoreT}
   return Tensor{ElT,length(indsR),StoreT,typeof(indsR)}

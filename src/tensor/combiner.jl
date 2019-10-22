@@ -1,6 +1,6 @@
 export Combiner
 
-struct Combiner <: TensorStorage
+struct Combiner <: TensorStorage{Number}
 end
 
 data(::Combiner) = error("Combiner storage has no data")
