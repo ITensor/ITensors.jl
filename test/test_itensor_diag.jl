@@ -297,6 +297,22 @@ using ITensors,
         end
       end
     end
+    
+    @testset "similar/complex/basic stuff (order 2)" begin
+      D = δ(i,j)
+      cD = complex(D)
+      @test eltype(cD) == ComplexF64
+      for ii = 1:d, jj = 1:d
+        if ii == jj
+          @test cD[i(ii),j(jj)] == complex(1.0)
+        else
+          @test cD[i(ii),j(jj)] == complex(0.0)
+        end
+      end
+      sD = similar(D)
+      @test eltype(sD) == Float64
+      @test size(sD) == size(D)
+    end
 
     @testset "delta constructor (order 3)" begin
       D = δ(i,j,k)
@@ -322,6 +338,8 @@ using ITensors,
       @test_throws ErrorException D[i(1),j(1),k(1)] = 2.0
       @test_throws ErrorException D[i(2),j(1),k(1)] = 4.3
       @test_throws ErrorException D[i(1),j(2),k(1)] = 2
+      # setindex for the storage
+      @test_throws ErrorException setindex!(store(D), 2.0, 1)
     end
 
     @testset "Convert diag uniform to dense" begin

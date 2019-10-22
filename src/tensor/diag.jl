@@ -31,13 +31,13 @@ Base.eltype(::Type{<:Diag{T}}) where {T} = eltype(T)
 # Deal with uniform Diag conversion
 Base.convert(::Type{<:Diag{T}},D::Diag) where {T} = Diag{T}(data(D))
 
-Base.similar(D::Diag{T}) where {T} = Diag{T}(similar(data(D)))
+Base.similar(D::Diag{T}, ::Type{T}) where {T} = Diag{T}(similar(data(D)))
 
 # TODO: write in terms of ::Int, not inds
-Base.similar(D::Diag{T},inds) where {T} = Diag{T}(similar(data(D),minimum(dims(inds))))
-Base.similar(D::Type{<:NonuniformDiag{T}},inds) where {T} = Diag{T}(similar(T,length(inds)==0 ? 1 : minimum(dims(inds))))
+Base.similar(D::Diag{T},inds::IndexSet) where {T} = Diag{T}(similar(data(D),minimum(dims(inds))))
+Base.similar(D::Type{<:NonuniformDiag{T}},inds::IndexSet) where {T} = Diag{T}(similar(T,length(inds)==0 ? 1 : minimum(dims(inds))))
 
-Base.similar(D::UniformDiag{T}) where {T<:Number} = Diag{T}(zero(T))
+Base.similar(D::UniformDiag{T}, ::Type{T}) where {T<:Number} = Diag{T}(zero(T))
 Base.similar(::Type{<:UniformDiag{T}},inds) where {T<:Number} = Diag{T}(zero(T))
 
 # TODO: make this work for other storage besides Vector
