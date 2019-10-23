@@ -5,6 +5,7 @@ export ITensor,
        delta,
        δ,
        exp,
+       expHermitian,
        replaceindex!,
        inds,
        isNull,
@@ -510,7 +511,11 @@ function LinearAlgebra.exp(A::ITensor,
   return ITensor(expAT)
 end
 
-expHermitian(A::ITensor,Linds,Rinds) = exp(A,Linds,Rinds;ishermitian=true)
+function expHermitian(A::ITensor,
+                      Linds,
+                      Rinds = prime(IndexSet(Linds))) 
+  return exp(A,Linds,Rinds;ishermitian=true)
+end
 
 #######################################################################
 #
