@@ -42,7 +42,7 @@ end
 
 function contract!!(R::Tensor{<:Number,NR},
                     labelsR::NTuple{NR},
-                    T1::CombinerTensor{<:Any,N1},
+                    T1::CombinerTensor{<:Number,N1},
                     labelsT1::NTuple{N1},
                     T2::Tensor{<:Number,N2},
                     labelsT2::NTuple{N2}) where {NR,N1,N2}
@@ -75,7 +75,7 @@ function contract!!(R::Tensor{<:Number,NR},
                     labelsR::NTuple{NR},
                     T1::Tensor{<:Number,N1},
                     labelsT1::NTuple{N1},
-                    T2::CombinerTensor{<:Any,N2},
+                    T2::CombinerTensor{<:Number,N2},
                     labelsT2::NTuple{N2}) where {NR,N1,N2}
   return contract!!(R,labelsR,T2,labelsT2,T1,labelsT1)
 end

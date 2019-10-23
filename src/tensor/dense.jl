@@ -44,8 +44,23 @@ Base.eltype(::Dense{ElT}) where {ElT} = ElT
 Base.eltype(::Dense{Nothing}) = Nothing
 Base.eltype(::Type{<:Dense{ElT}}) where {ElT} = ElT
 
-Base.promote_rule(::Type{<:Dense{ElT1,VecT1}},
-                  ::Type{<:Dense{ElT2,VecT2}}) where {ElT1,VecT1,ElT2,VecT2} = Dense{promote_type(ElT1,ElT2),promote_type(VecT1,VecT2)}
+function Base.promote_rule(::Type{<:Dense{ElT1,VecT1}},
+                           ::Type{<:Dense{ElT2,VecT2}}) where {ElT1,VecT1,
+                                                               ElT2,VecT2}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = promote_type(VecT1,VecT2)
+  return Dense{ElR,VecR}
+end
+
+# This is to get around the issue in Julia that:
+# promote_type(Vector{ComplexF32},Vector{Float64}) == Vector{T} where T
+function Base.promote_rule(::Type{<:Dense{ElT1,Vector{ElT1}}},
+                           ::Type{<:Dense{ElT2,Vector{ElT2}}}) where {ElT1,ElT2}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = Vector{ElR}
+  return Dense{ElR,VecR}
+end
+
 Base.convert(::Type{<:Dense{ElR,VecR}},
              D::Dense) where {ElR,VecR} = Dense(convert(VecR,data(D)))
 

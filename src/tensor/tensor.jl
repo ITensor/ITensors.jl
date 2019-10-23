@@ -175,7 +175,9 @@ function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},inds) where {ElT,N,StoreT}
 end
 
 function Base.promote_rule(::Type{<:Tensor{ElT1,N1,StoreT1}},
-                           ::Type{<:Tensor{ElT2,N2,StoreT2}}) where {ElT1,ElT2,N1,N2,StoreT1,StoreT2}
+                           ::Type{<:Tensor{ElT2,N2,StoreT2}}) where {ElT1,ElT2,
+                                                                     N1,N2,
+                                                                     StoreT1,StoreT2}
   return Tensor{promote_type(ElT1,ElT2),N3,promote_type(StoreT1,StoreT2)} where {N3}
 end
 
