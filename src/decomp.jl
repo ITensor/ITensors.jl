@@ -1,6 +1,7 @@
 export polar,
        eigenHermitian,
-       factorize
+       factorize,
+       svd
 
 import LinearAlgebra.qr
 function qr(A::ITensor,
