@@ -61,6 +61,15 @@ function Base.promote_rule(::Type{<:Dense{ElT1,Vector{ElT1}}},
   return Dense{ElR,VecR}
 end
 
+# This is for type promotion for Scalar*Dense
+function Base.promote_rule(::Type{<:Dense{ElT1,Vector{ElT1}}},
+                           ::Type{ElT2}) where {ElT1,
+                                                ElT2<:Number}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = Vector{ElR}
+  return Dense{ElR,VecR}
+end
+
 Base.convert(::Type{<:Dense{ElR,VecR}},
              D::Dense) where {ElR,VecR} = Dense(convert(VecR,data(D)))
 

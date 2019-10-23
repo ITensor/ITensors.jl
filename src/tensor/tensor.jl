@@ -59,12 +59,14 @@ Base.length(ds::Type{<:BlockDims{N}}) where {N} = N
 # Make the "dense" version of the indices
 # For indices with QNs, this means removing the QNs
 dense(ds::BlockDims) = dims(ds)
-dense(::Type{BlockDims{N}}) where {N} = Dims{N}
+dense(::Type{<:BlockDims{N}}) where {N} = Dims{N}
 
 # This may be a bad idea to overload?
 # Type piracy?
 Base.strides(ds::Dims) = Base.size_to_strides(1, dims(ds)...)
 Base.copy(ds::Dims) = ds
+
+Base.copy(ds::BlockDims) = ds
 
 function dims(ds::BlockDims{N}) where {N}
   return ntuple(i->sum(ds[i]),Val(N))
@@ -79,13 +81,21 @@ function nblocks(inds::BlockDims{N}) where {N}
   return ntuple(dim->length(inds[dim]),Val(N))
 end
 
+function nblocks(ind::NTuple{N,Int}) where {N}
+  return N
+end
+
+function blocksize(ind::NTuple{N,Int},i::Int) where {N}
+  return ind[i]
+end
+
 # Version taking CartestianIndex
 function blockdims(inds::BlockDims{N},
                    loc) where {N}
   return ntuple(dim->inds[dim][loc[dim]],Val(N))
 end
 
-function blockindex(inds::BlockDims{N},
+function whichblock(inds::BlockDims{N},
                     loc::Int) where {N}
   cartesian_loc = CartesianIndices(nblocks(inds))[loc]
   return Tuple(cartesian_loc)
@@ -171,6 +181,11 @@ Base.similar(T::Tensor,::Type{S},dims::Dims) where {S<:Number} = Tensor(similar(
 #end
 
 function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},inds) where {ElT,N,StoreT}
+  return Tensor(zeros(StoreT,dim(inds)),inds)
+end
+
+# This is to fix a method ambiguity with a Base array function
+function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},inds::Dims{N}) where {ElT,N,StoreT}
   return Tensor(zeros(StoreT,dim(inds)),inds)
 end
 

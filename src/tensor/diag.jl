@@ -77,38 +77,34 @@ function Base.promote_rule(::Type{<:NonuniformDiag{ElT1,VecT1}},
 end
 
 # This is an internal definition, is there a more general way?
-Base.promote_type(::Type{Vector{ElT1}},
-                  ::Type{ElT2}) where {ElT1<:Number,
-                                       ElT2<:Number} = Vector{promote_type(ElT1,ElT2)}
-
-Base.promote_type(::Type{ElT1},
-                  ::Type{Vector{ElT2}}) where {ElT1<:Number,
-                                               ElT2<:Number} = promote_type(Vector{ElT2},ElT1)
+#Base.promote_type(::Type{Vector{ElT1}},
+#                  ::Type{ElT2}) where {ElT1<:Number,
+#                                       ElT2<:Number} = Vector{promote_type(ElT1,ElT2)}
+#
+#Base.promote_type(::Type{ElT1},
+#                  ::Type{Vector{ElT2}}) where {ElT1<:Number,
+#                                               ElT2<:Number} = promote_type(Vector{ElT2},ElT1)
 
 # TODO: how do we make this work more generally for T2<:AbstractVector{S2}?
 # Make a similar_type(AbstractVector{S2},T1) -> AbstractVector{T1} function?
 function Base.promote_rule(::Type{<:UniformDiag{ElT1,VecT1}},
-                           ::Type{<:NonuniformDiag{ElT2,VecT2}}) where {ElT1,VecT1<:Number,
-                                                                        ElT2,VecT2<:AbstractVector}
+                           ::Type{<:NonuniformDiag{ElT2,Vector{ElT2}}}) where {ElT1,VecT1<:Number,
+                                                                               ElT2}
   ElR = promote_type(ElT1,ElT2)
-  VecR = promote_type(VecT1,VecT2)
+  VecR = Vector{ElR}
   return Diag{ElR,VecR}
 end
 
-function Base.promote_rule(::Type{<:Dense{ElT1,VecT1}},
-                           ::Type{<:NonuniformDiag{ElT2,VecT2}}) where {ElT1,VecT1,
+function Base.promote_rule(::Type{DenseT1},
+                           ::Type{<:NonuniformDiag{ElT2,VecT2}}) where {DenseT1<:Dense,
                                                                         ElT2,VecT2<:AbstractVector}
-  ElR = promote_type(ElT1,ElT2)
-  VecR = promote_type(VecT1,VecT2)
-  return Dense{ElR,VecR}
+  return promote_type(DenseT1,Dense{ElT2,VecT2})
 end
 
-function Base.promote_rule(::Type{<:Dense{ElT1,VecT1}},
-                           ::Type{<:UniformDiag{ElT2,VecT2}}) where {ElT1,VecT1,
+function Base.promote_rule(::Type{DenseT1},
+                           ::Type{<:UniformDiag{ElT2,VecT2}}) where {DenseT1<:Dense,
                                                                      ElT2,VecT2<:Number}
-  ElR = promote_type(ElT1,ElT2)
-  VecR = promote_type(VecT1,VecT2)
-  return Dense{ElR,VecR}
+  return promote_type(DenseT1,ElT2)
 end
 
 # Convert a Diag storage type to the closest Dense storage type
