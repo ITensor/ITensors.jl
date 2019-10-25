@@ -93,7 +93,12 @@ whichblock(T::BlockSparseTensor,i) = whichblock(inds(T),i)
 
 # From a block location, get the LinearIndex version
 function linear_whichblock(T::BlockSparseTensor,whichblock)
-  return LinearIndices(nblocks(T))[CartesianIndex(whichblock)]
+  return linear_whichblock(inds(T),whichblock)
+end
+
+# TODO: move to tensor.jl
+function linear_whichblock(inds::BlockDims,whichblock)
+  return LinearIndices(nblocks(inds))[CartesianIndex(whichblock)]
 end
 
 # Check if the specified block is non-zero
@@ -113,16 +118,20 @@ end
 # TODO: sort the offsets if they are not ordered (currently
 # if they are not ordered the BlockSparse storage constructor 
 # throws an error)
-function BlockSparseTensor(locs::Vector{NTuple{N,Int}},
+function BlockSparseTensor(whichblocks::Vector{NTuple{N,Int}},
                            inds::BlockDims{N}) where {N}
   nblocks_inds = nblocks(inds)
   linear_offset_total = 0
   offsets = BlockOffsets()
-  for loc in locs
-    # Canonical Julia way to convert CartesianIndex to LinearIndex
-    linear_loc = LinearIndices(nblocks_inds)[CartesianIndex(loc)]
-    push!(offsets,(linear_loc,linear_offset_total))
-    current_block_length = blockdim(inds,loc)
+
+  # Convention is to have offsets sorted
+  # TODO: seperate this into seperate function (whichblocks,inds -> offsets)
+  linear_whichblocks = [linear_whichblock(inds,whichblock_i) for whichblock_i in whichblocks]
+  linear_whichblocks = sort(linear_whichblocks)
+
+  for linear_whichblock_i in linear_whichblocks
+    push!(offsets,(linear_whichblock_i,linear_offset_total))
+    current_block_length = blockdim(inds,linear_whichblock_i)
     linear_offset_total += current_block_length
   end
   storage = BlockSparse{Float64}(Vector{Float64}(undef,linear_offset_total),offsets)
@@ -254,6 +263,7 @@ function blockview(T::BlockSparseTensor{ElT,N},
   dataTslice = @view data(store(T))[blockoffsetT+1:blockoffsetT+prod(blockdimsT)]
   return Tensor(Dense(dataTslice),blockdimsT)
 end
+blockview(T::BlockSparseTensor,linear_whichblock::Int) = blockview(T,whichblock(T,linear_whichblock))
 
 dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
 
@@ -284,41 +294,58 @@ function Base.:+(T1::BlockSparseTensor,T2::BlockSparseTensor)
   return Tensor(store(T1)+store(T2),inds(T1))
 end
 
-# TODO: implement this function!
 function similar_permuted(T::BlockSparseTensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
-  @show inds(T)
-
-  indsTp = permute(inds(T),perm)
-
-  @show indsTp
-
-  @show offsets(T)
-
-  offsetsp = BlockOffsets()
+  whichblocksp = NTuple{N,Int}[]
   for (nblock_i,offset_i) in offsets(T)
-    @show nblock_i,offset_i
     whichblock_i = whichblock(T,nblock_i)
-    @show whichblock_i
     whichblockp_i = permute(whichblock_i,perm)
-    @show whichblockp_i
-    nblockp_i = linear_whichblock(T,whichblockp_i)
-    push!(offsetsp,(nblockp_i,offset_i))
+    push!(whichblocksp,whichblockp_i)
   end
-  @show offsetsp
-
-  #offsetsTp = permute(offsets(T),perm)
-  #@show offsetsTp
-  #storeTp = similar(store(T),offsetsTp)
-  #@show storeTp
-  #Tp = Tensor(storeTp,permute(inds(T),perm))
+  indsR = permute(inds(T),perm)
+  return BlockSparseTensor(whichblocksp,indsR)
 end
 
 function Base.permutedims(T::BlockSparseTensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
-  Tp = similar_permuted(T,perm)
-  Tp = permutedims!!(Tp,T,perm)
-  return Tp
+  R = similar_permuted(T,perm)
+  @show R
+  R = permutedims!!(R,T,perm)
+  return R
+end
+
+function permutedims!!(R::BlockSparseTensor{<:Number,N},
+                       T::BlockSparseTensor{<:Number,N},
+                       perm::NTuple{N,Int}) where {N}
+  R = permutedims!(R,T,perm)
+  return R
+end
+
+function Base.permutedims!(R::BlockSparseTensor{<:Number,N},
+                           T::BlockSparseTensor{<:Number,N},
+                           perm::NTuple{N,Int}) where {N}
+  for ((linear_whichblockT,_),(linear_whichblockR,_)) in zip(offsets(T),offsets(R))
+    # Loop over non-zero blocks of T/R
+    Tblock = blockview(T,linear_whichblockT)
+    Rblock = blockview(R,linear_whichblockR)
+    permutedims!(Rblock,Tblock,perm)
+  end
+  return R
+end
+
+#
+# Contraction
+#
+
+function contraction_output(T1::TensorT1,
+                            T2::TensorT2,
+                            indsR::IndsR) where {TensorT1<:BlockSparseTensor,
+                                                 TensorT2<:BlockSparseTensor,
+                                                 IndsR}
+  TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
+  @show TensorR
+  #error("In contraction_output(::BlockSparseTensor,BlockSparseTensor,::IndsR), need to determine output blocks")
+  return similar(TensorR,indsR,offsetsR)
 end
 
 #

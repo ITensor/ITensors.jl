@@ -269,28 +269,32 @@ function outer(T1::DenseTensor{ElT1},
 end
 const ⊗ = outer
 
-function contraction_output_type(TensorT1::Type{<:DenseTensor},
-                                 TensorT2::Type{<:DenseTensor},
-                                 indsR)
-  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+# TODO: move to tensor.jl?
+function contraction_output_type(TensorT1::Type{<:Tensor},
+                                 TensorT2::Type{<:Tensor},
+                                 IndsR::Type)
+  return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 
-function contraction_output(TensorT1::Type{<:DenseTensor},
-                            TensorT2::Type{<:DenseTensor},
-                            indsR)
-  return similar(contraction_output_type(TensorT1,TensorT2,indsR),indsR)
+function contraction_output(T1::TensorT1,
+                            T2::TensorT2,
+                            indsR::IndsR) where {TensorT1<:DenseTensor,
+                                                 TensorT2<:DenseTensor,
+                                                 IndsR}
+  TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
+  return similar(TensorR,indsR)
 end
 
 # TODO: move to tensor.jl?
 function contract(T1::Tensor{<:Any,N1},
                   labelsT1,
                   T2::Tensor{<:Any,N2},
-                  labelsT2) where {N1,N2}
+                  labelsT2,
+                  labelsR = contract_labels(labelsT1,labelsT2)) where {N1,N2}
   # TODO: put the contract_inds logic into contraction_output,
   # call like R = contraction_ouput(T1,labelsT1,T2,labelsT2)
-  indsR,labelsR = contract_inds(inds(T1),labelsT1,
-                                inds(T2),labelsT2)
-  R = contraction_output(typeof(T1),typeof(T2),indsR)
+  indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
+  R = contraction_output(T1,T2,indsR)
   # contract!! version here since the output R may not
   # be mutable (like UniformDiag)
   R = contract!!(R,labelsR,T1,labelsT1,T2,labelsT2)

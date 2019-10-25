@@ -130,12 +130,12 @@ end
 # (given the indices of the output tensors)
 function contraction_output_type(TensorT1::Type{<:DiagTensor},
                                  TensorT2::Type{<:DenseTensor},
-                                 indsR)
-  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+                                 IndsR::Type)
+  return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 contraction_output_type(TensorT1::Type{<:DenseTensor},
                         TensorT2::Type{<:DiagTensor},
-                        indsR) = contraction_output_type(TensorT2,TensorT1,indsR)
+                        IndsR::Type) = contraction_output_type(TensorT2,TensorT1,IndsR)
 
 # This performs the logic that DiagTensor*DiagTensor -> DiagTensor if it is not an outer
 # product but -> DenseTensor if it is
@@ -145,29 +145,32 @@ contraction_output_type(TensorT1::Type{<:DenseTensor},
 # SparseTensor result?
 function contraction_output_type(TensorT1::Type{<:DiagTensor{<:Number,N1}},
                                  TensorT2::Type{<:DiagTensor{<:Number,N2}},
-                                 indsR) where {N1,N2}
-  if ValLength(indsR)===Val(N1+N2)
+                                 IndsR::Type) where {N1,N2}
+  if ValLength(IndsR)===Val{N1+N2}
     # Turn into is_outer(inds1,inds2,indsR) function?
     # How does type inference work with arithmatic of compile time values?
-    return similar_type(dense(promote_type(TensorT1,TensorT2)),indsR)
+    return similar_type(dense(promote_type(TensorT1,TensorT2)),IndsR)
   end
-  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+  return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 
 # TODO: move to tensor.jl?
-zero_contraction_output(TensorT1::Type{<:Tensor},TensorT2::Type{<:Tensor},indsR) = zeros(contraction_output_type(TensorT1,TensorT2,indsR),indsR)
-
-function contraction_output(TensorT1::Type{<:DiagTensor},
-                            TensorT2::Type{<:Tensor},
-                            indsR)
-  return zero_contraction_output(TensorT1,TensorT2,indsR)
+function zero_contraction_output(T1::TensorT1,
+                                 T2::TensorT2,
+                                 indsR::IndsR) where {TensorT1<:Tensor,
+                                                      TensorT2<:Tensor,
+                                                      IndsR}
+  return zeros(contraction_output_type(TensorT1,TensorT2,IndsR),indsR)
 end
-contraction_output(TensorT1::Type{<:Tensor},TensorT2::Type{<:DiagTensor},indsR) = contraction_output(TensorT2,TensorT1,indsR)
 
-function contraction_output(TensorT1::Type{<:DiagTensor},
-                            TensorT2::Type{<:DiagTensor},
+# The output must be initialized as zero since it is sparse, cannot be undefined
+contraction_output(T1::DiagTensor,T2::Tensor,indsR) = zero_contraction_output(T1,T2,indsR)
+contraction_output(T1::Tensor,T2::DiagTensor,indsR) = contraction_output(T2,T1,indsR)
+
+function contraction_output(T1::DiagTensor,
+                            T2::DiagTensor,
                             indsR)
-  return zero_contraction_output(TensorT1,TensorT2,indsR)
+  return zero_contraction_output(T1,T2,indsR)
 end
 
 function array(T::DiagTensor{ElT,N}) where {ElT,N}

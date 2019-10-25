@@ -40,6 +40,7 @@ ind(T::Tensor,j::Integer) = inds(T)[j]
 
 #
 # Tools for working with Dims/Tuples
+# TODO: put this in a seperate file
 #
 
 # dim and dims are used in the Tensor interface, overload 
@@ -52,7 +53,7 @@ dim(ds::Dims) = prod(ds)
 Base.length(ds::Type{<:Dims{N}}) where {N} = N
 
 # Used for BlockSparse Tensors
-const BlockDims{N} = NTuple{N,NTuple{<:Any,Int}}
+const BlockDims{N} = NTuple{N,Vector{Int}}
 
 Base.length(ds::Type{<:BlockDims{N}}) where {N} = N
 
@@ -129,6 +130,9 @@ ValLength(::Dims{N}) where {N} = Val{N}()
 StaticArrays.similar_type(::Type{<:Dims},
                           ::Type{Val{N}}) where {N} = Dims{N}
 
+StaticArrays.similar_type(::Type{<:BlockDims},
+                          ::Type{Val{N}}) where {N} = BlockDims{N}
+
 unioninds(is1::Dims{N1},
           is2::Dims{N2}) where {N1,N2} = Dims{N1+N2}((is1...,is2...))
 
@@ -159,6 +163,7 @@ Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
 Random.randn!(T::Tensor) = (randn!(store(T)); return T)
 
+# TODO: For BlockSparse, this needs to include the offsets
 function Base.similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
   return Tensor(similar(StoreT,dim(dims)),dims)
 end
