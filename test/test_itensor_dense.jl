@@ -233,6 +233,10 @@ end
   B = ITensor(b,i)
   @test mul!(A2, A, 2.0) == B == ITensors.add!(A2, 0, 2, A)
   @test rmul!(A, 2.0) == B == ITensors.scale!(A3, 2)
+  #make sure mul! works also when A2 has NaNs in it
+  A = ITensor([1.0; 2.0],i)
+  A2 = ITensor([NaN; 1.],i)
+  @test mul!(A2, A, 2.0) == B
 
   i = Index(2,"i")
   j = Index(2,"j")
