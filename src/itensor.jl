@@ -617,9 +617,9 @@ rmul!(T::ITensor,fac::Number) = scale!(T,fac)
     mul!(A::ITensor,x::Number,B::ITensor)
 
 Scalar multiplication of ITensor B with x, and store the result in A.
-Like `A .= x .* B`, and equivalent to `add!(A, 0, x, B)`.
+Like `A .= x .* B`.
 """
-mul!(R::ITensor,α::Number,T::ITensor) = add!(R,0,α,T)
+mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
 mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
 
 function summary(io::IO,
