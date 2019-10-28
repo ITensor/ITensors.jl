@@ -12,6 +12,7 @@ using ITensors, Test
         "test_combiner.jl",
         "test_trg.jl",
         "test_ctmrg.jl",
+        "test_iterativesolvers.jl",
         "test_dmrg.jl",
         "test_tag_types.jl",
         "test_phys_site_types.jl",

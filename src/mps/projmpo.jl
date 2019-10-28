@@ -48,6 +48,20 @@ function product(pm::ProjMPO,
   return noprime(Hv)
 end
 
+function Base.eltype(pm::ProjMPO)
+  elT = eltype(pm.H[pm.lpos+1])
+  for j = pm.lpos+2:pm.rpos-1
+    elT = promote_type(elT,eltype(pm.H[j]))
+  end
+  if !isNull(LProj(pm))
+    elT = promote_type(elT,eltype(LProj(pm)))
+  end
+  if !isNull(RProj(pm))
+    elT = promote_type(elT,eltype(RProj(pm)))
+  end
+  return elT
+end
+
 (pm::ProjMPO)(v::ITensor) = product(pm,v)
 
 function size(pm::ProjMPO)::Tuple{Int,Int}

@@ -42,8 +42,8 @@ function orthogonalize!(q::ITensor,V,ni)
   return 
 end
 
-function expand_krylov_space(M::Matrix,V,AV,ni)
-  newM = fill(0.0,(ni+1,ni+1))
+function expand_krylov_space(M::Matrix{elT},V,AV,ni) where {elT}
+  newM = fill(zero(elT),(ni+1,ni+1))
   newM[1:ni,1:ni] = M
   for k=1:ni+1
     newM[k,ni+1] = dot(V[k],AV[ni+1])
@@ -55,6 +55,7 @@ end
 function davidson(A,
                   phi0::ITensorT;
                   kwargs...) where {ITensorT<:ITensor}
+  elT = eltype(A)
 
   phi = copy(phi0)
 
@@ -87,10 +88,10 @@ end
   AV = ITensorT[Aphi]
 
   last_lambda = NaN
-  lambda::Float64 = dot(V[1],AV[1])
+  lambda::Float64 = real(dot(V[1],AV[1]))
   q = AV[1] - lambda*V[1];
 
-  M = fill(lambda,(1,1))
+  M = fill(elT(lambda),(1,1))
 
   for ni=1:actual_maxiter
 
