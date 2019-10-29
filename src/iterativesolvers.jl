@@ -55,9 +55,18 @@ end
 function davidson(A,
                   phi0::ITensorT;
                   kwargs...) where {ITensorT<:ITensor}
-  elT = eltype(A)
+  elTA   = eltype(A)
+  elTphi = eltype(phi0)
 
-  phi = copy(phi0)
+  # if the matrix is complex and the starting vector is real,
+  # that's not going to last long
+  # and we're going to need phi to be complex
+  # down when we reuse the storage in get_vecs!
+  if !(elTA <: Real) && (elTphi <: Real)
+    phi = complex(phi0)
+  else
+    phi = copy(phi0)
+  end
 
   maxiter = get(kwargs,:maxiter,2)
   miniter = get(kwargs,:maxiter,1)
@@ -91,7 +100,7 @@ end
   lambda::Float64 = real(dot(V[1],AV[1]))
   q = AV[1] - lambda*V[1];
 
-  M = fill(elT(lambda),(1,1))
+  M = fill(elTA(lambda),(1,1))
 
   for ni=1:actual_maxiter
 

@@ -1,3 +1,5 @@
+using ITensors
+using Test
 
 # Wrap an ITensor with pairs of primed and
 # unprimed indices to pass to davidson
@@ -14,10 +16,14 @@ Base.size(M::ITensorMap) = dim(findinds(M.A,("",0)))
   A = randomITensor(Complex,i,prime(i))
   A = mapprime(A*mapprime(dag(A),0,2),2,1)
   M = ITensorMap(A)
-  v = randomITensor(Complex,i)
-
+    
+  v = randomITensor(i)
   λ,v = davidson(M,v;maxiter=10)
-
-  @show M(v)≈λ*v
+  @test M(v)≈λ*v
+    
+  v = randomITensor(Complex, i)
+  λ,v = davidson(M,v;maxiter=10)
+  @test M(v)≈λ*v
+    
 end
 
