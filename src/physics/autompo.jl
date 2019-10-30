@@ -27,12 +27,12 @@ name(s::SiteOp) = s.name
 site(s::SiteOp) = s.site
 Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
 
-#function Base.isless(s1::SiteOp,s2::SiteOp)::Bool
-#  if site(s1) < site(s2)
-#    return true
-#  end
-#  return name(s1) < name(s2)
-#end
+function Base.isless(s1::SiteOp,s2::SiteOp)::Bool
+  if site(s1) < site(s2)
+    return true
+  end
+  return name(s1) < name(s2)
+end
 
 ###########################
 # OpTerm                  # 
