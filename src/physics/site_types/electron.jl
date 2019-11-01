@@ -5,7 +5,7 @@ function electronSites(N::Int; kwargs...)
   return [Index(4,"Site,Electron,n=$n") for n=1:N]
 end
 
-const ElectronSite = makeTagType("Electron")
+const ElectronSite = TagType"Electron"
 
 function state(::ElectronSite,
                st::AbstractString)
