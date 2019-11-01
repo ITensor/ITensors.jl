@@ -5,7 +5,7 @@ function spinHalfSites(N::Int; kwargs...)
   return [Index(2,"Site,S=1/2,n=$n") for n=1:N]
 end
 
-const SpinHalfSite = Union{makeTagType("S=1/2"),makeTagType("SpinHalf")}
+const SpinHalfSite = Union{TagType"S=1/2",TagType"SpinHalf"}
 
 function state(::SpinHalfSite,
                st::AbstractString)

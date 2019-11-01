@@ -5,7 +5,7 @@ function tJSites(N::Int; kwargs...)
   return [Index(3,"Site,tJ,n=$n") for n=1:N]
 end
 
-const tJSite = makeTagType("tJ")
+const tJSite = TagType"tJ"
 
 function state(::tJSite,
                st::AbstractString)

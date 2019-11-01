@@ -1,10 +1,19 @@
 export makeTagType,
+       TagType_str,
+       TagType,
        op,
        state
 
+struct TagType{T}
+end
+
 function makeTagType(t)
   tag = Tag(t)
-  return Val{tag}
+  return TagType{tag}
+end
+
+macro TagType_str(s)
+  TagType{Tag(s)}
 end
 
 function _call_op(s::Index,
@@ -13,7 +22,7 @@ function _call_op(s::Index,
   use_tag = 0
   nfound = 0
   for n=1:length(tags(s))
-    TType = Val{tags(s)[n]}
+    TType = TagType{tags(s)[n]}
     if hasmethod(op,Tuple{TType,Index,AbstractString})
       use_tag = n
       nfound += 1
@@ -24,7 +33,7 @@ function _call_op(s::Index,
   elseif nfound > 1
     error("Multiple tags from $(tags(s)) overload the function \"op\"")
   end
-  TType = Val{tags(s)[use_tag]}
+  TType = TagType{tags(s)[use_tag]}
   return op(TType(),s,opname;kwargs...)
 end
 
@@ -68,7 +77,7 @@ function state(s::Index,
   use_tag = 0
   nfound = 0
   for n=1:length(tags(s))
-    TType = Val{tags(s)[n]}
+    TType = TagType{tags(s)[n]}
     if hasmethod(state,Tuple{TType,AbstractString})
       use_tag = n
       nfound += 1
@@ -79,7 +88,7 @@ function state(s::Index,
   elseif nfound > 1
     error("Multiple tags from $(tags(s)) overload the function \"state\"")
   end
-  TType = Val{tags(s)[use_tag]}
+  TType = TagType{tags(s)[use_tag]}
   sn = state(TType(),str)
   return s[sn]
 end
