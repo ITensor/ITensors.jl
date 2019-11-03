@@ -295,3 +295,26 @@ function Base.read(io::IO,::Type{Index}; kwargs...)
   end
   return i
 end
+
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    I::Index)
+  attrs(parent)["type"] = "Index"
+  write(parent,"id",I.id)
+  write(parent,"dim",I.dim)
+  write(parent,"dir",Int(I.dir))
+  tag_g = g_create(parent,"tags")
+  write(tag_g,I.tags)
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   ::Type{Index})
+  if read(attrs(parent)["type"]) != "Index"
+    error("HDF5 group or file does not contain Index data")
+  end
+  id = read(parent,"id")
+  dim = read(parent,"dim")
+  dir = Arrow(read(parent,"dir"))
+  tag_g = g_open(parent,"tags")
+  tags = read(tag_g,TagSet)
+  return Index(id,dim,dir,tags)
+end
