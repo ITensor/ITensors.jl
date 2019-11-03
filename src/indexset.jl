@@ -675,10 +675,10 @@ function is_uncombiner(labelsT1,labelsT2)
          count_common(labelsT1,labelsT2) == 1
 end
 
-function Base.read(io::IO,::Type{IndexSet};kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readCpp(io::IO,::Type{IndexSet};kwargs...)
+  format = get(kwargs,:format,"v3")
   is = IndexSet()
-  if format=="cpp"
+  if format=="v3"
     size = read(io,Int)
     resize!(is.inds,size)
     for n=1:size
