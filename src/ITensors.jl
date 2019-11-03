@@ -4,7 +4,8 @@ using Random,
       Printf,
       LinearAlgebra,
       StaticArrays,
-      TimerOutputs
+      TimerOutputs,
+      HDF5
 
 # TODO: move imports to individual files
 import Base.adjoint,
