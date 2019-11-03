@@ -304,3 +304,22 @@ function Base.read(io::IO,::Type{TagSet}; kwargs...)
   end
   return ts
 end
+
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    T::TagSet)
+  attrs(parent)["type"] = "TagSet"
+  write(parent,"plev",T.plev)
+  write(parent,"length",T.length)
+  write(parent,"tags",Vector{IntTag}(T.tags))
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   ::Type{TagSet})
+  if read(attrs(parent)["type"]) != "TagSet"
+    error("HDF5 group or file does not contain TagSet data")
+  end
+  plev = read(parent,"plev")
+  length = read(parent,"length")
+  tags = TagSetStorage(read(parent,"tags"))
+  return TagSet(tags,plev,length)
+end
