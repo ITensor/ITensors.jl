@@ -32,6 +32,11 @@ end
 IndexSet(inds::MVector{N,Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
 
+function IndexSet(vi::Vector{Index}) 
+  N = length(vi)
+  return IndexSet{N}(NTuple{N,Index}(vi))
+end
+
 inds(is::IndexSet) = is.inds
 
 # Empty constructor
