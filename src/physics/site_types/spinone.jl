@@ -5,7 +5,7 @@ function spinOneSites(N::Int; kwargs...)
   return [Index(3,"Site,S=1,n=$n") for n=1:N]
 end
 
-const SpinOneSite = Union{TagType"S=1",TagType"SpinOne"}
+const SpinOneSite = Union{TagType"S=1", TagType"SpinOne"}
 
 function state(::SpinOneSite,
                st::AbstractString)
