@@ -691,3 +691,28 @@ function readCpp(io::IO,::Type{IndexSet};kwargs...)
   end
   return is
 end
+
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    is::IndexSet)
+  attrs(parent)["type"] = "IndexSet"
+  N = length(is)
+  write(parent,"length",N)
+  for n=1:N
+    ig = g_create(parent,"index_$n")
+    write(ig,is[n])
+  end
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   ::Type{IndexSet})
+  if read(attrs(parent)["type"]) != "IndexSet"
+    error("HDF5 group or file does not contain IndexSet data")
+  end
+  N = read(parent,"length")
+  vi = Vector{Index}(undef,N)
+  for n=1:N
+    ig = g_open(parent,"index_$n")
+    vi[n] = read(ig,Index)
+  end
+  return IndexSet(vi)
+end
