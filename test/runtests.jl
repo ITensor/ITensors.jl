@@ -10,6 +10,7 @@ using ITensors, Test
         "test_itensor_diag.jl",
         "test_contract.jl",
         "test_combiner.jl",
+        "test_readwrite.jl",
         "test_trg.jl",
         "test_ctmrg.jl",
         "test_iterativesolvers.jl",
