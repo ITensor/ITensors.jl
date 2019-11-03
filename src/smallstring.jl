@@ -113,15 +113,14 @@ Base.isless(s1::SmallString,s2::SmallString) = isless(s1.data,s2.data)
 
 #######################################################
 
-#function Base.String(s::SmallString)
-#  res = ""
-#  n = 1
-#  while n <= smallLength && s[n] != IntChar(0)
-#    res *= Char(s[n])
-#    n += 1
-#  end
-#  return res
-#end
+function Base.String(s::SmallString)
+  n = 1
+  while n <= smallLength && s[n] != IntChar(0)
+    n += 1
+  end
+  len = n-1
+  return String(s.data[1:len])
+end
 
 #Base.convert(::Type{String}, s::SmallString) = String(s)
 

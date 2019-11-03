@@ -33,15 +33,19 @@ import ITensors.SmallString,
       @test u < t
   end
 
-  #@testset "Convert to String" begin
-  #  s = SmallString("abc")
-  #  @test typeof(s) == SmallString
+  @testset "Convert to String" begin
+    s = SmallString("abc")
+    @test typeof(s) == SmallString
 
-  #  sg = String(s)
-  #  for n=1:length(sg)
-  #    @test sg[n] == convert(Char,s[n])
-  #  end
-  #end
+    sg = String(s)
+    for n=1:length(sg)
+      @test sg[n] == convert(Char,s[n])
+    end
+
+    s = SmallString("")
+    sg = String(s)
+    @test sg == ""
+  end
 
   @testset "isint" begin
     i = SmallString("123")
