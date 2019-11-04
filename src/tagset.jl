@@ -310,7 +310,11 @@ function HDF5.write(parent::Union{HDF5File,HDF5Group},
   attrs(parent)["type"] = "TagSet"
   write(parent,"plev",T.plev)
   write(parent,"length",T.length)
-  write(parent,"tags",Vector{IntTag}(T.tags))
+  s_tags = Vector{String}(undef,length(T.tags))
+  for n=1:length(T.tags)
+    s_tags[n] = String(T[n])
+  end
+  write(parent,"tags",s_tags)
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
@@ -320,6 +324,7 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   end
   plev = read(parent,"plev")
   length = read(parent,"length")
-  tags = TagSetStorage(read(parent,"tags"))
-  return TagSet(tags,plev,length)
+  s_tags = read(parent,"tags")
+  store = TagSetStorage([IntSmallString(Tag(s)) for s in s_tags])
+  return TagSet(store,plev,length)
 end
