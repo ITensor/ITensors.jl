@@ -58,7 +58,10 @@ end
 
 function Base.isless(t1::MPOTerm,t2::MPOTerm)::Bool
   if !isapprox(coef(t1),coef(t2))
-    return coef(t1) < coef(t2)
+    ct1 = coef(t1)
+    ct2 = coef(t2)
+    #"lexicographic" ordering on  complex numbers
+    return real(ct1) < real(ct2) || (real(ct1) == real(ct2) && imag(ct1) < imag(ct2))
   end
   return ops(t1) < ops(t2)
 end
