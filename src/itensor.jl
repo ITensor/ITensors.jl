@@ -685,10 +685,10 @@ function readCpp!(io::IO,T::ITensor;kwargs...)
   end
 end
 
-function Base.read(io::IO,::Type{ITensor};kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readCpp(io::IO,::Type{ITensor};kwargs...)
+  format = get(kwargs,:format,"v3")
   T = ITensor()
-  if format=="cpp"
+  if format=="v3"
     readCpp!(io,T;kwargs...)
   else
     throw(ArgumentError("read ITensor: format=$format not supported"))
