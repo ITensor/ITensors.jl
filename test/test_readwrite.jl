@@ -5,6 +5,10 @@ using ITensors,
 
 @testset "HDF5 Read and Write" begin
 
+  i = Index(2,"i")
+  j = Index(3,"j")
+  k = Index(4,"k")
+
   @testset "TagSet" begin
     ts = TagSet("A,Site,n=2")
     fo = h5open("data.h5","w")
@@ -30,9 +34,6 @@ using ITensors,
   end
 
   @testset "IndexSet" begin
-    i = Index(2,"i")
-    j = Index(3,"j")
-    k = Index(4,"k")
     is = IndexSet(i,j,k)
 
     fo = h5open("data.h5","w")
@@ -43,6 +44,33 @@ using ITensors,
     ris = read(fi,IndexSet)
     close(fi)
     @test ris == is
+  end
+
+  @testset "ITensor" begin
+
+    # real case
+    T = randomITensor(i,j,k)
+
+    fo = h5open("data.h5","w")
+    write(fo,T)
+    close(fo)
+
+    fi = h5open("data.h5","r")
+    rT = read(fi,ITensor)
+    close(fi)
+    @test norm(rT-T)/norm(T) < 1E-10
+
+    # complex case
+    T = randomITensor(ComplexF64,i,j,k)
+
+    fo = h5open("data.h5","w")
+    write(fo,T)
+    close(fo)
+
+    fi = h5open("data.h5","r")
+    rT = read(fi,ITensor)
+    close(fi)
+    @test norm(rT-T)/norm(T) < 1E-10
   end
 
 end

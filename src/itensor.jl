@@ -695,3 +695,26 @@ function readCpp(io::IO,::Type{ITensor};kwargs...)
   end
   return T
 end
+
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    T::ITensor)
+  attrs(parent)["type"] = "ITensor"
+  write(g_create(parent,"inds"),T.inds)
+  write(g_create(parent,"store"),T.store)
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   ::Type{ITensor})
+  if read(attrs(parent)["type"]) != "ITensor"
+    error("HDF5 group or file does not contain ITensor data")
+  end
+  inds = read(g_open(parent,"inds"),IndexSet)
+
+  store_g = g_open(parent,"store")
+  stype = read(attrs(store_g)["type"])
+  if stype == "Dense"
+    store = read(store_g,Dense)
+  end
+
+  return ITensor(store,inds)
+end
