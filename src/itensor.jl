@@ -699,7 +699,7 @@ end
 
 
 """
-    real_if_close(x :: Complex{T}; tol = 1e-10) :: T where T <: Real 
+    real_if_close(x ; tol = 1e-10) 
 
 Returns the real part of `x` if `x` is nearly real, i.e. `(x |> imag |> abs) < tol`; errors otherwise.
 
@@ -707,6 +707,8 @@ This function differs from numpy's real_if_close in two ways in that it errors, 
 
 This choice is in part for type stability, and in part because when one uses a function like this one typically has good physical reason to believe that the answer should be real. Failure to in fact be nearly real will be indicative of a deeper problem, and likely to cause further problems downstream.
 """
+real_if_close(x :: Real; tol = 1e-10) = x
+
 function real_if_close(x :: Complex{T}; tol = 1e-10) :: T where T <: Real 
   if abs( imag(x) ) < tol
     return real(x)
