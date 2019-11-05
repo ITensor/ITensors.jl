@@ -23,7 +23,8 @@ export ITensor,
        vector,
        scalar,
        store,
-       dense
+       dense,
+       real_if_close
 
 """
 An ITensor is a tensor whose interface is 
@@ -695,3 +696,42 @@ function Base.read(io::IO,::Type{ITensor};kwargs...)
   end
   return T
 end
+
+
+"""
+    real_if_close(x :: Complex{T}; tol = 1e-10) :: T where T <: Real 
+
+Returns the real part of `x` if `x` is nearly real, i.e. `(x |> imag |> abs) < tol`; errors otherwise.
+
+This function differs from numpy's real_if_close in two ways in that it errors, rather than returning a complex result, when the argument is not nearly real.
+
+This choice is in part for type stability, and in part because when one uses a function like this one typically has good physical reason to believe that the answer should be real. Failure to in fact be nearly real will be indicative of a deeper problem, and likely to cause further problems downstream.
+"""
+function real_if_close(x :: Complex{T}; tol = 1e-10) :: T where T <: Real 
+  if abs( imag(x) ) < tol
+    return real(x)
+  else
+    error("real_if_close: imaginary part of $x too large")
+  end
+end
+
+# turns the tensor into an array,
+# applies real_if_close elementwise,
+# and turns the result back into a tensor
+#
+# not sure this is really a good way to do this
+# in particular it seems bad for non-dense storage types
+# but this is a super useful function to have
+# (e.g. if you have a Hermitian MP(D)O
+# that you've put into a basis of Hermitian onsite operators:
+# it should be be at least gauge-equivalent to an MP(D)O with real tensors,
+# and typically IME it already has real tensors
+# ---but only up to 1e-13 or something)
+# (CDW)
+"""
+    real_if_close(A :: ITensor; tol = 1e-10)
+
+Return the real part of an itensor `A` if all the elements of A are nearly real, i.e. `all((x .|> imag .|> abs) < tol)`; errors otherwise.
+
+"""
+real_if_close(A :: ITensor; tol = 1e-10) = ITensor( real_if_close.(A |> array, tol=tol)  , inds(A))
