@@ -12,19 +12,19 @@ function Base.:*(T1::Tensor{ElT1,2,StoreT1,IndsT1},
                                         ElT2,StoreT2<:Dense,IndsT2}
   RM = matrix(T1)*matrix(T2)
   indsR = IndsT1(ind(T1,1),ind(T2,2))
-  return Tensor(Dense{promote_type(ElT1,ElT2)}(vec(RM)),indsR)
+  return Tensor(Dense(vec(RM)),indsR)
 end
 
 function LinearAlgebra.exp(T::DenseTensor{ElT,2}) where {ElT}
   expTM = exp(matrix(T))
-  return Tensor(Dense{ElT}(vec(expTM)),inds(T))
+  return Tensor(Dense(vec(expTM)),inds(T))
 end
 
 function expHermitian(T::DenseTensor{ElT,2}) where {ElT}
   # exp(::Hermitian/Symmetric) returns Hermitian/Symmetric,
   # so extract the parent matrix
   expTM = parent(exp(Hermitian(matrix(T))))
-  return Tensor(Dense{ElT}(vec(expTM)),inds(T))
+  return Tensor(Dense(vec(expTM)),inds(T))
 end
 
 # svd of an order-2 tensor
@@ -63,9 +63,9 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   Uinds = IndsT((ind(T,1),u))
   Sinds = IndsT((u,v))
   Vinds = IndsT((ind(T,2),v))
-  U = Tensor(Dense{ElT}(vec(MU)),Uinds)
-  S = Tensor(Diag{Vector{real(ElT)}}(MS),Sinds)
-  V = Tensor(Dense{ElT}(vec(MV)),Vinds)
+  U = Tensor(Dense(vec(MU)),Uinds)
+  S = Tensor(Diag(MS),Sinds)
+  V = Tensor(Dense(vec(MV)),Vinds)
   return U,S,V
 end
 
@@ -103,8 +103,8 @@ function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
   v = eltype(IndsT)(dD)
   Uinds = IndsT((ind(T,1),u))
   Dinds = IndsT((u,v))
-  U = Tensor(Dense{ElT}(vec(UM)),Uinds)
-  D = Tensor(Diag{Vector{real(ElT)}}(DM),Dinds)
+  U = Tensor(Dense(vec(UM)),Uinds)
+  D = Tensor(Diag(DM),Dinds)
   return U,D
 end
 
@@ -118,8 +118,8 @@ function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}) where {ElT,
   q = dim(q) < dim(r) ? sim(q) : sim(r)
   Qinds = IndsT((ind(T,1),q))
   Rinds = IndsT((q,ind(T,2)))
-  Q = Tensor(Dense{ElT}(vec(Matrix(QM))),Qinds)
-  R = Tensor(Dense{ElT}(vec(RM)),Rinds)
+  Q = Tensor(Dense(vec(Matrix(QM))),Qinds)
+  R = Tensor(Dense(vec(RM)),Rinds)
   return Q,R
 end
 
@@ -132,8 +132,8 @@ function polar(T::DenseTensor{ElT,2,IndsT}) where {ElT,IndsT}
   # call here
   Qinds = IndsT((ind(T,1),q))
   Rinds = IndsT((q,ind(T,2)))
-  Q = Tensor(Dense{ElT}(vec(QM)),Qinds)
-  R = Tensor(Dense{ElT}(vec(RM)),Rinds)
+  Q = Tensor(Dense(vec(QM)),Qinds)
+  R = Tensor(Dense(vec(RM)),Rinds)
   return Q,R
 end
 

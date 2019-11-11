@@ -3,13 +3,19 @@ export Diag
 # Diag can have either Vector storage, in which case
 # it is a general Diag tensor, or scalar storage,
 # in which case the diagonal has a uniform value
-struct Diag{T} <: TensorStorage
-  data::T
-  Diag{T}(data) where {T} = new{T}(data)
+struct Diag{ElT,VecT} <: TensorStorage{ElT}
+  data::VecT
+  Diag(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = new{ElT,VecT}(data)
+  Diag(data::VecT) where {VecT<:Number} = new{VecT,VecT}(data)
+end
+#Diag{T}(data) where {T} = new{T}(data)
+
+function Diag{ElR}(data::VecT) where {ElR<:Number,VecT<:AbstractVector{ElT}} where {ElT}
+  ElT == ElR ? Diag(data) : Diag(ElR.(data))
 end
 
-const NonuniformDiag{T} = Diag{T} where {T<:AbstractVector}
-const UniformDiag{T} = Diag{T} where {T<:Number}
+const NonuniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:AbstractVector}
+const UniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:Number}
 
 Base.@propagate_inbounds Base.getindex(D::NonuniformDiag,i::Int)= data(D)[i]
 Base.getindex(D::UniformDiag,i::Int) = data(D)
@@ -21,39 +27,34 @@ Base.fill!(D::Diag,v) = fill!(data(D),v)
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
-Base.complex(D::Diag{T}) where {T} = Diag{complex(T)}(complex(data(D)))
+Base.complex(D::Diag) = Diag(complex(data(D)))
 
-Base.copy(D::Diag{T}) where {T} = Diag{T}(copy(data(D)))
+Base.copy(D::Diag) = Diag(copy(data(D)))
 
-Base.eltype(::Diag{T}) where {T} = eltype(T)
-Base.eltype(::Type{<:Diag{T}}) where {T} = eltype(T)
+Base.eltype(::Diag{ElT}) where {ElT} = ElT
+Base.eltype(::Type{<:Diag{ElT}}) where {ElT} = ElT
 
 # Deal with uniform Diag conversion
-Base.convert(::Type{<:Diag{T}},D::Diag) where {T} = Diag{T}(data(D))
+Base.convert(::Type{<:Diag{ElT,VecT}},D::Diag) where {ElT,VecT} = Diag(convert(VecT,data(D)))
 
-Base.similar(D::Diag{T}) where {T} = Diag{T}(similar(data(D)))
+diaglength(inds) = (length(inds) == 0 ? 1 : minimum(dims(inds)))
 
 # TODO: write in terms of ::Int, not inds
-Base.similar(D::Diag{T},inds) where {T} = Diag{T}(similar(data(D),minimum(dims(inds))))
-Base.similar(D::Type{<:NonuniformDiag{T}},inds) where {T} = Diag{T}(similar(T,length(inds)==0 ? 1 : minimum(dims(inds))))
+Base.similar(D::NonuniformDiag) = Diag(similar(data(D)))
+Base.similar(D::NonuniformDiag,inds) = Diag(similar(data(D),minimum(dims(inds))))
+function Base.similar(D::Type{<:NonuniformDiag{ElT,VecT}},inds) where {ElT,VecT}
+  return Diag(similar(VecT,diaglength(inds)))
+end
 
-Base.similar(D::UniformDiag{T}) where {T<:Number} = Diag{T}(zero(T))
-Base.similar(::Type{<:UniformDiag{T}},inds) where {T<:Number} = Diag{T}(zero(T))
+Base.similar(D::UniformDiag) = Diag(zero(T))
+Base.similar(D::UniformDiag,inds) = similar(D)
+Base.similar(::Type{<:UniformDiag{ElT}},inds) where {ElT} = Diag(zero(ElT))
 
 # TODO: make this work for other storage besides Vector
-Base.zeros(::Type{Diag{T}},dim::Int64) where 
-  {T<:AbstractVector} = Diag{T}(zeros(eltype(T),dim))
-Base.zeros(::Type{Diag{T}},dim::Int64) where 
-  {T<:Number} = Diag{T}(zero(T))
+Base.zeros(::Type{<:NonuniformDiag{ElT}},dim::Int64) where {ElT} = Diag(zeros(ElT,dim))
+Base.zeros(::Type{<:UniformDiag{ElT}},dim::Int64) where {ElT} = Diag(zero(ElT))
 
-function Base.:*(D::Diag{<:Vector{El}},x::S) where {El<:Number,S<:Number}
-  return Diag{Vector{promote_type(El,S)}}(x*data(D))
-end
-
-function Base.:*(D::UniformDiag{<:El},x::S) where {El<:Number,S<:Number}
-  return Diag{promote_type(El,S)}(x*data(D))
-end
-
+Base.:*(D::Diag,x::Number) = Diag(x*data(D))
 Base.:*(x::Number,D::Diag) = D*x
 
 #
@@ -61,22 +62,54 @@ Base.:*(x::Number,D::Diag) = D*x
 # Useful for knowing how conversions should work when adding and contracting
 #
 
-Base.promote_rule(::Type{<:UniformDiag{T1}},::Type{<:UniformDiag{T2}}) where 
-  {T1<:Number,T2<:Number} = Diag{promote_type(T1,T2)}
+function Base.promote_rule(::Type{<:UniformDiag{ElT1}},
+                           ::Type{<:UniformDiag{ElT2}}) where {ElT1,ElT2}
+  ElR = promote_type(ElT1,ElT2)
+  return Diag{ElR,ElR}
+end
 
-Base.promote_rule(::Type{<:NonuniformDiag{T1}},::Type{<:NonuniformDiag{T2}}) where 
-  {T1<:AbstractVector,T2<:AbstractVector} = Diag{promote_type(T1,T2)}
+function Base.promote_rule(::Type{<:NonuniformDiag{ElT1,VecT1}},
+                           ::Type{<:NonuniformDiag{ElT2,VecT2}}) where {ElT1,VecT1<:AbstractVector,
+                                                                        ElT2,VecT2<:AbstractVector}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = promote_type(VecT1,VecT2)
+  return Diag{ElR,VecR}
+end
+
+# This is an internal definition, is there a more general way?
+#Base.promote_type(::Type{Vector{ElT1}},
+#                  ::Type{ElT2}) where {ElT1<:Number,
+#                                       ElT2<:Number} = Vector{promote_type(ElT1,ElT2)}
+#
+#Base.promote_type(::Type{ElT1},
+#                  ::Type{Vector{ElT2}}) where {ElT1<:Number,
+#                                               ElT2<:Number} = promote_type(Vector{ElT2},ElT1)
 
 # TODO: how do we make this work more generally for T2<:AbstractVector{S2}?
 # Make a similar_type(AbstractVector{S2},T1) -> AbstractVector{T1} function?
-Base.promote_rule(::Type{<:UniformDiag{T1}},::Type{<:NonuniformDiag{T2}}) where 
-  {T1<:Number,T2<:Vector{S2}} where S2 = Diag{Vector{promote_type(T1,S2)}}
+function Base.promote_rule(::Type{<:UniformDiag{ElT1,VecT1}},
+                           ::Type{<:NonuniformDiag{ElT2,Vector{ElT2}}}) where {ElT1,VecT1<:Number,
+                                                                               ElT2}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = Vector{ElR}
+  return Diag{ElR,VecR}
+end
 
-Base.promote_rule(::Type{<:Dense{T1}},::Type{<:Diag{T2}}) where 
-  {T1,T2} = Dense{promote_type(T1,eltype(T2))}
+function Base.promote_rule(::Type{DenseT1},
+                           ::Type{<:NonuniformDiag{ElT2,VecT2}}) where {DenseT1<:Dense,
+                                                                        ElT2,VecT2<:AbstractVector}
+  return promote_type(DenseT1,Dense{ElT2,VecT2})
+end
+
+function Base.promote_rule(::Type{DenseT1},
+                           ::Type{<:UniformDiag{ElT2,VecT2}}) where {DenseT1<:Dense,
+                                                                     ElT2,VecT2<:Number}
+  return promote_type(DenseT1,ElT2)
+end
 
 # Convert a Diag storage type to the closest Dense storage type
-dense(::Type{<:Diag{T}}) where {T} = Dense{eltype(T)}
+dense(::Type{<:NonuniformDiag{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
+dense(::Type{<:UniformDiag{ElT}}) where {ElT} = Dense{ElT,Vector{ElT}}
 
 const DiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Diag}
 const NonuniformDiagTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where 
@@ -97,12 +130,12 @@ end
 # (given the indices of the output tensors)
 function contraction_output_type(TensorT1::Type{<:DiagTensor},
                                  TensorT2::Type{<:DenseTensor},
-                                 indsR)
-  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+                                 IndsR::Type)
+  return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 contraction_output_type(TensorT1::Type{<:DenseTensor},
                         TensorT2::Type{<:DiagTensor},
-                        indsR) = contraction_output_type(TensorT2,TensorT1,indsR)
+                        IndsR::Type) = contraction_output_type(TensorT2,TensorT1,IndsR)
 
 # This performs the logic that DiagTensor*DiagTensor -> DiagTensor if it is not an outer
 # product but -> DenseTensor if it is
@@ -112,29 +145,32 @@ contraction_output_type(TensorT1::Type{<:DenseTensor},
 # SparseTensor result?
 function contraction_output_type(TensorT1::Type{<:DiagTensor{<:Number,N1}},
                                  TensorT2::Type{<:DiagTensor{<:Number,N2}},
-                                 indsR) where {N1,N2}
-  if ValLength(indsR)===Val(N1+N2)
+                                 IndsR::Type) where {N1,N2}
+  if ValLength(IndsR)===Val{N1+N2}
     # Turn into is_outer(inds1,inds2,indsR) function?
     # How does type inference work with arithmatic of compile time values?
-    return similar_type(dense(promote_type(TensorT1,TensorT2)),indsR)
+    return similar_type(dense(promote_type(TensorT1,TensorT2)),IndsR)
   end
-  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+  return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 
 # TODO: move to tensor.jl?
-zero_contraction_output(TensorT1::Type{<:Tensor},TensorT2::Type{<:Tensor},indsR) = zeros(contraction_output_type(TensorT1,TensorT2,indsR),indsR)
-
-function contraction_output(TensorT1::Type{<:DiagTensor},
-                            TensorT2::Type{<:Tensor},
-                            indsR)
-  return zero_contraction_output(TensorT1,TensorT2,indsR)
+function zero_contraction_output(T1::TensorT1,
+                                 T2::TensorT2,
+                                 indsR::IndsR) where {TensorT1<:Tensor,
+                                                      TensorT2<:Tensor,
+                                                      IndsR}
+  return zeros(contraction_output_type(TensorT1,TensorT2,IndsR),indsR)
 end
-contraction_output(TensorT1::Type{<:Tensor},TensorT2::Type{<:DiagTensor},indsR) = contraction_output(TensorT2,TensorT1,indsR)
 
-function contraction_output(TensorT1::Type{<:DiagTensor},
-                            TensorT2::Type{<:DiagTensor},
+# The output must be initialized as zero since it is sparse, cannot be undefined
+contraction_output(T1::DiagTensor,T2::Tensor,indsR) = zero_contraction_output(T1,T2,indsR)
+contraction_output(T1::Tensor,T2::DiagTensor,indsR) = contraction_output(T2,T1,indsR)
+
+function contraction_output(T1::DiagTensor,
+                            T2::DiagTensor,
                             indsR)
-  return zero_contraction_output(TensorT1,TensorT2,indsR)
+  return zero_contraction_output(T1,T2,indsR)
 end
 
 function array(T::DiagTensor{ElT,N}) where {ElT,N}
@@ -150,9 +186,10 @@ getdiag(T::DiagTensor,ind::Int) = store(T)[ind]
 
 setdiag!(T::DiagTensor,val,ind::Int) = (store(T)[ind] = val)
 
-setdiag(T::DiagTensor,val::ElR,ind::Int) where {ElR} = Tensor(Diag{ElR}(val),inds(T))
+setdiag(T::DiagTensor,val,ind::Int) = Tensor(Diag(val),inds(T))
 
-Base.@propagate_inbounds function Base.getindex(T::DiagTensor{ElT,N},inds::Vararg{Int,N}) where {ElT,N}
+Base.@propagate_inbounds function Base.getindex(T::DiagTensor{ElT,N},
+                                                inds::Vararg{Int,N}) where {ElT,N}
   if all(==(inds[1]),inds)
     return store(T)[inds[1]]
   else
@@ -165,7 +202,7 @@ Base.@propagate_inbounds Base.getindex(T::DiagTensor{<:Number,0}) = store(T)[1]
 # Set diagonal elements
 # Throw error for off-diagonal
 Base.@propagate_inbounds function Base.setindex!(T::DiagTensor{<:Number,N},
-                                            val,inds::Vararg{Int,N}) where {N}
+                                                 val,inds::Vararg{Int,N}) where {N}
   all(==(inds[1]),inds) || error("Cannot set off-diagonal element of Diag storage")
   return store(T)[inds[1]] = val
 end
@@ -224,7 +261,7 @@ end
 function outer(T1::DiagTensor{ElT1,N1},
                T2::DiagTensor{ElT2,N2}) where {ElT1,ElT2,N1,N2}
   indsR = unioninds(inds(T1),inds(T2))
-  R = Tensor(Dense{promote_type(ElT1,ElT2)}(zeros(dim(indsR))),indsR)
+  R = Tensor(Dense(zeros(promote_type(ElT1,ElT2),dim(indsR))),indsR)
   outer!(R,T1,T2)
   return R
 end
@@ -249,8 +286,7 @@ end
 function Base.permutedims(T::UniformDiagTensor{ElT,N},
                           perm::NTuple{N,Int},
                           f::Function=identity) where {ElR,ElT,N}
-  R = Tensor(Diag{promote_type(ElR,ElT)}(f(getdiag(T,1))),
-                                         permute(inds(T),perm))
+  R = Tensor(Diag(f(getdiag(T,1))),permute(inds(T),perm))
   return R
 end
 
@@ -267,7 +303,7 @@ function permutedims!!(R::UniformDiagTensor{ElR,N},
                        T::UniformDiagTensor{ElT,N},
                        perm::NTuple{N,Int},
                        f::Function=(r,t)->t) where {ElR,ElT,N}
-  R = Tensor(Diag{promote_type(ElR,ElT)}(f(getdiag(R,1),getdiag(T,1))),inds(R))
+  R = Tensor(Diag(f(getdiag(R,1),getdiag(T,1))),inds(R))
   return R
 end
 

@@ -1,6 +1,6 @@
 export Combiner
 
-struct Combiner <: TensorStorage
+struct Combiner <: TensorStorage{Number}
 end
 
 data(::Combiner) = error("Combiner storage has no data")
@@ -11,38 +11,30 @@ Base.eltype(::StoreT) where {StoreT<:Combiner} = eltype(StoreT)
 Base.promote_rule(::Type{<:Combiner},StorageT::Type{<:Dense}) = StorageT
 
 #
-# CombinerTensor (Tensor using Dense storage)
+# CombinerTensor (Tensor using Combiner storage)
 #
 
 const CombinerTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Combiner}
 
-function contraction_output_type(TensorT1::Type{<:CombinerTensor},
-                                 TensorT2::Type{<:DenseTensor},
-                                 indsR)
-  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+function contraction_output(::TensorT1,
+                            ::TensorT2,
+                            indsR::IndsR) where {TensorT1<:CombinerTensor,
+                                                 TensorT2<:DenseTensor,
+                                                 IndsR}
+  TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
+  return similar(TensorR,indsR)
 end
 
-function contraction_output_type(TensorT1::Type{<:DenseTensor},
-                                 TensorT2::Type{<:CombinerTensor},
-                                 indsR)
-  return contraction_output_type(TensorT2,TensorT1,indsR)
-end
-
-function contraction_output(TensorT1::Type{<:CombinerTensor},
-                            TensorT2::Type{<:DenseTensor},
-                            indsR)
-  return similar(contraction_output_type(TensorT1,TensorT2,indsR),indsR)
-end
-
-function contraction_output(TensorT1::Type{<:DenseTensor},
-                            TensorT2::Type{<:CombinerTensor},
-                            indsR)
-  return contraction_output(TensorT2,TensorT1,indsR)
+function contraction_output(T1::TensorT1,
+                            T2::TensorT2,
+                            indsR) where {TensorT1<:DenseTensor,
+                                          TensorT2<:CombinerTensor}
+  return contraction_output(T2,T1,indsR)
 end
 
 function contract!!(R::Tensor{<:Number,NR},
                     labelsR::NTuple{NR},
-                    T1::CombinerTensor{<:Any,N1},
+                    T1::CombinerTensor{<:Number,N1},
                     labelsT1::NTuple{N1},
                     T2::Tensor{<:Number,N2},
                     labelsT2::NTuple{N2}) where {NR,N1,N2}
@@ -75,7 +67,7 @@ function contract!!(R::Tensor{<:Number,NR},
                     labelsR::NTuple{NR},
                     T1::Tensor{<:Number,N1},
                     labelsT1::NTuple{N1},
-                    T2::CombinerTensor{<:Any,N2},
+                    T2::CombinerTensor{<:Number,N2},
                     labelsT2::NTuple{N2}) where {NR,N1,N2}
   return contract!!(R,labelsR,T2,labelsT2,T1,labelsT1)
 end

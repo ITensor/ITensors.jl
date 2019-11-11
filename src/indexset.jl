@@ -114,7 +114,8 @@ unioninds(is1::IndexSet{N1},is2::IndexSet{N2}) where {N1,N2} = IndexSet{N1+N2}(i
 # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
 # only known thing for dispatch is a concrete type such
 # as IndexSet{4})
-StaticArrays.similar_type(::Type{IndsT},::Val{N}) where {IndsT<:IndexSet,N} = IndexSet{N}
+StaticArrays.similar_type(::Type{<:IndexSet},::Val{N}) where {N} = IndexSet{N}
+StaticArrays.similar_type(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
 
 sim(is::IndexSet{N}) where {N} = IndexSet{N}(ntuple(i->sim(is[i]),Val(N)))
 
@@ -518,34 +519,34 @@ end
 # Move this to tensor, since this logic is different
 # for contracting different kinds of storage
 # Also, generalize this to not just use IndexSet
-function contract_inds(Ais::IndexSet{N1},
-                       Alabel::NTuple{N1,Int},
-                       Bis::IndexSet{N2},
-                       Blabel::NTuple{N2,Int}) where {N1,N2}
-  ncont = 0
-  for i in Alabel
-    i < 0 && (ncont += 1)
-  end
-  NR = N1+N2-2*ncont
-  Clabel = Vector{Int}(undef,NR)
-  Cis = Vector{Index}(undef,NR)
-  u = 1
-  @inbounds for i ∈ 1:N1
-    if(Alabel[i] > 0) 
-      Clabel[u] = Alabel[i]; 
-      Cis[u] = Ais[i]; 
-      u += 1 
-    end
-  end
-  @inbounds for i ∈ 1:N2
-    if(Blabel[i] > 0) 
-      Clabel[u] = Blabel[i]; 
-      Cis[u] = Bis[i]; 
-      u += 1 
-    end
-  end
-  return IndexSet{NR}(Cis...),NTuple{NR,Int}(Clabel)
-end
+#function contract_inds(Ais::IndexSet{N1},
+#                       Alabels::Labels{N1},
+#                       Bis::IndexSet{N2},
+#                       Blabels::Labels{N2}) where {N1,N2}
+#  ncont = 0
+#  for i in Alabel
+#    i < 0 && (ncont += 1)
+#  end
+#  NR = N1+N2-2*ncont
+#  Clabels = Vector{Int}(undef,NR)
+#  Cis = Vector{Index}(undef,NR)
+#  u = 1
+#  @inbounds for i ∈ 1:N1
+#    if(Alabel[i] > 0) 
+#      Clabels[u] = Alabel[i]; 
+#      Cis[u] = Ais[i]; 
+#      u += 1 
+#    end
+#  end
+#  @inbounds for i ∈ 1:N2
+#    if(Blabel[i] > 0) 
+#      Clabels[u] = Blabel[i]; 
+#      Cis[u] = Bis[i]; 
+#      u += 1 
+#    end
+#  end
+#  return IndexSet{NR}(Cis...),NTuple{NR,Int}(Clabels)
+#end
 
 # TODO: implement this in terms of a tuple,
 # overload Base.strides and implement strides(inds,j)
