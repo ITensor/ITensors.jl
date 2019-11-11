@@ -276,8 +276,8 @@ function contraction_output_type(TensorT1::Type{<:Tensor},
   return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 
-function contraction_output(T1::TensorT1,
-                            T2::TensorT2,
+function contraction_output(::TensorT1,
+                            ::TensorT2,
                             indsR::IndsR) where {TensorT1<:DenseTensor,
                                                  TensorT2<:DenseTensor,
                                                  IndsR}
