@@ -1,15 +1,9 @@
-export makeTagType,
+export TagType,
        TagType_str,
-       TagType,
        op,
        state
 
 struct TagType{T}
-end
-
-function makeTagType(t)
-  tag = Tag(t)
-  return TagType{tag}
 end
 
 macro TagType_str(s)
