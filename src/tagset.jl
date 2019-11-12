@@ -306,25 +306,22 @@ function Base.read(io::IO,::Type{TagSet}; kwargs...)
 end
 
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
                     T::TagSet)
-  attrs(parent)["type"] = "TagSet"
-  write(parent,"plev",T.plev)
-  write(parent,"length",T.length)
-  s_tags = Vector{String}(undef,length(T.tags))
-  for n=1:length(T.tags)
-    s_tags[n] = String(T[n])
-  end
-  write(parent,"tags",s_tags)
+  tag_g = g_create(parent,name)
+  attrs(tag_g)["type"] = "TagSet"
+  write(tag_g,"plev",plev(T))
+  write(tag_g,"tags",tagstring(T))
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
                    ::Type{TagSet})
-  if read(attrs(parent)["type"]) != "TagSet"
-    error("HDF5 group or file does not contain TagSet data")
+  tag_g = g_open(parent,name)
+  if read(attrs(tag_g)["type"]) != "TagSet"
+    error("HDF5 group '$name' does not contain TagSet data")
   end
-  plev = read(parent,"plev")
-  length = read(parent,"length")
-  s_tags = read(parent,"tags")
-  store = TagSetStorage([IntSmallString(Tag(s)) for s in s_tags])
-  return TagSet(store,plev,length)
+  plev = read(tag_g,"plev")
+  tstring = read(tag_g,"tags")
+  return TagSet((tstring,plev))
 end
