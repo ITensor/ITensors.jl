@@ -31,6 +31,18 @@ using ITensors,
     ri = read(fi,"index",Index)
     close(fi)
     @test ri == i
+
+    # primed Index
+    i = Index(3,"Site,S=1")
+    i = prime(i,2)
+    fo = h5open("data.h5","w")
+    write(fo,"index",i)
+    close(fo)
+
+    fi = h5open("data.h5","r")
+    ri = read(fi,"index",Index)
+    close(fi)
+    @test ri == i
   end
 
   @testset "IndexSet" begin
