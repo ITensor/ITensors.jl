@@ -558,16 +558,20 @@ function LinearAlgebra.exp(T::DenseTensor{ElT,N},
 end
 
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
                     D::Dense)
-  attrs(parent)["type"] = "Dense"
-  write(parent,"data",D.data)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "Dense"
+  write(g,"data",D.data)
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
                    ::Type{Dense})
-  if read(attrs(parent)["type"]) != "Dense"
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "Dense"
     error("HDF5 group or file does not contain Dense data")
   end
-  data = read(parent,"data")
+  data = read(g,"data")
   return Dense{eltype(data)}(data)
 end

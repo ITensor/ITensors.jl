@@ -46,31 +46,31 @@ using ITensors,
     @test ris == is
   end
 
-  #@testset "ITensor" begin
+  @testset "ITensor" begin
 
-  #  # real case
-  #  T = randomITensor(i,j,k)
+    # real case
+    T = randomITensor(i,j,k)
 
-  #  fo = h5open("data.h5","w")
-  #  write(fo,"T",T)
-  #  close(fo)
+    fo = h5open("data.h5","w")
+    write(fo,"T",T)
+    close(fo)
 
-  #  fi = h5open("data.h5","r")
-  #  rT = read(fi,"T",ITensor)
-  #  close(fi)
-  #  @test norm(rT-T)/norm(T) < 1E-10
+    fi = h5open("data.h5","r")
+    rT = read(fi,"T",ITensor)
+    close(fi)
+    @test norm(rT-T)/norm(T) < 1E-10
 
-  #  # complex case
-  #  T = randomITensor(ComplexF64,i,j,k)
+    # complex case
+    T = randomITensor(ComplexF64,i,j,k)
 
-  #  fo = h5open("data.h5","w")
-  #  write(fo,"complexT",T)
-  #  close(fo)
+    fo = h5open("data.h5","w")
+    write(fo,"complexT",T)
+    close(fo)
 
-  #  fi = h5open("data.h5","r")
-  #  rT = read(fi,"complexT",ITensor)
-  #  close(fi)
-  #  @test norm(rT-T)/norm(T) < 1E-10
-  #end
+    fi = h5open("data.h5","r")
+    rT = read(fi,"complexT",ITensor)
+    close(fi)
+    @test norm(rT-T)/norm(T) < 1E-10
+  end
 
 end
