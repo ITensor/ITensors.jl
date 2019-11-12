@@ -169,5 +169,13 @@ end
     end
 end
 
+@testset "SVD/Combiner should play nice" begin
+    cmb, ci = combiner(i, j, k)
+    Ac = A*cmb
+    U,S,V,u,v = svd(Ac, ci)
+    Uc = U*cmb
+    @test Uc*S*V ≈ A
+end
+
 end
 
