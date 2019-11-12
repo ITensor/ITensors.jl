@@ -334,14 +334,13 @@ end
     @test norm(T-0.5*O) < 1E-8
 
       
-    sites = spinOneSites(4)
+    sites = spinOneSites(2)
     ampo = AutoMPO()
     add!(ampo, 0.5im, "Sx",1)
     add!(ampo, 0.5, "Sy",1)
     H = toMPO(ampo, sites)
-    l = commonindex(H[1],H[2])
-    T = setElt(l[1])*H[1]
-    O = im*op(sites[1],"Sx")+op(sites[1],"Sy")
+    T = H[1]*H[2]
+    O = im*op(sites[1],"Sx")*op(sites[2],"Id")+op(sites[1],"Sy")*op(sites[2],"Id")
     @test norm(T-0.5*O) < 1E-8
   end
 
