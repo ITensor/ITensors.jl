@@ -49,16 +49,40 @@ function contract!!(R::Tensor{<:Number,NR},
     # TODO: handle the case where inds(R) and inds(T1)
     # are not ordered the same?
     # Could just use a permutedims...
-    return Tensor(store(T2),inds(R))
+    Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))
+    final_labels    = contract_labels(Blabels, Alabels)
+    final_labels_n  = contract_labels(labelsT1,labelsT2)
+    indsR = inds(R)
+    if final_labels != final_labels_n
+        perm  = getperm(final_labels_n, final_labels)
+        indsR = permute(inds(R), perm) 
+    end
+    # need to permute storeT2
+    return Tensor(store(T2),indsR)
   elseif is_combiner(labelsT1,labelsT2)
     # This is the case of combining
+    Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))
+    final_labels    = contract_labels(Blabels, Alabels)
+    final_labels_n  = contract_labels(labelsT1,labelsT2)
+    indsR = inds(R)
+    if final_labels != final_labels_n
+        perm  = getperm(final_labels_n, final_labels)
+        indsR = permute(inds(R), perm)
+        labelsR = permute(labelsR, perm)
+    end
     cpos1,cposR = intersect_positions(labelsT1,labelsR)
     labels_comb = deleteat(labelsT1,cpos1)
-    labels_perm = insertat(labelsR,labels_comb,cposR)
+    vlR = [labelsR...]
+    vlc = [labels_comb...]
+    for (ii, li) in enumerate(vlc)
+        insert!(vlR, cposR+ii, li)
+    end
+    deleteat!(vlR, cposR)
+    labels_perm = tuple(vlR...) 
     perm = getperm(labels_perm,labelsT2)
     T2p = reshape(R,permute(inds(T2),perm))
     permutedims!(T2p,T2,perm)
-    R = reshape(T2p,inds(R))
+    R = reshape(T2p,indsR)
   end
   return R
 end

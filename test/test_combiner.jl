@@ -46,6 +46,18 @@ A = randomITensor(i, j, k, l)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        B = C*A
+        @test hasinds(B, i, l)
+        @test c == commonindex(B, C)
+        D = B*C
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
     end
     for inds_jl ∈ permutations([j,l])
         C,c = combiner(inds_jl...)
@@ -55,6 +67,18 @@ A = randomITensor(i, j, k, l)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        B = C*A
+        @test hasinds(B, i, k)
+        @test c == commonindex(B, C)
+        D = B*C
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
     end
     for inds_kl ∈ permutations([k,l])
         C,c = combiner(inds_kl...)
@@ -62,6 +86,18 @@ A = randomITensor(i, j, k, l)
         @test hasinds(B, i, j)
         @test c == commonindex(B, C)
         D = B*C
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        B = C*A
+        @test hasinds(B, i, j)
+        @test c == commonindex(B, C)
+        D = B*C
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        D = C*B
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
     end
@@ -76,6 +112,18 @@ end
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        B = C*A
+        @test hasindex(B, k)
+        @test c == commonindex(B, C)
+        D = B*C
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
     end
     for inds_ijk ∈ permutations([i,j,k])
         C,c = combiner(inds_ijk...)
@@ -85,6 +133,18 @@ end
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        B = C*A
+        @test hasindex(B, l)
+        @test c == commonindex(B, C)
+        D = B*C
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
     end
     for inds_jkl ∈ permutations([j,k,l])
         C,c = combiner(inds_jkl...)
@@ -92,6 +152,18 @@ end
         @test hasindex(B, i)
         @test c == commonindex(B, C)
         D = B*C
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        D = C*B
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        B = C*A
+        @test hasindex(B, i)
+        @test c == commonindex(B, C)
+        D = B*C
+        @test hasinds(D, i, j, k, l)
+        @test D ≈ A
+        D = C*B
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
     end
