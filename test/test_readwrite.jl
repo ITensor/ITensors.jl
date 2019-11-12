@@ -33,18 +33,18 @@ using ITensors,
     @test ri == i
   end
 
-  #@testset "IndexSet" begin
-  #  is = IndexSet(i,j,k)
+  @testset "IndexSet" begin
+    is = IndexSet(i,j,k)
 
-  #  fo = h5open("data.h5","w")
-  #  write(fo,is)
-  #  close(fo)
+    fo = h5open("data.h5","w")
+    write(fo,"inds",is)
+    close(fo)
 
-  #  fi = h5open("data.h5","r")
-  #  ris = read(fi,IndexSet)
-  #  close(fi)
-  #  @test ris == is
-  #end
+    fi = h5open("data.h5","r")
+    ris = read(fi,"inds",IndexSet)
+    close(fi)
+    @test ris == is
+  end
 
   #@testset "ITensor" begin
 
@@ -52,11 +52,11 @@ using ITensors,
   #  T = randomITensor(i,j,k)
 
   #  fo = h5open("data.h5","w")
-  #  write(fo,T)
+  #  write(fo,"T",T)
   #  close(fo)
 
   #  fi = h5open("data.h5","r")
-  #  rT = read(fi,ITensor)
+  #  rT = read(fi,"T",ITensor)
   #  close(fi)
   #  @test norm(rT-T)/norm(T) < 1E-10
 
@@ -64,11 +64,11 @@ using ITensors,
   #  T = randomITensor(ComplexF64,i,j,k)
 
   #  fo = h5open("data.h5","w")
-  #  write(fo,T)
+  #  write(fo,"complexT",T)
   #  close(fo)
 
   #  fi = h5open("data.h5","r")
-  #  rT = read(fi,ITensor)
+  #  rT = read(fi,"complexT",ITensor)
   #  close(fi)
   #  @test norm(rT-T)/norm(T) < 1E-10
   #end
