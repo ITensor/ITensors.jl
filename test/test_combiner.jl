@@ -175,6 +175,16 @@ end
     U,S,V,u,v = svd(Ac, ci)
     Uc = U*cmb
     @test Uc*S*V ≈ A
+    cmb, ci = combiner(i, j)
+    Ac = A*cmb
+    U,S,V,u,v = svd(Ac, ci)
+    Uc = U*cmb
+    @test Uc*S*V ≈ A
+    cmb, ci = combiner(i, j)
+    Ac = A*cmb
+    U,S,V,u,v = svd(Ac, ci, k)
+    Uc = U*cmb
+    @test Uc*S*V ≈ A
 end
 
 end
