@@ -298,24 +298,26 @@ function readCpp(io::IO,::Type{Index}; kwargs...)
 end
 
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
                     I::Index)
-  attrs(parent)["type"] = "Index"
-  write(parent,"id",I.id)
-  write(parent,"dim",I.dim)
-  write(parent,"dir",Int(I.dir))
-  tag_g = g_create(parent,"tags")
-  write(tag_g,I.tags)
+  index_g = g_create(parent,name)
+  attrs(index_g)["type"] = "Index"
+  write(index_g,"id",I.id)
+  write(index_g,"dim",I.dim)
+  write(index_g,"dir",Int(I.dir))
+  write(index_g,"tags",I.tags)
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
                    ::Type{Index})
-  if read(attrs(parent)["type"]) != "Index"
+  index_g = g_open(parent,name)
+  if read(attrs(index_g)["type"]) != "Index"
     error("HDF5 group or file does not contain Index data")
   end
-  id = read(parent,"id")
-  dim = read(parent,"dim")
-  dir = Arrow(read(parent,"dir"))
-  tag_g = g_open(parent,"tags")
-  tags = read(tag_g,TagSet)
+  id = read(index_g,"id")
+  dim = read(index_g,"dim")
+  dir = Arrow(read(index_g,"dir"))
+  tags = read(index_g,"tags",TagSet)
   return Index(id,dim,dir,tags)
 end

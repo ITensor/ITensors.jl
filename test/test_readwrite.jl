@@ -21,17 +21,17 @@ using ITensors,
     @test rts == ts
   end
 
-  #@testset "Index" begin
-  #  i = Index(3,"Site,S=1")
-  #  fo = h5open("data.h5","w")
-  #  write(fo,i)
-  #  close(fo)
+  @testset "Index" begin
+    i = Index(3,"Site,S=1")
+    fo = h5open("data.h5","w")
+    write(fo,"index",i)
+    close(fo)
 
-  #  fi = h5open("data.h5","r")
-  #  ri = read(fi,Index)
-  #  close(fi)
-  #  @test ri == i
-  #end
+    fi = h5open("data.h5","r")
+    ri = read(fi,"index",Index)
+    close(fi)
+    @test ri == i
+  end
 
   #@testset "IndexSet" begin
   #  is = IndexSet(i,j,k)
