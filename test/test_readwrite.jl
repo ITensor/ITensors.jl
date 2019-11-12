@@ -85,4 +85,9 @@ using ITensors,
     @test norm(rT-T)/norm(T) < 1E-10
   end
 
+  #
+  # Clean up the test hdf5 file
+  #
+  rm("data.h5",force=true)
+
 end
