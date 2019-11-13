@@ -173,11 +173,16 @@ end
     cmb, ci = combiner(i, j, k)
     Ac = A*cmb
     U,S,V,u,v = svd(Ac, ci)
-    Uc = U*cmb
+    Uc = cmb*U
     Ua,Sa,Va,ua,va = svd(A, i, j, k)
     replaceindex!(Ua, ua, u)
+    @test A ≈ cmb*Ac 
+    @test A ≈ Ac*cmb
+    @test Ua*cmb ≈ U
+    @test cmb*Ua ≈ U
     @test Ua ≈ Uc
     @test Uc*S*V ≈ A
+    @test (cmb*Ua)*S*V ≈ Ac
     cmb, ci = combiner(i, j)
     Ac = A*cmb
     U,S,V,u,v = svd(Ac, ci)
@@ -185,12 +190,10 @@ end
     Ua,Sa,Va,ua,va = svd(A, i, j)
     replaceindex!(Ua, ua, u)
     @test Ua ≈ Uc
+    @test Ua*cmb ≈ U
+    @test cmb*Ua ≈ U
     @test Uc*S*V ≈ A
-    cmb, ci = combiner(i, j)
-    Ac = A*cmb
-    U,S,V,u,v = svd(Ac, ci, k)
-    Uc = U*cmb
-    @test Uc*S*V ≈ A
+    @test (cmb*Ua)*S*V ≈ Ac
 end
 
 @testset "mult/Combiner should play nice" begin
