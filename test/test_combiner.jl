@@ -204,5 +204,11 @@ end
     @test C*cmb ≈ A*B
 end
 
+@testset "Replace index combiner" begin
+    C,nl = combiner(l, tags="nl")
+    B = A*C
+    replaceindex!(B, nl, l)
+    @test B == A 
 end
 
+end

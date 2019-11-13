@@ -43,7 +43,14 @@ function contract!!(R::Tensor{<:Number,NR},
     return R
   elseif N1 + N2 == NR
     error("Cannot perform outer product involving a combiner")
-  elseif count_common(labelsT1,labelsT2) == 1
+  elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) == 2
+    ci = commonindex(inds(T1), inds(T2))
+    ui = uniqueindex(inds(T1), inds(T2))
+    inds2        = [inds(T2)...]
+    cpos1,cpos2  = intersect_positions(labelsT1,labelsT2)
+    inds2[cpos2] = ui 
+    return Tensor(copy(store(T2)), IndexSet(inds2...))
+  elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) != 2
     # This is the case of Index replacement or
     # uncombining
     # TODO: handle the case where inds(R) and inds(T1)
@@ -57,7 +64,7 @@ function contract!!(R::Tensor{<:Number,NR},
         insert!(inds2, cpos2+ii, ind)
     end
     deleteat!(inds2, cpos2)
-    return Tensor(Dense(vec(T2data)), IndexSet(inds2...))
+    return Tensor(Dense(copy(T2data)), IndexSet(inds2...))
   elseif is_combiner(labelsT1,labelsT2)
     # This is the case of combining
     Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))
