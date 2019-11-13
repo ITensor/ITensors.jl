@@ -49,16 +49,15 @@ function contract!!(R::Tensor{<:Number,NR},
     # TODO: handle the case where inds(R) and inds(T1)
     # are not ordered the same?
     # Could just use a permutedims...
-    Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))
-    final_labels    = contract_labels(Blabels, Alabels)
-    final_labels_n  = contract_labels(labelsT1,labelsT2)
-    indsR = inds(R)
-    if final_labels != final_labels_n
-        perm  = getperm(final_labels_n, final_labels)
-        indsR = permute(inds(R), perm) 
+    T2data      = data(store(T2))
+    cpos1,cpos2 = intersect_positions(labelsT1,labelsT2)
+    inds1       = [inds(T1)...]
+    inds2       = [inds(T2)...]
+    for (ii, ind) in enumerate(inds1[cpos1+1:end])
+        insert!(inds2, cpos2+ii, ind)
     end
-    # need to permute storeT2
-    return Tensor(store(T2),indsR)
+    deleteat!(inds2, cpos2)
+    return Tensor(Dense(vec(T2data)), IndexSet(inds2...))
   elseif is_combiner(labelsT1,labelsT2)
     # This is the case of combining
     Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))
