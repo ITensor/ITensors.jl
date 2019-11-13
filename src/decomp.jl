@@ -68,7 +68,7 @@ function svd(A::ITensor,
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,ST,VT = svd(tensor(A),Lpos,Rpos;kwargs...)
+  UT,ST,VT,spec = svd(tensor(A),Lpos,Rpos;kwargs...)
   U,S,V = ITensor(UT),ITensor(ST),ITensor(VT)
   u₀ = commonindex(U,S)
   v₀ = commonindex(S,V)
@@ -80,14 +80,14 @@ function svd(A::ITensor,
   S = δ(dag(u₀),u)*S*δ(dag(v₀),v)
   V *= δ(dag(v₀),v)
 
-  return U,S,V,u,v
+  return U,S,V,u,v,spec
 end
 
 function _factorize_center(A::ITensor,
                            Linds...;
                            kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V = svd(A,Linds...;kwargs...)
+  U,S,V,_,_,spec = svd(A,Linds...;kwargs...)
   u = commonindex(U,S)
   v = commonindex(S,V)
   for ss = 1:dim(u)
@@ -95,40 +95,40 @@ function _factorize_center(A::ITensor,
   end
   FU = settags(U*S,tags,v)
   FV = settags(S*V,tags,u)
-  return FU,FV,commonindex(FU,FV)
+  return FU,FV,commonindex(FU,FV),spec
 end
 
 function _factorize_from_left_svd(A::ITensor,
                                   Linds...;
                                   kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V = svd(A,Linds...;kwargs...)
+  U,S,V,_,_,spec = svd(A,Linds...;kwargs...)
   u = commonindex(U,S)
   FU = settags(U,tags,u)
   FV = settags(S*V,tags,u)
-  return FU,FV,commonindex(FU,FV)
+  return FU,FV,commonindex(FU,FV),spec
 end
 
 function _factorize_from_right_svd(A::ITensor,
-                                   Linds...; 
+                                   Linds...;
                                    kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V = svd(A,Linds...;kwargs...)
+  U,S,V,_,_,spec = svd(A,Linds...;kwargs...)
   v = commonindex(S,V)
   FU = settags(U*S,tags,v)
   FV = settags(V,tags,v)
-  return FU,FV,commonindex(FU,FV)
+  return FU,FV,commonindex(FU,FV),spec
 end
 
 function _factorize_from_left_eigen(A::ITensor,
-                                    Linds...; 
+                                    Linds...;
                                     kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
-  FU,D = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true,
+  FU,D,_,_,spec = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true,
                                            kwargs...)
   FV = dag(FU)*A
-  return FU,FV,commonindex(FU,FV)
+  return FU,FV,commonindex(FU,FV),spec
 end
 
 function _factorize_from_right_eigen(A::ITensor,
@@ -136,10 +136,10 @@ function _factorize_from_right_eigen(A::ITensor,
                                      kwargs...)
   Ris = uniqueinds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
-  FV,D = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true,
-                                           kwargs...)
+  FV,D,_,_,spec = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true,
+                             kwargs...)
   FU = A*dag(FV)
-  return FU,FV,commonindex(FU,FV)
+  return FU,FV,commonindex(FU,FV),spec
 end
 
 import LinearAlgebra.factorize
@@ -187,7 +187,7 @@ function eigenHermitian(A::ITensor,
   Lis = commoninds(inds(A),IndexSet(Linds))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,DT = eigenHermitian(tensor(A),Lpos,Rpos;kwargs...)
+  UT,DT,spec = eigenHermitian(tensor(A),Lpos,Rpos;kwargs...)
   U,D = ITensor(UT),ITensor(DT)
   u = commonindex(U,D)
   settags!(U,lefttags,u)
@@ -195,7 +195,7 @@ function eigenHermitian(A::ITensor,
   u = settags(u,lefttags)
   v = uniqueindex(D,U)
   D *= δ(v,settags(u,righttags))
-  return U,D,u,v
+  return U,D,u,v,spec
 end
 
 import LinearAlgebra.eigen
