@@ -39,7 +39,7 @@ function contract!!(R::Tensor{<:Number,NR},
                     T2::Tensor{<:Number,N2},
                     labelsT2::NTuple{N2}) where {NR,N1,N2}
   if N1 ≤ 1
-    println("identity")
+    #println("identity")
     return R
   elseif N1 + N2 == NR
     error("Cannot perform outer product involving a combiner")
