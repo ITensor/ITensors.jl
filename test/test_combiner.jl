@@ -174,17 +174,31 @@ end
     Ac = A*cmb
     U,S,V,u,v = svd(Ac, ci)
     Uc = U*cmb
+    Ua,Sa,Va,ua,va = svd(A, i, j, k)
+    replaceindex!(Ua, ua, u)
+    @test Ua ≈ Uc
     @test Uc*S*V ≈ A
     cmb, ci = combiner(i, j)
     Ac = A*cmb
     U,S,V,u,v = svd(Ac, ci)
     Uc = U*cmb
+    Ua,Sa,Va,ua,va = svd(A, i, j)
+    replaceindex!(Ua, ua, u)
+    @test Ua ≈ Uc
     @test Uc*S*V ≈ A
     cmb, ci = combiner(i, j)
     Ac = A*cmb
     U,S,V,u,v = svd(Ac, ci, k)
     Uc = U*cmb
     @test Uc*S*V ≈ A
+end
+
+@testset "mult/Combiner should play nice" begin
+    cmb, ci = combiner(i, j, k)
+    Ac = A*cmb
+    B = randomITensor(l)
+    C = Ac*B
+    @test C*cmb ≈ A*B
 end
 
 end
