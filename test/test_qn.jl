@@ -6,25 +6,25 @@ import ITensors.SmallString
 
   @testset "QNVal Basics" begin
     qv = QNVal()
-    @test !isActive(qv)
+    @test !isactive(qv)
 
     qv = QNVal("Sz",0)
     @test name(qv) == SmallString("Sz")
     @test val(qv) == 0
     @test modulus(qv) == 1
-    @test isActive(qv)
+    @test isactive(qv)
 
     qv = QNVal("A",1,2)
     @test name(qv) == SmallString("A")
     @test val(qv) == 1
     @test modulus(qv) == 2
-    @test !isFermionic(qv)
+    @test !isfermionic(qv)
 
     qv = QNVal("Nf",1,-1)
     @test name(qv) == SmallString("Nf")
     @test val(qv) == 1
     @test modulus(qv) == -1
-    @test isFermionic(qv)
+    @test isfermionic(qv)
   end
 
   @testset "QN Basics" begin
@@ -33,23 +33,23 @@ import ITensors.SmallString
 
     q = QN(("Sz",1))
     @test length(sprint(show,q)) > 1
-    @test isActive(q[1])
+    @test isactive(q[1])
     @test val(q,"Sz") == 1
 
     q = QN("Sz",1)
     @test length(sprint(show,q)) > 1
-    @test isActive(q[1])
+    @test isactive(q[1])
     @test val(q,"Sz") == 1
 
     q = QN("P",1,2)
     @test length(sprint(show,q)) > 1
-    @test isActive(q[1])
+    @test isactive(q[1])
     @test val(q,"P") == 1
     @test modulus(q,"P") == 2
 
     q = QN(("A",1),("B",2))
-    @test isActive(q[1])
-    @test isActive(q[2])
+    @test isactive(q[1])
+    @test isactive(q[2])
     @test val(q,"A") == 1
     @test val(q,"B") == 2
     @test modulus(q,"A") == 1
