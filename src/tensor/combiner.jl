@@ -56,9 +56,9 @@ function contract!!(R::Tensor{<:Number,NR},
     cpos1,cpos2 = intersect_positions(labelsT1,labelsT2)
     indsC = inds(T1)
     indsT = inds(T2)
-    num_new = length(indsC)-1
-    num_keep = length(indsT)-1
-    newinds = Vector{Index}(undef,num_keep+num_new)
+
+    newlength = (length(indsC)-1) + (length(indsT)-1)
+    newinds = Vector{Index}(undef,newlength)
     n = 1
     # Copy existing indices before one we are uncombining
     for i in 1:cpos2-1
@@ -75,7 +75,8 @@ function contract!!(R::Tensor{<:Number,NR},
       newinds[n] = indsT[i]
       n += 1
     end
-    return Tensor(Dense(copy(T2data)), IndexSet(newinds))
+
+    return Tensor(Dense(copy(T2data)), IndexSet(newinds...))
   elseif is_combiner(labelsT1,labelsT2)
     # This is the case of combining
     Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))

@@ -58,11 +58,6 @@ IndexSet(inds::IndexSet,i::Index) = IndexSet(inds...,i)
 IndexSet(i::Index,inds::IndexSet) = IndexSet(i,inds...)
 IndexSet(is1::IndexSet,is2::IndexSet) = IndexSet(is1...,is2...)
 
-function IndexSet(inds::Vector{Index})
-  N = length(inds)
-  return IndexSet{N}(ntuple(i->inds[i],N))
-end
-
 # This is used in type promotion in the Tensor contraction code
 Base.promote_rule(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
 
