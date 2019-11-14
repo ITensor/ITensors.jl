@@ -83,16 +83,15 @@ function contract!!(R::Tensor{<:Number,NR},
     final_labels_n  = contract_labels(labelsT1,labelsT2)
     indsR = inds(R)
     if final_labels != final_labels_n
-        perm  = getperm(final_labels_n, final_labels)
-        indsR = permute(inds(R), perm)
-        labelsR = permute(labelsR, perm)
+      perm  = getperm(final_labels_n, final_labels)
+      indsR = permute(inds(R), perm)
+      labelsR = permute(labelsR, perm)
     end
     cpos1,cposR = intersect_positions(labelsT1,labelsR)
     labels_comb = deleteat(labelsT1,cpos1)
     vlR = [labelsR...]
-    vlc = [labels_comb...]
-    for (ii, li) in enumerate(vlc)
-        insert!(vlR, cposR+ii, li)
+    for (ii, li) in enumerate(labels_comb)
+      insert!(vlR, cposR+ii, li)
     end
     deleteat!(vlR, cposR)
     labels_perm = tuple(vlR...) 
