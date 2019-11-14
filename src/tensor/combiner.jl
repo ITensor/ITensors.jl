@@ -51,20 +51,31 @@ function contract!!(R::Tensor{<:Number,NR},
     inds2[cpos2] = ui 
     return Tensor(copy(store(T2)), IndexSet(inds2...))
   elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) != 2
-    # This is the case of Index replacement or
-    # uncombining
-    # TODO: handle the case where inds(R) and inds(T1)
-    # are not ordered the same?
-    # Could just use a permutedims...
+    # This is the case of Index replacement or uncombining
     T2data      = data(store(T2))
     cpos1,cpos2 = intersect_positions(labelsT1,labelsT2)
-    inds1       = [inds(T1)...]
-    inds2       = [inds(T2)...]
-    for (ii, ind) in enumerate(inds1[cpos1+1:end])
-        insert!(inds2, cpos2+ii, ind)
+    indsC = inds(T1)
+    indsT = inds(T2)
+    num_new = length(indsC)-1
+    num_keep = length(indsT)-1
+    newinds = Vector{Index}(undef,num_keep+num_new)
+    n = 1
+    # Copy existing indices before one we are uncombining
+    for i in 1:cpos2-1
+      newinds[n] = indsT[i]
+      n += 1
     end
-    deleteat!(inds2, cpos2)
-    return Tensor(Dense(copy(T2data)), IndexSet(inds2...))
+    # Replace uncombined index with indices of combiner
+    for j in 2:length(indsC)
+      newinds[n] = indsC[j]
+      n += 1
+    end
+    # Copy existing indices after one we are uncombining
+    for i in cpos2+1:length(indsT)
+      newinds[n] = indsT[i]
+      n += 1
+    end
+    return Tensor(Dense(copy(T2data)), IndexSet(newinds))
   elseif is_combiner(labelsT1,labelsT2)
     # This is the case of combining
     Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))
