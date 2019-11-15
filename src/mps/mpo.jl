@@ -277,7 +277,7 @@ function errorMPOprod(y::MPS, A::MPO, x::MPS)
   return sqrt(abs(1. + (inner(y,y) - 2*real(inner(y,A,x)))/inner(A,x,A,x)))
 end
 
-function plussers(left_ind::Index, right_ind::Index, sum_ind::Index)
+function plussers(::Type{T}, left_ind::Index, right_ind::Index, sum_ind::Index) where {T<:Array}
     #if dir(left_ind) == dir(right_ind) == Neither
         total_dim    = dim(left_ind) + dim(right_ind)
         total_dim    = max(total_dim, 1)
@@ -312,7 +312,7 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
         lA = linkindex(A, i)
         lB = linkindex(B, i)
         r  = Index(dim(lA) + dim(lB), tags(lA))
-        f, s = plussers(lA, lB, r)
+        f, s = plussers(typeof(data(store(A[1]))), lA, lB, r)
         first[i]  = f
         second[i] = s
     end
@@ -447,8 +447,14 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
         replaceindex!(res[i+1], ci, new_ci)
         @assert commonindex(res[i], res[i+1]) != commonindex(A[i], A[i+1])
     end
-    sites_A = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(tensors(A_), tensors(B_))]
-    sites_B = [setdiff(findinds(x, "Site"), findindex(y, "Site"))[1] for (x,y) in zip(tensors(B_), tensors(A_))]
+    sites_A = Index[]
+    sites_B = Index[]
+    @inbounds for (AA, BB) in zip(tensors(A_), tensors(B_))
+        sda = setdiff(findinds(AA, "Site"), findinds(BB, "Site"))
+        sdb = setdiff(findinds(BB, "Site"), findinds(AA, "Site"))
+        push!(sites_A, sda[1])
+        push!(sites_B, sdb[1])
+    end
     res[1] = ITensor(sites_A[1], sites_B[1], commonindex(res[1], res[2]))
     for i in 1:N-2
         if i == 1
