@@ -77,9 +77,9 @@ using ITensors, Test
     @test all(length.(measurements(observer)["Sz"]) .== N)
     @test all(length.(measurements(observer)["Sx"]) .== N)
     @test length(energies(observer))==3
-    @test length(truncErrors(observer))==3
+    @test length(truncerrors(observer))==3
     @test energies(observer)[end]==E
-    @test all(truncErrors(observer) .< 1E-12)
+    @test all(truncerrors(observer) .< 1E-12)
 
     orthogonalize!(psi,1)
     m = scalar(dag(psi[1])*noprime(op(sites, "Sz", 1)*psi[1]))

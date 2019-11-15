@@ -5,7 +5,7 @@ export AbstractObserver,
        DMRGObserver,
        measurements,
        energies,
-       truncErrors
+       truncerrors
 
 
 abstract type AbstractObserver end
@@ -45,7 +45,7 @@ measurements(o::DMRGObserver) = o.measurements
 energies(o::DMRGObserver) = o.energies
 sites(obs::DMRGObserver) = obs.sites
 ops(obs::DMRGObserver) = obs.ops
-truncErrors(obs::DMRGObserver) = obs.truncerrs
+truncerrors(obs::DMRGObserver) = obs.truncerrs
 
 function measureLocalOps!(obs::DMRGObserver,
                           wf::ITensor,
@@ -63,7 +63,7 @@ function measure!(obs::DMRGObserver;
   b = kwargs[:bond]
   energy = kwargs[:energy]
   psi = kwargs[:psi]
-  truncerr = truncErr(kwargs[:spec])
+  truncerr = truncerror(kwargs[:spec])
 
   if half_sweep==2
     N = length(psi)
@@ -72,7 +72,7 @@ function measure!(obs::DMRGObserver;
       for o in ops(obs)
         push!(measurements(obs)[o],zeros(N))
       end
-      push!(truncErrors(obs),0.0)
+      push!(truncerrors(obs),0.0)
     end
 
     # when sweeping left the orthogonality center is located
@@ -86,7 +86,7 @@ function measure!(obs::DMRGObserver;
       push!(energies(obs), energy)
       measureLocalOps!(obs,wf,b)
     end
-    truncerr > truncErrors(obs)[end] && (truncErrors(obs)[end] = truncerr)
+    truncerr > truncerrors(obs)[end] && (truncerrors(obs)[end] = truncerr)
   end
 end
 

@@ -36,7 +36,7 @@ end
 
       dir = ha==1 ? "fromleft" : "fromright"
 
-@timeit_debug GLOBAL_TIMER "replaceBond!" begin
+@timeit_debug GLOBAL_TIMER "replacebond!" begin
       spec = replacebond!(psi,b,phi;
                           maxdim=maxdim(sweeps,sw),
                           mindim=mindim(sweeps,sw),

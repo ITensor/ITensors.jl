@@ -35,6 +35,28 @@ function polar(A::ITensor,
   replaceinds!(P,u,p')
   return U,P,commoninds(U,P)
 end
+"""
+  TruncSVD{N}
+ITensor factorization type for a truncated singular-value decomposition, returned by
+`svd`.
+"""
+struct TruncSVD{N1,N2}
+  U::ITensor{N1}
+  S::ITensor{2}
+  V::ITensor{N2}
+  spec::Spectrum
+  u::Index
+  v::Index
+end
+
+# iteration for destructuring into components `U,S,V,spec,u,v = S`
+Base.iterate(S::TruncSVD) = (S.U, Val(:S))
+Base.iterate(S::TruncSVD, ::Val{:S}) = (S.S, Val(:V))
+Base.iterate(S::TruncSVD, ::Val{:V}) = (S.V, Val(:spec))
+Base.iterate(S::TruncSVD, ::Val{:spec}) = (S.spec, Val(:u))
+Base.iterate(S::TruncSVD, ::Val{:u}) = (S.u, Val(:v))
+Base.iterate(S::TruncSVD, ::Val{:v}) = (S.v, Val(:done))
+Base.iterate(S::TruncSVD, ::Val{:done}) = nothing
 
 import LinearAlgebra.svd
 """
@@ -80,14 +102,14 @@ function svd(A::ITensor,
   S = δ(dag(u₀),u)*S*δ(dag(v₀),v)
   V *= δ(dag(v₀),v)
 
-  return U,S,V,u,v,spec
+  return TruncSVD(U,S,V,spec,u,v)
 end
 
 function _factorize_center(A::ITensor,
                            Linds...;
                            kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V,_,_,spec = svd(A,Linds...;kwargs...)
+  U,S,V,spec = svd(A,Linds...;kwargs...)
   u = commonindex(U,S)
   v = commonindex(S,V)
   for ss = 1:dim(u)
@@ -95,29 +117,29 @@ function _factorize_center(A::ITensor,
   end
   FU = settags(U*S,tags,v)
   FV = settags(S*V,tags,u)
-  return FU,FV,commonindex(FU,FV),spec
+  return FU,FV,spec,commonindex(FU,FV)
 end
 
 function _factorize_from_left_svd(A::ITensor,
                                   Linds...;
                                   kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V,_,_,spec = svd(A,Linds...;kwargs...)
+  U,S,V,spec = svd(A,Linds...;kwargs...)
   u = commonindex(U,S)
   FU = settags(U,tags,u)
   FV = settags(S*V,tags,u)
-  return FU,FV,commonindex(FU,FV),spec
+  return FU,FV,spec,commonindex(FU,FV)
 end
 
 function _factorize_from_right_svd(A::ITensor,
                                    Linds...;
                                    kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V,_,_,spec = svd(A,Linds...;kwargs...)
+  U,S,V,spec = svd(A,Linds...;kwargs...)
   v = commonindex(S,V)
   FU = settags(U*S,tags,v)
   FV = settags(V,tags,v)
-  return FU,FV,commonindex(FU,FV),spec
+  return FU,FV,spec,commonindex(FU,FV)
 end
 
 function _factorize_from_left_eigen(A::ITensor,
@@ -125,21 +147,21 @@ function _factorize_from_left_eigen(A::ITensor,
                                     kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
-  FU,D,_,_,spec = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true,
+  FU,D,spec = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true,
                                            kwargs...)
   FV = dag(FU)*A
-  return FU,FV,commonindex(FU,FV),spec
+  return FU,FV,spec,commonindex(FU,FV)
 end
 
 function _factorize_from_right_eigen(A::ITensor,
-                                     Linds...; 
+                                     Linds...;
                                      kwargs...)
   Ris = uniqueinds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
-  FV,D,_,_,spec = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true,
+  FV,D,spec = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true,
                              kwargs...)
   FU = A*dag(FV)
-  return FU,FV,commonindex(FU,FV),spec
+  return FU,FV,spec,commonindex(FU,FV)
 end
 
 import LinearAlgebra.factorize
@@ -177,6 +199,27 @@ function factorize(A::ITensor,
   throw(ArgumentError("In factorize, no dir = $dir supported. Use center, fromleft or fromright."))
 end
 
+"""
+  TruncEigen{N}
+ITensor factorization type for a truncated eigenvalue decomposition, returned by
+`eigenHermitian`.
+"""
+struct TruncEigen{N}
+  U::ITensor{N}
+  D::ITensor{2}
+  spec::Spectrum
+  u::Index
+  v::Index
+end
+
+# iteration for destructuring into components `U,D,spec,u,v = E`
+Base.iterate(E::TruncEigen) = (E.U, Val(:D))
+Base.iterate(E::TruncEigen, ::Val{:D}) = (E.D, Val(:spec))
+Base.iterate(E::TruncEigen, ::Val{:spec}) = (E.spec, Val(:u))
+Base.iterate(E::TruncEigen, ::Val{:u}) = (E.u, Val(:v))
+Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
+Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
+
 function eigenHermitian(A::ITensor,
                         Linds=findinds(A,("",0)),
                         Rinds=prime(IndexSet(Linds));
@@ -195,7 +238,7 @@ function eigenHermitian(A::ITensor,
   u = settags(u,lefttags)
   v = uniqueindex(D,U)
   D *= δ(v,settags(u,righttags))
-  return U,D,u,v,spec
+  return TruncEigen(U,D,spec,u,v)
 end
 
 import LinearAlgebra.eigen

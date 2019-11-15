@@ -5,7 +5,7 @@
 # and passable to BLAS/LAPACK, it cannot
 # be made <: StridedArray
 export eigs,
-       truncErr,
+       truncerror,
        entropy
 
 function Base.:*(T1::Tensor{ElT1,2,StoreT1,IndsT1},
@@ -40,7 +40,7 @@ struct Spectrum
 end
 
 eigs(s::Spectrum) = s.eigs
-truncErr(s::Spectrum) = s.truncerr
+truncerror(s::Spectrum) = s.truncerr
 
 function entropy(s::Spectrum)
   S = 0.0

@@ -21,12 +21,12 @@ A = randomITensor(i,j)
   S ./= norm(S)
   A = ITensor(U*diagm(0=>S)*V', i,j)
 
-  _,_,_,_,_,spec = svd(A,i)
+  spec = svd(A,i).spec
 
   @test eigs(spec) ≈ S .^2
-  @test truncErr(spec) == 0.0
+  @test truncerror(spec) == 0.0
 
-  _,_,_,_,_,spec = svd(A,i; maxdim=length(S)-3)
-  @test truncErr(spec) ≈ sum(S[end-2:end].^2)
+  spec = svd(A,i; maxdim=length(S)-3).spec
+  @test truncerror(spec) ≈ sum(S[end-2:end].^2)
 
 end

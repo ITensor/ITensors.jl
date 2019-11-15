@@ -469,7 +469,7 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     # in case we primed A
     A_ind = uniqueindex(findinds(A_[N-1], "Site"), findinds(B_[N-1], "Site"))
     Lis = IndexSet(A_ind, sites_B[N-1], commonindex(res[N-2], res[N-1]))
-    U, V, ci = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(N-1)",maxdim=maxdim,mindim=mindim)
+    U, V = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(N-1)",maxdim=maxdim,mindim=mindim)
     res[N-1] = U
     res[N] = V
     truncate!(res;kwargs...)
