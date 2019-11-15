@@ -5,7 +5,7 @@ export ITensor,
        delta,
        δ,
        exp,
-       expHermitian,
+       exphermitian,
        replaceindex!,
        inds,
        isnull,
@@ -511,7 +511,7 @@ function LinearAlgebra.exp(A::ITensor,
   return ITensor(expAT)
 end
 
-function expHermitian(A::ITensor,
+function exphermitian(A::ITensor,
                       Linds,
                       Rinds = prime(IndexSet(Linds))) 
   return exp(A,Linds,Rinds;ishermitian=true)
@@ -652,14 +652,14 @@ function Base.similar(T::ITensor,
   return ITensor(similar(tensor(T),element_type))
 end
 
-function multSiteOps(A::ITensor,
-                     B::ITensor)
-  R = prime(A,"Site")
+function matmul(A::ITensor,
+                B::ITensor)
+  R = mapprime(mapprime(A,1,2),0,1)
   R *= B
   return mapprime(R,2,1)
 end
 
-function readCpp!(io::IO,T::ITensor;kwargs...)
+function read_cpp!(T::ITensor,io::IO;kwargs...)
   T.inds = read(io,IndexSet;kwargs...)
   read(io,12) # ignore scale factor
   storage_type = read(io,Int32) # see StorageType enum above
@@ -689,7 +689,7 @@ function Base.read(io::IO,::Type{ITensor};kwargs...)
   format = get(kwargs,:format,"hdf5")
   T = ITensor()
   if format=="cpp"
-    readCpp!(io,T;kwargs...)
+    read_cpp!(T,io;kwargs...)
   else
     throw(ArgumentError("read ITensor: format=$format not supported"))
   end

@@ -11,18 +11,18 @@ using ITensors,
     @test sites[1] isa Index
     Sz = op(sites,"Sz",2)
     SzSz = op(sites,"Sz * Sz",2)
-    @test SzSz ≈ multSiteOps(Sz,Sz)
+    @test SzSz ≈ matmul(Sz,Sz)
     Sy = op(sites,"Sy",2)
     SySy = op(sites,"Sy * Sy",2)
-    @test SySy ≈ multSiteOps(Sy,Sy)
+    @test SySy ≈ matmul(Sy,Sy)
 
     sites = spinOneSites(N)
     @test_throws ArgumentError op(sites, "Sp", 1)
     Sz = op(sites,"Sz",2)
     SzSz = op(sites,"Sz * Sz",2)
-    @test SzSz ≈ multSiteOps(Sz,Sz)
+    @test SzSz ≈ matmul(Sz,Sz)
     Sy = op(sites,"Sy",2)
     SySy = op(sites,"Sy * Sy",2)
-    @test SySy ≈ multSiteOps(Sy,Sy)
+    @test SySy ≈ matmul(Sy,Sy)
   end
 end
