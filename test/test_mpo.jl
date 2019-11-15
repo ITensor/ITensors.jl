@@ -185,7 +185,7 @@ include("util.jl")
     end
   end
   @testset "add" begin
-    shsites = spinHalfSites(N)
+    shsites = siteinds("S=1/2",N)
     K = randomMPO(shsites)
     L = randomMPO(shsites)
     M = sum(K, L)
@@ -211,7 +211,7 @@ include("util.jl")
     @test_throws DimensionMismatch multMPO(K,badL)
   end
 
-  sites = spinHalfSites(N)
+  sites = siteinds("S=1/2",N)
   O = MPO(sites,"Sz")
   @test length(O) == N # just make sure this works
 

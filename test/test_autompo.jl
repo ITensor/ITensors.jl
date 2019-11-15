@@ -171,7 +171,7 @@ end
   @testset "Single creation op" begin
     ampo = AutoMPO()
     add!(ampo,"Cdagup",3)
-    sites = electronSites(N)
+    sites = siteinds("Electron",N)
     W = toMPO(ampo,sites)
     psi = makeRandomMPS(sites)
     cdu_psi = copy(psi)
@@ -184,7 +184,7 @@ end
     for j=1:N-1
       add!(ampo,"Sz",j,"Sz",j+1)
     end
-    sites = spinHalfSites(N)
+    sites = siteinds("S=1/2",N)
     Ha = toMPO(ampo,sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
@@ -198,7 +198,7 @@ end
     for j=1:N-1
       add!(ampo,"Sz",j+1,"Sz",j)
     end
-    sites = spinHalfSites(N)
+    sites = siteinds("S=1/2",N)
     Ha = toMPO(ampo,sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
@@ -219,7 +219,7 @@ end
       add!(ampo,h[j],"Sz",j)
     end
 
-    sites = spinHalfSites(N)
+    sites = siteinds("S=1/2",N)
     Ha = toMPO(ampo,sites)
     He = heisenbergMPO(sites,h)
     psi = makeRandomMPS(sites)
@@ -230,7 +230,7 @@ end
 
 
   @testset "Multiple Onsite Ops" begin
-    sites = spinOneSites(N)
+    sites = siteinds("S=1",N)
     ampo1 = AutoMPO()
     for j=1:N-1
       add!(ampo1,"Sz",j,"Sz",j+1)
@@ -274,7 +274,7 @@ end
     for j=1:N
       add!(ampo,h[j],"Sx",j)
     end
-    sites = spinHalfSites(N)
+    sites = siteinds("S=1/2",N)
     Ha = toMPO(ampo,sites)
     He = threeSiteIsingMPO(sites,h)
     psi = makeRandomMPS(sites)
@@ -288,7 +288,7 @@ end
     for j=1:N-3
       add!(ampo,"Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3)
     end
-    sites = spinHalfSites(N)
+    sites = siteinds("S=1/2",N)
     Ha = toMPO(ampo,sites)
     He = fourSiteIsingMPO(sites)
     psi = makeRandomMPS(sites)
@@ -311,7 +311,7 @@ end
       add!(ampo,J2*0.5,"S+",j,"S-",j+2)
       add!(ampo,J2*0.5,"S-",j,"S+",j+2)
     end
-    sites = spinHalfSites(N)
+    sites = siteinds("S=1/2",N)
     Ha = toMPO(ampo,sites)
 
     He = NNheisenbergMPO(sites,J1,J2)
@@ -323,7 +323,7 @@ end
   end
 
   @testset "Onsite Regression Test" begin
-    sites = spinOneSites(4)
+    sites = siteinds("S=1",4)
     ampo = AutoMPO()
     add!(ampo, 0.5, "Sx",1)
     add!(ampo, 0.5, "Sy",1)
@@ -334,7 +334,7 @@ end
     @test norm(T-0.5*O) < 1E-8
 
       
-    sites = spinOneSites(2)
+    sites = siteinds("S=1",2)
     ampo = AutoMPO()
     add!(ampo, 0.5im, "Sx",1)
     add!(ampo, 0.5, "Sy",1)

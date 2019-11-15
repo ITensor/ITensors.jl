@@ -24,7 +24,7 @@ include("util.jl")
 
   @testset "productMPS" begin
     @testset "vector of string input" begin
-      sites = spinHalfSites(N)
+      sites = siteinds("S=1/2",N)
       state = fill("",N)
       for j=1:N
         state[j] = isodd(j) ? "Up" : "Dn"
@@ -38,7 +38,7 @@ include("util.jl")
     end
 
     @testset "vector of int input" begin
-      sites = spinHalfSites(N)
+      sites = siteinds("S=1/2",N)
       state = fill(0,N)
       for j=1:N
         state[j] = isodd(j) ? 1 : 2
@@ -93,7 +93,7 @@ include("util.jl")
     @test inner(xi, xi) ≈ 4.0 * inner(psi, psi) 
   end
 
-  sites = spinHalfSites(N)
+  sites = siteinds(2,N)
   psi = MPS(sites)
   @test length(psi) == N # just make sure this works
   @test length(siteinds(psi)) == N
