@@ -35,7 +35,7 @@ include("util.jl")
   @testset "inner <y|A|x>" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
-    @test maxLinkDim(K) == 1
+    @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     phidag = dag(phi)
     prime!(phidag)
@@ -146,7 +146,7 @@ include("util.jl")
   @testset "applyMPO" begin
     phi = randomMPS(sites)
     K   = randomMPO(sites)
-    @test maxLinkDim(K) == 1
+    @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     psi_out = applyMPO(K, psi,maxdim=1)
     @test inner(phi,psi_out) ≈ inner(phi,K,psi)
@@ -196,19 +196,19 @@ include("util.jl")
     @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
   end
 
-  @testset "nmultMPO" begin
+  @testset "multMPO" begin
     psi = randomMPS(sites)
     K = randomMPO(sites)
     L = randomMPO(sites)
-    @test maxLinkDim(K) == 1
-    @test maxLinkDim(L) == 1
-    KL = nmultMPO(K, L, maxdim=1)
+    @test maxlinkdim(K) == 1
+    @test maxlinkdim(L) == 1
+    KL = multMPO(K, L, maxdim=1)
     psi_kl_out = applyMPO(K, applyMPO(L, psi, maxdim=1), maxdim=1)
     @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
 
     badsites = [Index(2,"Site") for n=1:N+1]
     badL = randomMPO(badsites)
-    @test_throws DimensionMismatch nmultMPO(K,badL)
+    @test_throws DimensionMismatch multMPO(K,badL)
   end
 
   sites = spinHalfSites(N)
