@@ -56,7 +56,12 @@ using ITensors,
     i = Index(3)     # Index of dimension 3
     @test dim(i)==3     # dim(i) = 3
 
+    ci = copy(i)
+    @test ci == i    # true
+
     j = Index(5,"j") # Index with a tag "j"
+
+    @test j == i     # false
 
     s = Index(2,"n=1,Site") # Index with two tags,
                             # "Site" and "n=1"

@@ -120,13 +120,23 @@ integer primelevel. If two Index objects have different tags or
 different prime levels, they do not compare equal even if they
 have the same id.
 
+Tags are also useful for identifying Index objects when printing
+tensors, and for performing certain Index manipulations (e.g.
+priming indices having certain sets of tags).
+
 ```Julia
 using ITensors
 let
   i = Index(3)     # Index of dimension 3
   @show dim(i)     # dim(i) = 3
+  @show id(i)      # id(i) = 0x472aae4ea033b083 or similar
+
+  ci = copy(i)
+  @show ci == i    # true
 
   j = Index(5,"j") # Index with a tag "j"
+
+  @show j == i     # false
 
   s = Index(2,"n=1,Site") # Index with two tags,
                           # "Site" and "n=1"
