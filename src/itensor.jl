@@ -8,7 +8,7 @@ export ITensor,
        expHermitian,
        replaceindex!,
        inds,
-       isNull,
+       isnull,
        scale!,
        normalize!,
        randn!,
@@ -274,7 +274,7 @@ Base.size(A::ITensor) = dims(inds(A))
 Base.size(A::ITensor{N}, d::Int) where {N} = d in 1:N ? dim(inds(A)[d]) :
   d>0 ? 1 : error("arraysize: dimension out of range")
 
-isNull(T::ITensor) = (eltype(T) === Nothing)
+isnull(T::ITensor) = (eltype(T) === Nothing)
 
 Base.copy(T::ITensor{N}) where {N} = ITensor{N}(copy(tensor(T)))
 
@@ -636,7 +636,7 @@ end
 function Base.show(io::IO,T::ITensor)
   summary(io,T)
   print(io,"\n")
-  if !isNull(T)
+  if !isnull(T)
     Base.show(io,MIME"text/plain"(),tensor(T))
   end
 end

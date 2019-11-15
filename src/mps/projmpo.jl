@@ -29,8 +29,8 @@ end
 function product(pm::ProjMPO,
                  v::ITensor)::ITensor
   Hv = v
-  if isNull(LProj(pm))
-    if !isNull(RProj(pm))
+  if isnull(LProj(pm))
+    if !isnull(RProj(pm))
       Hv *= RProj(pm)
     end
     for j=pm.rpos-1:-1:pm.lpos+1
@@ -41,7 +41,7 @@ function product(pm::ProjMPO,
     for j=pm.lpos+1:pm.rpos-1
       Hv *= pm.H[j]
     end
-    if !isNull(RProj(pm))
+    if !isnull(RProj(pm))
       Hv *= RProj(pm)
     end
   end
@@ -53,10 +53,10 @@ function Base.eltype(pm::ProjMPO)
   for j = pm.lpos+2:pm.rpos-1
     elT = promote_type(elT,eltype(pm.H[j]))
   end
-  if !isNull(LProj(pm))
+  if !isnull(LProj(pm))
     elT = promote_type(elT,eltype(LProj(pm)))
   end
-  if !isNull(RProj(pm))
+  if !isnull(RProj(pm))
     elT = promote_type(elT,eltype(RProj(pm)))
   end
   return elT
@@ -66,7 +66,7 @@ end
 
 function size(pm::ProjMPO)::Tuple{Int,Int}
   d = 1
-  if !isNull(LProj(pm))
+  if !isnull(LProj(pm))
     for i in inds(LProj(pm))
       plev(i) > 0 && (d *= dim(i))
     end
@@ -76,7 +76,7 @@ function size(pm::ProjMPO)::Tuple{Int,Int}
       plev(i) > 0 && (d *= dim(i))
     end
   end
-  if !isNull(RProj(pm))
+  if !isnull(RProj(pm))
     for i in inds(RProj(pm))
       plev(i) > 0 && (d *= dim(i))
     end
