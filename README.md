@@ -23,61 +23,41 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 ### Basic Overview
 
-Here is a basic intro overview of making 
-ITensors, setting some elements, contracting, and adding
-ITensors. See further examples below for detailed
-detailed examples of these operations and more.
+ITensor construction, setting of elements, contraction, and addition.
+Before constructing an ITensor, one constructs Index objects
+representing tensor indices.
 
 ```Julia
 using ITensors
 let
   i = Index(3)
-  j = Index(5,"MyTag")
-  k = Index(4,"Link,n=1")
-  l = Index(7,"Site")
+  j = Index(5)
+  k = Index(2)
+  l = Index(7)
 
   A = ITensor(i,j,k)
   B = ITensor(j,l)
 
   A[i(1),j(1),k(1)] = 11.1
-  A[i(2),j(1),k(2)] = 21.2
+  A[i(2),j(1),k(2)] = -21.2
   A[k(1),i(3),j(1)] = 31.1  # can provide Index values in any order
   # ...
 
-  # contract over index j
+  # Contract over shared index j
   C = A * B
 
   @show hasinds(C,i,k,l) # == true
 
-  D = randomITensor(k,j,i)
+  D = randomITensor(k,j,i) # ITensor with random elements
 
-  # add two ITensors
+  # Add two ITensors
+  # must have same set of indices
+  # but can be in any order
   R = A + D
-
 end
 
 ```
 
-### Making Tensor Indices
-
-Before making an ITensor, you have to define its indices.
-Tensor indices in ITensors.jl are themselves objects that 
-carry extra information beyond just their dimension.
-
-```Julia
-using ITensors
-let
-  i = Index(3)     # Index of dimension 3
-  @show dim(i)     # dim(i) = 3
-
-  j = Index(5,"j") # Index with a tag "j"
-
-  s = Index(2,"n=1,Site") # Index with two tags,
-                          # "Site" and "n=1"
-  @show hastags(s,"Site") # hastags(s,"Site") = true
-  @show hastags(s,"n=1")  # hastags(s,"n=1") = true
-end
-```
 
 ### Singular Value Decomposition (SVD) of a Matrix
 
@@ -126,6 +106,49 @@ let
 end
 ```
 
+### Tensor Indices: Tags and Prime Levels
+
+Before making an ITensor, you have to define its indices.
+Tensor Index objects carry extra information beyond just their dimension.
+
+All Index objects carry a permanent, immutable id number which is 
+determined when it is constructed, and allow it to be matched
+(compare equal) with copies of itself.
+
+Additionally, an Index can have up to four tag strings, and an
+integer primelevel. If two Index objects have different tags or 
+different prime levels, they do not compare equal even if they
+have the same id.
+
+Tags are also useful for identifying Index objects when printing
+tensors, and for performing certain Index manipulations (e.g.
+priming indices having certain sets of tags).
+
+```Julia
+using ITensors
+let
+  i = Index(3)     # Index of dimension 3
+  @show dim(i)     # dim(i) = 3
+  @show id(i)      # id(i) = 0x472aae4ea033b083 or similar
+
+  ci = copy(i)
+  @show ci == i    # true
+
+  j = Index(5,"j") # Index with a tag "j"
+
+  @show j == i     # false
+
+  s = Index(2,"n=1,Site") # Index with two tags,
+                          # "Site" and "n=1"
+  @show hastags(s,"Site") # hastags(s,"Site") = true
+  @show hastags(s,"n=1")  # hastags(s,"n=1") = true
+
+  i1 = prime(i) # i1 has a "prime level" of 1
+                # but otherwise same properties as i
+  @show i1 == i # false, prime levels do not match
+end
+```
+
 ### DMRG Calculation
 
 DMRG is an iterative algorithm for finding the dominant
@@ -140,7 +163,7 @@ using ITensors
 let
   # Create 100 spin-one (dimension 3) indices
   N = 100
-  sites = spinOneSites(N)
+  sites = siteinds("S=1",N)
 
   # Input operator terms which define 
   # a Hamiltonian matrix, and convert
