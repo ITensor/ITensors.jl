@@ -23,8 +23,7 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 ### Basic Overview
 
-This example illustrates constructing
-ITensors, setting their elements, contracting, and adding them. 
+ITensor construction, setting of elements, contraction, and addition.
 Before constructing an ITensor, one constructs Index objects
 representing tensor indices.
 
