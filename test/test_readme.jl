@@ -61,7 +61,7 @@ using ITensors,
 
     j = Index(5,"j") # Index with a tag "j"
 
-    @test j == i     # false
+    @test j != i     # false
 
     s = Index(2,"n=1,Site") # Index with two tags,
                             # "Site" and "n=1"
