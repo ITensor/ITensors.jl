@@ -23,35 +23,37 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 ### Basic Overview
 
-Here is a basic intro overview of making 
-ITensors, setting some elements, contracting, and adding
-ITensors. See further examples below for detailed
-detailed examples of these operations and more.
+This example illustrates constructing
+ITensors, setting their elements, contracting, and adding them. 
+Before constructing an ITensor, one constructs Index objects
+representing tensor indices.
 
 ```Julia
 using ITensors
 let
   i = Index(3)
-  j = Index(5,"MyTag")
-  k = Index(4,"Link,n=1")
-  l = Index(7,"Site")
+  j = Index(5)
+  k = Index(2)
+  l = Index(7)
 
   A = ITensor(i,j,k)
   B = ITensor(j,l)
 
   A[i(1),j(1),k(1)] = 11.1
-  A[i(2),j(1),k(2)] = 21.2
+  A[i(2),j(1),k(2)] = -21.2
   A[k(1),i(3),j(1)] = 31.1  # can provide Index values in any order
   # ...
 
-  # contract over index j
+  # Contract over shared index j
   C = A * B
 
   @show hasinds(C,i,k,l) # == true
 
-  D = randomITensor(k,j,i)
+  D = randomITensor(k,j,i) # ITensor with random elements
 
-  # add two ITensors
+  # Add two ITensors
+  # must have same set of indices
+  # but can be in any order
   R = A + D
 
 end
