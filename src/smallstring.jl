@@ -39,7 +39,7 @@ function Base.setindex(s::SmallString,val,n::Integer)
   return SmallString(setindex(s.data,val,n))
 end
 
-isNull(s::SmallString) = @inbounds s[1] == IntChar(0)
+isnull(s::SmallString) = @inbounds s[1] == IntChar(0)
 
 #function StaticArrays.push(s::SmallString,val)
 #  newlen = 1

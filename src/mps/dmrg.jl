@@ -37,7 +37,7 @@ end
       dir = ha==1 ? "fromleft" : "fromright"
 
 @timeit_debug GLOBAL_TIMER "replaceBond!" begin
-      spec = replaceBond!(psi,b,phi;
+      spec = replacebond!(psi,b,phi;
                           maxdim=maxdim(sweeps,sw),
                           mindim=mindim(sweeps,sw),
                           cutoff=cutoff(sweeps,sw),
@@ -55,7 +55,7 @@ end
     end
     end
     if !quiet
-      @printf("After sweep %d energy=%.12f maxLinkDim=%d time=%.3f\n",sw,energy,maxLinkDim(psi),sw_time)
+      @printf("After sweep %d energy=%.12f maxlinkdim=%d time=%.3f\n",sw,energy,maxlinkdim(psi),sw_time)
     end
     checkdone!(obs;quiet=quiet) && break
   end

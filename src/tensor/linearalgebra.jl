@@ -63,7 +63,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   if fastSVD
     MU,MS,MV = svd(matrix(T))
   else
-    MU,MS,MV = recursiveSVD(matrix(T))
+    MU,MS,MV = svd_recursive(matrix(T))
   end
   conj!(MV)
 

@@ -1,16 +1,16 @@
 export MPS,
        sample,
        sample!,
-       leftLim,
+       leftlim,
        prime!,
        primelinks!,
        simlinks!,
        inner,
+       isortho,
        productMPS,
        randomMPS,
-       replaceBond!,
-       rightLim,
-       maxLinkDim,
+       replacebond!,
+       rightlim,
        linkindex,
        siteindex,
        siteinds
@@ -53,29 +53,29 @@ end
 
 length(m::MPS) = m.N_
 tensors(m::MPS) = m.A_
-leftLim(m::MPS) = m.llim_
-rightLim(m::MPS) = m.rlim_
+leftlim(m::MPS) = m.llim_
+rightlim(m::MPS) = m.rlim_
 
-function setLeftLim!(m::MPS,new_ll::Int) 
+function set_leftlim!(m::MPS,new_ll::Int) 
   m.llim_ = new_ll
 end
 
-function setRightLim!(m::MPS,new_rl::Int) 
+function set_rightlim!(m::MPS,new_rl::Int) 
   m.rlim_ = new_rl
 end
 
-isOrtho(m::MPS) = (leftLim(m)+1 == rightLim(m)-1)
+isortho(m::MPS) = (leftlim(m)+1 == rightlim(m)-1)
 
 function orthoCenter(m::MPS)
-  !isOrtho(m) && error("MPS has no well-defined orthogonality center")
-  return leftLim(m)+1
+  !isortho(m) && error("MPS has no well-defined orthogonality center")
+  return leftlim(m)+1
 end
 
 getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
 
 function setindex!(M::MPS,T::ITensor,n::Integer) 
-  (n <= leftLim(M)) && setLeftLim!(M,n-1)
-  (n >= rightLim(M)) && setRightLim!(M,n+1)
+  (n <= leftlim(M)) && set_leftlim!(M,n-1)
+  (n >= rightlim(M)) && set_rightlim!(M,n+1)
   setindex!(tensors(M),T,n)
 end
 
@@ -182,7 +182,7 @@ function inner(M1::MPS, M2::MPS)::Number
   return O[]
 end
 
-function replaceBond!(M::MPS,
+function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)

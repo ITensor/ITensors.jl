@@ -1,5 +1,5 @@
 export orthog!,
-       recursiveSVD
+       svd_recursive
 
 function orthog!(M::AbstractMatrix{T};
                  npass::Int=2) where {T}
@@ -55,13 +55,13 @@ function checkSVDDone(S::Vector,
   return (false,start)
 end
 
-function recursiveSVD(M::AbstractMatrix;
+function svd_recursive(M::AbstractMatrix;
                       thresh::Float64=1E-3,
                       north_pass::Int=2)
   Mr,Mc = size(M)
 
   if Mr > Mc
-    V,S,U = recursiveSVD(transpose(M))
+    V,S,U = svd_recursive(transpose(M))
     conj!(U)
     conj!(V)
     return U,S,V
@@ -87,7 +87,7 @@ function recursiveSVD(M::AbstractMatrix;
   v = view(V,:,start:Nd)
 
   b = u'*(M*v)
-  bu,bd,bv = recursiveSVD(b,
+  bu,bd,bv = svd_recursive(b,
                           thresh=thresh,
                           north_pass=north_pass)
 

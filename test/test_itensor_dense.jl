@@ -17,19 +17,19 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
   @testset "Default" begin
     A = ITensor()
     @test store(A) isa Dense{Nothing}
-    @test isNull(A)
+    @test isnull(A)
   end
 
   @testset "Undef with index" begin
     A = ITensor(undef, i)
     @test store(A) isa Dense{Float64}
-    @test !isNull(A)
+    @test !isnull(A)
   end
 
   @testset "Default with indices" begin
     A = ITensor(i,j)
     @test store(A) isa Dense{Float64}
-    @test !isNull(A)
+    @test !isnull(A)
   end
 
   @testset "Random" begin
@@ -39,13 +39,13 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test ndims(A) == order(A) == 2 == length(inds(A))
     @test size(A) == dims(A) == (2,2)
 
-    @test !isNull(A)
+    @test !isnull(A)
 
     B = randomITensor(IndexSet(i,j))
     @test store(B) isa Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
     @test size(B) == dims(B) == (2,2)
-    @test !isNull(B)
+    @test !isnull(B)
   end
 
   @testset "From matrix" begin

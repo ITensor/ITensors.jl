@@ -1,9 +1,9 @@
 export MPO,
        randomMPO,
        applyMPO,
-       nmultMPO,
-       errorMPOProd,
-       maxLinkDim,
+       multMPO,
+       errorMPOprod,
+       maxlinkdim,
        orthogonalize!,
        truncate!
 
@@ -87,22 +87,22 @@ end
 
 length(m::MPO) = m.N_
 tensors(m::MPO) = m.A_
-leftLim(m::MPO) = m.llim_
-rightLim(m::MPO) = m.rlim_
+leftlim(m::MPO) = m.llim_
+rightlim(m::MPO) = m.rlim_
 
-function setLeftLim!(m::MPO,new_ll::Int)
+function set_leftlim!(m::MPO,new_ll::Int)
   m.llim_ = new_ll
 end
 
-function setRightLim!(m::MPO,new_rl::Int)
+function set_rightlim!(m::MPO,new_rl::Int)
   m.rlim_ = new_rl
 end
 
 getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
 
 function setindex!(M::MPO,T::ITensor,n::Integer)
-  (n <= leftLim(M)) && setLeftLim!(M,n-1)
-  (n >= rightLim(M)) && setRightLim!(M,n+1)
+  (n <= leftlim(M)) && set_leftlim!(M,n-1)
+  (n >= rightlim(M)) && set_rightlim!(M,n+1)
   setindex!(tensors(M),T,n)
 end
 
@@ -177,12 +177,12 @@ function simlinks!(M::T) where {T <: Union{MPS,MPO}}
 end
 
 """
-maxLinkDim(M::MPS)
-maxLinkDim(M::MPO)
+maxlinkdim(M::MPS)
+maxlinkdim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
 """
-function maxLinkDim(M::T) where {T <: Union{MPS,MPO}}
+function maxlinkdim(M::T) where {T <: Union{MPS,MPO}}
   md = 0
   for b ∈ eachindex(M)[1:end-1]
     md = max(md,dim(linkindex(M,b)))
@@ -264,12 +264,12 @@ end
 
 
 """
-errorMPOProd(y::MPS, A::MPO, x::MPS)
+errorMPOprod(y::MPS, A::MPO, x::MPS)
 
 Compute the distance between A|x> and an approximation MPS y:
 | |y> - A|x> |/| A|x> | = √(1 + (<y|y> - 2*real(<y|A|x>))/<Ax|A|x>)
 """
-function errorMPOProd(y::MPS, A::MPO, x::MPS)
+function errorMPOprod(y::MPS, A::MPO, x::MPS)
   N = length(A)
   if length(y) != N || length(x) != N
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
@@ -342,7 +342,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     psi_out         = similar(psi)
     cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
 
-    maxdim::Int     = get(kwargs,:maxdim,maxLinkDim(psi))
+    maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(psi))
     mindim::Int     = max(get(kwargs,:mindim,1), 1)
     normalize::Bool = get(kwargs, :normalize, false) 
     all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
@@ -419,10 +419,10 @@ function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   return psi_out
 end
 
-function nmultMPO(A::MPO, B::MPO; kwargs...)::MPO
+function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
     resp_degen::Bool = get(kwargs, :respect_degenerate, true)
-    maxdim::Int = get(kwargs,:maxdim,maxLinkDim(A)*maxLinkDim(B))
+    maxdim::Int = get(kwargs,:maxdim,maxlinkdim(A)*maxlinkdim(B))
     mindim::Int = max(get(kwargs,:mindim,1), 1)
     N = length(A)
     N != length(B) && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
@@ -482,31 +482,31 @@ end
 function orthogonalize!(M::Union{MPS,MPO},
                         j::Int;
                         kwargs...)
-  while leftLim(M) < (j-1)
-    (leftLim(M) < 0) && setLeftLim!(M,0)
-    b = leftLim(M)+1
+  while leftlim(M) < (j-1)
+    (leftlim(M) < 0) && set_leftlim!(M,0)
+    b = leftlim(M)+1
     linds = uniqueinds(M[b],M[b+1])
     Q,R = qr(M[b], linds)
     M[b] = Q
     M[b+1] *= R
-    setLeftLim!(M,b)
-    if rightLim(M) < leftLim(M)+2
-      setRightLim!(M,leftLim(M)+2)
+    set_leftlim!(M,b)
+    if rightlim(M) < leftlim(M)+2
+      set_rightlim!(M,leftlim(M)+2)
     end
   end
 
   N = length(M)
 
-  while rightLim(M) > (j+1)
-    (rightLim(M) > (N+1)) && setRightLim!(M,N+1)
-    b = rightLim(M)-2
+  while rightlim(M) > (j+1)
+    (rightlim(M) > (N+1)) && set_rightlim!(M,N+1)
+    b = rightlim(M)-2
     rinds = uniqueinds(M[b+1],M[b])
     Q,R = qr(M[b+1], rinds)
     M[b+1] = Q
     M[b] *= R
-    setRightLim!(M,b+1)
-    if leftLim(M) > rightLim(M)-2
-      setLeftLim!(M,rightLim(M)-2)
+    set_rightlim!(M,b+1)
+    if leftlim(M) > rightlim(M)-2
+      set_leftlim!(M,rightlim(M)-2)
     end
   end
 end
@@ -525,7 +525,7 @@ function truncate!(M::Union{MPS,MPO}; kwargs...)
     U,S,V = svd(M[j],rinds;kwargs...)
     M[j] = U
     M[j-1] *= (S*V)
-    setRightLim!(M,j)
+    set_rightlim!(M,j)
   end
 
 end

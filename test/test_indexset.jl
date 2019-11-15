@@ -35,7 +35,7 @@ using ITensors,
     @test dim(I,2) == jdim
     @test dim(I,3) == kdim
 
-    @test maxDim(I) == max(idim,jdim,kdim)
+    @test maxdim(I) == max(idim,jdim,kdim)
   end
   @testset "Set operations" begin
     I1 = IndexSet(i,j,k)

@@ -16,8 +16,8 @@ export IndexSet,
        uniqueinds,
        uniqueindex,
        dims,
-       minDim,
-       maxDim,
+       mindim,
+       maxdim,
        push,
        permute
 
@@ -120,13 +120,13 @@ StaticArrays.similar_type(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSe
 sim(is::IndexSet{N}) where {N} = IndexSet{N}(ntuple(i->sim(is[i]),Val(N)))
 
 """
-minDim(is::IndexSet)
+mindim(is::IndexSet)
 
 Get the minimum dimension of the indices in the index set.
 
 Returns 1 if the IndexSet is empty.
 """
-function minDim(is::IndexSet)
+function mindim(is::IndexSet)
   length(is) == 0 && (return 1)
   md = dim(is[1])
   for n ∈ 2:length(is)
@@ -136,13 +136,13 @@ function minDim(is::IndexSet)
 end
 
 """
-maxDim(is::IndexSet)
+maxdim(is::IndexSet)
 
 Get the maximum dimension of the indices in the index set.
 
 Returns 1 if the IndexSet is empty.
 """
-function maxDim(is::IndexSet)
+function maxdim(is::IndexSet)
   length(is) == 0 && (return 1)
   md = dim(is[1])
   for n ∈ 2:length(is)

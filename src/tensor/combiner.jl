@@ -39,26 +39,67 @@ function contract!!(R::Tensor{<:Number,NR},
                     T2::Tensor{<:Number,N2},
                     labelsT2::NTuple{N2}) where {NR,N1,N2}
   if N1 ≤ 1
-    println("identity")
+    #println("identity")
     return R
   elseif N1 + N2 == NR
     error("Cannot perform outer product involving a combiner")
-  elseif count_common(labelsT1,labelsT2) == 1
-    # This is the case of Index replacement or
-    # uncombining
-    # TODO: handle the case where inds(R) and inds(T1)
-    # are not ordered the same?
-    # Could just use a permutedims...
-    return Tensor(store(T2),inds(R))
+  elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) == 2
+    ci = commonindex(inds(T1), inds(T2))
+    ui = uniqueindex(inds(T1), inds(T2))
+    inds2        = [inds(T2)...]
+    cpos1,cpos2  = intersect_positions(labelsT1,labelsT2)
+    inds2[cpos2] = ui 
+    return Tensor(copy(store(T2)), IndexSet(inds2...))
+  elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) != 2
+    # This is the case of Index replacement or uncombining
+    T2data      = data(store(T2))
+    cpos1,cpos2 = intersect_positions(labelsT1,labelsT2)
+    indsC = inds(T1)
+    indsT = inds(T2)
+
+    newlength = (length(indsC)-1) + (length(indsT)-1)
+    newinds = Vector{Index}(undef,newlength)
+    n = 1
+    # Copy existing indices before one we are uncombining
+    for i in 1:cpos2-1
+      newinds[n] = indsT[i]
+      n += 1
+    end
+    # Replace uncombined index with indices of combiner
+    for j in 2:length(indsC)
+      newinds[n] = indsC[j]
+      n += 1
+    end
+    # Copy existing indices after one we are uncombining
+    for i in cpos2+1:length(indsT)
+      newinds[n] = indsT[i]
+      n += 1
+    end
+
+    return Tensor(Dense(copy(T2data)), IndexSet(newinds...))
   elseif is_combiner(labelsT1,labelsT2)
     # This is the case of combining
+    Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))
+    final_labels    = contract_labels(Blabels, Alabels)
+    final_labels_n  = contract_labels(labelsT1,labelsT2)
+    indsR = inds(R)
+    if final_labels != final_labels_n
+      perm  = getperm(final_labels_n, final_labels)
+      indsR = permute(inds(R), perm)
+      labelsR = permute(labelsR, perm)
+    end
     cpos1,cposR = intersect_positions(labelsT1,labelsR)
     labels_comb = deleteat(labelsT1,cpos1)
-    labels_perm = insertat(labelsR,labels_comb,cposR)
+    vlR = [labelsR...]
+    for (ii, li) in enumerate(labels_comb)
+      insert!(vlR, cposR+ii, li)
+    end
+    deleteat!(vlR, cposR)
+    labels_perm = tuple(vlR...) 
     perm = getperm(labels_perm,labelsT2)
     T2p = reshape(R,permute(inds(T2),perm))
     permutedims!(T2p,T2,perm)
-    R = reshape(T2p,inds(R))
+    R = reshape(T2p,indsR)
   end
   return R
 end
