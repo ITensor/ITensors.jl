@@ -5,14 +5,14 @@ export ITensor,
        delta,
        δ,
        exp,
-       expHermitian,
+       exphermitian,
        replaceindex!,
        inds,
-       isNull,
+       isnull,
        scale!,
        normalize!,
        randn!,
-       multSiteOps,
+       matmul,
        order,
        permute,
        randomITensor,
@@ -120,7 +120,7 @@ The storage will have Diag type.
 """
 function diagITensor(::Type{T},
                      is::IndexSet{N}) where {T<:Number,N}
-  return ITensor{N}(Diag(zeros(T,minDim(is))),is)
+  return ITensor{N}(Diag(zeros(T,mindim(is))),is)
 end
 
 """
@@ -142,7 +142,7 @@ The storage will have Diag type.
 """
 function diagITensor(v::Vector{T},
                      is::IndexSet) where {T<:Number}
-  length(v) ≠ minDim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
+  length(v) ≠ mindim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
   return ITensor(Diag(float(v)),is)
 end
 
@@ -187,7 +187,7 @@ The storage will have Diag type.
 """
 function diagITensor(x::T,
                      is::IndexSet) where {T<:Number}
-  return ITensor(Diag(fill(float(x),minDim(is))),is)
+  return ITensor(Diag(fill(float(x),mindim(is))),is)
 end
 
 """
@@ -274,7 +274,7 @@ Base.size(A::ITensor) = dims(inds(A))
 Base.size(A::ITensor{N}, d::Int) where {N} = d in 1:N ? dim(inds(A)[d]) :
   d>0 ? 1 : error("arraysize: dimension out of range")
 
-isNull(T::ITensor) = (eltype(T) === Nothing)
+isnull(T::ITensor) = (eltype(T) === Nothing)
 
 Base.copy(T::ITensor{N}) where {N} = ITensor{N}(copy(tensor(T)))
 
@@ -511,7 +511,7 @@ function LinearAlgebra.exp(A::ITensor,
   return ITensor(expAT)
 end
 
-function expHermitian(A::ITensor,
+function exphermitian(A::ITensor,
                       Linds,
                       Rinds = prime(IndexSet(Linds))) 
   return exp(A,Linds,Rinds;ishermitian=true)
@@ -636,7 +636,7 @@ end
 function Base.show(io::IO,T::ITensor)
   summary(io,T)
   print(io,"\n")
-  if !isNull(T)
+  if !isnull(T)
     Base.show(io,MIME"text/plain"(),tensor(T))
   end
 end
@@ -652,14 +652,14 @@ function Base.similar(T::ITensor,
   return ITensor(similar(tensor(T),element_type))
 end
 
-function multSiteOps(A::ITensor,
-                     B::ITensor)
-  R = prime(A,"Site")
+function matmul(A::ITensor,
+                B::ITensor)
+  R = mapprime(mapprime(A,1,2),0,1)
   R *= B
   return mapprime(R,2,1)
 end
 
-function readCpp!(io::IO,T::ITensor;kwargs...)
+function read_cpp!(T::ITensor,io::IO;kwargs...)
   T.inds = read(io,IndexSet;kwargs...)
   read(io,12) # ignore scale factor
   storage_type = read(io,Int32) # see StorageType enum above
@@ -689,7 +689,7 @@ function Base.read(io::IO,::Type{ITensor};kwargs...)
   format = get(kwargs,:format,"hdf5")
   T = ITensor()
   if format=="cpp"
-    readCpp!(io,T;kwargs...)
+    read_cpp!(T,io;kwargs...)
   else
     throw(ArgumentError("read ITensor: format=$format not supported"))
   end

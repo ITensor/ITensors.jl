@@ -1,11 +1,11 @@
-export ElectronSite,
-       electronSites
-
-function electronSites(N::Int; kwargs...)
-  return [Index(4,"Site,Electron,n=$n") for n=1:N]
-end
+export ElectronSite
 
 const ElectronSite = TagType"Electron"
+
+function siteinds(::ElectronSite, 
+                  N::Int; kwargs...)
+  return [Index(4,"Site,Electron,n=$n") for n=1:N]
+end
 
 function state(::ElectronSite,
                st::AbstractString)

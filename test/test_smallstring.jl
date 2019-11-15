@@ -8,21 +8,21 @@ import ITensors.SmallString,
 @testset "SmallString" begin
   @testset "ctors" begin
       s = SmallString()
-      @test ITensors.isNull(s)
+      @test ITensors.isnull(s)
   end
 
   @testset "setindex" begin
       s = SmallString()
-      @test ITensors.isNull(s)
+      @test ITensors.isnull(s)
       t = setindex(s, IntChar(1), 1)
-      @test !ITensors.isNull(t)
+      @test !ITensors.isnull(t)
   end
 
   #@testset "push" begin
   #  s = SmallString()
-  #  @test ITensors.isNull(s)
+  #  @test ITensors.isnull(s)
   #  t = push(s, IntChar(1))
-  #  @test !ITensors.isNull(t)
+  #  @test !ITensors.isnull(t)
   #end
 
   @testset "comparison" begin
