@@ -157,7 +157,7 @@ using ITensors,
 end
 
 
-const MySite = makeTagType("MySite")
+const MySite = ITensors.TagType"MySite"
 
 @testset "Custom Site Tag Type" begin
 

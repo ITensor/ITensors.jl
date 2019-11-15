@@ -1,4 +1,63 @@
 
+const Labels{N} = NTuple{N,Int}
+
+# Automatically determine the output labels given
+# input labels of a contraction
+function contract_labels(T1labels::Labels{N1},
+                         T2labels::Labels{N2}) where {N1,N2}
+  ncont = 0
+  for i in T1labels
+    i < 0 && (ncont += 1)
+  end
+  NR = N1+N2-2*ncont
+  Rlabels = Vector{Int}(undef,NR)
+  u = 1
+  # TODO: use Rlabels, don't assume ncon convention
+  @inbounds for i ∈ 1:N1
+    if(T1labels[i] > 0)
+      Rlabels[u] = T1labels[i];
+      u += 1
+    end
+  end
+  @inbounds for i ∈ 1:N2
+    if(T2labels[i] > 0)
+      Rlabels[u] = T2labels[i];
+      u += 1
+    end
+  end
+  return Labels{NR}(Rlabels)
+end
+
+function contract_inds(T1is,
+                       T1labels::Labels{N1},
+                       T2is,
+                       T2labels::Labels{N2},
+                       Rlabels::Labels{NR}) where {N1,N2,NR}
+  ncont = 0
+  for i in T1labels
+    i < 0 && (ncont += 1)
+  end
+  IndT1 = eltype(T1is)
+  Ris = Vector{IndT1}(undef,NR)
+  u = 1
+  # TODO: use Rlabels, don't assume ncon convention
+  @inbounds for i ∈ 1:N1
+    if(T1labels[i] > 0) 
+      Ris[u] = T1is[i]; 
+      u += 1 
+    end
+  end
+  @inbounds for i ∈ 1:N2
+    if(T2labels[i] > 0) 
+      Ris[u] = T2is[i]; 
+      u += 1 
+    end
+  end
+  IndsT1 = typeof(T1is)
+  IndsR = similar_type(IndsT1,Val{NR})
+  return IndsR(Ris...)
+end
+
 mutable struct ContractionProperties{NA,NB,NC}
   ai::NTuple{NA,Int}
   bi::NTuple{NB,Int}

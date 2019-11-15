@@ -121,7 +121,7 @@ The storage will have Diag type.
 """
 function diagITensor(::Type{T},
                      is::IndexSet{N}) where {T<:Number,N}
-  return ITensor{N}(Diag{Vector{T}}(zeros(T,minDim(is))),is)
+  return ITensor{N}(Diag(zeros(T,minDim(is))),is)
 end
 
 """
@@ -144,7 +144,7 @@ The storage will have Diag type.
 function diagITensor(v::Vector{T},
                      is::IndexSet) where {T<:Number}
   length(v) ≠ minDim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
-  return ITensor(Diag{Vector{float(T)}}(v),is)
+  return ITensor(Diag(float(v)),is)
 end
 
 """
@@ -188,7 +188,7 @@ The storage will have Diag type.
 """
 function diagITensor(x::T,
                      is::IndexSet) where {T<:Number}
-  return ITensor(Diag{Vector{float(T)}}(fill(float(x),minDim(is))),is)
+  return ITensor(Diag(fill(float(x),minDim(is))),is)
 end
 
 """
@@ -210,7 +210,7 @@ end
 Make a diagonal ITensor with all diagonal elements 1.
 """
 function delta(::Type{T},is::IndexSet) where {T}
-  return ITensor(Diag{float(T)}(one(T)),is)
+  return ITensor(Diag(one(T)),is)
 end
 
 """
@@ -638,7 +638,7 @@ function Base.show(io::IO,T::ITensor)
   summary(io,T)
   print(io,"\n")
   if !isNull(T)
-    Base.print_array(io,array(T))
+    Base.show(io,MIME"text/plain"(),tensor(T))
   end
 end
 

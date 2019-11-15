@@ -1,15 +1,20 @@
-export makeTagType,
+export TagType,
        TagType_str,
-       TagType,
        op,
        state
 
-struct TagType{T}
-end
 
-function makeTagType(t)
-  tag = Tag(t)
-  return TagType{tag}
+"""
+TagType is a parameterized type which allows
+making Index tags into Julia types. One use case
+is overloading functions such as `op` which
+generates physics operators for indices
+with certain tags such as "S=1/2".
+
+To make a TagType, you can use the string
+macro notation: `TagType"MyTag"`
+"""
+struct TagType{T}
 end
 
 macro TagType_str(s)

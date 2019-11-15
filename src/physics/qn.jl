@@ -3,8 +3,8 @@ export QNVal,
        name,
        val,
        modulus,
-       isActive,
-       isFermionic
+       isactive,
+       isfermionic
 
 struct QNVal 
   name::SmallString
@@ -26,8 +26,8 @@ end
 name(qv::QNVal) = qv.name
 val(qv::QNVal) = qv.val
 modulus(qv::QNVal) = qv.modulus
-isActive(qv::QNVal) = (modulus(qv) != 0)
-isFermionic(qv::QNVal) = (modulus(qv) < 0)
+isactive(qv::QNVal) = (modulus(qv) != 0)
+isfermionic(qv::QNVal) = (modulus(qv) < 0)
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 Base.:-(qv::QNVal) =  QNVal(name(qv),-val(qv),modulus(qv))
 
@@ -101,16 +101,16 @@ function modulus(q::QN,name_)
 end
 
 function combineQNs(a::QN,b::QN,operation)
-  !isActive(b[1]) && return a
+  !isactive(b[1]) && return a
 
   ma = MQNStorage(a.store)
 
   for nb=1:maxQNs
-    !isActive(b[nb]) && break
+    !isactive(b[nb]) && break
     bname = name(b[nb])
     for na=1:maxQNs
       aname = name(a[na])
-      if !isActive(ma[na])
+      if !isactive(ma[na])
         ma[na] = b[nb]
         break
       elseif name(ma[na]) == bname
@@ -158,16 +158,16 @@ end
 function Base.:(<)(qa::QN,qb::QN)
   a = 1
   b = 1
-  while a<=maxQNs && b<=maxQNs && (isActive(qa[a])||isActive(qb[b]))
+  while a<=maxQNs && b<=maxQNs && (isactive(qa[a])||isactive(qb[b]))
     aval = val(qa[a])
     bval = val(qb[b])
-    if !isActive(qa[a])
+    if !isactive(qa[a])
       if 0 == bval
         b += 1
         continue
       end
       return 0 < bval
-    elseif !isActive(qb[b])
+    elseif !isactive(qb[b])
       if 0 == aval
         a += 1
         continue
@@ -205,7 +205,7 @@ function Base.show(io::IO,q::QN)
   print(io,"QN(")
   for n=1:maxQNs
     v = q[n]
-    !isActive(v) && break
+    !isactive(v) && break
     n > 1 && print(io,",")
     print(io,"(\"$(name(v))\",$(val(v))")
     if modulus(v) != 1

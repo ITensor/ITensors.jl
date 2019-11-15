@@ -6,51 +6,74 @@ export Dense,
 # Dense storage
 #
 
-struct Dense{T} <: TensorStorage
-  data::Vector{T}
-  Dense{T}(data) where {T} = new{T}(convert(Vector{T},data))
-  Dense{T}() where {T} = new{T}(Vector{T}())
+struct Dense{ElT,VecT<:AbstractVector} <: TensorStorage{ElT}
+  data::VecT
+  Dense(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = new{ElT,VecT}(data)
 end
+
+function Dense{ElR}(data::VecT) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
+  ElT == ElR ? Dense(data) : Dense(ElR.(data))
+end
+Dense{ElT}() where {ElT} = Dense(ElT[])
 
 # Convenient functions for Dense storage type
 Base.@propagate_inbounds Base.getindex(D::Dense,i::Integer) = data(D)[i]
 Base.@propagate_inbounds Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
 
-Base.similar(D::Dense{T}) where {T} = Dense{T}(similar(data(D)))
+Base.similar(D::Dense) = Dense(similar(data(D)))
 
-# TODO: make this just take Int, the length of the data
-Base.similar(D::Dense{T},dims) where {T} = Dense{T}(similar(data(D),dim(dims)))
+Base.similar(D::Dense,length::Int) = Dense(similar(data(D),length))
+Base.similar(::Type{<:Dense{ElT,VecT}},length::Int) where {ElT,VecT} = Dense(similar(VecT,length))
 
-# TODO: make this just take Int, the length of the data
-Base.similar(::Type{Dense{T}},dims) where {T} = Dense{T}(similar(Vector{T},dim(dims)))
-
-Base.similar(D::Dense,::Type{T}) where {T} = Dense{T}(similar(data(D),T))
-Base.copy(D::Dense{T}) where {T} = Dense{T}(copy(data(D)))
+Base.similar(D::Dense,::Type{T}) where {T<:Number} = Dense(similar(data(D),T))
+Base.copy(D::Dense) = Dense(copy(data(D)))
 Base.copyto!(D1::Dense,D2::Dense) = copyto!(data(D1),data(D2))
 
 Base.fill!(D::Dense,v) = fill!(data(D),v)
 
-Base.zeros(::Type{Dense{T}},dim::Int) where {T} = Dense{T}(zeros(T,dim))
+# TODO: should this do something different for SubArray?
+Base.zeros(::Type{<:Dense{ElT}},dim::Int) where {ElT} = Dense(zeros(ElT,dim))
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
-Base.complex(D::Dense{T}) where {T} = Dense{complex(T)}(complex(data(D)))
+Base.complex(D::Dense) = Dense(complex(data(D)))
 
-Base.eltype(::Dense{T}) where {T} = eltype(T)
+Base.eltype(::Dense{ElT}) where {ElT} = ElT
 # This is necessary since for some reason inference doesn't work
 # with the more general definition (eltype(Nothing) === Any)
 Base.eltype(::Dense{Nothing}) = Nothing
-Base.eltype(::Type{Dense{T}}) where {T} = eltype(T)
+Base.eltype(::Type{<:Dense{ElT}}) where {ElT} = ElT
 
-Base.promote_rule(::Type{Dense{T1}},
-                  ::Type{Dense{T2}}) where {T1,T2} = Dense{promote_type(T1,T2)}
-Base.convert(::Type{Dense{R}},
-             D::Dense) where {R} = Dense{R}(convert(Vector{R},data(D)))
-
-function Base.:*(D::Dense{<:El},x::S) where {El<:Number,S<:Number}
-  return Dense{promote_type(El,S)}(x*data(D))
+function Base.promote_rule(::Type{<:Dense{ElT1,VecT1}},
+                           ::Type{<:Dense{ElT2,VecT2}}) where {ElT1,VecT1,
+                                                               ElT2,VecT2}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = promote_type(VecT1,VecT2)
+  return Dense{ElR,VecR}
 end
 
+# This is to get around the issue in Julia that:
+# promote_type(Vector{ComplexF32},Vector{Float64}) == Vector{T} where T
+function Base.promote_rule(::Type{<:Dense{ElT1,Vector{ElT1}}},
+                           ::Type{<:Dense{ElT2,Vector{ElT2}}}) where {ElT1,ElT2}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = Vector{ElR}
+  return Dense{ElR,VecR}
+end
+
+# This is for type promotion for Scalar*Dense
+function Base.promote_rule(::Type{<:Dense{ElT1,Vector{ElT1}}},
+                           ::Type{ElT2}) where {ElT1,
+                                                ElT2<:Number}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = Vector{ElR}
+  return Dense{ElR,VecR}
+end
+
+Base.convert(::Type{<:Dense{ElR,VecR}},
+             D::Dense) where {ElR,VecR} = Dense(convert(VecR,data(D)))
+
+Base.:*(D::Dense,x::Number) = Dense(x*data(D))
 Base.:*(x::Number,D::Dense) = D*x
 
 #
@@ -246,28 +269,32 @@ function outer(T1::DenseTensor{ElT1},
 end
 const ⊗ = outer
 
-function contraction_output_type(TensorT1::Type{<:DenseTensor},
-                                 TensorT2::Type{<:DenseTensor},
-                                 indsR)
-  return similar_type(promote_type(TensorT1,TensorT2),indsR)
+# TODO: move to tensor.jl?
+function contraction_output_type(TensorT1::Type{<:Tensor},
+                                 TensorT2::Type{<:Tensor},
+                                 IndsR::Type)
+  return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 
-function contraction_output(TensorT1::Type{<:DenseTensor},
-                            TensorT2::Type{<:DenseTensor},
-                            indsR)
-  return similar(contraction_output_type(TensorT1,TensorT2,indsR),indsR)
+function contraction_output(::TensorT1,
+                            ::TensorT2,
+                            indsR::IndsR) where {TensorT1<:DenseTensor,
+                                                 TensorT2<:DenseTensor,
+                                                 IndsR}
+  TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
+  return similar(TensorR,indsR)
 end
 
 # TODO: move to tensor.jl?
 function contract(T1::Tensor{<:Any,N1},
                   labelsT1,
                   T2::Tensor{<:Any,N2},
-                  labelsT2) where {N1,N2}
+                  labelsT2,
+                  labelsR = contract_labels(labelsT1,labelsT2)) where {N1,N2}
   # TODO: put the contract_inds logic into contraction_output,
   # call like R = contraction_ouput(T1,labelsT1,T2,labelsT2)
-  indsR,labelsR = contract_inds(inds(T1),labelsT1,
-                                inds(T2),labelsT2)
-  R = contraction_output(typeof(T1),typeof(T2),indsR)
+  indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
+  R = contraction_output(T1,T2,indsR)
   # contract!! version here since the output R may not
   # be mutable (like UniformDiag)
   R = contract!!(R,labelsR,T1,labelsT1,T2,labelsT2)
