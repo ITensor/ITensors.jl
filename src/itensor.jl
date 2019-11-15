@@ -12,7 +12,7 @@ export ITensor,
        scale!,
        normalize!,
        randn!,
-       multSiteOps,
+       matmul,
        order,
        permute,
        randomITensor,
@@ -120,7 +120,7 @@ The storage will have Diag type.
 """
 function diagITensor(::Type{T},
                      is::IndexSet{N}) where {T<:Number,N}
-  return ITensor{N}(Diag(zeros(T,minDim(is))),is)
+  return ITensor{N}(Diag(zeros(T,mindim(is))),is)
 end
 
 """
@@ -142,7 +142,7 @@ The storage will have Diag type.
 """
 function diagITensor(v::Vector{T},
                      is::IndexSet) where {T<:Number}
-  length(v) ≠ minDim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
+  length(v) ≠ mindim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
   return ITensor(Diag(float(v)),is)
 end
 
@@ -187,7 +187,7 @@ The storage will have Diag type.
 """
 function diagITensor(x::T,
                      is::IndexSet) where {T<:Number}
-  return ITensor(Diag(fill(float(x),minDim(is))),is)
+  return ITensor(Diag(fill(float(x),mindim(is))),is)
 end
 
 """
