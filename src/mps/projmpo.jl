@@ -1,6 +1,6 @@
 export ProjMPO,
-       LProj,
-       RProj,
+       lproj,
+       rproj,
        product
 
 mutable struct ProjMPO
@@ -16,12 +16,12 @@ nsite(pm::ProjMPO) = pm.nsite
 length(pm::ProjMPO) = length(pm.H)
 
 
-function LProj(pm::ProjMPO)::ITensor
+function lproj(pm::ProjMPO)::ITensor
   (pm.lpos <= 0) && return ITensor()
   return pm.LR[pm.lpos]
 end
 
-function RProj(pm::ProjMPO)::ITensor
+function rproj(pm::ProjMPO)::ITensor
   (pm.rpos >= length(pm)+1) && return ITensor()
   return pm.LR[pm.rpos]
 end
@@ -29,20 +29,20 @@ end
 function product(pm::ProjMPO,
                  v::ITensor)::ITensor
   Hv = v
-  if isnull(LProj(pm))
-    if !isnull(RProj(pm))
-      Hv *= RProj(pm)
+  if isnull(lproj(pm))
+    if !isnull(rproj(pm))
+      Hv *= rproj(pm)
     end
     for j=pm.rpos-1:-1:pm.lpos+1
       Hv *= pm.H[j]
     end
-  else #if LProj is not null
-    Hv *= LProj(pm)
+  else #if lproj is not null
+    Hv *= lproj(pm)
     for j=pm.lpos+1:pm.rpos-1
       Hv *= pm.H[j]
     end
-    if !isnull(RProj(pm))
-      Hv *= RProj(pm)
+    if !isnull(rproj(pm))
+      Hv *= rproj(pm)
     end
   end
   return noprime(Hv)
@@ -53,11 +53,11 @@ function Base.eltype(pm::ProjMPO)
   for j = pm.lpos+2:pm.rpos-1
     elT = promote_type(elT,eltype(pm.H[j]))
   end
-  if !isnull(LProj(pm))
-    elT = promote_type(elT,eltype(LProj(pm)))
+  if !isnull(lproj(pm))
+    elT = promote_type(elT,eltype(lproj(pm)))
   end
-  if !isnull(RProj(pm))
-    elT = promote_type(elT,eltype(RProj(pm)))
+  if !isnull(rproj(pm))
+    elT = promote_type(elT,eltype(rproj(pm)))
   end
   return elT
 end
@@ -66,8 +66,8 @@ end
 
 function size(pm::ProjMPO)::Tuple{Int,Int}
   d = 1
-  if !isnull(LProj(pm))
-    for i in inds(LProj(pm))
+  if !isnull(lproj(pm))
+    for i in inds(lproj(pm))
       plev(i) > 0 && (d *= dim(i))
     end
   end
@@ -76,8 +76,8 @@ function size(pm::ProjMPO)::Tuple{Int,Int}
       plev(i) > 0 && (d *= dim(i))
     end
   end
-  if !isnull(RProj(pm))
-    for i in inds(RProj(pm))
+  if !isnull(rproj(pm))
+    for i in inds(rproj(pm))
       plev(i) > 0 && (d *= dim(i))
     end
   end
@@ -122,7 +122,7 @@ function position!(pm::ProjMPO,
   makeR!(pm,psi,pos+nsite(pm))
 
   #These next two lines are needed 
-  #when moving LProj and RProj backward
+  #when moving lproj and rproj backward
   pm.lpos = pos-1
   pm.rpos = pos+nsite(pm)
 end
