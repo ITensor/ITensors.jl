@@ -2,7 +2,7 @@ export MPO,
        randomMPO,
        applyMPO,
        multMPO,
-       errorMPOProd,
+       errorMPOprod,
        maxlinkdim,
        orthogonalize!,
        truncate!
@@ -264,12 +264,12 @@ end
 
 
 """
-errorMPOProd(y::MPS, A::MPO, x::MPS)
+errorMPOprod(y::MPS, A::MPO, x::MPS)
 
 Compute the distance between A|x> and an approximation MPS y:
 | |y> - A|x> |/| A|x> | = √(1 + (<y|y> - 2*real(<y|A|x>))/<Ax|A|x>)
 """
-function errorMPOProd(y::MPS, A::MPO, x::MPS)
+function errorMPOprod(y::MPS, A::MPO, x::MPS)
   N = length(A)
   if length(y) != N || length(x) != N
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))

@@ -123,7 +123,7 @@ include("util.jl")
     @test_throws DimensionMismatch inner(J,phi,K,badpsi)
   end
 
-  @testset "errorMPOProd" begin
+  @testset "errorMPOprod" begin
     phi = makeRandomMPS(sites)
     K = makeRandomMPO(sites,chi=2)
 
@@ -131,16 +131,16 @@ include("util.jl")
 
     dist = sqrt(abs(1 + (inner(phi,phi) - 2*real(inner(phi,K,psi)))
                         /inner(K,psi,K,psi)))
-    @test dist ≈ errorMPOProd(phi,K,psi)
+    @test dist ≈ errorMPOprod(phi,K,psi)
 
     badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
-    # Apply K to phi and check that errorMPOProd is close to 0.
+    # Apply K to phi and check that errorMPOprod is close to 0.
     Kphi = applyMPO(K,phi;method="naive", cutoff=1E-8)
-    @test errorMPOProd(Kphi, K, phi) ≈ 0. atol=1e-4
+    @test errorMPOprod(Kphi, K, phi) ≈ 0. atol=1e-4
 
     @test_throws DimensionMismatch applyMPO(K,badpsi;method="naive", cutoff=1E-8)
-    @test_throws DimensionMismatch errorMPOProd(phi,K,badpsi)
+    @test_throws DimensionMismatch errorMPOprod(phi,K,badpsi)
   end
 
   @testset "applyMPO" begin
