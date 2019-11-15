@@ -54,31 +54,10 @@ let
   # must have same set of indices
   # but can be in any order
   R = A + D
-
 end
 
 ```
 
-### Making Tensor Indices
-
-Before making an ITensor, you have to define its indices.
-Tensor indices in ITensors.jl are themselves objects that 
-carry extra information beyond just their dimension.
-
-```Julia
-using ITensors
-let
-  i = Index(3)     # Index of dimension 3
-  @show dim(i)     # dim(i) = 3
-
-  j = Index(5,"j") # Index with a tag "j"
-
-  s = Index(2,"n=1,Site") # Index with two tags,
-                          # "Site" and "n=1"
-  @show hastags(s,"Site") # hastags(s,"Site") = true
-  @show hastags(s,"n=1")  # hastags(s,"n=1") = true
-end
-```
 
 ### Singular Value Decomposition (SVD) of a Matrix
 
@@ -127,6 +106,39 @@ let
 end
 ```
 
+### Tensor Indices: Tags and Prime Levels
+
+Before making an ITensor, you have to define its indices.
+Tensor Index objects carry extra information beyond just their dimension.
+
+All Index objects carry a permanent, immutable id number which is 
+determined when it is constructed, and allow it to be matched
+(compare equal) with copies of itself.
+
+Additionally, an Index can have up to four tag strings, and an
+integer primelevel. If two Index objects have different tags or 
+different prime levels, they do not compare equal even if they
+have the same id.
+
+```Julia
+using ITensors
+let
+  i = Index(3)     # Index of dimension 3
+  @show dim(i)     # dim(i) = 3
+
+  j = Index(5,"j") # Index with a tag "j"
+
+  s = Index(2,"n=1,Site") # Index with two tags,
+                          # "Site" and "n=1"
+  @show hastags(s,"Site") # hastags(s,"Site") = true
+  @show hastags(s,"n=1")  # hastags(s,"n=1") = true
+
+  i1 = prime(i) # i1 has a "prime level" of 1
+                # but otherwise same properties as i
+  @show i1 == i # false, prime levels do not match
+end
+```
+
 ### DMRG Calculation
 
 DMRG is an iterative algorithm for finding the dominant
@@ -141,7 +153,7 @@ using ITensors
 let
   # Create 100 spin-one (dimension 3) indices
   N = 100
-  sites = spinOneSites(N)
+  sites = siteinds("S=1",N)
 
   # Input operator terms which define 
   # a Hamiltonian matrix, and convert
