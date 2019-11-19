@@ -206,6 +206,21 @@ include("util.jl")
     psi_kl_out = applyMPO(K, applyMPO(L, psi, maxdim=1), maxdim=1)
     @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
 
+    # where both K and L have differently labelled sites
+    othersitesk = [Index(2,"Site,aaa") for n=1:N]
+    othersitesl = [Index(2,"Site,bbb") for n=1:N]
+    K = randomMPO(sites)
+    L = randomMPO(sites)
+    for ii in 1:N
+        replaceindex!(K[ii], sites[ii]', othersitesk[ii])
+        replaceindex!(L[ii], sites[ii]', othersitesl[ii])
+    end
+    KL = multMPO(K, L, maxdim=1)
+    psik = randomMPS(othersitesk)
+    psil = randomMPS(othersitesl)
+    psi_kl_out = applyMPO(K, applyMPO(L, psil, maxdim=1), maxdim=1)
+    @test inner(psik,KL,psil) ≈ inner(psik, psi_kl_out) atol=5e-3
+    
     badsites = [Index(2,"Site") for n=1:N+1]
     badL = randomMPO(badsites)
     @test_throws DimensionMismatch multMPO(K,badL)

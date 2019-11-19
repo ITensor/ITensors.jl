@@ -348,8 +348,8 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
 
     rand_plev = 14741
-    psi_c     = dag(deepcopy(psi))
-    A_c       = dag(deepcopy(A))
+    psi_c     = dag(copy(psi))
+    A_c       = dag(copy(A))
     prime!(psi_c, rand_plev)
     prime!(A_c, rand_plev)
     for j in 1:n-1
@@ -452,7 +452,8 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     @inbounds for (AA, BB) in zip(tensors(A_), tensors(B_))
         sda = setdiff(findinds(AA, "Site"), findinds(BB, "Site"))
         sdb = setdiff(findinds(BB, "Site"), findinds(AA, "Site"))
-        push!(sites_A, sda[1])
+        sda_ind = setprime(sda[1], 0) == sdb[1] ? plev(sda[1]) == 1 ? sda[1] : setprime(sda[1], 1) : setprime(sda[1], 0)
+        push!(sites_A, sda_ind)
         push!(sites_B, sdb[1])
     end
     res[1] = ITensor(sites_A[1], sites_B[1], commonindex(res[1], res[2]))
