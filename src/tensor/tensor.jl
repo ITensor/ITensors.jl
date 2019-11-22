@@ -82,11 +82,11 @@ function nblocks(inds::BlockDims{N}) where {N}
   return ntuple(dim->length(inds[dim]),Val(N))
 end
 
-function nblocks(ind::NTuple{N,Int}) where {N}
-  return N
+function nblocks(ind)
+  return length(ind)
 end
 
-function blocksize(ind::NTuple{N,Int},i::Int) where {N}
+function blocksize(ind,i::Int) where {N}
   return ind[i]
 end
 
