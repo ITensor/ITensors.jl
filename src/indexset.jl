@@ -676,13 +676,11 @@ function readcpp(io::IO,::Type{IndexSet};kwargs...)
   is = IndexSet()
   if format=="v3"
     size = read(io,Int)
-
     function readind(io,n)
       i = readcpp(io,Index;kwargs...)
       stride = read(io,UInt64)
       return i
     end
-
     is = IndexSet(ntuple(n->readind(io,n),size))
   else
     throw(ArgumentError("read IndexSet: format=$format not supported"))
