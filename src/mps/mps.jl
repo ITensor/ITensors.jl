@@ -191,7 +191,7 @@ function replaceBond!(M::MPS,
   # with a user-specified factorization
   # that might not just be "automatic"
   FU,FV = factorize(phi,inds(M[b]);
-                        which_factorization=get(kwargs,:which_factorization,"automatic")
+                        which_factorization=get(kwargs,:which_factorization,"automatic"),
                         tags=tags(linkindex(M,b)), kwargs...)
   M[b]   = FU
   M[b+1] = FV
