@@ -1,35 +1,41 @@
 export BlockSparse,
        BlockSparseTensor,
-       offsets
+       Block,
+       BlockOffset,
+       BlockOffsets,
+       blockoffsets,
+       blockview
 
 #
 # BlockSparse storage
 #
 
-const BlockOffset = Tuple{Int,Int}
-const BlockOffsets = Vector{BlockOffset}
+const Block{N} = CartesianIndex{N}
+const BlockOffset{N} = Pair{Block{N},Int}
+const BlockOffsets{N} = Vector{BlockOffset{N}}
 
-struct BlockSparse{ElT,VecT} <: TensorStorage{ElT}
+struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
-  offsets::BlockOffsets  # Block number-offset pairs
-  function BlockSparse(data::VecT,offsets) where {VecT<:AbstractVector{ElT}} where {ElT}
-    for jj in 1:length(offsets)-1
-      block_jj,_ = offsets[jj]
-      block_jj1,_ = offsets[jj+1]
-      block_jj ≥ block_jj1 && error("When creating BlockSparse storage, offsets of blocks must be ordered")
+  blockoffsets::BlockOffsets{N}  # Block number-offset pairs
+  function BlockSparse(data::VecT,
+                       blockoffsets::BlockOffsets{N}) where {VecT<:AbstractVector{ElT},N} where {ElT}
+    for jj in 1:length(blockoffsets)-1
+      block_jj,_ = blockoffsets[jj]
+      block_jj1,_ = blockoffsets[jj+1]
+      block_jj < block_jj1 && error("When creating BlockSparse storage, blocks must be ordered")
     end
-    new{ElT,VecT}(data,offsets)
+    new{ElT,VecT,N}(data,blockoffsets)
   end
 end
 
-function BlockSparse{ElR}(data::VecT,offsets) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
-  ElT == ElR ? BlockSparse(data,offsets) : BlockSparse(ElR.(data),offsets)
-end
-BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
+#function BlockSparse{ElR}(data::VecT,offsets) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
+#  ElT == ElR ? BlockSparse(data,offsets) : BlockSparse(ElR.(data),offsets)
+#end
+#BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
 
-offsets(D::BlockSparse) = D.offsets
+blockoffsets(D::BlockSparse) = D.blockoffsets
 
-Base.similar(D::BlockSparse{T}) where {T} = BlockSparse{T}(similar(data(D)),offsets(D))
+Base.similar(D::BlockSparse{T}) where {T} = BlockSparse{T}(similar(data(D)),blockoffsets(D))
 
 # TODO: should this accept offsets and length?
 #Base.similar(D::BlockSparse{T},dims) where {T} = BlockSparse{T}(similar(data(D),dim(dims)))
@@ -38,12 +44,12 @@ Base.similar(D::BlockSparse{T}) where {T} = BlockSparse{T}(similar(data(D)),offs
 #Base.similar(::Type{BlockSparse{T}},dims) where {T} = BlockSparse{T}(similar(Vector{T},dim(dims)))
 
 Base.similar(D::BlockSparse,::Type{T}) where {T} = BlockSparse{T}(similar(data(D),T),
-                                                                  offsets(D))
-Base.copy(D::BlockSparse{T}) where {T} = BlockSparse{T}(copy(data(D)),offsets(D))
+                                                                  blockoffsets(D))
+Base.copy(D::BlockSparse{T}) where {T} = BlockSparse{T}(copy(data(D)),blockoffsets(D))
 
 # TODO: check the offsets are the same?
 function Base.copyto!(D1::BlockSparse,D2::BlockSparse)
-  offsets(D1) ≠ offsets(D1) && error("Cannot copy between BlockSparse storages with different offsets")
+  blockoffsets(D1) ≠ blockoffsets(D1) && error("Cannot copy between BlockSparse storages with different offsets")
   copyto!(data(D1),data(D2))
   return D1
 end
@@ -53,7 +59,7 @@ end
 # convert to complex
 # TODO: this could be a generic TensorStorage function
 Base.complex(D::BlockSparse{T}) where {T} = BlockSparse{complex(T)}(complex(data(D)),
-                                                                    offsets(D))
+                                                                    blockoffsets(D))
 
 Base.eltype(::BlockSparse{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
@@ -66,16 +72,16 @@ Base.promote_rule(::Type{BlockSparse{T1}},
 
 Base.convert(::Type{BlockSparse{R}},
              D::BlockSparse) where {R} = BlockSparse{R}(convert(Vector{R},data(D)),
-                                                        offsets(D))
+                                                        blockoffsets(D))
 
 function Base.:*(D::BlockSparse,x::Number)
-  return BlockSparse(x*data(D),offsets(D))
+  return BlockSparse(x*data(D),blockoffsets(D))
 end
 Base.:*(x::Number,D::BlockSparse) = D*x
 
 function Base.:+(D1::BlockSparse,D2::BlockSparse)
-  offsets(D1) ≠ offsets(D2) && error("Cannot add BlockSparse storage with different sparsity structure")
-  return BlockSparse(data(D1)+data(D2),offsets(D1))
+  blockoffsets(D1) ≠ blockoffsets(D2) && error("Cannot add BlockSparse storage with different sparsity structure")
+  return BlockSparse(data(D1)+data(D2),blockoffsets(D1))
 end
 
 #
@@ -84,31 +90,18 @@ end
 
 const BlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
-offsets(T::BlockSparseTensor) = offsets(store(T))
+blockoffsets(T::BlockSparseTensor) = blockoffsets(store(T))
 nblocks(T::BlockSparseTensor) = nblocks(inds(T))
-nblocksnz(T::BlockSparseTensor) = length(offsets(T))
+nnzblocks(T::BlockSparseTensor) = length(blockoffsets(T))
+nnz(T::BlockSparseTensor) = length(store(T))
 blockdims(T::BlockSparseTensor,i) = blockdims(inds(T),i)
 blockdim(T::BlockSparseTensor,i) = blockdim(inds(T),i)
-whichblock(T::BlockSparseTensor,i) = whichblock(inds(T),i)
-
-# From a block location, get the LinearIndex version
-function linear_whichblock(T::BlockSparseTensor,whichblock)
-  return linear_whichblock(inds(T),whichblock)
-end
-
-# TODO: move to tensor.jl
-function linear_whichblock(inds::BlockDims,whichblock)
-  return LinearIndices(nblocks(inds))[CartesianIndex(whichblock)]
-end
 
 # Check if the specified block is non-zero
-function isblocknz(T::BlockSparseTensor,whichblock)
-  return isblocknz(T,linear_whichblock(T,whichblock))
-end
-
-function isblocknz(T::BlockSparseTensor,linear_whichblock::Int)
-  for (blocknum,_) in offsets(T)
-    blocknum == linear_whichblock && return true
+function isblocknz(T::BlockSparseTensor{ElT,N},block) where {ElT,N}
+  find_block = Block(block)
+  for (current_block,_) in blockoffsets(T)
+    current_block == find_block && return true
   end
   return false
 end
@@ -118,24 +111,23 @@ end
 # TODO: sort the offsets if they are not ordered (currently
 # if they are not ordered the BlockSparse storage constructor 
 # throws an error)
-function BlockSparseTensor(whichblocks::Vector{NTuple{N,Int}},
+function BlockSparseTensor(blocks::Vector{Block{N}},
                            inds::BlockDims{N}) where {N}
-  nblocks_inds = nblocks(inds)
-  linear_offset_total = 0
-  offsets = BlockOffsets()
-
-  # Convention is to have offsets sorted
-  # TODO: seperate this into seperate function (whichblocks,inds -> offsets)
-  linear_whichblocks = [linear_whichblock(inds,whichblock_i) for whichblock_i in whichblocks]
-  linear_whichblocks = sort(linear_whichblocks)
-
-  for linear_whichblock_i in linear_whichblocks
-    push!(offsets,(linear_whichblock_i,linear_offset_total))
-    current_block_length = blockdim(inds,linear_whichblock_i)
-    linear_offset_total += current_block_length
+  sort!(blocks;rev=true)
+  blockoffsets = BlockOffsets{N}(undef,length(blocks))
+  offset_total = 0
+  for (i,block) in enumerate(blocks)
+    blockoffsets[i] = block=>offset_total
+    current_block_dim = blockdim(inds,block)
+    offset_total += current_block_dim
   end
-  storage = BlockSparse{Float64}(Vector{Float64}(undef,linear_offset_total),offsets)
+  storage = BlockSparse(Vector{Float64}(undef,offset_total),blockoffsets)
   return Tensor(storage,inds)
+end
+
+function BlockSparseTensor(blocks::Vector{NTuple{N,Int}},
+                           inds::BlockDims{N}) where {N}
+  return BlockSparseTensor(Block.(blocks),inds)
 end
 
 # Basic functionality for AbstractArray interface
@@ -143,16 +135,12 @@ Base.IndexStyle(::Type{<:BlockSparseTensor}) = IndexCartesian()
 
 # Get the linear offset in the data storage for the specified block.
 # If the specified block is not non-zero structurally, return nothing.
-function blockoffset(T::BlockSparseTensor{ElT,N},
-                     whichblock) where {ElT,N}
-  return blockoffset(T,linear_whichblock(T,whichblock))
-end
-
-function blockoffset(T::BlockSparseTensor{ElT,N},
-                     linear_whichblock::Int) where {ElT,N}
-  for (blocknum_i,blockoffset_i) in offsets(T)
-    if blocknum_i == linear_whichblock
-      return blockoffset_i
+function offset(T::BlockSparseTensor{ElT,N},
+                block) where {ElT,N}
+  find_block = Block(block)
+  for (current_block,current_offset) in blockoffsets(T)
+    if current_block == find_block
+      return current_offset
     end
   end
   return nothing
@@ -166,7 +154,6 @@ function blockindex(T::BlockSparseTensor{ElT,N},
   current_block_loc = @MVector ones(Int,N)
   current_block_dims = blockdims(T,current_block_loc)
   block_index = MVector(i)
-
   for dim in 1:N
     while block_index[dim] > current_block_dims[dim]
       block_index[dim] -= current_block_dims[dim]
@@ -174,39 +161,40 @@ function blockindex(T::BlockSparseTensor{ElT,N},
       current_block_dims = blockdims(T,current_block_loc)
     end
   end
-  return Tuple(block_index),Tuple(current_block_loc)
+  return CartesianIndex(Tuple(block_index)),CartesianIndex(Tuple(current_block_loc))
 end
 
 # Get the starting index of the block
 function blockstart(T::BlockSparseTensor{ElT,N},
-                    whichblock) where {ElT,N}
-  index = @MVector ones(Int,N)
-  for dim in 1:N
-    inddim = ind(T,dim)
-    for blocknum in 1:whichblock[dim]-1
-      index[dim] += blocksize(inddim,blocknum)
+                    block) where {ElT,N}
+  start_index = @MVector ones(Int,N)
+  for j in 1:N
+    ind_j = ind(T,j)
+    for block_j in 1:block[j]-1
+      start_index[j] += blocksize(ind_j,block_j)
     end
   end
-  return Tuple(index)
+  return CartesianIndex(Tuple(start_index))
 end
 
+# Get the ending index of the block
 function blockend(T::BlockSparseTensor{ElT,N},
-                  whichblock) where {ElT,N}
-  index = @MVector zeros(Int,N)
-  for dim in 1:N
-    inddim = ind(T,dim)
-    for blocknum in 1:whichblock[dim]
-      index[dim] += blocksize(inddim,blocknum)
+                  block) where {ElT,N}
+  end_index = @MVector zeros(Int,N)
+  for j in 1:N
+    ind_j = ind(T,j)
+    for block_j in 1:block[j]
+      end_index[j] += blocksize(ind_j,block_j)
     end
   end
-  return Tuple(index)
+  return CartesianIndex(Tuple(end_index))
 end
 
+# Get the CartesianIndices for the range of indices
+# of the specified
 function blockindices(T::BlockSparseTensor{ElT,N},
-                      whichblock) where {ElT,N}
-  blockstartT = blockstart(T,whichblock)
-  blockendT = blockend(T,whichblock)
-  return CartesianIndex(blockstartT):CartesianIndex(blockendT)
+                      block) where {ElT,N}
+  return blockstart(T,block):blockend(T,block)
 end
 
 # TODO: implement using a `getoffset(inds::BlockInds,i::Int...)::Int` function
@@ -214,17 +202,12 @@ end
 Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,N},
                                                 i::Vararg{Int,N}) where {ElT,N}
   # TODO: Add a checkbounds
-
-  block_index,current_block_loc = blockindex(T,i...)
-
-  linear_block_loc = LinearIndices(nblocks(T))[CartesianIndex(current_block_loc)]
-
-  current_block_dims = blockdims(T,current_block_loc)
-  linear_block_index = LinearIndices(current_block_dims)[CartesianIndex(block_index)]
-
-  for (blocknum,blockoffset) in offsets(T)
-    if linear_block_loc == blocknum
-      return store(T)[linear_block_index+blockoffset]
+  block_index,block_loc = blockindex(T,i...)
+  block_dims = blockdims(T,block_loc)
+  linear_block_index = LinearIndices(block_dims)[CartesianIndex(block_index)]
+  for (block,offset) in blockoffsets(T)
+    if block_loc == block
+      return store(T)[linear_block_index+offset]
     end
   end
   return zero(ElT)
@@ -236,17 +219,12 @@ end
 Base.@propagate_inbounds function Base.setindex!(T::BlockSparseTensor{ElT,N},val,
                                                  i::Vararg{Int,N}) where {ElT,N}
   # TODO: Add a checkbounds
-
-  block_index,current_block_loc = blockindex(T,i...)
-
-  linear_block_loc = linear_whichblock(T,current_block_loc)
-
-  current_block_dims = blockdims(T,current_block_loc)
-  linear_block_index = LinearIndices(current_block_dims)[CartesianIndex(block_index)]
-
-  for (blocknum,blockoffset) in offsets(T)
-    if linear_block_loc == blocknum
-      return store(T)[linear_block_index+blockoffset] = val
+  block_index,block_loc = blockindex(T,i...)
+  block_dims = blockdims(T,block_loc)
+  linear_block_index = LinearIndices(block_dims)[CartesianIndex(block_index)]
+  for (block,offset) in blockoffsets(T)
+    if block_loc == block
+      return store(T)[linear_block_index+offset] = val
     end
   end
   error("Index lies in a block that is not structurally non-zero, cannot set element")
@@ -256,31 +234,24 @@ end
 # Given a specified block, return a Dense Tensor that is a view to the data
 # in that block
 function blockview(T::BlockSparseTensor{ElT,N},
-                   whichblock::NTuple{N,Int}) where {ElT,N}
-  !isblocknz(T,whichblock) && error("Block must be structurally non-zero to get a view")
-  blockoffsetT = blockoffset(T,whichblock)
-  blockdimsT = blockdims(T,whichblock)
+                   block) where {ElT,N}
+  !isblocknz(T,block) && error("Block must be structurally non-zero to get a view")
+  blockoffsetT = offset(T,block)
+  blockdimsT = blockdims(T,block)
   dataTslice = @view data(store(T))[blockoffsetT+1:blockoffsetT+prod(blockdimsT)]
   return Tensor(Dense(dataTslice),blockdimsT)
 end
-blockview(T::BlockSparseTensor,linear_whichblock::Int) = blockview(T,whichblock(T,linear_whichblock))
 
 dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
 
 # convert to Dense
 function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
   R = zeros(dense(TensorT),dense(inds(T)))
-  for (blocknum_i,blockoffset_i) in offsets(T)
-    whichblock_i = whichblock(T,blocknum_i)
-    # This is a Tensor view of the block in A
-    Tblock_i = blockview(T,whichblock_i)
-    # Get the CartesianIndices for the block of data
-    # in the resulting Dense tensor
-    blockindices_i = blockindices(T,whichblock_i)
+  for (block,offset) in blockoffsets(T)
     # Make sure this assignment is efficient
-    # (should be able to do move it as a slice,
+    # (should be able to move it as a slice,
     # but this may be calling generic AbstractArray code)
-    R[blockindices_i] = Tblock_i
+    R[blockindices(T,block)] = blockview(T,block)
   end
   return R
 end
@@ -294,22 +265,22 @@ function Base.:+(T1::BlockSparseTensor,T2::BlockSparseTensor)
   return Tensor(store(T1)+store(T2),inds(T1))
 end
 
+# TODO: sort the output
 function similar_permuted(T::BlockSparseTensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
-  whichblocksp = NTuple{N,Int}[]
-  for (nblock_i,offset_i) in offsets(T)
-    whichblock_i = whichblock(T,nblock_i)
-    whichblockp_i = permute(whichblock_i,perm)
-    push!(whichblocksp,whichblockp_i)
+  blocksR = Vector{CartesianIndex{N}}(undef,nnzblocks(T))
+  for (i,(block,offset)) in enumerate(blockoffsets(T))
+    @show block
+    @show permute(block,perm)
+    blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds(T),perm)
-  return BlockSparseTensor(whichblocksp,indsR)
+  return BlockSparseTensor(blocksR,indsR)
 end
 
 function Base.permutedims(T::BlockSparseTensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
   R = similar_permuted(T,perm)
-  @show R
   R = permutedims!!(R,T,perm)
   return R
 end
@@ -324,10 +295,10 @@ end
 function Base.permutedims!(R::BlockSparseTensor{<:Number,N},
                            T::BlockSparseTensor{<:Number,N},
                            perm::NTuple{N,Int}) where {N}
-  for ((linear_whichblockT,_),(linear_whichblockR,_)) in zip(offsets(T),offsets(R))
+  for (blockT,_) in blockoffsets(T)
     # Loop over non-zero blocks of T/R
-    Tblock = blockview(T,linear_whichblockT)
-    Rblock = blockview(R,linear_whichblockR)
+    Tblock = blockview(T,blockT)
+    Rblock = blockview(R,permute(blockT,perm))
     permutedims!(Rblock,Tblock,perm)
   end
   return R
@@ -343,7 +314,6 @@ function contraction_output(T1::TensorT1,
                                                  TensorT2<:BlockSparseTensor,
                                                  IndsR}
   TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
-  @show TensorR
   #error("In contraction_output(::BlockSparseTensor,BlockSparseTensor,::IndsR), need to determine output blocks")
   return similar(TensorR,indsR,offsetsR)
 end
@@ -359,7 +329,7 @@ function Base.summary(io::IO,
   for (dim,ind) in enumerate(inds(T))
     println(io,"Dim $dim: ",ind)
   end
-  println("Number of nonzero blocks: ",nblocksnz(T))
+  println("Number of nonzero blocks: ",nnzblocks(T))
 end
 
 function Base.show(io::IO,
@@ -367,16 +337,20 @@ function Base.show(io::IO,
                    T::BlockSparseTensor)
   summary(io,T)
   println(io)
-  for (blocknum,blockoffset) in offsets(T)
-    blockdimsT = blockdims(T,blocknum)
+  for (block,_) in blockoffsets(T)
+    blockdimsT = blockdims(T,block)
     # Print the location of the current block
-    println(io,"Block: ",whichblock(T,blocknum))
+    println(io,"Block: ",block)
     # Print the dimension of the current block
     println(io," ",Base.dims2string(blockdimsT))
-    blockstart = blockoffset+1
-    blockend = blockoffset+blockdim(T,blocknum)
-    dataTslice = @view data(store(T))[blockstart:blockend]
-    Tblock = reshape(dataTslice,blockdimsT)
+
+    # TODO: rewrite in terms of blockview(T,block)
+    #blockstart = blockoffset+1
+    #blockend = blockoffset+blockdim(T,block)
+    #dataTslice = @view data(store(T))[blockstart:blockend]
+    #Tblock = reshape(dataTslice,blockdimsT)
+
+    Tblock = array(blockview(T,block))
     Base.print_array(io,Tblock)
     println(io)
     println(io)

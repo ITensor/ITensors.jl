@@ -321,7 +321,7 @@ function contract!!(R::Tensor{<:Number,NR},
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
     R = outer!!(R,T1,T2)
-    labelsRp = unioninds(labelsT1,labelsT2)
+    labelsRp = tuplecat(labelsT1,labelsT2)
     perm = getperm(labelsR,labelsRp)
     if !is_trivial_permutation(perm)
       R = permutedims!!(R,copy(R),perm)
@@ -435,12 +435,6 @@ function _contract!(CT::DenseTensor{El,NC},
   return C
 end
 
-# Combine a bunch of tuples
-# TODO: move this functionality to IndexSet, combine with unioninds?
-@inline tuplejoin(x) = x
-@inline tuplejoin(x, y) = (x..., y...)
-@inline tuplejoin(x, y, z...) = (x..., tuplejoin(y, z...)...)
-
 """
 permute_reshape(T::Tensor,pos)
 
@@ -455,7 +449,7 @@ First T is permuted as `permutedims(3,2,1)`, then reshaped such
 that the original indices 3 and 2 are combined.
 """
 function permute_reshape(T::DenseTensor{ElT,NT,IndsT},pos::Vararg{<:Any,N}) where {ElT,NT,IndsT,N}
-  perm = tuplejoin(pos...)
+  perm = tuplecat(pos...)
 
   length(perm)≠NT && error("Index positions must add up to order of Tensor ($N)")
   isperm(perm) || error("Index positions must be a permutation")

@@ -1,23 +1,7 @@
 export Tensor,
        inds,
-       store,
-       data
-
-# TODO: make into:
-# abstract type TensorStorage{El} end <: AbstractVector{El}
-abstract type TensorStorage{ElT} end
-
-data(S::TensorStorage) = S.data
-
-Base.@propagate_inbounds Base.getindex(S::TensorStorage,
-                                       i::Integer) = getindex(data(S),i)
-Base.@propagate_inbounds Base.setindex!(S::TensorStorage,v,
-                                        i::Integer) = setindex!(data(S),v,i)
-
-Random.randn!(S::TensorStorage) = randn!(data(S))
-Base.fill!(S::TensorStorage,v) = fill!(data(S),v)
-
-Base.convert(::Type{T},D::T) where {T<:TensorStorage} = D
+       ind,
+       store
 
 """
 Tensor{StoreT,IndsT}
@@ -37,116 +21,6 @@ end
 store(T::Tensor) = T.store
 inds(T::Tensor) = T.inds
 ind(T::Tensor,j::Integer) = inds(T)[j]
-
-#
-# Tools for working with Dims/Tuples
-# TODO: put this in a seperate file
-#
-
-# dim and dims are used in the Tensor interface, overload 
-# base Dims here
-dims(ds::Dims) = ds
-dense(ds::Dims) = dims(ds)
-dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
-dim(ds::Dims) = prod(ds)
-
-Base.length(ds::Type{<:Dims{N}}) where {N} = N
-
-# Used for BlockSparse Tensors
-const BlockDims{N} = NTuple{N,Vector{Int}}
-
-Base.length(ds::Type{<:BlockDims{N}}) where {N} = N
-
-# Make the "dense" version of the indices
-# For indices with QNs, this means removing the QNs
-dense(ds::BlockDims) = dims(ds)
-dense(::Type{<:BlockDims{N}}) where {N} = Dims{N}
-
-# This may be a bad idea to overload?
-# Type piracy?
-Base.strides(ds::Dims) = Base.size_to_strides(1, dims(ds)...)
-Base.copy(ds::Dims) = ds
-
-Base.copy(ds::BlockDims) = ds
-
-function dims(ds::BlockDims{N}) where {N}
-  return ntuple(i->sum(ds[i]),Val(N))
-end
-function dim(ds::BlockDims{N}) where {N}
-  return prod(dims(ds))
-end
-
-# A tuple of the number of blocks in each
-# dimension
-function nblocks(inds::BlockDims{N}) where {N}
-  return ntuple(dim->length(inds[dim]),Val(N))
-end
-
-function nblocks(ind)
-  return length(ind)
-end
-
-function blocksize(ind,i::Int) where {N}
-  return ind[i]
-end
-
-# Version taking CartestianIndex
-function blockdims(inds::BlockDims{N},
-                   loc) where {N}
-  return ntuple(dim->inds[dim][loc[dim]],Val(N))
-end
-
-function whichblock(inds::BlockDims{N},
-                    loc::Int) where {N}
-  cartesian_loc = CartesianIndices(nblocks(inds))[loc]
-  return Tuple(cartesian_loc)
-end
-
-# Version taking LinearIndex
-function blockdims(inds::BlockDims{N},
-                   loc::Int) where {N}
-  # TODO: do this without conversion to CartesianIndex?
-  # That may involve division and be slow?
-  cartesian_loc = CartesianIndices(nblocks(inds))[loc]
-  return ntuple(dim->inds[dim][cartesian_loc[dim]],Val(N))
-end
-
-function blockdim(inds::BlockDims{N},
-                  loc) where {N}
-  return prod(blockdims(inds,loc))
-end
-
-## TODO: should this be StaticArrays.similar_type?
-#Base.promote_rule(::Type{<:Dims},
-#                  ::Type{Val{N}}) where {N} = Dims{N}
-
-ValLength(::Type{Dims{N}}) where {N} = Val{N}
-ValLength(::Dims{N}) where {N} = Val{N}()
-
-# This is to help with some generic programming in the Tensor
-# code (it helps to construct a Tuple(::NTuple{N,Int}) where the 
-# only known thing for dispatch is a concrete type such
-# as Dims{4})
-StaticArrays.similar_type(::Type{<:Dims},
-                          ::Type{Val{N}}) where {N} = Dims{N}
-
-StaticArrays.similar_type(::Type{<:BlockDims},
-                          ::Type{Val{N}}) where {N} = BlockDims{N}
-
-unioninds(is1::Dims{N1},
-          is2::Dims{N2}) where {N1,N2} = Dims{N1+N2}((is1...,is2...))
-
-function deleteat(t::NTuple{N},pos::Int) where {N}
-  return ntuple(i -> i < pos ? t[i] : t[i+1],Val(N-1))
-end
-
-function insertat(t::NTuple{N},
-                  val::NTuple{M},
-                  pos::Int) where {N,M}
-  return ntuple(i -> i < pos ? t[i] :
-                ( i > pos+M-1 ? t[i-1] : 
-                 val[i-pos+1] ), Val(N+M-1))
-end
 
 #
 # Generic Tensor functions
