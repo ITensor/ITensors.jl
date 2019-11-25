@@ -13,16 +13,16 @@ export insertat,
 #  return tuple(is1...,is2...)
 #end
 
-function _deleteat(i,pos)
+function _deleteat(t,pos,i)
   i < pos && return t[i]
   return t[i+1]
 end
 
 function deleteat(t::NTuple{N},pos::Int) where {N}
-  return ntuple(i -> _deleteat(i,pos),Val(N-1))
+  return ntuple(i -> _deleteat(t,pos,i),Val(N-1))
 end
 
-function _insertat(i,pos,n_insert)
+function _insertat(t,pos,n_insert,val,i)
   if i < pos
     return t[i]
   elseif i > pos+n_insert-1
@@ -34,6 +34,6 @@ end
 function insertat(t::NTuple{N},
                   val::NTuple{M},
                   pos::Int) where {N,M}
-  return ntuple(i -> _insertat(i,pos,M),Val(N+M-1))
+  return ntuple(i -> _insertat(t,pos,M,val,i),Val(N+M-1))
 end
 
