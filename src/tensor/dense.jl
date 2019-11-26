@@ -559,19 +559,26 @@ end
 
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
                     name::AbstractString,
-                    D::Dense)
+                    D::Dense{T}) where {T}
   g = g_create(parent,name)
-  attrs(g)["type"] = "Dense"
-  write(g,"data",D.data)
+  attrs(g)["type"] = string(typeof(D))
+  attrs(g)["version"] = 1
+  if T != Nothing
+    write(g,"data",D.data)
+  end
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
                    name::AbstractString,
-                   ::Type{Dense})
+                   ::Type{Dense{T}}) where {T}
   g = g_open(parent,name)
-  if read(attrs(g)["type"]) != "Dense"
-    error("HDF5 group or file does not contain Dense data")
+  typestr = string(Dense{T})
+  if read(attrs(g)["type"]) != string(Dense{T})
+    error("HDF5 group or file does not contain $typestr data")
+  end
+  if T == Nothing
+    return Dense{Nothing}()
   end
   data = read(g,"data")
-  return Dense{eltype(data)}(data)
+  return Dense{T}(data)
 end
