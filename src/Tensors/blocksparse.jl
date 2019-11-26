@@ -4,13 +4,15 @@ export BlockSparse,
        BlockOffset,
        BlockOffsets,
        blockoffsets,
-       blockview
+       blockview,
+       nnzblocks,
+       nnz
 
 #
 # BlockSparse storage
 #
 
-const Block{N} = CartesianIndex{N}
+const Block{N} = NTuple{N,Int}
 const BlockOffset{N} = Pair{Block{N},Int}
 const BlockOffsets{N} = Vector{BlockOffset{N}}
 
@@ -22,7 +24,9 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
     for jj in 1:length(blockoffsets)-1
       block_jj,_ = blockoffsets[jj]
       block_jj1,_ = blockoffsets[jj+1]
-      block_jj < block_jj1 && error("When creating BlockSparse storage, blocks must be ordered")
+      if CartesianIndex(block_jj) < CartesianIndex(block_jj1)
+        error("When creating BlockSparse storage, blocks must be ordered")
+      end
     end
     new{ElT,VecT,N}(data,blockoffsets)
   end
@@ -34,6 +38,8 @@ end
 #BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
 
 blockoffsets(D::BlockSparse) = D.blockoffsets
+nnzblocks(D::BlockSparse) = length(blockoffsets(D))
+nnz(D::BlockSparse) = length(data(D))
 
 Base.similar(D::BlockSparse{T}) where {T} = BlockSparse{T}(similar(data(D)),blockoffsets(D))
 
@@ -91,9 +97,10 @@ end
 const BlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
 blockoffsets(T::BlockSparseTensor) = blockoffsets(store(T))
+nnzblocks(T::BlockSparseTensor) = nnzblocks(store(T))
+nnz(T::BlockSparseTensor) = nnz(store(T))
+
 nblocks(T::BlockSparseTensor) = nblocks(inds(T))
-nnzblocks(T::BlockSparseTensor) = length(blockoffsets(T))
-nnz(T::BlockSparseTensor) = length(store(T))
 blockdims(T::BlockSparseTensor,i) = blockdims(inds(T),i)
 blockdim(T::BlockSparseTensor,i) = blockdim(inds(T),i)
 
@@ -113,7 +120,7 @@ end
 # throws an error)
 function BlockSparseTensor(blocks::Vector{Block{N}},
                            inds::BlockDims{N}) where {N}
-  sort!(blocks;rev=true)
+  sort!(blocks; by=CartesianIndex, rev=true)
   blockoffsets = BlockOffsets{N}(undef,length(blocks))
   offset_total = 0
   for (i,block) in enumerate(blocks)
@@ -123,11 +130,6 @@ function BlockSparseTensor(blocks::Vector{Block{N}},
   end
   storage = BlockSparse(Vector{Float64}(undef,offset_total),blockoffsets)
   return Tensor(storage,inds)
-end
-
-function BlockSparseTensor(blocks::Vector{NTuple{N,Int}},
-                           inds::BlockDims{N}) where {N}
-  return BlockSparseTensor(Block.(blocks),inds)
 end
 
 # Basic functionality for AbstractArray interface
@@ -161,7 +163,7 @@ function blockindex(T::BlockSparseTensor{ElT,N},
       current_block_dims = blockdims(T,current_block_loc)
     end
   end
-  return CartesianIndex(Tuple(block_index)),CartesianIndex(Tuple(current_block_loc))
+  return Tuple(block_index),Tuple(current_block_loc)
 end
 
 # Get the starting index of the block
@@ -171,7 +173,7 @@ function blockstart(T::BlockSparseTensor{ElT,N},
   for j in 1:N
     ind_j = ind(T,j)
     for block_j in 1:block[j]-1
-      start_index[j] += blocksize(ind_j,block_j)
+      start_index[j] += blockdim(ind_j,block_j)
     end
   end
   return CartesianIndex(Tuple(start_index))
@@ -184,7 +186,7 @@ function blockend(T::BlockSparseTensor{ElT,N},
   for j in 1:N
     ind_j = ind(T,j)
     for block_j in 1:block[j]
-      end_index[j] += blocksize(ind_j,block_j)
+      end_index[j] += blockdim(ind_j,block_j)
     end
   end
   return CartesianIndex(Tuple(end_index))
@@ -268,10 +270,8 @@ end
 # TODO: sort the output
 function similar_permuted(T::BlockSparseTensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
-  blocksR = Vector{CartesianIndex{N}}(undef,nnzblocks(T))
+  blocksR = Vector{Block{N}}(undef,nnzblocks(T))
   for (i,(block,offset)) in enumerate(blockoffsets(T))
-    @show block
-    @show permute(block,perm)
     blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds(T),perm)

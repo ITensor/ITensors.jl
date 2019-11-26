@@ -16,6 +16,7 @@ export IndexSet,
        uniqueinds,
        uniqueindex,
        dims,
+       ndims,
        mindim,
        maxdim,
        push,
@@ -86,6 +87,8 @@ Base.length(::Type{IndexSet{N}}) where {N} = N
 order(is::IndexSet) = length(is)
 Base.copy(is::IndexSet) = IndexSet(copy(is.inds))
 dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
+ndims(::IndexSet{N}) where {N} = N
+ndims(::Type{IndexSet{N}}) where {N} = N
 dim(is::IndexSet) = prod(dim.(is))
 dim(is::IndexSet,pos::Integer) = dim(is[pos])
 

@@ -1,4 +1,5 @@
 export Dense,
+       DenseTensor,
        outer,
        ⊗
 
@@ -10,6 +11,14 @@ struct Dense{ElT,VecT<:AbstractVector} <: TensorStorage{ElT}
   data::VecT
   Dense(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = new{ElT,VecT}(data)
 end
+
+Dense{ElT}(dim::Integer) where {ElT} = Dense(zeros(ElT,dim))
+
+Dense(dim::Integer) where {ElT} = Dense{Float64}(dim)
+
+Dense{ElT}(::UndefInitializer,dim::Integer) where {ElT} = Dense(Vector{ElT}(undef,dim))
+
+Dense(::UndefInitializer,dim::Integer) = Dense{Float64}(undef,dim)
 
 function Dense{ElR}(data::VecT) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
   ElT == ElR ? Dense(data) : Dense(ElR.(data))
@@ -32,7 +41,7 @@ Base.copyto!(D1::Dense,D2::Dense) = copyto!(data(D1),data(D2))
 Base.fill!(D::Dense,v) = fill!(data(D),v)
 
 # TODO: should this do something different for SubArray?
-Base.zeros(::Type{<:Dense{ElT}},dim::Int) where {ElT} = Dense(zeros(ElT,dim))
+Base.zeros(::Type{<:Dense{ElT}},dim::Int) where {ElT} = Dense{ElT}(dim)
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
@@ -82,9 +91,22 @@ Base.:*(x::Number,D::Dense) = D*x
 
 const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Dense}
 
+DenseTensor(inds::Dims{N}) where {N} = Tensor(Dense(dim(inds)),inds)
+
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
+
+# TODO: make a version accepting I... with some mixture of ranges
+# Note that CartesianIndices((1:2,3)) creates CartesianIndex(1,3):CartesianIndex(2,3)
+Base.@propagate_inbounds function Base.getindex(D::DenseTensor{ElT,N},
+                                                I::CartesianIndices{N}) where {ElT,N}
+  storeR = Dense(vec(@view array(D)[I]))
+  indsR = Tuple(I[end]-I[1]+CartesianIndex(ntuple(_->1,Val(N))))
+  return Tensor(storeR,indsR)
+end
+
 Base.@propagate_inbounds Base.getindex(T::DenseTensor,i::Int) = store(T)[i]
+
 Base.@propagate_inbounds Base.setindex!(T::DenseTensor,v,i::Int) = (store(T)[i] = v)
 
 Base.fill!(T::DenseTensor,v) = fill!(store(T),v)
@@ -270,9 +292,11 @@ end
 const ⊗ = outer
 
 # TODO: move to tensor.jl?
-function contraction_output_type(TensorT1::Type{<:Tensor},
-                                 TensorT2::Type{<:Tensor},
-                                 IndsR::Type)
+function contraction_output_type(::Type{TensorT1},
+                                 ::Type{TensorT2},
+                                 ::Type{IndsR}) where {TensorT1<:Tensor,
+                                                       TensorT2<:Tensor,
+                                                       IndsR}
   return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 
@@ -474,7 +498,7 @@ function permute_reshape(T::DenseTensor{ElT,NT,IndsT},pos::Vararg{<:Any,N}) wher
       newdims[i] = eltype(IndsT)(newdim_i)
     end
   end
-  newinds = similar_type(IndsT,Val(N))(Tuple(newdims))
+  newinds = similar_type(IndsT,Val{N})(Tuple(newdims))
   return reshape(T,newinds)
 end
 
@@ -489,11 +513,11 @@ function LinearAlgebra.svd(T::DenseTensor{<:Number,N,IndsT},
   u = ind(UM,2)
   v = ind(VM,2)
   
-  Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Linds = similar_type(IndsT,Val{NL})(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
   Uinds = push(Linds,u)
 
   # TODO: do these positions need to be reversed?
-  Rinds = similar_type(IndsT,Val(NR))(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
+  Rinds = similar_type(IndsT,Val{NR})(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
   Vinds = push(Rinds,v)
 
   U = reshape(UM,Uinds)
@@ -511,7 +535,7 @@ function eigenHermitian(T::DenseTensor{<:Number,N,IndsT},
   M = permute_reshape(T,Lpos,Rpos)
   UM,D = eigenHermitian(M;kwargs...)
   u = ind(UM,2)
-  Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Linds = similar_type(IndsT,Val{NL})(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
   Uinds = push(Linds,u)
   U = reshape(UM,Uinds)
   return U,D
@@ -528,10 +552,10 @@ function LinearAlgebra.qr(T::DenseTensor{<:Number,N,IndsT},
   r = ind(RM,1)
   # TODO: simplify this by permuting inds(T) by (Lpos,Rpos)
   # then grab Linds,Rinds
-  Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Linds = similar_type(IndsT,Val{NL})(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
   Qinds = push(Linds,r)
   Q = reshape(QM,Qinds)
-  Rinds = similar_type(IndsT,Val(NR))(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
+  Rinds = similar_type(IndsT,Val{NR})(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
   Rinds = pushfirst(Rinds,r)
   R = reshape(RM,Rinds)
   return Q,R
@@ -546,8 +570,8 @@ function polar(T::DenseTensor{<:Number,N,IndsT},
   UM,PM = polar(M)
 
   # TODO: turn these into functions
-  Linds = similar_type(IndsT,Val(NL))(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
-  Rinds = similar_type(IndsT,Val(NR))(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
+  Linds = similar_type(IndsT,Val{NL})(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Rinds = similar_type(IndsT,Val{NR})(ntuple(i->inds(T)[Rpos[i]],Val(NR)))
 
   # Use sim to create "similar" indices, in case
   # the indices have identifiers. If not this should

@@ -10,11 +10,12 @@ export dense,
 # dim and dims are used in the Tensor interface, overload 
 # base Dims here
 dims(ds::Dims) = ds
-dense(ds::Dims) = dims(ds)
+dense(ds::Dims) = ds
 dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
 dim(ds::Dims) = prod(ds)
 
-Base.length(ds::Type{<:Dims{N}}) where {N} = N
+ndims(ds::Dims{N}) where {N} = N
+ndims(::Type{Dims{N}}) where {N} = N
 
 # This may be a bad idea to overload?
 # Type piracy?
@@ -25,8 +26,8 @@ Base.copy(ds::Dims) = ds
 #Base.promote_rule(::Type{<:Dims},
 #                  ::Type{Val{N}}) where {N} = Dims{N}
 
-ValLength(::Type{Dims{N}}) where {N} = Val{N}
-ValLength(::Dims{N}) where {N} = Val{N}()
+ValNDims(::Type{Dims{N}}) where {N} = Val{N}
+ValNDims(::Dims{N}) where {N} = Val(N)
 
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct a Tuple(::NTuple{N,Int}) where the 

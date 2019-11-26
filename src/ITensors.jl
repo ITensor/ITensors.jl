@@ -67,19 +67,7 @@ include("indexset.jl")
 #####################################
 # Tensor
 #
-include("tensor/tupletools.jl")
-include("tensor/dims.jl")
-include("tensor/blockdims.jl")
-include("tensor/tensorstorage.jl")
-include("tensor/tensor.jl")
-include("tensor/contraction_logic.jl")
-include("tensor/dense.jl")
-include("tensor/blocksparse.jl")
-include("tensor/linearalgebra.jl")
-include("tensor/diag.jl")
-include("tensor/combiner.jl")
-include("tensor/truncate.jl")
-include("tensor/svd.jl")
+include("Tensors/Tensors.jl")
 
 #####################################
 # ITensor
