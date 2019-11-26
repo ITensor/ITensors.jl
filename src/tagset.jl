@@ -308,20 +308,21 @@ end
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
                     name::AbstractString,
                     T::TagSet)
-  tag_g = g_create(parent,name)
-  attrs(tag_g)["type"] = "TagSet"
-  write(tag_g,"plev",plev(T))
-  write(tag_g,"tags",tagstring(T))
+  g = g_create(parent,name)
+  attrs(g)["type"] = "TagSet"
+  attrs(g)["version"] = 1
+  write(g,"plev",plev(T))
+  write(g,"tags",tagstring(T))
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
                    name::AbstractString,
                    ::Type{TagSet})
-  tag_g = g_open(parent,name)
-  if read(attrs(tag_g)["type"]) != "TagSet"
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "TagSet"
     error("HDF5 group '$name' does not contain TagSet data")
   end
-  plev = read(tag_g,"plev")
-  tstring = read(tag_g,"tags")
+  plev = read(g,"plev")
+  tstring = read(g,"tags")
   return TagSet((tstring,plev))
 end

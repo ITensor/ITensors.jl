@@ -695,23 +695,24 @@ end
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
                     name::AbstractString,
                     is::IndexSet)
-  iset_g = g_create(parent,name)
-  attrs(iset_g)["type"] = "IndexSet"
+  g = g_create(parent,name)
+  attrs(g)["type"] = "IndexSet"
+  attrs(g)["version"] = 1
   N = length(is)
-  write(iset_g,"length",N)
+  write(g,"length",N)
   for n=1:N
-    write(iset_g,"index_$n",is[n])
+    write(g,"index_$n",is[n])
   end
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
                    name::AbstractString,
                    ::Type{IndexSet})
-  iset_g = g_open(parent,name)
-  if read(attrs(iset_g)["type"]) != "IndexSet"
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "IndexSet"
     error("HDF5 group or file does not contain IndexSet data")
   end
-  N = read(iset_g,"length")
-  it = ntuple(n->read(iset_g,"index_$n",Index),N)
+  N = read(g,"length")
+  it = ntuple(n->read(g,"index_$n",Index),N)
   return IndexSet(it)
 end

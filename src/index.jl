@@ -300,24 +300,25 @@ end
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
                     name::AbstractString,
                     I::Index)
-  index_g = g_create(parent,name)
-  attrs(index_g)["type"] = "Index"
-  write(index_g,"id",I.id)
-  write(index_g,"dim",I.dim)
-  write(index_g,"dir",Int(I.dir))
-  write(index_g,"tags",I.tags)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "Index"
+  attrs(g)["version"] = 1
+  write(g,"id",I.id)
+  write(g,"dim",I.dim)
+  write(g,"dir",Int(I.dir))
+  write(g,"tags",I.tags)
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
                    name::AbstractString,
                    ::Type{Index})
-  index_g = g_open(parent,name)
-  if read(attrs(index_g)["type"]) != "Index"
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "Index"
     error("HDF5 group or file does not contain Index data")
   end
-  id = read(index_g,"id")
-  dim = read(index_g,"dim")
-  dir = Arrow(read(index_g,"dir"))
-  tags = read(index_g,"tags",TagSet)
+  id = read(g,"id")
+  dim = read(g,"dim")
+  dir = Arrow(read(g,"dir"))
+  tags = read(g,"tags",TagSet)
   return Index(id,dim,dir,tags)
 end
