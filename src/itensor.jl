@@ -699,26 +699,39 @@ end
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
                     name::AbstractString,
                     T::ITensor)
-  it_g = g_create(parent,name)
-  attrs(it_g)["type"] = "ITensor"
-  write(it_g,"inds",inds(T))
-  write(it_g,"store",store(T))
+  g = g_create(parent,name)
+  attrs(g)["type"] = "ITensor"
+  attrs(g)["version"] = 1
+  write(g,"inds",inds(T))
+  write(g,"store",store(T))
 end
+
+#function HDF5.read(parent::Union{HDF5File,HDF5Group},
+#                   name::AbstractString)
+#  g = g_open(parent,name)
+#
+#  try
+#    typestr = read(attrs(g)["type"])
+#    type_t = eval(Meta.parse(typestr))
+#    res = read(parent,"name",type_t)
+#    return res
+#  end
+#  return 
+#end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
                    name::AbstractString,
                    ::Type{ITensor})
-  it_g = g_open(parent,name)
-  if read(attrs(it_g)["type"]) != "ITensor"
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "ITensor"
     error("HDF5 group or file does not contain ITensor data")
   end
-  inds = read(it_g,"inds",IndexSet)
+  inds = read(g,"inds",IndexSet)
 
-  stype = read(attrs(g_open(it_g,"store"))["type"])
+  stypestr = read(attrs(g_open(g,"store"))["type"])
+  stype = eval(Meta.parse(stypestr))
 
-  if stype == "Dense"
-    store = read(it_g,"store",Dense)
-  end
+  store = read(g,"store",stype)
 
   return ITensor(store,inds)
 end
