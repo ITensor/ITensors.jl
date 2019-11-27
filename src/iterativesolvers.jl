@@ -69,7 +69,7 @@ function davidson(A,
   end
 
   maxiter = get(kwargs,:maxiter,2)
-  miniter = get(kwargs,:maxiter,1)
+  miniter = get(kwargs,:miniter,1)
   errgoal = get(kwargs,:errgoal,1E-14)
   Northo_pass = get(kwargs,:Northo_pass,1)
 
