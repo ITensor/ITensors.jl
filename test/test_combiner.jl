@@ -172,9 +172,9 @@ end
 @testset "SVD/Combiner should play nice" begin
     cmb, ci = combiner(i, j, k)
     Ac = A*cmb
-    U,S,V,u,v = svd(Ac, ci)
+    U,S,V,spec,u,v = svd(Ac, ci)
     Uc = cmb*U
-    Ua,Sa,Va,ua,va = svd(A, i, j, k)
+    Ua,Sa,Va,spec,ua,va = svd(A, i, j, k)
     replaceindex!(Ua, ua, u)
     @test A ≈ cmb*Ac 
     @test A ≈ Ac*cmb
@@ -185,9 +185,9 @@ end
     @test (cmb*Ua)*S*V ≈ Ac
     cmb, ci = combiner(i, j)
     Ac = A*cmb
-    U,S,V,u,v = svd(Ac, ci)
+    U,S,V,spec,u,v = svd(Ac, ci)
     Uc = U*cmb
-    Ua,Sa,Va,ua,va = svd(A, i, j)
+    Ua,Sa,Va,spec,ua,va = svd(A, i, j)
     replaceindex!(Ua, ua, u)
     @test Ua ≈ Uc
     @test Ua*cmb ≈ U

@@ -1,10 +1,12 @@
-
 #
 # Linear Algebra of order 2 Tensors
 #
 # Even though DenseTensor{_,2} is strided
 # and passable to BLAS/LAPACK, it cannot
 # be made <: StridedArray
+export eigs,
+       truncerror,
+       entropy
 
 function Base.:*(T1::Tensor{ElT1,2,StoreT1,IndsT1},
                  T2::Tensor{ElT2,2,StoreT2,IndsT2}) where
@@ -27,7 +29,28 @@ function expHermitian(T::DenseTensor{ElT,2}) where {ElT}
   return Tensor(Dense(vec(expTM)),inds(T))
 end
 
-# svd of an order-2 tensor
+"""
+  Spectrum
+contains the (truncated) density matrix eigenvalue spectrum which is computed during a
+decomposition done by `svd` or `eigenHermitian`. In addition stores the truncation error.
+"""
+struct Spectrum
+  eigs::Vector{Float64}
+  truncerr::Float64
+end
+
+eigs(s::Spectrum) = s.eigs
+truncerror(s::Spectrum) = s.truncerr
+
+function entropy(s::Spectrum)
+  S = 0.0
+  for p in eigs(s)
+    p > 1e-13 && (S -= p*log(p))
+  end
+  return S
+end
+
+#svd of an order-2 tensor
 function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
                            kwargs...) where {ElT,IndsT}
   maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
@@ -45,11 +68,12 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   conj!(MV)
 
   P = MS.^2
-  truncate!(P;mindim=mindim,
-              maxdim=maxdim,
-              cutoff=cutoff,
-              absoluteCutoff=absoluteCutoff,
-              doRelCutoff=doRelCutoff)
+  truncerr,_ = truncate!(P;mindim=mindim,
+                         maxdim=maxdim,
+                         cutoff=cutoff,
+                         absoluteCutoff=absoluteCutoff,
+                         doRelCutoff=doRelCutoff)
+  spec = Spectrum(P,truncerr)
   dS = length(P)
   if dS < length(MS)
     MU = MU[:,1:dS]
@@ -66,7 +90,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   U = Tensor(Dense(vec(MU)),Uinds)
   S = Tensor(Diag(MS),Sinds)
   V = Tensor(Dense(vec(MV)),Vinds)
-  return U,S,V
+  return U,S,V,spec
 end
 
 function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
@@ -86,17 +110,19 @@ function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
   UM = UM[:,p]
 
   if ispossemidef
-    truncate!(DM;maxdim=maxdim,
-                 cutoff=cutoff,
-                 absoluteCutoff=absoluteCutoff,
-                 doRelCutoff=doRelCutoff)
+    truncerr,_ = truncate!(DM;maxdim=maxdim,
+                           cutoff=cutoff,
+                           absoluteCutoff=absoluteCutoff,
+                           doRelCutoff=doRelCutoff)
     dD = length(DM)
     if dD < size(UM,2)
       UM = UM[:,1:dD]
     end
   else
     dD = length(DM)
+    truncerr = 0.0
   end
+  spec = Spectrum(DM,truncerr)
 
   # Make the new indices to go onto U and V
   u = eltype(IndsT)(dD)
@@ -105,7 +131,7 @@ function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
   Dinds = IndsT((u,v))
   U = Tensor(Dense(vec(UM)),Uinds)
   D = Tensor(Diag(DM),Dinds)
-  return U,D
+  return U,D,spec
 end
 
 function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}) where {ElT,

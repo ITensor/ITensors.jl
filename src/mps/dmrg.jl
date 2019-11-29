@@ -37,20 +37,21 @@ end
       dir = ha==1 ? "fromleft" : "fromright"
 
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
-      replacebond!(psi,b,phi;
-                   maxdim=maxdim(sweeps,sw),
-                   mindim=mindim(sweeps,sw),
-                   cutoff=cutoff(sweeps,sw),
-                   dir=dir,
-                   which_factorization=which_factorization)
+      spec = replacebond!(psi,b,phi;
+                          maxdim=maxdim(sweeps,sw),
+                          mindim=mindim(sweeps,sw),
+                          cutoff=cutoff(sweeps,sw),
+                          dir=dir,
+                          which_factorization=which_factorization)
 end
 
       measure!(obs;energy=energy,
-                   psi=psi,
-                   bond=b,
-                   sweep=sw,
-                   half_sweep=ha,
-                   quiet=quiet)
+               psi=psi,
+               bond=b,
+               sweep=sw,
+               half_sweep=ha,
+               spec = spec,
+               quiet=quiet)
     end
     end
     if !quiet
