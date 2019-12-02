@@ -53,6 +53,31 @@ using ITensors, Test
     @test abs(energy - energy_exact) < 0.05
   end
 
+  #this is really just a smoketest
+  @testset "Transverse field Ising with noise" begin
+    N = 8
+    sites = siteinds("S=1/2",N)
+    psi0 = randomMPS(sites)
+
+    ampo = AutoMPO()
+    for j = 1:N
+      j < N && add!(ampo,-1.0,"Sz",j,"Sz",j+1)
+      add!(ampo,-0.5,"Sx",j)
+    end
+    H = toMPO(ampo,sites)
+
+    sweeps = Sweeps(5)
+    maxdim!(sweeps,10,20)
+    cutoff!(sweeps,1E-12)
+    noise!(sweeps, 1e-3, 1e-6,1e-9,1e-12)  
+    energy,psi = dmrg(H,psi0,sweeps,quiet=true)
+
+    # Exact energy for transverse field Ising model
+    # with open boundary conditions at criticality
+    energy_exact = 0.25 - 0.25/sin(π/(2*(2*N+1)))
+    @test abs(energy - energy_exact) < 0.05
+  end
+    
   @testset "DMRGObserver" begin
     N = 10
     sites = siteinds("S=1/2",N)
