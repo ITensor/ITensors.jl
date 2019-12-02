@@ -85,7 +85,7 @@ function randomMPO(sites, m::Int=1)
   return M
 end
 
-length(m::MPO) = m.N_
+Base.length(m::MPO) = m.N_
 tensors(m::MPO) = m.A_
 leftlim(m::MPO) = m.llim_
 rightlim(m::MPO) = m.rlim_

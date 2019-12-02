@@ -7,47 +7,6 @@ using Random,
       TimerOutputs,
       Reexport
 
-# TODO: move imports to individual files
-import Base.adjoint,
-       Base.conj,
-       Base.convert,
-       Base.deepcopy,
-       Base.copyto!,
-       Base.eltype,
-       Base.fill!,
-       Base.getindex,
-       Base.in,
-       Base.isapprox,
-       Base.isless,
-       Base.iterate,
-       Base.length,
-       Base.push!,
-       Base.setindex!,
-       Base.eachindex,
-       Base.show,
-       Base.sum,
-       Base.summary,
-       Base.similar,
-       Base.size,
-       Base.ndims,
-       Base.!=,
-       Base.+,
-       Base.-,
-       Base.*,
-       Base./,
-       Base.^,
-       Base.setdiff,  # Since setdiff doesn't 
-                      # work with IndexSet, overload it
-       Base.lastindex,
-       LinearAlgebra.axpby!,
-       LinearAlgebra.axpy!,
-       LinearAlgebra.dot,
-       LinearAlgebra.norm,
-       LinearAlgebra.mul!,
-       LinearAlgebra.rmul!,
-       LinearAlgebra.normalize!
-
-
 #####################################
 # Global Variables
 #

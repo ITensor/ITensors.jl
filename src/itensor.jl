@@ -1,17 +1,13 @@
 export ITensor,
-       norm,
        combiner,
        combinedindex,
        delta,
        δ,
-       exp,
        exphermitian,
        replaceindex!,
        inds,
        isnull,
        scale!,
-       normalize!,
-       randn!,
        matmul,
        order,
        permute,
@@ -247,7 +243,7 @@ Base.complex(T::ITensor) = ITensor(complex(Tensor(store(T),inds(T))))
 # set operations to work with ITensors
 IndexSet(T::ITensor) = inds(T)
 
-eltype(T::ITensor) = eltype(store(T))
+Base.eltype(T::ITensor) = eltype(store(T))
 
 """
     order(A::ITensor) = ndims(A)
@@ -533,7 +529,7 @@ end
 
 Normalize an ITensor in-place, such that norm(T)==1.
 """
-normalize!(T::ITensor) = scale!(T,1/norm(T))
+LinearAlgebra.normalize!(T::ITensor) = scale!(T,1/norm(T))
 
 """
     copyto!(B::ITensor, A::ITensor)
@@ -596,13 +592,13 @@ end
 w .+= a .* v
 ```
 """
-axpy!(a::Number,v::ITensor,w::ITensor) = add!(w,a,v)
+LinearAlgebra.axpy!(a::Number,v::ITensor,w::ITensor) = add!(w,a,v)
 
 # This is not implemented correctly
 #"""
 #w .= a .* v + b .* w
 #"""
-#axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = add!(w,b,w,a,v)
+#LinearAlgebra.axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = add!(w,b,w,a,v)
 
 """
     scale!(A::ITensor,x::Number) = rmul!(A,x)
@@ -617,7 +613,7 @@ function Tensors.scale!(T::ITensor,x::Number)
   scale!(TT,x)
   return T
 end
-rmul!(T::ITensor,fac::Number) = scale!(T,fac)
+LinearAlgebra.rmul!(T::ITensor,fac::Number) = scale!(T,fac)
 
 """
     mul!(A::ITensor,x::Number,B::ITensor)
@@ -625,11 +621,11 @@ rmul!(T::ITensor,fac::Number) = scale!(T,fac)
 Scalar multiplication of ITensor B with x, and store the result in A.
 Like `A .= x .* B`.
 """
-mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
-mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
+LinearAlgebra.mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
+LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
 
-function summary(io::IO,
-                   T::ITensor)
+function Base.summary(io::IO,
+                      T::ITensor)
   print(io,"ITensor ord=$(order(T))")
   for i = 1:order(T)
     print(io," ",inds(T)[i])

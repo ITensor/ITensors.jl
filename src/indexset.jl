@@ -215,7 +215,7 @@ end
 
 IndexSet quality (order dependent)
 """
-function ==(Ais::IndexSet,Bis::IndexSet)
+function Base.:(==)(Ais::IndexSet,Bis::IndexSet)
   length(Ais) ≠ length(Bis) && return false
   for i ∈ 1:length(Ais)
     Ais[i] ≠ Bis[i] && return false
@@ -274,7 +274,7 @@ end
 # slower because of IndexSet allocation
 #uniqueindex(Ais,Bis) = Index(uniqueinds(Ais,Bis)) 
 
-setdiff(Ais::IndexSet,Bis) = uniqueinds(Ais,Bis)
+Base.setdiff(Ais::IndexSet,Bis) = uniqueinds(Ais,Bis)
 
 """
 commoninds(Ais,Bis)
@@ -403,7 +403,7 @@ end
 prime!(is::IndexSet,match=nothing) = prime!(is,1,match)
 prime(is::IndexSet, vargs...) = prime!(copy(is), vargs...)
 # For is' notation
-adjoint(is::IndexSet) = prime(is)
+Base.adjoint(is::IndexSet) = prime(is)
 
 function setprime!(is::IndexSet, plev::Integer, match = nothing)
   pos = indexpositions(is, match)

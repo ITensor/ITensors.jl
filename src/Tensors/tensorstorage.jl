@@ -1,5 +1,6 @@
 export data,
-       TensorStorage
+       TensorStorage,
+       randn!
 
 # TODO: define as
 # abstract type TensorStorage{El} end <: AbstractVector{El}
