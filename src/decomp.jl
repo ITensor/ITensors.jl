@@ -142,13 +142,21 @@ function _factorize_from_right_svd(A::ITensor,
   return FU,FV,spec,commonindex(FU,FV)
 end
 
+# Make the perturbation to the density matrix used in "noise term" DMRG
+# This assumes that A comes in with no primes
+# If it doesn't, I expect A² += drho later to fail
+function deltaRho(A :: ITensor, nt :: ITensor, is)
+  drho = (nt * A) |> noprime
+  drho *= prime(dag(drho), is)
+end
+
 function _factorize_from_left_eigen(A::ITensor,
                                     Linds...;
                                     kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
-  FU,D,spec = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true,
-                                           kwargs...)
+  if (get(kwargs, :noise, 0) > 0) A² += deltaRho(A, kwargs[:noise_tensor], Lis) end
+  FU,D,spec = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true, kwargs...)
   FV = dag(FU)*A
   return FU,FV,spec,commonindex(FU,FV)
 end
@@ -158,8 +166,8 @@ function _factorize_from_right_eigen(A::ITensor,
                                      kwargs...)
   Ris = uniqueinds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
-  FV,D,spec = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true,
-                             kwargs...)
+  if (get(kwargs, :noise, 0) > 0) A² += deltaRho(A, kwargs[:noise_tensor], Ris) end
+  FV,D,spec = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true, kwargs...)
   FU = A*dag(FV)
   return FU,FV,spec,commonindex(FU,FV)
 end
@@ -179,8 +187,12 @@ function factorize(A::ITensor,
   end
   which_factorization::String = get(kwargs,:which_factorization,"svd")
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  noise::Float64  = get(kwargs,:noise, 0.0)
   use_eigen = false
-  if which_factorization == "eigen" || (which_factorization == "automatic" && cutoff > 1e-12)
+  if (noise > 0 && !(which_factorization == "eigen" || which_factorization == "automatic"))
+    error("factorize: noise term nonzero so which_factorization must be 'automatic' or 'eigen', not $which_factorization")
+  end
+  if (which_factorization == "eigen" || (which_factorization == "automatic" && (cutoff > 1e-12 || noise > 0)))
     use_eigen = true
   end
   if dir == "fromleft"

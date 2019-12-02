@@ -186,8 +186,13 @@ function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  FU,FV,spec = factorize(phi,inds(M[b]); which_factorization="automatic",
-                           tags=tags(linkindex(M,b)), kwargs...)
+
+  # in dmrg() we call replaceBond!
+  # with a user-specified factorization
+  # that might not just be "automatic"
+  FU,FV,spec = factorize(phi,inds(M[b]);
+                         which_factorization=get(kwargs,:which_factorization,"automatic"),
+                         tags=tags(linkindex(M,b)), kwargs...)
   M[b]   = FU
   M[b+1] = FV
 

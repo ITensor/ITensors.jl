@@ -6,6 +6,7 @@ export Sweeps,
        maxdim!,
        mindim!,
        cutoff!,
+       noise!,
        sweepnext
 
 mutable struct Sweeps
@@ -13,9 +14,10 @@ mutable struct Sweeps
   maxdim::Vector{Int}
   cutoff::Vector{Float64}
   mindim::Vector{Int}
+  noise::Vector{Float64}
 
   function Sweeps(nsw::Int)
-    return new(nsw,fill(1,nsw),zeros(nsw),fill(1,nsw))
+    return new(nsw,fill(1,nsw),zeros(nsw),fill(1,nsw), zeros(nsw))
   end
 
 end
@@ -26,6 +28,7 @@ length(sw::Sweeps)::Int = sw.nsweep
 maxdim(sw::Sweeps,n::Int)::Int = sw.maxdim[n]
 mindim(sw::Sweeps,n::Int)::Int = sw.mindim[n]
 cutoff(sw::Sweeps,n::Int)::Float64 = sw.cutoff[n]
+noise(sw::Sweeps,n::Int)::Float64  = sw.noise[n]
 
 function maxdim!(sw::Sweeps,maxdims::Int...)::Nothing
   Nm = length(maxdims)
@@ -57,6 +60,20 @@ function cutoff!(sw::Sweeps,cutoffs::Float64...)::Nothing
   end
   for i=Nm+1:nsweep(sw)
     sw.cutoff[i] = cutoffs[Nm]
+  end
+end
+
+function noise!(sw::Sweeps,noises::Float64...)::Nothing
+  Nm = length(noises)
+  N = min(nsweep(sw),Nm)
+  for i=1:N
+    sw.noise[i] = noises[i]
+  end
+  for i=Nm+1:nsweep(sw)
+    # this is different behavior from cutoff!, min/maxdim!, etc.,
+    # but I (CDW) think it's the right thing:
+    # if the noise isn't specified, it should be 0
+    sw.noise[i] = 0 
   end
 end
 
