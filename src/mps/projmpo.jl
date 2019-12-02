@@ -141,10 +141,10 @@ function noisetensor(M   :: MPS,
   end
 
   if dir=="fromleft"
-    nt = LProj(PH)
+    nt = lproj(PH)
     ind = commonindex(nt, PH.H[PH.lpos + 1])
   elseif dir=="fromright"
-    nt = RProj(PH)
+    nt = rproj(PH)
     ind = commonindex(nt, PH.H[PH.rpos - 1])
   else throw(ArgumentError("In noisetensor(), no dir = $dir supported. Use fromleft or fromright."))
   end
