@@ -6,7 +6,7 @@ using ITensors,
   N = 10
 
   @testset "Spin Half sites" begin
-    s = spinHalfSites(N)
+    s = siteinds("S=1/2",N)
 
     @test state(s[1],"Up") == s[1](1)
     @test state(s[1],"Dn") == s[1](2)
@@ -29,7 +29,7 @@ using ITensors,
   end
 
   @testset "Spin One sites" begin
-    s = spinOneSites(N)
+    s = siteinds("S=1",N)
 
     @test state(s[1],"Up") == s[1](1)
     @test state(s[1],"0")  == s[1](2)
@@ -58,7 +58,7 @@ using ITensors,
   end
 
   @testset "Electron sites" begin
-    s = electronSites(N)
+    s = siteinds("Electron",N)
 
     @test state(s[1],"0")    == s[1](1)
     @test state(s[1],"Up")   == s[1](2)
@@ -109,7 +109,7 @@ using ITensors,
   end
 
   @testset "tJ sites" begin
-    s = tJSites(N)
+    s = siteinds("tJ",N)
 
     @test state(s[1],"0")    == s[1](1)
     @test state(s[1],"Up")   == s[1](2)

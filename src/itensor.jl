@@ -5,14 +5,14 @@ export ITensor,
        delta,
        δ,
        exp,
-       expHermitian,
+       exphermitian,
        replaceindex!,
        inds,
-       isNull,
+       isnull,
        scale!,
        normalize!,
        randn!,
-       multSiteOps,
+       matmul,
        order,
        permute,
        randomITensor,
@@ -121,7 +121,7 @@ The storage will have Diag type.
 """
 function diagITensor(::Type{T},
                      is::IndexSet{N}) where {T<:Number,N}
-  return ITensor{N}(Diag(zeros(T,minDim(is))),is)
+  return ITensor{N}(Diag(zeros(T,mindim(is))),is)
 end
 
 """
@@ -143,7 +143,7 @@ The storage will have Diag type.
 """
 function diagITensor(v::Vector{T},
                      is::IndexSet) where {T<:Number}
-  length(v) ≠ minDim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
+  length(v) ≠ mindim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
   return ITensor(Diag(float(v)),is)
 end
 
@@ -188,7 +188,7 @@ The storage will have Diag type.
 """
 function diagITensor(x::T,
                      is::IndexSet) where {T<:Number}
-  return ITensor(Diag(fill(float(x),minDim(is))),is)
+  return ITensor(Diag(fill(float(x),mindim(is))),is)
 end
 
 """
@@ -275,7 +275,7 @@ Base.size(A::ITensor) = dims(inds(A))
 Base.size(A::ITensor{N}, d::Int) where {N} = d in 1:N ? dim(inds(A)[d]) :
   d>0 ? 1 : error("arraysize: dimension out of range")
 
-isNull(T::ITensor) = (eltype(T) === Nothing)
+isnull(T::ITensor) = (eltype(T) === Nothing)
 
 Base.copy(T::ITensor{N}) where {N} = ITensor{N}(copy(tensor(T)))
 
@@ -512,7 +512,7 @@ function LinearAlgebra.exp(A::ITensor,
   return ITensor(expAT)
 end
 
-function expHermitian(A::ITensor,
+function exphermitian(A::ITensor,
                       Linds,
                       Rinds = prime(IndexSet(Linds))) 
   return exp(A,Linds,Rinds;ishermitian=true)
@@ -637,7 +637,7 @@ end
 function Base.show(io::IO,T::ITensor)
   summary(io,T)
   print(io,"\n")
-  if !isNull(T)
+  if !isnull(T)
     Base.show(io,MIME"text/plain"(),tensor(T))
   end
 end
@@ -653,46 +653,55 @@ function Base.similar(T::ITensor,
   return ITensor(similar(tensor(T),element_type))
 end
 
-function multSiteOps(A::ITensor,
-                     B::ITensor)
-  R = prime(A,"Site")
+function matmul(A::ITensor,
+                B::ITensor)
+  R = mapprime(mapprime(A,1,2),0,1)
   R *= B
   return mapprime(R,2,1)
 end
 
-function readCpp!(io::IO,T::ITensor;kwargs...)
-  T.inds = read(io,IndexSet;kwargs...)
-  read(io,12) # ignore scale factor
-  storage_type = read(io,Int32) # see StorageType enum above
-  if storage_type==0 # Null
-    T.store = Dense{Nothing}()
-  elseif storage_type==1  # DenseReal
-    T.store = read(io,Dense{Float64};kwargs...)
-  elseif storage_type==2  # DenseCplx
-    T.store = read(io,Dense{ComplexF64};kwargs...)
-  elseif storage_type==3  # Combiner
-    T.store = CombinerStorage(T.inds[1])
-  #elseif storage_type==4  # DiagReal
-  #elseif storage_type==5  # DiagCplx
-  #elseif storage_type==6  # QDenseReal
-  #elseif storage_type==7  # QDenseCplx
-  #elseif storage_type==8  # QCombiner
-  #elseif storage_type==9  # QDiagReal
-  #elseif storage_type==10 # QDiagCplx
-  #elseif storage_type==11 # ScalarReal
-  #elseif storage_type==12 # ScalarCplx
+function readcpp(io::IO,::Type{Dense{ValT}};kwargs...) where {ValT}
+  format = get(kwargs,:format,"v3")
+  if format=="v3"
+    size = read(io,UInt64)
+    data = Vector{ValT}(undef,size)
+    for n=1:size
+      data[n] = read(io,ValT)
+    end
+    return Dense(data)
   else
-    throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
+    throw(ArgumentError("read Dense: format=$format not supported"))
   end
 end
 
-function Base.read(io::IO,::Type{ITensor};kwargs...)
-  format = get(kwargs,:format,"hdf5")
-  T = ITensor()
-  if format=="cpp"
-    readCpp!(io,T;kwargs...)
+function readcpp(io::IO,::Type{ITensor};kwargs...)
+  format = get(kwargs,:format,"v3")
+  if format=="v3"
+    inds = readcpp(io,IndexSet;kwargs...)
+    read(io,12) # ignore scale factor by reading 12 bytes
+    storage_type = read(io,Int32)
+    if storage_type==0 # Null
+      store = Dense{Nothing}()
+    elseif storage_type==1  # DenseReal
+      store = readcpp(io,Dense{Float64};kwargs...)
+    elseif storage_type==2  # DenseCplx
+      store = readcpp(io,Dense{ComplexF64};kwargs...)
+    elseif storage_type==3  # Combiner
+      store = CombinerStorage(T.inds[1])
+    #elseif storage_type==4  # DiagReal
+    #elseif storage_type==5  # DiagCplx
+    #elseif storage_type==6  # QDenseReal
+    #elseif storage_type==7  # QDenseCplx
+    #elseif storage_type==8  # QCombiner
+    #elseif storage_type==9  # QDiagReal
+    #elseif storage_type==10 # QDiagCplx
+    #elseif storage_type==11 # ScalarReal
+    #elseif storage_type==12 # ScalarCplx
+    else
+      throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
+    end
+    return ITensor(store,inds)
   else
     throw(ArgumentError("read ITensor: format=$format not supported"))
   end
-  return T
 end

@@ -16,8 +16,8 @@ export IndexSet,
        uniqueinds,
        uniqueindex,
        dims,
-       minDim,
-       maxDim,
+       mindim,
+       maxdim,
        push,
        permute
 
@@ -120,13 +120,13 @@ StaticArrays.similar_type(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSe
 sim(is::IndexSet{N}) where {N} = IndexSet{N}(ntuple(i->sim(is[i]),Val(N)))
 
 """
-minDim(is::IndexSet)
+mindim(is::IndexSet)
 
 Get the minimum dimension of the indices in the index set.
 
 Returns 1 if the IndexSet is empty.
 """
-function minDim(is::IndexSet)
+function mindim(is::IndexSet)
   length(is) == 0 && (return 1)
   md = dim(is[1])
   for n ∈ 2:length(is)
@@ -136,13 +136,13 @@ function minDim(is::IndexSet)
 end
 
 """
-maxDim(is::IndexSet)
+maxdim(is::IndexSet)
 
 Get the maximum dimension of the indices in the index set.
 
 Returns 1 if the IndexSet is empty.
 """
-function maxDim(is::IndexSet)
+function maxdim(is::IndexSet)
   length(is) == 0 && (return 1)
   md = dim(is[1])
   for n ∈ 2:length(is)
@@ -671,17 +671,17 @@ function is_uncombiner(labelsT1,labelsT2)
          count_common(labelsT1,labelsT2) == 1
 end
 
-function Base.read(io::IO,::Type{IndexSet};kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readcpp(io::IO,::Type{IndexSet};kwargs...)
+  format = get(kwargs,:format,"v3")
   is = IndexSet()
-  if format=="cpp"
+  if format=="v3"
     size = read(io,Int)
-    resize!(is.inds,size)
-    for n=1:size
-      i = read(io,Index;kwargs...)
+    function readind(io,n)
+      i = readcpp(io,Index;kwargs...)
       stride = read(io,UInt64)
-      is.inds[n] = i
+      return i
     end
+    is = IndexSet(ntuple(n->readind(io,n),size))
   else
     throw(ArgumentError("read IndexSet: format=$format not supported"))
   end

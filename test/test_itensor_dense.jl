@@ -17,19 +17,19 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
   @testset "Default" begin
     A = ITensor()
     @test store(A) isa Dense{Nothing}
-    @test isNull(A)
+    @test isnull(A)
   end
 
   @testset "Undef with index" begin
     A = ITensor(undef, i)
     @test store(A) isa Dense{Float64}
-    @test !isNull(A)
+    @test !isnull(A)
   end
 
   @testset "Default with indices" begin
     A = ITensor(i,j)
     @test store(A) isa Dense{Float64}
-    @test !isNull(A)
+    @test !isnull(A)
   end
 
   @testset "Random" begin
@@ -39,13 +39,13 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test ndims(A) == order(A) == 2 == length(inds(A))
     @test size(A) == dims(A) == (2,2)
 
-    @test !isNull(A)
+    @test !isnull(A)
 
     B = randomITensor(IndexSet(i,j))
     @test store(B) isa Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
     @test size(B) == dims(B) == (2,2)
-    @test !isNull(B)
+    @test !isnull(B)
   end
 
   @testset "From matrix" begin
@@ -478,7 +478,7 @@ end
     A = randomITensor(SType,i,j,k,l)
 
     @testset "Test SVD of an ITensor" begin
-      U,S,V,u,v = svd(A,(j,l))
+      U,S,V,spec,u,v = svd(A,(j,l))
       @test store(S) isa Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
@@ -524,7 +524,7 @@ end
       is = IndexSet(i,j)
       T = randomITensor(is...,prime(is)...)
       T = T + swapprime(dag(T),0,1)
-      U,D,u = eigenHermitian(T)
+      U,D,spec,u = eigenHermitian(T)
       @test T ≈ U*D*prime(dag(U))
       UUᴴ =  U*prime(dag(U),u)
       @test UUᴴ ≈ δ(u,u') atol=1e-14

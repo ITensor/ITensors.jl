@@ -35,7 +35,7 @@ include("util.jl")
   @testset "inner <y|A|x>" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)
-    @test maxLinkDim(K) == 1
+    @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     phidag = dag(phi)
     prime!(phidag)
@@ -123,7 +123,7 @@ include("util.jl")
     @test_throws DimensionMismatch inner(J,phi,K,badpsi)
   end
 
-  @testset "errorMPOProd" begin
+  @testset "errorMPOprod" begin
     phi = makeRandomMPS(sites)
     K = makeRandomMPO(sites,chi=2)
 
@@ -131,22 +131,22 @@ include("util.jl")
 
     dist = sqrt(abs(1 + (inner(phi,phi) - 2*real(inner(phi,K,psi)))
                         /inner(K,psi,K,psi)))
-    @test dist ≈ errorMPOProd(phi,K,psi)
+    @test dist ≈ errorMPOprod(phi,K,psi)
 
     badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
-    # Apply K to phi and check that errorMPOProd is close to 0.
+    # Apply K to phi and check that errorMPOprod is close to 0.
     Kphi = applyMPO(K,phi;method="naive", cutoff=1E-8)
-    @test errorMPOProd(Kphi, K, phi) ≈ 0. atol=1e-4
+    @test errorMPOprod(Kphi, K, phi) ≈ 0. atol=1e-4
 
     @test_throws DimensionMismatch applyMPO(K,badpsi;method="naive", cutoff=1E-8)
-    @test_throws DimensionMismatch errorMPOProd(phi,K,badpsi)
+    @test_throws DimensionMismatch errorMPOprod(phi,K,badpsi)
   end
 
   @testset "applyMPO" begin
     phi = randomMPS(sites)
     K   = randomMPO(sites)
-    @test maxLinkDim(K) == 1
+    @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     psi_out = applyMPO(K, psi,maxdim=1)
     @test inner(phi,psi_out) ≈ inner(phi,K,psi)
@@ -185,7 +185,7 @@ include("util.jl")
     end
   end
   @testset "add" begin
-    shsites = spinHalfSites(N)
+    shsites = siteinds("S=1/2",N)
     K = randomMPO(shsites)
     L = randomMPO(shsites)
     M = sum(K, L)
@@ -196,22 +196,37 @@ include("util.jl")
     @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
   end
 
-  @testset "nmultMPO" begin
+  @testset "multMPO" begin
     psi = randomMPS(sites)
     K = randomMPO(sites)
     L = randomMPO(sites)
-    @test maxLinkDim(K) == 1
-    @test maxLinkDim(L) == 1
-    KL = nmultMPO(K, L, maxdim=1)
+    @test maxlinkdim(K) == 1
+    @test maxlinkdim(L) == 1
+    KL = multMPO(K, L, maxdim=1)
     psi_kl_out = applyMPO(K, applyMPO(L, psi, maxdim=1), maxdim=1)
     @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
 
+    # where both K and L have differently labelled sites
+    othersitesk = [Index(2,"Site,aaa") for n=1:N]
+    othersitesl = [Index(2,"Site,bbb") for n=1:N]
+    K = randomMPO(sites)
+    L = randomMPO(sites)
+    for ii in 1:N
+        replaceindex!(K[ii], sites[ii]', othersitesk[ii])
+        replaceindex!(L[ii], sites[ii]', othersitesl[ii])
+    end
+    KL = multMPO(K, L, maxdim=1)
+    psik = randomMPS(othersitesk)
+    psil = randomMPS(othersitesl)
+    psi_kl_out = applyMPO(K, applyMPO(L, psil, maxdim=1), maxdim=1)
+    @test inner(psik,KL,psil) ≈ inner(psik, psi_kl_out) atol=5e-3
+    
     badsites = [Index(2,"Site") for n=1:N+1]
     badL = randomMPO(badsites)
-    @test_throws DimensionMismatch nmultMPO(K,badL)
+    @test_throws DimensionMismatch multMPO(K,badL)
   end
 
-  sites = spinHalfSites(N)
+  sites = siteinds("S=1/2",N)
   O = MPO(sites,"Sz")
   @test length(O) == N # just make sure this works
 

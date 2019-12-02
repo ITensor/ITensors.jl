@@ -3,7 +3,7 @@ using ITensors, Test
 @testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
     N = 100
-    sites = spinOneSites(N)
+    sites = siteinds("S=1",N)
 
     ampo = AutoMPO()
     for j=1:N-1
@@ -32,7 +32,7 @@ using ITensors, Test
 
   @testset "Transverse field Ising" begin
     N = 32
-    sites = spinHalfSites(N)
+    sites = siteinds("S=1/2",N)
     psi0 = randomMPS(sites)
 
     ampo = AutoMPO()
@@ -55,7 +55,7 @@ using ITensors, Test
 
   @testset "DMRGObserver" begin
     N = 10
-    sites = spinHalfSites(N)
+    sites = siteinds("S=1/2",N)
     psi0 = randomMPS(sites)
 
     ampo = AutoMPO()
@@ -77,7 +77,9 @@ using ITensors, Test
     @test all(length.(measurements(observer)["Sz"]) .== N)
     @test all(length.(measurements(observer)["Sx"]) .== N)
     @test length(energies(observer))==3
+    @test length(truncerrors(observer))==3
     @test energies(observer)[end]==E
+    @test all(truncerrors(observer) .< 1E-12)
 
     orthogonalize!(psi,1)
     m = scalar(dag(psi[1])*noprime(op(sites, "Sz", 1)*psi[1]))

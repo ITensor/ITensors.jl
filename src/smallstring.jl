@@ -1,6 +1,6 @@
 export convert,
        setindex,
-       read
+       readcpp
 
 const IntChar = UInt8
 const IntSmallString = UInt64
@@ -39,7 +39,7 @@ function Base.setindex(s::SmallString,val,n::Integer)
   return SmallString(setindex(s.data,val,n))
 end
 
-isNull(s::SmallString) = @inbounds s[1] == IntChar(0)
+isnull(s::SmallString) = @inbounds s[1] == IntChar(0)
 
 #function StaticArrays.push(s::SmallString,val)
 #  newlen = 1
@@ -133,10 +133,10 @@ function Base.show(io::IO, s::SmallString)
   end
 end
 
-function Base.read(io::IO,::Type{SmallString}; kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readcpp(io::IO,::Type{SmallString}; kwargs...)
+  format = get(kwargs,:format,"v3")
   s = SmallString()
-  if format=="cpp"
+  if format=="v3"
     for n=1:7
       c = read(io,Char)
       s = setindex(s,c,n)

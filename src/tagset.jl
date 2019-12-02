@@ -59,7 +59,7 @@ end
 function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   plnew = plev
   t = Tag(tag)
-  if !isNull(t)
+  if !isnull(t)
     if isint(t)
       error("""Cannot use a bare integer as a tag.
             If you are looking to set the prime level, use the syntax ("x",1)
@@ -73,7 +73,7 @@ function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   return plnew, ntags
 end
 
-#isNull(v::MTagStorage) = v[0] == IntChar(0)
+#isnull(v::MTagStorage) = v[0] == IntChar(0)
 
 function reset!(v::MTagStorage, nchar::Int)
   for i = 1:nchar
@@ -285,14 +285,14 @@ function show(io::IO, T::TagSet)
   print(io,primestring(T))
 end
 
-function Base.read(io::IO,::Type{TagSet}; kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readcpp(io::IO,::Type{TagSet}; kwargs...)
+  format = get(kwargs,:format,"v3")
   ts = TagSet()
-  if format=="cpp"
+  if format=="v3"
     mstore = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
     ntags = 0
     for n=1:4
-      t = read(io,Tag;kwargs...)
+      t = readcpp(io,Tag;kwargs...)
       if t != Tag()
         ntags = _addtag_ordered!(mstore,ntags,IntSmallString(t))
       end

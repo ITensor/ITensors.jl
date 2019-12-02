@@ -1,11 +1,11 @@
-export tJSite,
-       tJSites
-
-function tJSites(N::Int; kwargs...)
-  return [Index(3,"Site,tJ,n=$n") for n=1:N]
-end
+export tJSite
 
 const tJSite = TagType"tJ"
+
+function siteinds(::tJSite,
+                  N::Int; kwargs...)
+  return [Index(3,"Site,tJ,n=$n") for n=1:N]
+end
 
 function state(::tJSite,
                st::AbstractString)

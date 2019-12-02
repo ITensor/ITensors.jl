@@ -23,6 +23,7 @@ using ITensors, Test
         "test_autompo.jl",
         "test_svd.jl",
         "test_qn.jl",
+        "test_readme.jl",
     )
       println("Running $filename")
       include(filename)
