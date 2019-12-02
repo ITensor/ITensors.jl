@@ -535,19 +535,3 @@ end
 end # End Dense storage test
 
 end # End Dense ITensor basic functionality
-
-
-@testset "Test real_if_close" begin
-  @testset "Test scalar real_if_close" begin
-    @test real_if_close(1 + 1e-11im) == 1.0
-    @test_throws ErrorException real_if_close(1 + 1e-11im, tol=1e-12)
-  end
-
-  @testset "Test tensor real_if_close" begin
-    i = Index(3)
-    R = randomITensor(i)
-    I = 1e-11*randomITensor(i)
-    @test real_if_close(R + im*I) == R
-    @test_throws ErrorException real_if_close(R + im*I, tol=1e-12)
-  end
-end
