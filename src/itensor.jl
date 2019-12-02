@@ -23,7 +23,8 @@ export ITensor,
        vector,
        scalar,
        store,
-       dense
+       dense,
+       real_if_close
 
 """
 An ITensor is a tensor whose interface is 

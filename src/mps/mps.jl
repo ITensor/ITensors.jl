@@ -258,7 +258,7 @@ function sample(m::MPS)
       projn = ITensor(s)
       projn[s[n]] = 1.0
       An = A*projn
-      pn = scalar(dag(An)*An)
+      pn = scalar(dag(An)*An) |> real
       pdisc += pn
       (r < pdisc) && break
       n += 1
