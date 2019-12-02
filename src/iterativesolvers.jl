@@ -76,8 +76,8 @@ function davidson(A,
   approx0 = 1E-12
 
   nrm = norm(phi)
-  if nrm < 1E-18 
-    phi = randomITensor(inds(phi))
+  if nrm < 1E-18
+    phi = randomITensor(eltype(phi), inds(phi))
     nrm = norm(phi)
   end
   scale!(phi,1.0/nrm)
