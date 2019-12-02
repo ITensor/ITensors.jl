@@ -2,7 +2,6 @@ export Index,
        IndexVal,
        adjoint,
        dag,
-       dim,
        prime,
        noprime,
        addtags,
@@ -85,7 +84,7 @@ id(i::Index) = i.id
     dim(i::Index)
 Obtain the dimension of an Index
 """
-dim(i::Index) = i.dim
+Tensors.dim(i::Index) = i.dim
 
 """
     dir(i::Index)
@@ -125,13 +124,13 @@ end
     copy(i::Index)
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
+Base.copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
 
 """
     sim(i::Index)
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
+Tensors.sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
 
 """
     dag(i::Index)

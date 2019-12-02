@@ -1,4 +1,5 @@
-export data
+export data,
+       TensorStorage
 
 # TODO: define as
 # abstract type TensorStorage{El} end <: AbstractVector{El}

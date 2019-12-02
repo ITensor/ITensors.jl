@@ -1,3 +1,8 @@
+@reexport module Tensors
+
+using StaticArrays,
+      Random,
+      LinearAlgebra
 
 #####################################
 # Tensor
@@ -16,3 +21,4 @@ include("combiner.jl")
 include("truncate.jl")
 include("svd.jl")
 
+end # module Tensors

@@ -1,6 +1,12 @@
 export Dense,
        DenseTensor,
+       array,
+       matrix,
+       vector,
+       contract,
        outer,
+       scale!,
+       permutedims!!,
        ⊗
 
 #
@@ -460,7 +466,7 @@ function _contract!(CT::DenseTensor{El,NC},
 end
 
 """
-permute_reshape(T::Tensor,pos)
+permute_reshape(T::Tensor,pos...)
 
 Takes a permutation that is split up into tuples. Index positions
 within the tuples are combined.
@@ -472,7 +478,8 @@ permute_reshape(T,(3,2),1)
 First T is permuted as `permutedims(3,2,1)`, then reshaped such
 that the original indices 3 and 2 are combined.
 """
-function permute_reshape(T::DenseTensor{ElT,NT,IndsT},pos::Vararg{<:Any,N}) where {ElT,NT,IndsT,N}
+function permute_reshape(T::DenseTensor{ElT,NT,IndsT},
+                         pos::Vararg{<:Any,N}) where {ElT,NT,IndsT,N}
   perm = tuplecat(pos...)
 
   length(perm)≠NT && error("Index positions must add up to order of Tensor ($N)")
@@ -578,8 +585,8 @@ function polar(T::DenseTensor{<:Number,N,IndsT},
   # act as an identity operator
   Rinds_sim = sim(Rinds)
 
-  Uinds = unioninds(Linds,Rinds_sim)
-  Pinds = unioninds(Rinds_sim,Rinds)
+  Uinds = tuplecat(Linds,Rinds_sim)
+  Pinds = tuplecat(Rinds_sim,Rinds)
 
   U = reshape(UM,Uinds)
   P = reshape(PM,Pinds)

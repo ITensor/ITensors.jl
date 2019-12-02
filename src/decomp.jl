@@ -1,12 +1,8 @@
-export polar,
-       eigenHermitian,
-       factorize,
-       svd
+export factorize
 
-import LinearAlgebra.qr
-function qr(A::ITensor,
-            Linds...;
-            kwargs...)
+function LinearAlgebra.qr(A::ITensor,
+                          Linds...;
+                          kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,qr")
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
@@ -21,9 +17,9 @@ function qr(A::ITensor,
 end
 
 # TODO: allow custom tags in internal indices?
-function polar(A::ITensor,
-               Linds...;
-               kwargs...)
+function Tensors.polar(A::ITensor,
+                       Linds...;
+                       kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
@@ -36,7 +32,6 @@ function polar(A::ITensor,
   return U,P,commoninds(U,P)
 end
 
-import LinearAlgebra.svd
 """
     svd(A::ITensor,
         leftind1::Index,
@@ -60,9 +55,9 @@ arguments provided. The following keyword arguments are recognized:
 * `vtags` [String] Default value: "Link,v".
 * `fastSVD` [Bool] Defaut value: false.
 """
-function svd(A::ITensor,
-             Linds...;
-             kwargs...)
+function LinearAlgebra.svd(A::ITensor,
+                           Linds...;
+                           kwargs...)
   utags::TagSet = get(kwargs,:utags,"Link,u")
   vtags::TagSet = get(kwargs,:vtags,"Link,v")
   Lis = commoninds(inds(A),IndexSet(Linds...))
@@ -142,15 +137,14 @@ function _factorize_from_right_eigen(A::ITensor,
   return FU,FV,commonindex(FU,FV)
 end
 
-import LinearAlgebra.factorize
 """
 factorize(A::ITensor, Linds...; dir = "center", which_factorization = "svd", cutoff = 0.0)
 
 Do a low rank factorization of A either using an SVD or an eigendecomposition of A'A or AA'.
 """
-function factorize(A::ITensor,
-                   Linds...;
-                   kwargs...)
+function LinearAlgebra.factorize(A::ITensor,
+                                 Linds...;
+                                 kwargs...)
   dir::String = get(kwargs,:dir,"center")
   if dir == "center"
     return _factorize_center(A,Linds...;kwargs...)
@@ -177,10 +171,10 @@ function factorize(A::ITensor,
   throw(ArgumentError("In factorize, no dir = $dir supported. Use center, fromleft or fromright."))
 end
 
-function eigenHermitian(A::ITensor,
-                        Linds=findinds(A,("",0)),
-                        Rinds=prime(IndexSet(Linds));
-                        kwargs...)
+function Tensors.eigenHermitian(A::ITensor,
+                                Linds=findinds(A,("",0)),
+                                Rinds=prime(IndexSet(Linds));
+                                kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
   lefttags::TagSet = get(kwargs,:lefttags,tags)
   righttags::TagSet = get(kwargs,:righttags,prime(tags))
@@ -198,11 +192,10 @@ function eigenHermitian(A::ITensor,
   return U,D,u,v
 end
 
-import LinearAlgebra.eigen
-function eigen(A::ITensor,
-               Linds=findinds(A,("",0)),
-               Rinds=prime(IndexSet(Linds));
-               kwargs...)
+function LinearAlgebra.eigen(A::ITensor,
+                             Linds=findinds(A,("",0)),
+                             Rinds=prime(IndexSet(Linds));
+                             kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
   Lis = commoninds(inds(A),IndexSet(Linds))
   Ris = uniqueinds(inds(A),Lis)

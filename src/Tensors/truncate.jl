@@ -1,3 +1,4 @@
+export truncate!
 
 function truncate!(P::Vector{Float64};
                    kwargs...)::Tuple{Float64,Float64}

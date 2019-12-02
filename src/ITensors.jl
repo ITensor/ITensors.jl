@@ -4,13 +4,13 @@ using Random,
       Printf,
       LinearAlgebra,
       StaticArrays,
-      TimerOutputs
+      TimerOutputs,
+      Reexport
 
 # TODO: move imports to individual files
 import Base.adjoint,
        Base.conj,
        Base.convert,
-       Base.copy,
        Base.deepcopy,
        Base.copyto!,
        Base.eltype,
@@ -55,19 +55,18 @@ const warnTensorOrder = 14
 const GLOBAL_TIMER = TimerOutput()
 
 #####################################
+# Tensor
+#
+include("Tensors/Tensors.jl")
+
+#####################################
 # Index and IndexSet
 #
-# TODO: load these after Tensor files
 include("smallstring.jl")
 include("readwrite.jl")
 include("tagset.jl")
 include("index.jl")
 include("indexset.jl")
-
-#####################################
-# Tensor
-#
-include("Tensors/Tensors.jl")
 
 #####################################
 # ITensor

@@ -18,15 +18,7 @@ Each entry lists the block sizes in each dimension.
 """
 const BlockDims{N} = NTuple{N,BlockDim}
 
-ndims(ds::Type{<:BlockDims{N}}) where {N} = N
-
-"""
-ValNDims(::BlockDims{N}) = Val(N)
-
-The static number of dimensions of the block indices.
-"""
-ValNDims(::BlockDims{N}) where {N} = Val(N)
-ValNDims(::Type{BlockDims{N}}) where {N} = Val{N}
+Base.ndims(ds::Type{<:BlockDims{N}}) where {N} = N
 
 StaticArrays.similar_type(::Type{<:BlockDims},
                           ::Type{Val{N}}) where {N} = BlockDims{N}

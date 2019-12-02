@@ -51,8 +51,11 @@ function MPS(sites)
   return MPS(N,v,0,N+1)
 end
 
-length(m::MPS) = m.N_
+Base.length(m::MPS) = m.N_
+
+# TODO: make this vec?
 tensors(m::MPS) = m.A_
+
 leftlim(m::MPS) = m.llim_
 rightlim(m::MPS) = m.rlim_
 
@@ -71,20 +74,20 @@ function orthoCenter(m::MPS)
   return leftlim(m)+1
 end
 
-getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
+Base.getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
 
-function setindex!(M::MPS,T::ITensor,n::Integer) 
+function Base.setindex!(M::MPS,T::ITensor,n::Integer) 
   (n <= leftlim(M)) && set_leftlim!(M,n-1)
   (n >= rightlim(M)) && set_rightlim!(M,n+1)
   setindex!(tensors(M),T,n)
 end
 
-copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
-similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
+Base.copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
+Base.similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
 
-eachindex(m::MPS) = 1:length(m)
+Base.eachindex(m::MPS) = 1:length(m)
 
-function show(io::IO, M::MPS)
+function Base.show(io::IO, M::MPS)
   print(io,"MPS")
   (length(M) > 0) && print(io,"\n")
   for (i, A) ∈ enumerate(tensors(M))

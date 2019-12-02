@@ -1,3 +1,5 @@
+export polar,
+       eigenHermitian
 
 #
 # Linear Algebra of order 2 Tensors

@@ -14,8 +14,8 @@ dense(ds::Dims) = ds
 dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
 dim(ds::Dims) = prod(ds)
 
-ndims(ds::Dims{N}) where {N} = N
-ndims(::Type{Dims{N}}) where {N} = N
+Base.ndims(ds::Dims{N}) where {N} = N
+Base.ndims(::Type{Dims{N}}) where {N} = N
 
 # This may be a bad idea to overload?
 # Type piracy?
@@ -25,9 +25,6 @@ Base.copy(ds::Dims) = ds
 ## TODO: should this be StaticArrays.similar_type?
 #Base.promote_rule(::Type{<:Dims},
 #                  ::Type{Val{N}}) where {N} = Dims{N}
-
-ValNDims(::Type{Dims{N}}) where {N} = Val{N}
-ValNDims(::Dims{N}) where {N} = Val(N)
 
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct a Tuple(::NTuple{N,Int}) where the 
