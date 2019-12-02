@@ -2,6 +2,7 @@ using ITensors, Test
 
 @testset "ITensors.jl" begin
     @testset "$filename" for filename in (
+        "Tensors/runtests.jl",
         "tagset.jl",
         "smallstring.jl",
         "index.jl",
