@@ -15,23 +15,34 @@ export Dense,
 
 struct Dense{ElT,VecT<:AbstractVector} <: TensorStorage{ElT}
   data::VecT
-  Dense(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = new{ElT,VecT}(data)
+  function Dense(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT}
+    return new{ElT,VecT}(data)
+  end
 end
 
 Dense{ElT}(dim::Integer) where {ElT} = Dense(zeros(ElT,dim))
 
-Dense(dim::Integer) where {ElT} = Dense{Float64}(dim)
-
 Dense{ElT}(::UndefInitializer,dim::Integer) where {ElT} = Dense(Vector{ElT}(undef,dim))
 
-Dense(::UndefInitializer,dim::Integer) = Dense{Float64}(undef,dim)
+Dense(::Type{ElT},
+      dim::Integer) where {ElT} = Dense{ElT}(dim)
+
+Dense(dim::Integer) = Dense(Float64,dim)
+
+Dense(::Type{ElT},
+      ::UndefInitializer,
+      dim::Integer) where {ElT} = Dense{ElT}(undef,dim)
+
+Dense(::UndefInitializer,dim::Integer) = Dense(Float64,undef,dim)
 
 function Dense{ElR}(data::VecT) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
   ElT == ElR ? Dense(data) : Dense(ElR.(data))
 end
-Dense{ElT}() where {ElT} = Dense(ElT[])
 
-# Convenient functions for Dense storage type
+Dense{ElT}() where {ElT} = Dense(ElT[])
+Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
+
+# Functions to make Dense storage act like a vector
 Base.@propagate_inbounds Base.getindex(D::Dense,i::Integer) = data(D)[i]
 Base.@propagate_inbounds Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
 
@@ -97,18 +108,70 @@ Base.:*(x::Number,D::Dense) = D*x
 
 const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Dense}
 
-DenseTensor(inds::Dims{N}) where {N} = Tensor(Dense(dim(inds)),inds)
+DenseTensor(::Type{ElT},
+            inds::Dims) where {ElT} = Tensor(Dense(ElT,dim(inds)),inds)
+
+DenseTensor(::Type{ElT},
+            inds::Int...) where {ElT} = DenseTensor(ElT,inds)
+
+DenseTensor(inds::Dims) = Tensor(Dense(dim(inds)),inds)
+
+DenseTensor(inds::Int...) = DenseTensor(inds)
+
+DenseTensor(::Type{ElT},
+            ::UndefInitializer,
+            inds::Dims) where {ElT} = Tensor(Dense(ElT,undef,dim(inds)),inds)
+
+DenseTensor(::Type{ElT},
+            ::UndefInitializer,
+            inds::Int...) where {ElT} = DenseTensor(ElT,undef,inds)
+
+DenseTensor(::UndefInitializer,
+            inds::Dims) = Tensor(Dense(undef,dim(inds)),inds)
+
+DenseTensor(::UndefInitializer,
+            inds::Int...) = DenseTensor(undef,inds)
+
+# For convenience, direct Tensor constructors default to Dense
+Tensor(::Type{ElT},inds::Dims) where {ElT} = DenseTensor(ElT,inds)
+Tensor(::Type{ElT},inds::Int...) where {ElT} = DenseTensor(ElT,inds...)
+Tensor(inds::Dims) = DenseTensor(inds)
+Tensor(inds::Int...) = DenseTensor(inds...)
+
+Tensor(::Type{ElT},
+       ::UndefInitializer,
+       inds::Dims) where {ElT} = DenseTensor(ElT,undef,inds)
+Tensor(::Type{ElT},
+       ::UndefInitializer,
+       inds::Int...) where {ElT} = DenseTensor(ElT,undef,inds...)
+Tensor(::UndefInitializer,
+       inds::Dims) = DenseTensor(undef,inds)
+Tensor(::UndefInitializer,
+       inds::Int...) = DenseTensor(undef,inds...)
 
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
 
-# TODO: make a version accepting I... with some mixture of ranges
-# Note that CartesianIndices((1:2,3)) creates CartesianIndex(1,3):CartesianIndex(2,3)
-Base.@propagate_inbounds function Base.getindex(D::DenseTensor{ElT,N},
-                                                I::CartesianIndices{N}) where {ElT,N}
+Base.@propagate_inbounds function _getindex(D::DenseTensor{ElT,N},
+                                            I::CartesianIndices{N}) where {ElT,N}
   storeR = Dense(vec(@view array(D)[I]))
   indsR = Tuple(I[end]-I[1]+CartesianIndex(ntuple(_->1,Val(N))))
   return Tensor(storeR,indsR)
+end
+
+Base.@propagate_inbounds function Base.getindex(T::DenseTensor{ElT,N},
+                                                I...) where {ElT,N}
+  return _getindex(T,CartesianIndices(I))
+end
+
+Base.@propagate_inbounds function Base.getindex(T::DenseTensor{ElT,N},
+                                                I::CartesianIndex{N}) where {ElT,N}
+  return T[LinearIndices(T)[CartesianIndex(I)]]
+end
+
+Base.@propagate_inbounds function Base.getindex(T::DenseTensor{ElT,N},
+                                                I::Vararg{Int,N}) where {ElT,N}
+  return T[CartesianIndex(I)]
 end
 
 Base.@propagate_inbounds Base.getindex(T::DenseTensor,i::Int) = store(T)[i]

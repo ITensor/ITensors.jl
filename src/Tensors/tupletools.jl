@@ -20,11 +20,14 @@ ValLength(::NTuple{N}) = Val(N)
 """
 ValLength(::NTuple{N}) where {N} = Val(N)
 
+ValLength(::CartesianIndex{N}) where {N} = Val(N)
+ValLength(::Type{CartesianIndex{N}}) where {N} = Val{N}
+
 # Permute some other type by perm
 # (for example, tuple, MVector, etc.)
 # as long as the constructor accepts a tuple
 function permute(s::T,perm) where {T}
-  return T(ntuple(i->s[perm[i]], ValLength(s)))
+  return T(ntuple(i->s[perm[i]], ValLength(T)()))
 end
 
 sim(s::NTuple) = s

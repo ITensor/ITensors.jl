@@ -18,4 +18,3 @@ Base.fill!(S::TensorStorage,v) = fill!(data(S),v)
 
 Base.convert(::Type{T},D::T) where {T<:TensorStorage} = D
 
-

@@ -3,10 +3,21 @@ using ITensors,
 
 @testset "DenseTensor basic functionality" begin
 
-indsA = (3,4)
+A = Tensor(3,4)
 
-A = DenseTensor(indsA)
+for I in eachindex(A)
+  @test A[I] == 0
+end
+
 randn!(A)
+
+for I in eachindex(A)
+  @test A[I] != 0
+end
+
+for I in CartesianIndices(A)
+  @test A[I] != 0
+end
 
 @test ndims(A) == 2
 @test dims(A) == (3,4)
@@ -16,20 +27,24 @@ A[1,1] = 11
 
 @test A[1,1] == 11
 
-Aview = A[CartesianIndex(2,2):CartesianIndex(3,3)]
+Aview = A[2:3,2:3]
 
 @test dims(Aview) == (2,2)
 @test A[2,2] == Aview[1,1]
 
-B = DenseTensor(indsA)
+B = Tensor(undef,3,4)
 randn!(B)
 
 C = A+B
 
-@test C[1,2] == A[1,2]+B[1,2]
+for I in CartesianIndices(C)
+  @test C[I] == A[I] + B[I]
+end
 
 Ap = permutedims(A,(2,1))
 
-@test A[3,4]==Ap[4,3]
+for I in CartesianIndices(A)
+  @test A[I] == Ap[permute(I,(2,1))]
+end
 
 end
