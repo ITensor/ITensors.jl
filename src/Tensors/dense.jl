@@ -672,3 +672,17 @@ function LinearAlgebra.exp(T::DenseTensor{ElT,N},
   end
 end
 
+function Base.summary(io::IO,
+                      T::DenseTensor{ElT,N}) where {ElT,N}
+  println(io,typeof(T))
+  println(io," ",Base.dims2string(dims(T)))
+end
+
+function Base.show(io::IO,
+                   mime::MIME"text/plain",
+                   T::DenseTensor)
+  summary(io,T)
+  Base.print_array(io,T)
+  println(io)
+end
+

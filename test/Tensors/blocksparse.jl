@@ -75,7 +75,59 @@ using ITensors,
 
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2,3],[4,5])
-    #T[1,1] = 2.0
+
+    for I in CartesianIndices(C)
+      @test T[I] == 0.0
+    end
+    @test nnz(T) == 0
+    @test nnzblocks(T) == 0
+    @test !isblocknz(T,(1,1))
+    @test !isblocknz(T,(2,1))
+    @test !isblocknz(T,(1,2))
+    @test !isblocknz(T,(2,2))
+
+    T[1,1] = 1.0
+
+    @test T[1,1] == 1.0
+    @test nnz(T) == 8
+    @test nnzblocks(T) == 1
+    @test isblocknz(T,(1,1))
+    @test !isblocknz(T,(2,1))
+    @test !isblocknz(T,(1,2))
+    @test !isblocknz(T,(2,2))
+
+    T[4,8] = 2.0
+
+    @test T[4,8] == 2.0
+    @test nnz(T) == 8+15
+    @test nnzblocks(T) == 2
+    @test isblocknz(T,(1,1))
+    @test !isblocknz(T,(2,1))
+    @test !isblocknz(T,(1,2))
+    @test isblocknz(T,(2,2))
+
+    T[1,6] = 3.0
+
+    @test T[1,6] == 3.0
+    @test nnz(T) == 8+15+10
+    @test nnzblocks(T) == 3
+    @test isblocknz(T,(1,1))
+    @test !isblocknz(T,(2,1))
+    @test isblocknz(T,(1,2))
+    @test isblocknz(T,(2,2))
+
+    T[4,2] = 4.0
+
+    @test T[4,2] == 4.0
+    @test nnz(T) == 8+15+10+12
+    @test nnzblocks(T) == 4
+    @test isblocknz(T,(1,1))
+    @test isblocknz(T,(2,1))
+    @test isblocknz(T,(1,2))
+    @test isblocknz(T,(2,2))
+
+    @show T
+    @show dense(T)
   end
  
 end

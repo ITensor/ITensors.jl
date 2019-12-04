@@ -19,8 +19,8 @@ const Block{N} = NTuple{N,Int}
 const BlockOffset{N} = Pair{Block{N},Int}
 const BlockOffsets{N} = Vector{BlockOffset{N}}
 
-block(bof::BlockOffset) = bof.first
-offset(bof::BlockOffset) = bof.second
+block(bof::BlockOffset) = first(bof)
+offset(bof::BlockOffset) = last(bof)
 block(block::Block) = block
 
 nnzblocks(bofs::BlockOffsets) = length(bofs)
@@ -168,6 +168,48 @@ blockdims(T::BlockSparseTensor{ElT,N},
 blockdim(T::BlockSparseTensor{ElT,N},
          block::Block{N}) where {ElT,N} = blockdim(inds(T),block)
 
+# Get the offset if the nth block in the block-offsets
+# list
+offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
+
+function offset(bofs::BlockOffsets{N},
+                block::Block{N}) where {N}
+  block_pos = findblock(bofs,block)
+  isnothing(block_pos) && return nothing
+  return offset(bofs,block_pos)
+end
+
+"""
+offset(T::BlockSparseTensor,
+       block::Block)
+
+Get the linear offset in the data storage for the specified block.
+If the specified block is not non-zero structurally, return nothing.
+"""
+function offset(T::BlockSparseTensor{ElT,N},
+                block::Block{N}) where {ElT,N}
+  return offset(blockoffsets(T),block)
+end
+
+# Get the offset if the nth block in the block-offsets
+# list
+offset(T::BlockSparseTensor,n::Int) = offset(blockoffsets(T),n)
+
+"""
+blockdim(T::BlockSparseTensor,pos::Int)
+
+Get the block dimension of the block at position pos.
+"""
+function blockdim(T::BlockSparseTensor,
+                  pos::Int)
+  if nnzblocks(T)==0
+    return 0
+  elseif pos==nnzblocks(T)
+    return nnz(T)-offset(T,pos)
+  end
+  return offset(T,pos+1)-offset(T,pos)
+end
+
 """
 findblock(::BlockOffsets,::Block)
 
@@ -175,18 +217,37 @@ Output the index of the specified block in the block-offsets
 list.
 If not found, return nothing.
 Searches assuming the blocks are sorted.
+If more than one block exists, throw an error.
 """
 function findblock(bofs::BlockOffsets{N},
                    block::Block{N}) where {N}
   r = searchsorted(bofs,block;lt=isblockless)
   length(r)>1 && error("In findblock, more than one block found")   
   length(r)==0 && return nothing
-  return r[]
+  return first(r)
 end
 
 findblock(T::BlockSparseTensor{ElT,N},
           block::Block{N}) where {ElT,N} = findblock(blockoffsets(T),block)
 
+"""
+new_block_pos(::BlockOffsets,::Block)
+
+Output the index where the specified block should go in
+the block-offsets list.
+Searches assuming the blocks are sorted.
+If the block already exists, throw an error.
+"""
+function new_block_pos(bofs::BlockOffsets{N},
+                   block::Block{N}) where {N}
+  r = searchsorted(bofs,block;lt=isblockless)
+  length(r)>1 && error("In new_block_pos, more than one block found")
+  length(r)==1 && error("In new_block_pos, block already found")
+  return first(r)
+end
+
+new_block_pos(T::BlockSparseTensor{ElT,N},
+              block::Block{N}) where {ElT,N} = new_block_pos(blockoffsets(T),block)
 """
 isblocknz(T::BlockSparseTensor,
           block::Block)
@@ -315,40 +376,6 @@ end
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:BlockSparseTensor}) = IndexCartesian()
 
-# Get the nth offset
-offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
-
-function offset(bofs::BlockOffsets{N},
-                block::Block{N}) where {N}
-  block_pos = findblock(bofs,block)
-  isnothing(block_pos) && return nothing
-  return offset(bofs,block_pos)
-end
-
-"""
-offset(T::BlockSparseTensor,
-       block::Block)
-
-Get the linear offset in the data storage for the specified block.
-If the specified block is not non-zero structurally, return nothing.
-"""
-function offset(T::BlockSparseTensor{ElT,N},
-                block::Block{N}) where {ElT,N}
-  return offset(blockoffsets(T),block)
-end
-
-offset(T::BlockSparseTensor,n::Int) = offset(blockoffsets(T),n)
-
-  #block_pos = findblock(T,block)
-  #isnothing(block_pos) && return nothing
-  #return offset(T,block_pos)
-  #for (current_block,current_offset) in blockoffsets(T)
-  #  if current_block == block
-  #    return current_offset
-  #  end
-  #end
-  #return nothing
-
 # Given a CartesianIndex in the range dims(T), get the block it is in
 # and the index within that block
 function blockindex(T::BlockSparseTensor{ElT,N},
@@ -364,7 +391,7 @@ function blockindex(T::BlockSparseTensor{ElT,N},
       current_block_dims = blockdims(T,Tuple(current_block_loc))
     end
   end
-  return Tuple(block_index),Tuple(current_block_loc)
+  return Block{N}(block_index),Tuple(current_block_loc)
 end
 
 # Get the starting index of the block
@@ -400,15 +427,35 @@ function blockindices(T::BlockSparseTensor{ElT,N},
   return blockstart(T,block):blockend(T,block)
 end
 
+"""
+indexoffset(T::BlockSparseTensor,i::Int...) -> offset,block,blockoffset
+
+Get the offset in the data of the specified
+CartesianIndex. If it falls in a block that doesn't
+exist, return nothing for the offset.
+Also returns the block the index is found in and the offset
+within the block.
+"""
+function indexoffset(T::BlockSparseTensor{ElT,N},
+                     i::Vararg{Int,N}) where {ElT,N}
+  index_within_block,block = blockindex(T,i...)
+  block_dims = blockdims(T,block)
+  offset_within_block = LinearIndices(block_dims)[CartesianIndex(index_within_block)]
+  offset_of_block = offset(T,block)
+  offset_of_i = isnothing(offset_of_block) ? nothing : offset_of_block+offset_within_block
+  return offset_of_i,block,offset_within_block
+end
+
+# TODO: Add a checkbounds
+# TODO: write this nicer in terms of blockview?
+#       Could write: 
+#       block,index_within_block = blockindex(T,i...)
+#       return blockview(T,block)[index_within_block]
 Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,N},
                                                 i::Vararg{Int,N}) where {ElT,N}
-  # TODO: Add a checkbounds
-  block_index,block = blockindex(T,i...)
-  block_dims = blockdims(T,block)
-  linear_block_index = LinearIndices(block_dims)[CartesianIndex(block_index)]
-  offsetT = offset(T,block)
-  isnothing(offsetT) && return zero(ElT)
-  return store(T)[linear_block_index+offsetT]
+  offset,_ = indexoffset(T,i...)
+  isnothing(offset) && return zero(ElT)
+  return store(T)[offset]
 end
 
 # These may not be valid if the Tensor has no blocks
@@ -416,21 +463,37 @@ end
 
 #Base.@propagate_inbounds Base.getindex(T::BlockSparseTensor{<:Number,0}) = store(T)[1]
 
+# Add the specified block to the BlockSparseTensor
+# Insert it such that the blocks remain ordered.
+# Defaults to adding zeros.
+function addblock!(T::BlockSparseTensor{ElT,N},
+                   newblock::Block{N}) where {ElT,N}
+  newdim = blockdim(T,newblock)
+  newpos = new_block_pos(T,newblock)
+  newoffset = 0
+  if nnzblocks(T)>0
+    newoffset = offset(T,newpos-1)+blockdim(T,newpos-1)
+  end
+  insert!(blockoffsets(T),newpos,BlockOffset{N}(newblock,newoffset))
+  splice!(data(store(T)),newoffset+1:newoffset,zeros(ElT,newdim))
+  for i in newpos+1:nnzblocks(T)
+    block_i,offset_i = blockoffsets(T)[i]
+    blockoffsets(T)[i] = BlockOffset{N}(block_i,offset_i+newdim)
+  end
+  return newoffset
+end
+
+# TODO: Add a checkbounds
 Base.@propagate_inbounds function Base.setindex!(T::BlockSparseTensor{ElT,N},
                                                  val,
                                                  i::Vararg{Int,N}) where {ElT,N}
-  # TODO: Add a checkbounds
-  block_index,block_loc = blockindex(T,i...)
-  block_dims = blockdims(T,block_loc)
-  linear_block_index = LinearIndices(block_dims)[CartesianIndex(block_index)]
-  # TODO: replace with a sorted search
-  for (block,offset) in blockoffsets(T)
-    if block_loc == block
-      store(T)[linear_block_index+offset] = val
-      return T
-    end
+  offset,block,offset_within_block = indexoffset(T,i...)
+  if isnothing(offset)
+    println("Index lies in a block that is not structurally non-zero, adding block")
+    offset_of_block = addblock!(T,block)
+    offset = offset_of_block+offset_within_block
   end
-  println("Index lies in a block that is not structurally non-zero, adding block")
+  store(T)[offset] = val
   return T
 end
 
