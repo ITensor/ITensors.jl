@@ -101,12 +101,6 @@ function Base.similar(D::BlockSparse{ElT}) where {ElT}
   return BlockSparse{ElT}(similar(data(D)),blockoffsets(D))
 end
 
-# TODO: should this accept offsets and length?
-#Base.similar(D::BlockSparse{T},dims) where {T} = BlockSparse{T}(similar(data(D),dim(dims)))
-
-# TODO: should this accept offsets and length?
-#Base.similar(::Type{BlockSparse{T}},dims) where {T} = BlockSparse{T}(similar(Vector{T},dim(dims)))
-
 Base.similar(D::BlockSparse,
              ::Type{ElT}) where {ElT} = BlockSparse{T}(similar(data(D),T),
                                                        blockoffsets(D))
@@ -119,8 +113,6 @@ function Base.copyto!(D1::BlockSparse,D2::BlockSparse)
   copyto!(data(D1),data(D2))
   return D1
 end
-
-#Base.zeros(::Type{BlockSparse{T}},dim::Int) where {T} = BlockSparse{T}(zeros(T,dim))
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
@@ -411,19 +403,17 @@ end
 Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,N},
                                                 i::Vararg{Int,N}) where {ElT,N}
   # TODO: Add a checkbounds
-  block_index,block_loc = blockindex(T,i...)
-  block_dims = blockdims(T,block_loc)
+  block_index,block = blockindex(T,i...)
+  block_dims = blockdims(T,block)
   linear_block_index = LinearIndices(block_dims)[CartesianIndex(block_index)]
-  # TODO: replace with a sorted search
-  for (block,offset) in blockoffsets(T)
-    if block_loc == block
-      return store(T)[linear_block_index+offset]
-    end
-  end
-  return zero(ElT)
+  offsetT = offset(T,block)
+  isnothing(offsetT) && return zero(ElT)
+  return store(T)[linear_block_index+offsetT]
 end
+
 # These may not be valid if the Tensor has no blocks
 #Base.@propagate_inbounds Base.getindex(T::BlockSparseTensor{<:Number,1},ind::Int) = store(T)[ind]
+
 #Base.@propagate_inbounds Base.getindex(T::BlockSparseTensor{<:Number,0}) = store(T)[1]
 
 Base.@propagate_inbounds function Base.setindex!(T::BlockSparseTensor{ElT,N},
@@ -433,7 +423,7 @@ Base.@propagate_inbounds function Base.setindex!(T::BlockSparseTensor{ElT,N},
   block_index,block_loc = blockindex(T,i...)
   block_dims = blockdims(T,block_loc)
   linear_block_index = LinearIndices(block_dims)[CartesianIndex(block_index)]
-  # TODO: turn into sorted search
+  # TODO: replace with a sorted search
   for (block,offset) in blockoffsets(T)
     if block_loc == block
       store(T)[linear_block_index+offset] = val
