@@ -214,10 +214,15 @@ end
         M = sum(K, L)
         @test length(M) == N
         psi = randomMPS(shsites)
-        k_psi = applyMPO(K, psi, maxdim=1)
-        l_psi = applyMPO(L, psi, maxdim=1)
+        k_psi = applyMPO(K, psi)
+        l_psi = applyMPO(L, psi)
         @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
         @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol=5e-3
+        psi = randomMPS(shsites)
+        M = sum(K, L; maxdim=dim)
+        k_psi = applyMPO(K, psi)
+        l_psi = applyMPO(L, psi)
+        @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
     end
   end
 
