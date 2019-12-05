@@ -326,6 +326,23 @@ function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     return C
 end
 
+function sum(A::Vector{T}; kwargs...) where {T <: Union{MPS, MPO}}
+    length(A) == 0 && return T()
+    length(A) == 1 && return A[1]
+    length(A) == 2 && return sum(A[1], A[2]; kwargs...)
+    nsize = isodd(length(A)) ? (div(length(A) - 1, 2) + 1) : div(length(A), 2)
+    newterms = Vector{T}(undef, nsize)
+    np = 1
+    for n in 1:2:length(A) - 1
+        newterms[np] = sum(A[n], A[n+1]; kwargs...)
+        np += 1
+    end
+    if isodd(length(A))
+        newterms[nsize] = A[end]
+    end
+    return sum(newterms; kwargs...)
+end
+
 function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   method = get(kwargs, :method, "DensityMatrix")
   if method == "DensityMatrix" || method == "densitymatrix"
