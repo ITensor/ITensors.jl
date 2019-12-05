@@ -152,13 +152,21 @@ Tensor(::UndefInitializer,
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
 
-Base.@propagate_inbounds function _getindex(D::DenseTensor{ElT,N},
+# Slicing
+Base.@propagate_inbounds function _getindex(T::DenseTensor{ElT,N},
                                             I::CartesianIndices{N}) where {ElT,N}
-  storeR = Dense(vec(@view array(D)[I]))
+  storeR = Dense(vec(@view array(T)[I]))
   indsR = Tuple(I[end]-I[1]+CartesianIndex(ntuple(_->1,Val(N))))
   return Tensor(storeR,indsR)
 end
 
+# Get single index
+Base.@propagate_inbounds function _getindex(T::DenseTensor{ElT,N},
+                                            I::CartesianIndex{N}) where {ElT,N}
+  return store(T)[LinearIndices(T)[CartesianIndex(I)]]
+end
+
+# Slicing (allow mixture of ranges and integers)
 Base.@propagate_inbounds function Base.getindex(T::DenseTensor{ElT,N},
                                                 I...) where {ElT,N}
   return _getindex(T,CartesianIndices(I))
@@ -166,12 +174,12 @@ end
 
 Base.@propagate_inbounds function Base.getindex(T::DenseTensor{ElT,N},
                                                 I::CartesianIndex{N}) where {ElT,N}
-  return T[LinearIndices(T)[CartesianIndex(I)]]
+  return _getindex(T,I)
 end
 
 Base.@propagate_inbounds function Base.getindex(T::DenseTensor{ElT,N},
                                                 I::Vararg{Int,N}) where {ElT,N}
-  return T[CartesianIndex(I)]
+  return _getindex(T,CartesianIndex(I))
 end
 
 Base.@propagate_inbounds Base.getindex(T::DenseTensor,i::Int) = store(T)[i]
