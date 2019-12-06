@@ -275,11 +275,11 @@ Base.adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
 
 Base.show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
 
-function Base.read(io::IO,::Type{Index}; kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readcpp(io::IO,::Type{Index}; kwargs...)
+  format = get(kwargs,:format,"v3")
   i = Index()
-  if format=="cpp"
-    tags = read(io,TagSet;kwargs...)
+  if format=="v3"
+    tags = readcpp(io,TagSet;kwargs...)
     id = read(io,IDType)
     dim = convert(Int64,read(io,Int32))
     dir_int = read(io,Int32)

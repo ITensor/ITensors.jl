@@ -587,7 +587,7 @@ function LinearAlgebra.svd(T::DenseTensor{<:Number,N,IndsT},
                            Rpos::NTuple{NR,Int};
                            kwargs...) where {N,IndsT,NL,NR}
   M = permute_reshape(T,Lpos,Rpos)
-  UM,S,VM = svd(M;kwargs...)
+  UM,S,VM,spec = svd(M;kwargs...)
   u = ind(UM,2)
   v = ind(VM,2)
   
@@ -601,7 +601,7 @@ function LinearAlgebra.svd(T::DenseTensor{<:Number,N,IndsT},
   U = reshape(UM,Uinds)
   V = reshape(VM,Vinds)
 
-  return U,S,V
+  return U,S,V,spec
 end
 
 # eigendecomposition of an order-n tensor according to 
@@ -611,12 +611,12 @@ function eigenHermitian(T::DenseTensor{<:Number,N,IndsT},
                         Rpos::NTuple{NR,Int};
                         kwargs...) where {N,IndsT,NL,NR}
   M = permute_reshape(T,Lpos,Rpos)
-  UM,D = eigenHermitian(M;kwargs...)
+  UM,D,spec = eigenHermitian(M;kwargs...)
   u = ind(UM,2)
   Linds = similar_type(IndsT,Val{NL})(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
   Uinds = push(Linds,u)
   U = reshape(UM,Uinds)
-  return U,D
+  return U,D,spec
 end
 
 # qr decomposition of an order-n tensor according to 

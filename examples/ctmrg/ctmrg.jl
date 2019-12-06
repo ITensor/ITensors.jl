@@ -145,7 +145,7 @@ function leftright_move!(T,(Clu,Cru,Cld,Crd),(Al,Ar,Au,Ad);dir="left",maxdim=5)
       elseif dir=="up" || dir=="down"
         utags = "$dir,link,x=$iy,y=$ixp"
       end
-      U,S,Vh,u,v = svd(ρ, (li,si); utags=utags, vtags="tmp", maxdim=maxdim, cutoff=0.0)
+      U,S,Vh,spec,u,v = svd(ρ, (li,si); utags=utags, vtags="tmp", maxdim=maxdim, cutoff=0.0)
       V = dag(Vh)
       U *= δ(u,v)
       invsqrtS = S

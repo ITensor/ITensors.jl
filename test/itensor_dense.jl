@@ -479,7 +479,7 @@ end
     A = randomITensor(SType,i,j,k,l)
 
     @testset "Test SVD of an ITensor" begin
-      U,S,V,u,v = svd(A,(j,l))
+      U,S,V,spec,u,v = svd(A,(j,l))
       @test store(S) isa Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
@@ -525,7 +525,7 @@ end
       is = IndexSet(i,j)
       T = randomITensor(is...,prime(is)...)
       T = T + swapprime(dag(T),0,1)
-      U,D,u = eigenHermitian(T)
+      U,D,spec,u = eigenHermitian(T)
       @test T ≈ U*D*prime(dag(U))
       UUᴴ =  U*prime(dag(U),u)
       @test UUᴴ ≈ δ(u,u') atol=1e-14
@@ -536,4 +536,3 @@ end
 end # End Dense storage test
 
 end # End Dense ITensor basic functionality
-

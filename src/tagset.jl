@@ -284,14 +284,14 @@ function show(io::IO, T::TagSet)
   print(io,primestring(T))
 end
 
-function Base.read(io::IO,::Type{TagSet}; kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readcpp(io::IO,::Type{TagSet}; kwargs...)
+  format = get(kwargs,:format,"v3")
   ts = TagSet()
-  if format=="cpp"
+  if format=="v3"
     mstore = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
     ntags = 0
     for n=1:4
-      t = read(io,Tag;kwargs...)
+      t = readcpp(io,Tag;kwargs...)
       if t != Tag()
         ntags = _addtag_ordered!(mstore,ntags,IntSmallString(t))
       end

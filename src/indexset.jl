@@ -547,17 +547,17 @@ function compute_contraction_labels(Ai::IndexSet{N1},
   return (NTuple{N1,Int}(Aind),NTuple{N2,Int}(Bind))
 end
 
-function Base.read(io::IO,::Type{IndexSet};kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readcpp(io::IO,::Type{IndexSet};kwargs...)
+  format = get(kwargs,:format,"v3")
   is = IndexSet()
-  if format=="cpp"
+  if format=="v3"
     size = read(io,Int)
-    resize!(is.inds,size)
-    for n=1:size
-      i = read(io,Index;kwargs...)
+    function readind(io,n)
+      i = readcpp(io,Index;kwargs...)
       stride = read(io,UInt64)
-      is.inds[n] = i
+      return i
     end
+    is = IndexSet(ntuple(n->readind(io,n),size))
   else
     throw(ArgumentError("read IndexSet: format=$format not supported"))
   end

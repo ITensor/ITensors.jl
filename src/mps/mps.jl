@@ -189,8 +189,8 @@ function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  FU,FV = factorize(phi,inds(M[b]); which_factorization="automatic",
-                        tags=tags(linkindex(M,b)), kwargs...)
+  FU,FV,spec = factorize(phi,inds(M[b]); which_factorization="automatic",
+                           tags=tags(linkindex(M,b)), kwargs...)
   M[b]   = FU
   M[b+1] = FV
 
@@ -202,6 +202,7 @@ function replacebond!(M::MPS,
     M.llim_ == b-1 && (M.llim_ += 1)
     M.rlim_ == b+1 && (M.rlim_ += 1)
   end
+  return spec
 end
 
 """
@@ -260,7 +261,7 @@ function sample(m::MPS)
       projn = ITensor(s)
       projn[s[n]] = 1.0
       An = A*projn
-      pn = scalar(dag(An)*An)
+      pn = scalar(dag(An)*An) |> real
       pdisc += pn
       (r < pdisc) && break
       n += 1
