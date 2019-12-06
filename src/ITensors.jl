@@ -4,49 +4,8 @@ using Random,
       Printf,
       LinearAlgebra,
       StaticArrays,
-      TimerOutputs
-
-# TODO: move imports to individual files
-import Base.adjoint,
-       Base.conj,
-       Base.convert,
-       Base.copy,
-       Base.deepcopy,
-       Base.copyto!,
-       Base.eltype,
-       Base.fill!,
-       Base.getindex,
-       Base.in,
-       Base.isapprox,
-       Base.isless,
-       Base.iterate,
-       Base.length,
-       Base.push!,
-       Base.setindex!,
-       Base.eachindex,
-       Base.show,
-       Base.sum,
-       Base.summary,
-       Base.similar,
-       Base.size,
-       Base.ndims,
-       Base.!=,
-       Base.+,
-       Base.-,
-       Base.*,
-       Base./,
-       Base.^,
-       Base.setdiff,  # Since setdiff doesn't 
-                      # work with IndexSet, overload it
-       Base.lastindex,
-       LinearAlgebra.axpby!,
-       LinearAlgebra.axpy!,
-       LinearAlgebra.dot,
-       LinearAlgebra.norm,
-       LinearAlgebra.mul!,
-       LinearAlgebra.rmul!,
-       LinearAlgebra.normalize!
-
+      TimerOutputs,
+      Reexport
 
 #####################################
 # Global Variables
@@ -55,26 +14,18 @@ const warnTensorOrder = 14
 const GLOBAL_TIMER = TimerOutput()
 
 #####################################
+# Tensor
+#
+include("Tensors/Tensors.jl")
+
+#####################################
 # Index and IndexSet
 #
-# TODO: load these after Tensor files
 include("smallstring.jl")
 include("readwrite.jl")
 include("tagset.jl")
 include("index.jl")
 include("indexset.jl")
-
-#####################################
-# Tensor
-#
-include("tensor/tensor.jl")
-include("tensor/contraction_logic.jl")
-include("tensor/dense.jl")
-include("tensor/linearalgebra.jl")
-include("tensor/diag.jl")
-include("tensor/combiner.jl")
-include("tensor/truncate.jl")
-include("tensor/svd.jl")
 
 #####################################
 # ITensor

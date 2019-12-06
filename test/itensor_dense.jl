@@ -254,9 +254,10 @@ end
   s = split(sprint(show, A), '\n')
   @test s[1] == "ITensor ord=1 " * sprint(show, i) * " "
   @test s[2] == "Dense{Float64,Array{Float64,1}}"
-  @test s[3] == "2-element Tensor{Float64,1,Dense{Float64,Array{Float64,1}},IndexSet{1}}:"
-  @test s[4] == " 1.0"
-  @test s[5] == " 2.0"
+  @test s[3] == "Tensor{Float64,1,Dense{Float64,Array{Float64,1}},IndexSet{1}}"
+  @test s[4] == " 2-element"
+  @test s[5] == " 1.0"
+  @test s[6] == " 2.0"
 end
 
 @testset "Test isapprox for ITensors" begin
@@ -457,7 +458,7 @@ end
     A = ITensor(x)
     @test x==scalar(A)
     A = ITensor(SType,i,j,k)
-    @test_throws BoundsError scalar(A)
+    @test_throws MethodError scalar(A)
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)

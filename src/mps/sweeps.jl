@@ -21,7 +21,7 @@ mutable struct Sweeps
 end
 
 nsweep(sw::Sweeps)::Int = sw.nsweep
-length(sw::Sweeps)::Int = sw.nsweep
+Base.length(sw::Sweeps)::Int = sw.nsweep
 
 maxdim(sw::Sweeps,n::Int)::Int = sw.maxdim[n]
 mindim(sw::Sweeps,n::Int)::Int = sw.mindim[n]
@@ -66,7 +66,7 @@ end
 
 sweepnext(N::Int)::SweepNext = SweepNext(N)
 
-function iterate(sn::SweepNext,state=(0,1))
+function Base.iterate(sn::SweepNext,state=(0,1))
   b,ha = state
   if ha==1
     inc = 1

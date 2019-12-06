@@ -1,8 +1,6 @@
 export Index,
        IndexVal,
-       adjoint,
        dag,
-       dim,
        prime,
        noprime,
        addtags,
@@ -34,7 +32,7 @@ associated with an index, i.e. the index leg is directed into or out of a given 
     -(dir::Arrow)
 Reverse direction of a directed `Arrow`.
 """
-function -(dir::Arrow)
+function Base.:-(dir::Arrow)
   dir==Neither && return Neither #throw(ArgumentError("Cannot reverse direction of Arrow direction 'Neither'"))
   return dir==In ? Out : In
 end
@@ -85,7 +83,7 @@ id(i::Index) = i.id
     dim(i::Index)
 Obtain the dimension of an Index
 """
-dim(i::Index) = i.dim
+Tensors.dim(i::Index) = i.dim
 
 """
     dir(i::Index)
@@ -117,7 +115,7 @@ Compare indices for equality. First the id's are compared,
 then the prime levels are compared, and finally the
 tags are compared.
 """
-function ==(i1::Index,i2::Index)
+function Base.:(==)(i1::Index,i2::Index)
   return id(i1) == id(i2) && tags(i1) == tags(i2)
 end
 
@@ -125,13 +123,13 @@ end
     copy(i::Index)
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
+Base.copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
 
 """
     sim(i::Index)
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
+Tensors.sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
 
 """
     dag(i::Index)
@@ -229,19 +227,17 @@ noprime(i::Index) = setprime(i, 0)
 Base.adjoint(i::Index) = prime(i)
 
 # To use the notation i^5 == prime(i,5)
-^(i::Index,pl::Integer) = prime(i,pl)
+Base.:^(i::Index,pl::Integer) = prime(i,pl)
 
 # Iterating over Index I gives
 # integers from 1...dim(I)
-function iterate(i::Index,state::Int=1)
+function Base.iterate(i::Index,state::Int=1)
   (state > dim(i)) && return nothing
   return (state,state+1)
 end
 
-colon(n::Int,i::Index) = range(n,dim(i))
-
-function show(io::IO,
-              i::Index) 
+function Base.show(io::IO,
+                   i::Index) 
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
     print(io,"($(dim(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
@@ -262,22 +258,22 @@ end
 
 IndexVal() = IndexVal(Index(),1)
 
-getindex(i::Index, j::Int) = IndexVal(i, j)
-#getindex(i::Index, c::Colon) = [IndexVal(i, j) for j in 1:dim(i)]
+Base.getindex(i::Index, j::Int) = IndexVal(i, j)
+#Base.getindex(i::Index, c::Colon) = [IndexVal(i, j) for j in 1:dim(i)]
 
 (i::Index)(n::Int) = IndexVal(i,n)
 
 val(iv::IndexVal) = iv.val
 ind(iv::IndexVal) = iv.ind
 
-==(i::Index,iv::IndexVal) = (i==ind(iv))
-==(iv::IndexVal,i::Index) = (i==iv)
+Base.:(==)(i::Index,iv::IndexVal) = (i==ind(iv))
+Base.:(==)(iv::IndexVal,i::Index) = (i==iv)
 
 plev(iv::IndexVal) = plev(ind(iv))
 prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))
-adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
+Base.adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
 
-show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
+Base.show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
 
 function readcpp(io::IO,::Type{Index}; kwargs...)
   format = get(kwargs,:format,"v3")
