@@ -125,9 +125,6 @@ using ITensors,
     @test isblocknz(T,(2,1))
     @test isblocknz(T,(1,2))
     @test isblocknz(T,(2,2))
-
-    @show T
-    @show dense(T)
   end
  
 end

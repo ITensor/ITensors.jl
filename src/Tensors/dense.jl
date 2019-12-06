@@ -686,11 +686,14 @@ function Base.summary(io::IO,
   println(io," ",Base.dims2string(dims(T)))
 end
 
+print_tensor(io::IO,T::DenseTensor) = Base.print_array(io,T)
+print_tensor(io::IO,T::DenseTensor{<:Number,1}) = Base.print_array(io,reshape(T,(dim(T),1)))
+
 function Base.show(io::IO,
                    mime::MIME"text/plain",
                    T::DenseTensor)
   summary(io,T)
-  Base.print_array(io,T)
+  print_tensor(io,T)
   println(io)
 end
 
