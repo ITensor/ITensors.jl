@@ -60,6 +60,18 @@ using ITensors,
 
   @testset "ITensor" begin
 
+    # default constructed case
+    T = ITensor()
+
+    fo = h5open("data.h5","w")
+    write(fo,"defaultT",T)
+    close(fo)
+
+    fi = h5open("data.h5","r")
+    rT = read(fi,"defaultT",ITensor)
+    close(fi)
+    @test typeof(store(T)) == ITensors.Dense{Nothing}
+
     # real case
     T = randomITensor(i,j,k)
 
