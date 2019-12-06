@@ -214,10 +214,10 @@ Base.iterate(E::TruncEigen, ::Val{:u}) = (E.u, Val(:v))
 Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
-function eigenHermitian(A::ITensor,
-                        Linds=findinds(A,("",0)),
-                        Rinds=prime(IndexSet(Linds));
-                        kwargs...)
+function Tensors.eigenHermitian(A::ITensor,
+                                Linds=findinds(A,("",0)),
+                                Rinds=prime(IndexSet(Linds));
+                                kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
   lefttags::TagSet = get(kwargs,:lefttags,tags)
   righttags::TagSet = get(kwargs,:righttags,prime(tags))

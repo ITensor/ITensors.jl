@@ -1,5 +1,6 @@
 export polar,
-       eigenHermitian
+       eigenHermitian,
+       Spectrum
 
 #
 # Linear Algebra of order 2 Tensors
