@@ -285,14 +285,33 @@ function Tensors.array(T::ITensor{N},is::Vararg{Index,N}) where {N}
   return array(permutedims(tensor(T),perm))
 end
 
+"""
+    matrix(T::ITensor, row_i:Index, col_i::Index)
+
+Given an ITensor with two indices row_i and col_i, returns
+a Matrix with a copy of the ITensor's elements. The
+order in which the indices are provided indicates
+which Index is to be treated as the row index of the 
+Matrix versus the column index.
+
+    matrix(T::ITensor)
+
+Given an ITensor with two indices, returns
+a Matrix with a copy of the ITensor's elements. 
+The ordering of the elements in the Matrix, in
+terms of which Index is treated as the row versus
+column, depends on the internal layout of the ITensor.
+Therefore this method is intended for developer use
+only and not recommend for use in ITensor applications.
+"""
+function Tensors.matrix(T::ITensor{N},row_i::Index,col_i::Index) where {N}
+  N≠2 && throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix"))
+  return array(T,row_i,col_i)
+end
+
 function Tensors.matrix(T::ITensor{N}) where {N}
   N!=2 && throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix"))
   return array(tensor(T))
-end
-
-function Tensors.matrix(T::ITensor{N},i1::Index,i2::Index) where {N}
-  N≠2 && throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix"))
-  return array(T,i1,i2)
 end
 
 function Tensors.vector(T::ITensor{N}) where {N}
