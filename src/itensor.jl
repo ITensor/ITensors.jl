@@ -288,7 +288,7 @@ end
 """
     matrix(T::ITensor, row_i:Index, col_i::Index)
 
-Given an ITensor with two indices row_i and col_i, returns
+Given an ITensor `T` with two indices `row_i` and `col_i`, returns
 a Matrix with a copy of the ITensor's elements. The
 order in which the indices are provided indicates
 which Index is to be treated as the row index of the 
@@ -296,13 +296,13 @@ Matrix versus the column index.
 
     matrix(T::ITensor)
 
-Given an ITensor with two indices, returns
+Given an ITensor `T` with two indices, returns
 a Matrix with a copy of the ITensor's elements. 
 The ordering of the elements in the Matrix, in
 terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
-Therefore this method is intended for developer use
-only and not recommend for use in ITensor applications.
+*Therefore this method is intended for developer use
+only and not recommend for use in ITensor applications.*
 """
 function Tensors.matrix(T::ITensor{N},row_i::Index,col_i::Index) where {N}
   N≠2 && throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix"))
