@@ -1,5 +1,9 @@
 export Combiner
 
+# TODO: Have combiner store the locations
+# of the uncombined and combined indices
+# This can generalize to a Combiner that combines
+# multiple set of indices, e.g. (i,j),(k,l) -> (a,b)
 struct Combiner <: TensorStorage{Number}
 end
 
@@ -43,43 +47,24 @@ function contract!!(R::Tensor{<:Number,NR},
     return R
   elseif N1 + N2 == NR
     error("Cannot perform outer product involving a combiner")
-  elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) == 2
-    ci = commonindex(inds(T1), inds(T2))
-    ui = uniqueindex(inds(T1), inds(T2))
-    inds2        = [inds(T2)...]
-    cpos1,cpos2  = intersect_positions(labelsT1,labelsT2)
-    inds2[cpos2] = ui 
-    return Tensor(copy(store(T2)), IndexSet(inds2...))
-  elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) != 2
-    # This is the case of Index replacement or uncombining
-    T2data      = data(store(T2))
+  elseif count_common(labelsT1,labelsT2) == 1 && N1 == 2
+    # This is the case of index replacement
+    ui = setdiff(labelsT1, labelsT2)[]
+    newind = inds(T1)[findfirst(==(ui),labelsT1)]
     cpos1,cpos2 = intersect_positions(labelsT1,labelsT2)
-    indsC = inds(T1)
-    indsT = inds(T2)
-
-    newlength = (length(indsC)-1) + (length(indsT)-1)
-    newinds = Vector{Index}(undef,newlength)
-    n = 1
-    # Copy existing indices before one we are uncombining
-    for i in 1:cpos2-1
-      newinds[n] = indsT[i]
-      n += 1
-    end
-    # Replace uncombined index with indices of combiner
-    for j in 2:length(indsC)
-      newinds[n] = indsC[j]
-      n += 1
-    end
-    # Copy existing indices after one we are uncombining
-    for i in cpos2+1:length(indsT)
-      newinds[n] = indsT[i]
-      n += 1
-    end
-
-    return Tensor(Dense(copy(T2data)), IndexSet(newinds...))
+    storeR = copy(store(T2))
+    indsR = setindex(inds(T2),newind,cpos2)
+    return Tensor(storeR,indsR)
+  elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) != 2
+    # This is the case of uncombining
+    cpos1,cpos2 = intersect_positions(labelsT1,labelsT2)
+    storeR = copy(store(T2))
+    indsC = deleteat(inds(T1),cpos1)
+    indsR = insertat(inds(T2),indsC,cpos2)
+    return Tensor(storeR,indsR)
   elseif is_combiner(labelsT1,labelsT2)
     # This is the case of combining
-    Alabels,Blabels = compute_contraction_labels(inds(T2),inds(T1))
+    Alabels,Blabels = labelsT2,labelsT1
     final_labels    = contract_labels(Blabels, Alabels)
     final_labels_n  = contract_labels(labelsT1,labelsT2)
     indsR = inds(R)

@@ -85,9 +85,9 @@ using ITensors,
     mapprime!(J,1,5)
     @test J == IndexSet(i,j,k^5)
   end
-  @testset "compute_strides" begin
+  @testset "strides" begin
     I = IndexSet(i, j)
-    @test ITensors.compute_strides(I) == [1, idim]
+    @test strides(I) == (1, idim)
   end
   @testset "setprime" begin
     I = IndexSet(i, j)

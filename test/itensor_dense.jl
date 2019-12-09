@@ -254,9 +254,10 @@ end
   s = split(sprint(show, A), '\n')
   @test s[1] == "ITensor ord=1 " * sprint(show, i) * " "
   @test s[2] == "Dense{Float64,Array{Float64,1}}"
-  @test s[3] == "2-element Tensor{Float64,1,Dense{Float64,Array{Float64,1}},IndexSet{1}}:"
-  @test s[4] == " 1.0"
-  @test s[5] == " 2.0"
+  @test s[3] == "Tensor{Float64,1,Dense{Float64,Array{Float64,1}},IndexSet{1}}"
+  @test s[4] == " 2-element"
+  @test s[5] == " 1.0"
+  @test s[6] == " 2.0"
 end
 
 @testset "Test isapprox for ITensors" begin
@@ -457,7 +458,7 @@ end
     A = ITensor(x)
     @test x==scalar(A)
     A = ITensor(SType,i,j,k)
-    @test_throws BoundsError scalar(A)
+    @test_throws MethodError scalar(A)
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)
@@ -478,7 +479,7 @@ end
     A = randomITensor(SType,i,j,k,l)
 
     @testset "Test SVD of an ITensor" begin
-      U,S,V,u,v = svd(A,(j,l))
+      U,S,V,spec,u,v = svd(A,(j,l))
       @test store(S) isa Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
@@ -524,7 +525,7 @@ end
       is = IndexSet(i,j)
       T = randomITensor(is...,prime(is)...)
       T = T + swapprime(dag(T),0,1)
-      U,D,u = eigenHermitian(T)
+      U,D,spec,u = eigenHermitian(T)
       @test T ≈ U*D*prime(dag(U))
       UUᴴ =  U*prime(dag(U),u)
       @test UUᴴ ≈ δ(u,u') atol=1e-14
@@ -535,4 +536,3 @@ end
 end # End Dense storage test
 
 end # End Dense ITensor basic functionality
-

@@ -85,7 +85,7 @@ function randomMPO(sites, m::Int=1)
   return M
 end
 
-length(m::MPO) = m.N_
+Base.length(m::MPO) = m.N_
 tensors(m::MPO) = m.A_
 leftlim(m::MPO) = m.llim_
 rightlim(m::MPO) = m.rlim_
@@ -98,25 +98,25 @@ function set_rightlim!(m::MPO,new_rl::Int)
   m.rlim_ = new_rl
 end
 
-getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
+Base.getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
 
-function setindex!(M::MPO,T::ITensor,n::Integer)
+function Base.setindex!(M::MPO,T::ITensor,n::Integer)
   (n <= leftlim(M)) && set_leftlim!(M,n-1)
   (n >= rightlim(M)) && set_rightlim!(M,n+1)
   setindex!(tensors(M),T,n)
 end
 
-copy(m::MPO) = MPO(m.N_, copy(tensors(m)))
-similar(m::MPO) = MPO(m.N_, similar(tensors(m)), 0, m.N_)
+Base.copy(m::MPO) = MPO(m.N_, copy(tensors(m)))
+Base.similar(m::MPO) = MPO(m.N_, similar(tensors(m)), 0, m.N_)
 
-function deepcopy(m::T) where {T <: Union{MPO,MPS}}
+function Base.deepcopy(m::T) where {T <: Union{MPO,MPS}}
     res = similar(m)
     # otherwise we will end up modifying the elements of A!
     res.A_ = deepcopy(tensors(m))
     return res
 end
 
-eachindex(m::MPO) = 1:length(m)
+Base.eachindex(m::MPO) = 1:length(m)
 
 # TODO: optimize finding the index a little bit
 # First do: scom = commonindex(A[j],x[j])
@@ -190,7 +190,7 @@ function maxlinkdim(M::T) where {T <: Union{MPS,MPO}}
   md
 end
 
-function show(io::IO, W::MPO)
+function Base.show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
   @inbounds for (i, A) ∈ enumerate(tensors(W))
@@ -296,7 +296,7 @@ function plussers(::Type{T}, left_ind::Index, right_ind::Index, sum_ind::Index) 
     #end
 end
 
-function sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
+function Base.sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     n = A.N_
     length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
     orthogonalize!(A, 1; kwargs...)
@@ -476,7 +476,7 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     # in case we primed A
     A_ind = uniqueindex(findinds(A_[N-1], "Site"), findinds(B_[N-1], "Site"))
     Lis = IndexSet(A_ind, sites_B[N-1], commonindex(res[N-2], res[N-1]))
-    U, V, ci = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(N-1)",maxdim=maxdim,mindim=mindim)
+    U, V = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(N-1)",maxdim=maxdim,mindim=mindim)
     res[N-1] = U
     res[N] = V
     truncate!(res;kwargs...)
@@ -518,8 +518,7 @@ function orthogonalize!(M::Union{MPS,MPO},
   end
 end
 
-function truncate!(M::Union{MPS,MPO}; kwargs...)
-
+function Tensors.truncate!(M::Union{MPS,MPO}; kwargs...)
   N = length(M)
 
   # Left-orthogonalize all tensors to make

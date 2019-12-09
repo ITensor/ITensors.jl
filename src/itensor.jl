@@ -1,17 +1,13 @@
 export ITensor,
-       norm,
        combiner,
        combinedindex,
        delta,
        δ,
-       exp,
        exphermitian,
        replaceindex!,
        inds,
        isnull,
        scale!,
-       normalize!,
-       randn!,
        matmul,
        order,
        permute,
@@ -21,9 +17,11 @@ export ITensor,
        array,
        matrix,
        vector,
+       norm,
        scalar,
        store,
-       dense
+       dense,
+       real_if_close
 
 """
 An ITensor is a tensor whose interface is 
@@ -43,8 +41,8 @@ mutable struct ITensor{N}
 end
 ITensor(st,is::IndexSet{N}) where {N} = ITensor{N}(st,is)
 
-inds(T::ITensor) = T.inds
-store(T::ITensor) = T.store
+Tensors.inds(T::ITensor) = T.inds
+Tensors.store(T::ITensor) = T.store
 
 # TODO: do we need these? I think yes, for add!(::ITensor,::ITensor)
 setinds!(T::ITensor,is...) = (T.inds = IndexSet(is...))
@@ -232,7 +230,7 @@ dense(T::ITensor)
 Make a copy of the ITensor where the storage is the dense version.
 For example, an ITensor with Diag storage will become Dense storage.
 """
-function dense(T::ITensor)
+function Tensors.dense(T::ITensor)
   ITensor(dense(Tensor(store(T),inds(T))))
 end
 
@@ -247,7 +245,7 @@ Base.complex(T::ITensor) = ITensor(complex(Tensor(store(T),inds(T))))
 # set operations to work with ITensors
 IndexSet(T::ITensor) = inds(T)
 
-eltype(T::ITensor) = eltype(store(T))
+Base.eltype(T::ITensor) = eltype(store(T))
 
 """
     order(A::ITensor) = ndims(A)
@@ -255,21 +253,21 @@ eltype(T::ITensor) = eltype(store(T))
 The number of indices, `length(inds(A))`.
 """
 order(T::ITensor) = order(inds(T))
-ndims(T::ITensor) = order(inds(T))
+Base.ndims(T::ITensor) = order(inds(T))
 
 """
     dim(A::ITensor) = length(A)
 
 The total number of entries, `prod(size(A))`.
 """
-dim(T::ITensor) = dim(inds(T))
+Tensors.dim(T::ITensor) = dim(inds(T))
 
 """
     dims(A::ITensor) = size(A)
 
 Tuple containing `size(A,d) == dim(inds(A)[d]) for d in 1:ndims(A)`.
 """
-dims(T::ITensor) = dims(inds(T))
+Tensors.dims(T::ITensor) = dims(inds(T))
 Base.size(A::ITensor) = dims(inds(A))
 Base.size(A::ITensor{N}, d::Int) where {N} = d in 1:N ? dim(inds(A)[d]) :
   d>0 ? 1 : error("arraysize: dimension out of range")
@@ -280,23 +278,48 @@ Base.copy(T::ITensor{N}) where {N} = ITensor{N}(copy(tensor(T)))
 
 # TODO: make versions where the element type can be specified
 # Should this be called `array`? (Version that makes a view, if dense)
-array(T::ITensor) = array(tensor(T))
+Tensors.array(T::ITensor) = array(tensor(T))
 
-matrix(T::ITensor{N}) where {N} = (N==2 ? array(tensor(T)) : throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix")))
-
-vector(T::ITensor{N}) where {N} = (N==1 ? array(tensor(T)) : throw(DimensionMismatch("ITensor must be order 1 to convert to a Vector")))
-
-scalar(T::ITensor) = T[]
-
-function array(T::ITensor{N},is::Vararg{Index,N}) where {N}
+function Tensors.array(T::ITensor{N},is::Vararg{Index,N}) where {N}
   perm = getperm(inds(T),is)
   return array(permutedims(tensor(T),perm))
 end
 
-function matrix(T::ITensor{N},i1::Index,i2::Index) where {N}
+"""
+    matrix(T::ITensor, row_i:Index, col_i::Index)
+
+Given an ITensor `T` with two indices `row_i` and `col_i`, returns
+a Matrix with a copy of the ITensor's elements. The
+order in which the indices are provided indicates
+which Index is to be treated as the row index of the 
+Matrix versus the column index.
+
+    matrix(T::ITensor)
+
+Given an ITensor `T` with two indices, returns
+a Matrix with a copy of the ITensor's elements. 
+The ordering of the elements in the Matrix, in
+terms of which Index is treated as the row versus
+column, depends on the internal layout of the ITensor.
+*Therefore this method is intended for developer use
+only and not recommend for use in ITensor applications.*
+"""
+function Tensors.matrix(T::ITensor{N},row_i::Index,col_i::Index) where {N}
   N≠2 && throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix"))
-  return array(T,i1,i2)
+  return array(T,row_i,col_i)
 end
+
+function Tensors.matrix(T::ITensor{N}) where {N}
+  N!=2 && throw(DimensionMismatch("ITensor must be order 2 to convert to a Matrix"))
+  return array(tensor(T))
+end
+
+function Tensors.vector(T::ITensor{N}) where {N}
+  N!=1 && throw(DimensionMismatch("ITensor must be order 1 to convert to a Vector"))
+  return array(tensor(T))
+end
+
+scalar(T::ITensor) = T[]
 
 Base.getindex(T::ITensor{N},vals::Vararg{Int,N}) where {N} = tensor(T)[vals...]::Number
 
@@ -453,12 +476,12 @@ function dag(T::ITensor)
   return ITensor(store(TT),dag(inds(T)))
 end
 
-function permute(T::ITensor,new_inds)
+function Tensors.permute(T::ITensor,new_inds)
   perm = getperm(new_inds,inds(T))
   Tp = permutedims(tensor(T),perm)
   return ITensor(Tp)
 end
-permute(T::ITensor,inds::Index...) = permute(T,IndexSet(inds...))
+Tensors.permute(T::ITensor,inds::Index...) = permute(T,IndexSet(inds...))
 
 function Base.:*(T::ITensor,x::Number)
   return ITensor(x*tensor(T))
@@ -527,7 +550,7 @@ end
 
 Normalize an ITensor in-place, such that norm(T)==1.
 """
-normalize!(T::ITensor) = scale!(T,1/norm(T))
+LinearAlgebra.normalize!(T::ITensor) = scale!(T,1/norm(T))
 
 """
     copyto!(B::ITensor, A::ITensor)
@@ -590,13 +613,13 @@ end
 w .+= a .* v
 ```
 """
-axpy!(a::Number,v::ITensor,w::ITensor) = add!(w,a,v)
+LinearAlgebra.axpy!(a::Number,v::ITensor,w::ITensor) = add!(w,a,v)
 
 # This is not implemented correctly
 #"""
 #w .= a .* v + b .* w
 #"""
-#axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = add!(w,b,w,a,v)
+#LinearAlgebra.axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = add!(w,b,w,a,v)
 
 """
     scale!(A::ITensor,x::Number) = rmul!(A,x)
@@ -606,12 +629,12 @@ Scale the ITensor A by x in-place. May also be written `rmul!`.
 A .*= x
 ```
 """
-function scale!(T::ITensor,x::Number)
+function Tensors.scale!(T::ITensor,x::Number)
   TT = tensor(T)
   scale!(TT,x)
   return T
 end
-rmul!(T::ITensor,fac::Number) = scale!(T,fac)
+LinearAlgebra.rmul!(T::ITensor,fac::Number) = scale!(T,fac)
 
 """
     mul!(A::ITensor,x::Number,B::ITensor)
@@ -619,11 +642,11 @@ rmul!(T::ITensor,fac::Number) = scale!(T,fac)
 Scalar multiplication of ITensor B with x, and store the result in A.
 Like `A .= x .* B`.
 """
-mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
-mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
+LinearAlgebra.mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
+LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
 
-function summary(io::IO,
-                   T::ITensor)
+function Base.summary(io::IO,
+                      T::ITensor)
   print(io,"ITensor ord=$(order(T))")
   for i = 1:order(T)
     print(io," ",inds(T)[i])
