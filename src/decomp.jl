@@ -145,7 +145,7 @@ end
 # Make the perturbation to the density matrix used in "noise term" DMRG
 # This assumes that A comes in with no primes
 # If it doesn't, I expect A² += drho later to fail
-function deltaRho(A :: ITensor, nt :: ITensor, is)
+function deltarho(A :: ITensor, nt :: ITensor, is)
   drho = (nt * A) |> noprime
   drho *= prime(dag(drho), is)
 end
@@ -155,7 +155,7 @@ function _factorize_from_left_eigen(A::ITensor,
                                     kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
-  if (get(kwargs, :noise, 0) > 0) A² += deltaRho(A, kwargs[:noise_tensor], Lis) end
+  if (get(kwargs, :noise, 0) > 0) A² += deltarho(A, kwargs[:noise_tensor], Lis) end
   FU,D,spec = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true, kwargs...)
   FV = dag(FU)*A
   return FU,FV,spec,commonindex(FU,FV)
@@ -166,7 +166,7 @@ function _factorize_from_right_eigen(A::ITensor,
                                      kwargs...)
   Ris = uniqueinds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
-  if (get(kwargs, :noise, 0) > 0) A² += deltaRho(A, kwargs[:noise_tensor], Ris) end
+  if (get(kwargs, :noise, 0) > 0) A² += deltarho(A, kwargs[:noise_tensor], Ris) end
   FV,D,spec = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true, kwargs...)
   FU = A*dag(FV)
   return FU,FV,spec,commonindex(FU,FV)
