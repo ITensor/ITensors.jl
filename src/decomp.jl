@@ -1,4 +1,5 @@
-export factorize
+export factorize,
+       qr
 
 function LinearAlgebra.qr(A::ITensor,
                           Linds...;
