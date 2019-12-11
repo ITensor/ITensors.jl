@@ -19,6 +19,7 @@ export ITensor,
        vector,
        norm,
        scalar,
+       set_warnorder,
        store,
        dense,
        real_if_close
@@ -506,6 +507,7 @@ function Base.:*(A::ITensor,B::ITensor)
   (Alabels,Blabels) = compute_contraction_labels(inds(A),inds(B))
   CT = contract(tensor(A),Alabels,tensor(B),Blabels)
   C = ITensor(CT)
+  warnTensorOrder = GLOBAL_PARAMS["WarnTensorOrder"]
   if warnTensorOrder > 0 && order(C) >= warnTensorOrder
     println("Warning: contraction resulted in ITensor with $(order(C)) indices")
   end
@@ -726,4 +728,8 @@ function readcpp(io::IO,::Type{ITensor};kwargs...)
   else
     throw(ArgumentError("read ITensor: format=$format not supported"))
   end
+end
+
+function set_warnorder(ord::Int)
+  ITensors.GLOBAL_PARAMS["WarnTensorOrder"] = ord
 end

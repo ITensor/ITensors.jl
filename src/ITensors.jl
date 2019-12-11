@@ -10,7 +10,7 @@ using Random,
 #####################################
 # Global Variables
 #
-const warnTensorOrder = 14
+const GLOBAL_PARAMS = Dict("WarnTensorOrder" => 14)
 const GLOBAL_TIMER = TimerOutput()
 
 #####################################
