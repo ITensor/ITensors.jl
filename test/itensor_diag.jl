@@ -1,5 +1,4 @@
 using ITensors,
-      LinearAlgebra, # For tr()
       Test
 
 @testset "diagITensor" begin

@@ -1,5 +1,4 @@
 using ITensors,
-      Random,
       Test
 
 include("2d_classical_ising.jl")
