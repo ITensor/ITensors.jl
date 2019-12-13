@@ -1,7 +1,6 @@
 using ITensors,
-      LinearAlgebra, # For tr()
-      Random,        # To set a seed
       Test
+import Random
 
 Random.seed!(12345)
 
@@ -199,7 +198,7 @@ end
   Amat = reshape(Amat+Amat'+randn(4,4)*1e-10,2,2,2,2)
   A = ITensor(Amat,i1,i2,s1,s2)
   Aexp = exp(A,(i1,i2),(s1,s2),ishermitian=true)
-  Amatexp = reshape(parent(exp(Hermitian(reshape(Amat,4,4)))),
+  Amatexp = reshape(parent(exp(ITensors.LinearAlgebra.Hermitian(reshape(Amat,4,4)))),
                     2,2,2,2)
   Aexp_from_mat = ITensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat

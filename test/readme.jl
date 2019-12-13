@@ -1,7 +1,5 @@
 using ITensors,
-      Test,
-      Random,
-      LinearAlgebra
+      Test
 
 @testset "README Examples" begin
 
