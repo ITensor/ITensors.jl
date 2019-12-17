@@ -242,6 +242,14 @@ array(T::DenseTensor) = reshape(data(store(T)),dims(inds(T)))
 matrix(T::DenseTensor{<:Number,2}) = array(T)
 vector(T::DenseTensor{<:Number,1}) = array(T)
 
+function Base.Array{ElT,N}(T::DenseTensor{ElT,N}) where {ElT,N}
+  return copy(array(T))
+end
+
+function Base.Array(T::DenseTensor{ElT,N}) where {ElT,N}
+  return Array{ElT,N}(T)
+end
+
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function Base.permutedims!(R::DenseTensor{<:Number,N},
                            T::DenseTensor{<:Number,N},

@@ -1,4 +1,5 @@
-export Diag
+export Diag,
+       DiagTensor
 
 # Diag can have either Vector storage, in which case
 # it is a general Diag tensor, or scalar storage,
@@ -178,6 +179,14 @@ function array(T::DiagTensor{ElT,N}) where {ElT,N}
 end
 matrix(T::DiagTensor{<:Number,2}) = array(T)
 vector(T::DiagTensor{<:Number,1}) = array(T)
+
+function Base.Array{ElT,N}(T::DiagTensor{ElT,N}) where {ElT,N}
+  return array(T)
+end
+
+function Base.Array(T::DiagTensor{ElT,N}) where {ElT,N}
+  return Array{ElT,N}(T)
+end
 
 diag_length(T::DiagTensor) = minimum(dims(T))
 diag_length(T::DiagTensor{<:Number,0}) = 1
