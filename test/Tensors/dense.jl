@@ -15,7 +15,7 @@ for I in eachindex(A)
   @test A[I] != 0
 end
 
-for I in CartesianIndices(A)
+for I in eachindex(A)
   @test A[I] != 0
 end
 
@@ -37,13 +37,13 @@ randn!(B)
 
 C = A+B
 
-for I in CartesianIndices(C)
+for I in eachindex(C)
   @test C[I] == A[I] + B[I]
 end
 
 Ap = permutedims(A,(2,1))
 
-for I in CartesianIndices(A)
+for I in eachindex(A)
   @test A[I] == Ap[permute(I,(2,1))]
 end
 

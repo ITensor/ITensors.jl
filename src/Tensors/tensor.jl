@@ -21,6 +21,7 @@ end
 store(T::Tensor) = T.store
 inds(T::Tensor) = T.inds
 ind(T::Tensor,j::Integer) = inds(T)[j]
+Base.eachindex(T::Tensor) = CartesianIndices(dims(inds(T)))
 
 #
 # Generic Tensor functions

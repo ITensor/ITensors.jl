@@ -29,41 +29,36 @@ function offset(T::BlockSparseTensor{ElT,N},
   return offset(blockoffsets(T),block)
 end
 
-# Get the offset if the nth block in the block-offsets
-# list
-offset(T::BlockSparseTensor,n::Int) = offset(blockoffsets(T),n)
+"""
+offset(T::BlockSparseTensor,pos::Int)
+
+Get the offset of the block at position pos
+in the block-offsets list.
+"""
+offset(T::BlockSparseTensor,n::Int) = offset(store(T),n)
 
 """
 blockdim(T::BlockSparseTensor,pos::Int)
 
-Get the block dimension of the block at position pos.
+Get the block dimension of the block at position pos
+in the block-offset list.
 """
-function blockdim(T::BlockSparseTensor,
-                  pos::Int)
-  if nnzblocks(T)==0
-    return 0
-  elseif pos==nnzblocks(T)
-    return nnz(T)-offset(T,pos)
-  end
-  return offset(T,pos+1)-offset(T,pos)
-end
+blockdim(T::BlockSparseTensor,pos::Int) = blockdim(store(T),pos)
 
 findblock(T::BlockSparseTensor{ElT,N},
-          block::Block{N}) where {ElT,N} = findblock(blockoffsets(T),block)
+          block::Block{N}) where {ElT,N} = findblock(store(T),block)
 
 new_block_pos(T::BlockSparseTensor{ElT,N},
               block::Block{N}) where {ElT,N} = new_block_pos(blockoffsets(T),block)
+
 """
 isblocknz(T::BlockSparseTensor,
           block::Block)
 
 Check if the specified block is non-zero
 """
-function isblocknz(T::BlockSparseTensor{ElT,N},
-                   block::Block{N}) where {ElT,N}
-  isnothing(findblock(T,block)) && return false
-  return true
-end
+isblocknz(T::BlockSparseTensor{ElT,N},
+          block::Block{N}) where {ElT,N} = isblocknz(store(T),block)
 
 function BlockSparseTensor(::Type{ElT},
                            ::UndefInitializer,
@@ -291,7 +286,7 @@ end
 # Given a specified block, return a Dense Tensor that is a view to the data
 # in that block
 function blockview(T::BlockSparseTensor{ElT,N},
-                   block) where {ElT,N}
+                   block::Block{N}) where {ElT,N}
   !isblocknz(T,block) && error("Block must be structurally non-zero to get a view")
   blockoffsetT = offset(T,block)
   blockdimsT = blockdims(T,block)

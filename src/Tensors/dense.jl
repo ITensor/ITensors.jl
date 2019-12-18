@@ -42,6 +42,9 @@ end
 Dense{ElT}() where {ElT} = Dense(ElT[])
 Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
 
+Base.length(D::Dense) = length(data(D))
+Base.size(D::Dense) = size(data(D))
+
 # Functions to make Dense storage act like a vector
 Base.@propagate_inbounds Base.getindex(D::Dense,i::Integer) = data(D)[i]
 Base.@propagate_inbounds Base.setindex!(D::Dense,v,i::Integer) = (data(D)[i] = v)
@@ -258,6 +261,15 @@ function scale!(T::DenseTensor,
   return T
 end
 
+function apply!(R::DenseTensor,
+                T::DenseTensor,
+                f=(r,t)->t)
+  RA = array(R)
+  TA = array(T)
+  RA .= f.(RA,TA)
+  return R
+end
+
 # Version that may overwrite the result or promote
 # and return the result
 # TODO: move to tensor.jl?
@@ -268,9 +280,7 @@ function permutedims!!(R::Tensor,
   if !is_trivial_permutation(perm)
     permutedims!(R,T,perm,f)
   else
-    RA = array(R)
-    TA = array(T)
-    RA .= f.(RA,TA)
+    apply!(R,T,f)
   end
   return R
 end

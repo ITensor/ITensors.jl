@@ -40,7 +40,7 @@ using ITensors,
 
   @test D == A
 
-  for I in CartesianIndices(A)
+  for I in eachindex(A)
     @test D[I] == A[I]
   end
 
@@ -48,9 +48,8 @@ using ITensors,
 
   @test dims(A12) == (2,5)
 
-  for I in CartesianIndices(A12)
-    blockstart = CartesianIndex(0,4)
-    @test A12[I] == A[I+blockstart]
+  for I in eachindex(A12)
+    @test A12[I] == A[I+CartesianIndex(0,4)]
   end
 
   B = BlockSparseTensor(undef,locs,indsA)
@@ -58,7 +57,7 @@ using ITensors,
 
   C = A+B
 
-  for I in CartesianIndices(C)
+  for I in eachindex(C)
     @test C[I] == A[I]+B[I]
   end
 
@@ -69,14 +68,14 @@ using ITensors,
   @test nnz(A) == nnz(Ap)
   @test nnzblocks(A) == nnzblocks(Ap)
 
-  for I in CartesianIndices(C)
+  for I in eachindex(C)
     @test A[I] == Ap[permute(I,(2,1))]
   end
 
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2,3],[4,5])
 
-    for I in CartesianIndices(C)
+    for I in eachindex(C)
       @test T[I] == 0.0
     end
     @test nnz(T) == 0
@@ -126,6 +125,26 @@ using ITensors,
     @test isblocknz(T,(1,2))
     @test isblocknz(T,(2,2))
   end
- 
+
+  @testset "Add with different blocks" begin
+    # Indices
+    inds = ([2,3],[4,5])
+
+    # Locations of non-zero blocks
+    locsA = [(1,1),(1,2),(2,2)]
+    A = BlockSparseTensor(locsA,inds...)
+    randn!(A)
+
+    locsB = [(1,2),(2,1)]
+    B = BlockSparseTensor(locsB,inds...)
+    randn!(B)
+
+    R = A+B
+
+    @test nnz(R) == dim(R)
+    for I in eachindex(R)
+      @test R[I] == A[I] + B[I]
+    end
+  end
 end
 
