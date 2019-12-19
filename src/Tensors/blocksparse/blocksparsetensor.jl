@@ -160,6 +160,12 @@ function Base.similar(::BlockSparseTensor{ElT,N},
   return BlockSparseTensor(ElT,undef,blockoffsets,inds)
 end
 
+function Base.similar(::Type{<:BlockSparseTensor{ElT,N}},
+                      blockoffsets::BlockOffsets{N},
+                      inds) where {ElT,N}
+  return BlockSparseTensor(ElT,undef,blockoffsets,inds)
+end
+
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:BlockSparseTensor}) = IndexCartesian()
 
@@ -283,13 +289,31 @@ Base.@propagate_inbounds function Base.setindex!(T::BlockSparseTensor{ElT,N},
   return T
 end
 
-# Given a specified block, return a Dense Tensor that is a view to the data
-# in that block
+"""
+blockview(T::BlockSparseTensor,block::Block)
+
+Given a specified block, return a Dense Tensor that is a view to the data
+in that block
+"""
 function blockview(T::BlockSparseTensor{ElT,N},
                    block::Block{N}) where {ElT,N}
-  !isblocknz(T,block) && error("Block must be structurally non-zero to get a view")
-  blockoffsetT = offset(T,block)
-  blockdimsT = blockdims(T,block)
+  pos = findblock(T,block)
+  return blockview(T,pos)
+end
+
+"""
+blockview(T::BlockSparseTensor,pos::Int)
+
+Given a specified position in the block-offset list, return a Dense Tensor 
+that is a view to the data in that block (to avoid block lookup if the position
+is known already).
+"""
+function blockview(T::BlockSparseTensor,
+                   pos::Union{Int,Nothing})
+  isnothing(pos) && error("Block must be structurally non-zero to get a view")
+  blockoffsetT = offset(T,pos)
+  blockT = block(blockoffsets(T)[pos])
+  blockdimsT = blockdims(T,blockT)
   dataTslice = @view data(store(T))[blockoffsetT+1:blockoffsetT+prod(blockdimsT)]
   return Tensor(Dense(dataTslice),blockdimsT)
 end
@@ -318,15 +342,36 @@ function Base.permutedims(T::BlockSparseTensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
   blockoffsetsR,indsR = permute(blockoffsets(T),inds(T),perm)
   R = similar(T,blockoffsetsR,indsR)
-  R = permutedims!!(R,T,perm)
+  permutedims!(R,T,perm)
   return R
 end
 
-# TODO: handle case with different block structures
+# TODO: handle case with different element types in R and T
 function permutedims!!(R::BlockSparseTensor{<:Number,N},
                        T::BlockSparseTensor{<:Number,N},
                        perm::NTuple{N,Int}) where {N}
-  R = permutedims!(R,T,perm)
+  blockoffsetsTp,indsTp = permute(blockoffsets(T),inds(T),perm)
+  if blockoffsets(Tp) == blockoffsets(R)
+    R = permutedims!(R,T,perm)
+    return R
+  end
+  R = similar(T,blockoffsetsR,indsR)
+  permutedims!(R,T,perm)
+  return R
+end
+
+# TODO: handle case with different element types in R and T
+function permutedims!!(R::BlockSparseTensor{<:Number,N},
+                       T::BlockSparseTensor{<:Number,N},
+                       perm::NTuple{N,Int},
+                       f::Function) where {N}
+  blockoffsetsTp,indsTp = permute(blockoffsets(T),inds(T),perm)
+  if blockoffsets(Tp) == blockoffsets(R)
+    R = permutedims!(R,T,perm,f)
+    return R
+  end
+  R = similar(T,blockoffsetsR,indsR)
+  permutedims!(R,T,perm,f)
   return R
 end
 
@@ -338,6 +383,19 @@ function Base.permutedims!(R::BlockSparseTensor{<:Number,N},
     Tblock = blockview(T,blockT)
     Rblock = blockview(R,permute(blockT,perm))
     permutedims!(Rblock,Tblock,perm)
+  end
+  return R
+end
+
+function Base.permutedims!(R::BlockSparseTensor{<:Number,N},
+                           T::BlockSparseTensor{<:Number,N},
+                           perm::NTuple{N,Int},
+                           f::Function) where {N}
+  for (blockT,_) in blockoffsets(T)
+    # Loop over non-zero blocks of T/R
+    Tblock = blockview(T,blockT)
+    Rblock = blockview(R,permute(blockT,perm))
+    permutedims!(Rblock,Tblock,perm,f)
   end
   return R
 end
@@ -355,9 +413,167 @@ function contraction_output(T1::TensorT1,
                                                  TensorT2<:BlockSparseTensor,
                                                  IndsR}
   TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
-  #error("In contraction_output(::BlockSparseTensor,BlockSparseTensor,::IndsR), need to determine output blocks")
-  return similar(TensorR,indsR,offsetsR)
+  return similar(TensorR,blockoffsetsR,indsR)
 end
+
+"""
+find_matching_positions(t1,t2) -> t1_to_t2
+
+In a tuple of length(t1), store the positions in t2
+where the element of t1 is found. Otherwise, store 0
+to indicate that the element of t1 is not in t2.
+
+For example, for all t1[pos1] == t2[pos2], t1_to_t2[pos1] == pos2,
+otherwise t1_to_t2[pos1] == 0.
+"""
+function find_matching_positions(t1,t2)
+  t1_to_t2 = @MVector zeros(Int,length(t1))
+  for pos1 in 1:length(t1)
+    for pos2 in 1:length(t2)
+      if t1[pos1] == t2[pos2]
+        t1_to_t2[pos1] = pos2
+      end
+    end
+  end
+  return Tuple(t1_to_t2)
+end
+
+function contract_labels(labels1,labels2,labelsR)
+  labels1_to_labels2 = find_matching_positions(labels1,labels2)
+  labels1_to_labelsR = find_matching_positions(labels1,labelsR)
+  labels2_to_labelsR = find_matching_positions(labels2,labelsR)
+  return labels1_to_labels2,labels1_to_labelsR,labels2_to_labelsR
+end
+
+function are_blocks_contracted(block1::Block{N1},
+                               block2::Block{N2},
+                               labels1_to_labels2::NTuple{N1,Int}) where {N1,N2}
+  for i1 in 1:N1
+    i2 = labels1_to_labels2[i1]
+    if i2 > 0
+      # This dimension is contracted
+      if block1[i1] != block2[i2]
+        return false
+      end
+    end
+  end
+  return true
+end
+
+function contract_blocks(block1::Block{N1},
+                         labels1_to_labelsR,
+                         block2::Block{N2},
+                         labels2_to_labelsR,
+                         ::Val{NR}) where {N1,N2,NR}
+  blockR = @MVector zeros(Int,NR)
+  for i1 in 1:N1
+    iR = labels1_to_labelsR[i1]
+    if iR > 0
+      blockR[iR] = block1[i1]
+    end
+  end
+  for i2 in 1:N2
+    iR = labels2_to_labelsR[i2]
+    if iR > 0
+      blockR[iR] = block2[i2]
+    end
+  end
+  return Tuple(blockR)    
+end
+
+function contract_blockoffsets(boffs1::BlockOffsets{N1},inds1,labels1,
+                               boffs2::BlockOffsets{N2},inds2,labels2,
+                               indsR,labelsR) where {N1,N2}
+  NR = length(labelsR)
+  ValNR = ValLength(labelsR)
+  labels1_to_labels2,labels1_to_labelsR,labels2_to_labelsR = contract_labels(labels1,labels2,labelsR)
+  blocksR = Block{NR}[]
+  contraction_plan = Tuple{Int,Int,Int}[]
+  for (pos1,(block1,offset1)) in enumerate(boffs1)
+    for (pos2,(block2,offset2)) in enumerate(boffs2)
+      if are_blocks_contracted(block1,block2,labels1_to_labels2)
+        blockR = contract_blocks(block1,labels1_to_labelsR,
+                                 block2,labels2_to_labelsR,
+                                 ValNR)
+        push!(contraction_plan,(pos1,pos2,0))
+        push!(blocksR,blockR)
+      end
+    end
+  end
+
+  sorted_blocksR = sort(blocksR;lt=isblockless)
+  unique!(sorted_blocksR)
+  blockoffsetsR = BlockOffsets{NR}(undef,length(sorted_blocksR))
+  nnzR = 0
+  for (i,blockR) in enumerate(sorted_blocksR)
+    blockoffsetsR[i] = BlockOffset(blockR,nnzR)
+    nnzR += blockdim(indsR,blockR)
+  end
+
+  # Now get the locations of the output blocks
+  # in the sorted block-offsets list
+  for (i,blockR) in enumerate(blocksR)
+    posR = findblock(blockoffsetsR,blockR)
+    pos1,pos2,_ = contraction_plan[i]
+    contraction_plan[i] = (pos1,pos2,posR)
+  end
+
+  return blockoffsetsR,contraction_plan
+end
+
+function contraction_output(T1::TensorT1,
+                            labelsT1,
+                            T2::TensorT2,
+                            labelsT2,
+                            labelsR) where {TensorT1<:BlockSparseTensor,
+                                            TensorT2<:BlockSparseTensor}
+  indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
+  TensorR = contraction_output_type(TensorT1,TensorT2,typeof(indsR))
+  blockoffsetsR,contraction_plan = contract_blockoffsets(blockoffsets(T1),inds(T1),labelsT1,
+                                                         blockoffsets(T2),inds(T2),labelsT2,
+                                                         indsR,labelsR)
+  R = similar(TensorR,blockoffsetsR,indsR)
+  return R,contraction_plan
+end
+
+function contract(T1::BlockSparseTensor{<:Any,N1},
+                  labelsT1,
+                  T2::BlockSparseTensor{<:Any,N2},
+                  labelsT2,
+                  labelsR = contract_labels(labelsT1,labelsT2)) where {N1,N2}
+  R,contraction_plan = contraction_output(T1,labelsT1,T2,labelsT2,labelsR)
+  R = contract!(R,labelsR,T1,labelsT1,T2,labelsT2,contraction_plan)
+  return R
+end
+
+function contract!(R::BlockSparseTensor{<:Number,NR},
+                   labelsR,
+                   T1::BlockSparseTensor{<:Number,N1},
+                   labelsT1,
+                   T2::BlockSparseTensor{<:Number,N2},
+                   labelsT2,
+                   contraction_plan) where {N1,N2,NR}
+  already_written_to = fill(false,nnzblocks(R))
+  # In R .= α .* (T1 * T2) .+ β .* R
+  α = 1
+  for (pos1,pos2,posR) in contraction_plan
+    blockT1 = blockview(T1,pos1)
+    blockT2 = blockview(T2,pos2)
+    blockR = blockview(R,posR)
+    β = 1
+    if !already_written_to[posR]
+      already_written_to[posR] = true
+      # Overwrite the block of R
+      β = 0
+    end
+    contract!(blockR,labelsR,
+              blockT1,labelsT1,
+              blockT2,labelsT2,
+              α,β)
+  end
+  return R
+end
+
 
 #
 # Print block sparse tensors

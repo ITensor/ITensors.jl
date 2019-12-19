@@ -339,9 +339,9 @@ function _contract!!(R::UniformDiagTensor{ElR,NR},labelsR,
   return R
 end
 
-function _contract!(R::DiagTensor{ElR,NR},labelsR,
-                    T1::DiagTensor{<:Number,N1},labelsT1,
-                    T2::DiagTensor{<:Number,N2},labelsT2) where {ElR,NR,N1,N2}
+function contract!(R::DiagTensor{ElR,NR},labelsR,
+                   T1::DiagTensor{<:Number,N1},labelsT1,
+                   T2::DiagTensor{<:Number,N2},labelsT2) where {ElR,NR,N1,N2}
   if NR==0  # If all indices of A and B are contracted
     # all indices are summed over, just add the product of the diagonal
     # elements of A and B
@@ -361,11 +361,11 @@ function _contract!(R::DiagTensor{ElR,NR},labelsR,
   return R
 end
 
-function _contract!(C::DenseTensor{ElC,NC},Clabels,
-                    A::DiagTensor{ElA,NA},Alabels,
-                    B::DenseTensor{ElB,NB},Blabels) where {ElA,NA,
-                                                           ElB,NB,
-                                                           ElC,NC}
+function contract!(C::DenseTensor{ElC,NC},Clabels,
+                   A::DiagTensor{ElA,NA},Alabels,
+                   B::DenseTensor{ElB,NB},Blabels) where {ElA,NA,
+                                                          ElB,NB,
+                                                          ElC,NC}
   if all(i -> i < 0, Blabels)
     # If all of B is contracted
     # TODO: can also check NC+NB==NA
@@ -445,9 +445,9 @@ function _contract!(C::DenseTensor{ElC,NC},Clabels,
     end
   end
 end
-_contract!(C::DenseTensor,Clabels,
-           A::DenseTensor,Alabels,
-           B::DiagTensor,Blabels) = _contract!(C,Clabels,
-                                               B,Blabels,
-                                               A,Alabels)
+contract!(C::DenseTensor,Clabels,
+          A::DenseTensor,Alabels,
+          B::DiagTensor,Blabels) = contract!(C,Clabels,
+                                             B,Blabels,
+                                             A,Alabels)
 

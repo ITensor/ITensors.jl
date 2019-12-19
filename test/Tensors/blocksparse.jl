@@ -146,5 +146,28 @@ using ITensors,
       @test R[I] == A[I] + B[I]
     end
   end
+
+  @testset "Contract" begin
+    indsA = ([2,3],[4,5])
+    locsA = [(1,1),(2,2),(2,1),(1,2)]
+    A = BlockSparseTensor(locsA,indsA...)
+    randn!(A)
+
+    indsB = ([4,5],[3,2])
+    locsB = [(1,2),(2,1),(1,1)]
+    B = BlockSparseTensor(locsB,indsB...)
+    randn!(B)
+
+    R = contract(A,(1,-1),B,(-1,2))
+
+    DA = dense(A)
+    DB = dense(B)
+    DR = contract(DA,(1,-1),DB,(-1,2))
+
+    for I in eachindex(R)
+      @test R[I] ≈ DR[I]
+    end
+  end
+
 end
 

@@ -55,7 +55,7 @@ function contract_inds(T1is,
   end
   IndsT1 = typeof(T1is)
   IndsR = similar_type(IndsT1,Val{NR})
-  return IndsR(Ris...)
+  return IndsR(tuple(Ris...))
 end
 
 mutable struct ContractionProperties{NA,NB,NC}

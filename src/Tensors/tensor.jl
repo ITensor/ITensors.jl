@@ -19,6 +19,7 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
 end
 
 store(T::Tensor) = T.store
+storetype(::Tensor{ElT,N,StoreT}) where {ElT,N,StoreT} = StoreT
 inds(T::Tensor) = T.inds
 ind(T::Tensor,j::Integer) = inds(T)[j]
 Base.eachindex(T::Tensor) = CartesianIndices(dims(inds(T)))
@@ -38,10 +39,9 @@ Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
 Random.randn!(T::Tensor) = (randn!(store(T)); return T)
 
-# TODO: For BlockSparse, this needs to include the offsets
-function Base.similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
-  return Tensor(similar(StoreT,dim(dims)),dims)
-end
+#function Base.similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
+#  return Tensor(similar(StoreT,dim(dims)),dims)
+#end
 
 # TODO: make sure these are implemented correctly
 #Base.similar(T::Type{<:Tensor},::Type{S}) where {S} = Tensor(similar(store(T),S),inds(T))
@@ -87,13 +87,17 @@ function Base.promote_rule(::Type{<:Tensor{ElT1,N1,StoreT1}},
                            ::Type{<:Tensor{ElT2,N2,StoreT2}}) where {ElT1,ElT2,
                                                                      N1,N2,
                                                                      StoreT1,StoreT2}
-  return Tensor{promote_type(ElT1,ElT2),N3,promote_type(StoreT1,StoreT2)} where {N3}
+  StoreR = promote_type(StoreT1,StoreT2)
+  ElR = eltype(StoreR)
+  return Tensor{ElR,N3,StoreR,IndsR} where {N3,IndsR}
 end
 
 function Base.promote_rule(::Type{Tensor{ElT1,N,StoreT1,Inds}},
                            ::Type{Tensor{ElT2,N,StoreT2,Inds}}) where {ElT1,ElT2,N,
                                                                        StoreT1,StoreT2,Inds}
-  return Tensor{promote_type(ElT1,ElT2),N,promote_type(StoreT1,StoreT2),Inds}
+  StoreR = promote_type(StoreT1,StoreT2)
+  ElR = eltype(StoreR)
+  return Tensor{ElR,N,StoreR,Inds}
 end
 
 #function Base.promote_rule(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Type{IndsR}) where {N,ElT,StoreT,IndsR}

@@ -123,7 +123,7 @@ DenseTensor(inds::Int...) = DenseTensor(inds)
 
 DenseTensor(::Type{ElT},
             ::UndefInitializer,
-            inds::Dims) where {ElT} = Tensor(Dense(ElT,undef,dim(inds)),inds)
+            inds) where {ElT} = Tensor(Dense(ElT,undef,dim(inds)),inds)
 
 DenseTensor(::Type{ElT},
             ::UndefInitializer,
@@ -154,6 +154,18 @@ Tensor(::UndefInitializer,
 
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
+
+
+# TODO: Naming _similar because of method ambiguity with 
+# similar(::AbstractArray,dims), how to avoid?
+function _similar(::Type{<:DenseTensor{ElT}},
+                  inds) where {ElT}
+  return DenseTensor(ElT,undef,inds)
+end
+
+# TODO: Naming _similar because of method ambiguity with 
+# similar(::AbstractArray,dims), how to avoid?
+_similar(T::DenseTensor,inds) = _similar(typeof(T),inds)
 
 # Slicing
 Base.@propagate_inbounds function _getindex(T::DenseTensor{ElT,N},
@@ -263,7 +275,7 @@ end
 
 function apply!(R::DenseTensor,
                 T::DenseTensor,
-                f=(r,t)->t)
+                f::Function=(r,t)->t)
   RA = array(R)
   TA = array(T)
   RA .= f.(RA,TA)
@@ -276,11 +288,11 @@ end
 function permutedims!!(R::Tensor,
                        T::Tensor,
                        perm::NTuple{N,Int},
-                       f=(r,t)->t) where {N}
+                       f::Function=(r,t)->t) where {N}
   if !is_trivial_permutation(perm)
-    permutedims!(R,T,perm,f)
+    R = permutedims!(R,T,perm,f)
   else
-    apply!(R,T,f)
+    R = apply!(R,T,f)
   end
   return R
 end
@@ -288,7 +300,7 @@ end
 # TODO: move to tensor.jl?
 function Base.permutedims(T::Tensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
-  Tp = similar(T,permute(inds(T),perm))
+  Tp = _similar(T,permute(inds(T),perm))
   Tp = permutedims!!(Tp,T,perm)
   return Tp
 end
@@ -393,7 +405,18 @@ function contraction_output(::TensorT1,
                                                  TensorT2<:DenseTensor,
                                                  IndsR}
   TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
-  return similar(TensorR,indsR)
+  return _similar(TensorR,indsR)
+end
+
+# TODO: move to tensor.jl?
+function contraction_output(T1::Tensor,
+                            labelsT1,
+                            T2::Tensor,
+                            labelsT2,
+                            labelsR) 
+  indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
+  R = contraction_output(T1,T2,indsR)
+  return R
 end
 
 # TODO: move to tensor.jl?
@@ -404,8 +427,8 @@ function contract(T1::Tensor{<:Any,N1},
                   labelsR = contract_labels(labelsT1,labelsT2)) where {N1,N2}
   # TODO: put the contract_inds logic into contraction_output,
   # call like R = contraction_ouput(T1,labelsT1,T2,labelsT2)
-  indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
-  R = contraction_output(T1,T2,indsR)
+  #indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
+  R = contraction_output(T1,labelsT1,T2,labelsT2,labelsR)
   # contract!! version here since the output R may not
   # be mutable (like UniformDiag)
   R = contract!!(R,labelsR,T1,labelsT1,T2,labelsT2)
@@ -451,36 +474,36 @@ Base.copyto!(R::Tensor,T::Tensor) = copyto!(store(R),store(T))
 function _contract!!(R::Tensor,labelsR,
                      T1::Tensor,labelsT1,
                      T2::Tensor,labelsT2)
-  _contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
+  contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
   return R
 end
 
-# TODO: make sure this is doing type promotion correctly
-# since we are calling BLAS (need to promote T1 and T2 to
-# the same types)
-function _contract!(R::DenseTensor,
-                    labelsR,
-                    T1::Tensor{<:Number,<:Any,StoreT1},
-                    labelsT1,
-                    T2::Tensor{<:Number,<:Any,StoreT2},
-                    labelsT2) where {StoreT1<:Dense,StoreT2<:Dense}
+function contract!(R::DenseTensor,
+                   labelsR,
+                   T1::DenseTensor,
+                   labelsT1,
+                   T2::DenseTensor,
+                   labelsT2,
+                   α::Number=1,β::Number=0)
   props = ContractionProperties(labelsT1,labelsT2,labelsR)
   compute_contraction_properties!(props,T1,T2,R)
 
   # We do type promotion here for BLAS (to ensure
   # we contract DenseComplex*DenseComplex)
-  if StoreT1 !== StoreT2
+  if storetype(T1) !== storetype(T2)
     T1,T2 = promote(T1,T2)
   end
 
-  _contract!(R,T1,T2,props)
+  _contract!(R,T1,T2,props,α,β)
   return R
 end
 
 function _contract!(CT::DenseTensor{El,NC},
                     AT::DenseTensor{El,NA},
                     BT::DenseTensor{El,NB},
-                    props::ContractionProperties) where {El,NC,NA,NB}
+                    props::ContractionProperties,
+                    α::Number=one(El),β::Number=zero(El)) where {El,NC,NA,NB}
+  # TODO: directly use Tensor instead of Array
   C = array(CT)
   A = array(AT)
   B = array(BT)
@@ -531,13 +554,7 @@ function _contract!(CT::DenseTensor{El,NC},
     end
   end
 
-  #BLAS.gemm!(tA,tB,promote_type(T,Tα)(α),AM,BM,promote_type(T,Tβ)(β),CM)
-
-  # TODO: make sure this is fast with Tensor{ElT,2}, or
-  # convert AM and BM to Matrix
-  BLAS.gemm!(tA,tB,one(El),
-             AM,BM,
-             zero(El),CM)
+  BLAS.gemm!(tA,tB,El(α),AM,BM,El(β),CM)
 
   if props.permuteC
     permutedims!(C,reshape(CM,props.newCrange...),
