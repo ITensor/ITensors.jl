@@ -63,12 +63,21 @@ function dim(ds::BlockDims{N}) where {N}
 end
 
 """
+nblocks(::BlockDim)
+
+The number of blocks of the BlockDim.
+"""
+function nblocks(ind::BlockDim)
+  return length(ind)
+end
+
+"""
 nblocks(::BlockDims,i::Integer)
 
 The number of blocks in the specified dimension.
 """
 function nblocks(inds::BlockDims,i::Integer)
-  return length(inds[i])
+  return nblocks(inds[i])
 end
 
 """

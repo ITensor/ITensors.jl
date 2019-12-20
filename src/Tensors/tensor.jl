@@ -52,10 +52,10 @@ Base.similar(T::Tensor) = Tensor(similar(store(T)),copy(inds(T)))
 
 # TODO: for BlockSparse, this needs to include the offsets
 # TODO: for Diag, the storage is not just the total dimension
-Base.similar(T::Tensor,dims) = _similar_from_dims(T,dims)
+#Base.similar(T::Tensor,dims) = _similar_from_dims(T,dims)
 
 # To handle method ambiguity with AbstractArray
-Base.similar(T::Tensor,dims::Dims) = _similar_from_dims(T,dims)
+#Base.similar(T::Tensor,dims::Dims) = _similar_from_dims(T,dims)
 
 Base.similar(T::Tensor,::Type{S}) where {S<:Number} = Tensor(similar(store(T),S),copy(inds(T)))
 

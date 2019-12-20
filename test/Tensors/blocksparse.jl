@@ -193,5 +193,18 @@ using ITensors,
     end
   end
 
+  @testset "permute_reshape" begin
+    indsA = ([2,3],[4,5])
+    locsA = [(2,1),(1,2)]
+    A = BlockSparseTensor(locsA,indsA...)
+    randn!(A)
+
+    @show A
+
+    B = Tensors.permute_reshape(A,(2,1))
+
+    @show B
+  end
+
 end
 

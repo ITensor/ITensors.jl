@@ -576,6 +576,95 @@ function contract!(R::BlockSparseTensor{<:Number,NR},
   return R
 end
 
+const PermReshape{N} = Vararg{Union{Int,NTuple{<:Any,Int}},N}
+
+function ⊗(dim1::BlockDim,dim2::BlockDim)
+  dimR = BlockDim(undef,nblocks(dim1)*nblocks(dim2))
+  for (i,t) in enumerate(Iterators.product(dim1,dim2))
+    dimR[i] = prod(t)
+  end
+  return dimR
+end
+
+function permute_reshape(inds::IndsT,pos::PermReshape{N}) where {IndsT,N}
+  IndT = eltype(IndsT)
+  newinds = SizedVector{N,IndT}(undef)
+  for i ∈ 1:N
+    pos_i = pos[i]
+    newind_i = inds[pos_i[1]]
+    for p in 2:length(pos_i)
+      newind_i = newind_i ⊗ inds[pos_i[p]]
+    end
+    newinds[i] = newind_i
+  end
+  IndsR = similar_type(IndsT,Val{N})
+  return IndsR(Tuple(newinds))
+end
+
+function Base.reshape(inds::IndsT,pos::PermReshape{N}) where {IndsT,N}
+  IndT = eltype(IndsT)
+  newinds = SizedVector{N,IndT}(undef)
+  inds_pos = 1
+  for i ∈ 1:N
+    ninds = length(pos[i])
+    newind_i = inds[inds_pos]
+    inds_pos += 1
+    for p in 2:ninds
+      newind_i = newind_i ⊗ inds[inds_pos]
+      inds_pos += 1
+    end
+    newinds[i] = newind_i
+  end
+  IndsR = similar_type(IndsT,Val{N})
+  return IndsR(Tuple(newinds))
+end
+
+function Base.reshape(block::Block{NT},
+                      pos::Tuple{PermReshape{N}}) where {NT,N}
+  return blockR
+end
+
+function Base.reshape(boffs::BlockOffsets{NT},
+                      indsT,
+                      pos::Tuple{PermReshape{N}}) where {NT,N}
+  @show boffs
+  @show pos
+  boffsR = BlockOffsets{N}(undef,nnzblocks(boffs))
+  for (i,(block,offset)) in enumerate(boffs)
+    blockR = reshape(block,pos)
+    boffsR[i] = BlockOffset(blockR,offset)
+  end
+  return boffsR
+end
+
+function Base.reshape(T::BlockSparseTensor{ElT,NT,IndsT},
+                      pos::Tuple{PermReshape{N}}) where {ElT,NT,IndsT,N}
+  @show T
+  @show pos
+  indsR = reshape(inds(T),pos...)
+  @show indsR
+  blockoffsetsR = reshape(blockoffsets(T),pos)
+  #R = reshape(T,newinds)
+end
+
+function permute_reshape(T::BlockSparseTensor{ElT,NT,IndsT},
+                         pos::PermReshape{N}) where {ElT,NT,IndsT,N}
+  @show pos
+
+  perm = tuplecat(pos...)
+
+  length(perm)≠NT && error("Index positions must add up to order of Tensor ($N)")
+  isperm(perm) || error("Index positions must be a permutation")
+
+  indsT = inds(T)
+  IndT = eltype(IndsT)
+  if !is_trivial_permutation(perm)
+    Tp = permutedims(T,perm)
+  end
+  N==NT && return Tp
+  R = reshape(T,pos)
+  return R
+end
 
 #
 # Print block sparse tensors
