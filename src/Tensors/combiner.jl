@@ -26,7 +26,7 @@ function contraction_output(::TensorT1,
                                                  TensorT2<:DenseTensor,
                                                  IndsR}
   TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
-  return similar(TensorR,indsR)
+  return _similar(TensorR,indsR)
 end
 
 function contraction_output(T1::TensorT1,

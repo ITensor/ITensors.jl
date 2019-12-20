@@ -2,9 +2,7 @@ export data,
        TensorStorage,
        randn!
 
-# TODO: define as
-# abstract type TensorStorage{El} end <: AbstractVector{El}
-abstract type TensorStorage{ElT} end
+abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 
 data(S::TensorStorage) = S.data
 

@@ -640,7 +640,7 @@ LinearAlgebra.axpy!(a::Number,v::ITensor,w::ITensor) = add!(w,a,v)
 #"""
 #w .= a .* v + b .* w
 #"""
-#LinearAlgebra.axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = add!(w,b,w,a,v)
+#LinearAlgebra.axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = add!(w,b,a,v)
 
 """
     scale!(A::ITensor,x::Number) = rmul!(A,x)
