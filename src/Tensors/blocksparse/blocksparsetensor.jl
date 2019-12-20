@@ -347,50 +347,39 @@ function Base.permutedims(T::BlockSparseTensor{<:Number,N},
 end
 
 # TODO: handle case with different element types in R and T
-function permutedims!!(R::BlockSparseTensor{<:Number,N},
-                       T::BlockSparseTensor{<:Number,N},
-                       perm::NTuple{N,Int}) where {N}
-  blockoffsetsTp,indsTp = permute(blockoffsets(T),inds(T),perm)
-  if blockoffsets(Tp) == blockoffsets(R)
-    R = permutedims!(R,T,perm)
-    return R
-  end
-  R = similar(T,blockoffsetsR,indsR)
-  permutedims!(R,T,perm)
-  return R
-end
+#function permutedims!!(R::BlockSparseTensor{<:Number,N},
+#                       T::BlockSparseTensor{<:Number,N},
+#                       perm::NTuple{N,Int}) where {N}
+#  blockoffsetsTp,indsTp = permute(blockoffsets(T),inds(T),perm)
+#  if blockoffsetsTp == blockoffsets(R)
+#    R = permutedims!(R,T,perm)
+#    return R
+#  end
+#  R = similar(T,blockoffsetsTp,indsTp)
+#  permutedims!(R,T,perm)
+#  return R
+#end
 
 # TODO: handle case with different element types in R and T
 function permutedims!!(R::BlockSparseTensor{<:Number,N},
                        T::BlockSparseTensor{<:Number,N},
                        perm::NTuple{N,Int},
-                       f::Function) where {N}
+                       f::Function=(r,t)->t) where {N}
   blockoffsetsTp,indsTp = permute(blockoffsets(T),inds(T),perm)
-  if blockoffsets(Tp) == blockoffsets(R)
+  indsTp != inds(R) && error("In permutedims!!, output indices are not permutation of input")
+  if blockoffsetsTp == blockoffsets(R)
     R = permutedims!(R,T,perm,f)
     return R
   end
-  R = similar(T,blockoffsetsR,indsR)
+  R = similar(T,blockoffsetsTp,indsTp)
   permutedims!(R,T,perm,f)
   return R
 end
 
 function Base.permutedims!(R::BlockSparseTensor{<:Number,N},
                            T::BlockSparseTensor{<:Number,N},
-                           perm::NTuple{N,Int}) where {N}
-  for (blockT,_) in blockoffsets(T)
-    # Loop over non-zero blocks of T/R
-    Tblock = blockview(T,blockT)
-    Rblock = blockview(R,permute(blockT,perm))
-    permutedims!(Rblock,Tblock,perm)
-  end
-  return R
-end
-
-function Base.permutedims!(R::BlockSparseTensor{<:Number,N},
-                           T::BlockSparseTensor{<:Number,N},
                            perm::NTuple{N,Int},
-                           f::Function) where {N}
+                           f::Function=(r,t)->t) where {N}
   for (blockT,_) in blockoffsets(T)
     # Loop over non-zero blocks of T/R
     Tblock = blockview(T,blockT)
@@ -399,6 +388,19 @@ function Base.permutedims!(R::BlockSparseTensor{<:Number,N},
   end
   return R
 end
+
+#function Base.permutedims!(R::BlockSparseTensor{<:Number,N},
+#                           T::BlockSparseTensor{<:Number,N},
+#                           perm::NTuple{N,Int},
+#                           f::Function) where {N}
+#  for (blockT,_) in blockoffsets(T)
+#    # Loop over non-zero blocks of T/R
+#    Tblock = blockview(T,blockT)
+#    Rblock = blockview(R,permute(blockT,perm))
+#    permutedims!(Rblock,Tblock,perm,f)
+#  end
+#  return R
+#end
 
 #
 # Contraction

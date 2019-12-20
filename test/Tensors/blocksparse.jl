@@ -147,6 +147,30 @@ using ITensors,
     end
   end
 
+  @testset "permutedims!! with different blocks" begin
+    # Indices
+    indsA = ([2,3],[4,5])
+
+    # Locations of non-zero blocks
+    locsA = [(1,2),(2,1)]
+    A = BlockSparseTensor(locsA,indsA...)
+    randn!(A)
+
+    perm = (2,1)
+
+    locsB = [(2,1)]
+    indsB = permute(indsA,perm)
+    B = BlockSparseTensor(locsB,indsB...)
+    randn!(B)
+
+    R = permutedims!!(B,A,perm)
+
+    @test nnz(R) == nnz(A)
+    for I in eachindex(A)
+      @test R[permute(I,perm)] == A[I]
+    end
+  end
+
   @testset "Contract" begin
     indsA = ([2,3],[4,5])
     locsA = [(1,1),(2,2),(2,1),(1,2)]
