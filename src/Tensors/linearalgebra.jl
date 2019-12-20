@@ -26,7 +26,7 @@ function LinearAlgebra.exp(T::DenseTensor{ElT,2}) where {ElT}
   return Tensor(Dense(vec(expTM)),inds(T))
 end
 
-function expHermitian(T::DenseTensor{ElT,2}) where {ElT}
+function exphermitian(T::DenseTensor{ElT,2}) where {ElT}
   # exp(::Hermitian/Symmetric) returns Hermitian/Symmetric,
   # so extract the parent matrix
   expTM = parent(exp(Hermitian(matrix(T))))

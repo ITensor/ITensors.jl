@@ -23,6 +23,7 @@ storetype(::Tensor{ElT,N,StoreT}) where {ElT,N,StoreT} = StoreT
 inds(T::Tensor) = T.inds
 ind(T::Tensor,j::Integer) = inds(T)[j]
 Base.eachindex(T::Tensor) = CartesianIndices(dims(inds(T)))
+Base.eltype(::Tensor{ElT}) where {ElT} = ElT
 
 #
 # Generic Tensor functions
