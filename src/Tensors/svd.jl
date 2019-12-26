@@ -1,5 +1,4 @@
-export orthog!,
-       svd_recursive
+export svd_recursive
 
 function uniqueQR(M::AbstractMatrix)
   sparseQ,R = qr(M)
