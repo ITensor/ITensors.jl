@@ -658,9 +658,9 @@ end
 # positions Lpos and Rpos
 function LinearAlgebra.qr(T::DenseTensor{<:Number,N,IndsT},
                           Lpos::NTuple{NL,Int},
-                          Rpos::NTuple{NR,Int}) where {N,IndsT,NL,NR}
+                          Rpos::NTuple{NR,Int};kwargs...) where {N,IndsT,NL,NR}
   M = permute_reshape(T,Lpos,Rpos)
-  QM,RM = qr(M)
+  QM,RM = qr(M;kwargs...)
   q = ind(QM,2)
   r = ind(RM,1)
   # TODO: simplify this by permuting inds(T) by (Lpos,Rpos)
