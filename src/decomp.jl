@@ -10,7 +10,7 @@ function LinearAlgebra.qr(A::ITensor,
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  QT,RT = qr(tensor(A),Lpos,Rpos)
+  QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
   Q,R = ITensor(QT),ITensor(RT)
   q = commonindex(Q,R)
   settags!(Q,tags,q)

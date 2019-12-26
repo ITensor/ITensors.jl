@@ -1,17 +1,5 @@
 export svd_recursive
 
-function uniqueQR(M::AbstractMatrix)
-  sparseQ,R = qr(M)
-  Q = convert(Array,sparseQ)
-  nc = size(Q,2)
-  for c=1:nc
-    if real(R[c,c]) < 0.0
-      R[c,c:end] *= -1
-      Q[:,c] *= -1
-    end
-  end
-  return (Q,R)
-end
 
 function checkSVDDone(S::Vector,
                       thresh::Float64)
@@ -49,7 +37,7 @@ function svd_recursive(M::AbstractMatrix;
 
   V = M'*U
 
-  V,R = uniqueQR(V)
+  V,R = qr_positive(V)
   for n=1:Nd
     D[n] = R[n,n]
   end
