@@ -31,7 +31,7 @@ function op(::SpinOneSite,
   Dn = s(3)
   DnP = sP(3)
  
-  Op = ITensor(dag(s), s')
+  Op = ITensor(s',dag(s))
 
   if opname == "S⁺" || opname == "Splus" || opname == "S+"
     Op[Z0P, Dn] = √2 
