@@ -98,3 +98,9 @@ function contract!!(R::Tensor{<:Number,NR},
   return contract!!(R,labelsR,T2,labelsT2,T1,labelsT1)
 end
 
+function Base.show(io::IO,
+                   mime::MIME"text/plain",
+                   T::CombinerTensor)
+  # Intentionally left blank
+end
+
