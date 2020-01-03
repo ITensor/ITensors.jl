@@ -199,7 +199,7 @@ using ITensors,
     A = BlockSparseTensor(locsA,indsA...)
     randn!(A)
 
-		indsB = ([8,12,10,15],)
+    indsB = ([8,12,10,15],)
     B = reshape(A,indsB)
 
     @test nnzblocks(A)==nnzblocks(B)
@@ -222,13 +222,13 @@ using ITensors,
     @test nnzblocks(A)==nnzblocks(B)
     @test nnz(A)==nnz(B)
 		
-		Ap = permutedims(A,(3,2,1))
+    Ap = permutedims(A,(3,2,1))
 
-		for i in 1:nnzblocks(A)
-			blockAp = blockview(Ap,i)
-			blockB = blockview(B,i)
-			@test reshape(blockAp,size(blockB))==blockB
-		end
+    for i in 1:nnzblocks(A)
+      blockAp = blockview(Ap,i)
+      blockB = blockview(B,i)
+      @test reshape(blockAp,size(blockB))==blockB
+    end
   end
 
 end
