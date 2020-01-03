@@ -319,19 +319,20 @@ function blockview(T::BlockSparseTensor,
   return Tensor(Dense(dataTslice),blockdimsT)
 end
 
-struct EachBlock{ElT,N,StoreT,IndsT}
-  T::BlockSparseTensor{ElT,N,StoreT,IndsT}
-end
-
-function Base.iterate(iter::EachBlock,state=(blockview(iter.T,1),1))
-  block,ind = state
-  ind > nnzblocks(iter.T) && return nothing
-  return blockview(iter.T,ind),ind+1
-end
-
-function eachblock(T::BlockSparseTensor)
-  return EachBlock(T)
-end
+# TODO: this is not working right now
+#struct EachBlock{ElT,N,StoreT,IndsT}
+#  T::BlockSparseTensor{ElT,N,StoreT,IndsT}
+#end
+#
+#function Base.iterate(iter::EachBlock,state=(blockview(iter.T,1),1))
+#  block,ind = state
+#  ind > nnzblocks(iter.T) && return nothing
+#  return blockview(iter.T,ind),ind+1
+#end
+#
+#function eachblock(T::BlockSparseTensor)
+#  return EachBlock(T)
+#end
 
 # convert to Dense
 function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
@@ -653,39 +654,8 @@ function permute_combine(boffs::BlockOffsets,
   boffsp,indsp = permute(boffs,inds,perm)
   indsR = combine(indsp,pos...)
   boffsR = reshape(boffsp,indsp,indsR)
-  #nblocksp = nblocks(indsp)
-  #nblocksR = nblocks(indsR)
-	#boffsR = BlockOffsets{N}(undef,nnzblocks(boffsp))
-	#for (i,(blockp_i,offsetp_i)) in enumerate(boffsp)
-		# Convert the block location
-		#blockR_i = CartesianIndices(nblocksR)[LinearIndices(nblocksp)[CartesianIndex(blockp_i)]]
-		#boffsR[i] = blockR_i => offsetp_i
-	#end
-	return boffsR,indsR
+  return boffsR,indsR
 end
-
-#function Base.reshape(inds::IndsT,pos::Vararg{IntOrIntTuple,N}) where {IndsT,N}
-#  IndT = eltype(IndsT)
-#  newinds = SizedVector{N,IndT}(undef)
-#  inds_pos = 1
-#  for i ∈ 1:N
-#    ninds = length(pos[i])
-#    newind_i = inds[inds_pos]
-#    inds_pos += 1
-#    for p in 2:ninds
-#      newind_i = newind_i ⊗ inds[inds_pos]
-#      inds_pos += 1
-#    end
-#    newinds[i] = newind_i
-#  end
-#  IndsR = similar_type(IndsT,Val{N})
-#  return IndsR(Tuple(newinds))
-#end
-
-#function Base.reshape(block::Block{NT},
-#                      pos::Tuple{PermReshape{N}}) where {NT,N}
-#  return blockR
-#end
 
 function Base.reshape(boffsT::BlockOffsets{NT},
                       indsT,
