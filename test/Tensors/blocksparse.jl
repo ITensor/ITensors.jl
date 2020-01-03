@@ -200,30 +200,35 @@ using ITensors,
     randn!(A)
 
 		indsB = ([8,12,10,15],)
-		locsB = [(2,),(3,)]
-    B = reshape(A,locsB,indsB)
+    B = reshape(A,indsB)
 
-    @test nnzblocks(A)==nnzblocks(A)
-    @test nnz(A)==nnz(A)
+    @test nnzblocks(A)==nnzblocks(B)
+    @test nnz(A)==nnz(B)
     for i in 1:nnzblocks(B)
       blockA = blockview(A,i)
       blockB = blockview(B,i)
       @test reshape(blockA,size(blockB))==blockB
     end
-
   end
 
-  @testset "permute_reshape" begin
-    indsA = ([2,3],[4,5])
-    locsA = [(2,1),(1,2)]
+  @testset "permute_combine" begin
+    indsA = ([2,3],[4,5],[6,7,8])
+    locsA = [(2,1,1),(1,2,1),(2,2,3)]
     A = BlockSparseTensor(locsA,indsA...)
     randn!(A)
 
-    @show A
+    B = Tensors.permute_combine(A,3,(2,1))
 
-    B = Tensors.permute_reshape(A,(2,1))
+    @test nnzblocks(A)==nnzblocks(B)
+    @test nnz(A)==nnz(B)
+		
+		Ap = permutedims(A,(3,2,1))
 
-    @show B
+		for i in 1:nnzblocks(A)
+			blockAp = blockview(Ap,i)
+			blockB = blockview(B,i)
+			@test reshape(blockAp,size(blockB))==blockB
+		end
   end
 
 end
