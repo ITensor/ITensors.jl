@@ -660,10 +660,10 @@ end
 function Base.reshape(boffsT::BlockOffsets{NT},
                       indsT,
                       indsR) where {NT}
-	NR = length(indsR)
+  NR = length(indsR)
   boffsR = BlockOffsets{NR}(undef,nnzblocks(boffsT))
-	nblocksT = nblocks(indsT)
-	nblocksR = nblocks(indsR)
+  nblocksT = nblocks(indsT)
+  nblocksR = nblocks(indsR)
   for (i,(blockT,offsetT)) in enumerate(boffsT)
     blockR = Tuple(CartesianIndices(nblocksR)[LinearIndices(nblocksT)[CartesianIndex(blockT)]])
     boffsR[i] = blockR => offsetT
@@ -713,8 +713,8 @@ function permute_combine(T::BlockSparseTensor{ElT,NT,IndsT},
 
   if !is_trivial_permutation(perm)
     Tp = permutedims(T,perm)
-	else
-		Tp = copy(T)
+  else
+    Tp = copy(T)
   end
   NR==NT && return Tp
   R = reshape(Tp,boffsR,indsR)
