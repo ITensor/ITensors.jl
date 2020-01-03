@@ -1,5 +1,6 @@
 export BlockSparseTensor,
-       blockview
+       blockview,
+       eachblock
 
 #
 # BlockSparseTensor (Tensor using BlockSparse storage)
@@ -318,6 +319,20 @@ function blockview(T::BlockSparseTensor,
   return Tensor(Dense(dataTslice),blockdimsT)
 end
 
+struct EachBlock{ElT,N,StoreT,IndsT}
+  T::BlockSparseTensor{ElT,N,StoreT,IndsT}
+end
+
+function Base.iterate(iter::EachBlock,state=(blockview(iter.T,1),1))
+  block,ind = state
+  ind > nnzblocks(iter.T) && return nothing
+  return blockview(iter.T,ind),ind+1
+end
+
+function eachblock(T::BlockSparseTensor)
+  return EachBlock(T)
+end
+
 # convert to Dense
 function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
   R = zeros(dense(TensorT),dense(inds(T)))
@@ -576,7 +591,8 @@ function contract!(R::BlockSparseTensor{<:Number,NR},
   return R
 end
 
-const PermReshape{N} = Vararg{Union{Int,NTuple{<:Any,Int}},N}
+const IntTuple = NTuple{N,Int} where N
+const IntOrIntTuple = Union{Int,IntTuple}
 
 function ⊗(dim1::BlockDim,dim2::BlockDim)
   dimR = BlockDim(undef,nblocks(dim1)*nblocks(dim2))
@@ -586,7 +602,7 @@ function ⊗(dim1::BlockDim,dim2::BlockDim)
   return dimR
 end
 
-function permute_reshape(inds::IndsT,pos::PermReshape{N}) where {IndsT,N}
+function permute_reshape(inds::IndsT,pos::Vararg{IntOrIntTuple,N}) where {IndsT,N}
   IndT = eltype(IndsT)
   newinds = SizedVector{N,IndT}(undef)
   for i ∈ 1:N
@@ -601,68 +617,99 @@ function permute_reshape(inds::IndsT,pos::PermReshape{N}) where {IndsT,N}
   return IndsR(Tuple(newinds))
 end
 
-function Base.reshape(inds::IndsT,pos::PermReshape{N}) where {IndsT,N}
-  IndT = eltype(IndsT)
-  newinds = SizedVector{N,IndT}(undef)
-  inds_pos = 1
-  for i ∈ 1:N
-    ninds = length(pos[i])
-    newind_i = inds[inds_pos]
-    inds_pos += 1
-    for p in 2:ninds
-      newind_i = newind_i ⊗ inds[inds_pos]
-      inds_pos += 1
-    end
-    newinds[i] = newind_i
-  end
-  IndsR = similar_type(IndsT,Val{N})
-  return IndsR(Tuple(newinds))
-end
+#function Base.reshape(inds::IndsT,pos::Vararg{IntOrIntTuple,N}) where {IndsT,N}
+#  IndT = eltype(IndsT)
+#  newinds = SizedVector{N,IndT}(undef)
+#  inds_pos = 1
+#  for i ∈ 1:N
+#    ninds = length(pos[i])
+#    newind_i = inds[inds_pos]
+#    inds_pos += 1
+#    for p in 2:ninds
+#      newind_i = newind_i ⊗ inds[inds_pos]
+#      inds_pos += 1
+#    end
+#    newinds[i] = newind_i
+#  end
+#  IndsR = similar_type(IndsT,Val{N})
+#  return IndsR(Tuple(newinds))
+#end
 
-function Base.reshape(block::Block{NT},
-                      pos::Tuple{PermReshape{N}}) where {NT,N}
-  return blockR
-end
+#function Base.reshape(block::Block{NT},
+#                      pos::Tuple{PermReshape{N}}) where {NT,N}
+#  return blockR
+#end
 
-function Base.reshape(boffs::BlockOffsets{NT},
+function Base.reshape(boffsT::BlockOffsets{N},
                       indsT,
-                      pos::Tuple{PermReshape{N}}) where {NT,N}
+                      indsR) where {N}
   @show boffs
-  @show pos
-  boffsR = BlockOffsets{N}(undef,nnzblocks(boffs))
-  for (i,(block,offset)) in enumerate(boffs)
-    blockR = reshape(block,pos)
-    boffsR[i] = BlockOffset(blockR,offset)
+  @show indsT
+  @show indsR
+  boffsR = BlockOffsets{N}(undef,nnzblocks(boffsT))
+  for (i,(blockT,offsetT)) in enumerate(boffsT)
+    blockR = 
+    boffsR[i] = BlockOffset(blockR,offsetT)
   end
   return boffsR
 end
 
-function Base.reshape(T::BlockSparseTensor{ElT,NT,IndsT},
-                      pos::Tuple{PermReshape{N}}) where {ElT,NT,IndsT,N}
+function Base.reshape(boffsT::BlockOffsets{NT},
+                      blocksR::Vector{Block{NR}}) where {NR,NT}
+  boffsR = BlockOffsets{NR}(undef,nnzblocks(boffsT))
+  # TODO: check blocksR is ordered and are properly reshaped
+  # versions of the blocks of boffsT
+  for (i,(blockT,offsetT)) in enumerate(boffsT)
+    blockR = blocksR[i]
+    boffsR[i] = BlockOffset(blockR,offsetT)
+  end
+  return boffsR
+end
+
+function Base.reshape(T::BlockSparse,
+                      boffsR::BlockOffsets)
+  return BlockSparse(data(T),boffsR)
+end
+
+function Base.reshape(T::BlockSparseTensor,
+                      boffsR::BlockOffsets,
+                      indsR)
+  storeR = reshape(store(T),boffsR)
+  return Tensor(storeR,indsR)
+end
+
+function Base.reshape(T::BlockSparseTensor,
+                      blocksR::Vector{Block{N}},
+                      indsR) where N
   @show T
-  @show pos
-  indsR = reshape(inds(T),pos...)
+  @show blocksR
   @show indsR
-  blockoffsetsR = reshape(blockoffsets(T),pos)
-  #R = reshape(T,newinds)
+  boffsR = reshape(blockoffsets(T),blocksR)
+  R = reshape(T,boffsR,indsR)
+  return R
 end
 
 function permute_reshape(T::BlockSparseTensor{ElT,NT,IndsT},
-                         pos::PermReshape{N}) where {ElT,NT,IndsT,N}
+                         pos::Vararg{IntOrIntTuple,NR}) where {ElT,NT,IndsT,NR}
   @show pos
 
   perm = tuplecat(pos...)
 
-  length(perm)≠NT && error("Index positions must add up to order of Tensor ($N)")
+  length(perm)≠NT && error("Index positions must add up to order of Tensor ($NT)")
   isperm(perm) || error("Index positions must be a permutation")
 
+  boffsT = blockoffsets(T)
   indsT = inds(T)
   IndT = eltype(IndsT)
   if !is_trivial_permutation(perm)
     Tp = permutedims(T,perm)
   end
-  N==NT && return Tp
-  R = reshape(T,pos)
+  NR==NT && return Tp
+
+  @show indsT
+  boffsR,indsR = permute_reshape(boffsT,indsT,pos...)
+  boffsR = permute_reshape(boffsT,pos...)
+  R = reshape(T,indsR)
   return R
 end
 

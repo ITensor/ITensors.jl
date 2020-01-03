@@ -193,6 +193,26 @@ using ITensors,
     end
   end
 
+  @testset "reshape" begin
+    indsA = ([2,3],[4,5])
+    locsA = [(2,1),(1,2)]
+    A = BlockSparseTensor(locsA,indsA...)
+    randn!(A)
+
+		indsB = ([8,12,10,15],)
+		locsB = [(2,),(3,)]
+    B = reshape(A,locsB,indsB)
+
+    @test nnzblocks(A)==nnzblocks(A)
+    @test nnz(A)==nnz(A)
+    for i in 1:nnzblocks(B)
+      blockA = blockview(A,i)
+      blockB = blockview(B,i)
+      @test reshape(blockA,size(blockB))==blockB
+    end
+
+  end
+
   @testset "permute_reshape" begin
     indsA = ([2,3],[4,5])
     locsA = [(2,1),(1,2)]
