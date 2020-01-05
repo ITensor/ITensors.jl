@@ -24,7 +24,7 @@ mutable struct MPS
 
   MPS() = new(0,Vector{ITensor}(),0,0)
 
-  MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
+  MPS(N::Int) = MPS(N,fill(ITensor(),N),0,N+1)
 
   function MPS(N::Int, 
                A::Vector{<:ITensor}, 
@@ -91,7 +91,11 @@ function Base.show(io::IO, M::MPS)
   print(io,"MPS")
   (length(M) > 0) && print(io,"\n")
   for (i, A) ∈ enumerate(tensors(M))
-    println(io,"$i  $(inds(A))")
+    if order(A) != 0
+      println(io,"[$i] $(inds(A))")
+    else
+      println(io,"[$i] ITensor()")
+    end
   end
 end
 

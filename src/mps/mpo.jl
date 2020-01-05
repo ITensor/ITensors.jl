@@ -39,7 +39,7 @@ mutable struct MPO
  
 end
 
-MPO(N::Int) = MPO(N,Vector{ITensor}(undef,N))
+MPO(N::Int) = MPO(N,fill(ITensor(),N))
 
 function MPO(sites,
              ops::Vector{String})
@@ -193,8 +193,12 @@ end
 function Base.show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  @inbounds for (i, A) ∈ enumerate(tensors(W))
-    println(io,"$i  $(inds(A))")
+  for (i, A) ∈ enumerate(tensors(W))
+    if order(A) != 0
+      println(io,"[$i] $(inds(A))")
+    else
+      println(io,"[$i] ITensor()")
+    end
   end
 end
 
