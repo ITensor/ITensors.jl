@@ -23,7 +23,7 @@ end
 
 let
   N = 100
-  sites = spinHalfSites(N)
+  sites = siteinds("S=1/2",N)
   psi0 = randomMPS(sites)
 
   # define parameters for DMRG sweeps

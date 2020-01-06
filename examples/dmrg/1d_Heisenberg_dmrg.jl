@@ -8,11 +8,11 @@ using Printf
 # We'll work in units where J=1
 
 let
-  N = 100                             
+  N = 100
   # Create N spin-one degrees of freedom
-  sites = spinOneSites(N)
+  sites = siteinds("S=1",N)
   # Alternatively can make spin-half sites instead
-  #sites = spinHalfSites(N)
+  #sites = siteinds("S=1/2",N)
 
   # Input operator terms which define a Hamiltonian
   ampo = AutoMPO()
@@ -33,7 +33,7 @@ let
   maxdim!(sweeps, 10,20,100,100,200)
   # Set maximum truncation error allowed when adapting bond dimensions
   cutoff!(sweeps, 1E-10)
-  @show sweeps               
+  @show sweeps
 
   # Run the DMRG algorithm, returning energy and optimized MPS
   energy, psi = dmrg(H,psi0, sweeps)

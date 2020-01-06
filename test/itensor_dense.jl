@@ -1,7 +1,6 @@
 using ITensors,
-      LinearAlgebra, # For tr()
-      Random,        # To set a seed
       Test
+import Random
 
 Random.seed!(12345)
 
@@ -53,9 +52,9 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     A = ITensor(M,i,j)
     @test store(A) isa Dense{Float64}
 
-    @test M ≈ matrix(A,i,j)
-    @test M' ≈ matrix(A,j,i)
-    @test_throws DimensionMismatch vector(A)
+    @test M ≈ Matrix(A,i,j)
+    @test M' ≈ Matrix(A,j,i)
+    @test_throws MethodError vector(A)
 
     @test size(A,1) == size(M,1) == 2
     @test size(A,3) == size(M,3) == 1
@@ -74,13 +73,13 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
       @test M1[ni,nj] ≈ TM[i(ni),j(nj)]
     end
 
-    M2 = matrix(TM,j,i)
+    M2 = Matrix(TM,j,i)
     for ni in i, nj in j
       @test M2[nj,ni] ≈ TM[i(ni),j(nj)]
     end
 
     T3 = randomITensor(i,j,k)
-    @test_throws DimensionMismatch matrix(T3,i,j)
+    @test_throws MethodError Matrix(T3,i,j)
   end
 
   @testset "To Vector" begin
@@ -92,7 +91,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     end
 
     T2 = randomITensor(i,j)
-    @test_throws DimensionMismatch vector(T2)
+    @test_throws MethodError vector(T2)
   end
 
   @testset "Complex" begin
@@ -199,7 +198,7 @@ end
   Amat = reshape(Amat+Amat'+randn(4,4)*1e-10,2,2,2,2)
   A = ITensor(Amat,i1,i2,s1,s2)
   Aexp = exp(A,(i1,i2),(s1,s2),ishermitian=true)
-  Amatexp = reshape(parent(exp(Hermitian(reshape(Amat,4,4)))),
+  Amatexp = reshape(parent(exp(ITensors.LinearAlgebra.Hermitian(reshape(Amat,4,4)))),
                     2,2,2,2)
   Aexp_from_mat = ITensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
@@ -245,6 +244,38 @@ end
   N = 2*M 
   B = ITensor(N,j,i)
   @test data(store(mul!(B, A, 2.0))) == 2.0*vec(transpose(M))
+end
+
+@testset "Convert to Array" begin
+  i = Index(2,"i")
+  j = Index(3,"j")
+  T = randomITensor(i,j)
+
+  A = Array{Float64}(T,i,j)
+  for I in CartesianIndices(T)
+    @test A[I] == T[I]
+  end
+
+  T11 = T[1,1]
+  T[1,1] = 1
+  @test T[1,1] == 1
+  @test T11 != 1
+  @test A[1,1] == T11
+
+  A = Matrix{Float64}(T,i,j)
+  for I in CartesianIndices(T)
+    @test A[I] == T[I]
+  end
+
+  A = Matrix(T,i,j)
+  for I in CartesianIndices(T)
+    @test A[I] == T[I]
+  end
+
+  A = Array(T,i,j)
+  for I in CartesianIndices(T)
+    @test A[I] == T[I]
+  end
 end
 
 @testset "show" begin

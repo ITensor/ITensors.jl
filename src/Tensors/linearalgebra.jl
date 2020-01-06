@@ -26,7 +26,7 @@ function LinearAlgebra.exp(T::DenseTensor{ElT,2}) where {ElT}
   return Tensor(Dense(vec(expTM)),inds(T))
 end
 
-function expHermitian(T::DenseTensor{ElT,2}) where {ElT}
+function exphermitian(T::DenseTensor{ElT,2}) where {ElT}
   # exp(::Hermitian/Symmetric) returns Hermitian/Symmetric,
   # so extract the parent matrix
   expTM = parent(exp(Hermitian(matrix(T))))
@@ -138,11 +138,29 @@ function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
   return U,D,spec
 end
 
-function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}) where {ElT,
-                                                              IndsT}
+function qr_positive(M::AbstractMatrix)
+  sparseQ,R = qr(M)
+  Q = convert(Matrix,sparseQ)
+  nc = size(Q,2)
+  for c=1:nc
+    if real(R[c,c]) < 0.0
+      R[c,c:end] *= -1
+      Q[:,c] *= -1
+    end
+  end
+  return (Q,R)
+end
+
+function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}
+                          ;kwargs...) where {ElT,IndsT}
+  positive = get(kwargs,:positive,false)
   # TODO: just call qr on T directly (make sure
   # that is fast)
-  QM,RM = qr(matrix(T))
+  if positive
+    QM,RM = qr_positive(matrix(T))
+  else
+    QM,RM = qr(matrix(T))
+  end
   # Make the new indices to go onto Q and R
   q,r = inds(T)
   q = dim(q) < dim(r) ? sim(q) : sim(r)

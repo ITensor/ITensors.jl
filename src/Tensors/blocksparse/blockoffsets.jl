@@ -19,6 +19,8 @@ const Block{N} = NTuple{N,Int}
 const BlockOffset{N} = Pair{Block{N},Int}
 const BlockOffsets{N} = Vector{BlockOffset{N}}
 
+BlockOffset(block::Block{N},offset::Int) where {N} = BlockOffset{N}(block,offset)
+
 block(bof::BlockOffset) = first(bof)
 offset(bof::BlockOffset) = last(bof)
 block(block::Block) = block
@@ -100,7 +102,7 @@ Searches assuming the blocks are sorted.
 If the block already exists, throw an error.
 """
 function new_block_pos(bofs::BlockOffsets{N},
-                   block::Block{N}) where {N}
+                       block::Block{N}) where {N}
   r = searchsorted(bofs,block;lt=isblockless)
   length(r)>1 && error("In new_block_pos, more than one block found")
   length(r)==1 && error("In new_block_pos, block already found")
@@ -132,5 +134,58 @@ function permute(blockoffsets::BlockOffsets{N},
   indsR = permute(inds,perm)
   blockoffsetsR,_ = get_blockoffsets(blocksR,indsR)
   return blockoffsetsR,indsR
+end
+
+"""
+blockdim(T::BlockOffsets,nnz::Int,pos::Int)
+
+Get the block dimension of the block at position pos.
+"""
+function blockdim(boffs::BlockOffsets,
+                  nnz::Int,
+                  pos::Int)
+  if nnzblocks(boffs)==0
+    return 0
+  elseif pos==nnzblocks(boffs)
+    return nnz-offset(boffs,pos)
+  end
+  return offset(boffs,pos+1)-offset(boffs,pos)
+end
+
+function Base.union(boffs1::BlockOffsets{N},
+                    nnz1::Int,
+                    boffs2::BlockOffsets{N},
+                    nnz2::Int) where {N}
+  n1,n2 = 1,1
+  boffsR = BlockOffset{N}[]
+  current_offset = 0
+  while n1 <= length(boffs1) && n2 <= length(boffs2)
+    if isblockless(boffs1[n1],boffs2[n2])
+      push!(boffsR, BlockOffset(block(boffs1[n1]),current_offset))
+      current_offset += blockdim(boffs1,nnz1,n1)
+      n1 += 1
+    elseif isblockless(boffs2[n2],boffs1[n1])
+      push!(boffsR, BlockOffset(block(boffs2[n2]),current_offset))
+      current_offset += blockdim(boffs2,nnz2,n2)
+      n2 += 1
+    else
+      push!(boffsR, BlockOffset(block(boffs1[n1]),current_offset))
+      current_offset += blockdim(boffs1,nnz1,n1)
+      n1 += 1
+      n2 += 1
+    end
+  end
+  if n1 <= length(boffs1)
+    for n in n1:length(boffs1)
+      push!(boffsR, BlockOffset(block(boffs1[n]),current_offset))
+      current_offset += blockdim(boffs1,nnz1,n)
+    end
+  elseif n2 <= length(boffs2)
+    for n in n2:length(bofss2)
+      push!(boffsR, BlockOffset(block(boffs2[n]),current_offset))
+      current_offset += blockdim(boffs2,nnz2,n)
+    end
+  end
+  return boffsR,current_offset
 end
 

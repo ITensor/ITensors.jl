@@ -1,4 +1,5 @@
-using ITensors, Test
+using ITensors,
+      Test
 
 a = [-0.1, -0.12]
 @test ITensors.truncate!(a) == (0., 0.)
@@ -19,7 +20,7 @@ A = randomITensor(i,j)
 
   U,S,V = svd(rand(100,100))
   S ./= norm(S)
-  A = ITensor(U*diagm(0=>S)*V', i,j)
+  A = ITensor(U*ITensors.LinearAlgebra.diagm(0=>S)*V', i,j)
 
   spec = svd(A,i).spec
 

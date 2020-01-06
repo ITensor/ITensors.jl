@@ -1,43 +1,5 @@
-export orthog!,
-       svd_recursive
+export svd_recursive
 
-function orthog!(M::AbstractMatrix{T};
-                 npass::Int=2) where {T}
-  nkeep = min(size(M)...)
-  dots = zeros(T,nkeep)
-  for i=1:nkeep
-    coli = view(M,:,i)
-    nrm = norm(coli)
-    if nrm < 1E-10
-      rand!(coli)
-      nrm = norm(coli)
-    end
-    coli ./= nrm
-    (i==1) && continue
-
-    Mcols = view(M,:,1:i-1)
-    dotsref = view(dots,1:i-1)
-    for pass=1:npass
-      mul!(dotsref,Mcols',coli)
-      #BLAS.gemv!('N',1.0,Mcols,dotsref,-1.0,coli)
-      coli .-= Mcols*dotsref
-      nrm = norm(coli)
-      if nrm < 1E-3 #orthog is suspect
-        pass = pass-1
-      end
-      if nrm < 1E-10
-        rand!(coli)
-        nrm = norm(coli)
-      end
-      coli ./= nrm
-    end
-  end
-end
-
-function pos_sqrt(x::Float64)::Float64
-  (x < 0.0) && return 0.0
-  return sqrt(x)
-end
 
 function checkSVDDone(S::Vector,
                       thresh::Float64)
@@ -72,12 +34,13 @@ function svd_recursive(M::AbstractMatrix;
   D,U = eigen(Hermitian(rho),1:size(rho,1))
 
   Nd = length(D)
-  for n=1:Nd
-    D[n] = pos_sqrt(-D[n])
-  end
 
   V = M'*U
-  orthog!(V,npass=north_pass)
+
+  V,R = qr_positive(V)
+  for n=1:Nd
+    D[n] = R[n,n]
+  end
 
   (done,start) = checkSVDDone(D,thresh)
 

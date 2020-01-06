@@ -54,6 +54,8 @@ BlockSparse(::UndefInitializer,
 blockoffsets(D::BlockSparse) = D.blockoffsets
 nnzblocks(D::BlockSparse) = length(blockoffsets(D))
 nnz(D::BlockSparse) = length(data(D))
+offset(D::BlockSparse,block::Block) = offset(blockoffsets(D),block)
+offset(D::BlockSparse,n::Int) = offset(blockoffsets(D),n)
 
 function Base.similar(D::BlockSparse{ElT}) where {ElT}
   return BlockSparse{ElT}(similar(data(D)),blockoffsets(D))
@@ -101,8 +103,72 @@ function Base.:*(D::BlockSparse,x::Number)
 end
 Base.:*(x::Number,D::BlockSparse) = D*x
 
+"""
+blockdim(T::BlockSparse,pos::Int)
+
+Get the block dimension of the block at position pos.
+"""
+blockdim(D::BlockSparse,pos::Int) = blockdim(blockoffsets(D),nnz(D),pos)
+
+"""
+blockdim(T::BlockSparse,block::Block)
+
+Get the block dimension of the block.
+"""
+function blockdim(D::BlockSparse,
+                  block::Block)
+  pos = findblock(D,block)
+  return blockdim(D,pos)
+end
+
+findblock(T::BlockSparse{ElT,VecT,N},
+          block::Block{N}) where {ElT,VecT,N} = findblock(blockoffsets(T),block)
+
+"""
+isblocknz(T::BlockSparse,
+          block::Block)
+
+Check if the specified block is non-zero.
+"""
+function isblocknz(T::BlockSparse{ElT,VecT,N},
+                   block::Block{N}) where {ElT,VecT,N}
+  isnothing(findblock(T,block)) && return false
+  return true
+end
+
+# Given a specified block, return a Dense storage that is a view to the data
+# in that block. Return nothing if the block is structurally zero
+function blockview(T::BlockSparse,
+                   block)
+  #error("Block must be structurally non-zero to get a view")
+  !isblocknz(T,block) && return nothing
+  blockoffsetT = offset(T,block)
+  blockdimT = blockdim(T,block)
+  dataTslice = @view data(T)[blockoffsetT+1:blockoffsetT+blockdimT]
+  return Dense(dataTslice)
+end
+
 function Base.:+(D1::BlockSparse,D2::BlockSparse)
-  blockoffsets(D1) ≠ blockoffsets(D2) && error("Cannot add BlockSparse storage with different sparsity structure")
-  return BlockSparse(data(D1)+data(D2),blockoffsets(D1))
+  # This could be of order nnzblocks, avoid?
+  if blockoffsets(D1) == blockoffsets(D2)
+    return BlockSparse(data(D1)+data(D2),blockoffsets(D1))
+  end
+  blockoffsetsR,nnzR = union(blockoffsets(D1),nnz(D1),
+                             blockoffsets(D2),nnz(D2))
+  R = BlockSparse(undef,blockoffsetsR,nnzR)
+  for (blockR,offsetR) in blockoffsets(R)
+    blockview1 = blockview(D1,blockR)
+    blockview2 = blockview(D2,blockR)
+    blockviewR = blockview(R,blockR)
+    if isnothing(blockview1)
+      copyto!(blockviewR,blockview2)
+    elseif isnothing(blockview2)
+      copyto!(blockviewR,blockview1)
+    else
+      # TODO: is this fast?
+      blockviewR .= blockview1 .+ blockview2
+    end
+  end
+  return R
 end
 
