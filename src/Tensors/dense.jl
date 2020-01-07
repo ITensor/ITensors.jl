@@ -155,10 +155,14 @@ Tensor(::UndefInitializer,
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
 
-
 function Base.similar(::Type{<:DenseTensor{ElT}},
-                  inds) where {ElT}
+                      inds) where {ElT}
   return DenseTensor(ElT,undef,inds)
+end
+
+# To fix method ambiguity with similar(::AbstractArray,::Type)
+function Base.similar(T::DenseTensor,::Type{ElT}) where {ElT}
+  return Tensor(similar(store(T),ElT),copy(inds(T)))
 end
 
 # To fix method ambiguity with similar(::AbstractArray,::Tuple)

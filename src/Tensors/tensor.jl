@@ -57,7 +57,7 @@ Base.similar(T::Tensor) = Tensor(similar(store(T)),copy(inds(T)))
 # To handle method ambiguity with AbstractArray
 #Base.similar(T::Tensor,dims::Dims) = _similar_from_dims(T,dims)
 
-Base.similar(T::Tensor,::Type{S}) where {S<:Number} = Tensor(similar(store(T),S),copy(inds(T)))
+Base.similar(T::Tensor,::Type{S}) where {S} = Tensor(similar(store(T),S),copy(inds(T)))
 
 Base.similar(T::Tensor,::Type{S},dims) where {S<:Number} = _similar_from_dims(T,S,dims)
 
