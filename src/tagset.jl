@@ -116,7 +116,7 @@ function TagSet((str,plev)::Tuple{<:AbstractString,<:Integer})
   return setprime(ts,plev)
 end
 
-convert(::Type{TagSet}, str::String) = TagSet(str)
+Base.convert(::Type{TagSet}, str::String) = TagSet(str)
 
 tags(T::TagSet) = T.tags
 plev(T::TagSet) = T.plev
@@ -150,8 +150,7 @@ function cast_to_uint128(a::TagSetStorage)
   return unsafe_load(convert(Ptr{SVector{2,UInt128}},pointer_from_objref(MTagSetStorage(a))))
 end
 
-import Base.==
-function ==(ts1::TagSet,ts2::TagSet)
+function Base.:(==)(ts1::TagSet,ts2::TagSet)
   plev(ts1) ≠ plev(ts2) && return false
   # Block the bits together to make the comparison faster
   return cast_to_uint128(tags(ts1)) == cast_to_uint128(tags(ts2))

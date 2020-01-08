@@ -13,7 +13,7 @@ mutable struct ProjMPO
 end
 
 nsite(pm::ProjMPO) = pm.nsite
-length(pm::ProjMPO) = length(pm.H)
+Base.length(pm::ProjMPO) = length(pm.H)
 
 
 function lproj(pm::ProjMPO)::ITensor
@@ -64,7 +64,7 @@ end
 
 (pm::ProjMPO)(v::ITensor) = product(pm,v)
 
-function size(pm::ProjMPO)::Tuple{Int,Int}
+function Base.size(pm::ProjMPO)::Tuple{Int,Int}
   d = 1
   if !isnull(lproj(pm))
     for i in inds(lproj(pm))

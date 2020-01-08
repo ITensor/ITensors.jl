@@ -1,7 +1,6 @@
 using ITensors,
-      LinearAlgebra, # For tr()
       Test
-using Combinatorics: permutations
+import Combinatorics
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
 
@@ -85,7 +84,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       Aij = permute(Aij,i,j)
       Bij = permute(Bij,i,j)
       C = Aij*Bij
-      CArray = tr(array(Aij)*transpose(array(Bij)))
+      CArray = ITensors.LinearAlgebra.tr(array(Aij)*transpose(array(Bij)))
       @test CArray≈scalar(C)
     end
     @testset "Test contract ITensors (Matrix*Matrix -> Matrix)" begin
@@ -168,7 +167,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       @test CArray≈array(permute(C,i,l))
     end
     @testset "Test contract ITensors (3-Tensor*3-Tensor -> 3-Tensor)" begin
-      for inds_ijk ∈ permutations([i,j,k]), inds_jkl ∈ permutations([j,k,l])
+      for inds_ijk ∈ Combinatorics.permutations([i,j,k]), inds_jkl ∈ Combinatorics.permutations([j,k,l])
         Aijk = permute(Aijk,inds_ijk...)
         Ajkl = permute(Ajkl,inds_jkl...)
         C = Ajkl*Aijk
@@ -177,7 +176,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       end
     end
     @testset "Test contract ITensors (4-Tensor*3-Tensor -> 1-Tensor)" begin
-      for inds_ijkl ∈ permutations([i,j,k,l]), inds_jkl ∈ permutations([j,k,l])
+      for inds_ijkl ∈ Combinatorics.permutations([i,j,k,l]), inds_jkl ∈ Combinatorics.permutations([j,k,l])
         Aijkl = permute(Aijkl,inds_ijkl...)
         Ajkl = permute(Ajkl,inds_jkl...) 
         C = Ajkl*Aijkl
@@ -186,7 +185,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       end
     end
     @testset "Test contract ITensors (4-Tensor*3-Tensor -> 3-Tensor)" begin
-      for inds_ijkl ∈ permutations([i,j,k,l]), inds_klα ∈ permutations([k,l,α])
+      for inds_ijkl ∈ Combinatorics.permutations([i,j,k,l]), inds_klα ∈ Combinatorics.permutations([k,l,α])
         Aijkl = permute(Aijkl,inds_ijkl...)
         Aklα = permute(Aklα,inds_klα...)
         C = Aklα*Aijkl

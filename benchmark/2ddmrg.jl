@@ -6,7 +6,7 @@ function main()
 
   N = Nx*Ny
 
-  sites = spinHalfSites(N;conserveQNs=false)
+  sites = siteinds("S=1/2",N)
 
   lattice = squareLattice(Nx,Ny,yperiodic=false)
   #lattice = triangularLattice(Nx,Ny,yperiodic=false)

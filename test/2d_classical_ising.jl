@@ -1,6 +1,5 @@
-using ITensors,
-      LinearAlgebra,
-      QuadGK
+using ITensors
+import QuadGK
 
 const βc = 0.5*log(sqrt(2.0)+1.0)
 
@@ -11,7 +10,7 @@ function ising_free_energy(β::Real,J::Real=1.0)
   xmin = 0.0
   xmax = π
   integrand(x) = log(c^2+sqrt(s^4+1-2*s^2*cos(x)))
-  integral,err = quadgk(integrand, xmin, xmax)::Tuple{Float64,Float64}
+  integral,err = QuadGK.quadgk(integrand, xmin, xmax)::Tuple{Float64,Float64}
   return -(log(2.0)+integral/π)/(2.0*β)
 end
 
@@ -31,8 +30,8 @@ function ising_mpo(sh::Tuple{Index,Index},sv::Tuple{Index,Index},
     end
     sz && (T[1,1,1,1] = -T[1,1,1,1])
     Q = [exp(β*J) exp(-β*J); exp(-β*J) exp(β*J)]
-    D,U = eigen(Symmetric(Q))
-    √Q = U*Diagonal(sqrt.(D))*U'
+    D,U = eigen(ITensors.LinearAlgebra.Symmetric(Q))
+    √Q = U*ITensors.LinearAlgebra.Diagonal(sqrt.(D))*U'
     Xh1 = ITensor(√Q,sh[1],sh[1]')
     Xh2 = ITensor(√Q,sh[2],sh[2]')
     Xv1 = ITensor(√Q,sv[1],sv[1]')
