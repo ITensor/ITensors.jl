@@ -155,17 +155,26 @@ Tensor(::UndefInitializer,
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
 
-
-# TODO: Naming _similar because of method ambiguity with 
-# similar(::AbstractArray,dims), how to avoid?
-function _similar(::Type{<:DenseTensor{ElT}},
-                  inds) where {ElT}
+function Base.similar(::Type{<:DenseTensor{ElT}},
+                      inds) where {ElT}
   return DenseTensor(ElT,undef,inds)
 end
 
-# TODO: Naming _similar because of method ambiguity with 
-# similar(::AbstractArray,dims), how to avoid?
-_similar(T::DenseTensor,inds) = _similar(typeof(T),inds)
+# To fix method ambiguity with similar(::AbstractArray,::Type)
+function Base.similar(T::DenseTensor,::Type{ElT}) where {ElT}
+  return Tensor(similar(store(T),ElT),copy(inds(T)))
+end
+
+# To fix method ambiguity with similar(::AbstractArray,::Tuple)
+function Base.similar(::Type{<:DenseTensor{ElT}},
+                      inds::Dims) where {ElT}
+  return DenseTensor(ElT,undef,inds)
+end
+
+Base.similar(T::DenseTensor,inds) = similar(typeof(T),inds)
+
+# To fix method ambiguity with similar(::AbstractArray,::Tuple)
+Base.similar(T::DenseTensor,inds::Dims) = similar(typeof(T),inds)
 
 # Slicing
 Base.@propagate_inbounds function _getindex(T::DenseTensor{ElT,N},
@@ -308,7 +317,7 @@ end
 # TODO: move to tensor.jl?
 function Base.permutedims(T::Tensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
-  Tp = _similar(T,permute(inds(T),perm))
+  Tp = similar(T,permute(inds(T),perm))
   Tp = permutedims!!(Tp,T,perm)
   return Tp
 end
@@ -413,7 +422,7 @@ function contraction_output(::TensorT1,
                                                  TensorT2<:DenseTensor,
                                                  IndsR}
   TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
-  return _similar(TensorR,indsR)
+  return similar(TensorR,indsR)
 end
 
 # TODO: move to tensor.jl?
