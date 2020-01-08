@@ -3,6 +3,18 @@ using ITensors,
 
 include("util.jl")
 
+function basicRandomMPO(N::Int, sites;dim=4)
+  #sites = [Index(2,"Site") for n=1:N]
+  M = MPO(sites)
+  links = [Index(dim,"n=$(n-1),Link") for n=1:N+1]
+  for n=1:N
+    M[n] = randomITensor(links[n],sites[n],sites[n]',links[n+1])
+  end
+  M[1] *= delta(links[1])
+  M[N] *= delta(links[N+1])
+  return M
+end
+
 @testset "MPO Basics" begin
   N = 6
   sites = [Index(2,"Site") for n=1:N]
@@ -194,6 +206,24 @@ include("util.jl")
     k_psi = applyMPO(K, psi, maxdim=1)
     l_psi = applyMPO(L, psi, maxdim=1)
     @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
+    @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol=5e-3
+    for dim in 2:4
+        shsites = siteinds("S=1/2",N)
+        K = basicRandomMPO(N, shsites; dim=dim)
+        L = basicRandomMPO(N, shsites; dim=dim)
+        M = sum(K, L)
+        @test length(M) == N
+        psi = randomMPS(shsites)
+        k_psi = applyMPO(K, psi)
+        l_psi = applyMPO(L, psi)
+        @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
+        @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol=5e-3
+        psi = randomMPS(shsites)
+        M = sum(K, L; cutoff=1E-9)
+        k_psi = applyMPO(K, psi)
+        l_psi = applyMPO(L, psi)
+        @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
+    end
   end
 
   @testset "multMPO" begin
