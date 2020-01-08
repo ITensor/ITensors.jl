@@ -219,7 +219,7 @@ end
         @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
         @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol=5e-3
         psi = randomMPS(shsites)
-        M = sum(K, L; maxdim=dim)
+        M = sum(K, L; cutoff=1E-9)
         k_psi = applyMPO(K, psi)
         l_psi = applyMPO(L, psi)
         @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
