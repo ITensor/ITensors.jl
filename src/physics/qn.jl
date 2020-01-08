@@ -11,8 +11,6 @@ struct QNVal
   val::Int
   modulus::Int
 
-  QNVal() = new(SmallString(),0,0)
-
   function QNVal(name,v::Int,m::Int=1)
     am = abs(m)
     if am > 1
@@ -22,6 +20,9 @@ struct QNVal
   end
 
 end
+
+QNVal(v::Int,m::Int=1) = QNVal("",v,m)
+QNVal() = QNVal("",0,0)
 
 name(qv::QNVal) = qv.name
 val(qv::QNVal) = qv.val
@@ -71,7 +72,7 @@ function QN(qvs...)
     m[n] = QNVal(qv...)
   end
   Nvals = length(qvs)
-  sort!(m[1:Nvals];by=name,alg=InsertionSort)
+  sort!(@view m[1:Nvals];by=name,alg=InsertionSort)
   for n=1:(length(qvs)-1)
     if name(m[n])==name(m[n+1])
       error("Duplicate name \"$(name(m[n]))\" in QN")
@@ -81,6 +82,7 @@ function QN(qvs...)
 end
 
 QN(name,val::Int,modulus::Int=1) = QN((name,val,modulus))
+QN(val::Int,modulus::Int=1) = QN(("",val,modulus))
 
 Base.getindex(q::QN,n::Int) = getindex(q.store,n)
 

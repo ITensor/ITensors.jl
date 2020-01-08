@@ -110,7 +110,7 @@ function randomMPS(sites)
   return M
 end
 
-function productMPS(ivals::Vector{IndexVal})
+function productMPS(ivals::Vector{<:IndexVal})
   N = length(ivals)
   As = Vector{ITensor}(undef,N)
   links  = Vector{Index}(undef,N)
