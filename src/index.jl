@@ -48,11 +48,20 @@ level which can be incremented or decremented with special priming functions.
 Internally, an `Index` has a fixed `id` number, which is how the ITensor library knows two indices are copies of a 
 single original `Index`. `Index` objects must have the same `id`, as well as the `tags` to compare equal.
 """
-struct Index
+struct Index{T}
   id::IDType
-  dim::Int
+  dim::T
   dir::Arrow
   tags::TagSet
+
+  function Index(id::IDType,dim::T,dir::Arrow,tags::TagSet) where {T}
+    # By default, an Index has a prime level of 0
+    # A prime level less than 0 is interpreted as the
+    # prime level not being set
+    !hasplev(tags) && (tags = setprime(tags,0))
+    return new{T}(id,dim,dir,tags)
+  end
+
 end
 
 Index() = Index(IDType(0),1,Neither,TagSet(("",0)))
@@ -66,11 +75,12 @@ Example: create a two dimensional index with tag `l`:
 """
 function Index(dim::Integer,tags=("",0))
   ts = TagSet(tags)
-  # By default, an Index has a prime level of 0
-  # A prime level less than 0 is interpreted as the
-  # prime level not being set
-  !hasplev(ts) && (ts = setprime(ts,0))
-  Index(rand(IDType),dim,Out,ts)
+  return Index(rand(IDType),dim,Out,ts)
+end
+
+function Index(blockdims::Vector{Pair{QN,Int64}},tags=("",0))
+  ts = TagSet(tags)
+  return Index(rand(IDType),blockdims,Out,ts)
 end
 
 """
