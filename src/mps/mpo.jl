@@ -302,9 +302,8 @@ function plussers(::Type{T}, left_ind::Index, right_ind::Index, sum_ind::Index) 
 end
 
 function Base.sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
-    #N = length(A)
-    N = A.N_
-    length(B) =! N && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
+    N = length(A)
+    length(B) != N && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
     orthogonalize!(A, 1; kwargs...)
     orthogonalize!(B, 1; kwargs...)
     C = similar(A)
