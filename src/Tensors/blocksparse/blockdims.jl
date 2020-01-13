@@ -107,9 +107,9 @@ blockdim(::BlockDims,block,::Integer)
 The size of the specified block in the specified
 dimension.
 """
-function blockdim(inds::BlockDims{N},
+function blockdim(inds,
                   block,
-                  i::Integer) where {N}
+                  i::Integer)
   return blockdim(inds[i],block[i])
 end
 
@@ -118,18 +118,18 @@ blockdims(::BlockDims,block)
 
 The size of the specified block.
 """
-function blockdims(inds::BlockDims{N},
-                   block) where {N}
-  return ntuple(i->blockdim(inds,block,i),Val(N))
+function blockdims(inds,
+                   block)
+  return ntuple(i->blockdim(inds,block,i),ValLength(inds))
 end
 
 """
-blockdims(::BlockDims,block)
+blockdim(::BlockDims,block)
 
 The total size of the specified block.
 """
-function blockdim(inds::BlockDims{N},
-                  block) where {N}
+function blockdim(inds,
+                  block)
   return prod(blockdims(inds,block))
 end
 

@@ -79,11 +79,6 @@ function Index(dim::Integer,tags=("",0))
   return Index(rand(IDType),dim,Out,ts)
 end
 
-function Index(blockdims::Vector{Pair{QN,Int64}},tags=("",0))
-  ts = TagSet(tags)
-  return Index(rand(IDType),blockdims,Out,ts)
-end
-
 """
     id(i::Index)
 Obtain the id of an Index, which is a unique 64 digit integer
