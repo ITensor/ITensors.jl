@@ -24,7 +24,6 @@ include("Tensors/Tensors.jl")
 include("smallstring.jl")
 include("readwrite.jl")
 include("tagset.jl")
-include("physics/qn.jl")
 include("index.jl")
 include("indexset.jl")
 
@@ -34,6 +33,13 @@ include("indexset.jl")
 include("itensor.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
+
+#####################################
+# QNs
+#
+include("qn.jl")
+include("qnindex.jl")
+include("qnitensor.jl")
 
 ###########################################################
 # MPS/MPO

@@ -1,6 +1,5 @@
 export BlockSparseTensor,
-       blockview,
-       eachblock
+       blockview
 
 #
 # BlockSparseTensor (Tensor using BlockSparse storage)
@@ -330,7 +329,7 @@ end
 #  return blockview(iter.T,ind),ind+1
 #end
 #
-#function eachblock(T::BlockSparseTensor)
+#function eachnzblock(T::BlockSparseTensor)
 #  return EachBlock(T)
 #end
 
