@@ -104,6 +104,7 @@ Tensors.dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 Base.ndims(::IndexSet{N}) where {N} = N
 Base.ndims(::Type{IndexSet{N}}) where {N} = N
 Tensors.dim(is::IndexSet) = prod(dim.(is))
+Tensors.dim(is::IndexSet{0}) = 1
 Tensors.dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
 function Tensors.insertat(is1::IndexSet{N1},
