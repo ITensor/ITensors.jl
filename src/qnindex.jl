@@ -1,3 +1,4 @@
+export flux
 
 const QNBlock = Pair{QN,Int64}
 const QNBlocks = Vector{QNBlock}
@@ -26,15 +27,13 @@ function Index(blockdims::QNBlocks,tags=("",0))
 end
 
 
-qnblocks(i::QNIndex) = i.dim
+Tensors.dim(i::QNIndex) = dim(space(i))
 
-Tensors.dim(i::QNIndex) = dim(qnblocks(i))
+Tensors.nblocks(i::QNIndex) = nblocks(space(i))
 
-Tensors.nblocks(i::QNIndex) = nblocks(qnblocks(i))
+qn(ind::QNIndex,b::Int) = qn(space(ind),b)
 
-qn(ind::QNIndex,b::Int) = qn(qnblocks(ind),b)
-
-Tensors.blockdim(ind::QNIndex,b::Int) = blockdim(qnblocks(ind),b)
+Tensors.blockdim(ind::QNIndex,b::Int) = blockdim(space(ind),b)
 
 # TODO: generic to IndexSet and BlockDims
 """
@@ -60,5 +59,24 @@ end
 # TODO: generic to IndexSet and BlockDims
 function eachblock(inds::IndexSet)
   return CartesianIndices(nblocks(inds))
+end
+
+function flux(inds::IndexSet,block)
+  qntot = QN()
+  for n in 1:ndims(inds)
+    ind = inds[n]
+    qntot += dir(ind)*qn(ind,block[n])
+  end
+  return qntot
+end
+
+function nzblocks(qn::QN,inds::IndexSet{N}) where {N}
+  blocks = NTuple{N,Int}[]
+  for block in eachblock(inds)
+    if flux(inds,block) == qn
+      push!(blocks,Tuple(block))
+    end
+  end
+  return blocks
 end
 

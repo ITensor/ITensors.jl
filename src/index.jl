@@ -51,7 +51,7 @@ single original `Index`. `Index` objects must have the same `id`, as well as the
 """
 struct Index{T}
   id::IDType
-  dim::T
+  space::T
   dir::Arrow
   tags::TagSet
 
@@ -89,7 +89,9 @@ id(i::Index) = i.id
     dim(i::Index)
 Obtain the dimension of an Index
 """
-Tensors.dim(i::Index) = i.dim
+Tensors.dim(i::Index) = i.space
+
+space(i::Index) = i.space
 
 """
     dir(i::Index)
@@ -129,19 +131,19 @@ end
     copy(i::Index)
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-Base.copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
+Base.copy(i::Index) = Index(id(i),space(i),dir(i),copy(tags(i)))
 
 """
     sim(i::Index)
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-Tensors.sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
+Tensors.sim(i::Index) = Index(rand(IDType),space(i),dir(i),copy(tags(i)))
 
 """
     dag(i::Index)
 Copy an index `i` and reverse it's direction
 """
-dag(i::Index) = Index(id(i),dim(i),-dir(i),tags(i))
+dag(i::Index) = Index(id(i),space(i),-dir(i),tags(i))
 
 """
     isdefault(i::Index)
@@ -180,7 +182,7 @@ function settags(i::Index, strts)
   ts = TagSet(strts)
   # By default, an Index has a prime level of 0
   !hasplev(ts) && (ts = setprime(ts,0))
-  Index(id(i),dim(i),dir(i),ts)
+  Index(id(i),space(i),dir(i),ts)
 end
 
 """
@@ -246,9 +248,9 @@ function Base.show(io::IO,
                    i::Index) 
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
-    print(io,"($(dim(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
+    print(io,"($(space(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
   else
-    print(io,"($(dim(i))|id=$(idstr))$(primestring(tags(i)))")
+    print(io,"($(space(i))|id=$(idstr))$(primestring(tags(i)))")
   end
 end
 
