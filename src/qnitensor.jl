@@ -1,37 +1,10 @@
 
-#function ITensor(::Type{T},
-#                 inds::IndexSet{N}) where {T<:Number,N}
-#  return ITensor{N}(Dense{float(T)}(zeros(float(T),dim(inds))),inds)
-#end
-
-function flux(inds::IndexSet,block)
-  qntot = QN()
-  for i in 1:ndims(inds)
-    qntot += qn(inds[i],block[i])
-  end
-  return qntot
-end
-
-function nzblocks(qn::QN,inds::IndexSet{N}) where {N}
-  blocks = NTuple{N,Int}[]
-  for block in eachblock(inds)
-    if flux(inds,block) == qn
-      push!(blocks,Tuple(block))
-    end
-  end
-  return blocks
-end
-
 function ITensor(::Type{ElT},
                  flux::QN,
                  inds::IndexSet) where {ElT<:Number}
-  @show flux
-  @show inds
   blocks = nzblocks(flux,inds)
-  @show blocks
   T = BlockSparseTensor(blocks,inds)
-  @show T
-  #ITensor(T,IndexSet(inds...))
+  return itensor(T)
 end
 
 ITensor(::Type{T},
@@ -41,5 +14,36 @@ ITensor(::Type{T},
 ITensor(flux::QN,inds::IndexSet) = ITensor(Float64,flux::QN,inds...)
 
 ITensor(flux::QN,
-        inds::Index...) where {T<:Number} = ITensor(flux,IndexSet(inds...))
+        inds::Index...) = ITensor(flux,IndexSet(inds...))
+
+function randomITensor(::Type{ElT},
+                       flux::QN,
+                       inds::IndexSet) where {ElT<:Number}
+  T = ITensor(ElT,flux,inds)
+  randn!(T)
+  return T
+end
+
+function randomITensor(::Type{T},
+                       flux::QN,
+                       inds::Index...) where {T<:Number}
+  return randomITensor(T,flux,IndexSet(inds...))
+end
+
+randomITensor(flux::QN,inds::IndexSet) = randomITensor(Float64,flux::QN,inds...)
+
+randomITensor(flux::QN,
+              inds::Index...) = randomITensor(flux,IndexSet(inds...))
+
+Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+
+Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+
+flux(T::ITensor,block) = flux(inds(T),block)
+
+function flux(T::ITensor)
+  bofs = blockoffsets(T)
+  block1 = block(bofs,1)
+  return flux(T,block1)
+end
 

@@ -130,6 +130,13 @@ function combineQNs(a::QN,b::QN,operation)
   return QN(QNStorage(ma))
 end
 
+function Base.:*(dir::Arrow,qn::QN)
+  if dir==In
+    return -qn
+  end
+  return qn
+end
+
 function Base.:+(a::QN,b::QN)
   return combineQNs(a,b,+)
 end
