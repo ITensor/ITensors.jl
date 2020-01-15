@@ -101,10 +101,19 @@ function _insertat(t,pos,n_insert,val,i)
   return val[i-pos+1]
 end
 
+"""
+insertat
+
+Remove the value at pos and insert the elements in val
+"""
 function insertat(t::NTuple{N},
                   val::NTuple{M},
                   pos::Integer) where {N,M}
   return ntuple(i -> _insertat(t,pos,M,val,i),Val(N+M-1))
+end
+
+function insertat(t::NTuple{N}, val, pos::Integer) where {N}
+  return insertat(t,tuple(val),pos)
 end
 
 """
