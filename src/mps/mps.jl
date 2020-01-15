@@ -1,16 +1,16 @@
 export MPS,
        sample,
        sample!,
-       leftLim,
+       leftlim,
        prime!,
        primelinks!,
        simlinks!,
        inner,
+       isortho,
        productMPS,
        randomMPS,
-       replaceBond!,
-       rightLim,
-       maxLinkDim,
+       replacebond!,
+       rightlim,
        linkindex,
        siteindex,
        siteinds
@@ -24,7 +24,7 @@ mutable struct MPS
 
   MPS() = new(0,Vector{ITensor}(),0,0)
 
-  MPS(N::Int) = MPS(N,Vector{ITensor}(undef,N),0,N+1)
+  MPS(N::Int) = MPS(N,fill(ITensor(),N),0,N+1)
 
   function MPS(N::Int, 
                A::Vector{<:ITensor}, 
@@ -51,44 +51,51 @@ function MPS(sites)
   return MPS(N,v,0,N+1)
 end
 
-length(m::MPS) = m.N_
-tensors(m::MPS) = m.A_
-leftLim(m::MPS) = m.llim_
-rightLim(m::MPS) = m.rlim_
+Base.length(m::MPS) = m.N_
 
-function setLeftLim!(m::MPS,new_ll::Int) 
+# TODO: make this vec?
+tensors(m::MPS) = m.A_
+
+leftlim(m::MPS) = m.llim_
+rightlim(m::MPS) = m.rlim_
+
+function set_leftlim!(m::MPS,new_ll::Int) 
   m.llim_ = new_ll
 end
 
-function setRightLim!(m::MPS,new_rl::Int) 
+function set_rightlim!(m::MPS,new_rl::Int) 
   m.rlim_ = new_rl
 end
 
-isOrtho(m::MPS) = (leftLim(m)+1 == rightLim(m)-1)
+isortho(m::MPS) = (leftlim(m)+1 == rightlim(m)-1)
 
 function orthoCenter(m::MPS)
-  !isOrtho(m) && error("MPS has no well-defined orthogonality center")
-  return leftLim(m)+1
+  !isortho(m) && error("MPS has no well-defined orthogonality center")
+  return leftlim(m)+1
 end
 
-getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
+Base.getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
 
-function setindex!(M::MPS,T::ITensor,n::Integer) 
-  (n <= leftLim(M)) && setLeftLim!(M,n-1)
-  (n >= rightLim(M)) && setRightLim!(M,n+1)
+function Base.setindex!(M::MPS,T::ITensor,n::Integer) 
+  (n <= leftlim(M)) && set_leftlim!(M,n-1)
+  (n >= rightlim(M)) && set_rightlim!(M,n+1)
   setindex!(tensors(M),T,n)
 end
 
-copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
-similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
+Base.copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
+Base.similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
 
-eachindex(m::MPS) = 1:length(m)
+Base.eachindex(m::MPS) = 1:length(m)
 
-function show(io::IO, M::MPS)
+function Base.show(io::IO, M::MPS)
   print(io,"MPS")
   (length(M) > 0) && print(io,"\n")
   for (i, A) ∈ enumerate(tensors(M))
-    println(io,"$i  $(inds(A))")
+    if order(A) != 0
+      println(io,"[$i] $(inds(A))")
+    else
+      println(io,"[$i] ITensor()")
+    end
   end
 end
 
@@ -182,12 +189,12 @@ function inner(M1::MPS, M2::MPS)::Number
   return O[]
 end
 
-function replaceBond!(M::MPS,
+function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  FU,FV = factorize(phi,inds(M[b]); which_factorization="automatic",
-                        tags=tags(linkindex(M,b)), kwargs...)
+  FU,FV,spec = factorize(phi,inds(M[b]); which_factorization="automatic",
+                           tags=tags(linkindex(M,b)), kwargs...)
   M[b]   = FU
   M[b+1] = FV
 
@@ -199,6 +206,7 @@ function replaceBond!(M::MPS,
     M.llim_ == b-1 && (M.llim_ += 1)
     M.rlim_ == b+1 && (M.rlim_ += 1)
   end
+  return spec
 end
 
 """
@@ -257,7 +265,7 @@ function sample(m::MPS)
       projn = ITensor(s)
       projn[s[n]] = 1.0
       An = A*projn
-      pn = scalar(dag(An)*An)
+      pn = scalar(dag(An)*An) |> real
       pdisc += pn
       (r < pdisc) && break
       n += 1

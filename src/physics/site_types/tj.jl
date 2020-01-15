@@ -1,11 +1,11 @@
-export tJSite,
-       tJSites
-
-function tJSites(N::Int; kwargs...)
-  return [Index(3,"Site,tJ,n=$n") for n=1:N]
-end
+export tJSite
 
 const tJSite = TagType"tJ"
+
+function siteinds(::tJSite,
+                  N::Int; kwargs...)
+  return [Index(3,"Site,tJ,n=$n") for n=1:N]
+end
 
 function state(::tJSite,
                st::AbstractString)
@@ -31,44 +31,44 @@ function op(::tJSite,
   Dn = s(3)
   DnP = sP(3)
 
-  Op = ITensor(dag(s), s')
+  Op = ITensor(s',dag(s))
   if opname == "Nup"
-    Op[Up, UpP] = 1.
+    Op[UpP, Up] = 1.
   elseif opname == "Ndn"
-    Op[Dn, DnP] = 1.
+    Op[DnP, Dn] = 1.
   elseif opname == "Ntot"
-    Op[Up, UpP] = 1.
-    Op[Dn, DnP] = 1.
+    Op[UpP, Up] = 1.
+    Op[DnP, Dn] = 1.
   elseif opname == "Cup" || opname == "Aup"
-    Op[Up, EmpP] = 1.
+    Op[EmpP, Up] = 1.
   elseif opname == "Cdagup" || opname == "Adagup"
-    Op[Emp, UpP] = 1.
+    Op[UpP, Emp] = 1.
   elseif opname == "Cdn" || opname == "Adn"
-    Op[Dn, EmpP] = 1.
+    Op[EmpP, Dn] = 1.
   elseif opname == "Cdagdn" || opname == "Adagdn"
-    Op[Emp, DnP] = 1.
+    Op[DnP, Emp] = 1.
   elseif opname == "FermiPhase" || opname == "FP"
-    Op[Up, UpP] = -1.
-    Op[Emp, EmpP] = 1.
-    Op[Dn, DnP] = -1.
+    Op[UpP, Up] = -1.
+    Op[EmpP, Emp] = 1.
+    Op[DnP, Dn] = -1.
   elseif opname == "Fup"
-    Op[Up, UpP] = -1.
-    Op[Emp, EmpP] = 1.
-    Op[Dn, DnP] = 1.
+    Op[UpP, Up] = -1.
+    Op[EmpP, Emp] = 1.
+    Op[DnP, Dn] = 1.
   elseif opname == "Fdn"
-    Op[Up, UpP] = 1.
-    Op[Emp, EmpP] = 1.
-    Op[Dn, DnP] = -1.
+    Op[UpP, Up] = 1.
+    Op[EmpP, Emp] = 1.
+    Op[DnP, Dn] = -1.
   elseif opname == "Sᶻ" || opname == "Sz"
-    Op[Up, UpP] = 0.5
-    Op[Dn, DnP] = -0.5
+    Op[UpP, Up] = 0.5
+    Op[DnP, Dn] = -0.5
   elseif opname == "Sˣ" || opname == "Sx"
-    Op[Up, DnP] = 1.0
-    Op[Dn, UpP] = 1.0 
+    Op[UpP, Dn] = 1.0
+    Op[DnP, Up] = 1.0 
   elseif opname == "S⁺" || opname == "Splus"
-    Op[Dn, UpP] = 1.
+    Op[UpP, Dn] = 1.
   elseif opname == "S⁻" || opname == "Sminus"
-    Op[Up, DnP] = 1.
+    Op[DnP, Up] = 1.
   elseif opname == "Emp" || opname == "0"
     pEmp = ITensor(s)
     pEmp[Emp] = 1.

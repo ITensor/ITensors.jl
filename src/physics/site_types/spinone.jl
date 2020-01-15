@@ -1,11 +1,11 @@
-export SpinOneSite,
-       spinOneSites
-
-function spinOneSites(N::Int; kwargs...)
-  return [Index(3,"Site,S=1,n=$n") for n=1:N]
-end
+export SpinOneSite
 
 const SpinOneSite = Union{TagType"S=1", TagType"SpinOne"}
+
+function siteinds(::SpinOneSite,
+                  N::Int; kwargs...)
+  return [Index(3,"Site,S=1,n=$n") for n=1:N]
+end
 
 function state(::SpinOneSite,
                st::AbstractString)
@@ -31,54 +31,54 @@ function op(::SpinOneSite,
   Dn = s(3)
   DnP = sP(3)
  
-  Op = ITensor(dag(s), s')
+  Op = ITensor(s',dag(s))
 
   if opname == "S⁺" || opname == "Splus" || opname == "S+"
-    Op[Dn, Z0P] = √2 
-    Op[Z0, UpP] = √2 
+    Op[Z0P, Dn] = √2 
+    Op[UpP, Z0] = √2 
   elseif opname == "S⁻" || opname == "Sminus" || opname == "S-"
-    Op[Up, Z0P] = √2 
-    Op[Z0, DnP] = √2 
+    Op[Z0P, Up] = √2 
+    Op[DnP, Z0] = √2 
   elseif opname == "Sˣ" || opname == "Sx"
-    Op[Up, Z0P] = 1.0/√2
-    Op[Z0, UpP] = 1.0/√2
-    Op[Z0, DnP] = 1.0/√2
-    Op[Dn, Z0P] = 1.0/√2
+    Op[Z0P, Up] = 1.0/√2
+    Op[UpP, Z0] = 1.0/√2
+    Op[DnP, Z0] = 1.0/√2
+    Op[Z0P, Dn] = 1.0/√2
   elseif opname == "iSʸ" || opname == "iSy"
-    Op[Up, Z0P] = -1.0/√2
-    Op[Z0, UpP] = +1.0/√2
-    Op[Z0, DnP] = -1.0/√2
-    Op[Dn, Z0P] = +1.0/√2
+    Op[Z0P, Up] = -1.0/√2
+    Op[UpP, Z0] = +1.0/√2
+    Op[DnP, Z0] = -1.0/√2
+    Op[Z0P, Dn] = +1.0/√2
   elseif opname == "Sʸ" || opname == "Sy"
     Op = complex(Op) 
-    Op[Up, Z0P] = +1.0/√2im
-    Op[Z0, UpP] = -1.0/√2im
-    Op[Z0, DnP] = +1.0/√2im
-    Op[Dn, Z0P] = -1.0/√2im
+    Op[Z0P, Up] = +1.0/√2im
+    Op[UpP, Z0] = -1.0/√2im
+    Op[DnP, Z0] = +1.0/√2im
+    Op[Z0P, Dn] = -1.0/√2im
   elseif opname == "Sᶻ" || opname == "Sz"
-    Op[Up, UpP] = 1.0 
-    Op[Dn, DnP] = -1.0
+    Op[UpP, Up] = 1.0 
+    Op[DnP, Dn] = -1.0
   elseif opname == "Sᶻ²" || opname == "Sz2"
-    Op[Up, UpP] = 1.0 
-    Op[Dn, DnP] = 1.0
+    Op[UpP, Up] = 1.0 
+    Op[DnP, Dn] = 1.0
   elseif opname == "Sˣ²" || opname == "Sx2"
-    Op[Up, UpP] = 0.5
-    Op[Up, DnP] = 0.5
-    Op[Z0, Z0P] = 1.0 
-    Op[Dn, UpP] = 0.5 
-    Op[Dn, DnP] = 0.5 
+    Op[UpP, Up] = 0.5
+    Op[DnP, Up] = 0.5
+    Op[Z0P, Z0] = 1.0 
+    Op[UpP, Dn] = 0.5 
+    Op[DnP, Dn] = 0.5 
   elseif opname == "Sʸ²" || opname == "Sy2"
-    Op[Up, UpP] = 0.5
-    Op[Up, DnP] = -0.5
-    Op[Z0, Z0P] = 1.0 
-    Op[Dn, UpP] = -0.5 
-    Op[Dn, DnP] = 0.5 
+    Op[UpP, Up] = 0.5
+    Op[DnP, Up] = -0.5
+    Op[Z0P, Z0] = 1.0 
+    Op[UpP, Dn] = -0.5 
+    Op[DnP, Dn] = 0.5 
   elseif opname == "projUp"
-    Op[Up, UpP] = 1.
+    Op[UpP, Up] = 1.
   elseif opname == "projZ0"
-    Op[Z0, Z0P] = 1.
+    Op[Z0P, Z0] = 1.
   elseif opname == "projDn"
-    Op[Dn, DnP] = 1.
+    Op[DnP, Dn] = 1.
   elseif opname == "XUp"
     xup = ITensor(ComplexF64,s)
     xup[Up] = 0.5

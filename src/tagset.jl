@@ -59,7 +59,7 @@ end
 function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   plnew = plev
   t = Tag(tag)
-  if !isNull(t)
+  if !isnull(t)
     if isint(t)
       error("""Cannot use a bare integer as a tag.
             If you are looking to set the prime level, use the syntax ("x",1)
@@ -73,7 +73,7 @@ function _addtag!(ts::MTagSetStorage, plev::Int, ntags::Int, tag::IntTag)
   return plnew, ntags
 end
 
-#isNull(v::MTagStorage) = v[0] == IntChar(0)
+#isnull(v::MTagStorage) = v[0] == IntChar(0)
 
 function reset!(v::MTagStorage, nchar::Int)
   for i = 1:nchar
@@ -116,7 +116,7 @@ function TagSet((str,plev)::Tuple{<:AbstractString,<:Integer})
   return setprime(ts,plev)
 end
 
-convert(::Type{TagSet}, str::String) = TagSet(str)
+Base.convert(::Type{TagSet}, str::String) = TagSet(str)
 
 tags(T::TagSet) = T.tags
 plev(T::TagSet) = T.plev
@@ -150,8 +150,7 @@ function cast_to_uint128(a::TagSetStorage)
   return unsafe_load(convert(Ptr{SVector{2,UInt128}},pointer_from_objref(MTagSetStorage(a))))
 end
 
-import Base.==
-function ==(ts1::TagSet,ts2::TagSet)
+function Base.:(==)(ts1::TagSet,ts2::TagSet)
   plev(ts1) ≠ plev(ts2) && return false
   # Block the bits together to make the comparison faster
   return cast_to_uint128(tags(ts1)) == cast_to_uint128(tags(ts2))
@@ -285,14 +284,14 @@ function show(io::IO, T::TagSet)
   print(io,primestring(T))
 end
 
-function Base.read(io::IO,::Type{TagSet}; kwargs...)
-  format = get(kwargs,:format,"hdf5")
+function readcpp(io::IO,::Type{TagSet}; kwargs...)
+  format = get(kwargs,:format,"v3")
   ts = TagSet()
-  if format=="cpp"
+  if format=="v3"
     mstore = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
     ntags = 0
     for n=1:4
-      t = read(io,Tag;kwargs...)
+      t = readcpp(io,Tag;kwargs...)
       if t != Tag()
         ntags = _addtag_ordered!(mstore,ntags,IntSmallString(t))
       end

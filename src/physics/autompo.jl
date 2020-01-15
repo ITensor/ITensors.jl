@@ -13,8 +13,6 @@ export SiteOp,
        MatElem,
        SiteOp
 
-import LinearAlgebra.svd
-
 ###########################
 # SiteOp                  # 
 ###########################
@@ -52,13 +50,16 @@ end
 coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
 
-function ==(t1::MPOTerm,t2::MPOTerm)
+function Base.:(==)(t1::MPOTerm,t2::MPOTerm)
   return (t1.ops==t2.ops && isapprox(t1.coef,t2.coef))
 end
 
 function Base.isless(t1::MPOTerm,t2::MPOTerm)::Bool
   if !isapprox(coef(t1),coef(t2))
-    return coef(t1) < coef(t2)
+    ct1 = coef(t1)
+    ct2 = coef(t2)
+    #"lexicographic" ordering on  complex numbers
+    return real(ct1) < real(ct2) || (real(ct1) == real(ct2) && imag(ct1) < imag(ct2))
   end
   return ops(t1) < ops(t2)
 end
@@ -94,7 +95,7 @@ end
 #end
 
 function Base.show(io::IO,
-              op::MPOTerm) 
+                   op::MPOTerm) 
   c = coef(op)
   if c != 1.0+0.0im
     if imag(c) == 0.0
@@ -166,8 +167,8 @@ function add!(ampo::AutoMPO,
 end
 
 
-function show(io::IO,
-              ampo::AutoMPO) 
+function Base.show(io::IO,
+                   ampo::AutoMPO) 
   println(io,"AutoMPO:")
   for term in terms(ampo)
     println(io,"  $term")
@@ -202,7 +203,7 @@ function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
   return M
 end
 
-function ==(m1::MatElem{T},m2::MatElem{T})::Bool where {T}
+function Base.:(==)(m1::MatElem{T},m2::MatElem{T})::Bool where {T}
   return (m1.row==m2.row && m1.col==m2.col && m1.val==m2.val)
 end
 
@@ -239,7 +240,7 @@ function computeSiteProd(sites,
   for j=2:length(ops)
     (ops[j].site != i) && error("Mismatch of site number in computeSiteProd")
     opj = op(sites[i],ops[j].name)
-    T = multSiteOps(T,opj)
+    T = matmul(T,opj)
   end
   return T
 end

@@ -69,7 +69,7 @@ function davidson(A,
   end
 
   maxiter = get(kwargs,:maxiter,2)
-  miniter = get(kwargs,:maxiter,1)
+  miniter = get(kwargs,:miniter,1)
   errgoal = get(kwargs,:errgoal,1E-14)
   Northo_pass = get(kwargs,:Northo_pass,1)
 
@@ -77,7 +77,9 @@ function davidson(A,
 
   nrm = norm(phi)
   if nrm < 1E-18 
-    phi = randomITensor(inds(phi))
+    phi_ = similar(phi)
+    randn!(phi_)
+    phi = phi_ 
     nrm = norm(phi)
   end
   scale!(phi,1.0/nrm)

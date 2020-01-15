@@ -5,6 +5,7 @@ using Random,
       LinearAlgebra,
       StaticArrays,
       TimerOutputs,
+      Reexport,
       HDF5
 
 # TODO: move imports to individual files
@@ -49,35 +50,25 @@ import Base.adjoint,
        LinearAlgebra.normalize!,
        Random.randn!
 
-
 #####################################
 # Global Variables
 #
-const warnTensorOrder = 10
+const GLOBAL_PARAMS = Dict("WarnTensorOrder" => 14)
 const GLOBAL_TIMER = TimerOutput()
+
+#####################################
+# Tensor
+#
+include("Tensors/Tensors.jl")
 
 #####################################
 # Index and IndexSet
 #
-# TODO: load these after Tensor functions
 include("smallstring.jl")
 include("readwrite.jl")
 include("tagset.jl")
 include("index.jl")
 include("indexset.jl")
-
-#####################################
-# Tensor
-#
-include("tensor/tensor.jl")
-include("tensor/tensorstorage.jl")
-include("tensor/contraction_logic.jl")
-include("tensor/dense.jl")
-include("tensor/linearalgebra.jl")
-include("tensor/diag.jl")
-include("tensor/combiner.jl")
-include("tensor/truncate.jl")
-include("tensor/svd.jl")
 
 #####################################
 # ITensor
