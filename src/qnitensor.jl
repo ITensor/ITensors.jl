@@ -42,6 +42,7 @@ Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
 flux(T::ITensor,block) = flux(inds(T),block)
 
 function flux(T::ITensor)
+  nnzblocks(T) == 0 && return QN()
   bofs = blockoffsets(T)
   block1 = block(bofs,1)
   return flux(T,block1)
