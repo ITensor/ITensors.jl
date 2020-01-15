@@ -32,6 +32,10 @@ isfermionic(qv::QNVal) = (modulus(qv) < 0)
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 Base.:-(qv::QNVal) =  QNVal(name(qv),-val(qv),modulus(qv))
 
+function Base.:*(dir::Arrow,qv::QNVal)
+  return QNVal(name(qv),Int(dir)*val(qv),modulus(qv))
+end
+
 function pm(qv1::QNVal,qv2::QNVal,fac::Int) 
   if name(qv1) != name(qv2)
     error("Cannot add QNVals with different names \"$(name(qv1))\", \"$(name(qv2))\"")
@@ -65,6 +69,8 @@ struct QN
 
   QN(s::QNStorage) = new(s)
 end
+
+QN(mqn::MQNStorage) = QN(QNStorage(mqn))
 
 function QN(qvs...)
   m = MQNStorage(ntuple(_->ZeroVal,Val(maxQNs)))
@@ -131,10 +137,11 @@ function combineQNs(a::QN,b::QN,operation)
 end
 
 function Base.:*(dir::Arrow,qn::QN)
-  if dir==In
-    return -qn
+  mqn = MQNStorage(undef)
+  for i in 1:length(mqn)
+    mqn[i] = dir*qn[i]
   end
-  return qn
+  return QN(mqn)
 end
 
 function Base.:+(a::QN,b::QN)
@@ -145,23 +152,31 @@ function Base.:-(a::QN,b::QN)
   return combineQNs(a,b,-)
 end
 
+#function valsMatch(x::QN,y::QN)
+#  for xv in x.store
+#    @show xv
+#    val(xv) == 0 && continue
+#    found = false
+#    for yv in y.store
+#      @show yv
+#      name(yv)!=name(xv) && continue
+#      val(yv)!=val(xv) && return false
+#      found = true
+#    end
+#    found || return false
+#  end
+#  return true
+#end
+
+#function Base.:(==)(a::QN,b::QN)
+#  return valsMatch(a,b) && valsMatch(b,a)
+#end
 
 function Base.:(==)(a::QN,b::QN)
-  function valsMatch(x::QN,y::QN)
-    for xv in x.store
-      val(xv) == 0 && continue
-      found = false
-      for yv in y.store
-        name(yv)!=name(xv) && continue
-        val(yv)!=val(xv) && return false
-        found = true
-      end
-      found || return false
-    end
-    return true
+  for (av,bv) in zip(a.store,b.store)
+    av!=bv && return false
   end
-
-  return valsMatch(a,b) && valsMatch(b,a)
+  return true
 end
 
 function Base.:(<)(qa::QN,qb::QN)
