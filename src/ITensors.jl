@@ -24,6 +24,7 @@ include("Tensors/Tensors.jl")
 include("smallstring.jl")
 include("readwrite.jl")
 include("tagset.jl")
+include("arrow.jl")
 include("index.jl")
 include("indexset.jl")
 
