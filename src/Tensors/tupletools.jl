@@ -1,4 +1,5 @@
 export insertat,
+       insertafter,
        tuplecat,
        getperm,
        getperms,
@@ -114,6 +115,30 @@ end
 
 function insertat(t::NTuple{N}, val, pos::Integer) where {N}
   return insertat(t,tuple(val),pos)
+end
+
+function _insertafter(t,pos,n_insert,val,i)
+  if i <= pos
+    return t[i]
+  elseif i > pos+n_insert
+    return t[i-n_insert]
+  end
+  return val[i-pos]
+end
+
+"""
+insertafter
+
+Insert the elements in val after the position pos
+"""
+function insertafter(t::NTuple{N},
+                     val::NTuple{M},
+                     pos::Integer) where {N,M}
+  return ntuple(i -> _insertafter(t,pos,M,val,i),Val(N+M))
+end
+
+function insertafter(t::NTuple{N}, val, pos::Integer) where {N}
+  return insertafter(t,tuple(val),pos)
 end
 
 """
