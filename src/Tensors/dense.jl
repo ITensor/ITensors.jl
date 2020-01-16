@@ -730,7 +730,7 @@ function HDF5.write(parent::Union{HDF5File, HDF5Group},
                     name::String, 
                     D::Store) where {Store <: Dense}
   g = g_create(parent,name)
-  attrs(g)["type"] = string(typeof(D))
+  attrs(g)["type"] = "Dense{$(eltype(Store))}"
   attrs(g)["version"] = 1
   if eltype(D) != Nothing
     write(g,"data",D.data)
@@ -740,17 +740,18 @@ end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
                    name::AbstractString,
-                   ::Type{Dense{T}}) where {T}
+                   ::Type{Store}) where {Store <: Dense}
   g = g_open(parent,name)
-  typestr = string(Dense{T})
-  if read(attrs(g)["type"]) != string(Dense{T})
+  ElT = eltype(Store)
+  typestr = "Dense{$ElT}"
+  if read(attrs(g)["type"]) != typestr
     error("HDF5 group or file does not contain $typestr data")
   end
-  if T == Nothing
+  if ElT == Nothing
     return Dense{Nothing}()
   end
   data = read(g,"data")
-  return Dense{T}(data)
+  return Dense{ElT}(data)
 end
 
 function Base.summary(io::IO,
