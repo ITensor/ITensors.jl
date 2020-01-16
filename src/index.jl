@@ -290,10 +290,10 @@ function HDF5.write(parent::Union{HDF5File,HDF5Group},
   g = g_create(parent,name)
   attrs(g)["type"] = "Index"
   attrs(g)["version"] = 1
-  write(g,"id",I.id)
-  write(g,"dim",I.dim)
-  write(g,"dir",Int(I.dir))
-  write(g,"tags",I.tags)
+  write(g,"id",id(I))
+  write(g,"dim",dim(I))
+  write(g,"dir",Int(dir(I)))
+  write(g,"tags",tags(I))
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
