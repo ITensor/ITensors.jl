@@ -5,8 +5,10 @@ export Dense,
        vector,
        contract,
        outer,
+       read,
        scale!,
        permutedims!!,
+       write,
        ⊗
 
 #
@@ -724,16 +726,17 @@ function LinearAlgebra.exp(T::DenseTensor{ElT,N},
   end
 end
 
-function HDF5.write(parent::Union{HDF5File,HDF5Group},
-                    name::AbstractString,
-                    D::Dense{T}) where {T}
+function HDF5.write(parent::Union{HDF5File, HDF5Group}, 
+                    name::String, 
+                    D::Store) where {Store <: Dense}
   g = g_create(parent,name)
   attrs(g)["type"] = string(typeof(D))
   attrs(g)["version"] = 1
-  if T != Nothing
+  if eltype(D) != Nothing
     write(g,"data",D.data)
   end
 end
+
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
                    name::AbstractString,
