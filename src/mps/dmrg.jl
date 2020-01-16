@@ -55,7 +55,7 @@ end
     end
     end
     if !quiet
-      @printf("After sweep %d energy=%.12f maxlinkdim=%d time=%.3f\n",sw,energy,maxlinkdim(psi),sw_time)
+      @printf("BBAfter sweep %d energy=%.12f maxlinkdim=%d time=%.3f\n",sw,energy,maxlinkdim(psi),sw_time)
     end
     checkdone!(obs;quiet=quiet) && break
   end
