@@ -1,4 +1,5 @@
 export ITensor,
+       itensor,
        axpy!,
        combiner,
        combinedindex,
@@ -66,11 +67,15 @@ Iterate over the CartesianIndices of an ITensor.
 Base.CartesianIndices(A::ITensor) = CartesianIndices(dims(A))
 
 #
-# Dense ITensor constructors
+# ITensor constructors
 #
+
+# Should this be ITensor or itensor?
 
 ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
 ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
+
+itensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
 
 # Convert the ITensor to a Tensor that shares the same
 # data and indices as the ITensor

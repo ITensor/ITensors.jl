@@ -69,7 +69,7 @@ function op(s::Index,
   return _call_op(s,opname;kwargs...)
 end
 
-function op(s::Vector{Index},
+function op(s::Vector{<:Index},
             opname::AbstractString,
             n::Int;
             kwargs...)::ITensor
@@ -99,7 +99,7 @@ function state(s::Index,
   return s[sn]
 end
 
-function state(sset::Vector{Index},
+function state(sset::Vector{<:Index},
                j::Integer,
                st)::IndexVal
   return state(sset[j],st)

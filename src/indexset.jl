@@ -21,16 +21,22 @@ export IndexSet,
        permute
 
 struct IndexSet{N}
-  inds::MVector{N,Index}
-  IndexSet{N}(inds::MVector{N,Index}) where {N} = new{N}(inds)
+  inds::SizedVector{N,Index}
+  IndexSet{N}(inds::SizedVector{N,<:Index}) where {N} = new{N}(inds)
+  IndexSet{N}(inds::SVector{N,<:Index}) where {N} = new{N}(inds)
+  IndexSet{N}(inds::MVector{N,<:Index}) where {N} = new{N}(inds)
   IndexSet{0}(::MVector{0}) = new{0}(())
-  IndexSet{N}(inds::NTuple{N,Index}) where {N} = new{N}(inds)
+  IndexSet{N}(inds::NTuple{N,<:Index}) where {N} = new{N}(inds)
   IndexSet{0}() = new{0}(())
   IndexSet{0}(::Tuple{}) = new{0}(())
 end
-IndexSet(inds::MVector{N,Index}) where {N} = IndexSet{N}(inds)
-IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::SizedVector{N,<:Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::SVector{N,<:Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::MVector{N,<:Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::NTuple{N,<:Index}) where {N} = IndexSet{N}(inds)
 
+# TODO: what is this used for? Should we have this?
+# It is not type stable.
 function IndexSet(vi::Vector{Index}) 
   N = length(vi)
   return IndexSet{N}(NTuple{N,Index}(vi))
@@ -105,6 +111,7 @@ Tensors.dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 Base.ndims(::IndexSet{N}) where {N} = N
 Base.ndims(::Type{IndexSet{N}}) where {N} = N
 Tensors.dim(is::IndexSet) = prod(dim.(is))
+Tensors.dim(is::IndexSet{0}) = 1
 Tensors.dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
 function Tensors.insertat(is1::IndexSet{N1},

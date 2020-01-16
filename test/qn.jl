@@ -102,8 +102,8 @@ import ITensors.SmallString
     @test !(z < qe)
     @test (qe < z)
 
-    @test (qa > qb)
-    @test !(qb > qa)
+    @test !(qa > qb)
+    @test qb > qa
     @test !(qb == qa)
     @test (qb < qc)
     @test !(qc < qb)

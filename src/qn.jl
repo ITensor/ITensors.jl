@@ -11,8 +11,6 @@ struct QNVal
   val::Int
   modulus::Int
 
-  QNVal() = new(SmallString(),0,0)
-
   function QNVal(name,v::Int,m::Int=1)
     am = abs(m)
     if am > 1
@@ -23,6 +21,9 @@ struct QNVal
 
 end
 
+QNVal(v::Int,m::Int=1) = QNVal("",v,m)
+QNVal() = QNVal("",0,0)
+
 name(qv::QNVal) = qv.name
 val(qv::QNVal) = qv.val
 modulus(qv::QNVal) = qv.modulus
@@ -30,6 +31,12 @@ isactive(qv::QNVal) = (modulus(qv) != 0)
 isfermionic(qv::QNVal) = (modulus(qv) < 0)
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 Base.:-(qv::QNVal) =  QNVal(name(qv),-val(qv),modulus(qv))
+
+Base.zero(qv::QNVal) = QNVal(name(qv),0,modulus(qv))
+
+function Base.:*(dir::Arrow,qv::QNVal)
+  return QNVal(name(qv),Int(dir)*val(qv),modulus(qv))
+end
 
 function pm(qv1::QNVal,qv2::QNVal,fac::Int) 
   if name(qv1) != name(qv2)
@@ -65,13 +72,16 @@ struct QN
   QN(s::QNStorage) = new(s)
 end
 
+QN(mqn::MQNStorage) = QN(QNStorage(mqn))
+QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
+
 function QN(qvs...)
   m = MQNStorage(ntuple(_->ZeroVal,Val(maxQNs)))
   for (n,qv) in enumerate(qvs)
     m[n] = QNVal(qv...)
   end
   Nvals = length(qvs)
-  sort!(m[1:Nvals];by=name,alg=InsertionSort)
+  sort!(@view m[1:Nvals];by=name,alg=InsertionSort)
   for n=1:(length(qvs)-1)
     if name(m[n])==name(m[n+1])
       error("Duplicate name \"$(name(m[n]))\" in QN")
@@ -81,8 +91,20 @@ function QN(qvs...)
 end
 
 QN(name,val::Int,modulus::Int=1) = QN((name,val,modulus))
+QN(val::Int,modulus::Int=1) = QN(("",val,modulus))
 
-Base.getindex(q::QN,n::Int) = getindex(q.store,n)
+Tensors.store(qn::QN) = qn.store
+
+Base.getindex(q::QN,n::Int) = getindex(store(q),n)
+
+Base.length(qn::QN) = length(store(qn))
+
+Base.lastindex(qn::QN) = length(qn)
+
+function Base.iterate(qn::QN,state::Int=1)
+  (state > length(qn)) && return nothing
+  return (qn[state],state+1)
+end
 
 function val(q::QN,name_)
   sname = SmallString(name_)
@@ -100,10 +122,10 @@ function modulus(q::QN,name_)
   return 0
 end
 
-function combineQNs(a::QN,b::QN,operation)
+function combineqns(a::QN,b::QN,operation)
   !isactive(b[1]) && return a
 
-  ma = MQNStorage(a.store)
+  ma = MQNStorage(store(a))
 
   for nb=1:maxQNs
     !isactive(b[nb]) && break
@@ -128,77 +150,105 @@ function combineQNs(a::QN,b::QN,operation)
   return QN(QNStorage(ma))
 end
 
+function Base.:*(dir::Arrow,qn::QN)
+  mqn = MQNStorage(undef)
+  for i in 1:length(mqn)
+    mqn[i] = dir*qn[i]
+  end
+  return QN(mqn)
+end
+
 function Base.:+(a::QN,b::QN)
-  return combineQNs(a,b,+)
+  return combineqns(a,b,+)
 end
 
 function Base.:-(a::QN,b::QN)
-  return combineQNs(a,b,-)
+  return combineqns(a,b,-)
 end
 
-
-function Base.:(==)(a::QN,b::QN)
-  function valsMatch(x::QN,y::QN)
-    for xv in x.store
-      val(xv) == 0 && continue
-      found = false
-      for yv in y.store
-        name(yv)!=name(xv) && continue
-        val(yv)!=val(xv) && return false
-        found = true
-      end
-      found || return false
-    end
-    return true
-  end
-
-  return valsMatch(a,b) && valsMatch(b,a)
-end
-
-function Base.:(<)(qa::QN,qb::QN)
-  a = 1
-  b = 1
-  while a<=maxQNs && b<=maxQNs && (isactive(qa[a])||isactive(qb[b]))
-    aval = val(qa[a])
-    bval = val(qb[b])
-    if !isactive(qa[a])
-      if 0 == bval
-        b += 1
-        continue
-      end
-      return 0 < bval
-    elseif !isactive(qb[b])
-      if 0 == aval
-        a += 1
-        continue
-      end
-      return aval < 0
-    else # both are active
-      aname = name(qa[a])
-      bname = name(qb[b])
-      if aname < bname
-        if aval == 0
-          a += 1
-          continue
-        end
-        return aval < 0
-      elseif bname < aname
-        if 0 == bval
-          b += 1
-          continue
-        end
-        return 0 < bval
-      else  # aname == bname
-        if aval == bval
-          a += 1
-          b += 1
-          continue
-        end
-        return aval < bval
-      end
-    end
+function hasname(qn::QN,qv_find::QNVal)
+  for qv in qn
+    name(qv) == name(qv_find) && return true
   end
   return false
+end
+
+# Does not perform checks on if QN is already full, drops
+# the last QNVal
+function Tensors.insertafter(qn::QN,qv::QNVal,pos::Int)
+  return QN(insertafter(Tuple(qn),qv,pos)[1:length(qn)])
+end
+
+function addqnval(qn::QN,qv_add::QNVal)
+  isactive(qn[end]) && error("Cannot add QNVal, QN already contains maximum number of QNVals")
+  for (pos,qv) in enumerate(qn)
+    if qv_add < qv || !isactive(qv)
+      return insertafter(qn,qv_add,pos-1)
+    end
+  end
+end
+
+# Fills in the qns of qn1 that qn2 has but
+# qn1 doesn't
+function fillqns_from(qn1::QN,qn2::QN)
+  for qv2 in qn2
+    if !hasname(qn1,qv2)
+      qn1 = addqnval(qn1,zero(qv2))
+    end
+  end
+  return qn1
+end
+
+# Make sure qn1 and qn2 have all of the same qns
+function fillqns(qn1::QN,qn2::QN)
+  qn1_filled = fillqns_from(qn1,qn2)
+  qn2_filled = fillqns_from(qn2,qn1)
+  return qn1_filled,qn2_filled
+end
+
+function isequal_assume_filled(qn1::QN,qn2::QN)
+  for (qv1,qv2) in zip(qn1,qn2)
+    modulus(qv1)!=modulus(qv2) && error("QNVals must have same modulus to compare")
+    qv1!=qv2 && return false
+  end
+  return true
+end
+
+function Base.:(==)(qn1::QN,qn2::QN; assume_filled=false)
+  if !assume_filled
+    qn1,qn2 = fillqns(qn1,qn2)
+  end
+  return isequal_assume_filled(qn1,qn2)
+end
+
+function isless_assume_filled(qn1::QN,qn2::QN)
+  for n in 1:length(qn1)
+    val1 = val(qn1[n])
+    val2 = val(qn2[n])
+    val1 != val2 && return val1 < val2
+  end
+  return false
+end
+
+function Base.:<(qn1::QN,qn2::QN; assume_filled=false)
+  if !assume_filled
+    qn1,qn2 = fillqns(qn1,qn2)
+  end
+  return isless_assume_filled(qn1,qn2)
+end
+
+function have_same_qns(qn1::QN,qn2::QN)
+  for n in 1:length(qn1)
+    name(qn1[n]) != name(qn2[n]) && return false
+  end
+  return true
+end
+
+function have_same_mods(qn1::QN,qn2::QN)
+  for n in 1:length(qn1)
+    modulus(qn1[n]) != modulus(qn2[n]) && return false
+  end
+  return true
 end
 
 function Base.show(io::IO,q::QN)
@@ -216,3 +266,4 @@ function Base.show(io::IO,q::QN)
   end
   print(io,")")
 end
+
