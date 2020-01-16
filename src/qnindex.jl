@@ -6,26 +6,44 @@ const QNBlocks = Vector{QNBlock}
 qn(qnblock::QNBlock) = qnblock.first
 Tensors.blockdim(qnblock::QNBlock) = qnblock.second
 
-Tensors.blockdim(qn::QNBlocks,b::Int) = blockdim(qn[b])
+Tensors.blockdim(qnblocks::QNBlocks,b::Int) = blockdim(qnblocks[b])
 
-qn(qnblock::QNBlocks,b::Int) = qn(qnblock[b])
+qn(qnblocks::QNBlocks,b::Int) = qn(qnblocks[b])
 
-Tensors.nblocks(qns::QNBlocks) = length(qns)
-function Tensors.dim(qns::QNBlocks)
+Tensors.nblocks(qnblocks::QNBlocks) = length(qnblocks)
+function Tensors.dim(qnblocks::QNBlocks)
   dimtot = 0
-  for qn in qns
-    dimtot += blockdim(qn)
+  for (_,blockdim) in qnblocks
+    dimtot += blockdim
   end
   return dimtot
 end
 
 const QNIndex = Index{QNBlocks}
 
-function Index(blockdims::QNBlocks,tags=("",0))
-  ts = TagSet(tags)
-  return Index(rand(IDType),blockdims,Out,ts)
+function have_same_qns(qnblocks::QNBlocks)
+  qn1 = qn(qnblocks,1)
+  for n in 2:nblocks(qnblocks)
+    !have_same_qns(qn1,qn(qnblocks,n)) && return false
+  end
+  return true
 end
 
+function have_same_mods(qnblocks::QNBlocks)
+  qn1 = qn(qnblocks,1)
+  for n in 2:nblocks(qnblocks)
+    !have_same_mods(qn1,qn(qnblocks,n)) && return false
+  end
+  return true
+end
+
+function Index(qnblocks::QNBlocks,tags=("",0))
+  # TODO: make this a debug check?
+  have_same_qns(qnblocks) || error("When creating a QN Index, the QN blocks must have the same QNs")
+  have_same_mods(qnblocks) || error("When creating a QN Index, the QN blocks must have the same mods")
+  ts = TagSet(tags)
+  return Index(rand(IDType),qnblocks,Out,ts)
+end
 
 Tensors.dim(i::QNIndex) = dim(space(i))
 
@@ -70,6 +88,7 @@ function flux(inds::IndexSet,block)
   return qntot
 end
 
+# Get a list of the non-zero blocks given a desired flux
 function nzblocks(qn::QN,inds::IndexSet{N}) where {N}
   blocks = NTuple{N,Int}[]
   for block in eachblock(inds)
