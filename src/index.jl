@@ -5,6 +5,7 @@ export Index,
        noprime,
        addtags,
        settags,
+       readCpp,
        replacetags,
        replacetags!,
        removetags,
@@ -290,4 +291,30 @@ function readcpp(io::IO,::Type{Index}; kwargs...)
     throw(ArgumentError("read Index: format=$format not supported"))
   end
   return i
+end
+
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    I::Index)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "Index"
+  attrs(g)["version"] = 1
+  write(g,"id",I.id)
+  write(g,"dim",I.dim)
+  write(g,"dir",Int(I.dir))
+  write(g,"tags",I.tags)
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{Index})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "Index"
+    error("HDF5 group or file does not contain Index data")
+  end
+  id = read(g,"id")
+  dim = read(g,"dim")
+  dir = Arrow(read(g,"dir"))
+  tags = read(g,"tags",TagSet)
+  return Index(id,dim,dir,tags)
 end

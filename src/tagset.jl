@@ -303,3 +303,25 @@ function readcpp(io::IO,::Type{TagSet}; kwargs...)
   end
   return ts
 end
+
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    T::TagSet)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "TagSet"
+  attrs(g)["version"] = 1
+  write(g,"plev",plev(T))
+  write(g,"tags",tagstring(T))
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{TagSet})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "TagSet"
+    error("HDF5 group '$name' does not contain TagSet data")
+  end
+  plev = read(g,"plev")
+  tstring = read(g,"tags")
+  return TagSet((tstring,plev))
+end

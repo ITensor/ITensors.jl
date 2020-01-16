@@ -31,6 +31,11 @@ end
 IndexSet(inds::MVector{N,Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
 
+function IndexSet(vi::Vector{Index}) 
+  N = length(vi)
+  return IndexSet{N}(NTuple{N,Index}(vi))
+end
+
 Tensors.inds(is::IndexSet) = is.inds
 
 # Empty constructor
@@ -564,3 +569,27 @@ function readcpp(io::IO,::Type{IndexSet};kwargs...)
   return is
 end
 
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    is::IndexSet)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "IndexSet"
+  attrs(g)["version"] = 1
+  N = length(is)
+  write(g,"length",N)
+  for n=1:N
+    write(g,"index_$n",is[n])
+  end
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{IndexSet})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "IndexSet"
+    error("HDF5 group or file does not contain IndexSet data")
+  end
+  N = read(g,"length")
+  it = ntuple(n->read(g,"index_$n",Index),N)
+  return IndexSet(it)
+end
