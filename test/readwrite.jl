@@ -70,7 +70,7 @@ using ITensors,
     fi = h5open("data.h5","r")
     rT = read(fi,"defaultT",ITensor)
     close(fi)
-    @test typeof(store(T)) == ITensors.Dense{Nothing}
+    @test typeof(store(T)) == typeof(store(ITensor()))
 
     # real case
     T = randomITensor(i,j,k)
