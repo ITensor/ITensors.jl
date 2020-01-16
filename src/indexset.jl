@@ -35,6 +35,8 @@ IndexSet(inds::SVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::MVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::NTuple{N,<:Index}) where {N} = IndexSet{N}(inds)
 
+# TODO: what is this used for? Should we have this?
+# It is not type stable.
 function IndexSet(vi::Vector{Index}) 
   N = length(vi)
   return IndexSet{N}(NTuple{N,Index}(vi))
