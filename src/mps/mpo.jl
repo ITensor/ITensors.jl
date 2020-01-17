@@ -570,16 +570,13 @@ function Tensors.truncate!(M::Union{MPS,MPO}; kwargs...)
 end
 
 function Base.:*(x::Number,M::Union{MPS,MPO})
-    N = deepcopy(M)
-    N[div(length(N), 2)] = N[div(length(N), 2)] * x
-    return N
+  N = deepcopy(M)
+  c = div(length(N), 2)
+  scale!(N[c],x)
+  return N
 end
 
-function Base.:-(M::Union{MPS,MPO})
-    N = deepcopy(M)
-    N[div(length(N), 2)] = -1.0*N[div(length(N), 2)]
-    return N
-end
+Base.:-(M::Union{MPS,MPO}) = Base.:*(-1,M)
 
 @doc """
 orthogonalize!(M::MPS, j::Int; kwargs...)
