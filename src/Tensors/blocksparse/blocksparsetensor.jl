@@ -594,14 +594,6 @@ end
 const IntTuple = NTuple{N,Int} where N
 const IntOrIntTuple = Union{Int,IntTuple}
 
-function ⊗(dim1::BlockDim,dim2::BlockDim)
-  dimR = BlockDim(undef,nblocks(dim1)*nblocks(dim2))
-  for (i,t) in enumerate(Iterators.product(dim1,dim2))
-    dimR[i] = prod(t)
-  end
-  return dimR
-end
-
 function permute_combine(inds::IndsT,
                          pos::Vararg{IntOrIntTuple,N}) where {IndsT,N}
   IndT = eltype(IndsT)

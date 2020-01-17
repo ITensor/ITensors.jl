@@ -485,7 +485,7 @@ function combiner(inds::IndexSet; kwargs...)
 end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
 
-combinedindex(T::ITensor) = store(T) isa Combiner ? store(T).ci : nothing
+combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 

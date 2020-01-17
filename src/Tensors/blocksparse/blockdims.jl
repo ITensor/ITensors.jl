@@ -133,3 +133,11 @@ function blockdim(inds,
   return prod(blockdims(inds,block))
 end
 
+function ⊗(dim1::BlockDim,dim2::BlockDim)
+  dimR = BlockDim(undef,nblocks(dim1)*nblocks(dim2))
+  for (i,t) in enumerate(Iterators.product(dim1,dim2))
+    dimR[i] = prod(t)
+  end
+  return dimR
+end
+

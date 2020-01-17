@@ -101,6 +101,8 @@ Base.length(qn::QN) = length(store(qn))
 
 Base.lastindex(qn::QN) = length(qn)
 
+isactive(qn::QN) = isactive(qn[1])
+
 function Base.iterate(qn::QN,state::Int=1)
   (state > length(qn)) && return nothing
   return (qn[state],state+1)
@@ -191,6 +193,9 @@ end
 # Fills in the qns of qn1 that qn2 has but
 # qn1 doesn't
 function fillqns_from(qn1::QN,qn2::QN)
+  # If qn1 has no non-trivial qns, fill
+  # with qn2
+  !isactive(qn1) && return qn2
   for qv2 in qn2
     if !hasname(qn1,qv2)
       qn1 = addqnval(qn1,zero(qv2))
@@ -228,6 +233,10 @@ function isless_assume_filled(qn1::QN,qn2::QN)
     val1 != val2 && return val1 < val2
   end
   return false
+end
+
+function Base.isless(qn1::QN,qn2::QN; assume_filled=false)
+  return <(qn1,qn2;assume_filled=assume_filled)
 end
 
 function Base.:<(qn1::QN,qn2::QN; assume_filled=false)
