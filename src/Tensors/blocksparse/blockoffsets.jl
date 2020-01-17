@@ -63,6 +63,8 @@ end
 # list
 offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
 
+block(bofs::BlockOffsets,n::Int) = block(bofs[n])
+
 function offset(bofs::BlockOffsets{N},
                 block::Block{N}) where {N}
   block_pos = findblock(bofs,block)

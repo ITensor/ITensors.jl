@@ -26,7 +26,7 @@ function contraction_output(::TensorT1,
                                                  TensorT2<:DenseTensor,
                                                  IndsR}
   TensorR = contraction_output_type(TensorT1,TensorT2,IndsR)
-  return _similar(TensorR,indsR)
+  return similar(TensorR,indsR)
 end
 
 function contraction_output(T1::TensorT1,
@@ -96,5 +96,11 @@ function contract!!(R::Tensor{<:Number,NR},
                     T2::CombinerTensor{<:Number,N2},
                     labelsT2::NTuple{N2}) where {NR,N1,N2}
   return contract!!(R,labelsR,T2,labelsT2,T1,labelsT1)
+end
+
+function Base.show(io::IO,
+                   mime::MIME"text/plain",
+                   T::CombinerTensor)
+  # Intentionally left blank
 end
 

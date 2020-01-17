@@ -31,7 +31,7 @@ function op(::tJSite,
   Dn = s(3)
   DnP = sP(3)
 
-  Op = ITensor(dag(s), s')
+  Op = ITensor(s',dag(s))
   if opname == "Nup"
     Op[UpP, Up] = 1.
   elseif opname == "Ndn"

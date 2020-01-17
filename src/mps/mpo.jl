@@ -5,7 +5,8 @@ export MPO,
        errorMPOprod,
        maxlinkdim,
        orthogonalize!,
-       truncate!
+       truncate!,
+       sum
 
 mutable struct MPO
   N_::Int
@@ -19,7 +20,7 @@ mutable struct MPO
     new(N, A, llim, rlim)
   end
 
-  function MPO(sites::Vector{Index})
+  function MPO(sites::Vector{<:Index})
     N = length(sites)
     v = Vector{ITensor}(undef, N)
     l = [Index(1, "Link,l=$ii") for ii ∈ 1:N-1]
@@ -39,7 +40,7 @@ mutable struct MPO
  
 end
 
-MPO(N::Int) = MPO(N,Vector{ITensor}(undef,N))
+MPO(N::Int) = MPO(N,fill(ITensor(),N))
 
 function MPO(sites,
              ops::Vector{String})
@@ -193,8 +194,12 @@ end
 function Base.show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  @inbounds for (i, A) ∈ enumerate(tensors(W))
-    println(io,"$i  $(inds(A))")
+  for (i, A) ∈ enumerate(tensors(W))
+    if order(A) != 0
+      println(io,"[$i] $(inds(A))")
+    else
+      println(io,"[$i] ITensor()")
+    end
   end
 end
 
@@ -297,18 +302,18 @@ function plussers(::Type{T}, left_ind::Index, right_ind::Index, sum_ind::Index) 
 end
 
 function Base.sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
-    n = A.N_
-    length(B) =! n && throw(DimensionMismatch("lengths of MPOs A ($n) and B ($(length(B))) do not match"))
+    N = length(A)
+    length(B) != N && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
     orthogonalize!(A, 1; kwargs...)
     orthogonalize!(B, 1; kwargs...)
     C = similar(A)
     rand_plev = 13124
-    lAs = [linkindex(A, i) for i in 1:n-1]
+    lAs = [linkindex(A, i) for i in 1:N-1]
     prime!(A, rand_plev, "Link")
 
-    first  = Vector{ITensor{2}}(undef,n-1)
-    second = Vector{ITensor{2}}(undef,n-1)
-    for i in 1:n-1
+    first  = Vector{ITensor{2}}(undef,N-1)
+    second = Vector{ITensor{2}}(undef,N-1)
+    for i in 1:N-1
         lA = linkindex(A, i)
         lB = linkindex(B, i)
         r  = Index(dim(lA) + dim(lB), tags(lA))
@@ -317,13 +322,30 @@ function Base.sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
         second[i] = s
     end
     C[1] = A[1] * first[1] + B[1] * second[1]
-    for i in 2:n-1
+    for i in 2:N-1
         C[i] = dag(first[i-1]) * A[i] * first[i] + dag(second[i-1]) * B[i] * second[i]
     end
-    C[n] = dag(first[n-1]) * A[n] + dag(second[n-1]) * B[n]
+    C[N] = dag(first[N-1]) * A[N] + dag(second[N-1]) * B[N]
     prime!(C, -rand_plev, "Link")
     truncate!(C; kwargs...)
     return C
+end
+
+function Base.sum(A::Vector{T}; kwargs...) where {T <: Union{MPS, MPO}}
+    length(A) == 0 && return T()
+    length(A) == 1 && return A[1]
+    length(A) == 2 && return sum(A[1], A[2]; kwargs...)
+    nsize = isodd(length(A)) ? (div(length(A) - 1, 2) + 1) : div(length(A), 2)
+    newterms = Vector{T}(undef, nsize)
+    np = 1
+    for n in 1:2:length(A) - 1
+      newterms[np] = sum(A[n], A[n+1]; kwargs...)
+      np += 1
+    end
+    if isodd(length(A))
+      newterms[nsize] = A[end]
+    end
+    return sum(newterms; kwargs...)
 end
 
 function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS

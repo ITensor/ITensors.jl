@@ -22,6 +22,14 @@ using ITensors,
     @test l ∈ IndexSet( (I, IndexSet(l)) )
     #TODO: what should size(::IndexSet) do?
     #@test size(I) == (3,)
+    @test length(IndexSet{2}()) == 2
+    @test length(IndexSet(Val(2))) == 2
+  end
+  @testset "length of IndexSet and friends" begin
+    @test length(typeof(IndexSet{2}())) == 2
+    @test order(IndexSet(Val(2))) == 2
+    @test ndims(IndexSet(Val(2))) == 2
+    @test ndims(typeof(IndexSet(Val(2)))) == 2
   end
   @testset "Convert to Index" begin
     @test Index(IndexSet(i)) === i
@@ -88,6 +96,8 @@ using ITensors,
   @testset "strides" begin
     I = IndexSet(i, j)
     @test strides(I) == (1, idim)
+    @test stride(I, 1) == 1
+    @test stride(I, 2) == idim
   end
   @testset "setprime" begin
     I = IndexSet(i, j)

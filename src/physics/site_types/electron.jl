@@ -35,7 +35,7 @@ function op(::ElectronSite,
   UpDn  = s(4)
   UpDnP = sP(4)
 
-  Op = ITensor(dag(s), s')
+  Op = ITensor(s',dag(s))
 
   if opname == "Nup"
     Op[UpP, Up] = 1.

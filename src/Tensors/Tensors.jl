@@ -2,7 +2,8 @@
 
 using StaticArrays,
       Random,
-      LinearAlgebra
+      LinearAlgebra,
+      HDF5
 
 #####################################
 # DenseTensor and DiagTensor
