@@ -34,8 +34,6 @@ Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 function qn_mod(val::Int,modulus::Int)
   modulus = abs(modulus)
   (modulus == 0 || modulus == 1) && return val
-  @show val
-  @show modulus
   return mod(val,modulus)
 end
 
