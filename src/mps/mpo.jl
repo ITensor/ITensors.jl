@@ -571,13 +571,13 @@ end
 
 function Base.:*(x::Number,M::Union{MPS,MPO})
     N = deepcopy(M)
-    N.A_[div(size(N), 2)] = N.A_[div(size(N), 2)] .* x
+    N[div(length(N), 2)] = N[div(length(N), 2)] * x
     return N
 end
 
 function Base.:-(M::Union{MPS,MPO})
     N = deepcopy(M)
-    N.A_[div(size(N), 2)] = -1.0*N.A_[div(size(N), 2)]
+    N[div(length(N), 2)] = -1.0*N[div(length(N), 2)]
     return N
 end
 
