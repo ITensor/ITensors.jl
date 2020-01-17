@@ -256,13 +256,21 @@ function inner(B::MPO,
   prime!(Bdag)
   # Swap prime levels 1 -> 2 and 2 -> 1.
   @inbounds for j ∈ eachindex(Bdag)
+    Axcommon = commonindex(A[j], x[j])
+    ABcommon = uniqueindex(findinds(A[j], "Site"), IndexSet(Axcommon))
     swapprime!(inds(Bdag[j]),2,3)
     swapprime!(inds(Bdag[j]),1,2)
     swapprime!(inds(Bdag[j]),3,1)
+    noprime!(inds(Bdag[j]), tags(prime(ABcommon, 2)))
   end
-  O = ydag[1]*Bdag[1]*A[1]*x[1]
+  yB = ydag[1] * Bdag[1]
+  Ax = A[1] * x[1]
+  O = yB*Ax
   @inbounds for j ∈ eachindex(y)[2:end]
-    O = O*ydag[j]*Bdag[j]*A[j]*x[j]
+      yB = ydag[j] * Bdag[j]
+      Ax = A[j] * x[j]
+      yB *= O
+      O = yB * Ax 
   end
   return O[]
 end
@@ -279,7 +287,10 @@ function errorMPOprod(y::MPS, A::MPO, x::MPS)
   if length(y) != N || length(x) != N
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
   end
-  return sqrt(abs(1. + (inner(y,y) - 2*real(inner(y,A,x)))/inner(A,x,A,x)))
+  iyy = inner(y,y)
+  iyax = inner(y,A,x)
+  iaxax = inner(A, x, A, x) 
+  return sqrt(abs(1. + (iyy - 2*real(iyax))/iaxax))
 end
 
 function plussers(::Type{T}, left_ind::Index, right_ind::Index, sum_ind::Index) where {T<:Array}
@@ -556,6 +567,18 @@ function Tensors.truncate!(M::Union{MPS,MPO}; kwargs...)
     set_rightlim!(M,j)
   end
 
+end
+
+function Base.:*(x::Number,M::Union{MPS,MPO})
+    N = deepcopy(M)
+    N[div(length(N), 2)] = N[div(length(N), 2)] * x
+    return N
+end
+
+function Base.:-(M::Union{MPS,MPO})
+    N = deepcopy(M)
+    N[div(length(N), 2)] = -1.0*N[div(length(N), 2)]
+    return N
 end
 
 @doc """
