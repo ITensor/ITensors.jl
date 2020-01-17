@@ -27,5 +27,6 @@ include("blocksparse/blockdims.jl")
 include("blocksparse/blockoffsets.jl")
 include("blocksparse/blocksparse.jl")
 include("blocksparse/blocksparsetensor.jl")
+include("blocksparse/combiner.jl")
 
 end # module Tensors

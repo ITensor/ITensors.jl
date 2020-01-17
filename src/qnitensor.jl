@@ -59,13 +59,18 @@ function combiner(inds::QNIndex...; kwargs...)
   tags = get(kwargs, :tags, "CMB,Link")
   @show inds
   new_ind = ⊗(inds...)
+  if all(i->dir(i)!=Out,inds)
+    new_ind = dag(new_ind)
+    new_ind = replaceqns(new_ind,-qnblocks(new_ind))
+  end
   new_ind = settags(new_ind,tags)
   @show new_ind
   # Permute the blocks and combine them, outputing the 
   # new Index and the permutation
-  new_ind,perm = combineqns(new_ind)
-  @show new_ind
-  @show perm
-  return ITensor(Combiner(perm),IndexSet(new_ind,inds...)),new_ind
+  #new_ind,perm = combineqns(new_ind)
+  #@show new_ind
+  #@show perm
+  #return ITensor(Combiner(perm),IndexSet(new_ind,inds...)),new_ind
+  return ITensor(Combiner(),IndexSet(new_ind,dag.(inds)...)),new_ind
 end
 

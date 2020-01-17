@@ -19,6 +19,18 @@ function Tensors.dim(qnblocks::QNBlocks)
   return dimtot
 end
 
+function Base.:-(qnb::QNBlock)
+  return QNBlock(-qn(qnb),blockdim(qnb))
+end
+
+function Base.:-(qns::QNBlocks)
+  qns_new = copy(qns)
+  for i in 1:length(qns_new)
+    qns_new[i] = -qns_new[i]
+  end
+  return qns_new
+end
+
 const QNIndex = Index{QNBlocks}
 
 function have_same_qns(qnblocks::QNBlocks)
@@ -139,19 +151,15 @@ function Base.:*(qn1::QNBlock,qn2::QNBlock)
 end
 
 function Tensors.:⊗(qn1::QNBlocks,qn2::QNBlocks)
-  @show qn1,qn2
   qnR = ITensors.QNBlocks(undef,nblocks(qn1)*nblocks(qn2))
   for (i,t) in enumerate(Iterators.product(qn1,qn2))
-    @show i,t
     qnR[i] = prod(t)
   end
   return qnR
 end
 
 function Tensors.:⊗(i1::QNIndex,i2::QNIndex)
-  @show i1,i2
   iR = Index((dir(i1)*qnblocks(i1))⊗(dir(i2)*qnblocks(i2)))
-  @show iR
   return iR
 end
 
@@ -166,7 +174,6 @@ end
 
 function combineqns(qns::QNBlocks)
   perm = sortperm(qns)
-  @show perm
   qnsR = qns[perm]
   return qnsR,perm
 end
@@ -176,11 +183,22 @@ function replaceqns(i::QNIndex,qns::QNBlocks)
 end
 
 function combineqns(i::QNIndex)
-  @show qnblocks(i)
   qnsR,perm = combineqns(qnblocks(i))
-  @show qnsR
   iR = replaceqns(i,qnsR)
-  @show iR
   return iR,perm
+end
+
+function Base.show(io::IO,
+                   i::QNIndex)
+  idstr = "$(id(i) % 1000)"
+  if length(tags(i)) > 0
+    print(io,"($(dim(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
+  else
+    print(io,"($(dim(i))|id=$(idstr))$(primestring(tags(i)))")
+  end
+  println(io," <$(dir(i))>")
+  for (n,qnblock) in enumerate(qnblocks(i))
+    println(io," $n: $qnblock")
+  end
 end
 

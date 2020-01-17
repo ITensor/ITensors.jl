@@ -30,7 +30,18 @@ modulus(qv::QNVal) = qv.modulus
 isactive(qv::QNVal) = (modulus(qv) != 0)
 isfermionic(qv::QNVal) = (modulus(qv) < 0)
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
-Base.:-(qv::QNVal) =  QNVal(name(qv),-val(qv),modulus(qv))
+
+function qn_mod(val::Int,modulus::Int)
+  modulus = abs(modulus)
+  (modulus == 0 || modulus == 1) && return val
+  @show val
+  @show modulus
+  return mod(val,modulus)
+end
+
+function Base.:-(qv::QNVal)
+  return QNVal(name(qv),qn_mod(-val(qv),modulus(qv)),modulus(qv))
+end
 
 Base.zero(qv::QNVal) = QNVal(name(qv),0,modulus(qv))
 
@@ -46,10 +57,7 @@ function pm(qv1::QNVal,qv2::QNVal,fac::Int)
     error("QNVals with matching name \"$(name(qv1))\" cannot have different modulus values ")
   end
   m1 = modulus(qv1)
-  if m1 == 1
-    return QNVal(name(qv1),val(qv1)+fac*val(qv2),1)
-  end
-  return QNVal(name(qv1),Base.mod(val(qv1)+fac*val(qv2),abs(m1)),m1)
+  return QNVal(name(qv1),qn_mod(val(qv1)+fac*val(qv2),m1),m1)
 end
 
 Base.:+(qv1::QNVal,qv2::QNVal) = pm(qv1,qv2,+1)
@@ -168,6 +176,14 @@ function Base.:-(a::QN,b::QN)
   return combineqns(a,b,-)
 end
 
+function Base.:-(qn::QN)
+  mqn = MQNStorage(undef)
+  for i in 1:length(mqn)
+    mqn[i] = -qn[i]
+  end
+  return QN(mqn)
+end
+
 function hasname(qn::QN,qv_find::QNVal)
   for qv in qn
     name(qv) == name(qv_find) && return true
@@ -266,7 +282,11 @@ function Base.show(io::IO,q::QN)
     v = q[n]
     !isactive(v) && break
     n > 1 && print(io,",")
-    print(io,"(\"$(name(v))\",$(val(v))")
+    if name(v)==SmallString("")
+      print(io,"($(val(v))")
+    else
+      print(io,"(\"$(name(v))\",$(val(v))")
+    end
     if modulus(v) != 1
       print(io,",$(modulus(v)))")
     else
