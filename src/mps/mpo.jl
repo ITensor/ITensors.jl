@@ -6,8 +6,7 @@ export MPO,
        maxlinkdim,
        orthogonalize!,
        truncate!,
-       sum,
-       overlap
+       sum
 
 mutable struct MPO
   N_::Int
@@ -572,22 +571,14 @@ end
 
 function Base.:*(x::Number,M::Union{MPS,MPO})
     N = deepcopy(M)
-    N.A_ = N.A_ .* x
+    N.A_[div(size(N), 2)] = N.A_[div(size(N), 2)] .* x
     return N
 end
 
 function Base.:-(M::Union{MPS,MPO})
     N = deepcopy(M)
-    N.A_ = [-1.0 * A for A in N.A_]
+    N.A_[div(size(N), 2)] = -1.0*N.A_[div(size(N), 2)]
     return N
-end
-
-function overlap(ψ::M, ϕ::M) where {M<:Union{MPS, MPO}}
-    L = dag(ψ[1]) * ϕ[1]
-    for ii in 2:length(ψ)
-        L *= dag(ψ[ii]) * ϕ[ii]
-    end
-    return scalar(L)
 end
 
 @doc """
