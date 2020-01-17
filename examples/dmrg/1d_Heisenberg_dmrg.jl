@@ -9,6 +9,7 @@ using Printf
 
 let
   N = 100
+
   # Create N spin-one degrees of freedom
   sites = siteinds("S=1",N)
   # Alternatively can make spin-half sites instead
@@ -39,3 +40,4 @@ let
   energy, psi = dmrg(H,psi0, sweeps)
   @printf("Final energy = %.12f\n",energy)
 end
+

@@ -24,8 +24,9 @@ using ITensors, Test
         "autompo.jl",
         "svd.jl",
         "qn.jl",
-        "readme.jl",
         "readwrite.jl",
+        "readme.jl",
+        "examples.jl",
     )
       println("Running $filename")
       include(filename)
