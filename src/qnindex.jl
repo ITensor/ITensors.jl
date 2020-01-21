@@ -98,6 +98,10 @@ function Tensors.nblocks(inds::IndexSet{N}) where {N}
   return ntuple(i->nblocks(inds,i),Val(N))
 end
 
+function Tensors.nblocks(inds::NTuple{N,QNIndex}) where {N}
+  return nblocks(IndexSet(inds))
+end
+
 # TODO: generic to IndexSet and BlockDims
 function eachblock(inds::IndexSet)
   return CartesianIndices(nblocks(inds))

@@ -48,6 +48,9 @@ mutable struct ITensor{N}
 end
 ITensor(st,is::IndexSet{N}) where {N} = ITensor{N}(st,is)
 
+ITensor{N}(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is))
+ITensor(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is))
+
 Tensors.inds(T::ITensor) = T.inds
 Tensors.store(T::ITensor) = T.store
 

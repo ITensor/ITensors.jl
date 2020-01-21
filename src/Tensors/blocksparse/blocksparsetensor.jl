@@ -187,6 +187,11 @@ function blockindex(T::BlockSparseTensor{ElT,N},
   return Block{N}(block_index),Tuple(current_block_loc)
 end
 
+# Special case for scalar BlockSparseTensor
+function blockindex(T::BlockSparseTensor{ElT,0}) where {ElT}
+  return Block{0}(),()
+end
+
 # Get the starting index of the block
 function blockstart(T::BlockSparseTensor{ElT,N},
                     block::Block{N}) where {ElT,N}
@@ -688,6 +693,8 @@ end
 
 function Base.reshape(T::BlockSparseTensor,
                       indsR)
+  # TODO: add some checks that the block dimensions
+  # are consistent (e.g. nnzblocks(T) == nnzblocks(R), etc.)
   boffsR = reshape(blockoffsets(T),inds(T),indsR)
   R = reshape(T,boffsR,indsR)
   return R

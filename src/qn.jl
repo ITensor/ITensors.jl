@@ -158,6 +158,14 @@ function combineqns(a::QN,b::QN,operation)
   return QN(QNStorage(ma))
 end
 
+function Base.zero(qn::QN)
+  mqn = MQNStorage(undef)
+  for i in 1:length(mqn)
+    mqn[i] = zero(qn[i])
+  end
+  return QN(mqn)
+end
+
 function Base.:*(dir::Arrow,qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
@@ -209,7 +217,7 @@ end
 function fillqns_from(qn1::QN,qn2::QN)
   # If qn1 has no non-trivial qns, fill
   # with qn2
-  !isactive(qn1) && return qn2
+  !isactive(qn1) && return zero(qn2)
   for qv2 in qn2
     if !hasname(qn1,qv2)
       qn1 = addqnval(qn1,zero(qv2))

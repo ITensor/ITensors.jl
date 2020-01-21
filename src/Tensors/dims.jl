@@ -14,8 +14,11 @@ dense(ds::Dims) = ds
 dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
 dim(ds::Dims) = prod(ds)
 
+dims(::Tuple{}) = ()
+
 Base.ndims(ds::Dims{N}) where {N} = N
 Base.ndims(::Type{Dims{N}}) where {N} = N
+Base.ndims(::Type{Tuple{}}) = 0
 
 # This may be a bad idea to overload?
 # Type piracy?
