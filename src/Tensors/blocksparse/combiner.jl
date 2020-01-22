@@ -15,8 +15,6 @@ function contract(T::BlockSparseTensor{<:Number,NT},
     cpos_in_labelsRc = findfirst(==(clabel),labelsRc)
     labelsR = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
     perm = getperm(labelsR,labelsT)
-    # TODO: should it be this instead?
-    #perm = getperm(labelsT,labelsR)
     R = permutedims(T,perm)
     Rc = reshape(R,indsRc)
     return Rc

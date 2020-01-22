@@ -154,7 +154,7 @@ function Base.:*(qn1::QNBlock,qn2::QNBlock)
   return QNBlock(qn(qn1)+qn(qn2),blockdim(qn1)*blockdim(qn2))
 end
 
-function Tensors.:⊗(qn1::QNBlocks,qn2::QNBlocks)
+function Tensors.outer(qn1::QNBlocks,qn2::QNBlocks)
   qnR = ITensors.QNBlocks(undef,nblocks(qn1)*nblocks(qn2))
   for (i,t) in enumerate(Iterators.product(qn1,qn2))
     qnR[i] = prod(t)
@@ -162,7 +162,7 @@ function Tensors.:⊗(qn1::QNBlocks,qn2::QNBlocks)
   return qnR
 end
 
-function Tensors.:⊗(i1::QNIndex,i2::QNIndex)
+function Tensors.outer(i1::QNIndex,i2::QNIndex)
   iR = Index((dir(i1)*qnblocks(i1))⊗(dir(i2)*qnblocks(i2)))
   return iR
 end
