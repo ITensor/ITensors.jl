@@ -10,16 +10,27 @@ function contract(T::BlockSparseTensor{<:Number,NT},
   if labelsC[1] ∉ labelsT
     c = combinedindex(C)
     labelsRc = contract_labels(labelsT,labelsC)
-    indsRc = contract_inds(inds(T),labelsT,inds(C),labelsC,labelsRc)
     labels_uc = deleteat(labelsC,cpos_in_labelsC)
     cpos_in_labelsRc = findfirst(==(clabel),labelsRc)
-    labelsR = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
-    perm = getperm(labelsR,labelsT)
-    R = permutedims(T,perm)
-    Rc = reshape(R,indsRc)
+    labelsRuc = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
+    perm = getperm(labelsRuc,labelsT)
+    Ruc = permutedims(T,perm)
+    indsRc = contract_inds(inds(T),labelsT,inds(C),labelsC,labelsRc)
+    Rc = reshape(Ruc,indsRc)
     return Rc
   else
     println("Uncombine: not implemented yet")
+    c = combinedindex(C)
+    #labelsRuc = contract_labels(labelsT,labelsC)
+    labelsRc = labelsT
+    labels_uc = deleteat(labelsC,cpos_in_labelsC)
+    cpos_in_labelsRc = findfirst(==(clabel),labelsRc)
+    labelsRuc = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
+    #perm = getperm(labelsRuc,labelsT)
+    #Ruc = permutedims(T,perm)
+    indsRuc = contract_inds(inds(T),labelsT,inds(C),labelsC,labelsRuc)
+    Ruc = reshape(Rc,indsRuc)
+    return Rc
   end
 end
 
