@@ -19,18 +19,16 @@ function contract(T::BlockSparseTensor{<:Number,NT},
     Rc = reshape(Ruc,indsRc)
     return Rc
   else
-    println("Uncombine: not implemented yet")
     c = combinedindex(C)
     #labelsRuc = contract_labels(labelsT,labelsC)
     labelsRc = labelsT
     labels_uc = deleteat(labelsC,cpos_in_labelsC)
     cpos_in_labelsRc = findfirst(==(clabel),labelsRc)
     labelsRuc = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
-    #perm = getperm(labelsRuc,labelsT)
-    #Ruc = permutedims(T,perm)
     indsRuc = contract_inds(inds(T),labelsT,inds(C),labelsC,labelsRuc)
+    Rc = copy(T)
     Ruc = reshape(Rc,indsRuc)
-    return Rc
+    return Ruc
   end
 end
 
