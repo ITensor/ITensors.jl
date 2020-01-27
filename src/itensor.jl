@@ -520,6 +520,17 @@ function Base.:-(A::ITensor,B::ITensor)
   return C
 end
 
+"""
+    *(A::ITensor, B::ITensor)
+
+Contract ITensors A and B to obtain a new ITensor. This 
+contraction `*` operator finds all matching indices common
+to A and B and sums over them, such that the result will 
+have only the unique indices of A and B. To prevent
+indices from matching, their prime level or tags can be 
+modified such that they no longer compare equal - for more
+information see the documentation on Index objects.
+"""
 function Base.:*(A::ITensor,B::ITensor)
   (Alabels,Blabels) = compute_contraction_labels(inds(A),inds(B))
   CT = contract(tensor(A),Alabels,tensor(B),Blabels)
