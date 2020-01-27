@@ -111,4 +111,5 @@ function Base.show(io::IO,
   else
     print(io,"]|id=$(idstr))$(primestring(tags(i)))")
   end
+  print(io,"<$(dir(i))>")
 end
