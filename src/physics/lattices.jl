@@ -1,7 +1,7 @@
 export LatticeBond,
        Lattice,
-       squareLattice,
-       triangularLattice
+       square_lattice,
+       triangular_lattice
 
 struct LatticeBond
   s1::Int
@@ -27,7 +27,7 @@ end
 
 const Lattice = Vector{LatticeBond}
 
-function squareLattice(Nx::Int,
+function square_lattice(Nx::Int,
                        Ny::Int;
                        kwargs...)::Lattice
   yperiodic = get(kwargs,:yperiodic,false)
@@ -54,7 +54,7 @@ function squareLattice(Nx::Int,
   return latt
 end
 
-function triangularLattice(Nx::Int,
+function triangular_lattice(Nx::Int,
                            Ny::Int;
                            kwargs...)::Lattice
   yperiodic = get(kwargs,:yperiodic,false)
