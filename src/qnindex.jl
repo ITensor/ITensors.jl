@@ -99,3 +99,16 @@ function nzblocks(qn::QN,inds::IndexSet{N}) where {N}
   return blocks
 end
 
+function Base.show(io::IO,
+                   i::QNIndex) 
+  idstr = "$(id(i) % 1000)"
+  print(io,"(dim=$(dim(i)) [")
+  for s in 1:length(space(i))
+    print(io,"$(space(i)[s]),")
+  end
+  if length(tags(i)) > 0
+    print(io,"]|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
+  else
+    print(io,"]|id=$(idstr))$(primestring(tags(i)))")
+  end
+end
