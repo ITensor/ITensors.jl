@@ -3,6 +3,7 @@ export insertat,
        tuplecat,
        getperm,
        getperms,
+			 invperm,
        permute,
        ValLength,
        is_trivial_permutation,
@@ -57,6 +58,25 @@ function getperms(s,s1,s2)
   perm2 = ntuple(i->findfirst(==(s2[i]),s),Val(N2))
   isperm((perm1...,perm2...)) || error("Combined permutations are $((perm1...,perm2...)), not a valid permutation")
   return perm1,perm2
+end
+
+function invperm!(permres,perm)
+  for i in 1:N
+    permres[perm[i]] = i
+  end
+  return permres
+end
+
+function invperm(perm::NTuple{N,Int}) where {N}
+  mpermres = MVector{N,Int}(undef)
+  permres!(mpermres,perm)
+  return Tuple(mpermres)
+end
+
+function invperm(perm)
+  permres = similar(perm)
+  invperm!(permres,perm)
+  return permres
 end
 
 """
