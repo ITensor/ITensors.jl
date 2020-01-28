@@ -14,10 +14,24 @@ function contract(T::BlockSparseTensor{<:Number,NT},
     cpos_in_labelsRc = findfirst(==(clabel),labelsRc)
     labelsRuc = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
     perm = getperm(labelsRuc,labelsT)
-    Ruc = permutedims(T,perm)
-    indsRc = contract_inds(inds(T),labelsT,inds(C),labelsC,labelsRc)
-    Rc = reshape(Ruc,indsRc)
-    return Rc
+    if length(blockperm(C)) == 0
+      println("In contract(::BlockSparseTensor,::CombinerTensor, no block permutation and combination")
+      Ruc = permutedims(T,perm)
+      indsRc = contract_inds(inds(T),labelsT,inds(C),labelsC,labelsRc)
+      Rc = reshape(Ruc,indsRc)
+      return Rc
+    else
+      println("In contract(::BlockSparseTensor,::CombinerTensor), block permutation and combination")
+      @show blockperm(C)
+      @show blockcomb(C)
+      @show labelsT
+      @show labelsC
+      @show clabel
+      @show labels_uc
+      @show labelsRc
+      @show labelsRuc
+      Ruc = permutedims(T,perm,blockperm(C),blockcomb(C))
+    end
   else
     c = combinedindex(C)
     #labelsRuc = contract_labels(labelsT,labelsC)

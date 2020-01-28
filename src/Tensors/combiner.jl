@@ -4,10 +4,19 @@ export Combiner
 # of the uncombined and combined indices
 # This can generalize to a Combiner that combines
 # multiple set of indices, e.g. (i,j),(k,l) -> (a,b)
-struct Combiner <: TensorStorage{Number}
+struct Combiner{IndT} <: TensorStorage{Number}
+  perm::Vector{Int}
+  comb::Vector{Int}
+  ind::IndT
+  Combiner(perm::Vector{Int},comb::Vector{Int},ind::IndT) where {IndT} = new{IndT}(perm,comb,ind)
 end
 
+Combiner() = Combiner(Int[],Int[],nothing)
+
 data(::Combiner) = error("Combiner storage has no data")
+
+blockperm(C::Combiner) = C.perm
+blockcomb(C::Combiner) = C.comb
 
 Base.eltype(::Type{<:Combiner}) = Nothing
 Base.eltype(::StoreT) where {StoreT<:Combiner} = eltype(StoreT)
@@ -24,6 +33,9 @@ combinedindex(T::CombinerTensor) = inds(T)[1]
 function uncombinedinds(T::CombinerTensor)
   return popfirst(inds(T))
 end
+
+blockperm(C::CombinerTensor) = blockperm(store(C))
+blockcomb(C::CombinerTensor) = blockcomb(store(C))
 
 Base.conj(T::CombinerTensor) = T
 

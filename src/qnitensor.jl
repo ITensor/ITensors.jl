@@ -56,7 +56,7 @@ end
 #end
 
 function combiner(inds::QNIndex...; kwargs...)
-  # TODO: support comining multiple set of indices
+  # TODO: support combining multiple set of indices
   tags = get(kwargs, :tags, "CMB,Link")
   do_combineblocks = get(kwargs, :combineblocks, false)
   new_ind = ⊗(inds...)
@@ -66,7 +66,7 @@ function combiner(inds::QNIndex...; kwargs...)
   end
   new_ind = settags(new_ind,tags)
   if do_combineblocks
-    error("Combining blocks in combiner is not implemented yet")
+    println("Combining blocks in combiner is not implemented yet")
     # TODO: sort and combine the blocks
     # Use sortperm to get the permutation, and store
     # which blocks are combined in comb
@@ -74,7 +74,8 @@ function combiner(inds::QNIndex...; kwargs...)
     # perm = (2,1,4,3)
     # comb = (1,2,2,3) # Part of block 1,2, or 3
     # The permutation is passed to the combiner
-    #new_ind,perm,comb = combineblocks(new_ind)
+    comb_ind,perm,comb = combineblocks(new_ind)
+    return ITensor(Combiner(perm,comb,new_ind),IndexSet(comb_ind,dag.(inds)...)),comb_ind
   end
   return ITensor(Combiner(),IndexSet(new_ind,dag.(inds)...)),new_ind
 end

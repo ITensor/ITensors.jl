@@ -114,7 +114,8 @@ end
 # TODO: should this be a constructor?
 function get_blockoffsets(blocks::Vector{Block{N}},
                           inds) where {N}
-  blocks = sort(blocks;lt=isblockless)
+  perm = sortperm(blocks;lt=isblockless)
+  blocks = blocks[perm]
   blockoffsets = BlockOffsets{N}(undef,length(blocks))
   offset_total = 0
   for (i,block) in enumerate(blocks)
@@ -122,20 +123,20 @@ function get_blockoffsets(blocks::Vector{Block{N}},
     current_block_dim = blockdim(inds,block)
     offset_total += current_block_dim
   end
-  return blockoffsets,offset_total
+  return blockoffsets,offset_total,perm
 end
 
 # Permute the blockoffsets and indices
-function permute(blockoffsets::BlockOffsets{N},
-                 inds,
-                 perm::NTuple{N,Int}) where {N}
+function permutedims(blockoffsets::BlockOffsets{N},
+                     inds,
+                     perm::NTuple{N,Int}) where {N}
   blocksR = Vector{Block{N}}(undef,nnzblocks(blockoffsets))
   for (i,(block,offset)) in enumerate(blockoffsets)
     blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds,perm)
-  blockoffsetsR,_ = get_blockoffsets(blocksR,indsR)
-  return blockoffsetsR,indsR
+  blockoffsetsR,_,perm = get_blockoffsets(blocksR,indsR)
+  return blockoffsetsR,indsR,perm
 end
 
 """

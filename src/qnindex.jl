@@ -23,6 +23,11 @@ function Base.:-(qnb::QNBlock)
   return QNBlock(-qn(qnb),blockdim(qnb))
 end
 
+function Base.:+(qn1::QNBlock,qn2::QNBlock)
+  qn(qn1) != qn(qn2) && error("Cannot add qn blocks with different qns")
+  return QNBlock(qn(qn1),blockdim(qn1)+blockdim(qn2))
+end
+
 function Base.:-(qns::QNBlocks)
   qns_new = copy(qns)
   for i in 1:length(qns_new)
@@ -172,24 +177,56 @@ function isless(qnb1::QNBlock, qnb2::QNBlock)
 end
 
 # Combine neighboring blocks that are the same
-function combineqns_sorted(qns::QNBlocks)
-  
-end
+#function combineqns_sorted(qns::QNBlocks)
+#end
 
-function combineqns(qns::QNBlocks)
+function combineblocks(qns::QNBlocks)
   perm = sortperm(qns)
-  qnsR = qns[perm]
-  return qnsR,perm
+  qnsP = qns[perm]
+
+  @show qns
+  @show qnsP
+  @show perm
+
+  qnsC = [qnsP[1]]
+
+  @show qnsC
+
+  comb = Vector{Int}(undef,nblocks(qns))
+
+  # Which block this is, after combining
+  block_count = 1
+  comb[1] = block_count
+  for i in 2:nblocks(qnsP)
+    @show i
+    @show block_count
+    @show qnsP[i]
+    if qn(qnsP[i]) == qn(qnsP[i-1])
+      qnsC[block_count] += qnsP[i]
+    else
+      push!(qnsC,qnsP[i])
+      block_count += 1
+    end
+    @show block_count
+    @show qnsC
+    comb[i] = block_count
+    @show comb
+  end
+
+  @show qnsC 
+
+  return qnsC,perm,comb
 end
 
+# Make a new Index with the specified qn blocks
 function replaceqns(i::QNIndex,qns::QNBlocks)
   return Index(id(i),qns,dir(i),tags(i))
 end
 
-function combineqns(i::QNIndex)
-  qnsR,perm = combineqns(qnblocks(i))
+function combineblocks(i::QNIndex)
+  qnsR,perm,comb = combineblocks(qnblocks(i))
   iR = replaceqns(i,qnsR)
-  return iR,perm
+  return iR,perm,comb
 end
 
 function Base.show(io::IO,

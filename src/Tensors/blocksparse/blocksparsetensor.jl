@@ -360,10 +360,23 @@ end
 
 function Base.permutedims(T::BlockSparseTensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
-  blockoffsetsR,indsR = permute(blockoffsets(T),inds(T),perm)
+  blockoffsetsR,indsR,_ = permutedims(blockoffsets(T),inds(T),perm)
   R = similar(T,blockoffsetsR,indsR)
   permutedims!(R,T,perm)
   return R
+end
+
+function Base.permutedims(T::BlockSparseTensor{<:Number,N},
+                          perm::NTuple{N,Int},
+                          blockperm::Vector{Int},
+                          blockcomb::Vector{Int}) where {N}
+	blockoffsetsP,indsP,blockperm_T_to_P = permutedims(blockoffsets(T),inds(T),perm)
+	@show blockoffsets(T)
+  @show blockoffsetsP
+	@show blockperm_T_to_P
+	@show blockperm
+	@show blockcomb
+  permuteblocks(blockoffsetsP,indsP,blockperm)
 end
 
 # TODO: handle case with different element types in R and T
