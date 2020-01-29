@@ -431,7 +431,11 @@ function combine_blockoffsets(boffs::BlockOffsets{N},
                               dim::Int,
                               blockcomb) where {N}
   boffs_comb = BlockOffsets{N}()
-  push!(boffs_comb,boffs[1])
+
+  # This is to shift the blocks when a block get combined
+  boffs_copy = copy(boffs)
+
+  push!(boffs_comb,boffs_copy[1])
   nnzblocks_comb = 1
   for i in 2:nnzblocks(boffs)
     @show i
@@ -442,8 +446,13 @@ function combine_blockoffsets(boffs::BlockOffsets{N},
     @show block(boffs[i-1])[dim]
     if blockcomb[block(boffs[i])[dim]] == blockcomb[block(boffs[i-1])[dim]]
       println("Blocks get combined")
+      for j = i:nnzblocks(boffs)
+        bj = block(boffs[j])
+        new_block = setindex(bj,bj[dim]-1,dim)
+        boffs_copy[j] = BlockOffset(new_block,offset(boffs[j]))
+      end
     else
-      push!(boffs_comb,boffs[i])
+      push!(boffs_comb,boffs_copy[i])
       nnzblocks_comb += 1
     end
   end
