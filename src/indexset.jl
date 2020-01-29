@@ -126,9 +126,21 @@ function Tensors.insertat(is1::IndexSet{N1},
   return IndexSet{N1+N2-1}(insertat(tuple(is1...),tuple(is2...),pos))
 end
 
-function StaticArrays.deleteat(is::IndexSet{N},
-                               pos::Integer) where {N}
-  return IndexSet{N-1}(deleteat(tuple(is...),pos))
+#function StaticArrays.deleteat(is::IndexSet{N},
+#                               pos::Integer) where {N}
+#  return IndexSet{N-1}(deleteat(tuple(is...),pos))
+#end
+
+function Tensors.insertafter(is::IndexSet,I...)
+  return IndexSet(insertafter(Tuple(is),I...))
+end
+
+function StaticArrays.deleteat(is::IndexSet,I...)
+  return IndexSet(deleteat(Tuple(is),I...))
+end
+
+function Tensors.getindices(is::IndexSet,I...)
+  return IndexSet(getindices(Tuple(is),I...))
 end
 
 # Optimize this (right own function that extracts dimensions

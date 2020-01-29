@@ -89,7 +89,11 @@ nblocks(::IndexSet,i::Integer)
 The number of blocks in the specified dimension.
 """
 function Tensors.nblocks(inds::IndexSet,i::Integer)
-  return nblocks(inds[i])
+  return nblocks(Tuple(inds),i)
+end
+
+function Tensors.nblocks(inds::IndexSet,is)
+  return nblocks(Tuple(inds),is)
 end
 
 # TODO: generic to IndexSet and BlockDims
@@ -179,6 +183,11 @@ end
 # Combine neighboring blocks that are the same
 #function combineqns_sorted(qns::QNBlocks)
 #end
+
+function Tensors.permuteblocks(i::QNIndex,perm)
+  qnblocks_perm = qnblocks(i)[perm]
+  return replaceqns(i,qnblocks_perm)
+end
 
 function combineblocks(qns::QNBlocks)
   perm = sortperm(qns)

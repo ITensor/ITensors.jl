@@ -16,16 +16,34 @@ export BlockSparse,
 #
 
 const Block{N} = NTuple{N,Int}
+const Blocks{N} = Vector{Block{N}}
 const BlockOffset{N} = Pair{Block{N},Int}
 const BlockOffsets{N} = Vector{BlockOffset{N}}
 
 BlockOffset(block::Block{N},offset::Int) where {N} = BlockOffset{N}(block,offset)
 
 block(bof::BlockOffset) = first(bof)
+
 offset(bof::BlockOffset) = last(bof)
+
 block(block::Block) = block
 
+# Get the offset if the nth block in the block-offsets
+# list
+offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
+
+block(bofs::BlockOffsets,n::Int) = block(bofs[n])
+
 nnzblocks(bofs::BlockOffsets) = length(bofs)
+nnzblocks(bs::Blocks) = length(bs)
+
+function nzblocks(bofs::BlockOffsets{N}) where {N}
+  blocks = Blocks{N}(undef,nnzblocks(bofs))
+  for i in 1:nnzblocks(bofs)
+    blocks[i] = block(bofs,i)
+  end
+  return blocks
+end
 
 # define block ordering with reverse lexographical order
 function isblockless(b1::Block{N},
@@ -58,12 +76,6 @@ function check_blocks_sorted(blockoffsets::BlockOffsets)
   end
   return
 end
-
-# Get the offset if the nth block in the block-offsets
-# list
-offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
-
-block(bofs::BlockOffsets,n::Int) = block(bofs[n])
 
 function offset(bofs::BlockOffsets{N},
                 block::Block{N}) where {N}
@@ -130,13 +142,22 @@ end
 function permutedims(blockoffsets::BlockOffsets{N},
                      inds,
                      perm::NTuple{N,Int}) where {N}
-  blocksR = Vector{Block{N}}(undef,nnzblocks(blockoffsets))
+  blocksR = Blocks{N}(undef,nnzblocks(blockoffsets))
   for (i,(block,offset)) in enumerate(blockoffsets)
     blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds,perm)
   blockoffsetsR,_,perm = get_blockoffsets(blocksR,indsR)
   return blockoffsetsR,indsR,perm
+end
+
+function permutedims(blocks::Blocks{N},
+                     perm::NTuple{N,Int}) where {N}
+  blocks_perm = Blocks{N}(undef,nnzblocks(blocks))
+  for (i,block) in enumerate(blocks)
+    blocks_perm[i] = permute(block,perm)
+  end
+  return blocks_perm
 end
 
 """
