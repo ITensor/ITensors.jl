@@ -37,8 +37,6 @@ randomITensor(flux::QN,
 
 Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 
-Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
-
 flux(T::ITensor,block) = flux(inds(T),block)
 
 function flux(T::ITensor)
@@ -47,13 +45,6 @@ function flux(T::ITensor)
   block1 = block(bofs,1)
   return flux(T,block1)
 end
-
-#function combiner(inds::IndexSet; kwargs...)
-#  tags = get(kwargs, :tags, "CMB,Link")
-#  new_ind = Index(prod(dims(inds)), tags)
-#  new_is = IndexSet(new_ind, inds)
-#  return ITensor(Combiner(),new_is),new_ind
-#end
 
 function combiner(inds::QNIndex...; kwargs...)
   # TODO: support combining multiple set of indices

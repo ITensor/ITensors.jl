@@ -129,7 +129,7 @@ end
 # TODO: make a fillqns(inds::IndexSet) function that makes all indices
 # in inds have the same qns. Then, use a faster comparison:
 #   ==(flux(inds,block; assume_filled=true), qn; assume_filled=true)
-function nzblocks(qn::QN,inds::IndexSet{N}) where {N}
+function Tensors.nzblocks(qn::QN,inds::IndexSet{N}) where {N}
   blocks = NTuple{N,Int}[]
   for block in eachblock(inds)
     if flux(inds,block) == qn
@@ -138,14 +138,6 @@ function nzblocks(qn::QN,inds::IndexSet{N}) where {N}
   end
   return blocks
 end
-
-#function ⊗(dim1::BlockDim,dim2::BlockDim)
-#  dimR = BlockDim(undef,nblocks(dim1)*nblocks(dim2))
-#  for (i,t) in enumerate(Iterators.product(dim1,dim2))
-#    dimR[i] = prod(t)
-#  end
-#  return dimR
-#end
 
 function Base.:*(dir::Arrow, qnb::QNBlock)
   return QNBlock(dir*qn(qnb),blockdim(qnb))

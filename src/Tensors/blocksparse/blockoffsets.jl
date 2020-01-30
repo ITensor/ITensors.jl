@@ -7,6 +7,7 @@ export BlockSparse,
        blockoffsets,
        blockview,
        nnzblocks,
+       nzblocks,
        nnz,
        findblock,
        isblocknz

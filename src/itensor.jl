@@ -674,6 +674,10 @@ Like `A .= x .* B`.
 LinearAlgebra.mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
 LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
 
+Tensors.nnz(T::ITensor) = nnz(tensor(T))
+Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
+
 #######################################################################
 #
 # Developer functions

@@ -120,16 +120,11 @@ Tensors.dim(is::IndexSet,pos::Integer) = dim(is[pos])
 Base.ndims(::NTuple{N,IndT}) where {N,IndT<:Index} = N
 Base.ndims(::Type{NTuple{N,IndT}}) where {N,IndT<:Index} = N
 
-function Tensors.insertat(is1::IndexSet{N1},
-                          is2::IndexSet{N2},
-                          pos::Integer) where {N1,N2}
-  return IndexSet{N1+N2-1}(insertat(tuple(is1...),tuple(is2...),pos))
+function Tensors.insertat(is1::IndexSet,
+                          is2,
+                          pos::Integer)
+  return IndexSet(insertat(Tuple(is1),Tuple(IndexSet(is2)),pos))
 end
-
-#function StaticArrays.deleteat(is::IndexSet{N},
-#                               pos::Integer) where {N}
-#  return IndexSet{N-1}(deleteat(tuple(is...),pos))
-#end
 
 function Tensors.insertafter(is::IndexSet,I...)
   return IndexSet(insertafter(Tuple(is),I...))
