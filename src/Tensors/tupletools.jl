@@ -136,7 +136,7 @@ end
     sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
 Sorts the tuple `t`.
 """
-sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+Base.sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
 @inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
     t1, t2 = _split(t)
     t1s = _sort(t1, lt, by, rev)

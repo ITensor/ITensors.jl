@@ -82,5 +82,38 @@ using ITensors,
     @test nnzblocks(C) == 1
   end
 
+  @testset "Combine and uncombine" begin
+    i = Index([QN(0)=>2,QN(1)=>2],"i")
+
+    A = randomITensor(QN(0),i,dag(i)',dag(i)'')
+
+    C,c = combiner(i,dag(i)''; combineblocks=true)
+
+    AC = A*C
+
+    @test hasinds(AC,c,i')
+    @test nnz(AC) == nnz(A)
+
+    for b in nzblocks(AC)
+      @test flux(AC,b) == QN(0)
+    end
+
+    # Check (2,2,1) and (2,3) are the same data
+    @test reshape(permutedims(blockview(tensor(A),(2,2,1)),(2,1,3)),2,4) == blockview(tensor(AC),(2,3))
+
+    # Check (1,1,1) and the beginning of block (1,2) are the same data
+    @test reshape(permutedims(blockview(tensor(A),(1,1,1)),(2,1,3)),2,4) == blockview(tensor(AC),(1,2))[1:2,1:4]
+
+    # Check (2,1,2) and the end of block (1,2) are the same data
+    @test reshape(permutedims(blockview(tensor(A),(2,1,2)),(2,1,3)),2,4) == blockview(tensor(AC),(1,2))[1:2,5:8]
+
+    Ap = AC*dag(C)
+
+    @test norm(A-Ap) == 0
+    @test nnz(A) == nnz(Ap)
+    @test nnzblocks(A) == nnzblocks(Ap)
+    @test hassameinds(A,Ap)
+  end
+
 end
 

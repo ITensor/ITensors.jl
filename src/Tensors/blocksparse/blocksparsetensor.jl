@@ -826,7 +826,7 @@ function permute_combine(boffs::BlockOffsets,
                          inds::IndsT,
                          pos::Vararg{IntOrIntTuple,N}) where {IndsT,N}
   perm = tuplecat(pos...)
-  boffsp,indsp = permute(boffs,inds,perm)
+  boffsp,indsp = permutedims(boffs,inds,perm)
   indsR = combine(indsp,pos...)
   boffsR = reshape(boffsp,indsp,indsR)
   return boffsR,indsR

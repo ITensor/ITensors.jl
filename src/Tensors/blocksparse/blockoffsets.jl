@@ -140,9 +140,9 @@ function get_blockoffsets(blocks::Vector{Block{N}},
 end
 
 # Permute the blockoffsets and indices
-function permutedims(blockoffsets::BlockOffsets{N},
-                     inds,
-                     perm::NTuple{N,Int}) where {N}
+function Base.permutedims(blockoffsets::BlockOffsets{N},
+                          inds,
+                          perm::NTuple{N,Int}) where {N}
   blocksR = Blocks{N}(undef,nnzblocks(blockoffsets))
   for (i,(block,offset)) in enumerate(blockoffsets)
     blocksR[i] = permute(block,perm)
@@ -152,8 +152,8 @@ function permutedims(blockoffsets::BlockOffsets{N},
   return blockoffsetsR,indsR,perm
 end
 
-function permutedims(blocks::Blocks{N},
-                     perm::NTuple{N,Int}) where {N}
+function Base.permutedims(blocks::Blocks{N},
+                          perm::NTuple{N,Int}) where {N}
   blocks_perm = Blocks{N}(undef,nnzblocks(blocks))
   for (i,block) in enumerate(blocks)
     blocks_perm[i] = permute(block,perm)
