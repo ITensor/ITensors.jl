@@ -403,7 +403,7 @@ function combine_dims(blocks::Blocks{N},
                       inds,
                       combdims::NTuple{NC,Int}) where {N,NC}
   nblcks = nblocks(inds,combdims)
-  blocks_comb = Blocks{NC}(undef,nnzblocks(blocks))
+  blocks_comb = Blocks{N-NC+1}(undef,nnzblocks(blocks))
   for (i,block) in enumerate(blocks)
     slice = getindices(block,combdims)
     slice_comb = LinearIndices(nblcks)[slice...]
@@ -426,31 +426,51 @@ function perm_blocks(blocks::Blocks{N},
   return blocks_perm
 end
 
-# In the dimension dim, combine the specified blocks
-function combine_blockoffsets(boffs::BlockOffsets{N},
-                              dim::Int,
-                              blockcomb) where {N}
-  boffs_comb = BlockOffsets{N}()
-
-  # This is to shift the blocks when a block get combined
-  boffs_copy = copy(boffs)
-
-  push!(boffs_comb,boffs_copy[1])
-  nnzblocks_comb = 1
-  for i in 2:nnzblocks(boffs)
-    if blockcomb[block(boffs[i])[dim]] == blockcomb[block(boffs[i-1])[dim]]
-      println("Blocks get combined")
-      for j = i:nnzblocks(boffs)
-        bj = block(boffs[j])
-        new_block = setindex(bj,bj[dim]-1,dim)
-        boffs_copy[j] = BlockOffset(new_block,offset(boffs[j]))
-      end
-    else
-      push!(boffs_comb,boffs_copy[i])
-      nnzblocks_comb += 1
-    end
+function _number_combined(i::Int,
+                          blockcomb::Vector{Int})
+  if blockcomb[i] == blockcomb[end]
+    return length(blockcomb)-findfirst(==(blockcomb[end]),blockcomb)+1
   end
-  return boffs_comb
+  return findfirst(==(blockcomb[i]+1),blockcomb)-findfirst(==(blockcomb[i]),blockcomb)
+end
+
+function _number_combined_shift(i::Int,
+                                blockcomb::Vector{Int})
+  blockval = blockcomb[i]
+  if blockval == 1
+    return 0
+  end
+  ncomb_shift = 0
+  for i = 1:blockval-1
+    ncomb_shift += findfirst(==(i+1),blockcomb) - findfirst(==(i),blockcomb) - 1
+  end
+  return ncomb_shift
+end
+
+# In the dimension dim, combine the specified blocks
+function combine_blocks(blocks::Blocks{N},
+                        dim::Int,
+                        blockcomb::Vector{Int}) where {N}
+  blocks_comb = copy(blocks)
+  nnz_comb = nnzblocks(blocks)
+  i = 1
+  while i <= nnz_comb
+    block = blocks_comb[i]
+    dimval = block[dim]
+    ncomb = _number_combined(dimval,blockcomb)
+    ncomb_shift = _number_combined_shift(dimval,blockcomb)
+    if ncomb > 1
+      for dimvalp = dimval+1:dimval+ncomb-1
+        blockp = setindex(block,dimvalp,dim)
+        deleteat!(blocks_comb,findfirst(==(blockp),blocks_comb))
+      end
+      nnz_comb -= (ncomb-1)
+    end
+
+    blocks_comb[i] = setindex(block,dimval-ncomb_shift,dim)
+    i += 1
+  end
+  return blocks_comb
 end
 
 function permutedims_combine(T::BlockSparseTensor{<:Number,N},
@@ -475,8 +495,8 @@ function permutedims_combine(T::BlockSparseTensor{<:Number,N},
   inds_perm_comb = insertafter(inds_perm_comb,ind_comb,combdims_perm[1]-1)
   # Using this sortperm could save some block lookup time
   #offset_perm = sortperm(blocks_perm_comb; lt=isblockless)
-  boffs_perm_comb,nnz = get_blockoffsets(blocks_perm_comb,inds_perm_comb)
-  storage = BlockSparse(undef,boffs_perm_comb,nnz)
+  boffs_perm_comb,nnz_perm_comb = get_blockoffsets(blocks_perm_comb,inds_perm_comb)
+  storage = BlockSparse(undef,boffs_perm_comb,nnz_perm_comb)
   R = Tensor(storage,inds_perm_comb)
   for (b1,b2) in zip(blocks,blocks_perm_comb)
     bv1 = blockview(T,b1)
@@ -484,12 +504,13 @@ function permutedims_combine(T::BlockSparseTensor{<:Number,N},
     bv2 = reshape(bv2,permute(size(bv1),perm))
     permutedims!(bv2,bv1,perm)
   end
-  boffs_perm_comb = combine_blockoffsets(boffs_perm_comb,comb_ind_loc,blockcomb)
+  blocks_perm_comb = combine_blocks(blocks_perm_comb,comb_ind_loc,blockcomb)
+  boffs_perm_comb,_ = get_blockoffsets(blocks_perm_comb,is)
   return Tensor(BlockSparse(data(store(R)),boffs_perm_comb),is)
 end
 
-function _number_combined(blockval::Int,
-                          blockcomb::Vector{Int})
+function _number_uncombined(blockval::Int,
+                            blockcomb::Vector{Int})
   if blockval == blockcomb[end]
     return length(blockcomb)-findfirst(==(blockval),blockcomb)+1
   end
@@ -507,7 +528,7 @@ function uncombine_blocks(blocks::Blocks{N},
   ncomb_tot = 0
   for i in 1:length(blocks)
     blockval = blocks[i][dim]
-    ncomb = _number_combined(blockval,blockcomb)
+    ncomb = _number_uncombined(blockval,blockcomb)
     if ncomb == 1
       push!(blocks_uncomb,setindex(blocks[i],blocks[i][dim]+ncomb_tot,dim))
     else

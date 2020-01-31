@@ -87,7 +87,7 @@ using ITensors,
 
     A = randomITensor(QN(0),i,dag(i)',dag(i)'')
 
-    C,c = combiner(i,dag(i)''; combineblocks=true)
+    C,c = combiner(i,dag(i)'')
 
     AC = A*C
 

@@ -184,38 +184,21 @@ end
 function combineblocks(qns::QNBlocks)
   perm = sortperm(qns)
   qnsP = qns[perm]
-
-  @show qns
-  @show qnsP
-  @show perm
-
   qnsC = [qnsP[1]]
-
-  @show qnsC
-
   comb = Vector{Int}(undef,nblocks(qns))
 
   # Which block this is, after combining
   block_count = 1
   comb[1] = block_count
   for i in 2:nblocks(qnsP)
-    @show i
-    @show block_count
-    @show qnsP[i]
     if qn(qnsP[i]) == qn(qnsP[i-1])
       qnsC[block_count] += qnsP[i]
     else
       push!(qnsC,qnsP[i])
       block_count += 1
     end
-    @show block_count
-    @show qnsC
     comb[i] = block_count
-    @show comb
   end
-
-  @show qnsC 
-
   return qnsC,perm,comb
 end
 
