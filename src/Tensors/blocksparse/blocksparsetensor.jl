@@ -517,6 +517,18 @@ function _number_uncombined(blockval::Int,
   return findfirst(==(blockval+1),blockcomb)-findfirst(==(blockval),blockcomb)
 end
 
+function _number_uncombined_shift(blockval::Int,
+                                  blockcomb::Vector{Int})
+  if blockval == 1
+    return 0
+  end
+  ncomb_shift = 0
+  for i = 1:blockval-1
+    ncomb_shift += findfirst(==(i+1),blockcomb) - findfirst(==(i),blockcomb) - 1
+  end
+  return ncomb_shift
+end
+
 # Uncombine the blocks along the dimension dim
 # according to the pattern in blockcomb (for example, blockcomb
 # is [1,2,2,3] and dim = 2, so the blocks (1,2),(2,3) get
@@ -527,15 +539,13 @@ function uncombine_blocks(blocks::Blocks{N},
   blocks_uncomb = Blocks{N}()
   ncomb_tot = 0
   for i in 1:length(blocks)
-    blockval = blocks[i][dim]
+    block = blocks[i]
+    blockval = block[dim]
     ncomb = _number_uncombined(blockval,blockcomb)
-    if ncomb == 1
-      push!(blocks_uncomb,setindex(blocks[i],blocks[i][dim]+ncomb_tot,dim))
-    else
-      for j in 1:ncomb
-        push!(blocks_uncomb,setindex(blocks[i],blocks[i][dim]+j-1,dim))
-      end
-      ncomb_tot += ncomb-1
+    ncomb_shift = _number_uncombined_shift(blockval,blockcomb)
+    push!(blocks_uncomb,setindex(block,blockval+ncomb_shift,dim))
+    for j in 1:ncomb-1
+      push!(blocks_uncomb,setindex(block,blockval+ncomb_shift+j,dim))
     end
   end
   return blocks_uncomb

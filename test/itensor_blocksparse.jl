@@ -83,36 +83,75 @@ using ITensors,
   end
 
   @testset "Combine and uncombine" begin
-    i = Index([QN(0)=>2,QN(1)=>2],"i")
 
-    A = randomITensor(QN(0),i,dag(i)',dag(i)'')
+    @testset "Example 1" begin
+      i = Index([QN(0)=>2,QN(1)=>2],"i")
 
-    C,c = combiner(i,dag(i)'')
+      A = randomITensor(QN(0),i,dag(i)',dag(i)'')
 
-    AC = A*C
+      C,c = combiner(i,dag(i)'')
 
-    @test hasinds(AC,c,i')
-    @test nnz(AC) == nnz(A)
+      AC = A*C
 
-    for b in nzblocks(AC)
-      @test flux(AC,b) == QN(0)
+      @test hasinds(AC,c,i')
+      @test nnz(AC) == nnz(A)
+
+      for b in nzblocks(AC)
+        @test flux(AC,b) == QN(0)
+      end
+
+      # Check (2,2,1) and (2,3) are the same data
+      @test reshape(permutedims(blockview(tensor(A),(2,2,1)),(2,1,3)),2,4) == blockview(tensor(AC),(2,3))
+
+      # Check (1,1,1) and the beginning of block (1,2) are the same data
+      @test reshape(permutedims(blockview(tensor(A),(1,1,1)),(2,1,3)),2,4) == blockview(tensor(AC),(1,2))[1:2,1:4]
+
+      # Check (2,1,2) and the end of block (1,2) are the same data
+      @test reshape(permutedims(blockview(tensor(A),(2,1,2)),(2,1,3)),2,4) == blockview(tensor(AC),(1,2))[1:2,5:8]
+
+      Ap = AC*dag(C)
+
+      @test norm(A-Ap) == 0
+      @test nnz(A) == nnz(Ap)
+      @test nnzblocks(A) == nnzblocks(Ap)
+      @test hassameinds(A,Ap)
     end
 
-    # Check (2,2,1) and (2,3) are the same data
-    @test reshape(permutedims(blockview(tensor(A),(2,2,1)),(2,1,3)),2,4) == blockview(tensor(AC),(2,3))
+    @testset "Example 2" begin
+      s1 = Index([QN(("Sz", 0),("Nf",0))=>1,
+                  QN(("Sz",+1),("Nf",1))=>1,
+                  QN(("Sz",-1),("Nf",1))=>1,
+                  QN(("Sz", 0),("Nf",2))=>1],"site,n=1");
+      s2 = replacetags(s1,"n=1","n=2")
+      s3 = replacetags(s1,"n=1","n=3")
+      s4 = replacetags(s1,"n=1","n=4")
 
-    # Check (1,1,1) and the beginning of block (1,2) are the same data
-    @test reshape(permutedims(blockview(tensor(A),(1,1,1)),(2,1,3)),2,4) == blockview(tensor(AC),(1,2))[1:2,1:4]
+      A = randomITensor(QN(),s1,s2,dag(s1)',dag(s2)')
 
-    # Check (2,1,2) and the end of block (1,2) are the same data
-    @test reshape(permutedims(blockview(tensor(A),(2,1,2)),(2,1,3)),2,4) == blockview(tensor(AC),(1,2))[1:2,5:8]
+      C,c = combiner(s1,s2)
 
-    Ap = AC*dag(C)
+      AC = A*C
 
-    @test norm(A-Ap) == 0
-    @test nnz(A) == nnz(Ap)
-    @test nnzblocks(A) == nnzblocks(Ap)
-    @test hassameinds(A,Ap)
+      @test norm(AC) == norm(A)
+      @test hasinds(AC,s1',s2',c)
+      @test nnz(AC) == nnz(A)
+      for b in nzblocks(AC)
+        @test flux(AC,b) == QN()
+      end
+
+      @test nnzblocks(AC) < nnz(A)
+
+      B = ITensor(QN(),dag(s1)',dag(s2)',c)
+      @test nnzblocks(B) == nnzblocks(AC)
+
+      Ap = AC*dag(C)
+      
+      @test hassameinds(A,Ap)
+      @test norm(A-Ap) == 0
+      @test nnz(A) == nnz(Ap)
+      @test nnzblocks(A) == nnzblocks(Ap)
+    end
+
   end
 
 end
