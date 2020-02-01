@@ -7,7 +7,7 @@ export Combiner
 struct Combiner <: TensorStorage{Number}
   perm::Vector{Int}
   comb::Vector{Int}
-  Combiner(perm::Vector{Int},comb::Vector{Int}) = new(perm,comb,ind)
+  Combiner(perm::Vector{Int},comb::Vector{Int}) = new(perm,comb)
 end
 
 Combiner() = Combiner(Int[],Int[])
