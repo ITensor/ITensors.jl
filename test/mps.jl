@@ -84,6 +84,20 @@ include("util.jl")
     end
     @test psipsi[] ≈ inner(psi,psi)
   end
+  
+  @testset "scaling MPS" begin
+    psi = randomMPS(sites)
+    twopsidag = 2.0*dag(psi)
+    primelinks!(twopsidag)
+    @test inner(twopsidag, psi) ≈ 2.0*inner(psi,psi)
+  end
+  
+  @testset "flip sign of MPS" begin
+    psi = randomMPS(sites)
+    minuspsidag = -dag(psi)
+    primelinks!(minuspsidag)
+    @test inner(minuspsidag, psi) ≈ -inner(psi,psi)
+  end
 
   @testset "add MPS" begin
     psi = randomMPS(sites)
