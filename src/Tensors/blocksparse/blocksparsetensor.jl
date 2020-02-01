@@ -360,7 +360,7 @@ end
 
 function Base.permutedims(T::BlockSparseTensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
-  blockoffsetsR,indsR,_ = permutedims(blockoffsets(T),inds(T),perm)
+  blockoffsetsR,indsR = permutedims(blockoffsets(T),inds(T),perm)
   R = similar(T,blockoffsetsR,indsR)
   permutedims!(R,T,perm)
   return R

@@ -132,7 +132,7 @@ using ITensors,
 
       AC = A*C
 
-      @test norm(AC) == norm(A)
+      @test norm(AC) ≈ norm(A)
       @test hasinds(AC,s1',s2',c)
       @test nnz(AC) == nnz(A)
       for b in nzblocks(AC)
