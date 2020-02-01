@@ -565,7 +565,7 @@ function uncombine(T::BlockSparseTensor{<:Number,N},
   blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
   blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
   boffs_uncomb,_ = get_blockoffsets(blocks_uncomb,inds_uncomb)
-  boffs_uncomb_perm,nnz_uncomb_perm,_ = get_blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
+  boffs_uncomb_perm,nnz_uncomb_perm = get_blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
   T_uncomb = Tensor(BlockSparse(data(store(T)),boffs_uncomb),inds_uncomb)
   T_uncomb_perm = Tensor(BlockSparse(undef,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
   for (b1,b2) in zip(blocks_uncomb,blocks_uncomb_perm)
