@@ -147,8 +147,8 @@ function Base.permutedims(blockoffsets::BlockOffsets{N},
     blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds,perm)
-  blockoffsetsR,_,perm = get_blockoffsets(blocksR,indsR)
-  return blockoffsetsR,indsR,perm
+  blockoffsetsR,_ = get_blockoffsets(blocksR,indsR)
+  return blockoffsetsR,indsR
 end
 
 function Base.permutedims(blocks::Blocks{N},
