@@ -3,7 +3,12 @@ function ITensor(::Type{ElT},
                  flux::QN,
                  inds::IndexSet) where {ElT<:Number}
   blocks = nzblocks(flux,inds)
-  T = BlockSparseTensor(blocks,inds)
+  T = BlockSparseTensor(ElT,blocks,inds)
+  return itensor(T)
+end
+
+function ITensor(inds::QNIndex...)
+  T = BlockSparseTensor(IndexSet(inds))
   return itensor(T)
 end
 
@@ -39,10 +44,12 @@ Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
 
+Tensors.nnz(T::ITensor) = nnz(tensor(T))
+
 flux(T::ITensor,block) = flux(inds(T),block)
 
 function flux(T::ITensor)
-  nnzblocks(T) == 0 && return QN()
+  nnzblocks(T) == 0 && return nothing
   bofs = blockoffsets(T)
   block1 = block(bofs,1)
   return flux(T,block1)

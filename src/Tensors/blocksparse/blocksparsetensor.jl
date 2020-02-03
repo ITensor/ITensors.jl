@@ -135,13 +135,23 @@ BlockSparseTensor(blocks::Vector{Block{N}},
 Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
+BlockSparseTensor(blocks::Vector{Block{N}},
+                  inds) where {N} = BlockSparseTensor(Float64,blocks,inds)
+
+function BlockSparseTensor(::Type{ElT},
+                           blocks::Vector{Block{N}},
+                           inds) where {ElT,N}
+  blockoffsets,offset_total = get_blockoffsets(blocks,inds)
+  storage = BlockSparse(ElT,blockoffsets,offset_total)
+  return Tensor(storage,inds)
+end
+
 function BlockSparseTensor(blocks::Vector{Block{N}},
                            inds) where {N}
   blockoffsets,offset_total = get_blockoffsets(blocks,inds)
   storage = BlockSparse(blockoffsets,offset_total)
   return Tensor(storage,inds)
 end
-
 """
 BlockSparseTensor(blocks::Vector{Block{N}},
                   inds...)
