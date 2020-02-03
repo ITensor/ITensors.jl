@@ -123,17 +123,15 @@ using ITensors,
                   QN(("Sz",-1),("Nf",1))=>1,
                   QN(("Sz", 0),("Nf",2))=>1],"site,n=1");
       s2 = replacetags(s1,"n=1","n=2")
-      s3 = replacetags(s1,"n=1","n=3")
-      s4 = replacetags(s1,"n=1","n=4")
 
       A = randomITensor(QN(),s1,s2,dag(s1)',dag(s2)')
 
-      C,c = combiner(s1,s2)
+      C,c = combiner(dag(s1)',dag(s2)')
 
       AC = A*C
 
       @test norm(AC) ≈ norm(A)
-      @test hasinds(AC,s1',s2',c)
+      @test hasinds(AC,s1,s2,c)
       @test nnz(AC) == nnz(A)
       for b in nzblocks(AC)
         @test flux(AC,b) == QN()
@@ -141,11 +139,83 @@ using ITensors,
 
       @test nnzblocks(AC) < nnz(A)
 
-      B = ITensor(QN(),dag(s1)',dag(s2)',c)
+      B = ITensor(QN(),s1,s2,c)
       @test nnzblocks(B) == nnzblocks(AC)
 
       Ap = AC*dag(C)
       
+      @test hassameinds(A,Ap)
+      @test norm(A-Ap) == 0
+      @test nnz(A) == nnz(Ap)
+      @test nnzblocks(A) == nnzblocks(Ap)
+    end
+
+    @testset "Example 3" begin
+      s1 = Index([QN(("Nf",0))=>1,
+                  QN(("Nf",1))=>1],"site,n=1")
+      s2 = replacetags(s1,"n=1","n=2")
+
+      A = randomITensor(QN(),dag(s2)',s2,dag(s1)',s1)
+
+      C,c = combiner(dag(s2)',dag(s1)')
+
+      AC = A*C
+
+      @test norm(AC) ≈ norm(A)
+      @test hasinds(AC,s1,s2,c)
+      @test nnz(AC) == nnz(A)
+      for b in nzblocks(AC)
+        @test flux(AC,b) == QN()
+      end
+
+      @test blockview(tensor(A),(1,1,1,1))[1] == blockview(tensor(AC),(1,1,1))[1]
+      @test blockview(tensor(A),(2,2,1,1))[1] == blockview(tensor(AC),(2,1,2))[1]
+      @test blockview(tensor(A),(1,2,2,1))[1] == blockview(tensor(AC),(2,1,2))[2]
+      @test blockview(tensor(A),(2,1,1,2))[1] == blockview(tensor(AC),(1,2,2))[1]
+      @test blockview(tensor(A),(1,1,2,2))[1] == blockview(tensor(AC),(1,2,2))[2]
+      @test blockview(tensor(A),(2,2,2,2))[1] == blockview(tensor(AC),(2,2,3))[1]
+
+      B = ITensor(QN(),s1,s2,c)
+      @test nnzblocks(B) == nnzblocks(AC)
+
+      Ap = AC*dag(C)
+
+      @test hassameinds(A,Ap)
+      @test norm(A-Ap) == 0
+      @test nnz(A) == nnz(Ap)
+      @test nnzblocks(A) == nnzblocks(Ap)
+    end
+
+    @testset "Example 4" begin
+      s1 = Index([QN(("Nf",0))=>1,
+                  QN(("Nf",1))=>1],"site,n=1")
+      s2 = replacetags(s1,"n=1","n=2")
+
+      A = randomITensor(QN(),dag(s1)',s2,dag(s2)',s1)
+
+      C,c = combiner(dag(s2)',dag(s1)')
+
+      AC = A*C
+
+      @test norm(AC) ≈ norm(A)
+      @test hasinds(AC,s1,s2,c)
+      @test nnz(AC) == nnz(A)
+      for b in nzblocks(AC)
+        @test flux(AC,b) == QN()
+      end
+
+      @test blockview(tensor(A),(1,1,1,1))[1] == blockview(tensor(AC),(1,1,1))[1]
+      @test blockview(tensor(A),(2,2,1,1))[1] == blockview(tensor(AC),(2,1,2))[1]
+      @test blockview(tensor(A),(1,2,2,1))[1] == blockview(tensor(AC),(2,1,2))[2]
+      @test blockview(tensor(A),(2,1,1,2))[1] == blockview(tensor(AC),(1,2,2))[1]
+      @test blockview(tensor(A),(1,1,2,2))[1] == blockview(tensor(AC),(1,2,2))[2]
+      @test blockview(tensor(A),(2,2,2,2))[1] == blockview(tensor(AC),(2,2,3))[1]
+
+      B = ITensor(QN(),s1,s2,c)
+      @test nnzblocks(B) == nnzblocks(AC)
+
+      Ap = AC*dag(C)
+
       @test hassameinds(A,Ap)
       @test norm(A-Ap) == 0
       @test nnz(A) == nnz(Ap)

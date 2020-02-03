@@ -95,8 +95,8 @@ Searches assuming the blocks are sorted.
 If more than one block exists, throw an error.
 """
 function findblock(bofs::BlockOffsets{N},
-                   block::Block{N}) where {N}
-  r = searchsorted(bofs,block;lt=isblockless)
+                   find_block::Block{N}; sorted=true) where {N}
+  r = sorted ? searchsorted(bofs,find_block;lt=isblockless) : findall(i->block(i)==find_block,bofs)
   length(r)>1 && error("In findblock, more than one block found")   
   length(r)==0 && return nothing
   return first(r)
@@ -126,8 +126,10 @@ end
 
 # TODO: should this be a constructor?
 function get_blockoffsets(blocks::Vector{Block{N}},
-                          inds) where {N}
-  blocks = sort(blocks;lt=isblockless)
+                          inds; sorted = true) where {N}
+  if sorted
+    blocks = sort(blocks;lt=isblockless)
+  end
   blockoffsets = BlockOffsets{N}(undef,length(blocks))
   offset_total = 0
   for (i,block) in enumerate(blocks)
