@@ -46,6 +46,9 @@ using ITensors,
     s = Index([QN(0)=>1,QN(1)=>1],"s")
     T = randomITensor(QN(0),s,s')
     cT = copy(T)
+    for ss in dim(s), ssp in dim(s')
+      @test T[s(ss),s'(ssp)] == cT[s(ss),s'(ssp)]
+    end
   end
 
   @testset "Permute" begin
