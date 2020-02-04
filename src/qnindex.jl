@@ -1,11 +1,7 @@
-<<<<<<< Updated upstream
-export flux
-=======
 export flux,
        QNIndex,
        QNIndexVal,
        qn
->>>>>>> Stashed changes
 
 const QNBlock = Pair{QN,Int64}
 const QNBlocks = Vector{QNBlock}
