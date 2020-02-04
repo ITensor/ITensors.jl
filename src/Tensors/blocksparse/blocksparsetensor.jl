@@ -146,12 +146,13 @@ function BlockSparseTensor(::Type{ElT},
   return Tensor(storage,inds)
 end
 
-function BlockSparseTensor(blocks::Vector{Block{N}},
-                           inds) where {N}
-  blockoffsets,offset_total = get_blockoffsets(blocks,inds)
-  storage = BlockSparse(blockoffsets,offset_total)
-  return Tensor(storage,inds)
-end
+#function BlockSparseTensor(blocks::Vector{Block{N}},
+#                           inds) where {N}
+#  blockoffsets,offset_total = get_blockoffsets(blocks,inds)
+#  storage = BlockSparse(blockoffsets,offset_total)
+#  return Tensor(storage,inds)
+#end
+
 """
 BlockSparseTensor(blocks::Vector{Block{N}},
                   inds...)
