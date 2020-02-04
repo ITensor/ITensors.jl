@@ -99,7 +99,7 @@ function flux(inds::IndexSet,block)
   qntot = QN()
   for n in 1:ndims(inds)
     ind = inds[n]
-    qntot += dir(ind)*qn(ind,block[n])
+    qntot += qn(ind,block[n])
   end
   return qntot
 end
