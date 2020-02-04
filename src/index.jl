@@ -238,13 +238,13 @@ function Base.show(io::IO,
   end
 end
 
-struct IndexVal
-  ind::Index
+struct IndexVal{IndexT}
+  ind::IndexT
   val::Int
-  function IndexVal(i::Index,n::Int)
+  function IndexVal(i::IndexT,n::Int) where {IndexT}
     n>dim(i) && throw(ErrorException("Value $n greater than size of Index $i"))
     n<1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
-    return new(i,n)
+    return new{IndexT}(i,n)
   end
 end
 

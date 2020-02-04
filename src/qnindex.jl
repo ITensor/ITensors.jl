@@ -23,6 +23,7 @@ function Tensors.dim(qnblocks::QNBlocks)
 end
 
 const QNIndex = Index{QNBlocks}
+const QNIndexVal = IndexVal{QNIndex}
 
 function have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks,1)
