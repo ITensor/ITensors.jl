@@ -1,4 +1,11 @@
+<<<<<<< Updated upstream
 export flux
+=======
+export flux,
+       QNIndex,
+       QNIndexVal,
+       qn
+>>>>>>> Stashed changes
 
 const QNBlock = Pair{QN,Int64}
 const QNBlocks = Vector{QNBlock}
@@ -49,9 +56,22 @@ Tensors.dim(i::QNIndex) = dim(space(i))
 
 Tensors.nblocks(i::QNIndex) = nblocks(space(i))
 
-qn(ind::QNIndex,b::Int) = qn(space(ind),b)
+qn(ind::QNIndex,b::Int) = dir(ind)*qn(space(ind),b)
 
 Tensors.blockdim(ind::QNIndex,b::Int) = blockdim(space(ind),b)
+
+function qn(iv::QNIndexVal)
+  i = ind(iv)
+  v = val(iv)
+  tdim = 0
+  for b=1:nblocks(i)
+    tdim += blockdim(i,b)
+    (v <= tdim) && return qn(i,b)
+  end
+  error("qn: QNIndexVal out of range")
+  return QN()
+end
+
 
 # TODO: generic to IndexSet and BlockDims
 """
