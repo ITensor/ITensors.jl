@@ -19,6 +19,25 @@ the DMRG algorithm.
 
 Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
+## Steps in Install Pre-Release Version
+
+1. Install the latest version of Julia: https://julialang.org/downloads/
+
+2. Install the following Julia packages (from inside Julia's package manager interface), which are ITensor's dependencies:
+- HDF5
+- LinearAlgebra
+- Printf
+- Random
+- Reexport
+- StaticArrays
+- TimerOutputs
+
+3. Clone (using git) or download the contents of this repository onto your machine, say into a location such as ~/software/ITensors.jl
+
+4. Edit (or create) the file ~/.julia/config/startup.jl. Add the following line to it: `push!(LOAD_PATH,"/location/of/ITensors.jl/src")` where "/location/of/ITensors.jl" is the full path where you placed the contents of this repository in step 3, and then don't forget to append "/src" to the end of this path.
+
+5. You can now use ITensors.jl by issuing the command `using ITensors` either in the Julia REPL (interactive mode) or in a Julia source code file.
+
 ## Code Examples
 
 ### Basic Overview
