@@ -10,12 +10,15 @@ export dense,
 # dim and dims are used in the Tensor interface, overload 
 # base Dims here
 dims(ds::Dims) = ds
+dims(::Tuple{}) = ()
 dense(ds::Dims) = ds
 dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
 dim(ds::Dims) = prod(ds)
 
-Base.ndims(ds::Dims{N}) where {N} = N
+Base.ndims(::Dims{N}) where {N} = N
 Base.ndims(::Type{Dims{N}}) where {N} = N
+Base.ndims(::Tuple{}) = 0
+Base.ndims(::Type{Tuple{}}) = 0
 
 # This may be a bad idea to overload?
 # Type piracy?

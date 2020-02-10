@@ -262,6 +262,10 @@ Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,N},
   return store(T)[offset]
 end
 
+Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,0}) where {ElT}
+  return store(T)[]
+end
+
 # These may not be valid if the Tensor has no blocks
 #Base.@propagate_inbounds Base.getindex(T::BlockSparseTensor{<:Number,1},ind::Int) = store(T)[ind]
 
