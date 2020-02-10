@@ -46,8 +46,8 @@ function pm(qv1::QNVal,qv2::QNVal,fac::Int)
     error("QNVals with matching name \"$(name(qv1))\" cannot have different modulus values ")
   end
   m1 = modulus(qv1)
-  if m1 == 1
-    return QNVal(name(qv1),val(qv1)+fac*val(qv2),1)
+  if m1 == 1 || m1 == -1
+    return QNVal(name(qv1),val(qv1)+fac*val(qv2),m1)
   end
   return QNVal(name(qv1),Base.mod(val(qv1)+fac*val(qv2),abs(m1)),m1)
 end
@@ -126,7 +126,6 @@ function combineqns(a::QN,b::QN,operation)
   !isactive(b[1]) && return a
 
   ma = MQNStorage(store(a))
-
   for nb=1:maxQNs
     !isactive(b[nb]) && break
     bname = name(b[nb])

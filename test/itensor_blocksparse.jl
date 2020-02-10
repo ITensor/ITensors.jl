@@ -46,6 +46,62 @@ using ITensors,
     @test nnzblocks(A) == 1
   end
 
+  @testset "setindex!" begin
+
+    @testset "Test 1" begin
+      s1 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s1")
+      s2 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s2")
+      A = ITensor(s1,s2)
+
+      @test nnzblocks(A) == 0
+      @test nnz(A) == 0
+      @test hasinds(A,s1,s2)
+      @test isnothing(flux(A))
+
+      A[2,1] = 1.0/sqrt(2)
+
+      @test nnzblocks(A) == 1
+      @test nnz(A) == 1
+      @test A[s1(2),s2(1)] ≈ 1.0/sqrt(2)
+      @test flux(A) == QN("N",1,-1)
+
+      A[1,2] = 1.0/sqrt(2)
+
+      @test nnzblocks(A) == 2
+      @test nnz(A) == 2
+      @test A[s1(2),s2(1)] ≈ 1.0/sqrt(2)
+      @test A[s1(1),s2(2)] ≈ 1.0/sqrt(2)
+      @test flux(A) == QN("N",1,-1)
+    end
+
+    @testset "Test 2" begin
+      s1 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s1")
+      s2 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s2")
+      A = ITensor(s1,s2)
+
+      @test nnzblocks(A) == 0
+      @test nnz(A) == 0
+      @test hasinds(A,s1,s2)
+      @test isnothing(flux(A))
+
+      A[1,2] = 1.0/sqrt(2)
+
+      @test nnzblocks(A) == 1
+      @test nnz(A) == 1
+      @test A[s1(1),s2(2)] ≈ 1.0/sqrt(2)
+      @test flux(A) == QN("N",1,-1)
+
+      A[2,1] = 1.0/sqrt(2)
+
+      @test nnzblocks(A) == 2
+      @test nnz(A) == 2
+      @test A[s1(2),s2(1)] ≈ 1.0/sqrt(2)
+      @test A[s1(1),s2(2)] ≈ 1.0/sqrt(2)
+      @test flux(A) == QN("N",1,-1)
+    end
+
+  end
+
   @testset "Multiply by scalar" begin
     i = Index([QN(0)=>1,QN(1)=>2],"i")
     j = Index([QN(0)=>3,QN(1)=>4],"j")
