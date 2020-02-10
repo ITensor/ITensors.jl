@@ -275,11 +275,14 @@ function addblock!(T::BlockSparseTensor{ElT,N},
   newdim = blockdim(T,newblock)
   newpos = new_block_pos(T,newblock)
   newoffset = 0
-  if nnzblocks(T)>0
+  if newpos!=1
     newoffset = offset(T,newpos-1)+blockdim(T,newpos-1)
   end
+  # Insert new block into blockoffsets list
   insert!(blockoffsets(T),newpos,BlockOffset{N}(newblock,newoffset))
+  # Insert new block into data
   splice!(data(store(T)),newoffset+1:newoffset,zeros(ElT,newdim))
+  # Shift the offsets of the block after the inserted one
   for i in newpos+1:nnzblocks(T)
     block_i,offset_i = blockoffsets(T)[i]
     blockoffsets(T)[i] = BlockOffset{N}(block_i,offset_i+newdim)
