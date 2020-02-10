@@ -170,5 +170,17 @@ using ITensors,
     @test nnzblocks(C) == 1
   end
 
+  @testset "Contract to scalar" begin
+    i = Index([QN(0)=>1,QN(1)=>1],"i")
+    A = randomITensor(QN(0),i,dag(i'))
+
+    c = A*dag(A)
+
+    @test nnz(c) == 1
+    @test nnzblocks(c) == 1
+    @test c[] isa Float64
+    @test c[] ≈ norm(A)^2
+  end
+
 end
 
