@@ -64,8 +64,8 @@ end
 
 # TODO: test this function
 Base.similar(D::BlockSparse,
-             ::Type{ElT}) where {ElT} = BlockSparse{ElT}(similar(data(D),ElT),
-                                                         blockoffsets(D))
+             ::Type{ElT}) where {ElT} = BlockSparse(similar(data(D),ElT),
+                                                    copy(blockoffsets(D)))
 Base.copy(D::BlockSparse) = BlockSparse(copy(data(D)),
                                         copy(blockoffsets(D)))
 

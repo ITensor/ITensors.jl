@@ -140,12 +140,23 @@ BlockSparseTensor(blocks::Vector{Block{N}},
 Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
-function BlockSparseTensor(blocks::Blocks{N},
-                           inds) where {N}
+BlockSparseTensor(blocks::Blocks,
+                  inds) = BlockSparseTensor(Float64,blocks,inds)
+
+function BlockSparseTensor(::Type{ElT},
+                           blocks::Blocks,
+                           inds) where {ElT}
   blockoffsets,offset_total = get_blockoffsets(blocks,inds)
-  storage = BlockSparse(blockoffsets,offset_total)
+  storage = BlockSparse(ElT,blockoffsets,offset_total)
   return Tensor(storage,inds)
 end
+
+#function BlockSparseTensor(blocks::Vector{Block{N}},
+#                           inds) where {N}
+#  blockoffsets,offset_total = get_blockoffsets(blocks,inds)
+#  storage = BlockSparse(blockoffsets,offset_total)
+#  return Tensor(storage,inds)
+#end
 
 """
 BlockSparseTensor(blocks::Vector{Block{N}},
@@ -261,6 +272,10 @@ Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,N},
   return store(T)[offset]
 end
 
+Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,0}) where {ElT}
+  return store(T)[]
+end
+
 # These may not be valid if the Tensor has no blocks
 #Base.@propagate_inbounds Base.getindex(T::BlockSparseTensor{<:Number,1},ind::Int) = store(T)[ind]
 
@@ -274,11 +289,14 @@ function addblock!(T::BlockSparseTensor{ElT,N},
   newdim = blockdim(T,newblock)
   newpos = new_block_pos(T,newblock)
   newoffset = 0
-  if nnzblocks(T)>0
+  if newpos!=1
     newoffset = offset(T,newpos-1)+blockdim(T,newpos-1)
   end
+  # Insert new block into blockoffsets list
   insert!(blockoffsets(T),newpos,BlockOffset{N}(newblock,newoffset))
+  # Insert new block into data
   splice!(data(store(T)),newoffset+1:newoffset,zeros(ElT,newdim))
+  # Shift the offsets of the block after the inserted one
   for i in newpos+1:nnzblocks(T)
     block_i,offset_i = blockoffsets(T)[i]
     blockoffsets(T)[i] = BlockOffset{N}(block_i,offset_i+newdim)

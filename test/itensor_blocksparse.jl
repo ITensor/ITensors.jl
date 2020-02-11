@@ -13,6 +13,29 @@ using ITensors,
     @test nnzblocks(A) == 2
   end
 
+  @testset "Empty constructor" begin
+    i = Index([QN(0)=>1,QN(1)=>2],"i")
+
+    A = ITensor(i,dag(i'))
+
+    @test nnzblocks(A) == 0
+    @test nnz(A) == 0
+    @test hasinds(A,i,i')
+    @test isnothing(flux(A))
+
+    A[i(1),i'(1)] = 1.0
+
+    @test nnzblocks(A) == 1
+    @test nnz(A) == 1
+    @test flux(A) == QN(0)
+
+    A[i(2),i'(2)] = 1.0
+
+    @test nnzblocks(A) == 2
+    @test nnz(A) == 5
+    @test flux(A) == QN(0)
+  end
+
   @testset "Random constructor" begin
     i = Index([QN(0)=>1,QN(1)=>2],"i")
     j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
@@ -21,6 +44,62 @@ using ITensors,
 
     @test flux(A) == QN(1)
     @test nnzblocks(A) == 1
+  end
+
+  @testset "setindex!" begin
+
+    @testset "Test 1" begin
+      s1 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s1")
+      s2 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s2")
+      A = ITensor(s1,s2)
+
+      @test nnzblocks(A) == 0
+      @test nnz(A) == 0
+      @test hasinds(A,s1,s2)
+      @test isnothing(flux(A))
+
+      A[2,1] = 1.0/sqrt(2)
+
+      @test nnzblocks(A) == 1
+      @test nnz(A) == 1
+      @test A[s1(2),s2(1)] ≈ 1.0/sqrt(2)
+      @test flux(A) == QN("N",1,-1)
+
+      A[1,2] = 1.0/sqrt(2)
+
+      @test nnzblocks(A) == 2
+      @test nnz(A) == 2
+      @test A[s1(2),s2(1)] ≈ 1.0/sqrt(2)
+      @test A[s1(1),s2(2)] ≈ 1.0/sqrt(2)
+      @test flux(A) == QN("N",1,-1)
+    end
+
+    @testset "Test 2" begin
+      s1 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s1")
+      s2 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s2")
+      A = ITensor(s1,s2)
+
+      @test nnzblocks(A) == 0
+      @test nnz(A) == 0
+      @test hasinds(A,s1,s2)
+      @test isnothing(flux(A))
+
+      A[1,2] = 1.0/sqrt(2)
+
+      @test nnzblocks(A) == 1
+      @test nnz(A) == 1
+      @test A[s1(1),s2(2)] ≈ 1.0/sqrt(2)
+      @test flux(A) == QN("N",1,-1)
+
+      A[2,1] = 1.0/sqrt(2)
+
+      @test nnzblocks(A) == 2
+      @test nnz(A) == 2
+      @test A[s1(2),s2(1)] ≈ 1.0/sqrt(2)
+      @test A[s1(1),s2(2)] ≈ 1.0/sqrt(2)
+      @test flux(A) == QN("N",1,-1)
+    end
+
   end
 
   @testset "Multiply by scalar" begin
@@ -39,6 +118,15 @@ using ITensors,
 
     for ii in dim(i), jj in dim(j)
       @test 2*A[i(ii),j(jj)] == B[i(ii),j(jj)]
+    end
+  end
+
+  @testset "Copy" begin
+    s = Index([QN(0)=>1,QN(1)=>1],"s")
+    T = randomITensor(QN(0),s,s')
+    cT = copy(T)
+    for ss in dim(s), ssp in dim(s')
+      @test T[s(ss),s'(ssp)] == cT[s(ss),s'(ssp)]
     end
   end
 
@@ -337,6 +425,16 @@ using ITensors,
       @test nnzblocks(A) == nnzblocks(Ap)
     end
 
+  @testset "Contract to scalar" begin
+    i = Index([QN(0)=>1,QN(1)=>1],"i")
+    A = randomITensor(QN(0),i,dag(i'))
+
+    c = A*dag(A)
+
+    @test nnz(c) == 1
+    @test nnzblocks(c) == 1
+    @test c[] isa Float64
+    @test c[] ≈ norm(A)^2
   end
 
 end

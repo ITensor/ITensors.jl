@@ -626,6 +626,8 @@ function permute_reshape(T::DenseTensor{ElT,NT,IndsT},
   return reshape(T,newinds)
 end
 
+LinearAlgebra.norm(T::DenseTensor) = norm(store(T))
+
 # svd of an order-n tensor according to positions Lpos
 # and Rpos
 function LinearAlgebra.svd(T::DenseTensor{<:Number,N,IndsT},
