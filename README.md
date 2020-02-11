@@ -25,9 +25,6 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 2. Install the following Julia packages (from inside Julia's package manager interface), which are ITensor's dependencies:
     - HDF5
-    - LinearAlgebra
-    - Printf
-    - Random
     - Reexport
     - StaticArrays
     - TimerOutputs
