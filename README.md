@@ -23,22 +23,19 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 1. Install the latest version of Julia: https://julialang.org/downloads/
 
-2. Install the following Julia packages (from inside Julia's package manager interface), which are ITensor's dependencies:
-    - HDF5
-    - Reexport
-    - StaticArrays
-    - TimerOutputs
+2. Run the `julia` command to begin an interactive Julia session (entering the so-called REPL). 
 
-3. Clone (using git) or download the contents of this repository onto your machine, say into a location such as ~/software/ITensors.jl
+3. Type `]` on your keyboard to enter Julia's interactive package manager.
 
-4. Edit (or create) the file ~/.julia/config/startup.jl. Add the following line to it: 
+4. Run the command 
 
-       push!(LOAD_PATH,"/location/of/ITensors.jl/src")
+       add https://github.com/ITensor/ITensors.jl
     
-   where "/location/of/ITensors.jl" is the full path where you placed the contents of this repository in step 3, and then     
-   don't forget to append "/src" to the end of this path.
+   The package system will update itself, then install some dependencies before finally installing ITensors.jl.
 
-5. You can now use ITensors.jl by issuing the command `using ITensors` either in the Julia REPL (interactive mode) or in a Julia source code file.
+5. Hit the backspace key to go back to the normal interactive Julia prompt, or type Ctrl+D to exit the Julia REPL.
+
+6. You can now do `using ITensors` to use the ITensor library in an interactive session, or run Julia code files (.jl files) which use ITensor, with some examples given below and in our examples folder. The test folder also has many examples of ITensor code you can run.
 
 ## Code Examples
 
