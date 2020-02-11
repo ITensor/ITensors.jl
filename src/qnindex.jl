@@ -163,8 +163,10 @@ function Tensors.outer(qn1::QNBlocks,qn2::QNBlocks)
   return qnR
 end
 
-function Tensors.outer(i1::QNIndex,i2::QNIndex)
-  iR = Index((dir(i1)*qnblocks(i1))⊗(dir(i2)*qnblocks(i2)))
+# TODO: add a combine kwarg to choose if the QN blocks
+# get sorted and combined (could do it by default?)
+function Tensors.outer(i1::QNIndex,i2::QNIndex; tags="")
+  iR = Index((dir(i1)*qnblocks(i1))⊗(dir(i2)*qnblocks(i2)),tags)
   return iR
 end
 

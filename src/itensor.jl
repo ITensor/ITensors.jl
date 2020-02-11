@@ -487,6 +487,7 @@ function combiner(inds::IndexSet; kwargs...)
   return ITensor(Combiner(),new_is),new_ind
 end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
+combiner(inds::Tuple{Vararg{Index}}; kwargs...) = combiner(inds...; kwargs...)
 
 combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 

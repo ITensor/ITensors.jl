@@ -395,13 +395,6 @@ function _permute_combdims(combdims::NTuple{NC,Int},
   return Tuple(res)
 end
 
-# Make a slice of the block on the specified dimensions
-# Make this a generic tupletools function (TupleTools.jl calls it getindices)
-#function slice_block(block::Block{N},
-#                     slicedims::NTuple{NS,Int}) where {N,NS}
-#  return ntuple(i->block[slicedims[i]],Val(NS))
-#end
-
 #
 # These are functions to help with combining and uncombining
 #
@@ -435,14 +428,19 @@ function perm_blocks(blocks::Blocks{N},
   return blocks_perm
 end
 
+# TODO: use that blockcomb is ordered to avoid findfirst
 function _number_combined(i::Int,
                           blockcomb::Vector{Int})
   if blockcomb[i] == blockcomb[end]
-    return length(blockcomb)-findfirst(==(blockcomb[end]),blockcomb)+1
+    start_loc = findfirst(==(blockcomb[end]),blockcomb)
+    return length(blockcomb)-start_loc+1
   end
-  return findfirst(==(blockcomb[i]+1),blockcomb)-findfirst(==(blockcomb[i]),blockcomb)
+  start_loc = findfirst(==(blockcomb[i]),blockcomb)
+  end_loc = findfirst(==(blockcomb[i]+1),blockcomb)-1
+  return end_loc-start_loc+1
 end
 
+# TODO: use that blockcomb is ordered to avoid findfirst
 function _number_combined_shift(i::Int,
                                 blockcomb::Vector{Int})
   blockval = blockcomb[i]
@@ -457,9 +455,9 @@ function _number_combined_shift(i::Int,
 end
 
 # In the dimension dim, combine the specified blocks
-function combine_blocks(blocks::Blocks{N},
+function combine_blocks(blocks::Blocks,
                         dim::Int,
-                        blockcomb::Vector{Int}) where {N}
+                        blockcomb::Vector{Int})
   blocks_comb = copy(blocks)
   nnz_comb = nnzblocks(blocks)
   i = 1
@@ -468,55 +466,15 @@ function combine_blocks(blocks::Blocks{N},
     dimval = block[dim]
     ncomb = _number_combined(dimval,blockcomb)
     ncomb_shift = _number_combined_shift(dimval,blockcomb)
-    if ncomb > 1
-      for dimvalp = dimval+1:dimval+ncomb-1
-        blockp = setindex(block,dimvalp,dim)
-        deleteat!(blocks_comb,findfirst(==(blockp),blocks_comb))
-      end
-      nnz_comb -= (ncomb-1)
+    for n = i+1:i+ncomb-1
+      deleteat!(blocks_comb,i+1)
     end
-
+    nnz_comb = nnzblocks(blocks_comb)
     blocks_comb[i] = setindex(block,dimval-ncomb_shift,dim)
     i += 1
   end
   return blocks_comb
 end
-
-#function permutedims_combine(T::BlockSparseTensor{ElT,N},
-#                             is,
-#                             perm::NTuple{N,Int},
-#                             combdims::NTuple{NC,Int},
-#                             blockperm::Vector{Int},
-#                             blockcomb::Vector{Int}) where {ElT,N,NC}
-#  blocks = nzblocks(T)
-#  blocks_perm = permutedims(blocks,perm)
-#  combdims_perm = _permute_combdims(combdims,perm)
-#  indsT = inds(T)
-#  inds_perm = permute(indsT,perm)
-#  blocks_perm_uncomb_1 = combine_dims(blocks_perm,inds_perm,combdims_perm)
-#  # Now we need to permute and combine the new blocks
-#  comb_ind_loc = minimum(combdims_perm)
-#  blocks_perm_uncomb_1 = perm_blocks(blocks_perm_uncomb_1,comb_ind_loc,blockperm)
-#  inds_to_combine = getindices(inds_perm,combdims_perm)
-#  ind_comb = ⊗(inds_to_combine...)
-#  ind_comb = permuteblocks(ind_comb,blockperm)
-#  inds_perm_comb = deleteat(inds_perm,combdims_perm)
-#  inds_perm_comb = insertafter(inds_perm_comb,ind_comb,minimum(combdims_perm)-1)
-#  blocks_perm_comb = combine_blocks(blocks_perm_uncomb_1,comb_ind_loc,blockcomb)
-#  blocks_perm_uncomb_2 = uncombine_blocks(blocks_perm_comb,comb_ind_loc,blockcomb)
-#  boffs_perm_comb,nnz_perm_comb = get_blockoffsets(blocks_perm_uncomb_2,inds_perm_comb; sorted=false)
-#  storage = BlockSparse(undef,boffs_perm_comb,nnz_perm_comb; sorted=false)
-#  R = Tensor(storage,inds_perm_comb)
-#  for (b1,b2) in zip(blocks,blocks_perm_uncomb_1)
-#    bv1 = blockview(T,b1)
-#    bv2 = blockview(R,b2; sorted=false)
-#    bv2 = reshape(bv2,permute(size(bv1),perm))
-#    permutedims!(bv2,bv1,perm)
-#  end
-#  boffs_perm_comb,_ = get_blockoffsets(blocks_perm_comb,is)
-#  R = Tensor(BlockSparse(data(store(R)),boffs_perm_comb),is)
-#  return R
-#end
 
 function permutedims_combine(T::BlockSparseTensor{ElT,N},
                              is,
@@ -526,18 +484,18 @@ function permutedims_combine(T::BlockSparseTensor{ElT,N},
                              blockcomb::Vector{Int}) where {ElT,N,NC}
   blocks = nzblocks(T)
   blocks_perm = permutedims(blocks,perm)
-  combdims_perm = _permute_combdims(combdims,perm)
+  combdims_perm = sort(_permute_combdims(combdims,perm))
   indsT = inds(T)
   inds_perm = permute(indsT,perm)
   blocks_perm_comb = combine_dims(blocks_perm,inds_perm,combdims_perm)
   # Now we need to permute and combine the new blocks
-  comb_ind_loc = combdims_perm[1]
+  comb_ind_loc = minimum(combdims_perm)
   blocks_perm_comb = perm_blocks(blocks_perm_comb,comb_ind_loc,blockperm)
   inds_to_combine = getindices(inds_perm,combdims_perm)
   ind_comb = ⊗(inds_to_combine...)
   ind_comb = permuteblocks(ind_comb,blockperm)
   inds_perm_comb = deleteat(inds_perm,combdims_perm)
-  inds_perm_comb = insertafter(inds_perm_comb,ind_comb,combdims_perm[1]-1)
+  inds_perm_comb = insertafter(inds_perm_comb,ind_comb,minimum(combdims_perm)-1)
   # Using this sortperm could save some block lookup time
   #offset_perm = sortperm(blocks_perm_comb; lt=isblockless)
   boffs_perm_comb,nnz_perm_comb = get_blockoffsets(blocks_perm_comb,inds_perm_comb)
@@ -549,11 +507,13 @@ function permutedims_combine(T::BlockSparseTensor{ElT,N},
     bv2 = reshape(bv2,permute(size(bv1),perm))
     permutedims!(bv2,bv1,perm)
   end
+  blocks_perm_comb = sort(blocks_perm_comb;lt=isblockless)
   blocks_perm_comb = combine_blocks(blocks_perm_comb,comb_ind_loc,blockcomb)
   boffs_perm_comb,_ = get_blockoffsets(blocks_perm_comb,is)
   return Tensor(BlockSparse(data(store(R)),boffs_perm_comb),is)
 end
 
+# TODO: optimize by avoiding findfirst
 function _number_uncombined(blockval::Int,
                             blockcomb::Vector{Int})
   if blockval == blockcomb[end]
@@ -562,6 +522,7 @@ function _number_uncombined(blockval::Int,
   return findfirst(==(blockval+1),blockcomb)-findfirst(==(blockval),blockcomb)
 end
 
+# TODO: optimize by avoiding findfirst
 function _number_uncombined_shift(blockval::Int,
                                   blockcomb::Vector{Int})
   if blockval == 1
@@ -595,31 +556,6 @@ function uncombine_blocks(blocks::Blocks{N},
   end
   return blocks_uncomb
 end
-
-#function uncombine(T::BlockSparseTensor{ElT,N},
-#                   is,
-#                   combdim::Int,
-#                   blockperm::Vector{Int},
-#                   blockcomb::Vector{Int}) where {ElT,N,NC}
-#  ind_uncomb_perm = ⊗(setdiff(is,inds(T))...)
-#  ind_uncomb = permuteblocks(ind_uncomb_perm,blockperm)
-#  # Same as inds(T) but with the blocks uncombined
-#  inds_uncomb = insertat(inds(T),ind_uncomb,combdim)
-#  inds_uncomb_perm = insertat(inds(T),ind_uncomb_perm,combdim)
-#  # Uncombine the blocks of T
-#  blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
-#  blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
-#  boffs_uncomb,_ = get_blockoffsets(blocks_uncomb,inds_uncomb; sorted=false)
-#  boffs_uncomb_perm,nnz_uncomb_perm = get_blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
-#  T_uncomb = Tensor(BlockSparse(data(store(T)),boffs_uncomb; sorted=false),inds_uncomb)
-#  T_uncomb_perm = Tensor(BlockSparse(undef,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
-#  for (b1,b2) in zip(blocks_uncomb,blocks_uncomb_perm)
-#    bv1 = blockview(T_uncomb,b1; sorted=false)
-#    bv2 = blockview(T_uncomb_perm,b2)
-#    copyto!(bv2,bv1)
-#  end
-#  return reshape(T_uncomb_perm,is)
-#end
 
 function uncombine(T::BlockSparseTensor{<:Number,N},
                    is,

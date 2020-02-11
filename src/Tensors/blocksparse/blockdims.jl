@@ -142,7 +142,7 @@ function blockdim(inds,
   return prod(blockdims(inds,block))
 end
 
-outer(dim1,dim2,dims...) = outer(outer(dim1,dim2),dims...)
+outer(dim1,dim2,dim3,dims...) = outer(outer(dim1,dim2),dim3,dims...)
 
 function outer(dim1::BlockDim,dim2::BlockDim)
   dimR = BlockDim(undef,nblocks(dim1)*nblocks(dim2))

@@ -228,6 +228,12 @@ function Base.iterate(i::Index,state::Int=1)
   return (state,state+1)
 end
 
+Tensors.outer(i::Index) = i
+
+function Tensors.outer(i1::Index,i2::Index; tags="")
+  return Index(dim(i1)*dim(i2),tags)
+end
+
 function Base.show(io::IO,
                    i::Index) 
   idstr = "$(id(i) % 1000)"

@@ -58,4 +58,5 @@ function combiner(inds::QNIndex...; kwargs...)
   comb_ind,perm,comb = combineblocks(new_ind)
   return ITensor(Combiner(perm,comb),IndexSet(comb_ind,dag.(inds)...)),comb_ind
 end
+combiner(inds::Tuple{Vararg{QNIndex}}; kwargs...) = combiner(inds...; kwargs...)
 
