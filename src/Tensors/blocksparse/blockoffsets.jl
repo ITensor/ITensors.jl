@@ -7,6 +7,7 @@ export BlockSparse,
        blockoffsets,
        blockview,
        nnzblocks,
+       nzblocks,
        nnz,
        findblock,
        isblocknz
@@ -16,16 +17,34 @@ export BlockSparse,
 #
 
 const Block{N} = NTuple{N,Int}
+const Blocks{N} = Vector{Block{N}}
 const BlockOffset{N} = Pair{Block{N},Int}
 const BlockOffsets{N} = Vector{BlockOffset{N}}
 
 BlockOffset(block::Block{N},offset::Int) where {N} = BlockOffset{N}(block,offset)
 
 block(bof::BlockOffset) = first(bof)
+
 offset(bof::BlockOffset) = last(bof)
+
 block(block::Block) = block
 
+# Get the offset if the nth block in the block-offsets
+# list
+offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
+
+block(bofs::BlockOffsets,n::Int) = block(bofs[n])
+
 nnzblocks(bofs::BlockOffsets) = length(bofs)
+nnzblocks(bs::Blocks) = length(bs)
+
+function nzblocks(bofs::BlockOffsets{N}) where {N}
+  blocks = Blocks{N}(undef,nnzblocks(bofs))
+  for i in 1:nnzblocks(bofs)
+    blocks[i] = block(bofs,i)
+  end
+  return blocks
+end
 
 # define block ordering with reverse lexographical order
 function isblockless(b1::Block{N},
@@ -59,12 +78,6 @@ function check_blocks_sorted(blockoffsets::BlockOffsets)
   return
 end
 
-# Get the offset if the nth block in the block-offsets
-# list
-offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
-
-block(bofs::BlockOffsets,n::Int) = block(bofs[n])
-
 function offset(bofs::BlockOffsets{N},
                 block::Block{N}) where {N}
   block_pos = findblock(bofs,block)
@@ -82,8 +95,8 @@ Searches assuming the blocks are sorted.
 If more than one block exists, throw an error.
 """
 function findblock(bofs::BlockOffsets{N},
-                   block::Block{N}) where {N}
-  r = searchsorted(bofs,block;lt=isblockless)
+                   find_block::Block{N}; sorted=true) where {N}
+  r = sorted ? searchsorted(bofs,find_block;lt=isblockless) : findall(i->block(i)==find_block,bofs)
   length(r)>1 && error("In findblock, more than one block found")   
   length(r)==0 && return nothing
   return first(r)
@@ -113,8 +126,10 @@ end
 
 # TODO: should this be a constructor?
 function get_blockoffsets(blocks::Vector{Block{N}},
-                          inds) where {N}
-  blocks = sort(blocks;lt=isblockless)
+                          inds; sorted = true) where {N}
+  if sorted
+    blocks = sort(blocks;lt=isblockless)
+  end
   blockoffsets = BlockOffsets{N}(undef,length(blocks))
   offset_total = 0
   for (i,block) in enumerate(blocks)
@@ -126,16 +141,25 @@ function get_blockoffsets(blocks::Vector{Block{N}},
 end
 
 # Permute the blockoffsets and indices
-function permute(blockoffsets::BlockOffsets{N},
-                 inds,
-                 perm::NTuple{N,Int}) where {N}
-  blocksR = Vector{Block{N}}(undef,nnzblocks(blockoffsets))
+function Base.permutedims(blockoffsets::BlockOffsets{N},
+                          inds,
+                          perm::NTuple{N,Int}) where {N}
+  blocksR = Blocks{N}(undef,nnzblocks(blockoffsets))
   for (i,(block,offset)) in enumerate(blockoffsets)
     blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds,perm)
   blockoffsetsR,_ = get_blockoffsets(blocksR,indsR)
   return blockoffsetsR,indsR
+end
+
+function Base.permutedims(blocks::Blocks{N},
+                          perm::NTuple{N,Int}) where {N}
+  blocks_perm = Blocks{N}(undef,nnzblocks(blocks))
+  for (i,block) in enumerate(blocks)
+    blocks_perm[i] = permute(block,perm)
+  end
+  return blocks_perm
 end
 
 """

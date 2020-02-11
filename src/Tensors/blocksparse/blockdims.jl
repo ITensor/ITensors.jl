@@ -76,8 +76,17 @@ nblocks(::BlockDims,i::Integer)
 
 The number of blocks in the specified dimension.
 """
-function nblocks(inds::BlockDims,i::Integer)
+function nblocks(inds::Tuple,i::Integer)
   return nblocks(inds[i])
+end
+
+"""
+nblocks(::BlockDims,is)
+
+The number of blocks in the specified dimensions.
+"""
+function nblocks(inds::Tuple,is::NTuple{N,Int}) where {N}
+  return ntuple(i->nblocks(inds,is[i]),Val(N))
 end
 
 """
@@ -86,7 +95,7 @@ nblocks(::BlockDims)
 A tuple of the number of blocks in each
 dimension.
 """
-function nblocks(inds::BlockDims{N}) where {N}
+function nblocks(inds::NTuple{N,<:Any}) where {N}
   return ntuple(i->nblocks(inds,i),Val(N))
 end
 
@@ -131,5 +140,19 @@ The total size of the specified block.
 function blockdim(inds,
                   block)
   return prod(blockdims(inds,block))
+end
+
+outer(dim1,dim2,dim3,dims...) = outer(outer(dim1,dim2),dim3,dims...)
+
+function outer(dim1::BlockDim,dim2::BlockDim)
+  dimR = BlockDim(undef,nblocks(dim1)*nblocks(dim2))
+  for (i,t) in enumerate(Iterators.product(dim1,dim2))
+    dimR[i] = prod(t)
+  end
+  return dimR
+end
+
+function permuteblocks(dim::BlockDim,perm)
+  return dim[perm]
 end
 

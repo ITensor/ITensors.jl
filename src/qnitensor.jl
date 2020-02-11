@@ -40,18 +40,17 @@ randomITensor(flux::QN,inds::IndexSet) = randomITensor(Float64,flux::QN,inds...)
 randomITensor(flux::QN,
               inds::Index...) = randomITensor(flux,IndexSet(inds...))
 
-Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
-
-Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
-
-Tensors.nnz(T::ITensor) = nnz(tensor(T))
-
-flux(T::ITensor,block) = flux(inds(T),block)
-
-function flux(T::ITensor)
-  nnzblocks(T) == 0 && return nothing
-  bofs = blockoffsets(T)
-  block1 = block(bofs,1)
-  return flux(T,block1)
+function combiner(inds::QNIndex...; kwargs...)
+  # TODO: support combining multiple set of indices
+  tags = get(kwargs, :tags, "CMB,Link")
+  new_ind = ⊗(inds...)
+  if all(i->dir(i)!=Out,inds)
+    new_ind = dag(new_ind)
+    new_ind = replaceqns(new_ind,-qnblocks(new_ind))
+  end
+  new_ind = settags(new_ind,tags)
+  comb_ind,perm,comb = combineblocks(new_ind)
+  return ITensor(Combiner(perm,comb),IndexSet(comb_ind,dag.(inds)...)),comb_ind
 end
+combiner(inds::Tuple{Vararg{QNIndex}}; kwargs...) = combiner(inds...; kwargs...)
 

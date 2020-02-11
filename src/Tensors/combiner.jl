@@ -5,9 +5,17 @@ export Combiner
 # This can generalize to a Combiner that combines
 # multiple set of indices, e.g. (i,j),(k,l) -> (a,b)
 struct Combiner <: TensorStorage{Number}
+  perm::Vector{Int}
+  comb::Vector{Int}
+  Combiner(perm::Vector{Int},comb::Vector{Int}) = new(perm,comb)
 end
 
+Combiner() = Combiner(Int[],Int[])
+
 data(::Combiner) = error("Combiner storage has no data")
+
+blockperm(C::Combiner) = C.perm
+blockcomb(C::Combiner) = C.comb
 
 Base.eltype(::Type{<:Combiner}) = Nothing
 Base.eltype(::StoreT) where {StoreT<:Combiner} = eltype(StoreT)
@@ -19,6 +27,16 @@ Base.promote_rule(::Type{<:Combiner},StorageT::Type{<:Dense}) = StorageT
 #
 
 const CombinerTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Combiner}
+
+combinedindex(T::CombinerTensor) = inds(T)[1]
+function uncombinedinds(T::CombinerTensor)
+  return popfirst(inds(T))
+end
+
+blockperm(C::CombinerTensor) = blockperm(store(C))
+blockcomb(C::CombinerTensor) = blockcomb(store(C))
+
+Base.conj(T::CombinerTensor) = T
 
 function contraction_output(::TensorT1,
                             ::TensorT2,

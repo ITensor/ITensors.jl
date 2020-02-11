@@ -30,7 +30,16 @@ modulus(qv::QNVal) = qv.modulus
 isactive(qv::QNVal) = (modulus(qv) != 0)
 isfermionic(qv::QNVal) = (modulus(qv) < 0)
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
-Base.:-(qv::QNVal) =  QNVal(name(qv),-val(qv),modulus(qv))
+
+function qn_mod(val::Int,modulus::Int)
+  modulus = abs(modulus)
+  (modulus == 0 || modulus == 1) && return val
+  return mod(val,modulus)
+end
+
+function Base.:-(qv::QNVal)
+  return QNVal(name(qv),qn_mod(-val(qv),modulus(qv)),modulus(qv))
+end
 
 Base.zero(qv::QNVal) = QNVal(name(qv),0,modulus(qv))
 
@@ -101,6 +110,8 @@ Base.length(qn::QN) = length(store(qn))
 
 Base.lastindex(qn::QN) = length(qn)
 
+isactive(qn::QN) = isactive(qn[1])
+
 function Base.iterate(qn::QN,state::Int=1)
   (state > length(qn)) && return nothing
   return (qn[state],state+1)
@@ -149,6 +160,14 @@ function combineqns(a::QN,b::QN,operation)
   return QN(QNStorage(ma))
 end
 
+function Base.zero(qn::QN)
+  mqn = MQNStorage(undef)
+  for i in 1:length(mqn)
+    mqn[i] = zero(qn[i])
+  end
+  return QN(mqn)
+end
+
 function Base.:*(dir::Arrow,qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
@@ -163,6 +182,14 @@ end
 
 function Base.:-(a::QN,b::QN)
   return combineqns(a,b,-)
+end
+
+function Base.:-(qn::QN)
+  mqn = MQNStorage(undef)
+  for i in 1:length(mqn)
+    mqn[i] = -qn[i]
+  end
+  return QN(mqn)
 end
 
 function hasname(qn::QN,qv_find::QNVal)
@@ -190,6 +217,9 @@ end
 # Fills in the qns of qn1 that qn2 has but
 # qn1 doesn't
 function fillqns_from(qn1::QN,qn2::QN)
+  # If qn1 has no non-trivial qns, fill
+  # with qn2
+  !isactive(qn1) && return zero(qn2)
   for qv2 in qn2
     if !hasname(qn1,qv2)
       qn1 = addqnval(qn1,zero(qv2))
@@ -229,6 +259,10 @@ function isless_assume_filled(qn1::QN,qn2::QN)
   return false
 end
 
+function Base.isless(qn1::QN,qn2::QN; assume_filled=false)
+  return <(qn1,qn2;assume_filled=assume_filled)
+end
+
 function Base.:<(qn1::QN,qn2::QN; assume_filled=false)
   if !assume_filled
     qn1,qn2 = fillqns(qn1,qn2)
@@ -256,7 +290,11 @@ function Base.show(io::IO,q::QN)
     v = q[n]
     !isactive(v) && break
     n > 1 && print(io,",")
-    print(io,"(\"$(name(v))\",$(val(v))")
+    if name(v)==SmallString("")
+      print(io,"($(val(v))")
+    else
+      print(io,"(\"$(name(v))\",$(val(v))")
+    end
     if modulus(v) != 1
       print(io,",$(modulus(v)))")
     else

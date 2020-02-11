@@ -1,8 +1,11 @@
 export insertat,
        insertafter,
+       deleteat,
+       getindices,
        tuplecat,
        getperm,
        getperms,
+       invperm,
        permute,
        ValLength,
        is_trivial_permutation,
@@ -59,6 +62,25 @@ function getperms(s,s1,s2)
   return perm1,perm2
 end
 
+function invperm!(permres,perm)
+  for i in 1:length(perm)
+    permres[perm[i]] = i
+  end
+  return permres
+end
+
+function invperm(perm::NTuple{N,Int}) where {N}
+  mpermres = MVector{N,Int}(undef)
+  invperm!(mpermres,perm)
+  return Tuple(mpermres)
+end
+
+function invperm(perm)
+  permres = similar(perm)
+  invperm!(permres,perm)
+  return permres
+end
+
 """
 Determine if P is a trivial permutation. Errors if P is not a valid
 permutation.
@@ -92,6 +114,56 @@ end
 function StaticArrays.deleteat(t::NTuple{N},pos::Integer) where {N}
   return ntuple(i -> _deleteat(t,pos,i),Val(N-1))
 end
+
+StaticArrays.deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
+function StaticArrays.deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
+    return deleteat_sorted(t, sort(I, rev = true))
+end
+
+deleteat_sorted(t::Tuple,pos::Int64) = deleteat(t,pos[1])
+deleteat_sorted(t::Tuple,pos::Tuple{Int}) = deleteat(t,pos[1])
+deleteat_sorted(t::Tuple,pos::NTuple{N,Int}) where {N} = deleteat_sorted(deleteat_sorted(t,pos[1]),Base.tail(pos))
+
+# Make a slice of the block on the specified dimensions
+# Make this a generic tupletools function (TupleTools.jl calls it getindices)
+function getindices(t::Tuple,
+                    I::NTuple{N,Int}) where {N}
+  return ntuple(i->t[I[i]],Val(N))
+end
+
+# Taken from TupleTools.jl
+"""
+    sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
+Sorts the tuple `t`.
+"""
+Base.sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)
+@inline function _sort(t::Tuple, lt=isless, by=identity, rev::Bool=false)
+    t1, t2 = _split(t)
+    t1s = _sort(t1, lt, by, rev)
+    t2s = _sort(t2, lt, by, rev)
+    return _merge(t1s, t2s, lt, by, rev)
+end
+_sort(t::Tuple{Any}, lt=isless, by=identity, rev::Bool=false) = t
+_sort(t::Tuple{}, lt=isless, by=identity, rev::Bool=false) = t
+
+function _split(t::NTuple{N}) where N
+    M = N>>1
+    ntuple(i->t[i], M), ntuple(i->t[i+M], N-M)
+end
+
+function _merge(t1::Tuple, t2::Tuple, lt, by, rev)
+    if lt(by(first(t1)), by(first(t2))) != rev
+        return (first(t1), _merge(Base.tail(t1), t2, lt, by, rev)...)
+    else
+        return (first(t2), _merge(t1, Base.tail(t2), lt, by, rev)...)
+    end
+end
+_merge(t1::Tuple{}, t2::Tuple, lt, by, rev) = t2
+_merge(t1::Tuple, t2::Tuple{}, lt, by, rev) = t1
+
+#function tail(t::NTuple{N})
+#  return ntuple(i -> t[i+1],Val(N-1))
+#end
 
 function _insertat(t,pos,n_insert,val,i)
   if i < pos

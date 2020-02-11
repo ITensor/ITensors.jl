@@ -42,7 +42,7 @@ function IndexSet(vi::Vector{Index})
   return IndexSet{N}(NTuple{N,Index}(vi))
 end
 
-Tensors.inds(is::IndexSet) = is.inds
+Tensors.store(is::IndexSet) = is.inds
 
 # Empty constructor
 IndexSet() = IndexSet{0}()
@@ -73,6 +73,8 @@ Base.promote_rule(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
 
 Tensors.ValLength(::Type{IndexSet{N}}) where {N} = Val{N}
 Tensors.ValLength(::IndexSet{N}) where {N} = Val(N)
+
+StaticArrays.popfirst(is::IndexSet) = IndexSet(popfirst(store(is))) 
 
 # TODO: make a version that accepts an arbitrary set of IndexSets
 # as well as mixtures of seperate Indices and Tuples of Indices.
@@ -114,15 +116,26 @@ Tensors.dim(is::IndexSet) = prod(dim.(is))
 Tensors.dim(is::IndexSet{0}) = 1
 Tensors.dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
-function Tensors.insertat(is1::IndexSet{N1},
-                          is2::IndexSet{N2},
-                          pos::Integer) where {N1,N2}
-  return IndexSet{N1+N2-1}(insertat(tuple(is1...),tuple(is2...),pos))
+# To help with generic code in Tensors
+Base.ndims(::NTuple{N,IndT}) where {N,IndT<:Index} = N
+Base.ndims(::Type{NTuple{N,IndT}}) where {N,IndT<:Index} = N
+
+function Tensors.insertat(is1::IndexSet,
+                          is2,
+                          pos::Integer)
+  return IndexSet(insertat(Tuple(is1),Tuple(IndexSet(is2)),pos))
 end
 
-function StaticArrays.deleteat(is::IndexSet{N},
-                               pos::Integer) where {N}
-  return IndexSet{N-1}(deleteat(tuple(is...),pos))
+function Tensors.insertafter(is::IndexSet,I...)
+  return IndexSet(insertafter(Tuple(is),I...))
+end
+
+function StaticArrays.deleteat(is::IndexSet,I...)
+  return IndexSet(deleteat(Tuple(is),I...))
+end
+
+function Tensors.getindices(is::IndexSet,I...)
+  return IndexSet(getindices(Tuple(is),I...))
 end
 
 # Optimize this (right own function that extracts dimensions

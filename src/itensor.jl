@@ -48,6 +48,9 @@ mutable struct ITensor{N}
 end
 ITensor(st,is::IndexSet{N}) where {N} = ITensor{N}(st,is)
 
+ITensor{N}(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is))
+ITensor(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is))
+
 Tensors.inds(T::ITensor) = T.inds
 Tensors.store(T::ITensor) = T.store
 
@@ -484,8 +487,9 @@ function combiner(inds::IndexSet; kwargs...)
   return ITensor(Combiner(),new_is),new_ind
 end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
+combiner(inds::Tuple{Vararg{Index}}; kwargs...) = combiner(inds...; kwargs...)
 
-combinedindex(T::ITensor) = store(T) isa Combiner ? store(T).ci : nothing
+combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
@@ -681,6 +685,25 @@ Like `A .= x .* B`.
 """
 LinearAlgebra.mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
 LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
+
+#
+# Block sparse related functions
+# (Maybe create fallback definitions for dense tensors)
+#
+
+Tensors.nnz(T::ITensor) = nnz(tensor(T))
+Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
+Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+flux(T::ITensor,block) = flux(inds(T),block)
+
+function flux(T::ITensor)
+  nnzblocks(T) == 0 && return nothing
+  bofs = blockoffsets(T)
+  block1 = block(bofs,1)
+  return flux(T,block1)
+end
+
 
 #######################################################################
 #
