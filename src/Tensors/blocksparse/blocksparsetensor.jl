@@ -98,7 +98,7 @@ from indices and locations of non-zero blocks.
 """
 BlockSparseTensor(::UndefInitializer,
                   blocks::Blocks,
-                  inds) = BlockSparseTensor(undef,Float64,blocks,inds)
+                  inds) = BlockSparseTensor(Float64,undef,blocks,inds)
 
 function BlockSparseTensor(::Type{ElT},
                            ::UndefInitializer,

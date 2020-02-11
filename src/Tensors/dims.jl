@@ -15,8 +15,6 @@ dense(ds::Dims) = ds
 dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
 dim(ds::Dims) = prod(ds)
 
-dims(::Tuple{}) = ()
-
 Base.ndims(::Dims{N}) where {N} = N
 Base.ndims(::Type{Dims{N}}) where {N} = N
 Base.ndims(::Tuple{}) = 0

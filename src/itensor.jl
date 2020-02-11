@@ -686,9 +686,24 @@ Like `A .= x .* B`.
 LinearAlgebra.mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
 LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
 
+#
+# Block sparse related functions
+# (Maybe create fallback definitions for dense tensors)
+#
+
 Tensors.nnz(T::ITensor) = nnz(tensor(T))
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
 Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
+Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+flux(T::ITensor,block) = flux(inds(T),block)
+
+function flux(T::ITensor)
+  nnzblocks(T) == 0 && return nothing
+  bofs = blockoffsets(T)
+  block1 = block(bofs,1)
+  return flux(T,block1)
+end
+
 
 #######################################################################
 #
