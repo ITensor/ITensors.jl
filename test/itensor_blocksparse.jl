@@ -100,14 +100,16 @@ using ITensors,
         @test flux(AC,b) == QN(0)
       end
 
+      @show nzblocks(AC)
+
       # Check (2,2,1) and (2,3) are the same data
-      @test reshape(permutedims(blockview(tensor(A),(2,2,1)),(2,1,3)),2,4) == blockview(tensor(AC),(2,3))
+      @test reshape(permutedims(blockview(tensor(A),(2,2,1)),(1,3,2)),4,2) == blockview(tensor(AC),(3,2))
 
       # Check (1,1,1) and the beginning of block (1,2) are the same data
-      @test reshape(permutedims(blockview(tensor(A),(1,1,1)),(2,1,3)),2,4) == blockview(tensor(AC),(1,2))[1:2,1:4]
+      @test reshape(permutedims(blockview(tensor(A),(1,1,1)),(1,3,2)),4,2) == blockview(tensor(AC),(2,1))[1:4,1:2]
 
       # Check (2,1,2) and the end of block (1,2) are the same data
-      @test reshape(permutedims(blockview(tensor(A),(2,1,2)),(2,1,3)),2,4) == blockview(tensor(AC),(1,2))[1:2,5:8]
+      @test reshape(permutedims(blockview(tensor(A),(2,1,2)),(1,3,2)),4,2) == blockview(tensor(AC),(2,1))[5:8,1:2]
 
       Ap = AC*dag(C)
 

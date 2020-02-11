@@ -12,10 +12,10 @@ function contract(T::BlockSparseTensor{<:Number,NT},
   c = combinedindex(C)
   labels_uc = deleteat(labelsC,cpos_in_labelsC)
   if labelsC[1] ∉ labelsT
-    labelsRc = contract_labels(labelsT,labelsC)
+    labelsRc = contract_labels(labelsC,labelsT)
     cpos_in_labelsRc = findfirst(==(clabel),labelsRc)
     labelsRuc = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
-    indsRc = contract_inds(inds(T),labelsT,inds(C),labelsC,labelsRc)
+    indsRc = contract_inds(inds(C),labelsC,inds(T),labelsT,labelsRc)
     perm = getperm(labelsRuc,labelsT)
     ucpos_in_labelsT = Tuple(findall(x->x in labels_uc,labelsT))
     Rc = permutedims_combine(T,indsRc,perm,ucpos_in_labelsT,blockperm(C),blockcomb(C))
@@ -24,7 +24,7 @@ function contract(T::BlockSparseTensor{<:Number,NT},
     labelsRc = labelsT
     cpos_in_labelsRc = findfirst(==(clabel),labelsRc)
     labelsRuc = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
-    indsRuc = contract_inds(inds(T),labelsT,inds(C),labelsC,labelsRuc)
+    indsRuc = contract_inds(inds(C),labelsC,inds(T),labelsT,labelsRuc)
     Ruc = uncombine(T,indsRuc,cpos_in_labelsRc,blockperm(C),blockcomb(C))
     return Ruc
   end
