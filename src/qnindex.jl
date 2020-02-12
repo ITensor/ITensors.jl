@@ -232,6 +232,10 @@ function combineblocks(i::QNIndex)
   return iR,perm,comb
 end
 
+Tensors.dense(inds::QNIndex...) = dense.(inds)
+
+Tensors.dense(i::QNIndex) = Index(id(i),dim(i),dir(i),tags(i))
+
 function Base.show(io::IO,
                    i::QNIndex)
   idstr = "$(id(i) % 1000)"

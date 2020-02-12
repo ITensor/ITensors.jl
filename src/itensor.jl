@@ -256,7 +256,7 @@ Make a copy of the ITensor where the storage is the dense version.
 For example, an ITensor with Diag storage will become Dense storage.
 """
 function Tensors.dense(T::ITensor)
-  ITensor(dense(Tensor(store(T),inds(T))))
+  ITensor(dense(tensor(T)))
 end
 
 """
@@ -264,7 +264,7 @@ complex(T::ITensor)
 
 Convert to the complex version of the storage.
 """
-Base.complex(T::ITensor) = ITensor(complex(Tensor(store(T),inds(T))))
+Base.complex(T::ITensor) = ITensor(complex(tensor(T)))
 
 # This constructor allows many IndexSet
 # set operations to work with ITensors

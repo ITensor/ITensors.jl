@@ -37,6 +37,8 @@ in the block-offsets list.
 """
 offset(T::BlockSparseTensor,n::Int) = offset(store(T),n)
 
+block(T::BlockSparseTensor,n::Int) = block(store(T),n)
+
 """
 blockdim(T::BlockSparseTensor,pos::Int)
 

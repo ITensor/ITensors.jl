@@ -32,7 +32,9 @@ Base.eltype(::Tensor{ElT}) where {ElT} = ElT
 # The size is obtained from the indices
 dims(T::Tensor) = dims(inds(T))
 dim(T::Tensor) = dim(inds(T))
+dim(T::Tensor,i::Int) = dim(inds(T),i)
 Base.size(T::Tensor) = dims(T)
+Base.size(T::Tensor,i::Int) = dim(T,i)
 
 Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 

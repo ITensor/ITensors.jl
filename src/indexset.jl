@@ -542,6 +542,12 @@ function swaptags!(is::IndexSet,
 end
 swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 
+Tensors.dense(::Type{IndexSetT}) where {IndexSetT<:IndexSet} = IndexSet
+
+Tensors.dense(is::IndexSet) = IndexSet(dense(is...))
+
+Tensors.dense(inds::Index...) = inds
+
 #
 # Helper functions for contracting ITensors
 #

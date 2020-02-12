@@ -244,7 +244,7 @@ function Base.show(io::IO,
   end
 end
 
-struct IndexVal{IndexT}
+struct IndexVal{IndexT<:Index}
   ind::IndexT
   val::Int
   function IndexVal(i::IndexT,n::Int) where {IndexT}

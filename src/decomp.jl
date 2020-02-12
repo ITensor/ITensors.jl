@@ -87,9 +87,19 @@ function LinearAlgebra.svd(A::ITensor,
   vtags::TagSet = get(kwargs,:vtags,"Link,v")
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
-  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,ST,VT,spec = svd(tensor(A),Lpos,Rpos;kwargs...)
-  U,S,V = ITensor(UT),ITensor(ST),ITensor(VT)
+
+  CL,_ = combiner(Lis...)
+  CR,_ = combiner(Ris...)
+  AC = A*CR*CL
+
+  @show AC
+
+  UT,ST,VT,spec = svd(tensor(A);kwargs...)
+  UC,S,VC = itensor(UT),itensor(ST),itensor(VT)
+
+  U = UC*dag(CL)
+  V = VC*dag(CR)
+
   u₀ = commonindex(U,S)
   v₀ = commonindex(S,V)
 
@@ -102,6 +112,29 @@ function LinearAlgebra.svd(A::ITensor,
 
   return TruncSVD(U,S,V,spec,u,v)
 end
+
+#function LinearAlgebra.svd(A::ITensor,
+#                           Linds...;
+#                           kwargs...)
+#  utags::TagSet = get(kwargs,:utags,"Link,u")
+#  vtags::TagSet = get(kwargs,:vtags,"Link,v")
+#  Lis = commoninds(inds(A),IndexSet(Linds...))
+#  Ris = uniqueinds(inds(A),Lis)
+#  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+#  UT,ST,VT,spec = svd(tensor(A),Lpos,Rpos;kwargs...)
+#  U,S,V = ITensor(UT),ITensor(ST),ITensor(VT)
+#  u₀ = commonindex(U,S)
+#  v₀ = commonindex(S,V)
+#
+#  u = settags(u₀,utags)
+#  v = settags(u₀,vtags)
+#
+#  U *= δ(dag(u₀),u)
+#  S = δ(dag(u₀),u)*S*δ(dag(v₀),v)
+#  V *= δ(dag(v₀),v)
+#
+#  return TruncSVD(U,S,V,spec,u,v)
+#end
 
 function _factorize_center(A::ITensor,
                            Linds...;
