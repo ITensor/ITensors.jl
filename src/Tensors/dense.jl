@@ -262,11 +262,14 @@ function Base.reshape(T::DenseTensor,dims::Int...)
   return Tensor(store(T),tuple(dims...))
 end
 
+# TODO: move to tensor.jl?
+array(T::Tensor) = array(dense(T))
+matrix(T::Tensor{<:Number,2}) = array(T)
+vector(T::Tensor{<:Number,1}) = array(T)
+
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
 array(T::DenseTensor) = reshape(data(store(T)),dims(inds(T)))
-matrix(T::DenseTensor{<:Number,2}) = array(T)
-vector(T::DenseTensor{<:Number,1}) = array(T)
 
 function Base.Array{ElT,N}(T::DenseTensor{ElT,N}) where {ElT,N}
   return copy(array(T))

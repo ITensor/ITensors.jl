@@ -156,3 +156,5 @@ function permuteblocks(dim::BlockDim,perm)
   return dim[perm]
 end
 
+sim(dim::BlockDim) = dim
+
