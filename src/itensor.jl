@@ -1,4 +1,5 @@
 export ITensor,
+       itensor,
        axpy!,
        combiner,
        combinedindex,
@@ -47,6 +48,9 @@ mutable struct ITensor{N}
 end
 ITensor(st,is::IndexSet{N}) where {N} = ITensor{N}(st,is)
 
+ITensor{N}(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is))
+ITensor(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is))
+
 Tensors.inds(T::ITensor) = T.inds
 Tensors.store(T::ITensor) = T.store
 
@@ -66,11 +70,15 @@ Iterate over the CartesianIndices of an ITensor.
 Base.CartesianIndices(A::ITensor) = CartesianIndices(dims(A))
 
 #
-# Dense ITensor constructors
+# ITensor constructors
 #
+
+# Should this be ITensor or itensor?
 
 ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
 ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
+
+itensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
 
 # Convert the ITensor to a Tensor that shares the same
 # data and indices as the ITensor
@@ -479,8 +487,9 @@ function combiner(inds::IndexSet; kwargs...)
   return ITensor(Combiner(),new_is),new_ind
 end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
+combiner(inds::Tuple{Vararg{Index}}; kwargs...) = combiner(inds...; kwargs...)
 
-combinedindex(T::ITensor) = store(T) isa Combiner ? store(T).ci : nothing
+combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
@@ -515,6 +524,17 @@ function Base.:-(A::ITensor,B::ITensor)
   return C
 end
 
+"""
+    *(A::ITensor, B::ITensor)
+
+Contract ITensors A and B to obtain a new ITensor. This 
+contraction `*` operator finds all matching indices common
+to A and B and sums over them, such that the result will 
+have only the unique indices of A and B. To prevent
+indices from matching, their prime level or tags can be 
+modified such that they no longer compare equal - for more
+information see the documentation on Index objects.
+"""
 function Base.:*(A::ITensor,B::ITensor)
   (Alabels,Blabels) = compute_contraction_labels(inds(A),inds(B))
   CT = contract(tensor(A),Alabels,tensor(B),Blabels)
@@ -666,6 +686,25 @@ Like `A .= x .* B`.
 LinearAlgebra.mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
 LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
 
+#
+# Block sparse related functions
+# (Maybe create fallback definitions for dense tensors)
+#
+
+Tensors.nnz(T::ITensor) = nnz(tensor(T))
+Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
+Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+flux(T::ITensor,block) = flux(inds(T),block)
+
+function flux(T::ITensor)
+  nnzblocks(T) == 0 && return nothing
+  bofs = blockoffsets(T)
+  block1 = block(bofs,1)
+  return flux(T,block1)
+end
+
+
 #######################################################################
 #
 # Developer functions
@@ -778,4 +817,44 @@ end
 
 function set_warnorder(ord::Int)
   ITensors.GLOBAL_PARAMS["WarnTensorOrder"] = ord
+end
+
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    T::ITensor)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "ITensor"
+  attrs(g)["version"] = 1
+  write(g,"inds",inds(T))
+  write(g,"store",store(T))
+end
+
+#function HDF5.read(parent::Union{HDF5File,HDF5Group},
+#                   name::AbstractString)
+#  g = g_open(parent,name)
+#
+#  try
+#    typestr = read(attrs(g)["type"])
+#    type_t = eval(Meta.parse(typestr))
+#    res = read(parent,"name",type_t)
+#    return res
+#  end
+#  return 
+#end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{ITensor})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "ITensor"
+    error("HDF5 group or file does not contain ITensor data")
+  end
+  inds = read(g,"inds",IndexSet)
+
+  stypestr = read(attrs(g_open(g,"store"))["type"])
+  stype = eval(Meta.parse(stypestr))
+
+  store = read(g,"store",stype)
+
+  return ITensor(store,inds)
 end

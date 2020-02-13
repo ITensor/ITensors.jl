@@ -19,32 +19,31 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
   blockoffsets::BlockOffsets{N}  # Block number-offset pairs
   function BlockSparse(data::VecT,
-                       blockoffsets::BlockOffsets{N}) where {VecT<:AbstractVector{ElT},N} where {ElT}
-    # TODO: make this a debug check?
-    check_blocks_sorted(blockoffsets)
+                       blockoffsets::BlockOffsets{N}; sorted=true) where {VecT<:AbstractVector{ElT},N} where {ElT}
+    sorted && check_blocks_sorted(blockoffsets)
     new{ElT,VecT,N}(data,blockoffsets)
   end
 end
 
 function BlockSparse(::Type{ElT},
                      blockoffsets::BlockOffsets,
-                     dim::Integer) where {ElT<:Number}
-  return BlockSparse(zeros(ElT,dim),blockoffsets)
+                     dim::Integer; vargs...) where {ElT<:Number}
+  return BlockSparse(zeros(ElT,dim),blockoffsets; vargs...)
 end
 
 function BlockSparse(::Type{ElT},
                      ::UndefInitializer,
                      blockoffsets::BlockOffsets,
-                     dim::Integer) where {ElT<:Number}
-  return BlockSparse(Vector{Float64}(undef,dim),blockoffsets)
+                     dim::Integer; vargs...) where {ElT<:Number}
+  return BlockSparse(Vector{Float64}(undef,dim),blockoffsets; vargs...)
 end
 
 BlockSparse(blockoffsets::BlockOffsets,
-            dim::Integer) = BlockSparse(Float64,blockoffsets,dim)
+            dim::Integer; vargs...) = BlockSparse(Float64,blockoffsets,dim; vargs...)
 
 BlockSparse(::UndefInitializer,
             blockoffsets::BlockOffsets,
-            dim::Integer) = BlockSparse(Float64,undef,blockoffsets,dim)
+            dim::Integer; vargs...) = BlockSparse(Float64,undef,blockoffsets,dim; vargs...)
 
 #function BlockSparse{ElR}(data::VecT,offsets) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}
 #  ElT == ElR ? BlockSparse(data,offsets) : BlockSparse(ElR.(data),offsets)
@@ -53,7 +52,9 @@ BlockSparse(::UndefInitializer,
 
 blockoffsets(D::BlockSparse) = D.blockoffsets
 nnzblocks(D::BlockSparse) = length(blockoffsets(D))
-nnz(D::BlockSparse) = length(data(D))
+Base.length(D::BlockSparse) = length(data(D))
+Base.size(D::BlockSparse) = (length(D),)
+nnz(D::BlockSparse) = length(D)
 offset(D::BlockSparse,block::Block) = offset(blockoffsets(D),block)
 offset(D::BlockSparse,n::Int) = offset(blockoffsets(D),n)
 
@@ -61,11 +62,12 @@ function Base.similar(D::BlockSparse{ElT}) where {ElT}
   return BlockSparse{ElT}(similar(data(D)),blockoffsets(D))
 end
 
+# TODO: test this function
 Base.similar(D::BlockSparse,
-             ::Type{ElT}) where {ElT} = BlockSparse{T}(similar(data(D),T),
-                                                       blockoffsets(D))
-Base.copy(D::BlockSparse{T}) where {T} = BlockSparse{T}(copy(data(D)),
-                                                        blockoffsets(D))
+             ::Type{ElT}) where {ElT} = BlockSparse(similar(data(D),ElT),
+                                                    copy(blockoffsets(D)))
+Base.copy(D::BlockSparse) = BlockSparse(copy(data(D)),
+                                        copy(blockoffsets(D)))
 
 # TODO: check the offsets are the same?
 function Base.copyto!(D1::BlockSparse,D2::BlockSparse)
@@ -122,7 +124,7 @@ function blockdim(D::BlockSparse,
 end
 
 findblock(T::BlockSparse{ElT,VecT,N},
-          block::Block{N}) where {ElT,VecT,N} = findblock(blockoffsets(T),block)
+          block::Block{N}; vargs...) where {ElT,VecT,N} = findblock(blockoffsets(T),block; vargs...)
 
 """
 isblocknz(T::BlockSparse,

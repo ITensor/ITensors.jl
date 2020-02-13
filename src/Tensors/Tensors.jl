@@ -2,7 +2,8 @@
 
 using StaticArrays,
       Random,
-      LinearAlgebra
+      LinearAlgebra,
+      HDF5
 
 #####################################
 # DenseTensor and DiagTensor
@@ -26,5 +27,6 @@ include("blocksparse/blockdims.jl")
 include("blocksparse/blockoffsets.jl")
 include("blocksparse/blocksparse.jl")
 include("blocksparse/blocksparsetensor.jl")
+include("blocksparse/combiner.jl")
 
 end # module Tensors

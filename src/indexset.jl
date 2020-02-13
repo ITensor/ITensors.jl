@@ -21,17 +21,28 @@ export IndexSet,
        permute
 
 struct IndexSet{N}
-  inds::MVector{N,Index}
-  IndexSet{N}(inds::MVector{N,Index}) where {N} = new{N}(inds)
+  inds::SizedVector{N,Index}
+  IndexSet{N}(inds::SizedVector{N,<:Index}) where {N} = new{N}(inds)
+  IndexSet{N}(inds::SVector{N,<:Index}) where {N} = new{N}(inds)
+  IndexSet{N}(inds::MVector{N,<:Index}) where {N} = new{N}(inds)
   IndexSet{0}(::MVector{0}) = new{0}(())
-  IndexSet{N}(inds::NTuple{N,Index}) where {N} = new{N}(inds)
+  IndexSet{N}(inds::NTuple{N,<:Index}) where {N} = new{N}(inds)
   IndexSet{0}() = new{0}(())
   IndexSet{0}(::Tuple{}) = new{0}(())
 end
-IndexSet(inds::MVector{N,Index}) where {N} = IndexSet{N}(inds)
-IndexSet(inds::NTuple{N,Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::SizedVector{N,<:Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::SVector{N,<:Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::MVector{N,<:Index}) where {N} = IndexSet{N}(inds)
+IndexSet(inds::NTuple{N,<:Index}) where {N} = IndexSet{N}(inds)
 
-Tensors.inds(is::IndexSet) = is.inds
+# TODO: what is this used for? Should we have this?
+# It is not type stable.
+function IndexSet(vi::Vector{Index}) 
+  N = length(vi)
+  return IndexSet{N}(NTuple{N,Index}(vi))
+end
+
+Tensors.store(is::IndexSet) = is.inds
 
 # Empty constructor
 IndexSet() = IndexSet{0}()
@@ -62,6 +73,8 @@ Base.promote_rule(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
 
 Tensors.ValLength(::Type{IndexSet{N}}) where {N} = Val{N}
 Tensors.ValLength(::IndexSet{N}) where {N} = Val(N)
+
+StaticArrays.popfirst(is::IndexSet) = IndexSet(popfirst(store(is))) 
 
 # TODO: make a version that accepts an arbitrary set of IndexSets
 # as well as mixtures of seperate Indices and Tuples of Indices.
@@ -100,17 +113,29 @@ Tensors.dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 Base.ndims(::IndexSet{N}) where {N} = N
 Base.ndims(::Type{IndexSet{N}}) where {N} = N
 Tensors.dim(is::IndexSet) = prod(dim.(is))
+Tensors.dim(is::IndexSet{0}) = 1
 Tensors.dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
-function Tensors.insertat(is1::IndexSet{N1},
-                          is2::IndexSet{N2},
-                          pos::Integer) where {N1,N2}
-  return IndexSet{N1+N2-1}(insertat(tuple(is1...),tuple(is2...),pos))
+# To help with generic code in Tensors
+Base.ndims(::NTuple{N,IndT}) where {N,IndT<:Index} = N
+Base.ndims(::Type{NTuple{N,IndT}}) where {N,IndT<:Index} = N
+
+function Tensors.insertat(is1::IndexSet,
+                          is2,
+                          pos::Integer)
+  return IndexSet(insertat(Tuple(is1),Tuple(IndexSet(is2)),pos))
 end
 
-function StaticArrays.deleteat(is::IndexSet{N},
-                               pos::Integer) where {N}
-  return IndexSet{N-1}(deleteat(tuple(is...),pos))
+function Tensors.insertafter(is::IndexSet,I...)
+  return IndexSet(insertafter(Tuple(is),I...))
+end
+
+function StaticArrays.deleteat(is::IndexSet,I...)
+  return IndexSet(deleteat(Tuple(is),I...))
+end
+
+function Tensors.getindices(is::IndexSet,I...)
+  return IndexSet(getindices(Tuple(is),I...))
 end
 
 # Optimize this (right own function that extracts dimensions
@@ -564,3 +589,27 @@ function readcpp(io::IO,::Type{IndexSet};kwargs...)
   return is
 end
 
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    is::IndexSet)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "IndexSet"
+  attrs(g)["version"] = 1
+  N = length(is)
+  write(g,"length",N)
+  for n=1:N
+    write(g,"index_$n",is[n])
+  end
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{IndexSet})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "IndexSet"
+    error("HDF5 group or file does not contain IndexSet data")
+  end
+  N = read(g,"length")
+  it = ntuple(n->read(g,"index_$n",Index),N)
+  return IndexSet(it)
+end

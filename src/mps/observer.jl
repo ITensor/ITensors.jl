@@ -20,7 +20,7 @@ const DMRGMeasurement = Vector{Vector{Float64}}
 
 struct DMRGObserver <: AbstractObserver
   ops::Vector{String}
-  sites::Vector{Index}
+  sites::Vector{<:Index}
   measurements::Dict{String,DMRGMeasurement}
   energies::Vector{Float64}
   truncerrs::Vector{Float64}
@@ -33,7 +33,7 @@ struct DMRGObserver <: AbstractObserver
   end
 
   function DMRGObserver(ops::Vector{String}, 
-                        sites::Vector{Index},
+                        sites::Vector{<:Index},
                         etol::Real=0,
                         minsweeps::Int=2)
     measurements = Dict(o => DMRGMeasurement() for o in ops)

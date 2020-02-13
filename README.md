@@ -19,6 +19,24 @@ the DMRG algorithm.
 
 Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
+## Steps in Install Pre-Release Version
+
+1. Install the latest version of Julia: https://julialang.org/downloads/
+
+2. Run the `julia` command to begin an interactive Julia session (entering the so-called REPL). 
+
+3. Type `]` on your keyboard to enter Julia's interactive package manager.
+
+4. Run the command 
+
+       add https://github.com/ITensor/ITensors.jl
+    
+   The package system will update itself, then install some dependencies before finally installing ITensors.jl.
+
+5. Hit the backspace key to go back to the normal interactive Julia prompt, or type Ctrl+D to exit the Julia REPL.
+
+6. You can now do `using ITensors` to use the ITensor library in an interactive session, or run Julia code files (.jl files) which use ITensor, with some examples given below and in our examples folder. The test folder also has many examples of ITensor code you can run.
+
 ## Code Examples
 
 ### Basic Overview

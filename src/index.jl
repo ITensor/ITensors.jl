@@ -5,6 +5,7 @@ export Index,
        noprime,
        addtags,
        settags,
+       readCpp,
        replacetags,
        replacetags!,
        removetags,
@@ -22,22 +23,6 @@ export Index,
 const IDType = UInt64
 
 """
-   Arrow
-`enum` type that can take three values: `In`, `Out`, or `Neither`, representing a directionality
-associated with an index, i.e. the index leg is directed into or out of a given tensor
-"""
-@enum Arrow In=-1 Out=1 Neither=0
-
-"""
-    -(dir::Arrow)
-Reverse direction of a directed `Arrow`.
-"""
-function Base.:-(dir::Arrow)
-  dir==Neither && return Neither #throw(ArgumentError("Cannot reverse direction of Arrow direction 'Neither'"))
-  return dir==In ? Out : In
-end
-
-"""
 An `Index` represents a single tensor index with fixed dimension `dim`. Copies of an Index compare equal unless their 
 `tags` are different.
 
@@ -48,11 +33,20 @@ level which can be incremented or decremented with special priming functions.
 Internally, an `Index` has a fixed `id` number, which is how the ITensor library knows two indices are copies of a 
 single original `Index`. `Index` objects must have the same `id`, as well as the `tags` to compare equal.
 """
-struct Index
+struct Index{T}
   id::IDType
-  dim::Int
+  space::T
   dir::Arrow
   tags::TagSet
+
+  function Index(id::IDType,dim::T,dir::Arrow,tags::TagSet) where {T}
+    # By default, an Index has a prime level of 0
+    # A prime level less than 0 is interpreted as the
+    # prime level not being set
+    !hasplev(tags) && (tags = setprime(tags,0))
+    return new{T}(id,dim,dir,tags)
+  end
+
 end
 
 Index() = Index(IDType(0),1,Neither,TagSet(("",0)))
@@ -66,11 +60,7 @@ Example: create a two dimensional index with tag `l`:
 """
 function Index(dim::Integer,tags=("",0))
   ts = TagSet(tags)
-  # By default, an Index has a prime level of 0
-  # A prime level less than 0 is interpreted as the
-  # prime level not being set
-  !hasplev(ts) && (ts = setprime(ts,0))
-  Index(rand(IDType),dim,Out,ts)
+  return Index(rand(IDType),dim,Out,ts)
 end
 
 """
@@ -83,7 +73,9 @@ id(i::Index) = i.id
     dim(i::Index)
 Obtain the dimension of an Index
 """
-Tensors.dim(i::Index) = i.dim
+Tensors.dim(i::Index) = i.space
+
+space(i::Index) = i.space
 
 """
     dir(i::Index)
@@ -123,19 +115,19 @@ end
     copy(i::Index)
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-Base.copy(i::Index) = Index(id(i),dim(i),dir(i),copy(tags(i)))
+Base.copy(i::Index) = Index(id(i),space(i),dir(i),copy(tags(i)))
 
 """
     sim(i::Index)
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-Tensors.sim(i::Index) = Index(rand(IDType),dim(i),dir(i),copy(tags(i)))
+Tensors.sim(i::Index) = Index(rand(IDType),space(i),dir(i),copy(tags(i)))
 
 """
     dag(i::Index)
 Copy an index `i` and reverse it's direction
 """
-dag(i::Index) = Index(id(i),dim(i),-dir(i),tags(i))
+dag(i::Index) = Index(id(i),space(i),-dir(i),tags(i))
 
 """
     isdefault(i::Index)
@@ -174,7 +166,7 @@ function settags(i::Index, strts)
   ts = TagSet(strts)
   # By default, an Index has a prime level of 0
   !hasplev(ts) && (ts = setprime(ts,0))
-  Index(id(i),dim(i),dir(i),ts)
+  Index(id(i),space(i),dir(i),ts)
 end
 
 """
@@ -236,23 +228,29 @@ function Base.iterate(i::Index,state::Int=1)
   return (state,state+1)
 end
 
+Tensors.outer(i::Index) = i
+
+function Tensors.outer(i1::Index,i2::Index; tags="")
+  return Index(dim(i1)*dim(i2),tags)
+end
+
 function Base.show(io::IO,
                    i::Index) 
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
-    print(io,"($(dim(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
+    print(io,"(dim=$(space(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
   else
-    print(io,"($(dim(i))|id=$(idstr))$(primestring(tags(i)))")
+    print(io,"(dim=$(space(i))|id=$(idstr))$(primestring(tags(i)))")
   end
 end
 
-struct IndexVal
-  ind::Index
+struct IndexVal{IndexT}
+  ind::IndexT
   val::Int
-  function IndexVal(i::Index,n::Int)
+  function IndexVal(i::IndexT,n::Int) where {IndexT}
     n>dim(i) && throw(ErrorException("Value $n greater than size of Index $i"))
     n<1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
-    return new(i,n)
+    return new{IndexT}(i,n)
   end
 end
 
@@ -290,4 +288,30 @@ function readcpp(io::IO,::Type{Index}; kwargs...)
     throw(ArgumentError("read Index: format=$format not supported"))
   end
   return i
+end
+
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    I::Index)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "Index"
+  attrs(g)["version"] = 1
+  write(g,"id",id(I))
+  write(g,"dim",dim(I))
+  write(g,"dir",Int(dir(I)))
+  write(g,"tags",tags(I))
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{Index})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "Index"
+    error("HDF5 group or file does not contain Index data")
+  end
+  id = read(g,"id")
+  dim = read(g,"dim")
+  dir = Arrow(read(g,"dir"))
+  tags = read(g,"tags",TagSet)
+  return Index(id,dim,dir,tags)
 end
