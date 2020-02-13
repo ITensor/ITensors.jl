@@ -10,6 +10,13 @@ l = Index(5,"l")
 
 A = randomITensor(i, j, k, l)
 
+@testset "Basic combiner properties" begin
+    C,c = combiner(i, j, k)
+    @test eltype(store(C)) === Nothing
+    @test_throws ErrorException data(store(C))
+    @test ITensors.Tensors.uncombinedinds(tensor(C)) == IndexSet(i, j, k)
+end
+
 @testset "Two index combiner" begin
     for inds_ij ∈ permutations([i,j])
         C,c = combiner(inds_ij...)
