@@ -1,4 +1,6 @@
 
+const BlockSparseMatrix{ElT,StoreT,IndsT} = BlockSparseTensor{ElT,2,StoreT,IndsT}
+
 """
 svd(T::BlockSparseTensor{<:Number,2}; kwargs...)
 
@@ -9,14 +11,22 @@ per row/column, otherwise it fails.
 This assumption makes it so the result can be
 computed from the dense svds of seperate blocks.
 """
-function LinearAlgebra.svd(T::BlockSparseTensor{ElT,2,IndsT};
-                           kwargs...) where {ElT,IndsT}
+function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
+                           kwargs...) where {ElT}
   nb1_lt_nb2 = (nblocks(T)[1] < nblocks(T)[2] || (nblocks(T)[1] == nblocks(T)[2] && dim(T,1) < dim(T,2)))
 
   if nb1_lt_nb2
     uind = sim(ind(T,1))
   else
     uind = sim(ind(T,2))
+    nzblocksT = nzblocks(T)
+    for n in 1:nblocks(uind)
+      b = findfirst(i->i[2]==n,nzblocksT)
+      if !isnothing(b)
+        blockT = nzblocksT[b]
+        uind[n] = minimum(blockdims(T,blockT))
+      end
+    end
   end
 
   indsU = setindex(inds(T),uind,2)
@@ -29,11 +39,7 @@ function LinearAlgebra.svd(T::BlockSparseTensor{ElT,2,IndsT};
     U = BlockSparseTensor(ElT,undef,blockoffsets(T),indsU)
   end
   
-  if nb1_lt_nb2
-    vind = sim(ind(T,1))
-  else
-    vind = sim(ind(T,2))
-  end
+  vind = sim(uind)
   indsV = setindex(inds(T),vind,1)
 
   if nb1_lt_nb2
@@ -57,9 +63,7 @@ function LinearAlgebra.svd(T::BlockSparseTensor{ElT,2,IndsT};
   for n in 1:nnzblocks(T)
     b = block(T,n)
     blockT = blockview(T,n)
-
     Ub,Sb,Vb = svd(blockT)
-
     if nb1_lt_nb2
       # Block of V, permute since we
       # are returning V such that T = U*S*V'
@@ -73,8 +77,6 @@ function LinearAlgebra.svd(T::BlockSparseTensor{ElT,2,IndsT};
         Sblock[i,i] = getdiag(Sb,i)
       end
     else
-      @show dims(Ub)
-      @show dims(blockview(U,b))
       blockview(U,b) .= Ub
       blockview(V,n) .= Vb
       for i in 1:diag_length(Sb)
