@@ -26,30 +26,32 @@ mutable struct MPS
 
   MPS(N::Int) = MPS(N,fill(ITensor(),N),0,N+1)
 
-  function MPS(N::Int, 
-               A::Vector{<:ITensor}, 
-               llim::Int=0, 
+  function MPS(N::Int,
+               A::Vector{<:ITensor},
+               llim::Int=0,
                rlim::Int=N+1)
     new(N,A,llim,rlim)
   end
 end
 
-function MPS(sites)
+function MPS(::Type{T},sites) where {T<:Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
-      v[ii] = ITensor(l[ii], s)
+      v[ii] = ITensor(T,l[ii], s)
     elseif ii == N
-      v[ii] = ITensor(l[ii-1], s)
+      v[ii] = ITensor(T,l[ii-1], s)
     else
-      v[ii] = ITensor(l[ii-1],s,l[ii])
+      v[ii] = ITensor(T,l[ii-1],s,l[ii])
     end
   end
   return MPS(N,v,0,N+1)
 end
+
+MPS(sites) = MPS(Float64,sites)
 
 Base.length(m::MPS) = m.N_
 
@@ -59,11 +61,11 @@ tensors(m::MPS) = m.A_
 leftlim(m::MPS) = m.llim_
 rightlim(m::MPS) = m.rlim_
 
-function set_leftlim!(m::MPS,new_ll::Int) 
+function set_leftlim!(m::MPS,new_ll::Int)
   m.llim_ = new_ll
 end
 
-function set_rightlim!(m::MPS,new_rl::Int) 
+function set_rightlim!(m::MPS,new_rl::Int)
   m.rlim_ = new_rl
 end
 
@@ -76,7 +78,7 @@ end
 
 Base.getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
 
-function Base.setindex!(M::MPS,T::ITensor,n::Integer) 
+function Base.setindex!(M::MPS,T::ITensor,n::Integer)
   (n <= leftlim(M)) && set_leftlim!(M,n-1)
   (n >= rightlim(M)) && set_rightlim!(M,n+1)
   setindex!(tensors(M),T,n)
@@ -99,8 +101,8 @@ function Base.show(io::IO, M::MPS)
   end
 end
 
-function randomMPS(sites)
-  M = MPS(sites)
+function randomMPS(::Type{T}, sites) where {T<:Number}
+  M = MPS(T, sites)
   for i in eachindex(sites)
     randn!(M[i])
     normalize!(M[i])
@@ -110,7 +112,9 @@ function randomMPS(sites)
   return M
 end
 
-function productMPS(ivals::Vector{<:IndexVal})
+randomMPS(sites) = randomMPS(Float64, sites)
+
+function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
   N = length(ivals)
   As = Vector{ITensor}(undef,N)
   links  = Vector{Index}(undef,N)
@@ -118,13 +122,13 @@ function productMPS(ivals::Vector{<:IndexVal})
     s = ind(ivals[n])
     links[n] = Index(1,"Link,l=$n")
     if n == 1
-      A = ITensor(s,links[n])
+      A = ITensor(T, s,links[n])
       A[ivals[n],links[n](1)] = 1.0
     elseif n == N
-      A = ITensor(links[n-1],s)
+      A = ITensor(T, links[n-1],s)
       A[links[n-1](1),ivals[n]] = 1.0
     else
-      A = ITensor(links[n-1],s,links[n])
+      A = ITensor(T, links[n-1],s,links[n])
       A[links[n-1](1),ivals[n],links[n](1)] = 1.0
     end
     As[n] = A
@@ -132,16 +136,20 @@ function productMPS(ivals::Vector{<:IndexVal})
   return MPS(N,As,0,2)
 end
 
-function productMPS(sites,
-                    states)
+productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64, ivals::Vector{<:IndexVal})
+
+function productMPS(::Type{T}, sites,
+                    states) where {T<:Number}
   if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial states don't match"))
   end
   ivals = [state(sites[n],states[n]) for n=1:length(sites)]
-  return productMPS(ivals)
+  return productMPS(T, ivals)
 end
 
-function linkindex(M::MPS,j::Integer) 
+productMPS(sites, states) = productMPS(Float64, sites, states)
+
+function linkindex(M::MPS,j::Integer)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPS is $N)")
   li = commonindex(M[j],M[j+1])
@@ -212,12 +220,12 @@ end
 """
     sample!(m::MPS)
 
-Given a normalized MPS m, returns a `Vector{Int}` 
-of `length(m)` corresponding to one sample 
-of the probability distribution defined by 
+Given a normalized MPS m, returns a `Vector{Int}`
+of `length(m)` corresponding to one sample
+of the probability distribution defined by
 squaring the components of the tensor
 that the MPS represents. If the MPS does
-not have an orthogonality center, 
+not have an orthogonality center,
 orthogonalize!(m,1) will be called before
 computing the sample.
 """
@@ -232,7 +240,7 @@ end
 Given a normalized MPS m with `orthoCenter(m)==1`,
 returns a `Vector{Int}` of `length(m)`
 corresponding to one sample of the
-probability distribution defined by 
+probability distribution defined by
 squaring the components of the tensor
 that the MPS represents
 """
@@ -287,5 +295,3 @@ inner(psi::MPS, phi::MPS)
 
 Compute <psi|phi>
 """ inner
-
-
