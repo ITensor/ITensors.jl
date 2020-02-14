@@ -232,10 +232,28 @@ using ITensors,
   end
 
   @testset "svd" begin
-    A = BlockSparseTensor([(2,1),(1,2)],[2,2],[2,2])
-    randn!(A)
-    U,S,V = svd(A)
-    @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0; atol=1e-15)
+
+    @testset "svd example 1" begin
+      A = BlockSparseTensor([(2,1),(1,2)],[2,2],[2,2])
+      randn!(A)
+      U,S,V = svd(A)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0; atol=1e-15)
+    end
+
+    @testset "svd example 2" begin
+      A = BlockSparseTensor([(1,2),(2,3)],[2,2],[3,2,3])
+      randn!(A)
+      U,S,V = svd(A)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 3" begin
+      A = BlockSparseTensor([(2,1),(3,2)],[3,2,3],[2,2])
+      randn!(A)
+      U,S,V = svd(A)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0.0; atol=1e-14)
+    end
+
   end
 
 end
