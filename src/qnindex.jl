@@ -1,4 +1,5 @@
 export flux,
+       hasqns,
        QNIndex,
        QNIndexVal,
        qn
@@ -41,6 +42,9 @@ end
 
 const QNIndex = Index{QNBlocks}
 const QNIndexVal = IndexVal{QNIndex}
+
+hasqns(i::QNIndex) = true
+hasqns(i::Index) = false
 
 function have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks,1)
