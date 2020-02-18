@@ -22,7 +22,8 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
       b = findfirst(i->i[1]==n,nzblocksT)
       if !isnothing(b)
         blockT = nzblocksT[b]
-        uind[n] = minimum(blockdims(T,blockT))
+        #setindex!(uind,minimum(blockdims(T,blockT)),n)
+        setblockdim!(uind,minimum(blockdims(T,blockT)),n)
       end
     end
   else
@@ -32,7 +33,8 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
       b = findfirst(i->i[2]==n,nzblocksT)
       if !isnothing(b)
         blockT = nzblocksT[b]
-        uind[n] = minimum(blockdims(T,blockT))
+        #setindex!(uind,minimum(blockdims(T,blockT)),n)
+        setblockdim!(uind,minimum(blockdims(T,blockT)),n)
       end
     end
   end
@@ -92,6 +94,7 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
       end
     end
   end
-  return U,S,V
+  # TODO: output spec
+  return U,S,V,Spectrum(Float64[],0.0)
 end
 

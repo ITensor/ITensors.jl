@@ -94,11 +94,19 @@ function LinearAlgebra.svd(A::ITensor,
 
   @show AC
 
-  UT,ST,VT,spec = svd(tensor(A);kwargs...)
+  UT,ST,VT,spec = svd(tensor(AC);kwargs...)
   UC,S,VC = itensor(UT),itensor(ST),itensor(VT)
+
+  @show norm(AC-UC*S*VC)
 
   U = UC*dag(CL)
   V = VC*dag(CR)
+
+  @show inds(A)
+  @show inds(AC)
+  @show inds(U)
+  @show inds(S)
+  @show inds(V)
 
   u₀ = commonindex(U,S)
   v₀ = commonindex(S,V)
@@ -106,9 +114,9 @@ function LinearAlgebra.svd(A::ITensor,
   u = settags(u₀,utags)
   v = settags(u₀,vtags)
 
-  U *= δ(dag(u₀),u)
-  S = δ(dag(u₀),u)*S*δ(dag(v₀),v)
-  V *= δ(dag(v₀),v)
+  #U *= δ(dag(u₀),u)
+  #S = δ(dag(u₀),u)*S*δ(dag(v₀),v)
+  #V *= δ(dag(v₀),v)
 
   return TruncSVD(U,S,V,spec,u,v)
 end

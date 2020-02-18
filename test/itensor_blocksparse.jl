@@ -172,6 +172,24 @@ using ITensors,
 
   @testset "Combine and uncombine" begin
 
+    @testset "Combine no indices" begin
+      i1 = Index([QN(0,2)=>2,QN(1,2)=>2],"i1")
+      A = randomITensor(QN(),i1,dag(i1'))
+
+      C,c = combiner()
+      @test isnothing(c)
+      AC = A*C
+      @test nnz(AC) == nnz(A)
+      @test nnzblocks(Ap) == nnzblocks(A)
+      @test hassameinds(AC,A)
+      @test norm(AC-A*C)
+      Ap = AC*dag(C)
+      @test nnz(Ap) == nnz(A)
+      @test nnzblocks(Ap) == nnzblocks(A)
+      @test hassameinds(Ap,A)
+      @test norm(A-Ap) ≈ 0.0
+    end
+
     @testset "Order 2" begin
       i1 = Index([QN(0,2)=>2,QN(1,2)=>2],"i1")
       A = randomITensor(QN(),i1,dag(i1'))
@@ -435,6 +453,17 @@ using ITensors,
     @test nnzblocks(c) == 1
     @test c[] isa Float64
     @test c[] ≈ norm(A)^2
+  end
+
+  @testset "svd" begin
+		i = Index(QN(0)=>2,QN(1)=>2; tags="i")
+		j = Index(QN(0)=>2,QN(1)=>2; tags="j")
+
+		A = randomITensor(QN(0),i,dag(j))
+
+		U,S,V = svd(A,i)
+
+		@test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
   end
 
 end

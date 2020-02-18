@@ -1,8 +1,8 @@
 
-function contract(T::BlockSparseTensor{<:Number,NT},
+function contract(T::BlockSparseTensor,
                   labelsT,
-                  C::CombinerTensor{<:Any,NC},
-                  labelsC) where {NT,NC}
+                  C::CombinerTensor,
+                  labelsC)
   # Get the label marking the combined index
   # By convention the combined index is the first one
   # TODO: consider storing the location of the combined
@@ -29,4 +29,10 @@ function contract(T::BlockSparseTensor{<:Number,NT},
     return Ruc
   end
 end
+
+# Special case when no indices are combined
+contract(T::BlockSparseTensor,
+         labelsT,
+         C::CombinerTensor{<:Any,0},
+         labelsC) = copy(T)
 

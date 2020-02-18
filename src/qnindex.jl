@@ -187,6 +187,8 @@ function Tensors.outer(i1::QNIndex,i2::QNIndex; tags="")
   return iR
 end
 
+Tensors.outer(i::QNIndex; tags="") = sim(i)
+
 function isless(qnb1::QNBlock, qnb2::QNBlock)
   return isless(qn(qnb1),qn(qnb2))
 end
@@ -224,6 +226,12 @@ end
 # Make a new Index with the specified qn blocks
 function replaceqns(i::QNIndex,qns::QNBlocks)
   return Index(id(i),qns,dir(i),tags(i))
+end
+
+function Tensors.setblockdim!(i::QNIndex,newdim::Int,n::Int)
+  qns = qnblocks(i)
+  qns[n] = qn(qns[n]) => newdim
+  return i
 end
 
 function combineblocks(i::QNIndex)

@@ -44,7 +44,7 @@ function combiner(inds::QNIndex...; kwargs...)
   # TODO: support combining multiple set of indices
   tags = get(kwargs, :tags, "CMB,Link")
   new_ind = ⊗(inds...)
-  if all(i->dir(i)!=Out,inds)
+  if all(i->dir(i)!=Out,inds) && all(i->dir(i)!=In,inds)
     new_ind = dag(new_ind)
     new_ind = replaceqns(new_ind,-qnblocks(new_ind))
   end

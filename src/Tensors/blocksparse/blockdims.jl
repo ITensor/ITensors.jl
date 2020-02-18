@@ -156,5 +156,7 @@ function permuteblocks(dim::BlockDim,perm)
   return dim[perm]
 end
 
+setblockdim!(dim1::BlockDim,newdim::Int,n::Int) = setindex!(dim1,newdim,n)
+
 sim(dim::BlockDim) = dim
 

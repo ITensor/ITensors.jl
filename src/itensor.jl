@@ -489,6 +489,11 @@ end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
 combiner(inds::Tuple{Vararg{Index}}; kwargs...) = combiner(inds...; kwargs...)
 
+# Special case when no indices are combined (useful for generic code)
+function combiner(; kwargs...)
+  return ITensor(Combiner(),IndexSet()),nothing
+end
+
 combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
