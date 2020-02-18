@@ -17,6 +17,14 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
 
   if nb1_lt_nb2
     uind = sim(ind(T,1))
+    nzblocksT = nzblocks(T)
+    for n in 1:nblocks(uind)
+      b = findfirst(i->i[1]==n,nzblocksT)
+      if !isnothing(b)
+        blockT = nzblocksT[b]
+        uind[n] = minimum(blockdims(T,blockT))
+      end
+    end
   else
     uind = sim(ind(T,2))
     nzblocksT = nzblocks(T)
