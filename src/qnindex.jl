@@ -234,11 +234,19 @@ function Tensors.setblockdim!(i::QNIndex,newdim::Int,n::Int)
   return i
 end
 
+function setblockqn!(i::QNIndex,newqn::QN,n::Int)
+  qns = qnblocks(i)
+  qns[n] = newqn => blockdim(qns[n])
+  return i
+end
+
 function combineblocks(i::QNIndex)
   qnsR,perm,comb = combineblocks(qnblocks(i))
   iR = replaceqns(i,qnsR)
   return iR,perm,comb
 end
+
+hasqns(::QNIndex) = true
 
 Tensors.dense(inds::QNIndex...) = dense.(inds)
 

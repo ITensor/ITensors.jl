@@ -8,6 +8,7 @@ export ITensor,
        exphermitian,
        replaceindex!,
        inds,
+       ind,
        isnull,
        scale!,
        matmul,
@@ -53,6 +54,7 @@ ITensor(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is
 
 Tensors.inds(T::ITensor) = T.inds
 Tensors.store(T::ITensor) = T.store
+ind(T::ITensor,i::Int) = inds(T)[i]
 
 # TODO: do we need these? I think yes, for add!(::ITensor,::ITensor)
 setinds!(T::ITensor,is...) = (T.inds = IndexSet(is...))
@@ -498,7 +500,7 @@ combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
-function dag(T::ITensor)
+function Tensors.dag(T::ITensor)
   TT = conj(tensor(T))
   return ITensor(store(TT),dag(inds(T)))
 end
@@ -695,6 +697,8 @@ LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
 # Block sparse related functions
 # (Maybe create fallback definitions for dense tensors)
 #
+
+hasqns(T::ITensor) = hasqns(inds(T))
 
 Tensors.nnz(T::ITensor) = nnz(tensor(T))
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))

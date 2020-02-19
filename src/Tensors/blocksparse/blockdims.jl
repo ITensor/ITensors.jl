@@ -156,7 +156,15 @@ function permuteblocks(dim::BlockDim,perm)
   return dim[perm]
 end
 
+#
+# This is to help with ITensor compatibility
+#
+
 setblockdim!(dim1::BlockDim,newdim::Int,n::Int) = setindex!(dim1,newdim,n)
 
-sim(dim::BlockDim) = dim
+sim(dim::BlockDim) = copy(dim)
+
+dir(::BlockDim) = 0
+
+dag(dim::BlockDim) = copy(dim)
 

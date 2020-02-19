@@ -143,7 +143,7 @@ siteinds(A::MPO,x::MPS) = [siteindex(A,x,j) for j ∈ 1:length(A)]
 Hermitian conjugation of a matrix product state or operator `m`.
 """
 
-function dag(m::T) where {T <: Union{MPS, MPO}}
+function Tensors.dag(m::T) where {T <: Union{MPS, MPO}}
   N = length(m)
   mdag = T(N)
   @inbounds for i ∈ eachindex(m)

@@ -9,6 +9,7 @@ using ITensors, Test
         "indexset.jl",
         "itensor_dense.jl",
         "itensor_diag.jl",
+        "itensor_blocksparse.jl",
         "contract.jl",
         "combiner.jl",
         "trg.jl",

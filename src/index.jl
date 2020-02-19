@@ -60,7 +60,7 @@ Example: create a two dimensional index with tag `l`:
 """
 function Index(dim::Integer,tags=("",0))
   ts = TagSet(tags)
-  return Index(rand(IDType),dim,Out,ts)
+  return Index(rand(IDType),dim,Neither,ts)
 end
 
 """
@@ -81,7 +81,7 @@ space(i::Index) = i.space
     dir(i::Index)
 Obtain the direction of an Index (In or Out)
 """
-dir(i::Index) = i.dir
+Tensors.dir(i::Index) = i.dir
 
 """
     tags(i::Index)
@@ -115,19 +115,19 @@ end
     copy(i::Index)
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-Base.copy(i::Index) = Index(id(i),space(i),dir(i),copy(tags(i)))
+Base.copy(i::Index) = Index(id(i),copy(space(i)),dir(i),copy(tags(i)))
 
 """
     sim(i::Index)
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-Tensors.sim(i::Index) = Index(rand(IDType),space(i),dir(i),copy(tags(i)))
+Tensors.sim(i::Index) = Index(rand(IDType),copy(space(i)),dir(i),copy(tags(i)))
 
 """
     dag(i::Index)
 Copy an index `i` and reverse it's direction
 """
-dag(i::Index) = Index(id(i),space(i),-dir(i),tags(i))
+Tensors.dag(i::Index) = Index(id(i),copy(space(i)),-dir(i),copy(tags(i)))
 
 """
     isdefault(i::Index)
@@ -166,7 +166,7 @@ function settags(i::Index, strts)
   ts = TagSet(strts)
   # By default, an Index has a prime level of 0
   !hasplev(ts) && (ts = setprime(ts,0))
-  Index(id(i),space(i),dir(i),ts)
+  Index(id(i),copy(space(i)),dir(i),ts)
 end
 
 """
@@ -270,6 +270,8 @@ Base.:(==)(iv::IndexVal,i::Index) = (i==iv)
 plev(iv::IndexVal) = plev(ind(iv))
 prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))
 Base.adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
+
+hasqns(::Index) = false
 
 Base.show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
 

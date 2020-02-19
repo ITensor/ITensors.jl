@@ -180,9 +180,9 @@ using ITensors,
       @test isnothing(c)
       AC = A*C
       @test nnz(AC) == nnz(A)
-      @test nnzblocks(Ap) == nnzblocks(A)
+      @test nnzblocks(AC) == nnzblocks(A)
       @test hassameinds(AC,A)
-      @test norm(AC-A*C)
+      @test norm(AC-A*C) ≈ 0.0
       Ap = AC*dag(C)
       @test nnz(Ap) == nnz(A)
       @test nnzblocks(Ap) == nnzblocks(A)
@@ -442,6 +442,7 @@ using ITensors,
       @test nnz(A) == nnz(Ap)
       @test nnzblocks(A) == nnzblocks(Ap)
     end
+  end
 
   @testset "Contract to scalar" begin
     i = Index([QN(0)=>1,QN(1)=>1],"i")
@@ -456,14 +457,67 @@ using ITensors,
   end
 
   @testset "svd" begin
-		i = Index(QN(0)=>2,QN(1)=>2; tags="i")
-		j = Index(QN(0)=>2,QN(1)=>2; tags="j")
 
-		A = randomITensor(QN(0),i,dag(j))
+    @testset "svd example 1" begin
+      i = Index(QN(0)=>2,QN(1)=>2; tags="i")
+      j = Index(QN(0)=>2,QN(1)=>2; tags="j")
+      A = randomITensor(QN(0),i,dag(j))
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
 
-		U,S,V = svd(A,i)
+    @testset "svd example 2" begin
+      i = Index(QN(0)=>5,QN(1)=>6; tags="i")
+      j = Index(QN(-1)=>2,QN(0)=>3,QN(1)=>4; tags="j")
+      A = randomITensor(QN(0),i,j)
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
 
-		@test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    @testset "svd example 3" begin
+      i = Index(QN(0)=>5,QN(1)=>6; tags="i")
+      j = Index(QN(-1)=>2,QN(0)=>3,QN(1)=>4; tags="j")
+      A = randomITensor(QN(0),i,dag(j))
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
   end
 
 end

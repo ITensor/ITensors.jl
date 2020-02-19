@@ -22,7 +22,6 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
       b = findfirst(i->i[1]==n,nzblocksT)
       if !isnothing(b)
         blockT = nzblocksT[b]
-        #setindex!(uind,minimum(blockdims(T,blockT)),n)
         setblockdim!(uind,minimum(blockdims(T,blockT)),n)
       end
     end
@@ -33,13 +32,16 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
       b = findfirst(i->i[2]==n,nzblocksT)
       if !isnothing(b)
         blockT = nzblocksT[b]
-        #setindex!(uind,minimum(blockdims(T,blockT)),n)
         setblockdim!(uind,minimum(blockdims(T,blockT)),n)
       end
     end
   end
 
-  indsU = setindex(inds(T),uind,2)
+  if dir(uind) != dir(inds(T)[1])
+    uind = dag(uind)
+  end
+
+  indsU = setindex(inds(T),dag(uind),2)
 
   if nb1_lt_nb2
     # Make U block diagonal by convention
@@ -50,14 +52,19 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
   end
   
   vind = sim(uind)
-  indsV = setindex(inds(T),vind,1)
+
+  if dir(vind) != dir(inds(T)[2])
+    vind = dag(vind)
+  end
+
+  indsV = setindex(inds(T),dag(vind),1)
 
   if nb1_lt_nb2
     blockoffsetsV,indsV = permutedims(blockoffsets(T),indsV,(2,1))
     V = BlockSparseTensor(ElT,undef,blockoffsetsV,indsV)
   else
     blocksV = Block{2}[ntuple(_->i,Val(2)) for i = 1:minimum(nblocks(indsV))]
-    V = BlockSparseTensor(undef,blocksV,indsV)
+    V = BlockSparseTensor(undef,blocksV,permute(indsV,(2,1)))
   end
 
   indsS = setindex(inds(T),uind,1)

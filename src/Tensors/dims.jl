@@ -1,6 +1,8 @@
 export dense,
        dims,
-       dim
+       dim,
+       dir,
+       dag
 
 #
 # Tools for working with Dims/Tuples
@@ -36,4 +38,9 @@ Base.copy(ds::Dims) = ds
 # as Dims{4})
 StaticArrays.similar_type(::Type{<:Dims},
                           ::Type{Val{N}}) where {N} = Dims{N}
+
+# This is to help with ITensor compatibility
+dir(::Int) = 0
+
+dag(i::Int) = i
 
