@@ -50,5 +50,6 @@ end
 t = Tensor(ComplexF64,100,100)
 randn!(t)
 @test conj(data(store(t))) == data(store(conj(t)))
+@test typeof(conj(t)) <: DenseTensor
 
 end
