@@ -111,11 +111,11 @@ function BlockSparseTensor(::Type{ElT},
   return Tensor(storage,inds)
 end
 
-function BlockSparseTensor(::UndefInitializer,
-                           blocks::Blocks{N},
-                           inds::Vararg{DimT,N}) where {DimT,N}
-  return BlockSparseTensor(undef,blocks,inds)
-end
+#function BlockSparseTensor(::UndefInitializer,
+#                           blocks::Blocks{N},
+#                           inds::Vararg{DimT,N}) where {DimT,N}
+#  return BlockSparseTensor(undef,blocks,inds)
+#end
 
 """
 BlockSparseTensor(inds)
@@ -340,11 +340,18 @@ is known already).
 """
 function blockview(T::BlockSparseTensor,
                    pos::Union{Int,Nothing})
+  # TODO: don't allow nothing input
   isnothing(pos) && error("Block must be structurally non-zero to get a view")
-  blockoffsetT = offset(T,pos)
-  blockT = block(blockoffsets(T)[pos])
+  blockT,offsetT = blockoffsets(T)[pos]
+  return blockview(T,BlockOffset(blockT,offsetT))
+end
+
+function blockview(T::BlockSparseTensor,
+                   bof::BlockOffset)
+  blockT,offsetT = bof
   blockdimsT = blockdims(T,blockT)
-  dataTslice = @view data(store(T))[blockoffsetT+1:blockoffsetT+prod(blockdimsT)]
+  blockdimT = prod(blockdimsT)
+  dataTslice = @view data(store(T))[offsetT+1:offsetT+blockdimT]
   return Tensor(Dense(dataTslice),blockdimsT)
 end
 
@@ -427,13 +434,25 @@ function combine_dims(blocks::Blocks{N},
   nblcks = nblocks(inds,combdims)
   blocks_comb = Blocks{N-NC+1}(undef,nnzblocks(blocks))
   for (i,block) in enumerate(blocks)
-    slice = getindices(block,combdims)
-    slice_comb = LinearIndices(nblcks)[slice...]
-    block_comb = deleteat(block,combdims)
-    block_comb = insertafter(block_comb,tuple(slice_comb),minimum(combdims)-1)
-    blocks_comb[i] = block_comb
+    blocks_comb[i] = combine_dims(block,inds,combdims)
+    #slice = getindices(block,combdims)
+    #slice_comb = LinearIndices(nblcks)[slice...]
+    #block_comb = deleteat(block,combdims)
+    #block_comb = insertafter(block_comb,tuple(slice_comb),minimum(combdims)-1)
+    #blocks_comb[i] = block_comb
   end
   return blocks_comb
+end
+
+function combine_dims(block::Block,
+                      inds,
+                      combdims::NTuple{NC,Int}) where {NC}
+  nblcks = nblocks(inds,combdims)
+  slice = getindices(block,combdims)
+  slice_comb = LinearIndices(nblcks)[slice...]
+  block_comb = deleteat(block,combdims)
+  block_comb = insertafter(block_comb,tuple(slice_comb),minimum(combdims)-1)
+  return block_comb
 end
 
 # In the dimension dim, permute the blocks
@@ -446,6 +465,14 @@ function perm_blocks(blocks::Blocks{N},
     blocks_perm[i] = setindex(block,iperm[block[dim]],dim)
   end
   return blocks_perm
+end
+
+# In the dimension dim, permute the block
+function perm_block(block::Block,
+                    dim::Int,
+                    perm) where {N}
+  iperm = invperm(perm)
+  return setindex(block,iperm[block[dim]],dim)
 end
 
 # TODO: use that blockcomb is ordered to avoid findfirst
@@ -531,6 +558,136 @@ function permutedims_combine(T::BlockSparseTensor{ElT,N},
   blocks_perm_comb = combine_blocks(blocks_perm_comb,comb_ind_loc,blockcomb)
   boffs_perm_comb,_ = get_blockoffsets(blocks_perm_comb,is)
   return Tensor(BlockSparse(data(store(R)),boffs_perm_comb),is)
+end
+
+function permutedims_combine_output(T::BlockSparseTensor{ElT,N},
+                                    is,
+                                    perm::NTuple{N,Int},
+                                    combdims::NTuple{NC,Int},
+                                    blockperm::Vector{Int},
+                                    blockcomb::Vector{Int}) where {ElT,N,NC}
+  # Permute the indices
+  indsT = inds(T)
+  inds_perm = permute(indsT,perm)
+
+  # Now that the indices are permuted, compute
+  # which indices are now combined
+  combdims_perm = sort(_permute_combdims(combdims,perm))
+
+  # Permute the nonzero blocks (dimension-wise)
+  blocks = nzblocks(T)
+  blocks_perm = permutedims(blocks,perm)
+
+  # Combine the nonzero blocks (dimension-wise)
+  blocks_perm_comb = combine_dims(blocks_perm,inds_perm,combdims_perm)
+
+  # Permute the blocks (within the newly combined dimension)
+  comb_ind_loc = minimum(combdims_perm)
+  blocks_perm_comb = perm_blocks(blocks_perm_comb,comb_ind_loc,blockperm)
+  blocks_perm_comb = sort(blocks_perm_comb;lt=isblockless)
+
+  # Combine the blocks (within the newly combined and permuted dimension)
+  blocks_perm_comb = combine_blocks(blocks_perm_comb,comb_ind_loc,blockcomb)
+
+  return BlockSparseTensor(undef,blocks_perm_comb,is)
+end
+
+function permutedims_combine_2(T::BlockSparseTensor{ElT,N},
+                               is,
+                               perm::NTuple{N,Int},
+                               combdims::NTuple{NC,Int},
+                               blockperm::Vector{Int},
+                               blockcomb::Vector{Int}) where {ElT,N,NC}
+  R = permutedims_combine_output(T,is,perm,combdims,blockperm,blockcomb)
+
+  #@show R
+
+  # Permute the indices
+  inds_perm = permute(inds(T),perm)
+
+  # Now that the indices are permuted, compute
+  # which indices are now combined
+  combdims_perm = sort(_permute_combdims(combdims,perm))
+
+  #@show combdims_perm
+
+  comb_ind_loc = minimum(combdims_perm)
+
+  #@show comb_ind_loc
+
+  # Determine the new index before combining
+  inds_to_combine = getindices(inds_perm,combdims_perm)
+  ind_comb = ⊗(inds_to_combine...)
+  ind_comb = permuteblocks(ind_comb,blockperm)
+
+  #@show ind_comb
+
+  for bof in blockoffsets(T)
+    #println()
+    #println("*"^40)
+
+    #@show bof
+    Tb = blockview(T,bof)
+
+    Tb_perm = permutedims(Tb,perm)
+
+    #@show dims(Tb)
+
+    b = block(bof)
+    b_perm = permute(b,perm)
+
+    #@show b_perm
+
+    b_perm_comb = combine_dims(b_perm,inds_perm,combdims_perm)
+
+    #@show b_perm_comb
+
+    b_perm_comb = perm_block(b_perm_comb,comb_ind_loc,blockperm)
+
+    #@show b_perm_comb
+
+    #@show blockcomb
+
+    b_in_combined_dim = b_perm_comb[comb_ind_loc]
+
+    #@show b_in_combined_dim
+
+    #@show ind_comb
+
+    #@show blockdim(ind_comb,b_in_combined_dim)
+
+    new_b_in_combined_dim = blockcomb[b_in_combined_dim]
+
+    #@show new_b_in_combined_dim
+
+    offset = 0
+    pos_in_new_combined_block = 1
+    while b_in_combined_dim-pos_in_new_combined_block > 0 && 
+            blockcomb[b_in_combined_dim-pos_in_new_combined_block] == new_b_in_combined_dim
+      offset += blockdim(ind_comb,b_in_combined_dim-pos_in_new_combined_block)
+      pos_in_new_combined_block += 1
+    end
+
+    #@show offset
+    #@show pos_in_new_combined_block
+
+    b_new = setindex(b_perm_comb,new_b_in_combined_dim,comb_ind_loc)
+
+    #@show b_new
+
+    Rb_total = blockview(R,b_new)
+
+    dimsRb_tot = dims(Rb_total)
+
+    #@show dimsRb_tot
+
+    subind = ntuple(i->i==comb_ind_loc ? range(1+offset,stop=offset+blockdim(ind_comb,b_in_combined_dim)) : range(1,stop=dimsRb_tot[i]),N-NC+1)
+    Rb = @view array(Rb_total)[subind...]
+
+    copyto!(Rb,Tb_perm)
+  end
+
+  return R
 end
 
 # TODO: optimize by avoiding findfirst

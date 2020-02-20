@@ -274,11 +274,11 @@ using ITensors,
       for is in iss
         C,c = combiner(is; tags="c")
         AC = A*C
-        @assert nnz(AC) == nnz(A)
+        @test nnz(AC) == nnz(A)
         Ap = AC*dag(C)
-        @assert nnz(Ap) == nnz(A)
-        @assert nnzblocks(Ap) == nnzblocks(A)
-        @assert norm(A-AC*dag(C)) ≈ 0.0
+        @test nnz(Ap) == nnz(A)
+        @test nnzblocks(Ap) == nnzblocks(A)
+        @test norm(A-AC*dag(C)) ≈ 0.0
       end
     end
 
