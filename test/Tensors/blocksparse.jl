@@ -72,6 +72,11 @@ using ITensors,
     @test A[I] == Ap[permute(I,(2,1))]
   end
 
+  A = BlockSparseTensor(ComplexF64,locs,indsA)
+  randn!(A)
+  @test conj(data(store(A))) == data(store(conj(A)))
+  @test typeof(conj(A)) <: BlockSparseTensor
+
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2,3],[4,5])
 
