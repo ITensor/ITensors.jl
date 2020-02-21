@@ -62,7 +62,11 @@ function contract(T::BlockSparseTensor,
 
     #@show indsRuc
 
-    Ruc = uncombine(T,indsRuc,cpos_in_labelsRc,blockperm(C),blockcomb(C))
+    Ruc = uncombine_2(T,indsRuc,cpos_in_labelsRc,blockperm(C),blockcomb(C))
+
+    #@show Ruc
+    #@show uncombine_2(T,indsRuc,cpos_in_labelsRc,blockperm(C),blockcomb(C))
+
     return Ruc
   end
 end

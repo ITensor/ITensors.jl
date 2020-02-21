@@ -133,10 +133,10 @@ function _svd_qns(A::ITensor,
   UT,ST,VT,spec = svd(tensor(AC);kwargs...)
   UC,S,VC = itensor(UT),itensor(ST),itensor(VT)
 
-  @show inds(UC)
-  @show inds(S)
-  @show inds(VC)
-  @show norm(UC*S*VC-AC)
+  #@show inds(UC)
+  #@show inds(S)
+  #@show inds(VC)
+  #@show norm(UC*S*VC-AC)
 
   u = commonindex(S,UC)
   v = commonindex(S,VC)
@@ -163,18 +163,18 @@ function _svd_qns(A::ITensor,
   U = UC*dag(CL)
   V = VC*dag(CR)
 
-  @show inds(A)
-  @show inds(U)
-  @show inds(S)
-  @show inds(V)
-  @show norm(U*S*V-A)
+  #@show inds(A)
+  #@show inds(U)
+  #@show inds(S)
+  #@show inds(V)
+  #@show norm(U*S*V-A)
 
   USV = U*S*V
   USVc = CL*USV*CR
   Ac = CL*A*CR
-  @show norm(USV-A)
-  @show norm(USVc-Ac)
-  @show norm(dag(CL)*USVc*dag(CR)-dag(CL)*Ac*dag(CR))
+  #@show norm(USV-A)
+  #@show norm(USVc-Ac)
+  #@show norm(dag(CL)*USVc*dag(CR)-dag(CL)*Ac*dag(CR))
 
   #u₀ = commonindex(U,S)
   #v₀ = commonindex(S,V)

@@ -230,17 +230,17 @@ using ITensors,
       @test nnz(B) == nnz(AC)
       @test nnzblocks(B) == nnzblocks(AC)
 
-      Ablock_221 = vec(permutedims(blockview(tensor(A),(2,2,1)),(1,3,2)))
-      ACblock_32 = vec(blockview(tensor(AC),(3,2)))
-      @test Ablock_221 == ACblock_32
+      #Ablock_221 = vec(permutedims(blockview(tensor(A),(2,2,1)),(1,3,2)))
+      #ACblock_32 = vec(blockview(tensor(AC),(3,2)))
+      #@test Ablock_221 == ACblock_32
 
-      Ablock_111 = vec(permutedims(blockview(tensor(A),(1,1,1)),(1,3,2)))
-      ACblock_21_1 = vec(blockview(tensor(AC),(2,1)))[1:length(Ablock_111)]
-      @test Ablock_111 == ACblock_21_1
+      #Ablock_111 = vec(permutedims(blockview(tensor(A),(1,1,1)),(1,3,2)))
+      #ACblock_21_1 = vec(blockview(tensor(AC),(2,1)))[1:length(Ablock_111)]
+      #@test Ablock_111 == ACblock_21_1
 
-      Ablock_212 = vec(permutedims(blockview(tensor(A),(2,1,2)),(1,3,2)))
-      ACblock_21_2 = vec(blockview(tensor(AC),(2,1)))[length(Ablock_111)+1:end]
-      @test Ablock_212 == ACblock_21_2
+      #Ablock_212 = vec(permutedims(blockview(tensor(A),(2,1,2)),(1,3,2)))
+      #ACblock_21_2 = vec(blockview(tensor(AC),(2,1)))[length(Ablock_111)+1:end]
+      #@test Ablock_212 == ACblock_21_2
 
       Ap = AC*dag(C)
 
@@ -444,6 +444,14 @@ using ITensors,
     end
   end
 
+  @testset "Check that combiner commutes" begin
+    i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+    j = settags(i,"j")
+    A = randomITensor(QN(0,2),i,j,dag(i'),dag(j'))
+    C,_ = combiner(i,j)
+    @test norm(A*dag(C')*C-A*C*dag(C')) ≈ 0.0
+  end
+
   @testset "Contract to scalar" begin
     i = Index([QN(0)=>1,QN(1)=>1],"i")
     A = randomITensor(QN(0),i,dag(i'))
@@ -514,6 +522,78 @@ using ITensors,
       end
       for b in nzblocks(V)
         @test flux(V,b)==QN(0)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 4" begin
+			i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+			j = settags(i,"j")
+
+			A = randomITensor(QN(0,2),i,j,dag(i'),dag(j'))
+
+			U,S,V = svd(A,i,j)
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0,2)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 5" begin
+			i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+			j = settags(i,"j")
+
+			A = randomITensor(QN(1,2),i,j,dag(i'),dag(j'))
+
+			U,S,V = svd(A,i,j)
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1,2)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 6" begin
+			i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+			j = settags(i,"j")
+
+			A = randomITensor(QN(1,2),i,j,dag(i'),dag(j'))
+
+			U,S,V = svd(A,i,i')
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1,2)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
       end
       @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
     end

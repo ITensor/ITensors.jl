@@ -734,11 +734,26 @@ function uncombine_blocks(blocks::Blocks{N},
   return blocks_uncomb
 end
 
+function uncombine_block(block::Block{N},
+                         dim::Int,
+                         blockcomb::Vector{Int}) where {N}
+  blocks_uncomb = Blocks{N}()
+  ncomb_tot = 0
+  blockval = block[dim]
+  ncomb = _number_uncombined(blockval,blockcomb)
+  ncomb_shift = _number_uncombined_shift(blockval,blockcomb)
+  push!(blocks_uncomb,setindex(block,blockval+ncomb_shift,dim))
+  for j in 1:ncomb-1
+    push!(blocks_uncomb,setindex(block,blockval+ncomb_shift+j,dim))
+  end
+  return blocks_uncomb
+end
+
 function uncombine(T::BlockSparseTensor{<:Number,N},
                    is,
                    combdim::Int,
                    blockperm::Vector{Int},
-                   blockcomb::Vector{Int}) where {N,NC}
+                   blockcomb::Vector{Int}) where {N}
   ind_uncomb_perm = ⊗(setdiff(is,inds(T))...)
   ind_uncomb = permuteblocks(ind_uncomb_perm,blockperm)
   # Same as inds(T) but with the blocks uncombined
@@ -757,6 +772,136 @@ function uncombine(T::BlockSparseTensor{<:Number,N},
     copyto!(bv2,bv1)
   end
   return reshape(T_uncomb_perm,is)
+end
+
+function uncombine_output(T::BlockSparseTensor{<:Number,N},
+                          is,
+                          combdim::Int,
+                          blockperm::Vector{Int},
+                          blockcomb::Vector{Int}) where {N}
+  ind_uncomb_perm = ⊗(setdiff(is,inds(T))...)
+  inds_uncomb_perm = insertat(inds(T),ind_uncomb_perm,combdim)
+  # Uncombine the blocks of T
+  blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
+  blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
+  boffs_uncomb_perm,nnz_uncomb_perm = get_blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
+  T_uncomb_perm = Tensor(BlockSparse(undef,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
+  R = reshape(T_uncomb_perm,is)
+  return R
+end
+
+function Base.reshape(blockT::Block{NT},
+                      indsT,
+                      indsR) where {NT}
+  nblocksT = nblocks(indsT)
+  nblocksR = nblocks(indsR)
+  blockR = Tuple(CartesianIndices(nblocksR)[LinearIndices(nblocksT)[CartesianIndex(blockT)]])
+  return blockR
+end
+
+function uncombine_2(T::BlockSparseTensor{<:Number,NT},
+                     is,
+                     combdim::Int,
+                     blockperm::Vector{Int},
+                     blockcomb::Vector{Int}) where {NT}
+  NR = length(is)
+  R = uncombine_output(T,is,combdim,blockperm,blockcomb)
+
+  #@show nzblocks(R)
+
+  invblockperm = invperm(blockperm)
+
+  # This is needed for reshaping the block
+  # It is already calculated in uncombine_output, use it from there
+  ind_uncomb_perm = ⊗(setdiff(is,inds(T))...)
+  ind_uncomb = permuteblocks(ind_uncomb_perm,blockperm)
+  # Same as inds(T) but with the blocks uncombined
+  inds_uncomb = insertat(inds(T),ind_uncomb,combdim)
+  inds_uncomb_perm = insertat(inds(T),ind_uncomb_perm,combdim)
+
+  for bof in blockoffsets(T)
+    #println()
+
+    b = block(bof)
+
+    #@show b
+
+    Tb_tot = blockview(T,bof)
+
+    #@show dims(Tb_tot)
+
+    dimsTb_tot = dims(Tb_tot)
+
+    bs_uncomb = uncombine_block(b,combdim,blockcomb)
+
+    #@show bs_uncomb
+
+    #bs_uncomb_perm_reshape = Blocks{NR}(undef,length(bs_uncomb_perm))
+    for i in 1:length(bs_uncomb)
+      #println()
+
+      #@show i
+
+      b_uncomb = bs_uncomb[i]
+
+      #@show b_uncomb
+
+      b_uncomb_perm = perm_block(b_uncomb,combdim,invblockperm)
+
+      #@show b_uncomb_perm
+
+      b_uncomb_perm_reshape = reshape(b_uncomb_perm,inds_uncomb_perm,is)
+
+      #@show b_uncomb_perm_reshape
+
+      Rb = blockview(R,b_uncomb_perm_reshape)
+
+      #@show dims(Rb)
+
+      b_uncomb_in_combined_dim = b_uncomb[combdim]
+      b_in_combined_dim = b[combdim]
+      offset = 0
+      pos_in_new_combined_block = 1
+      while b_uncomb_in_combined_dim-pos_in_new_combined_block > 0 &&
+              blockcomb[b_uncomb_in_combined_dim-pos_in_new_combined_block] == b_in_combined_dim
+        offset += blockdim(ind_uncomb_perm,b_uncomb_in_combined_dim-pos_in_new_combined_block)
+        pos_in_new_combined_block += 1
+      end
+
+      #@show offset
+      #@show pos_in_new_combined_block
+
+      #b_in_combined_dim = b_perm_comb[comb_ind_loc]
+      #new_b_in_combined_dim = blockcomb[b_in_combined_dim]
+      #offset = 0
+      #pos_in_new_combined_block = 1
+      #while b_in_combined_dim-pos_in_new_combined_block > 0 &&
+      #        blockcomb[b_in_combined_dim-pos_in_new_combined_block] == new_b_in_combined_dim
+      #  offset += blockdim(ind_comb,b_in_combined_dim-pos_in_new_combined_block)
+      #  pos_in_new_combined_block += 1
+      #end
+      #b_new = setindex(b_perm_comb,new_b_in_combined_dim,comb_ind_loc)
+
+      subind = ntuple(i->i==combdim ? range(1+offset,stop=offset+blockdim(ind_uncomb_perm,b_uncomb_in_combined_dim)) : range(1,stop=dimsTb_tot[i]),NT)
+
+      #if i==1
+      #  offset = 0
+      #else
+      #  offset = 4
+      #end
+
+      #subind = ntuple(i->i==combdim ? range(1+offset,stop=offset+4) : range(1,stop=2),NT)
+
+      #@show subind
+
+      Tb = @view array(Tb_tot)[subind...]
+
+      copyto!(Rb,Tb)
+    end
+
+  end
+
+  return R
 end
 
 # TODO: handle case with different element types in R and T
