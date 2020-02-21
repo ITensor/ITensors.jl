@@ -84,6 +84,20 @@ end
 QN(mqn::MQNStorage) = QN(QNStorage(mqn))
 QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
 
+function Base.hash(obj::QN, h::UInt)
+  # TODO: use an MVector or SVector
+  # for performance here; put non-zero QNVals
+  # to front and slice when passing to hash
+  nzqv = QNVal[]
+  for qv in obj.store
+    if val(qv) != 0
+      push!(nzqv,qv)
+    end
+  end
+  return hash(nzqv, h)
+end
+
+
 function QN(qvs...)
   m = MQNStorage(ntuple(_->ZeroVal,Val(maxQNs)))
   for (n,qv) in enumerate(qvs)

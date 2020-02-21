@@ -113,4 +113,10 @@ import ITensors.SmallString
     @test !(qd < qc)
   end
 
+  @testset "Hashing" begin
+    @test hash(QN(("Sz",0))) == hash(QN())
+    @test hash(QN("Sz",0)) == hash(QN("N",0))
+    @test hash(QN(("Sz",1),("N",2))) == hash(QN(("N",2),("Sz",1)))
+  end
+
 end
