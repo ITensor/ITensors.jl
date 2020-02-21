@@ -13,6 +13,29 @@ computed from the dense svds of seperate blocks.
 """
 function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
                            kwargs...) where {ElT}
+  maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
+  mindim::Int = get(kwargs,:mindim,1)
+  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
+  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
+  fastSVD::Bool = get(kwargs,:fastSVD,false)
+
+  truncate = (maxdim != minimum(dims(T))) || (cutoff != 0.0)
+
+  if truncate
+    return _svd_truncate(T,kwargs...)
+  else
+    return _svd_no_truncate(T,kwargs...)
+  end
+end
+
+function _svd_truncate(T::BlockSparseMatrix{ElT};
+                       kwargs...) where {ElT}
+  error("svd(::BlockSparseMatrix) with truncation not supported yet")
+end
+
+function _svd_no_truncate(T::BlockSparseMatrix{ElT};
+                          kwargs...) where {ElT}
   nb1_lt_nb2 = (nblocks(T)[1] < nblocks(T)[2] || (nblocks(T)[1] == nblocks(T)[2] && dim(T,1) < dim(T,2)))
 
   if nb1_lt_nb2

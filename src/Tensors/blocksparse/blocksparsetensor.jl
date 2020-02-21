@@ -511,12 +511,16 @@ function combine_blocks(blocks::Blocks,
   while i <= nnz_comb
     block = blocks_comb[i]
     dimval = block[dim]
-    ncomb = _number_combined(dimval,blockcomb)
-    ncomb_shift = _number_combined_shift(dimval,blockcomb)
+    ncomb = 1
+    while i+ncomb<=nnz_comb && insertat(blocks_comb[i+ncomb],dimval,dim)==block
+      ncomb += 1
+    end
     for n = i+1:i+ncomb-1
       deleteat!(blocks_comb,i+1)
     end
     nnz_comb = nnzblocks(blocks_comb)
+
+    ncomb_shift = _number_combined_shift(dimval,blockcomb)
     blocks_comb[i] = setindex(block,dimval-ncomb_shift,dim)
     i += 1
   end
@@ -552,7 +556,7 @@ function permutedims_combine_output(T::BlockSparseTensor{ElT,N},
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb,comb_ind_loc,blockcomb)
 
-  return BlockSparseTensor(undef,blocks_perm_comb,is)
+  return BlockSparseTensor(blocks_perm_comb,is)
 end
 
 function permutedims_combine(T::BlockSparseTensor{ElT,N},
@@ -675,7 +679,7 @@ function uncombine_output(T::BlockSparseTensor{<:Number,N},
   blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
   blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
   boffs_uncomb_perm,nnz_uncomb_perm = get_blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
-  T_uncomb_perm = Tensor(BlockSparse(undef,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
+  T_uncomb_perm = Tensor(BlockSparse(boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
   R = reshape(T_uncomb_perm,is)
   return R
 end
