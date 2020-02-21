@@ -26,15 +26,15 @@ function contract(T::BlockSparseTensor,
     labelsRc = labelsT
     cpos_in_labelsRc = findfirst(==(clabel),labelsRc)
     # Move combined index to first position
-    if cpos_in_labelsRc != 1
-      labelsRc_orig = labelsRc
-      labelsRc = deleteat(labelsRc,cpos_in_labelsRc)
-      labelsRc = insertafter(labelsRc,clabel,0)
-      cpos_in_labelsRc = 1
-      perm = getperm(labelsRc,labelsRc_orig)
-      T = permutedims(T,perm)
-      labelsT = permute(labelsT,perm)
-    end
+    #if cpos_in_labelsRc != 1
+    #  labelsRc_orig = labelsRc
+    #  labelsRc = deleteat(labelsRc,cpos_in_labelsRc)
+    #  labelsRc = insertafter(labelsRc,clabel,0)
+    #  cpos_in_labelsRc = 1
+    #  perm = getperm(labelsRc,labelsRc_orig)
+    #  T = permutedims(T,perm)
+    #  labelsT = permute(labelsT,perm)
+    #end
     labelsRuc = insertat(labelsRc,labels_uc,cpos_in_labelsRc)
     indsRuc = contract_inds(inds(C),labelsC,inds(T),labelsT,labelsRuc)
     Ruc = uncombine(T,indsRuc,cpos_in_labelsRc,blockperm(C),blockcomb(C))
