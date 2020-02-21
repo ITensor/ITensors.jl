@@ -47,4 +47,9 @@ for I in eachindex(A)
   @test A[I] == Ap[permute(I,(2,1))]
 end
 
+t = Tensor(ComplexF64,100,100)
+randn!(t)
+@test conj(data(store(t))) == data(store(conj(t)))
+@test typeof(conj(t)) <: DenseTensor
+
 end

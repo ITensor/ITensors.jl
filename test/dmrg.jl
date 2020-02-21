@@ -1,4 +1,4 @@
-using ITensors, Test
+using ITensors, Test, Random
 
 @testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
@@ -56,6 +56,7 @@ using ITensors, Test
   @testset "DMRGObserver" begin
     N = 10
     sites = siteinds("S=1/2",N)
+    Random.seed!(42)
     psi0 = randomMPS(sites)
 
     ampo = AutoMPO()

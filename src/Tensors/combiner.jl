@@ -29,9 +29,7 @@ Base.promote_rule(::Type{<:Combiner},StorageT::Type{<:Dense}) = StorageT
 const CombinerTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Combiner}
 
 combinedindex(T::CombinerTensor) = inds(T)[1]
-function uncombinedinds(T::CombinerTensor)
-  return popfirst(inds(T))
-end
+uncombinedinds(T::CombinerTensor) = popfirst(inds(T))
 
 blockperm(C::CombinerTensor) = blockperm(store(C))
 blockcomb(C::CombinerTensor) = blockcomb(store(C))

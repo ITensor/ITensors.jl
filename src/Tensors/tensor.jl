@@ -38,6 +38,8 @@ Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 
 Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
+Base.conj(T::Tensor) = Tensor(conj(store(T)), copy(inds(T)))
+
 Random.randn!(T::Tensor) = (randn!(store(T)); return T)
 
 #function Base.similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}

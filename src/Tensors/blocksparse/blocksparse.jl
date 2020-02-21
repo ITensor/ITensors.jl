@@ -80,6 +80,8 @@ end
 # TODO: this could be a generic TensorStorage function
 Base.complex(D::BlockSparse{T}) where {T} = BlockSparse{complex(T)}(complex(data(D)),
                                                                     blockoffsets(D))
+Base.conj(D::BlockSparse{<: Real}) = D
+Base.conj(D::BlockSparse) = BlockSparse(conj(data(D)), copy(blockoffsets(D)))
 
 Base.eltype(::BlockSparse{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
