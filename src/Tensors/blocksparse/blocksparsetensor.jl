@@ -162,13 +162,13 @@ end
 
 """
 BlockSparseTensor(blocks::Vector{Block{N}},
-                  inds...)
+                  inds::BlockDims...)
 
 Construct a block sparse tensor with the specified blocks.
 Defaults to setting structurally non-zero blocks to zero.
 """
 function BlockSparseTensor(blocks::Blocks{N},
-                           inds::Vararg{DimT,N}) where {DimT,N}
+                           inds::Vararg{BlockDim,N}) where {DimT,N}
   return BlockSparseTensor(blocks,inds)
 end
 
@@ -751,20 +751,19 @@ end
 #  return R
 #end
 
-# TODO: handle case with different element types in R and T
-function permutedims!!(R::BlockSparseTensor{<:Number,N},
-                       T::BlockSparseTensor{<:Number,N},
+# TODO: handle case where:
+# f(zero(ElR),zero(ElT)) != promote_type(ElR,ElT)
+function permutedims!!(R::BlockSparseTensor{ElR,N},
+                       T::BlockSparseTensor{ElT,N},
                        perm::NTuple{N,Int},
-                       f::Function=(r,t)->t) where {N}
-  blockoffsetsTp,indsTp = permutedims(blockoffsets(T),inds(T),perm)
-  indsTp != inds(R) && error("In permutedims!!, output indices are not permutation of input")
-  if blockoffsetsTp == blockoffsets(R)
-    R = permutedims!(R,T,perm,f)
-    return R
-  end
-  R = similar(T,blockoffsetsTp,indsTp)
-  permutedims!(R,T,perm,f)
-  return R
+                       f::Function=(r,t)->t) where {ElR,ElT,N}
+  # TODO: write a custom function for merging two sorted
+  # lists with no repeated elements
+  nzblocksRR = unique!(sort(vcat(nzblocks(R),permutedims(nzblocks(T),perm))))
+  RR = BlockSparseTensor(promote_type(ElR,ElT),nzblocksRR,inds(R))
+  copyto!(RR,R)
+  permutedims!(RR,T,perm,f)
+  return RR
 end
 
 function Base.permutedims!(R::BlockSparseTensor{<:Number,N},

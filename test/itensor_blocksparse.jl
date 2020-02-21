@@ -452,6 +452,18 @@ using ITensors,
     @test norm(A*dag(C')*C-A*C*dag(C')) ≈ 0.0
   end
 
+  @testset "Combiner for block deficient ITensor" begin
+    i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+    j = settags(i,"j")
+    A = ITensor(i,j,dag(i'))
+    A[1,1,1] = 1.0
+    C,_ = combiner(i,j; tags="c")
+    AC = A*C
+    Ap = AC*dag(C)
+    @test norm(A-Ap) ≈ 0.0
+    @test norm(Ap-A) ≈ 0.0
+  end
+
   @testset "Contract to scalar" begin
     i = Index([QN(0)=>1,QN(1)=>1],"i")
     A = randomITensor(QN(0),i,dag(i'))
