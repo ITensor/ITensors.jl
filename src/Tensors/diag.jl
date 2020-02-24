@@ -40,16 +40,22 @@ Base.convert(::Type{<:Diag{ElT,VecT}},D::Diag) where {ElT,VecT} = Diag(convert(V
 
 diaglength(inds) = (length(inds) == 0 ? 1 : minimum(dims(inds)))
 
+Base.size(D::Diag) = size(data(D))
+
 # TODO: write in terms of ::Int, not inds
 Base.similar(D::NonuniformDiag) = Diag(similar(data(D)))
-Base.similar(D::NonuniformDiag,inds) = Diag(similar(data(D),minimum(dims(inds))))
-function Base.similar(D::Type{<:NonuniformDiag{ElT,VecT}},inds) where {ElT,VecT}
-  return Diag(similar(VecT,diaglength(inds)))
-end
+#Base.similar(D::NonuniformDiag,inds) = Diag(similar(data(D),minimum(dims(inds))))
+#function Base.similar(D::Type{<:NonuniformDiag{ElT,VecT}},inds) where {ElT,VecT}
+#  return Diag(similar(VecT,diaglength(inds)))
+#end
 
 Base.similar(D::UniformDiag) = Diag(zero(T))
 Base.similar(D::UniformDiag,inds) = similar(D)
 Base.similar(::Type{<:UniformDiag{ElT}},inds) where {ElT} = Diag(zero(ElT))
+
+Base.similar(D::Diag,n::Int) = Diag(similar(data(D),n))
+
+Base.similar(D::Diag,::Type{ElR},n::Int) where {ElR} = Diag(similar(data(D),ElR,n))
 
 # TODO: make this work for other storage besides Vector
 Base.zeros(::Type{<:NonuniformDiag{ElT}},dim::Int64) where {ElT} = Diag(zeros(ElT,dim))
@@ -186,6 +192,13 @@ end
 
 function Base.Array(T::DiagTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
+end
+
+# Needed to get slice of DiagTensor like T[1:3,1:3]
+function Base.similar(T::DiagTensor{<:Number,N},
+                      ::Type{ElR},
+                      inds::Dims{N}) where {ElR<:Number,N}
+  return Tensor(similar(store(T),ElR,minimum(inds)),inds)
 end
 
 diag_length(T::DiagTensor) = minimum(dims(T))

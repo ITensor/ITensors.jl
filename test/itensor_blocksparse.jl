@@ -1,5 +1,8 @@
 using ITensors,
-      Test
+      Test,
+      Random
+
+Random.seed!(1234)
 
 @testset "BlockSparse ITensor" begin
 
@@ -608,6 +611,45 @@ using ITensors,
         @test flux(V,b)==QN(0,2)
       end
       @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd truncation example 1" begin
+      i = Index(QN(0)=>2,QN(1)=>2; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(0),i,j,dag(i'),dag(j'))
+      for i = 1:4
+        A = mapprime(A*A',2,1)
+      end
+      A = A/norm(A)
+
+      cutoff = 1e-5
+      U,S,V,spec = svd(A,i,j; utags="x", vtags="y", cutoff=cutoff)
+
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      @test spec.truncerr ≤ cutoff
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test err ≤ cutoff
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
+    @testset "svd truncation example 2" begin
+      i = Index(QN(0)=>2,QN(1)=>2; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(0),i,j,dag(i'),dag(j'))
+
+      maxdim = 4
+      U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
+
+      @test minimum(dims(S)) == maxdim
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
     end
 
   end

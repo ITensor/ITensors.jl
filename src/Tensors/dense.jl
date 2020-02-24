@@ -154,6 +154,8 @@ Tensor(::UndefInitializer,
 Tensor(::UndefInitializer,
        inds::Int...) = DenseTensor(undef,inds...)
 
+Tensor(A::Array{<:Number,N},inds::Dims{N}) where {N} = Tensor(Dense(vec(A)),inds)
+
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
 
