@@ -158,10 +158,6 @@ function _svd_qns(A::ITensor,
   U = UC*dag(CL)
   V = VC*dag(CR)
 
-  USV = U*S*V
-  USVc = CL*USV*CR
-  Ac = CL*A*CR
-
   settags!(U,utags,u)
   settags!(S,utags,u)
   settags!(S,vtags,v)

@@ -714,23 +714,27 @@ function uncombine(T::BlockSparseTensor{<:Number,NT},
     b = block(bof)
     Tb_tot = blockview(T,bof)
     dimsTb_tot = dims(Tb_tot)
+
     bs_uncomb = uncombine_block(b,combdim,blockcomb)
+
+    offset = 0
     for i in 1:length(bs_uncomb)
       b_uncomb = bs_uncomb[i]
       b_uncomb_perm = perm_block(b_uncomb,combdim,invblockperm)
       b_uncomb_perm_reshape = reshape(b_uncomb_perm,inds_uncomb_perm,is)
+
       Rb = blockview(R,b_uncomb_perm_reshape)
-      b_uncomb_in_combined_dim = b_uncomb[combdim]
-      b_in_combined_dim = b[combdim]
-      offset = 0
-      pos_in_new_combined_block = 1
-      while b_uncomb_in_combined_dim-pos_in_new_combined_block > 0 &&
-              blockcomb[b_uncomb_in_combined_dim-pos_in_new_combined_block] == b_in_combined_dim
-        offset += blockdim(ind_uncomb_perm,b_uncomb_in_combined_dim-pos_in_new_combined_block)
-        pos_in_new_combined_block += 1
-      end
-      subind = ntuple(i->i==combdim ? range(1+offset,stop=offset+blockdim(ind_uncomb_perm,b_uncomb_in_combined_dim)) : range(1,stop=dimsTb_tot[i]),NT)
+
+      b_uncomb_in_combined_dim = b_uncomb_perm[combdim]
+
+      start = offset+1
+      stop = offset+blockdim(ind_uncomb_perm,b_uncomb_in_combined_dim)
+      subind = ntuple(i->i==combdim ? range(start,stop=stop) : range(1,stop=dimsTb_tot[i]),NT)
+
+      offset = stop
+
       Tb = @view array(Tb_tot)[subind...]
+
       copyto!(Rb,Tb)
     end
   end

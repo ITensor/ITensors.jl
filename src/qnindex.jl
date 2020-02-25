@@ -183,8 +183,11 @@ end
 # TODO: add a combine kwarg to choose if the QN blocks
 # get sorted and combined (could do it by default?)
 function Tensors.outer(i1::QNIndex,i2::QNIndex; tags="")
-  iR = Index((dir(i1)*space(i1))⊗(dir(i2)*space(i2)),tags)
-  return iR
+  if dir(i1) == dir(i2)
+    return Index(space(i1)⊗space(i2),dir(i1),tags)
+  else
+    return Index((dir(i1)*space(i1))⊗(dir(i2)*space(i2)),Out,tags)
+  end
 end
 
 Tensors.outer(i::QNIndex; tags="") = sim(i)
@@ -242,6 +245,11 @@ end
 
 function Base.deleteat!(i::QNIndex,pos)
   deleteat!(space(i),pos)
+  return i
+end
+
+function Base.resize!(i::QNIndex,n::Integer)
+  resize!(space(i),n)
   return i
 end
 

@@ -614,7 +614,7 @@ Random.seed!(1234)
     end
 
     @testset "svd truncation example 1" begin
-      i = Index(QN(0)=>2,QN(1)=>2; tags="i")
+      i = Index(QN(0)=>2,QN(1)=>3; tags="i")
       j = settags(i,"j")
       A = randomITensor(QN(0),i,j,dag(i'),dag(j'))
       for i = 1:4
@@ -625,23 +625,186 @@ Random.seed!(1234)
       cutoff = 1e-5
       U,S,V,spec = svd(A,i,j; utags="x", vtags="y", cutoff=cutoff)
 
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(V,(i',j',v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+
+      Ap = U*S*V
+
+      @test norm(Ap-A) ≤ 1e-2
       @test minimum(dims(S)) == length(spec.eigs)
       @test minimum(dims(S)) < dim(i)*dim(j)
 
       @test spec.truncerr ≤ cutoff
-      Ap = U*S*V
       err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
       @test err ≤ cutoff
       @test isapprox(err,spec.truncerr; rtol=1e-6)
     end
 
     @testset "svd truncation example 2" begin
-      i = Index(QN(0)=>2,QN(1)=>2; tags="i")
+      i = Index(QN(0)=>3,QN(1)=>2; tags="i")
       j = settags(i,"j")
       A = randomITensor(QN(0),i,j,dag(i'),dag(j'))
 
       maxdim = 4
       U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(V,(i',j',v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+
+      @test minimum(dims(S)) == maxdim
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
+    @testset "svd truncation example 3" begin
+      i = Index(QN(0)=>2,QN(1)=>3,QN(2)=>4; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(1),i,j,dag(i'),dag(j'))
+
+      maxdim = 4
+      U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(V,(i',j',v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+
+      @test minimum(dims(S)) == maxdim
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
+    @testset "svd truncation example 4" begin
+      i = Index(QN(0,2)=>3,QN(1,2)=>4; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(1,2),i,j,dag(i'),dag(j'))
+
+      maxdim = 4
+      U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(V,(i',j',v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1,2)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
+
+      @test minimum(dims(S)) == maxdim
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
+    @testset "svd truncation example 5" begin
+      i = Index(QN(0,2)=>2,QN(1,2)=>3; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(1,2),i,j,dag(i'),dag(j'))
+
+      maxdim = 4
+      U,S,V,spec = svd(A,i,j'; utags="x", vtags="y", maxdim=maxdim)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j',u))
+      @test hassameinds(V,(i',j,v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1,2)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
 
       @test minimum(dims(S)) == maxdim
       @test minimum(dims(S)) == length(spec.eigs)

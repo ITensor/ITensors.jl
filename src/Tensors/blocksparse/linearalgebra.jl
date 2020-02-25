@@ -104,6 +104,11 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
 
   deleteat!(uind,dropblocks)
 
+  # uind may have too many blocks
+  if nblocks(uind) > nnzblocksT
+    resize!(uind,nnzblocksT)
+  end
+
   for n in 1:nnzblocksT
     setblockdim!(uind,minimum(dims(Ss[n])),n)
   end
