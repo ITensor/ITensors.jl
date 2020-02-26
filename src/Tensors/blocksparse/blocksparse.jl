@@ -63,8 +63,8 @@ offset(D::BlockSparse,n::Int) = offset(blockoffsets(D),n)
 
 block(D::BlockSparse,n::Int) = block(blockoffsets(D),n)
 
-function Base.similar(D::BlockSparse{ElT}) where {ElT}
-  return BlockSparse{ElT}(similar(data(D)),blockoffsets(D))
+function Base.similar(D::BlockSparse)
+  return BlockSparse(similar(data(D)),blockoffsets(D))
 end
 
 # TODO: test this function
@@ -85,6 +85,11 @@ end
 # TODO: this could be a generic TensorStorage function
 Base.complex(D::BlockSparse{T}) where {T} = BlockSparse{complex(T)}(complex(data(D)),
                                                                     blockoffsets(D))
+
+function scale!(D::BlockSparse,α::Number)
+  scale!(data(D),α)
+  return D
+end
 
 Base.eltype(::BlockSparse{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work

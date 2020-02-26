@@ -58,10 +58,12 @@ Create an `Index` with a unique `id` and a tagset given by `tags`.
 Example: create a two dimensional index with tag `l`:
     Index(2, "l")
 """
-function Index(dim::Integer,tags=("",0))
+function Index(dim::Integer;tags=("",0))
   ts = TagSet(tags)
   return Index(rand(IDType),dim,Neither,ts)
 end
+
+Index(dim::Integer,tags::Union{AbstractString,TagSet}) = Index(dim; tags=tags)
 
 """
     id(i::Index)

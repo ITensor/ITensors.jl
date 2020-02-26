@@ -755,6 +755,14 @@ end
 #  return R
 #end
 
+function Base.copyto!(R::BlockSparseTensor,
+                      T::BlockSparseTensor)
+  for bof in blockoffsets(T)
+    copyto!(blockview(R,block(bof)),blockview(T,bof))
+  end
+  return R
+end
+
 # TODO: handle case where:
 # f(zero(ElR),zero(ElT)) != promote_type(ElR,ElT)
 function permutedims!!(R::BlockSparseTensor{ElR,N},
@@ -763,7 +771,7 @@ function permutedims!!(R::BlockSparseTensor{ElR,N},
                        f::Function=(r,t)->t) where {ElR,ElT,N}
   # TODO: write a custom function for merging two sorted
   # lists with no repeated elements
-  nzblocksRR = unique!(sort(vcat(nzblocks(R),permutedims(nzblocks(T),perm))))
+  nzblocksRR = unique!(sort(vcat(nzblocks(R),permutedims(nzblocks(T),perm));lt=isblockless))
   RR = BlockSparseTensor(promote_type(ElR,ElT),nzblocksRR,inds(R))
   copyto!(RR,R)
   permutedims!(RR,T,perm,f)
@@ -1097,14 +1105,15 @@ end
 # Print block sparse tensors
 #
 
-function Base.summary(io::IO,
-                      T::BlockSparseTensor{ElT,N}) where {ElT,N}
-  println(io,Base.dims2string(dims(T))," ",typeof(T))
-  for (dim,ind) in enumerate(inds(T))
-    println(io,"Dim $dim: ",ind)
-  end
-  println("Number of nonzero blocks: ",nnzblocks(T))
-end
+#function Base.summary(io::IO,
+#                      T::BlockSparseTensor{ElT,N}) where {ElT,N}
+#  println(io,typeof(T))
+#  println(io,Base.dims2string(dims(T))," ",typeof(T))
+#  for (dim,ind) in enumerate(inds(T))
+#    println(io,"Dim $dim: ",ind)
+#  end
+#  println("Number of nonzero blocks: ",nnzblocks(T))
+#end
 
 function Base.show(io::IO,
                    mime::MIME"text/plain",
@@ -1115,13 +1124,11 @@ function Base.show(io::IO,
     blockdimsT = blockdims(T,block)
     # Print the location of the current block
     println(io,"Block: ",block)
+    println(io,"Start: ",Tuple(blockstart(T,block)))
+    println(io,"End: ",Tuple(blockend(T,block)))
     # Print the dimension of the current block
     println(io," ",Base.dims2string(blockdimsT))
-    # TODO: replace with a Tensor show method
-    # instead of converting to array (for other
-    # storage types, like CuArray)
-    Tblock = array(blockview(T,block))
-    Base.print_array(io,Tblock)
+    print_tensor(io,blockview(T,block))
     println(io)
     println(io)
   end

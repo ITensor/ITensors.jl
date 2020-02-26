@@ -214,7 +214,7 @@ Base.@propagate_inbounds Base.getindex(T::DenseTensor,i::Int) = store(T)[i]
 
 Base.@propagate_inbounds Base.setindex!(T::DenseTensor,v,i::Int) = (store(T)[i] = v)
 
-Base.fill!(T::DenseTensor,v) = fill!(store(T),v)
+#Base.fill!(T::DenseTensor,v) = fill!(store(T),v)
 
 # How does Julia map from IndexCartesian to IndexLinear?
 #Base.getindex(T::DenseTensor{<:Number,N},
@@ -289,13 +289,13 @@ function Base.permutedims!(R::DenseTensor{<:Number,N},
   return R
 end
 
-function scale!(T::DenseTensor,
-                α::Number)
-  A = array(T)
-  # This is faster than A .*= α
-  rmul!(A,α)
-  return T
-end
+#function scale!(T::DenseTensor,
+#                α::Number)
+#  A = array(T)
+#  # This is faster than A .*= α
+#  rmul!(A,α)
+#  return T
+#end
 
 function apply!(R::DenseTensor,
                 T::DenseTensor,
@@ -502,13 +502,23 @@ function _contract!!(R::Tensor,labelsR,
   return R
 end
 
-function contract!(R::DenseTensor,
+function contract!(R::DenseTensor{<:Number,NR},
                    labelsR,
-                   T1::DenseTensor,
+                   T1::DenseTensor{<:Number,N1},
                    labelsT1,
-                   T2::DenseTensor,
+                   T2::DenseTensor{<:Number,N2},
                    labelsT2,
-                   α::Number=1,β::Number=0)
+                   α::Number=1,β::Number=0) where {N1,N2,NR}
+  if N1+N2==NR
+    outer!(R,T1,T2)
+    labelsRp = tuplecat(labelsT1,labelsT2)
+    perm = getperm(labelsR,labelsRp)
+    if !is_trivial_permutation(perm)
+      permutedims!(R,copy(R),perm)
+    end
+    return R
+  end
+
   props = ContractionProperties(labelsT1,labelsT2,labelsR)
   compute_contraction_properties!(props,T1,T2,R)
 
@@ -761,11 +771,14 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   return Dense{ElT}(data)
 end
 
-function Base.summary(io::IO,
-                      T::DenseTensor{ElT,N}) where {ElT,N}
-  println(io,typeof(T))
-  println(io," ",Base.dims2string(dims(T)))
-end
+#function Base.summary(io::IO,
+#                      T::Tensor)
+#  println(io,typeof(T))
+#  println(io," ",Base.dims2string(dims(T)))
+#  for (dim,ind) in enumerate(inds(T))
+#    println(io,"Dim $dim: ",ind)
+#  end
+#end
 
 print_tensor(io::IO,T::DenseTensor) = Base.print_array(io,T)
 print_tensor(io::IO,T::DenseTensor{<:Number,1}) = Base.print_array(io,reshape(T,(dim(T),1)))
@@ -774,6 +787,7 @@ function Base.show(io::IO,
                    mime::MIME"text/plain",
                    T::DenseTensor)
   summary(io,T)
+  println(io)
   print_tensor(io,T)
   println(io)
 end

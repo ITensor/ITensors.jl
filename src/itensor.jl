@@ -29,6 +29,7 @@ export ITensor,
        set_warnorder,
        store,
        dense,
+       setelt,
        real_if_close
 
 """
@@ -250,6 +251,12 @@ delta(is::IndexSet) = delta(Float64,is)
 
 delta(is::Index...) = delta(IndexSet(is...))
 const δ = delta
+
+function setelt(iv::IndexVal)
+  A = ITensor(ind(iv))
+  A[val(iv)] = 1.0
+  return A
+end
 
 """
 dense(T::ITensor)
@@ -481,6 +488,9 @@ randomITensor(inds::Indices) = randomITensor(Float64,
                                              IndexSet(inds))
 randomITensor(inds::Index...) = randomITensor(Float64,
                                               IndexSet(inds...))
+
+randomITensor(::Type{ElT}) where {ElT<:Number} = randomITensor(ElT,IndexSet())
+randomITensor() = randomITensor(Float64)
 
 function combiner(inds::IndexSet; kwargs...)
   tags = get(kwargs, :tags, "CMB,Link")
@@ -760,8 +770,9 @@ end
 # TODO: make a specialized printing from Diag
 # that emphasizes the missing elements
 function Base.show(io::IO,T::ITensor)
-  summary(io,T)
-  print(io,"\n")
+  #summary(io,T)
+  println(io,"ITensor ord=$(order(T))")
+  println(io)
   if !isnull(T)
     Base.show(io,MIME"text/plain"(),tensor(T))
   end

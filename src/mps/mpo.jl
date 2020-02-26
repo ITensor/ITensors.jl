@@ -40,6 +40,8 @@ mutable struct MPO
  
 end
 
+MPO(A::Vector{<:ITensor}) = MPO(length(A),A,0,length(A)+1)
+
 MPO(N::Int) = MPO(N,fill(ITensor(),N))
 
 function MPO(sites,

@@ -24,7 +24,7 @@ Base.getindex(D::UniformDiag,i::Int) = data(D)
 Base.@propagate_inbounds Base.setindex!(D::Diag,val,i::Int)= (data(D)[i] = val)
 Base.setindex!(D::UniformDiag,val,i::Int)= error("Cannot set elements of a uniform Diag storage")
 
-Base.fill!(D::Diag,v) = fill!(data(D),v)
+#Base.fill!(D::Diag,v) = fill!(data(D),v)
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
@@ -236,7 +236,7 @@ function Base.setindex!(T::UniformDiagTensor{<:Number,N},val,inds::Vararg{Int,N}
 end
 
 # TODO: make a fill!! that works for uniform and non-uniform
-Base.fill!(T::DiagTensor,v) = fill!(store(T),v)
+#Base.fill!(T::DiagTensor,v) = fill!(store(T),v)
 
 function dense(::Type{<:Tensor{ElT,N,StoreT,IndsT}}) where {ElT,N,
                                                             StoreT<:Diag,IndsT}
