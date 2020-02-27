@@ -40,6 +40,8 @@ mutable struct MPO
  
 end
 
+MPO(A::Vector{<:ITensor}) = MPO(length(A),A,0,length(A)+1)
+
 MPO(N::Int) = MPO(N,fill(ITensor(),N))
 
 function MPO(sites,
@@ -143,7 +145,7 @@ siteinds(A::MPO,x::MPS) = [siteindex(A,x,j) for j ∈ 1:length(A)]
 Hermitian conjugation of a matrix product state or operator `m`.
 """
 
-function dag(m::T) where {T <: Union{MPS, MPO}}
+function Tensors.dag(m::T) where {T <: Union{MPS, MPO}}
   N = length(m)
   mdag = T(N)
   @inbounds for i ∈ eachindex(m)

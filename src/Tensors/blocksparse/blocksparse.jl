@@ -54,12 +54,17 @@ blockoffsets(D::BlockSparse) = D.blockoffsets
 nnzblocks(D::BlockSparse) = length(blockoffsets(D))
 Base.length(D::BlockSparse) = length(data(D))
 Base.size(D::BlockSparse) = (length(D),)
+
 nnz(D::BlockSparse) = length(D)
+
 offset(D::BlockSparse,block::Block) = offset(blockoffsets(D),block)
+
 offset(D::BlockSparse,n::Int) = offset(blockoffsets(D),n)
 
-function Base.similar(D::BlockSparse{ElT}) where {ElT}
-  return BlockSparse{ElT}(similar(data(D)),blockoffsets(D))
+block(D::BlockSparse,n::Int) = block(blockoffsets(D),n)
+
+function Base.similar(D::BlockSparse)
+  return BlockSparse(similar(data(D)),blockoffsets(D))
 end
 
 # TODO: test this function
@@ -80,6 +85,13 @@ end
 # TODO: this could be a generic TensorStorage function
 Base.complex(D::BlockSparse{T}) where {T} = BlockSparse{complex(T)}(complex(data(D)),
                                                                     blockoffsets(D))
+Base.conj(D::BlockSparse{<: Real}) = D
+Base.conj(D::BlockSparse) = BlockSparse(conj(data(D)), copy(blockoffsets(D)))
+
+function scale!(D::BlockSparse,α::Number)
+  scale!(data(D),α)
+  return D
+end
 
 Base.eltype(::BlockSparse{T}) where {T} = eltype(T)
 # This is necessary since for some reason inference doesn't work
@@ -123,8 +135,8 @@ function blockdim(D::BlockSparse,
   return blockdim(D,pos)
 end
 
-findblock(T::BlockSparse{ElT,VecT,N},
-          block::Block{N}; vargs...) where {ElT,VecT,N} = findblock(blockoffsets(T),block; vargs...)
+findblock(D::BlockSparse{ElT,VecT,N},
+          block::Block{N}; vargs...) where {ElT,VecT,N} = findblock(blockoffsets(D),block; vargs...)
 
 """
 isblocknz(T::BlockSparse,

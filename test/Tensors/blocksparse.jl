@@ -72,6 +72,11 @@ using ITensors,
     @test A[I] == Ap[permute(I,(2,1))]
   end
 
+  A = BlockSparseTensor(ComplexF64,locs,indsA)
+  randn!(A)
+  @test conj(data(store(A))) == data(store(conj(A)))
+  @test typeof(conj(A)) <: BlockSparseTensor
+
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2,3],[4,5])
 
@@ -228,6 +233,44 @@ using ITensors,
       blockAp = blockview(Ap,i)
       blockB = blockview(B,i)
       @test reshape(blockAp,size(blockB))==blockB
+    end
+  end
+
+  @testset "svd" begin
+
+    @testset "svd example 1" begin
+      A = BlockSparseTensor([(2,1),(1,2)],[2,2],[2,2])
+      randn!(A)
+      U,S,V = svd(A)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0; atol=1e-14)
+    end
+
+    @testset "svd example 2" begin
+      A = BlockSparseTensor([(1,2),(2,3)],[2,2],[3,2,3])
+      randn!(A)
+      U,S,V = svd(A)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 3" begin
+      A = BlockSparseTensor([(2,1),(3,2)],[3,2,3],[2,2])
+      randn!(A)
+      U,S,V = svd(A)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 4" begin
+      A = BlockSparseTensor([(2,1),(3,2)],[2,3,4],[5,6])
+      randn!(A)
+      U,S,V = svd(A)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 5" begin
+      A = BlockSparseTensor([(1,2),(2,3)],[5,6],[2,3,4])
+      randn!(A)
+      U,S,V = svd(A)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0.0; atol=1e-14)
     end
   end
 

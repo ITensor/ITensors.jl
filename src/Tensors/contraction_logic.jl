@@ -41,15 +41,20 @@ function contract_inds(T1is,
   Ris = Vector{IndT1}(undef,NR)
   u = 1
   # TODO: use Rlabels, don't assume ncon convention
-  @inbounds for i ∈ 1:N1
-    if(T1labels[i] > 0) 
-      Ris[u] = T1is[i]; 
+  for i1 ∈ 1:N1
+    if T1labels[i1] > 0
+      Ris[u] = T1is[i1]; 
       u += 1 
+    else
+      # This is to check that T1is and T2is
+      # can contract
+      i2 = findfirst(==(T1labels[i1]),T2labels)
+      dir(T1is[i1]) == -dir(T2is[i2]) || error("Indices must have opposite directions to contract")
     end
   end
-  @inbounds for i ∈ 1:N2
-    if(T2labels[i] > 0) 
-      Ris[u] = T2is[i]; 
+  for i2 ∈ 1:N2
+    if T2labels[i2] > 0
+      Ris[u] = T2is[i2]; 
       u += 1 
     end
   end

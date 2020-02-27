@@ -32,13 +32,37 @@ Base.eltype(::Tensor{ElT}) where {ElT} = ElT
 # The size is obtained from the indices
 dims(T::Tensor) = dims(inds(T))
 dim(T::Tensor) = dim(inds(T))
+dim(T::Tensor,i::Int) = dim(inds(T),i)
 Base.size(T::Tensor) = dims(T)
+Base.size(T::Tensor,i::Int) = dim(T,i)
 
 Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 
 Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
+LinearAlgebra.norm(T::Tensor) = norm(store(T))
+
+Base.conj(T::Tensor) = Tensor(conj(store(T)), copy(inds(T)))
+
 Random.randn!(T::Tensor) = (randn!(store(T)); return T)
+
+function scale!(v::Vector,
+                α::Number)
+  rmul!(v,α)
+  return v
+end
+
+function scale!(T::Tensor,
+                α::Number)
+  scale!(store(T),α)
+  return T
+end
+
+function Base.fill!(T::Tensor,
+                    α::Number)
+  fill!(store(T),α)
+  return T
+end
 
 #function Base.similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
 #  return Tensor(similar(StoreT,dim(dims)),dims)
@@ -133,4 +157,14 @@ find_tensor(::Any, rest) = find_tensor(rest)
 
 # TODO: implement some generic fallbacks for necessary parts of the API?
 #Base.getindex(A::TensorT, i::Int) where {TensorT<:Tensor} = error("getindex not yet implemented for Tensor type $TensorT")
+
+function Base.summary(io::IO,
+                      T::Tensor)
+  println(io,typeof(inds(T)))
+  for (dim,ind) in enumerate(inds(T))
+    println(io,"Dim $dim: ",ind)
+  end
+  println(io,typeof(store(T)))
+  println(io," ",Base.dims2string(dims(T)))
+end
 

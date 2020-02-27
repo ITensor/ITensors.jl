@@ -24,13 +24,16 @@ Base.getindex(D::UniformDiag,i::Int) = data(D)
 Base.@propagate_inbounds Base.setindex!(D::Diag,val,i::Int)= (data(D)[i] = val)
 Base.setindex!(D::UniformDiag,val,i::Int)= error("Cannot set elements of a uniform Diag storage")
 
-Base.fill!(D::Diag,v) = fill!(data(D),v)
+#Base.fill!(D::Diag,v) = fill!(data(D),v)
 
 # convert to complex
 # TODO: this could be a generic TensorStorage function
 Base.complex(D::Diag) = Diag(complex(data(D)))
 
 Base.copy(D::Diag) = Diag(copy(data(D)))
+
+Base.conj(D::Diag{<:Real, VecT}) where {VecT} = D
+Base.conj(D::Diag{<:Complex, VecT}) where {VecT} = Diag(conj(data(D)))
 
 Base.eltype(::Diag{ElT}) where {ElT} = ElT
 Base.eltype(::Type{<:Diag{ElT}}) where {ElT} = ElT
@@ -40,16 +43,22 @@ Base.convert(::Type{<:Diag{ElT,VecT}},D::Diag) where {ElT,VecT} = Diag(convert(V
 
 diaglength(inds) = (length(inds) == 0 ? 1 : minimum(dims(inds)))
 
+Base.size(D::Diag) = size(data(D))
+
 # TODO: write in terms of ::Int, not inds
 Base.similar(D::NonuniformDiag) = Diag(similar(data(D)))
-Base.similar(D::NonuniformDiag,inds) = Diag(similar(data(D),minimum(dims(inds))))
-function Base.similar(D::Type{<:NonuniformDiag{ElT,VecT}},inds) where {ElT,VecT}
-  return Diag(similar(VecT,diaglength(inds)))
-end
+#Base.similar(D::NonuniformDiag,inds) = Diag(similar(data(D),minimum(dims(inds))))
+#function Base.similar(D::Type{<:NonuniformDiag{ElT,VecT}},inds) where {ElT,VecT}
+#  return Diag(similar(VecT,diaglength(inds)))
+#end
 
 Base.similar(D::UniformDiag) = Diag(zero(T))
 Base.similar(D::UniformDiag,inds) = similar(D)
 Base.similar(::Type{<:UniformDiag{ElT}},inds) where {ElT} = Diag(zero(ElT))
+
+Base.similar(D::Diag,n::Int) = Diag(similar(data(D),n))
+
+Base.similar(D::Diag,::Type{ElR},n::Int) where {ElR} = Diag(similar(data(D),ElR,n))
 
 # TODO: make this work for other storage besides Vector
 Base.zeros(::Type{<:NonuniformDiag{ElT}},dim::Int64) where {ElT} = Diag(zeros(ElT,dim))
@@ -188,6 +197,13 @@ function Base.Array(T::DiagTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
 end
 
+# Needed to get slice of DiagTensor like T[1:3,1:3]
+function Base.similar(T::DiagTensor{<:Number,N},
+                      ::Type{ElR},
+                      inds::Dims{N}) where {ElR<:Number,N}
+  return Tensor(similar(store(T),ElR,minimum(inds)),inds)
+end
+
 diag_length(T::DiagTensor) = minimum(dims(T))
 diag_length(T::DiagTensor{<:Number,0}) = 1
 
@@ -223,7 +239,7 @@ function Base.setindex!(T::UniformDiagTensor{<:Number,N},val,inds::Vararg{Int,N}
 end
 
 # TODO: make a fill!! that works for uniform and non-uniform
-Base.fill!(T::DiagTensor,v) = fill!(store(T),v)
+#Base.fill!(T::DiagTensor,v) = fill!(store(T),v)
 
 function dense(::Type{<:Tensor{ElT,N,StoreT,IndsT}}) where {ElT,N,
                                                             StoreT<:Diag,IndsT}

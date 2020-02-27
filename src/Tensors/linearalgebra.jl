@@ -54,7 +54,11 @@ function entropy(s::Spectrum)
   return S
 end
 
-#svd of an order-2 tensor
+"""
+svd(T::DenseTensor{<:Number,2}; kwargs...)
+
+svd of an order-2 DenseTensor
+"""
 function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
                            kwargs...) where {ElT,IndsT}
   maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))

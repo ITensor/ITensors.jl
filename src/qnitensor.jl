@@ -40,11 +40,17 @@ randomITensor(flux::QN,inds::IndexSet) = randomITensor(Float64,flux::QN,inds...)
 randomITensor(flux::QN,
               inds::Index...) = randomITensor(flux,IndexSet(inds...))
 
+# Throw error if flux is not specified
+randomITensor(::Type{T},
+              inds::QNIndex...) where {T<:Number} = error("In randomITensor constructor, must specify desired flux when using QN Indices")
+
+randomITensor(inds::QNIndex...) = randomITensor(Float64,inds...)
+
 function combiner(inds::QNIndex...; kwargs...)
   # TODO: support combining multiple set of indices
   tags = get(kwargs, :tags, "CMB,Link")
   new_ind = ⊗(inds...)
-  if all(i->dir(i)!=Out,inds)
+  if all(i->dir(i)!=Out,inds) && all(i->dir(i)!=In,inds)
     new_ind = dag(new_ind)
     new_ind = replaceqns(new_ind,-qnblocks(new_ind))
   end

@@ -278,18 +278,18 @@ end
   end
 end
 
-@testset "show" begin
-  i = Index(2,"i")
-  a = [1.0; 2.0]
-  A = ITensor(a,i)
-  s = split(sprint(show, A), '\n')
-  @test s[1] == "ITensor ord=1 " * sprint(show, i) * " "
-  @test s[2] == "Dense{Float64,Array{Float64,1}}"
-  @test s[3] == "Tensor{Float64,1,Dense{Float64,Array{Float64,1}},IndexSet{1}}"
-  @test s[4] == " 2-element"
-  @test s[5] == " 1.0"
-  @test s[6] == " 2.0"
-end
+#@testset "show" begin
+#  i = Index(2,"i")
+#  a = [1.0; 2.0]
+#  A = ITensor(a,i)
+#  s = split(sprint(show, A), '\n')
+#  @test s[1] == "ITensor ord=1 " * sprint(show, i) * " "
+#  @test s[2] == "Dense{Float64,Array{Float64,1}}"
+#  @test s[3] == "Tensor{Float64,1,Dense{Float64,Array{Float64,1}},IndexSet{1}}"
+#  @test s[4] == " 2-element"
+#  @test s[5] == " 1.0"
+#  @test s[6] == " 2.0"
+#end
 
 @testset "Test isapprox for ITensors" begin
   m,n = rand(0:20,2)
