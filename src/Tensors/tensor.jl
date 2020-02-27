@@ -40,6 +40,8 @@ Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 
 Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
+LinearAlgebra.norm(T::Tensor) = norm(store(T))
+
 Random.randn!(T::Tensor) = (randn!(store(T)); return T)
 
 function scale!(v::Vector,

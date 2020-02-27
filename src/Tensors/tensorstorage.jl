@@ -17,5 +17,7 @@ Base.fill!(S::TensorStorage,v) = fill!(data(S),v)
 
 scale!(S::TensorStorage,v) = scale!(data(S),v)
 
+LinearAlgebra.norm(S::TensorStorage) = norm(data(S))
+
 Base.convert(::Type{T},D::T) where {T<:TensorStorage} = D
 
