@@ -963,7 +963,7 @@ function Base.summary(io::IO,
   for (dim,ind) in enumerate(inds(T))
     println(io,"Dim $dim: ",ind)
   end
-  println("Number of nonzero blocks: ",nnzblocks(T))
+  println(io,"Number of nonzero blocks: ",nnzblocks(T))
 end
 
 function Base.show(io::IO,
