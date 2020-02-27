@@ -1,13 +1,11 @@
 using ITensors
   
 function heisenberg(s::Vector{<:Index})
-  s = dag.(s)
-  
   N = length(s)
 
   l = [Index(QN(0)=>3,QN(-2)=>1,QN(2)=>1; tags="l=$(l-1)") for l in 1:N+1]
 
-  h = ITensor[ITensor(dag(l[i]),l[i+1],s[i],dag(s[i]')) for i in 1:N]
+  h = ITensor[ITensor(dag(l[i]),l[i+1],dag(s[i]),s[i]') for i in 1:N]
 
   H = MPO(h)
 
