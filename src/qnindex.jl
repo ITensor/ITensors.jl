@@ -45,8 +45,7 @@ end
 const QNIndex = Index{QNBlocks}
 const QNIndexVal = IndexVal{QNIndex}
 
-hasqns(i::QNIndex) = true
-hasqns(i::Index) = false
+hasqns(::QNIndex) = true
 
 function have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks,1)
@@ -292,8 +291,6 @@ function combineblocks(i::QNIndex)
   iR = replaceqns(i,qnsR)
   return iR,perm,comb
 end
-
-hasqns(::QNIndex) = true
 
 Tensors.dense(inds::QNIndex...) = dense.(inds)
 
