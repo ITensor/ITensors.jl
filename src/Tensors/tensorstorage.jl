@@ -12,7 +12,12 @@ Base.@propagate_inbounds Base.setindex!(S::TensorStorage,v,
                                         i::Integer) = setindex!(data(S),v,i)
 
 Random.randn!(S::TensorStorage) = randn!(data(S))
+
 Base.fill!(S::TensorStorage,v) = fill!(data(S),v)
+
+scale!(S::TensorStorage,v) = scale!(data(S),v)
+
+LinearAlgebra.norm(S::TensorStorage) = norm(data(S))
 
 Base.convert(::Type{T},D::T) where {T<:TensorStorage} = D
 

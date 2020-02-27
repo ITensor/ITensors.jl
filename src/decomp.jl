@@ -83,6 +83,16 @@ arguments provided. The following keyword arguments are recognized:
 function LinearAlgebra.svd(A::ITensor,
                            Linds...;
                            kwargs...)
+  if hasqns(A)
+    return _svd_qns(A,Linds...;kwargs...)
+  else
+    return _svd(A,Linds...;kwargs...)
+  end
+end
+
+function _svd(A::ITensor,
+              Linds...;
+              kwargs...)
   utags::TagSet = get(kwargs,:utags,"Link,u")
   vtags::TagSet = get(kwargs,:vtags,"Link,v")
   Lis = commoninds(inds(A),IndexSet(Linds...))
@@ -102,6 +112,82 @@ function LinearAlgebra.svd(A::ITensor,
 
   return TruncSVD(U,S,V,spec,u,v)
 end
+
+function _svd_qns(A::ITensor,
+                  Linds...;
+                  kwargs...)
+  utags::TagSet = get(kwargs,:utags,"Link,u")
+  vtags::TagSet = get(kwargs,:vtags,"Link,v")
+  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Ris = uniqueinds(inds(A),Lis)
+
+  CL,cL = combiner(Lis...)
+  CR,cR = combiner(Ris...)
+
+  AC = A*CR*CL
+
+  if inds(AC) != IndexSet(cL,cR)
+    AC = permute(AC,cL,cR)
+  end
+
+  UT,ST,VT,spec = svd(tensor(AC);kwargs...)
+  UC,S,VC = itensor(UT),itensor(ST),itensor(VT)
+
+  u = commonindex(S,UC)
+  v = commonindex(S,VC)
+
+  # Fix the flux of UC,S,VC
+  # such that flux(UC) == flux(VC) == QN()
+  # and flux(S) == flux(A)
+  for b in nzblocks(UC)
+    i1 = inds(UC)[1]
+    i2 = inds(UC)[2]
+    newqn = -dir(i2)*qn(i1,b[1])
+    setblockqn!(i2,newqn,b[2])
+    setblockqn!(u,newqn,b[2])
+  end
+
+  for b in nzblocks(VC)
+    i1 = inds(VC)[1]
+    i2 = inds(VC)[2]
+    newqn = -dir(i2)*qn(i1,b[1])
+    setblockqn!(i2,newqn,b[2])
+    setblockqn!(v,newqn,b[2])
+  end
+
+  U = UC*dag(CL)
+  V = VC*dag(CR)
+
+  settags!(U,utags,u)
+  settags!(S,utags,u)
+  settags!(S,vtags,v)
+  settags!(V,vtags,v)
+
+  return TruncSVD(U,S,V,spec,u,v)
+end
+
+#function LinearAlgebra.svd(A::ITensor,
+#                           Linds...;
+#                           kwargs...)
+#  utags::TagSet = get(kwargs,:utags,"Link,u")
+#  vtags::TagSet = get(kwargs,:vtags,"Link,v")
+#  Lis = commoninds(inds(A),IndexSet(Linds...))
+#  Ris = uniqueinds(inds(A),Lis)
+#  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+#  UT,ST,VT,spec = svd(tensor(A),Lpos,Rpos;kwargs...)
+#  U,S,V = ITensor(UT),ITensor(ST),ITensor(VT)
+#  u₀ = commonindex(U,S)
+#  v₀ = commonindex(S,V)
+#
+#  u = settags(u₀,utags)
+#  v = settags(u₀,vtags)
+#
+#  U *= δ(dag(u₀),u)
+#  S = δ(dag(u₀),u)*S*δ(dag(v₀),v)
+#  V *= δ(dag(v₀),v)
+#
+#  return TruncSVD(U,S,V,spec,u,v)
+#end
 
 function _factorize_center(A::ITensor,
                            Linds...;

@@ -8,6 +8,7 @@ export ITensor,
        exphermitian,
        replaceindex!,
        inds,
+       ind,
        isnull,
        scale!,
        matmul,
@@ -28,6 +29,7 @@ export ITensor,
        set_warnorder,
        store,
        dense,
+       setelt,
        real_if_close
 
 """
@@ -53,6 +55,7 @@ ITensor(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is
 
 Tensors.inds(T::ITensor) = T.inds
 Tensors.store(T::ITensor) = T.store
+ind(T::ITensor,i::Int) = inds(T)[i]
 
 # TODO: do we need these? I think yes, for add!(::ITensor,::ITensor)
 setinds!(T::ITensor,is...) = (T.inds = IndexSet(is...))
@@ -249,6 +252,12 @@ delta(is::IndexSet) = delta(Float64,is)
 delta(is::Index...) = delta(IndexSet(is...))
 const δ = delta
 
+function setelt(iv::IndexVal)
+  A = ITensor(ind(iv))
+  A[val(iv)] = 1.0
+  return A
+end
+
 """
 dense(T::ITensor)
 
@@ -256,7 +265,7 @@ Make a copy of the ITensor where the storage is the dense version.
 For example, an ITensor with Diag storage will become Dense storage.
 """
 function Tensors.dense(T::ITensor)
-  ITensor(dense(Tensor(store(T),inds(T))))
+  ITensor(dense(tensor(T)))
 end
 
 """
@@ -264,7 +273,7 @@ complex(T::ITensor)
 
 Convert to the complex version of the storage.
 """
-Base.complex(T::ITensor) = ITensor(complex(Tensor(store(T),inds(T))))
+Base.complex(T::ITensor) = ITensor(complex(tensor(T)))
 
 # This constructor allows many IndexSet
 # set operations to work with ITensors
@@ -480,6 +489,9 @@ randomITensor(inds::Indices) = randomITensor(Float64,
 randomITensor(inds::Index...) = randomITensor(Float64,
                                               IndexSet(inds...))
 
+randomITensor(::Type{ElT}) where {ElT<:Number} = randomITensor(ElT,IndexSet())
+randomITensor() = randomITensor(Float64)
+
 function combiner(inds::IndexSet; kwargs...)
   tags = get(kwargs, :tags, "CMB,Link")
   new_ind = Index(prod(dims(inds)), tags)
@@ -489,11 +501,16 @@ end
 combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
 combiner(inds::Tuple{Vararg{Index}}; kwargs...) = combiner(inds...; kwargs...)
 
+# Special case when no indices are combined (useful for generic code)
+function combiner(; kwargs...)
+  return ITensor(Combiner(),IndexSet()),nothing
+end
+
 combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
-function dag(T::ITensor)
+function Tensors.dag(T::ITensor)
   TT = conj(tensor(T))
   return ITensor(store(TT),dag(inds(T)))
 end
@@ -691,6 +708,8 @@ LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = mul!(R,α,T)
 # (Maybe create fallback definitions for dense tensors)
 #
 
+hasqns(T::ITensor) = hasqns(inds(T))
+
 Tensors.nnz(T::ITensor) = nnz(tensor(T))
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
 Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
@@ -751,8 +770,9 @@ end
 # TODO: make a specialized printing from Diag
 # that emphasizes the missing elements
 function Base.show(io::IO,T::ITensor)
-  summary(io,T)
-  print(io,"\n")
+  #summary(io,T)
+  println(io,"ITensor ord=$(order(T))")
+  println(io)
   if !isnull(T)
     Base.show(io,MIME"text/plain"(),tensor(T))
   end

@@ -1,5 +1,8 @@
 using ITensors,
-      Test
+      Test,
+      Random
+
+Random.seed!(1234)
 
 @testset "BlockSparse ITensor" begin
 
@@ -172,6 +175,24 @@ using ITensors,
 
   @testset "Combine and uncombine" begin
 
+    @testset "Combine no indices" begin
+      i1 = Index([QN(0,2)=>2,QN(1,2)=>2],"i1")
+      A = randomITensor(QN(),i1,dag(i1'))
+
+      C,c = combiner()
+      @test isnothing(c)
+      AC = A*C
+      @test nnz(AC) == nnz(A)
+      @test nnzblocks(AC) == nnzblocks(A)
+      @test hassameinds(AC,A)
+      @test norm(AC-A*C) ≈ 0.0
+      Ap = AC*dag(C)
+      @test nnz(Ap) == nnz(A)
+      @test nnzblocks(Ap) == nnzblocks(A)
+      @test hassameinds(Ap,A)
+      @test norm(A-Ap) ≈ 0.0
+    end
+
     @testset "Order 2" begin
       i1 = Index([QN(0,2)=>2,QN(1,2)=>2],"i1")
       A = randomITensor(QN(),i1,dag(i1'))
@@ -212,17 +233,17 @@ using ITensors,
       @test nnz(B) == nnz(AC)
       @test nnzblocks(B) == nnzblocks(AC)
 
-      Ablock_221 = vec(permutedims(blockview(tensor(A),(2,2,1)),(1,3,2)))
-      ACblock_32 = vec(blockview(tensor(AC),(3,2)))
-      @test Ablock_221 == ACblock_32
+      #Ablock_221 = vec(permutedims(blockview(tensor(A),(2,2,1)),(1,3,2)))
+      #ACblock_32 = vec(blockview(tensor(AC),(3,2)))
+      #@test Ablock_221 == ACblock_32
 
-      Ablock_111 = vec(permutedims(blockview(tensor(A),(1,1,1)),(1,3,2)))
-      ACblock_21_1 = vec(blockview(tensor(AC),(2,1)))[1:length(Ablock_111)]
-      @test Ablock_111 == ACblock_21_1
+      #Ablock_111 = vec(permutedims(blockview(tensor(A),(1,1,1)),(1,3,2)))
+      #ACblock_21_1 = vec(blockview(tensor(AC),(2,1)))[1:length(Ablock_111)]
+      #@test Ablock_111 == ACblock_21_1
 
-      Ablock_212 = vec(permutedims(blockview(tensor(A),(2,1,2)),(1,3,2)))
-      ACblock_21_2 = vec(blockview(tensor(AC),(2,1)))[length(Ablock_111)+1:end]
-      @test Ablock_212 == ACblock_21_2
+      #Ablock_212 = vec(permutedims(blockview(tensor(A),(2,1,2)),(1,3,2)))
+      #ACblock_21_2 = vec(blockview(tensor(AC),(2,1)))[length(Ablock_111)+1:end]
+      #@test Ablock_212 == ACblock_21_2
 
       Ap = AC*dag(C)
 
@@ -256,11 +277,11 @@ using ITensors,
       for is in iss
         C,c = combiner(is; tags="c")
         AC = A*C
-        @assert nnz(AC) == nnz(A)
+        @test nnz(AC) == nnz(A)
         Ap = AC*dag(C)
-        @assert nnz(Ap) == nnz(A)
-        @assert nnzblocks(Ap) == nnzblocks(A)
-        @assert norm(A-AC*dag(C)) ≈ 0.0
+        @test nnz(Ap) == nnz(A)
+        @test nnzblocks(Ap) == nnzblocks(A)
+        @test norm(A-AC*dag(C)) ≈ 0.0
       end
     end
 
@@ -424,6 +445,27 @@ using ITensors,
       @test nnz(A) == nnz(Ap)
       @test nnzblocks(A) == nnzblocks(Ap)
     end
+  end
+
+  @testset "Check that combiner commutes" begin
+    i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+    j = settags(i,"j")
+    A = randomITensor(QN(0,2),i,j,dag(i'),dag(j'))
+    C,_ = combiner(i,j)
+    @test norm(A*dag(C')*C-A*C*dag(C')) ≈ 0.0
+  end
+
+  @testset "Combiner for block deficient ITensor" begin
+    i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+    j = settags(i,"j")
+    A = ITensor(i,j,dag(i'))
+    A[1,1,1] = 1.0
+    C,_ = combiner(i,j; tags="c")
+    AC = A*C
+    Ap = AC*dag(C)
+    @test norm(A-Ap) ≈ 0.0
+    @test norm(Ap-A) ≈ 0.0
+  end
 
   @testset "Contract to scalar" begin
     i = Index([QN(0)=>1,QN(1)=>1],"i")
@@ -435,6 +477,344 @@ using ITensors,
     @test nnzblocks(c) == 1
     @test c[] isa Float64
     @test c[] ≈ norm(A)^2
+  end
+
+  @testset "svd" begin
+
+    @testset "svd example 1" begin
+      i = Index(QN(0)=>2,QN(1)=>2; tags="i")
+      j = Index(QN(0)=>2,QN(1)=>2; tags="j")
+      A = randomITensor(QN(0),i,dag(j))
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 2" begin
+      i = Index(QN(0)=>5,QN(1)=>6; tags="i")
+      j = Index(QN(-1)=>2,QN(0)=>3,QN(1)=>4; tags="j")
+      A = randomITensor(QN(0),i,j)
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 3" begin
+      i = Index(QN(0)=>5,QN(1)=>6; tags="i")
+      j = Index(QN(-1)=>2,QN(0)=>3,QN(1)=>4; tags="j")
+      A = randomITensor(QN(0),i,dag(j))
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 4" begin
+			i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+			j = settags(i,"j")
+
+			A = randomITensor(QN(0,2),i,j,dag(i'),dag(j'))
+
+			U,S,V = svd(A,i,j)
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0,2)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 5" begin
+			i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+			j = settags(i,"j")
+
+			A = randomITensor(QN(1,2),i,j,dag(i'),dag(j'))
+
+			U,S,V = svd(A,i,j)
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1,2)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd example 6" begin
+			i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
+			j = settags(i,"j")
+
+			A = randomITensor(QN(1,2),i,j,dag(i'),dag(j'))
+
+			U,S,V = svd(A,i,i')
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1,2)
+      end
+      U,S,V = svd(A,i)
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
+      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+    end
+
+    @testset "svd truncation example 1" begin
+      i = Index(QN(0)=>2,QN(1)=>3; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(0),i,j,dag(i'),dag(j'))
+      for i = 1:4
+        A = mapprime(A*A',2,1)
+      end
+      A = A/norm(A)
+
+      cutoff = 1e-5
+      U,S,V,spec = svd(A,i,j; utags="x", vtags="y", cutoff=cutoff)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(V,(i',j',v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+
+      Ap = U*S*V
+
+      @test norm(Ap-A) ≤ 1e-2
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      @test spec.truncerr ≤ cutoff
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test err ≤ cutoff
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
+    @testset "svd truncation example 2" begin
+      i = Index(QN(0)=>3,QN(1)=>2; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(0),i,j,dag(i'),dag(j'))
+
+      maxdim = 4
+      U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(V,(i',j',v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(0)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+
+      @test minimum(dims(S)) == maxdim
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
+    @testset "svd truncation example 3" begin
+      i = Index(QN(0)=>2,QN(1)=>3,QN(2)=>4; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(1),i,j,dag(i'),dag(j'))
+
+      maxdim = 4
+      U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(V,(i',j',v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0)
+      end
+
+      @test minimum(dims(S)) == maxdim
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
+    @testset "svd truncation example 4" begin
+      i = Index(QN(0,2)=>3,QN(1,2)=>4; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(1,2),i,j,dag(i'),dag(j'))
+
+      maxdim = 4
+      U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(V,(i',j',v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1,2)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
+
+      @test minimum(dims(S)) == maxdim
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
+    @testset "svd truncation example 5" begin
+      i = Index(QN(0,2)=>2,QN(1,2)=>3; tags="i")
+      j = settags(i,"j")
+      A = randomITensor(QN(1,2),i,j,dag(i'),dag(j'))
+
+      maxdim = 4
+      U,S,V,spec = svd(A,i,j'; utags="x", vtags="y", maxdim=maxdim)
+
+      u = commonindex(S,U)
+      v = commonindex(S,V)
+
+      @test hastags(u,"x")
+      @test hastags(v,"y")
+
+      @test hassameinds(U,(i,j',u))
+      @test hassameinds(V,(i',j,v))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(1,2)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0,2)
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN(1,2)
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN(0,2)
+      end
+
+      @test minimum(dims(S)) == maxdim
+      @test minimum(dims(S)) == length(spec.eigs)
+      @test minimum(dims(S)) < dim(i)*dim(j)
+
+      Ap = U*S*V
+      err = 1-(Ap*dag(Ap))[]/(A*dag(A))[]
+      @test isapprox(err,spec.truncerr; rtol=1e-6)
+    end
+
   end
 
 end

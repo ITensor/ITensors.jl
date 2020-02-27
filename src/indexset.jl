@@ -18,7 +18,8 @@ export IndexSet,
        mindim,
        maxdim,
        push,
-       permute
+       permute,
+       hasqns
 
 struct IndexSet{N}
   inds::SizedVector{N,Index}
@@ -143,7 +144,7 @@ end
 Base.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
 Base.stride(is::IndexSet,k::Integer) = strides(is)[k]
 
-dag(is::IndexSet) = IndexSet(dag.(is.inds))
+Tensors.dag(is::IndexSet) = IndexSet(dag.(is.inds))
 
 # Allow iteration
 Base.iterate(is::IndexSet{N},state::Int=1) where {N} = state > N ? nothing : (is[state], state+1)
@@ -542,6 +543,12 @@ function swaptags!(is::IndexSet,
 end
 swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 
+Tensors.dense(::Type{IndexSetT}) where {IndexSetT<:IndexSet} = IndexSet
+
+Tensors.dense(is::IndexSet) = IndexSet(dense(is...))
+
+Tensors.dense(inds::Index...) = inds
+
 #
 # Helper functions for contracting ITensors
 #
@@ -571,6 +578,12 @@ function compute_contraction_labels(Ai::IndexSet{N1},
 
   return (NTuple{N1,Int}(Aind),NTuple{N2,Int}(Bind))
 end
+
+#
+# QN functions
+#
+
+hasqns(is::IndexSet) = any(hasqns,is)
 
 function readcpp(io::IO,::Type{IndexSet};kwargs...)
   format = get(kwargs,:format,"v3")

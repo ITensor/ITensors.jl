@@ -183,9 +183,14 @@ end
 # TODO: add a combine kwarg to choose if the QN blocks
 # get sorted and combined (could do it by default?)
 function Tensors.outer(i1::QNIndex,i2::QNIndex; tags="")
-  iR = Index((dir(i1)*qnblocks(i1))⊗(dir(i2)*qnblocks(i2)),tags)
-  return iR
+  if dir(i1) == dir(i2)
+    return Index(space(i1)⊗space(i2),dir(i1),tags)
+  else
+    return Index((dir(i1)*space(i1))⊗(dir(i2)*space(i2)),Out,tags)
+  end
 end
+
+Tensors.outer(i::QNIndex; tags="") = sim(i)
 
 function isless(qnb1::QNBlock, qnb2::QNBlock)
   return isless(qn(qnb1),qn(qnb2))
@@ -196,7 +201,7 @@ end
 #end
 
 function Tensors.permuteblocks(i::QNIndex,perm)
-  qnblocks_perm = qnblocks(i)[perm]
+  qnblocks_perm = space(i)[perm]
   return replaceqns(i,qnblocks_perm)
 end
 
@@ -226,11 +231,39 @@ function replaceqns(i::QNIndex,qns::QNBlocks)
   return Index(id(i),qns,dir(i),tags(i))
 end
 
+function Tensors.setblockdim!(i::QNIndex,newdim::Int,n::Int)
+  qns = space(i)
+  qns[n] = qn(qns[n]) => newdim
+  return i
+end
+
+function setblockqn!(i::QNIndex,newqn::QN,n::Int)
+  qns = space(i)
+  qns[n] = newqn => blockdim(qns[n])
+  return i
+end
+
+function Base.deleteat!(i::QNIndex,pos)
+  deleteat!(space(i),pos)
+  return i
+end
+
+function Base.resize!(i::QNIndex,n::Integer)
+  resize!(space(i),n)
+  return i
+end
+
 function combineblocks(i::QNIndex)
-  qnsR,perm,comb = combineblocks(qnblocks(i))
+  qnsR,perm,comb = combineblocks(space(i))
   iR = replaceqns(i,qnsR)
   return iR,perm,comb
 end
+
+hasqns(::QNIndex) = true
+
+Tensors.dense(inds::QNIndex...) = dense.(inds)
+
+Tensors.dense(i::QNIndex) = Index(id(i),dim(i),dir(i),tags(i))
 
 function Base.show(io::IO,
                    i::QNIndex)
@@ -241,7 +274,7 @@ function Base.show(io::IO,
     print(io,"($(dim(i))|id=$(idstr))$(primestring(tags(i)))")
   end
   println(io," <$(dir(i))>")
-  for (n,qnblock) in enumerate(qnblocks(i))
+  for (n,qnblock) in enumerate(space(i))
     println(io," $n: $qnblock")
   end
 end
