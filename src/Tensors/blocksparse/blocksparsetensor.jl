@@ -1134,7 +1134,7 @@ function Base.show(io::IO,
     # Print the location of the current block
     println(io,"Block: ",block)
     println(io,"Start: ",Tuple(blockstart(T,block)))
-    println(io,"End: ",Tuple(blockend(T,block)))
+    println(io,"End:   ",Tuple(blockend(T,block)))
     # Print the dimension of the current block
     println(io," ",Base.dims2string(blockdimsT))
     print_tensor(io,blockview(T,block))
