@@ -60,6 +60,9 @@ Base.similar(D::Dense,::Type{T}) where {T<:Number} = Dense(similar(data(D),T))
 Base.copy(D::Dense) = Dense(copy(data(D)))
 Base.copyto!(D1::Dense,D2::Dense) = copyto!(data(D1),data(D2))
 
+Base.conj(D::Dense{<:Real,VecT}) where {VecT} = D
+Base.conj(D::Dense{<:Complex,VecT}) where {VecT} = Dense(conj(data(D)))
+
 Base.fill!(D::Dense,v) = fill!(data(D),v)
 
 # TODO: should this do something different for SubArray?

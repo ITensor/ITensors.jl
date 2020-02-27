@@ -32,6 +32,9 @@ Base.complex(D::Diag) = Diag(complex(data(D)))
 
 Base.copy(D::Diag) = Diag(copy(data(D)))
 
+Base.conj(D::Diag{<:Real, VecT}) where {VecT} = D
+Base.conj(D::Diag{<:Complex, VecT}) where {VecT} = Diag(conj(data(D)))
+
 Base.eltype(::Diag{ElT}) where {ElT} = ElT
 Base.eltype(::Type{<:Diag{ElT}}) where {ElT} = ElT
 

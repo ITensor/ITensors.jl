@@ -25,6 +25,8 @@ using ITensors, Test
         "autompo.jl",
         "svd.jl",
         "qn.jl",
+        "qnindex.jl",
+        "itensor_blocksparse.jl",
         "readwrite.jl",
         "readme.jl",
         "examples.jl",

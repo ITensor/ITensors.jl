@@ -42,6 +42,8 @@ Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
 LinearAlgebra.norm(T::Tensor) = norm(store(T))
 
+Base.conj(T::Tensor) = Tensor(conj(store(T)), copy(inds(T)))
+
 Random.randn!(T::Tensor) = (randn!(store(T)); return T)
 
 function scale!(v::Vector,
