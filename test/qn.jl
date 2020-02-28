@@ -80,6 +80,9 @@ import ITensors.SmallString
 
     @test QN("P",0,2) + QN("P",1,2) == QN("P",1,2)
     @test QN("P",1,2) + QN("P",1,2) == QN("P",0,2)
+
+    # Arithmetic involving mixed-label QNs
+    @test QN()-QN("Sz",2) == QN("Sz",-2)
   end
 
   @testset "Ordering" begin

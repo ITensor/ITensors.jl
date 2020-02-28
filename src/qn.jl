@@ -147,33 +147,6 @@ function modulus(q::QN,name_)
   return 0
 end
 
-function combineqns(a::QN,b::QN,operation)
-  !isactive(b[1]) && return a
-
-  ma = MQNStorage(store(a))
-  for nb=1:maxQNs
-    !isactive(b[nb]) && break
-    bname = name(b[nb])
-    for na=1:maxQNs
-      aname = name(a[na])
-      if !isactive(ma[na])
-        ma[na] = b[nb]
-        break
-      elseif name(ma[na]) == bname
-        ma[na] = operation(ma[na],b[nb])
-        break
-      elseif (bname < aname) && (na==1 || bname > name(ma[na-1]))
-        for j=maxQNs:-1:(na+1)
-          ma[j] = ma[j-1]
-        end
-        ma[na] = b[nb]
-        break
-      end
-    end
-  end
-  return QN(QNStorage(ma))
-end
-
 function Base.zero(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
@@ -190,14 +163,6 @@ function Base.:*(dir::Arrow,qn::QN)
   return QN(mqn)
 end
 
-function Base.:+(a::QN,b::QN)
-  return combineqns(a,b,+)
-end
-
-function Base.:-(a::QN,b::QN)
-  return combineqns(a,b,-)
-end
-
 function Base.:-(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
@@ -205,6 +170,38 @@ function Base.:-(qn::QN)
   end
   return QN(mqn)
 end
+
+function Base.:+(a::QN,b::QN)
+  !isactive(b[1]) && return a
+
+  ma = MQNStorage(store(a))
+  for nb=1:maxQNs
+    !isactive(b[nb]) && break
+    bname = name(b[nb])
+    for na=1:maxQNs
+      aname = name(a[na])
+      if !isactive(ma[na])
+        ma[na] = b[nb]
+        break
+      elseif name(ma[na]) == bname
+        ma[na] = ma[na]+b[nb]
+        break
+      elseif (bname < aname) && (na==1 || bname > name(ma[na-1]))
+        for j=maxQNs:-1:(na+1)
+          ma[j] = ma[j-1]
+        end
+        ma[na] = b[nb]
+        break
+      end
+    end
+  end
+  return QN(QNStorage(ma))
+end
+
+function Base.:-(a::QN,b::QN)
+  return a+(-b)
+end
+
 
 function hasname(qn::QN,qv_find::QNVal)
   for qv in qn
