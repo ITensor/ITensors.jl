@@ -819,5 +819,3 @@ Random.seed!(1234)
 
 end
 
-end
-
