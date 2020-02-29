@@ -142,6 +142,22 @@ function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
   return U,D,spec
 end
 
+function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
+                             kwargs...) where {ElT,IndsT}
+  DM,UM = eigen(matrix(T))
+
+  dD = length(DM)
+  # Make the new indices to go onto U and V
+  u = eltype(IndsT)(dD)
+  v = eltype(IndsT)(dD)
+  Uinds = IndsT((ind(T,1),u))
+  Dinds = IndsT((u,v))
+  U = Tensor(Dense(vec(UM)),Uinds)
+  D = Tensor(Diag(DM),Dinds)
+  return U,D
+end
+
+
 function qr_positive(M::AbstractMatrix)
   sparseQ,R = qr(M)
   Q = convert(Matrix,sparseQ)
