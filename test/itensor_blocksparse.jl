@@ -47,6 +47,8 @@ Random.seed!(1234)
 
     @test flux(A) == QN(1)
     @test nnzblocks(A) == 1
+    
+    @test_throws ErrorException randomITensor(i,dag(j))
   end
 
   @testset "setindex!" begin
