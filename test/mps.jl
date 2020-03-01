@@ -49,7 +49,19 @@ include("util.jl")
         @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
       end
     end
-
+    @testset "vector of ivals input" begin
+      sites  = siteinds("S=1/2",N)
+      states = fill(0,N)
+      for j=1:N
+        states[j] = isodd(j) ? 1 : 2
+      end
+      ivals  = [state(sites[n],states[n]) for n=1:length(sites)]
+      psi = productMPS(ivals)
+      for j=1:N
+        sign = isodd(j) ? +1.0 : -1.0
+        @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
+      end
+    end
   end
 
   @testset "randomMPS" begin
@@ -105,6 +117,11 @@ include("util.jl")
     phi.A_ = deepcopy(psi.A_)
     xi = sum(psi, phi)
     @test inner(xi, xi) ≈ 4.0 * inner(psi, psi) 
+    # sum of many MPSs
+    Ks = [randomMPS(sites) for i in 1:3]
+    K12  = sum(Ks[1], Ks[2])
+    K123 = sum(K12, Ks[3])
+    @test inner(sum(Ks), K123) ≈ 3.0 atol=0.1
   end
 
   sites = siteinds(2,N)

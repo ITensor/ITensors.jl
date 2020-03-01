@@ -32,6 +32,9 @@ end
   P = copy(O)
   @test hasindex(P[1],sites[1])
   @test hasindex(P[1],prime(sites[1]))
+  # test constructor from Vector{ITensor}
+  K = randomMPO(sites)
+  @test ITensors.tensors(MPO(copy(ITensors.tensors(K)))) == ITensors.tensors(K)
 
   @testset "orthogonalize" begin
     phi = randomMPS(sites)
