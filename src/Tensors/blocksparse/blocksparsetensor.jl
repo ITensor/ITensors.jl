@@ -90,6 +90,7 @@ function BlockSparseTensor(blockoffsets::BlockOffsets,
   return BlockSparseTensor(Float64,blockoffsets,inds)
 end
 
+
 """
 BlockSparseTensor(::UndefInitializer,
                   blocks::Vector{Block{N}},
@@ -124,6 +125,11 @@ Construct a block sparse tensor with no blocks.
 """
 function BlockSparseTensor(inds)
   return BlockSparseTensor(BlockOffsets{length(inds)}(),inds)
+end
+
+function BlockSparseTensor(::Type{ElT},
+                           inds) where {ElT<:Number,N}
+  return BlockSparseTensor(ElT,BlockOffsets{length(inds)}(),inds)
 end
 
 """
