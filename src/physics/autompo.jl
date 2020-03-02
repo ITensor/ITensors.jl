@@ -397,11 +397,6 @@ function qn_svdMPO(ampo::AutoMPO,
     llinks[n+1] = Index(qi...;tags="Link,n=$n")
   end
 
-  # TODO debugging code:
-  for n=1:N+1
-    println("llinks[$n] = $(llinks[n])")
-  end
-
   H = MPO(N)
 
   # Constants which define MPO start/end scheme
@@ -484,8 +479,6 @@ function qn_svdMPO(ampo::AutoMPO,
       blockview(T,block) .= M
 
       IT = itensor(T)
-      @show IT
-      @show Op
       H[n] += IT * Op
     end
 
@@ -494,7 +487,7 @@ function qn_svdMPO(ampo::AutoMPO,
   L = ITensor(llinks[1])
   L[startState] = 1.0
 
-  R = ITensor(llinks[N+1])
+  R = ITensor(dag(llinks[N+1]))
   R[endState] = 1.0
 
   H[1] *= L
