@@ -47,6 +47,8 @@ const QNIndexVal = IndexVal{QNIndex}
 
 hasqns(::QNIndex) = true
 
+QNIndex() = Index(IDType(0),Pair{QN,Int}[],Out,TagSet(("",0)))
+
 function have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks,1)
   for n in 2:nblocks(qnblocks)
