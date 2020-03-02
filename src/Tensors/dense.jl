@@ -685,6 +685,22 @@ function eigenHermitian(T::DenseTensor{<:Number,N,IndsT},
   return U,D,spec
 end
 
+# eigendecomposition of an order-n tensor according to 
+# positions Lpos and Rpos
+function LinearAlgebra.eigen(T::DenseTensor{<:Number,N,IndsT},
+               Lpos::NTuple{NL,Int},
+               Rpos::NTuple{NR,Int};
+               kwargs...) where {N,IndsT,NL,NR}
+  M = permute_reshape(T,Lpos,Rpos)
+  UM,D = eigen(M;kwargs...)
+  u = ind(UM,2)
+  Linds = similar_type(IndsT,Val{NL})(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+  Uinds = push(Linds,u)
+  U = reshape(UM,Uinds)
+  return U,D
+end
+
+
 # qr decomposition of an order-n tensor according to 
 # positions Lpos and Rpos
 function LinearAlgebra.qr(T::DenseTensor{<:Number,N,IndsT},
