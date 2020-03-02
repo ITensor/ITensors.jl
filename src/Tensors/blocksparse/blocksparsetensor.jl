@@ -220,7 +220,8 @@ function blockstart(T::BlockSparseTensor{ElT,N},
       start_index[j] += blockdim(ind_j,block_j)
     end
   end
-  return CartesianIndex(Tuple(start_index))
+  #return CartesianIndex(Tuple(start_index))
+  return Tuple(start_index)
 end
 
 # Get the ending index of the block
@@ -233,14 +234,15 @@ function blockend(T::BlockSparseTensor{ElT,N},
       end_index[j] += blockdim(ind_j,block_j)
     end
   end
-  return CartesianIndex(Tuple(end_index))
+  #return CartesianIndex(Tuple(end_index))
+  return Tuple(end_index)
 end
 
 # Get the CartesianIndices for the range of indices
 # of the specified
 function blockindices(T::BlockSparseTensor{ElT,N},
                       block) where {ElT,N}
-  return blockstart(T,block):blockend(T,block)
+  return CartesianIndex(blockstart(T,block)):CartesianIndex(blockend(T,block))
 end
 
 """
@@ -1115,6 +1117,18 @@ end
 #  println("Number of nonzero blocks: ",nnzblocks(T))
 #end
 
+function _range2string(rangestart::NTuple{N,Int},
+                       rangeend::NTuple{N,Int}) where {N}
+  s = ""
+  for n in 1:N
+    s = string(s,rangestart[n],":",rangeend[n])
+    if n < N
+      s = string(s,", ")
+    end
+  end
+  return s
+end
+
 function Base.show(io::IO,
                    mime::MIME"text/plain",
                    T::BlockSparseTensor)
@@ -1124,10 +1138,11 @@ function Base.show(io::IO,
     blockdimsT = blockdims(T,block)
     # Print the location of the current block
     println(io,"Block: ",block)
-    println(io,"Start: ",Tuple(blockstart(T,block)))
-    println(io,"End: ",Tuple(blockend(T,block)))
+    println(io," [",_range2string(blockstart(T,block),blockend(T,block)),"]")
+    #println(io,"Start: ",Tuple(blockstart(T,block)))
+    #println(io,"End: ",Tuple(blockend(T,block)))
     # Print the dimension of the current block
-    println(io," ",Base.dims2string(blockdimsT))
+    #println(io,"   (",Base.dims2string(blockdimsT),")")
     print_tensor(io,blockview(T,block))
     println(io)
     println(io)
