@@ -446,7 +446,7 @@ function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     pl = commonindex(psi[b],psi[b+1])
     C,_ = combiner(Al,pl)
     psi_out[b] *= C
-    psi_out[b+1] *= C
+    psi_out[b+1] *= dag(C)
   end
 
   truncate!(psi_out;kwargs...)
