@@ -256,43 +256,92 @@ Base.iterate(E::TruncEigen, ::Val{:u}) = (E.u, Val(:v))
 Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
-function Tensors.eigenHermitian(A::ITensor,
-                                Linds=findinds(A,("",0)),
-                                Rinds=prime(IndexSet(Linds));
-                                kwargs...)
-  tags::TagSet = get(kwargs,:tags,"Link,eigen")
-  lefttags::TagSet = get(kwargs,:lefttags,tags)
-  righttags::TagSet = get(kwargs,:righttags,prime(tags))
-  Lis = commoninds(inds(A),IndexSet(Linds))
-  Ris = uniqueinds(inds(A),Lis)
-  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,DT,spec = eigenHermitian(tensor(A),Lpos,Rpos;kwargs...)
-  U,D = ITensor(UT),ITensor(DT)
-  u = commonindex(U,D)
-  settags!(U,lefttags,u)
-  settags!(D,lefttags,u)
-  u = settags(u,lefttags)
-  v = uniqueindex(D,U)
-  D *= δ(v,settags(u,righttags))
-  return TruncEigen(U,D,spec,u,v)
-end
+#function Tensors.eigenHermitian(A::ITensor,
+#                                Linds=findinds(A,("",0)),
+#                                Rinds=prime(IndexSet(Linds));
+#                                kwargs...)
+#  tags::TagSet = get(kwargs,:tags,"Link,eigen")
+#  lefttags::TagSet = get(kwargs,:lefttags,tags)
+#  righttags::TagSet = get(kwargs,:righttags,prime(tags))
+#  Lis = commoninds(inds(A),IndexSet(Linds))
+#  Ris = uniqueinds(inds(A),Lis)
+#  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+#  UT,DT,spec = eigenHermitian(tensor(A),Lpos,Rpos;kwargs...)
+#  U,D = ITensor(UT),ITensor(DT)
+#  u = commonindex(U,D)
+#  settags!(U,lefttags,u)
+#  settags!(D,lefttags,u)
+#  u = settags(u,lefttags)
+#  v = uniqueindex(D,U)
+#  D *= δ(v,settags(u,righttags))
+#  return TruncEigen(U,D,spec,u,v)
+#end
 
 function LinearAlgebra.eigen(A::ITensor,
                              Linds=findinds(A,("",0)),
                              Rinds=prime(IndexSet(Linds));
                              kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
-  Lis = commoninds(inds(A),IndexSet(Linds))
-  Ris = uniqueinds(inds(A),Lis)
-  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,DT = eigen(tensor(A),Lpos,Rpos;kwargs...)
-  U,D = ITensor(UT),ITensor(DT)
+  lefttags::TagSet = get(kwargs,:lefttags,tags)
+  righttags::TagSet = get(kwargs,:righttags,prime(tags))
+  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Ris = commoninds(inds(A),IndexSet(Rinds...))
+
+  CL,cL = combiner(Lis...)
+  CR,cR = combiner(Ris...)
+
+  AC = A*CR*CL
+
+  if inds(AC) != IndexSet(cL,cR)
+    AC = permute(AC,cL,cR)
+  end
+
+  UT,DT,spec = eigen(tensor(AC);kwargs...)
+  UC,D = itensor(UT),itensor(DT)
+
+  u = commonindex(UC,D)
+
+  if hasqns(A)
+    # Fix the flux of UC,D
+    # such that flux(UC) == QN()
+    # and flux(D) == flux(A)
+    for b in nzblocks(UC)
+      i1 = inds(UC)[1]
+      i2 = inds(UC)[2]
+      newqn = -dir(i2)*qn(i1,b[1])
+      setblockqn!(i2,newqn,b[2])
+      setblockqn!(u,newqn,b[2])
+    end
+  end
+
+  U = UC*dag(CL)
+
   u = commonindex(U,D)
-  settags!(U,tags,u)
-  settags!(D,tags,u)
-  u = settags(u,tags)
+  settags!(U,lefttags,u)
+  settags!(D,lefttags,u)
+  u = settags(u,lefttags)
   v = uniqueindex(D,U)
-  D *= δ(v,u')
-  return U,D,u
+  replaceindex!(D,v,settags(u,righttags))
+  v = settags(u,righttags)
+  return TruncEigen(U,D,spec,u,v)
 end
+
+#function LinearAlgebra.eigen(A::ITensor,
+#                             Linds=findinds(A,("",0)),
+#                             Rinds=prime(IndexSet(Linds));
+#                             kwargs...)
+#  tags::TagSet = get(kwargs,:tags,"Link,eigen")
+#  Lis = commoninds(inds(A),IndexSet(Linds))
+#  Ris = uniqueinds(inds(A),Lis)
+#  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+#  UT,DT = eigen(tensor(A),Lpos,Rpos;kwargs...)
+#  U,D = ITensor(UT),ITensor(DT)
+#  u = commonindex(U,D)
+#  settags!(U,tags,u)
+#  settags!(D,tags,u)
+#  u = settags(u,tags)
+#  v = uniqueindex(D,U)
+#  D *= δ(v,u')
+#  return U,D,u
+#end
 

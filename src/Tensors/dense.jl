@@ -527,8 +527,14 @@ function contract!(R::DenseTensor{<:Number,NR},
 
   # We do type promotion here for BLAS (to ensure
   # we contract DenseComplex*DenseComplex)
-  if storetype(T1) !== storetype(T2)
-    T1,T2 = promote(T1,T2)
+  #if storetype(T1) != storetype(T2)
+  #  T1,T2 = promote(T1,T2)
+  #end
+
+  if isreal(T1) && !isreal(T2)
+    T1 = complex(T1)
+  elseif !isreal(T1) && isreal(T2)
+    T2 = complex(T2)
   end
 
   _contract!(R,T1,T2,props,α,β)

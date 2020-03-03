@@ -670,18 +670,18 @@ function uncombine_block(block::Block{N},
   return blocks_uncomb
 end
 
-function uncombine_output(T::BlockSparseTensor{<:Number,N},
+function uncombine_output(T::BlockSparseTensor{ElT,N},
                           is,
                           combdim::Int,
                           blockperm::Vector{Int},
-                          blockcomb::Vector{Int}) where {N}
+                          blockcomb::Vector{Int}) where {ElT<:Number,N}
   ind_uncomb_perm = ⊗(setdiff(is,inds(T))...)
   inds_uncomb_perm = insertat(inds(T),ind_uncomb_perm,combdim)
   # Uncombine the blocks of T
   blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
   blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
   boffs_uncomb_perm,nnz_uncomb_perm = get_blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
-  T_uncomb_perm = Tensor(BlockSparse(boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
+  T_uncomb_perm = Tensor(BlockSparse(ElT,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
   R = reshape(T_uncomb_perm,is)
   return R
 end

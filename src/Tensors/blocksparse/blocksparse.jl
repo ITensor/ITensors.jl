@@ -35,7 +35,7 @@ function BlockSparse(::Type{ElT},
                      ::UndefInitializer,
                      blockoffsets::BlockOffsets,
                      dim::Integer; vargs...) where {ElT<:Number}
-  return BlockSparse(Vector{Float64}(undef,dim),blockoffsets; vargs...)
+  return BlockSparse(Vector{ElT}(undef,dim),blockoffsets; vargs...)
 end
 
 BlockSparse(blockoffsets::BlockOffsets,
@@ -101,15 +101,20 @@ Base.eltype(::Type{BlockSparse{T}}) where {T} = eltype(T)
 
 dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
 
-function Base.promote_rule(::Type{BlockSparse{T1}},
-                           ::Type{BlockSparse{T2}}) where {T1,T2}
-  return BlockSparse{promote_type(T1,T2)}
+function Base.promote_rule(::Type{<:BlockSparse{ElT1,VecT1,N}},
+                           ::Type{<:BlockSparse{ElT2,VecT2,N}}) where {ElT1,ElT2,VecT1,VecT2,N}
+  return BlockSparse{promote_type(ElT1,ElT2),promote_type(VecT1,VecT2),N}
 end
 
-function Base.convert(::Type{BlockSparse{R}},
-                      D::BlockSparse) where {R}
-  return BlockSparse{R}(convert(Vector{R},data(D)),
-                        blockoffsets(D))
+function Base.promote_rule(::Type{<:BlockSparse{ElT1,VecT1,N1}},
+                           ::Type{<:BlockSparse{ElT2,VecT2,N2}}) where {ElT1,ElT2,VecT1,VecT2,N1,N2}
+  return BlockSparse{promote_type(ElT1,ElT2),promote_type(VecT1,VecT2),NR} where {NR}
+end
+
+function Base.convert(::Type{<:BlockSparse{ElR,VecR,N}},
+                      D::BlockSparse{ElD,VecD,N}) where {ElR,VecR,N,ElD,VecD}
+  return BlockSparse(convert(VecR,data(D)),
+                     blockoffsets(D))
 end
 
 function Base.:*(D::BlockSparse,x::Number)

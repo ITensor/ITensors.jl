@@ -94,10 +94,10 @@ function _similar_from_dims(T::Tensor,::Type{S},dims) where {S<:Number}
   return Tensor(similar(store(T),S,dim(dims)),dims)
 end
 
-#function Base.convert(::Type{Tensor{<:Number,N,StoreR,Inds}},
-#                      T::Tensor{<:Number,N,<:Any,Inds}) where {N,Inds,StoreR}
-#  return Tensor(convert(StoreR,store(T)),copy(inds(T)))
-#end
+function Base.convert(::Type{<:Tensor{<:Number,N,StoreR,Inds}},
+                      T::Tensor{<:Number,N,<:Any,Inds}) where {N,Inds,StoreR}
+  return Tensor(convert(StoreR,store(T)),copy(inds(T)))
+end
 
 function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},inds) where {ElT,N,StoreT}
   return Tensor(zeros(StoreT,dim(inds)),inds)
@@ -108,18 +108,19 @@ function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},inds::Dims{N}) where {ElT,N,S
   return Tensor(zeros(StoreT,dim(inds)),inds)
 end
 
-function Base.promote_rule(::Type{<:Tensor{ElT1,N1,StoreT1}},
-                           ::Type{<:Tensor{ElT2,N2,StoreT2}}) where {ElT1,ElT2,
-                                                                     N1,N2,
-                                                                     StoreT1,StoreT2}
+function Base.promote_rule(::Type{<:Tensor{ElT1,N1,StoreT1,IndsT1}},
+                           ::Type{<:Tensor{ElT2,N2,StoreT2,IndsT2}}) where {ElT1,ElT2,
+                                                                            N1,N2,
+                                                                            StoreT1,StoreT2,
+                                                                            IndsT1,IndsT2}
   StoreR = promote_type(StoreT1,StoreT2)
   ElR = eltype(StoreR)
   return Tensor{ElR,N3,StoreR,IndsR} where {N3,IndsR}
 end
 
-function Base.promote_rule(::Type{Tensor{ElT1,N,StoreT1,Inds}},
-                           ::Type{Tensor{ElT2,N,StoreT2,Inds}}) where {ElT1,ElT2,N,
-                                                                       StoreT1,StoreT2,Inds}
+function Base.promote_rule(::Type{<:Tensor{ElT1,N,StoreT1,Inds}},
+                           ::Type{<:Tensor{ElT2,N,StoreT2,Inds}}) where {ElT1,ElT2,N,
+                                                                         StoreT1,StoreT2,Inds}
   StoreR = promote_type(StoreT1,StoreT2)
   ElR = eltype(StoreR)
   return Tensor{ElR,N,StoreR,Inds}
@@ -131,12 +132,18 @@ end
 
 # Convert the tensor type to the closest dense
 # type
-function dense(::Type{<:Tensor{ElT,N,StoreT,IndsT}}) where {ElT,N,StoreT,IndsT}
-  return Tensor{ElT,N,dense(StoreT),dense(IndsT)}
+function dense(::Type{<:Tensor{ElT,NT,StoreT,IndsT}}) where {ElT,NT,StoreT,IndsT}
+  return Tensor{ElT,NT,dense(StoreT),dense(IndsT)}
 end
 
-function StaticArrays.similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Type{IndsR}) where {N,ElT,StoreT,IndsR}
+function StaticArrays.similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Type{IndsR}) where {ElT,StoreT,IndsR}
   return Tensor{ElT,ndims(IndsR),StoreT,IndsR}
+end
+
+# Special version for BlockSparse
+function StaticArrays.similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT,NT},<:Any}},::Type{IndsR}) where {NT,ElT,VecT,IndsR}
+  NR = ndims(IndsR)
+  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
 end
 
 Base.BroadcastStyle(::Type{T}) where {T<:Tensor} = Broadcast.ArrayStyle{T}()
