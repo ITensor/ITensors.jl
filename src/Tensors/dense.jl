@@ -246,12 +246,6 @@ function Base.unsafe_convert(::Type{Ptr{ElT}},
   return Base.unsafe_convert(Ptr{ElT},data(store(T)))
 end
 
-# Convert a Dense Tensor to a Tensor with the specified storage
-function Base.convert(::Type{<:Tensor{<:Any,<:Any,StoreR}},
-                      T::DenseTensor) where {StoreR}
-  return Tensor(convert(StoreR,store(T)),inds(T))
-end
-
 # Reshape a DenseTensor using the specified dimensions
 # This returns a view into the same Tensor data
 function Base.reshape(T::DenseTensor,dims)
@@ -507,11 +501,11 @@ end
 
 function contract!(R::DenseTensor{<:Number,NR},
                    labelsR,
-                   T1::DenseTensor{<:Number,N1},
+                   T1::DenseTensor{ElT1,N1},
                    labelsT1,
-                   T2::DenseTensor{<:Number,N2},
+                   T2::DenseTensor{ElT2,N2},
                    labelsT2,
-                   α::Number=1,β::Number=0) where {N1,N2,NR}
+                   α::Number=1,β::Number=0) where {ElT1,ElT2,N1,N2,NR}
   if N1+N2==NR
     outer!(R,T1,T2)
     labelsRp = tuplecat(labelsT1,labelsT2)
@@ -525,16 +519,21 @@ function contract!(R::DenseTensor{<:Number,NR},
   props = ContractionProperties(labelsT1,labelsT2,labelsR)
   compute_contraction_properties!(props,T1,T2,R)
 
-  # We do type promotion here for BLAS (to ensure
-  # we contract DenseComplex*DenseComplex)
-  #if storetype(T1) != storetype(T2)
-  #  T1,T2 = promote(T1,T2)
-  #end
+  if ElT1 != ElT2
+    # TODO: use promote instead
+    # T1,T2 = promote(T1,T2)
 
-  if isreal(T1) && !isreal(T2)
-    T1 = complex(T1)
-  elseif !isreal(T1) && isreal(T2)
-    T2 = complex(T2)
+    ElR = promote_type(ElT1,ElT2)
+    if ElT1 != ElR
+      # TODO: get this working
+      # T1 = ElR.(T1)
+      T1 = one(ElR) * T1
+    end
+    if ElT2 != ElR
+      # TODO: get this working
+      # T2 = ElR.(T2)
+      T2 = one(ElR) * T2
+    end
   end
 
   _contract!(R,T1,T2,props,α,β)
@@ -678,18 +677,18 @@ end
 
 # eigendecomposition of an order-n tensor according to 
 # positions Lpos and Rpos
-function eigenHermitian(T::DenseTensor{<:Number,N,IndsT},
-                        Lpos::NTuple{NL,Int},
-                        Rpos::NTuple{NR,Int};
-                        kwargs...) where {N,IndsT,NL,NR}
-  M = permute_reshape(T,Lpos,Rpos)
-  UM,D,spec = eigenHermitian(M;kwargs...)
-  u = ind(UM,2)
-  Linds = similar_type(IndsT,Val{NL})(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
-  Uinds = push(Linds,u)
-  U = reshape(UM,Uinds)
-  return U,D,spec
-end
+#function eigen(T::DenseTensor{<:Number,N,IndsT},
+#               Lpos::NTuple{NL,Int},
+#               Rpos::NTuple{NR,Int};
+#               kwargs...) where {N,IndsT,NL,NR}
+#  M = permute_reshape(T,Lpos,Rpos)
+#  UM,D,spec = eigen(M;kwargs...)
+#  u = ind(UM,2)
+#  Linds = similar_type(IndsT,Val{NL})(ntuple(i->inds(T)[Lpos[i]],Val(NL)))
+#  Uinds = push(Linds,u)
+#  U = reshape(UM,Uinds)
+#  return U,D,spec
+#end
 
 # qr decomposition of an order-n tensor according to 
 # positions Lpos and Rpos

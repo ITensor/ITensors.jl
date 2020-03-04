@@ -140,12 +140,6 @@ function StaticArrays.similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Ty
   return Tensor{ElT,ndims(IndsR),StoreT,IndsR}
 end
 
-# Special version for BlockSparse
-function StaticArrays.similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT,NT},<:Any}},::Type{IndsR}) where {NT,ElT,VecT,IndsR}
-  NR = ndims(IndsR)
-  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
-end
-
 Base.BroadcastStyle(::Type{T}) where {T<:Tensor} = Broadcast.ArrayStyle{T}()
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}},
