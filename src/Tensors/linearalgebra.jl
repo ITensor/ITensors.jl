@@ -1,5 +1,4 @@
 export polar,
-       eigenHermitian,
        Spectrum
 
 #
@@ -36,7 +35,7 @@ end
 """
   Spectrum
 contains the (truncated) density matrix eigenvalue spectrum which is computed during a
-decomposition done by `svd` or `eigenHermitian`. In addition stores the truncation error.
+decomposition done by `svd` or `eigen`. In addition stores the truncation error.
 """
 struct Spectrum
   eigs::Vector{Float64}
@@ -101,14 +100,8 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   return U,S,V,spec
 end
 
-dims(H::Hermitian{ElT,<:DenseTensor{ElT,2}}) where {ElT} = dims(parent(H))
-matrix(H::Hermitian{ElT,<:DenseTensor{ElT,2}}) where {ElT} = matrix(parent(H))
-ind(H::Hermitian{ElT,<:DenseTensor{ElT,2}},i::Int) where {ElT} = ind(parent(H),i)
-
 function LinearAlgebra.eigen(T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
                              kwargs...) where {ElT<:Union{Real,Complex},IndsT}
-  #ispossemidef::Bool = get(kwargs,:ispossemidef,false)
-
   truncate = haskey(kwargs,:maxdim) || haskey(kwargs,:cutoff)
   maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
   mindim::Int = get(kwargs,:mindim,1)
@@ -116,7 +109,7 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
 
-  DM,UM = eigen(Hermitian(matrix(T)))
+  DM,UM = eigen(matrix(T))
 
   # Sort by largest to smallest eigenvalues
   p = sortperm(DM; rev = true)

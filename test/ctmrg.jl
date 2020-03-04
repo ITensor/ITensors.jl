@@ -24,12 +24,11 @@ function ctmrg(T::ITensor,
     lr = findindex(Clu⁽¹⁾,"link,right")
     sr = findindex(Clu⁽¹⁾,"site,right")
 
-    Ud,Cdr = eigenHermitian(Clu⁽¹⁾, (ld,sd), (lr,sr);
-                            ispossemidef=true,
-                            maxdim=χmax,
-                            lefttags="link,down,renorm",
-                            righttags="link,right,renorm",
-                            truncate=true)
+    Ud,Cdr = eigen(Clu⁽¹⁾, (ld,sd), (lr,sr); ishermitian=true,
+                                             maxdim=χmax,
+                                             lefttags="link,down,renorm",
+                                             righttags="link,right,renorm",
+                                             truncate=true)
 
     ## The renormalized CTM is the diagonal matrix of eigenvalues
     Clu = replacetags(Cdr,"renorm","orig")

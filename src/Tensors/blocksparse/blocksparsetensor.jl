@@ -7,6 +7,14 @@ export BlockSparseTensor,
 
 const BlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
+# Special version for BlockSparseTensor
+# Generic version doesn't work since BlockSparse us parametrized by
+# the Tensor order
+function StaticArrays.similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT,NT},<:Any}},::Type{IndsR}) where {NT,ElT,VecT,IndsR}
+  NR = ndims(IndsR)
+  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
+end
+
 blockoffsets(T::BlockSparseTensor) = blockoffsets(store(T))
 nnzblocks(T::BlockSparseTensor) = nnzblocks(store(T))
 nnz(T::BlockSparseTensor) = nnz(store(T))

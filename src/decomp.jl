@@ -184,8 +184,8 @@ function _factorize_from_left_eigen(A::ITensor,
                                     kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
-  FU,D,spec = eigenHermitian(A²,Lis,prime(Lis); ispossemidef=true,
-                                           kwargs...)
+  FU,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
+                                       kwargs...)
   FV = dag(FU)*A
   return FU,FV,spec,commonindex(FU,FV)
 end
@@ -195,8 +195,8 @@ function _factorize_from_right_eigen(A::ITensor,
                                      kwargs...)
   Ris = uniqueinds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
-  FV,D,spec = eigenHermitian(A²,Ris,prime(Ris); ispossemidef=true,
-                             kwargs...)
+  FV,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
+                                       kwargs...)
   FU = A*dag(FV)
   return FU,FV,spec,commonindex(FU,FV)
 end
@@ -238,7 +238,7 @@ end
 """
   TruncEigen{N}
 ITensor factorization type for a truncated eigenvalue decomposition, returned by
-`eigenHermitian`.
+`eigen`.
 """
 struct TruncEigen{N}
   U::ITensor{N}
@@ -256,36 +256,17 @@ Base.iterate(E::TruncEigen, ::Val{:u}) = (E.u, Val(:v))
 Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
-#function Tensors.eigenHermitian(A::ITensor,
-#                                Linds=findinds(A,("",0)),
-#                                Rinds=prime(IndexSet(Linds));
-#                                kwargs...)
-#  tags::TagSet = get(kwargs,:tags,"Link,eigen")
-#  lefttags::TagSet = get(kwargs,:lefttags,tags)
-#  righttags::TagSet = get(kwargs,:righttags,prime(tags))
-#  Lis = commoninds(inds(A),IndexSet(Linds))
-#  Ris = uniqueinds(inds(A),Lis)
-#  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-#  UT,DT,spec = eigenHermitian(tensor(A),Lpos,Rpos;kwargs...)
-#  U,D = ITensor(UT),ITensor(DT)
-#  u = commonindex(U,D)
-#  settags!(U,lefttags,u)
-#  settags!(D,lefttags,u)
-#  u = settags(u,lefttags)
-#  v = uniqueindex(D,U)
-#  D *= δ(v,settags(u,righttags))
-#  return TruncEigen(U,D,spec,u,v)
-#end
-
 function LinearAlgebra.eigen(A::ITensor,
                              Linds=findinds(A,("",0)),
                              Rinds=prime(IndexSet(Linds));
                              kwargs...)
+  ishermitian::Bool = get(kwargs,:ishermitian,false)
   tags::TagSet = get(kwargs,:tags,"Link,eigen")
   lefttags::TagSet = get(kwargs,:lefttags,tags)
   righttags::TagSet = get(kwargs,:righttags,prime(tags))
-  Lis = commoninds(inds(A),IndexSet(Linds...))
-  Ris = commoninds(inds(A),IndexSet(Rinds...))
+
+  Lis = commoninds(inds(A),IndexSet(Linds))
+  Ris = commoninds(inds(A),IndexSet(Rinds))
 
   CL,cL = combiner(Lis...)
   CR,cR = combiner(Ris...)
@@ -296,7 +277,8 @@ function LinearAlgebra.eigen(A::ITensor,
     AC = permute(AC,cL,cR)
   end
 
-  UT,DT,spec = eigen(tensor(AC);kwargs...)
+  AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
+  UT,DT,spec = eigen(AT;kwargs...)
   UC,D = itensor(UT),itensor(DT)
 
   u = commonindex(UC,D)
