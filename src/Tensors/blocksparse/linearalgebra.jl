@@ -38,13 +38,6 @@ end
 
 function _svd_truncate(T::BlockSparseMatrix{ElT};
                        kwargs...) where {ElT}
-  #maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
-  #mindim::Int = get(kwargs,:mindim,1)
-  #cutoff::Float64 = get(kwargs,:cutoff,0.0)
-  #absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
-  #doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
-  #fastSVD::Bool = get(kwargs,:fastSVD,false)
-
   Us = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
   Ss = Vector{BlockSparseMatrix{real(ElT)}}(undef,nnzblocks(T))
   Vs = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
