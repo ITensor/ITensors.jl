@@ -556,7 +556,7 @@ end
       is = IndexSet(i,j)
       T = randomITensor(is...,prime(is)...)
       T = T + swapprime(dag(T),0,1)
-      U,D,spec,u = eigenHermitian(T)
+      U,D,spec,u = eigen(T; ishermitian=true)
       @test T ≈ U*D*prime(dag(U))
       UUᴴ =  U*prime(dag(U),u)
       @test UUᴴ ≈ δ(u,u') atol=1e-14

@@ -12,7 +12,6 @@ using ITensors,
 
   @testset "Array of QN Constructor" begin
     i = Index([QN(0)=>1,QN(1)=>2],"i")
-
     @test hasqns(i)
     @test dim(i) == 3
     @test hastags(i,"i")

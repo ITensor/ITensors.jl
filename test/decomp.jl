@@ -1,5 +1,5 @@
 using ITensors,
-      Test
+      LinearAlgebra, Test
 
 a = [-0.1, -0.12]
 @test ITensors.truncate!(a) == (0., 0.)
@@ -13,6 +13,11 @@ j = Index(2,"j")
 A = randomITensor(i,j)
 @test_throws ArgumentError factorize(A, i, dir="fakedir")
 
+
+A = randomITensor(i,i')
+eigA = eigen(A)
+eigArr = eigen(array(A))
+@test diag(array(eigA.D), 0) == eigArr.values
 
 @testset "Spectrum" begin
   i = Index(100,"i")

@@ -47,6 +47,8 @@ Random.seed!(1234)
 
     @test flux(A) == QN(1)
     @test nnzblocks(A) == 1
+    
+    @test_throws ErrorException randomITensor(i,dag(j))
   end
 
   @testset "setindex!" begin
@@ -479,6 +481,107 @@ Random.seed!(1234)
     @test c[] ≈ norm(A)^2
   end
 
+  @testset "eigen" begin
+
+    @testset "eigen hermitian" begin
+      i = Index(QN(0)=>2,QN(1)=>3,QN(2)=>4; tags="i")
+      j = settags(i,"j")
+      k = settags(i,"k")
+      l = settags(i,"l")
+
+      A = randomITensor(QN(),i,j,dag(k),dag(l))
+      A = A*prime(dag(A),(i,j))
+
+      U,D = eigen(A; ishermitian=true, tags="x")
+
+      u = commonindex(D,U)
+      up = uniqueindex(D,U)
+
+      @test hastags(u,"x")
+      @test plev(u) == 0
+      @test hastags(up,"x")
+      @test plev(up) == 1
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(D,(u,up))
+
+      @test norm(A-U*D*dag(U)') ≈ 0.0 atol=1e-11
+      @test norm(A*U'-U*D) ≈ 0.0 atol=1e-11
+    end
+
+    @testset "eigen hermitian (truncate)" begin
+      i = Index(QN(0)=>2,QN(1)=>3,QN(2)=>4; tags="i")
+      j = settags(i,"j")
+      k = settags(i,"k")
+      l = settags(i,"l")
+
+      A = randomITensor(QN(),i,j,dag(k),dag(l))
+      A = A*prime(dag(A),(i,j))
+      for i = 1:4
+        A = mapprime(A*A',2,1)
+      end
+      A = A/norm(A)
+
+      cutoff = 1e-5
+      U,D,spec = eigen(A; ishermitian=true,
+                          tags="x",
+                          cutoff=cutoff)
+
+      u = commonindex(D,U)
+      up = uniqueindex(D,U)
+
+      @test hastags(u,"x")
+      @test plev(u) == 0
+      @test hastags(up,"x")
+      @test plev(up) == 1
+
+      @test hassameinds(U,(i,j,u))
+      @test hassameinds(D,(u,up))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN(0)
+      end
+      for b in nzblocks(U)
+        @test flux(U,b)==QN(0)
+      end
+      for b in nzblocks(D)
+        @test flux(D,b)==QN(0)
+      end
+
+      Ap = U*D*dag(U)'
+
+      @test norm(Ap-A) ≤ 1e-2
+      @test minimum(dims(D)) == length(spec.eigs)
+      @test minimum(dims(D)) < dim(i)*dim(j)
+
+      @test spec.truncerr ≤ cutoff
+      err = sqrt(1-(Ap*dag(Ap))[]/(A*dag(A))[])
+      @test err ≤ cutoff
+      @test err ≈ spec.truncerr rtol=1e-1
+		end
+
+    @testset "eigen non-hermitian" begin
+      i = Index(QN(0)=>2,QN(1)=>3,QN(2)=>4; tags="i")
+      j = settags(i,"j")
+
+      A = randomITensor(QN(),i,j,dag(i'),dag(j'))
+
+      U,D = eigen(A; tags="x")
+
+      u = commonindex(D,U)
+      up = uniqueindex(D,U)
+
+      @test hastags(u,"x")
+      @test plev(u) == 0
+      @test hastags(up,"x")
+      @test plev(up) == 1
+
+      @test norm(A-U*D*dag(U)') ≉ 0.0 atol=1e-12
+      @test norm(A*U'-U*D) ≈ 0.0 atol=1e-12
+    end
+
+  end
+
   @testset "svd" begin
 
     @testset "svd example 1" begin
@@ -816,8 +919,6 @@ Random.seed!(1234)
     end
 
   end
-
-end
 
 end
 

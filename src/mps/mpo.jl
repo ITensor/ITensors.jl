@@ -401,10 +401,10 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     ρ     = E[n-1] * O * dag(prime(O, rand_plev))
     ts    = tags(commonindex(psi[n], psi[n-1]))
     Lis   = commonindex(ρ, A[n])
-    Ris   = uniqueinds(ρ, Lis)
-    FU, D = eigenHermitian(ρ, Lis, Ris; ispossemidef=true, 
-                                        tags=ts, 
-                                        kwargs...)
+    Ris   = prime(Lis, rand_plev)
+    FU, D = eigen(ρ, Lis, Ris; ishermitian=true, 
+                               tags=ts, 
+                               kwargs...)
     psi_out[n] = setprime(dag(FU), 0, "Site")
     O     = O * FU * psi[n-1] * A[n-1]
     O     = prime(O, -1, "Site")
@@ -413,10 +413,11 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
         ρ   = E[j-1] * O * dO
         ts  = tags(commonindex(psi[j], psi[j-1]))
         Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
-        Ris = uniqueinds(ρ, Lis)
-        FU, D = eigenHermitian(ρ, Lis, Ris; ispossemidef=true,
-                                            tags=ts, 
-                                            kwargs...)
+        #Ris = uniqueinds(ρ, Lis)
+        Ris = prime(Lis, rand_plev)
+        FU, D = eigen(ρ, Lis, Ris; ishermitian=true,
+                                   tags=ts, 
+                                   kwargs...)
         psi_out[j] = dag(FU)
         O = O * FU * psi[j-1] * A[j-1]
         O = prime(O, -1, "Site")
