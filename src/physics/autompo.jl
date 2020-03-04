@@ -403,6 +403,15 @@ function qn_svdMPO(ampo::AutoMPO,
   startState = 2
   endState = 1
 
+
+  # TODO debug
+  for n=1:N
+    println("---------------------------\n")
+    println("n = $n")
+    @show tempMPO[n]
+    println("---------------------------\n")
+  end
+
   for n=1:N
     finalMPO = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
 
