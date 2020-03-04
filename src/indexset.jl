@@ -21,20 +21,22 @@ export IndexSet,
        permute,
        hasqns
 
-struct IndexSet{N}
-  inds::SizedVector{N,Index}
-  IndexSet{N}(inds::SizedVector{N,<:Index}) where {N} = new{N}(inds)
-  IndexSet{N}(inds::SVector{N,<:Index}) where {N} = new{N}(inds)
-  IndexSet{N}(inds::MVector{N,<:Index}) where {N} = new{N}(inds)
-  IndexSet{0}(::MVector{0}) = new{0}(())
-  IndexSet{N}(inds::NTuple{N,<:Index}) where {N} = new{N}(inds)
-  IndexSet{0}() = new{0}(())
-  IndexSet{0}(::Tuple{}) = new{0}(())
+struct IndexSet{N,IndexT<:Index}
+  inds::SizedVector{N,IndexT}
+  IndexSet{N}(inds::SizedVector{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
+  IndexSet{N}(inds::SVector{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
+  IndexSet{N}(inds::MVector{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
+  IndexSet{0}(::MVector{0}) = new{0,Index}(())
+  IndexSet{N}(inds::NTuple{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
+  IndexSet{0}() = new{0,Index}(())
+  IndexSet{0}(::Tuple{}) = new{0,Index}(())
 end
 IndexSet(inds::SizedVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::SVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::MVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::NTuple{N,<:Index}) where {N} = IndexSet{N}(inds)
+
+IndexSet{N,IndexT}(inds::NTuple{N,IndexT}) where {N,IndexT<:Index} = IndexSet(inds)
 
 # TODO: what is this used for? Should we have this?
 # It is not type stable.
@@ -72,7 +74,7 @@ IndexSet(is1::IndexSet,is2::IndexSet) = IndexSet(is1...,is2...)
 # This is used in type promotion in the Tensor contraction code
 Base.promote_rule(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
 
-Tensors.ValLength(::Type{IndexSet{N}}) where {N} = Val{N}
+Tensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
 Tensors.ValLength(::IndexSet{N}) where {N} = Val(N)
 
 StaticArrays.popfirst(is::IndexSet) = IndexSet(popfirst(store(is))) 
@@ -107,19 +109,19 @@ function StaticArrays.setindex(is::IndexSet,i::Index,n::Integer)
 end
 
 Base.length(is::IndexSet{N}) where {N} = N
-Base.length(::Type{IndexSet{N}}) where {N} = N
+Base.length(::Type{<:IndexSet{N}}) where {N} = N
 order(is::IndexSet) = length(is)
 Base.copy(is::IndexSet) = IndexSet(copy(is.inds))
 Tensors.dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 Base.ndims(::IndexSet{N}) where {N} = N
-Base.ndims(::Type{IndexSet{N}}) where {N} = N
+Base.ndims(::Type{<:IndexSet{N}}) where {N} = N
 Tensors.dim(is::IndexSet) = prod(dim.(is))
 Tensors.dim(is::IndexSet{0}) = 1
 Tensors.dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
 # To help with generic code in Tensors
 Base.ndims(::NTuple{N,IndT}) where {N,IndT<:Index} = N
-Base.ndims(::Type{NTuple{N,IndT}}) where {N,IndT<:Index} = N
+Base.ndims(::Type{<:NTuple{N,IndT}}) where {N,IndT<:Index} = N
 
 function Tensors.insertat(is1::IndexSet,
                           is2,
@@ -543,7 +545,7 @@ function swaptags!(is::IndexSet,
 end
 swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
 
-Tensors.dense(::Type{IndexSetT}) where {IndexSetT<:IndexSet} = IndexSet
+Tensors.dense(::Type{<:IndexSet}) = IndexSet
 
 Tensors.dense(is::IndexSet) = IndexSet(dense(is...))
 
@@ -585,7 +587,7 @@ end
 
 hasqns(is::IndexSet) = any(hasqns,is)
 
-function readcpp(io::IO,::Type{IndexSet};kwargs...)
+function readcpp(io::IO,::Type{<:IndexSet};kwargs...)
   format = get(kwargs,:format,"v3")
   is = IndexSet()
   if format=="v3"
@@ -617,7 +619,7 @@ end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
                    name::AbstractString,
-                   ::Type{IndexSet})
+                   ::Type{<:IndexSet})
   g = g_open(parent,name)
   if read(attrs(g)["type"]) != "IndexSet"
     error("HDF5 group or file does not contain IndexSet data")
