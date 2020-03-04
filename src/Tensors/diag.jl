@@ -131,10 +131,9 @@ Base.IndexStyle(::Type{<:DiagTensor}) = IndexCartesian()
 
 # TODO: this needs to be better (promote element type, check order compatibility,
 # etc.
-function Base.convert(::Type{<:Tensor{ElT,N,<:Dense}}, T::DiagTensor{ElT,N}) where {ElT,N}
+function Base.convert(::Type{<:DenseTensor{ElT,N}}, T::DiagTensor{ElT,N}) where {ElT<:Number,N}
   return dense(T)
 end
-
 
 # These are rules for determining the output of a pairwise contraction of Tensors
 # (given the indices of the output tensors)

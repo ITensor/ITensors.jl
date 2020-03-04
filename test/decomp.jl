@@ -17,7 +17,7 @@ A = randomITensor(i,j)
 A = randomITensor(i,i')
 eigA = eigen(A)
 eigArr = eigen(array(A))
-@test diag(array(eigA[2]), 0) == eigArr.values
+@test diag(array(eigA.D), 0) == eigArr.values
 
 @testset "Spectrum" begin
   i = Index(100,"i")

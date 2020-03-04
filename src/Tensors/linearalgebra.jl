@@ -1,5 +1,4 @@
 export polar,
-       eigenHermitian,
        Spectrum
 
 #
@@ -36,7 +35,7 @@ end
 """
   Spectrum
 contains the (truncated) density matrix eigenvalue spectrum which is computed during a
-decomposition done by `svd` or `eigenHermitian`. In addition stores the truncation error.
+decomposition done by `svd` or `eigen`. In addition stores the truncation error.
 """
 struct Spectrum
   eigs::Vector{Float64}
@@ -101,27 +100,27 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   return U,S,V,spec
 end
 
-function eigenHermitian(T::DenseTensor{ElT,2,IndsT};
-                        kwargs...) where {ElT,IndsT}
-  ispossemidef::Bool = get(kwargs,:ispossemidef,false)
+function LinearAlgebra.eigen(T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
+                             kwargs...) where {ElT<:Union{Real,Complex},IndsT}
+  truncate = haskey(kwargs,:maxdim) || haskey(kwargs,:cutoff)
   maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
   mindim::Int = get(kwargs,:mindim,1)
   cutoff::Float64 = get(kwargs,:cutoff,0.0)
   absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
   doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
 
-  DM,UM = eigen(Hermitian(matrix(T)))
+  DM,UM = eigen(matrix(T))
 
   # Sort by largest to smallest eigenvalues
   p = sortperm(DM; rev = true)
   DM = DM[p]
   UM = UM[:,p]
 
-  if ispossemidef
+  if truncate
     truncerr,_ = truncate!(DM;maxdim=maxdim,
-                           cutoff=cutoff,
-                           absoluteCutoff=absoluteCutoff,
-                           doRelCutoff=doRelCutoff)
+                              cutoff=cutoff,
+                              absoluteCutoff=absoluteCutoff,
+                              doRelCutoff=doRelCutoff)
     dD = length(DM)
     if dD < size(UM,2)
       UM = UM[:,1:dD]
@@ -169,6 +168,49 @@ function qr_positive(M::AbstractMatrix)
     end
   end
   return (Q,R)
+end
+
+function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
+                             kwargs...) where {ElT<:Union{Real,Complex},IndsT}
+  #ispossemidef::Bool = get(kwargs,:ispossemidef,false)
+
+  truncate = haskey(kwargs,:maxdim) || haskey(kwargs,:cutoff)
+  maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
+  mindim::Int = get(kwargs,:mindim,1)
+  cutoff::Float64 = get(kwargs,:cutoff,0.0)
+  absoluteCutoff::Bool = get(kwargs,:absoluteCutoff,false)
+  doRelCutoff::Bool = get(kwargs,:doRelCutoff,true)
+
+  DM,UM = eigen(matrix(T))
+
+  # Sort by largest to smallest eigenvalues
+  #p = sortperm(DM; rev = true)
+  #DM = DM[p]
+  #UM = UM[:,p]
+
+  if truncate
+    truncerr,_ = truncate!(DM;maxdim=maxdim,
+                              cutoff=cutoff,
+                              absoluteCutoff=absoluteCutoff,
+                              doRelCutoff=doRelCutoff)
+    dD = length(DM)
+    if dD < size(UM,2)
+      UM = UM[:,1:dD]
+    end
+  else
+    dD = length(DM)
+    truncerr = 0.0
+  end
+  spec = Spectrum(abs.(DM),truncerr)
+
+  # Make the new indices to go onto U and V
+  u = eltype(IndsT)(dD)
+  v = eltype(IndsT)(dD)
+  Uinds = IndsT((ind(T,1),u))
+  Dinds = IndsT((u,v))
+  U = Tensor(Dense(vec(UM)),Uinds)
+  D = Tensor(Diag(DM),Dinds)
+  return U,D,spec
 end
 
 function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}

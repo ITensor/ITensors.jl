@@ -121,7 +121,7 @@ include("util.jl")
     Ks = [randomMPS(sites) for i in 1:3]
     K12  = sum(Ks[1], Ks[2])
     K123 = sum(K12, Ks[3])
-    @test inner(sum(Ks), K123) ≈ 3.0 atol=0.1
+    @test inner(sum(Ks), K123) ≈ inner(K123,K123)
   end
 
   sites = siteinds(2,N)

@@ -7,6 +7,14 @@ export BlockSparseTensor,
 
 const BlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
+# Special version for BlockSparseTensor
+# Generic version doesn't work since BlockSparse us parametrized by
+# the Tensor order
+function StaticArrays.similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT,NT},<:Any}},::Type{IndsR}) where {NT,ElT,VecT,IndsR}
+  NR = ndims(IndsR)
+  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
+end
+
 blockoffsets(T::BlockSparseTensor) = blockoffsets(store(T))
 nnzblocks(T::BlockSparseTensor) = nnzblocks(store(T))
 nnz(T::BlockSparseTensor) = nnz(store(T))
@@ -220,7 +228,8 @@ function blockstart(T::BlockSparseTensor{ElT,N},
       start_index[j] += blockdim(ind_j,block_j)
     end
   end
-  return CartesianIndex(Tuple(start_index))
+  #return CartesianIndex(Tuple(start_index))
+  return Tuple(start_index)
 end
 
 # Get the ending index of the block
@@ -233,14 +242,15 @@ function blockend(T::BlockSparseTensor{ElT,N},
       end_index[j] += blockdim(ind_j,block_j)
     end
   end
-  return CartesianIndex(Tuple(end_index))
+  #return CartesianIndex(Tuple(end_index))
+  return Tuple(end_index)
 end
 
 # Get the CartesianIndices for the range of indices
 # of the specified
 function blockindices(T::BlockSparseTensor{ElT,N},
                       block) where {ElT,N}
-  return blockstart(T,block):blockend(T,block)
+  return CartesianIndex(blockstart(T,block)):CartesianIndex(blockend(T,block))
 end
 
 """
@@ -668,18 +678,18 @@ function uncombine_block(block::Block{N},
   return blocks_uncomb
 end
 
-function uncombine_output(T::BlockSparseTensor{<:Number,N},
+function uncombine_output(T::BlockSparseTensor{ElT,N},
                           is,
                           combdim::Int,
                           blockperm::Vector{Int},
-                          blockcomb::Vector{Int}) where {N}
+                          blockcomb::Vector{Int}) where {ElT<:Number,N}
   ind_uncomb_perm = ⊗(setdiff(is,inds(T))...)
   inds_uncomb_perm = insertat(inds(T),ind_uncomb_perm,combdim)
   # Uncombine the blocks of T
   blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
   blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
   boffs_uncomb_perm,nnz_uncomb_perm = get_blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
-  T_uncomb_perm = Tensor(BlockSparse(boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
+  T_uncomb_perm = Tensor(BlockSparse(ElT,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
   R = reshape(T_uncomb_perm,is)
   return R
 end
@@ -1115,6 +1125,18 @@ end
 #  println("Number of nonzero blocks: ",nnzblocks(T))
 #end
 
+function _range2string(rangestart::NTuple{N,Int},
+                       rangeend::NTuple{N,Int}) where {N}
+  s = ""
+  for n in 1:N
+    s = string(s,rangestart[n],":",rangeend[n])
+    if n < N
+      s = string(s,", ")
+    end
+  end
+  return s
+end
+
 function Base.show(io::IO,
                    mime::MIME"text/plain",
                    T::BlockSparseTensor)
@@ -1124,10 +1146,11 @@ function Base.show(io::IO,
     blockdimsT = blockdims(T,block)
     # Print the location of the current block
     println(io,"Block: ",block)
-    println(io,"Start: ",Tuple(blockstart(T,block)))
-    println(io,"End: ",Tuple(blockend(T,block)))
+    println(io," [",_range2string(blockstart(T,block),blockend(T,block)),"]")
+    #println(io,"Start: ",Tuple(blockstart(T,block)))
+    #println(io,"End: ",Tuple(blockend(T,block)))
     # Print the dimension of the current block
-    println(io," ",Base.dims2string(blockdimsT))
+    #println(io,"   (",Base.dims2string(blockdimsT),")")
     print_tensor(io,blockview(T,block))
     println(io)
     println(io)
