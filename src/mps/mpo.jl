@@ -175,7 +175,7 @@ function simlinks!(M::T) where {T <: Union{MPS,MPO}}
     #M[i] *= δ(l,l̃)
     replaceindex!(M[i],l,l̃)
     #M[i+1] *= δ(l,l̃)
-    replaceindex!(M[i+1],l,l̃)
+    replaceindex!(M[i+1],l,dag(l̃))
   end
 end
 

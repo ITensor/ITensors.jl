@@ -184,7 +184,7 @@ end
 function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
-      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
+    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
   end
   M1dag = dag(M1)
   simlinks!(M1dag)
