@@ -96,11 +96,11 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
   @testset "Complex" begin
     A = ITensor(Complex,i,j)
-    @test store(A) isa Dense{ComplexF64}
+    @test store(A) isa Dense{Complex}
   end
 
   @testset "Random complex" begin
-    A = randomITensor(Complex,i,j)
+    A = randomITensor(ComplexF64,i,j)
     @test store(A) isa Dense{ComplexF64}
   end
 

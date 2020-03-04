@@ -99,17 +99,24 @@ ITensor(is::IndexSet) = ITensor(Float64,is)
 ITensor() = ITensor{0}(Dense{Nothing}(),IndexSet())
 ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet{N}(inds...))
 
-function ITensor(::Type{T},
-                 inds::IndexSet{N}) where {T<:Number,N}
-  return ITensor{N}(Dense{float(T)}(zeros(float(T),dim(inds))),inds)
+function ITensor(::Type{ElT},
+                 inds::IndexSet{N}) where {ElT<:Number,N}
+  return ITensor{N}(Dense(ElT,dim(inds)),inds)
 end
-ITensor(::Type{T},inds::Index...) where {T<:Number} = ITensor(T,IndexSet(inds...))
+ITensor(::Type{ElT},inds::Index...) where {ElT<:Number} = ITensor(ElT,IndexSet(inds...))
+
+function ITensor(::Type{ElT},
+                 ::UndefInitializer,
+                 inds::IndexSet{N}) where {ElT<:Number,N}
+  return ITensor{N}(Dense(ElT,undef,dim(inds)),inds)
+end
+ITensor(::Type{ElT},::UndefInitializer,inds::Index...) where {ElT} = ITensor(ElT,undef,IndexSet(inds...))
 
 function ITensor(::UndefInitializer,
                  inds::IndexSet{N}) where {N}
-  return ITensor{N}(Dense{Float64}(Vector{Float64}(undef,dim(inds))),inds)
+  return ITensor{N}(Dense(undef,dim(inds)),inds)
 end
-ITensor(x::UndefInitializer,inds::Index...) = ITensor(x,IndexSet(inds...))
+ITensor(::UndefInitializer,inds::Index...) = ITensor(undef,IndexSet(inds...))
 
 function ITensor(x::S,inds::IndexSet{N}) where {S<:Number,N}
   return ITensor{N}(Dense{float(S)}(fill(float(x),dim(inds))),inds)
@@ -123,13 +130,16 @@ Construct a scalar ITensor with value `x`.
     ITensor(x,i,j,...)
 
 Construct an ITensor with indices `i`,`j`,...
-and all elements set to `x`.
+and all elements set to `float(x)`.
+
+Note that the ITensor storage will be the closest
+floating point version of the input value.
 """
 ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
 
 function ITensor(A::Array{S},inds::IndexSet{N}) where {S<:Number,N}
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
-  return ITensor{N}(Dense{float(S)}(float(vec(A))),inds)
+  return ITensor{N}(Dense(float(vec(A))),inds)
 end
 ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
 
@@ -146,7 +156,7 @@ The storage will have Diag type.
 """
 function diagITensor(::Type{T},
                      is::IndexSet{N}) where {T<:Number,N}
-  return ITensor{N}(Diag(zeros(T,mindim(is))),is)
+  return ITensor{N}(Diag(T,mindim(is)),is)
 end
 
 """
