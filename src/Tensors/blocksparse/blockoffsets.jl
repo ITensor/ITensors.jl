@@ -125,19 +125,19 @@ function new_block_pos(bofs::BlockOffsets{N},
 end
 
 # TODO: should this be a constructor?
-function get_blockoffsets(blocks::Vector{Block{N}},
-                          inds; sorted = true) where {N}
+function blockoffsets(blocks::Blocks{N},
+                      inds; sorted = true) where {N}
   if sorted
     blocks = sort(blocks;lt=isblockless)
   end
   blockoffsets = BlockOffsets{N}(undef,length(blocks))
-  offset_total = 0
+  nnz = 0
   for (i,block) in enumerate(blocks)
-    blockoffsets[i] = block=>offset_total
+    blockoffsets[i] = block=>nnz
     current_block_dim = blockdim(inds,block)
-    offset_total += current_block_dim
+    nnz += current_block_dim
   end
-  return blockoffsets,offset_total
+  return blockoffsets,nnz
 end
 
 # Permute the blockoffsets and indices
@@ -149,7 +149,7 @@ function Base.permutedims(blockoffsets::BlockOffsets{N},
     blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds,perm)
-  blockoffsetsR,_ = get_blockoffsets(blocksR,indsR)
+  blockoffsetsR,_ = blockoffsets(blocksR,indsR)
   return blockoffsetsR,indsR
 end
 

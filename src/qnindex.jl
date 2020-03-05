@@ -124,13 +124,19 @@ function Tensors.nblocks(inds::IndexSet{N}) where {N}
   return ntuple(i->nblocks(inds,i),Val(N))
 end
 
-function Tensors.nblocks(inds::NTuple{N,QNIndex}) where {N}
+function Tensors.nblocks(inds::NTuple{N,<:Index}) where {N}
   return nblocks(IndexSet(inds))
 end
+
+ndiagblocks(inds) = minimum(nblocks(inds))
 
 # TODO: generic to IndexSet and BlockDims
 function eachblock(inds::IndexSet)
   return CartesianIndices(nblocks(inds))
+end
+
+function eachdiagblock(inds::IndexSet{N}) where {N}
+  return [ntuple(_->i,Val(N)) for i in 1:ndiagblocks(inds)]
 end
 
 function flux(inds::IndexSet,block)
@@ -149,6 +155,16 @@ end
 function Tensors.nzblocks(qn::QN,inds::IndexSet{N}) where {N}
   blocks = NTuple{N,Int}[]
   for block in eachblock(inds)
+    if flux(inds,block) == qn
+      push!(blocks,Tuple(block))
+    end
+  end
+  return blocks
+end
+
+function nzdiagblocks(qn::QN,inds::IndexSet{N}) where {N}
+  blocks = NTuple{N,Int}[]
+  for block in eachdiagblock(inds)
     if flux(inds,block) == qn
       push!(blocks,Tuple(block))
     end

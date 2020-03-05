@@ -114,7 +114,7 @@ function BlockSparseTensor(::Type{ElT},
                            ::UndefInitializer,
                            blocks::Blocks,
                            inds) where {ElT}
-  blockoffsets,nnz = get_blockoffsets(blocks,inds)
+  blockoffsets,nnz = blockoffsets(blocks,inds)
   storage = BlockSparse(ElT,undef,blockoffsets,nnz)
   return Tensor(storage,inds)
 end
@@ -156,15 +156,15 @@ BlockSparseTensor(blocks::Blocks,
 function BlockSparseTensor(::Type{ElT},
                            blocks::Blocks,
                            inds) where {ElT}
-  blockoffsets,offset_total = get_blockoffsets(blocks,inds)
-  storage = BlockSparse(ElT,blockoffsets,offset_total)
+  blockoffsets,nnz = blockoffsets(blocks,inds)
+  storage = BlockSparse(ElT,blockoffsets,nnz)
   return Tensor(storage,inds)
 end
 
 #function BlockSparseTensor(blocks::Vector{Block{N}},
 #                           inds) where {N}
-#  blockoffsets,offset_total = get_blockoffsets(blocks,inds)
-#  storage = BlockSparse(blockoffsets,offset_total)
+#  blockoffsets,nnz = blockoffsets(blocks,inds)
+#  storage = BlockSparse(blockoffsets,nnz)
 #  return Tensor(storage,inds)
 #end
 
@@ -688,7 +688,7 @@ function uncombine_output(T::BlockSparseTensor{ElT,N},
   # Uncombine the blocks of T
   blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
   blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
-  boffs_uncomb_perm,nnz_uncomb_perm = get_blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
+  boffs_uncomb_perm,nnz_uncomb_perm = blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
   T_uncomb_perm = Tensor(BlockSparse(ElT,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
   R = reshape(T_uncomb_perm,is)
   return R

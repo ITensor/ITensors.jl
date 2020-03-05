@@ -4,10 +4,11 @@ export DiagBlock,
 # DiagBlock can have either Vector storage, in which case
 # it is a general DiagBlock tensor, or scalar storage,
 # in which case the diagonal has a uniform value
-struct DiagBlock{ElT,VecT} <: TensorStorage{ElT}
+struct DiagBlock{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
-  DiagBlock(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = new{ElT,VecT}(data)
-  DiagBlock(data::VecT) where {VecT<:Number} = new{VecT,VecT}(data)
+  blockoffsets::BlockOffsets{N}  # Block number-offset pairs
+  DiagBlock(data::VecT,blockoffsets::BlockOffsets{N}) where {VecT<:AbstractVector{ElT},N} where {ElT} = new{ElT,VecT,N}(data,blockoffsets)
+  DiagBlock(data::VecT,blockoffsets::BlockOffsets{N}) where {VecT<:Number,N} = new{VecT,VecT,N}(data,blockoffsets)
 end
 #DiagBlock{T}(data) where {T} = new{T}(data)
 
@@ -16,6 +17,8 @@ function DiagBlock{ElR}(data::VecT) where {ElR<:Number,VecT<:AbstractVector{ElT}
 end
 
 DiagBlock(::Type{ElT},n::Integer) where {ElT<:Number} = DiagBlock(zeros(ElT,n))
+
+blockoffsets(D::DiagBlock) = D.blockoffsets
 
 const NonuniformDiagBlock{ElT,VecT} = DiagBlock{ElT,VecT} where {VecT<:AbstractVector}
 const UniformDiagBlock{ElT,VecT} = DiagBlock{ElT,VecT} where {VecT<:Number}
@@ -126,6 +129,14 @@ const NonuniformDiagBlockTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT}
                                                {StoreT<:NonuniformDiagBlock}
 const UniformDiagBlockTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where 
                                                {StoreT<:UniformDiagBlock}
+
+function DiagBlockTensor(::Type{ElT},
+                         blocks::Blocks,
+                         inds) where {ElT}
+  blockoffsets,nnz = diagblockoffsets(blocks,inds)
+  storage = DiagBlock(ElT,blockoffsets,nnz)
+  return Tensor(storage,inds)
+end
 
 Base.IndexStyle(::Type{<:DiagBlockTensor}) = IndexCartesian()
 
@@ -471,4 +482,22 @@ contract!(C::DenseTensor,Clabels,
           B::DiagBlockTensor,Blabels) = contract!(C,Clabels,
                                              B,Blabels,
                                              A,Alabels)
+
+function Base.show(io::IO,
+                   mime::MIME"text/plain",
+                   T::DiagBlockTensor)
+  summary(io,T)
+  println(io)
+  for (block,_) in blockoffsets(T)
+    blockdimsT = blockdims(T,block)
+    # Print the location of the current block
+    println(io,"Block: ",block)
+    println(io," [",_range2string(blockstart(T,block),blockend(T,block)),"]")
+    print_tensor(io,blockview(T,block))
+    println(io)
+    println(io)
+  end
+end
+
+Base.show(io::IO, T::DiagBlockTensor) = show(io,MIME("text/plain"),T)
 

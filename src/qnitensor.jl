@@ -1,4 +1,6 @@
 
+const QNIndexSet{N} = IndexSet{N,QNIndex}
+
 function ITensor(::Type{ElT},
                  flux::QN,
                  inds::IndexSet) where {ElT<:Number}
@@ -42,8 +44,13 @@ randomITensor(flux::QN,
 
 # Throw error if flux is not specified
 randomITensor(::Type{<:Number},
-              inds::QNIndex...) = error("In randomITensor constructor, must specify desired flux when using QN Indices")
+              inds::QNIndexSet) = error("In randomITensor constructor, must specify desired flux when using QN Indices")
 
+# Throw error if flux is not specified
+randomITensor(::Type{ElT},
+              inds::QNIndex...) where {ElT<:Number} = randomITensor(ElT,IndexSet(inds...))
+
+randomITensor(inds::QNIndexSet) = randomITensor(Float64,inds)
 randomITensor(inds::QNIndex...) = randomITensor(Float64,inds...)
 
 function combiner(inds::QNIndex...; kwargs...)
@@ -71,14 +78,18 @@ Make a sparse ITensor of element type T with non-zero elements
 only along the diagonal. Defaults to having `zero(T)` along the diagonal.
 The storage will have Diag type.
 """
-function diagITensor(::Type{T},
+function diagITensor(::Type{ElT},
                      flux::QN,
-                     is::IndexSet{N}) where {T<:Number,N}
+                     is::IndexSet{N}) where {ElT<:Number,N}
   # TODO: check that the diagonal blocks all have the same flux
-  return ITensor{N}(DiagBlock(T,mindim(is)),is)
+  blocks = nzdiagblocks(flux,is)
+  T = DiagBlockTensor(ElT,blocks,is)
+  return itensor(T)
+  #return ITensor{N}(DiagBlock(T,mindim(is)),is)
 end
 
-diagITensor(::Type{<:Number},inds::QNIndex...) = error("Must specify flux")
+diagITensor(::Type{<:Number},inds::QNIndexSet) = error("Must specify flux")
+diagITensor(::Type{ElT},inds::QNIndex...) where {ElT<:Number} = diagITensor(ElT,IndexSet(inds...))
 
 """
 diagITensor(::Type{T}, flux::QN, is::Index...)
@@ -87,7 +98,7 @@ Make a sparse ITensor of element type T with non-zero elements
 only along the diagonal. Defaults to having `zero(T)` along the diagonal.
 The storage will have Diag type.
 """
-diagITensor(::Type{T},flux::QN,inds::QNIndex...) where {T<:Number} = diagITensor(T,flux,IndexSet(inds...))
+diagITensor(::Type{ElT},flux::QN,inds::QNIndex...) where {ElT<:Number} = diagITensor(ElT,flux,IndexSet(inds...))
 
 """
 diagITensor(flux::QN, is::IndexSet)
@@ -107,10 +118,11 @@ The storage will have DiagBlock type.
 """
 diagITensor(flux::QN,inds::Index...) = diagITensor(flux,IndexSet(inds...))
 
-diagITensor(inds::QNIndex...) = error("Must specify flux")
+diagITensor(inds::QNIndexSet) = error("Must specify flux")
+diagITensor(inds::QNIndex...) = diagITensor(IndexSet(inds...))
 
 """
-diagITensor(v::Vector{T},flux::QN,is::IndexSet)
+diagITensor(v::Vector{T<:Number},flux::QN,is::IndexSet)
 
 Make a sparse ITensor with non-zero elements only along the diagonal.
 The diagonal elements will be set to the values stored in `v` and
@@ -126,7 +138,7 @@ function diagITensor(v::Vector{<:Number},
 end
 
 """
-diagITensor(v::Vector{<:Number}, flux::QN, is::Index...)
+diagITensor(v::Vector{T<:Number}, flux::QN, is::Index...)
 
 Make a sparse ITensor with non-zero elements only along the diagonal.
 The diagonal elements will be set to the values stored in `v` and
@@ -135,14 +147,15 @@ The storage will have DiagBlock type.
 """
 function diagITensor(v::Vector{<:Number},
                      flux::QN,
-                     is::QNIndex...)
-  return diagITensor(v,flux,IndexSet(is...))
+                     inds::Index...)
+  return diagITensor(v,flux,IndexSet(inds...))
 end
 
-diagITensor(v::Vector{<:Number},is::QNIndex...) = error("Must specify flux")
+diagITensor(v::Vector{<:Number},inds::QNIndexSet) = error("Must specify flux")
+diagITensor(v::Vector{<:Number},inds::QNIndex...) = diagITensor(v,IndexSet(inds...))
 
 """
-diagITensor(x::T, is::IndexSet) where {T<:Number}
+diagITensor(x::Number, is::IndexSet)
 
 Make a sparse ITensor with non-zero elements only along the diagonal. 
 The diagonal elements will be set to the value `x` and
@@ -169,5 +182,6 @@ function diagITensor(x::Number,
   return diagITensor(x,flux,IndexSet(is...))
 end
 
-diagITensor(x::Number,is::QNIndex...) = error("Must specify flux")
+diagITensor(x::Number,is::QNIndexSet) = error("Must specify flux")
+diagITensor(x::Number,inds::QNIndex...) = diagITensor(x,IndexSet(inds...))
 
