@@ -7,6 +7,7 @@ using ITensors, Test
         "smallstring.jl",
         "index.jl",
         "indexset.jl",
+        "not.jl",
         "itensor_dense.jl",
         "itensor_diag.jl",
         "itensor_blocksparse.jl",

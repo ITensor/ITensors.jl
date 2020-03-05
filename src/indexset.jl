@@ -5,6 +5,7 @@ export IndexSet,
        findindex,
        findinds,
        indexposition,
+       not,
        swaptags,
        swaptags!,
        swapprime,
@@ -414,6 +415,40 @@ function indexpositions(inds, match)
 end
 # Version for matching a list of indices
 indexpositions(inds, match_inds::Index...) = indexpositions(inds, IndexSet(match_inds...))
+
+#
+# not syntax (to prime or tag the compliment 
+# of the specified indices)
+#
+
+struct Not{T}
+  pattern::T
+  Not(p::T) where {T} = new{T}(p)
+end
+
+not(ts::Union{AbstractString,TagSet}) = Not(TagSet(ts))
+
+not(is::IndexSet) = Not(is)
+not(inds::Index...) = not(IndexSet(inds...))
+not(inds::NTuple{<:Any,<:Index}) = not(IndexSet(inds))
+
+function indexpositions(inds, match::Not{TagSet})
+  is = IndexSet(inds)
+  pos = Int[]
+  for (j,I) ∈ enumerate(is)
+    !hastags(I,match.pattern) && push!(pos,j)
+  end
+  return pos
+end
+
+function indexpositions(inds, match::Not{<:IndexSet})
+  is = IndexSet(inds)
+  pos = Int[]
+  for (j,I) ∈ enumerate(is)
+    !hasindex(match.pattern,I) && push!(pos,j)
+  end
+  return pos
+end
 
 #
 # Tagging functions
