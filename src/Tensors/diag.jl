@@ -15,6 +15,8 @@ function Diag{ElR}(data::VecT) where {ElR<:Number,VecT<:AbstractVector{ElT}} whe
   ElT == ElR ? Diag(data) : Diag(ElR.(data))
 end
 
+Diag(::Type{ElT},n::Integer) where {ElT<:Number} = Diag(zeros(ElT,n))
+
 const NonuniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:AbstractVector}
 const UniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:Number}
 

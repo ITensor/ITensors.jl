@@ -13,7 +13,7 @@ Base.size(M::ITensorMap) = dim(findinds(M.A,("",0)))
 @testset "Complex davidson" begin
   d = 10
   i = Index(d,"i")
-  A = randomITensor(Complex,i,prime(i))
+  A = randomITensor(ComplexF64,i,prime(i))
   A = mapprime(A*mapprime(dag(A),0,2),2,1)
   M = ITensorMap(A)
     
@@ -21,7 +21,7 @@ Base.size(M::ITensorMap) = dim(findinds(M.A,("",0)))
   λ,v = davidson(M,v;maxiter=10)
   @test M(v)≈λ*v
     
-  v = randomITensor(Complex, i)
+  v = randomITensor(ComplexF64, i)
   λ,v = davidson(M,v;maxiter=10)
   @test M(v)≈λ*v
     
