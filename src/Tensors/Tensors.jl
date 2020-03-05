@@ -28,6 +28,7 @@ include("blocksparse/blockdims.jl")
 include("blocksparse/blockoffsets.jl")
 include("blocksparse/blocksparse.jl")
 include("blocksparse/blocksparsetensor.jl")
+include("blocksparse/diagblock.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
 

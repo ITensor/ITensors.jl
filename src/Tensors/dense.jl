@@ -227,16 +227,6 @@ Base.@propagate_inbounds Base.setindex!(T::DenseTensor,v,i::Int) = (store(T)[i] 
 #               v,i::Vararg{Int,N}) where {N} = 
 #(store(T)[sum(i.*strides(T))+1-sum(strides(T))] = v)
 
-# Get the specified value on the diagonal
-function getdiag(T::DenseTensor{<:Number,N},ind::Int) where {N}
-  return T[CartesianIndex(ntuple(_->ind,Val(N)))]
-end
-
-# Set the specified value on the diagonal
-function setdiag!(T::DenseTensor{<:Number,N},val,ind::Int) where {N}
-  T[CartesianIndex(ntuple(_->ind,Val(N)))] = val
-end
-
 # This is for BLAS/LAPACK
 Base.strides(T::DenseTensor) = strides(inds(T))
 

@@ -140,6 +140,45 @@ function StaticArrays.similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Ty
   return Tensor{ElT,ndims(IndsR),StoreT,IndsR}
 end
 
+#
+# Some generic getindex and setindex! functionality
+#
+
+"""
+getdiagindex
+
+Get the specified value on the diagonal
+"""
+function getdiagindex(T::Tensor{<:Number,N},ind::Int) where {N}
+  return getindex(T,CartesianIndex(ntuple(_->ind,Val(N))))
+end
+
+"""
+setdiagindex!
+
+Set the specified value on the diagonal
+"""
+function setdiagindex!(T::Tensor{<:Number,N},val,ind::Int) where {N}
+  setindex!(T,val,CartesianIndex(ntuple(_->ind,Val(N))))
+  return T
+end
+
+#
+# Some generic contraction functionality
+#
+
+function zero_contraction_output(T1::TensorT1,
+                                 T2::TensorT2,
+                                 indsR::IndsR) where {TensorT1<:Tensor,
+                                                      TensorT2<:Tensor,
+                                                      IndsR}
+  return zeros(contraction_output_type(TensorT1,TensorT2,IndsR),indsR)
+end
+
+#
+# Broadcasting
+#
+
 Base.BroadcastStyle(::Type{T}) where {T<:Tensor} = Broadcast.ArrayStyle{T}()
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}},
@@ -148,16 +187,12 @@ function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}},
   return similar(A)
 end
 
-# This is used for overloading broadcast
 "`A = find_tensor(As)` returns the first Tensor among the arguments."
 find_tensor(bc::Base.Broadcast.Broadcasted) = find_tensor(bc.args)
 find_tensor(args::Tuple) = find_tensor(find_tensor(args[1]), Base.tail(args))
 find_tensor(x) = x
 find_tensor(a::Tensor, rest) = a
 find_tensor(::Any, rest) = find_tensor(rest)
-
-# TODO: implement some generic fallbacks for necessary parts of the API?
-#Base.getindex(A::TensorT, i::Int) where {TensorT<:Tensor} = error("getindex not yet implemented for Tensor type $TensorT")
 
 function Base.summary(io::IO,
                       T::Tensor)

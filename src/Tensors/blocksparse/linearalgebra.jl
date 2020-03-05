@@ -26,11 +26,11 @@ end
 
 function _truncated_blockdim(S::DiagMatrix, docut::Float64; singular_values=false)
   newdim = 0
-	val = singular_values ? getdiag(S,newdim+1)^2 : getdiag(S,newdim+1)
+	val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
   while newdim+1 ≤ diaglength(S) && val ≥ docut
     newdim += 1
     if newdim+1 ≤ diaglength(S)
-      val = singular_values ? getdiag(S,newdim+1)^2 : getdiag(S,newdim+1)
+      val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
     end
   end
   return newdim
@@ -154,8 +154,8 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
     blockview(V,blockV) .= Vb
 
     blockviewS = blockview(S,blockS)
-    for i in 1:diag_length(Sb)
-      blockviewS[i,i] = getdiag(Sb,i)
+    for i in 1:diaglength(Sb)
+      blockviewS[i,i] = getdiagindex(Sb,i)
     end
   end
 
@@ -235,14 +235,14 @@ function _svd_no_truncate(T::BlockSparseMatrix{ElT};
 
       blockview(U,(bV[2],bV[2])) .= Ub
       Sblock = blockview(S,(bV[2],bV[2]))
-      for i in 1:diag_length(Sb)
-        Sblock[i,i] = getdiag(Sb,i)
+      for i in 1:diaglength(Sb)
+        Sblock[i,i] = getdiagindex(Sb,i)
       end
     else
       blockview(U,b) .= Ub
       blockview(V,n) .= Vb
-      for i in 1:diag_length(Sb)
-        blockview(S,n)[i,i] = getdiag(Sb,i)
+      for i in 1:diaglength(Sb)
+        blockview(S,n)[i,i] = getdiagindex(Sb,i)
       end
     end
   end
@@ -360,8 +360,8 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}};
     blockview(U,blockU) .= Ub
 
     blockviewD = blockview(D,blockD)
-    for i in 1:diag_length(Db)
-      blockviewD[i,i] = getdiag(Db,i)
+    for i in 1:diaglength(Db)
+      blockviewD[i,i] = getdiagindex(Db,i)
     end
   end
 
@@ -461,8 +461,8 @@ function LinearAlgebra.eigen(T::BlockSparseMatrix{ElT};
     blockview(U,blockU) .= Ub
 
     blockviewD = blockview(D,blockD)
-    for i in 1:diag_length(Db)
-      blockviewD[i,i] = getdiag(Db,i)
+    for i in 1:diaglength(Db)
+      blockviewD[i,i] = getdiagindex(Db,i)
     end
   end
 
