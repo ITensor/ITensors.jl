@@ -15,68 +15,15 @@ function StaticArrays.similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT
   return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
 end
 
-# TODO: move to tensor.jl?
-blockoffsets(T::Tensor) = blockoffsets(store(T))
-nnzblocks(T::Tensor) = nnzblocks(store(T))
-nnz(T::Tensor) = nnz(store(T))
-nblocks(T::Tensor) = nblocks(inds(T))
-blockdims(T::Tensor{<:Number,N},
-          block::Block{N}) where {N} = blockdims(inds(T),block)
-blockdim(T::Tensor{<:Number,N},
-         block::Block{N}) where {N} = blockdim(inds(T),block)
-
-"""
-offset(T::BlockSparseTensor,
-       block::Block)
-
-Get the linear offset in the data storage for the specified block.
-If the specified block is not non-zero structurally, return nothing.
-"""
-function offset(T::BlockSparseTensor{ElT,N},
-                block::Block{N}) where {ElT,N}
-  return offset(blockoffsets(T),block)
-end
-
-"""
-offset(T::BlockSparseTensor,pos::Int)
-
-Get the offset of the block at position pos
-in the block-offsets list.
-"""
-offset(T::BlockSparseTensor,n::Int) = offset(store(T),n)
-
-block(T::BlockSparseTensor,n::Int) = block(store(T),n)
-
-"""
-blockdim(T::BlockSparseTensor,pos::Int)
-
-Get the block dimension of the block at position pos
-in the block-offset list.
-"""
-blockdim(T::BlockSparseTensor,pos::Int) = blockdim(store(T),pos)
-
-# TODO: move to tensor.jl?
-findblock(T::Tensor{<:Number,N},
-          block::Block{N}; sorted=true) where {N} = findblock(store(T),block; sorted=sorted)
-
 new_block_pos(T::BlockSparseTensor{ElT,N},
               block::Block{N}) where {ElT,N} = new_block_pos(blockoffsets(T),block)
 
-"""
-isblocknz(T::BlockSparseTensor,
-          block::Block)
-
-Check if the specified block is non-zero
-"""
-isblocknz(T::BlockSparseTensor{ElT,N},
-          block::Block{N}) where {ElT,N} = isblocknz(store(T),block)
-
 function BlockSparseTensor(::Type{ElT},
                            ::UndefInitializer,
-                           blockoffsets::BlockOffsets{N},
+                           boffs::BlockOffsets{N},
                            inds) where {ElT<:Number,N}
-  nnz_tot = nnz(blockoffsets,inds)
-  storage = BlockSparse(ElT,undef,blockoffsets,nnz_tot)
+  nnz_tot = nnz(boffs,inds)
+  storage = BlockSparse(ElT,undef,boffs,nnz_tot)
   return Tensor(storage,inds)
 end
 
@@ -115,8 +62,8 @@ function BlockSparseTensor(::Type{ElT},
                            ::UndefInitializer,
                            blocks::Blocks,
                            inds) where {ElT}
-  blockoffsets,nnz = blockoffsets(blocks,inds)
-  storage = BlockSparse(ElT,undef,blockoffsets,nnz)
+  boffs,nnz = blockoffsets(blocks,inds)
+  storage = BlockSparse(ElT,undef,boffs,nnz)
   return Tensor(storage,inds)
 end
 
@@ -157,8 +104,8 @@ BlockSparseTensor(blocks::Blocks,
 function BlockSparseTensor(::Type{ElT},
                            blocks::Blocks,
                            inds) where {ElT}
-  blockoffsets,nnz = blockoffsets(blocks,inds)
-  storage = BlockSparse(ElT,blockoffsets,nnz)
+  boffs,nnz = blockoffsets(blocks,inds)
+  storage = BlockSparse(ElT,boffs,nnz)
   return Tensor(storage,inds)
 end
 
@@ -217,34 +164,6 @@ end
 # Special case for scalar BlockSparseTensor
 function blockindex(T::BlockSparseTensor{ElT,0}) where {ElT}
   return Block{0}(),()
-end
-
-# Get the starting index of the block
-# TODO: move to tensor.jl?
-function blockstart(T::Tensor{<:Number,N},
-                    block::Block{N}) where {N}
-  start_index = @MVector ones(Int,N)
-  for j in 1:N
-    ind_j = ind(T,j)
-    for block_j in 1:block[j]-1
-      start_index[j] += blockdim(ind_j,block_j)
-    end
-  end
-  return Tuple(start_index)
-end
-
-# Get the ending index of the block
-# TODO: move to tensor.jl?
-function blockend(T::Tensor{<:Number,N},
-                  block) where {N}
-  end_index = @MVector zeros(Int,N)
-  for j in 1:N
-    ind_j = ind(T,j)
-    for block_j in 1:block[j]
-      end_index[j] += blockdim(ind_j,block_j)
-    end
-  end
-  return Tuple(end_index)
 end
 
 # Get the CartesianIndices for the range of indices
@@ -330,19 +249,6 @@ Base.@propagate_inbounds function Base.setindex!(T::BlockSparseTensor{ElT,N},
   return T
 end
 
-# TODO: move to tensor.jl?
-"""
-blockview(T::BlockSparseTensor,block::Block)
-
-Given a specified block, return a Dense Tensor that is a view to the data
-in that block
-"""
-function blockview(T::Tensor{<:Number,N},
-                   block::Block{N}; sorted=true) where {N}
-  pos = findblock(T,block; sorted=sorted)
-  return blockview(T,pos)
-end
-
 """
 blockview(T::BlockSparseTensor,pos::Int)
 
@@ -409,20 +315,6 @@ function Base.permutedims(T::BlockSparseTensor{<:Number,N},
   permutedims!(R,T,perm)
   return R
 end
-
-"""
-nzblocks(T::BlockSparse)
-
-Return a vector of the non-zero blocks of the BlockSparse storage.
-"""
-nzblocks(T::BlockSparse) = nzblocks(blockoffsets(T))
-
-"""
-nzblocks(T::BlockSparseTensor)
-
-Return a vector of the non-zero blocks of the BlockSparseTensor.
-"""
-nzblocks(T::BlockSparseTensor) = nzblocks(store(T))
 
 function _permute_combdims(combdims::NTuple{NC,Int},
                            perm::NTuple{NP,Int}) where {NC,NP}

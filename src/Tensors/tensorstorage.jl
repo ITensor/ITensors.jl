@@ -21,3 +21,23 @@ LinearAlgebra.norm(S::TensorStorage) = norm(data(S))
 
 Base.convert(::Type{T},D::T) where {T<:TensorStorage} = D
 
+blockoffsets(D::TensorStorage) = D.blockoffsets
+
+"""
+nzblocks(T::TensorStorage)
+
+Return a vector of the non-zero blocks of the BlockSparse storage.
+"""
+nzblocks(T::TensorStorage) = nzblocks(blockoffsets(T))
+
+nnzblocks(D::TensorStorage) = length(blockoffsets(D))
+Base.length(D::TensorStorage) = length(data(D))
+Base.size(D::TensorStorage) = (length(D),)
+nnz(D::TensorStorage) = length(D)
+
+offset(D::TensorStorage,block) = offset(blockoffsets(D),block)
+
+block(D::TensorStorage,n::Int) = block(blockoffsets(D),n)
+
+
+

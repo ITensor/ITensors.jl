@@ -727,6 +727,7 @@ hasqns(T::ITensor) = hasqns(inds(T))
 
 Tensors.nnz(T::ITensor) = nnz(tensor(T))
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+Tensors.block(T::ITensor,i) = block(tensor(T),i)
 Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
 Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 flux(T::ITensor,block) = flux(inds(T),block)

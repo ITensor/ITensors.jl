@@ -25,6 +25,7 @@ function DiagBlockSparse(::Type{ElT},
 end
 
 diagblockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
+blockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
 
 findblock(D::DiagBlockSparse{<:Number,<:AbstractVector,N},
           block::Block{N}; vargs...) where {N} = findblock(diagblockoffsets(D),block; vargs...)
@@ -207,15 +208,6 @@ function contraction_output_type(TensorT1::Type{<:DiagBlockSparseTensor{<:Number
   end
   return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
-
-# TODO: move to tensor.jl?
-#function zero_contraction_output(T1::TensorT1,
-#                                 T2::TensorT2,
-#                                 indsR::IndsR) where {TensorT1<:Tensor,
-#                                                      TensorT2<:Tensor,
-#                                                      IndsR}
-#  return zeros(contraction_output_type(TensorT1,TensorT2,IndsR),indsR)
-#end
 
 # The output must be initialized as zero since it is sparse, cannot be undefined
 contraction_output(T1::DiagBlockSparseTensor,T2::Tensor,indsR) = zero_contraction_output(T1,T2,indsR)

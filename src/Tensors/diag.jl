@@ -206,7 +206,7 @@ setdiagindex!(T::DiagTensor,i::Int)
 
 Set the ith value along the diagonal of the tensor.
 """
-setdiagindex!(T::DiagTensor,val,ind::Int) = (store(T)[ind] = val)
+setdiagindex!(T::DiagTensor{<:Number},val,ind::Int) = (store(T)[ind] = val)
 
 """
 setdiag(T::UniformDiagTensor,val)

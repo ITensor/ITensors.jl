@@ -50,19 +50,6 @@ BlockSparse(::UndefInitializer,
 #end
 #BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
 
-blockoffsets(D::BlockSparse) = D.blockoffsets
-nnzblocks(D::BlockSparse) = length(blockoffsets(D))
-Base.length(D::BlockSparse) = length(data(D))
-Base.size(D::BlockSparse) = (length(D),)
-
-nnz(D::BlockSparse) = length(D)
-
-offset(D::BlockSparse,block::Block) = offset(blockoffsets(D),block)
-
-offset(D::BlockSparse,n::Int) = offset(blockoffsets(D),n)
-
-block(D::BlockSparse,n::Int) = block(blockoffsets(D),n)
-
 function Base.similar(D::BlockSparse)
   return BlockSparse(similar(data(D)),blockoffsets(D))
 end

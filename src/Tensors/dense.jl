@@ -251,11 +251,6 @@ function Base.reshape(T::DenseTensor,dims::Int...)
   return Tensor(store(T),tuple(dims...))
 end
 
-# TODO: move to tensor.jl?
-array(T::Tensor) = array(dense(T))
-matrix(T::Tensor{<:Number,2}) = array(T)
-vector(T::Tensor{<:Number,1}) = array(T)
-
 # Create an Array that is a view of the Dense Tensor
 # Useful for using Base Array functions
 array(T::DenseTensor) = reshape(data(store(T)),dims(inds(T)))
@@ -476,9 +471,6 @@ function contract!!(R::Tensor{<:Number,NR},
   end
   return R
 end
-
-# TODO: move to tensor.jl?
-Base.copyto!(R::Tensor,T::Tensor) = copyto!(store(R),store(T))
 
 # Move to tensor.jl? Overload this function
 # for immutable storage types
@@ -777,10 +769,6 @@ end
 #    println(io,"Dim $dim: ",ind)
 #  end
 #end
-
-# TODO: move to tensor.jl
-print_tensor(io::IO,T::Tensor) = Base.print_array(io,T)
-print_tensor(io::IO,T::Tensor{<:Number,1}) = Base.print_array(io,reshape(T,(dim(T),1)))
 
 function Base.show(io::IO,
                    mime::MIME"text/plain",

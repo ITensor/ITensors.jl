@@ -33,11 +33,13 @@ block(block::Block) = block
 # list
 offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
 
+# TODO: rename nzblock?
 block(bofs::BlockOffsets,n::Int) = block(bofs[n])
 
 nnzblocks(bofs::BlockOffsets) = length(bofs)
 nnzblocks(bs::Blocks) = length(bs)
 
+# TODO: make an iterator eachnzblocks to avoid allocation
 function nzblocks(bofs::BlockOffsets{N}) where {N}
   blocks = Blocks{N}(undef,nnzblocks(bofs))
   for i in 1:nnzblocks(bofs)
@@ -160,11 +162,11 @@ function diagblockoffsets(blocks::Blocks{N},
 end
 
 # Permute the blockoffsets and indices
-function Base.permutedims(blockoffsets::BlockOffsets{N},
+function Base.permutedims(boffs::BlockOffsets{N},
                           inds,
                           perm::NTuple{N,Int}) where {N}
-  blocksR = Blocks{N}(undef,nnzblocks(blockoffsets))
-  for (i,(block,offset)) in enumerate(blockoffsets)
+  blocksR = Blocks{N}(undef,nnzblocks(boffs))
+  for (i,(block,offset)) in enumerate(boffs)
     blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds,perm)

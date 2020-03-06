@@ -11,6 +11,7 @@ using ITensors, Test
         "itensor_dense.jl",
         "itensor_diag.jl",
         "itensor_blocksparse.jl",
+        "itensor_diagblocksparse.jl",
         "contract.jl",
         "combiner.jl",
         "trg.jl",
