@@ -81,12 +81,9 @@ The storage will have Diag type.
 function diagITensor(::Type{ElT},
                      flux::QN,
                      is::IndexSet{N}) where {ElT<:Number,N}
-  # TODO: check that the diagonal blocks all have the same flux
   blocks = nzdiagblocks(flux,is)
-  @show blocks
   T = DiagBlockSparseTensor(ElT,blocks,is)
   return itensor(T)
-  #return ITensor{N}(DiagBlockSparse(T,mindim(is)),is)
 end
 
 diagITensor(::Type{<:Number},inds::QNIndexSet) = error("Must specify flux")

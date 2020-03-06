@@ -139,10 +139,8 @@ const UniformDiagBlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,Ind
 function DiagBlockSparseTensor(::Type{ElT},
                                blocks::Blocks,
                                inds) where {ElT}
-  println("TEST")
   blockoffsets,nnz = diagblockoffsets(blocks,inds)
   storage = DiagBlockSparse(ElT,blockoffsets,nnz)
-  @show storage
   return Tensor(storage,inds)
 end
 
