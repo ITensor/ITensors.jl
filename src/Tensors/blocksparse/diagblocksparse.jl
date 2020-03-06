@@ -6,7 +6,7 @@ export DiagBlockSparse,
 # in which case the diagonal has a uniform value
 struct DiagBlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
-  blockoffsets::BlockOffsets{N}  # Block number-offset pairs
+  diagblockoffsets::BlockOffsets{N}  # Block number-offset pairs
   DiagBlockSparse(data::VecT,blockoffsets::BlockOffsets{N}) where {VecT<:AbstractVector{ElT},N} where {ElT} = new{ElT,VecT,N}(data,blockoffsets)
   DiagBlockSparse(data::VecT,blockoffsets::BlockOffsets{N}) where {VecT<:Number,N} = new{VecT,VecT,N}(data,blockoffsets)
 end
@@ -24,7 +24,10 @@ function DiagBlockSparse(::Type{ElT},
   return DiagBlockSparse(zeros(ElT,diaglength),blockoffsets)
 end
 
-blockoffsets(D::DiagBlockSparse) = D.blockoffsets
+diagblockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
+
+findblock(D::DiagBlockSparse{<:Number,<:AbstractVector,N},
+          block::Block{N}; vargs...) where {N} = findblock(diagblockoffsets(D),block; vargs...)
 
 const NonuniformDiagBlockSparse{ElT,VecT} = DiagBlockSparse{ElT,VecT} where {VecT<:AbstractVector}
 const UniformDiagBlockSparse{ElT,VecT} = DiagBlockSparse{ElT,VecT} where {VecT<:Number}
@@ -43,9 +46,10 @@ Base.complex(D::DiagBlockSparse) = DiagBlockSparse(complex(data(D)))
 
 Base.copy(D::DiagBlockSparse) = DiagBlockSparse(copy(data(D)))
 
-Base.conj(D::DiagBlockSparse{<:Real, VecT}) where {VecT} = D
-Base.conj(D::DiagBlockSparse{<:Complex, VecT}) where {VecT} = DiagBlockSparse(conj(data(D)))
+Base.conj(D::DiagBlockSparse{<:Real}) = D
+Base.conj(D::DiagBlockSparse{<:Complex}) = DiagBlockSparse(conj(data(D)))
 
+# TODO: make this generic for all storage types
 Base.eltype(::DiagBlockSparse{ElT}) where {ElT} = ElT
 Base.eltype(::Type{<:DiagBlockSparse{ElT}}) where {ElT} = ElT
 
@@ -142,6 +146,30 @@ function DiagBlockSparseTensor(::Type{ElT},
   blockoffsets,nnz = diagblockoffsets(blocks,inds)
   storage = DiagBlockSparse(ElT,blockoffsets,nnz)
   return Tensor(storage,inds)
+end
+
+diagblockoffsets(T::DiagBlockSparseTensor) = diagblockoffsets(store(T))
+
+"""
+blockview(T::DiagBlockSparseTensor,pos::Int)
+
+Given a specified position in the block-offset list, return a Diag Tensor
+that is a view to the data in that block (to avoid block lookup if the position
+is known already).
+"""
+function blockview(T::DiagBlockSparseTensor,
+                   pos::Int)
+  blockT,offsetT = diagblockoffsets(T)[pos]
+  return blockview(T,BlockOffset(blockT,offsetT))
+end
+
+function blockview(T::DiagBlockSparseTensor,
+                   bof::BlockOffset)
+  blockT,offsetT = bof
+  blockdimsT = blockdims(T,blockT)
+  blockdiaglengthT = minimum(blockdimsT)
+  dataTslice = @view data(store(T))[offsetT+1:offsetT+blockdiaglengthT]
+  return Tensor(Diag(dataTslice),blockdimsT)
 end
 
 Base.IndexStyle(::Type{<:DiagBlockSparseTensor}) = IndexCartesian()
@@ -494,7 +522,7 @@ function Base.show(io::IO,
                    T::DiagBlockSparseTensor)
   summary(io,T)
   println(io)
-  for (block,_) in blockoffsets(T)
+  for (block,_) in diagblockoffsets(T)
     blockdimsT = blockdims(T,block)
     # Print the location of the current block
     println(io,"Block: ",block)

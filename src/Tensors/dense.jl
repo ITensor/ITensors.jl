@@ -778,8 +778,9 @@ end
 #  end
 #end
 
-print_tensor(io::IO,T::DenseTensor) = Base.print_array(io,T)
-print_tensor(io::IO,T::DenseTensor{<:Number,1}) = Base.print_array(io,reshape(T,(dim(T),1)))
+# TODO: move to tensor.jl
+print_tensor(io::IO,T::Tensor) = Base.print_array(io,T)
+print_tensor(io::IO,T::Tensor{<:Number,1}) = Base.print_array(io,reshape(T,(dim(T),1)))
 
 function Base.show(io::IO,
                    mime::MIME"text/plain",

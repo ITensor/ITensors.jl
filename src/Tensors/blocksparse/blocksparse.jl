@@ -140,8 +140,8 @@ function blockdim(D::BlockSparse,
   return blockdim(D,pos)
 end
 
-findblock(D::BlockSparse{ElT,VecT,N},
-          block::Block{N}; vargs...) where {ElT,VecT,N} = findblock(blockoffsets(D),block; vargs...)
+findblock(D::BlockSparse{<:Number,<:AbstractVector,N},
+          block::Block{N}; vargs...) where {N} = findblock(blockoffsets(D),block; vargs...)
 
 """
 isblocknz(T::BlockSparse,

@@ -140,6 +140,12 @@ function blockoffsets(blocks::Blocks{N},
   return blockoffsets,nnz
 end
 
+"""
+diagblockoffsets(blocks::Blocks,inds)
+
+Get the blockoffsets only along the diagonal.
+The offsets are along the diagonal.
+"""
 function diagblockoffsets(blocks::Blocks{N},
                           inds) where {N}
   blocks = sort(blocks;lt=isblockless)
