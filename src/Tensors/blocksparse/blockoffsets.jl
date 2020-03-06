@@ -140,6 +140,19 @@ function blockoffsets(blocks::Blocks{N},
   return blockoffsets,nnz
 end
 
+function diagblockoffsets(blocks::Blocks{N},
+                          inds) where {N}
+  blocks = sort(blocks;lt=isblockless)
+  blockoffsets = BlockOffsets{N}(undef,length(blocks))
+  nnzdiag = 0
+  for (i,block) in enumerate(blocks)
+    blockoffsets[i] = block=>nnzdiag
+    current_block_diaglength = blockdiaglength(inds,block)
+    nnzdiag += current_block_diaglength
+  end
+  return blockoffsets,nnzdiag
+end
+
 # Permute the blockoffsets and indices
 function Base.permutedims(blockoffsets::BlockOffsets{N},
                           inds,

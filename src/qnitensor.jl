@@ -68,7 +68,7 @@ end
 combiner(inds::Tuple{Vararg{QNIndex}}; kwargs...) = combiner(inds...; kwargs...)
 
 #
-# DiagBlock ITensor constructors
+# DiagBlockSparse ITensor constructors
 #
 
 """
@@ -83,9 +83,10 @@ function diagITensor(::Type{ElT},
                      is::IndexSet{N}) where {ElT<:Number,N}
   # TODO: check that the diagonal blocks all have the same flux
   blocks = nzdiagblocks(flux,is)
-  T = DiagBlockTensor(ElT,blocks,is)
+  @show blocks
+  T = DiagBlockSparseTensor(ElT,blocks,is)
   return itensor(T)
-  #return ITensor{N}(DiagBlock(T,mindim(is)),is)
+  #return ITensor{N}(DiagBlockSparse(T,mindim(is)),is)
 end
 
 diagITensor(::Type{<:Number},inds::QNIndexSet) = error("Must specify flux")
@@ -114,7 +115,7 @@ diagITensor(flux::QN,is::Index...)
 
 Make a sparse ITensor of element type Float64 with non-zero elements 
 only along the diagonal. Defaults to storing zeros along the diagonal.
-The storage will have DiagBlock type.
+The storage will have DiagBlockSparse type.
 """
 diagITensor(flux::QN,inds::Index...) = diagITensor(flux,IndexSet(inds...))
 
@@ -127,14 +128,14 @@ diagITensor(v::Vector{T<:Number},flux::QN,is::IndexSet)
 Make a sparse ITensor with non-zero elements only along the diagonal.
 The diagonal elements will be set to the values stored in `v` and
 the ITensor will have element type `float(T)`.
-The storage will have DiagBlock type.
+The storage will have DiagBlockSparse type.
 """
 function diagITensor(v::Vector{<:Number},
                      flux::QN,
                      is::IndexSet)
   # TODO: check that the diagonal blocks all have the same flux
   length(v) ≠ mindim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
-  return ITensor(DiagBlock(float(v)),is)
+  return ITensor(DiagBlockSparse(float(v)),is)
 end
 
 """
@@ -143,7 +144,7 @@ diagITensor(v::Vector{T<:Number}, flux::QN, is::Index...)
 Make a sparse ITensor with non-zero elements only along the diagonal.
 The diagonal elements will be set to the values stored in `v` and
 the ITensor will have element type `float(T)`.
-The storage will have DiagBlock type.
+The storage will have DiagBlockSparse type.
 """
 function diagITensor(v::Vector{<:Number},
                      flux::QN,
@@ -160,7 +161,7 @@ diagITensor(x::Number, is::IndexSet)
 Make a sparse ITensor with non-zero elements only along the diagonal. 
 The diagonal elements will be set to the value `x` and
 the ITensor will have element type `float(T)`.
-The storage will have DiagBlock type.
+The storage will have DiagBlockSparse type.
 """
 function diagITensor(x::Number,
                      flux::QN,
@@ -174,7 +175,7 @@ diagITensor(x::Number, is::Index...)
 Make a sparse ITensor with non-zero elements only along the diagonal. 
 The diagonal elements will be set to the value `x` and
 the ITensor will have element type `float(T)`.
-The storage will have DiagBlock type.
+The storage will have DiagBlockSparse type.
 """
 function diagITensor(x::Number,
                      flux::QN,
