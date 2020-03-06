@@ -19,10 +19,23 @@ end
 #DiagBlockSparse(::Type{ElT},n::Integer) where {ElT<:Number} = DiagBlockSparse(zeros(ElT,n))
 
 function DiagBlockSparse(::Type{ElT},
-                         blockoffsets::BlockOffsets,
+                         boffs::BlockOffsets,
                          diaglength::Integer) where {ElT<:Number}
-  return DiagBlockSparse(zeros(ElT,diaglength),blockoffsets)
+  return DiagBlockSparse(zeros(ElT,diaglength),boffs)
 end
+
+DiagBlockSparse(boffs::BlockOffsets,diaglength::Integer) = DiagBlockSparse(Float64,boffs,diaglength)
+
+function DiagBlockSparse(::Type{ElT},
+                         ::UndefInitializer,
+                         boffs::BlockOffsets,
+                         diaglength::Integer) where {ElT<:Number}
+  return DiagBlockSparse(Vector{ElT}(undef,diaglength),boffs)
+end
+
+DiagBlockSparse(::UndefInitializer,
+                boffs::BlockOffsets,
+                diaglength::Integer) = DiagBlockSparse(Float64,undef,boffs,diaglength)
 
 diagblockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
 blockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
@@ -113,22 +126,23 @@ end
 # Make a similar_type(AbstractVector{S2},T1) -> AbstractVector{T1} function?
 function Base.promote_rule(::Type{<:UniformDiagBlockSparse{ElT1,VecT1}},
                            ::Type{<:NonuniformDiagBlockSparse{ElT2,Vector{ElT2}}}) where {ElT1,VecT1<:Number,
-                                                                               ElT2}
+                                                                                          ElT2}
   ElR = promote_type(ElT1,ElT2)
   VecR = Vector{ElR}
   return DiagBlockSparse{ElR,VecR}
 end
 
-function Base.promote_rule(::Type{DenseT1},
-                           ::Type{<:NonuniformDiagBlockSparse{ElT2,VecT2}}) where {DenseT1<:Dense,
-                                                                        ElT2,VecT2<:AbstractVector}
-  return promote_type(DenseT1,Dense{ElT2,VecT2})
+function Base.promote_rule(::Type{BlockSparseT1},
+                           ::Type{<:NonuniformDiagBlockSparse{ElT2,VecT2}}) where {BlockSparseT1<:BlockSparse,
+                                                                                   ElT2<:Number,VecT2<:AbstractVector}
+  @show BlockSparseT1
+  return promote_type(BlockSparseT1,BlockSparse{ElT2,VecT2})
 end
 
-function Base.promote_rule(::Type{DenseT1},
-                           ::Type{<:UniformDiagBlockSparse{ElT2,VecT2}}) where {DenseT1<:Dense,
-                                                                     ElT2,VecT2<:Number}
-  return promote_type(DenseT1,ElT2)
+function Base.promote_rule(::Type{BlockSparseT1},
+                           ::Type{<:UniformDiagBlockSparse{ElT2,VecT2}}) where {BlockSparseT1<:BlockSparse,
+                                                                                ElT2<:Number,VecT2<:Number}
+  return promote_type(BlockSparseT1,ElT2)
 end
 
 # Convert a DiagBlockSparse storage type to the closest Dense storage type
@@ -142,12 +156,28 @@ const UniformDiagBlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,Ind
                                                {StoreT<:UniformDiagBlockSparse}
 
 function DiagBlockSparseTensor(::Type{ElT},
+                               ::UndefInitializer,
+                               blocks::Blocks,
+                               inds) where {ElT}
+  blockoffsets,nnz = diagblockoffsets(blocks,inds)
+  storage = DiagBlockSparse(ElT,undef,blockoffsets,nnz)
+  return Tensor(storage,inds)
+end
+
+DiagBlockSparseTensor(::UndefInitializer,
+                      blocks::Blocks,
+                      inds) = DiagBlockSparseTensor(Float64,undef,blocks,inds)
+
+function DiagBlockSparseTensor(::Type{ElT},
                                blocks::Blocks,
                                inds) where {ElT}
   blockoffsets,nnz = diagblockoffsets(blocks,inds)
   storage = DiagBlockSparse(ElT,blockoffsets,nnz)
   return Tensor(storage,inds)
 end
+
+DiagBlockSparseTensor(blocks::Blocks,
+                      inds) = DiagBlockSparseTensor(Float64,blocks,inds)
 
 diagblockoffsets(T::DiagBlockSparseTensor) = diagblockoffsets(store(T))
 
@@ -184,11 +214,16 @@ end
 # These are rules for determining the output of a pairwise contraction of Tensors
 # (given the indices of the output tensors)
 function contraction_output_type(TensorT1::Type{<:DiagBlockSparseTensor},
-                                 TensorT2::Type{<:DenseTensor},
+                                 TensorT2::Type{<:BlockSparseTensor},
                                  IndsR::Type)
+  @show TensorT1
+  @show TensorT2
+  @show promote_type(TensorT1,TensorT2)
+  @show similar_type(promote_type(TensorT1,TensorT2),IndsR)
   return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
-contraction_output_type(TensorT1::Type{<:DenseTensor},
+
+contraction_output_type(TensorT1::Type{<:BlockSparseTensor},
                         TensorT2::Type{<:DiagBlockSparseTensor},
                         IndsR::Type) = contraction_output_type(TensorT2,TensorT1,IndsR)
 
@@ -397,117 +432,180 @@ function _contract!!(R::UniformDiagBlockSparseTensor{ElR,NR},labelsR,
   return R
 end
 
-function contract!(R::DiagBlockSparseTensor{ElR,NR},labelsR,
-                   T1::DiagBlockSparseTensor{<:Number,N1},labelsT1,
-                   T2::DiagBlockSparseTensor{<:Number,N2},labelsT2) where {ElR,NR,N1,N2}
-  if NR==0  # If all indices of A and B are contracted
-    # all indices are summed over, just add the product of the diagonal
-    # elements of A and B
-    Rdiag = zero(ElR)
-    for i = 1:diaglength(T1)
-      Rdiag += getdiagindex(T1,i)*getdiagindex(T2,i)
+function contraction_output(T1::TensorT1,
+                            labelsT1,
+                            T2::TensorT2,
+                            labelsT2,
+                            labelsR) where {TensorT1<:BlockSparseTensor,
+                                            TensorT2<:DiagBlockSparseTensor}
+  indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
+  TensorR = contraction_output_type(TensorT1,TensorT2,typeof(indsR))
+
+  @show TensorT1
+  @show TensorT2
+  @show TensorR
+
+  blockoffsetsR,contraction_plan = contract_blockoffsets(blockoffsets(T1),inds(T1),labelsT1,
+                                                         blockoffsets(T2),inds(T2),labelsT2,
+                                                         indsR,labelsR)
+  R = similar(TensorR,blockoffsetsR,indsR)
+  return R,contraction_plan
+end
+
+function contract(T1::BlockSparseTensor{<:Number,N1},
+                  labelsT1,
+                  T2::DiagBlockSparseTensor{<:Number,N2},
+                  labelsT2,
+                  labelsR = contract_labels(labelsT1,labelsT2)) where {N1,N2}
+  @show "In contract(...)"
+  R,contraction_plan = contraction_output(T1,labelsT1,T2,labelsT2,labelsR)
+  @show R
+  @show contraction_plan
+  R = contract!(R,labelsR,T1,labelsT1,T2,labelsT2,contraction_plan)
+  return R
+end
+
+#function contract!(R::DiagBlockSparseTensor{ElR,NR},labelsR,
+#                   T1::DiagBlockSparseTensor{<:Number,N1},labelsT1,
+#                   T2::DiagBlockSparseTensor{<:Number,N2},labelsT2) where {ElR,NR,N1,N2}
+#  if NR==0  # If all indices of A and B are contracted
+#    # all indices are summed over, just add the product of the diagonal
+#    # elements of A and B
+#    Rdiag = zero(ElR)
+#    for i = 1:diaglength(T1)
+#      Rdiag += getdiagindex(T1,i)*getdiagindex(T2,i)
+#    end
+#    setdiagindex!(R,Rdiag,1)
+#  else
+#    min_dim = min(diaglength(T1),diaglength(T2))
+#    # not all indices are summed over, set the diagonals of the result
+#    # to the product of the diagonals of A and B
+#    for i = 1:min_dim
+#      setdiagindex!(R,getdiagindex(T1,i)*getdiagindex(T2,i),i)
+#    end
+#  end
+#  return R
+#end
+
+#function contract!(C::DenseTensor{ElC,NC},Clabels,
+#                   A::DiagBlockSparseTensor{ElA,NA},Alabels,
+#                   B::DenseTensor{ElB,NB},Blabels) where {ElA,NA,
+#                                                          ElB,NB,
+#                                                          ElC,NC}
+#  if all(i -> i < 0, Blabels)
+#    # If all of B is contracted
+#    # TODO: can also check NC+NB==NA
+#    min_dim = minimum(dims(B))
+#    if length(Clabels) == 0
+#      # all indices are summed over, just add the product of the diagonal
+#      # elements of A and B
+#      for i = 1:min_dim
+#        setdiagindex!(C,getdiagindex(C,1)+getdiagindex(A,i)*getdiagindex(B,i),1)
+#      end
+#    else
+#      # not all indices are summed over, set the diagonals of the result
+#      # to the product of the diagonals of A and B
+#      # TODO: should we make this return a DiagBlockSparse storage?
+#      for i = 1:min_dim
+#        setdiagindex!(C,getdiagindex(A,i)*getdiagindex(B,i),i)
+#      end
+#    end
+#  else
+#    astarts = zeros(Int,length(Alabels))
+#    bstart = 0
+#    cstart = 0
+#    b_cstride = 0
+#    nbu = 0
+#    for ib = 1:length(Blabels)
+#      ia = findfirst(==(Blabels[ib]),Alabels)
+#      if !isnothing(ia)
+#        b_cstride += stride(B,ib)
+#        bstart += astarts[ia]*stride(B,ib)
+#      else
+#        nbu += 1
+#      end
+#    end
+#
+#    c_cstride = 0
+#    for ic = 1:length(Clabels)
+#      ia = findfirst(==(Clabels[ic]),Alabels)
+#      if !isnothing(ia)
+#        c_cstride += stride(C,ic)
+#        cstart += astarts[ia]*stride(C,ic)
+#      end
+#    end
+#
+#    # strides of the uncontracted dimensions of
+#    # B
+#    bustride = zeros(Int,nbu)
+#    custride = zeros(Int,nbu)
+#    # size of the uncontracted dimensions of
+#    # B, to be used in CartesianIndices
+#    busize = zeros(Int,nbu)
+#    n = 1
+#    for ib = 1:length(Blabels)
+#      if Blabels[ib] > 0
+#        bustride[n] = stride(B,ib)
+#        busize[n] = size(B,ib)
+#        ic = findfirst(==(Blabels[ib]),Clabels)
+#        custride[n] = stride(C,ic)
+#        n += 1
+#      end
+#    end
+#
+#    boffset_orig = 1-sum(strides(B))
+#    coffset_orig = 1-sum(strides(C))
+#    cartesian_inds = CartesianIndices(Tuple(busize))
+#    for inds in cartesian_inds
+#      boffset = boffset_orig
+#      coffset = coffset_orig
+#      for i in 1:nbu
+#        ii = inds[i]
+#        boffset += ii*bustride[i]
+#        coffset += ii*custride[i]
+#      end
+#      for j in 1:diaglength(A)
+#        C[cstart+j*c_cstride+coffset] += getdiagindex(A,j)*
+#                                         B[bstart+j*b_cstride+boffset]
+#      end
+#    end
+#  end
+#end
+#
+
+function contract!(R::BlockSparseTensor{<:Number,NR},
+                   labelsR,
+                   T1::BlockSparseTensor{<:Number,N1},
+                   labelsT1,
+                   T2::DiagBlockSparseTensor{<:Number,N2},
+                   labelsT2,
+                   contraction_plan) where {N1,N2,NR}
+  already_written_to = fill(false,nnzblocks(R))
+  # In R .= α .* (T1 * T2) .+ β .* R
+  α = 1
+  for (pos1,pos2,posR) in contraction_plan
+    blockT1 = blockview(T1,pos1)
+    blockT2 = blockview(T2,pos2)
+    blockR = blockview(R,posR)
+    β = 1
+    if !already_written_to[posR]
+      already_written_to[posR] = true
+      # Overwrite the block of R
+      β = 0
     end
-    setdiagindex!(R,Rdiag,1)
-  else
-    min_dim = min(diaglength(T1),diaglength(T2))
-    # not all indices are summed over, set the diagonals of the result
-    # to the product of the diagonals of A and B
-    for i = 1:min_dim
-      setdiagindex!(R,getdiagindex(T1,i)*getdiagindex(T2,i),i)
-    end
+    contract!(blockR,labelsR,
+              blockT1,labelsT1,
+              blockT2,labelsT2,
+              α,β)
   end
   return R
 end
 
-function contract!(C::DenseTensor{ElC,NC},Clabels,
-                   A::DiagBlockSparseTensor{ElA,NA},Alabels,
-                   B::DenseTensor{ElB,NB},Blabels) where {ElA,NA,
-                                                          ElB,NB,
-                                                          ElC,NC}
-  if all(i -> i < 0, Blabels)
-    # If all of B is contracted
-    # TODO: can also check NC+NB==NA
-    min_dim = minimum(dims(B))
-    if length(Clabels) == 0
-      # all indices are summed over, just add the product of the diagonal
-      # elements of A and B
-      for i = 1:min_dim
-        setdiagindex!(C,getdiagindex(C,1)+getdiagindex(A,i)*getdiagindex(B,i),1)
-      end
-    else
-      # not all indices are summed over, set the diagonals of the result
-      # to the product of the diagonals of A and B
-      # TODO: should we make this return a DiagBlockSparse storage?
-      for i = 1:min_dim
-        setdiagindex!(C,getdiagindex(A,i)*getdiagindex(B,i),i)
-      end
-    end
-  else
-    astarts = zeros(Int,length(Alabels))
-    bstart = 0
-    cstart = 0
-    b_cstride = 0
-    nbu = 0
-    for ib = 1:length(Blabels)
-      ia = findfirst(==(Blabels[ib]),Alabels)
-      if !isnothing(ia)
-        b_cstride += stride(B,ib)
-        bstart += astarts[ia]*stride(B,ib)
-      else
-        nbu += 1
-      end
-    end
-
-    c_cstride = 0
-    for ic = 1:length(Clabels)
-      ia = findfirst(==(Clabels[ic]),Alabels)
-      if !isnothing(ia)
-        c_cstride += stride(C,ic)
-        cstart += astarts[ia]*stride(C,ic)
-      end
-    end
-
-    # strides of the uncontracted dimensions of
-    # B
-    bustride = zeros(Int,nbu)
-    custride = zeros(Int,nbu)
-    # size of the uncontracted dimensions of
-    # B, to be used in CartesianIndices
-    busize = zeros(Int,nbu)
-    n = 1
-    for ib = 1:length(Blabels)
-      if Blabels[ib] > 0
-        bustride[n] = stride(B,ib)
-        busize[n] = size(B,ib)
-        ic = findfirst(==(Blabels[ib]),Clabels)
-        custride[n] = stride(C,ic)
-        n += 1
-      end
-    end
-
-    boffset_orig = 1-sum(strides(B))
-    coffset_orig = 1-sum(strides(C))
-    cartesian_inds = CartesianIndices(Tuple(busize))
-    for inds in cartesian_inds
-      boffset = boffset_orig
-      coffset = coffset_orig
-      for i in 1:nbu
-        ii = inds[i]
-        boffset += ii*bustride[i]
-        coffset += ii*custride[i]
-      end
-      for j in 1:diaglength(A)
-        C[cstart+j*c_cstride+coffset] += getdiagindex(A,j)*
-                                         B[bstart+j*b_cstride+boffset]
-      end
-    end
-  end
-end
-contract!(C::DenseTensor,Clabels,
-          A::DenseTensor,Alabels,
+contract!(C::BlockSparseTensor,Clabels,
+          A::BlockSparseTensor,Alabels,
           B::DiagBlockSparseTensor,Blabels) = contract!(C,Clabels,
-                                             B,Blabels,
-                                             A,Alabels)
+                                                        B,Blabels,
+                                                        A,Alabels)
 
 function Base.show(io::IO,
                    mime::MIME"text/plain",

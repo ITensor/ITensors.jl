@@ -141,7 +141,7 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
 
   U = BlockSparseTensor(undef,nzblocksU,indsU)
   V = BlockSparseTensor(undef,nzblocksV,indsV)
-  S = BlockSparseTensor(nzblocksS,indsS)
+  S = DiagBlockSparseTensor(undef,nzblocksS,indsS)
 
   for n in 1:nnzblocksT
     Ub,Sb,Vb = Us[n],Ss[n],Vs[n]
@@ -155,7 +155,7 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
 
     blockviewS = blockview(S,blockS)
     for i in 1:diaglength(Sb)
-      blockviewS[i,i] = getdiagindex(Sb,i)
+      setdiagindex!(blockviewS,getdiagindex(Sb,i),i)
     end
   end
 
@@ -218,9 +218,7 @@ function _svd_no_truncate(T::BlockSparseMatrix{ElT};
   # Make S block diagonal by convention
   blocksS = Block{2}[ntuple(_->i,Val(2)) for i = 1:minimum(nblocks(indsS))]
 
-  # TODO: make a DiagBlockTensor type
-  # S = DiagBlockTensor(blocksS,indsS)
-  S = BlockSparseTensor(blocksS,indsS)
+  S = DiagBlockSparseTensor(undef,blocksS,indsS)
 
   for n in 1:nnzblocks(T)
     b = block(T,n)
@@ -241,8 +239,9 @@ function _svd_no_truncate(T::BlockSparseMatrix{ElT};
     else
       blockview(U,b) .= Ub
       blockview(V,n) .= Vb
+      Sblock = blockview(S,n)
       for i in 1:diaglength(Sb)
-        blockview(S,n)[i,i] = getdiagindex(Sb,i)
+        setdiagindex!(Sblock,getdiagindex(Sb,i),i)
       end
     end
   end
