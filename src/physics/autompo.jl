@@ -224,6 +224,10 @@ struct QNMatElem{T}
   val::T
 end
 
+function Base.:(==)(m1::QNMatElem{T},m2::QNMatElem{T})::Bool where {T}
+  return (m1.row==m2.row && m1.col==m2.col && m1.val==m2.val && m1.rowqn==m2.rowqn && m1.colqn==m2.colqn)
+end
+
 function Base.isless(m1::QNMatElem{T},m2::QNMatElem{T})::Bool where {T}
   if m1.rowqn != m2.rowqn
     return m1.rowqn < m2.rowqn
@@ -402,15 +406,6 @@ function qn_svdMPO(ampo::AutoMPO,
   # Constants which define MPO start/end scheme
   startState = 2
   endState = 1
-
-
-  # TODO debug
-  for n=1:N
-    println("---------------------------\n")
-    println("n = $n")
-    @show tempMPO[n]
-    println("---------------------------\n")
-  end
 
   for n=1:N
     finalMPO = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
