@@ -170,6 +170,7 @@ end
 
 function simlinks!(M::T) where {T <: Union{MPS,MPO}}
   @inbounds for i ∈ eachindex(M)[1:end-1]
+    isnothing(commonindex(M[i],M[i+1])) && continue
     l = linkindex(M,i)
     l̃ = sim(l)
     #M[i] *= δ(l,l̃)
