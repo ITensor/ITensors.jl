@@ -115,10 +115,7 @@ function Base.promote_rule(::Type{<:Tensor{ElT1,N1,StoreT1,IndsT1}},
                                                                             N1,N2,
                                                                             StoreT1,StoreT2,
                                                                             IndsT1,IndsT2}
-  @show StoreT1
-  @show StoreT2
   StoreR = promote_type(StoreT1,StoreT2)
-  @show StoreR
   ElR = eltype(StoreR)
   return Tensor{ElR,N3,StoreR,IndsR} where {N3,IndsR}
 end
@@ -126,10 +123,7 @@ end
 function Base.promote_rule(::Type{<:Tensor{ElT1,N,StoreT1,Inds}},
                            ::Type{<:Tensor{ElT2,N,StoreT2,Inds}}) where {ElT1,ElT2,N,
                                                                          StoreT1,StoreT2,Inds}
-  @show StoreT1
-  @show StoreT2
   StoreR = promote_type(StoreT1,StoreT2)
-  @show StoreR
   ElR = eltype(StoreR)
   return Tensor{ElR,N,StoreR,Inds}
 end

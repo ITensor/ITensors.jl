@@ -11,9 +11,7 @@ const BlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {
 # Generic version doesn't work since BlockSparse us parametrized by
 # the Tensor order
 function StaticArrays.similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}},::Type{IndsR}) where {NT,ElT,VecT,IndsR}
-  @show "similar_type"
   NR = ndims(IndsR)
-  @show NR
   return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
 end
 
@@ -140,6 +138,18 @@ function Base.similar(::Type{<:BlockSparseTensor{ElT,N}},
                       blockoffsets::BlockOffsets{N},
                       inds) where {ElT,N}
   return BlockSparseTensor(ElT,undef,blockoffsets,inds)
+end
+
+function Base.zeros(::BlockSparseTensor{ElT,N},
+                    blockoffsets::BlockOffsets{N},
+                    inds) where {ElT,N}
+  return BlockSparseTensor(ElT,blockoffsets,inds)
+end
+
+function Base.zeros(::Type{<:BlockSparseTensor{ElT,N}},
+                    blockoffsets::BlockOffsets{N},
+                    inds) where {ElT,N}
+  return BlockSparseTensor(ElT,blockoffsets,inds)
 end
 
 # Basic functionality for AbstractArray interface
@@ -836,7 +846,7 @@ function contraction_output(T1::TensorT1,
                             T2::TensorT2,
                             labelsT2,
                             labelsR) where {TensorT1<:BlockSparseTensor,
-                                            TensorT2<:DiagBlockSparseTensor}
+                                            TensorT2<:BlockSparseTensor}
   indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
   TensorR = contraction_output_type(TensorT1,TensorT2,typeof(indsR))
   blockoffsetsR,contraction_plan = contract_blockoffsets(blockoffsets(T1),inds(T1),labelsT1,
