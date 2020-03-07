@@ -141,7 +141,7 @@ function productMPS(::Type{T}, sites,
   if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial states don't match"))
   end
-  ivals = [sites[n][states[n]] for n=1:length(sites)]
+  ivals = [state(sites[n],states[n]) for n=1:length(sites)]
   return productMPS(T, ivals)
 end
 
