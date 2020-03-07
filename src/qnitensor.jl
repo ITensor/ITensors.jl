@@ -12,9 +12,15 @@ function ITensor(inds::QNIndex...)
   return itensor(T)
 end
 
+function ITensor(::Type{ELT},inds::QNIndex...) where {ELT<:Number} 
+  T = BlockSparseTensor(ELT,inds)
+  return itensor(T)
+end
+
 ITensor(::Type{T},
         flux::QN,
         inds::Index...) where {T<:Number} = ITensor(T,flux,IndexSet(inds...))
+
 
 ITensor(flux::QN,inds::IndexSet) = ITensor(Float64,flux::QN,inds...)
 

@@ -116,24 +116,22 @@ randomMPS(sites) = randomMPS(Float64, sites)
 
 function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
   N = length(ivals)
-  As = Vector{ITensor}(undef,N)
-  links  = Vector{Index}(undef,N)
-  for n=1:N
-    s = ind(ivals[n])
-    links[n] = Index(1,"Link,l=$n")
-    if n == 1
-      A = ITensor(T, s,links[n])
-      A[ivals[n],links[n](1)] = 1.0
-    elseif n == N
-      A = ITensor(T, links[n-1],s)
-      A[links[n-1](1),ivals[n]] = 1.0
-    else
-      A = ITensor(T, links[n-1],s,links[n])
-      A[links[n-1](1),ivals[n],links[n](1)] = 1.0
-    end
-    As[n] = A
+  M = MPS(N)
+  if hasqns(ind(ivals[1]))
+    links = [Index(QN()=>1;tags="Link,l=$n") for n=1:N]
+  else
+    links = [Index(1,"Link,l=$n") for n=1:N]
   end
-  return MPS(N,As,0,2)
+  M[1] = ITensor(T,ind(ivals[1]),links[1])
+  M[1][ivals[1],links[1](1)] = 1.0
+  for n=2:N-1
+    s = ind(ivals[n])
+    M[n] = ITensor(T,dag(links[n-1]),s,links[n])
+    M[n][links[n-1](1),ivals[n],links[n](1)] = 1.0
+  end
+  M[N] = ITensor(T,dag(links[N-1]),ind(ivals[N]))
+  M[N][links[N-1](1),ivals[N]] = 1.0
+  return M
 end
 
 productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64, ivals::Vector{<:IndexVal})
@@ -178,7 +176,12 @@ end
 function replacesites!(M::MPS,sites)
   for j in eachindex(M)
     sj = siteindex(M,j)
-    replaceindex!(M[j],sj,sites[j])
+    #TODO: use a more elegant approach to fix arrows?
+    if dir(sj) == dir(sites[j])
+      replaceindex!(M[j],sj,sites[j])
+    else
+      replaceindex!(M[j],sj,dag(sites[j]))
+    end
   end
   return M
 end
@@ -186,7 +189,7 @@ end
 function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
-      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
+    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
   end
   M1dag = dag(M1)
   simlinks!(M1dag)

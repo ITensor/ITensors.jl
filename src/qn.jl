@@ -84,6 +84,20 @@ end
 QN(mqn::MQNStorage) = QN(QNStorage(mqn))
 QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
 
+function Base.hash(obj::QN, h::UInt)
+  # TODO: use an MVector or SVector
+  # for performance here; put non-zero QNVals
+  # to front and slice when passing to hash
+  nzqv = QNVal[]
+  for qv in obj.store
+    if val(qv) != 0
+      push!(nzqv,qv)
+    end
+  end
+  return hash(nzqv, h)
+end
+
+
 function QN(qvs...)
   m = MQNStorage(ntuple(_->ZeroVal,Val(maxQNs)))
   for (n,qv) in enumerate(qvs)
@@ -133,33 +147,6 @@ function modulus(q::QN,name_)
   return 0
 end
 
-function combineqns(a::QN,b::QN,operation)
-  !isactive(b[1]) && return a
-
-  ma = MQNStorage(store(a))
-  for nb=1:maxQNs
-    !isactive(b[nb]) && break
-    bname = name(b[nb])
-    for na=1:maxQNs
-      aname = name(a[na])
-      if !isactive(ma[na])
-        ma[na] = b[nb]
-        break
-      elseif name(ma[na]) == bname
-        ma[na] = operation(ma[na],b[nb])
-        break
-      elseif (bname < aname) && (na==1 || bname > name(ma[na-1]))
-        for j=maxQNs:-1:(na+1)
-          ma[j] = ma[j-1]
-        end
-        ma[na] = b[nb]
-        break
-      end
-    end
-  end
-  return QN(QNStorage(ma))
-end
-
 function Base.zero(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
@@ -176,14 +163,6 @@ function Base.:*(dir::Arrow,qn::QN)
   return QN(mqn)
 end
 
-function Base.:+(a::QN,b::QN)
-  return combineqns(a,b,+)
-end
-
-function Base.:-(a::QN,b::QN)
-  return combineqns(a,b,-)
-end
-
 function Base.:-(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
@@ -191,6 +170,38 @@ function Base.:-(qn::QN)
   end
   return QN(mqn)
 end
+
+function Base.:+(a::QN,b::QN)
+  !isactive(b[1]) && return a
+
+  ma = MQNStorage(store(a))
+  for nb=1:maxQNs
+    !isactive(b[nb]) && break
+    bname = name(b[nb])
+    for na=1:maxQNs
+      aname = name(a[na])
+      if !isactive(ma[na])
+        ma[na] = b[nb]
+        break
+      elseif name(ma[na]) == bname
+        ma[na] = ma[na]+b[nb]
+        break
+      elseif (bname < aname) && (na==1 || bname > name(ma[na-1]))
+        for j=maxQNs:-1:(na+1)
+          ma[j] = ma[j-1]
+        end
+        ma[na] = b[nb]
+        break
+      end
+    end
+  end
+  return QN(QNStorage(ma))
+end
+
+function Base.:-(a::QN,b::QN)
+  return a+(-b)
+end
+
 
 function hasname(qn::QN,qv_find::QNVal)
   for qv in qn

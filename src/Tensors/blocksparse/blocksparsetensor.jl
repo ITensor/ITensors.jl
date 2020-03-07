@@ -98,6 +98,7 @@ function BlockSparseTensor(blockoffsets::BlockOffsets,
   return BlockSparseTensor(Float64,blockoffsets,inds)
 end
 
+
 """
 BlockSparseTensor(::UndefInitializer,
                   blocks::Vector{Block{N}},
@@ -132,6 +133,11 @@ Construct a block sparse tensor with no blocks.
 """
 function BlockSparseTensor(inds)
   return BlockSparseTensor(BlockOffsets{length(inds)}(),inds)
+end
+
+function BlockSparseTensor(::Type{ElT},
+                           inds) where {ElT<:Number,N}
+  return BlockSparseTensor(ElT,BlockOffsets{length(inds)}(),inds)
 end
 
 """
@@ -1114,6 +1120,15 @@ end
 #
 # Print block sparse tensors
 #
+
+#function Base.summary(io::IO,
+#                      T::BlockSparseTensor{ElT,N}) where {ElT,N}
+#  println(io,Base.dims2string(dims(T))," ",typeof(T))
+#  for (dim,ind) in enumerate(inds(T))
+#    println(io,"Dim $dim: ",ind)
+#  end
+#  println(io,"Number of nonzero blocks: ",nnzblocks(T))
+#end
 
 #function Base.summary(io::IO,
 #                      T::BlockSparseTensor{ElT,N}) where {ElT,N}

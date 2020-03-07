@@ -106,15 +106,15 @@ function state(sset::Vector{<:Index},
 end
 
 function siteinds(d::Integer,
-                  N::Integer)
+                  N::Integer; kwargs...)
   return [Index(d,"Site,n=$n") for n=1:N]
 end
 
 function siteinds(str::String,
-                  N::Integer)
+                  N::Integer; kwargs...)
   TType = TagType{Tag(str)}
   if !hasmethod(siteinds,Tuple{TType,Int})
     error("Overload of \"siteinds\" function not found for tag type \"$str\"")
   end
-  return siteinds(TType(),N)
+  return siteinds(TType(),N; kwargs...)
 end

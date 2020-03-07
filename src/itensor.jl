@@ -772,7 +772,12 @@ function Base.summary(io::IO,
                       T::ITensor)
   print(io,"ITensor ord=$(order(T))")
   for i = 1:order(T)
-    print(io," ",inds(T)[i])
+    if hasqns(inds(T)[i])
+      startstr = (i==1) ? "\n" : ""
+      print(io,startstr,inds(T)[i])
+    else
+      print(io," ",inds(T)[i])
+    end
   end
   print(io," \n",typeof(store(T)))
 end
