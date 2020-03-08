@@ -176,12 +176,7 @@ end
 function replacesites!(M::MPS,sites)
   for j in eachindex(M)
     sj = siteindex(M,j)
-    #TODO: use a more elegant approach to fix arrows?
-    if dir(sj) == dir(sites[j])
-      replaceindex!(M[j],sj,sites[j])
-    else
-      replaceindex!(M[j],sj,dag(sites[j]))
-    end
+    replaceindex!(M[j],sj,sites[j])
   end
   return M
 end
