@@ -36,7 +36,7 @@ end
 
 function state(::ElectronSite,
                st::AbstractString)
-  if st == "0" || st == "Emp"
+  if st == "Emp" || st == "0"
     return 1
   elseif st == "Up" || st == "↑"
     return 2
@@ -69,6 +69,8 @@ function op(::ElectronSite,
     Op[UpDnP, UpDn] = 1.
   elseif opname == "Ndn"
     Op[DnP, Dn] = 1.
+    Op[UpDnP, UpDn] = 1.
+  elseif opname == "Nupdn"
     Op[UpDnP, UpDn] = 1.
   elseif opname == "Ntot"
     Op[UpP, Up] = 1.
