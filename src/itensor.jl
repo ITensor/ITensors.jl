@@ -409,6 +409,7 @@ end
 # TODO: implement in terms of delta tensors (better for QNs)
 function replaceindex!(A::ITensor,i::Index,j::Index)
   pos = indexpositions(A,i)
+  isempty(pos) && error("Index not found")
   inds(A)[pos[1]] = j
   return A
 end
