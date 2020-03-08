@@ -920,5 +920,26 @@ Random.seed!(1234)
 
   end
 
+  @testset "Replace Index" begin
+    i = Index([QN(0)=>1,QN(1)=>2],"i")
+    j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
+
+    T1 = randomITensor(QN(1),i,j)
+    T2 = copy(T1)
+
+    k = Index([QN(0)=>1,QN(1)=>2],"k")
+
+    replaceindex!(T1,i,k)
+    @test hasindex(T1,k)
+    @test dir(inds(T1)[1]) == dir(i)
+
+    # Check that replaceindex! keeps
+    # original Arrow direction
+    replaceindex!(T2,i,dag(k))
+    @test hasindex(T2,k)
+    @test dir(inds(T2)[1]) == dir(i)
+    @test dir(inds(T2)[1]) != dir(dag(k))
+  end
+
 end
 
