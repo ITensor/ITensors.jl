@@ -1,5 +1,6 @@
 export flux,
        hasqns,
+       setdir,
        QNIndex,
        QNIndexVal,
        qn,
@@ -264,6 +265,10 @@ end
 # Make a new Index with the specified qn blocks
 function replaceqns(i::QNIndex,qns::QNBlocks)
   return Index(id(i),qns,dir(i),tags(i))
+end
+
+function setdir(i::QNIndex,ndir::Arrow)
+  return Index(id(i),space(i),ndir,tags(i))
 end
 
 function Tensors.setblockdim!(i::QNIndex,newdim::Int,n::Int)
