@@ -124,6 +124,8 @@ terms(ampo::AutoMPO) = ampo.terms
 
 Base.copy(ampo::AutoMPO) = AutoMPO(copy(terms(ampo)))
 
+Base.size(ampo::AutoMPO) = size(terms(ampo))
+
 function add!(ampo::AutoMPO,
               op::String, i::Int)
   push!(terms(ampo),MPOTerm(1.0,op,i))
@@ -183,15 +185,17 @@ end
 struct AutoMPOStyle <: Broadcast.BroadcastStyle end
 Base.BroadcastStyle(::Type{<:AutoMPO}) = AutoMPOStyle()
 
-# This makes sure the custom BroadcastStyle is used
+struct AutoMPOAddTermStyle <: Broadcast.BroadcastStyle end
+
 Base.broadcastable(ampo::AutoMPO) = ampo
 
-function Broadcast.materialize!(ampo::AutoMPO,
-                                ampo_plus_term::Broadcast.Broadcasted{Broadcast.Unknown,
-                                                                      Nothing,
-                                                                      typeof(+),
-                                                                      <:Tuple{AutoMPO,<:Tuple}})
-  add!(ampo,ampo_plus_term.args[2]...)
+Base.BroadcastStyle(::AutoMPOStyle, ::Broadcast.Style{Tuple}) = AutoMPOAddTermStyle()
+
+Broadcast.instantiate(bc::Broadcast.Broadcasted{AutoMPOAddTermStyle}) = bc
+
+function Base.copyto!(ampo,
+                      bc::Broadcast.Broadcasted{AutoMPOAddTermStyle})
+  add!(ampo,bc.args[2]...)
   return ampo
 end
 
