@@ -216,6 +216,31 @@ function Base.isless(m1::MatElem{T},m2::MatElem{T})::Bool where {T}
   return m1.val < m2.val
 end
 
+struct QNMatElem{T}
+  rowqn::QN
+  colqn::QN
+  row::Int
+  col::Int
+  val::T
+end
+
+function Base.:(==)(m1::QNMatElem{T},m2::QNMatElem{T})::Bool where {T}
+  return (m1.row==m2.row && m1.col==m2.col && m1.val==m2.val && m1.rowqn==m2.rowqn && m1.colqn==m2.colqn)
+end
+
+function Base.isless(m1::QNMatElem{T},m2::QNMatElem{T})::Bool where {T}
+  if m1.rowqn != m2.rowqn
+    return m1.rowqn < m2.rowqn
+  elseif m1.colqn != m2.colqn
+    return m1.colqn < m2.colqn
+  elseif m1.row != m2.row
+    return m1.row < m2.row
+  elseif m1.col != m2.col
+    return m1.col < m2.col
+  end
+  return m1.val < m2.val
+end
+
 function posInLink!(linkmap::Vector{OpTerm},
                     op::OpTerm)::Int
   isempty(op) && return -1
@@ -264,6 +289,215 @@ function remove_dups!(v::Vector{T}) where {T}
   end
   resize!(v,n)
   return
+end
+
+function qn_svdMPO(ampo::AutoMPO,
+                sites; 
+                kwargs...)::MPO
+
+  mindim::Int = get(kwargs,:mindim,1)
+  maxdim::Int = get(kwargs,:maxdim,10000)
+  cutoff::Float64 = get(kwargs,:cutoff,1E-13)
+
+  N = length(sites)
+
+  ValType = determineValType(terms(ampo))
+
+  Vs = [Dict{QN,Matrix{ValType}}() for n=1:N+1]
+  tempMPO = [QNMatElem{MPOTerm}[] for n=1:N]
+
+  crosses_bond(t::MPOTerm,n::Int) = (ops(t)[1].site <= n <= ops(t)[end].site)
+
+  rightmap = Dict{QN,Vector{OpTerm}}()
+  next_rightmap = Dict{QN,Vector{OpTerm}}()
+  
+  for n=1:N
+
+    leftbond_coefs = Dict{QN,Vector{MatElem{ValType}}}()
+
+    leftmap = Dict{QN,Vector{OpTerm}}()
+    for term in terms(ampo)
+      crosses_bond(term,n) || continue
+
+      left::OpTerm   = filter(t->(t.site < n),ops(term))
+      onsite::OpTerm = filter(t->(t.site == n),ops(term))
+      right::OpTerm  = filter(t->(t.site > n),ops(term))
+
+      function calcQN(term::OpTerm)
+        q = QN()
+        for st in term
+          op_tensor = op(sites[site(st)],name(st))
+          q -= flux(op_tensor)
+        end
+        return q
+      end
+      lqn = calcQN(left)
+      sqn = calcQN(onsite)
+
+      q_leftmap = get!(leftmap,lqn,OpTerm[])
+      q_rightmap = get!(rightmap,lqn,OpTerm[])
+
+      bond_row = -1
+      bond_col = -1
+      if !isempty(left)
+        bond_row = posInLink!(q_leftmap,left)
+        bond_col = posInLink!(q_rightmap,mult(onsite,right))
+        bond_coef = convert(ValType,coef(term))
+        q_leftbond_coefs = get!(leftbond_coefs,lqn,MatElem{ValType}[])
+        push!(q_leftbond_coefs,MatElem(bond_row,bond_col,bond_coef))
+      end
+
+      rqn = sqn+lqn
+      q_next_rightmap = get!(next_rightmap,rqn,OpTerm[])
+      A_row = bond_col
+      A_col = posInLink!(q_next_rightmap,right)
+      site_coef = 1.0+0.0im
+      if A_row == -1
+        site_coef = coef(term)
+      end
+      isempty(onsite) && push!(onsite,SiteOp("Id",n))
+      el = QNMatElem(lqn,rqn,A_row,A_col,MPOTerm(site_coef,onsite))
+      push!(tempMPO[n],el)
+    end
+    rightmap = next_rightmap
+    next_rightmap = Dict{QN,Vector{OpTerm}}()
+
+    remove_dups!(tempMPO[n])
+
+    if n > 1 && !isempty(leftbond_coefs)
+      for (q,mat) in leftbond_coefs
+        M = toMatrix(mat)
+        U,S,V = svd(M)
+        P = S.^2
+        truncate!(P;maxdim=maxdim,cutoff=cutoff,mindim=mindim)
+        tdim = length(P)
+        nc = size(M,2)
+        Vs[n][q] = Matrix{ValType}(V[1:nc,1:tdim])
+      end
+    end
+  end
+
+  #
+  # Make MPO link indices
+  #
+  d0 = 2
+  llinks = Vector{QNIndex}(undef,N+1)
+  llinks[1] = Index(QN()=>d0;tags="Link,n=0")
+  for n=1:N
+    qi = Vector{Pair{QN,Int}}()
+    if !haskey(Vs[n+1],QN())
+      # Make sure QN=zero is first in list of sectors
+      push!(qi,QN()=>d0)
+    end
+    for (q,Vq) in Vs[n+1]
+      cols = size(Vq,2)
+      if q==QN()
+        # Make sure QN=zero is first in list of sectors
+        insert!(qi,1,q=>d0+cols)
+      else
+        push!(qi,q=>cols)
+      end
+    end
+    llinks[n+1] = Index(qi...;tags="Link,n=$n")
+  end
+
+  H = MPO(N)
+
+  # Constants which define MPO start/end scheme
+  startState = 2
+  endState = 1
+
+  for n=1:N
+    finalMPO = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
+
+    ll = llinks[n]
+    rl = llinks[n+1]
+
+    function defaultMat(ll,rl,lqn,rqn) 
+      ldim = qnblockdim(ll,lqn)
+      rdim = qnblockdim(rl,rqn)
+      return zeros(ValType,ldim,rdim)
+    end
+
+    idTerm = [SiteOp("Id",n)]
+    finalMPO[(QN(),idTerm)] = defaultMat(ll,rl,QN(),QN())
+    idM = finalMPO[(QN(),idTerm)]
+    idM[1,1] = 1.0
+    idM[2,2] = 1.0
+
+    for el in tempMPO[n]
+      t = el.val
+      (abs(coef(t)) > eps()) || continue
+      A_row = el.row
+      A_col = el.col
+
+      M = get!(finalMPO,(el.rowqn,ops(t)),defaultMat(ll,rl,el.rowqn,el.colqn))
+
+      # rowShift and colShift account for
+      # special entries in the zero-QN sector
+      # of the MPO
+      rowShift = (el.rowqn == QN()) ? 2 : 0
+      colShift = (el.colqn == QN()) ? 2 : 0
+
+      ct = convert(ValType,coef(t))
+      if A_row==-1 && A_col==-1 #onsite term
+        M[startState,endState] += ct
+      elseif A_row==-1 #term starting on site n
+        VR = Vs[n+1][el.colqn]
+        for c=1:size(VR,2)
+          z = ct*VR[A_col,c]
+          M[startState,colShift+c] += z
+        end
+      elseif A_col==-1 #term ending on site n
+        VL = Vs[n][el.rowqn]
+        for r=1:size(VL,2)
+          z = ct*conj(VL[A_row,r])
+          M[rowShift+r,endState] += z
+        end
+      else
+        VL = Vs[n][el.rowqn]
+        VR = Vs[n+1][el.colqn]
+        for r=1:size(VL,2),c=1:size(VR,2)
+          z = ct*conj(VL[A_row,r])*VR[A_col,c]
+          M[rowShift+r,colShift+c] += z
+        end
+      end
+    end
+
+    s = sites[n]
+    H[n] = ITensor(dag(s),s',dag(ll),rl)
+    for (q_op,M) in finalMPO
+      op_prod = q_op[2]
+      Op = computeSiteProd(sites,op_prod)
+
+      rq = q_op[1]
+      sq = flux(Op)
+      cq = rq-sq
+
+      rn = qnblocknum(ll,rq)
+      cn = qnblocknum(rl,cq)
+
+      #TODO: wrap following 3 lines into a function
+      block = (rn,cn)
+      T = BlockSparseTensor([block],IndexSet(dag(ll),rl))
+      blockview(T,block) .= M
+
+      IT = itensor(T)
+      H[n] += IT * Op
+    end
+
+  end
+
+  L = ITensor(llinks[1])
+  L[startState] = 1.0
+
+  R = ITensor(dag(llinks[N+1]))
+  R[endState] = 1.0
+
+  H[1] *= L
+  H[N] *= R
+
+  return H
 end
 
 function svdMPO(ampo::AutoMPO,
@@ -429,6 +663,9 @@ function toMPO(ampo::AutoMPO,
                sites::Vector{<:Index};
                kwargs...)::MPO
   sortEachTerm!(ampo)
+  if hasqns(sites[1])
+    return qn_svdMPO(ampo,sites;kwargs...)
+  end
   return svdMPO(ampo,sites;kwargs...)
 end
 

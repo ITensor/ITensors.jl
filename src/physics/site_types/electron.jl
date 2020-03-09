@@ -4,12 +4,39 @@ const ElectronSite = TagType"Electron"
 
 function siteinds(::ElectronSite, 
                   N::Int; kwargs...)
+  conserve_qns = get(kwargs,:conserve_qns,false)
+  conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
+  conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
+  conserve_parity = get(kwargs,:conserve_parity,conserve_qns)
+  if conserve_sz && conserve_nf
+    em = QN(("Nf",0,-1),("Sz", 0)) => 1
+    up = QN(("Nf",1,-1),("Sz",+1)) => 1
+    dn = QN(("Nf",1,-1),("Sz",-1)) => 1
+    ud = QN(("Nf",2,-1),("Sz", 0)) => 1
+    return [Index(em,up,dn,ud;tags="Site,Electron,n=$n") for n=1:N]
+  elseif conserve_nf
+    zer = QN("Nf",0,-1) => 1
+    one = QN("Nf",1,-1) => 2
+    two = QN("Nf",2,-1) => 1
+    return [Index(zer,one,two;tags="Site,Electron,n=$n") for n=1:N]
+  elseif conserve_sz
+    em = QN(("Sz", 0),("Pf",0,-2)) => 1
+    up = QN(("Sz",+1),("Pf",1,-2)) => 1
+    dn = QN(("Sz",-1),("Pf",1,-2)) => 1
+    ud = QN(("Sz", 0),("Pf",0,-2)) => 1
+    return [Index(em,up,dn,ud;tags="Site,Electron,n=$n") for n=1:N]
+  elseif conserve_parity
+    zer = QN("Pf",0,-2) => 1
+    one = QN("Pf",1,-2) => 2
+    two = QN("Pf",0,-2) => 1
+    return [Index(zer,one,two;tags="Site,Electron,n=$n") for n=1:N]
+  end
   return [Index(4,"Site,Electron,n=$n") for n=1:N]
 end
 
 function state(::ElectronSite,
                st::AbstractString)
-  if st == "0" || st == "Emp"
+  if st == "Emp" || st == "0"
     return 1
   elseif st == "Up" || st == "↑"
     return 2
@@ -42,6 +69,8 @@ function op(::ElectronSite,
     Op[UpDnP, UpDn] = 1.
   elseif opname == "Ndn"
     Op[DnP, Dn] = 1.
+    Op[UpDnP, UpDn] = 1.
+  elseif opname == "Nupdn"
     Op[UpDnP, UpDn] = 1.
   elseif opname == "Ntot"
     Op[UpP, Up] = 1.

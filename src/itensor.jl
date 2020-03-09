@@ -412,6 +412,7 @@ end
 # TODO: implement in terms of delta tensors (better for QNs)
 function replaceindex!(A::ITensor,i::Index,j::Index)
   pos = indexpositions(A,i)
+  isempty(pos) && error("Index not found")
   inds(A)[pos[1]] = j
   return A
 end
@@ -778,7 +779,12 @@ function Base.summary(io::IO,
                       T::ITensor)
   print(io,"ITensor ord=$(order(T))")
   for i = 1:order(T)
-    print(io," ",inds(T)[i])
+    if hasqns(inds(T)[i])
+      startstr = (i==1) ? "\n" : ""
+      print(io,startstr,inds(T)[i])
+    else
+      print(io," ",inds(T)[i])
+    end
   end
   print(io," \n",typeof(store(T)))
 end

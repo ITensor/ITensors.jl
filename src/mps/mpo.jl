@@ -170,12 +170,13 @@ end
 
 function simlinks!(M::T) where {T <: Union{MPS,MPO}}
   @inbounds for i ∈ eachindex(M)[1:end-1]
+    isnothing(commonindex(M[i],M[i+1])) && continue
     l = linkindex(M,i)
     l̃ = sim(l)
     #M[i] *= δ(l,l̃)
     replaceindex!(M[i],l,l̃)
     #M[i+1] *= δ(l,l̃)
-    replaceindex!(M[i+1],l,l̃)
+    replaceindex!(M[i+1],l,dag(l̃))
   end
 end
 
@@ -447,7 +448,7 @@ function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     pl = commonindex(psi[b],psi[b+1])
     C,_ = combiner(Al,pl)
     psi_out[b] *= C
-    psi_out[b+1] *= C
+    psi_out[b+1] *= dag(C)
   end
 
   truncate!(psi_out;kwargs...)
@@ -529,9 +530,14 @@ function orthogonalize!(M::Union{MPS,MPO},
     (leftlim(M) < 0) && set_leftlim!(M,0)
     b = leftlim(M)+1
     linds = uniqueinds(M[b],M[b+1])
-    Q,R = qr(M[b], linds)
-    M[b] = Q
-    M[b+1] *= R
+
+    #Q,R = qr(M[b], linds)
+    #M[b] = Q
+    #M[b+1] *= R
+    U,S,V = svd(M[b],linds)
+    M[b] = U
+    M[b+1] *= (S*V)
+
     set_leftlim!(M,b)
     if rightlim(M) < leftlim(M)+2
       set_rightlim!(M,leftlim(M)+2)

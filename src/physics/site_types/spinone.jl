@@ -4,6 +4,14 @@ const SpinOneSite = Union{TagType"S=1", TagType"SpinOne"}
 
 function siteinds(::SpinOneSite,
                   N::Int; kwargs...)
+  conserve_qns = get(kwargs,:conserve_qns,false)
+  conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
+  if conserve_sz
+    up = QN("Sz",+2) => 1
+    z0 = QN("Sz", 0) => 1
+    dn = QN("Sz",-2) => 1
+    return [Index(up,z0,dn;tags="Site,S=1,n=$n") for n=1:N]
+  end
   return [Index(3,"Site,S=1,n=$n") for n=1:N]
 end
 

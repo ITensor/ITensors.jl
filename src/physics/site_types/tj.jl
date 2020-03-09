@@ -4,6 +4,29 @@ const tJSite = TagType"tJ"
 
 function siteinds(::tJSite,
                   N::Int; kwargs...)
+  conserve_qns = get(kwargs,:conserve_qns,false)
+  conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
+  conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
+  conserve_parity = get(kwargs,:conserve_parity,conserve_qns)
+  if conserve_sz && conserve_nf
+    em = QN(("Nf",0,-1),("Sz", 0)) => 1
+    up = QN(("Nf",1,-1),("Sz",+1)) => 1
+    dn = QN(("Nf",1,-1),("Sz",-1)) => 1
+    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+  elseif conserve_nf
+    zer = QN("Nf",0,-1) => 1
+    one = QN("Nf",1,-1) => 2
+    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+  elseif conserve_sz
+    em = QN(("Sz", 0),("Pf",0,-2)) => 1
+    up = QN(("Sz",+1),("Pf",1,-2)) => 1
+    dn = QN(("Sz",-1),("Pf",1,-2)) => 1
+    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+  elseif conserve_parity
+    zer = QN("Pf",0,-2) => 1
+    one = QN("Pf",1,-2) => 2
+    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+  end
   return [Index(3,"Site,tJ,n=$n") for n=1:N]
 end
 

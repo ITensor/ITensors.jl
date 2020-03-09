@@ -80,6 +80,12 @@ import ITensors.SmallString
 
     @test QN("P",0,2) + QN("P",1,2) == QN("P",1,2)
     @test QN("P",1,2) + QN("P",1,2) == QN("P",0,2)
+
+    # Arithmetic involving mixed-label QNs
+    @test QN()-QN("Sz",2) == QN("Sz",-2)
+    @test QN("Sz",2)-QN() == QN("Sz",2)
+    @test QN()-QN(("Sz",2),("N",1)) == QN(("Sz",-2),("N",-1))
+    @test QN("N",1)-QN("Sz",2) == QN(("N",1),("Sz",-2))
   end
 
   @testset "Ordering" begin
@@ -111,6 +117,12 @@ import ITensors.SmallString
     @test (qc == qd)
     @test !(qc < qd)
     @test !(qd < qc)
+  end
+
+  @testset "Hashing" begin
+    @test hash(QN(("Sz",0))) == hash(QN())
+    @test hash(QN("Sz",0)) == hash(QN("N",0))
+    @test hash(QN(("Sz",1),("N",2))) == hash(QN(("N",2),("Sz",1)))
   end
 
 end

@@ -14,9 +14,15 @@ function ITensor(inds::QNIndex...)
   return itensor(T)
 end
 
+function ITensor(::Type{ELT},inds::QNIndex...) where {ELT<:Number} 
+  T = BlockSparseTensor(ELT,inds)
+  return itensor(T)
+end
+
 ITensor(::Type{T},
         flux::QN,
         inds::Index...) where {T<:Number} = ITensor(T,flux,IndexSet(inds...))
+
 
 ITensor(flux::QN,inds::IndexSet) = ITensor(Float64,flux::QN,inds...)
 
@@ -183,3 +189,11 @@ function delta(::Type{ElT},is::QNIndexSet) where {ElT<:Number}
   return itensor(T)
 end
 
+function replaceindex!(A::ITensor,i::QNIndex,j::QNIndex)
+  space(i) != space(j) && error("Indices must have the same spaces to be replaced")
+  pos = indexpositions(A,i)
+  isempty(pos) && error("Index not found")
+  curdir = dir(inds(A)[pos[1]])
+  inds(A)[pos[1]] = setdir(j,curdir)
+  return A
+end

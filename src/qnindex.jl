@@ -1,7 +1,11 @@
 export flux,
+       hasqns,
+       setdir,
        QNIndex,
        QNIndexVal,
-       qn
+       qn,
+       qnblockdim,
+       qnblocknum
 
 const QNBlock = Pair{QN,Int64}
 const QNBlocks = Vector{QNBlock}
@@ -42,6 +46,10 @@ end
 const QNIndex = Index{QNBlocks}
 const QNIndexVal = IndexVal{QNIndex}
 
+hasqns(::QNIndex) = true
+
+QNIndex() = Index(IDType(0),Pair{QN,Int}[],Out,TagSet(("",0)))
+
 function have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks,1)
   for n in 2:nblocks(qnblocks)
@@ -60,8 +68,8 @@ end
 
 function Index(qnblocks::QNBlocks, dir::Arrow, tags=("",0))
   # TODO: make this a debug check?
-  have_same_qns(qnblocks) || error("When creating a QN Index, the QN blocks must have the same QNs")
-  have_same_mods(qnblocks) || error("When creating a QN Index, the QN blocks must have the same mods")
+  #have_same_qns(qnblocks) || error("When creating a QN Index, the QN blocks must have the same QNs")
+  #have_same_mods(qnblocks) || error("When creating a QN Index, the QN blocks must have the same mods")
   ts = TagSet(tags)
   return Index(rand(IDType),qnblocks,dir,ts)
 end
@@ -97,6 +105,34 @@ function qn(iv::QNIndexVal)
   error("qn: QNIndexVal out of range")
   return QN()
 end
+
+"""
+    qnblocknum(ind::QNIndex,q::QN)
+
+Given a QNIndex `ind` and QN `q`, return the 
+number of the block (from 1,...,nblocks(ind)) 
+of the QNIndex having QN equal to `q`. Assumes 
+all blocks of `ind` have a unique QN.
+"""
+function qnblocknum(ind::QNIndex,q::QN) 
+  for b=1:nblocks(ind)
+    if qn(ind,b) == q
+      return b
+    end
+  end
+  error("No block found with QN equal to $q")
+  return 0
+end
+
+"""
+    qnblockdim(ind::QNIndex,q::QN)
+
+Given a QNIndex `ind` and QN `q`, return the 
+dimension of the block of the QNIndex having 
+QN equal to `q`. Assumes all blocks of `ind` 
+have a unique QN.
+"""
+qnblockdim(ind::QNIndex,q::QN) = blockdim(ind,qnblocknum(ind,q))
 
 
 # TODO: generic to IndexSet and BlockDims
@@ -247,6 +283,10 @@ function replaceqns(i::QNIndex,qns::QNBlocks)
   return Index(id(i),qns,dir(i),tags(i))
 end
 
+function setdir(i::QNIndex,ndir::Arrow)
+  return Index(id(i),space(i),ndir,tags(i))
+end
+
 function Tensors.setblockdim!(i::QNIndex,newdim::Int,n::Int)
   qns = space(i)
   qns[n] = qn(qns[n]) => newdim
@@ -275,8 +315,6 @@ function combineblocks(i::QNIndex)
   return iR,perm,comb
 end
 
-hasqns(::QNIndex) = true
-
 Tensors.dense(inds::QNIndex...) = dense.(inds)
 
 Tensors.dense(i::QNIndex) = Index(id(i),dim(i),dir(i),tags(i))
@@ -285,9 +323,9 @@ function Base.show(io::IO,
                    i::QNIndex)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
-    print(io,"($(dim(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
+    print(io,"(dim=$(dim(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
   else
-    print(io,"($(dim(i))|id=$(idstr))$(primestring(tags(i)))")
+    print(io,"(dim=$(dim(i))|id=$(idstr))$(primestring(tags(i)))")
   end
   println(io," <$(dir(i))>")
   for (n,qnblock) in enumerate(space(i))
