@@ -142,6 +142,16 @@ function blockdim(inds,
   return prod(blockdims(inds,block))
 end
 
+"""
+blockdiaglength(inds::BlockDims,block)
+
+The length of the diagonal of the specified block.
+"""
+function blockdiaglength(inds,
+                         block)
+  return minimum(blockdims(inds,block))
+end
+
 outer(dim1,dim2,dim3,dims...) = outer(outer(dim1,dim2),dim3,dims...)
 
 function outer(dim1::BlockDim,dim2::BlockDim)

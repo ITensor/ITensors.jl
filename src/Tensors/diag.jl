@@ -43,8 +43,6 @@ Base.eltype(::Type{<:Diag{ElT}}) where {ElT} = ElT
 # Deal with uniform Diag conversion
 Base.convert(::Type{<:Diag{ElT,VecT}},D::Diag) where {ElT,VecT} = Diag(convert(VecT,data(D)))
 
-diaglength(inds) = (length(inds) == 0 ? 1 : minimum(dims(inds)))
-
 Base.size(D::Diag) = size(data(D))
 
 # TODO: write in terms of ::Int, not inds
@@ -165,15 +163,6 @@ function contraction_output_type(TensorT1::Type{<:DiagTensor{<:Number,N1}},
   return similar_type(promote_type(TensorT1,TensorT2),IndsR)
 end
 
-# TODO: move to tensor.jl?
-function zero_contraction_output(T1::TensorT1,
-                                 T2::TensorT2,
-                                 indsR::IndsR) where {TensorT1<:Tensor,
-                                                      TensorT2<:Tensor,
-                                                      IndsR}
-  return zeros(contraction_output_type(TensorT1,TensorT2,IndsR),indsR)
-end
-
 # The output must be initialized as zero since it is sparse, cannot be undefined
 contraction_output(T1::DiagTensor,T2::Tensor,indsR) = zero_contraction_output(T1,T2,indsR)
 contraction_output(T1::Tensor,T2::DiagTensor,indsR) = contraction_output(T2,T1,indsR)
@@ -205,19 +194,31 @@ function Base.similar(T::DiagTensor{<:Number,N},
   return Tensor(similar(store(T),ElR,minimum(inds)),inds)
 end
 
-diag_length(T::DiagTensor) = minimum(dims(T))
-diag_length(T::DiagTensor{<:Number,0}) = 1
+"""
+getdiagindex(T::DiagTensor,i::Int)
 
-getdiag(T::DiagTensor,ind::Int) = store(T)[ind]
+Get the ith value along the diagonal of the tensor.
+"""
+getdiagindex(T::DiagTensor{<:Number},ind::Int) = store(T)[ind]
 
-setdiag!(T::DiagTensor,val,ind::Int) = (store(T)[ind] = val)
+"""
+setdiagindex!(T::DiagTensor,i::Int)
 
-setdiag(T::DiagTensor,val,ind::Int) = Tensor(Diag(val),inds(T))
+Set the ith value along the diagonal of the tensor.
+"""
+setdiagindex!(T::DiagTensor{<:Number},val,ind::Int) = (store(T)[ind] = val)
+
+"""
+setdiag(T::UniformDiagTensor,val)
+
+Set the entire diagonal of a uniform DiagTensor.
+"""
+setdiag(T::UniformDiagTensor,val) = Tensor(Diag(val),inds(T))
 
 Base.@propagate_inbounds function Base.getindex(T::DiagTensor{ElT,N},
                                                 inds::Vararg{Int,N}) where {ElT,N}
   if all(==(inds[1]),inds)
-    return store(T)[inds[1]]
+    return getdiagindex(T,inds[1])
   else
     return zero(eltype(ElT))
   end
@@ -230,7 +231,8 @@ Base.@propagate_inbounds Base.getindex(T::DiagTensor{<:Number,0}) = store(T)[1]
 Base.@propagate_inbounds function Base.setindex!(T::DiagTensor{<:Number,N},
                                                  val,inds::Vararg{Int,N}) where {N}
   all(==(inds[1]),inds) || error("Cannot set off-diagonal element of Diag storage")
-  return store(T)[inds[1]] = val
+  setdiagindex!(T,val,inds[1])
+  return T
 end
 Base.@propagate_inbounds Base.setindex!(T::DiagTensor{<:Number,1},val,ind::Int) = ( store(T)[ind] = val )
 Base.@propagate_inbounds Base.setindex!(T::DiagTensor{<:Number,0},val) = ( store(T)[1] = val )
@@ -250,8 +252,8 @@ end
 # convert to Dense
 function dense(T::TensorT) where {TensorT<:DiagTensor}
   R = zeros(dense(TensorT),inds(T))
-  for i = 1:diag_length(T)
-    setdiag!(R,getdiag(T,i),i)
+  for i = 1:diaglength(T)
+    setdiagindex!(R,getdiagindex(T,i),i)
   end
   return R
 end
@@ -259,9 +261,9 @@ end
 function outer!(R::DenseTensor{<:Number,NR},
                 T1::DiagTensor{<:Number,N1},
                 T2::DiagTensor{<:Number,N2}) where {NR,N1,N2}
-  for i1 = 1:diag_length(T1), i2 = 1:diag_length(T2)
+  for i1 = 1:diaglength(T1), i2 = 1:diaglength(T2)
     indsR = CartesianIndex{NR}(ntuple(r -> r ≤ N1 ? i1 : i2, Val(NR)))
-    R[indsR] = getdiag(T1,i1)*getdiag(T2,i2)
+    R[indsR] = getdiagindex(T1,i1)*getdiagindex(T2,i2)
   end
   return R
 end
@@ -296,8 +298,8 @@ function Base.permutedims!(R::DiagTensor{<:Number,N},
                            T::DiagTensor{<:Number,N},
                            perm::NTuple{N,Int},f::Function=(r,t)->t) where {N}
   # TODO: check that inds(R)==permute(inds(T),perm)?
-  for i=1:diag_length(R)
-    @inbounds setdiag!(R,f(getdiag(R,i),getdiag(T,i)),i)
+  for i=1:diaglength(R)
+    @inbounds setdiagindex!(R,f(getdiagindex(R,i),getdiagindex(T,i)),i)
   end
   return R
 end
@@ -312,7 +314,7 @@ end
 function Base.permutedims(T::UniformDiagTensor{ElT,N},
                           perm::NTuple{N,Int},
                           f::Function=identity) where {ElR,ElT,N}
-  R = Tensor(Diag(f(getdiag(T,1))),permute(inds(T),perm))
+  R = Tensor(Diag(f(getdiagindex(T,1))),permute(inds(T),perm))
   return R
 end
 
@@ -329,7 +331,7 @@ function permutedims!!(R::UniformDiagTensor{ElR,N},
                        T::UniformDiagTensor{ElT,N},
                        perm::NTuple{N,Int},
                        f::Function=(r,t)->t) where {ElR,ElT,N}
-  R = Tensor(Diag(f(getdiag(R,1),getdiag(T,1))),inds(R))
+  R = Tensor(Diag(f(getdiagindex(R,1),getdiagindex(T,1))),inds(R))
   return R
 end
 
@@ -337,8 +339,8 @@ function Base.permutedims!(R::DenseTensor{ElR,N},
                            T::DiagTensor{ElT,N},
                            perm::NTuple{N,Int},
                            f::Function = (r,t)->t) where {ElR,ElT,N}
-  for i = 1:diag_length(T)
-    @inbounds setdiag!(R,f(getdiag(R,i),getdiag(T,i)),i)
+  for i = 1:diaglength(T)
+    @inbounds setdiagindex!(R,f(getdiagindex(R,i),getdiagindex(T,i)),i)
   end
   return R
 end
@@ -356,11 +358,11 @@ function _contract!!(R::UniformDiagTensor{ElR,NR},labelsR,
   if NR==0  # If all indices of A and B are contracted
     # all indices are summed over, just add the product of the diagonal
     # elements of A and B
-    R = setdiag(R,diag_length(T1)*getdiag(T1,1)*getdiag(T2,1),1)
+    R = setdiag(R,diaglength(T1)*getdiagindex(T1,1)*getdiagindex(T2,1))
   else
     # not all indices are summed over, set the diagonals of the result
     # to the product of the diagonals of A and B
-    R = setdiag(R,getdiag(T1,1)*getdiag(T2,1),1)
+    R = setdiag(R,getdiagindex(T1,1)*getdiagindex(T2,1))
   end
   return R
 end
@@ -372,16 +374,16 @@ function contract!(R::DiagTensor{ElR,NR},labelsR,
     # all indices are summed over, just add the product of the diagonal
     # elements of A and B
     Rdiag = zero(ElR)
-    for i = 1:diag_length(T1)
-      Rdiag += getdiag(T1,i)*getdiag(T2,i)
+    for i = 1:diaglength(T1)
+      Rdiag += getdiagindex(T1,i)*getdiagindex(T2,i)
     end
-    setdiag!(R,Rdiag,1)
+    setdiagindex!(R,Rdiag,1)
   else
-    min_dim = min(diag_length(T1),diag_length(T2))
+    min_dim = min(diaglength(T1),diaglength(T2))
     # not all indices are summed over, set the diagonals of the result
     # to the product of the diagonals of A and B
     for i = 1:min_dim
-      setdiag!(R,getdiag(T1,i)*getdiag(T2,i),i)
+      setdiagindex!(R,getdiagindex(T1,i)*getdiagindex(T2,i),i)
     end
   end
   return R
@@ -400,14 +402,14 @@ function contract!(C::DenseTensor{ElC,NC},Clabels,
       # all indices are summed over, just add the product of the diagonal
       # elements of A and B
       for i = 1:min_dim
-        setdiag!(C,getdiag(C,1)+getdiag(A,i)*getdiag(B,i),1)
+        setdiagindex!(C,getdiagindex(C,1)+getdiagindex(A,i)*getdiagindex(B,i),1)
       end
     else
       # not all indices are summed over, set the diagonals of the result
       # to the product of the diagonals of A and B
       # TODO: should we make this return a Diag storage?
       for i = 1:min_dim
-        setdiag!(C,getdiag(A,i)*getdiag(B,i),i)
+        setdiagindex!(C,getdiagindex(A,i)*getdiagindex(B,i),i)
       end
     end
   else
@@ -464,8 +466,8 @@ function contract!(C::DenseTensor{ElC,NC},Clabels,
         boffset += ii*bustride[i]
         coffset += ii*custride[i]
       end
-      for j in 1:diag_length(A)
-        C[cstart+j*c_cstride+coffset] += getdiag(A,j)*
+      for j in 1:diaglength(A)
+        C[cstart+j*c_cstride+coffset] += getdiagindex(A,j)*
                                          B[bstart+j*b_cstride+boffset]
       end
     end

@@ -33,11 +33,13 @@ block(block::Block) = block
 # list
 offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
 
+# TODO: rename nzblock?
 block(bofs::BlockOffsets,n::Int) = block(bofs[n])
 
 nnzblocks(bofs::BlockOffsets) = length(bofs)
 nnzblocks(bs::Blocks) = length(bs)
 
+# TODO: make an iterator eachnzblocks to avoid allocation
 function nzblocks(bofs::BlockOffsets{N}) where {N}
   blocks = Blocks{N}(undef,nnzblocks(bofs))
   for i in 1:nnzblocks(bofs)
@@ -125,31 +127,50 @@ function new_block_pos(bofs::BlockOffsets{N},
 end
 
 # TODO: should this be a constructor?
-function get_blockoffsets(blocks::Vector{Block{N}},
-                          inds; sorted = true) where {N}
+function blockoffsets(blocks::Blocks{N},
+                      inds; sorted = true) where {N}
   if sorted
     blocks = sort(blocks;lt=isblockless)
   end
   blockoffsets = BlockOffsets{N}(undef,length(blocks))
-  offset_total = 0
+  nnz = 0
   for (i,block) in enumerate(blocks)
-    blockoffsets[i] = block=>offset_total
+    blockoffsets[i] = block=>nnz
     current_block_dim = blockdim(inds,block)
-    offset_total += current_block_dim
+    nnz += current_block_dim
   end
-  return blockoffsets,offset_total
+  return blockoffsets,nnz
+end
+
+"""
+diagblockoffsets(blocks::Blocks,inds)
+
+Get the blockoffsets only along the diagonal.
+The offsets are along the diagonal.
+"""
+function diagblockoffsets(blocks::Blocks{N},
+                          inds) where {N}
+  blocks = sort(blocks;lt=isblockless)
+  blockoffsets = BlockOffsets{N}(undef,length(blocks))
+  nnzdiag = 0
+  for (i,block) in enumerate(blocks)
+    blockoffsets[i] = block=>nnzdiag
+    current_block_diaglength = blockdiaglength(inds,block)
+    nnzdiag += current_block_diaglength
+  end
+  return blockoffsets,nnzdiag
 end
 
 # Permute the blockoffsets and indices
-function Base.permutedims(blockoffsets::BlockOffsets{N},
+function Base.permutedims(boffs::BlockOffsets{N},
                           inds,
                           perm::NTuple{N,Int}) where {N}
-  blocksR = Blocks{N}(undef,nnzblocks(blockoffsets))
-  for (i,(block,offset)) in enumerate(blockoffsets)
+  blocksR = Blocks{N}(undef,nnzblocks(boffs))
+  for (i,(block,offset)) in enumerate(boffs)
     blocksR[i] = permute(block,perm)
   end
   indsR = permute(inds,perm)
-  blockoffsetsR,_ = get_blockoffsets(blocksR,indsR)
+  blockoffsetsR,_ = blockoffsets(blocksR,indsR)
   return blockoffsetsR,indsR
 end
 

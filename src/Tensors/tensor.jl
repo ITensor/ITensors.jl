@@ -38,6 +38,8 @@ Base.size(T::Tensor,i::Int) = dim(T,i)
 
 Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 
+Base.copyto!(R::Tensor,T::Tensor) = copyto!(store(R),store(T))
+
 Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
 LinearAlgebra.norm(T::Tensor) = norm(store(T))
@@ -140,6 +142,135 @@ function StaticArrays.similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Ty
   return Tensor{ElT,ndims(IndsR),StoreT,IndsR}
 end
 
+# Convert to Array, avoiding copying if possible
+array(T::Tensor) = array(dense(T))
+matrix(T::Tensor{<:Number,2}) = array(T)
+vector(T::Tensor{<:Number,1}) = array(T)
+
+#
+# Helper functions for BlockSparse-type storage
+#
+
+"""
+nzblocks(T::Tensor)
+
+Return a vector of the non-zero blocks of the BlockSparseTensor.
+"""
+nzblocks(T::Tensor) = nzblocks(store(T))
+
+blockoffsets(T::Tensor) = blockoffsets(store(T))
+nnzblocks(T::Tensor) = nnzblocks(store(T))
+nnz(T::Tensor) = nnz(store(T))
+nblocks(T::Tensor) = nblocks(inds(T))
+blockdims(T::Tensor,block) = blockdims(inds(T),block)
+blockdim(T::Tensor,block) = blockdim(inds(T),block)
+
+"""
+offset(T::Tensor,block::Block)
+
+Get the linear offset in the data storage for the specified block.
+If the specified block is not non-zero structurally, return nothing.
+
+offset(T::Tensor,pos::Int)
+
+Get the offset of the block at position pos
+in the block-offsets list.
+"""
+offset(T::Tensor,block) = offset(store(T),block)
+
+block(T::Tensor,n::Int) = block(store(T),n)
+
+"""
+blockdim(T::Tensor,pos::Int)
+
+Get the block dimension of the block at position pos
+in the block-offset list.
+"""
+blockdim(T::Tensor,pos::Int) = blockdim(store(T),pos)
+
+findblock(T::Tensor,block; sorted=true) = findblock(store(T),block; sorted=sorted)
+
+"""
+isblocknz(T::Tensor,
+          block::Block)
+
+Check if the specified block is non-zero
+"""
+isblocknz(T::Tensor,block) = isblocknz(store(T),block)
+
+function blockstart(T::Tensor{<:Number,N},block) where {N}
+  start_index = @MVector ones(Int,N)
+  for j in 1:N
+    ind_j = ind(T,j)
+    for block_j in 1:block[j]-1
+      start_index[j] += blockdim(ind_j,block_j)
+    end
+  end
+  return Tuple(start_index)
+end
+
+function blockend(T::Tensor{<:Number,N},
+                  block) where {N}
+  end_index = @MVector zeros(Int,N)
+  for j in 1:N
+    ind_j = ind(T,j)
+    for block_j in 1:block[j]
+      end_index[j] += blockdim(ind_j,block_j)
+    end
+  end
+  return Tuple(end_index)
+end
+
+"""
+blockview(T::Tensor,block::Block)
+
+Given a specified block, return a Dense/Diag Tensor that is a view to the data
+in that block.
+"""
+function blockview(T::Tensor,block; sorted=true)
+  pos = findblock(T,block; sorted=sorted)
+  return blockview(T,pos)
+end
+
+#
+# Some generic getindex and setindex! functionality
+#
+
+"""
+getdiagindex
+
+Get the specified value on the diagonal
+"""
+function getdiagindex(T::Tensor{<:Number,N},ind::Int) where {N}
+  return getindex(T,CartesianIndex(ntuple(_->ind,Val(N))))
+end
+
+"""
+setdiagindex!
+
+Set the specified value on the diagonal
+"""
+function setdiagindex!(T::Tensor{<:Number,N},val,ind::Int) where {N}
+  setindex!(T,val,CartesianIndex(ntuple(_->ind,Val(N))))
+  return T
+end
+
+#
+# Some generic contraction functionality
+#
+
+function zero_contraction_output(T1::TensorT1,
+                                 T2::TensorT2,
+                                 indsR::IndsR) where {TensorT1<:Tensor,
+                                                      TensorT2<:Tensor,
+                                                      IndsR}
+  return zeros(contraction_output_type(TensorT1,TensorT2,IndsR),indsR)
+end
+
+#
+# Broadcasting
+#
+
 Base.BroadcastStyle(::Type{T}) where {T<:Tensor} = Broadcast.ArrayStyle{T}()
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}},
@@ -148,16 +279,12 @@ function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}},
   return similar(A)
 end
 
-# This is used for overloading broadcast
 "`A = find_tensor(As)` returns the first Tensor among the arguments."
 find_tensor(bc::Base.Broadcast.Broadcasted) = find_tensor(bc.args)
 find_tensor(args::Tuple) = find_tensor(find_tensor(args[1]), Base.tail(args))
 find_tensor(x) = x
 find_tensor(a::Tensor, rest) = a
 find_tensor(::Any, rest) = find_tensor(rest)
-
-# TODO: implement some generic fallbacks for necessary parts of the API?
-#Base.getindex(A::TensorT, i::Int) where {TensorT<:Tensor} = error("getindex not yet implemented for Tensor type $TensorT")
 
 function Base.summary(io::IO,
                       T::Tensor)
@@ -168,4 +295,11 @@ function Base.summary(io::IO,
   println(io,typeof(store(T)))
   println(io," ",Base.dims2string(dims(T)))
 end
+
+#
+# Printing
+#
+
+print_tensor(io::IO,T::Tensor) = Base.print_array(io,T)
+print_tensor(io::IO,T::Tensor{<:Number,1}) = Base.print_array(io,reshape(T,(dim(T),1)))
 

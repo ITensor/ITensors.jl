@@ -23,6 +23,9 @@ Base.ndims(::Type{Dims{N}}) where {N} = N
 Base.ndims(::Tuple{}) = 0
 Base.ndims(::Type{Tuple{}}) = 0
 
+mindim(inds) = (ndims(inds) == 0 ? 1 : minimum(dims(inds)))
+diaglength(inds) = mindim(inds)
+
 # This may be a bad idea to overload?
 # Type piracy?
 Base.strides(ds::Dims) = Base.size_to_strides(1, dims(ds)...)

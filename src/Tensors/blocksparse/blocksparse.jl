@@ -50,19 +50,6 @@ BlockSparse(::UndefInitializer,
 #end
 #BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
 
-blockoffsets(D::BlockSparse) = D.blockoffsets
-nnzblocks(D::BlockSparse) = length(blockoffsets(D))
-Base.length(D::BlockSparse) = length(data(D))
-Base.size(D::BlockSparse) = (length(D),)
-
-nnz(D::BlockSparse) = length(D)
-
-offset(D::BlockSparse,block::Block) = offset(blockoffsets(D),block)
-
-offset(D::BlockSparse,n::Int) = offset(blockoffsets(D),n)
-
-block(D::BlockSparse,n::Int) = block(blockoffsets(D),n)
-
 function Base.similar(D::BlockSparse)
   return BlockSparse(similar(data(D)),blockoffsets(D))
 end
@@ -111,6 +98,13 @@ function Base.promote_rule(::Type{<:BlockSparse{ElT1,VecT1,N1}},
   return BlockSparse{promote_type(ElT1,ElT2),promote_type(VecT1,VecT2),NR} where {NR}
 end
 
+function Base.promote_rule(::Type{<:BlockSparse{ElT1,Vector{ElT1},N1}},
+                           ::Type{ElT2}) where {ElT1,ElT2<:Number,N1}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = Vector{ElR}
+  return BlockSparse{ElR,VecR,N1}
+end
+
 function Base.convert(::Type{<:BlockSparse{ElR,VecR,N}},
                       D::BlockSparse{ElD,VecD,N}) where {ElR,VecR,N,ElD,VecD}
   return BlockSparse(convert(VecR,data(D)),
@@ -140,8 +134,8 @@ function blockdim(D::BlockSparse,
   return blockdim(D,pos)
 end
 
-findblock(D::BlockSparse{ElT,VecT,N},
-          block::Block{N}; vargs...) where {ElT,VecT,N} = findblock(blockoffsets(D),block; vargs...)
+findblock(D::BlockSparse{<:Number,<:AbstractVector,N},
+          block::Block{N}; vargs...) where {N} = findblock(blockoffsets(D),block; vargs...)
 
 """
 isblocknz(T::BlockSparse,

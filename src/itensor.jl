@@ -96,8 +96,10 @@ Construct an ITensor having indices
 given by the IndexSet `iset`
 """
 ITensor(is::IndexSet) = ITensor(Float64,is)
-ITensor() = ITensor{0}(Dense{Nothing}(),IndexSet())
 ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet{N}(inds...))
+
+# TODO: make this Dense(Float64[]), Dense([0.0]), Dense([1.0])?
+ITensor() = ITensor{0}(Dense{Nothing}(),IndexSet())
 
 function ITensor(::Type{ElT},
                  inds::IndexSet{N}) where {ElT<:Number,N}
@@ -118,8 +120,8 @@ function ITensor(::UndefInitializer,
 end
 ITensor(::UndefInitializer,inds::Index...) = ITensor(undef,IndexSet(inds...))
 
-function ITensor(x::S,inds::IndexSet{N}) where {S<:Number,N}
-  return ITensor{N}(Dense{float(S)}(fill(float(x),dim(inds))),inds)
+function ITensor(x::Number,inds::IndexSet{N}) where {N}
+  return ITensor{N}(Dense(fill(float(x),dim(inds))),inds)
 end
 
 """
@@ -135,13 +137,13 @@ and all elements set to `float(x)`.
 Note that the ITensor storage will be the closest
 floating point version of the input value.
 """
-ITensor(x::S,inds::Index...) where {S<:Number} = ITensor(x,IndexSet(inds...))
+ITensor(x::Number,inds::Index...) = ITensor(x,IndexSet(inds...))
 
-function ITensor(A::Array{S},inds::IndexSet{N}) where {S<:Number,N}
+function ITensor(A::Array{<:Number},inds::IndexSet{N}) where {N}
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   return ITensor{N}(Dense(float(vec(A))),inds)
 end
-ITensor(A::Array{S},inds::Index...) where {S<:Number} = ITensor(A,IndexSet(inds...))
+ITensor(A::Array{<:Number},inds::Index...) = ITensor(A,IndexSet(inds...))
 
 #
 # Diag ITensor constructors
@@ -176,8 +178,8 @@ The diagonal elements will be set to the values stored in `v` and
 the ITensor will have element type `float(T)`.
 The storage will have Diag type.
 """
-function diagITensor(v::Vector{T},
-                     is::IndexSet) where {T<:Number}
+function diagITensor(v::Vector{<:Number},
+                     is::IndexSet)
   length(v) ≠ mindim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
   return ITensor(Diag(float(v)),is)
 end
@@ -190,8 +192,8 @@ The diagonal elements will be set to the values stored in `v` and
 the ITensor will have element type `float(T)`.
 The storage will have Diag type.
 """
-function diagITensor(v::Vector{T},
-                     is::Index...) where {T<:Number}
+function diagITensor(v::Vector{<:Number},
+                     is::Index...)
   return diagITensor(v,IndexSet(is...))
 end
 
@@ -221,8 +223,8 @@ The diagonal elements will be set to the value `x` and
 the ITensor will have element type `float(T)`.
 The storage will have Diag type.
 """
-function diagITensor(x::T,
-                     is::IndexSet) where {T<:Number}
+function diagITensor(x::Number,
+                     is::IndexSet)
   return ITensor(Diag(fill(float(x),mindim(is))),is)
 end
 
@@ -234,8 +236,8 @@ The diagonal elements will be set to the value `x` and
 the ITensor will have element type `float(T)`.
 The storage will have Diag type.
 """
-function diagITensor(x::T,
-                     is::Index...) where {T<:Number}
+function diagITensor(x::Number,
+                     is::Index...)
   return diagITensor(x,IndexSet(is...))
 end
 
@@ -244,7 +246,7 @@ end
 
 Make a diagonal ITensor with all diagonal elements 1.
 """
-function delta(::Type{T},is::IndexSet) where {T}
+function delta(::Type{T},is::IndexSet) where {T<:Number}
   return ITensor(Diag(one(T)),is)
 end
 
@@ -253,7 +255,7 @@ end
 
 Make a diagonal ITensor with all diagonal elements 1.
 """
-function delta(::Type{T},is::Index...) where {T}
+function delta(::Type{T},is::Index...) where {T<:Number}
   return delta(T,IndexSet(is...))
 end
 
@@ -391,12 +393,13 @@ end
 
 Base.getindex(T::ITensor) = tensor(T)[]
 
-Base.setindex!(T::ITensor{N},x::Number,vals::Vararg{Int,N}) where {N} = (tensor(T)[vals...] = x)
+Base.setindex!(T::ITensor{N},x::Number,vals::Int...) where {N} = (setindex!(tensor(T),x,vals...); return T)
 
 function Base.setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   p = getperm(inds(T),ivs)
   vals = permute(val.(ivs),p)
-  return T[vals...] = x
+  T[vals...] = x
+  return T
 end
 
 function Base.fill!(T::ITensor,
@@ -459,6 +462,8 @@ swaptags(A::ITensor,vargs...) = ITensor(store(A),swaptags(inds(A),vargs...))
 # TODO: implement in a better way (more generically for other storage)
 Base.:(==)(A::ITensor,B::ITensor) = (norm(A-B) == zero(promote_type(eltype(A),eltype(B))))
 
+# TODO: can we define this as:
+# isapprox(A::ITensor,B::ITensor; kwargs...) = isapprox(norm(A-B),0; kwargs...)
 function Base.isapprox(A::ITensor,
                        B::ITensor;
                        atol::Real=0.0,
@@ -569,7 +574,7 @@ function Base.:*(A::ITensor,B::ITensor)
   C = ITensor(CT)
   warnTensorOrder = GLOBAL_PARAMS["WarnTensorOrder"]
   if warnTensorOrder > 0 && order(C) >= warnTensorOrder
-    println("Warning: contraction resulted in ITensor with $(order(C)) indices")
+    @warn "Contraction resulted in ITensor with $(order(C)) indices"
   end
   return C
 end
@@ -723,6 +728,7 @@ hasqns(T::ITensor) = hasqns(inds(T))
 
 Tensors.nnz(T::ITensor) = nnz(tensor(T))
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+Tensors.block(T::ITensor,i) = block(tensor(T),i)
 Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
 Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 flux(T::ITensor,block) = flux(inds(T),block)

@@ -1,6 +1,6 @@
 
 const BlockSparseMatrix{ElT,StoreT,IndsT} = BlockSparseTensor{ElT,2,StoreT,IndsT}
-
+const DiagBlockSparseMatrix{ElT,StoreT,IndsT} = DiagBlockSparseTensor{ElT,2,StoreT,IndsT}
 const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 
 """
@@ -26,11 +26,11 @@ end
 
 function _truncated_blockdim(S::DiagMatrix, docut::Float64; singular_values=false)
   newdim = 0
-	val = singular_values ? getdiag(S,newdim+1)^2 : getdiag(S,newdim+1)
+	val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
   while newdim+1 ≤ diaglength(S) && val ≥ docut
     newdim += 1
     if newdim+1 ≤ diaglength(S)
-      val = singular_values ? getdiag(S,newdim+1)^2 : getdiag(S,newdim+1)
+      val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
     end
   end
   return newdim
@@ -39,7 +39,7 @@ end
 function _svd_truncate(T::BlockSparseMatrix{ElT};
                        kwargs...) where {ElT}
   Us = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
-  Ss = Vector{BlockSparseMatrix{real(ElT)}}(undef,nnzblocks(T))
+  Ss = Vector{DiagBlockSparseMatrix{real(ElT)}}(undef,nnzblocks(T))
   Vs = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
 
   # Sorted eigenvalues
@@ -141,7 +141,7 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
 
   U = BlockSparseTensor(undef,nzblocksU,indsU)
   V = BlockSparseTensor(undef,nzblocksV,indsV)
-  S = BlockSparseTensor(nzblocksS,indsS)
+  S = DiagBlockSparseTensor(undef,nzblocksS,indsS)
 
   for n in 1:nnzblocksT
     Ub,Sb,Vb = Us[n],Ss[n],Vs[n]
@@ -154,8 +154,8 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
     blockview(V,blockV) .= Vb
 
     blockviewS = blockview(S,blockS)
-    for i in 1:diag_length(Sb)
-      blockviewS[i,i] = getdiag(Sb,i)
+    for i in 1:diaglength(Sb)
+      setdiagindex!(blockviewS,getdiagindex(Sb,i),i)
     end
   end
 
@@ -218,9 +218,7 @@ function _svd_no_truncate(T::BlockSparseMatrix{ElT};
   # Make S block diagonal by convention
   blocksS = Block{2}[ntuple(_->i,Val(2)) for i = 1:minimum(nblocks(indsS))]
 
-  # TODO: make a DiagBlockTensor type
-  # S = DiagBlockTensor(blocksS,indsS)
-  S = BlockSparseTensor(blocksS,indsS)
+  S = DiagBlockSparseTensor(undef,blocksS,indsS)
 
   for n in 1:nnzblocks(T)
     b = block(T,n)
@@ -235,14 +233,15 @@ function _svd_no_truncate(T::BlockSparseMatrix{ElT};
 
       blockview(U,(bV[2],bV[2])) .= Ub
       Sblock = blockview(S,(bV[2],bV[2]))
-      for i in 1:diag_length(Sb)
-        Sblock[i,i] = getdiag(Sb,i)
+      for i in 1:diaglength(Sb)
+        Sblock[i,i] = getdiagindex(Sb,i)
       end
     else
       blockview(U,b) .= Ub
       blockview(V,n) .= Vb
-      for i in 1:diag_length(Sb)
-        blockview(S,n)[i,i] = getdiag(Sb,i)
+      Sblock = blockview(S,n)
+      for i in 1:diaglength(Sb)
+        setdiagindex!(Sblock,getdiagindex(Sb,i),i)
       end
     end
   end
@@ -255,7 +254,7 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}};
   truncate = haskey(kwargs,:maxdim) || haskey(kwargs,:cutoff)
 
   Us = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
-  Ds = Vector{BlockSparseMatrix{real(ElT)}}(undef,nnzblocks(T))
+  Ds = Vector{DiagBlockSparseMatrix{real(ElT)}}(undef,nnzblocks(T))
 
   # Sorted eigenvalues
   d = Vector{real(ElT)}()
@@ -349,7 +348,7 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}};
   end
 
   U = BlockSparseTensor(ElT,undef,nzblocksU,indsU)
-  D = BlockSparseTensor(ElT,nzblocksD,indsD)
+  D = DiagBlockSparseTensor(ElT,undef,nzblocksD,indsD)
 
   for n in 1:nnzblocksT
     Ub,Db = Us[n],Ds[n]
@@ -360,8 +359,8 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}};
     blockview(U,blockU) .= Ub
 
     blockviewD = blockview(D,blockD)
-    for i in 1:diag_length(Db)
-      blockviewD[i,i] = getdiag(Db,i)
+    for i in 1:diaglength(Db)
+      setdiagindex!(blockviewD,getdiagindex(Db,i),i)
     end
   end
 
@@ -377,7 +376,7 @@ function LinearAlgebra.eigen(T::BlockSparseMatrix{ElT};
   end
 
   Us = Vector{BlockSparseMatrix{complex(ElT)}}(undef,nnzblocks(T))
-  Ds = Vector{BlockSparseMatrix{complex(ElT)}}(undef,nnzblocks(T))
+  Ds = Vector{DiagBlockSparseMatrix{complex(ElT)}}(undef,nnzblocks(T))
 
   # Sorted eigenvalues
   d = Vector{real(ElT)}()
@@ -450,7 +449,7 @@ function LinearAlgebra.eigen(T::BlockSparseMatrix{ElT};
   end
 
   U = BlockSparseTensor(complex(ElT),undef,nzblocksU,indsU)
-  D = BlockSparseTensor(complex(ElT),nzblocksD,indsD)
+  D = DiagBlockSparseTensor(complex(ElT),undef,nzblocksD,indsD)
 
   for n in 1:nnzblocksT
     Ub,Db = Us[n],Ds[n]
@@ -461,8 +460,8 @@ function LinearAlgebra.eigen(T::BlockSparseMatrix{ElT};
     blockview(U,blockU) .= Ub
 
     blockviewD = blockview(D,blockD)
-    for i in 1:diag_length(Db)
-      blockviewD[i,i] = getdiag(Db,i)
+    for i in 1:diaglength(Db)
+      setdiagindex!(blockviewD,getdiagindex(Db,i),i)
     end
   end
 

@@ -121,10 +121,12 @@ Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 Base.copy(i::Index) = Index(id(i),copy(space(i)),dir(i),copy(tags(i)))
 
 """
-    sim(i::Index)
+  sim(i::Index; tags=tags(i), dir=dir(i))
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-Tensors.sim(i::Index) = Index(rand(IDType),copy(space(i)),dir(i),copy(tags(i)))
+function Tensors.sim(i::Index; tags=copy(tags(i)), dir=dir(i))
+  return Index(rand(IDType),copy(space(i)),dir,TagSet(tags))
+end
 
 """
     dag(i::Index)
