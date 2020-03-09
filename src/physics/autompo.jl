@@ -124,6 +124,8 @@ terms(ampo::AutoMPO) = ampo.terms
 
 Base.copy(ampo::AutoMPO) = AutoMPO(copy(terms(ampo)))
 
+Base.size(ampo::AutoMPO) = size(terms(ampo))
+
 function add!(ampo::AutoMPO,
               op::String, i::Int)
   push!(terms(ampo),MPOTerm(1.0,op,i))
@@ -174,6 +176,27 @@ function Base.:+(ampo::AutoMPO,
   ampo_plus_term = copy(ampo)
   add!(ampo_plus_term,term...)
   return ampo_plus_term
+end
+
+#
+# ampo .+= ("Sz",1) syntax using broadcasting
+#
+
+struct AutoMPOStyle <: Broadcast.BroadcastStyle end
+Base.BroadcastStyle(::Type{<:AutoMPO}) = AutoMPOStyle()
+
+struct AutoMPOAddTermStyle <: Broadcast.BroadcastStyle end
+
+Base.broadcastable(ampo::AutoMPO) = ampo
+
+Base.BroadcastStyle(::AutoMPOStyle, ::Broadcast.Style{Tuple}) = AutoMPOAddTermStyle()
+
+Broadcast.instantiate(bc::Broadcast.Broadcasted{AutoMPOAddTermStyle}) = bc
+
+function Base.copyto!(ampo,
+                      bc::Broadcast.Broadcasted{AutoMPOAddTermStyle})
+  add!(ampo,bc.args[2]...)
+  return ampo
 end
 
 function Base.show(io::IO,
