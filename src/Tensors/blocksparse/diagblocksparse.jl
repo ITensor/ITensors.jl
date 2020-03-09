@@ -7,7 +7,11 @@ export DiagBlockSparse,
 struct DiagBlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
   diagblockoffsets::BlockOffsets{N}  # Block number-offset pairs
+
+  # Nonuniform case
   DiagBlockSparse(data::VecT,blockoffsets::BlockOffsets{N}) where {VecT<:AbstractVector{ElT},N} where {ElT} = new{ElT,VecT,N}(data,blockoffsets)
+
+  # Uniform case
   DiagBlockSparse(data::VecT,blockoffsets::BlockOffsets{N}) where {VecT<:Number,N} = new{VecT,VecT,N}(data,blockoffsets)
 end
 
@@ -33,7 +37,7 @@ DiagBlockSparse(::UndefInitializer,
 diagblockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
 blockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
 
-findblock(D::DiagBlockSparse{<:Number,<:AbstractVector,N},
+findblock(D::DiagBlockSparse{<:Number,<:Union{Number,AbstractVector},N},
           block::Block{N}; vargs...) where {N} = findblock(diagblockoffsets(D),block; vargs...)
 
 const NonuniformDiagBlockSparse{ElT,VecT} = DiagBlockSparse{ElT,VecT} where {VecT<:AbstractVector}
@@ -132,8 +136,8 @@ function Base.promote_rule(::Type{BlockSparseT1},
 end
 
 function Base.promote_rule(::Type{BlockSparseT1},
-                           ::Type{<:UniformDiagBlockSparse{ElT2,VecT2}}) where {BlockSparseT1<:BlockSparse,
-                                                                                ElT2<:Number,VecT2<:Number}
+                           ::Type{<:UniformDiagBlockSparse{ElT2,ElT2}}) where {BlockSparseT1<:BlockSparse,
+                                                                        ElT2<:Number}
   return promote_type(BlockSparseT1,ElT2)
 end
 
@@ -171,6 +175,15 @@ end
 DiagBlockSparseTensor(blocks::Blocks,
                       inds) = DiagBlockSparseTensor(Float64,blocks,inds)
 
+# Uniform case
+function DiagBlockSparseTensor(x::Number,
+                               blocks::Blocks,
+                               inds)
+  blockoffsets,nnz = diagblockoffsets(blocks,inds)
+  storage = DiagBlockSparse(x,blockoffsets)
+  return Tensor(storage,inds)
+end
+
 diagblockoffsets(T::DiagBlockSparseTensor) = diagblockoffsets(store(T))
 
 """
@@ -193,6 +206,13 @@ function blockview(T::DiagBlockSparseTensor,
   blockdiaglengthT = minimum(blockdimsT)
   dataTslice = @view data(store(T))[offsetT+1:offsetT+blockdiaglengthT]
   return Tensor(Diag(dataTslice),blockdimsT)
+end
+
+function blockview(T::UniformDiagBlockSparseTensor,
+                   bof::BlockOffset)
+  blockT,offsetT = bof
+  blockdimsT = blockdims(T,blockT)
+  return Tensor(Diag(getdiagindex(T,1)),blockdimsT)
 end
 
 Base.IndexStyle(::Type{<:DiagBlockSparseTensor}) = IndexCartesian()

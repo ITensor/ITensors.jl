@@ -46,13 +46,6 @@ randomITensor(flux::QN,
 randomITensor(::Type{<:Number},
               inds::QNIndexSet) = error("In randomITensor constructor, must specify desired flux when using QN Indices")
 
-# Throw error if flux is not specified
-randomITensor(::Type{ElT},
-              inds::QNIndex...) where {ElT<:Number} = randomITensor(ElT,IndexSet(inds...))
-
-randomITensor(inds::QNIndexSet) = randomITensor(Float64,inds)
-randomITensor(inds::QNIndex...) = randomITensor(Float64,inds...)
-
 function combiner(inds::QNIndex...; kwargs...)
   # TODO: support combining multiple set of indices
   tags = get(kwargs, :tags, "CMB,Link")
@@ -87,7 +80,6 @@ function diagITensor(::Type{ElT},
 end
 
 diagITensor(::Type{<:Number},inds::QNIndexSet) = error("Must specify flux")
-diagITensor(::Type{ElT},inds::QNIndex...) where {ElT<:Number} = diagITensor(ElT,IndexSet(inds...))
 
 """
 diagITensor(::Type{T}, flux::QN, is::Index...)
@@ -117,7 +109,6 @@ The storage will have DiagBlockSparse type.
 diagITensor(flux::QN,inds::Index...) = diagITensor(flux,IndexSet(inds...))
 
 diagITensor(inds::QNIndexSet) = error("Must specify flux")
-diagITensor(inds::QNIndex...) = diagITensor(IndexSet(inds...))
 
 """
 diagITensor(v::Vector{T<:Number},flux::QN,is::IndexSet)
@@ -150,7 +141,6 @@ function diagITensor(v::Vector{<:Number},
 end
 
 diagITensor(v::Vector{<:Number},inds::QNIndexSet) = error("Must specify flux")
-diagITensor(v::Vector{<:Number},inds::QNIndex...) = diagITensor(v,IndexSet(inds...))
 
 """
 diagITensor(x::Number, is::IndexSet)
@@ -181,5 +171,15 @@ function diagITensor(x::Number,
 end
 
 diagITensor(x::Number,is::QNIndexSet) = error("Must specify flux")
-diagITensor(x::Number,inds::QNIndex...) = diagITensor(x,IndexSet(inds...))
+
+"""
+    delta(::Type{T},inds::IndexSet)
+
+Make a diagonal ITensor with all diagonal elements 1.
+"""
+function delta(::Type{ElT},is::QNIndexSet) where {ElT<:Number}
+  blocks = nzdiagblocks(QN(),is)
+  T = DiagBlockSparseTensor(one(ElT),blocks,is)
+  return itensor(T)
+end
 

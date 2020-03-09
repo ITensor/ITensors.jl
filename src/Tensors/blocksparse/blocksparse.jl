@@ -98,6 +98,13 @@ function Base.promote_rule(::Type{<:BlockSparse{ElT1,VecT1,N1}},
   return BlockSparse{promote_type(ElT1,ElT2),promote_type(VecT1,VecT2),NR} where {NR}
 end
 
+function Base.promote_rule(::Type{<:BlockSparse{ElT1,Vector{ElT1},N1}},
+                           ::Type{ElT2}) where {ElT1,ElT2<:Number,N1}
+  ElR = promote_type(ElT1,ElT2)
+  VecR = Vector{ElR}
+  return BlockSparse{ElR,VecR,N1}
+end
+
 function Base.convert(::Type{<:BlockSparse{ElR,VecR,N}},
                       D::BlockSparse{ElD,VecD,N}) where {ElR,VecR,N,ElD,VecD}
   return BlockSparse(convert(VecR,data(D)),
