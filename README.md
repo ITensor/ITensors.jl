@@ -92,7 +92,7 @@ let
   i = Index(10)           # index of dimension 10
   j = Index(20)           # index of dimension 20
   M = randomITensor(i,j)  # random matrix, indices i,j
-  U,S,V = svd(M,i)        # compute SVD
+  U,S,V = svd(M,i)        # compute SVD with i as row index
   @show norm(M - U*S*V)   # ≈ 0.0
 end
 ```
@@ -117,7 +117,7 @@ let
   k = Index(4,"k")
   l = Index(4,"l")
   T = randomITensor(i,j,k,l)
-  U,S,V = svd(T,i,k)
+  U,S,V = svd(T,i,k)   # compute SVD with (i,k) as row indices (indices of U)
   @show hasinds(U,i,k) # == true
   @show hasinds(V,j,l) # == true
   @show norm(T - U*S*V)   # ≈ 0.0
