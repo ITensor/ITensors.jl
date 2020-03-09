@@ -117,9 +117,12 @@ end
 
 struct AutoMPO
   terms::Vector{MPOTerm}
-  AutoMPO() = new(Vector{MPOTerm}())
+  AutoMPO(terms::Vector{MPOTerm}) = new(terms)
 end
+AutoMPO() = AutoMPO(Vector{MPOTerm}())
 terms(ampo::AutoMPO) = ampo.terms
+
+Base.copy(ampo::AutoMPO) = AutoMPO(copy(terms(ampo)))
 
 function add!(ampo::AutoMPO,
               op::String, i::Int)
@@ -166,6 +169,12 @@ function add!(ampo::AutoMPO,
   return
 end
 
+function Base.:+(ampo::AutoMPO,
+                 term::Tuple)
+  ampo_plus_term = copy(ampo)
+  add!(ampo_plus_term,term...)
+  return ampo_plus_term
+end
 
 function Base.show(io::IO,
                    ampo::AutoMPO) 
