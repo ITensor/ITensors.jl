@@ -179,13 +179,14 @@ the behavior of quantum systems.
 using ITensors
 
 let
-  # Create 100 spin-one (dimension 3) indices
+  # Create 100 spin-one indices
   N = 100
   sites = siteinds("S=1",N)
 
   # Input operator terms which define 
   # a Hamiltonian matrix, and convert
   # these terms to an MPO tensor network
+  # (here we make the 1D Heisenberg model)
   ampo = AutoMPO()
   for j=1:N-1
     ampo +=     ("Sz",j,"Sz",j+1)
