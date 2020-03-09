@@ -176,6 +176,25 @@ function Base.:+(ampo::AutoMPO,
   return ampo_plus_term
 end
 
+#
+# ampo .+= ("Sz",1) syntax using broadcasting
+#
+
+struct AutoMPOStyle <: Broadcast.BroadcastStyle end
+Base.BroadcastStyle(::Type{<:AutoMPO}) = AutoMPOStyle()
+
+# This makes sure the custom BroadcastStyle is used
+Base.broadcastable(ampo::AutoMPO) = ampo
+
+function Broadcast.materialize!(ampo::AutoMPO,
+                                ampo_plus_term::Broadcast.Broadcasted{Broadcast.Unknown,
+                                                                      Nothing,
+                                                                      typeof(+),
+                                                                      <:Tuple{AutoMPO,<:Tuple}})
+  add!(ampo,ampo_plus_term.args[2]...)
+  return ampo
+end
+
 function Base.show(io::IO,
                    ampo::AutoMPO) 
   println(io,"AutoMPO:")

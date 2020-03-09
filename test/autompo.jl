@@ -538,4 +538,197 @@ end
 
   end
 
+  @testset ".+= syntax" begin
+
+    @testset "Show MPOTerm" begin
+      ampo = AutoMPO()
+      ampo .+= ("Sz",1,"Sz",2)
+      @test sprint(show,terms(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
+    end
+
+    @testset "Show AutoMPO" begin
+      ampo = AutoMPO()
+      ampo .+= ("Sz",1,"Sz",2)
+      ampo .+= ("Sz",2,"Sz",3)
+      expected_string = "AutoMPO:\n  \"Sz\"(1)\"Sz\"(2)\n  \"Sz\"(2)\"Sz\"(3)\n"
+      @test sprint(show,ampo) == expected_string
+    end
+
+    @testset "Single creation op" begin
+      ampo = AutoMPO()
+      ampo .+= ("Cdagup",3)
+      sites = siteinds("Electron",N)
+      W = toMPO(ampo,sites)
+      psi = makeRandomMPS(sites)
+      cdu_psi = copy(psi)
+      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
+      @test inner(psi,W,psi) ≈ inner(cdu_psi,psi)
+    end
+
+    @testset "Ising" begin
+      ampo = AutoMPO()
+      for j=1:N-1
+        ampo .+= ("Sz",j,"Sz",j+1)
+      end
+      sites = siteinds("S=1/2",N)
+      Ha = toMPO(ampo,sites)
+      He = isingMPO(sites)
+      psi = makeRandomMPS(sites)
+      Oa = inner(psi,Ha,psi)
+      Oe = inner(psi,He,psi)
+      @test Oa ≈ Oe
+    end
+
+    @testset "Ising-Different Order" begin
+      ampo = AutoMPO()
+      for j=1:N-1
+        ampo .+= ("Sz",j+1,"Sz",j)
+      end
+      sites = siteinds("S=1/2",N)
+      Ha = toMPO(ampo,sites)
+      He = isingMPO(sites)
+      psi = makeRandomMPS(sites)
+      Oa = inner(psi,Ha,psi)
+      Oe = inner(psi,He,psi)
+      @test Oa ≈ Oe
+    end
+
+    @testset "Heisenberg" begin
+      ampo = AutoMPO()
+      h = rand(N) #random magnetic fields
+      for j=1:N-1
+        ampo .+= ("Sz",j,"Sz",j+1)
+        ampo .+= (0.5,"S+",j,"S-",j+1)
+        ampo .+= (0.5,"S-",j,"S+",j+1)
+      end
+      for j=1:N
+        ampo .+= (h[j],"Sz",j)
+      end
+
+      sites = siteinds("S=1/2",N)
+      Ha = toMPO(ampo,sites)
+      He = heisenbergMPO(sites,h)
+      psi = makeRandomMPS(sites)
+      Oa = inner(psi,Ha,psi)
+      Oe = inner(psi,He,psi)
+      @test Oa ≈ Oe
+    end
+
+
+    @testset "Multiple Onsite Ops" begin
+      sites = siteinds("S=1",N)
+      ampo1 = AutoMPO()
+      for j=1:N-1
+        ampo1 .+= ("Sz",j,"Sz",j+1)
+        ampo1 .+= (0.5,"S+",j,"S-",j+1)
+        ampo1 .+= (0.5,"S-",j,"S+",j+1)
+      end
+      for j=1:N
+        ampo1 .+= ("Sz*Sz",j)
+      end
+      Ha1 = toMPO(ampo1,sites)
+
+      ampo2 = AutoMPO()
+      for j=1:N-1
+        ampo2 .+= ("Sz",j,"Sz",j+1)
+        ampo2 .+= (0.5,"S+",j,"S-",j+1)
+        ampo2 .+= (0.5,"S-",j,"S+",j+1)
+      end
+      for j=1:N
+        ampo2 .+= ("Sz",j,"Sz",j)
+      end
+      Ha2 = toMPO(ampo2,sites)
+
+      He = heisenbergMPO(sites,ones(N),"Sz*Sz")
+      psi = makeRandomMPS(sites)
+      Oe = inner(psi,He,psi)
+      Oa1 = inner(psi,Ha1,psi)
+      @test Oa1 ≈ Oe
+      Oa2 = inner(psi,Ha2,psi)
+      @test Oa2 ≈ Oe
+    end
+
+    @testset "Three-site ops" begin
+      ampo = AutoMPO()
+      # To test version of add! taking a coefficient
+      ampo .+= (1.0,"Sz",1,"Sz",2,"Sz",3)
+      @test length(terms(ampo)) == 1
+      for j=2:N-2
+        ampo .+= ("Sz",j,"Sz",j+1,"Sz",j+2)
+      end
+      h = ones(N)
+      for j=1:N
+        ampo .+= (h[j],"Sx",j)
+      end
+      sites = siteinds("S=1/2",N)
+      Ha = toMPO(ampo,sites)
+      He = threeSiteIsingMPO(sites,h)
+      psi = makeRandomMPS(sites)
+      Oa = inner(psi,Ha,psi)
+      Oe = inner(psi,He,psi)
+      @test Oa ≈ Oe
+    end
+
+    @testset "Four-site ops" begin
+      ampo = AutoMPO()
+      for j=1:N-3
+        ampo .+= ("Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3)
+      end
+      sites = siteinds("S=1/2",N)
+      Ha = toMPO(ampo,sites)
+      He = fourSiteIsingMPO(sites)
+      psi = makeRandomMPS(sites)
+      Oa = inner(psi,Ha,psi)
+      Oe = inner(psi,He,psi)
+      @test Oa ≈ Oe
+    end
+
+    @testset "Next-neighbor Heisenberg" begin
+      ampo = AutoMPO()
+      J1 = 1.0
+      J2 = 0.5
+      for j=1:N-1
+        ampo .+= (J1,  "Sz",j,"Sz",j+1)
+        ampo .+= (J1*0.5,"S+",j,"S-",j+1)
+        ampo .+= (J1*0.5,"S-",j,"S+",j+1)
+      end
+      for j=1:N-2
+        ampo .+= (J2,  "Sz",j,"Sz",j+2)
+        ampo .+= (J2*0.5,"S+",j,"S-",j+2)
+        ampo .+= (J2*0.5,"S-",j,"S+",j+2)
+      end
+      sites = siteinds("S=1/2",N)
+      Ha = toMPO(ampo,sites)
+
+      He = NNheisenbergMPO(sites,J1,J2)
+      psi = makeRandomMPS(sites)
+      Oa = inner(psi,Ha,psi)
+      Oe = inner(psi,He,psi)
+      @test Oa ≈ Oe
+      #@test maxlinkdim(Ha) == 8
+    end
+
+    @testset "Onsite Regression Test" begin
+      sites = siteinds("S=1",4)
+      ampo = AutoMPO()
+      ampo .+= (0.5, "Sx",1)
+      ampo .+= (0.5, "Sy",1)
+      H = toMPO(ampo, sites)
+      l = commonindex(H[1],H[2])
+      T = setElt(l[1])*H[1]
+      O = op(sites[1],"Sx")+op(sites[1],"Sy")
+      @test norm(T-0.5*O) < 1E-8
+
+        
+      sites = siteinds("S=1",2)
+      ampo = AutoMPO()
+      ampo .+= (0.5im, "Sx",1)
+      ampo .+= (0.5, "Sy",1)
+      H = toMPO(ampo, sites)
+      T = H[1]*H[2]
+      O = im*op(sites[1],"Sx")*op(sites[2],"Id")+op(sites[1],"Sy")*op(sites[2],"Id")
+      @test norm(T-0.5*O) < 1E-8
+    end
+
+  end
 end
