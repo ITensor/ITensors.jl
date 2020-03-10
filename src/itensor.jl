@@ -548,12 +548,12 @@ Base.:/(A::ITensor,x::Number) = A*(1.0/x)
 Base.:-(A::ITensor) = ITensor(-tensor(A))
 function Base.:+(A::ITensor,B::ITensor)
   C = copy(A)
-  C = add!(C,B)
+  add!(C,B)
   return C
 end
 function Base.:-(A::ITensor,B::ITensor)
   C = copy(A)
-  C = add!(C,-1,B)
+  add!(C,-1,B)
   return C
 end
 
@@ -650,11 +650,11 @@ B .+= A
 B .+= α .* A
 ```
 """
-add!(R::ITensor,T::ITensor) = add!(R,1,T)
+add!(R::ITensor,T::ITensor) = apply!(R,T,(r,t)->r+t)
 
-function add!(R::ITensor{N},α::Number,T::ITensor{N}) where {N}
-  return apply!(R,T,(r,t)->r+α*t)
-end
+add!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->r+α*t)
+
+add!(R::ITensor,T::ITensor,α::Number) = add!(R,α,T)
 
 """
     add!(A::ITensor, α::Number, β::Number, B::ITensor)
@@ -664,9 +664,7 @@ Add ITensors α*A and β*B and store the result in A.
 A .= α .* A .+ β .* B
 ```
 """
-function add!(R::ITensor{N},αr::Number,αt::Number,T::ITensor{N}) where {N}
-  return apply!(R,T,(r,t)->αr*r+αt*t)
-end
+add!(R::ITensor,αr::Number,αt::Number,T::ITensor) = apply!(R,T,(r,t)->αr*r+αt*t)
 
 function apply!(R::ITensor{N},T::ITensor{N},f::Function) where {N}
   perm = getperm(inds(R),inds(T))
@@ -772,6 +770,126 @@ end
 
 #######################################################################
 #
+# ITensor broadcast support
+#
+
+struct ITensorStyle <: Broadcast.BroadcastStyle end
+Base.BroadcastStyle(::Type{<:ITensor}) = ITensorStyle()
+
+Base.broadcastable(T::ITensor) = T
+
+"`A = find_itensor(As)` returns the first ITensor among the arguments."
+find_itensor(bc::Broadcast.Broadcasted) = find_itensor(bc.args)
+find_itensor(args::Tuple) = find_itensor(find_itensor(args[1]), Base.tail(args))
+find_itensor(x) = x
+find_itensor(a::ITensor, rest) = a
+find_itensor(::Any, rest) = find_itensor(rest)
+
+"`A = find_scalar(As)` returns the first scalar among the arguments."
+find_scalar(bc::Broadcast.Broadcasted) = find_scalar(bc.args)
+find_scalar(args::Tuple) = find_scalar(find_scalar(args[1]), Base.tail(args))
+find_scalar(x) = x
+find_scalar(a::Number, rest) = a
+find_scalar(::Any, rest) = find_scalar(rest)
+
+#
+# For B .= α .* A
+#
+
+struct ITensorMulScalarStyle <: Broadcast.BroadcastStyle end
+
+Base.BroadcastStyle(::ITensorStyle, ::Broadcast.DefaultArrayStyle{0}) = ITensorMulScalarStyle()
+
+Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorMulScalarStyle}) = bc
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcast.Broadcasted{ITensorMulScalarStyle})
+  mul!(T,bc.args[1],bc.args[2])
+  return T
+end
+
+function Base.similar(bc::Broadcast.Broadcasted{ITensorMulScalarStyle},
+                      ::Type{ElT}) where {ElT<:Number}
+  A = find_itensor(bc)
+  return similar(A,ElT)
+end
+
+#
+# For B .+= A
+#
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcast.Broadcasted{ITensorStyle,<:Any,typeof(+)})
+  if T === bc.args[1]
+    add!(T,bc.args[2])
+  elseif T === bc.args[2]
+    add!(T,bc.args[1])
+  else
+    error("When adding two ITensors in-place, one must be the same as the output ITensor")
+  end
+  return T
+end
+
+function Base.similar(bc::Broadcast.Broadcasted{ITensorStyle},
+                      ::Type{ElT}) where {ElT<:Number}
+  A = find_itensor(bc)
+  return similar(A,ElT)
+end
+
+#
+# For B .+= α .* A
+#
+
+struct ITensorMulAddStyle <: Broadcast.BroadcastStyle end
+
+Base.BroadcastStyle(::ITensorStyle, ::ITensorMulScalarStyle) = ITensorMulAddStyle()
+
+Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorMulAddStyle}) = bc
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcast.Broadcasted{ITensorMulAddStyle})
+  if T === bc.args[1]
+    add!(T,bc.args[2].args...)
+  elseif T === bc.args[2]
+    add!(T,bc.args[1].args...)
+  else
+    error("When adding two ITensors in-place, one must be the same as the output ITensor")
+  end
+  return T
+end
+
+#
+# For B .= α .* A .+ β .* B
+#
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcast.Broadcasted{ITensorMulScalarStyle,<:Any,typeof(+)})
+  α = find_scalar(bc.args[1])
+  A = find_itensor(bc.args[1])
+  β = find_scalar(bc.args[2])
+  B = find_itensor(bc.args[2])
+  if T === A
+    add!(T,α,β,B)
+  elseif T === B
+    add!(T,β,α,A)
+  else
+    error("When adding two ITensors in-place, one must be the same as the output ITensor")
+  end
+  return T
+end
+
+#
+# For C .= A .* B
+#
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcast.Broadcasted{ITensorStyle,<:Any,typeof(*)})
+  error("C .= A .* B not supported right now")
+  return T
+end
+
+#######################################################################
+#
 # Printing, reading and writing ITensors
 #
 
@@ -806,9 +924,13 @@ function Base.show(io::IO,
   summary(io,T)
 end
 
+function Base.similar(T::ITensor)
+  return ITensor(similar(tensor(T)))
+end
+
 function Base.similar(T::ITensor,
-                      element_type=eltype(T))
-  return ITensor(similar(tensor(T),element_type))
+                      ::Type{ElT}) where {ElT<:Number}
+  return ITensor(similar(tensor(T),ElT))
 end
 
 function readcpp(io::IO,::Type{Dense{ValT}};kwargs...) where {ValT}
