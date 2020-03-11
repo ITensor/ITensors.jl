@@ -578,10 +578,14 @@ function Tensors.truncate!(M::Union{MPS,MPO}; kwargs...)
 
 end
 
+# TODO: scale the tensors between the left limit
+# and right limit by x^(1/N)
+# where N is the distance between the left limit
+# and right limit
 function Base.:*(x::Number,M::Union{MPS,MPO})
   N = deepcopy(M)
   c = div(length(N), 2)
-  scale!(N[c],x)
+  N[c] .*= x
   return N
 end
 
