@@ -260,17 +260,27 @@ struct IndexVal{IndexT<:Index}
 end
 
 IndexVal() = IndexVal(Index(),1)
+IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first,iv.second)
+
+const PairIndexInt{IndexT} = Pair{IndexT,Int}
+const IndexValOrPairIndexInt{IndexT} = Union{IndexVal{IndexT},PairIndexInt{IndexT}}
+
+Base.convert(::Type{IndexVal},iv::Pair{<:Index,Int}) = IndexVal(iv)
+Base.convert(::Type{IndexVal{IndexT}},iv::Pair{IndexT,Int}) where {IndexT<:Index} = IndexVal(iv)
 
 Base.getindex(i::Index, j::Int) = IndexVal(i, j)
 #Base.getindex(i::Index, c::Colon) = [IndexVal(i, j) for j in 1:dim(i)]
 
 (i::Index)(n::Int) = IndexVal(i,n)
 
-val(iv::IndexVal) = iv.val
 ind(iv::IndexVal) = iv.ind
+val(iv::IndexVal) = iv.val
 
-Base.:(==)(i::Index,iv::IndexVal) = (i==ind(iv))
-Base.:(==)(iv::IndexVal,i::Index) = (i==iv)
+ind(iv::PairIndexInt) = iv.first
+val(iv::PairIndexInt) = iv.second
+
+Base.:(==)(i::Index,iv::IndexValOrPairIndexInt) = (i==ind(iv))
+Base.:(==)(iv::IndexValOrPairIndexInt,i::Index) = (i==iv)
 
 plev(iv::IndexVal) = plev(ind(iv))
 prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))

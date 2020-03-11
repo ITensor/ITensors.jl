@@ -263,7 +263,7 @@ delta(is::IndexSet) = delta(Float64,is)
 delta(is::Index...) = delta(IndexSet(is...))
 const δ = delta
 
-function setelt(iv::IndexVal)
+function setelt(iv)
   A = ITensor(ind(iv))
   A[val(iv)] = 1.0
   return A
@@ -375,8 +375,7 @@ Base.getindex(T::ITensor{N},vals::Vararg{Int,N}) where {N} = tensor(T)[vals...]:
 # CartesianIndices
 Base.getindex(T::ITensor{N},I::CartesianIndex{N}) where {N} = tensor(T)[I]::Number
 
-function Base.getindex(T::ITensor{N},
-                       ivs::Vararg{IndexVal,N}) where {N}
+function Base.getindex(T::ITensor,ivs...)
   p = getperm(inds(T),ivs)
   vals = permute(val.(ivs),p)
   return T[vals...]
@@ -392,9 +391,12 @@ end
 
 Base.getindex(T::ITensor) = tensor(T)[]
 
-Base.setindex!(T::ITensor{N},x::Number,vals::Int...) where {N} = (setindex!(tensor(T),x,vals...); return T)
+function Base.setindex!(T::ITensor,x::Number,vals::Int...)
+  tensor(T)[vals...] = x
+  return T
+end
 
-function Base.setindex!(T::ITensor,x::Number,ivs::IndexVal...)
+function Base.setindex!(T::ITensor,x::Number,ivs...)
   p = getperm(inds(T),ivs)
   vals = permute(val.(ivs),p)
   T[vals...] = x
@@ -884,6 +886,32 @@ function Base.copyto!(R::ITensor,
   T = find_type(ITensor,bc.args)
   apply!(R,T,(r,t)->t^α)
   return R
+end
+
+#
+# For A .= α
+#
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcast.Broadcasted{Broadcast.DefaultArrayStyle{0},
+                                                <:Any,
+                                                typeof(identity),
+                                                <:Tuple{<:Number}})
+  fill!(T,bc.args[1])
+  return T
+end
+
+#
+# For B .= A
+#
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcast.Broadcasted{ITensorStyle,
+                                                <:Any,
+                                                typeof(identity),
+                                                <:Tuple{<:ITensor}})
+  copyto!(T,bc.args[1])
+  return T
 end
 
 #

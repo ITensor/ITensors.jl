@@ -118,7 +118,7 @@ end
   A = randomITensor(i,j)
   B = complex(A)
   for ii ∈ dim(i), jj ∈ dim(j)
-    @test complex(A[i(ii),j(jj)]) == B[i(ii),j(jj)]
+    @test complex(A[i=>ii,j=>jj]) == B[i=>ii,j=>jj]
   end
 end
 
@@ -137,6 +137,14 @@ end
   j = Index(2,"j")
   A = randomITensor(i,j)
   fill!(A, 1.0)
+  @test all(data(store(A)) .== 1.0)
+end
+
+@testset "fill! using broadcast" begin
+  i = Index(2,"i")
+  j = Index(2,"j")
+  A = randomITensor(i,j)
+  A .= 1.0
   @test all(data(store(A)) .== 1.0)
 end
 
@@ -420,8 +428,8 @@ end
     @test typeof(S1.store) == Dense{ComplexF64,Vector{ComplexF64}}
     @test typeof(S2.store) == Dense{ComplexF64,Vector{ComplexF64}}
     for ii=1:dim(i),jj=1:dim(j)
-      @test S1[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
-      @test S2[i(ii),j(jj)] ≈ TC[i(ii),j(jj)]+TR[i(ii),j(jj)]
+      @test S1[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
+      @test S2[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
     end
   end
 
@@ -438,10 +446,10 @@ end
   @testset "Set and get values with IndexVals" begin
     A = ITensor(SType,i,j,k)
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      A[k(kk),j(jj),i(ii)] = digits(SType,ii,jj,kk)
+      A[k=>kk,j=>jj,i=>ii] = digits(SType,ii,jj,kk)
     end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test A[j(jj),k(kk),i(ii)]==digits(SType,ii,jj,kk)
+      @test A[j=>jj,k=>kk,i=>ii]==digits(SType,ii,jj,kk)
     end
     @test_throws MethodError A[1]
   end
@@ -452,24 +460,24 @@ end
     @test j==inds(permA)[2]
     @test i==inds(permA)[3]
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test A[k(kk),i(ii),j(jj)]==permA[i(ii),j(jj),k(kk)]
+      @test A[k=>kk,i=>ii,j=>jj]==permA[i=>ii,j=>jj,k=>kk]
     end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test A[k(kk),i(ii),j(jj)]==permA[i(ii),j(jj),k(kk)]
+      @test A[k=>kk,i=>ii,j=>jj]==permA[i=>ii,j=>jj,k=>kk]
     end
     # TODO: I think this was doing slicing, but what is the output
     # of slicing an ITensor?
     #@testset "getindex and setindex with vector of IndexVals" begin
-    #    k_inds = [k(kk) for kk ∈ 1:dim(k)]
+    #    k_inds = [k=>kk for kk ∈ 1:dim(k)]
     #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-    #      @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
+    #      @test A[k_inds,i=>ii,j=>jj]==permA[i=>ii,j=>jj,k_inds...]
     #    end
     #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-    #        A[k_inds,i(ii),j(jj)]=collect(1:length(k_inds))
+    #        A[k_inds,i=>ii,j=>jj]=collect(1:length(k_inds))
     #    end
     #    permA = permute(A,k,j,i)
     #    for ii ∈ 1:dim(i), jj ∈ 1:dim(j)
-    #      @test A[k_inds,i(ii),j(jj)]==permA[i(ii),j(jj),k_inds...]
+    #      @test A[k_inds,i=>ii,j=>jj]==permA[i=>ii,j=>jj,k_inds...]
     #    end
     #end
   end
@@ -500,7 +508,7 @@ end
     B = randomITensor(SType,k,i,j)
     C = A+B
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test C[i(ii),j(jj),k(kk)]==A[j(jj),i(ii),k(kk)]+B[i(ii),k(kk),j(jj)]
+      @test C[i=>ii,j=>jj,k=>kk]==A[j=>jj,i=>ii,k=>kk]+B[i=>ii,k=>kk,j=>jj]
     end
     @test array(permute(C,i,j,k))==array(permute(A,i,j,k))+array(permute(B,i,j,k))
   end
