@@ -4,24 +4,17 @@ function get_vecs!((phi,q),M,V,AV,ni)
   F = eigen(Hermitian(M))
   lambda = F.values[1]
   u = F.vectors[:,1]
-  #phi = u[1]*V[1]
-  mul!(phi,u[1],V[1])
-  #q = u[1]*AV[1]
-  mul!(q,u[1],AV[1])
+  phi .= u[1] .* V[1]
+  q .= u[1] .* AV[1]
   for n=2:ni
-    #phi += u[n]*V[n]
-    add!(phi,u[n],V[n])
-    #q += u[n]*AV[n]
-    add!(q,u[n],AV[n])
+    phi .+= u[n] .* V[n]
+    q .+= u[n] .* AV[n]
   end
-  #q -= lambda*phi
-  add!(q,-lambda,phi)
+  q .-= lambda .* phi
   #Fix sign
   if real(u[1]) < 0.0
-    #phi *= -1
-    scale!(phi,-1)
-    #q *= -1
-    scale!(q,-1)
+    phi .*= -1
+    q .*= -1
   end
   return lambda
 end
@@ -30,15 +23,14 @@ function orthogonalize!(q::ITensor,V,ni)
   q0 = copy(q)
   for k=1:ni
     Vq0k = dot(V[k],q0)
-    #q += -Vq0k*V[k]
-    add!(q,-Vq0k,V[k])
+    q .+= -Vq0k .* V[k]
   end
   qnrm = norm(q)
   if qnrm < 1E-10 #orthog failure, try randomizing
     randn!(q)
     qnrm = norm(q)
   end
-  scale!(q,1.0/qnrm)
+  q .*= 1.0/qnrm
   return 
 end
 
@@ -82,7 +74,7 @@ function davidson(A,
     phi = phi_ 
     nrm = norm(phi)
   end
-  scale!(phi,1.0/nrm)
+  phi .*= 1.0/nrm
 
   maxsize = size(A)[1]
   actual_maxiter = min(maxiter,maxsize-1)
