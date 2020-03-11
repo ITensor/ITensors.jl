@@ -392,7 +392,12 @@ end
 
 Base.getindex(T::ITensor) = tensor(T)[]
 
-Base.setindex!(T::ITensor{N},x::Number,vals::Int...) where {N} = (setindex!(tensor(T),x,vals...); return T)
+function Base.setindex!(T::ITensor,x::Number,vals::Int...)
+  fluxT = flux(T)
+  (!isnothing(fluxT) && fluxT != flux(T,vals...)) && error("setindex! not consistent with current flux")
+  tensor(T)[vals...] = x
+  return T
+end
 
 function Base.setindex!(T::ITensor,x::Number,ivs::IndexVal...)
   p = getperm(inds(T),ivs)
@@ -734,6 +739,7 @@ Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 flux(T::ITensor,block) = flux(inds(T),block)
 
 function flux(T::ITensor)
+  !hasqns(T) && return nothing
   nnzblocks(T) == 0 && return nothing
   bofs = blockoffsets(T)
   block1 = block(bofs,1)

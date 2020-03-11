@@ -39,6 +39,12 @@ Random.seed!(1234)
     @test flux(A) == QN(0)
   end
 
+  @testset "Check flux when setting elements" begin
+    i = Index(QN(0)=>1,QN(1)=>1; tags="i")
+    A = randomITensor(QN(0),i,dag(i'))
+    @test_throws ErrorException A[i(1),i'(2)] = 1.0
+  end
+
   @testset "Random constructor" begin
     i = Index([QN(0)=>1,QN(1)=>2],"i")
     j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")

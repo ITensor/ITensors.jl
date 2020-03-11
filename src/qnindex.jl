@@ -184,6 +184,10 @@ function flux(inds::IndexSet,block)
   return qntot
 end
 
+flux(inds::IndexSet,vals::Int...) = flux(inds,block(inds,vals...))
+
+Tensors.block(inds::IndexSet,vals::Int...) = blockindex(inds,vals...)[2]
+
 # Get a list of the non-zero blocks given a desired flux
 # TODO: make a fillqns(inds::IndexSet) function that makes all indices
 # in inds have the same qns. Then, use a faster comparison:
