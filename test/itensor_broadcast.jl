@@ -71,5 +71,78 @@ using ITensors,
     @test_throws ErrorException C .= A .* B
   end
 
+  @testset "General functions" begin
+    absA = abs.(A)
+
+    @test absA[1,1] == abs(A[1,1])
+    @test absA[2,1] == abs(A[2,1])
+
+    Bc = copy(B)
+    Bc .= sqrt.(absA)
+
+    @test Bc[1,1] == sqrt(absA[1,1])
+    @test Bc[2,1] == sqrt(absA[1,2])
+
+    Bc2 = copy(B)
+    Bc2 .+= sqrt.(absA)
+
+    @test Bc2[1,1] == B[1,1]+sqrt(absA[1,1])
+    @test Bc2[2,1] == B[2,1]+sqrt(absA[1,2])
+  end
+
+  @testset "Some other operations" begin
+    i = Index(2)
+    A = randomITensor(i)
+    B = randomITensor(i)
+
+    absA = abs.(A)
+
+    @test absA[1] == abs(A[1])
+    @test absA[2] == abs(A[2])
+
+    Bc = copy(B)
+    Bc .= sqrt.(absA)
+
+    @test Bc[1] == sqrt(absA[1])
+    @test Bc[2] == sqrt(absA[2])
+
+    Bc2 = copy(B)
+    Bc2 .+= sqrt.(absA)
+
+    @test Bc2[1] == B[1]+sqrt(absA[1])
+    @test Bc2[2] == B[2]+sqrt(absA[2])
+
+    Bc3 = copy(B)
+    Bc3 .= sqrt.(absA) .+ sin.(Bc3)
+
+    @test Bc3[1] == sin(B[1])+sqrt(absA[1])
+    @test Bc3[2] == sin(B[2])+sqrt(absA[2])
+
+    sqrtabsA = sqrt.(abs.(A))
+
+    @test sqrtabsA[1] == sqrt(abs(A[1]))
+    @test sqrtabsA[2] == sqrt(abs(A[2]))
+
+    sqrtabsA = cos.(sin.(sqrt.(abs.(A))))
+
+    @test sqrtabsA[1] == cos(sin(sqrt(abs(A[1]))))
+    @test sqrtabsA[2] == cos(sin(sqrt(abs(A[2]))))
+
+    Ap = A .+ 3
+
+    @test Ap[1] == A[1] + 3
+    @test Ap[2] == A[2] + 3
+
+    Apow1 = A .^ 2.0
+
+    @test Apow1[1] == A[1]^2
+    @test Apow1[2] == A[2]^2
+
+    Apow2 = A .^ 3
+
+    @test Apow2[1] == A[1]^3
+    @test Apow2[2] == A[2]^3
+  end
+
 end
 
