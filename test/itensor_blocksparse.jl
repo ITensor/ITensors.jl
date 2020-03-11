@@ -122,7 +122,7 @@ Random.seed!(1234)
     @test nnzblocks(B) == 2
 
     for ii in dim(i), jj in dim(j)
-      @test 2*A[i(ii),j(jj)] == B[i(ii),j(jj)]
+      @test 2*A[i=>ii,j=>jj] == B[i=>ii,j=>jj]
     end
   end
 
@@ -131,7 +131,7 @@ Random.seed!(1234)
     T = randomITensor(QN(0),s,s')
     cT = copy(T)
     for ss in dim(s), ssp in dim(s')
-      @test T[s(ss),s'(ssp)] == cT[s(ss),s'(ssp)]
+      @test T[s=>ss,s'=>ssp] == cT[s=>ss,s'=>ssp]
     end
   end
 
@@ -234,18 +234,6 @@ Random.seed!(1234)
       B = ITensor(QN(0),i',c)
       @test nnz(B) == nnz(AC)
       @test nnzblocks(B) == nnzblocks(AC)
-
-      #Ablock_221 = vec(permutedims(blockview(tensor(A),(2,2,1)),(1,3,2)))
-      #ACblock_32 = vec(blockview(tensor(AC),(3,2)))
-      #@test Ablock_221 == ACblock_32
-
-      #Ablock_111 = vec(permutedims(blockview(tensor(A),(1,1,1)),(1,3,2)))
-      #ACblock_21_1 = vec(blockview(tensor(AC),(2,1)))[1:length(Ablock_111)]
-      #@test Ablock_111 == ACblock_21_1
-
-      #Ablock_212 = vec(permutedims(blockview(tensor(A),(2,1,2)),(1,3,2)))
-      #ACblock_21_2 = vec(blockview(tensor(AC),(2,1)))[length(Ablock_111)+1:end]
-      #@test Ablock_212 == ACblock_21_2
 
       Ap = AC*dag(C)
 
