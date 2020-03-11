@@ -24,9 +24,9 @@ using ITensors,
       @test eltype(D) == Float64
       for ii = 1:d, jj = 1:d
         if ii == jj
-          @test D[i(ii),j(jj)] == 0.0
+          @test D[i=>ii,j=>jj] == 0.0
         else
-          @test D[i(ii),j(jj)] == 0.0
+          @test D[i=>ii,j=>jj] == 0.0
         end
       end
     end
@@ -37,9 +37,9 @@ using ITensors,
       @test eltype(D) == Float64
       for ii = 1:d, jj = 1:d, kk = 1:d
         if ii == jj == kk
-          @test D[i(ii),j(jj),k(kk)] == 0.0
+          @test D[i=>ii,j=>jj,k=>kk] == 0.0
         else
-          @test D[i(ii),j(jj),k(kk)] == 0.0
+          @test D[i=>ii,j=>jj,k=>kk] == 0.0
         end
       end
     end
@@ -50,9 +50,9 @@ using ITensors,
       @test eltype(D) == ComplexF64
       for ii = 1:d, jj = 1:d
         if ii == jj
-          @test D[i(ii),j(jj)] == complex(0.0)
+          @test D[i=>ii,j=>jj] == complex(0.0)
         else
-          @test D[i(ii),j(jj)] == complex(0.0)
+          @test D[i=>ii,j=>jj] == complex(0.0)
         end
       end
     end
@@ -63,9 +63,9 @@ using ITensors,
       @test eltype(D) == Float64
       for ii = 1:d, jj = 1:d
         if ii == jj
-          @test D[i(ii),j(jj)] == v[ii]
+          @test D[i=>ii,j=>jj] == v[ii]
         else
-          @test D[i(ii),j(jj)] == 0.0
+          @test D[i=>ii,j=>jj] == 0.0
         end
       end
     end
@@ -76,9 +76,9 @@ using ITensors,
       @test eltype(D) == Float64
       for ii = 1:d, jj = 1:d, kk = 1:d
         if ii == jj == kk
-          @test D[i(ii),j(jj),k(kk)] == v[ii]
+          @test D[i=>ii,j=>jj,k=>kk] == v[ii]
         else
-          @test D[i(ii),j(jj),k(kk)] == 0.0
+          @test D[i=>ii,j=>jj,k=>kk] == 0.0
         end
       end
     end
@@ -90,9 +90,9 @@ using ITensors,
       @test eltype(D) == ComplexF64
       for ii = 1:d, jj = 1:d, kk = 1:d
         if ii == jj == kk
-          @test D[i(ii),j(jj),k(kk)] == vc[ii]
+          @test D[i=>ii,j=>jj,k=>kk] == vc[ii]
         else
-          @test D[i(ii),j(jj),k(kk)] == complex(0.0)
+          @test D[i=>ii,j=>jj,k=>kk] == complex(0.0)
         end
       end
     end
@@ -101,7 +101,7 @@ using ITensors,
       D = diagITensor(ones(d), i,j,k)
       D = fill!(D, 2.0)
       for ii = 1:d
-        @test D[i(ii),j(ii),k(ii)] == 2.0
+        @test D[i=>ii,j(ii),k(ii)] == 2.0
       end
 
       @test eltype(D) == Float64
@@ -111,15 +111,15 @@ using ITensors,
       D = diagITensor(i,j,k)
 
       for ii = 1:d
-        D[i(ii),j(ii),k(ii)] = ii
+        D[i=>ii,j(ii),k(ii)] = ii
       end
 
       @test eltype(D) == Float64
       for ii = 1:d, jj = 1:d, kk = 1:d
         if ii == jj == kk
-          @test D[i(ii),j(jj),k(kk)] == ii
+          @test D[i=>ii,j=>jj,k=>kk] == ii
         else
-          @test D[i(ii),j(jj),k(kk)] == 0.0
+          @test D[i=>ii,j=>jj,k=>kk] == 0.0
         end
       end
 
@@ -137,7 +137,7 @@ using ITensors,
         if ii == jj == kk
           @test T[ii,ii,ii] == ii
         else
-          @test T[i(ii),j(jj),k(kk)] == 0.0
+          @test T[i=>ii,j=>jj,k=>kk] == 0.0
         end
       end
     end
@@ -290,9 +290,9 @@ using ITensors,
       @test eltype(D) == Float64
       for ii = 1:d, jj = 1:d
         if ii == jj
-          @test D[i(ii),j(jj)] == 1.0
+          @test D[i=>ii,j=>jj] == 1.0
         else
-          @test D[i(ii),j(jj)] == 0.0
+          @test D[i=>ii,j=>jj] == 0.0
         end
       end
     end
@@ -303,9 +303,9 @@ using ITensors,
       @test eltype(D) == Float64
       for ii = 1:dim(i), jj = 1:dim(j), kk = 1:dim(k)
         if ii == jj == kk
-          @test D[i(ii),j(jj),k(kk)] == 1.0
+          @test D[i=>ii,j=>jj,k=>kk] == 1.0
         else
-          @test D[i(ii),j(jj),k(kk)] == 0.0
+          @test D[i=>ii,j=>jj,k=>kk] == 0.0
         end
       end
     end
@@ -332,7 +332,7 @@ using ITensors,
         if ii == jj == kk
           @test T[ii,ii,ii] == 1.0
         else
-          @test T[i(ii),j(jj),k(kk)] == 0.0
+          @test T[i=>ii,j=>jj,k=>kk] == 0.0
         end
       end
     end
