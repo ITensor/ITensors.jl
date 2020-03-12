@@ -1,7 +1,8 @@
 export BlockDims,
        blockdim,
        blockdims,
-       nblocks
+       nblocks,
+       blockindex
 
 """
 BlockDim
@@ -165,6 +166,26 @@ end
 function permuteblocks(dim::BlockDim,perm)
   return dim[perm]
 end
+
+# Given a CartesianIndex in the range dims(T), get the block it is in
+# and the index within that block
+function blockindex(T,
+                    i::Vararg{Int,N}) where {ElT,N}
+  # Start in the (1,1,...,1) block
+  current_block_loc = @MVector ones(Int,N)
+  current_block_dims = blockdims(T,Tuple(current_block_loc))
+  block_index = MVector(i)
+  for dim in 1:N
+    while block_index[dim] > current_block_dims[dim]
+      block_index[dim] -= current_block_dims[dim]
+      current_block_loc[dim] += 1
+      current_block_dims = blockdims(T,Tuple(current_block_loc))
+    end
+  end
+  return Tuple(block_index),Block{N}(current_block_loc)
+end
+
+blockindex(T) = (),Block{0}()
 
 #
 # This is to help with ITensor compatibility

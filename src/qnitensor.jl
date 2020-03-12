@@ -197,3 +197,6 @@ function replaceindex!(A::ITensor,i::QNIndex,j::QNIndex)
   inds(A)[pos[1]] = setdir(j,curdir)
   return A
 end
+
+flux(T::ITensor,vals::Int...) = flux(inds(T),vals...)
+

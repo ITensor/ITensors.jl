@@ -161,29 +161,6 @@ end
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:BlockSparseTensor}) = IndexCartesian()
 
-# Given a CartesianIndex in the range dims(T), get the block it is in
-# and the index within that block
-function blockindex(T::BlockSparseTensor{ElT,N},
-                    i::Vararg{Int,N}) where {ElT,N}
-  # Start in the (1,1,...,1) block
-  current_block_loc = @MVector ones(Int,N)
-  current_block_dims = blockdims(T,Tuple(current_block_loc))
-  block_index = MVector(i)
-  for dim in 1:N
-    while block_index[dim] > current_block_dims[dim]
-      block_index[dim] -= current_block_dims[dim]
-      current_block_loc[dim] += 1
-      current_block_dims = blockdims(T,Tuple(current_block_loc))
-    end
-  end
-  return Block{N}(block_index),Tuple(current_block_loc)
-end
-
-# Special case for scalar BlockSparseTensor
-function blockindex(T::BlockSparseTensor{ElT,0}) where {ElT}
-  return Block{0}(),()
-end
-
 # Get the CartesianIndices for the range of indices
 # of the specified
 function blockindices(T::BlockSparseTensor{ElT,N},
