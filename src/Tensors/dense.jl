@@ -25,7 +25,7 @@ function Dense(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT}
   return Dense{ElT,VecT}(data)
 end
 
-function Dense{ElR}(data) where {ElR}
+function Dense{ElR}(data::AbstractVector{ElT}) where {ElR,ElT}
   ElT == ElR ? Dense(data) : Dense(ElR.(data))
 end
 
