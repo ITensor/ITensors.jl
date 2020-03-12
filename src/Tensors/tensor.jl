@@ -19,6 +19,7 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
 end
 
 store(T::Tensor) = T.store
+data(T::Tensor) = data(store(T))
 storetype(::Tensor{ElT,N,StoreT}) where {ElT,N,StoreT} = StoreT
 inds(T::Tensor) = T.inds
 ind(T::Tensor,j::Integer) = inds(T)[j]
@@ -36,35 +37,36 @@ dim(T::Tensor,i::Int) = dim(inds(T),i)
 Base.size(T::Tensor) = dims(T)
 Base.size(T::Tensor,i::Int) = dim(T,i)
 
+# Needed for passing Tensor{T,2} to BLAS/LAPACK
+# TODO: maybe this should only be for DenseTensor?
+function Base.unsafe_convert(::Type{Ptr{ElT}},
+                             T::Tensor{ElT}) where {ElT}
+  return Base.unsafe_convert(Ptr{ElT},store(T))
+end
+
+Base.strides(T::Tensor) = strides(inds(T))
+
 Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
 
-Base.copyto!(R::Tensor,T::Tensor) = copyto!(store(R),store(T))
+Base.copyto!(R::Tensor,T::Tensor) = (copyto!(store(R),store(T)); R)
 
 Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
+
+#
+# Necessary to overload since the generic fallbacks are
+# slow
+#
 
 LinearAlgebra.norm(T::Tensor) = norm(store(T))
 
 Base.conj(T::Tensor) = Tensor(conj(store(T)), copy(inds(T)))
 
-Random.randn!(T::Tensor) = (randn!(store(T)); return T)
+Random.randn!(T::Tensor) = (randn!(store(T)); T)
 
-function scale!(v::Vector,
-                α::Number)
-  rmul!(v,α)
-  return v
-end
+LinearAlgebra.rmul!(T::Tensor,α::Number) = (rmul!(store(T),α); T)
+scale!(T::Tensor,α::Number) = rmul!(store(T),α)
 
-function scale!(T::Tensor,
-                α::Number)
-  scale!(store(T),α)
-  return T
-end
-
-function Base.fill!(T::Tensor,
-                    α::Number)
-  fill!(store(T),α)
-  return T
-end
+Base.fill!(T::Tensor,α::Number) = (fill!(store(T),α); T)
 
 #function Base.similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
 #  return Tensor(similar(StoreT,dim(dims)),dims)

@@ -6,44 +6,37 @@ export Diag,
 # in which case the diagonal has a uniform value
 struct Diag{ElT,VecT} <: TensorStorage{ElT}
   data::VecT
-  Diag(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = new{ElT,VecT}(data)
-  Diag(data::VecT) where {VecT<:Number} = new{VecT,VecT}(data)
+  function Diag{ElT,VecT}(data) where {ElT,VecT<:AbstractVector{ElT}}
+    return new{ElT,VecT}(data)
+  end
+  function Diag{ElT,ElT}(data) where {ElT}
+    return new{ElT,ElT}(data)
+  end
 end
-#Diag{T}(data) where {T} = new{T}(data)
 
-function Diag{ElR}(data::VecT) where {ElR<:Number,VecT<:AbstractVector{ElT}} where {ElT}
+Diag(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = Diag{ElT,VecT}(data)
+Diag(data::ElT) where {ElT<:Number} = Diag{ElT,ElT}(data)
+
+function Diag{ElR}(data::AbstractVector{ElT}) where {ElR<:Number,ElT<:Number}
   ElT == ElR ? Diag(data) : Diag(ElR.(data))
 end
 
 Diag(::Type{ElT},n::Integer) where {ElT<:Number} = Diag(zeros(ElT,n))
 
+Base.copy(D::Diag) = Diag(copy(data(D)))
+
 const NonuniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:AbstractVector}
 const UniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:Number}
 
-Base.@propagate_inbounds Base.getindex(D::NonuniformDiag,i::Int)= data(D)[i]
 Base.getindex(D::UniformDiag,i::Int) = data(D)
 
-Base.@propagate_inbounds Base.setindex!(D::Diag,val,i::Int)= (data(D)[i] = val)
-Base.setindex!(D::UniformDiag,val,i::Int)= error("Cannot set elements of a uniform Diag storage")
+Base.setindex!(D::UniformDiag,val,i::Int) = error("Cannot set elements of a uniform Diag storage")
 
-#Base.fill!(D::Diag,v) = fill!(data(D),v)
-
-# convert to complex
-# TODO: this could be a generic TensorStorage function
-Base.complex(D::Diag) = Diag(complex(data(D)))
-
-Base.copy(D::Diag) = Diag(copy(data(D)))
-
-Base.conj(D::Diag{<:Real, VecT}) where {VecT} = D
-Base.conj(D::Diag{<:Complex, VecT}) where {VecT} = Diag(conj(data(D)))
-
-Base.eltype(::Diag{ElT}) where {ElT} = ElT
-Base.eltype(::Type{<:Diag{ElT}}) where {ElT} = ElT
+Base.complex(::Type{Diag{ElT,Vector{ElT}}}) where {ElT} = Diag{complex(ElT),Vector{complex(ElT)}}
+Base.complex(::Type{Diag{ElT,ElT}}) where {ElT} = Diag{complex(ElT),complex(ElT)}
 
 # Deal with uniform Diag conversion
 Base.convert(::Type{<:Diag{ElT,VecT}},D::Diag) where {ElT,VecT} = Diag(convert(VecT,data(D)))
-
-Base.size(D::Diag) = size(data(D))
 
 # TODO: write in terms of ::Int, not inds
 Base.similar(D::NonuniformDiag) = Diag(similar(data(D)))

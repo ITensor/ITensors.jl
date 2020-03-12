@@ -298,7 +298,7 @@ function LinearAlgebra.eigen(A::ITensor,
 
   U = UC*dag(CL)
 
-  u = commonindex(U,D)
+  u = commonindex(D,U)
   settags!(U,lefttags,u)
   settags!(D,lefttags,u)
   u = settags(u,lefttags)
