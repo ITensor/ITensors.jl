@@ -11,13 +11,15 @@ Base.eltype(::TensorStorage{ElT}) where {ElT} = ElT
 
 Base.eltype(::Type{<:TensorStorage{ElT}}) where {ElT} = ElT
 
+iterate(S::TensorStorage,args...) = iterate(data(S),args...)
+
 # This is necessary since for some reason inference doesn't work
 # with the more general definition (eltype(Nothing) === Any)
 Base.eltype(::TensorStorage{Nothing}) = Nothing
 
-Base.length(D::TensorStorage) = length(data(D))
+Base.length(S::TensorStorage) = length(data(S))
 
-Base.size(D::TensorStorage) = size(data(D))
+Base.size(S::TensorStorage) = size(data(S))
 
 Base.@propagate_inbounds Base.getindex(S::TensorStorage,
                                        i::Integer) = data(S)[i]
@@ -47,9 +49,9 @@ scale!(S::TensorStorage,v::Number) = rmul!(S,v)
 
 LinearAlgebra.norm(S::TensorStorage) = norm(data(S))
 
-Base.convert(::Type{T},D::T) where {T<:TensorStorage} = D
+Base.convert(::Type{T},S::T) where {T<:TensorStorage} = S
 
-blockoffsets(D::TensorStorage) = D.blockoffsets
+blockoffsets(S::TensorStorage) = S.blockoffsets
 
 """
 nzblocks(T::TensorStorage)
@@ -58,12 +60,10 @@ Return a vector of the non-zero blocks of the BlockSparse storage.
 """
 nzblocks(T::TensorStorage) = nzblocks(blockoffsets(T))
 
-nnzblocks(D::TensorStorage) = length(blockoffsets(D))
-nnz(D::TensorStorage) = length(D)
+nnzblocks(S::TensorStorage) = length(blockoffsets(S))
+nnz(S::TensorStorage) = length(S)
 
-offset(D::TensorStorage,block) = offset(blockoffsets(D),block)
+offset(S::TensorStorage,block) = offset(blockoffsets(S),block)
 
-block(D::TensorStorage,n::Int) = block(blockoffsets(D),n)
-
-
+block(S::TensorStorage,n::Int) = block(blockoffsets(S),n)
 
