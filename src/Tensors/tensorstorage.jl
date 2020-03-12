@@ -11,7 +11,7 @@ Base.eltype(::TensorStorage{ElT}) where {ElT} = ElT
 
 Base.eltype(::Type{<:TensorStorage{ElT}}) where {ElT} = ElT
 
-iterate(S::TensorStorage,args...) = iterate(data(S),args...)
+Base.iterate(S::TensorStorage,args...) = iterate(data(S),args...)
 
 # This is necessary since for some reason inference doesn't work
 # with the more general definition (eltype(Nothing) === Any)
