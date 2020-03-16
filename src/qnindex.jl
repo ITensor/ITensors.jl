@@ -327,7 +327,7 @@ function Base.show(io::IO,
                    i::QNIndex)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
-    print(io,"(dim=$(dim(i))|id=$(idstr)|$(tagstring(tags(i))))$(primestring(tags(i)))")
+    print(io,"(dim=$(dim(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(tags(i)))")
   else
     print(io,"(dim=$(dim(i))|id=$(idstr))$(primestring(tags(i)))")
   end
