@@ -60,6 +60,7 @@ let
   A[i=>2,j=>1,k=>2] = -21.2
   A[k=>1,i=>3,j=>1] = 31.1  # can provide Index values in any order
   # ...
+  A[k(1),i(3),j(1)] = 31.1  # alternative notation
 
   # Contract over shared index j
   C = A * B
