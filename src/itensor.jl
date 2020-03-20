@@ -412,6 +412,13 @@ function Base.fill!(T::ITensor,
   return T
 end
 
+hasindex(A::ITensor,i::Index) = hasindex(inds(A),i)
+hasinds(A::ITensor,is::Index...) = hasinds(inds(A),is...)
+hasinds(A::ITensor,is) = hasinds(inds(A),is)
+hassameinds(A::ITensor,is) = hassameinds(inds(A),is)
+hassameinds(is,A::ITensor) = hassameinds(A,is)
+hassameinds(A::ITensor,B::ITensor) = hassameinds(inds(A),inds(B))
+
 # TODO: implement in terms of delta tensors (better for QNs)
 function replaceindex!(A::ITensor,i::Index,j::Index)
   pos = indexpositions(A,i)
@@ -438,29 +445,29 @@ end
 
 # TODO: implement more in-place versions
 
-prime!(A::ITensor,vargs...)= ( prime!(inds(A),vargs...); return A )
-prime(A::ITensor,vargs...)= ITensor(store(A),prime(inds(A),vargs...))
+prime!(A::ITensor,vargs...;kwargs...)= ( prime!(inds(A),vargs...;kwargs...); return A )
+prime(A::ITensor,vargs...;kwargs...)= ITensor(store(A),prime(inds(A),vargs...;kwargs...))
 Base.adjoint(A::ITensor) = prime(A)
 
-setprime(A::ITensor,vargs...) = ITensor(store(A),setprime(inds(A),vargs...))
+setprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),setprime(inds(A),vargs...;kwargs...))
 
-noprime(A::ITensor,vargs...) = ITensor(store(A),noprime(inds(A),vargs...))
+noprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),noprime(inds(A),vargs...;kwargs...))
 
-mapprime(A::ITensor,vargs...) = ITensor(store(A),mapprime(inds(A),vargs...))
+mapprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),mapprime(inds(A),vargs...;kwargs...))
 
-swapprime(A::ITensor,vargs...) = ITensor(store(A),swapprime(inds(A),vargs...))
+swapprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),swapprime(inds(A),vargs...;kwargs...))
 
-addtags(A::ITensor,vargs...) = ITensor(store(A),addtags(inds(A),vargs...))
+addtags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),addtags(inds(A),vargs...;kwargs...))
 
-removetags(A::ITensor,vargs...) = ITensor(store(A),removetags(inds(A),vargs...))
+removetags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),removetags(inds(A),vargs...;kwargs...))
 
-replacetags!(A::ITensor,vargs...) = ( replacetags!(inds(A),vargs...); return A )
-replacetags(A::ITensor,vargs...) = ITensor(store(A),replacetags(inds(A),vargs...))
+replacetags!(A::ITensor,vargs...;kwargs...) = ( replacetags!(inds(A),vargs...;kwargs...); return A )
+replacetags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),replacetags(inds(A),vargs...;kwargs...))
 
-settags!(A::ITensor,vargs...) = ( settags!(inds(A),vargs...); return A )
-settags(A::ITensor,vargs...) = ITensor(store(A),settags(inds(A),vargs...))
+settags!(A::ITensor,vargs...;kwargs...) = ( settags!(inds(A),vargs...;kwargs...); return A )
+settags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),settags(inds(A),vargs...;kwargs...))
 
-swaptags(A::ITensor,vargs...) = ITensor(store(A),swaptags(inds(A),vargs...))
+swaptags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),swaptags(inds(A),vargs...;kwargs...))
 
 # TODO: implement in a better way (more generically for other storage)
 Base.:(==)(A::ITensor,B::ITensor) = (norm(A-B) == zero(promote_type(eltype(A),eltype(B))))

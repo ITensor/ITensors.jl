@@ -37,6 +37,9 @@ IndexSet(inds::SVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::MVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::NTuple{N,<:Index}) where {N} = IndexSet{N}(inds)
 
+IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
+IndexSet{N}(inds::Vector{<:Index}) where {N} = IndexSet{N}(inds...)
+
 IndexSet{N,IndexT}(inds::NTuple{N,IndexT}) where {N,IndexT<:Index} = IndexSet(inds)
 
 # TODO: what is this used for? Should we have this?
@@ -95,7 +98,7 @@ function Base.show(io::IO, is::IndexSet)
   end
 end
 
-Base.getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
+Base.getindex(is::IndexSet,n) = getindex(is.inds,n)
 
 function Base.setindex!(is::IndexSet,i::Index,n::Integer)
   setindex!(is.inds,i,n)
@@ -215,8 +218,8 @@ end
 
 # inds has the index i
 function hasindex(inds,i::Index)
-  is = IndexSet(inds)
-  for j ∈ is
+  #is = IndexSet(inds)
+  for j ∈ inds
     i==j && return true
   end
   return false
@@ -224,8 +227,8 @@ end
 
 # Binds is subset of Ainds
 function hasinds(Binds,Ainds)
-  Ais = IndexSet(Ainds)
-  for i ∈ Ais
+  #Ais = IndexSet(Ainds)
+  for i ∈ Ainds
     !hasindex(Binds,i) && return false
   end
   return true
@@ -234,9 +237,9 @@ hasinds(Binds,Ainds::Index...) = hasinds(Binds,IndexSet(Ainds...))
 
 # Set equality (order independent)
 function hassameinds(Ainds,Binds)
-  Ais = IndexSet(Ainds)
-  Bis = IndexSet(Binds)
-  return hasinds(Ais,Bis) && length(Ais) == length(Bis)
+  #Ais = IndexSet(Ainds)
+  #Bis = IndexSet(Binds)
+  return hasinds(Ainds,Binds) && length(Ainds) == length(Binds)
 end
 
 """
@@ -276,9 +279,9 @@ the IndexSets Bis.
 """
 function uniqueinds(Ainds,Binds)
   Ais = IndexSet(Ainds)
-  Cis = IndexSet()
+  Cis = eltype(Ais)[]
   for j ∈ Ais
-    _is_unique_index(j,Binds) && (Cis = push(Cis,j))
+    _is_unique_index(j,Binds) && push!(Cis,j)
   end
   return Cis
 end
@@ -312,9 +315,9 @@ Output the IndexSet in the intersection of Ais and Bis
 """
 function commoninds(Ainds,Binds)
   Ais = IndexSet(Ainds)
-  Cis = IndexSet()
+  Cis = eltype(Ais)[]
   for i ∈ Ais
-    hasindex(Binds,i) && (Cis = push(Cis,i))
+    hasindex(Binds,i) && push!(Cis,i)
   end
   return Cis
 end
@@ -339,19 +342,12 @@ end
 """
 findinds(inds,tags)
 
-Output the IndexSet containing the subset of indices
+Output the Vector of indices containing the subset of indices
 of inds containing the tags in the input tagset.
 """
-function findinds(inds,tags)
-  is = IndexSet(inds)
-  ts = TagSet(tags)
-  found_inds = IndexSet()
-  for i ∈ is
-    if hastags(i,ts)
-      found_inds = push(found_inds,i)
-    end
-  end
-  return found_inds
+function findinds(inds, args...; kwargs...)
+  ns = indexpositions(inds, args...; kwargs...)
+  return IndexSet(inds)[ns]
 end
 
 """
@@ -361,46 +357,45 @@ Output the Index containing the tags in the input tagset.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-function findindex(inds,tags)
-  is = IndexSet(inds)
-  ts = TagSet(tags)
-  for i ∈ is
-    if hastags(i,ts)
-      return i
-    end
-  end
-  # TODO: should this return `nothing` if no Index is found?
+function findindex(inds, args...; kwargs...)
+  n = indexposition(inds, args...; kwargs...)
+  isnothing(n) && return nothing
+  return IndexSet(inds)[n]
   return nothing
 end
-# This version checks if there are more than one indices
-#findindex(inds, tags) = Index(findinds(inds,tags))
 
-# TODO: Should this return `nothing` like `findfirst`?
-# Should this just use `findfirst`?
-function indexposition(is::IndexSet,
-                       i::Index)
-  for (n,j) in enumerate(is)
-    if i==j
-      return n
-    end
-  end
-  return nothing
+function indexposition(inds, args...; kwargs...)
+  ns = indexpositions(inds, args...; kwargs...)
+  length(ns) == 0 && return nothing
+  return ns[1]
 end
 
 # From a tag set or index set, find the positions
 # of the matching indices as a vector of integers
-indexpositions(inds) = collect(1:length(inds))
-indexpositions(inds, match::Nothing) = collect(1:length(inds))
-#indexpositions(inds, match::Tuple{}) = collect(1:length(inds))
+#indexpositions(inds, match::Nothing) = collect(1:length(inds))
 # Version for matching a tag set
-function indexpositions(inds, match::T) where {T<:Union{AbstractString,
-                                                        Tuple{<:AbstractString,<:Integer},
-                                                        TagSet}}
+function indexpositions(inds, tags::Union{AbstractString,TagSet};
+                        plev=nothing)
+  return indexpositions(inds; tags=tags, plev=plev)
+end
+
+function indexpositions(inds; tags=nothing, 
+                              plev=nothing)
+  isnothing(tags) && isnothing(plev) && return collect(1:length(inds))
   is = IndexSet(inds)
-  tsmatch = TagSet(match)
   pos = Int[]
-  for (j,I) ∈ enumerate(is)
-    hastags(I,tsmatch) && push!(pos,j)
+  if isnothing(plev)
+    for (j,I) ∈ enumerate(is)
+        hastags(I,tags) && push!(pos,j)
+    end
+  elseif isnothing(tags)
+    for (j,I) ∈ enumerate(is)
+      ITensors.plev(I)==plev && push!(pos,j)
+    end
+  else
+    for (j,I) ∈ enumerate(is)
+      ITensors.plev(I)==plev && hastags(I,tags) && push!(pos,j)
+    end
   end
   return pos
 end
@@ -456,35 +451,35 @@ end
 # Tagging functions
 #
 
-function prime!(is::IndexSet, plinc::Integer, match = nothing)
-  pos = indexpositions(is, match)
+function prime!(is::IndexSet, plinc::Integer, args...; kwargs...)
+  pos = indexpositions(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = prime(is[jj],plinc)
   end
   return is
 end
-prime!(is::IndexSet,match=nothing) = prime!(is,1,match)
-prime(is::IndexSet, vargs...) = prime!(copy(is), vargs...)
+prime!(is::IndexSet,vargs...) = prime!(is,1,vargs...)
+prime(is::IndexSet,vargs...) = prime!(copy(is),vargs...)
 # For is' notation
 Base.adjoint(is::IndexSet) = prime(is)
 
-function setprime!(is::IndexSet, plev::Integer, match = nothing)
-  pos = indexpositions(is, match)
+function setprime!(is::IndexSet, plev::Integer, args...; kwargs...)
+  pos = indexpositions(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = setprime(is[jj],plev)
   end
   return is
 end
-setprime(is::IndexSet, vargs...) = setprime!(copy(is), vargs...)
+setprime(is::IndexSet, vargs...; kwargs...) = setprime!(copy(is), vargs...; kwargs...)
 
-noprime!(is::IndexSet, match = nothing) = setprime!(is, 0, match)
-noprime(is::IndexSet, vargs...) = noprime!(copy(is), vargs...)
+noprime!(is::IndexSet, args...; kwargs...) = setprime!(is, 0, args...; kwargs...)
+noprime(is::IndexSet, args...; kwargs...) = noprime!(copy(is), args...; kwargs...)
 
 function swapprime!(is::IndexSet, 
                     pl1::Int,
                     pl2::Int,
-                    vargs...) 
-  pos = indexpositions(is,vargs...)
+                    args...; kwargs...) 
+  pos = indexpositions(is,args...; kwargs...)
   for n in pos
     if plev(is[n])==pl1
       is[n] = setprime(is[n],pl2)
@@ -495,13 +490,13 @@ function swapprime!(is::IndexSet,
   return is
 end
 
-swapprime(is::IndexSet,pl1::Int,pl2::Int,vargs...) = swapprime!(copy(is),pl1,pl2,vargs...)
+swapprime(is::IndexSet,pl1::Int,pl2::Int,args...; kwargs...) = swapprime!(copy(is),pl1,pl2,args...; kwargs...)
 
 function mapprime!(is::IndexSet,
                    plold::Integer,
                    plnew::Integer,
-                   match = nothing)
-  pos = indexpositions(is,match)
+                   args...; kwargs...)
+  pos = indexpositions(is, args...; kwargs...)
   for n in pos
     if plev(is[n])==plold 
       is[n] = setprime(is[n],plnew)
@@ -513,72 +508,71 @@ end
 function mapprime(is::IndexSet,
                   plold::Integer,
                   plnew::Integer,
-                  match=nothing)
-  return mapprime!(copy(is),plold,plnew,match)
+                  args...; kwargs...)
+  return mapprime!(copy(is),plold,plnew,args...;kwargs...)
 end
 
 
 function addtags!(is::IndexSet,
                   tags,
-                  match = nothing)
-  pos = indexpositions(is, match)
+                  args...; kwargs...)
+  pos = indexpositions(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = addtags(is[jj],tags)
   end
   return is
 end
-addtags(is, vargs...) = addtags!(copy(is), vargs...)
+addtags(is, args...; kwargs...) = addtags!(copy(is), args...; kwargs...)
 
 function settags!(is::IndexSet,
                   ts,
-                  match = nothing)
-  pos = indexpositions(is, match)
+                  args...; kwargs...)
+  pos = indexpositions(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = settags(is[jj],ts)
   end
   return is
 end
-settags(is, vargs...) = settags!(copy(is), vargs...)
+settags(is, args...; kwargs...) = settags!(copy(is), args...; kwargs...)
 
 function removetags!(is::IndexSet,
                      tags,
-                     match = nothing)
-  pos = indexpositions(is, match)
+                     args...; kwargs...)
+  pos = indexpositions(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = removetags(is[jj],tags)
   end
   return is
 end
-removetags(is, vargs...) = removetags!(copy(is), vargs...)
+removetags(is, args...; kwargs...) = removetags!(copy(is), args...; kwargs...)
 
 function replacetags!(is::IndexSet,
                       tags_old, tags_new,
-                      match = nothing)
-  pos = indexpositions(is, match)
+                      args...; kwargs...)
+  pos = indexpositions(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = replacetags(is[jj],tags_old,tags_new)
   end
   return is
 end
-replacetags(is, vargs...) = replacetags!(copy(is), vargs...)
+replacetags(is, args...; kwargs...) = replacetags!(copy(is), args...; kwargs...)
 
 # TODO: write more efficient version in terms
 # of indexpositions like swapprime!
 function swaptags!(is::IndexSet,
                    tags1, tags2,
-                   match = nothing)
+                   args...; kwargs...)
   ts1 = TagSet(tags1)
   ts2 = TagSet(tags2)
   # TODO: add debug check that this "random" tag
   # doesn't clash with ts1 or ts2
   tstemp = TagSet("e43efds")
-  plev(ts1) ≥ 0 && (tstemp = setprime(tstemp,431534))
-  replacetags!(is, ts1, tstemp, match)
-  replacetags!(is, ts2, ts1, match)
-  replacetags!(is, tstemp, ts2, match)
+  replacetags!(is, ts1, tstemp, args...; kwargs...)
+  replacetags!(is, ts2, ts1, args...; kwargs...)
+  replacetags!(is, tstemp, ts2, args...; kwargs...)
   return is
 end
-swaptags(is, vargs...) = swaptags!(copy(is), vargs...)
+swaptags(is, args...; kwargs...) = swaptags!(copy(is), args...; kwargs...)
 
 Tensors.dense(::Type{<:IndexSet}) = IndexSet
 

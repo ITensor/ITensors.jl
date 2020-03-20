@@ -86,13 +86,15 @@ end
   # Normalize MPS tensor
   trA² = Clu*mapprime(Clu,0,1,"up")*Al*
          mapprime(Al,0,1,"link")*
-         mapprime(replacetags(Clu,("up",0),("down",1)),0,1,"left")*
+         mapprime(replacetags(mapprime(Clu,0,1,"up"),"up","down"),0,1,"left")*
          replacetags(mapprime(Clu,0,1,"left"),"up","down")
   Al = Al/sqrt(scalar(trA²))
 
   ## Get environment tensors for a single site measurement
   Ar = mapprime(replacetags(Al,"left","right","site"),0,1,"link")
-  Au = replacetags(replacetags(replacetags(Al,"left","up","site"),"down","left","link"),"up","right","link")
+  Au = replacetags(replacetags(replacetags(Al,"left","up","site"),
+                                              "down","left","link"),
+                                              "up","right","link")
   Ad  = mapprime(replacetags(Au,"up","down","site"),0,1,"link")
   Cld = mapprime(replacetags(Clu,"up","down"),0,1,"left")
   Cru = mapprime(replacetags(Clu,"left","right"),0,1,"up")

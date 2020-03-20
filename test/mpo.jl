@@ -120,7 +120,7 @@ end
       phiJdagKpsi = phiJdagKpsi*phidag[j]*Jdag[j]*K[j]*psi[j]
     end
 
-    @test scalar(phiJdagKpsi) ≈ inner(J,phi,K,psi)
+    @test phiJdagKpsi[] ≈ inner(J,phi,K,psi)
 
     ## Do contraction manually.
     #O = 1.

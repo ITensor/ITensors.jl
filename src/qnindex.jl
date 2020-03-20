@@ -48,7 +48,7 @@ const QNIndexVal = IndexVal{QNIndex}
 
 hasqns(::QNIndex) = true
 
-QNIndex() = Index(IDType(0),Pair{QN,Int}[],Out,TagSet(("",0)))
+QNIndex() = Index(0,Pair{QN,Int}[],Out,"",0)
 
 function have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks,1)
@@ -66,22 +66,21 @@ function have_same_mods(qnblocks::QNBlocks)
   return true
 end
 
-function Index(qnblocks::QNBlocks, dir::Arrow, tags=("",0))
+function Index(qnblocks::QNBlocks, dir::Arrow, tags="", plev=0)
   # TODO: make this a debug check?
   #have_same_qns(qnblocks) || error("When creating a QN Index, the QN blocks must have the same QNs")
   #have_same_mods(qnblocks) || error("When creating a QN Index, the QN blocks must have the same mods")
-  ts = TagSet(tags)
-  return Index(rand(IDType),qnblocks,dir,ts)
+  return Index(rand(IDType),qnblocks,dir,tags,plev)
 end
 
 Index(qnblocks::QNBlocks, tags, dir::Arrow=Out) = Index(qnblocks,dir,tags)
 
-function Index(qnblocks::QNBlocks; dir::Arrow=Out, tags=("",0))
-  return Index(qnblocks,dir,tags)
+function Index(qnblocks::QNBlocks; dir::Arrow=Out, tags="", plev=0)
+  return Index(qnblocks,dir,tags,plev)
 end
 
-function Index(qnblocks::QNBlock...; dir::Arrow=Out, tags=("",0))
-  return Index([qnblocks...], dir, tags)
+function Index(qnblocks::QNBlock...; dir::Arrow=Out, tags="", plev=0)
+  return Index([qnblocks...], dir, tags, plev)
 end
 
 Tensors.dim(i::QNIndex) = dim(space(i))
@@ -238,15 +237,15 @@ end
 
 # TODO: add a combine kwarg to choose if the QN blocks
 # get sorted and combined (could do it by default?)
-function Tensors.outer(i1::QNIndex,i2::QNIndex; tags="")
+function Tensors.outer(i1::QNIndex,i2::QNIndex; tags="", plev=0)
   if dir(i1) == dir(i2)
-    return Index(space(i1)⊗space(i2),dir(i1),tags)
+    return Index(space(i1)⊗space(i2),dir(i1),tags,plev)
   else
-    return Index((dir(i1)*space(i1))⊗(dir(i2)*space(i2)),Out,tags)
+    return Index((dir(i1)*space(i1))⊗(dir(i2)*space(i2)),Out,tags,plev)
   end
 end
 
-Tensors.outer(i::QNIndex; tags="") = sim(i)
+Tensors.outer(i::QNIndex; tags="", plev=0) = sim(i; tags=tags, plev=plev)
 
 function isless(qnb1::QNBlock, qnb2::QNBlock)
   return isless(qn(qnb1),qn(qnb2))
@@ -284,11 +283,11 @@ end
 
 # Make a new Index with the specified qn blocks
 function replaceqns(i::QNIndex,qns::QNBlocks)
-  return Index(id(i),qns,dir(i),tags(i))
+  return Index(id(i),qns,dir(i),tags(i),plev(i))
 end
 
 function setdir(i::QNIndex,ndir::Arrow)
-  return Index(id(i),space(i),ndir,tags(i))
+  return Index(id(i),space(i),ndir,tags(i),plev(i))
 end
 
 function Tensors.setblockdim!(i::QNIndex,newdim::Int,n::Int)
@@ -321,15 +320,15 @@ end
 
 Tensors.dense(inds::QNIndex...) = dense.(inds)
 
-Tensors.dense(i::QNIndex) = Index(id(i),dim(i),dir(i),tags(i))
+Tensors.dense(i::QNIndex) = Index(id(i),dim(i),dir(i),tags(i),plev(i))
 
 function Base.show(io::IO,
                    i::QNIndex)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
-    print(io,"(dim=$(dim(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(tags(i)))")
+    print(io,"(dim=$(dim(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))")
   else
-    print(io,"(dim=$(dim(i))|id=$(idstr))$(primestring(tags(i)))")
+    print(io,"(dim=$(dim(i))|id=$(idstr))$(primestring(plev(i)))")
   end
   println(io," <$(dir(i))>")
   for (n,qnblock) in enumerate(space(i))
