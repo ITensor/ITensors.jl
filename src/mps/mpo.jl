@@ -433,6 +433,8 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
 end
 
 function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
+  truncate = get(kwargs,:truncate,true)
+
   N = length(A)
   if N != length(psi) 
     throw(DimensionMismatch("lengths of MPO ($N) and MPS ($(length(psi))) do not match"))
@@ -451,7 +453,9 @@ function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
     psi_out[b+1] *= dag(C)
   end
 
-  truncate!(psi_out;kwargs...)
+  if truncate
+    truncate!(psi_out;kwargs...)
+  end
 
   return psi_out
 end
