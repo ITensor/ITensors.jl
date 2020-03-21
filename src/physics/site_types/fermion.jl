@@ -48,6 +48,7 @@ function op(::FermionSite,
   elseif opname == "Cdag"
     Op[OccP, Emp] = 1.
   elseif opname=="F" || opname=="FermiPhase" || opname=="FP"
+    Op[EmpP,Emp] =  1.
     Op[OccP,Occ] = -1.
   elseif opname == "Emp" || opname == "0"
     pEmp = ITensor(s)
