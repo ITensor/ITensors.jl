@@ -57,6 +57,31 @@ using ITensors,
     @test Array(op(s,"XDn",2),s[2]) ≈ [0.5,-im*√2,0.5]
   end
 
+  @testset "Fermion sites" begin
+    s = siteinds("Fermion",N)
+
+    @test state(s[1],"0")   == s[1](1)
+    @test state(s[1],"1")   == s[1](2)
+    @test_throws ArgumentError state(s[1],"Fake")
+
+    N5 = op(s,"N",5)
+    @test hasinds(N5,s[5]',s[5])
+     
+    @test_throws ArgumentError op(s, "Fake", 2)
+    N3 = Array(op(s,"N",3),s[3]',s[3]) 
+    @test N3 ≈ [0. 0; 0 1]
+    C3 = Array(op(s,"C",3),s[3]',s[3]) 
+    @test C3 ≈ [0. 1; 0 0]
+    Cdag3 = Array(op(s,"Cdag",3),s[3]',s[3]) 
+    @test Cdag3 ≈ [0. 0; 1 0]
+    F3 = Array(op(s,"F",3),s[3]',s[3]) 
+    @test F3 ≈ [1. 0; 0 -1]
+    Emp = Array(op(s,"Emp",3),s[3])
+    @test Emp ≈ [1.0; 0.0]
+    Occ = Array(op(s,"Occ",3),s[3])
+    @test Occ ≈ [0.0; 1.0]
+  end
+
   @testset "Electron sites" begin
     s = siteinds("Electron",N)
 
