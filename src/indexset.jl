@@ -444,8 +444,8 @@ function prime!(is::IndexSet, plinc::Integer, args...; kwargs...)
   end
   return is
 end
-prime!(is::IndexSet,vargs...) = prime!(is,1,vargs...)
-prime(is::IndexSet,vargs...) = prime!(copy(is),vargs...)
+prime!(is::IndexSet,vargs...; kwargs...) = prime!(is,1,vargs...; kwargs...)
+prime(is::IndexSet,vargs...; kwargs...) = prime!(copy(is),vargs...; kwargs...)
 # For is' notation
 Base.adjoint(is::IndexSet) = prime(is)
 
