@@ -41,6 +41,7 @@ IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
 IndexSet{N}(inds::Vector{<:Index}) where {N} = IndexSet{N}(inds...)
 
 IndexSet{N,IndexT}(inds::NTuple{N,IndexT}) where {N,IndexT<:Index} = IndexSet(inds)
+IndexSet{N,IndexT}(inds::Vararg{IndexT,N}) where {N,IndexT<:Index} = IndexSet(inds)
 
 # TODO: what is this used for? Should we have this?
 # It is not type stable.
@@ -98,7 +99,8 @@ function Base.show(io::IO, is::IndexSet)
   end
 end
 
-Base.getindex(is::IndexSet,n) = getindex(is.inds,n)
+Base.getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
+Base.getindex(is::IndexSet,v::AbstractVector) = IndexSet(getindex(Tuple(is),v))
 
 function Base.setindex!(is::IndexSet,i::Index,n::Integer)
   setindex!(is.inds,i,n)
@@ -155,8 +157,8 @@ Tensors.dag(is::IndexSet) = IndexSet(dag.(is.inds))
 # Allow iteration
 Base.iterate(is::IndexSet{N},state::Int=1) where {N} = state > N ? nothing : (is[state], state+1)
 
-Base.eltype(is::Type{<:IndexSet}) = Index
-Base.eltype(is::IndexSet) = eltype(typeof(is))
+Base.eltype(is::Type{IndexSet{N,IndexT}}) where {N,IndexT} = IndexT
+Base.eltype(is::IndexSet{N,IndexT}) where {N,IndexT} = IndexT
 
 # Needed for findfirst (I think)
 Base.keys(is::IndexSet{N}) where {N} = 1:N
@@ -216,29 +218,33 @@ end
 # Set operations
 #
 
+function indexmatch(i::Index; tags=nothing, plev=nothing)
+  return (isnothing(plev) || ITensors.plev(i)==plev) &&
+         (isnothing(tags) || hastags(i,tags))
+end
+
+function indexmatch(i::Index,j::Index; kwargs...)
+  return indexmatch(i; kwargs...) && i==j
+end
+
 # inds has the index i
-function hasindex(inds,i::Index)
-  #is = IndexSet(inds)
-  for j ∈ inds
-    i==j && return true
-  end
-  return false
+function hasindex(inds,i::Index; kwargs...)
+  return indexmatch(i; kwargs...) && any(==(i),IndexSet(inds))
 end
 
 # Binds is subset of Ainds
-function hasinds(Binds,Ainds)
-  #Ais = IndexSet(Ainds)
+function hasinds(Binds,Ainds; kwargs...)
   for i ∈ Ainds
-    !hasindex(Binds,i) && return false
+    !hasindex(Binds,i; kwargs...) && return false
   end
   return true
 end
-hasinds(Binds,Ainds::Index...) = hasinds(Binds,IndexSet(Ainds...))
+hasinds(Binds,
+        Ainds::Index...; kwargs...) = hasinds(Binds,
+                                              IndexSet(Ainds...); kwargs...)
 
 # Set equality (order independent)
 function hassameinds(Ainds,Binds)
-  #Ais = IndexSet(Ainds)
-  #Bis = IndexSet(Binds)
   return hasinds(Ainds,Binds) && length(Ainds) == length(Binds)
 end
 
@@ -255,33 +261,18 @@ function Base.:(==)(Ais::IndexSet,Bis::IndexSet)
   return true
 end
 
-# Helper function for uniqueinds
-# Return true if the Index is not in any
-# of the input sets of indices
-function _is_unique_index(j::Index,inds::T) where {T<:Tuple}
-  for I in inds
-    hasindex(I,j) && return false
-  end
-  return true
-end
-# Version taking one ITensor or IndexSet
-function _is_unique_index(j::Index,inds)
-  hasindex(inds,j) && return false
-  return true
-end
-
-
 """
 uniqueinds(Ais,Bis...)
 
 Output the IndexSet with Indices in Ais but not in
 the IndexSets Bis.
 """
-function uniqueinds(Ainds,Binds)
+function uniqueinds(Ainds,Binds; kwargs...)
   Ais = IndexSet(Ainds)
-  Cis = eltype(Ais)[]
+  Cis = IndexSet{0,eltype(Ais)}()
   for j ∈ Ais
-    _is_unique_index(j,Binds) && push!(Cis,j)
+    indexmatch(j; kwargs...) &&
+      !hasindex(Binds,j) && (Cis = push(Cis,j))
   end
   return Cis
 end
@@ -295,29 +286,27 @@ Otherwise, return a default constructed Index.
 In the future, this may throw an error if more than 
 one Index is found.
 """
-function uniqueindex(Ainds,Binds)
+function uniqueindex(Ainds,Binds...; kwargs...)
   Ais = IndexSet(Ainds)
   for j ∈ Ais
-    _is_unique_index(j,Binds) && return j
+    indexmatch(j; kwargs...) &&
+      all(x->!hasindex(x,j),Binds) && return j
   end
   return nothing
 end
-# This version can check for repeats, but is a bit
-# slower because of IndexSet allocation
-#uniqueindex(Ais,Bis) = Index(uniqueinds(Ais,Bis)) 
 
-Base.setdiff(Ais::IndexSet,Bis) = uniqueinds(Ais,Bis)
+Base.setdiff(Ais::IndexSet,Bis; kwargs...) = uniqueinds(Ais,Bis; kwargs...)
 
 """
 commoninds(Ais,Bis)
 
 Output the IndexSet in the intersection of Ais and Bis
 """
-function commoninds(Ainds,Binds)
+function commoninds(Ainds,Binds; kwargs...)
   Ais = IndexSet(Ainds)
-  Cis = eltype(Ais)[]
+  Cis = IndexSet{0,eltype(Ais)}()
   for i ∈ Ais
-    hasindex(Binds,i) && push!(Cis,i)
+    hasindex(Binds,i; kwargs...) && (Cis = push(Cis,i))
   end
   return Cis
 end
@@ -329,15 +318,13 @@ Output the Index common to Ais and Bis.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-function commonindex(Ainds,Binds)
+function commonindex(Ainds,Binds; kwargs...)
   Ais = IndexSet(Ainds)
   for i ∈ Ais
-    hasindex(Binds,i) && return i
+    hasindex(Binds,i; kwargs...) && return i
   end
   return nothing
 end
-# This version checks if there are more than one indices
-#commonindex(Ais,Bis) = Index(commoninds(Ais,Bis))
 
 """
 findinds(inds,tags)
@@ -361,7 +348,6 @@ function findindex(inds, args...; kwargs...)
   n = indexposition(inds, args...; kwargs...)
   isnothing(n) && return nothing
   return IndexSet(inds)[n]
-  return nothing
 end
 
 function indexposition(inds, args...; kwargs...)

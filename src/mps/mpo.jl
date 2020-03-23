@@ -127,11 +127,11 @@ Base.eachindex(m::MPO) = 1:length(m)
 function siteindex(A::MPO,x::MPS,j::Integer)
   N = length(A)
   if j == 1
-    si = uniqueindex(A[j],(A[j+1],x[j]))
+    si = uniqueindex(A[j],A[j+1],x[j])
   elseif j == N
-    si = uniqueindex(A[j],(A[j-1],x[j]))
+    si = uniqueindex(A[j],A[j-1],x[j])
   else
-    si = uniqueindex(A[j],(A[j-1],A[j+1],x[j]))
+    si = uniqueindex(A[j],A[j-1],A[j+1],x[j])
   end
   return si
 end
@@ -148,34 +148,32 @@ Hermitian conjugation of a matrix product state or operator `m`.
 function Tensors.dag(m::T) where {T <: Union{MPS, MPO}}
   N = length(m)
   mdag = T(N)
-  @inbounds for i ∈ eachindex(m)
+  for i ∈ eachindex(m)
     mdag[i] = dag(m[i])
   end
   return mdag
 end
 
-function prime!(M::T,vargs...) where {T <: Union{MPS,MPO}}
-  @inbounds for i ∈ eachindex(M)
+function prime!(M::Union{MPS,MPO},vargs...)
+  for i ∈ eachindex(M)
     prime!(M[i],vargs...)
   end
 end
 
-function primelinks!(M::T, plinc::Integer = 1) where {T <: Union{MPS,MPO}}
-  @inbounds for i ∈ eachindex(M)[1:end-1]
+function primelinks!(M::Union{MPS,MPO}, plinc::Integer = 1)
+  for i ∈ eachindex(M)[1:end-1]
     l = linkindex(M,i)
     prime!(M[i],plinc,l)
     prime!(M[i+1],plinc,l)
   end
 end
 
-function simlinks!(M::T) where {T <: Union{MPS,MPO}}
-  @inbounds for i ∈ eachindex(M)[1:end-1]
+function simlinks!(M::Union{MPS,MPO})
+  for i ∈ eachindex(M)[1:end-1]
     isnothing(commonindex(M[i],M[i+1])) && continue
     l = linkindex(M,i)
     l̃ = sim(l)
-    #M[i] *= δ(l,l̃)
     replaceindex!(M[i],l,l̃)
-    #M[i+1] *= δ(l,l̃)
     replaceindex!(M[i+1],l,dag(l̃))
   end
 end
@@ -186,7 +184,7 @@ maxlinkdim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
 """
-function maxlinkdim(M::T) where {T <: Union{MPS,MPO}}
+function maxlinkdim(M::Union{MPS,MPO})
   md = 0
   for b ∈ eachindex(M)[1:end-1]
     md = max(md,dim(linkindex(M,b)))
@@ -388,10 +386,10 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   A_c       = dag(copy(A))
   prime!(psi_c, rand_plev)
   prime!(A_c, rand_plev)
-  for j in 1:n-1
-    unique_site_ind = setdiff(findinds(A_c[j], "Site"), findindex(psi_c[j], "Site"))[1]
-    pl = id(unique_site_ind) == id(commonindex(A_c[j], psi_c[j])) ? 1 : 0
-    A_c[j] = setprime(A_c[j], pl, unique_site_ind)
+  for j in 1:n
+    s = siteindex(A[j],psi[j])
+    s_dag = siteindex(A_c[j],psi_c[j])
+    replaceindex!(A_c[j],s_dag,s)
   end
   E = Vector{ITensor}(undef, n-1)
   E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
@@ -403,9 +401,6 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   ts    = tags(commonindex(psi[n], psi[n-1]))
   Lis   = commonindex(ρ, A[n])
   Ris   = prime(Lis, rand_plev)
-  @show inds(ρ)
-  @show Lis
-  @show Ris
   FU, D = eigen(ρ, Lis, Ris; ishermitian=true, 
                              tags=ts, 
                              kwargs...)

@@ -9,7 +9,7 @@ function LinearAlgebra.qr(A::ITensor,
   tags::TagSet = get(kwargs,:tags,"Link,qr")
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
-  Lpos,Rpos = getperms(inds(A),IndexSet(Lis...),IndexSet(Ris...))
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
   QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
   Q,R = ITensor(QT),ITensor(RT)
   q = commonindex(Q,R)
@@ -25,14 +25,14 @@ function Tensors.polar(A::ITensor,
                        kwargs...)
   Lis = commoninds(inds(A),IndexSet(Linds...))
   Ris = uniqueinds(inds(A),Lis)
-  Lpos,Rpos = getperms(inds(A),IndexSet(Lis...),IndexSet(Ris...))
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
   UT,PT = polar(tensor(A),Lpos,Rpos)
   U,P = ITensor(UT),ITensor(PT)
-  u = IndexSet(commoninds(U,P)...)
-  p = IndexSet(uniqueinds(P,U)...)
+  u = commoninds(U,P)
+  p = uniqueinds(P,U)
   replaceinds!(U,u,p')
   replaceinds!(P,u,p')
-  return U,P,IndexSet(commoninds(U,P)...)
+  return U,P,commoninds(U,P)
 end
 
 """
@@ -182,7 +182,7 @@ end
 function _factorize_from_left_eigen(A::ITensor,
                                     Linds...;
                                     kwargs...)
-  Lis = IndexSet(commoninds(inds(A),IndexSet(Linds...))...)
+  Lis = commoninds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
   FU,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
                                        kwargs...)
@@ -193,7 +193,7 @@ end
 function _factorize_from_right_eigen(A::ITensor,
                                      Linds...;
                                      kwargs...)
-  Ris = IndexSet(uniqueinds(inds(A),IndexSet(Linds...))...)
+  Ris = uniqueinds(inds(A),IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
   FV,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
                                        kwargs...)
@@ -267,20 +267,13 @@ function LinearAlgebra.eigen(A::ITensor,
   leftplev = get(kwargs,:leftplev,0)
   rightplev = get(kwargs,:rightplev,lefttags==righttags ? 1 : 0)
 
+  (lefttags==righttags && leftplev==rightplev) && error("In eigen, left tags and prime level must be different from right tags and prime level")
+
   Lis = commoninds(inds(A),IndexSet(Linds))
   Ris = commoninds(inds(A),IndexSet(Rinds))
 
-  @show inds(A)
-  @show Lis
-  @show Ris
-
   CL,cL = combiner(Lis...)
   CR,cR = combiner(Ris...)
-
-  @show CL
-  @show CR
-  @show cL
-  @show cR
 
   AC = A*CR*CL
 

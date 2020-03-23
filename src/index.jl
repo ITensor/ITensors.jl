@@ -43,8 +43,8 @@ struct Index{T}
   function Index(id,space::T,dir,tags,plev) where {T}
     return new{T}(id,space,dir,tags,plev)
   end
-
 end
+Index{SpaceT}(space::SpaceT,args...;vargs...) where {SpaceT} = Index(space,args...;vargs...)
 
 Index() = Index(0,1,Neither,"",0)
 
@@ -58,6 +58,7 @@ Example: create a two dimensional index with tag `l`:
 function Index(dim::Integer;tags="",plev=0)
   return Index(rand(IDType),dim,Neither,tags,plev)
 end
+
 
 Index(dim::Integer,tags::Union{AbstractString,TagSet}) = Index(dim; tags=tags)
 
