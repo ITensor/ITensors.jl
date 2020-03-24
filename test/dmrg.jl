@@ -33,6 +33,7 @@ using ITensors, Test, Random
   @testset "Transverse field Ising" begin
     N = 32
     sites = siteinds("S=1/2",N)
+    Random.seed!(432)
     psi0 = randomMPS(sites)
 
     ampo = AutoMPO()
@@ -42,7 +43,7 @@ using ITensors, Test, Random
     end
     H = toMPO(ampo,sites)
 
-    sweeps = Sweeps(3)
+    sweeps = Sweeps(5)
     maxdim!(sweeps,10,20)
     cutoff!(sweeps,1E-12)
     energy,psi = dmrg(H,psi0,sweeps,quiet=true)
@@ -50,7 +51,7 @@ using ITensors, Test, Random
     # Exact energy for transverse field Ising model
     # with open boundary conditions at criticality
     energy_exact = 0.25 - 0.25/sin(π/(2*(2*N+1)))
-    @test abs(energy - energy_exact) < 0.05
+    @test abs((energy-energy_exact)/energy_exact) < 6e-4
   end
 
   @testset "DMRGObserver" begin

@@ -5,10 +5,13 @@ function dmrg(H::MPO,
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)::Tuple{Float64,MPS}
-
   which_factorization::String = get(kwargs,:which_factorization,"automatic")
   obs = get(kwargs,:observer, NoObserver())
   quiet::Bool = get(kwargs,:quiet,false)
+
+  # eigsolve kwargs
+  krylovdim = get(kwargs,:maxiter,2)
+  tol = get(kwargs,:errgoal,1E-14)
 
   psi = copy(psi0)
   N = length(psi)
@@ -30,9 +33,13 @@ end
       phi = psi[b]*psi[b+1]
 end
 
-@timeit_debug GLOBAL_TIMER "davidson" begin
-      energy,phi = davidson(PH,phi;kwargs...)
+@timeit_debug GLOBAL_TIMER "eigsolve" begin
+      vals,vecs = eigsolve(PH,phi,1,:SR; ishermitian=true,
+                                         tol=tol,
+                                         krylovdim=krylovdim,
+                                         maxiter=1)
 end
+      energy,phi = vals[1],vecs[1]
 
       dir = ha==1 ? "fromleft" : "fromright"
 
