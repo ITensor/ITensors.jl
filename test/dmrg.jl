@@ -51,7 +51,7 @@ using ITensors, Test, Random
     # Exact energy for transverse field Ising model
     # with open boundary conditions at criticality
     energy_exact = 0.25 - 0.25/sin(π/(2*(2*N+1)))
-    @test abs((energy-energy_exact)/energy_exact) < 6e-4
+    @test abs((energy-energy_exact)/energy_exact) < 1e-6
   end
 
   @testset "DMRGObserver" begin
