@@ -10,7 +10,7 @@ function dmrg(H::MPO,
   quiet::Bool = get(kwargs,:quiet,false)
 
   # eigsolve kwargs
-  krylovdim = get(kwargs,:maxiter,2)
+  krylovdim = get(kwargs,:maxiter,2)+1
   tol = get(kwargs,:errgoal,1E-14)
 
   psi = copy(psi0)
