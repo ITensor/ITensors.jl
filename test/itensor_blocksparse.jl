@@ -968,6 +968,43 @@ Random.seed!(1234)
       @test isapprox(err,spec.truncerr; rtol=1e-6)
     end
 
+    @testset "issue #231" begin
+      l = Index(QN("Nf",-1,-1)=>2,
+            QN("Nf", 0,-1)=>4,
+            QN("Nf",+1,-1)=>2,
+            tags="CMB,Link")
+      s = Index(QN("Nf",0,-1)=>1,
+                QN("Nf",1,-1)=>1,
+                tags="Fermion,Site,n=4")
+      r = Index(QN("Nf",1,-1)=>2,
+                QN("Nf",0,-1)=>1,
+                QN("Nf",1,-1)=>2,
+                tags="Link,u")
+
+      A = ITensor(l,s,dag(r))
+
+      addblock!(A,(2,1,2))
+      addblock!(A,(1,2,2))
+      addblock!(A,(2,2,3))
+
+      for b in nzblocks(A)
+        @test flux(A,b)==QN()
+      end
+
+      U,S,V = svd(A,l,s)
+
+      for b in nzblocks(U)
+        @test flux(U,b)==QN()
+      end
+      for b in nzblocks(S)
+        @test flux(S,b)==QN()
+      end
+      for b in nzblocks(V)
+        @test flux(V,b)==QN()
+      end
+      @test norm(U*S*V-A) ≈ 0 atol=1e-15
+    end
+
   end
 
   @testset "Replace Index" begin

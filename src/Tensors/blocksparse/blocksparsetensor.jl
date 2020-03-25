@@ -1,5 +1,6 @@
 export BlockSparseTensor,
-       blockview
+       blockview,
+       addblock!
 
 #
 # BlockSparseTensor (Tensor using BlockSparse storage)
@@ -334,11 +335,6 @@ function combine_dims(blocks::Blocks{N},
   blocks_comb = Blocks{N-NC+1}(undef,nnzblocks(blocks))
   for (i,block) in enumerate(blocks)
     blocks_comb[i] = combine_dims(block,inds,combdims)
-    #slice = getindices(block,combdims)
-    #slice_comb = LinearIndices(nblcks)[slice...]
-    #block_comb = deleteat(block,combdims)
-    #block_comb = insertafter(block_comb,tuple(slice_comb),minimum(combdims)-1)
-    #blocks_comb[i] = block_comb
   end
   return blocks_comb
 end
@@ -374,55 +370,17 @@ function perm_block(block::Block,
   return setindex(block,iperm[block[dim]],dim)
 end
 
-# TODO: use that blockcomb is ordered to avoid findfirst
-function _number_combined(i::Int,
-                          blockcomb::Vector{Int})
-  if blockcomb[i] == blockcomb[end]
-    start_loc = findfirst(==(blockcomb[end]),blockcomb)
-    return length(blockcomb)-start_loc+1
-  end
-  start_loc = findfirst(==(blockcomb[i]),blockcomb)
-  end_loc = findfirst(==(blockcomb[i]+1),blockcomb)-1
-  return end_loc-start_loc+1
-end
-
-# TODO: use that blockcomb is ordered to avoid findfirst
-function _number_combined_shift(i::Int,
-                                blockcomb::Vector{Int})
-  blockval = blockcomb[i]
-  if blockval == 1
-    return 0
-  end
-  ncomb_shift = 0
-  for i = 1:blockval-1
-    ncomb_shift += findfirst(==(i+1),blockcomb) - findfirst(==(i),blockcomb) - 1
-  end
-  return ncomb_shift
-end
-
 # In the dimension dim, combine the specified blocks
 function combine_blocks(blocks::Blocks,
                         dim::Int,
                         blockcomb::Vector{Int})
   blocks_comb = copy(blocks)
   nnz_comb = nnzblocks(blocks)
-  i = 1
-  while i <= nnz_comb
-    block = blocks_comb[i]
+  for (i,block) in enumerate(blocks)
     dimval = block[dim]
-    ncomb = 1
-    while i+ncomb<=nnz_comb && insertat(blocks_comb[i+ncomb],dimval,dim)==block
-      ncomb += 1
-    end
-    for n = i+1:i+ncomb-1
-      deleteat!(blocks_comb,i+1)
-    end
-    nnz_comb = nnzblocks(blocks_comb)
-
-    ncomb_shift = _number_combined_shift(dimval,blockcomb)
-    blocks_comb[i] = setindex(block,dimval-ncomb_shift,dim)
-    i += 1
+    blocks_comb[i] = setindex(block,blockcomb[dimval],dim)
   end
+  unique!(blocks_comb)
   return blocks_comb
 end
 
@@ -464,6 +422,7 @@ function permutedims_combine(T::BlockSparseTensor{ElT,N},
                              combdims::NTuple{NC,Int},
                              blockperm::Vector{Int},
                              blockcomb::Vector{Int}) where {ElT,N,NC}
+
   R = permutedims_combine_output(T,is,perm,combdims,blockperm,blockcomb)
 
   # Permute the indices
@@ -495,6 +454,7 @@ function permutedims_combine(T::BlockSparseTensor{ElT,N},
       pos_in_new_combined_block += 1
     end
     b_new = setindex(b_perm_comb,new_b_in_combined_dim,comb_ind_loc)
+
     Rb_total = blockview(R,b_new)
     dimsRb_tot = dims(Rb_total)
     subind = ntuple(i->i==comb_ind_loc ? range(1+offset,stop=offset+blockdim(ind_comb,b_in_combined_dim)) : range(1,stop=dimsRb_tot[i]),N-NC+1)
