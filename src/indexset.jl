@@ -360,44 +360,41 @@ end
 # of the matching indices as a vector of integers
 #indexpositions(inds, match::Nothing) = collect(1:length(inds))
 # Version for matching a tag set
-function indexpositions(inds, tags::Union{AbstractString,TagSet};
-                        plev=nothing)
-  return indexpositions(inds; tags=tags, plev=plev)
+function Base.findall(inds::IndexSet, tags::Union{AbstractString,TagSet}; plev=nothing)
+  return findall(inds; tags=tags, plev=plev)
 end
 
-function indexpositions(inds; tags=nothing, 
-                              plev=nothing)
-  isnothing(tags) && isnothing(plev) && return collect(1:length(inds))
-  is = IndexSet(inds)
-  pos = Int[]
-  if isnothing(plev)
-    for (j,I) ∈ enumerate(is)
-        hastags(I,tags) && push!(pos,j)
-    end
-  elseif isnothing(tags)
-    for (j,I) ∈ enumerate(is)
-      ITensors.plev(I)==plev && push!(pos,j)
-    end
-  else
-    for (j,I) ∈ enumerate(is)
-      ITensors.plev(I)==plev && hastags(I,tags) && push!(pos,j)
-    end
-  end
-  return pos
+fmatch(inds::IndexSet) = x->hasindex(inds,x)
+fmatch(tags::Union{AbstractString,TagSet}) = x->hastags(x,tags)
+fmatch(pl::Integer) = x->plev(x)==pl
+
+fmatch(tags::Not{TagSet}) = x->!hastags(x,tags)
+fmatch(pl::Not{<:Integer}) = x->plev(x)!=pl
+
+#fmatch(tags::Union{AbstractString,TagSet},pl::Nothing) = x->hastags(x,tags)
+#fmatch(tags::Nothing,pl::Integer) = x->plev(x)==pl
+#fmatch(tags::Nothing,pl::Nothing) = identity
+#
+#fmatch(tags::Union{AbstractString,TagSet},pl::Integer) = x->plev(x)==pl && hastags(x,tags)
+#fmatch(tags::Union{AbstractString,TagSet},pl::Nothing) = x->hastags(x,tags)
+#fmatch(tags::Nothing,pl::Integer) = x->plev(x)==pl
+#fmatch(tags::Nothing,pl::Nothing) = identity
+#
+## not syntax
+#fmatch(tags::Not{TagSet},pl::Not{<:Integer}) = x->plev(x)!=pl && !hastags(x,tags)
+#fmatch(tags::Not{TagSet},pl::Integer) = x->plev(x)==pl && !hastags(x,tags)
+#fmatch(tags::TagSet,pl::Not{<:Integer}) = x->plev(x)!=pl && !hastags(x,tags)
+
+function findall(inds::IndexSet; tags=nothing, plev=nothing)
+  return findall(fmatch(tags,plev),inds)
 end
 
 # Version for matching a collection of indices
-function indexpositions(inds, match)
-  is = IndexSet(inds)
-  ismatch = IndexSet(match)
-  pos = Int[]
-  for (j,I) ∈ enumerate(is)
-    hasindex(ismatch,I) && push!(pos,j)
-  end
-  return pos
+function Base.findall(inds::IndexSet, indsmatch)
+  return findall(fmatch(IndexSet(indsmatch)),inds)
 end
 # Version for matching a list of indices
-indexpositions(inds, match_inds::Index...) = indexpositions(inds, IndexSet(match_inds...))
+Base.findall(inds, match_inds::Index...) = findall(inds, IndexSet(match_inds...))
 
 #
 # not syntax (to prime or tag the compliment 
@@ -415,23 +412,23 @@ not(is::IndexSet) = Not(is)
 not(inds::Index...) = not(IndexSet(inds...))
 not(inds::NTuple{<:Any,<:Index}) = not(IndexSet(inds))
 
-function indexpositions(inds, match::Not{TagSet})
-  is = IndexSet(inds)
-  pos = Int[]
-  for (j,I) ∈ enumerate(is)
-    !hastags(I,match.pattern) && push!(pos,j)
-  end
-  return pos
-end
-
-function indexpositions(inds, match::Not{<:IndexSet})
-  is = IndexSet(inds)
-  pos = Int[]
-  for (j,I) ∈ enumerate(is)
-    !hasindex(match.pattern,I) && push!(pos,j)
-  end
-  return pos
-end
+#function indexpositions(inds, match::Not{TagSet})
+#  is = IndexSet(inds)
+#  pos = Int[]
+#  for (j,I) ∈ enumerate(is)
+#    !hastags(I,match.pattern) && push!(pos,j)
+#  end
+#  return pos
+#end
+#
+#function indexpositions(inds, match::Not{<:IndexSet})
+#  is = IndexSet(inds)
+#  pos = Int[]
+#  for (j,I) ∈ enumerate(is)
+#    !hasindex(match.pattern,I) && push!(pos,j)
+#  end
+#  return pos
+#end
 
 #
 # Tagging functions
