@@ -732,10 +732,12 @@ hasqns(T::ITensor) = hasqns(inds(T))
 
 Tensors.nnz(T::ITensor) = nnz(tensor(T))
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
-Tensors.block(T::ITensor,i) = block(tensor(T),i)
+Tensors.block(T::ITensor,args...) = block(tensor(T),args...)
 Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
 Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
-flux(T::ITensor,block) = flux(inds(T),block)
+flux(T::ITensor,args...) = flux(inds(T),args...)
+
+Tensors.addblock!(T::ITensor,args...) = addblock!(tensor(T),args...)
 
 function flux(T::ITensor)
   !hasqns(T) && return nothing
