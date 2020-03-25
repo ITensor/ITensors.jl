@@ -6,7 +6,8 @@ using Random,
       StaticArrays,
       TimerOutputs,
       Reexport,
-      HDF5
+      HDF5,
+      KrylovKit
 
 # TODO: move imports to individual files
 import Base.adjoint,

@@ -5,10 +5,29 @@ function dmrg(H::MPO,
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)::Tuple{Float64,MPS}
-
   which_factorization::String = get(kwargs,:which_factorization,"automatic")
   obs = get(kwargs,:observer, NoObserver())
   quiet::Bool = get(kwargs,:quiet,false)
+
+  # eigsolve kwargs
+  eigsolve_tol::Float64 = get(kwargs,:eigsolve_tol,1E-14)
+  eigsolve_krylovdim::Int = get(kwargs,:eigsolve_krylovdim,3)
+  eigsolve_maxiter::Int = get(kwargs,:eigsolve_maxiter,1)
+  eigsolve_verbosity::Int = get(kwargs,:eigsolve_verbosity,0)
+
+  # TODO: add support for non-Hermitian DMRG
+  ishermitian::Bool = true #get(kwargs,:ishermitian,true)
+
+  # TODO: add support for targeting other states with DMRG
+  # (such as the state with the largest eigenvalue)
+  eigsolve_which_eigenvalue::Symbol = :SR #get(kwargs,:eigsolve_which_eigenvalue,:SR)
+
+  # Keyword argument deprecations
+  haskey(kwargs,:maxiter) && error("""maxiter keyword has been replace by eigsolve_krylovdim.
+                                      Note: compared to the C++ version of ITensor,
+                                      setting eigsolve_krylovdim 3 is the same as setting
+                                      a maxiter of 2.""")
+  haskey(kwargs,:errgoal) && error("errgoal keyword has been replace by eigsolve_tol.")
 
   psi = copy(psi0)
   N = length(psi)
@@ -30,9 +49,13 @@ end
       phi = psi[b]*psi[b+1]
 end
 
-@timeit_debug GLOBAL_TIMER "davidson" begin
-      energy,phi = davidson(PH,phi;kwargs...)
+@timeit_debug GLOBAL_TIMER "eigsolve" begin
+      vals,vecs = eigsolve(PH,phi,1,eigsolve_which_eigenvalue; ishermitian=ishermitian,
+                                                               tol=eigsolve_tol,
+                                                               krylovdim=eigsolve_krylovdim,
+                                                               maxiter=eigsolve_maxiter)
 end
+      energy,phi = vals[1],vecs[1]
 
       dir = ha==1 ? "fromleft" : "fromright"
 
