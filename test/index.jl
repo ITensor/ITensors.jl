@@ -11,7 +11,7 @@ import ITensors: In,Out,Neither
     @test dir(i) == Neither
     @test -dir(i) == Neither
     @test plev(i) == 0
-    @test tags(i) == TagSet(("",0))
+    @test tags(i) == TagSet("")
   end
   @testset "Index with dim" begin
     i = Index(2)
@@ -19,21 +19,21 @@ import ITensors: In,Out,Neither
     @test dim(i) == 2
     @test dir(i) == Neither
     @test plev(i) == 0
-    @test tags(i) == TagSet(("",0))
+    @test tags(i) == TagSet("")
   end
   @testset "Index with all args" begin
-    i = Index(UInt64(1), 2, In, TagSet(("Link",1)))
+    i = Index(1, 2, In, "Link", 1)
     @test id(i) == 1
     @test dim(i) == 2
     @test dir(i) == In
     @test plev(i) == 1 
-    @test tags(i) == TagSet(("Link",1))
+    @test tags(i) == TagSet("Link")
     j = copy(i)
     @test id(j) == 1
     @test dim(j) == 2
     @test dir(j) == In
     @test plev(j) == 1 
-    @test tags(j) == TagSet(("Link",1))
+    @test tags(j) == TagSet("Link")
     @test j == i
   end
   @testset "prime" begin

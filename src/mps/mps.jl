@@ -164,7 +164,7 @@ function siteindex(M::MPS,j::Integer)
   elseif j == N
     si = uniqueindex(M[j],M[j-1])
   else
-    si = uniqueindex(M[j],(M[j-1],M[j+1]))
+    si = uniqueindex(M[j],M[j-1],M[j+1])
   end
   return si
 end

@@ -54,15 +54,21 @@ using ITensors,
     @test isnothing(uniqueindex(I1,IndexSet(k, j, i)))
     @test uniqueinds(I1,I2) == IndexSet(i,j)
     @test setdiff(I1,I2) == IndexSet(i,j)
+    @test hassameinds(uniqueinds(I1,I2),IndexSet(i,j))
+    @test hassameinds(setdiff(I1,I2),IndexSet(i,j))
     @test hassameinds(uniqueinds(I1,I2),(j,i))
     @test commoninds(I1,I2) == IndexSet(k)
+    @test hassameinds(commoninds(I1,I2),IndexSet(k))
     @test commonindex(I1,I2) == k
     @test isnothing(commonindex(I1,IndexSet(l)))
     @test commoninds(I1,(j,l)) == IndexSet(j)
+    @test hassameinds(commoninds(I1,(j,l)),IndexSet(j))
     @test commonindex(I1,(j,l)) == j
     @test commoninds(I1,(j,k)) == IndexSet(j,k)
+    @test hassameinds(commoninds(I1,(j,k)),IndexSet(j,k))
     @test hassameinds(commoninds(I1,(j,k,l)),(j,k))
     @test findinds(I1,"i") == IndexSet(i)
+    @test hassameinds(findinds(I1,"i"),IndexSet(i))
     @test findindex(I1,"j") == j
     @test isnothing(findindex(I1,"l"))
     @test indexposition(I1,i) == 1
@@ -75,8 +81,8 @@ using ITensors,
     J = IndexSet(j,l,i)
     # Test that commoninds respects the ordering
     # of the indices in the first IndexSet
-    @test commoninds(I,J) == IndexSet(i,j)
-    @test commoninds(J,I) == IndexSet(j,i)
+    @test hassameinds(commoninds(I,J),IndexSet(i,j))
+    @test hassameinds(commoninds(J,I),IndexSet(j,i))
   end
   @testset "adjoint" begin
     I = IndexSet(i,k,j)

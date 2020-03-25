@@ -127,11 +127,11 @@ Base.eachindex(m::MPO) = 1:length(m)
 function siteindex(A::MPO,x::MPS,j::Integer)
   N = length(A)
   if j == 1
-    si = uniqueindex(A[j],(A[j+1],x[j]))
+    si = uniqueindex(A[j],A[j+1],x[j])
   elseif j == N
-    si = uniqueindex(A[j],(A[j-1],x[j]))
+    si = uniqueindex(A[j],A[j-1],x[j])
   else
-    si = uniqueindex(A[j],(A[j-1],A[j+1],x[j]))
+    si = uniqueindex(A[j],A[j-1],A[j+1],x[j])
   end
   return si
 end
@@ -148,34 +148,32 @@ Hermitian conjugation of a matrix product state or operator `m`.
 function Tensors.dag(m::T) where {T <: Union{MPS, MPO}}
   N = length(m)
   mdag = T(N)
-  @inbounds for i ∈ eachindex(m)
+  for i ∈ eachindex(m)
     mdag[i] = dag(m[i])
   end
   return mdag
 end
 
-function prime!(M::T,vargs...) where {T <: Union{MPS,MPO}}
-  @inbounds for i ∈ eachindex(M)
+function prime!(M::Union{MPS,MPO},vargs...)
+  for i ∈ eachindex(M)
     prime!(M[i],vargs...)
   end
 end
 
-function primelinks!(M::T, plinc::Integer = 1) where {T <: Union{MPS,MPO}}
-  @inbounds for i ∈ eachindex(M)[1:end-1]
+function primelinks!(M::Union{MPS,MPO}, plinc::Integer = 1)
+  for i ∈ eachindex(M)[1:end-1]
     l = linkindex(M,i)
     prime!(M[i],plinc,l)
     prime!(M[i+1],plinc,l)
   end
 end
 
-function simlinks!(M::T) where {T <: Union{MPS,MPO}}
-  @inbounds for i ∈ eachindex(M)[1:end-1]
+function simlinks!(M::Union{MPS,MPO})
+  for i ∈ eachindex(M)[1:end-1]
     isnothing(commonindex(M[i],M[i+1])) && continue
     l = linkindex(M,i)
     l̃ = sim(l)
-    #M[i] *= δ(l,l̃)
     replaceindex!(M[i],l,l̃)
-    #M[i+1] *= δ(l,l̃)
     replaceindex!(M[i+1],l,dag(l̃))
   end
 end
@@ -186,7 +184,7 @@ maxlinkdim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
 """
-function maxlinkdim(M::T) where {T <: Union{MPS,MPO}}
+function maxlinkdim(M::Union{MPS,MPO})
   md = 0
   for b ∈ eachindex(M)[1:end-1]
     md = max(md,dim(linkindex(M,b)))
@@ -258,22 +256,22 @@ function inner(B::MPO,
   Bdag = dag(B)
   prime!(Bdag)
   # Swap prime levels 1 -> 2 and 2 -> 1.
-  @inbounds for j ∈ eachindex(Bdag)
+  for j ∈ eachindex(Bdag)
     Axcommon = commonindex(A[j], x[j])
     ABcommon = uniqueindex(findinds(A[j], "Site"), IndexSet(Axcommon))
     swapprime!(inds(Bdag[j]),2,3)
     swapprime!(inds(Bdag[j]),1,2)
     swapprime!(inds(Bdag[j]),3,1)
-    noprime!(inds(Bdag[j]), tags(prime(ABcommon, 2)))
+    noprime!(inds(Bdag[j]),prime(ABcommon,2))
   end
   yB = ydag[1] * Bdag[1]
   Ax = A[1] * x[1]
   O = yB*Ax
-  @inbounds for j ∈ eachindex(y)[2:end]
-      yB = ydag[j] * Bdag[j]
-      Ax = A[j] * x[j]
-      yB *= O
-      O = yB * Ax 
+  for j ∈ eachindex(y)[2:end]
+    yB = ydag[j] * Bdag[j]
+    Ax = A[j] * x[j]
+    yB *= O
+    O = yB * Ax 
   end
   return O[]
 end
@@ -373,63 +371,62 @@ function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS
 end
 
 function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
-    n = length(A)
-    n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
-    psi_out         = similar(psi)
-    cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
+  n = length(A)
+  n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
+  psi_out         = similar(psi)
+  cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
 
-    maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(psi))
-    mindim::Int     = max(get(kwargs,:mindim,1), 1)
-    normalize::Bool = get(kwargs, :normalize, false) 
-    all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
+  maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(psi))
+  mindim::Int     = max(get(kwargs,:mindim,1), 1)
+  normalize::Bool = get(kwargs, :normalize, false) 
+  all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
 
-    rand_plev = 14741
-    psi_c     = dag(copy(psi))
-    A_c       = dag(copy(A))
-    prime!(psi_c, rand_plev)
-    prime!(A_c, rand_plev)
-    for j in 1:n-1
-        unique_site_ind = setdiff(findinds(A_c[j], "Site"), findindex(psi_c[j], "Site"))[1]
-        pl = id(unique_site_ind) == id(commonindex(A_c[j], psi_c[j])) ? 1 : 0
-        A_c[j] = setprime(A_c[j], pl, unique_site_ind)
-    end
-    E = Vector{ITensor}(undef, n-1)
-    E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
-    for j in 2:n-1
-        E[j] = E[j-1]*psi[j]*A[j]*A_c[j]*psi_c[j]
-    end
-    O     = psi[n] * A[n]
-    ρ     = E[n-1] * O * dag(prime(O, rand_plev))
-    ts    = tags(commonindex(psi[n], psi[n-1]))
-    Lis   = commonindex(ρ, A[n])
-    Ris   = prime(Lis, rand_plev)
-    FU, D = eigen(ρ, Lis, Ris; ishermitian=true, 
+  rand_plev = 14741
+  psi_c     = dag(copy(psi))
+  A_c       = dag(copy(A))
+  prime!(psi_c, rand_plev)
+  prime!(A_c, rand_plev)
+  for j in 1:n
+    s = siteindex(A[j],psi[j])
+    s_dag = siteindex(A_c[j],psi_c[j])
+    replaceindex!(A_c[j],s_dag,s)
+  end
+  E = Vector{ITensor}(undef, n-1)
+  E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
+  for j in 2:n-1
+    E[j] = E[j-1]*psi[j]*A[j]*A_c[j]*psi_c[j]
+  end
+  O     = psi[n] * A[n]
+  ρ     = E[n-1] * O * dag(prime(O, rand_plev))
+  ts    = tags(commonindex(psi[n], psi[n-1]))
+  Lis   = commonindex(ρ, A[n])
+  Ris   = prime(Lis, rand_plev)
+  FU, D = eigen(ρ, Lis, Ris; ishermitian=true, 
+                             tags=ts, 
+                             kwargs...)
+  psi_out[n] = setprime(dag(FU), 0, "Site")
+  O     = O * FU * psi[n-1] * A[n-1]
+  O     = noprime(O, "Site")
+  for j in reverse(2:n-1)
+    dO  = prime(dag(O), rand_plev)
+    ρ   = E[j-1] * O * dO
+    ts  = tags(commonindex(psi[j], psi[j-1]))
+    Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
+    Ris = prime(Lis, rand_plev)
+    FU, D = eigen(ρ, Lis, Ris; ishermitian=true,
                                tags=ts, 
                                kwargs...)
-    psi_out[n] = setprime(dag(FU), 0, "Site")
-    O     = O * FU * psi[n-1] * A[n-1]
-    O     = prime(O, -1, "Site")
-    for j in reverse(2:n-1)
-        dO  = prime(dag(O), rand_plev)
-        ρ   = E[j-1] * O * dO
-        ts  = tags(commonindex(psi[j], psi[j-1]))
-        Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
-        #Ris = uniqueinds(ρ, Lis)
-        Ris = prime(Lis, rand_plev)
-        FU, D = eigen(ρ, Lis, Ris; ishermitian=true,
-                                   tags=ts, 
-                                   kwargs...)
-        psi_out[j] = dag(FU)
-        O = O * FU * psi[j-1] * A[j-1]
-        O = prime(O, -1, "Site")
-    end
-    if normalize
-        O /= norm(O)
-    end
-    psi_out[1]    = copy(O)
-    psi_out.llim_ = 0
-    psi_out.rlim_ = 2
-    return psi_out
+    psi_out[j] = dag(FU)
+    O = O * FU * psi[j-1] * A[j-1]
+    O = noprime(O, "Site")
+  end
+  if normalize
+    O /= norm(O)
+  end
+  psi_out[1]    = copy(O)
+  psi_out.llim_ = 0
+  psi_out.rlim_ = 2
+  return psi_out
 end
 
 function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
