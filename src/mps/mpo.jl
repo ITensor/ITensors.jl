@@ -259,10 +259,10 @@ function inner(B::MPO,
   for j ∈ eachindex(Bdag)
     Axcommon = commonindex(A[j], x[j])
     ABcommon = uniqueindex(findinds(A[j], "Site"), IndexSet(Axcommon))
-    swapprime!(inds(Bdag[j]),2,3)
-    swapprime!(inds(Bdag[j]),1,2)
-    swapprime!(inds(Bdag[j]),3,1)
-    noprime!(inds(Bdag[j]),prime(ABcommon,2))
+    swapprime!(Bdag[j],2,3)
+    swapprime!(Bdag[j],1,2)
+    swapprime!(Bdag[j],3,1)
+    noprime!(Bdag[j],prime(ABcommon,2))
   end
   yB = ydag[1] * Bdag[1]
   Ax = A[1] * x[1]
@@ -386,10 +386,10 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   A_c       = dag(copy(A))
   prime!(psi_c, rand_plev)
   prime!(A_c, rand_plev)
+  sites = siteinds(A,psi)
+  dagsites = siteinds(A_c,psi_c)
   for j in 1:n
-    s = siteindex(A[j],psi[j])
-    s_dag = siteindex(A_c[j],psi_c[j])
-    replaceindex!(A_c[j],s_dag,s)
+    replaceindex!(A_c[j],dagsites[j],sites[j])
   end
   E = Vector{ITensor}(undef, n-1)
   E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
