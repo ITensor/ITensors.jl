@@ -258,7 +258,7 @@ function inner(B::MPO,
   # Swap prime levels 1 -> 2 and 2 -> 1.
   for j ∈ eachindex(Bdag)
     Axcommon = commonindex(A[j], x[j])
-    ABcommon = uniqueindex(findinds(A[j], "Site"), IndexSet(Axcommon))
+    ABcommon = firstsetdiff(inds(A[j], "Site"), IndexSet(Axcommon))
     swapprime!(inds(Bdag[j]),2,3)
     swapprime!(inds(Bdag[j]),1,2)
     swapprime!(inds(Bdag[j]),3,1)
@@ -387,8 +387,8 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   prime!(psi_c, rand_plev)
   prime!(A_c, rand_plev)
   for j in 1:n
-    s = siteindex(A[j],psi[j])
-    s_dag = siteindex(A_c[j],psi_c[j])
+    s = siteindex(A,psi,j)
+    s_dag = siteindex(A_c,psi_c,j)
     replaceindex!(A_c[j],s_dag,s)
   end
   E = Vector{ITensor}(undef, n-1)
@@ -469,11 +469,11 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     B_ = copy(B)
     orthogonalize!(B_, 1)
 
-    links_A = findinds.(A.A_, "Link")
-    links_B = findinds.(B.A_, "Link")
+    links_A = inds.(A.A_, "Link")
+    links_B = inds.(B.A_, "Link")
 
     for i in 1:N
-        if length(commoninds(findinds(A_[i], "Site"), findinds(B_[i], "Site"))) == 2
+        if length(intersect(inds(A_[i], "Site"), inds(B_[i], "Site"))) == 2
             A_[i] = prime(A_[i], "Site")
         end
     end
@@ -488,8 +488,8 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     sites_A = Index[]
     sites_B = Index[]
     @inbounds for (AA, BB) in zip(tensors(A_), tensors(B_))
-        sda = setdiff(findinds(AA, "Site"), findinds(BB, "Site"))
-        sdb = setdiff(findinds(BB, "Site"), findinds(AA, "Site"))
+        sda = setdiff(inds(AA, "Site"), inds(BB, "Site"))
+        sdb = setdiff(inds(BB, "Site"), inds(AA, "Site"))
         sda_ind = setprime(sda[1], 0) == sdb[1] ? plev(sda[1]) == 1 ? sda[1] : setprime(sda[1], 1) : setprime(sda[1], 0)
         push!(sites_A, sda_ind)
         push!(sites_B, sdb[1])
@@ -512,7 +512,7 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     nfork = clust * A_[N] * B_[N]
 
     # in case we primed A
-    A_ind = uniqueindex(findinds(A_[N-1], "Site"), findinds(B_[N-1], "Site"))
+    A_ind = firstsetdiff(inds(A_[N-1], "Site"), inds(B_[N-1], "Site"))
     Lis = IndexSet(A_ind, sites_B[N-1], commonindex(res[N-2], res[N-1]))
     U, V = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(N-1)",maxdim=maxdim,mindim=mindim)
     res[N-1] = U

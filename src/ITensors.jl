@@ -67,6 +67,7 @@ include("Tensors/Tensors.jl")
 #
 include("smallstring.jl")
 include("readwrite.jl")
+include("not.jl")
 include("tagset.jl")
 include("arrow.jl")
 include("index.jl")

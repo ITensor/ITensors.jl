@@ -7,8 +7,15 @@ export ITensor,
        δ,
        exphermitian,
        replaceindex!,
+       getfirstindex,
+       findindex, # deprecated
+       findinds, # deprecated
        inds,
        ind,
+       commoninds,
+       commonindex,
+       uniqueinds,
+       uniqueindex,
        isnull,
        scale!,
        matmul,
@@ -29,8 +36,7 @@ export ITensor,
        set_warnorder,
        store,
        dense,
-       setelt,
-       real_if_close
+       setelt
 
 """
 An ITensor is a tensor whose interface is 
@@ -288,7 +294,7 @@ Base.complex(T::ITensor) = ITensor(complex(tensor(T)))
 
 # This constructor allows many IndexSet
 # set operations to work with ITensors
-IndexSet(T::ITensor) = inds(T)
+#IndexSet(T::ITensor) = inds(T)
 
 Base.eltype(T::ITensor) = eltype(tensor(T))
 
@@ -412,25 +418,87 @@ function Base.fill!(T::ITensor,
   return T
 end
 
+# in
 hasindex(A::ITensor,i::Index) = hasindex(inds(A),i)
+
+# issubset
 hasinds(A::ITensor,is::Index...) = hasinds(inds(A),is...)
 hasinds(A::ITensor,is) = hasinds(inds(A),is)
+
+# issetequal
 hassameinds(A::ITensor,is) = hassameinds(inds(A),is)
-hassameinds(is,A::ITensor) = hassameinds(A,is)
+hassameinds(is,A::ITensor) = hassameinds(is,inds(A))
 hassameinds(A::ITensor,B::ITensor) = hassameinds(inds(A),inds(B))
 
-# TODO: implement in terms of delta tensors (better for QNs)
+# intersect
+commoninds(A::ITensor,
+           B::ITensor;
+           kwargs...) = IndexSet(intersect(inds(A), inds(B); kwargs...)...)
+commoninds(A::ITensor,
+           is;
+           kwargs...) = IndexSet(intersect(inds(A), IndexSet(is); kwargs...)...)
+commoninds(is,
+           A::ITensor;
+           kwargs...) = IndexSet(intersect(IndexSet(is), inds(A); kwargs...)...)
+
+# firstintersect
+commonindex(A::ITensor,
+            B::ITensor;
+            kwargs...) = firstintersect(inds(A), inds(B); kwargs...)
+commonindex(A::ITensor,
+            is;
+            kwargs...) = firstintersect(inds(A), IndexSet(is); kwargs...)
+commonindex(is,
+            A::ITensor;
+            kwargs...) = firstintersect(IndexSet(is), inds(A); kwargs...)
+
+# setdiff
+uniqueinds(A::ITensor,
+           B::ITensor...;
+           kwargs...) = IndexSet(setdiff(inds(A), inds.(B)...; kwargs...)...)
+uniqueinds(A::ITensor,
+           is...;
+           kwargs...) = IndexSet(setdiff(inds(A), IndexSet.(is)...; kwargs...)...)
+uniqueinds(is,
+           A::ITensor...;
+           kwargs...) = IndexSet(setdiff(IndexSet(is), inds.(A)...; kwargs...)...)
+
+# first(setdiff)
+uniqueindex(A::ITensor,
+            B::ITensor...;
+            kwargs...) = firstsetdiff(inds(A), inds.(B)...; kwargs...)
+uniqueindex(A::ITensor,
+            is...;
+            kwargs...) = firstsetdiff(inds(A), IndexSet.(is)...; kwargs...)
+uniqueindex(is,
+            B::ITensor...;
+            kwargs...) = firstsetdiff(IndexSet(is), inds.(B)...; kwargs...)
+
+getfirstindex(f::Function, T::ITensor) = getfirst(f,inds(T))
+
+getfirstindex(T::ITensor, args...; kwargs...) = getfirst(inds(T), args...; kwargs...)
+
+# TODO: Deprecate for getfirstindex?
+findindex(args...; kwargs...) = (@warn "findindex is deprecated for getfirstindex"; getfirstindex(args...; kwargs...))
+
+Tensors.inds(A::ITensor, args...; kwargs...) = filter(inds(A), args...; kwargs...)
+
+Tensors.inds(f::Function, A::ITensor) = filter(f, inds(A))
+
+# TODO: Deprecate for inds?
+findinds(args...; kwargs...) = (@warn "findinds is deprecated for inds"; inds(args...; kwargs...))
+
 function replaceindex!(A::ITensor,i::Index,j::Index)
-  pos = indexpositions(A,i)
-  isempty(pos) && error("Index not found")
-  inds(A)[pos[1]] = j
+  pos = findfirst(inds(A),i)
+  isnothing(pos) && error("Index not found")
+  inds(A)[pos] = j
   return A
 end
 
 function replaceinds!(A::ITensor,inds1,inds2)
   is1 = IndexSet(inds1)
   is2 = IndexSet(inds2)
-  pos = indexpositions(A,is1)
+  pos = findall(inds(A),is1)
   for (j,p) ∈ enumerate(pos)
     inds(A)[p] = is2[j]
   end

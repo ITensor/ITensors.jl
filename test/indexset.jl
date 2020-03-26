@@ -50,39 +50,37 @@ using ITensors,
     I2 = IndexSet(k,l)
     I3 = IndexSet(j,l)
     @test hassameinds(I1,(k,j,i))
-    @test uniqueindex(I1,(I2,I3)) == i
-    @test isnothing(uniqueindex(I1,IndexSet(k, j, i)))
-    @test uniqueinds(I1,I2) == IndexSet(i,j)
-    @test setdiff(I1,I2) == IndexSet(i,j)
-    @test hassameinds(uniqueinds(I1,I2),IndexSet(i,j))
+    @test firstsetdiff(I1,I2,I3) == i
+    @test isnothing(firstsetdiff(I1,IndexSet(k, j, i)))
+    @test setdiff(I1,I2) == [i,j]
     @test hassameinds(setdiff(I1,I2),IndexSet(i,j))
-    @test hassameinds(uniqueinds(I1,I2),(j,i))
-    @test commoninds(I1,I2) == IndexSet(k)
-    @test hassameinds(commoninds(I1,I2),IndexSet(k))
-    @test commonindex(I1,I2) == k
-    @test isnothing(commonindex(I1,IndexSet(l)))
-    @test commoninds(I1,(j,l)) == IndexSet(j)
-    @test hassameinds(commoninds(I1,(j,l)),IndexSet(j))
-    @test commonindex(I1,(j,l)) == j
-    @test commoninds(I1,(j,k)) == IndexSet(j,k)
-    @test hassameinds(commoninds(I1,(j,k)),IndexSet(j,k))
-    @test hassameinds(commoninds(I1,(j,k,l)),(j,k))
-    @test findinds(I1,"i") == IndexSet(i)
-    @test hassameinds(findinds(I1,"i"),IndexSet(i))
-    @test findindex(I1,"j") == j
-    @test isnothing(findindex(I1,"l"))
-    @test indexposition(I1,i) == 1
-    @test indexposition(I1,j) == 2
-    @test indexposition(I1,k) == 3
-    @test isnothing(indexposition(I1,Index(2)))
+    @test hassameinds(setdiff(I1,I2),(j,i))
+    @test I1 ∩ I2 == [k]
+    @test hassameinds(I1 ∩ I2,IndexSet(k))
+    @test firstintersect(I1,I2) == k
+    @test isnothing(firstintersect(I1,IndexSet(l)))
+    @test intersect(I1,(j,l)) == [j]
+    @test hassameinds(intersect(I1,(j,l)),IndexSet(j))
+    @test firstintersect(I1,(j,l)) == j
+    @test intersect(I1,(j,k)) == [j,k]
+    @test hassameinds(intersect(I1,(j,k)),IndexSet(j,k))
+    @test hassameinds(intersect(I1,(j,k,l)),(j,k))
+    @test filter(I1,"i") == IndexSet(i)
+    @test hassameinds(filter(I1,"i"),IndexSet(i))
+    @test getfirst(I1,"j") == j
+    @test isnothing(getfirst(I1,"l"))
+    @test findfirst(I1,i) == 1
+    @test findfirst(I1,j) == 2
+    @test findfirst(I1,k) == 3
+    @test isnothing(findfirst(I1,Index(2)))
   end
-  @testset "commoninds index ordering" begin
+  @testset "intersect index ordering" begin
     I = IndexSet(i,k,j)
     J = IndexSet(j,l,i)
-    # Test that commoninds respects the ordering
+    # Test that intersect respects the ordering
     # of the indices in the first IndexSet
-    @test hassameinds(commoninds(I,J),IndexSet(i,j))
-    @test hassameinds(commoninds(J,I),IndexSet(j,i))
+    @test hassameinds(intersect(I,J),IndexSet(i,j))
+    @test hassameinds(intersect(J,I),IndexSet(j,i))
   end
   @testset "adjoint" begin
     I = IndexSet(i,k,j)

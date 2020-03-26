@@ -11,6 +11,8 @@ export Index,
        replacetags!,
        removetags,
        hastags,
+       hasplev,
+       hasid,
        id,
        isdefault,
        dir,
@@ -142,7 +144,36 @@ Example:
     hastags(i,"SpinHalf,Site") == true
     hastags(i,"Link") == false
 """
-hastags(i::Index, ts) = hastags(tags(i),ts)
+hastags(i::Index,
+        ts::Union{AbstractString,TagSet}) = hastags(tags(i),ts)
+
+hastags(ts::Union{AbstractString,TagSet}) = x->hastags(x,ts)
+
+"""
+    hasplev(i::Index,plev::Int)
+Check if an `Index` `i` has the provided prime level.
+
+Example:
+    i = Index(2; plev=2)
+    hasplev(i,2) == true
+    hastags(i,1) == false
+"""
+hasplev(i::Index, pl::Int) = plev(i)==pl
+
+hasplev(pl::Int) = x->hasplev(x,pl)
+
+"""
+    hasid(i::Index,id::IDType)
+Check if an `Index` `i` has the provided id.
+
+Example:
+    i = Index(2)
+    hasid(i,id(i)) == true
+    hasid(i,IDType(2)) == false
+"""
+hasid(ind::Index, i::IDType) = id(ind)==i
+
+hasid(i::IDType) = x->hasid(x,i)
 
 """
     settags(i::Index,ts)

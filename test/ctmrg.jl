@@ -19,10 +19,10 @@ function ctmrg(T::ITensor,
     Clu⁽¹⁾ = Clu*Al*Au*T
 
     ## Diagonalize the grown CTM
-    ld = findindex(Clu⁽¹⁾,"link,down")
-    sd = findindex(Clu⁽¹⁾,"site,down")
-    lr = findindex(Clu⁽¹⁾,"link,right")
-    sr = findindex(Clu⁽¹⁾,"site,right")
+    ld = getfirstindex(Clu⁽¹⁾,"link,down")
+    sd = getfirstindex(Clu⁽¹⁾,"site,down")
+    lr = getfirstindex(Clu⁽¹⁾,"link,right")
+    sr = getfirstindex(Clu⁽¹⁾,"site,right")
 
     Ud,Cdr = eigen(Clu⁽¹⁾, (ld,sd), (lr,sr); ishermitian=true,
                                              maxdim=χmax,

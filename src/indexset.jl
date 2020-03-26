@@ -2,9 +2,7 @@ export IndexSet,
        hasindex,
        hasinds,
        hassameinds,
-       findindex,
-       findinds,
-       indexposition,
+       getfirst,
        not,
        swaptags,
        swaptags!,
@@ -12,10 +10,10 @@ export IndexSet,
        swapprime!,
        mapprime,
        mapprime!,
-       commoninds,
-       commonindex,
-       uniqueinds,
-       uniqueindex,
+       intersect,
+       firstintersect,
+       setdiff,
+       firstsetdiff,
        mindim,
        maxdim,
        push,
@@ -37,7 +35,9 @@ IndexSet(inds::SVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::MVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::NTuple{N,<:Index}) where {N} = IndexSet{N}(inds)
 
-IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
+# This is not defined to discourage it's use,
+# since it is not type stable
+#IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
 IndexSet{N}(inds::Vector{<:Index}) where {N} = IndexSet{N}(inds...)
 
 IndexSet{N,IndexT}(inds::NTuple{N,IndexT}) where {N,IndexT<:Index} = IndexSet(inds)
@@ -49,6 +49,10 @@ function IndexSet(vi::Vector{Index})
   N = length(vi)
   return IndexSet{N}(NTuple{N,Index}(vi))
 end
+
+not(is::IndexSet) = Not(is)
+not(inds::Index...) = not(IndexSet(inds...))
+not(inds::NTuple{<:Any,<:Index}) = not(IndexSet(inds))
 
 Tensors.store(is::IndexSet) = is.inds
 
@@ -218,24 +222,40 @@ end
 # Set operations
 #
 
-function indexmatch(i::Index; tags=nothing, plev=nothing)
-  return (isnothing(plev) || ITensors.plev(i)==plev) &&
-         (isnothing(tags) || hastags(i,tags))
-end
+fmatch(n::Not) = !fmatch(parent(n))
 
-function indexmatch(i::Index,j::Index; kwargs...)
-  return indexmatch(i; kwargs...) && i==j
+fmatch(::Nothing) = _->true
+
+fmatch(is::IndexSet) = hasindex(is)
+fmatch(is::Tuple{Vararg{<:Index}}) = fmatch(IndexSet(is))
+fmatch(is::Index...) = fmatch(IndexSet(is...))
+
+fmatch(pl::Int) = hasplev(pl)
+
+fmatch(tags::TagSet) = hastags(tags)
+fmatch(tags::AbstractString) = fmatch(TagSet(tags))
+
+fmatch(id::IDType) = hasid(id)
+
+indexmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
+
+function fmatch(; tags=nothing,
+                  plev=nothing,
+                  id=nothing)
+  return i -> fmatch(plev)(i) && fmatch(id)(i) && fmatch(tags)(i)
 end
 
 # inds has the index i
-function hasindex(inds,i::Index; kwargs...)
-  return indexmatch(i; kwargs...) && any(==(i),IndexSet(inds))
+function hasindex(inds, i::Index; kwargs...)
+  return indexmatch(i; kwargs...) && any(==(i),inds)
 end
 
+hasindex(inds) = i -> hasindex(inds,i)
+
 # Binds is subset of Ainds
-function hasinds(Binds,Ainds; kwargs...)
+function hasinds(Binds, Ainds; kwargs...)
   for i ∈ Ainds
-    !hasindex(Binds,i; kwargs...) && return false
+    !hasindex(Binds, i; kwargs...) && return false
   end
   return true
 end
@@ -262,23 +282,22 @@ function Base.:(==)(Ais::IndexSet,Bis::IndexSet)
 end
 
 """
-uniqueinds(Ais,Bis...)
+setdiff(Ais,Bis...)
 
 Output the IndexSet with Indices in Ais but not in
 the IndexSets Bis.
 """
-function uniqueinds(Ainds,Binds; kwargs...)
-  Ais = IndexSet(Ainds)
-  Cis = IndexSet{0,eltype(Ais)}()
-  for j ∈ Ais
-    indexmatch(j; kwargs...) &&
-      !hasindex(Binds,j) && (Cis = push(Cis,j))
+function setdiff(A::IndexSet, Bs::IndexSet...; kwargs...)
+  R = eltype(A)[]
+  for a ∈ A
+    indexmatch(a; kwargs...) &&
+      all(B->!hasindex(B,a),Bs) && push!(R,a)
   end
-  return Cis
+  return R
 end
 
 """
-uniqueindex(Ais,Bis)
+firstsetdiff(A,B)
 
 Output the Index in Ais but not in the IndexSets Bis.
 Otherwise, return a default constructed Index.
@@ -286,156 +305,76 @@ Otherwise, return a default constructed Index.
 In the future, this may throw an error if more than 
 one Index is found.
 """
-function uniqueindex(Ainds,Binds...; kwargs...)
-  Ais = IndexSet(Ainds)
-  for j ∈ Ais
-    indexmatch(j; kwargs...) &&
-      all(x->!hasindex(x,j),Binds) && return j
+function firstsetdiff(A::IndexSet, Bs::IndexSet...; kwargs...)
+  for a in A
+    indexmatch(a; kwargs...) &&
+      all(B->!hasindex(B,a),Bs) && return a
   end
   return nothing
 end
 
-Base.setdiff(Ais::IndexSet,Bis; kwargs...) = uniqueinds(Ais,Bis; kwargs...)
-
 """
-commoninds(Ais,Bis)
+intersect(A,B)
 
-Output the IndexSet in the intersection of Ais and Bis
+Output the IndexSet in the intersection of A and B
 """
-function commoninds(Ainds,Binds; kwargs...)
-  Ais = IndexSet(Ainds)
-  Cis = IndexSet{0,eltype(Ais)}()
-  for i ∈ Ais
-    hasindex(Binds,i; kwargs...) && (Cis = push(Cis,i))
+function Base.intersect(A::IndexSet, B::IndexSet; kwargs...)
+  R = eltype(A)[]
+  for a in A
+    hasindex(B,a; kwargs...) && push!(R,a)
   end
-  return Cis
+  return R
 end
 
 """
-commonindex(Ais,Bis)
+firstintersect(Ais,Bis)
 
 Output the Index common to Ais and Bis.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-function commonindex(Ainds,Binds; kwargs...)
-  Ais = IndexSet(Ainds)
-  for i ∈ Ais
-    hasindex(Binds,i; kwargs...) && return i
+function firstintersect(A::IndexSet, B::IndexSet; kwargs...)
+  for a in A
+    hasindex(B,a; kwargs...) && return a
   end
   return nothing
 end
 
-"""
-findinds(inds,tags)
-
-Output the Vector of indices containing the subset of indices
-of inds containing the tags in the input tagset.
-"""
-function findinds(inds, args...; kwargs...)
-  ns = indexpositions(inds, args...; kwargs...)
-  return IndexSet(inds)[ns]
-end
+firstintersect(A::IndexSet, B; kwargs...) = firstintersect(A, IndexSet(B); kwargs...)
+firstintersect(A, B::IndexSet; kwargs...) = firstintersect(IndexSet(A), B; kwargs...)
 
 """
-findindex(inds,tags)
+filter(f::Function,inds::IndexSet)
 
-Output the Index containing the tags in the input tagset.
-If more than one Index is found, throw an error.
-Otherwise, return a default constructed Index.
+Filter the IndexSet by the given function (output a new
+IndexSet with indices `i` for which `f(i)` returns true).
 """
-function findindex(inds, args...; kwargs...)
-  n = indexposition(inds, args...; kwargs...)
-  isnothing(n) && return nothing
-  return IndexSet(inds)[n]
+Base.filter(f::Function, is::IndexSet) = IndexSet(filter(f,Tuple(is)))
+
+Base.filter(is::IndexSet, args...; kwargs...) = filter(fmatch(args...; kwargs...),is)
+
+# To fix ambiguity error with Base function
+Base.filter(is::IndexSet, tags::String; kwargs...) = filter(fmatch(tags; kwargs...),is)
+
+function getfirst(f::Function, is::IndexSet)
+  for i in is
+    f(i) && return i
+  end
+  return nothing
 end
 
-function indexposition(inds, args...; kwargs...)
-  ns = indexpositions(inds, args...; kwargs...)
-  length(ns) == 0 && return nothing
-  return ns[1]
-end
+getfirst(is::IndexSet, args...; kwargs...) = getfirst(fmatch(args...; kwargs...),is)
 
-# From a tag set or index set, find the positions
-# of the matching indices as a vector of integers
-#indexpositions(inds, match::Nothing) = collect(1:length(inds))
-# Version for matching a tag set
-function Base.findall(inds::IndexSet, tags::Union{AbstractString,TagSet}; plev=nothing)
-  return findall(inds; tags=tags, plev=plev)
-end
+Base.findall(is::IndexSet, args...; kwargs...) = findall(fmatch(args...; kwargs...), is)
 
-fmatch(inds::IndexSet) = x->hasindex(inds,x)
-fmatch(tags::Union{AbstractString,TagSet}) = x->hastags(x,tags)
-fmatch(pl::Integer) = x->plev(x)==pl
-
-fmatch(tags::Not{TagSet}) = x->!hastags(x,tags)
-fmatch(pl::Not{<:Integer}) = x->plev(x)!=pl
-
-#fmatch(tags::Union{AbstractString,TagSet},pl::Nothing) = x->hastags(x,tags)
-#fmatch(tags::Nothing,pl::Integer) = x->plev(x)==pl
-#fmatch(tags::Nothing,pl::Nothing) = identity
-#
-#fmatch(tags::Union{AbstractString,TagSet},pl::Integer) = x->plev(x)==pl && hastags(x,tags)
-#fmatch(tags::Union{AbstractString,TagSet},pl::Nothing) = x->hastags(x,tags)
-#fmatch(tags::Nothing,pl::Integer) = x->plev(x)==pl
-#fmatch(tags::Nothing,pl::Nothing) = identity
-#
-## not syntax
-#fmatch(tags::Not{TagSet},pl::Not{<:Integer}) = x->plev(x)!=pl && !hastags(x,tags)
-#fmatch(tags::Not{TagSet},pl::Integer) = x->plev(x)==pl && !hastags(x,tags)
-#fmatch(tags::TagSet,pl::Not{<:Integer}) = x->plev(x)!=pl && !hastags(x,tags)
-
-function findall(inds::IndexSet; tags=nothing, plev=nothing)
-  return findall(fmatch(tags,plev),inds)
-end
-
-# Version for matching a collection of indices
-function Base.findall(inds::IndexSet, indsmatch)
-  return findall(fmatch(IndexSet(indsmatch)),inds)
-end
-# Version for matching a list of indices
-Base.findall(inds, match_inds::Index...) = findall(inds, IndexSet(match_inds...))
-
-#
-# not syntax (to prime or tag the compliment 
-# of the specified indices)
-#
-
-struct Not{T}
-  pattern::T
-  Not(p::T) where {T} = new{T}(p)
-end
-
-not(ts::Union{AbstractString,TagSet}) = Not(TagSet(ts))
-
-not(is::IndexSet) = Not(is)
-not(inds::Index...) = not(IndexSet(inds...))
-not(inds::NTuple{<:Any,<:Index}) = not(IndexSet(inds))
-
-#function indexpositions(inds, match::Not{TagSet})
-#  is = IndexSet(inds)
-#  pos = Int[]
-#  for (j,I) ∈ enumerate(is)
-#    !hastags(I,match.pattern) && push!(pos,j)
-#  end
-#  return pos
-#end
-#
-#function indexpositions(inds, match::Not{<:IndexSet})
-#  is = IndexSet(inds)
-#  pos = Int[]
-#  for (j,I) ∈ enumerate(is)
-#    !hasindex(match.pattern,I) && push!(pos,j)
-#  end
-#  return pos
-#end
+Base.findfirst(is::IndexSet, args...; kwargs...) = findfirst(fmatch(args...; kwargs...), is)
 
 #
 # Tagging functions
 #
 
 function prime!(is::IndexSet, plinc::Integer, args...; kwargs...)
-  pos = indexpositions(is, args...; kwargs...)
+  pos = findall(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = prime(is[jj],plinc)
   end
@@ -447,7 +386,7 @@ prime(is::IndexSet,vargs...; kwargs...) = prime!(copy(is),vargs...; kwargs...)
 Base.adjoint(is::IndexSet) = prime(is)
 
 function setprime!(is::IndexSet, plev::Integer, args...; kwargs...)
-  pos = indexpositions(is, args...; kwargs...)
+  pos = findall(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = setprime(is[jj],plev)
   end
@@ -462,7 +401,7 @@ function swapprime!(is::IndexSet,
                     pl1::Int,
                     pl2::Int,
                     args...; kwargs...) 
-  pos = indexpositions(is,args...; kwargs...)
+  pos = findall(is,args...; kwargs...)
   for n in pos
     if plev(is[n])==pl1
       is[n] = setprime(is[n],pl2)
@@ -479,7 +418,7 @@ function mapprime!(is::IndexSet,
                    plold::Integer,
                    plnew::Integer,
                    args...; kwargs...)
-  pos = indexpositions(is, args...; kwargs...)
+  pos = findall(is, args...; kwargs...)
   for n in pos
     if plev(is[n])==plold 
       is[n] = setprime(is[n],plnew)
@@ -499,7 +438,7 @@ end
 function addtags!(is::IndexSet,
                   tags,
                   args...; kwargs...)
-  pos = indexpositions(is, args...; kwargs...)
+  pos = findall(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = addtags(is[jj],tags)
   end
@@ -510,7 +449,7 @@ addtags(is, args...; kwargs...) = addtags!(copy(is), args...; kwargs...)
 function settags!(is::IndexSet,
                   ts,
                   args...; kwargs...)
-  pos = indexpositions(is, args...; kwargs...)
+  pos = findall(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = settags(is[jj],ts)
   end
@@ -521,7 +460,7 @@ settags(is, args...; kwargs...) = settags!(copy(is), args...; kwargs...)
 function removetags!(is::IndexSet,
                      tags,
                      args...; kwargs...)
-  pos = indexpositions(is, args...; kwargs...)
+  pos = findall(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = removetags(is[jj],tags)
   end
@@ -532,7 +471,7 @@ removetags(is, args...; kwargs...) = removetags!(copy(is), args...; kwargs...)
 function replacetags!(is::IndexSet,
                       tags_old, tags_new,
                       args...; kwargs...)
-  pos = indexpositions(is, args...; kwargs...)
+  pos = findall(is, args...; kwargs...)
   for jj ∈ pos
     is[jj] = replacetags(is[jj],tags_old,tags_new)
   end
@@ -541,7 +480,7 @@ end
 replacetags(is, args...; kwargs...) = replacetags!(copy(is), args...; kwargs...)
 
 # TODO: write more efficient version in terms
-# of indexpositions like swapprime!
+# of findall like swapprime!
 function swaptags!(is::IndexSet,
                    tags1, tags2,
                    args...; kwargs...)

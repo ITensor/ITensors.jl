@@ -7,8 +7,8 @@ function LinearAlgebra.qr(A::ITensor,
                           Linds...;
                           kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,qr")
-  Lis = commoninds(inds(A),IndexSet(Linds...))
-  Ris = uniqueinds(inds(A),Lis)
+  Lis = commoninds(A,IndexSet(Linds...))
+  Ris = uniqueinds(A,Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
   Q,R = ITensor(QT),ITensor(RT)
@@ -23,8 +23,8 @@ end
 function Tensors.polar(A::ITensor,
                        Linds...;
                        kwargs...)
-  Lis = commoninds(inds(A),IndexSet(Linds...))
-  Ris = uniqueinds(inds(A),Lis)
+  Lis = commoninds(A,IndexSet(Linds...))
+  Ris = uniqueinds(A,Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   UT,PT = polar(tensor(A),Lpos,Rpos)
   U,P = ITensor(UT),ITensor(PT)
@@ -86,8 +86,8 @@ function LinearAlgebra.svd(A::ITensor,
                            kwargs...)
   utags::TagSet = get(kwargs,:utags,"Link,u")
   vtags::TagSet = get(kwargs,:vtags,"Link,v")
-  Lis = commoninds(inds(A),IndexSet(Linds...))
-  Ris = uniqueinds(inds(A),Lis)
+  Lis = commoninds(A,IndexSet(Linds...))
+  Ris = uniqueinds(A,Lis)
 
   CL,cL = combiner(Lis...)
   CR,cR = combiner(Ris...)
@@ -182,7 +182,7 @@ end
 function _factorize_from_left_eigen(A::ITensor,
                                     Linds...;
                                     kwargs...)
-  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Lis = commoninds(A,IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
   FU,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
                                        kwargs...)
@@ -193,7 +193,7 @@ end
 function _factorize_from_right_eigen(A::ITensor,
                                      Linds...;
                                      kwargs...)
-  Ris = uniqueinds(inds(A),IndexSet(Linds...))
+  Ris = uniqueinds(A,IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
   FV,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
                                        kwargs...)
@@ -257,7 +257,7 @@ Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
 function LinearAlgebra.eigen(A::ITensor,
-                             Linds=findinds(A;plev=0),
+                             Linds=inds(A;plev=0),
                              Rinds=prime(IndexSet(Linds));
                              kwargs...)
   ishermitian::Bool = get(kwargs,:ishermitian,false)
@@ -269,8 +269,8 @@ function LinearAlgebra.eigen(A::ITensor,
 
   (lefttags==righttags && leftplev==rightplev) && error("In eigen, left tags and prime level must be different from right tags and prime level")
 
-  Lis = commoninds(inds(A),IndexSet(Linds))
-  Ris = commoninds(inds(A),IndexSet(Rinds))
+  Lis = commoninds(A,IndexSet(Linds))
+  Ris = commoninds(A,IndexSet(Rinds))
 
   CL,cL = combiner(Lis...)
   CR,cR = combiner(Ris...)
@@ -320,23 +320,4 @@ function LinearAlgebra.eigen(A::ITensor,
   v = uniqueindex(D,U)
   return TruncEigen(U,D,spec,u,v)
 end
-
-#function LinearAlgebra.eigen(A::ITensor,
-#                             Linds=findinds(A,("",0)),
-#                             Rinds=prime(IndexSet(Linds));
-#                             kwargs...)
-#  tags::TagSet = get(kwargs,:tags,"Link,eigen")
-#  Lis = commoninds(inds(A),IndexSet(Linds))
-#  Ris = uniqueinds(inds(A),Lis)
-#  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-#  UT,DT = eigen(tensor(A),Lpos,Rpos;kwargs...)
-#  U,D = ITensor(UT),ITensor(DT)
-#  u = commonindex(U,D)
-#  settags!(U,tags,u)
-#  settags!(D,tags,u)
-#  u = settags(u,tags)
-#  v = uniqueindex(D,U)
-#  D *= δ(v,u')
-#  return U,D,u
-#end
 

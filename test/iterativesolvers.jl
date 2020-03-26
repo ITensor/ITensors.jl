@@ -7,7 +7,7 @@ struct ITensorMap
   A::ITensor
 end
 Base.eltype(M::ITensorMap) = eltype(M.A)
-Base.size(M::ITensorMap) = dim(IndexSet(findinds(M.A;plev=0)...))
+Base.size(M::ITensorMap) = dim(IndexSet(inds(M.A;plev=0)...))
 (M::ITensorMap)(v::ITensor) = noprime(M.A*v)
 
 @testset "Complex davidson" begin

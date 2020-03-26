@@ -191,7 +191,7 @@ end
 
 function replaceindex!(A::ITensor,i::QNIndex,j::QNIndex)
   space(i) != space(j) && error("Indices must have the same spaces to be replaced")
-  pos = indexpositions(A,i)
+  pos = findall(inds(A),i)
   isempty(pos) && error("Index not found")
   curdir = dir(inds(A)[pos[1]])
   inds(A)[pos[1]] = setdir(j,curdir)
