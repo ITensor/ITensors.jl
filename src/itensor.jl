@@ -7,6 +7,9 @@ export ITensor,
        δ,
        exphermitian,
        replaceindex!,
+       replaceindex,
+       replaceinds!,
+       replaceinds,
        inds,
        ind,
        isnull,
@@ -427,6 +430,8 @@ function replaceindex!(A::ITensor,i::Index,j::Index)
   return A
 end
 
+replaceindex(A::ITensor,i::Index,j::Index) = replaceindex!(copy(A),i,j)
+
 function replaceinds!(A::ITensor,inds1,inds2)
   is1 = IndexSet(inds1)
   is2 = IndexSet(inds2)
@@ -436,6 +441,8 @@ function replaceinds!(A::ITensor,inds1,inds2)
   end
   return A
 end
+
+replaceinds(A::ITensor,inds1,inds2) = replaceinds!(copy(A),inds1,inds2)
 
 # TODO: can we turn these into a macro?
 # for f ∈ (prime,setprime,noprime,...)
