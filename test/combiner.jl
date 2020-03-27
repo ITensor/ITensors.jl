@@ -22,7 +22,7 @@ end
         C,c = combiner(inds_ij...)
         B = A*C
         @test hasinds(B, l, k, c)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -31,7 +31,7 @@ end
         C,c = combiner(inds_il...)
         B = A*C
         @test hasinds(B, j, k)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -40,7 +40,7 @@ end
         C,c = combiner(inds_ik...)
         B = A*C
         @test hasinds(B, j, l)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -49,7 +49,7 @@ end
         C,c = combiner(inds_jk...)
         B = A*C
         @test hasinds(B, i, l)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -58,7 +58,7 @@ end
         @test D ≈ A
         B = C*A
         @test hasinds(B, i, l)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -70,7 +70,7 @@ end
         C,c = combiner(inds_jl...)
         B = A*C
         @test hasinds(B, i, k)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -79,7 +79,7 @@ end
         @test D ≈ A
         B = C*A
         @test hasinds(B, i, k)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -91,7 +91,7 @@ end
         C,c = combiner(inds_kl...)
         B = A*C
         @test hasinds(B, i, j)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -100,7 +100,7 @@ end
         @test D ≈ A
         B = C*A
         @test hasinds(B, i, j)
-        @test c == commonindex(B, C)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -114,8 +114,8 @@ end
     for inds_ijl ∈ permutations([i,j,l])
         C,c = combiner(inds_ijl...)
         B = A*C
-        @test hasindex(B, k)
-        @test c == commonindex(B, C)
+        @test hasind(B, k)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -123,8 +123,8 @@ end
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
         B = C*A
-        @test hasindex(B, k)
-        @test c == commonindex(B, C)
+        @test hasind(B, k)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -135,8 +135,8 @@ end
     for inds_ijk ∈ permutations([i,j,k])
         C,c = combiner(inds_ijk...)
         B = A*C
-        @test hasindex(B, l)
-        @test c == commonindex(B, C)
+        @test hasind(B, l)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -144,8 +144,8 @@ end
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
         B = C*A
-        @test hasindex(B, l)
-        @test c == commonindex(B, C)
+        @test hasind(B, l)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -156,8 +156,8 @@ end
     for inds_jkl ∈ permutations([j,k,l])
         C,c = combiner(inds_jkl...)
         B = A*C
-        @test hasindex(B, i)
-        @test c == commonindex(B, C)
+        @test hasind(B, i)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -165,8 +165,8 @@ end
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
         B = C*A
-        @test hasindex(B, i)
-        @test c == commonindex(B, C)
+        @test hasind(B, i)
+        @test c == commonind(B, C)
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
@@ -182,7 +182,7 @@ end
     U,S,V,spec,u,v = svd(Ac, ci)
     Uc = cmb*U
     Ua,Sa,Va,spec,ua,va = svd(A, i, j, k)
-    replaceindex!(Ua, ua, u)
+    replaceind!(Ua, ua, u)
     @test A ≈ cmb*Ac 
     @test A ≈ Ac*cmb
     @test Ua*cmb ≈ U
@@ -195,7 +195,7 @@ end
     U,S,V,spec,u,v = svd(Ac, ci)
     Uc = U*cmb
     Ua,Sa,Va,spec,ua,va = svd(A, i, j)
-    replaceindex!(Ua, ua, u)
+    replaceind!(Ua, ua, u)
     @test Ua ≈ Uc
     @test Ua*cmb ≈ U
     @test cmb*Ua ≈ U
@@ -214,7 +214,7 @@ end
 @testset "Replace index combiner" begin
     C,nl = combiner(l, tags="nl")
     B = A*C
-    replaceindex!(B, nl, l)
+    replaceind!(B, nl, l)
     @test B == A 
 end
 

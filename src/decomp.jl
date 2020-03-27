@@ -12,7 +12,7 @@ function LinearAlgebra.qr(A::ITensor,
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
   Q,R = ITensor(QT),ITensor(RT)
-  q = commonindex(Q,R)
+  q = commonind(Q,R)
   settags!(Q,tags,q)
   settags!(R,tags,q)
   q = settags(q,tags)
@@ -101,8 +101,8 @@ function LinearAlgebra.svd(A::ITensor,
   UT,ST,VT,spec = svd(tensor(AC);kwargs...)
   UC,S,VC = itensor(UT),itensor(ST),itensor(VT)
 
-  u = commonindex(S,UC)
-  v = commonindex(S,VC)
+  u = commonind(S,UC)
+  v = commonind(S,VC)
 
   if hasqns(A)
     # Fix the flux of UC,S,VC
@@ -144,8 +144,8 @@ function _factorize_center(A::ITensor,
                            kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
   U,S,V,spec = svd(A,Linds...;kwargs...)
-  u = commonindex(U,S)
-  v = commonindex(S,V)
+  u = commonind(U,S)
+  v = commonind(S,V)
   for ss = 1:dim(u)
     S[ss,ss] = sqrt(S[ss,ss])
   end
@@ -153,8 +153,8 @@ function _factorize_center(A::ITensor,
   FV = settags(S*V,tags,u)
   u = settags(u,tags)
   v = settags(v,tags)
-  replaceindex!(FU,v,u)
-  return FU,FV,spec,commonindex(FU,FV)
+  replaceind!(FU,v,u)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 function _factorize_from_left_svd(A::ITensor,
@@ -162,10 +162,10 @@ function _factorize_from_left_svd(A::ITensor,
                                   kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
   U,S,V,spec = svd(A,Linds...;kwargs...)
-  u = commonindex(U,S)
+  u = commonind(U,S)
   FU = settags(U,tags,u)
   FV = settags(S*V,tags,u)
-  return FU,FV,spec,commonindex(FU,FV)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 function _factorize_from_right_svd(A::ITensor,
@@ -173,10 +173,10 @@ function _factorize_from_right_svd(A::ITensor,
                                    kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
   U,S,V,spec = svd(A,Linds...;kwargs...)
-  v = commonindex(S,V)
+  v = commonind(S,V)
   FU = settags(U*S,tags,v)
   FV = settags(V,tags,v)
-  return FU,FV,spec,commonindex(FU,FV)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 function _factorize_from_left_eigen(A::ITensor,
@@ -187,7 +187,7 @@ function _factorize_from_left_eigen(A::ITensor,
   FU,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
                                        kwargs...)
   FV = dag(FU)*A
-  return FU,FV,spec,commonindex(FU,FV)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 function _factorize_from_right_eigen(A::ITensor,
@@ -198,7 +198,7 @@ function _factorize_from_right_eigen(A::ITensor,
   FV,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
                                        kwargs...)
   FU = A*dag(FV)
-  return FU,FV,spec,commonindex(FU,FV)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 """
@@ -285,7 +285,7 @@ function LinearAlgebra.eigen(A::ITensor,
   UT,DT,spec = eigen(AT;kwargs...)
   UC,D = itensor(UT),itensor(DT)
 
-  u = commonindex(UC,D)
+  u = commonind(UC,D)
 
   if hasqns(A)
     # Fix the flux of UC,D
@@ -303,21 +303,21 @@ function LinearAlgebra.eigen(A::ITensor,
   U = UC*dag(CL)
 
   # Set left index tags
-  u = commonindex(D,U)
+  u = commonind(D,U)
   settags!(U,lefttags,u)
   settags!(D,lefttags,u)
 
   # Set left index plev
-  u = commonindex(D,U)
+  u = commonind(D,U)
   U = setprime(U,leftplev,u)
   D = setprime(D,leftplev,u)
 
   # Set right index tags and plev
-  v = uniqueindex(D,U)
-  replaceindex!(D,v,setprime(settags(u,righttags),rightplev))
+  v = uniqueind(D,U)
+  replaceind!(D,v,setprime(settags(u,righttags),rightplev))
 
-  u = commonindex(D,U) 
-  v = uniqueindex(D,U)
+  u = commonind(D,U) 
+  v = uniqueind(D,U)
   return TruncEigen(U,D,spec,u,v)
 end
 

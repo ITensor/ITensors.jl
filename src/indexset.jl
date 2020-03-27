@@ -1,24 +1,17 @@
 export IndexSet,
-       hasindex,
-       hasinds,
-       hassameinds,
-       getfirst,
-       not,
        swaptags,
        swaptags!,
        swapprime,
        swapprime!,
        mapprime,
        mapprime!,
-       intersect,
+       getfirst,
        firstintersect,
-       setdiff,
        firstsetdiff,
        mindim,
        maxdim,
        push,
-       permute,
-       hasqns
+       permute
 
 struct IndexSet{N,IndexT<:Index}
   inds::SizedVector{N,IndexT}
@@ -222,11 +215,24 @@ end
 # Set operations
 #
 
+"""
+==(is1::IndexSet, is2::IndexSet)
+
+IndexSet quality (order dependent)
+"""
+function Base.:(==)(A::IndexSet,B::IndexSet)
+  length(A) ≠ length(B) && return false
+  for (a,b) in zip(A,B)
+    a ≠ b && return false
+  end
+  return true
+end
+
 fmatch(n::Not) = !fmatch(parent(n))
 
 fmatch(::Nothing) = _->true
 
-fmatch(is::IndexSet) = hasindex(is)
+fmatch(is::IndexSet) = in(is)
 fmatch(is::Tuple{Vararg{<:Index}}) = fmatch(IndexSet(is))
 fmatch(is::Index...) = fmatch(IndexSet(is...))
 
@@ -237,63 +243,54 @@ fmatch(tags::AbstractString) = fmatch(TagSet(tags))
 
 fmatch(id::IDType) = hasid(id)
 
-indexmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
+"""
+fmatch
 
+Return a function that accepts an Index that checks if the
+Index matches the provided conditions.
+"""
 function fmatch(; tags=nothing,
                   plev=nothing,
                   id=nothing)
   return i -> fmatch(plev)(i) && fmatch(id)(i) && fmatch(tags)(i)
 end
 
-# inds has the index i
-function hasindex(inds, i::Index; kwargs...)
-  return indexmatch(i; kwargs...) && any(==(i),inds)
-end
+"""
+indmatch
 
-hasindex(inds) = i -> hasindex(inds,i)
+Checks if the Index matches the provided conditions.
+"""
+indmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
 
-# Binds is subset of Ainds
-function hasinds(Binds, Ainds; kwargs...)
-  for i ∈ Ainds
-    !hasindex(Binds, i; kwargs...) && return false
+const IndexCollection{IndexT<:Index} = Union{IndexSet{<:Any,IndexT},
+                                             Tuple{Vararg{IndexT}},
+                                             Vector{IndexT},
+                                             SVector{<:Any,IndexT},
+                                             MVector{<:Any,IndexT}}
+
+function Base.setdiff(f::Function, A, Bs...)
+  R = eltype(A)[]
+  for a ∈ A
+    f(a) && all(B -> a ∉ B, Bs) && push!(R, a)
   end
-  return true
-end
-hasinds(Binds,
-        Ainds::Index...; kwargs...) = hasinds(Binds,
-                                              IndexSet(Ainds...); kwargs...)
-
-# Set equality (order independent)
-function hassameinds(Ainds,Binds)
-  return hasinds(Ainds,Binds) && length(Ainds) == length(Binds)
+  return R
 end
 
 """
-==(is1::IndexSet, is2::IndexSet)
-
-IndexSet quality (order dependent)
-"""
-function Base.:(==)(Ais::IndexSet,Bis::IndexSet)
-  length(Ais) ≠ length(Bis) && return false
-  for i ∈ 1:length(Ais)
-    Ais[i] ≠ Bis[i] && return false
-  end
-  return true
-end
-
-"""
-setdiff(Ais,Bis...)
+setdiff(A,B...)
 
 Output the IndexSet with Indices in Ais but not in
 the IndexSets Bis.
 """
-function setdiff(A::IndexSet, Bs::IndexSet...; kwargs...)
-  R = eltype(A)[]
-  for a ∈ A
-    indexmatch(a; kwargs...) &&
-      all(B->!hasindex(B,a),Bs) && push!(R,a)
+Base.setdiff(A::IndexCollection,
+             Bs::IndexCollection...;
+             kwargs...) = setdiff(fmatch(; kwargs...), A, Bs...)
+
+function firstsetdiff(f::Function, A, Bs...)
+  for a in A
+    f(a) && all(B -> a ∉ B, Bs) && return a
   end
-  return R
+  return nothing
 end
 
 """
@@ -305,12 +302,15 @@ Otherwise, return a default constructed Index.
 In the future, this may throw an error if more than 
 one Index is found.
 """
-function firstsetdiff(A::IndexSet, Bs::IndexSet...; kwargs...)
+firstsetdiff(A, Bs...;
+             kwargs...) = firstsetdiff(fmatch(; kwargs...), A, Bs...)
+
+function Base.intersect(f::Function, A, B)
+  R = eltype(A)[]
   for a in A
-    indexmatch(a; kwargs...) &&
-      all(B->!hasindex(B,a),Bs) && return a
+    f(a) && a ∈ B && push!(R,a)
   end
-  return nothing
+  return R
 end
 
 """
@@ -318,12 +318,15 @@ intersect(A,B)
 
 Output the IndexSet in the intersection of A and B
 """
-function Base.intersect(A::IndexSet, B::IndexSet; kwargs...)
-  R = eltype(A)[]
+Base.intersect(A::IndexCollection,
+               B::IndexCollection;
+               kwargs...) = intersect(fmatch(; kwargs...), A, B)
+
+function firstintersect(f::Function, A, B)
   for a in A
-    hasindex(B,a; kwargs...) && push!(R,a)
+    f(a) && a ∈ B && return a
   end
-  return R
+  return nothing
 end
 
 """
@@ -333,15 +336,8 @@ Output the Index common to Ais and Bis.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-function firstintersect(A::IndexSet, B::IndexSet; kwargs...)
-  for a in A
-    hasindex(B,a; kwargs...) && return a
-  end
-  return nothing
-end
-
-firstintersect(A::IndexSet, B; kwargs...) = firstintersect(A, IndexSet(B); kwargs...)
-firstintersect(A, B::IndexSet; kwargs...) = firstintersect(IndexSet(A), B; kwargs...)
+firstintersect(A, B;
+               kwargs...) = firstintersect(fmatch(; kwargs...), A, B)
 
 """
 filter(f::Function,inds::IndexSet)
@@ -351,23 +347,32 @@ IndexSet with indices `i` for which `f(i)` returns true).
 """
 Base.filter(f::Function, is::IndexSet) = IndexSet(filter(f,Tuple(is)))
 
-Base.filter(is::IndexSet, args...; kwargs...) = filter(fmatch(args...; kwargs...),is)
+Base.filter(is::IndexCollection,
+            args...; kwargs...) = filter(fmatch(args...;
+                                                kwargs...),is)
 
 # To fix ambiguity error with Base function
-Base.filter(is::IndexSet, tags::String; kwargs...) = filter(fmatch(tags; kwargs...),is)
+Base.filter(is::IndexCollection,
+            tags::String; kwargs...) = filter(fmatch(tags; kwargs...),is)
 
-function getfirst(f::Function, is::IndexSet)
+function getfirst(f::Function, is)
   for i in is
     f(i) && return i
   end
   return nothing
 end
 
-getfirst(is::IndexSet, args...; kwargs...) = getfirst(fmatch(args...; kwargs...),is)
+getfirst(is,
+         args...; kwargs...) = getfirst(fmatch(args...;
+                                               kwargs...),is)
 
-Base.findall(is::IndexSet, args...; kwargs...) = findall(fmatch(args...; kwargs...), is)
+Base.findall(is::IndexCollection,
+             args...; kwargs...) = findall(fmatch(args...;
+                                                  kwargs...), is)
 
-Base.findfirst(is::IndexSet, args...; kwargs...) = findfirst(fmatch(args...; kwargs...), is)
+Base.findfirst(is::IndexCollection,
+               args...; kwargs...) = findfirst(fmatch(args...;
+                                                      kwargs...), is)
 
 #
 # Tagging functions

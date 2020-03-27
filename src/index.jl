@@ -21,7 +21,8 @@ export Index,
        ind,
        setprime,
        sim,
-       val
+       val,
+       hasqns
 
 const IDType = UInt64
 
@@ -106,6 +107,13 @@ tags are compared.
 function Base.:(==)(i1::Index,i2::Index)
   return id(i1) == id(i2) && tags(i1) == tags(i2) && plev(i1) == plev(i2)
 end
+
+# This is so that when IndexSets are converted
+# to Julia Base Sets, the hashing is done correctly
+function Base.hash(i::Index, h::UInt)
+  return hash((id(i),tags(i),plev(i)), h)
+end
+
 
 """
     copy(i::Index)

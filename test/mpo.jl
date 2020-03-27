@@ -27,11 +27,11 @@ end
   @test length(str) == length(O) + 2
 
   O[1] = ITensor(sites[1], prime(sites[1]))
-  @test hasindex(O[1],sites[1])
-  @test hasindex(O[1],prime(sites[1]))
+  @test hasind(O[1],sites[1])
+  @test hasind(O[1],prime(sites[1]))
   P = copy(O)
-  @test hasindex(P[1],sites[1])
-  @test hasindex(P[1],prime(sites[1]))
+  @test hasind(P[1],sites[1])
+  @test hasind(P[1],prime(sites[1]))
   # test constructor from Vector{ITensor}
   K = randomMPO(sites)
   @test ITensors.tensors(MPO(copy(ITensors.tensors(K)))) == ITensors.tensors(K)
@@ -245,8 +245,8 @@ end
     K = randomMPO(sites)
     L = randomMPO(sites)
     for ii in 1:N
-        replaceindex!(K[ii], sites[ii]', othersitesk[ii])
-        replaceindex!(L[ii], sites[ii]', othersitesl[ii])
+        replaceind!(K[ii], sites[ii]', othersitesk[ii])
+        replaceind!(L[ii], sites[ii]', othersitesl[ii])
     end
     KL = multMPO(K, L, maxdim=1)
     psik = randomMPS(othersitesk)
@@ -264,5 +264,5 @@ end
   @test length(O) == N # just make sure this works
 
   @test_throws ArgumentError randomMPO(sites, 2)
-  @test_throws ErrorException linkindex(MPO(N, fill(ITensor(), N), 0, N + 1), 1)
+  @test_throws ErrorException linkind(MPO(N, fill(ITensor(), N), 0, N + 1), 1)
 end

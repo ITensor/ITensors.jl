@@ -2,20 +2,21 @@ export ITensor,
        itensor,
        axpy!,
        combiner,
-       combinedindex,
+       combinedind,
        delta,
        δ,
        exphermitian,
-       replaceindex!,
-       getfirstindex,
-       findindex, # deprecated
-       findinds, # deprecated
+       replaceind!,
+       hasind,
+       hasinds,
+       hassameinds,
+       firstind,
        inds,
        ind,
        commoninds,
-       commonindex,
+       commonind,
        uniqueinds,
-       uniqueindex,
+       uniqueind,
        isnull,
        scale!,
        matmul,
@@ -418,77 +419,43 @@ function Base.fill!(T::ITensor,
   return T
 end
 
+itensor2inds(A::ITensor) = inds(A)
+itensor2inds(A) = A
+
 # in
-hasindex(A::ITensor,i::Index) = hasindex(inds(A),i)
+hasind(A,i::Index) = i ∈ itensor2inds(A)
 
 # issubset
-hasinds(A::ITensor,is::Index...) = hasinds(inds(A),is...)
-hasinds(A::ITensor,is) = hasinds(inds(A),is)
+hasinds(A,is) = is ⊆ itensor2inds(A)
+hasinds(A,is::Index...) = hasinds(A,IndexSet(is...))
 
 # issetequal
-hassameinds(A::ITensor,is) = hassameinds(inds(A),is)
-hassameinds(is,A::ITensor) = hassameinds(is,inds(A))
-hassameinds(A::ITensor,B::ITensor) = hassameinds(inds(A),inds(B))
+hassameinds(A,B) = issetequal(itensor2inds(A),
+                              itensor2inds(B))
 
 # intersect
-commoninds(A::ITensor,
-           B::ITensor;
-           kwargs...) = IndexSet(intersect(inds(A), inds(B); kwargs...)...)
-commoninds(A::ITensor,
-           is;
-           kwargs...) = IndexSet(intersect(inds(A), IndexSet(is); kwargs...)...)
-commoninds(is,
-           A::ITensor;
-           kwargs...) = IndexSet(intersect(IndexSet(is), inds(A); kwargs...)...)
+commoninds(A...; kwargs...) = IndexSet(intersect(itensor2inds.(A)...;
+                                                 kwargs...)...)
 
 # firstintersect
-commonindex(A::ITensor,
-            B::ITensor;
-            kwargs...) = firstintersect(inds(A), inds(B); kwargs...)
-commonindex(A::ITensor,
-            is;
-            kwargs...) = firstintersect(inds(A), IndexSet(is); kwargs...)
-commonindex(is,
-            A::ITensor;
-            kwargs...) = firstintersect(IndexSet(is), inds(A); kwargs...)
+commonind(A...; kwargs...) = firstintersect(itensor2inds.(A)...;
+                                            kwargs...)
 
 # setdiff
-uniqueinds(A::ITensor,
-           B::ITensor...;
-           kwargs...) = IndexSet(setdiff(inds(A), inds.(B)...; kwargs...)...)
-uniqueinds(A::ITensor,
-           is...;
-           kwargs...) = IndexSet(setdiff(inds(A), IndexSet.(is)...; kwargs...)...)
-uniqueinds(is,
-           A::ITensor...;
-           kwargs...) = IndexSet(setdiff(IndexSet(is), inds.(A)...; kwargs...)...)
+uniqueinds(A...; kwargs...) = IndexSet(setdiff(itensor2inds.(A)...;
+                                               kwargs...)...)
 
-# first(setdiff)
-uniqueindex(A::ITensor,
-            B::ITensor...;
-            kwargs...) = firstsetdiff(inds(A), inds.(B)...; kwargs...)
-uniqueindex(A::ITensor,
-            is...;
-            kwargs...) = firstsetdiff(inds(A), IndexSet.(is)...; kwargs...)
-uniqueindex(is,
-            B::ITensor...;
-            kwargs...) = firstsetdiff(IndexSet(is), inds.(B)...; kwargs...)
+# firstsetdiff
+uniqueind(A...; kwargs...) = firstsetdiff(itensor2inds.(A)...;
+                                          kwargs...)
 
-getfirstindex(f::Function, T::ITensor) = getfirst(f,inds(T))
+firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
+                                     kwargs...)
 
-getfirstindex(T::ITensor, args...; kwargs...) = getfirst(inds(T), args...; kwargs...)
+Tensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
+                                       kwargs...)
 
-# TODO: Deprecate for getfirstindex?
-findindex(args...; kwargs...) = (@warn "findindex is deprecated for getfirstindex"; getfirstindex(args...; kwargs...))
-
-Tensors.inds(A::ITensor, args...; kwargs...) = filter(inds(A), args...; kwargs...)
-
-Tensors.inds(f::Function, A::ITensor) = filter(f, inds(A))
-
-# TODO: Deprecate for inds?
-findinds(args...; kwargs...) = (@warn "findinds is deprecated for inds"; inds(args...; kwargs...))
-
-function replaceindex!(A::ITensor,i::Index,j::Index)
+function replaceind!(A::ITensor,i::Index,j::Index)
   pos = findfirst(inds(A),i)
   isnothing(pos) && error("Index not found")
   inds(A)[pos] = j
@@ -496,22 +463,12 @@ function replaceindex!(A::ITensor,i::Index,j::Index)
 end
 
 function replaceinds!(A::ITensor,inds1,inds2)
-  is1 = IndexSet(inds1)
-  is2 = IndexSet(inds2)
-  pos = findall(inds(A),is1)
+  pos = findall(inds(A),inds1)
   for (j,p) ∈ enumerate(pos)
-    inds(A)[p] = is2[j]
+    inds(A)[p] = inds2[j]
   end
   return A
 end
-
-# TODO: can we turn these into a macro?
-# for f ∈ (prime,setprime,noprime,...)
-#   f(A::ITensor,vargs...) = ITensor(store(A),f(inds(A),vargs...))
-#   f!(A::ITensor,vargs...) = ( f!(inds(A),vargs...); return A )
-# end
-
-# TODO: implement more in-place versions
 
 prime!(A::ITensor,vargs...;kwargs...)= ( prime!(inds(A),vargs...;kwargs...); return A )
 prime(A::ITensor,vargs...;kwargs...)= ITensor(store(A),prime(inds(A),vargs...;kwargs...))
@@ -600,7 +557,7 @@ function combiner(; kwargs...)
   return ITensor(Combiner(),IndexSet()),nothing
 end
 
-combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
+combinedind(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
@@ -1317,3 +1274,22 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
 
   return ITensor(store,inds)
 end
+
+#
+# Deprecations
+#
+
+@deprecate findindex(args...; kwargs...) firstind(args...; kwargs...)
+
+@deprecate findinds(args...; kwargs...) inds(args...; kwargs...)
+
+@deprecate commonindex(args...; kwargs...) commonind(args...; kwargs...)
+
+@deprecate uniqueindex(args...; kwargs...) uniqueind(args...; kwargs...)
+
+@deprecate replaceindex!(args...; kwargs...) replaceind!(args...; kwargs...)
+
+@deprecate siteindex(args...; kwargs...) siteind(args...; kwargs...)
+
+@deprecate linkindex(args...; kwargs...) linkind(args...; kwargs...)
+

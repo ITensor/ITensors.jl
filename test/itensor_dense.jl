@@ -321,24 +321,24 @@ end
   ltmp = settags(l,"Temp")
   A1 = randomITensor(s1,l,l')
   A2 = randomITensor(s2,l',l'')
-  @testset "getfirstindex(::ITensor,::String)" begin
-    @test s1==getfirstindex(A1, "Site")
-    @test s1==getfirstindex(A1, "s=1")
-    @test s1==getfirstindex(A1, "s=1,Site")
-    @test l==getfirstindex(A1; tags="Link", plev=0)
-    @test l'==getfirstindex(A1; plev=1)
-    @test l'==getfirstindex(A1; tags="Link", plev=1)
-    @test s2==getfirstindex(A2, "Site")
-    @test s2==getfirstindex(A2, "s=2")
-    @test s2==getfirstindex(A2, "Site")
-    @test s2==getfirstindex(A2, plev=0)
-    @test s2==getfirstindex(A2; tags="s=2", plev=0)
-    @test s2==getfirstindex(A2; tags="Site", plev=0)
-    @test s2==getfirstindex(A2; tags="s=2,Site", plev=0)
-    @test l'==getfirstindex(A2; plev=1)
-    @test l'==getfirstindex(A2; tags="Link", plev=1)
-    @test l''==getfirstindex(A2; plev=2)
-    @test l''==getfirstindex(A2; tags="Link", plev=2)
+  @testset "firstind(::ITensor,::String)" begin
+    @test s1==firstind(A1, "Site")
+    @test s1==firstind(A1, "s=1")
+    @test s1==firstind(A1, "s=1,Site")
+    @test l==firstind(A1; tags="Link", plev=0)
+    @test l'==firstind(A1; plev=1)
+    @test l'==firstind(A1; tags="Link", plev=1)
+    @test s2==firstind(A2, "Site")
+    @test s2==firstind(A2, "s=2")
+    @test s2==firstind(A2, "Site")
+    @test s2==firstind(A2, plev=0)
+    @test s2==firstind(A2; tags="s=2", plev=0)
+    @test s2==firstind(A2; tags="Site", plev=0)
+    @test s2==firstind(A2; tags="s=2,Site", plev=0)
+    @test l'==firstind(A2; plev=1)
+    @test l'==firstind(A2; tags="Link", plev=1)
+    @test l''==firstind(A2; plev=2)
+    @test l''==firstind(A2; tags="Link", plev=2)
   end
   @testset "addtags(::ITensor,::String,::String)" begin
     s1u = addtags(s1, "u")
@@ -529,7 +529,7 @@ end
 
     @testset "Test QR decomposition of an ITensor" begin
       Q,R,q = qr(A,(i,l))
-      q = commonindex(Q,R)
+      q = commonind(Q,R)
       @test A≈Q*R
       @test Q*dag(prime(Q,q))≈δ(SType,q,q') atol=1e-14
     end

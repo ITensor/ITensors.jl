@@ -491,8 +491,8 @@ Random.seed!(1234)
       @test store(U) isa BlockSparse
       @test store(D) isa DiagBlockSparse
 
-      u = commonindex(D,U)
-      up = uniqueindex(D,U)
+      u = commonind(D,U)
+      up = uniqueind(D,U)
 
       @test hastags(u,"x")
       @test plev(u) == 0
@@ -527,8 +527,8 @@ Random.seed!(1234)
       @test store(U) isa BlockSparse
       @test store(D) isa DiagBlockSparse
 
-      u = commonindex(D,U)
-      up = uniqueindex(D,U)
+      u = commonind(D,U)
+      up = uniqueind(D,U)
 
       @test hastags(u,"x")
       @test plev(u) == 0
@@ -571,8 +571,8 @@ Random.seed!(1234)
       @test store(U) isa BlockSparse
       @test store(D) isa DiagBlockSparse
 
-      u = commonindex(D,U)
-      up = uniqueindex(D,U)
+      u = commonind(D,U)
+      up = uniqueind(D,U)
 
       @test hastags(u,"x")
       @test plev(u) == 0
@@ -762,8 +762,8 @@ Random.seed!(1234)
       @test store(S) isa DiagBlockSparse
       @test store(V) isa BlockSparse
 
-      u = commonindex(S,U)
-      v = commonindex(S,V)
+      u = commonind(S,U)
+      v = commonind(S,V)
 
       @test hastags(u,"x")
       @test hastags(v,"y")
@@ -808,8 +808,8 @@ Random.seed!(1234)
       @test store(S) isa DiagBlockSparse
       @test store(V) isa BlockSparse
 
-      u = commonindex(S,U)
-      v = commonindex(S,V)
+      u = commonind(S,U)
+      v = commonind(S,V)
 
       @test hastags(u,"x")
       @test hastags(v,"y")
@@ -851,8 +851,8 @@ Random.seed!(1234)
       @test store(S) isa DiagBlockSparse
       @test store(V) isa BlockSparse
 
-      u = commonindex(S,U)
-      v = commonindex(S,V)
+      u = commonind(S,U)
+      v = commonind(S,V)
 
       @test hastags(u,"x")
       @test hastags(v,"y")
@@ -894,8 +894,8 @@ Random.seed!(1234)
       @test store(S) isa DiagBlockSparse
       @test store(V) isa BlockSparse
 
-      u = commonindex(S,U)
-      v = commonindex(S,V)
+      u = commonind(S,U)
+      v = commonind(S,V)
 
       @test hastags(u,"x")
       @test hastags(v,"y")
@@ -937,8 +937,8 @@ Random.seed!(1234)
       @test store(S) isa DiagBlockSparse
       @test store(V) isa BlockSparse
 
-      u = commonindex(S,U)
-      v = commonindex(S,V)
+      u = commonind(S,U)
+      v = commonind(S,V)
 
       @test hastags(u,"x")
       @test hastags(v,"y")
@@ -1016,14 +1016,14 @@ Random.seed!(1234)
 
     k = Index([QN(0)=>1,QN(1)=>2],"k")
 
-    replaceindex!(T1,i,k)
-    @test hasindex(T1,k)
+    replaceind!(T1,i,k)
+    @test hasind(T1,k)
     @test dir(inds(T1)[1]) == dir(i)
 
-    # Check that replaceindex! keeps
+    # Check that replaceind! keeps
     # original Arrow direction
-    replaceindex!(T2,i,dag(k))
-    @test hasindex(T2,k)
+    replaceind!(T2,i,dag(k))
+    @test hasind(T2,k)
     @test dir(inds(T2)[1]) == dir(i)
     @test dir(inds(T2)[1]) != dir(dag(k))
   end

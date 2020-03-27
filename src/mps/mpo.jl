@@ -122,16 +122,16 @@ end
 Base.eachindex(m::MPO) = 1:length(m)
 
 # TODO: optimize finding the index a little bit
-# First do: scom = commonindex(A[j],x[j])
-# Then do: uniqueindex(A[j],A[j-1],A[j+1],(scom,))
+# First do: scom = commonind(A[j],x[j])
+# Then do: uniqueind(A[j],A[j-1],A[j+1],(scom,))
 function siteindex(A::MPO,x::MPS,j::Integer)
   N = length(A)
   if j == 1
-    si = uniqueindex(A[j],A[j+1],x[j])
+    si = uniqueind(A[j],A[j+1],x[j])
   elseif j == N
-    si = uniqueindex(A[j],A[j-1],x[j])
+    si = uniqueind(A[j],A[j-1],x[j])
   else
-    si = uniqueindex(A[j],A[j-1],A[j+1],x[j])
+    si = uniqueind(A[j],A[j-1],A[j+1],x[j])
   end
   return si
 end
@@ -162,7 +162,7 @@ end
 
 function primelinks!(M::Union{MPS,MPO}, plinc::Integer = 1)
   for i ∈ eachindex(M)[1:end-1]
-    l = linkindex(M,i)
+    l = linkind(M,i)
     prime!(M[i],plinc,l)
     prime!(M[i+1],plinc,l)
   end
@@ -170,11 +170,11 @@ end
 
 function simlinks!(M::Union{MPS,MPO})
   for i ∈ eachindex(M)[1:end-1]
-    isnothing(commonindex(M[i],M[i+1])) && continue
-    l = linkindex(M,i)
+    isnothing(commonind(M[i],M[i+1])) && continue
+    l = linkind(M,i)
     l̃ = sim(l)
-    replaceindex!(M[i],l,l̃)
-    replaceindex!(M[i+1],l,dag(l̃))
+    replaceind!(M[i],l,l̃)
+    replaceind!(M[i+1],l,dag(l̃))
   end
 end
 
@@ -187,7 +187,7 @@ Get the maximum link dimension of the MPS or MPO.
 function maxlinkdim(M::Union{MPS,MPO})
   md = 0
   for b ∈ eachindex(M)[1:end-1]
-    md = max(md,dim(linkindex(M,b)))
+    md = max(md,dim(linkind(M,b)))
   end
   md
 end
@@ -204,12 +204,12 @@ function Base.show(io::IO, W::MPO)
   end
 end
 
-function linkindex(M::MPO,j::Integer)
+function linkind(M::MPO,j::Integer)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPO is $N)")
-  li = commonindex(M[j],M[j+1])
+  li = commonind(M[j],M[j+1])
   if isnothing(li)
-    error("linkindex: no MPO link index at link $j")
+    error("linkind: no MPO link index at link $j")
   end
   return li
 end
@@ -257,8 +257,8 @@ function inner(B::MPO,
   prime!(Bdag)
   # Swap prime levels 1 -> 2 and 2 -> 1.
   for j ∈ eachindex(Bdag)
-    Axcommon = commonindex(A[j], x[j])
-    ABcommon = firstsetdiff(inds(A[j], "Site"), IndexSet(Axcommon))
+    Axcommon = commonind(A[j], x[j])
+    ABcommon = uniqueind(inds(A[j], "Site"), IndexSet(Axcommon))
     swapprime!(inds(Bdag[j]),2,3)
     swapprime!(inds(Bdag[j]),1,2)
     swapprime!(inds(Bdag[j]),3,1)
@@ -320,14 +320,14 @@ function Base.sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
     orthogonalize!(B, 1; kwargs...)
     C = similar(A)
     rand_plev = 13124
-    lAs = [linkindex(A, i) for i in 1:N-1]
+    lAs = [linkind(A, i) for i in 1:N-1]
     prime!(A, rand_plev, "Link")
 
     first  = Vector{ITensor{2}}(undef,N-1)
     second = Vector{ITensor{2}}(undef,N-1)
     for i in 1:N-1
-        lA = linkindex(A, i)
-        lB = linkindex(B, i)
+        lA = linkind(A, i)
+        lB = linkind(B, i)
         r  = Index(dim(lA) + dim(lB), tags(lA))
         f, s = plussers(typeof(data(store(A[1]))), lA, lB, r)
         first[i]  = f
@@ -389,7 +389,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   for j in 1:n
     s = siteindex(A,psi,j)
     s_dag = siteindex(A_c,psi_c,j)
-    replaceindex!(A_c[j],s_dag,s)
+    replaceind!(A_c[j],s_dag,s)
   end
   E = Vector{ITensor}(undef, n-1)
   E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
@@ -398,8 +398,8 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   end
   O     = psi[n] * A[n]
   ρ     = E[n-1] * O * dag(prime(O, rand_plev))
-  ts    = tags(commonindex(psi[n], psi[n-1]))
-  Lis   = commonindex(ρ, A[n])
+  ts    = tags(commonind(psi[n], psi[n-1]))
+  Lis   = commonind(ρ, A[n])
   Ris   = prime(Lis, rand_plev)
   FU, D = eigen(ρ, Lis, Ris; ishermitian=true, 
                              tags=ts, 
@@ -410,8 +410,8 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   for j in reverse(2:n-1)
     dO  = prime(dag(O), rand_plev)
     ρ   = E[j-1] * O * dO
-    ts  = tags(commonindex(psi[j], psi[j-1]))
-    Lis = IndexSet(commonindex(ρ, A[j]), commonindex(ρ, psi_out[j+1])) 
+    ts  = tags(commonind(psi[j], psi[j-1]))
+    Lis = IndexSet(commonind(ρ, A[j]), commonind(ρ, psi_out[j+1])) 
     Ris = prime(Lis, rand_plev)
     FU, D = eigen(ρ, Lis, Ris; ishermitian=true,
                                tags=ts, 
@@ -443,8 +443,8 @@ function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   end
 
   for b=1:(N-1)
-    Al = commonindex(A[b],A[b+1])
-    pl = commonindex(psi[b],psi[b+1])
+    Al = commonind(A[b],A[b+1])
+    pl = commonind(psi[b],psi[b+1])
     C,_ = combiner(Al,pl)
     psi_out[b] *= C
     psi_out[b+1] *= dag(C)
@@ -479,11 +479,11 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     end
     res = deepcopy(A_)
     for i in 1:N-1
-        ci = commonindex(res[i], res[i+1])
+        ci = commonind(res[i], res[i+1])
         new_ci = Index(dim(ci), tags(ci))
-        replaceindex!(res[i], ci, new_ci)
-        replaceindex!(res[i+1], ci, new_ci)
-        @assert commonindex(res[i], res[i+1]) != commonindex(A[i], A[i+1])
+        replaceind!(res[i], ci, new_ci)
+        replaceind!(res[i+1], ci, new_ci)
+        @assert commonind(res[i], res[i+1]) != commonind(A[i], A[i+1])
     end
     sites_A = Index[]
     sites_B = Index[]
@@ -494,26 +494,26 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
         push!(sites_A, sda_ind)
         push!(sites_B, sdb[1])
     end
-    res[1] = ITensor(sites_A[1], sites_B[1], commonindex(res[1], res[2]))
+    res[1] = ITensor(sites_A[1], sites_B[1], commonind(res[1], res[2]))
     for i in 1:N-2
         if i == 1
             clust = A_[i] * B_[i]
         else
             clust = nfork * A_[i] * B_[i]
         end
-        lA = commonindex(A_[i], A_[i+1])
-        lB = commonindex(B_[i], B_[i+1])
-        nfork = ITensor(lA, lB, commonindex(res[i], res[i+1]))
+        lA = commonind(A_[i], A_[i+1])
+        lB = commonind(B_[i], B_[i+1])
+        nfork = ITensor(lA, lB, commonind(res[i], res[i+1]))
         res[i], nfork = factorize(mapprime(clust,2,1), inds(res[i]), dir="fromleft", tags=tags(lA), cutoff=cutoff, maxdim=maxdim, mindim=mindim)
-        mid = dag(commonindex(res[i], nfork))
-        res[i+1] = ITensor(mid, sites_A[i+1], sites_B[i+1], commonindex(res[i+1], res[i+2]))
+        mid = dag(commonind(res[i], nfork))
+        res[i+1] = ITensor(mid, sites_A[i+1], sites_B[i+1], commonind(res[i+1], res[i+2]))
     end
     clust = nfork * A_[N-1] * B_[N-1]
     nfork = clust * A_[N] * B_[N]
 
     # in case we primed A
-    A_ind = firstsetdiff(inds(A_[N-1], "Site"), inds(B_[N-1], "Site"))
-    Lis = IndexSet(A_ind, sites_B[N-1], commonindex(res[N-2], res[N-1]))
+    A_ind = uniqueind(inds(A_[N-1], "Site"), inds(B_[N-1], "Site"))
+    Lis = IndexSet(A_ind, sites_B[N-1], commonind(res[N-2], res[N-1]))
     U, V = factorize(nfork,Lis,dir="fromright",cutoff=cutoff,which_factorization="svd",tags="Link,n=$(N-1)",maxdim=maxdim,mindim=mindim)
     res[N-1] = U
     res[N] = V

@@ -189,7 +189,7 @@ function delta(::Type{ElT},is::QNIndexSet) where {ElT<:Number}
   return itensor(T)
 end
 
-function replaceindex!(A::ITensor,i::QNIndex,j::QNIndex)
+function replaceind!(A::ITensor,i::QNIndex,j::QNIndex)
   space(i) != space(j) && error("Indices must have the same spaces to be replaced")
   pos = findall(inds(A),i)
   isempty(pos) && error("Index not found")

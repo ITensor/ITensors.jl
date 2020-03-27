@@ -11,8 +11,8 @@ export MPS,
        randomMPS,
        replacebond!,
        rightlim,
-       linkindex,
-       siteindex,
+       linkind,
+       siteind,
        siteinds
 
 
@@ -147,36 +147,36 @@ end
 
 productMPS(sites, states) = productMPS(Float64, sites, states)
 
-function linkindex(M::MPS,j::Integer)
+function linkind(M::MPS,j::Integer)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPS is $N)")
-  li = commonindex(M[j],M[j+1])
+  li = commonind(M[j],M[j+1])
   if isnothing(li)
-    error("linkindex: no MPS link index at link $j")
+    error("linkind: no MPS link index at link $j")
   end
   return li
 end
 
-function siteindex(M::MPS,j::Integer)
+function siteind(M::MPS,j::Integer)
   N = length(M)
   if j == 1
-    si = uniqueindex(M[j],M[j+1])
+    si = uniqueind(M[j],M[j+1])
   elseif j == N
-    si = uniqueindex(M[j],M[j-1])
+    si = uniqueind(M[j],M[j-1])
   else
-    si = uniqueindex(M[j],M[j-1],M[j+1])
+    si = uniqueind(M[j],M[j-1],M[j+1])
   end
   return si
 end
 
 function siteinds(M::MPS)
-  return [siteindex(M,j) for j in 1:length(M)]
+  return [siteind(M,j) for j in 1:length(M)]
 end
 
 function replacesites!(M::MPS,sites)
   for j in eachindex(M)
-    sj = siteindex(M,j)
-    replaceindex!(M[j],sj,sites[j])
+    sj = siteind(M,j)
+    replaceind!(M[j],sj,sites[j])
   end
   return M
 end
@@ -200,7 +200,7 @@ function replacebond!(M::MPS,
                       phi::ITensor;
                       kwargs...)
   FU,FV,spec = factorize(phi,inds(M[b]); which_factorization="automatic",
-                           tags=tags(linkindex(M,b)), kwargs...)
+                           tags=tags(linkind(M,b)), kwargs...)
   M[b]   = FU
   M[b+1] = FV
 
@@ -256,7 +256,7 @@ function sample(m::MPS)
   A = m[1]
 
   for j=1:N
-    s = siteindex(m,j)
+    s = siteind(m,j)
     d = dim(s)
     # Compute the probability of each state
     # one-by-one and stop when the random
