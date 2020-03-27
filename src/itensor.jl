@@ -15,8 +15,12 @@ export ITensor,
        ind,
        commoninds,
        commonind,
+       noncommoninds,
+       noncommonind,
        uniqueinds,
        uniqueind,
+       unioninds,
+       unionind,
        isnull,
        scale!,
        matmul,
@@ -441,6 +445,14 @@ commoninds(A...; kwargs...) = IndexSet(intersect(itensor2inds.(A)...;
 commonind(A...; kwargs...) = firstintersect(itensor2inds.(A)...;
                                             kwargs...)
 
+# symdiff
+noncommoninds(A...; kwargs...) = IndexSet(symdiff(itensor2inds.(A)...;
+                                               kwargs...)...)
+
+# firstsymdiff
+noncommonind(A...; kwargs...) = getfirst(symdiff(itensor2inds.(A)...;
+                                                 kwargs...))
+
 # setdiff
 uniqueinds(A...; kwargs...) = IndexSet(setdiff(itensor2inds.(A)...;
                                                kwargs...)...)
@@ -448,6 +460,14 @@ uniqueinds(A...; kwargs...) = IndexSet(setdiff(itensor2inds.(A)...;
 # firstsetdiff
 uniqueind(A...; kwargs...) = firstsetdiff(itensor2inds.(A)...;
                                           kwargs...)
+
+# union
+unioninds(A...; kwargs...) = IndexSet(union(itensor2inds.(A)...;
+                                            kwargs...)...)
+
+# firstsymdiff
+unionind(A...; kwargs...) = getfirst(union(itensor2inds.(A)...;
+                                           kwargs...))
 
 firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
                                      kwargs...)

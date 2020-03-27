@@ -355,6 +355,18 @@ Base.filter(is::IndexCollection,
 Base.filter(is::IndexCollection,
             tags::String; kwargs...) = filter(fmatch(tags; kwargs...),is)
 
+"""
+Like first, but if the length is 0 return nothing
+"""
+function getfirst(is)
+  length(is) == 0 && return nothing
+  return first(is)
+end
+
+"""
+Get the first value matching the pattern function,
+return nothing if not found.
+"""
 function getfirst(f::Function, is)
   for i in is
     f(i) && return i
