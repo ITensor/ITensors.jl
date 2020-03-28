@@ -194,8 +194,8 @@ function replaceind!(A::ITensor,i::QNIndex,j::QNIndex)
   pos = findall(inds(A),i)
   isempty(pos) && error("Index not found")
   curdir = dir(inds(A)[pos[1]])
-  inds(A)[pos[1]] = setdir(j,curdir)
-  return A
+  j = setdir(j,curdir)
+  return setinds!(A,setindex(inds(A),j,pos[1]))
 end
 
 flux(T::ITensor,vals::Int...) = flux(inds(T),vals...)

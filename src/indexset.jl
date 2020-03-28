@@ -1,21 +1,22 @@
 export IndexSet,
        swaptags,
-       swaptags!,
        swapprime,
-       swapprime!,
        mapprime,
        mapprime!,
        getfirst,
        firstintersect,
        firstsetdiff,
+       commoninds,
+       commonindex,
+       uniqueinds,
+       uniqueindex,
        mindim,
        maxdim,
        push,
        permute
 
 struct IndexSet{N,IndexT<:Index}
-  inds::SizedVector{N,IndexT}
-  IndexSet{N}(inds::SizedVector{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
+  store::SVector{N,IndexT}
   IndexSet{N}(inds::SVector{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
   IndexSet{N}(inds::MVector{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
   IndexSet{0}(::MVector{0}) = new{0,Index}(())
@@ -43,11 +44,14 @@ function IndexSet(vi::Vector{Index})
   return IndexSet{N}(NTuple{N,Index}(vi))
 end
 
+
 not(is::IndexSet) = Not(is)
 not(inds::Index...) = not(IndexSet(inds...))
 not(inds::NTuple{<:Any,<:Index}) = not(IndexSet(inds))
 
-Tensors.store(is::IndexSet) = is.inds
+
+Tensors.store(is::IndexSet) = is.store
+
 
 # Empty constructor
 IndexSet() = IndexSet{0}()
@@ -90,31 +94,23 @@ IndexSet(inds::NTuple{2,IndexSet}) = IndexSet(inds...)
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
 
 function Base.show(io::IO, is::IndexSet)
-  for i in is.inds
+  for i in store(is)
     print(io,i)
     print(io," ")
   end
 end
 
-Base.getindex(is::IndexSet,n::Integer) = getindex(is.inds,n)
+Base.getindex(is::IndexSet,n::Integer) = getindex(store(is),n)
 Base.getindex(is::IndexSet,v::AbstractVector) = IndexSet(getindex(Tuple(is),v))
 
-function Base.setindex!(is::IndexSet,i::Index,n::Integer)
-  setindex!(is.inds,i,n)
-  return is
-end
-
 function StaticArrays.setindex(is::IndexSet,i::Index,n::Integer)
-  # TODO: should this be deepcopy?
-  isR = copy(is)
-  setindex!(isR.inds,i,n)
-  return isR
+  return IndexSet(setindex(store(is),i,n))
 end
 
 Base.length(is::IndexSet{N}) where {N} = N
 Base.length(::Type{<:IndexSet{N}}) where {N} = N
 order(is::IndexSet) = length(is)
-Base.copy(is::IndexSet) = IndexSet(copy(is.inds))
+Base.copy(is::IndexSet) = IndexSet(copy(store(is)))
 Tensors.dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
 Base.ndims(::IndexSet{N}) where {N} = N
 Base.ndims(::Type{<:IndexSet{N}}) where {N} = N
@@ -149,7 +145,7 @@ end
 Base.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
 Base.stride(is::IndexSet,k::Integer) = strides(is)[k]
 
-Tensors.dag(is::IndexSet) = IndexSet(dag.(is.inds))
+Tensors.dag(is::IndexSet) = IndexSet(dag.(store(is)))
 
 # Allow iteration
 Base.iterate(is::IndexSet{N},state::Int=1) where {N} = state > N ? nothing : (is[state], state+1)
@@ -160,8 +156,8 @@ Base.eltype(is::IndexSet{N,IndexT}) where {N,IndexT} = IndexT
 # Needed for findfirst (I think)
 Base.keys(is::IndexSet{N}) where {N} = 1:N
 
-StaticArrays.push(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(push(is.inds,i))
-StaticArrays.pushfirst(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(pushfirst(is.inds,i))
+StaticArrays.push(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(push(store(is),i))
+StaticArrays.pushfirst(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(pushfirst(store(is),i))
 
 # TODO: this assumes there is no overlap between the sets
 unioninds(is1::IndexSet{N1},is2::IndexSet{N2}) where {N1,N2} = IndexSet{N1+N2}(is1...,is2...)
@@ -390,29 +386,29 @@ Base.findfirst(is::IndexCollection,
 # Tagging functions
 #
 
+
 function prime!(is::IndexSet, plinc::Integer, args...; kwargs...)
   pos = findall(is, args...; kwargs...)
   for jj ∈ pos
-    is[jj] = prime(is[jj],plinc)
+    is = setindex(is,prime(is[jj],plinc),jj)
   end
   return is
 end
-prime!(is::IndexSet,vargs...; kwargs...) = prime!(is,1,vargs...; kwargs...)
-prime(is::IndexSet,vargs...; kwargs...) = prime!(copy(is),vargs...; kwargs...)
+prime(is::IndexSet,vargs...; kwargs...) = prime(is,1,vargs...; kwargs...)
 # For is' notation
 Base.adjoint(is::IndexSet) = prime(is)
+
 
 function setprime!(is::IndexSet, plev::Integer, args...; kwargs...)
   pos = findall(is, args...; kwargs...)
   for jj ∈ pos
-    is[jj] = setprime(is[jj],plev)
+    is = setindex(is,setprime(is[jj],plev),jj)
   end
   return is
 end
-setprime(is::IndexSet, vargs...; kwargs...) = setprime!(copy(is), vargs...; kwargs...)
 
-noprime!(is::IndexSet, args...; kwargs...) = setprime!(is, 0, args...; kwargs...)
-noprime(is::IndexSet, args...; kwargs...) = noprime!(copy(is), args...; kwargs...)
+noprime(is::IndexSet, args...; kwargs...) = setprime(is, 0, args...; kwargs...)
+
 
 function swapprime!(is::IndexSet, 
                     pl1::Int,
@@ -421,13 +417,14 @@ function swapprime!(is::IndexSet,
   pos = findall(is,args...; kwargs...)
   for n in pos
     if plev(is[n])==pl1
-      is[n] = setprime(is[n],pl2)
+      is = setindex(is,setprime(is[n],pl2),n)
     elseif plev(is[n])==pl2
-      is[n] = setprime(is[n],pl1)
+      is = setindex(is,setprime(is[n],pl1),n)
     end
   end
   return is
 end
+
 
 swapprime(is::IndexSet,pl1::Int,pl2::Int,args...; kwargs...) = swapprime!(copy(is),pl1,pl2,args...; kwargs...)
 
@@ -438,11 +435,12 @@ function mapprime!(is::IndexSet,
   pos = findall(is, args...; kwargs...)
   for n in pos
     if plev(is[n])==plold 
-      is[n] = setprime(is[n],plnew)
+      is = setindex(is,setprime(is[n],plnew),n)
     end
   end
   return is
 end
+
 
 function mapprime(is::IndexSet,
                   plold::Integer,
@@ -457,44 +455,43 @@ function addtags!(is::IndexSet,
                   args...; kwargs...)
   pos = findall(is, args...; kwargs...)
   for jj ∈ pos
-    is[jj] = addtags(is[jj],tags)
+    is = setindex(is,addtags(is[jj],tags),jj)
   end
   return is
 end
-addtags(is, args...; kwargs...) = addtags!(copy(is), args...; kwargs...)
+
 
 function settags!(is::IndexSet,
                   ts,
                   args...; kwargs...)
   pos = findall(is, args...; kwargs...)
   for jj ∈ pos
-    is[jj] = settags(is[jj],ts)
+    is = setindex(is,settags(is[jj],ts),jj)
   end
   return is
 end
-settags(is, args...; kwargs...) = settags!(copy(is), args...; kwargs...)
+
 
 function removetags!(is::IndexSet,
                      tags,
                      args...; kwargs...)
   pos = findall(is, args...; kwargs...)
   for jj ∈ pos
-    is[jj] = removetags(is[jj],tags)
+    is = setindex(is,removetags(is[jj],tags),jj)
   end
   return is
 end
-removetags(is, args...; kwargs...) = removetags!(copy(is), args...; kwargs...)
+
 
 function replacetags!(is::IndexSet,
                       tags_old, tags_new,
                       args...; kwargs...)
   pos = findall(is, args...; kwargs...)
   for jj ∈ pos
-    is[jj] = replacetags(is[jj],tags_old,tags_new)
+    is = setindex(is,replacetags(is[jj],tags_old,tags_new),jj)
   end
   return is
 end
-replacetags(is, args...; kwargs...) = replacetags!(copy(is), args...; kwargs...)
 
 # TODO: write more efficient version in terms
 # of findall like swapprime!
@@ -506,12 +503,11 @@ function swaptags!(is::IndexSet,
   # TODO: add debug check that this "random" tag
   # doesn't clash with ts1 or ts2
   tstemp = TagSet("e43efds")
-  replacetags!(is, ts1, tstemp, args...; kwargs...)
-  replacetags!(is, ts2, ts1, args...; kwargs...)
-  replacetags!(is, tstemp, ts2, args...; kwargs...)
+  is = replacetags(is, ts1, tstemp, args...; kwargs...)
+  is = replacetags(is, ts2, ts1, args...; kwargs...)
+  is = replacetags(is, tstemp, ts2, args...; kwargs...)
   return is
 end
-swaptags(is, args...; kwargs...) = swaptags!(copy(is), args...; kwargs...)
 
 Tensors.dense(::Type{<:IndexSet}) = IndexSet
 

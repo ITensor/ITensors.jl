@@ -94,7 +94,7 @@ using ITensors,
     J = IndexSet(i,j,k')
     @test mapprime(J,0,2) == IndexSet(i'',j'',k')
 
-    mapprime!(J,1,5)
+    J = mapprime(J,1,5)
     @test J == IndexSet(i,j,k^5)
   end
   @testset "strides" begin
@@ -132,7 +132,7 @@ using ITensors,
     @test swapprime(I,2,1) == IndexSet(i,k',j')
     # In-place version:
     I = IndexSet(i,k'',j''')
-    swapprime!(I,2,0)
+    I = swapprime(I,2,0)
     @test I == IndexSet(i'',k,j''')
     # With tags specified:
     I = IndexSet(i,k,j)

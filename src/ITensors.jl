@@ -109,4 +109,6 @@ include("physics/site_types/electron.jl")
 include("physics/site_types/tj.jl")
 include("physics/autompo.jl")
 
+include("developer_tools.jl")
+
 end # module ITensors

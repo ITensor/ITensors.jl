@@ -7,6 +7,9 @@ export ITensor,
        δ,
        exphermitian,
        replaceind!,
+       replaceind,
+       replaceinds!
+       replaceinds,
        hasind,
        hasinds,
        hassameinds,
@@ -41,7 +44,19 @@ export ITensor,
        set_warnorder,
        store,
        dense,
-       setelt
+       setelt,
+       real_if_close,
+       prime!,
+       setprime!,
+       noprime!,
+       mapprime!,
+       swapprime!,
+       addtags!,
+       removetags!,
+       replacetags!,
+       settags!,
+       swaptags!
+
 
 """
 An ITensor is a tensor whose interface is 
@@ -68,8 +83,8 @@ Tensors.inds(T::ITensor) = T.inds
 Tensors.store(T::ITensor) = T.store
 ind(T::ITensor,i::Int) = inds(T)[i]
 
-setinds!(T::ITensor,is...) = (T.inds = IndexSet(is...))
-setstore!(T::ITensor,st::TensorStorage) = (T.store = st)
+setinds!(T::ITensor,is...) = (T.inds = IndexSet(is...); return T)
+setstore!(T::ITensor,st::TensorStorage) = (T.store = st; return T)
 
 #
 # Iteration over ITensors
@@ -426,6 +441,7 @@ end
 itensor2inds(A::ITensor) = inds(A)
 itensor2inds(A) = A
 
+
 # in
 hasind(A,i::Index) = i ∈ itensor2inds(A)
 
@@ -482,16 +498,35 @@ function replaceind!(A::ITensor,i::Index,j::Index)
   return A
 end
 
+function replaceind(A::ITensor,i::Index,j::Index) 
+  rA = ITensor(store(A),inds(A))
+  replaceindex!(rA,i,j)
+  return rA
+end
+
+
+
 function replaceinds!(A::ITensor,inds1,inds2)
   pos = findall(inds(A),inds1)
   for (j,p) ∈ enumerate(pos)
     inds(A)[p] = inds2[j]
+
   end
-  return A
+  return setinds!(A,isA)
 end
 
+function replaceinds(A::ITensor,inds1,inds2)
+  rA = ITensor(store(A),inds(A))
+  replaceinds!(rA,inds1,inds2)
+  return rA
+end
+
+
+
 prime!(A::ITensor,vargs...;kwargs...)= ( prime!(inds(A),vargs...;kwargs...); return A )
+
 prime(A::ITensor,vargs...;kwargs...)= ITensor(store(A),prime(inds(A),vargs...;kwargs...))
+
 Base.adjoint(A::ITensor) = prime(A)
 
 setprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),setprime(inds(A),vargs...;kwargs...))
@@ -506,13 +541,29 @@ addtags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),addtags(inds(A),vargs.
 
 removetags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),removetags(inds(A),vargs...;kwargs...))
 
-replacetags!(A::ITensor,vargs...;kwargs...) = ( replacetags!(inds(A),vargs...;kwargs...); return A )
 replacetags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),replacetags(inds(A),vargs...;kwargs...))
 
-settags!(A::ITensor,vargs...;kwargs...) = ( settags!(inds(A),vargs...;kwargs...); return A )
 settags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),settags(inds(A),vargs...;kwargs...))
 
 swaptags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),swaptags(inds(A),vargs...;kwargs...))
+
+# in-place versions of priming and tagging
+for fname in (:prime,
+              :setprime,
+              :noprime,
+              :mapprime,
+              :swapprime,
+              :addtags,
+              :removetags,
+              :replacetags,
+              :settags,
+              :swaptags)
+  @eval begin
+    $(Symbol(fname,:!))(A::ITensor,vargs...;kwargs...) = setinds!(A,$fname(inds(A),vargs...;kwargs...))
+  end
+end
+
+#prime!(A::ITensor,vargs...;kwargs...)= setinds!(A,prime(inds(A),vargs...;kwargs...))
 
 # TODO: implement in a better way (more generically for other storage)
 Base.:(==)(A::ITensor,B::ITensor) = (norm(A-B) == zero(promote_type(eltype(A),eltype(B))))

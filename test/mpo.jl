@@ -110,9 +110,9 @@ end
     Jdag = dag(J)
     prime!(Jdag)
     for j ∈ eachindex(Jdag)
-      swapprime!(inds(Jdag[j]),2,3)
-      swapprime!(inds(Jdag[j]),1,2)
-      swapprime!(inds(Jdag[j]),3,1)
+      swapprime!(Jdag[j],2,3)
+      swapprime!(Jdag[j],1,2)
+      swapprime!(Jdag[j],3,1)
     end
 
     phiJdagKpsi = phidag[1]*Jdag[1]*K[1]*psi[1]
