@@ -416,12 +416,12 @@ end
   A1 = randomITensor(s1,l,l')
   A2 = randomITensor(s2,l',l'')
 
-  @testset "replaceindex and replaceinds" begin
-    rA1 = replaceindex(A1,s1,s2)
+  @testset "replaceind and replaceinds" begin
+    rA1 = replaceind(A1,s1,s2)
     @test hasinds(rA1,s2,l,l')
     @test hasinds(A1,s1,l,l')
 
-    replaceindex!(A1,s1,s2)
+    replaceind!(A1,s1,s2)
     @test hasinds(A1,s2,l,l')
 
     rA2 = replaceinds(A2,(s2,l'),(s1,l))
