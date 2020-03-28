@@ -7,6 +7,9 @@ export ITensor,
        δ,
        exphermitian,
        replaceindex!,
+       replaceindex,
+       replaceinds!,
+       replaceinds,
        inds,
        ind,
        isnull,
@@ -436,6 +439,12 @@ function replaceindex!(A::ITensor,i::Index,j::Index)
   return setinds!(A,setindex(inds(A),j,pos[1]))
 end
 
+function replaceindex(A::ITensor,i::Index,j::Index) 
+  rA = ITensor(store(A),inds(A))
+  replaceindex!(rA,i,j)
+  return rA
+end
+
 function replaceinds!(A::ITensor,inds1,inds2)
   isA = inds(A)
   is1 = IndexSet(inds1)
@@ -445,6 +454,12 @@ function replaceinds!(A::ITensor,inds1,inds2)
     isA = setindex(isA,is2[j],p)
   end
   return setinds!(A,isA)
+end
+
+function replaceinds(A::ITensor,inds1,inds2)
+  rA = ITensor(store(A),inds(A))
+  replaceinds!(rA,inds1,inds2)
+  return rA
 end
 
 prime(A::ITensor,vargs...;kwargs...)= ITensor(store(A),prime(inds(A),vargs...;kwargs...))
