@@ -8,7 +8,7 @@ export ITensor,
        exphermitian,
        replaceind!,
        replaceind,
-       replaceinds!
+       replaceinds!,
        replaceinds,
        hasind,
        hasinds,
@@ -505,12 +505,10 @@ function replaceind(A::ITensor,i::Index,j::Index)
 end
 
 
-
 function replaceinds!(A::ITensor,inds1,inds2)
   pos = findall(inds(A),inds1)
   for (j,p) ∈ enumerate(pos)
     inds(A)[p] = inds2[j]
-
   end
   return setinds!(A,isA)
 end
@@ -521,9 +519,6 @@ function replaceinds(A::ITensor,inds1,inds2)
   return rA
 end
 
-
-
-prime!(A::ITensor,vargs...;kwargs...)= ( prime!(inds(A),vargs...;kwargs...); return A )
 
 prime(A::ITensor,vargs...;kwargs...)= ITensor(store(A),prime(inds(A),vargs...;kwargs...))
 
