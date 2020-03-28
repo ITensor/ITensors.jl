@@ -405,6 +405,32 @@ end
   end
 end
 
+@testset "ITensor other index operations" begin
+
+  s1 = Index(2,"Site,s=1")
+  s2 = Index(2,"Site,s=2")
+  l = Index(3,"Link")
+  A1 = randomITensor(s1,l,l')
+  A2 = randomITensor(s2,l',l'')
+
+  @testset "replaceindex and replaceinds" begin
+    rA1 = replaceindex(A1,s1,s2)
+    @test hasinds(rA1,s2,l,l')
+    @test hasinds(A1,s1,l,l')
+
+    replaceindex!(A1,s1,s2)
+    @test hasinds(A1,s2,l,l')
+
+    rA2 = replaceinds(A2,(s2,l'),(s1,l))
+    @test hasinds(rA2,s1,l,l'')
+    @test hasinds(A2,s2,l',l'')
+
+    replaceinds!(A2,(s2,l'),(s1,l))
+    @test hasinds(A2,s1,l,l'')
+  end
+
+end #End "ITensor other index operations"
+
 @testset "Converting Real and Complex Storage" begin
 
   @testset "Add Real and Complex" begin
