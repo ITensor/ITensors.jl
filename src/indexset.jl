@@ -249,8 +249,6 @@ function fmatch(; tags=nothing,
   return i -> fmatch(plev)(i) && fmatch(id)(i) && fmatch(tags)(i)
 end
 
-fmatch() = _ -> true
-
 """
 indmatch
 
