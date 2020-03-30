@@ -49,7 +49,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
   @testset "From matrix" begin
     M = [1 2; 3 4]
-    A = ITensor(M,i,j)
+    A = itensor(M,i,j)
     @test store(A) isa Dense{Float64}
 
     @test M ≈ Matrix(A,i,j)
@@ -57,12 +57,12 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test_throws MethodError vector(A)
 
     @test size(A,1) == size(M,1) == 2
-    @test size(A,3) == size(M,3) == 1
-    @test_throws ErrorException size(A,0)
+    @test_throws BoundsError size(A,3)
+    @test_throws BoundsError size(A,0)
     @test_throws ErrorException size(M,0)
 
     M = [1 2 3; 4 5 6]
-    @test_throws DimensionMismatch ITensor(M,i,j)
+    @test_throws DimensionMismatch itensor(M,i,j)
   end
 
   @testset "To Matrix" begin
@@ -106,7 +106,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
   @testset "From complex matrix" begin
     M = [1+2im 2; 3 4]
-    A = ITensor(M,i,j)
+    A = itensor(M,i,j)
     @test store(A) isa Dense{ComplexF64}
   end
 
@@ -152,14 +152,14 @@ end
   i = Index(2,"i")
   j = Index(2,"j")
   M = [1 2; 3 4]
-  A = ITensor(M,i,j)
+  A = itensor(M,i,j)
   N = 2*M
-  B = ITensor(N,i,j)
+  B = itensor(N,i,j)
   copyto!(A, B)
   @test A == B
   @test data(store(A)) == vec(N)
-  A = ITensor(M,i,j)
-  B = ITensor(N,j,i)
+  A = itensor(M,i,j)
+  B = itensor(N,j,i)
   copyto!(A, B)
   @test A == B
   @test data(store(A)) == vec(transpose(N))
@@ -169,16 +169,16 @@ end
   i = Index(2,"i")
   j = Index(2,"j")
   M = [1 2; 3 4]
-  A = ITensor(M,i,j)
-  @test -A == ITensor(-M, i, j)
+  A = itensor(M,i,j)
+  @test -A == itensor(-M, i, j)
 end
 
 @testset "dot" begin
   i = Index(2,"i")
   a = [1.0; 2.0]
   b = [3.0; 4.0]
-  A = ITensor(a,i)
-  B = ITensor(b,i)
+  A = itensor(a,i)
+  B = itensor(b,i)
   @test dot(A, B) == 11.0
 end
 
@@ -188,27 +188,27 @@ end
   i1 = Index(2,"i1")
   i2 = Index(2,"i2")
   Amat = rand(2,2,2,2)
-  A = ITensor(Amat,i1,i2,s1,s2)
+  A = itensor(Amat,i1,i2,s1,s2)
 
   Aexp = exp(A,(i1,i2),(s1,s2))
   Amatexp = reshape(exp(reshape(Amat,4,4)),2,2,2,2)
-  Aexp_from_mat = ITensor(Amatexp,i1,i2,s1,s2)
+  Aexp_from_mat = itensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
 
   #test that exponentiation works when indices need to be permuted
   Aexp = exp(A,(s1,s2),(i1,i2))
   Amatexp = Matrix(exp(reshape(Amat,4,4))')
-  Aexp_from_mat = ITensor(reshape(Amatexp,2,2,2,2),s1,s2,i1,i2)
+  Aexp_from_mat = itensor(reshape(Amatexp,2,2,2,2),s1,s2,i1,i2)
   @test Aexp ≈ Aexp_from_mat
 
   #test exponentiation when hermitian=true is used
   Amat = reshape(Amat, 4,4)
   Amat = reshape(Amat+Amat'+randn(4,4)*1e-10,2,2,2,2)
-  A = ITensor(Amat,i1,i2,s1,s2)
+  A = itensor(Amat,i1,i2,s1,s2)
   Aexp = exp(A,(i1,i2),(s1,s2),ishermitian=true)
   Amatexp = reshape(parent(exp(ITensors.LinearAlgebra.Hermitian(reshape(Amat,4,4)))),
                     2,2,2,2)
-  Aexp_from_mat = ITensor(Amatexp,i1,i2,s1,s2)
+  Aexp_from_mat = itensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
 end
 
@@ -217,17 +217,17 @@ end
   i = Index(2,"i")
   a = [1.0; 2.0]
   b = [3.0; 4.0]
-  A = ITensor(a,i)
-  B = ITensor(b,i)
+  A = itensor(a,i)
+  B = itensor(b,i)
   c = [5.0; 8.0]
-  @test A + B == ITensor([4.0; 6.0], i)
-  @test axpy!(2.0, A, B) == ITensor(c, i) 
+  @test A + B == itensor([4.0; 6.0], i)
+  @test axpy!(2.0, A, B) == itensor(c, i) 
   a = [1.0; 2.0]
   b = [3.0; 4.0]
-  A = ITensor(a,i)
-  B = ITensor(b,i)
+  A = itensor(a,i)
+  B = itensor(b,i)
   c = [8.0; 12.0]
-  @test add!(A, 2.0, 2.0, B) == ITensor(c, i) 
+  @test add!(A, 2.0, 2.0, B) == itensor(c, i) 
   
 end
 
@@ -235,22 +235,22 @@ end
   i = Index(2,"i")
   a = [1.0; 2.0]
   b = [2.0; 4.0]
-  A = ITensor(a,i)
+  A = itensor(a,i)
   A2, A3 = copy(A), copy(A)
-  B = ITensor(b,i)
+  B = itensor(b,i)
   @test mul!(A2, A, 2.0) == B == ITensors.add!(A2, 0, 2, A)
   @test rmul!(A, 2.0) == B == ITensors.scale!(A3, 2)
   #make sure mul! works also when A2 has NaNs in it
-  A = ITensor([1.0; 2.0],i)
-  A2 = ITensor([NaN; 1.],i)
+  A = itensor([1.0; 2.0],i)
+  A2 = itensor([NaN; 1.],i)
   @test mul!(A2, A, 2.0) == B
 
   i = Index(2,"i")
   j = Index(2,"j")
   M = [1 2; 3 4]
-  A = ITensor(M,i,j)
+  A = itensor(M,i,j)
   N = 2*M 
-  B = ITensor(N,j,i)
+  B = itensor(N,j,i)
   @test data(store(mul!(B, A, 2.0))) == 2.0*vec(transpose(M))
 end
 
@@ -305,8 +305,8 @@ end
   j = Index(n)
   realData = rand(m,n)
   complexData = complex(realData)
-  A = ITensor(realData, i,j)
-  B = ITensor(complexData, i,j)
+  A = itensor(realData, i,j)
+  B = itensor(complexData, i,j)
   @test A≈B
   @test B≈A
   A = permute(A,j,i)
@@ -550,19 +550,19 @@ end
         T = randomITensor(ComplexF64,ii,jj)
         U,S,V = svd(T,ii;maxdim=2)
         u,s,v = svd(matrix(T))
-        @test norm(U*S*V-T)≈sqrt(s[3]^2+s[4]^2)
+        @test norm(U*S*V-T) ≈ sqrt(s[3]^2+s[4]^2)
     end
 
     @testset "Test QR decomposition of an ITensor" begin
       Q,R,q = qr(A,(i,l))
       q = commonind(Q,R)
-      @test A≈Q*R
-      @test Q*dag(prime(Q,q))≈δ(SType,q,q') atol=1e-14
+      @test A ≈ Q*R atol=1e-14
+      @test Q*dag(prime(Q,q)) ≈ δ(SType,q,q') atol=1e-14
     end
 
     @testset "Test polar decomposition of an ITensor" begin
       U,P,u = polar(A,(k,l))
-      @test A≈U*P
+      @test A ≈ U*P atol=1e-13
       #Note: this is only satisfied when left dimensions
       #are greater than right dimensions
       UUᵀ =  U*dag(prime(U,u))
@@ -572,21 +572,21 @@ end
       for ii ∈ 1:dim(u[1]), jj ∈ 1:dim(u[2]), iip ∈ 1:dim(u[1]), jjp ∈ 1:dim(u[2])
         val = UUᵀ[u[1](ii),u[2](jj),u[1]'(iip),u[2]'(jjp)]
         if ii==iip && jj==jjp
-          @test val≈one(SType) atol=1e-14
+          @test val ≈ one(SType) atol=1e-14
         else
-          @test val≈zero(SType) atol=1e-14
+          @test val ≈ zero(SType) atol=1e-14
         end
       end
     end
 
     @testset "Test Hermitian eigendecomposition of an ITensor" begin
       is = IndexSet(i,j)
-      T = randomITensor(is...,prime(is)...)
-      T = T + swapprime(dag(T),0,1)
+      T = randomITensor(is..., prime(is)...)
+      T = T + swapprime(dag(T), 0, 1)
       U,D,spec,u = eigen(T; ishermitian=true)
-      @test T ≈ U*D*prime(dag(U))
+      @test T ≈ U*D*prime(dag(U)) atol=1e-13
       UUᴴ =  U*prime(dag(U),u)
-      @test UUᴴ ≈ δ(u,u') atol=1e-14
+      @test UUᴴ ≈ δ(u,u')
     end
 
   end # End ITensor factorization testset

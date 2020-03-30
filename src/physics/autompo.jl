@@ -666,7 +666,7 @@ function svdMPO(ampo::AutoMPO,
     s = sites[n]
     H[n] = ITensor(dag(s),s',ll,rl)
     for (op,M) in finalMPO
-      T = ITensor(M,ll,rl)
+      T = itensor(M,ll,rl)
       H[n] += T*computeSiteProd(sites,op)
     end
 
