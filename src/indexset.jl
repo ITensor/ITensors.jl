@@ -6,10 +6,8 @@ export IndexSet,
        getfirst,
        firstintersect,
        firstsetdiff,
-       commoninds,
-       commonindex,
-       uniqueinds,
-       uniqueindex,
+       replaceind,
+       replaceinds,
        mindim,
        maxdim,
        push,
@@ -226,7 +224,7 @@ end
 
 fmatch(n::Not) = !fmatch(parent(n))
 
-fmatch(::Nothing) = _->true
+fmatch(::Nothing) = _ -> true
 
 fmatch(is::IndexSet) = in(is)
 fmatch(is::Tuple{Vararg{<:Index}}) = fmatch(IndexSet(is))
@@ -250,6 +248,8 @@ function fmatch(; tags=nothing,
                   id=nothing)
   return i -> fmatch(plev)(i) && fmatch(id)(i) && fmatch(tags)(i)
 end
+
+fmatch() = _ -> true
 
 """
 indmatch
@@ -382,130 +382,204 @@ Base.findfirst(is::IndexCollection,
                args...; kwargs...) = findfirst(fmatch(args...;
                                                       kwargs...), is)
 
+"""
+map(f, is::IndexSet)
+
+Apply the function to the elements of the IndexSet,
+returning a new IndexSet.
+"""
+Base.map(f::Function, is::IndexSet) = IndexSet(map(f, store(is)))
+
 #
 # Tagging functions
 #
 
-
-function prime!(is::IndexSet, plinc::Integer, args...; kwargs...)
-  pos = findall(is, args...; kwargs...)
-  for jj ∈ pos
-    is = setindex(is,prime(is[jj],plinc),jj)
-  end
-  return is
+function prime(f::Function,
+               is::IndexSet,
+               args...)
+  return map(i -> f(i) ? prime(i,args...) : i, is)
 end
-prime(is::IndexSet,vargs...; kwargs...) = prime(is,1,vargs...; kwargs...)
-# For is' notation
+
+"""
+prime(A, plinc, ...)
+
+Increase the prime level of the indices by the specified amount.
+Filter which indices are primed using keyword arguments
+tags, plev and id.
+"""
+prime(is::IndexSet,
+      plinc::Integer,
+      args...; kwargs...) = prime(fmatch(args...; kwargs...),
+                                  is, plinc)
+
+prime(f::Function,
+      is::IndexSet) = prime(f, is, 1)
+
+prime(is::IndexSet,
+      args...;
+      kwargs...) = prime(is, 1, args...; kwargs...)
+
+"""
+adjoint(is::IndexSet)
+
+For is' notation.
+"""
 Base.adjoint(is::IndexSet) = prime(is)
 
-
-function setprime!(is::IndexSet, plev::Integer, args...; kwargs...)
-  pos = findall(is, args...; kwargs...)
-  for jj ∈ pos
-    is = setindex(is,setprime(is[jj],plev),jj)
-  end
-  return is
+function setprime(f::Function,
+                  is::IndexSet,
+                  args...)
+  return map(i -> f(i) ? setprime(i, args...) : i, is)
 end
 
-noprime(is::IndexSet, args...; kwargs...) = setprime(is, 0, args...; kwargs...)
+setprime(is::IndexSet,
+         plev::Integer,
+         args...; kwargs...) = setprime(fmatch(args...; kwargs...),
+                                        is, plev)
 
+noprime(f::Function,
+        is::IndexSet,
+        args...) = setprime(is, 0, args...; kwargs...)
 
-function swapprime!(is::IndexSet, 
+noprime(is::IndexSet,
+        args...;
+        kwargs...) = setprime(is, 0, args...; kwargs...)
+
+function _swapprime(f::Function,
+                    i::Index,
                     pl1::Int,
-                    pl2::Int,
-                    args...; kwargs...) 
-  pos = findall(is,args...; kwargs...)
-  for n in pos
-    if plev(is[n])==pl1
-      is = setindex(is,setprime(is[n],pl2),n)
-    elseif plev(is[n])==pl2
-      is = setindex(is,setprime(is[n],pl1),n)
+                    pl2::Int)
+  if f(i)
+    if hasplev(i, pl1)
+      return setprime(i, pl2)
+    elseif hasplev(i, pl2)
+      return setprime(i, pl1)
     end
+    return i
   end
-  return is
+  return i
 end
 
+function swapprime(f::Function,
+                   is::IndexSet, 
+                   pl1::Int,
+                   pl2::Int)
+  return map(i -> _swapprime(f, i, pl1, pl2), is)
+end
 
-swapprime(is::IndexSet,pl1::Int,pl2::Int,args...; kwargs...) = swapprime!(copy(is),pl1,pl2,args...; kwargs...)
+swapprime(is::IndexSet, 
+          pl1::Int,
+          pl2::Int,
+          args...; kwargs...) = swapprime(fmatch(args...; kwargs...),
+                                          is, pl1, pl2)
 
-function mapprime!(is::IndexSet,
-                   plold::Integer,
-                   plnew::Integer,
-                   args...; kwargs...)
-  pos = findall(is, args...; kwargs...)
-  for n in pos
-    if plev(is[n])==plold 
-      is = setindex(is,setprime(is[n],plnew),n)
+function mapprime(f::Function,
+                  is::IndexSet, 
+                  pl1::Int,
+                  pl2::Int)
+  return map(i -> f(i) && hasplev(i, pl1) ? 
+                  setprime(i, pl2) : i, is)
+end
+
+mapprime(is::IndexSet,
+         pl1::Int,
+         pl2::Int,
+         args...; kwargs...) = mapprime(fmatch(args...; kwargs...),
+                                        is, pl1, pl2)
+
+function addtags(f::Function,
+                 is::IndexSet,
+                 args...)
+  return map(i -> f(i) ? addtags(i, args...) : i, is)
+end
+
+addtags(is::IndexSet,
+        tags,
+        args...; kwargs...) = addtags(fmatch(args...; kwargs...),
+                                      is, tags)
+
+function settags(f::Function,
+                 is::IndexSet,
+                 args...)
+  return map(i -> f(i) ? settags(i, args...) : i, is)
+end
+
+settags(is::IndexSet,
+        tags,
+        args...;
+        kwargs...) = settags(fmatch(args...; kwargs...),
+                             is, tags)
+
+function removetags(f::Function,
+                    is::IndexSet,
+                    args...)
+  return map(i -> f(i) ? removetags(i, args...) : i, is)
+end
+
+removetags(is::IndexSet,
+           tags,
+           args...;
+           kwargs...) = removetags(fmatch(args...; kwargs...),
+                                   is, tags)
+
+function replacetags(f::Function,
+                     is::IndexSet,
+                     args...)
+  return map(i -> f(i) ? replacetags(i, args...) : i, is)
+end
+
+replacetags(is::IndexSet,
+            tags1,
+            tags2,
+            args...;
+            kwargs...) = replacetags(fmatch(args...; kwargs...),
+                                     is, tags1, tags2)
+
+function _swaptags(f::Function,
+                   i::Index,
+                   tags1,
+                   tags2)
+  if f(i)
+    if hastags(i, tags1)
+      return replacetags(i, tags1, tags2)
+    elseif hasteags(i, tags2)
+      return replacetags(i, tags2, tags1)
     end
+    return i
   end
-  return is
+  return i
 end
 
-
-function mapprime(is::IndexSet,
-                  plold::Integer,
-                  plnew::Integer,
-                  args...; kwargs...)
-  return mapprime!(copy(is),plold,plnew,args...;kwargs...)
+function swaptags(f::Function,
+                  is::IndexSet, 
+                  tags1,
+                  tags2)
+  return map(i -> _swaptags(f, i, tags1, tags2), is)
 end
 
+swaptags(is::IndexSet,
+         tags1,
+         tags2,
+         args...;
+         kwargs...) = swaptags(fmatch(args...; kwargs...),
+                               is, tags1, tags2)
 
-function addtags!(is::IndexSet,
-                  tags,
-                  args...; kwargs...)
-  pos = findall(is, args...; kwargs...)
-  for jj ∈ pos
-    is = setindex(is,addtags(is[jj],tags),jj)
+function replaceind(is::IndexSet, i1::Index, i2::Index)
+  space(i1) != space(i2) && error("Indices must have the same spaces to be replaced")
+  pos = findfirst(is, i1)
+  isnothing(pos) && error("Index not found")
+  i2 = setdir(i2, dir(is[pos]))
+  return setindex(is, i2, pos)
+end
+
+function replaceinds(is::IndexSet, is1, is2)
+  poss = findall(is,is1)
+  for (j,pos) ∈ enumerate(poss)
+    i1 = is[pos]
+    i2 = is2[j]
+    i2 = setdir(i2, dir(i1))
+    is = setindex(is, i2, pos)
   end
-  return is
-end
-
-
-function settags!(is::IndexSet,
-                  ts,
-                  args...; kwargs...)
-  pos = findall(is, args...; kwargs...)
-  for jj ∈ pos
-    is = setindex(is,settags(is[jj],ts),jj)
-  end
-  return is
-end
-
-
-function removetags!(is::IndexSet,
-                     tags,
-                     args...; kwargs...)
-  pos = findall(is, args...; kwargs...)
-  for jj ∈ pos
-    is = setindex(is,removetags(is[jj],tags),jj)
-  end
-  return is
-end
-
-
-function replacetags!(is::IndexSet,
-                      tags_old, tags_new,
-                      args...; kwargs...)
-  pos = findall(is, args...; kwargs...)
-  for jj ∈ pos
-    is = setindex(is,replacetags(is[jj],tags_old,tags_new),jj)
-  end
-  return is
-end
-
-# TODO: write more efficient version in terms
-# of findall like swapprime!
-function swaptags!(is::IndexSet,
-                   tags1, tags2,
-                   args...; kwargs...)
-  ts1 = TagSet(tags1)
-  ts2 = TagSet(tags2)
-  # TODO: add debug check that this "random" tag
-  # doesn't clash with ts1 or ts2
-  tstemp = TagSet("e43efds")
-  is = replacetags(is, ts1, tstemp, args...; kwargs...)
-  is = replacetags(is, ts2, ts1, args...; kwargs...)
-  is = replacetags(is, tstemp, ts2, args...; kwargs...)
   return is
 end
 

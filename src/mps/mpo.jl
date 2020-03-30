@@ -259,10 +259,10 @@ function inner(B::MPO,
   for j ∈ eachindex(Bdag)
     Axcommon = commonind(A[j], x[j])
     ABcommon = uniqueind(inds(A[j], "Site"), IndexSet(Axcommon))
-    swapprime!(inds(Bdag[j]),2,3)
-    swapprime!(inds(Bdag[j]),1,2)
-    swapprime!(inds(Bdag[j]),3,1)
-    noprime!(inds(Bdag[j]),prime(ABcommon,2))
+    swapprime!(Bdag[j],2,3)
+    swapprime!(Bdag[j],1,2)
+    swapprime!(Bdag[j],3,1)
+    noprime!(Bdag[j],prime(ABcommon,2))
   end
   yB = ydag[1] * Bdag[1]
   Ax = A[1] * x[1]

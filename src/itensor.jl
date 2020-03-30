@@ -6,10 +6,6 @@ export ITensor,
        delta,
        δ,
        exphermitian,
-       replaceind!,
-       replaceind,
-       replaceinds!,
-       replaceinds,
        hasind,
        hasinds,
        hassameinds,
@@ -45,7 +41,6 @@ export ITensor,
        store,
        dense,
        setelt,
-       real_if_close,
        prime!,
        setprime!,
        noprime!,
@@ -55,8 +50,9 @@ export ITensor,
        removetags!,
        replacetags!,
        settags!,
-       swaptags!
-
+       swaptags!,
+       replaceind!,
+       replaceinds!
 
 """
 An ITensor is a tensor whose interface is 
@@ -83,8 +79,11 @@ Tensors.inds(T::ITensor) = T.inds
 Tensors.store(T::ITensor) = T.store
 ind(T::ITensor,i::Int) = inds(T)[i]
 
-setinds!(T::ITensor,is...) = (T.inds = IndexSet(is...); return T)
+setinds!(T::ITensor,is) = (T.inds = is; return T)
 setstore!(T::ITensor,st::TensorStorage) = (T.store = st; return T)
+
+setinds(T::ITensor,is) = ITensor(store(T),is)
+setstore(T::ITensor,st) = ITensor(st,inds(T))
 
 #
 # Iteration over ITensors
@@ -491,57 +490,6 @@ firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
 Tensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
                                        kwargs...)
 
-function replaceind!(A::ITensor,i::Index,j::Index)
-  pos = findfirst(inds(A),i)
-  isnothing(pos) && error("Index not found")
-  inds(A)[pos] = j
-  return A
-end
-
-function replaceind(A::ITensor,i::Index,j::Index) 
-  rA = ITensor(store(A),inds(A))
-  replaceindex!(rA,i,j)
-  return rA
-end
-
-
-function replaceinds!(A::ITensor,inds1,inds2)
-  pos = findall(inds(A),inds1)
-  for (j,p) ∈ enumerate(pos)
-    inds(A)[p] = inds2[j]
-  end
-  return setinds!(A,isA)
-end
-
-function replaceinds(A::ITensor,inds1,inds2)
-  rA = ITensor(store(A),inds(A))
-  replaceinds!(rA,inds1,inds2)
-  return rA
-end
-
-
-prime(A::ITensor,vargs...;kwargs...)= ITensor(store(A),prime(inds(A),vargs...;kwargs...))
-
-Base.adjoint(A::ITensor) = prime(A)
-
-setprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),setprime(inds(A),vargs...;kwargs...))
-
-noprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),noprime(inds(A),vargs...;kwargs...))
-
-mapprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),mapprime(inds(A),vargs...;kwargs...))
-
-swapprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),swapprime(inds(A),vargs...;kwargs...))
-
-addtags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),addtags(inds(A),vargs...;kwargs...))
-
-removetags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),removetags(inds(A),vargs...;kwargs...))
-
-replacetags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),replacetags(inds(A),vargs...;kwargs...))
-
-settags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),settags(inds(A),vargs...;kwargs...))
-
-swaptags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),swaptags(inds(A),vargs...;kwargs...))
-
 # in-place versions of priming and tagging
 for fname in (:prime,
               :setprime,
@@ -552,15 +500,43 @@ for fname in (:prime,
               :removetags,
               :replacetags,
               :settags,
-              :swaptags)
+              :swaptags,
+              :replaceind,
+              :replaceinds)
   @eval begin
-    $(Symbol(fname,:!))(A::ITensor,vargs...;kwargs...) = setinds!(A,$fname(inds(A),vargs...;kwargs...))
+    $fname(f::Function,
+           A::ITensor,
+           args...) = setinds(A,$fname(f,
+                                       inds(A),
+                                       args...))
+
+    $(Symbol(fname,:!))(f::Function,
+                        A::ITensor,
+                        args...) = setinds!(A,$fname(f,
+                                                     inds(A),
+                                                     args...))
+
+    $fname(A::ITensor,
+           args...;
+           kwargs...) = setinds(A,$fname(inds(A),
+                                         args...;
+                                         kwargs...))
+
+    $(Symbol(fname,:!))(A::ITensor,
+                        args...;
+                        kwargs...) = setinds!(A,$fname(inds(A),
+                                                       args...;
+                                                       kwargs...))
   end
 end
 
-#prime!(A::ITensor,vargs...;kwargs...)= setinds!(A,prime(inds(A),vargs...;kwargs...))
+"""
+adjoint(A::ITensor)
 
-# TODO: implement in a better way (more generically for other storage)
+For A' notation.
+"""
+Base.adjoint(A::ITensor) = prime(A)
+
 Base.:(==)(A::ITensor,B::ITensor) = (norm(A-B) == zero(promote_type(eltype(A),eltype(B))))
 
 # TODO: can we define this as:
@@ -571,14 +547,6 @@ function Base.isapprox(A::ITensor,
                        rtol::Real=Base.rtoldefault(eltype(A),eltype(B),atol))
     return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
 end
-
-# TODO: bring this back or just use T[]?
-# I think T[] may not be generic, since it may only work if order(T)==0
-# so it may be nice to have a seperate scalar(T) for when dim(T)==1
-#function scalar(T::ITensor)
-#  !(order(T)==0 || dim(T)==1) && throw(ArgumentError("ITensor with inds $(inds(T)) is not a scalar"))
-#  return scalar(tensor(store(T),inds(T)))
-#end
 
 function Random.randn!(T::ITensor)
   return randn!(tensor(T))

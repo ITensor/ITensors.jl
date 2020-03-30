@@ -2,6 +2,7 @@ export Index,
        IndexVal,
        dag,
        prime,
+       setprime,
        noprime,
        addtags,
        settags,
@@ -16,10 +17,10 @@ export Index,
        id,
        isdefault,
        dir,
+       setdir,
        plev,
        tags,
        ind,
-       setprime,
        sim,
        val,
        hasqns
@@ -84,6 +85,14 @@ space(i::Index) = i.space
 Obtain the direction of an Index (In or Out)
 """
 Tensors.dir(i::Index) = i.dir
+
+"""
+    setdir(i::Index, dir::Arrow)
+Create a copy of Index i with the specified direction.
+"""
+function setdir(i::Index, dir::Arrow)
+  return Index(id(i),copy(space(i)),dir,copy(tags(i)),plev(i))
+end
 
 """
     tags(i::Index)
