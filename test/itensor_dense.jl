@@ -321,42 +321,45 @@ end
   ltmp = settags(l,"Temp")
   A1 = randomITensor(s1,l,l')
   A2 = randomITensor(s2,l',l'')
-  @testset "findindex(::ITensor,::String)" begin
-    @test s1==findindex(A1,"Site")
-    @test s1==findindex(A1,"s=1")
-    @test s1==findindex(A1,"s=1,Site")
-    @test l==findindex(A1,"Link";plev=0)
-    @test l'==findindex(A1;plev=1)
-    @test l'==findindex(A1,"Link";plev=1)
-    @test s2==findindex(A2,"Site")
-    @test s2==findindex(A2,"s=2")
-    @test s2==findindex(A2,"Site")
-    @test s2==findindex(A2,plev=0)
-    @test s2==findindex(A2,"s=2";plev=0)
-    @test s2==findindex(A2,"Site";plev=0)
-    @test s2==findindex(A2,"s=2,Site";plev=0)
-    @test l'==findindex(A2;plev=1)
-    @test l'==findindex(A2,"Link";plev=1)
-    @test l''==findindex(A2;plev=2)
-    @test l''==findindex(A2,"Link";plev=2)
+  @testset "firstind(::ITensor,::String)" begin
+    @test s1==firstind(A1, "Site")
+    @test s1==firstind(A1, "s=1")
+    @test s1==firstind(A1, "s=1,Site")
+    @test l==firstind(A1; tags="Link", plev=0)
+    @test l'==firstind(A1; plev=1)
+    @test l'==firstind(A1; tags="Link", plev=1)
+    @test s2==firstind(A2, "Site")
+    @test s2==firstind(A2, "s=2")
+    @test s2==firstind(A2, "Site")
+    @test s2==firstind(A2, plev=0)
+    @test s2==firstind(A2; tags="s=2", plev=0)
+    @test s2==firstind(A2; tags="Site", plev=0)
+    @test s2==firstind(A2; tags="s=2,Site", plev=0)
+    @test l'==firstind(A2; plev=1)
+    @test l'==firstind(A2; tags="Link", plev=1)
+    @test l''==firstind(A2; plev=2)
+    @test l''==firstind(A2; tags="Link", plev=2)
   end
   @testset "addtags(::ITensor,::String,::String)" begin
-    s1u = addtags(s1,"u")
-    lu = addtags(l,"u")
+    s1u = addtags(s1, "u")
+    lu = addtags(l, "u")
 
-    A1u = addtags(A1,"u")
+    A1u = addtags(A1, "u")
     @test hasinds(A1u,s1u,lu,lu')
 
-    A1u = addtags(A1,"u","Link")
+    A1u = addtags(A1, "u", "Link")
     @test hasinds(A1u,s1,lu,lu')
 
-    A1u = addtags(A1,"u";plev=0)
+    A1u = addtags(A1, "u"; tags="Link")
+    @test hasinds(A1u,s1,lu,lu')
+
+    A1u = addtags(A1, "u"; plev=0)
     @test hasinds(A1u,s1u,lu,l')
 
-    A1u = addtags(A1,"u";tags="Link",plev=0)
+    A1u = addtags(A1, "u"; tags="Link", plev=0)
     @test hasinds(A1u,s1,lu,l')
 
-    A1u = addtags(A1,"u","Link";plev=1)
+    A1u = addtags(A1, "u"; tags="Link", plev=1)
     @test hasinds(A1u,s1,l,lu')
   end
   @testset "removetags(::ITensor,::String,::String)" begin
@@ -413,12 +416,12 @@ end
   A1 = randomITensor(s1,l,l')
   A2 = randomITensor(s2,l',l'')
 
-  @testset "replaceindex and replaceinds" begin
-    rA1 = replaceindex(A1,s1,s2)
+  @testset "replaceind and replaceinds" begin
+    rA1 = replaceind(A1,s1,s2)
     @test hasinds(rA1,s2,l,l')
     @test hasinds(A1,s1,l,l')
 
-    replaceindex!(A1,s1,s2)
+    replaceind!(A1,s1,s2)
     @test hasinds(A1,s2,l,l')
 
     rA2 = replaceinds(A2,(s2,l'),(s1,l))
@@ -552,7 +555,7 @@ end
 
     @testset "Test QR decomposition of an ITensor" begin
       Q,R,q = qr(A,(i,l))
-      q = commonindex(Q,R)
+      q = commonind(Q,R)
       @test A≈Q*R
       @test Q*dag(prime(Q,q))≈δ(SType,q,q') atol=1e-14
     end

@@ -7,12 +7,12 @@ function LinearAlgebra.qr(A::ITensor,
                           Linds...;
                           kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,qr")
-  Lis = commoninds(inds(A),IndexSet(Linds...))
-  Ris = uniqueinds(inds(A),Lis)
+  Lis = commoninds(A,IndexSet(Linds...))
+  Ris = uniqueinds(A,Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
   Q,R = ITensor(QT),ITensor(RT)
-  q = commonindex(Q,R)
+  q = commonind(Q,R)
   settags!(Q,tags,q)
   settags!(R,tags,q)
   q = settags(q,tags)
@@ -23,8 +23,8 @@ end
 function Tensors.polar(A::ITensor,
                        Linds...;
                        kwargs...)
-  Lis = commoninds(inds(A),IndexSet(Linds...))
-  Ris = uniqueinds(inds(A),Lis)
+  Lis = commoninds(A,IndexSet(Linds...))
+  Ris = uniqueinds(A,Lis)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   UT,PT = polar(tensor(A),Lpos,Rpos)
   U,P = ITensor(UT),ITensor(PT)
@@ -86,8 +86,8 @@ function LinearAlgebra.svd(A::ITensor,
                            kwargs...)
   utags::TagSet = get(kwargs,:utags,"Link,u")
   vtags::TagSet = get(kwargs,:vtags,"Link,v")
-  Lis = commoninds(inds(A),IndexSet(Linds...))
-  Ris = uniqueinds(inds(A),Lis)
+  Lis = commoninds(A,IndexSet(Linds...))
+  Ris = uniqueinds(A,Lis)
 
   CL,cL = combiner(Lis...)
   CR,cR = combiner(Ris...)
@@ -101,8 +101,8 @@ function LinearAlgebra.svd(A::ITensor,
   UT,ST,VT,spec = svd(tensor(AC);kwargs...)
   UC,S,VC = itensor(UT),itensor(ST),itensor(VT)
 
-  u = commonindex(S,UC)
-  v = commonindex(S,VC)
+  u = commonind(S,UC)
+  v = commonind(S,VC)
 
   if hasqns(A)
     # Fix the flux of UC,S,VC
@@ -144,8 +144,8 @@ function _factorize_center(A::ITensor,
                            kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
   U,S,V,spec = svd(A,Linds...;kwargs...)
-  u = commonindex(U,S)
-  v = commonindex(S,V)
+  u = commonind(U,S)
+  v = commonind(S,V)
   for ss = 1:dim(u)
     S[ss,ss] = sqrt(S[ss,ss])
   end
@@ -153,8 +153,8 @@ function _factorize_center(A::ITensor,
   FV = settags(S*V,tags,u)
   u = settags(u,tags)
   v = settags(v,tags)
-  replaceindex!(FU,v,u)
-  return FU,FV,spec,commonindex(FU,FV)
+  replaceind!(FU,v,u)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 function _factorize_from_left_svd(A::ITensor,
@@ -162,10 +162,10 @@ function _factorize_from_left_svd(A::ITensor,
                                   kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
   U,S,V,spec = svd(A,Linds...;kwargs...)
-  u = commonindex(U,S)
+  u = commonind(U,S)
   FU = settags(U,tags,u)
   FV = settags(S*V,tags,u)
-  return FU,FV,spec,commonindex(FU,FV)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 function _factorize_from_right_svd(A::ITensor,
@@ -173,32 +173,32 @@ function _factorize_from_right_svd(A::ITensor,
                                    kwargs...)
   tags::TagSet = get(kwargs,:tags,"Link,u")
   U,S,V,spec = svd(A,Linds...;kwargs...)
-  v = commonindex(S,V)
+  v = commonind(S,V)
   FU = settags(U*S,tags,v)
   FV = settags(V,tags,v)
-  return FU,FV,spec,commonindex(FU,FV)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 function _factorize_from_left_eigen(A::ITensor,
                                     Linds...;
                                     kwargs...)
-  Lis = commoninds(inds(A),IndexSet(Linds...))
+  Lis = commoninds(A,IndexSet(Linds...))
   A² = A*prime(dag(A),Lis)
   FU,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
                                        kwargs...)
   FV = dag(FU)*A
-  return FU,FV,spec,commonindex(FU,FV)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 function _factorize_from_right_eigen(A::ITensor,
                                      Linds...;
                                      kwargs...)
-  Ris = uniqueinds(inds(A),IndexSet(Linds...))
+  Ris = uniqueinds(A,IndexSet(Linds...))
   A² = A*prime(dag(A),Ris)
   FV,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
                                        kwargs...)
   FU = A*dag(FV)
-  return FU,FV,spec,commonindex(FU,FV)
+  return FU,FV,spec,commonind(FU,FV)
 end
 
 """
@@ -257,7 +257,7 @@ Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
 function LinearAlgebra.eigen(A::ITensor,
-                             Linds=findinds(A;plev=0),
+                             Linds=inds(A;plev=0),
                              Rinds=prime(IndexSet(Linds));
                              kwargs...)
   ishermitian::Bool = get(kwargs,:ishermitian,false)
@@ -269,8 +269,8 @@ function LinearAlgebra.eigen(A::ITensor,
 
   (lefttags==righttags && leftplev==rightplev) && error("In eigen, left tags and prime level must be different from right tags and prime level")
 
-  Lis = commoninds(inds(A),IndexSet(Linds))
-  Ris = commoninds(inds(A),IndexSet(Rinds))
+  Lis = commoninds(A,IndexSet(Linds))
+  Ris = commoninds(A,IndexSet(Rinds))
 
   CL,cL = combiner(Lis...)
   CR,cR = combiner(Ris...)
@@ -285,7 +285,7 @@ function LinearAlgebra.eigen(A::ITensor,
   UT,DT,spec = eigen(AT;kwargs...)
   UC,D = itensor(UT),itensor(DT)
 
-  u = commonindex(UC,D)
+  u = commonind(UC,D)
 
   if hasqns(A)
     # Fix the flux of UC,D
@@ -303,40 +303,21 @@ function LinearAlgebra.eigen(A::ITensor,
   U = UC*dag(CL)
 
   # Set left index tags
-  u = commonindex(D,U)
+  u = commonind(D,U)
   settags!(U,lefttags,u)
   settags!(D,lefttags,u)
 
   # Set left index plev
-  u = commonindex(D,U)
+  u = commonind(D,U)
   U = setprime(U,leftplev,u)
   D = setprime(D,leftplev,u)
 
   # Set right index tags and plev
-  v = uniqueindex(D,U)
-  replaceindex!(D,v,setprime(settags(u,righttags),rightplev))
+  v = uniqueind(D,U)
+  replaceind!(D,v,setprime(settags(u,righttags),rightplev))
 
-  u = commonindex(D,U) 
-  v = uniqueindex(D,U)
+  u = commonind(D,U) 
+  v = uniqueind(D,U)
   return TruncEigen(U,D,spec,u,v)
 end
-
-#function LinearAlgebra.eigen(A::ITensor,
-#                             Linds=findinds(A,("",0)),
-#                             Rinds=prime(IndexSet(Linds));
-#                             kwargs...)
-#  tags::TagSet = get(kwargs,:tags,"Link,eigen")
-#  Lis = commoninds(inds(A),IndexSet(Linds))
-#  Ris = uniqueinds(inds(A),Lis)
-#  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-#  UT,DT = eigen(tensor(A),Lpos,Rpos;kwargs...)
-#  U,D = ITensor(UT),ITensor(DT)
-#  u = commonindex(U,D)
-#  settags!(U,tags,u)
-#  settags!(D,tags,u)
-#  u = settags(u,tags)
-#  v = uniqueindex(D,U)
-#  D *= δ(v,u')
-#  return U,D,u
-#end
 

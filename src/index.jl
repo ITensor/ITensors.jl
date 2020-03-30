@@ -2,6 +2,7 @@ export Index,
        IndexVal,
        dag,
        prime,
+       setprime,
        noprime,
        addtags,
        settags,
@@ -11,15 +12,18 @@ export Index,
        replacetags!,
        removetags,
        hastags,
+       hasplev,
+       hasid,
        id,
        isdefault,
        dir,
+       setdir,
        plev,
        tags,
        ind,
-       setprime,
        sim,
-       val
+       val,
+       hasqns
 
 const IDType = UInt64
 
@@ -83,6 +87,14 @@ Obtain the direction of an Index (In or Out)
 Tensors.dir(i::Index) = i.dir
 
 """
+    setdir(i::Index, dir::Arrow)
+Create a copy of Index i with the specified direction.
+"""
+function setdir(i::Index, dir::Arrow)
+  return Index(id(i),copy(space(i)),dir,copy(tags(i)),plev(i))
+end
+
+"""
     tags(i::Index)
 Obtain the TagSet of an Index
 """
@@ -104,6 +116,13 @@ tags are compared.
 function Base.:(==)(i1::Index,i2::Index)
   return id(i1) == id(i2) && tags(i1) == tags(i2) && plev(i1) == plev(i2)
 end
+
+# This is so that when IndexSets are converted
+# to Julia Base Sets, the hashing is done correctly
+function Base.hash(i::Index, h::UInt)
+  return hash((id(i),tags(i),plev(i)), h)
+end
+
 
 """
     copy(i::Index)
@@ -142,7 +161,36 @@ Example:
     hastags(i,"SpinHalf,Site") == true
     hastags(i,"Link") == false
 """
-hastags(i::Index, ts) = hastags(tags(i),ts)
+hastags(i::Index,
+        ts::Union{AbstractString,TagSet}) = hastags(tags(i),ts)
+
+hastags(ts::Union{AbstractString,TagSet}) = x->hastags(x,ts)
+
+"""
+    hasplev(i::Index,plev::Int)
+Check if an `Index` `i` has the provided prime level.
+
+Example:
+    i = Index(2; plev=2)
+    hasplev(i,2) == true
+    hastags(i,1) == false
+"""
+hasplev(i::Index, pl::Int) = plev(i)==pl
+
+hasplev(pl::Int) = x->hasplev(x,pl)
+
+"""
+    hasid(i::Index,id::IDType)
+Check if an `Index` `i` has the provided id.
+
+Example:
+    i = Index(2)
+    hasid(i,id(i)) == true
+    hasid(i,IDType(2)) == false
+"""
+hasid(ind::Index, i::IDType) = id(ind)==i
+
+hasid(i::IDType) = x->hasid(x,i)
 
 """
     settags(i::Index,ts)

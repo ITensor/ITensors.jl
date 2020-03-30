@@ -14,9 +14,9 @@ T is assumed to have Indices with tags "left", "right", "up", and "down".
 
 The indices of T must obey: 
 
-`findindex(T,"left") = tags(findindex(T,"right"),"right->left")`
+`firstind(T,"left") = tags(firstind(T,"right"),"right->left")`
 
-`findindex(T,"up") = tags(findindex(T,"down"),"down->up")`
+`firstind(T,"up") = tags(firstind(T,"down"),"down->up")`
 
 χmax is the maximum renormalized bond dimension.
 
@@ -65,20 +65,20 @@ function trg(T::ITensor, horiz_inds, vert_inds;
     T = Fl*Fu*Fr*Fd
     T = replacetags(T,"renorm","orig")
 
-    l = findindex(T,"left")
-    r = findindex(T,"right")
-    u = findindex(T,"up")
-    d = findindex(T,"down")
+    l = firstind(T,"left")
+    r = firstind(T,"right")
+    u = firstind(T,"up")
+    d = firstind(T,"down")
 
     trT = abs((T*δ(l,r)*δ(u,d))[])
     T = T/trT
     κ *= trT^(1.0/2^n)
   end
   T = removetags(T,"orig")
-  l = findindex(T,"left")
-  r = findindex(T,"right")
-  u = findindex(T,"up")
-  d = findindex(T,"down")
+  l = firstind(T,"left")
+  r = firstind(T,"right")
+  u = firstind(T,"up")
+  d = firstind(T,"down")
   return κ,T,(l,r),(u,d)
 end
 

@@ -23,6 +23,8 @@ end
 
 TagSet(ts::TagSet) = ts
 
+not(ts::Union{AbstractString,TagSet}) = Not(TagSet(ts))
+
 function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   for n = 1:ntags
     @inbounds ts[n] == tag && return true

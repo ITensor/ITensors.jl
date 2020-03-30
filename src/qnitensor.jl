@@ -189,14 +189,3 @@ function delta(::Type{ElT},is::QNIndexSet) where {ElT<:Number}
   return itensor(T)
 end
 
-function replaceindex!(A::ITensor,i::QNIndex,j::QNIndex)
-  space(i) != space(j) && error("Indices must have the same spaces to be replaced")
-  pos = indexpositions(A,i)
-  isempty(pos) && error("Index not found")
-  curdir = dir(inds(A)[pos[1]])
-  j = setdir(j,curdir)
-  return setinds!(A,setindex(inds(A),j,pos[1]))
-end
-
-flux(T::ITensor,vals::Int...) = flux(inds(T),vals...)
-

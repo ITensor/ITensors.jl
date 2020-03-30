@@ -2,16 +2,24 @@ export ITensor,
        itensor,
        axpy!,
        combiner,
-       combinedindex,
+       combinedind,
        delta,
        δ,
        exphermitian,
-       replaceindex!,
-       replaceindex,
-       replaceinds!,
-       replaceinds,
+       hasind,
+       hasinds,
+       hassameinds,
+       firstind,
        inds,
        ind,
+       commoninds,
+       commonind,
+       noncommoninds,
+       noncommonind,
+       uniqueinds,
+       uniqueind,
+       unioninds,
+       unionind,
        isnull,
        scale!,
        matmul,
@@ -33,7 +41,6 @@ export ITensor,
        store,
        dense,
        setelt,
-       real_if_close,
        prime!,
        setprime!,
        noprime!,
@@ -43,7 +50,9 @@ export ITensor,
        removetags!,
        replacetags!,
        settags!,
-       swaptags!
+       swaptags!,
+       replaceind!,
+       replaceinds!
 
 """
 An ITensor is a tensor whose interface is 
@@ -70,8 +79,11 @@ Tensors.inds(T::ITensor) = T.inds
 Tensors.store(T::ITensor) = T.store
 ind(T::ITensor,i::Int) = inds(T)[i]
 
-setinds!(T::ITensor,is...) = (T.inds = IndexSet(is...); return T)
+setinds!(T::ITensor,is) = (T.inds = is; return T)
 setstore!(T::ITensor,st::TensorStorage) = (T.store = st; return T)
+
+setinds(T::ITensor,is) = ITensor(store(T),is)
+setstore(T::ITensor,st) = ITensor(st,inds(T))
 
 #
 # Iteration over ITensors
@@ -301,7 +313,7 @@ Base.complex(T::ITensor) = ITensor(complex(tensor(T)))
 
 # This constructor allows many IndexSet
 # set operations to work with ITensors
-IndexSet(T::ITensor) = inds(T)
+#IndexSet(T::ITensor) = inds(T)
 
 Base.eltype(T::ITensor) = eltype(tensor(T))
 
@@ -425,64 +437,58 @@ function Base.fill!(T::ITensor,
   return T
 end
 
-hasindex(A::ITensor,i::Index) = hasindex(inds(A),i)
-hasinds(A::ITensor,is::Index...) = hasinds(inds(A),is...)
-hasinds(A::ITensor,is) = hasinds(inds(A),is)
-hassameinds(A::ITensor,is) = hassameinds(inds(A),is)
-hassameinds(is,A::ITensor) = hassameinds(A,is)
-hassameinds(A::ITensor,B::ITensor) = hassameinds(inds(A),inds(B))
+itensor2inds(A::ITensor) = inds(A)
+itensor2inds(A) = A
 
-# TODO: implement in terms of delta tensors (better for QNs)
-function replaceindex!(A::ITensor,i::Index,j::Index)
-  pos = indexpositions(A,i)
-  isempty(pos) && error("Index not found")
-  return setinds!(A,setindex(inds(A),j,pos[1]))
-end
 
-function replaceindex(A::ITensor,i::Index,j::Index) 
-  rA = ITensor(store(A),inds(A))
-  replaceindex!(rA,i,j)
-  return rA
-end
+# in
+hasind(A,i::Index) = i ∈ itensor2inds(A)
 
-function replaceinds!(A::ITensor,inds1,inds2)
-  isA = inds(A)
-  is1 = IndexSet(inds1)
-  is2 = IndexSet(inds2)
-  pos = indexpositions(A,is1)
-  for (j,p) ∈ enumerate(pos)
-    isA = setindex(isA,is2[j],p)
-  end
-  return setinds!(A,isA)
-end
+# issubset
+hasinds(A,is) = is ⊆ itensor2inds(A)
+hasinds(A,is::Index...) = hasinds(A,IndexSet(is...))
 
-function replaceinds(A::ITensor,inds1,inds2)
-  rA = ITensor(store(A),inds(A))
-  replaceinds!(rA,inds1,inds2)
-  return rA
-end
+# issetequal
+hassameinds(A,B) = issetequal(itensor2inds(A),
+                              itensor2inds(B))
 
-prime(A::ITensor,vargs...;kwargs...)= ITensor(store(A),prime(inds(A),vargs...;kwargs...))
+# intersect
+commoninds(A...; kwargs...) = IndexSet(intersect(itensor2inds.(A)...;
+                                                 kwargs...)...)
 
-Base.adjoint(A::ITensor) = prime(A)
+# firstintersect
+commonind(A...; kwargs...) = firstintersect(itensor2inds.(A)...;
+                                            kwargs...)
 
-setprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),setprime(inds(A),vargs...;kwargs...))
+# symdiff
+noncommoninds(A...; kwargs...) = IndexSet(symdiff(itensor2inds.(A)...;
+                                               kwargs...)...)
 
-noprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),noprime(inds(A),vargs...;kwargs...))
+# firstsymdiff
+noncommonind(A...; kwargs...) = getfirst(symdiff(itensor2inds.(A)...;
+                                                 kwargs...))
 
-mapprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),mapprime(inds(A),vargs...;kwargs...))
+# setdiff
+uniqueinds(A...; kwargs...) = IndexSet(setdiff(itensor2inds.(A)...;
+                                               kwargs...)...)
 
-swapprime(A::ITensor,vargs...;kwargs...) = ITensor(store(A),swapprime(inds(A),vargs...;kwargs...))
+# firstsetdiff
+uniqueind(A...; kwargs...) = firstsetdiff(itensor2inds.(A)...;
+                                          kwargs...)
 
-addtags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),addtags(inds(A),vargs...;kwargs...))
+# union
+unioninds(A...; kwargs...) = IndexSet(union(itensor2inds.(A)...;
+                                            kwargs...)...)
 
-removetags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),removetags(inds(A),vargs...;kwargs...))
+# firstsymdiff
+unionind(A...; kwargs...) = getfirst(union(itensor2inds.(A)...;
+                                           kwargs...))
 
-replacetags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),replacetags(inds(A),vargs...;kwargs...))
+firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
+                                     kwargs...)
 
-settags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),settags(inds(A),vargs...;kwargs...))
-
-swaptags(A::ITensor,vargs...;kwargs...) = ITensor(store(A),swaptags(inds(A),vargs...;kwargs...))
+Tensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
+                                       kwargs...)
 
 # in-place versions of priming and tagging
 for fname in (:prime,
@@ -494,15 +500,43 @@ for fname in (:prime,
               :removetags,
               :replacetags,
               :settags,
-              :swaptags)
+              :swaptags,
+              :replaceind,
+              :replaceinds)
   @eval begin
-    $(Symbol(fname,:!))(A::ITensor,vargs...;kwargs...) = setinds!(A,$fname(inds(A),vargs...;kwargs...))
+    $fname(f::Function,
+           A::ITensor,
+           args...) = setinds(A,$fname(f,
+                                       inds(A),
+                                       args...))
+
+    $(Symbol(fname,:!))(f::Function,
+                        A::ITensor,
+                        args...) = setinds!(A,$fname(f,
+                                                     inds(A),
+                                                     args...))
+
+    $fname(A::ITensor,
+           args...;
+           kwargs...) = setinds(A,$fname(inds(A),
+                                         args...;
+                                         kwargs...))
+
+    $(Symbol(fname,:!))(A::ITensor,
+                        args...;
+                        kwargs...) = setinds!(A,$fname(inds(A),
+                                                       args...;
+                                                       kwargs...))
   end
 end
 
-#prime!(A::ITensor,vargs...;kwargs...)= setinds!(A,prime(inds(A),vargs...;kwargs...))
+"""
+adjoint(A::ITensor)
 
-# TODO: implement in a better way (more generically for other storage)
+For A' notation.
+"""
+Base.adjoint(A::ITensor) = prime(A)
+
 Base.:(==)(A::ITensor,B::ITensor) = (norm(A-B) == zero(promote_type(eltype(A),eltype(B))))
 
 # TODO: can we define this as:
@@ -513,14 +547,6 @@ function Base.isapprox(A::ITensor,
                        rtol::Real=Base.rtoldefault(eltype(A),eltype(B),atol))
     return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
 end
-
-# TODO: bring this back or just use T[]?
-# I think T[] may not be generic, since it may only work if order(T)==0
-# so it may be nice to have a seperate scalar(T) for when dim(T)==1
-#function scalar(T::ITensor)
-#  !(order(T)==0 || dim(T)==1) && throw(ArgumentError("ITensor with inds $(inds(T)) is not a scalar"))
-#  return scalar(tensor(store(T),inds(T)))
-#end
 
 function Random.randn!(T::ITensor)
   return randn!(tensor(T))
@@ -565,7 +591,7 @@ function combiner(; kwargs...)
   return ITensor(Combiner(),IndexSet()),nothing
 end
 
-combinedindex(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
+combinedind(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
@@ -1282,3 +1308,22 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
 
   return ITensor(store,inds)
 end
+
+#
+# Deprecations
+#
+
+@deprecate findindex(args...; kwargs...) firstind(args...; kwargs...)
+
+@deprecate findinds(args...; kwargs...) inds(args...; kwargs...)
+
+@deprecate commonindex(args...; kwargs...) commonind(args...; kwargs...)
+
+@deprecate uniqueindex(args...; kwargs...) uniqueind(args...; kwargs...)
+
+@deprecate replaceindex!(args...; kwargs...) replaceind!(args...; kwargs...)
+
+@deprecate siteindex(args...; kwargs...) siteind(args...; kwargs...)
+
+@deprecate linkindex(args...; kwargs...) linkind(args...; kwargs...)
+

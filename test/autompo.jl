@@ -323,7 +323,7 @@ end
     add!(ampo, 0.5, "Sx",1)
     add!(ampo, 0.5, "Sy",1)
     H = toMPO(ampo, sites)
-    l = commonindex(H[1],H[2])
+    l = commonind(H[1],H[2])
     T = setelt(l[1])*H[1]
     O = op(sites[1],"Sx")+op(sites[1],"Sy")
     @test norm(T-0.5*O) < 1E-8
@@ -515,7 +515,7 @@ end
       ampo += (0.5, "Sx",1)
       ampo += (0.5, "Sy",1)
       H = toMPO(ampo, sites)
-      l = commonindex(H[1],H[2])
+      l = commonind(H[1],H[2])
       T = setelt(l[1])*H[1]
       O = op(sites[1],"Sx")+op(sites[1],"Sy")
       @test norm(T-0.5*O) < 1E-8
@@ -709,7 +709,7 @@ end
       ampo .+= (0.5, "Sx",1)
       ampo .+= (0.5, "Sy",1)
       H = toMPO(ampo, sites)
-      l = commonindex(H[1],H[2])
+      l = commonind(H[1],H[2])
       T = setelt(l[1])*H[1]
       O = op(sites[1],"Sx")+op(sites[1],"Sy")
       @test norm(T-0.5*O) < 1E-8
