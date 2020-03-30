@@ -58,7 +58,7 @@ using ITensors,
     u1 = Index(2,"u1")
     u2 = Index(2,"u2")
 
-    T = ITensor(M,t1,t2,u1,u2)
+    T = itensor(M,t1,t2,u1,u2)
 
     U,S,V = svd(T,(u1,t1))
     @test norm(U*S*V-T)/norm(T) < 1E-10

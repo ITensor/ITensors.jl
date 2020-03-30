@@ -25,7 +25,7 @@ eigArr = eigen(array(A))
 
   U,S,V = svd(rand(100,100))
   S ./= norm(S)
-  A = ITensor(U*ITensors.LinearAlgebra.diagm(0=>S)*V', i,j)
+  A = itensor(U*ITensors.LinearAlgebra.diagm(0=>S)*V', i,j)
 
   spec = svd(A,i).spec
 
