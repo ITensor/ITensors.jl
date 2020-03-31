@@ -181,6 +181,11 @@ function replacesites!(M::MPS,sites)
   return M
 end
 
+"""
+inner(psi::MPS, phi::MPS)
+
+Compute <psi|phi>
+"""
 function inner(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
@@ -199,19 +204,27 @@ function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  FU,FV,spec = factorize(phi,inds(M[b]); which_factorization="automatic",
-                           tags=tags(linkind(M,b)), kwargs...)
-  M[b]   = FU
-  M[b+1] = FV
-
-  dir = get(kwargs,:dir,"center")
-  if dir=="fromright"
-    M.llim_ ==b && (M.llim_ -= 1)
-    M.rlim_ == b+2 && (M.rlim_ -= 1)
-  elseif dir=="fromleft"
+  dir = get(kwargs, :dir, "fromleft")
+  which_decomp = get(kwargs, :which_decomp, "automatic")
+  if dir == "fromleft"
     M.llim_ == b-1 && (M.llim_ += 1)
     M.rlim_ == b+1 && (M.rlim_ += 1)
+    ortho = "left"
+  elseif dir == "fromright"
+    M.llim_ == b   && (M.llim_ -= 1)
+    M.rlim_ == b+2 && (M.rlim_ -= 1)
+    ortho = "right"
+  else
+    error("In replacebond!, dir keyword $dir not supported. Use fromleft or fromright")
   end
+  kwargs_factorize = Dict(kwargs)
+  delete!(kwargs_factorize, :dir)
+  L,R,spec = factorize(phi,inds(M[b]); which_decomp = which_decomp,
+                                       tags = tags(linkind(M,b)),
+                                       ortho = ortho,
+                                       kwargs_factorize...)
+  M[b]   = L
+  M[b+1] = R
   return spec
 end
 
@@ -286,10 +299,3 @@ function sample(m::MPS)
   end
   return result
 end
-
-
-@doc """
-inner(psi::MPS, phi::MPS)
-
-Compute <psi|phi>
-""" inner
