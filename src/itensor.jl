@@ -700,13 +700,26 @@ modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
 """
 function Base.:*(A::ITensor, B::ITensor)
-  (Alabels,Blabels) = compute_contraction_labels(inds(A),inds(B))
-  CT = contract(tensor(A),Alabels,tensor(B),Blabels)
+  (labelsA,labelsB) = compute_contraction_labels(inds(A),inds(B))
+  CT = contract(tensor(A),labelsA,tensor(B),labelsB)
   C = itensor(CT)
   warnTensorOrder = GLOBAL_PARAMS["WarnTensorOrder"]
   if warnTensorOrder > 0 && order(C) >= warnTensorOrder
     @warn "Contraction resulted in ITensor with $(order(C)) indices"
   end
+  return C
+end
+
+function LinearAlgebra.mul!(C::ITensor, A::ITensor, B::ITensor,
+                            α::Number=1, β::Number=0)
+  (labelsC,labelsA,labelsB) = compute_contraction_labels(inds(C),
+                                                         inds(A),
+                                                         inds(B))
+  CT = Tensors.contract!!(tensor(C), labelsC,
+                          tensor(A), labelsA,
+                          tensor(B), labelsB,
+                          α, β)
+  C = itensor(CT)
   return C
 end
 

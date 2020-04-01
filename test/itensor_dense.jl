@@ -182,6 +182,68 @@ end
   @test dot(A, B) == 11.0
 end
 
+@testset "mul!" begin
+  i = Index(2; tags="i")
+  j = Index(2; tags="j")
+  k = Index(2; tags="k")
+
+  A = randomITensor(i, j)
+  B = randomITensor(j, k)
+  C = randomITensor(i, k)
+  mul!(C, A, B)
+  @test C ≈ A*B
+
+  A = randomITensor(i, j)
+  B = randomITensor(j, k)
+  C = randomITensor(k, i)
+  mul!(C, A, B)
+  @test C ≈ A*B
+
+  A = randomITensor(i, j)
+  B = randomITensor(k, j)
+  C = randomITensor(i, k)
+  mul!(C, A, B)
+  @test C ≈ A*B
+
+  A = randomITensor(i, j)
+  B = randomITensor(k, j)
+  C = randomITensor(k, i)
+  mul!(C, A, B)
+  @test C ≈ A*B
+
+  A = randomITensor(j, i)
+  B = randomITensor(j, k)
+  C = randomITensor(i, k)
+  mul!(C, A, B)
+  @test C ≈ A*B
+
+  A = randomITensor(j, i)
+  B = randomITensor(j, k)
+  C = randomITensor(k, i)
+  mul!(C, A, B)
+  @test C ≈ A*B
+
+  A = randomITensor(j, i)
+  B = randomITensor(k, j)
+  C = randomITensor(i, k)
+  mul!(C, A, B)
+  @test C ≈ A*B
+
+  A = randomITensor(j, i)
+  B = randomITensor(k, j)
+  C = randomITensor(k, i)
+  mul!(C, A, B)
+  @test C ≈ A*B
+
+  A = randomITensor(i, j)
+  B = randomITensor(k, j)
+  C = randomITensor(k, i)
+  α = 2
+  β = 3
+  R = mul!(copy(C), A, B, α, β)
+  @test α*A*B+β*C ≈ R
+end
+
 @testset "exponentiate" begin
   s1 = Index(2,"s1")
   s2 = Index(2,"s2")
