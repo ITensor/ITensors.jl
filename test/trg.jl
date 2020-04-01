@@ -45,8 +45,12 @@ function trg(T::ITensor, horiz_inds, vert_inds;
   κ = 1.0
 
   for n = 1:nsteps
-    Fr,Fl = factorize(T, (l,u); maxdim=χmax, tags="renorm")
-    Fd,Fu = factorize(T, (r,u); maxdim=χmax, tags="renorm")
+    Fr,Fl = factorize(T, (l,u); ortho="none",
+                                maxdim=χmax,
+                                tags="renorm")
+    Fd,Fu = factorize(T, (r,u); ortho="none",
+                                maxdim=χmax,
+                                tags="renorm")
 
     Fl = addtags(Fl,"left","renorm")
     Fr = addtags(Fr,"right","renorm")

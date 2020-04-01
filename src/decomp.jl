@@ -302,7 +302,7 @@ function LinearAlgebra.factorize(A::ITensor,
                                  Linds...;
                                  kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
-  which_decomp::String = get(kwargs, :which_decomp, "svd")
+  which_decomp::String = get(kwargs, :which_decomp, "automatic")
   cutoff::Float64 = get(kwargs, :cutoff, 0.0)
 
   # Deprecated keywords
