@@ -14,15 +14,15 @@ let
   println("Using AutoMPO")
   ampo = AutoMPO()
   for j=1:N-1
-    add!(ampo,"Sz",j,"Sz",j+1)
-    add!(ampo,0.5,"S+",j,"S-",j+1)
-    add!(ampo,0.5,"S-",j,"S+",j+1)
+    ampo += ("Sz",j,"Sz",j+1)
+    ampo += (0.5,"S+",j,"S-",j+1)
+    ampo += (0.5,"S-",j,"S+",j+1)
   end
   J2 = 0.1
   for j=1:N-2
-    add!(ampo,J2,"Sz",j,"Sz",j+2)
-  #  add!(ampo,0.5*J2,"S+",j,"S-",j+2)
-  #  add!(ampo,0.5*J2,"S-",j,"S+",j+2)
+    ampo += (J2,"Sz",j,"Sz",j+2)
+  #  ampo += (0.5*J2,"S+",j,"S-",j+2)
+  #  ampo += (0.5*J2,"S-",j,"S+",j+2)
   end
   H = toMPO(ampo,sites)
 
