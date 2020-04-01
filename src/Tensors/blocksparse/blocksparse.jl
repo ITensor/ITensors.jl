@@ -72,8 +72,17 @@ end
 # TODO: this could be a generic TensorStorage function
 Base.complex(D::BlockSparse{T}) where {T} = BlockSparse{complex(T)}(complex(data(D)),
                                                                     blockoffsets(D))
-Base.conj(D::BlockSparse{<: Real}) = D
-Base.conj(D::BlockSparse) = BlockSparse(conj(data(D)), copy(blockoffsets(D)))
+
+function Base.conj(D::BlockSparse{<: Real}; always_copy = false) 
+  if always_copy
+    return conj!(copy(D))
+  end
+  return D
+end
+
+Base.conj(D::BlockSparse; kwargs...) = BlockSparse(conj(data(D)), copy(blockoffsets(D)))
+
+
 
 function scale!(D::BlockSparse,α::Number)
   scale!(data(D),α)
