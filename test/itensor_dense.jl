@@ -593,4 +593,29 @@ end
 
 end # End Dense storage test
 
+@testset "dag copy behavior" begin
+  i = Index(4,"i")
+
+  v1 = ITensor([1.,2,3,4],i)
+  cv1 = dag(v1)
+  cv1[1] = -1
+  @test v1[1] ≈ -1
+
+  v2 = ITensor([1.,2,3,4],i)
+  cv2 = dag(v2;always_copy=true)
+  cv2[1] = -1
+  @test v2[1] ≈ +1
+
+  v3 = ITensor([1.0+1im,2,3,4],i)
+  cv3 = dag(v3)
+  cv3[1] = -1
+  @test v3[1] ≈ 1.0+1.0im
+
+  v4 = ITensor([1.0+1im,2,3,4],i)
+  cv4 = dag(v4;always_copy=true)
+  cv4[1] = -1
+  @test v4[1] ≈ 1.0+1.0im
+end
+
+
 end # End Dense ITensor basic functionality
