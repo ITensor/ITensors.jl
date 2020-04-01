@@ -32,10 +32,10 @@ function ising_mpo(sh::Tuple{Index,Index},sv::Tuple{Index,Index},
     Q = [exp(β*J) exp(-β*J); exp(-β*J) exp(β*J)]
     D,U = eigen(ITensors.LinearAlgebra.Symmetric(Q))
     √Q = U*ITensors.LinearAlgebra.Diagonal(sqrt.(D))*U'
-    Xh1 = ITensor(√Q,sh[1],sh[1]')
-    Xh2 = ITensor(√Q,sh[2],sh[2]')
-    Xv1 = ITensor(√Q,sv[1],sv[1]')
-    Xv2 = ITensor(√Q,sv[2],sv[2]')
+    Xh1 = itensor(√Q,sh[1],sh[1]')
+    Xh2 = itensor(√Q,sh[2],sh[2]')
+    Xv1 = itensor(√Q,sv[1],sv[1]')
+    Xv2 = itensor(√Q,sv[2],sv[2]')
     T = noprime(T*Xh1*Xh2*Xv1*Xv2)
   else
     sig(s) = 1.0-2.0*(s-1)

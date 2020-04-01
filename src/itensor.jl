@@ -68,22 +68,41 @@ mutable struct ITensor{N}
   inds::IndexSet{N}
   #TODO: check that the storage is consistent with the
   #total dimension of the indices (possibly only in debug mode);
-  ITensor{N}(st,is::IndexSet{N}) where {N} = new{N}(st,is)
+  ITensor{N}(st,
+             is::IndexSet{N}) where {N} = new{N}(st,is)
 end
-ITensor(st,is::IndexSet{N}) where {N} = ITensor{N}(st,is)
 
-ITensor{N}(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is))
-ITensor(st,is::NTuple{N,IndT}) where {N,IndT<:Index} = ITensor{N}(st,IndexSet(is))
+ITensor{N}(st,
+           is::NTuple{N,<:Index}) where {N} = ITensor{N}(st,
+                                                         IndexSet(is))
+
+ITensor(st,
+        is::IndexSet{N}) where {N} = ITensor{N}(st, is)
+
+ITensor(st,
+        is::NTuple{N,<:Index}) where {N} = ITensor{N}(st,
+                                                      IndexSet(is))
+
+itensor(st, is) = ITensor{ndims(is)}(st, is)
 
 Tensors.inds(T::ITensor) = T.inds
+
 Tensors.store(T::ITensor) = T.store
+
 ind(T::ITensor,i::Int) = inds(T)[i]
 
+Base.similar(T::ITensor) = itensor(similar(tensor(T)))
+
+Base.similar(T::ITensor,
+             ::Type{ElT}) where {ElT<:Number} = itensor(similar(tensor(T),ElT))
+
 setinds!(T::ITensor,is) = (T.inds = is; return T)
+
 setstore!(T::ITensor,st::TensorStorage) = (T.store = st; return T)
 
-setinds(T::ITensor,is) = ITensor(store(T),is)
-setstore(T::ITensor,st) = ITensor(st,inds(T))
+setinds(T::ITensor,is) = itensor(store(T),is)
+
+setstore(T::ITensor,st) = itensor(st,inds(T))
 
 #
 # Iteration over ITensors
@@ -100,17 +119,36 @@ Base.CartesianIndices(A::ITensor) = CartesianIndices(dims(A))
 # ITensor constructors
 #
 
-# Should this be ITensor or itensor?
+"""
+ITensor(::Tensor)
 
-ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
-ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
+Convert a Tensor to an ITensor with a copy of the storage and
+indices.
 
-itensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),inds(T))
+To make an ITensor that shares the same storage as the Tensor,
+is the function `itensor(::Tensor)`.
+"""
+ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(copy(store(T)),
+                                                      inds(T))
 
-# Convert the ITensor to a Tensor that shares the same
-# data and indices as the ITensor
-# TODO: should we define a `convert(::Type{<:Tensor},::ITensor)`
-# method?
+ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(copy(store(T)),
+                                                         inds(T))
+
+"""
+itensor(::Tensor)
+
+Make an ITensor that shares the same storage as the Tensor and
+has the same indices.
+"""
+itensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),
+                                                      inds(T))
+
+"""
+tensor(::ITensor)
+
+Convert the ITensor to a Tensor that shares the same
+storage and indices as the ITensor.
+"""
 tensor(A::ITensor) = Tensor(store(A),inds(A))
 
 """
@@ -120,32 +158,44 @@ Construct an ITensor having indices
 given by the IndexSet `iset`
 """
 ITensor(is::IndexSet) = ITensor(Float64,is)
+
 ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet{N}(inds...))
 
 # TODO: make this Dense(Float64[]), Dense([0.0]), Dense([1.0])?
-ITensor() = ITensor{0}(Dense{Nothing}(),IndexSet())
+ITensor() = itensor(Dense{Nothing}(),IndexSet())
 
 function ITensor(::Type{ElT},
                  inds::IndexSet{N}) where {ElT<:Number,N}
-  return ITensor{N}(Dense(ElT,dim(inds)),inds)
+  return itensor(Dense(ElT,dim(inds)),inds)
 end
-ITensor(::Type{ElT},inds::Index...) where {ElT<:Number} = ITensor(ElT,IndexSet(inds...))
+
+ITensor(::Type{ElT},
+        inds::Index...) where {ElT<:Number} = ITensor(ElT,
+                                                      IndexSet(inds...))
 
 function ITensor(::Type{ElT},
                  ::UndefInitializer,
                  inds::IndexSet{N}) where {ElT<:Number,N}
-  return ITensor{N}(Dense(ElT,undef,dim(inds)),inds)
+  return itensor(Dense(ElT,undef,dim(inds)),inds)
 end
-ITensor(::Type{ElT},::UndefInitializer,inds::Index...) where {ElT} = ITensor(ElT,undef,IndexSet(inds...))
+
+ITensor(::Type{ElT},
+        ::UndefInitializer,
+        inds::Index...) where {ElT} = ITensor(ElT,
+                                              undef,
+                                              IndexSet(inds...))
 
 function ITensor(::UndefInitializer,
                  inds::IndexSet{N}) where {N}
-  return ITensor{N}(Dense(undef,dim(inds)),inds)
+  return itensor(Dense(undef,dim(inds)),inds)
 end
-ITensor(::UndefInitializer,inds::Index...) = ITensor(undef,IndexSet(inds...))
+ITensor(::UndefInitializer,
+        inds::Index...) = ITensor(undef,
+                                  IndexSet(inds...))
 
-function ITensor(x::Number,inds::IndexSet{N}) where {N}
-  return ITensor{N}(Dense(fill(float(x),dim(inds))),inds)
+function ITensor(x::Number,
+                 inds::IndexSet)
+  return itensor(Dense(float(x),dim(inds)),inds)
 end
 
 """
@@ -161,13 +211,17 @@ and all elements set to `float(x)`.
 Note that the ITensor storage will be the closest
 floating point version of the input value.
 """
-ITensor(x::Number,inds::Index...) = ITensor(x,IndexSet(inds...))
+ITensor(x::Number,
+        inds::Index...) = ITensor(x,IndexSet(inds...))
 
-function ITensor(A::Array{<:Number},inds::IndexSet{N}) where {N}
+function itensor(A::Array{<:Number},
+                 inds::IndexSet)
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
-  return ITensor{N}(Dense(float(vec(A))),inds)
+  return itensor(Dense(float(vec(A))),inds)
 end
-ITensor(A::Array{<:Number},inds::Index...) = ITensor(A,IndexSet(inds...))
+
+itensor(A::Array{<:Number},
+        inds::Index...) = itensor(A,IndexSet(inds...))
 
 #
 # Diag ITensor constructors
@@ -180,9 +234,9 @@ Make a sparse ITensor of element type T with non-zero elements
 only along the diagonal. Defaults to having `zero(T)` along the diagonal.
 The storage will have Diag type.
 """
-function diagITensor(::Type{T},
-                     is::IndexSet{N}) where {T<:Number,N}
-  return ITensor{N}(Diag(T,mindim(is)),is)
+function diagITensor(::Type{ElT},
+                     is::IndexSet) where {ElT}
+  return itensor(Diag(ElT, mindim(is)), is)
 end
 
 """
@@ -192,7 +246,9 @@ Make a sparse ITensor of element type T with non-zero elements
 only along the diagonal. Defaults to having `zero(T)` along the diagonal.
 The storage will have Diag type.
 """
-diagITensor(::Type{T},inds::Index...) where {T<:Number} = diagITensor(T,IndexSet(inds...))
+diagITensor(::Type{ElT},
+            inds::Index...) where {ElT} = diagITensor(ElT,
+                                                      IndexSet(inds...))
 
 """
 diagITensor(v::Vector{T}, is::IndexSet)
@@ -205,7 +261,7 @@ The storage will have Diag type.
 function diagITensor(v::Vector{<:Number},
                      is::IndexSet)
   length(v) ≠ mindim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
-  return ITensor(Diag(float(v)),is)
+  return itensor(Diag(float(v)),is)
 end
 
 """
@@ -249,7 +305,7 @@ The storage will have Diag type.
 """
 function diagITensor(x::Number,
                      is::IndexSet)
-  return ITensor(Diag(fill(float(x),mindim(is))),is)
+  return itensor(Diag(float(x), mindim(is)), is)
 end
 
 """
@@ -262,7 +318,7 @@ The storage will have Diag type.
 """
 function diagITensor(x::Number,
                      is::Index...)
-  return diagITensor(x,IndexSet(is...))
+  return diagITensor(x, IndexSet(is...))
 end
 
 """
@@ -270,8 +326,9 @@ end
 
 Make a diagonal ITensor with all diagonal elements 1.
 """
-function delta(::Type{T},is::IndexSet) where {T<:Number}
-  return ITensor(Diag(one(T)),is)
+function delta(::Type{T},
+               is::IndexSet) where {T<:Number}
+  return itensor(Diag(one(T)), is)
 end
 
 """
@@ -279,13 +336,15 @@ end
 
 Make a diagonal ITensor with all diagonal elements 1.
 """
-function delta(::Type{T},is::Index...) where {T<:Number}
-  return delta(T,IndexSet(is...))
+function delta(::Type{T},
+               is::Index...) where {T<:Number}
+  return delta(T, IndexSet(is...))
 end
 
 delta(is::IndexSet) = delta(Float64,is)
 
 delta(is::Index...) = delta(IndexSet(is...))
+
 const δ = delta
 
 function setelt(iv)
@@ -300,20 +359,14 @@ dense(T::ITensor)
 Make a copy of the ITensor where the storage is the dense version.
 For example, an ITensor with Diag storage will become Dense storage.
 """
-function Tensors.dense(T::ITensor)
-  ITensor(dense(tensor(T)))
-end
+Tensors.dense(T::ITensor) = itensor(dense(tensor(T)))
 
 """
 complex(T::ITensor)
 
 Convert to the complex version of the storage.
 """
-Base.complex(T::ITensor) = ITensor(complex(tensor(T)))
-
-# This constructor allows many IndexSet
-# set operations to work with ITensors
-#IndexSet(T::ITensor) = inds(T)
+Base.complex(T::ITensor) = itensor(complex(tensor(T)))
 
 Base.eltype(T::ITensor) = eltype(tensor(T))
 
@@ -338,13 +391,15 @@ Tensors.dim(T::ITensor) = dim(inds(T))
 Tuple containing `size(A,d) == dim(inds(A)[d]) for d in 1:ndims(A)`.
 """
 Tensors.dims(T::ITensor) = dims(inds(T))
+
 Base.size(A::ITensor) = dims(inds(A))
-Base.size(A::ITensor{N}, d::Int) where {N} = d in 1:N ? dim(inds(A)[d]) :
-  d>0 ? 1 : error("arraysize: dimension out of range")
+
+Base.size(A::ITensor,
+          d::Int) = dim(inds(A),d)
 
 isnull(T::ITensor) = (eltype(T) === Nothing)
 
-Base.copy(T::ITensor{N}) where {N} = ITensor{N}(copy(tensor(T)))
+Base.copy(T::ITensor) = itensor(copy(tensor(T)))
 
 """
     Array{ElT}(T::ITensor, i:Index...)
@@ -405,14 +460,6 @@ function Base.getindex(T::ITensor,ivs...)
   vals = permute(val.(ivs),p)
   return T[vals...]
 end
-
-# TODO: we should figure out if this is how we want to do
-# slicing
-#function getindex(T::ITensor,ivs::AbstractVector{IndexVal}...)
-#  p = getperm(inds(T),map(x->x[1], ivs))
-#  vals = map(x->val.(x), ivs[[p...]])
-#  return Tensor(store(T),inds(T))[vals...]
-#end
 
 Base.getindex(T::ITensor) = tensor(T)[]
 
@@ -537,15 +584,15 @@ For A' notation.
 """
 Base.adjoint(A::ITensor) = prime(A)
 
-Base.:(==)(A::ITensor,B::ITensor) = (norm(A-B) == zero(promote_type(eltype(A),eltype(B))))
+function Base.:(==)(A::ITensor,B::ITensor)
+  return norm(A-B) == zero(promote_type(eltype(A),eltype(B)))
+end
 
-# TODO: can we define this as:
-# isapprox(A::ITensor,B::ITensor; kwargs...) = isapprox(norm(A-B),0; kwargs...)
 function Base.isapprox(A::ITensor,
                        B::ITensor;
-                       atol::Real=0.0,
-                       rtol::Real=Base.rtoldefault(eltype(A),eltype(B),atol))
-    return norm(A-B) <= atol + rtol*max(norm(A),norm(B))
+                       kwargs...)
+    B = permute(dense(B), inds(A))
+    return isapprox(array(A), array(B); kwargs...)
 end
 
 function Random.randn!(T::ITensor)
@@ -565,30 +612,39 @@ function randomITensor(::Type{S},
   randn!(T)
   return T
 end
+
 function randomITensor(::Type{S},
                        inds::Index...) where {S<:Number}
   return randomITensor(S,IndexSet(inds...))
 end
+
 randomITensor(inds::Indices) = randomITensor(Float64,
                                              IndexSet(inds))
+
 randomITensor(inds::Index...) = randomITensor(Float64,
                                               IndexSet(inds...))
 
-randomITensor(::Type{ElT}) where {ElT<:Number} = randomITensor(ElT,IndexSet())
+randomITensor(::Type{ElT}) where {ElT<:Number} = randomITensor(ElT,
+                                                               IndexSet())
+
 randomITensor() = randomITensor(Float64)
 
-function combiner(inds::IndexSet; kwargs...)
+function combiner(inds::IndexSet;
+                  kwargs...)
   tags = get(kwargs, :tags, "CMB,Link")
   new_ind = Index(prod(dims(inds)), tags)
   new_is = IndexSet(new_ind, inds)
-  return ITensor(Combiner(),new_is),new_ind
+  return itensor(Combiner(),new_is),new_ind
 end
-combiner(inds::Index...; kwargs...) = combiner(IndexSet(inds...); kwargs...)
-combiner(inds::Tuple{Vararg{Index}}; kwargs...) = combiner(inds...; kwargs...)
+
+combiner(inds::Index...;
+         kwargs...) = combiner(IndexSet(inds...); kwargs...)
+combiner(inds::Tuple{Vararg{Index}};
+         kwargs...) = combiner(inds...; kwargs...)
 
 # Special case when no indices are combined (useful for generic code)
 function combiner(; kwargs...)
-  return ITensor(Combiner(),IndexSet()),nothing
+  return itensor(Combiner(),IndexSet()),nothing
 end
 
 combinedind(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
@@ -600,27 +656,33 @@ function Tensors.dag(T::ITensor; always_copy = false)
   return ITensor(store(TT),dag(inds(T)))
 end
 
-function Tensors.permute(T::ITensor{N},new_inds) where {N}
-  perm = getperm(new_inds,inds(T))
-  Tp = permutedims(tensor(T),perm)
-  return ITensor(Tp)::ITensor{N}
+function Tensors.permute(T::ITensor{N},
+                         new_inds) where {N}
+  perm = getperm(new_inds, inds(T))
+  Tp = permutedims(tensor(T), perm)
+  return itensor(Tp)::ITensor{N}
 end
-Tensors.permute(T::ITensor,inds::Index...) = permute(T,IndexSet(inds...))
 
-function Base.:*(T::ITensor,x::Number)
-  return ITensor(x*tensor(T))
-end
-Base.:*(x::Number,T::ITensor) = T*x
+Tensors.permute(T::ITensor,
+                inds::Index...) = permute(T,
+                                          IndexSet(inds...))
+
+Base.:*(T::ITensor, x::Number) = itensor(x*tensor(T))
+
+Base.:*(x::Number, T::ITensor) = T*x
+
 #TODO: make a proper element-wise division
-Base.:/(A::ITensor,x::Number) = A*(1.0/x)
+Base.:/(A::ITensor, x::Number) = A*(1.0/x)
 
-Base.:-(A::ITensor) = ITensor(-tensor(A))
-function Base.:+(A::ITensor,B::ITensor)
+Base.:-(A::ITensor) = itensor(-tensor(A))
+
+function Base.:+(A::ITensor, B::ITensor)
   C = copy(A)
   C .+= B
   return C
 end
-function Base.:-(A::ITensor,B::ITensor)
+
+function Base.:-(A::ITensor, B::ITensor)
   C = copy(A)
   C .-= B
   return C
@@ -637,10 +699,10 @@ indices from matching, their prime level or tags can be
 modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
 """
-function Base.:*(A::ITensor,B::ITensor)
+function Base.:*(A::ITensor, B::ITensor)
   (Alabels,Blabels) = compute_contraction_labels(inds(A),inds(B))
   CT = contract(tensor(A),Alabels,tensor(B),Blabels)
-  C = ITensor(CT)
+  C = itensor(CT)
   warnTensorOrder = GLOBAL_PARAMS["WarnTensorOrder"]
   if warnTensorOrder > 0 && order(C) >= warnTensorOrder
     @warn "Contraction resulted in ITensor with $(order(C)) indices"
@@ -648,7 +710,7 @@ function Base.:*(A::ITensor,B::ITensor)
   return C
 end
 
-LinearAlgebra.dot(A::ITensor,B::ITensor) = (dag(A)*B)[]
+LinearAlgebra.dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 
 """
     exp(A::ITensor, Lis::IndexSet; hermitian = false)
@@ -667,7 +729,7 @@ function LinearAlgebra.exp(A::ITensor,
   Lis,Ris = IndexSet(Linds),IndexSet(Rinds)
   Lpos,Rpos = getperms(inds(A),Lis,Ris)
   expAT = exp(tensor(A),Lpos,Rpos;ishermitian=ishermitian)
-  return ITensor(expAT)
+  return itensor(expAT)
 end
 
 function exphermitian(A::ITensor,
@@ -703,10 +765,10 @@ Copy the contents of ITensor A into ITensor B.
 B .= A
 ```
 """
-function Base.copyto!(R::ITensor{N},T::ITensor{N}) where {N}
+function Base.copyto!(R::ITensor{N}, T::ITensor{N}) where {N}
   perm = getperm(inds(R),inds(T))
   TR = permutedims!(tensor(R),tensor(T),perm)
-  return ITensor(TR)
+  return itensor(TR)
 end
 
 """
@@ -719,11 +781,11 @@ B .+= A
 B .+= α .* A
 ```
 """
-add!(R::ITensor,T::ITensor) = apply!(R,T,(r,t)->r+t)
+add!(R::ITensor, T::ITensor) = apply!(R,T,(r,t)->r+t)
 
-add!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->r+α*t)
+add!(R::ITensor, α::Number, T::ITensor) = apply!(R,T,(r,t)->r+α*t)
 
-add!(R::ITensor,T::ITensor,α::Number) = (R .+= α .* T)
+add!(R::ITensor, T::ITensor, α::Number) = (R .+= α .* T)
 
 """
     add!(A::ITensor, α::Number, β::Number, B::ITensor)
@@ -733,9 +795,14 @@ Add ITensors α*A and β*B and store the result in A.
 A .= α .* A .+ β .* B
 ```
 """
-add!(R::ITensor,αr::Number,αt::Number,T::ITensor) = apply!(R,T,(r,t)->αr*r+αt*t)
+add!(R::ITensor,
+     αr::Number,
+     αt::Number,
+     T::ITensor) = apply!(R,T,(r,t)->αr*r+αt*t)
 
-function apply!(R::ITensor{N},T::ITensor{N},f::Function) where {N}
+function apply!(R::ITensor{N},
+                T::ITensor{N},
+                f::Function) where {N}
   perm = getperm(inds(R),inds(T))
   TR,TT = tensor(R),tensor(T)
 
@@ -754,7 +821,9 @@ end
 w .+= a .* v
 ```
 """
-LinearAlgebra.axpy!(a::Number,v::ITensor,w::ITensor) = (w .+= a .* v)
+LinearAlgebra.axpy!(a::Number,
+                    v::ITensor,
+                    w::ITensor) = (w .+= a .* v)
 
 """
 axpby!(a,v,b,w)
@@ -763,7 +832,10 @@ axpby!(a,v,b,w)
 w .= a .* v + b .* w
 ```
 """
-LinearAlgebra.axpby!(a::Number,v::ITensor,b::Number,w::ITensor) = (w .= a .* v + b .* w)
+LinearAlgebra.axpby!(a::Number,
+                     v::ITensor,
+                     b::Number,
+                     w::ITensor) = (w .= a .* v + b .* w)
 
 """
     scale!(A::ITensor,x::Number) = rmul!(A,x)
@@ -773,12 +845,13 @@ Scale the ITensor A by x in-place. May also be written `rmul!`.
 A .*= x
 ```
 """
-function Tensors.scale!(T::ITensor,x::Number)
+function Tensors.scale!(T::ITensor, x::Number)
   TT = tensor(T)
   scale!(TT,x)
   return T
 end
-LinearAlgebra.rmul!(T::ITensor,fac::Number) = scale!(T,fac)
+
+LinearAlgebra.rmul!(T::ITensor, fac::Number) = scale!(T,fac)
 
 """
     mul!(A::ITensor,x::Number,B::ITensor)
@@ -786,8 +859,13 @@ LinearAlgebra.rmul!(T::ITensor,fac::Number) = scale!(T,fac)
 Scalar multiplication of ITensor B with x, and store the result in A.
 Like `A .= x .* B`.
 """
-LinearAlgebra.mul!(R::ITensor,α::Number,T::ITensor) = apply!(R,T,(r,t)->α*t )
-LinearAlgebra.mul!(R::ITensor,T::ITensor,α::Number) = (R .= α .* T)
+LinearAlgebra.mul!(R::ITensor,
+                   α::Number,
+                   T::ITensor) = apply!(R,T,(r,t)->α*t )
+
+LinearAlgebra.mul!(R::ITensor,
+                   T::ITensor,
+                   α::Number) = (R .= α .* T)
 
 #
 # Block sparse related functions
@@ -803,7 +881,8 @@ Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
 Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 flux(T::ITensor,args...) = flux(inds(T),args...)
 
-Tensors.addblock!(T::ITensor,args...) = addblock!(tensor(T),args...)
+Tensors.addblock!(T::ITensor,
+                  args...) = addblock!(tensor(T), args...)
 
 function flux(T::ITensor)
   !hasqns(T) && return nothing
@@ -869,11 +948,15 @@ end
 
 struct ITensorOpScalarStyle <: Broadcast.BroadcastStyle end
 
-Base.BroadcastStyle(::ITensorStyle, ::Broadcast.DefaultArrayStyle{0}) = ITensorOpScalarStyle()
+Base.BroadcastStyle(::ITensorStyle,
+                    ::Broadcast.DefaultArrayStyle{0}) = ITensorOpScalarStyle()
 
 Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorOpScalarStyle}) = bc
 
-function Broadcast.broadcasted(a::typeof(Base.literal_pow), b::typeof(^), T::ITensor, x::Val)
+function Broadcast.broadcasted(a::typeof(Base.literal_pow),
+                               b::typeof(^),
+                               T::ITensor,
+                               x::Val)
   return Broadcast.broadcasted(ITensorOpScalarStyle(),Base.literal_pow,Ref(^),T,Ref(x))
 end
 
@@ -889,7 +972,8 @@ end
 
 struct ITensorMulAddStyle <: Broadcast.BroadcastStyle end
 
-Base.BroadcastStyle(::ITensorStyle, ::ITensorOpScalarStyle) = ITensorMulAddStyle()
+Base.BroadcastStyle(::ITensorStyle,
+                    ::ITensorOpScalarStyle) = ITensorMulAddStyle()
 
 Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorMulAddStyle}) = bc
 
@@ -922,10 +1006,10 @@ Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorStyle}) = bc
 #
 
 "`A = find_type(::Type,As)` returns the first of type Type among the arguments."
-find_type(::Type{T},args::Tuple) where {T} = find_type(T, find_type(T,args[1]), Base.tail(args))
-find_type(::Type{T},x) where {T} = x
-find_type(::Type{T},a::T,rest) where {T} = a
-find_type(::Type{T},::Any,rest) where {T} = find_type(T,rest)
+find_type(::Type{T}, args::Tuple) where {T} = find_type(T, find_type(T,args[1]), Base.tail(args))
+find_type(::Type{T}, x) where {T} = x
+find_type(::Type{T}, a::T, rest) where {T} = a
+find_type(::Type{T}, ::Any, rest) where {T} = find_type(T, rest)
 
 #
 # For B .= α .* A
@@ -935,12 +1019,12 @@ function Base.copyto!(T::ITensor,
                       bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
                                                 <:Any,
                                                 typeof(*)})
-  α = find_type(Number,bc.args)
-  A = find_type(ITensor,bc.args)
+  α = find_type(Number, bc.args)
+  A = find_type(ITensor, bc.args)
   if A === T
-    scale!(T,α)
+    scale!(T, α)
   else
-    mul!(T,α,A)
+    mul!(T, α, A)
   end
   return T
 end
@@ -953,8 +1037,8 @@ function Base.copyto!(R::ITensor,
                       bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
                                                 <:Any,
                                                 typeof(^)})
-  α = find_type(Number,bc.args)
-  T = find_type(ITensor,bc.args)
+  α = find_type(Number, bc.args)
+  T = find_type(ITensor, bc.args)
   apply!(R,T,(r,t)->t^α)
   return R
 end
@@ -1195,7 +1279,8 @@ end
 
 # TODO: make a specialized printing from Diag
 # that emphasizes the missing elements
-function Base.show(io::IO,T::ITensor)
+function Base.show(io::IO,
+                   T::ITensor)
   #summary(io,T)
   println(io,"ITensor ord=$(order(T))")
   println(io)
@@ -1210,16 +1295,9 @@ function Base.show(io::IO,
   summary(io,T)
 end
 
-function Base.similar(T::ITensor)
-  return ITensor(similar(tensor(T)))
-end
-
-function Base.similar(T::ITensor,
-                      ::Type{ElT}) where {ElT<:Number}
-  return ITensor(similar(tensor(T),ElT))
-end
-
-function readcpp(io::IO,::Type{Dense{ValT}};kwargs...) where {ValT}
+function readcpp(io::IO,
+                 ::Type{Dense{ValT}};
+                 kwargs...) where {ValT}
   format = get(kwargs,:format,"v3")
   if format=="v3"
     size = read(io,UInt64)
@@ -1233,7 +1311,9 @@ function readcpp(io::IO,::Type{Dense{ValT}};kwargs...) where {ValT}
   end
 end
 
-function readcpp(io::IO,::Type{ITensor};kwargs...)
+function readcpp(io::IO,
+                 ::Type{ITensor};
+                 kwargs...)
   format = get(kwargs,:format,"v3")
   if format=="v3"
     inds = readcpp(io,IndexSet;kwargs...)
@@ -1259,7 +1339,7 @@ function readcpp(io::IO,::Type{ITensor};kwargs...)
     else
       throw(ErrorException("C++ ITensor storage type $storage_type not yet supported"))
     end
-    return ITensor(store,inds)
+    return itensor(store,inds)
   else
     throw(ArgumentError("read ITensor: format=$format not supported"))
   end
@@ -1306,7 +1386,7 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
 
   store = read(g,"store",stype)
 
-  return ITensor(store,inds)
+  return itensor(store,inds)
 end
 
 #

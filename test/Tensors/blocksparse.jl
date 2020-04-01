@@ -263,7 +263,7 @@ using ITensors,
       A = BlockSparseTensor([(2,1),(3,2)],[2,3,4],[5,6])
       randn!(A)
       U,S,V = svd(A)
-      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0.0; atol=1e-14)
+      @test isapprox(norm(array(U)*array(S)*array(V)'-array(A)),0.0; atol=1e-13)
     end
 
     @testset "svd example 5" begin

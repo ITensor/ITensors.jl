@@ -31,10 +31,14 @@ end
 
 Dense{ElT}(dim::Integer) where {ElT} = Dense(zeros(ElT,dim))
 
-Dense{ElT}(::UndefInitializer,dim::Integer) where {ElT} = Dense(Vector{ElT}(undef,dim))
+Dense{ElT}(::UndefInitializer,
+           dim::Integer) where {ElT} = Dense(Vector{ElT}(undef,dim))
 
 Dense(::Type{ElT},
       dim::Integer) where {ElT} = Dense{ElT}(dim)
+
+Dense(x::ElT,
+      dim::Integer) where {ElT<:Number} = Dense(fill(x,dim))
 
 Dense(dim::Integer) = Dense(Float64,dim)
 

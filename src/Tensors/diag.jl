@@ -15,17 +15,23 @@ struct Diag{ElT,VecT} <: TensorStorage{ElT}
 end
 
 Diag(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = Diag{ElT,VecT}(data)
+
 Diag(data::ElT) where {ElT<:Number} = Diag{ElT,ElT}(data)
 
 function Diag{ElR}(data::AbstractVector{ElT}) where {ElR<:Number,ElT<:Number}
   ElT == ElR ? Diag(data) : Diag(ElR.(data))
 end
 
-Diag(::Type{ElT},n::Integer) where {ElT<:Number} = Diag(zeros(ElT,n))
+Diag(::Type{ElT},
+     n::Integer) where {ElT<:Number} = Diag(zeros(ElT,n))
+
+Diag(x::ElT,
+     n::Integer) where {ElT<:Number} = Diag(fill(x,n))
 
 Base.copy(D::Diag) = Diag(copy(data(D)))
 
 const NonuniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:AbstractVector}
+
 const UniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:Number}
 
 Base.getindex(D::UniformDiag,i::Int) = data(D)

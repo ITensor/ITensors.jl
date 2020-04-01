@@ -50,16 +50,18 @@ end
 coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
 
-function Base.:(==)(t1::MPOTerm,t2::MPOTerm)
-  return (t1.ops==t2.ops && isapprox(t1.coef,t2.coef))
+function Base.:(==)(t1::MPOTerm,
+                    t2::MPOTerm)
+  return coef(t1) ≈ coef(t2) && ops(t1) == ops(t2)
 end
 
-function Base.isless(t1::MPOTerm,t2::MPOTerm)::Bool
+function Base.isless(t1::MPOTerm, t2::MPOTerm)::Bool
   if !isapprox(coef(t1),coef(t2))
     ct1 = coef(t1)
     ct2 = coef(t2)
     #"lexicographic" ordering on  complex numbers
-    return real(ct1) < real(ct2) || (real(ct1) == real(ct2) && imag(ct1) < imag(ct2))
+    return real(ct1) < real(ct2) || 
+           (real(ct1) == real(ct2) && imag(ct1) < imag(ct2))
   end
   return ops(t1) < ops(t2)
 end
@@ -122,6 +124,9 @@ end
 AutoMPO() = AutoMPO(Vector{MPOTerm}())
 terms(ampo::AutoMPO) = ampo.terms
 
+Base.:(==)(ampo1::AutoMPO,
+           ampo2::AutoMPO) = terms(ampo1) == terms(ampo2)
+
 Base.copy(ampo::AutoMPO) = AutoMPO(copy(terms(ampo)))
 
 Base.size(ampo::AutoMPO) = size(terms(ampo))
@@ -155,26 +160,46 @@ function add!(ampo::AutoMPO,
 end
 
 function add!(ampo::AutoMPO,
-              op1::String, i1::Int,
-              op2::String, i2::Int,
-              ops...)
-  push!(terms(ampo),MPOTerm(1.0,op1,i1,op2,i2,ops...))
-  return
-end
-
-function add!(ampo::AutoMPO,
               coef::Number,
               op1::String, i1::Int,
               op2::String, i2::Int,
               ops...)
-  push!(terms(ampo),MPOTerm(coef,op1,i1,op2,i2,ops...))
-  return
+  push!(terms(ampo), MPOTerm(coef, op1, i1, op2, i2, ops...))
+  return ampo
 end
+
+add!(ampo::AutoMPO,
+     op1::String, i1::Int,
+     op2::String, i2::Int,
+     ops...) = add!(ampo, 1.0, op1, i1, op2, i2, ops...)
+
+subtract!(ampo::AutoMPO,
+          op1::String, i1::Int,
+          op2::String, i2::Int,
+          ops...) = add!(ampo, -1.0, op1, i1, op2, i2, ops...)
+
+function subtract!(ampo::AutoMPO,
+                   coef::Number,
+                   op1::String, i1::Int,
+                   op2::String, i2::Int,
+                   ops...)
+  push!(terms(ampo), -MPOTerm(coef, op1, i1, op2, i2, ops...))
+  return ampo
+end
+
+Base.:-(t::MPOTerm) = MPOTerm(-coef(t), ops(t))
 
 function Base.:+(ampo::AutoMPO,
                  term::Tuple)
   ampo_plus_term = copy(ampo)
-  add!(ampo_plus_term,term...)
+  add!(ampo_plus_term, term...)
+  return ampo_plus_term
+end
+
+function Base.:-(ampo::AutoMPO,
+                 term::Tuple)
+  ampo_plus_term = copy(ampo)
+  subtract!(ampo_plus_term, term...)
   return ampo_plus_term
 end
 
@@ -189,13 +214,28 @@ struct AutoMPOAddTermStyle <: Broadcast.BroadcastStyle end
 
 Base.broadcastable(ampo::AutoMPO) = ampo
 
-Base.BroadcastStyle(::AutoMPOStyle, ::Broadcast.Style{Tuple}) = AutoMPOAddTermStyle()
+Base.BroadcastStyle(::AutoMPOStyle,
+                    ::Broadcast.Style{Tuple}) = AutoMPOAddTermStyle()
 
 Broadcast.instantiate(bc::Broadcast.Broadcasted{AutoMPOAddTermStyle}) = bc
 
 function Base.copyto!(ampo,
-                      bc::Broadcast.Broadcasted{AutoMPOAddTermStyle})
-  add!(ampo,bc.args[2]...)
+                      bc::Broadcast.Broadcasted{AutoMPOAddTermStyle,
+                                                <:Any,
+                                                typeof(+)})
+  add!(ampo, bc.args[2]...)
+  return ampo
+end
+
+#
+# ampo .-= ("Sz",1) syntax using broadcasting
+#
+
+function Base.copyto!(ampo,
+                      bc::Broadcast.Broadcasted{AutoMPOAddTermStyle,
+                                                <:Any,
+                                                typeof(-)})
+  subtract!(ampo, bc.args[2]...)
   return ampo
 end
 
@@ -666,7 +706,7 @@ function svdMPO(ampo::AutoMPO,
     s = sites[n]
     H[n] = ITensor(dag(s),s',ll,rl)
     for (op,M) in finalMPO
-      T = ITensor(M,ll,rl)
+      T = itensor(M,ll,rl)
       H[n] += T*computeSiteProd(sites,op)
     end
 
