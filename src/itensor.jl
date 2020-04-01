@@ -595,8 +595,8 @@ combinedind(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
-function Tensors.dag(T::ITensor)
-  TT = conj(tensor(T))
+function Tensors.dag(T::ITensor; always_copy = false)
+  TT = conj(tensor(T); always_copy=always_copy)
   return ITensor(store(TT),dag(inds(T)))
 end
 
