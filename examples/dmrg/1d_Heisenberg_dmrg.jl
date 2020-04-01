@@ -19,9 +19,9 @@ let
   # Input operator terms which define a Hamiltonian
   ampo = AutoMPO()
   for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      ampo += ("Sz",j,"Sz",j+1)
+      ampo += (0.5,"S+",j,"S-",j+1)
+      ampo += (0.5,"S-",j,"S+",j+1)
   end
   # Convert these terms to an MPO tensor network
   H = toMPO(ampo,sites)

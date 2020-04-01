@@ -12,9 +12,9 @@ let
 
   ampo = AutoMPO()
   for b in lattice
-    add!(ampo,0.5,"S+",b.s1,"S-",b.s2)
-    add!(ampo,0.5,"S-",b.s1,"S+",b.s2)
-    add!(ampo,    "Sz",b.s1,"Sz",b.s2)
+    ampo += (0.5,"S+",b.s1,"S-",b.s2)
+    ampo += (0.5,"S-",b.s1,"S+",b.s2)
+    ampo += ("Sz",b.s1,"Sz",b.s2)
   end
   H = toMPO(ampo,sites)
 

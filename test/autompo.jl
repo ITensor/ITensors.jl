@@ -509,6 +509,14 @@ end
       #@test maxlinkdim(Ha) == 8
     end
 
+    @testset "-= syntax" begin
+      ampo = AutoMPO()
+      ampo += (-1,"Sz",1,"Sz",2)
+      ampo2 = AutoMPO()
+      ampo2 -= ("Sz",1,"Sz",2)
+      @test ampo == ampo2
+    end
+
     @testset "Onsite Regression Test" begin
       sites = siteinds("S=1",4)
       ampo = AutoMPO()
@@ -533,7 +541,7 @@ end
 
   end
 
-  @testset ".+= syntax" begin
+  @testset ".+= and .-= syntax" begin
 
     @testset "Show MPOTerm" begin
       ampo = AutoMPO()
@@ -547,6 +555,14 @@ end
       ampo .+= ("Sz",2,"Sz",3)
       expected_string = "AutoMPO:\n  \"Sz\"(1)\"Sz\"(2)\n  \"Sz\"(2)\"Sz\"(3)\n"
       @test sprint(show,ampo) == expected_string
+    end
+
+    @testset ".-= syntax" begin
+      ampo = AutoMPO()
+      ampo .+= (-1,"Sz",1,"Sz",2)
+      ampo2 = AutoMPO()
+      ampo2 .-= ("Sz",1,"Sz",2)
+      @test ampo == ampo2
     end
 
     @testset "Single creation op" begin
