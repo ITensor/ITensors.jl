@@ -75,12 +75,17 @@ Base.complex(D::BlockSparse{T}) where {T} = BlockSparse{complex(T)}(complex(data
 
 function Base.conj(D::BlockSparse{<: Real}; always_copy = false) 
   if always_copy
-    return conj!(copy(D))
+    return copy(D)
   end
   return D
 end
 
-Base.conj(D::BlockSparse; kwargs...) = BlockSparse(conj(data(D)), copy(blockoffsets(D)))
+function Base.conj(D::BlockSparse; always_copy = false)
+  if always_copy
+    return conj!(copy(D))
+  end
+  return BlockSparse(conj(data(D)), blockoffsets(D))
+end
 
 
 
