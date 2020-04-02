@@ -593,4 +593,32 @@ end
 
 end # End Dense storage test
 
+@testset "dag copy behavior" begin
+  i = Index(4,"i")
+
+  v1 = randomITensor(i)
+  cv1 = dag(v1)
+  cv1[1] = -1
+  @test v1[1] ≈ cv1[1]
+
+  v2 = randomITensor(i)
+  cv2 = dag(v2;always_copy=true)
+  orig_elt = v2[1]
+  cv2[1] = -1
+  @test v2[1] ≈ orig_elt
+
+  v3 = randomITensor(ComplexF64,i)
+  orig_elt = v3[1]
+  cv3 = dag(v3)
+  cv3[1] = -1
+  @test v3[1] ≈ orig_elt
+
+  v4 = randomITensor(ComplexF64,i)
+  cv4 = dag(v4;always_copy=true)
+  orig_elt = v4[1]
+  cv4[1] = -1
+  @test v4[1] ≈ orig_elt
+end
+
+
 end # End Dense ITensor basic functionality

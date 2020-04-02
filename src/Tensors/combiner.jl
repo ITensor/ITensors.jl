@@ -34,7 +34,7 @@ uncombinedinds(T::CombinerTensor) = popfirst(inds(T))
 blockperm(C::CombinerTensor) = blockperm(store(C))
 blockcomb(C::CombinerTensor) = blockcomb(store(C))
 
-Base.conj(T::CombinerTensor) = T
+Base.conj(T::CombinerTensor; always_copy = false) = T
 
 function contraction_output(::TensorT1,
                             ::TensorT2,
