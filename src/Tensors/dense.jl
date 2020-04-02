@@ -449,14 +449,20 @@ function contract!!(R::Tensor{<:Number,NR},
                     labelsT2::NTuple{N2},
                     α::Number=1, β::Number=0) where {NR,N1,N2}
   if N1==0
+    (α ≠ 1 || β ≠ 0) &&
+      error("contract!! not yet implemented for scalar ITensor with non-trivial α and β")
     # TODO: replace with an add! function?
     # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
     perm = getperm(labelsR,labelsT2)
     R = permutedims!!(R,T2,perm,(r,t2)->T1[]*t2)
   elseif N2==0
+    (α ≠ 1 || β ≠ 0) &&
+      error("contract!! not yet implemented for scalar ITensor with non-trivial α and β")
     perm = getperm(labelsR,labelsT1)
     R = permutedims!!(R,T1,perm,(r,t1)->T2[]*t1)
   elseif N1+N2==NR
+    (α ≠ 1 || β ≠ 0) &&
+      error("contract!! not yet implemented for outer product tensor contraction with non-trivial α and β")
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
@@ -467,10 +473,16 @@ function contract!!(R::Tensor{<:Number,NR},
       R = permutedims!!(R,copy(R),perm)
     end
   else
-    R = _contract!!(R, labelsR,
-                    T1, labelsT1,
-                    T2, labelsT2,
-                    α, β)
+    if α ≠ 1 || β ≠ 0
+      R = _contract!!(R, labelsR,
+                      T1, labelsT1,
+                      T2, labelsT2,
+                      α, β)
+    else
+      R = _contract!!(R, labelsR,
+                      T1, labelsT1,
+                      T2, labelsT2)
+    end
   end
   return R
 end
@@ -480,16 +492,16 @@ end
 function _contract!!(R::Tensor, labelsR,
                      T1::Tensor, labelsT1,
                      T2::Tensor, labelsT2,
-                     α, β)
-  if α == 1 && β == 0
-    contract!(R, labelsR,
-              T1, labelsT1,
-              T2, labelsT2)
-  else
+                     α::Number=1, β::Number=0)
+  if α ≠ 1 || β ≠ 0
     contract!(R, labelsR,
               T1, labelsT1,
               T2, labelsT2,
               α, β)
+  else
+    contract!(R, labelsR,
+              T1, labelsT1,
+              T2, labelsT2)
   end
   return R
 end
