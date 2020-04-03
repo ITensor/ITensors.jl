@@ -43,8 +43,8 @@ arguments provided. The following keyword arguments are recognized:
 * `maxdim` [Int]
 * `mindim` [Int]
 * `cutoff` [Float64]
-* `absoluteCutoff` [Bool] Default value: false.
-* `doRelCutoff` [Bool] Default value: true.
+* `use_absolute_cutoff` [Bool] Default value: false.
+* `use_relative_cutoff` [Bool] Default value: true.
 * `utags` [String] Default value: "Link,u".
 * `vtags` [String] Default value: "Link,v".
 * `fastSVD` [Bool] Defaut value: false.

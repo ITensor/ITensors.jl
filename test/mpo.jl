@@ -34,7 +34,7 @@ end
   @test hasind(P[1],prime(sites[1]))
   # test constructor from Vector{ITensor}
   K = randomMPO(sites)
-  @test ITensors.tensors(MPO(copy(ITensors.tensors(K)))) == ITensors.tensors(K)
+  @test ITensors.store(MPO(copy(ITensors.store(K)))) == ITensors.store(K)
 
   @testset "orthogonalize" begin
     phi = randomMPS(sites)
@@ -138,7 +138,7 @@ end
     @test_throws DimensionMismatch inner(J,phi,K,badpsi)
   end
 
-  @testset "errorMPOprod" begin
+  @testset "error_mpoprod" begin
     phi = makeRandomMPS(sites)
     K = makeRandomMPO(sites,chi=2)
 
@@ -146,30 +146,30 @@ end
 
     dist = sqrt(abs(1 + (inner(phi,phi) - 2*real(inner(phi,K,psi)))
                         /inner(K,psi,K,psi)))
-    @test dist ≈ errorMPOprod(phi,K,psi)
+    @test dist ≈ error_mpoprod(phi,K,psi)
 
     badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
-    # Apply K to phi and check that errorMPOprod is close to 0.
-    Kphi = applyMPO(K,phi;method="naive", cutoff=1E-8)
-    @test errorMPOprod(Kphi, K, phi) ≈ 0. atol=1e-4
+    # Apply K to phi and check that error_mpoprod is close to 0.
+    Kphi = applympo(K,phi;method="naive", cutoff=1E-8)
+    @test error_mpoprod(Kphi, K, phi) ≈ 0. atol=1e-4
 
-    @test_throws DimensionMismatch applyMPO(K,badpsi;method="naive", cutoff=1E-8)
-    @test_throws DimensionMismatch errorMPOprod(phi,K,badpsi)
+    @test_throws DimensionMismatch applympo(K,badpsi;method="naive", cutoff=1E-8)
+    @test_throws DimensionMismatch error_mpoprod(phi,K,badpsi)
   end
 
-  @testset "applyMPO" begin
+  @testset "applympo" begin
     phi = randomMPS(sites)
     K   = randomMPO(sites)
     @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
-    psi_out = applyMPO(K, psi,maxdim=1)
+    psi_out = applympo(K, psi,maxdim=1)
     @test inner(phi,psi_out) ≈ inner(phi,K,psi)
-    @test_throws ArgumentError applyMPO(K, psi, method="fakemethod")
+    @test_throws ArgumentError applympo(K, psi, method="fakemethod")
 
     badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
-    @test_throws DimensionMismatch applyMPO(K,badpsi)
+    @test_throws DimensionMismatch applympo(K,badpsi)
 
     # make bigger random MPO...
     for link_dim in 2:5
@@ -195,7 +195,7 @@ end
         orthogonalize!(psi, 1; maxdim=link_dim)
         orthogonalize!(K, 1; maxdim=link_dim)
         orthogonalize!(phi, 1; normalize=true, maxdim=link_dim)
-        psi_out = applyMPO(deepcopy(K), deepcopy(psi); maxdim=10*link_dim, cutoff=0.0)
+        psi_out = applympo(deepcopy(K), deepcopy(psi); maxdim=10*link_dim, cutoff=0.0)
         @test inner(phi, psi_out) ≈ inner(phi, K, psi)
     end
   end
@@ -206,8 +206,8 @@ end
     M = sum(K, L)
     @test length(M) == N
     psi = randomMPS(shsites)
-    k_psi = applyMPO(K, psi, maxdim=1)
-    l_psi = applyMPO(L, psi, maxdim=1)
+    k_psi = applympo(K, psi, maxdim=1)
+    l_psi = applympo(L, psi, maxdim=1)
     @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
     @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol=5e-3
     for dim in 2:4
@@ -217,26 +217,26 @@ end
         M = sum(K, L)
         @test length(M) == N
         psi = randomMPS(shsites)
-        k_psi = applyMPO(K, psi)
-        l_psi = applyMPO(L, psi)
+        k_psi = applympo(K, psi)
+        l_psi = applympo(L, psi)
         @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
         @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol=5e-3
         psi = randomMPS(shsites)
         M = sum(K, L; cutoff=1E-9)
-        k_psi = applyMPO(K, psi)
-        l_psi = applyMPO(L, psi)
+        k_psi = applympo(K, psi)
+        l_psi = applympo(L, psi)
         @test inner(psi, sum(k_psi, l_psi)) ≈ inner(psi, M, psi) atol=5e-3
     end
   end
 
-  @testset "multMPO" begin
+  @testset "multmpo" begin
     psi = randomMPS(sites)
     K = randomMPO(sites)
     L = randomMPO(sites)
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
-    KL = multMPO(K, L, maxdim=1)
-    psi_kl_out = applyMPO(K, applyMPO(L, psi, maxdim=1), maxdim=1)
+    KL = multmpo(K, L, maxdim=1)
+    psi_kl_out = applympo(K, applympo(L, psi, maxdim=1), maxdim=1)
     @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
 
     # where both K and L have differently labelled sites
@@ -248,15 +248,15 @@ end
         replaceind!(K[ii], sites[ii]', othersitesk[ii])
         replaceind!(L[ii], sites[ii]', othersitesl[ii])
     end
-    KL = multMPO(K, L, maxdim=1)
+    KL = multmpo(K, L, maxdim=1)
     psik = randomMPS(othersitesk)
     psil = randomMPS(othersitesl)
-    psi_kl_out = applyMPO(K, applyMPO(L, psil, maxdim=1), maxdim=1)
+    psi_kl_out = applympo(K, applympo(L, psil, maxdim=1), maxdim=1)
     @test inner(psik,KL,psil) ≈ inner(psik, psi_kl_out) atol=5e-3
     
     badsites = [Index(2,"Site") for n=1:N+1]
     badL = randomMPO(badsites)
-    @test_throws DimensionMismatch multMPO(K,badL)
+    @test_throws DimensionMismatch multmpo(K,badL)
   end
 
   sites = siteinds("S=1/2",N)

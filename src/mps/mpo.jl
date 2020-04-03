@@ -1,8 +1,8 @@
 export MPO,
        randomMPO,
-       applyMPO,
-       multMPO,
-       errorMPOprod,
+       applympo,
+       multmpo,
+       error_mpoprod,
        maxlinkdim,
        orthogonalize!,
        truncate!,
@@ -89,7 +89,7 @@ function randomMPO(sites, m::Int=1)
 end
 
 Base.length(m::MPO) = m.N_
-tensors(m::MPO) = m.A_
+Tensors.store(m::MPO) = m.A_
 leftlim(m::MPO) = m.llim_
 rightlim(m::MPO) = m.rlim_
 
@@ -101,21 +101,21 @@ function set_rightlim!(m::MPO,new_rl::Int)
   m.rlim_ = new_rl
 end
 
-Base.getindex(m::MPO, n::Integer) = getindex(tensors(m), n)
+Base.getindex(m::MPO, n::Integer) = getindex(store(m), n)
 
 function Base.setindex!(M::MPO,T::ITensor,n::Integer)
   (n <= leftlim(M)) && set_leftlim!(M,n-1)
   (n >= rightlim(M)) && set_rightlim!(M,n+1)
-  setindex!(tensors(M),T,n)
+  setindex!(store(M),T,n)
 end
 
-Base.copy(m::MPO) = MPO(m.N_, copy(tensors(m)))
-Base.similar(m::MPO) = MPO(m.N_, similar(tensors(m)), 0, m.N_)
+Base.copy(m::MPO) = MPO(m.N_, copy(store(m)))
+Base.similar(m::MPO) = MPO(m.N_, similar(store(m)), 0, m.N_)
 
 function Base.deepcopy(m::T) where {T <: Union{MPO,MPS}}
     res = similar(m)
     # otherwise we will end up modifying the elements of A!
-    res.A_ = deepcopy(tensors(m))
+    res.A_ = deepcopy(store(m))
     return res
 end
 
@@ -195,7 +195,7 @@ end
 function Base.show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  for (i, A) ∈ enumerate(tensors(W))
+  for (i, A) ∈ enumerate(store(W))
     if order(A) != 0
       println(io,"[$i] $(inds(A))")
     else
@@ -216,13 +216,14 @@ end
 
 
 """
+dot(y::MPS, A::MPO, x::MPS)
 inner(y::MPS, A::MPO, x::MPS)
 
 Compute <y|A|x>
 """
-function inner(y::MPS,
-               A::MPO,
-               x::MPS)::Number
+function LinearAlgebra.dot(y::MPS,
+                           A::MPO,
+                           x::MPS)::Number
   N = length(A)
   if length(y) != N || length(x) != N
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
@@ -239,14 +240,15 @@ function inner(y::MPS,
 end
 
 """
+dot(B::MPO, y::MPS, A::MPO, x::MPS)
 inner(B::MPO, y::MPS, A::MPO, x::MPS)
 
 Compute <By|A|x>
 """
-function inner(B::MPO,
-               y::MPS,
-               A::MPO,
-               x::MPS)::Number
+function LinearAlgebra.dot(B::MPO,
+                           y::MPS,
+                           A::MPO,
+                           x::MPS)::Number
   N = length(B)
   if length(y) != N || length(x) != N || length(A) != N
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y)) or $(length(A))"))
@@ -278,12 +280,12 @@ end
 
 
 """
-errorMPOprod(y::MPS, A::MPO, x::MPS)
+error_mpoprod(y::MPS, A::MPO, x::MPS)
 
 Compute the distance between A|x> and an approximation MPS y:
 | |y> - A|x> |/| A|x> | = √(1 + (<y|y> - 2*real(<y|A|x>))/<Ax|A|x>)
 """
-function errorMPOprod(y::MPS, A::MPO, x::MPS)
+function error_mpoprod(y::MPS, A::MPO, x::MPS)
   N = length(A)
   if length(y) != N || length(x) != N
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
@@ -360,17 +362,21 @@ function Base.sum(A::Vector{T}; kwargs...) where {T <: Union{MPS, MPO}}
     return sum(newterms; kwargs...)
 end
 
-function applyMPO(A::MPO, psi::MPS; kwargs...)::MPS
-  method = get(kwargs, :method, "DensityMatrix")
-  if method == "DensityMatrix" || method == "densitymatrix"
-    return densityMatrixApplyMPO(A, psi; kwargs...)
+function applympo(A::MPO, psi::MPS; kwargs...)::MPS
+  method = get(kwargs, :method, "densitymatrix")
+  if method == "DensityMatrix"
+    @warn "In applympo, method DensityMatrix is deprecated in favor of densitymatrix"
+    method = "densitymatrix"
+  end
+  if method == "densitymatrix"
+    return applympo_densitymatrix(A, psi; kwargs...)
   elseif method == "naive" || method == "Naive"
-    return naiveApplyMPO(A, psi; kwargs...)
+    return applympo_naive(A, psi; kwargs...)
   end
   throw(ArgumentError("Method $method not supported"))
 end
 
-function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
+function applympo_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   n = length(A)
   n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
   psi_out         = similar(psi)
@@ -379,7 +385,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(psi))
   mindim::Int     = max(get(kwargs,:mindim,1), 1)
   normalize::Bool = get(kwargs, :normalize, false) 
-  all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applyMPO method 'DensityMatrix'"))
+  all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applympo method 'DensityMatrix'"))
 
   rand_plev = 14741
   psi_c     = dag(copy(psi))
@@ -429,7 +435,7 @@ function densityMatrixApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   return psi_out
 end
 
-function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
+function applympo_naive(A::MPO, psi::MPS; kwargs...)::MPS
   truncate = get(kwargs,:truncate,true)
 
   N = length(A)
@@ -457,7 +463,7 @@ function naiveApplyMPO(A::MPO, psi::MPS; kwargs...)::MPS
   return psi_out
 end
 
-function multMPO(A::MPO, B::MPO; kwargs...)::MPO
+function multmpo(A::MPO, B::MPO; kwargs...)::MPO
     cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
     resp_degen::Bool = get(kwargs, :respect_degenerate, true)
     maxdim::Int = get(kwargs,:maxdim,maxlinkdim(A)*maxlinkdim(B))
@@ -487,7 +493,7 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
     end
     sites_A = Index[]
     sites_B = Index[]
-    @inbounds for (AA, BB) in zip(tensors(A_), tensors(B_))
+    @inbounds for (AA, BB) in zip(store(A_), store(B_))
         sda = setdiff(inds(AA, "Site"), inds(BB, "Site"))
         sdb = setdiff(inds(BB, "Site"), inds(AA, "Site"))
         sda_ind = setprime(sda[1], 0) == sdb[1] ? plev(sda[1]) == 1 ? sda[1] : setprime(sda[1], 1) : setprime(sda[1], 0)
@@ -634,3 +640,13 @@ Perform a truncation of all bonds of an MPO,
 using the truncation parameters (cutoff,maxdim, etc.)
 provided as keyword arguments.
 """ truncate!
+
+@deprecate applyMPO(args...; kwargs...) applympo(args...; kwargs...)
+@deprecate errorMPOprod(args...; kwargs...) error_mpoprod(args...; kwargs...)
+@deprecate densityMatrixApplyMPO(args...; kwargs...) applympo_densitymatrix(args...; kwargs...)
+@deprecate naiveApplyMPO(args...; kwargs...) applympo_naive(args...; kwargs...)
+@deprecate multMPO(args...; kwargs...) multmpo(args...; kwargs...)
+@deprecate set_leftlim!(args...; kwargs...) setleftlim!(args...; kwargs...)
+@deprecate set_rightlim!(args...; kwargs...) setrightlim!(args...; kwargs...)
+@deprecate tensors(args...; kwargs...) store(args...; kwargs...)
+
