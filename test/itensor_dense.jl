@@ -212,6 +212,23 @@ end
   @test Aexp ≈ Aexp_from_mat
 end
 
+@testset "setelt" begin
+  i = Index(2,"i")
+
+  T = setelt(i(1))
+  @test T[i(1)] ≈ 1.0
+  @test T[i(2)] ≈ 0.0
+
+  T = setelt(i(2))
+  @test T[i(1)] ≈ 0.0
+  @test T[i(2)] ≈ 1.0
+
+  # Test setelt taking Pair{Index,Int}
+  T = setelt(i=>2)
+  @test T[i(1)] ≈ 0.0
+  @test T[i(2)] ≈ 1.0
+end
+
 
 @testset "add and axpy" begin
   i = Index(2,"i")
