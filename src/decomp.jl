@@ -3,38 +3,6 @@ export factorize,
        qr,
        svd
 
-function LinearAlgebra.qr(A::ITensor,
-                          Linds...;
-                          kwargs...)
-  tags::TagSet = get(kwargs,:tags,"Link,qr")
-  Lis = commoninds(A,IndexSet(Linds...))
-  Ris = uniqueinds(A,Lis)
-  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
-  Q,R = itensor(QT),itensor(RT)
-  q = commonind(Q,R)
-  settags!(Q,tags,q)
-  settags!(R,tags,q)
-  q = settags(q,tags)
-  return Q,R,q
-end
-
-# TODO: allow custom tags in internal indices?
-function Tensors.polar(A::ITensor,
-                       Linds...;
-                       kwargs...)
-  Lis = commoninds(A,IndexSet(Linds...))
-  Ris = uniqueinds(A,Lis)
-  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  UT,PT = polar(tensor(A),Lpos,Rpos)
-  U,P = itensor(UT),itensor(PT)
-  u = commoninds(U,P)
-  p = uniqueinds(P,U)
-  replaceinds!(U,u,p')
-  replaceinds!(P,u,p')
-  return U,P,commoninds(U,P)
-end
-
 """
   TruncSVD{N}
 ITensor factorization type for a truncated singular-value decomposition, returned by
@@ -139,102 +107,6 @@ function LinearAlgebra.svd(A::ITensor,
   return TruncSVD(U,S,V,spec,u,v)
 end
 
-function _factorize_center(A::ITensor,
-                           Linds...;
-                           kwargs...)
-  tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V,spec = svd(A,Linds...;kwargs...)
-  u = commonind(U,S)
-  v = commonind(S,V)
-  for ss = 1:dim(u)
-    S[ss,ss] = sqrt(S[ss,ss])
-  end
-  FU = settags(U*S,tags,v)
-  FV = settags(S*V,tags,u)
-  u = settags(u,tags)
-  v = settags(v,tags)
-  replaceind!(FU,v,u)
-  return FU,FV,spec,commonind(FU,FV)
-end
-
-function _factorize_from_left_svd(A::ITensor,
-                                  Linds...;
-                                  kwargs...)
-  tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V,spec = svd(A,Linds...;kwargs...)
-  u = commonind(U,S)
-  FU = settags(U,tags,u)
-  FV = settags(S*V,tags,u)
-  return FU,FV,spec,commonind(FU,FV)
-end
-
-function _factorize_from_right_svd(A::ITensor,
-                                   Linds...;
-                                   kwargs...)
-  tags::TagSet = get(kwargs,:tags,"Link,u")
-  U,S,V,spec = svd(A,Linds...;kwargs...)
-  v = commonind(S,V)
-  FU = settags(U*S,tags,v)
-  FV = settags(V,tags,v)
-  return FU,FV,spec,commonind(FU,FV)
-end
-
-function _factorize_from_left_eigen(A::ITensor,
-                                    Linds...;
-                                    kwargs...)
-  Lis = commoninds(A,IndexSet(Linds...))
-  A² = A*prime(dag(A),Lis)
-  FU,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
-                                       kwargs...)
-  FV = dag(FU)*A
-  return FU,FV,spec,commonind(FU,FV)
-end
-
-function _factorize_from_right_eigen(A::ITensor,
-                                     Linds...;
-                                     kwargs...)
-  Ris = uniqueinds(A,IndexSet(Linds...))
-  A² = A*prime(dag(A),Ris)
-  FV,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
-                                       kwargs...)
-  FU = A*dag(FV)
-  return FU,FV,spec,commonind(FU,FV)
-end
-
-"""
-factorize(A::ITensor, Linds...; dir = "center", which_factorization = "svd", cutoff = 0.0)
-
-Do a low rank factorization of A either using an SVD or an eigendecomposition of A'A or AA'.
-"""
-function LinearAlgebra.factorize(A::ITensor,
-                                 Linds...;
-                                 kwargs...)
-  dir::String = get(kwargs,:dir,"center")
-  if dir == "center"
-    return _factorize_center(A,Linds...;kwargs...)
-  end
-  which_factorization::String = get(kwargs,:which_factorization,"svd")
-  cutoff::Float64 = get(kwargs,:cutoff,0.0)
-  use_eigen = false
-  if which_factorization == "eigen" || (which_factorization == "automatic" && cutoff > 1e-12)
-    use_eigen = true
-  end
-  if dir == "fromleft"
-    if use_eigen
-      return _factorize_from_left_eigen(A,Linds...;kwargs...)
-    else
-      return _factorize_from_left_svd(A,Linds...;kwargs...)
-    end
-  elseif dir == "fromright"
-    if use_eigen
-      return _factorize_from_right_eigen(A,Linds...;kwargs...)
-    else
-      return _factorize_from_right_svd(A,Linds...;kwargs...)
-    end
-  end
-  throw(ArgumentError("In factorize, no dir = $dir supported. Use center, fromleft or fromright."))
-end
-
 """
   TruncEigen{N}
 ITensor factorization type for a truncated eigenvalue decomposition, returned by
@@ -319,5 +191,141 @@ function LinearAlgebra.eigen(A::ITensor,
   u = commonind(D,U) 
   v = uniqueind(D,U)
   return TruncEigen(U,D,spec,u,v)
+end
+
+function LinearAlgebra.qr(A::ITensor,
+                          Linds...;
+                          kwargs...)
+  tags::TagSet = get(kwargs,:tags,"Link,qr")
+  Lis = commoninds(A,IndexSet(Linds...))
+  Ris = uniqueinds(A,Lis)
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
+  Q,R = itensor(QT),itensor(RT)
+  q = commonind(Q,R)
+  settags!(Q,tags,q)
+  settags!(R,tags,q)
+  q = settags(q,tags)
+  return Q,R,q
+end
+
+# TODO: allow custom tags in internal indices?
+function Tensors.polar(A::ITensor,
+                       Linds...;
+                       kwargs...)
+  Lis = commoninds(A,IndexSet(Linds...))
+  Ris = uniqueinds(A,Lis)
+  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  UT,PT = polar(tensor(A),Lpos,Rpos)
+  U,P = itensor(UT),itensor(PT)
+  u = commoninds(U,P)
+  p = uniqueinds(P,U)
+  replaceinds!(U,u,p')
+  replaceinds!(P,u,p')
+  return U,P,commoninds(U,P)
+end
+
+function factorize_svd(A::ITensor,
+                       Linds...;
+                       kwargs...)
+  ortho::String = get(kwargs, :ortho, "left")
+  tags::TagSet = get(kwargs, :tags, "Link,fact")
+  U,S,V,spec,u,v = svd(A, Linds...; kwargs...)
+  if ortho == "left"
+    L,R = U,S*V
+  elseif ortho == "right"
+    L,R = U*S,V
+  elseif ortho == "none"
+    sqrtS = S
+    sqrtS .= sqrt.(S)
+    L,R = U*sqrtS,sqrtS*V
+    replaceind!(L,v,u)
+  else
+    error("In factorize using svd decomposition, ortho keyword $ortho not supported. Supported options are left, right, or none.")
+  end
+
+  # Set the tags properly
+  l = commonind(L,R)
+  settags!(L, tags, l)
+  settags!(R, tags, l)
+  l = settags(l, tags)
+
+  return L,R,spec,l
+end
+
+function factorize_eigen(A::ITensor,
+                         Linds...;
+                         kwargs...)
+  ortho::String = get(kwargs, :ortho, "left")
+  if ortho == "left"
+    Lis = commoninds(A,IndexSet(Linds...))
+    A² = A*prime(dag(A),Lis)
+    L,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
+                                        kwargs...)
+    R = dag(L)*A
+  elseif ortho == "right"
+    Ris = uniqueinds(A,IndexSet(Linds...))
+    A² = A*prime(dag(A),Ris)
+    R,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
+                                        kwargs...)
+    L = A*dag(R)
+  else
+    error("In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
+  end
+  return L,R,spec,commonind(L,R)
+end
+
+"""
+factorize(A::ITensor, Linds...;
+          ortho = "left",
+          which_decomp = "automatic",
+          tags = "Link,fact",
+          cutoff = 0.0,
+          maxdim = ...)
+
+Perform a factorization of A into ITensors L and R such the A ≈ L*R.
+
+Choose orthogonality properties of the factorization with the keyword `ortho`. For example, if `ortho = "left"`, the left factor L is an orthogonal basis such that `L * dag(prime(L, commonind(L,R))) ≈ I`. If `ortho = "right"`, the right factor R forms an orthogonal basis. Finally, if `ortho = "none"`, neither of the factors form an orthogonal basis, and in general are made as symmetricly as possible (based on the decomposition used).
+
+By default, the decomposition used is chosen automatically. You can choose which decomposition to use with the keyword `which_decomp`. Right now, options `"svd"` and `"eigen"` are supported.
+
+When `"svd"` is chosen, L = U and R = S*V for `ortho = "left"`, L = U*S and R = V for `ortho = "right"`, and L = U*sqrt(S) and R = sqrt(S)*V for `ortho = "none"`.
+
+When `"eigen"` is chosen, L = U and R = U'*A where U is determined
+from the eigendecompositon A*A' = U*D*U' for `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is not supported for `ortho = "none"`. 
+
+When `"automatic"` is chosen, svd or eigen is used depending on the provided cutoff (eigen is only used when the cutoff is greater than 1e-12, since it has a lower precision).
+
+In the future, other decompositions like QR, polar, cholesky, LU, etc.
+are expected to be supported.
+"""
+function LinearAlgebra.factorize(A::ITensor,
+                                 Linds...;
+                                 kwargs...)
+  ortho::String = get(kwargs, :ortho, "left")
+  which_decomp::String = get(kwargs, :which_decomp, "automatic")
+  cutoff::Float64 = get(kwargs, :cutoff, 0.0)
+
+  # Deprecated keywords
+  haskey(kwargs, :dir) && 
+  error("""dir keyword in factorize has been replace by ortho.
+  Note that the default is now `left`, meaning for the results L,R = factorize(A), L forms an orthogonal basis.""")
+
+  haskey(kwargs, :which_factorization) && 
+  error("""which_factorization keyword in factorize has been replace by which_decomp.""")
+
+  # Determines when to use eigen vs. svd (eigen is less precise,
+  # so eigen should only be used if a larger cutoff is requested)
+  automatic_cutoff = 1e-12
+  if which_decomp == "svd" || 
+     (which_decomp == "automatic" && cutoff ≤ automatic_cutoff)
+    L,R,spec,l = factorize_svd(A, Linds...; kwargs...)
+  elseif which_decomp == "eigen" ||
+         (which_decomp == "automatic" && cutoff > automatic_cutoff)
+    L,R,spec,l = factorize_eigen(A, Linds...; kwargs...)
+  else
+    return throw(ArgumentError("In factorize, no factorization $which_decomp supported. Use svd, eigen, or automatic."))
+  end
+  return L,R,spec,l
 end
 

@@ -5,22 +5,24 @@ function dmrg(H::MPO,
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)::Tuple{Float64,MPS}
-  which_factorization::String = get(kwargs,:which_factorization,"automatic")
+  which_decomp::String = get(kwargs, :which_decomp, "automatic")
   obs = get(kwargs,:observer, NoObserver())
-  quiet::Bool = get(kwargs,:quiet,false)
+  quiet::Bool = get(kwargs, :quiet, false)
 
   # eigsolve kwargs
-  eigsolve_tol::Float64 = get(kwargs,:eigsolve_tol,1E-14)
-  eigsolve_krylovdim::Int = get(kwargs,:eigsolve_krylovdim,3)
-  eigsolve_maxiter::Int = get(kwargs,:eigsolve_maxiter,1)
-  eigsolve_verbosity::Int = get(kwargs,:eigsolve_verbosity,0)
+  eigsolve_tol::Float64   = get(kwargs, :eigsolve_tol, 1e-14)
+  eigsolve_krylovdim::Int = get(kwargs, :eigsolve_krylovdim, 3)
+  eigsolve_maxiter::Int   = get(kwargs, :eigsolve_maxiter, 1)
+  eigsolve_verbosity::Int = get(kwargs, :eigsolve_verbosity, 0)
 
   # TODO: add support for non-Hermitian DMRG
-  ishermitian::Bool = true #get(kwargs,:ishermitian,true)
+  # get(kwargs, :ishermitian, true)
+  ishermitian::Bool = true
 
   # TODO: add support for targeting other states with DMRG
   # (such as the state with the largest eigenvalue)
-  eigsolve_which_eigenvalue::Symbol = :SR #get(kwargs,:eigsolve_which_eigenvalue,:SR)
+  # get(kwargs, :eigsolve_which_eigenvalue, :SR)
+  eigsolve_which_eigenvalue::Symbol = :SR
 
   # Keyword argument deprecations
   haskey(kwargs,:maxiter) && error("""maxiter keyword has been replace by eigsolve_krylovdim.
@@ -50,37 +52,38 @@ end
 end
 
 @timeit_debug GLOBAL_TIMER "eigsolve" begin
-      vals,vecs = eigsolve(PH,phi,1,eigsolve_which_eigenvalue; ishermitian=ishermitian,
-                                                               tol=eigsolve_tol,
-                                                               krylovdim=eigsolve_krylovdim,
-                                                               maxiter=eigsolve_maxiter)
+      vals,vecs = eigsolve(PH, phi, 1, eigsolve_which_eigenvalue;
+                           ishermitian = ishermitian,
+                           tol = eigsolve_tol,
+                           krylovdim = eigsolve_krylovdim,
+                           maxiter = eigsolve_maxiter)
 end
       energy,phi = vals[1],vecs[1]
 
       dir = ha==1 ? "fromleft" : "fromright"
 
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
-      spec = replacebond!(psi,b,phi;
-                          maxdim=maxdim(sweeps,sw),
-                          mindim=mindim(sweeps,sw),
-                          cutoff=cutoff(sweeps,sw),
-                          dir=dir,
-                          which_factorization=which_factorization)
+      spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps,sw),
+                                       mindim = mindim(sweeps,sw),
+                                       cutoff = cutoff(sweeps,sw),
+                                       dir = dir,
+                                       which_decomp = which_decomp)
 end
 
-      measure!(obs;energy=energy,
-               psi=psi,
-               bond=b,
-               sweep=sw,
-               half_sweep=ha,
-               spec = spec,
-               quiet=quiet)
+      measure!(obs; energy = energy,
+                    psi = psi,
+                    bond = b,
+                    sweep = sw,
+                    half_sweep = ha,
+                    spec = spec,
+                    quiet = quiet)
     end
     end
     if !quiet
-      @printf("After sweep %d energy=%.12f maxlinkdim=%d time=%.3f\n",sw,energy,maxlinkdim(psi),sw_time)
+      @printf("After sweep %d energy=%.12f maxlinkdim=%d time=%.3f\n",
+              sw, energy, maxlinkdim(psi), sw_time)
     end
-    checkdone!(obs;quiet=quiet) && break
+    checkdone!(obs; quiet = quiet) && break
   end
   return (energy,psi)
 end

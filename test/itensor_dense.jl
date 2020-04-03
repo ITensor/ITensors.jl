@@ -589,6 +589,42 @@ end
       @test UUᴴ ≈ δ(u,u')
     end
 
+    @testset "Test factorize of an ITensor" begin
+
+      @testset "factorize default" begin
+        L,R = factorize(A, (j,l))
+        l = commonind(L, R)
+        @test A ≈ L*R
+        @test L*dag(prime(L, l)) ≈ δ(SType, l, l')
+        @test R*dag(prime(R, l)) ≉ δ(SType, l, l')
+      end
+
+      @testset "factorize ortho left" begin
+        L,R = factorize(A, (j,l); ortho="left")
+        l = commonind(L, R)
+        @test A ≈ L*R
+        @test L*dag(prime(L, l)) ≈ δ(SType, l, l')
+        @test R*dag(prime(R, l)) ≉ δ(SType, l, l')
+      end
+
+      @testset "factorize ortho right" begin
+        L,R = factorize(A, (j,l); ortho="right")
+        l = commonind(L, R)
+        @test A ≈ L*R
+        @test L*dag(prime(L, l)) ≉ δ(SType, l, l')
+        @test R*dag(prime(R, l)) ≈ δ(SType, l, l')
+      end
+
+      @testset "factorize ortho none" begin
+        L,R = factorize(A, (j,l); ortho="none")
+        l = commonind(L, R)
+        @test A ≈ L*R
+        @test L*dag(prime(L, l)) ≉ δ(SType, l, l')
+        @test R*dag(prime(R, l)) ≉ δ(SType, l, l')
+      end
+
+    end
+
   end # End ITensor factorization testset
 
 end # End Dense storage test
