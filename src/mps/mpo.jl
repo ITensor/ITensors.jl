@@ -504,9 +504,18 @@ function multMPO(A::MPO, B::MPO; kwargs...)::MPO
         lA = commonind(A_[i], A_[i+1])
         lB = commonind(B_[i], B_[i+1])
         nfork = ITensor(lA, lB, commonind(res[i], res[i+1]))
-        res[i], nfork = factorize(mapprime(clust,2,1), inds(res[i]), dir="fromleft", tags=tags(lA), cutoff=cutoff, maxdim=maxdim, mindim=mindim)
+        res[i], nfork = factorize(mapprime(clust,2,1),
+                                  inds(res[i]),
+                                  ortho="left",
+                                  tags=tags(lA),
+                                  cutoff=cutoff,
+                                  maxdim=maxdim,
+                                  mindim=mindim)
         mid = dag(commonind(res[i], nfork))
-        res[i+1] = ITensor(mid, sites_A[i+1], sites_B[i+1], commonind(res[i+1], res[i+2]))
+        res[i+1] = ITensor(mid,
+                           sites_A[i+1],
+                           sites_B[i+1],
+                           commonind(res[i+1], res[i+2]))
     end
     clust = nfork * A_[N-1] * B_[N-1]
     nfork = clust * A_[N] * B_[N]

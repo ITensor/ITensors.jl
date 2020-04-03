@@ -11,8 +11,8 @@ a = [0.1, 0.01, 1e-13]
 i = Index(2,"i")
 j = Index(2,"j")
 A = randomITensor(i,j)
-@test_throws ArgumentError factorize(A, i, dir="fakedir")
-
+@test_throws ErrorException factorize(A, i, dir="left")
+@test_throws ErrorException factorize(A, i, ortho="fakedir")
 
 A = randomITensor(i,i')
 eigA = eigen(A)

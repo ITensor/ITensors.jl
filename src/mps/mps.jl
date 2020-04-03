@@ -207,12 +207,8 @@ function replacebond!(M::MPS,
   dir = get(kwargs, :dir, "fromleft")
   which_decomp = get(kwargs, :which_decomp, "automatic")
   if dir == "fromleft"
-    M.llim_ == b-1 && (M.llim_ += 1)
-    M.rlim_ == b+1 && (M.rlim_ += 1)
     ortho = "left"
   elseif dir == "fromright"
-    M.llim_ == b   && (M.llim_ -= 1)
-    M.rlim_ == b+2 && (M.rlim_ -= 1)
     ortho = "right"
   else
     error("In replacebond!, dir keyword $dir not supported. Use fromleft or fromright")
@@ -225,6 +221,13 @@ function replacebond!(M::MPS,
                                        kwargs_factorize...)
   M[b]   = L
   M[b+1] = R
+  if dir == "fromleft"
+    M.llim_ == b-1 && (M.llim_ += 1)
+    M.rlim_ == b+1 && (M.rlim_ += 1)
+  else
+    M.llim_ == b   && (M.llim_ -= 1)
+    M.rlim_ == b+2 && (M.rlim_ -= 1)
+  end
   return spec
 end
 

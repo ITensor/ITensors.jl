@@ -155,21 +155,21 @@ include("util.jl")
     # check that replacebond! updates llim_ and rlim_ properly
     orthogonalize!(psi,5)
     phi = psi[5]*psi[6]
-    replacebond!(psi,5,phi, dir="fromleft")
-    @test ITensors.leftlim(psi)==5
-    @test ITensors.rightlim(psi)==7
+    replacebond!(psi, 5, phi; dir="fromleft")
+    @test leftlim(psi)==5
+    @test rightlim(psi)==7
 
     phi = psi[5]*psi[6]
-    replacebond!(psi,5,phi,dir="fromright")
-    @test ITensors.leftlim(psi)==4
-    @test ITensors.rightlim(psi)==6
+    replacebond!(psi, 5, phi; dir="fromright")
+    @test leftlim(psi)==4
+    @test rightlim(psi)==6
 
     psi.llim_ = 3
     psi.rlim_ = 7
     phi = psi[5]*psi[6]
-    replacebond!(psi,5,phi,dir="fromleft")
-    @test ITensors.leftlim(psi)==3
-    @test ITensors.rightlim(psi)==7
+    replacebond!(psi, 5, phi; dir="fromleft")
+    @test leftlim(psi)==3
+    @test rightlim(psi)==7
   end
 
 end
