@@ -174,6 +174,16 @@ include("util.jl")
 
 end
 
+@testset "orthogonalize! with QNs" begin
+  N = 8
+  sites = siteinds("S=1/2",N, conserve_qns=true)
+  init_state = [isodd(n) ? "Up" : "Dn" for n=1:N]
+  psi0 = productMPS(sites,init_state)
+  orthogonalize!(psi0,4)
+  @test leftlim(psi0) == 3
+  @test rightlim(psi0) == 5
+end
+
 # Helper function for making MPS
 function basicRandomMPS(N::Int;dim=4)
   sites = [Index(2,"Site") for n=1:N]

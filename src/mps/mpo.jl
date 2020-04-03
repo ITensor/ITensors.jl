@@ -546,6 +546,8 @@ function orthogonalize!(M::Union{MPS,MPO},
     b = leftlim(M)+1
     linds = uniqueinds(M[b],M[b+1])
 
+    # TODO: switch back to QR once
+    # block sparse version is implemented
     #Q,R = qr(M[b], linds)
     #M[b] = Q
     #M[b+1] *= R
@@ -565,9 +567,14 @@ function orthogonalize!(M::Union{MPS,MPO},
     (rightlim(M) > (N+1)) && set_rightlim!(M,N+1)
     b = rightlim(M)-2
     rinds = uniqueinds(M[b+1],M[b])
-    Q,R = qr(M[b+1], rinds)
-    M[b+1] = Q
-    M[b] *= R
+    # TODO: switch back to QR once
+    # block sparse version is implemented
+    #Q,R = qr(M[b+1], rinds)
+    #M[b+1] = Q
+    #M[b] *= R
+    U,S,V = svd(M[b+1],rinds)
+    M[b+1] = U
+    M[b] *= (S*V)
     set_rightlim!(M,b+1)
     if leftlim(M) > rightlim(M)-2
       set_leftlim!(M,rightlim(M)-2)
