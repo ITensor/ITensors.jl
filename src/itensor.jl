@@ -347,7 +347,7 @@ delta(is::Index...) = delta(IndexSet(is...))
 
 const δ = delta
 
-function setelt(iv::IndexVal)
+function setelt(iv::Union{IndexVal,PairIndexInt})
   A = ITensor(ind(iv))
   A[val(iv)] = 1.0
   return A
