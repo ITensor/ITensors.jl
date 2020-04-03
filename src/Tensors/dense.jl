@@ -446,16 +446,23 @@ function contract!!(R::Tensor{<:Number,NR},
                     T1::Tensor{<:Number,N1},
                     labelsT1::NTuple{N1},
                     T2::Tensor{<:Number,N2},
-                    labelsT2::NTuple{N2}) where {NR,N1,N2}
+                    labelsT2::NTuple{N2},
+                    α::Number=1, β::Number=0) where {NR,N1,N2}
   if N1==0
+    (α ≠ 1 || β ≠ 0) &&
+      error("contract!! not yet implemented for scalar ITensor with non-trivial α and β")
     # TODO: replace with an add! function?
     # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
     perm = getperm(labelsR,labelsT2)
     R = permutedims!!(R,T2,perm,(r,t2)->T1[]*t2)
   elseif N2==0
+    (α ≠ 1 || β ≠ 0) &&
+      error("contract!! not yet implemented for scalar ITensor with non-trivial α and β")
     perm = getperm(labelsR,labelsT1)
     R = permutedims!!(R,T1,perm,(r,t1)->T2[]*t1)
   elseif N1+N2==NR
+    (α ≠ 1 || β ≠ 0) &&
+      error("contract!! not yet implemented for outer product tensor contraction with non-trivial α and β")
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
@@ -466,17 +473,36 @@ function contract!!(R::Tensor{<:Number,NR},
       R = permutedims!!(R,copy(R),perm)
     end
   else
-    R = _contract!!(R,labelsR,T1,labelsT1,T2,labelsT2)
+    if α ≠ 1 || β ≠ 0
+      R = _contract!!(R, labelsR,
+                      T1, labelsT1,
+                      T2, labelsT2,
+                      α, β)
+    else
+      R = _contract!!(R, labelsR,
+                      T1, labelsT1,
+                      T2, labelsT2)
+    end
   end
   return R
 end
 
 # Move to tensor.jl? Overload this function
 # for immutable storage types
-function _contract!!(R::Tensor,labelsR,
-                     T1::Tensor,labelsT1,
-                     T2::Tensor,labelsT2)
-  contract!(R,labelsR,T1,labelsT1,T2,labelsT2)
+function _contract!!(R::Tensor, labelsR,
+                     T1::Tensor, labelsT1,
+                     T2::Tensor, labelsT2,
+                     α::Number=1, β::Number=0)
+  if α ≠ 1 || β ≠ 0
+    contract!(R, labelsR,
+              T1, labelsT1,
+              T2, labelsT2,
+              α, β)
+  else
+    contract!(R, labelsR,
+              T1, labelsT1,
+              T2, labelsT2)
+  end
   return R
 end
 
@@ -486,7 +512,8 @@ function contract!(R::DenseTensor{<:Number,NR},
                    labelsT1,
                    T2::DenseTensor{ElT2,N2},
                    labelsT2,
-                   α::Number=1,β::Number=0) where {ElT1,ElT2,N1,N2,NR}
+                   α::Number=1,
+                   β::Number=0) where {ElT1,ElT2,N1,N2,NR}
   if N1+N2==NR
     outer!(R,T1,T2)
     labelsRp = tuplecat(labelsT1,labelsT2)
@@ -525,7 +552,8 @@ function _contract!(CT::DenseTensor{El,NC},
                     AT::DenseTensor{El,NA},
                     BT::DenseTensor{El,NB},
                     props::ContractionProperties,
-                    α::Number=one(El),β::Number=zero(El)) where {El,NC,NA,NB}
+                    α::Number=one(El),
+                    β::Number=zero(El)) where {El,NC,NA,NB}
   # TODO: directly use Tensor instead of Array
   C = array(CT)
   A = array(AT)
@@ -533,7 +561,8 @@ function _contract!(CT::DenseTensor{El,NC},
 
   tA = 'N'
   if props.permuteA
-    AM = reshape(permutedims(A,NTuple{NA,Int}(props.PA)),props.dmid,props.dleft)
+    AM = reshape(permutedims(A,NTuple{NA,Int}(props.PA)),
+                 props.dmid, props.dleft)
     tA = 'T'
   else
     #A doesn't have to be permuted
@@ -547,7 +576,8 @@ function _contract!(CT::DenseTensor{El,NC},
 
   tB = 'N'
   if props.permuteB
-    BM = reshape(permutedims(B,NTuple{NB,Int}(props.PB)),props.dmid,props.dright)
+    BM = reshape(permutedims(B,NTuple{NB,Int}(props.PB)),
+                 props.dmid, props.dright)
   else
     if Btrans(props)
       BM = reshape(B,props.dright,props.dmid)
@@ -565,12 +595,9 @@ function _contract!(CT::DenseTensor{El,NC},
   else
     if Ctrans(props)
       CM = reshape(C,props.dleft,props.dright)
-      if tA=='N' && tB=='N'
-        (AM,BM) = (BM,AM)
-        tA = tB = 'T'
-      elseif tA=='T' && tB=='T'
-        (AM,BM) = (BM,AM)
-        tA = tB = 'N'
+      (AM,BM) = (BM,AM)
+      if tA==tB
+        tA = tB = (tA == 'T' ? 'N' : 'T')
       end
     else
       CM = reshape(C,props.dleft,props.dright)

@@ -57,6 +57,31 @@ Random.seed!(1234)
     @test_throws ErrorException randomITensor(i,dag(j))
   end
 
+
+  @testset "QN setelt" begin
+    i = Index(QN(0)=>2,QN(1)=>2,tags="i")
+
+    T = setelt(i(1))
+    @test T[i(1)] ≈ 1.0
+    @test T[i(2)] ≈ 0.0
+    @test T[i(3)] ≈ 0.0
+    @test T[i(4)] ≈ 0.0
+
+    T = setelt(i(2))
+    @test T[i(1)] ≈ 0.0
+    @test T[i(2)] ≈ 1.0
+    @test T[i(3)] ≈ 0.0
+    @test T[i(4)] ≈ 0.0
+
+    # Test setelt taking Pair{Index,Int}
+    T = setelt(i=>3)
+    @test T[i(1)] ≈ 0.0
+    @test T[i(2)] ≈ 0.0
+    @test T[i(3)] ≈ 1.0
+    @test T[i(4)] ≈ 0.0
+  end
+
+
   @testset "setindex!" begin
 
     @testset "Test 1" begin

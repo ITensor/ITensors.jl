@@ -591,30 +591,45 @@ Tensors.dense(inds::Index...) = inds
 # Helper functions for contracting ITensors
 #
 
-function compute_contraction_labels(Ai::IndexSet{N1},
-                                    Bi::IndexSet{N2}) where {N1,N2}
-  rA = length(Ai)
-  rB = length(Bi)
-  Aind = MVector{N1,Int}(ntuple(_->0,Val(N1)))
-  Bind = MVector{N2,Int}(ntuple(_->0,Val(N2)))
+function compute_contraction_labels(Ais::IndexSet{NA},
+                                    Bis::IndexSet{NB}) where {NA,NB}
+  Alabels = MVector{NA,Int}(ntuple(_->0,Val(NA)))
+  Blabels = MVector{NB,Int}(ntuple(_->0,Val(NB)))
 
   ncont = 0
-  for i = 1:rA, j = 1:rB
-    if Ai[i]==Bi[j]
-      Aind[i] = Bind[j] = -(1+ncont)
+  for i = 1:NA, j = 1:NB
+    if Ais[i] == Bis[j]
+      Alabels[i] = Blabels[j] = -(1+ncont)
       ncont += 1
     end
   end
 
   u = ncont
-  for i = 1:rA
-    if(Aind[i]==0) Aind[i] = (u+=1) end
+  for i = 1:NA
+    if(Alabels[i]==0) Alabels[i] = (u+=1) end
   end
-  for j = 1:rB
-    if(Bind[j]==0) Bind[j] = (u+=1) end
+  for j = 1:NB
+    if(Blabels[j]==0) Blabels[j] = (u+=1) end
   end
 
-  return (NTuple{N1,Int}(Aind),NTuple{N2,Int}(Bind))
+  return (Tuple(Alabels),Tuple(Blabels))
+end
+
+function compute_contraction_labels(Cis::IndexSet{NC},
+                                    Ais::IndexSet{NA},
+                                    Bis::IndexSet{NB}) where {NC,NA,NB}
+  Alabels,Blabels = compute_contraction_labels(Ais, Bis)
+  Clabels = MVector{NC,Int}(ntuple(_->0,Val(NC)))
+  for i = 1:NC
+    locA = findfirst(==(Cis[i]), Ais)
+    if !isnothing(locA)
+      Clabels[i] = Alabels[locA]
+    else
+      locB = findfirst(==(Cis[i]), Bis)
+      Clabels[i] = Blabels[locB]
+    end
+  end
+  return (Tuple(Clabels),Alabels,Blabels)
 end
 
 #
