@@ -229,7 +229,7 @@ function factorize_svd(A::ITensor,
                        Linds...;
                        kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
-  tags::TagSet = get(kwargs, :tags, "Link,u")
+  tags::TagSet = get(kwargs, :tags, "Link,fact")
   U,S,V,spec,u,v = svd(A, Linds...; kwargs...)
   if ortho == "left"
     L,R = U,S*V
@@ -277,23 +277,24 @@ end
 
 """
 factorize(A::ITensor, Linds...;
-          which_decomp = "svd",
           ortho = "left",
-          cutoff = 0.0)
+          which_decomp = "automatic",
+          tags = "Link,fact",
+          cutoff = 0.0,
+          maxdim = ...)
 
 Perform a factorization of A into ITensors L and R such the A ≈ L*R.
 
-Choose which decomposition to use with the keyword `which_decomp`.
+Choose orthogonality properties of the factorization with the keyword `ortho`. For example, if `ortho = "left"`, the left factor L is an orthogonal basis such that `L * dag(prime(L, commonind(L,R))) ≈ I`. If `ortho = "right"`, the right factor R forms an orthogonal basis. Finally, if `ortho = "none"`, neither of the factors form an orthogonal basis, and in general are made as symmetricly as possible (based on the decomposition used).
 
-Right now, options `"svd"`, `"eigen"` and `"automatic"` are supported.
+By default, the decomposition used is chosen automatically. You can choose which decomposition to use with the keyword `which_decomp`. Right now, options `"svd"` and `"eigen"` are supported.
 
-When `"svd"` is chosen, L = U and R = S*V (for `ortho = "left"`).
+When `"svd"` is chosen, L = U and R = S*V for `ortho = "left"`, L = U*S and R = V for `ortho = "right"`, and L = U*sqrt(S) and R = sqrt(S)*V for `ortho = "none"`.
 
-When `"eigen"` is chosen, L = U and R = U'*A where U is determined 
-from the eigendecompositon A*A' = U*D*U'.
+When `"eigen"` is chosen, L = U and R = U'*A where U is determined
+from the eigendecompositon A*A' = U*D*U' for `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is not supported for `ortho = "none"`. 
 
-When `"automatic"` is chosen, svd or eigen is used depending on the provided
-cutoff.
+When `"automatic"` is chosen, svd or eigen is used depending on the provided cutoff (eigen is only used when the cutoff is greater than 1e-12, since it has a lower precision).
 
 In the future, other decompositions like QR, polar, cholesky, LU, etc.
 are expected to be supported.
@@ -327,3 +328,4 @@ function LinearAlgebra.factorize(A::ITensor,
   end
   return L,R,spec,l
 end
+
