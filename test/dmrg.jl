@@ -22,11 +22,12 @@ using ITensors, Test, Random
     cutoff!(sweeps,1E-11)
     str = split(sprint(show, sweeps), '\n')
     @test length(str) > 1
-    energy,psi = dmrg(H,psi,sweeps;quiet=true)
+    energy,psi = dmrg(H, psi, sweeps; quiet=true)
     @test energy < -120.0
     # test with SVD too! 
     psi = randomMPS(sites)
-    energy,psi = dmrg(H,psi,sweeps;quiet=true,which_factorization="svd")
+    energy,psi = dmrg(H, psi, sweeps; 
+                      quiet=true)
     @test energy < -120.0
   end
 
