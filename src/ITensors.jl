@@ -77,6 +77,7 @@ include("indexset.jl")
 # ITensor
 #
 include("itensor.jl")
+include("broadcast.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
 

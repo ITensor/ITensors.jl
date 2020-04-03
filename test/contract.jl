@@ -255,6 +255,5 @@ end
     @test array(permute(C, i, j)) ≈ kron(array(A), transpose(array(B)))
   end 
 
-
 end
 

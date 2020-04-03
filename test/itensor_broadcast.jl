@@ -89,6 +89,40 @@ using ITensors,
     @test_throws ErrorException C .= A .* B
   end
 
+  @testset "Contraction" begin
+    ii = Index(2; tags="ii")
+    jj = Index(2; tags="jj")
+    kk = Index(2; tags="kk")
+
+    AA = randomITensor(ii, jj)
+    BB = randomITensor(kk, jj)
+    CC = randomITensor(kk, ii)
+
+    R = copy(CC)
+    R .= AA .* BB
+    @test AA*BB ≈ R
+
+    R = copy(CC)
+    R .= α .* AA .* BB
+    @test α*AA*BB ≈ R
+
+    R = copy(CC)
+    R .= AA .* α .* BB
+    @test α*AA*BB ≈ R
+
+    R = copy(CC)
+    R .= AA .* BB .* α
+    @test α*AA*BB ≈ R
+
+    R = copy(CC)
+    R .+= α .* AA .* BB
+    @test α*AA*BB+CC ≈ R
+
+    R = copy(CC)
+    R .= β .* R .+ AA .* BB .* α
+    @test α*AA*BB+β*CC ≈ R
+  end
+
   @testset "General functions" begin
     absA = abs.(A)
 
