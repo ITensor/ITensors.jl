@@ -55,8 +55,7 @@ MPS(sites) = MPS(Float64,sites)
 
 Base.length(m::MPS) = m.N_
 
-# TODO: make this vec?
-tensors(m::MPS) = m.A_
+Tensors.store(m::MPS) = m.A_
 
 leftlim(m::MPS) = m.llim_
 rightlim(m::MPS) = m.rlim_
@@ -71,28 +70,28 @@ end
 
 isortho(m::MPS) = (leftlim(m)+1 == rightlim(m)-1)
 
-function orthoCenter(m::MPS)
+function orthocenter(m::MPS)
   !isortho(m) && error("MPS has no well-defined orthogonality center")
   return leftlim(m)+1
 end
 
-Base.getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
+Base.getindex(M::MPS, n::Integer) = getindex(store(M),n)
 
 function Base.setindex!(M::MPS,T::ITensor,n::Integer)
   (n <= leftlim(M)) && set_leftlim!(M,n-1)
   (n >= rightlim(M)) && set_rightlim!(M,n+1)
-  setindex!(tensors(M),T,n)
+  setindex!(store(M),T,n)
 end
 
-Base.copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
-Base.similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
+Base.copy(m::MPS) = MPS(m.N_,copy(store(m)),m.llim_,m.rlim_)
+Base.similar(m::MPS) = MPS(m.N_, similar(store(m)), 0, m.N_)
 
 Base.eachindex(m::MPS) = 1:length(m)
 
 function Base.show(io::IO, M::MPS)
   print(io,"MPS")
   (length(M) > 0) && print(io,"\n")
-  for (i, A) ∈ enumerate(tensors(M))
+  for (i, A) ∈ enumerate(store(M))
     if order(A) != 0
       println(io,"[$i] $(inds(A))")
     else
@@ -182,11 +181,12 @@ function replacesites!(M::MPS,sites)
 end
 
 """
+dot(psi::MPS, phi::MPS)
 inner(psi::MPS, phi::MPS)
 
 Compute <psi|phi>
 """
-function inner(M1::MPS, M2::MPS)::Number
+function LinearAlgebra.dot(M1::MPS, M2::MPS)::Number
   N = length(M1)
   if length(M2) != N
     throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
@@ -199,6 +199,8 @@ function inner(M1::MPS, M2::MPS)::Number
   end
   return O[]
 end
+
+const inner = dot
 
 function replacebond!(M::MPS,
                       b::Int,
@@ -251,7 +253,7 @@ end
 """
     sample(m::MPS)
 
-Given a normalized MPS m with `orthoCenter(m)==1`,
+Given a normalized MPS m with `orthocenter(m)==1`,
 returns a `Vector{Int}` of `length(m)`
 corresponding to one sample of the
 probability distribution defined by
@@ -261,8 +263,8 @@ that the MPS represents
 function sample(m::MPS)
   N = length(m)
 
-  if orthoCenter(m) != 1
-    error("sample: MPS m must have orthoCenter(m)==1")
+  if orthocenter(m) != 1
+    error("sample: MPS m must have orthocenter(m)==1")
   end
   if abs(1.0-norm(m[1])) > 1E-8
     error("sample: MPS is not normalized, norm=$(norm(m[1]))")
@@ -302,3 +304,6 @@ function sample(m::MPS)
   end
   return result
 end
+
+@deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
+
