@@ -661,6 +661,21 @@ end
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
     end
 
+    @testset "Test SVD of a DenseTensor internally" begin
+      Lis = commoninds(A,IndexSet(j,l))
+      Ris = uniqueinds(A,Lis)
+      Lpos,Rpos = getperms(inds(A),Lis,Ris)
+      Ut,St,Vt,spec = svd(tensor(A), Lpos, Rpos)
+      U = itensor(Ut)
+      S = itensor(St)
+      V = itensor(Vt)
+      u = commonind(U, S)
+      v = commonind(V, S)
+      @test store(S) isa Diag{Float64,Vector{Float64}}
+      @test A≈U*S*V
+      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
+      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
+    end
     @testset "Test SVD truncation" begin
         ii = Index(4)
         jj = Index(4)
