@@ -16,8 +16,10 @@ A = randomITensor(i,j)
 
 A = randomITensor(i,i')
 eigA = eigen(A)
+Ut, Dt = eigen(tensor(A))
 eigArr = eigen(array(A))
 @test diag(array(eigA.D), 0) == eigArr.values
+@test diag(array(Dt), 0) == eigArr.values
 
 @testset "Spectrum" begin
   i = Index(100,"i")
@@ -35,4 +37,7 @@ eigArr = eigen(array(A))
   spec = svd(A,i; maxdim=length(S)-3).spec
   @test truncerror(spec) ≈ sum(S[end-2:end].^2)
 
+  @test entropy(Spectrum([0.5; 0.5], 0.0)) == log(2)
+  @test entropy(Spectrum([1.0], 0.0)) == 0.0 
+  @test entropy(Spectrum([0.0], 0.0)) == 0.0 
 end
