@@ -32,6 +32,10 @@ Aview = A[2:3,2:3]
 @test dims(Aview) == (2,2)
 @test A[2,2] == Aview[1,1]
 
+Asim = similar(data(A), 10)
+@test eltype(Asim) == Float64
+@test length(Asim) == 10
+
 B = Tensor(undef,3,4)
 randn!(B)
 
@@ -52,4 +56,6 @@ randn!(t)
 @test conj(data(store(t))) == data(store(conj(t)))
 @test typeof(conj(t)) <: DenseTensor
 
+
+@test Dense(ComplexF64) == Dense{ComplexF64}()
 end
