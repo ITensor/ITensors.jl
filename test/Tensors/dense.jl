@@ -58,6 +58,7 @@ randn!(t)
 
 
 @test Dense(ComplexF64) == Dense{ComplexF64}()
+@test Dense(ComplexF64) == complex(Dense(Float64))
 
 D = Tensor(ComplexF64,(100,100))
 @test eltype(D) == ComplexF64
@@ -83,4 +84,10 @@ H = Tensor(ComplexF64,undef, 100,100)
 @test eltype(H) == ComplexF64
 @test ndims(H) == 2
 @test dim(H) == 100^2
+
+I_arr = rand(10,10,10)
+I = Tensor(I_arr, (10,10,10))
+@test eltype(I) == Float64
+@test dim(I) == 1000
+@test Array(I) == I_arr
 end
