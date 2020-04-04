@@ -1,5 +1,6 @@
 export polar,
-       Spectrum
+       Spectrum,
+       exphermitian
 
 #
 # Linear Algebra of order 2 Tensors

@@ -21,6 +21,11 @@ eigArr = eigen(array(A))
 @test diag(array(eigA.D), 0) == eigArr.values
 @test diag(array(Dt), 0) == eigArr.values
 
+At = rand(10, 10)
+k  = Index(10, "k")
+A = itensor(At + transpose(At), k, k')
+@test Array(exphermitian(tensor(A))) ≈ exp(At + transpose(At))
+
 @testset "Spectrum" begin
   i = Index(100,"i")
   j = Index(100,"j")
