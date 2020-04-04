@@ -98,5 +98,5 @@ j = Index(2,"j")
 k = Index(2,"k")
 J = randomITensor(i, j)
 K = randomITensor(j, k)
-@test Array(tensor(J) * tensor(K)) == Array(J*K, i, k) 
+@test Array(tensor(J) * tensor(K)) ≈ Array(J*K, i, k) 
 end
