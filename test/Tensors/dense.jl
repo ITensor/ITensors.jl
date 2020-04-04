@@ -32,6 +32,8 @@ Aview = A[2:3,2:3]
 @test dims(Aview) == (2,2)
 @test A[2,2] == Aview[1,1]
 
+@test A * 2.0 == 2.0 * A
+
 Asim = similar(data(A), 10)
 @test eltype(Asim) == Float64
 @test length(Asim) == 10
