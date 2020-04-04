@@ -58,4 +58,29 @@ randn!(t)
 
 
 @test Dense(ComplexF64) == Dense{ComplexF64}()
+
+D = Tensor(ComplexF64,(100,100))
+@test eltype(D) == ComplexF64
+@test ndims(D) == 2
+@test dim(D) == 100^2
+
+E = Tensor(ComplexF64,undef, (100,100))
+@test eltype(E) == ComplexF64
+@test ndims(E) == 2
+@test dim(E) == 100^2
+
+F = Tensor((100,100))
+@test eltype(F) == Float64
+@test ndims(F) == 2
+@test dim(F) == 100^2
+
+G = Tensor(undef, (100,100))
+@test eltype(G) == Float64
+@test ndims(G) == 2
+@test dim(G) == 100^2
+
+H = Tensor(ComplexF64,undef, 100,100)
+@test eltype(H) == ComplexF64
+@test ndims(H) == 2
+@test dim(H) == 100^2
 end
