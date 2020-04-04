@@ -92,4 +92,11 @@ I = Tensor(I_arr, (10,10,10))
 @test eltype(I) == Float64
 @test dim(I) == 1000
 @test Array(I) == I_arr
+
+i = Index(2,"i")
+j = Index(2,"j")
+k = Index(2,"k")
+J = randomITensor(i, j)
+K = randomITensor(j, k)
+@test Array(tensor(J) * tensor(K)) == Array(J*K, i, k) 
 end
