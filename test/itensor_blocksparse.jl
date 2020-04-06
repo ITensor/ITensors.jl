@@ -1030,6 +1030,23 @@ Random.seed!(1234)
       @test norm(U*S*V-A) ≈ 0 atol=1e-15
     end
 
+    @testset "SVD no truncate bug" begin
+      s = Index(QN("Sz",-4) => 1,
+                QN("Sz",-2) => 4,
+                QN("Sz", 0) => 6,
+                QN("Sz", 2) => 4,
+                QN("Sz", 4) => 1)
+      A = ITensor(s,s')
+      addblock!(A, (5,2))
+      addblock!(A, (4,3))
+      addblock!(A, (3,4))
+      addblock!(A, (2,5))
+      randn!(A)
+
+      U,S,V = svd(A,s)
+      @test U*S*V ≈ A
+    end
+
   end
 
   @testset "Replace Index" begin

@@ -60,11 +60,11 @@ Tensors.store(m::MPS) = m.A_
 leftlim(m::MPS) = m.llim_
 rightlim(m::MPS) = m.rlim_
 
-function set_leftlim!(m::MPS,new_ll::Int)
+function setleftlim!(m::MPS,new_ll::Int)
   m.llim_ = new_ll
 end
 
-function set_rightlim!(m::MPS,new_rl::Int)
+function setrightlim!(m::MPS,new_rl::Int)
   m.rlim_ = new_rl
 end
 
@@ -78,15 +78,13 @@ end
 Base.getindex(M::MPS, n::Integer) = getindex(store(M),n)
 
 function Base.setindex!(M::MPS,T::ITensor,n::Integer)
-  (n <= leftlim(M)) && set_leftlim!(M,n-1)
-  (n >= rightlim(M)) && set_rightlim!(M,n+1)
+  (n <= leftlim(M)) && setleftlim!(M,n-1)
+  (n >= rightlim(M)) && setrightlim!(M,n+1)
   setindex!(store(M),T,n)
 end
 
 Base.copy(m::MPS) = MPS(m.N_,copy(store(m)),m.llim_,m.rlim_)
 Base.similar(m::MPS) = MPS(m.N_, similar(store(m)), 0, m.N_)
-
-Base.eachindex(m::MPS) = 1:length(m)
 
 function Base.show(io::IO, M::MPS)
   print(io,"MPS")

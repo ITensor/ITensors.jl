@@ -93,19 +93,19 @@ Tensors.store(m::MPO) = m.A_
 leftlim(m::MPO) = m.llim_
 rightlim(m::MPO) = m.rlim_
 
-function set_leftlim!(m::MPO,new_ll::Int)
+function setleftlim!(m::MPO,new_ll::Int)
   m.llim_ = new_ll
 end
 
-function set_rightlim!(m::MPO,new_rl::Int)
+function setrightlim!(m::MPO,new_rl::Int)
   m.rlim_ = new_rl
 end
 
 Base.getindex(m::MPO, n::Integer) = getindex(store(m), n)
 
 function Base.setindex!(M::MPO,T::ITensor,n::Integer)
-  (n <= leftlim(M)) && set_leftlim!(M,n-1)
-  (n >= rightlim(M)) && set_rightlim!(M,n+1)
+  (n <= leftlim(M)) && setleftlim!(M,n-1)
+  (n >= rightlim(M)) && setrightlim!(M,n+1)
   setindex!(store(M),T,n)
 end
 
@@ -119,7 +119,11 @@ function Base.deepcopy(m::T) where {T <: Union{MPO,MPS}}
     return res
 end
 
-Base.eachindex(m::MPO) = 1:length(m)
+const MPSorMPO = Union{MPS,MPO}
+
+Base.eachindex(m::MPSorMPO) = 1:length(m)
+Base.iterate(M::MPSorMPO) = iterate(store(M))
+Base.iterate(M::MPSorMPO, state) = iterate(store(M), state)
 
 # TODO: optimize finding the index a little bit
 # First do: scom = commonind(A[j],x[j])
@@ -548,32 +552,32 @@ function orthogonalize!(M::Union{MPS,MPO},
                         j::Int;
                         kwargs...)
   while leftlim(M) < (j-1)
-    (leftlim(M) < 0) && set_leftlim!(M,0)
+    (leftlim(M) < 0) && setleftlim!(M,0)
     b = leftlim(M)+1
     linds = uniqueinds(M[b],M[b+1])
     L,R = factorize(M[b], linds)
     M[b] = L
     M[b+1] *= R
 
-    set_leftlim!(M,b)
+    setleftlim!(M,b)
     if rightlim(M) < leftlim(M)+2
-      set_rightlim!(M,leftlim(M)+2)
+      setrightlim!(M,leftlim(M)+2)
     end
   end
 
   N = length(M)
 
   while rightlim(M) > (j+1)
-    (rightlim(M) > (N+1)) && set_rightlim!(M,N+1)
+    (rightlim(M) > (N+1)) && setrightlim!(M,N+1)
     b = rightlim(M)-2
     rinds = uniqueinds(M[b+1],M[b])
     L,R = factorize(M[b+1], rinds)
     M[b+1] = L
     M[b] *= R
 
-    set_rightlim!(M,b+1)
+    setrightlim!(M,b+1)
     if leftlim(M) > rightlim(M)-2
-      set_leftlim!(M,rightlim(M)-2)
+      setleftlim!(M,rightlim(M)-2)
     end
   end
 end
@@ -591,7 +595,7 @@ function Tensors.truncate!(M::Union{MPS,MPO}; kwargs...)
     U,S,V = svd(M[j],rinds;kwargs...)
     M[j] = U
     M[j-1] *= (S*V)
-    set_rightlim!(M,j)
+    setrightlim!(M,j)
   end
 
 end
