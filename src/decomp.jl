@@ -66,7 +66,7 @@ function LinearAlgebra.svd(A::ITensor,
     AC = permute(AC,cL,cR)
   end
 
-  UT,ST,VT,spec = svd(tensor(AC);kwargs...)
+  UT,ST,VT,spec = svd(tensor(AC); kwargs...)
   UC,S,VC = itensor(UT),itensor(ST),itensor(VT)
 
   u = commonind(S,UC)

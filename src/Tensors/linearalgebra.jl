@@ -61,6 +61,8 @@ svd of an order-2 DenseTensor
 """
 function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
                            kwargs...) where {ElT,IndsT}
+  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
+
   # Keyword argument deprecations
   use_absolute_cutoff = false
   if haskey(kwargs, :absoluteCutoff)
@@ -100,11 +102,15 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   conj!(MV)
 
   P = MS.^2
-  truncerr,_ = truncate!(P;mindim=mindim,
-                         maxdim=maxdim,
-                         cutoff=cutoff,
-                         use_absolute_cutoff=use_absolute_cutoff,
-                         use_relative_cutoff=use_relative_cutoff)
+  if truncate
+    truncerr,_ = truncate!(P;mindim=mindim,
+                             maxdim=maxdim,
+                             cutoff=cutoff,
+                             use_absolute_cutoff=use_absolute_cutoff,
+                             use_relative_cutoff=use_relative_cutoff)
+  else
+    truncerr = 0.0
+  end
   spec = Spectrum(P,truncerr)
   dS = length(P)
   if dS < length(MS)

@@ -27,9 +27,24 @@ IndexSet(inds::SVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::MVector{N,<:Index}) where {N} = IndexSet{N}(inds)
 IndexSet(inds::NTuple{N,<:Index}) where {N} = IndexSet{N}(inds)
 
-# This is not defined to discourage it's use,
-# since it is not type stable
-#IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
+"""
+IndexSet(inds::Vector{<:Index})
+
+Convert a Vector of indices to an IndexSet.
+
+Note that this is not type stable, since a Vector
+is dynamically sized and an IndexSet is statically sized.
+"""
+IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
+
+"""
+IndexSet{N}(inds::Vector{<:Index})
+
+Convert a Vector of indices to an IndexSet of size N.
+
+Type stable conversion of a Vector of indices to an IndexSet
+(in contrast to `IndexSet(::Vector{<:Index})`).
+"""
 IndexSet{N}(inds::Vector{<:Index}) where {N} = IndexSet{N}(inds...)
 
 IndexSet{N,IndexT}(inds::NTuple{N,IndexT}) where {N,IndexT<:Index} = IndexSet(inds)

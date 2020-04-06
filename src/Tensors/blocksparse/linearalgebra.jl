@@ -3,6 +3,23 @@ const BlockSparseMatrix{ElT,StoreT,IndsT} = BlockSparseTensor{ElT,2,StoreT,IndsT
 const DiagBlockSparseMatrix{ElT,StoreT,IndsT} = DiagBlockSparseTensor{ElT,2,StoreT,IndsT}
 const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 
+function _truncated_blockdim(S::DiagMatrix,
+                             docut::Float64;
+                             singular_values=false,
+                             truncate=true)
+  !truncate && return diaglength(S)
+  newdim = 0
+	val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
+  while newdim+1 ≤ diaglength(S) && val > docut
+    newdim += 1
+    if newdim+1 ≤ diaglength(S)
+      val = singular_values ? getdiagindex(S,newdim+1)^2 : 
+             getdiagindex(S,newdim+1)
+    end
+  end
+  return newdim
+end
+
 """
 svd(T::BlockSparseTensor{<:Number,2}; kwargs...)
 
@@ -15,29 +32,8 @@ computed from the dense svds of seperate blocks.
 """
 function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
                            kwargs...) where {ElT}
-  truncate = haskey(kwargs,:maxdim) || haskey(kwargs,:cutoff)
+  truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 
-  if truncate
-    return _svd_truncate(T; kwargs...)
-  else
-    return _svd_no_truncate(T; kwargs...)
-  end
-end
-
-function _truncated_blockdim(S::DiagMatrix, docut::Float64; singular_values=false)
-  newdim = 0
-	val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
-  while newdim+1 ≤ diaglength(S) && val ≥ docut
-    newdim += 1
-    if newdim+1 ≤ diaglength(S)
-      val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
-    end
-  end
-  return newdim
-end
-
-function _svd_truncate(T::BlockSparseMatrix{ElT};
-                       kwargs...) where {ElT}
   Us = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
   Ss = Vector{DiagBlockSparseMatrix{real(ElT)}}(undef,nnzblocks(T))
   Vs = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
@@ -59,27 +55,36 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
   # the eigenvalues
   d .= d .^ 2
   sort!(d; rev=true)
-  truncerr,docut = truncate!(d; kwargs...)
-  dropblocks = Int[]
-  for n in 1:nnzblocks(T)
-    blockdim = _truncated_blockdim(Ss[n],docut; singular_values=true)
-    if blockdim == 0
-      push!(dropblocks,n)
-    else
-      Strunc = Tensor(Diag(store(Ss[n])[1:blockdim]),(blockdim,blockdim))
-      Ss[n] = Strunc
-      Us[n] = copy(Us[n][1:dim(Us[n],1),1:blockdim])
-      Vs[n] = copy(Vs[n][1:dim(Vs[n],1),1:blockdim])
-    end
-  end
-  deleteat!(Ss,dropblocks)
-  deleteat!(Us,dropblocks)
-  deleteat!(Vs,dropblocks)
 
   # Get the list of blocks of T
   # that are not dropped
   nzblocksT = nzblocks(T)
-  deleteat!(nzblocksT,dropblocks)
+
+  dropblocks = Int[]
+  if truncate
+    truncerr,docut = truncate!(d; kwargs...)
+    for n in 1:nnzblocks(T)
+      blockdim = _truncated_blockdim(Ss[n],
+                                     docut;
+                                     singular_values=true,
+                                     truncate=truncate)
+      if blockdim == 0
+        push!(dropblocks,n)
+      else
+        Strunc = Tensor(Diag(store(Ss[n])[1:blockdim]),
+                        (blockdim,blockdim))
+        Ss[n] = Strunc
+        Us[n] = copy(Us[n][1:dim(Us[n],1),1:blockdim])
+        Vs[n] = copy(Vs[n][1:dim(Vs[n],1),1:blockdim])
+      end
+    end
+    deleteat!(Ss,dropblocks)
+    deleteat!(Us,dropblocks)
+    deleteat!(Vs,dropblocks)
+    deleteat!(nzblocksT,dropblocks)
+    else
+    truncerr,docut = 0.0,0.0
+  end
 
   # The number of blocks of T remaining
   nnzblocksT = nnzblocks(T)-length(dropblocks)
@@ -88,7 +93,9 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
   # Put the blocks into U,S,V
   # 
 
-  nb1_lt_nb2 = (nblocks(T)[1] < nblocks(T)[2] || (nblocks(T)[1] == nblocks(T)[2] && dim(T,1) < dim(T,2)))
+  nb1_lt_nb2 = (nblocks(T)[1] < nblocks(T)[2] || 
+                (nblocks(T)[1] == nblocks(T)[2] && 
+                 dim(T,1) < dim(T,2)))
 
   if nb1_lt_nb2
     uind = sim(ind(T,1))
@@ -104,13 +111,13 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
   end
 
   for n in 1:nnzblocksT
-    setblockdim!(uind,minimum(dims(Ss[n])),n)
+    setblockdim!(uind, minimum(dims(Ss[n])), n)
   end
 
   if dir(uind) != dir(inds(T)[1])
     uind = dag(uind)
   end
-  indsU = setindex(inds(T),dag(uind),2)
+  indsU = setindex(inds(T), dag(uind), 2)
 
   vind = sim(uind)
   if dir(vind) != dir(inds(T)[2])
@@ -162,93 +169,6 @@ function _svd_truncate(T::BlockSparseMatrix{ElT};
   return U,S,V,Spectrum(d,truncerr)
 end
 
-function _svd_no_truncate(T::BlockSparseMatrix{ElT};
-                          kwargs...) where {ElT}
-  nb1_lt_nb2 = (nblocks(T)[1] < nblocks(T)[2] || (nblocks(T)[1] == nblocks(T)[2] && dim(T,1) < dim(T,2)))
-
-  if nb1_lt_nb2
-    uind_from = 1
-  else
-    uind_from = 2
-  end
-
-  uind = sim(ind(T,uind_from))
-  nzblocksT = nzblocks(T)
-  for n in 1:nblocks(uind)
-    b = findfirst(i->i[uind_from]==n,nzblocksT)
-    if !isnothing(b)
-      blockT = nzblocksT[b]
-      setblockdim!(uind,minimum(blockdims(T,blockT)),n)
-    end
-  end
-
-  if dir(uind) != dir(inds(T)[1])
-    uind = dag(uind)
-  end
-
-  indsU = setindex(inds(T),dag(uind),2)
-
-  if nb1_lt_nb2
-    # Make U block diagonal by convention
-    blocksU = Block{2}[ntuple(_->i,Val(2)) for i = 1:minimum(nblocks(indsU))]
-    U = BlockSparseTensor(undef,blocksU,indsU)
-  else
-    U = BlockSparseTensor(ElT,undef,blockoffsets(T),indsU)
-  end
-  
-  vind = sim(uind)
-
-  if dir(vind) != dir(inds(T)[2])
-    vind = dag(vind)
-  end
-
-  indsV = setindex(inds(T),dag(vind),1)
-
-  if nb1_lt_nb2
-    blockoffsetsV,indsV = permutedims(blockoffsets(T),indsV,(2,1))
-    V = BlockSparseTensor(ElT,undef,blockoffsetsV,indsV)
-  else
-    blocksV = Block{2}[ntuple(_->i,Val(2)) for i = 1:minimum(nblocks(indsV))]
-    V = BlockSparseTensor(undef,blocksV,permute(indsV,(2,1)))
-  end
-
-  indsS = setindex(inds(T),uind,1)
-  indsS = setindex(indsS,vind,2)
-
-  # Make S block diagonal by convention
-  blocksS = Block{2}[ntuple(_->i,Val(2)) for i = 1:minimum(nblocks(indsS))]
-
-  S = DiagBlockSparseTensor(undef,blocksS,indsS)
-
-  for n in 1:nnzblocks(T)
-    b = block(T,n)
-    blockT = blockview(T,n)
-    Ub,Sb,Vb = svd(blockT)
-    if nb1_lt_nb2
-      # Block of V, permute since we
-      # are returning V such that T = U*S*V'
-      bV = permute(b,(2,1))
-
-      blockview(V,bV) .= Vb
-
-      blockview(U,(bV[2],bV[2])) .= Ub
-      Sblock = blockview(S,(bV[2],bV[2]))
-      for i in 1:diaglength(Sb)
-        Sblock[i,i] = getdiagindex(Sb,i)
-      end
-    else
-      blockview(U,b) .= Ub
-      blockview(V,n) .= Vb
-      Sblock = blockview(S,n)
-      for i in 1:diaglength(Sb)
-        setdiagindex!(Sblock,getdiagindex(Sb,i),i)
-      end
-    end
-  end
-  # TODO: output spec
-  return U,S,V,Spectrum(Float64[],0.0)
-end
-
 function LinearAlgebra.eigen(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}};
                              kwargs...) where {ElT<:Union{Real,Complex}}
   truncate = haskey(kwargs,:maxdim) || haskey(kwargs,:cutoff)
@@ -277,7 +197,8 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}};
       if blockdim == 0
         push!(dropblocks,n)
       else
-        Dtrunc = Tensor(Diag(store(Ds[n])[1:blockdim]),(blockdim,blockdim))
+        Dtrunc = Tensor(Diag(store(Ds[n])[1:blockdim]),
+                        (blockdim,blockdim))
         Ds[n] = Dtrunc
         Us[n] = copy(Us[n][1:dim(Us[n],1),1:blockdim])
       end
