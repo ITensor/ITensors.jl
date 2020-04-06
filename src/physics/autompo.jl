@@ -266,7 +266,7 @@ function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
   nc = 0
   for el in els
     nr = max(nr,el.row)
-    nc = max(nr,el.col)
+    nc = max(nc,el.col)
   end
   M = zeros(T,nr,nc)
   for el in els
