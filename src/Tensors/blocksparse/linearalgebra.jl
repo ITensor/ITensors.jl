@@ -10,10 +10,11 @@ function _truncated_blockdim(S::DiagMatrix,
   !truncate && return diaglength(S)
   newdim = 0
 	val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
-  while newdim+1 ≤ diaglength(S) && val ≥ docut
+  while newdim+1 ≤ diaglength(S) && val > docut
     newdim += 1
     if newdim+1 ≤ diaglength(S)
-      val = singular_values ? getdiagindex(S,newdim+1)^2 : getdiagindex(S,newdim+1)
+      val = singular_values ? getdiagindex(S,newdim+1)^2 : 
+             getdiagindex(S,newdim+1)
     end
   end
   return newdim
@@ -55,35 +56,35 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
   d .= d .^ 2
   sort!(d; rev=true)
 
-  if truncate
-    truncerr,docut = truncate!(d; kwargs...)
-  else
-    truncerr,docut = 0.0,0.0
-  end
-  dropblocks = Int[]
-  for n in 1:nnzblocks(T)
-    blockdim = _truncated_blockdim(Ss[n],
-                                   docut;
-                                   singular_values=true,
-                                   truncate=truncate)
-    if blockdim == 0
-      push!(dropblocks,n)
-    else
-      Strunc = Tensor(Diag(store(Ss[n])[1:blockdim]),
-                      (blockdim,blockdim))
-      Ss[n] = Strunc
-      Us[n] = copy(Us[n][1:dim(Us[n],1),1:blockdim])
-      Vs[n] = copy(Vs[n][1:dim(Vs[n],1),1:blockdim])
-    end
-  end
-  deleteat!(Ss,dropblocks)
-  deleteat!(Us,dropblocks)
-  deleteat!(Vs,dropblocks)
-
   # Get the list of blocks of T
   # that are not dropped
   nzblocksT = nzblocks(T)
-  deleteat!(nzblocksT,dropblocks)
+
+  dropblocks = Int[]
+  if truncate
+    truncerr,docut = truncate!(d; kwargs...)
+    for n in 1:nnzblocks(T)
+      blockdim = _truncated_blockdim(Ss[n],
+                                     docut;
+                                     singular_values=true,
+                                     truncate=truncate)
+      if blockdim == 0
+        push!(dropblocks,n)
+      else
+        Strunc = Tensor(Diag(store(Ss[n])[1:blockdim]),
+                        (blockdim,blockdim))
+        Ss[n] = Strunc
+        Us[n] = copy(Us[n][1:dim(Us[n],1),1:blockdim])
+        Vs[n] = copy(Vs[n][1:dim(Vs[n],1),1:blockdim])
+      end
+    end
+    deleteat!(Ss,dropblocks)
+    deleteat!(Us,dropblocks)
+    deleteat!(Vs,dropblocks)
+    deleteat!(nzblocksT,dropblocks)
+    else
+    truncerr,docut = 0.0,0.0
+  end
 
   # The number of blocks of T remaining
   nnzblocksT = nnzblocks(T)-length(dropblocks)
@@ -110,13 +111,13 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
   end
 
   for n in 1:nnzblocksT
-    setblockdim!(uind,minimum(dims(Ss[n])),n)
+    setblockdim!(uind, minimum(dims(Ss[n])), n)
   end
 
   if dir(uind) != dir(inds(T)[1])
     uind = dag(uind)
   end
-  indsU = setindex(inds(T),dag(uind),2)
+  indsU = setindex(inds(T), dag(uind), 2)
 
   vind = sim(uind)
   if dir(vind) != dir(inds(T)[2])
@@ -196,7 +197,8 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}};
       if blockdim == 0
         push!(dropblocks,n)
       else
-        Dtrunc = Tensor(Diag(store(Ds[n])[1:blockdim]),(blockdim,blockdim))
+        Dtrunc = Tensor(Diag(store(Ds[n])[1:blockdim]),
+                        (blockdim,blockdim))
         Ds[n] = Dtrunc
         Us[n] = copy(Us[n][1:dim(Us[n],1),1:blockdim])
       end

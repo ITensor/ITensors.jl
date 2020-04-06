@@ -1036,14 +1036,47 @@ Random.seed!(1234)
                 QN("Sz", 0) => 6,
                 QN("Sz", 2) => 4,
                 QN("Sz", 4) => 1)
-      A = ITensor(s,s')
+      A = ITensor(s, s')
       addblock!(A, (5,2))
       addblock!(A, (4,3))
       addblock!(A, (3,4))
       addblock!(A, (2,5))
       randn!(A)
-
       U,S,V = svd(A,s)
+      @test U*S*V ≈ A
+    end
+
+    @testset "SVD no truncate" begin
+      s = Index(QN("Sz",-4) => 1,
+                QN("Sz",-2) => 4,
+                QN("Sz", 0) => 6,
+                QN("Sz", 2) => 4,
+                QN("Sz", 4) => 1)
+      A = ITensor(s, s')
+      addblock!(A, (5,1))
+      addblock!(A, (4,2))
+      addblock!(A, (3,3))
+      addblock!(A, (2,4))
+      addblock!(A, (1,5))
+      U,S,V = svd(A, s)
+      @test dims(S) == dims(A)
+      @test U*S*V ≈ A
+    end
+
+    @testset "SVD truncate zeros" begin
+      s = Index(QN("Sz",-4) => 1,
+                QN("Sz",-2) => 4,
+                QN("Sz", 0) => 6,
+                QN("Sz", 2) => 4,
+                QN("Sz", 4) => 1)
+      A = ITensor(s, s')
+      addblock!(A, (5,1))
+      addblock!(A, (4,2))
+      addblock!(A, (3,3))
+      addblock!(A, (2,4))
+      addblock!(A, (1,5))
+      U,S,V = svd(A, s; cutoff=0)
+      @test dims(S) == (0,0)
       @test U*S*V ≈ A
     end
 
