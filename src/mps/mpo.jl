@@ -551,13 +551,9 @@ function orthogonalize!(M::Union{MPS,MPO},
     (leftlim(M) < 0) && set_leftlim!(M,0)
     b = leftlim(M)+1
     linds = uniqueinds(M[b],M[b+1])
-
-    #Q,R = qr(M[b], linds)
-    #M[b] = Q
-    #M[b+1] *= R
-    U,S,V = svd(M[b],linds)
-    M[b] = U
-    M[b+1] *= (S*V)
+    L,R = factorize(M[b], linds)
+    M[b] = L
+    M[b+1] *= R
 
     set_leftlim!(M,b)
     if rightlim(M) < leftlim(M)+2
@@ -571,9 +567,10 @@ function orthogonalize!(M::Union{MPS,MPO},
     (rightlim(M) > (N+1)) && set_rightlim!(M,N+1)
     b = rightlim(M)-2
     rinds = uniqueinds(M[b+1],M[b])
-    Q,R = qr(M[b+1], rinds)
-    M[b+1] = Q
+    L,R = factorize(M[b+1], rinds)
+    M[b+1] = L
     M[b] *= R
+
     set_rightlim!(M,b+1)
     if leftlim(M) > rightlim(M)-2
       set_leftlim!(M,rightlim(M)-2)
