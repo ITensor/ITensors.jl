@@ -51,7 +51,7 @@ Base.similar(D::NonuniformDiag) = Diag(similar(data(D)))
 #  return Diag(similar(VecT,diaglength(inds)))
 #end
 
-Base.similar(D::UniformDiag) = Diag(zero(T))
+Base.similar(D::UniformDiag{ElT}) where {ElT} = Diag(zero(ElT))
 Base.similar(D::UniformDiag,inds) = similar(D)
 Base.similar(::Type{<:UniformDiag{ElT}},inds) where {ElT} = Diag(zero(ElT))
 

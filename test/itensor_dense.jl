@@ -37,6 +37,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
     @test size(A) == dims(A) == (2,2)
+    @test dim(A) == 4
 
     @test !isnull(A)
 
@@ -45,7 +46,11 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test ndims(B) == order(B) == 2 == length(inds(B))
     @test size(B) == dims(B) == (2,2)
     @test !isnull(B)
-  end
+
+    A = randomITensor()
+    @test eltype(A) == Float64
+    @test ndims(A) == 0
+end
 
   @testset "From matrix" begin
     M = [1 2; 3 4]
@@ -60,6 +65,12 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test_throws BoundsError size(A,3)
     @test_throws BoundsError size(A,0)
     @test_throws ErrorException size(M,0)
+    # setstore changes the internal data but not indices
+    N = [5 6; 7 8]
+    A = itensor(M, i, j)
+    B = ITensors.setstore(A, N)
+    @test N == Matrix(B, i, j)
+    @test store(B) isa Dense{Float64}
 
     M = [1 2 3; 4 5 6]
     @test_throws DimensionMismatch itensor(M,i,j)
@@ -88,6 +99,18 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     V = vector(TV)
     for ni in i
       @test V[ni] ≈ TV[i(ni)]
+    end
+    V = Vector(TV)
+    for ni in i
+      @test V[ni] ≈ TV[i(ni)]
+    end
+    V = Vector(TV, i)
+    for ni in i
+      @test V[ni] ≈ TV[i(ni)]
+    end
+    V = Vector{ComplexF64}(TV)
+    for ni in i
+      @test V[ni] ≈ complex(TV[i(ni)])
     end
 
     T2 = randomITensor(i,j)
@@ -272,6 +295,11 @@ end
                     2,2,2,2)
   Aexp_from_mat = itensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
+  Aexp = exphermitian(A,(i1,i2),(s1,s2))
+  Amatexp = reshape(parent(exp(ITensors.LinearAlgebra.Hermitian(reshape(Amat,4,4)))),
+                    2,2,2,2)
+  Aexp_from_mat = itensor(Amatexp,i1,i2,s1,s2)
+  @test Aexp ≈ Aexp_from_mat
 end
 
 @testset "setelt" begin
@@ -300,7 +328,13 @@ end
   B = itensor(b,i)
   c = [5.0; 8.0]
   @test A + B == itensor([4.0; 6.0], i)
-  @test axpy!(2.0, A, B) == itensor(c, i) 
+  @test axpy!(2.0, A, B) == itensor(c, i)
+  a = [1.0; 2.0]
+  b = [3.0; 4.0]
+  A = itensor(a,i)
+  B = itensor(b,i)
+  c = [5.0; 8.0]
+  @test add!(B, 2.0, A) == itensor(c, i)
   a = [1.0; 2.0]
   b = [3.0; 4.0]
   A = itensor(a,i)
@@ -495,6 +529,10 @@ end
   A1 = randomITensor(s1,l,l')
   A2 = randomITensor(s2,l',l'')
 
+  @testset "ind(::ITensor)" begin
+    @test ind(A1, 1) == s1
+    @test ind(A1, 2) == l
+  end
   @testset "replaceind and replaceinds" begin
     rA1 = replaceind(A1,s1,s2)
     @test hasinds(rA1,s2,l,l')
@@ -623,6 +661,21 @@ end
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
     end
 
+    @testset "Test SVD of a DenseTensor internally" begin
+      Lis = commoninds(A,IndexSet(j,l))
+      Ris = uniqueinds(A,Lis)
+      Lpos,Rpos = getperms(inds(A),Lis,Ris)
+      Ut,St,Vt,spec = svd(tensor(A), Lpos, Rpos)
+      U = itensor(Ut)
+      S = itensor(St)
+      V = itensor(Vt)
+      u = commonind(U, S)
+      v = commonind(V, S)
+      @test store(S) isa Diag{Float64,Vector{Float64}}
+      @test A≈U*S*V
+      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
+      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
+    end
     @testset "Test SVD truncation" begin
         ii = Index(4)
         jj = Index(4)

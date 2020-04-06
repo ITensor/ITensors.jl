@@ -242,6 +242,22 @@ using ITensors,
       @test D*A ≈ dense(D)*A
       @test A*D ≈ dense(D)*A
     end
+    
+    @testset "Contraction Diag*Dense (outer)" begin
+      D = diagITensor(v,l,i,k,j)
+      A = randomITensor(m,n)
+
+      @test order(D*A) == 6 
+      @test D*A ≈ dense(D)*A
+    end
+
+    @testset "Contraction Diag*Diag (outer)" begin
+      D1 = diagITensor(v,l,i)
+      D2 = diagITensor(v,m,n)
+
+      @test order(D1*D2) == 4
+      @test D1*D2 ≈ dense(D1)*dense(D2)
+    end
 
     @testset "Contraction Diag*Diag (all contracted)" begin
       D1 = diagITensor(v,l,i,k,j)

@@ -23,9 +23,12 @@ end
         B = A*C
         @test hasinds(B, l, k, c)
         @test c == commonind(B, C)
+        @test combinedind(C) == c
+        @test isnothing(combinedind(A))
         D = B*C
         @test hasinds(D, i, j, k, l)
         @test D ≈ A
+        @test isnothing(combinedind(D))
     end
     for inds_il ∈ permutations([i,l])
         C,c = combiner(inds_il...)
