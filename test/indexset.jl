@@ -19,17 +19,13 @@ using ITensors,
     @test IndexSet(I) === I
     @test l ∈ IndexSet(I, l) 
     @test l ∈ IndexSet(l, I)
-    @test l ∈ IndexSet( (I, IndexSet(l)) )
-    #TODO: what should size(::IndexSet) do?
-    #@test size(I) == (3,)
-    @test length(IndexSet{2}()) == 2
-    @test length(IndexSet(Val(2))) == 2
+    @test length(IndexSet{2}(i,j)) == 2
   end
   @testset "length of IndexSet and friends" begin
-    @test length(typeof(IndexSet{2}())) == 2
-    @test order(IndexSet(Val(2))) == 2
-    @test ndims(IndexSet(Val(2))) == 2
-    @test ndims(typeof(IndexSet(Val(2)))) == 2
+    @test length(typeof(IndexSet{2}(i,j))) == 2
+    @test order(IndexSet(i,j)) == 2
+    @test ndims(IndexSet(i,j)) == 2
+    @test ndims(typeof(IndexSet(i,j))) == 2
   end
   @testset "Convert to Index" begin
     @test Index(IndexSet(i)) === i

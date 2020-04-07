@@ -31,8 +31,6 @@ end
 
 SmallString(s::SmallString) = SmallString(s.data)
 
-#Base.length(s::SmallString) = s.length
-
 Base.getindex(s::SmallString,n::Integer) = getindex(s.data,n)
 
 function Base.setindex(s::SmallString,val,n::Integer)
@@ -40,18 +38,6 @@ function Base.setindex(s::SmallString,val,n::Integer)
 end
 
 isnull(s::SmallString) = @inbounds s[1] == IntChar(0)
-
-#function StaticArrays.push(s::SmallString,val)
-#  newlen = 1
-#  while newlen <= smallLength && s[newlen] != IntChar(0)
-#    newlen += 1
-#  end
-#  if newlen > smallLength
-#    throw(ErrorException("push: SmallString already at maximum length"))
-#  end
-#  icval = convert(IntChar,val)
-#  return SmallString(setindex(s.data,icval,newlen))
-#end
 
 function SmallString(i::IntSmallString)
   mut_is = MVector{1,IntSmallString}(ntoh(i))
@@ -69,8 +55,6 @@ function IntSmallString(s::SmallString)
   return cast_to_uint64(s.data)
 end
 
-#isint(i::IntSmallString) = isint(SmallString(i))
-
 function isint(s::SmallString)::Bool
   ndigits = 1
   while ndigits <= smallLength && s[ndigits] != IntChar(0)
@@ -80,17 +64,6 @@ function isint(s::SmallString)::Bool
   end
   return true
 end
-
-#Base.parse(::Type{Int}, i::IntSmallString) = parse(Int,SmallString(i))
-
-#function Base.parse(::Type{Int}, s::SmallString)
-#  n = length(s)
-#  int = 0
-#  for j = 1:n
-#    int = int*10 + parse(Int,Char(s[j]))
-#  end
-#  return int
-#end
 
 # Here we use the StaticArrays comparison
 Base.:(==)(s1::SmallString,s2::SmallString) = (s1.data == s2.data)
@@ -121,8 +94,6 @@ function Base.String(s::SmallString)
   len = n-1
   return String(s.data[1:len])
 end
-
-#Base.convert(::Type{String}, s::SmallString) = String(s)
 
 function Base.show(io::IO, s::SmallString)
   n = 1

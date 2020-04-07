@@ -116,7 +116,16 @@ end
 
 function Base.show(io::IO,
                    mime::MIME"text/plain",
+                   S::Combiner)
+  println(io, "Permutation of blocks: ", S.perm)
+  println(io, "Combination of blocks: ", S.comb)
+end
+
+function Base.show(io::IO,
+                   mime::MIME"text/plain",
                    T::CombinerTensor)
-  # Intentionally left blank
+  summary(io, T)
+  println(io)
+  show(io, mime, store(T))
 end
 

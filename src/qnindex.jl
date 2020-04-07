@@ -1,22 +1,20 @@
 export flux,
-       hasqns,
-       QNIndex,
-       QNIndexVal,
-       qn,
-       qnblockdim,
-       qnblocknum
+       hasqns
 
 const QNBlock = Pair{QN,Int64}
+
 const QNBlocks = Vector{QNBlock}
 
 qn(qnblock::QNBlock) = qnblock.first
-Tensors.blockdim(qnblock::QNBlock) = qnblock.second
 
-Tensors.blockdim(qnblocks::QNBlocks,b::Int) = blockdim(qnblocks[b])
+blockdim(qnblock::QNBlock) = qnblock.second
+
+blockdim(qnblocks::QNBlocks,b::Int) = blockdim(qnblocks[b])
 
 qn(qnblocks::QNBlocks,b::Int) = qn(qnblocks[b])
 
-Tensors.nblocks(qnblocks::QNBlocks) = length(qnblocks)
+nblocks(qnblocks::QNBlocks) = length(qnblocks)
+
 function Tensors.dim(qnblocks::QNBlocks)
   dimtot = 0
   for (_,blockdim) in qnblocks
@@ -82,6 +80,12 @@ function Index(qnblocks::QNBlock...; dir::Arrow=Out, tags="", plev=0)
   return Index([qnblocks...], dir, tags, plev)
 end
 
+"""
+dim(::QNIndex)
+
+Get the total dimension of the QN Index
+(the sum of the block dimensions).
+"""
 Tensors.dim(i::QNIndex) = dim(space(i))
 
 Tensors.nblocks(i::QNIndex) = nblocks(space(i))
@@ -90,7 +94,8 @@ qn(ind::QNIndex,b::Int) = dir(ind)*qn(space(ind),b)
 
 qnblocks(ind::QNIndex) = space(ind)
 
-Tensors.blockdim(ind::QNIndex,b::Int) = blockdim(space(ind),b)
+Tensors.blockdim(ind::QNIndex,
+                 b::Int) = blockdim(space(ind),b)
 
 function qn(iv::QNIndexVal)
   i = ind(iv)
@@ -244,15 +249,11 @@ function Tensors.outer(i1::QNIndex,i2::QNIndex; tags="", plev=0)
   end
 end
 
-Tensors.outer(i::QNIndex; tags="", plev=0) = sim(i; tags=tags, plev=plev)
+outer(i::QNIndex; tags="", plev=0) = sim(i; tags=tags, plev=plev)
 
 function isless(qnb1::QNBlock, qnb2::QNBlock)
   return isless(qn(qnb1),qn(qnb2))
 end
-
-# Combine neighboring blocks that are the same
-#function combineqns_sorted(qns::QNBlocks)
-#end
 
 function Tensors.permuteblocks(i::QNIndex,perm)
   qnblocks_perm = space(i)[perm]

@@ -11,7 +11,8 @@ const BlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {
 # Special version for BlockSparseTensor
 # Generic version doesn't work since BlockSparse us parametrized by
 # the Tensor order
-function StaticArrays.similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}},::Type{IndsR}) where {NT,ElT,VecT,IndsR}
+function similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}},
+                      ::Type{IndsR}) where {NT,ElT,VecT,IndsR}
   NR = ndims(IndsR)
   return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
 end
@@ -887,7 +888,7 @@ end
 function permute_combine(boffs::BlockOffsets,
                          inds::IndsT,
                          pos::Vararg{IntOrIntTuple,N}) where {IndsT,N}
-  perm = tuplecat(pos...)
+  perm = flatten(pos...)
   boffsp,indsp = permutedims(boffs,inds,perm)
   indsR = combine(indsp,pos...)
   boffsR = reshape(boffsp,indsp,indsR)
@@ -945,7 +946,7 @@ function permute_combine(T::BlockSparseTensor{ElT,NT,IndsT},
                          pos::Vararg{IntOrIntTuple,NR}) where {ElT,NT,IndsT,NR}
   boffsR,indsR = permute_combine(blockoffsets(T),inds(T),pos...)
 
-  perm = tuplecat(pos...)
+  perm = flatten(pos...)
 
   length(perm)≠NT && error("Index positions must add up to order of Tensor ($NT)")
   isperm(perm) || error("Index positions must be a permutation")

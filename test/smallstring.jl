@@ -69,14 +69,14 @@ import ITensors.SmallString,
   end
 
   @testset "show" begin
-    t = Tag("")
+    t = ITensors.Tag("")
     @test sprint(show,t) == ""
 
-    t = Tag("Red")
+    t = ITensors.Tag("Red")
     @test sprint(show,t) == "Red"
 
     # Make sure to test maximum length tag
-    t = Tag("Electron")
+    t = ITensors.Tag("Electron")
     @test sprint(show,t) == "Electron"
   end
 

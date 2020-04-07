@@ -1,6 +1,7 @@
 export polar,
        Spectrum,
-       exphermitian
+       exphermitian,
+       svd
 
 #
 # Linear Algebra of order 2 Tensors
@@ -12,13 +13,13 @@ export eigs,
        truncerror,
        entropy
 
-function Base.:*(T1::Tensor{ElT1,2,StoreT1,IndsT1},
-                 T2::Tensor{ElT2,2,StoreT2,IndsT2}) where
+function Base.:*(T1::Tensor{ElT1,2,StoreT1},
+                 T2::Tensor{ElT2,2,StoreT2}) where
                                        {ElT1,StoreT1<:Dense,IndsT1,
                                         ElT2,StoreT2<:Dense,IndsT2}
   RM = matrix(T1)*matrix(T2)
-  indsR = IndsT1(ind(T1,1),ind(T2,2))
-  return Tensor(Dense(vec(RM)),indsR)
+  indsR = (ind(T1,1), ind(T2,2))
+  return Tensor(Dense(vec(RM)), indsR)
 end
 
 function LinearAlgebra.exp(T::DenseTensor{ElT,2}) where {ElT}

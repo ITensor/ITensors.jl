@@ -1,5 +1,5 @@
-using ITensors,
-      Test, LinearAlgebra
+using ITensors.Tensors,
+      Test
 
 @testset "DiagTensor basic functionality" begin
 
@@ -20,12 +20,10 @@ using ITensors,
   @test similar(D) == Diag(0.0)
 
   d = 3
-  i = Index(d,"i")
-  j = Index(d,"j")
   vr = rand(d)
-  D = tensor(diagITensor(vr, i,j))
-  @test Array(D) == diagm(0=>vr) 
-  @test matrix(D) == diagm(0=>vr)
+  D = Tensor(Diag(vr), (d,d))
+  @test Array(D) == Tensors.LinearAlgebra.diagm(0=>vr) 
+  @test matrix(D) == Tensors.LinearAlgebra.diagm(0=>vr)
   # fails because of missing similar method for NonuniformDiag :(
   #@test permutedims(D, (2, 1)) == tensor(diagITensor(vr, j, i))
   #@test permutedims(tensor(diagITensor(2.0, j, i)), (2, 1)) == tensor(diagITensor(2.0, j, i))

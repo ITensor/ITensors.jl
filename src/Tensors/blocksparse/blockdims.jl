@@ -21,8 +21,8 @@ const BlockDims{N} = NTuple{N,BlockDim}
 
 Base.ndims(ds::Type{<:BlockDims{N}}) where {N} = N
 
-StaticArrays.similar_type(::Type{<:BlockDims},
-                          ::Type{Val{N}}) where {N} = BlockDims{N}
+similar_type(::Type{<:BlockDims},
+             ::Type{Val{N}}) where {N} = BlockDims{N}
 
 """
 dense(::BlockDims) -> Dims

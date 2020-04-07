@@ -1,7 +1,8 @@
 export data,
        TensorStorage,
        randn!,
-       scale!
+       scale!,
+       norm
 
 abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 

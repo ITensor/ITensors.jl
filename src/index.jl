@@ -134,7 +134,10 @@ Base.copy(i::Index) = Index(id(i),copy(space(i)),dir(i),copy(tags(i)),plev(i))
   sim(i::Index; tags=tags(i), dir=dir(i))
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-function Tensors.sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
+function sim(i::Index;
+             tags=copy(tags(i)),
+             plev=plev(i),
+             dir=dir(i))
   return Index(rand(IDType),copy(space(i)),dir,tags,plev)
 end
 
@@ -142,7 +145,7 @@ end
     dag(i::Index)
 Copy an index `i` and reverse it's direction
 """
-Tensors.dag(i::Index) = Index(id(i),copy(space(i)),-dir(i),copy(tags(i)),plev(i))
+dag(i::Index) = Index(id(i),copy(space(i)),-dir(i),copy(tags(i)),plev(i))
 
 """
     isdefault(i::Index)
@@ -267,9 +270,9 @@ function Base.iterate(i::Index,state::Int=1)
   return (state,state+1)
 end
 
-Tensors.outer(i::Index) = i
+outer(i::Index) = i
 
-function Tensors.outer(i1::Index,i2::Index; tags="")
+function outer(i1::Index, i2::Index; tags="")
   return Index(dim(i1)*dim(i2),tags)
 end
 

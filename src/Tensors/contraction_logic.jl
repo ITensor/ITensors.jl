@@ -37,8 +37,8 @@ function contract_inds(T1is,
   for i in T1labels
     i < 0 && (ncont += 1)
   end
-  IndT1 = eltype(T1is)
-  Ris = Vector{IndT1}(undef,NR)
+  IndT = promote_type(eltype(T1is), eltype(T2is))
+  Ris = Vector{IndT}(undef,NR)
   u = 1
   # TODO: use Rlabels, don't assume ncon convention
   for i1 ∈ 1:N1

@@ -161,7 +161,7 @@ end
 
 # To fix method ambiguity with similar(::AbstractArray,::Type)
 function Base.similar(T::DenseTensor,::Type{ElT}) where {ElT}
-  return Tensor(similar(store(T),ElT),copy(inds(T)))
+  return Tensor(similar(store(T),ElT), inds(T))
 end
 
 # To fix method ambiguity with similar(::AbstractArray,::Tuple)
@@ -243,19 +243,19 @@ end
 
 # Reshape a DenseTensor using the specified dimensions
 # This returns a view into the same Tensor data
-function Base.reshape(T::DenseTensor,dims)
+function Base.reshape(T::DenseTensor, dims)
   dim(T)==dim(dims) || error("Total new dimension must be the same as the old dimension")
-  return Tensor(store(T),dims)
+  return Tensor(store(T), dims)
 end
 
 # This version fixes method ambiguity with AbstractArray reshape
-function Base.reshape(T::DenseTensor,dims::Dims)
+function Base.reshape(T::DenseTensor, dims::Dims)
   dim(T)==dim(dims) || error("Total new dimension must be the same as the old dimension")
-  return Tensor(store(T),dims)
+  return Tensor(store(T), dims)
 end
 
-function Base.reshape(T::DenseTensor,dims::Int...)
-  return Tensor(store(T),tuple(dims...))
+function Base.reshape(T::DenseTensor, dims::Int...)
+  return Tensor(store(T), tuple(dims...))
 end
 
 # Create an Array that is a view of the Dense Tensor
@@ -467,10 +467,10 @@ function contract!!(R::Tensor{<:Number,NR},
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
     R = outer!!(R,T1,T2)
-    labelsRp = tuplecat(labelsT1,labelsT2)
-    perm = getperm(labelsR,labelsRp)
+    labelsRp = (labelsT1..., labelsT2...)
+    perm = getperm(labelsR, labelsRp)
     if !is_trivial_permutation(perm)
-      R = permutedims!!(R,copy(R),perm)
+      R = permutedims!!(R, copy(R), perm)
     end
   else
     if α ≠ 1 || β ≠ 0
@@ -516,10 +516,10 @@ function contract!(R::DenseTensor{<:Number,NR},
                    β::Number=0) where {ElT1,ElT2,N1,N2,NR}
   if N1+N2==NR
     outer!(R,T1,T2)
-    labelsRp = tuplecat(labelsT1,labelsT2)
+    labelsRp = (labelsT1..., labelsT2...)
     perm = getperm(labelsR,labelsRp)
     if !is_trivial_permutation(perm)
-      permutedims!(R,copy(R),perm)
+      permutedims!(R, copy(R), perm)
     end
     return R
   end
@@ -591,7 +591,7 @@ function _contract!(CT::DenseTensor{El,NC},
   if props.permuteC
     # Need to copy here since we will be permuting
     # into C later
-    CM = reshape(copy(C),props.dleft,props.dright)
+    CM = reshape(copy(C), props.dleft, props.dright)
   else
     if Ctrans(props)
       CM = reshape(C,props.dleft,props.dright)
@@ -628,7 +628,7 @@ that the original indices 3 and 2 are combined.
 """
 function permute_reshape(T::DenseTensor{ElT,NT,IndsT},
                          pos::Vararg{<:Any,N}) where {ElT,NT,IndsT,N}
-  perm = tuplecat(pos...)
+  perm = flatten(pos...)
 
   length(perm)≠NT && error("Index positions must add up to order of Tensor ($N)")
   isperm(perm) || error("Index positions must be a permutation")
@@ -716,10 +716,8 @@ function polar(T::DenseTensor{<:Number,N,IndsT},
   # Use sim to create "similar" indices, in case
   # the indices have identifiers. If not this should
   # act as an identity operator
-  Rinds_sim = sim(Rinds)
-
-  Uinds = tuplecat(Linds,Rinds_sim)
-  Pinds = tuplecat(Rinds_sim,Rinds)
+  Uinds = (Linds..., sim(Rinds)...)
+  Pinds = (sim(Rinds)..., Rinds...)
 
   U = reshape(UM,Uinds)
   P = reshape(PM,Pinds)
@@ -769,15 +767,6 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   data = read(g,"data")
   return Dense{ElT}(data)
 end
-
-#function Base.summary(io::IO,
-#                      T::Tensor)
-#  println(io,typeof(T))
-#  println(io," ",Base.dims2string(dims(T)))
-#  for (dim,ind) in enumerate(inds(T))
-#    println(io,"Dim $dim: ",ind)
-#  end
-#end
 
 function Base.show(io::IO,
                    mime::MIME"text/plain",

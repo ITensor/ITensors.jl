@@ -1,18 +1,3 @@
-export insertat,
-       insertafter,
-       deleteat,
-       getindices,
-       tuplecat,
-       getperm,
-       getperms,
-       invperm,
-       permute,
-       ValLength,
-       is_trivial_permutation,
-       sim,
-       isdisjoint,
-       count_common,
-       count_unique
 
 """
 ValLength(::Type{NTuple{N}}) = Val{N}
@@ -26,6 +11,16 @@ ValLength(::NTuple{N}) where {N} = Val(N)
 
 ValLength(::CartesianIndex{N}) where {N} = Val(N)
 ValLength(::Type{CartesianIndex{N}}) where {N} = Val{N}
+
+push(s::Tuple, val) = (s..., val)
+
+pushfirst(s::Tuple, val) = (val, s...)
+
+pop(s::NTuple{N}) where {N} = ntuple(i -> s[i],
+                                     Val(N-1))
+
+popfirst(s::NTuple{N}) where {N} = ntuple(i -> s[i+1],
+                                          Val(N-1))
 
 # Permute some other type by perm
 # (for example, tuple, MVector, etc.)
@@ -96,27 +91,21 @@ function is_trivial_permutation(P)
 end
 
 # Combine a bunch of tuples
-# TODO: move this functionality to IndexSet, combine with unioninds?
-@inline tuplecat(x) = x
-@inline tuplecat(x, y) = (x..., y...)
-@inline tuplecat(x, y, z...) = (x..., tuplecat(y, z...)...)
-
-#function tuplecat(is1::NTuple{N1},
-#                  is2::NTuple{N2}) where {N1,N2}
-#  return tuple(is1...,is2...)
-#end
+@inline flatten(x) = x
+@inline flatten(x, y) = (x..., y...)
+@inline flatten(x, y, z...) = (x..., flatten(y, z...)...)
 
 function _deleteat(t,pos,i)
   i < pos && return t[i]
   return t[i+1]
 end
 
-function StaticArrays.deleteat(t::NTuple{N},pos::Integer) where {N}
+function deleteat(t::NTuple{N},pos::Integer) where {N}
   return ntuple(i -> _deleteat(t,pos,i),Val(N-1))
 end
 
-StaticArrays.deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
-function StaticArrays.deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
+deleteat(t::Tuple, I::Tuple{Int}) = deleteat(t, I[1])
+function deleteat(t::Tuple, I::Tuple{Int, Int, Vararg{Int}})
     return deleteat_sorted(t, sort(I, rev = true))
 end
 
