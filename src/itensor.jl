@@ -83,28 +83,6 @@ mutable struct ITensor{N}
   ITensor{N}(is, st::TensorStorage) where {N} = new{N}(st, is)
 end
 
-# TODO: put this constructor back
-#"""
-#ITensor{N}(st::TensorStorage, is)
-#
-#Constructor for an ITensor with the number
-#of dimensions explicitly specified.
-#The TensorStorage is copied (the ITensor
-#owns the storage data).
-#"""
-#ITensor{N}(st::TensorStorage, is) where {N} = ITensor{N}(is, copy(st))
-
-# TODO: put this constructor back
-#"""
-#ITensor(st::TensorStorage, is)
-#
-#Constructor for an ITensor from a TensorStorage
-#and a set of indices.
-#The TensorStorage is copied (the ITensor
-#owns the storage data).
-#"""
-#ITensor(st::TensorStorage, is) = ITensor{ndims(is)}(st, is)
-
 """
 itensor(st::TensorStorage, is)
 
@@ -113,6 +91,16 @@ and a set of indices.
 The ITensor stores a view of the TensorStorage.
 """
 itensor(st::TensorStorage, is) = ITensor{ndims(is)}(is, st)
+
+"""
+ITensor(st::TensorStorage, is)
+
+Constructor for an ITensor from a TensorStorage
+and a set of indices.
+The TensorStorage is copied (the ITensor
+owns the storage data).
+"""
+ITensor(st::TensorStorage, is) = itensor(copy(st), is)
 
 """
 inds(T::ITensor)
