@@ -310,6 +310,9 @@ function Base.permutedims(T::Tensor{<:Number,N},
   return Tp
 end
 
+Base.permutedims(T::Tensor,
+                 perm::Tuple{Vararg{Int}}) = error("Permutation size must match tensor order")
+
 # TODO: move to tensor.jl?
 function Base.:*(x::Number,
                  T::Tensor)
@@ -716,8 +719,9 @@ function polar(T::DenseTensor{<:Number,N,IndsT},
   # Use sim to create "similar" indices, in case
   # the indices have identifiers. If not this should
   # act as an identity operator
-  Uinds = (Linds..., sim(Rinds)...)
-  Pinds = (sim(Rinds)..., Rinds...)
+  simRinds = sim(Rinds)
+  Uinds = (Linds..., simRinds...)
+  Pinds = (simRinds..., Rinds...)
 
   U = reshape(UM,Uinds)
   P = reshape(PM,Pinds)

@@ -26,7 +26,7 @@ eigArr = eigen(array(A))
 At = rand(10, 10)
 k  = Index(10, "k")
 A = itensor(At + transpose(At), k, k')
-@test Array(exphermitian(tensor(A))) ≈ exp(At + transpose(At))
+@test Array(exp(Hermitian(tensor(A)))) ≈ exp(At + transpose(At))
 
 @testset "Spectrum" begin
   i = Index(100,"i")

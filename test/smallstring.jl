@@ -2,7 +2,6 @@ using ITensors,
       Test
 
 import ITensors.SmallString, 
-       ITensors.IntChar, 
        ITensors.isint
 
 @testset "SmallString" begin
@@ -14,7 +13,7 @@ import ITensors.SmallString,
   @testset "setindex" begin
       s = SmallString()
       @test ITensors.isnull(s)
-      t = setindex(s, IntChar(1), 1)
+      t = ITensors.setindex(s, ITensors.IntChar(1), 1)
       @test !ITensors.isnull(t)
   end
 

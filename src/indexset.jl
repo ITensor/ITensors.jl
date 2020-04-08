@@ -11,7 +11,8 @@ export IndexSet,
        mindim,
        maxdim,
        push,
-       permute
+       permute,
+       dims
 
 struct IndexSet{N,IndexT<:Index}
   store::NTuple{N,IndexT}
@@ -131,14 +132,14 @@ pop(is::IndexSet)
 
 Return a new IndexSet with the last Index removed.
 """
-Tensors.pop(is::IndexSet) = IndexSet(pop(store(is))) 
+Tensors.pop(is::IndexSet) = IndexSet(Tensors.pop(Tuple(is))) 
 
 """
 popfirst(is::IndexSet)
 
 Return a new IndexSet with the first Index removed.
 """
-Tensors.popfirst(is::IndexSet) = IndexSet(popfirst(store(is))) 
+Tensors.popfirst(is::IndexSet) = IndexSet(Tensors.popfirst(Tuple(is))) 
 
 # Convert to an Index if there is only one
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
@@ -169,10 +170,10 @@ Warning: this function is not type stable.
 Base.getindex(is::IndexSet,
               v::AbstractVector) = IndexSet(getindex(Tuple(is),v))
 
-function setindex(is::IndexSet,
-                  i::Index,
-                  n::Integer)
-  return IndexSet(setindex(store(is),i,n))
+function Base.setindex(is::IndexSet,
+                       i::Index,
+                       n::Integer)
+  return IndexSet(setindex(store(is), i, n))
 end
 
 Base.length(is::IndexSet{N}) where {N} = N
@@ -181,7 +182,9 @@ Base.length(::Type{<:IndexSet{N}}) where {N} = N
 
 order(is::IndexSet) = length(is)
 
-Tensors.dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
+Tensors.dims(is::IndexSet{N}) where {N} = dims(Tuple(is))
+
+Tensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
 
 Base.ndims(::IndexSet{N}) where {N} = N
 
@@ -193,9 +196,11 @@ dim(is::IndexSet)
 Get the product of the dimensions of the indices
 of the IndexSet (the total dimension of the space).
 """
-Tensors.dim(is::IndexSet) = prod(dims(is))
+Tensors.dim(is::IndexSet) = dim(Tuple(is))
 
 Tensors.dim(is::IndexSet{0}) = 1
+
+Tensors.dim(is::Tuple{Vararg{<:Index}}) = prod(dims(is))
 
 """
 dim(is::IndexSet, n::Int)
@@ -209,8 +214,6 @@ Base.ndims(::NTuple{N,<:Index}) where {N} = N
 
 Base.ndims(::Type{<:NTuple{N,<:Index}}) where {N} = N
 
-#Tensors.dim(::Tuple{Vararg{<:IndexT}})
-
 """
 instertat(is1::IndexSet, is2, pos)
 
@@ -220,7 +223,9 @@ is2 starting at that position.
 function Tensors.insertat(is1::IndexSet,
                           is2,
                           pos::Integer)
-  return IndexSet(insertat(Tuple(is1), Tuple(IndexSet(is2)), pos))
+  return IndexSet(Tensors.insertat(Tuple(is1),
+                                   Tuple(IndexSet(is2)),
+                                   pos))
 end
 
 """
@@ -228,16 +233,16 @@ instertafter(is1::IndexSet, is2, pos)
 
 Insert the indices is2 after position pos.
 """
-function insertafter(is::IndexSet, I...)
-  return IndexSet(insertafter(Tuple(is), I...))
+function Tensors.insertafter(is::IndexSet, I...)
+  return IndexSet(Tensors.insertafter(Tuple(is), I...))
 end
 
-function deleteat(is::IndexSet, I...)
-  return IndexSet(deleteat(Tuple(is),I...))
+function Tensors.deleteat(is::IndexSet, I...)
+  return IndexSet(Tensors.deleteat(Tuple(is),I...))
 end
 
-function getindices(is::IndexSet, I...)
-  return IndexSet(getindices(Tuple(is), I...))
+function Tensors.getindices(is::IndexSet, I...)
+  return IndexSet(Tensors.getindices(Tuple(is), I...))
 end
 
 """
@@ -252,8 +257,9 @@ stride(is::IndexSet. i::Int)
 
 Get the stride of the IndexSet in the dimension i.
 """
-Tensors.stride(is::IndexSet, k::Int) = strides(is)[k]
+Tensors.stride(is::IndexSet, k::Int) = Tensors.strides(is)[k]
 
+import .Tensors.dag
 """
 dag(is::IndexSet)
 
@@ -289,11 +295,11 @@ push(is::IndexSet, i::Index)
 Make a new IndexSet with the Index i inserted
 at the end.
 """
-push(is::IndexSet,
-     i::Index) = IndexSet(push(store(is), i))
+Tensors.push(is::IndexSet,
+             i::Index) = IndexSet(Tensors.push(store(is), i))
 
-push(is::IndexSet{0},
-     i::Index) = IndexSet(i)
+Tensors.push(is::IndexSet{0},
+             i::Index) = IndexSet(i)
 
 """
 pushfirst(is::IndexSet, i::Index)
@@ -301,11 +307,11 @@ pushfirst(is::IndexSet, i::Index)
 Make a new IndexSet with the Index i inserted
 at the beginning.
 """
-pushfirst(is::IndexSet,
-          i::Index) = IndexSet(pushfirst(store(is), i))
+Tensors.pushfirst(is::IndexSet,
+                  i::Index) = IndexSet(Tensors.pushfirst(store(is), i))
 
-pushfirst(is::IndexSet{0},
-          i::Index) = IndexSet(i)
+Tensors.pushfirst(is::IndexSet{0},
+                  i::Index) = IndexSet(i)
 
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
@@ -322,7 +328,7 @@ sim(is::IndexSet)
 
 Make a new IndexSet with similar indices.
 """
-sim(is::IndexSet) = map(i -> sim(i), is)
+Tensors.sim(is::IndexSet) = map(i -> sim(i), is)
 
 """
 mindim(is::IndexSet)
@@ -334,8 +340,8 @@ Returns 1 if the IndexSet is empty.
 function mindim(is::IndexSet)
   length(is) == 0 && (return 1)
   md = dim(is[1])
-  for n ∈ 2:length(is)
-    md = min(md,dim(is[n]))
+  for n in 2:length(is)
+    md = min(md, dim(is[n]))
   end
   return md
 end
@@ -805,6 +811,62 @@ end
 #
 
 hasqns(is::IndexSet) = any(hasqns,is)
+
+"""
+nblocks(::IndexSet,i::Integer)
+
+The number of blocks in the specified dimension.
+"""
+function Tensors.nblocks(inds::IndexSet, i::Integer)
+  return nblocks(Tuple(inds),i)
+end
+
+function Tensors.nblocks(inds::IndexSet, is)
+  return nblocks(Tuple(inds),is)
+end
+
+"""
+nblocks(::IndexSet)
+
+A tuple of the number of blocks in each
+dimension.
+"""
+function Tensors.nblocks(inds::IndexSet{N}) where {N}
+  return ntuple(i->nblocks(inds,i),Val(N))
+end
+
+function Tensors.nblocks(inds::NTuple{N,<:Index}) where {N}
+  return nblocks(IndexSet(inds))
+end
+
+ndiagblocks(inds) = minimum(nblocks(inds))
+
+# TODO: generic to IndexSet and BlockDims
+function eachblock(inds::IndexSet)
+  return CartesianIndices(nblocks(inds))
+end
+
+function eachdiagblock(inds::IndexSet{N}) where {N}
+  return [ntuple(_->i,Val(N)) for i in 1:ndiagblocks(inds)]
+end
+
+function flux(inds::IndexSet,block)
+  qntot = QN()
+  for n in 1:ndims(inds)
+    ind = inds[n]
+    qntot += qn(ind,block[n])
+  end
+  return qntot
+end
+
+flux(inds::IndexSet,vals::Int...) = flux(inds,block(inds,vals...))
+
+Tensors.block(inds::IndexSet,
+              vals::Int...) = blockindex(inds, vals...)[2]
+
+#
+# Read and write
+#
 
 function readcpp(io::IO,::Type{<:IndexSet};kwargs...)
   format = get(kwargs,:format,"v3")

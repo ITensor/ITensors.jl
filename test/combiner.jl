@@ -13,7 +13,7 @@ A = randomITensor(i, j, k, l)
 @testset "Basic combiner properties" begin
     C,c = combiner(i, j, k)
     @test eltype(store(C)) === Nothing
-    @test_throws ErrorException data(store(C))
+    @test_throws ErrorException ITensors.data(C)
     @test ITensors.Tensors.uncombinedinds(tensor(C)) == IndexSet(i, j, k)
 end
 

@@ -17,8 +17,8 @@ using ITensors,
   @testset "Basic constructors" begin
     I = IndexSet(i,j,k)
     @test IndexSet(I) === I
-    @test l ∈ IndexSet(I, l) 
-    @test l ∈ IndexSet(l, I)
+    @test l ∈ IndexSet(I..., l) 
+    @test l ∈ IndexSet(l, I...)
     @test length(IndexSet{2}(i,j)) == 2
   end
   @testset "length of IndexSet and friends" begin
@@ -95,9 +95,9 @@ using ITensors,
   end
   @testset "strides" begin
     I = IndexSet(i, j)
-    @test strides(I) == (1, idim)
-    @test stride(I, 1) == 1
-    @test stride(I, 2) == idim
+    @test ITensors.Tensors.strides(I) == (1, idim)
+    @test ITensors.Tensors.stride(I, 1) == 1
+    @test ITensors.Tensors.stride(I, 2) == idim
   end
   @testset "setprime" begin
     I = IndexSet(i, j)

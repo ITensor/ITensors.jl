@@ -51,7 +51,13 @@ export ITensor,
        settags!,
        swaptags!,
        replaceind!,
-       replaceinds!
+       replaceinds!,
+       addblock!,
+       nnzblocks,
+       nzblocks,
+       nzblock,
+       blockoffsets,
+       nnz
 
 """
 An ITensor is a tensor whose interface is 
@@ -77,13 +83,7 @@ mutable struct ITensor{N}
   ITensor{N}(is, st::TensorStorage) where {N} = new{N}(st, is)
 end
 
-#ITensor{N}(st,
-#           is::NTuple{N,<:Index}) where {N} = ITensor{N}(st,
-#                                                         IndexSet(is))
-#ITensor(st,
-#        is::NTuple{N,<:Index}) where {N} = ITensor{N}(st,
-#                                                      IndexSet(is))
-
+# TODO: put this constructor back
 #"""
 #ITensor{N}(st::TensorStorage, is)
 #
@@ -94,6 +94,7 @@ end
 #"""
 #ITensor{N}(st::TensorStorage, is) where {N} = ITensor{N}(is, copy(st))
 
+# TODO: put this constructor back
 #"""
 #ITensor(st::TensorStorage, is)
 #
@@ -125,7 +126,7 @@ ind(T::ITensor, i::Int)
 
 Get the Index of the ITensor along dimension i.
 """
-ind(T::ITensor, i::Int) = inds(T)[i]
+Tensors.ind(T::ITensor, i::Int) = inds(T)[i]
 
 """
 store(T::ITensor)
@@ -133,6 +134,13 @@ store(T::ITensor)
 Return a view of the TensorStorage of the ITensor.
 """
 Tensors.store(T::ITensor) = T.store
+
+"""
+data(T::ITensor)
+
+Return a view of the raw data of the ITensor.
+"""
+Tensors.data(T::ITensor) = data(store(T))
 
 Base.similar(T::ITensor) = itensor(similar(tensor(T)))
 
@@ -186,6 +194,7 @@ has the same indices.
 itensor(T::Tensor) = itensor(store(T),
                              inds(T))
 
+#TODO: replace with tensor(...)
 """
 tensor(::ITensor)
 
@@ -699,6 +708,7 @@ combinedind(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
+import .Tensors.dag
 function dag(T::ITensor; always_copy=false)
   TT = conj(tensor(T); always_copy=always_copy)
   return itensor(store(TT),dag(inds(T)))
@@ -718,9 +728,9 @@ function permute(T::ITensor{N},
   return itensor(Tp)::ITensor{N}
 end
 
-Tensors.permute(T::ITensor,
-                inds::Index...) = permute(T,
-                                          IndexSet(inds...))
+permute(T::ITensor,
+        inds::Index...) = permute(T,
+                                  IndexSet(inds...))
 
 Base.:*(T::ITensor, x::Number) = itensor(x*tensor(T))
 
@@ -822,12 +832,6 @@ function LinearAlgebra.exp(A::ITensor,
   Lpos,Rpos = Tensors.getperms(inds(A), Lis, Ris)
   expAT = exp(tensor(A), Lpos, Rpos; ishermitian=ishermitian)
   return itensor(expAT)
-end
-
-function Tensors.exphermitian(A::ITensor,
-                      Linds,
-                      Rinds = prime(IndexSet(Linds))) 
-  return exp(A, Linds, Rinds; ishermitian=true)
 end
 
 function matmul(A::ITensor,
@@ -967,10 +971,16 @@ LinearAlgebra.mul!(R::ITensor,
 hasqns(T::ITensor) = hasqns(inds(T))
 
 Tensors.nnz(T::ITensor) = nnz(tensor(T))
+
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
-Tensors.block(T::ITensor,args...) = block(tensor(T),args...)
+
+# TODO: rename block -> nzblock in Tensors
+nzblock(T::ITensor,args...) = block(tensor(T),args...)
+
 Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
+
 Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+
 flux(T::ITensor,args...) = flux(inds(T),args...)
 
 function Tensors.addblock!(T::ITensor,

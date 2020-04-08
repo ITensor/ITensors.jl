@@ -1,7 +1,3 @@
-export convert,
-       setindex,
-       readcpp
-
 const IntChar = UInt8
 const IntSmallString = UInt64
 const smallLength = 8
@@ -31,10 +27,10 @@ end
 
 SmallString(s::SmallString) = SmallString(s.data)
 
-Base.getindex(s::SmallString,n::Integer) = getindex(s.data,n)
+Base.getindex(s::SmallString, n::Int) = getindex(s.data,n)
 
-function Base.setindex(s::SmallString,val,n::Integer)
-  return SmallString(setindex(s.data,val,n))
+function Base.setindex(s::SmallString, val, n::Int)
+  return SmallString(StaticArrays.setindex(s.data, val, n))
 end
 
 isnull(s::SmallString) = @inbounds s[1] == IntChar(0)

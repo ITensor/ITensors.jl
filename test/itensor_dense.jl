@@ -160,7 +160,7 @@ end
   j = Index(2,"j")
   A = randomITensor(i,j)
   fill!(A, 1.0)
-  @test all(data(store(A)) .== 1.0)
+  @test all(ITensors.data(A) .== 1.0)
 end
 
 @testset "fill! using broadcast" begin
@@ -168,7 +168,7 @@ end
   j = Index(2,"j")
   A = randomITensor(i,j)
   A .= 1.0
-  @test all(data(store(A)) .== 1.0)
+  @test all(ITensors.data(A) .== 1.0)
 end
 
 @testset "copyto!" begin
@@ -180,12 +180,12 @@ end
   B = itensor(N,i,j)
   copyto!(A, B)
   @test A == B
-  @test data(store(A)) == vec(N)
+  @test ITensors.data(A) == vec(N)
   A = itensor(M,i,j)
   B = itensor(N,j,i)
   copyto!(A, B)
   @test A == B
-  @test data(store(A)) == vec(transpose(N))
+  @test ITensors.data(A) == vec(transpose(N))
 end
 
 @testset "Unary -" begin
@@ -295,7 +295,7 @@ end
                     2,2,2,2)
   Aexp_from_mat = itensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
-  Aexp = exphermitian(A,(i1,i2),(s1,s2))
+  Aexp = exp(A,(i1,i2),(s1,s2); ishermitian=true)
   Amatexp = reshape(parent(exp(ITensors.LinearAlgebra.Hermitian(reshape(Amat,4,4)))),
                     2,2,2,2)
   Aexp_from_mat = itensor(Amatexp,i1,i2,s1,s2)
@@ -364,7 +364,7 @@ end
   A = itensor(M,i,j)
   N = 2*M 
   B = itensor(N,j,i)
-  @test data(store(mul!(B, A, 2.0))) == 2.0*vec(transpose(M))
+  @test ITensors.data(mul!(B, A, 2.0)) == 2.0*vec(transpose(M))
 end
 
 @testset "Convert to Array" begin
@@ -664,7 +664,7 @@ end
     @testset "Test SVD of a DenseTensor internally" begin
       Lis = commoninds(A,IndexSet(j,l))
       Ris = uniqueinds(A,Lis)
-      Lpos,Rpos = getperms(inds(A),Lis,Ris)
+      Lpos,Rpos = ITensors.Tensors.getperms(inds(A),Lis,Ris)
       Ut,St,Vt,spec = svd(tensor(A), Lpos, Rpos)
       U = itensor(Ut)
       S = itensor(St)
@@ -701,7 +701,10 @@ end
 
       # TODO: use a combiner to combine the u indices to make
       # this test simpler
-      for ii ∈ 1:dim(u[1]), jj ∈ 1:dim(u[2]), iip ∈ 1:dim(u[1]), jjp ∈ 1:dim(u[2])
+      for ii ∈ 1:dim(u[1]),
+          jj ∈ 1:dim(u[2]),
+          iip ∈ 1:dim(u[1]),
+          jjp ∈ 1:dim(u[2])
         val = UUᵀ[u[1](ii),u[2](jj),u[1]'(iip),u[2]'(jjp)]
         if ii==iip && jj==jjp
           @test val ≈ one(SType) atol=1e-14

@@ -420,8 +420,8 @@ function contract!(C::DenseTensor{ElC,NC},Clabels,
     for ib = 1:length(Blabels)
       ia = findfirst(==(Blabels[ib]),Alabels)
       if !isnothing(ia)
-        b_cstride += stride(B,ib)
-        bstart += astarts[ia]*stride(B,ib)
+        b_cstride += Base.stride(B,ib)
+        bstart += astarts[ia]*Base.stride(B,ib)
       else
         nbu += 1
       end
@@ -431,8 +431,8 @@ function contract!(C::DenseTensor{ElC,NC},Clabels,
     for ic = 1:length(Clabels)
       ia = findfirst(==(Clabels[ic]),Alabels)
       if !isnothing(ia)
-        c_cstride += stride(C,ic)
-        cstart += astarts[ia]*stride(C,ic)
+        c_cstride += Base.stride(C,ic)
+        cstart += astarts[ia]*Base.stride(C,ic)
       end
     end
 
@@ -446,16 +446,16 @@ function contract!(C::DenseTensor{ElC,NC},Clabels,
     n = 1
     for ib = 1:length(Blabels)
       if Blabels[ib] > 0
-        bustride[n] = stride(B,ib)
+        bustride[n] = Base.stride(B,ib)
         busize[n] = size(B,ib)
         ic = findfirst(==(Blabels[ib]),Clabels)
-        custride[n] = stride(C,ic)
+        custride[n] = Base.stride(C,ic)
         n += 1
       end
     end
 
-    boffset_orig = 1-sum(strides(B))
-    coffset_orig = 1-sum(strides(C))
+    boffset_orig = 1-sum(Base.strides(B))
+    coffset_orig = 1-sum(Base.strides(C))
     cartesian_inds = CartesianIndices(Tuple(busize))
     for inds in cartesian_inds
       boffset = boffset_orig

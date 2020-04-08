@@ -9,7 +9,7 @@ using ITensors,
     D = diagITensor(QN(),i,dag(i'))
 
     for n in nnzblocks(D)
-      b = block(D,n)
+      b = nzblock(D,n)
       @test flux(D,b) == QN()
     end
 

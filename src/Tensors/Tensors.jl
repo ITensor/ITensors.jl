@@ -1,9 +1,9 @@
-@reexport module Tensors
+module Tensors
 
-using StaticArrays,
-      Random,
-      LinearAlgebra,
-      HDF5
+using Random
+using LinearAlgebra
+using StaticArrays
+using HDF5
 
 #####################################
 # DenseTensor and DiagTensor

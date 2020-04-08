@@ -1,7 +1,8 @@
 export factorize,
        eigen,
        qr,
-       svd
+       svd,
+       polar
 
 """
   TruncSVD{N}

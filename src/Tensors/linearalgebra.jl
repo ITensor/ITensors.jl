@@ -1,6 +1,5 @@
 export polar,
        Spectrum,
-       exphermitian,
        svd
 
 #
@@ -27,10 +26,11 @@ function LinearAlgebra.exp(T::DenseTensor{ElT,2}) where {ElT}
   return Tensor(Dense(vec(expTM)),inds(T))
 end
 
-function exphermitian(T::DenseTensor{ElT,2}) where {ElT}
+function LinearAlgebra.exp(T::Hermitian{ElT,
+                                        <:DenseTensor{ElT,2}}) where {ElT<:Union{Real,Complex}}
   # exp(::Hermitian/Symmetric) returns Hermitian/Symmetric,
   # so extract the parent matrix
-  expTM = parent(exp(Hermitian(matrix(T))))
+  expTM = parent(exp(matrix(T)))
   return Tensor(Dense(vec(expTM)),inds(T))
 end
 

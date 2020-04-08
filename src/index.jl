@@ -1,5 +1,6 @@
 export Index,
        IndexVal,
+       dim,
        dag,
        prime,
        setprime,
@@ -44,27 +45,40 @@ struct Index{T}
   dir::Arrow
   tags::TagSet
   plev::Int
-  function Index(id,space::T,dir,tags,plev) where {T}
-    return new{T}(id,space,dir,tags,plev)
+  function Index{T}(id, space::T, dir, tags, plev) where {T}
+    return new{T}(id, space, dir, tags, plev)
   end
 end
-Index{SpaceT}(space::SpaceT,args...;vargs...) where {SpaceT} = Index(space,args...;vargs...)
+
+function Index(id, space::T, dir, tags, plev) where {T}
+  return Index{T}(id, space, dir, tags, plev)
+end
 
 Index() = Index(0,1,Neither,"",0)
 
 """
-  Index(dim::Integer, tags=("",0))
+  Index(dim::Integer; tags="", plev=0)
+Create an `Index` with a unique `id` and a tagset given by `tags`.
+
+Example: create a two dimensional index with tag `l`:
+    Index(2; tags="l")
+"""
+function Index(dim::Int; tags="", plev=0)
+  return Index(rand(IDType), dim, Neither, tags, plev)
+end
+
+# Used in Tensors, mostly for internal usage
+Index{T}(dim::T) where {T} = Index(dim)
+
+"""
+  Index(dim::Integer, tags)
 Create an `Index` with a unique `id` and a tagset given by `tags`.
 
 Example: create a two dimensional index with tag `l`:
     Index(2, "l")
 """
-function Index(dim::Integer;tags="",plev=0)
-  return Index(rand(IDType),dim,Neither,tags,plev)
-end
-
-
-Index(dim::Integer,tags::Union{AbstractString,TagSet}) = Index(dim; tags=tags)
+Index(dim::Int,
+      tags::Union{AbstractString,TagSet}) = Index(dim; tags=tags)
 
 """
     id(i::Index)
@@ -72,19 +86,24 @@ Obtain the id of an Index, which is a unique 64 digit integer
 """
 id(i::Index) = i.id
 
+import .Tensors.dim
 """
     dim(i::Index)
 Obtain the dimension of an Index
 """
-Tensors.dim(i::Index) = i.space
+dim(i::Index) = i.space
 
 space(i::Index) = i.space
 
+# Note: need to use import here
+# so that we can export it,
+# since it is not exported from Tensors
+import .Tensors.dir
 """
     dir(i::Index)
 Obtain the direction of an Index (In or Out)
 """
-Tensors.dir(i::Index) = i.dir
+dir(i::Index) = i.dir
 
 """
     setdir(i::Index, dir::Arrow)
@@ -128,8 +147,13 @@ end
     copy(i::Index)
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-Base.copy(i::Index) = Index(id(i),copy(space(i)),dir(i),copy(tags(i)),plev(i))
+Base.copy(i::Index) = Index(id(i),
+                            copy(space(i)),
+                            dir(i),
+                            copy(tags(i)),
+                            plev(i))
 
+import .Tensors.sim
 """
   sim(i::Index; tags=tags(i), dir=dir(i))
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
@@ -141,6 +165,7 @@ function sim(i::Index;
   return Index(rand(IDType),copy(space(i)),dir,tags,plev)
 end
 
+import .Tensors.dag
 """
     dag(i::Index)
 Copy an index `i` and reverse it's direction
@@ -270,10 +295,10 @@ function Base.iterate(i::Index,state::Int=1)
   return (state,state+1)
 end
 
-outer(i::Index) = i
+Tensors.outer(i::Index; tags="", plev=0) = sim(i; tags=tags, plev=plev)
 
-function outer(i1::Index, i2::Index; tags="")
-  return Index(dim(i1)*dim(i2),tags)
+function Tensors.outer(i1::Index, i2::Index; tags="")
+  return Index(dim(i1)*dim(i2), tags)
 end
 
 function primestring(plev)
@@ -323,10 +348,10 @@ Base.getindex(i::Index, j::Int) = IndexVal(i, j)
 
 (i::Index)(n::Int) = IndexVal(i,n)
 
-ind(iv::IndexVal) = iv.ind
+Tensors.ind(iv::IndexVal) = iv.ind
 val(iv::IndexVal) = iv.val
 
-ind(iv::PairIndexInt) = iv.first
+Tensors.ind(iv::PairIndexInt) = iv.first
 val(iv::PairIndexInt) = iv.second
 
 Base.:(==)(i::Index,iv::IndexValOrPairIndexInt) = (i==ind(iv))

@@ -212,15 +212,15 @@ end
 
 # Does not perform checks on if QN is already full, drops
 # the last QNVal
-function Tensors.insertafter(qn::QN,qv::QNVal,pos::Int)
-  return QN(insertafter(Tuple(qn),qv,pos)[1:length(qn)])
+function Tensors.insertafter(qn::QN, qv::QNVal, pos::Int)
+  return QN(Tensors.insertafter(Tuple(qn),qv,pos)[1:length(qn)])
 end
 
-function addqnval(qn::QN,qv_add::QNVal)
+function addqnval(qn::QN, qv_add::QNVal)
   isactive(qn[end]) && error("Cannot add QNVal, QN already contains maximum number of QNVals")
   for (pos,qv) in enumerate(qn)
     if qv_add < qv || !isactive(qv)
-      return insertafter(qn,qv_add,pos-1)
+      return Tensors.insertafter(qn, qv_add, pos-1)
     end
   end
 end

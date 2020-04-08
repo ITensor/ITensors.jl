@@ -33,12 +33,20 @@ struct Tensor{ElT,
 end
 
 store(T::Tensor) = T.store
+
 data(T::Tensor) = data(store(T))
+
 storetype(::Tensor{ElT,N,StoreT}) where {ElT,N,StoreT} = StoreT
+
 inds(T::Tensor) = T.inds
-ind(T::Tensor,j::Integer) = inds(T)[j]
+
+ind(T::Tensor, j::Integer) = inds(T)[j]
+
 Base.eachindex(T::Tensor) = CartesianIndices(dims(inds(T)))
+
 Base.eltype(::Tensor{ElT}) where {ElT} = ElT
+
+Base.strides(T::Tensor) = strides(inds(T))
 
 #
 # Generic Tensor functions
@@ -57,8 +65,6 @@ function Base.unsafe_convert(::Type{Ptr{ElT}},
                              T::Tensor{ElT}) where {ElT}
   return Base.unsafe_convert(Ptr{ElT},store(T))
 end
-
-Base.strides(T::Tensor) = strides(inds(T))
 
 Base.copy(T::Tensor) = Tensor(copy(store(T)), inds(T))
 

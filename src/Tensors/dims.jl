@@ -1,8 +1,6 @@
 export dense,
        dims,
-       dim,
-       dir,
-       dag
+       dim
 
 #
 # Tools for working with Dims/Tuples
@@ -26,8 +24,19 @@ Base.ndims(::Type{Tuple{}}) = 0
 mindim(inds) = (ndims(inds) == 0 ? 1 : minimum(dims(inds)))
 diaglength(inds) = mindim(inds)
 
+"""
+strides(ds::Dims)
+
+Get the strides of the dimensions.
+
+This is unexported, call with Tensors.strides.
+"""
 strides(ds::Dims) = Base.size_to_strides(1, dims(ds)...)
 
+"""
+stride(ds::Dims, k::Int)
+
+"""
 stride(ds::Dims, k::Int) = strides(ds)[k]
 
 # This is to help with some generic programming in the Tensor
