@@ -32,13 +32,22 @@ end
 
 DiagBlockSparse(::UndefInitializer,
                 boffs::BlockOffsets,
-                diaglength::Integer) = DiagBlockSparse(Float64,undef,boffs,diaglength)
+                diaglength::Integer) = DiagBlockSparse(Float64,
+                                                       undef,
+                                                       boffs,
+                                                       diaglength)
 
 diagblockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
+
 blockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
 
-findblock(D::DiagBlockSparse{<:Number,<:Union{Number,AbstractVector},N},
-          block::Block{N}; vargs...) where {N} = findblock(diagblockoffsets(D),block; vargs...)
+function findblock(D::DiagBlockSparse{<:Number,
+                                      <:Union{Number,AbstractVector},
+                                      N},
+                   block::Block{N};
+                   vargs...) where {N}
+  return findblock(diagblockoffsets(D), block; vargs...)
+end
 
 const NonuniformDiagBlockSparse{ElT,VecT} = DiagBlockSparse{ElT,VecT} where {VecT<:AbstractVector}
 const UniformDiagBlockSparse{ElT,VecT} = DiagBlockSparse{ElT,VecT} where {VecT<:Number}

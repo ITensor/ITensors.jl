@@ -1,7 +1,7 @@
 export BlockSparse,
        BlockSparseTensor,
        Block,
-       block,
+       nzblock,
        BlockOffset,
        BlockOffsets,
        blockoffsets,
@@ -21,29 +21,32 @@ const Blocks{N} = Vector{Block{N}}
 const BlockOffset{N} = Pair{Block{N},Int}
 const BlockOffsets{N} = Vector{BlockOffset{N}}
 
-BlockOffset(block::Block{N},offset::Int) where {N} = BlockOffset{N}(block,offset)
+BlockOffset(block::Block{N},
+            offset::Int) where {N} = BlockOffset{N}(block, offset)
 
-block(bof::BlockOffset) = first(bof)
+nzblock(bof::BlockOffset) = first(bof)
 
 offset(bof::BlockOffset) = last(bof)
 
-block(block::Block) = block
+nzblock(block::Block) = block
 
 # Get the offset if the nth block in the block-offsets
 # list
-offset(bofs::BlockOffsets,n::Int) = offset(bofs[n])
+offset(bofs::BlockOffsets,
+       n::Int) = offset(bofs[n])
 
 # TODO: rename nzblock?
-block(bofs::BlockOffsets,n::Int) = block(bofs[n])
+nzblock(bofs::BlockOffsets,
+        n::Int) = nzblock(bofs[n])
 
 nnzblocks(bofs::BlockOffsets) = length(bofs)
 nnzblocks(bs::Blocks) = length(bs)
 
 # TODO: make an iterator eachnzblocks to avoid allocation
 function nzblocks(bofs::BlockOffsets{N}) where {N}
-  blocks = Blocks{N}(undef,nnzblocks(bofs))
+  blocks = Blocks{N}(undef, nnzblocks(bofs))
   for i in 1:nnzblocks(bofs)
-    blocks[i] = block(bofs,i)
+    blocks[i] = nzblock(bofs, i)
   end
   return blocks
 end
@@ -56,23 +59,23 @@ end
 
 function isblockless(bof1::BlockOffset{N},
                      bof2::BlockOffset{N}) where {N}
-  return isblockless(block(bof1),block(bof2))
+  return isblockless(nzblock(bof1), nzblock(bof2))
 end
 
 function isblockless(bof1::BlockOffset{N},
                      b2::Block{N}) where {N}
-  return isblockless(block(bof1),b2)
+  return isblockless(nzblock(bof1), b2)
 end
 
 function isblockless(b1::Block{N},
                      bof2::BlockOffset{N}) where {N}
-  return isblockless(b1,block(bof2))
+  return isblockless(b1, nzblock(bof2))
 end
 
 function check_blocks_sorted(blockoffsets::BlockOffsets)
   for jj in 1:length(blockoffsets)-1
-    block_jj = block(blockoffsets[jj])
-    block_jj1 = block(blockoffsets[jj+1])
+    block_jj = nzblock(blockoffsets[jj])
+    block_jj1 = nzblock(blockoffsets[jj+1])
     if !isblockless(block_jj,block_jj1)
       error("Blocks in BlockOffsets not ordered")
     end
@@ -208,31 +211,36 @@ function Base.union(boffs1::BlockOffsets{N},
   current_offset = 0
   while n1 <= length(boffs1) && n2 <= length(boffs2)
     if isblockless(boffs1[n1],boffs2[n2])
-      push!(boffsR, BlockOffset(block(boffs1[n1]),current_offset))
-      current_offset += blockdim(boffs1,nnz1,n1)
+      push!(boffsR, BlockOffset(nzblock(boffs1[n1]),
+                                current_offset))
+      current_offset += blockdim(boffs1, nnz1, n1)
       n1 += 1
-    elseif isblockless(boffs2[n2],boffs1[n1])
-      push!(boffsR, BlockOffset(block(boffs2[n2]),current_offset))
-      current_offset += blockdim(boffs2,nnz2,n2)
+    elseif isblockless(boffs2[n2], boffs1[n1])
+      push!(boffsR, BlockOffset(nzblock(boffs2[n2]),
+                                current_offset))
+      current_offset += blockdim(boffs2, nnz2, n2)
       n2 += 1
     else
-      push!(boffsR, BlockOffset(block(boffs1[n1]),current_offset))
-      current_offset += blockdim(boffs1,nnz1,n1)
+      push!(boffsR, BlockOffset(nzblock(boffs1[n1]),
+                                current_offset))
+      current_offset += blockdim(boffs1, nnz1, n1)
       n1 += 1
       n2 += 1
     end
   end
   if n1 <= length(boffs1)
     for n in n1:length(boffs1)
-      push!(boffsR, BlockOffset(block(boffs1[n]),current_offset))
-      current_offset += blockdim(boffs1,nnz1,n)
+      push!(boffsR, BlockOffset(nzblock(boffs1[n]),
+                                current_offset))
+      current_offset += blockdim(boffs1, nnz1, n)
     end
   elseif n2 <= length(boffs2)
     for n in n2:length(bofss2)
-      push!(boffsR, BlockOffset(block(boffs2[n]),current_offset))
-      current_offset += blockdim(boffs2,nnz2,n)
+      push!(boffsR, BlockOffset(nzblock(boffs2[n]),
+                                current_offset))
+      current_offset += blockdim(boffs2, nnz2, n)
     end
   end
-  return boffsR,current_offset
+  return boffsR, current_offset
 end
 

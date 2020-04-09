@@ -962,14 +962,13 @@ Tensors.nnz(T::ITensor) = nnz(tensor(T))
 
 Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
 
-# TODO: rename block -> nzblock in Tensors
-nzblock(T::ITensor,args...) = block(tensor(T),args...)
+Tensors.nzblock(T::ITensor, args...) = nzblock(tensor(T), args...)
 
 Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
 
 Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 
-flux(T::ITensor,args...) = flux(inds(T),args...)
+flux(T::ITensor, args...) = flux(inds(T), args...)
 
 function Tensors.addblock!(T::ITensor,
                            args...)
@@ -983,7 +982,7 @@ function flux(T::ITensor)
   !hasqns(T) && return nothing
   nnzblocks(T) == 0 && return nothing
   bofs = blockoffsets(T)
-  block1 = block(bofs,1)
+  block1 = nzblock(bofs, 1)
   return flux(T,block1)
 end
 

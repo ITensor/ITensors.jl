@@ -446,7 +446,7 @@ function permutedims_combine(T::BlockSparseTensor{ElT,N},
 
   for bof in blockoffsets(T)
     Tb = blockview(T,bof)
-    b = block(bof)
+    b = nzblock(bof)
     b_perm = permute(b,perm)
     b_perm_comb = combine_dims(b_perm,inds_perm,combdims_perm)
     b_perm_comb = perm_block(b_perm_comb,comb_ind_loc,blockperm)
@@ -576,7 +576,7 @@ function uncombine(T::BlockSparseTensor{<:Number,NT},
   inds_uncomb_perm = insertat(inds(T),ind_uncomb_perm,combdim)
 
   for bof in blockoffsets(T)
-    b = block(bof)
+    b = nzblock(bof)
     Tb_tot = blockview(T,bof)
     dimsTb_tot = dims(Tb_tot)
 
@@ -623,7 +623,7 @@ end
 function Base.copyto!(R::BlockSparseTensor,
                       T::BlockSparseTensor)
   for bof in blockoffsets(T)
-    copyto!(blockview(R,block(bof)),blockview(T,bof))
+    copyto!(blockview(R, nzblock(bof)), blockview(T, bof))
   end
   return R
 end
@@ -770,21 +770,21 @@ function contract_blockoffsets(boffs1::BlockOffsets{N1},inds1,labels1,
     end
   end
 
-  sorted_blocksR = sort(blocksR;lt=isblockless)
+  sorted_blocksR = sort(blocksR; lt=isblockless)
   unique!(sorted_blocksR)
   blockoffsetsR = BlockOffsets{NR}(undef,length(sorted_blocksR))
   nnzR = 0
   for (i,blockR) in enumerate(sorted_blocksR)
-    blockoffsetsR[i] = BlockOffset(blockR,nnzR)
-    nnzR += blockdim(indsR,blockR)
+    blockoffsetsR[i] = BlockOffset(blockR, nnzR)
+    nnzR += blockdim(indsR, blockR)
   end
 
   # Now get the locations of the output blocks
   # in the sorted block-offsets list
   for (i,blockR) in enumerate(blocksR)
-    posR = findblock(blockoffsetsR,blockR)
+    posR = findblock(blockoffsetsR, blockR)
     pos1,pos2,_ = contraction_plan[i]
-    contraction_plan[i] = (pos1,pos2,posR)
+    contraction_plan[i] = (pos1, pos2, posR)
   end
 
   return blockoffsetsR,contraction_plan

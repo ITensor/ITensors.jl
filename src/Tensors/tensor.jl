@@ -234,7 +234,7 @@ blockdims(T::Tensor,block) = blockdims(inds(T),block)
 blockdim(T::Tensor,block) = blockdim(inds(T),block)
 
 """
-offset(T::Tensor,block::Block)
+offset(T::Tensor, block::Block)
 
 Get the linear offset in the data storage for the specified block.
 If the specified block is not non-zero structurally, return nothing.
@@ -244,9 +244,9 @@ offset(T::Tensor,pos::Int)
 Get the offset of the block at position pos
 in the block-offsets list.
 """
-offset(T::Tensor,block) = offset(store(T),block)
+offset(T::Tensor, block) = offset(store(T), block)
 
-block(T::Tensor,n::Int) = block(store(T),n)
+nzblock(T::Tensor, n::Int) = nzblock(store(T), n)
 
 """
 blockdim(T::Tensor,pos::Int)
@@ -254,9 +254,11 @@ blockdim(T::Tensor,pos::Int)
 Get the block dimension of the block at position pos
 in the block-offset list.
 """
-blockdim(T::Tensor,pos::Int) = blockdim(store(T),pos)
+blockdim(T::Tensor, pos::Int) = blockdim(store(T), pos)
 
-findblock(T::Tensor,block; sorted=true) = findblock(store(T),block; sorted=sorted)
+findblock(T::Tensor,
+          block;
+          sorted=true) = findblock(store(T), block; sorted=sorted)
 
 """
 isblocknz(T::Tensor,

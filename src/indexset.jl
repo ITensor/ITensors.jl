@@ -837,23 +837,63 @@ function eachblock(inds::IndexSet)
   return CartesianIndices(nblocks(inds))
 end
 
+# TODO: turn this into an iterator instead
+# of returning a Vector
 function eachdiagblock(inds::IndexSet{N}) where {N}
   return [ntuple(_->i,Val(N)) for i in 1:ndiagblocks(inds)]
 end
 
+"""
+flux(inds::IndexSet, block)
+
+Get the flux of the specified block, for example:
+```
+i = Index(QN(0)=>2, QN(1)=>2)
+is = IndexSet(i, dag(i'))
+flux(is, (1,1)) == QN(0)
+flux(is, (2,1)) == QN(1)
+flux(is, (1,2)) == QN(-1)
+flux(is, (2,2)) == QN(0)
+```
+"""
 function flux(inds::IndexSet, block)
   qntot = QN()
   for n in 1:length(inds)
     ind = inds[n]
-    qntot += qn(ind,block[n])
+    qntot += qn(ind, block[n])
   end
   return qntot
 end
 
-flux(inds::IndexSet,vals::Int...) = flux(inds,block(inds,vals...))
+"""
+flux(inds::IndexSet, I::Int...)
 
-Tensors.block(inds::IndexSet,
-              vals::Int...) = blockindex(inds, vals...)[2]
+Get the flux of the block that the specified
+index falls in.
+```
+i = Index(QN(0)=>2, QN(1)=>2)
+is = IndexSet(i, dag(i'))
+flux(is, 3, 1) == QN(1)
+flux(is, 1, 2) == QN(0)
+```
+"""
+flux(inds::IndexSet,
+     vals::Int...) = flux(inds, block(inds, vals...))
+
+"""
+block(inds::IndexSet, I::Int...)
+
+Get the block that the specified
+index falls in.
+```
+i = Index(QN(0)=>2, QN(1)=>2)
+is = IndexSet(i, dag(i'))
+ITensors.block(is, 3, 1) == (2,1)
+ITensors.block(is, 1, 2) == (1,1)
+```
+"""
+block(inds::IndexSet,
+      vals::Int...) = blockindex(inds, vals...)[2]
 
 #
 # Read and write

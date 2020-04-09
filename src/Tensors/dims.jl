@@ -4,23 +4,23 @@ export dense,
        mindim,
        diaglength
 
-#
-# Tools for working with Dims/Tuples
-# TODO: put this in a seperate file
-#
-
 # dim and dims are used in the Tensor interface, overload 
 # base Dims here
 dims(ds::Dims) = ds
+
 dims(::Tuple{}) = ()
+
 dense(ds::Dims) = ds
+
 dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
+
 dim(ds::Dims) = prod(ds)
+
 dim(ds::Dims,i::Int) = dims(ds)[i]
 
-mindim(inds::Dims) = minimum(inds)
+mindim(inds::Tuple) = minimum(dims(inds))
 
-diaglength(inds::Dims) = mindim(inds)
+diaglength(inds::Tuple) = mindim(inds)
 
 """
 strides(ds::Dims)

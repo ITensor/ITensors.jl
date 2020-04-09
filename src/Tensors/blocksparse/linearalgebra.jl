@@ -42,8 +42,8 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
   d = Vector{real(ElT)}()
 
   for n in 1:nnzblocks(T)
-    b = block(T,n)
-    blockT = blockview(T,n)
+    b = nzblock(T, n)
+    blockT = blockview(T, n)
     Ub,Sb,Vb = svd(blockT)
     Us[n] = Ub
     Ss[n] = Sb
@@ -180,8 +180,8 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:BlockSparseMatrix{ElT}};
   d = Vector{real(ElT)}()
 
   for n in 1:nnzblocks(T)
-    b = block(T,n)
-    blockT = blockview(T,n)
+    b = nzblock(T, n)
+    blockT = blockview(T, n)
     Ub,Db = eigen(blockT)
     Us[n] = Ub
     Ds[n] = Db
@@ -303,8 +303,8 @@ function LinearAlgebra.eigen(T::BlockSparseMatrix{ElT};
   d = Vector{real(ElT)}()
 
   for n in 1:nnzblocks(T)
-    b = block(T,n)
-    blockT = blockview(T,n)
+    b = nzblock(T, n)
+    blockT = blockview(T, n)
     Ub,Db = eigen(blockT)
     Us[n] = complex(Ub)
     Ds[n] = complex(Db)

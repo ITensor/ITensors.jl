@@ -19,16 +19,19 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
   blockoffsets::BlockOffsets{N}  # Block number-offset pairs
   function BlockSparse(data::VecT,
-                       blockoffsets::BlockOffsets{N}; sorted=true) where {VecT<:AbstractVector{ElT},N} where {ElT}
+                       blockoffsets::BlockOffsets{N};
+                       sorted=true) where {VecT<:AbstractVector{ElT},
+                                           N} where {ElT}
     sorted && check_blocks_sorted(blockoffsets)
-    new{ElT,VecT,N}(data,blockoffsets)
+    new{ElT,VecT,N}(data, blockoffsets)
   end
 end
 
 function BlockSparse(::Type{ElT},
                      blockoffsets::BlockOffsets,
-                     dim::Integer; vargs...) where {ElT<:Number}
-  return BlockSparse(zeros(ElT,dim),blockoffsets; vargs...)
+                     dim::Integer;
+                     vargs...) where {ElT<:Number}
+  return BlockSparse(zeros(ElT, dim), blockoffsets; vargs...)
 end
 
 function BlockSparse(::Type{ElT},
@@ -135,7 +138,10 @@ blockdim(T::BlockSparse,pos::Int)
 
 Get the block dimension of the block at position pos.
 """
-blockdim(D::BlockSparse,pos::Int) = blockdim(blockoffsets(D),nnz(D),pos)
+blockdim(D::BlockSparse,
+         pos::Int) = blockdim(blockoffsets(D),
+                              nnz(D),
+                              pos)
 
 """
 blockdim(T::BlockSparse,block::Block)
@@ -144,12 +150,17 @@ Get the block dimension of the block.
 """
 function blockdim(D::BlockSparse,
                   block::Block)
-  pos = findblock(D,block)
-  return blockdim(D,pos)
+  pos = findblock(D, block)
+  return blockdim(D, pos)
 end
 
-findblock(D::BlockSparse{<:Number,<:AbstractVector,N},
-          block::Block{N}; vargs...) where {N} = findblock(blockoffsets(D),block; vargs...)
+findblock(D::BlockSparse{<:Number,
+                         <:AbstractVector,
+                         N},
+          block::Block{N};
+          vargs...) where {N} = findblock(blockoffsets(D),
+                                          block;
+                                          vargs...)
 
 """
 isblocknz(T::BlockSparse,
