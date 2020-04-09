@@ -1,5 +1,4 @@
-using ITensors.Tensors,
-      Test
+using Test
 
 @testset "Tensors.jl" begin
     @testset "$filename" for filename in (

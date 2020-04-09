@@ -3,7 +3,7 @@ module ITensors
 #####################################
 # Tensors
 #
-include("Tensors/Tensors.jl")
+include("../Tensors/src/Tensors.jl")
 
 using Random
 using Printf

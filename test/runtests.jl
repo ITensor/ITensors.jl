@@ -1,11 +1,5 @@
 using Test
 
-#@testset "Tensors.jl" begin
-#  filename = "Tensors/runtests.jl"
-#  println("Running $filename")
-#  include(filename)
-#end
-
 @testset "ITensors.jl" begin
   @testset "$filename" for filename in (
     "tagset.jl",
