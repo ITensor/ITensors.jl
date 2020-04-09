@@ -3,7 +3,7 @@ using ITensors.Tensors,
 
 @testset "DiagTensor basic functionality" begin
 
-  t = Tensor(Diag(rand(ComplexF64,100)), (100,100))
+  t = tensor(Diag(rand(ComplexF64,100)), (100,100))
   @test conj(data(store(t))) == data(store(conj(t)))
   @test typeof(conj(t)) <: DiagTensor
 
@@ -21,7 +21,7 @@ using ITensors.Tensors,
 
   d = 3
   vr = rand(d)
-  D = Tensor(Diag(vr), (d,d))
+  D = tensor(Diag(vr), (d,d))
   @test Array(D) == Tensors.LinearAlgebra.diagm(0=>vr) 
   @test matrix(D) == Tensors.LinearAlgebra.diagm(0=>vr)
   # fails because of missing similar method for NonuniformDiag :(

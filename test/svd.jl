@@ -9,27 +9,27 @@ using ITensors,
          0.0 0.5 0.5 1.0;
          0.0 1.0 1.0 2.0]
     U,S,V = ITensors.Tensors.svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    @test norm(U*ITensors.Diagonal(S)*V'-M) < 1E-13
   end
 
   @testset "Real Matrix" begin
     M = rand(10,20)
     U,S,V = ITensors.Tensors.svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    @test norm(U*ITensors.Diagonal(S)*V'-M) < 1E-13
 
     M = rand(20,10)
     U,S,V = ITensors.Tensors.svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    @test norm(U*ITensors.Diagonal(S)*V'-M) < 1E-13
   end
 
   @testset "Cplx Matrix" begin
     M = rand(ComplexF64,10,15)
     U,S,V = ITensors.Tensors.svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    @test norm(U*ITensors.Diagonal(S)*V'-M) < 1E-13
 
     M = rand(ComplexF64,15,10)
     U,S,V = ITensors.Tensors.svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    @test norm(U*ITensors.Diagonal(S)*V'-M) < 1E-13
   end
 
   @testset "Regression Test 1" begin

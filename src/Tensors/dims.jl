@@ -1,6 +1,8 @@
 export dense,
        dims,
-       dim
+       dim,
+       mindim,
+       diaglength
 
 #
 # Tools for working with Dims/Tuples
@@ -16,13 +18,9 @@ dense(::Type{DimsT}) where {DimsT<:Dims} = DimsT
 dim(ds::Dims) = prod(ds)
 dim(ds::Dims,i::Int) = dims(ds)[i]
 
-Base.ndims(::Dims{N}) where {N} = N
-Base.ndims(::Type{Dims{N}}) where {N} = N
-Base.ndims(::Tuple{}) = 0
-Base.ndims(::Type{Tuple{}}) = 0
+mindim(inds::Dims) = minimum(inds)
 
-mindim(inds) = (ndims(inds) == 0 ? 1 : minimum(dims(inds)))
-diaglength(inds) = mindim(inds)
+diaglength(inds::Dims) = mindim(inds)
 
 """
 strides(ds::Dims)

@@ -12,9 +12,9 @@ A = randomITensor(i, j, k, l)
 
 @testset "Basic combiner properties" begin
     C,c = combiner(i, j, k)
-    @test eltype(store(C)) === Nothing
+    @test eltype(store(C)) === Number
     @test_throws ErrorException ITensors.data(C)
-    @test ITensors.Tensors.uncombinedinds(tensor(C)) == IndexSet(i, j, k)
+    @test ITensors.Tensors.uncombinedinds(ITensors.tensor(C)) == IndexSet(i, j, k)
 end
 
 @testset "Two index combiner" begin

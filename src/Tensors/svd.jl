@@ -1,5 +1,3 @@
-export svd_recursive
-
 
 function checkSVDDone(S::Vector,
                       thresh::Float64)

@@ -513,8 +513,8 @@ Random.seed!(1234)
 
       U,D = eigen(A; ishermitian=true, tags="x")
 
-      @test store(U) isa BlockSparse
-      @test store(D) isa DiagBlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(D) isa ITensors.DiagBlockSparse
 
       u = commonind(D,U)
       up = uniqueind(D,U)
@@ -549,8 +549,8 @@ Random.seed!(1234)
                           tags="x",
                           cutoff=cutoff)
 
-      @test store(U) isa BlockSparse
-      @test store(D) isa DiagBlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(D) isa ITensors.DiagBlockSparse
 
       u = commonind(D,U)
       up = uniqueind(D,U)
@@ -593,8 +593,8 @@ Random.seed!(1234)
 
       U,D = eigen(A; tags="x")
 
-      @test store(U) isa BlockSparse
-      @test store(D) isa DiagBlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(D) isa ITensors.DiagBlockSparse
 
       u = commonind(D,U)
       up = uniqueind(D,U)
@@ -621,9 +621,9 @@ Random.seed!(1234)
       end
       U,S,V = svd(A,i)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       for b in nzblocks(U)
         @test flux(U,b)==QN(0)
@@ -646,9 +646,9 @@ Random.seed!(1234)
       end
       U,S,V = svd(A,i)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       for b in nzblocks(U)
         @test flux(U,b)==QN(0)
@@ -671,9 +671,9 @@ Random.seed!(1234)
       end
       U,S,V = svd(A,i)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       for b in nzblocks(U)
         @test flux(U,b)==QN(0)
@@ -695,9 +695,9 @@ Random.seed!(1234)
 
 			U,S,V = svd(A,i,j)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       for b in nzblocks(A)
         @test flux(A,b)==QN(0,2)
@@ -723,9 +723,9 @@ Random.seed!(1234)
 
 			U,S,V = svd(A,i,j)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       for b in nzblocks(A)
         @test flux(A,b)==QN(1,2)
@@ -751,9 +751,9 @@ Random.seed!(1234)
 
 			U,S,V = svd(A,i,i')
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       for b in nzblocks(A)
         @test flux(A,b)==QN(1,2)
@@ -783,9 +783,9 @@ Random.seed!(1234)
       cutoff = 1e-5
       U,S,V,spec = svd(A,i,j; utags="x", vtags="y", cutoff=cutoff)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       u = commonind(S,U)
       v = commonind(S,V)
@@ -829,9 +829,9 @@ Random.seed!(1234)
       maxdim = 4
       U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       u = commonind(S,U)
       v = commonind(S,V)
@@ -872,9 +872,9 @@ Random.seed!(1234)
       maxdim = 4
       U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       u = commonind(S,U)
       v = commonind(S,V)
@@ -915,9 +915,9 @@ Random.seed!(1234)
       maxdim = 4
       U,S,V,spec = svd(A,i,j; utags="x", vtags="y", maxdim=maxdim)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       u = commonind(S,U)
       v = commonind(S,V)
@@ -958,9 +958,9 @@ Random.seed!(1234)
       maxdim = 4
       U,S,V,spec = svd(A,i,j'; utags="x", vtags="y", maxdim=maxdim)
 
-      @test store(U) isa BlockSparse
-      @test store(S) isa DiagBlockSparse
-      @test store(V) isa BlockSparse
+      @test store(U) isa ITensors.BlockSparse
+      @test store(S) isa ITensors.DiagBlockSparse
+      @test store(V) isa ITensors.BlockSparse
 
       u = commonind(S,U)
       v = commonind(S,V)

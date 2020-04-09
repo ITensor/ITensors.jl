@@ -10,9 +10,10 @@ export IndexSet,
        replaceinds,
        mindim,
        maxdim,
-       push,
        permute,
        dims
+
+import .Tensors: mindim
 
 struct IndexSet{N,IndexT<:Index}
   store::NTuple{N,IndexT}
@@ -121,7 +122,8 @@ This is mostly for internal usage.
 Tensors.store(is::IndexSet) = is.store
 
 # This is used in type promotion in the Tensor contraction code
-Base.promote_rule(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
+Base.promote_rule(::Type{<:IndexSet},
+                  ::Type{Val{N}}) where {N} = IndexSet{N}
 
 Tensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
 
@@ -180,15 +182,9 @@ Base.length(is::IndexSet{N}) where {N} = N
 
 Base.length(::Type{<:IndexSet{N}}) where {N} = N
 
-order(is::IndexSet) = length(is)
-
 Tensors.dims(is::IndexSet{N}) where {N} = dims(Tuple(is))
 
 Tensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
-
-Base.ndims(::IndexSet{N}) where {N} = N
-
-Base.ndims(::Type{<:IndexSet{N}}) where {N} = N
 
 """
 dim(is::IndexSet)
@@ -208,11 +204,6 @@ dim(is::IndexSet, n::Int)
 Get the dimension of the Index n of the IndexSet.
 """
 Tensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
-
-# To help with generic code in Tensors
-Base.ndims(::NTuple{N,<:Index}) where {N} = N
-
-Base.ndims(::Type{<:NTuple{N,<:Index}}) where {N} = N
 
 """
 instertat(is1::IndexSet, is2, pos)
@@ -850,9 +841,9 @@ function eachdiagblock(inds::IndexSet{N}) where {N}
   return [ntuple(_->i,Val(N)) for i in 1:ndiagblocks(inds)]
 end
 
-function flux(inds::IndexSet,block)
+function flux(inds::IndexSet, block)
   qntot = QN()
-  for n in 1:ndims(inds)
+  for n in 1:length(inds)
     ind = inds[n]
     qntot += qn(ind,block[n])
   end

@@ -13,7 +13,12 @@ const BlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {
 # the Tensor order
 function similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}},
                       ::Type{IndsR}) where {NT,ElT,VecT,IndsR}
-  NR = ndims(IndsR)
+  NR = length(IndsR)
+  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
+end
+
+function similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}},
+                      ::Type{IndsR}) where {NT,ElT,VecT,IndsR<:NTuple{NR}} where {NR}
   return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
 end
 
@@ -26,7 +31,7 @@ function BlockSparseTensor(::Type{ElT},
                            inds) where {ElT<:Number,N}
   nnz_tot = nnz(boffs,inds)
   storage = BlockSparse(ElT,undef,boffs,nnz_tot)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 function BlockSparseTensor(::UndefInitializer,
@@ -40,7 +45,7 @@ function BlockSparseTensor(::Type{ElT},
                            inds) where {ElT<:Number,N}
   nnz_tot = nnz(blockoffsets,inds)
   storage = BlockSparse(ElT,blockoffsets,nnz_tot)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 function BlockSparseTensor(blockoffsets::BlockOffsets,
@@ -67,7 +72,7 @@ function BlockSparseTensor(::Type{ElT},
                            inds) where {ElT}
   boffs,nnz = blockoffsets(blocks,inds)
   storage = BlockSparse(ElT,undef,boffs,nnz)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 #function BlockSparseTensor(::UndefInitializer,
@@ -114,14 +119,14 @@ function BlockSparseTensor(::Type{ElT},
                            inds) where {ElT}
   boffs,nnz = blockoffsets(blocks,inds)
   storage = BlockSparse(ElT,boffs,nnz)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 #function BlockSparseTensor(blocks::Vector{Block{N}},
 #                           inds) where {N}
 #  blockoffsets,nnz = blockoffsets(blocks,inds)
 #  storage = BlockSparse(blockoffsets,nnz)
-#  return Tensor(storage,inds)
+#  return tensor(storage,inds)
 #end
 
 """
@@ -267,7 +272,7 @@ function blockview(T::BlockSparseTensor,
   blockdimsT = blockdims(T,blockT)
   blockdimT = prod(blockdimsT)
   dataTslice = @view data(store(T))[offsetT+1:offsetT+blockdimT]
-  return Tensor(Dense(dataTslice),blockdimsT)
+  return tensor(Dense(dataTslice),blockdimsT)
 end
 
 # TODO: this is not working right now
@@ -302,7 +307,7 @@ end
 # TODO: extend to case with different block structures
 function Base.:+(T1::BlockSparseTensor,T2::BlockSparseTensor)
   inds(T1) ≠ inds(T2) && error("Cannot add block sparse tensors with different block structure")  
-  return Tensor(store(T1)+store(T2),inds(T1))
+  return tensor(store(T1)+store(T2),inds(T1))
 end
 
 function Base.permutedims(T::BlockSparseTensor{<:Number,N},
@@ -539,7 +544,7 @@ function uncombine_output(T::BlockSparseTensor{ElT,N},
   blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
   blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
   boffs_uncomb_perm,nnz_uncomb_perm = blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
-  T_uncomb_perm = Tensor(BlockSparse(ElT,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
+  T_uncomb_perm = tensor(BlockSparse(ElT,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
   R = reshape(T_uncomb_perm,is)
   return R
 end
@@ -930,7 +935,7 @@ function Base.reshape(T::BlockSparseTensor,
                       boffsR::BlockOffsets,
                       indsR)
   storeR = reshape(store(T),boffsR)
-  return Tensor(storeR,indsR)
+  return tensor(storeR,indsR)
 end
 
 function Base.reshape(T::BlockSparseTensor,

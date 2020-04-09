@@ -18,12 +18,12 @@ function Base.:*(T1::Tensor{ElT1,2,StoreT1},
                                         ElT2,StoreT2<:Dense,IndsT2}
   RM = matrix(T1)*matrix(T2)
   indsR = (ind(T1,1), ind(T2,2))
-  return Tensor(Dense(vec(RM)), indsR)
+  return tensor(Dense(vec(RM)), indsR)
 end
 
 function LinearAlgebra.exp(T::DenseTensor{ElT,2}) where {ElT}
   expTM = exp(matrix(T))
-  return Tensor(Dense(vec(expTM)),inds(T))
+  return tensor(Dense(vec(expTM)),inds(T))
 end
 
 function LinearAlgebra.exp(T::Hermitian{ElT,
@@ -31,7 +31,7 @@ function LinearAlgebra.exp(T::Hermitian{ElT,
   # exp(::Hermitian/Symmetric) returns Hermitian/Symmetric,
   # so extract the parent matrix
   expTM = parent(exp(matrix(T)))
-  return Tensor(Dense(vec(expTM)),inds(T))
+  return tensor(Dense(vec(expTM)),inds(T))
 end
 
 """
@@ -126,9 +126,9 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   Uinds = IndsT((ind(T,1),u))
   Sinds = IndsT((u,v))
   Vinds = IndsT((ind(T,2),v))
-  U = Tensor(Dense(vec(MU)),Uinds)
-  S = Tensor(Diag(MS),Sinds)
-  V = Tensor(Dense(vec(MV)),Vinds)
+  U = tensor(Dense(vec(MU)),Uinds)
+  S = tensor(Diag(MS),Sinds)
+  V = tensor(Dense(vec(MV)),Vinds)
   return U,S,V,spec
 end
 
@@ -188,8 +188,8 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
   v = eltype(IndsT)(dD)
   Uinds = IndsT((ind(T,1),u))
   Dinds = IndsT((u,v))
-  U = Tensor(Dense(vec(UM)),Uinds)
-  D = Tensor(Diag(DM),Dinds)
+  U = tensor(Dense(vec(UM)),Uinds)
+  D = tensor(Diag(DM),Dinds)
   return U,D,spec
 end
 
@@ -203,8 +203,8 @@ function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
   v = eltype(IndsT)(dD)
   Uinds = IndsT((ind(T,1),u))
   Dinds = IndsT((u,v))
-  U = Tensor(Dense(vec(UM)),Uinds)
-  D = Tensor(Diag(DM),Dinds)
+  U = tensor(Dense(vec(UM)),Uinds)
+  D = tensor(Diag(DM),Dinds)
   return U,D
 end
 
@@ -277,8 +277,8 @@ function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
   v = eltype(IndsT)(dD)
   Uinds = IndsT((ind(T,1),u))
   Dinds = IndsT((u,v))
-  U = Tensor(Dense(vec(UM)),Uinds)
-  D = Tensor(Diag(DM),Dinds)
+  U = tensor(Dense(vec(UM)),Uinds)
+  D = tensor(Diag(DM),Dinds)
   return U,D,spec
 end
 
@@ -297,8 +297,8 @@ function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}
   q = dim(q) < dim(r) ? sim(q) : sim(r)
   Qinds = IndsT((ind(T,1),q))
   Rinds = IndsT((q,ind(T,2)))
-  Q = Tensor(Dense(vec(Matrix(QM))),Qinds)
-  R = Tensor(Dense(vec(RM)),Rinds)
+  Q = tensor(Dense(vec(Matrix(QM))),Qinds)
+  R = tensor(Dense(vec(RM)),Rinds)
   return Q,R
 end
 
@@ -311,8 +311,8 @@ function polar(T::DenseTensor{ElT,2,IndsT}) where {ElT,IndsT}
   # call here
   Qinds = IndsT((ind(T,1),q))
   Rinds = IndsT((q,ind(T,2)))
-  Q = Tensor(Dense(vec(QM)),Qinds)
-  R = Tensor(Dense(vec(RM)),Rinds)
+  Q = tensor(Dense(vec(QM)),Qinds)
+  R = tensor(Dense(vec(RM)),Rinds)
   return Q,R
 end
 

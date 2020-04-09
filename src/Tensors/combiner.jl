@@ -17,10 +17,12 @@ data(::Combiner) = error("Combiner storage has no data")
 blockperm(C::Combiner) = C.perm
 blockcomb(C::Combiner) = C.comb
 
-Base.eltype(::Type{<:Combiner}) = Nothing
+Base.eltype(::Type{<:Combiner}) = Number
+
 Base.eltype(::StoreT) where {StoreT<:Combiner} = eltype(StoreT)
 
-Base.promote_rule(::Type{<:Combiner},StorageT::Type{<:Dense}) = StorageT
+Base.promote_rule(::Type{<:Combiner},
+                  StorageT::Type{<:Dense}) = StorageT
 
 #
 # CombinerTensor (Tensor using Combiner storage)
@@ -70,14 +72,14 @@ function contract!!(R::Tensor{<:Number,NR},
     cpos1,cpos2 = intersect_positions(labelsT1,labelsT2)
     storeR = copy(store(T2))
     indsR = setindex(inds(T2),newind,cpos2)
-    return Tensor(storeR,indsR)
+    return tensor(storeR,indsR)
   elseif count_common(labelsT1,labelsT2) == 1 && length(inds(T1)) != 2
     # This is the case of uncombining
     cpos1,cpos2 = intersect_positions(labelsT1,labelsT2)
     storeR = copy(store(T2))
     indsC = deleteat(inds(T1),cpos1)
     indsR = insertat(inds(T2),indsC,cpos2)
-    return Tensor(storeR,indsR)
+    return tensor(storeR,indsR)
   elseif is_combiner(labelsT1,labelsT2)
     # This is the case of combining
     Alabels,Blabels = labelsT2,labelsT1

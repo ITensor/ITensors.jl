@@ -17,15 +17,10 @@ using .Tensors
 #####################################
 # Exports from Tensors module
 #
-# TODO: remove exports of storage types?
 export truncerror,
        Spectrum,
        eigs,
-       entropy,
-       Dense,
-       Diag,
-       BlockSparse,
-       DiagBlockSparse
+       entropy
 
 #####################################
 # Global Variables

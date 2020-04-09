@@ -18,7 +18,7 @@ A = randomITensor(i,j)
 
 A = randomITensor(i,i')
 eigA = eigen(A)
-Ut, Dt = eigen(tensor(A))
+Ut, Dt = eigen(ITensors.tensor(A))
 eigArr = eigen(array(A))
 @test diag(array(eigA.D), 0) == eigArr.values
 @test diag(array(Dt), 0) == eigArr.values
@@ -26,7 +26,7 @@ eigArr = eigen(array(A))
 At = rand(10, 10)
 k  = Index(10, "k")
 A = itensor(At + transpose(At), k, k')
-@test Array(exp(Hermitian(tensor(A)))) ≈ exp(At + transpose(At))
+@test Array(exp(Hermitian(ITensors.tensor(A)))) ≈ exp(At + transpose(At))
 
 @testset "Spectrum" begin
   i = Index(100,"i")
@@ -34,7 +34,7 @@ A = itensor(At + transpose(At), k, k')
 
   U,S,V = svd(rand(100,100))
   S ./= norm(S)
-  A = itensor(U*ITensors.LinearAlgebra.diagm(0=>S)*V', i,j)
+  A = itensor(U*ITensors.diagm(0=>S)*V', i,j)
 
   spec = svd(A,i).spec
 

@@ -26,6 +26,11 @@ export Index,
        val,
        hasqns
 
+import .Tensors: dim,
+                 dir,
+                 sim,
+                 dag
+
 const IDType = UInt64
 
 """
@@ -86,7 +91,6 @@ Obtain the id of an Index, which is a unique 64 digit integer
 """
 id(i::Index) = i.id
 
-import .Tensors.dim
 """
     dim(i::Index)
 Obtain the dimension of an Index
@@ -95,10 +99,6 @@ dim(i::Index) = i.space
 
 space(i::Index) = i.space
 
-# Note: need to use import here
-# so that we can export it,
-# since it is not exported from Tensors
-import .Tensors.dir
 """
     dir(i::Index)
 Obtain the direction of an Index (In or Out)
@@ -153,7 +153,6 @@ Base.copy(i::Index) = Index(id(i),
                             copy(tags(i)),
                             plev(i))
 
-import .Tensors.sim
 """
   sim(i::Index; tags=tags(i), dir=dir(i))
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
@@ -165,7 +164,6 @@ function sim(i::Index;
   return Index(rand(IDType),copy(space(i)),dir,tags,plev)
 end
 
-import .Tensors.dag
 """
     dag(i::Index)
 Copy an index `i` and reverse it's direction

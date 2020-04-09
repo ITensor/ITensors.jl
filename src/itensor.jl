@@ -29,7 +29,6 @@ export ITensor,
        rmul!,
        diagITensor,
        dot,
-       tensor,
        array,
        matrix,
        vector,
@@ -58,6 +57,8 @@ export ITensor,
        nzblock,
        blockoffsets,
        nnz
+
+import .Tensors: dag
 
 """
 An ITensor is a tensor whose interface is 
@@ -90,7 +91,7 @@ Constructor for an ITensor from a TensorStorage
 and a set of indices.
 The ITensor stores a view of the TensorStorage.
 """
-itensor(st::TensorStorage, is) = ITensor{ndims(is)}(is, st)
+itensor(st::TensorStorage, is) = ITensor{length(is)}(is, st)
 
 """
 ITensor(st::TensorStorage, is)
@@ -182,14 +183,13 @@ has the same indices.
 itensor(T::Tensor) = itensor(store(T),
                              inds(T))
 
-#TODO: replace with tensor(...)
 """
 tensor(::ITensor)
 
 Convert the ITensor to a Tensor that shares the same
 storage and indices as the ITensor.
 """
-tensor(A::ITensor) = Tensor(store(A),inds(A))
+Tensors.tensor(A::ITensor) = tensor(store(A),inds(A))
 
 """
     ITensor(iset::IndexSet)
@@ -418,8 +418,9 @@ Base.eltype(T::ITensor) = eltype(tensor(T))
 
 The number of indices, `length(inds(A))`.
 """
-order(T::ITensor) = order(inds(T))
-Base.ndims(T::ITensor) = order(inds(T))
+order(T::ITensor) = ndims(T)
+
+Base.ndims(T::ITensor) = length(inds(T))
 
 """
     dim(A::ITensor) = length(A)
@@ -696,7 +697,6 @@ combinedind(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
-import .Tensors.dag
 function dag(T::ITensor; always_copy=false)
   TT = conj(tensor(T); always_copy=always_copy)
   return itensor(store(TT),dag(inds(T)))

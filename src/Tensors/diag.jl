@@ -190,7 +190,7 @@ end
 function Base.similar(T::DiagTensor{<:Number,N},
                       ::Type{ElR},
                       inds::Dims{N}) where {ElR<:Number,N}
-  return Tensor(similar(store(T),ElR,minimum(inds)),inds)
+  return tensor(similar(store(T),ElR,minimum(inds)),inds)
 end
 
 """
@@ -212,7 +212,7 @@ setdiag(T::UniformDiagTensor,val)
 
 Set the entire diagonal of a uniform DiagTensor.
 """
-setdiag(T::UniformDiagTensor,val) = Tensor(Diag(val),inds(T))
+setdiag(T::UniformDiagTensor,val) = tensor(Diag(val),inds(T))
 
 Base.@propagate_inbounds function Base.getindex(T::DiagTensor{ElT,N},
                                                 inds::Vararg{Int,N}) where {ElT,N}
@@ -288,7 +288,7 @@ end
 function outer(T1::DiagTensor{ElT1,N1},
                T2::DiagTensor{ElT2,N2}) where {ElT1,ElT2,N1,N2}
   indsR = unioninds(inds(T1),inds(T2))
-  R = Tensor(Dense(zeros(promote_type(ElT1,ElT2),dim(indsR))),indsR)
+  R = tensor(Dense(zeros(promote_type(ElT1,ElT2),dim(indsR))),indsR)
   outer!(R,T1,T2)
   return R
 end
@@ -313,7 +313,7 @@ end
 function Base.permutedims(T::UniformDiagTensor{ElT,N},
                           perm::NTuple{N,Int},
                           f::Function=identity) where {ElR,ElT,N}
-  R = Tensor(Diag(f(getdiagindex(T,1))),permute(inds(T),perm))
+  R = tensor(Diag(f(getdiagindex(T,1))),permute(inds(T),perm))
   return R
 end
 
@@ -330,7 +330,7 @@ function permutedims!!(R::UniformDiagTensor{ElR,N},
                        T::UniformDiagTensor{ElT,N},
                        perm::NTuple{N,Int},
                        f::Function=(r,t)->t) where {ElR,ElT,N}
-  R = Tensor(Diag(f(getdiagindex(R,1),getdiagindex(T,1))),inds(R))
+  R = tensor(Diag(f(getdiagindex(R,1),getdiagindex(T,1))),inds(R))
   return R
 end
 

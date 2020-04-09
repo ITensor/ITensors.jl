@@ -15,25 +15,25 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
   @testset "Default" begin
     A = ITensor()
-    @test store(A) isa Dense{Nothing}
+    @test store(A) isa ITensors.Dense{Nothing}
     @test isnull(A)
   end
 
   @testset "Undef with index" begin
     A = ITensor(undef, i)
-    @test store(A) isa Dense{Float64}
+    @test store(A) isa ITensors.Dense{Float64}
     @test !isnull(A)
   end
 
   @testset "Default with indices" begin
     A = ITensor(i,j)
-    @test store(A) isa Dense{Float64}
+    @test store(A) isa ITensors.Dense{Float64}
     @test !isnull(A)
   end
 
   @testset "Random" begin
     A = randomITensor(i,j)
-    @test store(A) isa Dense{Float64}
+    @test store(A) isa ITensors.Dense{Float64}
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
     @test size(A) == dims(A) == (2,2)
@@ -42,7 +42,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test !isnull(A)
 
     B = randomITensor(IndexSet(i,j))
-    @test store(B) isa Dense{Float64}
+    @test store(B) isa ITensors.Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
     @test size(B) == dims(B) == (2,2)
     @test !isnull(B)
@@ -55,7 +55,7 @@ end
   @testset "From matrix" begin
     M = [1 2; 3 4]
     A = itensor(M,i,j)
-    @test store(A) isa Dense{Float64}
+    @test store(A) isa ITensors.Dense{Float64}
 
     @test M ≈ Matrix(A,i,j)
     @test M' ≈ Matrix(A,j,i)
@@ -70,7 +70,7 @@ end
     A = itensor(M, i, j)
     B = ITensors.setstore(A, N)
     @test N == Matrix(B, i, j)
-    @test store(B) isa Dense{Float64}
+    @test store(B) isa ITensors.Dense{Float64}
 
     M = [1 2 3; 4 5 6]
     @test_throws DimensionMismatch itensor(M,i,j)
@@ -119,18 +119,18 @@ end
 
   @testset "Complex" begin
     A = ITensor(Complex,i,j)
-    @test store(A) isa Dense{Complex}
+    @test store(A) isa ITensors.Dense{Complex}
   end
 
   @testset "Random complex" begin
     A = randomITensor(ComplexF64,i,j)
-    @test store(A) isa Dense{ComplexF64}
+    @test store(A) isa ITensors.Dense{ComplexF64}
   end
 
   @testset "From complex matrix" begin
     M = [1+2im 2; 3 4]
     A = itensor(M,i,j)
-    @test store(A) isa Dense{ComplexF64}
+    @test store(A) isa ITensors.Dense{ComplexF64}
   end
 
 end
@@ -152,7 +152,7 @@ end
   B = similar(A)
   @test inds(B) == inds(A)
   Ac = similar(A, ComplexF32)
-  @test store(Ac) isa Dense{ComplexF32}
+  @test store(Ac) isa ITensors.Dense{ComplexF32}
 end
 
 @testset "fill!" begin
@@ -291,12 +291,12 @@ end
   Amat = reshape(Amat+Amat'+randn(4,4)*1e-10,2,2,2,2)
   A = itensor(Amat,i1,i2,s1,s2)
   Aexp = exp(A,(i1,i2),(s1,s2),ishermitian=true)
-  Amatexp = reshape(parent(exp(ITensors.LinearAlgebra.Hermitian(reshape(Amat,4,4)))),
+  Amatexp = reshape(parent(exp(ITensors.Hermitian(reshape(Amat,4,4)))),
                     2,2,2,2)
   Aexp_from_mat = itensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
   Aexp = exp(A,(i1,i2),(s1,s2); ishermitian=true)
-  Amatexp = reshape(parent(exp(ITensors.LinearAlgebra.Hermitian(reshape(Amat,4,4)))),
+  Amatexp = reshape(parent(exp(ITensors.Hermitian(reshape(Amat,4,4)))),
                     2,2,2,2)
   Aexp_from_mat = itensor(Amatexp,i1,i2,s1,s2)
   @test Aexp ≈ Aexp_from_mat
@@ -398,19 +398,6 @@ end
     @test A[I] == T[I]
   end
 end
-
-#@testset "show" begin
-#  i = Index(2,"i")
-#  a = [1.0; 2.0]
-#  A = ITensor(a,i)
-#  s = split(sprint(show, A), '\n')
-#  @test s[1] == "ITensor ord=1 " * sprint(show, i) * " "
-#  @test s[2] == "Dense{Float64,Array{Float64,1}}"
-#  @test s[3] == "Tensor{Float64,1,Dense{Float64,Array{Float64,1}},IndexSet{1}}"
-#  @test s[4] == " 2-element"
-#  @test s[5] == " 1.0"
-#  @test s[6] == " 2.0"
-#end
 
 @testset "Test isapprox for ITensors" begin
   m,n = rand(0:20,2)
@@ -561,8 +548,8 @@ end #End "ITensor other index operations"
 
     S1 = TC+TR
     S2 = TR+TC
-    @test typeof(S1.store) == Dense{ComplexF64,Vector{ComplexF64}}
-    @test typeof(S2.store) == Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(S1.store) == ITensors.Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(S2.store) == ITensors.Dense{ComplexF64,Vector{ComplexF64}}
     for ii=1:dim(i),jj=1:dim(j)
       @test S1[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
       @test S2[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
@@ -572,7 +559,8 @@ end #End "ITensor other index operations"
 end
 
 
-@testset "ITensor, Dense{$SType} storage" for SType ∈ (Float64,ComplexF64)
+@testset "ITensor, ITensors.Dense{$SType} storage" for SType ∈ (Float64,
+                                                                ComplexF64)
   mi,mj,mk,ml,mα = 2,3,4,5,6,7
   i = Index(mi,"i")
   j = Index(mj,"j")
@@ -655,7 +643,7 @@ end
 
     @testset "Test SVD of an ITensor" begin
       U,S,V,spec,u,v = svd(A,(j,l))
-      @test store(S) isa Diag{Float64,Vector{Float64}}
+      @test store(S) isa ITensors.Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
@@ -665,13 +653,13 @@ end
       Lis = commoninds(A,IndexSet(j,l))
       Ris = uniqueinds(A,Lis)
       Lpos,Rpos = ITensors.Tensors.getperms(inds(A),Lis,Ris)
-      Ut,St,Vt,spec = svd(tensor(A), Lpos, Rpos)
+      Ut,St,Vt,spec = svd(ITensors.tensor(A), Lpos, Rpos)
       U = itensor(Ut)
       S = itensor(St)
       V = itensor(Vt)
       u = commonind(U, S)
       v = commonind(V, S)
-      @test store(S) isa Diag{Float64,Vector{Float64}}
+      @test store(S) isa ITensors.Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14

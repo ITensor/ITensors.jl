@@ -37,8 +37,8 @@ getperm(col1,col2)
 Get the permutation that takes collection 2 to collection 1,
 such that col2[p].==col1
 """
-function getperm(s1,s2)
-  return ntuple(i->findfirst(==(s1[i]),s2),Val(ndims(s1)))
+function getperm(s1, s2)
+  return ntuple(i->findfirst(==(s1[i]),s2),Val(length(s1)))
 end
 
 """
@@ -47,9 +47,9 @@ getperm(col1,col2,col3)
 Get the permutations that takes collections 2 and 3 to collection 1.
 """
 function getperms(s,s1,s2)
-  N = ndims(s)
-  N1 = ndims(s1)
-  N2 = ndims(s2)
+  N = length(s)
+  N1 = length(s1)
+  N2 = length(s2)
   N1+N2≠N && error("Size of partial sets don't match with total set")
   perm1 = ntuple(i->findfirst(==(s1[i]),s),Val(N1))
   perm2 = ntuple(i->findfirst(==(s2[i]),s),Val(N2))

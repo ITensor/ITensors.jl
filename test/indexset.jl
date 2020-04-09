@@ -23,9 +23,8 @@ using ITensors,
   end
   @testset "length of IndexSet and friends" begin
     @test length(typeof(IndexSet{2}(i,j))) == 2
-    @test order(IndexSet(i,j)) == 2
-    @test ndims(IndexSet(i,j)) == 2
-    @test ndims(typeof(IndexSet(i,j))) == 2
+    @test length(IndexSet(i,j)) == 2
+    @test length(typeof(IndexSet(i,j))) == 2
   end
   @testset "Convert to Index" begin
     @test Index(IndexSet(i)) === i
