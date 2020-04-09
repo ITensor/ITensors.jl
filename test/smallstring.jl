@@ -2,27 +2,23 @@ using ITensors,
       Test
 
 import ITensors.SmallString, 
-       ITensors.isint
+       ITensors.Tag,
+       ITensors.isint,
+       ITensors.isnull,
+       ITensors.IntChar
 
 @testset "SmallString" begin
   @testset "ctors" begin
       s = SmallString()
-      @test ITensors.isnull(s)
+      @test isnull(s)
   end
 
   @testset "setindex" begin
       s = SmallString()
-      @test ITensors.isnull(s)
-      t = ITensors.setindex(s, ITensors.IntChar(1), 1)
-      @test !ITensors.isnull(t)
+      @test isnull(s)
+      t = setindex(s, IntChar(1), 1)
+      @test !isnull(t)
   end
-
-  #@testset "push" begin
-  #  s = SmallString()
-  #  @test ITensors.isnull(s)
-  #  t = push(s, IntChar(1))
-  #  @test !ITensors.isnull(t)
-  #end
 
   @testset "comparison" begin
       u = SmallString("1")
@@ -68,14 +64,14 @@ import ITensors.SmallString,
   end
 
   @testset "show" begin
-    t = ITensors.Tag("")
+    t = Tag("")
     @test sprint(show,t) == ""
 
-    t = ITensors.Tag("Red")
+    t = Tag("Red")
     @test sprint(show,t) == "Red"
 
     # Make sure to test maximum length tag
-    t = ITensors.Tag("Electron")
+    t = Tag("Electron")
     @test sprint(show,t) == "Electron"
   end
 

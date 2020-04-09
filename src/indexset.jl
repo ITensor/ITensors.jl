@@ -11,9 +11,12 @@ export IndexSet,
        mindim,
        maxdim,
        permute,
-       dims
-
-import .Tensors: mindim
+       dims,
+       setindex,
+       pop,
+       popfirst,
+       push,
+       pushfirst
 
 struct IndexSet{N,IndexT<:Index}
   store::NTuple{N,IndexT}
@@ -129,20 +132,6 @@ Tensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
 
 Tensors.ValLength(::IndexSet{N}) where {N} = Val(N)
 
-"""
-pop(is::IndexSet)
-
-Return a new IndexSet with the last Index removed.
-"""
-Tensors.pop(is::IndexSet) = IndexSet(Tensors.pop(Tuple(is))) 
-
-"""
-popfirst(is::IndexSet)
-
-Return a new IndexSet with the first Index removed.
-"""
-Tensors.popfirst(is::IndexSet) = IndexSet(Tensors.popfirst(Tuple(is))) 
-
 # Convert to an Index if there is only one
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
 
@@ -172,9 +161,14 @@ Warning: this function is not type stable.
 Base.getindex(is::IndexSet,
               v::AbstractVector) = IndexSet(getindex(Tuple(is),v))
 
+"""
+setindex(is::IndexSet, i::Index, n::Int)
+
+Set the Index of the IndexSet in the dimension n.
+"""
 function Base.setindex(is::IndexSet,
                        i::Index,
-                       n::Integer)
+                       n::Int)
   return IndexSet(setindex(store(is), i, n))
 end
 
@@ -204,37 +198,6 @@ dim(is::IndexSet, n::Int)
 Get the dimension of the Index n of the IndexSet.
 """
 Tensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
-
-"""
-instertat(is1::IndexSet, is2, pos)
-
-Remove the index at pos and insert the indices
-is2 starting at that position.
-"""
-function Tensors.insertat(is1::IndexSet,
-                          is2,
-                          pos::Integer)
-  return IndexSet(Tensors.insertat(Tuple(is1),
-                                   Tuple(IndexSet(is2)),
-                                   pos))
-end
-
-"""
-instertafter(is1::IndexSet, is2, pos)
-
-Insert the indices is2 after position pos.
-"""
-function Tensors.insertafter(is::IndexSet, I...)
-  return IndexSet(Tensors.insertafter(Tuple(is), I...))
-end
-
-function Tensors.deleteat(is::IndexSet, I...)
-  return IndexSet(Tensors.deleteat(Tuple(is),I...))
-end
-
-function Tensors.getindices(is::IndexSet, I...)
-  return IndexSet(Tensors.getindices(Tuple(is), I...))
-end
 
 """
 strides(is::IndexSet)
@@ -280,30 +243,6 @@ Base.eltype(is::IndexSet{N,IndexT}) where {N,IndexT} = IndexT
 # Needed for findfirst (I think)
 Base.keys(is::IndexSet{N}) where {N} = 1:N
 
-"""
-push(is::IndexSet, i::Index)
-
-Make a new IndexSet with the Index i inserted
-at the end.
-"""
-Tensors.push(is::IndexSet,
-             i::Index) = IndexSet(Tensors.push(store(is), i))
-
-Tensors.push(is::IndexSet{0},
-             i::Index) = IndexSet(i)
-
-"""
-pushfirst(is::IndexSet, i::Index)
-
-Make a new IndexSet with the Index i inserted
-at the beginning.
-"""
-Tensors.pushfirst(is::IndexSet,
-                  i::Index) = IndexSet(Tensors.pushfirst(store(is), i))
-
-Tensors.pushfirst(is::IndexSet{0},
-                  i::Index) = IndexSet(i)
-
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
 # only known thing for dispatch is a concrete type such
@@ -321,6 +260,7 @@ Make a new IndexSet with similar indices.
 """
 Tensors.sim(is::IndexSet) = map(i -> sim(i), is)
 
+import .Tensors: mindim
 """
 mindim(is::IndexSet)
 
@@ -796,6 +736,117 @@ function compute_contraction_labels(Cis::IndexSet{NC},
   end
   return (Tuple(Clabels),Alabels,Blabels)
 end
+
+#
+# TupleTools
+#
+
+"""
+pop(is::IndexSet)
+
+Return a new IndexSet with the last Index removed.
+"""
+pop(is::IndexSet) = IndexSet(Tensors.pop(Tuple(is))) 
+
+# Overload the unexported Tensors version
+Tensors.pop(is::IndexSet) = pop(is)
+
+"""
+popfirst(is::IndexSet)
+
+Return a new IndexSet with the first Index removed.
+"""
+popfirst(is::IndexSet) = IndexSet(Tensors.popfirst(Tuple(is))) 
+
+# Overload the unexported Tensors version
+Tensors.popfirst(is::IndexSet) = popfirst(is)
+
+"""
+push(is::IndexSet, i::Index)
+
+Make a new IndexSet with the Index i inserted
+at the end.
+"""
+push(is::IndexSet,
+     i::Index) = IndexSet(Tensors.push(store(is), i))
+
+# Overload the unexported Tensors version
+Tensors.push(is::IndexSet,
+             i::Index) = push(is, i)
+
+push(is::IndexSet{0},
+     i::Index) = IndexSet(i)
+
+# Overload the unexported Tensors version
+Tensors.push(is::IndexSet{0},
+             i::Index) = push(is, i)
+
+"""
+pushfirst(is::IndexSet, i::Index)
+
+Make a new IndexSet with the Index i inserted
+at the beginning.
+"""
+pushfirst(is::IndexSet,
+          i::Index) = IndexSet(Tensors.pushfirst(store(is), i))
+
+# Overload the unexported Tensors version
+Tensors.pushfirst(is::IndexSet,
+                  i::Index) = pushfirst(is, i)
+
+pushfirst(is::IndexSet{0},
+          i::Index) = IndexSet(i)
+
+# Overload the unexported Tensors version
+Tensors.pushfirst(is::IndexSet{0},
+                  i::Index) = pushfirst(is, i)
+
+"""
+instertat(is1::IndexSet, is2, pos)
+
+Remove the index at pos and insert the indices
+is2 starting at that position.
+"""
+function insertat(is1::IndexSet,
+                  is2,
+                  pos::Int)
+  return IndexSet(Tensors.insertat(Tuple(is1),
+                                   Tuple(IndexSet(is2)),
+                                   pos))
+end
+
+# Overload the unexported Tensors version
+Tensors.insertat(is1::IndexSet,
+                 is2,
+                 pos::Int) = insertat(is1, is2, pos)
+
+"""
+instertafter(is1::IndexSet, is2, pos)
+
+Insert the indices is2 after position pos.
+"""
+function insertafter(is::IndexSet, I...)
+  return IndexSet(Tensors.insertafter(Tuple(is), I...))
+end
+
+# Overload the unexported Tensors version
+Tensors.insertafter(is::IndexSet,
+                    I...) = insertafter(is, I...)
+
+function deleteat(is::IndexSet, I...)
+  return IndexSet(Tensors.deleteat(Tuple(is),I...))
+end
+
+# Overload the unexported Tensors version
+Tensors.deleteat(is::IndexSet,
+                 I...) = deleteat(is, I...)
+
+function getindices(is::IndexSet, I...)
+  return IndexSet(Tensors.getindices(Tuple(is), I...))
+end
+
+Tensors.getindices(is::IndexSet,
+                   I...) = getindices(is, I...)
 
 #
 # QN functions

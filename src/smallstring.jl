@@ -2,7 +2,7 @@ const IntChar = UInt8
 const IntSmallString = UInt64
 const smallLength = 8
 const SmallStringStorage = SVector{smallLength,IntChar}
-const MSmallStringStorage = MVector{smallLength,IntChar} # Mutable SmallString storage
+const MSmallStringStorage = MVector{smallLength,IntChar}
 
 struct SmallString
   data::SmallStringStorage
