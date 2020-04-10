@@ -8,6 +8,10 @@ let
 
   sites = siteinds("S=1/2",N)
 
+  # Turning on QN conservation can 
+  # give large speedups for DMRG:
+  #sites = siteinds("S=1/2",N,conserve_qns=true)
+
   lattice = square_lattice(Nx,Ny,yperiodic=false)
 
   ampo = AutoMPO()
