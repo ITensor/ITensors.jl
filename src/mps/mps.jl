@@ -98,18 +98,57 @@ function Base.show(io::IO, M::MPS)
   end
 end
 
-function randomMPS(::Type{T}, sites) where {T<:Number}
+function randomizeMPS!(M::MPS, sites, bond_dim=1)
+  N = length(sites)
+  c = div(N,2)
+  max_pass = 100
+  for pass=1:max_pass,half=1:2
+    if half==1
+      (db,brange) = (+1, 1:1:N-1)
+    else
+      (db,brange) = (-1, N:-1:2)
+    end
+    for b=brange
+      s1 = sites[b]
+      s2 = sites[b+db]
+      mdim = dim(s1)*dim(s2)
+      RM = randn(mdim,mdim)
+      Q,_ = Tensors.qr_positive(RM)
+      G = itensor(Q,dag(s1),dag(s2),s1',s2')
+      T = noprime(G*M[b]*M[b+db])
+      rinds = uniqueinds(M[b],M[b+db])
+      U,S,V = svd(T,rinds;maxdim=bond_dim)
+      M[b] = U
+      M[b+db] = S*V
+      M[b+db] /= norm(M[b+db])
+    end
+    if half==2 && dim(commonind(M[c],M[c+1])) >= bond_dim
+      break
+    end
+  end
+  M.llim_ = 0
+  M.rlim_ = 2
+  if dim(commonind(M[c],M[c+1])) < bond_dim
+    error("MPS center bond dim less than requested")
+  end
+end
+
+function randomMPS(::Type{T}, sites, bond_dim=1) where {T<:Number}
   M = MPS(T, sites)
   for i in eachindex(sites)
     randn!(M[i])
     normalize!(M[i])
   end
-  M.llim_ = 1
-  M.rlim_ = length(M)
+  M.llim_ = 0
+  M.rlim_ = 2
+
+  if bond_dim > 1
+    randomizeMPS!(M,sites,bond_dim)
+  end
   return M
 end
 
-randomMPS(sites) = randomMPS(Float64, sites)
+randomMPS(sites,bond_dim=1) = randomMPS(Float64,sites,bond_dim)
 
 function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
   N = length(ivals)
