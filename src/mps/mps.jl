@@ -122,7 +122,7 @@ function randomizeMPS!(M::MPS, sites, bond_dim=1)
       M[b+db] = S*V
       M[b+db] /= norm(M[b+db])
     end
-    if dim(commonind(M[c],M[c+1])) >= bond_dim
+    if half==2 && dim(commonind(M[c],M[c+1])) >= bond_dim
       break
     end
   end
@@ -141,6 +141,7 @@ function randomMPS(::Type{T}, sites, bond_dim=1) where {T<:Number}
   end
   M.llim_ = 0
   M.rlim_ = 2
+
   if bond_dim > 1
     randomizeMPS!(M,sites,bond_dim)
   end
