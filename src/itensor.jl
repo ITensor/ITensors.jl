@@ -1,64 +1,9 @@
-export ITensor,
-       itensor,
-       axpy!,
-       combiner,
-       combinedind,
-       delta,
-       δ,
-       hasind,
-       hasinds,
-       hassameinds,
-       firstind,
-       inds,
-       ind,
-       commoninds,
-       commonind,
-       noncommoninds,
-       noncommonind,
-       uniqueinds,
-       uniqueind,
-       unioninds,
-       unionind,
-       isnull,
-       scale!,
-       matmul,
-       mul!,
-       order,
-       permute,
-       randomITensor,
-       rmul!,
-       diagITensor,
-       dot,
-       array,
-       matrix,
-       vector,
-       norm,
-       normalize!,
-       scalar,
-       set_warnorder,
-       store,
-       dense,
-       setelt,
-       prime!,
-       setprime!,
-       noprime!,
-       mapprime!,
-       swapprime!,
-       addtags!,
-       removetags!,
-       replacetags!,
-       settags!,
-       swaptags!,
-       replaceind!,
-       replaceinds!,
-       addblock!,
-       nnzblocks,
-       nzblocks,
-       nzblock,
-       blockoffsets,
-       nnz
 
-import .Tensors: dag
+# This is explicitly imported
+# so that it can be exported from
+# ITensors (it is not exported from
+# NDTensors)
+import .NDTensors: dag
 
 """
 An ITensor is a tensor whose interface is 
@@ -108,28 +53,28 @@ inds(T::ITensor)
 
 Return the indices of the ITensor as an IndexSet.
 """
-Tensors.inds(T::ITensor) = T.inds
+NDTensors.inds(T::ITensor) = T.inds
 
 """
 ind(T::ITensor, i::Int)
 
 Get the Index of the ITensor along dimension i.
 """
-Tensors.ind(T::ITensor, i::Int) = inds(T)[i]
+NDTensors.ind(T::ITensor, i::Int) = inds(T)[i]
 
 """
 store(T::ITensor)
 
 Return a view of the TensorStorage of the ITensor.
 """
-Tensors.store(T::ITensor) = T.store
+NDTensors.store(T::ITensor) = T.store
 
 """
 data(T::ITensor)
 
 Return a view of the raw data of the ITensor.
 """
-Tensors.data(T::ITensor) = data(store(T))
+NDTensors.data(T::ITensor) = data(store(T))
 
 Base.similar(T::ITensor) = itensor(similar(tensor(T)))
 
@@ -189,7 +134,7 @@ tensor(::ITensor)
 Convert the ITensor to a Tensor that shares the same
 storage and indices as the ITensor.
 """
-Tensors.tensor(A::ITensor) = tensor(store(A),inds(A))
+NDTensors.tensor(A::ITensor) = tensor(store(A),inds(A))
 
 """
     ITensor(iset::IndexSet)
@@ -402,7 +347,7 @@ dense(T::ITensor)
 Make a copy of the ITensor where the storage is the dense version.
 For example, an ITensor with Diag storage will become Dense storage.
 """
-Tensors.dense(T::ITensor) = itensor(dense(tensor(T)))
+NDTensors.dense(T::ITensor) = itensor(dense(tensor(T)))
 
 """
 complex(T::ITensor)
@@ -427,14 +372,14 @@ Base.ndims(T::ITensor) = length(inds(T))
 
 The total number of entries, `prod(size(A))`.
 """
-Tensors.dim(T::ITensor) = dim(inds(T))
+NDTensors.dim(T::ITensor) = dim(inds(T))
 
 """
     dims(A::ITensor) = size(A)
 
 Tuple containing `size(A,d) == dim(inds(A)[d]) for d in 1:ndims(A)`.
 """
-Tensors.dims(T::ITensor) = dims(inds(T))
+NDTensors.dims(T::ITensor) = dims(inds(T))
 
 Base.size(A::ITensor) = dims(inds(A))
 
@@ -502,8 +447,8 @@ Base.getindex(T::ITensor{N},
               I::CartesianIndex{N}) where {N} = tensor(T)[I]::Number
 
 function Base.getindex(T::ITensor, ivs...)
-  p = Tensors.getperm(inds(T), ivs)
-  vals = Tensors.permute(val.(ivs), p)
+  p = NDTensors.getperm(inds(T), ivs)
+  vals = NDTensors.permute(val.(ivs), p)
   return T[vals...]
 end
 
@@ -517,8 +462,8 @@ function Base.setindex!(T::ITensor,x::Number,vals::Int...)
 end
 
 function Base.setindex!(T::ITensor,x::Number,ivs...)
-  p = Tensors.getperm(inds(T),ivs)
-  vals = Tensors.permute(val.(ivs),p)
+  p = NDTensors.getperm(inds(T),ivs)
+  vals = NDTensors.permute(val.(ivs),p)
   T[vals...] = x
   return T
 end
@@ -580,7 +525,7 @@ unionind(A...; kwargs...) = getfirst(union(itensor2inds.(A)...;
 firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
                                      kwargs...)
 
-Tensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
+NDTensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
                                        kwargs...)
 
 # in-place versions of priming and tagging
@@ -711,7 +656,7 @@ is permuted accordingly.
 """
 function permute(T::ITensor{N},
                  new_inds) where {N}
-  perm = Tensors.getperm(new_inds, inds(T))
+  perm = NDTensors.getperm(new_inds, inds(T))
   Tp = permutedims(tensor(T), perm)
   return itensor(Tp)::ITensor{N}
 end
@@ -773,7 +718,7 @@ function LinearAlgebra.mul!(C::ITensor, A::ITensor, B::ITensor,
   (labelsC,labelsA,labelsB) = compute_contraction_labels(inds(C),
                                                          inds(A),
                                                          inds(B))
-  CT = Tensors.contract!!(tensor(C), labelsC,
+  CT = NDTensors.contract!!(tensor(C), labelsC,
                           tensor(A), labelsA,
                           tensor(B), labelsB,
                           α, β)
@@ -787,7 +732,7 @@ function LinearAlgebra.mul!(C::ITensor, A::ITensor, B::ITensor)
   (labelsC,labelsA,labelsB) = compute_contraction_labels(inds(C),
                                                          inds(A),
                                                          inds(B))
-  CT = Tensors.contract!!(tensor(C), labelsC,
+  CT = NDTensors.contract!!(tensor(C), labelsC,
                           tensor(A), labelsA,
                           tensor(B), labelsB)
   C = itensor(CT)
@@ -817,7 +762,7 @@ function LinearAlgebra.exp(A::ITensor,
                            Rinds = prime(IndexSet(Linds));
                            ishermitian = false)
   Lis,Ris = IndexSet(Linds),IndexSet(Rinds)
-  Lpos,Rpos = Tensors.getperms(inds(A), Lis, Ris)
+  Lpos,Rpos = NDTensors.getperms(inds(A), Lis, Ris)
   expAT = exp(tensor(A), Lpos, Rpos; ishermitian=ishermitian)
   return itensor(expAT)
 end
@@ -850,7 +795,7 @@ B .= A
 ```
 """
 function Base.copyto!(R::ITensor{N}, T::ITensor{N}) where {N}
-  perm = Tensors.getperm(inds(R), inds(T))
+  perm = NDTensors.getperm(inds(R), inds(T))
   TR = permutedims!(tensor(R), tensor(T), perm)
   return itensor(TR)
 end
@@ -887,7 +832,7 @@ add!(R::ITensor,
 function apply!(R::ITensor{N},
                 T::ITensor{N},
                 f::Function) where {N}
-  perm = Tensors.getperm(inds(R),inds(T))
+  perm = NDTensors.getperm(inds(R),inds(T))
   TR,TT = tensor(R),tensor(T)
 
   # TODO: Include type promotion from α
@@ -929,7 +874,7 @@ Scale the ITensor A by x in-place. May also be written `rmul!`.
 A .*= x
 ```
 """
-function Tensors.scale!(T::ITensor, x::Number)
+function NDTensors.scale!(T::ITensor, x::Number)
   TT = tensor(T)
   scale!(TT,x)
   return T
@@ -958,19 +903,19 @@ LinearAlgebra.mul!(R::ITensor,
 
 hasqns(T::ITensor) = hasqns(inds(T))
 
-Tensors.nnz(T::ITensor) = nnz(tensor(T))
+NDTensors.nnz(T::ITensor) = nnz(tensor(T))
 
-Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+NDTensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
 
-Tensors.nzblock(T::ITensor, args...) = nzblock(tensor(T), args...)
+NDTensors.nzblock(T::ITensor, args...) = nzblock(tensor(T), args...)
 
-Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
+NDTensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
 
-Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+NDTensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 
 flux(T::ITensor, args...) = flux(inds(T), args...)
 
-function Tensors.addblock!(T::ITensor,
+function NDTensors.addblock!(T::ITensor,
                            args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) && 
    error("Block does not match current flux")
@@ -994,7 +939,7 @@ end
 
 # TODO: make versions where the element type can be specified (for type
 # inference).
-Tensors.array(T::ITensor) = array(tensor(T))
+NDTensors.array(T::ITensor) = array(tensor(T))
 
 """
     matrix(T::ITensor)
@@ -1008,11 +953,11 @@ column, depends on the internal layout of the ITensor.
 *Therefore this method is intended for developer use
 only and not recommended for use in ITensor applications.*
 """
-function Tensors.matrix(T::ITensor{2})
+function NDTensors.matrix(T::ITensor{2})
   return array(tensor(T))
 end
 
-function Tensors.vector(T::ITensor{1})
+function NDTensors.vector(T::ITensor{1})
   return array(tensor(T))
 end
 
@@ -1103,7 +1048,7 @@ function readcpp(io::IO,
   end
 end
 
-function set_warnorder(ord::Int)
+function setwarnorder!(ord::Int)
   ITensors.GLOBAL_PARAMS["WarnTensorOrder"] = ord
 end
 

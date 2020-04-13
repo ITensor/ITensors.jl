@@ -30,8 +30,8 @@ function ising_mpo(sh::Tuple{Index,Index},sv::Tuple{Index,Index},
     end
     sz && (T[1,1,1,1] = -T[1,1,1,1])
     Q = [exp(β*J) exp(-β*J); exp(-β*J) exp(β*J)]
-    D,U = eigen(ITensors.Symmetric(Q))
-    √Q = U*ITensors.Diagonal(sqrt.(D))*U'
+    D,U = eigen(LinearAlgebra.Symmetric(Q))
+    √Q = U*LinearAlgebra.Diagonal(sqrt.(D))*U'
     Xh1 = itensor(√Q,sh[1],sh[1]')
     Xh2 = itensor(√Q,sh[2],sh[2]')
     Xv1 = itensor(√Q,sv[1],sv[1]')

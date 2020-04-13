@@ -1,3 +1,4 @@
+
 const IntChar = UInt8
 const IntSmallString = UInt64
 const smallLength = 8

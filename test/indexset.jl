@@ -94,9 +94,9 @@ using ITensors,
   end
   @testset "strides" begin
     I = IndexSet(i, j)
-    @test ITensors.Tensors.strides(I) == (1, idim)
-    @test ITensors.Tensors.stride(I, 1) == 1
-    @test ITensors.Tensors.stride(I, 2) == idim
+    @test NDTensors.strides(I) == (1, idim)
+    @test NDTensors.stride(I, 1) == 1
+    @test NDTensors.stride(I, 2) == idim
   end
   @testset "setprime" begin
     I = IndexSet(i, j)

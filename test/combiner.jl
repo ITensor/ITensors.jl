@@ -14,7 +14,7 @@ A = randomITensor(i, j, k, l)
     C,c = combiner(i, j, k)
     @test eltype(store(C)) === Number
     @test_throws ErrorException ITensors.data(C)
-    @test ITensors.Tensors.uncombinedinds(ITensors.tensor(C)) == IndexSet(i, j, k)
+    @test NDTensors.uncombinedinds(NDTensors.tensor(C)) == IndexSet(i, j, k)
 end
 
 @testset "Two index combiner" begin

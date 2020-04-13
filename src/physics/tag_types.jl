@@ -1,9 +1,3 @@
-export TagType,
-       TagType_str,
-       op,
-       siteinds,
-       state
-
 
 """
 TagType is a parameterized type which allows

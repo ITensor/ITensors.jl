@@ -1,4 +1,4 @@
-module Tensors
+module NDTensors
 
 using Random
 using LinearAlgebra
@@ -32,4 +32,4 @@ include("blocksparse/diagblocksparse.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
 
-end # module Tensors
+end # module NDTensors

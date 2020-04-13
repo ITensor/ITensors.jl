@@ -1,35 +1,12 @@
-export Index,
-       IndexVal,
-       dim,
-       dag,
-       prime,
-       setprime,
-       noprime,
-       addtags,
-       settags,
-       space,
-       readCpp,
-       replacetags,
-       replacetags!,
-       removetags,
-       hastags,
-       hasplev,
-       hasid,
-       id,
-       isdefault,
-       dir,
-       setdir,
-       plev,
-       tags,
-       ind,
-       sim,
-       val,
-       hasqns
 
-import .Tensors: dim,
-                 dir,
-                 sim,
-                 dag
+# These are explicitly imported
+# so that they can be exported
+# from ITensors (they are not
+# exported from NDTensors)
+import .NDTensors: dim,
+                   dir,
+                   sim,
+                   dag
 
 const IDType = UInt64
 
@@ -72,7 +49,7 @@ function Index(dim::Int; tags="", plev=0)
   return Index(rand(IDType), dim, Neither, tags, plev)
 end
 
-# Used in Tensors, mostly for internal usage
+# Used in NDTensors, mostly for internal usage
 Index{T}(dim::T) where {T} = Index(dim)
 
 """
@@ -293,9 +270,9 @@ function Base.iterate(i::Index,state::Int=1)
   return (state,state+1)
 end
 
-Tensors.outer(i::Index; tags="", plev=0) = sim(i; tags=tags, plev=plev)
+NDTensors.outer(i::Index; tags="", plev=0) = sim(i; tags=tags, plev=plev)
 
-function Tensors.outer(i1::Index, i2::Index; tags="")
+function NDTensors.outer(i1::Index, i2::Index; tags="")
   return Index(dim(i1)*dim(i2), tags)
 end
 
@@ -346,10 +323,10 @@ Base.getindex(i::Index, j::Int) = IndexVal(i, j)
 
 (i::Index)(n::Int) = IndexVal(i,n)
 
-Tensors.ind(iv::IndexVal) = iv.ind
+NDTensors.ind(iv::IndexVal) = iv.ind
 val(iv::IndexVal) = iv.val
 
-Tensors.ind(iv::PairIndexInt) = iv.first
+NDTensors.ind(iv::PairIndexInt) = iv.first
 val(iv::PairIndexInt) = iv.second
 
 Base.:(==)(i::Index,iv::IndexValOrPairIndexInt) = (i==ind(iv))

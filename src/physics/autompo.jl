@@ -3,16 +3,6 @@
 #  - replace leftmap, rightmap with sorted vectors
 # 
 
-export SiteOp,
-       MPOTerm,
-       AutoMPO,
-       terms,
-       add!,
-       toMPO,
-       MPOTerm,
-       MatElem,
-       SiteOp
-
 ###########################
 # SiteOp                  # 
 ###########################

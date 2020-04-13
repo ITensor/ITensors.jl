@@ -1,6 +1,4 @@
 
-const QNIndexSet{N} = IndexSet{N,QNIndex}
-
 function ITensor(::Type{ElT},
                  flux::QN,
                  inds::IndexSet) where {ElT<:Number}

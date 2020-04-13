@@ -3,7 +3,7 @@ export polar,
        svd
 
 #
-# Linear Algebra of order 2 Tensors
+# Linear Algebra of order 2 NDTensors
 #
 # Even though DenseTensor{_,2} is strided
 # and passable to BLAS/LAPACK, it cannot

@@ -1,4 +1,4 @@
-using ITensors.Tensors,
+using ITensors.NDTensors,
       Test
 
 @testset "DenseTensor basic functionality" begin
@@ -50,7 +50,7 @@ using ITensors.Tensors,
   Ap = permutedims(A,(2,1))
 
   for I in eachindex(A)
-    @test A[I] == Ap[Tensors.permute(I,(2,1))]
+    @test A[I] == Ap[NDTensors.permute(I,(2,1))]
   end
 
   t = Tensor(ComplexF64,100,100)

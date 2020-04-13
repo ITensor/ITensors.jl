@@ -1,20 +1,3 @@
-export MPS,
-       sample,
-       sample!,
-       leftlim,
-       prime!,
-       primelinks!,
-       simlinks!,
-       inner,
-       isortho,
-       productMPS,
-       randomMPS,
-       replacebond!,
-       rightlim,
-       linkind,
-       siteind,
-       siteinds
-
 
 mutable struct MPS
   N_::Int
@@ -55,7 +38,7 @@ MPS(sites) = MPS(Float64,sites)
 
 Base.length(m::MPS) = m.N_
 
-Tensors.store(m::MPS) = m.A_
+NDTensors.store(m::MPS) = m.A_
 
 leftlim(m::MPS) = m.llim_
 rightlim(m::MPS) = m.rlim_

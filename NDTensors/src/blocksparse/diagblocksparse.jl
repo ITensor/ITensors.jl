@@ -232,7 +232,7 @@ function Base.convert(::Type{<:DenseTensor{ElT,N}}, T::DiagBlockSparseTensor{ElT
   return dense(T)
 end
 
-# These are rules for determining the output of a pairwise contraction of Tensors
+# These are rules for determining the output of a pairwise contraction of NDTensors
 # (given the indices of the output tensors)
 function contraction_output_type(TensorT1::Type{<:DiagBlockSparseTensor},
                                  TensorT2::Type{<:BlockSparseTensor},

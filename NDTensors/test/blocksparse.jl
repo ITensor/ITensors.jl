@@ -1,4 +1,4 @@
-using ITensors.Tensors,
+using ITensors.NDTensors,
       Test
 
 @testset "BlockSparseTensor basic functionality" begin
@@ -69,7 +69,7 @@ using ITensors.Tensors,
   @test nnzblocks(A) == nnzblocks(Ap)
 
   for I in eachindex(C)
-    @test A[I] == Ap[Tensors.permute(I,(2,1))]
+    @test A[I] == Ap[NDTensors.permute(I,(2,1))]
   end
 
   A = BlockSparseTensor(ComplexF64,locs,indsA)
@@ -164,7 +164,7 @@ using ITensors.Tensors,
     perm = (2,1)
 
     locsB = [(2,1)]
-    indsB = Tensors.permute(indsA, perm)
+    indsB = NDTensors.permute(indsA, perm)
     B = BlockSparseTensor(locsB,indsB...)
     randn!(B)
 
@@ -172,7 +172,7 @@ using ITensors.Tensors,
 
     @test nnz(R) == nnz(A)
     for I in eachindex(A)
-      @test R[Tensors.permute(I,perm)] == A[I]
+      @test R[NDTensors.permute(I,perm)] == A[I]
     end
   end
 
@@ -222,7 +222,7 @@ using ITensors.Tensors,
     A = BlockSparseTensor(locsA,indsA...)
     randn!(A)
 
-    B = Tensors.permute_combine(A,3,(2,1))
+    B = NDTensors.permute_combine(A,3,(2,1))
 
     @test nnzblocks(A)==nnzblocks(B)
     @test nnz(A)==nnz(B)

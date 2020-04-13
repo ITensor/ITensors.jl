@@ -1,13 +1,5 @@
-export Sweeps,
-       nsweep,
-       maxdim,
-       cutoff,
-       maxdim!,
-       mindim!,
-       cutoff!,
-       sweepnext
 
-import .Tensors: mindim
+import .NDTensors: mindim
 
 mutable struct Sweeps
   nsweep::Int

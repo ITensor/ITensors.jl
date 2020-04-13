@@ -1,22 +1,3 @@
-export IndexSet,
-       swaptags,
-       swapprime,
-       mapprime,
-       mapprime!,
-       getfirst,
-       firstintersect,
-       firstsetdiff,
-       replaceind,
-       replaceinds,
-       mindim,
-       maxdim,
-       permute,
-       dims,
-       setindex,
-       pop,
-       popfirst,
-       push,
-       pushfirst
 
 struct IndexSet{N,IndexT<:Index}
   store::NTuple{N,IndexT}
@@ -122,15 +103,15 @@ sized immutable vector, similar to a Tuple).
 
 This is mostly for internal usage.
 """
-Tensors.store(is::IndexSet) = is.store
+NDTensors.store(is::IndexSet) = is.store
 
 # This is used in type promotion in the Tensor contraction code
 Base.promote_rule(::Type{<:IndexSet},
                   ::Type{Val{N}}) where {N} = IndexSet{N}
 
-Tensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
+NDTensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
 
-Tensors.ValLength(::IndexSet{N}) where {N} = Val(N)
+NDTensors.ValLength(::IndexSet{N}) where {N} = Val(N)
 
 # Convert to an Index if there is only one
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
@@ -176,9 +157,9 @@ Base.length(is::IndexSet{N}) where {N} = N
 
 Base.length(::Type{<:IndexSet{N}}) where {N} = N
 
-Tensors.dims(is::IndexSet{N}) where {N} = dims(Tuple(is))
+NDTensors.dims(is::IndexSet{N}) where {N} = dims(Tuple(is))
 
-Tensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
+NDTensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
 
 """
 dim(is::IndexSet)
@@ -186,34 +167,34 @@ dim(is::IndexSet)
 Get the product of the dimensions of the indices
 of the IndexSet (the total dimension of the space).
 """
-Tensors.dim(is::IndexSet) = dim(Tuple(is))
+NDTensors.dim(is::IndexSet) = dim(Tuple(is))
 
-Tensors.dim(is::IndexSet{0}) = 1
+NDTensors.dim(is::IndexSet{0}) = 1
 
-Tensors.dim(is::Tuple{Vararg{<:Index}}) = prod(dims(is))
+NDTensors.dim(is::Tuple{Vararg{<:Index}}) = prod(dims(is))
 
 """
 dim(is::IndexSet, n::Int)
 
 Get the dimension of the Index n of the IndexSet.
 """
-Tensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
+NDTensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
 
 """
 strides(is::IndexSet)
 
 Get the strides of the IndexSet.
 """
-Tensors.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
+NDTensors.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
 
 """
 stride(is::IndexSet. i::Int)
 
 Get the stride of the IndexSet in the dimension i.
 """
-Tensors.stride(is::IndexSet, k::Int) = Tensors.strides(is)[k]
+NDTensors.stride(is::IndexSet, k::Int) = NDTensors.strides(is)[k]
 
-import .Tensors.dag
+import .NDTensors.dag
 """
 dag(is::IndexSet)
 
@@ -247,10 +228,10 @@ Base.keys(is::IndexSet{N}) where {N} = 1:N
 # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
 # only known thing for dispatch is a concrete type such
 # as IndexSet{4})
-Tensors.similar_type(::Type{<:IndexSet},
+NDTensors.similar_type(::Type{<:IndexSet},
                      ::Val{N}) where {N} = IndexSet{N}
 
-Tensors.similar_type(::Type{<:IndexSet},
+NDTensors.similar_type(::Type{<:IndexSet},
                      ::Type{Val{N}}) where {N} = IndexSet{N}
 
 """
@@ -258,9 +239,9 @@ sim(is::IndexSet)
 
 Make a new IndexSet with similar indices.
 """
-Tensors.sim(is::IndexSet) = map(i -> sim(i), is)
+NDTensors.sim(is::IndexSet) = map(i -> sim(i), is)
 
-import .Tensors: mindim
+import .NDTensors: mindim
 """
 mindim(is::IndexSet)
 
@@ -686,11 +667,11 @@ function replaceinds(is::IndexSet, is1, is2)
   return is
 end
 
-Tensors.dense(::Type{<:IndexSet}) = IndexSet
+NDTensors.dense(::Type{<:IndexSet}) = IndexSet
 
-Tensors.dense(is::IndexSet) = IndexSet(dense(is...))
+NDTensors.dense(is::IndexSet) = IndexSet(dense(is...))
 
-Tensors.dense(inds::Index...) = inds
+NDTensors.dense(inds::Index...) = inds
 
 #
 # Helper functions for contracting ITensors
@@ -746,20 +727,20 @@ pop(is::IndexSet)
 
 Return a new IndexSet with the last Index removed.
 """
-pop(is::IndexSet) = IndexSet(Tensors.pop(Tuple(is))) 
+pop(is::IndexSet) = IndexSet(NDTensors.pop(Tuple(is))) 
 
-# Overload the unexported Tensors version
-Tensors.pop(is::IndexSet) = pop(is)
+# Overload the unexported NDTensors version
+NDTensors.pop(is::IndexSet) = pop(is)
 
 """
 popfirst(is::IndexSet)
 
 Return a new IndexSet with the first Index removed.
 """
-popfirst(is::IndexSet) = IndexSet(Tensors.popfirst(Tuple(is))) 
+popfirst(is::IndexSet) = IndexSet(NDTensors.popfirst(Tuple(is))) 
 
-# Overload the unexported Tensors version
-Tensors.popfirst(is::IndexSet) = popfirst(is)
+# Overload the unexported NDTensors version
+NDTensors.popfirst(is::IndexSet) = popfirst(is)
 
 """
 push(is::IndexSet, i::Index)
@@ -768,17 +749,17 @@ Make a new IndexSet with the Index i inserted
 at the end.
 """
 push(is::IndexSet,
-     i::Index) = IndexSet(Tensors.push(store(is), i))
+     i::Index) = IndexSet(NDTensors.push(store(is), i))
 
-# Overload the unexported Tensors version
-Tensors.push(is::IndexSet,
+# Overload the unexported NDTensors version
+NDTensors.push(is::IndexSet,
              i::Index) = push(is, i)
 
 push(is::IndexSet{0},
      i::Index) = IndexSet(i)
 
-# Overload the unexported Tensors version
-Tensors.push(is::IndexSet{0},
+# Overload the unexported NDTensors version
+NDTensors.push(is::IndexSet{0},
              i::Index) = push(is, i)
 
 """
@@ -788,17 +769,17 @@ Make a new IndexSet with the Index i inserted
 at the beginning.
 """
 pushfirst(is::IndexSet,
-          i::Index) = IndexSet(Tensors.pushfirst(store(is), i))
+          i::Index) = IndexSet(NDTensors.pushfirst(store(is), i))
 
-# Overload the unexported Tensors version
-Tensors.pushfirst(is::IndexSet,
+# Overload the unexported NDTensors version
+NDTensors.pushfirst(is::IndexSet,
                   i::Index) = pushfirst(is, i)
 
 pushfirst(is::IndexSet{0},
           i::Index) = IndexSet(i)
 
-# Overload the unexported Tensors version
-Tensors.pushfirst(is::IndexSet{0},
+# Overload the unexported NDTensors version
+NDTensors.pushfirst(is::IndexSet{0},
                   i::Index) = pushfirst(is, i)
 
 """
@@ -810,13 +791,13 @@ is2 starting at that position.
 function insertat(is1::IndexSet,
                   is2,
                   pos::Int)
-  return IndexSet(Tensors.insertat(Tuple(is1),
+  return IndexSet(NDTensors.insertat(Tuple(is1),
                                    Tuple(IndexSet(is2)),
                                    pos))
 end
 
-# Overload the unexported Tensors version
-Tensors.insertat(is1::IndexSet,
+# Overload the unexported NDTensors version
+NDTensors.insertat(is1::IndexSet,
                  is2,
                  pos::Int) = insertat(is1, is2, pos)
 
@@ -826,26 +807,26 @@ instertafter(is1::IndexSet, is2, pos)
 Insert the indices is2 after position pos.
 """
 function insertafter(is::IndexSet, I...)
-  return IndexSet(Tensors.insertafter(Tuple(is), I...))
+  return IndexSet(NDTensors.insertafter(Tuple(is), I...))
 end
 
-# Overload the unexported Tensors version
-Tensors.insertafter(is::IndexSet,
+# Overload the unexported NDTensors version
+NDTensors.insertafter(is::IndexSet,
                     I...) = insertafter(is, I...)
 
 function deleteat(is::IndexSet, I...)
-  return IndexSet(Tensors.deleteat(Tuple(is),I...))
+  return IndexSet(NDTensors.deleteat(Tuple(is),I...))
 end
 
-# Overload the unexported Tensors version
-Tensors.deleteat(is::IndexSet,
+# Overload the unexported NDTensors version
+NDTensors.deleteat(is::IndexSet,
                  I...) = deleteat(is, I...)
 
 function getindices(is::IndexSet, I...)
-  return IndexSet(Tensors.getindices(Tuple(is), I...))
+  return IndexSet(NDTensors.getindices(Tuple(is), I...))
 end
 
-Tensors.getindices(is::IndexSet,
+NDTensors.getindices(is::IndexSet,
                    I...) = getindices(is, I...)
 
 #
@@ -859,11 +840,11 @@ nblocks(::IndexSet,i::Integer)
 
 The number of blocks in the specified dimension.
 """
-function Tensors.nblocks(inds::IndexSet, i::Integer)
+function NDTensors.nblocks(inds::IndexSet, i::Integer)
   return nblocks(Tuple(inds),i)
 end
 
-function Tensors.nblocks(inds::IndexSet, is)
+function NDTensors.nblocks(inds::IndexSet, is)
   return nblocks(Tuple(inds),is)
 end
 
@@ -873,11 +854,11 @@ nblocks(::IndexSet)
 A tuple of the number of blocks in each
 dimension.
 """
-function Tensors.nblocks(inds::IndexSet{N}) where {N}
+function NDTensors.nblocks(inds::IndexSet{N}) where {N}
   return ntuple(i->nblocks(inds,i),Val(N))
 end
 
-function Tensors.nblocks(inds::NTuple{N,<:Index}) where {N}
+function NDTensors.nblocks(inds::NTuple{N,<:Index}) where {N}
   return nblocks(IndexSet(inds))
 end
 
@@ -932,7 +913,7 @@ flux(inds::IndexSet,
      vals::Int...) = flux(inds, block(inds, vals...))
 
 """
-block(inds::IndexSet, I::Int...)
+ITensors.block(inds::IndexSet, I::Int...)
 
 Get the block that the specified
 index falls in.

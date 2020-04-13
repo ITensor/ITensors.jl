@@ -2,10 +2,10 @@ using ITensors,
       LinearAlgebra, Test
 
 a = [-0.1, -0.12]
-@test ITensors.truncate!(a) == (0., 0.)
+@test NDTensors.truncate!(a) == (0., 0.)
 @test length(a) == 1
 a = [0.1, 0.01, 1e-13]
-@test ITensors.truncate!(a,
+@test NDTensors.truncate!(a,
                          use_absolute_cutoff=true,
                          cutoff=1e-5) == (1e-13, (0.01 + 1e-13)/2)
 @test length(a) == 2
@@ -18,7 +18,7 @@ A = randomITensor(i,j)
 
 A = randomITensor(i,i')
 eigA = eigen(A)
-Ut, Dt = eigen(ITensors.tensor(A))
+Ut, Dt = eigen(NDTensors.tensor(A))
 eigArr = eigen(array(A))
 @test diag(array(eigA.D), 0) == eigArr.values
 @test diag(array(Dt), 0) == eigArr.values
@@ -26,7 +26,7 @@ eigArr = eigen(array(A))
 At = rand(10, 10)
 k  = Index(10, "k")
 A = itensor(At + transpose(At), k, k')
-@test Array(exp(Hermitian(ITensors.tensor(A)))) ≈ exp(At + transpose(At))
+@test Array(exp(Hermitian(NDTensors.tensor(A)))) ≈ exp(At + transpose(At))
 
 @testset "Spectrum" begin
   i = Index(100,"i")

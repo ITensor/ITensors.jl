@@ -1,4 +1,3 @@
-export readcpp
 
 function readcpp(io::IO,
                  ::Type{Vector{T}};

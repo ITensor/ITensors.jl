@@ -1,5 +1,3 @@
-export dmrg
-
 
 function dmrg(H::MPO,
               psi0::MPS,

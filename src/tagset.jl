@@ -1,6 +1,3 @@
-export TagSet,
-       addtags,
-       hastags
 
 const Tag = SmallString
 const maxTagLength = smallLength
@@ -103,7 +100,7 @@ Get the raw storage of the TagSet.
 
 This is an insternal function.
 """
-Tensors.store(T::TagSet) = T.tags
+NDTensors.store(T::TagSet) = T.tags
 
 Base.length(T::TagSet) = T.length
 Base.getindex(T::TagSet,n::Int) = Tag(getindex(store(T),n))

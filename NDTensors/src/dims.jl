@@ -27,7 +27,7 @@ strides(ds::Dims)
 
 Get the strides of the dimensions.
 
-This is unexported, call with Tensors.strides.
+This is unexported, call with NDTensors.strides.
 """
 strides(ds::Dims) = Base.size_to_strides(1, dims(ds)...)
 

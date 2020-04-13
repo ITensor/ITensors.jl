@@ -1,4 +1,3 @@
-export ElectronSite
 
 const ElectronSite = TagType"Electron"
 

@@ -37,7 +37,7 @@ using ITensors,
 
     δiĩ = δ(dag(i),ĩ)
 
-    @test store(δiĩ) isa ITensors.DiagBlockSparse{ElT,
+    @test store(δiĩ) isa NDTensors.DiagBlockSparse{ElT,
                                                   ElT} where {ElT<:Number}
 
     B = A*δiĩ
@@ -45,7 +45,7 @@ using ITensors,
     A = permute(A,i,j)
     B = permute(B,ĩ,j)
 
-    @test norm(dense(ITensors.tensor(A))-dense(ITensors.tensor(B))) ≈ 0
+    @test norm(dense(NDTensors.tensor(A))-dense(NDTensors.tensor(B))) ≈ 0
   end
 
 end

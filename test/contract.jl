@@ -84,7 +84,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
       Aij = permute(Aij,i,j)
       Bij = permute(Bij,i,j)
       C = Aij*Bij
-      CArray = ITensors.tr(array(Aij)*transpose(array(Bij)))
+      CArray = LinearAlgebra.tr(array(Aij)*transpose(array(Bij)))
       @test CArray≈scalar(C)
     end
     @testset "Test contract ITensors (Matrix*Matrix -> Matrix)" begin
