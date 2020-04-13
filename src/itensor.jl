@@ -199,15 +199,21 @@ floating point version of the input value.
 ITensor(x::Number,
         inds::Index...) = ITensor(x,IndexSet(inds...))
 
-function itensor(A::Array{<:Number,N},
-                 inds::IndexSet{N}) where {N}
-  length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
+"""
+    itensor(A::Array, inds::IndexSet)
+    itensor(A::Array, inds::Index...)
 
+Construct an ITensor from an Array and a set if Indices,
+where the ITensor stores a view of the Array data.
+"""
+function itensor(A::Array{<:Number},
+                 inds::IndexSet)
+  length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   return itensor(Dense(float(vec(A))),inds)
 end
 
-itensor(A::Array{<:Number,N},
-        inds::Vararg{Index,N}) where {N} = itensor(A,IndexSet(inds...))
+itensor(A::Array{<:Number},
+        inds::Vararg{Index}) = itensor(A,IndexSet(inds...))
 
 ITensor(A::Array, inds::IndexSet) = itensor(copy(A), inds)
 
