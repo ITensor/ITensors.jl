@@ -1,37 +1,22 @@
 using ITensors,
       Printf
 
-include("heisenberg.jl")
-
 let
-  N = 50
+  N = 100
 
-  sites = [Index(QN(1)=>1,QN(-1)=>1; tags="S=1/2,n=$n") for n in 1:N]
+  sites = siteinds("S=1",N,conserve_qns=true)
 
-  #println("Using manual MPO")
-  #H = heisenberg(sites)
-
-  println("Using AutoMPO")
   ampo = AutoMPO()
   for j=1:N-1
     ampo += ("Sz",j,"Sz",j+1)
     ampo += (0.5,"S+",j,"S-",j+1)
     ampo += (0.5,"S-",j,"S+",j+1)
   end
-  J2 = 0.1
-  for j=1:N-2
-    ampo += (J2,"Sz",j,"Sz",j+2)
-  #  ampo += (0.5*J2,"S+",j,"S-",j+2)
-  #  ampo += (0.5*J2,"S-",j,"S+",j+2)
-  end
   H = toMPO(ampo,sites)
 
   psi0 = MPS(N)
 
-  state = [isodd(n) ? 1 : 2 for n in 1:N] 
-
-  l = [Index(QN()=>1; tags="l=$l") for l in 1:N-1]
-
+  state = [isodd(n) ? "Up" : "Dn" for n in 1:N] 
   psi0 = productMPS(sites,state)
 
   # Plan to do 5 DMRG sweeps:

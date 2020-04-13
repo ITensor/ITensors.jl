@@ -288,4 +288,29 @@ end
     @test length(s) == N
   end
 
+  @testset "randomMPS with chi > 1" begin
+    N = 20
+    chi = 8
+    sites = siteinds(2,N)
+    M = randomMPS(sites,chi)
+
+    @test leftlim(M) == 0
+    @test rightlim(M) == 2
+
+    @test norm(M[1]) ≈ 1.0
+
+    c = div(N,2)
+    @test dim(linkind(M,c)) == chi
+
+    # Test for right-orthogonality
+    R = M[N]*prime(M[N],"Link")
+    r = linkind(M,N-1)
+    @test norm(R-delta(r,r')) < 1E-10
+    for j in reverse(2:N-1)
+      R = R*M[j]*prime(M[j],"Link")
+      r = linkind(M,j-1)
+      @test norm(R-delta(r,r')) < 1E-10
+    end
+  end
+
 end
