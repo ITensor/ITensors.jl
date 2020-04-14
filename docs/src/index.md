@@ -47,7 +47,7 @@ ITensor construction, setting of elements, contraction, and addition.
 Before constructing an ITensor, one constructs Index objects
 representing tensor indices.
 
-```Julia
+```jldoctest; output=false
 using ITensors
 let
   i = Index(3)
@@ -62,12 +62,13 @@ let
   A[i=>2,j=>1,k=>2] = -21.2
   A[k=>1,i=>3,j=>1] = 31.1  # can provide Index values in any order
   # ...
-  A[k(1),i(3),j(1)] = 31.1  # alternative notation
+
+  # A[k(1),i(3),j(1)] = 31.1  # alternative notation
 
   # Contract over shared index j
   C = A * B
 
-  @show hasinds(C,i,k,l) # == true
+  @show hasinds(C,i,k,l) # = true
 
   D = randomITensor(k,j,i) # ITensor with random elements
 
@@ -75,8 +76,13 @@ let
   # must have same set of indices
   # but can be in any order
   R = A + D
+
+  nothing
 end
 
+# output
+
+hasinds(C, i, k, l) = true
 ```
 
 
@@ -89,15 +95,21 @@ ITensor `*` operation, which automatically recognizes
 the matching indices between U and S, and between S and V
 and contracts (sums over) them.
 
-```Julia
+```jldoctest; output=false
 using ITensors
 let
   i = Index(10)           # index of dimension 10
   j = Index(20)           # index of dimension 20
   M = randomITensor(i,j)  # random matrix, indices i,j
   U,S,V = svd(M,i)        # compute SVD with i as row index
-  @show norm(M - U*S*V)   # ≈ 0.0
+  @show M ≈ U*S*V         # = true
+
+  nothing
 end
+
+# output
+
+M ≈ U * S * V = true
 ```
 
 ### Singular Value Decomposition (SVD) of a Tensor
@@ -121,10 +133,18 @@ let
   l = Index(4,"l")
   T = randomITensor(i,j,k,l)
   U,S,V = svd(T,i,k)   # compute SVD with (i,k) as row indices (indices of U)
-  @show hasinds(U,i,k) # == true
-  @show hasinds(V,j,l) # == true
-  @show norm(T - U*S*V)   # ≈ 0.0
+  @show hasinds(U,i,k) # = true
+  @show hasinds(V,j,l) # = true
+  @show T ≈ U*S*V      # = true
+
+  nothing
 end
+
+# output
+
+hasinds(U,i,k) = true
+hasinds(V,j,l) = true
+M ≈ U * S * V = true
 ```
 
 ### Tensor Indices: Tags and Prime Levels
@@ -145,29 +165,41 @@ Tags are also useful for identifying Index objects when printing
 tensors, and for performing certain Index manipulations (e.g.
 priming indices having certain sets of tags).
 
-```Julia
+```jldoctest; output=false, filter=r"0x[0-9a-f]{16}"
 using ITensors
 let
   i = Index(3)     # Index of dimension 3
-  @show dim(i)     # dim(i) = 3
-  @show id(i)      # id(i) = 0x472aae4ea033b083 or similar
+  @show dim(i)     # = 3
+  @show id(i)      # = 0x5d28aa559dd13001 or similar
 
   ci = copy(i)
-  @show ci == i    # true
+  @show ci == i    # = true
 
   j = Index(5,"j") # Index with a tag "j"
 
-  @show j == i     # false
+  @show j == i     # = false
 
   s = Index(2,"n=1,Site") # Index with two tags,
                           # "Site" and "n=1"
-  @show hastags(s,"Site") # hastags(s,"Site") = true
-  @show hastags(s,"n=1")  # hastags(s,"n=1") = true
+  @show hastags(s,"Site") # = true
+  @show hastags(s,"n=1")  # = true
 
   i1 = prime(i) # i1 has a "prime level" of 1
                 # but otherwise same properties as i
-  @show i1 == i # false, prime levels do not match
+  @show i1 == i # = false, prime levels do not match
+
+  nothing
 end
+
+# output
+
+dim(i) = 3
+id(i) = 0x5d28aa559dd13001
+ci == i = true
+j == i = false
+hastags(s, "Site") = true
+hastags(s, "n=1") = true
+i1 == i = false
 ```
 
 ### DMRG Calculation
@@ -178,9 +210,8 @@ It originates in physics with the purpose of finding
 eigenvectors of Hamiltonian (energy) matrices which model
 the behavior of quantum systems.
 
-```Julia
+```jldoctest; output=false, filter=[r"After sweep [1-5] energy=\-[0-9]{3}\.[0-9]{10,16} maxlinkdim=[0-9]{1,3} time=[0-9]{1,2}\.[0-9]{3}", r"Final energy = \-138\.[0-9]{10,16}"]
 using ITensors
-
 let
   # Create 100 spin-one indices
   N = 100
@@ -214,5 +245,23 @@ let
   # (dominant eigenvalue) and optimized MPS
   energy, psi = dmrg(H,psi0, sweeps)
   println("Final energy = $energy")
+
+  nothing
 end
+
+# output
+
+sweeps = Sweeps
+1 cutoff=1.0E-10, maxdim=10, mindim=1
+2 cutoff=1.0E-10, maxdim=20, mindim=1
+3 cutoff=1.0E-10, maxdim=100, mindim=1
+4 cutoff=1.0E-10, maxdim=100, mindim=1
+5 cutoff=1.0E-10, maxdim=200, mindim=1
+
+After sweep 1 energy=-137.845841178879 maxlinkdim=9 time=8.538
+After sweep 2 energy=-138.935378608196 maxlinkdim=20 time=0.316
+After sweep 3 energy=-138.940079710492 maxlinkdim=88 time=1.904
+After sweep 4 energy=-138.940086018149 maxlinkdim=100 time=4.179
+After sweep 5 energy=-138.940086075413 maxlinkdim=96 time=4.184
+Final energy = -138.94008607296038
 ```

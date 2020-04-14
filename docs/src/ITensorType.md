@@ -8,13 +8,7 @@ ITensor
 
 ```@docs
 ITensor(::IndexSet)
-```
-
-```@docs
 ITensor(::Number, ::Index...)
-```
-
-```@docs
 randomITensor(::Type{<:Number}, ::IndexSet)
 ```
 
@@ -22,9 +16,6 @@ randomITensor(::Type{<:Number}, ::IndexSet)
 
 ```@docs
 diagITensor(::IndexSet)
-```
-
-```@docs
 delta(::Type{<:Number}, ::IndexSet)
 ```
 
@@ -32,9 +23,6 @@ delta(::Type{<:Number}, ::IndexSet)
 
 ```@docs
 *(::ITensor, ::ITensor)
-```
-
-```@docs
 exp(::ITensor, ::Any)
 ```
 

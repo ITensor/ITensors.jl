@@ -8,9 +8,6 @@ IndexSet(::Vector{<:Index})
 
 ```@docs
 prime(::IndexSet, ::Int)
-```
-
-```@docs
 map(::Function, ::IndexSet)
 ```
 
@@ -18,17 +15,8 @@ map(::Function, ::IndexSet)
 
 ```@docs
 intersect(::IndexSet, ::IndexSet)
-```
-
-```@docs
 firstintersect(::IndexSet, ::IndexSet)
-```
-
-```@docs
 setdiff(::IndexSet, ::IndexSet)
-```
-
-```@docs
 firstsetdiff(::IndexSet, ::IndexSet)
 ```
 
@@ -37,8 +25,5 @@ firstsetdiff(::IndexSet, ::IndexSet)
 ```@docs
 getfirst(::Function, ::IndexSet)
 getfirst(::IndexSet)
-```
-
-```@docs
 filter(::Function, ::IndexSet)
 ```

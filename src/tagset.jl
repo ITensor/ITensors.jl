@@ -201,13 +201,13 @@ function tagstring(T::TagSet)
   return res
 end
 
-function show(io::IO, T::TagSet)
-  print(io,"(")
+function Base.show(io::IO, T::TagSet)
+  print(io, "(")
   lT = length(T)
   if lT > 0
-    print(io,T[1])
+    print(io, T[1])
     for n=2:lT
-      print(io,",$(T[n])")
+      print(io, ",$(T[n])")
     end
   end
   print(io,")")
