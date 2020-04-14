@@ -3,4 +3,5 @@
 benchmark/mult
 Manifest.toml
 test/data.h5
+docs/build/
 .DS_Store
