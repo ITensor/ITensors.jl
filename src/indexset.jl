@@ -1,6 +1,8 @@
 
+import .NDTensors: store
+
 struct IndexSet{N,IndexT<:Index}
-  store::NTuple{N,IndexT}
+  data::NTuple{N,IndexT}
   IndexSet{N,IndexT}(inds) where {N,IndexT} = new{N,IndexT}(inds)
 end
 
@@ -57,7 +59,7 @@ Base.convert(::Type{IndexSet{N,IndexT}}, t) where {N,IndexT} = IndexSet{N,IndexT
 
 Base.convert(::Type{IndexSet{N,IndexT}}, is::IndexSet{N,IndexT}) where {N,IndexT} = is
 
-Base.Tuple(is::IndexSet) = Tuple(store(is))
+Base.Tuple(is::IndexSet) = Tuple(data(is))
 
 """
 IndexSet(inds::Vector{<:Index})
@@ -95,15 +97,16 @@ not(inds::Index...) = not(IndexSet(inds...))
 not(inds::Tuple{Vararg{<:Index}}) = not(IndexSet(inds))
 
 """
-store(is::IndexSet)
+data(is::IndexSet)
 
 Return the raw storage data for the indices.
-Currently the storage is an SVector (a statically
-sized immutable vector, similar to a Tuple).
+Currently the storage is a Tuple.
 
-This is mostly for internal usage.
+This is mostly for internal usage, please
+contact us if there is functionality you want
+availabe for IndexSet.
 """
-NDTensors.store(is::IndexSet) = is.store
+NDTensors.data(is::IndexSet) = is.data
 
 # This is used in type promotion in the Tensor contraction code
 Base.promote_rule(::Type{<:IndexSet},
@@ -117,7 +120,7 @@ NDTensors.ValLength(::IndexSet{N}) where {N} = Val(N)
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
 
 function Base.show(io::IO, is::IndexSet)
-  for i in store(is)
+  for i in is
     print(io,i)
     print(io," ")
   end
@@ -129,7 +132,7 @@ getindex(is::IndexSet, n::Int)
 Get the Index of the IndexSet in the dimension n.
 """
 Base.getindex(is::IndexSet,
-              n::Int) = getindex(store(is),n)
+              n::Int) = getindex(data(is),n)
 
 """
 getindex(is::IndexSet, v::AbstractVector)
@@ -150,7 +153,7 @@ Set the Index of the IndexSet in the dimension n.
 function Base.setindex(is::IndexSet,
                        i::Index,
                        n::Int)
-  return IndexSet(setindex(store(is), i, n))
+  return IndexSet(setindex(data(is), i, n))
 end
 
 Base.length(is::IndexSet{N}) where {N} = N
@@ -208,9 +211,9 @@ iterate(is::IndexSet[, state])
 
 Iterate over the indices of an IndexSet.
 """
-Base.iterate(is::IndexSet, state) = iterate(store(is), state)
+Base.iterate(is::IndexSet, state) = iterate(data(is), state)
 
-Base.iterate(is::IndexSet) = iterate(store(is))
+Base.iterate(is::IndexSet) = iterate(data(is))
 
 Base.eltype(is::Type{IndexSet{N,IndexT}}) where {N,IndexT} = IndexT
 
@@ -472,7 +475,7 @@ map(f, is::IndexSet)
 Apply the function to the elements of the IndexSet,
 returning a new IndexSet.
 """
-Base.map(f::Function, is::IndexSet) = IndexSet(map(f, store(is)))
+Base.map(f::Function, is::IndexSet) = IndexSet(map(f, data(is)))
 
 #
 # Tagging functions
@@ -749,7 +752,7 @@ Make a new IndexSet with the Index i inserted
 at the end.
 """
 push(is::IndexSet,
-     i::Index) = IndexSet(NDTensors.push(store(is), i))
+     i::Index) = IndexSet(NDTensors.push(data(is), i))
 
 # Overload the unexported NDTensors version
 NDTensors.push(is::IndexSet,
@@ -769,7 +772,7 @@ Make a new IndexSet with the Index i inserted
 at the beginning.
 """
 pushfirst(is::IndexSet,
-          i::Index) = IndexSet(NDTensors.pushfirst(store(is), i))
+          i::Index) = IndexSet(NDTensors.pushfirst(data(is), i))
 
 # Overload the unexported NDTensors version
 NDTensors.pushfirst(is::IndexSet,
@@ -972,3 +975,6 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   it = ntuple(n->read(g,"index_$n",Index),N)
   return IndexSet(it)
 end
+
+@deprecate store(is::IndexSet) data(is)
+

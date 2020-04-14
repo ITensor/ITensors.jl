@@ -1,4 +1,6 @@
 
+import .NDTensors: store
+
 const Tag = SmallString
 const maxTagLength = smallLength
 const MTagStorage = MSmallStringStorage # A mutable tag storage
@@ -8,7 +10,7 @@ const TagSetStorage = SVector{maxTags,IntTag}
 const MTagSetStorage = MVector{maxTags,IntTag}  # A mutable tag storage
 
 struct TagSet
-  tags::TagSetStorage
+  data::TagSetStorage
   length::Int
   function TagSet() 
     ts = TagSetStorage(ntuple(_ -> IntTag(0),Val(4)))
@@ -94,17 +96,17 @@ end
 Base.convert(::Type{TagSet}, str::String) = TagSet(str)
 
 """
-store(T::TagSet)
+data(T::TagSet)
 
 Get the raw storage of the TagSet.
 
 This is an insternal function.
 """
-NDTensors.store(T::TagSet) = T.tags
+NDTensors.data(T::TagSet) = T.data
 
 Base.length(T::TagSet) = T.length
-Base.getindex(T::TagSet,n::Int) = Tag(getindex(store(T),n))
-Base.copy(ts::TagSet) = TagSet(store(ts),length(ts))
+Base.getindex(T::TagSet,n::Int) = Tag(getindex(data(T),n))
+Base.copy(ts::TagSet) = TagSet(data(ts),length(ts))
 
 # Cast SVector of IntTag of length 4 to SVector of UInt128 of length 2
 # This is to make TagSet comparison a little bit faster
@@ -114,7 +116,7 @@ end
 
 function Base.:(==)(ts1::TagSet,ts2::TagSet)
   # Block the bits together to make the comparison faster
-  return cast_to_uint128(store(ts1)) == cast_to_uint128(store(ts2))
+  return cast_to_uint128(data(ts1)) == cast_to_uint128(data(ts2))
 end
 
 function hastag(ts::TagSet, tag)
@@ -142,7 +144,7 @@ function addtags(ts::TagSet, tagsadd)
     throw(ErrorException("Cannot add tag: TagSet already maximum size"))
   end
   tsadd = TagSet(tagsadd)
-  res_ts = MVector(store(ts))
+  res_ts = MVector(data(ts))
   ntags = length(ts)
   for n = 1:length(tsadd)
     @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntSmallString(tsadd[n]))
@@ -166,7 +168,7 @@ end
 #TODO: optimize this function
 function removetags(ts::TagSet, tagsremove)
   tsremove = TagSet(tagsremove)
-  res_ts = MVector(store(ts))
+  res_ts = MVector(data(ts))
   ntags = length(ts)
   for n=1:length(tsremove)
     @inbounds ntags = _removetag!(res_ts, ntags, tsremove[n])
@@ -178,7 +180,7 @@ end
 function replacetags(ts::TagSet, tagsremove, tagsadd)
   tsremove = TagSet(tagsremove)
   tsadd = TagSet(tagsadd)
-  res_ts = MVector(store(ts))
+  res_ts = MVector(data(ts))
   ntags = length(ts)
   # The TagSet must have the tags to be replaced
   !hastags(ts,tsremove) && return ts
@@ -252,5 +254,7 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   return TagSet(tstring)
 end
 
-@deprecate tags(t::TagSet) store(t::TagSet)
+@deprecate tags(t::TagSet) data(t)
+
+@deprecate store(t::TagSet) data(t)
 

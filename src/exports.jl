@@ -242,6 +242,15 @@ export
 # physics/site_types/tj.jl
   tJSite,
 
+# qn/qn.jl
+  QNVal,
+  QN,
+  name,
+  val,
+  modulus,
+  isactive,
+  isfermionic,
+
 # qn/qnindex.jl
   flux,
   hasqns

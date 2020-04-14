@@ -1,13 +1,18 @@
 
+import .NDTensors: store
+
 mutable struct MPO
-  N_::Int
-  A_::Vector{ITensor}
-  llim_::Int
-  rlim_::Int
+  length::Int
+  data::Vector{ITensor}
+  llim::Int
+  rlim::Int
 
   MPO() = new(0,Vector{ITensor}(), 0, 0)
 
-  function MPO(N::Int, A::Vector{<:ITensor}, llim::Int=0, rlim::Int=N+1)
+  function MPO(N::Int,
+               A::Vector{<:ITensor},
+               llim::Int=0,
+               rlim::Int=N+1)
     new(N, A, llim, rlim)
   end
 
@@ -79,17 +84,20 @@ function randomMPO(sites, m::Int=1)
   return M
 end
 
-Base.length(m::MPO) = m.N_
-NDTensors.store(m::MPO) = m.A_
-leftlim(m::MPO) = m.llim_
-rightlim(m::MPO) = m.rlim_
+Base.length(m::MPO) = m.length
+
+NDTensors.data(m::MPO) = m.data
+
+leftlim(m::MPO) = m.llim
+
+rightlim(m::MPO) = m.rlim
 
 function setleftlim!(m::MPO,new_ll::Int)
-  m.llim_ = new_ll
+  m.llim = new_ll
 end
 
 function setrightlim!(m::MPO,new_rl::Int)
-  m.rlim_ = new_rl
+  m.rlim = new_rl
 end
 
 Base.getindex(m::MPO, n::Integer) = getindex(store(m), n)
@@ -100,13 +108,13 @@ function Base.setindex!(M::MPO,T::ITensor,n::Integer)
   setindex!(store(M),T,n)
 end
 
-Base.copy(m::MPO) = MPO(m.N_, copy(store(m)))
-Base.similar(m::MPO) = MPO(m.N_, similar(store(m)), 0, m.N_)
+Base.copy(m::MPO) = MPO(m.length, copy(data(m)))
+Base.similar(m::MPO) = MPO(m.length, similar(data(m)), 0, m.length)
 
 function Base.deepcopy(m::T) where {T <: Union{MPO,MPS}}
     res = similar(m)
     # otherwise we will end up modifying the elements of A!
-    res.A_ = deepcopy(store(m))
+    res.data = deepcopy(store(m))
     return res
 end
 
@@ -424,8 +432,8 @@ function applympo_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
     O /= norm(O)
   end
   psi_out[1]    = copy(O)
-  psi_out.llim_ = 0
-  psi_out.rlim_ = 2
+  psi_out.llim = 0
+  psi_out.rlim = 2
   return psi_out
 end
 
@@ -469,8 +477,8 @@ function multmpo(A::MPO, B::MPO; kwargs...)::MPO
     B_ = copy(B)
     orthogonalize!(B_, 1)
 
-    links_A = inds.(A.A_, "Link")
-    links_B = inds.(B.A_, "Link")
+    links_A = inds.(A.data, "Link")
+    links_B = inds.(B.data, "Link")
 
     for i in 1:N
         if length(intersect(inds(A_[i], "Site"), inds(B_[i], "Site"))) == 2
@@ -633,11 +641,20 @@ provided as keyword arguments.
 """ truncate!
 
 @deprecate applyMPO(args...; kwargs...) applympo(args...; kwargs...)
+
 @deprecate errorMPOprod(args...; kwargs...) error_mpoprod(args...; kwargs...)
+
 @deprecate densityMatrixApplyMPO(args...; kwargs...) applympo_densitymatrix(args...; kwargs...)
+
 @deprecate naiveApplyMPO(args...; kwargs...) applympo_naive(args...; kwargs...)
+
 @deprecate multMPO(args...; kwargs...) multmpo(args...; kwargs...)
+
 @deprecate set_leftlim!(args...; kwargs...) setleftlim!(args...; kwargs...)
+
 @deprecate set_rightlim!(args...; kwargs...) setrightlim!(args...; kwargs...)
-@deprecate tensors(args...; kwargs...) store(args...; kwargs...)
+
+@deprecate tensors(args...; kwargs...) data(args...; kwargs...)
+
+@deprecate store(m::MPO) data(m)
 

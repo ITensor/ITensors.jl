@@ -1,9 +1,11 @@
 
+import .NDTensors: store
+
 mutable struct MPS
-  N_::Int
-  A_::Vector{ITensor}
-  llim_::Int
-  rlim_::Int
+  length::Int
+  data::Vector{ITensor}
+  llim::Int
+  rlim::Int
 
   MPS() = new(0,Vector{ITensor}(),0,0)
 
@@ -36,43 +38,51 @@ end
 
 MPS(sites) = MPS(Float64,sites)
 
-Base.length(m::MPS) = m.N_
+Base.length(m::MPS) = m.N
 
-NDTensors.store(m::MPS) = m.A_
+NDTensors.data(m::MPS) = m.data
 
-leftlim(m::MPS) = m.llim_
-rightlim(m::MPS) = m.rlim_
+leftlim(m::MPS) = m.llim
+
+rightlim(m::MPS) = m.rlim
 
 function setleftlim!(m::MPS,new_ll::Int)
-  m.llim_ = new_ll
+  m.llim = new_ll
 end
 
 function setrightlim!(m::MPS,new_rl::Int)
-  m.rlim_ = new_rl
+  m.rlim = new_rl
 end
 
-isortho(m::MPS) = (leftlim(m)+1 == rightlim(m)-1)
+isortho(m::MPS) = leftlim(m)+1 == rightlim(m)-1
 
 function orthocenter(m::MPS)
   !isortho(m) && error("MPS has no well-defined orthogonality center")
   return leftlim(m)+1
 end
 
-Base.getindex(M::MPS, n::Integer) = getindex(store(M),n)
+Base.getindex(M::MPS, n::Integer) = getindex(data(M),n)
 
 function Base.setindex!(M::MPS,T::ITensor,n::Integer)
   (n <= leftlim(M)) && setleftlim!(M,n-1)
   (n >= rightlim(M)) && setrightlim!(M,n+1)
-  setindex!(store(M),T,n)
+  setindex!(data(M),T,n)
 end
 
-Base.copy(m::MPS) = MPS(m.N_,copy(store(m)),m.llim_,m.rlim_)
-Base.similar(m::MPS) = MPS(m.N_, similar(store(m)), 0, m.N_)
+Base.copy(m::MPS) = MPS(length(m),
+                        copy(data(m)),
+                        leftlim(m),
+                        rightlim(m))
+
+Base.similar(m::MPS) = MPS(length(m),
+                           similar(data(m)),
+                           0,
+                           length(m))
 
 function Base.show(io::IO, M::MPS)
   print(io,"MPS")
   (length(M) > 0) && print(io,"\n")
-  for (i, A) ∈ enumerate(store(M))
+  for (i, A) ∈ enumerate(data(M))
     if order(A) != 0
       println(io,"[$i] $(inds(A))")
     else
@@ -109,8 +119,8 @@ function randomizeMPS!(M::MPS, sites, bond_dim=1)
       break
     end
   end
-  M.llim_ = 0
-  M.rlim_ = 2
+  setleftlim!(M, 0)
+  setrightlim!(M, 2)
   if dim(commonind(M[c],M[c+1])) < bond_dim
     error("MPS center bond dim less than requested")
   end
@@ -122,11 +132,11 @@ function randomMPS(::Type{T}, sites, bond_dim=1) where {T<:Number}
     randn!(M[i])
     normalize!(M[i])
   end
-  M.llim_ = 0
-  M.rlim_ = 2
+  setleftlim!(M, 0)
+  setrightlim!(rightlim(M), 2)
 
   if bond_dim > 1
-    randomizeMPS!(M,sites,bond_dim)
+    randomizeMPS!(M, sites, bond_dim)
   end
   return M
 end
@@ -244,11 +254,11 @@ function replacebond!(M::MPS,
   M[b]   = L
   M[b+1] = R
   if dir == "fromleft"
-    M.llim_ == b-1 && (M.llim_ += 1)
-    M.rlim_ == b+1 && (M.rlim_ += 1)
+    leftlim(M) == b-1 && setleftlim!(M, leftlim(M)+1)
+    rightlim(M) == b+1 && setrightlim!(M, rightlim(M)+1)
   else
-    M.llim_ == b   && (M.llim_ -= 1)
-    M.rlim_ == b+2 && (M.rlim_ -= 1)
+    leftlim(M) == b && setleftlim!(M, leftlim(M)-1)
+    rightlim(M) == b+2 && setrightlim!(M, rightlim(M)-1)
   end
   return spec
 end
@@ -266,7 +276,7 @@ orthogonalize!(m,1) will be called before
 computing the sample.
 """
 function sample!(m::MPS)
-  orthogonalize!(m,1)
+  orthogonalize!(m, 1)
   return sample(m)
 end
 
@@ -309,7 +319,7 @@ function sample(m::MPS)
       projn = ITensor(s)
       projn[s[n]] = 1.0
       An = A*projn
-      pn = scalar(dag(An)*An) |> real
+      pn = real(scalar(dag(An)*An))
       pdisc += pn
       (r < pdisc) && break
       n += 1
@@ -326,4 +336,6 @@ function sample(m::MPS)
 end
 
 @deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
+
+@deprecate store(m::MPS) data(m)
 
