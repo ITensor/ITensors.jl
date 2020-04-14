@@ -1,4 +1,3 @@
-export FermionSite
 
 const FermionSite = TagType"Fermion"
 

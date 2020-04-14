@@ -1,20 +1,3 @@
-export MPS,
-       sample,
-       sample!,
-       leftlim,
-       prime!,
-       primelinks!,
-       simlinks!,
-       inner,
-       isortho,
-       productMPS,
-       randomMPS,
-       replacebond!,
-       rightlim,
-       linkind,
-       siteind,
-       siteinds
-
 
 mutable struct MPS
   N_::Int
@@ -55,7 +38,7 @@ MPS(sites) = MPS(Float64,sites)
 
 Base.length(m::MPS) = m.N_
 
-Tensors.store(m::MPS) = m.A_
+NDTensors.store(m::MPS) = m.A_
 
 leftlim(m::MPS) = m.llim_
 rightlim(m::MPS) = m.rlim_
@@ -113,7 +96,7 @@ function randomizeMPS!(M::MPS, sites, bond_dim=1)
       s2 = sites[b+db]
       mdim = dim(s1)*dim(s2)
       RM = randn(mdim,mdim)
-      Q,_ = Tensors.qr_positive(RM)
+      Q,_ = NDTensors.qr_positive(RM)
       G = itensor(Q,dag(s1),dag(s2),s1',s2')
       T = noprime(G*M[b]*M[b+db])
       rinds = uniqueinds(M[b],M[b+db])

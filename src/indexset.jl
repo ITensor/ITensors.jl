@@ -1,39 +1,72 @@
-export IndexSet,
-       swaptags,
-       swapprime,
-       mapprime,
-       mapprime!,
-       getfirst,
-       firstintersect,
-       firstsetdiff,
-       replaceind,
-       replaceinds,
-       mindim,
-       maxdim,
-       push,
-       permute
 
 struct IndexSet{N,IndexT<:Index}
-  store::SVector{N,IndexT}
-  IndexSet{N}(inds::SVector{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
-  IndexSet{N}(inds::MVector{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
-  IndexSet{0}(::MVector{0}) = new{0,Index}(())
-  IndexSet{N}(inds::NTuple{N,IndexT}) where {N,IndexT<:Index} = new{N,IndexT}(inds)
-  IndexSet{0}() = new{0,Index}(())
-  IndexSet{0}(::Tuple{}) = new{0,Index}(())
+  store::NTuple{N,IndexT}
+  IndexSet{N,IndexT}(inds) where {N,IndexT} = new{N,IndexT}(inds)
 end
-IndexSet(inds::SizedVector{N,<:Index}) where {N} = IndexSet{N}(inds)
-IndexSet(inds::SVector{N,<:Index}) where {N} = IndexSet{N}(inds)
-IndexSet(inds::MVector{N,<:Index}) where {N} = IndexSet{N}(inds)
-IndexSet(inds::NTuple{N,<:Index}) where {N} = IndexSet{N}(inds)
+
+"""
+IndexSet{N,IndexT}(inds)
+IndexSet{N,IndexT}(inds::Index...)
+
+Construct an IndexSet of order N and element type IndexT
+from a collection of indices (any collection that is convertable to a Tuple).
+"""
+IndexSet{N,IndexT}(inds::Index...) where {N,IndexT} = IndexSet{N,IndexT}(inds)
+
+"""
+IndexSet{N}(inds)
+IndexSet{N}(inds::Index...)
+
+Construct an IndexSet of order N from a collection of indices
+(any collection that is convertable to a Tuple).
+"""
+IndexSet{N}(inds) where {N} = IndexSet{N,eltype(inds)}(inds)
+
+IndexSet{N}(inds::Index...) where {N} = IndexSet{N}(inds)
+
+IndexSet{N}(is::IndexSet{N}) where {N} = is
+
+"""
+IndexSet(inds)
+IndexSet(inds::Index...)
+
+Construct an IndexSet from a collection of indices
+(any collection that is convertable to a Tuple).
+"""
+IndexSet(inds) = IndexSet{length(inds)}(inds)
+
+IndexSet(inds::Index...) = IndexSet(inds)
+
+IndexSet(is::IndexSet) = is
+
+"""
+convert(::Type{IndexSet}, t)
+
+Convert the collection t to an IndexSet,
+as long as it can be converted to an SVector.
+"""
+Base.convert(::Type{IndexSet}, t) = IndexSet(t)
+
+Base.convert(::Type{IndexSet}, is::IndexSet) = is
+
+Base.convert(::Type{IndexSet{N}}, t) where {N} = IndexSet{N}(t)
+
+Base.convert(::Type{IndexSet{N}}, is::IndexSet{N}) where {N} = is
+
+Base.convert(::Type{IndexSet{N,IndexT}}, t) where {N,IndexT} = IndexSet{N,IndexT}(t)
+
+Base.convert(::Type{IndexSet{N,IndexT}}, is::IndexSet{N,IndexT}) where {N,IndexT} = is
+
+Base.Tuple(is::IndexSet) = Tuple(store(is))
 
 """
 IndexSet(inds::Vector{<:Index})
 
 Convert a Vector of indices to an IndexSet.
 
-Note that this is not type stable, since a Vector
+Warning: this is not type stable, since a Vector
 is dynamically sized and an IndexSet is statically sized.
+Consider using the constructor IndexSet{N}(inds::Vector).
 """
 IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
 
@@ -47,61 +80,38 @@ Type stable conversion of a Vector of indices to an IndexSet
 """
 IndexSet{N}(inds::Vector{<:Index}) where {N} = IndexSet{N}(inds...)
 
-IndexSet{N,IndexT}(inds::NTuple{N,IndexT}) where {N,IndexT<:Index} = IndexSet(inds)
-IndexSet{N,IndexT}(inds::Vararg{IndexT,N}) where {N,IndexT<:Index} = IndexSet(inds)
+"""
+not(inds::IndexSet)
+not(inds::Index...)
+not(inds::Tuple{Vararg{<:Index}})
 
-# TODO: what is this used for? Should we have this?
-# It is not type stable.
-function IndexSet(vi::Vector{Index}) 
-  N = length(vi)
-  return IndexSet{N}(NTuple{N,Index}(vi))
-end
-
-
+Represents the set of indices not in the specified
+IndexSet, for use in pattern matching (i.e. when
+searching for an index or priming/tagging specified
+indices).
+"""
 not(is::IndexSet) = Not(is)
 not(inds::Index...) = not(IndexSet(inds...))
-not(inds::NTuple{<:Any,<:Index}) = not(IndexSet(inds))
+not(inds::Tuple{Vararg{<:Index}}) = not(IndexSet(inds))
 
+"""
+store(is::IndexSet)
 
-Tensors.store(is::IndexSet) = is.store
+Return the raw storage data for the indices.
+Currently the storage is an SVector (a statically
+sized immutable vector, similar to a Tuple).
 
-
-# Empty constructor
-IndexSet() = IndexSet{0}()
-IndexSet(::Tuple{}) = IndexSet()
-IndexSet(::MVector{0}) = IndexSet()
-
-# Construct of some size
-IndexSet{N}() where {N} = IndexSet{N}(ntuple(_->Index(),Val(N)))
-IndexSet(::Val{N}) where {N} = IndexSet{N}()
-
-# Construct from various sets of indices
-IndexSet{N}(inds::Vararg{Index,N}) where {N} = IndexSet{N}(NTuple{N,Index}(inds))
-IndexSet(inds::Vararg{Index,N}) where {N} = IndexSet{N}(inds...)
-
-IndexSet{N}(ivs::NTuple{N,IndexVal}) where {N} = IndexSet{N}(ntuple(i->ind(ivs[i]),Val(N)))
-IndexSet(ivs::NTuple{N,IndexVal}) where {N} = IndexSet{N}(ivs)
-IndexSet{N}(ivs::Vararg{IndexVal,N}) where {N} = IndexSet{N}(tuple(ivs...))
-IndexSet(ivs::Vararg{IndexVal,N}) where {N} = IndexSet{N}(tuple(ivs...))
-
-# Construct from various sets of IndexSets
-IndexSet(inds::IndexSet) = inds
-IndexSet(inds::IndexSet,i::Index) = IndexSet(inds...,i)
-IndexSet(i::Index,inds::IndexSet) = IndexSet(i,inds...)
-IndexSet(is1::IndexSet,is2::IndexSet) = IndexSet(is1...,is2...)
+This is mostly for internal usage.
+"""
+NDTensors.store(is::IndexSet) = is.store
 
 # This is used in type promotion in the Tensor contraction code
-Base.promote_rule(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
+Base.promote_rule(::Type{<:IndexSet},
+                  ::Type{Val{N}}) where {N} = IndexSet{N}
 
-Tensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
-Tensors.ValLength(::IndexSet{N}) where {N} = Val(N)
+NDTensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
 
-StaticArrays.popfirst(is::IndexSet) = IndexSet(popfirst(store(is))) 
-
-# TODO: make a version that accepts an arbitrary set of IndexSets
-# as well as mixtures of seperate Indices and Tuples of Indices.
-# Look at jointuples in the DenseTensor decomposition logic.
-IndexSet(inds::NTuple{2,IndexSet}) = IndexSet(inds...)
+NDTensors.ValLength(::IndexSet{N}) where {N} = Val(N)
 
 # Convert to an Index if there is only one
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
@@ -113,81 +123,125 @@ function Base.show(io::IO, is::IndexSet)
   end
 end
 
-Base.getindex(is::IndexSet,n::Integer) = getindex(store(is),n)
-Base.getindex(is::IndexSet,v::AbstractVector) = IndexSet(getindex(Tuple(is),v))
+"""
+getindex(is::IndexSet, n::Int)
 
-function StaticArrays.setindex(is::IndexSet,i::Index,n::Integer)
-  return IndexSet(setindex(store(is),i,n))
+Get the Index of the IndexSet in the dimension n.
+"""
+Base.getindex(is::IndexSet,
+              n::Int) = getindex(store(is),n)
+
+"""
+getindex(is::IndexSet, v::AbstractVector)
+
+Get the indices of the IndexSet in the dimensions
+specified in the collection v, returning an IndexSet.
+
+Warning: this function is not type stable.
+"""
+Base.getindex(is::IndexSet,
+              v::AbstractVector) = IndexSet(getindex(Tuple(is),v))
+
+"""
+setindex(is::IndexSet, i::Index, n::Int)
+
+Set the Index of the IndexSet in the dimension n.
+"""
+function Base.setindex(is::IndexSet,
+                       i::Index,
+                       n::Int)
+  return IndexSet(setindex(store(is), i, n))
 end
 
 Base.length(is::IndexSet{N}) where {N} = N
+
 Base.length(::Type{<:IndexSet{N}}) where {N} = N
-order(is::IndexSet) = length(is)
-Base.copy(is::IndexSet) = IndexSet(copy(store(is)))
-Tensors.dims(is::IndexSet{N}) where {N} = ntuple(i->dim(is[i]),Val(N))
-Base.ndims(::IndexSet{N}) where {N} = N
-Base.ndims(::Type{<:IndexSet{N}}) where {N} = N
-Tensors.dim(is::IndexSet) = prod(dim.(is))
-Tensors.dim(is::IndexSet{0}) = 1
-Tensors.dim(is::IndexSet,pos::Integer) = dim(is[pos])
 
-# To help with generic code in Tensors
-Base.ndims(::NTuple{N,IndT}) where {N,IndT<:Index} = N
-Base.ndims(::Type{<:NTuple{N,IndT}}) where {N,IndT<:Index} = N
+NDTensors.dims(is::IndexSet{N}) where {N} = dims(Tuple(is))
 
-function Tensors.insertat(is1::IndexSet,
-                          is2,
-                          pos::Integer)
-  return IndexSet(insertat(Tuple(is1),Tuple(IndexSet(is2)),pos))
-end
+NDTensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
 
-function Tensors.insertafter(is::IndexSet,I...)
-  return IndexSet(insertafter(Tuple(is),I...))
-end
+"""
+dim(is::IndexSet)
 
-function StaticArrays.deleteat(is::IndexSet,I...)
-  return IndexSet(deleteat(Tuple(is),I...))
-end
+Get the product of the dimensions of the indices
+of the IndexSet (the total dimension of the space).
+"""
+NDTensors.dim(is::IndexSet) = dim(Tuple(is))
 
-function Tensors.getindices(is::IndexSet,I...)
-  return IndexSet(getindices(Tuple(is),I...))
-end
+NDTensors.dim(is::IndexSet{0}) = 1
 
-# Optimize this (right own function that extracts dimensions
-# with a function)
-Base.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
-Base.stride(is::IndexSet,k::Integer) = strides(is)[k]
+NDTensors.dim(is::Tuple{Vararg{<:Index}}) = prod(dims(is))
 
-Tensors.dag(is::IndexSet) = IndexSet(dag.(store(is)))
+"""
+dim(is::IndexSet, n::Int)
 
-# Allow iteration
-Base.iterate(is::IndexSet{N},state::Int=1) where {N} = state > N ? nothing : (is[state], state+1)
+Get the dimension of the Index n of the IndexSet.
+"""
+NDTensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
+
+"""
+strides(is::IndexSet)
+
+Get the strides of the IndexSet.
+"""
+NDTensors.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
+
+"""
+stride(is::IndexSet. i::Int)
+
+Get the stride of the IndexSet in the dimension i.
+"""
+NDTensors.stride(is::IndexSet, k::Int) = NDTensors.strides(is)[k]
+
+import .NDTensors.dag
+"""
+dag(is::IndexSet)
+
+Return a new IndexSet with the indices daggered (flip
+all of the arrow directions).
+"""
+dag(is::IndexSet) = map(i -> dag(i), is)
+
+"""
+iterate(is::IndexSet[, state])
+
+Iterate over the indices of an IndexSet.
+"""
+Base.iterate(is::IndexSet, state) = iterate(store(is), state)
+
+Base.iterate(is::IndexSet) = iterate(store(is))
 
 Base.eltype(is::Type{IndexSet{N,IndexT}}) where {N,IndexT} = IndexT
+
+"""
+eltype(::IndexSet)
+
+Get the element type of the IndexSet.
+"""
 Base.eltype(is::IndexSet{N,IndexT}) where {N,IndexT} = IndexT
 
 # Needed for findfirst (I think)
 Base.keys(is::IndexSet{N}) where {N} = 1:N
 
-StaticArrays.push(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(push(store(is),i))
-StaticArrays.pushfirst(is::IndexSet{N},i::Index) where {N} = IndexSet{N+1}(pushfirst(store(is),i))
-
-# TODO: this assumes there is no overlap between the sets
-unioninds(is1::IndexSet{N1},is2::IndexSet{N2}) where {N1,N2} = IndexSet{N1+N2}(is1...,is2...)
-
-# This overload is used in Tensors
-Tensors.tuplecat(is1::IndexSet{N1},
-                 is2::IndexSet{N2}) where {N1,N2} = IndexSet{N1+N2}(is1...,is2...)
-
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
 # only known thing for dispatch is a concrete type such
 # as IndexSet{4})
-StaticArrays.similar_type(::Type{<:IndexSet},::Val{N}) where {N} = IndexSet{N}
-StaticArrays.similar_type(::Type{<:IndexSet},::Type{Val{N}}) where {N} = IndexSet{N}
+NDTensors.similar_type(::Type{<:IndexSet},
+                     ::Val{N}) where {N} = IndexSet{N}
 
-Tensors.sim(is::IndexSet{N}) where {N} = IndexSet{N}(ntuple(i->sim(is[i]),Val(N)))
+NDTensors.similar_type(::Type{<:IndexSet},
+                     ::Type{Val{N}}) where {N} = IndexSet{N}
 
+"""
+sim(is::IndexSet)
+
+Make a new IndexSet with similar indices.
+"""
+NDTensors.sim(is::IndexSet) = map(i -> sim(i), is)
+
+import .NDTensors: mindim
 """
 mindim(is::IndexSet)
 
@@ -198,8 +252,8 @@ Returns 1 if the IndexSet is empty.
 function mindim(is::IndexSet)
   length(is) == 0 && (return 1)
   md = dim(is[1])
-  for n ∈ 2:length(is)
-    md = min(md,dim(is[n]))
+  for n in 2:length(is)
+    md = min(md, dim(is[n]))
   end
   return md
 end
@@ -237,10 +291,20 @@ function Base.:(==)(A::IndexSet,B::IndexSet)
   return true
 end
 
-fmatch(n::Not) = !fmatch(parent(n))
+"""
+fmatch(pattern) -> ::Function
 
-fmatch(::Nothing) = _ -> true
+fmatch is an internal function that
+creates a function that accepts an Index.
+The function returns true if the Index matches
+the provided pattern, and false otherwise.
 
+For example:
+```
+i = Index(2, "s")
+fmatch("s")(i) == true
+```
+"""
 fmatch(is::IndexSet) = in(is)
 fmatch(is::Tuple{Vararg{<:Index}}) = fmatch(IndexSet(is))
 fmatch(is::Index...) = fmatch(IndexSet(is...))
@@ -252,10 +316,17 @@ fmatch(tags::AbstractString) = fmatch(TagSet(tags))
 
 fmatch(id::IDType) = hasid(id)
 
-"""
-fmatch
+fmatch(n::Not) = !fmatch(parent(n))
 
-Return a function that accepts an Index that checks if the
+fmatch(::Nothing) = _ -> true
+
+"""
+fmatch(; tags=nothing,
+         plev=nothing,
+         id=nothing) -> ::Function
+
+An internal function that returns a function 
+that accepts an Index that checks if the
 Index matches the provided conditions.
 """
 function fmatch(; tags=nothing,
@@ -596,11 +667,11 @@ function replaceinds(is::IndexSet, is1, is2)
   return is
 end
 
-Tensors.dense(::Type{<:IndexSet}) = IndexSet
+NDTensors.dense(::Type{<:IndexSet}) = IndexSet
 
-Tensors.dense(is::IndexSet) = IndexSet(dense(is...))
+NDTensors.dense(is::IndexSet) = IndexSet(dense(is...))
 
-Tensors.dense(inds::Index...) = inds
+NDTensors.dense(inds::Index...) = inds
 
 #
 # Helper functions for contracting ITensors
@@ -648,10 +719,217 @@ function compute_contraction_labels(Cis::IndexSet{NC},
 end
 
 #
+# TupleTools
+#
+
+"""
+pop(is::IndexSet)
+
+Return a new IndexSet with the last Index removed.
+"""
+pop(is::IndexSet) = IndexSet(NDTensors.pop(Tuple(is))) 
+
+# Overload the unexported NDTensors version
+NDTensors.pop(is::IndexSet) = pop(is)
+
+"""
+popfirst(is::IndexSet)
+
+Return a new IndexSet with the first Index removed.
+"""
+popfirst(is::IndexSet) = IndexSet(NDTensors.popfirst(Tuple(is))) 
+
+# Overload the unexported NDTensors version
+NDTensors.popfirst(is::IndexSet) = popfirst(is)
+
+"""
+push(is::IndexSet, i::Index)
+
+Make a new IndexSet with the Index i inserted
+at the end.
+"""
+push(is::IndexSet,
+     i::Index) = IndexSet(NDTensors.push(store(is), i))
+
+# Overload the unexported NDTensors version
+NDTensors.push(is::IndexSet,
+             i::Index) = push(is, i)
+
+push(is::IndexSet{0},
+     i::Index) = IndexSet(i)
+
+# Overload the unexported NDTensors version
+NDTensors.push(is::IndexSet{0},
+             i::Index) = push(is, i)
+
+"""
+pushfirst(is::IndexSet, i::Index)
+
+Make a new IndexSet with the Index i inserted
+at the beginning.
+"""
+pushfirst(is::IndexSet,
+          i::Index) = IndexSet(NDTensors.pushfirst(store(is), i))
+
+# Overload the unexported NDTensors version
+NDTensors.pushfirst(is::IndexSet,
+                  i::Index) = pushfirst(is, i)
+
+pushfirst(is::IndexSet{0},
+          i::Index) = IndexSet(i)
+
+# Overload the unexported NDTensors version
+NDTensors.pushfirst(is::IndexSet{0},
+                  i::Index) = pushfirst(is, i)
+
+"""
+instertat(is1::IndexSet, is2, pos)
+
+Remove the index at pos and insert the indices
+is2 starting at that position.
+"""
+function insertat(is1::IndexSet,
+                  is2,
+                  pos::Int)
+  return IndexSet(NDTensors.insertat(Tuple(is1),
+                                   Tuple(IndexSet(is2)),
+                                   pos))
+end
+
+# Overload the unexported NDTensors version
+NDTensors.insertat(is1::IndexSet,
+                 is2,
+                 pos::Int) = insertat(is1, is2, pos)
+
+"""
+instertafter(is1::IndexSet, is2, pos)
+
+Insert the indices is2 after position pos.
+"""
+function insertafter(is::IndexSet, I...)
+  return IndexSet(NDTensors.insertafter(Tuple(is), I...))
+end
+
+# Overload the unexported NDTensors version
+NDTensors.insertafter(is::IndexSet,
+                    I...) = insertafter(is, I...)
+
+function deleteat(is::IndexSet, I...)
+  return IndexSet(NDTensors.deleteat(Tuple(is),I...))
+end
+
+# Overload the unexported NDTensors version
+NDTensors.deleteat(is::IndexSet,
+                 I...) = deleteat(is, I...)
+
+function getindices(is::IndexSet, I...)
+  return IndexSet(NDTensors.getindices(Tuple(is), I...))
+end
+
+NDTensors.getindices(is::IndexSet,
+                   I...) = getindices(is, I...)
+
+#
 # QN functions
 #
 
 hasqns(is::IndexSet) = any(hasqns,is)
+
+"""
+nblocks(::IndexSet,i::Integer)
+
+The number of blocks in the specified dimension.
+"""
+function NDTensors.nblocks(inds::IndexSet, i::Integer)
+  return nblocks(Tuple(inds),i)
+end
+
+function NDTensors.nblocks(inds::IndexSet, is)
+  return nblocks(Tuple(inds),is)
+end
+
+"""
+nblocks(::IndexSet)
+
+A tuple of the number of blocks in each
+dimension.
+"""
+function NDTensors.nblocks(inds::IndexSet{N}) where {N}
+  return ntuple(i->nblocks(inds,i),Val(N))
+end
+
+function NDTensors.nblocks(inds::NTuple{N,<:Index}) where {N}
+  return nblocks(IndexSet(inds))
+end
+
+ndiagblocks(inds) = minimum(nblocks(inds))
+
+# TODO: generic to IndexSet and BlockDims
+function eachblock(inds::IndexSet)
+  return CartesianIndices(nblocks(inds))
+end
+
+# TODO: turn this into an iterator instead
+# of returning a Vector
+function eachdiagblock(inds::IndexSet{N}) where {N}
+  return [ntuple(_->i,Val(N)) for i in 1:ndiagblocks(inds)]
+end
+
+"""
+flux(inds::IndexSet, block)
+
+Get the flux of the specified block, for example:
+```
+i = Index(QN(0)=>2, QN(1)=>2)
+is = IndexSet(i, dag(i'))
+flux(is, (1,1)) == QN(0)
+flux(is, (2,1)) == QN(1)
+flux(is, (1,2)) == QN(-1)
+flux(is, (2,2)) == QN(0)
+```
+"""
+function flux(inds::IndexSet, block)
+  qntot = QN()
+  for n in 1:length(inds)
+    ind = inds[n]
+    qntot += qn(ind, block[n])
+  end
+  return qntot
+end
+
+"""
+flux(inds::IndexSet, I::Int...)
+
+Get the flux of the block that the specified
+index falls in.
+```
+i = Index(QN(0)=>2, QN(1)=>2)
+is = IndexSet(i, dag(i'))
+flux(is, 3, 1) == QN(1)
+flux(is, 1, 2) == QN(0)
+```
+"""
+flux(inds::IndexSet,
+     vals::Int...) = flux(inds, block(inds, vals...))
+
+"""
+ITensors.block(inds::IndexSet, I::Int...)
+
+Get the block that the specified
+index falls in.
+```
+i = Index(QN(0)=>2, QN(1)=>2)
+is = IndexSet(i, dag(i'))
+ITensors.block(is, 3, 1) == (2,1)
+ITensors.block(is, 1, 2) == (1,1)
+```
+"""
+block(inds::IndexSet,
+      vals::Int...) = blockindex(inds, vals...)[2]
+
+#
+# Read and write
+#
 
 function readcpp(io::IO,::Type{<:IndexSet};kwargs...)
   format = get(kwargs,:format,"v3")

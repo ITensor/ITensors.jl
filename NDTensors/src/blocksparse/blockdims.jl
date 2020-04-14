@@ -14,15 +14,15 @@ const BlockDim = Vector{Int}
 """
 BlockDims{N}
 
-Dimensions used for BlockSparse Tensors.
+Dimensions used for BlockSparse NDTensors.
 Each entry lists the block sizes in each dimension.
 """
 const BlockDims{N} = NTuple{N,BlockDim}
 
 Base.ndims(ds::Type{<:BlockDims{N}}) where {N} = N
 
-StaticArrays.similar_type(::Type{<:BlockDims},
-                          ::Type{Val{N}}) where {N} = BlockDims{N}
+similar_type(::Type{<:BlockDims},
+             ::Type{Val{N}}) where {N} = BlockDims{N}
 
 """
 dense(::BlockDims) -> Dims

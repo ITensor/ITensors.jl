@@ -1,7 +1,3 @@
-export factorize,
-       eigen,
-       qr,
-       svd
 
 """
   TruncSVD{N}
@@ -199,7 +195,7 @@ function LinearAlgebra.qr(A::ITensor,
   tags::TagSet = get(kwargs,:tags,"Link,qr")
   Lis = commoninds(A,IndexSet(Linds...))
   Ris = uniqueinds(A,Lis)
-  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  Lpos,Rpos = NDTensors.getperms(inds(A),Lis,Ris)
   QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
   Q,R = itensor(QT),itensor(RT)
   q = commonind(Q,R)
@@ -210,12 +206,12 @@ function LinearAlgebra.qr(A::ITensor,
 end
 
 # TODO: allow custom tags in internal indices?
-function Tensors.polar(A::ITensor,
+function NDTensors.polar(A::ITensor,
                        Linds...;
                        kwargs...)
   Lis = commoninds(A,IndexSet(Linds...))
   Ris = uniqueinds(A,Lis)
-  Lpos,Rpos = getperms(inds(A),Lis,Ris)
+  Lpos,Rpos = NDTensors.getperms(inds(A),Lis,Ris)
   UT,PT = polar(tensor(A),Lpos,Rpos)
   U,P = itensor(UT),itensor(PT)
   u = commoninds(U,P)

@@ -32,13 +32,22 @@ end
 
 DiagBlockSparse(::UndefInitializer,
                 boffs::BlockOffsets,
-                diaglength::Integer) = DiagBlockSparse(Float64,undef,boffs,diaglength)
+                diaglength::Integer) = DiagBlockSparse(Float64,
+                                                       undef,
+                                                       boffs,
+                                                       diaglength)
 
 diagblockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
+
 blockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
 
-findblock(D::DiagBlockSparse{<:Number,<:Union{Number,AbstractVector},N},
-          block::Block{N}; vargs...) where {N} = findblock(diagblockoffsets(D),block; vargs...)
+function findblock(D::DiagBlockSparse{<:Number,
+                                      <:Union{Number,AbstractVector},
+                                      N},
+                   block::Block{N};
+                   vargs...) where {N}
+  return findblock(diagblockoffsets(D), block; vargs...)
+end
 
 const NonuniformDiagBlockSparse{ElT,VecT} = DiagBlockSparse{ElT,VecT} where {VecT<:AbstractVector}
 const UniformDiagBlockSparse{ElT,VecT} = DiagBlockSparse{ElT,VecT} where {VecT<:Number}
@@ -155,9 +164,9 @@ function DiagBlockSparseTensor(::Type{ElT},
                                ::UndefInitializer,
                                blocks::Blocks,
                                inds) where {ElT}
-  blockoffsets,nnz = diagblockoffsets(blocks,inds)
+  blockoffsets,nnz = diagblockoffsets(blocks, inds)
   storage = DiagBlockSparse(ElT,undef,blockoffsets,nnz)
-  return Tensor(storage,inds)
+  return tensor(storage, inds)
 end
 
 DiagBlockSparseTensor(::UndefInitializer,
@@ -169,7 +178,7 @@ function DiagBlockSparseTensor(::Type{ElT},
                                inds) where {ElT}
   blockoffsets,nnz = diagblockoffsets(blocks,inds)
   storage = DiagBlockSparse(ElT,blockoffsets,nnz)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 DiagBlockSparseTensor(blocks::Blocks,
@@ -181,7 +190,7 @@ function DiagBlockSparseTensor(x::Number,
                                inds)
   blockoffsets,nnz = diagblockoffsets(blocks,inds)
   storage = DiagBlockSparse(x,blockoffsets)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 diagblockoffsets(T::DiagBlockSparseTensor) = diagblockoffsets(store(T))
@@ -205,14 +214,14 @@ function blockview(T::DiagBlockSparseTensor,
   blockdimsT = blockdims(T,blockT)
   blockdiaglengthT = minimum(blockdimsT)
   dataTslice = @view data(store(T))[offsetT+1:offsetT+blockdiaglengthT]
-  return Tensor(Diag(dataTslice),blockdimsT)
+  return tensor(Diag(dataTslice),blockdimsT)
 end
 
 function blockview(T::UniformDiagBlockSparseTensor,
                    bof::BlockOffset)
   blockT,offsetT = bof
   blockdimsT = blockdims(T,blockT)
-  return Tensor(Diag(getdiagindex(T,1)),blockdimsT)
+  return tensor(Diag(getdiagindex(T,1)),blockdimsT)
 end
 
 Base.IndexStyle(::Type{<:DiagBlockSparseTensor}) = IndexCartesian()
@@ -223,7 +232,7 @@ function Base.convert(::Type{<:DenseTensor{ElT,N}}, T::DiagBlockSparseTensor{ElT
   return dense(T)
 end
 
-# These are rules for determining the output of a pairwise contraction of Tensors
+# These are rules for determining the output of a pairwise contraction of NDTensors
 # (given the indices of the output tensors)
 function contraction_output_type(TensorT1::Type{<:DiagBlockSparseTensor},
                                  TensorT2::Type{<:BlockSparseTensor},
@@ -280,14 +289,14 @@ end
 function Base.similar(T::DiagBlockSparseTensor{<:Number,N},
                       ::Type{ElR},
                       inds::Dims{N}) where {ElR<:Number,N}
-  return Tensor(similar(store(T),ElR,minimum(inds)),inds)
+  return tensor(similar(store(T),ElR,minimum(inds)),inds)
 end
 
 getdiagindex(T::DiagBlockSparseTensor{<:Number},ind::Int) = store(T)[ind]
 
 setdiagindex!(T::DiagBlockSparseTensor,val,ind::Int) = (setindex!(T,val,ind); return T)
 
-setdiag(T::DiagBlockSparseTensor,val,ind::Int) = Tensor(DiagBlockSparse(val),inds(T))
+setdiag(T::DiagBlockSparseTensor,val,ind::Int) = tensor(DiagBlockSparse(val),inds(T))
 
 Base.@propagate_inbounds function Base.getindex(T::DiagBlockSparseTensor{ElT,N},
                                                 inds::Vararg{Int,N}) where {ElT,N}
@@ -362,7 +371,7 @@ end
 function outer(T1::DiagBlockSparseTensor{ElT1,N1},
                T2::DiagBlockSparseTensor{ElT2,N2}) where {ElT1,ElT2,N1,N2}
   indsR = unioninds(inds(T1),inds(T2))
-  R = Tensor(Dense(zeros(promote_type(ElT1,ElT2),dim(indsR))),indsR)
+  R = tensor(Dense(zeros(promote_type(ElT1,ElT2),dim(indsR))),indsR)
   outer!(R,T1,T2)
   return R
 end
@@ -387,7 +396,7 @@ end
 function Base.permutedims(T::UniformDiagBlockSparseTensor{ElT,N},
                           perm::NTuple{N,Int},
                           f::Function=identity) where {ElR,ElT,N}
-  R = Tensor(DiagBlockSparse(f(getdiagindex(T,1))),permute(inds(T),perm))
+  R = tensor(DiagBlockSparse(f(getdiagindex(T,1))),permute(inds(T),perm))
   return R
 end
 
@@ -404,7 +413,7 @@ function permutedims!!(R::UniformDiagBlockSparseTensor{ElR,N},
                        T::UniformDiagBlockSparseTensor{ElT,N},
                        perm::NTuple{N,Int},
                        f::Function=(r,t)->t) where {ElR,ElT,N}
-  R = Tensor(DiagBlockSparse(f(getdiagindex(R,1),getdiagindex(T,1))),inds(R))
+  R = tensor(DiagBlockSparse(f(getdiagindex(R,1),getdiagindex(T,1))),inds(R))
   return R
 end
 

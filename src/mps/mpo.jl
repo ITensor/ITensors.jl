@@ -1,12 +1,3 @@
-export MPO,
-       randomMPO,
-       applympo,
-       multmpo,
-       error_mpoprod,
-       maxlinkdim,
-       orthogonalize!,
-       truncate!,
-       sum
 
 mutable struct MPO
   N_::Int
@@ -89,7 +80,7 @@ function randomMPO(sites, m::Int=1)
 end
 
 Base.length(m::MPO) = m.N_
-Tensors.store(m::MPO) = m.A_
+NDTensors.store(m::MPO) = m.A_
 leftlim(m::MPO) = m.llim_
 rightlim(m::MPO) = m.rlim_
 
@@ -148,8 +139,7 @@ siteinds(A::MPO,x::MPS) = [siteindex(A,x,j) for j ∈ 1:length(A)]
 
 Hermitian conjugation of a matrix product state or operator `m`.
 """
-
-function Tensors.dag(m::T) where {T <: Union{MPS, MPO}}
+function dag(m::T) where {T <: Union{MPS, MPO}}
   N = length(m)
   mdag = T(N)
   for i ∈ eachindex(m)
@@ -582,7 +572,7 @@ function orthogonalize!(M::Union{MPS,MPO},
   end
 end
 
-function Tensors.truncate!(M::Union{MPS,MPO}; kwargs...)
+function NDTensors.truncate!(M::Union{MPS,MPO}; kwargs...)
   N = length(M)
 
   # Left-orthogonalize all tensors to make

@@ -1,6 +1,4 @@
 
-const QNIndexSet{N} = IndexSet{N,QNIndex}
-
 function ITensor(::Type{ElT},
                  flux::QN,
                  inds::IndexSet) where {ElT<:Number}
@@ -62,7 +60,8 @@ function combiner(inds::QNIndex...; kwargs...)
   end
   new_ind = settags(new_ind,tags)
   comb_ind,perm,comb = combineblocks(new_ind)
-  return ITensor(Combiner(perm,comb),IndexSet(comb_ind,dag.(inds)...)),comb_ind
+  return itensor(Combiner(perm,comb),
+                 IndexSet(comb_ind, dag.(inds)...)), comb_ind
 end
 combiner(inds::Tuple{Vararg{QNIndex}}; kwargs...) = combiner(inds...; kwargs...)
 

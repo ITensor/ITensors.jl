@@ -1,4 +1,5 @@
 export Tensor,
+       tensor,
        inds,
        ind,
        store
@@ -9,22 +10,73 @@ Tensor{StoreT,IndsT}
 A plain old tensor (with order independent
 interface and no assumption of labels)
 """
-struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
+struct Tensor{ElT,
+              N,
+              StoreT<:TensorStorage,
+              IndsT} <: AbstractArray{ElT,N}
   store::StoreT
   inds::IndsT
-  # The resulting Tensor is a view into the input data
-  function Tensor(store::StoreT,inds::IndsT) where {StoreT<:TensorStorage{ElT},IndsT} where {ElT}
-    new{ElT,ndims(IndsT),StoreT,IndsT}(store,inds)
+  """
+  Tensor{ElT,N,StoreT,IndsT}(inds, store::StorageType)
+
+  Internal constructor for creating a Tensor from the 
+  storage and indices.
+
+  The Tensor is a view of the tensor storage.
+
+  For normal usage, use the Tensor(store::TensorStorage, inds)
+  and tensor(store::TensorStorage, inds) constructors.
+  """
+  function Tensor{ElT,N,StoreT,IndsT}(inds,
+                                      store::TensorStorage) where {ElT,
+                                                                   N,
+                                                                   StoreT,
+                                                                   IndsT}
+    new{ElT,N,StoreT,IndsT}(store, inds)
   end
 end
 
+"""
+tensor(store::TensorStorage, inds)
+
+Construct a Tensor from a tensor storage and indices.
+The Tensor is a view of the tensor storage.
+
+See also Tensor(store::TensorStorage, inds)
+which makes a copy of the storage.
+"""
+function tensor(store::StoreT,
+                inds::IndsT) where {StoreT<:TensorStorage,
+                                    IndsT}
+  return Tensor{eltype(store),length(inds),StoreT,IndsT}(inds, store)
+end
+
+"""
+Tensor(store::TensorStorage, inds)
+
+Construct a Tensor from a tensor storage and indices.
+The storage data is copied into the Tensor.
+
+See also tensor(store::TensorStorage, inds)
+which makes a view of the storage.
+"""
+Tensor(store::TensorStorage, inds) = tensor(copy(store), inds)
+
 store(T::Tensor) = T.store
+
 data(T::Tensor) = data(store(T))
+
 storetype(::Tensor{ElT,N,StoreT}) where {ElT,N,StoreT} = StoreT
+
 inds(T::Tensor) = T.inds
-ind(T::Tensor,j::Integer) = inds(T)[j]
+
+ind(T::Tensor, j::Integer) = inds(T)[j]
+
 Base.eachindex(T::Tensor) = CartesianIndices(dims(inds(T)))
+
 Base.eltype(::Tensor{ElT}) where {ElT} = ElT
+
+Base.strides(T::Tensor) = strides(inds(T))
 
 #
 # Generic Tensor functions
@@ -34,6 +86,8 @@ Base.eltype(::Tensor{ElT}) where {ElT} = ElT
 dims(T::Tensor) = dims(inds(T))
 dim(T::Tensor) = dim(inds(T))
 dim(T::Tensor,i::Int) = dim(inds(T),i)
+mindim(T::Tensor) = mindim(inds(T))
+diaglength(T::Tensor) = mindim(T)
 Base.size(T::Tensor) = dims(T)
 Base.size(T::Tensor,i::Int) = dim(T,i)
 
@@ -44,13 +98,11 @@ function Base.unsafe_convert(::Type{Ptr{ElT}},
   return Base.unsafe_convert(Ptr{ElT},store(T))
 end
 
-Base.strides(T::Tensor) = strides(inds(T))
+Base.copy(T::Tensor) = tensor(copy(store(T)), inds(T))
 
-Base.copy(T::Tensor) = Tensor(copy(store(T)),copy(inds(T)))
+Base.copyto!(R::Tensor,T::Tensor) = (copyto!(store(R), store(T)); R)
 
-Base.copyto!(R::Tensor,T::Tensor) = (copyto!(store(R),store(T)); R)
-
-Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
+Base.complex(T::Tensor) = tensor(complex(store(T)), inds(T))
 
 #
 # Necessary to overload since the generic fallbacks are
@@ -59,7 +111,8 @@ Base.complex(T::Tensor) = Tensor(complex(store(T)),copy(inds(T)))
 
 LinearAlgebra.norm(T::Tensor) = norm(store(T))
 
-Base.conj(T::Tensor;kwargs...) = Tensor(conj(store(T);kwargs...), copy(inds(T)))
+Base.conj(T::Tensor;
+          kwargs...) = tensor(conj(store(T); kwargs...), inds(T))
 
 Random.randn!(T::Tensor) = (randn!(store(T)); T)
 
@@ -69,14 +122,14 @@ scale!(T::Tensor,α::Number) = rmul!(store(T),α)
 Base.fill!(T::Tensor,α::Number) = (fill!(store(T),α); T)
 
 #function Base.similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
-#  return Tensor(similar(StoreT,dim(dims)),dims)
+#  return tensor(similar(StoreT,dim(dims)),dims)
 #end
 
 # TODO: make sure these are implemented correctly
-#Base.similar(T::Type{<:Tensor},::Type{S}) where {S} = Tensor(similar(store(T),S),inds(T))
-#Base.similar(T::Type{<:Tensor},::Type{S},dims) where {S} = Tensor(similar(store(T),S),dims)
+#Base.similar(T::Type{<:Tensor},::Type{S}) where {S} = tensor(similar(store(T),S),inds(T))
+#Base.similar(T::Type{<:Tensor},::Type{S},dims) where {S} = tensor(similar(store(T),S),dims)
 
-Base.similar(T::Tensor) = Tensor(similar(store(T)),copy(inds(T)))
+Base.similar(T::Tensor) = tensor(similar(store(T)), inds(T))
 
 # TODO: for BlockSparse, this needs to include the offsets
 # TODO: for Diag, the storage is not just the total dimension
@@ -85,31 +138,40 @@ Base.similar(T::Tensor) = Tensor(similar(store(T)),copy(inds(T)))
 # To handle method ambiguity with AbstractArray
 #Base.similar(T::Tensor,dims::Dims) = _similar_from_dims(T,dims)
 
-Base.similar(T::Tensor,::Type{S}) where {S} = Tensor(similar(store(T),S),copy(inds(T)))
+Base.similar(T::Tensor,
+             ::Type{S}) where {S} = tensor(similar(store(T),S),
+                                           inds(T))
 
-Base.similar(T::Tensor,::Type{S},dims) where {S<:Number} = _similar_from_dims(T,S,dims)
+Base.similar(T::Tensor,
+             ::Type{S},
+             dims) where {S<:Number} = _similar_from_dims(T, S, dims)
 
 # To handle method ambiguity with AbstractArray
-Base.similar(T::Tensor,::Type{S},dims::Dims) where {S<:Number} = _similar_from_dims(T,S,dims)
+Base.similar(T::Tensor,
+             ::Type{S},
+             dims::Dims) where {S<:Number} = _similar_from_dims(T, S, dims)
 
-_similar_from_dims(T::Tensor,dims) = Tensor(similar(store(T),dim(dims)),dims)
+_similar_from_dims(T::Tensor,
+                   dims) = tensor(similar(store(T), dim(dims)), dims)
 
 function _similar_from_dims(T::Tensor,::Type{S},dims) where {S<:Number}
-  return Tensor(similar(store(T),S,dim(dims)),dims)
+  return tensor(similar(store(T),S,dim(dims)),dims)
 end
 
 function Base.convert(::Type{<:Tensor{<:Number,N,StoreR,Inds}},
                       T::Tensor{<:Number,N,<:Any,Inds}) where {N,Inds,StoreR}
-  return Tensor(convert(StoreR,store(T)),copy(inds(T)))
+  return tensor(convert(StoreR,store(T)),inds(T))
 end
 
-function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},inds) where {ElT,N,StoreT}
-  return Tensor(zeros(StoreT,dim(inds)),inds)
+function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},
+                    inds) where {ElT,N,StoreT}
+  return tensor(zeros(StoreT,dim(inds)),inds)
 end
 
 # This is to fix a method ambiguity with a Base array function
-function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},inds::Dims{N}) where {ElT,N,StoreT}
-  return Tensor(zeros(StoreT,dim(inds)),inds)
+function Base.zeros(::Type{<:Tensor{ElT,N,StoreT}},
+                    inds::Dims{N}) where {ElT,N,StoreT}
+  return tensor(zeros(StoreT,dim(inds)),inds)
 end
 
 function Base.promote_rule(::Type{<:Tensor{ElT1,N1,StoreT1,IndsT1}},
@@ -130,20 +192,22 @@ function Base.promote_rule(::Type{<:Tensor{ElT1,N,StoreT1,Inds}},
   return Tensor{ElR,N,StoreR,Inds}
 end
 
-#function Base.promote_rule(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Type{IndsR}) where {N,ElT,StoreT,IndsR}
-#  return Tensor{ElT,ndims(IndsR),StoreT,IndsR}
-#end
-
 # Convert the tensor type to the closest dense
 # type
 function dense(::Type{<:Tensor{ElT,NT,StoreT,IndsT}}) where {ElT,NT,StoreT,IndsT}
-  return Tensor{ElT,NT,dense(StoreT), dense(IndsT)}
+  return Tensor{ElT,NT,dense(StoreT),dense(IndsT)}
 end
 
-dense(T::Tensor) = Tensor(dense(store(T)), inds(T))
+dense(T::Tensor) = tensor(dense(store(T)), inds(T))
 
-function StaticArrays.similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},::Type{IndsR}) where {ElT,StoreT,IndsR}
-  return Tensor{ElT,ndims(IndsR),StoreT,IndsR}
+function similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},
+                      ::Type{IndsR}) where {ElT,StoreT,IndsR}
+  return Tensor{ElT,length(IndsR),StoreT,IndsR}
+end
+
+function similar_type(::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}},
+                      ::Type{IndsR}) where {ElT,StoreT,IndsR<:NTuple{NR}} where {NR}
+  return Tensor{ElT,NR,StoreT,IndsR}
 end
 
 # Convert to Array, avoiding copying if possible
@@ -170,7 +234,7 @@ blockdims(T::Tensor,block) = blockdims(inds(T),block)
 blockdim(T::Tensor,block) = blockdim(inds(T),block)
 
 """
-offset(T::Tensor,block::Block)
+offset(T::Tensor, block::Block)
 
 Get the linear offset in the data storage for the specified block.
 If the specified block is not non-zero structurally, return nothing.
@@ -180,9 +244,9 @@ offset(T::Tensor,pos::Int)
 Get the offset of the block at position pos
 in the block-offsets list.
 """
-offset(T::Tensor,block) = offset(store(T),block)
+offset(T::Tensor, block) = offset(store(T), block)
 
-block(T::Tensor,n::Int) = block(store(T),n)
+nzblock(T::Tensor, n::Int) = nzblock(store(T), n)
 
 """
 blockdim(T::Tensor,pos::Int)
@@ -190,9 +254,11 @@ blockdim(T::Tensor,pos::Int)
 Get the block dimension of the block at position pos
 in the block-offset list.
 """
-blockdim(T::Tensor,pos::Int) = blockdim(store(T),pos)
+blockdim(T::Tensor, pos::Int) = blockdim(store(T), pos)
 
-findblock(T::Tensor,block; sorted=true) = findblock(store(T),block; sorted=sorted)
+findblock(T::Tensor,
+          block;
+          sorted=true) = findblock(store(T), block; sorted=sorted)
 
 """
 isblocknz(T::Tensor,

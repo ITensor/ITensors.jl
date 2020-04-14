@@ -1,4 +1,3 @@
-export tJSite
 
 const tJSite = TagType"tJ"
 

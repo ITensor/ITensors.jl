@@ -1,4 +1,3 @@
-export SpinHalfSite
 
 const SpinHalfSite = Union{TagType"S=1/2", TagType"SpinHalf"}
 

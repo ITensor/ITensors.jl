@@ -2,28 +2,23 @@ using ITensors,
       Test
 
 import ITensors.SmallString, 
-       ITensors.IntChar, 
-       ITensors.isint
+       ITensors.Tag,
+       ITensors.isint,
+       ITensors.isnull,
+       ITensors.IntChar
 
 @testset "SmallString" begin
   @testset "ctors" begin
       s = SmallString()
-      @test ITensors.isnull(s)
+      @test isnull(s)
   end
 
   @testset "setindex" begin
       s = SmallString()
-      @test ITensors.isnull(s)
+      @test isnull(s)
       t = setindex(s, IntChar(1), 1)
-      @test !ITensors.isnull(t)
+      @test !isnull(t)
   end
-
-  #@testset "push" begin
-  #  s = SmallString()
-  #  @test ITensors.isnull(s)
-  #  t = push(s, IntChar(1))
-  #  @test !ITensors.isnull(t)
-  #end
 
   @testset "comparison" begin
       u = SmallString("1")

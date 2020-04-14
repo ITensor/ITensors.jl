@@ -9,7 +9,7 @@ using ITensors,
     D = diagITensor(QN(),i,dag(i'))
 
     for n in nnzblocks(D)
-      b = block(D,n)
+      b = nzblock(D,n)
       @test flux(D,b) == QN()
     end
 
@@ -37,14 +37,15 @@ using ITensors,
 
     δiĩ = δ(dag(i),ĩ)
 
-    @test store(δiĩ) isa DiagBlockSparse{ElT,ElT} where {ElT<:Number}
+    @test store(δiĩ) isa NDTensors.DiagBlockSparse{ElT,
+                                                  ElT} where {ElT<:Number}
 
     B = A*δiĩ
 
     A = permute(A,i,j)
     B = permute(B,ĩ,j)
 
-    @test norm(dense(tensor(A))-dense(tensor(B))) ≈ 0
+    @test norm(dense(NDTensors.tensor(A))-dense(NDTensors.tensor(B))) ≈ 0
   end
 
 end

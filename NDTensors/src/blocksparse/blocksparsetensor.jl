@@ -11,8 +11,14 @@ const BlockSparseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {
 # Special version for BlockSparseTensor
 # Generic version doesn't work since BlockSparse us parametrized by
 # the Tensor order
-function StaticArrays.similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}},::Type{IndsR}) where {NT,ElT,VecT,IndsR}
-  NR = ndims(IndsR)
+function similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}},
+                      ::Type{IndsR}) where {NT,ElT,VecT,IndsR}
+  NR = length(IndsR)
+  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
+end
+
+function similar_type(::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}},
+                      ::Type{IndsR}) where {NT,ElT,VecT,IndsR<:NTuple{NR}} where {NR}
   return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
 end
 
@@ -25,7 +31,7 @@ function BlockSparseTensor(::Type{ElT},
                            inds) where {ElT<:Number,N}
   nnz_tot = nnz(boffs,inds)
   storage = BlockSparse(ElT,undef,boffs,nnz_tot)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 function BlockSparseTensor(::UndefInitializer,
@@ -39,7 +45,7 @@ function BlockSparseTensor(::Type{ElT},
                            inds) where {ElT<:Number,N}
   nnz_tot = nnz(blockoffsets,inds)
   storage = BlockSparse(ElT,blockoffsets,nnz_tot)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 function BlockSparseTensor(blockoffsets::BlockOffsets,
@@ -66,7 +72,7 @@ function BlockSparseTensor(::Type{ElT},
                            inds) where {ElT}
   boffs,nnz = blockoffsets(blocks,inds)
   storage = BlockSparse(ElT,undef,boffs,nnz)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 #function BlockSparseTensor(::UndefInitializer,
@@ -113,14 +119,14 @@ function BlockSparseTensor(::Type{ElT},
                            inds) where {ElT}
   boffs,nnz = blockoffsets(blocks,inds)
   storage = BlockSparse(ElT,boffs,nnz)
-  return Tensor(storage,inds)
+  return tensor(storage,inds)
 end
 
 #function BlockSparseTensor(blocks::Vector{Block{N}},
 #                           inds) where {N}
 #  blockoffsets,nnz = blockoffsets(blocks,inds)
 #  storage = BlockSparse(blockoffsets,nnz)
-#  return Tensor(storage,inds)
+#  return tensor(storage,inds)
 #end
 
 """
@@ -266,7 +272,7 @@ function blockview(T::BlockSparseTensor,
   blockdimsT = blockdims(T,blockT)
   blockdimT = prod(blockdimsT)
   dataTslice = @view data(store(T))[offsetT+1:offsetT+blockdimT]
-  return Tensor(Dense(dataTslice),blockdimsT)
+  return tensor(Dense(dataTslice),blockdimsT)
 end
 
 # TODO: this is not working right now
@@ -301,7 +307,7 @@ end
 # TODO: extend to case with different block structures
 function Base.:+(T1::BlockSparseTensor,T2::BlockSparseTensor)
   inds(T1) ≠ inds(T2) && error("Cannot add block sparse tensors with different block structure")  
-  return Tensor(store(T1)+store(T2),inds(T1))
+  return tensor(store(T1)+store(T2),inds(T1))
 end
 
 function Base.permutedims(T::BlockSparseTensor{<:Number,N},
@@ -440,7 +446,7 @@ function permutedims_combine(T::BlockSparseTensor{ElT,N},
 
   for bof in blockoffsets(T)
     Tb = blockview(T,bof)
-    b = block(bof)
+    b = nzblock(bof)
     b_perm = permute(b,perm)
     b_perm_comb = combine_dims(b_perm,inds_perm,combdims_perm)
     b_perm_comb = perm_block(b_perm_comb,comb_ind_loc,blockperm)
@@ -538,7 +544,7 @@ function uncombine_output(T::BlockSparseTensor{ElT,N},
   blocks_uncomb = uncombine_blocks(nzblocks(T),combdim,blockcomb)
   blocks_uncomb_perm = perm_blocks(blocks_uncomb,combdim,invperm(blockperm))
   boffs_uncomb_perm,nnz_uncomb_perm = blockoffsets(blocks_uncomb_perm,inds_uncomb_perm)
-  T_uncomb_perm = Tensor(BlockSparse(ElT,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
+  T_uncomb_perm = tensor(BlockSparse(ElT,boffs_uncomb_perm,nnz_uncomb_perm),inds_uncomb_perm)
   R = reshape(T_uncomb_perm,is)
   return R
 end
@@ -570,7 +576,7 @@ function uncombine(T::BlockSparseTensor{<:Number,NT},
   inds_uncomb_perm = insertat(inds(T),ind_uncomb_perm,combdim)
 
   for bof in blockoffsets(T)
-    b = block(bof)
+    b = nzblock(bof)
     Tb_tot = blockview(T,bof)
     dimsTb_tot = dims(Tb_tot)
 
@@ -617,7 +623,7 @@ end
 function Base.copyto!(R::BlockSparseTensor,
                       T::BlockSparseTensor)
   for bof in blockoffsets(T)
-    copyto!(blockview(R,block(bof)),blockview(T,bof))
+    copyto!(blockview(R, nzblock(bof)), blockview(T, bof))
   end
   return R
 end
@@ -764,21 +770,21 @@ function contract_blockoffsets(boffs1::BlockOffsets{N1},inds1,labels1,
     end
   end
 
-  sorted_blocksR = sort(blocksR;lt=isblockless)
+  sorted_blocksR = sort(blocksR; lt=isblockless)
   unique!(sorted_blocksR)
   blockoffsetsR = BlockOffsets{NR}(undef,length(sorted_blocksR))
   nnzR = 0
   for (i,blockR) in enumerate(sorted_blocksR)
-    blockoffsetsR[i] = BlockOffset(blockR,nnzR)
-    nnzR += blockdim(indsR,blockR)
+    blockoffsetsR[i] = BlockOffset(blockR, nnzR)
+    nnzR += blockdim(indsR, blockR)
   end
 
   # Now get the locations of the output blocks
   # in the sorted block-offsets list
   for (i,blockR) in enumerate(blocksR)
-    posR = findblock(blockoffsetsR,blockR)
+    posR = findblock(blockoffsetsR, blockR)
     pos1,pos2,_ = contraction_plan[i]
-    contraction_plan[i] = (pos1,pos2,posR)
+    contraction_plan[i] = (pos1, pos2, posR)
   end
 
   return blockoffsetsR,contraction_plan
@@ -887,7 +893,7 @@ end
 function permute_combine(boffs::BlockOffsets,
                          inds::IndsT,
                          pos::Vararg{IntOrIntTuple,N}) where {IndsT,N}
-  perm = tuplecat(pos...)
+  perm = flatten(pos...)
   boffsp,indsp = permutedims(boffs,inds,perm)
   indsR = combine(indsp,pos...)
   boffsR = reshape(boffsp,indsp,indsR)
@@ -929,7 +935,7 @@ function Base.reshape(T::BlockSparseTensor,
                       boffsR::BlockOffsets,
                       indsR)
   storeR = reshape(store(T),boffsR)
-  return Tensor(storeR,indsR)
+  return tensor(storeR,indsR)
 end
 
 function Base.reshape(T::BlockSparseTensor,
@@ -945,7 +951,7 @@ function permute_combine(T::BlockSparseTensor{ElT,NT,IndsT},
                          pos::Vararg{IntOrIntTuple,NR}) where {ElT,NT,IndsT,NR}
   boffsR,indsR = permute_combine(blockoffsets(T),inds(T),pos...)
 
-  perm = tuplecat(pos...)
+  perm = flatten(pos...)
 
   length(perm)≠NT && error("Index positions must add up to order of Tensor ($NT)")
   isperm(perm) || error("Index positions must be a permutation")

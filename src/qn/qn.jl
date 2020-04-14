@@ -116,7 +116,7 @@ end
 QN(name,val::Int,modulus::Int=1) = QN((name,val,modulus))
 QN(val::Int,modulus::Int=1) = QN(("",val,modulus))
 
-Tensors.store(qn::QN) = qn.store
+NDTensors.store(qn::QN) = qn.store
 
 Base.getindex(q::QN,n::Int) = getindex(store(q),n)
 
@@ -212,15 +212,15 @@ end
 
 # Does not perform checks on if QN is already full, drops
 # the last QNVal
-function Tensors.insertafter(qn::QN,qv::QNVal,pos::Int)
-  return QN(insertafter(Tuple(qn),qv,pos)[1:length(qn)])
+function NDTensors.insertafter(qn::QN, qv::QNVal, pos::Int)
+  return QN(NDTensors.insertafter(Tuple(qn),qv,pos)[1:length(qn)])
 end
 
-function addqnval(qn::QN,qv_add::QNVal)
+function addqnval(qn::QN, qv_add::QNVal)
   isactive(qn[end]) && error("Cannot add QNVal, QN already contains maximum number of QNVals")
   for (pos,qv) in enumerate(qn)
     if qv_add < qv || !isactive(qv)
-      return insertafter(qn,qv_add,pos-1)
+      return NDTensors.insertafter(qn, qv_add, pos-1)
     end
   end
 end

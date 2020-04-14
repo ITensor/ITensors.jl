@@ -1,66 +1,32 @@
 module ITensors
 
-using Random,
-      Printf,
-      LinearAlgebra,
-      StaticArrays,
-      TimerOutputs,
-      Reexport,
-      HDF5,
-      KrylovKit
+#####################################
+# NDTensors
+#
+include("../NDTensors/src/NDTensors.jl")
 
-# TODO: move imports to individual files
-import Base.adjoint,
-       Base.conj,
-       Base.convert,
-       Base.copy,
-       Base.deepcopy,
-       Base.copyto!,
-       Base.eltype,
-       Base.fill!,
-       Base.getindex,
-       Base.in,
-       Base.isapprox,
-       Base.isless,
-       Base.iterate,
-       Base.length,
-       Base.push!,
-       Base.setindex!,
-       Base.eachindex,
-       Base.show,
-       Base.sum,
-       Base.summary,
-       Base.similar,
-       Base.size,
-       Base.ndims,
-       Base.!=,
-       Base.+,
-       Base.-,
-       Base.*,
-       Base./,
-       Base.^,
-       Base.setdiff,  # Since setdiff doesn't 
-                      # work with IndexSet, overload it
-       Base.lastindex,
-       LinearAlgebra.axpby!,
-       LinearAlgebra.axpy!,
-       LinearAlgebra.dot,
-       LinearAlgebra.norm,
-       LinearAlgebra.mul!,
-       LinearAlgebra.rmul!,
-       LinearAlgebra.normalize!,
-       Random.randn!
+#####################################
+# External packages
+#
+using HDF5
+using KrylovKit
+using LinearAlgebra
+using .NDTensors
+using Printf
+using Random
+using StaticArrays
+using TimerOutputs
+
+#####################################
+# Global Variables
+#
+include("exports.jl")
 
 #####################################
 # Global Variables
 #
 const GLOBAL_PARAMS = Dict("WarnTensorOrder" => 14)
 const GLOBAL_TIMER = TimerOutput()
-
-#####################################
-# Tensor
-#
-include("Tensors/Tensors.jl")
 
 #####################################
 # Index and IndexSet
@@ -84,11 +50,12 @@ include("iterativesolvers.jl")
 #####################################
 # QNs
 #
-include("qn.jl")
-include("qnindex.jl")
-include("qnitensor.jl")
+include("qn/qn.jl")
+include("qn/qnindex.jl")
+include("qn/qnindexset.jl")
+include("qn/qnitensor.jl")
 
-###########################################################
+#####################################
 # MPS/MPO
 #
 include("mps/mps.jl")
@@ -98,7 +65,7 @@ include("mps/projmpo.jl")
 include("mps/observer.jl")
 include("mps/dmrg.jl")
 
-###########################################################
+#####################################
 # Physics
 #
 include("physics/tag_types.jl")
@@ -110,6 +77,10 @@ include("physics/site_types/electron.jl")
 include("physics/site_types/tj.jl")
 include("physics/autompo.jl")
 
+#####################################
+# Developer tools, for internal
+# use only
+#
 include("developer_tools.jl")
 
 end # module ITensors

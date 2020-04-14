@@ -1,29 +1,12 @@
-export Index,
-       IndexVal,
-       dag,
-       prime,
-       setprime,
-       noprime,
-       addtags,
-       settags,
-       space,
-       readCpp,
-       replacetags,
-       replacetags!,
-       removetags,
-       hastags,
-       hasplev,
-       hasid,
-       id,
-       isdefault,
-       dir,
-       setdir,
-       plev,
-       tags,
-       ind,
-       sim,
-       val,
-       hasqns
+
+# These are explicitly imported
+# so that they can be exported
+# from ITensors (they are not
+# exported from NDTensors)
+import .NDTensors: dim,
+                   dir,
+                   sim,
+                   dag
 
 const IDType = UInt64
 
@@ -44,27 +27,40 @@ struct Index{T}
   dir::Arrow
   tags::TagSet
   plev::Int
-  function Index(id,space::T,dir,tags,plev) where {T}
-    return new{T}(id,space,dir,tags,plev)
+  function Index{T}(id, space::T, dir, tags, plev) where {T}
+    return new{T}(id, space, dir, tags, plev)
   end
 end
-Index{SpaceT}(space::SpaceT,args...;vargs...) where {SpaceT} = Index(space,args...;vargs...)
+
+function Index(id, space::T, dir, tags, plev) where {T}
+  return Index{T}(id, space, dir, tags, plev)
+end
 
 Index() = Index(0,1,Neither,"",0)
 
 """
-  Index(dim::Integer, tags=("",0))
+  Index(dim::Integer; tags="", plev=0)
+Create an `Index` with a unique `id` and a tagset given by `tags`.
+
+Example: create a two dimensional index with tag `l`:
+    Index(2; tags="l")
+"""
+function Index(dim::Int; tags="", plev=0)
+  return Index(rand(IDType), dim, Neither, tags, plev)
+end
+
+# Used in NDTensors, mostly for internal usage
+Index{T}(dim::T) where {T} = Index(dim)
+
+"""
+  Index(dim::Integer, tags)
 Create an `Index` with a unique `id` and a tagset given by `tags`.
 
 Example: create a two dimensional index with tag `l`:
     Index(2, "l")
 """
-function Index(dim::Integer;tags="",plev=0)
-  return Index(rand(IDType),dim,Neither,tags,plev)
-end
-
-
-Index(dim::Integer,tags::Union{AbstractString,TagSet}) = Index(dim; tags=tags)
+Index(dim::Int,
+      tags::Union{AbstractString,TagSet}) = Index(dim; tags=tags)
 
 """
     id(i::Index)
@@ -76,7 +72,7 @@ id(i::Index) = i.id
     dim(i::Index)
 Obtain the dimension of an Index
 """
-Tensors.dim(i::Index) = i.space
+dim(i::Index) = i.space
 
 space(i::Index) = i.space
 
@@ -84,7 +80,7 @@ space(i::Index) = i.space
     dir(i::Index)
 Obtain the direction of an Index (In or Out)
 """
-Tensors.dir(i::Index) = i.dir
+dir(i::Index) = i.dir
 
 """
     setdir(i::Index, dir::Arrow)
@@ -128,13 +124,20 @@ end
     copy(i::Index)
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-Base.copy(i::Index) = Index(id(i),copy(space(i)),dir(i),copy(tags(i)),plev(i))
+Base.copy(i::Index) = Index(id(i),
+                            copy(space(i)),
+                            dir(i),
+                            copy(tags(i)),
+                            plev(i))
 
 """
   sim(i::Index; tags=tags(i), dir=dir(i))
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-function Tensors.sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
+function sim(i::Index;
+             tags=copy(tags(i)),
+             plev=plev(i),
+             dir=dir(i))
   return Index(rand(IDType),copy(space(i)),dir,tags,plev)
 end
 
@@ -142,7 +145,7 @@ end
     dag(i::Index)
 Copy an index `i` and reverse it's direction
 """
-Tensors.dag(i::Index) = Index(id(i),copy(space(i)),-dir(i),copy(tags(i)),plev(i))
+dag(i::Index) = Index(id(i),copy(space(i)),-dir(i),copy(tags(i)),plev(i))
 
 """
     isdefault(i::Index)
@@ -267,10 +270,10 @@ function Base.iterate(i::Index,state::Int=1)
   return (state,state+1)
 end
 
-Tensors.outer(i::Index) = i
+NDTensors.outer(i::Index; tags="", plev=0) = sim(i; tags=tags, plev=plev)
 
-function Tensors.outer(i1::Index,i2::Index; tags="")
-  return Index(dim(i1)*dim(i2),tags)
+function NDTensors.outer(i1::Index, i2::Index; tags="")
+  return Index(dim(i1)*dim(i2), tags)
 end
 
 function primestring(plev)
@@ -320,10 +323,10 @@ Base.getindex(i::Index, j::Int) = IndexVal(i, j)
 
 (i::Index)(n::Int) = IndexVal(i,n)
 
-ind(iv::IndexVal) = iv.ind
+NDTensors.ind(iv::IndexVal) = iv.ind
 val(iv::IndexVal) = iv.val
 
-ind(iv::PairIndexInt) = iv.first
+NDTensors.ind(iv::PairIndexInt) = iv.first
 val(iv::PairIndexInt) = iv.second
 
 Base.:(==)(i::Index,iv::IndexValOrPairIndexInt) = (i==ind(iv))

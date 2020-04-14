@@ -1,6 +1,6 @@
-using ITensors, Test
+using Test
 
-@testset "Tensors.jl" begin
+@testset "NDTensors.jl" begin
     @testset "$filename" for filename in (
         "dense.jl",
         "blocksparse.jl",

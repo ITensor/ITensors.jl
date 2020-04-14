@@ -1,7 +1,8 @@
 export data,
        TensorStorage,
        randn!,
-       scale!
+       scale!,
+       norm
 
 abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 
@@ -48,7 +49,8 @@ end
 
 Base.complex(S::T) where {T<:TensorStorage} = complex(T)(complex(data(S)))
 
-Base.copyto!(S1::TensorStorage,S2::TensorStorage) = (copyto!(data(S1),data(S2)); S1)
+Base.copyto!(S1::TensorStorage,
+             S2::TensorStorage) = (copyto!(data(S1),data(S2)); S1)
 
 Random.randn!(S::TensorStorage) = (randn!(data(S)); S)
 
@@ -73,7 +75,9 @@ nzblocks(T::TensorStorage) = nzblocks(blockoffsets(T))
 nnzblocks(S::TensorStorage) = length(blockoffsets(S))
 nnz(S::TensorStorage) = length(S)
 
-offset(S::TensorStorage,block) = offset(blockoffsets(S),block)
+offset(S::TensorStorage,
+       block) = offset(blockoffsets(S), block)
 
-block(S::TensorStorage,n::Int) = block(blockoffsets(S),n)
+nzblock(S::TensorStorage,
+        n::Int) = nzblock(blockoffsets(S), n)
 

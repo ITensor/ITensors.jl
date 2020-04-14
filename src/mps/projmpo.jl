@@ -1,7 +1,3 @@
-export ProjMPO,
-       lproj,
-       rproj,
-       product
 
 mutable struct ProjMPO
   lpos::Int

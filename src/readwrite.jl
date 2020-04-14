@@ -1,7 +1,7 @@
 
-export readcpp
-
-function readcpp(io::IO,::Type{Vector{T}};kwargs...) where {T}
+function readcpp(io::IO,
+                 ::Type{Vector{T}};
+                 kwargs...) where {T}
   format = get(kwargs,:format,"v3")
   v = Vector{T}()
   if format=="v3"

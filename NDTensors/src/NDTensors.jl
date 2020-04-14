@@ -1,9 +1,9 @@
-@reexport module Tensors
+module NDTensors
 
-using StaticArrays,
-      Random,
-      LinearAlgebra,
-      HDF5
+using Random
+using LinearAlgebra
+using StaticArrays
+using HDF5
 
 #####################################
 # DenseTensor and DiagTensor
@@ -32,4 +32,4 @@ include("blocksparse/diagblocksparse.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
 
-end # module Tensors
+end # module NDTensors

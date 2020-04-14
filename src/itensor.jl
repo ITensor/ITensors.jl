@@ -1,58 +1,9 @@
-export ITensor,
-       itensor,
-       axpy!,
-       combiner,
-       combinedind,
-       delta,
-       δ,
-       #exphermitian,
-       hasind,
-       hasinds,
-       hassameinds,
-       firstind,
-       inds,
-       ind,
-       commoninds,
-       commonind,
-       noncommoninds,
-       noncommonind,
-       uniqueinds,
-       uniqueind,
-       unioninds,
-       unionind,
-       isnull,
-       scale!,
-       matmul,
-       mul!,
-       order,
-       permute,
-       randomITensor,
-       rmul!,
-       diagITensor,
-       dot,
-       tensor,
-       array,
-       matrix,
-       vector,
-       norm,
-       normalize!,
-       scalar,
-       set_warnorder,
-       store,
-       dense,
-       setelt,
-       prime!,
-       setprime!,
-       noprime!,
-       mapprime!,
-       swapprime!,
-       addtags!,
-       removetags!,
-       replacetags!,
-       settags!,
-       swaptags!,
-       replaceind!,
-       replaceinds!
+
+# This is explicitly imported
+# so that it can be exported from
+# ITensors (it is not exported from
+# NDTensors)
+import .NDTensors: dag
 
 """
 An ITensor is a tensor whose interface is 
@@ -68,28 +19,62 @@ mutable struct ITensor{N}
   inds::IndexSet{N}
   #TODO: check that the storage is consistent with the
   #total dimension of the indices (possibly only in debug mode);
-  ITensor{N}(st,
-             is::IndexSet{N}) where {N} = new{N}(st,is)
+  """
+  ITensor{N}(is::IndexSet{N}, st::TensorStorage)
+
+  This is an internal constructor for an ITensor
+  where the ITensor stores a view of the
+  TensorStorage.
+  """
+  ITensor{N}(is, st::TensorStorage) where {N} = new{N}(st, is)
 end
 
-ITensor{N}(st,
-           is::NTuple{N,<:Index}) where {N} = ITensor{N}(st,
-                                                         IndexSet(is))
+"""
+itensor(st::TensorStorage, is)
 
-ITensor(st,
-        is::IndexSet{N}) where {N} = ITensor{N}(st, is)
+Constructor for an ITensor from a TensorStorage
+and a set of indices.
+The ITensor stores a view of the TensorStorage.
+"""
+itensor(st::TensorStorage, is) = ITensor{length(is)}(is, st)
 
-ITensor(st,
-        is::NTuple{N,<:Index}) where {N} = ITensor{N}(st,
-                                                      IndexSet(is))
+"""
+ITensor(st::TensorStorage, is)
 
-itensor(st, is) = ITensor{ndims(is)}(st, is)
+Constructor for an ITensor from a TensorStorage
+and a set of indices.
+The TensorStorage is copied (the ITensor
+owns the storage data).
+"""
+ITensor(st::TensorStorage, is) = itensor(copy(st), is)
 
-Tensors.inds(T::ITensor) = T.inds
+"""
+inds(T::ITensor)
 
-Tensors.store(T::ITensor) = T.store
+Return the indices of the ITensor as an IndexSet.
+"""
+NDTensors.inds(T::ITensor) = T.inds
 
-ind(T::ITensor,i::Int) = inds(T)[i]
+"""
+ind(T::ITensor, i::Int)
+
+Get the Index of the ITensor along dimension i.
+"""
+NDTensors.ind(T::ITensor, i::Int) = inds(T)[i]
+
+"""
+store(T::ITensor)
+
+Return a view of the TensorStorage of the ITensor.
+"""
+NDTensors.store(T::ITensor) = T.store
+
+"""
+data(T::ITensor)
+
+Return a view of the raw data of the ITensor.
+"""
+NDTensors.data(T::ITensor) = data(store(T))
 
 Base.similar(T::ITensor) = itensor(similar(tensor(T)))
 
@@ -100,9 +85,9 @@ setinds!(T::ITensor,is) = (T.inds = is; return T)
 
 setstore!(T::ITensor,st::TensorStorage) = (T.store = st; return T)
 
-setinds(T::ITensor,is) = itensor(store(T),is)
+setinds(T::ITensor, is) = itensor(store(T),is)
 
-setstore(T::ITensor,st) = itensor(st,inds(T))
+setstore(T::ITensor, st) = itensor(st,inds(T))
 
 #
 # Iteration over ITensors
@@ -128,10 +113,10 @@ indices.
 To make an ITensor that shares the same storage as the Tensor,
 is the function `itensor(::Tensor)`.
 """
-ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(copy(store(T)),
+ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),
                                                       inds(T))
 
-ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(copy(store(T)),
+ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),
                                                          inds(T))
 
 """
@@ -140,8 +125,8 @@ itensor(::Tensor)
 Make an ITensor that shares the same storage as the Tensor and
 has the same indices.
 """
-itensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),
-                                                      inds(T))
+itensor(T::Tensor) = itensor(store(T),
+                             inds(T))
 
 """
 tensor(::ITensor)
@@ -149,7 +134,7 @@ tensor(::ITensor)
 Convert the ITensor to a Tensor that shares the same
 storage and indices as the ITensor.
 """
-tensor(A::ITensor) = Tensor(store(A),inds(A))
+NDTensors.tensor(A::ITensor) = tensor(store(A),inds(A))
 
 """
     ITensor(iset::IndexSet)
@@ -159,7 +144,7 @@ given by the IndexSet `iset`
 """
 ITensor(is::IndexSet) = ITensor(Float64,is)
 
-ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet{N}(inds...))
+ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet(inds...))
 
 # TODO: make this Dense(Float64[]), Dense([0.0]), Dense([1.0])?
 ITensor() = itensor(Dense{Nothing}(),IndexSet())
@@ -214,6 +199,13 @@ floating point version of the input value.
 ITensor(x::Number,
         inds::Index...) = ITensor(x,IndexSet(inds...))
 
+"""
+    itensor(A::Array, inds::IndexSet)
+    itensor(A::Array, inds::Index...)
+
+Construct an ITensor from an Array and a set if Indices,
+where the ITensor stores a view of the Array data.
+"""
 function itensor(A::Array{<:Number},
                  inds::IndexSet)
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(Array,IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
@@ -221,7 +213,9 @@ function itensor(A::Array{<:Number},
 end
 
 itensor(A::Array{<:Number},
-        inds::Index...) = itensor(A,IndexSet(inds...))
+        inds::Vararg{Index}) = itensor(A,IndexSet(inds...))
+
+ITensor(A::Array, inds::IndexSet) = itensor(copy(A), inds)
 
 #
 # Diag ITensor constructors
@@ -359,7 +353,7 @@ dense(T::ITensor)
 Make a copy of the ITensor where the storage is the dense version.
 For example, an ITensor with Diag storage will become Dense storage.
 """
-Tensors.dense(T::ITensor) = itensor(dense(tensor(T)))
+NDTensors.dense(T::ITensor) = itensor(dense(tensor(T)))
 
 """
 complex(T::ITensor)
@@ -375,22 +369,23 @@ Base.eltype(T::ITensor) = eltype(tensor(T))
 
 The number of indices, `length(inds(A))`.
 """
-order(T::ITensor) = order(inds(T))
-Base.ndims(T::ITensor) = order(inds(T))
+order(T::ITensor) = ndims(T)
+
+Base.ndims(T::ITensor) = length(inds(T))
 
 """
     dim(A::ITensor) = length(A)
 
 The total number of entries, `prod(size(A))`.
 """
-Tensors.dim(T::ITensor) = dim(inds(T))
+NDTensors.dim(T::ITensor) = dim(inds(T))
 
 """
     dims(A::ITensor) = size(A)
 
 Tuple containing `size(A,d) == dim(inds(A)[d]) for d in 1:ndims(A)`.
 """
-Tensors.dims(T::ITensor) = dims(inds(T))
+NDTensors.dims(T::ITensor) = dims(inds(T))
 
 Base.size(A::ITensor) = dims(inds(A))
 
@@ -449,15 +444,17 @@ end
 
 scalar(T::ITensor) = T[]::Number
 
-Base.getindex(T::ITensor{N},vals::Vararg{Int,N}) where {N} = tensor(T)[vals...]::Number
+Base.getindex(T::ITensor{N},
+              vals::Vararg{Int,N}) where {N} = tensor(T)[vals...]::Number
 
 # Version accepting CartesianIndex, useful when iterating over
 # CartesianIndices
-Base.getindex(T::ITensor{N},I::CartesianIndex{N}) where {N} = tensor(T)[I]::Number
+Base.getindex(T::ITensor{N},
+              I::CartesianIndex{N}) where {N} = tensor(T)[I]::Number
 
-function Base.getindex(T::ITensor,ivs...)
-  p = getperm(inds(T),ivs)
-  vals = permute(val.(ivs),p)
+function Base.getindex(T::ITensor, ivs...)
+  p = NDTensors.getperm(inds(T), ivs)
+  vals = NDTensors.permute(val.(ivs), p)
   return T[vals...]
 end
 
@@ -471,8 +468,8 @@ function Base.setindex!(T::ITensor,x::Number,vals::Int...)
 end
 
 function Base.setindex!(T::ITensor,x::Number,ivs...)
-  p = getperm(inds(T),ivs)
-  vals = permute(val.(ivs),p)
+  p = NDTensors.getperm(inds(T),ivs)
+  vals = NDTensors.permute(val.(ivs),p)
   T[vals...] = x
   return T
 end
@@ -534,7 +531,7 @@ unionind(A...; kwargs...) = getfirst(union(itensor2inds.(A)...;
 firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
                                      kwargs...)
 
-Tensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
+NDTensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
                                        kwargs...)
 
 # in-place versions of priming and tagging
@@ -633,7 +630,7 @@ function combiner(inds::IndexSet;
                   kwargs...)
   tags = get(kwargs, :tags, "CMB,Link")
   new_ind = Index(prod(dims(inds)), tags)
-  new_is = IndexSet(new_ind, inds)
+  new_is = IndexSet(new_ind, inds...)
   return itensor(Combiner(),new_is),new_ind
 end
 
@@ -651,21 +648,28 @@ combinedind(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 
-function Tensors.dag(T::ITensor; always_copy = false)
+function dag(T::ITensor; always_copy=false)
   TT = conj(tensor(T); always_copy=always_copy)
-  return ITensor(store(TT),dag(inds(T)))
+  return itensor(store(TT),dag(inds(T)))
 end
 
-function Tensors.permute(T::ITensor{N},
-                         new_inds) where {N}
-  perm = getperm(new_inds, inds(T))
+"""
+permute(T::ITensors, inds)
+
+Return a new ITensor T with indices permuted according
+to the input indices inds. The storage of the ITensor
+is permuted accordingly.
+"""
+function permute(T::ITensor{N},
+                 new_inds) where {N}
+  perm = NDTensors.getperm(new_inds, inds(T))
   Tp = permutedims(tensor(T), perm)
   return itensor(Tp)::ITensor{N}
 end
 
-Tensors.permute(T::ITensor,
-                inds::Index...) = permute(T,
-                                          IndexSet(inds...))
+permute(T::ITensor,
+        inds::Index...) = permute(T,
+                                  IndexSet(inds...))
 
 Base.:*(T::ITensor, x::Number) = itensor(x*tensor(T))
 
@@ -720,7 +724,7 @@ function LinearAlgebra.mul!(C::ITensor, A::ITensor, B::ITensor,
   (labelsC,labelsA,labelsB) = compute_contraction_labels(inds(C),
                                                          inds(A),
                                                          inds(B))
-  CT = Tensors.contract!!(tensor(C), labelsC,
+  CT = NDTensors.contract!!(tensor(C), labelsC,
                           tensor(A), labelsA,
                           tensor(B), labelsB,
                           α, β)
@@ -734,7 +738,7 @@ function LinearAlgebra.mul!(C::ITensor, A::ITensor, B::ITensor)
   (labelsC,labelsA,labelsB) = compute_contraction_labels(inds(C),
                                                          inds(A),
                                                          inds(B))
-  CT = Tensors.contract!!(tensor(C), labelsC,
+  CT = NDTensors.contract!!(tensor(C), labelsC,
                           tensor(A), labelsA,
                           tensor(B), labelsB)
   C = itensor(CT)
@@ -764,15 +768,9 @@ function LinearAlgebra.exp(A::ITensor,
                            Rinds = prime(IndexSet(Linds));
                            ishermitian = false)
   Lis,Ris = IndexSet(Linds),IndexSet(Rinds)
-  Lpos,Rpos = getperms(inds(A),Lis,Ris)
-  expAT = exp(tensor(A),Lpos,Rpos;ishermitian=ishermitian)
+  Lpos,Rpos = NDTensors.getperms(inds(A), Lis, Ris)
+  expAT = exp(tensor(A), Lpos, Rpos; ishermitian=ishermitian)
   return itensor(expAT)
-end
-
-function Tensors.exphermitian(A::ITensor,
-                      Linds,
-                      Rinds = prime(IndexSet(Linds))) 
-  return exp(A,Linds,Rinds;ishermitian=true)
 end
 
 function matmul(A::ITensor,
@@ -803,8 +801,8 @@ B .= A
 ```
 """
 function Base.copyto!(R::ITensor{N}, T::ITensor{N}) where {N}
-  perm = getperm(inds(R),inds(T))
-  TR = permutedims!(tensor(R),tensor(T),perm)
+  perm = NDTensors.getperm(inds(R), inds(T))
+  TR = permutedims!(tensor(R), tensor(T), perm)
   return itensor(TR)
 end
 
@@ -840,7 +838,7 @@ add!(R::ITensor,
 function apply!(R::ITensor{N},
                 T::ITensor{N},
                 f::Function) where {N}
-  perm = getperm(inds(R),inds(T))
+  perm = NDTensors.getperm(inds(R),inds(T))
   TR,TT = tensor(R),tensor(T)
 
   # TODO: Include type promotion from α
@@ -882,7 +880,7 @@ Scale the ITensor A by x in-place. May also be written `rmul!`.
 A .*= x
 ```
 """
-function Tensors.scale!(T::ITensor, x::Number)
+function NDTensors.scale!(T::ITensor, x::Number)
   TT = tensor(T)
   scale!(TT,x)
   return T
@@ -911,14 +909,19 @@ LinearAlgebra.mul!(R::ITensor,
 
 hasqns(T::ITensor) = hasqns(inds(T))
 
-Tensors.nnz(T::ITensor) = nnz(tensor(T))
-Tensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
-Tensors.block(T::ITensor,args...) = block(tensor(T),args...)
-Tensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
-Tensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
-flux(T::ITensor,args...) = flux(inds(T),args...)
+NDTensors.nnz(T::ITensor) = nnz(tensor(T))
 
-function Tensors.addblock!(T::ITensor,
+NDTensors.nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+
+NDTensors.nzblock(T::ITensor, args...) = nzblock(tensor(T), args...)
+
+NDTensors.nzblocks(T::ITensor) = nzblocks(tensor(T))
+
+NDTensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+
+flux(T::ITensor, args...) = flux(inds(T), args...)
+
+function NDTensors.addblock!(T::ITensor,
                            args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) && 
    error("Block does not match current flux")
@@ -930,7 +933,7 @@ function flux(T::ITensor)
   !hasqns(T) && return nothing
   nnzblocks(T) == 0 && return nothing
   bofs = blockoffsets(T)
-  block1 = block(bofs,1)
+  block1 = nzblock(bofs, 1)
   return flux(T,block1)
 end
 
@@ -942,7 +945,7 @@ end
 
 # TODO: make versions where the element type can be specified (for type
 # inference).
-Tensors.array(T::ITensor) = array(tensor(T))
+NDTensors.array(T::ITensor) = array(tensor(T))
 
 """
     matrix(T::ITensor)
@@ -956,11 +959,11 @@ column, depends on the internal layout of the ITensor.
 *Therefore this method is intended for developer use
 only and not recommended for use in ITensor applications.*
 """
-function Tensors.matrix(T::ITensor{2})
+function NDTensors.matrix(T::ITensor{2})
   return array(tensor(T))
 end
 
-function Tensors.vector(T::ITensor{1})
+function NDTensors.vector(T::ITensor{1})
   return array(tensor(T))
 end
 
@@ -1051,7 +1054,7 @@ function readcpp(io::IO,
   end
 end
 
-function set_warnorder(ord::Int)
+function setwarnorder!(ord::Int)
   ITensors.GLOBAL_PARAMS["WarnTensorOrder"] = ord
 end
 

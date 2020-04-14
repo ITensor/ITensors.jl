@@ -105,25 +105,25 @@ Base.:*(x::Number,D::Dense) = D*x
 const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Dense}
 
 DenseTensor(::Type{ElT},
-            inds::Dims) where {ElT} = Tensor(Dense(ElT,dim(inds)),inds)
+            inds::Dims) where {ElT} = tensor(Dense(ElT,dim(inds)),inds)
 
 DenseTensor(::Type{ElT},
             inds::Int...) where {ElT} = DenseTensor(ElT,inds)
 
-DenseTensor(inds::Dims) = Tensor(Dense(dim(inds)),inds)
+DenseTensor(inds::Dims) = tensor(Dense(dim(inds)),inds)
 
 DenseTensor(inds::Int...) = DenseTensor(inds)
 
 DenseTensor(::Type{ElT},
             ::UndefInitializer,
-            inds) where {ElT} = Tensor(Dense(ElT,undef,dim(inds)),inds)
+            inds) where {ElT} = tensor(Dense(ElT,undef,dim(inds)),inds)
 
 DenseTensor(::Type{ElT},
             ::UndefInitializer,
             inds::Int...) where {ElT} = DenseTensor(ElT,undef,inds)
 
 DenseTensor(::UndefInitializer,
-            inds::Dims) = Tensor(Dense(undef,dim(inds)),inds)
+            inds::Dims) = tensor(Dense(undef,dim(inds)),inds)
 
 DenseTensor(::UndefInitializer,
             inds::Int...) = DenseTensor(undef,inds)
@@ -145,7 +145,8 @@ Tensor(::UndefInitializer,
 Tensor(::UndefInitializer,
        inds::Int...) = DenseTensor(undef,inds...)
 
-Tensor(A::Array{<:Number,N},inds::Dims{N}) where {N} = Tensor(Dense(vec(A)),inds)
+Tensor(A::Array{<:Number,N},
+       inds::Dims{N}) where {N} = tensor(Dense(vec(A)),inds)
 
 # Basic functionality for AbstractArray interface
 Base.IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
@@ -160,8 +161,9 @@ function Base.similar(::Type{<:DenseTensor{ElT}},
 end
 
 # To fix method ambiguity with similar(::AbstractArray,::Type)
-function Base.similar(T::DenseTensor,::Type{ElT}) where {ElT}
-  return Tensor(similar(store(T),ElT),copy(inds(T)))
+function Base.similar(T::DenseTensor,
+                      ::Type{ElT}) where {ElT}
+  return tensor(similar(store(T),ElT), inds(T))
 end
 
 # To fix method ambiguity with similar(::AbstractArray,::Tuple)
@@ -233,7 +235,7 @@ Base.@propagate_inbounds function _getindex(T::DenseTensor{ElT,N},
                                             I::CartesianIndices{N}) where {ElT,N}
   storeR = Dense(vec(@view array(T)[I]))
   indsR = Tuple(I[end]-I[1]+CartesianIndex(ntuple(_->1,Val(N))))
-  return Tensor(storeR,indsR)
+  return tensor(storeR, indsR)
 end
 
 Base.@propagate_inbounds function Base.getindex(T::DenseTensor{ElT,N},
@@ -243,19 +245,19 @@ end
 
 # Reshape a DenseTensor using the specified dimensions
 # This returns a view into the same Tensor data
-function Base.reshape(T::DenseTensor,dims)
+function Base.reshape(T::DenseTensor, dims)
   dim(T)==dim(dims) || error("Total new dimension must be the same as the old dimension")
-  return Tensor(store(T),dims)
+  return tensor(store(T), dims)
 end
 
 # This version fixes method ambiguity with AbstractArray reshape
-function Base.reshape(T::DenseTensor,dims::Dims)
+function Base.reshape(T::DenseTensor, dims::Dims)
   dim(T)==dim(dims) || error("Total new dimension must be the same as the old dimension")
-  return Tensor(store(T),dims)
+  return tensor(store(T), dims)
 end
 
-function Base.reshape(T::DenseTensor,dims::Int...)
-  return Tensor(store(T),tuple(dims...))
+function Base.reshape(T::DenseTensor, dims::Int...)
+  return tensor(store(T), tuple(dims...))
 end
 
 # Create an Array that is a view of the Dense Tensor
@@ -310,10 +312,13 @@ function Base.permutedims(T::Tensor{<:Number,N},
   return Tp
 end
 
+Base.permutedims(T::Tensor,
+                 perm::Tuple{Vararg{Int}}) = error("Permutation size must match tensor order")
+
 # TODO: move to tensor.jl?
 function Base.:*(x::Number,
                  T::Tensor)
-  return Tensor(x*store(T),inds(T))
+  return tensor(x*store(T),inds(T))
 end
 Base.:*(T::Tensor, x::Number) = x*T
 
@@ -391,7 +396,8 @@ function outer(T1::DenseTensor{ElT1},
                T2::DenseTensor{ElT2}) where {ElT1,ElT2}
   array_outer = vec(array(T1))*transpose(vec(array(T2)))
   inds_outer = unioninds(inds(T1),inds(T2))
-  return Tensor(Dense{promote_type(ElT1,ElT2)}(vec(array_outer)),inds_outer)
+  return tensor(Dense{promote_type(ElT1,ElT2)}(vec(array_outer)),
+                inds_outer)
 end
 const ⊗ = outer
 
@@ -467,10 +473,10 @@ function contract!!(R::Tensor{<:Number,NR},
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
     R = outer!!(R,T1,T2)
-    labelsRp = tuplecat(labelsT1,labelsT2)
-    perm = getperm(labelsR,labelsRp)
+    labelsRp = (labelsT1..., labelsT2...)
+    perm = getperm(labelsR, labelsRp)
     if !is_trivial_permutation(perm)
-      R = permutedims!!(R,copy(R),perm)
+      R = permutedims!!(R, copy(R), perm)
     end
   else
     if α ≠ 1 || β ≠ 0
@@ -516,10 +522,10 @@ function contract!(R::DenseTensor{<:Number,NR},
                    β::Number=0) where {ElT1,ElT2,N1,N2,NR}
   if N1+N2==NR
     outer!(R,T1,T2)
-    labelsRp = tuplecat(labelsT1,labelsT2)
+    labelsRp = (labelsT1..., labelsT2...)
     perm = getperm(labelsR,labelsRp)
     if !is_trivial_permutation(perm)
-      permutedims!(R,copy(R),perm)
+      permutedims!(R, copy(R), perm)
     end
     return R
   end
@@ -591,7 +597,7 @@ function _contract!(CT::DenseTensor{El,NC},
   if props.permuteC
     # Need to copy here since we will be permuting
     # into C later
-    CM = reshape(copy(C),props.dleft,props.dright)
+    CM = reshape(copy(C), props.dleft, props.dright)
   else
     if Ctrans(props)
       CM = reshape(C,props.dleft,props.dright)
@@ -628,7 +634,7 @@ that the original indices 3 and 2 are combined.
 """
 function permute_reshape(T::DenseTensor{ElT,NT,IndsT},
                          pos::Vararg{<:Any,N}) where {ElT,NT,IndsT,N}
-  perm = tuplecat(pos...)
+  perm = flatten(pos...)
 
   length(perm)≠NT && error("Index positions must add up to order of Tensor ($N)")
   isperm(perm) || error("Index positions must be a permutation")
@@ -716,10 +722,9 @@ function polar(T::DenseTensor{<:Number,N,IndsT},
   # Use sim to create "similar" indices, in case
   # the indices have identifiers. If not this should
   # act as an identity operator
-  Rinds_sim = sim(Rinds)
-
-  Uinds = tuplecat(Linds,Rinds_sim)
-  Pinds = tuplecat(Rinds_sim,Rinds)
+  simRinds = sim(Rinds)
+  Uinds = (Linds..., simRinds...)
+  Pinds = (simRinds..., Rinds...)
 
   U = reshape(UM,Uinds)
   P = reshape(PM,Pinds)
@@ -732,10 +737,10 @@ function LinearAlgebra.exp(T::DenseTensor{ElT,N},
                            ishermitian::Bool=false) where {ElT,N,
                                                            NL,NR}
   M = permute_reshape(T,Lpos,Rpos)
-  indsTp = permute(inds(T),(Lpos...,Rpos...))
+  indsTp = permute(inds(T), (Lpos...,Rpos...))
   if ishermitian
     expM = exp(Hermitian(matrix(M)))
-    return Tensor(Dense{ElT}(vec(expM)),indsTp)
+    return tensor(Dense{ElT}(vec(expM)), indsTp)
   else
     expM = exp(M)
     return reshape(expM,indsTp)
@@ -769,15 +774,6 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   data = read(g,"data")
   return Dense{ElT}(data)
 end
-
-#function Base.summary(io::IO,
-#                      T::Tensor)
-#  println(io,typeof(T))
-#  println(io," ",Base.dims2string(dims(T)))
-#  for (dim,ind) in enumerate(inds(T))
-#    println(io,"Dim $dim: ",ind)
-#  end
-#end
 
 function Base.show(io::IO,
                    mime::MIME"text/plain",

@@ -1,12 +1,5 @@
-export Sweeps,
-       nsweep,
-       maxdim,
-       mindim,
-       cutoff,
-       maxdim!,
-       mindim!,
-       cutoff!,
-       sweepnext
+
+import .NDTensors: mindim
 
 mutable struct Sweeps
   nsweep::Int
@@ -21,10 +14,13 @@ mutable struct Sweeps
 end
 
 nsweep(sw::Sweeps)::Int = sw.nsweep
+
 Base.length(sw::Sweeps)::Int = sw.nsweep
 
 maxdim(sw::Sweeps,n::Int)::Int = sw.maxdim[n]
+
 mindim(sw::Sweeps,n::Int)::Int = sw.mindim[n]
+
 cutoff(sw::Sweeps,n::Int)::Float64 = sw.cutoff[n]
 
 function maxdim!(sw::Sweeps,maxdims::Int...)::Nothing

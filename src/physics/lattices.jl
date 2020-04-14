@@ -1,7 +1,3 @@
-export LatticeBond,
-       Lattice,
-       square_lattice,
-       triangular_lattice
 
 struct LatticeBond
   s1::Int
