@@ -1,6 +1,6 @@
 using Documenter, ITensors
 
-makedocs(sitename="ITensors.jl";
+makedocs(sitename = "ITensors.jl";
          modules = [ITensors],
          pages = ["Introduction" => "index.md",
                   "Index" => "Index.md",
@@ -8,4 +8,6 @@ makedocs(sitename="ITensors.jl";
                   "ITensor" => "ITensor.md",
                   "MPS and MPO" => "MPSandMPO.md",
                   "DMRG" => "DMRG.md"],
-         format = Documenter.HTML(prettyurls = false))
+         format = Documenter.HTML(prettyurls = false),
+         doctest = true,
+         checkdocs = :none)

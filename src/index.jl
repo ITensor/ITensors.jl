@@ -32,45 +32,92 @@ struct Index{T}
   end
 end
 
+# Used in NDTensors, mostly for internal usage
+Index{T}(dim::T) where {T} = Index(dim)
+
 function Index(id, space::T, dir, tags, plev) where {T}
   return Index{T}(id, space, dir, tags, plev)
 end
 
-Index() = Index(0,1,Neither,"",0)
-
 """
-  Index(dim::Integer; tags="", plev=0)
-Create an `Index` with a unique `id` and a tagset given by `tags`.
+    Index(dim::Int; tags::Union{AbstractString,TagSet}="",
+                    plev::Int=0)
 
-Example: create a two dimensional index with tag `l`:
-    Index(2; tags="l")
+Create an `Index` with a unique `id`, a TagSet given by `tags`,
+and a prime level `plev`.
+
+# Examples
+```jldoctest
+julia> using ITensors;
+
+julia> i = Index(2; tags="l", plev=1);
+
+julia> dim(i)
+2
+
+julia> plev(i)
+1
+
+julia> tags(i)
+(l)
+```
 """
 function Index(dim::Int; tags="", plev=0)
   return Index(rand(IDType), dim, Neither, tags, plev)
 end
 
-# Used in NDTensors, mostly for internal usage
-Index{T}(dim::T) where {T} = Index(dim)
-
 """
-  Index(dim::Integer, tags)
+    Index(dim::Integer, tags::Union{AbstractString,TagSet})
+
 Create an `Index` with a unique `id` and a tagset given by `tags`.
 
-Example: create a two dimensional index with tag `l`:
-    Index(2, "l")
+# Examples
+```jldoctest
+julia> using ITensors;
+
+julia> i = Index(2, "l,tag");
+
+julia> dim(i)
+2
+
+julia> plev(i)
+0
+
+julia> tags(i)
+(l,tag)
+```
 """
 Index(dim::Int,
       tags::Union{AbstractString,TagSet}) = Index(dim; tags=tags)
 
 """
+    Index()
+
+Create a default Index.
+
+# Examples
+```jldoctest
+julia> using ITensors;
+
+julia> i = Index();
+
+julia> isdefault(i)
+true
+```
+"""
+Index() = Index(0, 1, Neither, "", 0)
+
+"""
     id(i::Index)
-Obtain the id of an Index, which is a unique 64 digit integer
+
+Obtain the id of an Index, which is a unique 64 digit integer.
 """
 id(i::Index) = i.id
 
 """
     dim(i::Index)
-Obtain the dimension of an Index
+
+Obtain the dimension of an Index.
 """
 dim(i::Index) = i.space
 
@@ -78,12 +125,14 @@ space(i::Index) = i.space
 
 """
     dir(i::Index)
-Obtain the direction of an Index (In or Out)
+
+Obtain the direction of an Index (In, Out, or Neither).
 """
 dir(i::Index) = i.dir
 
 """
     setdir(i::Index, dir::Arrow)
+
 Create a copy of Index i with the specified direction.
 """
 function setdir(i::Index, dir::Arrow)
@@ -92,77 +141,94 @@ end
 
 """
     tags(i::Index)
-Obtain the TagSet of an Index
+
+Obtain the TagSet of an Index.
 """
 tags(i::Index) = i.tags
 
 """
     plev(i::Index)
-Obtain the prime level of an Index
+
+Obtain the prime level of an Index.
 """
 plev(i::Index) = i.plev
 
 """
-==(i1::Index, i1::Index)
+    ==(i1::Index, i1::Index)
 
 Compare indices for equality. First the id's are compared,
 then the prime levels are compared, and finally the
 tags are compared.
 """
-function Base.:(==)(i1::Index,i2::Index)
+function Base.:(==)(i1::Index, i2::Index)
   return id(i1) == id(i2) && tags(i1) == tags(i2) && plev(i1) == plev(i2)
 end
 
 # This is so that when IndexSets are converted
 # to Julia Base Sets, the hashing is done correctly
 function Base.hash(i::Index, h::UInt)
-  return hash((id(i),tags(i),plev(i)), h)
+  return hash((id(i), tags(i), plev(i)), h)
 end
 
 
 """
     copy(i::Index)
+
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
 Base.copy(i::Index) = Index(id(i),
                             copy(space(i)),
                             dir(i),
-                            copy(tags(i)),
+                            tags(i),
                             plev(i))
 
 """
-  sim(i::Index; tags=tags(i), dir=dir(i))
+    sim(i::Index; tags=tags(i), plev=plev(i), dir=dir(i))
+
 Similar to `copy(i::Index)` except `sim` will produce an `Index` with a new, unique `id` instead of the same `id`.
 """
-function sim(i::Index;
-             tags=copy(tags(i)),
-             plev=plev(i),
-             dir=dir(i))
-  return Index(rand(IDType),copy(space(i)),dir,tags,plev)
-end
+sim(i::Index;
+    tags=copy(tags(i)),
+    plev=plev(i),
+    dir=dir(i)) = Index(rand(IDType),
+                        copy(space(i)),
+                        dir,
+                        tags,
+                        plev)
 
 """
     dag(i::Index)
-Copy an index `i` and reverse it's direction
+
+Copy an index `i` and reverse its direction.
 """
-dag(i::Index) = Index(id(i),copy(space(i)),-dir(i),copy(tags(i)),plev(i))
+dag(i::Index) = Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
 
 """
     isdefault(i::Index)
+
 Check if an `Index` `i` was created with the default options.
 """
-isdefault(i::Index) = (i==Index())
+isdefault(i::Index) = (i == Index())
 
 """
-    hastags(i::Index,ts)
+    hastags(i::Index, ts::Union{AbstractString,TagSet})
+
 Check if an `Index` `i` has the provided tags,
 which can be a string of comma-separated tags or 
-a TagSet object
+a TagSet object.
 
-Example:
-    i = Index(2,"Site,SpinHalf,n=3")
-    hastags(i,"SpinHalf,Site") == true
-    hastags(i,"Link") == false
+# Examples
+```jldoctest
+julia> using ITensors;
+
+julia> i = Index(2, "Site,SpinHalf,n=3");
+
+julia> hastags(i, "SpinHalf,Site")
+true
+
+julia> hastags(i, "Link")
+false
+```
 """
 hastags(i::Index,
         ts::Union{AbstractString,TagSet}) = hastags(tags(i),ts)
@@ -170,49 +236,86 @@ hastags(i::Index,
 hastags(ts::Union{AbstractString,TagSet}) = x->hastags(x,ts)
 
 """
-    hasplev(i::Index,plev::Int)
+    hasplev(i::Index, plev::Int)
+
 Check if an `Index` `i` has the provided prime level.
 
-Example:
-    i = Index(2; plev=2)
-    hasplev(i,2) == true
-    hastags(i,1) == false
-"""
-hasplev(i::Index, pl::Int) = plev(i)==pl
+# Examples
+```jldoctest
+julia> using ITensors;
 
-hasplev(pl::Int) = x->hasplev(x,pl)
+julia> i = Index(2; plev=2);
+
+julia> hasplev(i, 2)
+true
+
+julia> hasplev(i, 1)
+false
+```
+"""
+hasplev(i::Index, pl::Int) = plev(i) == pl
+
+hasplev(pl::Int) = x -> hasplev(x, pl)
 
 """
-    hasid(i::Index,id::IDType)
+    hasid(i::Index, id::ITensors.IDType)
+
 Check if an `Index` `i` has the provided id.
 
-Example:
-    i = Index(2)
-    hasid(i,id(i)) == true
-    hasid(i,IDType(2)) == false
-"""
-hasid(ind::Index, i::IDType) = id(ind)==i
+# Examples
+```jldoctest
+julia> using ITensors;
 
-hasid(i::IDType) = x->hasid(x,i)
+julia> i = Index(2);
+
+julia> hasid(i, id(i))
+true
+
+julia> j = Index(2);
+
+julia> hasid(i, id(j))
+false
+```
+"""
+hasid(ind::Index, i::IDType) = id(ind) == i
+
+hasid(i::IDType) = x -> hasid(x, i)
 
 """
-    settags(i::Index,ts)
+    settags(i::Index, ts)
+
 Return a copy of Index `i` with
 tags replaced by the ones given
 The `ts` argument can be a comma-separated 
 string of tags or a TagSet.
 
-Example:
-    i = Index(2,"Site,SpinHalf,n=3")
-    hastags(i,"Link") == false
-    j = settags(i,"Link,n=4")
-    hastags(j,"Link") == true
-    hastags(j,"n=4,Link") == true
+# Examples
+```jldoctest
+julia> using ITensors;
+
+julia> i = Index(2, "Site,SpinHalf,n=3");
+
+julia> hastags(i, "Link")
+false
+
+julia> j = settags(i,"Link,n=4");
+
+julia> hastags(j, "Link")
+true
+
+julia> hastags(j, "n=4,Link")
+true
+```
 """
-settags(i::Index, ts) = Index(id(i),copy(space(i)),dir(i),ts,plev(i))
+settags(i::Index, ts) = Index(id(i),
+                              copy(space(i)),
+                              dir(i),
+                              ts,
+                              plev(i))
 
 """
     addtags(i::Index,ts)
+
 Return a copy of Index `i` with the
 specified tags added to the existing ones.
 The `ts` argument can be a comma-separated 
@@ -221,7 +324,8 @@ string of tags or a TagSet.
 addtags(i::Index, ts) = settags(i, addtags(tags(i), ts))
 
 """
-    removetags(i::Index,ts)
+    removetags(i::Index, ts)
+
 Return a copy of Index `i` with the
 specified tags removed. The `ts` argument
 can be a comma-separated string of tags or a TagSet.
@@ -229,51 +333,76 @@ can be a comma-separated string of tags or a TagSet.
 removetags(i::Index, ts) = settags(i, removetags(tags(i), ts))
 
 """
-    replacetags(i::Index,tsold,tsnew)
+    replacetags(i::Index, tsold, tsnew)
+
 If the tag set of `i` contains the tags specified by `tsold`,
 replaces these with the tags specified by `tsnew`, preserving
 any other tags. The arguments `tsold` and `tsnew` can be
 comma-separated strings of tags, or TagSet objects.
 """
-replacetags(i::Index, tsold, tsnew) = settags(i, replacetags(tags(i), tsold, tsnew))
+replacetags(i::Index,
+            tsold,
+            tsnew) = settags(i,
+                             replacetags(tags(i), tsold, tsnew))
 
 """
-    prime(i::Index,plinc = 1)
+    prime(i::Index, plinc::Int = 1)
+
 Return a copy of Index `i` with its
 prime level incremented by the amount `plinc`
 """
-prime(i::Index, plinc=1) = setprime(i, plev(i)+plinc)
+prime(i::Index, plinc::Int = 1) = setprime(i, plev(i) + plinc)
 
 """
-    setprime(i::Index,plev)
+    setprime(i::Index, plev::Int)
+
 Return a copy of Index `i` with its
 prime level set to `plev`
 """
-setprime(i::Index, plev) = Index(id(i),copy(space(i)),dir(i),copy(tags(i)),plev)
+setprime(i::Index, plev::Int) = Index(id(i),
+                                      copy(space(i)),
+                                      dir(i),
+                                      tags(i),
+                                      plev)
 
 """
     noprime(i::Index)
+
 Return a copy of Index `i` with its
-prime level set to zero
+prime level set to zero.
 """
 noprime(i::Index) = setprime(i, 0)
 
+"""
+    adjoint(i::Index)
+
+Prime an Index using the notation `i'`.
+"""
 Base.adjoint(i::Index) = prime(i)
 
-# To use the notation i^5 == prime(i,5)
-Base.:^(i::Index,pl::Integer) = prime(i,pl)
+"""
+    ^(i::Index, pl::Int)
+
+Prime an Index using the notation `i^3`.
+"""
+Base.:^(i::Index, pl::Int) = prime(i, pl)
 
 # Iterating over Index I gives
 # integers from 1...dim(I)
-function Base.iterate(i::Index,state::Int=1)
+# TODO: should this iterate through the IndexVals?
+function Base.iterate(i::Index, state::Int = 1)
   (state > dim(i)) && return nothing
-  return (state,state+1)
+  return (state, state+1)
 end
 
-NDTensors.outer(i::Index; tags="", plev=0) = sim(i; tags=tags, plev=plev)
+# This is a trivial definition for use in NDTensors
+NDTensors.outer(i::Index; tags = "",
+                          plev = 0) = sim(i; tags = tags,
+                                             plev = plev)
 
-function NDTensors.outer(i1::Index, i2::Index; tags="")
-  return Index(dim(i1)*dim(i2), tags)
+# This is for use in NDTensors
+function NDTensors.outer(i1::Index, i2::Index; tags = "")
+  return Index(dim(i1) * dim(i2), tags)
 end
 
 function primestring(plev)
@@ -310,37 +439,49 @@ struct IndexVal{IndexT<:Index}
 end
 
 IndexVal() = IndexVal(Index(),1)
+
 IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first,iv.second)
 
 const PairIndexInt{IndexT} = Pair{IndexT,Int}
-const IndexValOrPairIndexInt{IndexT} = Union{IndexVal{IndexT},PairIndexInt{IndexT}}
 
-Base.convert(::Type{IndexVal},iv::Pair{<:Index,Int}) = IndexVal(iv)
-Base.convert(::Type{IndexVal{IndexT}},iv::Pair{IndexT,Int}) where {IndexT<:Index} = IndexVal(iv)
+const IndexValOrPairIndexInt{IndexT} = Union{IndexVal{IndexT},
+                                             PairIndexInt{IndexT}}
+
+Base.convert(::Type{IndexVal}, iv::Pair{<:Index,Int}) = IndexVal(iv)
+
+Base.convert(::Type{IndexVal{IndexT}},
+             iv::Pair{IndexT,Int}) where {IndexT<:Index} = IndexVal(iv)
 
 Base.getindex(i::Index, j::Int) = IndexVal(i, j)
-#Base.getindex(i::Index, c::Colon) = [IndexVal(i, j) for j in 1:dim(i)]
 
-(i::Index)(n::Int) = IndexVal(i,n)
+(i::Index)(n::Int) = IndexVal(i, n)
 
 NDTensors.ind(iv::IndexVal) = iv.ind
+
 val(iv::IndexVal) = iv.val
 
 NDTensors.ind(iv::PairIndexInt) = iv.first
+
 val(iv::PairIndexInt) = iv.second
 
-Base.:(==)(i::Index,iv::IndexValOrPairIndexInt) = (i==ind(iv))
-Base.:(==)(iv::IndexValOrPairIndexInt,i::Index) = (i==iv)
+Base.:(==)(i::Index,
+           iv::IndexValOrPairIndexInt) = i == ind(iv)
+
+Base.:(==)(iv::IndexValOrPairIndexInt,
+           i::Index) = i == iv
 
 plev(iv::IndexVal) = plev(ind(iv))
-prime(iv::IndexVal,inc::Integer=1) = IndexVal(prime(ind(iv),inc),val(iv))
-Base.adjoint(iv::IndexVal) = IndexVal(adjoint(ind(iv)),val(iv))
+
+prime(iv::IndexVal,
+      inc::Integer = 1) = IndexVal(prime(ind(iv), inc), val(iv))
+
+Base.adjoint(iv::IndexVal) = IndexVal(prime(ind(iv)), val(iv))
 
 hasqns(::Index) = false
 
-Base.show(io::IO,iv::IndexVal) = print(io,ind(iv),"=$(val(iv))")
+Base.show(io::IO, iv::IndexVal) = print(io, ind(iv), "=$(val(iv))")
 
-function readcpp(io::IO,::Type{Index}; kwargs...)
+function readcpp(io::IO, ::Type{Index}; kwargs...)
   format = get(kwargs,:format,"v3")
   i = Index()
   if format=="v3"

@@ -10,45 +10,33 @@ Index
 
 ```@docs
 Index(::Int)
+Index(::Int, ::Union{AbstractString,TagSet})
+Index()
 ```
 
 ## Index properties
 
 ```@docs
 id(::Index)
-```
-
-```@docs
+hasid(::Index, ::ITensors.IDType)
 tags(::Index)
-```
-
-```@docs
+hastags(::Index, ::Union{AbstractString,TagSet})
 plev(::Index)
-```
-
-```@docs
+hasplev(::Index, ::Int)
 dim(::Index)
-```
-
-```@docs
 ==(::Index, ::Index)
-```
-
-```@docs
 dir(::Index)
 ```
 
 ## Priming and tagging methods
 
 ```@docs
-prime(::Index, ::Any)
-```
-
-```@docs
-setprime(::Index, ::Any)
-```
-
-```@docs
+prime(::Index, ::Int)
+setprime(::Index, ::Int)
 noprime(::Index)
+settags(::Index, ::Any)
+addtags(::Index, ::Any)
+removetags(::Index, ::Any)
+replacetags(::Index, ::Any, ::Any)
 ```
 
