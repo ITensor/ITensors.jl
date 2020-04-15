@@ -7,6 +7,14 @@ function dmrg(H::MPO,
   return dmrg(PH,psi0,sweeps;kwargs...)
 end
 
+function dmrg(Hs::Vector{MPO},
+              psi0::MPS,
+              sweeps::Sweeps;
+              kwargs...)
+  PHS = ProjMPOSum(Hs)
+  return dmrg(PHS,psi0,sweeps;kwargs...)
+end
+
 function dmrg(PH,
               psi0::MPS,
               sweeps::Sweeps;

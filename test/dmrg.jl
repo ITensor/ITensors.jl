@@ -2,7 +2,7 @@ using ITensors, Test, Random
 
 @testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
-    N = 100
+    N = 10
     sites = siteinds("S=1",N)
 
     ampo = AutoMPO()
@@ -23,12 +23,8 @@ using ITensors, Test, Random
     str = split(sprint(show, sweeps), '\n')
     @test length(str) > 1
     energy,psi = dmrg(H, psi, sweeps; quiet=true)
-    @test energy < -120.0
-    # test with SVD too! 
-    psi = randomMPS(sites)
-    energy,psi = dmrg(H, psi, sweeps; 
-                      quiet=true)
-    @test energy < -120.0
+    @show energy
+    @test energy < -12.0
   end
 
   @testset "Transverse field Ising" begin
@@ -87,5 +83,36 @@ using ITensors, Test, Random
     orthogonalize!(psi,1)
     m = scalar(dag(psi[1])*noprime(op(sites, "Sz", 1)*psi[1]))
     @test measurements(observer)["Sz"][end][1] ≈ m
+  end
+
+  @testset "Sum of MPOs (ProjMPOSum)" begin
+    N = 10
+    sites = siteinds("S=1",N)
+
+    ampoZ = AutoMPO()
+    for j=1:N-1
+      add!(ampoZ,"Sz",j,"Sz",j+1)
+    end
+    HZ = toMPO(ampoZ,sites)
+
+    ampoXY = AutoMPO()
+    for j=1:N-1
+      add!(ampoXY,0.5,"S+",j,"S-",j+1)
+      add!(ampoXY,0.5,"S-",j,"S+",j+1)
+    end
+    HXY = toMPO(ampoXY,sites)
+
+    psi = randomMPS(sites)
+
+    sweeps = Sweeps(3)
+    @test length(sweeps) == 3
+    maxdim!(sweeps,10,20,40)
+    mindim!(sweeps,1,10,10)
+    cutoff!(sweeps,1E-11)
+    str = split(sprint(show, sweeps), '\n')
+    @test length(str) > 1
+    energy,psi = dmrg([HZ,HXY], psi, sweeps; quiet=true)
+    @show energy
+    @test energy < -12.0
   end
 end
