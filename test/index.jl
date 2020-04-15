@@ -73,7 +73,7 @@ import ITensors: In,Out,Neither
     i = Index(10)
     c = 1
     for n in i
-      @test n == c
+      @test n == i(c)
       c += 1
     end
   end
