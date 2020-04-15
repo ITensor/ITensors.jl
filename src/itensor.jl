@@ -631,20 +631,23 @@ function combiner(inds::IndexSet;
   tags = get(kwargs, :tags, "CMB,Link")
   new_ind = Index(prod(dims(inds)), tags)
   new_is = IndexSet(new_ind, inds...)
-  return itensor(Combiner(),new_is),new_ind
+  return itensor(Combiner(), new_is)
 end
 
 combiner(inds::Index...;
          kwargs...) = combiner(IndexSet(inds...); kwargs...)
+
 combiner(inds::Tuple{Vararg{Index}};
          kwargs...) = combiner(inds...; kwargs...)
 
 # Special case when no indices are combined (useful for generic code)
 function combiner(; kwargs...)
-  return itensor(Combiner(),IndexSet()),nothing
+  return itensor(Combiner(), IndexSet())
 end
 
 combinedind(T::ITensor) = store(T) isa Combiner ? inds(T)[1] : nothing
+
+combinedind(T::ITensor{0}) = nothing
 
 LinearAlgebra.norm(T::ITensor) = norm(tensor(T))
 

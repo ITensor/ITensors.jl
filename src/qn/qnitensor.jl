@@ -61,9 +61,11 @@ function combiner(inds::QNIndex...; kwargs...)
   new_ind = settags(new_ind,tags)
   comb_ind,perm,comb = combineblocks(new_ind)
   return itensor(Combiner(perm,comb),
-                 IndexSet(comb_ind, dag.(inds)...)), comb_ind
+                 IndexSet(comb_ind, dag.(inds)...))
 end
-combiner(inds::Tuple{Vararg{QNIndex}}; kwargs...) = combiner(inds...; kwargs...)
+
+combiner(inds::Tuple{Vararg{QNIndex}};
+         kwargs...) = combiner(inds...; kwargs...)
 
 #
 # DiagBlockSparse ITensor constructors

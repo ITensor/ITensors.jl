@@ -53,11 +53,13 @@ function LinearAlgebra.svd(A::ITensor,
   Lis = commoninds(A,IndexSet(Linds...))
   Ris = uniqueinds(A,Lis)
 
-  CL,cL = combiner(Lis...)
-  CR,cR = combiner(Ris...)
+  CL = combiner(Lis...)
+  CR = combiner(Ris...)
 
   AC = A*CR*CL
 
+  cL = combinedind(CL)
+  cR = combinedind(CR)
   if inds(AC) != IndexSet(cL,cR)
     AC = permute(AC,cL,cR)
   end
@@ -140,11 +142,13 @@ function LinearAlgebra.eigen(A::ITensor,
   Lis = commoninds(A,IndexSet(Linds))
   Ris = commoninds(A,IndexSet(Rinds))
 
-  CL,cL = combiner(Lis...)
-  CR,cR = combiner(Ris...)
+  CL = combiner(Lis...)
+  CR = combiner(Ris...)
 
   AC = A*CR*CL
 
+  cL = combinedind(CL)
+  cR = combinedind(CR)
   if inds(AC) != IndexSet(cL,cR)
     AC = permute(AC,cL,cR)
   end

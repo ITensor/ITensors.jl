@@ -212,7 +212,8 @@ Random.seed!(1234)
       i1 = Index([QN(0,2)=>2,QN(1,2)=>2],"i1")
       A = randomITensor(QN(),i1,dag(i1'))
 
-      C,c = combiner()
+      C = combiner()
+      c = combinedind(C)
       @test isnothing(c)
       AC = A*C
       @test nnz(AC) == nnz(A)
@@ -236,7 +237,7 @@ Random.seed!(1234)
              (dag(i1'),i1)]
 
       for is in iss
-        C,c = combiner(is; tags="c")
+        C = combiner(is; tags="c")
         AC = A*C
         @test nnz(AC) == nnz(A)
         Ap = AC*dag(C)
@@ -251,7 +252,8 @@ Random.seed!(1234)
 
       A = randomITensor(QN(0),i,dag(i)',dag(i)'')
 
-      C,c = combiner(i,dag(i)'')
+      C = combiner(i,dag(i)'')
+      c = combinedind(C)
 
       AC = A*C
 
@@ -296,7 +298,7 @@ Random.seed!(1234)
              (dag(i1'),i2,i1)]
 
       for is in iss
-        C,c = combiner(is; tags="c")
+        C = combiner(is; tags="c")
         AC = A*C
         @test nnz(AC) == nnz(A)
         Ap = AC*dag(C)
@@ -365,7 +367,7 @@ Random.seed!(1234)
              (dag(i2'),i2,dag(i1'),i1)]
 
       for is in iss
-        C,c = combiner(is; tags="c")
+        C = combiner(is; tags="c")
         AC = A*C
         @test nnz(AC) == nnz(A)
         Ap = AC*dag(C)
@@ -384,7 +386,8 @@ Random.seed!(1234)
 
       A = randomITensor(QN(),s1,s2,dag(s1)',dag(s2)')
 
-      C,c = combiner(dag(s1)',dag(s2)')
+      C = combiner(dag(s1)',dag(s2)')
+      c = combinedind(C)
 
       AC = A*C
 
@@ -416,7 +419,8 @@ Random.seed!(1234)
 
       A = randomITensor(QN(),dag(s2)',s2,dag(s1)',s1)
 
-      C,c = combiner(dag(s2)',dag(s1)')
+      C = combiner(dag(s2)',dag(s1)')
+      c = combinedind(C)
 
       AC = A*C
 
@@ -445,7 +449,8 @@ Random.seed!(1234)
 
       A = randomITensor(QN(),dag(s1)',s2,dag(s2)',s1)
 
-      C,c = combiner(dag(s2)',dag(s1)')
+      C = combiner(dag(s2)',dag(s1)')
+      c = combinedind(C)
 
       AC = A*C
 
@@ -472,7 +477,7 @@ Random.seed!(1234)
     i = Index(QN(0,2)=>2,QN(1,2)=>2; tags="i")
     j = settags(i,"j")
     A = randomITensor(QN(0,2),i,j,dag(i'),dag(j'))
-    C,_ = combiner(i,j)
+    C = combiner(i,j)
     @test norm(A*dag(C')*C-A*C*dag(C')) ≈ 0.0
   end
 
@@ -481,7 +486,7 @@ Random.seed!(1234)
     j = settags(i,"j")
     A = ITensor(i,j,dag(i'))
     A[1,1,1] = 1.0
-    C,_ = combiner(i,j; tags="c")
+    C = combiner(i,j; tags="c")
     AC = A*C
     Ap = AC*dag(C)
     @test norm(A-Ap) ≈ 0.0
