@@ -110,4 +110,38 @@ using ITensors, Test, Random
     energy,psi = dmrg([HZ,HXY], psi, sweeps; quiet=true)
     @test energy < -12.0
   end
+
+  @testset "Excited-state DMRG" begin
+    N = 10
+    weight = 15.0
+
+    sites = siteinds("S=1",N)
+    sites[1] = Index(2,"S=1/2,n=1,Site")
+    sites[N] = Index(2,"S=1/2,n=$N,Site")
+
+    ampo = AutoMPO()
+    for j=1:N-1
+      add!(ampo,"Sz",j,"Sz",j+1)
+      add!(ampo,0.5,"S+",j,"S-",j+1)
+      add!(ampo,0.5,"S-",j,"S+",j+1)
+    end
+    H = MPO(ampo,sites)
+
+    psi0i = randomMPS(sites,10)
+
+    sweeps = Sweeps(6)
+    maxdim!(sweeps, 10,20,100,100,200)
+    cutoff!(sweeps, 1E-11)
+
+    energy0, psi0 = dmrg(H,psi0i, sweeps; quiet=true)
+    @test energy0 < -11.5
+
+    psi1i = randomMPS(sites,10)
+    energy1,psi1 = dmrg(H,[psi0],psi1i,sweeps;quiet=true,weight=weight)
+
+    @test energy1 > energy0
+    @test energy1 < -11.1
+
+    @test inner(psi1,psi0) < 1E-6
+  end
 end
