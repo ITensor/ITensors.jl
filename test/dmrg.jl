@@ -23,7 +23,6 @@ using ITensors, Test, Random
     str = split(sprint(show, sweeps), '\n')
     @test length(str) > 1
     energy,psi = dmrg(H, psi, sweeps; quiet=true)
-    @show energy
     @test energy < -12.0
   end
 
@@ -93,14 +92,14 @@ using ITensors, Test, Random
     for j=1:N-1
       add!(ampoZ,"Sz",j,"Sz",j+1)
     end
-    HZ = toMPO(ampoZ,sites)
+    HZ = MPO(ampoZ,sites)
 
     ampoXY = AutoMPO()
     for j=1:N-1
       add!(ampoXY,0.5,"S+",j,"S-",j+1)
       add!(ampoXY,0.5,"S-",j,"S+",j+1)
     end
-    HXY = toMPO(ampoXY,sites)
+    HXY = MPO(ampoXY,sites)
 
     psi = randomMPS(sites)
 
@@ -112,7 +111,6 @@ using ITensors, Test, Random
     str = split(sprint(show, sweeps), '\n')
     @test length(str) > 1
     energy,psi = dmrg([HZ,HXY], psi, sweeps; quiet=true)
-    @show energy
     @test energy < -12.0
   end
 end

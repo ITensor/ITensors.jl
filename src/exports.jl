@@ -175,13 +175,11 @@ export
   inner,
   isortho,
   linkind,
-  primelinks!,
   productMPS,
   randomMPS,
   replacebond!,
   sample,
   sample!,
-  simlinks!,
   siteind,
   siteinds,
 
@@ -254,7 +252,6 @@ export
   isactive,
   isfermionic,
   modulus,
-  name,
 
 # qn/qnindex.jl
   flux,

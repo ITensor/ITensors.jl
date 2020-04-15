@@ -1,8 +1,6 @@
 using ITensors,
       Test
 
-import ITensors: SmallString
-
 @testset "QN" begin
 
   @testset "QNVal Basics" begin
@@ -10,19 +8,19 @@ import ITensors: SmallString
     @test !isactive(qv)
 
     qv = ITensors.QNVal("Sz",0)
-    @test name(qv) == SmallString("Sz")
+    @test ITensors.name(qv) == ITensors.SmallString("Sz")
     @test val(qv) == 0
     @test modulus(qv) == 1
     @test isactive(qv)
 
     qv = ITensors.QNVal("A",1,2)
-    @test name(qv) == SmallString("A")
+    @test ITensors.name(qv) == ITensors.SmallString("A")
     @test val(qv) == 1
     @test modulus(qv) == 2
     @test !isfermionic(qv)
 
     qv = ITensors.QNVal("Nf",1,-1)
-    @test name(qv) == SmallString("Nf")
+    @test ITensors.name(qv) == ITensors.SmallString("Nf")
     @test val(qv) == 1
     @test modulus(qv) == -1
     @test isfermionic(qv)

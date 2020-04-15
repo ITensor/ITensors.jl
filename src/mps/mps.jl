@@ -1,5 +1,5 @@
 
-mutable struct MPS
+mutable struct MPS <: AbstractMPS
   length::Int
   data::Vector{ITensor}
   llim::Int
@@ -35,64 +35,6 @@ function MPS(::Type{T}, sites) where {T<:Number}
 end
 
 MPS(sites) = MPS(Float64,sites)
-
-Base.length(m::MPS) = m.length
-
-data(m::MPS) = m.data
-
-leftlim(m::MPS) = m.llim
-
-rightlim(m::MPS) = m.rlim
-
-function setleftlim!(m::MPS, new_ll::Int)
-  m.llim = new_ll
-end
-
-function setrightlim!(m::MPS, new_rl::Int)
-  m.rlim = new_rl
-end
-
-isortho(m::MPS) = leftlim(m)+1 == rightlim(m)-1
-
-function orthocenter(m::MPS)
-  !isortho(m) && error("MPS has no well-defined orthogonality center")
-  return leftlim(m)+1
-end
-
-Base.getindex(M::MPS, n::Integer) = getindex(data(M),n)
-
-function Base.setindex!(M::MPS, T::ITensor, n::Integer)
-  (n <= leftlim(M)) && setleftlim!(M,n-1)
-  (n >= rightlim(M)) && setrightlim!(M,n+1)
-  setindex!(data(M),T,n)
-end
-
-Base.copy(m::MPS) = MPS(length(m),
-                        copy(data(m)),
-                        leftlim(m),
-                        rightlim(m))
-
-Base.similar(m::MPS) = MPS(length(m),
-                           similar(data(m)),
-                           0,
-                           length(m))
-
-Base.deepcopy(m::MPS) = MPS(length(m),
-                            deepcopy(data(m)),
-                            leftlim(m),
-                            rightlim(m))
-
-function Base.show(io::IO, M::MPS)
-  print(io,"MPS")
-  (length(M) > 0) && print(io,"\n")
-  for (i, A) ∈ enumerate(data(M))
-    if order(A) != 0
-      println(io,"[$i] $(inds(A))")
-    else
-      println(io,"[$i] ITensor()")
-    end
-  end
-end
 
 function randomizeMPS!(M::MPS, sites, bond_dim=1)
   N = length(sites)
@@ -166,9 +108,11 @@ function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
   return M
 end
 
-productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64, ivals::Vector{<:IndexVal})
+productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64,
+                                                   ivals::Vector{<:IndexVal})
 
-function productMPS(::Type{T}, sites,
+function productMPS(::Type{T},
+                    sites,
                     states) where {T<:Number}
   if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial states don't match"))
@@ -179,7 +123,7 @@ end
 
 productMPS(sites, states) = productMPS(Float64, sites, states)
 
-function linkind(M::MPS,j::Integer)
+function linkind(M::MPS, j::Int)
   N = length(M)
   j ≥ length(M) && error("No link index to the right of site $j (length of MPS is $N)")
   li = commonind(M[j],M[j+1])
@@ -189,7 +133,7 @@ function linkind(M::MPS,j::Integer)
   return li
 end
 
-function siteind(M::MPS,j::Integer)
+function siteind(M::MPS, j::Int)
   N = length(M)
   if j == 1
     si = uniqueind(M[j],M[j+1])
@@ -205,10 +149,10 @@ function siteinds(M::MPS)
   return [siteind(M,j) for j in 1:length(M)]
 end
 
-function replacesites!(M::MPS,sites)
+function replacesiteinds!(M::MPS, sites)
   for j in eachindex(M)
     sj = siteind(M,j)
-    replaceind!(M[j],sj,sites[j])
+    replaceind!(M[j], sj, sites[j])
   end
   return M
 end
@@ -225,7 +169,7 @@ function LinearAlgebra.dot(M1::MPS, M2::MPS)::Number
     throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
   end
   M1dag = dag(M1)
-  simlinks!(M1dag)
+  simlinkinds!(M1dag)
   O = M1dag[1]*M2[1]
   for j in eachindex(M1)[2:end]
     O = (O*M1dag[j])*M2[j]
@@ -337,8 +281,4 @@ function sample(m::MPS)
   end
   return result
 end
-
-@deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
-
-@deprecate store(m::MPS) data(m)
 
