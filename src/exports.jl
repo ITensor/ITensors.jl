@@ -194,6 +194,9 @@ export
   rproj,
   product,
 
+# mps/projmposum.jl
+  ProjMPOSum,
+
 # mps/sweeps.jl
   Sweeps,
   nsweep,

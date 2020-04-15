@@ -62,6 +62,7 @@ include("mps/mps.jl")
 include("mps/mpo.jl")
 include("mps/sweeps.jl")
 include("mps/projmpo.jl")
+include("mps/projmposum.jl")
 include("mps/observer.jl")
 include("mps/dmrg.jl")
 
