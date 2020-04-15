@@ -2,7 +2,23 @@
 function dmrg(H::MPO,
               psi0::MPS,
               sweeps::Sweeps;
-              kwargs...)::Tuple{Float64,MPS}
+              kwargs...)
+  PH = ProjMPO(H)
+  return dmrg(PH,psi0,sweeps;kwargs...)
+end
+
+function dmrg(Hs::Vector{MPO},
+              psi0::MPS,
+              sweeps::Sweeps;
+              kwargs...)
+  PHS = ProjMPOSum(Hs)
+  return dmrg(PHS,psi0,sweeps;kwargs...)
+end
+
+function dmrg(PH,
+              psi0::MPS,
+              sweeps::Sweeps;
+              kwargs...)
   which_decomp::String = get(kwargs, :which_decomp, "automatic")
   obs = get(kwargs,:observer, NoObserver())
   quiet::Bool = get(kwargs, :quiet, false)
@@ -32,7 +48,6 @@ function dmrg(H::MPO,
   psi = copy(psi0)
   N = length(psi)
 
-  PH = ProjMPO(H)
   position!(PH,psi0,1)
   energy = 0.0
 
