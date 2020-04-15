@@ -215,6 +215,10 @@ Base.iterate(is::IndexSet, state) = iterate(data(is), state)
 
 Base.iterate(is::IndexSet) = iterate(data(is))
 
+Base.firstindex(::IndexSet) = 1
+
+Base.lastindex(::IndexSet{N}) where {N} = N
+
 Base.eltype(is::Type{IndexSet{N,IndexT}}) where {N,IndexT} = IndexT
 
 """
