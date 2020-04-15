@@ -445,7 +445,7 @@ function applympo_naive(A::MPO, psi::MPS; kwargs...)::MPS
   for b=1:(N-1)
     Al = commonind(A[b],A[b+1])
     pl = commonind(psi[b],psi[b+1])
-    C,_ = combiner(Al,pl)
+    C = combiner(Al,pl)
     psi_out[b] *= C
     psi_out[b+1] *= dag(C)
   end
