@@ -1,13 +1,16 @@
 
 mutable struct MPO
-  N_::Int
-  A_::Vector{ITensor}
-  llim_::Int
-  rlim_::Int
+  length::Int
+  data::Vector{ITensor}
+  llim::Int
+  rlim::Int
 
   MPO() = new(0,Vector{ITensor}(), 0, 0)
 
-  function MPO(N::Int, A::Vector{<:ITensor}, llim::Int=0, rlim::Int=N+1)
+  function MPO(N::Int,
+               A::Vector{<:ITensor},
+               llim::Int = 0,
+               rlim::Int = N+1)
     new(N, A, llim, rlim)
   end
 
@@ -59,7 +62,10 @@ function MPO(sites,
     else
       this_it = ITensor(links[ii-1], links[ii], si, si')
       for jj in 1:d, jjp in 1:d
-        this_it[links[ii-1](1), links[ii](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
+        this_it[links[ii-1](1),
+                links[ii](1),
+                si[jj],
+                si'[jjp]] = spin_op[si[jj], si'[jjp]]
       end
     end
     its[ii] = this_it
@@ -79,42 +85,50 @@ function randomMPO(sites, m::Int=1)
   return M
 end
 
-Base.length(m::MPO) = m.N_
-NDTensors.store(m::MPO) = m.A_
-leftlim(m::MPO) = m.llim_
-rightlim(m::MPO) = m.rlim_
+Base.length(m::MPO) = m.length
 
-function setleftlim!(m::MPO,new_ll::Int)
-  m.llim_ = new_ll
+data(m::MPO) = m.data
+
+leftlim(m::MPO) = m.llim
+
+rightlim(m::MPO) = m.rlim
+
+function setleftlim!(m::MPO, new_ll::Int)
+  m.llim = new_ll
 end
 
-function setrightlim!(m::MPO,new_rl::Int)
-  m.rlim_ = new_rl
+function setrightlim!(m::MPO, new_rl::Int)
+  m.rlim = new_rl
 end
 
-Base.getindex(m::MPO, n::Integer) = getindex(store(m), n)
+Base.getindex(m::MPO, n::Integer) = getindex(data(m), n)
 
-function Base.setindex!(M::MPO,T::ITensor,n::Integer)
-  (n <= leftlim(M)) && setleftlim!(M,n-1)
-  (n >= rightlim(M)) && setrightlim!(M,n+1)
-  setindex!(store(M),T,n)
+function Base.setindex!(M::MPO, T::ITensor, n::Integer)
+  (n <= leftlim(M)) && setleftlim!(M, n-1)
+  (n >= rightlim(M)) && setrightlim!(M, n+1)
+  setindex!(data(M), T, n)
 end
 
-Base.copy(m::MPO) = MPO(m.N_, copy(store(m)))
-Base.similar(m::MPO) = MPO(m.N_, similar(store(m)), 0, m.N_)
+Base.copy(m::MPO) = MPO(length(m),
+                        copy(data(m)),
+                        leftlim(m),
+                        rightlim(m))
 
-function Base.deepcopy(m::T) where {T <: Union{MPO,MPS}}
-    res = similar(m)
-    # otherwise we will end up modifying the elements of A!
-    res.A_ = deepcopy(store(m))
-    return res
-end
+Base.similar(m::MPO) = MPO(length(m),
+                           similar(data(m)),
+                           0,
+                           length(m))
+
+Base.deepcopy(m::MPO) = MPO(length(m),
+                            deepcopy(data(m)),
+                            leftlim(m),
+                            rightlim(m))
 
 const MPSorMPO = Union{MPS,MPO}
 
 Base.eachindex(m::MPSorMPO) = 1:length(m)
-Base.iterate(M::MPSorMPO) = iterate(store(M))
-Base.iterate(M::MPSorMPO, state) = iterate(store(M), state)
+Base.iterate(M::MPSorMPO) = iterate(data(M))
+Base.iterate(M::MPSorMPO, state) = iterate(data(M), state)
 
 # TODO: optimize finding the index a little bit
 # First do: scom = commonind(A[j],x[j])
@@ -189,7 +203,7 @@ end
 function Base.show(io::IO, W::MPO)
   print(io,"MPO")
   (length(W) > 0) && print(io,"\n")
-  for (i, A) ∈ enumerate(store(W))
+  for (i, A) ∈ enumerate(data(W))
     if order(A) != 0
       println(io,"[$i] $(inds(A))")
     else
@@ -325,7 +339,7 @@ function Base.sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
         lA = linkind(A, i)
         lB = linkind(B, i)
         r  = Index(dim(lA) + dim(lB), tags(lA))
-        f, s = plussers(typeof(data(store(A[1]))), lA, lB, r)
+        f, s = plussers(typeof(data(A[1])), lA, lB, r)
         first[i]  = f
         second[i] = s
     end
@@ -424,8 +438,8 @@ function applympo_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
     O /= norm(O)
   end
   psi_out[1]    = copy(O)
-  psi_out.llim_ = 0
-  psi_out.rlim_ = 2
+  setleftlim!(psi_out, 0)
+  setrightlim!(psi_out, 2)
   return psi_out
 end
 
@@ -469,8 +483,8 @@ function multmpo(A::MPO, B::MPO; kwargs...)::MPO
     B_ = copy(B)
     orthogonalize!(B_, 1)
 
-    links_A = inds.(A.A_, "Link")
-    links_B = inds.(B.A_, "Link")
+    links_A = inds.(A.data, "Link")
+    links_B = inds.(B.data, "Link")
 
     for i in 1:N
         if length(intersect(inds(A_[i], "Site"), inds(B_[i], "Site"))) == 2
@@ -487,7 +501,7 @@ function multmpo(A::MPO, B::MPO; kwargs...)::MPO
     end
     sites_A = Index[]
     sites_B = Index[]
-    @inbounds for (AA, BB) in zip(store(A_), store(B_))
+    @inbounds for (AA, BB) in zip(data(A_), data(B_))
         sda = setdiff(inds(AA, "Site"), inds(BB, "Site"))
         sdb = setdiff(inds(BB, "Site"), inds(AA, "Site"))
         sda_ind = setprime(sda[1], 0) == sdb[1] ? plev(sda[1]) == 1 ? sda[1] : setprime(sda[1], 1) : setprime(sda[1], 0)
@@ -542,7 +556,7 @@ function orthogonalize!(M::Union{MPS,MPO},
                         j::Int;
                         kwargs...)
   while leftlim(M) < (j-1)
-    (leftlim(M) < 0) && setleftlim!(M,0)
+    (leftlim(M) < 0) && setleftlim!(M, 0)
     b = leftlim(M)+1
     linds = uniqueinds(M[b],M[b+1])
     L,R = factorize(M[b], linds)
@@ -551,7 +565,7 @@ function orthogonalize!(M::Union{MPS,MPO},
 
     setleftlim!(M,b)
     if rightlim(M) < leftlim(M)+2
-      setrightlim!(M,leftlim(M)+2)
+      setrightlim!(M, leftlim(M)+2)
     end
   end
 
@@ -567,7 +581,7 @@ function orthogonalize!(M::Union{MPS,MPO},
 
     setrightlim!(M,b+1)
     if leftlim(M) > rightlim(M)-2
-      setleftlim!(M,rightlim(M)-2)
+      setleftlim!(M, rightlim(M)-2)
     end
   end
 end
@@ -633,11 +647,20 @@ provided as keyword arguments.
 """ truncate!
 
 @deprecate applyMPO(args...; kwargs...) applympo(args...; kwargs...)
+
 @deprecate errorMPOprod(args...; kwargs...) error_mpoprod(args...; kwargs...)
+
 @deprecate densityMatrixApplyMPO(args...; kwargs...) applympo_densitymatrix(args...; kwargs...)
+
 @deprecate naiveApplyMPO(args...; kwargs...) applympo_naive(args...; kwargs...)
+
 @deprecate multMPO(args...; kwargs...) multmpo(args...; kwargs...)
+
 @deprecate set_leftlim!(args...; kwargs...) setleftlim!(args...; kwargs...)
+
 @deprecate set_rightlim!(args...; kwargs...) setrightlim!(args...; kwargs...)
-@deprecate tensors(args...; kwargs...) store(args...; kwargs...)
+
+@deprecate tensors(args...; kwargs...) data(args...; kwargs...)
+
+@deprecate store(m::MPO) data(m)
 

@@ -18,7 +18,7 @@ function tfimMPO(sites,
   end
   ampo += (h,"Sx",N)
   # Convert these terms to an MPO tensor network
-  return toMPO(ampo,sites)
+  return MPO(ampo,sites)
 end
 
 let

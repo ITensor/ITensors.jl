@@ -113,8 +113,7 @@ include("util.jl")
 
   @testset "add MPS" begin
     psi = randomMPS(sites)
-    phi = similar(psi)
-    phi.A_ = deepcopy(psi.A_)
+    phi = deepcopy(psi)
     xi = sum(psi, phi)
     @test inner(xi, xi) ≈ 4.0 * inner(psi, psi) 
     # sum of many MPSs
@@ -137,7 +136,8 @@ include("util.jl")
   @test ITensors.leftlim(psi) == 1
   @test ITensors.rightlim(psi) == 3
   psi = randomMPS(sites)
-  psi.rlim_ = N+1 # do this to test qr from rightmost tensor
+  ITensors.setrightlim!(psi, N+1) # do this to test qr 
+                                  # from rightmost tensor
   orthogonalize!(psi, div(N, 2))
   @test ITensors.leftlim(psi) == div(N, 2) - 1
   @test ITensors.rightlim(psi) == div(N, 2) + 1
@@ -152,24 +152,24 @@ include("util.jl")
     replacebond!(psi,1,phi)
     @test tags(linkind(psi,1)) == bondindtags
 
-    # check that replacebond! updates llim_ and rlim_ properly
+    # check that replacebond! updates llim and rlim properly
     orthogonalize!(psi,5)
     phi = psi[5]*psi[6]
     replacebond!(psi, 5, phi; dir="fromleft")
-    @test leftlim(psi)==5
-    @test rightlim(psi)==7
+    @test ITensors.leftlim(psi)==5
+    @test ITensors.rightlim(psi)==7
 
     phi = psi[5]*psi[6]
     replacebond!(psi, 5, phi; dir="fromright")
-    @test leftlim(psi)==4
-    @test rightlim(psi)==6
+    @test ITensors.leftlim(psi) == 4
+    @test ITensors.rightlim(psi)==6
 
-    psi.llim_ = 3
-    psi.rlim_ = 7
+    ITensors.setleftlim!(psi, 3)
+    ITensors.setrightlim!(psi, 7)
     phi = psi[5]*psi[6]
     replacebond!(psi, 5, phi; dir="fromleft")
-    @test leftlim(psi)==3
-    @test rightlim(psi)==7
+    @test ITensors.leftlim(psi)==3
+    @test ITensors.rightlim(psi)==7
   end
 
 end
@@ -180,8 +180,8 @@ end
   init_state = [isodd(n) ? "Up" : "Dn" for n=1:N]
   psi0 = productMPS(sites,init_state)
   orthogonalize!(psi0,4)
-  @test leftlim(psi0) == 3
-  @test rightlim(psi0) == 5
+  @test ITensors.leftlim(psi0) == 3
+  @test ITensors.rightlim(psi0) == 5
 end
 
 # Helper function for making MPS
@@ -207,8 +207,8 @@ end
     M = basicRandomMPS(N)
     orthogonalize!(M,c)
 
-    @test leftlim(M) == c-1
-    @test rightlim(M) == c+1
+    @test ITensors.leftlim(M) == c-1
+    @test ITensors.rightlim(M) == c+1
 
     # Test for left-orthogonality
     L = M[1]*prime(M[1],"Link")
@@ -238,7 +238,7 @@ end
     M0 = copy(M)
     truncate!(M;maxdim=5)
 
-    @test rightlim(M) == 2
+    @test ITensors.rightlim(M) == 2
 
     # Test for right-orthogonality
     R = M[N]*prime(M[N],"Link")
@@ -294,8 +294,8 @@ end
     sites = siteinds(2,N)
     M = randomMPS(sites,chi)
 
-    @test leftlim(M) == 0
-    @test rightlim(M) == 2
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == 2
 
     @test norm(M[1]) ≈ 1.0
 

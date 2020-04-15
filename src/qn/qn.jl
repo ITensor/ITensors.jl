@@ -1,10 +1,3 @@
-export QNVal,
-       QN,
-       name,
-       val,
-       modulus,
-       isactive,
-       isfermionic
 
 struct QNVal 
   name::SmallString
@@ -27,8 +20,8 @@ QNVal() = QNVal("",0,0)
 name(qv::QNVal) = qv.name
 val(qv::QNVal) = qv.val
 modulus(qv::QNVal) = qv.modulus
-isactive(qv::QNVal) = (modulus(qv) != 0)
-isfermionic(qv::QNVal) = (modulus(qv) < 0)
+isactive(qv::QNVal) = modulus(qv) != 0
+isfermionic(qv::QNVal) = modulus(qv) < 0
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 
 function qn_mod(val::Int,modulus::Int)
@@ -71,7 +64,7 @@ const QNStorage = SVector{maxQNs,QNVal}
 const MQNStorage = MVector{maxQNs,QNVal}
 
 struct QN
-  store::QNStorage
+  data::QNStorage
 
   function QN()
     s = QNStorage(ntuple(_ ->ZeroVal,Val(maxQNs)))
@@ -89,7 +82,7 @@ function Base.hash(obj::QN, h::UInt)
   # for performance here; put non-zero QNVals
   # to front and slice when passing to hash
   nzqv = QNVal[]
-  for qv in obj.store
+  for qv in obj.data
     if val(qv) != 0
       push!(nzqv,qv)
     end
@@ -116,11 +109,11 @@ end
 QN(name,val::Int,modulus::Int=1) = QN((name,val,modulus))
 QN(val::Int,modulus::Int=1) = QN(("",val,modulus))
 
-NDTensors.store(qn::QN) = qn.store
+data(qn::QN) = qn.data
 
-Base.getindex(q::QN,n::Int) = getindex(store(q),n)
+Base.getindex(q::QN,n::Int) = getindex(data(q),n)
 
-Base.length(qn::QN) = length(store(qn))
+Base.length(qn::QN) = length(data(qn))
 
 Base.lastindex(qn::QN) = length(qn)
 
@@ -174,7 +167,7 @@ end
 function Base.:+(a::QN,b::QN)
   !isactive(b[1]) && return a
 
-  ma = MQNStorage(store(a))
+  ma = MQNStorage(data(a))
   for nb=1:maxQNs
     !isactive(b[nb]) && break
     bname = name(b[nb])
@@ -314,4 +307,6 @@ function Base.show(io::IO,q::QN)
   end
   print(io,")")
 end
+
+@deprecate store(qn::QN) data(qn)
 

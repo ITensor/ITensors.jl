@@ -108,36 +108,38 @@ end
 ############################
 
 struct AutoMPO
-  terms::Vector{MPOTerm}
+  data::Vector{MPOTerm}
   AutoMPO(terms::Vector{MPOTerm}) = new(terms)
 end
+
 AutoMPO() = AutoMPO(Vector{MPOTerm}())
-terms(ampo::AutoMPO) = ampo.terms
+
+data(ampo::AutoMPO) = ampo.data
 
 Base.:(==)(ampo1::AutoMPO,
-           ampo2::AutoMPO) = terms(ampo1) == terms(ampo2)
+           ampo2::AutoMPO) = data(ampo1) == data(ampo2)
 
-Base.copy(ampo::AutoMPO) = AutoMPO(copy(terms(ampo)))
+Base.copy(ampo::AutoMPO) = AutoMPO(copy(data(ampo)))
 
-Base.size(ampo::AutoMPO) = size(terms(ampo))
+Base.size(ampo::AutoMPO) = size(data(ampo))
 
 function add!(ampo::AutoMPO,
               op::String, i::Int)
-  push!(terms(ampo),MPOTerm(1.0,op,i))
+  push!(data(ampo),MPOTerm(1.0,op,i))
   return
 end
 
 function add!(ampo::AutoMPO,
               coef::Number,
               op::String, i::Int)
-  push!(terms(ampo),MPOTerm(coef,op,i))
+  push!(data(ampo),MPOTerm(coef,op,i))
   return
 end
 
 function add!(ampo::AutoMPO,
               op1::String, i1::Int,
               op2::String, i2::Int)
-  push!(terms(ampo),MPOTerm(1.0,op1,i1,op2,i2))
+  push!(data(ampo),MPOTerm(1.0,op1,i1,op2,i2))
   return
 end
 
@@ -145,7 +147,7 @@ function add!(ampo::AutoMPO,
               coef::Number,
               op1::String, i1::Int,
               op2::String, i2::Int)
-  push!(terms(ampo),MPOTerm(coef,op1,i1,op2,i2))
+  push!(data(ampo),MPOTerm(coef,op1,i1,op2,i2))
   return
 end
 
@@ -154,7 +156,7 @@ function add!(ampo::AutoMPO,
               op1::String, i1::Int,
               op2::String, i2::Int,
               ops...)
-  push!(terms(ampo), MPOTerm(coef, op1, i1, op2, i2, ops...))
+  push!(data(ampo), MPOTerm(coef, op1, i1, op2, i2, ops...))
   return ampo
 end
 
@@ -173,7 +175,7 @@ function subtract!(ampo::AutoMPO,
                    op1::String, i1::Int,
                    op2::String, i2::Int,
                    ops...)
-  push!(terms(ampo), -MPOTerm(coef, op1, i1, op2, i2, ops...))
+  push!(data(ampo), -MPOTerm(coef, op1, i1, op2, i2, ops...))
   return ampo
 end
 
@@ -232,7 +234,7 @@ end
 function Base.show(io::IO,
                    ampo::AutoMPO) 
   println(io,"AutoMPO:")
-  for term in terms(ampo)
+  for term in data(ampo)
     println(io,"  $term")
   end
 end
@@ -354,8 +356,8 @@ function remove_dups!(v::Vector{T}) where {T}
 end
 
 function qn_svdMPO(ampo::AutoMPO,
-                sites; 
-                kwargs...)::MPO
+                   sites; 
+                   kwargs...)::MPO
 
   mindim::Int = get(kwargs,:mindim,1)
   maxdim::Int = get(kwargs,:maxdim,10000)
@@ -363,7 +365,7 @@ function qn_svdMPO(ampo::AutoMPO,
 
   N = length(sites)
 
-  ValType = determineValType(terms(ampo))
+  ValType = determineValType(data(ampo))
 
   Vs = [Dict{QN,Matrix{ValType}}() for n=1:N+1]
   tempMPO = [QNMatElem{MPOTerm}[] for n=1:N]
@@ -378,7 +380,7 @@ function qn_svdMPO(ampo::AutoMPO,
     leftbond_coefs = Dict{QN,Vector{MatElem{ValType}}}()
 
     leftmap = Dict{QN,Vector{OpTerm}}()
-    for term in terms(ampo)
+    for term in data(ampo)
       crosses_bond(term,n) || continue
 
       left::OpTerm   = filter(t->(t.site < n),ops(term))
@@ -572,7 +574,7 @@ function svdMPO(ampo::AutoMPO,
 
   N = length(sites)
 
-  ValType = determineValType(terms(ampo))
+  ValType = determineValType(data(ampo))
 
   Vs = [Matrix{ValType}(undef,1,1) for n=1:N]
   tempMPO = [MatElem{MPOTerm}[] for n=1:N]
@@ -587,7 +589,7 @@ function svdMPO(ampo::AutoMPO,
     leftbond_coefs = MatElem{ValType}[]
 
     leftmap = OpTerm[]
-    for term in terms(ampo)
+    for term in data(ampo)
       crosses_bond(term,n) || continue
 
       left::OpTerm   = filter(t->(t.site < n),ops(term))
@@ -714,21 +716,25 @@ function svdMPO(ampo::AutoMPO,
   return H
 end
 
-function sortEachTerm!(ampo::AutoMPO)
-  isless_site(o1::SiteOp,o2::SiteOp) = (site(o1)<site(o2))
-  for t in terms(ampo)
-    sort!(ops(t),alg=InsertionSort,lt=isless_site)
+function sorteachterm!(ampo::AutoMPO)
+  isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
+  for t in data(ampo)
+    sort!(ops(t), alg=InsertionSort, lt=isless_site)
   end
+  return ampo
 end
 
-function toMPO(ampo::AutoMPO,
-               sites::Vector{<:Index};
-               kwargs...)::MPO
-  sortEachTerm!(ampo)
+sorteachterm(ampo::AutoMPO) = sorteachterm!(copy(ampo))
+
+function MPO(ampo::AutoMPO,
+             sites::Vector{<:Index};
+             kwargs...)::MPO
+  ampo = sorteachterm(ampo)
   if hasqns(sites[1])
     return qn_svdMPO(ampo,sites;kwargs...)
   end
   return svdMPO(ampo,sites;kwargs...)
 end
 
-MPO(ampo::AutoMPO,sites::Vector{<:Index};kwargs...) = toMPO(ampo,sites;kwargs...)
+@deprecate toMPO(args...; kwargs...) MPO(args...; kwargs...)
+

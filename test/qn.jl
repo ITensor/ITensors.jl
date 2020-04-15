@@ -1,26 +1,27 @@
 using ITensors,
       Test
-import ITensors.SmallString
+
+import ITensors: SmallString
 
 @testset "QN" begin
 
   @testset "QNVal Basics" begin
-    qv = QNVal()
+    qv = ITensors.QNVal()
     @test !isactive(qv)
 
-    qv = QNVal("Sz",0)
+    qv = ITensors.QNVal("Sz",0)
     @test name(qv) == SmallString("Sz")
     @test val(qv) == 0
     @test modulus(qv) == 1
     @test isactive(qv)
 
-    qv = QNVal("A",1,2)
+    qv = ITensors.QNVal("A",1,2)
     @test name(qv) == SmallString("A")
     @test val(qv) == 1
     @test modulus(qv) == 2
     @test !isfermionic(qv)
 
-    qv = QNVal("Nf",1,-1)
+    qv = ITensors.QNVal("Nf",1,-1)
     @test name(qv) == SmallString("Nf")
     @test val(qv) == 1
     @test modulus(qv) == -1
