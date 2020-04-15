@@ -15,6 +15,16 @@ function dmrg(Hs::Vector{MPO},
   return dmrg(PHS,psi0,sweeps;kwargs...)
 end
 
+function dmrg(H::MPO,
+              Ms::Vector{MPS},
+              psi0::MPS,
+              sweeps::Sweeps;
+              kwargs...)
+  weight = get(kwargs,:weight,1.0)
+  PMM = ProjMPO_MPS(H,Ms;weight=weight)
+  return dmrg(PMM,psi0,sweeps;kwargs...)
+end
+
 function dmrg(PH,
               psi0::MPS,
               sweeps::Sweeps;

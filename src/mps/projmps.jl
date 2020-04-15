@@ -32,7 +32,7 @@ function product(P::ProjMPS,
   !isnull(lproj(P)) && (Lpm *= lproj(P))
 
   Rpm = dag(prime(P.M[P.rpos-1],"Link"))
-  !isnull(lproj(R)) && (Rpm *= rproj(P))
+  !isnull(rproj(P)) && (Rpm *= rproj(P))
 
   pm = Lpm*Rpm
 
@@ -43,35 +43,35 @@ function product(P::ProjMPS,
   return noprime(Mv)
 end
 
-function Base.eltype(P::ProjMPS)
-  elT = eltype(P.M[P.lpos+1])
-  for j = P.lpos+2:P.rpos-1
-    elT = promote_type(elT,eltype(P.M[j]))
-  end
-  if !isnull(lproj(P))
-    elT = promote_type(elT,eltype(lproj(P)))
-  end
-  if !isnull(rproj(P))
-    elT = promote_type(elT,eltype(rproj(P)))
-  end
-  return elT
-end
+#function Base.eltype(P::ProjMPS)
+#  elT = eltype(P.M[P.lpos+1])
+#  for j = P.lpos+2:P.rpos-1
+#    elT = promote_type(elT,eltype(P.M[j]))
+#  end
+#  if !isnull(lproj(P))
+#    elT = promote_type(elT,eltype(lproj(P)))
+#  end
+#  if !isnull(rproj(P))
+#    elT = promote_type(elT,eltype(rproj(P)))
+#  end
+#  return elT
+#end
 
 (P::ProjMPS)(v::ITensor) = product(P,v)
 
-function Base.size(P::ProjMPS)::Tuple{Int,Int}
-  d = 1
-  if P.lpos > 0
-    d *= dim(linkind(M,P.lpos))
-  end
-  for j=P.lpos+1:P.rpos-1
-    d *= dim(siteind(P.M,j))
-  end
-  if P.rpos-1 < N
-    d *= dim(linkind(M,P.rpos-1))
-  end
-  return (d,d)
-end
+#function Base.size(P::ProjMPS)::Tuple{Int,Int}
+#  d = 1
+#  if P.lpos > 0
+#    d *= dim(linkind(M,P.lpos))
+#  end
+#  for j=P.lpos+1:P.rpos-1
+#    d *= dim(siteind(P.M,j))
+#  end
+#  if P.rpos-1 < N
+#    d *= dim(linkind(M,P.rpos-1))
+#  end
+#  return (d,d)
+#end
 
 function makeL!(P::ProjMPS,
                 psi::MPS,
@@ -79,10 +79,10 @@ function makeL!(P::ProjMPS,
   while P.lpos < k
     ll = P.lpos
     if ll <= 0
-      P.LR[1] = psi[1]*dag(prime(psi[1],"Link"))
+      P.LR[1] = psi[1]*dag(prime(P.M[1],"Link"))
       P.lpos = 1
     else
-      P.LR[ll+1] = P.LR[ll]*psi[ll+1]*dag(prime(psi[ll+1],"Link"))
+      P.LR[ll+1] = P.LR[ll]*psi[ll+1]*dag(prime(P.M[ll+1],"Link"))
       P.lpos += 1
     end
   end
@@ -91,14 +91,14 @@ end
 function makeR!(P::ProjMPS,
                 psi::MPS,
                 k::Int)
-  N = length(P.H)
+  N = length(P.M)
   while P.rpos > k
     rl = P.rpos
     if rl >= N+1
-      P.LR[N] = psi[N]*dag(prime(psi[N],"Link"))
+      P.LR[N] = psi[N]*dag(prime(P.M[N],"Link"))
       P.rpos = N
     else
-      P.LR[rl-1] = P.LR[rl]*psi[rl-1]*dag(prime(psi[rl-1],"Link"))
+      P.LR[rl-1] = P.LR[rl]*psi[rl-1]*dag(prime(P.M[rl-1],"Link"))
       P.rpos -= 1
     end
   end
