@@ -89,7 +89,7 @@ include("util.jl")
   @testset "inner same MPS" begin
     psi = randomMPS(sites)
     psidag = dag(psi)
-    primelinks!(psidag)
+    ITensors.primelinkinds!(psidag)
     psipsi = psidag[1]*psi[1]
     for j = 2:N
       psipsi *= psidag[j]*psi[j]
@@ -100,14 +100,14 @@ include("util.jl")
   @testset "scaling MPS" begin
     psi = randomMPS(sites)
     twopsidag = 2.0*dag(psi)
-    primelinks!(twopsidag)
+    ITensors.primelinkinds!(twopsidag)
     @test inner(twopsidag, psi) ≈ 2.0*inner(psi,psi)
   end
   
   @testset "flip sign of MPS" begin
     psi = randomMPS(sites)
     minuspsidag = -dag(psi)
-    primelinks!(minuspsidag)
+    ITensors.primelinkinds!(minuspsidag)
     @test inner(minuspsidag, psi) ≈ -inner(psi,psi)
   end
 

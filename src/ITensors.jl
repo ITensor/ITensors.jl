@@ -58,6 +58,7 @@ include("qn/qnitensor.jl")
 #####################################
 # MPS/MPO
 #
+include("mps/abstractmps.jl")
 include("mps/mps.jl")
 include("mps/mpo.jl")
 include("mps/sweeps.jl")

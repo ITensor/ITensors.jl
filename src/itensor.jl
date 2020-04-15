@@ -480,6 +480,14 @@ function Base.setindex!(T::ITensor,x::Number,ivs...)
   return T
 end
 
+function Base.iterate(::ITensor, args...)
+  error("""Iterating ITensors is currently not supported (it will be supported in the future).
+
+        You may be attempting to use the deprecated notation `C,c = combiner(i,j)` to grab both the combiner ITensor and combined Index.
+        Note that the `combiner` constructor only outputs the combiner ITensor, you can extract the combined Index with `C = combiner(i,j); c = combinedind(C)`.
+        """)
+end
+
 function Base.fill!(T::ITensor,
                     x::Number)
   # TODO: automatically switch storage type if needed?

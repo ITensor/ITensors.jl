@@ -1,5 +1,5 @@
 
-mutable struct MPO
+mutable struct MPO <: AbstractMPS
   length::Int
   data::Vector{ITensor}
   llim::Int
@@ -85,143 +85,31 @@ function randomMPO(sites, m::Int=1)
   return M
 end
 
-Base.length(m::MPO) = m.length
+"""
+    siteind(A::MPO, x::MPS, j::Int)
 
-data(m::MPO) = m.data
-
-leftlim(m::MPO) = m.llim
-
-rightlim(m::MPO) = m.rlim
-
-function setleftlim!(m::MPO, new_ll::Int)
-  m.llim = new_ll
-end
-
-function setrightlim!(m::MPO, new_rl::Int)
-  m.rlim = new_rl
-end
-
-Base.getindex(m::MPO, n::Integer) = getindex(data(m), n)
-
-function Base.setindex!(M::MPO, T::ITensor, n::Integer)
-  (n <= leftlim(M)) && setleftlim!(M, n-1)
-  (n >= rightlim(M)) && setrightlim!(M, n+1)
-  setindex!(data(M), T, n)
-end
-
-Base.copy(m::MPO) = MPO(length(m),
-                        copy(data(m)),
-                        leftlim(m),
-                        rightlim(m))
-
-Base.similar(m::MPO) = MPO(length(m),
-                           similar(data(m)),
-                           0,
-                           length(m))
-
-Base.deepcopy(m::MPO) = MPO(length(m),
-                            deepcopy(data(m)),
-                            leftlim(m),
-                            rightlim(m))
-
-const MPSorMPO = Union{MPS,MPO}
-
-Base.eachindex(m::MPSorMPO) = 1:length(m)
-Base.iterate(M::MPSorMPO) = iterate(data(M))
-Base.iterate(M::MPSorMPO, state) = iterate(data(M), state)
-
-# TODO: optimize finding the index a little bit
-# First do: scom = commonind(A[j],x[j])
-# Then do: uniqueind(A[j],A[j-1],A[j+1],(scom,))
-function siteindex(A::MPO,x::MPS,j::Integer)
+Get the site index of MPO `A` that is unique to
+`A` (not shared with MPS `x`).
+"""
+function siteind(A::MPO, x::MPS, j::Int)
   N = length(A)
   if j == 1
-    si = uniqueind(A[j],A[j+1],x[j])
+    si = uniqueind(A[j], A[j+1], x[j])
   elseif j == N
-    si = uniqueind(A[j],A[j-1],x[j])
+    si = uniqueind(A[j], A[j-1], x[j])
   else
-    si = uniqueind(A[j],A[j-1],A[j+1],x[j])
+    si = uniqueind(A[j], A[j-1], A[j+1], x[j])
   end
   return si
 end
 
-siteinds(A::MPO,x::MPS) = [siteindex(A,x,j) for j ∈ 1:length(A)]
-
 """
-    dag(m::MPS)
-    dag(m::MPO)
+    siteinds(A::MPO, x::MPS)
 
-Hermitian conjugation of a matrix product state or operator `m`.
+Get the site indices of MPO `A` that are unique to
+`A` (not shared with MPS `x`), as a `Vector{<:Index}`.
 """
-function dag(m::T) where {T <: Union{MPS, MPO}}
-  N = length(m)
-  mdag = T(N)
-  for i ∈ eachindex(m)
-    mdag[i] = dag(m[i])
-  end
-  return mdag
-end
-
-function prime!(M::Union{MPS,MPO},vargs...)
-  for i ∈ eachindex(M)
-    prime!(M[i],vargs...)
-  end
-end
-
-function primelinks!(M::Union{MPS,MPO}, plinc::Integer = 1)
-  for i ∈ eachindex(M)[1:end-1]
-    l = linkind(M,i)
-    prime!(M[i],plinc,l)
-    prime!(M[i+1],plinc,l)
-  end
-end
-
-function simlinks!(M::Union{MPS,MPO})
-  for i ∈ eachindex(M)[1:end-1]
-    isnothing(commonind(M[i],M[i+1])) && continue
-    l = linkind(M,i)
-    l̃ = sim(l)
-    replaceind!(M[i],l,l̃)
-    replaceind!(M[i+1],l,dag(l̃))
-  end
-end
-
-"""
-maxlinkdim(M::MPS)
-maxlinkdim(M::MPO)
-
-Get the maximum link dimension of the MPS or MPO.
-"""
-function maxlinkdim(M::Union{MPS,MPO})
-  md = 0
-  for b ∈ eachindex(M)[1:end-1]
-    md = max(md,dim(linkind(M,b)))
-  end
-  md
-end
-
-function Base.show(io::IO, W::MPO)
-  print(io,"MPO")
-  (length(W) > 0) && print(io,"\n")
-  for (i, A) ∈ enumerate(data(W))
-    if order(A) != 0
-      println(io,"[$i] $(inds(A))")
-    else
-      println(io,"[$i] ITensor()")
-    end
-  end
-end
-
-function linkind(M::MPO,j::Integer)
-  N = length(M)
-  j ≥ length(M) && error("No link index to the right of site $j (length of MPO is $N)")
-  li = commonind(M[j],M[j+1])
-  if isnothing(li)
-    error("linkind: no MPO link index at link $j")
-  end
-  return li
-end
-
+siteinds(A::MPO, x::MPS) = [siteind(A, x, j) for j in eachindex(A)]
 
 """
 dot(y::MPS, A::MPO, x::MPS)
@@ -237,11 +125,11 @@ function LinearAlgebra.dot(y::MPS,
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
   end
   ydag = dag(y)
-  simlinks!(ydag)
-  sAx = siteinds(A,x)
-  replacesites!(ydag,sAx)
+  simlinkinds!(ydag)
+  sAx = siteinds(A, x)
+  replacesiteinds!(ydag, sAx)
   O = ydag[1]*A[1]*x[1]
-  @inbounds for j ∈ eachindex(y)[2:end]
+  for j in 2:N
     O = O*ydag[j]*A[j]*x[j]
   end
   return O[]
@@ -266,7 +154,7 @@ function LinearAlgebra.dot(B::MPO,
   Bdag = dag(B)
   prime!(Bdag)
   # Swap prime levels 1 -> 2 and 2 -> 1.
-  for j ∈ eachindex(Bdag)
+  for j in eachindex(Bdag)
     Axcommon = commonind(A[j], x[j])
     ABcommon = uniqueind(inds(A[j], "Site"), IndexSet(Axcommon))
     swapprime!(Bdag[j],2,3)
@@ -277,7 +165,7 @@ function LinearAlgebra.dot(B::MPO,
   yB = ydag[1] * Bdag[1]
   Ax = A[1] * x[1]
   O = yB*Ax
-  for j ∈ eachindex(y)[2:end]
+  for j in 2:N
     yB = ydag[j] * Bdag[j]
     Ax = A[j] * x[j]
     yB *= O
@@ -285,7 +173,6 @@ function LinearAlgebra.dot(B::MPO,
   end
   return O[]
 end
-
 
 """
 error_mpoprod(y::MPS, A::MPO, x::MPS)
@@ -296,78 +183,12 @@ Compute the distance between A|x> and an approximation MPS y:
 function error_mpoprod(y::MPS, A::MPO, x::MPS)
   N = length(A)
   if length(y) != N || length(x) != N
-      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
+    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
   end
-  iyy = inner(y,y)
-  iyax = inner(y,A,x)
+  iyy = inner(y, y)
+  iyax = inner(y, A, x)
   iaxax = inner(A, x, A, x) 
   return sqrt(abs(1. + (iyy - 2*real(iyax))/iaxax))
-end
-
-function plussers(::Type{T}, left_ind::Index, right_ind::Index, sum_ind::Index) where {T<:Array}
-    #if dir(left_ind) == dir(right_ind) == Neither
-        total_dim    = dim(left_ind) + dim(right_ind)
-        total_dim    = max(total_dim, 1)
-        # TODO: I am not sure if we should be using delta
-        # tensors for this purpose? I think we should consider
-        # not allowing them to be made with different index sizes
-        #left_tensor  = δ(left_ind, sum_ind)
-        left_tensor  = diagITensor(1.0,left_ind, sum_ind)
-        right_tensor = ITensor(right_ind, sum_ind)
-        for i in 1:dim(right_ind)
-            right_tensor[right_ind(i), sum_ind(dim(left_ind) + i)] = 1
-        end
-        return left_tensor, right_tensor
-    #else # tensors have QNs
-    #    throw(ArgumentError("support for adding MPOs with defined quantum numbers not implemented yet."))
-    #end
-end
-
-function Base.sum(A::T, B::T; kwargs...) where {T <: Union{MPS, MPO}}
-    N = length(A)
-    length(B) != N && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
-    orthogonalize!(A, 1; kwargs...)
-    orthogonalize!(B, 1; kwargs...)
-    C = similar(A)
-    rand_plev = 13124
-    lAs = [linkind(A, i) for i in 1:N-1]
-    prime!(A, rand_plev, "Link")
-
-    first  = Vector{ITensor{2}}(undef,N-1)
-    second = Vector{ITensor{2}}(undef,N-1)
-    for i in 1:N-1
-        lA = linkind(A, i)
-        lB = linkind(B, i)
-        r  = Index(dim(lA) + dim(lB), tags(lA))
-        f, s = plussers(typeof(data(A[1])), lA, lB, r)
-        first[i]  = f
-        second[i] = s
-    end
-    C[1] = A[1] * first[1] + B[1] * second[1]
-    for i in 2:N-1
-        C[i] = dag(first[i-1]) * A[i] * first[i] + dag(second[i-1]) * B[i] * second[i]
-    end
-    C[N] = dag(first[N-1]) * A[N] + dag(second[N-1]) * B[N]
-    prime!(C, -rand_plev, "Link")
-    truncate!(C; kwargs...)
-    return C
-end
-
-function Base.sum(A::Vector{T}; kwargs...) where {T <: Union{MPS, MPO}}
-    length(A) == 0 && return T()
-    length(A) == 1 && return A[1]
-    length(A) == 2 && return sum(A[1], A[2]; kwargs...)
-    nsize = isodd(length(A)) ? (div(length(A) - 1, 2) + 1) : div(length(A), 2)
-    newterms = Vector{T}(undef, nsize)
-    np = 1
-    for n in 1:2:length(A) - 1
-      newterms[np] = sum(A[n], A[n+1]; kwargs...)
-      np += 1
-    end
-    if isodd(length(A))
-      newterms[nsize] = A[end]
-    end
-    return sum(newterms; kwargs...)
 end
 
 function applympo(A::MPO, psi::MPS; kwargs...)::MPS
@@ -393,7 +214,9 @@ function applympo_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(psi))
   mindim::Int     = max(get(kwargs,:mindim,1), 1)
   normalize::Bool = get(kwargs, :normalize, false) 
-  all(x -> x != Index(), [siteindex(A, psi, j) for j in 1:n]) || throw(ErrorException("MPS and MPO have different site indices in applympo method 'DensityMatrix'"))
+  all(x -> x != Index(),
+      [siteind(A, psi, j) for j in 1:n]) || 
+  throw(ErrorException("MPS and MPO have different site indices in applympo method 'DensityMatrix'"))
 
   rand_plev = 14741
   psi_c     = dag(copy(psi))
@@ -401,9 +224,9 @@ function applympo_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   prime!(psi_c, rand_plev)
   prime!(A_c, rand_plev)
   for j in 1:n
-    s = siteindex(A,psi,j)
-    s_dag = siteindex(A_c,psi_c,j)
-    replaceind!(A_c[j],s_dag,s)
+    s = siteind(A, psi, j)
+    s_dag = siteind(A_c, psi_c, j)
+    replaceind!(A_c[j], s_dag, s)
   end
   E = Vector{ITensor}(undef, n-1)
   E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
@@ -551,116 +374,4 @@ function multmpo(A::MPO, B::MPO; kwargs...)::MPO
     end
     return res
 end
-
-function orthogonalize!(M::Union{MPS,MPO},
-                        j::Int;
-                        kwargs...)
-  while leftlim(M) < (j-1)
-    (leftlim(M) < 0) && setleftlim!(M, 0)
-    b = leftlim(M)+1
-    linds = uniqueinds(M[b],M[b+1])
-    L,R = factorize(M[b], linds)
-    M[b] = L
-    M[b+1] *= R
-
-    setleftlim!(M,b)
-    if rightlim(M) < leftlim(M)+2
-      setrightlim!(M, leftlim(M)+2)
-    end
-  end
-
-  N = length(M)
-
-  while rightlim(M) > (j+1)
-    (rightlim(M) > (N+1)) && setrightlim!(M,N+1)
-    b = rightlim(M)-2
-    rinds = uniqueinds(M[b+1],M[b])
-    L,R = factorize(M[b+1], rinds)
-    M[b+1] = L
-    M[b] *= R
-
-    setrightlim!(M,b+1)
-    if leftlim(M) > rightlim(M)-2
-      setleftlim!(M, rightlim(M)-2)
-    end
-  end
-end
-
-function NDTensors.truncate!(M::Union{MPS,MPO}; kwargs...)
-  N = length(M)
-
-  # Left-orthogonalize all tensors to make
-  # truncations controlled
-  orthogonalize!(M,N)
-
-  # Perform truncations in a right-to-left sweep
-  for j in reverse(2:N)
-    rinds = uniqueinds(M[j],M[j-1])
-    U,S,V = svd(M[j],rinds;kwargs...)
-    M[j] = U
-    M[j-1] *= (S*V)
-    setrightlim!(M,j)
-  end
-
-end
-
-# TODO: scale the tensors between the left limit
-# and right limit by x^(1/N)
-# where N is the distance between the left limit
-# and right limit
-function Base.:*(x::Number,M::Union{MPS,MPO})
-  N = deepcopy(M)
-  c = div(length(N), 2)
-  N[c] .*= x
-  return N
-end
-
-Base.:-(M::Union{MPS,MPO}) = Base.:*(-1,M)
-
-@doc """
-orthogonalize!(M::MPS, j::Int; kwargs...)
-
-Move the orthogonality center of the MPS
-to site j. No observable property of the
-MPS will be changed, and no truncation of the
-bond indices is performed. Afterward, tensors
-1,2,...,j-1 will be left-orthogonal and tensors
-j+1,j+2,...,N will be right-orthogonal.
-
-orthogonalize!(W::MPO, j::Int; kwargs...)
-
-Move the orthogonality center of an MPO to site j.
-""" orthogonalize!
-
-@doc """
-truncate!(M::MPS; kwargs...)
-
-Perform a truncation of all bonds of an MPS,
-using the truncation parameters (cutoff,maxdim, etc.)
-provided as keyword arguments.
-
-truncate!(M::MPO; kwargs...)
-
-Perform a truncation of all bonds of an MPO,
-using the truncation parameters (cutoff,maxdim, etc.)
-provided as keyword arguments.
-""" truncate!
-
-@deprecate applyMPO(args...; kwargs...) applympo(args...; kwargs...)
-
-@deprecate errorMPOprod(args...; kwargs...) error_mpoprod(args...; kwargs...)
-
-@deprecate densityMatrixApplyMPO(args...; kwargs...) applympo_densitymatrix(args...; kwargs...)
-
-@deprecate naiveApplyMPO(args...; kwargs...) applympo_naive(args...; kwargs...)
-
-@deprecate multMPO(args...; kwargs...) multmpo(args...; kwargs...)
-
-@deprecate set_leftlim!(args...; kwargs...) setleftlim!(args...; kwargs...)
-
-@deprecate set_rightlim!(args...; kwargs...) setrightlim!(args...; kwargs...)
-
-@deprecate tensors(args...; kwargs...) data(args...; kwargs...)
-
-@deprecate store(m::MPO) data(m)
 
