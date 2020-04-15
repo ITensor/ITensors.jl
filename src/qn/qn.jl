@@ -1,6 +1,4 @@
 
-import .NDTensors: store
-
 struct QNVal 
   name::SmallString
   val::Int
@@ -22,8 +20,8 @@ QNVal() = QNVal("",0,0)
 name(qv::QNVal) = qv.name
 val(qv::QNVal) = qv.val
 modulus(qv::QNVal) = qv.modulus
-isactive(qv::QNVal) = (modulus(qv) != 0)
-isfermionic(qv::QNVal) = (modulus(qv) < 0)
+isactive(qv::QNVal) = modulus(qv) != 0
+isfermionic(qv::QNVal) = modulus(qv) < 0
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 
 function qn_mod(val::Int,modulus::Int)
@@ -111,7 +109,7 @@ end
 QN(name,val::Int,modulus::Int=1) = QN((name,val,modulus))
 QN(val::Int,modulus::Int=1) = QN(("",val,modulus))
 
-NDTensors.data(qn::QN) = qn.data
+data(qn::QN) = qn.data
 
 Base.getindex(q::QN,n::Int) = getindex(data(q),n)
 

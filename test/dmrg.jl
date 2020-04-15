@@ -11,7 +11,7 @@ using ITensors, Test, Random
       add!(ampo,0.5,"S+",j,"S-",j+1)
       add!(ampo,0.5,"S-",j,"S+",j+1)
     end
-    H = toMPO(ampo,sites)
+    H = MPO(ampo,sites)
 
     psi = randomMPS(sites)
 
@@ -42,7 +42,7 @@ using ITensors, Test, Random
       j < N && add!(ampo,-1.0,"Sz",j,"Sz",j+1)
       add!(ampo,-0.5,"Sx",j)
     end
-    H = toMPO(ampo,sites)
+    H = MPO(ampo,sites)
 
     sweeps = Sweeps(5)
     maxdim!(sweeps,10,20)
@@ -66,7 +66,7 @@ using ITensors, Test, Random
       j < N && add!(ampo,-1.0,"Sz",j,"Sz",j+1)
       add!(ampo,-0.2,"Sx",j)
     end
-    H = toMPO(ampo,sites)
+    H = MPO(ampo,sites)
 
     sweeps = Sweeps(3)
     maxdim!(sweeps,10)

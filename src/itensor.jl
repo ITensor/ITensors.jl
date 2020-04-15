@@ -73,8 +73,13 @@ NDTensors.store(T::ITensor) = T.store
 data(T::ITensor)
 
 Return a view of the raw data of the ITensor.
+
+This is mostly an internal ITensor function, please
+let the developers of ITensors.jl know if there is
+functionality for ITensors that you would like
+that is not currently available.
 """
-NDTensors.data(T::ITensor) = data(store(T))
+data(T::ITensor) = NDTensors.data(store(T))
 
 Base.similar(T::ITensor) = itensor(similar(tensor(T)))
 
@@ -350,7 +355,8 @@ end
 """
 dense(T::ITensor)
 
-Make a copy of the ITensor where the storage is the dense version.
+Make a new ITensor where the storage is the dense version,
+avoiding allocating new data if possible.
 For example, an ITensor with Diag storage will become Dense storage.
 """
 NDTensors.dense(T::ITensor) = itensor(dense(tensor(T)))

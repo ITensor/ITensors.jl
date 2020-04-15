@@ -34,7 +34,7 @@ end
   @test hasind(P[1],prime(sites[1]))
   # test constructor from Vector{ITensor}
   K = randomMPO(sites)
-  @test ITensors.store(MPO(copy(ITensors.store(K)))) == ITensors.store(K)
+  @test ITensors.data(MPO(copy(ITensors.data(K)))) == ITensors.data(K)
 
   @testset "orthogonalize" begin
     phi = randomMPS(sites)

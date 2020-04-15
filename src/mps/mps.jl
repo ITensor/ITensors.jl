@@ -1,6 +1,4 @@
 
-import .NDTensors: store
-
 mutable struct MPS
   length::Int
   data::Vector{ITensor}
@@ -13,13 +11,13 @@ mutable struct MPS
 
   function MPS(N::Int,
                A::Vector{<:ITensor},
-               llim::Int=0,
-               rlim::Int=N+1)
-    new(N,A,llim,rlim)
+               llim::Int = 0,
+               rlim::Int = N+1)
+    new(N, A, llim, rlim)
   end
 end
 
-function MPS(::Type{T},sites) where {T<:Number}
+function MPS(::Type{T}, sites) where {T<:Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
@@ -38,19 +36,19 @@ end
 
 MPS(sites) = MPS(Float64,sites)
 
-Base.length(m::MPS) = m.N
+Base.length(m::MPS) = m.length
 
-NDTensors.data(m::MPS) = m.data
+data(m::MPS) = m.data
 
 leftlim(m::MPS) = m.llim
 
 rightlim(m::MPS) = m.rlim
 
-function setleftlim!(m::MPS,new_ll::Int)
+function setleftlim!(m::MPS, new_ll::Int)
   m.llim = new_ll
 end
 
-function setrightlim!(m::MPS,new_rl::Int)
+function setrightlim!(m::MPS, new_rl::Int)
   m.rlim = new_rl
 end
 
@@ -63,7 +61,7 @@ end
 
 Base.getindex(M::MPS, n::Integer) = getindex(data(M),n)
 
-function Base.setindex!(M::MPS,T::ITensor,n::Integer)
+function Base.setindex!(M::MPS, T::ITensor, n::Integer)
   (n <= leftlim(M)) && setleftlim!(M,n-1)
   (n >= rightlim(M)) && setrightlim!(M,n+1)
   setindex!(data(M),T,n)
@@ -78,6 +76,11 @@ Base.similar(m::MPS) = MPS(length(m),
                            similar(data(m)),
                            0,
                            length(m))
+
+Base.deepcopy(m::MPS) = MPS(length(m),
+                            deepcopy(data(m)),
+                            leftlim(m),
+                            rightlim(m))
 
 function Base.show(io::IO, M::MPS)
   print(io,"MPS")
@@ -133,7 +136,7 @@ function randomMPS(::Type{T}, sites, bond_dim=1) where {T<:Number}
     normalize!(M[i])
   end
   setleftlim!(M, 0)
-  setrightlim!(rightlim(M), 2)
+  setrightlim!(M, 2)
 
   if bond_dim > 1
     randomizeMPS!(M, sites, bond_dim)

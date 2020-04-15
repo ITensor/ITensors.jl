@@ -106,7 +106,7 @@ This is mostly for internal usage, please
 contact us if there is functionality you want
 availabe for IndexSet.
 """
-NDTensors.data(is::IndexSet) = is.data
+data(is::IndexSet) = is.data
 
 # This is used in type promotion in the Tensor contraction code
 Base.promote_rule(::Type{<:IndexSet},

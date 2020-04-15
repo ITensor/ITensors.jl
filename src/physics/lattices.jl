@@ -24,8 +24,8 @@ end
 const Lattice = Vector{LatticeBond}
 
 function square_lattice(Nx::Int,
-                       Ny::Int;
-                       kwargs...)::Lattice
+                        Ny::Int;
+                        kwargs...)::Lattice
   yperiodic = get(kwargs,:yperiodic,false)
   yperiodic = yperiodic && (Ny > 2)
   N = Nx*Ny
@@ -51,8 +51,8 @@ function square_lattice(Nx::Int,
 end
 
 function triangular_lattice(Nx::Int,
-                           Ny::Int;
-                           kwargs...)::Lattice
+                            Ny::Int;
+                            kwargs...)::Lattice
   yperiodic = get(kwargs,:yperiodic,false)
   yperiodic = yperiodic && (Ny > 2)
   N = Nx*Ny
@@ -86,3 +86,4 @@ function triangular_lattice(Nx::Int,
   end
   return latt
 end
+

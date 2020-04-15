@@ -1,6 +1,4 @@
 
-import .NDTensors: store
-
 const Tag = SmallString
 const maxTagLength = smallLength
 const MTagStorage = MSmallStringStorage # A mutable tag storage
@@ -96,13 +94,16 @@ end
 Base.convert(::Type{TagSet}, str::String) = TagSet(str)
 
 """
-data(T::TagSet)
+ITensors.data(T::TagSet)
 
 Get the raw storage of the TagSet.
 
-This is an insternal function.
+This is an internal function, please inform the
+developers of ITensors.jl if there is functionality
+you would like for TagSet that is not currently
+available.
 """
-NDTensors.data(T::TagSet) = T.data
+data(T::TagSet) = T.data
 
 Base.length(T::TagSet) = T.length
 Base.getindex(T::TagSet,n::Int) = Tag(getindex(data(T),n))
@@ -253,8 +254,4 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   tstring = read(g,"tags")
   return TagSet(tstring)
 end
-
-@deprecate tags(t::TagSet) data(t)
-
-@deprecate store(t::TagSet) data(t)
 

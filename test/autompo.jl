@@ -152,7 +152,8 @@ end
   @testset "Show MPOTerm" begin
     ampo = AutoMPO()
     add!(ampo,"Sz",1,"Sz",2)
-    @test sprint(show,terms(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
+    @test sprint(show,
+                 ITensors.data(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
   end
 
   @testset "Show AutoMPO" begin
@@ -167,7 +168,7 @@ end
     ampo = AutoMPO()
     add!(ampo,"Cdagup",3)
     sites = siteinds("Electron",N)
-    W = toMPO(ampo,sites)
+    W = MPO(ampo,sites)
     psi = makeRandomMPS(sites)
     cdu_psi = copy(psi)
     cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
@@ -180,7 +181,7 @@ end
       add!(ampo,"Sz",j,"Sz",j+1)
     end
     sites = siteinds("S=1/2",N)
-    Ha = toMPO(ampo,sites)
+    Ha = MPO(ampo,sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -194,7 +195,7 @@ end
       add!(ampo,"Sz",j+1,"Sz",j)
     end
     sites = siteinds("S=1/2",N)
-    Ha = toMPO(ampo,sites)
+    Ha = MPO(ampo,sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -215,7 +216,7 @@ end
     end
 
     sites = siteinds("S=1/2",N)
-    Ha = toMPO(ampo,sites)
+    Ha = MPO(ampo,sites)
     He = heisenbergMPO(sites,h)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -235,7 +236,7 @@ end
     for j=1:N
       add!(ampo1,"Sz*Sz",j)
     end
-    Ha1 = toMPO(ampo1,sites)
+    Ha1 = MPO(ampo1,sites)
 
     ampo2 = AutoMPO()
     for j=1:N-1
@@ -246,7 +247,7 @@ end
     for j=1:N
       add!(ampo2,"Sz",j,"Sz",j)
     end
-    Ha2 = toMPO(ampo2,sites)
+    Ha2 = MPO(ampo2,sites)
 
     He = heisenbergMPO(sites,ones(N),"Sz*Sz")
     psi = makeRandomMPS(sites)
@@ -261,7 +262,7 @@ end
     ampo = AutoMPO()
     # To test version of add! taking a coefficient
     add!(ampo,1.0,"Sz",1,"Sz",2,"Sz",3)
-    @test length(terms(ampo)) == 1
+    @test length(ITensors.data(ampo)) == 1
     for j=2:N-2
       add!(ampo,"Sz",j,"Sz",j+1,"Sz",j+2)
     end
@@ -270,7 +271,7 @@ end
       add!(ampo,h[j],"Sx",j)
     end
     sites = siteinds("S=1/2",N)
-    Ha = toMPO(ampo,sites)
+    Ha = MPO(ampo,sites)
     He = threeSiteIsingMPO(sites,h)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -284,7 +285,7 @@ end
       add!(ampo,"Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3)
     end
     sites = siteinds("S=1/2",N)
-    Ha = toMPO(ampo,sites)
+    Ha = MPO(ampo,sites)
     He = fourSiteIsingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi,Ha,psi)
@@ -307,7 +308,7 @@ end
       add!(ampo,J2*0.5,"S-",j,"S+",j+2)
     end
     sites = siteinds("S=1/2",N)
-    Ha = toMPO(ampo,sites)
+    Ha = MPO(ampo,sites)
 
     He = NNheisenbergMPO(sites,J1,J2)
     psi = makeRandomMPS(sites)
@@ -322,7 +323,7 @@ end
     ampo = AutoMPO()
     add!(ampo, 0.5, "Sx",1)
     add!(ampo, 0.5, "Sy",1)
-    H = toMPO(ampo, sites)
+    H = MPO(ampo, sites)
     l = commonind(H[1],H[2])
     T = setelt(l[1])*H[1]
     O = op(sites[1],"Sx")+op(sites[1],"Sy")
@@ -333,7 +334,7 @@ end
     ampo = AutoMPO()
     add!(ampo, 0.5im, "Sx",1)
     add!(ampo, 0.5, "Sy",1)
-    H = toMPO(ampo, sites)
+    H = MPO(ampo, sites)
     T = H[1]*H[2]
     O = im*op(sites[1],"Sx")*op(sites[2],"Id")+op(sites[1],"Sy")*op(sites[2],"Id")
     @test norm(T-0.5*O) < 1E-8
@@ -344,7 +345,8 @@ end
     @testset "Show MPOTerm" begin
       ampo = AutoMPO()
       ampo += ("Sz",1,"Sz",2)
-      @test sprint(show,terms(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
+      @test sprint(show,
+                   ITensors.data(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
     end
 
     @testset "Show AutoMPO" begin
@@ -359,7 +361,7 @@ end
       ampo = AutoMPO()
       ampo += ("Cdagup",3)
       sites = siteinds("Electron",N)
-      W = toMPO(ampo,sites)
+      W = MPO(ampo,sites)
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
       cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
@@ -372,7 +374,7 @@ end
         ampo += ("Sz",j,"Sz",j+1)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -386,7 +388,7 @@ end
         ampo += ("Sz",j+1,"Sz",j)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -407,7 +409,7 @@ end
       end
 
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = heisenbergMPO(sites,h)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -427,7 +429,7 @@ end
       for j=1:N
         ampo1 += ("Sz*Sz",j)
       end
-      Ha1 = toMPO(ampo1,sites)
+      Ha1 = MPO(ampo1,sites)
 
       ampo2 = AutoMPO()
       for j=1:N-1
@@ -438,7 +440,7 @@ end
       for j=1:N
         ampo2 += ("Sz",j,"Sz",j)
       end
-      Ha2 = toMPO(ampo2,sites)
+      Ha2 = MPO(ampo2,sites)
 
       He = heisenbergMPO(sites,ones(N),"Sz*Sz")
       psi = makeRandomMPS(sites)
@@ -453,7 +455,7 @@ end
       ampo = AutoMPO()
       # To test version of add! taking a coefficient
       ampo += (1.0,"Sz",1,"Sz",2,"Sz",3)
-      @test length(terms(ampo)) == 1
+      @test length(ITensors.data(ampo)) == 1
       for j=2:N-2
         ampo += ("Sz",j,"Sz",j+1,"Sz",j+2)
       end
@@ -462,7 +464,7 @@ end
         ampo += (h[j],"Sx",j)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = threeSiteIsingMPO(sites,h)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -476,7 +478,7 @@ end
         ampo += ("Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = fourSiteIsingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -499,7 +501,7 @@ end
         ampo += (J2*0.5,"S-",j,"S+",j+2)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
 
       He = NNheisenbergMPO(sites,J1,J2)
       psi = makeRandomMPS(sites)
@@ -522,7 +524,7 @@ end
       ampo = AutoMPO()
       ampo += (0.5, "Sx",1)
       ampo += (0.5, "Sy",1)
-      H = toMPO(ampo, sites)
+      H = MPO(ampo, sites)
       l = commonind(H[1],H[2])
       T = setelt(l[1])*H[1]
       O = op(sites[1],"Sx")+op(sites[1],"Sy")
@@ -533,7 +535,7 @@ end
       ampo = AutoMPO()
       ampo += (0.5im, "Sx",1)
       ampo += (0.5, "Sy",1)
-      H = toMPO(ampo, sites)
+      H = MPO(ampo, sites)
       T = H[1]*H[2]
       O = im*op(sites[1],"Sx")*op(sites[2],"Id")+op(sites[1],"Sy")*op(sites[2],"Id")
       @test norm(T-0.5*O) < 1E-8
@@ -546,7 +548,8 @@ end
     @testset "Show MPOTerm" begin
       ampo = AutoMPO()
       ampo .+= ("Sz",1,"Sz",2)
-      @test sprint(show,terms(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
+      @test sprint(show,
+                   ITensors.data(ampo)[1]) == "\"Sz\"(1)\"Sz\"(2)"
     end
 
     @testset "Show AutoMPO" begin
@@ -569,7 +572,7 @@ end
       ampo = AutoMPO()
       ampo .+= ("Cdagup",3)
       sites = siteinds("Electron",N)
-      W = toMPO(ampo,sites)
+      W = MPO(ampo,sites)
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
       cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
@@ -582,7 +585,7 @@ end
         ampo .+= ("Sz",j,"Sz",j+1)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -596,7 +599,7 @@ end
         ampo .+= ("Sz",j+1,"Sz",j)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -617,7 +620,7 @@ end
       end
 
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = heisenbergMPO(sites,h)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -637,7 +640,7 @@ end
       for j=1:N
         ampo1 .+= ("Sz*Sz",j)
       end
-      Ha1 = toMPO(ampo1,sites)
+      Ha1 = MPO(ampo1,sites)
 
       ampo2 = AutoMPO()
       for j=1:N-1
@@ -648,7 +651,7 @@ end
       for j=1:N
         ampo2 .+= ("Sz",j,"Sz",j)
       end
-      Ha2 = toMPO(ampo2,sites)
+      Ha2 = MPO(ampo2,sites)
 
       He = heisenbergMPO(sites,ones(N),"Sz*Sz")
       psi = makeRandomMPS(sites)
@@ -663,7 +666,7 @@ end
       ampo = AutoMPO()
       # To test version of add! taking a coefficient
       ampo .+= (1.0,"Sz",1,"Sz",2,"Sz",3)
-      @test length(terms(ampo)) == 1
+      @test length(ITensors.data(ampo)) == 1
       for j=2:N-2
         ampo .+= ("Sz",j,"Sz",j+1,"Sz",j+2)
       end
@@ -672,7 +675,7 @@ end
         ampo .+= (h[j],"Sx",j)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = threeSiteIsingMPO(sites,h)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -686,7 +689,7 @@ end
         ampo .+= ("Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
       He = fourSiteIsingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi,Ha,psi)
@@ -709,7 +712,7 @@ end
         ampo .+= (J2*0.5,"S-",j,"S+",j+2)
       end
       sites = siteinds("S=1/2",N)
-      Ha = toMPO(ampo,sites)
+      Ha = MPO(ampo,sites)
 
       He = NNheisenbergMPO(sites,J1,J2)
       psi = makeRandomMPS(sites)
@@ -724,7 +727,7 @@ end
       ampo = AutoMPO()
       ampo .+= (0.5, "Sx",1)
       ampo .+= (0.5, "Sy",1)
-      H = toMPO(ampo, sites)
+      H = MPO(ampo, sites)
       l = commonind(H[1],H[2])
       T = setelt(l[1])*H[1]
       O = op(sites[1],"Sx")+op(sites[1],"Sy")
@@ -735,7 +738,7 @@ end
       ampo = AutoMPO()
       ampo .+= (0.5im, "Sx",1)
       ampo .+= (0.5, "Sy",1)
-      H = toMPO(ampo, sites)
+      H = MPO(ampo, sites)
       T = H[1]*H[2]
       O = im*op(sites[1],"Sx")*op(sites[2],"Id")+op(sites[1],"Sy")*op(sites[2],"Id")
       @test norm(T-0.5*O) < 1E-8
