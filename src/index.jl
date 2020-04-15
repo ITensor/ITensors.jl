@@ -387,12 +387,13 @@ Prime an Index using the notation `i^3`.
 """
 Base.:^(i::Index, pl::Int) = prime(i, pl)
 
-# Iterating over Index I gives
-# integers from 1...dim(I)
-# TODO: should this iterate through the IndexVals?
+"""
+Iterating over Index `I` gives the IndexVals
+`I(1)` through `I(dim(I))`.
+"""
 function Base.iterate(i::Index, state::Int = 1)
   (state > dim(i)) && return nothing
-  return (state, state+1)
+  return (i(state), state+1)
 end
 
 # This is a trivial definition for use in NDTensors

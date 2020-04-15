@@ -81,12 +81,12 @@ end
 
     M1 = matrix(TM)
     for ni in i, nj in j
-      @test M1[ni,nj] ≈ TM[i(ni),j(nj)]
+      @test M1[val(ni),val(nj)] ≈ TM[ni,nj]
     end
 
     M2 = Matrix(TM,j,i)
     for ni in i, nj in j
-      @test M2[nj,ni] ≈ TM[i(ni),j(nj)]
+      @test M2[val(nj),val(ni)] ≈ TM[ni,nj]
     end
 
     T3 = randomITensor(i,j,k)
@@ -98,19 +98,19 @@ end
 
     V = vector(TV)
     for ni in i
-      @test V[ni] ≈ TV[i(ni)]
+      @test V[val(ni)] ≈ TV[ni]
     end
     V = Vector(TV)
     for ni in i
-      @test V[ni] ≈ TV[i(ni)]
+      @test V[val(ni)] ≈ TV[ni]
     end
     V = Vector(TV, i)
     for ni in i
-      @test V[ni] ≈ TV[i(ni)]
+      @test V[val(ni)] ≈ TV[ni]
     end
     V = Vector{ComplexF64}(TV)
     for ni in i
-      @test V[ni] ≈ complex(TV[i(ni)])
+      @test V[val(ni)] ≈ complex(TV[ni])
     end
 
     T2 = randomITensor(i,j)
