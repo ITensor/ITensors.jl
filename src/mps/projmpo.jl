@@ -9,8 +9,8 @@ mutable struct ProjMPO
 end
 
 nsite(pm::ProjMPO) = pm.nsite
-Base.length(pm::ProjMPO) = length(pm.H)
 
+Base.length(pm::ProjMPO) = length(pm.H)
 
 function lproj(pm::ProjMPO)::ITensor
   (pm.lpos <= 0) && return ITensor()
