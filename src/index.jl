@@ -39,10 +39,9 @@ Create an `Index` with a unique `id`, a TagSet given by `tags`,
 and a prime level `plev`.
 
 # Examples
-```jldoctest
-julia> using ITensors;
-
-julia> i = Index(2; tags="l", plev=1);
+```jldoctest; filter=r"id=[0-9]{1,3}"
+julia> i = Index(2; tags="l", plev=1)
+(dim=2|id=818|"l")'
 
 julia> dim(i)
 2
@@ -51,7 +50,7 @@ julia> plev(i)
 1
 
 julia> tags(i)
-(l)
+"l"
 ```
 """
 function Index(dim::Int; tags="", plev=0)
@@ -64,10 +63,9 @@ end
 Create an `Index` with a unique `id` and a tagset given by `tags`.
 
 # Examples
-```jldoctest
-julia> using ITensors;
-
-julia> i = Index(2, "l,tag");
+```jldoctest; filter=r"id=[0-9]{1,3}"
+julia> i = Index(2, "l,tag")
+(dim=2|id=58|"l,tag")
 
 julia> dim(i)
 2
@@ -76,7 +74,7 @@ julia> plev(i)
 0
 
 julia> tags(i)
-(l,tag)
+"l,tag"
 ```
 """
 Index(dim::Int,
@@ -89,15 +87,14 @@ Create a default Index.
 
 # Examples
 ```jldoctest
-julia> using ITensors;
-
-julia> i = Index();
+julia> i = Index()
+(dim=0|id=0)
 
 julia> isdefault(i)
 true
 ```
 """
-Index() = Index(0, 1, Neither, "", 0)
+Index() = Index(0, 0, Neither, "", 0)
 
 """
     id(i::Index)
@@ -219,10 +216,9 @@ which can be a string of comma-separated tags or
 a TagSet object.
 
 # Examples
-```jldoctest
-julia> using ITensors;
-
-julia> i = Index(2, "Site,SpinHalf,n=3");
+```jldoctest; filter=r"id=[0-9]{1,3}"
+julia> i = Index(2, "SpinHalf,Site,n=3")
+(dim=2|id=861|"Site,SpinHalf,n=3")
 
 julia> hastags(i, "SpinHalf,Site")
 true
@@ -242,10 +238,9 @@ hastags(ts::Union{AbstractString,TagSet}) = x->hastags(x,ts)
 Check if an `Index` `i` has the provided prime level.
 
 # Examples
-```jldoctest
-julia> using ITensors;
-
-julia> i = Index(2; plev=2);
+```jldoctest; filter=r"id=[0-9]{1,3}"
+julia> i = Index(2; plev=2)
+(dim=2|id=543)''
 
 julia> hasplev(i, 2)
 true
@@ -264,15 +259,15 @@ hasplev(pl::Int) = x -> hasplev(x, pl)
 Check if an `Index` `i` has the provided id.
 
 # Examples
-```jldoctest
-julia> using ITensors;
-
-julia> i = Index(2);
+```jldoctest; filter=r"id=[0-9]{1,3}"
+julia> i = Index(2)
+(dim=2|id=321)
 
 julia> hasid(i, id(i))
 true
 
-julia> j = Index(2);
+julia> j = Index(2)
+(dim=2|id=17)
 
 julia> hasid(i, id(j))
 false
@@ -291,15 +286,15 @@ The `ts` argument can be a comma-separated
 string of tags or a TagSet.
 
 # Examples
-```jldoctest
-julia> using ITensors;
-
-julia> i = Index(2, "Site,SpinHalf,n=3");
+```jldoctest; filter=r"id=[0-9]{1,3}"
+julia> i = Index(2, "SpinHalf,Site,n=3")
+(dim=2|id=543|"Site,SpinHalf,n=3")
 
 julia> hastags(i, "Link")
 false
 
-julia> j = settags(i,"Link,n=4");
+julia> j = settags(i,"Link,n=4")
+(dim=2|id=543|"Link,n=4")
 
 julia> hastags(j, "Link")
 true
@@ -407,29 +402,6 @@ function NDTensors.outer(i1::Index, i2::Index; tags = "")
   return Index(dim(i1) * dim(i2), tags)
 end
 
-function primestring(plev)
-  if plev<0
-    return " (warning: prime level $plev is less than 0)"
-  end
-  if plev==0
-    return ""
-  elseif plev > 3
-    return "'$plev"
-  else
-    return "'"^plev
-  end
-end
-
-function Base.show(io::IO,
-                   i::Index) 
-  idstr = "$(id(i) % 1000)"
-  if length(tags(i)) > 0
-    print(io,"(dim=$(space(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))")
-  else
-    print(io,"(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")
-  end
-end
-
 struct IndexVal{IndexT<:Index}
   ind::IndexT
   val::Int
@@ -480,6 +452,29 @@ prime(iv::IndexVal,
 Base.adjoint(iv::IndexVal) = IndexVal(prime(ind(iv)), val(iv))
 
 hasqns(::Index) = false
+
+function primestring(plev)
+  if plev<0
+    return " (warning: prime level $plev is less than 0)"
+  end
+  if plev==0
+    return ""
+  elseif plev > 3
+    return "'$plev"
+  else
+    return "'"^plev
+  end
+end
+
+function Base.show(io::IO,
+                   i::Index) 
+  idstr = "$(id(i) % 1000)"
+  if length(tags(i)) > 0
+    print(io,"(dim=$(space(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))")
+  else
+    print(io,"(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")
+  end
+end
 
 Base.show(io::IO, iv::IndexVal) = print(io, ind(iv), "=$(val(iv))")
 

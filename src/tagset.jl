@@ -196,24 +196,17 @@ end
 
 function tagstring(T::TagSet)
   res = ""
-  length(T) == 0 && return res
-  for n=1:length(T)-1
+  N = length(T)
+  N == 0 && return res
+  for n=1:N-1
     res *= "$(Tag(T[n])),"
   end
-  res *= "$(Tag(T[length(T)]))"
+  res *= "$(Tag(T[N]))"
   return res
 end
 
 function Base.show(io::IO, T::TagSet)
-  print(io, "(")
-  lT = length(T)
-  if lT > 0
-    print(io, T[1])
-    for n=2:lT
-      print(io, ",$(T[n])")
-    end
-  end
-  print(io,")")
+  print(io, "\"$(tagstring(T))\"")
 end
 
 function readcpp(io::IO,::Type{TagSet}; kwargs...)
@@ -241,7 +234,7 @@ function HDF5.write(parent::Union{HDF5File,HDF5Group},
   g = g_create(parent,name)
   attrs(g)["type"] = "TagSet"
   attrs(g)["version"] = 1
-  write(g,"tags",tagstring(T))
+  write(g,"tags", tagstring(T))
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
