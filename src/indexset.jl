@@ -5,8 +5,8 @@ struct IndexSet{N,IndexT<:Index}
 end
 
 """
-IndexSet{N,IndexT}(inds)
-IndexSet{N,IndexT}(inds::Index...)
+    IndexSet{N,IndexT}(inds)
+    IndexSet{N,IndexT}(inds::Index...)
 
 Construct an IndexSet of order N and element type IndexT
 from a collection of indices (any collection that is convertable to a Tuple).
@@ -14,8 +14,8 @@ from a collection of indices (any collection that is convertable to a Tuple).
 IndexSet{N,IndexT}(inds::Index...) where {N,IndexT} = IndexSet{N,IndexT}(inds)
 
 """
-IndexSet{N}(inds)
-IndexSet{N}(inds::Index...)
+    IndexSet{N}(inds)
+    IndexSet{N}(inds::Index...)
 
 Construct an IndexSet of order N from a collection of indices
 (any collection that is convertable to a Tuple).
@@ -27,8 +27,8 @@ IndexSet{N}(inds::Index...) where {N} = IndexSet{N}(inds)
 IndexSet{N}(is::IndexSet{N}) where {N} = is
 
 """
-IndexSet(inds)
-IndexSet(inds::Index...)
+    IndexSet(inds)
+    IndexSet(inds::Index...)
 
 Construct an IndexSet from a collection of indices
 (any collection that is convertable to a Tuple).
@@ -40,10 +40,10 @@ IndexSet(inds::Index...) = IndexSet(inds)
 IndexSet(is::IndexSet) = is
 
 """
-convert(::Type{IndexSet}, t)
+    convert(::Type{IndexSet}, t)
 
 Convert the collection t to an IndexSet,
-as long as it can be converted to an SVector.
+as long as it can be converted to a Tuple.
 """
 Base.convert(::Type{IndexSet}, t) = IndexSet(t)
 
@@ -60,18 +60,18 @@ Base.convert(::Type{IndexSet{N,IndexT}}, is::IndexSet{N,IndexT}) where {N,IndexT
 Base.Tuple(is::IndexSet) = Tuple(data(is))
 
 """
-IndexSet(inds::Vector{<:Index})
+    IndexSet(inds::Vector{<:Index})
 
 Convert a Vector of indices to an IndexSet.
 
 Warning: this is not type stable, since a Vector
 is dynamically sized and an IndexSet is statically sized.
-Consider using the constructor IndexSet{N}(inds::Vector).
+Consider using the constructor `IndexSet{N}(inds::Vector)`.
 """
 IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
 
 """
-IndexSet{N}(inds::Vector{<:Index})
+    IndexSet{N}(inds::Vector{<:Index})
 
 Convert a Vector of indices to an IndexSet of size N.
 
@@ -81,9 +81,9 @@ Type stable conversion of a Vector of indices to an IndexSet
 IndexSet{N}(inds::Vector{<:Index}) where {N} = IndexSet{N}(inds...)
 
 """
-not(inds::IndexSet)
-not(inds::Index...)
-not(inds::Tuple{Vararg{<:Index}})
+    not(inds::IndexSet)
+    not(inds::Index...)
+    not(inds::Tuple{Vararg{<:Index}})
 
 Represents the set of indices not in the specified
 IndexSet, for use in pattern matching (i.e. when
@@ -95,7 +95,7 @@ not(inds::Index...) = not(IndexSet(inds...))
 not(inds::Tuple{Vararg{<:Index}}) = not(IndexSet(inds))
 
 """
-data(is::IndexSet)
+    NDTensors.data(is::IndexSet)
 
 Return the raw storage data for the indices.
 Currently the storage is a Tuple.
@@ -116,13 +116,6 @@ NDTensors.ValLength(::IndexSet{N}) where {N} = Val(N)
 
 # Convert to an Index if there is only one
 Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
-
-function Base.show(io::IO, is::IndexSet)
-  for i in is
-    print(io,i)
-    print(io," ")
-  end
-end
 
 """
     getindex(is::IndexSet, n::Int)
@@ -198,7 +191,7 @@ NDTensors.dims(is::IndexSet{N}) where {N} = dims(Tuple(is))
 NDTensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
 
 """
-dim(is::IndexSet)
+    dim(is::IndexSet)
 
 Get the product of the dimensions of the indices
 of the IndexSet (the total dimension of the space).
@@ -901,11 +894,11 @@ NDTensors.getindices(is::IndexSet,
 hasqns(is::IndexSet) = any(hasqns,is)
 
 """
-nblocks(::IndexSet,i::Integer)
+    nblocks(::IndexSet, i::Int)
 
 The number of blocks in the specified dimension.
 """
-function NDTensors.nblocks(inds::IndexSet, i::Integer)
+function NDTensors.nblocks(inds::IndexSet, i::Int)
   return nblocks(Tuple(inds),i)
 end
 
@@ -993,6 +986,13 @@ ITensors.block(is, 1, 2) == (1,1)
 """
 block(inds::IndexSet,
       vals::Int...) = blockindex(inds, vals...)[2]
+
+function Base.show(io::IO, is::IndexSet)
+  for i in is
+    print(io, i)
+    print(io, " ")
+  end
+end
 
 #
 # Read and write
