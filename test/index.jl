@@ -7,7 +7,7 @@ import ITensors: In,Out,Neither
   @testset "Default Index" begin
     i = Index()
     @test id(i) == 0
-    @test dim(i) == 1
+    @test dim(i) == 0
     @test dir(i) == Neither
     @test -dir(i) == Neither
     @test plev(i) == 0
