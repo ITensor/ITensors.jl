@@ -264,6 +264,16 @@ end
 
 Base.:-(M::AbstractMPS) = Base.:*(-1,M)
 
+function flux(M::AbstractMPS)::QN
+  q = QN()
+  for j=M.llim+1:M.rlim-1
+    q += flux(M[j])
+  end
+  return q
+end
+
+totalqn(M::AbstractMPS) = flux(M)
+
 @doc """
 orthogonalize!(M::MPS, j::Int; kwargs...)
 orthogonalize!(M::MPO, j::Int; kwargs...)
