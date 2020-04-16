@@ -308,5 +308,6 @@ function Base.show(io::IO,q::QN)
   print(io,")")
 end
 
+import .NDTensors.store
 @deprecate store(qn::QN) data(qn)
 
