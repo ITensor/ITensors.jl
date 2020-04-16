@@ -5,9 +5,9 @@ const QNBlocks = Vector{QNBlock}
 
 qn(qnblock::QNBlock) = qnblock.first
 
-blockdim(qnblock::QNBlock) = qnblock.second
+NDTensors.blockdim(qnblock::QNBlock) = qnblock.second
 
-blockdim(qnblocks::QNBlocks,b::Int) = blockdim(qnblocks[b])
+NDTensors.blockdim(qnblocks::QNBlocks,b::Int) = blockdim(qnblocks[b])
 
 qn(qnblocks::QNBlocks,b::Int) = qn(qnblocks[b])
 
@@ -93,7 +93,7 @@ qn(ind::QNIndex,b::Int) = dir(ind)*qn(space(ind),b)
 qnblocks(ind::QNIndex) = space(ind)
 
 NDTensors.blockdim(ind::QNIndex,
-                 b::Int) = blockdim(space(ind),b)
+                   b::Int) = blockdim(space(ind),b)
 
 function qn(iv::QNIndexVal)
   i = ind(iv)
@@ -133,7 +133,7 @@ dimension of the block of the QNIndex having
 QN equal to `q`. Assumes all blocks of `ind` 
 have a unique QN.
 """
-qnblockdim(ind::QNIndex,q::QN) = NDTensors.blockdim(ind,qnblocknum(ind,q))
+qnblockdim(ind::QNIndex,q::QN) = blockdim(ind,qnblocknum(ind,q))
 
 function Base.:*(dir::Arrow, qnb::QNBlock)
   return QNBlock(dir*qn(qnb),blockdim(qnb))
