@@ -405,14 +405,16 @@ end
 struct IndexVal{IndexT<:Index}
   ind::IndexT
   val::Int
-  function IndexVal(i::IndexT,n::Int) where {IndexT}
+  function IndexVal(i::IndexT,
+                    n::Int) where {IndexT}
     n>dim(i) && throw(ErrorException("Value $n greater than size of Index $i"))
-    n<1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
-    return new{IndexT}(i,n)
+    dim(i)>0 && n<1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
+    dim(i)==0 && n<0 && throw(ErrorException("Index value must be >= 1 (was $n)"))
+    return new{IndexT}(i, n)
   end
 end
 
-IndexVal() = IndexVal(Index(),1)
+IndexVal() = IndexVal(Index(), 0)
 
 IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first,iv.second)
 
