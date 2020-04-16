@@ -353,7 +353,7 @@ function remove_dups!(v::Vector{T}) where {T}
   end
   resize!(v,n)
   return
-end
+end #remove_dups!
 
 
 function svdMPO(ampo::AutoMPO,
@@ -506,7 +506,7 @@ function svdMPO(ampo::AutoMPO,
   H[N] *= R
 
   return H
-end
+end #svdMPO
 
 function qn_svdMPO(ampo::AutoMPO,
                    sites; 
@@ -715,7 +715,7 @@ function qn_svdMPO(ampo::AutoMPO,
   H[N] *= R
 
   return H
-end
+end #qn_svdMPO
 
 function sorteachterm!(ampo::AutoMPO)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
