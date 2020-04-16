@@ -1,6 +1,4 @@
 
-import .NDTensors: store
-
 struct IndexSet{N,IndexT<:Index}
   data::NTuple{N,IndexT}
   IndexSet{N,IndexT}(inds) where {N,IndexT} = new{N,IndexT}(inds)
@@ -127,15 +125,14 @@ function Base.show(io::IO, is::IndexSet)
 end
 
 """
-getindex(is::IndexSet, n::Int)
+    getindex(is::IndexSet, n::Int)
 
 Get the Index of the IndexSet in the dimension n.
 """
-Base.getindex(is::IndexSet,
-              n::Int) = getindex(data(is),n)
+Base.getindex(is::IndexSet, n) = getindex(data(is), n)
 
 """
-getindex(is::IndexSet, v::AbstractVector)
+    getindex(is::IndexSet, v::AbstractVector)
 
 Get the indices of the IndexSet in the dimensions
 specified in the collection v, returning an IndexSet.
@@ -143,12 +140,18 @@ specified in the collection v, returning an IndexSet.
 Warning: this function is not type stable.
 """
 Base.getindex(is::IndexSet,
-              v::AbstractVector) = IndexSet(getindex(Tuple(is),v))
+              v::AbstractVector) = IndexSet(getindex(data(is), v))
 
 """
-setindex(is::IndexSet, i::Index, n::Int)
+    setindex(is::IndexSet, i::Index, n::Int)
 
 Set the Index of the IndexSet in the dimension n.
+
+This function is mostly for internal use, if you want to
+replace the indices of an IndexSet, use the `replaceind`,
+`replaceind!`, `replaceinds`, and `replaceinds!` functions,
+which check for compatibility of the indices and ensure
+the proper Arrow directions.
 """
 function Base.setindex(is::IndexSet,
                        i::Index,
@@ -156,9 +159,39 @@ function Base.setindex(is::IndexSet,
   return IndexSet(setindex(data(is), i, n))
 end
 
-Base.length(is::IndexSet{N}) where {N} = N
+"""
+    length(is::IndexSet)
 
+The number of indices in the IndexSet.
+"""
+Base.length(::IndexSet{N}) where {N} = N
+
+"""
+length(::Type{<:IndexSet})
+
+The number of indices in the IndexSet type.
+"""
 Base.length(::Type{<:IndexSet{N}}) where {N} = N
+
+"""
+    size(is::IndexSet)
+
+The size of the IndexSet, the same as `(length(is),)`.
+
+Mostly for internal use for compatability with Base methods,
+like for broadcasting.
+"""
+Base.size(is::IndexSet) = size(data(is))
+
+"""
+    axes(is::IndexSet)
+
+The axes of the IndexSet, the same as `(Base.OneTo(length(is)),)`.
+
+Mostly for internal use for compatability with Base methods,
+like for broadcasting.
+"""
+Base.axes(is::IndexSet) = axes(data(is))
 
 NDTensors.dims(is::IndexSet{N}) where {N} = dims(Tuple(is))
 
@@ -177,29 +210,30 @@ NDTensors.dim(is::IndexSet{0}) = 1
 NDTensors.dim(is::Tuple{Vararg{<:Index}}) = prod(dims(is))
 
 """
-dim(is::IndexSet, n::Int)
+    dim(is::IndexSet, n::Int)
 
 Get the dimension of the Index n of the IndexSet.
 """
 NDTensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
 
 """
-strides(is::IndexSet)
+    NDTensors.strides(is::IndexSet)
 
-Get the strides of the IndexSet.
+Get the strides of the n-dimensional tensor if it had
+this IndexSet.
 """
 NDTensors.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
 
 """
-stride(is::IndexSet. i::Int)
+    NDTensors.stride(is::IndexSet. i::Int)
 
-Get the stride of the IndexSet in the dimension i.
+Get the stride of the n-dimensional tensor if it had
+this IndexSet in the dimension `i`.
 """
 NDTensors.stride(is::IndexSet, k::Int) = NDTensors.strides(is)[k]
 
-import .NDTensors.dag
 """
-dag(is::IndexSet)
+    dag(is::IndexSet)
 
 Return a new IndexSet with the indices daggered (flip
 all of the arrow directions).
@@ -207,26 +241,43 @@ all of the arrow directions).
 dag(is::IndexSet) = map(i -> dag(i), is)
 
 """
-iterate(is::IndexSet[, state])
+    iterate(is::IndexSet[, state])
 
 Iterate over the indices of an IndexSet.
+
+# Example
+```jldoctest
+julia> using ITensors;
+
+julia> i = Index(2);
+
+julia> is = IndexSet(i,i');
+
+julia> for j in is
+         println(plev(j))
+       end
+0
+1
+```
 """
 Base.iterate(is::IndexSet, state) = iterate(data(is), state)
 
 Base.iterate(is::IndexSet) = iterate(data(is))
 
+# To allow for the syntax is[end]
 Base.firstindex(::IndexSet) = 1
 
-Base.lastindex(::IndexSet{N}) where {N} = N
-
-Base.eltype(is::Type{IndexSet{N,IndexT}}) where {N,IndexT} = IndexT
+# To allow for the syntax is[begin]
+Base.lastindex(is::IndexSet) = length(is)
 
 """
-eltype(::IndexSet)
+    eltype(::IndexSet)
 
 Get the element type of the IndexSet.
 """
 Base.eltype(is::IndexSet{N,IndexT}) where {N,IndexT} = IndexT
+
+Base.eltype(::Type{IndexSet{N,IndexT}}) where {N,IndexT} = IndexT
 
 # Needed for findfirst (I think)
 Base.keys(is::IndexSet{N}) where {N} = 1:N
@@ -236,21 +287,26 @@ Base.keys(is::IndexSet{N}) where {N} = 1:N
 # only known thing for dispatch is a concrete type such
 # as IndexSet{4})
 NDTensors.similar_type(::Type{<:IndexSet},
-                     ::Val{N}) where {N} = IndexSet{N}
+                       ::Val{N}) where {N} = IndexSet{N}
 
 NDTensors.similar_type(::Type{<:IndexSet},
-                     ::Type{Val{N}}) where {N} = IndexSet{N}
+                       ::Type{Val{N}}) where {N} = IndexSet{N}
 
 """
-sim(is::IndexSet)
+    sim(is::IndexSet)
 
 Make a new IndexSet with similar indices.
+
+You can also use the broadcast version `sim.(is)`.
 """
-NDTensors.sim(is::IndexSet) = map(i -> sim(i), is)
+sim(is::IndexSet) = map(i -> sim(i), is)
+
+# For generic code in NDTensors
+NDTensors.sim(is::IndexSet) = sim(is)
 
 import .NDTensors: mindim
 """
-mindim(is::IndexSet)
+    mindim(is::IndexSet)
 
 Get the minimum dimension of the indices in the index set.
 
@@ -266,7 +322,7 @@ function mindim(is::IndexSet)
 end
 
 """
-maxdim(is::IndexSet)
+    maxdim(is::IndexSet)
 
 Get the maximum dimension of the indices in the index set.
 
@@ -286,9 +342,11 @@ end
 #
 
 """
-==(is1::IndexSet, is2::IndexSet)
+    ==(is1::IndexSet, is2::IndexSet)
 
-IndexSet quality (order dependent)
+IndexSet equality (order dependent). For order
+independent equality use `issetequal` or
+`hassameinds`.
 """
 function Base.:(==)(A::IndexSet,B::IndexSet)
   length(A) ≠ length(B) && return false
@@ -299,7 +357,7 @@ function Base.:(==)(A::IndexSet,B::IndexSet)
 end
 
 """
-fmatch(pattern) -> ::Function
+    ITensors.fmatch(pattern) -> ::Function
 
 fmatch is an internal function that
 creates a function that accepts an Index.
@@ -328,9 +386,9 @@ fmatch(n::Not) = !fmatch(parent(n))
 fmatch(::Nothing) = _ -> true
 
 """
-fmatch(; tags=nothing,
-         plev=nothing,
-         id=nothing) -> ::Function
+    ITensors.fmatch(; tags=nothing,
+                      plev=nothing,
+                      id=nothing) -> ::Function
 
 An internal function that returns a function 
 that accepts an Index that checks if the
@@ -343,7 +401,7 @@ function fmatch(; tags=nothing,
 end
 
 """
-indmatch
+    indmatch
 
 Checks if the Index matches the provided conditions.
 """
@@ -364,7 +422,7 @@ function Base.setdiff(f::Function, A, Bs...)
 end
 
 """
-setdiff(A,B...)
+    setdiff(A,B...)
 
 Output the IndexSet with Indices in Ais but not in
 the IndexSets Bis.
@@ -381,7 +439,7 @@ function firstsetdiff(f::Function, A, Bs...)
 end
 
 """
-firstsetdiff(A,B)
+    firstsetdiff(A,B)
 
 Output the Index in Ais but not in the IndexSets Bis.
 Otherwise, return a default constructed Index.
@@ -401,7 +459,7 @@ function Base.intersect(f::Function, A, B)
 end
 
 """
-intersect(A,B)
+    intersect(A,B)
 
 Output the IndexSet in the intersection of A and B
 """
@@ -417,7 +475,7 @@ function firstintersect(f::Function, A, B)
 end
 
 """
-firstintersect(Ais,Bis)
+    firstintersect(Ais,Bis)
 
 Output the Index common to Ais and Bis.
 If more than one Index is found, throw an error.
@@ -427,7 +485,7 @@ firstintersect(A, B;
                kwargs...) = firstintersect(fmatch(; kwargs...), A, B)
 
 """
-filter(f::Function,inds::IndexSet)
+    filter(f::Function,inds::IndexSet)
 
 Filter the IndexSet by the given function (output a new
 IndexSet with indices `i` for which `f(i)` returns true).
@@ -474,7 +532,7 @@ Base.findfirst(is::IndexCollection,
                                                       kwargs...), is)
 
 """
-map(f, is::IndexSet)
+    map(f, is::IndexSet)
 
 Apply the function to the elements of the IndexSet,
 returning a new IndexSet.
@@ -492,7 +550,7 @@ function prime(f::Function,
 end
 
 """
-prime(A, plinc, ...)
+    prime(A, plinc, ...)
 
 Increase the prime level of the indices by the specified amount.
 Filter which indices are primed using keyword arguments
@@ -511,7 +569,7 @@ prime(is::IndexSet,
       kwargs...) = prime(is, 1, args...; kwargs...)
 
 """
-adjoint(is::IndexSet)
+    adjoint(is::IndexSet)
 
 For is' notation.
 """
@@ -730,7 +788,7 @@ end
 #
 
 """
-pop(is::IndexSet)
+    pop(is::IndexSet)
 
 Return a new IndexSet with the last Index removed.
 """
@@ -740,7 +798,7 @@ pop(is::IndexSet) = IndexSet(NDTensors.pop(Tuple(is)))
 NDTensors.pop(is::IndexSet) = pop(is)
 
 """
-popfirst(is::IndexSet)
+    popfirst(is::IndexSet)
 
 Return a new IndexSet with the first Index removed.
 """
@@ -750,7 +808,7 @@ popfirst(is::IndexSet) = IndexSet(NDTensors.popfirst(Tuple(is)))
 NDTensors.popfirst(is::IndexSet) = popfirst(is)
 
 """
-push(is::IndexSet, i::Index)
+    push(is::IndexSet, i::Index)
 
 Make a new IndexSet with the Index i inserted
 at the end.
@@ -770,7 +828,7 @@ NDTensors.push(is::IndexSet{0},
              i::Index) = push(is, i)
 
 """
-pushfirst(is::IndexSet, i::Index)
+    pushfirst(is::IndexSet, i::Index)
 
 Make a new IndexSet with the Index i inserted
 at the beginning.
@@ -790,7 +848,7 @@ NDTensors.pushfirst(is::IndexSet{0},
                   i::Index) = pushfirst(is, i)
 
 """
-instertat(is1::IndexSet, is2, pos)
+    instertat(is1::IndexSet, is2, pos::Int)
 
 Remove the index at pos and insert the indices
 is2 starting at that position.
@@ -805,11 +863,11 @@ end
 
 # Overload the unexported NDTensors version
 NDTensors.insertat(is1::IndexSet,
-                 is2,
-                 pos::Int) = insertat(is1, is2, pos)
+                   is2,
+                   pos::Int) = insertat(is1, is2, pos)
 
 """
-instertafter(is1::IndexSet, is2, pos)
+    instertafter(is1::IndexSet, is2, pos)
 
 Insert the indices is2 after position pos.
 """
@@ -827,7 +885,7 @@ end
 
 # Overload the unexported NDTensors version
 NDTensors.deleteat(is::IndexSet,
-                 I...) = deleteat(is, I...)
+                   I...) = deleteat(is, I...)
 
 function getindices(is::IndexSet, I...)
   return IndexSet(NDTensors.getindices(Tuple(is), I...))
@@ -856,7 +914,7 @@ function NDTensors.nblocks(inds::IndexSet, is)
 end
 
 """
-nblocks(::IndexSet)
+    nblocks(::IndexSet)
 
 A tuple of the number of blocks in each
 dimension.
@@ -883,7 +941,7 @@ function eachdiagblock(inds::IndexSet{N}) where {N}
 end
 
 """
-flux(inds::IndexSet, block)
+    flux(inds::IndexSet, block::Tuple{Vararg{Int}})
 
 Get the flux of the specified block, for example:
 ```
@@ -905,7 +963,7 @@ function flux(inds::IndexSet, block)
 end
 
 """
-flux(inds::IndexSet, I::Int...)
+    flux(inds::IndexSet, I::Int...)
 
 Get the flux of the block that the specified
 index falls in.
@@ -920,10 +978,12 @@ flux(inds::IndexSet,
      vals::Int...) = flux(inds, block(inds, vals...))
 
 """
-ITensors.block(inds::IndexSet, I::Int...)
+    ITensors.block(inds::IndexSet, I::Int...)
 
-Get the block that the specified
-index falls in.
+Get the block that the specified index falls in.
+
+This is mostly an internal function, and the interface
+is subject to change.
 ```
 i = Index(QN(0)=>2, QN(1)=>2)
 is = IndexSet(i, dag(i'))
@@ -980,5 +1040,6 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   return IndexSet(it)
 end
 
+import .NDTensors.store
 @deprecate store(is::IndexSet) data(is)
 

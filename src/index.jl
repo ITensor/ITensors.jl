@@ -1,13 +1,4 @@
 
-# These are explicitly imported
-# so that they can be exported
-# from ITensors (they are not
-# exported from NDTensors)
-import .NDTensors: dim,
-                   dir,
-                   sim,
-                   dag
-
 const IDType = UInt64
 
 """
@@ -32,7 +23,8 @@ struct Index{T}
   end
 end
 
-# Used in NDTensors, mostly for internal usage
+# Used in NDTensors for generic code,
+# mostly for internal usage
 Index{T}(dim::T) where {T} = Index(dim)
 
 function Index(id, space::T, dir, tags, plev) where {T}
@@ -119,7 +111,7 @@ id(i::Index) = i.id
 
 Obtain the dimension of an Index.
 """
-dim(i::Index) = i.space
+NDTensors.dim(i::Index) = i.space
 
 space(i::Index) = i.space
 
@@ -129,6 +121,9 @@ space(i::Index) = i.space
 Obtain the direction of an Index (In, Out, or Neither).
 """
 dir(i::Index) = i.dir
+
+# Used for generic code in NDTensors
+NDTensors.dir(i::Index) = dir(i)
 
 """
     setdir(i::Index, dir::Arrow)
@@ -196,12 +191,18 @@ sim(i::Index;
                         tags,
                         plev)
 
+# Used for internal use in NDTensors
+NDTensors.sim(i::Index) = sim(i)
+
 """
     dag(i::Index)
 
 Copy an index `i` and reverse its direction.
 """
 dag(i::Index) = Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
+
+# For internal use in NDTensors
+NDTensors.dag(i::Index) = dag(i)
 
 """
     isdefault(i::Index)
@@ -526,3 +527,4 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   plev = read(g,"plev")
   return Index(id,dim,dir,tags,plev)
 end
+

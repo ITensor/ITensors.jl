@@ -1,14 +1,45 @@
 
 #
+# Broadcasting for IndexSets
+#
+
+import Base.Broadcast: BroadcastStyle,
+                       Style,
+                       Broadcasted,
+                       broadcastable,
+                       instantiate,
+                       DefaultArrayStyle
+
+BroadcastStyle(::Type{<:IndexSet}) = Style{IndexSet}()
+
+broadcastable(t::IndexSet) = t
+
+# This is required for speed and type stability
+# (not sure why, but I guess the default is slow)
+instantiate(bc::Broadcasted{Style{IndexSet}, Nothing}) = bc
+
+function Base.copy(bc::Broadcasted{Style{IndexSet}})
+  dim = axes(bc)
+  length(dim) == 1 || throw(DimensionMismatch("IndexSet only supports one dimension"))
+  N = length(dim[1])
+  return IndexSet(ntuple(k -> bc[k], Val(N)))
+end
+
+#
+# Broadcasting for ITensors
+#
+
+#
 # ITensorStyle
 #
 
-struct ITensorStyle <: Broadcast.BroadcastStyle end
-Broadcast.BroadcastStyle(::Type{<:ITensor}) = ITensorStyle()
+struct ITensorStyle <: BroadcastStyle end
 
-Broadcast.broadcastable(T::ITensor) = T
+BroadcastStyle(::Type{<:ITensor}) = ITensorStyle()
 
-function Base.similar(bc::Broadcast.Broadcasted{ITensorStyle},
+broadcastable(T::ITensor) = T
+
+function Base.similar(bc::Broadcasted{ITensorStyle},
                       ::Type{ElT}) where {ElT<:Number}
   A = find_type(ITensor, bc.args)
   return similar(A,ElT)
@@ -19,28 +50,28 @@ end
 # Operating with a scalar
 #
 
-struct ITensorOpScalarStyle <: Broadcast.BroadcastStyle end
+struct ITensorOpScalarStyle <: BroadcastStyle end
 
 function Base.BroadcastStyle(::ITensorStyle,
-                             ::Broadcast.DefaultArrayStyle{0})
+                             ::DefaultArrayStyle{0})
   return ITensorOpScalarStyle()
 end
 
 Base.BroadcastStyle(::ITensorStyle,
                     ::ITensorOpScalarStyle) = ITensorOpScalarStyle()
 
-Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorOpScalarStyle}) = bc
+instantiate(bc::Broadcasted{ITensorOpScalarStyle}) = bc
 
-function Broadcast.broadcasted(::typeof(Base.literal_pow),
-                               ::typeof(^),
-                               T::ITensor,
-                               x::Val)
-  return Broadcast.broadcasted(ITensorOpScalarStyle(),
-                               Base.literal_pow,
-                               Ref(^), T, Ref(x))
+function broadcasted(::typeof(Base.literal_pow),
+                     ::typeof(^),
+                     T::ITensor,
+                     x::Val)
+  return broadcasted(ITensorOpScalarStyle(),
+                     Base.literal_pow,
+                     Ref(^), T, Ref(x))
 end
 
-function Base.similar(bc::Broadcast.Broadcasted{ITensorOpScalarStyle},
+function Base.similar(bc::Broadcasted{ITensorOpScalarStyle},
                       ::Type{ElT}) where {ElT<:Number}
   A = find_type(ITensor, bc.args)
   return similar(A,ElT)
@@ -50,25 +81,25 @@ end
 # For arbitrary function chaining f.(g.(h.(x)))
 #
 
-function Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorStyle,
-                                                         <:Any,
-                                                         <:Function,
-                                                         <:Tuple{Broadcast.Broadcasted}})
-  return Broadcast.instantiate(Broadcast.broadcasted(bc.f∘bc.args[1].f,bc.args[1].args...))
+function instantiate(bc::Broadcasted{ITensorStyle,
+                                     <:Any,
+                                     <:Function,
+                                     <:Tuple{Broadcasted}})
+  return instantiate(broadcasted(bc.f∘bc.args[1].f,bc.args[1].args...))
 end
 
-function Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorStyle,
-                                                         <:Any,
-                                                         <:Function,
-                                                         <:Tuple{Broadcast.Broadcasted{ITensorStyle,
+function instantiate(bc::Broadcasted{ITensorStyle,
+                                     <:Any,
+                                     <:Function,
+                                     <:Tuple{Broadcasted{ITensorStyle,
                                                                                        <:Any,
                                                                                        <:Function,
                                                                                        <:Tuple{<:ITensor}}}})
-  return Broadcast.broadcasted(bc.f∘bc.args[1].f,
+  return broadcasted(bc.f∘bc.args[1].f,
                                bc.args[1].args...)  
 end
 
-Broadcast.instantiate(bc::Broadcast.Broadcasted{ITensorStyle}) = bc
+instantiate(bc::Broadcasted{ITensorStyle}) = bc
 
 #
 # Some helper functionality to find certain
@@ -91,11 +122,11 @@ find_type(::Type{T}, ::Tuple{}) where {T} = nothing
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
-                                                <:Any,
-                                                typeof(*),
-                                                <:Tuple{<:Union{<:Number,<:ITensor},
-                                                        <:Union{<:Number,<:ITensor}}})
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(*),
+                                      <:Tuple{<:Union{<:Number,<:ITensor},
+                                              <:Union{<:Number,<:ITensor}}})
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
   if A === T
@@ -111,9 +142,9 @@ end
 #
 
 function Base.copyto!(R::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
-                                                <:Any,
-                                                typeof(^)})
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(^)})
   α = find_type(Number, bc.args)
   T = find_type(ITensor, bc.args)
   apply!(R,T,(r,t)->t^α)
@@ -125,10 +156,10 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{Broadcast.DefaultArrayStyle{0},
-                                                <:Any,
-                                                typeof(identity),
-                                                <:Tuple{<:Number}})
+                      bc::Broadcasted{DefaultArrayStyle{0},
+                                      <:Any,
+                                      typeof(identity),
+                                      <:Tuple{<:Number}})
   fill!(T,bc.args[1])
   return T
 end
@@ -138,10 +169,10 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorStyle,
-                                                <:Any,
-                                                typeof(identity),
-                                                <:Tuple{<:ITensor}})
+                      bc::Broadcasted{ITensorStyle,
+                                      <:Any,
+                                      typeof(identity),
+                                      <:Tuple{<:ITensor}})
   copyto!(T,bc.args[1])
   return T
 end
@@ -151,10 +182,10 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorStyle,
-                                                <:Any,
-                                                typeof(+),
-                                                <:Tuple{Vararg{<:ITensor}}})
+                      bc::Broadcasted{ITensorStyle,
+                                      <:Any,
+                                      typeof(+),
+                                      <:Tuple{Vararg{<:ITensor}}})
   if T === bc.args[1]
     add!(T,bc.args[2])
   elseif T === bc.args[2]
@@ -170,9 +201,9 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorStyle,
-                                                <:Any,
-                                                typeof(-)})
+                      bc::Broadcasted{ITensorStyle,
+                                      <:Any,
+                                      typeof(-)})
   if T === bc.args[1]
     add!(T,-1,bc.args[2])
   elseif T === bc.args[2]
@@ -188,18 +219,18 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
-                                                <:Any,
-                                                typeof(+)})
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(+)})
   C = find_type(ITensor, bc.args)
-  bc_bc = find_type(Broadcast.Broadcasted, bc.args)
+  bc_bc = find_type(Broadcasted, bc.args)
   if T === C
     α = find_type(Number, bc_bc.args)
     A = find_type(ITensor, bc_bc.args)
     if !isnothing(α) && !isnothing(A)
       add!(T, α, A)
     else
-      bc_bc_bc = find_type(Broadcast.Broadcasted, bc_bc.args)
+      bc_bc_bc = find_type(Broadcasted, bc_bc.args)
       if isnothing(α)
         α = find_type(Number, bc_bc_bc.args)
         B = find_type(ITensor, bc_bc_bc.args)
@@ -219,9 +250,9 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
-                                                <:Any,
-                                                typeof(-)})
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(-)})
   if T === bc.args[1]
     add!(T,-1,bc.args[2].args...)
   elseif T === bc.args[2]
@@ -237,10 +268,10 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
-                                                <:Any,
-                                                typeof(+),
-                                                <:Tuple{Vararg{<:Broadcast.Broadcasted}}})
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(+),
+                                      <:Tuple{Vararg{<:Broadcasted}}})
   bc_α = bc.args[1]
   bc_β = bc.args[2]
   α = find_type(Number, bc_α.args)
@@ -257,7 +288,7 @@ function Base.copyto!(T::ITensor,
      !isnothing(α) && !isnothing(β)
     add!(T, β, α, A)
   else
-    bc_bc_α = find_type(Broadcast.Broadcasted, bc_α.args)
+    bc_bc_α = find_type(Broadcasted, bc_α.args)
     if isnothing(α)
       α = find_type(Number, bc_bc_α.args)
       B = find_type(ITensor, bc_bc_α.args)
@@ -274,10 +305,10 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
-                                                <:Any,
-                                                typeof(+),
-                                                <:Tuple{Vararg{<:Union{<:ITensor,<:Number}}}})
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(+),
+                                      <:Tuple{Vararg{<:Union{<:ITensor,<:Number}}}})
   α = find_type(Number,bc.args)
   A = find_type(ITensor,bc.args)
   tensor(T) .= tensor(A) .+ α
@@ -289,9 +320,9 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorStyle,
-                                                <:Any,
-                                                typeof(*)})
+                      bc::Broadcasted{ITensorStyle,
+                                      <:Any,
+                                      typeof(*)})
   mul!(T, bc.args[1], bc.args[2])
   return T
 end
@@ -301,11 +332,11 @@ end
 #
 
 function Base.copyto!(T::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
-                                                <:Any,
-                                                typeof(*)})
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(*)})
   A = find_type(Union{<:Number,<:ITensor}, bc.args)
-  bc_bc = find_type(Broadcast.Broadcasted, bc.args)
+  bc_bc = find_type(Broadcasted, bc.args)
   if A isa Number
     mul!(T, bc_bc.args[1], bc_bc.args[2], A)
   else
@@ -320,10 +351,10 @@ end
 #
 
 function Base.copyto!(R::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorStyle,
-                                                <:Any,
-                                                <:Function,
-                                                <:Tuple{<:ITensor}})
+                      bc::Broadcasted{ITensorStyle,
+                                      <:Any,
+                                      <:Function,
+                                      <:Tuple{<:ITensor}})
   apply!(R, bc.args[1], (r,t)->bc.f(t))
   return R
 end
@@ -333,13 +364,13 @@ end
 #
 
 function Base.copyto!(R::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorStyle,
-                                                <:Any,
-                                                typeof(+),
-                                                <:Tuple{Vararg{Union{<:ITensor,
-                                                                     <:Broadcast.Broadcasted}}}})
+                      bc::Broadcasted{ITensorStyle,
+                                      <:Any,
+                                      typeof(+),
+                                      <:Tuple{Vararg{Union{<:ITensor,
+                                                           <:Broadcasted}}}})
   R̃ = find_type(ITensor,bc.args)
-  bc2 = find_type(Broadcast.Broadcasted,bc.args)
+  bc2 = find_type(Broadcasted,bc.args)
   if R === R̃
     apply!(R,bc2.args[1],(r,t)->r+bc2.f(t))
   else
@@ -353,10 +384,10 @@ end
 #
 
 function Base.copyto!(R::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorStyle,
-                                                <:Any,
-                                                typeof(+),
-                                                <:Tuple{Vararg{<:Broadcast.Broadcasted}}})
+                      bc::Broadcasted{ITensorStyle,
+                                      <:Any,
+                                      typeof(+),
+                                      <:Tuple{Vararg{<:Broadcasted}}})
   bc1 = bc.args[1]
   bc2 = bc.args[2]
   T1 = bc1.args[1]
@@ -378,9 +409,9 @@ end
 #
 
 function Base.copyto!(R::ITensor,
-                      bc::Broadcast.Broadcasted{ITensorOpScalarStyle,
-                                                <:Any,
-                                                typeof(Base.literal_pow)})
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(Base.literal_pow)})
   α = find_type(Base.RefValue{<:Val},bc.args).x
   powf = find_type(Base.RefValue{<:Function},bc.args).x
   T = find_type(ITensor,bc.args)
