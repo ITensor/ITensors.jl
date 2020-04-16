@@ -179,6 +179,16 @@ end
 
 const inner = dot
 
+function flux(M::MPS)::QN
+  q = QN()
+  for j=M.llim+1:M.rlim-1
+    q += flux(M[j])
+  end
+  return q
+end
+
+totalqn(M::MPS) = flux(M)
+
 function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;

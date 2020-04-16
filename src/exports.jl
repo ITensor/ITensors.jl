@@ -182,6 +182,7 @@ export
   sample!,
   siteind,
   siteinds,
+  totalqn,
 
 # mps/observer.jl
   # Types
