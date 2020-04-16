@@ -133,7 +133,7 @@ dimension of the block of the QNIndex having
 QN equal to `q`. Assumes all blocks of `ind` 
 have a unique QN.
 """
-qnblockdim(ind::QNIndex,q::QN) = blockdim(ind,qnblocknum(ind,q))
+qnblockdim(ind::QNIndex,q::QN) = NDTensors.blockdim(ind,qnblocknum(ind,q))
 
 function Base.:*(dir::Arrow, qnb::QNBlock)
   return QNBlock(dir*qn(qnb),blockdim(qnb))
