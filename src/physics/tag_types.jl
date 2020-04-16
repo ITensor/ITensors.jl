@@ -112,3 +112,25 @@ function siteinds(str::String,
   end
   return siteinds(TType(),N; kwargs...)
 end
+
+function has_fermion_string(s::Index,
+                            opname::AbstractString;
+                            kwargs...)::Bool
+  opname = strip(opname)
+  use_tag = 0
+  nfound = 0
+  for n=1:length(tags(s))
+    TType = TagType{tags(s)[n]}
+    if hasmethod(has_fermion_string,Tuple{TType,Index,AbstractString})
+      use_tag = n
+      nfound += 1
+    end
+  end
+  if nfound == 0
+    return false
+  elseif nfound > 1
+    error("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\"")
+  end
+  TType = TagType{tags(s)[use_tag]}
+  return has_fermion_string(TType(),s,opname;kwargs...)
+end

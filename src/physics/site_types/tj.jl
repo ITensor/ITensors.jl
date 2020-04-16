@@ -109,3 +109,11 @@ function op(::tJSite,
   return Op
 end
 
+function has_fermion_string(::tJSite,
+            s::Index,
+            opname::AbstractString)::Bool
+  if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"
+    return true
+  end
+  return false
+end

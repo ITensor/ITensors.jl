@@ -133,3 +133,12 @@ function op(::ElectronSite,
   end
   return Op
 end
+
+function has_fermion_string(::ElectronSite,
+            s::Index,
+            opname::AbstractString)::Bool
+  if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"
+    return true
+  end
+  return false
+end
