@@ -1,4 +1,19 @@
 
+"""
+    dmrg(H::MPO,psi0::MPS,sweeps::Sweeps;kwargs...)
+                    
+Use the density matrix renormalization group (DMRG) algorithm
+to optimize a matrix product state (MPS) such that it is the
+eigenvector of lowest eigenvalue of a Hermitian matrix H,
+represented as a matrix product operator (MPO).
+The MPS `psi0` is used to initialize the MPS to be optimized,
+and the `sweeps` object determines the parameters used to 
+control the DMRG algorithm.
+
+Returns:
+* `energy::Float64` - eigenvalue of the optimized MPS
+* `psi::MPS` - optimized MPS
+"""
 function dmrg(H::MPO,
               psi0::MPS,
               sweeps::Sweeps;
@@ -7,6 +22,27 @@ function dmrg(H::MPO,
   return dmrg(PH,psi0,sweeps;kwargs...)
 end
 
+"""
+    dmrg(Hs::Vector{MPO},psi0::MPS,sweeps::Sweeps;kwargs...)
+                    
+Use the density matrix renormalization group (DMRG) algorithm
+to optimize a matrix product state (MPS) such that it is the
+eigenvector of lowest eigenvalue of a Hermitian matrix H.
+The MPS `psi0` is used to initialize the MPS to be optimized,
+and the `sweeps` object determines the parameters used to 
+control the DMRG algorithm.
+
+This version of `dmrg` accepts a representation of H as a
+Vector of MPOs, Hs = [H1,H2,H3,...] such that H is defined
+as H = H1+H2+H3+...
+Note that this sum of MPOs is not actually computed; rather
+the set of MPOs [H1,H2,H3,..] is efficiently looped over at 
+each step of the DMRG algorithm when optimizing the MPS.
+
+Returns:
+* `energy::Float64` - eigenvalue of the optimized MPS
+* `psi::MPS` - optimized MPS
+"""
 function dmrg(Hs::Vector{MPO},
               psi0::MPS,
               sweeps::Sweeps;
@@ -15,6 +51,26 @@ function dmrg(Hs::Vector{MPO},
   return dmrg(PHS,psi0,sweeps;kwargs...)
 end
 
+"""
+    dmrg(H::MPO,Ms::Vector{MPS},psi0::MPS,sweeps::Sweeps;kwargs...)
+                    
+Use the density matrix renormalization group (DMRG) algorithm
+to optimize a matrix product state (MPS) such that it is the
+eigenvector of lowest eigenvalue of a Hermitian matrix H,
+subject to the constraint that the MPS is orthogonal to each
+of the MPS provided in the Vector `Ms`. The orthogonality
+constraint is approximately enforced by adding to H terms of 
+the form w|M1><M1| + w|M2><M2| + ... where Ms=[M1,M2,...] and
+w is the "weight" parameter, which can be adjusted through the
+optional `weight` keyword argument.
+The MPS `psi0` is used to initialize the MPS to be optimized,
+and the `sweeps` object determines the parameters used to 
+control the DMRG algorithm.
+
+Returns:
+* `energy::Float64` - eigenvalue of the optimized MPS
+* `psi::MPS` - optimized MPS
+"""
 function dmrg(H::MPO,
               Ms::Vector{MPS},
               psi0::MPS,
@@ -110,21 +166,3 @@ end
   end
   return (energy,psi)
 end
-
-@doc """
-dmrg(H::MPO,psi0::MPS,sweeps::Sweeps;kwargs...)::Tuple{Float64,MPS}
-
-Optimize a matrix product state (MPS) to be the eigenvector
-of the Hermitian matrix product operator (MPO) H with minimal
-eigenvalue using the density matrix renormalization group 
-(DMRG) algorithm.
-
-Inputs:
-* `H::MPO` - a Hermitian MPO
-* `psi0::MPS` - MPS used to initialize the optimization
-* `sweeps::Sweeps` - `Sweeps` object used to control the algorithm
-
-Returns:
-* `energy::Float64` - eigenvalue of the optimized MPS
-* `psi::MPS` - optimized MPS
-""" dmrg
