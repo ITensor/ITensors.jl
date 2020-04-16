@@ -75,17 +75,33 @@ function op(::ElectronSite,
     Op[UpP, Up] = 1.
     Op[DnP, Dn] = 1.
     Op[UpDnP, UpDn] = 2.
-  elseif opname == "Cup" || opname == "Aup"
-    Op[EmpP, Up] = 1.
+  elseif opname == "Cup"
+    Op[EmpP, Up]  = +1.
+    Op[DnP, UpDn] = +1.
+  elseif opname == "Cdagup"
+    Op[UpP, Emp]  = +1.
+    Op[UpDnP, Dn] = +1.
+  elseif opname == "Cdn"
+    Op[EmpP, Dn]  = +1.
+    Op[UpP, UpDn] = -1.
+  elseif opname == "Cdagdn"
+    Op[DnP, Emp]  = +1.
+    Op[UpDnP, Up] = -1.
+  # Aup,Adagup,Adn,Adagdn below
+  # are "bosonic" versions of
+  # the creation/annihilation
+  # C operators defined above
+  elseif opname == "Aup"
+    Op[EmpP, Up]  = 1.
     Op[DnP, UpDn] = 1.
-  elseif opname == "Cdagup" || opname == "Adagup"
-    Op[UpP, Emp] = 1.
+  elseif opname == "Adagup"
+    Op[UpP, Emp]  = 1.
     Op[UpDnP, Dn] = 1.
-  elseif opname == "Cdn" || opname == "Adn"
-    Op[EmpP, Dn] = 1.
+  elseif opname == "Adn"
+    Op[EmpP, Dn]  = 1.
     Op[UpP, UpDn] = 1.
-  elseif opname == "Cdagdn" || opname == "Adagdn"
-    Op[DnP, Emp] = 1.
+  elseif opname == "Adagdn"
+    Op[DnP, Emp]  = 1.
     Op[UpDnP, Up] = 1.
   elseif opname=="F" || opname=="FermiPhase" || opname=="FP"
     Op[UpP, Up] = -1.
