@@ -741,20 +741,20 @@ function sorteachterm(ampo::AutoMPO, sites)
   ampo = copy(ampo)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
   for t in data(ampo)
-    t_ops = ops(t)
-    Nops = length(t_ops)
-    perm = zeros(Int,Nops)
-    sortperm!(perm,t_ops, alg=InsertionSort, lt=isless_site)
+    Nops = length(t.ops)
+    perm = Vector{Int}(undef,Nops)
+    sortperm!(perm,t.ops, alg=InsertionSort, lt=isless_site)
+    t.ops = t.ops[perm]
 
     # Identify fermionic operators,
     # zeroing perm for bosonic operators,
     # and insert string "F" operators
     parity = +1
     for n=Nops:-1:1
-      opn = t_ops[n]
+      opn = t.ops[n]
       if has_fermion_string(sites[site(opn)],name(opn))
         if parity == -1
-          t_ops[n].name = "F*$(t_ops[n].name)"
+          t.ops[n].name = "F*$(t.ops[n].name)"
         end
         parity = -parity
       else
