@@ -99,17 +99,15 @@ end
 function Base.show(io::IO,
                    op::MPOTerm) 
   c = coef(op)
-  if c != 1.0+0.0im
-    if iszero(imag(c))
-      print(io,"$(real(c)) ")
-    elseif iszero(real(c))
-      print(io,"$(imag(c))im ")
-    else
-      print(io,"($c) ")
-    end
+  if iszero(imag(c))
+    print(io,"$(real(c)) ")
+  elseif iszero(real(c))
+    print(io,"$(imag(c))im ")
+  else
+    print(io,"($c) ")
   end
   for o in ops(op)
-    print(io,"\"$(name(o))\"($(site(o)))")
+    print(io,"\"$(name(o))\"($(site(o))) ")
   end
 end
 
