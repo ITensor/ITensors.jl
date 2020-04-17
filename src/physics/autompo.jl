@@ -741,28 +741,38 @@ function sorteachterm(ampo::AutoMPO, sites)
   ampo = copy(ampo)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
   for t in data(ampo)
-    Nops = length(t.ops)
-    perm = Vector{Int}(undef,Nops)
+    Nt = length(t.ops)
+
+    # Sort operators in t by site order,
+    # and keep the permutation used, perm, for analysis below
+    perm = Vector{Int}(undef,Nt)
     sortperm!(perm,t.ops, alg=InsertionSort, lt=isless_site)
     t.ops = t.ops[perm]
 
     # Identify fermionic operators,
     # zeroing perm for bosonic operators,
-    # and insert string "F" operators
+    # and inserting string "F" operators
     parity = +1
-    for n=Nops:-1:1
-      opn = t.ops[n]
-      if has_fermion_string(sites[site(opn)],name(opn))
-        if parity == -1
-          t.ops[n].name = "F*$(t.ops[n].name)"
-        end
+    for n=Nt:-1:1
+      fermionic = has_fermion_string(sites[site(t.ops[n])],name(t.ops[n]))
+      if parity == -1
+        # Put Jordan-Wigner string emanating
+        # from fermionic operators to the right
+        # (Remaining F operators will be put in by svdMPO)
+        t.ops[n].name = "$(t.ops[n].name)*F"
+      end
+      if fermionic
         parity = -parity
       else
+        # Ignore bosonic operators in perm
+        # by zeroing corresponding entries
         perm[n] = 0
       end
     end
-    # Keep only fermionic op positions
+    # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero,perm)
+    # Account for anti-commuting, fermionic operators 
+    # during above sort; put resulting sign into coef
     t.coef *= parity_sign(perm)
   end
   return ampo
