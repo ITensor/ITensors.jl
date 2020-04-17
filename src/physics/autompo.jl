@@ -7,7 +7,7 @@
 # SiteOp                  # 
 ###########################
 
-struct SiteOp
+mutable struct SiteOp
   name::String
   site::Int
 end
@@ -33,7 +33,7 @@ mult(t1::OpTerm,t2::OpTerm) = isempty(t2) ? t1 : vcat(t1,t2)
 # MPOTerm                 # 
 ###########################
 
-struct MPOTerm
+mutable struct MPOTerm
   coef::ComplexF64
   ops::OpTerm
 end
@@ -90,9 +90,9 @@ function Base.show(io::IO,
                    op::MPOTerm) 
   c = coef(op)
   if c != 1.0+0.0im
-    if imag(c) == 0.0
+    if iszero(imag(c))
       print(io,"$(real(c)) ")
-    elseif real(c) == 0.0
+    elseif iszero(real(c))
       print(io,"$(imag(c))im ")
     else
       print(io,"($c) ")
@@ -717,20 +717,41 @@ function qn_svdMPO(ampo::AutoMPO,
   return H
 end #qn_svdMPO
 
-function sorteachterm!(ampo::AutoMPO)
+function sorteachterm(ampo::AutoMPO, sites)
+  ampo = copy(ampo)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
   for t in data(ampo)
-    sort!(ops(t), alg=InsertionSort, lt=isless_site)
+    t_ops = ops(t)
+    Nops = length(t_ops)
+    perm = zeros(Int,Nops)
+    sortperm!(perm,t_ops, alg=InsertionSort, lt=isless_site)
+
+    # Identify fermionic operators,
+    # zeroing perm for bosonic operators,
+    # and insert string "F" operators
+    parity = +1
+    for n=Nops:-1:1
+      opn = t_ops[n]
+      if has_fermion_string(sites[site(opn)],name(opn))
+        if parity == -1
+          t_ops[n].name = "F*$(t_ops[n].name)"
+        end
+        parity = -parity
+      else
+        perm[n] = 0
+      end
+    end
+    # Keep only fermionic op positions
+    filter!(!iszero,perm)
+    t.coef *= parity_sign(perm)
   end
   return ampo
 end
 
-sorteachterm(ampo::AutoMPO) = sorteachterm!(copy(ampo))
-
 function MPO(ampo::AutoMPO,
              sites::Vector{<:Index};
              kwargs...)::MPO
-  ampo = sorteachterm(ampo)
+  ampo = sorteachterm(ampo,sites)
   if hasqns(sites[1])
     return qn_svdMPO(ampo,sites;kwargs...)
   end
