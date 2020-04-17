@@ -307,6 +307,7 @@ provided as keyword arguments.
 
 @deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
 
+import .NDTensors.store
 @deprecate store(m::AbstractMPS) data(m)
 
 @deprecate replacesites!(args...; kwargs...) ITensors.replacesiteinds!(args...; kwargs...)

@@ -21,7 +21,7 @@ the DMRG algorithm.
 
 Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
-## Steps in Install Pre-Release Version
+## Steps to Install Pre-Release Version
 
 1. Install the latest version of Julia: https://julialang.org/downloads/
 

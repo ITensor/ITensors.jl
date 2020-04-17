@@ -7,7 +7,7 @@ import ITensors: In,Out,Neither
   @testset "Default Index" begin
     i = Index()
     @test id(i) == 0
-    @test dim(i) == 1
+    @test dim(i) == 0
     @test dir(i) == Neither
     @test -dir(i) == Neither
     @test plev(i) == 0
@@ -67,7 +67,7 @@ import ITensors: In,Out,Neither
     #@test i[:] == [i(1); i(2)]
     @test sprint(show, i(2)) == sprint(show, i)*"=2"
 
-    @test IndexVal() == IndexVal(Index(),1)
+    @test IndexVal() == IndexVal(Index(), 0)
   end
   @testset "Iteration" begin
     i = Index(10)

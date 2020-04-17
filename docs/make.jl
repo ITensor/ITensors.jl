@@ -1,5 +1,10 @@
 using Documenter, ITensors
 
+DocMeta.setdocmeta!(ITensors,
+                    :DocTestSetup,
+                    :(using ITensors);
+                    recursive=true)
+
 makedocs(sitename = "ITensors.jl";
          modules = [ITensors],
          pages = ["Introduction" => "index.md",

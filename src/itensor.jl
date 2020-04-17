@@ -1,10 +1,4 @@
 
-# This is explicitly imported
-# so that it can be exported from
-# ITensors (it is not exported from
-# NDTensors)
-import .NDTensors: dag
-
 """
 An ITensor is a tensor whose interface is 
 independent of its memory layout. Therefore
@@ -49,28 +43,31 @@ owns the storage data).
 ITensor(st::TensorStorage, is) = itensor(copy(st), is)
 
 """
-inds(T::ITensor)
+    inds(T::ITensor)
 
 Return the indices of the ITensor as an IndexSet.
 """
 NDTensors.inds(T::ITensor) = T.inds
 
 """
-ind(T::ITensor, i::Int)
+    ind(T::ITensor, i::Int)
 
 Get the Index of the ITensor along dimension i.
 """
 NDTensors.ind(T::ITensor, i::Int) = inds(T)[i]
 
+# Explicit import since there are some deprecations
+# involving store for other types.
+import .NDTensors: store
 """
-store(T::ITensor)
+    store(T::ITensor)
 
 Return a view of the TensorStorage of the ITensor.
 """
-NDTensors.store(T::ITensor) = T.store
+store(T::ITensor) = T.store
 
 """
-data(T::ITensor)
+    data(T::ITensor)
 
 Return a view of the raw data of the ITensor.
 
@@ -1081,8 +1078,8 @@ function HDF5.write(parent::Union{HDF5File,HDF5Group},
   g = g_create(parent,name)
   attrs(g)["type"] = "ITensor"
   attrs(g)["version"] = 1
-  write(g,"inds",inds(T))
-  write(g,"store",store(T))
+  write(g,"inds", inds(T))
+  write(g,"store", store(T))
 end
 
 #function HDF5.read(parent::Union{HDF5File,HDF5Group},

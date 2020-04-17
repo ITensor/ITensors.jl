@@ -148,4 +148,11 @@ using ITensors,
       @test hastags(j,"Link")
     end
   end
+  @testset "broadcasting" begin
+    I = IndexSet(i, j)
+    J = prime.(I)
+    @test J isa IndexSet
+    @test i' ∈ J
+    @test j' ∈ J
+  end
 end
