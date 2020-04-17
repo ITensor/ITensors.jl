@@ -1,8 +1,22 @@
 
 abstract type AbstractMPS end
 
+"""
+    length(::MPS/MPO)
+
+The number of sites of an MPS/MPO.
+"""
 Base.length(m::AbstractMPS) = m.length
 
+"""
+    ITensors.data(::MPS/MPO)
+
+The Vector storage of an MPS/MPO.
+
+This is mostly for internal usage, please let us
+know if there is functionality not available for
+MPS/MPO you would like.
+"""
 data(m::AbstractMPS) = m.data
 
 leftlim(m::AbstractMPS) = m.llim
@@ -58,6 +72,7 @@ Base.iterate(M::AbstractMPS, state) = iterate(data(M), state)
 
 """
     dag(m::MPS)
+
     dag(m::MPO)
 
 Hermitian conjugation of a matrix product state or operator `m`.
@@ -71,11 +86,52 @@ function dag(m::AbstractMPS)
   return mdag
 end
 
-function prime!(M::AbstractMPS, vargs...)
-  for i ∈ eachindex(M)
-    prime!(M[i], vargs...)
+"""
+    prime!(m::MPS, args...; kwargs...)
+
+    prime!(m::MPO, args...; kwargs...)
+
+Prime all ITensors of an MPS/MPO in-place.
+"""
+function prime!(M::AbstractMPS, args...; kwargs...)
+  for i in eachindex(M)
+    M[i] = prime(M[i], args...; kwargs...)
   end
+  return M
 end
+
+"""
+    prime(m::MPS, args...; kwargs...)
+
+    prime(m::MPO, args...; kwargs...)
+
+Prime all ITensors of an MPS/MPO.
+"""
+prime(M::AbstractMPS, vargs...) = prime!(copy(M), vargs...)
+
+"""
+    noprime!(m::MPS, args...; kwargs...)
+
+    noprime!(m::MPO, args...; kwargs...)
+
+Set the prime level to zero for all ITensors of an MPS/MPO,
+in-place.
+"""
+function noprime!(M::AbstractMPS, args...; kwargs...)
+  for i in eachindex(M)
+    M[i] = noprime(M[i], args...; kwargs...)
+  end
+  return M
+end
+
+"""
+    noprime(m::MPS, args...; kwargs...)
+
+    noprime(m::MPO, args...; kwargs...)
+
+Set the prime level to zero for all ITensors of an MPS/MPO.
+"""
+noprime(M::AbstractMPS, vargs...) = noprime!(copy(M), vargs...)
 
 function primelinkinds!(M::AbstractMPS, plinc::Integer = 1)
   for i ∈ eachindex(M)[1:end-1]
@@ -96,8 +152,9 @@ function simlinkinds!(M::AbstractMPS)
 end
 
 """
-maxlinkdim(M::MPS)
-maxlinkdim(M::MPO)
+    maxlinkdim(M::MPS)
+
+    maxlinkdim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
 """
@@ -149,8 +206,17 @@ function plussers(::Type{T},
   return left_tensor, right_tensor
 end
 
-function Base.sum(A::T,
-                  B::T; kwargs...) where {T <: AbstractMPS}
+"""
+    add(A::MPS, B::MPS; kwargs...)
+    +(A::MPS, B::MPS; kwargs...)
+
+    add(A::MPO, B::MPO; kwargs...)
+    +(A::MPO, B::MPO; kwargs...)
+
+Add two MPS (or MPO) with each other, with some optional
+truncation.
+"""
+function Base.:+(A::T, B::T; kwargs...) where {T <: AbstractMPS}
     N = length(A)
     length(B) != N && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
     orthogonalize!(A, 1; kwargs...)
@@ -180,16 +246,27 @@ function Base.sum(A::T,
     return C
 end
 
+add(A::T, B::T;
+    kwargs...) where {T <: AbstractMPS} = +(A, B; kwargs...)
+
+"""
+    sum(A::Vector{MPS}; kwargs...)
+
+    sum(A::Vector{MPO}; kwargs...)
+
+Add multiple MPS (or MPO) with each other, with some optional
+truncation.
+"""
 function Base.sum(A::Vector{T};
                   kwargs...) where {T <: AbstractMPS}
   length(A) == 0 && return T()
   length(A) == 1 && return A[1]
-  length(A) == 2 && return sum(A[1], A[2]; kwargs...)
+  length(A) == 2 && return +(A[1], A[2]; kwargs...)
   nsize = isodd(length(A)) ? (div(length(A) - 1, 2) + 1) : div(length(A), 2)
   newterms = Vector{T}(undef, nsize)
   np = 1
   for n in 1:2:length(A) - 1
-    newterms[np] = sum(A[n], A[n+1]; kwargs...)
+    newterms[np] = +(A[n], A[n+1]; kwargs...)
     np += 1
   end
   if isodd(length(A))
@@ -251,10 +328,21 @@ function NDTensors.truncate!(M::AbstractMPS;
 
 end
 
-# TODO: scale the tensors between the left limit
-# and right limit by x^(1/N)
-# where N is the distance between the left limit
-# and right limit
+mul(A::AbstractMPS, B::AbstractMPS; kwargs...) = *(A, B; kwargs...)
+
+"""
+    *(x::Number, M::MPS)
+
+    *(x::Number, M::MPO)
+
+Scale the MPS or MPO by the provided number.
+
+Note: right now this just naively scales the
+middle tensor. In the future, the plan would be
+to scale the tensors between the left limit
+and right limit by `x^(1/N)` where `N` is the distance 
+between the left limit and right limit.
+"""
 function Base.:*(x::Number, M::AbstractMPS)
   N = deepcopy(M)
   c = div(length(N), 2)
@@ -265,32 +353,24 @@ end
 Base.:-(M::AbstractMPS) = Base.:*(-1,M)
 
 @doc """
-orthogonalize!(M::MPS, j::Int; kwargs...)
-orthogonalize!(M::MPO, j::Int; kwargs...)
+    orthogonalize!(M::MPS, j::Int; kwargs...)
+
+    orthogonalize!(M::MPO, j::Int; kwargs...)
 
 Move the orthogonality center of the MPS
-to site j. No observable property of the
+to site `j`. No observable property of the
 MPS will be changed, and no truncation of the
 bond indices is performed. Afterward, tensors
-1,2,...,j-1 will be left-orthogonal and tensors
-j+1,j+2,...,N will be right-orthogonal.
-
-orthogonalize!(W::MPO, j::Int; kwargs...)
-
-Move the orthogonality center of an MPO to site j.
+`1,2,...,j-1` will be left-orthogonal and tensors
+`j+1,j+2,...,N` will be right-orthogonal.
 """ orthogonalize!
 
 @doc """
-truncate!(M::MPS; kwargs...)
-truncate!(M::MPO; kwargs...)
+    truncate!(M::MPS; kwargs...)
 
-Perform a truncation of all bonds of an MPS,
-using the truncation parameters (cutoff,maxdim, etc.)
-provided as keyword arguments.
+    truncate!(M::MPO; kwargs...)
 
-truncate!(M::MPO; kwargs...)
-
-Perform a truncation of all bonds of an MPO,
+Perform a truncation of all bonds of an MPS/MPO,
 using the truncation parameters (cutoff,maxdim, etc.)
 provided as keyword arguments.
 """ truncate!
@@ -302,21 +382,28 @@ import .NDTensors.store
 
 @deprecate replacesites!(args...; kwargs...) ITensors.replacesiteinds!(args...; kwargs...)
 
-@deprecate applyMPO(args...; kwargs...) applympo(args...; kwargs...)
+@deprecate applyMPO(args...; kwargs...) mul(args...; kwargs...)
 
-@deprecate errorMPOprod(args...; kwargs...) error_mpoprod(args...; kwargs...)
+@deprecate applympo(args...; kwargs...) mul(args...; kwargs...)
 
-@deprecate densityMatrixApplyMPO(args...; kwargs...) applympo_densitymatrix(args...; kwargs...)
+@deprecate errorMPOprod(args...; kwargs...) error_mul(args...; kwargs...)
 
-@deprecate naiveApplyMPO(args...; kwargs...) applympo_naive(args...; kwargs...)
+@deprecate error_mpoprod(args...; kwargs...) error_mul(args...; kwargs...)
 
-@deprecate multMPO(args...; kwargs...) multmpo(args...; kwargs...)
+@deprecate multMPO(args...; kwargs...) mul(args...; kwargs...)
 
-@deprecate set_leftlim!(args...; kwargs...) setleftlim!(args...; kwargs...)
+import Base.sum
 
-@deprecate set_rightlim!(args...; kwargs...) setrightlim!(args...; kwargs...)
+@deprecate sum(A::AbstractMPS,
+               B::AbstractMPS; kwargs...) add(A, B; kwargs...)
 
-@deprecate tensors(args...; kwargs...) data(args...; kwargs...)
+@deprecate multmpo(args...; kwargs...) mul(args...; kwargs...)
+
+@deprecate set_leftlim!(args...; kwargs...) ITensors.setleftlim!(args...; kwargs...)
+
+@deprecate set_rightlim!(args...; kwargs...) ITensors.setrightlim!(args...; kwargs...)
+
+@deprecate tensors(args...; kwargs...) ITensors.data(args...; kwargs...)
 
 @deprecate primelinks!(args...; kwargs...) ITensors.primelinkinds!(args...; kwargs...)
 

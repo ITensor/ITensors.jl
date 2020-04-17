@@ -43,7 +43,7 @@ arguments provided. The following keyword arguments are recognized:
 * `use_relative_cutoff` [Bool] Default value: true.
 * `utags` [String] Default value: "Link,u".
 * `vtags` [String] Default value: "Link,v".
-* `fastSVD` [Bool] Defaut value: false.
+* `fastsvd` [Bool] Defaut value: false.
 """
 function LinearAlgebra.svd(A::ITensor,
                            Linds...;

@@ -1,14 +1,15 @@
 
+"""
+    MPS
+
+A finite size matrix product state type.
+Keeps track of the orthogonality center.
+"""
 mutable struct MPS <: AbstractMPS
   length::Int
   data::Vector{ITensor}
   llim::Int
   rlim::Int
-
-  MPS() = new(0,Vector{ITensor}(),0,0)
-
-  MPS(N::Int) = MPS(N,fill(ITensor(),N),0,N+1)
-
   function MPS(N::Int,
                A::Vector{<:ITensor},
                llim::Int = 0,
@@ -17,6 +18,27 @@ mutable struct MPS <: AbstractMPS
   end
 end
 
+"""
+    MPS()
+
+Construct an empty MPS with zero sites.
+"""
+MPS() = MPS(0, Vector{ITensor}(), 0, 0)
+
+"""
+    MPS(N::Int)
+
+Construct an MPS with N sites with default constructed
+ITensors.
+"""
+MPS(N::Int) = MPS(N, fill(ITensor(), N))
+
+"""
+    MPS(::Type{T<:Number}, sites)
+
+Construct an MPS from a collection of indices
+with element type T.
+"""
 function MPS(::Type{T}, sites) where {T<:Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
@@ -31,12 +53,18 @@ function MPS(::Type{T}, sites) where {T<:Number}
       v[ii] = ITensor(T,l[ii-1],s,l[ii])
     end
   end
-  return MPS(N,v,0,N+1)
+  return MPS(N, v)
 end
 
-MPS(sites) = MPS(Float64,sites)
+"""
+    MPS(sites)
 
-function randomizeMPS!(M::MPS, sites, bond_dim=1)
+Construct an MPS from a collection of indices
+with element type Float64.
+"""
+MPS(sites) = MPS(Float64, sites)
+
+function randomizeMPS!(M::MPS, sites, linkdim=1)
   N = length(sites)
   c = div(N,2)
   max_pass = 100
@@ -55,23 +83,29 @@ function randomizeMPS!(M::MPS, sites, bond_dim=1)
       G = itensor(Q,dag(s1),dag(s2),s1',s2')
       T = noprime(G*M[b]*M[b+db])
       rinds = uniqueinds(M[b],M[b+db])
-      U,S,V = svd(T,rinds;maxdim=bond_dim)
+      U,S,V = svd(T,rinds;maxdim=linkdim)
       M[b] = U
       M[b+db] = S*V
       M[b+db] /= norm(M[b+db])
     end
-    if half==2 && dim(commonind(M[c],M[c+1])) >= bond_dim
+    if half==2 && dim(commonind(M[c],M[c+1])) >= linkdim
       break
     end
   end
   setleftlim!(M, 0)
   setrightlim!(M, 2)
-  if dim(commonind(M[c],M[c+1])) < bond_dim
+  if dim(commonind(M[c],M[c+1])) < linkdim
     error("MPS center bond dim less than requested")
   end
 end
 
-function randomMPS(::Type{T}, sites, bond_dim=1) where {T<:Number}
+"""
+    randomMPS(::Type{T<:Number}, sites; linkdim=1)
+
+Construct a random MPS with link dimension `linkdim` of 
+type `T`.
+"""
+function randomMPS(::Type{T}, sites, linkdim=1) where {T<:Number}
   M = MPS(T, sites)
   for i in eachindex(sites)
     randn!(M[i])
@@ -80,15 +114,28 @@ function randomMPS(::Type{T}, sites, bond_dim=1) where {T<:Number}
   setleftlim!(M, 0)
   setrightlim!(M, 2)
 
-  if bond_dim > 1
-    randomizeMPS!(M, sites, bond_dim)
+  if linkdim > 1
+    randomizeMPS!(M, sites, linkdim)
   end
   return M
 end
 
-randomMPS(sites,bond_dim=1) = randomMPS(Float64,sites,bond_dim)
+"""
+    randomMPS(sites; linkdim=1)
 
-function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
+Construct a random MPS with link dimension `linkdim` of 
+type `Float64`.
+"""
+randomMPS(sites, linkdim=1) = randomMPS(Float64, sites, linkdim)
+
+"""
+    productMPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
+
+Construct a product state MPS with element type `T` and
+nonzero values determined from the input IndexVals.
+"""
+function productMPS(::Type{T},
+                    ivals::Vector{<:IndexVal}) where {T<:Number}
   N = length(ivals)
   M = MPS(N)
   if hasqns(ind(ivals[1]))
@@ -108,6 +155,12 @@ function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
   return M
 end
 
+"""
+    productMPS(ivals::Vector{<:IndexVal})
+
+Construct a product state MPS with element type `Float64` and
+nonzero values determined from the input IndexVals.
+"""
 productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64,
                                                    ivals::Vector{<:IndexVal})
 
@@ -158,18 +211,26 @@ function replacesiteinds!(M::MPS, sites)
 end
 
 """
-dot(psi::MPS, phi::MPS)
-inner(psi::MPS, phi::MPS)
+    dot(psi::MPS, phi::MPS; make_inds_match = true)
+    inner(psi::MPS, phi::MPS; make_inds_match = true)
 
-Compute <psi|phi>
+Compute <psi|phi>.
+
+If `make_inds_match = true`, the function attempts to make
+the site indices match before contracting (so for example, the
+inputs can have different site indices, as long as they 
+have the same dimensions or QN blocks).
 """
-function LinearAlgebra.dot(M1::MPS, M2::MPS)::Number
+function LinearAlgebra.dot(M1::MPS, M2::MPS; make_inds_match::Bool = true)::Number
   N = length(M1)
   if length(M2) != N
     throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
   end
   M1dag = dag(M1)
-  simlinkinds!(M1dag)
+  if make_inds_match
+    simlinkinds!(M1dag)
+    replacesiteinds!(M1dag, siteinds(M2))
+  end
   O = M1dag[1]*M2[1]
   for j in eachindex(M1)[2:end]
     O = (O*M1dag[j])*M2[j]
@@ -177,8 +238,15 @@ function LinearAlgebra.dot(M1::MPS, M2::MPS)::Number
   return O[]
 end
 
-const inner = dot
+inner(M1::MPS, M2::MPS; kwargs...) = dot(M1, M2; kwargs...)
 
+"""
+    replacebond!(M::MPS, b::Int, phi::ITensor; kwargs...)
+
+Factorize the ITensor `phi` and replace the ITensors
+`b` and `b+1` of MPS `M` with the factors. Choose
+the orthogonality with `dir="fromleft"/"fromright"`.
+"""
 function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
