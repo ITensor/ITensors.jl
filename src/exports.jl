@@ -155,17 +155,18 @@ export
 # mps/dmrg.jl
   dmrg,
 
+# mps/abstractmps.jl
+  add,
+  mul,
+
 # mps/mpo.jl
   # Types
   MPO,
   # Methods
-  applympo,
-  error_mpoprod,
+  error_mul,
   maxlinkdim,
-  multmpo,
   orthogonalize!,
   randomMPO,
-  sum,
   truncate!,
 
 # mps/mps.jl
