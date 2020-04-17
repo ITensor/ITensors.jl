@@ -114,12 +114,24 @@ include("util.jl")
   @testset "add MPS" begin
     psi = randomMPS(sites)
     phi = deepcopy(psi)
-    xi = sum(psi, phi)
+    xi = add(psi, phi)
     @test inner(xi, xi) ≈ 4.0 * inner(psi, psi) 
     # sum of many MPSs
     Ks = [randomMPS(sites) for i in 1:3]
-    K12  = sum(Ks[1], Ks[2])
-    K123 = sum(K12, Ks[3])
+    K12  = add(Ks[1], Ks[2])
+    K123 = add(K12, Ks[3])
+    @test inner(sum(Ks), K123) ≈ inner(K123,K123)
+  end
+
+  @testset "+ MPS" begin
+    psi = randomMPS(sites)
+    phi = deepcopy(psi)
+    xi = psi + phi
+    @test inner(xi, xi) ≈ 4.0 * inner(psi, psi) 
+    # sum of many MPSs
+    Ks = [randomMPS(sites) for i in 1:3]
+    K12  = Ks[1] + Ks[2]
+    K123 = K12 + Ks[3]
     @test inner(sum(Ks), K123) ≈ inner(K123,K123)
   end
 
