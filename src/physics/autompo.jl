@@ -29,6 +29,16 @@ end
 const OpTerm = Vector{SiteOp}
 mult(t1::OpTerm,t2::OpTerm) = isempty(t2) ? t1 : vcat(t1,t2)
 
+function isfermionic(t::OpTerm,sites)::Bool
+  p = +1
+  for op in t
+    if has_fermion_string(sites[site(op)],name(op))
+      p *= -1
+    end
+  end
+  return (p == -1)
+end
+
 ###########################
 # MPOTerm                 # 
 ###########################
@@ -403,7 +413,13 @@ function svdMPO(ampo::AutoMPO,
       if A_row == -1
         site_coef = coef(term)
       end
-      isempty(onsite) && push!(onsite,SiteOp("Id",n))
+      if isempty(onsite)
+        if isfermionic(right,sites)
+          push!(onsite,SiteOp("F",n))
+        else
+          push!(onsite,SiteOp("Id",n))
+        end
+      end
       el = MatElem(A_row,A_col,MPOTerm(site_coef,onsite))
       push!(tempMPO[n],el)
     end
@@ -572,7 +588,13 @@ function qn_svdMPO(ampo::AutoMPO,
       if A_row == -1
         site_coef = coef(term)
       end
-      isempty(onsite) && push!(onsite,SiteOp("Id",n))
+      if isempty(onsite)
+        if isfermionic(right,sites)
+          push!(onsite,SiteOp("F",n))
+        else
+          push!(onsite,SiteOp("Id",n))
+        end
+      end
       el = QNMatElem(lqn,rqn,A_row,A_col,MPOTerm(site_coef,onsite))
       push!(tempMPO[n],el)
     end
