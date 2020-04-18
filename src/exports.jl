@@ -158,6 +158,7 @@ export
 # mps/abstractmps.jl
   add,
   mul,
+  primelinkinds!,
 
 # mps/mpo.jl
   # Types
