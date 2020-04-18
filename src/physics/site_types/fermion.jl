@@ -62,3 +62,12 @@ function op(::FermionSite,
   end
   return Op
 end
+
+function has_fermion_string(::FermionSite,
+            s::Index,
+            opname::AbstractString)::Bool
+  if opname=="C" || opname=="Cdag"
+    return true
+  end
+  return false
+end

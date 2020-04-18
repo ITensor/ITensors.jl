@@ -106,9 +106,9 @@ using ITensors,
     Cdagup3 = Array(op(s,"Cdagup",3),s[3]',s[3]) 
     @test Cdagup3 ≈ [0. 0 0 0; 1 0 0 0; 0 0 0 0; 0 0 1 0]
     Cdn3 = Array(op(s,"Cdn",3),s[3]',s[3]) 
-    @test Cdn3 ≈ [0. 0 1 0; 0 0 0 1; 0 0 0 0; 0 0 0 0]
+    @test Cdn3 ≈ [0. 0 1 0; 0 0 0 -1; 0 0 0 0; 0 0 0 0]
     Cdagdn3 = Array(op(s,"Cdagdn",3),s[3]',s[3]) 
-    @test Cdagdn3 ≈ [0. 0 0 0; 0 0 0 0; 1 0 0 0; 0 1 0 0]
+    @test Cdagdn3 ≈ [0. 0 0 0; 0 0 0 0; 1 0 0 0; 0 -1 0 0]
     F3 = Array(op(s,"F",3),s[3]',s[3]) 
     @test F3 ≈ [1. 0 0 0; 0 -1 0 0; 0 0 -1 0; 0 0 0 1]
     Fup3 = Array(op(s,"Fup",3),s[3]',s[3]) 

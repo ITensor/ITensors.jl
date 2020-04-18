@@ -183,6 +183,7 @@ export
   sample!,
   siteind,
   siteinds,
+  totalqn,
 
 # mps/observer.jl
   # Types
@@ -230,6 +231,7 @@ export
   TagType_str,
   op,
   state,
+  has_fermion_string,
 
 # physics/site_types/electron.jl
   ElectronSite,
