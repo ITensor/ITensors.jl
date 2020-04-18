@@ -164,12 +164,12 @@ end
 
   @testset "Single creation op" begin
     ampo = AutoMPO()
-    add!(ampo,"Cdagup",3)
+    add!(ampo,"Adagup",3)
     sites = siteinds("Electron",N)
     W = MPO(ampo,sites)
     psi = makeRandomMPS(sites)
     cdu_psi = copy(psi)
-    cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
+    cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Adagup",3))
     @test inner(psi,W,psi) ≈ inner(cdu_psi,psi)
   end
 
@@ -342,12 +342,12 @@ end
 
     @testset "Single creation op" begin
       ampo = AutoMPO()
-      ampo += ("Cdagup",3)
+      ampo += ("Adagup",3)
       sites = siteinds("Electron",N)
       W = MPO(ampo,sites)
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
-      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
+      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Adagup",3))
       @test inner(psi,W,psi) ≈ inner(cdu_psi,psi)
     end
 
@@ -538,12 +538,12 @@ end
 
     @testset "Single creation op" begin
       ampo = AutoMPO()
-      ampo .+= ("Cdagup",3)
+      ampo .+= ("Adagup",3)
       sites = siteinds("Electron",N)
       W = MPO(ampo,sites)
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
-      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
+      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Adagup",3))
       @test inner(psi,W,psi) ≈ inner(cdu_psi,psi)
     end
 
