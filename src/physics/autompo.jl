@@ -413,8 +413,10 @@ function svdMPO(ampo::AutoMPO,
       end
       if isempty(onsite)
         if isfermionic(right,sites)
+          #println("Putting F on site $n")
           push!(onsite,SiteOp("F",n))
         else
+          #println("Putting Id on site $n")
           push!(onsite,SiteOp("Id",n))
         end
       end
@@ -785,6 +787,9 @@ function MPO(ampo::AutoMPO,
              sites::Vector{<:Index};
              kwargs...)::MPO
   ampo = sorteachterm(ampo,sites)
+  #for t in data(ampo)
+  #  @show t
+  #end
   if hasqns(sites[1])
     return qn_svdMPO(ampo,sites;kwargs...)
   end
