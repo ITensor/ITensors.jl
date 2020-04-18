@@ -119,6 +119,8 @@ function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
   chi = d
   l[N-1] = Index(chi,"Link,l=$(N-1)")
   O = random_orthog(chi,d)
+  #TODO: replace this copy(itensor(O,...)) pattern with
+  #      ITensor(O,...) after that constructor is restored
   M[N] = copy(itensor(O,l[N-1],sites[N]))
 
   for j=N-1:-1:2
