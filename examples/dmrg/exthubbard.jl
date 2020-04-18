@@ -39,7 +39,7 @@ let
   cutoff!(sweeps,1E-12)
   @show sweeps
 
-  state = fill("Emp",N)
+  state = ["Emp" for n=1:N]
   p = Npart
   for i=N:-1:1
     if p > i
@@ -53,8 +53,11 @@ let
     end
   end
   psi0 = productMPS(sites,state)
+
+  # Check total number of particles:
   @show flux(psi0)
 
+  # Start DMRG calculation:
   energy,psi = dmrg(H,psi0,sweeps)
 
   upd = fill(0.0,N)
