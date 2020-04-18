@@ -99,6 +99,49 @@ function randomizeMPS!(M::MPS, sites, linkdim=1)
   end
 end
 
+function random_orthog(n::Int,m::Int)::Matrix
+  r = max(n,m)
+  Q,_ = NDTensors.qr_positive(randn(r,r))
+  if m < n
+    return copy(Q[:,1:m])
+  else
+    return copy(Q[1:n,:])
+  end
+end
+
+function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
+  N = length(sites)
+  M = MPS(N)
+
+  l = Vector{Index}(undef,N)
+  
+  d = dim(sites[N])
+  chi = d
+  l[N-1] = Index(chi,"Link,l=$(N-1)")
+  O = random_orthog(chi,d)
+  M[N] = copy(itensor(O,l[N-1],sites[N]))
+
+  for j=N-1:-1:2
+    chi *= dim(sites[j])
+    chi = min(linkdim,chi)
+    l[j-1] = Index(chi,"Link,l=$(j-1)")
+    O = random_orthog(chi,dim(sites[j])*dim(l[j]))
+    T = reshape(O,(chi,dim(sites[j]),dim(l[j])))
+    M[j] = copy(itensor(T,l[j-1],sites[j],l[j]))
+  end
+
+  O = random_orthog(1,dim(sites[1])*dim(l[1]))
+  l0 = Index(1,"Link,l=0")
+  T = reshape(O,(1,dim(sites[1]),dim(l[1])))
+  M[1] = copy(itensor(T,l0,sites[1],l[1]))
+  M[1] *= setelt(l0=>1)
+
+  M.llim = 0
+  M.rlim = 2
+
+  return M
+end
+
 """
     randomMPS(::Type{T<:Number}, sites; linkdim=1)
 
@@ -106,6 +149,14 @@ Construct a random MPS with link dimension `linkdim` of
 type `T`.
 """
 function randomMPS(::Type{T}, sites, linkdim=1) where {T<:Number}
+  if !hasqns(sites[1])
+    #
+    # For non-QN-conserving MPS, instantiate
+    # the random MPS directly as a circuit:
+    #
+    return randomCircuitMPS(sites,linkdim)
+  end
+
   M = MPS(T, sites)
   for i in eachindex(sites)
     randn!(M[i])
