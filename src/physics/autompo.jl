@@ -769,6 +769,9 @@ function sorteachterm(ampo::AutoMPO, sites)
         perm[n] = 0
       end
     end
+    if parity == -1
+      error("Parity-odd fermionic terms not yet supported by AutoMPO")
+    end
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero,perm)
     # Account for anti-commuting, fermionic operators 
