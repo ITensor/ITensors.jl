@@ -353,6 +353,7 @@ end
 Base.:-(M::AbstractMPS) = Base.:*(-1,M)
 
 function flux(M::AbstractMPS)::QN
+  hasqns(M[1]) || error("MPS or MPO does not conserve QNs")
   q = QN()
   for j=M.llim+1:M.rlim-1
     q += flux(M[j])
