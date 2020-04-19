@@ -413,8 +413,10 @@ function svdMPO(ampo::AutoMPO,
       end
       if isempty(onsite)
         if isfermionic(right,sites)
+          #println("Putting F on site $n")
           push!(onsite,SiteOp("F",n))
         else
+          #println("Putting Id on site $n")
           push!(onsite,SiteOp("Id",n))
         end
       end
@@ -769,6 +771,9 @@ function sorteachterm(ampo::AutoMPO, sites)
         perm[n] = 0
       end
     end
+    if parity == -1
+      error("Parity-odd fermionic terms not yet supported by AutoMPO")
+    end
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero,perm)
     # Account for anti-commuting, fermionic operators 
@@ -782,6 +787,9 @@ function MPO(ampo::AutoMPO,
              sites::Vector{<:Index};
              kwargs...)::MPO
   ampo = sorteachterm(ampo,sites)
+  #for t in data(ampo)
+  #  @show t
+  #end
   if hasqns(sites[1])
     return qn_svdMPO(ampo,sites;kwargs...)
   end

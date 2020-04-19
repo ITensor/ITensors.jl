@@ -164,12 +164,12 @@ end
 
   @testset "Single creation op" begin
     ampo = AutoMPO()
-    add!(ampo,"Cdagup",3)
+    add!(ampo,"Adagup",3)
     sites = siteinds("Electron",N)
     W = MPO(ampo,sites)
     psi = makeRandomMPS(sites)
     cdu_psi = copy(psi)
-    cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
+    cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Adagup",3))
     @test inner(psi,W,psi) ≈ inner(cdu_psi,psi)
   end
 
@@ -342,12 +342,12 @@ end
 
     @testset "Single creation op" begin
       ampo = AutoMPO()
-      ampo += ("Cdagup",3)
+      ampo += ("Adagup",3)
       sites = siteinds("Electron",N)
       W = MPO(ampo,sites)
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
-      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
+      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Adagup",3))
       @test inner(psi,W,psi) ≈ inner(cdu_psi,psi)
     end
 
@@ -538,12 +538,12 @@ end
 
     @testset "Single creation op" begin
       ampo = AutoMPO()
-      ampo .+= ("Cdagup",3)
+      ampo .+= ("Adagup",3)
       sites = siteinds("Electron",N)
       W = MPO(ampo,sites)
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
-      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Cdagup",3))
+      cdu_psi[3] = noprime(cdu_psi[3]*op(sites,"Adagup",3))
       @test inner(psi,W,psi) ≈ inner(cdu_psi,psi)
     end
 
@@ -743,6 +743,36 @@ end
     @test inner(p100,M1,p001) ≈ +1.0
     @test inner(p100,M2,p001) ≈ +1.0
     @test inner(p100,M3,p001) ≈  0.0
+
+    #
+    # Repeat similar test but
+    # with Electron sites
+    # 
+
+    s = siteinds("Electron",N;conserve_qns=true)
+
+    a1 = AutoMPO()
+    a1 += ("Cdagup",1,"Cup",3)
+    M1 = MPO(a1,s)
+
+    a2 = AutoMPO()
+    a2 += (-1,"Cdn",3,"Cdagdn",1)
+    M2 = MPO(a2,s)
+
+    p0uu = productMPS(s,[1,2,2,1,1])
+    puu0 = productMPS(s,[2,2,1,1,1])
+    p0ud = productMPS(s,[1,2,3,1,1])
+    pdu0 = productMPS(s,[3,2,1,1,1])
+    p00u = productMPS(s,[1,1,2,1,1])
+    pu00 = productMPS(s,[2,1,1,1,1])
+    p00d = productMPS(s,[1,1,3,1,1])
+    pd00 = productMPS(s,[3,1,1,1,1])
+
+    @test inner(puu0,M1,p0uu) ≈ -1.0
+    @test inner(pdu0,M2,p0ud) ≈ -1.0
+    @test inner(pu00,M1,p00u) ≈ +1.0
+    @test inner(pd00,M2,p00d) ≈ +1.0
+
   end
 
 end
