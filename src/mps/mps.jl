@@ -99,28 +99,6 @@ function randomizeMPS!(M::MPS, sites, linkdim=1)
   end
 end
 
-function random_orthog(n::Int,m::Int)::Matrix
-  r = max(n,m)
-  nc = min(n,m)
-  # TODO: always QR a tall, skinny matrix?
-  #       then Q can be of dim (n,m) or (m,n)
-  #       and transpose to get wide Q case?
-  #       faster because avoids square QR when m != n
-
-  sparseQ,R = qr(randn(r,r))
-  Q = convert(Matrix,sparseQ) # TODO: Speed this up?
-  for c=1:nc
-    if real(R[c,c]) < 0.0
-      Q[:,c] *= -1
-    end
-  end
-
-  if m < n
-    return Q
-  else
-    return transpose(Q[:,1:n])
-  end
-end
 
 function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
   N = length(sites)
@@ -131,21 +109,19 @@ function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
   d = dim(sites[N])
   chi = d
   l[N-1] = Index(chi,"Link,l=$(N-1)")
-  O = random_orthog(chi,d)
-  #TODO: replace this copy(itensor(O,...)) pattern with
-  #      ITensor(O,...) after that constructor is restored?
+  O = NDTensors.random_orthog(chi,d)
   M[N] = itensor(O,l[N-1],sites[N])
 
   for j=N-1:-1:2
     chi *= dim(sites[j])
     chi = min(linkdim,chi)
     l[j-1] = Index(chi,"Link,l=$(j-1)")
-    O = random_orthog(chi,dim(sites[j])*dim(l[j]))
+    O = NDTensors.random_orthog(chi,dim(sites[j])*dim(l[j]))
     T = reshape(O,(chi,dim(sites[j]),dim(l[j])))
     M[j] = itensor(T,l[j-1],sites[j],l[j])
   end
 
-  O = random_orthog(1,dim(sites[1])*dim(l[1]))
+  O = NDTensors.random_orthog(1,dim(sites[1])*dim(l[1]))
   l0 = Index(1,"Link,l=0")
   T = reshape(O,(1,dim(sites[1]),dim(l[1])))
   M[1] = itensor(T,l0,sites[1],l[1])

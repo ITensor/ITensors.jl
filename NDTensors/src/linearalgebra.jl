@@ -208,6 +208,29 @@ function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
   return U,D
 end
 
+"""
+    random_orthog(n::Int,m::Int)
+
+Return a random matrix O of dimensions (n,m)
+such that if n >= m, transpose(O)*O is the 
+identity, or if m > n O*transpose(O) is the
+identity.
+"""
+function random_orthog(n::Int,m::Int)::Matrix
+  #TODO: optimize by using recursive Householder algorithm?
+  if n < m
+    return transpose(random_orthog(m,n))
+  end
+  F = qr(randn(n,m))
+  Q = Matrix(F.Q)
+  for c=1:size(Q,2)
+    if real(F.R[c,c]) < 0.0
+      Q[:,c] *= -1
+    end
+  end
+  return Q
+end
+
 function qr_positive(M::AbstractMatrix)
   sparseQ,R = qr(M)
   Q = convert(Matrix,sparseQ)
