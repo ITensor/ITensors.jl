@@ -1,6 +1,10 @@
-export polar,
+export eigs,
+       entropy,
+       polar,
+       random_orthog,
        Spectrum,
-       svd
+       svd,
+       truncerror
 
 #
 # Linear Algebra of order 2 NDTensors
@@ -8,9 +12,6 @@ export polar,
 # Even though DenseTensor{_,2} is strided
 # and passable to BLAS/LAPACK, it cannot
 # be made <: StridedArray
-export eigs,
-       truncerror,
-       entropy
 
 function Base.:*(T1::Tensor{ElT1,2,StoreT1},
                  T2::Tensor{ElT2,2,StoreT2}) where
@@ -206,6 +207,29 @@ function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
   U = tensor(Dense(vec(UM)),Uinds)
   D = tensor(Diag(DM),Dinds)
   return U,D
+end
+
+"""
+    random_orthog(n::Int,m::Int)
+
+Return a random matrix O of dimensions (n,m)
+such that if n >= m, transpose(O)*O is the 
+identity, or if m > n O*transpose(O) is the
+identity.
+"""
+function random_orthog(n::Int,m::Int)::Matrix
+  #TODO: optimize by using recursive Householder algorithm?
+  if n < m
+    return transpose(random_orthog(m,n))
+  end
+  F = qr(randn(n,m))
+  Q = Matrix(F.Q)
+  for c=1:size(Q,2)
+    if real(F.R[c,c]) < 0.0
+      Q[:,c] *= -1
+    end
+  end
+  return Q
 end
 
 function qr_positive(M::AbstractMatrix)
