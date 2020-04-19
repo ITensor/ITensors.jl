@@ -1,6 +1,10 @@
-export polar,
+export eigs,
+       entropy,
+       polar,
+       random_orthog,
        Spectrum,
-       svd
+       svd,
+       truncerror
 
 #
 # Linear Algebra of order 2 NDTensors
@@ -8,9 +12,6 @@ export polar,
 # Even though DenseTensor{_,2} is strided
 # and passable to BLAS/LAPACK, it cannot
 # be made <: StridedArray
-export eigs,
-       truncerror,
-       entropy
 
 function Base.:*(T1::Tensor{ElT1,2,StoreT1},
                  T2::Tensor{ElT2,2,StoreT2}) where
