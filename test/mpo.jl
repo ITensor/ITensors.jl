@@ -153,7 +153,7 @@ end
     @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     psi_out = mul(K, psi,maxdim=1)
-    @test inner(phi,psi_out) ≈ inner(phi,K,psi)
+    @test abs(inner(phi,psi_out) - inner(phi,K,psi)) < 1E-4
     @test_throws ArgumentError mul(K, psi, method="fakemethod")
 
     badsites = [Index(2,"Site") for n=1:N+1]
