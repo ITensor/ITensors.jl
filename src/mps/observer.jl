@@ -82,10 +82,10 @@ function measure!(obs::DMRGObserver;
 end
 
 function checkdone!(o::DMRGObserver; kwargs...)
-  quiet = get(kwargs,:quiet,false)
+  outputlevel = get(kwargs,:outputlevel,false)
   if (length(energies(o)) > o.minsweeps &&
       abs(energies(o)[end] - energies(o)[end-1]) < o.etol)
-    !quiet && println("Energy difference less than $(o.etol), stopping DMRG")
+    outputlevel > 0 && println("Energy difference less than $(o.etol), stopping DMRG")
     return true
   end
   return false
