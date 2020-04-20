@@ -273,7 +273,6 @@ function factorize_eigen(A::ITensor,
     Ris = uniqueinds(A,IndexSet(Linds...))
     A2 = A*prime(dag(A),Ris)
     if delta_A2 != nothing
-      println("Applying eigen perturbation")
       A2 += delta_A2
     end
     R,D,spec = eigen(A2,Ris,prime(Ris); ishermitian=true,
