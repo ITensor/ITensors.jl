@@ -12,7 +12,7 @@ let
     ampo += (0.5,"S+",j,"S-",j+1)
     ampo += (0.5,"S-",j,"S+",j+1)
   end
-  H = toMPO(ampo,sites)
+  H = MPO(ampo,sites)
 
   psi0 = MPS(N)
 
