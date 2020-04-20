@@ -217,3 +217,5 @@ const MySite = ITensors.TagType"MySite"
   @test state(i,"One") == i(1)
   @test state(i,"Two") == i(2)
 end
+
+nothing

@@ -11,3 +11,5 @@ end
     tL = triangular_lattice(3, 4)
     @test length(tL) == 23
 end
+
+nothing
