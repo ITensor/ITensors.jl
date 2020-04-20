@@ -320,12 +320,14 @@ function LinearAlgebra.factorize(A::ITensor,
   end
 
   # Deprecated keywords
-  haskey(kwargs, :dir) && 
-  error("""dir keyword in factorize has been replace by ortho.
-  Note that the default is now `left`, meaning for the results L,R = factorize(A), L forms an orthogonal basis.""")
+  if haskey(kwargs, :dir)
+    error("""dir keyword in factorize has been replace by ortho.
+    Note that the default is now `left`, meaning for the results L,R = factorize(A), L forms an orthogonal basis.""")
+  end
 
-  haskey(kwargs, :which_factorization) && 
-  error("""which_factorization keyword in factorize has been replace by which_decomp.""")
+  if haskey(kwargs, :which_factorization)
+    error("""which_factorization keyword in factorize has been replace by which_decomp.""")
+  end
 
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)

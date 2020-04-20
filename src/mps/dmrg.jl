@@ -87,7 +87,7 @@ function dmrg(PH,
               sweeps::Sweeps;
               kwargs...)
   which_decomp::String = get(kwargs, :which_decomp, "automatic")
-  obs = get(kwargs,:observer, NoObserver())
+  obs = get(kwargs, :observer, NoObserver())
   quiet::Bool = get(kwargs, :quiet, false)
 
   # eigsolve kwargs
@@ -106,54 +106,59 @@ function dmrg(PH,
   eigsolve_which_eigenvalue::Symbol = :SR
 
   # Keyword argument deprecations
-  haskey(kwargs,:maxiter) && error("""maxiter keyword has been replace by eigsolve_krylovdim.
-                                      Note: compared to the C++ version of ITensor,
-                                      setting eigsolve_krylovdim 3 is the same as setting
-                                      a maxiter of 2.""")
-  haskey(kwargs,:errgoal) && error("errgoal keyword has been replace by eigsolve_tol.")
+  if haskey(kwargs, :maxiter)
+    error("""maxiter keyword has been replace by eigsolve_krylovdim.
+             Note: compared to the C++ version of ITensor,
+             setting eigsolve_krylovdim 3 is the same as setting
+             a maxiter of 2.""")
+  end
+
+  if haskey(kwargs, :errgoal)
+    error("errgoal keyword has been replace by eigsolve_tol.")
+  end
 
   psi = copy(psi0)
   N = length(psi)
 
-  position!(PH,psi0,1)
+  position!(PH, psi0, 1)
   energy = 0.0
 
   for sw=1:nsweep(sweeps)
     sw_time = @elapsed begin
 
-    for (b,ha) in sweepnext(N)
+    for (b, ha) in sweepnext(N)
 
 @timeit_debug GLOBAL_TIMER "position!" begin
-      position!(PH,psi,b)
+      position!(PH, psi, b)
 end
 
 @timeit_debug GLOBAL_TIMER "psi[b]*psi[b+1]" begin
-      phi = psi[b]*psi[b+1]
+      phi = psi[b] * psi[b+1]
 end
 
 @timeit_debug GLOBAL_TIMER "eigsolve" begin
-      vals,vecs = eigsolve(PH, phi, 1, eigsolve_which_eigenvalue;
-                           ishermitian = ishermitian,
-                           tol = eigsolve_tol,
-                           krylovdim = eigsolve_krylovdim,
-                           maxiter = eigsolve_maxiter)
+      vals, vecs = eigsolve(PH, phi, 1, eigsolve_which_eigenvalue;
+                            ishermitian = ishermitian,
+                            tol = eigsolve_tol,
+                            krylovdim = eigsolve_krylovdim,
+                            maxiter = eigsolve_maxiter)
 end
-      energy,phi = vals[1],vecs[1]
+      energy, phi = vals[1], vecs[1]
 
-      dir = ha==1 ? "fromleft" : "fromright"
+      ortho = ha == 1 ? "left" : "right"
 
       drho = nothing
-      if noise(sweeps,sw) > 0.0
+      if noise(sweeps, sw) > 0.0
         # Use noise term when determining new MPS basis
-        drho = noise(sweeps,sw)*noiseterm(PH,phi,b,dir)
+        drho = noise(sweeps, sw) * noiseterm(PH, phi, b, ortho)
       end
 
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
-        spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps,sw),
-                                         mindim = mindim(sweeps,sw),
-                                         cutoff = cutoff(sweeps,sw),
-                                         eigen_perturbation=drho,
-                                         dir = dir,
+        spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
+                                         mindim = mindim(sweeps, sw),
+                                         cutoff = cutoff(sweeps, sw),
+                                         eigen_perturbation = drho,
+                                         ortho = ortho,
                                          which_decomp = which_decomp)
 end
 
@@ -172,5 +177,6 @@ end
     end
     checkdone!(obs; quiet = quiet) && break
   end
-  return (energy,psi)
+  return (energy, psi)
 end
+
