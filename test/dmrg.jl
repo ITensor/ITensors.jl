@@ -47,7 +47,7 @@ using ITensors, Test, Random
     # Exact energy for transverse field Ising model
     # with open boundary conditions at criticality
     energy_exact = 0.25 - 0.25/sin(π/(2*(2*N+1)))
-    @test abs((energy-energy_exact)/energy_exact) < 1e-6
+    @test abs((energy-energy_exact)/energy_exact) < 1e-4
   end
 
   @testset "DMRGObserver" begin
@@ -144,4 +144,40 @@ using ITensors, Test, Random
 
     @test inner(psi1,psi0) < 1E-6
   end
+
+  @testset "Fermionic Hamiltonian" begin
+    N = 10
+    t1 = 1.0
+    t2 = 0.5
+    V = 0.2
+    s = siteinds("Fermion",N;conserve_qns=true)
+
+    state = fill(1,N)
+    state[1] = 2
+    state[3] = 2
+    state[5] = 2
+    state[7] = 2
+    psi0 = productMPS(s,state)
+
+    ampo = AutoMPO()
+    for j=1:N-1
+      ampo += (-t1,"Cdag",j,  "C",j+1)
+      ampo += (-t1,"Cdag",j+1,"C",j)
+      ampo += (V,"N",j,"N",j+1)
+    end
+    for j=1:N-2
+      ampo += (-t2,"Cdag",j,  "C",j+2)
+      ampo += (-t2,"Cdag",j+2,"C",j)
+    end
+    H = MPO(ampo,s)
+
+    sweeps = Sweeps(5)
+    maxdim!(sweeps, 10,20,100,100,200)
+    cutoff!(sweeps, 1E-8)
+
+    energy,psi = dmrg(H,psi0,sweeps;quiet=true)
+    @test (-6.5 < energy < -6.4)
+  end
 end
+
+nothing

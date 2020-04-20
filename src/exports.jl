@@ -155,17 +155,19 @@ export
 # mps/dmrg.jl
   dmrg,
 
+# mps/abstractmps.jl
+  add,
+  mul,
+  primelinkinds!,
+
 # mps/mpo.jl
   # Types
   MPO,
   # Methods
-  applympo,
-  error_mpoprod,
+  error_mul,
   maxlinkdim,
-  multmpo,
   orthogonalize!,
   randomMPO,
-  sum,
   truncate!,
 
 # mps/mps.jl
@@ -182,6 +184,7 @@ export
   sample!,
   siteind,
   siteinds,
+  totalqn,
 
 # mps/observer.jl
   # Types
@@ -229,6 +232,7 @@ export
   TagType_str,
   op,
   state,
+  has_fermion_string,
 
 # physics/site_types/electron.jl
   ElectronSite,

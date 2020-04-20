@@ -26,3 +26,5 @@ using ITensors,
     @test SySy ≈ matmul(Sy,Sy)
   end
 end
+
+nothing
