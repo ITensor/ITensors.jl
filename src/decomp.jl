@@ -105,6 +105,7 @@ function LinearAlgebra.svd(A::ITensor,
   return TruncSVD(U,S,V,spec,u,v)
 end
 
+
 """
   TruncEigen{N}
 ITensor factorization type for a truncated eigenvalue decomposition, returned by
@@ -225,6 +226,7 @@ function NDTensors.polar(A::ITensor,
   return U,P,commoninds(U,P)
 end
 
+
 function factorize_svd(A::ITensor,
                        Linds...;
                        kwargs...)
@@ -257,16 +259,23 @@ function factorize_eigen(A::ITensor,
                          Linds...;
                          kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
+  delta_A2 = get(kwargs,:eigen_perturbation,nothing)
   if ortho == "left"
     Lis = commoninds(A,IndexSet(Linds...))
-    A² = A*prime(dag(A),Lis)
-    L,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
+    A2 = A*prime(dag(A),Lis)
+    if delta_A2 != nothing
+      A2 += delta_A2
+    end
+    L,D,spec = eigen(A2,Lis,prime(Lis); ishermitian=true,
                                         kwargs...)
     R = dag(L)*A
   elseif ortho == "right"
     Ris = uniqueinds(A,IndexSet(Linds...))
-    A² = A*prime(dag(A),Ris)
-    R,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
+    A2 = A*prime(dag(A),Ris)
+    if delta_A2 != nothing
+      A2 += delta_A2
+    end
+    R,D,spec = eigen(A2,Ris,prime(Ris); ishermitian=true,
                                         kwargs...)
     L = A*dag(R)
   else
@@ -305,6 +314,10 @@ function LinearAlgebra.factorize(A::ITensor,
   ortho::String = get(kwargs, :ortho, "left")
   which_decomp::String = get(kwargs, :which_decomp, "automatic")
   cutoff::Float64 = get(kwargs, :cutoff, 0.0)
+  eigen_perturbation = get(kwargs,:eigen_perturbation,nothing)
+  if eigen_perturbation != nothing
+    which_decomp = "eigen"
+  end
 
   # Deprecated keywords
   haskey(kwargs, :dir) && 

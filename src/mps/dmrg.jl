@@ -81,6 +81,7 @@ function dmrg(H::MPO,
   return dmrg(PMM,psi0,sweeps;kwargs...)
 end
 
+
 function dmrg(PH,
               psi0::MPS,
               sweeps::Sweeps;
@@ -141,12 +142,19 @@ end
 
       dir = ha==1 ? "fromleft" : "fromright"
 
+      drho = nothing
+      if noise(sweeps,sw) > 0.0
+        # Use noise term when determining new MPS basis
+        drho = noise(sweeps,sw)*noiseterm(PH,phi,b,dir)
+      end
+
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
-      spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps,sw),
-                                       mindim = mindim(sweeps,sw),
-                                       cutoff = cutoff(sweeps,sw),
-                                       dir = dir,
-                                       which_decomp = which_decomp)
+        spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps,sw),
+                                         mindim = mindim(sweeps,sw),
+                                         cutoff = cutoff(sweeps,sw),
+                                         eigen_perturbation=drho,
+                                         dir = dir,
+                                         which_decomp = which_decomp)
 end
 
       measure!(obs; energy = energy,

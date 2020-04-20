@@ -123,3 +123,22 @@ function position!(pm::ProjMPO,
   pm.rpos = pos+nsite(pm)
 end
 
+# Return a "noise term" as in Phys. Rev. B 72, 180403
+function noiseterm(pm::ProjMPO,
+                   phi::ITensor,
+                   b::Int,
+                   dir::String)
+  if dir=="fromleft"
+    nt = pm.H[b]*phi
+    if !isnull(lproj(pm))
+      nt *= lproj(pm)
+    end
+  elseif dir=="fromright"
+    nt = phi*pm.H[b+1]
+    if !isnull(rproj(pm))
+      nt *= rproj(pm)
+    end
+  end
+  nt = nt*dag(noprime(nt))
+  return nt
+end
