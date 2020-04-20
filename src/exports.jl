@@ -174,6 +174,7 @@ export
   # Types
   MPS,
   # Methods
+  ⋅,
   inner,
   isortho,
   linkind,
@@ -214,6 +215,7 @@ export
   maxdim,
   maxdim!,
   mindim!,
+  noise!,
   nsweep,
   sweepnext,
 

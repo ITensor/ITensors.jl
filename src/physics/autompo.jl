@@ -441,7 +441,7 @@ function svdMPO(ampo::AutoMPO,
   end
 
   llinks = [Index() for n=1:N+1]
-  llinks[1] = Index(2,"Link,n=0")
+  llinks[1] = Index(2,"Link,l=0")
 
   H = MPO(sites)
 
@@ -459,7 +459,7 @@ function svdMPO(ampo::AutoMPO,
     VR = Vs[n]
     tdim = size(VR,2)
 
-    llinks[n+1] = Index(2+tdim,"Link,n=$n")
+    llinks[n+1] = Index(2+tdim,"Link,l=$n")
 
     finalMPO = Dict{OpTerm,Matrix{ValType}}()
 
@@ -621,7 +621,7 @@ function qn_svdMPO(ampo::AutoMPO,
   #
   d0 = 2
   llinks = Vector{QNIndex}(undef,N+1)
-  llinks[1] = Index(QN()=>d0;tags="Link,n=0")
+  llinks[1] = Index(QN()=>d0;tags="Link,l=0")
   for n=1:N
     qi = Vector{Pair{QN,Int}}()
     if !haskey(Vs[n+1],QN())
@@ -637,7 +637,7 @@ function qn_svdMPO(ampo::AutoMPO,
         push!(qi,q=>cols)
       end
     end
-    llinks[n+1] = Index(qi...;tags="Link,n=$n")
+    llinks[n+1] = Index(qi...;tags="Link,l=$n")
   end
 
   H = MPO(N)

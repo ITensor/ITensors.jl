@@ -64,12 +64,17 @@ include("util.jl")
     end
   end
 
-  @testset "randomMPS" begin
+  @testset "randomMPS with chi==1" begin
     phi = randomMPS(sites)
+
+    @test maxlinkdim(phi) == 1
+
     @test hasind(phi[1],sites[1])
     @test norm(phi[1])≈1.0
+
     @test hasind(phi[4],sites[4])
     @test norm(phi[4])≈1.0
+
   end
 
   @testset "inner different MPS" begin
@@ -167,21 +172,21 @@ include("util.jl")
     # check that replacebond! updates llim and rlim properly
     orthogonalize!(psi,5)
     phi = psi[5]*psi[6]
-    replacebond!(psi, 5, phi; dir="fromleft")
-    @test ITensors.leftlim(psi)==5
-    @test ITensors.rightlim(psi)==7
+    replacebond!(psi, 5, phi; ortho = "left")
+    @test ITensors.leftlim(psi) == 5
+    @test ITensors.rightlim(psi) == 7
 
     phi = psi[5]*psi[6]
-    replacebond!(psi, 5, phi; dir="fromright")
+    replacebond!(psi, 5, phi; ortho = "right")
     @test ITensors.leftlim(psi) == 4
     @test ITensors.rightlim(psi)==6
 
     ITensors.setleftlim!(psi, 3)
     ITensors.setrightlim!(psi, 7)
     phi = psi[5]*psi[6]
-    replacebond!(psi, 5, phi; dir="fromleft")
-    @test ITensors.leftlim(psi)==3
-    @test ITensors.rightlim(psi)==7
+    replacebond!(psi, 5, phi; ortho = "left")
+    @test ITensors.leftlim(psi) == 3
+    @test ITensors.rightlim(psi) == 7
   end
 
 end

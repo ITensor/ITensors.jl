@@ -123,3 +123,25 @@ function position!(pm::ProjMPO,
   pm.rpos = pos+nsite(pm)
 end
 
+# Return a "noise term" as in Phys. Rev. B 72, 180403
+function noiseterm(pm::ProjMPO,
+                   phi::ITensor,
+                   b::Int,
+                   ortho::String)
+  if ortho == "left"
+    nt = pm.H[b]*phi
+    if !isnull(lproj(pm))
+      nt *= lproj(pm)
+    end
+  elseif ortho == "right"
+    nt = phi*pm.H[b+1]
+    if !isnull(rproj(pm))
+      nt *= rproj(pm)
+    end
+  else
+    error("In noiseterm, got ortho = $ortho, only supports `left` and `right`")
+  end
+  nt = nt*dag(noprime(nt))
+  return nt
+end
+
