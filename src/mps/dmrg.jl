@@ -81,6 +81,14 @@ function dmrg(H::MPO,
   return dmrg(PMM,psi0,sweeps;kwargs...)
 end
 
+# Make the perturbation to the density matrix used in "noise term" DMRG
+# This assumes that A comes in with no primes
+# If it doesn't, I expect A² += drho later to fail
+function deltarho(A :: ITensor, nt :: ITensor, is)
+  drho = noprime(nt * A)
+  drho *= prime(dag(drho), is)
+end
+
 function dmrg(PH,
               psi0::MPS,
               sweeps::Sweeps;
