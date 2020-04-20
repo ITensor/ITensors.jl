@@ -174,6 +174,7 @@ export
   # Types
   MPS,
   # Methods
+  ⋅,
   inner,
   isortho,
   linkind,

@@ -278,7 +278,6 @@ function _mul_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
   psi_out         = similar(psi)
   cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
-
   maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(psi))
   mindim::Int     = max(get(kwargs,:mindim,1), 1)
   normalize::Bool = get(kwargs, :normalize, false) 

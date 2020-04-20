@@ -153,7 +153,7 @@ end
     @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     psi_out = mul(K, psi,maxdim=1)
-    @test abs(inner(phi,psi_out) - inner(phi,K,psi)) < 1E-4
+    @test inner(phi,psi_out) ≈ inner(phi,K,psi)
     @test_throws ArgumentError mul(K, psi, method="fakemethod")
 
     badsites = [Index(2,"Site") for n=1:N+1]
@@ -226,7 +226,7 @@ end
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
     KL = mul(prime(K), L, maxdim=1)
-    psi_kl_out = mul(K, mul(L, psi, maxdim=1), maxdim=1)
+    psi_kl_out = mul(prime(K), mul(L, psi, maxdim=1), maxdim=1)
     @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
 
     # where both K and L have differently labelled sites
@@ -256,7 +256,7 @@ end
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
     KL = *(prime(K), L, maxdim=1)
-    psi_kl_out = *(K, *(L, psi, maxdim=1), maxdim=1)
+    psi_kl_out = *(prime(K), *(L, psi, maxdim=1), maxdim=1)
     @test ⋅(psi, KL, psi) ≈ dot(psi, psi_kl_out) atol=5e-3
 
     # where both K and L have differently labelled sites
