@@ -787,10 +787,20 @@ function LinearAlgebra.exp(A::ITensor,
   return itensor(expAT)
 end
 
-function matmul(A::ITensor,
-                B::ITensor)
-  R = mapprime(mapprime(A,1,2),0,1)
-  R *= B
+"""
+    product(A::ITensor, B::ITensor)
+
+For matrix-like ITensors (ones with pairs of primed and
+unprimed indices), perform a matrix product, i.e.
+```julia
+mapprime(prime(A) * B, 2, 1)
+```
+In the future, more general ITensors with other tag or
+prime conventions may be supported.
+"""
+function product(A::ITensor,
+                 B::ITensor)
+  R = prime(A) * B
   return mapprime(R,2,1)
 end
 
@@ -1129,4 +1139,6 @@ end
 @deprecate siteindex(args...; kwargs...) siteind(args...; kwargs...)
 
 @deprecate linkindex(args...; kwargs...) linkind(args...; kwargs...)
+
+@deprecate matmul(A::ITensor, B::ITensor) product(A, B)
 

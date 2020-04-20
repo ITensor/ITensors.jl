@@ -221,8 +221,10 @@ end
 inner(B::MPO, y::MPS, A::MPO, x::MPS) = dot(B, y, A, x)
 
 """
-    error_mul(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
-    error_mul(y::MPS, x::MPS, x::MPO; make_inds_match::Bool = true)
+    error_contract(y::MPS, A::MPO, x::MPS;
+                   make_inds_match::Bool = true)
+    error_contract(y::MPS, x::MPS, x::MPO;
+                   make_inds_match::Bool = true)
 
 Compute the distance between A|x> and an approximation MPS y:
 `| |y> - A|x> |/| A|x> | = √(1 + (<y|y> - 2*real(<y|A|x>))/<Ax|A|x>)`.
@@ -231,7 +233,7 @@ If `make_inds_match = true`, the function attempts match the site
 indices of `y` with the site indices of `A` that are not common
 with `x`.
 """
-function error_mul(y::MPS, A::MPO, x::MPS; kwargs...)
+function error_contract(y::MPS, A::MPO, x::MPS; kwargs...)
   N = length(A)
   if length(y) != N || length(x) != N
     throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
@@ -242,13 +244,13 @@ function error_mul(y::MPS, A::MPO, x::MPS; kwargs...)
   return sqrt(abs(1. + (iyy - 2*real(iyax))/iaxax))
 end
 
-error_mul(y::MPS, x::MPS, A::MPO) = error_mul(y, A, x)
+error_contract(y::MPS, x::MPS, A::MPO) = error_contract(y, A, x)
 
 """
-    mul(::MPS, ::MPO; kwargs...)
+    contract(::MPS, ::MPO; kwargs...)
     *(::MPS, ::MPO; kwargs...)
 
-    mul(::MPO, ::MPS; kwargs...)
+    contract(::MPO, ::MPS; kwargs...)
     *(::MPO, ::MPS; kwargs...)
 
 Contract the MPO with the MPS, returning an MPS with the unique
@@ -259,21 +261,29 @@ Choose the method with the `method` keyword, for example
 """
 function Base.:*(A::MPO, psi::MPS; kwargs...)::MPS
   method = get(kwargs, :method, "densitymatrix")
+
+  # Keyword argument deprecations
   if method == "DensityMatrix"
-    @warn "In mul, method DensityMatrix is deprecated in favor of densitymatrix"
+    @warn "In contract, method DensityMatrix is deprecated in favor of densitymatrix"
     method = "densitymatrix"
   end
+
+  if method == "Naive"
+    @warn "In contract, method Naive is deprecated in favor of naive"
+    method = "naive"
+  end
+
   if method == "densitymatrix"
-    return _mul_densitymatrix(A, psi; kwargs...)
-  elseif method == "naive" || method == "Naive"
-    return _mul_naive(A, psi; kwargs...)
+    return _contract_densitymatrix(A, psi; kwargs...)
+  elseif method == "naive"
+    return _contract_naive(A, psi; kwargs...)
   end
   throw(ArgumentError("Method $method not supported"))
 end
 
 Base.:*(psi::MPS, A::MPO; kwargs...) = *(A, psi; kwargs...)
 
-function _mul_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
+function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   n = length(A)
   n != length(psi) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(psi))) do not match"))
   psi_out         = similar(psi)
@@ -283,7 +293,7 @@ function _mul_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   normalize::Bool = get(kwargs, :normalize, false) 
   all(x -> x != Index(),
       [siteind(A, psi, j) for j in 1:n]) || 
-  throw(ErrorException("MPS and MPO have different site indices in mul method 'densitymatrix'"))
+  throw(ErrorException("MPS and MPO have different site indices in contract method 'densitymatrix'"))
 
   rand_plev = 14741
   psi_c     = dag(copy(psi))
@@ -332,7 +342,7 @@ function _mul_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   return psi_out
 end
 
-function _mul_naive(A::MPO, psi::MPS; kwargs...)::MPS
+function _contract_naive(A::MPO, psi::MPS; kwargs...)::MPS
   truncate = get(kwargs,:truncate,true)
 
   N = length(A)
@@ -388,8 +398,8 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   for (AA, BB) in zip(data(A_), data(B_))
     sda = setdiff(inds(AA, "Site"), inds(BB, "Site"))
     sdb = setdiff(inds(BB, "Site"), inds(AA, "Site"))
-    length(sda) != 1 && error("In mul(::MPO, ::MPO), MPOs must have exactly one shared site index")
-    length(sdb) != 1 && error("In mul(::MPO, ::MPO), MPOs must have exactly one shared site index")
+    length(sda) != 1 && error("In contract(::MPO, ::MPO), MPOs must have exactly one shared site index")
+    length(sdb) != 1 && error("In contract(::MPO, ::MPO), MPOs must have exactly one shared site index")
     push!(sites_A, sda[1])
     push!(sites_B, sdb[1])
   end
