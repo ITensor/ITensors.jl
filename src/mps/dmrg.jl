@@ -140,13 +140,13 @@ end
 end
       energy,phi = vals[1],vecs[1]
 
-      drho = ITensor()
+      dir = ha==1 ? "fromleft" : "fromright"
+
+      drho = nothing
       if noise(sweeps,sw) > 0.0
         # Use noise term when determining new MPS basis
-        drho = noise(sweeps,sw)*noiseterm(phi,b,PH,dir)
+        drho = noise(sweeps,sw)*noiseterm(PH,phi,b,dir)
       end
-
-      dir = ha==1 ? "fromleft" : "fromright"
 
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
         spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps,sw),

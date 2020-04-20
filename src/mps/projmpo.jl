@@ -123,16 +123,11 @@ function position!(pm::ProjMPO,
   pm.rpos = pos+nsite(pm)
 end
 
-# Make the perturbation to the density matrix used in "noise term" DMRG
-# This assumes that A comes in with no primes
-# If it doesn't, I expect A² += drho later to fail
-function deltarho(A :: ITensor, nt :: ITensor, is)
-  drho = noprime(nt * A)
-  drho *= prime(dag(drho), is)
-end
-
 # Return a "noise term" as in Phys. Rev. B 72, 180403
-function noiseterm(phi::ITensor,b::Int,pm::ProjMPO,dir::String)
+function noiseterm(pm::ProjMPO,
+                   phi::ITensor,
+                   b::Int,
+                   dir::String)
   if dir=="fromleft"
     nt = pm.H[b]*phi
     if !isnull(lproj(pm))
@@ -144,5 +139,6 @@ function noiseterm(phi::ITensor,b::Int,pm::ProjMPO,dir::String)
       nt *= rproj(pm)
     end
   end
+  nt = nt*dag(noprime(nt))
   return nt
 end
