@@ -24,7 +24,7 @@ let
       ampo += (0.5,"S-",j,"S+",j+1)
   end
   # Convert these terms to an MPO tensor network
-  H = toMPO(ampo,sites)
+  H = MPO(ampo,sites)
 
   # Create an initial random matrix product state
   psi0 = randomMPS(sites,10)
