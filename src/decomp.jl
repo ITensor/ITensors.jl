@@ -273,6 +273,7 @@ function factorize_eigen(A::ITensor,
     Ris = uniqueinds(A,IndexSet(Linds...))
     A2 = A*prime(dag(A),Ris)
     if delta_A2 != nothing
+      println("Applying eigen perturbation")
       A2 += delta_A2
     end
     R,D,spec = eigen(A2,Ris,prime(Ris); ishermitian=true,
@@ -315,7 +316,12 @@ function LinearAlgebra.factorize(A::ITensor,
   which_decomp::String = get(kwargs, :which_decomp, "automatic")
   cutoff::Float64 = get(kwargs, :cutoff, 0.0)
   eigen_perturbation = get(kwargs,:eigen_perturbation,nothing)
-  if eigen_perturbation != nothing
+  if !isnothing(eigen_perturbation)
+    if !(which_decomp == "automatic" || which_decomp == "eigen")
+      error("""when passing a non-trivial eigen_perturbation to `factorize`,
+               the which_decomp keyword argument must be either "automatic" or
+               "eigen" """)
+    end
     which_decomp = "eigen"
   end
 
