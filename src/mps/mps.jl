@@ -107,7 +107,7 @@ function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
   l = Vector{Index}(undef,N)
   
   d = dim(sites[N])
-  chi = d
+  chi = min(linkdim,d)
   l[N-1] = Index(chi,"Link,l=$(N-1)")
   O = NDTensors.random_orthog(chi,d)
   M[N] = itensor(O,l[N-1],sites[N])
@@ -140,11 +140,10 @@ Construct a random MPS with link dimension `linkdim` of
 type `T`.
 """
 function randomMPS(::Type{T}, sites, linkdim=1) where {T<:Number}
-  if !hasqns(sites[1])
-    #
+
+  if linkdim > 1 && !hasqns(sites[1])
     # For non-QN-conserving MPS, instantiate
     # the random MPS directly as a circuit:
-    #
     return randomCircuitMPS(sites,linkdim)
   end
 
@@ -153,6 +152,7 @@ function randomMPS(::Type{T}, sites, linkdim=1) where {T<:Number}
     randn!(M[i])
     normalize!(M[i])
   end
+
   setleftlim!(M, 0)
   setrightlim!(M, 2)
 
