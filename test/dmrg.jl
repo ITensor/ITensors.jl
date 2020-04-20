@@ -20,6 +20,7 @@ using ITensors, Test, Random
     maxdim!(sweeps,10,20,40)
     mindim!(sweeps,1,10,10)
     cutoff!(sweeps,1E-11)
+    noise!(sweeps,1E-10)
     str = split(sprint(show, sweeps), '\n')
     @test length(str) > 1
     energy,psi = dmrg(H, psi, sweeps; quiet=true)
@@ -42,6 +43,7 @@ using ITensors, Test, Random
     sweeps = Sweeps(5)
     maxdim!(sweeps,10,20)
     cutoff!(sweeps,1E-12)
+    noise!(sweeps,1E-10)
     energy,psi = dmrg(H,psi0,sweeps,quiet=true)
 
     # Exact energy for transverse field Ising model
@@ -107,6 +109,7 @@ using ITensors, Test, Random
     maxdim!(sweeps,10,20,40)
     mindim!(sweeps,1,10,10)
     cutoff!(sweeps,1E-11)
+    noise!(sweeps,1E-10)
     energy,psi = dmrg([HZ,HXY], psi, sweeps; quiet=true)
     @test energy < -12.0
   end
@@ -132,6 +135,7 @@ using ITensors, Test, Random
     sweeps = Sweeps(6)
     maxdim!(sweeps, 10,20,100,100,200)
     cutoff!(sweeps, 1E-11)
+    noise!(sweeps,1E-10)
 
     energy0, psi0 = dmrg(H,psi0i, sweeps; quiet=true)
     @test energy0 < -11.5
@@ -174,6 +178,7 @@ using ITensors, Test, Random
     sweeps = Sweeps(5)
     maxdim!(sweeps, 10,20,100,100,200)
     cutoff!(sweeps, 1E-8)
+    noise!(sweeps,1E-10)
 
     energy,psi = dmrg(H,psi0,sweeps;quiet=true)
     @test (-6.5 < energy < -6.4)
