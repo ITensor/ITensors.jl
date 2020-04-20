@@ -65,10 +65,7 @@ function noise!(sw::Sweeps,noises::Float64...)::Nothing
     sw.noise[i] = noises[i]
   end
   for i=Nm+1:nsweep(sw)
-    # this is different behavior from cutoff!, min/maxdim!, etc.,
-    # but I (CDW) think it's the right thing:
-    # if the noise isn't specified, it should be 0
-    sw.noise[i] = 0 
+    sw.noise[i] = noises[Nm]
   end
 end
 
