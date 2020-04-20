@@ -99,7 +99,6 @@ export
   inds,
   isnull,
   itensor,
-  matmul,
   mul!,
   matrix,
   mapprime!,
@@ -157,14 +156,14 @@ export
 
 # mps/abstractmps.jl
   add,
-  mul,
+  contract,
   primelinkinds!,
 
 # mps/mpo.jl
   # Types
   MPO,
   # Methods
-  error_mul,
+  error_contract,
   maxlinkdim,
   orthogonalize!,
   randomMPO,

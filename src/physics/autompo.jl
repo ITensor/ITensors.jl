@@ -337,7 +337,7 @@ function computeSiteProd(sites,
   for j=2:length(ops)
     (ops[j].site != i) && error("Mismatch of site number in computeSiteProd")
     opj = op(sites[i],ops[j].name)
-    T = matmul(T,opj)
+    T = product(T, opj)
   end
   return T
 end
