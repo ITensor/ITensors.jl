@@ -315,7 +315,12 @@ function LinearAlgebra.factorize(A::ITensor,
   which_decomp::String = get(kwargs, :which_decomp, "automatic")
   cutoff::Float64 = get(kwargs, :cutoff, 0.0)
   eigen_perturbation = get(kwargs,:eigen_perturbation,nothing)
-  if eigen_perturbation != nothing
+  if !isnothing(eigen_perturbation)
+    if !(which_decomp == "automatic" || which_decomp == "eigen")
+      error("""when passing a non-trivial eigen_perturbation to `factorize`,
+               the which_decomp keyword argument must be either "automatic" or
+               "eigen" """)
+    end
     which_decomp = "eigen"
   end
 
