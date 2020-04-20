@@ -226,6 +226,14 @@ function NDTensors.polar(A::ITensor,
   return U,P,commoninds(U,P)
 end
 
+# Make the perturbation to the density matrix used in "noise term" DMRG
+# This assumes that A comes in with no primes
+# If it doesn't, I expect A² += drho later to fail
+function deltarho(A :: ITensor, nt :: ITensor, is)
+  drho = noprime(nt * A)
+  drho *= prime(dag(drho), is)
+end
+
 #
 # TODO: merge noise term parts of commented
 #       code below
@@ -242,13 +250,6 @@ end
 #  return FU,FV,spec,commonindex(FU,FV)
 #end
 #
-## Make the perturbation to the density matrix used in "noise term" DMRG
-## This assumes that A comes in with no primes
-## If it doesn't, I expect A² += drho later to fail
-#function deltarho(A :: ITensor, nt :: ITensor, is)
-#  drho = (nt * A) |> noprime
-#  drho *= prime(dag(drho), is)
-#end
 #
 #function _factorize_from_left_eigen(A::ITensor,
 #                                    Linds...;
