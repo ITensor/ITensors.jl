@@ -123,3 +123,30 @@ function position!(pm::ProjMPO,
   pm.rpos = pos+nsite(pm)
 end
 
+
+# Return a "noise tensor" a la PRB 72, 180403.
+function noisetensor(M   :: MPS,
+                     PH  :: ProjMPO,
+                     b   :: Int,
+                     noise :: Float64,
+                     dir :: String)
+
+
+  if (PH.lpos < 1 && dir=="fromleft") || (PH.rpos > length(M) &&  dir=="fromright")
+    return ITensor(0)
+  end
+
+  if dir=="fromleft"
+    nt = lproj(PH)
+    ind = commonindex(nt, PH.H[PH.lpos + 1])
+  elseif dir=="fromright"
+    nt = rproj(PH)
+    ind = commonindex(nt, PH.H[PH.rpos - 1])
+  else throw(ArgumentError("In noisetensor(), no dir = $dir supported. Use fromleft or fromright."))
+  end
+
+  #Do we want complex to break TR symmetry?
+  nt *= randomITensor(ind)
+  nt *= noise
+  return nt
+end

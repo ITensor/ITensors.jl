@@ -214,6 +214,7 @@ export
   maxdim,
   maxdim!,
   mindim!,
+  noise!,
   nsweep,
   sweepnext,
 
