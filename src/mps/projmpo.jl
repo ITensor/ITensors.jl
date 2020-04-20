@@ -127,18 +127,21 @@ end
 function noiseterm(pm::ProjMPO,
                    phi::ITensor,
                    b::Int,
-                   dir::String)
-  if dir=="fromleft"
+                   ortho::String)
+  if ortho == "left"
     nt = pm.H[b]*phi
     if !isnull(lproj(pm))
       nt *= lproj(pm)
     end
-  elseif dir=="fromright"
+  elseif ortho == "right"
     nt = phi*pm.H[b+1]
     if !isnull(rproj(pm))
       nt *= rproj(pm)
     end
+  else
+    error("In noiseterm, got ortho = $ortho, only supports `left` and `right`")
   end
   nt = nt*dag(noprime(nt))
   return nt
 end
+

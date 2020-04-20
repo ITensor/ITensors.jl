@@ -287,35 +287,34 @@ inner(M1::MPS, M2::MPS; kwargs...) = dot(M1, M2; kwargs...)
 
 Factorize the ITensor `phi` and replace the ITensors
 `b` and `b+1` of MPS `M` with the factors. Choose
-the orthogonality with `dir="fromleft"/"fromright"`.
+the orthogonality with `ortho="left"/"right"`.
 """
 function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  dir = get(kwargs, :dir, "fromleft")
+  ortho = get(kwargs, :ortho, "left")
   which_decomp = get(kwargs, :which_decomp, "automatic")
-  if dir == "fromleft"
-    ortho = "left"
-  elseif dir == "fromright"
-    ortho = "right"
-  else
-    error("In replacebond!, dir keyword $dir not supported. Use fromleft or fromright")
+
+  # Deprecated keywords
+  if haskey(kwargs, :dir)
+    error("""dir keyword in replacebond! has been replaced by ortho.
+          Note that the options are now the same as factorize, so use `left` instead of `fromleft` and `right` instead of `fromright`.""")
   end
-  kwargs_factorize = Dict(kwargs)
-  delete!(kwargs_factorize, :dir)
+
   L,R,spec = factorize(phi,inds(M[b]); which_decomp = which_decomp,
                                        tags = tags(linkind(M,b)),
-                                       ortho = ortho,
-                                       kwargs_factorize...)
+                                       kwargs...)
   M[b]   = L
   M[b+1] = R
-  if dir == "fromleft"
+  if ortho == "left"
     leftlim(M) == b-1 && setleftlim!(M, leftlim(M)+1)
     rightlim(M) == b+1 && setrightlim!(M, rightlim(M)+1)
-  else
+  elseif ortho == "right"
     leftlim(M) == b && setleftlim!(M, leftlim(M)-1)
     rightlim(M) == b+2 && setrightlim!(M, rightlim(M)-1)
+  else
+    error("In replacebond!, got ortho = $ortho, only currently supports `left` and `right`.")
   end
   return spec
 end
