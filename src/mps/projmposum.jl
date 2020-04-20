@@ -37,3 +37,14 @@ function position!(P::ProjMPOSum,psi::MPS,pos::Int)
     position!(M,psi,pos)
   end
 end
+
+function noiseterm(P::ProjMPOSum,
+                   phi::ITensor,
+                   b::Int,
+                   dir::String)
+  nt = noiseterm(P.pm[1],phi,b,dir)
+  for n=2:length(P.pm)
+    nt += noiseterm(P.pm[n],phi,b,dir)
+  end
+  return nt
+end
