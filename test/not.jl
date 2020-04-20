@@ -28,3 +28,5 @@ using ITensors,
 
   @test hassameinds(At2,(settags(i,"y"),j,k))
 end
+
+nothing

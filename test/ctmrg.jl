@@ -110,3 +110,4 @@ end
   @test abs(m)≈ising_magnetization(β)
 end
 
+nothing

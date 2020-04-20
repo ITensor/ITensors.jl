@@ -287,3 +287,4 @@ end
   @test_throws ErrorException linkind(MPO(N, fill(ITensor(), N), 0, N + 1), 1)
 end
 
+nothing

@@ -48,3 +48,5 @@ A = itensor(At + transpose(At), k, k')
   @test entropy(Spectrum([1.0], 0.0)) == 0.0 
   @test entropy(Spectrum([0.0], 0.0)) == 0.0 
 end
+
+nothing

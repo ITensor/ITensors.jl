@@ -179,3 +179,5 @@ using ITensors, Test, Random
     @test (-6.5 < energy < -6.4)
   end
 end
+
+nothing

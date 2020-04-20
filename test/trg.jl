@@ -104,3 +104,4 @@ end
   @test κ≈exp(-β*ising_free_energy(β)) atol=1e-4
 end
 
+nothing
