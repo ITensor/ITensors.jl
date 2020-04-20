@@ -252,11 +252,11 @@ end
 # output
 
 sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1
-2 cutoff=1.0E-10, maxdim=20, mindim=1
-3 cutoff=1.0E-10, maxdim=100, mindim=1
-4 cutoff=1.0E-10, maxdim=100, mindim=1
-5 cutoff=1.0E-10, maxdim=200, mindim=1
+1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
+2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
+3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
+4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
+5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
 
 After sweep 1 energy=-137.845841178879 maxlinkdim=9 time=8.538
 After sweep 2 energy=-138.935378608196 maxlinkdim=20 time=0.316
