@@ -259,16 +259,23 @@ function factorize_eigen(A::ITensor,
                          Linds...;
                          kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
+  delta_A2::ITensor = get(kwargs,:eigen_perturbation,ITensor())
   if ortho == "left"
     Lis = commoninds(A,IndexSet(Linds...))
-    A² = A*prime(dag(A),Lis)
-    L,D,spec = eigen(A²,Lis,prime(Lis); ishermitian=true,
+    A2 = A*prime(dag(A),Lis)
+    if !isnull(delta_A2)
+      A2 += delta_A2
+    end
+    L,D,spec = eigen(A2,Lis,prime(Lis); ishermitian=true,
                                         kwargs...)
     R = dag(L)*A
   elseif ortho == "right"
     Ris = uniqueinds(A,IndexSet(Linds...))
-    A² = A*prime(dag(A),Ris)
-    R,D,spec = eigen(A²,Ris,prime(Ris); ishermitian=true,
+    A2 = A*prime(dag(A),Ris)
+    if !isnull(delta_A2)
+      A2 += delta_A2
+    end
+    R,D,spec = eigen(A2,Ris,prime(Ris); ishermitian=true,
                                         kwargs...)
     L = A*dag(R)
   else
@@ -307,6 +314,10 @@ function LinearAlgebra.factorize(A::ITensor,
   ortho::String = get(kwargs, :ortho, "left")
   which_decomp::String = get(kwargs, :which_decomp, "automatic")
   cutoff::Float64 = get(kwargs, :cutoff, 0.0)
+  eigen_perturbation::ITensor = get(kwargs,:eigen_perturbation,ITensor())
+  if !isnull(eigen_perturbation)
+    which_decomp = "eigen"
+  end
 
   # Deprecated keywords
   haskey(kwargs, :dir) && 

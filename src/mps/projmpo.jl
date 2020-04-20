@@ -123,30 +123,26 @@ function position!(pm::ProjMPO,
   pm.rpos = pos+nsite(pm)
 end
 
+# Make the perturbation to the density matrix used in "noise term" DMRG
+# This assumes that A comes in with no primes
+# If it doesn't, I expect A² += drho later to fail
+function deltarho(A :: ITensor, nt :: ITensor, is)
+  drho = noprime(nt * A)
+  drho *= prime(dag(drho), is)
+end
 
-# Return a "noise tensor" a la PRB 72, 180403.
-function noisetensor(M   :: MPS,
-                     PH  :: ProjMPO,
-                     b   :: Int,
-                     noise :: Float64,
-                     dir :: String)
-
-
-  if (PH.lpos < 1 && dir=="fromleft") || (PH.rpos > length(M) &&  dir=="fromright")
-    return ITensor(0)
-  end
-
+# Return a "noise term" as in Phys. Rev. B 72, 180403
+function noiseterm(phi::ITensor,b::Int,pm::ProjMPO,dir::String)
   if dir=="fromleft"
-    nt = lproj(PH)
-    ind = commonindex(nt, PH.H[PH.lpos + 1])
+    nt = pm.H[b]*phi
+    if !isnull(lproj(pm))
+      nt *= lproj(pm)
+    end
   elseif dir=="fromright"
-    nt = rproj(PH)
-    ind = commonindex(nt, PH.H[PH.rpos - 1])
-  else throw(ArgumentError("In noisetensor(), no dir = $dir supported. Use fromleft or fromright."))
+    nt = phi*pm.H[b+1]
+    if !isnull(rproj(pm))
+      nt *= rproj(pm)
+    end
   end
-
-  #Do we want complex to break TR symmetry?
-  nt *= randomITensor(ind)
-  nt *= noise
   return nt
 end

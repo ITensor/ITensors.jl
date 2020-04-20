@@ -81,13 +81,6 @@ function dmrg(H::MPO,
   return dmrg(PMM,psi0,sweeps;kwargs...)
 end
 
-# Make the perturbation to the density matrix used in "noise term" DMRG
-# This assumes that A comes in with no primes
-# If it doesn't, I expect A² += drho later to fail
-function deltarho(A :: ITensor, nt :: ITensor, is)
-  drho = noprime(nt * A)
-  drho *= prime(dag(drho), is)
-end
 
 function dmrg(PH,
               psi0::MPS,
@@ -147,28 +140,21 @@ end
 end
       energy,phi = vals[1],vecs[1]
 
+      drho = ITensor()
+      if noise(sweeps,sw) > 0.0
+        # Use noise term when determining new MPS basis
+        drho = noise(sweeps,sw)*noiseterm(phi,b,PH,dir)
+      end
+
       dir = ha==1 ? "fromleft" : "fromright"
 
-      noise_mag = noise(sweeps, sw)
-
-      # This is slightly strange, but it does The Right Thing (TM).
-      # replaceBond!() calls factorize(), which
-      #   1. checks if noise > 0
-      #   2. if so, ultimately calls _factorize_from_{left,right}_eigen;
-      #   3. if not, may or may not call _eigen() (depending on other parameters.
-      # But if noise == 0, _eigen() will ignore the noise tensor,
-      # so it can be anything we want: here a zero-index default tensor.
-
-      nt = (if noise_mag > 0 noisetensor(psi, PH, b, noise_mag, dir) else ITensor() end)
-
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
-      spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps,sw),
-                                       mindim = mindim(sweeps,sw),
-                                       cutoff = cutoff(sweeps,sw),
-                                       noise=noise_mag,
-                                       noise_tensor=nt,
-                                       dir = dir,
-                                       which_decomp = which_decomp)
+        spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps,sw),
+                                         mindim = mindim(sweeps,sw),
+                                         cutoff = cutoff(sweeps,sw),
+                                         eigen_perturbation=drho,
+                                         dir = dir,
+                                         which_decomp = which_decomp)
 end
 
       measure!(obs; energy = energy,
