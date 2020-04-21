@@ -88,4 +88,12 @@ include("physics/autompo.jl")
 #
 include("developer_tools.jl")
 
+#####################################
+# Precompile certain functions
+# (generated from precompile/snoop.jl
+# using SnoopCompile.jl)
+#
+include("precompile/precompile.jl")
+_precompile_()
+
 end # module ITensors
