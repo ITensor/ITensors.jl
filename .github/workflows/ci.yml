@@ -1,4 +1,4 @@
-name: Continuous Integration (Auto Testing)
+name: Tests
 on:
   push:
     branches:
