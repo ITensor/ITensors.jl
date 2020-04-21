@@ -213,7 +213,7 @@ end
     add(A::MPO, B::MPO; kwargs...)
     +(A::MPO, B::MPO; kwargs...)
 
-Add two MPS (or MPO) with each other, with some optional
+Add two MPS/MPO with each other, with some optional
 truncation.
 """
 function Base.:+(A::T, B::T; kwargs...) where {T <: AbstractMPS}
@@ -254,7 +254,7 @@ add(A::T, B::T;
 
     sum(A::Vector{MPO}; kwargs...)
 
-Add multiple MPS (or MPO) with each other, with some optional
+Add multiple MPS/MPO with each other, with some optional
 truncation.
 """
 function Base.sum(A::Vector{T};
@@ -328,7 +328,9 @@ function NDTensors.truncate!(M::AbstractMPS;
 
 end
 
-mul(A::AbstractMPS, B::AbstractMPS; kwargs...) = *(A, B; kwargs...)
+NDTensors.contract(A::AbstractMPS,
+                   B::AbstractMPS;
+                   kwargs...) = *(A, B; kwargs...)
 
 """
     *(x::Number, M::MPS)
@@ -386,37 +388,62 @@ using the truncation parameters (cutoff,maxdim, etc.)
 provided as keyword arguments.
 """ truncate!
 
-@deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
+@deprecate orthoCenter(args...;
+                       kwargs...) orthocenter(args...; kwargs...)
 
 import .NDTensors.store
+
 @deprecate store(m::AbstractMPS) data(m)
 
-@deprecate replacesites!(args...; kwargs...) ITensors.replacesiteinds!(args...; kwargs...)
+@deprecate replacesites!(args...;
+                         kwargs...) ITensors.replacesiteinds!(args...; kwargs...)
 
-@deprecate applyMPO(args...; kwargs...) mul(args...; kwargs...)
+@deprecate applyMPO(args...; kwargs...) contract(args...; kwargs...)
 
-@deprecate applympo(args...; kwargs...) mul(args...; kwargs...)
+@deprecate applympo(args...; kwargs...) contract(args...; kwargs...)
 
-@deprecate errorMPOprod(args...; kwargs...) error_mul(args...; kwargs...)
+@deprecate errorMPOprod(args...;
+                        kwargs...) error_contract(args...;
+                                                  kwargs...)
 
-@deprecate error_mpoprod(args...; kwargs...) error_mul(args...; kwargs...)
+@deprecate error_mpoprod(args...;
+                         kwargs...) error_contract(args...;
+                                                   kwargs...)
 
-@deprecate multMPO(args...; kwargs...) mul(args...; kwargs...)
+@deprecate error_mul(args...;
+                     kwargs...) error_contract(args...;
+                                               kwargs...)
+
+@deprecate multMPO(args...; kwargs...) contract(args...; kwargs...)
 
 import Base.sum
 
 @deprecate sum(A::AbstractMPS,
                B::AbstractMPS; kwargs...) add(A, B; kwargs...)
 
-@deprecate multmpo(args...; kwargs...) mul(args...; kwargs...)
+@deprecate multmpo(args...;
+                   kwargs...) contract(args...; kwargs...)
 
-@deprecate set_leftlim!(args...; kwargs...) ITensors.setleftlim!(args...; kwargs...)
+@deprecate set_leftlim!(args...;
+                        kwargs...) ITensors.setleftlim!(args...;
+                                                        kwargs...)
 
-@deprecate set_rightlim!(args...; kwargs...) ITensors.setrightlim!(args...; kwargs...)
+@deprecate set_rightlim!(args...;
+                         kwargs...) ITensors.setrightlim!(args...;
+                                                          kwargs...)
 
-@deprecate tensors(args...; kwargs...) ITensors.data(args...; kwargs...)
+@deprecate tensors(args...;
+                   kwargs...) ITensors.data(args...; kwargs...)
 
-@deprecate primelinks!(args...; kwargs...) ITensors.primelinkinds!(args...; kwargs...)
+@deprecate primelinks!(args...;
+                       kwargs...) ITensors.primelinkinds!(args...;
+                                                          kwargs...)
 
-@deprecate simlinks!(args...; kwargs...) ITensors.simlinkinds!(args...; kwargs...)
+@deprecate simlinks!(args...;
+                     kwargs...) ITensors.simlinkinds!(args...;
+                                                      kwargs...)
+
+@deprecate mul(A::AbstractMPS,
+               B::AbstractMPS;
+               kwargs...) contract(A, B; kwargs...)
 

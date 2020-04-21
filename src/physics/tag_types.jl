@@ -57,7 +57,7 @@ function op(s::Index,
   if !isnothing(starpos)
     op1 = opname[1:starpos.start-1]
     op2 = opname[starpos.start+1:end]
-    return matmul(op(s,op1;kwargs...),op(s,op2;kwargs...))
+    return product(op(s,op1;kwargs...),op(s,op2;kwargs...))
   end
 
   return _call_op(s,opname;kwargs...)

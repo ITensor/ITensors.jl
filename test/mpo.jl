@@ -127,7 +127,7 @@ end
     @test_throws DimensionMismatch inner(J,phi,K,badpsi)
   end
 
-  @testset "error_mul" begin
+  @testset "error_contract" begin
     phi = makeRandomMPS(sites)
     K = makeRandomMPO(sites,chi=2)
 
@@ -135,30 +135,30 @@ end
 
     dist = sqrt(abs(1 + (inner(phi,phi) - 2*real(inner(phi,K,psi)))
                         /inner(K,psi,K,psi)))
-    @test dist ≈ error_mul(phi,K,psi)
+    @test dist ≈ error_contract(phi,K,psi)
 
     badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
-    # Apply K to phi and check that error_mul is close to 0.
-    Kphi = mul(K, phi; method="naive", cutoff=1E-8)
-    @test error_mul(Kphi, K, phi) ≈ 0. atol=1e-4
+    # Apply K to phi and check that error_contract is close to 0.
+    Kphi = contract(K, phi; method="naive", cutoff=1E-8)
+    @test error_contract(Kphi, K, phi) ≈ 0. atol=1e-4
 
-    @test_throws DimensionMismatch mul(K,badpsi;method="naive", cutoff=1E-8)
-    @test_throws DimensionMismatch error_mul(phi,K,badpsi)
+    @test_throws DimensionMismatch contract(K,badpsi;method="naive", cutoff=1E-8)
+    @test_throws DimensionMismatch error_contract(phi,K,badpsi)
   end
 
-  @testset "mul" begin
+  @testset "contract" begin
     phi = randomMPS(sites)
     K   = randomMPO(sites)
     @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
-    psi_out = mul(K, psi,maxdim=1)
+    psi_out = contract(K, psi,maxdim=1)
     @test inner(phi,psi_out) ≈ inner(phi,K,psi)
-    @test_throws ArgumentError mul(K, psi, method="fakemethod")
+    @test_throws ArgumentError contract(K, psi, method="fakemethod")
 
     badsites = [Index(2,"Site") for n=1:N+1]
     badpsi = randomMPS(badsites)
-    @test_throws DimensionMismatch mul(K,badpsi)
+    @test_throws DimensionMismatch contract(K,badpsi)
 
     # make bigger random MPO...
     for link_dim in 2:5
@@ -184,7 +184,7 @@ end
       orthogonalize!(psi, 1; maxdim=link_dim)
       orthogonalize!(K, 1; maxdim=link_dim)
       orthogonalize!(phi, 1; normalize=true, maxdim=link_dim)
-      psi_out = mul(deepcopy(K), deepcopy(psi); maxdim=10*link_dim, cutoff=0.0)
+      psi_out = contract(deepcopy(K), deepcopy(psi); maxdim=10*link_dim, cutoff=0.0)
       @test inner(phi, psi_out) ≈ inner(phi, K, psi)
     end
   end
@@ -196,8 +196,8 @@ end
     M = add(K, L)
     @test length(M) == N
     psi = randomMPS(shsites)
-    k_psi = mul(K, psi, maxdim=1)
-    l_psi = mul(L, psi, maxdim=1)
+    k_psi = contract(K, psi, maxdim=1)
+    l_psi = contract(L, psi, maxdim=1)
     @test inner(psi, k_psi + l_psi) ≈ ⋅(psi, M, psi) atol=5e-3
     @test inner(psi, sum([k_psi, l_psi])) ≈ dot(psi, M, psi) atol=5e-3
     for dim in 2:4
@@ -207,26 +207,26 @@ end
         M = K + L
         @test length(M) == N
         psi = randomMPS(shsites)
-        k_psi = mul(K, psi)
-        l_psi = mul(L, psi)
+        k_psi = contract(K, psi)
+        l_psi = contract(L, psi)
         @test inner(psi, k_psi + l_psi) ≈ dot(psi, M, psi) atol=5e-3
         @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol=5e-3
         psi = randomMPS(shsites)
         M = add(K, L; cutoff=1E-9)
-        k_psi = mul(K, psi)
-        l_psi = mul(L, psi)
+        k_psi = contract(K, psi)
+        l_psi = contract(L, psi)
         @test inner(psi, k_psi + l_psi) ≈ inner(psi, M, psi) atol=5e-3
     end
   end
 
-  @testset "mul(::MPO, ::MPO)" begin
+  @testset "contract(::MPO, ::MPO)" begin
     psi = randomMPS(sites)
     K = randomMPO(sites)
     L = randomMPO(sites)
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
-    KL = mul(prime(K), L, maxdim=1)
-    psi_kl_out = mul(prime(K), mul(L, psi, maxdim=1), maxdim=1)
+    KL = contract(prime(K), L, maxdim=1)
+    psi_kl_out = contract(prime(K), contract(L, psi, maxdim=1), maxdim=1)
     @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
 
     # where both K and L have differently labelled sites
@@ -238,15 +238,15 @@ end
       replaceind!(K[ii], sites[ii]', othersitesk[ii])
       replaceind!(L[ii], sites[ii]', othersitesl[ii])
     end
-    KL = mul(K, L, maxdim=1)
+    KL = contract(K, L, maxdim=1)
     psik = randomMPS(othersitesk)
     psil = randomMPS(othersitesl)
-    psi_kl_out = mul(K, mul(L, psil, maxdim=1), maxdim=1)
+    psi_kl_out = contract(K, contract(L, psil, maxdim=1), maxdim=1)
     @test inner(psik,KL,psil) ≈ inner(psik, psi_kl_out) atol=5e-3
     
     badsites = [Index(2,"Site") for n=1:N+1]
     badL = randomMPO(badsites)
-    @test_throws DimensionMismatch mul(K,badL)
+    @test_throws DimensionMismatch contract(K,badL)
   end
 
   @testset "*(::MPO, ::MPO)" begin
