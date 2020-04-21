@@ -23,7 +23,7 @@ using ITensors, Test, Random
     noise!(sweeps,1E-10)
     str = split(sprint(show, sweeps), '\n')
     @test length(str) > 1
-    energy,psi = dmrg(H, psi, sweeps; quiet=true)
+    energy,psi = dmrg(H, psi, sweeps; outputlevel=0)
     @test energy < -12.0
   end
 
@@ -44,7 +44,7 @@ using ITensors, Test, Random
     maxdim!(sweeps,10,20)
     cutoff!(sweeps,1E-12)
     noise!(sweeps,1E-10)
-    energy,psi = dmrg(H,psi0,sweeps,quiet=true)
+    energy,psi = dmrg(H,psi0,sweeps,outputlevel=0)
 
     # Exact energy for transverse field Ising model
     # with open boundary conditions at criticality
@@ -71,7 +71,7 @@ using ITensors, Test, Random
 
     observer = DMRGObserver(["Sz","Sx"], sites)
 
-    E,psi = dmrg(H,psi0,sweeps,observer=observer,quiet=true)
+    E,psi = dmrg(H,psi0,sweeps,observer=observer,outputlevel=0)
     @test length(measurements(observer)["Sz"])==3
     @test length(measurements(observer)["Sx"])==3
     @test all(length.(measurements(observer)["Sz"]) .== N)
@@ -110,7 +110,7 @@ using ITensors, Test, Random
     mindim!(sweeps,1,10,10)
     cutoff!(sweeps,1E-11)
     noise!(sweeps,1E-10)
-    energy,psi = dmrg([HZ,HXY], psi, sweeps; quiet=true)
+    energy,psi = dmrg([HZ,HXY], psi, sweeps; outputlevel=0)
     @test energy < -12.0
   end
 
@@ -137,11 +137,11 @@ using ITensors, Test, Random
     cutoff!(sweeps, 1E-11)
     noise!(sweeps,1E-10)
 
-    energy0, psi0 = dmrg(H,psi0i, sweeps; quiet=true)
+    energy0, psi0 = dmrg(H,psi0i, sweeps; outputlevel=0)
     @test energy0 < -11.5
 
     psi1i = randomMPS(sites,10)
-    energy1,psi1 = dmrg(H,[psi0],psi1i,sweeps;quiet=true,weight=weight)
+    energy1,psi1 = dmrg(H,[psi0],psi1i,sweeps;outputlevel=0,weight=weight)
 
     @test energy1 > energy0
     @test energy1 < -11.1
@@ -180,7 +180,7 @@ using ITensors, Test, Random
     cutoff!(sweeps, 1E-8)
     noise!(sweeps,1E-10)
 
-    energy,psi = dmrg(H,psi0,sweeps;quiet=true)
+    energy,psi = dmrg(H,psi0,sweeps;outputlevel=0)
     @test (-6.5 < energy < -6.4)
   end
 end
