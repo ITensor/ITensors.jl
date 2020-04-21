@@ -132,8 +132,8 @@ using ITensors, Test, Random
 
     psi0i = randomMPS(sites,10)
 
-    sweeps = Sweeps(6)
-    maxdim!(sweeps, 10,20,100,100,200)
+    sweeps = Sweeps(4)
+    maxdim!(sweeps, 10,20,100,100)
     cutoff!(sweeps, 1E-11)
     noise!(sweeps,1E-10)
 
