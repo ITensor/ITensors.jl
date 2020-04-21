@@ -92,13 +92,15 @@ using ITensors,
     sweeps = Sweeps(2)
     maxdim!(sweeps, 10,20,100,100,200)
     cutoff!(sweeps, 1E-10)
-    #@show sweeps
+    @show sweeps
 
     # Run the DMRG algorithm, returning energy
     # (dominant eigenvalue) and optimized MPS
-    energy, psi = dmrg(H,psi0, sweeps,quiet=true)
+    energy, psi = dmrg(H,psi0, sweeps)
     #println("Final energy = $energy")
   end
 
 
 end
+
+nothing

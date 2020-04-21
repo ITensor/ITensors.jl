@@ -88,7 +88,7 @@ function dmrg(PH,
               kwargs...)
   which_decomp::String = get(kwargs, :which_decomp, "automatic")
   obs = get(kwargs, :observer, NoObserver())
-  quiet::Bool = get(kwargs, :quiet, false)
+  outputlevel::Int = get(kwargs, :outputlevel,1)
 
   # eigsolve kwargs
   eigsolve_tol::Float64   = get(kwargs, :eigsolve_tol, 1e-14)
@@ -107,14 +107,18 @@ function dmrg(PH,
 
   # Keyword argument deprecations
   if haskey(kwargs, :maxiter)
-    error("""maxiter keyword has been replace by eigsolve_krylovdim.
+    error("""maxiter keyword has been replaced by eigsolve_krylovdim.
              Note: compared to the C++ version of ITensor,
              setting eigsolve_krylovdim 3 is the same as setting
              a maxiter of 2.""")
   end
 
   if haskey(kwargs, :errgoal)
-    error("errgoal keyword has been replace by eigsolve_tol.")
+    error("errgoal keyword has been replaced by eigsolve_tol.")
+  end
+
+  if haskey(kwargs, :quiet)
+    error("quiet keyword has been replaced by outputlevel")
   end
 
   psi = copy(psi0)
@@ -162,20 +166,27 @@ end
                                          which_decomp = which_decomp)
 end
 
+      if outputlevel >= 2
+        @printf("Sweep %d, half %d, bond (%d,%d) energy=%.12f\n",sw,ha,b,b+1,energy)
+        @printf("(Truncated using cutoff=%.1E maxdim=%d mindim=%d)\n",
+                cutoff(sweeps, sw),maxdim(sweeps, sw),mindim(sweeps, sw))
+        @printf("Trunc. err=%.1E, bond dimension %d\n\n",spec.truncerr,dim(linkind(psi,b)))
+      end
+
       measure!(obs; energy = energy,
                     psi = psi,
                     bond = b,
                     sweep = sw,
                     half_sweep = ha,
                     spec = spec,
-                    quiet = quiet)
+                    outputlevel = outputlevel)
     end
     end
-    if !quiet
+    if outputlevel >= 1
       @printf("After sweep %d energy=%.12f maxlinkdim=%d time=%.3f\n",
               sw, energy, maxlinkdim(psi), sw_time)
     end
-    checkdone!(obs; quiet = quiet) && break
+    checkdone!(obs; outputlevel = outputlevel) && break
   end
   return (energy, psi)
 end

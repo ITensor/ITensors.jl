@@ -38,7 +38,7 @@ let
   1E-7 tolerance
   =#
   let
-    Sz_observer = DMRGObserver(["Sz"],sites,1E-7)
+    Sz_observer = DMRGObserver(["Sz"],sites,energy_tol=1E-7)
 
     # we will now run DMRG calculation for different values
     # of the transverse field and check how local observables
@@ -58,7 +58,7 @@ let
   let
     println("\nRunning DMRG for TFIM with h=0.5 (critical point)")
     println("================================")
-    Sz_observer= DMRGObserver(["Sz"],sites,1E-7)
+    Sz_observer= DMRGObserver(["Sz"],sites,energy_tol=1E-7)
     H = tfimMPO(sites,0.5)
     energy, psi = dmrg(H,psi0,sweeps,observer=Sz_observer)
 
@@ -70,7 +70,7 @@ let
   let
     println("\nRunning DMRG for TFIM with h=5.")
     println("================================")
-    Sz_Sx_observer= DMRGObserver(["Sz","Sx"],sites,1E-7)
+    Sz_Sx_observer= DMRGObserver(["Sz","Sx"],sites,energy_tol=1E-7)
     H = tfimMPO(sites,5.0)
     energy, psi = dmrg(H,psi0,sweeps,observer=Sz_Sx_observer)
 
