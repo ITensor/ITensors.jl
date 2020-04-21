@@ -90,7 +90,7 @@ include("developer_tools.jl")
 
 #####################################
 # Precompile certain functions
-# (generated from precompile/snoop.jl
+# (generated from precompile/make_precompile.jl
 # using SnoopCompile.jl)
 #
 include("precompile/precompile.jl")
