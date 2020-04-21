@@ -16,3 +16,6 @@ makedocs(sitename = "ITensors.jl";
          format = Documenter.HTML(prettyurls = false),
          doctest = true,
          checkdocs = :none)
+
+deploydocs(repo = "github.com/ITensor/ITensors.jl.git")
+

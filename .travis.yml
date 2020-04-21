@@ -15,9 +15,20 @@ allow_failures:
 notifications:
   email: false
 
-##script:
-##- if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-##- julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("ITensors"; coverage=true)'
+#script:
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("ITensors"; coverage=true)'
 
 after_success:
   - julia -e 'using Pkg; cd(Pkg.dir("ITensors")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.4
+      os: linux
+      script:
+        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+                                               Pkg.instantiate()'
+        - julia --project=docs/ docs/make.jl
+      after_success: skip
