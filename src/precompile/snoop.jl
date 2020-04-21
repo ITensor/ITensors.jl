@@ -33,12 +33,17 @@ for filename in (
   include("../../test/$filename")
 end
 
-i = Index(2)
-A = randomITensor(i, i')
-B = randomITensor(i', i'')
-C = A * B
-U, S, V = svd(A, i)
+for T in (Float64, ComplexF64)
+  i = Index(2)
+  A = randomITensor(T, i, i')
+  B = randomITensor(T, i', i'')
+  C = A * B
+  U, S, V = svd(A, i)
+  A, B = factorize(A, i)
+end
 
+# One step of DMRG (dmrg itself
+# leads to an error during precompilation)
 N = 100
 sites = siteinds("S=1", N)
 ampo = AutoMPO()
@@ -52,10 +57,6 @@ psi0 = randomMPS(sites, 10)
 sweeps = Sweeps(5)
 maxdim!(sweeps, 10, 20, 100, 100, 200)
 cutoff!(sweeps, 1E-11)
-
-# This leads to an error in precompilation
-#energy, psi = dmrg(H, psi0, sweeps)
-
 PH = ProjMPO(H)
 which_decomp = "automatic"
 obs = NoObserver()
