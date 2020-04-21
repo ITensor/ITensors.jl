@@ -65,7 +65,7 @@ import ITensors: In,Out,Neither
     @test val(i(2)') == 2
     @test plev(prime(i(2),4)) == 4
     #@test i[:] == [i(1); i(2)]
-    @test sprint(show, i(2)) == sprint(show, i)*"=2"
+    @test sprint(show, i(2)) == sprint(show, i)*"=>2"
 
     @test IndexVal() == IndexVal(Index(), 0)
   end
