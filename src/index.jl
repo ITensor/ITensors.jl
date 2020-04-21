@@ -446,12 +446,14 @@ Base.:(==)(i::Index,
 Base.:(==)(iv::IndexValOrPairIndexInt,
            i::Index) = i == iv
 
-plev(iv::IndexVal) = plev(ind(iv))
+plev(iv::IndexValOrPairIndexInt) = plev(ind(iv))
 
-prime(iv::IndexVal,
+prime(iv::IndexValOrPairIndexInt,
       inc::Integer = 1) = IndexVal(prime(ind(iv), inc), val(iv))
 
-Base.adjoint(iv::IndexVal) = IndexVal(prime(ind(iv)), val(iv))
+dag(iv::IndexValOrPairIndexInt) = IndexVal(dag(ind(iv)),val(iv))
+
+Base.adjoint(iv::IndexValOrPairIndexInt) = IndexVal(prime(ind(iv)), val(iv))
 
 hasqns(::Index) = false
 
@@ -478,7 +480,7 @@ function Base.show(io::IO,
   end
 end
 
-Base.show(io::IO, iv::IndexVal) = print(io, ind(iv), "=$(val(iv))")
+Base.show(io::IO, iv::IndexVal) = print(io, ind(iv), "=>$(val(iv))")
 
 function readcpp(io::IO, ::Type{Index}; kwargs...)
   format = get(kwargs,:format,"v3")
