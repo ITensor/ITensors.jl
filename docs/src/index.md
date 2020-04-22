@@ -1,7 +1,6 @@
 # Introduction
 
-[![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/) [![Build Status](https://travis-ci.org/ITensor/ITensors.jl.svg?branch=master)](https://travis-ci.org/ITensor/ITensors.jl) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/) [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![Build Status](https://travis-ci.org/ITensor/ITensors.jl.svg?branch=master)](https://travis-ci.org/ITensor/ITensors.jl) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl)
 
 PLEASE NOTE THIS IS PRE-RELEASE SOFTWARE FOR PREVIEW PURPOSES ONLY
 
