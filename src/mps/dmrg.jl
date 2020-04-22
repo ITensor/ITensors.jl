@@ -163,6 +163,7 @@ end
                                          cutoff = cutoff(sweeps, sw),
                                          eigen_perturbation = drho,
                                          ortho = ortho,
+                                         normalize=true,
                                          which_decomp = which_decomp)
 end
 
