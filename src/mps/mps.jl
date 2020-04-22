@@ -295,6 +295,7 @@ function replacebond!(M::MPS,
                       kwargs...)
   ortho = get(kwargs, :ortho, "left")
   which_decomp = get(kwargs, :which_decomp, "automatic")
+  normalize = get(kwargs,:normalize,false)
 
   # Deprecated keywords
   if haskey(kwargs, :dir)
@@ -310,9 +311,11 @@ function replacebond!(M::MPS,
   if ortho == "left"
     leftlim(M) == b-1 && setleftlim!(M, leftlim(M)+1)
     rightlim(M) == b+1 && setrightlim!(M, rightlim(M)+1)
+    normalize && (M[b+1] /= norm(M[b+1]))
   elseif ortho == "right"
     leftlim(M) == b && setleftlim!(M, leftlim(M)-1)
     rightlim(M) == b+2 && setrightlim!(M, rightlim(M)-1)
+    normalize && (M[b] /= norm(M[b]))
   else
     error("In replacebond!, got ortho = $ortho, only currently supports `left` and `right`.")
   end
