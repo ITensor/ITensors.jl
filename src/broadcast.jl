@@ -8,7 +8,8 @@ import Base.Broadcast: BroadcastStyle,
                        Broadcasted,
                        broadcastable,
                        instantiate,
-                       DefaultArrayStyle
+                       DefaultArrayStyle,
+                       broadcasted
 
 BroadcastStyle(::Type{<:IndexSet}) = Style{IndexSet}()
 
@@ -92,9 +93,9 @@ function instantiate(bc::Broadcasted{ITensorStyle,
                                      <:Any,
                                      <:Function,
                                      <:Tuple{Broadcasted{ITensorStyle,
-                                                                                       <:Any,
-                                                                                       <:Function,
-                                                                                       <:Tuple{<:ITensor}}}})
+                                                         <:Any,
+                                                         <:Function,
+                                                         <:Tuple{<:ITensor}}}})
   return broadcasted(bc.f∘bc.args[1].f,
                                bc.args[1].args...)  
 end
@@ -118,7 +119,15 @@ find_type(::Type{T}, ::Any, rest) where {T} = find_type(T, rest)
 find_type(::Type{T}, ::Tuple{}) where {T} = nothing
 
 #
+# Generic fallback
+#
+
+Base.copyto!(T::ITensor,
+             bc::Broadcasted) = error("The broadcasting operation you are attempting is not yet implemented for ITensors, please raise an issue if you would like it to be supported.")
+
+#
 # For B .= α .* A
+#     A .*= α
 #
 
 function Base.copyto!(T::ITensor,
@@ -133,6 +142,27 @@ function Base.copyto!(T::ITensor,
     scale!(T, α)
   else
     mul!(T, α, A)
+  end
+  return T
+end
+
+#
+# For B .= α ./ A
+#     A ./= α
+#
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(/),
+                                      <:Tuple{<:ITensor,
+                                              <:Number}})
+  α = find_type(Number, bc.args)
+  A = find_type(ITensor, bc.args)
+  if A === T
+    scale!(T, 1/α)
+  else
+    mul!(T, 1/α, A)
   end
   return T
 end
