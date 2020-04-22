@@ -36,6 +36,15 @@ using ITensors,
     @test Bc[2,2] == α * B[2,2]
   end
 
+  @testset "Dividing" begin
+    Bc = copy(B)
+    Bc ./= α
+    @test Bc[1,1] == B[1,1] / α
+    @test Bc[2,1] == B[2,1] / α
+    @test Bc[1,2] == B[1,2] / α
+    @test Bc[2,2] == B[2,2] / α
+  end
+
   @testset "Scalar multiplication (in-place)" begin
     Bc = copy(B)
     Bc .= α .* A
@@ -43,6 +52,16 @@ using ITensors,
     @test Bc[2,1] == α * A[1,2]
     @test Bc[1,2] == α * A[2,1]
     @test Bc[2,2] == α * A[2,2]
+  end
+
+  @testset "Dividing (in-place)" begin
+    Bc = copy(B)
+    Bc .= A ./ α
+    @test Bc[1,1] == A[1,1] / α
+    @test Bc[2,1] == A[1,2] / α
+    @test Bc[1,2] == A[2,1] / α
+    @test Bc[2,2] == A[2,2] / α
+    @test_throws ErrorException Bc .= α ./ A
   end
 
   @testset "Scalar multiplication (out-of-place)" begin
