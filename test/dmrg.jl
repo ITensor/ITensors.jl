@@ -154,7 +154,7 @@ using ITensors, Test, Random
     t1 = 1.0
     t2 = 0.5
     V = 0.2
-    s = siteinds("Fermion",N;conserve_qns=true)
+    s = siteinds("Fermion", N; conserve_qns = true)
 
     state = fill(1,N)
     state[1] = 2
@@ -165,22 +165,22 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j=1:N-1
-      ampo += (-t1,"Cdag",j,  "C",j+1)
-      ampo += (-t1,"Cdag",j+1,"C",j)
-      ampo += (V,"N",j,"N",j+1)
+      ampo += (-t1, "Cdag", j,   "C", j+1)
+      ampo += (-t1, "Cdag", j+1, "C", j)
+      ampo += (  V, "N",    j,   "N", j+1)
     end
     for j=1:N-2
-      ampo += (-t2,"Cdag",j,  "C",j+2)
-      ampo += (-t2,"Cdag",j+2,"C",j)
+      ampo += (-t2, "Cdag", j,   "C", j+2)
+      ampo += (-t2, "Cdag", j+2, "C", j)
     end
-    H = MPO(ampo,s)
+    H = MPO(ampo, s)
 
     sweeps = Sweeps(5)
-    maxdim!(sweeps, 10,20,100,100,200)
+    maxdim!(sweeps, 10, 20, 100, 100, 200)
     cutoff!(sweeps, 1E-8)
-    noise!(sweeps,1E-10)
+    noise!(sweeps, 1E-10)
 
-    energy,psi = dmrg(H,psi0,sweeps;outputlevel=0)
+    energy, psi = dmrg(H, psi0, sweeps; outputlevel = 0)
     @test (-6.5 < energy < -6.4)
   end
 end
