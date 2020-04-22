@@ -187,7 +187,11 @@ end
       @printf("After sweep %d energy=%.12f maxlinkdim=%d time=%.3f\n",
               sw, energy, maxlinkdim(psi), sw_time)
     end
-    checkdone!(obs; outputlevel = outputlevel) && break
+    isdone = checkdone!(obs;energy=energy,
+                            psi=psi,
+                            sweep=sw,
+                            outputlevel=outputlevel) 
+    isdone && break
   end
   return (energy, psi)
 end
