@@ -95,7 +95,7 @@ using ITensors,
 
     # Run the DMRG algorithm, returning energy
     # (dominant eigenvalue) and optimized MPS
-    energy, psi = dmrg(H,psi0, sweeps; outputlevel=0)
+    energy, psi = dmrg(H,psi0, sweeps; outputlevel = 0)
     #println("Final energy = $energy")
   end
 

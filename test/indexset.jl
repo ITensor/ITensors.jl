@@ -40,35 +40,37 @@ using ITensors,
 
     @test maxdim(I) == max(idim,jdim,kdim)
   end
+
   @testset "Set operations" begin
-    I1 = IndexSet(i,j,k)
-    I2 = IndexSet(k,l)
-    I3 = IndexSet(j,l)
-    @test hassameinds(I1,(k,j,i))
-    @test firstsetdiff(I1,I2,I3) == i
-    @test isnothing(firstsetdiff(I1,IndexSet(k, j, i)))
-    @test setdiff(I1,I2) == [i,j]
-    @test hassameinds(setdiff(I1,I2),IndexSet(i,j))
-    @test hassameinds(setdiff(I1,I2),(j,i))
+    I1 = IndexSet(i, j, k)
+    I2 = IndexSet(k, l)
+    I3 = IndexSet(j, l)
+    @test hassameinds(I1, (k, j, i))
+    @test firstsetdiff(I1, I2, I3) == i
+    @test isnothing(firstsetdiff(I1, IndexSet(k, j, i)))
+    @test setdiff(I1, I2) == [i, j]
+    @test hassameinds(setdiff(I1, I2), IndexSet(i, j))
+    @test hassameinds(setdiff(I1, I2), (j, i))
     @test I1 ∩ I2 == [k]
-    @test hassameinds(I1 ∩ I2,IndexSet(k))
-    @test firstintersect(I1,I2) == k
-    @test isnothing(firstintersect(I1,IndexSet(l)))
-    @test intersect(I1,(j,l)) == [j]
-    @test hassameinds(intersect(I1,(j,l)),IndexSet(j))
-    @test firstintersect(I1,(j,l)) == j
-    @test intersect(I1,(j,k)) == [j,k]
-    @test hassameinds(intersect(I1,(j,k)),IndexSet(j,k))
-    @test hassameinds(intersect(I1,(j,k,l)),(j,k))
-    @test filter(I1,"i") == IndexSet(i)
-    @test hassameinds(filter(I1,"i"),IndexSet(i))
-    @test getfirst(I1,"j") == j
-    @test isnothing(getfirst(I1,"l"))
-    @test findfirst(I1,i) == 1
-    @test findfirst(I1,j) == 2
-    @test findfirst(I1,k) == 3
-    @test isnothing(findfirst(I1,Index(2)))
+    @test hassameinds(I1 ∩ I2, IndexSet(k))
+    @test firstintersect(I1, I2) == k
+    @test isnothing(firstintersect(I1, IndexSet(l)))
+    @test intersect(I1, (j, l)) == [j]
+    @test hassameinds(intersect(I1, (j, l)), IndexSet(j))
+    @test firstintersect(I1, IndexSet(j, l)) == j
+    @test intersect(I1, (j, k)) == [j, k]
+    @test hassameinds(intersect(I1, (j, k)), IndexSet(j, k))
+    @test hassameinds(intersect(I1, (j, k, l)), (j, k))
+    @test filter(I1, "i") == IndexSet(i)
+    @test hassameinds(filter(I1, "i"), IndexSet(i))
+    @test getfirst(I1, "j") == j
+    @test isnothing(getfirst(I1, "l"))
+    @test findfirst(I1, i) == 1
+    @test findfirst(I1, j) == 2
+    @test findfirst(I1, k) == 3
+    @test isnothing(findfirst(I1, Index(2)))
   end
+
   @testset "intersect index ordering" begin
     I = IndexSet(i,k,j)
     J = IndexSet(j,l,i)
