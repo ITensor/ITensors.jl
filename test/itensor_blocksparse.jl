@@ -493,6 +493,19 @@ Random.seed!(1234)
     @test norm(Ap-A) ≈ 0.0
   end
 
+  @testset "Combine Complex ITensor" begin
+    s1 = Index(QN(("Sz",1)) => 1,QN(("Sz",-1)) => 1;tags="S=1/2,Site,n=1")
+    s2 = Index(QN(("Sz",1)) => 1,QN(("Sz",-1)) => 1;tags="S=1/2,Site,n=2")
+
+    T = randomITensor(ComplexF64,QN("Sz",0),s1,s2)
+
+    C = combiner(s1,s2)
+    CT = C*T
+    @test norm(CT) ≈ norm(T)
+    TT = dag(C)*CT
+    @test TT ≈ T
+  end
+
   @testset "Contract to scalar" begin
     i = Index([QN(0)=>1,QN(1)=>1],"i")
     A = randomITensor(QN(0),i,dag(i'))
