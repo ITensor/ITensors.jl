@@ -419,7 +419,7 @@ function permutedims_combine_output(T::BlockSparseTensor{ElT,N},
   # Combine the blocks (within the newly combined and permuted dimension)
   blocks_perm_comb = combine_blocks(blocks_perm_comb,comb_ind_loc,blockcomb)
 
-  return BlockSparseTensor(blocks_perm_comb,is)
+  return BlockSparseTensor(ElT,blocks_perm_comb,is)
 end
 
 function permutedims_combine(T::BlockSparseTensor{ElT,N},
