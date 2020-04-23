@@ -9,7 +9,7 @@ include("util.jl")
 function isingMPO(sites)::MPO
   H = MPO(sites)
   N = length(H)
-  link = fill(Index(),N+1)
+  link = Vector{Index}(undef, N+1)
   for n=1:N+1
     link[n] = Index(3,"Link,Ising,l=$(n-1)")
   end
@@ -35,7 +35,7 @@ function heisenbergMPO(sites,
                        onsite::String="Sz")::MPO
   H = MPO(sites)
   N = length(H)
-  link = fill(Index(),N+1)
+  link = Vector{Index}(undef, N+1)
   for n=1:N+1
     link[n] = Index(5,"Link,Heis,l=$(n-1)")
   end
@@ -64,7 +64,7 @@ function NNheisenbergMPO(sites,
                          J2::Float64)::MPO
   H = MPO(sites)
   N = length(H)
-  link = fill(Index(),N+1)
+  link = Vector{Index}(undef, N+1)
   for n=1:N+1
     link[n] = Index(8,"Link,H,l=$(n-1)")
   end
@@ -100,7 +100,7 @@ function threeSiteIsingMPO(sites,
                            h::Vector{Float64})::MPO
   H = MPO(sites)
   N = length(H)
-  link = fill(Index(),N+1)
+  link = Vector{Index}(undef, N+1)
   for n=1:N+1
     link[n] = Index(4,"Link,l=$(n-1)")
   end
@@ -124,7 +124,7 @@ end
 function fourSiteIsingMPO(sites)::MPO
   H = MPO(sites)
   N = length(H)
-  link = fill(Index(),N+1)
+  link = Vector{Index}(undef, N+1)
   for n=1:N+1
     link[n] = Index(5,"Link,l=$(n-1)")
   end

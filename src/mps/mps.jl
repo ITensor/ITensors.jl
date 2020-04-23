@@ -31,7 +31,7 @@ MPS() = MPS(0, Vector{ITensor}(), 0, 0)
 Construct an MPS with N sites with default constructed
 ITensors.
 """
-MPS(N::Int) = MPS(N, fill(ITensor(), N))
+MPS(N::Int) = MPS(N, Vector{ITensor}(undef, N))
 
 """
     MPS(::Type{T<:Number}, sites)

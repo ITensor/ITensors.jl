@@ -5,20 +5,28 @@ mutable struct ProjMPS
   nsite::Int
   M::MPS
   LR::Vector{ITensor}
-  ProjMPS(M::MPS) = new(0,length(M)+1,2,M,fill(ITensor(),length(M)))
+  ProjMPS(M::MPS) = new(0,
+                        length(M)+1,
+                        2,
+                        M,
+                        Vector{ITensor}(undef, length(M)))
 end
 
 nsite(P::ProjMPS) = P.nsite
 
 Base.length(P::ProjMPS) = length(P.M)
 
-function lproj(P::ProjMPS)::ITensor
-  (P.lpos <= 0) && return ITensor()
+is_lproj_assigned(pm::ProjMPS) = isassigned(pm.LR, pm.lpos)
+
+is_rproj_assigned(pm::ProjMPS) = isassigned(pm.LR, pm.rpos)
+
+function lproj(P::ProjMPS)
+  (P.lpos <= 0) && return nothing
   return P.LR[P.lpos]
 end
 
-function rproj(P::ProjMPS)::ITensor
-  (P.rpos >= length(P)+1) && return ITensor()
+function rproj(P::ProjMPS)
+  (P.rpos >= length(P)+1) && return nothing
   return P.LR[P.rpos]
 end
 
@@ -29,10 +37,10 @@ function product(P::ProjMPS,
   end
 
   Lpm = dag(prime(P.M[P.lpos+1],"Link"))
-  !isnull(lproj(P)) && (Lpm *= lproj(P))
+  is_lproj_assigned(P) && (Lpm *= lproj(P))
 
   Rpm = dag(prime(P.M[P.rpos-1],"Link"))
-  !isnull(rproj(P)) && (Rpm *= rproj(P))
+  is_rproj_assigned(P) && (Rpm *= rproj(P))
 
   pm = Lpm*Rpm
 

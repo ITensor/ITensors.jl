@@ -45,7 +45,7 @@ MPO(A::Vector{<:ITensor}) = MPO(length(A), A)
 
 Make an MPO of length `N` filled with default ITensors.
 """
-MPO(N::Int) = MPO(N, fill(ITensor(), N))
+MPO(N::Int) = MPO(N, Vector{ITensor}(undef, N))
 
 """
     MPO(sites, ops::Vector{String})
@@ -291,7 +291,7 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(psi))
   mindim::Int     = max(get(kwargs,:mindim,1), 1)
   normalize::Bool = get(kwargs, :normalize, false) 
-  all(x -> x != Index(),
+  all(x -> !isnothing(x),
       [siteind(A, psi, j) for j in 1:n]) || 
   throw(ErrorException("MPS and MPO have different site indices in contract method 'densitymatrix'"))
 
