@@ -775,6 +775,24 @@ end
 
   end
 
+  @testset "Complex AutoMPO Coefs" begin
+    N = 4
+
+    for use_qn in [false,true]
+      sites = siteinds("S=1/2",N;conserve_qns=use_qn)
+      ampo = AutoMPO()
+      for i=1:N-1
+        ampo += (+1im,"S+",i,"S-",i+1)
+        ampo += (-1im,"S-",i,"S+",i+1)
+      end
+      H = MPO(ampo,sites)
+      psiud = productMPS(sites,[1,2,1,2])
+      psidu = productMPS(sites,[2,1,1,2])
+      @test inner(psiud,H,psidu) ≈ +1im
+      @test inner(psidu,H,psiud) ≈ -1im
+    end
+  end
+
 end
 
 nothing

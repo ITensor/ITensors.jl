@@ -43,7 +43,10 @@ arguments provided. The following keyword arguments are recognized:
 * `use_relative_cutoff` [Bool] Default value: true.
 * `utags` [String] Default value: "Link,u".
 * `vtags` [String] Default value: "Link,v".
-* `fastsvd` [Bool] Defaut value: false.
+* `arg` [String] Defaut value: "recursive". Options:
+   - "recursive" - ITensor's custom svd. Very reliable, but may be slow if high precision is needed. To get an `svd` of a matrix `A`, an eigendecomposition of `A'*A` is used to compute `U` and then a `qr` of `A'*U` is used to compute `V`. This is performed recursively to compute small singular values.
+   - "divide_and_conquer" - A divide-and-conquer algorithm. LAPACK's gesdd.
+   - "qr_iteration" - Typically slower but more accurate than "divide_and_conquer". LAPACK's gesvd.
 """
 function LinearAlgebra.svd(A::ITensor,
                            Linds...;
@@ -232,7 +235,8 @@ function factorize_svd(A::ITensor,
                        kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   tags::TagSet = get(kwargs, :tags, "Link,fact")
-  U,S,V,spec,u,v = svd(A, Linds...; kwargs...)
+  alg::String = get(kwargs, :svd_alg, "recursive")
+  U,S,V,spec,u,v = svd(A, Linds...; kwargs..., alg = alg)
   if ortho == "left"
     L,R = U,S*V
   elseif ortho == "right"
@@ -259,29 +263,35 @@ function factorize_eigen(A::ITensor,
                          Linds...;
                          kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
-  delta_A2 = get(kwargs,:eigen_perturbation,nothing)
+  delta_A2 = get(kwargs, :eigen_perturbation, nothing)
   if ortho == "left"
-    Lis = commoninds(A,IndexSet(Linds...))
-    A2 = A*prime(dag(A),Lis)
-    if delta_A2 != nothing
-      A2 += delta_A2
+    Lis = commoninds(A, IndexSet(Linds...))
+    simLis = sim(Lis)
+    A2 = A * replaceinds(dag(A), Lis, simLis)
+    if !isnothing(delta_A2)
+      # This assumes delta_A2 has indices:
+      # (Lis..., prime(Lis)...)
+      A2 += replaceinds(delta_A2, prime(Lis), simLis)
     end
-    L,D,spec = eigen(A2,Lis,prime(Lis); ishermitian=true,
+    L, D, spec = eigen(A2, Lis, simLis; ishermitian=true,
                                         kwargs...)
     R = dag(L)*A
   elseif ortho == "right"
-    Ris = uniqueinds(A,IndexSet(Linds...))
-    A2 = A*prime(dag(A),Ris)
-    if delta_A2 != nothing
-      A2 += delta_A2
+    Ris = uniqueinds(A, IndexSet(Linds...))
+    simRis = sim(Ris)
+    A2 = A * replaceinds(dag(A), Ris, simRis)
+    if !isnothing(delta_A2)
+      # This assumes delta_A2 has indices:
+      # (Ris..., prime(Ris)...)
+      A2 += replaceinds(delta_A2, prime(Ris), simRis)
     end
-    R,D,spec = eigen(A2,Ris,prime(Ris); ishermitian=true,
+    R, D, spec = eigen(A2, Ris, simRis; ishermitian=true,
                                         kwargs...)
-    L = A*dag(R)
+    L = A * dag(R)
   else
     error("In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
   end
-  return L,R,spec,commonind(L,R)
+  return L, R, spec, commonind(L, R)
 end
 
 """
@@ -298,7 +308,7 @@ Choose orthogonality properties of the factorization with the keyword `ortho`. F
 
 By default, the decomposition used is chosen automatically. You can choose which decomposition to use with the keyword `which_decomp`. Right now, options `"svd"` and `"eigen"` are supported.
 
-When `"svd"` is chosen, L = U and R = S*V for `ortho = "left"`, L = U*S and R = V for `ortho = "right"`, and L = U*sqrt(S) and R = sqrt(S)*V for `ortho = "none"`.
+When `"svd"` is chosen, L = U and R = S*V for `ortho = "left"`, L = U*S and R = V for `ortho = "right"`, and L = U*sqrt(S) and R = sqrt(S)*V for `ortho = "none"`. To control which `svd` algorithm is choose, use the `svd_alg` keyword argument. See the documentation for `svd` for the supported algorithms, which are the same as those accepted by the `alg` keyword argument.
 
 When `"eigen"` is chosen, L = U and R = U'*A where U is determined
 from the eigendecompositon A*A' = U*D*U' for `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is not supported for `ortho = "none"`. 

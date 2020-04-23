@@ -57,7 +57,7 @@ function entropy(s::Spectrum)
 end
 
 """
-svd(T::DenseTensor{<:Number,2}; kwargs...)
+    svd(T::DenseTensor{<:Number,2}; kwargs...)
 
 svd of an order-2 DenseTensor
 """
@@ -65,7 +65,9 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
                            kwargs...) where {ElT,IndsT}
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 
+  #
   # Keyword argument deprecations
+  #
   use_absolute_cutoff = false
   if haskey(kwargs, :absoluteCutoff)
     @warn "In svd, keyword argument absoluteCutoff is deprecated in favor of use_absolute_cutoff"
@@ -73,6 +75,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
                               :absoluteCutoff,
                               use_absolute_cutoff)
   end
+
   use_relative_cutoff = true
   if haskey(kwargs, :doRelCutoff)
     @warn "In svd, keyword argument doRelCutoff is deprecated in favor of use_relative_cutoff"
@@ -80,9 +83,9 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
                               :doRelCutoff,
                               use_relative_cutoff)
   end
-  if haskey(kwargs, :fastSVD)
-    @warn "In svd, keyword argument fastSVD is deprecated in favor of fastsvd"
-    fastsvd = get(kwargs, :fastsvd, true)
+
+  if haskey(kwargs, :fastsvd) || haskey(kwargs, :fastSVD)
+    error("In svd, fastsvd/fastSVD keyword arguments are removed in favor of alg, see documentation for more details.")
   end
 
   maxdim::Int = get(kwargs,:maxdim,minimum(dims(T)))
@@ -94,26 +97,30 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT};
   use_relative_cutoff::Bool = get(kwargs,
                                   :use_relative_cutoff,
                                   use_relative_cutoff)
-  fastsvd::Bool = get(kwargs,:fastsvd,false)
+  alg::String = get(kwargs, :alg, "recursive")
 
-  if fastsvd
-    MU,MS,MV = svd(matrix(T))
-  else
+  if alg == "divide_and_conquer"
+    MU,MS,MV = svd(matrix(T); alg = LinearAlgebra.DivideAndConquer())
+  elseif alg == "qr_iteration"
+    MU,MS,MV = svd(matrix(T); alg = LinearAlgebra.QRIteration())
+  elseif alg == "recursive"
     MU,MS,MV = svd_recursive(matrix(T))
+  else
+    error("svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.")
   end
   conj!(MV)
 
-  P = MS.^2
+  P = MS .^ 2
   if truncate
-    truncerr,_ = truncate!(P;mindim=mindim,
-                             maxdim=maxdim,
-                             cutoff=cutoff,
-                             use_absolute_cutoff=use_absolute_cutoff,
-                             use_relative_cutoff=use_relative_cutoff)
+    truncerr, _ = truncate!(P; mindim = mindim,
+                               maxdim = maxdim,
+                               cutoff = cutoff,
+                               use_absolute_cutoff = use_absolute_cutoff,
+                               use_relative_cutoff = use_relative_cutoff)
   else
     truncerr = 0.0
   end
-  spec = Spectrum(P,truncerr)
+  spec = Spectrum(P, truncerr)
   dS = length(P)
   if dS < length(MS)
     MU = MU[:,1:dS]
@@ -326,6 +333,7 @@ function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}
   return Q,R
 end
 
+# TODO: support alg keyword argument to choose the svd algorithm
 function polar(T::DenseTensor{ElT,2,IndsT}) where {ElT,IndsT}
   QM,RM = polar(matrix(T))
   dim = size(QM,2)

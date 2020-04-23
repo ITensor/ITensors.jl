@@ -718,7 +718,7 @@ function qn_svdMPO(ampo::AutoMPO,
 
       #TODO: wrap following 3 lines into a function
       block = (rn,cn)
-      T = BlockSparseTensor([block],IndexSet(dag(ll),rl))
+      T = BlockSparseTensor(ValType,[block],IndexSet(dag(ll),rl))
       blockview(T,block) .= M
 
       IT = itensor(T)

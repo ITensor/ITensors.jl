@@ -514,6 +514,7 @@ end
     @test ind(A1, 1) == s1
     @test ind(A1, 2) == l
   end
+
   @testset "replaceind and replaceinds" begin
     rA1 = replaceind(A1,s1,s2)
     @test hasinds(rA1,s2,l,l')
@@ -528,6 +529,19 @@ end
 
     replaceinds!(A2,(s2,l'),(s1,l))
     @test hasinds(A2,s1,l,l'')
+  end
+
+  @testset "replaceinds fixed errors" begin
+    l = Index(3; tags="l")
+    s = Index(2; tags="s")
+    l̃, s̃ = sim(l), sim(s)
+    A = randomITensor(s, l)
+    Ã = replaceinds(A, (l, s), (l̃, s̃))
+    @test ind(A, 1) == s
+    @test ind(A, 2) == l
+    @test ind(Ã, 1) == s̃
+    @test ind(Ã, 2) == l̃
+    @test_throws ErrorException replaceinds(A, (l, s), (s̃, l̃))
   end
 
 end #End "ITensor other index operations"
@@ -643,6 +657,28 @@ end
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
     end
 
+    @testset "Test SVD of an ITensor with different algorithms" begin
+      U, S, V, spec, u, v = svd(A, j, l; alg = "recursive")
+      @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+      @test A ≈ U * S * V
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+
+      U, S, V, spec, u, v = svd(A, j,l; alg = "divide_and_conquer")
+      @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+      @test A ≈ U * S * V
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+
+      U, S, V, spec, u, v = svd(A, j,l; alg = "qr_iteration")
+      @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+      @test A ≈ U * S * V
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+
+      @test_throws ErrorException svd(A, j,l; alg = "bad_alg")
+    end
+
     @testset "Test SVD of a DenseTensor internally" begin
       Lis = commoninds(A,IndexSet(j,l))
       Ris = uniqueinds(A,Lis)
@@ -738,6 +774,17 @@ end
         @test A ≈ L*R
         @test L*dag(prime(L, l)) ≉ δ(SType, l, l')
         @test R*dag(prime(R, l)) ≉ δ(SType, l, l')
+      end
+
+      @testset "factorize when ITensor has primed indices" begin
+        A = randomITensor(i, i')
+        L, R = factorize(A, i)
+        l = commonind(L, R)
+        @test A ≈ L * R
+        @test L * dag(prime(L, l)) ≈ δ(SType, l, l')
+        @test R * dag(prime(R, l)) ≉ δ(SType, l, l')
+
+        @test_throws ErrorException factorize(A, i; svd_alg = "bad_alg")
       end
 
     end

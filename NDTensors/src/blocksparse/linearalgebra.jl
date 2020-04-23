@@ -32,11 +32,13 @@ computed from the dense svds of seperate blocks.
 """
 function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
                            kwargs...) where {ElT}
+  alg::String = get(kwargs, :alg, "recursive")
+
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 
-  Us = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
-  Ss = Vector{DiagBlockSparseMatrix{real(ElT)}}(undef,nnzblocks(T))
-  Vs = Vector{BlockSparseMatrix{ElT}}(undef,nnzblocks(T))
+  Us = Vector{BlockSparseMatrix{ElT}}(undef, nnzblocks(T))
+  Ss = Vector{DiagBlockSparseMatrix{real(ElT)}}(undef, nnzblocks(T))
+  Vs = Vector{BlockSparseMatrix{ElT}}(undef, nnzblocks(T))
 
   # Sorted eigenvalues
   d = Vector{real(ElT)}()
@@ -44,11 +46,11 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT};
   for n in 1:nnzblocks(T)
     b = nzblock(T, n)
     blockT = blockview(T, n)
-    Ub,Sb,Vb = svd(blockT)
+    Ub, Sb, Vb = svd(blockT; alg = alg)
     Us[n] = Ub
     Ss[n] = Sb
     Vs[n] = Vb
-    append!(d,vector(diag(Sb)))
+    append!(d, vector(diag(Sb)))
   end
 
   # Square the singular values to get

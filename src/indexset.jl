@@ -11,7 +11,7 @@ end
 Construct an IndexSet of order N and element type IndexT
 from a collection of indices (any collection that is convertable to a Tuple).
 """
-IndexSet{N, IndexT}(inds::Index...) where {N,IndexT} = IndexSet{N,IndexT}(inds)
+IndexSet{N, IndexT}(inds::Index...) where {N, IndexT} = IndexSet{N, IndexT}(inds)
 
 """
     IndexSet{N}(inds)
@@ -115,7 +115,10 @@ NDTensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
 NDTensors.ValLength(::IndexSet{N}) where {N} = Val(N)
 
 # Convert to an Index if there is only one
-Index(is::IndexSet) = length(is)==1 ? is[1] : error("Number of Index in IndexSet ≠ 1")
+function Index(is::IndexSet)
+  length(is) != 1 && error("Number of Index in IndexSet ≠ 1")
+  return is[1]
+end
 
 """
     getindex(is::IndexSet, n::Int)
@@ -341,7 +344,7 @@ IndexSet equality (order dependent). For order
 independent equality use `issetequal` or
 `hassameinds`.
 """
-function Base.:(==)(A::IndexSet,B::IndexSet)
+function Base.:(==)(A::IndexSet, B::IndexSet)
   length(A) ≠ length(B) && return false
   for (a,b) in zip(A,B)
     a ≠ b && return false
@@ -400,13 +403,9 @@ Checks if the Index matches the provided conditions.
 """
 indmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
 
-const IndexCollection{IndexT<:Index} = Union{IndexSet{<:Any,IndexT},
-                                             Tuple{Vararg{IndexT}},
-                                             Vector{IndexT},
-                                             SVector{<:Any,IndexT},
-                                             MVector{<:Any,IndexT}}
-
-function Base.setdiff(f::Function, A, Bs...)
+function Base.setdiff(f::Function,
+                      A::IndexSet,
+                      Bs::IndexSet...)
   R = eltype(A)[]
   for a ∈ A
     f(a) && all(B -> a ∉ B, Bs) && push!(R, a)
@@ -415,16 +414,18 @@ function Base.setdiff(f::Function, A, Bs...)
 end
 
 """
-    setdiff(A,B...)
+    setdiff(A::IndexSet, Bs::IndexSet...)
 
-Output the IndexSet with Indices in Ais but not in
-the IndexSets Bis.
+Output the IndexSet with Indices in `A` but not in
+the IndexSets `Bs`.
 """
-Base.setdiff(A::IndexCollection,
-             Bs::IndexCollection...;
+Base.setdiff(A::IndexSet,
+             Bs::IndexSet...;
              kwargs...) = setdiff(fmatch(; kwargs...), A, Bs...)
 
-function firstsetdiff(f::Function, A, Bs...)
+function firstsetdiff(f::Function,
+                      A::IndexSet,
+                      Bs::IndexSet...)
   for a in A
     f(a) && all(B -> a ∉ B, Bs) && return a
   end
@@ -432,18 +433,22 @@ function firstsetdiff(f::Function, A, Bs...)
 end
 
 """
-    firstsetdiff(A,B)
+    firstsetdiff(A::IndexSet, Bs::IndexSet...)
 
-Output the Index in Ais but not in the IndexSets Bis.
+Output the first Index in `A` that is not in the IndexSets `Bs`.
 Otherwise, return a default constructed Index.
-
-In the future, this may throw an error if more than 
-one Index is found.
 """
-firstsetdiff(A, Bs...;
+firstsetdiff(A::IndexSet,
+             Bs::IndexSet...;
              kwargs...) = firstsetdiff(fmatch(; kwargs...), A, Bs...)
 
-function Base.intersect(f::Function, A, B)
+"""
+    intersect(f::Function, A::IndexSet, B::IndexSet)
+
+Output the IndexSet in the intersection of `A` and `B`,
+optionally filtering by the function `f`.
+"""
+function Base.intersect(f::Function, A::IndexSet, B::IndexSet)
   R = eltype(A)[]
   for a in A
     f(a) && a ∈ B && push!(R,a)
@@ -452,15 +457,16 @@ function Base.intersect(f::Function, A, B)
 end
 
 """
-    intersect(A,B)
+    intersect(A::IndexSet, B::IndexSet; kwargs...)
 
-Output the IndexSet in the intersection of A and B
+Output the IndexSet in the intersection of `A` and `B`,
+optionally filtering by tags, prime level, etc.
 """
-Base.intersect(A::IndexCollection,
-               B::IndexCollection;
+Base.intersect(A::IndexSet,
+               B::IndexSet;
                kwargs...) = intersect(fmatch(; kwargs...), A, B)
 
-function firstintersect(f::Function, A, B)
+function firstintersect(f::Function, A::IndexSet, B::IndexSet)
   for a in A
     f(a) && a ∈ B && return a
   end
@@ -468,59 +474,82 @@ function firstintersect(f::Function, A, B)
 end
 
 """
-    firstintersect(Ais,Bis)
+    firstintersect(A::IndexSet, B::IndexSet; kwargs...)
 
-Output the Index common to Ais and Bis.
+Output the Index common to `A` and `B`, optionally
+filtering by tags, prime level, etc.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-firstintersect(A, B;
+firstintersect(A::IndexSet,
+               B::IndexSet;
                kwargs...) = firstintersect(fmatch(; kwargs...), A, B)
 
 """
-    filter(f::Function,inds::IndexSet)
+    filter(f::Function, inds::IndexSet)
 
 Filter the IndexSet by the given function (output a new
 IndexSet with indices `i` for which `f(i)` returns true).
-"""
-Base.filter(f::Function, is::IndexSet) = IndexSet(filter(f,Tuple(is)))
 
-Base.filter(is::IndexCollection,
+Note that this function is not type stable, since the number
+of output indices is not known at compile time.
+"""
+Base.filter(f::Function,
+            is::IndexSet) = IndexSet(filter(f, Tuple(is)))
+
+Base.filter(is::IndexSet,
             args...; kwargs...) = filter(fmatch(args...;
-                                                kwargs...),is)
+                                                kwargs...), is)
 
 # To fix ambiguity error with Base function
-Base.filter(is::IndexCollection,
-            tags::String; kwargs...) = filter(fmatch(tags; kwargs...),is)
+Base.filter(is::IndexSet,
+            tags::String;
+            kwargs...) = filter(fmatch(tags; kwargs...),is)
 
 """
-Like first, but if the length is 0 return nothing
+    getfirst(is::IndexSet)
+
+Return the first Index in the IndexSet. If the IndexSet
+is empty, return `nothing`.
 """
-function getfirst(is)
+function getfirst(is::IndexSet)
   length(is) == 0 && return nothing
   return first(is)
 end
 
 """
-Get the first value matching the pattern function,
-return nothing if not found.
+    getfirst(f::Function, is::IndexSet)
+
+Get the first Index matching the pattern function,
+return `nothing` if not found.
 """
-function getfirst(f::Function, is)
+function getfirst(f::Function, is::IndexSet)
   for i in is
     f(i) && return i
   end
   return nothing
 end
 
-getfirst(is,
+getfirst(is::IndexSet,
          args...; kwargs...) = getfirst(fmatch(args...;
                                                kwargs...),is)
 
-Base.findall(is::IndexCollection,
+Base.findall(is::IndexSet,
              args...; kwargs...) = findall(fmatch(args...;
                                                   kwargs...), is)
 
-Base.findfirst(is::IndexCollection,
+"""
+    indexin(ais::IndexSet, bis::IndexSet)
+
+For collections of Indices, returns the first location in 
+`bis` for each value in `ais`, as a Tuple.
+"""
+function Base.indexin(ais::IndexSet,
+                      bis::IndexSet)
+  return ntuple(i -> findfirst(bis, ais[i]), Val(length(ais)))
+end
+
+Base.findfirst(is::IndexSet,
                args...; kwargs...) = findfirst(fmatch(args...;
                                                       kwargs...), is)
 
@@ -543,7 +572,7 @@ function prime(f::Function,
 end
 
 """
-    prime(A, plinc, ...)
+    prime(A::IndexSet, plinc, ...)
 
 Increase the prime level of the indices by the specified amount.
 Filter which indices are primed using keyword arguments
@@ -714,11 +743,13 @@ function replaceind(is::IndexSet, i1::Index, i2::Index)
   return setindex(is, i2, pos)
 end
 
-function replaceinds(is::IndexSet, is1, is2)
-  poss = findall(is,is1)
-  for (j,pos) ∈ enumerate(poss)
+function replaceinds(is::IndexSet, inds1, inds2)
+  is1 = IndexSet(inds1)
+  poss = indexin(is1, is)
+  for (j, pos) in enumerate(poss)
     i1 = is[pos]
-    i2 = is2[j]
+    i2 = inds2[j]
+    space(i1) != space(i2) && error("Indices must have the same spaces to be replaced")
     i2 = setdir(i2, dir(i1))
     is = setindex(is, i2, pos)
   end
