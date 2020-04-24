@@ -71,15 +71,16 @@ end
 
 struct SweepNext
   N::Int
+  ncenter::Int
 end
 
-sweepnext(N::Int)::SweepNext = SweepNext(N)
+sweepnext(N::Int;ncenter::Int=2)::SweepNext = SweepNext(N,ncenter)
 
 function Base.iterate(sn::SweepNext,state=(0,1))
   b,ha = state
   if ha==1
     inc = 1
-    bstop = sn.N
+    bstop = sn.N-sn.ncenter+2
   else
     inc = -1
     bstop = 0
