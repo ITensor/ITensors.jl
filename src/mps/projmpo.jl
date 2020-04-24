@@ -16,10 +16,6 @@ nsite(pm::ProjMPO) = pm.nsite
 
 Base.length(pm::ProjMPO) = length(pm.H)
 
-is_lproj_assigned(pm::ProjMPO) = isassigned(pm.LR, pm.lpos)
-
-is_rproj_assigned(pm::ProjMPO) = isassigned(pm.LR, pm.rpos)
-
 function lproj(pm::ProjMPO)
   (pm.lpos <= 0) && return nothing
   return pm.LR[pm.lpos]
@@ -33,19 +29,19 @@ end
 function product(pm::ProjMPO,
                  v::ITensor)::ITensor
   Hv = v
-  if !is_lproj_assigned(pm) #isnull(lproj(pm))
-    if is_rproj_assigned(pm) #isnull(rproj(pm))
+  if isnothing(lproj(pm))
+    if !isnothing(rproj(pm))
       Hv *= rproj(pm)
     end
-    for j=pm.rpos-1:-1:pm.lpos+1
+    for j in pm.rpos-1:-1:pm.lpos+1
       Hv *= pm.H[j]
     end
-  else #if lproj is not assigned
+  else #if lproj exists
     Hv *= lproj(pm)
-    for j=pm.lpos+1:pm.rpos-1
+    for j in pm.lpos+1:pm.rpos-1
       Hv *= pm.H[j]
     end
-    if is_rproj_assigned(pm) #isnull(rproj(pm))
+    if !isnothing(rproj(pm))
       Hv *= rproj(pm)
     end
   end
@@ -54,14 +50,14 @@ end
 
 function Base.eltype(pm::ProjMPO)
   elT = eltype(pm.H[pm.lpos+1])
-  for j = pm.lpos+2:pm.rpos-1
-    elT = promote_type(elT,eltype(pm.H[j]))
+  for j in pm.lpos+2:pm.rpos-1
+    elT = promote_type(elT, eltype(pm.H[j]))
   end
-  if is_lproj_assigned(pm)
-    elT = promote_type(elT,eltype(lproj(pm)))
+  if !isnothing(lproj(pm))
+    elT = promote_type(elT, eltype(lproj(pm)))
   end
-  if is_rproj_assigned(pm)
-    elT = promote_type(elT,eltype(rproj(pm)))
+  if !isnothing(rproj(pm))
+    elT = promote_type(elT, eltype(rproj(pm)))
   end
   return elT
 end
@@ -70,17 +66,17 @@ end
 
 function Base.size(pm::ProjMPO)::Tuple{Int,Int}
   d = 1
-  if is_lproj_assigned(pm)
+  if !isnothing(lproj(pm))
     for i in inds(lproj(pm))
       plev(i) > 0 && (d *= dim(i))
     end
   end
-  for j=pm.lpos+1:pm.rpos-1
+  for j in pm.lpos+1:pm.rpos-1
     for i in inds(pm.H[j])
       plev(i) > 0 && (d *= dim(i))
     end
   end
-  if is_rproj_assigned(pm)
+  if !isnothing(rproj(pm))
     for i in inds(rproj(pm))
       plev(i) > 0 && (d *= dim(i))
     end
@@ -138,12 +134,12 @@ function noiseterm(pm::ProjMPO,
                    ortho::String)
   if ortho == "left"
     nt = pm.H[b]*phi
-    if is_lproj_assigned(pm)
+    if !isnothing(lproj(pm))
       nt *= lproj(pm)
     end
   elseif ortho == "right"
     nt = phi*pm.H[b+1]
-    if is_rproj_assigned(pm)
+    if !isnothing(rproj(pm))
       nt *= rproj(pm)
     end
   else

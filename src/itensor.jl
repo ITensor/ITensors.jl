@@ -165,7 +165,7 @@ element type `ElT`.
 The storage will have `NDTensors.Dense` type.
 """
 function ITensor(::Type{ElT},
-                 inds::IndexSet{N}) where {ElT <: Number, N}
+                 inds::IndexSet) where {ElT <: Number}
   return itensor(Dense(ElT, dim(inds)), inds)
 end
 

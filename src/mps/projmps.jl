@@ -16,10 +16,6 @@ nsite(P::ProjMPS) = P.nsite
 
 Base.length(P::ProjMPS) = length(P.M)
 
-is_lproj_assigned(pm::ProjMPS) = isassigned(pm.LR, pm.lpos)
-
-is_rproj_assigned(pm::ProjMPS) = isassigned(pm.LR, pm.rpos)
-
 function lproj(P::ProjMPS)
   (P.lpos <= 0) && return nothing
   return P.LR[P.lpos]
@@ -37,10 +33,10 @@ function product(P::ProjMPS,
   end
 
   Lpm = dag(prime(P.M[P.lpos+1],"Link"))
-  is_lproj_assigned(P) && (Lpm *= lproj(P))
+  !isnothing(lproj(P)) && (Lpm *= lproj(P))
 
   Rpm = dag(prime(P.M[P.rpos-1],"Link"))
-  is_rproj_assigned(P) && (Rpm *= rproj(P))
+  !isnothing(rproj(P)) && (Rpm *= rproj(P))
 
   pm = Lpm*Rpm
 
