@@ -1,8 +1,9 @@
 
 """
-  TruncSVD{N}
-ITensor factorization type for a truncated singular-value decomposition, returned by
-`svd`.
+    TruncSVD{N}
+
+ITensor factorization type for a truncated singular-value 
+decomposition, returned by `svd`.
 """
 struct TruncSVD{N1,N2}
   U::ITensor{N1}
@@ -22,49 +23,62 @@ Base.iterate(S::TruncSVD, ::Val{:u}) = (S.u, Val(:v))
 Base.iterate(S::TruncSVD, ::Val{:v}) = (S.v, Val(:done))
 Base.iterate(S::TruncSVD, ::Val{:done}) = nothing
 
-"""
-    svd(A::ITensor,
-        leftind1::Index,
-        leftind2::Index,
-        ...
-        ;kwargs...)
+@doc """
+    svd(A::ITensor, inds::Index...; <keyword arguments>)
 
-Singular value decomposition (SVD) of an ITensor A, computed
+Singular value decomposition (SVD) of an ITensor `A`, computed
 by treating the "left indices" provided collectively
 as a row index, and the remaining "right indices" as a
 column index (matricization of a tensor).
 
-Whether the SVD performs a trunction depends on the keyword
-arguments provided. The following keyword arguments are recognized:
-* `maxdim` [Int]
-* `mindim` [Int]
-* `cutoff` [Float64]
-* `use_absolute_cutoff` [Bool] Default value: false.
-* `use_relative_cutoff` [Bool] Default value: true.
-* `utags` [String] Default value: "Link,u".
-* `vtags` [String] Default value: "Link,v".
-* `arg` [String] Defaut value: "recursive". Options:
-   - "recursive" - ITensor's custom svd. Very reliable, but may be slow if high precision is needed. To get an `svd` of a matrix `A`, an eigendecomposition of `A'*A` is used to compute `U` and then a `qr` of `A'*U` is used to compute `V`. This is performed recursively to compute small singular values.
-   - "divide_and_conquer" - A divide-and-conquer algorithm. LAPACK's gesdd.
-   - "qr_iteration" - Typically slower but more accurate than "divide_and_conquer". LAPACK's gesvd.
+The first three return arguments are `U`, `S`, and `V`, such that
+`A ≈ U * S * V`.
+
+Whether or not the SVD performs a trunction depends on the keyword
+arguments provided. 
+
+# Arguments
+- `maxdim::Int`: the maximum number of singular values to keep.
+- `mindim::Int`: the minimum number of singular values to keep.
+- `cutoff::Float64`: set the desired truncation error of the SVD, by default defined as the sum of the squares of the smallest singular values.
+- `lefttags::String = "Link,u"`: set the tags of the Index shared by `U` and `S`.
+- `righttags::String = "Link,v"`: set the tags of the Index shared by `S` and `V`.
+- `alg::String = "recursive"`. Options:
+  - `"recursive"` - ITensor's custom svd. Very reliable, but may be slow if high precision is needed. To get an `svd` of a matrix `A`, an eigendecomposition of ``A^{\\dagger} A`` is used to compute `U` and then a `qr` of ``A^{\\dagger} U`` is used to compute `V`. This is performed recursively to compute small singular values.
+  - `"divide_and_conquer"` - A divide-and-conquer algorithm. LAPACK's gesdd.
+  - `"qr_iteration"` - Typically slower but more accurate than `"divide_and_conquer"`. LAPACK's gesvd.
+- `use_absolute_cutoff::Bool = false`: set if all probability weights below the `cutoff` value should be discarded, rather than the sum of discarded weights.
+- `use_relative_cutoff::Bool = true`: set if the singular values should be normalized for the sake of truncation.
+
+See also: [`factorize`](@ref)
 """
 function LinearAlgebra.svd(A::ITensor,
                            Linds...;
                            kwargs...)
-  utags::TagSet = get(kwargs,:utags,"Link,u")
-  vtags::TagSet = get(kwargs,:vtags,"Link,v")
-  Lis = commoninds(A,IndexSet(Linds...))
-  Ris = uniqueinds(A,Lis)
+  utags::TagSet = get(kwargs, :lefttags, get(kwargs, :utags, "Link,u"))
+  vtags::TagSet = get(kwargs, :righttags, get(kwargs, :vtags, "Link,v"))
+
+  # Keyword argument deprecations
+  #if haskey(kwargs, :utags) || haskey(kwargs, :vtags)
+  #  @warn "Keyword arguments `utags` and `vtags` are deprecated in favor of `leftags` and `righttags`."
+  #end
+
+  Lis = commoninds(A, IndexSet(Linds...))
+  Ris = uniqueinds(A, Lis)
+
+  if length(Lis) == 0 || length(Ris) == 0
+    error("In `svd`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.")
+  end
 
   CL = combiner(Lis...)
   CR = combiner(Ris...)
 
-  AC = A*CR*CL
+  AC = A * CR * CL
 
   cL = combinedind(CL)
   cR = combinedind(CR)
-  if inds(AC) != IndexSet(cL,cR)
-    AC = permute(AC,cL,cR)
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
   end
 
   UT,ST,VT,spec = svd(tensor(AC); kwargs...)
@@ -110,9 +124,10 @@ end
 
 
 """
-  TruncEigen{N}
-ITensor factorization type for a truncated eigenvalue decomposition, returned by
-`eigen`.
+    TruncEigen{N}
+
+ITensor factorization type for a truncated eigenvalue 
+decomposition, returned by `eigen`.
 """
 struct TruncEigen{N}
   U::ITensor{N}
@@ -131,25 +146,32 @@ Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
 function LinearAlgebra.eigen(A::ITensor,
-                             Linds=inds(A;plev=0),
-                             Rinds=prime(IndexSet(Linds));
+                             Linds = inds(A; plev=0),
+                             Rinds = prime(IndexSet(Linds));
                              kwargs...)
-  ishermitian::Bool = get(kwargs,:ishermitian,false)
-  tags::TagSet = get(kwargs,:tags,"Link,eigen")
-  lefttags::TagSet = get(kwargs,:lefttags,tags)
-  righttags::TagSet = get(kwargs,:righttags,tags)
-  leftplev = get(kwargs,:leftplev,0)
-  rightplev = get(kwargs,:rightplev,lefttags==righttags ? 1 : 0)
+  ishermitian::Bool = get(kwargs, :ishermitian, false)
+  tags::TagSet = get(kwargs, :tags, "Link,eigen")
+  lefttags::TagSet = get(kwargs, :lefttags, tags)
+  righttags::TagSet = get(kwargs, :righttags, tags)
+  leftplev = get(kwargs, :leftplev, 0)
+  rightplev = get(kwargs, :rightplev, 1)
 
-  (lefttags==righttags && leftplev==rightplev) && error("In eigen, left tags and prime level must be different from right tags and prime level")
+  if lefttags == righttags && leftplev == rightplev
+    error("In eigen, left tags and prime level must be different from right tags and prime level")
+  end
 
-  Lis = commoninds(A,IndexSet(Linds))
-  Ris = commoninds(A,IndexSet(Rinds))
+  Lis = commoninds(A, IndexSet(Linds))
+
+  Ris = commoninds(A, IndexSet(Rinds))
+
+  if length(Lis) == 0 || length(Ris) == 0
+    error("In `eigen`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.")
+  end
 
   CL = combiner(Lis...)
   CR = combiner(Ris...)
 
-  AC = A*CR*CL
+  AC = A * CR * CL
 
   cL = combinedind(CL)
   cR = combinedind(CR)
@@ -200,7 +222,7 @@ end
 function LinearAlgebra.qr(A::ITensor,
                           Linds...;
                           kwargs...)
-  tags::TagSet = get(kwargs,:tags,"Link,qr")
+  tags::TagSet = get(kwargs, :tags, "Link,qr")
   Lis = commoninds(A,IndexSet(Linds...))
   Ris = uniqueinds(A,Lis)
   Lpos,Rpos = NDTensors.getperms(inds(A),Lis,Ris)
@@ -295,38 +317,33 @@ function factorize_eigen(A::ITensor,
 end
 
 """
-factorize(A::ITensor, Linds...;
-          ortho = "left",
-          which_decomp = "automatic",
-          tags = "Link,fact",
-          cutoff = 0.0,
-          maxdim = ...)
+    factorize(A::ITensor, Linds::Index...; <keyword arguments>)
 
-Perform a factorization of A into ITensors L and R such the A ≈ L*R.
+Perform a factorization of `A` into ITensors `L` and `R` such that `A ≈ L * R`.
 
-Choose orthogonality properties of the factorization with the keyword `ortho`. For example, if `ortho = "left"`, the left factor L is an orthogonal basis such that `L * dag(prime(L, commonind(L,R))) ≈ I`. If `ortho = "right"`, the right factor R forms an orthogonal basis. Finally, if `ortho = "none"`, neither of the factors form an orthogonal basis, and in general are made as symmetricly as possible (based on the decomposition used).
+# Arguments
+- `ortho::String = "left"`: Choose orthogonality properties of the factorization.
+  - `"left"`: the left factor `L` is an orthogonal basis such that `L * dag(prime(L, commonind(L,R))) ≈ I`. 
+  - `"right"`: the right factor `R` forms an orthogonal basis. 
+  - `"none"`, neither of the factors form an orthogonal basis, and in general are made as symmetrically as possible (depending on the decomposition used).
+- `which_decomp::Union{String, Nothing} = nothing`: choose what kind of decomposition is used. 
+  - `nothing`: choose the decomposition automatically based on the other arguments. For example, when `"automatic"` is chosen and `ortho = "left"` or `"right"`, `svd` or `eigen` is used depending on the provided cutoff (`eigen` is only used when the cutoff is greater than `1e-12`, since it has a lower precision).
+  - `"svd"`: `L = U` and `R = S * V` for `ortho = "left"`, `L = U * S` and `R = V` for `ortho = "right"`, and `L = U * sqrt.(S)` and `R = sqrt.(S) * V` for `ortho = "none"`. To control which `svd` algorithm is choose, use the `svd_alg` keyword argument. See the documentation for `svd` for the supported algorithms, which are the same as those accepted by the `alg` keyword argument.
+  - `"eigen"`: `L = U` and ``R = U^{\\dagger} A`` where `U` is determined from the eigendecompositon ``A A^{\\dagger} = U D U^{\\dagger}`` for `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is not supported for `ortho = "none"`.
 
-By default, the decomposition used is chosen automatically. You can choose which decomposition to use with the keyword `which_decomp`. Right now, options `"svd"` and `"eigen"` are supported.
+In the future, other decompositions like QR, polar, cholesky, LU, etc. are expected to be supported.
 
-When `"svd"` is chosen, L = U and R = S*V for `ortho = "left"`, L = U*S and R = V for `ortho = "right"`, and L = U*sqrt(S) and R = sqrt(S)*V for `ortho = "none"`. To control which `svd` algorithm is choose, use the `svd_alg` keyword argument. See the documentation for `svd` for the supported algorithms, which are the same as those accepted by the `alg` keyword argument.
-
-When `"eigen"` is chosen, L = U and R = U'*A where U is determined
-from the eigendecompositon A*A' = U*D*U' for `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is not supported for `ortho = "none"`. 
-
-When `"automatic"` is chosen, svd or eigen is used depending on the provided cutoff (eigen is only used when the cutoff is greater than 1e-12, since it has a lower precision).
-
-In the future, other decompositions like QR, polar, cholesky, LU, etc.
-are expected to be supported.
+For truncation arguments, see: [`svd`](@ref)
 """
 function LinearAlgebra.factorize(A::ITensor,
                                  Linds...;
                                  kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
-  which_decomp::String = get(kwargs, :which_decomp, "automatic")
+  which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
   cutoff::Float64 = get(kwargs, :cutoff, 0.0)
-  eigen_perturbation = get(kwargs,:eigen_perturbation,nothing)
+  eigen_perturbation = get(kwargs, :eigen_perturbation, nothing)
   if !isnothing(eigen_perturbation)
-    if !(which_decomp == "automatic" || which_decomp == "eigen")
+    if !(isnothing(which_decomp) || which_decomp == "eigen")
       error("""when passing a non-trivial eigen_perturbation to `factorize`,
                the which_decomp keyword argument must be either "automatic" or
                "eigen" """)
@@ -348,13 +365,13 @@ function LinearAlgebra.factorize(A::ITensor,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
   if which_decomp == "svd" || 
-     (which_decomp == "automatic" && cutoff ≤ automatic_cutoff)
-    L,R,spec,l = factorize_svd(A, Linds...; kwargs...)
+     (isnothing(which_decomp) && cutoff ≤ automatic_cutoff)
+    L, R, spec, l = factorize_svd(A, Linds...; kwargs...)
   elseif which_decomp == "eigen" ||
-         (which_decomp == "automatic" && cutoff > automatic_cutoff)
-    L,R,spec,l = factorize_eigen(A, Linds...; kwargs...)
+         (isnothing(which_decomp) && cutoff > automatic_cutoff)
+    L, R, spec, l = factorize_eigen(A, Linds...; kwargs...)
   else
-    return throw(ArgumentError("In factorize, no factorization $which_decomp supported. Use svd, eigen, or automatic."))
+    return throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, or `nothing`."""))
   end
   return L,R,spec,l
 end

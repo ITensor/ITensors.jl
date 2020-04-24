@@ -15,20 +15,17 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
   @testset "Default" begin
     A = ITensor()
-    @test store(A) isa NDTensors.Dense{Nothing}
-    @test isnull(A)
+    @test store(A) isa NDTensors.Dense{Float64}
   end
 
   @testset "Undef with index" begin
     A = ITensor(undef, i)
     @test store(A) isa NDTensors.Dense{Float64}
-    @test !isnull(A)
   end
 
   @testset "Default with indices" begin
     A = ITensor(i,j)
     @test store(A) isa NDTensors.Dense{Float64}
-    @test !isnull(A)
   end
 
   @testset "Random" begin
@@ -39,13 +36,10 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test size(A) == dims(A) == (2,2)
     @test dim(A) == 4
 
-    @test !isnull(A)
-
     B = randomITensor(IndexSet(i,j))
     @test store(B) isa NDTensors.Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
     @test size(B) == dims(B) == (2,2)
-    @test !isnull(B)
 
     A = randomITensor()
     @test eltype(A) == Float64
@@ -574,7 +568,7 @@ end
 
 
 @testset "ITensor, NDTensors.Dense{$SType} storage" for SType ∈ (Float64,
-                                                                ComplexF64)
+                                                                 ComplexF64)
   mi,mj,mk,ml,mα = 2,3,4,5,6,7
   i = Index(mi,"i")
   j = Index(mj,"j")
@@ -793,6 +787,14 @@ end
         @test_throws ErrorException factorize(A, i; svd_alg = "bad_alg")
       end
 
+    end # End factorize tests
+
+    @testset "Test error for empty inputs" begin
+      @test_throws ErrorException svd(A)
+      @test_throws ErrorException svd(A, inds(A))
+      @test_throws ErrorException eigen(A, inds(A))
+      @test_throws ErrorException factorize(A)
+      @test_throws ErrorException factorize(A, inds(A))
     end
 
   end # End ITensor factorization testset

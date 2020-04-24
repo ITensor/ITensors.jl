@@ -31,7 +31,7 @@ MPS() = MPS(0, Vector{ITensor}(), 0, 0)
 Construct an MPS with N sites with default constructed
 ITensors.
 """
-MPS(N::Int) = MPS(N, fill(ITensor(), N))
+MPS(N::Int) = MPS(N, Vector{ITensor}(undef, N))
 
 """
     MPS(::Type{T<:Number}, sites)
@@ -293,9 +293,9 @@ function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  ortho = get(kwargs, :ortho, "left")
-  which_decomp = get(kwargs, :which_decomp, "automatic")
-  normalize = get(kwargs,:normalize,false)
+  ortho::String = get(kwargs, :ortho, "left")
+  which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
+  normalize::Bool = get(kwargs, :normalize, false)
 
   # Deprecated keywords
   if haskey(kwargs, :dir)

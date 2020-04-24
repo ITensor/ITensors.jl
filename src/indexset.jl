@@ -1,7 +1,7 @@
 
-struct IndexSet{N,IndexT<:Index}
-  data::NTuple{N,IndexT}
-  IndexSet{N,IndexT}(inds) where {N,IndexT} = new{N,IndexT}(inds)
+struct IndexSet{N, IndexT<:Index}
+  data::NTuple{N, IndexT}
+  IndexSet{N, IndexT}(inds) where {N,IndexT} = new{N,IndexT}(inds)
 end
 
 """
@@ -11,18 +11,16 @@ end
 Construct an IndexSet of order N and element type IndexT
 from a collection of indices (any collection that is convertable to a Tuple).
 """
-function IndexSet{N,IndexT}(inds::Index...) where {N,IndexT}
-  return IndexSet{N,IndexT}(inds)
-end
+IndexSet{N, IndexT}(inds::Index...) where {N, IndexT} = IndexSet{N, IndexT}(inds)
 
 """
     IndexSet{N}(inds)
     IndexSet{N}(inds::Index...)
 
-Construct an IndexSet of order N from a collection of indices
+Construct an IndexSet of order `N` from a collection of indices
 (any collection that is convertable to a Tuple).
 """
-IndexSet{N}(inds) where {N} = IndexSet{N,eltype(inds)}(inds)
+IndexSet{N}(inds) where {N} = IndexSet{N, eltype(inds)}(inds)
 
 IndexSet{N}(inds::Index...) where {N} = IndexSet{N}(inds)
 

@@ -39,6 +39,8 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 6. You can now do `using ITensors` to use the ITensor library in an interactive session, or run Julia code files (.jl files) which use ITensor, with some examples given below and in our examples folder. The test folder also has many examples of ITensor code you can run.
 
+We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions here: https://github.com/JuliaComputing/MKL.jl
+
 ## Code Examples
 
 ### Basic Overview
@@ -124,7 +126,7 @@ ITensor `*` operation, which automatically recognizes
 the matching indices between U and S, and between S and V
 and contracts (sums over) them.
 
-```Julia
+```jldoctest; output=false
 using ITensors
 let
   i = Index(4,"i")
@@ -142,9 +144,9 @@ end
 
 # output
 
-hasinds(U,i,k) = true
-hasinds(V,j,l) = true
-M ≈ U * S * V = true
+hasinds(U, i, k) = true
+hasinds(V, j, l) = true
+T ≈ U * S * V = true
 ```
 
 ### Tensor Indices: Tags and Prime Levels

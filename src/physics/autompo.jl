@@ -440,8 +440,8 @@ function svdMPO(ampo::AutoMPO,
 
   end
 
-  llinks = [Index() for n=1:N+1]
-  llinks[1] = Index(2,"Link,l=0")
+  llinks = Vector{Index{Int}}(undef, N+1)
+  llinks[1] = Index(2, "Link,l=0")
 
   H = MPO(sites)
 

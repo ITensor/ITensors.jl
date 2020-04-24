@@ -1,20 +1,23 @@
 # Index
 
-## Index object
+## Description
 
 ```@docs
 Index
+ITensors.QNIndex
 ```
 
-## Index constructors
+## Constructors
 
 ```@docs
 Index(::Int)
-Index(::Int, ::Union{AbstractString,TagSet})
-Index()
+Index(::Int, ::Union{AbstractString, TagSet})
+Index(::Pair{QN, Int}...)
+Index(::Vector{Pair{QN, Int}})
+Index(::Vector{Pair{QN, Int}}, ::Union{AbstractString, TagSet})
 ```
 
-## Index properties
+## Properties
 
 ```@docs
 id(::Index)
@@ -26,17 +29,33 @@ hasplev(::Index, ::Int)
 dim(::Index)
 ==(::Index, ::Index)
 dir(::Index)
+hasqns(::Index)
 ```
 
 ## Priming and tagging methods
 
 ```@docs
 prime(::Index, ::Int)
+adjoint(::Index)
+^(::Index, ::Int)
 setprime(::Index, ::Int)
 noprime(::Index)
 settags(::Index, ::Any)
 addtags(::Index, ::Any)
 removetags(::Index, ::Any)
 replacetags(::Index, ::Any, ::Any)
+```
+
+## Methods
+
+```@docs
+sim(::Index)
+dag(::Index)
+```
+
+## Iterating
+
+```@docs
+iterate(::Index)
 ```
 

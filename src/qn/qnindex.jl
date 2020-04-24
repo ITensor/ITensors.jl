@@ -7,7 +7,8 @@ qn(qnblock::QNBlock) = qnblock.first
 
 NDTensors.blockdim(qnblock::QNBlock) = qnblock.second
 
-NDTensors.blockdim(qnblocks::QNBlocks,b::Int) = blockdim(qnblocks[b])
+NDTensors.blockdim(qnblocks::QNBlocks,
+                   b::Int) = blockdim(qnblocks[b])
 
 qn(qnblocks::QNBlocks,b::Int) = qn(qnblocks[b])
 
@@ -38,12 +39,18 @@ function Base.:-(qns::QNBlocks)
   return qns_new
 end
 
+"""
+A QN Index is an Index with QN block storage instead of
+just an integer dimension. The QN block storage is a 
+vector of pairs of QNs and block dimensions.
+The total dimension of a QN Index is the sum of the
+dimensions of the blocks of the Index.
+"""
 const QNIndex = Index{QNBlocks}
+
 const QNIndexVal = IndexVal{QNIndex}
 
 hasqns(::QNIndex) = true
-
-QNIndex() = Index(0,Pair{QN,Int}[],Out,"",0)
 
 function have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks,1)
@@ -61,25 +68,72 @@ function have_same_mods(qnblocks::QNBlocks)
   return true
 end
 
-function Index(qnblocks::QNBlocks, dir::Arrow, tags="", plev=0)
+"""
+    Index(qnblocks::Vector{Pair{QN, Int64}}; dir::Arrow = Out,
+                                             tags = "",
+                                             plev::Int = 0)
+
+Construct a QN Index from a Vector of pairs of QN and block 
+dimensions.
+
+Note: in the future, this may enforce that all blocks have the
+same QNs (which would allow for some optimizations, for example
+when constructing random QN ITensors).
+
+# Example
+```
+Index([QN("Sz", -1) => 1, QN("Sz", 1) => 1]; tags = "i")
+```
+"""
+function Index(qnblocks::QNBlocks; dir::Arrow = Out, tags = "", plev = 0)
   # TODO: make this a debug check?
   #have_same_qns(qnblocks) || error("When creating a QN Index, the QN blocks must have the same QNs")
   #have_same_mods(qnblocks) || error("When creating a QN Index, the QN blocks must have the same mods")
-  return Index(rand(IDType),qnblocks,dir,tags,plev)
-end
-
-Index(qnblocks::QNBlocks, tags, dir::Arrow=Out) = Index(qnblocks,dir,tags)
-
-function Index(qnblocks::QNBlocks; dir::Arrow=Out, tags="", plev=0)
-  return Index(qnblocks,dir,tags,plev)
-end
-
-function Index(qnblocks::QNBlock...; dir::Arrow=Out, tags="", plev=0)
-  return Index([qnblocks...], dir, tags, plev)
+  return Index(rand(IDType), qnblocks, dir, tags, plev)
 end
 
 """
-dim(::QNIndex)
+    Index(qnblocks::Vector{Pair{QN, Int64}}, tags; dir::Arrow = Out,
+                                                   plev::Int = 0)
+
+Construct a QN Index from a Vector of pairs of QN and block 
+dimensions.
+
+# Example
+```
+Index([QN("Sz", -1) => 1, QN("Sz", 1) => 1], "i"; dir = In)
+```
+"""
+Index(qnblocks::QNBlocks,
+      tags;
+      dir::Arrow = Out,
+      plev::Int = 0) = Index(qnblocks; dir = dir,
+                                       tags = tags,
+                                       plev = plev)
+
+"""
+    Index(qnblocks::Pair{QN, Int64}...; dir::Arrow = Out,
+                                        tags = "",
+                                        plev::Int = 0)
+
+Construct a QN Index from a list of pairs of QN and block 
+dimensions.
+
+# Example
+```
+Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags = "i")
+```
+"""
+function Index(qnblocks::QNBlock...; dir::Arrow=Out,
+                                     tags="",
+                                     plev=0)
+  return Index([qnblocks...]; dir = dir,
+                              tags = tags,
+                              plev = plev)
+end
+
+"""
+    dim(::QNIndex)
 
 Get the total dimension of the QN Index
 (the sum of the block dimensions).
@@ -126,17 +180,17 @@ function qnblocknum(ind::QNIndex,q::QN)
 end
 
 """
-    qnblockdim(ind::QNIndex,q::QN)
+    qnblockdim(ind::QNIndex, q::QN)
 
 Given a QNIndex `ind` and QN `q`, return the 
 dimension of the block of the QNIndex having 
 QN equal to `q`. Assumes all blocks of `ind` 
 have a unique QN.
 """
-qnblockdim(ind::QNIndex,q::QN) = blockdim(ind,qnblocknum(ind,q))
+qnblockdim(ind::QNIndex, q::QN) = blockdim(ind, qnblocknum(ind,q))
 
 function Base.:*(dir::Arrow, qnb::QNBlock)
-  return QNBlock(dir*qn(qnb),blockdim(qnb))
+  return QNBlock(dir*qn(qnb), blockdim(qnb))
 end
 
 function Base.:*(dir::Arrow, qn::QNBlocks)
@@ -148,7 +202,7 @@ function Base.:*(dir::Arrow, qn::QNBlocks)
 end
 
 function Base.:*(qn1::QNBlock, qn2::QNBlock)
-  return QNBlock(qn(qn1)+qn(qn2),blockdim(qn1)*blockdim(qn2))
+  return QNBlock(qn(qn1)+qn(qn2), blockdim(qn1)*blockdim(qn2))
 end
 
 function NDTensors.outer(qn1::QNBlocks, qn2::QNBlocks)

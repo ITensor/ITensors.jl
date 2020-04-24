@@ -86,9 +86,9 @@ function dmrg(PH,
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)
-  which_decomp::String = get(kwargs, :which_decomp, "automatic")
+  which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
   obs = get(kwargs, :observer, NoObserver())
-  outputlevel::Int = get(kwargs, :outputlevel,1)
+  outputlevel::Int = get(kwargs, :outputlevel, 1)
 
   # eigsolve kwargs
   eigsolve_tol::Float64   = get(kwargs, :eigsolve_tol, 1e-14)
@@ -163,7 +163,7 @@ end
                                          cutoff = cutoff(sweeps, sw),
                                          eigen_perturbation = drho,
                                          ortho = ortho,
-                                         normalize=true,
+                                         normalize = true,
                                          which_decomp = which_decomp)
 end
 
