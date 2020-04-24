@@ -293,9 +293,9 @@ function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  ortho = get(kwargs, :ortho, "left")
-  which_decomp = get(kwargs, :which_decomp, "automatic")
-  normalize = get(kwargs,:normalize,false)
+  ortho::String = get(kwargs, :ortho, "left")
+  which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
+  normalize::Bool = get(kwargs, :normalize, false)
 
   # Deprecated keywords
   if haskey(kwargs, :dir)

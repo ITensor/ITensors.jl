@@ -672,60 +672,24 @@ for fname in (:prime,
               :replaceind,
               :replaceinds)
   @eval begin
-    """
-        $($fname)(f::Function, A::ITensor, args...)
-
-    Apply $($fname) to every Index in the ITensor, filtered
-    by the function `f` (i.e. for Index `i` in `A`, only
-    apply to Indices such that `f(i) == true`.
-
-    Returns a new ITensor with a new set of indices and
-    a view of the original storage.
-    """
     $fname(f::Function,
            A::ITensor,
            args...) = setinds(A,$fname(f,
                                        inds(A),
                                        args...))
 
-    """
-        $(Symbol($fname,:!))(f::Function, A::ITensor, args...)
-
-    Apply $($fname) to every Index in the ITensor, filtered
-    by the function `f` (i.e. for Index `i` in `A`, only
-    apply to Indices such that `f(i) == true`.
-
-    The indices are replaced in-place.
-    """
     $(Symbol(fname,:!))(f::Function,
                         A::ITensor,
                         args...) = setinds!(A,$fname(f,
                                                      inds(A),
                                                      args...))
 
-    """
-        $($fname)(A::ITensor, args...; kwargs...)
-
-    Apply $($fname) to every Index in the ITensor, filtered
-    by the options specified in the keyword arguments.
-
-    Returns a new ITensor with a new set of indices and
-    a view of the original storage.
-    """
     $fname(A::ITensor,
            args...;
            kwargs...) = setinds(A,$fname(inds(A),
                                          args...;
                                          kwargs...))
 
-    """
-        $(Symbol($fname,:!))(A::ITensor, args...; kwargs...)
-
-    Apply $($fname) to every Index in the ITensor, filtered
-    by the options specified in the keyword arguments.
-    
-    The indices are replaced in-place.
-    """
     $(Symbol(fname,:!))(A::ITensor,
                         args...;
                         kwargs...) = setinds!(A,$fname(inds(A),
@@ -733,6 +697,138 @@ for fname in (:prime,
                                                        kwargs...))
   end
 end
+
+priming_tagging_doc = """
+Optionally, only modify the indices with the specified keyword arguments.
+
+# Arguments
+- `tags = nothing`: if specified, only modify Index `i` if `hastags(i, tags) == true`. 
+- `plev = nothing`: if specified, only modify Index `i` if `hasplev(i, plev) == true`.
+
+In both versions above, the ITensor storage is not modified or copied (so the first version returns an ITensor with a view of the original storage).
+"""
+
+@doc """
+    prime(A::ITensor, plinc::Int = 1; <keyword arguments>) -> ITensor
+
+    prime!(A::ITensor, plinc::Int = 1; <keyword arguments>)
+
+Increase the prime level of the indices of an ITensor.
+
+$priming_tagging_doc
+""" prime(::ITensor, ::Any...)
+
+@doc """
+    setprime(A::ITensor, plev::Int; <keyword arguments>) -> ITensor
+
+    setprime!(A::ITensor, plev::Int; <keyword arguments>)
+
+Set the prime level of the indices of an ITensor.
+
+$priming_tagging_doc
+""" setprime(::ITensor, ::Any...)
+
+@doc """
+    noprime(A::ITensor; <keyword arguments>) -> ITensor
+
+    noprime!(A::ITensor; <keyword arguments>)
+
+Set the prime level of the indices of an ITensor to zero.
+
+$priming_tagging_doc
+""" noprime(::ITensor, ::Any...)
+
+@doc """
+    mapprime(A::ITensor, plold::Int, plnew::Int; <keyword arguments>) -> ITensor
+
+    mapprime!(A::ITensor, plold::Int, plnew::Int; <keyword arguments>)
+
+Set the prime level of the indices of an ITensor with prime level `plold` to `plnew`.
+
+$priming_tagging_doc
+""" mapprime(::ITensor, ::Any...)
+
+@doc """
+    swapprime(A::ITensor, pl1::Int, pl2::Int; <keyword arguments>) -> ITensor
+
+    swapprime!(A::ITensor, pl1::Int, pl2::Int; <keyword arguments>)
+
+Set the prime level of the indices of an ITensor with prime level `pl1` to `pl2`, and those with prime level `pl2` to `pl1`.
+
+$priming_tagging_doc
+""" swapprime(::ITensor, ::Any...)
+
+@doc """
+    addtags(A::ITensor, ts::String; <keyword arguments>) -> ITensor
+
+    addtags!(A::ITensor, ts::String; <keyword arguments>)
+
+Add the tags `ts` to the indices of an ITensor.
+
+$priming_tagging_doc
+""" addtags(::ITensor, ::Any...)
+
+@doc """
+    removetags(A::ITensor, ts::String; <keyword arguments>) -> ITensor
+
+    removetags!(A::ITensor, ts::String; <keyword arguments>)
+
+Remove the tags `ts` from the indices of an ITensor.
+
+$priming_tagging_doc
+""" removetags(::ITensor, ::Any...)
+
+@doc """
+    settags(A::ITensor, ts::String; <keyword arguments>) -> ITensor
+
+    settags!(A::ITensor, ts::String; <keyword arguments>)
+
+Set the tags of the indices of an ITensor to `ts`.
+
+$priming_tagging_doc
+""" settags(::ITensor, ::Any...)
+
+@doc """
+    replacetags(A::ITensor, tsold::String, tsnew::String; <keyword arguments>) -> ITensor
+
+    replacetags!(A::ITensor, tsold::String, tsnew::String; <keyword arguments>)
+
+Replace the tags `tsold` with `tsnew` for the indices of an ITensor.
+
+$priming_tagging_doc
+""" replacetags(::ITensor, ::Any...)
+
+@doc """
+    swaptags(A::ITensor, ts1::String, ts2::String; <keyword arguments>) -> ITensor
+
+    swaptags!(A::ITensor, ts1::String, ts2::String; <keyword arguments>)
+
+Swap the tags `ts1` with `ts2` for the indices of an ITensor.
+
+$priming_tagging_doc
+""" swaptags(::ITensor, ::Any...)
+
+@doc """
+    replaceind(A::ITensor, i1::Index, i2::Index) -> ITensor
+
+    replaceind!(A::ITensor, i1::Index, i2::Index)
+
+Replace the Index `i1` with the Index `i2` in the ITensor.
+
+The indices must have the same space (i.e. the same dimension and QNs, if applicable).
+""" replaceind(::ITensor, ::Any...)
+
+@doc """
+    replaceinds(A::ITensor, inds1, inds2) -> ITensor
+
+    replaceinds!(A::ITensor, inds1, inds2)
+
+Replace the Index `inds1[n]` with the Index `inds2[n]` in the ITensor, where `n` runs from `1` to `length(inds1) == length(inds2)`.
+
+The indices must have the same space (i.e. the same dimension and QNs, if applicable).
+
+The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
+""" replaceinds(::ITensor, ::Any...)
 
 """
     adjoint(A::ITensor)

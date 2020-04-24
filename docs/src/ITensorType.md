@@ -46,6 +46,26 @@ ind(::ITensor, ::Int)
 
 ## Priming and tagging
 
+```@docs
+prime(::ITensor, ::Any...)
+setprime(::ITensor, ::Any...)
+noprime(::ITensor, ::Any...)
+mapprime(::ITensor, ::Any...)
+swapprime(::ITensor, ::Any...)
+addtags(::ITensor, ::Any...)
+removetags(::ITensor, ::Any...)
+replacetags(::ITensor, ::Any...)
+settags(::ITensor, ::Any...)
+swaptags(::ITensor, ::Any...)
+```
+
+## Index Manipulations
+
+```@docs
+replaceind(::ITensor, ::Any...)
+replaceinds(::ITensor, ::Any...)
+```
+
 ## Math operations
 
 ```@docs
@@ -56,6 +76,7 @@ exp(::ITensor, ::Any)
 ## Decompositions
 ```@docs
 svd(::ITensor, ::Any...)
+factorize(::ITensor, ::Any...)
 ```
 
 ## Operations
