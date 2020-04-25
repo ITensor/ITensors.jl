@@ -69,13 +69,26 @@ function noise!(sw::Sweeps,noises::Float64...)::Nothing
   end
 end
 
+function Base.show(io::IO,
+                   sw::Sweeps)
+  println(io,"Sweeps")
+  for n=1:nsweep(sw)
+    @printf(io,"%d cutoff=%.1E, maxdim=%d, mindim=%d, noise=%.1E\n",n,cutoff(sw,n),maxdim(sw,n),mindim(sw,n),noise(sw,n))
+  end
+end
+
 struct SweepNext
   N::Int
   ncenter::Int
 end
 
-sweepnext(N::Int;ncenter::Int=2)::SweepNext = SweepNext(N,ncenter)
-
+function sweepnext(N::Int;ncenter::Int=2)::SweepNext 
+  if ncenter < 0
+    error("ncenter must be non-negative")
+  end
+  return SweepNext(N,ncenter)
+end
+   
 function Base.iterate(sn::SweepNext,state=(0,1))
   b,ha = state
   if ha==1
@@ -98,10 +111,3 @@ function Base.iterate(sn::SweepNext,state=(0,1))
   return ((new_b,new_ha),(new_b,new_ha))
 end
 
-function Base.show(io::IO,
-                   sw::Sweeps)
-  println(io,"Sweeps")
-  for n=1:nsweep(sw)
-    @printf(io,"%d cutoff=%.1E, maxdim=%d, mindim=%d, noise=%.1E\n",n,cutoff(sw,n),maxdim(sw,n),mindim(sw,n),noise(sw,n))
-  end
-end
