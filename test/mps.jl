@@ -74,7 +74,6 @@ include("util.jl")
 
     @test hasind(phi[4],sites[4])
     @test norm(phi[4])≈1.0
-
   end
 
   @testset "inner different MPS" begin
@@ -316,8 +315,7 @@ end
 
     @test norm(M[1]) ≈ 1.0
 
-    c = div(N,2)
-    @test dim(linkind(M,c)) == chi
+    @test maxlinkdim(M) == chi
 
     # Test for right-orthogonality
     R = M[N]*prime(M[N],"Link")
