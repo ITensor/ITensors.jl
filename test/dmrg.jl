@@ -59,8 +59,10 @@ using ITensors, Test, Random
     psi0 = randomMPS(sites)
 
     ampo = AutoMPO()
+    for j = 1:N-1
+      add!(ampo,-1.0,"Sz",j,"Sz",j+1)
+    end
     for j = 1:N
-      j < N && add!(ampo,-1.0,"Sz",j,"Sz",j+1)
       add!(ampo,-0.2,"Sx",j)
     end
     H = MPO(ampo,sites)
@@ -79,7 +81,7 @@ using ITensors, Test, Random
     @test length(energies(observer))==3
     @test length(truncerrors(observer))==3
     @test energies(observer)[end]==E
-    @test all(truncerrors(observer) .< 1E-11)
+    @test all(truncerrors(observer) .< 1E-9)
 
     orthogonalize!(psi,1)
     m = scalar(dag(psi[1])*noprime(op(sites, "Sz", 1)*psi[1]))
