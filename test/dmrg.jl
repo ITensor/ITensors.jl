@@ -18,7 +18,7 @@ using ITensors, Test, Random
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
     maxdim!(sweeps,10,20,40)
-    mindim!(sweeps,1,10,10)
+    mindim!(sweeps,1,10)
     cutoff!(sweeps,1E-11)
     noise!(sweeps,1E-10)
     str = split(sprint(show, sweeps), '\n')
