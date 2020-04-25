@@ -328,6 +328,33 @@ end
     end
   end
 
+  @testset "randomMPS from initial state (QN case)" begin
+    N = 20
+    chi = 8
+    sites = siteinds("S=1/2",N;conserve_qns=true)
+
+    # Make flux-zero random MPS
+    state = [isodd(n) ? 1 : 2 for n=1:N]
+    M = randomMPS(sites,state,chi)
+    @test flux(M) == QN("Sz",0)
+
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == 2
+
+    @test norm(M[1]) ≈ 1.0
+    @test inner(M,M) ≈ 1.0
+
+    @test maxlinkdim(M) == chi
+
+    # Test making random MPS with different flux
+    state[1] = 2
+    M = randomMPS(sites,state,chi)
+    @test flux(M) == QN("Sz",-2)
+    state[3] = 2
+    M = randomMPS(sites,state,chi)
+    @test flux(M) == QN("Sz",-4)
+  end
+
 end
 
 nothing
