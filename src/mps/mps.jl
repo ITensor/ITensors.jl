@@ -71,6 +71,22 @@ Construct an MPS from a Vector of ITensors.
 """
 MPS(v::Vector{<:ITensor}) = MPS(length(v), v)
 
+function randomU(s1,s2)
+  if !hasqns(s1) && !hasqns(s2)
+    mdim = dim(s1)*dim(s2)
+    RM = randn(mdim,mdim)
+    Q,_ = NDTensors.qr_positive(RM)
+    G = itensor(Q,dag(s1),dag(s2),s1',s2')
+  else
+    M = randomITensor(QN(),s1',s2',dag(s1),dag(s2))
+    U,S,V = svd(M,(s1',s2'))
+    u = commonind(U,S)
+    v = commonind(S,V)
+    G = (U*delta(dag(u),v))*V
+  end
+  return G
+end
+
 function randomizeMPS!(M::MPS, sites, linkdim=1)
   N = length(sites)
   c = div(N,2)
@@ -84,10 +100,7 @@ function randomizeMPS!(M::MPS, sites, linkdim=1)
     for b=brange
       s1 = sites[b]
       s2 = sites[b+db]
-      mdim = dim(s1)*dim(s2)
-      RM = randn(mdim,mdim)
-      Q,_ = NDTensors.qr_positive(RM)
-      G = itensor(Q,dag(s1),dag(s2),s1',s2')
+      G = randomU(s1,s2)
       T = noprime(G*M[b]*M[b+db])
       rinds = uniqueinds(M[b],M[b+db])
       U,S,V = svd(T,rinds;maxdim=linkdim)
@@ -145,27 +158,14 @@ end
 Construct a random MPS with link dimension `linkdim` of 
 type `T`.
 """
-function randomMPS(::Type{T}, sites, linkdim=1) where {T<:Number}
-
-  if linkdim > 1 && !hasqns(sites[1])
-    # For non-QN-conserving MPS, instantiate
-    # the random MPS directly as a circuit:
-    return randomCircuitMPS(sites,linkdim)
+function randomMPS(::Type{T}, sites, linkdim::Int=1) where {T<:Number}
+  if hasqns(sites[1])
+    error("initial state required to use randomMPS with QNs")
   end
 
-  M = MPS(T, sites)
-  for i in eachindex(sites)
-    randn!(M[i])
-    normalize!(M[i])
-  end
-
-  setleftlim!(M, 0)
-  setrightlim!(M, 2)
-
-  if linkdim > 1
-    randomizeMPS!(M, sites, linkdim)
-  end
-  return M
+  # For non-QN-conserving MPS, instantiate
+  # the random MPS directly as a circuit:
+  return randomCircuitMPS(sites,linkdim)
 end
 
 """
@@ -174,7 +174,22 @@ end
 Construct a random MPS with link dimension `linkdim` of 
 type `Float64`.
 """
-randomMPS(sites, linkdim=1) = randomMPS(Float64, sites, linkdim)
+randomMPS(sites, linkdim::Int=1) = randomMPS(Float64, sites, linkdim)
+
+"""
+    randomMPS(sites,state; linkdim=1)
+
+Construct a real, random MPS with link dimension `linkdim`,
+made by randomizing an initial product state specified by
+`state`.
+"""
+function randomMPS(sites,state,linkdim::Int=1)::MPS
+  M = productMPS(sites,state)
+  if linkdim > 1
+    randomizeMPS!(M,sites,linkdim)
+  end
+  return M
+end
 
 """
     productMPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})

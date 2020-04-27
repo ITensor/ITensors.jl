@@ -83,7 +83,6 @@ include("util.jl")
 
     @test hasind(phi[4],sites[4])
     @test norm(phi[4])≈1.0
-
   end
 
   @testset "inner different MPS" begin
@@ -325,8 +324,7 @@ end
 
     @test norm(M[1]) ≈ 1.0
 
-    c = div(N,2)
-    @test dim(linkind(M,c)) == chi
+    @test maxlinkdim(M) == chi
 
     # Test for right-orthogonality
     R = M[N]*prime(M[N],"Link")
@@ -337,6 +335,33 @@ end
       r = linkind(M,j-1)
       @test norm(R-delta(r,r')) < 1E-10
     end
+  end
+
+  @testset "randomMPS from initial state (QN case)" begin
+    N = 20
+    chi = 8
+    sites = siteinds("S=1/2",N;conserve_qns=true)
+
+    # Make flux-zero random MPS
+    state = [isodd(n) ? 1 : 2 for n=1:N]
+    M = randomMPS(sites,state,chi)
+    @test flux(M) == QN("Sz",0)
+
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == 2
+
+    @test norm(M[1]) ≈ 1.0
+    @test inner(M,M) ≈ 1.0
+
+    @test maxlinkdim(M) == chi
+
+    # Test making random MPS with different flux
+    state[1] = 2
+    M = randomMPS(sites,state,chi)
+    @test flux(M) == QN("Sz",-2)
+    state[3] = 2
+    M = randomMPS(sites,state,chi)
+    @test flux(M) == QN("Sz",-4)
   end
 
 end

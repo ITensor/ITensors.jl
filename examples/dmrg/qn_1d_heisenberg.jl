@@ -17,7 +17,7 @@ let
   psi0 = MPS(N)
 
   state = [isodd(n) ? "Up" : "Dn" for n in 1:N] 
-  psi0 = productMPS(sites,state)
+  psi0 = randomMPS(sites,state,10)
 
   # Plan to do 5 DMRG sweeps:
   sweeps = Sweeps(5)
