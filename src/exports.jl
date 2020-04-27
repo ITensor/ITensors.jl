@@ -155,7 +155,6 @@ export
 # mps/abstractmps.jl
   add,
   contract,
-  primelinkinds!,
 
 # mps/mpo.jl
   # Types

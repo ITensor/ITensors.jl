@@ -49,7 +49,7 @@ function contract_inds(T1is,
       # This is to check that T1is and T2is
       # can contract
       i2 = findfirst(==(T1labels[i1]),T2labels)
-      dir(T1is[i1]) == -dir(T2is[i2]) || error("Indices must have opposite directions to contract")
+      dir(T1is[i1]) == -dir(T2is[i2]) || error("Attempting to contract index $(T1is[i1]) with $(T2is[i2]). Indices must have opposite directions to contract.")
     end
   end
   for i2 ∈ 1:N2
