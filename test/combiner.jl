@@ -25,6 +25,10 @@ end
   @test A == AC
   AC = C * A
   @test A == AC
+
+  R = ITensor(j, l, k, i)
+  R .= A .* C
+  @test R == A
 end
 
 @testset "Two index combiner" begin
