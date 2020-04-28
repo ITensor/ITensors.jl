@@ -35,16 +35,30 @@ maxlinkdim(::ITensors.AbstractMPS)
 ## Priming and tagging
 
 ```@docs
+prime(::ITensors.AbstractMPS)
 prime!(::ITensors.AbstractMPS)
+setprime(::ITensors.AbstractMPS)
+setprime!(::ITensors.AbstractMPS)
+noprime(::ITensors.AbstractMPS)
+noprime!(::ITensors.AbstractMPS)
+addtags(::ITensors.AbstractMPS)
+addtags!(::ITensors.AbstractMPS)
+removetags(::ITensors.AbstractMPS)
+removetags!(::ITensors.AbstractMPS)
+replacetags(::ITensors.AbstractMPS)
+replacetags!(::ITensors.AbstractMPS)
+settags(::ITensors.AbstractMPS)
+settags!(::ITensors.AbstractMPS)
 ```
 
 ## Operations
 
 ```@docs
 dag(::ITensors.AbstractMPS)
+dag!(::ITensors.AbstractMPS)
 orthogonalize!
 truncate!
-replacebond!(::MPS, ::Int, ::ITensor; kwargs...)
+replacebond!(::MPS, ::Int, ::ITensor)
 sample(::MPS)
 sample!(::MPS)
 ```

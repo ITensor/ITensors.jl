@@ -155,6 +155,7 @@ export
 # mps/abstractmps.jl
   add,
   contract,
+  dag!,
 
 # mps/mpo.jl
   # Types
