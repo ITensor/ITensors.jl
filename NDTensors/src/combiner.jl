@@ -61,7 +61,8 @@ function contract!!(R::Tensor{<:Number,NR},
                     T2::Tensor{<:Number,N2},
                     labelsT2::NTuple{N2}) where {NR,N1,N2}
   if N1 ≤ 1
-    #println("identity")
+    # Empty combiner, acts as multiplying by 1
+    R = permutedims!!(R, T2, getperm(labelsR, labelsT2))
     return R
   elseif N1 + N2 == NR
     error("Cannot perform outer product involving a combiner")
