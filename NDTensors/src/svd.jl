@@ -19,7 +19,6 @@ function svd_recursive(M::AbstractMatrix;
                       thresh::Float64=1E-3,
                       north_pass::Int=2)
   Mr,Mc = size(M)
-
   if Mr > Mc
     V,S,U = svd_recursive(transpose(M))
     conj!(U)
