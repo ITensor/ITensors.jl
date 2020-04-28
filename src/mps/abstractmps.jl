@@ -74,6 +74,49 @@ Base.iterate(M::AbstractMPS) = iterate(data(M))
 
 Base.iterate(M::AbstractMPS, state) = iterate(data(M), state)
 
+"""
+    unique_siteind(A::MPO, B::MPS, j::Int)
+    unique_siteind(A::MPO, B::MPO, j::Int)
+
+Get the site index of MPO `A` that is unique to `A` (not shared with MPS/MPO `B`).
+"""
+function unique_siteind(A::AbstractMPS, B::AbstractMPS, j::Int)
+  N = length(A)
+  j == 1 && return uniqueind(A[j], A[j+1], B[j])
+  j == N && return uniqueind(A[j], A[j-1], B[j])
+  return uniqueind(A[j], A[j-1], A[j+1], B[j])
+end
+
+"""
+    unique_siteinds(A::MPO, B::MPS)
+    unique_siteinds(A::MPO, B::MPO)
+
+Get the site indices of MPO `A` that are unique to `A` (not shared with MPS/MPO `B`), as a `Vector{<:Index}`.
+"""
+function unique_siteinds(A::AbstractMPS, B::AbstractMPS)
+  return [unique_siteind(A, B, j) for j in eachindex(A)]
+end
+
+"""
+    common_siteind(A::MPO, B::MPS, j::Int)
+    common_siteind(A::MPO, B::MPO, j::Int)
+
+Get the site index of MPO `A` that is shared with MPS/MPO `B`.
+"""
+function common_siteind(A::AbstractMPS, B::AbstractMPS, j::Int)
+  return commonind(A[j], B[j])
+end
+
+"""
+    common_siteinds(A::MPO, B::MPS)
+    common_siteinds(A::MPO, B::MPO)
+
+Get the site indices of MPO `A` that are shared with MPS/MPO `B`, as a `Vector{<:Index}`.
+"""
+function common_siteinds(A::AbstractMPS, B::AbstractMPS)
+  return [common_siteind(A, B, j) for j in eachindex(A)]
+end
+
 function Base.map!(f::Function, M::AbstractMPS)
   for i in eachindex(M)
     setindex!(M, f(M[i]), i; set_limits = false)
@@ -137,13 +180,11 @@ end
 
 map_linkinds(f::Function, M::AbstractMPS) = map_linkinds!(f, copy(M))
 
-function map_linkinds!(f::Function, M1::AbstractMPS,
-                                   M2::AbstractMPS)
+function map_common_siteinds!(f::Function, M1::AbstractMPS,
+                                           M2::AbstractMPS)
   length(M1) != length(M2) && error("MPOs/MPSs must be the same length")
-  map_linkinds!(f, M1)
-  map_linkinds!(f, M2)
   for i in eachindex(M1)
-    s = commonind(M1[i], M2[i])
+    s = common_siteind(M1, M2, i)
     if !isnothing(s)
       s̃ = f(s)
       setindex!(M1, replaceind(M1[i], s, s̃), i;
@@ -155,16 +196,16 @@ function map_linkinds!(f::Function, M1::AbstractMPS,
   return M1, M2
 end
 
-function map_linkinds(f::Function, M1::AbstractMPS,
-                                  M2::AbstractMPS)
-  return map_linkinds!(f, copy(M1), copy(M2))
+function map_common_siteinds(f::Function, M1::AbstractMPS,
+                                          M2::AbstractMPS)
+  return map_common_siteinds!(f, copy(M1), copy(M2))
 end
 
 function map_unique_siteinds!(f::Function, M1::AbstractMPS,
-                                         M2::AbstractMPS)
+                                           M2::AbstractMPS)
   length(M1) != length(M2) && error("MPOs/MPSs must be the same length")
   for i in eachindex(M1)
-    s = siteind(M1, M2, i)
+    s = unique_siteind(M1, M2, i)
     if !isnothing(s)
       s̃ = f(s)
       setindex!(M1, replaceind(M1[i], s, s̃), i;
@@ -189,6 +230,8 @@ for fname in (:sim,
               :settags)
   fname_linkinds = Symbol(fname, :_linkinds)
   fname_linkinds_inplace = Symbol(fname_linkinds, :!)
+  fname_common_siteinds = Symbol(fname, :_common_siteinds)
+  fname_common_siteinds_inplace = Symbol(fname_common_siteinds, :!)
   fname_unique_siteinds = Symbol(fname, :_unique_siteinds)
   fname_unique_siteinds_inplace = Symbol(fname_unique_siteinds, :!)
 
@@ -215,40 +258,44 @@ for fname in (:sim,
     Apply $($fname) to all link indices of the ITensors of an MPS/MPO in-place.
     """
     function $fname_linkinds_inplace(M::AbstractMPS,
-                               args...;
-                               kwargs...)
+                                     args...;
+                                     kwargs...)
       return map_linkinds!(i -> $fname(i, args...;
                                       kwargs...), M)
     end
 
     """
-        $($fname_linkinds)(M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname_common_siteinds)(M1::MPO, M2::MPS, args...; kwargs...)
 
-        $($fname_linkinds)(M1::MPO, M2::MPO, args...; kwargs...)
+        $($fname_common_siteinds)(M1::MPO, M2::MPO, args...; kwargs...)
 
-    Apply $($fname) to the link indices of the input MPSs/MPOs, as well as the site indices that they share. Returns new MPSs/MPOs.
+    Apply $($fname) to the site indices that are shared by `M1` and `M2`.
     
-    The ITensors of the MPSs/MPOs will be a view of the storage of the original ITensors.
+    Returns new MPSs/MPOs. The ITensors of the MPSs/MPOs will be a view of the storage of the original ITensors.
     """
-    $fname_linkinds(M1::AbstractMPS,
-              M2::AbstractMPS,
-              args...;
-              kwargs...) = map_linkinds(i -> $fname(i, args...;
-                                                   kwargs...), M1, M2)
+    function $fname_common_siteinds(M1::AbstractMPS,
+                                    M2::AbstractMPS,
+                                    args...;
+                                    kwargs...)
+      return map_common_siteinds(i -> $fname(i, args...;
+                                             kwargs...), M1, M2)
+    end
 
     """
-        $($fname_linkinds)!(M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname_common_siteinds)!(M1::MPO, M2::MPS, args...; kwargs...)
 
-        $($fname_linkinds)!(M1::MPO, M2::MPO, args...; kwargs...)
+        $($fname_common_siteinds)!(M1::MPO, M2::MPO, args...; kwargs...)
 
-    Apply $($fname) to the link indices of the input MPSs/MPOs, as well as the site indices that they share. Modifies the input MPSs/MPOs in-place.
+    Apply $($fname) to the site indices that are shared by `M1` and `M2`. Returns new MPSs/MPOs.
+    
+    Modifies the input MPSs/MPOs in-place.
     """
-    function $fname_linkinds_inplace(M1::AbstractMPS,
-                               M2::AbstractMPS,
-                               args...;
-                               kwargs...)
-      return map_linkinds!(i -> $fname(i, args...;
-                                      kwargs...), M1, M2)
+    function $fname_common_siteinds_inplace(M1::AbstractMPS,
+                                            M2::AbstractMPS,
+                                            args...;
+                                            kwargs...)
+      return map_common_siteinds!(i -> $fname(i, args...;
+                                              kwargs...), M1, M2)
     end
 
     """
@@ -258,11 +305,13 @@ for fname in (:sim,
     
     The ITensors of the MPSs/MPOs will be a view of the storage of the original ITensors.
     """
-    $fname_unique_siteinds(M1::AbstractMPS,
-              M2::AbstractMPS,
-              args...;
-              kwargs...) = map_unique_siteinds(i -> $fname(i, args...;
-                                                         kwargs...), M1, M2)
+    function $fname_unique_siteinds(M1::AbstractMPS,
+                                    M2::AbstractMPS,
+                                    args...;
+                                    kwargs...)
+      return map_unique_siteinds(i -> $fname(i, args...;
+                                             kwargs...), M1, M2)
+    end
 
     """
         $($fname_unique_siteinds)!(M1::MPO, M2::MPS, args...; kwargs...)
@@ -270,11 +319,11 @@ for fname in (:sim,
     Apply $($fname) to the site indices of `M1` that are not shared with `M2`. Modifies the input MPSs/MPOs in-place.
     """
     function $fname_unique_siteinds_inplace(M1::AbstractMPS,
-                               M2::AbstractMPS,
-                               args...;
-                               kwargs...)
+                                            M2::AbstractMPS,
+                                            args...;
+                                            kwargs...)
       return map_unique_siteinds!(i -> $fname(i, args...;
-                                            kwargs...), M1, M2)
+                                              kwargs...), M1, M2)
     end
   end
 end

@@ -242,17 +242,17 @@ productMPS(sites, states) = productMPS(Float64, sites, states)
 function siteind(M::MPS, j::Int)
   N = length(M)
   if j == 1
-    si = uniqueind(M[j],M[j+1])
+    si = uniqueind(M[j], M[j+1])
   elseif j == N
-    si = uniqueind(M[j],M[j-1])
+    si = uniqueind(M[j], M[j-1])
   else
-    si = uniqueind(M[j],M[j-1],M[j+1])
+    si = uniqueind(M[j], M[j-1], M[j+1])
   end
   return si
 end
 
 function siteinds(M::MPS)
-  return [siteind(M,j) for j in 1:length(M)]
+  return [siteind(M, j) for j in 1:length(M)]
 end
 
 function replace_siteinds!(M::MPS, sites)
@@ -262,6 +262,8 @@ function replace_siteinds!(M::MPS, sites)
   end
   return M
 end
+
+replace_siteinds(M::MPS, sites) = replace_siteinds!(copy(M), sites)
 
 """
     dot(psi::MPS, phi::MPS; make_inds_match = true)

@@ -21,6 +21,7 @@ using Test
     "lattices.jl",
     "mps.jl",
     "mpo.jl",
+    "sweepnext.jl",
     "autompo.jl",
     "svd.jl",
     "qn.jl",

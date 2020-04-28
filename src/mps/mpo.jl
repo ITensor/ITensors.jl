@@ -107,35 +107,6 @@ function randomMPO(sites, m::Int=1)
 end
 
 """
-    siteind(A::MPO, x::MPS, j::Int)
-
-Get the site index of MPO `A` that is unique to
-`A` (not shared with MPS `x`).
-"""
-function siteind(A::MPO, x::MPS, j::Int)
-  N = length(A)
-  if j == 1
-    si = uniqueind(A[j], A[j+1], x[j])
-  elseif j == N
-    si = uniqueind(A[j], A[j-1], x[j])
-  else
-    si = uniqueind(A[j], A[j-1], A[j+1], x[j])
-  end
-  return si
-end
-
-"""
-    siteinds(A::MPO, x::MPS)
-
-Get the site indices of MPO `A` that are unique to
-`A` (not shared with MPS `x`), as a `Vector{<:Index}`.
-
-This is the same as getting the `siteinds` of `A|x>`, i.e.
-`siteinds(A * x)`, without doing the contraction.
-"""
-siteinds(A::MPO, x::MPS) = [siteind(A, x, j) for j in eachindex(A)]
-
-"""
     dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
     inner(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
 
@@ -158,7 +129,7 @@ function LinearAlgebra.dot(y::MPS, A::MPO, x::MPS;
   ydag = dag(y)
   sim_linkinds!(ydag)
   if make_inds_match
-    sAx = siteinds(A, x)
+    sAx = unique_siteinds(A, x)
     replace_siteinds!(ydag, sAx)
   end
   O = ydag[1] * A[1] * x[1]
@@ -292,9 +263,7 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   mindim::Int     = max(get(kwargs,:mindim,1), 1)
   normalize::Bool = get(kwargs, :normalize, false) 
 
-  all(x -> !isnothing(x),
-      [siteind(A, psi, j) for j in 1:n]) || 
-  throw(ErrorException("MPS and MPO have different site indices in contract method 'densitymatrix'"))
+  any(i -> isnothing(i), common_siteinds(A, psi)) && error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
 
   # In case A and psi have the same link indices
   A = sim_linkinds(A)
@@ -303,7 +272,9 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   A_c = dag(A)
 
   # To not clash with the link indices of A and psi
-  sim_linkinds!(A_c, psi_c)
+  sim_linkinds!(A_c)
+  sim_linkinds!(psi_c)
+  sim_common_siteinds!(A_c, psi_c)
 
   # A version helpful for making the density matrix
   simA_c = sim_unique_siteinds(A_c, psi_c)
@@ -320,8 +291,8 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   ρ = E[n-1] * R * simR_c
   l = linkind(psi, n-1)
   ts = isnothing(l) ? "" : tags(l)
-  s = siteind(A, psi, n)
-  s̃ = siteind(simA_c, psi_c, n)
+  s = unique_siteind(A, psi, n)
+  s̃ = unique_siteind(simA_c, psi_c, n)
   Lis = IndexSet(s)
   Ris = IndexSet(s̃)
   FU, D = eigen(ρ, Lis, Ris; ishermitian=true, 
@@ -333,8 +304,8 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   R = R * dag(FU) * psi[n-1] * A[n-1]
   simR_c = simR_c * dag(simFU_c) * psi_c[n-1] * simA_c[n-1]
   for j in reverse(2:n-1)
-    s = siteind(A, psi, j)
-    s̃ = siteind(simA_c, psi_c, j)
+    s = unique_siteind(A, psi, j)
+    s̃ = unique_siteind(simA_c, psi_c, j)
     ρ = E[j-1] * R * simR_c
     l = linkind(psi, j-1)
     ts = isnothing(l) ? "" : tags(l)
