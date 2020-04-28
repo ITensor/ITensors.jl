@@ -207,6 +207,7 @@ Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,N},
 end
 
 Base.@propagate_inbounds function Base.getindex(T::BlockSparseTensor{ElT,0}) where {ElT}
+  nnzblocks(T) == 0 && return zero(ElT)
   return store(T)[]
 end
 

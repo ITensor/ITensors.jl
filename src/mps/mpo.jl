@@ -107,35 +107,6 @@ function randomMPO(sites, m::Int=1)
 end
 
 """
-    siteind(A::MPO, x::MPS, j::Int)
-
-Get the site index of MPO `A` that is unique to
-`A` (not shared with MPS `x`).
-"""
-function siteind(A::MPO, x::MPS, j::Int)
-  N = length(A)
-  if j == 1
-    si = uniqueind(A[j], A[j+1], x[j])
-  elseif j == N
-    si = uniqueind(A[j], A[j-1], x[j])
-  else
-    si = uniqueind(A[j], A[j-1], A[j+1], x[j])
-  end
-  return si
-end
-
-"""
-    siteinds(A::MPO, x::MPS)
-
-Get the site indices of MPO `A` that are unique to
-`A` (not shared with MPS `x`), as a `Vector{<:Index}`.
-
-This is the same as getting the `siteinds` of `A|x>`, i.e.
-`siteinds(A * x)`, without doing the contraction.
-"""
-siteinds(A::MPO, x::MPS) = [siteind(A, x, j) for j in eachindex(A)]
-
-"""
     dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
     inner(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
 
@@ -156,14 +127,14 @@ function LinearAlgebra.dot(y::MPS, A::MPO, x::MPS;
       throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
   end
   ydag = dag(y)
-  simlinkinds!(ydag)
+  sim_linkinds!(ydag)
   if make_inds_match
-    sAx = siteinds(A, x)
-    replacesiteinds!(ydag, sAx)
+    sAx = unique_siteinds(A, x)
+    replace_siteinds!(ydag, sAx)
   end
-  O = ydag[1]*A[1]*x[1]
+  O = ydag[1] * A[1] * x[1]
   for j in 2:N
-    O = O*ydag[j]*A[j]*x[j]
+    O = O * ydag[j] * A[j] * x[j]
   end
   return O[]
 end
@@ -291,52 +262,68 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(psi))
   mindim::Int     = max(get(kwargs,:mindim,1), 1)
   normalize::Bool = get(kwargs, :normalize, false) 
-  all(x -> !isnothing(x),
-      [siteind(A, psi, j) for j in 1:n]) || 
-  throw(ErrorException("MPS and MPO have different site indices in contract method 'densitymatrix'"))
 
-  rand_plev = 14741
-  psi_c     = dag(copy(psi))
-  A_c       = dag(copy(A))
-  prime!(psi_c, rand_plev)
-  prime!(A_c, rand_plev)
-  for j in 1:n
-    s = siteind(A, psi, j)
-    s_dag = siteind(A_c, psi_c, j)
-    replaceind!(A_c[j], s_dag, s)
-  end
+  any(i -> isnothing(i), common_siteinds(A, psi)) && error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
+
+  # In case A and psi have the same link indices
+  A = sim_linkinds(A)
+
+  psi_c = dag(psi)
+  A_c = dag(A)
+
+  # To not clash with the link indices of A and psi
+  sim_linkinds!(A_c)
+  sim_linkinds!(psi_c)
+  sim_common_siteinds!(A_c, psi_c)
+
+  # A version helpful for making the density matrix
+  simA_c = sim_unique_siteinds(A_c, psi_c)
+
+  # Store the left environment tensors
   E = Vector{ITensor}(undef, n-1)
-  E[1] = psi[1]*A[1]*A_c[1]*psi_c[1]
+
+  E[1] = psi[1] * A[1] * A_c[1] * psi_c[1]
   for j in 2:n-1
-    E[j] = E[j-1]*psi[j]*A[j]*A_c[j]*psi_c[j]
+    E[j] = E[j-1] * psi[j] * A[j] * A_c[j] * psi_c[j]
   end
-  O     = psi[n] * A[n]
-  ρ     = E[n-1] * O * dag(prime(O, rand_plev))
-  ts    = tags(commonind(psi[n], psi[n-1]))
-  Lis   = commonind(ρ, A[n])
-  Ris   = prime(Lis, rand_plev)
+  R = psi[n] * A[n]
+  simR_c = psi_c[n] * simA_c[n]
+  ρ = E[n-1] * R * simR_c
+  l = linkind(psi, n-1)
+  ts = isnothing(l) ? "" : tags(l)
+  s = unique_siteind(A, psi, n)
+  s̃ = unique_siteind(simA_c, psi_c, n)
+  Lis = IndexSet(s)
+  Ris = IndexSet(s̃)
   FU, D = eigen(ρ, Lis, Ris; ishermitian=true, 
                              tags=ts, 
                              kwargs...)
-  psi_out[n] = dag(FU)
-  O     = O * FU * psi[n-1] * A[n-1]
+  l_renorm = commonind(FU, D)
+  simFU_c = replaceinds(prime(dag(FU), l_renorm), Lis, Ris)
+  psi_out[n] = FU
+  R = R * dag(FU) * psi[n-1] * A[n-1]
+  simR_c = simR_c * dag(simFU_c) * psi_c[n-1] * simA_c[n-1]
   for j in reverse(2:n-1)
-    dO  = prime(dag(O), rand_plev)
-    ρ   = E[j-1] * O * dO
-    ts  = tags(commonind(psi[j], psi[j-1]))
-    Lis = IndexSet(commonind(ρ, A[j]),
-                   commonind(ρ, psi_out[j+1])) 
-    Ris = prime(Lis, rand_plev)
+    s = unique_siteind(A, psi, j)
+    s̃ = unique_siteind(simA_c, psi_c, j)
+    ρ = E[j-1] * R * simR_c
+    l = linkind(psi, j-1)
+    ts = isnothing(l) ? "" : tags(l)
+    Lis = IndexSet(s, l_renorm)
+    Ris = IndexSet(s̃, l_renorm')
     FU, D = eigen(ρ, Lis, Ris; ishermitian=true,
-                               tags=ts, 
-                               kwargs...)
-    psi_out[j] = dag(FU)
-    O = O * FU * psi[j-1] * A[j-1]
+                                tags=ts, 
+                                kwargs...)
+    l_renorm = commonind(FU, D)
+    simFU_c = replaceinds(prime(dag(FU), l_renorm), Lis, Ris)
+    psi_out[j] = FU
+    R = R * dag(FU) * psi[j-1] * A[j-1]
+    simR_c = simR_c * dag(simFU_c) * psi_c[j-1] * simA_c[j-1]
   end
   if normalize
-    O /= norm(O)
+    R ./= norm(R)
   end
-  psi_out[1]    = copy(O)
+  psi_out[1] = R
   setleftlim!(psi_out, 0)
   setrightlim!(psi_out, 2)
   return psi_out
@@ -388,7 +375,7 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   res = deepcopy(A_)
   for i in 1:N-1
     ci = commonind(res[i], res[i+1])
-    new_ci = Index(dim(ci), tags(ci))
+    new_ci = sim(ci)
     replaceind!(res[i], ci, new_ci)
     replaceind!(res[i+1], ci, new_ci)
     @assert commonind(res[i], res[i+1]) != commonind(A[i], A[i+1])

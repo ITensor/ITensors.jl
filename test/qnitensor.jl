@@ -16,6 +16,25 @@ Random.seed!(1234)
     @test nnzblocks(A) == 2
   end
 
+  @testset "No indices getindex" begin
+    T = ITensor(QN())
+    @test order(T) == 0
+    @test flux(T) == nothing
+    @test nnzblocks(T) == 1
+    @test T[] == 0
+
+    s = Index(QN(-1)=>1,QN(1)=>1)
+    A = ITensor(s, dag(s'))
+    B = ITensor(s', dag(s))
+    A[1, 1] = 1
+    B[2, 2] = 1
+    C = A * B
+    @test order(C) == 0
+    @test flux(C) == nothing
+    @test nnzblocks(C) == 0
+    @test C[] == 0
+  end
+
   @testset "Empty constructor" begin
     i = Index([QN(0)=>1,QN(1)=>2],"i")
 

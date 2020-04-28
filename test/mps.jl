@@ -22,6 +22,15 @@ include("util.jl")
   psi[1] = ITensor(sites[1])
   @test hasind(psi[1],sites[1])
 
+  @testset "Missing links" begin
+    psi = MPS([randomITensor(sites[i]) for i in 1:N])
+    @test isnothing(linkind(psi, 1))
+    @test isnothing(linkind(psi, 5))
+    @test isnothing(linkind(psi, N))
+    @test maxlinkdim(psi) == 0
+    @test psi ⋅ psi ≈ *(dag(psi)..., psi...)[]
+  end
+
   @testset "productMPS" begin
     @testset "vector of string input" begin
       sites = siteinds("S=1/2",N)
@@ -93,7 +102,7 @@ include("util.jl")
   @testset "inner same MPS" begin
     psi = randomMPS(sites)
     psidag = dag(psi)
-    ITensors.primelinkinds!(psidag)
+    #ITensors.prime_linkinds!(psidag)
     psipsi = psidag[1]*psi[1]
     for j = 2:N
       psipsi *= psidag[j]*psi[j]
@@ -104,14 +113,14 @@ include("util.jl")
   @testset "scaling MPS" begin
     psi = randomMPS(sites)
     twopsidag = 2.0*dag(psi)
-    ITensors.primelinkinds!(twopsidag)
+    #ITensors.prime_linkinds!(twopsidag)
     @test inner(twopsidag, psi) ≈ 2.0*inner(psi,psi)
   end
   
   @testset "flip sign of MPS" begin
     psi = randomMPS(sites)
     minuspsidag = -dag(psi)
-    ITensors.primelinkinds!(minuspsidag)
+    #ITensors.primelinkinds!(minuspsidag)
     @test inner(minuspsidag, psi) ≈ -inner(psi,psi)
   end
 
@@ -158,7 +167,7 @@ include("util.jl")
   @test ITensors.leftlim(psi) == div(N, 2) - 1
   @test ITensors.rightlim(psi) == div(N, 2) + 1
 
-  @test_throws ErrorException linkind(MPS(N, fill(ITensor(), N), 0, N + 1), 1)
+  @test isnothing(linkind(MPS(N, fill(ITensor(), N), 0, N + 1), 1))
 
   @testset "replacebond!" begin
   # make sure factorization preserves the bond index tags

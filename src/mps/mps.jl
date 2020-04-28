@@ -64,6 +64,13 @@ with element type Float64.
 """
 MPS(sites) = MPS(Float64, sites)
 
+"""
+    MPS(v::Vector{<:ITensor})
+
+Construct an MPS from a Vector of ITensors.
+"""
+MPS(v::Vector{<:ITensor}) = MPS(length(v), v)
+
 function randomU(s1,s2)
   if !hasqns(s1) && !hasqns(s2)
     mdim = dim(s1)*dim(s2)
@@ -232,39 +239,31 @@ end
 
 productMPS(sites, states) = productMPS(Float64, sites, states)
 
-function linkind(M::MPS, j::Int)
-  N = length(M)
-  j ≥ length(M) && error("No link index to the right of site $j (length of MPS is $N)")
-  li = commonind(M[j],M[j+1])
-  if isnothing(li)
-    error("linkind: no MPS link index at link $j")
-  end
-  return li
-end
-
 function siteind(M::MPS, j::Int)
   N = length(M)
   if j == 1
-    si = uniqueind(M[j],M[j+1])
+    si = uniqueind(M[j], M[j+1])
   elseif j == N
-    si = uniqueind(M[j],M[j-1])
+    si = uniqueind(M[j], M[j-1])
   else
-    si = uniqueind(M[j],M[j-1],M[j+1])
+    si = uniqueind(M[j], M[j-1], M[j+1])
   end
   return si
 end
 
 function siteinds(M::MPS)
-  return [siteind(M,j) for j in 1:length(M)]
+  return [siteind(M, j) for j in 1:length(M)]
 end
 
-function replacesiteinds!(M::MPS, sites)
+function replace_siteinds!(M::MPS, sites)
   for j in eachindex(M)
-    sj = siteind(M,j)
+    sj = siteind(M, j)
     replaceind!(M[j], sj, sites[j])
   end
   return M
 end
+
+replace_siteinds(M::MPS, sites) = replace_siteinds!(copy(M), sites)
 
 """
     dot(psi::MPS, phi::MPS; make_inds_match = true)
@@ -283,11 +282,11 @@ function LinearAlgebra.dot(M1::MPS, M2::MPS; make_inds_match::Bool = true)::Numb
     throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
   end
   M1dag = dag(M1)
+  sim_linkinds!(M1dag)
   if make_inds_match
-    simlinkinds!(M1dag)
-    replacesiteinds!(M1dag, siteinds(M2))
+    replace_siteinds!(M1dag, siteinds(M2))
   end
-  O = M1dag[1]*M2[1]
+  O = M1dag[1] * M2[1]
   for j in eachindex(M1)[2:end]
     O = (O*M1dag[j])*M2[j]
   end
