@@ -132,17 +132,18 @@ decomposition, returned by `eigen`.
 struct TruncEigen{N}
   U::ITensor{N}
   D::ITensor{2}
+  Ut::ITensor{N}
   spec::Spectrum
   u::Index
-  v::Index
+  ut::Index
 end
 
-# iteration for destructuring into components `U,D,spec,u,v = E`
+# iteration for destructuring into components `U,D,spec,u,ut = E`
 Base.iterate(E::TruncEigen) = (E.U, Val(:D))
 Base.iterate(E::TruncEigen, ::Val{:D}) = (E.D, Val(:spec))
 Base.iterate(E::TruncEigen, ::Val{:spec}) = (E.spec, Val(:u))
-Base.iterate(E::TruncEigen, ::Val{:u}) = (E.u, Val(:v))
-Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
+Base.iterate(E::TruncEigen, ::Val{:u}) = (E.u, Val(:ut))
+Base.iterate(E::TruncEigen, ::Val{:ut}) = (E.ut, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
 function LinearAlgebra.eigen(A::ITensor,
@@ -150,14 +151,17 @@ function LinearAlgebra.eigen(A::ITensor,
                              Rinds = prime(IndexSet(Linds));
                              kwargs...)
   ishermitian::Bool = get(kwargs, :ishermitian, false)
+
   tags::TagSet = get(kwargs, :tags, "Link,eigen")
   lefttags::TagSet = get(kwargs, :lefttags, tags)
   righttags::TagSet = get(kwargs, :righttags, tags)
-  leftplev = get(kwargs, :leftplev, 0)
-  rightplev = get(kwargs, :rightplev, 1)
+
+  plev::Int = get(kwargs, :plev, 0)
+  leftplev::Int = get(kwargs, :leftplev, plev)
+  rightplev::Int = get(kwargs, :rightplev, plev)
 
   if lefttags == righttags && leftplev == rightplev
-    error("In eigen, left tags and prime level must be different from right tags and prime level")
+    rightplev = leftplev + 1
   end
 
   Lis = commoninds(A, IndexSet(Linds))
@@ -166,6 +170,17 @@ function LinearAlgebra.eigen(A::ITensor,
 
   if length(Lis) == 0 || length(Ris) == 0
     error("In `eigen`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.")
+  end
+
+  for (l, r) in zip(Lis, Ris)
+    if space(l) != space(r)
+      error("In eigen, indices must come in pairs with equal spaces.")
+    end
+    if hasqns(A)
+      if dir(l) == dir(r)
+        error("In eigen, indices must come in pairs with opposite directions")
+      end
+    end
   end
 
   CL = combiner(Lis...)
@@ -183,22 +198,22 @@ function LinearAlgebra.eigen(A::ITensor,
   UT,DT,spec = eigen(AT;kwargs...)
   UC,D = itensor(UT),itensor(DT)
 
-  u = commonind(UC,D)
+  u = commonind(UC, D)
 
   if hasqns(A)
-    # Fix the flux of UC,D
+    # Fix the flux of UC, D
     # such that flux(UC) == QN()
     # and flux(D) == flux(A)
     for b in nzblocks(UC)
       i1 = inds(UC)[1]
       i2 = inds(UC)[2]
-      newqn = -dir(i2)*qn(i1,b[1])
-      setblockqn!(i2,newqn,b[2])
-      setblockqn!(u,newqn,b[2])
+      newqn = -dir(i2) * qn(i1,b[1])
+      setblockqn!(i2, newqn, b[2])
+      setblockqn!(u, newqn, b[2])
     end
   end
 
-  U = UC*dag(CL)
+  U = UC * dag(CL)
 
   # Set left index tags
   u = commonind(D,U)
@@ -211,12 +226,16 @@ function LinearAlgebra.eigen(A::ITensor,
   D = setprime(D,leftplev,u)
 
   # Set right index tags and plev
-  v = uniqueind(D,U)
-  replaceind!(D,v,setprime(settags(u,righttags),rightplev))
+  ut = uniqueind(D, U)
+  ũt = setprime(settags(u, righttags), rightplev)
+  replaceind!(D, ut, ũt)
 
-  u = commonind(D,U) 
-  v = uniqueind(D,U)
-  return TruncEigen(U,D,spec,u,v)
+  u = commonind(D, U)
+  ut = uniqueind(D, U)
+
+  Ut = replaceinds(U, (Lis..., u), (Ris..., ut))
+
+  return TruncEigen(U, D, Ut, spec, u, ut)
 end
 
 function LinearAlgebra.qr(A::ITensor,
