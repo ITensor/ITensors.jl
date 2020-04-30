@@ -298,7 +298,7 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   F = eigen(ρ, Lis, Ris; ishermitian=true, 
                          tags=ts, 
                          kwargs...)
-  U, D = F
+  D, U = F
   Ut = F.Ut
   l_renorm = commonind(U, D)
   psi_out[n] = U
@@ -315,7 +315,7 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
     F = eigen(ρ, Lis, Ris; ishermitian=true,
                            tags=ts, 
                            kwargs...)
-    U, D = F
+    D, U = F
     Ut = F.Ut
     l_renorm = commonind(U, D)
     psi_out[j] = U

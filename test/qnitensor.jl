@@ -550,8 +550,8 @@ Random.seed!(1234)
 
       F = eigen(A; ishermitian=true, tags="x")
 
-      U, D = F
-      Ut = F.Ut
+      D, U = F
+      Ut = F.Vt
 
 
       @test store(U) isa NDTensors.BlockSparse
@@ -565,12 +565,13 @@ Random.seed!(1234)
       @test hastags(up,"x")
       @test plev(up) == 1
 
-      @test hassameinds(U,(i,j,u))
-      @test hassameinds(D,(u,up))
+      @test hassameinds(U, (i,j,u))
+      @test hassameinds(D, (u,up))
 
-      @test norm(A - U * D * dag(U)') ≈ 0.0 atol=1e-11
-      @test norm(A * U' - U * D) ≈ 0.0 atol=1e-11
-      @test norm(A * Ut - U * D) ≈ 0.0 atol=1e-11
+      @test norm(A - dag(U) * D * U') ≈ 0.0 atol=1e-11
+      @test norm(A - dag(U) * D * Ut) ≈ 0.0 atol=1e-11
+      @test norm(A * U - U' * D) ≈ 0.0 atol=1e-11
+      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-11
     end
 
     @testset "eigen hermitian (truncate)" begin
@@ -591,8 +592,8 @@ Random.seed!(1234)
                    tags="x",
                    cutoff=cutoff)
 
-      U, D, spec = F
-      Ut = F.Ut
+      D, U, spec = F
+      Ut = F.Vt
 
       @test store(U) isa NDTensors.BlockSparse
       @test store(D) isa NDTensors.DiagBlockSparse
@@ -618,10 +619,10 @@ Random.seed!(1234)
         @test flux(D,b)==QN(0)
       end
 
-      Ap = U * D * dag(U)'
+      Ap = dag(U) * D * U'
 
       @test norm(Ap-A) ≤ 1e-2
-      @test norm(U * D * dag(Ut) - A) ≤ 1e-2
+      @test norm(dag(U) * D * Ut - A) ≤ 1e-2
       @test minimum(dims(D)) == length(spec.eigs)
       @test minimum(dims(D)) < dim(i)*dim(j)
 
@@ -639,8 +640,8 @@ Random.seed!(1234)
 
       F = eigen(A; tags="x")
 
-      U, D = F
-      Ut = F.Ut
+      D, U = F
+      Ut = F.Vt
 
       @test store(U) isa NDTensors.BlockSparse
       @test store(D) isa NDTensors.DiagBlockSparse
@@ -653,9 +654,10 @@ Random.seed!(1234)
       @test hastags(up,"x")
       @test plev(up) == 1
 
-      @test norm(A - U * D * dag(U)') ≉ 0.0 atol=1e-12
-      @test norm(A - U * D * dag(Ut)) ≉ 0.0 atol=1e-12
-      @test norm(A * Ut - U * D) ≈ 0.0 atol=1e-12
+      @test norm(A - U' * D * dag(U)) ≉ 0.0 atol=1e-12
+      @test norm(A - Ut * D * dag(U)) ≉ 0.0 atol=1e-12
+      @test norm(A * U - U' * D) ≈ 0.0 atol=1e-12
+      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
     end
 
     @testset "eigen non-hermitian (general inds)" begin
@@ -669,28 +671,28 @@ Random.seed!(1234)
 
       F = eigen(A, (i, j), (ĩ, j̃); lefttags = "x", righttags = "y")
 
-      U, D = F
-      Ut = F.Ut
+      D, U = F
+      Ut = F.Vt
 
       @test store(U) isa NDTensors.BlockSparse
       @test store(D) isa NDTensors.DiagBlockSparse
 
-      u = commonind(D, U)
-      ut = uniqueind(D, U)
+      l = uniqueind(D, U)
+      r = commonind(D, U)
 
-      @test F.u == u
-      @test F.ut == ut
+      @test F.l == l
+      @test F.r == r
 
-      @test hastags(u, "x")
-      @test plev(u) == 0
-      @test hastags(ut, "y")
-      @test plev(ut) == 0
+      @test hastags(l, "x")
+      @test plev(l) == 0
+      @test hastags(r, "y")
+      @test plev(r) == 0
 
-      @test hassameinds(U, (i, j, u))
-      @test hassameinds(Ut, (ĩ, j̃, ut))
+      @test hassameinds(U, (ĩ, j̃, r))
+      @test hassameinds(Ut, (i, j, l))
 
-      @test norm(A - U * D * dag(Ut)) ≉ 0.0 atol=1e-12
-      @test norm(A * Ut - U * D) ≈ 0.0 atol=1e-12
+      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
+      @test norm(A - Ut * D * dag(U)) ≉ 0.0 atol=1e-12
     end
 
   end

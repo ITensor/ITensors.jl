@@ -130,26 +130,31 @@ ITensor factorization type for a truncated eigenvalue
 decomposition, returned by `eigen`.
 """
 struct TruncEigen{N}
-  U::ITensor{N}
   D::ITensor{2}
-  Ut::ITensor{N}
+  V::ITensor{N}
+  Vt::ITensor{N}
   spec::Spectrum
-  u::Index
-  ut::Index
+  l::Index
+  r::Index
 end
 
-# iteration for destructuring into components `U,D,spec,u,ut = E`
-Base.iterate(E::TruncEigen) = (E.U, Val(:D))
-Base.iterate(E::TruncEigen, ::Val{:D}) = (E.D, Val(:spec))
-Base.iterate(E::TruncEigen, ::Val{:spec}) = (E.spec, Val(:u))
-Base.iterate(E::TruncEigen, ::Val{:u}) = (E.u, Val(:ut))
-Base.iterate(E::TruncEigen, ::Val{:ut}) = (E.ut, Val(:done))
+# iteration for destructuring into components `D, V, spec, l, r = E`
+Base.iterate(E::TruncEigen) = (E.D, Val(:V))
+Base.iterate(E::TruncEigen, ::Val{:V}) = (E.V, Val(:spec))
+Base.iterate(E::TruncEigen, ::Val{:spec}) = (E.spec, Val(:l))
+Base.iterate(E::TruncEigen, ::Val{:l}) = (E.l, Val(:r))
+Base.iterate(E::TruncEigen, ::Val{:r}) = (E.r, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
-function LinearAlgebra.eigen(A::ITensor,
-                             Linds = inds(A; plev=0),
-                             Rinds = prime(IndexSet(Linds));
-                             kwargs...)
+function LinearAlgebra.eigen(A::ITensor{N},
+                             Linds,
+                             Rinds;
+                             kwargs...) where {N}
+  NL = length(Linds)
+  NR = length(Rinds)
+  NL != NR && error("Must have equal number of left and right indices")
+  N != NL + NR && error("Number of left and right indices must add up to total number of indices")
+
   ishermitian::Bool = get(kwargs, :ishermitian, false)
 
   tags::TagSet = get(kwargs, :tags, "Link,eigen")
@@ -161,16 +166,11 @@ function LinearAlgebra.eigen(A::ITensor,
   rightplev::Int = get(kwargs, :rightplev, plev)
 
   if lefttags == righttags && leftplev == rightplev
-    rightplev = leftplev + 1
+    leftplev = rightplev + 1
   end
 
-  Lis = commoninds(A, IndexSet(Linds))
-
-  Ris = commoninds(A, IndexSet(Rinds))
-
-  if length(Lis) == 0 || length(Ris) == 0
-    error("In `eigen`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.")
-  end
+  Lis::IndexSet{NL} = commoninds(A, IndexSet(Linds))
+  Ris::IndexSet{NR} = commoninds(A, IndexSet(Rinds))
 
   for (l, r) in zip(Lis, Ris)
     if space(l) != space(r)
@@ -183,59 +183,62 @@ function LinearAlgebra.eigen(A::ITensor,
     end
   end
 
-  CL = combiner(Lis...)
-  CR = combiner(Ris...)
+  CL = combiner(Lis...; tags = "CMB,left")
+  CR = combiner(Ris...; tags = "CMB,right")
 
   AC = A * CR * CL
 
   cL = combinedind(CL)
   cR = combinedind(CR)
-  if inds(AC) != IndexSet(cL,cR)
-    AC = permute(AC,cL,cR)
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
   end
 
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
-  UT,DT,spec = eigen(AT;kwargs...)
-  UC,D = itensor(UT),itensor(DT)
 
-  u = commonind(UC, D)
+  DT, VT, spec = eigen(AT; kwargs...)
+  D, VC = itensor(DT), itensor(VT)
+
+  l = uniqueind(D, VC)
+  r = commonind(D, VC)
 
   if hasqns(A)
-    # Fix the flux of UC, D
-    # such that flux(UC) == QN()
+    # Fix the flux of D, VC
     # and flux(D) == flux(A)
-    for b in nzblocks(UC)
-      i1 = inds(UC)[1]
-      i2 = inds(UC)[2]
-      newqn = -dir(i2) * qn(i1,b[1])
+    # such that flux(VC) == QN()
+    for b in nzblocks(VC)
+      i1, i2 = inds(VC)
+      newqn = -dir(i2) * qn(i1, b[1])
       setblockqn!(i2, newqn, b[2])
-      setblockqn!(u, newqn, b[2])
+      setblockqn!(r, newqn, b[2])
     end
   end
 
-  U = UC * dag(CL)
+  V = VC * CR
 
-  # Set left index tags
-  u = commonind(D,U)
-  settags!(U,lefttags,u)
-  settags!(D,lefttags,u)
+  # Set right index tags
+  l = uniqueind(D, V)
+  r = commonind(D, V)
+  l̃ = setprime(settags(l, lefttags), leftplev)
+  r̃ = setprime(settags(l̃, righttags), rightplev)
 
-  # Set left index plev
-  u = commonind(D,U)
-  U = setprime(U,leftplev,u)
-  D = setprime(D,leftplev,u)
+  replaceinds!(D, (l, r), (l̃, r̃))
+  replaceind!(V, r, r̃)
+ 
+  l, r = l̃, r̃
 
-  # Set right index tags and plev
-  ut = uniqueind(D, U)
-  ũt = setprime(settags(u, righttags), rightplev)
-  replaceind!(D, ut, ũt)
+  # The right eigenvectors, after being applied to A
+  Vt = replaceinds(V, (Ris..., r), (Lis..., l))
 
-  u = commonind(D, U)
-  ut = uniqueind(D, U)
+  return TruncEigen(D, V, Vt, spec, l, r)
+end
 
-  Ut = replaceinds(U, (Lis..., u), (Ris..., ut))
+function LinearAlgebra.eigen(A::ITensor;
+                             kwargs...)
+  Ris = inds(A; plev = 0)
+  Lis = Ris'
 
-  return TruncEigen(U, D, Ut, spec, u, ut)
+  return eigen(A, Lis, Ris; kwargs...)
 end
 
 function LinearAlgebra.qr(A::ITensor,
@@ -314,7 +317,7 @@ function factorize_eigen(A::ITensor,
       # (Lis..., prime(Lis)...)
       A2 += replaceinds(delta_A2, prime(Lis), simLis)
     end
-    L, D, spec = eigen(A2, Lis, simLis; ishermitian=true,
+    D, L, spec = eigen(A2, Lis, simLis; ishermitian=true,
                                         kwargs...)
     R = dag(L)*A
   elseif ortho == "right"
@@ -326,7 +329,7 @@ function factorize_eigen(A::ITensor,
       # (Ris..., prime(Ris)...)
       A2 += replaceinds(delta_A2, prime(Ris), simRis)
     end
-    R, D, spec = eigen(A2, Ris, simRis; ishermitian=true,
+    D, R, spec = eigen(A2, Ris, simRis; ishermitian=true,
                                         kwargs...)
     L = A * dag(R)
   else

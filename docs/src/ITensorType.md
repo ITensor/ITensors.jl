@@ -64,6 +64,8 @@ swaptags(::ITensor, ::Any...)
 ```@docs
 replaceind(::ITensor, ::Any...)
 replaceinds(::ITensor, ::Any...)
+swapind(::ITensor, ::Any...)
+swapinds(::ITensor, ::Any...)
 ```
 
 ## Math operations

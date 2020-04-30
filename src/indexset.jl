@@ -735,14 +735,6 @@ swaptags(is::IndexSet,
          kwargs...) = swaptags(fmatch(args...; kwargs...),
                                is, tags1, tags2)
 
-function replaceind(is::IndexSet, i1::Index, i2::Index)
-  space(i1) != space(i2) && error("Indices must have the same spaces to be replaced")
-  pos = findfirst(is, i1)
-  isnothing(pos) && error("Index not found")
-  i2 = setdir(i2, dir(is[pos]))
-  return setindex(is, i2, pos)
-end
-
 function replaceinds(is::IndexSet, inds1, inds2)
   is1 = IndexSet(inds1)
   poss = indexin(is1, is)
@@ -755,6 +747,23 @@ function replaceinds(is::IndexSet, inds1, inds2)
   end
   return is
 end
+
+replaceind(is::IndexSet, i1::Index, i2::Index) = replaceinds(is, (i1,), (i2,))
+
+function swapinds(is::IndexSet, inds1, inds2)
+  is1 = IndexSet(inds1)
+  is2 = IndexSet(inds2)
+
+  # Temporary indices for swapping
+  is2_sim = sim(is2)
+
+  is = replaceinds(is, is1, is2_sim)
+  is = replaceinds(is, is2, is1)
+  is = replaceinds(is, is2_sim, is2)
+  return is
+end
+
+swapind(is::IndexSet, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
 NDTensors.dense(::Type{<:IndexSet}) = IndexSet
 

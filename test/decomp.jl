@@ -50,7 +50,7 @@ using ITensors,
     j = Index(2,"j")
     A = randomITensor(i,i')
     eigA = eigen(A)
-    Ut, Dt = eigen(NDTensors.tensor(A))
+    Dt, Ut = eigen(NDTensors.tensor(A))
     eigArr = eigen(array(A))
     @test diag(array(eigA.D), 0) == eigArr.values
     @test diag(array(Dt), 0) == eigArr.values
