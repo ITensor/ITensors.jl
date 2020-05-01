@@ -169,8 +169,12 @@ function LinearAlgebra.eigen(A::ITensor{N},
     leftplev = rightplev + 1
   end
 
-  Lis::IndexSet{NL} = commoninds(A, IndexSet(Linds))
-  Ris::IndexSet{NR} = commoninds(A, IndexSet(Rinds))
+  # Linds, Rinds may not have the correct directions
+  Lis = IndexSet(Linds...)
+  Ris = IndexSet(Rinds...)
+
+  Lis = setdirs(Lis, dirs(A, Lis))
+  Ris = setdirs(Ris, dirs(A, Ris))
 
   for (l, r) in zip(Lis, Ris)
     if space(l) != space(r)
@@ -310,30 +314,25 @@ function factorize_eigen(A::ITensor,
   delta_A2 = get(kwargs, :eigen_perturbation, nothing)
   if ortho == "left"
     Lis = commoninds(A, IndexSet(Linds...))
-    simLis = sim(Lis)
-    A2 = A * replaceinds(dag(A), Lis, simLis)
-    if !isnothing(delta_A2)
-      # This assumes delta_A2 has indices:
-      # (Lis..., prime(Lis)...)
-      A2 += replaceinds(delta_A2, prime(Lis), simLis)
-    end
-    D, L, spec = eigen(A2, Lis, simLis; ishermitian=true,
-                                        kwargs...)
-    R = dag(L)*A
-  elseif ortho == "right"
-    Ris = uniqueinds(A, IndexSet(Linds...))
-    simRis = sim(Ris)
-    A2 = A * replaceinds(dag(A), Ris, simRis)
-    if !isnothing(delta_A2)
-      # This assumes delta_A2 has indices:
-      # (Ris..., prime(Ris)...)
-      A2 += replaceinds(delta_A2, prime(Ris), simRis)
-    end
-    D, R, spec = eigen(A2, Ris, simRis; ishermitian=true,
-                                        kwargs...)
-    L = A * dag(R)
+  elseif orthog == "right"
+    Lis = uniqueinds(A, IndexSet(Linds...))
   else
     error("In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
+  end
+  simLis = sim(Lis)
+  A2 = A * replaceinds(dag(A), Lis, simLis)
+  if !isnothing(delta_A2)
+    # This assumes delta_A2 has indices:
+    # (Lis..., prime(Lis)...)
+    A2 += replaceinds(delta_A2, prime(Lis), simLis)
+  end
+  F = eigen(A2, Lis, simLis; ishermitian=true,
+                             kwargs...)
+  D, _, spec = F
+  L = F.Vt
+  R = dag(L) * A
+  if ortho == "right"
+    L, R = R, L
   end
   return L, R, spec, commonind(L, R)
 end

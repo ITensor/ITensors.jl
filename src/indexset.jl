@@ -925,11 +925,39 @@ function getindices(is::IndexSet, I...)
 end
 
 NDTensors.getindices(is::IndexSet,
-                   I...) = getindices(is, I...)
+                     I...) = getindices(is, I...)
 
 #
 # QN functions
 #
+
+"""
+    setdirs(is::IndexSet, dirs::Arrow...)
+
+Return a new IndexSet with indices `setdir(is[i], dirs[i])`.
+"""
+function setdirs(is::IndexSet{N}, dirs) where {N}
+  return IndexSet(ntuple(i -> setdir(is[i], dirs[i]), Val(N)))
+end
+
+"""
+    dir(is::IndexSet, i::Index)
+
+Return the direction of the Index `i` in the IndexSet `is`.
+"""
+function dir(is1::IndexSet, i::Index)
+  return dir(getfirst(is1, i))
+end
+
+"""
+    dirs(is::IndexSet, inds)
+
+Return a tuple of the directions of the indices `inds` in 
+the IndexSet `is`.
+"""
+function dirs(is1::IndexSet, inds)
+  return ntuple(i -> dir(is1, inds[i]), Val(length(inds)))
+end
 
 hasqns(is::IndexSet) = any(hasqns,is)
 

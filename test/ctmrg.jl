@@ -24,12 +24,10 @@ function ctmrg(T::ITensor,
     lr = firstind(Clu⁽¹⁾,"link,right")
     sr = firstind(Clu⁽¹⁾,"site,right")
 
-    Ud,Cdr = eigen(Clu⁽¹⁾, (ld, sd), (lr, sr); ishermitian = true,
+    Cdr,Ur = eigen(Clu⁽¹⁾, (ld, sd), (lr, sr); ishermitian = true,
                                                maxdim = χmax,
                                                lefttags = "link,down,renorm",
-                                               leftplev = 0,
-                                               righttags = "link,right,renorm",
-                                               rightplev = 0)
+                                               righttags = "link,right,renorm")
 
     ## The renormalized CTM is the diagonal matrix of eigenvalues
     Clu = replacetags(Cdr,"renorm","orig")
@@ -38,6 +36,7 @@ function ctmrg(T::ITensor,
     Clu = Clu/norm(Clu)
 
     ## Calculate the renormalized half row transfer matrix (HRTM)
+    Ud = replacetags(Ur,"right","down")
     Uu = replacetags(Ud,"down","up")
 
     Al = Al*Uu*T*Ud

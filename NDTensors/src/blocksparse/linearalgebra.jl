@@ -191,6 +191,7 @@ function LinearAlgebra.eigen(T::Union{Hermitian{ElT,<:BlockSparseMatrix{ElT}},
   Db, Vb = eigen(blockT)
   Ds = [Db]
   Vs = [Vb]
+  append!(d, abs.(vector(diag(Db))))
   for n in 2:nnzblocks(T)
     b = nzblock(T, n)
     all(==(b[1]), b) || error("Eigen currently only supports block diagonal matrices.")
@@ -203,6 +204,7 @@ function LinearAlgebra.eigen(T::Union{Hermitian{ElT,<:BlockSparseMatrix{ElT}},
 
   dropblocks = Int[]
   sort!(d; rev=true, by=abs)
+
   if truncate
     truncerr,docut = truncate!(d; kwargs...)
     for n in 1:nnzblocks(T)

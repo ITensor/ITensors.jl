@@ -734,15 +734,12 @@ end
 
     @testset "Test Hermitian eigendecomposition of an ITensor" begin
       is = IndexSet(i,j)
-      T = randomITensor(is..., prime(is)...)
+      T = randomITensor(SType, is..., prime(is)...)
       T = T + swapprime(dag(T), 0, 1)
-
-      @show inds(T)
-
-      D, U, spec, u = eigen(T; ishermitian=true)
+      D, U, spec, l, r = eigen(T; ishermitian=true)
       @test T ≈ prime(U) * D * dag(U) atol=1e-13
-      UUᴴ =  U * prime(dag(U), u)
-      @test UUᴴ ≈ δ(u, u')
+      UUᴴ =  U * prime(dag(U), r)
+      @test UUᴴ ≈ δ(r, r')
     end
 
     @testset "Test factorize of an ITensor" begin

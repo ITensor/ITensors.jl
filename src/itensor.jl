@@ -656,7 +656,7 @@ firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
                                      kwargs...)
 
 NDTensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
-                                       kwargs...)
+                                         kwargs...)
 
 # in-place versions of priming and tagging
 for fname in (:prime,
@@ -860,6 +860,8 @@ The storage of the ITensor is not modified or copied (the output ITensor is a vi
 For `A'` notation to prime an ITensor by 1.
 """
 Base.adjoint(A::ITensor) = prime(A)
+
+dirs(A::ITensor, is) = dirs(inds(A), is)
 
 function Base.:(==)(A::ITensor, B::ITensor)
   return norm(A - B) == zero(promote_type(eltype(A),eltype(B)))
