@@ -158,13 +158,13 @@ end
       end
 
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
-        spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
-                                         mindim = mindim(sweeps, sw),
-                                         cutoff = cutoff(sweeps, sw),
-                                         eigen_perturbation = drho,
-                                         ortho = ortho,
-                                         normalize = true,
-                                         which_decomp = which_decomp)
+      spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
+                                       mindim = mindim(sweeps, sw),
+                                       cutoff = cutoff(sweeps, sw),
+                                       eigen_perturbation = drho,
+                                       ortho = ortho,
+                                       normalize = true,
+                                       which_decomp = which_decomp)
 end
 
       if outputlevel >= 2

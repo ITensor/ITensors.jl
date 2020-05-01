@@ -265,16 +265,16 @@ end
 function NDTensors.polar(A::ITensor,
                        Linds...;
                        kwargs...)
-  Lis = commoninds(A,IndexSet(Linds...))
-  Ris = uniqueinds(A,Lis)
-  Lpos,Rpos = NDTensors.getperms(inds(A),Lis,Ris)
-  UT,PT = polar(tensor(A),Lpos,Rpos)
-  U,P = itensor(UT),itensor(PT)
-  u = commoninds(U,P)
-  p = uniqueinds(P,U)
-  replaceinds!(U,u,p')
-  replaceinds!(P,u,p')
-  return U,P,commoninds(U,P)
+  Lis = commoninds(A, IndexSet(Linds...))
+  Ris = uniqueinds(A, Lis)
+  Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
+  UT, PT = polar(tensor(A), Lpos, Rpos)
+  U, P = itensor(UT), itensor(PT)
+  u = commoninds(U, P)
+  p = uniqueinds(P, U)
+  replaceinds!(U, u, p')
+  replaceinds!(P, u, p')
+  return U, P, commoninds(U, P)
 end
 
 
@@ -282,29 +282,21 @@ function factorize_svd(A::ITensor,
                        Linds...;
                        kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
-  tags::TagSet = get(kwargs, :tags, "Link,fact")
   alg::String = get(kwargs, :svd_alg, "recursive")
-  U,S,V,spec,u,v = svd(A, Linds...; kwargs..., alg = alg)
+  U, S, V, spec, u, v = svd(A, Linds...; kwargs..., alg = alg)
   if ortho == "left"
-    L,R = U,S*V
+    L, R = U, S * V
   elseif ortho == "right"
     L,R = U*S,V
   elseif ortho == "none"
     sqrtS = S
     sqrtS .= sqrt.(S)
-    L,R = U*sqrtS,sqrtS*V
-    replaceind!(L,v,u)
+    L, R = U * sqrtS, sqrtS * V
+    replaceind!(L, v, u)
   else
     error("In factorize using svd decomposition, ortho keyword $ortho not supported. Supported options are left, right, or none.")
   end
-
-  # Set the tags properly
-  l = commonind(L,R)
-  settags!(L, tags, l)
-  settags!(R, tags, l)
-  l = settags(l, tags)
-
-  return L,R,spec,l
+  return L, R, spec
 end
 
 function factorize_eigen(A::ITensor,
@@ -314,7 +306,7 @@ function factorize_eigen(A::ITensor,
   delta_A2 = get(kwargs, :eigen_perturbation, nothing)
   if ortho == "left"
     Lis = commoninds(A, IndexSet(Linds...))
-  elseif orthog == "right"
+  elseif ortho == "right"
     Lis = uniqueinds(A, IndexSet(Linds...))
   else
     error("In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
@@ -334,7 +326,7 @@ function factorize_eigen(A::ITensor,
   if ortho == "right"
     L, R = R, L
   end
-  return L, R, spec, commonind(L, R)
+  return L, R, spec
 end
 
 """
@@ -360,6 +352,8 @@ function LinearAlgebra.factorize(A::ITensor,
                                  Linds...;
                                  kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
+  tags::TagSet = get(kwargs, :tags, "Link,fact")
+  plev::Int = get(kwargs, :plev, 0)
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
   cutoff::Float64 = get(kwargs, :cutoff, 0.0)
   eigen_perturbation = get(kwargs, :eigen_perturbation, nothing)
@@ -387,13 +381,21 @@ function LinearAlgebra.factorize(A::ITensor,
   automatic_cutoff = 1e-12
   if which_decomp == "svd" || 
      (isnothing(which_decomp) && cutoff ≤ automatic_cutoff)
-    L, R, spec, l = factorize_svd(A, Linds...; kwargs...)
+    L, R, spec = factorize_svd(A, Linds...; kwargs...)
   elseif which_decomp == "eigen" ||
          (isnothing(which_decomp) && cutoff > automatic_cutoff)
-    L, R, spec, l = factorize_eigen(A, Linds...; kwargs...)
+    L, R, spec = factorize_eigen(A, Linds...; kwargs...)
   else
-    return throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, or `nothing`."""))
+    throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, or `nothing`."""))
   end
-  return L,R,spec,l
+
+  # Set the tags and prime level
+  l = commonind(L, R)
+  l̃ = setprime(settags(l, tags), plev)
+  replaceind!(L, l, l̃)
+  replaceind!(R, l, l̃)
+  l = l̃
+
+  return L, R, spec, l
 end
 
