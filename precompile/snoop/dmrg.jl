@@ -17,7 +17,7 @@ let
   maxdim!(sweeps, 10)
   cutoff!(sweeps, 1E-11)
   PH = ProjMPO(H)
-  which_decomp = "automatic"
+  which_decomp = nothing
   obs = NoObserver()
   quiet = false
   eigsolve_tol = 1e-14

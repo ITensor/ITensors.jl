@@ -199,10 +199,11 @@ using ITensors,
     @test sqrtabsA[1] == cos(sin(sqrt(abs(A[1]))))
     @test sqrtabsA[2] == cos(sin(sqrt(abs(A[2]))))
 
-    Ap = A .+ 3
+    # Not currently supported
+    #Ap = A .+ 3
 
-    @test Ap[1] == A[1] + 3
-    @test Ap[2] == A[2] + 3
+    #@test Ap[1] == A[1] + 3
+    #@test Ap[2] == A[2] + 3
 
     Apow1 = A .^ 2.0
 

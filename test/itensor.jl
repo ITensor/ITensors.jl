@@ -328,13 +328,13 @@ end
   A = itensor(a,i)
   B = itensor(b,i)
   c = [5.0; 8.0]
-  @test add!(B, 2.0, A) == itensor(c, i)
+  @test (B .+= 2.0 .* A) == itensor(c, i)
   a = [1.0; 2.0]
   b = [3.0; 4.0]
   A = itensor(a,i)
   B = itensor(b,i)
   c = [8.0; 12.0]
-  @test add!(A, 2.0, 2.0, B) == itensor(c, i) 
+  @test (A .= 2.0 .* A .+ 2.0 .* B) == itensor(c, i) 
   
 end
 
@@ -345,7 +345,7 @@ end
   A = itensor(a,i)
   A2, A3 = copy(A), copy(A)
   B = itensor(b,i)
-  @test mul!(A2, A, 2.0) == B == ITensors.add!(A2, 0, 2, A)
+  @test mul!(A2, A, 2.0) == B == (A2 .= 0 .* A2 .+ 2 .* A)
   @test rmul!(A, 2.0) == B == ITensors.scale!(A3, 2)
   #make sure mul! works also when A2 has NaNs in it
   A = itensor([1.0; 2.0],i)
