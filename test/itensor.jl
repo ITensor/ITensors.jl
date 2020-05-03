@@ -544,6 +544,18 @@ end
     @test_throws ErrorException replaceinds(A, (l, s), (s̃, l̃))
   end
 
+  @testset "swapinds and swapinds!" begin
+    s = Index(2)
+    t = Index(2)
+    Ast = randomITensor(s, s', t, t')
+    Ats = swapinds(Ast, (s, s'), (t, t'))
+    @test Ast != Ats
+    @test Ast == swapinds(Ats, (s, s'), (t, t'))
+
+    swapinds!(Ats, (s, s'), (t, t'))
+    @test Ast == Ats
+  end
+
 end #End "ITensor other index operations"
 
 @testset "Converting Real and Complex Storage" begin

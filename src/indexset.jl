@@ -756,6 +756,12 @@ function replaceinds(is::IndexSet, inds1, inds2)
   return is
 end
 
+function swapinds(is::IndexSet, inds1, inds2)
+  (length(inds1) == 1) && (inds1 = ((inds1, )..., ))
+  (length(inds2) == 1) && (inds2 = ((inds2, )..., ))
+  replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
+end
+
 NDTensors.dense(::Type{<:IndexSet}) = IndexSet
 
 NDTensors.dense(is::IndexSet) = IndexSet(dense(is...))

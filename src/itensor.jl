@@ -670,7 +670,8 @@ for fname in (:prime,
               :settags,
               :swaptags,
               :replaceind,
-              :replaceinds)
+              :replaceinds,
+              :swapinds)
   @eval begin
     $fname(f::Function,
            A::ITensor,
@@ -829,6 +830,16 @@ The indices must have the same space (i.e. the same dimension and QNs, if applic
 
 The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
 """ replaceinds(::ITensor, ::Any...)
+
+@doc """
+    swapinds(A::ITensor, inds1, inds2) -> ITensor
+
+    swapinds!(A::ITensor, inds1, inds2)
+
+Swaps the order of the Index `inds1[n]` with the Index `inds2[n]` in the ITensor.
+
+The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
+""" swapinds(::ITensor, ::Any...)
 
 """
     adjoint(A::ITensor)
