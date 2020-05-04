@@ -756,11 +756,7 @@ end
 
 swapind(is::IndexSet, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
-NDTensors.dense(::Type{<:IndexSet}) = IndexSet
-
-NDTensors.dense(is::IndexSet) = IndexSet(dense(is...))
-
-NDTensors.dense(inds::Index...) = inds
+removeqns(is::IndexSet) = is
 
 #
 # Helper functions for contracting ITensors

@@ -398,11 +398,15 @@ end
 """
     dense(T::ITensor)
 
-Make a new ITensor where the storage is the dense version,
+Make a new ITensor where the storage is the closest Dense storage,
 avoiding allocating new data if possible.
-For example, an ITensor with Diag storage will become Dense storage.
+For example, an ITensor with Diag storage will become Dense storage,
+filled with zeros except for the diagonal values.
 """
-NDTensors.dense(T::ITensor) = itensor(dense(tensor(T)))
+function NDTensors.dense(A::ITensor)
+  T = dense(tensor(A))
+  return itensor(store(T), removeqns(inds(A)))
+end
 
 """
     complex(T::ITensor)

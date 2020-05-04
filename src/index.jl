@@ -396,6 +396,13 @@ Checks of the Index has QNs or not.
 """
 hasqns(::Index) = false
 
+"""
+    removeqns(::Index)
+
+Removes the QNs from the Index, if it has any.
+"""
+removeqns(i::Index) = i
+
 #
 # IndexVal
 #

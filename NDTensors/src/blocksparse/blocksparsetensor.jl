@@ -293,7 +293,7 @@ end
 
 # convert to Dense
 function dense(T::TensorT) where {TensorT<:BlockSparseTensor}
-  R = zeros(dense(TensorT),dense(inds(T)))
+  R = zeros(dense(TensorT), inds(T))
   for (block,offset) in blockoffsets(T)
     # TODO: make sure this assignment is efficient
     R[blockindices(T,block)] = blockview(T,block)
