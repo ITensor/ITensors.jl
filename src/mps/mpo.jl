@@ -295,14 +295,14 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
   s̃ = unique_siteind(simA_c, psi_c, n)
   Lis = IndexSet(s)
   Ris = IndexSet(s̃)
-  FU, D = eigen(ρ, Lis, Ris; ishermitian=true, 
-                             tags=ts, 
-                             kwargs...)
-  l_renorm = commonind(FU, D)
-  simFU_c = replaceinds(prime(dag(FU), l_renorm), Lis, Ris)
-  psi_out[n] = FU
-  R = R * dag(FU) * psi[n-1] * A[n-1]
-  simR_c = simR_c * dag(simFU_c) * psi_c[n-1] * simA_c[n-1]
+  F = eigen(ρ, Lis, Ris; ishermitian=true, 
+                         tags=ts, 
+                         kwargs...)
+  D, U, Ut = F.D, F.V, F.Vt
+  l_renorm, r_renorm = F.l, F.r
+  psi_out[n] = Ut
+  R = R * dag(Ut) * psi[n-1] * A[n-1]
+  simR_c = simR_c * U * psi_c[n-1] * simA_c[n-1]
   for j in reverse(2:n-1)
     s = unique_siteind(A, psi, j)
     s̃ = unique_siteind(simA_c, psi_c, j)
@@ -310,15 +310,15 @@ function _contract_densitymatrix(A::MPO, psi::MPS; kwargs...)::MPS
     l = linkind(psi, j-1)
     ts = isnothing(l) ? "" : tags(l)
     Lis = IndexSet(s, l_renorm)
-    Ris = IndexSet(s̃, l_renorm')
-    FU, D = eigen(ρ, Lis, Ris; ishermitian=true,
-                                tags=ts, 
-                                kwargs...)
-    l_renorm = commonind(FU, D)
-    simFU_c = replaceinds(prime(dag(FU), l_renorm), Lis, Ris)
-    psi_out[j] = FU
-    R = R * dag(FU) * psi[j-1] * A[j-1]
-    simR_c = simR_c * dag(simFU_c) * psi_c[j-1] * simA_c[j-1]
+    Ris = IndexSet(s̃, r_renorm)
+    F = eigen(ρ, Lis, Ris; ishermitian=true,
+                           tags=ts, 
+                           kwargs...)
+    D, U, Ut = F.D, F.V, F.Vt
+    l_renorm, r_renorm = F.l, F.r
+    psi_out[j] = Ut
+    R = R * dag(Ut) * psi[j-1] * A[j-1]
+    simR_c = simR_c * U * psi_c[j-1] * simA_c[j-1]
   end
   if normalize
     R ./= norm(R)

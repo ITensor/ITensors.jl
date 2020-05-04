@@ -656,7 +656,7 @@ firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
                                      kwargs...)
 
 NDTensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
-                                       kwargs...)
+                                         kwargs...)
 
 # in-place versions of priming and tagging
 for fname in (:prime,
@@ -671,6 +671,7 @@ for fname in (:prime,
               :swaptags,
               :replaceind,
               :replaceinds,
+              :swapind,
               :swapinds)
   @eval begin
     $fname(f::Function,
@@ -832,11 +833,23 @@ The storage of the ITensor is not modified or copied (the output ITensor is a vi
 """ replaceinds(::ITensor, ::Any...)
 
 @doc """
+    swapind(A::ITensor, i1::Index, i2::Index) -> ITensor
+
+    swapind!(A::ITensor, i1::Index, i2::Index)
+
+Swap the Index `i1` with the Index `i2` in the ITensor.
+
+The indices must have the same space (i.e. the same dimension and QNs, if applicable).
+""" swapind(::ITensor, ::Any...)
+
+@doc """
     swapinds(A::ITensor, inds1, inds2) -> ITensor
 
     swapinds!(A::ITensor, inds1, inds2)
 
-Swaps the order of the Index `inds1[n]` with the Index `inds2[n]` in the ITensor.
+Swap the Index `inds1[n]` with the Index `inds2[n]` in the ITensor, where `n` runs from `1` to `length(inds1) == length(inds2)`.
+
+The indices must have the same space (i.e. the same dimension and QNs, if applicable).
 
 The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
 """ swapinds(::ITensor, ::Any...)
@@ -847,6 +860,8 @@ The storage of the ITensor is not modified or copied (the output ITensor is a vi
 For `A'` notation to prime an ITensor by 1.
 """
 Base.adjoint(A::ITensor) = prime(A)
+
+dirs(A::ITensor, is) = dirs(inds(A), is)
 
 function Base.:(==)(A::ITensor, B::ITensor)
   return norm(A - B) == zero(promote_type(eltype(A),eltype(B)))
@@ -1030,12 +1045,6 @@ function LinearAlgebra.mul!(C::ITensor, A::ITensor, B::ITensor)
   return C
 end
 
-# TODO: this will allow for contraction order optimization
-#LinearAlgebra.mul!(R::ITensor,
-#                   A1::ITensor,
-#                   A2::ITensor,
-#                   A3::ITensor, As...) = mul!(R, A1, *(A2, A3, As...))
-
 LinearAlgebra.dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 
 """
@@ -1096,45 +1105,17 @@ B .= A
 ```
 """
 function Base.copyto!(R::ITensor{N}, T::ITensor{N}) where {N}
-  perm = NDTensors.getperm(inds(R), inds(T))
-  TR = permutedims!(tensor(R), tensor(T), perm)
-  return itensor(TR)
+  R .= T
+  return R
 end
 
-"""
-    add!(B::ITensor, A::ITensor)
-    add!(B::ITensor, α::Number, A::ITensor)
-
-Add ITensors B and A (or α*A) and store the result in B.
-```
-B .+= A
-B .+= α .* A
-```
-"""
-add!(R::ITensor, T::ITensor) = apply!(R,T,(r,t)->r+t)
-
-add!(R::ITensor, α::Number, T::ITensor) = apply!(R,T,(r,t)->r+α*t)
-
-add!(R::ITensor, T::ITensor, α::Number) = (R .+= α .* T)
-
-"""
-    add!(A::ITensor, α::Number, β::Number, B::ITensor)
-
-Add ITensors α*A and β*B and store the result in A.
-```
-A .= α .* A .+ β .* B
-```
-"""
-add!(R::ITensor,
-     αr::Number,
-     αt::Number,
-     T::ITensor) = apply!(R,T,(r,t)->αr*r+αt*t)
-
-function apply!(R::ITensor{N},
-                T::ITensor{N},
-                f::Function) where {N}
-  perm = NDTensors.getperm(inds(R),inds(T))
-  TR,TT = tensor(R),tensor(T)
+function Base.map!(f::Function,
+                   R::ITensor{N},
+                   T1::ITensor{N},
+                   T2::ITensor{N}) where {N}
+  R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
+  perm = NDTensors.getperm(inds(R),inds(T2))
+  TR,TT = tensor(R),tensor(T2)
 
   # TODO: Include type promotion from α
   TR = convert(promote_type(typeof(TR),typeof(TT)),TR)
@@ -1175,27 +1156,25 @@ Scale the ITensor A by x in-place. May also be written `rmul!`.
 A .*= x
 ```
 """
-function NDTensors.scale!(T::ITensor, x::Number)
-  TT = tensor(T)
-  scale!(TT,x)
-  return T
-end
+NDTensors.scale!(T::ITensor, α::Number) = (T .*= α)
 
-LinearAlgebra.rmul!(T::ITensor, fac::Number) = scale!(T,fac)
+LinearAlgebra.rmul!(T::ITensor, α::Number) = (T .*= α)
+
+LinearAlgebra.lmul!(T::ITensor, α::Number) = (T .= α .* T)
 
 """
-    mul!(A::ITensor,x::Number,B::ITensor)
+    mul!(A::ITensor, x::Number, B::ITensor)
 
 Scalar multiplication of ITensor B with x, and store the result in A.
 Like `A .= x .* B`.
 """
 LinearAlgebra.mul!(R::ITensor,
                    α::Number,
-                   T::ITensor) = apply!(R,T,(r,t)->α*t )
+                   T::ITensor) = (R .= α .* T)
 
 LinearAlgebra.mul!(R::ITensor,
                    T::ITensor,
-                   α::Number) = (R .= α .* T)
+                   α::Number) = (R .= T .* α)
 
 #
 # Block sparse related functions

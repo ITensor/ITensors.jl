@@ -735,14 +735,6 @@ swaptags(is::IndexSet,
          kwargs...) = swaptags(fmatch(args...; kwargs...),
                                is, tags1, tags2)
 
-function replaceind(is::IndexSet, i1::Index, i2::Index)
-  space(i1) != space(i2) && error("Indices must have the same spaces to be replaced")
-  pos = findfirst(is, i1)
-  isnothing(pos) && error("Index not found")
-  i2 = setdir(i2, dir(is[pos]))
-  return setindex(is, i2, pos)
-end
-
 function replaceinds(is::IndexSet, inds1, inds2)
   is1 = IndexSet(inds1)
   poss = indexin(is1, is)
@@ -756,11 +748,13 @@ function replaceinds(is::IndexSet, inds1, inds2)
   return is
 end
 
+replaceind(is::IndexSet, i1::Index, i2::Index) = replaceinds(is, (i1,), (i2,))
+
 function swapinds(is::IndexSet, inds1, inds2)
-  (length(inds1) == 1) && (inds1 = ((inds1, )..., ))
-  (length(inds2) == 1) && (inds2 = ((inds2, )..., ))
-  replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
+  return replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
 end
+
+swapind(is::IndexSet, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
 NDTensors.dense(::Type{<:IndexSet}) = IndexSet
 
@@ -922,11 +916,39 @@ function getindices(is::IndexSet, I...)
 end
 
 NDTensors.getindices(is::IndexSet,
-                   I...) = getindices(is, I...)
+                     I...) = getindices(is, I...)
 
 #
 # QN functions
 #
+
+"""
+    setdirs(is::IndexSet, dirs::Arrow...)
+
+Return a new IndexSet with indices `setdir(is[i], dirs[i])`.
+"""
+function setdirs(is::IndexSet{N}, dirs) where {N}
+  return IndexSet(ntuple(i -> setdir(is[i], dirs[i]), Val(N)))
+end
+
+"""
+    dir(is::IndexSet, i::Index)
+
+Return the direction of the Index `i` in the IndexSet `is`.
+"""
+function dir(is1::IndexSet, i::Index)
+  return dir(getfirst(is1, i))
+end
+
+"""
+    dirs(is::IndexSet, inds)
+
+Return a tuple of the directions of the indices `inds` in 
+the IndexSet `is`.
+"""
+function dirs(is1::IndexSet, inds)
+  return ntuple(i -> dir(is1, inds[i]), Val(length(inds)))
+end
 
 hasqns(is::IndexSet) = any(hasqns,is)
 

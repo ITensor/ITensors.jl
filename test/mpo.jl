@@ -3,8 +3,7 @@ using ITensors,
 
 include("util.jl")
 
-function basicRandomMPO(N::Int, sites;dim=4)
-  #sites = [Index(2,"Site") for n=1:N]
+function basicRandomMPO(N::Int, sites; dim=4)
   M = MPO(sites)
   links = [Index(dim,"n=$(n-1),Link") for n=1:N+1]
   for n=1:N
@@ -17,7 +16,7 @@ end
 
 @testset "MPO Basics" begin
   N = 6
-  sites = [Index(2,"Site") for n=1:N]
+  sites = [Index(2,"Site,n=$n") for n=1:N]
   @test length(MPO()) == 0
   O = MPO(sites)
   @test length(O) == N
@@ -152,7 +151,7 @@ end
     K   = randomMPO(sites)
     @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
-    psi_out = contract(K, psi,maxdim=1)
+    psi_out = contract(K, psi; maxdim=1)
     @test inner(phi,psi_out) ≈ inner(phi,K,psi)
     @test_throws ArgumentError contract(K, psi, method="fakemethod")
 

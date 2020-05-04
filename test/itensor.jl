@@ -328,13 +328,13 @@ end
   A = itensor(a,i)
   B = itensor(b,i)
   c = [5.0; 8.0]
-  @test add!(B, 2.0, A) == itensor(c, i)
+  @test (B .+= 2.0 .* A) == itensor(c, i)
   a = [1.0; 2.0]
   b = [3.0; 4.0]
   A = itensor(a,i)
   B = itensor(b,i)
   c = [8.0; 12.0]
-  @test add!(A, 2.0, 2.0, B) == itensor(c, i) 
+  @test (A .= 2.0 .* A .+ 2.0 .* B) == itensor(c, i) 
   
 end
 
@@ -345,7 +345,7 @@ end
   A = itensor(a,i)
   A2, A3 = copy(A), copy(A)
   B = itensor(b,i)
-  @test mul!(A2, A, 2.0) == B == ITensors.add!(A2, 0, 2, A)
+  @test mul!(A2, A, 2.0) == B == (A2 .= 0 .* A2 .+ 2 .* A)
   @test rmul!(A, 2.0) == B == ITensors.scale!(A3, 2)
   #make sure mul! works also when A2 has NaNs in it
   A = itensor([1.0; 2.0],i)
@@ -746,12 +746,12 @@ end
 
     @testset "Test Hermitian eigendecomposition of an ITensor" begin
       is = IndexSet(i,j)
-      T = randomITensor(is..., prime(is)...)
+      T = randomITensor(SType, is..., prime(is)...)
       T = T + swapprime(dag(T), 0, 1)
-      U,D,spec,u = eigen(T; ishermitian=true)
-      @test T ≈ U*D*prime(dag(U)) atol=1e-13
-      UUᴴ =  U*prime(dag(U),u)
-      @test UUᴴ ≈ δ(u,u')
+      D, U, spec, l, r = eigen(T; ishermitian=true)
+      @test T ≈ prime(U) * D * dag(U) atol=1e-13
+      UUᴴ =  U * prime(dag(U), r)
+      @test UUᴴ ≈ δ(r, r')
     end
 
     @testset "Test factorize of an ITensor" begin
@@ -804,7 +804,7 @@ end
     @testset "Test error for empty inputs" begin
       @test_throws ErrorException svd(A)
       @test_throws ErrorException svd(A, inds(A))
-      @test_throws ErrorException eigen(A, inds(A))
+      @test_throws ErrorException eigen(A, inds(A), inds(A))
       @test_throws ErrorException factorize(A)
       @test_throws ErrorException factorize(A, inds(A))
     end

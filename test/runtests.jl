@@ -8,6 +8,7 @@ using Test
     "indexset.jl",
     "not.jl",
     "itensor.jl",
+    "broadcast.jl",
     "diagitensor.jl",
     "contract.jl",
     "combiner.jl",

@@ -87,6 +87,7 @@ function dmrg(PH,
               sweeps::Sweeps;
               kwargs...)
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
+  svd_alg::String = get(kwargs, :svd_alg, "recursive")
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
 
@@ -164,7 +165,8 @@ end
                                          eigen_perturbation = drho,
                                          ortho = ortho,
                                          normalize = true,
-                                         which_decomp = which_decomp)
+                                         which_decomp = which_decomp,
+                                         svd_alg = svd_alg)
 end
 
       if outputlevel >= 2

@@ -4,6 +4,7 @@ using Random
 using LinearAlgebra
 using StaticArrays
 using HDF5
+using Strided
 
 #####################################
 # DenseTensor and DiagTensor
