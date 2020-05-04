@@ -656,7 +656,7 @@ firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
                                      kwargs...)
 
 NDTensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
-                                       kwargs...)
+                                         kwargs...)
 
 # in-place versions of priming and tagging
 for fname in (:prime,
@@ -670,7 +670,9 @@ for fname in (:prime,
               :settags,
               :swaptags,
               :replaceind,
-              :replaceinds)
+              :replaceinds,
+              :swapind,
+              :swapinds)
   @eval begin
     $fname(f::Function,
            A::ITensor,
@@ -830,12 +832,36 @@ The indices must have the same space (i.e. the same dimension and QNs, if applic
 The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
 """ replaceinds(::ITensor, ::Any...)
 
+@doc """
+    swapind(A::ITensor, i1::Index, i2::Index) -> ITensor
+
+    swapind!(A::ITensor, i1::Index, i2::Index)
+
+Swap the Index `i1` with the Index `i2` in the ITensor.
+
+The indices must have the same space (i.e. the same dimension and QNs, if applicable).
+""" swapind(::ITensor, ::Any...)
+
+@doc """
+    swapinds(A::ITensor, inds1, inds2) -> ITensor
+
+    swapinds!(A::ITensor, inds1, inds2)
+
+Swap the Index `inds1[n]` with the Index `inds2[n]` in the ITensor, where `n` runs from `1` to `length(inds1) == length(inds2)`.
+
+The indices must have the same space (i.e. the same dimension and QNs, if applicable).
+
+The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
+""" swapinds(::ITensor, ::Any...)
+
 """
     adjoint(A::ITensor)
 
 For `A'` notation to prime an ITensor by 1.
 """
 Base.adjoint(A::ITensor) = prime(A)
+
+dirs(A::ITensor, is) = dirs(inds(A), is)
 
 function Base.:(==)(A::ITensor, B::ITensor)
   return norm(A - B) == zero(promote_type(eltype(A),eltype(B)))

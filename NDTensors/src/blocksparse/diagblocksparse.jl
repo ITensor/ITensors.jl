@@ -139,9 +139,11 @@ function Base.promote_rule(::Type{<:UniformDiagBlockSparse{ElT1,VecT1}},
 end
 
 function Base.promote_rule(::Type{BlockSparseT1},
-                           ::Type{<:NonuniformDiagBlockSparse{ElT2,VecT2}}) where {BlockSparseT1<:BlockSparse,
-                                                                                   ElT2<:Number,VecT2<:AbstractVector}
-  return promote_type(BlockSparseT1,BlockSparse{ElT2,VecT2})
+                           ::Type{<:NonuniformDiagBlockSparse{ElT2,VecT2,N2}}) where {BlockSparseT1<:BlockSparse,
+                                                                                      ElT2<:Number,
+                                                                                      VecT2<:AbstractVector,
+                                                                                      N2}
+  return promote_type(BlockSparseT1,BlockSparse{ElT2,VecT2,N2})
 end
 
 function Base.promote_rule(::Type{BlockSparseT1},

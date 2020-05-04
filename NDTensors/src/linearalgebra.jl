@@ -169,12 +169,12 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
                                   :use_relative_cutoff,
                                   use_relative_cutoff)
 
-  DM,UM = eigen(matrix(T))
+  DM, VM = eigen(matrix(T))
 
   # Sort by largest to smallest eigenvalues
   p = sortperm(DM; rev = true)
   DM = DM[p]
-  UM = UM[:,p]
+  VM = VM[:,p]
 
   if truncate
     truncerr,_ = truncate!(DM;maxdim=maxdim,
@@ -182,8 +182,8 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
                               use_absolute_cutoff=use_absolute_cutoff,
                               use_relative_cutoff=use_relative_cutoff)
     dD = length(DM)
-    if dD < size(UM,2)
-      UM = UM[:,1:dD]
+    if dD < size(VM, 2)
+      VM = VM[:, 1:dD]
     end
   else
     dD = length(DM)
@@ -191,29 +191,14 @@ function LinearAlgebra.eigen(T::Hermitian{ElT,<:DenseTensor{ElT,2,IndsT}};
   end
   spec = Spectrum(DM,truncerr)
 
-  # Make the new indices to go onto U and V
-  u = eltype(IndsT)(dD)
-  v = eltype(IndsT)(dD)
-  Uinds = IndsT((ind(T,1),u))
-  Dinds = IndsT((u,v))
-  U = tensor(Dense(vec(UM)),Uinds)
-  D = tensor(Diag(DM),Dinds)
-  return U,D,spec
-end
-
-function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
-                             kwargs...) where {ElT,IndsT}
-  DM,UM = eigen(matrix(T))
-
-  dD = length(DM)
-  # Make the new indices to go onto U and V
-  u = eltype(IndsT)(dD)
-  v = eltype(IndsT)(dD)
-  Uinds = IndsT((ind(T,1),u))
-  Dinds = IndsT((u,v))
-  U = tensor(Dense(vec(UM)),Uinds)
-  D = tensor(Diag(DM),Dinds)
-  return U,D
+  # Make the new indices to go onto V
+  l = eltype(IndsT)(dD)
+  r = eltype(IndsT)(dD)
+  Vinds = IndsT((dag(ind(T, 2)), dag(r)))
+  Dinds = IndsT((l, dag(r)))
+  V = tensor(Dense(vec(VM)), Vinds)
+  D = tensor(Diag(DM), Dinds)
+  return D, V, spec
 end
 
 """
@@ -281,12 +266,12 @@ function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
                                   :use_relative_cutoff,
                                   use_relative_cutoff)
 
-  DM,UM = eigen(matrix(T))
+  DM, VM = eigen(matrix(T))
 
   # Sort by largest to smallest eigenvalues
   #p = sortperm(DM; rev = true)
   #DM = DM[p]
-  #UM = UM[:,p]
+  #VM = VM[:,p]
 
   if truncate
     truncerr,_ = truncate!(DM;maxdim=maxdim,
@@ -294,23 +279,25 @@ function LinearAlgebra.eigen(T::DenseTensor{ElT,2,IndsT};
                               use_absolute_cutoff=use_absolute_cutoff,
                               use_relative_cutoff=use_relative_cutoff)
     dD = length(DM)
-    if dD < size(UM,2)
-      UM = UM[:,1:dD]
+    if dD < size(VM, 2)
+      VM = VM[:, 1:dD]
     end
   else
     dD = length(DM)
     truncerr = 0.0
   end
-  spec = Spectrum(abs.(DM),truncerr)
+  spec = Spectrum(abs.(DM), truncerr)
 
-  # Make the new indices to go onto U and V
-  u = eltype(IndsT)(dD)
-  v = eltype(IndsT)(dD)
-  Uinds = IndsT((ind(T,1),u))
-  Dinds = IndsT((u,v))
-  U = tensor(Dense(vec(UM)),Uinds)
-  D = tensor(Diag(DM),Dinds)
-  return U,D,spec
+  i1, i2 = inds(T)
+
+  # Make the new indices to go onto D and V
+  l = typeof(i1)(dD)
+  r = dag(sim(l))
+  Dinds = (l, r)
+  Vinds = (dag(i2), r)
+  D = complex(tensor(Diag(DM), Dinds))
+  V = complex(tensor(Dense(vec(VM)), Vinds))
+  return D, V, spec
 end
 
 function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}

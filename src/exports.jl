@@ -69,6 +69,8 @@ export
   replaceind,
   replaceinds,
   setindex,
+  swapind,
+  swapinds,
   swapprime,
   swaptags,
 

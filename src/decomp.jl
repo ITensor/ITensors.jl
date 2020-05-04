@@ -130,93 +130,119 @@ ITensor factorization type for a truncated eigenvalue
 decomposition, returned by `eigen`.
 """
 struct TruncEigen{N}
-  U::ITensor{N}
   D::ITensor{2}
+  V::ITensor{N}
+  Vt::ITensor{N}
   spec::Spectrum
-  u::Index
-  v::Index
+  l::Index
+  r::Index
 end
 
-# iteration for destructuring into components `U,D,spec,u,v = E`
-Base.iterate(E::TruncEigen) = (E.U, Val(:D))
-Base.iterate(E::TruncEigen, ::Val{:D}) = (E.D, Val(:spec))
-Base.iterate(E::TruncEigen, ::Val{:spec}) = (E.spec, Val(:u))
-Base.iterate(E::TruncEigen, ::Val{:u}) = (E.u, Val(:v))
-Base.iterate(E::TruncEigen, ::Val{:v}) = (E.v, Val(:done))
+# iteration for destructuring into components `D, V, spec, l, r = E`
+Base.iterate(E::TruncEigen) = (E.D, Val(:V))
+Base.iterate(E::TruncEigen, ::Val{:V}) = (E.V, Val(:spec))
+Base.iterate(E::TruncEigen, ::Val{:spec}) = (E.spec, Val(:l))
+Base.iterate(E::TruncEigen, ::Val{:l}) = (E.l, Val(:r))
+Base.iterate(E::TruncEigen, ::Val{:r}) = (E.r, Val(:done))
 Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
 
-function LinearAlgebra.eigen(A::ITensor,
-                             Linds = inds(A; plev=0),
-                             Rinds = prime(IndexSet(Linds));
-                             kwargs...)
+function LinearAlgebra.eigen(A::ITensor{N},
+                             Linds,
+                             Rinds;
+                             kwargs...) where {N}
+  NL = length(Linds)
+  NR = length(Rinds)
+  NL != NR && error("Must have equal number of left and right indices")
+  N != NL + NR && error("Number of left and right indices must add up to total number of indices")
+
   ishermitian::Bool = get(kwargs, :ishermitian, false)
+
   tags::TagSet = get(kwargs, :tags, "Link,eigen")
   lefttags::TagSet = get(kwargs, :lefttags, tags)
   righttags::TagSet = get(kwargs, :righttags, tags)
-  leftplev = get(kwargs, :leftplev, 0)
-  rightplev = get(kwargs, :rightplev, 1)
+
+  plev::Int = get(kwargs, :plev, 0)
+  leftplev::Int = get(kwargs, :leftplev, plev)
+  rightplev::Int = get(kwargs, :rightplev, plev)
 
   if lefttags == righttags && leftplev == rightplev
-    error("In eigen, left tags and prime level must be different from right tags and prime level")
+    leftplev = rightplev + 1
   end
 
-  Lis = commoninds(A, IndexSet(Linds))
+  # Linds, Rinds may not have the correct directions
+  Lis = IndexSet(Linds...)
+  Ris = IndexSet(Rinds...)
 
-  Ris = commoninds(A, IndexSet(Rinds))
+  Lis = setdirs(Lis, dirs(A, Lis))
+  Ris = setdirs(Ris, dirs(A, Ris))
 
-  if length(Lis) == 0 || length(Ris) == 0
-    error("In `eigen`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.")
+  for (l, r) in zip(Lis, Ris)
+    if space(l) != space(r)
+      error("In eigen, indices must come in pairs with equal spaces.")
+    end
+    if hasqns(A)
+      if dir(l) == dir(r)
+        error("In eigen, indices must come in pairs with opposite directions")
+      end
+    end
   end
 
-  CL = combiner(Lis...)
-  CR = combiner(Ris...)
+  CL = combiner(Lis...; tags = "CMB,left")
+  CR = combiner(Ris...; tags = "CMB,right")
 
   AC = A * CR * CL
 
   cL = combinedind(CL)
   cR = combinedind(CR)
-  if inds(AC) != IndexSet(cL,cR)
-    AC = permute(AC,cL,cR)
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
   end
 
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
-  UT,DT,spec = eigen(AT;kwargs...)
-  UC,D = itensor(UT),itensor(DT)
 
-  u = commonind(UC,D)
+  DT, VT, spec = eigen(AT; kwargs...)
+  D, VC = itensor(DT), itensor(VT)
+
+  l = uniqueind(D, VC)
+  r = commonind(D, VC)
 
   if hasqns(A)
-    # Fix the flux of UC,D
-    # such that flux(UC) == QN()
+    # Fix the flux of D, VC
     # and flux(D) == flux(A)
-    for b in nzblocks(UC)
-      i1 = inds(UC)[1]
-      i2 = inds(UC)[2]
-      newqn = -dir(i2)*qn(i1,b[1])
-      setblockqn!(i2,newqn,b[2])
-      setblockqn!(u,newqn,b[2])
+    # such that flux(VC) == QN()
+    for b in nzblocks(VC)
+      i1, i2 = inds(VC)
+      newqn = -dir(i2) * qn(i1, b[1])
+      setblockqn!(i2, newqn, b[2])
+      setblockqn!(r, newqn, b[2])
     end
   end
 
-  U = UC*dag(CL)
+  V = VC * CR
 
-  # Set left index tags
-  u = commonind(D,U)
-  settags!(U,lefttags,u)
-  settags!(D,lefttags,u)
+  # Set right index tags
+  l = uniqueind(D, V)
+  r = commonind(D, V)
+  l̃ = setprime(settags(l, lefttags), leftplev)
+  r̃ = setprime(settags(l̃, righttags), rightplev)
 
-  # Set left index plev
-  u = commonind(D,U)
-  U = setprime(U,leftplev,u)
-  D = setprime(D,leftplev,u)
+  replaceinds!(D, (l, r), (l̃, r̃))
+  replaceind!(V, r, r̃)
+ 
+  l, r = l̃, r̃
 
-  # Set right index tags and plev
-  v = uniqueind(D,U)
-  replaceind!(D,v,setprime(settags(u,righttags),rightplev))
+  # The right eigenvectors, after being applied to A
+  Vt = replaceinds(V, (Ris..., r), (Lis..., l))
 
-  u = commonind(D,U) 
-  v = uniqueind(D,U)
-  return TruncEigen(U,D,spec,u,v)
+  return TruncEigen(D, V, Vt, spec, l, r)
+end
+
+function LinearAlgebra.eigen(A::ITensor;
+                             kwargs...)
+  Ris = inds(A; plev = 0)
+  Lis = Ris'
+
+  return eigen(A, Lis, Ris; kwargs...)
 end
 
 function LinearAlgebra.qr(A::ITensor,
@@ -239,16 +265,16 @@ end
 function NDTensors.polar(A::ITensor,
                        Linds...;
                        kwargs...)
-  Lis = commoninds(A,IndexSet(Linds...))
-  Ris = uniqueinds(A,Lis)
-  Lpos,Rpos = NDTensors.getperms(inds(A),Lis,Ris)
-  UT,PT = polar(tensor(A),Lpos,Rpos)
-  U,P = itensor(UT),itensor(PT)
-  u = commoninds(U,P)
-  p = uniqueinds(P,U)
-  replaceinds!(U,u,p')
-  replaceinds!(P,u,p')
-  return U,P,commoninds(U,P)
+  Lis = commoninds(A, IndexSet(Linds...))
+  Ris = uniqueinds(A, Lis)
+  Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
+  UT, PT = polar(tensor(A), Lpos, Rpos)
+  U, P = itensor(UT), itensor(PT)
+  u = commoninds(U, P)
+  p = uniqueinds(P, U)
+  replaceinds!(U, u, p')
+  replaceinds!(P, u, p')
+  return U, P, commoninds(U, P)
 end
 
 
@@ -256,29 +282,21 @@ function factorize_svd(A::ITensor,
                        Linds...;
                        kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
-  tags::TagSet = get(kwargs, :tags, "Link,fact")
   alg::String = get(kwargs, :svd_alg, "recursive")
-  U,S,V,spec,u,v = svd(A, Linds...; kwargs..., alg = alg)
+  U, S, V, spec, u, v = svd(A, Linds...; kwargs..., alg = alg)
   if ortho == "left"
-    L,R = U,S*V
+    L, R = U, S * V
   elseif ortho == "right"
     L,R = U*S,V
   elseif ortho == "none"
     sqrtS = S
     sqrtS .= sqrt.(S)
-    L,R = U*sqrtS,sqrtS*V
-    replaceind!(L,v,u)
+    L, R = U * sqrtS, sqrtS * V
+    replaceind!(L, v, u)
   else
     error("In factorize using svd decomposition, ortho keyword $ortho not supported. Supported options are left, right, or none.")
   end
-
-  # Set the tags properly
-  l = commonind(L,R)
-  settags!(L, tags, l)
-  settags!(R, tags, l)
-  l = settags(l, tags)
-
-  return L,R,spec,l
+  return L, R, spec
 end
 
 function factorize_eigen(A::ITensor,
@@ -288,32 +306,27 @@ function factorize_eigen(A::ITensor,
   delta_A2 = get(kwargs, :eigen_perturbation, nothing)
   if ortho == "left"
     Lis = commoninds(A, IndexSet(Linds...))
-    simLis = sim(Lis)
-    A2 = A * replaceinds(dag(A), Lis, simLis)
-    if !isnothing(delta_A2)
-      # This assumes delta_A2 has indices:
-      # (Lis..., prime(Lis)...)
-      A2 += replaceinds(delta_A2, prime(Lis), simLis)
-    end
-    L, D, spec = eigen(A2, Lis, simLis; ishermitian=true,
-                                        kwargs...)
-    R = dag(L)*A
   elseif ortho == "right"
-    Ris = uniqueinds(A, IndexSet(Linds...))
-    simRis = sim(Ris)
-    A2 = A * replaceinds(dag(A), Ris, simRis)
-    if !isnothing(delta_A2)
-      # This assumes delta_A2 has indices:
-      # (Ris..., prime(Ris)...)
-      A2 += replaceinds(delta_A2, prime(Ris), simRis)
-    end
-    R, D, spec = eigen(A2, Ris, simRis; ishermitian=true,
-                                        kwargs...)
-    L = A * dag(R)
+    Lis = uniqueinds(A, IndexSet(Linds...))
   else
     error("In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
   end
-  return L, R, spec, commonind(L, R)
+  simLis = sim(Lis)
+  A2 = A * replaceinds(dag(A), Lis, simLis)
+  if !isnothing(delta_A2)
+    # This assumes delta_A2 has indices:
+    # (Lis..., prime(Lis)...)
+    A2 += replaceinds(delta_A2, prime(Lis), simLis)
+  end
+  F = eigen(A2, Lis, simLis; ishermitian=true,
+                             kwargs...)
+  D, _, spec = F
+  L = F.Vt
+  R = dag(L) * A
+  if ortho == "right"
+    L, R = R, L
+  end
+  return L, R, spec
 end
 
 """
@@ -339,6 +352,8 @@ function LinearAlgebra.factorize(A::ITensor,
                                  Linds...;
                                  kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
+  tags::TagSet = get(kwargs, :tags, "Link,fact")
+  plev::Int = get(kwargs, :plev, 0)
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
   cutoff::Float64 = get(kwargs, :cutoff, 0.0)
   eigen_perturbation = get(kwargs, :eigen_perturbation, nothing)
@@ -366,13 +381,21 @@ function LinearAlgebra.factorize(A::ITensor,
   automatic_cutoff = 1e-12
   if which_decomp == "svd" || 
      (isnothing(which_decomp) && cutoff ≤ automatic_cutoff)
-    L, R, spec, l = factorize_svd(A, Linds...; kwargs...)
+    L, R, spec = factorize_svd(A, Linds...; kwargs...)
   elseif which_decomp == "eigen" ||
          (isnothing(which_decomp) && cutoff > automatic_cutoff)
-    L, R, spec, l = factorize_eigen(A, Linds...; kwargs...)
+    L, R, spec = factorize_eigen(A, Linds...; kwargs...)
   else
-    return throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, or `nothing`."""))
+    throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, or `nothing`."""))
   end
-  return L,R,spec,l
+
+  # Set the tags and prime level
+  l = commonind(L, R)
+  l̃ = setprime(settags(l, tags), plev)
+  replaceind!(L, l, l̃)
+  replaceind!(R, l, l̃)
+  l = l̃
+
+  return L, R, spec, l
 end
 

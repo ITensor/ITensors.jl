@@ -50,3 +50,6 @@ dir(::Int) = 0
 # This is to help with ITensor compatibility
 dag(i::Int) = i
 
+# This is to help with ITensor compatibility
+sim(i::Int) = i
+

@@ -165,7 +165,8 @@ end
                                          eigen_perturbation = drho,
                                          ortho = ortho,
                                          normalize = true,
-                                         which_decomp = which_decomp,                                          svd_alg = svd_alg)
+                                         which_decomp = which_decomp,
+                                         svd_alg = svd_alg)
 end
 
       if outputlevel >= 2
