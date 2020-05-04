@@ -955,12 +955,18 @@ Base.:/(A::ITensor, x::Number) = A*(1.0/x)
 Base.:-(A::ITensor) = itensor(-tensor(A))
 
 function Base.:+(A::ITensor, B::ITensor)
+  if order(A) != order(B)
+    error("different number of indices when adding ITensors")
+  end
   C = copy(A)
   C .+= B
   return C
 end
 
 function Base.:-(A::ITensor, B::ITensor)
+  if order(A) != order(B)
+    error("different number of indices when subtracting ITensors")
+  end
   C = copy(A)
   C .-= B
   return C
