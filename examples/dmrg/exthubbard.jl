@@ -67,8 +67,9 @@ let
   dnd = fill(0.0,N)
   for j=1:N
     orthogonalize!(psi,j)
-    upd[j] = scalar(dag(prime(psi[j],"Site"))*op(sites,"Nup",j)*psi[j])
-    dnd[j] = scalar(dag(prime(psi[j],"Site"))*op(sites,"Ndn",j)*psi[j])
+    psidag_j = dag(prime(psi[j], "Site"))
+    upd[j] = scalar(psidag_j * op(sites, "Nup", j) * psi[j])
+    dnd[j] = scalar(psidag_j * op(sites, "Ndn", j) * psi[j])
   end
 
   println("Up Density:")

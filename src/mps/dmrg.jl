@@ -87,6 +87,7 @@ function dmrg(PH,
               sweeps::Sweeps;
               kwargs...)
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
+  svd_alg::String = get(kwargs, :svd_alg, "recursive")
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
 
@@ -158,13 +159,14 @@ end
       end
 
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
-      spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
-                                       mindim = mindim(sweeps, sw),
-                                       cutoff = cutoff(sweeps, sw),
-                                       eigen_perturbation = drho,
-                                       ortho = ortho,
-                                       normalize = true,
-                                       which_decomp = which_decomp)
+        spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
+                                         mindim = mindim(sweeps, sw),
+                                         cutoff = cutoff(sweeps, sw),
+                                         eigen_perturbation = drho,
+                                         ortho = ortho,
+                                         normalize = true,
+                                         which_decomp = which_decomp,
+                                         svd_alg = svd_alg)
 end
 
       if outputlevel >= 2

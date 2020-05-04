@@ -276,7 +276,9 @@ end
 function Base.permutedims!(R::DenseTensor{<:Number,N},
                            T::DenseTensor{<:Number,N},
                            perm::NTuple{N,Int}) where {N}
-  permutedims!(array(R),array(T),perm)
+  RA = array(R)
+  TA = array(T)
+  @strided RA .= permutedims(TA, perm)
   return R
 end
 
@@ -297,7 +299,9 @@ function permutedims!!(R::Tensor,
                        perm::NTuple{N,Int},
                        f::Function=(r,t)->t) where {N}
   if !is_trivial_permutation(perm)
-    R = permutedims!(R,T,perm,f)
+    RA = array(R)
+    TA = array(T)
+    @strided RA .= f.(RA, permutedims(TA, perm))
   else
     R = apply!(R,T,f)
   end
@@ -308,7 +312,7 @@ end
 function Base.permutedims(T::Tensor{<:Number,N},
                           perm::NTuple{N,Int}) where {N}
   Tp = similar(T,permute(inds(T),perm))
-  Tp = permutedims!!(Tp,T,perm)
+  Tp = permutedims!!(Tp, T, perm)
   return Tp
 end
 
@@ -322,56 +326,14 @@ function Base.:*(x::Number,
 end
 Base.:*(T::Tensor, x::Number) = x*T
 
-# For use in custom permutedims!
-using Base.Cartesian: @nexprs,
-                      @ntuple,
-                      @nloops
-
-#
-# A generalized permutedims!(P,B,perm) that also allows
-# a function to be applied elementwise
-# TODO: benchmark to make sure it is similar to Base.permutedims!
-#
-# Based off of the permutedims! implementation in Julia's base:
-# https://github.com/JuliaLang/julia/blob/91151ab871c7e7d6689d1cfa793c12062d37d6b6/base/multidimensional.jl#L1355
-#
-@generated function Base.permutedims!(TTP::DenseTensor{<:Number,N},
-                                      TT::DenseTensor{<:Number,N},
-                                      perm,
-                                      f::Function) where {N}
-  quote
-    TP = array(TTP)
-    T = array(TT)
-    Base.checkdims_perm(TP, T, perm)
-
-    #calculates all the strides
-    native_strides = Base.size_to_strides(1, size(T)...)
-    strides_1 = 0
-    @nexprs $N d->(strides_{d+1} = native_strides[perm[d]])
-
-    #Creates offset, because indexing starts at 1
-    offset = 1 - sum(@ntuple $N d->strides_{d+1})
-
-    ind = 1
-    @nexprs 1 d->(counts_{$N+1} = strides_{$N+1}) # a trick to set counts_($N+1)
-    @nloops($N, i, TP,
-            d->(counts_d = strides_d), # PRE
-            d->(counts_{d+1} += strides_{d+1}), # POST
-            begin # BODY
-                sumc = sum(@ntuple $N d->counts_{d+1})
-                @inbounds TP[ind] = f(TP[ind],T[sumc+offset])
-                ind += 1
-            end)
-
-    return TTP
-  end
-end
-function Base.permutedims!(TP::DenseTensor{<:Number,0},
-                           T::DenseTensor{<:Number,0},
+function Base.permutedims!(R::DenseTensor{<:Number,N},
+                           T::DenseTensor{<:Number,N},
                            perm,
-                           f::Function)
-  TP[] = f(TP[],T[])
-  return TP
+                           f::Function) where {N}
+  RA = array(R)
+  TA = array(T)
+  @strided RA .= f.(RA, permutedims(TA, perm))
+  return R
 end
 
 function outer!(R::DenseTensor,
@@ -567,8 +529,9 @@ function _contract!(CT::DenseTensor{El,NC},
 
   tA = 'N'
   if props.permuteA
-    AM = reshape(permutedims(A,NTuple{NA,Int}(props.PA)),
-                 props.dmid, props.dleft)
+    pA = NTuple{NA,Int}(props.PA)
+    @strided Ap = permutedims(A, pA)
+    AM = reshape(Ap, props.dmid, props.dleft)
     tA = 'T'
   else
     #A doesn't have to be permuted
@@ -582,8 +545,9 @@ function _contract!(CT::DenseTensor{El,NC},
 
   tB = 'N'
   if props.permuteB
-    BM = reshape(permutedims(B,NTuple{NB,Int}(props.PB)),
-                 props.dmid, props.dright)
+    pB = NTuple{NB,Int}(props.PB)
+    @strided Bp = permutedims(B, pB)
+    BM = reshape(Bp, props.dmid, props.dright)
   else
     if Btrans(props)
       BM = reshape(B,props.dright,props.dmid)
@@ -606,15 +570,16 @@ function _contract!(CT::DenseTensor{El,NC},
         tA = tB = (tA == 'T' ? 'N' : 'T')
       end
     else
-      CM = reshape(C,props.dleft,props.dright)
+      CM = reshape(C, props.dleft, props.dright)
     end
   end
 
-  BLAS.gemm!(tA,tB,El(α),AM,BM,El(β),CM)
+  BLAS.gemm!(tA, tB, El(α), AM, BM, El(β), CM)
 
   if props.permuteC
-    permutedims!(C,reshape(CM,props.newCrange...),
-                 NTuple{NC,Int}(props.PC))
+    pC = NTuple{NC,Int}(props.PC)
+    Cr = reshape(CM,props.newCrange...)
+    @strided C .= permutedims(Cr, pC)
   end
   return C
 end
@@ -642,7 +607,7 @@ function permute_reshape(T::DenseTensor{ElT,NT,IndsT},
   dimsT = dims(T)
   indsT = inds(T)
   if !is_trivial_permutation(perm)
-    T = permutedims(T,perm)
+    T = permutedims(T, perm)
   end
   N==NT && return T
   newdims = MVector(ntuple(_->eltype(IndsT)(1),Val(N)))
