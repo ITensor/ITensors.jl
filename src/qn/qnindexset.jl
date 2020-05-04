@@ -27,3 +27,5 @@ function nzdiagblocks(qn::QN,
   return blocks
 end
 
+removeqns(is::QNIndexSet) = map(i -> removeqns(i), is)
+

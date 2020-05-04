@@ -24,14 +24,6 @@ Base.ndims(ds::Type{<:BlockDims{N}}) where {N} = N
 similar_type(::Type{<:BlockDims},
              ::Type{Val{N}}) where {N} = BlockDims{N}
 
-"""
-dense(::BlockDims) -> Dims
-
-Make the "dense" version of the block indices.
-"""
-dense(ds::BlockDims) = dims(ds)
-dense(::Type{<:BlockDims{N}}) where {N} = Dims{N}
-
 Base.copy(ds::BlockDims) = ds
 
 """
