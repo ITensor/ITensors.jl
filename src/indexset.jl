@@ -751,16 +751,7 @@ end
 replaceind(is::IndexSet, i1::Index, i2::Index) = replaceinds(is, (i1,), (i2,))
 
 function swapinds(is::IndexSet, inds1, inds2)
-  is1 = IndexSet(inds1)
-  is2 = IndexSet(inds2)
-
-  # Temporary indices for swapping
-  is2_sim = sim(is2)
-
-  is = replaceinds(is, is1, is2_sim)
-  is = replaceinds(is, is2, is1)
-  is = replaceinds(is, is2_sim, is2)
-  return is
+  return replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
 end
 
 swapind(is::IndexSet, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
