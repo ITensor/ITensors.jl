@@ -115,11 +115,30 @@ end
 ## AutoMPO                 #
 ############################
 
+"""
+An AutoMPO is a data structure
+representing a sum of operator terms.
+These are products of local operators
+specified by names such as "Sz" or "N",
+times an optional coefficient which
+can be real or complex.
+
+Which local operator names are available
+is determined by the function `op`
+associated with the TagType defined by
+special Index tags, such as "S=1/2","S=1",
+"Fermion", and "Electron".
+"""
 struct AutoMPO
   data::Vector{MPOTerm}
   AutoMPO(terms::Vector{MPOTerm}) = new(terms)
 end
 
+"""
+    AutoMPO()
+    
+Construct an empty AutoMPO
+"""
 AutoMPO() = AutoMPO(Vector{MPOTerm}())
 
 data(ampo::AutoMPO) = ampo.data
@@ -131,12 +150,31 @@ Base.copy(ampo::AutoMPO) = AutoMPO(copy(data(ampo)))
 
 Base.size(ampo::AutoMPO) = size(data(ampo))
 
+
+"""
+    add!(ampo::AutoMPO,
+         op::String, i::Int)
+
+Add a single-site operator term
+to the AutoMPO `ampo`. The operator's
+name is `op` and site number is `i`.
+"""              
 function add!(ampo::AutoMPO,
               op::String, i::Int)
   push!(data(ampo),MPOTerm(1.0,op,i))
   return
 end
 
+"""
+    add!(ampo::AutoMPO,
+         coef::Number,
+         op::String, i::Int)
+
+Add a single-site operator term
+to the AutoMPO `ampo`. The operator's
+name is `op`, site number is `i`,
+and coefficient is `coef`.
+"""
 function add!(ampo::AutoMPO,
               coef::Number,
               op::String, i::Int)
@@ -144,6 +182,14 @@ function add!(ampo::AutoMPO,
   return
 end
 
+"""
+    add!(ampo::AutoMPO,
+         op1::String, i1::Int,
+         op2::String, i2::Int)
+
+Add a two-site operator term
+to the AutoMPO `ampo`.
+"""
 function add!(ampo::AutoMPO,
               op1::String, i1::Int,
               op2::String, i2::Int)
@@ -151,6 +197,15 @@ function add!(ampo::AutoMPO,
   return
 end
 
+"""
+    add!(ampo::AutoMPO,
+         coef::Number,
+         op1::String, i1::Int,
+         op2::String, i2::Int)
+
+Add a two-site operator term
+to the AutoMPO `ampo`.
+"""
 function add!(ampo::AutoMPO,
               coef::Number,
               op1::String, i1::Int,
@@ -159,6 +214,16 @@ function add!(ampo::AutoMPO,
   return
 end
 
+"""
+    add!(ampo::AutoMPO,
+         coef::Number,
+         op1::String, i1::Int,
+         op2::String, i2::Int,
+         ops...)
+
+Add a multi-site operator term
+to the AutoMPO `ampo`.
+"""
 function add!(ampo::AutoMPO,
               coef::Number,
               op1::String, i1::Int,
@@ -168,6 +233,15 @@ function add!(ampo::AutoMPO,
   return ampo
 end
 
+"""
+    add!(ampo::AutoMPO,
+         op1::String, i1::Int,
+         op2::String, i2::Int,
+         ops...)
+
+Add a multi-site operator term
+to the AutoMPO `ampo`.
+"""
 add!(ampo::AutoMPO,
      op1::String, i1::Int,
      op2::String, i2::Int,
@@ -783,6 +857,20 @@ function sorteachterm(ampo::AutoMPO, sites)
   return ampo
 end
 
+"""
+   MPO(ampo::AutoMPO,
+       sites::Vector{<:Index};
+       kwargs...)
+       
+Convert an AutoMPO object `ampo` to an
+MPO, with indices given by `sites`. The
+resulting MPO will have the indices
+sites[1], sites[1]', sites[2], sites[2]'
+etc. The conversion is done by an algorithm
+that compresses the MPO resulting from adding
+the AutoMPO terms together, often achieving
+the minimum possible bond dimension.
+"""
 function MPO(ampo::AutoMPO,
              sites::Vector{<:Index};
              kwargs...)::MPO
