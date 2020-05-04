@@ -980,17 +980,20 @@ Base.:/(A::ITensor, x::Number) = A*(1.0/x)
 
 Base.:-(A::ITensor) = itensor(-tensor(A))
 
-function Base.:+(A::ITensor, B::ITensor)
+function Base.:+(A::ITensor{N}, B::ITensor{N}) where {N}
   C = copy(A)
   C .+= B
   return C
 end
 
-function Base.:-(A::ITensor, B::ITensor)
+function Base.:-(A::ITensor{N}, B::ITensor{N}) where {N}
   C = copy(A)
   C .-= B
   return C
 end
+
+Base.:+(A::ITensor, B::ITensor) = error("cannot add ITensors with different numbers of indices")
+Base.:-(A::ITensor, B::ITensor) = error("cannot subtract ITensors with different numbers of indices")
 
 """
     *(A::ITensor, B::ITensor)

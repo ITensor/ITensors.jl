@@ -170,6 +170,8 @@ export
   orthogonalize!,
   randomMPO,
   truncate!,
+  unique_siteind,
+  unique_siteinds,
 
 # mps/mps.jl
   # Types
