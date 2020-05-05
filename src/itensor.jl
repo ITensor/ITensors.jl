@@ -398,11 +398,15 @@ end
 """
     dense(T::ITensor)
 
-Make a new ITensor where the storage is the dense version,
+Make a new ITensor where the storage is the closest Dense storage,
 avoiding allocating new data if possible.
-For example, an ITensor with Diag storage will become Dense storage.
+For example, an ITensor with Diag storage will become Dense storage,
+filled with zeros except for the diagonal values.
 """
-NDTensors.dense(T::ITensor) = itensor(dense(tensor(T)))
+function NDTensors.dense(A::ITensor)
+  T = dense(tensor(A))
+  return itensor(store(T), removeqns(inds(A)))
+end
 
 """
     complex(T::ITensor)
@@ -980,17 +984,20 @@ Base.:/(A::ITensor, x::Number) = A*(1.0/x)
 
 Base.:-(A::ITensor) = itensor(-tensor(A))
 
-function Base.:+(A::ITensor, B::ITensor)
+function Base.:+(A::ITensor{N}, B::ITensor{N}) where {N}
   C = copy(A)
   C .+= B
   return C
 end
 
-function Base.:-(A::ITensor, B::ITensor)
+function Base.:-(A::ITensor{N}, B::ITensor{N}) where {N}
   C = copy(A)
   C .-= B
   return C
 end
+
+Base.:+(A::ITensor, B::ITensor) = error("cannot add ITensors with different numbers of indices")
+Base.:-(A::ITensor, B::ITensor) = error("cannot subtract ITensors with different numbers of indices")
 
 """
     *(A::ITensor, B::ITensor)

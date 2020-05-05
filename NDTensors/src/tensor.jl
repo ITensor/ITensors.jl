@@ -195,7 +195,7 @@ end
 # Convert the tensor type to the closest dense
 # type
 function dense(::Type{<:Tensor{ElT,NT,StoreT,IndsT}}) where {ElT,NT,StoreT,IndsT}
-  return Tensor{ElT,NT,dense(StoreT),dense(IndsT)}
+  return Tensor{ElT,NT,dense(StoreT),IndsT}
 end
 
 dense(T::Tensor) = tensor(dense(store(T)), inds(T))

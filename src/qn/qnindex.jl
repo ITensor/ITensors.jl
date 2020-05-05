@@ -289,10 +289,11 @@ function combineblocks(i::QNIndex)
   return iR,perm,comb
 end
 
-# TODO: should this be removeblocks/removeqns?
-NDTensors.dense(inds::QNIndex...) = dense.(inds)
-
-NDTensors.dense(i::QNIndex) = Index(id(i),dim(i),dir(i),tags(i),plev(i))
+removeqns(i::QNIndex) = Index(id(i),
+                              dim(i),
+                              dir(i),
+                              tags(i),
+                              plev(i))
 
 function Base.show(io::IO,
                    i::QNIndex)

@@ -123,6 +123,12 @@ function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
   N = length(sites)
   M = MPS(N)
 
+  if N==1
+    M[1] = ITensor(randn(dim(sites[1])),sites[1])
+    M[1] /= norm(M[1])
+    return M
+  end
+
   l = Vector{Index}(undef,N)
   
   d = dim(sites[N])
