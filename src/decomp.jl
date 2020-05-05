@@ -23,13 +23,38 @@ Base.iterate(S::TruncSVD, ::Val{:u}) = (S.u, Val(:v))
 Base.iterate(S::TruncSVD, ::Val{:v}) = (S.v, Val(:done))
 Base.iterate(S::TruncSVD, ::Val{:done}) = nothing
 
+function right_svd(A::ITensor; kwargs...)
+  indices_of_A = inds(A)
+  u = Index(1, "Link, u")
+  v = Index(1, "Link, v")
+  U = itensor([1.], IndexSet(u))
+  norm_A =  norm(A)
+  S = itensor([norm_A], IndexSet(u, v))
+  vdata = A / norm_A
+  V = itensor(vdata.store, IndexSet(v, indices_of_A...))
+  return TruncSVD(U, S, V, Spectrum([norm_A^2], 0.0), u, v)
+end
+
+function left_svd(A::ITensor; kwargs...)
+  indices_of_A = inds(A)
+  u = Index(1, "Link, u")
+  v = Index(1, "Link, v")
+  V = itensor([1.], IndexSet(v))
+  norm_A =  norm(A)
+  S = itensor([norm_A], IndexSet(u, v))
+  udata = A / norm_A
+  U = itensor(udata.store, IndexSet(indices_of_A..., u))
+  return TruncSVD(U, S, V, Spectrum([norm_A^2], 0.0), u, v)
+end
+
 @doc """
     svd(A::ITensor, inds::Index...; <keyword arguments>)
 
-Singular value decomposition (SVD) of an ITensor `A`, computed
-by treating the "left indices" provided collectively
-as a row index, and the remaining "right indices" as a
-column index (matricization of a tensor).
+Singular value decomposition (SVD) of an ITensor `A`, computed by treating the
+"left indices" provided collectively as a row index, and the remaining "right
+indices" as a column index (matricization of a tensor). Providing `inds` is
+optional. If nothing is provided, all the indices of the ITensor `A` is used
+as the right index.
 
 The first three return arguments are `U`, `S`, and `V`, such that
 `A ≈ U * S * V`.
@@ -55,6 +80,13 @@ See also: [`factorize`](@ref)
 function LinearAlgebra.svd(A::ITensor,
                            Linds...;
                            kwargs...)
+  row_inds = IndexSet(Linds...)
+  if row_inds == IndexSet()
+    return right_svd(A, kwargs...)
+  elseif row_inds == inds(A)
+    return left_svd(A, kwargs...)
+  end
+
   utags::TagSet = get(kwargs, :lefttags, get(kwargs, :utags, "Link,u"))
   vtags::TagSet = get(kwargs, :righttags, get(kwargs, :vtags, "Link,v"))
 

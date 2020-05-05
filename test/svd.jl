@@ -64,6 +64,39 @@ using ITensors,
     @test norm(U*S*V-T)/norm(T) < 1E-10
   end
 
+  @testset "ITensor Right SVD" begin
+    i = Index(5)
+    j = Index(10)
+    A = randomITensor(i, j)
+    U_right, S_right, V_right = svd(A)
+    u = commonind(S_right, U_right)
+    v = commonind(S_right, V_right)
+    @test U_right * S_right * V_right ≈ A
+    @test U_right == itensor([1.0], IndexSet(u))
+    @test S_right == itensor([norm(A)], IndexSet(u, v))
+
+    @test hassameinds(U_right, (u, ))
+    @test hassameinds(S_right, (u, v))
+    @test hassameinds(V_right, (v, i, j))
+  end
+
+
+  @testset "ITensor Left SVD" begin
+    i = Index(5)
+    j = Index(10)
+    A = randomITensor(i, j)
+    U_left, S_left, V_left = svd(A, i, j)
+    u = commonind(S_left, U_left)
+    v = commonind(S_left, V_left)
+    @test U_left * S_left * V_left ≈ A
+    @test V_left == itensor([1.0], IndexSet(v))
+    @test S_left == itensor([norm(A)], IndexSet(u, v))
+
+    @test hassameinds(U_left, (u, i, j))
+    @test hassameinds(S_left, (u, v))
+    @test hassameinds(V_left, (v, ))
+  end
+
 end
 
 nothing
