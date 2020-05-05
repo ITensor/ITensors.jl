@@ -155,26 +155,16 @@ Base.size(ampo::AutoMPO) = size(data(ampo))
     add!(ampo::AutoMPO,
          op::String, i::Int)
 
+    add!(ampo::AutoMPO,
+         coef::Number,
+         op1::String, i::Int)
+
 Add a single-site operator term
 to the AutoMPO `ampo`. The operator's
 name is `op` and site number is `i`.
+The second version accepts a real
+or complex coefficient.
 """              
-function add!(ampo::AutoMPO,
-              op::String, i::Int)
-  push!(data(ampo),MPOTerm(1.0,op,i))
-  return
-end
-
-"""
-    add!(ampo::AutoMPO,
-         coef::Number,
-         op::String, i::Int)
-
-Add a single-site operator term
-to the AutoMPO `ampo`. The operator's
-name is `op`, site number is `i`,
-and coefficient is `coef`.
-"""
 function add!(ampo::AutoMPO,
               coef::Number,
               op::String, i::Int)
@@ -182,29 +172,25 @@ function add!(ampo::AutoMPO,
   return
 end
 
+add!(ampo::AutoMPO,op::String, i::Int) = add!(ampo,1.0,op,i)
+
+
 """
     add!(ampo::AutoMPO,
          op1::String, i1::Int,
-         op2::String, i2::Int)
+         op2::String, i2::Int,
+         ops...)
 
-Add a two-site operator term
-to the AutoMPO `ampo`.
-"""
-function add!(ampo::AutoMPO,
-              op1::String, i1::Int,
-              op2::String, i2::Int)
-  push!(data(ampo),MPOTerm(1.0,op1,i1,op2,i2))
-  return
-end
-
-"""
     add!(ampo::AutoMPO,
          coef::Number,
          op1::String, i1::Int,
          op2::String, i2::Int)
 
-Add a two-site operator term
-to the AutoMPO `ampo`.
+Add a multi-site operator term
+to the AutoMPO `ampo`. Each operator
+is specified by a name (String) and a
+site number (Int). The second version
+accepts a real or complex coefficient.
 """
 function add!(ampo::AutoMPO,
               coef::Number,
@@ -214,16 +200,10 @@ function add!(ampo::AutoMPO,
   return
 end
 
-"""
-    add!(ampo::AutoMPO,
-         coef::Number,
-         op1::String, i1::Int,
-         op2::String, i2::Int,
-         ops...)
+add!(ampo::AutoMPO,
+     op1::String, i1::Int,
+     op2::String, i2::Int) = add!(ampo,1.0,op1,i1,op2,i2)
 
-Add a multi-site operator term
-to the AutoMPO `ampo`.
-"""
 function add!(ampo::AutoMPO,
               coef::Number,
               op1::String, i1::Int,
@@ -233,20 +213,29 @@ function add!(ampo::AutoMPO,
   return ampo
 end
 
-"""
-    add!(ampo::AutoMPO,
-         op1::String, i1::Int,
-         op2::String, i2::Int,
-         ops...)
-
-Add a multi-site operator term
-to the AutoMPO `ampo`.
-"""
 add!(ampo::AutoMPO,
      op1::String, i1::Int,
      op2::String, i2::Int,
      ops...) = add!(ampo, 1.0, op1, i1, op2, i2, ops...)
 
+"""
+    subtract!(ampo::AutoMPO,
+              op1::String, i1::Int,
+              op2::String, i2::Int,
+              ops...)
+
+    subtract!(ampo::AutoMPO,
+              coef::Number,
+              op1::String, i1::Int,
+              op2::String, i2::Int,
+              ops...)
+
+Subtract a multi-site operator term
+from the AutoMPO `ampo`. Each operator
+is specified by a name (String) and a
+site number (Int). The second version
+accepts a real or complex coefficient.
+"""
 subtract!(ampo::AutoMPO,
           op1::String, i1::Int,
           op2::String, i2::Int,
