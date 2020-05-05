@@ -1,36 +1,73 @@
 
+"""
+    ITensor([::Type{ElT} = Float64, ]flux::QN, inds::IndexSet) where {ElT <: Number}
+
+    ITensor([::Type{ElT} = Float64, ]flux::QN, inds::Index...) where {ElT <: Number}
+
+Construct an ITensor with BlockSparse storage filled with `zero(ElT)` where the nonzero blocks are determined by `flux`.
+
+If `ElT` is not specified it defaults to `Float64`.
+"""
 function ITensor(::Type{ElT},
                  flux::QN,
-                 inds::IndexSet) where {ElT<:Number}
-  blocks = nzblocks(flux,inds)
-  T = BlockSparseTensor(ElT,blocks,inds)
+                 inds::IndexSet) where {ElT <: Number}
+  blocks = nzblocks(flux, inds)
+  T = BlockSparseTensor(ElT, blocks, inds)
   return itensor(T)
 end
 
-function ITensor(inds::QNIndex...)
-  T = BlockSparseTensor(IndexSet(inds))
-  return itensor(T)
+function ITensor(::Type{ElT},
+                 flux::QN,
+                 inds::Index...) where {ElT <: Number}
+  return ITensor(ElT, flux, IndexSet(inds...))
 end
 
-function ITensor(::Type{ELT},inds::QNIndex...) where {ELT<:Number} 
-  T = BlockSparseTensor(ELT,inds)
-  return itensor(T)
-end
-
-ITensor(::Type{T},
-        flux::QN,
-        inds::Index...) where {T<:Number} = ITensor(T,flux,IndexSet(inds...))
-
-
-ITensor(flux::QN,inds::IndexSet) = ITensor(Float64,flux::QN,inds...)
+ITensor(flux::QN, inds::IndexSet) = ITensor(Float64, flux, inds)
 
 ITensor(flux::QN,
-        inds::Index...) = ITensor(flux,IndexSet(inds...))
+        inds::Index...) = ITensor(Float64, flux, IndexSet(inds...))
 
+
+ITensor(::Type{<:Number},
+        inds::QNIndexSet) = error("Must specify flux")
+
+ITensor(inds::QNIndexSet) = ITensor(Float64, inds)
+
+function ITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number} 
+  return ITensor(ElT, IndexSet(inds...))
+end
+
+ITensor(inds::QNIndex...) = ITensor(Float64, IndexSet(inds...))
+
+# TODO: bring back this version that creates an ITensor with no blocks?
+#"""
+#    ITensor([::Type{ElT} = Float64, ]inds::QNIndexSet) where {ElT <: Number}
+#
+#    ITensor([::Type{ElT} = Float64, ]inds::QNIndex...) where {ElT <: Number}
+#
+#Construct an ITensor with `NDTensors.BlockSparse` storage of element type `ElT` with the no blocks.
+#
+#If `ElT` is not specified it defaults to `Float64`.
+#"""
+#function ITensor(::Type{ElT}, inds::QNIndexSet) where {ElT<:Number} 
+#  T = BlockSparseTensor(ElT, inds)
+#  return itensor(T)
+#end
+#
+
+"""
+    randomITensor([::Type{ElT} = Float64, ]flux::QN, inds::IndexSet) where {ElT <: Number}
+
+    randomITensor([::Type{ElT} = Float64, ]flux::QN, inds::Index...) where {ElT <: Number}
+
+Construct an ITensor with `NDTensors.BlockSparse` storage filled with random elements of type `ElT` where the nonzero blocks are determined by `flux`.
+
+If `ElT` is not specified it defaults to `Float64`.
+"""
 function randomITensor(::Type{ElT},
                        flux::QN,
                        inds::IndexSet) where {ElT<:Number}
-  T = ITensor(ElT,flux,inds)
+  T = ITensor(ElT, flux, inds)
   randn!(T)
   return T
 end
@@ -38,13 +75,16 @@ end
 function randomITensor(::Type{ElT},
                        flux::QN,
                        inds::Index...) where {ElT<:Number}
-  return randomITensor(ElT,flux,IndexSet(inds...))
+  return randomITensor(ElT, flux, IndexSet(inds...))
 end
 
-randomITensor(flux::QN,inds::IndexSet) = randomITensor(Float64,flux::QN,inds...)
+randomITensor(flux::QN,
+              inds::IndexSet) = randomITensor(Float64, flux, inds)
 
 randomITensor(flux::QN,
-              inds::Index...) = randomITensor(flux,IndexSet(inds...))
+              inds::Index...) = randomITensor(Float64,
+                                              flux,
+                                              IndexSet(inds...))
 
 # Throw error if flux is not specified
 randomITensor(::Type{<:Number},
@@ -72,12 +112,11 @@ combiner(inds::Tuple{Vararg{QNIndex}};
 #
 
 """
-    diagITensor(::Type{T}, flux::QN, is::IndexSet)
-    diagITensor(::Type{T}, flux::QN, is::Index...)
+    diagITensor([::Type{ElT} = Float64, ]flux::QN, is::IndexSet)
 
-Make a sparse ITensor of element type T with non-zero elements
-only along the diagonal. Defaults to having `zero(T)` along the diagonal.
-The storage will have Diag type.
+    diagITensor([::Type{ElT} = Float64, ]flux::QN, is::Index...)
+
+Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements `zero(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`. If the element type is not specified, it defaults to `Float64`.
 """
 function diagITensor(::Type{ElT},
                      flux::QN,
@@ -87,29 +126,58 @@ function diagITensor(::Type{ElT},
   return itensor(T)
 end
 
-diagITensor(::Type{ElT},
-            flux::QN,
-            inds::Index...) where {ElT <: Number} = diagITensor(ElT,
-                                                                flux,
-                                                                IndexSet(inds...))
+function diagITensor(::Type{ElT},
+                     flux::QN,
+                     inds::Index...) where {ElT <: Number}
+  return diagITensor(ElT, flux, IndexSet(inds...))
+end
 
-diagITensor(::Type{<:Number},inds::QNIndexSet) = error("Must specify flux")
-
-"""
-    diagITensor(flux::QN, is::IndexSet)
-    diagITensor(flux::QN, is::Index...)
-
-Make a sparse ITensor of element type Float64 with non-zero elements
-only along the diagonal. Defaults to storing zeros along the diagonal.
-The storage will have Diag type.
-"""
-diagITensor(flux::QN,
-            is::IndexSet) = diagITensor(Float64,flux,is)
+diagITensor(::Type{<:Number},
+            inds::QNIndexSet) = error("Must specify flux")
 
 diagITensor(flux::QN,
-            inds::Index...) = diagITensor(flux, IndexSet(inds...))
+            is::IndexSet) = diagITensor(Float64, flux, is)
+
+diagITensor(flux::QN,
+            inds::Index...) = diagITensor(Float64,
+                                          flux,
+                                          IndexSet(inds...))
 
 diagITensor(inds::QNIndexSet) = error("Must specify flux")
+
+"""
+    delta([::Type{ElT} = Float64, ]flux::QN, is::IndexSet)
+
+    delta([::Type{ElT} = Float64, ]flux::QN, is::Index...)
+
+Make an ITensor with storage type `NDTensors.DiagBlockSparse` with uniform elements `one(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`. If the element type is not specified, it defaults to `Float64`.
+"""
+function delta(::Type{ElT},
+               flux::QN,
+               inds::IndexSet) where {ElT <: Number}
+  blocks = nzdiagblocks(flux, inds)
+  T = DiagBlockSparseTensor(one(ElT), blocks, inds)
+  return itensor(T)
+end
+
+function delta(::Type{ElT},
+               flux::QN,
+               inds::Index...) where {ElT <: Number}
+  return delta(ElT, flux, IndexSet(inds...))
+end
+
+delta(flux::QN,
+      inds::IndexSet) = delta(Float64, flux, is)
+
+delta(flux::QN,
+      inds::Index...) = delta(Float64, flux, IndexSet(inds...))
+
+delta(::Type{<:Number},
+      is::QNIndexSet) = error("Must specify flux")
+
+#
+# Possible constructors
+#
 
 #"""
 #    diagITensor(v::Vector{T<:Number}, flux::QN, is::IndexSet)
@@ -159,10 +227,4 @@ diagITensor(inds::QNIndexSet) = error("Must specify flux")
 #end
 #
 #diagITensor(x::Number, is::QNIndexSet) = error("Must specify flux")
-
-function delta(::Type{ElT}, is::QNIndexSet) where {ElT<:Number}
-  blocks = nzdiagblocks(QN(), is)
-  T = DiagBlockSparseTensor(one(ElT), blocks, is)
-  return itensor(T)
-end
 

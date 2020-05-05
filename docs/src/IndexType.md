@@ -51,6 +51,7 @@ replacetags(::Index, ::Any, ::Any)
 ```@docs
 sim(::Index)
 dag(::Index)
+removeqns(::Index)
 ```
 
 ## Iterating

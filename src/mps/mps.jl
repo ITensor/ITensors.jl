@@ -79,10 +79,11 @@ function randomU(s1,s2)
     G = itensor(Q,dag(s1),dag(s2),s1',s2')
   else
     M = randomITensor(QN(),s1',s2',dag(s1),dag(s2))
-    U,S,V = svd(M,(s1',s2'))
+    U, S, V = svd(M,(s1',s2'))
     u = commonind(U,S)
     v = commonind(S,V)
-    G = (U*delta(dag(u),v))*V
+    replaceind!(U, u, v)
+    G = U * V
   end
   return G
 end
@@ -213,14 +214,14 @@ function productMPS(::Type{T},
     links = [Index(1,"Link,l=$n") for n=1:N]
   end
   M[1] = ITensor(T,ind(ivals[1]),links[1])
-  M[1][ivals[1],links[1](1)] = 1.0
+  M[1][ivals[1],links[1](1)] = one(T)
   for n=2:N-1
     s = ind(ivals[n])
     M[n] = ITensor(T,dag(links[n-1]),s,links[n])
-    M[n][links[n-1](1),ivals[n],links[n](1)] = 1.0
+    M[n][links[n-1](1),ivals[n],links[n](1)] = one(T)
   end
   M[N] = ITensor(T,dag(links[N-1]),ind(ivals[N]))
-  M[N][links[N-1](1),ivals[N]] = 1.0
+  M[N][links[N-1](1),ivals[N]] = one(T)
   return M
 end
 

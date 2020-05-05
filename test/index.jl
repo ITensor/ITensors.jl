@@ -50,8 +50,8 @@ import ITensors: In, Out, Neither
     @test i(2) == IndexVal(i, 2)
     @test val(IndexVal(i, 1)) == 1
     @test ind(IndexVal(i, 1)) == i
-    @test i == IndexVal(i, 2)
-    @test IndexVal(i, 2) == i
+    @test isindequal(i, IndexVal(i, 2))
+    @test isindequal(IndexVal(i, 2), i)
     @test plev(i(2)') == 1
     @test val(i(2)') == 2
     @test plev(prime(i(2),4)) == 4

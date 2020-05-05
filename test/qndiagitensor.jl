@@ -33,19 +33,20 @@ using ITensors,
     ĩ = sim(i; tags="i_sim")
     j = Index(QN(0)=>2,QN(1)=>3,QN(2)=>4; tags="j")
 
-    A = randomITensor(QN(),i,dag(j))
+    A = randomITensor(QN(), i, dag(j))
 
-    δiĩ = δ(dag(i),ĩ)
+    δiĩ = δ(QN(), dag(i), ĩ)
 
     @test store(δiĩ) isa NDTensors.DiagBlockSparse{ElT,
-                                                  ElT} where {ElT<:Number}
+                                                   ElT} where {ElT<:Number}
 
-    B = A*δiĩ
+    B = A * δiĩ
 
-    A = permute(A,i,j)
-    B = permute(B,ĩ,j)
+    A = permute(A, i, j)
+    B = permute(B, ĩ, j)
 
-    @test norm(dense(NDTensors.tensor(A))-dense(NDTensors.tensor(B))) ≈ 0
+    @test norm(dense(NDTensors.tensor(A)) -
+               dense(NDTensors.tensor(B))) ≈ 0
   end
 
 end

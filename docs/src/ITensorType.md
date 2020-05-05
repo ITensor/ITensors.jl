@@ -18,14 +18,27 @@ randomITensor(::Type{<:Number}, ::IndexSet)
 setelt(::IndexVal)
 ```
 
-## Sparse constructors
+## QN Constructors
 
 ```@docs
-diagITensor(::IndexSet)
+ITensor(::Type{<:Number}, ::QN, ::IndexSet)
+```
+
+## Diagonal constructors
+
+```@docs
 diagITensor(::Type{<:Number}, ::IndexSet)
+diagITensor(::IndexSet)
 diagITensor(::Vector{<:Number}, ::IndexSet)
 diagITensor(::Number, ::IndexSet)
 delta(::Type{<:Number}, ::IndexSet)
+```
+
+## QN Diagonal constructors
+
+```@docs
+diagITensor(::Type{<:Number}, ::QN, ::IndexSet)
+delta(::Type{<:Number}, ::QN, ::IndexSet)
 ```
 
 ## Getting and setting elements
