@@ -1,6 +1,20 @@
 
 import .NDTensors: mindim
 
+"""
+A Sweeps objects holds information
+about the various parameters controlling
+a density matrix renormalization group (DMRG)
+or similar matrix product state (MPS) calculation.
+
+For a Sweeps object `sw` the available
+parameters are:
+* `nsweep(sw)` -- the number of sweeps to do
+* `maxdim(sw,n)` -- maximum MPS bond dimension for sweep n
+* `mindim(sw,n)` -- minimum MPS bond dimension for sweep n
+* `cutoff(sw,n)` -- truncation error cutoff for sweep n
+* `noise(sw,n)` -- noise term coefficient for sweep n
+"""
 mutable struct Sweeps
   nsweep::Int
   maxdim::Vector{Int}
@@ -14,17 +28,57 @@ mutable struct Sweeps
 
 end
 
+"""
+    nsweep(sw::Sweeps)
+    length(sw::Sweeps)
+
+Obtain the number of sweeps parameterized
+by this sweeps object.
+"""
 nsweep(sw::Sweeps)::Int = sw.nsweep
 
 Base.length(sw::Sweeps)::Int = sw.nsweep
 
+"""
+    maxdim(sw::Sweeps,n::Int)
+
+Maximum MPS bond dimension allowed by the
+Sweeps object `sw` during sweep `n`
+"""
 maxdim(sw::Sweeps,n::Int)::Int = sw.maxdim[n]
 
+"""
+    mindim(sw::Sweeps,n::Int)
+
+Minimum MPS bond dimension allowed by the
+Sweeps object `sw` during sweep `n`
+"""
 mindim(sw::Sweeps,n::Int)::Int = sw.mindim[n]
 
+"""
+    cutoff(sw::Sweeps,n::Int)
+
+Truncation error cutoff setting of the
+Sweeps object `sw` during sweep `n`
+"""
 cutoff(sw::Sweeps,n::Int)::Float64 = sw.cutoff[n]
+
+"""
+    noise(sw::Sweeps,n::Int)
+
+Noise term coefficient setting of the
+Sweeps object `sw` during sweep `n`
+"""
 noise(sw::Sweeps,n::Int)::Float64  = sw.noise[n]
 
+"""
+    maxdim!(sw::Sweeps,maxdims::Int...)
+
+Set the maximum MPS bond dimension for each
+sweep by providing up to `nsweep(sw)` values.
+If fewer values are provided, the last value
+is repeated for the remaining sweeps.
+"""
 function maxdim!(sw::Sweeps,maxdims::Int...)::Nothing
   Nm = length(maxdims)
   N = min(nsweep(sw),Nm)
@@ -36,6 +90,14 @@ function maxdim!(sw::Sweeps,maxdims::Int...)::Nothing
   end
 end
 
+"""
+    mindim!(sw::Sweeps,maxdims::Int...)
+
+Set the minimum MPS bond dimension for each
+sweep by providing up to `nsweep(sw)` values.
+If fewer values are provided, the last value
+is repeated for the remaining sweeps.
+"""
 function mindim!(sw::Sweeps,mindims::Int...)::Nothing
   Nm = length(mindims)
   N = min(nsweep(sw),Nm)
@@ -47,6 +109,14 @@ function mindim!(sw::Sweeps,mindims::Int...)::Nothing
   end
 end
 
+"""
+    cutoff!(sw::Sweeps,maxdims::Int...)
+
+Set the MPS truncation error used for each
+sweep by providing up to `nsweep(sw)` values.
+If fewer values are provided, the last value
+is repeated for the remaining sweeps.
+"""
 function cutoff!(sw::Sweeps,cutoffs::Float64...)::Nothing
   Nm = length(cutoffs)
   N = min(nsweep(sw),Nm)
@@ -58,6 +128,14 @@ function cutoff!(sw::Sweeps,cutoffs::Float64...)::Nothing
   end
 end
 
+"""
+    noise!(sw::Sweeps,maxdims::Int...)
+
+Set the noise-term coefficient used for each
+sweep by providing up to `nsweep(sw)` values.
+If fewer values are provided, the last value
+is repeated for the remaining sweeps.
+"""
 function noise!(sw::Sweeps,noises::Float64...)::Nothing
   Nm = length(noises)
   N = min(nsweep(sw),Nm)
@@ -82,6 +160,16 @@ struct SweepNext
   ncenter::Int
 end
 
+"""
+    sweepnext(N::Int; ncenter::Int=2)
+
+Returns an iterable object that evaluates
+to tuples of the form `(b,ha)` where `b`
+is the bond number and `ha` is the half-sweep
+number. Takes an optional named argument 
+`ncenter` for use with an n-site MPS or DMRG
+algorithm, with a default of 2-site.
+"""
 function sweepnext(N::Int;ncenter::Int=2)::SweepNext 
   if ncenter < 0
     error("ncenter must be non-negative")
