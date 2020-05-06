@@ -37,7 +37,7 @@ function op(::SpinOneSite,
   Dn = s(3)
   DnP = s'(3)
  
-  Op = zeroITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
 
   if opname == "S⁺" || opname == "Splus" || opname == "S+"
     Op[Z0P, Dn] = √2 
@@ -86,18 +86,18 @@ function op(::SpinOneSite,
   elseif opname == "projDn"
     Op[DnP, Dn] = 1.
   elseif opname == "XUp"
-    xup = zeroITensor(ComplexF64,s)
+    xup = emptyITensor(ComplexF64,s)
     xup[Up] = 0.5
     xup[Z0] = im*√2
     xup[Dn] = 0.5
     return xup
   elseif opname == "XZ0"
-    xZ0 = zeroITensor(ComplexF64,s)
+    xZ0 = emptyITensor(ComplexF64,s)
     xZ0[Up] = im*√2
     xZ0[Dn] = -im*√2
     return xZ0
   elseif opname == "XDn"
-    xdn = zeroITensor(ComplexF64,s)
+    xdn = emptyITensor(ComplexF64,s)
     xdn[Up] = 0.5
     xdn[Z0] = -im*√2
     xdn[Dn] = 0.5

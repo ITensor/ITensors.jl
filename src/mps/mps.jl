@@ -45,11 +45,11 @@ function MPS(::Type{T}, sites) where {T <: Number}
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
-      v[ii] = zeroITensor(T,l[ii], s)
+      v[ii] = emptyITensor(T,l[ii], s)
     elseif ii == N
-      v[ii] = zeroITensor(T,l[ii-1], s)
+      v[ii] = emptyITensor(T,l[ii-1], s)
     else
-      v[ii] = zeroITensor(T,l[ii-1],s,l[ii])
+      v[ii] = emptyITensor(T,l[ii-1],s,l[ii])
     end
   end
   return MPS(N, v)
@@ -206,14 +206,14 @@ function productMPS(::Type{T},
   else
     links = [Index(1,"Link,l=$n") for n=1:N]
   end
-  M[1] = zeroITensor(ind(ivals[1]), links[1])
+  M[1] = emptyITensor(ind(ivals[1]), links[1])
   M[1][ivals[1],links[1](1)] = one(T)
   for n=2:N-1
     s = ind(ivals[n])
-    M[n] = zeroITensor(T,dag(links[n-1]),s,links[n])
+    M[n] = emptyITensor(T,dag(links[n-1]),s,links[n])
     M[n][links[n-1](1),ivals[n],links[n](1)] = one(T)
   end
-  M[N] = zeroITensor(T,dag(links[N-1]),ind(ivals[N]))
+  M[N] = emptyITensor(T,dag(links[N-1]),ind(ivals[N]))
   M[N][links[N-1](1),ivals[N]] = one(T)
   return M
 end

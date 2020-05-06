@@ -30,7 +30,7 @@ function op(::SpinHalfSite,
   Dn = s(2)
   DnP = s'(2)
  
-  Op = zeroITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
 
   if opname == "S⁺" || opname == "Splus" || opname == "S+"
     Op[UpP, Dn] = 1.
@@ -54,11 +54,11 @@ function op(::SpinHalfSite,
   elseif opname == "projDn"
     Op[DnP, Dn] = 1.
   elseif opname == "Up" || opname == "↑"
-    pU = zeroITensor(s)
+    pU = emptyITensor(s)
     pU[Up] = 1.
     return pU
   elseif opname == "Dn" || opname == "↓"
-    pD = zeroITensor(s)
+    pD = emptyITensor(s)
     pD[Dn] = 1.
     return pD
   else

@@ -25,13 +25,13 @@ ITensor(::Type{<:Number}, ::ITensors.QNIndexSet)
 ## Zero Constructors
 
 ```@docs
-zeroITensor(::Type{<:Number}, ::IndexSet)
+emptyITensor(::Type{<:Number}, ::IndexSet)
 ```
 
 ## QN Zero Constructors
 
 ```@docs
-zeroITensor(::Type{<:Number}, ::ITensors.QNIndexSet)
+emptyITensor(::Type{<:Number}, ::ITensors.QNIndexSet)
 ```
 
 ## Diagonal constructors

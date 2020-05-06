@@ -60,7 +60,7 @@ function op(::ElectronSite,
   UpDn  = s(4)
   UpDnP = s'(4)
 
-  Op = zeroITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
 
   if opname == "Nup"
     Op[UpP, Up] = 1.
@@ -128,19 +128,19 @@ function op(::ElectronSite,
   elseif opname=="S-" || opname=="Sm" || opname == "S⁻" || opname == "Sminus"
     Op[DnP, Up] = 1.0
   elseif opname == "Emp" || opname == "0"
-    pEmp = zeroITensor(s)
+    pEmp = emptyITensor(s)
     pEmp[Emp] = 1.0
     return pEmp
   elseif opname == "Up" || opname == "↑"
-    pU = zeroITensor(s)
+    pU = emptyITensor(s)
     pU[Up] = 1.0
     return pU
   elseif opname == "Dn" || opname == "↓"
-    pD = zeroITensor(s)
+    pD = emptyITensor(s)
     pD[Dn] = 1.0
     return pD
   elseif opname == "UpDn" || opname == "↑↓"
-    pUD = zeroITensor(s)
+    pUD = emptyITensor(s)
     pUD[UpDn] = 1.0
     return pUD
   else

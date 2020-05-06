@@ -216,9 +216,9 @@ ITensor(x::Number,
 #
 
 """
-    zeroITensor([::Type{ElT} = Float64, ]inds::IndexSet) where {ElT <: Number}
+    emptyITensor([::Type{ElT} = Float64, ]inds::IndexSet) where {ElT <: Number}
 
-    zeroITensor([::Type{ElT} = Float64, ]inds::Index...) where {ElT <: Number}
+    emptyITensor([::Type{ElT} = Float64, ]inds::Index...) where {ElT <: Number}
 
 Construct an ITensor filled with zeros having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
 
@@ -226,25 +226,25 @@ The storage will have `NDTensors.Dense` type.
 
 In the future, this will create an ITensor for storage type `NDTensors.ZeroDense`.
 """
-function zeroITensor(::Type{ElT},
+function emptyITensor(::Type{ElT},
                      inds::IndexSet) where {ElT <: Number}
   return itensor(Dense(ElT, dim(inds)), inds)
 end
 
-function zeroITensor(::Type{ElT},
+function emptyITensor(::Type{ElT},
                      inds::Index...) where {ElT <: Number}
-  return zeroITensor(ElT, IndexSet(inds...))
+  return emptyITensor(ElT, IndexSet(inds...))
 end
 
 # To fix ambiguity with QN Index version
-zeroITensor(::Type{ElT}) where {ElT <: Number} = zeroITensor(ElT, IndexSet())
+emptyITensor(::Type{ElT}) where {ElT <: Number} = emptyITensor(ElT, IndexSet())
 
-zeroITensor(is::IndexSet) = zeroITensor(Float64, is)
+emptyITensor(is::IndexSet) = emptyITensor(Float64, is)
 
-zeroITensor(inds::Index...) = zeroITensor(Float64, IndexSet(inds...))
+emptyITensor(inds::Index...) = emptyITensor(Float64, IndexSet(inds...))
 
 # To fix ambiguity with QN Index version
-zeroITensor() = zeroITensor(Float64, IndexSet())
+emptyITensor() = emptyITensor(Float64, IndexSet())
 
 #
 # Construct from Array
@@ -400,7 +400,7 @@ Create an ITensor with all zeros except the specified value,
 which is set to 1.
 """
 function setelt(iv::IndexValOrPairIndexInt)
-  A = zeroITensor(ind(iv))
+  A = emptyITensor(ind(iv))
   A[val(iv)] = 1.0
   return A
 end

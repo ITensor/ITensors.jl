@@ -52,7 +52,7 @@ function op(::tJSite,
   Dn = s(3)
   DnP = s'(3)
 
-  Op = zeroITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
   if opname == "Nup"
     Op[UpP, Up] = 1.
   elseif opname == "Ndn"
@@ -91,15 +91,15 @@ function op(::tJSite,
   elseif opname == "S⁻" || opname == "Sminus"
     Op[DnP, Up] = 1.
   elseif opname == "Emp" || opname == "0"
-    pEmp = zeroITensor(s)
+    pEmp = emptyITensor(s)
     pEmp[Emp] = 1.
     return pEmp
   elseif opname == "Up" || opname == "↑"
-    pU = zeroITensor(s)
+    pU = emptyITensor(s)
     pU[Up] = 1.
     return pU
   elseif opname == "Dn" || opname == "↓"
-    pD = zeroITensor(s)
+    pD = emptyITensor(s)
     pD[Dn] = 1.
     return pD
   else

@@ -41,9 +41,9 @@ ITensor(inds::QNIndex...) = ITensor(Float64, IndexSet(inds...))
 
 # TODO: make this use NDTensors.ZeroBlockSparse storage
 """
-    zeroITensor([::Type{ElT} = Float64, ]inds::QNIndexSet) where {ElT <: Number}
+    emptyITensor([::Type{ElT} = Float64, ]inds::QNIndexSet) where {ElT <: Number}
 
-    zeroITensor([::Type{ElT} = Float64, ]inds::QNIndex...) where {ElT <: Number}
+    emptyITensor([::Type{ElT} = Float64, ]inds::QNIndex...) where {ElT <: Number}
 
 Construct an ITensor with `NDTensors.BlockSparse` storage of element type `ElT` with the no blocks.
 
@@ -51,12 +51,12 @@ If `ElT` is not specified it defaults to `Float64`.
 
 In the future, this will use the storage `NDTensors.ZeroBlockSparse`.
 """
-function zeroITensor(::Type{ElT}, inds::QNIndexSet) where {ElT<:Number} 
+function emptyITensor(::Type{ElT}, inds::QNIndexSet) where {ElT<:Number} 
   T = BlockSparseTensor(ElT, inds)
   return itensor(T)
 end
 
-zeroITensor(inds::QNIndexSet) = zeroITensor(Float64, inds)
+emptyITensor(inds::QNIndexSet) = emptyITensor(Float64, inds)
 
 """
     randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::IndexSet) where {ElT <: Number}

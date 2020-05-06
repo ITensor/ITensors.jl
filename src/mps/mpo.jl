@@ -28,11 +28,11 @@ function MPO(sites::Vector{<:Index})
     s = sites[ii]
     sp = prime(s)
     if ii == 1
-      v[ii] = zeroITensor(s, sp, l[ii])
+      v[ii] = emptyITensor(s, sp, l[ii])
     elseif ii == N
-      v[ii] = zeroITensor(l[ii-1], s, sp)
+      v[ii] = emptyITensor(l[ii-1], s, sp)
     else
-      v[ii] = zeroITensor(l[ii-1], s, sp, l[ii])
+      v[ii] = emptyITensor(l[ii-1], s, sp, l[ii])
     end
   end
   return MPO(N, v)
@@ -65,17 +65,17 @@ function MPO(sites,
     links[ii] = Index(1, "Link,n=$ii")
     local this_it
     if ii == 1
-      this_it = zeroITensor(links[ii], si, si')
+      this_it = emptyITensor(links[ii], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
       end
     elseif ii == N
-      this_it = zeroITensor(links[ii-1], si, si')
+      this_it = emptyITensor(links[ii-1], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii-1](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
       end
     else
-      this_it = zeroITensor(links[ii-1], links[ii], si, si')
+      this_it = emptyITensor(links[ii-1], links[ii], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii-1](1),
                 links[ii](1),
@@ -390,7 +390,7 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
     push!(sites_A, sda[1])
     push!(sites_B, sdb[1])
   end
-  res[1] = zeroITensor(sites_A[1], sites_B[1], commonind(res[1], res[2]))
+  res[1] = emptyITensor(sites_A[1], sites_B[1], commonind(res[1], res[2]))
   for i in 1:N-2
     if i == 1
       clust = A_[i] * B_[i]
@@ -399,7 +399,7 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
     end
     lA = commonind(A_[i], A_[i+1])
     lB = commonind(B_[i], B_[i+1])
-    nfork = zeroITensor(lA, lB, commonind(res[i], res[i+1]))
+    nfork = emptyITensor(lA, lB, commonind(res[i], res[i+1]))
     res[i], nfork = factorize(clust,
                               inds(res[i]),
                               ortho="left",
@@ -408,7 +408,7 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
                               maxdim=maxdim,
                               mindim=mindim)
     mid = dag(commonind(res[i], nfork))
-    res[i+1] = zeroITensor(mid,
+    res[i+1] = emptyITensor(mid,
                            sites_A[i+1],
                            sites_B[i+1],
                            commonind(res[i+1], res[i+2]))

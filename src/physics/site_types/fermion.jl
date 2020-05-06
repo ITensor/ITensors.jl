@@ -37,7 +37,7 @@ function op(::FermionSite,
   Occ   = s(2)
   OccP  = s'(2)
 
-  Op = zeroITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
 
   if opname == "N"
     Op[OccP, Occ] = 1.
@@ -49,11 +49,11 @@ function op(::FermionSite,
     Op[EmpP,Emp] =  1.
     Op[OccP,Occ] = -1.
   elseif opname == "Emp" || opname == "0"
-    pEmp = zeroITensor(s)
+    pEmp = emptyITensor(s)
     pEmp[Emp] = 1.0
     return pEmp
   elseif opname == "Occ" || opname == "1"
-    pOcc = zeroITensor(s)
+    pOcc = emptyITensor(s)
     pOcc[Occ] = 1.0
     return pOcc
   else
