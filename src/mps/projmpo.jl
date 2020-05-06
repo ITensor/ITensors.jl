@@ -1,19 +1,44 @@
 
+"""
+A ProjMPO object represents the projection of an
+MPO into a basis defined by an MPS, leaving a
+certain number of site indices of the MPO unprojected.
+Which sites are unprojected can be shifted by calling
+the `position!` method.
+
+Drawing of the network represented by a ProjMPO `P`, 
+showing the case of `nsite(P)==2` and `position!(P,4)`:
+
+o--o--o-      -o--o--o--o--o--o
+|  |  |  |  |  |  |  |  |  |  |
+o--o--o--o--o--o--o--o--o--o--o
+|  |  |  |  |  |  |  |  |  |  |
+o--o--o-      -o--o--o--o--o--o
+"""
 mutable struct ProjMPO
   lpos::Int
   rpos::Int
   nsite::Int
   H::MPO
   LR::Vector{ITensor}
-  ProjMPO(H::MPO) = new(0,
-                        length(H) + 1,
-                        2,
-                        H,
+  ProjMPO(H::MPO) = new(0,length(H)+1,2,H,
                         Vector{ITensor}(undef, length(H)))
 end
 
+"""
+    nsite(pm::ProjMPO)
+
+Retrieve the number of unprojected (open)
+site indices of the ProjMPO object `pm`
+"""
 nsite(pm::ProjMPO) = pm.nsite
 
+"""
+    length(pm::ProjMPO)
+
+The length of a ProjMPO is the same as
+the length of the MPO used to construct it
+"""
 Base.length(pm::ProjMPO) = length(pm.H)
 
 function lproj(pm::ProjMPO)
@@ -26,6 +51,20 @@ function rproj(pm::ProjMPO)
   return pm.LR[pm.rpos]
 end
 
+"""
+    product(pm::ProjMPO,v::ITensor)
+
+    (pm::ProjMPO)(v::ITensor)
+
+Efficiently multiply the ProjMPO `pm`
+by an ITensor `v` in the sense that the
+ProjMPO is a generalized square matrix 
+or linear operator and `v` is a generalized
+vector in the space where it acts. The
+returned ITensor will have the same indices
+as `v`. The operator overload `pm(v)` is
+shorthand for `product(pm,v)`.
+"""
 function product(pm::ProjMPO,
                  v::ITensor)::ITensor
   Hv = v
@@ -48,6 +87,15 @@ function product(pm::ProjMPO,
   return noprime(Hv)
 end
 
+(pm::ProjMPO)(v::ITensor) = product(pm,v)
+
+"""
+    eltype(pm::ProjMPO)
+
+Deduce the element type (such as Float64
+or ComplexF64) of the tensors in the ProjMPO
+`pm`.
+"""
 function Base.eltype(pm::ProjMPO)
   elT = eltype(pm.H[pm.lpos+1])
   for j in pm.lpos+2:pm.rpos-1
@@ -62,8 +110,16 @@ function Base.eltype(pm::ProjMPO)
   return elT
 end
 
-(pm::ProjMPO)(v::ITensor) = product(pm,v)
+"""
+    size(pm::ProjMPO)
 
+The size of a ProjMPO is the dimension
+of the space on which it acts as a linear
+operator. Thus if a ProjMPO maps from a space
+with indices `(a,s1,s2,b)` to the space 
+`(a',s1',s2',b')` then the size 
+is `dim(a)*dim(s1)*dim(s1)*dim(b)`.
+"""
 function Base.size(pm::ProjMPO)::Tuple{Int,Int}
   d = 1
   if !isnothing(lproj(pm))
@@ -115,6 +171,18 @@ function makeR!(pm::ProjMPO,
   end
 end
 
+"""
+    position!(pm::ProjMPO, psi::MPS, pos::Int)
+
+Given an MPS `psi`, shift the projection of the
+MPO represented by the ProjMPO `pm` such that
+the set of unprojected sites begins with site `pos`.
+This operation efficiently reuses previous projections
+of the MPO on sites that have already been projected.
+The MPS `psi` must have compatible bond indices with
+the previous projected MPO tensors for this
+operation to succeed.
+"""
 function position!(pm::ProjMPO,
                    psi::MPS, 
                    pos::Int)
@@ -128,10 +196,19 @@ function position!(pm::ProjMPO,
 end
 
 # Return a "noise term" as in Phys. Rev. B 72, 180403
+"""
+    noiseterm(pm::ProjMPO,
+              phi::ITensor,
+              b::Int,
+              ortho::String)
+"""
 function noiseterm(pm::ProjMPO,
                    phi::ITensor,
                    b::Int,
                    ortho::String)
+  if nsite(pm) != 2
+    error("noise term only defined for 2-site ProjMPO")
+  end
   if ortho == "left"
     nt = pm.H[b]*phi
     if !isnothing(lproj(pm))
