@@ -140,27 +140,11 @@ storage and indices as the ITensor.
 NDTensors.tensor(A::ITensor) = tensor(store(A),inds(A))
 
 """
-    ITensor(inds::IndexSet)
-    ITensor(inds::Index...)
+    ITensor([::Type{ElT} = Float64, ]inds::IndexSet) where {ElT <: Number}
 
-Construct an ITensor filled with zeros having indices given by 
-the indices `inds` and element type `Float64`.
+    ITensor([::Type{ElT} = Float64, ]inds::Index...) where {ElT <: Number}
 
-The storage will have `NDTensors.Dense` type.
-"""
-ITensor(is::IndexSet) = ITensor(Float64, is)
-
-ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet(inds...))
-
-# To fix ambiguity with QN Index version
-ITensor() = ITensor(IndexSet())
-
-"""
-    ITensor(::Type{ElT <: Number}, inds::IndexSet)
-    ITensor(::Type{ElT <: Number}, inds::Index...)
-
-Construct an ITensor filled with zeros having indices `inds` and 
-element type `ElT`.
+Construct an ITensor filled with zeros having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
 
 The storage will have `NDTensors.Dense` type.
 """
@@ -176,36 +160,19 @@ ITensor(::Type{ElT},
 # To fix ambiguity with QN Index version
 ITensor(::Type{ElT}) where {ElT <: Number} = ITensor(ElT, IndexSet())
 
-"""
-    ITensor(::UndefInitializer,
-            inds::IndexSet)
-    ITensor(::UndefInitializer,
-            inds::Index...)
+ITensor(is::IndexSet) = ITensor(Float64, is)
 
-Construct an ITensor filled with undefined elements having indices 
-`inds` and element type `Float64`.
+ITensor(inds::Index...) = ITensor(Float64, IndexSet(inds...))
 
-The storage will have `NDTensors.Dense` type.
-"""
-function ITensor(::UndefInitializer,
-                 inds::IndexSet)
-  return itensor(Dense(undef, dim(inds)), inds)
-end
-
-ITensor(::UndefInitializer,
-        inds::Index...) = ITensor(undef,
-                                  IndexSet(inds...))
+# To fix ambiguity with QN Index version
+ITensor() = ITensor(Float64, IndexSet())
 
 """
-    ITensor(::Type{ElT <: Number},
-            ::UndefInitializer,
-            inds::IndexSet)
-    ITensor(::Type{ElT <: Number},
-            ::UndefInitializer,
-            inds::Index...)
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::IndexSet) where {ElT <: Number}
 
-Construct an ITensor filled with undefined elements having indices 
-`inds` and element type `ElT`.
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::Index...) where {ElT <: Number}
+
+Construct an ITensor filled with undefined elements having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
 
 The storage will have `NDTensors.Dense` type.
 """
@@ -221,12 +188,18 @@ ITensor(::Type{ElT},
                                               undef,
                                               IndexSet(inds...))
 
+ITensor(::UndefInitializer,
+        inds::IndexSet) = ITensor(Float64, undef, inds)
+
+ITensor(::UndefInitializer,
+        inds::Index...) = ITensor(Float64, undef, IndexSet(inds...))
+
 """
     ITensor(x::Number, inds::IndexSet)
+
     ITensor(x::Number, inds::Index...)
 
-Construct an ITensor with all elements set to `float(x)` and
-indices `inds`.
+Construct an ITensor with all elements set to `float(x)` and indices `inds`.
 
 The storage will have `NDTensors.Dense` type.
 """
@@ -237,6 +210,45 @@ end
 
 ITensor(x::Number,
         inds::Index...) = ITensor(x, IndexSet(inds...))
+
+#
+# Zero ITensor constructors
+#
+
+"""
+    zeroITensor([::Type{ElT} = Float64, ]inds::IndexSet) where {ElT <: Number}
+
+    zeroITensor([::Type{ElT} = Float64, ]inds::Index...) where {ElT <: Number}
+
+Construct an ITensor filled with zeros having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
+
+The storage will have `NDTensors.Dense` type.
+
+In the future, this will create an ITensor for storage type `NDTensors.ZeroDense`.
+"""
+function zeroITensor(::Type{ElT},
+                     inds::IndexSet) where {ElT <: Number}
+  return itensor(Dense(ElT, dim(inds)), inds)
+end
+
+function zeroITensor(::Type{ElT},
+                     inds::Index...) where {ElT <: Number}
+  return zeroITensor(ElT, IndexSet(inds...))
+end
+
+# To fix ambiguity with QN Index version
+zeroITensor(::Type{ElT}) where {ElT <: Number} = zeroITensor(ElT, IndexSet())
+
+zeroITensor(is::IndexSet) = zeroITensor(Float64, is)
+
+zeroITensor(inds::Index...) = zeroITensor(Float64, IndexSet(inds...))
+
+# To fix ambiguity with QN Index version
+zeroITensor() = zeroITensor(Float64, IndexSet())
+
+#
+# Construct from Array
+#
 
 """
     itensor(A::Array, inds::IndexSet)
@@ -255,8 +267,6 @@ end
 
 itensor(A::Array{<:Number},
         inds::Index...) = itensor(A, IndexSet(inds...))
-
-_isfloat(::Type{T}) where {T} = float(T) == T
 
 """
     ITensor(A::Array, inds::IndexSet)
@@ -390,7 +400,7 @@ Create an ITensor with all zeros except the specified value,
 which is set to 1.
 """
 function setelt(iv::IndexValOrPairIndexInt)
-  A = ITensor(ind(iv))
+  A = zeroITensor(ind(iv))
   A[val(iv)] = 1.0
   return A
 end
@@ -885,41 +895,36 @@ end
 const Indices = Union{IndexSet, Tuple{Vararg{Index}}}
 
 """
-    randomITensor(::Type{ElT <: Number}, inds::IndexSet)
-    randomITensor(::Type{ElT <: Number}, inds::Index...)
+    randomITensor([::Type{ElT <: Number} = Float64, ]inds::IndexSet)
 
-Construct an ITensor with type `ElT` and indices `inds`, 
-whose elements are normally distributed random numbers.
+    randomITensor([::Type{ElT <: Number} = Float64, ]inds::Index...)
+
+Construct an ITensor with type `ElT` and indices `inds`, whose elements are normally distributed random numbers. If the element type is not specified, it defaults to `Float64`.
 """
 function randomITensor(::Type{S},
-                       inds::Indices) where {S <: Number}
-  T = ITensor(S, IndexSet(inds))
+                       inds::IndexSet) where {S <: Number}
+  T = ITensor(S, inds)
   randn!(T)
   return T
 end
 
 function randomITensor(::Type{S},
                        inds::Index...) where {S <: Number}
-  return randomITensor(S,IndexSet(inds...))
+  return randomITensor(S, IndexSet(inds...))
 end
 
-"""
-    randomITensor(inds::IndexSet)
-    randomITensor(inds::Index...)
+# To fix ambiguity errors with QN version
+function randomITensor(::Type{ElT}) where {ElT <: Number}
+  return randomITensor(ElT, IndexSet())
+end
 
-Construct an ITensor with type `Float64` and indices `inds`, 
-whose elements are normally distributed random numbers.
-"""
-randomITensor(inds::Indices) = randomITensor(Float64,
-                                             IndexSet(inds))
+randomITensor(inds::IndexSet) = randomITensor(Float64, inds)
 
 randomITensor(inds::Index...) = randomITensor(Float64,
                                               IndexSet(inds...))
 
-randomITensor(::Type{ElT}) where {ElT<:Number} = randomITensor(ElT,
-                                                               IndexSet())
-
-randomITensor() = randomITensor(Float64)
+# To fix ambiguity errors with QN version
+randomITensor() = randomITensor(Float64, IndexSet())
 
 function combiner(inds::IndexSet;
                   kwargs...)

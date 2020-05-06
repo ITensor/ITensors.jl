@@ -30,15 +30,14 @@ end
 function op(::SpinOneSite,
             s::Index,
             opname::AbstractString)::ITensor
-  sP = prime(s)
   Up = s(1)
-  UpP = sP(1)
+  UpP = s'(1)
   Z0 = s(2)
-  Z0P = sP(2)
+  Z0P = s'(2)
   Dn = s(3)
-  DnP = sP(3)
+  DnP = s'(3)
  
-  Op = ITensor(s',dag(s))
+  Op = zeroITensor(s',dag(s))
 
   if opname == "S⁺" || opname == "Splus" || opname == "S+"
     Op[Z0P, Dn] = √2 
@@ -87,18 +86,18 @@ function op(::SpinOneSite,
   elseif opname == "projDn"
     Op[DnP, Dn] = 1.
   elseif opname == "XUp"
-    xup = ITensor(ComplexF64,s)
+    xup = zeroITensor(ComplexF64,s)
     xup[Up] = 0.5
     xup[Z0] = im*√2
     xup[Dn] = 0.5
     return xup
   elseif opname == "XZ0"
-    xZ0 = ITensor(ComplexF64,s)
+    xZ0 = zeroITensor(ComplexF64,s)
     xZ0[Up] = im*√2
     xZ0[Dn] = -im*√2
     return xZ0
   elseif opname == "XDn"
-    xdn = ITensor(ComplexF64,s)
+    xdn = zeroITensor(ComplexF64,s)
     xdn[Up] = 0.5
     xdn[Z0] = -im*√2
     xdn[Dn] = 0.5

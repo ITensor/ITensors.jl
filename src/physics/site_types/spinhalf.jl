@@ -25,13 +25,12 @@ end
 function op(::SpinHalfSite,
             s::Index,
             opname::AbstractString;kwargs...)::ITensor
-  sP = prime(s)
   Up = s(1)
-  UpP = sP(1)
+  UpP = s'(1)
   Dn = s(2)
-  DnP = sP(2)
+  DnP = s'(2)
  
-  Op = ITensor(s',dag(s))
+  Op = zeroITensor(s',dag(s))
 
   if opname == "S⁺" || opname == "Splus" || opname == "S+"
     Op[UpP, Dn] = 1.
@@ -55,11 +54,11 @@ function op(::SpinHalfSite,
   elseif opname == "projDn"
     Op[DnP, Dn] = 1.
   elseif opname == "Up" || opname == "↑"
-    pU = ITensor(s)
+    pU = zeroITensor(s)
     pU[Up] = 1.
     return pU
   elseif opname == "Dn" || opname == "↓"
-    pD = ITensor(s)
+    pD = zeroITensor(s)
     pD[Dn] = 1.
     return pD
   else

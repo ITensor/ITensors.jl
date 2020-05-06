@@ -35,7 +35,7 @@ using ITensors,
 
     A = randomITensor(QN(), i, dag(j))
 
-    δiĩ = δ(QN(), dag(i), ĩ)
+    δiĩ = δ(dag(i), ĩ)
 
     @test store(δiĩ) isa NDTensors.DiagBlockSparse{ElT,
                                                    ElT} where {ElT<:Number}

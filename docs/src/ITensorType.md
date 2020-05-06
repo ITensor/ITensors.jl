@@ -6,29 +6,38 @@
 ITensor
 ```
 
-## Constructors
+## Dense Constructors
 
 ```@docs
-ITensor(::IndexSet)
-ITensor(::UndefInitializer, ::IndexSet)
 ITensor(::Type{<:Number}, ::IndexSet)
 ITensor(::Type{<:Number}, ::UndefInitializer, ::IndexSet)
-randomITensor(::IndexSet)
 randomITensor(::Type{<:Number}, ::IndexSet)
 setelt(::IndexVal)
 ```
 
-## QN Constructors
+## QN BlockSparse Constructors
 
 ```@docs
 ITensor(::Type{<:Number}, ::QN, ::IndexSet)
+ITensor(::Type{<:Number}, ::ITensors.QNIndexSet)
+```
+
+## Zero Constructors
+
+```@docs
+zeroITensor(::Type{<:Number}, ::IndexSet)
+```
+
+## QN Zero Constructors
+
+```@docs
+zeroITensor(::Type{<:Number}, ::ITensors.QNIndexSet)
 ```
 
 ## Diagonal constructors
 
 ```@docs
 diagITensor(::Type{<:Number}, ::IndexSet)
-diagITensor(::IndexSet)
 diagITensor(::Vector{<:Number}, ::IndexSet)
 diagITensor(::Number, ::IndexSet)
 delta(::Type{<:Number}, ::IndexSet)

@@ -13,7 +13,7 @@ using ITensors,
   end
   @test length(O) == N
 
-  O[1] = ITensor(sites[1], prime(sites[1]))
+  O[1] = zeroITensor(sites[1], prime(sites[1]))
   @test hasind(O[1],sites[1])
   @test hasind(O[1],prime(sites[1]))
   P = copy(O)

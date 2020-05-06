@@ -138,6 +138,7 @@ export
   unioninds,
   unionind,
   vector,
+  zeroITensor,
 
 # iterativesolvers.jl
   davidson,
