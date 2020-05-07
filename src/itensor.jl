@@ -212,7 +212,7 @@ ITensor(x::Number,
         inds::Index...) = ITensor(x, IndexSet(inds...))
 
 #
-# Zero ITensor constructors
+# Empty ITensor constructors
 #
 
 """
@@ -224,7 +224,7 @@ Construct an ITensor filled with zeros having indices `inds` and element type `E
 
 The storage will have `NDTensors.Dense` type.
 
-In the future, this will create an ITensor for storage type `NDTensors.ZeroDense`.
+In the future, this will create an ITensor for storage type `NDTensors.EmptyDense`.
 """
 function emptyITensor(::Type{ElT},
                      inds::IndexSet) where {ElT <: Number}
@@ -236,15 +236,18 @@ function emptyITensor(::Type{ElT},
   return emptyITensor(ElT, IndexSet(inds...))
 end
 
-# To fix ambiguity with QN Index version
-emptyITensor(::Type{ElT}) where {ElT <: Number} = emptyITensor(ElT, IndexSet())
-
 emptyITensor(is::IndexSet) = emptyITensor(Float64, is)
 
 emptyITensor(inds::Index...) = emptyITensor(Float64, IndexSet(inds...))
 
-# To fix ambiguity with QN Index version
-emptyITensor() = emptyITensor(Float64, IndexSet())
+"""
+    emptyITensor(::Type{ElT} = Float64) where {ElT <: Number}
+
+Construct an ITensor with empty storage and `Any` number of indices.
+"""
+emptyITensor(::Type{ElT}) where {ElT <: Number} = itensor(Dense(ElT), IndexSet{Any}())
+
+emptyITensor() = emptyITensor(Float64)
 
 #
 # Construct from Array
@@ -556,6 +559,12 @@ end
 
 Base.getindex(T::ITensor) = tensor(T)[]
 
+# TODO: this definition needs to be removed and moved
+# to NDTensors
+setindex!!(T::NDTensors.Tensor,
+           x::Number,
+           I...) = setindex!(T, x, I...)
+
 """
     setindex!(T::ITensor, x::Number, I::Int...)
 
@@ -574,7 +583,9 @@ function Base.setindex!(T::ITensor, x::Number, I::Int...)
   if !isnothing(fluxT) && fluxT != flux(T, I...)
     error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
   end
-  tensor(T)[I...] = x
+  TR = setindex!!(tensor(T), x, I...)
+  setstore!(T, store(TR))
+  setinds!(T, inds(TR))
   return T
 end
 
@@ -596,6 +607,10 @@ function Base.setindex!(T::ITensor, x::Number, ivs...)
   vals = NDTensors.permute(val.(ivs), p)
   T[vals...] = x
   return T
+end
+
+function Base.setindex!(::ITensor{Any}, ::Number, ivs...)
+  error("Cannot set the element of an emptyITensor(). Must define indices to set elements")
 end
 
 function Base.iterate(::ITensor, args...)
@@ -1001,6 +1016,10 @@ function Base.:-(A::ITensor{N}, B::ITensor{N}) where {N}
   return C
 end
 
+Base.:+(A::ITensor{Any}, B::ITensor) = copy(B)
+
+Base.:+(A::ITensor, B::ITensor{Any}) = B + A
+
 Base.:+(A::ITensor, B::ITensor) = error("cannot add ITensors with different numbers of indices")
 Base.:-(A::ITensor, B::ITensor) = error("cannot subtract ITensors with different numbers of indices")
 
@@ -1270,6 +1289,13 @@ function Base.summary(io::IO,
     end
   end
   print(io," \n",typeof(store(T)))
+end
+
+function Base.summary(io::IO,
+                      T::ITensor{Any})
+  print(io,"ITensor ord=$(order(T))")
+  print(io," \n", typeof(inds(T)))
+  print(io," \n", typeof(store(T)))
 end
 
 # TODO: make a specialized printing from Diag

@@ -1,12 +1,31 @@
 
-struct IndexSet{N, IndexT<:Index}
-  data::NTuple{N, IndexT}
-  IndexSet{N, IndexT}(inds) where {N,IndexT} = new{N,IndexT}(inds)
+struct IndexSet{N, IndexT, DataT}
+  data::DataT
+
+  function IndexSet{N, IndexT, DataT}(data) where {N, IndexT, DataT}
+    N != length(data) && error("N must be length of data")
+    IndexT != eltype(data) && error("IndexT must be element type of data")
+    return new{N, IndexT, DataT}(data)
+  end
+
+  """
+      IndexSet{Any}()
+
+  Create a special "empty" IndexSet with data `Tuple{}` and `Any` number of indices.
+
+  This is used as the IndexSet of an `emptyITensor()`, an ITensor with `NDTensors.Empty` storage and any number of indices.
+  """
+  IndexSet{Any}() = new{Any, Union{}, Tuple{}}()
+end
+
+function IndexSet{N, IndexT}(inds) where {N, IndexT}
+  data = NTuple{N, IndexT}(inds)
+  return IndexSet{N, IndexT, typeof(data)}(data)
 end
 
 """
-    IndexSet{N,IndexT}(inds)
-    IndexSet{N,IndexT}(inds::Index...)
+    IndexSet{N, IndexT}(inds)
+    IndexSet{N, IndexT}(inds::Index...)
 
 Construct an IndexSet of order N and element type IndexT
 from a collection of indices (any collection that is convertable to a Tuple).
@@ -271,9 +290,10 @@ Base.lastindex(is::IndexSet) = length(is)
 
 Get the element type of the IndexSet.
 """
-Base.eltype(is::IndexSet{N,IndexT}) where {N,IndexT} = IndexT
+Base.eltype(is::IndexSet{<: Any, IndexT}) where {IndexT} = IndexT
 
-Base.eltype(::Type{IndexSet{N,IndexT}}) where {N,IndexT} = IndexT
+Base.eltype(::Type{<: IndexSet{<: Any,
+                               IndexT}}) where {IndexT} = IndexT
 
 # Needed for findfirst (I think)
 Base.keys(is::IndexSet{N}) where {N} = 1:N
@@ -1043,6 +1063,7 @@ block(inds::IndexSet,
       vals::Int...) = blockindex(inds, vals...)[2]
 
 function Base.show(io::IO, is::IndexSet)
+  print(io, typeof(is))
   for i in is
     print(io, i)
     print(io, " ")
