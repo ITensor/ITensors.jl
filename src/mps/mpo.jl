@@ -28,11 +28,11 @@ function MPO(sites::Vector{<:Index})
     s = sites[ii]
     sp = prime(s)
     if ii == 1
-      v[ii] = emptyITensor(s, sp, l[ii])
+      v[ii] = ITensor(s, sp, l[ii])
     elseif ii == N
-      v[ii] = emptyITensor(l[ii-1], s, sp)
+      v[ii] = ITensor(l[ii-1], s, sp)
     else
-      v[ii] = emptyITensor(l[ii-1], s, sp, l[ii])
+      v[ii] = ITensor(l[ii-1], s, sp, l[ii])
     end
   end
   return MPO(N, v)

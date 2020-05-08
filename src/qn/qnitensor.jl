@@ -39,7 +39,6 @@ end
 
 ITensor(inds::QNIndex...) = ITensor(Float64, IndexSet(inds...))
 
-# TODO: make this use NDTensors.EmptyBlockSparse storage
 """
     emptyITensor([::Type{ElT} = Float64, ]inds::QNIndexSet) where {ElT <: Number}
 
@@ -52,9 +51,9 @@ If `ElT` is not specified it defaults to `Float64`.
 In the future, this will use the storage `NDTensors.EmptyBlockSparse`.
 """
 function emptyITensor(::Type{ElT},
-                      inds::QNIndexSet) where {ElT <: Number} 
-  T = BlockSparseTensor(ElT, inds)
-  return itensor(T)
+                      inds::QNIndexSet{N}) where {ElT <: Number,
+                                                  N} 
+  return itensor(EmptyBlockSparseTensor(ElT, inds))
 end
 
 emptyITensor(inds::QNIndexSet) = emptyITensor(Float64, inds)

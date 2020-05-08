@@ -22,14 +22,14 @@ mutable struct ITensor{N}
   ITensor{N}(is,
              st::TensorStorage) where {N} = new{N}(st, is)
 
-  #ITensor{Any}(is,
-  #             st::Empty) = new{Any}(st, is)
+  ITensor{Any}(is,
+               st::Empty) = new{Any}(st, is)
 end
 
-#function ITensor{Any}(is,
-#                      st::TensorStorage)
-#  error("Can only make an ITensor with Any number of indices with NDTensors.Empty storage")
-#end
+function ITensor{Any}(is,
+                      st::TensorStorage)
+  error("Can only make an ITensor with Any number of indices with NDTensors.Empty storage")
+end
 
 """
     itensor(st::TensorStorage, is)
@@ -228,15 +228,11 @@ ITensor(x::Number,
 
     emptyITensor([::Type{ElT} = Float64, ]inds::Index...) where {ElT <: Number}
 
-Construct an ITensor filled with zeros having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
-
-The storage will have `NDTensors.Dense` type.
-
-In the future, this will create an ITensor for storage type `NDTensors.EmptyDense`.
+Construct an ITensor with storage type `NDTensors.Empty`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
 """
 function emptyITensor(::Type{ElT},
-                     inds::IndexSet) where {ElT <: Number}
-  return itensor(Dense(ElT, dim(inds)), inds)
+                      inds::IndexSet) where {ElT <: Number}
+  return itensor(EmptyTensor(ElT, inds))
 end
 
 function emptyITensor(::Type{ElT},
@@ -249,16 +245,22 @@ emptyITensor(is::IndexSet) = emptyITensor(Float64, is)
 emptyITensor(inds::Index...) = emptyITensor(Float64,
                                             IndexSet(inds...))
 
-"""
-    emptyITensor(::Type{ElT} = Float64) where {ElT <: Number}
-
-Construct an ITensor with empty storage and `Any` number of indices.
-"""
 function emptyITensor(::Type{ElT}) where {ElT <: Number}
-  return itensor(Dense(ElT), IndexSet{Any}())
+  return itensor(EmptyTensor(ElT, IndexSet()))
 end
 
 emptyITensor() = emptyITensor(Float64)
+
+"""
+    emptyITensor(::Type{ElT} = Float64, ::Type{Any}) where {ElT <: Number}
+
+Construct an ITensor with empty storage and `Any` number of indices.
+"""
+function emptyITensor(::Type{ElT}, ::Type{Any}) where {ElT <: Number}
+  return itensor(EmptyTensor(ElT, IndexSet{Any}()))
+end
+
+emptyITensor(::Type{Any}) = emptyITensor(Float64, Any)
 
 #
 # Construct from Array
@@ -570,12 +572,6 @@ end
 
 Base.getindex(T::ITensor) = tensor(T)[]
 
-# TODO: this definition needs to be removed and moved
-# to NDTensors
-setindex!!(T::NDTensors.Tensor,
-           x::Number,
-           I...) = setindex!(T, x, I...)
-
 """
     setindex!(T::ITensor, x::Number, I::Int...)
 
@@ -596,7 +592,6 @@ function Base.setindex!(T::ITensor, x::Number, I::Int...)
   end
   TR = setindex!!(tensor(T), x, I...)
   setstore!(T, store(TR))
-  setinds!(T, inds(TR))
   return T
 end
 
@@ -1238,19 +1233,35 @@ NDTensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 flux(T::ITensor, args...) = flux(inds(T), args...)
 
 function NDTensors.addblock!(T::ITensor,
-                           args...)
+                             args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) && 
    error("Block does not match current flux")
-  addblock!(tensor(T), args...)
+  TR = addblock!!(tensor(T), args...)
+  setstore!(T, store(TR))
   return T
 end
 
+"""
+    isempty(T::ITensor)
+
+Returns `true` if the ITensor contains no elements.
+
+An ITensor with `Empty` storage always returns `true`.
+"""
+Base.isempty(T::ITensor) = isempty(tensor(T))
+
+"""
+    flux(T::ITensor)
+
+Returns the flux of the ITensor.
+
+If the ITensor is empty or it has no QNs, returns `nothing`.
+"""
 function flux(T::ITensor)
-  !hasqns(T) && return nothing
-  nnzblocks(T) == 0 && return nothing
+  (!hasqns(T) || isempty(T)) && return nothing
   bofs = blockoffsets(T)
   block1 = nzblock(bofs, 1)
-  return flux(T,block1)
+  return flux(T, block1)
 end
 
 
