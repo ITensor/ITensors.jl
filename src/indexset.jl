@@ -1,10 +1,9 @@
 
-struct IndexSet{N, IndexT, DataT}
+# TODO: extend type restriction to `IndexT <: Union{<: Index, <: IndexVal}`
+struct IndexSet{N, IndexT <: Index, DataT <: Tuple}
   data::DataT
 
-  function IndexSet{N, IndexT, DataT}(data) where {N, IndexT, DataT}
-    N != length(data) && error("N must be length of data")
-    IndexT != eltype(data) && error("IndexT must be element type of data")
+  function IndexSet{N, IndexT, DataT}(data) where {N, IndexT, DataT <: NTuple{N, IndexT}}
     return new{N, IndexT, DataT}(data)
   end
 
@@ -30,7 +29,9 @@ end
 Construct an IndexSet of order N and element type IndexT
 from a collection of indices (any collection that is convertable to a Tuple).
 """
-IndexSet{N, IndexT}(inds::Index...) where {N, IndexT} = IndexSet{N, IndexT}(inds)
+function IndexSet{N, IndexT}(inds::Index...) where {N, IndexT}
+  return IndexSet{N, IndexT}(inds)
+end
 
 """
     IndexSet{N}(inds)
@@ -61,7 +62,7 @@ IndexSet(is::IndexSet) = is
 """
     convert(::Type{IndexSet}, t)
 
-Convert the collection t to an IndexSet,
+Convert the collection to an IndexSet,
 as long as it can be converted to a Tuple.
 """
 Base.convert(::Type{IndexSet}, t) = IndexSet(t)

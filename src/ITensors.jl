@@ -8,17 +8,12 @@ The ITensor library also includes composable and extensible algorithms for optim
 module ITensors
 
 #####################################
-# NDTensors
-#
-include("../NDTensors/src/NDTensors.jl")
-
-#####################################
 # External packages
 #
 using HDF5
 using KrylovKit
 using LinearAlgebra
-using .NDTensors
+using NDTensors
 using Printf
 using Random
 using StaticArrays

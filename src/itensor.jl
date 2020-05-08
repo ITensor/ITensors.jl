@@ -11,17 +11,25 @@ handle any memory permutations.
 mutable struct ITensor{N}
   store::TensorStorage
   inds::IndexSet{N}
-  #TODO: check that the storage is consistent with the
-  #total dimension of the indices (possibly only in debug mode);
+
+  # TODO: check that the storage is consistent with the 
+  # indices (possibly only in debug mode);
   """
       ITensor{N}(is::IndexSet{N}, st::TensorStorage)
 
-  This is an internal constructor for an ITensor
-  where the ITensor stores a view of the
-  `NDTensors.TensorStorage`.
+  This is an internal constructor for an ITensor where the ITensor stores a view of the `NDTensors.TensorStorage`.
   """
-  ITensor{N}(is, st::TensorStorage) where {N} = new{N}(st, is)
+  ITensor{N}(is,
+             st::TensorStorage) where {N} = new{N}(st, is)
+
+  #ITensor{Any}(is,
+  #             st::Empty) = new{Any}(st, is)
 end
+
+#function ITensor{Any}(is,
+#                      st::TensorStorage)
+#  error("Can only make an ITensor with Any number of indices with NDTensors.Empty storage")
+#end
 
 """
     itensor(st::TensorStorage, is)
@@ -238,14 +246,17 @@ end
 
 emptyITensor(is::IndexSet) = emptyITensor(Float64, is)
 
-emptyITensor(inds::Index...) = emptyITensor(Float64, IndexSet(inds...))
+emptyITensor(inds::Index...) = emptyITensor(Float64,
+                                            IndexSet(inds...))
 
 """
     emptyITensor(::Type{ElT} = Float64) where {ElT <: Number}
 
 Construct an ITensor with empty storage and `Any` number of indices.
 """
-emptyITensor(::Type{ElT}) where {ElT <: Number} = itensor(Dense(ElT), IndexSet{Any}())
+function emptyITensor(::Type{ElT}) where {ElT <: Number}
+  return itensor(Dense(ElT), IndexSet{Any}())
+end
 
 emptyITensor() = emptyITensor(Float64)
 
