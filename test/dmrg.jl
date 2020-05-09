@@ -1,6 +1,7 @@
 using ITensors, Test, Random
 
 @testset "Basic DMRG" begin
+
   @testset "Spin-one Heisenberg" begin
     N = 10
     sites = siteinds("S=1",N)
@@ -14,6 +15,33 @@ using ITensors, Test, Random
     H = MPO(ampo,sites)
 
     psi = randomMPS(sites)
+
+    sweeps = Sweeps(3)
+    @test length(sweeps) == 3
+    maxdim!(sweeps,10,20,40)
+    mindim!(sweeps,1,10)
+    cutoff!(sweeps,1E-11)
+    noise!(sweeps,1E-10)
+    str = split(sprint(show, sweeps), '\n')
+    @test length(str) > 1
+    energy,psi = dmrg(H, psi, sweeps; outputlevel=0)
+    @test energy < -12.0
+  end
+
+  @testset "QN-conserving Spin-one Heisenberg" begin
+    N = 10
+    sites = siteinds("S=1",N; conserve_qns=true)
+
+    ampo = AutoMPO()
+    for j=1:N-1
+      add!(ampo,"Sz",j,"Sz",j+1)
+      add!(ampo,0.5,"S+",j,"S-",j+1)
+      add!(ampo,0.5,"S-",j,"S+",j+1)
+    end
+    H = MPO(ampo,sites)
+
+    state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+    psi = randomMPS(sites,state,4)
 
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
