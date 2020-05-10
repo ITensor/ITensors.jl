@@ -155,7 +155,7 @@ end
       drho = nothing
       if noise(sweeps, sw) > 0.0
         # Use noise term when determining new MPS basis
-        drho = noise(sweeps, sw) * noiseterm(PH, phi, b, ortho)
+        drho = noise(sweeps, sw) * noiseterm(PH,phi,ortho)
       end
 
 @timeit_debug GLOBAL_TIMER "replacebond!" begin

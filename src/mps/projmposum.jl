@@ -40,11 +40,10 @@ end
 
 function noiseterm(P::ProjMPOSum,
                    phi::ITensor,
-                   b::Int,
                    dir::String)
-  nt = noiseterm(P.pm[1],phi,b,dir)
+  nt = noiseterm(P.pm[1],phi,dir)
   for n=2:length(P.pm)
-    nt += noiseterm(P.pm[n],phi,b,dir)
+    nt += noiseterm(P.pm[n],phi,dir)
   end
   return nt
 end
