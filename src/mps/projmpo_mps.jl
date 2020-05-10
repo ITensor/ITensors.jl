@@ -46,5 +46,4 @@ end
 
 noiseterm(P::ProjMPO_MPS,
           phi::ITensor,
-          b::Int,
-          dir::String) = noiseterm(P.PH,phi,b,dir)
+          dir::String) = noiseterm(P.PH,phi,dir)
