@@ -64,6 +64,7 @@ export
   maxdim,
   mindim,
   permute,
+  permute!,
   pop,
   popfirst,
   push,

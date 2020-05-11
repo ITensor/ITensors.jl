@@ -1001,6 +1001,17 @@ permute(T::ITensor,
         inds::Index...) = permute(T,
                                   IndexSet(inds...))
 
+function Base.permute!(T::ITensor{N},new_inds) where {N}
+  Tp = permute(T,new_inds)
+  T.store = Tp.store
+  T.inds = Tp.inds
+  return T
+end
+
+Base.permute!(T::ITensor,
+              inds::Index...) = permute!(T,IndexSet(inds...))
+
+
 Base.:*(T::ITensor, x::Number) = itensor(x*tensor(T))
 
 Base.:*(x::Number, T::ITensor) = T*x
