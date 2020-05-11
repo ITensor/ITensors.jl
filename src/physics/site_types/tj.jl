@@ -45,15 +45,14 @@ end
 function op(::tJSite,
             s::Index,
             opname::AbstractString)::ITensor
-  sP = prime(s)
   Emp = s(1)
-  EmpP = sP(1)
+  EmpP = s'(1)
   Up = s(2)
-  UpP = sP(2)
+  UpP = s'(2)
   Dn = s(3)
-  DnP = sP(3)
+  DnP = s'(3)
 
-  Op = ITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
   if opname == "Nup"
     Op[UpP, Up] = 1.
   elseif opname == "Ndn"
@@ -92,15 +91,15 @@ function op(::tJSite,
   elseif opname == "S⁻" || opname == "Sminus"
     Op[DnP, Up] = 1.
   elseif opname == "Emp" || opname == "0"
-    pEmp = ITensor(s)
+    pEmp = emptyITensor(s)
     pEmp[Emp] = 1.
     return pEmp
   elseif opname == "Up" || opname == "↑"
-    pU = ITensor(s)
+    pU = emptyITensor(s)
     pU[Up] = 1.
     return pU
   elseif opname == "Dn" || opname == "↓"
-    pD = ITensor(s)
+    pD = emptyITensor(s)
     pD[Dn] = 1.
     return pD
   else

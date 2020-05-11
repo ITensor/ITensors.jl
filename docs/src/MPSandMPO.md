@@ -12,7 +12,6 @@ MPO
 ```@docs
 MPS(::Int)
 MPS(::Type{<:Number}, ::Any)
-MPS(::Any)
 randomMPS
 productMPS
 ```

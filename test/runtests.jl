@@ -29,6 +29,7 @@ using Test
     "qnindex.jl",
     "qnitensor.jl",
     "qndiagitensor.jl",
+    "empty.jl",
     "qnmpo.jl",
     "readwrite.jl",
     "readme.jl",

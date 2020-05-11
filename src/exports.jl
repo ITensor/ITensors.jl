@@ -36,10 +36,12 @@ export
   hasqns,
   id,
   ind,
+  isindequal,
   noprime,
   plev,
   prime,
   removetags,
+  removeqns,
   replacetags,
   replacetags!,
   setdir,
@@ -136,6 +138,7 @@ export
   unioninds,
   unionind,
   vector,
+  emptyITensor,
 
 # iterativesolvers.jl
   davidson,

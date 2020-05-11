@@ -132,12 +132,6 @@ function Index(qnblocks::QNBlock...; dir::Arrow=Out,
                               plev = plev)
 end
 
-"""
-    dim(::QNIndex)
-
-Get the total dimension of the QN Index
-(the sum of the block dimensions).
-"""
 NDTensors.dim(i::QNIndex) = dim(space(i))
 
 NDTensors.nblocks(i::QNIndex) = nblocks(space(i))

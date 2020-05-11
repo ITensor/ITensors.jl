@@ -34,34 +34,27 @@ ITensors.
 MPS(N::Int) = MPS(N, Vector{ITensor}(undef, N))
 
 """
-    MPS(::Type{T<:Number}, sites)
+    MPS([::Type{T} = Float64, ]sites) where {T <: Number}
 
-Construct an MPS from a collection of indices
-with element type T.
+Construct an MPS filled with zeros from a collection of indices with element type `T`.
 """
-function MPS(::Type{T}, sites) where {T<:Number}
+function MPS(::Type{T}, sites) where {T <: Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
-      v[ii] = ITensor(T,l[ii], s)
+      v[ii] = emptyITensor(T,l[ii], s)
     elseif ii == N
-      v[ii] = ITensor(T,l[ii-1], s)
+      v[ii] = emptyITensor(T,l[ii-1], s)
     else
-      v[ii] = ITensor(T,l[ii-1],s,l[ii])
+      v[ii] = emptyITensor(T,l[ii-1],s,l[ii])
     end
   end
   return MPS(N, v)
 end
 
-"""
-    MPS(sites)
-
-Construct an MPS from a collection of indices
-with element type Float64.
-"""
 MPS(sites) = MPS(Float64, sites)
 
 """
@@ -79,10 +72,11 @@ function randomU(s1,s2)
     G = itensor(Q,dag(s1),dag(s2),s1',s2')
   else
     M = randomITensor(QN(),s1',s2',dag(s1),dag(s2))
-    U,S,V = svd(M,(s1',s2'))
+    U, S, V = svd(M,(s1',s2'))
     u = commonind(U,S)
     v = commonind(S,V)
-    G = (U*delta(dag(u),v))*V
+    replaceind!(U, u, v)
+    G = U * V
   end
   return G
 end
@@ -212,15 +206,15 @@ function productMPS(::Type{T},
   else
     links = [Index(1,"Link,l=$n") for n=1:N]
   end
-  M[1] = ITensor(T,ind(ivals[1]),links[1])
-  M[1][ivals[1],links[1](1)] = 1.0
+  M[1] = emptyITensor(ind(ivals[1]), links[1])
+  M[1][ivals[1],links[1](1)] = one(T)
   for n=2:N-1
     s = ind(ivals[n])
-    M[n] = ITensor(T,dag(links[n-1]),s,links[n])
-    M[n][links[n-1](1),ivals[n],links[n](1)] = 1.0
+    M[n] = emptyITensor(T,dag(links[n-1]),s,links[n])
+    M[n][links[n-1](1),ivals[n],links[n](1)] = one(T)
   end
-  M[N] = ITensor(T,dag(links[N-1]),ind(ivals[N]))
-  M[N][links[N-1](1),ivals[N]] = 1.0
+  M[N] = emptyITensor(T,dag(links[N-1]),ind(ivals[N]))
+  M[N][links[N-1](1),ivals[N]] = one(T)
   return M
 end
 

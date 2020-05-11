@@ -1,9 +1,11 @@
-module ITensors
+"""
+ITensors is a library for rapidly creating correct and efficient tensor network algorithms.
 
-#####################################
-# NDTensors
-#
-include("../NDTensors/src/NDTensors.jl")
+An ITensor is a tensor whose interface is independent of its memory layout. ITensor indices are objects which carry extra information and which 'recognize' each other (compare equal to each other).
+
+The ITensor library also includes composable and extensible algorithms for optimizing and transforming tensor networks, such as matrix product state and matrix product operators, such as the DMRG algorithm.
+"""
+module ITensors
 
 #####################################
 # External packages
@@ -11,7 +13,7 @@ include("../NDTensors/src/NDTensors.jl")
 using HDF5
 using KrylovKit
 using LinearAlgebra
-using .NDTensors
+using NDTensors
 using Printf
 using Random
 using StaticArrays
