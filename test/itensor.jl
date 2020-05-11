@@ -609,6 +609,19 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[k=>kk,i=>ii,j=>jj]==permA[i=>ii,j=>jj,k=>kk]
     end
+
+    Aorig = deepcopy(A)
+    permute!(A,k,j,i)
+    @test k==inds(A)[1]
+    @test j==inds(A)[2]
+    @test i==inds(A)[3]
+    for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
+      @test Aorig[k=>kk,i=>ii,j=>jj]==A[i=>ii,j=>jj,k=>kk]
+    end
+    for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
+      @test Aorig[k=>kk,i=>ii,j=>jj]==A[i=>ii,j=>jj,k=>kk]
+    end
+
     # TODO: I think this was doing slicing, but what is the output
     # of slicing an ITensor?
     #@testset "getindex and setindex with vector of IndexVals" begin
