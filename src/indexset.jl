@@ -1064,7 +1064,7 @@ block(inds::IndexSet,
       vals::Int...) = blockindex(inds, vals...)[2]
 
 function Base.show(io::IO, is::IndexSet)
-  print(io, typeof(is))
+  print(io,"IndexSet{$(length(is))} ")
   for i in is
     print(io, i)
     print(io, " ")
