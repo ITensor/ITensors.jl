@@ -1001,6 +1001,14 @@ permute(T::ITensor,
         inds::Index...) = permute(T,
                                   IndexSet(inds...))
 
+"""
+    permute!(T::ITensors, inds)
+    permute!(T::ITensors, inds::Index...)
+
+Modify the ITensor T to have indices permuted according
+to the input indices inds. The storage of the ITensor
+is permuted accordingly.
+"""
 function Base.permute!(T::ITensor{N},new_inds) where {N}
   Tp = permute(T,new_inds)
   T.store = Tp.store

@@ -107,5 +107,6 @@ factorize(::ITensor, ::Any...)
 
 ```@docs
 permute(::ITensor, ::Any)
+permute!(::ITensor, ::Any)
 ```
 
