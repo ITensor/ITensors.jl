@@ -97,6 +97,34 @@ using ITensors,
     @test norm(rT-T)/norm(T) < 1E-10
   end
 
+  @testset "MPO/MPS" begin
+    N = 6
+    sites = siteinds("S=1/2",N)
+
+    # MPO
+    mpo = makeRandomMPO(sites)
+
+    fo = h5open("data.h5","w")
+    write(fo,"mpo",mpo)
+    close(fo)
+
+    fi = h5open("data.h5","r")
+    rmpo = read(fi,"mpo",MPO)
+    close(fi)
+    @test prod( [norm(rmpo[i] - mpo[i])/norm(mpo[i]) < 1E-10 for i in 1:N] )
+
+    # MPS
+    mps = makeRandomMPS(sites)
+    fo = h5open("data.h5","w")
+    write(fo,"mps",mps)
+    close(fo)
+
+    fi = h5open("data.h5","r")
+    rmps = read(fi,"mps", MPS)
+    close(fi)
+    @test prod( [norm(rmps[i] - mps[i])/norm(mps[i]) < 1E-10 for i in 1:N] )
+
+  end
   #
   # Clean up the test hdf5 file
   #
