@@ -257,12 +257,12 @@ function Base.copyto!(T::ITensor,
     else
       bc_bc_bc = find_type(Broadcasted, bc_bc.args)
       if isnothing(α)
-        α = find_type(Number, bc_bc_bc.args)
+        β = find_type(Number, bc_bc_bc.args)
         B = find_type(ITensor, bc_bc_bc.args)
       else
         A, B = bc_bc_bc.args
       end
-      mul!(T, A, B, α, 1)
+      mul!(T, A, B, β, 1)
     end
   else
     error("When adding two ITensors in-place, one must be the same as the output ITensor")
