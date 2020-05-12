@@ -11,11 +11,6 @@ export
   entropy,
   truncerror,
 
-# arrow.jl
-  In,
-  Neither,
-  Out,
-
 # decomp.jl
   eigen,
   factorize,
