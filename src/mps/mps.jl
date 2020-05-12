@@ -415,6 +415,8 @@ function HDF5.write(parent::Union{HDF5File,HDF5Group},
   attrs(g)["version"] = 1
   N = length(M)
   write(g,"length",N)
+  write(g, "rlim", M.rlim)
+  write(g, "llim", M.llim)
   for n=1:N
     write(g,"MPS[$(n)]", M[n])
   end
@@ -428,8 +430,8 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
     error("HDF5 group or file does not contain MPS data")
   end
   N = read(g,"length")
-
+  rlim = read(g, "rlim")
+  llim = read(g, "llim")
   v = [read(g,"MPS[$(i)]",ITensor) for i in 1:N]
-
-  return MPS(v)
+  return MPS(N, v, llim, rlim)
 end
