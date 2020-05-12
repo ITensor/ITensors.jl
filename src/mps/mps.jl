@@ -407,3 +407,31 @@ function sample(m::MPS)
   return result
 end
 
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    M::MPS)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "MPS"
+  attrs(g)["version"] = 1
+  N = length(M)
+  write(g,"length",N)
+  write(g, "rlim", M.rlim)
+  write(g, "llim", M.llim)
+  for n=1:N
+    write(g,"MPS[$(n)]", M[n])
+  end
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{MPS})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "MPS"
+    error("HDF5 group or file does not contain MPS data")
+  end
+  N = read(g,"length")
+  rlim = read(g, "rlim")
+  llim = read(g, "llim")
+  v = [read(g,"MPS[$(i)]",ITensor) for i in 1:N]
+  return MPS(N, v, llim, rlim)
+end
