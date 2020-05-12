@@ -610,7 +610,7 @@ end
       @test A[k=>kk,i=>ii,j=>jj]==permA[i=>ii,j=>jj,k=>kk]
     end
 
-    Aorig = deepcopy(A)
+    Aorig = copy(A)
     permute!(A,k,j,i)
     @test k==inds(A)[1]
     @test j==inds(A)[2]

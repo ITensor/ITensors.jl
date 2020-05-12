@@ -1011,8 +1011,8 @@ is permuted accordingly.
 """
 function Base.permute!(T::ITensor{N},new_inds) where {N}
   Tp = permute(T,new_inds)
-  T.store = Tp.store
-  T.inds = Tp.inds
+  setstore!(T,store(Tp))
+  setinds!(T,inds(Tp))
   return T
 end
 
