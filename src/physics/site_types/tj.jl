@@ -1,9 +1,31 @@
-export tJSite
 
 const tJSite = TagType"tJ"
 
 function siteinds(::tJSite,
                   N::Int; kwargs...)
+  conserve_qns = get(kwargs,:conserve_qns,false)
+  conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
+  conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
+  conserve_parity = get(kwargs,:conserve_parity,conserve_qns)
+  if conserve_sz && conserve_nf
+    em = QN(("Nf",0,-1),("Sz", 0)) => 1
+    up = QN(("Nf",1,-1),("Sz",+1)) => 1
+    dn = QN(("Nf",1,-1),("Sz",-1)) => 1
+    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+  elseif conserve_nf
+    zer = QN("Nf",0,-1) => 1
+    one = QN("Nf",1,-1) => 2
+    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+  elseif conserve_sz
+    em = QN(("Sz", 0),("Pf",0,-2)) => 1
+    up = QN(("Sz",+1),("Pf",1,-2)) => 1
+    dn = QN(("Sz",-1),("Pf",1,-2)) => 1
+    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+  elseif conserve_parity
+    zer = QN("Pf",0,-2) => 1
+    one = QN("Pf",1,-2) => 2
+    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+  end
   return [Index(3,"Site,tJ,n=$n") for n=1:N]
 end
 
@@ -23,15 +45,14 @@ end
 function op(::tJSite,
             s::Index,
             opname::AbstractString)::ITensor
-  sP = prime(s)
   Emp = s(1)
-  EmpP = sP(1)
+  EmpP = s'(1)
   Up = s(2)
-  UpP = sP(2)
+  UpP = s'(2)
   Dn = s(3)
-  DnP = sP(3)
+  DnP = s'(3)
 
-  Op = ITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
   if opname == "Nup"
     Op[UpP, Up] = 1.
   elseif opname == "Ndn"
@@ -70,15 +91,15 @@ function op(::tJSite,
   elseif opname == "S⁻" || opname == "Sminus"
     Op[DnP, Up] = 1.
   elseif opname == "Emp" || opname == "0"
-    pEmp = ITensor(s)
+    pEmp = emptyITensor(s)
     pEmp[Emp] = 1.
     return pEmp
   elseif opname == "Up" || opname == "↑"
-    pU = ITensor(s)
+    pU = emptyITensor(s)
     pU[Up] = 1.
     return pU
   elseif opname == "Dn" || opname == "↓"
-    pD = ITensor(s)
+    pD = emptyITensor(s)
     pD[Dn] = 1.
     return pD
   else
@@ -87,3 +108,11 @@ function op(::tJSite,
   return Op
 end
 
+function has_fermion_string(::tJSite,
+            s::Index,
+            opname::AbstractString)::Bool
+  if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"
+    return true
+  end
+  return false
+end

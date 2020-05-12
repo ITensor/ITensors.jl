@@ -1,144 +1,234 @@
-export MPS,
-       sample,
-       sample!,
-       leftlim,
-       prime!,
-       primelinks!,
-       simlinks!,
-       inner,
-       isortho,
-       productMPS,
-       randomMPS,
-       replacebond!,
-       rightlim,
-       linkindex,
-       siteindex,
-       siteinds
 
+"""
+    MPS
 
-mutable struct MPS
-  N_::Int
-  A_::Vector{ITensor}
-  llim_::Int
-  rlim_::Int
-
-  MPS() = new(0,Vector{ITensor}(),0,0)
-
-  MPS(N::Int) = MPS(N,fill(ITensor(),N),0,N+1)
-
+A finite size matrix product state type.
+Keeps track of the orthogonality center.
+"""
+mutable struct MPS <: AbstractMPS
+  length::Int
+  data::Vector{ITensor}
+  llim::Int
+  rlim::Int
   function MPS(N::Int,
                A::Vector{<:ITensor},
-               llim::Int=0,
-               rlim::Int=N+1)
-    new(N,A,llim,rlim)
+               llim::Int = 0,
+               rlim::Int = N+1)
+    new(N, A, llim, rlim)
   end
 end
 
-function MPS(::Type{T},sites) where {T<:Number}
+"""
+    MPS()
+
+Construct an empty MPS with zero sites.
+"""
+MPS() = MPS(0, Vector{ITensor}(), 0, 0)
+
+"""
+    MPS(N::Int)
+
+Construct an MPS with N sites with default constructed
+ITensors.
+"""
+MPS(N::Int) = MPS(N, Vector{ITensor}(undef, N))
+
+"""
+    MPS([::Type{T} = Float64, ]sites) where {T <: Number}
+
+Construct an MPS filled with zeros from a collection of indices with element type `T`.
+"""
+function MPS(::Type{T}, sites) where {T <: Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
-      v[ii] = ITensor(T,l[ii], s)
+      v[ii] = emptyITensor(T,l[ii], s)
     elseif ii == N
-      v[ii] = ITensor(T,l[ii-1], s)
+      v[ii] = emptyITensor(T,l[ii-1], s)
     else
-      v[ii] = ITensor(T,l[ii-1],s,l[ii])
+      v[ii] = emptyITensor(T,l[ii-1],s,l[ii])
     end
   end
-  return MPS(N,v,0,N+1)
+  return MPS(N, v)
 end
 
-MPS(sites) = MPS(Float64,sites)
+MPS(sites) = MPS(Float64, sites)
 
-Base.length(m::MPS) = m.N_
+"""
+    MPS(v::Vector{<:ITensor})
 
-# TODO: make this vec?
-tensors(m::MPS) = m.A_
+Construct an MPS from a Vector of ITensors.
+"""
+MPS(v::Vector{<:ITensor}) = MPS(length(v), v)
 
-leftlim(m::MPS) = m.llim_
-rightlim(m::MPS) = m.rlim_
-
-function set_leftlim!(m::MPS,new_ll::Int)
-  m.llim_ = new_ll
+function randomU(s1,s2)
+  if !hasqns(s1) && !hasqns(s2)
+    mdim = dim(s1)*dim(s2)
+    RM = randn(mdim,mdim)
+    Q,_ = NDTensors.qr_positive(RM)
+    G = itensor(Q,dag(s1),dag(s2),s1',s2')
+  else
+    M = randomITensor(QN(),s1',s2',dag(s1),dag(s2))
+    U, S, V = svd(M,(s1',s2'))
+    u = commonind(U,S)
+    v = commonind(S,V)
+    replaceind!(U, u, v)
+    G = U * V
+  end
+  return G
 end
 
-function set_rightlim!(m::MPS,new_rl::Int)
-  m.rlim_ = new_rl
-end
-
-isortho(m::MPS) = (leftlim(m)+1 == rightlim(m)-1)
-
-function orthoCenter(m::MPS)
-  !isortho(m) && error("MPS has no well-defined orthogonality center")
-  return leftlim(m)+1
-end
-
-Base.getindex(M::MPS, n::Integer) = getindex(tensors(M),n)
-
-function Base.setindex!(M::MPS,T::ITensor,n::Integer)
-  (n <= leftlim(M)) && set_leftlim!(M,n-1)
-  (n >= rightlim(M)) && set_rightlim!(M,n+1)
-  setindex!(tensors(M),T,n)
-end
-
-Base.copy(m::MPS) = MPS(m.N_,copy(tensors(m)),m.llim_,m.rlim_)
-Base.similar(m::MPS) = MPS(m.N_, similar(tensors(m)), 0, m.N_)
-
-Base.eachindex(m::MPS) = 1:length(m)
-
-function Base.show(io::IO, M::MPS)
-  print(io,"MPS")
-  (length(M) > 0) && print(io,"\n")
-  for (i, A) ∈ enumerate(tensors(M))
-    if order(A) != 0
-      println(io,"[$i] $(inds(A))")
+function randomizeMPS!(M::MPS, sites, linkdim=1)
+  N = length(sites)
+  c = div(N,2)
+  max_pass = 100
+  for pass=1:max_pass,half=1:2
+    if half==1
+      (db,brange) = (+1, 1:1:N-1)
     else
-      println(io,"[$i] ITensor()")
+      (db,brange) = (-1, N:-1:2)
+    end
+    for b=brange
+      s1 = sites[b]
+      s2 = sites[b+db]
+      G = randomU(s1,s2)
+      T = noprime(G*M[b]*M[b+db])
+      rinds = uniqueinds(M[b],M[b+db])
+      U,S,V = svd(T,rinds;maxdim=linkdim)
+      M[b] = U
+      M[b+db] = S*V
+      M[b+db] /= norm(M[b+db])
+    end
+    if half==2 && dim(commonind(M[c],M[c+1])) >= linkdim
+      break
     end
   end
+  setleftlim!(M, 0)
+  setrightlim!(M, 2)
+  if dim(commonind(M[c],M[c+1])) < linkdim
+    error("MPS center bond dim less than requested")
+  end
 end
 
-function randomMPS(::Type{T}, sites) where {T<:Number}
-  M = MPS(T, sites)
-  for i in eachindex(sites)
-    randn!(M[i])
-    normalize!(M[i])
+function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
+  N = length(sites)
+  M = MPS(N)
+
+  if N==1
+    M[1] = ITensor(randn(dim(sites[1])),sites[1])
+    M[1] /= norm(M[1])
+    return M
   end
-  M.llim_ = 1
-  M.rlim_ = length(M)
+
+  l = Vector{Index}(undef,N)
+  
+  d = dim(sites[N])
+  chi = min(linkdim,d)
+  l[N-1] = Index(chi,"Link,l=$(N-1)")
+  O = NDTensors.random_orthog(chi,d)
+  M[N] = itensor(O,l[N-1],sites[N])
+
+  for j=N-1:-1:2
+    chi *= dim(sites[j])
+    chi = min(linkdim,chi)
+    l[j-1] = Index(chi,"Link,l=$(j-1)")
+    O = NDTensors.random_orthog(chi,dim(sites[j])*dim(l[j]))
+    T = reshape(O,(chi,dim(sites[j]),dim(l[j])))
+    M[j] = itensor(T,l[j-1],sites[j],l[j])
+  end
+
+  O = NDTensors.random_orthog(1,dim(sites[1])*dim(l[1]))
+  l0 = Index(1,"Link,l=0")
+  T = reshape(O,(1,dim(sites[1]),dim(l[1])))
+  M[1] = itensor(T,l0,sites[1],l[1])
+  M[1] *= setelt(l0=>1)
+
+  M.llim = 0
+  M.rlim = 2
+
   return M
 end
 
-randomMPS(sites) = randomMPS(Float64, sites)
+"""
+    randomMPS(::Type{T<:Number}, sites; linkdim=1)
 
-function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
-  N = length(ivals)
-  As = Vector{ITensor}(undef,N)
-  links  = Vector{Index}(undef,N)
-  for n=1:N
-    s = ind(ivals[n])
-    links[n] = Index(1,"Link,l=$n")
-    if n == 1
-      A = ITensor(T, s,links[n])
-      A[ivals[n],links[n](1)] = 1.0
-    elseif n == N
-      A = ITensor(T, links[n-1],s)
-      A[links[n-1](1),ivals[n]] = 1.0
-    else
-      A = ITensor(T, links[n-1],s,links[n])
-      A[links[n-1](1),ivals[n],links[n](1)] = 1.0
-    end
-    As[n] = A
+Construct a random MPS with link dimension `linkdim` of 
+type `T`.
+"""
+function randomMPS(::Type{T}, sites, linkdim::Int=1) where {T<:Number}
+  if hasqns(sites[1])
+    error("initial state required to use randomMPS with QNs")
   end
-  return MPS(N,As,0,2)
+
+  # For non-QN-conserving MPS, instantiate
+  # the random MPS directly as a circuit:
+  return randomCircuitMPS(sites,linkdim)
 end
 
-productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64, ivals::Vector{<:IndexVal})
+"""
+    randomMPS(sites; linkdim=1)
 
-function productMPS(::Type{T}, sites,
+Construct a random MPS with link dimension `linkdim` of 
+type `Float64`.
+"""
+randomMPS(sites, linkdim::Int=1) = randomMPS(Float64, sites, linkdim)
+
+"""
+    randomMPS(sites,state; linkdim=1)
+
+Construct a real, random MPS with link dimension `linkdim`,
+made by randomizing an initial product state specified by
+`state`.
+"""
+function randomMPS(sites,state,linkdim::Int=1)::MPS
+  M = productMPS(sites,state)
+  if linkdim > 1
+    randomizeMPS!(M,sites,linkdim)
+  end
+  return M
+end
+
+"""
+    productMPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
+
+Construct a product state MPS with element type `T` and
+nonzero values determined from the input IndexVals.
+"""
+function productMPS(::Type{T},
+                    ivals::Vector{<:IndexVal}) where {T<:Number}
+  N = length(ivals)
+  M = MPS(N)
+  if hasqns(ind(ivals[1]))
+    links = [Index(QN()=>1;tags="Link,l=$n") for n=1:N]
+  else
+    links = [Index(1,"Link,l=$n") for n=1:N]
+  end
+  M[1] = emptyITensor(ind(ivals[1]), links[1])
+  M[1][ivals[1],links[1](1)] = one(T)
+  for n=2:N-1
+    s = ind(ivals[n])
+    M[n] = emptyITensor(T,dag(links[n-1]),s,links[n])
+    M[n][links[n-1](1),ivals[n],links[n](1)] = one(T)
+  end
+  M[N] = emptyITensor(T,dag(links[N-1]),ind(ivals[N]))
+  M[N][links[N-1](1),ivals[N]] = one(T)
+  return M
+end
+
+"""
+    productMPS(ivals::Vector{<:IndexVal})
+
+Construct a product state MPS with element type `Float64` and
+nonzero values determined from the input IndexVals.
+"""
+productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64,
+                                                   ivals::Vector{<:IndexVal})
+
+function productMPS(::Type{T},
+                    sites,
                     states) where {T<:Number}
   if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial states don't match"))
@@ -149,70 +239,98 @@ end
 
 productMPS(sites, states) = productMPS(Float64, sites, states)
 
-function linkindex(M::MPS,j::Integer)
-  N = length(M)
-  j ≥ length(M) && error("No link index to the right of site $j (length of MPS is $N)")
-  li = commonindex(M[j],M[j+1])
-  if isnothing(li)
-    error("linkindex: no MPS link index at link $j")
-  end
-  return li
-end
-
-function siteindex(M::MPS,j::Integer)
+function siteind(M::MPS, j::Int)
   N = length(M)
   if j == 1
-    si = uniqueindex(M[j],M[j+1])
+    si = uniqueind(M[j], M[j+1])
   elseif j == N
-    si = uniqueindex(M[j],M[j-1])
+    si = uniqueind(M[j], M[j-1])
   else
-    si = uniqueindex(M[j],(M[j-1],M[j+1]))
+    si = uniqueind(M[j], M[j-1], M[j+1])
   end
   return si
 end
 
 function siteinds(M::MPS)
-  return [siteindex(M,j) for j in 1:length(M)]
+  return [siteind(M, j) for j in 1:length(M)]
 end
 
-function replacesites!(M::MPS,sites)
+function replace_siteinds!(M::MPS, sites)
   for j in eachindex(M)
-    sj = siteindex(M,j)
-    replaceindex!(M[j],sj,sites[j])
+    sj = siteind(M, j)
+    replaceind!(M[j], sj, sites[j])
   end
   return M
 end
 
-function inner(M1::MPS, M2::MPS)::Number
+replace_siteinds(M::MPS, sites) = replace_siteinds!(copy(M), sites)
+
+"""
+    dot(psi::MPS, phi::MPS; make_inds_match = true)
+    inner(psi::MPS, phi::MPS; make_inds_match = true)
+
+Compute <psi|phi>.
+
+If `make_inds_match = true`, the function attempts to make
+the site indices match before contracting (so for example, the
+inputs can have different site indices, as long as they 
+have the same dimensions or QN blocks).
+"""
+function LinearAlgebra.dot(M1::MPS, M2::MPS; make_inds_match::Bool = true)::Number
   N = length(M1)
   if length(M2) != N
-      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
+    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
   end
   M1dag = dag(M1)
-  simlinks!(M1dag)
-  O = M1dag[1]*M2[1]
+  sim_linkinds!(M1dag)
+  if make_inds_match
+    replace_siteinds!(M1dag, siteinds(M2))
+  end
+  O = M1dag[1] * M2[1]
   for j in eachindex(M1)[2:end]
     O = (O*M1dag[j])*M2[j]
   end
   return O[]
 end
 
+inner(M1::MPS, M2::MPS; kwargs...) = dot(M1, M2; kwargs...)
+
+"""
+    replacebond!(M::MPS, b::Int, phi::ITensor; kwargs...)
+
+Factorize the ITensor `phi` and replace the ITensors
+`b` and `b+1` of MPS `M` with the factors. Choose
+the orthogonality with `ortho="left"/"right"`.
+"""
 function replacebond!(M::MPS,
                       b::Int,
                       phi::ITensor;
                       kwargs...)
-  FU,FV,spec = factorize(phi,inds(M[b]); which_factorization="automatic",
-                           tags=tags(linkindex(M,b)), kwargs...)
-  M[b]   = FU
-  M[b+1] = FV
+  ortho::String = get(kwargs, :ortho, "left")
+  which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
+  normalize::Bool = get(kwargs, :normalize, false)
 
-  dir = get(kwargs,:dir,"center")
-  if dir=="fromright"
-    M.llim_ ==b && (M.llim_ -= 1)
-    M.rlim_ == b+2 && (M.rlim_ -= 1)
-  elseif dir=="fromleft"
-    M.llim_ == b-1 && (M.llim_ += 1)
-    M.rlim_ == b+1 && (M.rlim_ += 1)
+  # Deprecated keywords
+  if haskey(kwargs, :dir)
+    error("""dir keyword in replacebond! has been replaced by ortho.
+          Note that the options are now the same as factorize, so use `left` instead of `fromleft` and `right` instead of `fromright`.""")
+  end
+
+  L,R,spec = factorize(phi,inds(M[b]); which_decomp = which_decomp,
+                                       tags = tags(linkind(M,b)),
+                                       kwargs...)
+  M[b]   = L
+  M[b+1] = R
+  if ortho == "left"
+    leftlim(M) == b-1 && setleftlim!(M, leftlim(M)+1)
+    rightlim(M) == b+1 && setrightlim!(M, rightlim(M)+1)
+    normalize && (M[b+1] ./= norm(M[b+1]))
+  elseif ortho == "right"
+    leftlim(M) == b && setleftlim!(M, leftlim(M)-1)
+    rightlim(M) == b+2 && setrightlim!(M, rightlim(M)-1)
+    normalize && (M[b] ./= norm(M[b]))
+  else
+    error("In replacebond!, got ortho = $ortho, only currently supports `left` and `right`.")
   end
   return spec
 end
@@ -230,14 +348,14 @@ orthogonalize!(m,1) will be called before
 computing the sample.
 """
 function sample!(m::MPS)
-  orthogonalize!(m,1)
+  orthogonalize!(m, 1)
   return sample(m)
 end
 
 """
     sample(m::MPS)
 
-Given a normalized MPS m with `orthoCenter(m)==1`,
+Given a normalized MPS m with `orthocenter(m)==1`,
 returns a `Vector{Int}` of `length(m)`
 corresponding to one sample of the
 probability distribution defined by
@@ -247,8 +365,8 @@ that the MPS represents
 function sample(m::MPS)
   N = length(m)
 
-  if orthoCenter(m) != 1
-    error("sample: MPS m must have orthoCenter(m)==1")
+  if orthocenter(m) != 1
+    error("sample: MPS m must have orthocenter(m)==1")
   end
   if abs(1.0-norm(m[1])) > 1E-8
     error("sample: MPS is not normalized, norm=$(norm(m[1]))")
@@ -258,7 +376,7 @@ function sample(m::MPS)
   A = m[1]
 
   for j=1:N
-    s = siteindex(m,j)
+    s = siteind(m,j)
     d = dim(s)
     # Compute the probability of each state
     # one-by-one and stop when the random
@@ -273,7 +391,7 @@ function sample(m::MPS)
       projn = ITensor(s)
       projn[s[n]] = 1.0
       An = A*projn
-      pn = scalar(dag(An)*An) |> real
+      pn = real(scalar(dag(An)*An))
       pdisc += pn
       (r < pdisc) && break
       n += 1
@@ -289,9 +407,3 @@ function sample(m::MPS)
   return result
 end
 
-
-@doc """
-inner(psi::MPS, phi::MPS)
-
-Compute <psi|phi>
-""" inner

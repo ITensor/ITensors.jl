@@ -1,23 +1,26 @@
-export AbstractObserver,
-       measure!,
-       checkdone!,
-       NoObserver,
-       DMRGObserver,
-       measurements,
-       energies,
-       truncerrors
-
 
 abstract type AbstractObserver end
 
 measure!(o::AbstractObserver; kwargs...) = nothing
 checkdone!(o::AbstractObserver; kwargs...) = false
 
+"""
+NoObserver is a trivial implementation of an
+observer type which can be used as a default
+argument for DMRG routines taking an AbstractObserver
+"""
 struct NoObserver <: AbstractObserver
 end
 
 const DMRGMeasurement = Vector{Vector{Float64}}
 
+"""
+DMRGObserver is an implementation of an
+observer object (<:AbstractObserver) which
+implements custom measurements and allows
+the `dmrg` function to return early if an
+energy convergence criterion is met.
+"""
 struct DMRGObserver <: AbstractObserver
   ops::Vector{String}
   sites::Vector{<:Index}
@@ -27,17 +30,17 @@ struct DMRGObserver <: AbstractObserver
   etol::Float64
   minsweeps::Int64
 
-  function DMRGObserver(etol::Real=0, 
-                        minsweeps::Int=2) 
-    new([],[],Dict{String,DMRGMeasurement}(),[],[],etol,minsweeps)
+  function DMRGObserver(energy_tol=0.0, 
+                        minsweeps=2) 
+    new([],[],Dict{String,DMRGMeasurement}(),[],[],energy_tol,minsweeps)
   end
 
   function DMRGObserver(ops::Vector{String}, 
-                        sites::Vector{<:Index},
-                        etol::Real=0,
-                        minsweeps::Int=2)
+                        sites::Vector{<:Index};
+                        energy_tol=0.0,
+                        minsweeps=2)
     measurements = Dict(o => DMRGMeasurement() for o in ops)
-    return new(ops,sites,measurements,[],[],etol,minsweeps)
+    return new(ops,sites,measurements,[],[],energy_tol,minsweeps)
   end
 end
 
@@ -47,7 +50,7 @@ sites(obs::DMRGObserver) = obs.sites
 ops(obs::DMRGObserver) = obs.ops
 truncerrors(obs::DMRGObserver) = obs.truncerrs
 
-function measureLocalOps!(obs::DMRGObserver,
+function measurelocalops!(obs::DMRGObserver,
                           wf::ITensor,
                           i::Int)
   for o in ops(obs)
@@ -68,7 +71,7 @@ function measure!(obs::DMRGObserver;
   if half_sweep==2
     N = length(psi)
 
-    if b==N-1
+    if b==(N-1)
       for o in ops(obs)
         push!(measurements(obs)[o],zeros(N))
       end
@@ -80,21 +83,21 @@ function measure!(obs::DMRGObserver;
     # We want to measure at n=b+1 because there the tensor has been
     # already fully updated (by the right and left pass of the sweep).
     wf = psi[b]*psi[b+1]
-    measureLocalOps!(obs,wf,b+1)
+    measurelocalops!(obs,wf,b+1)
 
     if b==1
       push!(energies(obs), energy)
-      measureLocalOps!(obs,wf,b)
+      measurelocalops!(obs,wf,b)
     end
     truncerr > truncerrors(obs)[end] && (truncerrors(obs)[end] = truncerr)
   end
 end
 
 function checkdone!(o::DMRGObserver; kwargs...)
-  quiet = get(kwargs,:quiet,false)
+  outputlevel = get(kwargs,:outputlevel,false)
   if (length(energies(o)) > o.minsweeps &&
       abs(energies(o)[end] - energies(o)[end-1]) < o.etol)
-    !quiet && println("Energy difference less than $(o.etol), stopping DMRG")
+    outputlevel > 0 && println("Energy difference less than $(o.etol), stopping DMRG")
     return true
   end
   return false

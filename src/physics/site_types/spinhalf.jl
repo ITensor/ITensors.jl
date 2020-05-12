@@ -1,9 +1,13 @@
-export SpinHalfSite
 
 const SpinHalfSite = Union{TagType"S=1/2", TagType"SpinHalf"}
 
 function siteinds(::SpinHalfSite,
                   N::Int; kwargs...)
+  conserve_qns = get(kwargs,:conserve_qns,false)
+  conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
+  if conserve_sz
+    return [Index(QN("Sz",+1)=>1,QN("Sz",-1)=>1;tags="Site,S=1/2,n=$n") for n=1:N]
+  end
   return [Index(2,"Site,S=1/2,n=$n") for n=1:N]
 end
 
@@ -21,13 +25,12 @@ end
 function op(::SpinHalfSite,
             s::Index,
             opname::AbstractString;kwargs...)::ITensor
-  sP = prime(s)
   Up = s(1)
-  UpP = sP(1)
+  UpP = s'(1)
   Dn = s(2)
-  DnP = sP(2)
+  DnP = s'(2)
  
-  Op = ITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
 
   if opname == "S⁺" || opname == "Splus" || opname == "S+"
     Op[UpP, Dn] = 1.
@@ -51,11 +54,11 @@ function op(::SpinHalfSite,
   elseif opname == "projDn"
     Op[DnP, Dn] = 1.
   elseif opname == "Up" || opname == "↑"
-    pU = ITensor(s)
+    pU = emptyITensor(s)
     pU[Up] = 1.
     return pU
   elseif opname == "Dn" || opname == "↓"
-    pD = ITensor(s)
+    pD = emptyITensor(s)
     pD[Dn] = 1.
     return pD
   else

@@ -103,3 +103,6 @@ using ITensors,
   rm("data.h5",force=true)
 
 end
+
+nothing
+nothing

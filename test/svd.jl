@@ -8,28 +8,28 @@ using ITensors,
          1.0 1.0 1.0 1.0;
          0.0 0.5 0.5 1.0;
          0.0 1.0 1.0 2.0]
-    U,S,V = svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    U,S,V = NDTensors.svd_recursive(M)
+    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
   end
 
   @testset "Real Matrix" begin
     M = rand(10,20)
-    U,S,V = svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    U,S,V = NDTensors.svd_recursive(M)
+    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
 
     M = rand(20,10)
-    U,S,V = svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    U,S,V = NDTensors.svd_recursive(M)
+    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
   end
 
   @testset "Cplx Matrix" begin
     M = rand(ComplexF64,10,15)
-    U,S,V = svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    U,S,V = NDTensors.svd_recursive(M)
+    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
 
     M = rand(ComplexF64,15,10)
-    U,S,V = svd_recursive(M)
-    @test norm(U*ITensors.LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    U,S,V = NDTensors.svd_recursive(M)
+    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
   end
 
   @testset "Regression Test 1" begin
@@ -58,10 +58,12 @@ using ITensors,
     u1 = Index(2,"u1")
     u2 = Index(2,"u2")
 
-    T = ITensor(M,t1,t2,u1,u2)
+    T = itensor(M,t1,t2,u1,u2)
 
     U,S,V = svd(T,(u1,t1))
     @test norm(U*S*V-T)/norm(T) < 1E-10
   end
 
 end
+
+nothing

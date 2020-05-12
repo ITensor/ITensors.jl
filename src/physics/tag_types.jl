@@ -1,9 +1,3 @@
-export TagType,
-       TagType_str,
-       op,
-       siteinds,
-       state
-
 
 """
 TagType is a parameterized type which allows
@@ -50,7 +44,7 @@ function op(s::Index,
   opname = strip(opname)
 
   if opname == "Id"
-    Op = ITensor(dag(s),s')
+    Op = emptyITensor(dag(s),s')
     for n=1:dim(s)
       Op[dag(s)(n),s'(n)] = 1.0
     end
@@ -63,7 +57,7 @@ function op(s::Index,
   if !isnothing(starpos)
     op1 = opname[1:starpos.start-1]
     op2 = opname[starpos.start+1:end]
-    return matmul(op(s,op1;kwargs...),op(s,op2;kwargs...))
+    return product(op(s,op1;kwargs...),op(s,op2;kwargs...))
   end
 
   return _call_op(s,opname;kwargs...)
@@ -106,15 +100,37 @@ function state(sset::Vector{<:Index},
 end
 
 function siteinds(d::Integer,
-                  N::Integer)
+                  N::Integer; kwargs...)
   return [Index(d,"Site,n=$n") for n=1:N]
 end
 
 function siteinds(str::String,
-                  N::Integer)
+                  N::Integer; kwargs...)
   TType = TagType{Tag(str)}
   if !hasmethod(siteinds,Tuple{TType,Int})
     error("Overload of \"siteinds\" function not found for tag type \"$str\"")
   end
-  return siteinds(TType(),N)
+  return siteinds(TType(),N; kwargs...)
+end
+
+function has_fermion_string(s::Index,
+                            opname::AbstractString;
+                            kwargs...)::Bool
+  opname = strip(opname)
+  use_tag = 0
+  nfound = 0
+  for n=1:length(tags(s))
+    TType = TagType{tags(s)[n]}
+    if hasmethod(has_fermion_string,Tuple{TType,Index,AbstractString})
+      use_tag = n
+      nfound += 1
+    end
+  end
+  if nfound == 0
+    return false
+  elseif nfound > 1
+    error("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\"")
+  end
+  TType = TagType{tags(s)[use_tag]}
+  return has_fermion_string(TType(),s,opname;kwargs...)
 end

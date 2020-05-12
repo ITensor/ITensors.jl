@@ -19,17 +19,15 @@ function ctmrg(T::ITensor,
     Clu⁽¹⁾ = Clu*Al*Au*T
 
     ## Diagonalize the grown CTM
-    ld = findindex(Clu⁽¹⁾,"link,down")
-    sd = findindex(Clu⁽¹⁾,"site,down")
-    lr = findindex(Clu⁽¹⁾,"link,right")
-    sr = findindex(Clu⁽¹⁾,"site,right")
+    ld = firstind(Clu⁽¹⁾,"link,down")
+    sd = firstind(Clu⁽¹⁾,"site,down")
+    lr = firstind(Clu⁽¹⁾,"link,right")
+    sr = firstind(Clu⁽¹⁾,"site,right")
 
-    Ud,Cdr = eigenHermitian(Clu⁽¹⁾, (ld,sd), (lr,sr);
-                            ispossemidef=true,
-                            maxdim=χmax,
-                            lefttags="link,down,renorm",
-                            righttags="link,right,renorm",
-                            truncate=true)
+    Cdr,Ur = eigen(Clu⁽¹⁾, (ld, sd), (lr, sr); ishermitian = true,
+                                               maxdim = χmax,
+                                               lefttags = "link,down,renorm",
+                                               righttags = "link,right,renorm")
 
     ## The renormalized CTM is the diagonal matrix of eigenvalues
     Clu = replacetags(Cdr,"renorm","orig")
@@ -38,6 +36,7 @@ function ctmrg(T::ITensor,
     Clu = Clu/norm(Clu)
 
     ## Calculate the renormalized half row transfer matrix (HRTM)
+    Ud = replacetags(Ur,"right","down")
     Uu = replacetags(Ud,"down","up")
 
     Al = Al*Uu*T*Ud
@@ -87,13 +86,15 @@ end
   # Normalize MPS tensor
   trA² = Clu*mapprime(Clu,0,1,"up")*Al*
          mapprime(Al,0,1,"link")*
-         mapprime(replacetags(Clu,("up",0),("down",1)),0,1,"left")*
+         mapprime(replacetags(mapprime(Clu,0,1,"up"),"up","down"),0,1,"left")*
          replacetags(mapprime(Clu,0,1,"left"),"up","down")
   Al = Al/sqrt(scalar(trA²))
 
   ## Get environment tensors for a single site measurement
   Ar = mapprime(replacetags(Al,"left","right","site"),0,1,"link")
-  Au = replacetags(replacetags(replacetags(Al,"left","up","site"),"down","left","link"),"up","right","link")
+  Au = replacetags(replacetags(replacetags(Al,"left","up","site"),
+                                              "down","left","link"),
+                                              "up","right","link")
   Ad  = mapprime(replacetags(Au,"up","down","site"),0,1,"link")
   Cld = mapprime(replacetags(Clu,"up","down"),0,1,"left")
   Cru = mapprime(replacetags(Clu,"left","right"),0,1,"up")
@@ -109,3 +110,4 @@ end
   @test abs(m)≈ising_magnetization(β)
 end
 
+nothing

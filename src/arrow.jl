@@ -1,6 +1,3 @@
-export In,
-       Out,
-       Neither
 
 """
    Arrow
