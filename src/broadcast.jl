@@ -257,7 +257,7 @@ function Base.copyto!(T::ITensor,
     else
       bc_bc_bc = find_type(Broadcasted, bc_bc.args)
       if isnothing(α)
-        α = find_type(Number, bc_bc_bc.args)
+      #  α = find_type(Number, bc_bc_bc.args)
         B = find_type(ITensor, bc_bc_bc.args)
       else
         A, B = bc_bc_bc.args
