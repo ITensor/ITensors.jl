@@ -431,3 +431,29 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   return res
 end
 
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    M::MPO)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "MPO"
+  attrs(g)["version"] = 1
+  N = length(M)
+  write(g,"length",N)
+  for n=1:N
+    write(g,"MPO[$(n)]", M[n])
+  end
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{MPO})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "MPO"
+    error("HDF5 group or file does not contain MPO data")
+  end
+  N = read(g,"length")
+
+  v = [read(g,"MPO[$(i)]",ITensor) for i in 1:N]
+
+  return MPO(v)
+end
