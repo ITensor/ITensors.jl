@@ -1169,9 +1169,15 @@ end
 w .+= a .* v
 ```
 """
-LinearAlgebra.axpy!(a::Number,
-                    v::ITensor,
-                    w::ITensor) = (w .+= a .* v)
+function LinearAlgebra.axpy!(a::Number,
+                             v::ITensor,
+                             w::ITensor)
+  return map!((r, t) -> r + a * t, w, w, v)
+end
+
+#LinearAlgebra.axpy!(a::Number,
+#                    v::ITensor,
+#                    w::ITensor) = (w .+= a .* v)
 
 """
 axpby!(a,v,b,w)
