@@ -1,6 +1,8 @@
 using ITensors,
       Test
 
+import ITensors: nactive
+
 @testset "QN" begin
 
   @testset "QNVal Basics" begin
@@ -45,6 +47,7 @@ using ITensors,
     @test isactive(q[1])
     @test val(q,"P") == 1
     @test modulus(q,"P") == 2
+    @test nactive(q) == 1
 
     q = QN(("A",1),("B",2))
     @test isactive(q[1])
@@ -57,6 +60,14 @@ using ITensors,
     q = QN(("B",2),("A",1))
     @test val(q,"A") == 1
     @test val(q,"B") == 2
+    @test nactive(q) == 2
+
+    q = QN(("A",1),("B",2),("C",3),("D",4))
+    @test nactive(q) == 4
+
+    @test_throws BoundsError begin
+      q = QN(("A",1),("B",2),("C",3),("D",4),("E",5))
+    end
   end
 
   @testset "Comparison" begin
