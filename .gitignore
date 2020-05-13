@@ -7,3 +7,4 @@ docs/build/
 precompile/tmp
 .DS_Store
 benchmark/*.json
+.benchmarkci
