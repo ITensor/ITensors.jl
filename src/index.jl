@@ -488,12 +488,12 @@ isindequal(iv1::IndexValOrPairIndexInt,
 
 plev(iv::IndexValOrPairIndexInt) = plev(ind(iv))
 
-prime(iv::IndexValOrPairIndexInt,
+prime(iv::IndexVal,
       inc::Integer = 1) = IndexVal(prime(ind(iv), inc), val(iv))
 
-dag(iv::IndexValOrPairIndexInt) = IndexVal(dag(ind(iv)), val(iv))
+dag(iv::IndexVal) = IndexVal(dag(ind(iv)), val(iv))
 
-Base.adjoint(iv::IndexValOrPairIndexInt) = IndexVal(prime(ind(iv)), val(iv))
+Base.adjoint(iv::IndexVal) = IndexVal(prime(ind(iv)), val(iv))
 
 #
 # Printing, reading, and writing

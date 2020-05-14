@@ -28,6 +28,17 @@ using ITensors,
     @test D[i(5),i'(5)] == 5
   end
 
+  @testset "diagITensor Tuple constructor" begin
+    i = Index(QN(0)=>2, QN(1)=>3; tags="i")
+
+    D = diagITensor((i, dag(i')))
+
+    for n in nnzblocks(D)
+      b = nzblock(D, n)
+      @test flux(D, b) == QN()
+    end
+  end
+
   @testset "delta" begin
     i = Index(QN(0)=>2,QN(1)=>3; tags="i")
     ĩ = sim(i; tags="i_sim")
@@ -47,6 +58,18 @@ using ITensors,
 
     @test norm(dense(NDTensors.tensor(A)) -
                dense(NDTensors.tensor(B))) ≈ 0
+  end
+
+  @testset "delta Tuple constructor" begin
+    i = Index(QN(0)=>2, QN(1)=>3; tags="i")
+    ĩ = sim(i; tags="i_sim")
+
+    δiĩ = δ((dag(i), ĩ))
+
+    for n in nnzblocks(δiĩ)
+      b = nzblock(δiĩ, n)
+      @test flux(δiĩ, b) == QN()
+    end
   end
 
 end

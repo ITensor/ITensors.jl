@@ -1,5 +1,8 @@
 
-const QNIndexSet{N} = IndexSet{N,QNIndex}
+const QNIndexSet{N} = IndexSet{N, QNIndex, NTuple{N, QNIndex}}
+
+const QNIndices{N} = Union{QNIndexSet{N},
+                           NTuple{N, QNIndex}}
 
 # Get a list of the non-zero blocks given a desired flux
 # TODO: make a fillqns(inds::IndexSet) function that makes all indices
