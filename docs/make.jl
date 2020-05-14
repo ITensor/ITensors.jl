@@ -14,7 +14,8 @@ makedocs(sitename = "ITensors.jl";
                   "ITensor" => "ITensorType.md",
                   "MPS and MPO" => "MPSandMPO.md",
                   "DMRG" => "DMRG.md",
-                  "AutoMPO" => "AutoMPO.md"],
+                  "AutoMPO" => "AutoMPO.md",
+                  "ProjMPO" => "ProjMPO.md"]
          format = Documenter.HTML(prettyurls = false),
          doctest = true,
          checkdocs = :none)
