@@ -430,7 +430,7 @@ The number of indices, `length(inds(A))`.
 """
 order(T::ITensor) = ndims(T)
 
-Base.ndims(::ITensor{N}) = N
+Base.ndims(::ITensor{N}) where {N} = N
 
 """
     dim(A::ITensor)
