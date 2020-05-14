@@ -40,7 +40,7 @@ end
 ITensor(inds::QNIndex...) = ITensor(Float64, QN(), IndexSet(inds...))
 
 """
-    emptyITensor([::Type{ElT} = Float64, ]inds::QNIndexSet)
+    emptyITensor([::Type{ElT} = Float64, ]inds)
     emptyITensor([::Type{ElT} = Float64, ]inds::QNIndex...)
 
 Construct an ITensor with `NDTensors.BlockSparse` storage of element type `ElT` with the no blocks.

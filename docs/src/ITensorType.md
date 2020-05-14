@@ -9,45 +9,44 @@ ITensor
 ## Dense Constructors
 
 ```@docs
-ITensor(::Type{<:Number}, ::IndexSet)
-ITensor(::Type{<:Number}, ::UndefInitializer, ::IndexSet)
-randomITensor(::Type{<:Number}, ::IndexSet)
+ITensor(::Type{<:Number}, ::ITensors.Indices)
+ITensor(::Type{<:Number}, ::UndefInitializer, ::ITensors.Indices)
+randomITensor(::Type{<:Number}, ::ITensors.Indices)
 setelt(::IndexVal)
 ```
 
 ## QN BlockSparse Constructors
 
 ```@docs
-ITensor(::Type{<:Number}, ::QN, ::IndexSet)
-ITensor(::Type{<:Number}, ::ITensors.QNIndexSet)
+ITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
 ```
 
-## Zero Constructors
+## Empty Constructors
 
 ```@docs
-emptyITensor(::Type{<:Number}, ::IndexSet)
+emptyITensor(::Type{<:Number}, ::ITensors.Indices)
 ```
 
-## QN Zero Constructors
+## QN Empty Constructors
 
 ```@docs
-emptyITensor(::Type{<:Number}, ::ITensors.QNIndexSet)
+emptyITensor(::Type{<:Number}, ::ITensors.QNIndices)
 ```
 
 ## Diagonal constructors
 
 ```@docs
-diagITensor(::Type{<:Number}, ::IndexSet)
-diagITensor(::Vector{<:Number}, ::IndexSet)
-diagITensor(::Number, ::IndexSet)
-delta(::Type{<:Number}, ::IndexSet)
+diagITensor(::Type{<:Number}, ::ITensors.Indices)
+diagITensor(::Vector{<:Number}, ::ITensors.Indices)
+diagITensor(::Number, ::ITensors.Indices)
+delta(::Type{<:Number}, ::ITensors.Indices)
 ```
 
 ## QN Diagonal constructors
 
 ```@docs
-diagITensor(::Type{<:Number}, ::QN, ::IndexSet)
-delta(::Type{<:Number}, ::QN, ::IndexSet)
+diagITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
+delta(::Type{<:Number}, ::QN, ::ITensors.Indices)
 ```
 
 ## Getting and setting elements
