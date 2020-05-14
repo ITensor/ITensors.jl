@@ -186,11 +186,38 @@ add!(ampo::AutoMPO,op::String, i::Int) = add!(ampo,1.0,op,i)
          op1::String, i1::Int,
          op2::String, i2::Int)
 
+    +(ampo:AutoMPO, term::Tuple)
+
 Add a multi-site operator term
 to the AutoMPO `ampo`. Each operator
 is specified by a name (String) and a
 site number (Int). The second version
 accepts a real or complex coefficient.
+
+The version involving the `+` operator
+accepts a tuple with entries either
+(String,Int,String,Int,...) or
+(Number,String,Int,String,Int,...)
+where these tuple values are the same
+as valid inputs to the `add!` function.
+For inputting a very large number of
+terms (tuples) to an AutoMPO, consider
+using the broadcasted operator `.+=`
+which avoids reallocating the AutoMPO
+after each addition.
+
+# Examples
+```julia
+julia> ampo = AutoMPO()
+
+julia> add!(ampo,"Sz",2,"Sz",3)
+
+julia> ampo += ("Sz",3,"Sz",4)
+
+julia> ampo += (0.5,"S+",4,"S-",5)
+
+julia> ampo .+= (0.5,"S+",5,"S-",6)
+```
 """
 function add!(ampo::AutoMPO,
               coef::Number,

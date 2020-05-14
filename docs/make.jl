@@ -13,7 +13,8 @@ makedocs(sitename = "ITensors.jl";
                   "IndexSet" => "IndexSetType.md",
                   "ITensor" => "ITensorType.md",
                   "MPS and MPO" => "MPSandMPO.md",
-                  "DMRG" => "DMRG.md"],
+                  "DMRG" => "DMRG.md",
+                  "AutoMPO" => "AutoMPO.md"],
          format = Documenter.HTML(prettyurls = false),
          doctest = true,
          checkdocs = :none)
