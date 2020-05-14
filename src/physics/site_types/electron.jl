@@ -51,17 +51,16 @@ end
 function op(::ElectronSite,
             s::Index,
             opname::AbstractString)::ITensor
-  sP = prime(s)
   Emp   = s(1)
-  EmpP  = sP(1)
+  EmpP  = s'(1)
   Up    = s(2)
-  UpP   = sP(2)
+  UpP   = s'(2)
   Dn    = s(3)
-  DnP   = sP(3)
+  DnP   = s'(3)
   UpDn  = s(4)
-  UpDnP = sP(4)
+  UpDnP = s'(4)
 
-  Op = ITensor(s',dag(s))
+  Op = emptyITensor(s',dag(s))
 
   if opname == "Nup"
     Op[UpP, Up] = 1.
@@ -129,19 +128,19 @@ function op(::ElectronSite,
   elseif opname=="S-" || opname=="Sm" || opname == "S⁻" || opname == "Sminus"
     Op[DnP, Up] = 1.0
   elseif opname == "Emp" || opname == "0"
-    pEmp = ITensor(s)
+    pEmp = emptyITensor(s)
     pEmp[Emp] = 1.0
     return pEmp
   elseif opname == "Up" || opname == "↑"
-    pU = ITensor(s)
+    pU = emptyITensor(s)
     pU[Up] = 1.0
     return pU
   elseif opname == "Dn" || opname == "↓"
-    pD = ITensor(s)
+    pD = emptyITensor(s)
     pD[Dn] = 1.0
     return pD
   elseif opname == "UpDn" || opname == "↑↓"
-    pUD = ITensor(s)
+    pUD = emptyITensor(s)
     pUD[UpDn] = 1.0
     return pUD
   else

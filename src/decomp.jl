@@ -203,18 +203,9 @@ function LinearAlgebra.eigen(A::ITensor{N},
   DT, VT, spec = eigen(AT; kwargs...)
   D, VC = itensor(DT), itensor(VT)
 
-  l = uniqueind(D, VC)
-  r = commonind(D, VC)
-
   if hasqns(A)
-    # Fix the flux of D, VC
-    # and flux(D) == flux(A)
-    # such that flux(VC) == QN()
-    for b in nzblocks(VC)
-      i1, i2 = inds(VC)
-      newqn = -dir(i2) * qn(i1, b[1])
-      setblockqn!(i2, newqn, b[2])
-      setblockqn!(r, newqn, b[2])
+    for b in nzblocks(D)
+      @assert flux(D, b) == QN()
     end
   end
 

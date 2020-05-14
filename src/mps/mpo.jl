@@ -65,17 +65,17 @@ function MPO(sites,
     links[ii] = Index(1, "Link,n=$ii")
     local this_it
     if ii == 1
-      this_it = ITensor(links[ii], si, si')
+      this_it = emptyITensor(links[ii], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
       end
     elseif ii == N
-      this_it = ITensor(links[ii-1], si, si')
+      this_it = emptyITensor(links[ii-1], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii-1](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
       end
     else
-      this_it = ITensor(links[ii-1], links[ii], si, si')
+      this_it = emptyITensor(links[ii-1], links[ii], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii-1](1),
                 links[ii](1),
@@ -390,7 +390,7 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
     push!(sites_A, sda[1])
     push!(sites_B, sdb[1])
   end
-  res[1] = ITensor(sites_A[1], sites_B[1], commonind(res[1], res[2]))
+  res[1] = emptyITensor(sites_A[1], sites_B[1], commonind(res[1], res[2]))
   for i in 1:N-2
     if i == 1
       clust = A_[i] * B_[i]
@@ -399,7 +399,7 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
     end
     lA = commonind(A_[i], A_[i+1])
     lB = commonind(B_[i], B_[i+1])
-    nfork = ITensor(lA, lB, commonind(res[i], res[i+1]))
+    nfork = emptyITensor(lA, lB, commonind(res[i], res[i+1]))
     res[i], nfork = factorize(clust,
                               inds(res[i]),
                               ortho="left",
@@ -408,10 +408,10 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
                               maxdim=maxdim,
                               mindim=mindim)
     mid = dag(commonind(res[i], nfork))
-    res[i+1] = ITensor(mid,
-                       sites_A[i+1],
-                       sites_B[i+1],
-                       commonind(res[i+1], res[i+2]))
+    res[i+1] = emptyITensor(mid,
+                           sites_A[i+1],
+                           sites_B[i+1],
+                           commonind(res[i+1], res[i+2]))
   end
   clust = nfork * A_[N-1] * B_[N-1]
   nfork = clust * A_[N] * B_[N]
@@ -431,3 +431,31 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   return res
 end
 
+function HDF5.write(parent::Union{HDF5File,HDF5Group},
+                    name::AbstractString,
+                    M::MPO)
+  g = g_create(parent,name)
+  attrs(g)["type"] = "MPO"
+  attrs(g)["version"] = 1
+  N = length(M)
+  write(g, "rlim", M.rlim)
+  write(g, "llim", M.llim)
+  write(g,"length",N)
+  for n=1:N
+    write(g,"MPO[$(n)]", M[n])
+  end
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{MPO})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "MPO"
+    error("HDF5 group or file does not contain MPO data")
+  end
+  N = read(g,"length")
+  rlim = read(g, "rlim")
+  llim = read(g, "llim")
+  v = [read(g,"MPO[$(i)]",ITensor) for i in 1:N]
+  return MPO(N, v, llim, rlim)
+end

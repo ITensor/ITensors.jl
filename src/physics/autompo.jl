@@ -567,7 +567,8 @@ function svdMPO(ampo::AutoMPO,
     end
 
     s = sites[n]
-    H[n] = ITensor(dag(s),s',ll,rl)
+    #H[n] = emptyITensor(dag(s),s',ll,rl)
+    H[n] = emptyITensor(Any)
     for (op,M) in finalMPO
       T = itensor(M,ll,rl)
       H[n] += T*computeSiteProd(sites,op)
@@ -575,10 +576,10 @@ function svdMPO(ampo::AutoMPO,
 
   end
 
-  L = ITensor(llinks[1])
+  L = emptyITensor(llinks[1])
   L[startState] = 1.0
 
-  R = ITensor(llinks[N+1])
+  R = emptyITensor(llinks[N+1])
   R[endState] = 1.0
 
   H[1] *= L
@@ -767,7 +768,8 @@ function qn_svdMPO(ampo::AutoMPO,
     end
 
     s = sites[n]
-    H[n] = ITensor(dag(s),s',dag(ll),rl)
+    #H[n] = emptyITensor(dag(s),s',dag(ll),rl)
+    H[n] = emptyITensor(Any)
     for (q_op,M) in finalMPO
       op_prod = q_op[2]
       Op = computeSiteProd(sites,op_prod)
@@ -790,10 +792,10 @@ function qn_svdMPO(ampo::AutoMPO,
 
   end
 
-  L = ITensor(llinks[1])
+  L = emptyITensor(llinks[1])
   L[startState] = 1.0
 
-  R = ITensor(dag(llinks[N+1]))
+  R = emptyITensor(dag(llinks[N+1]))
   R[endState] = 1.0
 
   H[1] *= L

@@ -44,7 +44,7 @@ function op(s::Index,
   opname = strip(opname)
 
   if opname == "Id"
-    Op = ITensor(dag(s),s')
+    Op = emptyITensor(dag(s),s')
     for n=1:dim(s)
       Op[dag(s)(n),s'(n)] = 1.0
     end

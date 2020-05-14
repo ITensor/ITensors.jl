@@ -204,18 +204,17 @@ end
 """
 function noiseterm(pm::ProjMPO,
                    phi::ITensor,
-                   b::Int,
                    ortho::String)
   if nsite(pm) != 2
     error("noise term only defined for 2-site ProjMPO")
   end
   if ortho == "left"
-    nt = pm.H[b]*phi
+    nt = pm.H[pm.lpos+1]*phi
     if !isnothing(lproj(pm))
       nt *= lproj(pm)
     end
   elseif ortho == "right"
-    nt = phi*pm.H[b+1]
+    nt = phi*pm.H[pm.rpos-1]
     if !isnothing(rproj(pm))
       nt *= rproj(pm)
     end

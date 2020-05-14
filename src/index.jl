@@ -92,6 +92,8 @@ id(i::Index) = i.id
     dim(i::Index)
 
 Obtain the dimension of an Index.
+
+For a QN Index, this is the sum of the block dimensions.
 """
 NDTensors.dim(i::Index) = i.space
 
@@ -367,8 +369,7 @@ Prime an Index using the notation `i^3`.
 Base.:^(i::Index, pl::Int) = prime(i, pl)
 
 """
-Iterating over Index `I` gives the IndexVals
-`I(1)` through `I(dim(I))`.
+Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
 """
 function Base.iterate(i::Index, state::Int = 1)
   (state > dim(i)) && return nothing
@@ -407,11 +408,14 @@ removeqns(i::Index) = i
 # IndexVal
 #
 
+"""
+An IndexVal represents an Index object set to a certain value.
+"""
 struct IndexVal{IndexT<:Index}
   ind::IndexT
   val::Int
   function IndexVal(i::IndexT,
-                    n::Int) where {IndexT}
+                    n::Int) where {IndexT <: Index}
     n>dim(i) && throw(ErrorException("Value $n greater than size of Index $i"))
     dim(i)>0 && n<1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
     dim(i)==0 && n<0 && throw(ErrorException("Index value must be >= 1 (was $n)"))
@@ -419,6 +423,18 @@ struct IndexVal{IndexT<:Index}
   end
 end
 
+"""
+    IndexVal(i::Index, n::Int)
+
+    IndexVal(iv::Pair{<:Index, Int})
+
+    (i::Index)(n::Int)
+
+
+Create an `IndexVal` from a pair of `Index` and `Int`.
+
+Alternatively, you can use the syntax `i(n)`.
+"""
 IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first,iv.second)
 
 # Help treat a Pair{IndexT, Int} like an IndexVal{IndexT}
@@ -434,21 +450,41 @@ Base.getindex(i::Index, j::Int) = IndexVal(i, j)
 
 (i::Index)(n::Int) = IndexVal(i, n)
 
-NDTensors.ind(iv::IndexVal) = iv.ind
+"""
+    ind(iv::IndexVal)
 
-val(iv::IndexVal) = iv.val
+Return the Index of the IndexVal.
+"""
+NDTensors.ind(iv::IndexVal) = iv.ind
 
 NDTensors.ind(iv::Pair{<:Index,Int}) = iv.first
 
+"""
+    val(iv::IndexVal)
+
+Return the value of the IndexVal.
+"""
+val(iv::IndexVal) = iv.val
+
 val(iv::Pair{<:Index,Int}) = iv.second
 
-# Could we call this isindequal?
-# Seems strange for this to be an equality.
-Base.:(==)(i::Index,
+"""
+    isindequal(i::Index, iv::IndexVal)
+
+    isindequal(i::IndexVal, iv::Index)
+
+    isindequal(i::IndexVal, iv::IndexVal)
+
+Check if the Index and IndexVal have the same indices.
+"""
+isindequal(i::Index,
            iv::IndexValOrPairIndexInt) = i == ind(iv)
 
-Base.:(==)(iv::IndexValOrPairIndexInt,
-           i::Index) = i == iv
+isindequal(iv::IndexValOrPairIndexInt,
+           i::Index) = isindequal(i, iv)
+
+isindequal(iv1::IndexValOrPairIndexInt,
+           iv2::IndexValOrPairIndexInt) = ind(iv1) == ind(iv2)
 
 plev(iv::IndexValOrPairIndexInt) = plev(ind(iv))
 

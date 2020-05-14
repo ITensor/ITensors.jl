@@ -11,16 +11,24 @@ handle any memory permutations.
 mutable struct ITensor{N}
   store::TensorStorage
   inds::IndexSet{N}
-  #TODO: check that the storage is consistent with the
-  #total dimension of the indices (possibly only in debug mode);
+
+  # TODO: check that the storage is consistent with the 
+  # indices (possibly only in debug mode);
   """
       ITensor{N}(is::IndexSet{N}, st::TensorStorage)
 
-  This is an internal constructor for an ITensor
-  where the ITensor stores a view of the
-  `NDTensors.TensorStorage`.
+  This is an internal constructor for an ITensor where the ITensor stores a view of the `NDTensors.TensorStorage`.
   """
-  ITensor{N}(is, st::TensorStorage) where {N} = new{N}(st, is)
+  ITensor{N}(is,
+             st::TensorStorage) where {N} = new{N}(st, is)
+
+  ITensor{Any}(is,
+               st::Empty) = new{Any}(st, is)
+end
+
+function ITensor{Any}(is,
+                      st::TensorStorage)
+  error("Can only make an ITensor with Any number of indices with NDTensors.Empty storage")
 end
 
 """
@@ -140,27 +148,11 @@ storage and indices as the ITensor.
 NDTensors.tensor(A::ITensor) = tensor(store(A),inds(A))
 
 """
-    ITensor(inds::IndexSet)
-    ITensor(inds::Index...)
+    ITensor([::Type{ElT} = Float64, ]inds::IndexSet) where {ElT <: Number}
 
-Construct an ITensor filled with zeros having indices given by 
-the indices `inds` and element type `Float64`.
+    ITensor([::Type{ElT} = Float64, ]inds::Index...) where {ElT <: Number}
 
-The storage will have `NDTensors.Dense` type.
-"""
-ITensor(is::IndexSet) = ITensor(Float64, is)
-
-ITensor(inds::Vararg{Index,N}) where {N} = ITensor(IndexSet(inds...))
-
-# To fix ambiguity with QN Index version
-ITensor() = ITensor(IndexSet())
-
-"""
-    ITensor(::Type{ElT <: Number}, inds::IndexSet)
-    ITensor(::Type{ElT <: Number}, inds::Index...)
-
-Construct an ITensor filled with zeros having indices `inds` and 
-element type `ElT`.
+Construct an ITensor filled with zeros having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
 
 The storage will have `NDTensors.Dense` type.
 """
@@ -176,36 +168,19 @@ ITensor(::Type{ElT},
 # To fix ambiguity with QN Index version
 ITensor(::Type{ElT}) where {ElT <: Number} = ITensor(ElT, IndexSet())
 
-"""
-    ITensor(::UndefInitializer,
-            inds::IndexSet)
-    ITensor(::UndefInitializer,
-            inds::Index...)
+ITensor(is::IndexSet) = ITensor(Float64, is)
 
-Construct an ITensor filled with undefined elements having indices 
-`inds` and element type `Float64`.
+ITensor(inds::Index...) = ITensor(Float64, IndexSet(inds...))
 
-The storage will have `NDTensors.Dense` type.
-"""
-function ITensor(::UndefInitializer,
-                 inds::IndexSet)
-  return itensor(Dense(undef, dim(inds)), inds)
-end
-
-ITensor(::UndefInitializer,
-        inds::Index...) = ITensor(undef,
-                                  IndexSet(inds...))
+# To fix ambiguity with QN Index version
+ITensor() = ITensor(Float64, IndexSet())
 
 """
-    ITensor(::Type{ElT <: Number},
-            ::UndefInitializer,
-            inds::IndexSet)
-    ITensor(::Type{ElT <: Number},
-            ::UndefInitializer,
-            inds::Index...)
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::IndexSet) where {ElT <: Number}
 
-Construct an ITensor filled with undefined elements having indices 
-`inds` and element type `ElT`.
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::Index...) where {ElT <: Number}
+
+Construct an ITensor filled with undefined elements having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
 
 The storage will have `NDTensors.Dense` type.
 """
@@ -221,12 +196,18 @@ ITensor(::Type{ElT},
                                               undef,
                                               IndexSet(inds...))
 
+ITensor(::UndefInitializer,
+        inds::IndexSet) = ITensor(Float64, undef, inds)
+
+ITensor(::UndefInitializer,
+        inds::Index...) = ITensor(Float64, undef, IndexSet(inds...))
+
 """
     ITensor(x::Number, inds::IndexSet)
+
     ITensor(x::Number, inds::Index...)
 
-Construct an ITensor with all elements set to `float(x)` and
-indices `inds`.
+Construct an ITensor with all elements set to `float(x)` and indices `inds`.
 
 The storage will have `NDTensors.Dense` type.
 """
@@ -237,6 +218,53 @@ end
 
 ITensor(x::Number,
         inds::Index...) = ITensor(x, IndexSet(inds...))
+
+#
+# Empty ITensor constructors
+#
+
+"""
+    emptyITensor([::Type{ElT} = Float64, ]inds::IndexSet) where {ElT <: Number}
+
+    emptyITensor([::Type{ElT} = Float64, ]inds::Index...) where {ElT <: Number}
+
+Construct an ITensor with storage type `NDTensors.Empty`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
+"""
+function emptyITensor(::Type{ElT},
+                      inds::IndexSet) where {ElT <: Number}
+  return itensor(EmptyTensor(ElT, inds))
+end
+
+function emptyITensor(::Type{ElT},
+                     inds::Index...) where {ElT <: Number}
+  return emptyITensor(ElT, IndexSet(inds...))
+end
+
+emptyITensor(is::IndexSet) = emptyITensor(Float64, is)
+
+emptyITensor(inds::Index...) = emptyITensor(Float64,
+                                            IndexSet(inds...))
+
+function emptyITensor(::Type{ElT}) where {ElT <: Number}
+  return itensor(EmptyTensor(ElT, IndexSet()))
+end
+
+emptyITensor() = emptyITensor(Float64)
+
+"""
+    emptyITensor(::Type{ElT} = Float64, ::Type{Any}) where {ElT <: Number}
+
+Construct an ITensor with empty storage and `Any` number of indices.
+"""
+function emptyITensor(::Type{ElT}, ::Type{Any}) where {ElT <: Number}
+  return itensor(EmptyTensor(ElT, IndexSet{Any}()))
+end
+
+emptyITensor(::Type{Any}) = emptyITensor(Float64, Any)
+
+#
+# Construct from Array
+#
 
 """
     itensor(A::Array, inds::IndexSet)
@@ -255,8 +283,6 @@ end
 
 itensor(A::Array{<:Number},
         inds::Index...) = itensor(A, IndexSet(inds...))
-
-_isfloat(::Type{T}) where {T} = float(T) == T
 
 """
     ITensor(A::Array, inds::IndexSet)
@@ -390,7 +416,7 @@ Create an ITensor with all zeros except the specified value,
 which is set to 1.
 """
 function setelt(iv::IndexValOrPairIndexInt)
-  A = ITensor(ind(iv))
+  A = emptyITensor(ind(iv))
   A[val(iv)] = 1.0
   return A
 end
@@ -564,7 +590,8 @@ function Base.setindex!(T::ITensor, x::Number, I::Int...)
   if !isnothing(fluxT) && fluxT != flux(T, I...)
     error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
   end
-  tensor(T)[I...] = x
+  TR = setindex!!(tensor(T), x, I...)
+  setstore!(T, store(TR))
   return T
 end
 
@@ -586,6 +613,10 @@ function Base.setindex!(T::ITensor, x::Number, ivs...)
   vals = NDTensors.permute(val.(ivs), p)
   T[vals...] = x
   return T
+end
+
+function Base.setindex!(::ITensor{Any}, ::Number, ivs...)
+  error("Cannot set the element of an emptyITensor(). Must define indices to set elements")
 end
 
 function Base.iterate(::ITensor, args...)
@@ -885,41 +916,36 @@ end
 const Indices = Union{IndexSet, Tuple{Vararg{Index}}}
 
 """
-    randomITensor(::Type{ElT <: Number}, inds::IndexSet)
-    randomITensor(::Type{ElT <: Number}, inds::Index...)
+    randomITensor([::Type{ElT <: Number} = Float64, ]inds::IndexSet)
 
-Construct an ITensor with type `ElT` and indices `inds`, 
-whose elements are normally distributed random numbers.
+    randomITensor([::Type{ElT <: Number} = Float64, ]inds::Index...)
+
+Construct an ITensor with type `ElT` and indices `inds`, whose elements are normally distributed random numbers. If the element type is not specified, it defaults to `Float64`.
 """
 function randomITensor(::Type{S},
-                       inds::Indices) where {S <: Number}
-  T = ITensor(S, IndexSet(inds))
+                       inds::IndexSet) where {S <: Number}
+  T = ITensor(S, inds)
   randn!(T)
   return T
 end
 
 function randomITensor(::Type{S},
                        inds::Index...) where {S <: Number}
-  return randomITensor(S,IndexSet(inds...))
+  return randomITensor(S, IndexSet(inds...))
 end
 
-"""
-    randomITensor(inds::IndexSet)
-    randomITensor(inds::Index...)
+# To fix ambiguity errors with QN version
+function randomITensor(::Type{ElT}) where {ElT <: Number}
+  return randomITensor(ElT, IndexSet())
+end
 
-Construct an ITensor with type `Float64` and indices `inds`, 
-whose elements are normally distributed random numbers.
-"""
-randomITensor(inds::Indices) = randomITensor(Float64,
-                                             IndexSet(inds))
+randomITensor(inds::IndexSet) = randomITensor(Float64, inds)
 
 randomITensor(inds::Index...) = randomITensor(Float64,
                                               IndexSet(inds...))
 
-randomITensor(::Type{ElT}) where {ElT<:Number} = randomITensor(ElT,
-                                                               IndexSet())
-
-randomITensor() = randomITensor(Float64)
+# To fix ambiguity errors with QN version
+randomITensor() = randomITensor(Float64, IndexSet())
 
 function combiner(inds::IndexSet;
                   kwargs...)
@@ -995,6 +1021,10 @@ function Base.:-(A::ITensor{N}, B::ITensor{N}) where {N}
   C .-= B
   return C
 end
+
+Base.:+(A::ITensor{Any}, B::ITensor) = copy(B)
+
+Base.:+(A::ITensor, B::ITensor{Any}) = B + A
 
 Base.:+(A::ITensor, B::ITensor) = error("cannot add ITensors with different numbers of indices")
 Base.:-(A::ITensor, B::ITensor) = error("cannot subtract ITensors with different numbers of indices")
@@ -1203,19 +1233,35 @@ NDTensors.blockoffsets(T::ITensor) = blockoffsets(tensor(T))
 flux(T::ITensor, args...) = flux(inds(T), args...)
 
 function NDTensors.addblock!(T::ITensor,
-                           args...)
+                             args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) && 
    error("Block does not match current flux")
-  addblock!(tensor(T), args...)
+  TR = addblock!!(tensor(T), args...)
+  setstore!(T, store(TR))
   return T
 end
 
+"""
+    isempty(T::ITensor)
+
+Returns `true` if the ITensor contains no elements.
+
+An ITensor with `Empty` storage always returns `true`.
+"""
+Base.isempty(T::ITensor) = isempty(tensor(T))
+
+"""
+    flux(T::ITensor)
+
+Returns the flux of the ITensor.
+
+If the ITensor is empty or it has no QNs, returns `nothing`.
+"""
 function flux(T::ITensor)
-  !hasqns(T) && return nothing
-  nnzblocks(T) == 0 && return nothing
+  (!hasqns(T) || isempty(T)) && return nothing
   bofs = blockoffsets(T)
   block1 = nzblock(bofs, 1)
-  return flux(T,block1)
+  return flux(T, block1)
 end
 
 
@@ -1265,6 +1311,13 @@ function Base.summary(io::IO,
     end
   end
   print(io," \n",typeof(store(T)))
+end
+
+function Base.summary(io::IO,
+                      T::ITensor{Any})
+  print(io,"ITensor ord=$(order(T))")
+  print(io," \n", typeof(inds(T)))
+  print(io," \n", typeof(store(T)))
 end
 
 # TODO: make a specialized printing from Diag

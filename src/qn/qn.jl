@@ -154,6 +154,13 @@ Base.lastindex(qn::QN) = length(qn)
 
 isactive(qn::QN) = isactive(qn[1])
 
+function nactive(q::QN)
+  for n=1:maxQNs
+    !isactive(q[n]) && (return n-1)
+  end
+  return maxQNs
+end
+
 function Base.iterate(qn::QN,state::Int=1)
   (state > length(qn)) && return nothing
   return (qn[state],state+1)
@@ -344,20 +351,19 @@ end
 
 function Base.show(io::IO,q::QN)
   print(io,"QN(")
-  for n=1:maxQNs
+  Na = nactive(q)
+  for n=1:Na
     v = q[n]
-    !isactive(v) && break
     n > 1 && print(io,",")
-    if name(v)==SmallString("")
-      print(io,"($(val(v))")
-    else
-      print(io,"(\"$(name(v))\",$(val(v))")
+    Na > 1 && print(io,"(")
+    if name(v) != SmallString("") 
+      print(io,"\"$(name(v))\",")
     end
+    print(io,"$(val(v))")
     if modulus(v) != 1
-      print(io,",$(modulus(v)))")
-    else
-      print(io,")")
+      print(io,",$(modulus(v))")
     end
+    Na > 1 && print(io,")")
   end
   print(io,")")
 end
