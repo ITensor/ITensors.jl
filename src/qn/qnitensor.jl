@@ -11,7 +11,7 @@ If `ElT` is not specified it defaults to `Float64`.
 function ITensor(::Type{ElT},
                  flux::QN,
                  inds::Indices) where {ElT <: Number}
-  blocks = nzblocks(flux, inds)
+  blocks = nzblocks(flux, IndexSet(inds))
   T = BlockSparseTensor(ElT, blocks, inds)
   return itensor(T)
 end
@@ -133,7 +133,7 @@ If the element type is not specified, it defaults to `Float64`. If theflux is no
 function diagITensor(::Type{ElT},
                      flux::QN,
                      is::Indices) where {ElT <: Number}
-  blocks = nzdiagblocks(flux, is)
+  blocks = nzdiagblocks(flux, IndexSet(is))
   T = DiagBlockSparseTensor(ElT, blocks, is)
   return itensor(T)
 end
@@ -173,7 +173,7 @@ If the element type is not specified, it defaults to `Float64`. If theflux is no
 function delta(::Type{ElT},
                flux::QN,
                inds::Indices) where {ElT <: Number}
-  blocks = nzdiagblocks(flux, inds)
+  blocks = nzdiagblocks(flux, IndexSet(inds))
   T = DiagBlockSparseTensor(one(ElT), blocks, inds)
   return itensor(T)
 end
