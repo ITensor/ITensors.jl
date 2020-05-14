@@ -16,6 +16,36 @@ Random.seed!(1234)
     @test nnzblocks(A) == 2
   end
 
+  @testset "Constructor (from Tuple)" begin
+    i = Index([QN(0)=>1,QN(1)=>2],"i")
+    j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
+
+    A = ITensor(QN(0), (i, dag(j)))
+
+    @test flux(A) == QN(0)
+    @test nnzblocks(A) == 2
+  end
+
+  @testset "Constructor (no flux specified)" begin
+    i = Index([QN(0)=>1, QN(1)=>2], "i")
+    j = Index([QN(0)=>3, QN(1)=>4, QN(2)=>5], "j")
+
+    A = ITensor(i, dag(j))
+
+    @test flux(A) == QN(0)
+    @test nnzblocks(A) == 2
+  end
+
+  @testset "Constructor (Tuple, no flux specified)" begin
+    i = Index([QN(0)=>1, QN(1)=>2], "i")
+    j = Index([QN(0)=>3, QN(1)=>4, QN(2)=>5], "j")
+
+    A = ITensor((i, dag(j)))
+
+    @test flux(A) == QN(0)
+    @test nnzblocks(A) == 2
+  end
+
   @testset "No indices getindex" begin
     T = ITensor(QN())
     @test order(T) == 0
@@ -249,9 +279,29 @@ Random.seed!(1234)
       @test norm(A-Ap) ≈ 0.0
     end
 
-    @testset "Order 2" begin
+    @testset "Order 2 (IndexSet constructor)" begin
       i1 = Index([QN(0,2)=>2,QN(1,2)=>2],"i1")
       A = randomITensor(QN(),i1,dag(i1'))
+
+      iss = [i1,
+             dag(i1'),
+             (i1,dag(i1')),
+             (dag(i1'),i1)]
+
+      for is in iss
+        C = combiner(IndexSet(is); tags="c")
+        AC = A*C
+        @test nnz(AC) == nnz(A)
+        Ap = AC*dag(C)
+        @test nnz(Ap) == nnz(A)
+        @test nnzblocks(Ap) == nnzblocks(A)
+        @test norm(A-Ap) ≈ 0.0
+      end
+    end
+
+    @testset "Order 2" begin
+      i1 = Index([QN(0,2)=>2,QN(1,2)=>2],"i1")
+      A = randomITensor(QN(), (i1, dag(i1')))
 
       iss = [i1,
              dag(i1'),

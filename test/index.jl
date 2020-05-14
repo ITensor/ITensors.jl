@@ -58,13 +58,13 @@ import ITensors: In, Out, Neither
     #@test i[:] == [i(1); i(2)]
     @test sprint(show, i(2)) == sprint(show, i)*"=>2"
 
-    @test dag(i(1)) != dag(i=>2)
-    @test dag(i(2)) == dag(i=>2)
+    @test dag(i(1)) != IndexVal(dag(i)=>2)
+    @test dag(i(2)) == IndexVal(dag(i)=>2)
     @test plev(i=>2) == 0
     @test plev(i'=>2) == 1
     @test prime(i(2)) == i'(2)
-    @test prime(i=>2) == i'(2)
-    @test (i=>1)' == i'(1)
+    @test IndexVal(prime(i)=>2) == i'(2)
+    @test IndexVal(i'=>1) == i'(1)
   end
   @testset "Iteration" begin
     i = Index(10)
