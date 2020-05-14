@@ -17,6 +17,12 @@ struct IndexSet{N, IndexT <: Index, DataT <: Tuple}
   IndexSet{Any}() = new{Any, Union{}, Tuple{}}()
 end
 
+# Definition to help with generic code
+const Indices{N, IndexT} = Union{IndexSet{N,
+                                          IndexT,
+                                          NTuple{N, IndexT}},
+                                 NTuple{N, IndexT}}
+
 function IndexSet{N, IndexT}(inds) where {N, IndexT}
   data = NTuple{N, IndexT}(inds)
   return IndexSet{N, IndexT, typeof(data)}(data)
