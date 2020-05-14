@@ -1,8 +1,7 @@
 
 """
-    ITensor([::Type{ElT} = Float64, ]flux::QN, inds::IndexSet) where {ElT <: Number}
-
-    ITensor([::Type{ElT} = Float64, ]flux::QN, inds::Index...) where {ElT <: Number}
+    ITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)
+    ITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...)
 
 Construct an ITensor with BlockSparse storage filled with `zero(ElT)` where the nonzero blocks are determined by `flux`.
 
@@ -41,9 +40,8 @@ end
 ITensor(inds::QNIndex...) = ITensor(Float64, QN(), IndexSet(inds...))
 
 """
-    emptyITensor([::Type{ElT} = Float64, ]inds::QNIndexSet) where {ElT <: Number}
-
-    emptyITensor([::Type{ElT} = Float64, ]inds::QNIndex...) where {ElT <: Number}
+    emptyITensor([::Type{ElT} = Float64, ]inds::QNIndexSet)
+    emptyITensor([::Type{ElT} = Float64, ]inds::QNIndex...)
 
 Construct an ITensor with `NDTensors.BlockSparse` storage of element type `ElT` with the no blocks.
 
@@ -59,9 +57,8 @@ end
 emptyITensor(inds::QNIndices) = emptyITensor(Float64, inds)
 
 """
-    randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::IndexSet) where {ElT <: Number}
-
-    randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...) where {ElT <: Number}
+    randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)
+    randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...)
 
 Construct an ITensor with `NDTensors.BlockSparse` storage filled with random elements of type `ElT` where the nonzero blocks are determined by `flux`.
 
@@ -122,8 +119,7 @@ end
 #
 
 """
-    diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::IndexSet)
-
+    diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
     diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
 
 Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements `zero(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`.
@@ -162,8 +158,7 @@ function diagITensor(inds::QNIndices)
 end
 
 """
-    delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::IndexSet)
-
+    delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
     delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
 
 Make an ITensor with storage type `NDTensors.DiagBlockSparse` with uniform elements `one(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`.
