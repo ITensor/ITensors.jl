@@ -205,6 +205,8 @@ export
   lproj,
   product,
   rproj,
+  noiseterm,
+  position!,
 
 # mps/projmposum.jl
   ProjMPOSum,
