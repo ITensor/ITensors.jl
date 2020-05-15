@@ -408,6 +408,24 @@ end
   @test B≈A
 end
 
+@testset "permute, always_copy = false" begin
+  i = Index(2)
+  A = ITensor(i, i')
+  Ap = permute(A, i, i')
+  A[i => 1, i' => 1] = 1
+  @test A[i => 1, i' => 1] == 1
+  @test Ap[i => 1, i' => 1] == 1
+end
+
+@testset "permute, always_copy = true" begin
+  i = Index(2)
+  A = ITensor(i, i')
+  Ap = permute(A, i, i'; always_copy = true)
+  A[i => 1, i' => 1] = 1
+  @test A[i => 1, i' => 1] == 1
+  @test Ap[i => 1, i' => 1] == 0
+end
+
 @testset "ITensor tagging and priming" begin
   s1 = Index(2,"Site,s=1")
   s2 = Index(2,"Site,s=2")

@@ -965,23 +965,31 @@ function dag(T::ITensor; always_copy=false)
 end
 
 """
-    permute(T::ITensors, inds)
-    permute(T::ITensors, inds::Index...)
+    permute(T::ITensors, inds; always_copy::Bool = false)
+    permute(T::ITensors, inds::Index...; always_copy::Bool = false)
 
 Return a new ITensor T with indices permuted according
 to the input indices inds. The storage of the ITensor
 is permuted accordingly.
+
+If `always_copy = false`, it avoids copying data if possible.
+Therefore, it may return a view. Use `always_copy = true`
+if you never want it to return an ITensor with a view
+of the original ITensor.
 """
 function permute(T::ITensor{N},
-                 new_inds) where {N}
+                 new_inds; always_copy::Bool = false) where {N}
   perm = NDTensors.getperm(new_inds, inds(T))
+  if !always_copy && NDTensors.is_trivial_permutation(perm)
+    return T
+  end
   Tp = permutedims(tensor(T), perm)
   return itensor(Tp)::ITensor{N}
 end
 
 permute(T::ITensor,
-        inds::Index...) = permute(T,
-                                  IndexSet(inds...))
+        inds::Index...; vargs...) = permute(T,
+                                            IndexSet(inds...); vargs...)
 
 Base.:*(T::ITensor, x::Number) = itensor(x*tensor(T))
 
