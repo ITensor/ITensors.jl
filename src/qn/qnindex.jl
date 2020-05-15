@@ -299,7 +299,8 @@ function Base.show(io::IO,
   end
   println(io," <$(dir(i))>")
   for (n,qnblock) in enumerate(space(i))
-    println(io," $n: $qnblock")
+    print(io," $n: $qnblock")
+    n < length(space(i)) && println(io)
   end
 end
 
