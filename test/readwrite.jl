@@ -133,4 +133,3 @@ using ITensors,
 end
 
 nothing
-nothing

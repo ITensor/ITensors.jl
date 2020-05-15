@@ -259,6 +259,7 @@ export
   isactive,
   isfermionic,
   modulus,
+  val,
 
 # qn/qnindex.jl
   flux,

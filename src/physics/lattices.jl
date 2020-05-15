@@ -1,4 +1,19 @@
 
+"""
+A LatticeBond is a struct which represents
+a single bond in a geometrical lattice or
+else on interaction graph defining a physical
+model such as a quantum Hamiltonian.
+
+LatticeBond has the following data fields:
+* s1::Int -- number of site 1
+* s2::Int -- number of site 2
+* x1::Int -- x coordinate of site 1
+* y1::Int -- y coordinate of site 1
+* x2::Int -- x coordinate of site 2
+* y2::Int -- y coordinate of site 2
+* type::String -- optional description of bond type
+"""
 struct LatticeBond
   s1::Int
   s2::Int
@@ -9,6 +24,20 @@ struct LatticeBond
   type::String
 end
 
+"""
+    LatticeBond(s1::Int,s2::Int)
+
+    LatticeBond(s1::Int,s2::Int,
+                x1::Real,y1::Real,
+                x2::Real,y2::Real,
+                type::String="")
+
+Construct a LatticeBond struct by
+specifying just the numbers of sites
+1 and 2, or additional details including
+the (x,y) coordinates of the two sites and
+an optional type string.
+"""
 function LatticeBond(s1::Int,s2::Int)
   return LatticeBond(s1,s2,0.0,0.0,0.0,0.0,"")
 end
@@ -21,8 +50,26 @@ function LatticeBond(s1::Int,s2::Int,
   return LatticeBond(s1,s2,cf(x1),cf(y1),cf(x2),cf(y2),bondtype)
 end
 
+
+"""
+Lattice is an alias for Vector{LatticeBond}
+"""
 const Lattice = Vector{LatticeBond}
 
+
+"""
+    square_lattice(Nx::Int,
+                   Ny::Int;
+                   kwargs...)::Lattice
+
+Return a Lattice (array of LatticeBond
+objects) corresponding to the two-dimensional
+square lattice of dimensions (Nx,Ny).
+By default the lattice has open boundaries,
+but can be made periodic in the y direction
+by specifying the keyword argument 
+`yperiodic=true`.
+"""
 function square_lattice(Nx::Int,
                         Ny::Int;
                         kwargs...)::Lattice
@@ -50,6 +97,19 @@ function square_lattice(Nx::Int,
   return latt
 end
 
+"""
+    triangular_lattice(Nx::Int,
+                       Ny::Int;
+                       kwargs...)::Lattice
+
+Return a Lattice (array of LatticeBond
+objects) corresponding to the two-dimensional
+triangular lattice of dimensions (Nx,Ny).
+By default the lattice has open boundaries,
+but can be made periodic in the y direction
+by specifying the keyword argument 
+`yperiodic=true`.
+"""
 function triangular_lattice(Nx::Int,
                             Ny::Int;
                             kwargs...)::Lattice

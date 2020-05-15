@@ -63,6 +63,19 @@ const maxQNs = 4
 const QNStorage = SVector{maxQNs,QNVal}
 const MQNStorage = MVector{maxQNs,QNVal}
 
+"""
+A QN object stores a collection of up to four
+named values such as ("Sz",1) or ("N",0). 
+These values can include a third integer "m"
+which makes them obey addition modulo m, for 
+example ("P",1,2) for a value obeying addition mod 2.
+(The default is regular integer addition).
+
+Adding or subtracting pairs of QN objects performs
+addition and subtraction element-wise on each of
+the named values. If a name is missing from the 
+collection, its value is treated as zero.
+"""
 struct QN
   data::QNStorage
 
@@ -91,6 +104,13 @@ function Base.hash(obj::QN, h::UInt)
 end
 
 
+"""
+   QN(qvs...)
+
+Construct a QN from a set of up to four
+named value tuples, such as QN(("Sz",1))
+or QN(("P",0,2),("Sz",3)).
+"""
 function QN(qvs...)
   m = MQNStorage(ntuple(_->ZeroVal,Val(maxQNs)))
   for (n,qv) in enumerate(qvs)
@@ -106,7 +126,22 @@ function QN(qvs...)
   return QN(QNStorage(m))
 end
 
+"""
+    QN(name,val::Int,modulus::Int=1)
+
+Construct a QN with a single named value
+by providing the name, value, and optional
+modulus.
+"""
 QN(name,val::Int,modulus::Int=1) = QN((name,val,modulus))
+
+"""
+    QN(val::Int,modulus::Int=1)
+
+Construct a QN with a single unnamed value
+(equivalent to the name being the empty string)
+with optional modulus.
+"""
 QN(val::Int,modulus::Int=1) = QN(("",val,modulus))
 
 data(qn::QN) = qn.data
@@ -131,6 +166,12 @@ function Base.iterate(qn::QN,state::Int=1)
   return (qn[state],state+1)
 end
 
+"""
+    val(q::QN,name)
+
+Get the value within the QN q
+corresponding to the string `name`
+"""
 function val(q::QN,name_)
   sname = SmallString(name_)
   for n=1:maxQNs
@@ -139,6 +180,12 @@ function val(q::QN,name_)
   return 0
 end
 
+"""
+    modulus(q::QN,name)
+
+Get the modulus within the QN q
+corresponding to the string `name`
+"""
 function modulus(q::QN,name_)
   sname = SmallString(name_)
   for n=1:maxQNs
@@ -147,6 +194,13 @@ function modulus(q::QN,name_)
   return 0
 end
 
+"""
+    zero(q::QN)
+
+Returns a QN object containing
+the same names as q, but with
+all values set to zero.
+"""
 function Base.zero(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
