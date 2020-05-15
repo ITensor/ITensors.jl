@@ -165,7 +165,7 @@ using ITensors,
   @test length(O) == N # just make sure this works
 
   @test_throws ArgumentError randomMPO(sites, 2)
-  @test isnothing(linkind(MPO(N, fill(ITensor(), N), 0, N + 1), 1))
+  @test isnothing(linkind(MPO(fill(ITensor(), N), 0, N + 1), 1))
 end
 
 nothing

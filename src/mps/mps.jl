@@ -6,24 +6,28 @@ A finite size matrix product state type.
 Keeps track of the orthogonality center.
 """
 mutable struct MPS <: AbstractMPS
-  length::Int
   data::Vector{ITensor}
   llim::Int
   rlim::Int
-  function MPS(N::Int,
-               A::Vector{<:ITensor},
+  function MPS(A::Vector{<:ITensor},
                llim::Int = 0,
-               rlim::Int = N+1)
-    new(N, A, llim, rlim)
+               rlim::Int = length(A) + 1)
+    new(A, llim, rlim)
   end
 end
+
+@doc """
+    MPS(v::Vector{<:ITensor})
+
+Construct an MPS from a Vector of ITensors.
+""" MPS(v::Vector{<:ITensor})
 
 """
     MPS()
 
 Construct an empty MPS with zero sites.
 """
-MPS() = MPS(0, Vector{ITensor}(), 0, 0)
+MPS() = MPS(ITensor[], 0, 0)
 
 """
     MPS(N::Int)
@@ -31,14 +35,14 @@ MPS() = MPS(0, Vector{ITensor}(), 0, 0)
 Construct an MPS with N sites with default constructed
 ITensors.
 """
-MPS(N::Int) = MPS(N, Vector{ITensor}(undef, N))
+MPS(N::Int) = MPS(Vector{ITensor}(undef, N))
 
 """
-    MPS([::Type{T} = Float64, ]sites) where {T <: Number}
+    MPS([::Type{ElT} = Float64, ]sites)
 
-Construct an MPS filled with zeros from a collection of indices with element type `T`.
+Construct an MPS filled with Empty ITensors of type `ElT` from a collection of indices.
 """
-function MPS(::Type{T}, sites) where {T <: Number}
+function MPS(::Type{T}, sites::Vector{<:Index}) where {T <: Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
@@ -52,19 +56,12 @@ function MPS(::Type{T}, sites) where {T <: Number}
       v[ii] = emptyITensor(T,l[ii-1],s,l[ii])
     end
   end
-  return MPS(N, v)
+  return MPS(v)
 end
 
-MPS(sites) = MPS(Float64, sites)
+MPS(sites::Vector{<:Index}) = MPS(Float64, sites)
 
-"""
-    MPS(v::Vector{<:ITensor})
-
-Construct an MPS from a Vector of ITensors.
-"""
-MPS(v::Vector{<:ITensor}) = MPS(length(v), v)
-
-function randomU(s1,s2)
+function randomU(s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)
     mdim = dim(s1)*dim(s2)
     RM = randn(mdim,mdim)
@@ -81,7 +78,7 @@ function randomU(s1,s2)
   return G
 end
 
-function randomizeMPS!(M::MPS, sites, linkdim=1)
+function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
   N = length(sites)
   c = div(N,2)
   max_pass = 100
@@ -113,7 +110,10 @@ function randomizeMPS!(M::MPS, sites, linkdim=1)
   end
 end
 
-function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
+function randomCircuitMPS(::Type{Float64},
+                          sites::Vector{<:Index},
+                          linkdim::Int;
+                          kwargs...)
   N = length(sites)
   M = MPS(N)
 
@@ -152,20 +152,28 @@ function randomCircuitMPS(sites,linkdim::Int;kwargs...)::MPS
   return M
 end
 
+function randomCircuitMPS(sites::Vector{<:Index},
+                          linkdim::Int;
+                          kwargs...)
+  return randomCircuitMPS(Float64, sites, linkdim; kwargs...)
+end
+
 """
-    randomMPS(::Type{T<:Number}, sites; linkdim=1)
+    randomMPS(::Type{ElT<:Number}, sites; linkdim=1)
 
 Construct a random MPS with link dimension `linkdim` of 
-type `T`.
+type `ElT`.
 """
-function randomMPS(::Type{T}, sites, linkdim::Int=1) where {T<:Number}
+function randomMPS(::Type{ElT},
+                   sites::Vector{<:Index},
+                   linkdim::Int=1) where {ElT<:Number}
   if hasqns(sites[1])
     error("initial state required to use randomMPS with QNs")
   end
 
   # For non-QN-conserving MPS, instantiate
   # the random MPS directly as a circuit:
-  return randomCircuitMPS(sites,linkdim)
+  return randomCircuitMPS(ElT, sites, linkdim)
 end
 
 """
@@ -174,17 +182,20 @@ end
 Construct a random MPS with link dimension `linkdim` of 
 type `Float64`.
 """
-randomMPS(sites, linkdim::Int=1) = randomMPS(Float64, sites, linkdim)
+randomMPS(sites::Vector{<:Index},
+          linkdim::Int=1) = randomMPS(Float64, sites, linkdim)
 
 """
-    randomMPS(sites,state; linkdim=1)
+    randomMPS(sites, state; linkdim=1)
 
 Construct a real, random MPS with link dimension `linkdim`,
 made by randomizing an initial product state specified by
 `state`.
 """
-function randomMPS(sites,state,linkdim::Int=1)::MPS
-  M = productMPS(sites,state)
+function randomMPS(sites::Vector{<:Index},
+                   state,
+                   linkdim::Int=1)::MPS
+  M = productMPS(sites, state)
   if linkdim > 1
     randomizeMPS!(M,sites,linkdim)
   end
@@ -228,7 +239,7 @@ productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64,
                                                    ivals::Vector{<:IndexVal})
 
 function productMPS(::Type{T},
-                    sites,
+                    sites::Vector{<:Index},
                     states) where {T<:Number}
   if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial states don't match"))
@@ -237,7 +248,10 @@ function productMPS(::Type{T},
   return productMPS(T, ivals)
 end
 
-productMPS(sites, states) = productMPS(Float64, sites, states)
+productMPS(sites::Vector{<:Index},
+           states) = productMPS(Float64,
+                                sites,
+                                states)
 
 function siteind(M::MPS, j::Int)
   N = length(M)
@@ -414,7 +428,7 @@ function HDF5.write(parent::Union{HDF5File,HDF5Group},
   attrs(g)["type"] = "MPS"
   attrs(g)["version"] = 1
   N = length(M)
-  write(g,"length",N)
+  write(g, "length", N)
   write(g, "rlim", M.rlim)
   write(g, "llim", M.llim)
   for n=1:N
@@ -429,9 +443,9 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   if read(attrs(g)["type"]) != "MPS"
     error("HDF5 group or file does not contain MPS data")
   end
-  N = read(g,"length")
+  N = read(g, "length")
   rlim = read(g, "rlim")
   llim = read(g, "llim")
   v = [read(g,"MPS[$(i)]",ITensor) for i in 1:N]
-  return MPS(N, v, llim, rlim)
+  return MPS(v, llim, rlim)
 end

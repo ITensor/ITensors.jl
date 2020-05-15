@@ -18,7 +18,7 @@ function makeRandomMPS(sites;
     randn!(v[n])
     normalize!(v[n])
   end
-  return MPS(N,v,0,N+1)
+  return MPS(v,0,N+1)
 end
 
 function makeRandomMPO(sites;
@@ -38,6 +38,6 @@ function makeRandomMPO(sites;
     randn!(v[n])
     normalize!(v[n])
   end
-  return MPO(N,v,0,N+1)
+  return MPO(v,0,N+1)
 end
 

@@ -167,7 +167,7 @@ include("util.jl")
   @test ITensors.leftlim(psi) == div(N, 2) - 1
   @test ITensors.rightlim(psi) == div(N, 2) + 1
 
-  @test isnothing(linkind(MPS(N, fill(ITensor(), N), 0, N + 1), 1))
+  @test isnothing(linkind(MPS(fill(ITensor(), N), 0, N + 1), 1))
 
   @testset "replacebond!" begin
   # make sure factorization preserves the bond index tags
