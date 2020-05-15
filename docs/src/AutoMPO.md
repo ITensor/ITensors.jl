@@ -10,4 +10,5 @@ AutoMPO
 
 ```@docs
 add!
+MPO(::AutoMPO,::Vector{<:Index})
 ```
