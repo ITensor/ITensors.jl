@@ -11,7 +11,7 @@ mutable struct MPS <: AbstractMPS
   rlim::Int
   function MPS(A::Vector{<:ITensor},
                llim::Int = 0,
-               rlim::Int = N+1)
+               rlim::Int = length(A) + 1)
     new(A, llim, rlim)
   end
 end

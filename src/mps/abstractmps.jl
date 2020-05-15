@@ -53,18 +53,15 @@ function Base.setindex!(M::AbstractMPS,
   return M
 end
 
-Base.copy(m::AbstractMPS) = typeof(m)(length(m),
-                                      copy(data(m)),
+Base.copy(m::AbstractMPS) = typeof(m)(copy(data(m)),
                                       leftlim(m),
                                       rightlim(m))
 
-Base.similar(m::AbstractMPS) = typeof(m)(length(m),
-                                         similar(data(m)),
+Base.similar(m::AbstractMPS) = typeof(m)(similar(data(m)),
                                          0,
                                          length(m))
 
-Base.deepcopy(m::AbstractMPS) = typeof(m)(length(m),
-                                          deepcopy(data(m)),
+Base.deepcopy(m::AbstractMPS) = typeof(m)(deepcopy(data(m)),
                                           leftlim(m),
                                           rightlim(m))
 
