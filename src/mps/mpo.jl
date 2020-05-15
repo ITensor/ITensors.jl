@@ -6,21 +6,20 @@ A finite size matrix product operator type.
 Keeps track of the orthogonality center.
 """
 mutable struct MPO <: AbstractMPS
-  length::Int
   data::Vector{ITensor}
   llim::Int
   rlim::Int
-  function MPO(N::Int,
-               A::Vector{<:ITensor},
+  function MPO(A::Vector{<:ITensor},
                llim::Int = 0,
                rlim::Int = N+1)
-    new(N, A, llim, rlim)
+    new(A, llim, rlim)
   end
 end
 
-MPO() = MPO(0, Vector{ITensor}(), 0, 0)
+MPO() = MPO(ITensor[], 0, 0)
 
-function MPO(sites::Vector{<:Index})
+function MPO(::Type{ElT},
+             sites::Vector{<:Index}) where {ElT <: Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   l = [Index(1, "Link,l=$ii") for ii in 1:N-1]
@@ -28,33 +27,34 @@ function MPO(sites::Vector{<:Index})
     s = sites[ii]
     sp = prime(s)
     if ii == 1
-      v[ii] = ITensor(s, sp, l[ii])
+      v[ii] = emptyITensor(ElT, s, sp, l[ii])
     elseif ii == N
-      v[ii] = ITensor(l[ii-1], s, sp)
+      v[ii] = emptyITensor(ElT, l[ii-1], s, sp)
     else
-      v[ii] = ITensor(l[ii-1], s, sp, l[ii])
+      v[ii] = emptyITensor(ElT, l[ii-1], s, sp, l[ii])
     end
   end
-  return MPO(N, v)
+  return MPO(v)
 end
  
-MPO(A::Vector{<:ITensor}) = MPO(length(A), A)
+MPO(sites::Vector{<:Index}) = MPO(Float64, sites)
 
 """
     MPO(N::Int)
 
 Make an MPO of length `N` filled with default ITensors.
 """
-MPO(N::Int) = MPO(N, Vector{ITensor}(undef, N))
+MPO(N::Int) = MPO(Vector{ITensor}(undef, N))
 
 """
-    MPO(sites, ops::Vector{String})
+    MPO([::Type{ElT} = Float64}, ]sites, ops::Vector{String})
 
 Make an MPO with pairs of sites `s[i]` and `s[i]'`
 and operators `ops` on each site.
 """
-function MPO(sites,
-             ops::Vector{String})
+function MPO(::Type{ElT},
+             sites::Vector{<:Index},
+             ops::Vector{String}) where {ElT <: Number}
   N = length(sites)
   its = Vector{ITensor}(undef, N)
   links = Vector{Index}(undef, N)
@@ -65,17 +65,17 @@ function MPO(sites,
     links[ii] = Index(1, "Link,n=$ii")
     local this_it
     if ii == 1
-      this_it = emptyITensor(links[ii], si, si')
+      this_it = emptyITensor(ElT, links[ii], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
       end
     elseif ii == N
-      this_it = emptyITensor(links[ii-1], si, si')
+      this_it = emptyITensor(ElT, links[ii-1], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii-1](1), si[jj], si'[jjp]] = spin_op[si[jj], si'[jjp]]
       end
     else
-      this_it = emptyITensor(links[ii-1], links[ii], si, si')
+      this_it = emptyITensor(ElT, links[ii-1], links[ii], si, si')
       for jj in 1:d, jjp in 1:d
         this_it[links[ii-1](1),
                 links[ii](1),
@@ -85,19 +85,29 @@ function MPO(sites,
     end
     its[ii] = this_it
   end
-  MPO(N, its)
+  MPO(its)
 end
 
+MPO(sites::Vector{<:Index},
+    ops::Vector{String}) = MPO(Float64, sites, ops)
+
 """
-    MPO(sites, ops::Vector{String})
+    MPO([::Type{ElT} = Float64, ]sites, op::String)
 
 Make an MPO with pairs of sites `s[i]` and `s[i]'`
-and operators `ops` on each site.
+and operator `op` on every site.
 """
-MPO(sites, ops::String) = MPO(sites, fill(ops, length(sites)))
+function MPO(::Type{ElT},
+             sites::Vector{<:Index},
+             op::String) where {ElT <: Number}
+  return MPO(ElT, sites, fill(op, length(sites)))
+end
 
-function randomMPO(sites, m::Int=1)
-  M = MPO(sites)
+MPO(sites::Vector{<:Index},
+    op::String) = MPO(Float64, sites, op)
+
+function randomMPO(sites::Vector{<:Index}, m::Int=1)
+  M = MPO(sites, "Id")
   for i ∈ eachindex(sites)
     randn!(M[i])
     normalize!(M[i])
@@ -440,7 +450,7 @@ function HDF5.write(parent::Union{HDF5File,HDF5Group},
   N = length(M)
   write(g, "rlim", M.rlim)
   write(g, "llim", M.llim)
-  write(g,"length",N)
+  write(g, "length", N)
   for n=1:N
     write(g,"MPO[$(n)]", M[n])
   end
@@ -453,9 +463,9 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   if read(attrs(g)["type"]) != "MPO"
     error("HDF5 group or file does not contain MPO data")
   end
-  N = read(g,"length")
+  N = read(g, "length")
   rlim = read(g, "rlim")
   llim = read(g, "llim")
   v = [read(g,"MPO[$(i)]",ITensor) for i in 1:N]
-  return MPO(N, v, llim, rlim)
+  return MPO( v, llim, rlim)
 end

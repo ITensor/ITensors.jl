@@ -10,5 +10,4 @@ AutoMPO
 
 ```@docs
 add!
-MPO
 ```

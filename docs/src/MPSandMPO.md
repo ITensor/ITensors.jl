@@ -11,7 +11,7 @@ MPO
 
 ```@docs
 MPS(::Int)
-MPS(::Type{<:Number}, ::Any)
+MPS(::Type{<:Number}, ::Vector{<:Index})
 randomMPS
 productMPS
 ```
@@ -20,8 +20,8 @@ productMPS
 
 ```@docs
 MPO(::Int)
-MPO(::Any, ::Vector{String})
-MPO(::Any, ::String)
+MPO(::Type{<:Number}, ::Vector{<:Index}, ::Vector{String})
+MPO(::Type{<:Number}, ::Vector{<:Index}, ::String)
 ```
 
 ## Properties

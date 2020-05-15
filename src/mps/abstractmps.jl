@@ -6,7 +6,7 @@ abstract type AbstractMPS end
 
 The number of sites of an MPS/MPO.
 """
-Base.length(m::AbstractMPS) = m.length
+Base.length(m::AbstractMPS) = length(m.data)
 
 """
     ITensors.data(::MPS/MPO)
