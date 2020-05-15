@@ -18,7 +18,6 @@ noiseterm(::ProjMPO,::ITensor,::String)
 
 ```@docs
 length(::ProjMPO)
-nsite(::ProjMPO)
 eltype(::ProjMPO)
 size(::ProjMPO)
 ```
