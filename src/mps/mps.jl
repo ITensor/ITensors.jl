@@ -159,7 +159,7 @@ function randomCircuitMPS(sites::Vector{<:Index},
 end
 
 """
-    randomMPS(::Type{ElT<:Number}, sites; linkdim=1)
+    randomMPS(::Type{ElT<:Number}, sites::Vector{<:Index}; linkdim=1)
 
 Construct a random MPS with link dimension `linkdim` of 
 type `ElT`.
@@ -177,7 +177,7 @@ function randomMPS(::Type{ElT},
 end
 
 """
-    randomMPS(sites; linkdim=1)
+    randomMPS(sites::Vector{<:Index}; linkdim=1)
 
 Construct a random MPS with link dimension `linkdim` of 
 type `Float64`.
@@ -186,11 +186,14 @@ randomMPS(sites::Vector{<:Index},
           linkdim::Int=1) = randomMPS(Float64, sites, linkdim)
 
 """
-    randomMPS(sites, state; linkdim=1)
+    randomMPS(sites::Vector{<:Index}, state; linkdim=1)
 
 Construct a real, random MPS with link dimension `linkdim`,
 made by randomizing an initial product state specified by
-`state`.
+`state`. This version of `randomMPS` is necessary when creating
+QN-conserving random MPS (consisting of QNITensors). The initial
+`state` array provided determines the total QN of the resulting
+random MPS.
 """
 function randomMPS(sites::Vector{<:Index},
                    state,
@@ -238,6 +241,24 @@ nonzero values determined from the input IndexVals.
 productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64,
                                                    ivals::Vector{<:IndexVal})
 
+"""
+    productMPS(::Type{T},sites::Vector{<:Index},states)
+
+Construct a product state MPS of element type `T`, having
+site indices `sites`, and which corresponds to the initial
+state given by the array `states`. The `states` array may
+consist of either an array of integers or strings, as 
+recognized by the `state` function defined for the relevant
+Index tag type.
+
+#Examples
+```julia
+N = 10
+sites = siteinds("S=1/2",N)
+states = [isodd(n) ? "Up" : "Dn" for n=1:N]
+psi = productMPS(ComplexF64,sites,states)
+```
+"""
 function productMPS(::Type{T},
                     sites::Vector{<:Index},
                     states) where {T<:Number}
@@ -248,6 +269,24 @@ function productMPS(::Type{T},
   return productMPS(T, ivals)
 end
 
+"""
+    productMPS(sites::Vector{<:Index},states)
+
+Construct a product state MPS having
+site indices `sites`, and which corresponds to the initial
+state given by the array `states`. The `states` array may
+consist of either an array of integers or strings, as 
+recognized by the `state` function defined for the relevant
+Index tag type.
+
+#Examples
+```julia
+N = 10
+sites = siteinds("S=1/2",N)
+states = [isodd(n) ? "Up" : "Dn" for n=1:N]
+psi = productMPS(sites,states)
+```
+"""
 productMPS(sites::Vector{<:Index},
            states) = productMPS(Float64,
                                 sites,

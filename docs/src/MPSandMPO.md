@@ -12,8 +12,13 @@ MPO
 ```@docs
 MPS(::Int)
 MPS(::Type{<:Number}, ::Vector{<:Index})
-randomMPS
-productMPS
+randomMPS(sites::Vector{<:Index}; linkdim=1)
+randomMPS(::Type{<:Number}, sites::Vector{<:Index}; linkdim=1)
+randomMPS(sites::Vector{<:Index}, state; linkdim=1)
+productMPS(::Vector{<:Index},states)
+productMPS(::Type{<:Number},::Vector{<:Index},states)
+productMPS(::Vector{<:IndexVal})
+productMPS(::Type{<:Number}, ::Vector{<:IndexVal})
 ```
 
 ## MPO Constructors
