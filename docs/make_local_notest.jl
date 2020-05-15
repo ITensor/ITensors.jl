@@ -4,7 +4,5 @@ makedocs(sitename = sitename;
          modules = modules,
          pages = pages,
          format = Documenter.HTML(prettyurls = false),
-         doctest = true,
+         doctest = false,
          checkdocs = :none)
-
-deploydocs(repo = "github.com/ITensor/ITensors.jl.git")
