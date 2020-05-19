@@ -2,10 +2,6 @@
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/) [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl)
 
-PLEASE NOTE THIS IS PRE-RELEASE SOFTWARE FOR PREVIEW PURPOSES ONLY
-
-THIS SOFTWARE IS SUBJECT TO BREAKING CHANGES AND NOT YET OFFICIALLY SUPPORTED
-
 ITensors is a library for rapidly creating correct and efficient
 tensor network algorithms. 
 
