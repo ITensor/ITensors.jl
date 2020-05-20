@@ -86,6 +86,12 @@ function dmrg(PH,
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)
+  # Debug level checks
+  @debug begin
+    checkflux(psi0)
+    checkflux(PH)
+  end
+
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
   svd_alg::String = get(kwargs, :svd_alg, "recursive")
   obs = get(kwargs, :observer, NoObserver())
@@ -133,9 +139,19 @@ function dmrg(PH,
 
     for (b, ha) in sweepnext(N)
 
+      @debug begin
+        checkflux(psi)
+        checkflux(PH)
+      end
+
 @timeit_debug GLOBAL_TIMER "position!" begin
       position!(PH, psi, b)
 end
+
+      @debug begin
+        checkflux(psi)
+        checkflux(PH)
+      end
 
 @timeit_debug GLOBAL_TIMER "psi[b]*psi[b+1]" begin
       phi = psi[b] * psi[b+1]
@@ -158,16 +174,26 @@ end
         drho = noise(sweeps, sw) * noiseterm(PH,phi,ortho)
       end
 
+      @debug begin
+        checkflux(phi)
+      end
+
 @timeit_debug GLOBAL_TIMER "replacebond!" begin
-        spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
-                                         mindim = mindim(sweeps, sw),
-                                         cutoff = cutoff(sweeps, sw),
-                                         eigen_perturbation = drho,
-                                         ortho = ortho,
-                                         normalize = true,
-                                         which_decomp = which_decomp,
-                                         svd_alg = svd_alg)
+      spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
+                                       mindim = mindim(sweeps, sw),
+                                       cutoff = cutoff(sweeps, sw),
+                                       eigen_perturbation = drho,
+                                       ortho = ortho,
+                                       normalize = true,
+                                       which_decomp = which_decomp,
+                                       svd_alg = svd_alg)
 end
+
+      @debug begin
+        checkflux(psi)
+        checkflux(PH)
+      end
+
 
       if outputlevel >= 2
         @printf("Sweep %d, half %d, bond (%d,%d) energy=%.12f\n",sw,ha,b,b+1,energy)
@@ -193,6 +219,7 @@ end
                             psi=psi,
                             sweep=sw,
                             outputlevel=outputlevel) 
+
     isdone && break
   end
   return (energy, psi)

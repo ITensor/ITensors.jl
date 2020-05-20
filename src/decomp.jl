@@ -150,6 +150,12 @@ function LinearAlgebra.eigen(A::ITensor{N},
                              Linds,
                              Rinds;
                              kwargs...) where {N}
+  @debug begin
+    if hasqns(A)
+      @assert flux(A) == QN()
+    end
+  end
+
   NL = length(Linds)
   NR = length(Rinds)
   NL != NR && error("Must have equal number of left and right indices")
@@ -204,8 +210,14 @@ function LinearAlgebra.eigen(A::ITensor{N},
   D, VC = itensor(DT), itensor(VT)
 
   if hasqns(A)
-    for b in nzblocks(D)
-      @assert flux(D, b) == QN()
+    d = uniqueind(D)
+    i1, i2 = inds(VC)
+    for b in nzblocks(VC)
+      if flux(VC, b) != QN()
+        new_flux = dir(i1)*qn(i1, b[1])
+        setblockqn!(i2, new_flux, b[2])
+        setblockqn!(d, new_flux, b[2])
+      end
     end
   end
 
@@ -224,6 +236,14 @@ function LinearAlgebra.eigen(A::ITensor{N},
 
   # The right eigenvectors, after being applied to A
   Vt = replaceinds(V, (Ris..., r), (Lis..., l))
+
+  @debug begin
+    if hasqns(A)
+      @assert flux(D) == QN()
+      @assert flux(V) == QN()
+      @assert flux(Vt) == QN()
+    end
+  end
 
   return TruncEigen(D, V, Vt, spec, l, r)
 end

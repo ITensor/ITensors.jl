@@ -564,6 +564,13 @@ end
 
 totalqn(M::AbstractMPS) = flux(M)
 
+function checkflux(M::AbstractMPS)
+  for m in M
+    checkflux(m)
+  end
+  return nothing
+end
+
 @doc """
     orthogonalize!(M::MPS, j::Int; kwargs...)
 

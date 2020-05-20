@@ -213,6 +213,45 @@ using ITensors, Test, Random
     energy, psi = dmrg(H, psi0, sweeps; outputlevel = 0)
     @test (-6.5 < energy < -6.4)
   end
+
+  @testset "Hubbard model" begin
+    N = 10
+    Npart = 8
+    t1 = 1.0
+    U  = 1.0
+    V1 = 0.5
+    sites = siteinds("Electron",N; conserve_qns=true)
+    ampo = AutoMPO()
+    for i=1:N
+      ampo += (U,"Nupdn",i)
+    end
+    for b=1:N-1
+      ampo += (-t1,"Cdagup",b,"Cup",b+1)
+      ampo += (-t1,"Cdagup",b+1,"Cup",b)
+      ampo += (-t1,"Cdagdn",b,"Cdn",b+1)
+      ampo += (-t1,"Cdagdn",b+1,"Cdn",b)
+      ampo += (V1,"Ntot",b,"Ntot",b+1)
+    end
+    H = MPO(ampo,sites)
+    sweeps = Sweeps(6)
+    maxdim!(sweeps,50,100,200,400,800,800)
+    cutoff!(sweeps,1E-10)
+    state = ["Up",
+             "Dn",
+             "Dn",
+             "Up",
+             "Emp",
+             "Up",
+             "Up",
+             "Emp",
+             "Dn",
+             "Dn"
+            ]
+    psi0 = randomMPS(sites,state,10)
+    energy,psi = dmrg(H,psi0,sweeps; outputlevel = 0)
+    @test (-8.02 < energy < -8.01)
+  end
+
 end
 
 nothing

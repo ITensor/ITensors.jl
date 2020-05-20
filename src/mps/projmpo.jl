@@ -236,3 +236,12 @@ function noiseterm(P::ProjMPO,
   return nt
 end
 
+function checkflux(P::ProjMPO)
+  checkflux(P.H)
+  for n in length(P.LR)
+    if isassigned(P.LR, n)
+      checkflux(P.LR[n])
+    end
+  end
+end
+
