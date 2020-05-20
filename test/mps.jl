@@ -71,6 +71,16 @@ include("util.jl")
         @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
       end
     end
+
+    @testset "N=1 case" begin
+      site = Index(2,"Site,n=1")
+      psi = productMPS([site],[1])
+      @test psi[1][1] ≈ 1.0
+      @test psi[1][2] ≈ 0.0
+      psi = productMPS([site],[2])
+      @test psi[1][1] ≈ 0.0
+      @test psi[1][2] ≈ 1.0
+    end
   end
 
   @testset "randomMPS with chi==1" begin
