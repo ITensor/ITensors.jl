@@ -45,6 +45,11 @@ Construct an MPS filled with Empty ITensors of type `ElT` from a collection of i
 function MPS(::Type{T}, sites::Vector{<:Index}) where {T <: Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
+  if N==1
+    v[1] = emptyITensor(T,sites[1])
+    return MPS(v)
+  end
+
   l = [Index(1, "Link,l=$ii") for ii=1:N-1]
   for ii in eachindex(sites)
     s = sites[ii]
@@ -301,6 +306,8 @@ productMPS(sites::Vector{<:Index},
 
 function siteind(M::MPS, j::Int)
   N = length(M)
+  (N==1) && return inds(M[1])[1]
+
   if j == 1
     si = uniqueind(M[j], M[j+1])
   elseif j == N

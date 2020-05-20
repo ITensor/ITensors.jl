@@ -22,6 +22,14 @@ include("util.jl")
   psi[1] = ITensor(sites[1])
   @test hasind(psi[1],sites[1])
 
+  @testset "N=1 MPS" begin
+    sites1 = [Index(2,"Site,n=1")]
+    psi = MPS(sites1)
+    @test length(psi) == 1
+    @test siteind(psi,1) == sites1[1]
+    @test siteinds(psi)[1] == sites1[1]
+  end
+
   @testset "Missing links" begin
     psi = MPS([randomITensor(sites[i]) for i in 1:N])
     @test isnothing(linkind(psi, 1))
