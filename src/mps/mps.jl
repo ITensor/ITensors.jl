@@ -215,6 +215,13 @@ function productMPS(::Type{T},
                     ivals::Vector{<:IndexVal}) where {T<:Number}
   N = length(ivals)
   M = MPS(N)
+
+  if N==1
+    M[1] = emptyITensor(ind(ivals[1]))
+    M[1][ivals[1]] = one(T)
+    return M
+  end
+
   if hasqns(ind(ivals[1]))
     links = [Index(QN()=>1;tags="Link,l=$n") for n=1:N]
   else
