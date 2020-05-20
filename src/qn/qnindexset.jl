@@ -32,3 +32,11 @@ end
 
 removeqns(is::QNIndexSet) = map(i -> removeqns(i), is)
 
+function Base.show(io::IO, is::QNIndexSet)
+  print(io,"IndexSet{$(length(is))} ")
+  for i in is
+    print(io, i)
+    println(io)
+  end
+end
+
