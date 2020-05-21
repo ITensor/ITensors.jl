@@ -64,6 +64,9 @@ end
 
   @testset "lognorm MPO" begin
     A = randomMPO(sites)
+    for j in 1:N
+      A[j] .*= j
+    end
     Adag = ITensors.sim_linkinds(dag(A))
     A² = ITensor(1)
     for j = 1:N
@@ -71,9 +74,6 @@ end
     end
     @test A²[] ≈ A ⋅ A
     @test 0.5 * log(A²[]) ≈ lognorm(A)
-    for j in 1:N
-      A[j] .*= j
-    end
     @test lognorm(A) ≈ log(factorial(N))
   end
 
