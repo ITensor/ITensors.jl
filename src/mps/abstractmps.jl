@@ -343,22 +343,133 @@ function maxlinkdim(M::AbstractMPS)
   md
 end
 
-function Base.show(io::IO, M::AbstractMPS)
-  print(io,"$(typeof(M))")
-  (length(M) > 0) && print(io,"\n")
-  for (i, A) ∈ enumerate(data(M))
-    if order(A) != 0
-      println(io,"[$i] $(inds(A))")
-    else
-      println(io,"[$i] ITensor()")
-    end
-  end
-end
-
 function linkind(M::AbstractMPS, j::Int)
   N = length(M)
   j ≥ length(M) && return nothing
   return commonind(M[j], M[j+1])
+end
+
+function _log_or_not_dot(M1::MPST,
+                         M2::MPST,
+                         loginner::Bool;
+                         make_inds_match::Bool = true)::Number where {MPST <: AbstractMPS}
+  N = length(M1)
+  if length(M2) != N
+    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
+  end
+  M1dag = dag(M1)
+  sim_linkinds!(M1dag)
+  if make_inds_match
+    replace_siteinds!(M1dag, siteinds(M2))
+  end
+  O = M1dag[1] * M2[1]
+
+  if loginner
+    normO = norm(O)
+    log_inner_tot = log(normO)
+    O ./= normO
+  end
+
+  for j in eachindex(M1)[2:end]
+    O = (O*M1dag[j])*M2[j]
+
+    if loginner
+      normO = norm(O)
+      log_inner_tot += log(normO)
+      O ./= normO
+    end
+
+  end
+
+  if loginner
+    return log_inner_tot
+  end
+
+  return O[]
+end
+
+"""
+    dot(A::MPS, B::MPS; make_inds_match = true)
+    inner(A::MPS, B::MPS; make_inds_match = true)
+
+    dot(A::MPO, B::MPO)
+    inner(A::MPO, B::MPO)
+
+Compute the inner product `<A|B>`. If `A` and `B` are MPOs, computes the Frobenius inner product.
+
+If `make_inds_match = true`, the function attempts to make
+the site indices match before contracting (so for example, the
+inputs can have different site indices, as long as they
+have the same dimensions or QN blocks).
+
+For now, `make_inds_match` is only supported for MPSs.
+
+See also `logdot`/`loginner`.
+"""
+function LinearAlgebra.dot(M1::MPST,
+                           M2::MPST;
+                           kwargs...) where {MPST <: AbstractMPS}
+  return _log_or_not_dot(M1, M2, false; kwargs...)
+end
+
+"""
+    logdot(A::MPS, B::MPS; make_inds_match = true)
+    loginner(A::MPS, B::MPS; make_inds_match = true)
+
+    logdot(A::MPO, B::MPO)
+    loginner(A::MPO, B::MPO)
+
+Compute the logarithm of the inner product `<A|B>`. If `A` and `B` are MPOs, computes the logarithm of the Frobenius inner product.
+
+This is useful for larger MPS/MPO, where in the limit of large numbers of sites the inner product can diverge or approach zero.
+
+If `make_inds_match = true`, the function attempts to make
+the site indices match before contracting (so for example, the
+inputs can have different site indices, as long as they
+have the same dimensions or QN blocks).
+
+For now, `make_inds_match` is only supported for MPSs.
+"""
+function logdot(M1::MPST,
+                M2::MPST;
+                kwargs...) where {MPST <: AbstractMPS}
+  return _log_or_not_dot(M1, M2, true; kwargs...)
+end
+
+inner(M1::MPST,
+      M2::MPST;
+      kwargs...) where {MPST <: AbstractMPS} = dot(M1, M2; kwargs...)
+
+loginner(M1::MPST,
+         M2::MPST;
+         kwargs...) where {MPST <: AbstractMPS} = logdot(M1, M2; kwargs...)
+
+"""
+    norm(A::MPS)
+
+    norm(A::MPO)
+
+Compute the norm of the MPS or MPO.
+
+See also `lognorm`.
+"""
+function LinearAlgebra.norm(M::AbstractMPS)
+  return sqrt(dot(M, M))
+end
+
+"""
+    lognorm(A::MPS)
+
+    lognorm(A::MPO)
+
+Compute the logarithm of the norm of the MPS or MPO. 
+
+This is useful for larger MPS/MPO that are not gauged, where in the limit of large numbers of sites the norm can diverge or approach zero.
+
+See also `norm` and `loginner`/`logdot`.
+"""
+function lognorm(M::AbstractMPS)
+  return 0.5 * logdot(M, M)
 end
 
 function plussers(::Type{T},
@@ -448,6 +559,18 @@ function Base.sum(A::Vector{T};
   return sum(newterms; kwargs...)
 end
 
+"""
+    orthogonalize!(M::MPS, j::Int; kwargs...)
+
+    orthogonalize!(M::MPO, j::Int; kwargs...)
+
+Move the orthogonality center of the MPS
+to site `j`. No observable property of the
+MPS will be changed, and no truncation of the
+bond indices is performed. Afterward, tensors
+`1,2,...,j-1` will be left-orthogonal and tensors
+`j+1,j+2,...,N` will be right-orthogonal.
+"""
 function orthogonalize!(M::AbstractMPS,
                         j::Int;
                         kwargs...)
@@ -482,6 +605,15 @@ function orthogonalize!(M::AbstractMPS,
   end
 end
 
+"""
+    truncate!(M::MPS; kwargs...)
+
+    truncate!(M::MPO; kwargs...)
+
+Perform a truncation of all bonds of an MPS/MPO,
+using the truncation parameters (cutoff,maxdim, etc.)
+provided as keyword arguments.
+"""
 function NDTensors.truncate!(M::AbstractMPS;
                              kwargs...)
   N = length(M)
@@ -571,28 +703,17 @@ function checkflux(M::AbstractMPS)
   return nothing
 end
 
-@doc """
-    orthogonalize!(M::MPS, j::Int; kwargs...)
-
-    orthogonalize!(M::MPO, j::Int; kwargs...)
-
-Move the orthogonality center of the MPS
-to site `j`. No observable property of the
-MPS will be changed, and no truncation of the
-bond indices is performed. Afterward, tensors
-`1,2,...,j-1` will be left-orthogonal and tensors
-`j+1,j+2,...,N` will be right-orthogonal.
-""" orthogonalize!
-
-@doc """
-    truncate!(M::MPS; kwargs...)
-
-    truncate!(M::MPO; kwargs...)
-
-Perform a truncation of all bonds of an MPS/MPO,
-using the truncation parameters (cutoff,maxdim, etc.)
-provided as keyword arguments.
-""" truncate!
+function Base.show(io::IO, M::AbstractMPS)
+  print(io,"$(typeof(M))")
+  (length(M) > 0) && print(io,"\n")
+  for (i, A) ∈ enumerate(data(M))
+    if order(A) != 0
+      println(io,"[$i] $(inds(A))")
+    else
+      println(io,"[$i] ITensor()")
+    end
+  end
+end
 
 @deprecate orthoCenter(args...;
                        kwargs...) orthocenter(args...; kwargs...)

@@ -47,6 +47,36 @@ end
     @test ⋅(phi, K, phi) ≈ orig_inner
   end
 
+  @testset "norm MPO" begin
+    A = randomMPO(sites)
+    Adag = ITensors.sim_linkinds(dag(A))
+    A² = ITensor(1)
+    for j = 1:N
+      A² *= Adag[j] * A[j]
+    end
+    @test A²[] ≈ inner(A, A)
+    @test sqrt(A²[]) ≈ norm(A)
+    for j in 1:N
+      A[j] ./= j
+    end
+    @test norm(A) ≈ 1 / factorial(N)
+  end
+
+  @testset "lognorm MPO" begin
+    A = randomMPO(sites)
+    for j in 1:N
+      A[j] .*= j
+    end
+    Adag = ITensors.sim_linkinds(dag(A))
+    A² = ITensor(1)
+    for j = 1:N
+      A² *= Adag[j] * A[j]
+    end
+    @test A²[] ≈ A ⋅ A
+    @test 0.5 * log(A²[]) ≈ lognorm(A)
+    @test lognorm(A) ≈ log(factorial(N))
+  end
+
   @testset "inner <y|A|x>" begin
     phi = randomMPS(sites)
     K = randomMPO(sites)

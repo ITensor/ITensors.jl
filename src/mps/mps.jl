@@ -333,36 +333,6 @@ end
 replace_siteinds(M::MPS, sites) = replace_siteinds!(copy(M), sites)
 
 """
-    dot(psi::MPS, phi::MPS; make_inds_match = true)
-    inner(psi::MPS, phi::MPS; make_inds_match = true)
-
-Compute <psi|phi>.
-
-If `make_inds_match = true`, the function attempts to make
-the site indices match before contracting (so for example, the
-inputs can have different site indices, as long as they 
-have the same dimensions or QN blocks).
-"""
-function LinearAlgebra.dot(M1::MPS, M2::MPS; make_inds_match::Bool = true)::Number
-  N = length(M1)
-  if length(M2) != N
-    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
-  end
-  M1dag = dag(M1)
-  sim_linkinds!(M1dag)
-  if make_inds_match
-    replace_siteinds!(M1dag, siteinds(M2))
-  end
-  O = M1dag[1] * M2[1]
-  for j in eachindex(M1)[2:end]
-    O = (O*M1dag[j])*M2[j]
-  end
-  return O[]
-end
-
-inner(M1::MPS, M2::MPS; kwargs...) = dot(M1, M2; kwargs...)
-
-"""
     replacebond!(M::MPS, b::Int, phi::ITensor; kwargs...)
 
 Factorize the ITensor `phi` and replace the ITensors
