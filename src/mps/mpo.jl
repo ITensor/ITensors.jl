@@ -201,6 +201,24 @@ end
 
 inner(B::MPO, y::MPS, A::MPO, x::MPS) = dot(B, y, A, x)
 
+function LinearAlgebra.dot(M1::MPO, M2::MPO;
+                           make_inds_match::Bool = false)
+  if make_inds_match
+    error("In dot(::MPO, ::MPO), make_inds_match is not currently supported")
+  end
+  return _log_or_not_dot(M1, M2, false;
+                         make_inds_match = make_inds_match)
+end
+
+function logdot(M1::MPO, M2::MPO;
+                make_inds_match::Bool = false)
+  if make_inds_match
+    error("In dot(::MPO, ::MPO), make_inds_match is not currently supported")
+  end
+  return _log_or_not_dot(M1, M2, true;
+                         make_inds_match = make_inds_match)
+end
+
 """
     error_contract(y::MPS, A::MPO, x::MPS;
                    make_inds_match::Bool = true)

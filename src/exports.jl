@@ -158,6 +158,9 @@ export
   add,
   contract,
   dag!,
+  logdot,
+  loginner,
+  lognorm,
 
 # mps/mpo.jl
   # Types
@@ -266,4 +269,3 @@ export
 # qn/qnindex.jl
   flux,
   hasqns
-

@@ -128,6 +128,36 @@ include("util.jl")
     @test psipsi[] ≈ inner(psi,psi)
   end
   
+  @testset "norm MPS" begin
+    psi = randomMPS(sites,10)
+    psidag = ITensors.sim_linkinds(dag(psi))
+    psi² = ITensor(1)
+    for j = 1:N
+      psi² *= psidag[j] * psi[j]
+    end
+    @test psi²[] ≈ psi ⋅ psi
+    @test sqrt(psi²[]) ≈ norm(psi)
+    for j in 1:N
+      psi[j] .*= j
+    end
+    @test norm(psi) ≈ factorial(N)
+  end
+
+  @testset "lognorm MPS" begin
+    psi = randomMPS(sites,10)
+    for j in 1:N
+      psi[j] .*= j
+    end
+    psidag = ITensors.sim_linkinds(dag(psi))
+    psi² = ITensor(1)
+    for j = 1:N
+      psi² *= psidag[j] * psi[j]
+    end
+    @test psi²[] ≈ psi ⋅ psi
+    @test 0.5 * log(psi²[]) ≈ lognorm(psi)
+    @test lognorm(psi) ≈ log(factorial(N))
+  end
+
   @testset "scaling MPS" begin
     psi = randomMPS(sites)
     twopsidag = 2.0*dag(psi)
