@@ -17,32 +17,14 @@ algorithms for optimizing and transforming tensor networks, such as
 matrix product state and matrix product operators, such as
 the DMRG algorithm.
 
-Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
-
-## Steps to Install Pre-Release Version
-
-1. Install the latest version of Julia: https://julialang.org/downloads/
-
-2. Run the `julia` command to begin an interactive Julia session (entering the so-called REPL). 
-
-3. Type `]` on your keyboard to enter Julia's interactive package manager.
-
-4. Run the command 
-
-       add https://github.com/ITensor/ITensors.jl
-    
-   The package system will update itself, then install some dependencies before finally installing ITensors.jl.
-
-5. Hit the backspace key to go back to the normal interactive Julia prompt, or type Ctrl+D to exit the Julia REPL.
-
-6. You can now do `using ITensors` to use the ITensor library in an interactive session, or run Julia code files (.jl files) which use ITensor, with some examples given below and in our examples folder. The test folder also has many examples of ITensor code you can run.
-
 We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions here: https://github.com/JuliaComputing/MKL.jl
+
+Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
 ## Documentation
 
-- [**STABLE**](https://itensor.github.io/ITensors.jl/stable/) &mdash; **documentation of the most recently tagged version.**
-- [**DEVEL**](https://itensor.github.io/ITensors.jl/dev/) &mdash; *documentation of the in-development version.*
+- [**STABLE**](https://itensor.github.io/ITensors.jl/stable/) --  **documentation of the most recently tagged version.**
+- [**DEVEL**](https://itensor.github.io/ITensors.jl/dev/) -- *documentation of the in-development version.*
 
 ## Code Examples
 
@@ -63,6 +45,7 @@ let
   A = ITensor(i,j,k)
   B = ITensor(j,l)
 
+  # Set elements of A
   A[i=>1,j=>1,k=>1] = 11.1
   A[i=>2,j=>1,k=>2] = -21.2
   A[k=>1,i=>3,j=>1] = 31.1  # can provide Index values in any order
