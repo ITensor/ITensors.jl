@@ -456,6 +456,13 @@ Base.copy(T::ITensor) = itensor(copy(tensor(T)))
 
 """
     Array{ElT}(T::ITensor, i:Index...)
+    Array(T::ITensor, i:Index...)
+
+    Matrix{ElT}(T::ITensor, row_i:Index, col_i::Index)
+    Matrix(T::ITensor, row_i:Index, col_i::Index)
+
+    Vector{ElT}(T::ITensor)
+    Vector(T::ITensor)
 
 Given an ITensor `T` with indices `i...`, returns
 an Array with a copy of the ITensor's elements. The
@@ -464,7 +471,8 @@ the order of the data in the resulting Array.
 """
 function Base.Array{ElT, N}(T::ITensor{N},
                             is::Vararg{Index, N}) where {ElT, N}
-  return Array{ElT, N}(tensor(permute(T, is...)))::Array{ElT, N}
+  TT = tensor(permute(T, is...; always_copy = true))
+  return Array{ElT, N}(TT)::Array{ElT, N}
 end
 
 function Base.Array{ElT}(T::ITensor{N},
@@ -477,33 +485,17 @@ function Base.Array(T::ITensor{N},
   return Array{eltype(T), N}(T, is...)::Array{<:Number, N}
 end
 
-"""
-    Matrix(T::ITensor, row_i:Index, col_i::Index)
-
-Given an ITensor `T` with two indices `row_i` and `col_i`, returns
-a Matrix with a copy of the ITensor's elements. The
-order in which the indices are provided indicates
-which Index is to be treated as the row index of the 
-Matrix versus the column index.
-
-"""
-function Base.Matrix(T::ITensor{2},
-                     row_i::Index,
-                     col_i::Index)
-  return Array(T,row_i,col_i)
-end
-
-function Base.Vector(T::ITensor{1},
-                     i::Index)
-  return Array(T,i)
+function Base.Array{<:Any, N}(T::ITensor{N},
+                              is::Vararg{Index, N}) where {N}
+  return Array(T, is...)
 end
 
 function Base.Vector{ElT}(T::ITensor{1}) where {ElT}
-  return Vector{ElT}(T,inds(T)...)
+  return Array{ElT}(T,inds(T)...)
 end
 
 function Base.Vector(T::ITensor{1})
-  return Vector(T,inds(T)...)
+  return Array(T,inds(T)...)
 end
 
 """
@@ -1277,8 +1269,18 @@ Base.isempty(T::ITensor) = isempty(tensor(T))
 # Developer functions
 #
 
-# TODO: make versions where the element type can be specified (for type
-# inference).
+"""
+    array(T::ITensor)
+
+Given an ITensor `T`, returns
+an Array with a copy of the ITensor's elements,
+or a view in the case the the ITensor's storage is Dense.
+The ordering of the elements in the Array, in
+terms of which Index is treated as the row versus
+column, depends on the internal layout of the ITensor.
+*Therefore this method is intended for developer use
+only and not recommended for use in ITensor applications.*
+"""
 NDTensors.array(T::ITensor) = array(tensor(T))
 
 """
@@ -1286,7 +1288,7 @@ NDTensors.array(T::ITensor) = array(tensor(T))
 
 Given an ITensor `T` with two indices, returns
 a Matrix with a copy of the ITensor's elements,
-or a view in the case the the ITensor's storage is Dense.
+or a view in the case the ITensor's storage is Dense.
 The ordering of the elements in the Matrix, in
 terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
@@ -1297,6 +1299,13 @@ function NDTensors.matrix(T::ITensor{2})
   return array(tensor(T))
 end
 
+"""
+    vector(T::ITensor)
+
+Given an ITensor `T` with one index, returns
+a Vector with a copy of the ITensor's elements,
+or a view in the case the ITensor's storage is Dense.
+"""
 function NDTensors.vector(T::ITensor{1})
   return array(tensor(T))
 end

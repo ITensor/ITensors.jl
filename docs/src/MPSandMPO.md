@@ -75,7 +75,6 @@ logdot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
 norm(::ITensors.AbstractMPS)
 lognorm(::ITensors.AbstractMPS)
 +(::MPS, ::MPS)
-+(::MPO, ::MPO)
 *(::MPO, ::MPS)
 ```
 

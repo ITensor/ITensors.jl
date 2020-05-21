@@ -49,6 +49,15 @@ diagITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
 delta(::Type{<:Number}, ::QN, ::ITensors.Indices)
 ```
 
+## Convert to Array
+
+```@docs
+Array{ElT, N}(::ITensor{N}, ::Vararg{Index, N}) where {ElT, N}
+array(::ITensor)
+matrix(::ITensor{2})
+vector(::ITensor{1})
+```
+
 ## Getting and setting elements
 
 ```@docs
