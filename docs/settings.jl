@@ -18,7 +18,11 @@ settings = Dict(
                                  "ITensor" => "ITensorType.md",
                                  "MPS and MPO" => "MPSandMPO.md",
                                  "QN" => "QN.md",
-                                 "DMRG" => "DMRG.md",
+                                 "DMRG" => [
+                                            "DMRG.md",
+                                            "ProjMPO.md",
+                                            "ProjMPOSum.md"
+                                           ],
                                  "AutoMPO" => "AutoMPO.md"
                                 ]
            ],

@@ -105,7 +105,7 @@ end
 
 
 """
-   QN(qvs...)
+    QN(qvs...)
 
 Construct a QN from a set of up to four
 named value tuples.

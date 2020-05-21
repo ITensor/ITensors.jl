@@ -391,6 +391,12 @@ end
   for I in CartesianIndices(T)
     @test A[I] == T[I]
   end
+
+  T = randomITensor(i)
+  A = Vector(T)
+  for I in CartesianIndices(T)
+    @test A[I] == T[I]
+  end
 end
 
 @testset "Test isapprox for ITensors" begin

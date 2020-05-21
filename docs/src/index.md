@@ -17,9 +17,31 @@ algorithms for optimizing and transforming tensor networks, such as
 matrix product state and matrix product operators, such as
 the DMRG algorithm.
 
-We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions here: https://github.com/JuliaComputing/MKL.jl
-
 Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
+
+
+## Installation
+
+The ITensors package can be installed with the Julia package manager.
+From the Julia REPL, type `]` to enter the Pkg REPL mode and run:
+
+```
+~ julia
+```
+
+```julia
+julia> ]
+
+pkg> add ITensors
+```
+
+Or, equivalently, via the `Pkg` API:
+
+```julia
+julia> import Pkg; Pkg.add("ITensors")
+```
+
+We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions [here](https://github.com/JuliaComputing/MKL.jl).
 
 ## Documentation
 
