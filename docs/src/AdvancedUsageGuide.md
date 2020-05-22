@@ -4,12 +4,12 @@
 ## Installing and updating ITensors.jl
 
 The ITensors package can be installed with the Julia package manager.
-From the Julia REPL, type `]` to enter the Pkg REPL mode and run:
-
+Assuming you have already downloaded Julia, which you can get
+[here](https://julialang.org/downloads/), from the Julia REPL, 
+type `]` to enter the Pkg REPL mode and run:
 ```
 ~ julia
 ```
-
 ```julia
 julia> ]
 
@@ -35,14 +35,133 @@ because new releases may be breaking.
 
 To try the "development branch" of ITensors.jl (for example, if 
 there is a feature or fix we added that hasn't been released yet), 
-you can do `add ITensors#master`. This is generally not encouraged 
-unless you know what you are doing.
+you can do `add ITensors#master`. You can switch back to the latest
+released version with `add ITensors`. Using the development/master
+branch is generally not encouraged unless you know what you are doing.
 
 ## Writing code based on ITensors.jl
 
 There are many ways you can write code based on ITensors.jl, ranging 
 from using it in the REPL to writing a small script to making a 
 package that depends on it.
+
+For example, you can just start the REPL from your command like:
+```
+~ julia
+```
+assuming you have an available version of Julia with the ITensors.jl
+package installed. Then just type:
+```julia
+julia> using ITensors
+```
+and start typing ITensor commands. For example:
+```julia
+julia> i = Index(2, "i")
+(dim=2|id=355|"i")
+
+julia> A = randomITensor(i, i')
+ITensor ord=2 (dim=2|id=355|"i") (dim=2|id=355|"i")'
+NDTensors.Dense{Float64,Array{Float64,1}}
+
+julia> @show A
+A = ITensor ord=2
+Dim 1: (dim=2|id=355|"i")
+Dim 2: (dim=2|id=355|"i")'
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 1.2320011464276275  1.8504245734277216
+ 1.0763652402177477  0.030353720156277037
+
+julia> (A*dag(A))[]
+3.9627443142240617
+```
+
+Note that there are some "gotchas" with working in the REPL like this.
+Technically, all commands in the REPL are in the "global scope".
+The global scope might not work as you would expect, for example:
+```julia
+julia> for _ in 1:3
+         A *= 2
+       end
+ERROR: UndefVarError: A not defined
+Stacktrace:
+ [1] top-level scope at ./REPL[12]:2
+ [2] eval(::Module, ::Any) at ./boot.jl:331
+ [3] eval_user_input(::Any, ::REPL.REPLBackend) at /home/mfishman/software/julia-1.4.0/share/julia/stdlib/v1.4/REPL/src/REPL.jl:86
+ [4] run_backend(::REPL.REPLBackend) at /home/mfishman/.julia/packages/Revise/AMRie/src/Revise.jl:1023
+ [5] top-level scope at none:0
+```
+since the `A` inside the for-loop introduces a new local variable.
+Some alternatives are to wrap that part of the code in a let-block
+or a function:
+```julia
+julia> function f(A)
+         for _ in 1:3
+           A *= 2
+         end
+         A
+       end
+f (generic function with 1 method)
+
+julia> A = f(A)
+ITensor ord=2 (dim=2|id=355|"i") (dim=2|id=355|"i")'
+NDTensors.Dense{Float64,Array{Float64,1}}
+
+julia> @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=355|"i")
+Dim 2: (dim=2|id=355|"i")'
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 9.85600917142102   14.803396587421773
+ 8.610921921741982   0.2428297612502163
+```
+In this particular case, you can alternatively modify the ITensor
+in-place:
+```julia
+julia> for _ in 1:3
+         A ./= 2
+       end
+
+julia> @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=355|"i")
+Dim 2: (dim=2|id=355|"i")'
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 1.2320011464276275  1.8504245734277216
+ 1.0763652402177477  0.030353720156277037
+```
+
+A common place you might accidentally come across this is the 
+following:
+```julia
+Reminder to add a section about this kind of "problem":
+```julia
+julia> N = 4;
+
+julia> sites = siteinds("S=1/2",N);
+
+julia> ampo = AutoMPO();
+
+julia> for j=1:N-1
+         ampo += ("Sz", j, "Sz", j+1)
+       end
+ERROR: UndefVarError: ampo not defined
+Stacktrace:
+ [1] top-level scope at ./REPL[16]:2
+ [2] eval(::Module, ::Any) at ./boot.jl:331
+ [3] eval_user_input(::Any, ::REPL.REPLBackend) at /home/mfishman/software/julia-1.4.0/share/julia/stdlib/v1.4/REPL/src/REPL.jl:86
+ [4] run_backend(::REPL.REPLBackend) at /home/mfishman/.julia/packages/Revise/AMRie/src/Revise.jl:1023
+ [5] top-level scope at none:0
+```
+In this case, you can use `ampo .+= ("Sz", j, "Sz", j+1)`,
+`add!(ampo, "Sz", j, "Sz", j+1)`, or wrap your code in a let-block
+or function.
+
+Note that the REPL is very useful for prototyping code quickly,
+but working directly in the REPL and outside of functions can
+cause sub-optimal performance.
 
 ## Developing ITensors.jl
 
@@ -61,18 +180,29 @@ session.
 You might notice that the time to load ITensors.jl (with `using 
 ITensors`) and the time to run your first few ITensors commands is 
 slow. This is due to Julia's just-in-time (JIT) compilation.
+Julia is compiling special versions of each function that is
+being called based on the inputs that it gets at runtime. This
+allows it to have fast code, often nearly as fast as fully compiled
+languages like C++ (as long as you give Julia the correct information
+to compile perfomant code).
 
- - Precompilation
- - Staying in the same Julia session with Revise
- - Using PackageCompile
+However, the long startup time can still be annoying. In this section,
+we will discuss some strategies that can be used to minimize this
+annoyance, for example:
+ - Precompilation.
+ - Staying in the same Julia session with Revise.
+ - Using PackageCompile to compile ITensors.jl ahead of time.
 
 ## Multithreading Support
 
-There are two possible sources of parallelization available in ITensors.jl, both external to the package right now. These are:
+There are two possible sources of parallelization available in 
+ITensors.jl, both external to the package right now. These are:
  - BLAS/LAPACK multithreading (through whatever flavor you are using, i.e. OpenBLAS or MKL).
  - The Strided.jl package, which implements a multithreaded array permutation.
 
-The BLAS/LAPACK multithreading can be controlled in the usual way with environment variables, or within Julia. So for example, to control from Julia, you would do:
+The BLAS/LAPACK multithreading can be controlled in the usual way with 
+environment variables, or within Julia. So for example, to control 
+from Julia, you would do:
 ```julia
 julia> using LinearAlgebra
 
@@ -89,9 +219,10 @@ julia> BLAS.set_num_threads(2)
 julia> ccall((:MKL_GET_MAX_THREADS, Base.libblas_name), Cint, ())
 2
 ```
-(if you are using OpenBLAS, I think you would get the number of threads with `ccall((:openblas_get_num_threads, Base.libblas_name), Cint, ())` but I haven't checked).
+if you are using OpenBLAS, the command would be something like `ccall((:openblas_get_num_threads, Base.libblas_name), Cint, ())`.
 
-Alternatively, you can use environment variables, so at your command line prompt you would use:
+Alternatively, you can use environment variables, so at your command 
+line prompt you would use:
 ```
 ~ export MKL_NUM_THREADS=4
 ```
@@ -99,21 +230,61 @@ if you are using MKL or
 ```
 ~ export OPENBLAS_NUM_THREADS=4
 ```
-if you are using OpenBLAS. We would highly recommend using MKL (you can easily add MKL support to an existing Julia build with https://github.com/JuliaComputing/MKL.jl), especially if you are using an Intel chip. In general, we have not found MKL/OpenBLAS multithreading to help much in the context of DMRG, and I would be very surprised if it scaled to 20 cores. How well it scales would depend highly on the problem you are studying, and would require your calculation to be vastly dominated by matrix multiplications (which is not always the case, especially if you are using QN conservation).
+if you are using OpenBLAS. We would highly recommend using MKL (see
+the installation instructions for how to do that), especially if you 
+are using an Intel chip. In general, we have not found MKL/OpenBLAS 
+multithreading to help much in the context of DMRG, but you mileage
+may vary and it would depend highly on the problem you are studying. 
+How well BLAS multithreading will work would depend on how mouch your 
+calculations are dominated by matrix multiplications (which is not 
+always the case, especially if you are using QN conservation).
 
-Then, a separate level of mutlithreading could be turned on, which is native Julia multithreading. Right now in ITensors.jl, this would only control array permutation functions we use from [Strided.jl](https://github.com/Jutho/Strided.jl). You would set it with the environment variable `JULIA_NUM_THREADS`, for example:
+Then, a separate level of mutlithreading could be turned on, which is 
+native Julia multithreading. Right now in ITensors.jl, this would 
+only control array permutation functions we use from 
+[Strided.jl](https://github.com/Jutho/Strided.jl). You would set it 
+with the environment variable `JULIA_NUM_THREADS`, for example:
 ```julia
 julia> Threads.nthreads() # By default it is probably off
 1
 ```
-Then if you set `export JULIA_NUM_THREADS=4` at your command line, you would see the next time you start up Julia:
+Then if you set `export JULIA_NUM_THREADS=4` at your command line, 
+you would see the next time you start up Julia:
 ```julia
 julia> Threads.nthreads()
 4
 ```
-Currently, we have not found that using that kind of multithreading has helped either, and I have seen it cause slowdowns, possibly because it is competing with BLAS multithreading (Jutho, the author of the package, is aware of those problems and it will hopefully improve in the future).
+As of this writing, we have not found that using that kind of 
+multithreading has helped much in the context of DMRG calculation, 
+but your mileage may vary. Also note that the two kinds of multithreading
+(BLAS vs. native Julia) may compete with each other for resources,
+so it is recommended you turn one or the other off.
 
-On top of that, we hope to incorporate our own multithreading with Julia's native multithreading capabilities, for example to parallelize over block sparse contractions. We have that implemented in the C++ version of ITensor, and it works very well (for certain problems, it did in fact scale up to 20 cores).
+We plan to incorporate our own multithreading with Julia's native 
+multithreading capabilities, for example to parallelize over block 
+sparse contractions. Stay tuned for that!
+
+## Benchmarking and profiling
+
+Julia has great built-in tools for benchmarking and profiling.
+For benchmarking fast code at the command line, you can use
+`BenchmarkTools`:
+```julia
+julia> using ITensors
+
+julia> using BenchmarkTools
+
+julia> i = Index(100, "i");
+
+julia> A = randomITensor(i, i');
+
+julia> @btime 2*$A;
+  4.279 μs (8 allocations: 78.73 KiB)
+```
+
+We recommend packages like `ProfileView` to get detailed profiles
+of your code, in order to pinpoint functions or lines of code
+that are slower than they should be.
 
 ## ITensor type design and writing performant code
 
@@ -122,8 +293,8 @@ of the ITensor type, that it is often not "type stable". Some of
 this is by design. The definition for ITensor is:
 ```julia
 mutable struct ITensor{N}
-  ::IndexSet{N}
-  ::TensorStorage
+  inds::IndexSet{N}
+  store::TensorStorage
 end
 ```
 These are both abstract types, which is something that is generally 
@@ -132,10 +303,35 @@ discouraged for peformance.
 This has a few disadvantages. Some code that you might expect to be 
 type stable, like `getindex`, is not, for example:
 ```julia
-@code_warntype A[i=>1, j=>2]
+julia> i = Index(2, "i");
+
+julia> A = randomITensor(i, i');
+
+julia> @code_warntype A[i=>1, i'=>2]
+Variables
+  #self#::Core.Compiler.Const(getindex, false)
+  T::ITensor{2}
+  ivs::Tuple{Pair{Index{Int64},Int64},Pair{Index{Int64},Int64}}
+  p::Tuple{Union{Nothing, Int64},Union{Nothing, Int64}}
+  vals::Tuple{Any,Any}
+
+Body::Any
+1 ─ %1  = NDTensors.getperm::Core.Compiler.Const(NDTensors.getperm, false)
+│   %2  = ITensors.inds(T)::IndexSet{2,IndexT,DataT} where DataT<:Tuple where IndexT<:Index
+│   %3  = Base.broadcasted(ITensors.ind, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(ind),Tuple{Tuple{Pair{Index{Int64},Int64},Pair{Index{Int64},Int64}}}}
+│   %4  = Base.materialize(%3)::Tuple{Index{Int64},Index{Int64}}
+│         (p = (%1)(%2, %4))
+│   %6  = NDTensors.permute::Core.Compiler.Const(NDTensors.permute, false)
+│   %7  = Base.broadcasted(ITensors.val, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(val),Tuple{Tuple{Pair{Index{Int64},Int64},Pair{Index{Int64},Int64}}}}
+│   %8  = Base.materialize(%7)::Tuple{Int64,Int64}
+│         (vals = (%6)(%8, p))
+│   %10 = Core.tuple(T)::Tuple{ITensor{2}}
+│   %11 = Core._apply_iterate(Base.iterate, Base.getindex, %10, vals)::Any
+└──       return %11
 ```
-Julia can't know ahead of time, based on the inputs, what the type 
-of the output is (though at runtime, the output has a concrete type).
+Uh oh, that doesn't look good! Julia can't know ahead of time, based on 
+the inputs, what the type of the output is (though at runtime, the 
+output has a concrete type).
 
 So why is it designed this way? The main reason is to allow more 
 generic code. This allows us to have code like:
@@ -145,8 +341,8 @@ A .*= 2+1im
 ```
 Here, the type of the storage of A is changed in-place. More 
 generally, this allows ITensors to have more generic in-place 
-functionality, so you can write code where you don't know what the s
-torage is until runtime.
+functionality, so you can write code where you don't know what the
+storage is until runtime.
 
 This can lead to certain types of code having perfomance problems, 
 for example looping through ITensors can be slow:
@@ -223,24 +419,28 @@ ITensors.jl code, and we warn that explicitly looping over large
 ITensor by individual elements should be avoiding in performance 
 critical sections of your code. However, they shouldn't be too
 worried about this, as rest assured high level ITensor functions
-are still performant.
+are still performant (but if they are not, please raise an issue!).
 
 ## ITensor in-place operations
 
-In-place operations can help with optimizating code, when the
+In-place operations can help with optimizing code, when the
 memory is preallocated.
 
 The main way to access this in ITensor is through broadcasting.
 For example:
 ```julia
-A .*= 2
+A .+= 2 .* B
 ```
 Internally, this is rewritten by Julia as a call to `broadcast!`.
 ITensors.jl overloads this call (or more specifically, a lower
-level function `copyto!`). Then, this call is rewritten as
+level function `copyto!` written in terms of a special lazy type
+that saves all of the objects and operations). Then, this call is 
+rewritten as
 ```julia
-map!(x -> 2*x, A, A)
+map!((x,y) -> x+2*y, A, A, B)
 ```
+This is mostly an optimization to use when you can pre-allocate
+storage that can be used multiple times.
 
 Additionally, ITensors makes the unique choice that:
 ```julia
@@ -257,7 +457,10 @@ mul!(C, A, B)
 Because of the design of the ITensor type (see the section above),
 there is some flexibility we take in allocating memory for users.
 For example, if the storage type is more narrow than the result,
-for convenience we will expand it in-place.
+for convenience we might expand it in-place. If you are worried
+about memory allocations, we recommend using benchmarking and
+profiling to pinpoint slow parts of your code (often times, you
+may be surprised by what is actually slow).
 
 ## NDTensors and ITensors
 
