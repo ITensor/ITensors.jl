@@ -24,7 +24,8 @@ settings = Dict(
                                             "ProjMPOSum.md"
                                            ],
                                  "AutoMPO" => "AutoMPO.md"
-                                ]
+                                ],
+             "Advanced usage guide" => "AdvancedUsageGuide.md",
            ],
   :format => Documenter.HTML(prettyurls = false),
   :doctest => true,
