@@ -78,6 +78,14 @@ include("util.jl")
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
       end
+
+      @testset "ComplexF64 eltype" begin
+        sites  = siteinds("S=1/2",N)
+        psi = productMPS(ComplexF64,sites,fill(1,N))
+        for j=1:N
+          @test eltype(psi[j]) <: ComplexF64
+        end
+      end
     end
 
     @testset "N=1 case" begin
