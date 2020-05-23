@@ -54,6 +54,28 @@ function rproj(P::ProjMPO)
   return P.LR[P.rpos]
 end
 
+function NDTensors.inds(P::ProjMPO)
+  Pinds = []
+  if isnothing(lproj(P))
+    if !isnothing(rproj(P))
+      push!(Pinds, inds(rproj(P))...)
+    else
+      throw("ProjMPO not initialized, call `position!` first.")
+    end
+  else
+    push!(Pinds,inds(lproj(P))...)
+    if !isnothing(rproj(P))
+      push!(Pinds,inds(rproj(P))...)
+    end
+  end
+  for j in P.rpos-1:-1:P.lpos+1
+    push!(Pinds,filter(x->hastags(x,"Site"), inds(P.H[j]))...)
+  end
+  return IndexSet(setdiff(IndexSet(Pinds...),
+                          IndexSet(filter(x->hastags(x,"Link"), IndexSet(inds(P.H[P.rpos-1])...,
+                                                                         inds(P.H[P.lpos+1])...)))))
+end
+
 """
     product(P::ProjMPO,v::ITensor)
 
@@ -61,7 +83,7 @@ end
 
 Efficiently multiply the ProjMPO `P`
 by an ITensor `v` in the sense that the
-ProjMPO is a generalized square matrix 
+ProjMPO is a generalized square matrix
 or linear operator and `v` is a generalized
 vector in the space where it acts. The
 returned ITensor will have the same indices
@@ -86,6 +108,14 @@ function product(P::ProjMPO,
     if !isnothing(rproj(P))
       Hv *= rproj(P)
     end
+  end
+  if order(Hv)!=order(v)
+    error(string("The order of the ProjMPO-ITensor product P*v is not equal to the order of the ITensor v, ",
+                 "this is probably due to an index mismatch.\nCommon reasons for this error: \n",
+                 "(1) You are trying to multiply the ProjMPO with the $(nsite(P))-site wave-function at the wrong position.\n",
+                 "(2) `orthognalize!` was called, changing the MPS without updating the ProjMPO.\n\n",
+                 "ProjMPO inds: $(inds(P)) \n\n",
+                 "ITensor inds: $(inds(v))"))
   end
   return noprime(Hv)
 end
