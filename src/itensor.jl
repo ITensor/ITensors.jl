@@ -1067,7 +1067,7 @@ end
 LinearAlgebra.dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 
 """
-    exp(A::ITensor, Lis; hermitian = false)
+    exp(A::ITensor, Lis; ishermitian = false)
 
 Compute the exponential of the tensor `A` by treating it as a matrix ``A_{lr}`` with
 the left index `l` running over all indices in `Lis` and `r` running over all
