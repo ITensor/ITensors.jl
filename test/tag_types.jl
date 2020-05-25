@@ -28,7 +28,10 @@ using ITensors,
 
   @testset "Custom TagType" begin
 
-    function ITensors.op(::TagType"S=3/2",
+    # Use "_Custom_" tag even though this example
+    # is for S=3/2, because we might define the 
+    # "S=3/2" TagType inside ITensors.jl later
+    function ITensors.op(::TagType"_Custom_",
                          s::Index,
                          opname::AbstractString)
       Op = ITensor(s',dag(s))
@@ -41,7 +44,7 @@ using ITensors,
       return Op
     end
 
-    s = Index(4,"S=3/2")
+    s = Index(4,"_Custom_")
     Sz = op(s,"Sz")
     @test Sz[s'=>1,s=>1] ≈ +3/2
     @test Sz[s'=>2,s=>2] ≈ +1/2
