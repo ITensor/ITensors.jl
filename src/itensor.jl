@@ -1072,24 +1072,26 @@ end
 LinearAlgebra.dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 
 """
-    exp(A::ITensor, Lis; ishermitian = false)
+    exp(A::ITensor, Linds, Rinds = prime(dag(IndexSet(Linds))); ishermitian = false)
 
 Compute the exponential of the tensor `A` by treating it as a matrix ``A_{lr}`` with
-the left index `l` running over all indices in `Lis` and `r` running over all
-indices not in `Lis`. Must have `dim(Lis) == dim(inds(A))/dim(Lis)` for the exponentiation to
+the left index `l` running over all indices in `Linds` and `r` running over all
+indices in `Rinds`. Must have `dim(Linds) == dim(inds(A))/dim(Linds)` for the exponentiation to
 be defined.
 When `ishermitian=true` the exponential of `Hermitian(A_{lr})` is
 computed internally.
 """
 function LinearAlgebra.exp(A::ITensor,
                            Linds,
-                           Rinds = prime(IndexSet(Linds));
+                           Rinds = prime(dag(IndexSet(Linds)));
                            ishermitian = false)
-  Lis,Ris = IndexSet(Linds),IndexSet(Rinds)
-  Lpos,Rpos = NDTensors.getperms(inds(A), Lis, Ris)
-  expAT = exp(tensor(A), Lpos, Rpos; ishermitian=ishermitian)
-  return itensor(expAT)
+  CL = combiner(Linds...)
+  CR = combiner(Rinds...)
+  AC = A * CR * CL
+  expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
+  return itensor(expAT)*dag(CR)*dag(CL)
 end
+
 
 """
     product(A::ITensor, B::ITensor)
