@@ -549,7 +549,12 @@ function Base.getindex(T::ITensor, ivs...)
   return T[vals...]
 end
 
-Base.getindex(T::ITensor) = tensor(T)[]
+function Base.getindex(T::ITensor) 
+  if order(T) != 0
+    throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar"))
+  end
+  return tensor(T)[]
+end
 
 """
     setindex!(T::ITensor, x::Number, I::Int...)
