@@ -69,7 +69,7 @@ as `v`. The operator overload `P(v)` is
 shorthand for `product(P,v)`.
 """
 function product(P::ProjMPO,
-                 v::ITensor)::ITensor
+                 v::ITensor{N})::ITensor{N} where N
   Hv = v
   if isnothing(lproj(P))
     if !isnothing(rproj(P))
