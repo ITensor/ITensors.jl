@@ -1,3 +1,11 @@
+ITensors v0.1.4 Release Notes
+========================
+
+* Add note to docs about requiring Julia 1.4 currently
+* Improve error message for non-scalar input to `scalar` (PR #396)
+* Export @TagType_str macro (PR #393)
+* Fix `productMPS` for complex element type (PR #392)
+
 ITensors v0.1.3 Release Notes
 ========================
 
