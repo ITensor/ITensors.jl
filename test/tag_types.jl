@@ -1,7 +1,7 @@
 using ITensors,
       Test
 
-@testset "Site Types" begin
+@testset "Tag Types" begin
 
   N = 10
 
@@ -25,6 +25,33 @@ using ITensors,
     SySy = op(sites,"Sy * Sy",2)
     @test SySy ≈ product(Sy, Sy)
   end
+
+  @testset "Custom TagType" begin
+
+    # Use "_Custom_" tag even though this example
+    # is for S=3/2, because we might define the 
+    # "S=3/2" TagType inside ITensors.jl later
+    function ITensors.op(::TagType"_Custom_",
+                         s::Index,
+                         opname::AbstractString)
+      Op = ITensor(s',dag(s))
+      if opname == "Sz"
+        Op[s'=>1,s=>1] = +3/2
+        Op[s'=>2,s=>2] = +1/2
+        Op[s'=>3,s=>3] = -1/2
+        Op[s'=>4,s=>4] = -3/2
+      end
+      return Op
+    end
+
+    s = Index(4,"_Custom_")
+    Sz = op(s,"Sz")
+    @test Sz[s'=>1,s=>1] ≈ +3/2
+    @test Sz[s'=>2,s=>2] ≈ +1/2
+    @test Sz[s'=>3,s=>3] ≈ -1/2
+    @test Sz[s'=>4,s=>4] ≈ -3/2
+  end
+
 end
 
 nothing

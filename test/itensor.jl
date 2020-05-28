@@ -665,7 +665,7 @@ end
     A = ITensor(x)
     @test x==scalar(A)
     A = ITensor(SType,i,j,k)
-    @test_throws MethodError scalar(A)
+    @test_throws DimensionMismatch scalar(A)
   end
   @testset "Test norm(ITensor)" begin
     A = randomITensor(SType,i,j,k)
