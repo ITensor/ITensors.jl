@@ -222,7 +222,7 @@ function productMPS(::Type{T},
   M = MPS(N)
 
   if N==1
-    M[1] = emptyITensor(ind(ivals[1]))
+    M[1] = emptyITensor(T,ind(ivals[1]))
     M[1][ivals[1]] = one(T)
     return M
   end
@@ -232,7 +232,7 @@ function productMPS(::Type{T},
   else
     links = [Index(1,"Link,l=$n") for n=1:N]
   end
-  M[1] = emptyITensor(ind(ivals[1]), links[1])
+  M[1] = emptyITensor(T,ind(ivals[1]), links[1])
   M[1][ivals[1],links[1](1)] = one(T)
   for n=2:N-1
     s = ind(ivals[n])

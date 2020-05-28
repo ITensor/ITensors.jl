@@ -237,7 +237,7 @@ export
 
 # physics/tag_types.jl
   TagType,
-  TagType_str,
+  @TagType_str,
   op,
   state,
   has_fermion_string,

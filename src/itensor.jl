@@ -549,7 +549,12 @@ function Base.getindex(T::ITensor, ivs...)
   return T[vals...]::Number
 end
 
-Base.getindex(T::ITensor) = tensor(T)[]::Number
+function Base.getindex(T::ITensor) 
+  if order(T) != 0
+    throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar"))
+  end
+  return tensor(T)[]::Number
+end
 
 """
     setindex!(T::ITensor, x::Number, I::Int...)
@@ -1067,7 +1072,7 @@ end
 LinearAlgebra.dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 
 """
-    exp(A::ITensor, Lis; hermitian = false)
+    exp(A::ITensor, Lis; ishermitian = false)
 
 Compute the exponential of the tensor `A` by treating it as a matrix ``A_{lr}`` with
 the left index `l` running over all indices in `Lis` and `r` running over all
