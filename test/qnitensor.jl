@@ -578,6 +578,16 @@ Random.seed!(1234)
     @test TT ≈ T
   end
 
+  @testset "Combiner bug #395" begin
+    i1 = Index([QN(0)=>1,QN(1)=>2],"i1")
+    i2 = Index([QN(0)=>1,QN(1)=>2],"i2")
+    A = randomITensor(QN(),i1,i2,dag(i1)', dag(i2)')
+    CL = combiner(i1,i2)
+    CR = combiner(dag(i1)',dag(i2)')
+    AC = A * CR * CL
+    @test AC * dag(CR) * dag(CL) ≈ A
+  end
+
   @testset "Contract to scalar" begin
     i = Index([QN(0)=>1,QN(1)=>1],"i")
     A = randomITensor(QN(0),i,dag(i'))
