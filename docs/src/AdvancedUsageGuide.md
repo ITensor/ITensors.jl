@@ -238,8 +238,8 @@ However, the long startup time can still be annoying. In this section,
 we will discuss some strategies that can be used to minimize this
 annoyance, for example:
  - Precompilation.
- - Staying in the same Julia session with Revise.
- - Using PackageCompile to compile ITensors.jl ahead of time.
+ - Staying in the same Julia session with [Revise](https://timholy.github.io/Revise.jl/stable/).
+ - Using [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/) to compile ITensors.jl ahead of time.
 
 Precompilation is performed automatically when you first install
 ITensors.jl or update a version and run the command `using ITensors`
@@ -273,10 +273,71 @@ packages and reflects them real-time in your current REPL session.
 Using these strategies should minimize the number of times you
 need to restart your REPL session.
 
-!!! info "Coming soon"
+If you plan to use ITensors.jl directly from the command line
+(i.e. not from the REPL), and the startup time is an issue,
+you can try compiling ITensors.jl using [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/).
 
-    A guide to compiling the ITensors.jl package with PackageCompiler
-    is coming soon.
+Before using PackageCompiler, when we first start using ITensors.jl
+we might see:
+```julia
+julia> @time using ITensors
+  3.845253 seconds (10.96 M allocations: 618.071 MiB, 3.95% gc time)
+
+julia> @time i = Index(2);
+  0.000684 seconds (23 allocations: 20.328 KiB)
+
+julia> @time A = randomITensor(i', i);
+  0.071022 seconds (183.24 k allocations: 9.715 MiB)
+
+julia> @time svd(A, i');
+  5.802053 seconds (24.56 M allocations: 1.200 GiB, 7.83% gc time)
+
+julia> @time svd(A, i');
+  0.000177 seconds (450 allocations: 36.609 KiB)
+```
+We would start by making a file `precompile_itensors.jl`:
+```julia
+using ITensors
+i = Index(2)
+A = randomITensor(i', i)
+svd(A, i')
+```
+We make the "custom system image", a custom version of Julia that
+includes a compiled version of ITensors.jl, with the commands:
+```
+julia> using PackageCompiler
+
+julia> create_sysimage(:ITensors, sysimage_path="sys_itensors.so", precompile_execution_file="precompile_itensors.jl")
+[ Info: PackageCompiler: creating system image object file, this might take a while...
+```
+Then, in the same directory that contains the file `sys_itensors.so`,
+if we start julia with:
+```
+~ julia --sysimage sys_itensors.so
+```
+then we see:
+```julia
+julia> @time using ITensors
+  0.330587 seconds (977.61 k allocations: 45.807 MiB, 1.89% gc time)
+
+julia> @time i = Index(2);
+  0.000656 seconds (23 allocations: 20.328 KiB)
+
+julia> @time A = randomITensor(i', i);
+  0.000007 seconds (7 allocations: 576 bytes)
+
+julia> @time svd(A, i');
+  0.263526 seconds (290.02 k allocations: 14.220 MiB)
+
+julia> @time svd(A, i');
+  0.000135 seconds (350 allocations: 29.984 KiB)
+```
+which is much better. 
+
+There is a script to partially automate this process in the
+`packagecompile/` directory of the ITensors.jl library.
+Additionally, we will investigate pre-packaging a compiled 
+version of ITensors.jl.
 
 ## Multithreading Support
 
