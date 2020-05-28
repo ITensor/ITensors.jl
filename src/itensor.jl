@@ -546,10 +546,10 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 function Base.getindex(T::ITensor, ivs...)
   p = NDTensors.getperm(inds(T), ind.(ivs))
   vals = NDTensors.permute(val.(ivs), p)
-  return T[vals...]
+  return T[vals...]::Number
 end
 
-Base.getindex(T::ITensor) = tensor(T)[]
+Base.getindex(T::ITensor) = tensor(T)[]::Number
 
 """
     setindex!(T::ITensor, x::Number, I::Int...)

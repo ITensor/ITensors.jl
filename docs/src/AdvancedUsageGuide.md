@@ -39,13 +39,13 @@ you can do `add ITensors#master`. You can switch back to the latest
 released version with `add ITensors`. Using the development/master
 branch is generally not encouraged unless you know what you are doing.
 
-## Writing code based on ITensors.jl
+## Using ITensors.jl in the REPL
 
 There are many ways you can write code based on ITensors.jl, ranging 
 from using it in the REPL to writing a small script to making a 
 package that depends on it.
 
-For example, you can just start the REPL from your command like:
+For example, you can just start the REPL from your command line like:
 ```
 ~ julia
 ```
@@ -63,7 +63,7 @@ julia> A = randomITensor(i, i')
 ITensor ord=2 (dim=2|id=355|"i") (dim=2|id=355|"i")'
 NDTensors.Dense{Float64,Array{Float64,1}}
 
-julia> @show A
+julia> @show A;
 A = ITensor ord=2
 Dim 1: (dim=2|id=355|"i")
 Dim 2: (dim=2|id=355|"i")'
@@ -136,8 +136,6 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 A common place you might accidentally come across this is the 
 following:
 ```julia
-Reminder to add a section about this kind of "problem":
-```julia
 julia> N = 4;
 
 julia> sites = siteinds("S=1/2",N);
@@ -159,32 +157,82 @@ In this case, you can use `ampo .+= ("Sz", j, "Sz", j+1)`,
 `add!(ampo, "Sz", j, "Sz", j+1)`, or wrap your code in a let-block
 or function.
 
+Take a look at Julia's documentation [here](https://docs.julialang.org/en/v1/manual/variables-and-scoping/)
+for rules on scoping. Also note that this behavior is particular
+to Julia v1.4 and below, and is expected to change in v1.5.
+
 Note that the REPL is very useful for prototyping code quickly,
 but working directly in the REPL and outside of functions can
-cause sub-optimal performance.
+cause sub-optimal performance. See Julia's [performance tips](https://docs.julialang.org/en/v1/manual/performance-tips/index.html)
+for more information.
+
+We recommend the package [OhMyREPL](https://kristofferc.github.io/OhMyREPL.jl/latest/) which adds syntax highlighting to the Julia REPL.
+
+Once you start to have longer code, you will want to put your
+code into a file. For example, you may have a short script
+with one or more functions based on ITensors.jl:
+```
+# my_itensor_script.jl
+using ITensors
+
+function norm2(A::ITensor)
+  return (A*dag(A))[]
+end
+```
+Then, in the same directory as your script `my_itensor_script.jl`,
+just type:
+```julia
+julia> include("my_itensor_script.jl");
+
+julia> i = Index(2; tags="i");
+
+julia> A = randomITensor(i', i);
+
+julia> norm2(A)
+[...]
+```
+
+As your code gets more complicated and has more files, it is good
+to organize it into a project. That will be covered in the
+next section.
+
+## Make a project based on ITensors.jl
+
+In this section, we will describe how to make a project based on
+ITensors.jl.
+
+!!! info "Coming soon"
+
+    A guide to making your own project based on ITensors.jl is coming soon.
 
 ## Developing ITensors.jl
 
-To make your own changes to ITensors.jl, type `dev ITensors`. This 
+To make your own changes to ITensors.jl, type `dev ITensors`
+in Pkg mode (by typing `]` at the Julia prompt). This 
 will create a local clone of the Github repository in the directory 
 `~/.julia/dev/ITensors`. Changes to that directory will be reflected 
 when you do `using ITensors` in a new session.
 
-We highly recommend using the Revise package when you are developing 
+We highly recommend using the [Revise](https://timholy.github.io/Revise.jl/stable/) package when you are developing 
 packages, which automatically detects changes you are making in a 
 package so you can edit code and not have to restart your Julia 
 session.
 
+!!! info "Coming soon"
+
+    A more extended guide for contributing to ITensors.jl, including 
+    contributing to the related NDTensors.jl as well as a style 
+    guide, is coming soon.
+
 ## Compiling ITensors.jl
 
 You might notice that the time to load ITensors.jl (with `using 
-ITensors`) and the time to run your first few ITensors commands is 
+ITensors`) and the time to run your first few ITensor commands is 
 slow. This is due to Julia's just-in-time (JIT) compilation.
 Julia is compiling special versions of each function that is
 being called based on the inputs that it gets at runtime. This
 allows it to have fast code, often nearly as fast as fully compiled
-languages like C++ (as long as you give Julia the correct information
-to compile perfomant code).
+languages like C++, while still being a dynamic language.
 
 However, the long startup time can still be annoying. In this section,
 we will discuss some strategies that can be used to minimize this
@@ -192,6 +240,43 @@ annoyance, for example:
  - Precompilation.
  - Staying in the same Julia session with Revise.
  - Using PackageCompile to compile ITensors.jl ahead of time.
+
+Precompilation is performed automatically when you first install
+ITensors.jl or update a version and run the command `using ITensors`
+for the first time. For example, when you first use ITensors after
+installation or updating, you will see:
+```julia
+julia> using ITensors
+[ Info: Precompiling ITensors [9136182c-28ba-11e9-034c-db9fb085ebd5]
+```
+The process is done automatically, and
+puts some compiled binaries in your `~/.julia` directory. The
+goal is to decrease the time it takes when you first type
+`using ITensors` in your next Julia session, and also the time
+it takes for you to first run ITensor functions in a new
+Julia session. This helps the startup time, but currently doesn't
+help enough.
+This is something both ITensors.jl and the Julia language will try
+to improve over time.
+
+To avoid this time, it is recommended that you work as much as you
+can in a single Julia session. You should not need to restart your
+Julia session very often. For example, if you are writing code in
+a script, just `include` the file again which will pull in the new
+changes to the script (the exception is if you change the definition
+of a type you made, which would requiring restarting the REPL).
+
+If you are working on a project, we highly recommend using the
+[Revise](https://timholy.github.io/Revise.jl/stable/) package
+which automatically detects changes you are making in your
+packages and reflects them real-time in your current REPL session.
+Using these strategies should minimize the number of times you
+need to restart your REPL session.
+
+!!! info "Coming soon"
+
+    A guide to compiling the ITensors.jl package with PackageCompiler
+    is coming soon.
 
 ## Multithreading Support
 
@@ -219,7 +304,8 @@ julia> BLAS.set_num_threads(2)
 julia> ccall((:MKL_GET_MAX_THREADS, Base.libblas_name), Cint, ())
 2
 ```
-if you are using OpenBLAS, the command would be something like `ccall((:openblas_get_num_threads, Base.libblas_name), Cint, ())`.
+if you are using OpenBLAS, the command would be something like 
+`ccall((:openblas_get_num_threads, Base.libblas_name), Cint, ())`.
 
 Alternatively, you can use environment variables, so at your command 
 line prompt you would use:
@@ -233,9 +319,10 @@ if you are using MKL or
 if you are using OpenBLAS. We would highly recommend using MKL (see
 the installation instructions for how to do that), especially if you 
 are using an Intel chip. In general, we have not found MKL/OpenBLAS 
-multithreading to help much in the context of DMRG, but you mileage
-may vary and it would depend highly on the problem you are studying. 
-How well BLAS multithreading will work would depend on how mouch your 
+multithreading to help much in the context of common ITensor applications
+(like DMRG), but your mileage may vary and it would depend highly on the 
+problem you are studying. 
+How well BLAS multithreading will work would depend on how much your 
 calculations are dominated by matrix multiplications (which is not 
 always the case, especially if you are using QN conservation).
 
@@ -268,11 +355,11 @@ sparse contractions. Stay tuned for that!
 
 Julia has great built-in tools for benchmarking and profiling.
 For benchmarking fast code at the command line, you can use
-`BenchmarkTools`:
+[BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl/blob/master/doc/manual.md):
 ```julia
-julia> using ITensors
+julia> using ITensors;
 
-julia> using BenchmarkTools
+julia> using BenchmarkTools;
 
 julia> i = Index(100, "i");
 
@@ -282,9 +369,9 @@ julia> @btime 2*$A;
   4.279 μs (8 allocations: 78.73 KiB)
 ```
 
-We recommend packages like `ProfileView` to get detailed profiles
-of your code, in order to pinpoint functions or lines of code
-that are slower than they should be.
+We recommend packages like [ProfileView](https://github.com/timholy/ProfileView.jl) 
+to get detailed profiles of your code, in order to pinpoint functions 
+or lines of code that are slower than they should be.
 
 ## ITensor type design and writing performant code
 
@@ -310,125 +397,109 @@ julia> A = randomITensor(i, i');
 julia> @code_warntype A[i=>1, i'=>2]
 Variables
   #self#::Core.Compiler.Const(getindex, false)
-  T::ITensor{2}
-  ivs::Tuple{Pair{Index{Int64},Int64},Pair{Index{Int64},Int64}}
-  p::Tuple{Union{Nothing, Int64},Union{Nothing, Int64}}
-  vals::Tuple{Any,Any}
+  T::ITensor{1}
+  ivs::Tuple{Pair{Index{Int64},Int64}}
+  p::Tuple{Union{Nothing, Int64}}
+  vals::Tuple{Any}
 
-Body::Any
+Body::Number
 1 ─ %1  = NDTensors.getperm::Core.Compiler.Const(NDTensors.getperm, false)
-│   %2  = ITensors.inds(T)::IndexSet{2,IndexT,DataT} where DataT<:Tuple where IndexT<:Index
-│   %3  = Base.broadcasted(ITensors.ind, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(ind),Tuple{Tuple{Pair{Index{Int64},Int64},Pair{Index{Int64},Int64}}}}
-│   %4  = Base.materialize(%3)::Tuple{Index{Int64},Index{Int64}}
+│   %2  = ITensors.inds(T)::IndexSet{1,IndexT,DataT} where DataT<:Tuple where IndexT<:Index
+│   %3  = Base.broadcasted(ITensors.ind, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(ind),Tuple{Tuple{Pair{Index{Int64},Int64}}}}
+│   %4  = Base.materialize(%3)::Tuple{Index{Int64}}
 │         (p = (%1)(%2, %4))
 │   %6  = NDTensors.permute::Core.Compiler.Const(NDTensors.permute, false)
-│   %7  = Base.broadcasted(ITensors.val, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(val),Tuple{Tuple{Pair{Index{Int64},Int64},Pair{Index{Int64},Int64}}}}
-│   %8  = Base.materialize(%7)::Tuple{Int64,Int64}
+│   %7  = Base.broadcasted(ITensors.val, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(val),Tuple{Tuple{Pair{Index{Int64},Int64}}}}
+│   %8  = Base.materialize(%7)::Tuple{Int64}
 │         (vals = (%6)(%8, p))
-│   %10 = Core.tuple(T)::Tuple{ITensor{2}}
-│   %11 = Core._apply_iterate(Base.iterate, Base.getindex, %10, vals)::Any
-└──       return %11
+│   %10 = Core.tuple(T)::Tuple{ITensor{1}}
+│   %11 = Core._apply_iterate(Base.iterate, Base.getindex, %10, vals)::Number
+│   %12 = Core.typeassert(%11, ITensors.Number)::Number
+└──       return %12
+
+julia> typeof(A[i=>1, i'=>2])
+Float64
 ```
 Uh oh, that doesn't look good! Julia can't know ahead of time, based on 
-the inputs, what the type of the output is (though at runtime, the 
-output has a concrete type).
+the inputs, what the type of the output is, besides that it will be a
+`Number` (though at runtime, the output has a concrete type, `Float64`).
 
 So why is it designed this way? The main reason is to allow more 
-generic code. This allows us to have code like:
+generic and dynamic code than traditional, statically-typed Arrays.
+This allows us to have code like:
 ```julia
 A = randomITensor(i', i)
 A .*= 2+1im
 ```
-Here, the type of the storage of A is changed in-place. More 
-generally, this allows ITensors to have more generic in-place 
+Here, the type of the storage of A is changed in-place (allocations
+are performed only when needed).
+More generally, this allows ITensors to have more generic in-place 
 functionality, so you can write code where you don't know what the
 storage is until runtime.
 
 This can lead to certain types of code having perfomance problems, 
-for example looping through ITensors can be slow:
+for example looping through ITensors with many elements can be slow:
 ```julia
-A = randomITensor(i', i)
-for n in 1:dim(A)
-  A[n] = 2 * A[n]
-end
+julia> function myscale!(A::ITensor, x::Number)
+         for n in 1:dim(A)
+           A[n] = x * A[n]
+         end
+       end;
+
+julia> d = 10_000;
+
+julia> i = Index(d);
+
+julia> @btime myscale!(A, 2) setup = (A = randomITensor(i));
+  2.169 ms (117958 allocations: 3.48 MiB)
 ```
 However, this is fast:
-```julia
-A .*= 2
+```
+julia> function myscale!(A::Array, x::Number)
+         for n in 1:length(A)
+           A[n] = x * A[n]
+         end
+       end;
+
+julia> @btime myscale!(A, 2) setup = (A = randn(d));
+  3.451 μs (0 allocations: 0 bytes)
+
+julia> myscale2!(A::ITensor, x::Number) = myscale!(array(A), x)
+myscale2! (generic function with 1 method)
+
+julia> @btime myscale2!(A, 2) setup = (A = randomITensor(i));
+  3.571 μs (2 allocations: 112 bytes)
 ```
 How does this work? It relies on a "function barrier" technique. 
-Julia compiles functions "just-in-time", so that calls an inner 
-function written in terms of a type-stable Tensor type from the 
-package NDTensors. That is the function ultimately being called. 
+Julia compiles functions "just-in-time", so that calls to an inner 
+function written in terms of a type-stable type are still fast.
+That inner function is compiled to very fast code.
 The main overhead is that Julia has to determine which function 
 to call at runtime.
 
-You can look at a simple example to see how this works.
-```julia
-struct MyMatrix
-  data
-end
-
-import Base: *
-
-# This is our function barrier
-A::MyMatrix * B::MyMatrix = A.data * B.data
-
-for d in 5:5:40
-  a = randn(d,d)
-  b = randn(d,d)
-
-  A = MyMatrix(a)
-  B = MyMatrix(b)
-
-  @btime $a*$b
-  @btime $A*$B
-end
-```
-However,
-```julia
-d = 100
-
-a = randn(d,d)
-
-A = MyMatrix(a)
-
-function Base.sum(A::MyMatrix)
-  t = 0.0
-  for i in 1:length(A.data)
-    t += A.data[i]
-  end
-  return A
-end
-```
-
-One can make code type stable by putting explicit type declerations, 
-if they know the type beforehand. For example:
-```julia
-function Base.sum(A::MyMatrix)
-  t::Float64 = 0.0
-  for i in 1:length(A.data)
-    t += A.data[i]
-  end
-  return A
-end
-```
-
 Therefore, users should keep this in mind when they are writing 
 ITensors.jl code, and we warn that explicitly looping over large 
-ITensor by individual elements should be avoiding in performance 
-critical sections of your code. However, they shouldn't be too
-worried about this, as rest assured high level ITensor functions
-are still performant (but if they are not, please raise an issue!).
+ITensors by individual elements should be done with caution in 
+performance critical sections of your code. 
+However, be sure to benchmark and profile your code before 
+prematurely optimizing, since you may end be surprised about 
+what are the fast and slow parts of your code.
+
+Some strategies for avoiding ITensor loops are:
+ - Use broadcasting and other built-in ITensor functionality that makes use of function barriers.
+ - Convert ITensors to type-stable collections like the Tensor type of NDTensors.jl and write functions in terms of the Tensor type (i.e. the function barrier techique that is used throughout ITensors.jl).
+ - When initializing very large ITensors elementwise, use built-in ITensor constructors, or first construct an equivalent tensor as an Array or Tensor and then convert it to an ITensor.
 
 ## ITensor in-place operations
 
 In-place operations can help with optimizing code, when the
-memory is preallocated.
+memory of the output tensor of an operation is preallocated.
 
 The main way to access this in ITensor is through broadcasting.
 For example:
 ```julia
+A = randomITensor(i, i')
+B = randomITensor(i', i)
 A .+= 2 .* B
 ```
 Internally, this is rewritten by Julia as a call to `broadcast!`.
@@ -439,7 +510,7 @@ rewritten as
 ```julia
 map!((x,y) -> x+2*y, A, A, B)
 ```
-This is mostly an optimization to use when you can pre-allocate
+This is mostly an optimization to use when you can preallocate
 storage that can be used multiple times.
 
 Additionally, ITensors makes the unique choice that:
@@ -478,11 +549,42 @@ using ITensors
 using NDTensors
 
 T = Tensor(2,2,2)
+T[1,2,1] = 1.3  # Conventional element setting
+
 i = Index(2)
 T = Tensor(i,i',i')  # The identifiers are ignored, just interpreted as above
+T[1,2,1] = 1.3
 ```
 To make performant ITensor code (refer to the the previous section 
 on type stability and function barriers), ITensor storage data and 
 indices are passed by reference into Tensors, where the performance 
 critical operations are performed.
 
+An example of a function barrier using NDTensors is the following:
+```julia
+julia> using NDTensors
+
+julia> d = 10_000;
+
+julia> i = Index(d);
+
+julia> function myscale!(A::Tensor, x::Number)
+         for n in 1:dim(A)
+           A[n] = x * A[n]
+         end
+       end;
+
+julia> @btime myscale!(A, 2) setup = (A = Tensor(d));
+  3.530 μs (0 allocations: 0 bytes)
+
+julia> myscale2!(A::ITensor, x::Number) = myscale!(tensor(A), x)
+myscale2! (generic function with 1 method)
+
+julia> @btime myscale2!(A, 2) setup = (A = randomITensor(i));
+  3.549 μs (2 allocations: 112 bytes)
+```
+A very efficient function is written for the Tensor type. Then,
+the ITensor version just wraps the Tensor function by calling it
+after converting the ITensor to a Tensor (without any copying)
+with the `tensor` function.
+This is the basis for the design of all performance critical ITensors.jl functions.
