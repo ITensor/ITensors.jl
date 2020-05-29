@@ -546,14 +546,14 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 function Base.getindex(T::ITensor, ivs...)
   p = NDTensors.getperm(inds(T), ind.(ivs))
   vals = NDTensors.permute(val.(ivs), p)
-  return T[vals...]
+  return T[vals...]::Number
 end
 
 function Base.getindex(T::ITensor) 
   if order(T) != 0
     throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar"))
   end
-  return tensor(T)[]
+  return tensor(T)[]::Number
 end
 
 """
