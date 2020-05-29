@@ -168,8 +168,10 @@ for more information.
 
 We recommend the package [OhMyREPL](https://kristofferc.github.io/OhMyREPL.jl/latest/) which adds syntax highlighting to the Julia REPL.
 
+## Make a small project based on ITensors.jl
+
 Once you start to have longer code, you will want to put your
-code into a file. For example, you may have a short script
+code into one or more files. For example, you may have a short script
 with one or more functions based on ITensors.jl:
 ```
 # my_itensor_script.jl
@@ -192,14 +194,66 @@ julia> norm2(A)
 [...]
 ```
 
-As your code gets more complicated and has more files, it is good
-to organize it into a project. That will be covered in the
+As your code gets longer, you can split it into multiple files
+and `include` this files into one main project file, for example
+if you have two files with functions in them:
+```julia
+# file1.jl
+
+function norm2(A::ITensor)
+  return (A*dag(A))[]
+end
+```
+and
+```julia
+# file2.jl
+
+function square(A::ITensor)
+  return A .^ 2
+end
+```
+
+```julia
+# my_itensor_project.jl
+
+using ITensors
+
+include("file1.jl")
+
+include("file2.jl")
+```
+Then, as before, you can use your functions at the Julia REPL
+by just including the file `my_itensor_project.jl`:
+```julia
+julia> include("my_itensor_project.jl");
+
+julia> i = Index(2; tags="i");
+
+julia> A = randomITensor(i', i);
+
+julia> norm2(A)
+[...]
+
+julia> square(A)
+[...]
+```
+
+As your code gets more complicated and has more files, it is helpful
+to organize it into a package. That will be covered in the
 next section.
 
-## Make a project based on ITensors.jl
+## Make a Julia package based on ITensors.jl
 
-In this section, we will describe how to make a project based on
-ITensors.jl.
+In this section, we will describe how to make a Julia package based on
+ITensors.jl. This is useful to do when your project gets longer,
+since it helps with:
+ - Code organization.
+ - Adding dependencies that will get automatically installed through Julia's package system.
+ - Versioning.
+ - Automated testing.
+ - Code sharing and easier package installation.
+ - Officially registering your package with Julia.
+and many more features that we will mention later.
 
 First enter Julia's standard development directory, `~/.julia/dev`.
 ```
@@ -739,7 +793,7 @@ ITensors.jl code, and we warn that explicitly looping over large
 ITensors by individual elements should be done with caution in 
 performance critical sections of your code. 
 However, be sure to benchmark and profile your code before 
-prematurely optimizing, since you may end be surprised about 
+prematurely optimizing, since you may be surprised about 
 what are the fast and slow parts of your code.
 
 Some strategies for avoiding ITensor loops are:
