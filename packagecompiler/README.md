@@ -4,12 +4,14 @@
 These are instructions for compiling ITensors.jl with 
 [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/).
 
-Then run the Julia script `packagecompile.jl` with:
+Run the Julia script `packagecompile.jl` with:
 ```
 ~ julia packagecompile.jl
 ```
-This will take some time, perhaps a few minutes. This
-should create the file `sys_itensors.so` in the directory
+This will take some time, perhaps a few minutes. (The script
+will also install the PackageCompiler Julia package if you
+do not already have it.)
+This should create the file `sys_itensors.so` in the directory
 `~/.julia/sysimages/`.
 This is a version of Julia that is compiled with ITensors.
 Now just start Julia with:
