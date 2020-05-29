@@ -8,7 +8,7 @@ Assuming you have already downloaded Julia, which you can get
 [here](https://julialang.org/downloads/), from the Julia REPL, 
 type `]` to enter the Pkg REPL mode and run:
 ```
-~ julia
+$ julia
 ```
 ```julia
 julia> ]
@@ -47,7 +47,7 @@ package that depends on it.
 
 For example, you can just start the REPL from your command line like:
 ```
-~ julia
+$ julia
 ```
 assuming you have an available version of Julia with the ITensors.jl
 package installed. Then just type:
@@ -201,9 +201,205 @@ next section.
 In this section, we will describe how to make a project based on
 ITensors.jl.
 
-!!! info "Coming soon"
+First enter Julia's standard development directory, `~/.julia/dev`.
+```
+$ cd ~/.julia/dev
+```
+Start up Julia and install [PkgTemplates](https://invenia.github.io/PkgTemplates.jl/stable/)
+```julia
+$ julia
 
-    A guide to making your own project based on ITensors.jl is coming soon.
+julia> ]
+
+pkg> add PkgTemplates
+```
+then press backspace and type:
+```
+julia> using PkgTemplates
+
+julia> t = Template(; user="your_github_username")
+
+julia> t("MyITensorsPkg")
+```
+Then, we want to tell Julia about our new package. We do this as
+follows:
+```julia
+julia> ]
+
+pkg> dev ~/.julia/dev/MyITensorsPkg
+```
+then you can do:
+```julia
+julia> using MyITensorsPkg
+```
+from any directory to use your new package. However, it doesn't 
+have any functions available yet. Additionally, there should be
+an empty test file already set up here:
+```
+~/.julia/dev/MyITensorsPkg/test/runtests.jl
+```
+which you can run from any directory like:
+```julia
+julia> ]
+
+pkg> test MyITensorsPkg
+```
+It should show something like:
+```julia
+[...]
+Test Summary:    |
+MyITensorsPkg.jl | No tests
+    Testing MyITensorsPkg tests passed 
+```
+since there are no tests yet.
+
+First we want to add ITensors as a dependency of our package.
+We do this by "activating" our package environment and then
+adding ITensors:
+```julia
+julia> ]
+
+pkg> activate MyITensorsPkg
+
+(MyITensorsPkg) pkg> add ITensors
+```
+This will edit the file `~/.julia/dev/MyITensorsPkg/Project.toml`
+and add the line
+```
+[deps]
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+```
+Because your package is under development, back in the main
+Pkg environment you should type `resolve`:
+```julia
+(MyITensorsPkg) pkg> activate
+
+pkg> resolve
+```
+Now, if you or someone else uses the package, it will automatically
+install ITensors.jl for you.
+
+Now your package is set up to develop! Try editing the file
+`~/.julia/dev/MyITensorsPkg/src/MyITensorsPkg.jl` and add the 
+`norm2` function, which calculates the squared norm of an ITensor:
+```julia
+module MyITensorsPkg
+
+using ITensors
+
+export norm2
+
+norm2(A::ITensor) = (A*dag(A))[]
+
+end
+```
+The export command makes `norm2` available in the namespace without
+needing to type `MyITensorsPkg.norm2` when you do 
+`using MyITensorsPkg`. Now in a new Julia session you can do:
+```julia
+julia> using ITensors
+
+julia> i = Index(2)
+(dim=2|id=263)
+
+julia> A = randomITensor(i)
+ITensor ord=1 (dim=2|id=263)
+NDTensors.Dense{Float64,Array{Float64,1}}
+
+julia> norm(A)^2
+6.884457016011188
+
+julia> norm2(A)
+ERROR: UndefVarError: norm2 not defined
+[...]
+
+julia> using MyITensorsPkg
+
+julia> norm2(A)
+6.884457016011188
+```
+Unfortunately, if you continue to edit the file `MyITensorsPkg.jl`,
+even if you type `using MyITensorsPkg` again, if you are in the
+same Julia session the changes will not be reflected, and
+you will have to restart your Julia session. The 
+[Revise](https://timholy.github.io/Revise.jl/stable/) package
+will allow you to edit your package files and have the changes
+reflected in real time in your current Julia session, so you
+don't have to restart the session.
+
+Now, we can add some tests for our new functionality. Edit
+the file `~/.julia/dev/MyITensorsPkg/test/runtests.jl` to
+look like:
+```julia
+using MyITensorsPkg
+using ITensors
+using Test
+
+@testset "MyITensorsPkg.jl" begin
+  i = Index(2)
+  A = randomITensor(i)
+  @test isapprox(norm2(A), norm(A)^2)
+end
+```
+You'll want to add ITensors as a test dependency, in case it
+is not already installed on someone's system who is running
+the tests. You can do this by editing the file
+`~/.julia/dev/MyITensorsPkg/Project.toml` to look like:
+```
+name = "MyITensorsPkg"
+uuid = "b33b1a07-6eec-4458-8efd-3d86e8afc6ba"
+authors = ["Matthew Fishman <mfishman@flatironinstitute.org> and contributors"]
+version = "0.1.0"
+
+[deps]
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+
+[targets]
+test = ["Test", "ITensors"]
+```
+so add the `ITensors = ...` line under `[extras]` and add 
+`"ITensors"` under `[targets]`.
+Now when you test your package you should see:
+```julia
+pkg> test MyITensorsPkg
+[...]
+Test Summary:    | Pass  Total
+MyITensorsPkg.jl |    1      1
+    Testing MyITensorsPkg tests passed 
+```
+
+Your package should already be set up as a git repository by 
+the `PkgTemplates` commands we started with.
+We recommend using Github or similar versions control systems
+for your packages, especially if you plan to make them public
+and officially register them as Julia packages.
+
+You can set up your local package as a Github repository by
+following the steps [here](https://help.github.com/en/github/importing-your-projects-to-github/adding-an-existing-project-to-github-using-the-command-line). Many of the steps may be unnecessary since they
+were already set up by `PkgTemplates`.
+
+You may also want to change from HTTPS to SSH authentification
+as described [here](https://help.github.com/en/github/using-git/changing-a-remotes-url).
+
+There are many more features you can add to your package through 
+various Julia packages and Github, for example:
+ - Control of precompilation with tools like [SnoopCompile](https://timholy.github.io/SnoopCompile.jl/stable/).
+ - Automatic testing of your package at every pull request/commit with Github Actions, Travis, or similar services.
+ - Automated benchmarking of your package at every pull request with [BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl), [PkgBenchmark](https://juliaci.github.io/PkgBenchmark.jl/stable/) and [BenchmarkCI](https://github.com/tkf/BenchmarkCI.jl).
+ - Automated building of your documentation with [Documenter](https://juliadocs.github.io/Documenter.jl/stable/).
+ - Compiling your package with [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/).
+ - Automatically check what parts of your code your tests check with code coverage.
+ - Officially register your Julia package so that others can easily install it and follow along with updated versions using the [Registrator](https://juliaregistries.github.io/Registrator.jl/stable/).
+You can take a look at the [ITensors](https://github.com/ITensor/ITensors.jl) 
+Github page for inspiration on setting up some of these services
+and ideas for organizing your package.
 
 ## Developing ITensors.jl
 
@@ -313,7 +509,7 @@ julia> create_sysimage(:ITensors, sysimage_path="sys_itensors.so", precompile_ex
 Then, in the same directory that contains the file `sys_itensors.so`,
 if we start julia with:
 ```
-~ julia --sysimage sys_itensors.so
+$ julia --sysimage sys_itensors.so
 ```
 then we see:
 ```julia
@@ -371,11 +567,11 @@ if you are using OpenBLAS, the command would be something like
 Alternatively, you can use environment variables, so at your command 
 line prompt you would use:
 ```
-~ export MKL_NUM_THREADS=4
+$ export MKL_NUM_THREADS=4
 ```
 if you are using MKL or
 ```
-~ export OPENBLAS_NUM_THREADS=4
+$ export OPENBLAS_NUM_THREADS=4
 ```
 if you are using OpenBLAS. We would highly recommend using MKL (see
 the installation instructions for how to do that), especially if you 
