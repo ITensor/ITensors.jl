@@ -1287,30 +1287,31 @@ end
   i1 = Index([QN(0)=>1,QN(1)=>2],"i1")
   i2 = Index([QN(0)=>1,QN(1)=>2],"i2")
   A = randomITensor(QN(),i1,i2,dag(i1)', dag(i2)')
-  Aexp = exp(A,IndexSet(i1,i2))
-  Amat = Array(A, i1,i2, dag(i1)', dag(i2)')
+  Aexp = exp(A)
+  Amat = Array(A, i1,i2, i1', i2')
   Amatexp = reshape(exp(reshape(Amat,9,9)),3,3,3,3)
-  @test isapprox(norm(Array(Aexp,i1,i2,dag(i1)',dag(i2)') - Amatexp),0.0, atol=1e-14)
+  @test isapprox(norm(Array(Aexp,i1,i2,i1',i2') - Amatexp),0.0, atol=1e-14)
   @test flux(Aexp) == QN()
   @test length(setdiff(inds(Aexp),inds(A)))==0
 
+  @test isapprox(norm(exp(A, (i1,i2), (i1',i2')) - Aexp),0.0, atol=5e-14)
+
   # test the case where indices are permuted
   A = randomITensor(QN(),i1,dag(i1)', dag(i2)',i2)
-  Aexp = exp(A,IndexSet(i1,i2))
-  Amat = Array(A, i1,i2,dag(i1)', dag(i2)')
+  Aexp = exp(A, (i1,i2), (i1',i2'))
+  Amat = Array(A, i1,i2,i1', i2')
   Amatexp = reshape(exp(reshape(Amat,9,9)),3,3,3,3)
-  @test isapprox(norm(Array(Aexp,i1,i2,dag(i1)',dag(i2)') - Amatexp),0.0,atol=1e-14)
+  @test isapprox(norm(Array(Aexp,i1,i2,i1',i2') - Amatexp),0.0,atol=1e-14)
 
   # test exponentiation in the Hermitian case
   i1 = Index([QN(0)=>2,QN(1)=>2,QN(2)=>3],"i1")
   A = randomITensor(QN(),i1,dag(i1)')
   Ad = dag(swapinds(A,IndexSet(i1),IndexSet(dag(i1)')))
   Ah = A+Ad + 1e-10*randomITensor(QN(),i1,dag(i1)')
-  Amat = Array(Ah ,i1,dag(i1)')
-  Aexp = exp(Ah,IndexSet(i1), ishermitian=true)
+  Amat = Array(Ah ,i1', i1)
+  Aexp = exp(Ah; ishermitian=true)
   Amatexp= exp(Hermitian(Amat))
-  @test isapprox(norm(Array(Aexp,i1,dag(i1)')-Amatexp),0.0,atol=5e-14)
-
+  @test isapprox(norm(Array(Aexp,i1,i1')-Amatexp),0.0,atol=5e-14)
 end
 
 end
