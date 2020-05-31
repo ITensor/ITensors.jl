@@ -19,9 +19,9 @@ macro TagType_str(s)
   TagType{Tag(s)}
 end
 
-function val(::TagType{T})::Tag where {T} 
-  return T
-end
+#function val(::TagType{T})::Tag where {T} 
+#  return T
+#end
 
 abstract type AbstractOpName end
 
@@ -32,9 +32,9 @@ macro OpName_str(s)
   OpName{Tag(s)}
 end
 
-function val(::OpName{T})::Tag where {T} 
-  return T
-end
+#function val(::OpName{T})::Tag where {T} 
+#  return T
+#end
 
 ## Default implementation of op!
 #function op!(T::AbstractTagType,
