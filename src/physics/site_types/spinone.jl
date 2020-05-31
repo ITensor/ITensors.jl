@@ -27,84 +27,92 @@ function state(::SpinOneSite,
   return 0
 end
 
-function op(::SpinOneSite,
-            s::Index,
-            opname::AbstractString)::ITensor
-  Up = s(1)
-  UpP = s'(1)
-  Z0 = s(2)
-  Z0P = s'(2)
-  Dn = s(3)
-  DnP = s'(3)
- 
-  Op = emptyITensor(s',dag(s))
-
-  if opname == "S⁺" || opname == "Splus" || opname == "S+"
-    Op[Z0P, Dn] = √2 
-    Op[UpP, Z0] = √2 
-  elseif opname == "S⁻" || opname == "Sminus" || opname == "S-"
-    Op[Z0P, Up] = √2 
-    Op[DnP, Z0] = √2 
-  elseif opname == "Sˣ" || opname == "Sx"
-    Op[Z0P, Up] = 1.0/√2
-    Op[UpP, Z0] = 1.0/√2
-    Op[DnP, Z0] = 1.0/√2
-    Op[Z0P, Dn] = 1.0/√2
-  elseif opname == "iSʸ" || opname == "iSy"
-    Op[Z0P, Up] = -1.0/√2
-    Op[UpP, Z0] = +1.0/√2
-    Op[DnP, Z0] = -1.0/√2
-    Op[Z0P, Dn] = +1.0/√2
-  elseif opname == "Sʸ" || opname == "Sy"
-    Op = complex(Op) 
-    Op[Z0P, Up] = +1.0/√2im
-    Op[UpP, Z0] = -1.0/√2im
-    Op[DnP, Z0] = +1.0/√2im
-    Op[Z0P, Dn] = -1.0/√2im
-  elseif opname == "Sᶻ" || opname == "Sz"
-    Op[UpP, Up] = 1.0 
-    Op[DnP, Dn] = -1.0
-  elseif opname == "Sᶻ²" || opname == "Sz2"
-    Op[UpP, Up] = 1.0 
-    Op[DnP, Dn] = 1.0
-  elseif opname == "Sˣ²" || opname == "Sx2"
-    Op[UpP, Up] = 0.5
-    Op[DnP, Up] = 0.5
-    Op[Z0P, Z0] = 1.0 
-    Op[UpP, Dn] = 0.5 
-    Op[DnP, Dn] = 0.5 
-  elseif opname == "Sʸ²" || opname == "Sy2"
-    Op[UpP, Up] = 0.5
-    Op[DnP, Up] = -0.5
-    Op[Z0P, Z0] = 1.0 
-    Op[UpP, Dn] = -0.5 
-    Op[DnP, Dn] = 0.5 
-  elseif opname == "projUp"
-    Op[UpP, Up] = 1.
-  elseif opname == "projZ0"
-    Op[Z0P, Z0] = 1.
-  elseif opname == "projDn"
-    Op[DnP, Dn] = 1.
-  elseif opname == "XUp"
-    xup = emptyITensor(ComplexF64,s)
-    xup[Up] = 0.5
-    xup[Z0] = im*√2
-    xup[Dn] = 0.5
-    return xup
-  elseif opname == "XZ0"
-    xZ0 = emptyITensor(ComplexF64,s)
-    xZ0[Up] = im*√2
-    xZ0[Dn] = -im*√2
-    return xZ0
-  elseif opname == "XDn"
-    xdn = emptyITensor(ComplexF64,s)
-    xdn[Up] = 0.5
-    xdn[Z0] = -im*√2
-    xdn[Dn] = 0.5
-    return xdn
-  else
-    throw(ArgumentError("Operator name '$opname' not recognized for SpinOneSite"))
-  end
-  return Op
+function op!(::TagType"S=1",
+             ::OpName"Sz",
+             Op::ITensor,
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>3,s=>3] = -1.0
 end
 
+function op!(::TagType"S=1",
+             ::Union{OpName"S+",OpName"Splus"},
+             Op::ITensor,
+             s::Index)
+  Op[s'=>2,s=>3] = sqrt(2)
+  Op[s'=>1,s=>2] = sqrt(2)
+end
+
+function op!(::TagType"S=1",
+             ::Union{OpName"S-",OpName"Sminus"},
+             Op::ITensor,
+             s::Index)
+  Op[s'=>3,s=>2] = sqrt(2)
+  Op[s'=>2,s=>1] = sqrt(2)
+end
+
+function op!(::TagType"S=1",
+             ::OpName"Sx",
+             Op::ITensor,
+             s::Index)
+  Op[s'=>2,s=>1] = 1/sqrt(2)
+  Op[s'=>1,s=>2] = 1/sqrt(2)
+  Op[s'=>3,s=>2] = 1/sqrt(2)
+  Op[s'=>2,s=>3] = 1/sqrt(2)
+end
+
+function op!(::TagType"S=1",
+             ::OpName"iSy",
+             Op::ITensor,
+             s::Index)
+  Op[s'=>2,s=>1] = -1/sqrt(2)
+  Op[s'=>1,s=>2] = +1/sqrt(2)
+  Op[s'=>3,s=>2] = -1/sqrt(2)
+  Op[s'=>2,s=>3] = +1/sqrt(2)
+end
+
+function op!(::TagType"S=1",
+             ::OpName"Sy",
+             Op::ITensor,
+             s::Index)
+  complex!(Op)
+  Op[s'=>2,s=>1] = +1im/sqrt(2)
+  Op[s'=>1,s=>2] = -1im/sqrt(2)
+  Op[s'=>3,s=>2] = +1im/sqrt(2)
+  Op[s'=>2,s=>3] = -1im/sqrt(2)
+end
+
+function op!(::TagType"S=1",
+             ::OpName"Sz2",
+             Op::ITensor,
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>3,s=>3] = +1.0
+end
+
+function op!(::TagType"S=1",
+             ::OpName"Sx2",
+             Op::ITensor,
+             s::Index)
+  Op[s'=>1,s=>1] = 0.5
+  Op[s'=>3,s=>1] = 0.5
+  Op[s'=>2,s=>2] = 1.0
+  Op[s'=>1,s=>3] = 0.5
+  Op[s'=>3,s=>3] = 0.5
+end
+
+function op!(::TagType"S=1",
+             ::OpName"Sy2",
+             Op::ITensor,
+             s::Index)
+  Op[s'=>1,s=>1] = +0.5
+  Op[s'=>3,s=>1] = -0.5
+  Op[s'=>2,s=>2] = +1.0
+  Op[s'=>1,s=>3] = -0.5
+  Op[s'=>3,s=>3] = +0.5
+end
+
+op!(::TagType"SpinOne",
+    o::AbstractOpName,
+    Op::ITensor,
+    s::Index) = op!(TagType"S=1"(),o,Op,s)
