@@ -45,9 +45,35 @@ end
 #  return Op
 #end
 
-function _call_op(s::Index,
-                  opname::AbstractString;
-                  kwargs...)
+# TODO: this should be deprecated in a later 
+# version, but leaving it as a fallback in case
+# any user code uses the old `op` function 
+# pattern
+function old_call_op(s::Index,
+                     opname::AbstractString;
+                     kwargs...)
+  use_tag = 0
+  nfound = 0
+  for n=1:length(tags(s))
+    TType = TagType{tags(s)[n]}
+    if hasmethod(op,Tuple{TType,Index,AbstractString})
+      use_tag = n
+      nfound += 1
+    end
+  end
+  if nfound == 0
+    error("Overload of \"op!\" or \"op\" functions not found for operator name \"$opname\" and Index tags $(tags(s))")
+  elseif nfound > 1
+    error("Multiple tags from $(tags(s)) overload the function \"op\"")
+  end
+
+  ttype = TagType{tags(s)[use_tag]}()
+  return op(ttype,s,opname;kwargs...)
+end
+
+function _call_op!(s::Index,
+                   opname::AbstractString;
+                   kwargs...)
   use_tag = 0
   nfound = 0
   for n=1:length(tags(s))
@@ -59,7 +85,10 @@ function _call_op(s::Index,
     end
   end
   if nfound == 0
-    error("Overload of \"op!\" function not found for operator name \"$opname\" and Index tags $(tags(s))")
+    # Try fallback to older interface:
+    return old_call_op(s,opname;kwargs...)
+
+    error("Overload of \"op!\" functions not found for operator name \"$opname\" and Index tags $(tags(s))")
   elseif nfound > 1
     error("Multiple tags from $(tags(s)) overload the function \"op!\" for operator name \"$opname\"")
   end
@@ -94,7 +123,7 @@ function op(s::Index,
     return product(op(s,op1;kwargs...),op(s,op2;kwargs...))
   end
 
-  return _call_op(s,opname;kwargs...)
+  return _call_op!(s,opname;kwargs...)
 end
 
 # Version of `op` taking an array of indices
