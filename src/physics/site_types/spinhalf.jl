@@ -65,10 +65,9 @@ function op!(::TagType"S=1/2",
              ::Union{OpName"Sy"},
              Op::ITensor,
              s::Index)
-  #Op = complex(Op) # this just shadows the input reference
-  #complex!(Op) # TODO: need this to be defined
-  #Op[s'=>1, s=>2] = -0.5im
-  #Op[s'=>2, s=>1] = 0.5im
+  complex!(Op)
+  Op[s'=>1, s=>2] = -0.5im
+  Op[s'=>2, s=>1] = 0.5im
 end
 
 op!(::TagType"SpinHalf",

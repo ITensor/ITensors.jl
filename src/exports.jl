@@ -85,6 +85,7 @@ export
   combiner,
   commonind,
   commoninds,
+  complex!,
   delta,
   dense,
   δ,
