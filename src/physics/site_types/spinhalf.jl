@@ -23,7 +23,7 @@ function state(::SpinHalfSite,
 end
 
 
-function op!(::SpinHalfSite,
+function op!(::TagType"S=1/2",
              ::Union{OpName"Sz"},
              Op::ITensor,
              s::Index)
@@ -31,21 +31,21 @@ function op!(::SpinHalfSite,
   Op[s'=>2, s=>2] = -0.5
 end
 
-function op!(::SpinHalfSite,
+function op!(::TagType"S=1/2",
              ::Union{OpName"S+",OpName"Splus"},
              Op::ITensor,
              s::Index)
   Op[s'=>1, s=>2] = 1.0
 end
 
-function op!(::SpinHalfSite,
+function op!(::TagType"S=1/2",
              ::Union{OpName"S-",OpName"Sminus"},
              Op::ITensor,
              s::Index)
   Op[s'=>2, s=>1] = 1.0
 end
 
-function op!(::SpinHalfSite,
+function op!(::TagType"S=1/2",
              ::Union{OpName"Sx"},
              Op::ITensor,
              s::Index)
@@ -53,7 +53,7 @@ function op!(::SpinHalfSite,
   Op[s'=>2, s=>1] = 0.5
 end
 
-function op!(::SpinHalfSite,
+function op!(::TagType"S=1/2",
              ::Union{OpName"iSy"},
              Op::ITensor,
              s::Index)
@@ -61,7 +61,7 @@ function op!(::SpinHalfSite,
   Op[s'=>2, s=>1] = -0.5
 end
 
-function op!(::SpinHalfSite,
+function op!(::TagType"S=1/2",
              ::Union{OpName"Sy"},
              Op::ITensor,
              s::Index)
@@ -70,4 +70,9 @@ function op!(::SpinHalfSite,
   #Op[s'=>1, s=>2] = -0.5im
   #Op[s'=>2, s=>1] = 0.5im
 end
+
+op!(::TagType"SpinHalf",
+    o::AbstractOpName,
+    Op::ITensor,
+    s::Index) = op!(TagType"S=1/2"(),o,Op,s)
 
