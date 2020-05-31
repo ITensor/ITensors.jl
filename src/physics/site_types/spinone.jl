@@ -76,10 +76,10 @@ function op!(::TagType"S=1",
              Op::ITensor,
              s::Index)
   complex!(Op)
-  Op[s'=>2,s=>1] = +1im/sqrt(2)
-  Op[s'=>1,s=>2] = -1im/sqrt(2)
-  Op[s'=>3,s=>2] = +1im/sqrt(2)
-  Op[s'=>2,s=>3] = -1im/sqrt(2)
+  Op[s'=>2,s=>1] = -1im/sqrt(2)
+  Op[s'=>1,s=>2] = +1im/sqrt(2)
+  Op[s'=>3,s=>2] = -1im/sqrt(2)
+  Op[s'=>2,s=>3] = +1im/sqrt(2)
 end
 
 function op!(::TagType"S=1",
