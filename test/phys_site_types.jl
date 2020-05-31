@@ -22,10 +22,6 @@ using ITensors,
     @test Array(op(s,"iSy",2),s[2]',s[2]) ≈ [ 0.0  0.5;-0.5  0.0]
     @test Array(op(s,"Sy",2),s[2]',s[2])  ≈ [0.0  -0.5im; 0.5im  0.0]
     @test Array(op(s,"Sz",2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
-    @test Array(op(s,"projUp",2),s[2]',s[2])  ≈ [ 1.0  0.0; 0.0 0.0]
-    @test Array(op(s,"projDn",2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
-    @test Array(op(s,"Up",2),s[2])  ≈ [1.0,0.0]
-    @test Array(op(s,"Dn",2),s[2])  ≈ [0.0,1.0]
   end
 
   @testset "Spin One sites" begin
@@ -49,12 +45,6 @@ using ITensors,
     @test Array(op(s,"Sz2",2),s[2]',s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 +1.0]
     @test Array(op(s,"Sx2",2),s[2]',s[2]) ≈ [0.5 0 0.5;0 1.0 0;0.5 0 0.5]
     @test Array(op(s,"Sy2",2),s[2]',s[2]) ≈ [0.5 0 -0.5;0 1.0 0;-0.5 0 0.5]
-    @test Array(op(s,"projUp",2),s[2]',s[2]) ≈ [1.0 0 0;0 0 0;0 0 0]
-    @test Array(op(s,"projZ0",2),s[2]',s[2]) ≈ [0 0 0;0 1.0 0;0 0 0]
-    @test Array(op(s,"projDn",2),s[2]',s[2]) ≈ [0 0 0;0 0 0;0 0 1.0]
-    @test Array(op(s,"XUp",2),s[2]) ≈ [0.5,im*√2,0.5]
-    @test Array(op(s,"XZ0",2),s[2]) ≈ [im*√2,0,-im*√2]
-    @test Array(op(s,"XDn",2),s[2]) ≈ [0.5,-im*√2,0.5]
   end
 
   @testset "Fermion sites" begin
@@ -76,10 +66,6 @@ using ITensors,
     @test Cdag3 ≈ [0. 0; 1 0]
     F3 = Array(op(s,"F",3),s[3]',s[3]) 
     @test F3 ≈ [1. 0; 0 -1]
-    Emp = Array(op(s,"Emp",3),s[3])
-    @test Emp ≈ [1.0; 0.0]
-    Occ = Array(op(s,"Occ",3),s[3])
-    @test Occ ≈ [0.0; 1.0]
   end
 
   @testset "Electron sites" begin
@@ -123,14 +109,6 @@ using ITensors,
     @test Sp3 ≈ [0. 0 0 0; 0 0 1 0; 0 0 0 0; 0 0 0 0]
     Sm3 = Array(op(s,"S-",3),s[3]',s[3]) 
     @test Sm3 ≈ [0. 0 0 0; 0 0 0 0; 0 1 0 0; 0 0 0 0]
-    Sem = Array(op(s,"Emp",3),s[3])
-    @test Sem ≈ [1.0; 0.0; 0.0; 0.0]
-    Sup = Array(op(s,"Up",3),s[3])
-    @test Sup ≈ [0.0; 1.0; 0.0; 0.0]
-    Sdn = Array(op(s,"Dn",3),s[3])
-    @test Sdn ≈ [0.0; 0.0; 1.0; 0.0]
-    Supdn = Array(op(s,"UpDn",3),s[3])
-    @test Supdn ≈ [0.0; 0.0; 0.0; 1.0]
   end
 
   @testset "tJ sites" begin
@@ -171,12 +149,6 @@ using ITensors,
     @test Sp3 ≈ [0.0 0. 0; 0 0 1.0; 0 0 0]
     Sm3 = Array(op(s,"Sminus",3),s[3]',s[3]) 
     @test Sm3 ≈ [0.0 0. 0; 0 0 0; 0 1.0 0]
-    Up3 = Array(op(s,"Up",3),s[3]) 
-    @test Up3 ≈ [0.0; 1.0; 0]
-    Dn3 = Array(op(s,"Dn",3),s[3]) 
-    @test Dn3 ≈ [0.0; 0.0; 1.0]
-    Em3 = Array(op(s,"Emp",3),s[3]) 
-    @test Em3 ≈ [1.0; 0.0; 0.0]
   end
 
 end

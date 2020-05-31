@@ -62,9 +62,9 @@ function old_call_op(s::Index,
     end
   end
   if nfound == 0
-    error("Overload of \"op!\" or \"op\" functions not found for operator name \"$opname\" and Index tags $(tags(s))")
+    throw(ArgumentError("Overload of \"op!\" or \"op\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
   elseif nfound > 1
-    error("Multiple tags from $(tags(s)) overload the function \"op\"")
+    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"op\""))
   end
 
   ttype = TagType{tags(s)[use_tag]}()
@@ -88,9 +88,9 @@ function _call_op!(s::Index,
     # Try fallback to older interface:
     return old_call_op(s,opname;kwargs...)
 
-    error("Overload of \"op!\" functions not found for operator name \"$opname\" and Index tags $(tags(s))")
+    throw(ArgumentError("Overload of \"op!\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
   elseif nfound > 1
-    error("Multiple tags from $(tags(s)) overload the function \"op!\" for operator name \"$opname\"")
+    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"op!\" for operator name \"$opname\""))
   end
 
   ttype = TagType{tags(s)[use_tag]}()
