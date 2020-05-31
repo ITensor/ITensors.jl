@@ -22,47 +22,52 @@ function state(::SpinHalfSite,
   return 0
 end
 
-function op(::SpinHalfSite,
-            s::Index,
-            opname::AbstractString;kwargs...)::ITensor
-  Up = s(1)
-  UpP = s'(1)
-  Dn = s(2)
-  DnP = s'(2)
- 
-  Op = emptyITensor(s',dag(s))
 
-  if opname == "S⁺" || opname == "Splus" || opname == "S+"
-    Op[UpP, Dn] = 1.
-  elseif opname == "S⁻" || opname == "Sminus" || opname == "S-"
-    Op[DnP, Up] = 1.
-  elseif opname == "Sˣ" || opname == "Sx"
-    Op[UpP, Dn] = 0.5
-    Op[DnP, Up] = 0.5
-  elseif opname == "iSʸ" || opname == "iSy"
-     Op[UpP, Dn] = 0.5
-     Op[DnP, Up] = -0.5
-  elseif opname == "Sʸ" || opname == "Sy"
-     Op = complex(Op) 
-     Op[UpP, Dn] = -0.5*im
-     Op[DnP, Up] = 0.5*im
-  elseif opname == "Sᶻ" || opname == "Sz"
-     Op[UpP, Up] = 0.5
-     Op[DnP, Dn] = -0.5
-  elseif opname == "projUp"
-     Op[UpP, Up] = 1.
-  elseif opname == "projDn"
-    Op[DnP, Dn] = 1.
-  elseif opname == "Up" || opname == "↑"
-    pU = emptyITensor(s)
-    pU[Up] = 1.
-    return pU
-  elseif opname == "Dn" || opname == "↓"
-    pD = emptyITensor(s)
-    pD[Dn] = 1.
-    return pD
-  else
-    throw(ArgumentError("Operator name '$opname' not recognized for SpinHalfSite"))
-  end
-  return Op
+function op!(::SpinHalfSite,
+             ::Union{OpName"Sz"},
+             Op::ITensor,
+             s::Index)
+  Op[s'=>1, s=>1] = 0.5
+  Op[s'=>2, s=>2] = -0.5
 end
+
+function op!(::SpinHalfSite,
+             ::Union{OpName"S+",OpName"Splus"},
+             Op::ITensor,
+             s::Index)
+  Op[s'=>1, s=>2] = 1.0
+end
+
+function op!(::SpinHalfSite,
+             ::Union{OpName"S-",OpName"Sminus"},
+             Op::ITensor,
+             s::Index)
+  Op[s'=>2, s=>1] = 1.0
+end
+
+function op!(::SpinHalfSite,
+             ::Union{OpName"Sx"},
+             Op::ITensor,
+             s::Index)
+  Op[s'=>1, s=>2] = 0.5
+  Op[s'=>2, s=>1] = 0.5
+end
+
+function op!(::SpinHalfSite,
+             ::Union{OpName"iSy"},
+             Op::ITensor,
+             s::Index)
+  Op[s'=>1, s=>2] = +0.5
+  Op[s'=>2, s=>1] = -0.5
+end
+
+function op!(::SpinHalfSite,
+             ::Union{OpName"Sy"},
+             Op::ITensor,
+             s::Index)
+  #Op = complex(Op) # this just shadows the input reference
+  #complex!(Op) # TODO: need this to be defined
+  #Op[s'=>1, s=>2] = -0.5im
+  #Op[s'=>2, s=>1] = 0.5im
+end
+
