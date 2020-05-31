@@ -17,7 +17,7 @@ struct SmallString
 
 end
 
-function SmallString(str::String)
+function SmallString(str::AbstractString)
   mstore = MSmallStringStorage(ntuple(_->IntChar(0),Val(smallLength)))
   lastchar = min(length(str),smallLength)
   for n=1:lastchar
