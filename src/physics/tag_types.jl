@@ -1,4 +1,6 @@
 
+abstract type AbstractTagType end
+
 """
 TagType is a parameterized type which allows
 making Index tags into Julia types. One use case
@@ -9,12 +11,39 @@ with certain tags such as "S=1/2".
 To make a TagType, you can use the string
 macro notation: `TagType"MyTag"`
 """
-struct TagType{T}
+
+struct TagType{T} <: AbstractTagType
 end
 
 macro TagType_str(s)
   TagType{Tag(s)}
 end
+
+function val(::TagType{T})::Tag where {T} 
+  return T
+end
+
+abstract type AbstractOpName end
+
+struct OpName{T} <: AbstractOpName
+end
+
+macro OpName_str(s)
+  OpName{Tag(s)}
+end
+
+function val(::OpName{T})::Tag where {T} 
+  return T
+end
+
+## Default implementation of op!
+#function op!(T::AbstractTagType,
+#             O::AbstractOpName,
+#             Op::ITensor,
+#             ::Index)
+#  throw(ArgumentError("Operator name \"$(val(O))\" not recognized for Index tag \"$(val(T))\""))
+#  return Op
+#end
 
 function _call_op(s::Index,
                   opname::AbstractString;
@@ -23,18 +52,23 @@ function _call_op(s::Index,
   nfound = 0
   for n=1:length(tags(s))
     TType = TagType{tags(s)[n]}
-    if hasmethod(op,Tuple{TType,Index,AbstractString})
+    OpN = OpName{Tag(opname)}
+    if hasmethod(op!,Tuple{TType,OpN,ITensor,Index})
       use_tag = n
       nfound += 1
     end
   end
   if nfound == 0
-    error("Overload of \"op\" function not found for Index tags $(tags(s))")
+    error("Overload of \"op!\" function not found for operator name \"$opname\" and Index tags $(tags(s))")
   elseif nfound > 1
-    error("Multiple tags from $(tags(s)) overload the function \"op\"")
+    error("Multiple tags from $(tags(s)) overload the function \"op!\" for operator name \"$opname\"")
   end
-  TType = TagType{tags(s)[use_tag]}
-  return op(TType(),s,opname;kwargs...)
+
+  ttype = TagType{tags(s)[use_tag]}()
+  opn = OpName{Tag(opname)}()
+  Op = emptyITensor(s',dag(s))
+  op!(ttype,opn,Op,s;kwargs...)
+  return Op
 end
 
 function op(s::Index,
@@ -63,6 +97,8 @@ function op(s::Index,
   return _call_op(s,opname;kwargs...)
 end
 
+# Version of `op` taking an array of indices
+# and an integer of which Index to use
 function op(s::Vector{<:Index},
             opname::AbstractString,
             n::Int;
