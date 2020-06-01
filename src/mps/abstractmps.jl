@@ -343,6 +343,14 @@ function maxlinkdim(M::AbstractMPS)
   md
 end
 
+"""
+    linkind(M::MPS, j::Int)
+
+    linkind(M::MPO, j::Int)
+
+Get the link or bond Index connecting the
+MPS or MPO tensor on site j to site j+1
+"""
 function linkind(M::AbstractMPS, j::Int)
   N = length(M)
   j ≥ length(M) && return nothing
