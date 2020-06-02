@@ -165,23 +165,7 @@ using Test
   i = Index(2)
   A = randomITensor(i)
   @test isapprox(norm2(A), norm(A)^2)
-end</code></pre><p>You&#39;ll want to add ITensors as a test dependency, in case it is not already installed on someone&#39;s system who is running the tests. You can do this by editing the file <code>~/.julia/dev/MyITensorsPkg/Project.toml</code> to look like:</p><pre><code class="language-none">name = &quot;MyITensorsPkg&quot;
-uuid = &quot;b33b1a07-6eec-4458-8efd-3d86e8afc6ba&quot;
-authors = [&quot;Matthew Fishman &lt;mfishman@flatironinstitute.org&gt; and contributors&quot;]
-version = &quot;0.1.0&quot;
-
-[deps]
-ITensors = &quot;9136182c-28ba-11e9-034c-db9fb085ebd5&quot;
-
-[compat]
-julia = &quot;1&quot;
-
-[extras]
-Test = &quot;8dfed614-e22c-5e08-85e1-65c5234f0b40&quot;
-ITensors = &quot;9136182c-28ba-11e9-034c-db9fb085ebd5&quot;
-
-[targets]
-test = [&quot;Test&quot;, &quot;ITensors&quot;]</code></pre><p>so add the <code>ITensors = ...</code> line under <code>[extras]</code> and add  <code>&quot;ITensors&quot;</code> under <code>[targets]</code>. Now when you test your package you should see:</p><pre><code class="language-julia">pkg&gt; test MyITensorsPkg
+end</code></pre><p>Now when you test your package you should see:</p><pre><code class="language-julia">pkg&gt; test MyITensorsPkg
 [...]
 Test Summary:    | Pass  Total
 MyITensorsPkg.jl |    1      1
@@ -218,7 +202,7 @@ julia&gt; @time svd(A, i&#39;);
   0.263526 seconds (290.02 k allocations: 14.220 MiB)
 
 julia&gt; @time svd(A, i&#39;);
-  0.000135 seconds (350 allocations: 29.984 KiB)</code></pre><p>which is much better. </p><p>There is a script to partially automate this process in the <code>packagecompile/</code> directory of the ITensors.jl library. Additionally, we will investigate pre-packaging a compiled  version of ITensors.jl.</p><h2 id="Multithreading-Support-1"><a class="docs-heading-anchor" href="#Multithreading-Support-1">Multithreading Support</a><a class="docs-heading-anchor-permalink" href="#Multithreading-Support-1" title="Permalink"></a></h2><p>There are two possible sources of parallelization available in  ITensors.jl, both external to the package right now. These are:</p><ul><li>BLAS/LAPACK multithreading (through whatever flavor you are using, i.e. OpenBLAS or MKL).</li><li>The Strided.jl package, which implements a multithreaded array permutation.</li></ul><p>The BLAS/LAPACK multithreading can be controlled in the usual way with  environment variables, or within Julia. So for example, to control  from Julia, you would do:</p><pre><code class="language-julia">julia&gt; using LinearAlgebra
+  0.000135 seconds (350 allocations: 29.984 KiB)</code></pre><p>which is much better. </p><p>There is a script to partially automate this process in the <code>packagecompiler/</code> directory of the ITensors.jl library. Additionally, we will investigate pre-packaging a compiled  version of ITensors.jl.</p><h2 id="Multithreading-Support-1"><a class="docs-heading-anchor" href="#Multithreading-Support-1">Multithreading Support</a><a class="docs-heading-anchor-permalink" href="#Multithreading-Support-1" title="Permalink"></a></h2><p>There are two possible sources of parallelization available in  ITensors.jl, both external to the package right now. These are:</p><ul><li>BLAS/LAPACK multithreading (through whatever flavor you are using, i.e. OpenBLAS or MKL).</li><li>The Strided.jl package, which implements a multithreaded array permutation.</li></ul><p>The BLAS/LAPACK multithreading can be controlled in the usual way with  environment variables, or within Julia. So for example, to control  from Julia, you would do:</p><pre><code class="language-julia">julia&gt; using LinearAlgebra
 
 julia&gt; BLAS.vendor()  # Check which BLAS you are using
 :mkl
@@ -327,4 +311,4 @@ julia&gt; myscale2!(A::ITensor, x::Number) = myscale!(tensor(A), x)
 myscale2! (generic function with 1 method)
 
 julia&gt; @btime myscale2!(A, 2) setup = (A = randomITensor(i));
-  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AutoMPO.html">« AutoMPO</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 2 June 2020 14:31">Tuesday 2 June 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AutoMPO.html">« AutoMPO</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Tuesday 2 June 2020 14:37">Tuesday 2 June 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
