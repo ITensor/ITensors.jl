@@ -395,31 +395,6 @@ using Test
   @test isapprox(norm2(A), norm(A)^2)
 end
 ```
-You'll want to add ITensors as a test dependency, in case it
-is not already installed on someone's system who is running
-the tests. You can do this by editing the file
-`~/.julia/dev/MyITensorsPkg/Project.toml` to look like:
-```
-name = "MyITensorsPkg"
-uuid = "b33b1a07-6eec-4458-8efd-3d86e8afc6ba"
-authors = ["Matthew Fishman <mfishman@flatironinstitute.org> and contributors"]
-version = "0.1.0"
-
-[deps]
-ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
-
-[compat]
-julia = "1"
-
-[extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
-
-[targets]
-test = ["Test", "ITensors"]
-```
-so add the `ITensors = ...` line under `[extras]` and add 
-`"ITensors"` under `[targets]`.
 Now when you test your package you should see:
 ```julia
 pkg> test MyITensorsPkg
@@ -585,7 +560,7 @@ julia> @time svd(A, i');
 which is much better. 
 
 There is a script to partially automate this process in the
-`packagecompile/` directory of the ITensors.jl library.
+`packagecompiler/` directory of the ITensors.jl library.
 Additionally, we will investigate pre-packaging a compiled 
 version of ITensors.jl.
 
