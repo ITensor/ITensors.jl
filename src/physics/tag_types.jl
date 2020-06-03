@@ -1,18 +1,23 @@
 
 """
 TagType is a parameterized type which allows
-making Index tags into Julia types. One use case
-is overloading functions such as `op` which
-generates physics operators for indices
-with certain tags such as "S=1/2".
+making Index tags into Julia types. Use cases
+include overloading functions such as `op`,
+`siteinds`, and `state` which generate custom
+operators, Index arrays, and IndexVals associated
+with Index objects having a certain tag.
 
-To make a TagType, you can use the string
+To make a TagType type, you can use the string
 macro notation: `TagType"MyTag"`
+
+To make an TagType value or object, you can use
+the notation: `TagType("MyTag")`
 """
 struct TagType{T}
 end
 
-TagType(s::AbstractString) = TagType{Tag(s)}()
+TagType(s::Tag) = TagType{s}()
+TagType(s::AbstractString) = TagType(Tag(s))
 
 macro TagType_str(s)
   TagType{Tag(s)}
@@ -35,7 +40,8 @@ the notation: `OpName("myop")`
 struct OpName{Name}
 end
 
-OpName(s::AbstractString) = OpName{SmallString(s)}()
+OpName(s::SmallString) = OpName{s}()
+OpName(s::AbstractString) = OpName(SmallString(s))
 
 macro OpName_str(s)
   OpName{SmallString(s)}
@@ -75,7 +81,7 @@ function _call_op!(s::Index,
   nfound = 0
   for n=1:length(tags(s))
     TType = TagType{tags(s)[n]}
-    OpN = OpName(opname)
+    OpN = OpName{SmallString(opname)}
     if hasmethod(op!,Tuple{TType,OpN,ITensor,Index})
       use_tag = n
       nfound += 1
@@ -146,9 +152,9 @@ function state(s::Index,
     end
   end
   if nfound == 0
-    error("Overload of \"state\" function not found for Index tags $(tags(s))")
+    throw(ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))"))
   elseif nfound > 1
-    error("Multiple tags from $(tags(s)) overload the function \"state\"")
+    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"state\""))
   end
   tt = TagType(tags(s)[use_tag])
   sn = state(tt,str)
@@ -168,9 +174,9 @@ end
 
 function siteinds(str::String,
                   N::Integer; kwargs...)
-  TType = TagType(str)
+  TType = TagType{Tag(str)}
   if !hasmethod(siteinds,Tuple{TType,Int})
-    error("Overload of \"siteinds\" function not found for tag type \"$str\"")
+    throw(ArgumentError("Overload of \"siteinds\" function not found for tag type \"$str\""))
   end
   return siteinds(TType(),N; kwargs...)
 end
@@ -191,7 +197,7 @@ function has_fermion_string(s::Index,
   if nfound == 0
     return false
   elseif nfound > 1
-    error("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\"")
+    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\""))
   end
   tt = TagType(tags(s)[use_tag])
   return has_fermion_string(tt,s,opname;kwargs...)
