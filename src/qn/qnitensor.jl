@@ -103,7 +103,7 @@ randomITensor(inds::QNIndex...) = randomITensor(Float64, QN(), IndexSet(inds...)
 function combiner(inds::QNIndices; kwargs...)
   # TODO: support combining multiple set of indices
   tags = get(kwargs, :tags, "CMB,Link")
-  new_ind = ⊗(inds...)
+  new_ind = ⊗(inds...; kwargs...)
   if all(i->dir(i)!=Out,inds) && all(i->dir(i)!=In,inds)
     new_ind = dag(new_ind)
     new_ind = replaceqns(new_ind,-qnblocks(new_ind))

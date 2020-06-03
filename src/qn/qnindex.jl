@@ -208,16 +208,22 @@ function NDTensors.outer(qn1::QNBlocks, qn2::QNBlocks)
 end
 
 function NDTensors.outer(i1::QNIndex, i2::QNIndex;
-                         tags="", plev=0)
-  if dir(i1) == dir(i2)
-    return Index(space(i1)⊗space(i2); dir=dir(i1),
-                                      tags=tags,
-                                      plev=plev)
-  else
-    return Index((dir(i1)*space(i1))⊗(dir(i2)*space(i2)); dir=Out,
-                                                          tags=tags,
-                                                          plev=plev)
-  end
+                         dir = nothing,
+                         tags = "",
+                         plev::Int = 0)
+    if isnothing(dir)
+      if ITensors.dir(i1) == ITensors.dir(i2)
+        dir = ITensors.dir(i1)
+      else
+        dir = Out
+      end
+    end
+    newspace = dir * ((ITensors.dir(i1) * space(i1)) ⊗
+                      (ITensors.dir(i2) * space(i2)))
+    return Index(newspace;
+                 dir = dir,
+                 tags = tags,
+                 plev = plev)
 end
 
 function Base.isless(qnb1::QNBlock, qnb2::QNBlock)
