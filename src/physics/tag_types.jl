@@ -9,29 +9,38 @@ with certain tags such as "S=1/2".
 To make a TagType, you can use the string
 macro notation: `TagType"MyTag"`
 """
-
 struct TagType{T}
 end
+
+TagType(s::AbstractString) = TagType{Tag(s)}()
 
 macro TagType_str(s)
   TagType{Tag(s)}
 end
 
-#function val(::TagType{T})::Tag where {T} 
-#  return T
-#end
+"""
+OpName is a parameterized type which allows
+making strings into Julia types for the purpose
+of representing operator names.
+The main use of OpName is overloading the 
+`ITensors.op!` method which generates operators 
+for indices with certain tags such as "S=1/2".
 
+To make a OpName type, you can use the string
+macro notation: `OpName"MyTag"`. 
 
-struct OpName{T}
+To make an OpName value or object, you can use
+the notation: `OpName("myop")`
+"""
+struct OpName{Name}
 end
+
+OpName(s::AbstractString) = OpName{SmallString(s)}()
 
 macro OpName_str(s)
-  OpName{Tag(s)}
+  OpName{SmallString(s)}
 end
 
-#function val(::OpName{T})::Tag where {T} 
-#  return T
-#end
 
 # TODO: this should be deprecated in a later 
 # version, but leaving it as a fallback in case
@@ -55,8 +64,8 @@ function old_call_op(s::Index,
     throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"op\""))
   end
 
-  ttype = TagType{tags(s)[use_tag]}()
-  return op(ttype,s,opname;kwargs...)
+  tt = TagType(tags(s)[use_tag])
+  return op(tt,s,opname;kwargs...)
 end
 
 function _call_op!(s::Index,
@@ -66,7 +75,7 @@ function _call_op!(s::Index,
   nfound = 0
   for n=1:length(tags(s))
     TType = TagType{tags(s)[n]}
-    OpN = OpName{Tag(opname)}
+    OpN = OpName(opname)
     if hasmethod(op!,Tuple{TType,OpN,ITensor,Index})
       use_tag = n
       nfound += 1
@@ -81,10 +90,10 @@ function _call_op!(s::Index,
     throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"op!\" for operator name \"$opname\""))
   end
 
-  ttype = TagType{tags(s)[use_tag]}()
-  opn = OpName{Tag(opname)}()
+  tt = TagType(tags(s)[use_tag])
+  opn = OpName(opname)
   Op = emptyITensor(s',dag(s))
-  op!(ttype,opn,Op,s;kwargs...)
+  op!(tt,opn,Op,s;kwargs...)
   return Op
 end
 
@@ -141,8 +150,8 @@ function state(s::Index,
   elseif nfound > 1
     error("Multiple tags from $(tags(s)) overload the function \"state\"")
   end
-  TType = TagType{tags(s)[use_tag]}
-  sn = state(TType(),str)
+  tt = TagType(tags(s)[use_tag])
+  sn = state(tt,str)
   return s[sn]
 end
 
@@ -159,7 +168,7 @@ end
 
 function siteinds(str::String,
                   N::Integer; kwargs...)
-  TType = TagType{Tag(str)}
+  TType = TagType(str)
   if !hasmethod(siteinds,Tuple{TType,Int})
     error("Overload of \"siteinds\" function not found for tag type \"$str\"")
   end
@@ -184,6 +193,6 @@ function has_fermion_string(s::Index,
   elseif nfound > 1
     error("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\"")
   end
-  TType = TagType{tags(s)[use_tag]}
-  return has_fermion_string(TType(),s,opname;kwargs...)
+  tt = TagType(tags(s)[use_tag])
+  return has_fermion_string(tt,s,opname;kwargs...)
 end
