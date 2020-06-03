@@ -240,7 +240,6 @@ export
   TagType,
   @TagType_str,
   op,
-  op!,
   @OpName_str,
   state,
   has_fermion_string,
