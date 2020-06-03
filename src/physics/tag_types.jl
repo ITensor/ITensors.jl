@@ -82,7 +82,7 @@ function _call_op!(s::Index,
   for n=1:length(tags(s))
     TType = TagType{tags(s)[n]}
     OpN = OpName{SmallString(opname)}
-    if hasmethod(op!,Tuple{TType,OpN,ITensor,Index})
+    if hasmethod(op!,Tuple{ITensor,TType,OpN,Index})
       use_tag = n
       nfound += 1
     end
@@ -96,10 +96,10 @@ function _call_op!(s::Index,
     throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"op!\" for operator name \"$opname\""))
   end
 
+  Op = emptyITensor(s',dag(s))
   tt = TagType(tags(s)[use_tag])
   opn = OpName(opname)
-  Op = emptyITensor(s',dag(s))
-  op!(tt,opn,Op,s;kwargs...)
+  op!(Op,tt,opn,s;kwargs...)
   return Op
 end
 
