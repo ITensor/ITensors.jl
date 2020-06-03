@@ -69,8 +69,7 @@ function TagSet(str::AbstractString)
   ts = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
   nchar = 0
   ntags = 0
-  for n = 1:length(str)
-    @inbounds current_char = str[n]
+  for current_char in str
     if current_char == ','
       if nchar != 0
         ntags = _addtag!(ts,ntags,cast_to_uint64(current_tag))

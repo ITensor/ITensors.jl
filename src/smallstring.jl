@@ -1,6 +1,6 @@
 
-const IntChar = UInt8
-const IntSmallString = UInt64
+const IntChar = UInt16
+const IntSmallString = UInt128
 const smallLength = 8
 const SmallStringStorage = SVector{smallLength,IntChar}
 const MSmallStringStorage = MVector{smallLength,IntChar}
@@ -89,7 +89,7 @@ function Base.String(s::SmallString)
     n += 1
   end
   len = n-1
-  return String(s.data[1:len])
+  return String(Char.(s.data[1:len]))
 end
 
 function Base.show(io::IO, s::SmallString)
