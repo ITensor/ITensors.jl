@@ -1,7 +1,5 @@
 
-const SpinOneSite = Union{TagType"S=1", TagType"SpinOne"}
-
-function siteinds(::SpinOneSite,
+function siteinds(::TagType"S=1",
                   N::Int; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
@@ -14,7 +12,10 @@ function siteinds(::SpinOneSite,
   return [Index(3,"Site,S=1,n=$n") for n=1:N]
 end
 
-function state(::SpinOneSite,
+siteinds(::TagType"SpinOne",
+         N::Int; kwargs...) = siteinds(TagType("S=1"),N;kwargs...)
+
+function state(::TagType"S=1",
                st::AbstractString)
   if st == "Up" || st == "↑"
     return 1
@@ -26,6 +27,8 @@ function state(::SpinOneSite,
   throw(ArgumentError("State string \"$st\" not recognized for SpinOne site"))
   return 0
 end
+
+state(::TagType"SpinOne",st::AbstractString) = state(TagType("S=1"),st)
 
 function op!(::TagType"S=1",
              ::OpName"Sz",
