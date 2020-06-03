@@ -250,12 +250,6 @@ export
 # physics/site_types/fermion.jl
   FermionSite,
 
-# physics/site_types/spinhalf.jl
-  SpinHalfSite,
-
-# physics/site_types/spinone.jl
-  SpinOneSite,
-
 # physics/site_types/tj.jl
   tJSite,
 
