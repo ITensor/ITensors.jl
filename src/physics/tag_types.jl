@@ -1,6 +1,4 @@
 
-abstract type AbstractTagType end
-
 """
 TagType is a parameterized type which allows
 making Index tags into Julia types. One use case
@@ -12,7 +10,7 @@ To make a TagType, you can use the string
 macro notation: `TagType"MyTag"`
 """
 
-struct TagType{T} <: AbstractTagType
+struct TagType{T}
 end
 
 macro TagType_str(s)
@@ -23,9 +21,8 @@ end
 #  return T
 #end
 
-abstract type AbstractOpName end
 
-struct OpName{T} <: AbstractOpName
+struct OpName{T}
 end
 
 macro OpName_str(s)
@@ -34,15 +31,6 @@ end
 
 #function val(::OpName{T})::Tag where {T} 
 #  return T
-#end
-
-## Default implementation of op!
-#function op!(T::AbstractTagType,
-#             O::AbstractOpName,
-#             Op::ITensor,
-#             ::Index)
-#  throw(ArgumentError("Operator name \"$(val(O))\" not recognized for Index tag \"$(val(T))\""))
-#  return Op
 #end
 
 # TODO: this should be deprecated in a later 
