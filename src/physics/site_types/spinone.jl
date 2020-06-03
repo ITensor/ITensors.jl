@@ -36,20 +36,28 @@ function op!(::TagType"S=1",
 end
 
 function op!(::TagType"S=1",
-             ::Union{OpName"S+",OpName"Splus"},
+             ::OpName"S+",
              Op::ITensor,
              s::Index)
   Op[s'=>2,s=>3] = sqrt(2)
   Op[s'=>1,s=>2] = sqrt(2)
 end
 
+op!(tt::TagType"S=1",
+    on::OpName"Splus",
+    Op::ITensor,s::Index) = op!(tt,OpName("S+"),Op,s)
+
 function op!(::TagType"S=1",
-             ::Union{OpName"S-",OpName"Sminus"},
+             ::OpName"S-",
              Op::ITensor,
              s::Index)
   Op[s'=>3,s=>2] = sqrt(2)
   Op[s'=>2,s=>1] = sqrt(2)
 end
+
+op!(tt::TagType"S=1",
+    on::OpName"Sminus",
+    Op::ITensor,s::Index) = op!(tt,OpName("S-"),Op,s)
 
 function op!(::TagType"S=1",
              ::OpName"Sx",
@@ -113,6 +121,6 @@ function op!(::TagType"S=1",
 end
 
 op!(::TagType"SpinOne",
-    o::AbstractOpName,
+    o::OpName,
     Op::ITensor,
-    s::Index) = op!(TagType"S=1"(),o,Op,s)
+    s::Index) = op!(TagType("S=1"),o,Op,s)

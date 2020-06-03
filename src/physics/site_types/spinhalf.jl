@@ -24,7 +24,7 @@ end
 
 
 function op!(::TagType"S=1/2",
-             ::Union{OpName"Sz"},
+             ::OpName"Sz",
              Op::ITensor,
              s::Index)
   Op[s'=>1, s=>1] = 0.5
@@ -32,21 +32,29 @@ function op!(::TagType"S=1/2",
 end
 
 function op!(::TagType"S=1/2",
-             ::Union{OpName"S+",OpName"Splus"},
+             ::OpName"S+",
              Op::ITensor,
              s::Index)
   Op[s'=>1, s=>2] = 1.0
 end
 
+op!(tt::TagType"S=1/2",
+    ::OpName"Splus",
+    Op::ITensor,s::Index) = op!(tt,OpName("S+"),Op,s)
+
 function op!(::TagType"S=1/2",
-             ::Union{OpName"S-",OpName"Sminus"},
+             ::OpName"S-",
              Op::ITensor,
              s::Index)
   Op[s'=>2, s=>1] = 1.0
 end
 
+op!(tt::TagType"S=1/2",
+    ::OpName"Sminus",
+    Op::ITensor,s::Index) = op!(tt,OpName("S-"),Op,s)
+
 function op!(::TagType"S=1/2",
-             ::Union{OpName"Sx"},
+             ::OpName"Sx",
              Op::ITensor,
              s::Index)
   Op[s'=>1, s=>2] = 0.5
@@ -54,7 +62,7 @@ function op!(::TagType"S=1/2",
 end
 
 function op!(::TagType"S=1/2",
-             ::Union{OpName"iSy"},
+             ::OpName"iSy",
              Op::ITensor,
              s::Index)
   Op[s'=>1, s=>2] = +0.5
@@ -62,7 +70,7 @@ function op!(::TagType"S=1/2",
 end
 
 function op!(::TagType"S=1/2",
-             ::Union{OpName"Sy"},
+             ::OpName"Sy",
              Op::ITensor,
              s::Index)
   complex!(Op)
@@ -71,7 +79,7 @@ function op!(::TagType"S=1/2",
 end
 
 op!(::TagType"SpinHalf",
-    o::AbstractOpName,
+    o::OpName,
     Op::ITensor,
-    s::Index) = op!(TagType"S=1/2"(),o,Op,s)
+    s::Index) = op!(TagType("S=1/2"),o,Op,s)
 
