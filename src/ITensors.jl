@@ -74,7 +74,7 @@ include("mps/dmrg.jl")
 #####################################
 # Physics
 #
-include("physics/tag_types.jl")
+include("physics/sitetype.jl")
 include("physics/lattices.jl")
 include("physics/site_types/spinhalf.jl")
 include("physics/site_types/spinone.jl")

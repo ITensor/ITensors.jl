@@ -236,22 +236,12 @@ export
   square_lattice,
   triangular_lattice,
 
-# physics/tag_types.jl
-  TagType,
-  @TagType_str,
+# physics/sitetype.jl
+  @SiteType_str,
   op,
   @OpName_str,
   state,
   has_fermion_string,
-
-# physics/site_types/electron.jl
-  ElectronSite,
-
-# physics/site_types/fermion.jl
-  FermionSite,
-
-# physics/site_types/tj.jl
-  tJSite,
 
 # qn/qn.jl
   # Types

@@ -1,26 +1,26 @@
 
 """
-TagType is a parameterized type which allows
+SiteType is a parameterized type which allows
 making Index tags into Julia types. Use cases
 include overloading functions such as `op`,
 `siteinds`, and `state` which generate custom
 operators, Index arrays, and IndexVals associated
 with Index objects having a certain tag.
 
-To make a TagType type, you can use the string
-macro notation: `TagType"MyTag"`
+To make a SiteType type, you can use the string
+macro notation: `SiteType"MyTag"`
 
-To make an TagType value or object, you can use
-the notation: `TagType("MyTag")`
+To make an SiteType value or object, you can use
+the notation: `SiteType("MyTag")`
 """
-struct TagType{T}
+struct SiteType{T}
 end
 
-TagType(s::Tag) = TagType{s}()
-TagType(s::AbstractString) = TagType(Tag(s))
+SiteType(s::Tag) = SiteType{s}()
+SiteType(s::AbstractString) = SiteType(Tag(s))
 
-macro TagType_str(s)
-  TagType{Tag(s)}
+macro SiteType_str(s)
+  SiteType{Tag(s)}
 end
 
 """
@@ -58,8 +58,8 @@ function old_call_op(s::Index,
   use_tag = 0
   nfound = 0
   for n=1:length(tags(s))
-    TType = TagType{tags(s)[n]}
-    if hasmethod(op,Tuple{TType,Index,AbstractString})
+    SType = SiteType{tags(s)[n]}
+    if hasmethod(op,Tuple{SType,Index,AbstractString})
       use_tag = n
       nfound += 1
     end
@@ -70,8 +70,8 @@ function old_call_op(s::Index,
     throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"op\""))
   end
 
-  tt = TagType(tags(s)[use_tag])
-  return op(tt,s,opname;kwargs...)
+  st = SiteType(tags(s)[use_tag])
+  return op(st,s,opname;kwargs...)
 end
 
 function _call_op!(s::Index,
@@ -80,9 +80,9 @@ function _call_op!(s::Index,
   use_tag = 0
   nfound = 0
   for n=1:length(tags(s))
-    TType = TagType{tags(s)[n]}
+    SType = SiteType{tags(s)[n]}
     OpN = OpName{SmallString(opname)}
-    if hasmethod(op!,Tuple{ITensor,TType,OpN,Index})
+    if hasmethod(op!,Tuple{ITensor,SType,OpN,Index})
       use_tag = n
       nfound += 1
     end
@@ -97,14 +97,14 @@ function _call_op!(s::Index,
   end
 
   Op = emptyITensor(s',dag(s))
-  tt = TagType(tags(s)[use_tag])
+  st = SiteType(tags(s)[use_tag])
   opn = OpName(opname)
-  op!(Op,tt,opn,s;kwargs...)
+  op!(Op,st,opn,s;kwargs...)
   return Op
 end
 
-function op(s::Index,
-            opname::AbstractString;
+function op(opname::AbstractString,
+            s::Index;
             kwargs...)::ITensor
 
   opname = strip(opname)
@@ -129,14 +129,21 @@ function op(s::Index,
   return _call_op!(s,opname;kwargs...)
 end
 
+op(s::Index,opname::AbstractString;kwargs...) = op(opname,s;kwargs...)
+
 # Version of `op` taking an array of indices
 # and an integer of which Index to use
-function op(s::Vector{<:Index},
-            opname::AbstractString,
+function op(opname::AbstractString,
+            s::Vector{<:Index},
             n::Int;
             kwargs...)::ITensor
   return op(s[n],opname;kwargs...)
 end
+
+op(s::Vector{<:Index},
+   opname::AbstractString,
+   n::Int;
+   kwargs...) = op(opname,s,n;kwargs...)
 
 state(s::Index,n::Integer) = s[n]
 
@@ -145,8 +152,8 @@ function state(s::Index,
   use_tag = 0
   nfound = 0
   for n=1:length(tags(s))
-    TType = TagType{tags(s)[n]}
-    if hasmethod(state,Tuple{TType,AbstractString})
+    SType = SiteType{tags(s)[n]}
+    if hasmethod(state,Tuple{SType,AbstractString})
       use_tag = n
       nfound += 1
     end
@@ -156,8 +163,8 @@ function state(s::Index,
   elseif nfound > 1
     throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"state\""))
   end
-  tt = TagType(tags(s)[use_tag])
-  sn = state(tt,str)
+  st = SiteType(tags(s)[use_tag])
+  sn = state(st,str)
   return s[sn]
 end
 
@@ -174,11 +181,11 @@ end
 
 function siteinds(str::String,
                   N::Integer; kwargs...)
-  TType = TagType{Tag(str)}
-  if !hasmethod(siteinds,Tuple{TType,Int})
+  SType = SiteType{Tag(str)}
+  if !hasmethod(siteinds,Tuple{SType,Int})
     throw(ArgumentError("Overload of \"siteinds\" function not found for tag type \"$str\""))
   end
-  return siteinds(TType(),N; kwargs...)
+  return siteinds(SType(),N; kwargs...)
 end
 
 function has_fermion_string(s::Index,
@@ -188,8 +195,8 @@ function has_fermion_string(s::Index,
   use_tag = 0
   nfound = 0
   for n=1:length(tags(s))
-    TType = TagType{tags(s)[n]}
-    if hasmethod(has_fermion_string,Tuple{TType,Index,AbstractString})
+    SType = SiteType{tags(s)[n]}
+    if hasmethod(has_fermion_string,Tuple{SType,Index,AbstractString})
       use_tag = n
       nfound += 1
     end
@@ -199,6 +206,6 @@ function has_fermion_string(s::Index,
   elseif nfound > 1
     throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\""))
   end
-  tt = TagType(tags(s)[use_tag])
-  return has_fermion_string(tt,s,opname;kwargs...)
+  st = SiteType(tags(s)[use_tag])
+  return has_fermion_string(st,s,opname;kwargs...)
 end

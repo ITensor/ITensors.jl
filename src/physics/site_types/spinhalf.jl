@@ -1,5 +1,5 @@
 
-function siteinds(::TagType"S=1/2",
+function siteinds(::SiteType"S=1/2",
                   N::Int; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
@@ -9,10 +9,10 @@ function siteinds(::TagType"S=1/2",
   return [Index(2,"Site,S=1/2,n=$n") for n=1:N]
 end
 
-siteinds(::TagType"SpinHalf",
-         N::Int; kwargs...) = siteinds(TagType("S=1/2"),N;kwargs...)
+siteinds(::SiteType"SpinHalf",
+         N::Int; kwargs...) = siteinds(SiteType("S=1/2"),N;kwargs...)
 
-function state(::TagType"S=1/2",
+function state(::SiteType"S=1/2",
                st::AbstractString)
   if st == "Up" || st == "↑"
     return 1
@@ -23,11 +23,11 @@ function state(::TagType"S=1/2",
   return 0
 end
 
-state(::TagType"SpinHalf",
-      st::AbstractString) = state(TagType("S=1/2"),st)
+state(::SiteType"SpinHalf",
+      st::AbstractString) = state(SiteType("S=1/2"),st)
 
 function op!(Op::ITensor,
-             ::TagType"S=1/2",
+             ::SiteType"S=1/2",
              ::OpName"Sz",
              s::Index)
   Op[s'=>1, s=>1] = 0.5
@@ -35,31 +35,31 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1/2",
+             ::SiteType"S=1/2",
              ::OpName"S+",
              s::Index)
   Op[s'=>1, s=>2] = 1.0
 end
 
 op!(Op::ITensor,
-    tt::TagType"S=1/2",
+    tt::SiteType"S=1/2",
     ::OpName"Splus",
     s::Index) = op!(Op,tt,OpName("S+"),s)
 
 function op!(Op::ITensor,
-             ::TagType"S=1/2",
+             ::SiteType"S=1/2",
              ::OpName"S-",
              s::Index)
   Op[s'=>2, s=>1] = 1.0
 end
 
 op!(Op::ITensor,
-    tt::TagType"S=1/2",
+    tt::SiteType"S=1/2",
     ::OpName"Sminus",
     s::Index) = op!(Op,tt,OpName("S-"),s)
 
 function op!(Op::ITensor,
-             ::TagType"S=1/2",
+             ::SiteType"S=1/2",
              ::OpName"Sx",
              s::Index)
   Op[s'=>1, s=>2] = 0.5
@@ -67,7 +67,7 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1/2",
+             ::SiteType"S=1/2",
              ::OpName"iSy",
              s::Index)
   Op[s'=>1, s=>2] = +0.5
@@ -75,7 +75,7 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1/2",
+             ::SiteType"S=1/2",
              ::OpName"Sy",
              s::Index)
   complex!(Op)
@@ -84,7 +84,7 @@ function op!(Op::ITensor,
 end
 
 op!(Op::ITensor,
-    ::TagType"SpinHalf",
+    ::SiteType"SpinHalf",
     o::OpName,
-    s::Index) = op!(Op,TagType("S=1/2"),o,s)
+    s::Index) = op!(Op,SiteType("S=1/2"),o,s)
 

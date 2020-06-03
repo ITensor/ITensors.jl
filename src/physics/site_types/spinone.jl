@@ -1,5 +1,5 @@
 
-function siteinds(::TagType"S=1",
+function siteinds(::SiteType"S=1",
                   N::Int; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
@@ -12,10 +12,10 @@ function siteinds(::TagType"S=1",
   return [Index(3,"Site,S=1,n=$n") for n=1:N]
 end
 
-siteinds(::TagType"SpinOne",
-         N::Int; kwargs...) = siteinds(TagType("S=1"),N;kwargs...)
+siteinds(::SiteType"SpinOne",
+         N::Int; kwargs...) = siteinds(SiteType("S=1"),N;kwargs...)
 
-function state(::TagType"S=1",
+function state(::SiteType"S=1",
                st::AbstractString)
   if st == "Up" || st == "↑"
     return 1
@@ -28,10 +28,10 @@ function state(::TagType"S=1",
   return 0
 end
 
-state(::TagType"SpinOne",st::AbstractString) = state(TagType("S=1"),st)
+state(::SiteType"SpinOne",st::AbstractString) = state(SiteType("S=1"),st)
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"Sz",
              s::Index)
   Op[s'=>1,s=>1] = +1.0
@@ -39,7 +39,7 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"S+",
              s::Index)
   Op[s'=>2,s=>3] = sqrt(2)
@@ -47,12 +47,12 @@ function op!(Op::ITensor,
 end
 
 op!(Op::ITensor,
-    tt::TagType"S=1",
+    tt::SiteType"S=1",
     on::OpName"Splus",
     s::Index) = op!(Op,tt,OpName("S+"),s)
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"S-",
              s::Index)
   Op[s'=>3,s=>2] = sqrt(2)
@@ -60,12 +60,12 @@ function op!(Op::ITensor,
 end
 
 op!(Op::ITensor,
-    tt::TagType"S=1",
+    tt::SiteType"S=1",
     on::OpName"Sminus",
     s::Index) = op!(Op,tt,OpName("S-"),s)
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"Sx",
              s::Index)
   Op[s'=>2,s=>1] = 1/sqrt(2)
@@ -75,7 +75,7 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"iSy",
              s::Index)
   Op[s'=>2,s=>1] = -1/sqrt(2)
@@ -85,7 +85,7 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"Sy",
              s::Index)
   complex!(Op)
@@ -96,7 +96,7 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"Sz2",
              s::Index)
   Op[s'=>1,s=>1] = +1.0
@@ -104,7 +104,7 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"Sx2",
              s::Index)
   Op[s'=>1,s=>1] = 0.5
@@ -115,7 +115,7 @@ function op!(Op::ITensor,
 end
 
 function op!(Op::ITensor,
-             ::TagType"S=1",
+             ::SiteType"S=1",
              ::OpName"Sy2",
              s::Index)
   Op[s'=>1,s=>1] = +0.5
@@ -126,6 +126,6 @@ function op!(Op::ITensor,
 end
 
 op!(Op::ITensor,
-    ::TagType"SpinOne",
+    ::SiteType"SpinOne",
     o::OpName,
-    s::Index) = op!(Op,TagType("S=1"),o,s)
+    s::Index) = op!(Op,SiteType("S=1"),o,s)
