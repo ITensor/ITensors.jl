@@ -1,3 +1,11 @@
+ITensors v0.1.6 Release Notes
+==============================
+
+* Allow user to control Arrow direction of combined Index in combiner (PR #417)
+* Fix eigen for case when left/right indices had mixed Arrow directions (PR #417)
+* Add exp for QN ITensor (PR #402)
+* Add Advanced Usage Guide to docs (PR #387)
+
 ITensors v0.1.5 Release Notes
 ==============================
 
