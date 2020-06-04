@@ -758,6 +758,16 @@ Random.seed!(1234)
       @test norm(A - Ut * D * dag(U)) ≉ 0.0 atol=1e-12
     end
 
+    @testset "eigen mixed arrows" begin
+      i1 = Index([QN(0)=>1,QN(1)=>2],"i1")
+      i2 = Index([QN(0)=>1,QN(1)=>2],"i2")
+      A = randomITensor(i1, i2, dag(i1)', dag(i2)')
+      F = eigen(A, (i1, i1'), (i2', i2))
+      D, U = F
+      Ut = F.Vt
+      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
+    end
+
   end
 
   @testset "svd" for ElT ∈ (Float64, ComplexF64)
@@ -1284,34 +1294,46 @@ Random.seed!(1234)
 end
 
 @testset "exponentiate" begin
-  i1 = Index([QN(0)=>1,QN(1)=>2],"i1")
-  i2 = Index([QN(0)=>1,QN(1)=>2],"i2")
-  A = randomITensor(QN(),i1,i2,dag(i1)', dag(i2)')
-  Aexp = exp(A)
-  Amat = Array(A, i1,i2, i1', i2')
-  Amatexp = reshape(exp(reshape(Amat,9,9)),3,3,3,3)
-  @test isapprox(norm(Array(Aexp,i1,i2,i1',i2') - Amatexp),0.0, atol=1e-14)
-  @test flux(Aexp) == QN()
-  @test length(setdiff(inds(Aexp),inds(A)))==0
 
-  @test isapprox(norm(exp(A, (i1,i2), (i1',i2')) - Aexp),0.0, atol=5e-14)
+  @testset "Simple arrows" begin
+    i1 = Index([QN(0)=>1,QN(1)=>2],"i1")
+    i2 = Index([QN(0)=>1,QN(1)=>2],"i2")
+    A = randomITensor(QN(),i1,i2,dag(i1)', dag(i2)')
+    Aexp = exp(A)
+    Amat = Array(A, i1,i2, i1', i2')
+    Amatexp = reshape(exp(reshape(Amat,9,9)),3,3,3,3)
+    @test isapprox(norm(Array(Aexp,i1,i2,i1',i2') - Amatexp),0.0, atol=1e-14)
+    @test flux(Aexp) == QN()
+    @test length(setdiff(inds(Aexp),inds(A)))==0
 
-  # test the case where indices are permuted
-  A = randomITensor(QN(),i1,dag(i1)', dag(i2)',i2)
-  Aexp = exp(A, (i1,i2), (i1',i2'))
-  Amat = Array(A, i1,i2,i1', i2')
-  Amatexp = reshape(exp(reshape(Amat,9,9)),3,3,3,3)
-  @test isapprox(norm(Array(Aexp,i1,i2,i1',i2') - Amatexp),0.0,atol=1e-14)
+    @test isapprox(norm(exp(A, (i1,i2), (i1',i2')) - Aexp),0.0, atol=5e-14)
 
-  # test exponentiation in the Hermitian case
-  i1 = Index([QN(0)=>2,QN(1)=>2,QN(2)=>3],"i1")
-  A = randomITensor(QN(),i1,dag(i1)')
-  Ad = dag(swapinds(A,IndexSet(i1),IndexSet(dag(i1)')))
-  Ah = A+Ad + 1e-10*randomITensor(QN(),i1,dag(i1)')
-  Amat = Array(Ah ,i1', i1)
-  Aexp = exp(Ah; ishermitian=true)
-  Amatexp= exp(Hermitian(Amat))
-  @test isapprox(norm(Array(Aexp,i1,i1')-Amatexp),0.0,atol=5e-14)
+    # test the case where indices are permuted
+    A = randomITensor(QN(),i1,dag(i1)', dag(i2)',i2)
+    Aexp = exp(A, (i1,i2), (i1',i2'))
+    Amat = Array(A, i1,i2,i1', i2')
+    Amatexp = reshape(exp(reshape(Amat,9,9)),3,3,3,3)
+    @test isapprox(norm(Array(Aexp,i1,i2,i1',i2') - Amatexp),0.0,atol=1e-14)
+
+    # test exponentiation in the Hermitian case
+    i1 = Index([QN(0)=>2,QN(1)=>2,QN(2)=>3],"i1")
+    A = randomITensor(QN(),i1,dag(i1)')
+    Ad = dag(swapinds(A,IndexSet(i1),IndexSet(dag(i1)')))
+    Ah = A+Ad + 1e-10*randomITensor(QN(),i1,dag(i1)')
+    Amat = Array(Ah ,i1', i1)
+    Aexp = exp(Ah; ishermitian=true)
+    Amatexp= exp(LinearAlgebra.Hermitian(Amat))
+    @test isapprox(norm(Array(Aexp,i1,i1')-Amatexp),0.0,atol=5e-14)
+  end
+
+  @testset "Mixed arrows" begin
+    i1 = Index([QN(0)=>1,QN(1)=>2],"i1")
+    i2 = Index([QN(0)=>1,QN(1)=>2],"i2")
+    A = randomITensor(i1, i2, dag(i1)', dag(i2)')
+    expA = exp(A, (i1, i1'), (i2', i2))
+    @test exp(dense(A), (i1, i1'), (i2', i2)) ≈ dense(expA)
+  end
+
 end
 
 end

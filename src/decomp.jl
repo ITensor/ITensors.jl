@@ -179,8 +179,12 @@ function LinearAlgebra.eigen(A::ITensor{N},
   Lis = IndexSet(Linds...)
   Ris = IndexSet(Rinds...)
 
-  Lis = setdirs(Lis, dirs(A, Lis))
-  Ris = setdirs(Ris, dirs(A, Ris))
+  # Ensure the indices have the correct directions,
+  # QNs, etc.
+  # First grab the indices in A, then permute them
+  # correctly.
+  Lis = permute(commoninds(A, Lis), Lis)
+  Ris = permute(commoninds(A, Ris), Ris)
 
   for (l, r) in zip(Lis, Ris)
     if space(l) != space(r)
@@ -193,8 +197,8 @@ function LinearAlgebra.eigen(A::ITensor{N},
     end
   end
 
-  CL = combiner(Lis...; tags = "CMB,left")
-  CR = combiner(Ris...; tags = "CMB,right")
+  CL = combiner(Lis...; dir = Out, tags = "CMB,left")
+  CR = combiner(Ris...; dir = In, tags = "CMB,right")
 
   AC = A * CR * CL
 

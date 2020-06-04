@@ -291,7 +291,7 @@ end
 
 removeqns(i::QNIndex) = Index(id(i),
                               dim(i),
-                              dir(i),
+                              Neither,
                               tags(i),
                               plev(i))
 
