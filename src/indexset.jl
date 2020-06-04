@@ -785,6 +785,11 @@ swapind(is::IndexSet, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
 removeqns(is::IndexSet) = is
 
+function permute(is1::IndexSet{N}, is2::IndexSet{N}) where {N}
+  perm = NDTensors.getperm(is1, is2)
+  return NDTensors.permute(is1, perm)
+end
+
 #
 # Helper functions for contracting ITensors
 #
@@ -967,10 +972,19 @@ end
     dirs(is::IndexSet, inds)
 
 Return a tuple of the directions of the indices `inds` in 
-the IndexSet `is`.
+the IndexSet `is`, in the order they are found in `inds`.
 """
 function dirs(is1::IndexSet, inds)
   return ntuple(i -> dir(is1, inds[i]), Val(length(inds)))
+end
+
+"""
+    dirs(is::IndexSet)
+
+Return a tuple of the directions of the indices `is`.
+"""
+function dirs(is::IndexSet{N}) where {N}
+  return ntuple(i -> dir(is[i]), Val(N))
 end
 
 hasqns(is::IndexSet) = any(hasqns,is)
