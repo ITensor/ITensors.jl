@@ -279,6 +279,25 @@ Random.seed!(1234)
       @test norm(A-Ap) ≈ 0.0
     end
 
+    @testset "Combine set direction" begin
+      i1 = Index([QN(0)=>2,QN(1)=>3],"i1")
+      A = randomITensor(i1',dag(i1))
+      @test isnothing(ITensors.checkflux(A))
+      C = combiner(dag(i1); dir = ITensors.Out)
+      c = combinedind(C)
+      @test dir(c) == ITensors.Out
+      AC = A * C
+      @test nnz(AC) == nnz(A)
+      @test nnzblocks(AC) == nnzblocks(A)
+      @test isnothing(ITensors.checkflux(AC))
+      Ap = AC*dag(C)
+      @test nnz(Ap) == nnz(A)
+      @test nnzblocks(Ap) == nnzblocks(A)
+      @test hassameinds(Ap, A)
+      @test isnothing(ITensors.checkflux(AC))
+      @test A ≈ Ap
+    end
+
     @testset "Order 2 (IndexSet constructor)" begin
       i1 = Index([QN(0,2)=>2,QN(1,2)=>2],"i1")
       A = randomITensor(QN(),i1,dag(i1'))

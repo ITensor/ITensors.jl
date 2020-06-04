@@ -211,19 +211,33 @@ function NDTensors.outer(i1::QNIndex, i2::QNIndex;
                          dir = nothing,
                          tags = "",
                          plev::Int = 0)
-    if isnothing(dir)
-      if ITensors.dir(i1) == ITensors.dir(i2)
-        dir = ITensors.dir(i1)
-      else
-        dir = Out
-      end
+  if isnothing(dir)
+    if ITensors.dir(i1) == ITensors.dir(i2)
+      dir = ITensors.dir(i1)
+    else
+      dir = Out
     end
-    newspace = dir * ((ITensors.dir(i1) * space(i1)) ⊗
-                      (ITensors.dir(i2) * space(i2)))
-    return Index(newspace;
-                 dir = dir,
-                 tags = tags,
-                 plev = plev)
+  end
+  newspace = dir * ((ITensors.dir(i1) * space(i1)) ⊗
+                    (ITensors.dir(i2) * space(i2)))
+  return Index(newspace;
+               dir = dir,
+               tags = tags,
+               plev = plev)
+end
+
+function NDTensors.outer(i::QNIndex;
+                         dir = nothing,
+                         tags = "",
+                         plev::Int = 0)
+  if isnothing(dir)
+    dir = ITensors.dir(i)
+  end
+  newspace = dir * (ITensors.dir(i) * space(i))
+  return Index(newspace;
+               dir = dir,
+               tags = tags,
+               plev = plev)
 end
 
 function Base.isless(qnb1::QNBlock, qnb2::QNBlock)

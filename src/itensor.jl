@@ -1135,7 +1135,6 @@ end
 function LinearAlgebra.exp(A::ITensor;
                            kwargs...)
   Ris = inds(A; plev = 0)
-  @show Ris
   Lis = Ris'
   return exp(A, Lis, Ris; kwargs...)
 end

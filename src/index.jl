@@ -377,9 +377,10 @@ function Base.iterate(i::Index, state::Int = 1)
 end
 
 # This is a trivial definition for use in NDTensors
-NDTensors.outer(i::Index; tags = tags(i),
-                          plev = plev(i),
-                          dir = dir(i)) = 
+NDTensors.outer(i::Index;
+                dir = dir(i),
+                tags = "",
+                plev::Int = 0) =
   sim(i; tags = tags,
          plev = plev,
          dir = dir)
