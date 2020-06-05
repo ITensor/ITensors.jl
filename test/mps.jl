@@ -10,6 +10,7 @@ include("util.jl")
   psi = MPS(sites)
   @test length(psi) == N
   @test length(MPS()) == 0
+  @test isnothing(flux(psi))
 
   str = split(sprint(show, psi), '\n')
   @test str[1] == "MPS"
