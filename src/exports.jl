@@ -184,6 +184,7 @@ export
   linkind,
   productMPS,
   randomMPS,
+  replacebond,
   replacebond!,
   sample,
   sample!,
