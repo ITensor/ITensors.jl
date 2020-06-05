@@ -393,6 +393,16 @@ function replacebond(M0::MPS, b::Int, phi::ITensor;
 end
 
 """
+    swapbondsites(ψ::MPS, b::Int; kwargs...)
+
+Swap the sites `b` and `b+1`.
+"""
+function swapbondsites(ψ::MPS, b::Int; kwargs...)
+  kwargs = setindex(values(kwargs), true, :swapsites)
+  return replacebond(ψ, b, ψ[b] * ψ[b+1]; kwargs...)
+end
+
+"""
     sample!(m::MPS)
 
 Given a normalized MPS m, returns a `Vector{Int}`

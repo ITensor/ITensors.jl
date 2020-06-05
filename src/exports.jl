@@ -190,6 +190,7 @@ export
   sample!,
   siteind,
   siteinds,
+  swapbondsites,
   totalqn,
 
 # mps/observer.jl
