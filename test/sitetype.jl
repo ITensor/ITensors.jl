@@ -26,8 +26,7 @@ using ITensors,
     @test SySy ≈ product(Sy, Sy)
   end
 
-  @testset "Custom SiteType" begin
-
+  @testset "Custom SiteType using op!" begin
     # Use "_Custom_" tag even though this example
     # is for S=3/2, because we might define the 
     # "S=3/2" TagType inside ITensors.jl later
@@ -47,6 +46,31 @@ using ITensors,
     @test Sz[s'=>2,s=>2] ≈ +1/2
     @test Sz[s'=>3,s=>3] ≈ -1/2
     @test Sz[s'=>4,s=>4] ≈ -3/2
+  end
+
+  @testset "Custom SiteType using op" begin
+    # Use "_Custom_" tag even though this example
+    # is for S=3/2, because we might define the 
+    # "S=3/2" TagType inside ITensors.jl later
+    function ITensors.op(::SiteType"_Custom_",
+                         s::Index,
+                         opname::AbstractString)
+      Op = emptyITensor(s',dag(s))
+      if opname=="S+"
+        Op[s'(1),s(2)] = sqrt(3)
+        Op[s'(2),s(3)] = 2
+        Op[s'(3),s(4)] = sqrt(3)
+      else
+        error("Name $opname not recognized for tag \"Custom\"")
+      end
+      return Op
+    end
+
+    s = Index(4,"_Custom_")
+    Sp = op("S+",s)
+    @test Sp[s'(1),s(2)] ≈ sqrt(3)
+    @test Sp[s'(2),s(3)] ≈ 2
+    @test Sp[s'(3),s(4)] ≈ sqrt(3)
   end
 
 end

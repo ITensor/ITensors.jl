@@ -48,60 +48,52 @@ macro OpName_str(s)
 end
 
 
-# TODO: this should be deprecated in a later 
-# version, but leaving it as a fallback in case
-# any user code uses the old `op` function 
-# pattern
-function old_call_op(s::Index,
-                     opname::AbstractString;
-                     kwargs...)
-  use_tag = 0
+function call_op(opname::AbstractString,
+                 s::Index;
+                 kwargs...)
+
+  usetag = Tag()
   nfound = 0
   for n=1:length(tags(s))
-    SType = SiteType{tags(s)[n]}
-    if hasmethod(op,Tuple{SType,Index,AbstractString})
-      use_tag = n
+    tagn = tags(s)[n]
+    if hasmethod(op!,Tuple{ITensor,SiteType{tagn},OpName{SmallString(opname)},Index})
+      usetag = tagn
       nfound += 1
     end
   end
-  if nfound == 0
-    throw(ArgumentError("Overload of \"op!\" or \"op\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
+
+  if nfound == 1
+    Op = emptyITensor(s',dag(s))
+    op!(Op,SiteType(usetag),OpName(opname),s;kwargs...)
+    return Op
   elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"op\""))
+    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"ITensors.op!\""))
   end
 
-  st = SiteType(tags(s)[use_tag])
-  return op(st,s,opname;kwargs...)
-end
+  #
+  # Otherwise nfound==0, meaning no overload of `op!` found for
+  # any of these Index Tags, so check for overloads of `op`
+  #
 
-function _call_op!(s::Index,
-                   opname::AbstractString;
-                   kwargs...)
-  use_tag = 0
+  usetag = Tag()
   nfound = 0
   for n=1:length(tags(s))
-    SType = SiteType{tags(s)[n]}
-    OpN = OpName{SmallString(opname)}
-    if hasmethod(op!,Tuple{ITensor,SType,OpN,Index})
-      use_tag = n
+    tagn = tags(s)[n]
+    if hasmethod(op,Tuple{SiteType{tagn},Index,AbstractString})
+      usetag = tagn
       nfound += 1
     end
   end
-  if nfound == 0
-    # Try fallback to older interface:
-    return old_call_op(s,opname;kwargs...)
 
-    throw(ArgumentError("Overload of \"op!\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
+  if nfound == 1
+    return op(SiteType(usetag),s,opname;kwargs...)
   elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"op!\" for operator name \"$opname\""))
+    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"ITensors.op\""))
   end
 
-  Op = emptyITensor(s',dag(s))
-  st = SiteType(tags(s)[use_tag])
-  opn = OpName(opname)
-  op!(Op,st,opn,s;kwargs...)
-  return Op
+  throw(ArgumentError("Overload of \"op!\" or \"op\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
 end
+
 
 function op(opname::AbstractString,
             s::Index;
@@ -126,9 +118,11 @@ function op(opname::AbstractString,
     return product(op(s,op1;kwargs...),op(s,op2;kwargs...))
   end
 
-  return _call_op!(s,opname;kwargs...)
+  return call_op(opname,s;kwargs...)
 end
 
+# For backwards compatibility, version of `op`
+# taking the arguments in the other order:
 op(s::Index,opname::AbstractString;kwargs...) = op(opname,s;kwargs...)
 
 # Version of `op` taking an array of indices
