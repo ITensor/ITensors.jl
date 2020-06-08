@@ -185,11 +185,13 @@ export
   linkind,
   productMPS,
   randomMPS,
+  replacebond,
   replacebond!,
   sample,
   sample!,
   siteind,
   siteinds,
+  swapbondsites,
   totalqn,
 
 # mps/observer.jl

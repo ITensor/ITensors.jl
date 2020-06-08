@@ -1079,23 +1079,71 @@ end
 LinearAlgebra.dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 
 """
-    exp(A::ITensor, Lis; ishermitian = false)
+    exp(A::ITensor, Linds=Rinds', Rinds=inds(A,plev=0); ishermitian = false)
 
 Compute the exponential of the tensor `A` by treating it as a matrix ``A_{lr}`` with
-the left index `l` running over all indices in `Lis` and `r` running over all
-indices not in `Lis`. Must have `dim(Lis) == dim(inds(A))/dim(Lis)` for the exponentiation to
-be defined.
+the left index `l` running over all indices in `Linds` and `r` running over all
+indices in `Rinds`.
+
+Only accepts index lists `Linds`,`Rinds` such that: (1) `length(Linds) +
+length(Rinds) == length(inds(A))` (2) `length(Linds) == length(Rinds)` (3) For
+each pair of indices `(Linds[n],Rinds[n])`, `Linds[n]` and `Rinds[n]` represent
+the same Hilbert space (the same QN structure in the QN case, or just the same
+length in the dense case), and appear in `A` with opposite directions.
+
 When `ishermitian=true` the exponential of `Hermitian(A_{lr})` is
 computed internally.
 """
-function LinearAlgebra.exp(A::ITensor,
+function LinearAlgebra.exp(A::ITensor{N},
                            Linds,
-                           Rinds = prime(IndexSet(Linds));
-                           ishermitian = false)
-  Lis,Ris = IndexSet(Linds),IndexSet(Rinds)
-  Lpos,Rpos = NDTensors.getperms(inds(A), Lis, Ris)
-  expAT = exp(tensor(A), Lpos, Rpos; ishermitian=ishermitian)
-  return itensor(expAT)
+                           Rinds; kwargs...) where N
+  ishermitian=get(kwargs,:ishermitian,false)
+
+  @debug begin
+    if hasqns(A)
+      @assert flux(A) == QN()
+    end
+  end
+
+  NL = length(Linds)
+  NR = length(Rinds)
+  NL != NR && error("Must have equal number of left and right indices")
+  N != NL + NR && error("Number of left and right indices must add up to total number of indices")
+
+  # Linds, Rinds may not have the correct directions
+  Lis = IndexSet(Linds...)
+  Ris = IndexSet(Rinds...)
+
+  # Ensure the indices have the correct directions,
+  # QNs, etc.
+  # First grab the indices in A, then permute them
+  # correctly.
+  Lis = permute(commoninds(A, Lis), Lis)
+  Ris = permute(commoninds(A, Ris), Ris)
+
+  for (l, r) in zip(Lis, Ris)
+    if space(l) != space(r)
+      error("In exp, indices must come in pairs with equal spaces.")
+    end
+    if hasqns(A)
+      if dir(l) == dir(r)
+        error("In exp, indices must come in pairs with opposite directions")
+      end
+    end
+  end
+
+  CL = combiner(Lis...; dir = Out)
+  CR = combiner(Ris...; dir = In)
+  AC = A * CR * CL
+  expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
+  return itensor(expAT) * dag(CR) * dag(CL)
+end
+
+function LinearAlgebra.exp(A::ITensor;
+                           kwargs...)
+  Ris = inds(A; plev = 0)
+  Lis = Ris'
+  return exp(A, Lis, Ris; kwargs...)
 end
 
 """

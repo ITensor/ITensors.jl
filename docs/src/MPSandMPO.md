@@ -34,6 +34,7 @@ MPO(::Type{<:Number}, ::Vector{<:Index}, ::String)
 ```@docs
 length(::ITensors.AbstractMPS)
 maxlinkdim(::ITensors.AbstractMPS)
+linkind(::ITensors.AbstractMPS,::Int)
 ```
 
 ## Priming and tagging

@@ -343,6 +343,14 @@ function maxlinkdim(M::AbstractMPS)
   md
 end
 
+"""
+    linkind(M::MPS, j::Int)
+
+    linkind(M::MPO, j::Int)
+
+Get the link or bond Index connecting the
+MPS or MPO tensor on site j to site j+1
+"""
 function linkind(M::AbstractMPS, j::Int)
   N = length(M)
   j ≥ length(M) && return nothing
@@ -685,8 +693,8 @@ the flux is the sum of fluxes of each of
 the tensors in the network. The name
 `totalqn` is an alias for `flux`.
 """
-function flux(M::AbstractMPS)::QN
-  hasqns(M) || error("MPS or MPO does not conserve QNs")
+function flux(M::AbstractMPS)
+  hasqns(M) || return nothing
   q = QN()
   for j=M.llim+1:M.rlim-1
     q += flux(M[j])

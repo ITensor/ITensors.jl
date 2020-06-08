@@ -10,6 +10,7 @@ include("util.jl")
   psi = MPS(sites)
   @test length(psi) == N
   @test length(MPS()) == 0
+  @test isnothing(flux(psi))
 
   str = split(sprint(show, psi), '\n')
   @test str[1] == "MPS"
@@ -418,6 +419,32 @@ end
     state[3] = 2
     M = randomMPS(sites,state,chi)
     @test flux(M) == QN("Sz",-4)
+  end
+
+  @testset "swapsites" begin
+    N = 5
+    sites = siteinds("S=1/2", N)
+    ψ0 = randomMPS(sites)
+    ψ = replacebond(ψ0, 3, ψ0[3] * ψ0[4];
+                    swapsites = true,
+                    cutoff = 1e-15)
+    @test siteind(ψ, 1) == siteind(ψ0, 1)
+    @test siteind(ψ, 2) == siteind(ψ0, 2)
+    @test siteind(ψ, 4) == siteind(ψ0, 3)
+    @test siteind(ψ, 3) == siteind(ψ0, 4)
+    @test siteind(ψ, 5) == siteind(ψ0, 5)
+    @test prod(ψ) ≈ prod(ψ0)
+    @test maxlinkdim(ψ) == 1
+
+    ψ = swapbondsites(ψ0, 4;
+                      cutoff = 1e-15)
+    @test siteind(ψ, 1) == siteind(ψ0, 1)
+    @test siteind(ψ, 2) == siteind(ψ0, 2)
+    @test siteind(ψ, 3) == siteind(ψ0, 3)
+    @test siteind(ψ, 5) == siteind(ψ0, 4)
+    @test siteind(ψ, 4) == siteind(ψ0, 5)
+    @test prod(ψ) ≈ prod(ψ0)
+    @test maxlinkdim(ψ) == 1
   end
 
 end
