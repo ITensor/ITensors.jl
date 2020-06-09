@@ -243,6 +243,7 @@ export
   op,
   @OpName_str,
   state,
+  @TagType_str,
   has_fermion_string,
 
 # qn/qn.jl

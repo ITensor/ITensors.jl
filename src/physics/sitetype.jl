@@ -23,6 +23,13 @@ macro SiteType_str(s)
   SiteType{Tag(s)}
 end
 
+# Keep TagType defined for backwards
+# compatibility; will be deprecated later
+const TagType = SiteType
+macro TagType_str(s)
+  TagType{Tag(s)}
+end
+
 """
 OpName is a parameterized type which allows
 making strings into Julia types for the purpose
