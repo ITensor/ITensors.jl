@@ -140,7 +140,9 @@ then the prime levels are compared, and finally the
 tags are compared.
 """
 function Base.:(==)(i1::Index, i2::Index)
-  return id(i1) == id(i2) && tags(i1) == tags(i2) && plev(i1) == plev(i2)
+  return id(i1) == id(i2) &&
+         plev(i1) == plev(i2) &&
+         tags(i1) == tags(i2)
 end
 
 # This is so that when IndexSets are converted

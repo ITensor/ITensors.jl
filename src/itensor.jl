@@ -440,12 +440,22 @@ The total dimension of the space the tensor lives in, `prod(dims(A))`.
 NDTensors.dim(T::ITensor) = dim(inds(T))
 
 """
+    dim(A::ITensor, n::Int)
+
+Get the nth dimension of the ITensors.
+"""
+NDTensors.dim(T::ITensor, n::Int) = dims(T)[n]
+
+"""
     dims(A::ITensor)
     size(A::ITensor)
 
 Tuple containing `dim(inds(A)[d]) for d in 1:ndims(A)`.
 """
-NDTensors.dims(T::ITensor) = dims(inds(T))
+(NDTensors.dims(T::ITensor{N})::NTuple{N,Int}) where {N} =
+  dims(inds(T))
+
+Base.axes(T::ITensor) = map(Base.OneTo, dims(T))
 
 Base.size(T::ITensor) = dims(T)
 

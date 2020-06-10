@@ -9,8 +9,10 @@ for d in 20:20:100
   i = Index(d)
   A = randomITensor(i, i')
   B = randomITensor(i', i'')
+  C = randomITensor(i, i'')
 
   suite["matmul_$d"] = @benchmarkable $A * $B
+  suite["matmul_inplace_$d"] = @benchmarkable $C .= $A .* $B
 end
 
 let

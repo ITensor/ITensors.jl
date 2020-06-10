@@ -109,15 +109,14 @@ Base.length(T::TagSet) = T.length
 Base.getindex(T::TagSet,n::Int) = Tag(getindex(data(T),n))
 Base.copy(ts::TagSet) = TagSet(data(ts),length(ts))
 
-# Cast SVector of IntTag of length 4 to SVector of UInt128 of length 2
-# This is to make TagSet comparison a little bit faster
-function cast_to_uint128(a::TagSetStorage)
-  return unsafe_load(convert(Ptr{SVector{2,UInt128}},pointer_from_objref(MTagSetStorage(a))))
-end
-
 function Base.:(==)(ts1::TagSet,ts2::TagSet)
-  # Block the bits together to make the comparison faster
-  return cast_to_uint128(data(ts1)) == cast_to_uint128(data(ts2))
+  l1 = length(ts1)
+  l2 = length(ts2)
+  l1 != l2 && return false
+  for n in 1:l1
+    @inbounds ts1[n] != ts2[n] && return false
+  end
+  return true
 end
 
 function hastag(ts::TagSet, tag)
