@@ -72,7 +72,7 @@ function TagSet(str::AbstractString)
   for current_char in str
     if current_char == ','
       if nchar != 0
-        ntags = _addtag!(ts,ntags,cast_to_uint64(current_tag))
+        ntags = _addtag!(ts,ntags,cast_to_uint(current_tag))
         # Reset the current tag
         reset!(current_tag,nchar)
         nchar = 0
@@ -85,7 +85,7 @@ function TagSet(str::AbstractString)
   end
   # Store the final tag
   if nchar != 0
-    ntags = _addtag!(ts,ntags,cast_to_uint64(current_tag))
+    ntags = _addtag!(ts,ntags,cast_to_uint(current_tag))
   end
   return TagSet(TagSetStorage(ts),ntags)
 end

@@ -42,6 +42,31 @@ using ITensors,
     @test removetags(ts1,"y") == ts2
   end
 
+  @testset "Unicode tags" begin
+    ts = TagSet("α")
+    @test length(ts) == 1
+    @test hastags(ts, "α")
+    @test ts[1] == ITensors.SmallString("α")
+
+    ts = TagSet("α,β")
+    @test length(ts) == 2
+    @test hastags(ts, "β")
+    @test hastags(ts, "α")
+    @test ts[1] == ITensors.SmallString("α")
+    @test ts[2] == ITensors.SmallString("β")
+
+    ts = TagSet("αβγδϵζηθ,ijklmnop,qrstuvwx,ΑΒΓΔΕΖΗΘ")
+    @test length(ts) == 4
+    @test hastags(ts, "αβγδϵζηθ")
+    @test hastags(ts, "ijklmnop")
+    @test hastags(ts, "qrstuvwx")
+    @test hastags(ts, "ΑΒΓΔΕΖΗΘ")
+    @test ts[1] == ITensors.SmallString("ijklmnop")
+    @test ts[2] == ITensors.SmallString("qrstuvwx")
+    @test ts[3] == ITensors.SmallString("ΑΒΓΔΕΖΗΘ")
+    @test ts[4] == ITensors.SmallString("αβγδϵζηθ")
+  end
+
   @testset "Tag too long" begin
     @test_throws ErrorException TagSet("ijklmnopq")
     @test_throws ErrorException TagSet("abcd,ijklmnopq")
