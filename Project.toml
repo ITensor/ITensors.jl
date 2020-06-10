@@ -17,7 +17,7 @@ TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 julia = "1.4"
 HDF5 = "0.13.1"
 KrylovKit = "0.4.2"
-NDTensors = "0.1.7"
+NDTensors = "0.1.8"
 StaticArrays = "0.12.3"
 TimerOutputs = "0.5.5"
 
