@@ -1087,7 +1087,9 @@ length in the dense case), and appear in `A` with opposite directions.
 When `ishermitian=true` the exponential of `Hermitian(A_{lr})` is
 computed internally.
 """
-function LinearAlgebra.exp(A::ITensor{N}, Linds, Rinds; kwargs...) where N
+function LinearAlgebra.exp(A::ITensor{N},
+                           Linds,
+                           Rinds; kwargs...) where N
   ishermitian=get(kwargs,:ishermitian,false)
 
   @debug begin
@@ -1105,8 +1107,12 @@ function LinearAlgebra.exp(A::ITensor{N}, Linds, Rinds; kwargs...) where N
   Lis = IndexSet(Linds...)
   Ris = IndexSet(Rinds...)
 
-  Lis = setdirs(Lis, dirs(A, Lis))
-  Ris = setdirs(Ris, dirs(A, Ris))
+  # Ensure the indices have the correct directions,
+  # QNs, etc.
+  # First grab the indices in A, then permute them
+  # correctly.
+  Lis = permute(commoninds(A, Lis), Lis)
+  Ris = permute(commoninds(A, Ris), Ris)
 
   for (l, r) in zip(Lis, Ris)
     if space(l) != space(r)
@@ -1119,18 +1125,17 @@ function LinearAlgebra.exp(A::ITensor{N}, Linds, Rinds; kwargs...) where N
     end
   end
 
-  CL = combiner(Lis...)
-  CR = combiner(Ris...)
+  CL = combiner(Lis...; dir = Out)
+  CR = combiner(Ris...; dir = In)
   AC = A * CR * CL
   expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
-  return itensor(expAT)*dag(CR)*dag(CL)
+  return itensor(expAT) * dag(CR) * dag(CL)
 end
 
 function LinearAlgebra.exp(A::ITensor;
-                             kwargs...)
+                           kwargs...)
   Ris = inds(A; plev = 0)
   Lis = Ris'
-
   return exp(A, Lis, Ris; kwargs...)
 end
 
