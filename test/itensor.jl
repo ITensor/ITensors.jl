@@ -259,6 +259,55 @@ end
   β = 3
   R = mul!(copy(C), A, B, α, β)
   @test α*A*B+β*C ≈ R
+
+  @testset "In-place bug" begin
+    l1 = Index(3, "l=1")
+    l2 = Index(3, "l=2")
+    s = Index(2, "s")
+
+    A = randomITensor(s', s)
+    B = randomITensor(l1, s, l2)
+
+    C = randomITensor(l1, s', l2)
+
+    C .= A .* B
+
+    @test C ≈ A * B
+  end
+
+  @testset "In-place outer bug" begin
+    l1 = Index(3, "l=1")
+    s = Index(2, "s")
+
+    A = randomITensor(l1)
+    B = randomITensor(s)
+    C = randomITensor(s, l1)
+
+    C .= A .* B
+
+    @test C ≈ A * B
+  end
+
+  @testset "In-place contractions" begin
+    i1 = Index(2, "i1")
+    i2 = Index(2, "i2")
+    i3 = Index(2, "i3")
+    i4 = Index(2, "i4")
+    i5 = Index(2, "i5")
+    i6 = Index(2, "i6")
+    j1 = Index(2, "j1")
+    j2 = Index(2, "j2")
+    j3 = Index(2, "j3")
+
+    #A = randomITensor(s', s)
+    #B = randomITensor(l1, s, l2)
+
+    #C = randomITensor(l1, s', l2)
+
+    C .= A .* B
+    @test C ≈ A * B
+  end
+
 end
 
 @testset "exponentiate" begin

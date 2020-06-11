@@ -253,7 +253,7 @@ function Base.copyto!(T::ITensor,
     α = find_type(Number, bc_bc.args)
     A = find_type(ITensor, bc_bc.args)
     if !isnothing(α) && !isnothing(A)
-      map!((r, t) -> r + α * t, T, T, A)
+      map!((r, t) -> r + bc_bc.f(t, α), T, T, A)
     else
       bc_bc_bc = find_type(Broadcasted, bc_bc.args)
       if isnothing(α)
@@ -284,7 +284,7 @@ function Base.copyto!(T::ITensor,
     α = find_type(Number, bc_bc.args)
     A = find_type(ITensor, bc_bc.args)
     if !isnothing(α) && !isnothing(A)
-      map!((r, t) -> r - α * t, T, T, A)
+      map!((r, t) -> r - bc_bc.f(t, α), T, T, A)
     else
       bc_bc_bc = find_type(Broadcasted, bc_bc.args)
       if isnothing(α)
