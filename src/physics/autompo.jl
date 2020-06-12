@@ -7,7 +7,7 @@
 # SiteOp                  # 
 ###########################
 
-mutable struct SiteOp
+struct SiteOp
   name::String
   site::Int
 end
