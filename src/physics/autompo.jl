@@ -47,7 +47,7 @@ end
 # MPOTerm                 # 
 ###########################
 
-struct MPOTerm
+mutable struct MPOTerm
   coef::ComplexF64
   ops::OpTerm
 end
@@ -842,8 +842,7 @@ function sorteachterm(ampo::AutoMPO, sites)
     perm = Vector{Int}(undef,Nt)
     sortperm!(perm,t.ops, alg=InsertionSort, lt=isless_site)
 
-    #t.ops = t.ops[perm]
-    t = MPOTerm(coef(t),ops(t)[perm])
+    t.ops = t.ops[perm]
 
     # Identify fermionic operators,
     # zeroing perm for bosonic operators,
@@ -855,7 +854,7 @@ function sorteachterm(ampo::AutoMPO, sites)
         # Put Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
-        t.ops[n].name = "$(t.ops[n].name)*F"
+        t.ops[n] = SiteOp("$(name(t.ops[n]))*F",site(t.ops[n]))
       end
       if fermionic
         parity = -parity
@@ -873,8 +872,7 @@ function sorteachterm(ampo::AutoMPO, sites)
     # Account for anti-commuting, fermionic operators 
     # during above sort; put resulting sign into coef
 
-    t = MPOTerm(parity_sign(perm)*coef(t),ops(t))
-    #t.coef *= parity_sign(perm)
+    t.coef *= parity_sign(perm)
   end
   return ampo
 end
