@@ -1,3 +1,8 @@
+ITensors v0.1.8 Release Notes
+==============================
+
+* Fix a bug in broadcast and in-place contraction (#425)
+
 ITensors v0.1.7 Release Notes
 ==============================
 
