@@ -7,13 +7,17 @@
 # SiteOp                  # 
 ###########################
 
-mutable struct SiteOp
+struct SiteOp
   name::String
   site::Int
 end
+
 name(s::SiteOp) = s.name
 site(s::SiteOp) = s.site
+
 Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
+
+Base.:(==)(s1::SiteOp,s2::SiteOp) = (s1.site==s2.site && s1.name==s2.name)
 
 function Base.isless(s1::SiteOp,s2::SiteOp)::Bool
   if site(s1) < site(s2)
@@ -837,6 +841,7 @@ function sorteachterm(ampo::AutoMPO, sites)
     # and keep the permutation used, perm, for analysis below
     perm = Vector{Int}(undef,Nt)
     sortperm!(perm,t.ops, alg=InsertionSort, lt=isless_site)
+
     t.ops = t.ops[perm]
 
     # Identify fermionic operators,
@@ -849,7 +854,7 @@ function sorteachterm(ampo::AutoMPO, sites)
         # Put Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
-        t.ops[n].name = "$(t.ops[n].name)*F"
+        t.ops[n] = SiteOp("$(name(t.ops[n]))*F",site(t.ops[n]))
       end
       if fermionic
         parity = -parity
@@ -866,6 +871,7 @@ function sorteachterm(ampo::AutoMPO, sites)
     filter!(!iszero,perm)
     # Account for anti-commuting, fermionic operators 
     # during above sort; put resulting sign into coef
+
     t.coef *= parity_sign(perm)
   end
   return ampo
