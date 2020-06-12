@@ -43,7 +43,7 @@ end
 # MPOTerm                 # 
 ###########################
 
-mutable struct MPOTerm
+struct MPOTerm
   coef::ComplexF64
   ops::OpTerm
 end
@@ -837,7 +837,9 @@ function sorteachterm(ampo::AutoMPO, sites)
     # and keep the permutation used, perm, for analysis below
     perm = Vector{Int}(undef,Nt)
     sortperm!(perm,t.ops, alg=InsertionSort, lt=isless_site)
-    t.ops = t.ops[perm]
+
+    #t.ops = t.ops[perm]
+    t = MPOTerm(coef(t),ops(t)[perm])
 
     # Identify fermionic operators,
     # zeroing perm for bosonic operators,
@@ -866,7 +868,9 @@ function sorteachterm(ampo::AutoMPO, sites)
     filter!(!iszero,perm)
     # Account for anti-commuting, fermionic operators 
     # during above sort; put resulting sign into coef
-    t.coef *= parity_sign(perm)
+
+    t = MPOTerm(parity_sign(perm)*coef(t),ops(t))
+    #t.coef *= parity_sign(perm)
   end
   return ampo
 end
