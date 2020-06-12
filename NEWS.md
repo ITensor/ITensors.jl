@@ -1,3 +1,8 @@
+ITensors v0.1.9 Release Notes
+==============================
+
+* Fix bug with AutoMPO dimension in certain cases (PR #426)
+
 ITensors v0.1.8 Release Notes
 ==============================
 
