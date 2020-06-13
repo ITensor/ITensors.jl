@@ -136,9 +136,9 @@ function op(opname::AbstractString,
   opname = strip(opname)
 
   if opname == "Id"
-    Op = emptyITensor(dag(s),s')
+    Op = emptyITensor(s',dag(s))
     for n=1:dim(s)
-      Op[dag(s)(n),s'(n)] = 1.0
+      Op[n,n] = 1.0
     end
     return Op
   end
