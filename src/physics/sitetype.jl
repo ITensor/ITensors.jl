@@ -59,6 +59,30 @@ function call_op(opname::AbstractString,
                  s::Index;
                  kwargs...)
 
+  #
+  # Try calling a function of the form:
+  #    op(::SiteType,::OpName,::Index;kwargs...)
+  #
+  usetag = Tag()
+  nfound = 0
+  for n=1:length(tags(s))
+    tagn = tags(s)[n]
+    if hasmethod(op,Tuple{SiteType{tagn},OpName{SmallString(opname)},Index})
+      usetag = tagn
+      nfound += 1
+    end
+  end
+  if nfound == 1
+    return op(SiteType(usetag),OpName(opname),s;kwargs...)
+  elseif nfound > 1
+    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"ITensors.op\""))
+  end
+
+  # otherwise, nfound == 0, so
+  #
+  # Try calling a function of the form:
+  #    op!(::ITensor,::SiteType,::OpName,::Index;kwargs...)
+  #
   usetag = Tag()
   nfound = 0
   for n=1:length(tags(s))
@@ -68,7 +92,6 @@ function call_op(opname::AbstractString,
       nfound += 1
     end
   end
-
   if nfound == 1
     Op = emptyITensor(s',dag(s))
     op!(Op,SiteType(usetag),OpName(opname),s;kwargs...)
@@ -77,9 +100,14 @@ function call_op(opname::AbstractString,
     throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"ITensors.op!\""))
   end
 
+  # otherwise, nfound == 0, so
   #
-  # Otherwise nfound==0, meaning no overload of `op!` found for
-  # any of these Index Tags, so check for overloads of `op`
+  # Try calling a function of the form:
+  #   op(::SiteType,::Index,::AbstractString)
+  #
+  # (Note: this version is for backwards compatibility
+  #  after version 0.1.10, and may be eventually
+  #  deprecated)
   #
 
   usetag = Tag()
@@ -91,14 +119,13 @@ function call_op(opname::AbstractString,
       nfound += 1
     end
   end
-
   if nfound == 1
     return op(SiteType(usetag),s,opname;kwargs...)
   elseif nfound > 1
     throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"ITensors.op\""))
   end
 
-  throw(ArgumentError("Overload of \"op!\" or \"op\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
+  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
 end
 
 

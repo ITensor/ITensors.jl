@@ -17,7 +17,7 @@ struct SmallString
 
 end
 
-function SmallString(str::String)
+function SmallString(str::AbstractString)
   length(str) > smallLength && error("String is too long for SmallString. Maximum length is $smallLength.")
   mstore = MSmallStringStorage(ntuple(_->IntChar(0),Val(smallLength)))
   for (n,c) in enumerate(str)

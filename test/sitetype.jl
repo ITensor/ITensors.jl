@@ -26,6 +26,29 @@ using ITensors,
     @test SySy ≈ product(Sy, Sy)
   end
 
+  @testset "Custom SiteType using op" begin
+    # Use "_Custom_" tag even though this example
+    # is for S=3/2, because we might define the 
+    # "S=3/2" TagType inside ITensors.jl later
+    function ITensors.op(::SiteType"_Custom_",
+                         ::OpName"Sz",
+                         s::Index)
+      Op = emptyITensor(s',dag(s))
+      Op[s'=>1,s=>1] = +3/2
+      Op[s'=>2,s=>2] = +1/2
+      Op[s'=>3,s=>3] = -1/2
+      Op[s'=>4,s=>4] = -3/2
+      return Op
+    end
+
+    s = Index(4,"_Custom_")
+    Sz = op("Sz",s)
+    @test Sz[s'=>1,s=>1] ≈ +3/2
+    @test Sz[s'=>2,s=>2] ≈ +1/2
+    @test Sz[s'=>3,s=>3] ≈ -1/2
+    @test Sz[s'=>4,s=>4] ≈ -3/2
+  end
+
   @testset "Custom SiteType using op!" begin
     # Use "_Custom_" tag even though this example
     # is for S=3/2, because we might define the 
@@ -48,7 +71,7 @@ using ITensors,
     @test Sz[s'=>4,s=>4] ≈ -3/2
   end
 
-  @testset "Custom SiteType using op" begin
+  @testset "Custom SiteType using older op interface" begin
     # Use "_Custom_" tag even though this example
     # is for S=3/2, because we might define the 
     # "S=3/2" TagType inside ITensors.jl later
