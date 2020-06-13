@@ -902,7 +902,7 @@ end
         @test L * dag(prime(L, l)) ≈ δ(SType, l, l')
         @test R * dag(prime(R, l)) ≉ δ(SType, l, l')
 
-        @test_throws ErrorException factorize(A, i; svd_alg = "bad_alg")
+        @test_throws ErrorException factorize(A, i; which_decomp="svd", svd_alg = "bad_alg")
       end
 
     end # End factorize tests
