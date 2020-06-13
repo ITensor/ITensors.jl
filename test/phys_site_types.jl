@@ -16,6 +16,7 @@ using ITensors,
     @test hasinds(Sz5,s[5]',s[5])
      
     @test_throws ArgumentError op(s, "Fake", 2)
+    @test Array(op("Id",s,3),s[3]',s[3])  ≈ [ 1.0  0.0; 0.0  1.0]
     @test Array(op("S+",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
     @test Array(op("S-",s,4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
     @test Array(op("Sx",s,2),s[2]',s[2])  ≈ [ 0.0  0.5; 0.5  0.0]
@@ -36,6 +37,7 @@ using ITensors,
     @test hasinds(Sz5,s[5]',s[5])
      
     @test_throws ArgumentError op(s, "Fake", 2)
+    @test Array(op("Id",s,3),s[3]',s[3])  ≈ [ 1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
     @test Array(op("S+",s,3),s[3]',s[3]) ≈ [ 0 √2 0; 0 0 √2; 0 0 0]
     @test Array(op("S-",s,3),s[3]',s[3]) ≈ [ 0 0 0; √2 0 0; 0.0 √2 0]
     @test Array(op("Sx",s,3),s[3]',s[3]) ≈ [ 0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
