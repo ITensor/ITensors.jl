@@ -55,93 +55,32 @@ macro OpName_str(s)
 end
 
 
-function call_op(opname::AbstractString,
-                 s::Index;
-                 kwargs...)
+"""
+    op(opname::String,s::Index; kwargs...)
 
-  #
-  # Try calling a function of the form:
-  #    op(::SiteType,::OpName,::Index;kwargs...)
-  #
-  usetag = Tag()
-  nfound = 0
-  for n=1:length(tags(s))
-    tagn = tags(s)[n]
-    if hasmethod(op,Tuple{SiteType{tagn},OpName{SmallString(opname)},Index})
-      usetag = tagn
-      nfound += 1
-    end
-  end
-  if nfound == 1
-    return op(SiteType(usetag),OpName(opname),s;kwargs...)
-  elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"ITensors.op\""))
-  end
+Return an ITensor corresponding to the operator
+named `opname` for the Index `s`. The operator
+is constructed by calling an overload of either
+the `op` or `op!` methods which take a `SiteType`
+argument that corresponds to one of the tags of
+the Index `s`.
 
-  # otherwise, nfound == 0, so
-  #
-  # Try calling a function of the form:
-  #    op!(::ITensor,::SiteType,::OpName,::Index;kwargs...)
-  #
-  usetag = Tag()
-  nfound = 0
-  for n=1:length(tags(s))
-    tagn = tags(s)[n]
-    if hasmethod(op!,Tuple{ITensor,SiteType{tagn},OpName{SmallString(opname)},Index})
-      usetag = tagn
-      nfound += 1
-    end
-  end
-  if nfound == 1
-    Op = emptyITensor(s',dag(s))
-    op!(Op,SiteType(usetag),OpName(opname),s;kwargs...)
-    return Op
-  elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"ITensors.op!\""))
-  end
+The `op` system is used by the AutoMPO
+system to convert operator names into ITensors,
+and can be used directly such as for applying
+operators to MPS.
 
-  # otherwise, nfound == 0, so
-  #
-  # Try calling a function of the form:
-  #   op(::SiteType,::Index,::AbstractString)
-  #
-  # (Note: this version is for backwards compatibility
-  #  after version 0.1.10, and may be eventually
-  #  deprecated)
-  #
-
-  usetag = Tag()
-  nfound = 0
-  for n=1:length(tags(s))
-    tagn = tags(s)[n]
-    if hasmethod(op,Tuple{SiteType{tagn},Index,AbstractString})
-      usetag = tagn
-      nfound += 1
-    end
-  end
-  if nfound == 1
-    return op(SiteType(usetag),s,opname;kwargs...)
-  elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"ITensors.op\""))
-  end
-
-  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
-end
-
-
+# Example
+```julia
+s = Index(2,"S=1/2,Site")
+Sz = op("Sz",s)
+```
+"""
 function op(opname::AbstractString,
             s::Index;
-            kwargs...)::ITensor
+            kwargs...)
 
   opname = strip(opname)
-
-  if opname == "Id"
-    Op = emptyITensor(s',dag(s))
-    for n=1:dim(s)
-      Op[n,n] = 1.0
-    end
-    return Op
-  end
 
   # Interpret operator names joined by *
   # as acting sequentially on the same site
@@ -149,18 +88,63 @@ function op(opname::AbstractString,
   if !isnothing(starpos)
     op1 = opname[1:starpos.start-1]
     op2 = opname[starpos.start+1:end]
-    return product(op(s,op1;kwargs...),op(s,op2;kwargs...))
+    return product(op(op1,s;kwargs...),op(op2,s;kwargs...))
   end
 
-  return call_op(opname,s;kwargs...)
+  #
+  # Try calling a function of the form:
+  #    op(::SiteType,::OpName,::Index;kwargs...)
+  #
+  for n=1:length(tags(s))
+    tagn = tags(s)[n]
+    if hasmethod(op,Tuple{SiteType{tagn},OpName{SmallString(opname)},Index})
+      return op(SiteType(tagn),OpName(opname),s;kwargs...)
+    end
+  end
+
+  # otherwise try calling a function of the form:
+  #    op!(::ITensor,::SiteType,::OpName,::Index;kwargs...)
+  #
+  for n=1:length(tags(s))
+    tagn = tags(s)[n]
+    if hasmethod(op!,Tuple{ITensor,SiteType{tagn},OpName{SmallString(opname)},Index})
+      Op = emptyITensor(s',dag(s))
+      op!(Op,SiteType(tagn),OpName(opname),s;kwargs...)
+      return Op
+    end
+  end
+
+  #
+  # otherwise try calling a function of the form:
+  #   op(::SiteType,::Index,::AbstractString)
+  #
+  # (Note: this version is for backwards compatibility
+  #  after version 0.1.10, and may be eventually
+  #  deprecated)
+  #
+
+  for n=1:length(tags(s))
+    tagn = tags(s)[n]
+    if hasmethod(op,Tuple{SiteType{tagn},Index,AbstractString})
+      return op(SiteType(tagn),s,opname;kwargs...)
+    end
+  end
+
+  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
 end
 
 # For backwards compatibility, version of `op`
 # taking the arguments in the other order:
 op(s::Index,opname::AbstractString;kwargs...) = op(opname,s;kwargs...)
 
-# Version of `op` taking an array of indices
-# and an integer of which Index to use
+
+"""
+  op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
+
+Return an ITensor corresponding to the operator
+named `opname` for the n'th Index in the array 
+`sites`.
+"""
 function op(opname::AbstractString,
             s::Vector{<:Index},
             n::Int;
@@ -172,6 +156,7 @@ op(s::Vector{<:Index},
    opname::AbstractString,
    n::Int;
    kwargs...) = op(opname,s,n;kwargs...)
+
 
 state(s::Index,n::Integer) = s[n]
 
