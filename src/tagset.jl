@@ -69,11 +69,10 @@ function TagSet(str::AbstractString)
   ts = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
   nchar = 0
   ntags = 0
-  for n = 1:length(str)
-    @inbounds current_char = str[n]
+  for current_char in str
     if current_char == ','
       if nchar != 0
-        ntags = _addtag!(ts,ntags,cast_to_uint64(current_tag))
+        ntags = _addtag!(ts,ntags,cast_to_uint(current_tag))
         # Reset the current tag
         reset!(current_tag,nchar)
         nchar = 0
@@ -86,7 +85,7 @@ function TagSet(str::AbstractString)
   end
   # Store the final tag
   if nchar != 0
-    ntags = _addtag!(ts,ntags,cast_to_uint64(current_tag))
+    ntags = _addtag!(ts,ntags,cast_to_uint(current_tag))
   end
   return TagSet(TagSetStorage(ts),ntags)
 end
@@ -109,15 +108,14 @@ Base.length(T::TagSet) = T.length
 Base.getindex(T::TagSet,n::Int) = Tag(getindex(data(T),n))
 Base.copy(ts::TagSet) = TagSet(data(ts),length(ts))
 
-# Cast SVector of IntTag of length 4 to SVector of UInt128 of length 2
-# This is to make TagSet comparison a little bit faster
-function cast_to_uint128(a::TagSetStorage)
-  return unsafe_load(convert(Ptr{SVector{2,UInt128}},pointer_from_objref(MTagSetStorage(a))))
-end
-
 function Base.:(==)(ts1::TagSet,ts2::TagSet)
-  # Block the bits together to make the comparison faster
-  return cast_to_uint128(data(ts1)) == cast_to_uint128(data(ts2))
+  l1 = length(ts1)
+  l2 = length(ts2)
+  l1 != l2 && return false
+  for n in 1:l1
+    @inbounds ts1[n] != ts2[n] && return false
+  end
+  return true
 end
 
 function hastag(ts::TagSet, tag)

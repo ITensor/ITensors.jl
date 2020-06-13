@@ -64,6 +64,28 @@ using ITensors,
     @test_throws ErrorException Bc .= α ./ A
   end
 
+  @testset "Add and divide (in-place)" begin
+    Bc = copy(B)
+    Bc .+= A ./ α
+    @test Bc[1,1] == B[1,1] + A[1,1] / α
+    @test Bc[2,1] == B[2,1] + A[1,2] / α
+    @test Bc[1,2] == B[1,2] + A[2,1] / α
+    @test Bc[2,2] == B[2,2] + A[2,2] / α
+    # Should error
+    @test_broken Bc .+= α ./ A
+  end
+
+  @testset "Subtract and divide (in-place)" begin
+    Bc = copy(B)
+    Bc .-= A ./ α
+    @test Bc[1,1] == B[1,1] - A[1,1] / α
+    @test Bc[2,1] == B[2,1] - A[1,2] / α
+    @test Bc[1,2] == B[1,2] - A[2,1] / α
+    @test Bc[2,2] == B[2,2] - A[2,2] / α
+    # Should error
+    @test_broken Bc .-= α ./ A
+  end
+
   @testset "Scalar multiplication (out-of-place)" begin
     Bc = α .* A
     @test Bc[1,1] == α * A[1,1]
@@ -105,7 +127,7 @@ using ITensors,
     C = randomITensor(i,i')
     @test_throws ErrorException C .= A .+ B
     @test_throws ErrorException C = A .+ B
-    @test_throws ErrorException C .= A .* B
+    @test_throws BoundsError C .= A .* B
   end
 
   @testset "Contraction" begin

@@ -1,3 +1,21 @@
+ITensors v0.1.9 Release Notes
+==============================
+
+* Fix bug with AutoMPO dimension in certain cases (PR #426)
+
+ITensors v0.1.8 Release Notes
+==============================
+
+* Fix a bug in broadcast and in-place contraction (#425)
+
+ITensors v0.1.7 Release Notes
+==============================
+
+* Add Unicode support for SmallStrings/Tags (PR #413)
+* Speed up small ITensor contractions (PR #423)
+* Add swapsites keyword argument to `replacebond` (PR #420)
+* Change `flux(::AbstractMPS)` to return nothing in non-QN case (PR #419)
+
 ITensors v0.1.6 Release Notes
 ==============================
 
