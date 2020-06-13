@@ -292,6 +292,20 @@ function NDTensors.polar(A::ITensor,
   return U, P, commoninds(U, P)
 end
 
+function factorize_qr(A::ITensor,
+                      Linds...;
+                      kwargs...)
+  ortho::String = get(kwargs, :ortho, "left")
+  if ortho == "left"
+    L,R,q = qr(A,Linds...; kwargs...)
+  elseif ortho == "right"
+    Lis = uniqueinds(A,IndexSet(Linds...))
+    R,L,q = qr(A,Lis...; kwargs...)
+  else
+    error("In factorize using qr decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
+  end
+  return L,R
+end
 
 function factorize_svd(A::ITensor,
                        Linds...;
@@ -394,12 +408,25 @@ function LinearAlgebra.factorize(A::ITensor,
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
-  if which_decomp == "svd" || 
-     (isnothing(which_decomp) && cutoff ≤ automatic_cutoff)
+
+  if isnothing(which_decomp)
+    if cutoff==0.0 && !hasqns(A)
+      which_decomp="qr"
+    elseif cutoff ≤ automatic_cutoff
+      which_decomp="svd"
+    elseif cutoff > automatic_cutoff
+      which_decomp="eigen"
+    end
+  end
+
+  if which_decomp == "svd"
     L, R, spec = factorize_svd(A, Linds...; kwargs...)
-  elseif which_decomp == "eigen" ||
-         (isnothing(which_decomp) && cutoff > automatic_cutoff)
+  elseif which_decomp == "eigen"
     L, R, spec = factorize_eigen(A, Linds...; kwargs...)
+  elseif which_decomp == "qr"
+    hasqns(A) && error("QR factorization of an ITensor with QNs is not yet supported.")
+    L,R = factorize_qr(A,Linds...; kwargs...)
+    spec = nothing
   else
     throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, or `nothing`."""))
   end
