@@ -410,7 +410,7 @@ function LinearAlgebra.factorize(A::ITensor,
   automatic_cutoff = 1e-12
 
   if isnothing(which_decomp)
-    if cutoff==0.0 && !hasqns(A)
+    if cutoff==0.0 && !hasqns(A) && ortho != "none"
       which_decomp="qr"
     elseif cutoff ≤ automatic_cutoff
       which_decomp="svd"
@@ -428,7 +428,7 @@ function LinearAlgebra.factorize(A::ITensor,
     L,R = factorize_qr(A,Linds...; kwargs...)
     spec = nothing
   else
-    throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, or `nothing`."""))
+    throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"` or `nothing`."""))
   end
 
   # Set the tags and prime level
