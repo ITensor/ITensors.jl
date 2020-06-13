@@ -18,11 +18,17 @@ using ITensors,
     @test_throws ArgumentError op(s, "Fake", 2)
     @test Array(op("Id",s,3),s[3]',s[3])  ≈ [ 1.0  0.0; 0.0  1.0]
     @test Array(op("S+",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
+    @test Array(op("S⁺",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
     @test Array(op("S-",s,4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
+    @test Array(op("S⁻",s,4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
     @test Array(op("Sx",s,2),s[2]',s[2])  ≈ [ 0.0  0.5; 0.5  0.0]
+    @test Array(op("Sˣ",s,2),s[2]',s[2])  ≈ [ 0.0  0.5; 0.5  0.0]
     @test Array(op("iSy",s,2),s[2]',s[2]) ≈ [ 0.0  0.5;-0.5  0.0]
+    @test Array(op("iSʸ",s,2),s[2]',s[2]) ≈ [ 0.0  0.5;-0.5  0.0]
     @test Array(op("Sy",s,2),s[2]',s[2])  ≈ [0.0  -0.5im; 0.5im  0.0]
+    @test Array(op("Sʸ",s,2),s[2]',s[2])  ≈ [0.0  -0.5im; 0.5im  0.0]
     @test Array(op("Sz",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
+    @test Array(op("Sᶻ",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
   end
 
   @testset "Spin One sites" begin
