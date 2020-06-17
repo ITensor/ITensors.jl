@@ -7,7 +7,7 @@ struct QNVal
   function QNVal(name,v::Int,m::Int=1)
     am = abs(m)
     if am > 1
-      new(SmallString(name),mod(v,am),m)
+      return new(SmallString(name),mod(v,am),m)
     end
     new(SmallString(name),v,m)
   end
@@ -25,9 +25,9 @@ isfermionic(qv::QNVal) = modulus(qv) < 0
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 
 function qn_mod(val::Int,modulus::Int)
-  modulus = abs(modulus)
-  (modulus == 0 || modulus == 1) && return val
-  return mod(val,modulus)
+  amod = abs(modulus)
+  amod <= 1 && return val
+  return mod(val,amod)
 end
 
 function Base.:-(qv::QNVal)
