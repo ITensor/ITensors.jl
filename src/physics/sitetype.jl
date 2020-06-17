@@ -16,18 +16,15 @@ the notation: `SiteType("MyTag")`
 struct SiteType{T}
 end
 
-SiteType(s::Tag) = SiteType{s}()
-SiteType(s::AbstractString) = SiteType(Tag(s))
-
 macro SiteType_str(s)
-  SiteType{Tag(s)}
+  Type{SiteType{Tag(s)}}
 end
 
 # Keep TagType defined for backwards
 # compatibility; will be deprecated later
 const TagType = SiteType
 macro TagType_str(s)
-  TagType{Tag(s)}
+  Type{TagType{Tag(s)}}
 end
 
 """
@@ -47,16 +44,16 @@ the notation: `OpName("myop")`
 struct OpName{Name}
 end
 
-OpName(s::SmallString) = OpName{s}()
-OpName(s::AbstractString) = OpName(SmallString(s))
-
 macro OpName_str(s)
-  OpName{SmallString(s)}
+  Type{OpName{SmallString(s)}}
 end
 
+op(::Type{<:SiteType},::Type{<:OpName},::Index;kwargs...) = nothing
+op!(::ITensor,::Type{<:SiteType},::Type{<:OpName},::Index;kwargs...) = nothing 
+op(::Type{<:SiteType},::Index,::AbstractString;kwargs...) = nothing
 
 """
-    op(opname::String,s::Index; kwargs...)
+    op(opname::String, s::Index; kwargs...)
 
 Return an ITensor corresponding to the operator
 named `opname` for the Index `s`. The operator
@@ -76,40 +73,43 @@ s = Index(2,"S=1/2,Site")
 Sz = op("Sz",s)
 ```
 """
-function op(opname::AbstractString,
+function op(name::AbstractString,
             s::Index;
             kwargs...)
 
-  opname = strip(opname)
+  name = strip(name)
 
   # Interpret operator names joined by *
   # as acting sequentially on the same site
-  starpos = findfirst("*",opname)
+  starpos = findfirst("*",name)
   if !isnothing(starpos)
-    op1 = opname[1:starpos.start-1]
-    op2 = opname[starpos.start+1:end]
+    op1 = name[1:starpos.start-1]
+    op2 = name[starpos.start+1:end]
     return product(op(op1,s;kwargs...),op(op2,s;kwargs...))
   end
+
+  Ntags = length(tags(s))
+  stypes  = ntuple(n->SiteType{tags(s)[n]},Val(maxTags))
+  opn = OpName{SmallString(name)}
 
   #
   # Try calling a function of the form:
   #    op(::SiteType,::OpName,::Index;kwargs...)
   #
-  for n=1:length(tags(s))
-    tagn = tags(s)[n]
-    if hasmethod(op,Tuple{SiteType{tagn},OpName{SmallString(opname)},Index})
-      return op(SiteType(tagn),OpName(opname),s;kwargs...)
+  for n=1:Ntags
+    res = op(stypes[n],opn,s;kwargs...)
+    if !isnothing(res)
+      return res
     end
   end
 
   # otherwise try calling a function of the form:
   #    op!(::ITensor,::SiteType,::OpName,::Index;kwargs...)
   #
-  for n=1:length(tags(s))
-    tagn = tags(s)[n]
-    if hasmethod(op!,Tuple{ITensor,SiteType{tagn},OpName{SmallString(opname)},Index})
-      Op = emptyITensor(s',dag(s))
-      op!(Op,SiteType(tagn),OpName(opname),s;kwargs...)
+  Op = emptyITensor(s',dag(s))
+  for n=1:Ntags
+    op!(Op,stypes[n],opn,s;kwargs...)
+    if !isempty(Op)
       return Op
     end
   end
@@ -122,11 +122,10 @@ function op(opname::AbstractString,
   #  after version 0.1.10, and may be eventually
   #  deprecated)
   #
-
-  for n=1:length(tags(s))
-    tagn = tags(s)[n]
-    if hasmethod(op,Tuple{SiteType{tagn},Index,AbstractString})
-      return op(SiteType(tagn),s,opname;kwargs...)
+  for n=1:Ntags
+    res = op(stypes[n],s,name;kwargs...)
+    if !isnothing(res)
+      return res
     end
   end
 
