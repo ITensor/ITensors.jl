@@ -14,12 +14,12 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [compat]
-julia = "1.4"
 HDF5 = "0.13.1"
-KrylovKit = "0.4.2"
+KrylovKit = "0.4.2, 0.5"
 NDTensors = "0.1.9"
 StaticArrays = "0.12.3"
 TimerOutputs = "0.5.5"
+julia = "1.4"
 
 [extras]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
