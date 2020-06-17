@@ -1,3 +1,8 @@
+ITensors v0.1.10 Release Notes
+==============================
+
+* Fix missing return statement in QNVal constructor (PR #431)
+
 ITensors v0.1.9 Release Notes
 ==============================
 
