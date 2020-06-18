@@ -216,6 +216,9 @@ export
 # mps/projmposum.jl
   ProjMPOSum,
 
+# mps/projmpo_mps.jl
+  ProjMPO_MPS,
+
 # mps/sweeps.jl
   Sweeps,
   cutoff,
