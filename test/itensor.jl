@@ -1,6 +1,7 @@
 using ITensors,
       Test
 import Random
+using Combinatorics: permutations
 
 Random.seed!(12345)
 
@@ -260,19 +261,51 @@ end
   R = mul!(copy(C), A, B, α, β)
   @test α*A*B+β*C ≈ R
 
-  @testset "In-place bug" begin
-    l1 = Index(3, "l=1")
-    l2 = Index(3, "l=2")
-    s = Index(2, "s")
+  @testset "In-place bugs" begin
 
-    A = randomITensor(s', s)
-    B = randomITensor(l1, s, l2)
+    @testset "Bug 1" begin
+      l1 = Index(3, "l=1")
+      l2 = Index(3, "l=2")
+      s = Index(2, "s")
 
-    C = randomITensor(l1, s', l2)
+      A = randomITensor(s', s)
+      B = randomITensor(l1, s, l2)
 
-    C .= A .* B
+      C = randomITensor(l1, s', l2)
 
-    @test C ≈ A * B
+      C .= A .* B
+
+      @test C ≈ A * B
+    end
+
+    @testset "Bug 2" begin
+      is = [Index(n+1, "i$n") for n in 1:6]
+
+      for ais in permutations((1, 2, 3)),
+          bis in permutations((2, 3, 4)),
+          cis in permutations((1, 4))
+        A = randomITensor(ntuple(i->is[ais[i]], Val(length(ais))))
+        B = randomITensor(ntuple(i->is[bis[i]], Val(length(bis))))
+        C = randomITensor(ntuple(i->is[cis[i]], Val(length(cis))))
+
+        C .= A .* B
+
+        @test C ≈ A * B
+      end
+
+      for ais in permutations((1, 2, 3)),
+          bis in permutations((2, 3, 4, 5)),
+          cis in permutations((1, 4, 5))
+        A = randomITensor(ntuple(i->is[ais[i]], Val(length(ais))))
+        B = randomITensor(ntuple(i->is[bis[i]], Val(length(bis))))
+        C = randomITensor(ntuple(i->is[cis[i]], Val(length(cis))))
+
+        C .= A .* B
+
+        @test C ≈ A * B
+      end
+    end
+
   end
 
   @testset "In-place outer bug" begin

@@ -82,6 +82,10 @@ using ITensors,
     @test entropy(Spectrum([0.5; 0.5], 0.0)) == log(2)
     @test entropy(Spectrum([1.0], 0.0)) == 0.0 
     @test entropy(Spectrum([0.0], 0.0)) == 0.0 
+
+    @test isnothing(eigs(Spectrum(nothing, 1.0)))
+    @test_throws ErrorException entropy(Spectrum(nothing, 1.0))
+    @test truncerror(Spectrum(nothing, 1.0)) == 1.0
   end
 end
 
