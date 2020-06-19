@@ -1,3 +1,9 @@
+ITensors v0.1.11 Release Notes
+==============================
+
+* Add tests for contraction bug. Add tests for extended Spectrum definition (PR #432)
+* Add ProjMPO_MPS to exports
+
 ITensors v0.1.10 Release Notes
 ==============================
 
