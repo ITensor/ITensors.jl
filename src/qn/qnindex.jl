@@ -324,3 +324,32 @@ function Base.show(io::IO,
   end
 end
 
+function HDF5.write(parent::Union{HDF5File, HDF5Group},
+                    name::AbstractString,
+                    B::QNBlocks)
+  g = g_create(parent, name)
+  attrs(g)["type"] = "QNBlocks"
+  attrs(g)["version"] = 1
+  write(g,"length",length(B))
+  dims = [block[2] for block in B]
+  write(g,"dims",dims)
+  for n=1:length(B)
+    write(g,"QN[$n]",B[n][1])
+  end
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{QNBlocks})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "QNBlocks"
+    error("HDF5 group or file does not contain QNBlocks data")
+  end
+  N = read(g,"length")
+  dims = read(g,"dims")
+  B = QNBlocks(undef,N)
+  for n=1:length(B)
+    B[n] = QNBlock(read(g,"QN[$n]",QN),dims[n])
+  end
+  return B
+end
