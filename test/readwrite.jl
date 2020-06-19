@@ -3,6 +3,8 @@ using ITensors,
       HDF5,
       Test
 
+include("util.jl")
+
 @testset "HDF5 Read and Write" begin
 
   i = Index(2,"i")
