@@ -426,7 +426,7 @@ function LinearAlgebra.factorize(A::ITensor,
   elseif which_decomp == "qr"
     hasqns(A) && error("QR factorization of an ITensor with QNs is not yet supported.")
     L,R = factorize_qr(A,Linds...; kwargs...)
-    spec = nothing
+    spec = Spectrum(nothing,0.0)
   else
     throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"` or `nothing`."""))
   end
