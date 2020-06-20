@@ -60,7 +60,7 @@ include("util.jl")
     @test ris == is
   end
 
-  @testset "ITensor" begin
+  @testset "Dense ITensor" begin
 
     # default constructed case
     T = ITensor()
@@ -97,6 +97,43 @@ include("util.jl")
     rT = read(fi,"complexT",ITensor)
     close(fi)
     @test norm(rT-T)/norm(T) < 1E-10
+  end
+
+  @testset "QN ITensor" begin
+
+    i = Index(QN("A",-1)=>3,
+              QN("A", 0)=>4,
+              QN("A",+1)=>3;tags="i")
+    j = Index(QN("A",-2)=>2,
+              QN("A", 0)=>3,
+              QN("A",+2)=>2;tags="j")
+    k = Index(QN("A",-1)=>1,
+              QN("A", 0)=>1,
+              QN("A",+1)=>1;tags="k")
+
+    # real case
+    T = randomITensor(QN("A",1),i,j,k)
+
+    fo = h5open("data.h5","w")
+    write(fo,"T",T)
+    close(fo)
+
+    fi = h5open("data.h5","r")
+    rT = read(fi,"T",ITensor)
+    close(fi)
+    @test rT ≈ T
+
+    # complex case
+    T = randomITensor(ComplexF64,i,j,k)
+
+    fo = h5open("data.h5","w")
+    write(fo,"complexT",T)
+    close(fo)
+
+    fi = h5open("data.h5","r")
+    rT = read(fi,"complexT",ITensor)
+    close(fi)
+    @test rT ≈ T
   end
 
   @testset "MPO/MPS" begin
