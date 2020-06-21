@@ -555,6 +555,14 @@ function HDF5.write(parent::Union{HDF5File, HDF5Group},
   write(g, "dir", Int(dir(I)))
   write(g, "tags", tags(I))
   write(g, "plev", plev(I))
+  if typeof(space(I)) == Int
+    attrs(g)["space_type"] = "Int"
+  elseif typeof(space(I)) == QNBlocks
+    attrs(g)["space_type"] = "QNBlocks"
+    write(g,"space",space(I))
+  else
+    error("Index space type not recognized")
+  end
 end
 
 function HDF5.read(parent::Union{HDF5File,HDF5Group},
@@ -569,6 +577,15 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   dir = Arrow(read(g,"dir"))
   tags = read(g,"tags",TagSet)
   plev = read(g,"plev")
-  return Index(id,dim,dir,tags,plev)
+  space_type = "Int"
+  if exists(attrs(g),"space_type")
+    space_type = read(attrs(g)["space_type"])
+  end
+  if space_type == "Int"
+    space = dim
+  elseif space_type == "QNBlocks"
+    space = read(g,"space",QNBlocks)
+  end
+  return Index(id,space,dir,tags,plev)
 end
 

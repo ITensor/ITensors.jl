@@ -374,6 +374,34 @@ function Base.show(io::IO,q::QN)
   print(io,")")
 end
 
+function HDF5.write(parent::Union{HDF5File, HDF5Group},
+                    gname::AbstractString,
+                    q::QN)
+  g = g_create(parent, gname)
+  attrs(g)["type"] = "QN"
+  attrs(g)["version"] = 1
+  names = [String(name(q[n])) for n=1:maxQNs]
+  vals = [val(q[n]) for n=1:maxQNs]
+  mods = [modulus(q[n]) for n=1:maxQNs]
+  write(g,"names",names)
+  write(g,"vals",vals)
+  write(g,"mods",mods)
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{QN})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "QN"
+    error("HDF5 group or file does not contain QN data")
+  end
+  names = read(g,"names")
+  vals = read(g,"vals")
+  mods = read(g,"mods")
+  mqn = ntuple(n->QNVal(names[n],vals[n],mods[n]),maxQNs)
+  return QN(mqn)
+end
+
 import .NDTensors.store
 @deprecate store(qn::QN) data(qn)
 
