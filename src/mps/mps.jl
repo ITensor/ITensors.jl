@@ -355,6 +355,9 @@ function replacebond!(M::MPS,
           Note that the options are now the same as factorize, so use `left` instead of `fromleft` and `right` instead of `fromright`.""")
   end
 
+  if ncenter < 2
+    error("""ncenter must be at least 2.""")
+  end
   if swapsites && ncenter != 2
     error("""swapsites only compatible with 2-site DMRG, i.e. ncenter=2.""")
   end
