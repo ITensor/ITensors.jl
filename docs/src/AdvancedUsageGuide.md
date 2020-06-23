@@ -502,8 +502,7 @@ If you plan to use ITensors.jl directly from the command line
 (i.e. not from the REPL), and the startup time is an issue,
 you can try compiling ITensors.jl using [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/).
 
-Before using PackageCompiler, when we first start using ITensors.jl
-we might see:
+Before using PackageCompiler to compile ITensors, when we first start using ITensors.jl we might see:
 ```julia
 julia> @time using ITensors
   3.845253 seconds (10.96 M allocations: 618.071 MiB, 3.95% gc time)
@@ -520,27 +519,21 @@ julia> @time svd(A, i');
 julia> @time svd(A, i');
   0.000177 seconds (450 allocations: 36.609 KiB)
 ```
-We would start by making a file `precompile_itensors.jl`:
-```julia
-using ITensors
-i = Index(2)
-A = randomITensor(i', i)
-svd(A, i')
+ITensors provides the command `ITensors.compile()` to create what is
+called a "custom system image", a custom version of Julia that
+includes a compiled version of ITensors (see the [PackageCompiler documentation](https://julialang.github.io/PackageCompiler.jl/dev/) for more details).
+Just run the command:
 ```
-We make the "custom system image", a custom version of Julia that
-includes a compiled version of ITensors.jl, with the commands:
+julia> ITensors.compile()
+[...]
 ```
-julia> using PackageCompiler
-
-julia> create_sysimage(:ITensors, sysimage_path="sys_itensors.so", precompile_execution_file="precompile_itensors.jl")
-[ Info: PackageCompiler: creating system image object file, this might take a while...
+By default, this will create the file `sys_itensors.so` in the directory
+`~/.julia/sysimages`.
+Then if we start julia with:
 ```
-Then, in the same directory that contains the file `sys_itensors.so`,
-if we start julia with:
+$ julia --sysimage ~/.julia/sysimages/sys_itensors.so
 ```
-$ julia --sysimage sys_itensors.so
-```
-then we see:
+then you should see something like:
 ```julia
 julia> @time using ITensors
   0.330587 seconds (977.61 k allocations: 45.807 MiB, 1.89% gc time)
@@ -559,10 +552,10 @@ julia> @time svd(A, i');
 ```
 which is much better. 
 
-There is a script to partially automate this process in the
-`packagecompiler/` directory of the ITensors.jl library.
-Additionally, we will investigate pre-packaging a compiled 
-version of ITensors.jl.
+Note that you will have to recompile ITensors with the command 
+`ITensors.compile()` any time that you update the version of ITensors
+in order to keep the system image updated. We hope to make this
+process more automated in the future.
 
 ## Multithreading Support
 
