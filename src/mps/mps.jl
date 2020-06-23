@@ -415,6 +415,7 @@ end
 
 """
     replacebond(M::MPS, b::Int, phi::ITensor; kwargs...)
+
 Like `replacebond!`, but returns the new MPS.
 """
 function replacebond(M0::MPS, b::Int, phi::ITensor;
@@ -426,6 +427,7 @@ end
 
 """
     swapbondsites(ψ::MPS, b::Int; kwargs...)
+    
 Swap the sites `b` and `b+1`.
 """
 function swapbondsites(ψ::MPS, b::Int; kwargs...)
