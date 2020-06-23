@@ -123,7 +123,7 @@ function op(name::AbstractString,
   Ntags = max(1,length(tags(s))) # use max here in case of no tags
                                  # because there may still be a
                                  # generic case such as name=="Id"
-  stypes  = [SiteType(tags(s)[n]) for n in Ntags]
+  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
   opn = OpName(SmallString(name))
 
   #
