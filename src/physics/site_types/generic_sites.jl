@@ -1,5 +1,5 @@
 
-function op(::Type{<:SiteType},
+function op(::SiteType,
             ::OpName"Id",
             s::Index)
   Op = emptyITensor(s',dag(s))
@@ -8,3 +8,4 @@ function op(::Type{<:SiteType},
   end
   return Op
 end
+

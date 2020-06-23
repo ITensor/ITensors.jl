@@ -1,56 +1,84 @@
 
-"""
-SiteType is a parameterized type which allows
-making Index tags into Julia types. Use cases
-include overloading functions such as `op`,
-`siteinds`, and `state` which generate custom
-operators, Index arrays, and IndexVals associated
-with Index objects having a certain tag.
-
-To make a SiteType type, you can use the string
-macro notation: `SiteType"MyTag"`
-
-To make an SiteType value or object, you can use
-the notation: `SiteType("MyTag")`
-"""
-struct SiteType{T}
+#"""
+#SiteType is a parameterized type which allows
+#making Index tags into Julia types. Use cases
+#include overloading functions such as `op`,
+#`siteinds`, and `state` which generate custom
+#operators, Index arrays, and IndexVals associated
+#with Index objects having a certain tag.
+#
+#To make a SiteType type, you can use the string
+#macro notation: `SiteType"MyTag"`
+#
+#To make an SiteType value or object, you can use
+#the notation: `SiteType("MyTag")`
+#"""
+@eval struct SiteType{T}
+  function (f::Type{<:SiteType})()
+    (Base.isconcretetype(f) ? $(Expr(:new, :f)) : throw(UndefVarError(:T)))
+  end
 end
 
+# Note that the complicated definition of
+# SiteType above is a workaround for performance
+# issues when creating parameterized types
+# in Julia 1.4 and 1.5-beta. Ideally we
+# can just use the following in the future:
+# struct SiteType{T}
+# end
+
+SiteType(s::AbstractString) = SiteType{Tag(s)}()
+SiteType(t::Tag) = SiteType{t}()
+
 macro SiteType_str(s)
-  Type{SiteType{Tag(s)}}
+  SiteType{Tag(s)}
 end
 
 # Keep TagType defined for backwards
 # compatibility; will be deprecated later
 const TagType = SiteType
 macro TagType_str(s)
-  Type{TagType{Tag(s)}}
+  TagType{Tag(s)}
 end
 
-"""
-OpName is a parameterized type which allows
-making strings into Julia types for the purpose
-of representing operator names.
-The main use of OpName is overloading the 
-`ITensors.op!` method which generates operators 
-for indices with certain tags such as "S=1/2".
-
-To make a OpName type, you can use the string
-macro notation: `OpName"MyTag"`. 
-
-To make an OpName value or object, you can use
-the notation: `OpName("myop")`
-"""
-struct OpName{Name}
+#"""
+#OpName is a parameterized type which allows
+#making strings into Julia types for the purpose
+#of representing operator names.
+#The main use of OpName is overloading the 
+#`ITensors.op!` method which generates operators 
+#for indices with certain tags such as "S=1/2".
+#
+#To make a OpName type, you can use the string
+#macro notation: `OpName"MyTag"`. 
+#
+#To make an OpName value or object, you can use
+#the notation: `OpName("myop")`
+#"""
+@eval struct OpName{Name}
+  function (f::Type{<:OpName})()
+    (Base.isconcretetype(f) ? $(Expr(:new, :f)) : throw(UndefVarError(:Name)))
+  end
 end
+# Note that the complicated definition of
+# OpName above is a workaround for performance
+# issues when creating parameterized types
+# in Julia 1.4 and 1.5-beta. Ideally we
+# can just use the following in the future:
+# struct OpName{Name}
+# end
+
+OpName(s::AbstractString) = OpName{SmallString(s)}()
+OpName(s::SmallString) = OpName{s}()
 
 macro OpName_str(s)
-  Type{OpName{SmallString(s)}}
+  OpName{SmallString(s)}
 end
 
-op(::Type{<:SiteType},::Type{<:OpName},::Index;kwargs...) = nothing
-op!(::ITensor,::Type{<:SiteType},::Type{<:OpName},::Index;kwargs...) = nothing 
-op(::Type{<:SiteType},::Index,::AbstractString;kwargs...) = nothing
+# Default implementations of op and op!
+op(::SiteType,::OpName,::Index; kwargs...) = nothing
+op!(::ITensor,::SiteType,::OpName,::Index;kwargs...) = nothing 
+op(::SiteType,::Index,::AbstractString;kwargs...) = nothing
 
 """
     op(opname::String, s::Index; kwargs...)
@@ -88,16 +116,18 @@ function op(name::AbstractString,
     return product(op(op1,s;kwargs...),op(op2,s;kwargs...))
   end
 
-  Ntags = length(tags(s))
-  stypes  = ntuple(n->SiteType{tags(s)[n]},Val(maxTags))
-  opn = OpName{SmallString(name)}
+  Ntags = max(1,length(tags(s))) # use max here in case of no tags
+                                 # because there may still be a
+                                 # generic case such as name=="Id"
+  stypes  = ntuple(n->SiteType(tags(s)[n]),Ntags)
+  opn = OpName(SmallString(name))
 
   #
   # Try calling a function of the form:
   #    op(::SiteType,::OpName,::Index;kwargs...)
   #
-  for n=1:Ntags
-    res = op(stypes[n],opn,s;kwargs...)
+  for st in stypes
+    res = op(st,opn,s;kwargs...)
     if !isnothing(res)
       return res
     end
@@ -107,8 +137,8 @@ function op(name::AbstractString,
   #    op!(::ITensor,::SiteType,::OpName,::Index;kwargs...)
   #
   Op = emptyITensor(s',dag(s))
-  for n=1:Ntags
-    op!(Op,stypes[n],opn,s;kwargs...)
+  for st in stypes
+    op!(Op,st,opn,s;kwargs...)
     if !isempty(Op)
       return Op
     end
@@ -122,14 +152,14 @@ function op(name::AbstractString,
   #  after version 0.1.10, and may be eventually
   #  deprecated)
   #
-  for n=1:Ntags
-    res = op(stypes[n],s,name;kwargs...)
+  for st in stypes
+    res = op(st,s,name;kwargs...)
     if !isnothing(res)
       return res
     end
   end
 
-  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$opname\" and Index tags $(tags(s))"))
+  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags(s))"))
 end
 
 # For backwards compatibility, version of `op`
