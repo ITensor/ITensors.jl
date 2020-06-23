@@ -1,5 +1,5 @@
 
-const tJSite = TagType"tJ"
+const tJSite = SiteType"tJ"
 
 function siteinds(::tJSite,
                   N::Int; kwargs...)

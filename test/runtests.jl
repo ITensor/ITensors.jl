@@ -16,7 +16,7 @@ using Test
     "ctmrg.jl",
     "iterativesolvers.jl",
     "dmrg.jl",
-    "tag_types.jl",
+    "sitetype.jl",
     "phys_site_types.jl",
     "decomp.jl",
     "lattices.jl",

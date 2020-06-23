@@ -12,20 +12,23 @@ using ITensors,
     @test state(s[1],"Dn") == s[1](2)
     @test_throws ArgumentError state(s[1],"Fake")
 
-    Sz5 = op(s,"Sz",5)
+    Sz5 = op("Sz",s,5)
     @test hasinds(Sz5,s[5]',s[5])
      
     @test_throws ArgumentError op(s, "Fake", 2)
-    @test Array(op(s,"S+",3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
-    @test Array(op(s,"S-",4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
-    @test Array(op(s,"Sx",2),s[2]',s[2])  ≈ [ 0.0  0.5; 0.5  0.0]
-    @test Array(op(s,"iSy",2),s[2]',s[2]) ≈ [ 0.0  0.5;-0.5  0.0]
-    @test Array(op(s,"Sy",2),s[2]',s[2])  ≈ [0.0  -0.5im; 0.5im  0.0]
-    @test Array(op(s,"Sz",2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
-    @test Array(op(s,"projUp",2),s[2]',s[2])  ≈ [ 1.0  0.0; 0.0 0.0]
-    @test Array(op(s,"projDn",2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
-    @test Array(op(s,"Up",2),s[2])  ≈ [1.0,0.0]
-    @test Array(op(s,"Dn",2),s[2])  ≈ [0.0,1.0]
+    @test Array(op("Id",s,3),s[3]',s[3])  ≈ [ 1.0  0.0; 0.0  1.0]
+    @test Array(op("S+",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
+    @test Array(op("S⁺",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
+    @test Array(op("S-",s,4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
+    @test Array(op("S⁻",s,4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
+    @test Array(op("Sx",s,2),s[2]',s[2])  ≈ [ 0.0  0.5; 0.5  0.0]
+    @test Array(op("Sˣ",s,2),s[2]',s[2])  ≈ [ 0.0  0.5; 0.5  0.0]
+    @test Array(op("iSy",s,2),s[2]',s[2]) ≈ [ 0.0  0.5;-0.5  0.0]
+    @test Array(op("iSʸ",s,2),s[2]',s[2]) ≈ [ 0.0  0.5;-0.5  0.0]
+    @test Array(op("Sy",s,2),s[2]',s[2])  ≈ [0.0  -0.5im; 0.5im  0.0]
+    @test Array(op("Sʸ",s,2),s[2]',s[2])  ≈ [0.0  -0.5im; 0.5im  0.0]
+    @test Array(op("Sz",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
+    @test Array(op("Sᶻ",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
   end
 
   @testset "Spin One sites" begin
@@ -36,25 +39,26 @@ using ITensors,
     @test state(s[1],"Dn") == s[1](3)
     @test_throws ArgumentError state(s[1],"Fake")
 
-    Sz5 = op(s,"Sz",5)
+    Sz5 = op("Sz",s,5)
     @test hasinds(Sz5,s[5]',s[5])
      
     @test_throws ArgumentError op(s, "Fake", 2)
-    @test Array(op(s,"S+",3),s[3]',s[3]) ≈ [ 0 √2 0; 0 0 √2; 0 0 0]
-    @test Array(op(s,"S-",3),s[3]',s[3]) ≈ [ 0 0 0; √2 0 0; 0.0 √2 0]
-    @test Array(op(s,"Sx",3),s[3]',s[3]) ≈ [ 0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
-    @test Array(op(s,"iSy",3),s[3]',s[3]) ≈ [ 0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
-    @test Array(op(s,"Sy",3),s[3]',s[3]) ≈ [ 0 -1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
-    @test Array(op(s,"Sz",2),s[2]',s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
-    @test Array(op(s,"Sz2",2),s[2]',s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 +1.0]
-    @test Array(op(s,"Sx2",2),s[2]',s[2]) ≈ [0.5 0 0.5;0 1.0 0;0.5 0 0.5]
-    @test Array(op(s,"Sy2",2),s[2]',s[2]) ≈ [0.5 0 -0.5;0 1.0 0;-0.5 0 0.5]
-    @test Array(op(s,"projUp",2),s[2]',s[2]) ≈ [1.0 0 0;0 0 0;0 0 0]
-    @test Array(op(s,"projZ0",2),s[2]',s[2]) ≈ [0 0 0;0 1.0 0;0 0 0]
-    @test Array(op(s,"projDn",2),s[2]',s[2]) ≈ [0 0 0;0 0 0;0 0 1.0]
-    @test Array(op(s,"XUp",2),s[2]) ≈ [0.5,im*√2,0.5]
-    @test Array(op(s,"XZ0",2),s[2]) ≈ [im*√2,0,-im*√2]
-    @test Array(op(s,"XDn",2),s[2]) ≈ [0.5,-im*√2,0.5]
+    @test Array(op("Id",s,3),s[3]',s[3])  ≈ [ 1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
+    @test Array(op("S+",s,3),s[3]',s[3]) ≈ [ 0 √2 0; 0 0 √2; 0 0 0]
+    @test Array(op("S⁺",s,3),s[3]',s[3]) ≈ [ 0 √2 0; 0 0 √2; 0 0 0]
+    @test Array(op("S-",s,3),s[3]',s[3]) ≈ [ 0 0 0; √2 0 0; 0.0 √2 0]
+    @test Array(op("S⁻",s,3),s[3]',s[3]) ≈ [ 0 0 0; √2 0 0; 0.0 √2 0]
+    @test Array(op("Sx",s,3),s[3]',s[3]) ≈ [ 0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
+    @test Array(op("Sˣ",s,3),s[3]',s[3]) ≈ [ 0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
+    @test Array(op("iSy",s,3),s[3]',s[3]) ≈ [ 0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
+    @test Array(op("iSʸ",s,3),s[3]',s[3]) ≈ [ 0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
+    @test Array(op("Sy",s,3),s[3]',s[3]) ≈ [ 0 -1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
+    @test Array(op("Sʸ",s,3),s[3]',s[3]) ≈ [ 0 -1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
+    @test Array(op("Sz",s,2),s[2]',s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
+    @test Array(op("Sᶻ",s,2),s[2]',s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
+    @test Array(op("Sz2",s,2),s[2]',s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 +1.0]
+    @test Array(op("Sx2",s,2),s[2]',s[2]) ≈ [0.5 0 0.5;0 1.0 0;0.5 0 0.5]
+    @test Array(op("Sy2",s,2),s[2]',s[2]) ≈ [0.5 0 -0.5;0 1.0 0;-0.5 0 0.5]
   end
 
   @testset "Fermion sites" begin
@@ -76,10 +80,6 @@ using ITensors,
     @test Cdag3 ≈ [0. 0; 1 0]
     F3 = Array(op(s,"F",3),s[3]',s[3]) 
     @test F3 ≈ [1. 0; 0 -1]
-    Emp = Array(op(s,"Emp",3),s[3])
-    @test Emp ≈ [1.0; 0.0]
-    Occ = Array(op(s,"Occ",3),s[3])
-    @test Occ ≈ [0.0; 1.0]
   end
 
   @testset "Electron sites" begin
@@ -123,14 +123,6 @@ using ITensors,
     @test Sp3 ≈ [0. 0 0 0; 0 0 1 0; 0 0 0 0; 0 0 0 0]
     Sm3 = Array(op(s,"S-",3),s[3]',s[3]) 
     @test Sm3 ≈ [0. 0 0 0; 0 0 0 0; 0 1 0 0; 0 0 0 0]
-    Sem = Array(op(s,"Emp",3),s[3])
-    @test Sem ≈ [1.0; 0.0; 0.0; 0.0]
-    Sup = Array(op(s,"Up",3),s[3])
-    @test Sup ≈ [0.0; 1.0; 0.0; 0.0]
-    Sdn = Array(op(s,"Dn",3),s[3])
-    @test Sdn ≈ [0.0; 0.0; 1.0; 0.0]
-    Supdn = Array(op(s,"UpDn",3),s[3])
-    @test Supdn ≈ [0.0; 0.0; 0.0; 1.0]
   end
 
   @testset "tJ sites" begin
@@ -171,33 +163,25 @@ using ITensors,
     @test Sp3 ≈ [0.0 0. 0; 0 0 1.0; 0 0 0]
     Sm3 = Array(op(s,"Sminus",3),s[3]',s[3]) 
     @test Sm3 ≈ [0.0 0. 0; 0 0 0; 0 1.0 0]
-    Up3 = Array(op(s,"Up",3),s[3]) 
-    @test Up3 ≈ [0.0; 1.0; 0]
-    Dn3 = Array(op(s,"Dn",3),s[3]) 
-    @test Dn3 ≈ [0.0; 0.0; 1.0]
-    Em3 = Array(op(s,"Emp",3),s[3]) 
-    @test Em3 ≈ [1.0; 0.0; 0.0]
   end
 
 end
 
 
-const MySite = ITensors.TagType"MySite"
-
 @testset "Custom Site Tag Type" begin
 
-  function ITensors.op(::MySite,s::Index,opname::AbstractString)
-    Op = ITensor(s,s')
-    if opname=="MyOp"
-      Op[s(1),s'(1)] = 11
-      Op[s(1),s'(2)] = 12
-      Op[s(2),s'(1)] = 21
-      Op[s(2),s'(2)] = 22
-    end
-    return Op
+  function ITensors.op!(Op::ITensor,
+                        ::SiteType"MySite",
+                        ::OpName"MyOp",
+                        s::Index)
+    Op[s(1),s'(1)] = 11
+    Op[s(1),s'(2)] = 12
+    Op[s(2),s'(1)] = 21
+    Op[s(2),s'(2)] = 22
   end
 
-  function ITensors.state(::MySite,statename::AbstractString)
+  function ITensors.state(::SiteType"MySite",
+                          statename::AbstractString)
     if statename == "One"
       return 1
     elseif statename == "Two"
@@ -212,7 +196,7 @@ const MySite = ITensors.TagType"MySite"
   expectedOp[i(1),i'(2)] = 12
   expectedOp[i(2),i'(1)] = 21
   expectedOp[i(2),i'(2)] = 22
-  @test norm(op(i,"MyOp")-expectedOp) < 1E-10
+  @test op("MyOp",i) ≈ expectedOp
 
   @test state(i,"One") == i(1)
   @test state(i,"Two") == i(2)

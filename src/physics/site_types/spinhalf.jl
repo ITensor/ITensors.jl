@@ -1,7 +1,5 @@
 
-const SpinHalfSite = Union{TagType"S=1/2", TagType"SpinHalf"}
-
-function siteinds(::SpinHalfSite,
+function siteinds(::SiteType"S=1/2",
                   N::Int; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
@@ -11,58 +9,94 @@ function siteinds(::SpinHalfSite,
   return [Index(2,"Site,S=1/2,n=$n") for n=1:N]
 end
 
-function state(::SpinHalfSite,
+siteinds(::SiteType"SpinHalf",
+         N::Int; kwargs...) = siteinds(SiteType("S=1/2"),N;kwargs...)
+
+function state(::SiteType"S=1/2",
                st::AbstractString)
   if st == "Up" || st == "↑"
     return 1
   elseif st == "Dn" || st == "↓"
     return 2
   end
-  throw(ArgumentError("State string \"$st\" not recognized for SpinHalf site"))
+  throw(ArgumentError("State string \"$st\" not recognized for \"S=1/2\" site"))
   return 0
 end
 
-function op(::SpinHalfSite,
-            s::Index,
-            opname::AbstractString;kwargs...)::ITensor
-  Up = s(1)
-  UpP = s'(1)
-  Dn = s(2)
-  DnP = s'(2)
- 
-  Op = emptyITensor(s',dag(s))
+state(::SiteType"SpinHalf",
+      st::AbstractString) = state(SiteType("S=1/2"),st)
 
-  if opname == "S⁺" || opname == "Splus" || opname == "S+"
-    Op[UpP, Dn] = 1.
-  elseif opname == "S⁻" || opname == "Sminus" || opname == "S-"
-    Op[DnP, Up] = 1.
-  elseif opname == "Sˣ" || opname == "Sx"
-    Op[UpP, Dn] = 0.5
-    Op[DnP, Up] = 0.5
-  elseif opname == "iSʸ" || opname == "iSy"
-     Op[UpP, Dn] = 0.5
-     Op[DnP, Up] = -0.5
-  elseif opname == "Sʸ" || opname == "Sy"
-     Op = complex(Op) 
-     Op[UpP, Dn] = -0.5*im
-     Op[DnP, Up] = 0.5*im
-  elseif opname == "Sᶻ" || opname == "Sz"
-     Op[UpP, Up] = 0.5
-     Op[DnP, Dn] = -0.5
-  elseif opname == "projUp"
-     Op[UpP, Up] = 1.
-  elseif opname == "projDn"
-    Op[DnP, Dn] = 1.
-  elseif opname == "Up" || opname == "↑"
-    pU = emptyITensor(s)
-    pU[Up] = 1.
-    return pU
-  elseif opname == "Dn" || opname == "↓"
-    pD = emptyITensor(s)
-    pD[Dn] = 1.
-    return pD
-  else
-    throw(ArgumentError("Operator name '$opname' not recognized for SpinHalfSite"))
-  end
-  return Op
+function op!(Op::ITensor,
+             ::SiteType"S=1/2",
+             ::OpName"Sz",
+             s::Index)
+  Op[s'=>1, s=>1] = 0.5
+  Op[s'=>2, s=>2] = -0.5
 end
+
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"Sᶻ",s::Index) = op!(Op,t,OpName("Sz"),s)
+
+function op!(Op::ITensor,
+             ::SiteType"S=1/2",
+             ::OpName"S+",
+             s::Index)
+  Op[s'=>1, s=>2] = 1.0
+end
+
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"S⁺",s::Index) = op!(Op,t,OpName("S+"),s)
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"Splus",s::Index) = op!(Op,t,OpName("S+"),s)
+
+function op!(Op::ITensor,
+             ::SiteType"S=1/2",
+             ::OpName"S-",
+             s::Index)
+  Op[s'=>2, s=>1] = 1.0
+end
+
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"S⁻",s::Index) = op!(Op,t,OpName("S-"),s)
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"Sminus",s::Index) = op!(Op,t,OpName("S-"),s)
+
+function op!(Op::ITensor,
+             ::SiteType"S=1/2",
+             ::OpName"Sx",
+             s::Index)
+  Op[s'=>1, s=>2] = 0.5
+  Op[s'=>2, s=>1] = 0.5
+end
+
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"Sˣ",s::Index) = op!(Op,t,OpName("Sx"),s)
+
+function op!(Op::ITensor,
+             ::SiteType"S=1/2",
+             ::OpName"iSy",
+             s::Index)
+  Op[s'=>1, s=>2] = +0.5
+  Op[s'=>2, s=>1] = -0.5
+end
+
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"iSʸ",s::Index) = op!(Op,t,OpName("iSy"),s)
+
+function op!(Op::ITensor,
+             ::SiteType"S=1/2",
+             ::OpName"Sy",
+             s::Index)
+  complex!(Op)
+  Op[s'=>1, s=>2] = -0.5im
+  Op[s'=>2, s=>1] = 0.5im
+end
+
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"Sʸ",s::Index) = op!(Op,t,OpName("Sy"),s)
+
+op!(Op::ITensor,
+    ::SiteType"SpinHalf",
+    o::OpName,
+    s::Index) = op!(Op,SiteType("S=1/2"),o,s)
+
