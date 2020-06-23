@@ -694,7 +694,7 @@ the tensors in the network. The name
 `totalqn` is an alias for `flux`.
 """
 function flux(M::AbstractMPS)::QN
-  hasqns(M) || error("MPS or MPO does not conserve QNs")
+  hasqns(M) || return nothing
   q = QN()
   for j=M.llim+1:M.rlim-1
     q += flux(M[j])

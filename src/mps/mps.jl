@@ -344,20 +344,32 @@ function replacebond!(M::MPS,
                       phi::ITensor;
                       kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
+  swapsites::Bool = get(kwargs, :swapsites, false)
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
   normalize::Bool = get(kwargs, :normalize, false)
   ncenter::Int = get(kwargs, :ncenter, 2)
+
   # Deprecated keywords
   if haskey(kwargs, :dir)
     error("""dir keyword in replacebond! has been replaced by ortho.
           Note that the options are now the same as factorize, so use `left` instead of `fromleft` and `right` instead of `fromright`.""")
   end
 
+  if swapsites && ncenter != 2
+    error("""swapsites only compatible with 2-site DMRG, i.e. ncenter=2.""")
+  end
+
   phi_new = ITensor[] # put in vector so that changes made in loop can be taken out of loop
   push!(phi_new, copy(phi))
   temp = ITensor[] # will store site tensors before we put them back into M
   for j=0:ncenter-3
-    index_set = j==0 ? inds(M[b+j]) : push(inds(M[b+j]), commonind(temp[j], phi_new[j+1]))
+    indsMb = inds(M[b])
+    if swapsites
+      sb = siteind(M, b)
+      sbp1 = siteind(M, b+1)
+      indsMb = replaceind(indsMb, sb, sbp1)
+    end
+    index_set = j==0 ? inds(M[b+j]) : push(indsMb, commonind(temp[j], phi_new[j+1]))
     L,R,spec = factorize(phi_new[j+1], index_set; which_decomp = which_decomp,
                                        tags = tags(linkind(M,b+j)),
                                        kwargs...)
@@ -366,7 +378,13 @@ function replacebond!(M::MPS,
   end
   # j = ncenter-2 case isolated from loop so that spec is defined at the end
   j = ncenter-2
-  index_set = j==0 ? inds(M[b+j]) : push(inds(M[b+j]), commonind(temp[j], phi_new[j+1]))
+  indsMb = inds(M[b])
+  if swapsites
+    sb = siteind(M, b)
+    sbp1 = siteind(M, b+1)
+    indsMb = replaceind(indsMb, sb, sbp1)
+  end
+  index_set = j==0 ? inds(M[b+j]) : push(indsMb, commonind(temp[j], phi_new[j+1]))
   L,R,spec = factorize(phi_new[j+1], index_set; which_decomp = which_decomp,
                                        tags = tags(linkind(M,b+j)),
                                        kwargs...)
@@ -390,6 +408,26 @@ function replacebond!(M::MPS,
     error("In replacebond!, got ortho = $ortho, only currently supports `left` and `right`.")
   end
   return spec
+end
+
+"""
+    replacebond(M::MPS, b::Int, phi::ITensor; kwargs...)
+Like `replacebond!`, but returns the new MPS.
+"""
+function replacebond(M0::MPS, b::Int, phi::ITensor;
+                     kwargs...)
+  M = copy(M0)
+  replacebond!(M, b, phi; kwargs...)
+  return M
+end
+
+"""
+    swapbondsites(ψ::MPS, b::Int; kwargs...)
+Swap the sites `b` and `b+1`.
+"""
+function swapbondsites(ψ::MPS, b::Int; kwargs...)
+  kwargs = setindex(values(kwargs), true, :swapsites)
+  return replacebond(ψ, b, ψ[b] * ψ[b+1]; kwargs...)
 end
 
 """
