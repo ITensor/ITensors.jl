@@ -18,7 +18,8 @@ function dmrg(H::MPO,
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)
-  PH = ProjMPO(H)
+  ncenter::Int = get(kwargs, :ncenter, 2)
+  PH = ProjMPO(H, ncenter)
   return dmrg(PH,psi0,sweeps;kwargs...)
 end
 
@@ -47,6 +48,7 @@ function dmrg(Hs::Vector{MPO},
               psi0::MPS,
               sweeps::Sweeps;
               kwargs...)
+  ncenter::Int = get(kwargs, :ncenter, 2)
   PHS = ProjMPOSum(Hs)
   return dmrg(PHS,psi0,sweeps;kwargs...)
 end
@@ -77,6 +79,7 @@ function dmrg(H::MPO,
               sweeps::Sweeps;
               kwargs...)
   weight = get(kwargs,:weight,1.0)
+  ncenter::Int = get(kwargs, :ncenter, 2)
   PMM = ProjMPO_MPS(H,Ms;weight=weight)
   return dmrg(PMM,psi0,sweeps;kwargs...)
 end
@@ -96,6 +99,7 @@ function dmrg(PH,
   svd_alg::String = get(kwargs, :svd_alg, "recursive")
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
+  ncenter::Int = get(kwargs, :ncenter, 2)
 
   # eigsolve kwargs
   eigsolve_tol::Float64   = get(kwargs, :eigsolve_tol, 1e-14)
@@ -137,7 +141,7 @@ function dmrg(PH,
   for sw=1:nsweep(sweeps)
     sw_time = @elapsed begin
 
-    for (b, ha) in sweepnext(N)
+    for (b, ha) in sweepnext(N, ncenter=ncenter)
 
       @debug begin
         checkflux(psi)
@@ -153,8 +157,11 @@ end
         checkflux(PH)
       end
 
-@timeit_debug GLOBAL_TIMER "psi[b]*psi[b+1]" begin
-      phi = psi[b] * psi[b+1]
+@timeit_debug GLOBAL_TIMER "psi[b]*...*psi[b+ncenter-1]" begin
+      phi = psi[b]
+      for j=1:ncenter-1
+        phi = phi * psi[b+j]
+      end
 end
 
 @timeit_debug GLOBAL_TIMER "eigsolve" begin
@@ -186,7 +193,8 @@ end
                                        ortho = ortho,
                                        normalize = true,
                                        which_decomp = which_decomp,
-                                       svd_alg = svd_alg)
+                                       svd_alg = svd_alg,
+                                       ncenter = ncenter)
 end
 
       @debug begin
@@ -196,7 +204,7 @@ end
 
 
       if outputlevel >= 2
-        @printf("Sweep %d, half %d, bond (%d,%d) energy=%.12f\n",sw,ha,b,b+1,energy)
+        @printf("Sweep %d, half %d, sites (%d:%d) energy=%.12f\n",sw,ha,b,b+ncenter-1,energy)
         @printf("(Truncated using cutoff=%.1E maxdim=%d mindim=%d)\n",
                 cutoff(sweeps, sw),maxdim(sweeps, sw),mindim(sweeps, sw))
         @printf("Trunc. err=%.1E, bond dimension %d\n\n",spec.truncerr,dim(linkind(psi,b)))

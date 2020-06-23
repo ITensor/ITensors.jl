@@ -26,6 +26,8 @@ mutable struct ProjMPO
   LR::Vector{ITensor}
   ProjMPO(H::MPO) = new(0,length(H)+1,2,H,
                         Vector{ITensor}(undef, length(H)))
+  ProjMPO(H::MPO, nsite::Int) = new(0,length(H)+1,nsite,H,
+                        Vector{ITensor}(undef, length(H)))                      
 end
 
 """

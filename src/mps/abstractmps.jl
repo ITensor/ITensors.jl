@@ -693,8 +693,8 @@ the flux is the sum of fluxes of each of
 the tensors in the network. The name
 `totalqn` is an alias for `flux`.
 """
-function flux(M::AbstractMPS)
-  hasqns(M) || return nothing
+function flux(M::AbstractMPS)::QN
+  hasqns(M) || error("MPS or MPO does not conserve QNs")
   q = QN()
   for j=M.llim+1:M.rlim-1
     q += flux(M[j])
