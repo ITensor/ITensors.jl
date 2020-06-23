@@ -14,9 +14,7 @@
 #the notation: `SiteType("MyTag")`
 #"""
 @eval struct SiteType{T}
-  function (f::Type{<:SiteType})()
-    (Base.isconcretetype(f) ? $(Expr(:new, :f)) : throw(UndefVarError(:T)))
-  end
+  (f::Type{<:SiteType})() = $(Expr(:new, :f))
 end
 
 # Note that the complicated definition of
@@ -56,10 +54,9 @@ end
 #the notation: `OpName("myop")`
 #"""
 @eval struct OpName{Name}
-  function (f::Type{<:OpName})()
-    (Base.isconcretetype(f) ? $(Expr(:new, :f)) : throw(UndefVarError(:Name)))
-  end
+  (f::Type{<:OpName})() = $(Expr(:new, :f))
 end
+
 # Note that the complicated definition of
 # OpName above is a workaround for performance
 # issues when creating parameterized types
