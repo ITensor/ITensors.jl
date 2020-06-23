@@ -239,8 +239,10 @@ export
   triangular_lattice,
 
 # physics/sitetype.jl
+  SiteType,
   @SiteType_str,
   op,
+  OpName,
   @OpName_str,
   state,
   @TagType_str,
