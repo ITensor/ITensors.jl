@@ -586,7 +586,7 @@ function orthogonalize!(M::AbstractMPS,
     (leftlim(M) < 0) && setleftlim!(M, 0)
     b = leftlim(M)+1
     linds = uniqueinds(M[b],M[b+1])
-    L,R = factorize(M[b], linds)
+    L,R = factorize(M[b], linds;kwargs...)
     M[b] = L
     M[b+1] *= R
 
@@ -602,7 +602,7 @@ function orthogonalize!(M::AbstractMPS,
     (rightlim(M) > (N+1)) && setrightlim!(M,N+1)
     b = rightlim(M)-2
     rinds = uniqueinds(M[b+1],M[b])
-    L,R = factorize(M[b+1], rinds)
+    L,R = factorize(M[b+1], rinds;kwargs...)
     M[b+1] = L
     M[b] *= R
 
