@@ -14,6 +14,7 @@ using HDF5
 using KrylovKit
 using LinearAlgebra
 using NDTensors
+using PackageCompiler
 using Printf
 using Random
 using StaticArrays
@@ -84,6 +85,12 @@ include("physics/site_types/electron.jl")
 include("physics/site_types/tj.jl")
 include("physics/fermions.jl")
 include("physics/autompo.jl")
+
+#####################################
+# Package compilation
+#
+#
+include("packagecompile/compile.jl")
 
 #####################################
 # Developer tools, for internal
