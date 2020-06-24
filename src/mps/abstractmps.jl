@@ -353,7 +353,7 @@ MPS or MPO tensor on site j to site j+1
 """
 function linkind(M::AbstractMPS, j::Int)
   N = length(M)
-  j ≥ length(M) && return nothing
+  (j ≥ length(M) || j < 1) && return nothing
   return commonind(M[j], M[j+1])
 end
 
