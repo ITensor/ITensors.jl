@@ -35,7 +35,8 @@ function compile(; path::AbstractString = joinpath(ENV["HOME"],
   println("""Creating the system image containing the compiled version of ITensors at "$path_filename". This may take a few minutes.""")
   create_sysimage(:ITensors;
                   sysimage_path = path_filename,
-                  precompile_execution_file = "precompile_itensors.jl")
+                  precompile_execution_file = joinpath(@__DIR__,
+                                                       "precompile_itensors.jl"))
   println("""
 
           The system image containing the compiled version of ITensors is located at "$path_filename". This is a version of Julia that is compiled with ITensors.
