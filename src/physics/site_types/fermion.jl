@@ -1,5 +1,5 @@
 
-const FermionSite = TagType"Fermion"
+const FermionSite = SiteType"Fermion"
 
 function siteinds(::FermionSite, 
                   N::Int; kwargs...)

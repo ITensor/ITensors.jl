@@ -420,6 +420,13 @@ Convert to the complex version of the storage.
 """
 Base.complex(T::ITensor) = itensor(complex(tensor(T)))
 
+function complex!(T::ITensor)
+  ct = complex(tensor(T))
+  setstore!(T,store(ct))
+  setinds!(T,inds(ct))
+  return T
+end
+
 Base.eltype(T::ITensor) = eltype(tensor(T))
 
 """

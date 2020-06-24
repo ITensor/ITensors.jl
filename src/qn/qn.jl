@@ -7,7 +7,7 @@ struct QNVal
   function QNVal(name,v::Int,m::Int=1)
     am = abs(m)
     if am > 1
-      new(SmallString(name),mod(v,am),m)
+      return new(SmallString(name),mod(v,am),m)
     end
     new(SmallString(name),v,m)
   end
@@ -25,9 +25,9 @@ isfermionic(qv::QNVal) = modulus(qv) < 0
 Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
 
 function qn_mod(val::Int,modulus::Int)
-  modulus = abs(modulus)
-  (modulus == 0 || modulus == 1) && return val
-  return mod(val,modulus)
+  amod = abs(modulus)
+  amod <= 1 && return val
+  return mod(val,amod)
 end
 
 function Base.:-(qv::QNVal)
@@ -372,6 +372,34 @@ function Base.show(io::IO,q::QN)
     Na > 1 && print(io,")")
   end
   print(io,")")
+end
+
+function HDF5.write(parent::Union{HDF5File, HDF5Group},
+                    gname::AbstractString,
+                    q::QN)
+  g = g_create(parent, gname)
+  attrs(g)["type"] = "QN"
+  attrs(g)["version"] = 1
+  names = [String(name(q[n])) for n=1:maxQNs]
+  vals = [val(q[n]) for n=1:maxQNs]
+  mods = [modulus(q[n]) for n=1:maxQNs]
+  write(g,"names",names)
+  write(g,"vals",vals)
+  write(g,"mods",mods)
+end
+
+function HDF5.read(parent::Union{HDF5File,HDF5Group},
+                   name::AbstractString,
+                   ::Type{QN})
+  g = g_open(parent,name)
+  if read(attrs(g)["type"]) != "QN"
+    error("HDF5 group or file does not contain QN data")
+  end
+  names = read(g,"names")
+  vals = read(g,"vals")
+  mods = read(g,"mods")
+  mqn = ntuple(n->QNVal(names[n],vals[n],mods[n]),maxQNs)
+  return QN(mqn)
 end
 
 import .NDTensors.store

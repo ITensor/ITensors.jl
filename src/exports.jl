@@ -85,6 +85,7 @@ export
   combiner,
   commonind,
   commoninds,
+  complex!,
   delta,
   dense,
   δ,
@@ -216,6 +217,9 @@ export
 # mps/projmposum.jl
   ProjMPOSum,
 
+# mps/projmpo_mps.jl
+  ProjMPO_MPS,
+
 # mps/sweeps.jl
   Sweeps,
   cutoff,
@@ -237,27 +241,15 @@ export
   square_lattice,
   triangular_lattice,
 
-# physics/tag_types.jl
-  TagType,
-  @TagType_str,
+# physics/sitetype.jl
+  SiteType,
+  @SiteType_str,
   op,
+  OpName,
+  @OpName_str,
   state,
+  @TagType_str,
   has_fermion_string,
-
-# physics/site_types/electron.jl
-  ElectronSite,
-
-# physics/site_types/fermion.jl
-  FermionSite,
-
-# physics/site_types/spinhalf.jl
-  SpinHalfSite,
-
-# physics/site_types/spinone.jl
-  SpinOneSite,
-
-# physics/site_types/tj.jl
-  tJSite,
 
 # qn/qn.jl
   # Types

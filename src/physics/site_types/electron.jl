@@ -1,5 +1,5 @@
 
-const ElectronSite = TagType"Electron"
+const ElectronSite = SiteType"Electron"
 
 function siteinds(::ElectronSite, 
                   N::Int; kwargs...)

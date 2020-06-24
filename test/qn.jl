@@ -135,6 +135,12 @@ import ITensors: nactive
     @test hash(QN(("Sz",1),("N",2))) == hash(QN(("N",2),("Sz",1)))
   end
 
+  @testset "Negative value for mod > 1" begin
+    @test QN("T",-1,3) == QN("T",2,3)
+    @test QN("T",-2,3) == QN("T",1,3)
+    @test QN("T",-3,3) == QN("T",0,3)
+  end
+
 end
 
 nothing

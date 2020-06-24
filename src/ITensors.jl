@@ -14,6 +14,7 @@ using HDF5
 using KrylovKit
 using LinearAlgebra
 using NDTensors
+using PackageCompiler
 using Printf
 using Random
 using StaticArrays
@@ -74,8 +75,9 @@ include("mps/dmrg.jl")
 #####################################
 # Physics
 #
-include("physics/tag_types.jl")
+include("physics/sitetype.jl")
 include("physics/lattices.jl")
+include("physics/site_types/generic_sites.jl")
 include("physics/site_types/spinhalf.jl")
 include("physics/site_types/spinone.jl")
 include("physics/site_types/fermion.jl")
@@ -83,6 +85,12 @@ include("physics/site_types/electron.jl")
 include("physics/site_types/tj.jl")
 include("physics/fermions.jl")
 include("physics/autompo.jl")
+
+#####################################
+# Package compilation
+#
+#
+include("packagecompile/compile.jl")
 
 #####################################
 # Developer tools, for internal
