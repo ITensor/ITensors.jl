@@ -20,6 +20,12 @@ include("util.jl")
   @test hasind(psi[3],linkind(psi,2))
   @test hasind(psi[3],linkind(psi,3))
 
+  @test isnothing(linkind(psi, N))
+  @test isnothing(linkind(psi, N+1))
+  @test isnothing(linkind(psi, 0))
+  @test isnothing(linkind(psi, -1))
+  @test linkind(psi, 3) == commonind(psi[3], psi[4])
+
   psi[1] = ITensor(sites[1])
   @test hasind(psi[1],sites[1])
 
