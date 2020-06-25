@@ -1,16 +1,16 @@
 
-const default_compile_dir = joinpath(ENV["HOME"],
-                                     ".julia",
-                                     "sysimages")
+default_compile_dir() = joinpath(homedir(),
+                                 ".julia",
+                                 "sysimages")
 
-const default_compile_filename = "sys_itensors.so"
+default_compile_filename() = "sys_itensors.so"
 
-const default_compile_path = joinpath(default_compile_dir,
-                                      default_compile_filename)
+default_compile_path() = joinpath(default_compile_dir(),
+                                  default_compile_filename())
 
 
-function compile_note(; dir = default_compile_dir,
-                        filename = default_compile_filename)
+function compile_note(; dir = default_compile_dir(),
+                        filename = default_compile_filename())
   path = joinpath(dir, filename)
   return """
   You will be able to start Julia with a compiled version of ITensors using:
@@ -32,8 +32,8 @@ function compile_note(; dir = default_compile_dir,
   """
 end
 
-function compile(; dir::AbstractString = default_compile_dir,
-                   filename::AbstractString = default_compile_filename)
+function compile(; dir::AbstractString = default_compile_dir(),
+                 filename::AbstractString = default_compile_filename())
   if !isdir(dir)
     println("""The directory "$dir" doesn't exist yet, creating it now.""")
     println()
@@ -50,12 +50,12 @@ function compile(; dir::AbstractString = default_compile_dir,
 end
 
 @doc """
-    ITensors.compile(; dir = "$default_compile_dir",
-                       filename = "$default_compile_filename")
+    ITensors.compile(; dir = "$(default_compile_dir())",
+                       filename = "$(default_compile_filename())")
 
 Compile ITensors.jl with [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/). This will take some time, perhaps a few minutes.
 
-This will create a system image containing the compiled version of ITensors located at `dir/filename`, by default `$default_compile_path`.
+This will create a system image containing the compiled version of ITensors located at `dir/filename`, by default `$(default_compile_path())`.
 
 $(compile_note())
 """ compile
