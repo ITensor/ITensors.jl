@@ -417,10 +417,14 @@ An internal function that returns a function
 that accepts an Index that checks if the
 Index matches the provided conditions.
 """
-function fmatch(; tags=nothing,
-                  plev=nothing,
-                  id=nothing)
-  return i -> fmatch(plev)(i) && fmatch(id)(i) && fmatch(tags)(i)
+function fmatch(; inds = nothing,
+                  tags = nothing,
+                  plev = nothing,
+                  id = nothing)
+  return i -> fmatch(inds)(i) &&
+              fmatch(plev)(i) &&
+              fmatch(id)(i) &&
+              fmatch(tags)(i)
 end
 
 """
