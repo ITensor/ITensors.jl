@@ -1,3 +1,17 @@
+ITensors v0.1.13 Release Notes
+==============================
+
+* New ITensors.compile() routine (PR #436, PR #439)
+* Propagate keyword args through orthogonalize! (PR #438)
+* Speed improvement to op (PR #435)
+* Major improvements to op function system (PR #406)
+
+ITensors v0.1.12 Release Notes
+==============================
+
+* HDF5 Support for QNITensors, QNIndex (PR #433)
+* Add ProjMPO_MPS to exports
+
 ITensors v0.1.11 Release Notes
 ==============================
 
