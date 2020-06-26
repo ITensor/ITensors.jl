@@ -73,9 +73,9 @@ macro OpName_str(s)
 end
 
 # Default implementations of op and op!
-op(::SiteType,::OpName,::Index; kwargs...) = nothing
-op!(::ITensor,::SiteType,::OpName,::Index;kwargs...) = nothing 
-op(::SiteType,::Index,::AbstractString;kwargs...) = nothing
+op(::SiteType, ::OpName, ::Index...; kwargs...) = nothing
+op!(::ITensor, ::SiteType, ::OpName, ::Index...; kwargs...) = nothing 
+op(::SiteType, ::Index, ::AbstractString; kwargs...) = nothing
 
 """
     op(opname::String, s::Index; kwargs...)
@@ -106,24 +106,29 @@ Sz = op("Sz",s)
 ```
 """
 function op(name::AbstractString,
-            s::Index;
+            s::Index...;
             kwargs...)
 
   name = strip(name)
 
+  # TODO: filter out only commons tags
+  # if there are multiple indices
+  stags = tags(s[1])
+
   # Interpret operator names joined by *
   # as acting sequentially on the same site
-  starpos = findfirst("*",name)
+  starpos = findfirst("*", name)
   if !isnothing(starpos)
     op1 = name[1:starpos.start-1]
     op2 = name[starpos.start+1:end]
-    return product(op(op1,s;kwargs...),op(op2,s;kwargs...))
+    return product(op(op1, s...; kwargs...),
+                   op(op2, s...; kwargs...))
   end
 
-  Ntags = max(1,length(tags(s))) # use max here in case of no tags
-                                 # because there may still be a
-                                 # generic case such as name=="Id"
-  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
+  Ntags = max(1,length(stags)) # use max here in case of no tags
+                               # because there may still be a
+                               # generic case such as name=="Id"
+  stypes  = [SiteType(stags[n]) for n in 1:Ntags]
   opn = OpName(SmallString(name))
 
   #
@@ -131,7 +136,7 @@ function op(name::AbstractString,
   #    op(::SiteType,::OpName,::Index;kwargs...)
   #
   for st in stypes
-    res = op(st,opn,s;kwargs...)
+    res = op(st, opn, s...; kwargs...)
     if !isnothing(res)
       return res
     end
@@ -140,9 +145,9 @@ function op(name::AbstractString,
   # otherwise try calling a function of the form:
   #    op!(::ITensor,::SiteType,::OpName,::Index;kwargs...)
   #
-  Op = emptyITensor(s',dag(s))
+  Op = emptyITensor(prime.(s)..., dag.(s)...)
   for st in stypes
-    op!(Op,st,opn,s;kwargs...)
+    op!(Op, st, opn, s...; kwargs...)
     if !isempty(Op)
       return Op
     end
@@ -150,25 +155,28 @@ function op(name::AbstractString,
 
   #
   # otherwise try calling a function of the form:
-  #   op(::SiteType,::Index,::AbstractString)
+  #   op(::SiteType, ::Index, ::AbstractString)
   #
   # (Note: this version is for backwards compatibility
   #  after version 0.1.10, and may be eventually
   #  deprecated)
   #
+  length(s) > 1 && error("Older op interface does not support more than one Index")
   for st in stypes
-    res = op(st,s,name;kwargs...)
+    res = op(st, s[1], name; kwargs...)
     if !isnothing(res)
       return res
     end
   end
 
-  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags(s))"))
+  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(stags))"))
 end
 
 # For backwards compatibility, version of `op`
 # taking the arguments in the other order:
-op(s::Index,opname::AbstractString;kwargs...) = op(opname,s;kwargs...)
+op(s::Index,
+   opname::AbstractString;
+   kwargs...) = op(opname, s; kwargs...)
 
 
 """
@@ -178,17 +186,17 @@ Return an ITensor corresponding to the operator
 named `opname` for the n'th Index in the array 
 `sites`.
 """
-function op(opname::AbstractString,
-            s::Vector{<:Index},
-            n::Int;
-            kwargs...)::ITensor
-  return op(s[n],opname;kwargs...)
-end
+op(opname::AbstractString,
+   s::Vector{<:Index},
+   ns::Vararg{Int, N};
+   kwargs...) where {N} =
+  op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
 
 op(s::Vector{<:Index},
    opname::AbstractString,
-   n::Int;
-   kwargs...) = op(opname,s,n;kwargs...)
+   ns::Int...;
+   kwargs...) =
+  op(opname, s, ns...; kwargs...)
 
 
 state(s::Index,n::Integer) = s[n]
