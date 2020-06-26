@@ -62,6 +62,13 @@ using ITensors,
     @test hassameinds(intersect(I1, (j, k)), IndexSet(j, k))
     @test hassameinds(intersect(I1, (j, k, l)), (j, k))
     @test filter(I1, "i") == IndexSet(i)
+    @test filter(I1; tags = "i") == IndexSet(i)
+    @test filter(I1; inds = j) == IndexSet(j)
+    @test filter(I1; tags = "i", inds = j) == IndexSet()
+    @test filter(I1; plev = 1, inds = j) == IndexSet()
+    @test filter(I1; plev = 0, inds = k) == IndexSet(k)
+    @test filter(I1; plev = 0) == IndexSet(i, j, k)
+    @test filter(I1; inds = l) == IndexSet()
     @test hassameinds(filter(I1, "i"), IndexSet(i))
     @test getfirst(I1, "j") == j
     @test isnothing(getfirst(I1, "l"))
@@ -110,6 +117,12 @@ using ITensors,
     J = prime(I, j)
     @test i ∈ J
     @test j' ∈ J
+    J = prime(I; inds = j)
+    @test i ∈ J
+    @test j' ∈ J
+    J = prime(I; inds = not(j))
+    @test i' ∈ J
+    @test j ∈ J
   end
   @testset "noprime" begin
     I = IndexSet(i'', j')
