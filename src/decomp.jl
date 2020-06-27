@@ -384,7 +384,7 @@ function LinearAlgebra.factorize(A::ITensor,
   tags::TagSet = get(kwargs, :tags, "Link,fact")
   plev::Int = get(kwargs, :plev, 0)
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
-  cutoff::Float64 = get(kwargs, :cutoff, 0.0)
+  cutoff = get(kwargs, :cutoff, nothing)
   eigen_perturbation = get(kwargs, :eigen_perturbation, nothing)
   if !isnothing(eigen_perturbation)
     if !(isnothing(which_decomp) || which_decomp == "eigen")
@@ -409,10 +409,14 @@ function LinearAlgebra.factorize(A::ITensor,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
 
+  dL,dR = dim(IndexSet(Linds...)), dim(IndexSet(setdiff(inds(A),Linds)...))
+  maxdim = get(kwargs,:maxdim, min(dL, dR))
+  might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
+
   if isnothing(which_decomp)
-    if cutoff==0.0 && !hasqns(A) && ortho != "none"
+    if !might_truncate && !hasqns(A) && ortho != "none"
       which_decomp="qr"
-    elseif cutoff ≤ automatic_cutoff
+    elseif isnothing(cutoff) || cutoff ≤ automatic_cutoff
       which_decomp="svd"
     elseif cutoff > automatic_cutoff
       which_decomp="eigen"
