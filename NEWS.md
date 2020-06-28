@@ -1,3 +1,10 @@
+ITensors v0.1.14 Release Notes
+==============================
+
+* Fix AutoMPO issue #440 (PR #445)
+* Have ITensors.compile() compile QN DMRG (PR #442)
+* Make linkind return nothing for all links outside the boundary of the MPS (PR #441)
+
 ITensors v0.1.13 Release Notes
 ==============================
 
