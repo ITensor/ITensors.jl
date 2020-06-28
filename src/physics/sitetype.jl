@@ -27,6 +27,7 @@ end
 
 SiteType(s::AbstractString) = SiteType{Tag(s)}()
 SiteType(t::Tag) = SiteType{t}()
+tag(::SiteType{T}) where {T} = T
 
 macro SiteType_str(s)
   SiteType{Tag(s)}
@@ -67,6 +68,7 @@ end
 
 OpName(s::AbstractString) = OpName{SmallString(s)}()
 OpName(s::SmallString) = OpName{s}()
+name(::OpName{N}) where {N} = N
 
 macro OpName_str(s)
   OpName{SmallString(s)}
