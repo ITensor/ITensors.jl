@@ -40,6 +40,12 @@ macro TagType_str(s)
   TagType{Tag(s)}
 end
 
+#---------------------------------------
+#
+# op system
+#
+#---------------------------------------
+
 #"""
 #OpName is a parameterized type which allows
 #making strings into Julia types for the purpose
@@ -192,6 +198,11 @@ op(s::Vector{<:Index},
    n::Int;
    kwargs...) = op(opname,s,n;kwargs...)
 
+#---------------------------------------
+#
+# state system
+#
+#---------------------------------------
 
 state(s::Index,n::Integer) = s[n]
 
@@ -222,19 +233,64 @@ function state(sset::Vector{<:Index},
   return state(sset[j],st)
 end
 
-function siteinds(d::Integer,
-                  N::Integer; kwargs...)
-  return [Index(d,"Site,n=$n") for n=1:N]
+#---------------------------------------
+#
+# siteind system
+#
+#---------------------------------------
+
+function siteind(st::SiteType,n;kwargs...) 
+  t = String(tag(st))
+  if applicable(space,st)
+    sp = space(st;kwargs...)
+    return Index(sp,"Site,$t,n=$n")
+  end
+  throw(ArgumentError("Overload of \"siteind\" or \"space\" functions not found for Index tag: $t"))
 end
 
-function siteinds(str::String,
-                  N::Integer; kwargs...)
-  SType = SiteType{Tag(str)}
-  if !hasmethod(siteinds,Tuple{SType,Int})
-    throw(ArgumentError("Overload of \"siteinds\" function not found for tag type \"$str\""))
-  end
-  return siteinds(SType(),N; kwargs...)
+function siteind(tag::String,
+                 n::Integer; kwargs...)
+  st = SiteType(tag)
+  return siteind(st,n;kwargs...)
 end
+
+# Special case of `siteind` where integer (dim) provided
+# instead of a tag string
+siteind(d::Integer,n::Integer; kwargs...) = Index(d,"Site,n=$n")
+
+#---------------------------------------
+#
+# siteinds system
+#
+#---------------------------------------
+
+
+siteinds(::SiteType, N; kwargs...) = nothing
+
+function siteinds(tag::String,
+                  N::Integer; kwargs...)
+  st = SiteType(tag)
+
+  si = siteinds(st,N;kwargs...)
+  if !isnothing(si)
+    return si
+  end
+
+  return [siteind(st,j; kwargs...) for j=1:N]
+end
+
+# Special case of `siteinds` where integer (dim)
+# provided instead of a tag string
+function siteinds(d::Integer,
+                  N::Integer; kwargs...)
+  return [siteind(d,n; kwargs...) for n=1:N]
+end
+
+#---------------------------------------
+#
+# has_fermion_string system
+#
+#---------------------------------------
 
 function has_fermion_string(s::Index,
                             opname::AbstractString;
