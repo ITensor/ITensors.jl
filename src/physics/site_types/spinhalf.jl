@@ -95,6 +95,17 @@ end
 op!(Op::ITensor,t::SiteType"S=1/2",
     ::OpName"Sʸ",s::Index) = op!(Op,t,OpName("Sy"),s)
 
+function op!(Op::ITensor,
+             ::SiteType"S=1/2",
+             ::OpName"S2",
+             s::Index)
+  Op[s'=>1, s=>1] = 0.75
+  Op[s'=>2, s=>2] = 0.75
+end
+
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"S²",s::Index) = op!(Op,t,OpName("S2"),s)
+
 op!(Op::ITensor,
     ::SiteType"SpinHalf",
     o::OpName,
