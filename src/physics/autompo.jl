@@ -20,8 +20,8 @@ Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
 Base.:(==)(s1::SiteOp,s2::SiteOp) = (s1.site==s2.site && s1.name==s2.name)
 
 function Base.isless(s1::SiteOp,s2::SiteOp)::Bool
-  if site(s1) < site(s2)
-    return true
+  if site(s1) != site(s2)
+    return site(s1) < site(s2)
   end
   return name(s1) < name(s2)
 end
@@ -31,6 +31,29 @@ end
 ###########################
 
 const OpTerm = Vector{SiteOp}
+
+function Base.:(==)(o1::OpTerm,
+                    o2::OpTerm)
+  (length(o1)==length(o2)) || return false
+  for n=1:length(o1)
+    (o1[n]!=o2[n]) && return false
+  end
+  return true
+end
+
+function Base.isless(o1::OpTerm,
+                     o2::OpTerm)::Bool
+  if length(o1) != length(o2) 
+    return length(o1) < length(o2)
+  end
+  for n=1:length(o1)
+    if o1[n]!=o2[n]
+      return (o1[n] < o2[n])
+    end
+  end
+  return false
+end
+
 mult(t1::OpTerm,t2::OpTerm) = isempty(t2) ? t1 : vcat(t1,t2)
 
 function isfermionic(t::OpTerm,sites)::Bool
@@ -54,18 +77,24 @@ end
 coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
 
+Base.copy(t::MPOTerm) = MPOTerm(coef(t),copy(ops(t)))
+
 function Base.:(==)(t1::MPOTerm,
                     t2::MPOTerm)
   return coef(t1) ≈ coef(t2) && ops(t1) == ops(t2)
 end
 
 function Base.isless(t1::MPOTerm, t2::MPOTerm)::Bool
-  if !isapprox(coef(t1),coef(t2))
-    ct1 = coef(t1)
-    ct2 = coef(t2)
-    #"lexicographic" ordering on  complex numbers
-    return real(ct1) < real(ct2) || 
-           (real(ct1) == real(ct2) && imag(ct1) < imag(ct2))
+  if ops(t1) == ops(t2)
+    if coef(t1) ≈ coef(t2)
+      return false
+    else
+      ct1 = coef(t1)
+      ct2 = coef(t2)
+      #"lexicographic" ordering on  complex numbers
+      return real(ct1) < real(ct2) || 
+             (real(ct1) ≈ real(ct2) && imag(ct1) < imag(ct2))
+    end
   end
   return ops(t1) < ops(t2)
 end
