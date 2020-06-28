@@ -164,7 +164,7 @@ associated with the TagType defined by
 special Index tags, such as "S=1/2","S=1",
 "Fermion", and "Electron".
 """
-struct AutoMPO
+mutable struct AutoMPO
   data::Vector{MPOTerm}
   AutoMPO(terms::Vector{MPOTerm}) = new(terms)
 end
@@ -177,6 +177,7 @@ Construct an empty AutoMPO
 AutoMPO() = AutoMPO(Vector{MPOTerm}())
 
 data(ampo::AutoMPO) = ampo.data
+setdata!(ampo::AutoMPO,ndata) = (ampo.data = ndata)
 
 Base.:(==)(ampo1::AutoMPO,
            ampo2::AutoMPO) = data(ampo1) == data(ampo2)
@@ -860,7 +861,7 @@ function qn_svdMPO(ampo::AutoMPO,
   return H
 end #qn_svdMPO
 
-function sorteachterm(ampo::AutoMPO, sites)
+function sorteachterm!(ampo::AutoMPO, sites)
   ampo = copy(ampo)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
   for t in data(ampo)
@@ -906,6 +907,28 @@ function sorteachterm(ampo::AutoMPO, sites)
   return ampo
 end
 
+function sortmergeterms!(ampo::AutoMPO)
+
+  sort!(data(ampo))
+
+  # Merge (add) terms with same operators
+  da = data(ampo)
+  ndata = MPOTerm[]
+  last_term = copy(da[1])
+  for n=2:length(da)
+    if ops(da[n])==ops(last_term)
+      last_term.coef += coef(da[n])
+    else
+      push!(ndata,last_term)
+      last_term = copy(da[n])
+    end
+  end
+  push!(ndata,last_term)
+
+  setdata!(ampo,ndata)
+  return ampo
+end
+
 """
     MPO(ampo::AutoMPO,sites::Vector{<:Index};kwargs...)
        
@@ -932,10 +955,11 @@ H = MPO(ampo,sites)
 function MPO(ampo::AutoMPO,
              sites::Vector{<:Index};
              kwargs...)::MPO
-  ampo = sorteachterm(ampo,sites)
-  #for t in data(ampo)
-  #  @show t
-  #end
+  length(data(ampo)) == 0 && error("AutoMPO has no terms")
+
+  sorteachterm!(ampo,sites)
+  sortmergeterms!(ampo)
+
   if hasqns(sites[1])
     return qn_svdMPO(ampo,sites;kwargs...)
   end
