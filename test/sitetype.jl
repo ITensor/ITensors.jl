@@ -101,10 +101,14 @@ using ITensors,
     s = siteind("Test1",3)
     @test dim(s) == 4
     @test hastags(s,"Site,Test1,n=3")
+
+    s = siteind("Test1")
+    @test dim(s) == 4
+    @test hastags(s,"Site,Test1")
   end
 
   @testset "siteind defined by siteind overload" begin
-    ITensors.siteind(::SiteType"Test2",n) = Index(4,"Test2,n=$n")
+    ITensors.siteind(::SiteType"Test2") = Index(4,"Test2")
     s = siteind("Test2",3)
     @test dim(s) == 4
     @test hastags(s,"Test2,n=3")

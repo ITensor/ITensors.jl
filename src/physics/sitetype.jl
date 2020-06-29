@@ -239,20 +239,19 @@ end
 #
 #---------------------------------------
 
-function siteind(st::SiteType,n;kwargs...) 
-  t = String(tag(st))
+function siteind(st::SiteType; kwargs...) 
   if applicable(space,st)
     sp = space(st;kwargs...)
-    return Index(sp,"Site,$t,n=$n")
+    return Index(sp,"Site,$(tag(st))")
   end
   throw(ArgumentError("Overload of \"siteind\" or \"space\" functions not found for Index tag: $t"))
 end
 
-function siteind(tag::String,
-                 n::Integer; kwargs...)
-  st = SiteType(tag)
-  return siteind(st,n;kwargs...)
-end
+siteind(st::SiteType, n; kwargs...) = addtags(siteind(st;kwargs...),"n=$n")
+
+siteind(tag::String; kwargs...) = siteind(SiteType(tag);kwargs...)
+
+siteind(tag::String,n; kwargs...) = siteind(SiteType(tag),n;kwargs...)
 
 # Special case of `siteind` where integer (dim) provided
 # instead of a tag string
