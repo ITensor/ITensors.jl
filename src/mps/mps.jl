@@ -366,13 +366,13 @@ function replacebond!(M::MPS,
   push!(phi_new, copy(phi))
   temp = ITensor[] # will store site tensors before we put them back into M
   for j=0:ncenter-3
-    indsMb = inds(M[b])
+    indsMb = inds(M[b+j])
     if swapsites
       sb = siteind(M, b)
       sbp1 = siteind(M, b+1)
       indsMb = replaceind(indsMb, sb, sbp1)
     end
-    index_set = j==0 ? inds(M[b+j]) : push(indsMb, commonind(temp[j], phi_new[j+1]))
+    index_set = j==0 ? indsMb : push(indsMb, commonind(temp[j], phi_new[j+1]))
     L,R,spec = factorize(phi_new[j+1], index_set; which_decomp = which_decomp,
                                        tags = tags(linkind(M,b+j)),
                                        kwargs...)
@@ -381,19 +381,19 @@ function replacebond!(M::MPS,
   end
   # j = ncenter-2 case isolated from loop so that spec is defined at the end
   j = ncenter-2
-  indsMb = inds(M[b])
+  indsMb = inds(M[b+j])
   if swapsites
     sb = siteind(M, b)
     sbp1 = siteind(M, b+1)
     indsMb = replaceind(indsMb, sb, sbp1)
   end
-  index_set = j==0 ? inds(M[b+j]) : push(indsMb, commonind(temp[j], phi_new[j+1]))
+  index_set = j==0 ? indsMb : push(indsMb, commonind(temp[j], phi_new[j+1]))
   L,R,spec = factorize(phi_new[j+1], index_set; which_decomp = which_decomp,
                                        tags = tags(linkind(M,b+j)),
                                        kwargs...)
   push!(temp, L)
   push!(temp, R)
-  
+
   # copy tensors from temp into M
   for j = 0:ncenter-1
     M[b+j] = copy(temp[j+1])
@@ -427,7 +427,7 @@ end
 
 """
     swapbondsites(ψ::MPS, b::Int; kwargs...)
-    
+
 Swap the sites `b` and `b+1`.
 """
 function swapbondsites(ψ::MPS, b::Int; kwargs...)
