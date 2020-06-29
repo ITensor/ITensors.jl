@@ -239,12 +239,11 @@ end
 #
 #---------------------------------------
 
+space(st::SiteType; kwargs...) = throw(MethodError("Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))"))
+
 function siteind(st::SiteType; kwargs...) 
-  if applicable(space,st)
-    sp = space(st;kwargs...)
-    return Index(sp,"Site,$(tag(st))")
-  end
-  throw(ArgumentError("Overload of \"siteind\" or \"space\" functions not found for Index tag: $(tag(st))"))
+  sp = space(st;kwargs...)
+  return Index(sp,"Site,$(tag(st))")
 end
 
 siteind(st::SiteType, n; kwargs...) = addtags(siteind(st;kwargs...),"n=$n")
@@ -262,7 +261,6 @@ siteind(d::Integer,n::Integer; kwargs...) = Index(d,"Site,n=$n")
 # siteinds system
 #
 #---------------------------------------
-
 
 siteinds(::SiteType, N; kwargs...) = nothing
 
