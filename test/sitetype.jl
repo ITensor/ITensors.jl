@@ -177,6 +177,14 @@ using ITensors,
     end
   end
 
+  @testset "siteinds add_tags keyword argument" begin
+    N = 4
+    s = siteinds("S=1/2",N,add_tags="T")
+    for n=1:N
+      @test hastags(s[n],"Site,S=1/2,n=$n,T")
+    end
+  end
+
   @testset "Error for undefined tag in siteinds,space system" begin
     @test_throws MethodError siteinds("Missing",10)
     @test_throws MethodError siteind("Missing",3)
