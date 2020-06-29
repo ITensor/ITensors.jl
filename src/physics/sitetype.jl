@@ -244,7 +244,7 @@ function siteind(st::SiteType; kwargs...)
     sp = space(st;kwargs...)
     return Index(sp,"Site,$(tag(st))")
   end
-  throw(ArgumentError("Overload of \"siteind\" or \"space\" functions not found for Index tag: $t"))
+  throw(ArgumentError("Overload of \"siteind\" or \"space\" functions not found for Index tag: $(tag(st))"))
 end
 
 siteind(st::SiteType, n; kwargs...) = addtags(siteind(st;kwargs...),"n=$n")
