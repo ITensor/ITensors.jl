@@ -1,24 +1,21 @@
 
-const FermionSite = SiteType"Fermion"
-
-function siteinds(::FermionSite, 
-                  N::Int; kwargs...)
+function space(::SiteType"Fermion"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
   conserve_parity = get(kwargs,:conserve_parity,conserve_qns)
   if conserve_nf
     zer = QN("Nf",0,-1) => 1
     one = QN("Nf",1,-1) => 1
-    return [Index(zer,one;tags="Site,Fermion,n=$n") for n=1:N]
+    return [zer,one]
   elseif conserve_parity
     zer = QN("Pf",0,-2) => 1
     one = QN("Pf",1,-2) => 1
-    return [Index(zer,one;tags="Site,Fermion,n=$n") for n=1:N]
+    return [zer,one]
   end
-  return [Index(2,"Site,Fermion,n=$n") for n=1:N]
+  return 2
 end
 
-function state(::FermionSite,
+function state(::SiteType"Fermion",
                st::AbstractString)
   if st == "Emp" || st == "0"
     return 1
@@ -29,7 +26,7 @@ function state(::FermionSite,
   return 0
 end
 
-function op(::FermionSite,
+function op(::SiteType"Fermion",
             s::Index,
             opname::AbstractString)::ITensor
   Emp   = s(1)
@@ -57,12 +54,12 @@ function op(::FermionSite,
     pOcc[Occ] = 1.0
     return pOcc
   else
-    throw(ArgumentError("Operator name $opname not recognized for FermionSite"))
+    throw(ArgumentError("Operator name $opname not recognized for \"Fermion\" site"))
   end
   return Op
 end
 
-function has_fermion_string(::FermionSite,
+function has_fermion_string(::SiteType"Fermion",
             s::Index,
             opname::AbstractString)::Bool
   if opname=="C" || opname=="Cdag"
