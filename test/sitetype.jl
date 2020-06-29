@@ -164,6 +164,19 @@ using ITensors,
     end
   end
 
+  @testset "Version of siteinds taking function argument" begin
+    N = 10
+    s = siteinds(n->(n==1||n==N) ? "S=1/2" : "S=1",N)
+    for n in (1,N)
+      @test dim(s[n]) == 2
+      @test hastags(s[n],"Site,S=1/2,n=$n")
+    end
+    for n=2:N-1
+      @test dim(s[n]) == 3
+      @test hastags(s[n],"Site,S=1,n=$n")
+    end
+  end
+
   @testset "Error for undefined tag in siteinds,space system" begin
     @test_throws MethodError siteinds("Missing",10)
     @test_throws MethodError siteind("Missing",3)

@@ -276,6 +276,11 @@ function siteinds(tag::String,
   return [siteind(st,j; kwargs...) for j=1:N]
 end
 
+function siteinds(f::Function,
+                  N::Integer; kwargs...)
+  [siteind(f(n),n; kwargs...) for n=1:N]
+end
+
 # Special case of `siteinds` where integer (dim)
 # provided instead of a tag string
 function siteinds(d::Integer,
