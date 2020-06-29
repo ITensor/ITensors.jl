@@ -125,8 +125,7 @@ using ITensors,
   end
 
   @testset "siteinds defined by space overload" begin
-    function ITensors.space(::SiteType"Test4"; kwargs...) 
-      conserve_qns = get(kwargs,:conserve_qns,false)
+    function ITensors.space(::SiteType"Test4"; conserve_qns=false)
       if conserve_qns
         return [QN("T",0)=>2, QN("T",1)=>1, QN("T",2)=>1]
       end
