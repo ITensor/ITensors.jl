@@ -17,20 +17,20 @@ let
 
   ampo = AutoMPO()
   for i=1:N
-    ampo += (U,"Nupdn",i)
+    ampo += U,"Nupdn",i
   end
   for b=1:N-1
-    ampo += (-t1,"Cdagup",b,"Cup",b+1)
-    ampo += (-t1,"Cdagup",b+1,"Cup",b)
-    ampo += (-t1,"Cdagdn",b,"Cdn",b+1)
-    ampo += (-t1,"Cdagdn",b+1,"Cdn",b)
-    ampo += (V1,"Ntot",b,"Ntot",b+1)
+    ampo += -t1,"Cdagup",b,"Cup",b+1
+    ampo += -t1,"Cdagup",b+1,"Cup",b
+    ampo += -t1,"Cdagdn",b,"Cdn",b+1
+    ampo += -t1,"Cdagdn",b+1,"Cdn",b
+    ampo += V1,"Ntot",b,"Ntot",b+1
   end
   for b=1:N-2
-    ampo += (-t2,"Cdagup",b,"Cup",b+2)
-    ampo += (-t2,"Cdagup",b+2,"Cup",b)
-    ampo += (-t2,"Cdagdn",b,"Cdn",b+2)
-    ampo += (-t2,"Cdagdn",b+2,"Cdn",b)
+    ampo += -t2,"Cdagup",b,"Cup",b+2
+    ampo += -t2,"Cdagup",b+2,"Cup",b
+    ampo += -t2,"Cdagdn",b,"Cdn",b+2
+    ampo += -t2,"Cdagdn",b+2,"Cdn",b
   end
   H = MPO(ampo,sites)
 

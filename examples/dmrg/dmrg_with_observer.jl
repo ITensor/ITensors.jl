@@ -13,10 +13,11 @@ function tfimMPO(sites,
   N = length(sites)
   ampo = AutoMPO()
   for j=1:N-1
-    ampo += (-1.,"Sz",j,"Sz",j+1)
-    ampo += (h,"Sx",j)
+    ampo += -1,"Sz",j,"Sz",j+1
   end
-  ampo += (h,"Sx",N)
+  for j=1:N
+    ampo += h,"Sx",j
+  end
   # Convert these terms to an MPO tensor network
   return MPO(ampo,sites)
 end
