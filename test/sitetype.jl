@@ -177,9 +177,9 @@ using ITensors,
     end
   end
 
-  @testset "siteinds add_tags keyword argument" begin
+  @testset "siteinds addtags keyword argument" begin
     N = 4
-    s = siteinds("S=1/2",N,add_tags="T")
+    s = siteinds("S=1/2",N,addtags="T")
     for n=1:N
       @test hastags(s[n],"Site,S=1/2,n=$n,T")
     end
