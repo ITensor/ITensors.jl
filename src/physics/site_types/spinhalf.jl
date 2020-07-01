@@ -8,21 +8,11 @@ function space(::SiteType"S=1/2"; kwargs...)
   return 2
 end
 
-space(::SiteType"SpinHalf"; kwargs...) = space(SiteType("S=1/2");kwargs...)
 
-function state(::SiteType"S=1/2",
-               st::AbstractString)
-  if st == "Up" || st == "↑"
-    return 1
-  elseif st == "Dn" || st == "↓"
-    return 2
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for \"S=1/2\" site"))
-  return 0
-end
-
-state(::SiteType"SpinHalf",
-      st::AbstractString) = state(SiteType("S=1/2"),st)
+state(::SiteType"S=1/2",::StateName"Up") = 1
+state(::SiteType"S=1/2",::StateName"Dn") = 2
+state(::SiteType"S=1/2",::StateName"↑") = 1
+state(::SiteType"S=1/2",::StateName"↓") = 2
 
 function op!(Op::ITensor,
              ::SiteType"S=1/2",
@@ -103,6 +93,12 @@ end
 
 op!(Op::ITensor,t::SiteType"S=1/2",
     ::OpName"S²",s::Index) = op!(Op,t,OpName("S2"),s)
+
+
+# Support the tag "SpinHalf" as equivalent to "S=1/2"
+
+space(::SiteType"SpinHalf"; kwargs...) = space(SiteType("S=1/2");kwargs...)
+state(::SiteType"SpinHalf",n::StateName) = state(SiteType("S=1/2"),n)
 
 op!(Op::ITensor,
     ::SiteType"SpinHalf",

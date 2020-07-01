@@ -31,20 +31,14 @@ function space(::SiteType"Electron"; kwargs...)
   return 4
 end
 
-function state(::SiteType"Electron",
-               st::AbstractString)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Up" || st == "↑"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  elseif st == "UpDn" || st == "↑↓"
-    return 4
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for Electron site"))
-  return 0
-end
+state(::SiteType"Electron",::StateName"Emp")  = 1
+state(::SiteType"Electron",::StateName"Up")   = 2
+state(::SiteType"Electron",::StateName"Dn")   = 3
+state(::SiteType"Electron",::StateName"UpDn") = 4
+state(::SiteType"Electron",::StateName"0")    = 1
+state(::SiteType"Electron",::StateName"↑")    = 2
+state(::SiteType"Electron",::StateName"↓")    = 3
+state(::SiteType"Electron",::StateName"↑↓")   = 4
 
 function op(::SiteType"Electron",
             s::Index,

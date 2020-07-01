@@ -15,16 +15,10 @@ function space(::SiteType"Fermion"; kwargs...)
   return 2
 end
 
-function state(::SiteType"Fermion",
-               st::AbstractString)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Occ" || st == "1"
-    return 2
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for Fermion site"))
-  return 0
-end
+state(::SiteType"Fermion",::StateName"Emp")  = 1
+state(::SiteType"Fermion",::StateName"Occ")  = 2
+state(::SiteType"Fermion",::StateName"0")  = 1
+state(::SiteType"Fermion",::StateName"1")  = 2
 
 function op(::SiteType"Fermion",
             s::Index,
