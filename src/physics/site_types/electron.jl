@@ -1,8 +1,6 @@
 
-const ElectronSite = SiteType"Electron"
 
-function siteinds(::ElectronSite, 
-                  N::Int; kwargs...)
+function space(::SiteType"Electron"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
   conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
@@ -12,28 +10,28 @@ function siteinds(::ElectronSite,
     up = QN(("Nf",1,-1),("Sz",+1)) => 1
     dn = QN(("Nf",1,-1),("Sz",-1)) => 1
     ud = QN(("Nf",2,-1),("Sz", 0)) => 1
-    return [Index(em,up,dn,ud;tags="Site,Electron,n=$n") for n=1:N]
+    return [em,up,dn,ud]
   elseif conserve_nf
     zer = QN("Nf",0,-1) => 1
     one = QN("Nf",1,-1) => 2
     two = QN("Nf",2,-1) => 1
-    return [Index(zer,one,two;tags="Site,Electron,n=$n") for n=1:N]
+    return [zer,one,two]
   elseif conserve_sz
     em = QN(("Sz", 0),("Pf",0,-2)) => 1
     up = QN(("Sz",+1),("Pf",1,-2)) => 1
     dn = QN(("Sz",-1),("Pf",1,-2)) => 1
     ud = QN(("Sz", 0),("Pf",0,-2)) => 1
-    return [Index(em,up,dn,ud;tags="Site,Electron,n=$n") for n=1:N]
+    return [em,up,dn,ud]
   elseif conserve_parity
     zer = QN("Pf",0,-2) => 1
     one = QN("Pf",1,-2) => 2
     two = QN("Pf",0,-2) => 1
-    return [Index(zer,one,two;tags="Site,Electron,n=$n") for n=1:N]
+    return [zer,one,two]
   end
-  return [Index(4,"Site,Electron,n=$n") for n=1:N]
+  return 4
 end
 
-function state(::ElectronSite,
+function state(::SiteType"Electron",
                st::AbstractString)
   if st == "Emp" || st == "0"
     return 1
@@ -48,7 +46,7 @@ function state(::ElectronSite,
   return 0
 end
 
-function op(::ElectronSite,
+function op(::SiteType"Electron",
             s::Index,
             opname::AbstractString)::ITensor
   Emp   = s(1)
@@ -144,12 +142,12 @@ function op(::ElectronSite,
     pUD[UpDn] = 1.0
     return pUD
   else
-    throw(ArgumentError("Operator name $opname not recognized for ElectronSite"))
+    throw(ArgumentError("Operator name $opname not recognized for \"Electron\" site"))
   end
   return Op
 end
 
-function has_fermion_string(::ElectronSite,
+function has_fermion_string(::SiteType"Electron",
             s::Index,
             opname::AbstractString)::Bool
   if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"

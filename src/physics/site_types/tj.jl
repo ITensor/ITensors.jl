@@ -1,8 +1,5 @@
 
-const tJSite = SiteType"tJ"
-
-function siteinds(::tJSite,
-                  N::Int; kwargs...)
+function space(::SiteType"tJ"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
   conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
@@ -11,25 +8,25 @@ function siteinds(::tJSite,
     em = QN(("Nf",0,-1),("Sz", 0)) => 1
     up = QN(("Nf",1,-1),("Sz",+1)) => 1
     dn = QN(("Nf",1,-1),("Sz",-1)) => 1
-    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+    return [em,up,dn]
   elseif conserve_nf
     zer = QN("Nf",0,-1) => 1
     one = QN("Nf",1,-1) => 2
-    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+    return [zer,one]
   elseif conserve_sz
     em = QN(("Sz", 0),("Pf",0,-2)) => 1
     up = QN(("Sz",+1),("Pf",1,-2)) => 1
     dn = QN(("Sz",-1),("Pf",1,-2)) => 1
-    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+    return [em,up,dn]
   elseif conserve_parity
     zer = QN("Pf",0,-2) => 1
     one = QN("Pf",1,-2) => 2
-    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+    return [zer,one]
   end
-  return [Index(3,"Site,tJ,n=$n") for n=1:N]
+  return 3
 end
 
-function state(::tJSite,
+function state(::SiteType"tJ",
                st::AbstractString)
   if st == "0" || st == "Emp"
     return 1
@@ -42,7 +39,7 @@ function state(::tJSite,
   return 0
 end
 
-function op(::tJSite,
+function op(::SiteType"tJ",
             s::Index,
             opname::AbstractString)::ITensor
   Emp = s(1)
@@ -103,12 +100,12 @@ function op(::tJSite,
     pD[Dn] = 1.
     return pD
   else
-    throw(ArgumentError("Operator name '$opname' not recognized for tJSite"))
+    throw(ArgumentError("Operator name '$opname' not recognized for \"tJ\" site"))
   end
   return Op
 end
 
-function has_fermion_string(::tJSite,
+function has_fermion_string(::SiteType"tJ",
             s::Index,
             opname::AbstractString)::Bool
   if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"

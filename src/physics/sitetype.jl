@@ -27,6 +27,7 @@ end
 
 SiteType(s::AbstractString) = SiteType{Tag(s)}()
 SiteType(t::Tag) = SiteType{t}()
+tag(::SiteType{T}) where {T} = T
 
 macro SiteType_str(s)
   SiteType{Tag(s)}
@@ -38,6 +39,12 @@ const TagType = SiteType
 macro TagType_str(s)
   TagType{Tag(s)}
 end
+
+#---------------------------------------
+#
+# op system
+#
+#---------------------------------------
 
 #"""
 #OpName is a parameterized type which allows
@@ -67,6 +74,7 @@ end
 
 OpName(s::AbstractString) = OpName{SmallString(s)}()
 OpName(s::SmallString) = OpName{s}()
+name(::OpName{N}) where {N} = N
 
 macro OpName_str(s)
   OpName{SmallString(s)}
@@ -190,6 +198,11 @@ op(s::Vector{<:Index},
    n::Int;
    kwargs...) = op(opname,s,n;kwargs...)
 
+#---------------------------------------
+#
+# state system
+#
+#---------------------------------------
 
 state(s::Index,n::Integer) = s[n]
 
@@ -220,19 +233,66 @@ function state(sset::Vector{<:Index},
   return state(sset[j],st)
 end
 
-function siteinds(d::Integer,
-                  N::Integer; kwargs...)
-  return [Index(d,"Site,n=$n") for n=1:N]
+#---------------------------------------
+#
+# siteind system
+#
+#---------------------------------------
+
+space(st::SiteType; kwargs...) = throw(MethodError("Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))"))
+
+function siteind(st::SiteType; addtags="", kwargs...) 
+  sp = space(st;kwargs...)
+  return Index(sp,"Site,$(tag(st)),$addtags")
 end
 
-function siteinds(str::String,
+siteind(st::SiteType, n; kwargs...) = addtags(siteind(st; kwargs...),"n=$n")
+
+siteind(tag::String; kwargs...) = siteind(SiteType(tag);kwargs...)
+
+siteind(tag::String,n; kwargs...) = siteind(SiteType(tag),n;kwargs...)
+
+# Special case of `siteind` where integer (dim) provided
+# instead of a tag string
+siteind(d::Integer,n::Integer; kwargs...) = Index(d,"Site,n=$n")
+
+#---------------------------------------
+#
+# siteinds system
+#
+#---------------------------------------
+
+siteinds(::SiteType, N; kwargs...) = nothing
+
+function siteinds(tag::String,
                   N::Integer; kwargs...)
-  SType = SiteType{Tag(str)}
-  if !hasmethod(siteinds,Tuple{SType,Int})
-    throw(ArgumentError("Overload of \"siteinds\" function not found for tag type \"$str\""))
+  st = SiteType(tag)
+
+  si = siteinds(st,N;kwargs...)
+  if !isnothing(si)
+    return si
   end
-  return siteinds(SType(),N; kwargs...)
+
+  return [siteind(st,j; kwargs...) for j=1:N]
 end
+
+function siteinds(f::Function,
+                  N::Integer; kwargs...)
+  [siteind(f(n),n; kwargs...) for n=1:N]
+end
+
+# Special case of `siteinds` where integer (dim)
+# provided instead of a tag string
+function siteinds(d::Integer,
+                  N::Integer; kwargs...)
+  return [siteind(d,n; kwargs...) for n=1:N]
+end
+
+#---------------------------------------
+#
+# has_fermion_string system
+#
+#---------------------------------------
 
 function has_fermion_string(s::Index,
                             opname::AbstractString;

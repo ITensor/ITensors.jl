@@ -1,19 +1,14 @@
 
-function siteinds(::SiteType"S=1",
-                  N::Int; kwargs...)
+function space(::SiteType"S=1"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
   if conserve_sz
-    up = QN("Sz",+2) => 1
-    z0 = QN("Sz", 0) => 1
-    dn = QN("Sz",-2) => 1
-    return [Index(up,z0,dn;tags="Site,S=1,n=$n") for n=1:N]
+    return [QN("Sz",+2)=>1,QN("Sz",0)=>1,QN("Sz",-2)=>1]
   end
-  return [Index(3,"Site,S=1,n=$n") for n=1:N]
+  return 3
 end
 
-siteinds(::SiteType"SpinOne",
-         N::Int; kwargs...) = siteinds(SiteType("S=1"),N;kwargs...)
+space(::SiteType"SpinOne"; kwargs...) = space(SiteType("S=1");kwargs...)
 
 function state(::SiteType"S=1",
                st::AbstractString)
@@ -24,7 +19,7 @@ function state(::SiteType"S=1",
   elseif st == "Dn" || st == "↓"
     return 3
   end
-  throw(ArgumentError("State string \"$st\" not recognized for SpinOne site"))
+  throw(ArgumentError("State string \"$st\" not recognized for \"S=1\" site"))
   return 0
 end
 

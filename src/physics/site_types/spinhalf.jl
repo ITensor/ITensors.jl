@@ -1,16 +1,14 @@
 
-function siteinds(::SiteType"S=1/2",
-                  N::Int; kwargs...)
+function space(::SiteType"S=1/2"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
   if conserve_sz
-    return [Index(QN("Sz",+1)=>1,QN("Sz",-1)=>1;tags="Site,S=1/2,n=$n") for n=1:N]
+    return [QN("Sz",+1)=>1,QN("Sz",-1)=>1]
   end
-  return [Index(2,"Site,S=1/2,n=$n") for n=1:N]
+  return 2
 end
 
-siteinds(::SiteType"SpinHalf",
-         N::Int; kwargs...) = siteinds(SiteType("S=1/2"),N;kwargs...)
+space(::SiteType"SpinHalf"; kwargs...) = space(SiteType("S=1/2");kwargs...)
 
 function state(::SiteType"S=1/2",
                st::AbstractString)

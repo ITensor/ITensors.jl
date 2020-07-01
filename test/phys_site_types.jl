@@ -6,6 +6,18 @@ using ITensors,
   N = 10
 
   @testset "Spin Half sites" begin
+
+    s = siteind("S=1/2")
+    @test hastags(s,"S=1/2,Site")
+    @test dim(s) == 2
+
+    s = siteind("S=1/2";conserve_qns=true)
+    @test hastags(s,"S=1/2,Site")
+    @test dim(s) == 2
+    @test nblocks(s) == 2
+    @test qn(s,1) == QN("Sz",+1)
+    @test qn(s,2) == QN("Sz",-1)
+
     s = siteinds("S=1/2",N)
 
     @test state(s[1],"Up") == s[1](1)
@@ -165,41 +177,6 @@ using ITensors,
     @test Sm3 ≈ [0.0 0. 0; 0 0 0; 0 1.0 0]
   end
 
-end
-
-
-@testset "Custom Site Tag Type" begin
-
-  function ITensors.op!(Op::ITensor,
-                        ::SiteType"MySite",
-                        ::OpName"MyOp",
-                        s::Index)
-    Op[s(1),s'(1)] = 11
-    Op[s(1),s'(2)] = 12
-    Op[s(2),s'(1)] = 21
-    Op[s(2),s'(2)] = 22
-  end
-
-  function ITensors.state(::SiteType"MySite",
-                          statename::AbstractString)
-    if statename == "One"
-      return 1
-    elseif statename == "Two"
-      return 2
-    end
-  end
-
-  i = Index(2,"MySite")
-
-  expectedOp = ITensor(i,i')
-  expectedOp[i(1),i'(1)] = 11
-  expectedOp[i(1),i'(2)] = 12
-  expectedOp[i(2),i'(1)] = 21
-  expectedOp[i(2),i'(2)] = 22
-  @test op("MyOp",i) ≈ expectedOp
-
-  @test state(i,"One") == i(1)
-  @test state(i,"Two") == i(2)
 end
 
 nothing
