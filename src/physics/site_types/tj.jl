@@ -99,11 +99,7 @@ function op(::SiteType"tJ",
   return Op
 end
 
-function has_fermion_string(::SiteType"tJ",
-            s::Index,
-            opname::AbstractString)::Bool
-  if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"
-    return true
-  end
-  return false
-end
+has_fermion_string(::SiteType"tJ",::OpName"Cup") = true
+has_fermion_string(::SiteType"tJ",::OpName"Cdagup") = true
+has_fermion_string(::SiteType"tJ",::OpName"Cdn") = true
+has_fermion_string(::SiteType"tJ",::OpName"Cdagdn") = true

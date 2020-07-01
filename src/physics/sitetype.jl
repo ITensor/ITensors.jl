@@ -307,24 +307,18 @@ end
 #
 #---------------------------------------
 
+has_fermion_string(::SiteType,::OpName) = nothing
+
 function has_fermion_string(s::Index,
                             opname::AbstractString;
                             kwargs...)::Bool
   opname = strip(opname)
-  use_tag = 0
-  nfound = 0
-  for n=1:length(tags(s))
-    SType = SiteType{tags(s)[n]}
-    if hasmethod(has_fermion_string,Tuple{SType,Index,AbstractString})
-      use_tag = n
-      nfound += 1
-    end
+  Ntags = length(tags(s))
+  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
+  opn = OpName(SmallString(opname))
+  for st in stypes
+    res = has_fermion_string(st,opn)
+    !isnothing(res) && return res
   end
-  if nfound == 0
-    return false
-  elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\""))
-  end
-  st = SiteType(tags(s)[use_tag])
-  return has_fermion_string(st,s,opname;kwargs...)
+  return false
 end
