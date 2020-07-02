@@ -1,30 +1,18 @@
 
-function siteinds(::SiteType"S=1/2",
-                  N::Int; kwargs...)
+function space(::SiteType"S=1/2"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
   if conserve_sz
-    return [Index(QN("Sz",+1)=>1,QN("Sz",-1)=>1;tags="Site,S=1/2,n=$n") for n=1:N]
+    return [QN("Sz",+1)=>1,QN("Sz",-1)=>1]
   end
-  return [Index(2,"Site,S=1/2,n=$n") for n=1:N]
+  return 2
 end
 
-siteinds(::SiteType"SpinHalf",
-         N::Int; kwargs...) = siteinds(SiteType("S=1/2"),N;kwargs...)
 
-function state(::SiteType"S=1/2",
-               st::AbstractString)
-  if st == "Up" || st == "↑"
-    return 1
-  elseif st == "Dn" || st == "↓"
-    return 2
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for \"S=1/2\" site"))
-  return 0
-end
-
-state(::SiteType"SpinHalf",
-      st::AbstractString) = state(SiteType("S=1/2"),st)
+state(::SiteType"S=1/2",::StateName"Up") = 1
+state(::SiteType"S=1/2",::StateName"Dn") = 2
+state(st::SiteType"S=1/2",::StateName"↑") = state(st,StateName("Up"))
+state(st::SiteType"S=1/2",::StateName"↓") = state(st,StateName("Dn"))
 
 function op!(Op::ITensor,
              ::SiteType"S=1/2",
@@ -94,6 +82,23 @@ end
 
 op!(Op::ITensor,t::SiteType"S=1/2",
     ::OpName"Sʸ",s::Index) = op!(Op,t,OpName("Sy"),s)
+
+function op!(Op::ITensor,
+             ::SiteType"S=1/2",
+             ::OpName"S2",
+             s::Index)
+  Op[s'=>1, s=>1] = 0.75
+  Op[s'=>2, s=>2] = 0.75
+end
+
+op!(Op::ITensor,t::SiteType"S=1/2",
+    ::OpName"S²",s::Index) = op!(Op,t,OpName("S2"),s)
+
+
+# Support the tag "SpinHalf" as equivalent to "S=1/2"
+
+space(::SiteType"SpinHalf"; kwargs...) = space(SiteType("S=1/2");kwargs...)
+state(::SiteType"SpinHalf",n::StateName) = state(SiteType("S=1/2"),n)
 
 op!(Op::ITensor,
     ::SiteType"SpinHalf",

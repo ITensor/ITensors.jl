@@ -34,9 +34,9 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      ampo += "Sz",j,"Sz",j+1
+      ampo += 0.5,"S+",j,"S-",j+1
+      ampo += 0.5,"S-",j,"S+",j+1
     end
     H = MPO(ampo,sites)
 
@@ -88,10 +88,10 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j = 1:N-1
-      add!(ampo,-1.0,"Sz",j,"Sz",j+1)
+      ampo += -1,"Sz",j,"Sz",j+1
     end
     for j = 1:N
-      add!(ampo,-0.2,"Sx",j)
+      ampo += -0.2,"Sx",j
     end
     H = MPO(ampo,sites)
 
@@ -122,14 +122,14 @@ using ITensors, Test, Random
 
     ampoZ = AutoMPO()
     for j=1:N-1
-      add!(ampoZ,"Sz",j,"Sz",j+1)
+      ampoZ += "Sz",j,"Sz",j+1
     end
     HZ = MPO(ampoZ,sites)
 
     ampoXY = AutoMPO()
     for j=1:N-1
-      add!(ampoXY,0.5,"S+",j,"S-",j+1)
-      add!(ampoXY,0.5,"S-",j,"S+",j+1)
+      ampoXY += 0.5,"S+",j,"S-",j+1
+      ampoXY += 0.5,"S-",j,"S+",j+1
     end
     HXY = MPO(ampoXY,sites)
 
@@ -154,9 +154,9 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      ampo += "Sz",j,"Sz",j+1
+      ampo += 0.5,"S+",j,"S-",j+1
+      ampo += 0.5,"S-",j,"S+",j+1
     end
     H = MPO(ampo,sites)
 
@@ -195,13 +195,13 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j=1:N-1
-      ampo += (-t1, "Cdag", j,   "C", j+1)
-      ampo += (-t1, "Cdag", j+1, "C", j)
-      ampo += (  V, "N",    j,   "N", j+1)
+      ampo += -t1,"Cdag",j,"C",j+1
+      ampo += -t1,"Cdag",j+1,"C",j
+      ampo += V,"N",j,"N",j+1
     end
     for j=1:N-2
-      ampo += (-t2, "Cdag", j,   "C", j+2)
-      ampo += (-t2, "Cdag", j+2, "C", j)
+      ampo += -t2,"Cdag",j,"C",j+2
+      ampo += -t2,"Cdag",j+2,"C",j
     end
     H = MPO(ampo, s)
 
@@ -226,11 +226,11 @@ using ITensors, Test, Random
       ampo += (U,"Nupdn",i)
     end
     for b=1:N-1
-      ampo += (-t1,"Cdagup",b,"Cup",b+1)
-      ampo += (-t1,"Cdagup",b+1,"Cup",b)
-      ampo += (-t1,"Cdagdn",b,"Cdn",b+1)
-      ampo += (-t1,"Cdagdn",b+1,"Cdn",b)
-      ampo += (V1,"Ntot",b,"Ntot",b+1)
+      ampo += -t1,"Cdagup",b,"Cup",b+1
+      ampo += -t1,"Cdagup",b+1,"Cup",b
+      ampo += -t1,"Cdagdn",b,"Cdn",b+1
+      ampo += -t1,"Cdagdn",b+1,"Cdn",b
+      ampo += V1,"Ntot",b,"Ntot",b+1
     end
     H = MPO(ampo,sites)
     sweeps = Sweeps(6)

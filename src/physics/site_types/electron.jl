@@ -1,8 +1,6 @@
 
-const ElectronSite = SiteType"Electron"
 
-function siteinds(::ElectronSite, 
-                  N::Int; kwargs...)
+function space(::SiteType"Electron"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
   conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
@@ -12,43 +10,37 @@ function siteinds(::ElectronSite,
     up = QN(("Nf",1,-1),("Sz",+1)) => 1
     dn = QN(("Nf",1,-1),("Sz",-1)) => 1
     ud = QN(("Nf",2,-1),("Sz", 0)) => 1
-    return [Index(em,up,dn,ud;tags="Site,Electron,n=$n") for n=1:N]
+    return [em,up,dn,ud]
   elseif conserve_nf
     zer = QN("Nf",0,-1) => 1
     one = QN("Nf",1,-1) => 2
     two = QN("Nf",2,-1) => 1
-    return [Index(zer,one,two;tags="Site,Electron,n=$n") for n=1:N]
+    return [zer,one,two]
   elseif conserve_sz
     em = QN(("Sz", 0),("Pf",0,-2)) => 1
     up = QN(("Sz",+1),("Pf",1,-2)) => 1
     dn = QN(("Sz",-1),("Pf",1,-2)) => 1
     ud = QN(("Sz", 0),("Pf",0,-2)) => 1
-    return [Index(em,up,dn,ud;tags="Site,Electron,n=$n") for n=1:N]
+    return [em,up,dn,ud]
   elseif conserve_parity
     zer = QN("Pf",0,-2) => 1
     one = QN("Pf",1,-2) => 2
     two = QN("Pf",0,-2) => 1
-    return [Index(zer,one,two;tags="Site,Electron,n=$n") for n=1:N]
+    return [zer,one,two]
   end
-  return [Index(4,"Site,Electron,n=$n") for n=1:N]
+  return 4
 end
 
-function state(::ElectronSite,
-               st::AbstractString)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Up" || st == "↑"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  elseif st == "UpDn" || st == "↑↓"
-    return 4
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for Electron site"))
-  return 0
-end
+state(::SiteType"Electron",::StateName"Emp")  = 1
+state(::SiteType"Electron",::StateName"Up")   = 2
+state(::SiteType"Electron",::StateName"Dn")   = 3
+state(::SiteType"Electron",::StateName"UpDn") = 4
+state(st::SiteType"Electron",::StateName"0")    = state(st,StateName("Emp"))
+state(st::SiteType"Electron",::StateName"↑")    = state(st,StateName("Up"))
+state(st::SiteType"Electron",::StateName"↓")    = state(st,StateName("Dn"))
+state(st::SiteType"Electron",::StateName"↑↓")   = state(st,StateName("UpDn"))
 
-function op(::ElectronSite,
+function op(::SiteType"Electron",
             s::Index,
             opname::AbstractString)::ITensor
   Emp   = s(1)
@@ -144,16 +136,12 @@ function op(::ElectronSite,
     pUD[UpDn] = 1.0
     return pUD
   else
-    throw(ArgumentError("Operator name $opname not recognized for ElectronSite"))
+    throw(ArgumentError("Operator name $opname not recognized for \"Electron\" site"))
   end
   return Op
 end
 
-function has_fermion_string(::ElectronSite,
-            s::Index,
-            opname::AbstractString)::Bool
-  if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"
-    return true
-  end
-  return false
-end
+has_fermion_string(::SiteType"Electron",::OpName"Cup") = true
+has_fermion_string(::SiteType"Electron",::OpName"Cdagup") = true
+has_fermion_string(::SiteType"Electron",::OpName"Cdn") = true
+has_fermion_string(::SiteType"Electron",::OpName"Cdagdn") = true

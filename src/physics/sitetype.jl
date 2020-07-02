@@ -27,6 +27,7 @@ end
 
 SiteType(s::AbstractString) = SiteType{Tag(s)}()
 SiteType(t::Tag) = SiteType{t}()
+tag(::SiteType{T}) where {T} = T
 
 macro SiteType_str(s)
   SiteType{Tag(s)}
@@ -38,6 +39,12 @@ const TagType = SiteType
 macro TagType_str(s)
   TagType{Tag(s)}
 end
+
+#---------------------------------------
+#
+# op system
+#
+#---------------------------------------
 
 #"""
 #OpName is a parameterized type which allows
@@ -67,6 +74,7 @@ end
 
 OpName(s::AbstractString) = OpName{SmallString(s)}()
 OpName(s::SmallString) = OpName{s}()
+name(::OpName{N}) where {N} = N
 
 macro OpName_str(s)
   OpName{SmallString(s)}
@@ -198,68 +206,127 @@ op(s::Vector{<:Index},
    kwargs...) =
   op(opname, s, ns...; kwargs...)
 
+#---------------------------------------
+#
+# state system
+#
+#---------------------------------------
+
+@eval struct StateName{Name}
+  (f::Type{<:StateName})() = $(Expr(:new, :f))
+end
+
+StateName(s::AbstractString) = StateName{SmallString(s)}()
+StateName(s::SmallString) = StateName{s}()
+name(::StateName{N}) where {N} = N
+
+macro StateName_str(s)
+  StateName{SmallString(s)}
+end
+
+state(::SiteType,::StateName) = nothing
+state(::SiteType,::AbstractString) = nothing
+
+function state(s::Index,
+               name::AbstractString)::IndexVal
+  Ntags = max(1,length(tags(s))) # use max here in case of no tags
+                                 # because there may still be a
+                                 # generic case such as name=="Id"
+  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
+  sname = StateName(SmallString(name))
+
+  # Try calling state(::SiteType"Tag",::StateName"Name")
+  for st in stypes
+    res = state(st,sname)
+    !isnothing(res) && return s(res)
+  end
+
+  # Try calling state(::SiteType"Tag","Name")
+  for st in stypes
+    res = state(st,name)
+    !isnothing(res) && return s(res)
+  end
+
+  throw(ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))"))
+end
 
 state(s::Index,n::Integer) = s[n]
 
-function state(s::Index,
-               str::String)::IndexVal
-  use_tag = 0
-  nfound = 0
-  for n=1:length(tags(s))
-    SType = SiteType{tags(s)[n]}
-    if hasmethod(state,Tuple{SType,AbstractString})
-      use_tag = n
-      nfound += 1
-    end
-  end
-  if nfound == 0
-    throw(ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))"))
-  elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"state\""))
-  end
-  st = SiteType(tags(s)[use_tag])
-  sn = state(st,str)
-  return s[sn]
+state(sset::Vector{<:Index},j::Integer,st) = state(sset[j],st)
+
+#---------------------------------------
+#
+# siteind system
+#
+#---------------------------------------
+
+space(st::SiteType; kwargs...) = throw(MethodError("Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))"))
+
+function siteind(st::SiteType; addtags="", kwargs...) 
+  sp = space(st;kwargs...)
+  return Index(sp,"Site,$(tag(st)),$addtags")
 end
 
-function state(sset::Vector{<:Index},
-               j::Integer,
-               st)::IndexVal
-  return state(sset[j],st)
+siteind(st::SiteType, n; kwargs...) = addtags(siteind(st; kwargs...),"n=$n")
+
+siteind(tag::String; kwargs...) = siteind(SiteType(tag);kwargs...)
+
+siteind(tag::String,n; kwargs...) = siteind(SiteType(tag),n;kwargs...)
+
+# Special case of `siteind` where integer (dim) provided
+# instead of a tag string
+siteind(d::Integer,n::Integer; kwargs...) = Index(d,"Site,n=$n")
+
+#---------------------------------------
+#
+# siteinds system
+#
+#---------------------------------------
+
+siteinds(::SiteType, N; kwargs...) = nothing
+
+function siteinds(tag::String,
+                  N::Integer; kwargs...)
+  st = SiteType(tag)
+
+  si = siteinds(st,N;kwargs...)
+  if !isnothing(si)
+    return si
+  end
+
+  return [siteind(st,j; kwargs...) for j=1:N]
 end
 
+function siteinds(f::Function,
+                  N::Integer; kwargs...)
+  [siteind(f(n),n; kwargs...) for n=1:N]
+end
+
+# Special case of `siteinds` where integer (dim)
+# provided instead of a tag string
 function siteinds(d::Integer,
                   N::Integer; kwargs...)
-  return [Index(d,"Site,n=$n") for n=1:N]
+  return [siteind(d,n; kwargs...) for n=1:N]
 end
 
-function siteinds(str::String,
-                  N::Integer; kwargs...)
-  SType = SiteType{Tag(str)}
-  if !hasmethod(siteinds,Tuple{SType,Int})
-    throw(ArgumentError("Overload of \"siteinds\" function not found for tag type \"$str\""))
-  end
-  return siteinds(SType(),N; kwargs...)
-end
+#---------------------------------------
+#
+# has_fermion_string system
+#
+#---------------------------------------
+
+has_fermion_string(::SiteType,::OpName) = nothing
 
 function has_fermion_string(s::Index,
                             opname::AbstractString;
                             kwargs...)::Bool
   opname = strip(opname)
-  use_tag = 0
-  nfound = 0
-  for n=1:length(tags(s))
-    SType = SiteType{tags(s)[n]}
-    if hasmethod(has_fermion_string,Tuple{SType,Index,AbstractString})
-      use_tag = n
-      nfound += 1
-    end
+  Ntags = length(tags(s))
+  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
+  opn = OpName(SmallString(opname))
+  for st in stypes
+    res = has_fermion_string(st,opn)
+    !isnothing(res) && return res
   end
-  if nfound == 0
-    return false
-  elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\""))
-  end
-  st = SiteType(tags(s)[use_tag])
-  return has_fermion_string(st,s,opname;kwargs...)
+  return false
 end

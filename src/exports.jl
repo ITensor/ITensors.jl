@@ -262,4 +262,6 @@ export
 
 # qn/qnindex.jl
   flux,
-  hasqns
+  hasqns,
+  nblocks,
+  qn

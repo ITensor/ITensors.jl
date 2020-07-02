@@ -1,8 +1,5 @@
 
-const tJSite = SiteType"tJ"
-
-function siteinds(::tJSite,
-                  N::Int; kwargs...)
+function space(::SiteType"tJ"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
   conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
@@ -11,38 +8,32 @@ function siteinds(::tJSite,
     em = QN(("Nf",0,-1),("Sz", 0)) => 1
     up = QN(("Nf",1,-1),("Sz",+1)) => 1
     dn = QN(("Nf",1,-1),("Sz",-1)) => 1
-    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+    return [em,up,dn]
   elseif conserve_nf
     zer = QN("Nf",0,-1) => 1
     one = QN("Nf",1,-1) => 2
-    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+    return [zer,one]
   elseif conserve_sz
     em = QN(("Sz", 0),("Pf",0,-2)) => 1
     up = QN(("Sz",+1),("Pf",1,-2)) => 1
     dn = QN(("Sz",-1),("Pf",1,-2)) => 1
-    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+    return [em,up,dn]
   elseif conserve_parity
     zer = QN("Pf",0,-2) => 1
     one = QN("Pf",1,-2) => 2
-    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+    return [zer,one]
   end
-  return [Index(3,"Site,tJ,n=$n") for n=1:N]
+  return 3
 end
 
-function state(::tJSite,
-               st::AbstractString)
-  if st == "0" || st == "Emp"
-    return 1
-  elseif st == "Up" || st == "↑"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for tJ site"))
-  return 0
-end
+state(::SiteType"tJ",::StateName"Emp")  = 1
+state(::SiteType"tJ",::StateName"Up")   = 2
+state(::SiteType"tJ",::StateName"Dn")   = 3
+state(st::SiteType"tJ",::StateName"0")    = state(st,StateName("Emp"))
+state(st::SiteType"tJ",::StateName"↑")    = state(st,StateName("Up"))
+state(st::SiteType"tJ",::StateName"↓")    = state(st,StateName("Dn"))
 
-function op(::tJSite,
+function op(::SiteType"tJ",
             s::Index,
             opname::AbstractString)::ITensor
   Emp = s(1)
@@ -90,29 +81,13 @@ function op(::tJSite,
     Op[UpP, Dn] = 1.
   elseif opname == "S⁻" || opname == "Sminus"
     Op[DnP, Up] = 1.
-  elseif opname == "Emp" || opname == "0"
-    pEmp = emptyITensor(s)
-    pEmp[Emp] = 1.
-    return pEmp
-  elseif opname == "Up" || opname == "↑"
-    pU = emptyITensor(s)
-    pU[Up] = 1.
-    return pU
-  elseif opname == "Dn" || opname == "↓"
-    pD = emptyITensor(s)
-    pD[Dn] = 1.
-    return pD
   else
-    throw(ArgumentError("Operator name '$opname' not recognized for tJSite"))
+    throw(ArgumentError("Operator name '$opname' not recognized for \"tJ\" site"))
   end
   return Op
 end
 
-function has_fermion_string(::tJSite,
-            s::Index,
-            opname::AbstractString)::Bool
-  if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"
-    return true
-  end
-  return false
-end
+has_fermion_string(::SiteType"tJ",::OpName"Cup") = true
+has_fermion_string(::SiteType"tJ",::OpName"Cdagup") = true
+has_fermion_string(::SiteType"tJ",::OpName"Cdn") = true
+has_fermion_string(::SiteType"tJ",::OpName"Cdagdn") = true

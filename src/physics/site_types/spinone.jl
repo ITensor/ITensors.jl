@@ -1,34 +1,20 @@
 
-function siteinds(::SiteType"S=1",
-                  N::Int; kwargs...)
+function space(::SiteType"S=1"; kwargs...)
   conserve_qns = get(kwargs,:conserve_qns,false)
   conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
   if conserve_sz
-    up = QN("Sz",+2) => 1
-    z0 = QN("Sz", 0) => 1
-    dn = QN("Sz",-2) => 1
-    return [Index(up,z0,dn;tags="Site,S=1,n=$n") for n=1:N]
+    return [QN("Sz",+2)=>1,QN("Sz",0)=>1,QN("Sz",-2)=>1]
   end
-  return [Index(3,"Site,S=1,n=$n") for n=1:N]
+  return 3
 end
 
-siteinds(::SiteType"SpinOne",
-         N::Int; kwargs...) = siteinds(SiteType("S=1"),N;kwargs...)
+state(::SiteType"S=1",::StateName"Up") = 1
+state(::SiteType"S=1",::StateName"Z0") = 2
+state(::SiteType"S=1",::StateName"Dn") = 3
+state(st::SiteType"S=1",::StateName"↑") = state(st,StateName("Up"))
+state(st::SiteType"S=1",::StateName"0") = state(st,StateName("Z0"))
+state(st::SiteType"S=1",::StateName"↓") = state(st,StateName("Dn"))
 
-function state(::SiteType"S=1",
-               st::AbstractString)
-  if st == "Up" || st == "↑"
-    return 1
-  elseif st == "Z0" || st == "0"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for SpinOne site"))
-  return 0
-end
-
-state(::SiteType"SpinOne",st::AbstractString) = state(SiteType("S=1"),st)
 
 function op!(Op::ITensor,
              ::SiteType"S=1",
@@ -136,6 +122,9 @@ function op!(Op::ITensor,
   Op[s'=>1,s=>3] = -0.5
   Op[s'=>3,s=>3] = +0.5
 end
+
+space(::SiteType"SpinOne"; kwargs...) = space(SiteType("S=1");kwargs...)
+state(::SiteType"SpinOne",st::AbstractString) = state(SiteType("S=1"),st)
 
 op!(Op::ITensor,
     ::SiteType"SpinOne",
