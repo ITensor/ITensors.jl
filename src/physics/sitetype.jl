@@ -82,8 +82,22 @@ end
 
 # Default implementations of op and op!
 op(::SiteType, ::OpName, ::Index...; kwargs...) = nothing
+op(::SiteType, ::SiteType,
+   args::Union{SiteType, OpName, Index}...; kwargs...) = nothing
 op!(::ITensor, ::SiteType, ::OpName, ::Index...; kwargs...) = nothing 
+op!(::ITensor, ::SiteType, ::SiteType,
+    args::Union{SiteType, OpName, Index}...; kwargs...) = nothing 
 op(::SiteType, ::Index, ::AbstractString; kwargs...) = nothing
+
+function _sitetypes(ts::TagSet)
+  # use max here in case of no tags
+  # because there may still be a
+  # generic case such as name=="Id"
+  Ntags = max(1, length(ts))
+  return [SiteType(ts[n]) for n in 1:Ntags]
+end
+
+_sitetypes(i::Index) = _sitetypes(tags(i))
 
 """
     op(opname::String, s::Index; kwargs...)
@@ -121,7 +135,7 @@ function op(name::AbstractString,
 
   # TODO: filter out only commons tags
   # if there are multiple indices
-  stags = tags(s[1])
+  commontags_s = commontags(s...)
 
   # Interpret operator names joined by *
   # as acting sequentially on the same site
@@ -133,17 +147,14 @@ function op(name::AbstractString,
                    op(op2, s...; kwargs...))
   end
 
-  Ntags = max(1,length(stags)) # use max here in case of no tags
-                               # because there may still be a
-                               # generic case such as name=="Id"
-  stypes  = [SiteType(stags[n]) for n in 1:Ntags]
-  opn = OpName(SmallString(name))
+  common_stypes  = _sitetypes(commontags_s)
+  opn = OpName(name)
 
   #
   # Try calling a function of the form:
   #    op(::SiteType,::OpName,::Index;kwargs...)
   #
-  for st in stypes
+  for st in common_stypes
     res = op(st, opn, s...; kwargs...)
     if !isnothing(res)
       return res
@@ -154,10 +165,38 @@ function op(name::AbstractString,
   #    op!(::ITensor,::SiteType,::OpName,::Index;kwargs...)
   #
   Op = emptyITensor(prime.(s)..., dag.(s)...)
-  for st in stypes
+  for st in common_stypes
     op!(Op, st, opn, s...; kwargs...)
     if !isempty(Op)
       return Op
+    end
+  end
+
+  if length(s) > 1
+    # No overloads for common tags found. It might be a
+    # case of making an operator with mixed site types,
+    # searching for overloads like:
+    #   op(::SiteType, ::SiteType,
+    #      ::OpName, ::Index, ::Index;
+    #      kwargs...)
+    #   op!(::ITensor, ::SiteType, ::SiteType,
+    #       ::OpName, ::Index, ::Index;
+    #       kwargs...)
+    stypes = _sitetypes.(s)
+
+    for st in Iterators.product(stypes...)
+      res = op(st..., opn, s...; kwargs...)
+      if !isnothing(res)
+        return res
+      end
+    end
+
+    Op = emptyITensor(prime.(s)..., dag.(s)...)
+    for st in Iterators.product(stypes...)
+      op!(Op, st..., opn, s...; kwargs...)
+      if !isempty(Op)
+        return Op
+      end
     end
   end
 
@@ -169,15 +208,15 @@ function op(name::AbstractString,
   #  after version 0.1.10, and may be eventually
   #  deprecated)
   #
-  length(s) > 1 && error("Older op interface does not support more than one Index")
-  for st in stypes
+  length(s) > 1 && error("Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::SiteType..., ::OpName, ::Index...)` or `op!(::ITensor, ::SiteType..., ::OpName, ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).")
+  for st in common_stypes
     res = op(st, s[1], name; kwargs...)
     if !isnothing(res)
       return res
     end
   end
 
-  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(stags))"))
+  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(commontags_s))"))
 end
 
 # For backwards compatibility, version of `op`
@@ -229,11 +268,8 @@ state(::SiteType,::AbstractString) = nothing
 
 function state(s::Index,
                name::AbstractString)::IndexVal
-  Ntags = max(1,length(tags(s))) # use max here in case of no tags
-                                 # because there may still be a
-                                 # generic case such as name=="Id"
-  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
-  sname = StateName(SmallString(name))
+  stypes  = _sitetypes(s)
+  sname = StateName(name)
 
   # Try calling state(::SiteType"Tag",::StateName"Name")
   for st in stypes
@@ -322,8 +358,8 @@ function has_fermion_string(s::Index,
                             kwargs...)::Bool
   opname = strip(opname)
   Ntags = length(tags(s))
-  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
-  opn = OpName(SmallString(opname))
+  stypes = _sitetypes(s)
+  opn = OpName(opname)
   for st in stypes
     res = has_fermion_string(st,opn)
     !isnothing(res) && return res

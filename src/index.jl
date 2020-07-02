@@ -125,6 +125,8 @@ Obtain the TagSet of an Index.
 """
 tags(i::Index) = i.tags
 
+commontags(is::Index...) = commontags(tags.(is)...)
+
 """
     plev(i::Index)
 
