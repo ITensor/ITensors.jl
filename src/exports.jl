@@ -244,10 +244,13 @@ export
 # physics/sitetype.jl
   SiteType,
   @SiteType_str,
+  StateName,
+  @StateName_str,
   op,
   OpName,
   @OpName_str,
   state,
+  TagType
   @TagType_str,
   has_fermion_string,
 
