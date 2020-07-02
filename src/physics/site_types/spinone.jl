@@ -8,22 +8,13 @@ function space(::SiteType"S=1"; kwargs...)
   return 3
 end
 
-space(::SiteType"SpinOne"; kwargs...) = space(SiteType("S=1");kwargs...)
+state(::SiteType"S=1",::StateName"Up") = 1
+state(::SiteType"S=1",::StateName"Z0") = 2
+state(::SiteType"S=1",::StateName"Dn") = 3
+state(st::SiteType"S=1",::StateName"↑") = state(st,StateName("Up"))
+state(st::SiteType"S=1",::StateName"0") = state(st,StateName("Z0"))
+state(st::SiteType"S=1",::StateName"↓") = state(st,StateName("Dn"))
 
-function state(::SiteType"S=1",
-               st::AbstractString)
-  if st == "Up" || st == "↑"
-    return 1
-  elseif st == "Z0" || st == "0"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for \"S=1\" site"))
-  return 0
-end
-
-state(::SiteType"SpinOne",st::AbstractString) = state(SiteType("S=1"),st)
 
 function op!(Op::ITensor,
              ::SiteType"S=1",
@@ -131,6 +122,9 @@ function op!(Op::ITensor,
   Op[s'=>1,s=>3] = -0.5
   Op[s'=>3,s=>3] = +0.5
 end
+
+space(::SiteType"SpinOne"; kwargs...) = space(SiteType("S=1");kwargs...)
+state(::SiteType"SpinOne",st::AbstractString) = state(SiteType("S=1"),st)
 
 op!(Op::ITensor,
     ::SiteType"SpinOne",

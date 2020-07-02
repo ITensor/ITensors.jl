@@ -204,34 +204,47 @@ op(s::Vector{<:Index},
 #
 #---------------------------------------
 
-state(s::Index,n::Integer) = s[n]
+@eval struct StateName{Name}
+  (f::Type{<:StateName})() = $(Expr(:new, :f))
+end
+
+StateName(s::AbstractString) = StateName{SmallString(s)}()
+StateName(s::SmallString) = StateName{s}()
+name(::StateName{N}) where {N} = N
+
+macro StateName_str(s)
+  StateName{SmallString(s)}
+end
+
+state(::SiteType,::StateName) = nothing
+state(::SiteType,::AbstractString) = nothing
 
 function state(s::Index,
-               str::String)::IndexVal
-  use_tag = 0
-  nfound = 0
-  for n=1:length(tags(s))
-    SType = SiteType{tags(s)[n]}
-    if hasmethod(state,Tuple{SType,AbstractString})
-      use_tag = n
-      nfound += 1
-    end
+               name::AbstractString)::IndexVal
+  Ntags = max(1,length(tags(s))) # use max here in case of no tags
+                                 # because there may still be a
+                                 # generic case such as name=="Id"
+  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
+  sname = StateName(SmallString(name))
+
+  # Try calling state(::SiteType"Tag",::StateName"Name")
+  for st in stypes
+    res = state(st,sname)
+    !isnothing(res) && return s(res)
   end
-  if nfound == 0
-    throw(ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))"))
-  elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"state\""))
+
+  # Try calling state(::SiteType"Tag","Name")
+  for st in stypes
+    res = state(st,name)
+    !isnothing(res) && return s(res)
   end
-  st = SiteType(tags(s)[use_tag])
-  sn = state(st,str)
-  return s[sn]
+
+  throw(ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))"))
 end
 
-function state(sset::Vector{<:Index},
-               j::Integer,
-               st)::IndexVal
-  return state(sset[j],st)
-end
+state(s::Index,n::Integer) = s[n]
+
+state(sset::Vector{<:Index},j::Integer,st) = state(sset[j],st)
 
 #---------------------------------------
 #
@@ -294,24 +307,18 @@ end
 #
 #---------------------------------------
 
+has_fermion_string(::SiteType,::OpName) = nothing
+
 function has_fermion_string(s::Index,
                             opname::AbstractString;
                             kwargs...)::Bool
   opname = strip(opname)
-  use_tag = 0
-  nfound = 0
-  for n=1:length(tags(s))
-    SType = SiteType{tags(s)[n]}
-    if hasmethod(has_fermion_string,Tuple{SType,Index,AbstractString})
-      use_tag = n
-      nfound += 1
-    end
+  Ntags = length(tags(s))
+  stypes  = [SiteType(tags(s)[n]) for n in 1:Ntags]
+  opn = OpName(SmallString(opname))
+  for st in stypes
+    res = has_fermion_string(st,opn)
+    !isnothing(res) && return res
   end
-  if nfound == 0
-    return false
-  elseif nfound > 1
-    throw(ArgumentError("Multiple tags from $(tags(s)) overload the function \"has_fermion_string\""))
-  end
-  st = SiteType(tags(s)[use_tag])
-  return has_fermion_string(st,s,opname;kwargs...)
+  return false
 end

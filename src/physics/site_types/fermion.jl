@@ -15,16 +15,10 @@ function space(::SiteType"Fermion"; kwargs...)
   return 2
 end
 
-function state(::SiteType"Fermion",
-               st::AbstractString)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Occ" || st == "1"
-    return 2
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for Fermion site"))
-  return 0
-end
+state(::SiteType"Fermion",::StateName"Emp")  = 1
+state(::SiteType"Fermion",::StateName"Occ")  = 2
+state(st::SiteType"Fermion",::StateName"0") = state(st,StateName("Emp"))
+state(st::SiteType"Fermion",::StateName"1") = state(st,StateName("Occ"))
 
 function op(::SiteType"Fermion",
             s::Index,
@@ -59,11 +53,6 @@ function op(::SiteType"Fermion",
   return Op
 end
 
-function has_fermion_string(::SiteType"Fermion",
-            s::Index,
-            opname::AbstractString)::Bool
-  if opname=="C" || opname=="Cdag"
-    return true
-  end
-  return false
-end
+
+has_fermion_string(::SiteType"Fermion",::OpName"C") = true
+has_fermion_string(::SiteType"Fermion",::OpName"Cdag") = true

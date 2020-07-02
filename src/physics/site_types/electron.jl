@@ -31,20 +31,14 @@ function space(::SiteType"Electron"; kwargs...)
   return 4
 end
 
-function state(::SiteType"Electron",
-               st::AbstractString)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Up" || st == "↑"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  elseif st == "UpDn" || st == "↑↓"
-    return 4
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for Electron site"))
-  return 0
-end
+state(::SiteType"Electron",::StateName"Emp")  = 1
+state(::SiteType"Electron",::StateName"Up")   = 2
+state(::SiteType"Electron",::StateName"Dn")   = 3
+state(::SiteType"Electron",::StateName"UpDn") = 4
+state(st::SiteType"Electron",::StateName"0")    = state(st,StateName("Emp"))
+state(st::SiteType"Electron",::StateName"↑")    = state(st,StateName("Up"))
+state(st::SiteType"Electron",::StateName"↓")    = state(st,StateName("Dn"))
+state(st::SiteType"Electron",::StateName"↑↓")   = state(st,StateName("UpDn"))
 
 function op(::SiteType"Electron",
             s::Index,
@@ -147,11 +141,7 @@ function op(::SiteType"Electron",
   return Op
 end
 
-function has_fermion_string(::SiteType"Electron",
-            s::Index,
-            opname::AbstractString)::Bool
-  if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"
-    return true
-  end
-  return false
-end
+has_fermion_string(::SiteType"Electron",::OpName"Cup") = true
+has_fermion_string(::SiteType"Electron",::OpName"Cdagup") = true
+has_fermion_string(::SiteType"Electron",::OpName"Cdn") = true
+has_fermion_string(::SiteType"Electron",::OpName"Cdagdn") = true
