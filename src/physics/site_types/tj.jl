@@ -29,9 +29,9 @@ end
 state(::SiteType"tJ",::StateName"Emp")  = 1
 state(::SiteType"tJ",::StateName"Up")   = 2
 state(::SiteType"tJ",::StateName"Dn")   = 3
-state(::SiteType"tJ",::StateName"0")    = 1
-state(::SiteType"tJ",::StateName"↑")    = 2
-state(::SiteType"tJ",::StateName"↓")    = 3
+state(st::SiteType"tJ",::StateName"0")    = state(st,StateName("Emp"))
+state(st::SiteType"tJ",::StateName"↑")    = state(st,StateName("Up"))
+state(st::SiteType"tJ",::StateName"↓")    = state(st,StateName("Dn"))
 
 function op(::SiteType"tJ",
             s::Index,
@@ -81,18 +81,6 @@ function op(::SiteType"tJ",
     Op[UpP, Dn] = 1.
   elseif opname == "S⁻" || opname == "Sminus"
     Op[DnP, Up] = 1.
-  elseif opname == "Emp" || opname == "0"
-    pEmp = emptyITensor(s)
-    pEmp[Emp] = 1.
-    return pEmp
-  elseif opname == "Up" || opname == "↑"
-    pU = emptyITensor(s)
-    pU[Up] = 1.
-    return pU
-  elseif opname == "Dn" || opname == "↓"
-    pD = emptyITensor(s)
-    pD[Dn] = 1.
-    return pD
   else
     throw(ArgumentError("Operator name '$opname' not recognized for \"tJ\" site"))
   end

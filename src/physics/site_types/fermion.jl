@@ -17,8 +17,8 @@ end
 
 state(::SiteType"Fermion",::StateName"Emp")  = 1
 state(::SiteType"Fermion",::StateName"Occ")  = 2
-state(::SiteType"Fermion",::StateName"0")  = 1
-state(::SiteType"Fermion",::StateName"1")  = 2
+state(st::SiteType"Fermion",::StateName"0") = state(st,StateName("Emp"))
+state(st::SiteType"Fermion",::StateName"1") = state(st,StateName("Occ"))
 
 function op(::SiteType"Fermion",
             s::Index,

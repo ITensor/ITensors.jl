@@ -11,8 +11,8 @@ end
 
 state(::SiteType"S=1/2",::StateName"Up") = 1
 state(::SiteType"S=1/2",::StateName"Dn") = 2
-state(::SiteType"S=1/2",::StateName"↑") = 1
-state(::SiteType"S=1/2",::StateName"↓") = 2
+state(st::SiteType"S=1/2",::StateName"↑") = state(st,StateName("Up"))
+state(st::SiteType"S=1/2",::StateName"↓") = state(st,StateName("Dn"))
 
 function op!(Op::ITensor,
              ::SiteType"S=1/2",

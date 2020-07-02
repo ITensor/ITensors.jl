@@ -35,10 +35,10 @@ state(::SiteType"Electron",::StateName"Emp")  = 1
 state(::SiteType"Electron",::StateName"Up")   = 2
 state(::SiteType"Electron",::StateName"Dn")   = 3
 state(::SiteType"Electron",::StateName"UpDn") = 4
-state(::SiteType"Electron",::StateName"0")    = 1
-state(::SiteType"Electron",::StateName"↑")    = 2
-state(::SiteType"Electron",::StateName"↓")    = 3
-state(::SiteType"Electron",::StateName"↑↓")   = 4
+state(st::SiteType"Electron",::StateName"0")    = state(st,StateName("Emp"))
+state(st::SiteType"Electron",::StateName"↑")    = state(st,StateName("Up"))
+state(st::SiteType"Electron",::StateName"↓")    = state(st,StateName("Dn"))
+state(st::SiteType"Electron",::StateName"↑↓")   = state(st,StateName("UpDn"))
 
 function op(::SiteType"Electron",
             s::Index,
