@@ -81,12 +81,14 @@ macro OpName_str(s)
 end
 
 # Default implementations of op and op!
-op(::SiteType, ::OpName, ::Index...; kwargs...) = nothing
-op(::SiteType, ::SiteType,
-   args::Union{SiteType, OpName, Index}...; kwargs...) = nothing
-op!(::ITensor, ::SiteType, ::OpName, ::Index...; kwargs...) = nothing 
-op!(::ITensor, ::SiteType, ::SiteType,
-    args::Union{SiteType, OpName, Index}...; kwargs...) = nothing 
+op(::OpName, ::SiteType, ::Index...; kwargs...) = nothing
+op(::OpName, ::SiteType, ::SiteType,
+   sitetypes_inds::Union{SiteType, Index}...; kwargs...) = nothing
+op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...) = nothing 
+op!(::ITensor, ::OpName, ::SiteType, ::SiteType,
+    sitetypes_inds::Union{SiteType, Index}...; kwargs...) = nothing 
+
+# Deprecated version, for backwards compatibility
 op(::SiteType, ::Index, ::AbstractString; kwargs...) = nothing
 
 function _sitetypes(ts::TagSet)
@@ -94,7 +96,7 @@ function _sitetypes(ts::TagSet)
   # because there may still be a
   # generic case such as name=="Id"
   Ntags = max(1, length(ts))
-  return [SiteType(ts[n]) for n in 1:Ntags]
+  return SiteType[SiteType(ts[n]) for n in 1:Ntags]
 end
 
 _sitetypes(i::Index) = _sitetypes(tags(i))
@@ -152,21 +154,21 @@ function op(name::AbstractString,
 
   #
   # Try calling a function of the form:
-  #    op(::SiteType,::OpName,::Index;kwargs...)
+  #    op(::OpName, ::SiteType, ::Index; kwargs...)
   #
   for st in common_stypes
-    res = op(st, opn, s...; kwargs...)
+    res = op(opn, st, s...; kwargs...)
     if !isnothing(res)
       return res
     end
   end
 
   # otherwise try calling a function of the form:
-  #    op!(::ITensor,::SiteType,::OpName,::Index;kwargs...)
+  #    op!(::ITensor, ::OpName, ::SiteType, ::Index; kwargs...)
   #
   Op = emptyITensor(prime.(s)..., dag.(s)...)
   for st in common_stypes
-    op!(Op, st, opn, s...; kwargs...)
+    op!(Op, opn, st, s...; kwargs...)
     if !isempty(Op)
       return Op
     end
@@ -176,16 +178,18 @@ function op(name::AbstractString,
     # No overloads for common tags found. It might be a
     # case of making an operator with mixed site types,
     # searching for overloads like:
-    #   op(::SiteType, ::SiteType,
-    #      ::OpName, ::Index, ::Index;
+    #   op(::OpName,
+    #      ::SiteType...,
+    #      ::Index...;
     #      kwargs...)
-    #   op!(::ITensor, ::SiteType, ::SiteType,
-    #       ::OpName, ::Index, ::Index;
+    #   op!(::ITensor, ::OpName,
+    #       ::SiteType...,
+    #       ::Index...;
     #       kwargs...)
     stypes = _sitetypes.(s)
 
     for st in Iterators.product(stypes...)
-      res = op(st..., opn, s...; kwargs...)
+      res = op(opn, st..., s...; kwargs...)
       if !isnothing(res)
         return res
       end
@@ -193,11 +197,12 @@ function op(name::AbstractString,
 
     Op = emptyITensor(prime.(s)..., dag.(s)...)
     for st in Iterators.product(stypes...)
-      op!(Op, st..., opn, s...; kwargs...)
+      op!(Op, opn, st..., s...; kwargs...)
       if !isempty(Op)
         return Op
       end
     end
+    error("Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::OpName, ::SiteType..., ::Index...)` or `op!(::ITensor, ::OpName, ::SiteType..., ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).")
   end
 
   #
@@ -208,7 +213,6 @@ function op(name::AbstractString,
   #  after version 0.1.10, and may be eventually
   #  deprecated)
   #
-  length(s) > 1 && error("Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::SiteType..., ::OpName, ::Index...)` or `op!(::ITensor, ::SiteType..., ::OpName, ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).")
   for st in common_stypes
     res = op(st, s[1], name; kwargs...)
     if !isnothing(res)
@@ -263,8 +267,8 @@ macro StateName_str(s)
   StateName{SmallString(s)}
 end
 
-state(::SiteType,::StateName) = nothing
-state(::SiteType,::AbstractString) = nothing
+state(::SiteType, ::StateName) = nothing
+state(::SiteType, ::AbstractString) = nothing
 
 function state(s::Index,
                name::AbstractString)::IndexVal
@@ -351,17 +355,17 @@ end
 #
 #---------------------------------------
 
-has_fermion_string(::SiteType,::OpName) = nothing
+has_fermion_string(::OpName, ::SiteType) = nothing
 
-function has_fermion_string(s::Index,
-                            opname::AbstractString;
+function has_fermion_string(opname::AbstractString,
+                            s::Index;
                             kwargs...)::Bool
   opname = strip(opname)
   Ntags = length(tags(s))
   stypes = _sitetypes(s)
   opn = OpName(opname)
   for st in stypes
-    res = has_fermion_string(st,opn)
+    res = has_fermion_string(opn, st)
     !isnothing(res) && return res
   end
   return false

@@ -59,7 +59,7 @@ mult(t1::OpTerm,t2::OpTerm) = isempty(t2) ? t1 : vcat(t1,t2)
 function isfermionic(t::OpTerm,sites)::Bool
   p = +1
   for op in t
-    if has_fermion_string(sites[site(op)],name(op))
+    if has_fermion_string(name(op), sites[site(op)])
       p *= -1
     end
   end
@@ -879,7 +879,8 @@ function sorteachterm!(ampo::AutoMPO, sites)
     # and inserting string "F" operators
     parity = +1
     for n=Nt:-1:1
-      fermionic = has_fermion_string(sites[site(t.ops[n])],name(t.ops[n]))
+      fermionic = has_fermion_string(name(t.ops[n]),
+                                     sites[site(t.ops[n])])
       if parity == -1
         # Put Jordan-Wigner string emanating
         # from fermionic operators to the right

@@ -93,9 +93,9 @@ using ITensors,
     F = Array(op(s,"F"),s',s) 
     @test F ≈ [1. 0; 0 -1]
 
-    @test has_fermion_string(s,"C")
-    @test has_fermion_string(s,"Cdag")
-    @test !has_fermion_string(s,"N")
+    @test has_fermion_string("C", s)
+    @test has_fermion_string("Cdag", s)
+    @test !has_fermion_string("N", s)
   end
 
   @testset "Electron sites" begin
@@ -140,11 +140,11 @@ using ITensors,
     Sm3 = Array(op(s,"S-"),s',s) 
     @test Sm3 ≈ [0. 0 0 0; 0 0 0 0; 0 1 0 0; 0 0 0 0]
 
-    @test has_fermion_string(s,"Cup")
-    @test has_fermion_string(s,"Cdagup")
-    @test has_fermion_string(s,"Cdn")
-    @test has_fermion_string(s,"Cdagdn")
-    @test !has_fermion_string(s,"N")
+    @test has_fermion_string("Cup", s)
+    @test has_fermion_string("Cdagup", s)
+    @test has_fermion_string("Cdn", s)
+    @test has_fermion_string("Cdagdn", s)
+    @test !has_fermion_string("N", s)
   end
 
   @testset "tJ sites" begin
@@ -186,11 +186,11 @@ using ITensors,
     Sm = Array(op(s,"Sminus"),s',s) 
     @test Sm ≈ [0.0 0. 0; 0 0 0; 0 1.0 0]
 
-    @test has_fermion_string(s,"Cup")
-    @test has_fermion_string(s,"Cdagup")
-    @test has_fermion_string(s,"Cdn")
-    @test has_fermion_string(s,"Cdagdn")
-    @test !has_fermion_string(s,"N")
+    @test has_fermion_string("Cup", s)
+    @test has_fermion_string("Cdagup", s)
+    @test has_fermion_string("Cdn", s)
+    @test has_fermion_string("Cdagdn", s)
+    @test !has_fermion_string("N", s)
   end
 
 end

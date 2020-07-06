@@ -141,7 +141,7 @@ function op(::SiteType"Electron",
   return Op
 end
 
-has_fermion_string(::SiteType"Electron",::OpName"Cup") = true
-has_fermion_string(::SiteType"Electron",::OpName"Cdagup") = true
-has_fermion_string(::SiteType"Electron",::OpName"Cdn") = true
-has_fermion_string(::SiteType"Electron",::OpName"Cdagdn") = true
+has_fermion_string(::OpName"Cup", ::SiteType"Electron") = true
+has_fermion_string(::OpName"Cdagup", ::SiteType"Electron") = true
+has_fermion_string(::OpName"Cdn", ::SiteType"Electron") = true
+has_fermion_string(::OpName"Cdagdn", ::SiteType"Electron") = true

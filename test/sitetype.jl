@@ -30,8 +30,8 @@ using ITensors,
     # Use "_Custom_" tag even though this example
     # is for S=3/2, because we might define the 
     # "S=3/2" TagType inside ITensors.jl later
-    function ITensors.op(::SiteType"_Custom_",
-                         ::OpName"Sz",
+    function ITensors.op(::OpName"Sz",
+                         ::SiteType"_Custom_",
                          s::Index)
       Op = emptyITensor(s',dag(s))
       Op[s'=>1,s=>1] = +3/2
@@ -41,8 +41,8 @@ using ITensors,
       return Op
     end
 
-    function ITensors.op(::SiteType"_Custom_",
-                         ::OpName"α",
+    function ITensors.op(::OpName"α",
+                         ::SiteType"_Custom_",
                          s1::Index,
                          s2::Index)
       Op = emptyITensor(s1', s2',
@@ -54,9 +54,9 @@ using ITensors,
       return Op
     end
 
-    function ITensors.op(::SiteType"_Custom1",
+    function ITensors.op(::OpName"β",
+                         ::SiteType"_Custom1",
                          ::SiteType"_Custom2",
-                         ::OpName"β",
                          s1::Index,
                          s2::Index)
       Op = emptyITensor(s1', s2',
@@ -99,8 +99,8 @@ using ITensors,
     # is for S=3/2, because we might define the 
     # "S=3/2" TagType inside ITensors.jl later
     function ITensors.op!(Op::ITensor,
-                          ::SiteType"_Custom_",
                           ::OpName"Sz",
+                          ::SiteType"_Custom_",
                           s::Index)
       Op[s'=>1,s=>1] = +3/2
       Op[s'=>2,s=>2] = +1/2
@@ -109,8 +109,8 @@ using ITensors,
     end
 
     function ITensors.op!(Op::ITensor,
-                          ::SiteType"_Custom_",
                           ::OpName"α",
+                          ::SiteType"_Custom_",
                           s1::Index,
                           s2::Index)
       Op[s1'=>1, s2'=>2, s1=>1, s2=>2] = +3/2
@@ -120,9 +120,9 @@ using ITensors,
     end
 
     function ITensors.op!(Op::ITensor,
+                          ::OpName"β",
                           ::SiteType"_Custom1",
                           ::SiteType"_Custom2",
-                          ::OpName"β",
                           s1::Index,
                           s2::Index)
       Op[s1'=>1, s2'=>2, s1=>1, s2=>2] = +5/2
