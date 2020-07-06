@@ -1,3 +1,10 @@
+ITensors v0.1.15 Release Notes
+==============================
+
+* Update state system to be user-extensible using StateName (PR #449)
+* Update siteinds system to be more easily extensible using `space` and `siteind` functions (PR #446)
+* Remove parenthesis from AutoMPO syntax from tests and examples (PR #448)
+
 ITensors v0.1.14 Release Notes
 ==============================
 
