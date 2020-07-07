@@ -94,6 +94,21 @@ using ITensors,
     @test_throws ErrorException op("β", s2, s1)
   end
 
+  @testset "op with more than two indices" begin
+    ITensors.space(SiteType"qubit") = 2
+
+    ITensors.op(::OpName"rand",
+                ::SiteType"qubit",
+                s::Index...) =
+      randomITensor(prime.(s)..., dag.(s)...)
+
+    s = siteinds("qubit", 4)
+    o = op("rand", s...)
+    @test norm(o) > 0
+    @test order(o) == 8
+    @test hassameinds(o, (prime.(s)..., s...))
+  end
+
   @testset "Custom SiteType using op!" begin
     # Use "_Custom_" tag even though this example
     # is for S=3/2, because we might define the 

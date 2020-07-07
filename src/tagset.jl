@@ -228,7 +228,7 @@ end
 
 function commontags(ts1::TagSet, ts2::TagSet,
                     ts3::TagSet, ts::TagSet...)
-  error("commontags(::TagSet...) not implemented yet")
+  return commontags(commontags(ts1, ts2), ts3, ts...)
 end
 
 function Base.show(io::IO, T::TagSet)
