@@ -215,7 +215,6 @@ end
 commontags(ts::TagSet) = ts
 
 function commontags(ts1::TagSet, ts2::TagSet)
-  #error("commontags(::TagSet, ::TagSet) not implemented yet")
   ts3 = TagSet()
   N1 = length(ts1)
   for n1 in 1:N1
