@@ -87,7 +87,7 @@ function op(::SiteType"tJ",
   return Op
 end
 
-has_fermion_string(::SiteType"tJ",::OpName"Cup") = true
-has_fermion_string(::SiteType"tJ",::OpName"Cdagup") = true
-has_fermion_string(::SiteType"tJ",::OpName"Cdn") = true
-has_fermion_string(::SiteType"tJ",::OpName"Cdagdn") = true
+has_fermion_string(::OpName"Cup", ::SiteType"tJ") = true
+has_fermion_string(::OpName"Cdagup", ::SiteType"tJ") = true
+has_fermion_string(::OpName"Cdn", ::SiteType"tJ") = true
+has_fermion_string(::OpName"Cdagdn", ::SiteType"tJ") = true
