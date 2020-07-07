@@ -95,7 +95,7 @@ using ITensors,
   end
 
   @testset "op with more than two indices" begin
-    ITensors.space(SiteType"qubit") = 2
+    ITensors.space(::SiteType"qubit") = 2
 
     ITensors.op(::OpName"rand",
                 ::SiteType"qubit",
