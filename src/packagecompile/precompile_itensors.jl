@@ -35,8 +35,7 @@ for j=1:N-1
     ampo .+= (0.5,"S-",j,"S+",j+1)
 end
 H = MPO(ampo,sites)
-state = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi0 = randomMPS(sites,state,2)
+psi0 = randomMPS(sites,[isodd(n) ? "Up" : "Dn" for n=1:N],2)
 sweeps = Sweeps(1)
 maxdim!(sweeps, 10)
 cutoff!(sweeps, 1E-13)
