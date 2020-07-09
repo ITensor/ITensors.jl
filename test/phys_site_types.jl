@@ -145,6 +145,22 @@ using ITensors,
     @test has_fermion_string("Cdn", s)
     @test has_fermion_string("Cdagdn", s)
     @test !has_fermion_string("N", s)
+
+    s = siteind("Electron";conserve_nf=true)
+    @test qn(s,1) == QN("Nf",0,-1)
+    @test qn(s,2) == QN("Nf",1,-1)
+    @test qn(s,3) == QN("Nf",2,-1)
+    s = siteind("Electron";conserve_sz=true)
+    @test qn(s,1) == QN(("Sz", 0),("Pf",0,-2))
+    @test qn(s,2) == QN(("Sz",+1),("Pf",1,-2))
+    @test qn(s,3) == QN(("Sz",-1),("Pf",1,-2))
+    @test qn(s,4) == QN(("Sz", 0),("Pf",0,-2))
+    s = siteind("Electron";conserve_parity=true)
+    @test qn(s,1) == QN("Pf",0,-2)
+    @test qn(s,2) == QN("Pf",1,-2)
+    @test qn(s,3) == QN("Pf",0,-2)
+    s = siteind("Electron";conserve_qns=false)
+    @test dim(s) == 4
   end
 
   @testset "tJ sites" begin

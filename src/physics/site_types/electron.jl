@@ -1,10 +1,10 @@
 
 
-function space(::SiteType"Electron"; kwargs...)
-  conserve_qns = get(kwargs,:conserve_qns,false)
-  conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
-  conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
-  conserve_parity = get(kwargs,:conserve_parity,conserve_qns)
+function space(::SiteType"Electron"; 
+               conserve_qns = false,
+               conserve_sz = conserve_qns,
+               conserve_nf = conserve_qns,
+               conserve_parity = conserve_qns)
   if conserve_sz && conserve_nf
     em = QN(("Nf",0,-1),("Sz", 0)) => 1
     up = QN(("Nf",1,-1),("Sz",+1)) => 1
