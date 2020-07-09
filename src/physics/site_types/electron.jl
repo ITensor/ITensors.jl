@@ -1,5 +1,4 @@
 
-
 function space(::SiteType"Electron"; 
                conserve_qns = false,
                conserve_sz = conserve_qns,
@@ -40,106 +39,198 @@ state(st::SiteType"Electron",::StateName"↑")    = state(st,StateName("Up"))
 state(st::SiteType"Electron",::StateName"↓")    = state(st,StateName("Dn"))
 state(st::SiteType"Electron",::StateName"↑↓")   = state(st,StateName("UpDn"))
 
-function op(::SiteType"Electron",
-            s::Index,
-            opname::AbstractString)::ITensor
-  Emp   = s(1)
-  EmpP  = s'(1)
-  Up    = s(2)
-  UpP   = s'(2)
-  Dn    = s(3)
-  DnP   = s'(3)
-  UpDn  = s(4)
-  UpDnP = s'(4)
-
-  Op = emptyITensor(s',dag(s))
-
-  if opname == "Nup"
-    Op[UpP, Up] = 1.
-    Op[UpDnP, UpDn] = 1.
-  elseif opname == "Ndn"
-    Op[DnP, Dn] = 1.
-    Op[UpDnP, UpDn] = 1.
-  elseif opname == "Nupdn"
-    Op[UpDnP, UpDn] = 1.
-  elseif opname == "Ntot"
-    Op[UpP, Up] = 1.
-    Op[DnP, Dn] = 1.
-    Op[UpDnP, UpDn] = 2.
-  elseif opname == "Cup"
-    Op[EmpP, Up]  = +1.
-    Op[DnP, UpDn] = +1.
-  elseif opname == "Cdagup"
-    Op[UpP, Emp]  = +1.
-    Op[UpDnP, Dn] = +1.
-  elseif opname == "Cdn"
-    Op[EmpP, Dn]  = +1.
-    Op[UpP, UpDn] = -1.
-  elseif opname == "Cdagdn"
-    Op[DnP, Emp]  = +1.
-    Op[UpDnP, Up] = -1.
-  # Aup,Adagup,Adn,Adagdn below
-  # are "bosonic" versions of
-  # the creation/annihilation
-  # C operators defined above
-  elseif opname == "Aup"
-    Op[EmpP, Up]  = 1.
-    Op[DnP, UpDn] = 1.
-  elseif opname == "Adagup"
-    Op[UpP, Emp]  = 1.
-    Op[UpDnP, Dn] = 1.
-  elseif opname == "Adn"
-    Op[EmpP, Dn]  = 1.
-    Op[UpP, UpDn] = 1.
-  elseif opname == "Adagdn"
-    Op[DnP, Emp]  = 1.
-    Op[UpDnP, Up] = 1.
-  elseif opname=="F" || opname=="FermiPhase" || opname=="FP"
-    Op[UpP, Up] = -1.
-    Op[EmpP, Emp] = 1.
-    Op[DnP, Dn] = -1.
-    Op[UpDnP, UpDn] = 1.
-  elseif opname == "Fup"
-    Op[EmpP, Emp] = 1.
-    Op[UpP, Up] = -1.
-    Op[DnP, Dn] = 1.
-    Op[UpDnP, UpDn] = -1.
-  elseif opname == "Fdn"
-    Op[EmpP, Emp] = 1.
-    Op[UpP, Up] = 1.
-    Op[DnP, Dn] = -1.
-    Op[UpDnP, UpDn] = -1.
-  elseif opname == "Sᶻ" || opname == "Sz"
-    Op[UpP, Up] = 0.5
-    Op[DnP, Dn] = -0.5
-  elseif opname == "Sˣ" || opname == "Sx"
-    Op[DnP, Up] = 0.5
-    Op[UpP, Dn] = 0.5 
-  elseif opname=="S+" || opname=="Sp" || opname == "S⁺" || opname == "Splus"
-    Op[UpP, Dn] = 1.0
-  elseif opname=="S-" || opname=="Sm" || opname == "S⁻" || opname == "Sminus"
-    Op[DnP, Up] = 1.0
-  elseif opname == "Emp" || opname == "0"
-    pEmp = emptyITensor(s)
-    pEmp[Emp] = 1.0
-    return pEmp
-  elseif opname == "Up" || opname == "↑"
-    pU = emptyITensor(s)
-    pU[Up] = 1.0
-    return pU
-  elseif opname == "Dn" || opname == "↓"
-    pD = emptyITensor(s)
-    pD[Dn] = 1.0
-    return pD
-  elseif opname == "UpDn" || opname == "↑↓"
-    pUD = emptyITensor(s)
-    pUD[UpDn] = 1.0
-    return pUD
-  else
-    throw(ArgumentError("Operator name $opname not recognized for \"Electron\" site"))
-  end
-  return Op
+function op!(Op::ITensor,
+             ::OpName"Nup",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>2,s=>2] = 1.0
+  Op[s'=>4,s=>4] = 1.0
 end
+
+function op!(Op::ITensor,
+             ::OpName"Ndn",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>3,s=>3] = 1.0
+  Op[s'=>4,s=>4] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Nupdn",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>4,s=>4] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Ntot",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>2,s=>2] = 1.0
+  Op[s'=>3,s=>3] = 1.0
+  Op[s'=>4,s=>4] = 2.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Cup",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>1,s=>2] = 1.0
+  Op[s'=>3,s=>4] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Cdagup",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>2,s=>1] = 1.0
+  Op[s'=>4,s=>3] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Cdn",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>1,s=>3] = 1.0
+  Op[s'=>2,s=>4] = -1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Cdagdn",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>3,s=>1] = 1.0
+  Op[s'=>4,s=>2] = -1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Aup",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>1,s=>2] = 1.0
+  Op[s'=>3,s=>4] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Adagup",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>2,s=>1] = 1.0
+  Op[s'=>4,s=>3] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Adn",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>1,s=>3] = 1.0
+  Op[s'=>2,s=>4] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Adagdn",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>3,s=>1] = 1.0
+  Op[s'=>2,s=>4] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"F",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>2,s=>2] = -1.0
+  Op[s'=>3,s=>3] = -1.0
+  Op[s'=>4,s=>4] = +1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Fup",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>2,s=>2] = -1.0
+  Op[s'=>3,s=>3] = +1.0
+  Op[s'=>4,s=>4] = -1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Fdn",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>2,s=>2] = +1.0
+  Op[s'=>3,s=>3] = -1.0
+  Op[s'=>4,s=>4] = -1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Sz",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>2,s=>2] = +0.5
+  Op[s'=>3,s=>3] = -0.5
+end
+
+op!(Op::ITensor,
+    ::OpName"Sᶻ",
+    st::SiteType"Electron",
+    s::Index) = op!(Op,OpName("Sz"),st,s)
+
+function op!(Op::ITensor,
+             ::OpName"Sx",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>2,s=>3] = 0.5
+  Op[s'=>3,s=>2] = 0.5
+end
+
+op!(Op::ITensor,
+    ::OpName"Sˣ",
+    st::SiteType"Electron",
+    s::Index) = op!(Op,OpName("Sx"),st,s)
+
+function op!(Op::ITensor,
+             ::OpName"S+",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>2,s=>3] = 1.0
+end
+
+op!(Op::ITensor,
+    ::OpName"S⁺",
+    st::SiteType"Electron",
+    s::Index) = op!(Op,OpName("S+"),st,s)
+op!(Op::ITensor,
+    ::OpName"Sp",
+    st::SiteType"Electron",
+    s::Index) = op!(Op,OpName("S+"),st,s)
+op!(Op::ITensor,
+    ::OpName"Splus",
+    st::SiteType"Electron",
+    s::Index) = op!(Op,OpName("S+"),st,s)
+
+function op!(Op::ITensor,
+             ::OpName"S-",
+             ::SiteType"Electron",
+             s::Index)
+  Op[s'=>3,s=>2] = 1.0
+end
+
+op!(Op::ITensor,
+    ::OpName"S⁻",
+    st::SiteType"Electron",
+    s::Index) = op!(Op,OpName("S-"),st,s)
+op!(Op::ITensor,
+    ::OpName"Sm",
+    st::SiteType"Electron",
+    s::Index) = op!(Op,OpName("S-"),st,s)
+op!(Op::ITensor,
+    ::OpName"Sminus",
+    st::SiteType"Electron",
+    s::Index) = op!(Op,OpName("S-"),st,s)
+
 
 has_fermion_string(::OpName"Cup", ::SiteType"Electron") = true
 has_fermion_string(::OpName"Cdagup", ::SiteType"Electron") = true
