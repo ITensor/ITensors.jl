@@ -1,6 +1,6 @@
 
 function space(::SiteType"Fermion"; 
-               conserve_qns=false
+               conserve_qns=false,
                conserve_nf=conserve_qns,
                conserve_parity=conserve_qns)
   if conserve_nf
@@ -20,37 +20,33 @@ state(::SiteType"Fermion",::StateName"Occ")  = 2
 state(st::SiteType"Fermion",::StateName"0") = state(st,StateName("Emp"))
 state(st::SiteType"Fermion",::StateName"1") = state(st,StateName("Occ"))
 
-function op(::SiteType"Fermion",
-            s::Index,
-            opname::AbstractString)::ITensor
-  Emp   = s(1)
-  EmpP  = s'(1)
-  Occ   = s(2)
-  OccP  = s'(2)
+function op!(Op::ITensor,
+             ::OpName"N",
+             ::SiteType"Fermion",
+             s::Index)
+  Op[s'=>2,s=>2] = 1.0
+end
 
-  Op = emptyITensor(s',dag(s))
+function op!(Op::ITensor,
+             ::OpName"C",
+             ::SiteType"Fermion",
+             s::Index)
+  Op[s'=>1,s=>2] = 1.0
+end
 
-  if opname == "N"
-    Op[OccP, Occ] = 1.
-  elseif opname == "C"
-    Op[EmpP, Occ] = 1.
-  elseif opname == "Cdag"
-    Op[OccP, Emp] = 1.
-  elseif opname=="F" || opname=="FermiPhase" || opname=="FP"
-    Op[EmpP,Emp] =  1.
-    Op[OccP,Occ] = -1.
-  elseif opname == "Emp" || opname == "0"
-    pEmp = emptyITensor(s)
-    pEmp[Emp] = 1.0
-    return pEmp
-  elseif opname == "Occ" || opname == "1"
-    pOcc = emptyITensor(s)
-    pOcc[Occ] = 1.0
-    return pOcc
-  else
-    throw(ArgumentError("Operator name $opname not recognized for \"Fermion\" site"))
-  end
-  return Op
+function op!(Op::ITensor,
+             ::OpName"Cdag",
+             ::SiteType"Fermion",
+             s::Index)
+  Op[s'=>2,s=>1] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"F",
+             ::SiteType"Fermion",
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>2,s=>2] = -1.0
 end
 
 
