@@ -196,7 +196,7 @@ using ITensors,
     @test Cdn ≈ [0. 0. 1; 0 0 0; 0 0 0]
     Cddn = Array(op(s,"Cdagdn"),s',s) 
     @test Cddn ≈ [0 0 0; 0. 0 0; 1 0 0]
-    FP = Array(op(s,"FP"),s',s) 
+    FP = Array(op(s,"F"),s',s) 
     @test FP ≈ [1.0 0. 0; 0 -1.0 0; 0 0 -1.0]
     Fup = Array(op(s,"Fup"),s',s) 
     @test Fup ≈ [1.0 0. 0; 0 -1.0 0; 0 0 1.0]
@@ -205,7 +205,7 @@ using ITensors,
     Sz = Array(op(s,"Sz"),s',s) 
     @test Sz ≈ [0.0 0. 0; 0 0.5 0; 0 0 -0.5]
     Sx = Array(op(s,"Sx"),s',s) 
-    @test Sx ≈ [0.0 0. 0; 0 0 1; 0 1 0]
+    @test Sx ≈ [0.0 0. 0; 0 0 0.5; 0 0.5 0]
     Sp = Array(op(s,"Splus"),s',s) 
     @test Sp ≈ [0.0 0. 0; 0 0 1.0; 0 0 0]
     Sm = Array(op(s,"Sminus"),s',s) 
