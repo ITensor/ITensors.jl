@@ -96,6 +96,15 @@ using ITensors,
     @test has_fermion_string("C", s)
     @test has_fermion_string("Cdag", s)
     @test !has_fermion_string("N", s)
+
+    s = siteind("Fermion";conserve_nf=true)
+    @test qn(s,1) == QN("Nf",0,-1)
+    @test qn(s,2) == QN("Nf",1,-1)
+    s = siteind("Fermion";conserve_parity=true)
+    @test qn(s,1) == QN("Pf",0,-2)
+    @test qn(s,2) == QN("Pf",1,-2)
+    s = siteind("Fermion";conserve_qns=false)
+    @test dim(s) == 2
   end
 
   @testset "Electron sites" begin

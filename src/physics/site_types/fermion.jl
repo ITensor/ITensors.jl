@@ -1,8 +1,8 @@
 
-function space(::SiteType"Fermion"; kwargs...)
-  conserve_qns = get(kwargs,:conserve_qns,false)
-  conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
-  conserve_parity = get(kwargs,:conserve_parity,conserve_qns)
+function space(::SiteType"Fermion"; 
+               conserve_qns=false
+               conserve_nf=conserve_qns,
+               conserve_parity=conserve_qns)
   if conserve_nf
     zer = QN("Nf",0,-1) => 1
     one = QN("Nf",1,-1) => 1
