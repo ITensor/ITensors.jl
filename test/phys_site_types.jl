@@ -96,6 +96,15 @@ using ITensors,
     @test has_fermion_string("C", s)
     @test has_fermion_string("Cdag", s)
     @test !has_fermion_string("N", s)
+
+    s = siteind("Fermion";conserve_nf=true)
+    @test qn(s,1) == QN("Nf",0,-1)
+    @test qn(s,2) == QN("Nf",1,-1)
+    s = siteind("Fermion";conserve_parity=true)
+    @test qn(s,1) == QN("Pf",0,-2)
+    @test qn(s,2) == QN("Pf",1,-2)
+    s = siteind("Fermion";conserve_qns=false)
+    @test dim(s) == 2
   end
 
   @testset "Electron sites" begin
@@ -145,6 +154,22 @@ using ITensors,
     @test has_fermion_string("Cdn", s)
     @test has_fermion_string("Cdagdn", s)
     @test !has_fermion_string("N", s)
+
+    s = siteind("Electron";conserve_nf=true)
+    @test qn(s,1) == QN("Nf",0,-1)
+    @test qn(s,2) == QN("Nf",1,-1)
+    @test qn(s,3) == QN("Nf",2,-1)
+    s = siteind("Electron";conserve_sz=true)
+    @test qn(s,1) == QN(("Sz", 0),("Pf",0,-2))
+    @test qn(s,2) == QN(("Sz",+1),("Pf",1,-2))
+    @test qn(s,3) == QN(("Sz",-1),("Pf",1,-2))
+    @test qn(s,4) == QN(("Sz", 0),("Pf",0,-2))
+    s = siteind("Electron";conserve_parity=true)
+    @test qn(s,1) == QN("Pf",0,-2)
+    @test qn(s,2) == QN("Pf",1,-2)
+    @test qn(s,3) == QN("Pf",0,-2)
+    s = siteind("Electron";conserve_qns=false)
+    @test dim(s) == 4
   end
 
   @testset "tJ sites" begin
@@ -171,7 +196,7 @@ using ITensors,
     @test Cdn ≈ [0. 0. 1; 0 0 0; 0 0 0]
     Cddn = Array(op(s,"Cdagdn"),s',s) 
     @test Cddn ≈ [0 0 0; 0. 0 0; 1 0 0]
-    FP = Array(op(s,"FP"),s',s) 
+    FP = Array(op(s,"F"),s',s) 
     @test FP ≈ [1.0 0. 0; 0 -1.0 0; 0 0 -1.0]
     Fup = Array(op(s,"Fup"),s',s) 
     @test Fup ≈ [1.0 0. 0; 0 -1.0 0; 0 0 1.0]
@@ -180,7 +205,7 @@ using ITensors,
     Sz = Array(op(s,"Sz"),s',s) 
     @test Sz ≈ [0.0 0. 0; 0 0.5 0; 0 0 -0.5]
     Sx = Array(op(s,"Sx"),s',s) 
-    @test Sx ≈ [0.0 0. 0; 0 0 1; 0 1 0]
+    @test Sx ≈ [0.0 0. 0; 0 0 0.5; 0 0.5 0]
     Sp = Array(op(s,"Splus"),s',s) 
     @test Sp ≈ [0.0 0. 0; 0 0 1.0; 0 0 0]
     Sm = Array(op(s,"Sminus"),s',s) 
