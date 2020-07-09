@@ -292,6 +292,20 @@ function NDTensors.polar(A::ITensor,
   return U, P, commoninds(U, P)
 end
 
+function factorize_qr(A::ITensor,
+                      Linds...;
+                      kwargs...)
+  ortho::String = get(kwargs, :ortho, "left")
+  if ortho == "left"
+    L,R,q = qr(A,Linds...; kwargs...)
+  elseif ortho == "right"
+    Lis = uniqueinds(A,IndexSet(Linds...))
+    R,L,q = qr(A,Lis...; kwargs...)
+  else
+    error("In factorize using qr decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
+  end
+  return L,R
+end
 
 function factorize_svd(A::ITensor,
                        Linds...;
@@ -355,11 +369,11 @@ Perform a factorization of `A` into ITensors `L` and `R` such that `A ≈ L * R`
   - `"right"`: the right factor `R` forms an orthogonal basis. 
   - `"none"`, neither of the factors form an orthogonal basis, and in general are made as symmetrically as possible (depending on the decomposition used).
 - `which_decomp::Union{String, Nothing} = nothing`: choose what kind of decomposition is used. 
-  - `nothing`: choose the decomposition automatically based on the other arguments. For example, when `"automatic"` is chosen and `ortho = "left"` or `"right"`, `svd` or `eigen` is used depending on the provided cutoff (`eigen` is only used when the cutoff is greater than `1e-12`, since it has a lower precision).
+  - `nothing`: choose the decomposition automatically based on the other arguments. For example, when `nothing` is chosen and `ortho = "left"` or `"right"`, and a cutoff is provided, `svd` or `eigen` is used depending on the provided cutoff (`eigen` is only used when the cutoff is greater than `1e-12`, since it has a lower precision). When no truncation is requested `qr` is used for dense ITensors and `svd` for block-sparse ITensors (in the future `qr` will be used also for block-sparse ITensors in this case).
   - `"svd"`: `L = U` and `R = S * V` for `ortho = "left"`, `L = U * S` and `R = V` for `ortho = "right"`, and `L = U * sqrt.(S)` and `R = sqrt.(S) * V` for `ortho = "none"`. To control which `svd` algorithm is choose, use the `svd_alg` keyword argument. See the documentation for `svd` for the supported algorithms, which are the same as those accepted by the `alg` keyword argument.
   - `"eigen"`: `L = U` and ``R = U^{\\dagger} A`` where `U` is determined from the eigendecompositon ``A A^{\\dagger} = U D U^{\\dagger}`` for `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is not supported for `ortho = "none"`.
-
-In the future, other decompositions like QR, polar, cholesky, LU, etc. are expected to be supported.
+  - `"qr"`: `L=Q` and `R` an upper-triangular matrix when `ortho = "left"`, and `R = Q` and `L` a lower-triangular matrix when `ortho = "right"` (currently supported for dense ITensors only).
+In the future, other decompositions like QR (for block-sparse ITensors), polar, cholesky, LU, etc. are expected to be supported.
 
 For truncation arguments, see: [`svd`](@ref)
 """
@@ -370,7 +384,7 @@ function LinearAlgebra.factorize(A::ITensor,
   tags::TagSet = get(kwargs, :tags, "Link,fact")
   plev::Int = get(kwargs, :plev, 0)
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
-  cutoff::Float64 = get(kwargs, :cutoff, 0.0)
+  cutoff = get(kwargs, :cutoff, nothing)
   eigen_perturbation = get(kwargs, :eigen_perturbation, nothing)
   if !isnothing(eigen_perturbation)
     if !(isnothing(which_decomp) || which_decomp == "eigen")
@@ -394,14 +408,31 @@ function LinearAlgebra.factorize(A::ITensor,
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
-  if which_decomp == "svd" || 
-     (isnothing(which_decomp) && cutoff ≤ automatic_cutoff)
+
+  dL,dR = dim(IndexSet(Linds...)), dim(IndexSet(setdiff(inds(A),Linds)...))
+  maxdim = get(kwargs,:maxdim, min(dL, dR))
+  might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
+
+  if isnothing(which_decomp)
+    if !might_truncate && !hasqns(A) && ortho != "none"
+      which_decomp="qr"
+    elseif isnothing(cutoff) || cutoff ≤ automatic_cutoff
+      which_decomp="svd"
+    elseif cutoff > automatic_cutoff
+      which_decomp="eigen"
+    end
+  end
+
+  if which_decomp == "svd"
     L, R, spec = factorize_svd(A, Linds...; kwargs...)
-  elseif which_decomp == "eigen" ||
-         (isnothing(which_decomp) && cutoff > automatic_cutoff)
+  elseif which_decomp == "eigen"
     L, R, spec = factorize_eigen(A, Linds...; kwargs...)
+  elseif which_decomp == "qr"
+    hasqns(A) && error("QR factorization of an ITensor with QNs is not yet supported.")
+    L,R = factorize_qr(A,Linds...; kwargs...)
+    spec = Spectrum(nothing,0.0)
   else
-    throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, or `nothing`."""))
+    throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, `"qr"` or `nothing`."""))
   end
 
   # Set the tags and prime level

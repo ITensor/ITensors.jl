@@ -45,6 +45,22 @@ using ITensors,
                                           which_decomp="svd")
   end
 
+  @testset "factorize with QR" begin
+    l = Index(5,"l")
+    s = Index(2,"s")
+    r = Index(10,"r")
+    A = randomITensor(l,s,r)
+    Q,R, = factorize(A,l,s; which_decomp="qr")
+    q = commonind(Q,R)
+    @test A ≈ Q*R atol=1e-14
+    @test Q*dag(prime(Q,q)) ≈ δ(Float64,q,q') atol=1e-14
+
+    R,Q, = factorize(A,l,s; which_decomp="qr", ortho="right")
+    q = commonind(Q,R)
+    @test A ≈ Q*R atol=1e-14
+    @test Q*dag(prime(Q,q)) ≈ δ(Float64,q,q') atol=1e-14
+  end
+
   @testset "eigen" begin
     i = Index(2,"i")
     j = Index(2,"j")
