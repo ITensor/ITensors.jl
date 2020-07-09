@@ -1,3 +1,9 @@
+ITensors v0.1.16 Release Notes
+==============================
+
+* Update physics site definitions to user newer overload style (PR #453)
+* Fix some issues with precompile_itensors.jl code and automatically test it (PR #452)
+
 ITensors v0.1.15 Release Notes
 ==============================
 
