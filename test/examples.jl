@@ -20,6 +20,14 @@ using ITensors,
     end
   end
 
+  @testset "Package Compile Code" begin
+    @test_nowarn begin 
+      @capture_out begin
+        include("../src/packagecompile/precompile_itensors.jl")
+      end 
+    end
+  end
+
 end
 
 nothing
