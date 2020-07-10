@@ -576,6 +576,8 @@ end
 """
     setindex!(T::ITensor, x::Number, I::Int...)
 
+    setindex!(T::ITensor, x::Number, I::CartesianIndex)
+
 Set the specified element of the ITensor, using internal
 Index ordering of the ITensor.
 
@@ -595,6 +597,9 @@ function Base.setindex!(T::ITensor, x::Number, I::Int...)
   setstore!(T, store(TR))
   return T
 end
+
+Base.setindex!(T::ITensor, x::Number, I::CartesianIndex) =
+  setindex!(T, x, Tuple(I)...)
 
 """
     setindex!(T::ITensor, x::Number, ivs...)
@@ -620,13 +625,23 @@ function Base.setindex!(::ITensor{Any}, ::Number, ivs...)
   error("Cannot set the element of an emptyITensor(). Must define indices to set elements")
 end
 
-function Base.iterate(::ITensor, args...)
-  error("""Iterating ITensors is currently not supported (it will be supported in the future).
+"""
+    eachindex(A::ITensor)
 
-        You may be attempting to use the deprecated notation `C,c = combiner(i,j)` to grab both the combiner ITensor and combined Index.
-        Note that the `combiner` constructor currently only outputs the combiner ITensor, you can extract the combined Index with `C = combiner(i,j); c = combinedind(C)`.
-        """)
-end
+Create an iterable object for visiting each element of the ITensor `A` (including structually
+zero elements for sparse tensors).
+
+For example, for dense tensors this may return `1:length(A)`, while for sparse tensors
+it may return a Cartesian range.
+"""
+Base.eachindex(A::ITensor) = eachindex(tensor(A))
+
+"""
+    iterate(A::ITensor, args...)
+
+Iterate over the elements of an ITensor.
+"""
+Base.iterate(A::ITensor, args...) = iterate(tensor(A), args...)
 
 """
     fill!(T::ITensor, x::Number)
@@ -641,16 +656,35 @@ function Base.fill!(T::ITensor,
   return T
 end
 
+# TODO: name this `indexset` or `IndexSet`,
+# or maybe just `inds`?
 itensor2inds(A::ITensor) = inds(A)
 itensor2inds(A) = A
 
-
 # in
-hasind(A,i::Index) = i ∈ itensor2inds(A)
+hasind(A, i::Index) = i ∈ itensor2inds(A)
 
 # issubset
-hasinds(A, is) = is ⊆ itensor2inds(A)
+hasinds(A, is::Indices) = is ⊆ itensor2inds(A)
 hasinds(A, is::Index...) = hasinds(A, IndexSet(is...))
+
+"""
+    hasinds(is...)
+
+Returns an anonymous function `x -> hasinds(x, is...)` which
+accepts an ITensor or IndexSet and returns `true` if the
+ITensor or IndexSet has the indices `is`.
+"""
+hasinds(is::Indices) = x -> hasinds(x, is)
+
+hasinds(is::Index...) = hasinds(IndexSet(is...))
+
+"""
+    hascommoninds(A, B; kwargs...)
+
+Check if the ITensors or sets of indices have common indices.
+"""
+hascommoninds(A, B; kwargs...) = !isnothing(commonind(A, B; kwargs...))
 
 # issetequal
 hassameinds(A,B) = issetequal(itensor2inds(A),

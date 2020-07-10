@@ -114,6 +114,18 @@ function common_siteinds(A::AbstractMPS, B::AbstractMPS)
   return [common_siteind(A, B, j) for j in eachindex(A)]
 end
 
+Base.keys(ψ::AbstractMPS) = keys(data(ψ))
+
+function findfirstsiteind(ψ::AbstractMPS,
+                          s::Index)
+  return findfirst(hasind(s), ψ)
+end
+
+function findfirstsiteinds(ψ::AbstractMPS,
+                           s)
+  return findfirst(hasinds(s), ψ)
+end
+
 function Base.map!(f::Function, M::AbstractMPS)
   for i in eachindex(M)
     setindex!(M, f(M[i]), i; set_limits = false)
@@ -349,13 +361,37 @@ end
     linkind(M::MPO, j::Int)
 
 Get the link or bond Index connecting the
-MPS or MPO tensor on site j to site j+1
+MPS or MPO tensor on site j to site j+1.
+
+If there is no link Index, return `nothing`.
 """
 function linkind(M::AbstractMPS, j::Int)
   N = length(M)
   (j ≥ length(M) || j < 1) && return nothing
   return commonind(M[j], M[j+1])
 end
+
+linkinds(ψ::AbstractMPS) =
+  [linkind(ψ, b) for b in 1:length(ψ)-1]
+
+"""
+    linkdim(M::MPS, j::Int)
+
+    linkdim(M::MPO, j::Int)
+
+Get the dimension of the link or bond connecting the
+MPS or MPO tensor on site j to site j+1.
+
+If there is no link Index, return `nothing`.
+"""
+function linkdim(ψ::AbstractMPS, b::Int)
+  l = linkind(ψ, b)
+  isnothing(l) && return nothing
+  return dim(l)
+end
+
+linkdims(ψ::AbstractMPS) =
+  [linkdim(ψ, b) for b in 1:length(ψ)-1]
 
 function _log_or_not_dot(M1::MPST,
                          M2::MPST,
@@ -509,6 +545,8 @@ Add two MPS/MPO with each other, with some optional
 truncation.
 """
 function Base.:+(A::T, B::T; kwargs...) where {T <: AbstractMPS}
+  A = copy(A)
+  B = copy(B)
   N = length(A)
   length(B) != N && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
   orthogonalize!(A, 1; kwargs...)
@@ -585,8 +623,9 @@ function orthogonalize!(M::AbstractMPS,
   while leftlim(M) < (j-1)
     (leftlim(M) < 0) && setleftlim!(M, 0)
     b = leftlim(M)+1
-    linds = uniqueinds(M[b],M[b+1])
-    L,R = factorize(M[b], linds;kwargs...)
+    linds = uniqueinds(M[b], M[b+1])
+    ltags = tags(linkind(M, b))
+    L,R = factorize(M[b], linds; tags = ltags, kwargs...)
     M[b] = L
     M[b+1] *= R
 
@@ -602,7 +641,8 @@ function orthogonalize!(M::AbstractMPS,
     (rightlim(M) > (N+1)) && setrightlim!(M,N+1)
     b = rightlim(M)-2
     rinds = uniqueinds(M[b+1],M[b])
-    L,R = factorize(M[b+1], rinds;kwargs...)
+    ltags = tags(linkind(M, b))
+    L,R = factorize(M[b+1], rinds; tags = ltags, kwargs...)
     M[b+1] = L
     M[b] *= R
 
@@ -611,6 +651,7 @@ function orthogonalize!(M::AbstractMPS,
       setleftlim!(M, rightlim(M)-2)
     end
   end
+  return M
 end
 
 """

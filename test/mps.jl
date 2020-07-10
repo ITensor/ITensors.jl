@@ -47,18 +47,37 @@ include("util.jl")
   end
 
   @testset "productMPS" begin
+
     @testset "vector of string input" begin
-      sites = siteinds("S=1/2",N)
-      state = fill("",N)
+      sites = siteinds("S=1/2", N)
+      state = fill("", N)
       for j=1:N
         state[j] = isodd(j) ? "Up" : "Dn"
       end
       psi = productMPS(sites,state)
       for j=1:N
         sign = isodd(j) ? +1.0 : -1.0
-        @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
+        @test (psi[j] * op(sites,"Sz",j) * dag(prime(psi[j],"Site")))[] ≈ sign/2
       end
       @test_throws DimensionMismatch productMPS(sites, fill("", N - 1))
+    end
+
+    @testset "String input" begin
+      sites = siteinds("S=1/2", N)
+      psi = productMPS(sites, "Dn")
+      for j=1:N
+        sign = -1.0
+        @test (psi[j] * op(sites,"Sz",j) * dag(prime(psi[j],"Site")))[] ≈ sign/2
+      end
+    end
+
+    @testset "Int input" begin
+      sites = siteinds("S=1/2", N)
+      psi = productMPS(sites, 2)
+      for j=1:N
+        sign = -1.0
+        @test (psi[j] * op(sites,"Sz",j) * dag(prime(psi[j],"Site")))[] ≈ sign/2
+      end
     end
 
     @testset "vector of int input" begin
@@ -73,6 +92,7 @@ include("util.jl")
         @test (psi[j]*op(sites,"Sz",j)*dag(prime(psi[j],"Site")))[] ≈ sign/2
       end
     end
+
     @testset "vector of ivals input" begin
       sites  = siteinds("S=1/2",N)
       states = fill(0,N)
@@ -217,7 +237,12 @@ include("util.jl")
   @test length(siteinds(psi)) == N
 
   psi = randomMPS(sites)
+  l0s = linkinds(psi)
   orthogonalize!(psi, N-1)
+  ls = linkinds(psi)
+  for (l0,l) in zip(l0s,ls)
+    @test tags(l0) == tags(l)
+  end
   @test ITensors.leftlim(psi) == N-2
   @test ITensors.rightlim(psi) == N
   orthogonalize!(psi, 2)
