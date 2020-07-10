@@ -48,6 +48,8 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
     @test hasinds(A, i)
     @test hasinds(A, j)
+    @test hasinds(A, [i, j])
+    @test hasinds([i, j])(A)
     @test hasinds(A, IndexSet(j))
     @test hasinds(A, j, i)
     @test hasinds(A, (i, j))

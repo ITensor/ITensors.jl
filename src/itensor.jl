@@ -665,7 +665,7 @@ itensor2inds(A) = A
 hasind(A, i::Index) = i ∈ itensor2inds(A)
 
 # issubset
-hasinds(A, is::Indices) = is ⊆ itensor2inds(A)
+hasinds(A, is) = is ⊆ itensor2inds(A)
 hasinds(A, is::Index...) = hasinds(A, IndexSet(is...))
 
 """
@@ -676,7 +676,7 @@ accepts an ITensor or IndexSet and returns `true` if the
 ITensor or IndexSet has the indices `is`.
 """
 hasinds(is::Indices) = x -> hasinds(x, is)
-
+hasinds(is::Vector{ <: Index}) = x -> hasinds(x, is)
 hasinds(is::Index...) = hasinds(IndexSet(is...))
 
 """
