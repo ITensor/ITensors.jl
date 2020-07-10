@@ -18,6 +18,11 @@ export
   qr,
   svd,
 
+# global_variables.jl
+  get_warn_itensor_order,
+  set_warn_itensor_order!,
+  reset_warn_itensor_order!,
+
 # index.jl
   # Types
   Index,
