@@ -1082,9 +1082,10 @@ function Base.:*(A::ITensor, B::ITensor)
   (labelsA,labelsB) = compute_contraction_labels(inds(A),inds(B))
   CT = contract(tensor(A),labelsA,tensor(B),labelsB)
   C = itensor(CT)
-  warnTensorOrder = GLOBAL_PARAMS["WarnTensorOrder"]
-  if warnTensorOrder > 0 && order(C) >= warnTensorOrder
-    @warn "Contraction resulted in ITensor with $(order(C)) indices"
+  warnTensorOrder = get_warn_itensor_order()
+  if !isnothing(warnTensorOrder) > 0 &&
+     order(C) >= warnTensorOrder
+     @warn "Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_itensor_order!(::Int)`, `reset_warn_itensor_order!()`, and `disable_warn_itensor_order!()`."
   end
   return C
 end
