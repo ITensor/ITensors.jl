@@ -17,6 +17,9 @@ include("util.jl")
   @test length(str) == length(psi) + 2
 
   @test siteind(psi,2) == sites[2]
+  @test findfirstsiteind(psi, sites[2]) == 2
+  @test findfirstsiteind(psi, sites[4]) == 4
+  @test findfirstsiteinds(psi, IndexSet(sites[5])) == 5
   @test hasind(psi[3],linkind(psi,2))
   @test hasind(psi[3],linkind(psi,3))
 

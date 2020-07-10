@@ -116,11 +116,27 @@ end
 
 Base.keys(ψ::AbstractMPS) = keys(data(ψ))
 
+"""
+    findfirstsiteind(M::MPS, i::Index)
+
+    findfirstsiteind(M::MPO, i::Index)
+
+Return the first site of the MPS or MPO that has the
+site index `i`.
+"""
 function findfirstsiteind(ψ::AbstractMPS,
                           s::Index)
   return findfirst(hasind(s), ψ)
 end
 
+"""
+    findfirstsiteind(M::MPS, is)
+
+    findfirstsiteind(M::MPO, is)
+
+Return the first site of the MPS or MPO that has the
+site indices `is`.
+"""
 function findfirstsiteinds(ψ::AbstractMPS,
                            s)
   return findfirst(hasinds(s), ψ)
