@@ -240,23 +240,7 @@ false
 """
 hasplev(i::Index, pl::Int) = plev(i) == pl
 
-"""
-    hasplev(pl::Int)
-
-Returns an anonymous function `x -> hasplev(x, pl)`.
-
-Useful for passing to functions like `map`.
-"""
 hasplev(pl::Int) = x -> hasplev(x, pl)
-
-"""
-    hasind(i::Index)
-
-Returns an anonymous function `x -> hasind(x, i)`.
-
-Useful for passing to functions like `map`.
-"""
-hasind(s::Index) = x -> hasind(x, s)
 
 """
     hasid(i::Index, id::ITensors.IDType)
