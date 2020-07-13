@@ -28,8 +28,7 @@ include("exports.jl")
 #####################################
 # Global Variables
 #
-const GLOBAL_PARAMS = Dict("WarnTensorOrder" => 14)
-const GLOBAL_TIMER = TimerOutput()
+include("global_variables.jl")
 
 #####################################
 # Index and IndexSet
