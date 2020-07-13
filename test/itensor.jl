@@ -619,14 +619,25 @@ end
     @test hasinds(A2r,s2,ltmp',l'')
   end
   @testset "replacetags(::ITensor,::String,::String)" begin
-    s2tmp = replacetags(s2,"Site","Temp")
-    ltmp = replacetags(l,"Link","Temp")
+    s2tmp = replacetags(s2, "Site", "Temp")
 
-    A2r = replacetags(A2,"Site","Temp")
+    @test s2tmp == replacetags(s2, "Site" => "Temp")
+
+    ltmp = replacetags(l, "Link", "Temp")
+
+    A2r = replacetags(A2, "Site", "Temp")
     @test hasinds(A2r,s2tmp,l',l'')
+
+    A2r = replacetags(A2, "Site" => "Temp")
+    @test hasinds(A2r, s2tmp, l', l'')
 
     A2r = replacetags(A2,"Link","Temp")
     @test hasinds(A2r,s2,ltmp',ltmp'')
+
+    A2r = replacetags(A2, "Site" => "Link", "Link" => "Site")
+    @test hasinds(A2r, replacetags(s2, "Site" => "Link"),
+                       replacetags(l', "Link" => "Site"),
+                       replacetags(l'', "Link" => "Site"))
   end
   @testset "prime(::ITensor,::String)" begin
     A2p = prime(A2)
@@ -645,10 +656,20 @@ end
     @test hasinds(mapprime(A2,1,7),s2,l^7,l'')
     @test hasinds(mapprime(A2,0,1),s2',l',l'')
   end
-  @testset "setprime" begin
-    @test hasinds(setprime(A2,2,s2),s2'',l',l'')
-    @test hasinds(setprime(A2,0,l''),s2,l',l)
+
+  @testset "replaceprime" begin
+    @test hasinds(mapprime(A2, 1 => 7), s2, l^7, l'')
+    @test hasinds(mapprime(A2, 0 => 1), s2', l', l'')
+    @test hasinds(mapprime(A2, 1 => 7, 0 => 1), s2', l^7, l'')
+    @test hasinds(mapprime(A2, 1 => 2, 2 => 1), s2, l'', l')
+    @test hasinds(mapprime(A2, 1 => 0, 0 => 1), s2', l, l'')
   end
+
+  @testset "setprime" begin
+    @test hasinds(setprime(A2,2,s2), s2'', l', l'')
+    @test hasinds(setprime(A2,0,l''), s2, l', l)
+  end
+
   @testset "swapprime" begin
     @test hasinds(swapprime(A2,1,3),l''',s2,l'')
   end
@@ -656,11 +677,11 @@ end
 
 @testset "ITensor other index operations" begin
 
-  s1 = Index(2,"Site,s=1")
-  s2 = Index(2,"Site,s=2")
-  l = Index(3,"Link")
-  A1 = randomITensor(s1,l,l')
-  A2 = randomITensor(s2,l',l'')
+  s1 = Index(2, "Site,s=1")
+  s2 = Index(2, "Site,s=2")
+  l = Index(3, "Link")
+  A1 = randomITensor(s1, l, l')
+  A2 = randomITensor(s2, l', l'')
 
   @testset "ind(::ITensor)" begin
     @test ind(A1, 1) == s1
@@ -668,19 +689,34 @@ end
   end
 
   @testset "replaceind and replaceinds" begin
-    rA1 = replaceind(A1,s1,s2)
-    @test hasinds(rA1,s2,l,l')
-    @test hasinds(A1,s1,l,l')
+    rA1 = replaceind(A1, s1, s2)
+    @test hasinds(rA1, s2, l, l')
+    @test hasinds(A1, s1, l, l')
 
-    replaceind!(A1,s1,s2)
-    @test hasinds(A1,s2,l,l')
+    # Pair notation (like Julia's replace function)
+    rA1 = replaceind(A1, s1 => s2)
+    @test hasinds(rA1, s2, l, l')
+    @test hasinds(A1, s1, l, l')
 
-    rA2 = replaceinds(A2,(s2,l'),(s1,l))
-    @test hasinds(rA2,s1,l,l'')
-    @test hasinds(A2,s2,l',l'')
+    replaceind!(A1, s1, s2)
+    @test hasinds(A1, s2, l, l')
 
-    replaceinds!(A2,(s2,l'),(s1,l))
-    @test hasinds(A2,s1,l,l'')
+    rA2 = replaceinds(A2, (s2, l'), (s1, l))
+    @test hasinds(rA2, s1, l, l'')
+    @test hasinds(A2, s2, l', l'')
+
+    # Pair notation (like Julia's replace function)
+    rA2 = replaceinds(A2, s2 => s1, l' => l)
+    @test hassameinds(rA2, (s1, l, l''))
+    @test hassameinds(A2, (s2, l', l''))
+
+    # Test ignoring indices that don't exist
+    rA2 = replaceinds(A2, s1 => l, l' => l)
+    @test hassameinds(rA2, (s2, l, l''))
+    @test hassameinds(A2, (s2, l', l''))
+
+    replaceinds!(A2, (s2, l'), (s1, l))
+    @test hasinds(A2, s1, l, l'')
   end
 
   @testset "replaceinds fixed errors" begin
