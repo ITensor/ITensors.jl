@@ -406,7 +406,10 @@ fmatch(id::IDType) = hasid(id)
 
 fmatch(n::Not) = !fmatch(parent(n))
 
-fmatch(::Nothing) = _ -> true
+# Function that always returns true
+ftrue() = true
+
+fmatch(::Nothing) = ftrue
 
 """
     ITensors.fmatch(; tags=nothing,
@@ -689,6 +692,25 @@ mapprime(is::IndexSet,
          args...; kwargs...) = mapprime(fmatch(args...; kwargs...),
                                         is, pl1, pl2)
 
+function _mapprime(i::Index,
+                   rep_pls::Pair{Int, Int}...)
+  for (pl1, pl2) in rep_pls
+    hasplev(i, pl1) && return setprime(i, pl2)
+  end
+  return i
+end
+
+function mapprime(f::Function,
+                  is::IndexSet,
+                  rep_pls::Pair{Int, Int}...)
+  return map(i -> f(i) ? _mapprime(i, rep_pls...) : i, is)
+end
+
+mapprime(is::IndexSet,
+         rep_pls::Pair{Int, Int}...;
+         kwargs...) = mapprime(fmatch(; kwargs...),
+                               is, rep_pls...)
+
 function addtags(f::Function,
                  is::IndexSet,
                  args...)
@@ -724,11 +746,15 @@ removetags(is::IndexSet,
            kwargs...) = removetags(fmatch(args...; kwargs...),
                                    is, tags)
 
-function replacetags(f::Function,
-                     is::IndexSet,
-                     args...)
-  return map(i -> f(i) ? replacetags(i, args...) : i, is)
-end
+replacetags(f::Function,
+            is::IndexSet,
+            args...) =
+  map(i -> f(i) ? replacetags(i, args...) : i, is)
+
+replacetags(f::Function,
+            is::IndexSet,
+            rep_ts::Pair) =
+  map(i -> f(i) ? replacetags(i, rep_ts) : i, is)
 
 replacetags(is::IndexSet,
             tags1,
@@ -736,6 +762,11 @@ replacetags(is::IndexSet,
             args...;
             kwargs...) = replacetags(fmatch(args...; kwargs...),
                                      is, tags1, tags2)
+
+replacetags(is::IndexSet,
+            rep_ts::Pair;
+            kwargs...) = replacetags(fmatch(; kwargs...),
+                                     is, rep_ts)
 
 function _swaptags(f::Function,
                    i::Index,
@@ -766,10 +797,14 @@ swaptags(is::IndexSet,
          kwargs...) = swaptags(fmatch(args...; kwargs...),
                                is, tags1, tags2)
 
+replaceinds(is::IndexSet, rep_inds::Pair{ <: Index, <: Index}...) =
+  replaceinds(is, zip(rep_inds...)...)
+
 function replaceinds(is::IndexSet, inds1, inds2)
   is1 = IndexSet(inds1)
   poss = indexin(is1, is)
   for (j, pos) in enumerate(poss)
+    isnothing(pos) && continue
     i1 = is[pos]
     i2 = inds2[j]
     space(i1) != space(i2) && error("Indices must have the same spaces to be replaced")
@@ -780,6 +815,8 @@ function replaceinds(is::IndexSet, inds1, inds2)
 end
 
 replaceind(is::IndexSet, i1::Index, i2::Index) = replaceinds(is, (i1,), (i2,))
+
+replaceind(is::IndexSet, rep_i::Pair{ <: Index, <: Index}) = replaceinds(is, rep_i)
 
 function swapinds(is::IndexSet, inds1, inds2)
   return replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
