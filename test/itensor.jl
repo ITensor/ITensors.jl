@@ -587,6 +587,11 @@ end
 
     A2r = replacetags(A2,"Link","Temp")
     @test hasinds(A2r,s2,ltmp',ltmp'')
+
+    A2r = replacetags(A2, "Site" => "Link", "Link" => "Site")
+    @test hasinds(A2r, replacetags(s2, "Site" => "Link"),
+                       replacetags(l', "Link" => "Site"),
+                       replacetags(l'', "Link" => "Site"))
   end
   @testset "prime(::ITensor,::String)" begin
     A2p = prime(A2)

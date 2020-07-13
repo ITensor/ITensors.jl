@@ -407,7 +407,7 @@ fmatch(id::IDType) = hasid(id)
 fmatch(n::Not) = !fmatch(parent(n))
 
 # Function that always returns true
-ftrue() = true
+ftrue(::Any) = true
 
 fmatch(::Nothing) = ftrue
 
@@ -678,19 +678,12 @@ swapprime(is::IndexSet,
           args...; kwargs...) = swapprime(fmatch(args...; kwargs...),
                                           is, pl1, pl2)
 
-function mapprime(f::Function,
-                  is::IndexSet, 
-                  pl1::Int,
-                  pl2::Int)
-  return map(i -> f(i) && hasplev(i, pl1) ? 
-                  setprime(i, pl2) : i, is)
-end
+mapprime(f::Function, is::IndexSet, 
+         pl1::Int, pl2::Int) = mapprime(f, is, pl1 => pl2)
 
-mapprime(is::IndexSet,
-         pl1::Int,
-         pl2::Int,
+mapprime(is::IndexSet, pl1::Int, pl2::Int,
          args...; kwargs...) = mapprime(fmatch(args...; kwargs...),
-                                        is, pl1, pl2)
+                                        is, pl1 => pl2)
 
 function _mapprime(i::Index,
                    rep_pls::Pair{Int, Int}...)
@@ -746,27 +739,37 @@ removetags(is::IndexSet,
            kwargs...) = removetags(fmatch(args...; kwargs...),
                                    is, tags)
 
-replacetags(f::Function,
-            is::IndexSet,
-            args...) =
-  map(i -> f(i) ? replacetags(i, args...) : i, is)
+function _replacetags(i::Index,
+                      rep_ts::Pair...)
+  for (tags1, tags2) in rep_ts
+    hastags(i, tags1) && return replacetags(i, tags1, tags2)
+  end
+  return i
+end
 
+# Version taking a list of Pairs
 replacetags(f::Function,
             is::IndexSet,
-            rep_ts::Pair) =
-  map(i -> f(i) ? replacetags(i, rep_ts) : i, is)
+            rep_ts::Pair...) =
+  map(i -> f(i) ? _replacetags(i, rep_ts...) : i, is)
+
+replacetags(is::IndexSet,
+            rep_ts::Pair...;
+            kwargs...) = replacetags(fmatch(; kwargs...),
+                                     is, rep_ts...)
+
+# Version taking two input TagSets/Strings
+replacetags(f::Function,
+            is::IndexSet,
+            tags1,
+            tags2) = replacetags(f, is, tags1 => tags2)
 
 replacetags(is::IndexSet,
             tags1,
             tags2,
             args...;
             kwargs...) = replacetags(fmatch(args...; kwargs...),
-                                     is, tags1, tags2)
-
-replacetags(is::IndexSet,
-            rep_ts::Pair;
-            kwargs...) = replacetags(fmatch(; kwargs...),
-                                     is, rep_ts)
+                                     is, tags1 => tags2)
 
 function _swaptags(f::Function,
                    i::Index,
