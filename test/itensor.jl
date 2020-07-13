@@ -10,9 +10,10 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 @testset "Dense ITensor basic functionality" begin
 
 @testset "ITensor constructors" begin
-  i = Index(2,"i")
-  j = Index(2,"j")
-  k = Index(2,"k")
+  i = Index(2, "i")
+  j = Index(2, "j")
+  k = Index(2, "k")
+  l = Index(2, "l")
 
   @testset "Default" begin
     A = ITensor()
@@ -29,8 +30,36 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test store(A) isa NDTensors.Dense{Float64}
   end
 
+  @testset "Index set operations" begin
+    A = randomITensor(i, j)
+    B = randomITensor(j, k)
+    C = randomITensor(k, l)
+    @test hascommoninds(A, B)
+    @test hascommoninds(B, C)
+    @test !hascommoninds(A, C)
+  end
+
   @testset "Random" begin
-    A = randomITensor(i,j)
+    A = randomITensor(i, j)
+
+    # Test hasind, hasinds
+    @test hasind(A, i)
+    @test hasind(i)(A)
+
+    @test hasinds(A, i)
+    @test hasinds(A, j)
+    @test hasinds(A, [i, j])
+    @test hasinds([i, j])(A)
+    @test hasinds(A, IndexSet(j))
+    @test hasinds(A, j, i)
+    @test hasinds(A, (i, j))
+    @test hasinds(A, IndexSet(i, j))
+    @test hasinds(j, i)(A)
+    @test hasinds(i)(A)
+    @test hasinds(IndexSet(j))(A)
+    @test hasinds((i, j))(A)
+    @test hasinds(IndexSet(i, j))(A)
+
     @test store(A) isa NDTensors.Dense{Float64}
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
@@ -45,6 +74,23 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     A = randomITensor()
     @test eltype(A) == Float64
     @test ndims(A) == 0
+end
+
+@testset "ITensor iteration" begin
+  A = randomITensor(i, j)
+  Is = eachindex(A)
+  @test length(Is) == dim(A)
+  sumA = 0.0
+  for I in Is
+    sumA += A[I]
+  end
+  @test sumA ≈ sum(ITensors.data(A))
+  sumA = 0.0
+  for a in A
+    sumA += a
+  end
+  @test sumA ≈ sum(A)
+  @test sumA ≈ sum(A)
 end
 
   @testset "From matrix" begin

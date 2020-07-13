@@ -250,34 +250,49 @@ end
 Construct a product state MPS with element type `Float64` and
 nonzero values determined from the input IndexVals.
 """
-productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64,
-                                                   ivals::Vector{<:IndexVal})
+productMPS(ivals::Vector{<:IndexVal}) =
+  productMPS(Float64,
+             ivals::Vector{<:IndexVal})
 
 """
-    productMPS(::Type{T},sites::Vector{<:Index},states)
+    productMPS(::Type{T},
+               sites::Vector{<:Index},
+               states::Union{Vector{String},
+                             Vector{Int},
+                             String,
+                             Int})
 
 Construct a product state MPS of element type `T`, having
 site indices `sites`, and which corresponds to the initial
-state given by the array `states`. The `states` array may
-consist of either an array of integers or strings, as 
-recognized by the `state` function defined for the relevant
-Index tag type.
+state given by the array `states`. The input `states` may
+be an array of strings or an array of ints recognized by the 
+`state` function defined for the relevant Index tag type.
+In addition, a single string or int can be input to create
+a uniform state.
 
 #Examples
 ```julia
 N = 10
-sites = siteinds("S=1/2",N)
+sites = siteinds("S=1/2", N)
 states = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi = productMPS(ComplexF64,sites,states)
+psi = productMPS(ComplexF64, sites, states)
+phi = productMPS(sites, "Up")
 ```
 """
 function productMPS(::Type{T},
-                    sites::Vector{<:Index},
-                    states) where {T<:Number}
+                    sites::Vector{ <: Index},
+                    states) where {T <: Number}
   if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial states don't match"))
   end
   ivals = [state(sites[n],states[n]) for n=1:length(sites)]
+  return productMPS(T, ivals)
+end
+
+function productMPS(::Type{T},
+                    sites::Vector{ <: Index},
+                    states::Union{String, Int}) where {T <: Number}
+  ivals = [state(sites[n], states) for n in 1:length(sites)]
   return productMPS(T, ivals)
 end
 
@@ -299,10 +314,9 @@ states = [isodd(n) ? "Up" : "Dn" for n=1:N]
 psi = productMPS(sites,states)
 ```
 """
-productMPS(sites::Vector{<:Index},
-           states) = productMPS(Float64,
-                                sites,
-                                states)
+productMPS(sites::Vector{ <: Index},
+           states) =
+  productMPS(Float64, sites, states)
 
 function siteind(M::MPS, j::Int)
   N = length(M)

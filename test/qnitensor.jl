@@ -16,6 +16,25 @@ Random.seed!(1234)
     @test nnzblocks(A) == 2
   end
 
+  @testset "ITensor iteration" begin
+    i = Index([QN(0)=>1,QN(1)=>2],"i")
+    j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
+
+    A = randomITensor(i, dag(j))
+    Is = eachindex(A)
+    @test length(Is) == dim(A)
+    sumA = 0.0
+    for I in Is
+      sumA += A[I]
+    end
+    @test sumA ≈ sum(ITensors.data(A))
+    sumA = 0.0
+    for a in A
+      sumA += a
+    end
+    @test sumA ≈ sum(A)
+  end
+
   @testset "Constructor (from Tuple)" begin
     i = Index([QN(0)=>1,QN(1)=>2],"i")
     j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
