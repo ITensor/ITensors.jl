@@ -1,3 +1,41 @@
+ITensors v0.1.17 Release Notes
+==============================
+
+* Miscellaneous new ITensor and MPS/MPO functionality (PR #457):
+  * Add `eachindex(T::ITensor)` to return an iterator over each cartesian
+index of an ITensor (i.e. for an `d x d` ITensor, either `1:d^2` or
+`(1,1), (1,2), ..., (d, d)`). For sparse ITensors, this includes
+structurally zero and nonzero entries.
+  * Add `iterate(A::ITensor, args...)`, which allows using `for a in A
+@show a end` to print all elements (zero and nonzero, for sparse
+tensors).
+  * Add `setindex!(T::ITensor, x::Number, I::CartesianIndex)` to allow
+indexing with a `CartesianIndex`, which is naturally returned by
+functions like `eachindex`.
+  * Add `hasplev(pl::Int)` that returns a function `x -> hasplev(x, pl)`
+(useful in functions like `map`).
+  * Add `hasind[s](i::Index)` that returns a function `x -> hasind[s](x, i)`
+(useful in functions like `map`).
+  * Add `hascommoninds(A, B; kwargs...)` which returns true if `A` and `B`
+have common indices.
+  * Add `findfirstsiteind(M::MPS/MPO, s::Index)` that returns which site
+of the MPS/MPO has the site index `s`.
+  * Add `findfirstsiteinds(M::MPS/MPO, is)` that returns which site
+of the MPS/MPO has the site indices `is`.
+  * Add `linkinds(::MPS/MPO)` that returns a vector of the link indices.
+  * Add `linkdim(::MPS/MPO, ::Int)` that returns the dimension of the
+specified link, and nothing if there is no link found.
+  * Add `linkdims(::MPS/MPO)` that returns a vector of the link
+dimensions.
+  * Fix a bug in `+(::MPST, ::MPST)` that the inputs were getting modified
+(the inputs were getting orthogonalized and the prime levels were beging
+modified).
+  * Add `productMPS(sites, state::Union{String, Int})` to create a uniform
+MPS (for example, `productMPS(sites, "Up")` makes a state with all Up
+spins).
+* Add QR option for factorize (only Dense tensors so far). Used by default
+if not truncation is requested (PR #427)
+
 ITensors v0.1.16 Release Notes
 ==============================
 
