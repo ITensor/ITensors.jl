@@ -3,10 +3,15 @@ mutable struct ProjMPO_MPS
   PH::ProjMPO
   pm::Vector{ProjMPS}
   weight::Float64
+  nsite::Int # default value = 2
+  ProjMPO_MPS(PH::ProjMPO, pm::Vector{ProjMPS}, weight::Float64, nsite::Int) = new(PH, pm, weight, nsite)
+  ProjMPO_MPS(PH::ProjMPO, pm::Vector{ProjMPS}, weight::Float64) = new(PH, pm, weight, 2)
 end
 
-function ProjMPO_MPS(H::MPO,mpsv::Vector{MPS};weight=1.0) 
-  return ProjMPO_MPS(ProjMPO(H),[ProjMPS(m) for m in mpsv],weight)
+function ProjMPO_MPS(H::MPO,mpsv::Vector{MPS};kwargs...) 
+  weight = get(kwargs, :weight, 1.0)
+  nsite = get(kwargs, :nsite, 2)
+  return ProjMPO_MPS(ProjMPO(H, nsite), [ProjMPS(nsite, m) for m in mpsv], weight, nsite)
 end
 
 

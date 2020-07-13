@@ -80,7 +80,7 @@ function dmrg(H::MPO,
               kwargs...)
   weight = get(kwargs,:weight,1.0)
   ncenter::Int = get(kwargs, :ncenter, 2)
-  PMM = ProjMPO_MPS(H,Ms;weight=weight)
+  PMM = ProjMPO_MPS(H,Ms;weight=weight,nsite=ncenter)
   return dmrg(PMM,psi0,sweeps;kwargs...)
 end
 

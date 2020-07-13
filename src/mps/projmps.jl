@@ -10,6 +10,11 @@ mutable struct ProjMPS
                         2,
                         M,
                         Vector{ITensor}(undef, length(M)))
+  ProjMPS(nsite::Int, M::MPS) = new(0,
+                        length(M)+1,
+                        nsite,
+                        M,
+                        Vector{ITensor}(undef, length(M)))
 end
 
 nsite(P::ProjMPS) = P.nsite
@@ -28,17 +33,26 @@ end
 
 function product(P::ProjMPS,
                  v::ITensor)::ITensor
-  if nsite(P) != 2
-    error("Only two-site ProjMPS currently supported")
+  if P.rpos - P.lpos != nsite(P) + 1
+    error("P.lpos and P.rpos values inconsistent with nsite (must satisfy P.rpos - P.lpos = nsite + 1")
   end
 
-  Lpm = dag(prime(P.M[P.lpos+1],"Link"))
-  !isnothing(lproj(P)) && (Lpm *= lproj(P))
-
-  Rpm = dag(prime(P.M[P.rpos-1],"Link"))
-  !isnothing(rproj(P)) && (Rpm *= rproj(P))
-
-  pm = Lpm*Rpm
+  tensor_list = ITensor[]
+  for j = P.lpos+1:P.rpos-1
+    if j == P.lpos+1
+      Lpm = dag(prime(P.M[j],"Link"))
+      !isnothing(lproj(P)) && (Lpm *= lproj(P))
+      push!(tensor_list, copy(Lpm))
+    elseif j == P.rpos-1
+      Rpm = dag(prime(P.M[j],"Link"))
+      !isnothing(rproj(P)) && (Rpm *= rproj(P))
+      push!(tensor_list, copy(Rpm))
+    else
+      Mpm = dag(prime(P.M[j],"Link"))
+      push!(tensor_list, copy(Mpm))
+    end
+  end
+  pm = prod(tensor_list)
 
   pv = scalar(pm*v)
 
