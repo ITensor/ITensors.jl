@@ -389,14 +389,25 @@ delta(is::Index...) = delta(Float64, IndexSet(is...))
 const δ = delta
 
 """
-    setelt(iv)
+    setelt(ivs...)
 
 Create an ITensor with all zeros except the specified value,
 which is set to 1.
+
+# Examples
+```julia
+i = Index(2,"i")
+A = setelt(i=>2)
+# A[i=>2] == 1, all other elements zero
+
+j = Index(3,"j")
+B = setelt(i=>1,j=>3)
+# B[i=>1,j=>3] == 1, all other element zero
+```
 """
-function setelt(iv::IndexValOrPairIndexInt)
-  A = emptyITensor(ind(iv))
-  A[val(iv)] = 1.0
+function setelt(ivs::IndexValOrPairIndexInt...)
+  A = emptyITensor(ind.(ivs)...)
+  A[val.(ivs)...] = 1.0
   return A
 end
 
@@ -1082,10 +1093,10 @@ function Base.:*(A::ITensor, B::ITensor)
   (labelsA,labelsB) = compute_contraction_labels(inds(A),inds(B))
   CT = contract(tensor(A),labelsA,tensor(B),labelsB)
   C = itensor(CT)
-  warnTensorOrder = get_warn_itensor_order()
+  warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 &&
      order(C) >= warnTensorOrder
-     @warn "Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_itensor_order!(::Int)`, `reset_warn_itensor_order!()`, and `disable_warn_itensor_order!()`."
+     @warn "Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_order!(::Int)`, `reset_warn_order!()`, and `disable_warn_order!()`."
   end
   return C
 end
