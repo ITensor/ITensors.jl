@@ -1,8 +1,8 @@
 ITensors v0.1.18 Release Notes
 ==============================
 
-* Add functions for controlling warn itensor order (#458)
-* Add pair syntax to mapprime, replacetags, and replaceinds (#459)
+* Add functions for controlling warn itensor order (PR #458)
+* Add pair syntax to mapprime, replacetags, and replaceinds (PR #459)
 
 ITensors v0.1.17 Release Notes
 ==============================
