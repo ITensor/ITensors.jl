@@ -270,7 +270,7 @@ be an array of strings or an array of ints recognized by the
 In addition, a single string or int can be input to create
 a uniform state.
 
-#Examples
+# Examples
 ```julia
 N = 10
 sites = siteinds("S=1/2", N)
