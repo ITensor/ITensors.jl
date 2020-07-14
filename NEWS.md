@@ -1,3 +1,20 @@
+ITensors v0.1.19 Release Notes
+==============================
+
+* Add setindex!(::MPS, _, ::Colon) (PR #463)
+  * Set new limits to limits of input MPS
+* Add macros for warn ITensor order (PR #461)
+  * Add macros for warn ITensor order
+  * Shorten warn ITensor order function name (breaking for anyone who
+  managed to use them in the short time they existed).
+* Make map for MPS reset the orthogonality limits (PR #460)
+  * Makes map and map! reset the orthogonality limits by default.
+  * Add keyword argument set_limits to map and map! to let users turn
+on and off setting the orthogonality limits (so it can be turned
+off for cases like priming).
+  * Add orthogonalize, an out-of-place version of orthogonalize!.
+  * Add SiteType"S=\1/2" as an alias for SiteType"S=1/2".
+
 ITensors v0.1.18 Release Notes
 ==============================
 
