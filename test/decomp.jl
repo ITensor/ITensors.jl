@@ -57,7 +57,7 @@ using ITensors,
 
     R,Q, = factorize(A,l,s; which_decomp="qr", ortho="right")
     q = commonind(Q,R)
-    @test A ≈ Q*R atol=1e-14
+    @test A ≈ Q*R atol=1e-13
     @test Q*dag(prime(Q,q)) ≈ δ(Float64,q,q') atol=1e-14
   end
 
