@@ -9,6 +9,13 @@ The number of sites of an MPS/MPO.
 Base.length(m::AbstractMPS) = length(m.data)
 
 """
+    size::MPS/MPO)
+
+The number of sites of an MPS/MPO, in a tuple.
+"""
+Base.size(m::AbstractMPS) = size(m.data)
+
+"""
     ITensors.data(::MPS/MPO)
 
 The Vector storage of an MPS/MPO.
@@ -52,6 +59,21 @@ function Base.setindex!(M::AbstractMPS,
   data(M)[n] = T
   return M
 end
+
+function Base.setindex!(M::MPST, v::MPST,
+                        ::Colon;
+                        set_limits::Bool = true) where {MPST <: AbstractMPS}
+  if set_limits
+    setleftlim!(M, -1)
+    setrightlim!(M, length(M)+1)
+  end
+  data(M)[:] = data(v)
+  return M
+end
+
+Base.setindex!(M::AbstractMPS, v::Vector{<:ITensor},
+               ::Colon; kwargs...) =
+  setindex!(M, MPS(v), :; kwargs...)
 
 Base.copy(m::AbstractMPS) = typeof(m)(copy(data(m)),
                                       leftlim(m),

@@ -515,6 +515,19 @@ end
     @test ITensors.rightlim(M) == 2
   end
 
+  @testset "setindex!(::MPS, _, ::Colon)" begin
+    N = 4
+    s = siteinds("S=½", N)
+    ψ = randomMPS(s)
+    ϕ = productMPS(s, "↑")
+    ψ[:] = ϕ
+    @test inner(ψ, ϕ) ≈ 1
+
+    ψ = randomMPS(s)
+    ϕ = productMPS(s, "↑")
+    ψ[:] = ITensors.data(ϕ)
+    @test inner(ψ, ϕ) ≈ 1
+  end
 end
 
 nothing
