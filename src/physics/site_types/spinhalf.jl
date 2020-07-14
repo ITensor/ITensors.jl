@@ -121,11 +121,21 @@ op!(Op::ITensor,
 
 space(::SiteType"SpinHalf"; kwargs...) =
   space(SiteType("S=1/2"); kwargs...)
+
 state(::SiteType"SpinHalf", n::StateName) =
   state(SiteType("S=1/2"), n)
 
-op!(Op::ITensor,
-    o::OpName,
-    ::SiteType"SpinHalf",
-    s::Index) = op!(Op, o, SiteType("S=1/2"), s)
+op!(Op::ITensor, o::OpName, ::SiteType"SpinHalf", s::Index...) =
+  op!(Op, o, SiteType("S=1/2"), s...)
+
+# Support the tag "S=½" as equivalent to "S=1/2"
+
+space(::SiteType"S=½"; kwargs...) =
+  space(SiteType("S=1/2"); kwargs...)
+
+state(::SiteType"S=½", n::StateName) =
+  state(SiteType("S=1/2"), n)
+
+op!(Op::ITensor, o::OpName, ::SiteType"S=½", s::Index...) =
+  op!(Op, o, SiteType("S=1/2"), s...)
 

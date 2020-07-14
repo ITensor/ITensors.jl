@@ -481,6 +481,40 @@ end
     @test maxlinkdim(ψ) == 1
   end
 
+  @testset "map!" begin
+    N = 5
+    s = siteinds("S=½", N)
+    M0 = productMPS(s, "↑")
+
+    # Test map! with limits getting set
+    M = orthogonalize(M0, 1)
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == 2
+    map!(prime, M)
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == N+1
+
+    # Test map! without limits getting set
+    M = orthogonalize(M0, 1)
+    map!(prime, M, set_limits = false)
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == 2
+
+    # Test prime! with limits getting set
+    M = orthogonalize(M0, 1)
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == 2
+    prime!(M, set_limits = true)
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == N+1
+
+    # Test prime! without limits getting set
+    M = orthogonalize(M0, 1)
+    prime!(M)
+    @test ITensors.leftlim(M) == 0
+    @test ITensors.rightlim(M) == 2
+  end
+
 end
 
 nothing
