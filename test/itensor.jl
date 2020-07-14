@@ -439,6 +439,14 @@ end
   T = setelt(i=>2)
   @test T[i(1)] ≈ 0.0
   @test T[i(2)] ≈ 1.0
+
+  j = Index(2,"j")
+
+  T = setelt(j=>2,i=>1)
+  @test T[j=>1,i=>1] ≈ 0.0
+  @test T[j=>2,i=>1] ≈ 1.0
+  @test T[j=>1,i=>2] ≈ 0.0
+  @test T[j=>2,i=>2] ≈ 0.0
 end
 
 
