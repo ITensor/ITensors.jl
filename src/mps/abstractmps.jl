@@ -61,19 +61,15 @@ function Base.setindex!(M::AbstractMPS,
 end
 
 function Base.setindex!(M::MPST, v::MPST,
-                        ::Colon;
-                        set_limits::Bool = true) where {MPST <: AbstractMPS}
-  if set_limits
-    setleftlim!(M, -1)
-    setrightlim!(M, length(M)+1)
-  end
+                        ::Colon) where {MPST <: AbstractMPS}
+  setleftlim!(M, leftlim(v))
+  setrightlim!(M, rightlim(v))
   data(M)[:] = data(v)
   return M
 end
 
-Base.setindex!(M::AbstractMPS, v::Vector{<:ITensor},
-               ::Colon; kwargs...) =
-  setindex!(M, MPS(v), :; kwargs...)
+Base.setindex!(M::AbstractMPS, v::Vector{<:ITensor}, ::Colon) =
+  setindex!(M, MPS(v), :)
 
 Base.copy(m::AbstractMPS) = typeof(m)(copy(data(m)),
                                       leftlim(m),
