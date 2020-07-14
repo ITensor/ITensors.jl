@@ -179,6 +179,7 @@ export
   # Methods
   error_contract,
   maxlinkdim,
+  orthogonalize,
   orthogonalize!,
   randomMPO,
   truncate!,

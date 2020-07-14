@@ -142,14 +142,16 @@ function findfirstsiteinds(ψ::AbstractMPS,
   return findfirst(hasinds(s), ψ)
 end
 
-function Base.map!(f::Function, M::AbstractMPS)
+function Base.map!(f::Function, M::AbstractMPS;
+                   set_limits::Bool = true)
   for i in eachindex(M)
-    setindex!(M, f(M[i]), i; set_limits = false)
+    M[i, set_limits = set_limits] = f(M[i])
   end
   return M
 end
 
-Base.map(f::Function, M::AbstractMPS) = map!(f, copy(M))
+Base.map(f::Function, M::AbstractMPS; set_limits::Bool = true) =
+  map!(f, copy(M); set_limits = set_limits)
 
 for fname in (:dag,
               :prime,
@@ -159,6 +161,8 @@ for fname in (:dag,
               :removetags,
               :replacetags,
               :settags)
+  fname_bang = Symbol(fname, :!)
+
   @eval begin
     """
         $($fname)(M::MPS, args...; kwargs...)
@@ -169,23 +173,22 @@ for fname in (:dag,
 
     The ITensors of the MPS/MPO will be a view of the storage of the original ITensors.
     """
-    $fname(M::AbstractMPS,
-           args...;
-           kwargs...) = map(m -> $fname(m, args...;
-                                        kwargs...), M)
+    $fname(M::AbstractMPS, args...;
+           set_limits::Bool = false, kwargs...) =
+      map(m -> $fname(m, args...; kwargs...), M;
+          set_limits = set_limits)
 
     """
-        $($fname)!(M::MPS, args...; kwargs...)
+        $($fname_bang)(M::MPS, args...; kwargs...)
 
-        $($fname)!(M::MPO, args...; kwargs...)
+        $($fname_bang)(M::MPO, args...; kwargs...)
 
     Apply $($fname) to all ITensors of an MPS/MPO in-place.
     """
-    $(Symbol(fname, :!))(M::AbstractMPS,
-                         args...;
-                         kwargs...) = map!(m -> $fname(m, args...;
-                                                       kwargs...), M)
-
+    $fname_bang(M::AbstractMPS, args...;
+                set_limits::Bool = false, kwargs...) =
+      map!(m -> $fname(m, args...; kwargs...), M;
+           set_limits = set_limits)
   end
 end
 
@@ -194,10 +197,8 @@ function map_linkinds!(f::Function, M::AbstractMPS)
     l = linkind(M, i)
     if !isnothing(l)
       l̃ = f(l)
-      setindex!(M, replaceind(M[i], l, l̃), i;
-                set_limits = false)
-      setindex!(M, replaceind(M[i+1], l, l̃), i+1;
-                set_limits = false)
+      M[i, set_limits = false] = replaceind(M[i], l, l̃)
+      M[i+1, set_limits = false] = replaceind(M[i+1], l, l̃)
     end
   end
   return M
@@ -212,10 +213,8 @@ function map_common_siteinds!(f::Function, M1::AbstractMPS,
     s = common_siteind(M1, M2, i)
     if !isnothing(s)
       s̃ = f(s)
-      setindex!(M1, replaceind(M1[i], s, s̃), i;
-                set_limits = false)
-      setindex!(M2, replaceind(M2[i], s, s̃), i;
-                set_limits = false)
+      M1[i, set_limits = false] = replaceind(M1[i], s, s̃)
+      M2[i, set_limits = false] = replaceind(M2[i], s, s̃)
     end
   end
   return M1, M2
@@ -233,8 +232,7 @@ function map_unique_siteinds!(f::Function, M1::AbstractMPS,
     s = unique_siteind(M1, M2, i)
     if !isnothing(s)
       s̃ = f(s)
-      setindex!(M1, replaceind(M1[i], s, s̃), i;
-                set_limits = false)
+      M1[i, set_limits = false] = replaceind(M1[i], s, s̃)
     end
   end
   return M1
@@ -270,10 +268,8 @@ for fname in (:sim,
     
     The ITensors of the MPS/MPO will be a view of the storage of the original ITensors.
     """
-    $fname_linkinds(M::AbstractMPS,
-                    args...;
-                    kwargs...) = map_linkinds(i -> $fname(i, args...;
-                                                         kwargs...), M)
+    $fname_linkinds(M::AbstractMPS, args...; kwargs...) =
+      map_linkinds(i -> $fname(i, args...; kwargs...), M)
 
     """
         $($fname_linkinds)!(M::MPS, args...; kwargs...)
@@ -282,12 +278,8 @@ for fname in (:sim,
 
     Apply $($fname) to all link indices of the ITensors of an MPS/MPO in-place.
     """
-    function $fname_linkinds_inplace(M::AbstractMPS,
-                                     args...;
-                                     kwargs...)
-      return map_linkinds!(i -> $fname(i, args...;
-                                      kwargs...), M)
-    end
+    $fname_linkinds_inplace(M::AbstractMPS, args...; kwargs...) =
+      map_linkinds!(i -> $fname(i, args...; kwargs...), M)
 
     """
         $($fname_common_siteinds)(M1::MPO, M2::MPS, args...; kwargs...)
@@ -315,13 +307,9 @@ for fname in (:sim,
     
     Modifies the input MPSs/MPOs in-place.
     """
-    function $fname_common_siteinds_inplace(M1::AbstractMPS,
-                                            M2::AbstractMPS,
-                                            args...;
-                                            kwargs...)
-      return map_common_siteinds!(i -> $fname(i, args...;
-                                              kwargs...), M1, M2)
-    end
+    $fname_common_siteinds_inplace(M1::AbstractMPS, M2::AbstractMPS,
+                                   args...; kwargs...) =
+      map_common_siteinds!(i -> $fname(i, args...; kwargs...), M1, M2)
 
     """
         $($fname_unique_siteinds)(M1::MPO, M2::MPS, args...; kwargs...)
@@ -623,8 +611,10 @@ end
 
 """
     orthogonalize!(M::MPS, j::Int; kwargs...)
+    orthogonalize(M::MPS, j::Int; kwargs...)
 
     orthogonalize!(M::MPO, j::Int; kwargs...)
+    orthogonalize(M::MPO, j::Int; kwargs...)
 
 Move the orthogonality center of the MPS
 to site `j`. No observable property of the
@@ -632,6 +622,9 @@ MPS will be changed, and no truncation of the
 bond indices is performed. Afterward, tensors
 `1,2,...,j-1` will be left-orthogonal and tensors
 `j+1,j+2,...,N` will be right-orthogonal.
+
+Either modify in-place with `orthogonalize!` or
+out-of-place with `orthogonalize`.
 """
 function orthogonalize!(M::AbstractMPS,
                         j::Int;
@@ -668,6 +661,12 @@ function orthogonalize!(M::AbstractMPS,
     end
   end
   return M
+end
+
+function orthogonalize(ψ0::AbstractMPS, args...; kwargs...)
+  ψ = copy(ψ0)
+  orthogonalize!(ψ, args...; kwargs...)
+  return ψ
 end
 
 """
