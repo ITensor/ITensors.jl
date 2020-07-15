@@ -831,7 +831,7 @@ T = Tensor(2,2,2)
 T[1,2,1] = 1.3  # Conventional element setting
 
 i = Index(2)
-T = Tensor(i,i',i')  # The identifiers are ignored, just interpreted as above
+T = Tensor((i,i',i'))  # The identifiers are ignored, just interpreted as above
 T[1,2,1] = 1.3
 ```
 To make performant ITensor code (refer to the the previous section 
