@@ -106,6 +106,22 @@ ITensor(A::Array,
         tol = 0) =
   _ITensor(A, IndexSet(inds...); tol = tol)
 
+itensor(A::Array,
+        inds::QNIndexSet;
+        tol = 0) =
+  ITensor(A, inds; tol = tol)
+
+itensor(A::Array,
+        inds::QNIndex...;
+        tol = 0) =
+  ITensor(A, inds...; tol = tol)
+
+# Defined to fix ambiguity error
+itensor(A::Array{ <: Number},
+        inds::QNIndex...;
+        tol = 0) =
+  ITensor(A, inds...; tol = tol)
+
 """
     emptyITensor([::Type{ElT} = Float64, ]inds)
     emptyITensor([::Type{ElT} = Float64, ]inds::QNIndex...)

@@ -33,6 +33,17 @@ Random.seed!(1234)
     @test T[3, 2] == 1e-10
     @test T[3, 3] == 4.0
 
+    T = itensor(A, i', dag(i))
+    @test flux(T) == QN(0)
+    @test nnzblocks(T) == 2
+    @test (1,1) in nzblocks(T)
+    @test (2,2) in nzblocks(T)
+    @test T[1, 1] == 1.0
+    @test T[2, 2] == 2.0
+    @test T[2, 3] == 3.0
+    @test T[3, 2] == 1e-10
+    @test T[3, 3] == 4.0
+
     T = ITensor(A, i', dag(i); tol = 1e-9)
     @test flux(T) == QN(0)
     @test nnzblocks(T) == 2
