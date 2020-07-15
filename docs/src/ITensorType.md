@@ -19,6 +19,7 @@ setelt(::IndexVal)
 
 ```@docs
 ITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
+ITensor(A::Array, inds::ITensors.QNIndexSet)
 ```
 
 ## Empty Constructors
