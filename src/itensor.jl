@@ -742,7 +742,8 @@ filterinds(A...; kwargs...) = filter(itensor2inds.(A)...;
 # Faster version when no filtering is requested
 filterinds(A::ITensor) = inds(A)
 
-#NDTensors.inds(A...; kwargs...) = filterinds(A...; kwargs...)
+# For backwards compatibility
+NDTensors.inds(A...; kwargs...) = filterinds(A...; kwargs...)
 
 # in-place versions of priming and tagging
 for fname in (:prime,

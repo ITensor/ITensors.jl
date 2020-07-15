@@ -181,7 +181,7 @@ function LinearAlgebra.dot(B::MPO, y::MPS,
   # Swap prime levels 1 -> 2 and 2 -> 1.
   for j in eachindex(Bdag)
     Axcommon = commonind(A[j], x[j])
-    ABcommon = uniqueind(inds(A[j], "Site"), IndexSet(Axcommon))
+    ABcommon = uniqueind(filterinds(A[j]; tags = "Site"), IndexSet(Axcommon))
     swapprime!(Bdag[j],2,3)
     swapprime!(Bdag[j],1,2)
     swapprime!(Bdag[j],3,1)
@@ -397,8 +397,8 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   B_ = copy(B)
   orthogonalize!(B_, 1)
 
-  links_A = inds.(A.data, "Link")
-  links_B = inds.(B.data, "Link")
+  links_A = filterinds.(A.data; tags = "Link")
+  links_B = filterinds.(B.data; tags = "Link")
 
   res = deepcopy(A_)
   for i in 1:N-1
@@ -445,7 +445,8 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   nfork = clust * A_[N] * B_[N]
 
   # in case we primed A
-  A_ind = uniqueind(inds(A_[N-1], "Site"), inds(B_[N-1], "Site"))
+  A_ind = uniqueind(filterinds(A_[N-1]; tags = "Site"),
+                    filterinds(B_[N-1]; tags = "Site"))
   Lis = IndexSet(A_ind, sites_B[N-1], commonind(res[N-2], res[N-1]))
   U, V = factorize(nfork, Lis; 
                    ortho="right",
