@@ -39,6 +39,44 @@ end
 
 ITensor(inds::QNIndex...) = ITensor(Float64, QN(), IndexSet(inds...))
 
+function _ITensor(A::Array{ElT},
+                  inds::QNIndexSet;
+                  tol = 0) where {ElT}
+  length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, ::IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
+  T = emptyITensor(ElT, inds)
+  A = reshape(A, dims(inds))
+  for vs in eachindex(T)
+    Avs = A[vs]
+    if abs(Avs) > tol
+      T[vs] = A[vs]
+    end
+  end
+  return T
+end
+
+"""
+    ITensor(::Array, ::QNIndexSet)
+
+Create a block sparse ITensor from the input Array, where zeros are
+dropped and nonzero blocks are determined from the zero values of
+the array.
+"""
+ITensor(A::Array,
+        inds::QNIndexSet;
+        tol = 0) =
+  _ITensor(A, inds; tol = tol)
+
+# Defined to fix ambiguity error
+ITensor(A::Array{ <: AbstractFloat},
+        inds::QNIndexSet;
+        tol = 0) =
+  _ITensor(A, inds; tol = tol)
+
+ITensor(A::Array,
+        inds::QNIndex...;
+        tol = 0) =
+  _ITensor(A, IndexSet(inds...); tol = tol)
+
 """
     emptyITensor([::Type{ElT} = Float64, ]inds)
     emptyITensor([::Type{ElT} = Float64, ]inds::QNIndex...)
