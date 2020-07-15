@@ -102,6 +102,7 @@ export
   diagITensor,
   dot,
   firstind,
+  filterinds,
   hascommoninds,
   hasind,
   hasinds,

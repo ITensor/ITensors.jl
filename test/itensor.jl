@@ -1036,6 +1036,15 @@ end # End Dense storage test
   @test v4[1] ≈ orig_elt
 end
 
+@testset "filter ITensor indices" begin
+  i = Index(2, "i")
+  A = randomITensor(i, i')
+  @test hassameinds(filterinds(A; plev = 0), (i,))
+  @test hassameinds(inds(A; plev = 0), (i,))
+  is = inds(A)
+  @test hassameinds(filterinds(is; plev = 0), (i,))
+  @test hassameinds(inds(is; plev = 0), (i,))
+end
 
 end # End Dense ITensor basic functionality
 

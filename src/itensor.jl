@@ -736,8 +736,14 @@ unionind(A...; kwargs...) = getfirst(union(itensor2inds.(A)...;
 firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
                                      kwargs...)
 
-NDTensors.inds(A...; kwargs...) = filter(itensor2inds.(A)...;
-                                         kwargs...)
+filterinds(A...; kwargs...) = filter(itensor2inds.(A)...;
+                                     kwargs...)
+
+# Faster version when no filtering is requested
+filterinds(A::ITensor) = inds(A)
+
+# For backwards compatibility
+NDTensors.inds(A...; kwargs...) = filterinds(A...; kwargs...)
 
 # in-place versions of priming and tagging
 for fname in (:prime,
@@ -1197,7 +1203,7 @@ end
 
 function LinearAlgebra.exp(A::ITensor;
                            kwargs...)
-  Ris = inds(A; plev = 0)
+  Ris = filterinds(A; plev = 0)
   Lis = Ris'
   return exp(A, Lis, Ris; kwargs...)
 end
