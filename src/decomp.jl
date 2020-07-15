@@ -254,7 +254,7 @@ end
 
 function LinearAlgebra.eigen(A::ITensor;
                              kwargs...)
-  Ris = inds(A; plev = 0)
+  Ris = filterinds(A; plev = 0)
   Lis = Ris'
 
   return eigen(A, Lis, Ris; kwargs...)

@@ -411,8 +411,8 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   sites_A = Index[]
   sites_B = Index[]
   for (AA, BB) in zip(data(A_), data(B_))
-    sda = setdiff(inds(AA, "Site"), inds(BB, "Site"))
-    sdb = setdiff(inds(BB, "Site"), inds(AA, "Site"))
+    sda = setdiff(filterinds(AA; tags="Site"), filterinds(BB; tags="Site"))
+    sdb = setdiff(filterinds(BB; tags="Site"), filterinds(AA; tags="Site"))
     length(sda) != 1 && error("In contract(::MPO, ::MPO), MPOs must have exactly one shared site index")
     length(sdb) != 1 && error("In contract(::MPO, ::MPO), MPOs must have exactly one shared site index")
     push!(sites_A, sda[1])
