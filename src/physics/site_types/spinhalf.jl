@@ -1,9 +1,17 @@
 
 function space(::SiteType"S=1/2";
                conserve_qns = false,
-               conserve_sz = conserve_qns)
-  if conserve_sz
-    return [QN("Sz",+1)=>1,QN("Sz",-1)=>1]
+               conserve_sz = conserve_qns,
+               conserve_parity = false)
+  if conserve_sz && conserve_parity
+    return [QN(("Sz", +1), ("Parity", 1, 2)) => 1,
+            QN(("Sz", -1), ("Parity", 0, 2)) => 1]
+  elseif conserve_sz
+    return [QN("Sz", +1) => 1,
+            QN("Sz", -1) => 1]
+  elseif conserve_parity
+    return [QN("Parity", 1, 2) => 1,
+            QN("Parity", 0, 2) => 1]
   end
   return 2
 end
@@ -116,6 +124,19 @@ op!(Op::ITensor,
     t::SiteType"S=1/2",
     s::Index) = op!(Op, OpName("S2"), t, s)
 
+function op!(Op::ITensor,
+             ::OpName"ProjUp",
+             ::SiteType"S=1/2",
+             s::Index)
+  Op[s' => 1, s => 1] = 1
+end
+
+function op!(Op::ITensor,
+             ::OpName"ProjDn",
+             ::SiteType"S=1/2",
+             s::Index)
+  Op[s' => 2, s => 2] = 1
+end
 
 # Support the tag "SpinHalf" as equivalent to "S=1/2"
 

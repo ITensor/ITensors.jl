@@ -11,15 +11,29 @@ using ITensors,
     @test hastags(s,"S=1/2,Site")
     @test dim(s) == 2
 
-    s = siteind("S=1/2";conserve_qns=true)
+    s = siteind("S=1/2"; conserve_qns=true)
     @test hastags(s,"S=1/2,Site")
     @test dim(s) == 2
     @test nblocks(s) == 2
     @test qn(s,1) == QN("Sz",+1)
     @test qn(s,2) == QN("Sz",-1)
 
-    s = siteinds("S=1/2",N)
+    s = siteind("S=1/2"; conserve_parity = true)
+    @test hastags(s, "S=1/2,Site")
+    @test dim(s) == 2
+    @test nblocks(s) == 2
+    @test qn(s,1) == QN("Parity", 1, 2)
+    @test qn(s,2) == QN("Parity", 0, 2)
 
+    s = siteind("S=1/2"; conserve_sz = true,
+                         conserve_parity = true)
+    @test hastags(s, "S=1/2,Site")
+    @test dim(s) == 2
+    @test nblocks(s) == 2
+    @test qn(s,1) == QN(("Parity", 1, 2), ("Sz", +1))
+    @test qn(s,2) == QN(("Parity", 0, 2), ("Sz", -1))
+
+    s = siteinds("S=1/2", N)
     @test state(s[1],"Up") == s[1](1)
     @test state(s[1],"Dn") == s[1](2)
     @test_throws ArgumentError state(s[1],"Fake")
@@ -41,6 +55,8 @@ using ITensors,
     @test Array(op("Sʸ",s,2),s[2]',s[2])  ≈ [0.0  -0.5im; 0.5im  0.0]
     @test Array(op("Sz",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
     @test Array(op("Sᶻ",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
+    @test Array(op("ProjUp",s,2),s[2]',s[2])  ≈ [ 1.0  0.0; 0.0 0.0]
+    @test Array(op("ProjDn",s,2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
   end
 
   @testset "Spin One sites" begin
