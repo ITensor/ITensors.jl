@@ -742,10 +742,10 @@ Random.seed!(1234)
       @test hassameinds(U, (i,j,u))
       @test hassameinds(D, (u,up))
 
-      @test norm(A - dag(U) * D * U') ≈ 0.0 atol=1e-11
-      @test norm(A - dag(U) * D * Ut) ≈ 0.0 atol=1e-11
-      @test norm(A * U - U' * D) ≈ 0.0 atol=1e-11
-      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-11
+      @test A ≈ dag(U) * D * U' atol=1e-11
+      @test A ≈ dag(U) * D * Ut atol=1e-11
+      @test A * U ≈ U' * D atol=1e-11
+      @test A * U ≈ Ut * D atol=1e-11
     end
 
     @testset "eigen hermitian (truncate)" begin
@@ -803,7 +803,7 @@ Random.seed!(1234)
       @test spec.truncerr ≤ cutoff
       err = sqrt(1-(Ap*dag(Ap))[]/(A*dag(A))[])
       @test err ≤ cutoff
-      @test err ≈ spec.truncerr rtol=1e-1
+      @test err ≈ spec.truncerr rtol=3e-1
 		end
 
     @testset "eigen non-hermitian" begin
@@ -828,10 +828,10 @@ Random.seed!(1234)
       @test hastags(up,"x")
       @test plev(up) == 1
 
-      @test norm(A - U' * D * dag(U)) ≉ 0.0 atol=1e-12
-      @test norm(A - Ut * D * dag(U)) ≉ 0.0 atol=1e-12
-      @test norm(A * U - U' * D) ≈ 0.0 atol=1e-12
-      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
+      @test A ≉ U' * D * dag(U) atol=1e-12
+      @test A ≉ Ut * D * dag(U) atol=1e-12
+      @test A * U ≈ U' * D atol=1e-12
+      @test A * U ≈ Ut * D atol=1e-12
     end
 
     @testset "eigen non-hermitian (general inds)" begin
@@ -865,8 +865,8 @@ Random.seed!(1234)
       @test hassameinds(U, (ĩ, j̃, r))
       @test hassameinds(Ut, (i, j, l))
 
-      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
-      @test norm(A - Ut * D * dag(U)) ≉ 0.0 atol=1e-12
+      @test A * U ≈ Ut * D atol=1e-12
+      @test A ≉ Ut * D * dag(U) atol=1e-12
     end
 
     @testset "eigen mixed arrows" begin
@@ -876,7 +876,7 @@ Random.seed!(1234)
       F = eigen(A, (i1, i1'), (i2', i2))
       D, U = F
       Ut = F.Vt
-      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
+      @test A * U ≈ Ut * D atol=1e-12
     end
 
   end
@@ -905,7 +905,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 2" begin
@@ -930,7 +930,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 3" begin
@@ -955,7 +955,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 4" begin
@@ -983,7 +983,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0,2)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 5" begin
@@ -1011,7 +1011,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0,2)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 6" begin
@@ -1039,7 +1039,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0,2)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd truncation example 1" begin
@@ -1298,7 +1298,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN()
       end
-      @test norm(U*S*V-A) ≈ 0 atol=1e-15
+      @test U * S * V ≈ A atol=1e-15
     end
 
     @testset "SVD no truncate bug" begin
