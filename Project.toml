@@ -18,7 +18,7 @@ TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 [compat]
 HDF5 = "0.13.1"
 KrylovKit = "0.4.2"
-NDTensors = "0.1.13"
+NDTensors = "0.1.14"
 PackageCompiler = "1.0.0"
 StaticArrays = "0.12.3"
 TimerOutputs = "0.5.5"
