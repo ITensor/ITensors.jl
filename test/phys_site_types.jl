@@ -56,7 +56,9 @@ using ITensors,
     @test Array(op("Sz",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
     @test Array(op("Sᶻ",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
     @test Array(op("ProjUp",s,2),s[2]',s[2])  ≈ [ 1.0  0.0; 0.0 0.0]
+    @test Array(op("projUp",s,2),s[2]',s[2])  ≈ [ 1.0  0.0; 0.0 0.0]
     @test Array(op("ProjDn",s,2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
+    @test Array(op("projDn",s,2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
   end
 
   @testset "Spin One sites" begin

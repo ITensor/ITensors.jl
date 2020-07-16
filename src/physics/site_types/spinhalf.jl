@@ -131,12 +131,22 @@ function op!(Op::ITensor,
   Op[s' => 1, s => 1] = 1
 end
 
+op!(Op::ITensor,
+    ::OpName"projUp",
+    t::SiteType"S=1/2",
+    s::Index) = op!(Op, OpName("ProjUp"), t, s)
+
 function op!(Op::ITensor,
              ::OpName"ProjDn",
              ::SiteType"S=1/2",
              s::Index)
   Op[s' => 2, s => 2] = 1
 end
+
+op!(Op::ITensor,
+    ::OpName"projDn",
+    t::SiteType"S=1/2",
+    s::Index) = op!(Op, OpName("ProjDn"), t, s)
 
 # Support the tag "SpinHalf" as equivalent to "S=1/2"
 
