@@ -40,7 +40,7 @@ Or, equivalently, via the `Pkg` API:
 ```julia
 julia> import Pkg; Pkg.add("ITensors")
 ```
-Please note that right now, ITensors.jl requires that you use Julia v1.4 or later (since we are using a feature that was introduced in Julia v1.4). We will work on supporting older minor versions.
+Please note that right now, ITensors.jl requires that you use Julia v1.3 or later (since ITensors.jl relies on a feature that was introduced in Julia v1.3).
 
 We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions [here](https://github.com/JuliaComputing/MKL.jl).
 
