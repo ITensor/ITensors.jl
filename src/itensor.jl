@@ -705,6 +705,12 @@ hassameinds(A,B) = issetequal(itensor2inds(A),
 commoninds(A...; kwargs...) = IndexSet(intersect(itensor2inds.(A)...;
                                                  kwargs...)...)
 
+commoninds(::Order{N},
+           A...;
+           kwargs...) where {N} =
+  IndexSet{N}(intersect(ITensors.itensor2inds.(A)...;
+                        kwargs...)...)
+
 # firstintersect
 commonind(A...; kwargs...) = firstintersect(itensor2inds.(A)...;
                                             kwargs...)
@@ -712,6 +718,12 @@ commonind(A...; kwargs...) = firstintersect(itensor2inds.(A)...;
 # symdiff
 noncommoninds(A...; kwargs...) = IndexSet(symdiff(itensor2inds.(A)...;
                                                kwargs...)...)
+
+noncommoninds(::Order{N},
+              A...;
+              kwargs...) where {N} =
+  IndexSet{N}(symdiff(ITensors.itensor2inds.(A)...;
+                      kwargs...)...)
 
 # firstsymdiff
 noncommonind(A...; kwargs...) = getfirst(symdiff(itensor2inds.(A)...;
@@ -721,6 +733,12 @@ noncommonind(A...; kwargs...) = getfirst(symdiff(itensor2inds.(A)...;
 uniqueinds(A...; kwargs...) = IndexSet(setdiff(itensor2inds.(A)...;
                                                kwargs...)...)
 
+uniqueinds(::Order{N},
+           A...;
+           kwargs...) where {N} =
+  IndexSet{N}(setdiff(ITensors.itensor2inds.(A)...;
+                      kwargs...)...)
+
 # firstsetdiff
 uniqueind(A...; kwargs...) = firstsetdiff(itensor2inds.(A)...;
                                           kwargs...)
@@ -729,7 +747,13 @@ uniqueind(A...; kwargs...) = firstsetdiff(itensor2inds.(A)...;
 unioninds(A...; kwargs...) = IndexSet(union(itensor2inds.(A)...;
                                             kwargs...)...)
 
-# firstsymdiff
+unioninds(::Order{N},
+          A...;
+          kwargs...) where {N} =
+  IndexSet{N}(union(ITensors.itensor2inds.(A)...;
+                    kwargs...)...)
+
+# firstunion
 unionind(A...; kwargs...) = getfirst(union(itensor2inds.(A)...;
                                            kwargs...))
 
