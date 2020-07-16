@@ -1,5 +1,6 @@
-using ITensors,
-      Test
+using ITensors
+using Test
+using Compat
 
 @testset "IndexSet" begin
   idim = 2

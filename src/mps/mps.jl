@@ -411,10 +411,9 @@ end
 
 Swap the sites `b` and `b+1`.
 """
-function swapbondsites(ψ::MPS, b::Int; kwargs...)
-  kwargs = setindex(values(kwargs), true, :swapsites)
-  return replacebond(ψ, b, ψ[b] * ψ[b+1]; kwargs...)
-end
+swapbondsites(ψ::MPS, b::Int; kwargs...) =
+  replacebond(ψ, b, ψ[b] * ψ[b+1];
+              kwargs..., swapsites = true)
 
 """
     sample!(m::MPS)

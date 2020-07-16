@@ -10,6 +10,7 @@ module ITensors
 #####################################
 # External packages
 #
+using Compat
 using HDF5
 using KrylovKit
 using LinearAlgebra
