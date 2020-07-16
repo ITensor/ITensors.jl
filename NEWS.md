@@ -1,3 +1,9 @@
+ITensors v0.1.20 Release Notes
+==============================
+* Make ITensors compatible with Julia v1.3 (#468)
+* New function filterinds, alias for inds (#466)
+* Add QN ITensor from Array constructor (#464)
+
 ITensors v0.1.19 Release Notes
 ==============================
 
