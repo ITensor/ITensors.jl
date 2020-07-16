@@ -861,28 +861,28 @@ end
       U,S,V,spec,u,v = svd(A,(j,l))
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
-      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
-      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
+      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-13
+      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
     end
 
     @testset "Test SVD of an ITensor with different algorithms" begin
       U, S, V, spec, u, v = svd(A, j, l; alg = "recursive")
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
-      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
-      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
 
       U, S, V, spec, u, v = svd(A, j,l; alg = "divide_and_conquer")
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
-      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
-      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
 
       U, S, V, spec, u, v = svd(A, j,l; alg = "qr_iteration")
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
-      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
-      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
 
       @test_throws ErrorException svd(A, j,l; alg = "bad_alg")
     end
@@ -899,8 +899,8 @@ end
       v = commonind(V, S)
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
-      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
-      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
+      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-13
+      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
     end
     @testset "Test SVD truncation" begin
         ii = Index(4)
@@ -914,8 +914,8 @@ end
     @testset "Test QR decomposition of an ITensor" begin
       Q,R,q = qr(A,(i,l))
       q = commonind(Q,R)
-      @test A ≈ Q*R atol=1e-14
-      @test Q*dag(prime(Q,q)) ≈ δ(SType,q,q') atol=1e-14
+      @test A ≈ Q*R atol=1e-13
+      @test Q*dag(prime(Q,q)) ≈ δ(SType,q,q') atol=1e-13
     end
 
     @testset "Test polar decomposition of an ITensor" begin
@@ -933,9 +933,9 @@ end
           jjp ∈ 1:dim(u[2])
         val = UUᵀ[u[1](ii),u[2](jj),u[1]'(iip),u[2]'(jjp)]
         if ii==iip && jj==jjp
-          @test val ≈ one(SType) atol=1e-14
+          @test val ≈ one(SType) atol=1e-13
         else
-          @test val ≈ zero(SType) atol=1e-14
+          @test val ≈ zero(SType) atol=1e-13
         end
       end
     end
