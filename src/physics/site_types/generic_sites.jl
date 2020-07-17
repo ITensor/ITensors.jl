@@ -8,3 +8,8 @@ function op!(Op::ITensor,
   end
 end
 
+op!(Op::ITensor,
+    ::OpName"F",
+    st::SiteType,
+    s::Index) = op!(Op,OpName("Id"),st,s)
+
