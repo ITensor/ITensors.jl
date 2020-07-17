@@ -695,43 +695,38 @@ hasinds(is::Index...) = hasinds(IndexSet(is...))
 
 Check if the ITensors or sets of indices have common indices.
 """
-hascommoninds(A, B; kwargs...) = !isnothing(commonind(A, B; kwargs...))
+hascommoninds(A, B; kwargs...) =
+  !isnothing(commonind(A, B; kwargs...))
 
 # issetequal
-hassameinds(A,B) = issetequal(itensor2inds(A),
-                              itensor2inds(B))
+hassameinds(A, B) =
+  issetequal(itensor2inds(A), itensor2inds(B))
 
 # intersect
-commoninds(A...; kwargs...) = IndexSet(intersect(itensor2inds.(A)...;
-                                                 kwargs...)...)
+commoninds(A...; kwargs...) =
+  intersect(itensor2inds.(A)...; kwargs...)
 
-commoninds(::Order{N},
-           A...;
-           kwargs...) where {N} =
-  IndexSet{N}(intersect(ITensors.itensor2inds.(A)...;
-                        kwargs...)...)
+commoninds(::Order{N}, A...; kwargs...) where {N} =
+  IndexSet{N}(intersect(itensor2inds.(A)...; kwargs...)...)
 
 # firstintersect
-commonind(A...; kwargs...) = firstintersect(itensor2inds.(A)...;
-                                            kwargs...)
+commonind(A...; kwargs...) =
+  firstintersect(itensor2inds.(A)...; kwargs...)
 
 # symdiff
-noncommoninds(A...; kwargs...) = IndexSet(symdiff(itensor2inds.(A)...;
-                                               kwargs...)...)
+noncommoninds(A...; kwargs...) =
+  IndexSet(symdiff(itensor2inds.(A)...; kwargs...)...)
 
-noncommoninds(::Order{N},
-              A...;
-              kwargs...) where {N} =
-  IndexSet{N}(symdiff(ITensors.itensor2inds.(A)...;
-                      kwargs...)...)
+noncommoninds(::Order{N}, A...; kwargs...) where {N} =
+  IndexSet{N}(symdiff(itensor2inds.(A)...; kwargs...)...)
 
 # firstsymdiff
-noncommonind(A...; kwargs...) = getfirst(symdiff(itensor2inds.(A)...;
-                                                 kwargs...))
+noncommonind(A...; kwargs...) =
+  getfirst(symdiff(itensor2inds.(A)...; kwargs...))
 
 # setdiff
-uniqueinds(A...; kwargs...) = IndexSet(setdiff(itensor2inds.(A)...;
-                                               kwargs...)...)
+uniqueinds(A...; kwargs...) =
+  IndexSet(setdiff(itensor2inds.(A)...; kwargs...)...)
 
 uniqueinds(::Order{N},
            A...;
