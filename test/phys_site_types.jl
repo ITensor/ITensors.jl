@@ -29,6 +29,7 @@ using ITensors,
      
     @test_throws ArgumentError op(s, "Fake", 2)
     @test Array(op("Id",s,3),s[3]',s[3])  ≈ [ 1.0  0.0; 0.0  1.0]
+    @test Array(op("F",s,3),s[3]',s[3])   ≈ [ 1.0  0.0; 0.0  1.0]
     @test Array(op("S+",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
     @test Array(op("S⁺",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
     @test Array(op("S-",s,4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
@@ -188,6 +189,8 @@ using ITensors,
     Ntot = op(s,"Ntot")
     @test Ntot[2,2] ≈ 1.0
     @test Ntot[3,3] ≈ 1.0
+    Id = Array(op(s,"Id"),s',s) 
+    @test Id ≈ [1.0 0 0; 0 1 0; 0 0 1]
     Cup = Array(op(s,"Cup"),s',s) 
     @test Cup ≈ [0. 1 0; 0 0 0; 0 0 0]
     Cdup = Array(op(s,"Cdagup"),s',s) 
