@@ -31,10 +31,15 @@ end
 """
     Sweeps(d::AbstractMatrix)
 
+    Sweeps(nsweep::Int, d::AbstractMatrix)
+
 Make a sweeps object from a matrix of input values.
 The first row should be strings that define which
 variables are being set ("maxdim", "cutoff", "mindim",
 and "noise").
+
+If the number of sweeps are not specified, they
+are determined from the size of the input matrix.
 
 # Examples
 ```julia
@@ -56,8 +61,7 @@ Sweeps
 6 cutoff=1.0E-12, maxdim=800, mindim=20, noise=0.0E+00
 ```
 """
-function Sweeps(d::AbstractMatrix)
-  nsw = size(d, 1) - 1
+function Sweeps(nsw::Int, d::AbstractMatrix)
   sw = Sweeps(nsw)
   vars = d[1, :]
   for (n, var) in enumerate(vars)
@@ -76,6 +80,8 @@ function Sweeps(d::AbstractMatrix)
   end
   return sw
 end
+
+Sweeps(d::AbstractMatrix) = Sweeps(size(d, 1) - 1, d)
 
 """
     nsweep(sw::Sweeps)
