@@ -126,6 +126,11 @@ Sweeps object `sw` during sweep `n`
 """
 noise(sw::Sweeps,n::Int)::Float64  = sw.noise[n]
 
+get_maxdims(sw::Sweeps) = sw.maxdim
+get_mindims(sw::Sweeps) = sw.mindim
+get_cutoffs(sw::Sweeps) = sw.cutoff
+get_noises(sw::Sweeps) = sw.noise
+
 """
     maxdim!(sw::Sweeps,maxdims::Int...)
 

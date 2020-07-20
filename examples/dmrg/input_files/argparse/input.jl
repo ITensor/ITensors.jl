@@ -57,7 +57,7 @@ end
 # Parse the arguments and define
 # variables for all of the inputs
 parsed_args = parse_args(s)
-for (arg,val) in parsed_args
+for (arg, val) in parsed_args
   arg == "arg1" && continue
   eval(Meta.parse("$arg = $val"))
 end

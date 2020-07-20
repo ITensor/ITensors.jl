@@ -11,6 +11,9 @@ export
   entropy,
   truncerror,
 
+# argparse/argparse.jl
+  parse_args,
+
 # decomp.jl
   eigen,
   factorize,
@@ -242,6 +245,10 @@ export
   Sweeps,
   cutoff,
   cutoff!,
+  get_cutoffs,
+  get_maxdims,
+  get_mindims,
+  get_noises,
   maxdim,
   maxdim!,
   mindim,
