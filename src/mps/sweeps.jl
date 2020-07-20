@@ -29,6 +29,55 @@ mutable struct Sweeps
 end
 
 """
+    Sweeps(d::AbstractMatrix)
+
+Make a sweeps object from a matrix of input values.
+The first row should be strings that define which
+variables are being set ("maxdim", "cutoff", "mindim",
+and "noise").
+
+# Examples
+```julia
+julia> Sweeps([
+         "maxdim" "mindim" "cutoff" "noise"
+          50       10       1e-12    1E-7
+          100      20       1e-12    1E-8
+          200      20       1e-12    1E-10
+          400      20       1e-12    0
+          800      20       1e-12    1E-11
+          800      20       1e-12    0
+         ])
+Sweeps
+1 cutoff=1.0E-12, maxdim=50, mindim=10, noise=1.0E-07
+2 cutoff=1.0E-12, maxdim=100, mindim=20, noise=1.0E-08
+3 cutoff=1.0E-12, maxdim=200, mindim=20, noise=1.0E-10
+4 cutoff=1.0E-12, maxdim=400, mindim=20, noise=0.0E+00
+5 cutoff=1.0E-12, maxdim=800, mindim=20, noise=1.0E-11
+6 cutoff=1.0E-12, maxdim=800, mindim=20, noise=0.0E+00
+```
+"""
+function Sweeps(d::AbstractMatrix)
+  nsw = size(d, 1) - 1
+  sw = Sweeps(nsw)
+  vars = d[1, :]
+  for (n, var) in enumerate(vars)
+    inputs = d[2:end, n]
+    if var == "maxdim"
+      maxdim!(sw, inputs...)
+    elseif var == "cutoff"
+      cutoff!(sw, inputs...)
+    elseif var == "mindim"
+      mindim!(sw, inputs...)
+    elseif var == "noise"
+      noise!(sw, float.(inputs)...)
+    else
+      error("Sweeps object does not have the field $var")
+    end
+  end
+  return sw
+end
+
+"""
     nsweep(sw::Sweeps)
     length(sw::Sweeps)
 
