@@ -1,7 +1,7 @@
 using Test
 
 @testset "ITensors.jl" begin
-  @testset "$filename" for filename in (
+  @testset "$filename" for filename in [
     "tagset.jl",
     "smallstring.jl",
     "index.jl",
@@ -22,6 +22,7 @@ using Test
     "lattices.jl",
     "mps.jl",
     "mpo.jl",
+    "sweeps.jl",
     "sweepnext.jl",
     "autompo.jl",
     "svd.jl",
@@ -34,7 +35,7 @@ using Test
     "readwrite.jl",
     "readme.jl",
     "examples.jl",
-  )
+   ]
     println("Running $filename")
     include(filename)
   end
