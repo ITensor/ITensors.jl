@@ -29,8 +29,7 @@ using ITensors
 #
 
 let
-  # Include the specified input file (use input.jl
-  # by defult if not specified)
+  # Include the specified input file
   isempty(ARGS) && error("""Must specify input file, for example with `julia exthubbard.jl input.jl` or interactively with `push!(ARGS, "input.jl")`""")
   include(ARGS[1])
 
