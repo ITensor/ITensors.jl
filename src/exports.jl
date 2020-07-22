@@ -11,8 +11,8 @@ export
   entropy,
   truncerror,
 
-# argparse/argparse.jl
-  parse_args,
+# argsdict/argsdict.jl
+  argsdict,
 
 # decomp.jl
   eigen,

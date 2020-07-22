@@ -11,14 +11,71 @@ using ITensors
 #
 # $ julia exthubbard.jl input.jl
 #
+# or with options, like
+#
+# $ julia exthubbard.jl input.jl N=100 Npart=20 nsweep=4 cutoff=1e-11 maxdim=20,40,80,100 noise=1e-12,1e-13
+#
+# In the REPL (if you just type `julia`), you can modify the command line options as follows (or just modify "input.jl" and reinclude it):
+#
+# julia> push!(ARGS, "input.jl");
+#
+# julia> push!(ARGS, "N=100", "Npart=20");
+#
+# julia> include("exthubbard.jl");
+#
 
-# Include the specified input file
+# Parse arguments to overide defaults
+args = argsdict(; prefix = "file")
+
 # Include the file from the first positional
 # argument. If none is specified, use
 # input.jl by default.
-include(get(ARGS, 1, "input.jl"))
+include(get(args, "file1", "input.jl"))
 
-sweeps = Sweeps(nsweep, sweeps_args)
+# Create the sweeps object from the input
+# file
+sweeps = Sweeps(nsw, sweeps_args)
+# Extract the original (default) values
+maxdim = get_maxdims(sweeps)
+mindim = get_mindims(sweeps)
+cutoff = get_cutoffs(sweeps)
+noise = get_noises(sweeps)
+
+# Extract the argument values from
+# the dictionary
+
+N = args["N"]
+Npart = args["Npart"]
+t1 = get(args, "t1", t1)
+t2 = get(args, "t2", t2)
+U = get(args, "U", U)
+V1 = get(args, "V1", V1)
+nsw = get(args, "nsweep", nsw)
+maxdim = get(args, "maxdim", maxdim)
+mindim = get(args, "mindim", mindim)
+cutoff = get(args, "cutoff", cutoff)
+noise = get(args, "noise", noise)
+
+#
+# Alternatively, define all of the
+# variables for all of the inputs
+# programatically. You can use the
+# keyword argument `as_symbols = true`
+# in the `parse_args` function to
+# automatically turn the keys of
+# the dictionary into symbols.
+#
+
+#for (arg, val) in args
+#  arg == "input_file" && continue
+#  @eval $(Symbol(arg)) = $val
+#end
+
+sweeps = Sweeps(nsw)
+maxdim!(sweeps, maxdim...)
+mindim!(sweeps, mindim...)
+cutoff!(sweeps, cutoff...)
+noise!(sweeps, noise...)
 
 @show sweeps
 @show N, Npart
@@ -96,3 +153,4 @@ end
 println()
 
 println("\nGround State Energy = $energy")
+

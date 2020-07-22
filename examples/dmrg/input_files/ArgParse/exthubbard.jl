@@ -5,20 +5,84 @@ using ITensors
 # ground state wavefunction, and spin densities
 #
 
-# Usage:
+# Usage: 
 #
-# Run:
+# First install `ArgParse.jl`:
+#
+# julia>] add ArgParse
+#
+# Then run:
 #
 # $ julia exthubbard.jl input.jl
 #
+# or with options, like
+#
+# $ julia exthubbard.jl input.jl --N=100 --Npart=20 --nsweep=4 --cutoff=1e-11 --maxdim=20 40 80 100 --noise=1e-12 1e-13
+#
+# In the REPL (if you just type `julia`), you can call it as follows:
+#
+# julia> push!(ARGS, "input.jl");
+#
+# julia> push!(ARGS, "--N=100", "--Npart=20");
+#
+# julia> include("exthubbard.jl");
+#
 
 # Include the specified input file
-# Include the file from the first positional
-# argument. If none is specified, use
-# input.jl by default.
-include(get(ARGS, 1, "input.jl"))
+# from the first input.
+# Searches for the default file input.jl
+# if nothing is specified.
+filename = get(ARGS, 1, "input.jl")
+if isfile(filename)
+  include(filename)
+else
+  include("input.jl")
+end
 
-sweeps = Sweeps(nsweep, sweeps_args)
+#
+# Parse the arguments and store
+# them in a dictionary.
+# Settings are defined in the input file.
+#
+
+args = parse_args(settings)
+
+#
+# Get the values from the dictionary
+#
+
+N = args["N"]
+Npart = args["Npart"]
+t1 = args["t1"]
+t2 = args["t2"]
+U = args["U"]
+V1 = args["V1"]
+nsweep = args["nsweep"]
+maxdim = args["maxdim"]
+mindim = args["mindim"]
+cutoff = args["cutoff"]
+noise = args["noise"]
+
+#
+# Alternatively, define all of the 
+# variables for all of the inputs
+# programatically. You can use the
+# keyword argument `as_symbols = true`
+# in the `parse_args` function to
+# automatically turn the keys of
+# the dictionary into symbols.
+#
+
+#for (arg, val) in args
+#  arg == "input_file" && continue
+#  @eval $(Symbol(arg)) = $val
+#end
+
+sweeps = Sweeps(nsweep)
+maxdim!(sweeps, maxdim...)
+mindim!(sweeps, mindim...)
+cutoff!(sweeps, cutoff...)
+noise!(sweeps, noise...)
 
 @show sweeps
 @show N, Npart

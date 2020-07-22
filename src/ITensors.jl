@@ -89,7 +89,7 @@ include("physics/autompo.jl")
 #####################################
 # Argument parsing
 #
-include("argparse/argparse.jl")
+include("argsdict/argsdict.jl")
 
 #####################################
 # Package compilation

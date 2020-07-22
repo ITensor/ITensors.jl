@@ -1,9 +1,9 @@
 using ArgParse
 
-s = ArgParseSettings()
-@add_arg_table! s begin
+settings = ArgParseSettings()
+@add_arg_table! settings begin
   "--N", "-N"
-    help = "Number of sweeps"
+    help = "Number of sites"
     arg_type = Int
     default = 20
   "--Npart"
@@ -50,14 +50,7 @@ s = ArgParseSettings()
     nargs = '+'
     arg_type = Float64
     default = [1e-7, 1e-8, 1e-10, 0, 1e-11, 0]
-  "arg1"
+  "input_file"
     help = "Input file"
     arg_type = String
-end
-# Parse the arguments and define
-# variables for all of the inputs
-parsed_args = parse_args(s)
-for (arg, val) in parsed_args
-  arg == "arg1" && continue
-  eval(Meta.parse("$arg = $val"))
 end
