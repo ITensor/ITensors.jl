@@ -92,10 +92,6 @@ op!(::ITensor, ::OpName, ::SiteType, ::SiteType,
 op(::SiteType, ::Index, ::AbstractString; kwargs...) = nothing
 
 function _sitetypes(ts::TagSet)
-  # use max here in case of no tags
-  # because there may still be a
-  # generic case such as name=="Id"
-  #Ntags = max(1, length(ts))
   Ntags = length(ts)
   return SiteType[SiteType(ts[n]) for n in 1:Ntags]
 end
@@ -151,7 +147,7 @@ function op(name::AbstractString,
   end
 
   common_stypes  = _sitetypes(commontags_s)
-  push!(common_stypes,SiteType("_Generic"))
+  push!(common_stypes,SiteType("Generic"))
   opn = OpName(name)
 
   #

@@ -1,7 +1,7 @@
 
 function op!(Op::ITensor,
              ::OpName"Id",
-             ::SiteType"_Generic",
+             ::SiteType"Generic",
              s::Index)
   for n=1:dim(s)
     Op[n,n] = 1.0
@@ -10,6 +10,6 @@ end
 
 op!(Op::ITensor,
     ::OpName"F",
-    st::SiteType"_Generic",
+    st::SiteType"Generic",
     s::Index) = op!(Op,OpName("Id"),st,s)
 
