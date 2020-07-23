@@ -18,20 +18,20 @@ using ITensors,
     @test qn(s,1) == QN("Sz",+1)
     @test qn(s,2) == QN("Sz",-1)
 
-    s = siteind("S=1/2"; conserve_parity = true)
+    s = siteind("S=1/2"; conserve_szparity = true)
     @test hastags(s, "S=1/2,Site")
     @test dim(s) == 2
     @test nblocks(s) == 2
-    @test qn(s,1) == QN("Parity", 1, 2)
-    @test qn(s,2) == QN("Parity", 0, 2)
+    @test qn(s,1) == QN("SzParity", 1, 2)
+    @test qn(s,2) == QN("SzParity", 0, 2)
 
     s = siteind("S=1/2"; conserve_sz = true,
-                         conserve_parity = true)
+                         conserve_szparity = true)
     @test hastags(s, "S=1/2,Site")
     @test dim(s) == 2
     @test nblocks(s) == 2
-    @test qn(s,1) == QN(("Parity", 1, 2), ("Sz", +1))
-    @test qn(s,2) == QN(("Parity", 0, 2), ("Sz", -1))
+    @test qn(s,1) == QN(("SzParity", 1, 2), ("Sz", +1))
+    @test qn(s,2) == QN(("SzParity", 0, 2), ("Sz", -1))
 
     s = siteinds("S=1/2", N)
     @test state(s[1],"Up") == s[1](1)
@@ -118,9 +118,9 @@ using ITensors,
     s = siteind("Fermion";conserve_nf=true)
     @test qn(s,1) == QN("Nf",0,-1)
     @test qn(s,2) == QN("Nf",1,-1)
-    s = siteind("Fermion";conserve_parity=true)
-    @test qn(s,1) == QN("Pf",0,-2)
-    @test qn(s,2) == QN("Pf",1,-2)
+    s = siteind("Fermion";conserve_nfparity=true)
+    @test qn(s,1) == QN("NfParity",0,-2)
+    @test qn(s,2) == QN("NfParity",1,-2)
     s = siteind("Fermion";conserve_qns=false)
     @test dim(s) == 2
   end
@@ -182,10 +182,10 @@ using ITensors,
     @test qn(s,2) == QN(("Sz",+1),("Pf",1,-2))
     @test qn(s,3) == QN(("Sz",-1),("Pf",1,-2))
     @test qn(s,4) == QN(("Sz", 0),("Pf",0,-2))
-    s = siteind("Electron";conserve_parity=true)
-    @test qn(s,1) == QN("Pf",0,-2)
-    @test qn(s,2) == QN("Pf",1,-2)
-    @test qn(s,3) == QN("Pf",0,-2)
+    s = siteind("Electron";conserve_nfparity=true)
+    @test qn(s,1) == QN("NfParity",0,-2)
+    @test qn(s,2) == QN("NfParity",1,-2)
+    @test qn(s,3) == QN("NfParity",0,-2)
     s = siteind("Electron";conserve_qns=false)
     @test dim(s) == 4
   end
