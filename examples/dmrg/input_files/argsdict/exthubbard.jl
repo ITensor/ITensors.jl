@@ -44,8 +44,8 @@ noise = get_noises(sweeps)
 # Extract the argument values from
 # the dictionary
 
-N = args["N"]
-Npart = args["Npart"]
+N = get(args,"N", N)
+Npart = get(args, "Npart", Npart)
 t1 = get(args, "t1", t1)
 t2 = get(args, "t2", t2)
 U = get(args, "U", U)
