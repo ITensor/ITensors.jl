@@ -3,29 +3,41 @@ function space(::SiteType"Electron";
                conserve_qns = false,
                conserve_sz = conserve_qns,
                conserve_nf = conserve_qns,
-               conserve_parity = conserve_qns)
+               conserve_nfparity = conserve_qns,
+               qnname_sz = "Sz",
+               qnname_nf = "Nf",
+               qnname_nfparity = "NfParity",
+               # Deprecated
+               conserve_parity = nothing)
+  if !isnothing(conserve_parity)
+    conserve_nfparity = conserve_parity
+  end
   if conserve_sz && conserve_nf
-    em = QN(("Nf",0,-1),("Sz", 0)) => 1
-    up = QN(("Nf",1,-1),("Sz",+1)) => 1
-    dn = QN(("Nf",1,-1),("Sz",-1)) => 1
-    ud = QN(("Nf",2,-1),("Sz", 0)) => 1
-    return [em,up,dn,ud]
+    return [
+       QN((qnname_nf,0,-1),(qnname_sz, 0)) => 1
+       QN((qnname_nf,1,-1),(qnname_sz,+1)) => 1
+       QN((qnname_nf,1,-1),(qnname_sz,-1)) => 1
+       QN((qnname_nf,2,-1),(qnname_sz, 0)) => 1
+      ]
   elseif conserve_nf
-    zer = QN("Nf",0,-1) => 1
-    one = QN("Nf",1,-1) => 2
-    two = QN("Nf",2,-1) => 1
-    return [zer,one,two]
+    return [
+       QN(qnname_nf,0,-1) => 1
+       QN(qnname_nf,1,-1) => 2
+       QN(qnname_nf,2,-1) => 1
+      ]
   elseif conserve_sz
-    em = QN(("Sz", 0),("Pf",0,-2)) => 1
-    up = QN(("Sz",+1),("Pf",1,-2)) => 1
-    dn = QN(("Sz",-1),("Pf",1,-2)) => 1
-    ud = QN(("Sz", 0),("Pf",0,-2)) => 1
-    return [em,up,dn,ud]
-  elseif conserve_parity
-    zer = QN("Pf",0,-2) => 1
-    one = QN("Pf",1,-2) => 2
-    two = QN("Pf",0,-2) => 1
-    return [zer,one,two]
+    return [
+       QN((qnname_sz, 0),(qnname_nfparity,0,-2)) => 1
+       QN((qnname_sz,+1),(qnname_nfparity,1,-2)) => 1
+       QN((qnname_sz,-1),(qnname_nfparity,1,-2)) => 1
+       QN((qnname_sz, 0),(qnname_nfparity,0,-2)) => 1
+      ]
+  elseif conserve_nfparity
+    return [
+       QN(qnname_nfparity,0,-2) => 1
+       QN(qnname_nfparity,1,-2) => 2
+       QN(qnname_nfparity,0,-2) => 1
+      ]
   end
   return 4
 end

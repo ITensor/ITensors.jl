@@ -2,14 +2,21 @@
 function space(::SiteType"Fermion"; 
                conserve_qns=false,
                conserve_nf=conserve_qns,
-               conserve_parity=conserve_qns)
+               conserve_nfparity=conserve_qns,
+               qnname_nf = "Nf",
+               qnname_nfparity = "NfParity",
+               # Deprecated
+               conserve_parity=nothing)
+  if !isnothing(conserve_parity)
+    conserve_nfparity = conserve_parity
+  end
   if conserve_nf
-    zer = QN("Nf",0,-1) => 1
-    one = QN("Nf",1,-1) => 1
+    zer = QN(qnname_nf,0,-1) => 1
+    one = QN(qnname_nf,1,-1) => 1
     return [zer,one]
-  elseif conserve_parity
-    zer = QN("Pf",0,-2) => 1
-    one = QN("Pf",1,-2) => 1
+  elseif conserve_nfparity
+    zer = QN(qnname_nfparity,0,-2) => 1
+    one = QN(qnname_nfparity,1,-2) => 1
     return [zer,one]
   end
   return 2
