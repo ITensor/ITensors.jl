@@ -25,7 +25,21 @@ function TagSet(t::Tag)
   return TagSet(TagSetStorage(ts), 1)
 end
 
-not(ts::Union{AbstractString,TagSet}) = Not(TagSet(ts))
+macro ts_str(s)
+  TagSet(s)
+end
+
+"""
+    not(::TagSet)
+    !(::TagSet)
+
+Create a wrapper around a TagSet representing
+the set of indices that do not contain that TagSet.
+"""
+not(ts::TagSet) = Not(ts)
+Base.:!(ts::TagSet) = Not(ts)
+
+not(ts::AbstractString) = Not(ts)
 
 function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   for n = 1:ntags

@@ -135,6 +135,20 @@ Obtain the prime level of an Index.
 plev(i::Index) = i.plev
 
 """
+    not(n::Int)
+
+Return Not{Int}(n).
+"""
+not(pl::Int) = Not(pl)
+
+"""
+    not(::IDType)
+
+Return Not{IDType}(n).
+"""
+not(id::IDType) = Not(id)
+
+"""
     ==(i1::Index, i1::Index)
 
 Compare indices for equality. First the id's are compared,
@@ -159,11 +173,8 @@ end
 
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-Base.copy(i::Index) = Index(id(i),
-                            copy(space(i)),
-                            dir(i),
-                            tags(i),
-                            plev(i))
+Base.copy(i::Index) =
+  Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
 
 """
     sim(i::Index; tags = tags(i), plev = plev(i), dir = dir(i))
@@ -171,14 +182,8 @@ Base.copy(i::Index) = Index(id(i),
 Produces an `Index` with the same properties (dimension or QN structure)
 but with a new `id`.
 """
-sim(i::Index;
-    tags=copy(tags(i)),
-    plev=plev(i),
-    dir=dir(i)) = Index(rand(IDType),
-                        copy(space(i)),
-                        dir,
-                        tags,
-                        plev)
+sim(i::Index; tags = copy(tags(i)), plev = plev(i), dir = dir(i)) =
+  Index(rand(IDType), copy(space(i)), dir, tags, plev)
 
 # Used for internal use in NDTensors
 NDTensors.sim(i::Index) = sim(i)
@@ -188,11 +193,8 @@ NDTensors.sim(i::Index) = sim(i)
 
 Copy an index `i` and reverse its direction.
 """
-dag(i::Index) = Index(id(i),
-                      copy(space(i)),
-                      -dir(i),
-                      tags(i),
-                      plev(i))
+dag(i::Index) =
+  Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
 
 # For internal use in NDTensors
 NDTensors.dag(i::Index) = dag(i)
