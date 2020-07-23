@@ -12,7 +12,7 @@ using ITensors,
 
   @test hassameinds(Ap, (i', j, k''))
 
-  Ap = prime(A, tags = !"j")
+  Ap = prime(A, tags = !ts"j")
 
   @test hassameinds(Ap, (i', j, k''))
 
@@ -44,9 +44,13 @@ using ITensors,
 
   @test hassameinds(At2, (settags(i, "y"), j, k'))
 
-  B = filterinds(A, plev = !0)
+  B = filterinds(A, plev = not(0))
 
   @test hassameinds(B, (k',))
+
+  @test_throws MethodError !"x"
+
+  @test_throws MethodError !1
 end
 
 nothing

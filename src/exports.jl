@@ -163,6 +163,7 @@ export
   # Methods
   addtags,
   hastags,
+  @ts_str,
 
 # mps/dmrg.jl
   dmrg,

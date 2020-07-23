@@ -136,21 +136,17 @@ plev(i::Index) = i.plev
 
 """
     not(n::Int)
-    !(n::Int)
 
 Return Not{Int}(n).
 """
 not(pl::Int) = Not(pl)
-Base.:!(pl::Int) = Not(pl)
 
 """
     not(::IDType)
-    !(::IDType)
 
 Return Not{IDType}(n).
 """
 not(id::IDType) = Not(id)
-Base.:!(id::IDType) = Not(id)
 
 """
     ==(i1::Index, i1::Index)
