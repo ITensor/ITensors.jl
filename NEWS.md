@@ -1,3 +1,16 @@
+ITensors v0.1.21 Release Notes
+==============================
+* Add parity conservation to S=1/2 sitetype (PR #467)
+  * Add "ProjUp" and "ProjDn" operator definitions to S=1/2 site type.
+  * Change QN name "Pf" to "NfParity"
+  * Add keyword arguments to choose the QN names when making siteinds.
+* Add ! as not syntax (PR #471)
+  * Add @ts_str macro for TagSet construction
+* Add Sweeps constructor from matrix of parameters (PR #472)
+* Add examples of input files (PR #473)
+  * Add native ITensors argument parsing with the argsdict() function.
+  * Add examples of using ITensors with input files and ArgParse.jl and argsdict().
+
 ITensors v0.1.20 Release Notes
 ==============================
 * Make ITensors compatible with Julia v1.3 (#468)
