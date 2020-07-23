@@ -109,6 +109,8 @@ IndexSet(inds) = IndexSet{length(inds)}(inds)
 
 IndexSet(inds::NTuple{N, IndexT}) where {N, IndexT} = IndexSet{N, IndexT, NTuple{N, IndexT}}(inds)
 
+IndexSet(::Tuple{}) = IndexSet{0, Index, Tuple{}}(())
+
 IndexSet(inds::Index...) = IndexSet(inds)
 
 IndexSet(is::IndexSet) = is
@@ -491,13 +493,12 @@ Checks if the Index matches the provided conditions.
 """
 indmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
 
-function Base.setdiff!(r,
-                       f::Function,
+function Base.setdiff!(f::Function,
+                       r,
                        A::IndexSet,
                        Bs::IndexSet...)
   
   N = length(r)
-  @show N
   j = 1
   for a in A
     if f(a) && all(B -> a ∉ B, Bs)
@@ -522,6 +523,10 @@ the IndexSets `Bs`.
 Base.setdiff(A::IndexSet, Bs::IndexSet...; kwargs...) =
   setdiff(fmatch(; kwargs...), A, Bs...)
 
+Base.setdiff(::Order{N}, A::IndexSet, Bs::IndexSet...;
+             kwargs...) where {N} =
+  setdiff(Order(N), fmatch(; kwargs...), A, Bs...)
+
 """
     setdiff(::Order{N}, f::Function, A::IndexSet, B::IndexSet...)
 
@@ -533,14 +538,9 @@ function Base.setdiff(::Order{N},
                       A::IndexSet{<:Any, IndexT},
                       B::IndexSet{<:Any, IndexT}...) where {N, IndexT}
   r = mutable_storage(Order{N}, IndexT)
-  setdiff!(r, f, A, B)
+  setdiff!(f, r, A, B...)
   return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(r))
 end
-
-Base.setdiff(::Order{N},
-             A::IndexSet{<:Any, IndexT},
-             B::IndexSet{<:Any, IndexT}...) where {N, IndexT} =
-  setdiff(Order(N), identity, A, B)
 
 function firstsetdiff(f::Function,
                       A::IndexSet,
@@ -585,12 +585,18 @@ function Base.intersect(::Order{N},
                         A::IndexSet{<:Any, IndexT},
                         B::IndexSet{<:Any, IndexT}) where {N, IndexT}
   R = mutable_storage(Order{N}, IndexT)
-  intersect!(R, f, A, B)
+  intersect!(f, R, A, B)
   return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(R))
 end
 
-function Base.intersect!(R::AbstractVector,
-                         f::Function,
+Base.intersect(::Order{N},
+               A::IndexSet,
+               B::IndexSet;
+               kwargs...) where {N} =
+ intersect(Order(N), fmatch(; kwargs...), A, B)
+
+function Base.intersect!(f::Function,
+                         R::AbstractVector,
                          A::IndexSet,
                          B::IndexSet)
   N = length(R)

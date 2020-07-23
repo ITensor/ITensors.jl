@@ -49,17 +49,23 @@ using Compat
     @test hassameinds(I1, (k, j, i))
     @test firstsetdiff(I1, I2, I3) == i
     @test isnothing(firstsetdiff(I1, IndexSet(k, j, i)))
-    @test setdiff(I1, I2) == [i, j]
+    @test setdiff(I1, I2) == IndexSet(i, j)
+    @test setdiff(Order(2), I1, I2) == IndexSet(i, j)
     @test hassameinds(setdiff(I1, I2), IndexSet(i, j))
+    @test hassameinds(setdiff(Order(2), I1, I2), IndexSet(i, j))
     @test hassameinds(setdiff(I1, I2), (j, i))
-    @test I1 ∩ I2 == [k]
+    @test hassameinds(setdiff(Order(2), I1, I2), (j, i))
+    @test I1 ∩ I2 == IndexSet(k)
     @test hassameinds(I1 ∩ I2, IndexSet(k))
     @test firstintersect(I1, I2) == k
     @test isnothing(firstintersect(I1, IndexSet(l)))
-    @test intersect(I1, (j, l)) == [j]
-    @test hassameinds(intersect(I1, (j, l)), IndexSet(j))
+    @test intersect(I1, IndexSet(j, l)) == IndexSet(j)
+    @test intersect(Order(1), I1, IndexSet(j, l)) == IndexSet(j)
+    @test hassameinds(intersect(I1, IndexSet(j, l)), IndexSet(j))
+    @test hassameinds(intersect(Order(1), I1, IndexSet(j, l)), IndexSet(j))
     @test firstintersect(I1, IndexSet(j, l)) == j
-    @test intersect(I1, (j, k)) == [j, k]
+    @test intersect(I1, IndexSet(j, k)) == IndexSet(j, k)
+    @test intersect(Order(2), I1, IndexSet(j, k)) == IndexSet(j, k)
     @test hassameinds(intersect(I1, (j, k)), IndexSet(j, k))
     @test hassameinds(intersect(I1, (j, k, l)), (j, k))
     @test filter(I1, "i") == IndexSet(i)
