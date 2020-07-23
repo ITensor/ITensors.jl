@@ -2,16 +2,18 @@
 function space(::SiteType"S=1/2";
                conserve_qns = false,
                conserve_sz = conserve_qns,
-               conserve_parity = false)
+               conserve_parity = false,
+               qnname_sz = "Sz",
+               qnname_szparity = "SzParity")
   if conserve_sz && conserve_parity
-    return [QN(("Sz", +1), ("Parity", 1, 2)) => 1,
-            QN(("Sz", -1), ("Parity", 0, 2)) => 1]
+    return [QN((qnname_sz, +1), (qnname_szparity, 1, 2)) => 1,
+            QN((qnname_sz, -1), (qnname_szparity, 0, 2)) => 1]
   elseif conserve_sz
-    return [QN("Sz", +1) => 1,
-            QN("Sz", -1) => 1]
-  elseif conserve_parity
-    return [QN("Parity", 1, 2) => 1,
-            QN("Parity", 0, 2) => 1]
+    return [QN(qnname_sz, +1) => 1,
+            QN(qnname_sz, -1) => 1]
+  elseif conserve_szparity
+    return [QN(qnname_szparity, 1, 2) => 1,
+            QN(qnname_szparity, 0, 2) => 1]
   end
   return 2
 end

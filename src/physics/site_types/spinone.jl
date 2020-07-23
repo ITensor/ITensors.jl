@@ -1,9 +1,12 @@
 
 function space(::SiteType"S=1";
                conserve_qns = false,
-               conserve_sz = conserve_qns)
+               conserve_sz = conserve_qns,
+               qnname_sz = "Sz")
   if conserve_sz
-    return [QN("Sz",+2)=>1,QN("Sz",0)=>1,QN("Sz",-2)=>1]
+    return [QN(qnname_sz,+2)=>1,
+            QN(qnname_sz,0)=>1,
+            QN(qnname_sz,-2)=>1]
   end
   return 3
 end
