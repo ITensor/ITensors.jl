@@ -23,7 +23,7 @@ is useful for inspecting output of programs at certain
 points while giving the option to continue.
 """
 function pause()
-  #print(stdout, "(Paused) ")
+  print(stdout, "(Paused) ")
   c = read(stdin, 1)
   c == UInt8[0x71] && exit(0)
   return
