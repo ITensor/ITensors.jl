@@ -98,6 +98,10 @@ IndexSet{N}(inds::Index...) where {N} = IndexSet{N}(inds)
 
 IndexSet{N}(is::IndexSet{N}) where {N} = is
 
+IndexSet{0}(::Tuple{}) = IndexSet{0, Union{}, Tuple{}}(())
+
+IndexSet{0}() = IndexSet{0}(())
+
 """
     IndexSet(inds)
     IndexSet(inds::Index...)
@@ -109,7 +113,9 @@ IndexSet(inds) = IndexSet{length(inds)}(inds)
 
 IndexSet(inds::NTuple{N, IndexT}) where {N, IndexT} = IndexSet{N, IndexT, NTuple{N, IndexT}}(inds)
 
-IndexSet(::Tuple{}) = IndexSet{0, Index, Tuple{}}(())
+IndexSet(::Tuple{}) = IndexSet{0, Union{}, Tuple{}}(())
+
+IndexSet() = IndexSet(())
 
 IndexSet(inds::Index...) = IndexSet(inds)
 
@@ -511,6 +517,15 @@ function Base.setdiff!(f::Function,
   return r
 end
 
+# Set functions
+#
+# setdiff
+# intersect
+# symdiff
+# union
+# filter
+#
+
 Base.setdiff(f::Function, is1::IndexSet, iss::IndexSet...) =
   setdiff(Order(count(i -> f(i) && all(is -> i ∉ is, iss), is1)), f, is1, iss...)
 
@@ -536,7 +551,7 @@ optionally filtering by the function `f`.
 function Base.setdiff(::Order{N},
                       f::Function,
                       A::IndexSet{<:Any, IndexT},
-                      B::IndexSet{<:Any, IndexT}...) where {N, IndexT}
+                      B::IndexSet...) where {N, IndexT}
   r = mutable_storage(Order{N}, IndexT)
   setdiff!(f, r, A, B...)
   return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(r))
@@ -583,7 +598,7 @@ optionally filtering by the function `f`.
 function Base.intersect(::Order{N},
                         f::Function,
                         A::IndexSet{<:Any, IndexT},
-                        B::IndexSet{<:Any, IndexT}) where {N, IndexT}
+                        B::IndexSet) where {N, IndexT}
   R = mutable_storage(Order{N}, IndexT)
   intersect!(f, R, A, B)
   return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(R))

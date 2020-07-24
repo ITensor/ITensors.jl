@@ -85,6 +85,85 @@ using Compat
     @test isnothing(findfirst(I1, Index(2)))
   end
 
+  @testset "Set operations with Order" begin
+    i,j,k,l = Index.(2, ("i", "j", "k", "l"))
+
+    Iij = IndexSet(i, j)
+    Ijl = IndexSet(j, l)
+    Ikl = IndexSet(k, l)
+    Iijk = IndexSet(i, j, k)
+
+    #
+    # setdiff 
+    # intersect
+    # symdiff
+    # union
+    # filter
+    #
+
+    #
+    # setdiff
+    #
+
+    @test setdiff(Iijk, Ikl) == IndexSet(i, j)
+    @test setdiff(Order(2), Iijk, Ikl) == IndexSet(i, j)
+
+    @test setdiff(Iij, Iijk) == IndexSet()
+    @test setdiff(Order(0), Iij, Iijk) == IndexSet()
+
+    @test setdiff(Iijk, Ikl; tags = "i") == IndexSet(i)
+    @test setdiff(Order(1), Iijk, Ikl; tags = "i") == IndexSet(i)
+
+    @test setdiff(Iijk, Ikl; tags = not("i")) == IndexSet(j)
+    @test setdiff(Order(1), Iijk, Ikl; tags = not("i")) == IndexSet(j)
+
+    @test setdiff(Iijk, Ijl, Ikl) == IndexSet(i)
+    @test setdiff(Order(1), Iijk, Ijl, Ikl) == IndexSet(i)
+
+    #
+    # intersect
+    #
+
+    @test intersect(Iijk, Ikl) == IndexSet(k)
+    @test intersect(Order(1), Iijk, Ikl) == IndexSet(k)
+
+    @test intersect(Iijk, Iij) == IndexSet(i, j)
+    @test intersect(Order(2), Iijk, Iij) == IndexSet(i, j)
+
+    @test intersect(Iijk, Iij; tags = "i") == IndexSet(i)
+    @test intersect(Order(1), Iijk, Iij; tags = "i") == IndexSet(i)
+
+    #
+    # symdiff
+    #
+
+    @test symdiff(Iijk, Ikl) == [i, j, l]
+    #@test symdiff(Iijk, Ikl) == IndexSet(i, j, l)
+    #@test symdiff(Order(3), Iijk, Ikl) == IndexSet(i, j, l)
+
+    @test symdiff(Iijk, Iij) == [k]
+    #@test symdiff(Iijk, Iij) == IndexSet(k)
+    #@test symdiff(Order(3), Iijk, Iij) == IndexSet(i, j, k)
+
+    #@test symdiff(Iijk, Iij; tags = "i") == IndexSet(i)
+    #@test symdiff(Order(1), Iijk, Iij; tags = "i") == IndexSet(i)
+
+    #
+    # union
+    #
+
+    @test union(Iijk, Ikl) == [i, j, k, l]
+    #@test union(Iijk, Ikl) == IndexSet(i, j, k, l)
+    #@test union(Order(4), Iijk, Ikl) == IndexSet(i, j, k, l)
+
+    @test union(Iijk, Iij) == [i, j, k]
+    #@test union(Iijk, Iij) == IndexSet(i, j, k)
+    #@test union(Order(3), Iijk, Iij) == IndexSet(i, j, k)
+
+    #@test union(Iijk, Iij; tags = "i") == IndexSet(i)
+    #@test union(Order(1), Iijk, Iij; tags = "i") == IndexSet(i)
+  end
+
   @testset "intersect index ordering" begin
     I = IndexSet(i,k,j)
     J = IndexSet(j,l,i)
