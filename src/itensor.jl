@@ -707,7 +707,7 @@ commoninds(A...; kwargs...) =
   intersect(itensor2inds.(A)...; kwargs...)
 
 commoninds(::Order{N}, A...; kwargs...) where {N} =
-  IndexSet{N}(intersect(itensor2inds.(A)...; kwargs...)...)
+  intersect(Order(N), itensor2inds.(A)...; kwargs...)
 
 # firstintersect
 commonind(A...; kwargs...) =
@@ -731,8 +731,7 @@ uniqueinds(A...; kwargs...) =
 uniqueinds(::Order{N},
            A...;
            kwargs...) where {N} =
-  IndexSet{N}(setdiff(ITensors.itensor2inds.(A)...;
-                      kwargs...)...)
+  setdiff(Order(N), ITensors.itensor2inds.(A)...; kwargs...)
 
 # firstsetdiff
 uniqueind(A...; kwargs...) = firstsetdiff(itensor2inds.(A)...;
