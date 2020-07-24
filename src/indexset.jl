@@ -499,6 +499,15 @@ Checks if the Index matches the provided conditions.
 """
 indmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
 
+# Set functions
+#
+# setdiff
+# intersect
+# symdiff
+# union
+# filter
+#
+
 function Base.setdiff!(f::Function,
                        r,
                        A::IndexSet,
@@ -517,17 +526,18 @@ function Base.setdiff!(f::Function,
   return r
 end
 
-# Set functions
-#
-# setdiff
-# intersect
-# symdiff
-# union
-# filter
-#
+function Base.setdiff(f::Function,
+                      A::IndexSet,
+                      Bs::IndexSet...)
+  R = eltype(A)[]
+  for a ∈ A
+    f(a) && all(B -> a ∉ B, Bs) && push!(R, a)
+  end
+  return R
+end
 
-Base.setdiff(f::Function, is1::IndexSet, iss::IndexSet...) =
-  setdiff(Order(count(i -> f(i) && all(is -> i ∉ is, iss), is1)), f, is1, iss...)
+#Base.setdiff(f::Function, is1::IndexSet, iss::IndexSet...) =
+#  setdiff(Order(count(i -> f(i) && all(is -> i ∉ is, iss), is1)), f, is1, iss...)
 
 """
     setdiff(A::IndexSet, Bs::IndexSet...)
@@ -582,8 +592,16 @@ firstsetdiff(A::IndexSet,
 Output a Vector of indices in the intersection of `A` and `B`,
 optionally filtering by the function `f`.
 """
-Base.intersect(f::Function, is1::IndexSet, is2::IndexSet) =
-  intersect(Order(count(i -> f(i) && i ∈ is2, is1)), f, is1, is2)
+function Base.intersect(f::Function, A::IndexSet, B::IndexSet)
+  R = eltype(A)[]
+  for a in A
+    f(a) && a ∈ B && push!(R,a)
+  end
+  return R
+end
+
+#Base.intersect(f::Function, is1::IndexSet, is2::IndexSet) =
+#  intersect(Order(count(i -> f(i) && i ∈ is2, is1)), f, is1, is2)
 
 mutable_storage(::Type{Order{N}},
                 ::Type{IndexT}) where {N, IndexT <: Index} =

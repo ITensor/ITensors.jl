@@ -49,22 +49,22 @@ using Compat
     @test hassameinds(I1, (k, j, i))
     @test firstsetdiff(I1, I2, I3) == i
     @test isnothing(firstsetdiff(I1, IndexSet(k, j, i)))
-    @test setdiff(I1, I2) == IndexSet(i, j)
+    @test setdiff(I1, I2) == [i, j]
     @test setdiff(Order(2), I1, I2) == IndexSet(i, j)
     @test hassameinds(setdiff(I1, I2), IndexSet(i, j))
     @test hassameinds(setdiff(Order(2), I1, I2), IndexSet(i, j))
     @test hassameinds(setdiff(I1, I2), (j, i))
     @test hassameinds(setdiff(Order(2), I1, I2), (j, i))
-    @test I1 ∩ I2 == IndexSet(k)
+    @test I1 ∩ I2 == [k]
     @test hassameinds(I1 ∩ I2, IndexSet(k))
     @test firstintersect(I1, I2) == k
     @test isnothing(firstintersect(I1, IndexSet(l)))
-    @test intersect(I1, IndexSet(j, l)) == IndexSet(j)
+    @test intersect(I1, IndexSet(j, l)) == [j]
     @test intersect(Order(1), I1, IndexSet(j, l)) == IndexSet(j)
     @test hassameinds(intersect(I1, IndexSet(j, l)), IndexSet(j))
     @test hassameinds(intersect(Order(1), I1, IndexSet(j, l)), IndexSet(j))
     @test firstintersect(I1, IndexSet(j, l)) == j
-    @test intersect(I1, IndexSet(j, k)) == IndexSet(j, k)
+    @test intersect(I1, IndexSet(j, k)) == [j, k]
     @test intersect(Order(2), I1, IndexSet(j, k)) == IndexSet(j, k)
     @test hassameinds(intersect(I1, (j, k)), IndexSet(j, k))
     @test hassameinds(intersect(I1, (j, k, l)), (j, k))
@@ -105,32 +105,32 @@ using Compat
     # setdiff
     #
 
-    @test setdiff(Iijk, Ikl) == IndexSet(i, j)
+    @test setdiff(Iijk, Ikl) == [i, j]
     @test setdiff(Order(2), Iijk, Ikl) == IndexSet(i, j)
 
-    @test setdiff(Iij, Iijk) == IndexSet()
+    @test setdiff(Iij, Iijk) == Index{Int}[]
     @test setdiff(Order(0), Iij, Iijk) == IndexSet()
 
-    @test setdiff(Iijk, Ikl; tags = "i") == IndexSet(i)
+    @test setdiff(Iijk, Ikl; tags = "i") == [i]
     @test setdiff(Order(1), Iijk, Ikl; tags = "i") == IndexSet(i)
 
-    @test setdiff(Iijk, Ikl; tags = not("i")) == IndexSet(j)
+    @test setdiff(Iijk, Ikl; tags = not("i")) == [j]
     @test setdiff(Order(1), Iijk, Ikl; tags = not("i")) == IndexSet(j)
 
-    @test setdiff(Iijk, Ijl, Ikl) == IndexSet(i)
+    @test setdiff(Iijk, Ijl, Ikl) == [i]
     @test setdiff(Order(1), Iijk, Ijl, Ikl) == IndexSet(i)
 
     #
     # intersect
     #
 
-    @test intersect(Iijk, Ikl) == IndexSet(k)
+    @test intersect(Iijk, Ikl) == [k]
     @test intersect(Order(1), Iijk, Ikl) == IndexSet(k)
 
-    @test intersect(Iijk, Iij) == IndexSet(i, j)
+    @test intersect(Iijk, Iij) == [i, j]
     @test intersect(Order(2), Iijk, Iij) == IndexSet(i, j)
 
-    @test intersect(Iijk, Iij; tags = "i") == IndexSet(i)
+    @test intersect(Iijk, Iij; tags = "i") == [i]
     @test intersect(Order(1), Iijk, Iij; tags = "i") == IndexSet(i)
 
     #
@@ -138,14 +138,12 @@ using Compat
     #
 
     @test symdiff(Iijk, Ikl) == [i, j, l]
-    #@test symdiff(Iijk, Ikl) == IndexSet(i, j, l)
     #@test symdiff(Order(3), Iijk, Ikl) == IndexSet(i, j, l)
 
     @test symdiff(Iijk, Iij) == [k]
-    #@test symdiff(Iijk, Iij) == IndexSet(k)
     #@test symdiff(Order(3), Iijk, Iij) == IndexSet(i, j, k)
 
-    #@test symdiff(Iijk, Iij; tags = "i") == IndexSet(i)
+    #@test symdiff(Iijk, Iij; tags = "i") == [i]
     #@test symdiff(Order(1), Iijk, Iij; tags = "i") == IndexSet(i)
 
     #
@@ -153,14 +151,12 @@ using Compat
     #
 
     @test union(Iijk, Ikl) == [i, j, k, l]
-    #@test union(Iijk, Ikl) == IndexSet(i, j, k, l)
     #@test union(Order(4), Iijk, Ikl) == IndexSet(i, j, k, l)
 
     @test union(Iijk, Iij) == [i, j, k]
-    #@test union(Iijk, Iij) == IndexSet(i, j, k)
     #@test union(Order(3), Iijk, Iij) == IndexSet(i, j, k)
 
-    #@test union(Iijk, Iij; tags = "i") == IndexSet(i)
+    #@test union(Iijk, Iij; tags = "i") == [i]
     #@test union(Order(1), Iijk, Iij; tags = "i") == IndexSet(i)
   end
 
