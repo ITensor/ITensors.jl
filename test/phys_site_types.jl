@@ -11,15 +11,29 @@ using ITensors,
     @test hastags(s,"S=1/2,Site")
     @test dim(s) == 2
 
-    s = siteind("S=1/2";conserve_qns=true)
+    s = siteind("S=1/2"; conserve_qns=true)
     @test hastags(s,"S=1/2,Site")
     @test dim(s) == 2
     @test nblocks(s) == 2
     @test qn(s,1) == QN("Sz",+1)
     @test qn(s,2) == QN("Sz",-1)
 
-    s = siteinds("S=1/2",N)
+    s = siteind("S=1/2"; conserve_szparity = true)
+    @test hastags(s, "S=1/2,Site")
+    @test dim(s) == 2
+    @test nblocks(s) == 2
+    @test qn(s,1) == QN("SzParity", 1, 2)
+    @test qn(s,2) == QN("SzParity", 0, 2)
 
+    s = siteind("S=1/2"; conserve_sz = true,
+                         conserve_szparity = true)
+    @test hastags(s, "S=1/2,Site")
+    @test dim(s) == 2
+    @test nblocks(s) == 2
+    @test qn(s,1) == QN(("SzParity", 1, 2), ("Sz", +1))
+    @test qn(s,2) == QN(("SzParity", 0, 2), ("Sz", -1))
+
+    s = siteinds("S=1/2", N)
     @test state(s[1],"Up") == s[1](1)
     @test state(s[1],"Dn") == s[1](2)
     @test_throws ArgumentError state(s[1],"Fake")
@@ -29,6 +43,7 @@ using ITensors,
      
     @test_throws ArgumentError op(s, "Fake", 2)
     @test Array(op("Id",s,3),s[3]',s[3])  ≈ [ 1.0  0.0; 0.0  1.0]
+    @test Array(op("F",s,3),s[3]',s[3])   ≈ [ 1.0  0.0; 0.0  1.0]
     @test Array(op("S+",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
     @test Array(op("S⁺",s,3),s[3]',s[3])  ≈ [ 0.0  1.0; 0.0  0.0]
     @test Array(op("S-",s,4),s[4]',s[4])  ≈ [ 0.0  0.0; 1.0  0.0]
@@ -41,6 +56,10 @@ using ITensors,
     @test Array(op("Sʸ",s,2),s[2]',s[2])  ≈ [0.0  -0.5im; 0.5im  0.0]
     @test Array(op("Sz",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
     @test Array(op("Sᶻ",s,2),s[2]',s[2])  ≈ [ 0.5  0.0; 0.0 -0.5]
+    @test Array(op("ProjUp",s,2),s[2]',s[2])  ≈ [ 1.0  0.0; 0.0 0.0]
+    @test Array(op("projUp",s,2),s[2]',s[2])  ≈ [ 1.0  0.0; 0.0 0.0]
+    @test Array(op("ProjDn",s,2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
+    @test Array(op("projDn",s,2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
   end
 
   @testset "Spin One sites" begin
@@ -100,9 +119,9 @@ using ITensors,
     s = siteind("Fermion";conserve_nf=true)
     @test qn(s,1) == QN("Nf",0,-1)
     @test qn(s,2) == QN("Nf",1,-1)
-    s = siteind("Fermion";conserve_parity=true)
-    @test qn(s,1) == QN("Pf",0,-2)
-    @test qn(s,2) == QN("Pf",1,-2)
+    s = siteind("Fermion";conserve_nfparity=true)
+    @test qn(s,1) == QN("NfParity",0,-2)
+    @test qn(s,2) == QN("NfParity",1,-2)
     s = siteind("Fermion";conserve_qns=false)
     @test dim(s) == 2
   end
@@ -160,14 +179,14 @@ using ITensors,
     @test qn(s,2) == QN("Nf",1,-1)
     @test qn(s,3) == QN("Nf",2,-1)
     s = siteind("Electron";conserve_sz=true)
-    @test qn(s,1) == QN(("Sz", 0),("Pf",0,-2))
-    @test qn(s,2) == QN(("Sz",+1),("Pf",1,-2))
-    @test qn(s,3) == QN(("Sz",-1),("Pf",1,-2))
-    @test qn(s,4) == QN(("Sz", 0),("Pf",0,-2))
-    s = siteind("Electron";conserve_parity=true)
-    @test qn(s,1) == QN("Pf",0,-2)
-    @test qn(s,2) == QN("Pf",1,-2)
-    @test qn(s,3) == QN("Pf",0,-2)
+    @test qn(s,1) == QN(("Sz", 0),("NfParity",0,-2))
+    @test qn(s,2) == QN(("Sz",+1),("NfParity",1,-2))
+    @test qn(s,3) == QN(("Sz",-1),("NfParity",1,-2))
+    @test qn(s,4) == QN(("Sz", 0),("NfParity",0,-2))
+    s = siteind("Electron";conserve_nfparity=true)
+    @test qn(s,1) == QN("NfParity",0,-2)
+    @test qn(s,2) == QN("NfParity",1,-2)
+    @test qn(s,3) == QN("NfParity",0,-2)
     s = siteind("Electron";conserve_qns=false)
     @test dim(s) == 4
   end
@@ -188,6 +207,8 @@ using ITensors,
     Ntot = op(s,"Ntot")
     @test Ntot[2,2] ≈ 1.0
     @test Ntot[3,3] ≈ 1.0
+    Id = Array(op(s,"Id"),s',s) 
+    @test Id ≈ [1.0 0 0; 0 1 0; 0 0 1]
     Cup = Array(op(s,"Cup"),s',s) 
     @test Cup ≈ [0. 1 0; 0 0 0; 0 0 0]
     Cdup = Array(op(s,"Cdagup"),s',s) 

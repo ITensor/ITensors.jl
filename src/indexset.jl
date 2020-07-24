@@ -164,9 +164,10 @@ IndexSet{N}(inds::Vector{IndexT}) where {N, IndexT} =
   IndexSet{N, IndexT, NTuple{N, IndexT}}(tuple(inds...))
 
 """
-    not(inds::IndexSet)
+    not(inds::Union{IndexSet, Tuple{Vararg{<:Index}}})
     not(inds::Index...)
-    not(inds::Tuple{Vararg{<:Index}})
+    !(inds::Union{IndexSet, Tuple{Vararg{<:Index}}})
+    !(inds::Index...)
 
 Represents the set of indices not in the specified
 IndexSet, for use in pattern matching (i.e. when
@@ -176,6 +177,9 @@ indices).
 not(is::IndexSet) = Not(is)
 not(inds::Index...) = not(IndexSet(inds...))
 not(inds::Tuple{Vararg{<:Index}}) = not(IndexSet(inds))
+Base.:!(is::IndexSet) = not(is)
+Base.:!(inds::Index...) = not(inds...)
+Base.:!(inds::Tuple{Vararg{<:Index}}) = not(inds)
 
 """
     NDTensors.data(is::IndexSet)
@@ -474,9 +478,10 @@ ftrue(::Any) = true
 fmatch(::Nothing) = ftrue
 
 """
-    ITensors.fmatch(; tags=nothing,
-                      plev=nothing,
-                      id=nothing) -> ::Function
+    ITensors.fmatch(; inds = nothing,
+                      tags = nothing,
+                      plev = nothing,
+                      id = nothing) -> Function
 
 An internal function that returns a function 
 that accepts an Index that checks if the

@@ -11,6 +11,9 @@ export
   entropy,
   truncerror,
 
+# argsdict/argsdict.jl
+  argsdict,
+
 # decomp.jl
   eigen,
   factorize,
@@ -164,6 +167,7 @@ export
   # Methods
   addtags,
   hastags,
+  @ts_str,
 
 # mps/dmrg.jl
   dmrg,
@@ -243,9 +247,15 @@ export
   Sweeps,
   cutoff,
   cutoff!,
+  get_cutoffs,
+  get_maxdims,
+  get_mindims,
+  get_noises,
   maxdim,
   maxdim!,
+  mindim,
   mindim!,
+  noise,
   noise!,
   nsweep,
   sweepnext,

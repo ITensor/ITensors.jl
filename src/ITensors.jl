@@ -22,7 +22,7 @@ using StaticArrays
 using TimerOutputs
 
 #####################################
-# Global Variables
+# Exports
 #
 include("exports.jl")
 
@@ -87,8 +87,12 @@ include("physics/fermions.jl")
 include("physics/autompo.jl")
 
 #####################################
-# Package compilation
+# Argument parsing
 #
+include("argsdict/argsdict.jl")
+
+#####################################
+# Package compilation
 #
 include("packagecompile/compile.jl")
 
