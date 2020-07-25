@@ -213,6 +213,8 @@ export
   sample!,
   siteind,
   siteinds,
+  replace_siteinds!,
+  replace_siteinds,
   swapbondsites,
   totalqn,
 
