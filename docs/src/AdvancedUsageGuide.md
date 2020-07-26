@@ -255,10 +255,6 @@ since it helps with:
  - Officially registering your package with Julia.
 and many more features that we will mention later.
 
-First enter Julia's standard development directory, `~/.julia/dev`.
-```
-$ cd ~/.julia/dev
-```
 Start up Julia and install [PkgTemplates](https://invenia.github.io/PkgTemplates.jl/stable/)
 ```julia
 $ julia
@@ -271,10 +267,21 @@ then press backspace and type:
 ```
 julia> using PkgTemplates
 
-julia> t = Template(; user="your_github_username")
+julia> t = Template(; user="your_github_username", plugins=[Git(; ssh=true),])
 
 julia> t("MyITensorsPkg")
 ```
+You should put your Github account name instead of `"your_github_username"`,
+if you want to use Github to host your package. 
+The option `plugins=[Git(; ssh=true),]` sets the Github authentication to use
+ssh, which is generally more convenient. You can switch to https (where you
+have to type your username and password to push changes) by setting `ssh=false`
+or leaving off `plugins=[...]`. By default, the package will be located in
+the directory `~/.julia/dev`, you can change this with the keyword argument
+`dir=[...]`. However, `~/.julia/dev` is recommended since that is the directory
+Julia's package manager (and other packages like `Revise`) will look for development
+packages. Please see the `PkgTemplate` documentation for more customization options.
+
 Then, we want to tell Julia about our new package. We do this as
 follows:
 ```julia
@@ -414,8 +421,10 @@ You can set up your local package as a Github repository by
 following the steps [here](https://help.github.com/en/github/importing-your-projects-to-github/adding-an-existing-project-to-github-using-the-command-line). Many of the steps may be unnecessary since they
 were already set up by `PkgTemplates`.
 
-You may also want to change from HTTPS to SSH authentification
-as described [here](https://help.github.com/en/github/using-git/changing-a-remotes-url).
+You may also want to switch between HTTPS and SSH authentication
+as described [here](https://help.github.com/en/github/using-git/changing-a-remotes-url),
+if you didn't choose your preferred authentication protocol with
+PkgTemplates.
 
 There are many more features you can add to your package through 
 various Julia packages and Github, for example:
