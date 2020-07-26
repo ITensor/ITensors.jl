@@ -419,7 +419,10 @@ and officially register them as Julia packages.
 
 You can set up your local package as a Github repository by
 following the steps [here](https://help.github.com/en/github/importing-your-projects-to-github/adding-an-existing-project-to-github-using-the-command-line). Many of the steps may be unnecessary since they
-were already set up by `PkgTemplates`.
+were already set up by `PkgTemplates`. You should be able to
+go to the website [here](https://github.com/new), create a new
+Github repository with the name `MyITensorsPkg.jl`, and then following
+the instructions under "push an existing repository from the command line".
 
 You may also want to switch between HTTPS and SSH authentication
 as described [here](https://help.github.com/en/github/using-git/changing-a-remotes-url),
