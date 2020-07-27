@@ -3,9 +3,12 @@
 struct IndexSet{N, IndexT <: Index, DataT <: Tuple}
   data::DataT
 
-  function IndexSet{N, IndexT, DataT}(data) where {N, IndexT, DataT <: NTuple{N, IndexT}}
-    return new{N, IndexT, DataT}(data)
-  end
+  IndexSet{N,
+           IndexT,
+           DataT}(data) where {N,
+                               IndexT,
+                               DataT <: NTuple{N, IndexT}} =
+    new{N, IndexT, DataT}(data)
 
   """
       IndexSet{Any}()
@@ -17,15 +20,54 @@ struct IndexSet{N, IndexT <: Index, DataT <: Tuple}
   IndexSet{Any}() = new{Any, Union{}, Tuple{}}()
 end
 
+#
+# Order value type
+#
+
+@eval struct Order{N}
+  (OrderT::Type{ <: Order})() = $(Expr(:new, :OrderT))
+end
+
+@doc """
+    Order{N}
+
+A value type representing the order of an ITensor.
+""" Order
+
+"""
+    Order(N) = Order{N}()
+
+Create an instance of the value type Order representing
+the order of an ITensor.
+"""
+Order(N) = Order{N}()
+
+"""
+    IndexSet(::Function, ::Order{N})
+
+Construct an IndexSet of length N from a function that accepts
+an integer between 1:N and returns an Index.
+
+# Examples
+```julia
+IndexSet(n -> Index(1, "i\$n"), Order(4))
+```
+"""
+IndexSet(f::Function, N::Int) =
+  IndexSet(ntuple(f, N))
+
+IndexSet(f::Function, ::Order{N}) where {N} =
+  IndexSet(ntuple(f, Val(N)))
+
 # Definition to help with generic code
 const Indices{N, IndexT} = Union{IndexSet{N,
                                           IndexT,
                                           NTuple{N, IndexT}},
                                  NTuple{N, IndexT}}
 
-function IndexSet{N, IndexT}(inds) where {N, IndexT}
+function (IndexSet{N, IndexT}(inds)::IndexSet{N, IndexT, NTuple{N, IndexT}}) where {N, IndexT}
   data = NTuple{N, IndexT}(inds)
-  return IndexSet{N, IndexT, typeof(data)}(data)
+  return IndexSet{N, IndexT, NTuple{N, IndexT}}(data)
 end
 
 """
@@ -46,11 +88,19 @@ end
 Construct an IndexSet of order `N` from a collection of indices
 (any collection that is convertable to a Tuple).
 """
-IndexSet{N}(inds) where {N} = IndexSet{N, eltype(inds)}(inds)
+IndexSet{N}(inds) where {N} =
+  IndexSet{N, eltype(inds)}(inds)
+
+IndexSet{N}(inds::NTuple{N, IndexT}) where {N, IndexT} =
+  IndexSet{N, IndexT, NTuple{N, IndexT}}(inds)
 
 IndexSet{N}(inds::Index...) where {N} = IndexSet{N}(inds)
 
 IndexSet{N}(is::IndexSet{N}) where {N} = is
+
+IndexSet{0}(::Tuple{}) = IndexSet{0, Union{}, Tuple{}}(())
+
+IndexSet{0}() = IndexSet{0}(())
 
 """
     IndexSet(inds)
@@ -60,6 +110,12 @@ Construct an IndexSet from a collection of indices
 (any collection that is convertable to a Tuple).
 """
 IndexSet(inds) = IndexSet{length(inds)}(inds)
+
+IndexSet(inds::NTuple{N, IndexT}) where {N, IndexT} = IndexSet{N, IndexT, NTuple{N, IndexT}}(inds)
+
+IndexSet(::Tuple{}) = IndexSet{0, Union{}, Tuple{}}(())
+
+IndexSet() = IndexSet(())
 
 IndexSet(inds::Index...) = IndexSet(inds)
 
@@ -94,7 +150,7 @@ Warning: this is not type stable, since a Vector
 is dynamically sized and an IndexSet is statically sized.
 Consider using the constructor `IndexSet{N}(inds::Vector)`.
 """
-IndexSet(inds::Vector{<:Index}) = IndexSet(inds...)
+IndexSet(inds::Vector{IndexT}) where {IndexT} = IndexSet(tuple(inds...))
 
 """
     IndexSet{N}(inds::Vector{<:Index})
@@ -104,7 +160,8 @@ Convert a Vector of indices to an IndexSet of size N.
 Type stable conversion of a Vector of indices to an IndexSet
 (in contrast to `IndexSet(::Vector{<:Index})`).
 """
-IndexSet{N}(inds::Vector{<:Index}) where {N} = IndexSet{N}(inds...)
+IndexSet{N}(inds::Vector{IndexT}) where {N, IndexT} =
+  IndexSet{N, IndexT, NTuple{N, IndexT}}(tuple(inds...))
 
 """
     not(inds::Union{IndexSet, Tuple{Vararg{<:Index}}})
@@ -144,7 +201,12 @@ NDTensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
 
 NDTensors.ValLength(::IndexSet{N}) where {N} = Val(N)
 
+Order(::IndexSet{N}) where {N} = Order(N)
+
+Order(::Type{<:IndexSet{N}}) where {N} = Order(N)
+
 # Convert to an Index if there is only one
+# TODO: also define the function `only`
 function Index(is::IndexSet)
   length(is) != 1 && error("Number of Index in IndexSet ≠ 1")
   return is[1]
@@ -435,6 +497,40 @@ function fmatch(; inds = nothing,
               fmatch(tags)(i)
 end
 
+"""
+    indmatch
+
+Checks if the Index matches the provided conditions.
+"""
+indmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
+
+# Set functions
+#
+# setdiff
+# intersect
+# symdiff
+# union
+# filter
+#
+
+function Base.setdiff!(f::Function,
+                       r,
+                       A::IndexSet,
+                       Bs::IndexSet...)
+  
+  N = length(r)
+  j = 1
+  for a in A
+    if f(a) && all(B -> a ∉ B, Bs)
+      j > N && error("Too many intersects found")
+      r[j] = a
+      j += 1
+    end
+  end
+  j ≤ N && error("Too few intersects found")
+  return r
+end
+
 function Base.setdiff(f::Function,
                       A::IndexSet,
                       Bs::IndexSet...)
@@ -445,15 +541,38 @@ function Base.setdiff(f::Function,
   return R
 end
 
+#Base.setdiff(f::Function, is1::IndexSet, iss::IndexSet...) =
+#  setdiff(Order(count(i -> f(i) && all(is -> i ∉ is, iss), is1)), f, is1, iss...)
+
 """
     setdiff(A::IndexSet, Bs::IndexSet...)
 
 Output the IndexSet with Indices in `A` but not in
 the IndexSets `Bs`.
 """
-Base.setdiff(A::IndexSet,
-             Bs::IndexSet...;
-             kwargs...) = setdiff(fmatch(; kwargs...), A, Bs...)
+Base.setdiff(A::IndexSet, Bs::IndexSet...; kwargs...) =
+  setdiff(fmatch(; kwargs...), A, Bs...)
+
+Base.setdiff(O::Order, A::IndexSet, Bs::IndexSet...;
+             kwargs...) =
+  setdiff(fmatch(; kwargs...), O, A, Bs...)
+
+"""
+  setdiff(f::Function, ::Order{N}, A::IndexSet, B::IndexSet...)
+
+Output the IndexSet in the set difference of `A` and `B`,
+optionally filtering by the function `f`.
+
+Specify the number of output indices with `Order(N)`.
+"""
+function Base.setdiff(f::Function,
+                      ::Order{N},
+                      A::IndexSet{<:Any, IndexT},
+                      B::IndexSet...) where {N, IndexT}
+  r = mutable_storage(Order{N}, IndexT)
+  setdiff!(f, r, A, B...)
+  return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(r))
+end
 
 function firstsetdiff(f::Function,
                       A::IndexSet,
@@ -477,7 +596,7 @@ firstsetdiff(A::IndexSet,
 """
     intersect(f::Function, A::IndexSet, B::IndexSet)
 
-Output the IndexSet in the intersection of `A` and `B`,
+Output a Vector of indices in the intersection of `A` and `B`,
 optionally filtering by the function `f`.
 """
 function Base.intersect(f::Function, A::IndexSet, B::IndexSet)
@@ -488,15 +607,59 @@ function Base.intersect(f::Function, A::IndexSet, B::IndexSet)
   return R
 end
 
+#Base.intersect(f::Function, is1::IndexSet, is2::IndexSet) =
+#  intersect(f, Order(count(i -> f(i) && i ∈ is2, is1)), is1, is2)
+
+mutable_storage(::Type{Order{N}},
+                ::Type{IndexT}) where {N, IndexT <: Index} =
+  MVector{N, IndexT}(undef)
+
+"""
+    intersect(f::Function, ::Order{N}, A::IndexSet, B::IndexSet)
+
+Output the IndexSet{N} in the intersection of `A` and `B`,
+optionally filtering by the function `f`.
+"""
+function Base.intersect(f::Function,
+                        ::Order{N},
+                        A::IndexSet{<:Any, IndexT},
+                        B::IndexSet) where {N, IndexT}
+  R = mutable_storage(Order{N}, IndexT)
+  intersect!(f, R, A, B)
+  return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(R))
+end
+
+Base.intersect(O::Order,
+               A::IndexSet,
+               B::IndexSet;
+               kwargs...) where {N} =
+  intersect(fmatch(; kwargs...), O, A, B)
+
+function Base.intersect!(f::Function,
+                         R::AbstractVector,
+                         A::IndexSet,
+                         B::IndexSet)
+  N = length(R)
+  j = 1
+  for a in A
+    if f(a) && a ∈ B
+      j > N && error("Too many intersects found")
+      R[j] = a
+      j += 1
+    end
+  end
+  j ≤ N && error("Too few intersects found")
+  return R
+end
+
 """
     intersect(A::IndexSet, B::IndexSet; kwargs...)
 
 Output the IndexSet in the intersection of `A` and `B`,
 optionally filtering by tags, prime level, etc.
 """
-Base.intersect(A::IndexSet,
-               B::IndexSet;
-               kwargs...) = intersect(fmatch(; kwargs...), A, B)
+Base.intersect(A::IndexSet, B::IndexSet; kwargs...) =
+  intersect(fmatch(; kwargs...), A, B)
 
 function firstintersect(f::Function, A::IndexSet, B::IndexSet)
   for a in A
@@ -513,30 +676,62 @@ filtering by tags, prime level, etc.
 If more than one Index is found, throw an error.
 Otherwise, return a default constructed Index.
 """
-firstintersect(A::IndexSet,
-               B::IndexSet;
-               kwargs...) = firstintersect(fmatch(; kwargs...), A, B)
+firstintersect(A::IndexSet, B::IndexSet; kwargs...) =
+  firstintersect(fmatch(; kwargs...), A, B)
 
 """
     filter(f::Function, inds::IndexSet)
+
+    filter(f::Function, ::Order{N}, inds::IndexSet)
 
 Filter the IndexSet by the given function (output a new
 IndexSet with indices `i` for which `f(i)` returns true).
 
 Note that this function is not type stable, since the number
 of output indices is not known at compile time.
+
+To make it type stable, specify the desired order by
+passing an instance of the type `Order`.
 """
 Base.filter(f::Function,
-            is::IndexSet) = IndexSet(filter(f, Tuple(is)))
+            is::IndexSet) =
+  IndexSet(filter(f, Tuple(is)))
 
-Base.filter(is::IndexSet,
-            args...; kwargs...) = filter(fmatch(args...;
-                                                kwargs...), is)
+Base.filter(is::IndexSet, args...; kwargs...) =
+  filter(fmatch(args...; kwargs...), is)
 
 # To fix ambiguity error with Base function
-Base.filter(is::IndexSet,
-            tags::String;
-            kwargs...) = filter(fmatch(tags; kwargs...),is)
+Base.filter(is::IndexSet, tags::String; kwargs...) =
+  filter(fmatch(tags; kwargs...),is)
+
+function Base.filter!(f::Function,
+                      r,
+                      is::IndexSet{<:Any, IndexT}) where {IndexT}
+  N = length(r)
+  j = 1
+  for i in is
+    if f(i)
+      j > N && error("Too many intersects found")
+      r[j] = i
+      j += 1
+    end
+  end
+  j ≤ N && error("Too few intersects found")
+  return r 
+end
+
+function Base.filter(f::Function,
+                     O::Order{N},
+                     is::IndexSet{<:Any, IndexT}) where {N, IndexT}
+  #t = filter(f, Tuple(is))
+  #return IndexSet{N, IndexT, NTuple{N, IndexT}}(t)
+  r = mutable_storage(Order{N}, IndexT)
+  filter!(f, r, is)
+  return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(r))
+end
+
+Base.filter(O::Order, is::IndexSet, args...; kwargs...) =
+  filter(ITensors.fmatch(args...; kwargs...), O, is)
 
 """
     getfirst(is::IndexSet)

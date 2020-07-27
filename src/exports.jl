@@ -63,6 +63,7 @@ export
 # indexset.jl
   # Types
   IndexSet,
+  Order,
   # Methods
   dims,
   firstintersect,

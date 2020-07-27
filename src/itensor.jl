@@ -670,6 +670,8 @@ end
 # TODO: name this `indexset` or `IndexSet`,
 # or maybe just `inds`?
 itensor2inds(A::ITensor) = inds(A)
+itensor2inds(is::Vector{<:Index}) = IndexSet(is)
+itensor2inds(is::Tuple{Vararg{<:Index}}) = IndexSet(is)
 itensor2inds(A) = A
 
 # in
@@ -695,55 +697,69 @@ hasinds(is::Index...) = hasinds(IndexSet(is...))
 
 Check if the ITensors or sets of indices have common indices.
 """
-hascommoninds(A, B; kwargs...) = !isnothing(commonind(A, B; kwargs...))
+hascommoninds(A, B; kwargs...) =
+  !isnothing(commonind(A, B; kwargs...))
 
 # issetequal
-hassameinds(A,B) = issetequal(itensor2inds(A),
-                              itensor2inds(B))
+hassameinds(A, B) =
+  issetequal(itensor2inds(A), itensor2inds(B))
 
 # intersect
-commoninds(A...; kwargs...) = IndexSet(intersect(itensor2inds.(A)...;
-                                                 kwargs...)...)
+commoninds(A...; kwargs...) =
+  IndexSet(intersect(itensor2inds.(A)...; kwargs...))
+
+commoninds(::Order{N}, A...; kwargs...) where {N} =
+  intersect(Order(N), itensor2inds.(A)...; kwargs...)
 
 # firstintersect
-commonind(A...; kwargs...) = firstintersect(itensor2inds.(A)...;
-                                            kwargs...)
+commonind(A...; kwargs...) =
+  firstintersect(itensor2inds.(A)...; kwargs...)
 
 # symdiff
-noncommoninds(A...; kwargs...) = IndexSet(symdiff(itensor2inds.(A)...;
-                                               kwargs...)...)
+noncommoninds(A...; kwargs...) =
+  IndexSet(symdiff(itensor2inds.(A)...; kwargs...)...)
+
+noncommoninds(::Order{N}, A...; kwargs...) where {N} =
+  IndexSet{N}(symdiff(itensor2inds.(A)...; kwargs...)...)
 
 # firstsymdiff
-noncommonind(A...; kwargs...) = getfirst(symdiff(itensor2inds.(A)...;
-                                                 kwargs...))
+noncommonind(A...; kwargs...) =
+  getfirst(symdiff(itensor2inds.(A)...; kwargs...))
 
 # setdiff
-uniqueinds(A...; kwargs...) = IndexSet(setdiff(itensor2inds.(A)...;
-                                               kwargs...)...)
+uniqueinds(A...; kwargs...) =
+  IndexSet(setdiff(itensor2inds.(A)...; kwargs...)...)
+
+uniqueinds(::Order{N}, A...; kwargs...) where {N} =
+  setdiff(Order(N), ITensors.itensor2inds.(A)...; kwargs...)
 
 # firstsetdiff
-uniqueind(A...; kwargs...) = firstsetdiff(itensor2inds.(A)...;
-                                          kwargs...)
+uniqueind(A...; kwargs...) =
+  firstsetdiff(itensor2inds.(A)...; kwargs...)
 
 # union
-unioninds(A...; kwargs...) = IndexSet(union(itensor2inds.(A)...;
-                                            kwargs...)...)
+unioninds(A...; kwargs...) =
+  IndexSet(union(itensor2inds.(A)...; kwargs...)...)
 
-# firstsymdiff
-unionind(A...; kwargs...) = getfirst(union(itensor2inds.(A)...;
-                                           kwargs...))
+unioninds(::Order{N}, A...; kwargs...) where {N} =
+  IndexSet{N}(union(ITensors.itensor2inds.(A)...; kwargs...)...)
 
-firstind(A...; kwargs...) = getfirst(itensor2inds.(A)...;
-                                     kwargs...)
+# firstunion
+unionind(A...; kwargs...) =
+  getfirst(union(itensor2inds.(A)...; kwargs...))
 
-filterinds(A...; kwargs...) = filter(itensor2inds.(A)...;
-                                     kwargs...)
+firstind(A...; kwargs...) =
+  getfirst(itensor2inds.(A)...; kwargs...)
+
+filterinds(A...; kwargs...) =
+  filter(itensor2inds.(A)...; kwargs...)
 
 # Faster version when no filtering is requested
 filterinds(A::ITensor) = inds(A)
 
 # For backwards compatibility
-NDTensors.inds(A...; kwargs...) = filterinds(A...; kwargs...)
+NDTensors.inds(A...; kwargs...) =
+  filterinds(A...; kwargs...)
 
 # in-place versions of priming and tagging
 for fname in (:prime,
