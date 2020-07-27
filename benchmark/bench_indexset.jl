@@ -15,8 +15,9 @@ suite["constructor"]["function"] = @benchmarkable IndexSet($(n -> i^(n-1)), $(Or
 suite["filter"] = BenchmarkGroup()
 
 suite["filter"]["kwargs"] = @benchmarkable filter($is; plev = 3)
+suite["filter"]["order_kwargs"] = @benchmarkable filter($(Order(1)), $is; plev = 3)
 suite["filter"]["function"] = @benchmarkable filter($(i -> plev(i) < 2), $is)
-suite["filter"]["order"] = @benchmarkable filter($(i -> plev(i)), $(Order(2)), $is)
+suite["filter"]["function_order"] = @benchmarkable filter($(i -> plev(i) < 2), $(Order(2)), $is)
 
 i,j,k,l = Index.(2, ("i", "j", "k", "l"))
 

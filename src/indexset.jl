@@ -553,9 +553,9 @@ the IndexSets `Bs`.
 Base.setdiff(A::IndexSet, Bs::IndexSet...; kwargs...) =
   setdiff(fmatch(; kwargs...), A, Bs...)
 
-Base.setdiff(::Order{N}, A::IndexSet, Bs::IndexSet...;
-             kwargs...) where {N} =
-  setdiff(fmatch(; kwargs...), Order(N), A, Bs...)
+Base.setdiff(O::Order, A::IndexSet, Bs::IndexSet...;
+             kwargs...) =
+  setdiff(fmatch(; kwargs...), O, A, Bs...)
 
 """
   setdiff(f::Function, ::Order{N}, A::IndexSet, B::IndexSet...)
@@ -629,11 +629,11 @@ function Base.intersect(f::Function,
   return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(R))
 end
 
-Base.intersect(::Order{N},
+Base.intersect(O::Order,
                A::IndexSet,
                B::IndexSet;
                kwargs...) where {N} =
-  intersect(fmatch(; kwargs...), Order(N), A, B)
+  intersect(fmatch(; kwargs...), O, A, B)
 
 function Base.intersect!(f::Function,
                          R::AbstractVector,
@@ -731,7 +731,7 @@ function Base.filter(f::Function,
 end
 
 Base.filter(O::Order, is::IndexSet, args...; kwargs...) =
-  filter(O, ITensors.fmatch(args...; kwargs...), is)
+  filter(ITensors.fmatch(args...; kwargs...), O, is)
 
 """
     getfirst(is::IndexSet)

@@ -1,4 +1,4 @@
-module BenchInplace
+module BenchTagSet
 
 using BenchmarkTools
 using ITensors
@@ -9,4 +9,4 @@ suite["tagset"] = @benchmarkable TagSet("abcdefgh,ijklmnop,qrstuvwx,ABCDEFGH")
 suite["tagset_unicode"] = @benchmarkable TagSet("αβγδϵζηθ,ijklmnop,qrstuvwx,ΑΒΓΔΕΖΗΘ")
 end
 
-BenchInplace.suite
+BenchTagSet.suite
