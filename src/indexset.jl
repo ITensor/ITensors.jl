@@ -555,16 +555,18 @@ Base.setdiff(A::IndexSet, Bs::IndexSet...; kwargs...) =
 
 Base.setdiff(::Order{N}, A::IndexSet, Bs::IndexSet...;
              kwargs...) where {N} =
-  setdiff(Order(N), fmatch(; kwargs...), A, Bs...)
+  setdiff(fmatch(; kwargs...), Order(N), A, Bs...)
 
 """
-    setdiff(::Order{N}, f::Function, A::IndexSet, B::IndexSet...)
+  setdiff(f::Function, ::Order{N}, A::IndexSet, B::IndexSet...)
 
 Output the IndexSet in the set difference of `A` and `B`,
 optionally filtering by the function `f`.
+
+Specify the number of output indices with `Order(N)`.
 """
-function Base.setdiff(::Order{N},
-                      f::Function,
+function Base.setdiff(f::Function,
+                      ::Order{N},
                       A::IndexSet{<:Any, IndexT},
                       B::IndexSet...) where {N, IndexT}
   r = mutable_storage(Order{N}, IndexT)
@@ -606,20 +608,20 @@ function Base.intersect(f::Function, A::IndexSet, B::IndexSet)
 end
 
 #Base.intersect(f::Function, is1::IndexSet, is2::IndexSet) =
-#  intersect(Order(count(i -> f(i) && i ∈ is2, is1)), f, is1, is2)
+#  intersect(f, Order(count(i -> f(i) && i ∈ is2, is1)), is1, is2)
 
 mutable_storage(::Type{Order{N}},
                 ::Type{IndexT}) where {N, IndexT <: Index} =
   MVector{N, IndexT}(undef)
 
 """
-    intersect(::Order{N}, f::Function, A::IndexSet, B::IndexSet)
+    intersect(f::Function, ::Order{N}, A::IndexSet, B::IndexSet)
 
-Output the NTuple{N} in the intersection of `A` and `B`,
+Output the IndexSet{N} in the intersection of `A` and `B`,
 optionally filtering by the function `f`.
 """
-function Base.intersect(::Order{N},
-                        f::Function,
+function Base.intersect(f::Function,
+                        ::Order{N},
                         A::IndexSet{<:Any, IndexT},
                         B::IndexSet) where {N, IndexT}
   R = mutable_storage(Order{N}, IndexT)
@@ -631,7 +633,7 @@ Base.intersect(::Order{N},
                A::IndexSet,
                B::IndexSet;
                kwargs...) where {N} =
- intersect(Order(N), fmatch(; kwargs...), A, B)
+  intersect(fmatch(; kwargs...), Order(N), A, B)
 
 function Base.intersect!(f::Function,
                          R::AbstractVector,
@@ -680,7 +682,7 @@ firstintersect(A::IndexSet, B::IndexSet; kwargs...) =
 """
     filter(f::Function, inds::IndexSet)
 
-    filter(::Order{N}, f::Function, inds::IndexSet)
+    filter(f::Function, ::Order{N}, inds::IndexSet)
 
 Filter the IndexSet by the given function (output a new
 IndexSet with indices `i` for which `f(i)` returns true).
@@ -693,7 +695,7 @@ passing an instance of the type `Order`.
 """
 Base.filter(f::Function,
             is::IndexSet) =
-  filter(Order(count(f, is)), f, is)
+  IndexSet(filter(f, Tuple(is)))
 
 Base.filter(is::IndexSet, args...; kwargs...) =
   filter(fmatch(args...; kwargs...), is)
@@ -702,8 +704,8 @@ Base.filter(is::IndexSet, args...; kwargs...) =
 Base.filter(is::IndexSet, tags::String; kwargs...) =
   filter(fmatch(tags; kwargs...),is)
 
-function Base.filter!(r,
-                      f::Function,
+function Base.filter!(f::Function,
+                      r,
                       is::IndexSet{<:Any, IndexT}) where {IndexT}
   N = length(r)
   j = 1
@@ -718,13 +720,13 @@ function Base.filter!(r,
   return r 
 end
 
-function Base.filter(O::Order{N},
-                     f::Function,
+function Base.filter(f::Function,
+                     O::Order{N},
                      is::IndexSet{<:Any, IndexT}) where {N, IndexT}
   #t = filter(f, Tuple(is))
   #return IndexSet{N, IndexT, NTuple{N, IndexT}}(t)
   r = mutable_storage(Order{N}, IndexT)
-  filter!(r, f, is)
+  filter!(f, r, is)
   return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(r))
 end
 

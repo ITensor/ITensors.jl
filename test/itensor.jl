@@ -998,10 +998,10 @@ end
     end # End factorize tests
 
     @testset "Test error for empty inputs" begin
-      @test_throws MethodError svd(A)
+      @test_throws ErrorException svd(A)
       @test_throws ErrorException svd(A, inds(A))
       @test_throws ErrorException eigen(A, inds(A), inds(A))
-      @test_throws MethodError factorize(A)
+      @test_throws ErrorException factorize(A)
       @test_throws ErrorException factorize(A, inds(A))
     end
 
