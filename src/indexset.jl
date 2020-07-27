@@ -593,12 +593,6 @@ firstsetdiff(A::IndexSet,
              Bs::IndexSet...;
              kwargs...) = firstsetdiff(fmatch(; kwargs...), A, Bs...)
 
-"""
-    intersect(f::Function, A::IndexSet, B::IndexSet)
-
-Output a Vector of indices in the intersection of `A` and `B`,
-optionally filtering by the function `f`.
-"""
 function Base.intersect(f::Function, A::IndexSet, B::IndexSet)
   R = eltype(A)[]
   for a in A
@@ -614,12 +608,6 @@ mutable_storage(::Type{Order{N}},
                 ::Type{IndexT}) where {N, IndexT <: Index} =
   MVector{N, IndexT}(undef)
 
-"""
-    intersect(f::Function, ::Order{N}, A::IndexSet, B::IndexSet)
-
-Output the IndexSet{N} in the intersection of `A` and `B`,
-optionally filtering by the function `f`.
-"""
 function Base.intersect(f::Function,
                         ::Order{N},
                         A::IndexSet{<:Any, IndexT},
@@ -655,8 +643,17 @@ end
 """
     intersect(A::IndexSet, B::IndexSet; kwargs...)
 
+    intersect(f::Function, A::IndexSet, B::IndexSet)
+
+    intersect(:Order{N}, A::IndexSet, B::IndexSet; kwargs...)
+
+    intersect(f::Function, ::Order{N}, A::IndexSet, B::IndexSet)
+
 Output the IndexSet in the intersection of `A` and `B`,
-optionally filtering by tags, prime level, etc.
+optionally filtering with keyword arguments `tags`, `plev`, etc. 
+or by a function `f(::Index) -> Bool`.
+
+Specify the output number of indices `N` with `Order(N)`.
 """
 Base.intersect(A::IndexSet, B::IndexSet; kwargs...) =
   intersect(fmatch(; kwargs...), A, B)
@@ -671,10 +668,13 @@ end
 """
     firstintersect(A::IndexSet, B::IndexSet; kwargs...)
 
-Output the Index common to `A` and `B`, optionally
-filtering by tags, prime level, etc.
-If more than one Index is found, throw an error.
-Otherwise, return a default constructed Index.
+    firstintersect(f::Function, A::IndexSet, B::IndexSet)
+
+Output the first Index common to `A` and `B`, optionally
+filtering by tags, prime level, etc. or by a function
+`f`.
+
+If no common Index is found, return `nothing`.
 """
 firstintersect(A::IndexSet, B::IndexSet; kwargs...) =
   firstintersect(fmatch(; kwargs...), A, B)
