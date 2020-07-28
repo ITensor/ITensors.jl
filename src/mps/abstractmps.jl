@@ -1022,7 +1022,7 @@ function (::Type{MPST})(A::ITensor, sites;
 end
 
 """
-    swapbondsites(ψ::AbstractMPS, b::Int; kwargs...)
+    swapbondsites(ψ::Union{MPS, MPO}, b::Int; kwargs...)
 
 Swap the sites `b` and `b+1`.
 """
