@@ -1,5 +1,6 @@
-using ITensors,
-      Test
+using Combinatorics
+using ITensors
+using Test
 
 include("util.jl")
 
@@ -13,6 +14,17 @@ function basicRandomMPO(sites; dim=4)
   M[1] *= delta(links[1])
   M[N] *= delta(links[N+1])
   return M
+end
+
+@testset "[first]siteinds(::MPO)" begin
+  N = 5
+  s = siteinds("S=1/2", N)
+  M = randomMPO(s)
+  v = siteinds(M)
+  for n in 1:N
+    @test hassameinds(v[n], (s[n], s[n]'))
+  end
+  @test firstsiteinds(M) == s
 end
 
 @testset "MPO Basics" begin
@@ -315,6 +327,25 @@ end
 
   @test_throws ArgumentError randomMPO(sites, 2)
   @test isnothing(linkind(MPO(fill(ITensor(), N), 0, N + 1), 1))
+
+  @testset "movesites $N sites" for N in 1:7
+    s0 = siteinds("S=1/2", N)
+    ψ0 = MPO(s0, "Id")
+    for perm in permutations(1:N)
+      s = s0[perm]
+      ψ = randomMPO(s)
+      ns′ = [findsite(ψ0, i) for i in s]
+      @test ns′ == perm
+      ψ′ = movesites(ψ, 1:N .=> ns′)
+      for n in 1:N
+        @test hassameinds(siteinds(ψ0, n), siteinds(ψ′, n))
+      end
+      set_warn_order!(15)
+      @test prod(ψ) ≈ prod(ψ′)
+      reset_warn_order!()
+    end
+  end
+
 end
 
 nothing

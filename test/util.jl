@@ -1,5 +1,5 @@
-using ITensors,
-      Random
+using ITensors
+using Random
 
 function makeRandomMPS(sites;
                        chi::Int=4)::MPS

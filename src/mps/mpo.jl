@@ -56,6 +56,7 @@ function MPO(::Type{ElT},
              sites::Vector{<:Index},
              ops::Vector{String}) where {ElT <: Number}
   N = length(sites)
+  N == 1 && return MPO([op(sites[1], ops[1])])
   its = Vector{ITensor}(undef, N)
   links = Vector{Index}(undef, N)
   for ii ∈ eachindex(sites)
@@ -115,6 +116,33 @@ function randomMPO(sites::Vector{<:Index}, m::Int=1)
   m > 1 && throw(ArgumentError("randomMPO: currently only m==1 supported"))
   return M
 end
+
+"""
+    siteind(M::MPO, j::Int; plev = 0, kwargs...)
+
+Get the first site Index of the MPO found, by
+default with prime level 0. 
+"""
+siteind(M::MPO, j::Int; kwargs...) =
+  firstsiteind(M, j; plev = 0, kwargs...)
+
+"""
+    siteinds(M::MPO; kwargs...)
+
+Get a Vector of IndexSets the all of the site indices of M.
+"""
+siteinds(M::MPO; kwargs...) =
+  [siteinds(M, j; kwargs...) for j in 1:length(M)]
+
+"""
+    firstsiteinds(M::MPO; kwargs...)
+
+Get a Vector of the first site Index found on each site of M.
+
+By default, it finds the first site Index with prime level 0.
+"""
+firstsiteinds(M::MPO; kwargs...) =
+  [siteind(M, j; kwargs...) for j in 1:length(M)]
 
 """
     dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
@@ -458,6 +486,30 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   res[N] = V
   truncate!(res;kwargs...)
   return res
+end
+
+"""
+    swapbondsites(ψ::MPO, b::Int; kwargs...)
+
+Swap the sites `b` and `b+1`.
+"""
+function ITensors.swapbondsites(ψ::MPO, b::Int; kwargs...)
+  ortho = get(kwargs, :ortho, "right")
+  ψ = copy(ψ)
+  if ortho == "left"
+    orthocenter = b + 1
+  elseif ortho == "right"
+    orthocenter = b
+  end
+  if leftlim(ψ) < b - 1
+    orthogonalize!(ψ, b)
+  elseif rightlim(ψ) > b + 2
+    orthogonalize!(ψ, b + 1)
+  end
+  ψ[b:b + 1,
+    orthocenter = orthocenter,
+    perm = [2, 1], kwargs...] = ψ[b] * ψ[b + 1]
+  return ψ
 end
 
 function HDF5.write(parent::Union{HDF5File,HDF5Group},

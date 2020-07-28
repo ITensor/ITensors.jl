@@ -1,5 +1,5 @@
-using ITensors,
-      Test
+using ITensors
+using Test
 
 include("util.jl")
 
@@ -533,6 +533,82 @@ end
     @test ITensors.rightlim(ψ) == N+1
     @test inner(ψ, ϕ) ≈ 1
   end
+
+  @testset "findsite[s](::MPS/MPO, is)" begin
+    s = siteinds("S=1/2", 5)
+    ψ = randomMPS(s)
+    l = linkinds(ψ)
+
+    A = randomITensor(s[4]', s[2]', dag(s[4]), dag(s[2]))
+
+    @test findsite(ψ, s[3]) == 3
+    @test findsite(ψ, (s[3], s[5])) == 3
+    @test findsite(ψ, l[2]) == 2
+    @test findsite(ψ, A) == 2
+
+    @test findsites(ψ, s[3]) == [3]
+    @test findsites(ψ, (s[4], s[1])) == [1, 4]
+    @test findsites(ψ, l[2]) == [2, 3]
+    @test findsites(ψ, (l[2], l[3])) == [2, 3, 4]
+    @test findsites(ψ, A) == [2, 4]
+
+    M = randomMPO(s)
+    lM = linkinds(M)
+
+    @test findsite(M, s[4]) == 4
+    @test findsite(M, s[4]') == 4
+    @test findsite(M, (s[4]', s[4])) == 4
+    @test findsite(M, (s[4]', s[3])) == 3
+    @test findsite(M, lM[2]) == 2
+    @test findsite(M, A) == 2
+
+    @test findsites(M, s[4]) == [4]
+    @test findsites(M, s[4]') == [4]
+    @test findsites(M, (s[4]', s[4])) == [4]
+    @test findsites(M, (s[4]', s[3])) == [3, 4]
+    @test findsites(M, (lM[2], lM[3])) == [2, 3, 4]
+    @test findsites(M, A) == [2, 4]
+  end
+
+  @testset "[first]siteind[s](::MPS/MPO, j::Int)" begin
+    s = siteinds("S=1/2", 5)
+    ψ = randomMPS(s)
+    @test firstsiteind(ψ, 3) == s[3]
+    @test siteind(ψ, 4) == s[4]
+    @test isnothing(siteind(ψ, 4; plev = 1))
+    @test siteinds(ψ, 3) == IndexSet(s[3])
+    @test siteinds(ψ, 3; plev = 1) == IndexSet()
+
+    M = randomMPO(s)
+    @test noprime(firstsiteind(M, 4)) == s[4]
+    @test firstsiteind(M, 4; plev = 0) == s[4]
+    @test firstsiteind(M, 4; plev = 1) == s[4]'
+    @test siteind(M, 4) == s[4]
+    @test siteind(M, 4; plev = 0) == s[4]
+    @test siteind(M, 4; plev = 1) == s[4]'
+    @test isnothing(siteind(M, 4; plev = 2))
+    @test siteinds(M, 3) == IndexSet(s[3], s[3]')
+    @test siteinds(M, 3; plev = 1) == IndexSet(s[3]')
+    @test siteinds(M, 3; plev = 0) == IndexSet(s[3])
+    @test siteinds(M, 3; tags = "n=2") == IndexSet()
+  end
+
+  @testset "movesites $N sites" for N in 1:7
+    s0 = siteinds("S=1/2", N)
+    ψ0 = productMPS(s0, "↑")
+    for perm in permutations(1:N)
+      s = s0[perm]
+      ψ = productMPS(s, rand(("↑", "↓"), N))
+      ns′ = [findsite(ψ0, i) for i in s]
+      @test ns′ == perm
+      ψ′ = movesites(ψ, 1:N .=> ns′)
+      for n in 1:N
+        @test siteind(ψ0, n) == siteind(ψ′, n)
+      end
+      @test prod(ψ) ≈ prod(ψ′)
+    end
+  end
+
 end
 
 nothing

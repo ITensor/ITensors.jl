@@ -695,10 +695,18 @@ hasinds(is::Index...) = hasinds(IndexSet(is...))
 """
     hascommoninds(A, B; kwargs...)
 
-Check if the ITensors or sets of indices have common indices.
+    hascommoninds(B; kwargs...) -> f::Function
+
+Check if the ITensors or sets of indices `A` and `B` have
+common indices.
+
+If only one ITensor or set of indices `B` is passed, return a
+function `f` such that `f(A) = hascommoninds(A, B; kwargs...)`
 """
 hascommoninds(A, B; kwargs...) =
   !isnothing(commonind(A, B; kwargs...))
+
+hascommoninds(B; kwargs...) = x -> hascommoninds(x, B; kwargs...)
 
 # issetequal
 hassameinds(A, B) =
