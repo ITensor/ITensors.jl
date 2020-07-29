@@ -687,6 +687,16 @@ end
     @test ITensors.orthocenter(ψ) == 3
   end
 
+  @testset "movesites reverse sites" begin
+    N = 6
+    s = siteinds("S=1/2", N)
+    ψ0 = randomMPS(s)
+    ψ = movesites(ψ0, 1:N .=> reverse(1:N))
+    for n in 1:N
+      @test siteind(ψ, n) == s[N-n+1]
+    end
+  end
+
 end
 
 nothing
