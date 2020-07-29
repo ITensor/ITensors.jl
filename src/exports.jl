@@ -129,6 +129,7 @@ export
   order,
   permute,
   prime!,
+  randn!,
   randomITensor,
   removetags!,
   replacetags!,

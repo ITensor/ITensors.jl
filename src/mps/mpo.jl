@@ -117,6 +117,9 @@ function randomMPO(sites::Vector{<:Index}, m::Int=1)
   return M
 end
 
+MPO(A::ITensor, sites::Vector{ <: Index}; kwargs...) =
+  MPO(A, IndexSet.(prime.(sites), dag.(sites)); kwargs...)
+
 """
     siteind(M::MPO, j::Int; plev = 0, kwargs...)
 

@@ -926,15 +926,14 @@ function Base.setindex!(ψ::MPST,
 
   # Check that A has the proper common
   # indices with ψ
-  l = linkind(ψ, firstsite-1)
-  r = linkind(ψ, lastsite)
+  lind = linkind(ψ, firstsite-1)
+  rind = linkind(ψ, lastsite)
 
   sites = [siteinds(ψ, j) for j in firstsite:lastsite]
 
   #s = collect(Iterators.flatten(sites))
   indsA = filter(x -> !isnothing(x),
-                 [l, Iterators.flatten(sites)..., r])
-
+                 [lind, Iterators.flatten(sites)..., rind])
   @assert hassameinds(A, indsA)
 
   # For MPO case, restrict to 0 prime level
@@ -945,8 +944,8 @@ function Base.setindex!(ψ::MPST,
   end
 
   ψA = MPST(A, sites;
-            firstlinkind = l,
-            lastlinkind = r,
+            leftinds = lind,
+            orthocenter = orthocenter - first(r) + 1,
             kwargs...)
   #@assert prod(ψA) ≈ A
 
@@ -973,40 +972,41 @@ _number_inds(s::IndexSet) = length(s)
 _number_inds(sites) = sum(_number_inds(s) for s in sites)
 
 """
-    MPS(::ITensor, sites)
+    MPS(A::ITensor, sites; <keyword arguments>)
 
-    MPO(::ITensor, sites)
+    MPO(A::ITensor, sites; <keyword arguments>)
 
-Construct an MPS/MPO from an ITensor by decomposing it site
-by site.
+Construct an MPS/MPO from an ITensor `A` by decomposing it site
+by site according to the site indices `sites`.
+
+# Arguments
+- `leftinds = nothing`: optional left dangling indices. Indices that are not in `sites` and `leftinds` will be dangling off of the right side of the MPS/MPO.
+- `orthocenter::Int = length(sites)`: the desired final orthogonality center of the output MPS/MPO.
+- `cutoff`: the desired truncation error at each link.
+- `maxdim`: the maximum link dimension.
 """
 function (::Type{MPST})(A::ITensor, sites;
-                        firstlinkind::Union{Nothing, Index} = nothing,
-                        lastlinkind::Union{Nothing, Index} = nothing,
+                        leftinds = nothing,
                         orthocenter::Int = length(sites),
                         kwargs...) where {MPST <: AbstractMPS}
   N = length(sites)
-  @assert order(A) == _number_inds(sites) +
-                      !isnothing(firstlinkind) +
-                      !isnothing(lastlinkind)
   for s in sites
     @assert hasinds(A, s)
   end
-  @assert isnothing(firstlinkind) || hasind(A, firstlinkind)
-  @assert isnothing(lastlinkind) || hasind(A, lastlinkind)
+  @assert isnothing(leftinds) || hasinds(A, leftinds)
 
   @assert 1 ≤ orthocenter ≤ N
 
   ψ = Vector{ITensor}(undef, N)
   Ã = A
-  l = firstlinkind
+  l = leftinds
   # TODO: To minimize work, loop from
   # 1:orthocenter and reverse(orthocenter:N)
   # so the orthogonality center is set correctly.
   for n in 1:N-1
-    Lis = sites[n]
+    Lis = IndexSet(sites[n])
     if !isnothing(l)
-      Lis = push(Lis, l)
+      Lis = unioninds(Lis, l)
     end
     L, R = factorize(Ã, Lis; kwargs..., ortho = "left")
     l = commonind(L, R)

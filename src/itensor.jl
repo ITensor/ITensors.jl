@@ -670,6 +670,7 @@ end
 # TODO: name this `indexset` or `IndexSet`,
 # or maybe just `inds`?
 itensor2inds(A::ITensor) = inds(A)
+itensor2inds(i::Index) = IndexSet(i)
 itensor2inds(is::Vector{<:Index}) = IndexSet(is)
 itensor2inds(is::Tuple{Vararg{<:Index}}) = IndexSet(is)
 itensor2inds(A) = A
@@ -985,9 +986,7 @@ function Base.isapprox(A::ITensor,
     return isapprox(array(A), array(B); kwargs...)
 end
 
-function Random.randn!(T::ITensor)
-  return randn!(tensor(T))
-end
+Random.randn!(T::ITensor) = randn!(tensor(T))
 
 """
     randomITensor([::Type{ElT <: Number} = Float64, ]inds)

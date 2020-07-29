@@ -1,3 +1,4 @@
+using Combinatorics
 using ITensors
 using Test
 
@@ -607,6 +608,83 @@ end
       end
       @test prod(ψ) ≈ prod(ψ′)
     end
+  end
+
+  @testset "Construct MPS from ITensor" begin
+    N = 5
+    s = siteinds("S=1/2", N)
+    l = [Index(3, "left_$n") for n in 1:2]
+    r = [Index(3, "right_$n") for n in 1:2]
+
+    #
+    # MPS
+    #
+
+    A = randomITensor(s...)
+    ψ = MPS(A, s)
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == N
+    @test maxlinkdim(ψ) == 4
+
+    ψ0 = productMPS(s, "↑")
+    A = prod(ψ0)
+    ψ = MPS(A, s; cutoff = 1e-15)
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == N
+    @test maxlinkdim(ψ) == 1
+
+    ψ0 = randomMPS(s, 2)
+    A = prod(ψ0)
+    ψ = MPS(A, s; cutoff = 1e-15, orthocenter = 2)
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == 2
+    @test maxlinkdim(ψ) == 2
+
+    A = randomITensor(s..., l[1], r[1])
+    ψ = MPS(A, s, leftinds = l[1], orthocenter = 3)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (l[1], s[1], ls[1]))
+    @test hassameinds(ψ[N], (r[1], s[N], ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == 3
+    @test maxlinkdim(ψ) == 12
+
+    A = randomITensor(s..., l..., r...)
+    ψ = MPS(A, s, leftinds = l)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (l..., s[1], ls[1]))
+    @test hassameinds(ψ[N], (r..., s[N], ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == N
+    @test maxlinkdim(ψ) == 36
+  end
+
+  @testset "Set range of MPS tensors" begin
+    N = 5
+    s = siteinds("S=1/2", N)
+    ψ0 = randomMPS(s, 3)
+
+    ψ = orthogonalize(ψ0, 2)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    ϕ = MPS(A, s[2:N-1], orthocenter = 1)
+    ψ[2:N-1] = ϕ
+    @test prod(ψ) ≈ ψ[1] * A * ψ[N]
+    @test maxlinkdim(ψ) == 4
+    @test ITensors.orthocenter(ψ) == 2
+
+    ψ = orthogonalize(ψ0, 1)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    @test_throws AssertionError ψ[2:N-1] = A
+
+    ψ = orthogonalize(ψ0, 2)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    ψ[2:N-1, orthocenter = 3] = A
+    @test prod(ψ) ≈ ψ[1] * A * ψ[N]
+    @test maxlinkdim(ψ) == 4
+    @test ITensors.orthocenter(ψ) == 3
   end
 
 end
