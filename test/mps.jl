@@ -456,7 +456,7 @@ end
     @test flux(M) == QN("Sz",-4)
   end
 
-  @testset "swapsites" begin
+  @testset "swapbondsites" begin
     N = 5
     sites = siteinds("S=1/2", N)
     ψ0 = randomMPS(sites)

@@ -491,30 +491,6 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   return res
 end
 
-"""
-    swapbondsites(ψ::MPO, b::Int; kwargs...)
-
-Swap the sites `b` and `b+1`.
-"""
-function ITensors.swapbondsites(ψ::MPO, b::Int; kwargs...)
-  ortho = get(kwargs, :ortho, "right")
-  ψ = copy(ψ)
-  if ortho == "left"
-    orthocenter = b + 1
-  elseif ortho == "right"
-    orthocenter = b
-  end
-  if leftlim(ψ) < b - 1
-    orthogonalize!(ψ, b)
-  elseif rightlim(ψ) > b + 2
-    orthogonalize!(ψ, b + 1)
-  end
-  ψ[b:b + 1,
-    orthocenter = orthocenter,
-    perm = [2, 1], kwargs...] = ψ[b] * ψ[b + 1]
-  return ψ
-end
-
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
                     name::AbstractString,
                     M::MPO)
