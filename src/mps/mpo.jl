@@ -56,6 +56,7 @@ function MPO(::Type{ElT},
              sites::Vector{<:Index},
              ops::Vector{String}) where {ElT <: Number}
   N = length(sites)
+  N == 1 && return MPO([op(sites[1], ops[1])])
   its = Vector{ITensor}(undef, N)
   links = Vector{Index}(undef, N)
   for ii ∈ eachindex(sites)
@@ -115,6 +116,36 @@ function randomMPO(sites::Vector{<:Index}, m::Int=1)
   m > 1 && throw(ArgumentError("randomMPO: currently only m==1 supported"))
   return M
 end
+
+MPO(A::ITensor, sites::Vector{ <: Index}; kwargs...) =
+  MPO(A, IndexSet.(prime.(sites), dag.(sites)); kwargs...)
+
+"""
+    siteind(M::MPO, j::Int; plev = 0, kwargs...)
+
+Get the first site Index of the MPO found, by
+default with prime level 0. 
+"""
+siteind(M::MPO, j::Int; kwargs...) =
+  firstsiteind(M, j; plev = 0, kwargs...)
+
+"""
+    siteinds(M::MPO; kwargs...)
+
+Get a Vector of IndexSets the all of the site indices of M.
+"""
+siteinds(M::MPO; kwargs...) =
+  [siteinds(M, j; kwargs...) for j in 1:length(M)]
+
+"""
+    firstsiteinds(M::MPO; kwargs...)
+
+Get a Vector of the first site Index found on each site of M.
+
+By default, it finds the first site Index with prime level 0.
+"""
+firstsiteinds(M::MPO; kwargs...) =
+  [siteind(M, j; kwargs...) for j in 1:length(M)]
 
 """
     dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)

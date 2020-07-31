@@ -37,6 +37,20 @@ maxlinkdim(::ITensors.AbstractMPS)
 linkind(::ITensors.AbstractMPS,::Int)
 ```
 
+## Grabbing and finding indices
+
+```@docs
+firstsiteind
+firstsiteinds
+siteind(::MPS, ::Int)
+siteinds(::MPS)
+siteind(::MPO, ::Int)
+siteinds(::MPO)
+siteinds(::ITensors.AbstractMPS, ::Int)
+findsite
+findsites
+```
+
 ## Priming and tagging
 
 ```@docs

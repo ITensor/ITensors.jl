@@ -1,5 +1,6 @@
-using ITensors,
-      Test
+using Combinatorics
+using ITensors
+using Test
 
 include("util.jl")
 
@@ -455,7 +456,7 @@ end
     @test flux(M) == QN("Sz",-4)
   end
 
-  @testset "swapsites" begin
+  @testset "swapbondsites" begin
     N = 5
     sites = siteinds("S=1/2", N)
     ψ0 = randomMPS(sites)
@@ -533,6 +534,169 @@ end
     @test ITensors.rightlim(ψ) == N+1
     @test inner(ψ, ϕ) ≈ 1
   end
+
+  @testset "findsite[s](::MPS/MPO, is)" begin
+    s = siteinds("S=1/2", 5)
+    ψ = randomMPS(s)
+    l = linkinds(ψ)
+
+    A = randomITensor(s[4]', s[2]', dag(s[4]), dag(s[2]))
+
+    @test findsite(ψ, s[3]) == 3
+    @test findsite(ψ, (s[3], s[5])) == 3
+    @test findsite(ψ, l[2]) == 2
+    @test findsite(ψ, A) == 2
+
+    @test findsites(ψ, s[3]) == [3]
+    @test findsites(ψ, (s[4], s[1])) == [1, 4]
+    @test findsites(ψ, l[2]) == [2, 3]
+    @test findsites(ψ, (l[2], l[3])) == [2, 3, 4]
+    @test findsites(ψ, A) == [2, 4]
+
+    M = randomMPO(s)
+    lM = linkinds(M)
+
+    @test findsite(M, s[4]) == 4
+    @test findsite(M, s[4]') == 4
+    @test findsite(M, (s[4]', s[4])) == 4
+    @test findsite(M, (s[4]', s[3])) == 3
+    @test findsite(M, lM[2]) == 2
+    @test findsite(M, A) == 2
+
+    @test findsites(M, s[4]) == [4]
+    @test findsites(M, s[4]') == [4]
+    @test findsites(M, (s[4]', s[4])) == [4]
+    @test findsites(M, (s[4]', s[3])) == [3, 4]
+    @test findsites(M, (lM[2], lM[3])) == [2, 3, 4]
+    @test findsites(M, A) == [2, 4]
+  end
+
+  @testset "[first]siteind[s](::MPS/MPO, j::Int)" begin
+    s = siteinds("S=1/2", 5)
+    ψ = randomMPS(s)
+    @test firstsiteind(ψ, 3) == s[3]
+    @test siteind(ψ, 4) == s[4]
+    @test isnothing(siteind(ψ, 4; plev = 1))
+    @test siteinds(ψ, 3) == IndexSet(s[3])
+    @test siteinds(ψ, 3; plev = 1) == IndexSet()
+
+    M = randomMPO(s)
+    @test noprime(firstsiteind(M, 4)) == s[4]
+    @test firstsiteind(M, 4; plev = 0) == s[4]
+    @test firstsiteind(M, 4; plev = 1) == s[4]'
+    @test siteind(M, 4) == s[4]
+    @test siteind(M, 4; plev = 0) == s[4]
+    @test siteind(M, 4; plev = 1) == s[4]'
+    @test isnothing(siteind(M, 4; plev = 2))
+    @test siteinds(M, 3) == IndexSet(s[3], s[3]')
+    @test siteinds(M, 3; plev = 1) == IndexSet(s[3]')
+    @test siteinds(M, 3; plev = 0) == IndexSet(s[3])
+    @test siteinds(M, 3; tags = "n=2") == IndexSet()
+  end
+
+  @testset "movesites $N sites" for N in 1:7
+    s0 = siteinds("S=1/2", N)
+    ψ0 = productMPS(s0, "↑")
+    for perm in permutations(1:N)
+      s = s0[perm]
+      ψ = productMPS(s, rand(("↑", "↓"), N))
+      ns′ = [findsite(ψ0, i) for i in s]
+      @test ns′ == perm
+      ψ′ = movesites(ψ, 1:N .=> ns′)
+      for n in 1:N
+        @test siteind(ψ0, n) == siteind(ψ′, n)
+      end
+      @test prod(ψ) ≈ prod(ψ′)
+    end
+  end
+
+  @testset "Construct MPS from ITensor" begin
+    N = 5
+    s = siteinds("S=1/2", N)
+    l = [Index(3, "left_$n") for n in 1:2]
+    r = [Index(3, "right_$n") for n in 1:2]
+
+    #
+    # MPS
+    #
+
+    A = randomITensor(s...)
+    ψ = MPS(A, s)
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == N
+    @test maxlinkdim(ψ) == 4
+
+    ψ0 = productMPS(s, "↑")
+    A = prod(ψ0)
+    ψ = MPS(A, s; cutoff = 1e-15)
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == N
+    @test maxlinkdim(ψ) == 1
+
+    ψ0 = randomMPS(s, 2)
+    A = prod(ψ0)
+    ψ = MPS(A, s; cutoff = 1e-15, orthocenter = 2)
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == 2
+    @test maxlinkdim(ψ) == 2
+
+    A = randomITensor(s..., l[1], r[1])
+    ψ = MPS(A, s, leftinds = l[1], orthocenter = 3)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (l[1], s[1], ls[1]))
+    @test hassameinds(ψ[N], (r[1], s[N], ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == 3
+    @test maxlinkdim(ψ) == 12
+
+    A = randomITensor(s..., l..., r...)
+    ψ = MPS(A, s, leftinds = l)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (l..., s[1], ls[1]))
+    @test hassameinds(ψ[N], (r..., s[N], ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == N
+    @test maxlinkdim(ψ) == 36
+  end
+
+  @testset "Set range of MPS tensors" begin
+    N = 5
+    s = siteinds("S=1/2", N)
+    ψ0 = randomMPS(s, 3)
+
+    ψ = orthogonalize(ψ0, 2)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    ϕ = MPS(A, s[2:N-1], orthocenter = 1)
+    ψ[2:N-1] = ϕ
+    @test prod(ψ) ≈ ψ[1] * A * ψ[N]
+    @test maxlinkdim(ψ) == 4
+    @test ITensors.orthocenter(ψ) == 2
+
+    ψ = orthogonalize(ψ0, 1)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    @test_throws AssertionError ψ[2:N-1] = A
+
+    ψ = orthogonalize(ψ0, 2)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    ψ[2:N-1, orthocenter = 3] = A
+    @test prod(ψ) ≈ ψ[1] * A * ψ[N]
+    @test maxlinkdim(ψ) == 4
+    @test ITensors.orthocenter(ψ) == 3
+  end
+
+  @testset "movesites reverse sites" begin
+    N = 6
+    s = siteinds("S=1/2", N)
+    ψ0 = randomMPS(s)
+    ψ = movesites(ψ0, 1:N .=> reverse(1:N))
+    for n in 1:N
+      @test siteind(ψ, n) == s[N-n+1]
+    end
+  end
+
 end
 
 nothing

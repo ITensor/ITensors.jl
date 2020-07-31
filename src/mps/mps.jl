@@ -318,23 +318,19 @@ productMPS(sites::Vector{ <: Index},
            states) =
   productMPS(Float64, sites, states)
 
-function siteind(M::MPS, j::Int)
-  N = length(M)
-  (N==1) && return inds(M[1])[1]
+"""
+    siteind(M::MPS, j::Int; kwargs...)
 
-  if j == 1
-    si = uniqueind(M[j], M[j+1])
-  elseif j == N
-    si = uniqueind(M[j], M[j-1])
-  else
-    si = uniqueind(M[j], M[j-1], M[j+1])
-  end
-  return si
-end
+Get the site Index of the MPS.
+"""
+siteind(M::MPS, j::Int; kwargs...) = firstsiteind(M, j; kwargs...)
 
-function siteinds(M::MPS)
-  return [siteind(M, j) for j in 1:length(M)]
-end
+"""
+    siteinds(M::MPS)
+
+Get a vector of the site indices of the MPS.
+"""
+siteinds(M::MPS) = [siteind(M, j) for j in 1:length(M)]
 
 function replace_siteinds!(M::MPS, sites)
   for j in eachindex(M)
@@ -405,15 +401,6 @@ function replacebond(M0::MPS, b::Int, phi::ITensor;
   replacebond!(M, b, phi; kwargs...)
   return M
 end
-
-"""
-    swapbondsites(ψ::MPS, b::Int; kwargs...)
-
-Swap the sites `b` and `b+1`.
-"""
-swapbondsites(ψ::MPS, b::Int; kwargs...) =
-  replacebond(ψ, b, ψ[b] * ψ[b+1];
-              kwargs..., swapsites = true)
 
 """
     sample!(m::MPS)
