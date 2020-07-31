@@ -670,6 +670,7 @@ end
 # TODO: name this `indexset` or `IndexSet`,
 # or maybe just `inds`?
 itensor2inds(A::ITensor) = inds(A)
+itensor2inds(i::Index) = IndexSet(i)
 itensor2inds(is::Vector{<:Index}) = IndexSet(is)
 itensor2inds(is::Tuple{Vararg{<:Index}}) = IndexSet(is)
 itensor2inds(A) = A
@@ -695,10 +696,18 @@ hasinds(is::Index...) = hasinds(IndexSet(is...))
 """
     hascommoninds(A, B; kwargs...)
 
-Check if the ITensors or sets of indices have common indices.
+    hascommoninds(B; kwargs...) -> f::Function
+
+Check if the ITensors or sets of indices `A` and `B` have
+common indices.
+
+If only one ITensor or set of indices `B` is passed, return a
+function `f` such that `f(A) = hascommoninds(A, B; kwargs...)`
 """
 hascommoninds(A, B; kwargs...) =
   !isnothing(commonind(A, B; kwargs...))
+
+hascommoninds(B; kwargs...) = x -> hascommoninds(x, B; kwargs...)
 
 # issetequal
 hassameinds(A, B) =
@@ -977,9 +986,7 @@ function Base.isapprox(A::ITensor,
     return isapprox(array(A), array(B); kwargs...)
 end
 
-function Random.randn!(T::ITensor)
-  return randn!(tensor(T))
-end
+Random.randn!(T::ITensor) = randn!(tensor(T))
 
 """
     randomITensor([::Type{ElT <: Number} = Float64, ]inds)

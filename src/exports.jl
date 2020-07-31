@@ -129,6 +129,7 @@ export
   order,
   permute,
   prime!,
+  randn!,
   randomITensor,
   removetags!,
   replacetags!,
@@ -178,9 +179,16 @@ export
   dag!,
   findfirstsiteind,
   findfirstsiteinds,
+  findsite,
+  findsites,
+  firstsiteind,
+  firstsiteinds,
   logdot,
   loginner,
   lognorm,
+  movesite,
+  movesites,
+  siteinds,
 
 # mps/mpo.jl
   # Types

@@ -1,5 +1,6 @@
-using ITensors,
-      Test
+using Combinatorics
+using ITensors
+using Test
 
 include("util.jl")
 
@@ -13,6 +14,17 @@ function basicRandomMPO(sites; dim=4)
   M[1] *= delta(links[1])
   M[N] *= delta(links[N+1])
   return M
+end
+
+@testset "[first]siteinds(::MPO)" begin
+  N = 5
+  s = siteinds("S=1/2", N)
+  M = randomMPO(s)
+  v = siteinds(M)
+  for n in 1:N
+    @test hassameinds(v[n], (s[n], s[n]'))
+  end
+  @test firstsiteinds(M) == s
 end
 
 @testset "MPO Basics" begin
@@ -315,6 +327,169 @@ end
 
   @test_throws ArgumentError randomMPO(sites, 2)
   @test isnothing(linkind(MPO(fill(ITensor(), N), 0, N + 1), 1))
+
+  @testset "movesites $N sites" for N in 1:7
+    s0 = siteinds("S=1/2", N)
+    ψ0 = MPO(s0, "Id")
+    for perm in permutations(1:N)
+      s = s0[perm]
+      ψ = randomMPO(s)
+      ns′ = [findsite(ψ0, i) for i in s]
+      @test ns′ == perm
+      ψ′ = movesites(ψ, 1:N .=> ns′)
+      for n in 1:N
+        @test hassameinds(siteinds(ψ0, n), siteinds(ψ′, n))
+      end
+      set_warn_order!(15)
+      @test prod(ψ) ≈ prod(ψ′)
+      reset_warn_order!()
+    end
+  end
+
+  @testset "Construct MPO from ITensor" begin
+
+    N = 5
+    s = siteinds("S=1/2", N)
+    l = [Index(3, "left_$n") for n in 1:2]
+    r = [Index(3, "right_$n") for n in 1:2]
+
+    sis = IndexSet.(prime.(s), s)
+
+    A = randomITensor(s..., prime.(s)...)
+    ψ = MPO(A, sis; orthocenter = 4)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (s[1], s[1]', ls[1]))
+    @test hassameinds(ψ[N], (s[N], s[N]', ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == 4
+    @test maxlinkdim(ψ) == 16
+
+    A = randomITensor(s..., prime.(s)...)
+    ψ = MPO(A, s; orthocenter = 4)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (s[1], s[1]', ls[1]))
+    @test hassameinds(ψ[N], (s[N], s[N]', ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == 4
+    @test maxlinkdim(ψ) == 16
+
+    ψ0 = MPO(s, "Id")
+    A = prod(ψ0)
+    ψ = MPO(A, sis; cutoff = 1e-15, orthocenter = 3)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (s[1], s[1]', ls[1]))
+    @test hassameinds(ψ[N], (s[N], s[N]', ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == 3
+    @test maxlinkdim(ψ) == 1
+
+    ψ0 = MPO(s, "Id")
+    A = prod(ψ0)
+    ψ = MPO(A, s; cutoff = 1e-15, orthocenter = 3)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (s[1], s[1]', ls[1]))
+    @test hassameinds(ψ[N], (s[N], s[N]', ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == 3
+    @test maxlinkdim(ψ) == 1
+
+    A = randomITensor(s..., prime.(s)..., l[1], r[1])
+    ψ = MPO(A, sis, leftinds = l[1])
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (l[1], s[1], s[1]', ls[1]))
+    @test hassameinds(ψ[N], (r[1], s[N], s[N]', ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == N
+    @test maxlinkdim(ψ) == 48
+
+    A = randomITensor(s..., prime.(s)..., l[1], r[1])
+    ψ = MPO(A, s, leftinds = l[1])
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (l[1], s[1], s[1]', ls[1]))
+    @test hassameinds(ψ[N], (r[1], s[N], s[N]', ls[N - 1]))
+    @test prod(ψ) ≈ A
+    @test ITensors.orthocenter(ψ) == N
+    @test maxlinkdim(ψ) == 48
+
+    A = randomITensor(s..., prime.(s)..., l..., r...)
+    ψ = MPO(A, sis, leftinds = l, orthocenter = 2)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (l..., s[1], s[1]', ls[1]))
+    @test hassameinds(ψ[N], (r..., s[N], s[N]', ls[N - 1]))
+    set_warn_order!(15)
+    @test prod(ψ) ≈ A
+    reset_warn_order!()
+    @test ITensors.orthocenter(ψ) == 2
+    @test maxlinkdim(ψ) == 144
+
+    A = randomITensor(s..., prime.(s)..., l..., r...)
+    ψ = MPO(A, s, leftinds = l, orthocenter = 2)
+    ls = linkinds(ψ)
+    @test hassameinds(ψ[1], (l..., s[1], s[1]', ls[1]))
+    @test hassameinds(ψ[N], (r..., s[N], s[N]', ls[N - 1]))
+    set_warn_order!(15)
+    @test prod(ψ) ≈ A
+    reset_warn_order!()
+    @test ITensors.orthocenter(ψ) == 2
+    @test maxlinkdim(ψ) == 144
+  end
+
+  @testset "Set range of MPO tensors" begin
+    N = 5
+    s = siteinds("S=1/2", N)
+    ψ0 = randomMPO(s)
+
+    ψ = orthogonalize(ψ0, 2)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    ϕ = MPO(A, s[2:N-1], orthocenter = 1)
+    ψ[2:N-1] = ϕ
+    @test prod(ψ) ≈ ψ[1] * A * ψ[N]
+    @test maxlinkdim(ψ) == 4
+    @test ITensors.orthocenter(ψ) == 2
+
+    ψ = orthogonalize(ψ0, 1)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    @test_throws AssertionError ψ[2:N-1] = A
+
+    ψ = orthogonalize(ψ0, 2)
+    A = prod(ITensors.data(ψ)[2:N-1])
+    randn!(A)
+    ψ[2:N-1, orthocenter = 3] = A
+    @test prod(ψ) ≈ ψ[1] * A * ψ[N]
+    @test maxlinkdim(ψ) == 4
+    @test ITensors.orthocenter(ψ) == 3
+  end
+
+  @testset "swapbondsites MPO" begin
+    N = 5
+    sites = siteinds("S=1/2", N)
+    ψ0 = randomMPO(sites)
+
+    # TODO: implement this?
+    #ψ = replacebond(ψ0, 3, ψ0[3] * ψ0[4];
+    #                swapsites = true,
+    #                cutoff = 1e-15)
+    #@test siteind(ψ, 1) == siteind(ψ0, 1)
+    #@test siteind(ψ, 2) == siteind(ψ0, 2)
+    #@test siteind(ψ, 4) == siteind(ψ0, 3)
+    #@test siteind(ψ, 3) == siteind(ψ0, 4)
+    #@test siteind(ψ, 5) == siteind(ψ0, 5)
+    #@test prod(ψ) ≈ prod(ψ0)
+    #@test maxlinkdim(ψ) == 1
+
+    ψ = swapbondsites(ψ0, 4;
+                      cutoff = 1e-15)
+    @test siteind(ψ, 1) == siteind(ψ0, 1)
+    @test siteind(ψ, 2) == siteind(ψ0, 2)
+    @test siteind(ψ, 3) == siteind(ψ0, 3)
+    @test siteind(ψ, 5) == siteind(ψ0, 4)
+    @test siteind(ψ, 4) == siteind(ψ0, 5)
+    @test prod(ψ) ≈ prod(ψ0)
+    @test maxlinkdim(ψ) == 1
+  end
+
 end
 
 nothing

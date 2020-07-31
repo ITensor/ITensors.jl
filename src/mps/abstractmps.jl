@@ -1,4 +1,3 @@
-
 abstract type AbstractMPS end
 
 """
@@ -134,6 +133,67 @@ end
 
 Base.keys(ψ::AbstractMPS) = keys(data(ψ))
 
+#
+# Find sites of an MPS or MPO
+#
+
+# TODO: accept a keyword argument sitedict that
+# is a dictionary from the site indices to the site.
+"""
+    findsite(M::Union{MPS, MPO}, is)
+
+Return the first site of the MPS or MPO that has at least one
+Index in common with the Index or collection of indices `is`.
+
+To find all sites with common indices with `is`, use the 
+`findsites` function.
+
+# Examples
+```julia
+s = siteinds("S=1/2", 5)
+ψ = randomMPS(s)
+findsite(ψ, s[3]) == 3
+findsite(ψ, (s[3], s[4])) == 3
+
+M = MPO(s)
+findsite(M, s[4]) == 4
+findsite(M, s[4]') == 4
+findsite(M, (s[4]', s[4])) == 4
+findsite(M, (s[4]', s[3])) == 3
+```
+"""
+findsite(ψ::AbstractMPS, is) = findfirst(hascommoninds(is), ψ)
+
+findsite(ψ::AbstractMPS, s::Index) = findsite(ψ, IndexSet(s))
+
+"""
+    findsites(M::Union{MPS, MPO}, is)
+
+Return the sites of the MPS or MPO that have
+indices in common with the collection of site indices
+`is`.
+
+# Examples
+```julia
+s = siteinds("S=1/2", 5)
+ψ = randomMPS(s)
+findsites(ψ, s[3]) == [3]
+findsites(ψ, (s[4], s[1])) == [1, 4]
+
+M = MPO(s)
+findsites(M, s[4]) == [4]
+findsites(M, s[4]') == [4]
+findsites(M, (s[4]', s[4])) == [4]
+findsites(M, (s[4]', s[3])) == [3, 4]
+```
+"""
+findsites(ψ::ITensors.AbstractMPS, is) =
+  findall(hascommoninds(is), ψ)
+
+findsites(ψ::ITensors.AbstractMPS, s::Index) =
+ findsites(ψ, IndexSet(s))
+
+# TODO: depracate in favor of findsite.
 """
     findfirstsiteind(M::MPS, i::Index)
 
@@ -147,6 +207,7 @@ function findfirstsiteind(ψ::AbstractMPS,
   return findfirst(hasind(s), ψ)
 end
 
+# TODO: depracate in favor of findsite.
 """
     findfirstsiteind(M::MPS, is)
 
@@ -160,6 +221,52 @@ function findfirstsiteinds(ψ::AbstractMPS,
   return findfirst(hasinds(s), ψ)
 end
 
+"""
+    firstsiteind(M::Union{MPS,MPO}, j::Int; kwargs...)
+
+Return the first site Index found on the MPS or MPO
+(the first Index unique to the `j`th MPS/MPO tensor).
+
+You can choose different filters, like prime level
+and tags, with the `kwargs`.
+"""
+function firstsiteind(M::AbstractMPS, j::Int;
+                      kwargs...)
+  N = length(M)
+  (N==1) && return firstind(M[1]; kwargs...)
+  if j == 1
+    si = uniqueind(M[j], M[j+1]; kwargs...)
+  elseif j == N
+    si = uniqueind(M[j], M[j-1]; kwargs...)
+  else
+    si = uniqueind(M[j], M[j-1], M[j+1]; kwargs...)
+  end
+  return si
+end
+
+"""
+    siteinds(M::Union{MPS, MPO}}, j::Int; kwargs...)
+
+Return the site Indices found of the MPO or MPO
+at the site `j` as an IndexSet.
+
+Optionally filter prime tags and prime levels with
+keyword arguments like `plev` and `tags`.
+"""
+function siteinds(M::AbstractMPS, j::Int; kwargs...)
+  N = length(M)
+  (N==1) && return inds(M[1]; kwargs...)
+  if j == 1
+    si = uniqueinds(M[j], M[j+1]; kwargs...)
+  elseif j == N
+    si = uniqueinds(M[j], M[j-1]; kwargs...)
+  else
+    si = uniqueinds(M[j], M[j-1], M[j+1]; kwargs...)
+  end
+  return si
+end
+
+# TODO: change kwarg from `set_limits` to `preserve_ortho`
 function Base.map!(f::Function, M::AbstractMPS;
                    set_limits::Bool = true)
   for i in eachindex(M)
@@ -168,6 +275,7 @@ function Base.map!(f::Function, M::AbstractMPS;
   return M
 end
 
+# TODO: change kwarg from `set_limits` to `preserve_ortho`
 Base.map(f::Function, M::AbstractMPS; set_limits::Bool = true) =
   map!(f, copy(M); set_limits = set_limits)
 
@@ -740,6 +848,286 @@ function Base.:*(x::Number, M::AbstractMPS)
 end
 
 Base.:-(M::AbstractMPS) = Base.:*(-1,M)
+
+"""
+    setindex!(::Union{MPS, MPO}, ::Union{MPS, MPO},
+              r::UnitRange{Int64})
+
+Sets a contiguous range of MPS/MPO tensors
+"""
+function Base.setindex!(ψ::MPST, ϕ::MPST,
+                        r::UnitRange{Int64}) where {MPST <: AbstractMPS}
+  @assert length(r) == length(ϕ)
+  # TODO: accept r::Union{AbstractRange{Int}, Vector{Int}}
+  # if r isa AbstractRange
+  #   @assert step(r) = 1
+  # else
+  #   all(==(1), diff(r))
+  # end
+  llim = leftlim(ψ)
+  rlim = rightlim(ψ)
+  for (j, n) in enumerate(r)
+    ψ[n] = ϕ[j]
+  end
+  if llim + 1 ≥ r[1]
+    setleftlim!(ψ, leftlim(ϕ) + r[1] - 1)
+  end
+  if rlim - 1 ≤ r[end]
+    setrightlim!(ψ, rightlim(ϕ) + r[1] - 1)
+  end
+  return ψ
+end
+
+# TODO: add a version that determines the sites
+# from common site indices of ψ and A
+"""
+    setindex!(ψ::Union{MPS, MPO},
+              A::ITensor,
+              r::UnitRange{Int};
+              orthocenter::Int = last(r),
+              perm = nothing,
+              kwargs...)
+
+    replacesites!([...])
+
+    replacesites([...])
+
+Replace the sites in the range `r` with tensors made
+from decomposing `A` into an MPS or MPO.
+
+The MPS or MPO must be orthogonalized such that
+```
+firstsite ≤ ITensors.orthocenter(ψ) ≤ lastsite
+```
+
+Choose the new orthogonality center with `orthocenter`, which
+should be within `r`.
+
+Optionally, permute the order of the sites with `perm`.
+"""
+function Base.setindex!(ψ::MPST,
+                        A::ITensor,
+                        r::UnitRange{Int};
+                        orthocenter::Int = last(r),
+                        perm = nothing,
+                        kwargs...) where {MPST <: AbstractMPS}
+  # Replace the sites of ITensor ψ
+  # with the tensor A, splitting up A
+  # into MPS tensors
+  firstsite = first(r)
+  lastsite = last(r)
+  @assert firstsite ≤ ITensors.orthocenter(ψ) ≤ lastsite
+  @assert firstsite ≤ leftlim(ψ) + 1
+  @assert rightlim(ψ) - 1 ≤ lastsite
+
+  # TODO: allow orthocenter outside of this
+  # range, and orthogonalize/truncate as needed
+  @assert firstsite ≤ orthocenter ≤ lastsite
+
+  # Check that A has the proper common
+  # indices with ψ
+  lind = linkind(ψ, firstsite-1)
+  rind = linkind(ψ, lastsite)
+
+  sites = [siteinds(ψ, j) for j in firstsite:lastsite]
+
+  #s = collect(Iterators.flatten(sites))
+  indsA = filter(x -> !isnothing(x),
+                 [lind, Iterators.flatten(sites)..., rind])
+  @assert hassameinds(A, indsA)
+
+  # For MPO case, restrict to 0 prime level
+  #sites = filter(hasplev(0), sites)
+
+    if !isnothing(perm)
+    sites = sites[[perm...]]
+  end
+
+  ψA = MPST(A, sites;
+            leftinds = lind,
+            orthocenter = orthocenter - first(r) + 1,
+            kwargs...)
+  #@assert prod(ψA) ≈ A
+
+  ψ[firstsite:lastsite] = ψA
+
+  return ψ
+end
+
+Base.setindex!(ψ::MPST,
+               A::ITensor,
+               r::UnitRange{Int},
+               args::Pair{Symbol}...;
+               kwargs...) where {MPST <: AbstractMPS} =
+  setindex!(ψ, A, r; args..., kwargs...)
+
+replacesites!(ψ::AbstractMPS, args...; kwargs...) =
+  setindex!(ψ, args...; kwargs...)
+
+replacesites(ψ::AbstractMPS, args...; kwargs...) =
+  setindex!(copy(ψ), args...; kwargs...)
+
+_number_inds(s::Index) = 1
+_number_inds(s::IndexSet) = length(s)
+_number_inds(sites) = sum(_number_inds(s) for s in sites)
+
+"""
+    MPS(A::ITensor, sites; <keyword arguments>)
+
+    MPO(A::ITensor, sites; <keyword arguments>)
+
+Construct an MPS/MPO from an ITensor `A` by decomposing it site
+by site according to the site indices `sites`.
+
+# Arguments
+- `leftinds = nothing`: optional left dangling indices. Indices that are not in `sites` and `leftinds` will be dangling off of the right side of the MPS/MPO.
+- `orthocenter::Int = length(sites)`: the desired final orthogonality center of the output MPS/MPO.
+- `cutoff`: the desired truncation error at each link.
+- `maxdim`: the maximum link dimension.
+"""
+function (::Type{MPST})(A::ITensor, sites;
+                        leftinds = nothing,
+                        orthocenter::Int = length(sites),
+                        kwargs...) where {MPST <: AbstractMPS}
+  N = length(sites)
+  for s in sites
+    @assert hasinds(A, s)
+  end
+  @assert isnothing(leftinds) || hasinds(A, leftinds)
+
+  @assert 1 ≤ orthocenter ≤ N
+
+  ψ = Vector{ITensor}(undef, N)
+  Ã = A
+  l = leftinds
+  # TODO: To minimize work, loop from
+  # 1:orthocenter and reverse(orthocenter:N)
+  # so the orthogonality center is set correctly.
+  for n in 1:N-1
+    Lis = IndexSet(sites[n])
+    if !isnothing(l)
+      Lis = unioninds(Lis, l)
+    end
+    L, R = factorize(Ã, Lis; kwargs..., ortho = "left")
+    l = commonind(L, R)
+    ψ[n] = L
+    Ã = R
+  end
+  ψ[N] = Ã
+  M = MPST(ψ)
+  setleftlim!(M, N-1)
+  setrightlim!(M, N+1)
+  orthogonalize!(M, orthocenter)
+  return M
+end
+
+"""
+    swapbondsites(ψ::Union{MPS, MPO}, b::Int; kwargs...)
+
+Swap the sites `b` and `b+1`.
+"""
+function swapbondsites(ψ::AbstractMPS, b::Int; kwargs...)
+  ortho = get(kwargs, :ortho, "right")
+  ψ = copy(ψ)
+  if ortho == "left"
+    orthocenter = b + 1
+  elseif ortho == "right"
+    orthocenter = b
+  end
+  if leftlim(ψ) < b - 1
+    orthogonalize!(ψ, b)
+  elseif rightlim(ψ) > b + 2
+    orthogonalize!(ψ, b + 1)
+  end
+  ψ[b:b + 1,
+    orthocenter = orthocenter,
+    perm = [2, 1], kwargs...] = ψ[b] * ψ[b + 1]
+  return ψ
+end
+
+"""
+    movesite(::Union{MPS, MPO}, n1n2::Pair{Int, Int})
+
+Create a new MPS/MPO where the site at `n1` is moved to `n2`,
+for a pair `n1n2 = n1 => n2`.
+
+This is done with a series a pairwise swaps, and can introduce
+a lot of entanglement into your state, so use with caution.
+"""
+function movesite(ψ::AbstractMPS, n1n2::Pair{Int, Int};
+                  orthocenter::Int = last(n1n2),
+                  kwargs...)
+  n1, n2 = n1n2
+  n1 == n2 && return copy(ψ)
+  ψ = orthogonalize(ψ, n2)
+  r = n1:n2-1
+  ortho = "left"
+  if n1 > n2
+    r = reverse(n2:n1-1)
+    ortho = "right"
+  end
+  for n in r
+    ψ = swapbondsites(ψ, n; ortho = ortho, kwargs...)
+  end
+  ψ = orthogonalize(ψ, orthocenter)
+  return ψ
+end
+
+# Helper function for permuting a vector for the 
+# movesites function.
+function _movesite(ns::Vector{Int},
+                   n1n2::Pair{Int, Int})
+  n1, n2 = n1n2
+  n1 == n2 && return copy(ns)
+  r = n1:n2-1
+  if n1 > n2
+    r = reverse(n2:n1-1)
+  end
+  for n in r
+    ns = replace(ns, n => n+1, n+1 => n)
+  end
+  return ns
+end
+
+# TODO: make a permutesites(::MPS/MPO, perm)
+# function that takes a permutation of the sites
+# p(1:N) for N sites
+function movesites(ψ::AbstractMPS,
+                   nsns′::Vector{Pair{Int, Int}}; kwargs...)
+  ns = first.(nsns′)
+  ns′ = last.(nsns′)
+  ψ = copy(ψ)
+  N = length(ns)
+  @assert N == length(ns′)
+  p = sortperm(ns′)
+  ns = ns[p]
+  ns′ = ns′[p]
+  ns = collect(ns)
+  for i in 1:N
+    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
+    ns = _movesite(ns, ns[i] => ns′[i])
+  end
+  return ψ
+end
+
+# TODO: make a permutesites(::MPS/MPO, perm)
+# function that that a permutation of the sites
+# p(1:N) for N sites
+function movesites(ψ::AbstractMPS,
+                   ns, ns′; kwargs...)
+  ψ = copy(ψ)
+  N = length(ns)
+  @assert N == length(ns′)
+  p = sortperm(ns′)
+  ns = ns[p]
+  ns′ = ns′[p]
+  ns = collect(ns)
+  for i in 1:N
+    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
+    ns = _movesite(ns, ns[i] => ns′[i])
+  end
+  return ψ
+end
 
 """
     hasqns(M::MPS)

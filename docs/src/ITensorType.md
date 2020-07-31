@@ -90,6 +90,16 @@ settags(::ITensor, ::Any...)
 swaptags(::ITensor, ::Any...)
 ```
 
+## IndexSet set operations
+
+```@docs
+commoninds
+hascommoninds
+uniqueinds
+noncommoninds
+unioninds
+```
+
 ## Index Manipulations
 
 ```@docs
