@@ -1130,6 +1130,61 @@ function movesites(ψ::AbstractMPS,
 end
 
 """
+    product(o::ITensor, ψ::Union{MPS, MPO}, [ns::Vector{Int}]; <keyword argument>)
+
+Get the product of the operator `o` with the MPS/MPO `ψ`,
+where the operator is applied to the sites `ns`. If `ns`
+are not specified, the sites are determined by the common indices
+between `o` and the site indices of `ψ`.
+
+If `ns` are non-contiguous, the sites of the MPS are
+moved to be contiguous. By default, the sites are moved
+back to their original locations. You can leave them where
+they are by setting the keyword argument `move_sites_back`
+to false.
+
+# Arguments
+- `move_sites_back::Bool = true`: after the ITensor is applied to the MPS or MPO, move the sites of the MPS or MPO back to their original locations.
+"""
+function product(o::ITensor,
+                 ψ::AbstractMPS,
+                 ns = findsites(ψ, o);
+                 move_sites_back::Bool = true,
+                 apply_dag::Bool = false,
+                 kwargs...)
+  N = length(ns)
+  ns = sort(ns)
+
+  # TODO: make this smarter by minimizing
+  # distance to orthogonalization.
+  # For example, if ITensors.orthocenter(ψ) > ns[end],
+  # set to ns[end].
+  ψ = orthogonalize(ψ, ns[1])
+  diff_ns = diff(ns)
+  ns′ = ns
+  if any(!=(1), diff_ns)
+    ns′ = [ns[1] + n - 1 for n in 1:N]
+    ψ = movesites(ψ, ns .=> ns′; kwargs...)
+  end
+  ϕ = ψ[ns′[1]]
+  for n in 2:N
+    ϕ *= ψ[ns′[n]]
+  end
+  ϕ = product(o, ϕ; apply_dag = apply_dag)
+  ψ[ns′[1]:ns′[end], kwargs...] = ϕ
+  if move_sites_back
+    @show ns
+    @show ns′
+    #s = siteinds(ψ)
+    #ns = 1:length(ψ)
+    #ns′ = [findsite(ψ0, i) for i in s]
+    # Move the sites back to their original positions
+    ψ = movesites(ψ, ns .=> ns′; kwargs...)
+  end
+  return ψ
+end
+
+"""
     hasqns(M::MPS)
 
     hasqns(M::MPO)

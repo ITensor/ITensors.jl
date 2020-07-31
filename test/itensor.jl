@@ -1046,6 +1046,102 @@ end
   @test hassameinds(inds(is; plev = 0), (i,))
 end
 
+@testset "product" begin
+  s1 = Index(2, "s1")
+  s2 = Index(2, "s2")
+  s3 = Index(2, "s3")
+
+  rA = Index(3, "rA")
+  lA = Index(3, "lA")
+
+  rB = Index(3, "rB")
+  lB = Index(3, "lB")
+
+  # operator * operator
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), lB, rB)
+  AB = product(A, B)
+  @test hassameinds(AB, (s1', s2', s1, s2, lA, rA, lB, rB))
+  @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+
+  # operator * operator, common dangling indices
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), dag(lA), dag(rA))
+  AB = product(A, B)
+  @test hassameinds(AB, (s1', s2', s1, s2))
+  @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+
+  # operator * operator, apply_dag, common dangling indices
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), lB, rB)
+  ABAdag = product(A, B; apply_dag = true)
+  AB = mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+  Adag = swapprime(dag(A), 0 => 1; inds = (s1', s2', s1, s2))
+  @test hassameinds(ABAdag, (s1', s2', s1, s2, lB, rB))
+  @test ABAdag ≈ mapprime(prime(AB; inds = (s1', s2', s1, s2)) * Adag, 2 => 1)
+
+  # operator * operator, more complicated
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', s3', dag(s1), dag(s2), dag(s3), lB, rB, dag(rA))
+  AB = product(A, B)
+  @test hassameinds(AB, (s1', s2', s3', s1, s2, s3, lA, lB, rB))
+  @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+
+  # state * operator (1)
+  A = randomITensor(dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), lB, rB)
+  AB = product(A, B)
+  @test hassameinds(AB, (s1, s2, lA, rA, lB, rB))
+  @test AB ≈ mapprime(prime(A; inds = (s1, s2)) * B)
+
+  # state * operator (2)
+  A = randomITensor(dag(s1'), dag(s2'), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), lB, rB)
+  @test_throws ErrorException product(A, B)
+
+  # operator * state (1)
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', lB, rB)
+  @test_throws ErrorException product(A, B)
+
+  # operator * state (2)
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1, s2, lB, rB, dag(lA))
+  AB = product(A, B)
+  @test hassameinds(AB, (s1, s2, rA, lB, rB))
+  @test AB ≈ noprime(A * B)
+
+  # state * state (1)
+  A = randomITensor(dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1, s2, lB, rB)
+  AB = product(A, B)
+  @test hassameinds(AB, (lA, rA, lB, rB))
+  @test AB ≈ A * B
+
+  # state * state (2)
+  A = randomITensor(dag(s1'), dag(s2'), lA, rA)
+  B = randomITensor(s1, s2, lB, dag(rA))
+  AB = product(A, B)
+  @test hassameinds(AB, (s1', s2', s1, s2, lA, lB))
+  @test AB ≈ A * B
+
+  # state * state (3)
+  A = randomITensor(dag(s1'), dag(s2'), lA, rA)
+  B = randomITensor(s1, s2, lB, rB)
+  @test_throws ErrorException product(A, B)
+
+  # state * state (4)
+  A = randomITensor(dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', lB, rB)
+  @test_throws ErrorException product(A, B)
+
+  # state * state (5)
+  A = randomITensor(dag(s1'), dag(s2'), lA, rA)
+  B = randomITensor(s1', s2', lB, rB)
+  @test_throws ErrorException product(A, B)
+
+end
+
 end # End Dense ITensor basic functionality
 
 nothing

@@ -1306,27 +1306,71 @@ For example:
 Again, like in the matrix-matrix product above, you can have
 dangling indices to do "batched" vector-matrix products, or
 sum over a batch of vector-matrix products.
+
+4. Vector-vector product. In this case, ITensors `A`
+and `B` share unprimed indices.
+Then, `B` and `A` are multiplied as a vector-vector
+product, and the result `C` is a scalar ITensor.
+For example:
+```
+---            ----<-s1   s1-<----
+|C| = product( |A|             |B| )
+---            ----<-s2 , s2-<----
+```
+Again, like in the matrix-matrix product above, you can have
+dangling indices to do "batched" vector-vector products, or
+sum over a batch of vector-vector products.
 """
-function product(A::ITensor, B::ITensor)
+function product(A::ITensor, B::ITensor; apply_dag::Bool = false)
   commonindsAB = commoninds(A, B; plev = 0)
   isempty(commonindsAB) && error("In product, must have common indices with prime level 0.")
   common_paired_indsA = filterinds(i -> hasind(commonindsAB, i) &&
                                         hasind(A, setprime(i, 1)), A)
   common_paired_indsB = filterinds(i -> hasind(commonindsAB, i) &&
                                         hasind(B, setprime(i, 1)), B)
-  if isempty(common_paired_indsA) && isempty(common_paired_indsB)
+
+  if !isempty(common_paired_indsA)
+    commoninds_pairs = unioninds(common_paired_indsA,
+                                 common_paired_indsA')
+  elseif !isempty(common_paired_indsB)
+    commoninds_pairs = unioninds(common_paired_indsB,
+                                 common_paired_indsB')
+  else
+    # vector-vector product
+    apply_dag && error("apply_dag not supported for vector-vector product")
     return A * B
-  elseif hassameinds(common_paired_indsA, common_paired_indsB)
-    A′ = prime(A; inds = unioninds(common_paired_indsA,
-                                   common_paired_indsA'))
-    return setprime(A′ * B, 1; inds = common_paired_indsA'')
+  end
+  danglings_indsA = uniqueinds(A, commoninds_pairs)
+  danglings_indsB = uniqueinds(B, commoninds_pairs)
+  danglings_inds = unioninds(danglings_indsA, danglings_indsB)
+  if hassameinds(common_paired_indsA, common_paired_indsB)
+    # matrix-matrix product
+    A′ = prime(A; inds = !danglings_inds)
+    AB = mapprime(A′ * B, 2 => 1; inds = !danglings_inds)
+    if apply_dag
+      AB′ = prime(AB; inds = !danglings_inds)
+      Adag = swapprime(dag(A), 0 => 1; inds = !danglings_inds)
+      return mapprime(AB′ * Adag, 2 => 1; inds = !danglings_inds)
+    end
+    return AB
   elseif isempty(common_paired_indsA) && !isempty(common_paired_indsB)
-    A′ = prime(A; inds = common_paired_indsB)
+    # vector-matrix product
+    apply_dag && error("apply_dag not supported for matrix-vector product")
+    A′ = prime(A; inds = !danglings_inds)
     return A′ * B
   elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
-    return noprime(A * B; inds = common_paired_indsA')
+    # matrix-vector product
+    apply_dag && error("apply_dag not supported for vector-matrix product")
+    return noprime(A * B; inds = !danglings_inds)
   end
 end
+
+#
+# Product from right to left, i.e.:
+# product(A, B, C) = product(A, product(B, C)
+#
+product(A1::ITensor, A2::ITensor, As::ITensor...) =
+  product(A1, product(A2, As...))
 
 #######################################################################
 #
