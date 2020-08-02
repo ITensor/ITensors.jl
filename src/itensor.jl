@@ -1365,12 +1365,42 @@ function product(A::ITensor, B::ITensor; apply_dag::Bool = false)
   end
 end
 
-#
-# Product from right to left, i.e.:
-# product(A, B, C) = product(A, product(B, C)
-#
-product(A1::ITensor, A2::ITensor, As::ITensor...) =
-  product(A1, product(A2, As...))
+#product_right_associative(A1, As...) =
+#  product(A1, product_left_associative(As...))
+
+product_right_associative(A1, As...) =
+  product(A1, product_left_associative(As...))
+
+"""
+    product(A1::ITensor, A2::ITensor, As::ITensor...;
+            associativity::String = "right")
+
+Product the ITensors pairwise.
+
+Choose the order of operations with the keyword `associatvity`.
+By default, it is set to "right", which means the product is performed
+from right to left, i.e.:
+```julia
+product(A, B, C) = product(A, product(B, C))
+```
+This is ideal for when `C` is vector-like.
+
+In the future, the `associativity` keyword will support the option
+"auto" for automating the order of operations, similar to the
+[matrix chain multiplication](https://en.wikipedia.org/wiki/Matrix_chain_multiplication) algorithm.
+"""
+function product(A1::ITensor, As::ITensor...;
+                 associativity::String = "right")
+  if associativity == "left"
+    R = foldl(product, (A1, As...))
+  elseif associativity == "right"
+    R = foldr(product, (A1, As...))
+  else
+    error("In product, keyword argument associativity = \"$associativity\" not supported")
+  end
+  return R
+end
+
 
 #######################################################################
 #

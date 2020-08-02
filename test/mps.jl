@@ -610,6 +610,22 @@ end
     end
   end
 
+  @testset "movesites $N sites" for N in 1:7
+    s0 = siteinds("S=1/2", N)
+    ψ0 = productMPS(s0, "↑")
+    for perm in permutations(1:N)
+      s = s0[perm]
+      ψ = productMPS(s, rand(("↑", "↓"), N))
+      ns = [findsite(ψ0, i) for i in s]
+      @test ns == perm
+      ψ′ = movesites(ψ, ns .=> 1:N)
+      for n in 1:N
+        @test siteind(ψ0, n) == siteind(ψ′, n)
+      end
+      @test prod(ψ) ≈ prod(ψ′)
+    end
+  end
+
   @testset "Construct MPS from ITensor" begin
     N = 5
     s = siteinds("S=1/2", N)

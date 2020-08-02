@@ -1089,6 +1089,18 @@ function _movesite(ns::Vector{Int},
   return ns
 end
 
+function _movesites(ψ::AbstractMPS, ns::Vector{Int}, ns′::Vector{Int};
+                    kwargs...)
+  ψ = copy(ψ)
+  N = length(ns)
+  @assert N == length(ns′)
+  for i in 1:N
+    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
+    ns = _movesite(ns, ns[i] => ns′[i])
+  end
+  return ψ, ns
+end
+
 # TODO: make a permutesites(::MPS/MPO, perm)
 # function that takes a permutation of the sites
 # p(1:N) for N sites
@@ -1103,16 +1115,13 @@ function movesites(ψ::AbstractMPS,
   ns = ns[p]
   ns′ = ns′[p]
   ns = collect(ns)
-  for i in 1:N
-    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
-    ns = _movesite(ns, ns[i] => ns′[i])
+  while ns ≠ ns′
+    ψ, ns = _movesites(ψ, ns, ns′; kwargs...)
   end
   return ψ
 end
 
-# TODO: make a permutesites(::MPS/MPO, perm)
-# function that that a permutation of the sites
-# p(1:N) for N sites
+# TODO: call the Vector{Pair{Int, Int}} version
 function movesites(ψ::AbstractMPS,
                    ns, ns′; kwargs...)
   ψ = copy(ψ)
@@ -1173,15 +1182,25 @@ function product(o::ITensor,
   ϕ = product(o, ϕ; apply_dag = apply_dag)
   ψ[ns′[1]:ns′[end], kwargs...] = ϕ
   if move_sites_back
-    @show ns
-    @show ns′
-    #s = siteinds(ψ)
-    #ns = 1:length(ψ)
-    #ns′ = [findsite(ψ0, i) for i in s]
     # Move the sites back to their original positions
-    ψ = movesites(ψ, ns .=> ns′; kwargs...)
+    ψ = movesites(ψ, ns′ .=> ns; kwargs...)
   end
   return ψ
+end
+
+"""
+    product(As::ITensor..., M::Union{MPS, MPO})
+
+Product the ITensors `As` with the MPS or MPO `M`.
+
+The order of operations are right associative, so for example
+product(A1, A2, ψ) == product(A1, product(A2, ψ))
+"""
+function product(A1::ITensor, Asψ::Union{ITensor, AbstractMPS}...;
+                 move_sites_back::Bool = true)
+  Aψ = foldr((x1,x2) -> product(x1, x2; move_sites_back = false),
+             Asψ)
+  return product(A1, Aψ; move_sites_back = move_sites_back)
 end
 
 """
