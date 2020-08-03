@@ -85,6 +85,7 @@ include("physics/site_types/electron.jl")
 include("physics/site_types/tj.jl")
 include("physics/fermions.jl")
 include("physics/autompo.jl")
+include("physics/productops.jl")
 
 #####################################
 # Argument parsing

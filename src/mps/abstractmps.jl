@@ -1193,14 +1193,21 @@ end
 
 Product the ITensors `As` with the MPS or MPO `M`.
 
-The order of operations are right associative, so for example
-product(A1, A2, ψ) == product(A1, product(A2, ψ))
+The order of operations are right associative, so for example:
+`product(A1, A2, ψ) == product(A1, product(A2, ψ))`.
 """
-function product(A1::ITensor, Asψ::Union{ITensor, AbstractMPS}...;
-                 move_sites_back::Bool = true)
-  Aψ = foldr((x1,x2) -> product(x1, x2; move_sites_back = false),
-             Asψ)
-  return product(A1, Aψ; move_sites_back = move_sites_back)
+function product(Asψ::Union{ITensor, AbstractMPS}...;
+                 move_sites_back::Bool = true, kwargs...)
+  ψ = Asψ[end]
+  @assert ψ isa AbstractMPS
+  Aψ = foldr((x1,x2) -> product(x1, x2; move_sites_back = false, kwargs...), Asψ)
+  if move_sites_back
+    s = siteinds(Aψ)
+    ns = 1:length(ψ)
+    ñs = [findsite(ψ, i) for i in s]
+    Aψ = movesites(Aψ, ns .=> ñs; kwargs...)
+  end
+  return Aψ
 end
 
 """

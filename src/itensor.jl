@@ -1390,11 +1390,12 @@ In the future, the `associativity` keyword will support the option
 [matrix chain multiplication](https://en.wikipedia.org/wiki/Matrix_chain_multiplication) algorithm.
 """
 function product(A1::ITensor, As::ITensor...;
-                 associativity::String = "right")
+                 associativity::String = "right",
+                 kwargs...)
   if associativity == "left"
-    R = foldl(product, (A1, As...))
+    R = foldl((x1, x2) -> product(x1, x2; kwargs...), (A1, As...))
   elseif associativity == "right"
-    R = foldr(product, (A1, As...))
+    R = foldr((x1, x2) -> product(x1, x2; kwargs...), (A1, As...))
   else
     error("In product, keyword argument associativity = \"$associativity\" not supported")
   end

@@ -3,6 +3,7 @@ using ITensors
 using Test
 
 include("util.jl")
+include("qubit.jl")
 
 @testset "MPS Basics" begin
 
@@ -775,6 +776,330 @@ end
     end
 
   end
+
+  @testset "product(::ITensor..., ::MPS)" begin
+    N = 6
+    s = siteinds("qubit", N)
+
+    I  = [op("I", s, n) for n in 1:N]
+    X = [op("X", s, n) for n in 1:N]
+    Y = [op("Y", s, n) for n in 1:N]
+    Z = [op("Z", s, n) for n in 1:N]
+    H = [op("H", s, n) for n in 1:N]
+    CX = [op("CX", s, n, m) for n in 1:N, m in 1:N]
+    CY = [op("CY", s, n, m) for n in 1:N, m in 1:N]
+    CZ = [op("CZ", s, n, m) for n in 1:N, m in 1:N]
+    CCNOT = [op("CCNOT", s, n, m, k) for n in 1:N, m in 1:N, k in 1:N]
+    CSWAP = [op("CSWAP", s, n, m, k) for n in 1:N, m in 1:N, k in 1:N]
+    CCCNOT = [op("CCCNOT", s, n, m, k, l) for n in 1:N, m in 1:N, k in 1:N, l in 1:N]
+
+    v0 = [setelt(state(s, n, "0")) for n in 1:N]
+    v1 = [setelt(state(s, n, "1")) for n in 1:N]
+
+    # Single qubit
+    @test product(I[1], v0[1]) ≈ v0[1]
+    @test product(I[1], v1[1]) ≈ v1[1]
+
+    @test product(H[1], H[1]) ≈ I[1]
+    @test product(H[1], v0[1]) ≈ 1/sqrt(2) * (v0[1] + v1[1])
+    @test product(H[1], v1[1]) ≈ 1/sqrt(2) * (v0[1] - v1[1])
+
+    @test product(X[1], v0[1]) ≈ v1[1]
+    @test product(X[1], v1[1]) ≈ v0[1]
+
+    @test product(Y[1], v0[1]) ≈  im*v1[1]
+    @test product(Y[1], v1[1]) ≈ -im*v0[1]
+
+    @test product(Z[1], v0[1]) ≈  v0[1]
+    @test product(Z[1], v1[1]) ≈ -v1[1]
+
+    @test product(X[1], X[1]) ≈ I[1]
+    @test product(Y[1], Y[1]) ≈ I[1]
+    @test product(Z[1], Z[1]) ≈ I[1]
+    @test -im * product(X[1], Y[1], Z[1]) ≈ I[1]
+
+    @test dag(X[1]) ≈ -product(Y[1], X[1], Y[1])
+    @test dag(Y[1]) ≈ -product(Y[1], Y[1], Y[1])
+    @test dag(Z[1]) ≈ -product(Y[1], Z[1], Y[1])
+
+    @test product(X[1], Y[1]) - product(Y[1], X[1]) ≈ 2*im*Z[1]
+    @test product(Y[1], Z[1]) - product(Z[1], Y[1]) ≈ 2*im*X[1]
+    @test product(Z[1], X[1]) - product(X[1], Z[1]) ≈ 2*im*Y[1]
+
+    @test product(X[1], Y[1], v0[1]) - product(Y[1], X[1], v0[1]) ≈ 2*im*product(Z[1], v0[1])
+    @test product(X[1], Y[1], v1[1]) - product(Y[1], X[1], v1[1]) ≈ 2*im*product(Z[1], v1[1])
+    @test product(Y[1], Z[1], v0[1]) - product(Z[1], Y[1], v0[1]) ≈ 2*im*product(X[1], v0[1])
+    @test product(Y[1], Z[1], v1[1]) - product(Z[1], Y[1], v1[1]) ≈ 2*im*product(X[1], v1[1])
+    @test product(Z[1], X[1], v0[1]) - product(X[1], Z[1], v0[1]) ≈ 2*im*product(Y[1], v0[1])
+    @test product(Z[1], X[1], v1[1]) - product(X[1], Z[1], v1[1]) ≈ 2*im*product(Y[1], v1[1])
+
+    #
+    # 2-qubit
+    #
+
+    @test product(I[1] * I[2], v0[1] * v0[2]) ≈ v0[1] * v0[2]
+
+    @test product(CX[1,2], v0[1] * v0[2]) ≈ v0[1] * v0[2]
+    @test product(CX[1,2], v0[1] * v1[2]) ≈ v0[1] * v1[2]
+    @test product(CX[1,2], v1[1] * v0[2]) ≈ v1[1] * v1[2]
+    @test product(CX[1,2], v1[1] * v1[2]) ≈ v1[1] * v0[2]
+
+    @test product(CY[1,2], v0[1] * v0[2]) ≈       v0[1] * v0[2]
+    @test product(CY[1,2], v0[1] * v1[2]) ≈       v0[1] * v1[2]
+    @test product(CY[1,2], v1[1] * v0[2]) ≈  im * v1[1] * v1[2]
+    @test product(CY[1,2], v1[1] * v1[2]) ≈ -im * v1[1] * v0[2]
+
+    @test product(CZ[1,2], v0[1] * v0[2]) ≈  v0[1] * v0[2]
+    @test product(CZ[1,2], v0[1] * v1[2]) ≈  v0[1] * v1[2]
+    @test product(CZ[1,2], v1[1] * v0[2]) ≈  v1[1] * v0[2]
+    @test product(CZ[1,2], v1[1] * v1[2]) ≈ -v1[1] * v1[2]
+
+    #
+    # 3-qubit
+    #
+
+    @test product(CCNOT[1,2,3], v0[1] * v0[2] * v0[3]) ≈ v0[1] * v0[2] * v0[3]
+    @test product(CCNOT[1,2,3], v0[1] * v0[2] * v1[3]) ≈ v0[1] * v0[2] * v1[3]
+    @test product(CCNOT[1,2,3], v0[1] * v1[2] * v0[3]) ≈ v0[1] * v1[2] * v0[3]
+    @test product(CCNOT[1,2,3], v0[1] * v1[2] * v1[3]) ≈ v0[1] * v1[2] * v1[3]
+    @test product(CCNOT[1,2,3], v1[1] * v0[2] * v0[3]) ≈ v1[1] * v0[2] * v0[3]
+    @test product(CCNOT[1,2,3], v1[1] * v0[2] * v1[3]) ≈ v1[1] * v0[2] * v1[3]
+    @test product(CCNOT[1,2,3], v1[1] * v1[2] * v0[3]) ≈ v1[1] * v1[2] * v1[3]
+    @test product(CCNOT[1,2,3], v1[1] * v1[2] * v1[3]) ≈ v1[1] * v1[2] * v0[3]
+
+    @test product(CSWAP[1,2,3], v0[1] * v0[2] * v0[3]) ≈ v0[1] * v0[2] * v0[3]
+    @test product(CSWAP[1,2,3], v0[1] * v0[2] * v1[3]) ≈ v0[1] * v0[2] * v1[3]
+    @test product(CSWAP[1,2,3], v0[1] * v1[2] * v0[3]) ≈ v0[1] * v1[2] * v0[3]
+    @test product(CSWAP[1,2,3], v0[1] * v1[2] * v1[3]) ≈ v0[1] * v1[2] * v1[3]
+    @test product(CSWAP[1,2,3], v1[1] * v0[2] * v0[3]) ≈ v1[1] * v0[2] * v0[3]
+    @test product(CSWAP[1,2,3], v1[1] * v0[2] * v1[3]) ≈ v1[1] * v1[2] * v0[3]
+    @test product(CSWAP[1,2,3], v1[1] * v1[2] * v0[3]) ≈ v1[1] * v0[2] * v1[3]
+    @test product(CSWAP[1,2,3], v1[1] * v1[2] * v1[3]) ≈ v1[1] * v1[2] * v1[3]
+
+    #
+    # Apply to an MPS
+    #
+
+    ψ = productMPS(s, "0")
+    @test prod(product(X[1], ψ)) ≈ prod(productMPS(s, n -> n==1 ? "1" : "0"))
+    @test prod(product(X[1], product(X[2], ψ))) ≈ prod(productMPS(s, n -> n==1 || n==2 ? "1" : "0"))
+    @test prod(product(X[1] * X[2], ψ)) ≈ prod(productMPS(s, n -> n==1 || n==2 ? "1" : "0"))
+    @test prod(product(X[1], X[2], ψ)) ≈ prod(productMPS(s, n -> n==1 || n==2 ? "1" : "0"))
+    @test prod(product(CX[1,2], ψ)) ≈ prod(productMPS(s, "0"))
+    @test prod(product(CX[1,2], product(X[1], ψ))) ≈ prod(productMPS(s, n -> n==1 || n==2 ? "1" : "0"))
+    @test prod(product(product(CX[1,2], X[1]), ψ)) ≈ prod(productMPS(s, n -> n==1 || n==2 ? "1" : "0"))
+    @test prod(product(CX[1,2], X[1], ψ)) ≈ prod(productMPS(s, n -> n==1 || n==2 ? "1" : "0"))
+
+    for i in 1:N, j in 1:N
+      !allunique((i, j)) && continue
+      # Don't move sites back
+      CXij_ψ = product(CX[i,j], X[i], ψ; move_sites_back = false, cutoff = 1e-15)
+      @test maxlinkdim(CXij_ψ) == 1
+      @test prod(CXij_ψ) ≈ prod(productMPS(s, n -> n==i || n==j ? "1" : "0"))
+
+      # Move sites back
+      CXij_ψ = product(CX[i,j], X[i], ψ)
+      for n in 1:N
+        @test siteind(CXij_ψ, n) == siteind(ψ, n)
+      end
+      @test prod(CXij_ψ) ≈ prod(productMPS(s, n -> n==i || n==j ? "1" : "0"))
+    end
+
+    for i in 1:N, j in 1:N, k in 1:N
+      ns = (i,j,k)
+      !allunique(ns) && continue
+      # Don't move sites back
+      CCNOTijk_ψ = product(CCNOT[ns...], X[j], X[i], ψ; move_sites_back = false, cutoff = 1e-15)
+      @test maxlinkdim(CCNOTijk_ψ) == 1
+      @test prod(CCNOTijk_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
+
+      # Move sites back
+      CCNOTijk_ψ = product(CCNOT[ns...], X[j], X[i], ψ, cutoff = 1e-15)
+      @test maxlinkdim(CCNOTijk_ψ) == 1
+      for n in 1:N
+        @test siteind(CCNOTijk_ψ, n) == siteind(ψ, n)
+      end
+      @test prod(CCNOTijk_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
+    end
+
+    for i in 1:N, j in 1:N, k in 1:N, l in 1:N
+      ns = (i,j,k,l)
+      !allunique(ns) && continue
+      # Don't move sites back
+      CCCNOTijkl_ψ = product(CCCNOT[ns...], X[k], X[j], X[i], ψ;
+                            move_sites_back = false, cutoff = 1e-15)
+      @test maxlinkdim(CCCNOTijkl_ψ) == 1
+      @test prod(CCCNOTijkl_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
+
+      # Move sites back
+      CCCNOTijkl_ψ = product(CCCNOT[ns...], X[k], X[j], X[i], ψ, cutoff = 1e-15)
+      @test maxlinkdim(CCCNOTijkl_ψ) == 1
+      for n in 1:N
+        @test siteind(CCCNOTijkl_ψ, n) == siteind(ψ, n)
+      end
+      @test prod(CCCNOTijkl_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
+    end
+  end
+
+  @testset "product with ProductOps" begin
+
+    @testset "Contraction order of operations" begin
+      s = siteind("qubit")
+      pops = ProductOps() * ("X", 1) * ("Y", 1)
+      @test pops[1] == ITensors.Op("X", 1)
+      @test pops[2] == ITensors.Op("Y", 1)
+      pops = ProductOps() << ("X", 1) << ("Y", 1)
+      @test pops[1] == ITensors.Op("X", 1)
+      @test pops[2] == ITensors.Op("Y", 1)
+      pops = ProductOps() >> ("X", 1) >> ("Y", 1)
+      @test pops[1] == ITensors.Op("Y", 1)
+      @test pops[2] == ITensors.Op("X", 1)
+      @test product(ops(ProductOps() * ("X", 1) * ("Y", 1), s)..., setelt(s => 1)) ≈ itensor(gate("X") * gate("Y") * [1; 0], s)
+      @test product(ops(ProductOps() * ("Z", 1) * ("Y", 1), s)..., setelt(s => 1)) ≈ itensor(gate("Z") * gate("Y") * [1; 0], s)
+      @test product(ops(ProductOps() << ("X", 1) << ("Y", 1), s)..., setelt(s => 1)) ≈ itensor(gate("X") * gate("Y") * [1; 0], s)
+      @test product(ops(ProductOps() >> ("X", 1) >> ("Y", 1), s)..., setelt(s => 1)) ≈ itensor(gate("Y") * gate("X") * [1; 0], s)
+    end
+
+    @testset "Simple on-site state evolution" begin
+      N = 3
+
+      pos = ProductOps()
+      pos >>= "Z", 3
+      pos >>= "Y", 2
+      pos >>= "X", 1
+
+      s = siteinds("qubit", N)
+      gates = ops(pos, s)
+      ψ0 = productMPS(s, "0")
+
+      # Apply the gates
+      ψ = product(gates..., ψ0)
+
+      # Move site 1 to position 3
+      ψ′ = movesite(ψ, 1 => 3)
+      @test siteind(ψ′, 1) == s[2]
+      @test siteind(ψ′, 2) == s[3]
+      @test siteind(ψ′, 3) == s[1]
+      @test prod(ψ) ≈ prod(ψ′)
+
+      # Move the site back
+      ψ′′ = movesite(ψ′, 3 => 1)
+      @test siteind(ψ′′, 1) == s[1]
+      @test siteind(ψ′′, 2) == s[2]
+      @test siteind(ψ′′, 3) == s[3]
+      @test prod(ψ) ≈ prod(ψ′′)
+    end
+
+    @testset "More complex evolution" begin
+      N = 7
+
+      osX = ProductOps()
+      for n in 1:N
+        osX >>= "X", n
+      end
+
+      osZ = ProductOps()
+      for n in 1:N
+        osZ >>= "Z", n
+      end
+
+      osRand = ProductOps()
+      for n in 1:N
+        osRand >>= "randn", n
+      end
+
+      osSw = ProductOps()
+      for n in 1:N-2
+        osSw >>= "SWAP", n, n+2
+      end
+
+      osCx = ProductOps()
+      for n in 1:N-3
+        osCx >>= "CX", n, n+3
+      end
+
+      osT = ProductOps()
+      for n in 1:N-3
+        osT >>= "CCX", n, n+1, n+3
+      end
+
+      osRx = ProductOps()
+      for n in 1:N
+        osRx >>= "Rx", n, (θ = π,)
+      end
+
+      os_noise = ProductOps()
+      for n in 1:N-4
+        os_noise >>= "noise", n, n+2, n+4
+      end
+
+      os = osRand * osX * osSw * osRx * osZ * osCx * osT
+      s = siteinds("qubit", N)
+      gates = ops(os, s)
+
+      @testset "Pure state evolution" begin
+        ψ0 = productMPS(s, "0")
+        ψ = product(gates..., ψ0; cutoff = 1e-15)
+        @test maxlinkdim(ψ) == 1
+        prodψ = product(gates..., prod(ψ0))
+        @test prod(ψ) ≈ prodψ
+      end
+
+      M0 = MPO(s, "Id")
+      maxdim = prod(dim(siteinds(M0, j)) for j in 1:N÷2)
+
+      @testset "Mixed state evolution" begin
+        M = product(gates..., M0; cutoff = 1e-15, maxdim = maxdim)
+        @test maxlinkdim(M) == 28
+        sM0 = siteinds(M0)
+        sM = siteinds(M)
+        for n in 1:N
+          @test hassameinds(sM[n], sM0[n])
+        end
+        set_warn_order!(15)
+        prodM = product(gates..., prod(M0))
+        @test prod(M) ≈ prodM atol = 1e-10
+        reset_warn_order!()
+      end
+
+      @testset "Mixed state noisy evolution" begin
+        os >>= os_noise
+        gates = ops(os, s)
+        M = product(gates..., M0; apply_dag = true,
+                    cutoff = 1e-15, maxdim = maxdim)
+        @test maxlinkdim(M) == maxdim
+        sM0 = siteinds(M0)
+        sM = siteinds(M)
+        for n in 1:N
+          @test hassameinds(sM[n], sM0[n])
+        end
+        set_warn_order!(16)
+        prodM = product(gates..., prod(M0); apply_dag = true)
+        @test prod(M) ≈ prodM atol = 1e-5
+        reset_warn_order!()
+      end
+
+      @testset "Mixed state noisy evolution" begin
+        os >>= os_noise
+        gates = ops(os, s)
+        M = product(gates..., M0; apply_dag = true,
+                            cutoff = 1e-15, maxdim = maxdim-1)
+        @test maxlinkdim(M) == maxdim-1
+        sM0 = siteinds(M0)
+        sM = siteinds(M)
+        for n in 1:N
+          @test hassameinds(sM[n], sM0[n])
+        end
+        set_warn_order!(16)
+        prodM = product(gates..., prod(M0); apply_dag = true)
+        @test prod(M) ≈ prodM rtol = 1e-1
+        reset_warn_order!()
+      end
+
+    end
+
+  end
+  
 end
 
 nothing

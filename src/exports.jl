@@ -280,6 +280,10 @@ export
   square_lattice,
   triangular_lattice,
 
+# physics/productops.jl
+  ProductOps,
+  ops,
+
 # physics/sitetype.jl
   SiteType,
   @SiteType_str,
