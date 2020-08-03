@@ -7,6 +7,10 @@ The ITensor library also includes composable and extensible algorithms for optim
 """
 module ITensors
 
+if isdefined(Base, :Experimental) && isdefined(Base.Experimental, Symbol("@optlevel"))
+  @eval Base.Experimental.@optlevel 1
+end
+
 #####################################
 # External packages
 #
