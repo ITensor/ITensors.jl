@@ -1402,6 +1402,8 @@ function product(A1::ITensor, As::ITensor...;
   return R
 end
 
+# Alias apply with product
+const apply = product
 
 #######################################################################
 #

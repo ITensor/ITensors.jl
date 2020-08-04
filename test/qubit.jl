@@ -241,28 +241,28 @@ gate(::GateName"CCCNOT") =
    0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
    0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0]
   
-gate(::GateName"randn"; dims) =
-    randn(dims)
+gate(::GateName"randn"; dim) =
+    randn(dim)
 
 gate(::GateName"noise"; dim) =
-  randn(2, 2, dim)
+  randn(dim)
 
-function quantumgate(on::GateName, s::Index...; kwargs...)
+function gate(on::GateName, s::Index...; kwargs...)
   rs = reverse(s)
   return itensor(gate(on; kwargs...), prime.(rs)..., dag.(rs)...)
 end
 
-quantumgate(::GateName"randn", s::Index...) =
-  itensor(gate(on; dims = dims(s)), prime.(s)..., dag.(s)...)
+gate(gn::GateName"randn", s::Index...) =
+  itensor(gate(gn; dim = dim(s) * dim(s)), prime.(s)..., dag.(s)...)
 
-quantumgate(::GateName"noise", s::Index...; krausind = Index(2, "kraus")) =
-  itensor(gate(on; dim = dim(krausind)), prime.(s)..., dag.(s)...)
+gate(gn::GateName"noise", s::Index...; krausind = Index(2, "kraus")) =
+  itensor(gate(gn; dim = dim(s) * dim(s) * dim(krausind)), prime.(s)..., dag.(s)..., krausind)
 
-quantumgate(gn::String, s::Index...; kwargs...) =
-  quantumgate(GateName(gn), s...; kwargs...)
+gate(gn::String, s::Index...; kwargs...) =
+  gate(GateName(gn), s...; kwargs...)
 
-quantumgate(gn::String, s::Vector{<:Index}, ns::Int...; kwargs...) =
-  quantumgate(GateName(gn), s[[ns...]]...; kwargs...)
+gate(gn::String, s::Vector{<:Index}, ns::Int...; kwargs...) =
+  gate(GateName(gn), s[[ns...]]...; kwargs...)
 
 ITensors.op(gn::GateName, ::SiteType"qubit", s::Index...; kwargs...) =
-  quantumgate(gn, s...; kwargs...)
+  gate(gn, s...; kwargs...)

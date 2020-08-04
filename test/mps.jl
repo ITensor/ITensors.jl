@@ -954,10 +954,10 @@ end
       pops = ProductOps() >> ("X", 1) >> ("Y", 1)
       @test pops[1] == ITensors.Op("Y", 1)
       @test pops[2] == ITensors.Op("X", 1)
-      @test product(ops(ProductOps() * ("X", 1) * ("Y", 1), s)..., setelt(s => 1)) ≈ itensor(gate("X") * gate("Y") * [1; 0], s)
-      @test product(ops(ProductOps() * ("Z", 1) * ("Y", 1), s)..., setelt(s => 1)) ≈ itensor(gate("Z") * gate("Y") * [1; 0], s)
-      @test product(ops(ProductOps() << ("X", 1) << ("Y", 1), s)..., setelt(s => 1)) ≈ itensor(gate("X") * gate("Y") * [1; 0], s)
-      @test product(ops(ProductOps() >> ("X", 1) >> ("Y", 1), s)..., setelt(s => 1)) ≈ itensor(gate("Y") * gate("X") * [1; 0], s)
+      @test product(ops(ProductOps() * ("X", 1) * ("Y", 1), [s])..., setelt(s => 1)) ≈ itensor(gate("X") * gate("Y") * [1; 0], s)
+      @test product(ops(ProductOps() * ("Z", 1) * ("Y", 1), [s])..., setelt(s => 1)) ≈ itensor(gate("Z") * gate("Y") * [1; 0], s)
+      @test product(ops(ProductOps() << ("X", 1) << ("Y", 1), [s])..., setelt(s => 1)) ≈ itensor(gate("X") * gate("Y") * [1; 0], s)
+      @test product(ops(ProductOps() >> ("X", 1) >> ("Y", 1), [s])..., setelt(s => 1)) ≈ itensor(gate("Y") * gate("X") * [1; 0], s)
     end
 
     @testset "Simple on-site state evolution" begin
