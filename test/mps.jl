@@ -1161,7 +1161,7 @@ end
       
       prodM = apply(gates..., prod(M0); apply_dag = true)
 
-      @test prod(M) ≈ prodM
+      @test prod(M) ≈ prodM atol = 1e-10
       
       reset_warn_order!()
     end

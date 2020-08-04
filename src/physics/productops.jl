@@ -51,26 +51,30 @@ end
 
 ProductOps() = ProductOps(Op[])
 
-Base.copy(C::ProductOps) = ProductOps(copy(C.data))
+data(C::ProductOps) = C.data
 
-Base.getindex(C::ProductOps, args...) = getindex(C.data, args...)
+Base.copy(C::ProductOps) = ProductOps(copy(data(C)))
+
+Base.getindex(C::ProductOps, args...) = getindex(data(C), args...)
+
+Base.lastindex(C::ProductOps) = lastindex(data(C))
 
 Base.push!(C::ProductOps, O) =
-(push!(C.data, O);
+(push!(data(C), O);
     return C)
 
 Base.pushfirst!(C::ProductOps, O) =
-(pushfirst!(C.data, O);
+(pushfirst!(data(C), O);
     return C)
 
-Base.iterate(C::ProductOps, args...) = iterate(C.data, args...)
-Base.length(C::ProductOps) = length(C.data)
+Base.iterate(C::ProductOps, args...) = iterate(data(C), args...)
+Base.length(C::ProductOps) = length(data(C))
 
 Base.:*(C::ProductOps, O) = push!(copy(C), O)
 
 Base.:*(O, C::ProductOps) = pushfirst!(copy(C), O)
 
-Base.:*(C1::ProductOps, C2::ProductOps) = ProductOps(vcat(C1.data, C2.data))
+Base.:*(C1::ProductOps, C2::ProductOps) = ProductOps(vcat(data(C1), data(C2)))
 
 """
     C::ProductOps << O
@@ -87,7 +91,7 @@ Base.:>>(C::ProductOps, O) = O * C
 
 function Base.show(io::IO, C::ProductOps)
   println("ProductOps")
-  for o in C.data
+  for o in C
     println(io, o)
   end
 end
