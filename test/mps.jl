@@ -1098,6 +1098,126 @@ end
 
     end
 
+    @testset "Gate evolution open system" begin
+      N = 8
+
+      osX = ProductOps()
+      for n in 1:N
+        osX *= "X", n
+      end
+      
+      osZ = ProductOps()
+      for n in 1:N
+        osZ *= "Z", n
+      end
+      
+      osSw = ProductOps()
+      for n in 1:N-2
+        osSw *= "SWAP", n, n+2
+      end
+      
+      osCx = ProductOps()
+      for n in 1:N-3
+        osCx *= "CX", n, n+3
+      end
+      
+      osT = ProductOps()
+      for n in 1:N-3
+        osT *= "CCX", n, n+1, n+3
+      end
+      
+      osRx = ProductOps()
+      for n in 1:N
+        osRx *= "Rx", n, (θ = π,)
+      end
+      
+      os_noise = ProductOps()
+      for n in 1:N-4
+        os_noise *= "noise", n, n+2, n+4
+      end
+      
+      os = osX * osSw * osRx * osZ * osCx * osT * os_noise
+      
+      #os = ProductOps()
+      #os *= "CCX", 1, 3, 4
+            
+      s = siteinds("qubit", N)
+      gates = ops(os, s)
+      
+      M0 = MPO(s, "Id")
+      
+      # Apply the gates
+      
+      s0 = siteinds(M0)
+      
+      M = apply(gates..., M0; apply_dag = true, cutoff = 1e-15, maxdim = 500)
+      
+      s = siteinds(M)
+      for n in 1:N
+        @assert hassameinds(s[n], s0[n])
+      end
+            
+      set_warn_order!(18)
+      
+      prodM = apply(gates..., prod(M0); apply_dag = true)
+
+      @test prod(M) ≈ prodM
+      
+      reset_warn_order!()
+    end
+
+    @testset "Gate evolution state" begin
+      N = 10
+
+      osRand = ProductOps()
+      for n in 1:N
+        osRand *= ("randn", n)
+      end
+      
+      osX = ProductOps()
+      for n in 1:N
+        osX *= ("X", n)
+      end
+      
+      osZ = ProductOps()
+      for n in 1:N
+        osZ *= ("Z", n)
+      end
+      
+      osSw = ProductOps()
+      for n in 1:N-1
+        osSw *= ("SWAP", n, n+1)
+      end
+      
+      osCx = ProductOps()
+      for n in 1:N-1
+        osCx *= ("CX", n, n+1)
+      end
+      
+      osRand = ProductOps()
+      for n in 1:N-1
+        osRand *= ("randn", n, n+1)
+      end
+      
+      osT = ProductOps()
+      for n in 1:N-4
+        osT *= ("CCX", n, n+2, n+4)
+      end
+      
+      os = osRand * osX * osSw * osZ * osCx * osT
+      
+      s = siteinds("qubit", N)
+      gates = ops(os, s)
+      
+      ψ0 = productMPS(s, "0")
+      
+      # Apply the gates
+      ψ = apply(gates..., ψ0; cutoff = 1e-15, maxdim = 100)
+      
+      prodψ = apply(gates..., prod(ψ0))
+      @test prod(ψ) ≈ prodψ
+    end
+
   end
   
 end
