@@ -878,6 +878,26 @@ function Base.setindex!(ψ::MPST, ϕ::MPST,
   return ψ
 end
 
+_isodd_fermionic_parity(s::Index, ::Int) = false
+
+function _isodd_fermionic_parity(s::QNIndex, n::Int)
+  qn_n = qn(space(s)[n])
+  fermionic_qn_pos = findfirst(q -> isfermionic(q), qn_n)
+  isnothing(fermionic_qn_pos) && return false
+  return isodd(val(qn_n[fermionic_qn_pos]))
+end
+
+function _fermionic_swap(s::Index)
+  T = diagITensor(1, s', dag(s));
+  for b in nzblocks(T)
+    n = b[2]
+    if _isodd_fermionic_parity(s, n)
+      NDTensors.data(blockview(tensor(T), b)) .= -1
+    end
+  end
+  return T
+end
+
 # TODO: add a version that determines the sites
 # from common site indices of ψ and A
 """
@@ -939,8 +959,36 @@ function Base.setindex!(ψ::MPST,
   # For MPO case, restrict to 0 prime level
   #sites = filter(hasplev(0), sites)
 
-    if !isnothing(perm)
-    sites = sites[[perm...]]
+  if !isnothing(perm)
+    sites0 = sites
+    sites = sites0[[perm...]]
+    # Check if the site indices
+    # are fermionic
+    if any(anyfermionic, sites)
+      if length(sites) == 2 && ψ isa MPS
+        if all(allfermionic, sites)
+          s0 = Index.(sites0)
+          s = Index.(sites)
+          C = combiner(s0[1], s0[2])
+          c = combinedind(C)
+          AC = A * C
+          AC = noprime(AC * _fermionic_swap(c))
+          A = AC * dag(C)
+        end
+      elseif ψ isa MPO
+        @warn "In setindex!(MPO, ::ITensor, ::UnitRange), " *
+              "fermionic signs are only not handled properly for non-trivial " *
+              "permutations of sites. Please inform the developers of ITensors " *
+              "if you require this feature (otherwise, fermionic signs can be " *
+              "put in manually with fermionic swap gates)."
+      else
+        @warn "In setindex!(::Union{MPS, MPO}, ::ITensor, ::UnitRange), " *
+              "fermionic signs are only handled properly for permutations involving 2 sites. " *
+              "The original sites are $sites0, with a permutation $perm. " *
+              "To have the fermion sign handled correctly, we recommend performing your permutation " *
+              "pairwise."
+      end
+    end
   end
 
   ψA = MPST(A, sites;
@@ -1191,16 +1239,19 @@ end
 """
     product(As::ITensor..., M::Union{MPS, MPO})
 
+    product(As::Vector{<:ITensor}, M::Union{MPS, MPO})
+
 Product the ITensors `As` with the MPS or MPO `M`.
 
 The order of operations are right associative, so for example:
 `product(A1, A2, ψ) == product(A1, product(A2, ψ))`.
 """
-function product(Asψ::Union{ITensor, AbstractMPS}...;
+function product(As::Vector{ <: ITensor}, ψ::AbstractMPS;
                  move_sites_back::Bool = true, kwargs...)
-  ψ = Asψ[end]
-  @assert ψ isa AbstractMPS
-  Aψ = foldr((x1,x2) -> product(x1, x2; move_sites_back = false, kwargs...), Asψ)
+  Aψ = ψ
+  for A in Iterators.reverse(As)
+    Aψ = product(A, Aψ; move_sites_back = false, kwargs...)
+  end
   if move_sites_back
     s = siteinds(Aψ)
     ns = 1:length(ψ)
@@ -1208,6 +1259,13 @@ function product(Asψ::Union{ITensor, AbstractMPS}...;
     Aψ = movesites(Aψ, ns .=> ñs; kwargs...)
   end
   return Aψ
+end
+
+function product(Asψ::Union{ITensor, AbstractMPS}...; kwargs...)
+  ψ = Asψ[end]
+  @assert ψ isa AbstractMPS
+  As = collect(Asψ[1:end-1])
+  return product(As, ψ; kwargs...)
 end
 
 """

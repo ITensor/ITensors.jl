@@ -287,9 +287,9 @@ using ITensors,
   end
 
   @testset "Error for undefined tag in siteinds,space system" begin
-    @test_throws MethodError siteinds("Missing",10)
-    @test_throws MethodError siteind("Missing",3)
-    @test_throws MethodError siteind("Missing")
+    @test_throws ErrorException siteinds("Missing",10)
+    @test_throws ErrorException siteind("Missing",3)
+    @test_throws ErrorException siteind("Missing")
   end
 
 end

@@ -1389,9 +1389,7 @@ In the future, the `associativity` keyword will support the option
 "auto" for automating the order of operations, similar to the
 [matrix chain multiplication](https://en.wikipedia.org/wiki/Matrix_chain_multiplication) algorithm.
 """
-function product(A1::ITensor, As::ITensor...;
-                 associativity::String = "right",
-                 kwargs...)
+function product(A1::ITensor, As::ITensor...; associativity::String = "right", kwargs...)
   if associativity == "left"
     R = foldl((x1, x2) -> product(x1, x2; kwargs...), (A1, As...))
   elseif associativity == "right"
@@ -1400,6 +1398,14 @@ function product(A1::ITensor, As::ITensor...;
     error("In product, keyword argument associativity = \"$associativity\" not supported")
   end
   return R
+end
+
+function product(As::Vector{<: ITensor}, B::ITensor; kwargs...)
+  AB = B
+  for A in Iterators.reverse(As)
+    AB = product(A, AB; kwargs...)
+  end
+  return AB
 end
 
 # Alias apply with product

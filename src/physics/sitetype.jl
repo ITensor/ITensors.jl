@@ -298,7 +298,7 @@ state(sset::Vector{<:Index},j::Integer,st) = state(sset[j],st)
 #
 #---------------------------------------
 
-space(st::SiteType; kwargs...) = throw(MethodError("Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))"))
+space(st::SiteType; kwargs...) = error("Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))")
 
 function siteind(st::SiteType; addtags="", kwargs...) 
   sp = space(st;kwargs...)

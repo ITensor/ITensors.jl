@@ -1158,11 +1158,8 @@ end
       end
             
       set_warn_order!(18)
-      
       prodM = apply(gates..., prod(M0); apply_dag = true)
-
-      @test prod(M) ≈ prodM atol = 1e-10
-      
+      @test prod(M) ≈ prodM atol = 1e-6
       reset_warn_order!()
     end
 
@@ -1216,6 +1213,43 @@ end
       
       prodψ = apply(gates..., prod(ψ0))
       @test prod(ψ) ≈ prodψ
+    end
+
+    @testset "With fermions" begin
+      N = 3
+
+      s = siteinds("Fermion", N; conserve_qns = true)
+      
+      # Ground state |000⟩
+      ψ000 = productMPS(s, "0")
+      
+      # Start state |011⟩
+      ψ011 = productMPS(s, n -> n == 2 || n == 3 ? "1" : "0")
+      
+      # Reference state |110⟩
+      ψ110 = productMPS(s, n -> n == 1 || n == 2 ? "1" : "0")
+      
+      function ITensors.op(::OpName"CdagC", ::SiteType, s1::Index, s2::Index)
+        return op("Cdag", s1) * op("C", s2)
+      end
+      
+      os = ProductOps()
+      os >>= "CdagC", 1, 3
+      Os = ops(os, s)
+      
+      # Results in -|110⟩
+      ψ1 = product(Os..., ψ011, cutoff = 1e-15)
+      
+      @test inner(ψ1, ψ110) == -1
+      
+      a = AutoMPO()
+      a += "Cdag", 1, "C", 3
+      H = MPO(a, s)
+      
+      # Results in -|110⟩
+      ψ2 = noprime(contract(H, ψ011, cutoff = 1e-15))
+      
+      @test inner(ψ2, ψ110) == -1
     end
 
   end
