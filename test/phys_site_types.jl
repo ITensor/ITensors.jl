@@ -124,6 +124,25 @@ using ITensors,
     @test qn(s,2) == QN("NfParity",1,-2)
     s = siteind("Fermion";conserve_qns=false)
     @test dim(s) == 2
+
+    s = siteind("Fermion";conserve_nf=true, conserve_sz=true)
+    @test qn(s,1) == QN(("Nf",0,-1),("Sz",0))
+    @test qn(s,2) == QN(("Nf",1,-1),("Sz",1))
+    s = siteind("Fermion";conserve_nfparity=true, conserve_sz=true)
+    @test qn(s,1) == QN(("NfParity",0,-2),("Sz",0))
+    @test qn(s,2) == QN(("NfParity",1,-2),("Sz",1))
+    s = siteind("Fermion";conserve_nf=true, conserve_sz="Up")
+    @test qn(s,1) == QN(("Nf",0,-1),("Sz",0))
+    @test qn(s,2) == QN(("Nf",1,-1),("Sz",1))
+    s = siteind("Fermion";conserve_nfparity=true, conserve_sz="Up")
+    @test qn(s,1) == QN(("NfParity",0,-2),("Sz",0))
+    @test qn(s,2) == QN(("NfParity",1,-2),("Sz",1))
+    s = siteind("Fermion";conserve_nf=true, conserve_sz="Dn")
+    @test qn(s,1) == QN(("Nf",0,-1),("Sz",0))
+    @test qn(s,2) == QN(("Nf",1,-1),("Sz",-1))
+    s = siteind("Fermion";conserve_nfparity=true, conserve_sz="Dn")
+    @test qn(s,1) == QN(("NfParity",0,-2),("Sz",0))
+    @test qn(s,2) == QN(("NfParity",1,-2),("Sz",-1))
   end
 
   @testset "Electron sites" begin
