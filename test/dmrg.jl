@@ -203,7 +203,7 @@ using ITensors, Test, Random
     @test energy1 > energy0
     @test energy1 < -11.1
 
-    @test inner(psi1,psi0) < 1E-6
+    @test inner(psi1,psi0) < 1E-5
   end
 
   @testset "Fermionic Hamiltonian" begin

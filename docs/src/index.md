@@ -1,8 +1,16 @@
 # Introduction
 
-| **Documentation**                                                               | **Build Status**                                                                                |
-|:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensors.jl/stable/) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/) | [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
+| **Documentation**                                                               |
+|:-------------------------------------------------------------------------------:|
+| [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensors.jl/stable/) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/) |
+
+|**Build Status**                                                                                |
+:-----------------------------------------------------------------------------------------------:|
+| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
+
+|**Citation**                                                                    |
+|:-------------------------------------------------------------------------------:|
+|[![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
 
 ITensors is a library for rapidly creating correct and efficient
 tensor network algorithms. 
@@ -48,6 +56,21 @@ We recommend using ITensors.jl with Intel MKL in order to get the best possible 
 
 - [**STABLE**](https://itensor.github.io/ITensors.jl/stable/) --  **documentation of the most recently tagged version.**
 - [**DEVEL**](https://itensor.github.io/ITensors.jl/dev/) -- *documentation of the in-development version.*
+
+## Citation
+
+If you use ITensors.jl in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
+
+```
+@misc{fishman2020itensor,
+    title={The ITensor Software Library for Tensor Network Calculations},
+    author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
+    year={2020},
+    eprint={2007.14822},
+    archivePrefix={arXiv},
+    primaryClass={cs.MS}
+}
+```
 
 ## Code Examples
 

@@ -323,6 +323,14 @@ siteind(d::Integer,n::Integer; kwargs...) = Index(d,"Site,n=$n")
 
 siteinds(::SiteType, N; kwargs...) = nothing
 
+"""
+  siteinds(tag::String, N::Integer; kwargs...)
+
+Create an array of `N` physical site indices of type `tag`.
+Keyword arguments can be used to specify quantum number conservation,
+see the `space` function corresponding to the site type `tag` for
+supported keyword arguments.
+"""
 function siteinds(tag::String,
                   N::Integer; kwargs...)
   st = SiteType(tag)
@@ -335,6 +343,12 @@ function siteinds(tag::String,
   return [siteind(st,j; kwargs...) for j=1:N]
 end
 
+"""
+  siteinds(f::Function, N::Integer; kwargs...)
+
+Create an array of `N` physical site indices where the site type at site `n` is given
+by `f(n)` (`f` should return a string).
+"""
 function siteinds(f::Function,
                   N::Integer; kwargs...)
   [siteind(f(n),n; kwargs...) for n=1:N]

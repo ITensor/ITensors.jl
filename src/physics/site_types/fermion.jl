@@ -5,12 +5,33 @@ function space(::SiteType"Fermion";
                conserve_nfparity=conserve_qns,
                qnname_nf = "Nf",
                qnname_nfparity = "NfParity",
+               qnname_sz = "Sz",
+               conserve_sz = false,
                # Deprecated
                conserve_parity=nothing)
   if !isnothing(conserve_parity)
     conserve_nfparity = conserve_parity
   end
-  if conserve_nf
+  if conserve_sz == true
+    conserve_sz = "Up"
+  end
+  if conserve_nf && conserve_sz == "Up"
+    zer = QN((qnname_nf,0,-1), (qnname_sz,0)) => 1
+    one = QN((qnname_nf,1,-1), (qnname_sz,1)) => 1
+    return [zer,one]
+  elseif conserve_nf && conserve_sz == "Dn"
+    zer = QN((qnname_nf,0,-1), (qnname_sz,0)) => 1
+    one = QN((qnname_nf,1,-1), (qnname_sz,-1)) => 1
+    return [zer,one]
+  elseif conserve_nfparity && conserve_sz == "Up"
+    zer = QN((qnname_nfparity,0,-2), (qnname_sz,0)) => 1
+    one = QN((qnname_nfparity,1,-2), (qnname_sz,1)) => 1
+    return [zer,one]
+  elseif conserve_nfparity && conserve_sz == "Dn"
+    zer = QN((qnname_nfparity,0,-2), (qnname_sz,0)) => 1
+    one = QN((qnname_nfparity,1,-2), (qnname_sz,-1)) => 1
+    return [zer,one]
+  elseif conserve_nf
     zer = QN(qnname_nf,0,-1) => 1
     one = QN(qnname_nf,1,-1) => 1
     return [zer,one]

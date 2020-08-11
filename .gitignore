@@ -8,3 +8,4 @@ precompile/tmp
 .DS_Store
 benchmark/*.json
 .benchmarkci
+.vscode/
