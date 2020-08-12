@@ -887,12 +887,35 @@ function _isodd_fermionic_parity(s::QNIndex, n::Int)
   return isodd(val(qn_n[fermionic_qn_pos]))
 end
 
-function _fermionic_swap(s::Index)
-  T = diagITensor(1, s', dag(s));
+# TODO: this version is incorrect, since it requires
+# putting minus signs on the subspace of `s` that
+# has 2 Fermions (not odd fermions).
+# function _fermionic_swap(s::Index)
+#   T = diagITensor(1, s', dag(s))
+#   for b in nzblocks(T)
+#     n = b[2]
+#     if _isodd_fermionic_parity(s, n)
+#       NDTensors.data(blockview(tensor(T), b)) .= -1
+#     end
+#   end
+#   return T
+# end
+
+function _fermionic_swap(s1::Index, s2::Index)
+  T = ITensor(s1', s2', dag(s1), dag(s2))
+  dval = 1.0
   for b in nzblocks(T)
-    n = b[2]
-    if _isodd_fermionic_parity(s, n)
-      NDTensors.data(blockview(tensor(T), b)) .= -1
+    # Must be a diagonal block
+    ((b[1] ≠ b[3]) || (b[2] ≠ b[4])) && continue
+    n1, n2 = b[1], b[2]
+    if _isodd_fermionic_parity(s1, n1) && _isodd_fermionic_parity(s2, n2)
+      dval = -1.0
+    end
+    Tb = blockview(tensor(T), b)
+    mat_dim = prod(dims(Tb)[1:2])
+    Tbr = reshape(Tb, mat_dim, mat_dim)
+    for i in diagind(Tbr)
+      NDTensors.setdiagindex!(Tbr, dval, i)
     end
   end
   return T
@@ -968,12 +991,17 @@ function Base.setindex!(ψ::MPST,
       if length(sites) == 2 && ψ isa MPS
         if all(allfermionic, sites)
           s0 = Index.(sites0)
-          s = Index.(sites)
-          C = combiner(s0[1], s0[2])
-          c = combinedind(C)
-          AC = A * C
-          AC = noprime(AC * _fermionic_swap(c))
-          A = AC * dag(C)
+
+          # TODO: the Fermionic swap is could be diagonal,
+          # if we combine the site indices
+          #C = combiner(s0[1], s0[2])
+          #c = combinedind(C)
+          #AC = A * C
+          #AC = noprime(AC * _fermionic_swap(c))
+          #A = AC * dag(C)
+
+          FSWAP = _fermionic_swap(s0[1], s0[2])
+          A = noprime(A * FSWAP)
         end
       elseif ψ isa MPO
         @warn "In setindex!(MPO, ::ITensor, ::UnitRange), " *

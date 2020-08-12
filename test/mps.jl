@@ -1252,7 +1252,45 @@ end
       @test inner(ψ2, ψ110) == -1
     end
 
-  end
+    @testset "Spinless fermion"
+      N = 10
+
+      s = siteinds("Fermion", N; conserve_qns = true)
+      
+      # Starting state
+      ψ0 = productMPS(s, n -> isodd(n) ? "0" : "1")
+      
+      t = 1.0
+      U = 1.0
+      ampo = AutoMPO()
+      for b in 1:N-1
+        ampo .+= -t,"Cdag",b,"C",b+1
+        ampo .+= -t,"Cdag",b+1,"C",b
+        ampo .+= U,"N",b,"N",b+1
+      end
+      H = MPO(ampo, s)
+      
+      sweeps = Sweeps(6)
+      maxdim!(sweeps,10,20,40)
+      cutoff!(sweeps,1E-12)
+      energy, ψ0 = dmrg(H, ψ0, sweeps)
+      
+      function ITensors.op(::OpName"CdagC", ::SiteType, s1::Index, s2::Index)
+        return op("Cdag", s1) * op("C", s2)
+      end
+      
+      for i in 1:N-1, j in i+1:N
+        os = ProductOps()
+        os >>= "CdagC", i, j
+        ψ1 = product(ops(os, s), ψ0, cutoff = 1e-15)
+      
+        a = AutoMPO()
+        a += "Cdag", i, "C", j
+        CdagCij = MPO(a, s)
+      
+        @test inner(ψ0, ψ1) ≈ inner(ψ0, CdagCij, ψ0) atol=1e-14
+      end
+    end
   
 end
 
