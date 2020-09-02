@@ -27,6 +27,7 @@ productMPS(::Type{<:Number}, ::Vector{<:IndexVal})
 MPO(::Int)
 MPO(::Type{<:Number}, ::Vector{<:Index}, ::Vector{String})
 MPO(::Type{<:Number}, ::Vector{<:Index}, ::String)
+MPO(::MPS)
 ```
 
 ## Properties
@@ -80,6 +81,7 @@ truncate!
 replacebond!(::MPS, ::Int, ::ITensor)
 sample(::MPS)
 sample!(::MPS)
+sample(::MPO)
 ```
 
 ## Algebra Operations

@@ -121,6 +121,21 @@ MPO(A::ITensor, sites::Vector{ <: Index}; kwargs...) =
   MPO(A, IndexSet.(prime.(sites), dag.(sites)); kwargs...)
 
 """
+    MPO(A::MPS; kwargs...)
+
+For an MPS `|A>`, make the MPO `|A><A|`.
+Keyword arguments like `cutoff` can be used to
+truncate the resulting MPO.
+"""
+function MPO(A::MPS; kwargs...)
+  N = length(A)
+  Adag = prime(dag(A))
+  M = MPO([A[n] * Adag[n] for n in 1:N])
+  truncate!(M; kwargs...)
+  return M
+end
+
+"""
     siteind(M::MPO, j::Int; plev = 0, kwargs...)
 
 Get the first site Index of the MPO found, by
@@ -489,6 +504,79 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   res[N] = V
   truncate!(res;kwargs...)
   return res
+end
+
+"""
+    sample(M::MPO)
+
+Given a normalized MPO `M`,
+returns a `Vector{Int}` of `length(M)`
+corresponding to one sample of the
+probability distribution defined by the MPO,
+treating the MPO as a density matrix.
+
+The MPO `M` should have an (approximately)
+positive spectrum.
+"""
+function sample(M::MPO)
+  N = length(M)
+  s = siteinds(M)
+  R = Vector{ITensor}(undef, N)
+  R[N] = M[N] * δ(dag(s[N]))
+  for n in reverse(1:N-1)
+    R[n] = M[n] * δ(dag(s[n])) * R[n+1]
+  end
+
+  if abs(1.0-R[1][]) > 1E-8
+    error("sample: MPO is not normalized, norm=$(norm(M[1]))")
+  end
+
+  result = zeros(Int,N)
+  ρj = M[1] * R[2]
+  Lj = ITensor()
+
+  for j in 1:N
+    s = siteind(M,j)
+    d = dim(s)
+    # Compute the probability of each state
+    # one-by-one and stop when the random
+    # number r is below the total prob so far
+    pdisc = 0.0
+    r = rand()
+    # Will need n, An, and pn below
+    n = 1
+    projn = ITensor()
+    pn = 0.0
+    while n <= d
+      projn = ITensor(s)
+      projn[s[n]] = 1.0
+      pnc = (ρj * projn * prime(projn))[]
+      if imag(pnc) > 1e-8
+        error("In sample, probability $pnc is complex.")
+      end
+      pn = real(pnc)
+      pdisc += pn
+      (r < pdisc) && break
+      n += 1
+    end
+    result[j] = n
+    if j < N
+      if j == 1
+        Lj = M[j] * projn * prime(projn)
+      elseif j > 1
+        Lj = Lj * M[j] * projn * prime(projn)
+      end
+      if j == N-1
+        ρj = Lj * M[j+1]
+      else
+        ρj = Lj * M[j+1] * R[j+2]
+      end
+      s = siteind(M, j+1)
+      normj = (ρj * δ(s', s))[]
+      ρj ./= normj
+    end
+  end
+  return result
 end
 
 function HDF5.write(parent::Union{HDF5File,HDF5Group},
