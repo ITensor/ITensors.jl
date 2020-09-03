@@ -810,17 +810,18 @@ function NDTensors.truncate!(M::AbstractMPS;
 
   # Left-orthogonalize all tensors to make
   # truncations controlled
-  orthogonalize!(M,N)
+  orthogonalize!(M, N)
 
   # Perform truncations in a right-to-left sweep
   for j in reverse(2:N)
-    rinds = uniqueinds(M[j],M[j-1])
-    U,S,V = svd(M[j],rinds;kwargs...)
+    rinds = uniqueinds(M[j], M[j-1])
+    ltags = tags(commonind(M[j], M[j-1]))
+    U, S, V = svd(M[j], rinds; lefttags = ltags, kwargs...)
     M[j] = U
-    M[j-1] *= (S*V)
-    setrightlim!(M,j)
+    M[j-1] *= (S * V)
+    setrightlim!(M, j)
   end
-
+  return M
 end
 
 NDTensors.contract(A::AbstractMPS,
