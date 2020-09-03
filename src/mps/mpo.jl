@@ -129,8 +129,7 @@ truncate the resulting MPO.
 """
 function MPO(A::MPS; kwargs...)
   N = length(A)
-  Adag = prime(dag(A))
-  M = MPO([A[n] * Adag[n] for n in 1:N])
+  M = MPO([A[n]' * dag(A[n]) for n in 1:N])
   truncate!(M; kwargs...)
   return M
 end
