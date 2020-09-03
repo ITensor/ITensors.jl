@@ -463,9 +463,7 @@ function sample(m::MPS)
       (r < pdisc) && break
       n += 1
     end
-
     result[j] = n
-
     if j < N
       A = m[j+1]*An
       A *= (1.0/sqrt(pn))
