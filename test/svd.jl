@@ -19,7 +19,7 @@ using ITensors,
 
     M = rand(20,10)
     U,S,V = NDTensors.svd_recursive(M)
-    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-12
   end
 
   @testset "Cplx Matrix" begin
