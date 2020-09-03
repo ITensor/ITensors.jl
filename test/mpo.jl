@@ -490,6 +490,17 @@ end
     @test maxlinkdim(ψ) == 1
   end
 
+  @testset "MPO(::MPS)" begin
+    i = Index(QN(0, 2) => 1, QN(1, 2) => 1; tags = "i")
+    j = settags(i, "j")
+    A = randomITensor(ComplexF64, i, j)
+    M = A' * dag(A)
+    ψ = MPS(A, [i, j])
+    @test prod(ψ) ≈ A
+    ρ = MPO(ψ)
+    @test prod(ρ) ≈ M
+  end
+
 end
 
 nothing
