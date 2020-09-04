@@ -1266,19 +1266,14 @@ function product(o::ITensor,
 end
 
 """
-    product(As::ITensor..., M::Union{MPS, MPO})
-
     product(As::Vector{<:ITensor}, M::Union{MPS, MPO})
 
 Product the ITensors `As` with the MPS or MPO `M`.
-
-The order of operations are right associative, so for example:
-`product(A1, A2, ψ) == product(A1, product(A2, ψ))`.
 """
 function product(As::Vector{ <: ITensor}, ψ::AbstractMPS;
                  move_sites_back::Bool = true, kwargs...)
   Aψ = ψ
-  for A in Iterators.reverse(As)
+  for A in As
     Aψ = product(A, Aψ; move_sites_back = false, kwargs...)
   end
   if move_sites_back
@@ -1288,13 +1283,6 @@ function product(As::Vector{ <: ITensor}, ψ::AbstractMPS;
     Aψ = movesites(Aψ, ns .=> ñs; kwargs...)
   end
   return Aψ
-end
-
-function product(Asψ::Union{ITensor, AbstractMPS}...; kwargs...)
-  ψ = Asψ[end]
-  @assert ψ isa AbstractMPS
-  As = collect(Asψ[1:end-1])
-  return product(As, ψ; kwargs...)
 end
 
 """

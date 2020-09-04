@@ -1365,44 +1365,14 @@ function product(A::ITensor, B::ITensor; apply_dag::Bool = false)
   end
 end
 
-#product_right_associative(A1, As...) =
-#  product(A1, product_left_associative(As...))
-
-product_right_associative(A1, As...) =
-  product(A1, product_left_associative(As...))
-
 """
-    product(A1::ITensor, A2::ITensor, As::ITensor...;
-            associativity::String = "right")
+    product(As::Vector{<:ITensor}, A::ITensor)
 
 Product the ITensors pairwise.
-
-Choose the order of operations with the keyword `associatvity`.
-By default, it is set to "right", which means the product is performed
-from right to left, i.e.:
-```julia
-product(A, B, C) = product(A, product(B, C))
-```
-This is ideal for when `C` is vector-like.
-
-In the future, the `associativity` keyword will support the option
-"auto" for automating the order of operations, similar to the
-[matrix chain multiplication](https://en.wikipedia.org/wiki/Matrix_chain_multiplication) algorithm.
 """
-function product(A1::ITensor, As::ITensor...; associativity::String = "right", kwargs...)
-  if associativity == "left"
-    R = foldl((x1, x2) -> product(x1, x2; kwargs...), (A1, As...))
-  elseif associativity == "right"
-    R = foldr((x1, x2) -> product(x1, x2; kwargs...), (A1, As...))
-  else
-    error("In product, keyword argument associativity = \"$associativity\" not supported")
-  end
-  return R
-end
-
 function product(As::Vector{<: ITensor}, B::ITensor; kwargs...)
   AB = B
-  for A in Iterators.reverse(As)
+  for A in As
     AB = product(A, AB; kwargs...)
   end
   return AB

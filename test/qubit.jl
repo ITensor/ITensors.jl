@@ -247,6 +247,8 @@ gate(::GateName"randn"; dim) =
 gate(::GateName"noise"; dim) =
   randn(dim)
 
+gate(gn::GateName; kwargs...) = error("Gate $gn not implemented.")
+
 function gate(on::GateName, s::Index...; kwargs...)
   rs = reverse(s)
   return itensor(gate(on; kwargs...), prime.(rs)..., dag.(rs)...)

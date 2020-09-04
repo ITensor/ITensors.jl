@@ -340,9 +340,7 @@ end
       for n in 1:N
         @test hassameinds(siteinds(ψ0, n), siteinds(ψ′, n))
       end
-      set_warn_order!(15)
-      @test prod(ψ) ≈ prod(ψ′)
-      reset_warn_order!()
+      @test @set_warn_order 15 prod(ψ) ≈ prod(ψ′)
     end
   end
 
@@ -416,9 +414,7 @@ end
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (l..., s[1], s[1]', ls[1]))
     @test hassameinds(ψ[N], (r..., s[N], s[N]', ls[N - 1]))
-    set_warn_order!(15)
-    @test prod(ψ) ≈ A
-    reset_warn_order!()
+    @test @set_warn_order 15 prod(ψ) ≈ A
     @test ITensors.orthocenter(ψ) == 2
     @test maxlinkdim(ψ) == 144
 
@@ -427,9 +423,7 @@ end
     ls = linkinds(ψ)
     @test hassameinds(ψ[1], (l..., s[1], s[1]', ls[1]))
     @test hassameinds(ψ[N], (r..., s[N], s[N]', ls[N - 1]))
-    set_warn_order!(15)
-    @test prod(ψ) ≈ A
-    reset_warn_order!()
+    @test @set_warn_order 15 prod(ψ) ≈ A
     @test ITensors.orthocenter(ψ) == 2
     @test maxlinkdim(ψ) == 144
   end

@@ -235,17 +235,36 @@ Return an ITensor corresponding to the operator
 named `opname` for the n'th Index in the array 
 `sites`.
 """
-op(opname::AbstractString,
-   s::Vector{<:Index},
-   ns::Vararg{Int, N};
-   kwargs...) where {N} =
+op(opname::AbstractString, s::Vector{<:Index},
+   ns::Vararg{Int, N}; kwargs...) where {N} =
   op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
 
-op(s::Vector{<:Index},
-   opname::AbstractString,
-   ns::Int...;
-   kwargs...) =
+op(s::Vector{ <: Index}, opname::AbstractString,
+   ns::Int...; kwargs...) =
   op(opname, s, ns...; kwargs...)
+
+op(s::Vector{ <: Index}, opname::AbstractString,
+   ns::Tuple{Vararg{Int}}, kwargs::NamedTuple) =
+  op(opname, s, ns...; kwargs...)
+
+op(s::Vector{ <: Index}, opname::AbstractString,
+   ns::Int, kwargs::NamedTuple) =
+  op(opname, s, ns; kwargs...)
+
+# This version helps with call like `op.(Ref(s), os)` where `os`
+# is a vector of tuples.
+op(s::Vector{ <: Index}, os::Tuple{String, Vararg}) =
+  op(s, os...)
+
+# Here, Ref is used to not broadcast over the vector of indices
+# TODO: consider overloading broadcast for `op` with the example
+# here: https://discourse.julialang.org/t/how-to-broadcast-over-only-certain-function-arguments/19274/5
+# so that `Ref` isn't needed.
+ops(s::Vector{ <: Index}, os::Vector{ <: Tuple{String, Vararg}}) =
+  op.(Ref(s), os)
+
+ops(os::Vector{ <: Tuple{String, Vararg}}, s::Vector{ <: Index}) =
+  op.(Ref(s), os)
 
 #---------------------------------------
 #
