@@ -1028,7 +1028,7 @@ end
         end
         @set_warn_order 15 begin
           prodM = product(gates, prod(M0))
-          @test prod(M) ≈ prodM rtol = 1e-13
+          @test prod(M) ≈ prodM rtol = 1e-12
         end
       end
 
