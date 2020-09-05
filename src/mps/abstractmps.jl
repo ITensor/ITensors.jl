@@ -97,7 +97,7 @@ having called `dense` on each ITensor to convert each
 tensor to use dense storage and remove any QN or other
 sparse structure information, if it is not dense already.
 """
-function dense(M::AbstractMPS)
+function NDTensors.dense(M::AbstractMPS)
   D = [dense(T) for T in M]
   return typeof(M)(D,leftlim(M),rightlim(M))
 end

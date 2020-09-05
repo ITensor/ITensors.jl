@@ -419,7 +419,7 @@ avoiding allocating new data if possible.
 For example, an ITensor with Diag storage will become Dense storage,
 filled with zeros except for the diagonal values.
 """
-function dense(A::ITensor)
+function NDTensors.dense(A::ITensor)
   T = NDTensors.dense(tensor(A))
   return itensor(store(T), removeqns(inds(A)))
 end
