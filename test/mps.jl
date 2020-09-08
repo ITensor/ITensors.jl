@@ -697,6 +697,18 @@ end
     end
   end
 
+  @testset "dense conversion of MPS" begin
+    N = 4
+    s = siteinds("S=1/2",N,conserve_qns=true)
+    QM = randomMPS(s,["Up","Dn","Up","Dn"],4)
+    qsz1 = scalar(QM[1]*op("Sz",s[1])*dag(prime(QM[1],"Site")))
+
+    M = dense(QM)
+    @test !hasqns(M[1])
+    sz1 = scalar(M[1]*op("Sz",removeqns(s[1]))*dag(prime(M[1],"Site")))
+    @test sz1 ≈ qsz1
+  end
+
 end
 
 nothing

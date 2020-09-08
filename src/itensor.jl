@@ -420,7 +420,7 @@ For example, an ITensor with Diag storage will become Dense storage,
 filled with zeros except for the diagonal values.
 """
 function NDTensors.dense(A::ITensor)
-  T = dense(tensor(A))
+  T = NDTensors.dense(tensor(A))
   return itensor(store(T), removeqns(inds(A)))
 end
 
