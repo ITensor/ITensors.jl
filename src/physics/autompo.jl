@@ -533,10 +533,8 @@ function svdMPO(ampo::AutoMPO,
       end
       if isempty(onsite)
         if isfermionic(right,sites)
-          #println("Putting F on site $n")
           push!(onsite,SiteOp("F",n))
         else
-          #println("Putting Id on site $n")
           push!(onsite,SiteOp("Id",n))
         end
       end
@@ -711,12 +709,8 @@ function qn_svdMPO(ampo::AutoMPO,
       end
       if isempty(onsite)
         if isfermionic(right,sites)
-          println("Putting an F for rhs = ")
-          @show right
           push!(onsite,SiteOp("F",n))
         else
-          println("Putting an I for rhs = ")
-          @show right
           push!(onsite,SiteOp("Id",n))
         end
       end
