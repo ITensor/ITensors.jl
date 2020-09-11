@@ -90,6 +90,8 @@ end
 QN(mqn::MQNStorage) = QN(QNStorage(mqn))
 QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
 
+isfermionic(qv::QN) = any(isfermionic, qv)
+
 function Base.hash(obj::QN, h::UInt)
   # TODO: use an MVector or SVector
   # for performance here; put non-zero QNVals
@@ -171,6 +173,8 @@ function Base.iterate(qn::QN,state::Int=1)
   (state > length(qn)) && return nothing
   return (qn[state],state+1)
 end
+
+Base.keys(qn::QN) = keys(data(qn))
 
 """
     val(q::QN,name)

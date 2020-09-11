@@ -27,7 +27,8 @@ settings = Dict(
                                 ],
              "Advanced usage guide" => "AdvancedUsageGuide.md",
            ],
-  :format => Documenter.HTML(prettyurls = false),
+  :format => Documenter.HTML(assets = ["assets/favicon.ico"],
+                             prettyurls = false),
   :doctest => true,
   :checkdocs => :none,
  )

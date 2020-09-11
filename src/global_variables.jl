@@ -64,17 +64,15 @@ Disable warning about the ITensor order in a block of code.
 
 # Examples
 ```julia
-@disable_warn_order begin
-  A * B
-end
+@disable_warn_order A * B
 ```
 """
 macro disable_warn_order(block)
   quote
-    old_order = disable_warn_order!()
+    local old_order = disable_warn_order!()
     r = $(esc(block))
     set_warn_order!(old_order)
-    return r
+    r
   end
 end
 
@@ -86,17 +84,20 @@ order in a block of code.
 
 # Examples
 ```julia
-@set_warn_order 12 begin
-  A * B
+@set_warn_order 12 A * B
+
+@set_warn_order 15 begin
+  C = A * B
+  E = C * D
 end
 ```
 """
 macro set_warn_order(new_order, block)
   quote
-    old_order = set_warn_order!($(esc(new_order)))
+    local old_order = set_warn_order!($(esc(new_order)))
     r = $(esc(block))
     set_warn_order!(old_order)
-    return r
+    r
   end
 end
 
@@ -108,17 +109,15 @@ order in a block of code to the default value $default_warn_order.
 
 # Examples
 ```julia
-@reset_warn_order begin
-  A * B
-end
+@reset_warn_order A * B
 ```
 """
 macro reset_warn_order(block)
   quote
-    old_order = reset_warn_order!()
+    local old_order = reset_warn_order!()
     r = $(esc(block))
     set_warn_order!(old_order)
-    return r
+    r
   end
 end
 

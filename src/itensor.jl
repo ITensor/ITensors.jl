@@ -1234,19 +1234,152 @@ end
 """
     product(A::ITensor, B::ITensor)
 
-For matrix-like ITensors (ones with pairs of primed and
-unprimed indices), perform a matrix product, i.e.
-```julia
-mapprime(prime(A) * B, 2, 1)
+Get the product of ITensor `A` and ITensor `B`, which
+roughly speaking is a matrix-matrix product, a
+matrix-vector product, or a vector-matrix product,
+depending on the index structure.
+
+There are three main modes:
+
+1. Matrix-matrix product. In this case, ITensors `A`
+and `B` have shared indices that come in pairs of primed
+and unprimed indices. Then, `A` and `B` are multiplied 
+together, treating them as matrices from the unprimed
+to primed indices, resulting in an ITensor `C` that
+has the same pairs of primed and unprimed indices. 
+For example:
 ```
-In the future, more general ITensors with other tag or
-prime conventions may be supported.
+s1'-<-----<-s1            s1'-<-----<-s1   s1'-<-----<-s1
+      |C|      = product(       |A|              |B|      )
+s2'-<-----<-s2            s2'-<-----<-s2 , s2'-<-----<-s2
+```
+Essentially, this is implemented as 
+`C = mapprime(A', B, 2 => 1)`.
+If there are dangling indices that are not shared between
+`A` and `B`, a "batched" matrix multiplication is
+performed, i.e.:
+```
+       j                         j
+       |                         |
+s1'-<-----<-s1            s1'-<-----<-s1   s1'-<-----<-s1
+      |C|      = product(       |A|              |B|      )
+s2'-<-----<-s2            s2'-<-----<-s2 , s2'-<-----<-s2
+```
+In addition, if there are shared dangling indices,
+they are summed over:
+```
+                                    j                j
+                                    |                |
+s1'-<-----<-s1               s1'-<-----<-s1   s1'-<-----<-s1
+      |C|      = Σⱼ product(       |A|              |B|      )
+s2'-<-----<-s2               s2'-<-----<-s2 , s2'-<-----<-s2
+```
+where the sum is not performed as an explicitly 
+for-loop, but as part of a single tensor contraction.
+
+2. Matrix-vector product. In this case, ITensor `A`
+has pairs of primed and unprimed indices, and ITensor
+`B` has unprimed indices that are shared with `A`.
+Then, `A` and `B` are multiplied as a matrix-vector
+product, and the result `C` has unprimed indices.
+For example:
+```
+s1-<----            s1'-<-----<-s1   s1-<----
+     |C| = product(       |A|             |B| )
+s2-<----            s2'-<-----<-s2 , s2-<----
+```
+Again, like in the matrix-matrix product above, you can have
+dangling indices to do "batched" matrix-vector products, or
+sum over a batch of matrix-vector products.
+
+3. Vector-matrix product. In this case, ITensor `B`
+has pairs of primed and unprimed indices, and ITensor
+`A` has unprimed indices that are shared with `B`.
+Then, `B` and `A` are multiplied as a matrix-vector
+product, and the result `C` has unprimed indices.
+For example:
+```
+---<-s1            ----<-s1   s1'-<-----<-s1
+|C|     = product( |A|              |B|      )
+---<-s2            ----<-s2 , s2'-<-----<-s2
+```
+Again, like in the matrix-matrix product above, you can have
+dangling indices to do "batched" vector-matrix products, or
+sum over a batch of vector-matrix products.
+
+4. Vector-vector product. In this case, ITensors `A`
+and `B` share unprimed indices.
+Then, `B` and `A` are multiplied as a vector-vector
+product, and the result `C` is a scalar ITensor.
+For example:
+```
+---            ----<-s1   s1-<----
+|C| = product( |A|             |B| )
+---            ----<-s2 , s2-<----
+```
+Again, like in the matrix-matrix product above, you can have
+dangling indices to do "batched" vector-vector products, or
+sum over a batch of vector-vector products.
 """
-function product(A::ITensor,
-                 B::ITensor)
-  R = prime(A) * B
-  return mapprime(R,2,1)
+function product(A::ITensor, B::ITensor; apply_dag::Bool = false)
+  commonindsAB = commoninds(A, B; plev = 0)
+  isempty(commonindsAB) && error("In product, must have common indices with prime level 0.")
+  common_paired_indsA = filterinds(i -> hasind(commonindsAB, i) &&
+                                        hasind(A, setprime(i, 1)), A)
+  common_paired_indsB = filterinds(i -> hasind(commonindsAB, i) &&
+                                        hasind(B, setprime(i, 1)), B)
+
+  if !isempty(common_paired_indsA)
+    commoninds_pairs = unioninds(common_paired_indsA,
+                                 common_paired_indsA')
+  elseif !isempty(common_paired_indsB)
+    commoninds_pairs = unioninds(common_paired_indsB,
+                                 common_paired_indsB')
+  else
+    # vector-vector product
+    apply_dag && error("apply_dag not supported for vector-vector product")
+    return A * B
+  end
+  danglings_indsA = uniqueinds(A, commoninds_pairs)
+  danglings_indsB = uniqueinds(B, commoninds_pairs)
+  danglings_inds = unioninds(danglings_indsA, danglings_indsB)
+  if hassameinds(common_paired_indsA, common_paired_indsB)
+    # matrix-matrix product
+    A′ = prime(A; inds = !danglings_inds)
+    AB = mapprime(A′ * B, 2 => 1; inds = !danglings_inds)
+    if apply_dag
+      AB′ = prime(AB; inds = !danglings_inds)
+      Adag = swapprime(dag(A), 0 => 1; inds = !danglings_inds)
+      return mapprime(AB′ * Adag, 2 => 1; inds = !danglings_inds)
+    end
+    return AB
+  elseif isempty(common_paired_indsA) && !isempty(common_paired_indsB)
+    # vector-matrix product
+    apply_dag && error("apply_dag not supported for matrix-vector product")
+    A′ = prime(A; inds = !danglings_inds)
+    return A′ * B
+  elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
+    # matrix-vector product
+    apply_dag && error("apply_dag not supported for vector-matrix product")
+    return noprime(A * B; inds = !danglings_inds)
+  end
 end
+
+"""
+    product(As::Vector{<:ITensor}, A::ITensor)
+
+Product the ITensors pairwise.
+"""
+function product(As::Vector{<: ITensor}, B::ITensor; kwargs...)
+  AB = B
+  for A in As
+    AB = product(A, AB; kwargs...)
+  end
+  return AB
+end
+
+# Alias apply with product
+const apply = product
 
 #######################################################################
 #

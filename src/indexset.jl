@@ -843,10 +843,8 @@ noprime(is::IndexSet,
         args...;
         kwargs...) = setprime(is, 0, args...; kwargs...)
 
-function _swapprime(f::Function,
-                    i::Index,
-                    pl1::Int,
-                    pl2::Int)
+function _swapprime(f::Function, i::Index, pl1pl2::Pair{Int, Int})
+  pl1, pl2 = pl1pl2
   if f(i)
     if hasplev(i, pl1)
       return setprime(i, pl2)
@@ -858,18 +856,17 @@ function _swapprime(f::Function,
   return i
 end
 
-function swapprime(f::Function,
-                   is::IndexSet, 
-                   pl1::Int,
-                   pl2::Int)
-  return map(i -> _swapprime(f, i, pl1, pl2), is)
-end
+swapprime(f::Function, is::IndexSet, pl1pl2::Pair{Int, Int}) =
+  map(i -> _swapprime(f, i, pl1pl2), is)
 
-swapprime(is::IndexSet, 
-          pl1::Int,
-          pl2::Int,
-          args...; kwargs...) = swapprime(fmatch(args...; kwargs...),
-                                          is, pl1, pl2)
+swapprime(f::Function, is::IndexSet, pl1::Int, pl2::Int) =
+  swapprime(f, is::IndexSet, pl1 => pl2)
+
+swapprime(is::IndexSet, pl1pl2::Pair{Int, Int}, args...; kwargs...) =
+  swapprime(fmatch(args...; kwargs...), is, pl1pl2)
+
+swapprime(is::IndexSet, pl1::Int, pl2::Int, args...; kwargs...) =
+  swapprime(fmatch(args...; kwargs...), is, pl1 => pl2)
 
 mapprime(f::Function, is::IndexSet, 
          pl1::Int, pl2::Int) = mapprime(f, is, pl1 => pl2)

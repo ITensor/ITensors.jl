@@ -92,6 +92,7 @@ export
   # Methods
   addblock!,
   addtags!,
+  apply,
   array,
   axpy!,
   blockoffsets,
@@ -129,6 +130,7 @@ export
   order,
   permute,
   prime!,
+  product,
   randn!,
   randomITensor,
   removetags!,
@@ -288,6 +290,7 @@ export
   StateName,
   @StateName_str,
   op,
+  ops,
   OpName,
   @OpName_str,
   state,

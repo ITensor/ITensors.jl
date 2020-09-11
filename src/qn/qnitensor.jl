@@ -221,6 +221,25 @@ function diagITensor(::Type{ElT},
   return diagITensor(ElT, flux, IndexSet(inds...))
 end
 
+function diagITensor(x::ElT,
+                     flux::QN,
+                     is::QNIndices) where {ElT <: Number}
+  blocks = nzdiagblocks(flux, IndexSet(is))
+  T = DiagBlockSparseTensor(float(ElT), blocks, is)
+  NDTensors.data(T) .= x
+  return itensor(T)
+end
+
+function diagITensor(x::Number,
+                     flux::QN,
+                     is::Index...)
+  return diagITensor(x, flux, IndexSet(is...))
+end
+
+diagITensor(x::Number, is::QNIndices) = diagITensor(x, QN(), is)
+
+diagITensor(x::Number, is::QNIndex...) = diagITensor(x, IndexSet(is...))
+
 diagITensor(flux::QN,
             is::Indices) = diagITensor(Float64, flux, is)
 

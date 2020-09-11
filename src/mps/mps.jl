@@ -296,6 +296,13 @@ function productMPS(::Type{T},
   return productMPS(T, ivals)
 end
 
+function productMPS(::Type{T},
+                    sites::Vector{ <: Index},
+                    states::Function) where {T <: Number}
+  ivals = [state(sites[n], states(n)) for n in 1:length(sites)]
+  return productMPS(T, ivals)
+end
+
 """
     productMPS(sites::Vector{<:Index},states)
 

@@ -893,6 +893,36 @@ function Base.setindex!(ψ::MPST, ϕ::MPST,
   return ψ
 end
 
+_isodd_fermionic_parity(s::Index, ::Int) = false
+
+function _isodd_fermionic_parity(s::QNIndex, n::Int)
+  qn_n = qn(space(s)[n])
+  fermionic_qn_pos = findfirst(q -> isfermionic(q), qn_n)
+  isnothing(fermionic_qn_pos) && return false
+  return isodd(val(qn_n[fermionic_qn_pos]))
+end
+
+function _fermionic_swap(s1::Index, s2::Index)
+  T = ITensor(s1', s2', dag(s1), dag(s2))
+  for b in nzblocks(T)
+    dval = 1.0
+    # Must be a diagonal block
+    ((b[1] ≠ b[3]) || (b[2] ≠ b[4])) && continue
+    n1, n2 = b[1], b[2]
+    if _isodd_fermionic_parity(s1, n1) &&
+       _isodd_fermionic_parity(s2, n2)
+      dval = -1.0
+    end
+    Tb = blockview(tensor(T), b)
+    mat_dim = prod(dims(Tb)[1:2])
+    Tbr = reshape(Tb, mat_dim, mat_dim)
+    for i in diagind(Tbr)
+      NDTensors.setdiagindex!(Tbr, dval, i)
+    end
+  end
+  return T
+end
+
 # TODO: add a version that determines the sites
 # from common site indices of ψ and A
 """
@@ -954,8 +984,41 @@ function Base.setindex!(ψ::MPST,
   # For MPO case, restrict to 0 prime level
   #sites = filter(hasplev(0), sites)
 
-    if !isnothing(perm)
-    sites = sites[[perm...]]
+  if !isnothing(perm)
+    sites0 = sites
+    sites = sites0[[perm...]]
+    # Check if the site indices
+    # are fermionic
+    if any(anyfermionic, sites)
+      if length(sites) == 2 && ψ isa MPS
+        if all(allfermionic, sites)
+          s0 = Index.(sites0)
+
+          # TODO: the Fermionic swap is could be diagonal,
+          # if we combine the site indices
+          #C = combiner(s0[1], s0[2])
+          #c = combinedind(C)
+          #AC = A * C
+          #AC = noprime(AC * _fermionic_swap(c))
+          #A = AC * dag(C)
+
+          FSWAP = _fermionic_swap(s0[1], s0[2])
+          A = noprime(A * FSWAP)
+        end
+      elseif ψ isa MPO
+        @warn "In setindex!(MPO, ::ITensor, ::UnitRange), " *
+              "fermionic signs are only not handled properly for non-trivial " *
+              "permutations of sites. Please inform the developers of ITensors " *
+              "if you require this feature (otherwise, fermionic signs can be " *
+              "put in manually with fermionic swap gates)."
+      else
+        @warn "In setindex!(::Union{MPS, MPO}, ::ITensor, ::UnitRange), " *
+              "fermionic signs are only handled properly for permutations involving 2 sites. " *
+              "The original sites are $sites0, with a permutation $perm. " *
+              "To have the fermion sign handled correctly, we recommend performing your permutation " *
+              "pairwise."
+      end
+    end
   end
 
   ψA = MPST(A, sites;
@@ -1104,6 +1167,18 @@ function _movesite(ns::Vector{Int},
   return ns
 end
 
+function _movesites(ψ::AbstractMPS, ns::Vector{Int}, ns′::Vector{Int};
+                    kwargs...)
+  ψ = copy(ψ)
+  N = length(ns)
+  @assert N == length(ns′)
+  for i in 1:N
+    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
+    ns = _movesite(ns, ns[i] => ns′[i])
+  end
+  return ψ, ns
+end
+
 # TODO: make a permutesites(::MPS/MPO, perm)
 # function that takes a permutation of the sites
 # p(1:N) for N sites
@@ -1118,16 +1193,13 @@ function movesites(ψ::AbstractMPS,
   ns = ns[p]
   ns′ = ns′[p]
   ns = collect(ns)
-  for i in 1:N
-    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
-    ns = _movesite(ns, ns[i] => ns′[i])
+  while ns ≠ ns′
+    ψ, ns = _movesites(ψ, ns, ns′; kwargs...)
   end
   return ψ
 end
 
-# TODO: make a permutesites(::MPS/MPO, perm)
-# function that that a permutation of the sites
-# p(1:N) for N sites
+# TODO: call the Vector{Pair{Int, Int}} version
 function movesites(ψ::AbstractMPS,
                    ns, ns′; kwargs...)
   ψ = copy(ψ)
@@ -1142,6 +1214,76 @@ function movesites(ψ::AbstractMPS,
     ns = _movesite(ns, ns[i] => ns′[i])
   end
   return ψ
+end
+
+"""
+    product(o::ITensor, ψ::Union{MPS, MPO}, [ns::Vector{Int}]; <keyword argument>)
+
+Get the product of the operator `o` with the MPS/MPO `ψ`,
+where the operator is applied to the sites `ns`. If `ns`
+are not specified, the sites are determined by the common indices
+between `o` and the site indices of `ψ`.
+
+If `ns` are non-contiguous, the sites of the MPS are
+moved to be contiguous. By default, the sites are moved
+back to their original locations. You can leave them where
+they are by setting the keyword argument `move_sites_back`
+to false.
+
+# Arguments
+- `move_sites_back::Bool = true`: after the ITensor is applied to the MPS or MPO, move the sites of the MPS or MPO back to their original locations.
+"""
+function product(o::ITensor,
+                 ψ::AbstractMPS,
+                 ns = findsites(ψ, o);
+                 move_sites_back::Bool = true,
+                 apply_dag::Bool = false,
+                 kwargs...)
+  N = length(ns)
+  ns = sort(ns)
+
+  # TODO: make this smarter by minimizing
+  # distance to orthogonalization.
+  # For example, if ITensors.orthocenter(ψ) > ns[end],
+  # set to ns[end].
+  ψ = orthogonalize(ψ, ns[1])
+  diff_ns = diff(ns)
+  ns′ = ns
+  if any(!=(1), diff_ns)
+    ns′ = [ns[1] + n - 1 for n in 1:N]
+    ψ = movesites(ψ, ns .=> ns′; kwargs...)
+  end
+  ϕ = ψ[ns′[1]]
+  for n in 2:N
+    ϕ *= ψ[ns′[n]]
+  end
+  ϕ = product(o, ϕ; apply_dag = apply_dag)
+  ψ[ns′[1]:ns′[end], kwargs...] = ϕ
+  if move_sites_back
+    # Move the sites back to their original positions
+    ψ = movesites(ψ, ns′ .=> ns; kwargs...)
+  end
+  return ψ
+end
+
+"""
+    product(As::Vector{<:ITensor}, M::Union{MPS, MPO})
+
+Product the ITensors `As` with the MPS or MPO `M`.
+"""
+function product(As::Vector{ <: ITensor}, ψ::AbstractMPS;
+                 move_sites_back::Bool = true, kwargs...)
+  Aψ = ψ
+  for A in As
+    Aψ = product(A, Aψ; move_sites_back = false, kwargs...)
+  end
+  if move_sites_back
+    s = siteinds(Aψ)
+    ns = 1:length(ψ)
+    ñs = [findsite(ψ, i) for i in s]
+    Aψ = movesites(Aψ, ns .=> ñs; kwargs...)
+  end
+  return Aψ
 end
 
 """

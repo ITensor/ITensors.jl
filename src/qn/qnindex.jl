@@ -335,6 +335,10 @@ mutable_storage(::Type{Order{N}},
                 ::Type{IndexT}) where {N, IndexT <: QNIndex} =
   SizedVector{N, IndexT}(undef)
 
+isfermionic(i::Index) = false
+
+isfermionic(i::QNIndex) = any(q -> isfermionic(qn(q)), space(i))
+
 function Base.show(io::IO,
                    i::QNIndex)
   idstr = "$(id(i) % 1000)"

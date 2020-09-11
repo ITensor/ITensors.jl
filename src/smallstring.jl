@@ -17,7 +17,11 @@ struct SmallString
 
 end
 
-function SmallString(str::AbstractString)
+data(ss::SmallString) = ss.data
+
+Base.eltype(ss::SmallString) = eltype(data(ss))
+
+function SmallString(str)
   length(str) > smallLength && error("String is too long for SmallString. Maximum length is $smallLength.")
   mstore = MSmallStringStorage(ntuple(_->IntChar(0),Val(smallLength)))
   for (n,c) in enumerate(str)
@@ -26,7 +30,7 @@ function SmallString(str::AbstractString)
   return SmallString(SmallStringStorage(mstore))
 end
 
-SmallString(s::SmallString) = SmallString(s.data)
+SmallString(s::SmallString) = SmallString(data(s))
 
 Base.getindex(s::SmallString, n::Int) = getindex(s.data,n)
 
@@ -34,7 +38,25 @@ function Base.setindex(s::SmallString, val, n::Int)
   return SmallString(StaticArrays.setindex(s.data, val, n))
 end
 
+# TODO: rename to `isempty`
 isnull(s::SmallString) = @inbounds s[1] == IntChar(0)
+
+function Base.vcat(s1::SmallString, s2::SmallString)
+  v = MSmallStringStorage(ntuple(_->IntChar(0),Val(smallLength)))
+  n = 1
+  while n <= smallLength && s1[n] != IntChar(0)
+    v[n] = s1[n]
+    n += 1
+  end
+  N1 = n-1
+  n2 = 1
+  while n2 <= smallLength && s2[n2] != IntChar(0)
+    v[n] = s2[n2]
+    n += 1
+    n2 += 1
+  end
+  return SmallString(SmallStringStorage(v))
+end
 
 function SmallString(i::IntSmallString)
   mut_is = MVector{1,IntSmallString}(ntoh(i))
