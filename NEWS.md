@@ -1,3 +1,15 @@
+ITensors v0.1.22 Release Notes
+==============================
+* Add MPS/MPO circuit evolution with the apply function (PR #480)
+* Improve MPS docs (PR #488)
+* dense function for MPS/MPO (PR #483)
+* MPO sampling (PR #486)
+* Allow conserving Sz up or down in Fermion type (PR #482)
+* Docstrings for siteinds method (PR #481)
+* movesites function for MPS/MPO for permuting sites (PR #477)
+* New Order value type for representing the order of a tensor at compile time (PR #475)
+* Add generic "F" operator for non-fermion site types (PR #469)
+
 ITensors v0.1.21 Release Notes
 ==============================
 * Add parity conservation to S=1/2 sitetype (PR #467)
