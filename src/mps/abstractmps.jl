@@ -888,28 +888,15 @@ function _isodd_fermionic_parity(s::QNIndex, n::Int)
   return isodd(val(qn_n[fermionic_qn_pos]))
 end
 
-# TODO: this version is incorrect, since it requires
-# putting minus signs on the subspace of `s` that
-# has 2 Fermions (not odd fermions).
-# function _fermionic_swap(s::Index)
-#   T = diagITensor(1, s', dag(s))
-#   for b in nzblocks(T)
-#     n = b[2]
-#     if _isodd_fermionic_parity(s, n)
-#       NDTensors.data(blockview(tensor(T), b)) .= -1
-#     end
-#   end
-#   return T
-# end
-
 function _fermionic_swap(s1::Index, s2::Index)
   T = ITensor(s1', s2', dag(s1), dag(s2))
-  dval = 1.0
   for b in nzblocks(T)
+    dval = 1.0
     # Must be a diagonal block
     ((b[1] ≠ b[3]) || (b[2] ≠ b[4])) && continue
     n1, n2 = b[1], b[2]
-    if _isodd_fermionic_parity(s1, n1) && _isodd_fermionic_parity(s2, n2)
+    if _isodd_fermionic_parity(s1, n1) &&
+       _isodd_fermionic_parity(s2, n2)
       dval = -1.0
     end
     Tb = blockview(tensor(T), b)

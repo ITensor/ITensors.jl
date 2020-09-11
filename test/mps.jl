@@ -3,7 +3,7 @@ using ITensors
 using Test
 
 include("util.jl")
-include("qubit.jl")
+include("../examples/gate_evolution/qubit.jl")
 
 @testset "MPS Basics" begin
 
@@ -779,7 +779,7 @@ end
 
   @testset "product(::Vector{ITensor}, ::MPS)" begin
     N = 6
-    s = siteinds("qubit", N)
+    s = siteinds("Qubit", N)
 
     I  = [op("I", s, n) for n in 1:N]
     X = [op("X", s, n) for n in 1:N]
@@ -944,10 +944,10 @@ end
   @testset "product" begin
 
     @testset "Contraction order of operations" begin
-      s = siteind("qubit")
-      @test product(ops([s], [("Y", 1), ("X", 1)]), setelt(s => 1)) ≈ itensor(gate("X") * gate("Y") * [1; 0], s)
-      @test product(ops([s], [("Y", 1), ("Z", 1)]), setelt(s => 1)) ≈ itensor(gate("Z") * gate("Y") * [1; 0], s)
-      @test product(ops([s], [("X", 1), ("Y", 1)]), setelt(s => 1)) ≈ itensor(gate("Y") * gate("X") * [1; 0], s)
+      s = siteind("Qubit")
+      @test product(ops([s], [("Y", 1), ("X", 1)]), setelt(s => 1)) ≈ itensor(op_matrix("X") * op_matrix("Y") * [1; 0], s)
+      @test product(ops([s], [("Y", 1), ("Z", 1)]), setelt(s => 1)) ≈ itensor(op_matrix("Z") * op_matrix("Y") * [1; 0], s)
+      @test product(ops([s], [("X", 1), ("Y", 1)]), setelt(s => 1)) ≈ itensor(op_matrix("Y") * op_matrix("X") * [1; 0], s)
     end
 
     @testset "Simple on-site state evolution" begin
@@ -960,7 +960,7 @@ end
          ("X", 1)
         ]
 
-      s = siteinds("qubit", N)
+      s = siteinds("Qubit", N)
       gates = ops(s, pos)
       ψ0 = productMPS(s, "0")
 
@@ -1004,7 +1004,7 @@ end
       os_noise = [("noise", n, n+2, n+4) for n in 1:N-4]
 
       os = vcat(osRand, osX, osXX, osSw, osRx, osZ, osCx, osT)
-      s = siteinds("qubit", N)
+      s = siteinds("Qubit", N)
       gates = ops(os, s)
 
       @testset "Pure state evolution" begin
@@ -1079,7 +1079,7 @@ end
       os_noise = [("noise", n, n+2, n+4) for n in 1:N-4]
       os = vcat(osX, osSw, osRx, osZ, osCx, osT, os_noise)
       
-      s = siteinds("qubit", N)
+      s = siteinds("Qubit", N)
       gates = ops(os, s)
       
       M0 = MPO(s, "Id")
@@ -1113,7 +1113,7 @@ end
       osT = [("CCX", n, n+2, n+4) for n in 1:N-4]
       os = vcat(osRand, osX, osSw, osZ, osCx, osT)
       
-      s = siteinds("qubit", N)
+      s = siteinds("Qubit", N)
       gates = ops(os, s)
       
       ψ0 = productMPS(s, "0")
@@ -1163,7 +1163,7 @@ end
       @test inner(ψ2, ψ110) == -1
     end
 
-    @testset "Spinless fermion" begin
+    @testset "Spinless fermion (gate evolution)" begin
       N = 10
 
       s = siteinds("Fermion", N; conserve_qns = true)
@@ -1175,9 +1175,9 @@ end
       U = 1.0
       ampo = AutoMPO()
       for b in 1:N-1
-        ampo .+= -t,"Cdag",b,"C",b+1
-        ampo .+= -t,"Cdag",b+1,"C",b
-        ampo .+= U,"N",b,"N",b+1
+        ampo .+= -t, "Cdag", b,   "C", b+1
+        ampo .+= -t, "Cdag", b+1, "C", b
+        ampo .+=  U, "N",    b,   "N", b+1
       end
       H = MPO(ampo, s)
       
@@ -1191,16 +1191,108 @@ end
                            s1::Index, s2::Index)
         return op("Cdag", s1) * op("C", s2)
       end
-      
+
+      function ITensors.op(::OpName"CCCC", ::SiteType,
+                           s1::Index, s2::Index,
+                           s3::Index, s4::Index)
+        return -1 * op("Cdag", s1) *
+                    op("Cdag", s2) *
+                    op("C", s3) *
+                    op("C", s4)
+      end
+
       for i in 1:N-1, j in i+1:N
-        os = [("CdagC", i, j)]
-        ψ1 = product(ops(os, s), ψ0, cutoff = 1e-15)
-      
-        a = AutoMPO()
-        a += "Cdag", i, "C", j
-        CdagCij = MPO(a, s)
-      
-        @test inner(ψ0, ψ1) ≈ inner(ψ0, CdagCij, ψ0) atol=1e-14
+        G1 = op("CdagC", s, i, j)
+
+        @disable_warn_order begin
+          G2 = op("Cdag", s, i)
+          for n in i+1:j-1
+            G2 *= op("F", s, n)
+          end
+          G2 *= op("C", s, j)
+        end
+
+        ampo = AutoMPO()
+        ampo += "Cdag", i, "C", j
+        G3 = MPO(ampo, s)
+
+        A_OP = prod(product(G1, ψ0, cutoff = 1e-16))
+
+        A_OPS = noprime(G2 * prod(ψ0))
+
+        A_MPO = noprime(prod(contract(G3, ψ0; cutoff = 1e-16)))
+
+        @test A_OP ≈ A_OPS
+        @test A_OP ≈ A_MPO
+      end
+
+      for i in 1:N-3, j in i+1:N-2, k in j+1:N-1, l in k+1:N
+        G1 = op("CCCC", s, i, j, k, l)
+        @disable_warn_order begin
+          G2 = -1 * op("Cdag", s, i)
+          for n in i+1:j-1
+            G2 *= op("F", s, n)
+          end
+          G2 *= op("Cdag", s, j)
+          for n in j+1:k-1
+            G2 *= op("Id", s, n)
+          end
+          G2 *= op("C", s, k)
+          for n in k+1:l-1
+            G2 *= op("F", s, n)
+          end
+          G2 *= op("C", s, l)
+
+          ampo = AutoMPO()
+          ampo += "Cdag", i, "Cdag", j, "C", k, "C", l
+          G3 = MPO(ampo, s)
+
+          A_OP = prod(product(G1, ψ0; cutoff = 1e-16))
+
+          A_OPS = noprime(G2 * prod(ψ0))
+
+          A_MPO = noprime(prod(contract(G3, ψ0; cutoff = 1e-16)))
+        end
+        @test A_OPS ≈ A_OP rtol = 1e-12
+      end
+
+    end
+
+    @testset "Spinful Fermions (Electron) gate evolution" begin
+      N = 8
+      s = siteinds("Electron", N; conserve_qns = true)
+      ψ0 = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
+      t = 1.0
+      U = 1.0
+      ampo = AutoMPO()
+      for b in 1:N-1
+        ampo .+= -t, "Cdagup", b,   "Cup", b+1
+        ampo .+= -t, "Cdagup", b+1, "Cup", b
+        ampo .+= -t, "Cdagdn", b,   "Cdn", b+1
+        ampo .+= -t, "Cdagdn", b+1, "Cdn", b
+      end
+      for n in 1:N
+        ampo .+= U, "Nupdn", n
+      end
+      H = MPO(ampo, s)
+      sweeps = Sweeps(6)
+      maxdim!(sweeps,10,20,40)
+      cutoff!(sweeps,1E-12)
+      energy, ψ = dmrg(H, ψ0, sweeps; outputlevel = 0)
+
+      ITensors.op(::OpName"CCup",
+                  ::SiteType"Electron",
+                  s1::Index, s2::Index) =
+        op("Adagup*F", s1) * op("Aup", s2)
+
+      for i in 1:N-1, j in i+1:N
+        ampo = AutoMPO()
+        ampo += "Cdagup", i, "Cup", j
+        G1 = MPO(ampo, s)
+        G2 = op("CCup", s, i, j)
+        A_MPO = prod(noprime(contract(G1, ψ; cutoff = 1e-16)))
+        A_OP = prod(product(G2, ψ; cutoff = 1e-16))
+        @test A_MPO ≈ A_OP
       end
     end
 
