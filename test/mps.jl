@@ -1122,8 +1122,8 @@ end
       ψ = apply(gates, ψ0; cutoff = 1e-15, maxdim = 100)
       
       prodψ = apply(gates, prod(ψ0))
-      @show norm(prod(ψ) - prodψ)
-      @test prod(ψ) ≈ prodψ rtol = 1e-8
+      @show norm(prod(ψ) - prodψ)/norm(prodψ)
+      @test prod(ψ) ≈ prodψ rtol = 1e-4
     end
 
     @testset "With fermions" begin
