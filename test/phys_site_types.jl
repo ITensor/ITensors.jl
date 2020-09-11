@@ -114,7 +114,10 @@ using ITensors,
 
     @test has_fermion_string("C", s)
     @test has_fermion_string("Cdag", s)
+    @test has_fermion_string("C*F", s)
+    @test has_fermion_string("F*Cdag*F", s)
     @test !has_fermion_string("N", s)
+    @test !has_fermion_string("N*F", s)
 
     s = siteind("Fermion";conserve_nf=true)
     @test qn(s,1) == QN("Nf",0,-1)
@@ -188,10 +191,14 @@ using ITensors,
     @test Sm3 ≈ [0. 0 0 0; 0 0 0 0; 0 1 0 0; 0 0 0 0]
 
     @test has_fermion_string("Cup", s)
+    @test has_fermion_string("Cup*F", s)
     @test has_fermion_string("Cdagup", s)
+    @test has_fermion_string("F*Cdagup", s)
     @test has_fermion_string("Cdn", s)
+    @test has_fermion_string("Cdn*F", s)
     @test has_fermion_string("Cdagdn", s)
     @test !has_fermion_string("N", s)
+    @test !has_fermion_string("F*N", s)
 
     s = siteind("Electron";conserve_nf=true)
     @test qn(s,1) == QN("Nf",0,-1)
