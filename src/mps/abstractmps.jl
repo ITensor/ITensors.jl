@@ -89,6 +89,20 @@ Base.iterate(M::AbstractMPS) = iterate(data(M))
 Base.iterate(M::AbstractMPS, state) = iterate(data(M), state)
 
 """
+    dense(M::MPS)
+    dense(M::MPO)
+
+Given an MPS (or MPO), return a new MPS (or MPO) 
+having called `dense` on each ITensor to convert each
+tensor to use dense storage and remove any QN or other
+sparse structure information, if it is not dense already.
+"""
+function NDTensors.dense(M::AbstractMPS)
+  D = [dense(T) for T in M]
+  return typeof(M)(D,leftlim(M),rightlim(M))
+end
+
+"""
     unique_siteind(A::MPO, B::MPS, j::Int)
     unique_siteind(A::MPO, B::MPO, j::Int)
 

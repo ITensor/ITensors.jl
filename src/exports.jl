@@ -178,6 +178,8 @@ export
 # mps/abstractmps.jl
   add,
   contract,
+  common_siteind,
+  common_siteinds,
   dag!,
   findfirstsiteind,
   findfirstsiteinds,
