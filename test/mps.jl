@@ -1122,7 +1122,7 @@ end
       ψ = apply(gates, ψ0; cutoff = 1e-15, maxdim = 100)
       
       prodψ = apply(gates, prod(ψ0))
-      @test prod(ψ) ≈ prodψ rtol = 1e-12
+      @test prod(ψ) ≈ prodψ rtol = 1e-10
     end
 
     @testset "With fermions" begin
@@ -1254,6 +1254,7 @@ end
           A_MPO = noprime(prod(contract(G3, ψ0; cutoff = 1e-16)))
         end
         @test A_OPS ≈ A_OP rtol = 1e-12
+        @test A_MPO ≈ A_OP rtol = 1e-12
       end
 
     end
