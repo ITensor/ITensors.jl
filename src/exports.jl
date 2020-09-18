@@ -92,6 +92,7 @@ export
   # Types
   ITensor,
   # Methods
+  ⊙,
   addblock!,
   addtags!,
   apply,
@@ -110,6 +111,7 @@ export
   dot,
   firstind,
   filterinds,
+  hadamard_product,
   hascommoninds,
   hasind,
   hasinds,

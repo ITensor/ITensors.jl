@@ -122,12 +122,15 @@ find_type(::Type{T}, ::Tuple{}) where {T} = nothing
 # Generic fallback
 #
 
-Base.copyto!(T::ITensor,
-             bc::Broadcasted) = error("The broadcasting operation you are attempting is not yet implemented for ITensors, please raise an issue if you would like it to be supported.")
+function Base.copyto!(T::ITensor,
+                      bc::Broadcasted)
+  @show typeof(bc)
+  error("The broadcasting operation you are attempting is not yet implemented for ITensors, please raise an issue if you would like it to be supported.")
+end
 
 #
-# For B .= α .* A
-#     A .*= α
+# B .= α .* A
+# A .*= α
 #
 
 function Base.copyto!(T::ITensor,
@@ -143,19 +146,77 @@ function Base.copyto!(T::ITensor,
 end
 
 #
-# For B .= α ./ A
-#     A ./= α
+# B .= A ./ α
+# A ./= α
 #
 
 function Base.copyto!(T::ITensor,
                       bc::Broadcasted{ITensorOpScalarStyle,
-                                      <:Any,
+                                      <: Any,
                                       typeof(/),
-                                      <:Tuple{<:ITensor,
-                                              <:Number}})
+                                      <: Tuple{ <: ITensor,
+                                                <: Number}})
   α = find_type(Number, bc.args)
   A = find_type(ITensor, bc.args)
-  map!((t, a) -> a / α, T, T, A)
+  map!((t, a) -> bc.f(a, α), T, T, A)
+  return T
+end
+
+#
+# C .= A ./ B
+#
+
+function Base.copyto!(R::ITensor,
+                      bc::Broadcasted{ITensorStyle,
+                                      <: Any,
+                                      typeof(/),
+                                      <: Tuple{ <: ITensor,
+                                                <: ITensor}})
+  T1, T2 = bc.args
+  if R === T1
+    map!((t1, t2) -> bc.f(t1, t2), R, T1, T2)
+  elseif R === T2
+    map!((t1, t2) -> bc.f(t2, t1), R, T2, T1)
+  else
+    error("When dividing two ITensors in-place, one must be the same as the output ITensor")
+  end
+  return R
+end
+
+#
+# C .= A .⊙ B
+#
+
+function Base.copyto!(R::ITensor,
+                      bc::Broadcasted{ITensorStyle,
+                                      <: Any,
+                                      typeof(⊙),
+                                      <: Tuple{ <: ITensor,
+                                                <: ITensor}})
+  T1, T2 = bc.args
+  if R === T1
+    map!((t1, t2) -> *(t1, t2), R, T1, T2)
+  elseif R === T2
+    map!((t1, t2) -> *(t2, t1), R, T2, T1)
+  else
+    error("When Hadamard producting two ITensors in-place, one must be the same as the output ITensor")
+  end
+  return R
+end
+
+#
+# B .= α ./ A
+#
+
+function Base.copyto!(T::ITensor,
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <: Any,
+                                      typeof(/),
+                                      <: Tuple{ <: Number,
+                                                <: ITensor}})
+  α = find_type(Number, bc.args)
+  A = find_type(ITensor, bc.args)
+  map!((t, a) -> bc.f(α, a), T, T, A)
   return T
 end
 
@@ -170,6 +231,22 @@ function Base.copyto!(R::ITensor,
   α = find_type(Number, bc.args)
   T = find_type(ITensor, bc.args)
   map!((r, t) -> t ^ α, R, R, T)
+  return R
+end
+
+#
+# For B .= A .^ 2
+#
+
+function Base.copyto!(R::ITensor,
+                      bc::Broadcasted{ITensorOpScalarStyle,
+                                      <:Any,
+                                      typeof(Base.literal_pow)})
+  α = find_type(Base.RefValue{<:Val},bc.args).x
+  powf = find_type(Base.RefValue{<:Function},bc.args).x
+  @assert !isnothing(powf)
+  T = find_type(ITensor,bc.args)
+  map!((r, t) -> bc.f(^, t, α), R, R, T)
   return R
 end
 
@@ -201,14 +278,28 @@ function Base.copyto!(T::ITensor,
 end
 
 #
-# For B .+= A
+# B .+= A
 #
+
+function fmap(bc::Broadcasted{ITensorStyle,
+                              <: Any,
+                              typeof(+),
+                              <: Tuple{Vararg{ <: ITensor}}})
+  return (r, t) -> bc.f(r, t)
+end
+
+function fmap(bc::Broadcasted{ITensorStyle,
+                              <: Any,
+                              typeof(-),
+                              <: Tuple{Vararg{ <: ITensor}}})
+  return (r, t) -> bc.f(r, t)
+end
 
 function Base.copyto!(T::ITensor,
                       bc::Broadcasted{ITensorStyle,
-                                      <:Any,
+                                      <: Any,
                                       typeof(+),
-                                      <:Tuple{Vararg{<:ITensor}}})
+                                      <: Tuple{Vararg{ <: ITensor}}})
   if T === bc.args[1]
     A = bc.args[2]
   elseif T === bc.args[2]
@@ -216,18 +307,19 @@ function Base.copyto!(T::ITensor,
   else
     error("When adding two ITensors in-place, one must be the same as the output ITensor")
   end
-  map!((r, t) -> r + t, T, T, A)
+  map!(fmap(bc), T, T, A)
   return T
 end
 
 #
-# For B .-= A
+# B .-= A
 #
 
 function Base.copyto!(T::ITensor,
                       bc::Broadcasted{ITensorStyle,
-                                      <:Any,
-                                      typeof(-)})
+                                      <: Any,
+                                      typeof(-),
+                                      <: Tuple{Vararg{ <: ITensor}}})
   if T === bc.args[1]
     A = bc.args[2]
   elseif T === bc.args[2]
@@ -235,26 +327,47 @@ function Base.copyto!(T::ITensor,
   else
     error("When subtracting two ITensors in-place, one must be the same as the output ITensor")
   end
-  map!((r, t) -> r - t, T, T, A)
+  map!(fmap(bc), T, T, A)
   return T
 end
 
 #
-# For C .+= α .* A or C .+= α .* A .* B
+# C .+= α .* A
+# C .-= α .* A
+#
+# C .+= α .* A .* B
+# C .-= α .* A .* B
+#
+# B .+= A .^ 2.5
+# B .-= A .^ 2.5
+#
+# B .+= A .^ 2
+# B .-= A .^ 2
+#
+
 #
 
 function Base.copyto!(T::ITensor,
                       bc::Broadcasted{ITensorOpScalarStyle,
-                                      <:Any,
-                                      typeof(+)})
+                                      <: Any,
+                                      <: Union{typeof(+), typeof(-)}})
   C = find_type(ITensor, bc.args)
   bc_bc = find_type(Broadcasted, bc.args)
   if T === C
-    α = find_type(Number, bc_bc.args)
     A = find_type(ITensor, bc_bc.args)
+    α = find_type(Number, bc_bc.args)
+
+    # Check if it is the case .^(::Int)
+    γ = find_type(Base.RefValue{<:Val}, bc_bc.args)
+    powf = find_type(Base.RefValue{<:Function}, bc_bc.args)
+
     if !isnothing(α) && !isnothing(A)
-      map!((r, t) -> r + bc_bc.f(t, α), T, T, A)
+      map!((r, t) -> bc.f(r, bc_bc.f(t, α)), T, T, A)
+    elseif !isnothing(γ) && !isnothing(A) && !isnothing(powf)
+      map!((r, t) -> bc.f(r, bc_bc.f(powf[], t, γ[])), T, T, A)
     else
+      # In-place contraction:
+      # C .+= α .* A .* B
       bc_bc_bc = find_type(Broadcasted, bc_bc.args)
       if isnothing(α)
         β = find_type(Number, bc_bc_bc.args)
@@ -262,7 +375,7 @@ function Base.copyto!(T::ITensor,
       else
         A, B = bc_bc_bc.args
       end
-      mul!(T, A, B, β, 1)
+      mul!(T, A, B, β, bc.f(1))
     end
   else
     error("When adding two ITensors in-place, one must be the same as the output ITensor")
@@ -271,38 +384,8 @@ function Base.copyto!(T::ITensor,
 end
 
 #
-# For B .-= α .* A
-#
-
-function Base.copyto!(T::ITensor,
-                      bc::Broadcasted{ITensorOpScalarStyle,
-                                      <:Any,
-                                      typeof(-)})
-  C = find_type(ITensor, bc.args)
-  bc_bc = find_type(Broadcasted, bc.args)
-  if T === C
-    α = find_type(Number, bc_bc.args)
-    A = find_type(ITensor, bc_bc.args)
-    if !isnothing(α) && !isnothing(A)
-      map!((r, t) -> r - bc_bc.f(t, α), T, T, A)
-    else
-      bc_bc_bc = find_type(Broadcasted, bc_bc.args)
-      if isnothing(α)
-        α = find_type(Number, bc_bc_bc.args)
-        B = find_type(ITensor, bc_bc_bc.args)
-      else
-        A, B = bc_bc_bc.args
-      end
-      mul!(T, A, B, α, -1)
-    end
-  else
-    error("When adding two ITensors in-place, one must be the same as the output ITensor")
-  end
-  return T
-end
-
-#
-# For C .= β .* C .+ α .* A or C .= β .* C .+ α .* A .* B
+# C .= β .* C .+ α .* A
+# C .= β .* C .+ α .* A .* B
 #
 
 function Base.copyto!(T::ITensor,
@@ -363,8 +446,9 @@ end
 
 function Base.copyto!(T::ITensor,
                       bc::Broadcasted{ITensorStyle,
-                                      <:Any,
-                                      typeof(*)})
+                                      <: Any,
+                                      typeof(*),
+                                      <: Tuple{ <: ITensor, <: ITensor}})
   mul!(T, bc.args[1], bc.args[2])
   return T
 end
@@ -445,21 +529,6 @@ function Base.copyto!(R::ITensor,
   else
     error("In C .= f.(B) .+ g.(A), C and B or A must be the same ITensor")
   end
-  return R
-end
-
-#
-# For B .= A .^ 2
-#
-
-function Base.copyto!(R::ITensor,
-                      bc::Broadcasted{ITensorOpScalarStyle,
-                                      <:Any,
-                                      typeof(Base.literal_pow)})
-  α = find_type(Base.RefValue{<:Val},bc.args).x
-  powf = find_type(Base.RefValue{<:Function},bc.args).x
-  T = find_type(ITensor,bc.args)
-  map!((r, t) -> bc.f(^, t, α), R, R, T)
   return R
 end
 

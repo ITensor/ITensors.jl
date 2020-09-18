@@ -1286,6 +1286,38 @@ function LinearAlgebra.exp(A::ITensor;
 end
 
 """
+    hadamard_product!(C::ITensor{N}, A::ITensor{N}, B::ITensor{N})
+    hadamard_product(A::ITensor{N}, B::ITensor{N})
+    ⊙(A::ITensor{N}, B::ITensor{N})
+
+Elementwise product of 2 ITensors with the same indices.
+
+Alternative syntax `⊙` can be typed in the REPL with `\\odot <tab>`.
+"""
+function hadamard_product!(R::ITensor{N},
+                           T1::ITensor{N},
+                           T2::ITensor{N}) where {N}
+  if !hassameinds(T1, T2)
+    error("ITensors must have some indices to perform Hadamard product")
+  end
+  # Permute the indices to the same order
+  #if inds(A) ≠ inds(B)
+  #  B = permute(B, inds(A))
+  #end
+  #tensor(C) .= tensor(A) .* tensor(B)
+  map!((t1, t2) -> *(t1, t2), R, T1, T2)
+  return R
+end
+
+# TODO: instead of copy, use promote(A, B)
+function hadamard_product(A::ITensor, B::ITensor)
+  Ac = copy(A)
+  return hadamard_product!(Ac, Ac, B)
+end
+
+⊙(A::ITensor, B::ITensor) = hadamard_product(A, B)
+
+"""
     product(A::ITensor, B::ITensor)
 
 Get the product of ITensor `A` and ITensor `B`, which

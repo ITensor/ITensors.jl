@@ -61,7 +61,27 @@ using ITensors,
     @test Bc[2,1] == A[1,2] / α
     @test Bc[1,2] == A[2,1] / α
     @test Bc[2,2] == A[2,2] / α
-    @test_throws ErrorException Bc .= α ./ A
+
+    Bc = copy(B)
+    Bc .= α ./ A
+    @test Bc[1,1] == α / A[1,1]
+    @test Bc[2,1] == α / A[1,2]
+    @test Bc[1,2] == α / A[2,1]
+    @test Bc[2,2] == α / A[2,2]
+
+    Bc = copy(B)
+    Bc .= Bc ./ A
+    @test Bc[1,1] == B[1,1] / A[1,1]
+    @test Bc[2,1] == B[2,1] / A[1,2]
+    @test Bc[1,2] == B[1,2] / A[2,1]
+    @test Bc[2,2] == B[2,2] / A[2,2]
+
+    Bc = copy(B)
+    Bc .= A ./ Bc
+    @test Bc[1,1] == A[1,1] / B[1,1]
+    @test Bc[2,1] == A[1,2] / B[2,1]
+    @test Bc[1,2] == A[2,1] / B[1,2]
+    @test Bc[2,2] == A[2,2] / B[2,2]
   end
 
   @testset "Add and divide (in-place)" begin
@@ -236,6 +256,43 @@ using ITensors,
 
     @test Apow2[1] == A[1]^3
     @test Apow2[2] == A[2]^3
+
+    Ac = copy(A)
+    Ac .+= B .^ 2.0
+
+    @test Ac[1] == A[1] + B[1]^2
+    @test Ac[2] == A[2] + B[2]^2
+
+    Ac = copy(A)
+    Ac .-= B .^ 2.0
+
+    @test Ac[1] == A[1] - B[1]^2
+    @test Ac[2] == A[2] - B[2]^2
+
+    Ac = copy(A)
+    Ac .-= B .^ 3
+
+    @test Ac[1] == A[1] - B[1]^3
+    @test Ac[2] == A[2] - B[2]^3
+  end
+
+  @testset "Hadamard product" begin
+    i = Index(2,"i")
+    A = randomITensor(i, i')
+    B = randomITensor(i', i)
+
+    C = A ⊙ B
+    @test C[1,1] == A[1,1] * B[1,1]
+    @test C[1,2] == A[1,2] * B[2,1]
+    @test C[2,1] == A[2,1] * B[1,2]
+    @test C[2,2] == A[2,2] * B[2,2]
+
+    Ac = copy(A)
+    Ac .= Ac .⊙ B
+    @test C[1,1] == A[1,1] * B[1,1]
+    @test C[1,2] == A[1,2] * B[2,1]
+    @test C[2,1] == A[2,1] * B[1,2]
+    @test C[2,2] == A[2,2] * B[2,2]
   end
 
 end
