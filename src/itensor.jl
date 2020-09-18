@@ -584,6 +584,11 @@ function Base.getindex(T::ITensor)
   return tensor(T)[]::Number
 end
 
+Base.lastindex(A::ITensor, n::Int64) = dim(A, n)
+
+# Implement when ITensors can be indexed by a single integer
+#Base.lastindex(A::ITensor) = dim(A)
+
 """
     setindex!(T::ITensor, x::Number, I::Int...)
 
@@ -997,6 +1002,23 @@ The indices must have the same space (i.e. the same dimension and QNs, if applic
 
 The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
 """ swapinds(::ITensor, ::Any...)
+
+"""
+    anyhastags(A::ITensor, ts::Union{String, TagSet})
+    hastags(A::ITensor, ts::Union{String, TagSet})
+
+Check if any of the indices in the ITensor have the specified tags.
+"""
+anyhastags(A::ITensor, ts) = anyhastags(inds(A), ts)
+
+hastags(A::ITensor, ts) = hastags(inds(A), ts)
+
+"""
+    allhastags(A::ITensor, ts::Union{String, TagSet})
+
+Check if all of the indices in the ITensor have the specified tags.
+"""
+allhastags(A::ITensor, ts) = allhastags(inds(A), ts)
 
 """
     adjoint(A::ITensor)

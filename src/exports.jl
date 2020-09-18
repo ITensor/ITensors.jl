@@ -65,6 +65,8 @@ export
   IndexSet,
   Order,
   # Methods
+  allhastags,
+  anyhastags,
   dims,
   firstintersect,
   firstsetdiff,

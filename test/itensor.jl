@@ -39,6 +39,13 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test !hascommoninds(A, C)
   end
 
+  @testset "Get element with end" begin
+    i = Index(2)
+    j = Index(3)
+    A = randomITensor(i, j)
+    @test A[end, end] == A[i => 2, j => 3]
+  end
+
   @testset "Random" begin
     A = randomITensor(i, j)
 
@@ -1140,6 +1147,16 @@ end
   B = randomITensor(s1', s2', lB, rB)
   @test_throws ErrorException product(A, B)
 
+end
+
+@testset "hastags" begin
+  i = Index(2, "i, x")
+  j = Index(2, "j, x")
+  A = randomITensor(i, j)
+  @test hastags(A, "i")
+  @test anyhastags(A, "i")
+  @test !allhastags(A, "i")
+  @test allhastags(A, "x")
 end
 
 end # End Dense ITensor basic functionality
