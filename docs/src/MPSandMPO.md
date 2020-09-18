@@ -93,6 +93,12 @@ swapbondsites(::ITensors.AbstractMPS, ::Int; kwargs...)
 truncate!
 ```
 
+## Gate evolution
+
+```@docs
+product(::Vector{ <: ITensor}, ::ITensors.AbstractMPS)
+```
+
 ## Algebra Operations
 
 ```@docs

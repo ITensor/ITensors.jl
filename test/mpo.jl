@@ -495,6 +495,14 @@ end
     @test prod(ρ) ≈ M
   end
 
+  @test "tr(::MPO)" begin
+    N = 5
+    s = siteinds("S=1/2", N)
+    H = MPO(s, "Id")
+    d = dim(s[1])
+    @test tr(H) ≈ d^N
+  end
+
 end
 
 nothing
