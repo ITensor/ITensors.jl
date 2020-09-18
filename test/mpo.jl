@@ -495,7 +495,7 @@ end
     @test prod(ρ) ≈ M
   end
 
-  @test "tr(::MPO)" begin
+  @testset "tr(::MPO)" begin
     N = 5
     s = siteinds("S=1/2", N)
     H = MPO(s, "Id")
