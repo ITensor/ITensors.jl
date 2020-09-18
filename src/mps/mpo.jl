@@ -264,6 +264,15 @@ function logdot(M1::MPO, M2::MPO;
                          make_inds_match = make_inds_match)
 end
 
+function LinearAlgebra.tr(M::MPO)
+  N = length(M)
+  L = M[1] * delta(dag(siteinds(M, 1)))
+  for j in 2:N
+    L = L * M[j] * delta(dag(siteinds(M, j)))
+  end
+  return L[]
+end
+
 """
     error_contract(y::MPS, A::MPO, x::MPS;
                    make_inds_match::Bool = true)

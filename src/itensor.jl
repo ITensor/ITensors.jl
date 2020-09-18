@@ -714,6 +714,14 @@ hassameinds(A, B) =
   issetequal(itensor2inds(A), itensor2inds(B))
 
 # intersect
+"""
+    commoninds(A, B; kwargs...)
+    commoninds(::Order{N}, A, B; kwargs...)
+
+Return an IndexSet with indices that are common (in the interesection) between the indices of `A` and `B`.
+
+Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
+"""
 commoninds(A...; kwargs...) =
   IndexSet(intersect(itensor2inds.(A)...; kwargs...))
 
@@ -725,6 +733,14 @@ commonind(A...; kwargs...) =
   firstintersect(itensor2inds.(A)...; kwargs...)
 
 # symdiff
+"""
+    noncommoninds(A, B; kwargs...)
+    noncommoninds(::Order{N}, A, B; kwargs...)
+
+Return an IndexSet with indices that are not common between the indices of `A` and `B` (the symmetric set difference).
+
+Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
+"""
 noncommoninds(A...; kwargs...) =
   IndexSet(symdiff(itensor2inds.(A)...; kwargs...)...)
 
@@ -736,6 +752,14 @@ noncommonind(A...; kwargs...) =
   getfirst(symdiff(itensor2inds.(A)...; kwargs...))
 
 # setdiff
+"""
+    uniqueinds(A, B; kwargs...)
+    uniqueinds(::Order{N}, A, B; kwargs...)
+
+Return an IndexSet with indices that are unique to the set of indices of `A` and not in `B` (the set difference).
+
+Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
+"""
 uniqueinds(A...; kwargs...) =
   IndexSet(setdiff(itensor2inds.(A)...; kwargs...)...)
 
@@ -747,6 +771,14 @@ uniqueind(A...; kwargs...) =
   firstsetdiff(itensor2inds.(A)...; kwargs...)
 
 # union
+"""
+    unioninds(A, B; kwargs...)
+    unioninds(::Order{N}, A, B; kwargs...)
+
+Return an IndexSet with indices that are the union of the indices of `A` and `B`.
+
+Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
+"""
 unioninds(A...; kwargs...) =
   IndexSet(union(itensor2inds.(A)...; kwargs...)...)
 
