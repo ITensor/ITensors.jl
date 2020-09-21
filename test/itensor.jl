@@ -40,10 +40,10 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
   end
 
   @testset "Get element with end" begin
-    i = Index(2)
-    j = Index(3)
-    A = randomITensor(i, j)
-    @test A[end, end] == A[i => 2, j => 3]
+    a = Index(2)
+    b = Index(3)
+    A = randomITensor(a, b)
+    @test A[end, end] == A[a => 2, b => 3]
   end
 
   @testset "Random" begin
