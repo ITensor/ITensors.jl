@@ -937,6 +937,25 @@ function _replacetags(i::Index,
   return i
 end
 
+"""
+    anyhastags(is::IndexSet, ts::Union{String, TagSet})
+    hastags(is::IndexSet, ts::Union{String, TagSet})
+
+Check if any of the indices in the IndexSet have the specified tags.
+"""
+anyhastags(is::IndexSet, ts) =
+  any(i -> hastags(i, ts), is)
+
+hastags(is::IndexSet, ts) = anyhastags(is, ts)
+
+"""
+    allhastags(is::IndexSet, ts::Union{String, TagSet})
+
+Check if all of the indices in the IndexSet have the specified tags.
+"""
+allhastags(is::IndexSet, ts::String) =
+  all(i -> hastags(i, ts), is)
+
 # Version taking a list of Pairs
 replacetags(f::Function,
             is::IndexSet,

@@ -584,6 +584,11 @@ function Base.getindex(T::ITensor)
   return tensor(T)[]::Number
 end
 
+Base.lastindex(A::ITensor, n::Int64) = dim(A, n)
+
+# Implement when ITensors can be indexed by a single integer
+#Base.lastindex(A::ITensor) = dim(A)
+
 """
     setindex!(T::ITensor, x::Number, I::Int...)
 
@@ -999,6 +1004,23 @@ The storage of the ITensor is not modified or copied (the output ITensor is a vi
 """ swapinds(::ITensor, ::Any...)
 
 """
+    anyhastags(A::ITensor, ts::Union{String, TagSet})
+    hastags(A::ITensor, ts::Union{String, TagSet})
+
+Check if any of the indices in the ITensor have the specified tags.
+"""
+anyhastags(A::ITensor, ts) = anyhastags(inds(A), ts)
+
+hastags(A::ITensor, ts) = hastags(inds(A), ts)
+
+"""
+    allhastags(A::ITensor, ts::Union{String, TagSet})
+
+Check if all of the indices in the ITensor have the specified tags.
+"""
+allhastags(A::ITensor, ts) = allhastags(inds(A), ts)
+
+"""
     adjoint(A::ITensor)
 
 For `A'` notation to prime an ITensor by 1.
@@ -1262,6 +1284,38 @@ function LinearAlgebra.exp(A::ITensor;
   Lis = Ris'
   return exp(A, Lis, Ris; kwargs...)
 end
+
+"""
+    hadamard_product!(C::ITensor{N}, A::ITensor{N}, B::ITensor{N})
+    hadamard_product(A::ITensor{N}, B::ITensor{N})
+    ⊙(A::ITensor{N}, B::ITensor{N})
+
+Elementwise product of 2 ITensors with the same indices.
+
+Alternative syntax `⊙` can be typed in the REPL with `\\odot <tab>`.
+"""
+function hadamard_product!(R::ITensor{N},
+                           T1::ITensor{N},
+                           T2::ITensor{N}) where {N}
+  if !hassameinds(T1, T2)
+    error("ITensors must have some indices to perform Hadamard product")
+  end
+  # Permute the indices to the same order
+  #if inds(A) ≠ inds(B)
+  #  B = permute(B, inds(A))
+  #end
+  #tensor(C) .= tensor(A) .* tensor(B)
+  map!((t1, t2) -> *(t1, t2), R, T1, T2)
+  return R
+end
+
+# TODO: instead of copy, use promote(A, B)
+function hadamard_product(A::ITensor, B::ITensor)
+  Ac = copy(A)
+  return hadamard_product!(Ac, Ac, B)
+end
+
+⊙(A::ITensor, B::ITensor) = hadamard_product(A, B)
 
 """
     product(A::ITensor, B::ITensor)

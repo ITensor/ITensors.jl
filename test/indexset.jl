@@ -235,6 +235,7 @@ using Compat
     @test swapprime(I,0,1,"i") == IndexSet(i',i,j)
     @test swapprime(I,0,1,"j") == IndexSet(i,i',j')
   end
+
   @testset "swaptags" begin
     i1 = Index(2,"Site,A")
     i2 = Index(2,"Site,B")
@@ -245,6 +246,17 @@ using Compat
       @test hastags(j,"Link")
     end
   end
+
+  @testset "hastags" begin
+    i = Index(2, "i, x")
+    j = Index(2, "j, x")
+    is = IndexSet(i, j)
+    @test hastags(is, "i")
+    @test anyhastags(is, "i")
+    @test !allhastags(is, "i")
+    @test allhastags(is, "x")
+  end
+
   @testset "broadcasting" begin
     I = IndexSet(i, j)
     J = prime.(I)
