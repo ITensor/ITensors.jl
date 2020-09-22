@@ -179,7 +179,7 @@ function LinearAlgebra.dot(y::MPS, A::MPO, x::MPS;
                            make_inds_match::Bool = true)::Number
   N = length(A)
   if length(y) != N || length(x) != N
-      throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
+    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
   end
   ydag = dag(y)
   sim_linkinds!(ydag)

@@ -579,7 +579,7 @@ end
 
 function Base.getindex(T::ITensor) 
   if order(T) != 0
-    throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar"))
+    throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."))
   end
   return tensor(T)[]::Number
 end
@@ -1180,6 +1180,8 @@ function Base.:*(A::ITensor, B::ITensor)
   if !isnothing(warnTensorOrder) > 0 &&
      order(C) >= warnTensorOrder
      @warn "Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_order!(::Int)`, `reset_warn_order!()`, and `disable_warn_order!()`."
+     show(stdout, MIME"text/plain"(), stacktrace())
+     println()
   end
   return C
 end

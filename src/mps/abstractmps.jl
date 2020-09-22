@@ -44,8 +44,11 @@ function orthocenter(m::T) where {T<:AbstractMPS}
   return leftlim(m)+1
 end
 
-Base.getindex(M::AbstractMPS,
-              n::Integer) = getindex(data(M),n)
+Base.getindex(M::AbstractMPS, n::Integer) =
+  getindex(data(M), n)
+
+Base.lastindex(M::AbstractMPS) =
+  lastindex(data(M))
 
 function Base.setindex!(M::AbstractMPS,
                         T::ITensor,
