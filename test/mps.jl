@@ -1097,7 +1097,7 @@ end
             
       @set_warn_order 18 begin
         prodM = apply(gates, prod(M0); apply_dag = true)
-        @test prod(M) ≈ prodM rtol = 1e-8
+        @test prod(M) ≈ prodM rtol = 1e-6
       end
     end
 
