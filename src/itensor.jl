@@ -1246,6 +1246,9 @@ function LinearAlgebra.tr(T::ITensor;
   for indpair in trpairs
     T *= δ(dag.(Tuple(indpair)))
   end
+  if order(T) == 0
+    return T[]
+  end
   return T
 end
 

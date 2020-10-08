@@ -277,12 +277,12 @@ function LinearAlgebra.tr(M::MPO;
   #
   # So tracing first is better if d > √χ.
   #
-  L = tr(M[1])
+  L = tr(M[1]; plev = plev, tags = tags)
   for j in 2:N
     L *= M[j]
     L = tr(L; plev = plev, tags = tags)
   end
-  return L[]
+  return L
 end
 
 """
