@@ -1219,6 +1219,36 @@ end
 
 LinearAlgebra.dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 
+# Returns a tuple of pairs of indices, where the pairs
+# are determined by the prime level pairs `plev` and
+# tag pairs `tags`.
+function indpairs(T::ITensor;
+                  plev::Pair{Int, Int} = 0 => 1,
+                  tags::Pair = ts"" => ts"")
+  is1 = filterinds(T; plev = first(plev), tags = first(tags))
+  is2 = filterinds(T, plev = last(plev), tags = last(tags))
+  is2to1 = replacetags(mapprime(is2, last(plev) => first(plev)),
+                       last(tags) => first(tags))
+  is_first = commoninds(is1, is2to1)
+  is_last = replacetags(mapprime(is_first, first(plev) => last(plev)),
+                        first(tags) => last(tags))
+  is_last = permute(commoninds(T, is_last), is_last)
+  return Tuple(is_first) .=> Tuple(is_last)
+end
+
+# Trace an ITensor over pairs of indices determined by
+# the prime levels and tags. Indices that are not in pairs
+# are not traced over, corresponding to a "batched" trace.
+function LinearAlgebra.tr(T::ITensor;
+                          plev::Pair{Int, Int} = 0 => 1,
+                          tags::Pair = ts"" => ts"")
+  trpairs = indpairs(T; plev = plev, tags = tags)
+  for indpair in trpairs
+    T *= δ(dag.(Tuple(indpair)))
+  end
+  return T
+end
+
 """
     exp(A::ITensor, Linds=Rinds', Rinds=inds(A,plev=0); ishermitian = false)
 

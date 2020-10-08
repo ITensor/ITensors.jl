@@ -1,5 +1,8 @@
-
 export
+# From external modules
+  # LinearAlgebra
+  tr,
+
 # Modules
   LinearAlgebra,
   NDTensors,

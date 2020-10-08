@@ -278,8 +278,8 @@ end
 
 # TODO: allow custom tags in internal indices?
 function NDTensors.polar(A::ITensor,
-                       Linds...;
-                       kwargs...)
+                         Linds...;
+                         kwargs...)
   Lis = commoninds(A, IndexSet(Linds...))
   Ris = uniqueinds(A, Lis)
   Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)

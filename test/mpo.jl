@@ -503,6 +503,16 @@ end
     @test tr(H) ≈ d^N
   end
 
+  @testset "tr(::MPO) multiple site indices" begin
+    N = 6
+    s = siteinds("S=1/2", N)
+    H = MPO(s, "Id")
+    H2 = MPO([H[j] * H[j+1] for j in 1:2:N-1])
+    d = dim(s[1])
+    @test tr(H) ≈ d^N
+    @test tr(H2) ≈ d^N
+  end
+
 end
 
 nothing
