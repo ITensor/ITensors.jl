@@ -1,16 +1,16 @@
+ITensors v0.1.24 Release Notes
+==============================
+* Generalize `tr(::MPO)` for MPOs with more an one pair of site indices per site (PR #509)
+* Add `tr(::ITensor)` to trace pairs of indices of an ITensor (PR #509)
+* Add stacktrace to warn tensor order (PR #498)
+
 ITensors v0.1.23 Release Notes
 ==============================
-
 * Add lastindex(A::ITensor, n::Int) to define A[end, end]. (PR #495)
-
 * Define hastags(A::ITensor, ts) and related functions. (PR #495)
-
 * Fix some broadcasting. Add Hadamard product and division. (PR #495)
-
 * Add tr(::MPO) (PR #492)
-
 * Add docstrings and docs for apply(::Vector{ITensor}, ::MPS) (PR #492)
-
 * Add docstrings for IndexSet set functions like commoninds, uniqueinds, etc. (PR #492)
 
 ITensors v0.1.22 Release Notes
