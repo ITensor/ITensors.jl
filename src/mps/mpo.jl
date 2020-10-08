@@ -264,13 +264,25 @@ function logdot(M1::MPO, M2::MPO;
                          make_inds_match = make_inds_match)
 end
 
-function LinearAlgebra.tr(M::MPO)
+function LinearAlgebra.tr(M::MPO;
+                          plev::Pair{Int, Int} = 0 => 1,
+                          tags::Pair = ts"" => ts"")
   N = length(M)
-  L = M[1] * delta(dag(siteinds(M, 1)))
+  #
+  # TODO: choose whether to contract or trace
+  # first depending on the bond dimension. The scaling is:
+  #
+  # 1. Trace last:  O(χ²d²) + O(χd²)
+  # 2. Trace first: O(χ²d²) + O(χ²)
+  #
+  # So tracing first is better if d > √χ.
+  #
+  L = tr(M[1]; plev = plev, tags = tags)
   for j in 2:N
-    L = L * M[j] * delta(dag(siteinds(M, j)))
+    L *= M[j]
+    L = tr(L; plev = plev, tags = tags)
   end
-  return L[]
+  return L
 end
 
 """
