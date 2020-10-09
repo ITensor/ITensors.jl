@@ -1,6 +1,5 @@
 using ITensors
 using Printf
-using Random
 
 # Use DMRG to solve the spin 1, 1D Heisenberg model on 100 sites
 # For the Heisenberg model in one dimension
