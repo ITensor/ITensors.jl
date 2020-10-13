@@ -1,6 +1,5 @@
-using ITensors,
-      Test
-
+using ITensors
+using Test
 import ITensors: In, Out, Neither
 
 @testset "Index" begin

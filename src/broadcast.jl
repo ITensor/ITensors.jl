@@ -3,14 +3,6 @@
 # Broadcasting for IndexSets
 #
 
-import Base.Broadcast: BroadcastStyle,
-                       Style,
-                       Broadcasted,
-                       broadcastable,
-                       instantiate,
-                       DefaultArrayStyle,
-                       broadcasted
-
 BroadcastStyle(::Type{<:IndexSet}) = Style{IndexSet}()
 
 broadcastable(t::IndexSet) = t

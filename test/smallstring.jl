@@ -1,11 +1,12 @@
-using ITensors,
-      Test
+using ITensors
+using Test
 
-import ITensors.SmallString, 
-       ITensors.Tag,
-       ITensors.isint,
-       ITensors.isnull,
-       ITensors.IntChar
+import ITensors:
+  SmallString, 
+  Tag,
+  isint,
+  isnull,
+  IntChar
 
 @testset "SmallString" begin
   @testset "ctors" begin

@@ -1,6 +1,4 @@
 
-import .NDTensors: mindim
-
 """
 A Sweeps objects holds information
 about the various parameters controlling
