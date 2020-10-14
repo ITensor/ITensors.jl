@@ -2,28 +2,35 @@ using ITensors
 using LinearAlgebra
 using QuadGK
 
-function ising_mpo(sh::Tuple{Index, Index},
-                   sv::Tuple{Index, Index},
+function ising_mpo(pair_sₕ::Pair{<: Index, <: Index},
+                   pair_sᵥ::Pair{<: Index, <: Index},
                    β::Real, J::Real = 1.0;
                    sz::Bool = false)
-  d = dim(sh[1])
-  T = ITensor(sh[1], sh[2], sv[1], sv[2])
+  sₕ, sₕ′ = pair_sₕ
+  sᵥ, sᵥ′ = pair_sᵥ
+  @assert dim(sₕ) == dim(sᵥ)
+  d = dim(sₕ)
+  T = ITensor(sₕ, sₕ′, sᵥ, sᵥ′)
   for i in 1:d
     T[i, i, i, i] = 1
   end
   if sz
     T[1, 1, 1, 1] = -T[1, 1, 1, 1]
   end
+  s̃ₕ, s̃ₕ′, s̃ᵥ, s̃ᵥ′ = sim.((sₕ, sₕ′, sᵥ, sᵥ′))
+  T̃ = T * δ(sₕ, s̃ₕ) * δ(sₕ′, s̃ₕ′) * δ(sᵥ, s̃ᵥ) * δ(sᵥ′, s̃ᵥ′)
   Q = [exp(β * J) exp(-β * J); exp(-β * J) exp(β * J)]
   D,U = eigen(Symmetric(Q))
   √Q = U * Diagonal(sqrt.(D)) * U'
-  Xh1 = itensor(vec(√Q), sh[1], sh[1]')
-  Xh2 = itensor(vec(√Q), sh[2], sh[2]')
-  Xv1 = itensor(vec(√Q), sv[1], sv[1]')
-  Xv2 = itensor(vec(√Q), sv[2], sv[2]')
-  T = mapprime(T * Xh1 * Xh2 * Xv1 * Xv2, 1 => 0)
-  return T
+  Xₕ = itensor(vec(√Q), s̃ₕ, sₕ)
+  Xₕ′ = itensor(vec(√Q), s̃ₕ′, sₕ′)
+  Xᵥ = itensor(vec(√Q), s̃ᵥ, sᵥ)
+  Xᵥ′ = itensor(vec(√Q), s̃ᵥ′, sᵥ′)
+  return T̃ * Xₕ′ * Xᵥ′ * Xₕ * Xᵥ
 end
+
+ising_mpo(sₕ::Index, sᵥ::Index, args...; kwargs...) =
+  ising_mpo(sₕ => sₕ', sᵥ => sᵥ', args...; kwargs...)
 
 function ising_mpo_dual(sh::Tuple{Index, Index},
                         sv::Tuple{Index, Index},
@@ -38,7 +45,7 @@ function ising_mpo_dual(sh::Tuple{Index, Index},
         sig(s3) * sig(s4) +
         sig(s4) * sig(s1)
     val = exp(-β * (E - E0))
-    T[sh[1](s1), sv[2](s2), sh[2](s3), sv[1](s4)] = val
+    T[sh[1] => s1, sv[2] => s2, sh[2] => s3, sv[1] => s4] = val
   end
   return T
 end
@@ -49,8 +56,8 @@ function ising_partition(sh, sv, β)
   for iy in 1:ny, ix in 1:nx
     ixp = per(ix + 1, nx)
     iyp = per(iy + 1, ny)
-    T[iy, ix] = ising_mpo((sh[iy, ix], sh[iy, ixp]),
-                          (sv[iy, ix], sv[iyp, ix]), β)
+    T[iy, ix] = ising_mpo(sh[iy, ix] => sh[iy, ixp],
+                          sv[iy, ix] => sv[iyp, ix], β)
   end
   return T
 end

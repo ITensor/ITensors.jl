@@ -13,14 +13,12 @@ include(joinpath(@__DIR__, "..", "examples", "src", "2d_classical_ising.jl"))
   d = 2
   s = Index(d)
   l = addtags(s, "left")
-  r = addtags(s, "right")
   u = addtags(s, "up")
-  d = addtags(s, "down")
-  T = ising_mpo((l, r), (u, d), β)
+  T = ising_mpo(l, u, β)
 
   χmax = 20
   nsteps = 20
-  κ, T, (l, r), (u, d) = trg(T, (l, r), (u, d); χmax = χmax, nsteps = nsteps)
+  κ, T = trg(T; χmax = χmax, nsteps = nsteps)
 
   @test κ ≈ exp(-β * ising_free_energy(β)) atol = 1e-4
 end

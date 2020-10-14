@@ -1,65 +1,51 @@
 using Pkg
 Pkg.activate(".")
 
-include(joinpath("..", "..", "src", "ctmrg_isotropic.jl"))
-include(joinpath("..", "..", "src", "2d_classical_ising.jl"))
+src_dir = joinpath(@__DIR__, "..", "..", "src")
+include(joinpath(src_dir, "ctmrg_isotropic.jl"))
+include(joinpath(src_dir, "2d_classical_ising.jl"))
 
 # Make Ising model MPO
 β = 1.1 * βc
 d = 2
-s = Index(d, "site")
-sl = addtags(s, "left")
-sr = addtags(s, "right")
-su = addtags(s, "up")
-sd = addtags(s, "down")
+s = Index(d, "Site")
+sₕ = addtags(s, "horiz")
+sᵥ = addtags(s, "vert")
 
-T = ising_mpo((sl,sr), (su,sd), β)
+T = ising_mpo(sₕ, sᵥ, β)
 
 χ0 = 1
-l = Index(χ0, "link")
-ll = addtags(l, "left")
-lu = addtags(l, "up")
-ld = addtags(l, "down")
+l = Index(χ0, "Link")
+lₕ = addtags(l, "horiz")
+lᵥ = addtags(l, "vert")
 
 # Initial CTM
-Clu = ITensor(lu, ll)
-Clu[1,1] = 1.0
+Cₗᵤ = ITensor(lᵥ, lₕ)
+Cₗᵤ[1, 1] = 1.0
 
 # Initial HRTM
-Al = ITensor(lu, ld, sl)
-Al[lu(1), ld(1), sl(1)] = 1.0
-Al[lu(1), ld(1), sl(2)] = 0.0
+Aₗ = ITensor(lᵥ, lᵥ', sₕ)
+Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 1] = 1.0
+Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 2] = 0.0
 
-Clu, Al = ctmrg(T, Clu, Al; χmax = 30, nsteps = 2000)
+Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax = 20, nsteps = 100)
 
-# Normalize corner matrix
-trC⁴ = Clu*mapprime(Clu, 0, 1, "up")*
-       mapprime(Clu,0,1)*mapprime(Clu,0,1,"left")
-Clu = Clu/scalar(trC⁴)^(1/4)
+lᵥ = commonind(Cₗᵤ, Aₗ)
+lₕ = noncommoninds(Cₗᵤ, Aₗ)[1]
 
-# Normalize MPS tensor
-trA² = Clu*mapprime(Clu,0,1,"up")*Al*
-       mapprime(Al,0,1,"link")*
-       mapprime(replacetags(mapprime(Clu,0,1,"up"),"up","down"),0,1,"left")*
-       replacetags(mapprime(Clu,0,1,"left"),"up","down")
-Al = Al/sqrt(scalar(trA²))
+Aᵤ = replaceinds(Aₗ, lᵥ => lₕ, lᵥ' => lₕ', sₕ => sᵥ)
 
-## Get environment tensors for a single site measurement
-Ar = mapprime(replacetags(Al,"left","right","site"),0,1,"link")
-Au = replacetags(replacetags(replacetags(Al,"left","up","site"),
-                                            "down","left","link"),
-                                            "up","right","link")
-Ad  = mapprime(replacetags(Au,"up","down","site"),0,1,"link")
-Cld = mapprime(replacetags(Clu,"up","down"),0,1,"left")
-Cru = mapprime(replacetags(Clu,"left","right"),0,1,"up")
-Crd = replacetags(mapprime(Cru,0,1,"right"),"up","down")
+ACₗ = Aₗ * Cₗᵤ * dag(Cₗᵤ')
 
-## Calculate partition function per site
-κ = scalar(Clu*Al*Cld*Au*T*Ad*Cru*Ar*Crd)
-@assert κ ≈ exp(-β*ising_free_energy(β))
+ACTₗ = prime(ACₗ * dag(Aᵤ') * T * Aᵤ, -1)
 
-## Calculate magnetization
-Tsz = ising_mpo((sl,sr),(su,sd),β;sz=true)
-m = scalar(Clu*Al*Cld*Au*Tsz*Ad*Cru*Ar*Crd)/κ
-@assert abs(m) ≈ ising_magnetization(β)
+κ = (ACTₗ * dag(ACₗ))[]
+
+@show κ, exp(-β * ising_free_energy(β))
+
+# Calculate magnetization
+Tsz = ising_mpo(sₕ, sᵥ, β; sz = true)
+ACTszₗ = prime(ACₗ * dag(Aᵤ') * Tsz * Aᵤ, -1)
+m = (ACTszₗ * dag(ACₗ))[] / κ
+@show m, ising_magnetization(β)
 

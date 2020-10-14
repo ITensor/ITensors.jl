@@ -1,87 +1,57 @@
 using ITensors
 
 """
-    trg(T::ITensor; χmax::Int, nsteps::Int) -> κ,T
+    trg(T::ITensor; χmax::Int, nsteps::Int) -> κ, T
 
 Perform the TRG algorithm on the partition function composed of the ITensor T.
-T is assumed to have Indices with tags "left", "right", "up", and "down".
 
-The indices of T must obey: 
-
-`firstind(T,"left") = tags(firstind(T,"right"),"right->left")`
-
-`firstind(T,"up") = tags(firstind(T,"down"),"down->up")`
+The indices of T must obey come in pairs `(sₕ => sₕ')` and  `(sᵥ => sᵥ').
 
 χmax is the maximum renormalized bond dimension.
 
 nsteps are the number of renormalization steps performed.
 
 The outputs are κ, the partition function per site, and the final renormalized
-ITensor T (also with Indices with tags "left","right","up", and "down").
+ITensor T.
 """
-function trg(T::ITensor, horiz_inds, vert_inds;
+function trg(T::ITensor;
              χmax::Int, nsteps::Int,
              svd_alg = "divide_and_conquer")
-
-  l = horiz_inds[1]
-  r = horiz_inds[2]
-  u = vert_inds[1]
-  d = vert_inds[2]
-
-  @assert hassameinds((l, r, u, d), T)
-
-  T = addtags(T, "orig")
-  l = addtags(l, "orig")
-  r = addtags(r, "orig")
-  u = addtags(u, "orig")
-  d = addtags(d, "orig")
+  sₕ, sᵥ = filterinds(T; plev = 0)
+  @assert hassameinds((sₕ, sₕ', sᵥ, sᵥ'), T)
 
   # Keep track of the partition function per site
   κ = 1.0
-
-  for n = 1:nsteps
-    Fr, Fl = factorize(T, (l, u);
+  for n in 1:nsteps
+    Fₕ, Fₕ′ = factorize(T, (sₕ', sᵥ');
                        ortho = "none",
                        maxdim = χmax,
-                       tags = "renorm",
+                       tags = tags(sₕ),
                        svd_alg = svd_alg)
-    Fd, Fu = factorize(T, (r, u);
+
+    s̃ₕ = commonind(Fₕ, Fₕ′)
+    Fₕ′ *= δ(dag(s̃ₕ), s̃ₕ')
+
+    Fᵥ, Fᵥ′ = factorize(T, (sₕ, sᵥ');
                        ortho = "none",
                        maxdim = χmax,
-                       tags = "renorm",
+                       tags = tags(sᵥ),
                        svd_alg = svd_alg)
 
-    Fl = addtags(Fl, "left", "renorm")
-    Fr = addtags(Fr, "right", "renorm")
-    Fu = addtags(Fu, "up", "renorm")
-    Fd = addtags(Fd, "down", "renorm")
+    s̃ᵥ = commonind(Fᵥ, Fᵥ′)
+    Fᵥ′ *=  δ(dag(s̃ᵥ), s̃ᵥ')
 
-    Fl = replacetags(replacetags(Fl, "down", "dnleft", "orig"),
-                                     "right", "upleft", "orig")
-    Fu = replacetags(replacetags(Fu, "left", "upleft", "orig"),
-                                     "down", "upright", "orig")
-    Fr = replacetags(replacetags(Fr, "up", "upright", "orig"),
-                                     "left", "dnright", "orig")
-    Fd = replacetags(replacetags(Fd, "right", "dnright", "orig"),
-                                     "up", "dnleft", "orig")
+    T = (Fₕ * δ(dag(sₕ'), sₕ)) *
+        (Fᵥ * δ(dag(sᵥ'), sᵥ)) *
+        (Fₕ′ * δ(dag(sₕ), sₕ')) *
+        (Fᵥ′ * δ(dag(sᵥ), sᵥ'))
 
-    T = Fl * Fu * Fr * Fd
-    T = replacetags(T, "renorm", "orig")
+    sₕ, sᵥ = s̃ₕ, s̃ᵥ
 
-    l = firstind(T, "left")
-    r = firstind(T, "right")
-    u = firstind(T, "up")
-    d = firstind(T, "down")
-
-    trT = abs((T * δ(l, r) * δ(u, d))[])
+    trT = abs((T * δ(sₕ, sₕ') * δ(sᵥ, sᵥ'))[])
     T = T / trT
     κ *= trT ^ (1 / 2 ^ n)
   end
-  T = removetags(T, "orig")
-  l = firstind(T, "left")
-  r = firstind(T, "right")
-  u = firstind(T, "up")
-  d = firstind(T, "down")
-  return κ, T, (l, r), (u, d)
+  return κ, T
 end
 

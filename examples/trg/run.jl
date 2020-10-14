@@ -8,17 +8,14 @@ include(joinpath(@__DIR__, "..", "src", "2d_classical_ising.jl"))
 β = 1.1 * βc
 d = 2
 s = Index(d)
-l = addtags(s, "left")
-r = addtags(s, "right")
-u = addtags(s, "up")
-d = addtags(s, "down")
-T = ising_mpo((l, r), (u, d), β)
+sₕ = addtags(s, "horiz")
+sᵥ = addtags(s, "vert")
+T = ising_mpo(sₕ, sᵥ, β)
 
 χmax = 20
 nsteps = 20
-κ, T, (l, r), (u, d) = trg(T, (l, r), (u, d);
-                           χmax = χmax, nsteps = nsteps,
-                           svd_alg = "divide_and_conquer")
+κ, T = trg(T; χmax = χmax, nsteps = nsteps,
+           svd_alg = "divide_and_conquer")
 
 κ_exact = exp(-β * ising_free_energy(β))
 @show κ, κ_exact
