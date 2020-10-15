@@ -5,16 +5,17 @@ function ctmrg(T::ITensor,
                Aₗ::ITensor;
                χmax::Int, nsteps::Int)
   sₕ = commonind(T, Aₗ)
-  sᵥ = firstind(noncommoninds(T, Aₗ, Aₗ'); plev = 0)
+  sᵥ = uniqueind(T, Aₗ, Aₗ'; plev = 0)
   lᵥ = commonind(Cₗᵤ, Aₗ)
-  # TODO: use noncommonind when fixed
-  lₕ = noncommoninds(Cₗᵤ, Aₗ)[1]
+  lₕ = uniqueind(Cₗᵤ, Aₗ)
   Aᵤ = replaceinds(Aₗ, lᵥ => lₕ, lᵥ' => lₕ', sₕ => sᵥ)
   for i in 1:nsteps
     ## Get the grown corner transfer matrix (CTM)
     Cₗᵤ⁽¹⁾ = Aₗ * Cₗᵤ * Aᵤ * T
 
     ## Diagonalize the grown CTM
+    # TODO: replace with
+    # eigen(Cₗᵤ⁽¹⁾, "horiz" => "vert"; tags = "horiz" => "vert", kwargs...)
     Cₗᵤ, Uᵥ = eigen(Cₗᵤ⁽¹⁾, (lₕ', sₕ'), (lᵥ', sᵥ');
                     ishermitian = true,
                     maxdim = χmax,
@@ -22,8 +23,7 @@ function ctmrg(T::ITensor,
                     righttags = tags(lᵥ))
 
     lᵥ = commonind(Cₗᵤ, Uᵥ)
-    # TODO: use noncommonind when fixed
-    lₕ = noncommoninds(Cₗᵤ, Uᵥ)[1]
+    lₕ = uniqueind(Cₗᵤ, Uᵥ)
 
     # The renormalized CTM is the diagonal matrix of eigenvalues
     # Normalize the CTM

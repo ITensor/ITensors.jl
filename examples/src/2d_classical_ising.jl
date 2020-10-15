@@ -12,20 +12,27 @@ function ising_mpo(pair_sₕ::Pair{<: Index, <: Index},
   d = dim(sₕ)
   T = ITensor(sₕ, sₕ′, sᵥ, sᵥ′)
   for i in 1:d
-    T[i, i, i, i] = 1
+    T[i, i, i, i] = 1.0
   end
   if sz
-    T[1, 1, 1, 1] = -T[1, 1, 1, 1]
+    T[1, 1, 1, 1] = -1.0
   end
   s̃ₕ, s̃ₕ′, s̃ᵥ, s̃ᵥ′ = sim.((sₕ, sₕ′, sᵥ, sᵥ′))
   T̃ = T * δ(sₕ, s̃ₕ) * δ(sₕ′, s̃ₕ′) * δ(sᵥ, s̃ᵥ) * δ(sᵥ′, s̃ᵥ′)
-  Q = [exp(β * J) exp(-β * J); exp(-β * J) exp(β * J)]
-  D,U = eigen(Symmetric(Q))
-  √Q = U * Diagonal(sqrt.(D)) * U'
-  Xₕ = itensor(vec(√Q), s̃ₕ, sₕ)
-  Xₕ′ = itensor(vec(√Q), s̃ₕ′, sₕ′)
-  Xᵥ = itensor(vec(√Q), s̃ᵥ, sᵥ)
-  Xᵥ′ = itensor(vec(√Q), s̃ᵥ′, sᵥ′)
+
+  # Alternative method
+  #Q = [exp(β * J) exp(-β * J); exp(-β * J) exp(β * J)]
+  #X = √Q
+
+  f(λ₊, λ₋) = [(λ₊ + λ₋) / 2 (λ₊ - λ₋) / 2
+               (λ₊ - λ₋) / 2 (λ₊ + λ₋) / 2]
+  λ₊ = √(exp(β * J) + exp(-β * J))
+  λ₋ = √(exp(β * J) - exp(-β * J))
+  X = f(λ₊, λ₋)
+  Xₕ = itensor(vec(X), s̃ₕ, sₕ)
+  Xₕ′ = itensor(vec(X), s̃ₕ′, sₕ′)
+  Xᵥ = itensor(vec(X), s̃ᵥ, sᵥ)
+  Xᵥ′ = itensor(vec(X), s̃ᵥ′, sᵥ′)
   return T̃ * Xₕ′ * Xᵥ′ * Xₕ * Xᵥ
 end
 

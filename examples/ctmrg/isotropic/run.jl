@@ -26,12 +26,11 @@ Cₗᵤ[1, 1] = 1.0
 # Initial HRTM
 Aₗ = ITensor(lᵥ, lᵥ', sₕ)
 Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 1] = 1.0
-Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 2] = 0.0
 
 Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax = 20, nsteps = 100)
 
 lᵥ = commonind(Cₗᵤ, Aₗ)
-lₕ = noncommoninds(Cₗᵤ, Aₗ)[1]
+lₕ = uniqueind(Cₗᵤ, Aₗ)
 
 Aᵤ = replaceinds(Aₗ, lᵥ => lₕ, lᵥ' => lₕ', sₕ => sᵥ)
 
