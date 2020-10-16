@@ -15,7 +15,9 @@ The outputs are κ, the partition function per site, and the final renormalized
 ITensor T.
 """
 function trg(T::ITensor;
-             χmax::Int, nsteps::Int,
+             χmax::Int,
+             nsteps::Int,
+             cutoff = 0.0,
              svd_alg = "divide_and_conquer")
   sₕ, sᵥ = filterinds(T; plev = 0)
   @assert hassameinds((sₕ, sₕ', sᵥ, sᵥ'), T)
@@ -26,6 +28,7 @@ function trg(T::ITensor;
     Fₕ, Fₕ′ = factorize(T, (sₕ', sᵥ');
                        ortho = "none",
                        maxdim = χmax,
+                       cutoff = cutoff,
                        tags = tags(sₕ),
                        svd_alg = svd_alg)
 
@@ -35,6 +38,7 @@ function trg(T::ITensor;
     Fᵥ, Fᵥ′ = factorize(T, (sₕ, sᵥ');
                        ortho = "none",
                        maxdim = χmax,
+                       cutoff = cutoff,
                        tags = tags(sᵥ),
                        svd_alg = svd_alg)
 

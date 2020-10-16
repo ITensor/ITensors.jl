@@ -3,7 +3,9 @@ using ITensors
 function ctmrg(T::ITensor,
                Cₗᵤ::ITensor,
                Aₗ::ITensor;
-               χmax::Int, nsteps::Int)
+               χmax::Int,
+               cutoff = 0.0,
+               nsteps::Int)
   sₕ = commonind(T, Aₗ)
   sᵥ = uniqueind(T, Aₗ, Aₗ'; plev = 0)
   lᵥ = commonind(Cₗᵤ, Aₗ)
@@ -18,6 +20,7 @@ function ctmrg(T::ITensor,
     # eigen(Cₗᵤ⁽¹⁾, "horiz" => "vert"; tags = "horiz" => "vert", kwargs...)
     Cₗᵤ, Uᵥ = eigen(Cₗᵤ⁽¹⁾, (lₕ', sₕ'), (lᵥ', sᵥ');
                     ishermitian = true,
+                    cutoff = cutoff,
                     maxdim = χmax,
                     lefttags = tags(lₕ),
                     righttags = tags(lᵥ))
