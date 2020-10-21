@@ -6,19 +6,16 @@ let
 
   N = Nx*Ny
 
-  sites = siteinds("S=1/2",N;conserve_qns=true)
+  sites = siteinds("S=1/2", N;
+                   conserve_qns = true)
 
-  # Turning on QN conservation can 
-  # give large speedups for DMRG:
-  #sites = siteinds("S=1/2",N,conserve_qns=true)
-
-  lattice = square_lattice(Nx,Ny,yperiodic=false)
+  lattice = square_lattice(Nx, Ny; yperiodic = false)
 
   ampo = AutoMPO()
   for b in lattice
-    ampo += 0.5,"S+",b.s1,"S-",b.s2
-    ampo += 0.5,"S-",b.s1,"S+",b.s2
-    ampo += "Sz",b.s1,"Sz",b.s2
+    ampo .+= 0.5, "S+", b.s1, "S-", b.s2
+    ampo .+= 0.5, "S-", b.s1, "S+", b.s2
+    ampo .+=      "Sz", b.s1, "Sz", b.s2
   end
   H = MPO(ampo,sites)
 

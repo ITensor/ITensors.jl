@@ -1,11 +1,6 @@
 using ITensors
-using Printf
 
-# Use DMRG to solve the spin 1, 1D Heisenberg model on 100 sites
-# For the Heisenberg model in one dimension
-# H = J ∑ᵢ(SᶻᵢSᶻᵢ₊₁ + SˣᵢSˣᵢ₊₁ + SʸᵢSʸᵢ₊₁ )
-#   = J ∑ᵢ[SᶻᵢSᶻᵢ₊₁ + ½(S⁺ᵢS⁻ᵢ₊₁ + S⁻ᵢS⁺ᵢ₊₁)]
-# We'll work in units where J=1
+include("../src/electronk.jl")
 
 let
   N = 100
