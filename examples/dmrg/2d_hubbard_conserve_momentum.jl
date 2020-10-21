@@ -1,6 +1,6 @@
 using ITensors
 
-include("../src/electronk.jl")
+include(joinpath("..", "src", "electronk.jl"))
 
 function main(; Nx = 6,
                 Ny = 3,
