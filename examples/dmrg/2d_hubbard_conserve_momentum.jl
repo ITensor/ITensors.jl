@@ -9,7 +9,7 @@ function main(; Nx = 6,
   t = 1.0
   N = Nx * Ny
   sweeps = Sweeps(15)
-  maxdim!(sweeps, 20, 60, 100, 100, 200, 400, 800)
+  maxdim!(sweeps, 20, 60, 100, 100, 200, 400, 800, 2000, 3000)
   cutoff!(sweeps, 1e-6)
   noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0, 1e-7, 0.0, 1e-6, 0.0, 1e-6, 0.0)
 
