@@ -5,46 +5,56 @@ src_dir = joinpath(@__DIR__, "..", "..", "src")
 include(joinpath(src_dir, "ctmrg_isotropic.jl"))
 include(joinpath(src_dir, "2d_classical_ising.jl"))
 
-# Make Ising model MPO
-β = 1.1 * βc
-d = 2
-s = Index(d, "Site")
-sₕ = addtags(s, "horiz")
-sᵥ = addtags(s, "vert")
+function main()
+  # Make Ising model MPO
+  β = 1.1 * βc
+  χmax = 20
+  cutoff = 1e-8
+  nsteps = 100
 
-T = ising_mpo(sₕ, sᵥ, β)
+  d = 2
+  s = Index(d, "Site")
+  sₕ = addtags(s, "horiz")
+  sᵥ = addtags(s, "vert")
 
-χ0 = 1
-l = Index(χ0, "Link")
-lₕ = addtags(l, "horiz")
-lᵥ = addtags(l, "vert")
+  T = ising_mpo(sₕ, sᵥ, β)
 
-# Initial CTM
-Cₗᵤ = ITensor(lᵥ, lₕ)
-Cₗᵤ[1, 1] = 1.0
+  χ0 = 1
+  l = Index(χ0, "Link")
+  lₕ = addtags(l, "horiz")
+  lᵥ = addtags(l, "vert")
 
-# Initial HRTM
-Aₗ = ITensor(lᵥ, lᵥ', sₕ)
-Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 1] = 1.0
+  # Initial CTM
+  Cₗᵤ = ITensor(lᵥ, lₕ)
+  Cₗᵤ[1, 1] = 1.0
 
-Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax = 20, nsteps = 100)
+  # Initial HRTM
+  Aₗ = ITensor(lᵥ, lᵥ', sₕ)
+  Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 1] = 1.0
 
-lᵥ = commonind(Cₗᵤ, Aₗ)
-lₕ = uniqueind(Cₗᵤ, Aₗ)
+  Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax = χmax,
+                              cutoff = cutoff,
+                              nsteps = nsteps)
 
-Aᵤ = replaceinds(Aₗ, lᵥ => lₕ, lᵥ' => lₕ', sₕ => sᵥ)
+  lᵥ = commonind(Cₗᵤ, Aₗ)
+  lₕ = uniqueind(Cₗᵤ, Aₗ)
 
-ACₗ = Aₗ * Cₗᵤ * dag(Cₗᵤ')
+  Aᵤ = replaceinds(Aₗ, lᵥ => lₕ, lᵥ' => lₕ', sₕ => sᵥ)
 
-ACTₗ = prime(ACₗ * dag(Aᵤ') * T * Aᵤ, -1)
+  ACₗ = Aₗ * Cₗᵤ * dag(Cₗᵤ')
 
-κ = (ACTₗ * dag(ACₗ))[]
+  ACTₗ = prime(ACₗ * dag(Aᵤ') * T * Aᵤ, -1)
 
-@show κ, exp(-β * ising_free_energy(β))
+  κ = (ACTₗ * dag(ACₗ))[]
 
-# Calculate magnetization
-Tsz = ising_mpo(sₕ, sᵥ, β; sz = true)
-ACTszₗ = prime(ACₗ * dag(Aᵤ') * Tsz * Aᵤ, -1)
-m = (ACTszₗ * dag(ACₗ))[] / κ
-@show m, ising_magnetization(β)
+  @show κ, exp(-β * ising_free_energy(β))
+
+  # Calculate magnetization
+  Tsz = ising_mpo(sₕ, sᵥ, β; sz = true)
+  ACTszₗ = prime(ACₗ * dag(Aᵤ') * Tsz * Aᵤ, -1)
+  m = (ACTszₗ * dag(ACₗ))[] / κ
+  @show m, ising_magnetization(β)
+end
+
+main()
 

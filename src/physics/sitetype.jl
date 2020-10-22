@@ -329,7 +329,7 @@ end
 
 function siteind(st::SiteType; addtags = "", kwargs...) 
   sp = space(st; kwargs...)
-  isnothing(sp) && error(space_error_message(st))
+  isnothing(sp) && return nothing
   return Index(sp, "Site, $(tag(st)), $addtags")
 end
 
@@ -342,10 +342,10 @@ function siteind(st::SiteType, n; kwargs...)
 end
 
 siteind(tag::String; kwargs...) =
-  siteind(SiteType(tag);kwargs...)
+  siteind(SiteType(tag); kwargs...)
 
-siteind(tag::String,n; kwargs...) =
-  siteind(SiteType(tag),n;kwargs...)
+siteind(tag::String, n; kwargs...) =
+  siteind(SiteType(tag), n; kwargs...)
 
 # Special case of `siteind` where integer (dim) provided
 # instead of a tag string

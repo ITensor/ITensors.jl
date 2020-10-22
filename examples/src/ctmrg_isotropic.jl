@@ -11,6 +11,7 @@ function ctmrg(T::ITensor,
   lᵥ = commonind(Cₗᵤ, Aₗ)
   lₕ = uniqueind(Cₗᵤ, Aₗ)
   Aᵤ = replaceinds(Aₗ, lᵥ => lₕ, lᵥ' => lₕ', sₕ => sᵥ)
+  Cₗᵤ = dense(Cₗᵤ)
   for i in 1:nsteps
     ## Get the grown corner transfer matrix (CTM)
     Cₗᵤ⁽¹⁾ = Aₗ * Cₗᵤ * Aᵤ * T
@@ -24,7 +25,7 @@ function ctmrg(T::ITensor,
                     maxdim = χmax,
                     lefttags = tags(lₕ),
                     righttags = tags(lᵥ))
-
+    Cₗᵤ = dense(Cₗᵤ)
     lᵥ = commonind(Cₗᵤ, Uᵥ)
     lₕ = uniqueind(Cₗᵤ, Uᵥ)
 
