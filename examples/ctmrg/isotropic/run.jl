@@ -1,13 +1,17 @@
-using ITensors
-using Test
+using Pkg
+Pkg.activate(".")
 
-src_dir = joinpath(@__DIR__, "..", "examples", "src")
+src_dir = joinpath(@__DIR__, "..", "..", "src")
 include(joinpath(src_dir, "ctmrg_isotropic.jl"))
 include(joinpath(src_dir, "2d_classical_ising.jl"))
 
-@testset "ctmrg" begin
+function main()
   # Make Ising model MPO
   β = 1.1 * βc
+  χmax = 20
+  cutoff = 1e-8
+  nsteps = 100
+
   d = 2
   s = Index(d, "Site")
   sₕ = addtags(s, "horiz")
@@ -27,12 +31,13 @@ include(joinpath(src_dir, "2d_classical_ising.jl"))
   # Initial HRTM
   Aₗ = ITensor(lᵥ, lᵥ', sₕ)
   Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 1] = 1.0
-  Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 2] = 0.0
 
-  Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax = 20, nsteps = 100)
+  Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax = χmax,
+                              cutoff = cutoff,
+                              nsteps = nsteps)
 
   lᵥ = commonind(Cₗᵤ, Aₗ)
-  lₕ = noncommoninds(Cₗᵤ, Aₗ)[1]
+  lₕ = uniqueind(Cₗᵤ, Aₗ)
 
   Aᵤ = replaceinds(Aₗ, lᵥ => lₕ, lᵥ' => lₕ', sₕ => sᵥ)
 
@@ -42,13 +47,14 @@ include(joinpath(src_dir, "2d_classical_ising.jl"))
 
   κ = (ACTₗ * dag(ACₗ))[]
 
-  @test κ ≈ exp(-β * ising_free_energy(β))
+  @show κ, exp(-β * ising_free_energy(β))
 
   # Calculate magnetization
   Tsz = ising_mpo(sₕ, sᵥ, β; sz = true)
   ACTszₗ = prime(ACₗ * dag(Aᵤ') * Tsz * Aᵤ, -1)
   m = (ACTszₗ * dag(ACₗ))[] / κ
-  @test abs(m) ≈ ising_magnetization(β)
+  @show m, ising_magnetization(β)
 end
 
-nothing
+main()
+

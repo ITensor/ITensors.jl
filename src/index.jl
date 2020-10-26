@@ -173,8 +173,7 @@ end
 
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-Base.copy(i::Index) =
-  Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
+copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
 
 """
     sim(i::Index; tags = tags(i), plev = plev(i), dir = dir(i))
@@ -185,16 +184,12 @@ but with a new `id`.
 sim(i::Index; tags = copy(tags(i)), plev = plev(i), dir = dir(i)) =
   Index(rand(IDType), copy(space(i)), dir, tags, plev)
 
-# Used for internal use in NDTensors
-NDTensors.sim(i::Index) = sim(i)
-
 """
     dag(i::Index)
 
 Copy an index `i` and reverse its direction.
 """
-dag(i::Index) =
-  Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
+dag(i::Index) = Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
 
 # For internal use in NDTensors
 NDTensors.dag(i::Index) = dag(i)

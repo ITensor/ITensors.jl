@@ -318,18 +318,34 @@ state(sset::Vector{<:Index},j::Integer,st) = state(sset[j],st)
 #
 #---------------------------------------
 
-space(st::SiteType; kwargs...) = error("Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))")
+space(st::SiteType; kwargs...) = nothing
 
-function siteind(st::SiteType; addtags="", kwargs...) 
-  sp = space(st;kwargs...)
-  return Index(sp,"Site,$(tag(st)),$addtags")
+space(st::SiteType, n::Int; kwargs...) =
+  space(st; kwargs...)
+
+function space_error_message(st::SiteType)
+  return "Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))"
 end
 
-siteind(st::SiteType, n; kwargs...) = addtags(siteind(st; kwargs...),"n=$n")
+function siteind(st::SiteType; addtags = "", kwargs...) 
+  sp = space(st; kwargs...)
+  isnothing(sp) && return nothing
+  return Index(sp, "Site, $(tag(st)), $addtags")
+end
 
-siteind(tag::String; kwargs...) = siteind(SiteType(tag);kwargs...)
+function siteind(st::SiteType, n; kwargs...)
+  s = siteind(st; kwargs...)
+  !isnothing(s) && return addtags(s, "n=$n")
+  sp = space(st, n; kwargs...)
+  isnothing(sp) && error(space_error_message(st))
+  return Index(sp, "Site, $(tag(st)), n=$n")
+end
 
-siteind(tag::String,n; kwargs...) = siteind(SiteType(tag),n;kwargs...)
+siteind(tag::String; kwargs...) =
+  siteind(SiteType(tag); kwargs...)
+
+siteind(tag::String, n; kwargs...) =
+  siteind(SiteType(tag), n; kwargs...)
 
 # Special case of `siteind` where integer (dim) provided
 # instead of a tag string

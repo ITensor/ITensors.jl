@@ -1,9 +1,9 @@
-using ITensors,
-      Test
-import Random
+using ITensors
+using Test
 using Combinatorics: permutations
+import Random: seed!
 
-Random.seed!(12345)
+seed!(12345)
 
 digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
 

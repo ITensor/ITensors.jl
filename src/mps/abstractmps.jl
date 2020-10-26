@@ -1427,8 +1427,6 @@ end
 @deprecate orthoCenter(args...;
                        kwargs...) orthocenter(args...; kwargs...)
 
-import .NDTensors.store
-
 @deprecate store(m::AbstractMPS) data(m)
 
 @deprecate replacesites!(args...;
@@ -1452,13 +1450,9 @@ import .NDTensors.store
 
 @deprecate multMPO(args...; kwargs...) contract(args...; kwargs...)
 
-import Base.sum
+@deprecate sum(A::AbstractMPS, B::AbstractMPS; kwargs...) add(A, B; kwargs...)
 
-@deprecate sum(A::AbstractMPS,
-               B::AbstractMPS; kwargs...) add(A, B; kwargs...)
-
-@deprecate multmpo(args...;
-                   kwargs...) contract(args...; kwargs...)
+@deprecate multmpo(args...; kwargs...) contract(args...; kwargs...)
 
 @deprecate set_leftlim!(args...;
                         kwargs...) ITensors.setleftlim!(args...;

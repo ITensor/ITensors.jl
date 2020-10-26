@@ -4,10 +4,12 @@ using ITensors,
 
 @testset "Example Codes" begin
 
+  examples_dir = joinpath("..", "examples")
+
   @testset "Basic Ops" begin
     @test_nowarn begin 
       @capture_out begin
-        include("../examples/basic_ops/basic_ops.jl")
+        include(joinpath(examples_dir, "basic_ops", "basic_ops.jl"))
       end 
     end
   end
@@ -15,7 +17,7 @@ using ITensors,
   @testset "DMRG with Observer" begin
     @test_nowarn begin 
       @capture_out begin
-        include("../examples/dmrg/dmrg_with_observer.jl")
+        include(joinpath(examples_dir, "dmrg", "1d_ising_with_observer.jl"))
       end 
     end
   end
@@ -23,7 +25,7 @@ using ITensors,
   @testset "Package Compile Code" begin
     @test_nowarn begin 
       @capture_out begin
-        include("../src/packagecompile/precompile_itensors.jl")
+        include(joinpath("..", "src", "packagecompile", "precompile_itensors.jl"))
       end 
     end
   end

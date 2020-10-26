@@ -1,5 +1,5 @@
-using ITensors,
-      Test
+using ITensors
+using Test
 import Combinatorics
 
 digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)

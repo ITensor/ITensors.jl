@@ -390,10 +390,6 @@ You can also use the broadcast version `sim.(is)`.
 """
 sim(is::IndexSet) = map(i -> sim(i), is)
 
-# For generic code in NDTensors
-NDTensors.sim(is::IndexSet) = sim(is)
-
-import .NDTensors: mindim
 """
     mindim(is::IndexSet)
 
@@ -1390,6 +1386,5 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   return IndexSet(it)
 end
 
-import .NDTensors.store
 @deprecate store(is::IndexSet) data(is)
 
