@@ -3,15 +3,17 @@ using ITensors
 include(joinpath("..", "src", "electronk.jl"))
 include(joinpath("..", "src", "hubbard.jl"))
 
-function main(; Nx = 6,
-                Ny = 3,
-                U = 4.0,
-                t = 1.0,
+function main(; Nx::Int = 6,
+                Ny::Int = 3,
+                U::Float64 = 4.0,
+                t::Float64 = 1.0,
+                maxdim::Int = 3000,
                 conserve_ky = true)
   N = Nx * Ny
 
   sweeps = Sweeps(10)
-  maxdim!(sweeps, 100, 200, 400, 800, 2000, 3000)
+  maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
+  maxdim!(sweeps, maxdims...)
   cutoff!(sweeps, 1e-6)
   noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
   @show sweeps
@@ -46,7 +48,7 @@ function main(; Nx = 6,
 
   psi0 = randomMPS(sites, state, 10)
 
-  energy, psi = dmrg(H, psi0, sweeps)
+  energy, psi = dmrg(H, psi0, sweeps; svd_alg = "divide_and_conquer")
   @show Nx, Ny
   @show t, U
   @show flux(psi)
