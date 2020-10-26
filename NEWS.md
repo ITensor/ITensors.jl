@@ -1,3 +1,9 @@
+ITensors v0.1.25 Release Notes
+==============================
+* Introduce imports.jl to organize import statements (PR #511).
+* Add TRG and isotropic CTMRG examples (PR #511).
+* Add example for 2D Hubbard model with momentum conservation around the cylinder (PR #511).
+
 ITensors v0.1.24 Release Notes
 ==============================
 * Generalize `tr(::MPO)` for MPOs with more an one pair of site indices per site (PR #509)
