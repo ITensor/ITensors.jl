@@ -21,7 +21,7 @@ end
 
 isfermionic(qv::QNVal) = (modulus(qv) < 0)
 
-isfermionic(qn::QN) = any(qval->isfermionic(qval),qn)
+isfermionic(qn::QN) = any(isfermionic,qn)
  
 #isfermionic(iv::IndexVal) = isfermionic(qn(ind(iv),val(iv)))
 
