@@ -1,0 +1,72 @@
+## Possible Bugs
+
+- is new permutedims!! in blocksparsetensor.jl
+  defined fermionically?
+
+- does dag permute indices?
+
+- implement fermionic indices for diagblocksparse.jl too
+
+## Roadmap
+
+X isfermionic for IndexVal
+X Start with setting elements, so
+  we can construct
+X Next permutation of ITensors
+  --> TEST: operators [done]
+  --> TEST: multi-site wavefunctions
+X Work on addition next (no combined indices)
+  --> TEST: operators [done]
+  --> TEST: multi-site wavefunctions [done]
+- dag / conj of ITensors
+- Work on contraction (no combined indices)
+  --> TEST: multi-site wavefunction inner product
+  --> TEST: C and Cdag acting on wavefunctions
+- Handle combined indices
+  (perhaps ignore parity-mod-4 issue for now and just
+   use particle number mod 2 for parity, mod 4 for ratio?
+   would have to only combine indices with same arrows though?)
+- Tools for mapping on-paper C,Cdag operators to
+  equivalent bosonic ITensors (using Grassman numbers or vectors)
+  Maybe put Grassman numbers *inside* QNIndex, similar to combining
+  indices and updating ratio & parity
+
+## Possible improvements (once things are working)
+
+- more streamlined handling of fermionic ITensors in
+  dag function (removing need for has_fermionic_sectors function)
+
+## General Comments & Ideas
+
+- Define `isfermionic` for QN? How? See below:
+
+- What if a QN has more than one fermionic QNVal,
+  such as:
+  q = QN(("Na",1,-1),("Nb",0,-1))
+  Is it still fermionic? What is the parity and ratio?
+  Maybe yes fermionic, and parity is combined parity.
+
+## Contraction Notes
+
+`compute_contraction_labels` is used to produce labels
+(integer arrays) indicating common and unique indices
+and their ordering, then the Tensors `contract` function
+is called. Negative integers in the labels arrays mean
+contracted indices, though it is optional and the
+important thing is just matching versus unique.
+
+When calling the Tensors `contract` function, the
+type passed is:
+Tensor{Float64,2,BlockSparse{Float64,Array{Float64,1},2},IndexSet{2}}
+
+`contract` for BlockSparse storage is defined in
+Tensors/blocksparse/blocksparsetensor.jl (line 556)
+
+Ideas to generalize:
+- The "inds" in the lower level block sparse routines are actually IndexSet,
+  so information about QNs is available
+- Create a default function defined by Tensors like `compute_alpha` which
+  computes alpha in: R = alpha*(T1*T2) + beta*R
+  (see line 574 of Tensors/blocksparse/blocksparsetensor.jl)
+  By default this function just returns 1.0, then have the upper ITensor
+  level override this function when the arguments are IndexSet
