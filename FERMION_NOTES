@@ -1,3 +1,37 @@
+
+# Oct 2020 Fermions Revisit
+
+- branch is "new_fermions" for
+  both ITensors.jl and NDTensors.jl
+
+- let's work with the emstoudenmire/ITensors.jl
+  and emstoudenmire/NDTensors.jl forks
+
+- fermion related changes should be marked 
+  with a comment:
+  # <fermions>
+
+
+## Important Functions & Changes in NDTensors:
+
+## Important Functions & Changes in ITensors:
+
+- itensor.jl:
+  + ITensor getindex and setindex!
+    calls to `permfactor`
+  + ITensor dag
+    call `scale_by_permfactor!` with
+    permutation as if indices reversed then
+    permuted back
+
+
+
+
+
+#######################################
+# Older Fermion Notes
+#######################################
+
 ## Possible Bugs
 
 - is new permutedims!! in blocksparsetensor.jl
