@@ -315,6 +315,7 @@ export
   triangular_lattice,
 
 # physics/fermions.jl
+  fparity,
   isfermionic,
 
 # physics/sitetype.jl
