@@ -790,8 +790,9 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 """
 function getindex(T::ITensor, ivs...)
   p = NDTensors.getperm(inds(T), ind.(ivs))
+  fac = permfactor(p,ivs...) #<fermions> possible sign
   vals = NDTensors.permute(val.(ivs), p)
-  return T[vals...]::Number
+  return (fac*T[vals...])::Number
 end
 
 function getindex(T::ITensor) 
@@ -851,7 +852,11 @@ A[i => 2, i' => :] = [2.0 3.0]
 function setindex!(T::ITensor, x::Number, ivs...)
   p = NDTensors.getperm(inds(T), ind.(ivs))
   vals = NDTensors.permute(val.(ivs), p)
-  T[vals...] = x
+
+  # Compute possible fermion sign
+  fac = permfactor(p,ivs...) #<fermions>
+
+  T[vals...] = (fac*x)
   return T
 end
 
@@ -1344,8 +1349,15 @@ norm(T::ITensor) = norm(tensor(T))
 
 # TODO: change to storage(TT)
 function dag(T::ITensor; always_copy=false)
-  TT = conj(tensor(T); always_copy=always_copy)
-  return itensor(storage(TT),dag(inds(T)))
+  if has_fermionic_sectors(inds(T)) # <fermions>
+    TT = conj(tensor(T);always_copy=true)
+    N = length(inds(T))
+    perm = ntuple(i->(N-i+1),N)
+    scale_by_permfactor!(TT,perm,inds(T))
+  else
+    TT = conj(tensor(T); always_copy=always_copy)
+  end
+  return itensor(store(TT),dag(inds(T)))
 end
 
 """
