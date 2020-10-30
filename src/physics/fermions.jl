@@ -84,9 +84,14 @@ function compute_permfactor(p,iv_or_qn::Vararg{T,N}) where {T,N}
 end
 
 # Default implementation for non-QN IndexVals
-permfactor(p,ivs::Vararg{IndexVal,N}) where {N} = 1.0
+permfactor(p,ivs...) where {N} = 1.0
 
 permfactor(p,ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p,ivs...)
+
+function permfactor(p,pairs::Vararg{Pair{QNIndex,Int},N}) where {N} 
+  ivs = ntuple(i->IndexVal(pairs[i]),N)
+  return compute_permfactor(p,ivs...)
+end
 
 function NDTensors.permfactor(p,block::NTuple{N,Int},inds::IndexSet) where {N}
   qns = ntuple(n->qn(inds[n],block[n]),N)
