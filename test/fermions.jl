@@ -179,6 +179,7 @@ using ITensors,
   @testset "C Cdag operators" begin
     s = siteinds("Fermion",3;conserve_qns=true)
 
+    Q1 = QN("Nf",1,-1)
     Q2 = QN("Nf",2,-1)
 
     p110 = ITensor(Q2,s[1],s[2],s[3])
@@ -264,10 +265,10 @@ using ITensors,
     #
     # Leave out middle fermion, test for cases <001|...|100>
     #
-    p100 = ITensor(s[1],s[2],s[3])
+    p100 = ITensor(Q1,s[1],s[2],s[3])
     p100[s[1]=>2,s[2]=>1,s[3]=>1] = 1.0
 
-    p001 = ITensor(s[1],s[2],s[3])
+    p001 = ITensor(Q1,s[1],s[2],s[3])
     p001[s[1]=>1,s[2]=>1,s[3]=>2] = 1.0
 
     let # <001|Cdag3*C1|100> = <001|Bdag3*B1|100> = +1
