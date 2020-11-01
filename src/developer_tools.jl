@@ -28,3 +28,8 @@ function pause()
   c == UInt8[0x71] && exit(0)
   return
 end
+
+global itdebug = false
+set_debug(val::Bool) = (global itdebug = val)
+get_debug() = itdebug
+
