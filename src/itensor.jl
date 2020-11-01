@@ -790,7 +790,7 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 """
 function getindex(T::ITensor, ivs...)
   p = NDTensors.getperm(inds(T), ind.(ivs))
-  fac = permfactor(p,ivs...) #<fermions> possible sign
+  fac = NDTensors.permfactor(p,ivs...) #<fermions> possible sign
   vals = NDTensors.permute(val.(ivs), p)
   return (fac*T[vals...])::Number
 end
@@ -854,7 +854,7 @@ function setindex!(T::ITensor, x::Number, ivs...)
   vals = NDTensors.permute(val.(ivs), p)
 
   # Compute possible fermion sign
-  fac = permfactor(p,ivs...) #<fermions>
+  fac = NDTensors.permfactor(p,ivs...) #<fermions>
 
   T[vals...] = (fac*x)
   return T
