@@ -188,8 +188,13 @@ using ITensors,
     p011 = ITensor(Q2,s[1],s[2],s[3])
     p011[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
 
+    np011 = ITensor(Q2,s[1],s[2],s[3])
+    np011[s[1]=>1,s[3]=>2,s[2]=>2] = 1.0
+
     dag_p011 = ITensor(Q2,dag(s[3]),dag(s[2]),dag(s[1]))
     dag_p011[s[3]=>2,s[2]=>2,s[1]=>1] = 1.0
+
+    @test norm(dag(p011) - dag_p011) ≈ 0
 
     C1 = op(s,"C",1)
     Cdag3 = op(s,"Cdag",3)
@@ -292,9 +297,7 @@ using ITensors,
       t = noprime((B1*Bdag3)*p100)
       @test scalar(dag(p001)*t) ≈ +1.0
     end
-
   end
-
 
 
 end

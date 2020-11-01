@@ -69,6 +69,7 @@ if the subset of index vals which are fermion-parity
 odd undergo an odd permutation (odd number of swaps)
 according to p, then return -1. Otherwise return +1.
 """
+
 function compute_permfactor(p,iv_or_qn::Vararg{T,N}) where {T,N}
   oddp = @MVector zeros(Int,N)
   n = 0
@@ -82,16 +83,16 @@ function compute_permfactor(p,iv_or_qn::Vararg{T,N}) where {T,N}
 end
 
 # Default implementation for non-QN IndexVals
-permfactor(p,ivs...) where {N} = 1.0
+NDTensors.permfactor(p,ivs...) where {N} = 1.0
 
-permfactor(p,ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p,ivs...)
+NDTensors.permfactor(p,ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p,ivs...)
 
-function permfactor(p,pairs::Vararg{Pair{QNIndex,Int},N}) where {N} 
+function NDTensors.permfactor(p,pairs::Vararg{Pair{QNIndex,Int},N}) where {N} 
   ivs = ntuple(i->IndexVal(pairs[i]),N)
   return compute_permfactor(p,ivs...)
 end
 
-function NDTensors.permfactor(p,block::NTuple{N,Int},inds::IndexSet) where {N}
+function NDTensors.permfactor(p,block::NTuple{N,Int},inds::QNIndexSet) where {N}
   qns = ntuple(n->qn(inds[n],block[n]),N)
   return compute_permfactor(p,qns...)
 end
@@ -100,43 +101,47 @@ end
 # TODO: specialize this *just* for QNIndex as an optimization
 #       probably requires parameterizing IndexSet over the Index type
 #
-function NDTensors.compute_alpha(labelsR,blockR,indsR::IndexSet,
-                               labelsT1,blockT1,indsT1::IndexSet,
-                               labelsT2,blockT2,indsT2::IndexSet)
-    orig_labelsT1 = [l for l in labelsT1]
-    orig_labelsT2 = [l for l in labelsT2]
-    NR = length(labelsR)
+function NDTensors.compute_alpha(labelsR,blockR,input_indsR,
+                                 labelsT1,blockT1,indsT1::QNIndexSet,
+                                 labelsT2,blockT2,indsT2::QNIndexSet)
+  # the "indsR" argument to compute_alpha from NDTensors
+  # may be a tuple of QNIndex, so convert to an IndexSet
+  indsR = IndexSet(input_indsR)
+  
+  orig_labelsT1 = [l for l in labelsT1]
+  orig_labelsT2 = [l for l in labelsT2]
 
-    nlabelsT1 = sort(orig_labelsT1;rev=true)
-    nlabelsT2 = sort(orig_labelsT2)
+  nlabelsT1 = sort(orig_labelsT1;rev=true)
+  nlabelsT2 = sort(orig_labelsT2)
 
-    orig_labelsR = zeros(Int,NR)
-    u = 1
-    for l in (nlabelsT1...,nlabelsT2...)
-      if l > 0 
-        orig_labelsR[u] = l
-        u += 1
-      end
+  NR = length(labelsR)
+  orig_labelsR = zeros(Int,NR)
+  u = 1
+  for l in (nlabelsT1...,nlabelsT2...)
+    if l > 0 
+      orig_labelsR[u] = l
+      u += 1
     end
+  end
 
-    permT1 = getperm(tuple(nlabelsT1...),tuple(orig_labelsT1...))
-    permT2 = getperm(tuple(nlabelsT2...),tuple(orig_labelsT2...))
-    permR = getperm(tuple(labelsR...),tuple(orig_labelsR...))
+  permT1 = NDTensors.getperm(tuple(nlabelsT1...),tuple(orig_labelsT1...))
+  permT2 = NDTensors.getperm(tuple(nlabelsT2...),tuple(orig_labelsT2...))
+  permR  = NDTensors.getperm(tuple(labelsR...),tuple(orig_labelsR...))
 
-    alpha1 = NDTensors.permfactor(permT1,blockT1,indsT1)
-    alpha2 = NDTensors.permfactor(permT2,blockT2,indsT2)
-    alphaR = NDTensors.permfactor(permR,blockR,indsR)
+  alpha1 = NDTensors.permfactor(permT1,blockT1,indsT1)
+  alpha2 = NDTensors.permfactor(permT2,blockT2,indsT2)
+  alphaR = NDTensors.permfactor(permR,blockR,indsR)
 
-    alpha_arrows = 1
-    for n in 1:length(indsT1)
-      l = orig_labelsT1[n]
-      i = indsT1[n]
-      qi = qn(i,blockT1[n])
-      if l < 0 && dir(i)==Out && fparity(qi)==1
-        alpha_arrows *= -1
-      end
+  alpha_arrows = 1
+  for n in 1:length(indsT1)
+    l = orig_labelsT1[n]
+    i = indsT1[n]
+    qi = qn(i,blockT1[n])
+    if l < 0 && dir(i)==Out && fparity(qi)==1
+      alpha_arrows *= -1
     end
+  end
 
-    return alpha1*alpha2*alphaR*alpha_arrows
+  return alpha1*alpha2*alphaR*alpha_arrows
 end
 
