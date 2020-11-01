@@ -14,6 +14,14 @@
 
 ## Important Functions & Changes in NDTensors:
 
+- blocksparse/blocksparsetensor.jl:
+  + contract function: extra information about blocks
+    extracted and passed to `compute_alpha` function
+    which computes minus sign factor for lower-level contraction
+  + default `compute_alpha` defined which always returns 1, but
+    is overloaded in ITensors.jl (physics/fermions.jl) when
+    the indsT1 and indsT2 arguments are of QNIndexSet type
+
 ## Important Functions & Changes in ITensors:
 
 - itensor.jl:
@@ -24,6 +32,23 @@
     permutation as if indices reversed then
     permuted back
 
+## Conceptual Logic of Various Functions
+
++ compute_alpha (physics/fermions.jl):
+  here the logic is that various permutations are
+  computed, thinking of a 'hypothetical' ordering
+  of the indices of the contracted tensors, and 
+  the resulting tensor afterward, even if the actual
+  contraction code does a different ordering of the
+  input tensors. The signs of each permutation is 
+  computed and combined into the final result sign.
+  The permutation `permR` is the one that takes the
+  'hypothetical' final index order and maps it to
+  the actual one that NDTensors selects for the result
+  tensor. Finally, the value `alpha_arrows` corrects
+  the sign for any cases where a contracted ket is 
+  to the left of a contracted bra (i.e. any of the 
+  contracted inds of T1 has an Out arrow)
 
 
 
