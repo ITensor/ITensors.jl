@@ -63,7 +63,7 @@ If you use ITensors.jl in your work, for now please cite the [arXiv preprint](ht
 
 ```
 @misc{fishman2020itensor,
-    title={The ITensor Software Library for Tensor Network Calculations},
+    title={The \mbox{ITensor} Software Library for Tensor Network Calculations},
     author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
     year={2020},
     eprint={2007.14822},
