@@ -62,13 +62,12 @@ We recommend using ITensors.jl with Intel MKL in order to get the best possible 
 If you use ITensors.jl in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
 
 ```
-@misc{fishman2020itensor,
-    title={The ITensor Software Library for Tensor Network Calculations},
+@misc{itensor,
+    title={The \mbox{ITensor} Software Library for Tensor Network Calculations},
     author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
     year={2020},
     eprint={2007.14822},
-    archivePrefix={arXiv},
-    primaryClass={cs.MS}
+    archivePrefix={arXiv}
 }
 ```
 
