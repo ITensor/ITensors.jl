@@ -862,8 +862,12 @@ end #qn_svdMPO
 function sorteachterm!(ampo::AutoMPO, sites)
   ampo = copy(ampo)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
+  N = length(sites)
   for t in data(ampo)
     Nt = length(t.ops)
+    prevsite = N+1 #keep track of whether we are switching
+                   #to a new site to make sure F string
+                   #is only placed at most once for each site
 
     # Sort operators in t by site order,
     # and keep the permutation used, perm, for analysis below
@@ -875,26 +879,30 @@ function sorteachterm!(ampo::AutoMPO, sites)
     # Identify fermionic operators,
     # zeroing perm for bosonic operators,
     # and inserting string "F" operators
-    parity = +1
+    rhs_parity = +1
     for n=Nt:-1:1
+      currsite = site(t.ops[n])
+
       fermionic = has_fermion_string(name(t.ops[n]),
                                      sites[site(t.ops[n])])
-      if parity == -1
-        # Put Jordan-Wigner string emanating
+      if (rhs_parity==-1) && (currsite < prevsite)
+        # Put local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
         t.ops[n] = SiteOp("$(name(t.ops[n]))*F",site(t.ops[n]))
       end
+      prevsite = currsite
+
       if fermionic
-        parity = -parity
+        rhs_parity = -rhs_parity
       else
         # Ignore bosonic operators in perm
         # by zeroing corresponding entries
         perm[n] = 0
       end
     end
-    if parity == -1
-      error("Parity-odd fermionic terms not yet supported by AutoMPO")
+    if rhs_parity == -1
+      error("Total parity-odd fermionic terms not yet supported by AutoMPO")
     end
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero,perm)
