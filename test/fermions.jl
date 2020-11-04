@@ -299,6 +299,44 @@ using ITensors,
     end
   end
 
+  @testset "Combine Uncombine Permute Test" begin
+    s = siteinds("Fermion",3;conserve_qns=true)
+
+    Q2 = QN("Nf",2,-1)
+    Q3 = QN("Nf",3,-1)
+
+    @testset "Two Site Test" begin
+      p11 = ITensor(Q2,s[1],s[2])
+      p11[s[1]=>2,s[2]=>2] = 1.0
+
+      C = combiner(s[1],s[2])
+
+      dp11 = dag(p11)
+
+      Cp11_A = C*p11
+      dCp11_A = dag(Cp11_A)
+      dp11_A = C*dCp11_A
+      @test dp11_A ≈ dp11
+
+      Cp11_B = p11*C
+      dCp11_B = dag(Cp11_B)
+      dp11_B = C*dCp11_B
+      @test dp11_B ≈ dp11
+    end
+
+    @testset "Three Site Test" begin
+      p111 = ITensor(Q3,s[1],s[2],s[3])
+      p111[s[1]=>2,s[2]=>2,s[3]=>2] = 1.0
+
+      dp111 = dag(p111)
+
+      C = combiner(s[1],s[3])
+      Cp111 = C*p111
+      dCp111 = dag(Cp111)
+      dp111_U = C*dCp111
+      @test dp111_U ≈ dp111
+    end
+  end
 
 end
 

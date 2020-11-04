@@ -1352,8 +1352,11 @@ function dag(T::ITensor; always_copy=false)
   if has_fermionic_sectors(inds(T)) # <fermions>
     TT = conj(tensor(T);always_copy=true)
     N = length(inds(T))
-    perm = ntuple(i->(N-i+1),N)
-    scale_by_permfactor!(TT,perm,inds(T))
+    perm = ntuple(i->(N-i+1),N) # reverse permutation
+    permfac(block::NTuple{N_,Int}) where {N_} = NDTensors.permfactor(perm,block,inds(T))
+    NDTensors.scale_blocks!(TT,permfac)
+    internal_fac(block::NTuple{N_,Int}) where {N_} = internal_factor(block,inds(T))
+    NDTensors.scale_blocks!(TT,internal_fac)
   else
     TT = conj(tensor(T); always_copy=always_copy)
   end
