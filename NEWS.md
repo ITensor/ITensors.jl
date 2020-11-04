@@ -3,6 +3,7 @@ ITensors v0.1.25 Release Notes
 * Introduce imports.jl to organize import statements (PR #511).
 * Add TRG and isotropic CTMRG examples (PR #511).
 * Add example for 2D Hubbard model with momentum conservation around the cylinder (PR #511).
+* Fix fermion string issue (PR #519)
 
 ITensors v0.1.24 Release Notes
 ==============================
