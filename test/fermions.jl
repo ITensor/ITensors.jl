@@ -338,6 +338,23 @@ using ITensors,
     end
   end
 
+  @testset "Permutedims Regression Test" begin
+    s1 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s1")
+    s2 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s2")
+    i = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1,QN("N",2,-1)=>1],"i")
+
+    A = ITensor(QN("N",4,-1),s1,s2,i)
+    A[s1[2],s2[2],i[3]] = 223
+
+    B = ITensor(QN("N",4,-1),s1,i,s2)
+    B[s1[2],i[3],s2[2]] = 223
+    @test A ≈ B
+
+    C = ITensor(QN("N",4,-1),s1,i,s2)
+    C[s2[2],i[3],s1[2]] = -223
+    @test A ≈ C
+  end
+
 end
 
 nothing
