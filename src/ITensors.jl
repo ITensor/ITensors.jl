@@ -22,6 +22,14 @@ using StaticArrays
 using TimerOutputs
 
 #####################################
+# Directory helper functions (useful for
+# running examples)
+#
+src_dir() = dirname(pathof(@__MODULE__))
+dir() = joinpath(src_dir(), "..")
+examples_dir() = joinpath(dir(), "examples")
+
+#####################################
 # Exports
 #
 include("exports.jl")
