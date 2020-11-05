@@ -793,6 +793,24 @@ end
     end
   end
 
+  @testset "Fermion AutoMPO Issue 514 Regression Test" begin
+    N = 4
+    s = siteinds("Electron",N;conserve_qns=true)
+    ampo1 = AutoMPO()
+    ampo2 = AutoMPO()
+
+    ampo1 += "Nup",1
+    ampo2 += "Cdagup",1,"Cup",1
+
+    M1 = MPO(ampo1,s)
+    M2 = MPO(ampo2,s)
+
+    H1 = M1[1]*M1[2]*M1[3]*M1[4]
+    H2 = M2[1]*M2[2]*M2[3]*M2[4]
+
+    @test norm(H1-H2) ≈ 0.0
+  end
+
 end
 
 nothing
