@@ -1,4 +1,17 @@
 
+# Main Steps Left To Do
+
+X remove Jordan-Wigner strings from AutoMPO
+
+- replace `has_fermion_string` system used by 
+  AutoMPO with logic that computes ITensors of
+  all operators passed to AutoMPO before making
+  the MPO, then stores a Dict or similar of what
+  parity these operators have
+
+- provide a helper system for users to convert
+  fermionic operators to bosonic operators
+
 # Oct 2020 Fermions Revisit
 
 - branch is "new_fermions" for
@@ -28,9 +41,12 @@
   + ITensor getindex and setindex!
     calls to `permfactor`
   + ITensor dag
-    call `scale_by_permfactor!` with
-    permutation as if indices reversed then
-    permuted back
+    - call `scale_blocks!` with permutation as
+      if indices reversed then permuted back
+    - call `scale_blocks!` with function
+      `internal_factor` which puts in an extra
+      minus for any QN values with a mod 4 that
+      is 2 or 3
 
 ## Conceptual Logic of Various Functions
 
