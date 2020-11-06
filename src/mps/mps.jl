@@ -234,14 +234,14 @@ function productMPS(::Type{T},
   end
 
   if hasqns(ind(ivals[1]))
-    rflux = QN()
-    for j=2:N
-      rflux += qn(ivals[j])
+    lflux = QN()
+    for j=1:N-1
+      lflux += qn(ivals[j])
     end
     links = Vector{QNIndex}(undef,N-1)
-    for j=1:N-1
-      links[j] = Index(rflux=>1;tags="Link,l=$j")
-      rflux -= qn(ivals[j+1])
+    for j=N-1:-1:1
+      links[j] = Index(lflux=>1;tags="Link,l=$j",dir=In)
+      lflux -= qn(ivals[j])
     end
   else
     links = [Index(1,"Link,l=$n") for n=1:N-1]
