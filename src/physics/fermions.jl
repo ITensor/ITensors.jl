@@ -156,6 +156,7 @@ function NDTensors.compute_alpha(labelsR,blockR,input_indsR,
       alpha_arrows *= -1
     end
   end
+  #@show alpha1,alpha2,alphaR,alpha_arrows
 
   return alpha1*alpha2*alphaR*alpha_arrows
 end

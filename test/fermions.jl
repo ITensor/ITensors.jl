@@ -355,6 +355,24 @@ using ITensors,
     @test A ≈ C
   end
 
+  @testset "Product MPS consistency checks" begin
+    s = siteinds("Fermion",3;conserve_qns=true)
+
+    q2 = QN("Nf",2,-1)
+
+    pA = productMPS(s,[2,1,2])
+    TA = ITensor(q2,s[1],s[2],s[3])
+    TA[s[1]=>2,s[2]=>1,s[3]=>2] = 1.0
+    A = pA[1]*pA[2]*pA[3]
+    @test norm(A-TA) < 1E-8
+
+    pB = productMPS(s,[1,2,2])
+    TB = ITensor(q2,s[1],s[2],s[3])
+    TB[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
+    B = pB[1]*pB[2]*pB[3]
+    @test norm(B-TB) < 1E-8
+  end
+
 end
 
 nothing
