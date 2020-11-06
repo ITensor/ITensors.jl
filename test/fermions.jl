@@ -373,6 +373,29 @@ using ITensors,
     @test norm(B-TB) < 1E-8
   end
 
+  @testset "Fermionic AutoMPO Tests" begin
+
+    @testset "Spinless Fermion Hamiltonian" begin
+      N = 2
+      sites = siteinds("Fermion",N;conserve_qns=true)
+      t1 = 1.0
+      ampo = AutoMPO()
+      for b=1:N-1
+        ampo += -t1, "Cdag", b,  "C", b+1
+        ampo += -t1, "Cdag", b+1,"C", b
+      end
+      H = MPO(ampo,sites)
+
+      HH = H[1]
+      for n=2:N
+        HH *= H[n]
+      end
+      HHc = dag(swapprime(HH,0,1))
+      @test norm(HHc-HH) < 1E-8
+    end
+
+  end
+
 end
 
 nothing

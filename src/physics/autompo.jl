@@ -549,11 +549,11 @@ function svdMPO(ampo::AutoMPO,
         site_coef = coef(term)
       end
       if isempty(onsite)
-        if isfermionic(right, sites)
-          push!(onsite,SiteOp("F",n))
-        else
+        #if isfermionic(right,sites)
+        #  push!(onsite,SiteOp("F",n))
+        #else
           push!(onsite,SiteOp("Id",n))
-        end
+        #end
       end
       el = MatElem(A_row,A_col,MPOTerm(site_coef,onsite))
       push!(tempMPO[n],el)
@@ -729,11 +729,11 @@ function qn_svdMPO(ampo::AutoMPO,
         site_coef = coef(term)
       end
       if isempty(onsite)
-        if isfermionic(right, sites)
-          push!(onsite,SiteOp("F",n))
-        else
+        #if isfermionic(right,sites)
+        #  push!(onsite,SiteOp("F",n))
+        #else
           push!(onsite,SiteOp("Id",n))
-        end
+        #end
       end
       el = QNMatElem(lqn,rqn,A_row,A_col,MPOTerm(site_coef,onsite))
       push!(tempMPO[n],el)
@@ -902,38 +902,35 @@ function sorteachterm!(ampo::AutoMPO, sites)
 
     t.ops = t.ops[perm]
 
-    # Identify fermionic operators,
-    # zeroing perm for bosonic operators,
-    # and inserting string "F" operators
-    rhs_parity = +1
-    for n=Nt:-1:1
-      currsite = site(t.ops[n])
-      fermionic = has_fermion_string(name(t.ops[n]),
-                                     sites[site(t.ops[n])])
-      if (rhs_parity==-1) && (currsite < prevsite)
-        # Put local piece of Jordan-Wigner string emanating
-        # from fermionic operators to the right
-        # (Remaining F operators will be put in by svdMPO)
-        t.ops[n] = SiteOp("$(name(t.ops[n]))*F",site(t.ops[n]))
-      end
-      prevsite = currsite
+    ## Identify fermionic operators,
+    ## zeroing perm for bosonic operators,
+    ## and inserting string "F" operators
+    #parity = +1
+    #for n=Nt:-1:1
+    #  fermionic = has_fermion_string(name(t.ops[n]),
+    #                                 sites[site(t.ops[n])])
+    #  if parity == -1
+    #    # Put Jordan-Wigner string emanating
+    #    # from fermionic operators to the right
+    #    # (Remaining F operators will be put in by svdMPO)
+    #    #t.ops[n] = SiteOp("$(name(t.ops[n]))*F",site(t.ops[n]))
+    #  end
+    #  if fermionic
+    #    parity = -parity
+    #  else
+    #    # Ignore bosonic operators in perm
+    #    # by zeroing corresponding entries
+    #    perm[n] = 0
+    #  end
+    #end
+    #if parity == -1
+    #  error("Parity-odd fermionic terms not yet supported by AutoMPO")
+    #end
 
-      if fermionic
-        rhs_parity = -rhs_parity
-      else
-        # Ignore bosonic operators in perm
-        # by zeroing corresponding entries
-        perm[n] = 0
-      end
-    end
-    if rhs_parity == -1
-      error("Total parity-odd fermionic terms not yet supported by AutoMPO")
-    end
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero,perm)
-    # Account for anti-commuting, fermionic operators 
+    # and account for anti-commuting, fermionic operators 
     # during above sort; put resulting sign into coef
-
     t.coef *= parity_sign(perm)
   end
   return ampo
