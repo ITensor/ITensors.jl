@@ -3,6 +3,17 @@
 
 X remove Jordan-Wigner strings from AutoMPO
 
+X have productMPS and similar functions put
+  QN-carrying Link indices so that fermionic
+  MPS always consist of bosonic ITensors on
+  all or at most one site
+
+- Fix issue where multiplying together some MPS
+  tensors (such as productMPS(s,[1,2,2]))
+  introduces an erroneous minus sign
+
+- dim=1 'tag' Index for fermion-odd MPS?
+
 - replace `has_fermion_string` system used by 
   AutoMPO with logic that computes ITensors of
   all operators passed to AutoMPO before making
