@@ -234,9 +234,17 @@ function productMPS(::Type{T},
   end
 
   if hasqns(ind(ivals[1]))
-    links = [Index(QN()=>1;tags="Link,l=$n") for n=1:N]
+    rflux = QN()
+    for j=2:N
+      rflux += qn(ivals[j])
+    end
+    links = Vector{QNIndex}(undef,N-1)
+    for j=1:N-1
+      links[j] = Index(rflux=>1;tags="Link,l=$j")
+      rflux -= qn(ivals[j+1])
+    end
   else
-    links = [Index(1,"Link,l=$n") for n=1:N]
+    links = [Index(1,"Link,l=$n") for n=1:N-1]
   end
   M[1] = emptyITensor(T,ind(ivals[1]), links[1])
   M[1][ivals[1],links[1](1)] = one(T)
