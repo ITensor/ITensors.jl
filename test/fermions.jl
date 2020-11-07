@@ -53,7 +53,7 @@ using ITensors,
   @testset "Get and Set Elements" begin
     s = Index([QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1],"s")
 
-    N = ITensor(s',dag(s))
+    N = emptyITensor(s',dag(s))
 
     N[s'(2),s(2)] = 1.0
     @test N[s'(2),s(2)] ≈ +1.0
@@ -63,14 +63,14 @@ using ITensors,
     @test N[s'(2),s(2)] ≈ -1.0
     @test N[s(2),s'(2)] ≈ 1.0
 
-    C = ITensor(QN("Nf",-1,-1),s',dag(s))
+    C = emptyITensor(s',dag(s))
 
     C[s'(1),s(2)] = 1.0
     @test C[s'(1),s(2)] ≈ 1.0
     @test C[s(2),s'(1)] ≈ 1.0
 
 
-    I = ITensor(s',dag(s))
+    I = emptyITensor(s',dag(s))
     I[s'(1),s(1)] = 1.0
     I[s'(2),s(2)] = 1.0
     @test I[s'(1),s(1)] ≈ 1.0
@@ -83,18 +83,18 @@ using ITensors,
   @testset "Making operators different ways" begin
     s = Index([QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1],"s")
 
-    N1 = ITensor(s',dag(s))
+    N1 = emptyITensor(s',dag(s))
     N1[s'(2),s(2)] = +1.0
 
-    N2 = ITensor(dag(s),s')
+    N2 = emptyITensor(dag(s),s')
     N2[s'(2),s(2)] = +1.0
     @test norm(N1-N2) ≈ 0.0
 
-    N3 = ITensor(s',dag(s))
+    N3 = emptyITensor(s',dag(s))
     N3[s(2),s'(2)] = -1.0
     @test norm(N1-N3) ≈ 0.0
 
-    N4 = ITensor(dag(s),s')
+    N4 = emptyITensor(dag(s),s')
     N4[s(2),s'(2)] = -1.0
     @test norm(N1-N4) ≈ 0.0
   end
@@ -104,10 +104,10 @@ using ITensors,
     @testset "Permute Operators" begin
       s = Index([QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1],"s")
 
-      N1 = ITensor(s',dag(s))
+      N1 = emptyITensor(s',dag(s))
       N1[s'(2),s(2)] = 1.0
 
-      N2 = ITensor(dag(s),s')
+      N2 = emptyITensor(dag(s),s')
       N2[s'(2),s(2)] = 1.0
 
       pN1 = permute(N1,dag(s),s')
@@ -122,10 +122,10 @@ using ITensors,
     @testset "Add Operators" begin
       s = Index([QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1],"sn")
 
-      N1 = ITensor(s',dag(s))
+      N1 = emptyITensor(s',dag(s))
       N1[s'(2),s(2)] = 1.0
 
-      N2 = ITensor(dag(s),s')
+      N2 = emptyITensor(dag(s),s')
       N2[s'(2),s(2)] = 1.0
 
       NN = N1+N2
@@ -179,19 +179,16 @@ using ITensors,
   @testset "C Cdag operators" begin
     s = siteinds("Fermion",3;conserve_qns=true)
 
-    Q1 = QN("Nf",1,-1)
-    Q2 = QN("Nf",2,-1)
-
-    p110 = ITensor(Q2,s[1],s[2],s[3])
+    p110 = emptyITensor(s[1],s[2],s[3])
     p110[s[1]=>2,s[2]=>2,s[3]=>1] = 1.0
 
-    p011 = ITensor(Q2,s[1],s[2],s[3])
+    p011 = emptyITensor(s[1],s[2],s[3])
     p011[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
 
-    np011 = ITensor(Q2,s[1],s[2],s[3])
+    np011 = emptyITensor(s[1],s[2],s[3])
     np011[s[1]=>1,s[3]=>2,s[2]=>2] = 1.0
 
-    dag_p011 = ITensor(Q2,dag(s[3]),dag(s[2]),dag(s[1]))
+    dag_p011 = emptyITensor(dag(s[3]),dag(s[2]),dag(s[1]))
     dag_p011[s[3]=>2,s[2]=>2,s[1]=>1] = 1.0
 
     @test norm(dag(p011) - dag_p011) ≈ 0
@@ -270,10 +267,10 @@ using ITensors,
     #
     # Leave out middle fermion, test for cases <001|...|100>
     #
-    p100 = ITensor(Q1,s[1],s[2],s[3])
+    p100 = emptyITensor(s[1],s[2],s[3])
     p100[s[1]=>2,s[2]=>1,s[3]=>1] = 1.0
 
-    p001 = ITensor(Q1,s[1],s[2],s[3])
+    p001 = emptyITensor(s[1],s[2],s[3])
     p001[s[1]=>1,s[2]=>1,s[3]=>2] = 1.0
 
     let # <001|Cdag3*C1|100> = <001|Bdag3*B1|100> = +1
@@ -302,11 +299,8 @@ using ITensors,
   @testset "Combine Uncombine Permute Test" begin
     s = siteinds("Fermion",3;conserve_qns=true)
 
-    Q2 = QN("Nf",2,-1)
-    Q3 = QN("Nf",3,-1)
-
     @testset "Two Site Test" begin
-      p11 = ITensor(Q2,s[1],s[2])
+      p11 = emptyITensor(s[1],s[2])
       p11[s[1]=>2,s[2]=>2] = 1.0
 
       C = combiner(s[1],s[2])
@@ -325,7 +319,7 @@ using ITensors,
     end
 
     @testset "Three Site Test" begin
-      p111 = ITensor(Q3,s[1],s[2],s[3])
+      p111 = emptyITensor(s[1],s[2],s[3])
       p111[s[1]=>2,s[2]=>2,s[3]=>2] = 1.0
 
       dp111 = dag(p111)
@@ -358,16 +352,14 @@ using ITensors,
   @testset "Product MPS consistency checks" begin
     s = siteinds("Fermion",3;conserve_qns=true)
 
-    q2 = QN("Nf",2,-1)
-
     pA = productMPS(s,[2,1,2])
-    TA = ITensor(q2,s[1],s[2],s[3])
+    TA = emptyITensor(s[1],s[2],s[3])
     TA[s[1]=>2,s[2]=>1,s[3]=>2] = 1.0
     A = pA[1]*pA[2]*pA[3]
     @test norm(A-TA) < 1E-8
 
     pB = productMPS(s,[1,2,2])
-    TB = ITensor(q2,s[1],s[2],s[3])
+    TB = emptyITensor(s[1],s[2],s[3])
     TB[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
     B = pB[1]*pB[2]*pB[3]
     @test norm(B-TB) < 1E-8
