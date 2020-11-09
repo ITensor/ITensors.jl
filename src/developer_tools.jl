@@ -29,7 +29,23 @@ function pause()
   return
 end
 
+# Boolean for debugging
 global itdebug = false
 set_debug(val::Bool) = (global itdebug = val)
 get_debug() = itdebug
+
+
+function printnz(T::ITensor{N}) where {N}
+  print("ITensor ord=$(order(T))")
+  print(" \n", inds(T))
+  println(" \n", typeof(store(T)))
+  for ind in Iterators.product(ntuple(n->1:dim(inds(T)[n]),N)...)
+    val = T[ind...]
+    if abs(val) > 1E-10
+      print("  $ind $val\n")
+    end
+  end
+  println()
+end
+
 
