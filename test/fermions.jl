@@ -365,6 +365,22 @@ using ITensors,
     @test norm(B-TB) < 1E-8
   end
 
+  @testset "Dag regression test" begin
+    s = Index(QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1,tags="s")
+    l1 = Index(QN("Nf",1,-1)=>1,tags="l1")
+    l2 = Index(QN("Nf",2,-1)=>1,tags="l2")
+    T = ITensor(l1,s,l2)
+    T[1,2,1] = 1.0
+    dT = dag(T)
+    @test dT[1,2,1] ≈ 1.0
+  end
+
+  @testset "MPS inner regression test" begin
+    sites = siteinds("Fermion",3;conserve_qns=true)
+    psi = productMPS(sites,[2,2,1])
+    @test inner(psi,psi) ≈ 1.0
+  end
+
   @testset "Fermionic AutoMPO Tests" begin
 
     @testset "Spinless Fermion Hamiltonian" begin
