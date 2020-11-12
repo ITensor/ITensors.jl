@@ -102,12 +102,14 @@ internal_factor(block::NTuple{N,Int},inds) where {N} = 1
 function internal_factor(block::NTuple{N,Int},inds::QNIndexSet) where {N}
   qns = ntuple(n->qn(inds[n],block[n]),N)
   fac = 1
-  for q in qns, v in q
-    !isactive(v) && break
-    if isfermionic(v) && mod(val(v),4) >= 2
-      fac *= -1
+  for q in qns
+    for v in q
+      !isactive(v) && break
+      if isfermionic(v) && mod(abs(val(v)),4) >= 2
+        fac *= -1
+      end
+      #@show q,v,fac
     end
-    #@show q,v,fac
   end
   return fac
 end
