@@ -55,10 +55,10 @@ See also: [`factorize`](@ref)
 function LinearAlgebra.svd(A::ITensor,
                            Linds...;
                            kwargs...)
-##  utags::TagSet = get(kwargs, :lefttags,
-##                      get(kwargs, :utags, "Link,u"))
-##  vtags::TagSet = get(kwargs, :righttags,
-##                      get(kwargs, :vtags, "Link,v"))
+  utags::TagSet = get(kwargs, :lefttags,
+                      get(kwargs, :utags, "Link,u"))
+  vtags::TagSet = get(kwargs, :righttags,
+                      get(kwargs, :vtags, "Link,v"))
 
   # Keyword argument deprecations
   #if haskey(kwargs, :utags) || haskey(kwargs, :vtags)
@@ -68,9 +68,9 @@ function LinearAlgebra.svd(A::ITensor,
   Lis = commoninds(A, IndexSet(Linds...))
   Ris = uniqueinds(A, Lis)
 
-##  if length(Lis) == 0 || length(Ris) == 0
-##    error("In `svd`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.")
-##  end
+  if length(Lis) == 0 || length(Ris) == 0
+    error("In `svd`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.")
+  end
 
   CL = combiner(Lis...)
   CR = combiner(Ris...)
@@ -86,43 +86,42 @@ function LinearAlgebra.svd(A::ITensor,
   Uₜ, Sₜ, Vₜ, spec = svd(tensor(AC); kwargs...)
   UC, S, VC = itensor.((Uₜ, Sₜ, Vₜ))
 
-##  u = commonind(S, UC)
-##  v = commonind(S, VC)
-##
-##  if hasqns(A)
-##    # Fix the flux of UC,S,VC
-##    # such that flux(UC) == flux(VC) == QN()
-##    # and flux(S) == flux(A)
-##    for b in nzblocks(UC)
-##      i1 = inds(UC)[1]
-##      i2 = inds(UC)[2]
-##      newqn = -dir(i2)*qn(i1,b[1])
-##      setblockqn!(i2,newqn,b[2])
-##      setblockqn!(u,newqn,b[2])
-##    end
-##
-##    for b in nzblocks(VC)
-##      i1 = inds(VC)[1]
-##      i2 = inds(VC)[2]
-##      newqn = -dir(i2)*qn(i1,b[1])
-##      setblockqn!(i2,newqn,b[2])
-##      setblockqn!(v,newqn,b[2])
-##    end
-##  end
+  u = commonind(S, UC)
+  v = commonind(S, VC)
+
+  if hasqns(A)
+    # Fix the flux of UC,S,VC
+    # such that flux(UC) == flux(VC) == QN()
+    # and flux(S) == flux(A)
+    for b in nzblocks(UC)
+      i1 = inds(UC)[1]
+      i2 = inds(UC)[2]
+      newqn = -dir(i2)*qn(i1,b[1])
+      setblockqn!(i2,newqn,b[2])
+      setblockqn!(u,newqn,b[2])
+    end
+
+    for b in nzblocks(VC)
+      i1 = inds(VC)[1]
+      i2 = inds(VC)[2]
+      newqn = -dir(i2)*qn(i1,b[1])
+      setblockqn!(i2,newqn,b[2])
+      setblockqn!(v,newqn,b[2])
+    end
+  end
 
   U = UC * dag(CL)
   V = VC * dag(CR)
 
-##  settags!(U, utags, u)
-##  settags!(S, utags, u)
-##  settags!(S, vtags, v)
-##  settags!(V, vtags, v)
-##
-##  u = settags(u, utags)
-##  v = settags(v, vtags)
-##
-##  return TruncSVD(U, S, V, spec, u, v)
-  return U, S, V
+  U = settags(U, utags, u)
+  S = settags(S, utags, u)
+  S = settags(S, vtags, v)
+  V = settags(V, vtags, v)
+
+  u = settags(u, utags)
+  v = settags(v, vtags)
+
+  return TruncSVD(U, S, V, spec, u, v)
 end
 
 
