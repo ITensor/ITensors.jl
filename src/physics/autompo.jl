@@ -894,30 +894,24 @@ function sorteachterm!(ampo::AutoMPO, sites)
 
     t.ops = t.ops[perm]
 
-    ## Identify fermionic operators,
-    ## zeroing perm for bosonic operators,
-    ## and inserting string "F" operators
-    #parity = +1
-    #for n=Nt:-1:1
-    #  fermionic = has_fermion_string(name(t.ops[n]),
-    #                                 sites[site(t.ops[n])])
-    #  if parity == -1
-    #    # Put Jordan-Wigner string emanating
-    #    # from fermionic operators to the right
-    #    # (Remaining F operators will be put in by svdMPO)
-    #    #t.ops[n] = SiteOp("$(name(t.ops[n]))*F",site(t.ops[n]))
-    #  end
-    #  if fermionic
-    #    parity = -parity
-    #  else
-    #    # Ignore bosonic operators in perm
-    #    # by zeroing corresponding entries
-    #    perm[n] = 0
-    #  end
-    #end
-    #if parity == -1
-    #  error("Parity-odd fermionic terms not yet supported by AutoMPO")
-    #end
+    # Identify fermionic operators,
+    # zeroing perm for bosonic operators,
+    # and inserting string "F" operators
+    parity = +1
+    for n=Nt:-1:1
+      fermionic = has_fermion_string(name(t.ops[n]),
+                                     sites[site(t.ops[n])])
+      if fermionic
+        parity = -parity
+      else
+        # Ignore bosonic operators in perm
+        # by zeroing corresponding entries
+        perm[n] = 0
+      end
+    end
+    if parity == -1
+      error("Parity-odd fermionic terms not yet supported by AutoMPO")
+    end
 
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero,perm)
