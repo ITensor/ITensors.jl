@@ -549,11 +549,7 @@ function svdMPO(ampo::AutoMPO,
         site_coef = coef(term)
       end
       if isempty(onsite)
-        #if isfermionic(right,sites)
-        #  push!(onsite,SiteOp("F",n))
-        #else
-          push!(onsite,SiteOp("Id",n))
-        #end
+        push!(onsite,SiteOp("Id",n))
       end
       el = MatElem(A_row,A_col,MPOTerm(site_coef,onsite))
       push!(tempMPO[n],el)
@@ -729,11 +725,7 @@ function qn_svdMPO(ampo::AutoMPO,
         site_coef = coef(term)
       end
       if isempty(onsite)
-        #if isfermionic(right,sites)
-        #  push!(onsite,SiteOp("F",n))
-        #else
-          push!(onsite,SiteOp("Id",n))
-        #end
+        push!(onsite,SiteOp("Id",n))
       end
       el = QNMatElem(lqn,rqn,A_row,A_col,MPOTerm(site_coef,onsite))
       push!(tempMPO[n],el)
