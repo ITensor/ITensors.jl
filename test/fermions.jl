@@ -402,6 +402,47 @@ using ITensors,
       @test norm(HHc-HH) < 1E-8
     end
 
+    @testset "Fermion Hamiltonian Matrix Elements" begin
+      N = 10
+      t1 = 0.654
+      V1 = 1.23
+
+      sites = siteinds("Fermion",N;conserve_qns=true)
+
+      ampo = AutoMPO()
+      for b=1:N-1
+        ampo += -t1,"Cdag",b,  "C",b+1
+        ampo += -t1,"Cdag",b+1,"C",b
+        ampo += V1,"N",b,"N",b+1
+      end
+      H = MPO(ampo,sites)
+
+      for j=1:N-2
+        stateA = [1 for n=1:N]
+        stateA[j] = 2
+        stateA[N] = 2 # to make MPS bosonic
+
+        stateB = [1 for n=1:N]
+        stateB[j+1] = 2
+        stateB[N] = 2 # to make MPS bosonic
+
+        psiA = productMPS(sites,stateA)
+        psiB = productMPS(sites,stateB)
+
+        @test inner(psiA,H,psiB) ≈ -t1
+        @test inner(psiB,H,psiA) ≈ -t1
+      end
+
+
+      for j=1:N-1
+        state = [1 for n=1:N]
+        state[j] = 2
+        state[j+1] = 2
+        psi = productMPS(sites,state)
+        @test inner(psi,H,psi) ≈ V1
+      end
+    end
+
   end
 
 end
