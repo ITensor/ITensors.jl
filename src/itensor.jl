@@ -574,11 +574,10 @@ function getindex(T::ITensor, ivs...)
   return T[vals...]::Number
 end
 
-function getindex(T::ITensor) 
-  if order(T) != 0
-    throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."))
-  end
-  return tensor(T)[]::Number
+getindex(T::ITensor{0}) = tensor(T)[]::Number
+
+function getindex(T::ITensor)
+  throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."))
 end
 
 lastindex(A::ITensor, n::Int64) = dim(A, n)

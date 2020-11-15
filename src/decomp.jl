@@ -152,11 +152,11 @@ function LinearAlgebra.eigen(A::ITensor{N},
                              Linds,
                              Rinds;
                              kwargs...) where {N}
-  @debug begin
+  #@debug begin
     if hasqns(A)
       @assert flux(A) == QN()
     end
-  end
+  #end
 
   NL = length(Linds)
   NR = length(Rinds)
@@ -235,21 +235,21 @@ function LinearAlgebra.eigen(A::ITensor{N},
   l̃ = setprime(settags(l, lefttags), leftplev)
   r̃ = setprime(settags(l̃, righttags), rightplev)
 
-  replaceinds!(D, (l, r), (l̃, r̃))
-  replaceind!(V, r, r̃)
+  D = replaceinds(D, (l, r), (l̃, r̃))
+  V = replaceind(V, r, r̃)
  
   l, r = l̃, r̃
 
   # The right eigenvectors, after being applied to A
   Vt = replaceinds(V, (Ris..., r), (Lis..., l))
 
-  @debug begin
+  #@debug begin
     if hasqns(A)
       @assert flux(D) == QN()
       @assert flux(V) == QN()
       @assert flux(Vt) == QN()
     end
-  end
+  #end
 
   return TruncEigen(D, V, Vt, spec, l, r)
 end
@@ -320,10 +320,13 @@ function factorize_svd(A::ITensor,
   elseif ortho == "right"
     L,R = U*S,V
   elseif ortho == "none"
-    sqrtS = S
-    sqrtS .= sqrt.(S)
+    # TODO: bring back in-place version (changed to get
+    # Zygote AD working)
+    #sqrtS = S
+    #sqrtS .= sqrt.(S)
+    sqrtS = ITensor(Diag(sqrt.(data(S))), inds(S))
     L, R = U * sqrtS, sqrtS * V
-    replaceind!(L, v, u)
+    L = replaceind(L, v, u)
   else
     error("In factorize using svd decomposition, ortho keyword $ortho not supported. Supported options are left, right, or none.")
   end
@@ -440,8 +443,8 @@ function LinearAlgebra.factorize(A::ITensor,
   # Set the tags and prime level
   l = commonind(L, R)
   l̃ = setprime(settags(l, tags), plev)
-  replaceind!(L, l, l̃)
-  replaceind!(R, l, l̃)
+  L = replaceind(L, l, l̃)
+  R = replaceind(R, l, l̃)
   l = l̃
 
   return L, R, spec, l
