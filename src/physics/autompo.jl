@@ -753,7 +753,8 @@ function qn_svdMPO(ampo::AutoMPO,
   #
   d0 = 2
   llinks = Vector{QNIndex}(undef,N+1)
-  llinks[1] = Index(QN()=>d0;tags="Link,l=0")
+  # Set dir=In for fermionic ordering, avoid arrow sign
+  llinks[1] = Index(QN()=>d0;tags="Link,l=0",dir=In)
   for n=1:N
     qi = Vector{Pair{QN,Int}}()
     if !haskey(Vs[n+1],QN())
@@ -769,7 +770,8 @@ function qn_svdMPO(ampo::AutoMPO,
         push!(qi,q=>cols)
       end
     end
-    llinks[n+1] = Index(qi...;tags="Link,l=$n")
+    # Set dir=In for fermionic ordering, avoid arrow sign
+    llinks[n+1] = Index(qi...;tags="Link,l=$n",dir=In)
   end
 
   H = MPO(N)
@@ -848,10 +850,16 @@ function qn_svdMPO(ampo::AutoMPO,
       sq = flux(Op)
       cq = rq-sq
 
-      #rn = qnblocknum(ll,rq)
-      #cn = qnblocknum(rl,cq)
-      rn = block(first, ll, rq)
-      cn = block(first, rl, cq)
+      # MPO is defined with Index order
+      # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
+      # so compute sign that would result by permuting cl from
+      # second position to last position:
+      if fparity(sq)==1 && fparity(cq)==1
+        Op .*= -1
+      end
+
+      rn = qnblocknum(ll,rq)
+      cn = qnblocknum(rl,cq)
 
       #TODO: wrap following 3 lines into a function
       _block = Block(rn, cn)
