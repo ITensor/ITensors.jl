@@ -443,6 +443,55 @@ using ITensors,
       end
     end
 
+    @testset "Fermion Second Neighbor Hopping" begin
+      N = 4
+      t1 = 1.79
+      t2 = 0.427
+      s = siteinds("Fermion",N;conserve_qns=true)
+      a = AutoMPO()
+      for n=1:N-1
+        a += -t1,"Cdag",n,"C",n+1
+        a += -t1,"Cdag",n+1,"C",n
+      end
+      for n=1:N-2
+        a += -t2,"Cdag",n,"C",n+2
+        a += -t2,"Cdag",n+2,"C",n
+      end
+      H = MPO(a,s)
+
+      state1 = [1 for n=1:N]
+      state1[1] = 2
+      state1[4] = 2
+      psi1 = productMPS(s,state1)
+
+      state2 = [1 for n=1:N]
+      state2[2] = 2
+      state2[4] = 2
+      psi2 = productMPS(s,state2)
+
+      state3 = [1 for n=1:N]
+      state3[3] = 2
+      state3[4] = 2
+      psi3 = productMPS(s,state3)
+
+      @test inner(psi1,H,psi2) ≈ -t1
+      @test inner(psi2,H,psi1) ≈ -t1
+      @test inner(psi2,H,psi3) ≈ -t1
+      @test inner(psi3,H,psi2) ≈ -t1
+
+      @test inner(psi1,H,psi3) ≈ -t2
+      @test inner(psi3,H,psi1) ≈ -t2
+
+      # Add stationary particle to site 2,
+      # hopping over should change sign:
+      state1[2] = 2
+      psi1 = productMPS(s,state1)
+      state3[2] = 2
+      psi3 = productMPS(s,state3)
+      @test inner(psi1,H,psi3) ≈ +t2
+      @test inner(psi3,H,psi1) ≈ +t2
+    end
+
   end
 
 end
