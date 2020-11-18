@@ -66,7 +66,17 @@ function MPO(::Type{ElT},
              ops::Vector{String}) where {ElT <: Number}
   N = length(sites)
   ampo = AutoMPO() + [ops[n] => n for n in 1:N]
-  return MPO(ampo, sites)
+  M = MPO(ampo, sites)
+
+  # Currently, AutoMPO does not output the optimally truncated
+  # MPO (see https://github.com/ITensor/ITensors.jl/issues/526)
+  # So here, we need to first normalize, then truncate, then
+  # return the normalization.
+  lognormM = lognorm(M)
+  M ./= exp(lognormM / N)
+  truncate!(M; cutoff = 1e-15)
+  M .*= exp(lognormM / N)
+  return M
 end
 
 MPO(sites::Vector{<:Index}, ops::Vector{String}) =
@@ -225,6 +235,9 @@ function dot(B::MPO, y::MPS, A::MPO, x::MPS;
   return O[]
 end
 
+# TODO: maybe make these into tuple inputs?
+# Also can generalize to:
+# inner((β, B, y), (α, A, x))
 inner(B::MPO, y::MPS, A::MPO, x::MPS) = dot(B, y, A, x)
 
 function dot(M1::MPO, M2::MPO;
@@ -324,8 +337,9 @@ function *(A::MPO, ψ::MPS; kwargs...)
     Aψ = _contract_densitymatrix(A, ψ; kwargs...)
   elseif method == "naive"
     Aψ = _contract_naive(A, ψ; kwargs...)
+  else
+    throw(ArgumentError("Method $method not supported"))
   end
-  throw(ArgumentError("Method $method not supported"))
   return Aψ
 end
 

@@ -693,9 +693,7 @@ For now, `make_inds_match` is only supported for MPSs.
 
 See also `logdot`/`loginner`.
 """
-function LinearAlgebra.dot(M1::MPST,
-                           M2::MPST;
-                           kwargs...) where {MPST <: AbstractMPS}
+function dot(M1::MPST, M2::MPST; kwargs...) where {MPST <: AbstractMPS}
   return _log_or_not_dot(M1, M2, false; kwargs...)
 end
 
@@ -717,19 +715,16 @@ have the same dimensions or QN blocks).
 
 For now, `make_inds_match` is only supported for MPSs.
 """
-function logdot(M1::MPST,
-                M2::MPST;
+function logdot(M1::MPST, M2::MPST;
                 kwargs...) where {MPST <: AbstractMPS}
   return _log_or_not_dot(M1, M2, true; kwargs...)
 end
 
-inner(M1::MPST,
-      M2::MPST;
-      kwargs...) where {MPST <: AbstractMPS} = dot(M1, M2; kwargs...)
+inner(M1::MPST, M2::MPST; kwargs...) where {MPST <: AbstractMPS} =
+  dot(M1, M2; kwargs...)
 
-loginner(M1::MPST,
-         M2::MPST;
-         kwargs...) where {MPST <: AbstractMPS} = logdot(M1, M2; kwargs...)
+loginner(M1::MPST, M2::MPST; kwargs...) where {MPST <: AbstractMPS} =
+  logdot(M1, M2; kwargs...)
 
 """
     norm(A::MPS)
@@ -740,9 +735,7 @@ Compute the norm of the MPS or MPO.
 
 See also `lognorm`.
 """
-function LinearAlgebra.norm(M::AbstractMPS)
-  return sqrt(dot(M, M))
-end
+norm(M::AbstractMPS) = sqrt(dot(M, M))
 
 """
     lognorm(A::MPS)
@@ -755,27 +748,7 @@ This is useful for larger MPS/MPO that are not gauged, where in the limit of lar
 
 See also `norm` and `loginner`/`logdot`.
 """
-function lognorm(M::AbstractMPS)
-  return 0.5 * logdot(M, M)
-end
-
-#function plussers(::Type{T},
-#                  left_ind::Index,
-#                  right_ind::Index,
-#                  sum_ind::Index) where {T<:Array}
-#  total_dim    = dim(left_ind) + dim(right_ind)
-#  total_dim    = max(total_dim, 1)
-#  # TODO: I am not sure if we should be using delta
-#  # tensors for this purpose? I think we should consider
-#  # not allowing them to be made with different index sizes
-#  #left_tensor  = δ(left_ind, sum_ind)
-#  left_tensor  = diagITensor(1.0,left_ind, sum_ind)
-#  right_tensor = ITensor(right_ind, sum_ind)
-#  for i in 1:dim(right_ind)
-#    right_tensor[right_ind(i), sum_ind(dim(left_ind) + i)] = 1
-#  end
-#  return left_tensor, right_tensor
-#end
+lognorm(M::AbstractMPS) = 0.5 * logdot(M, M)
 
 function site_combiners(ψ::AbstractMPS)
   N = length(ψ)
@@ -896,9 +869,7 @@ function +(α⃗ψ⃗::ScaledMPS{<:Number, MPST}...;
 
   set_ortho_lims!(ψ, 1:1)
 
-  convert(MPST, ψ)
-
-  return ψ
+  return convert(MPST, ψ)
 end
 
 function fill_trivial_coefficients(ψ::MPSOrScaledMPS)
@@ -918,38 +889,6 @@ add(ψ⃗::MPSOrScaledMPS...; kwargs...) =
 
 -(ψ₁::ScaledMPS, ψ₂::ScaledMPS; kwargs...) =
   +(ψ₁, -ψ₂; kwargs...)
-
-#function Base.:+(A::T, B::T; kwargs...) where {T <: AbstractMPS}
-#  A = copy(A)
-#  B = copy(B)
-#  N = length(A)
-#  length(B) != N && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
-#  orthogonalize!(A, 1; kwargs...)
-#  orthogonalize!(B, 1; kwargs...)
-#  C = similar(A)
-#  rand_plev = 13124
-#  lAs = [linkind(A, i) for i in 1:N-1]
-#  prime!(A, rand_plev, "Link")
-#
-#  first  = Vector{ITensor{2}}(undef,N-1)
-#  second = Vector{ITensor{2}}(undef,N-1)
-#  for i in 1:N-1
-#    lA = linkind(A, i)
-#    lB = linkind(B, i)
-#    r  = Index(dim(lA) + dim(lB), tags(lA))
-#    f, s = plussers(typeof(data(A[1])), lA, lB, r)
-#    first[i]  = f
-#    second[i] = s
-#  end
-#  C[1] = A[1] * first[1] + B[1] * second[1]
-#  for i in 2:N-1
-#      C[i] = dag(first[i-1]) * A[i] * first[i] + dag(second[i-1]) * B[i] * second[i]
-#  end
-#  C[N] = dag(first[N-1]) * A[N] + dag(second[N-1]) * B[N]
-#  prime!(C, -rand_plev, "Link")
-#  truncate!(C; kwargs...)
-#  return C
-#end
 
 add(A::T, B::T;
     kwargs...) where {T <: AbstractMPS} = +(A, B; kwargs...)
@@ -1708,4 +1647,58 @@ end
 @deprecate mul(A::AbstractMPS,
                B::AbstractMPS;
                kwargs...) contract(A, B; kwargs...)
+
+#
+# Old code for adding MPS/MPO
+#
+
+#function plussers(::Type{T},
+#                  left_ind::Index,
+#                  right_ind::Index,
+#                  sum_ind::Index) where {T<:Array}
+#  total_dim    = dim(left_ind) + dim(right_ind)
+#  total_dim    = max(total_dim, 1)
+#  # TODO: I am not sure if we should be using delta
+#  # tensors for this purpose? I think we should consider
+#  # not allowing them to be made with different index sizes
+#  #left_tensor  = δ(left_ind, sum_ind)
+#  left_tensor  = diagITensor(1.0,left_ind, sum_ind)
+#  right_tensor = ITensor(right_ind, sum_ind)
+#  for i in 1:dim(right_ind)
+#    right_tensor[right_ind(i), sum_ind(dim(left_ind) + i)] = 1
+#  end
+#  return left_tensor, right_tensor
+#end
+#
+#function Base.:+(A::T, B::T; kwargs...) where {T <: AbstractMPS}
+#  A = copy(A)
+#  B = copy(B)
+#  N = length(A)
+#  length(B) != N && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
+#  orthogonalize!(A, 1; kwargs...)
+#  orthogonalize!(B, 1; kwargs...)
+#  C = similar(A)
+#  rand_plev = 13124
+#  lAs = [linkind(A, i) for i in 1:N-1]
+#  prime!(A, rand_plev, "Link")
+#
+#  first  = Vector{ITensor{2}}(undef,N-1)
+#  second = Vector{ITensor{2}}(undef,N-1)
+#  for i in 1:N-1
+#    lA = linkind(A, i)
+#    lB = linkind(B, i)
+#    r  = Index(dim(lA) + dim(lB), tags(lA))
+#    f, s = plussers(typeof(data(A[1])), lA, lB, r)
+#    first[i]  = f
+#    second[i] = s
+#  end
+#  C[1] = A[1] * first[1] + B[1] * second[1]
+#  for i in 2:N-1
+#      C[i] = dag(first[i-1]) * A[i] * first[i] + dag(second[i-1]) * B[i] * second[i]
+#  end
+#  C[N] = dag(first[N-1]) * A[N] + dag(second[N-1]) * B[N]
+#  prime!(C, -rand_plev, "Link")
+#  truncate!(C; kwargs...)
+#  return C
+#end
 

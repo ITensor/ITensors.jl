@@ -440,7 +440,7 @@ end
   @testset "sample! method" begin
     N = 10
     sites = [Index(3,"Site,n=$n") for n in 1:N]
-    psi = makeRandomMPS(sites,chi=3)
+    psi = randomMPS(sites, 3)
     nrm2 = inner(psi,psi)
     psi[1] *= (1.0/sqrt(nrm2))
 
