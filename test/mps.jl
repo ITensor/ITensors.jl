@@ -2,6 +2,8 @@ using Combinatorics
 using ITensors
 using Test
 
+using ITensors: AbstractMPS, fill_trivial_coefficients
+
 include("util.jl")
 include("../examples/gate_evolution/qubit.jl")
 
@@ -234,6 +236,65 @@ include("../examples/gate_evolution/qubit.jl")
     K12  = Ks[1] + Ks[2]
     K123 = K12 + Ks[3]
     @test inner(sum(Ks), K123) ≈ inner(K123,K123)
+  end
+
+  function inner_add(α⃗ψ⃗::Tuple{<:Number, <:MPST}...) where {MPST <: AbstractMPS}
+    Nₘₚₛ = length(α⃗ψ⃗)
+    α⃗ = first.(α⃗ψ⃗)
+    ψ⃗ = last.(α⃗ψ⃗)
+    N⃡ = (conj(α⃗[i]) * α⃗[j] * inner(ψ⃗[i], ψ⃗[j]) for i in 1:Nₘₚₛ, j in 1:Nₘₚₛ)
+    return sum(N⃡)
+  end
+
+  inner_add(ψ⃗...) =
+    inner_add(fill_trivial_coefficients.(ψ⃗)...)
+
+  @testset "+ MPS with coefficients" begin
+    N = 20
+    conserve_qns = true
+
+    s = siteinds("S=1/2", N; conserve_qns = conserve_qns)
+    state = n -> isodd(n) ? "↑" : "↓"
+
+    ψ₁ = randomMPS(s, state, 4)
+    ψ₂ = randomMPS(s, state, 4)
+    ψ₃ = randomMPS(s, state, 4)
+
+    ψ = ψ₁ + ψ₂
+
+    @test inner(ψ, ψ) ≈ inner_add(ψ₁, ψ₂)
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+
+    ψ = (1, ψ₁) + (-1, ψ₂)
+
+    @test inner(ψ, ψ) ≈ inner_add((1, ψ₁), (-1, ψ₂))
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+    
+    α₁ = 2.2
+    α₂ = -4.1
+    ψ = +((α₁, ψ₁), (α₂, ψ₂); cutoff = 1e-8)
+
+    @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂))
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+
+    α₁ = 2 + 3im
+    α₂ = -4 + 1im
+    ψ = (α₁, ψ₁) + (α₂, ψ₂)
+
+    @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂))
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+
+    α₁ = 2 + 3im
+    α₂ = -4 + 1im
+    ψ = (α₁, ψ₁) + (α₂, ψ₂) + ψ₃
+
+    @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂), ψ₃)
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂) + maxlinkdim(ψ₃)
+
+    ψ = ψ₁ - ψ₂
+
+    @test inner(ψ, ψ) ≈ inner_add(ψ₁, (-1, ψ₂))
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
   end
 
   sites = siteinds(2,N)
@@ -589,7 +650,7 @@ end
     @test siteind(M, 4; plev = 0) == s[4]
     @test siteind(M, 4; plev = 1) == s[4]'
     @test isnothing(siteind(M, 4; plev = 2))
-    @test siteinds(M, 3) == IndexSet(s[3], s[3]')
+    @test hassameinds(siteinds(M, 3), (s[3], s[3]'))
     @test siteinds(M, 3; plev = 1) == IndexSet(s[3]')
     @test siteinds(M, 3; plev = 0) == IndexSet(s[3])
     @test siteinds(M, 3; tags = "n=2") == IndexSet()
