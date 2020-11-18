@@ -262,11 +262,11 @@ end
   end
 
   @testset "+(::MPO, ::MPO)" begin
-    N = 10
+    #N = 10
     conserve_qns = true
     s = siteinds("S=1/2", N; conserve_qns = conserve_qns)
 
-    ops = n -> isodd(n) ? "Sz" : "Sx"
+    ops = n -> isodd(n) ? "Sz" : "Id"
     H₁ = MPO(s, ops)
     H₂ = MPO(s, ops)
 

@@ -30,17 +30,22 @@ function MPO(::Type{ElT},
              sites::Vector{<:Index}) where {ElT <: Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
+  if N == 0
+    return MPO()
+  elseif N == 1
+    v[1] = emptyITensor(ElT, dag(sites[1]), sites[1]')
+    return MPO(v)
+  end
   space_ii = all(hasqns, sites) ? [QN() => 1] : 1
   l = [Index(space_ii, "Link,l=$ii") for ii in 1:N-1]
   for ii ∈ eachindex(sites)
     s = sites[ii]
-    sp = prime(s)
     if ii == 1
-      v[ii] = emptyITensor(ElT, dag(s), sp, l[ii])
+      v[ii] = emptyITensor(ElT, dag(s), s', l[ii])
     elseif ii == N
-      v[ii] = emptyITensor(ElT, dag(l[ii-1]), dag(s), sp)
+      v[ii] = emptyITensor(ElT, dag(l[ii-1]), dag(s), s')
     else
-      v[ii] = emptyITensor(ElT, dag(l[ii-1]), dag(s), sp, l[ii])
+      v[ii] = emptyITensor(ElT, dag(l[ii-1]), dag(s), s', l[ii])
     end
   end
   return MPO(v)
@@ -61,8 +66,7 @@ MPO(N::Int) = MPO(Vector{ITensor}(undef, N))
 Make an MPO with pairs of sites `s[i]` and `s[i]'`
 and operators `ops` on each site.
 """
-function MPO(::Type{ElT},
-             sites::Vector{<:Index},
+function MPO(::Type{ElT}, sites::Vector{<:Index},
              ops::Vector{String}) where {ElT <: Number}
   N = length(sites)
   ampo = AutoMPO() + [ops[n] => n for n in 1:N]
@@ -79,8 +83,13 @@ function MPO(::Type{ElT},
   return M
 end
 
-MPO(sites::Vector{<:Index}, ops::Vector{String}) =
-  MPO(Float64, sites, ops)
+function MPO(::Type{ElT}, sites::Vector{<:Index},
+             fops::Function) where {ElT <: Number}
+  ops = [fops(n) for n in 1:length(sites)]
+  return MPO(ElT, sites, ops)
+end
+
+MPO(sites::Vector{<:Index}, ops) = MPO(Float64, sites, ops)
 
 """
     MPO([::Type{ElT} = Float64, ]sites, op::String)
