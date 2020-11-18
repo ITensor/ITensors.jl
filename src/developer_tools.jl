@@ -48,4 +48,9 @@ function printnz(T::ITensor{N}) where {N}
   println()
 end
 
+function printnz(name::String,T::ITensor{N}) where {N}
+  println(name)
+  printnz(T)
+end
+
 
