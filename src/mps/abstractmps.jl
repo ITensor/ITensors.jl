@@ -767,7 +767,9 @@ end
 Add arbitrary numbers of MPS/MPO with each other, with some optional
 truncation.
 
-A cutoff of 1e-8 is used by default.
+A cutoff of 1e-15 is used by default, and in general users should set their own cutoff for their particular application.
+
+In the future we will give an interface for returning the truncation error.
 
 # Examples
 
@@ -811,7 +813,7 @@ println()
 ```
 """
 function +(ψ⃗::MPST...;
-           cutoff = 1e-8, kwargs...) where {MPST <: AbstractMPS}
+           cutoff = 1e-15, kwargs...) where {MPST <: AbstractMPS}
   Nₘₚₛ = length(ψ⃗)
 
   @assert all(ψᵢ -> length(ψ⃗[1]) == length(ψᵢ), ψ⃗)
