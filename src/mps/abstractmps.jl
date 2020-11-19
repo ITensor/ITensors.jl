@@ -995,6 +995,8 @@ function (α::Number * ψ::AbstractMPS)
   return αψ
 end
 
+(ψ::AbstractMPS * α::Number) = α * ψ
+
 -(ψ::AbstractMPS) = -1 * ψ
 
 """
