@@ -882,22 +882,11 @@ add(A::T, B::T;
 Add multiple MPS/MPO with each other, with some optional
 truncation.
 """
-function Base.sum(A::Vector{T};
+function Base.sum(ψ⃗::Vector{T};
                   kwargs...) where {T <: AbstractMPS}
-  length(A) == 0 && return T()
-  length(A) == 1 && return A[1]
-  length(A) == 2 && return +(A[1], A[2]; kwargs...)
-  nsize = isodd(length(A)) ? (div(length(A) - 1, 2) + 1) : div(length(A), 2)
-  newterms = Vector{T}(undef, nsize)
-  np = 1
-  for n in 1:2:length(A) - 1
-    newterms[np] = +(A[n], A[n+1]; kwargs...)
-    np += 1
-  end
-  if isodd(length(A))
-    newterms[nsize] = A[end]
-  end
-  return sum(newterms; kwargs...)
+  length(ψ⃗) == 0 && return T()
+  length(ψ⃗) == 1 && return A[1]
+  return +(ψ⃗...; kwargs...)
 end
 
 """
