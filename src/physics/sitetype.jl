@@ -1,18 +1,4 @@
 
-#"""
-#SiteType is a parameterized type which allows
-#making Index tags into Julia types. Use cases
-#include overloading functions such as `op`,
-#`siteinds`, and `state` which generate custom
-#operators, Index arrays, and IndexVals associated
-#with Index objects having a certain tag.
-#
-#To make a SiteType type, you can use the string
-#macro notation: `SiteType"MyTag"`
-#
-#To make an SiteType value or object, you can use
-#the notation: `SiteType("MyTag")`
-#"""
 @eval struct SiteType{T}
   (f::Type{<:SiteType})() = $(Expr(:new, :f))
 end
@@ -25,8 +11,100 @@ end
 # struct SiteType{T}
 # end
 
+"""
+SiteType is a parameterized type which allows
+making Index tags into Julia types. Use cases
+include overloading functions such as `op`,
+`siteinds`, and `state` which generate custom
+operators, Index arrays, and IndexVals associated
+with Index objects having a certain tag.
+
+To make a SiteType type, you can use the string
+macro notation: `SiteType"MyTag"`
+
+To make a SiteType value or object, you can use
+the notation: `SiteType("MyTag")`
+
+There are currently a few built-in site types
+recognized by `ITensors.jl`. The system is easily extensible
+by users. To add new operators to an existing site type,
+you can follow the instructions [here](http://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_extending).
+To create new site types, you can follow the instructions
+[here](https://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_basic) and 
+[here](https://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_qns).
+
+The current built-in site types are:
+
+- `SiteType"S=1/2"` (or `SiteType"S=½"`)
+- `SiteType"S=1"`
+- `SiteType"Fermion"`
+- `SiteType"tJ"`
+- `SiteType"Electron"`
+
+# Examples
+
+Tags on indices get turned into SiteTypes internally, and then
+we search for overloads of functions like `op` and `siteind`.
+For example:
+```julia
+julia> s = siteind("S=1/2")
+(dim=2|id=862|"S=1/2,Site")
+
+julia> @show op("Sz", s);
+op(s, "Sz") = ITensor ord=2
+Dim 1: (dim=2|id=862|"S=1/2,Site")'
+Dim 2: (dim=2|id=862|"S=1/2,Site")
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 0.5   0.0
+ 0.0  -0.5
+
+julia> @show op("Sx", s);
+op(s, "Sx") = ITensor ord=2
+Dim 1: (dim=2|id=862|"S=1/2,Site")'
+Dim 2: (dim=2|id=862|"S=1/2,Site")
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 0.0  0.5
+ 0.5  0.0
+
+julia> @show op("Sy", s);
+op(s, "Sy") = ITensor ord=2
+Dim 1: (dim=2|id=862|"S=1/2,Site")'
+Dim 2: (dim=2|id=862|"S=1/2,Site")
+NDTensors.Dense{Complex{Float64},Array{Complex{Float64},1}}
+ 2×2
+ 0.0 + 0.0im  -0.0 - 0.5im
+ 0.0 + 0.5im   0.0 + 0.0im
+
+julia> s = siteind("Electron")
+(dim=4|id=734|"Electron,Site")
+
+julia> @show op("Nup", s);
+op(s, "Nup") = ITensor ord=2
+Dim 1: (dim=4|id=734|"Electron,Site")'
+Dim 2: (dim=4|id=734|"Electron,Site")
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 4×4
+ 0.0  0.0  0.0  0.0
+ 0.0  1.0  0.0  0.0
+ 0.0  0.0  0.0  0.0
+ 0.0  0.0  0.0  1.0
+```
+
+Many operators are available, for example:
+
+- `SiteType"S=1/2"`: `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
+- `SiteType"Electron"`: `"Nup"`, `"Ndn"`, `"Nupdn"`, `"Ntot"`, `"Cup"`, `"Cdagup"`, `"Cdn"`, `"Cdagup"`, `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
+- ...
+
+You can view the source code for the internal SiteType definitions
+and operators that are defined [here](https://github.com/ITensor/ITensors.jl/tree/master/src/physics/site_types).
+"""
 SiteType(s::AbstractString) = SiteType{Tag(s)}()
+
 SiteType(t::Tag) = SiteType{t}()
+
 tag(::SiteType{T}) where {T} = T
 
 macro SiteType_str(s)
@@ -46,20 +124,6 @@ end
 #
 #---------------------------------------
 
-#"""
-#OpName is a parameterized type which allows
-#making strings into Julia types for the purpose
-#of representing operator names.
-#The main use of OpName is overloading the 
-#`ITensors.op!` method which generates operators 
-#for indices with certain tags such as "S=1/2".
-#
-#To make a OpName type, you can use the string
-#macro notation: `OpName"MyTag"`. 
-#
-#To make an OpName value or object, you can use
-#the notation: `OpName("myop")`
-#"""
 @eval struct OpName{Name}
   (f::Type{<:OpName})() = $(Expr(:new, :f))
 end
@@ -72,6 +136,20 @@ end
 # struct OpName{Name}
 # end
 
+"""
+OpName is a parameterized type which allows
+making strings into Julia types for the purpose
+of representing operator names.
+The main use of OpName is overloading the 
+`ITensors.op!` method which generates operators 
+for indices with certain tags such as "S=1/2".
+
+To make a OpName type, you can use the string
+macro notation: `OpName"MyTag"`. 
+
+To make an OpName value or object, you can use
+the notation: `OpName("myop")`
+"""
 OpName(s::AbstractString) = OpName{SmallString(s)}()
 OpName(s::SmallString) = OpName{s}()
 name(::OpName{N}) where {N} = N
@@ -109,8 +187,8 @@ argument that corresponds to one of the tags of
 the Index `s` and an `OpName"opname"` argument
 that corresponds to the input operator name.
 
-Operator names can be combined using the "*"
-symbol, for example "S+*S-" or "Sz*Sz*Sz". 
+Operator names can be combined using the `"\\*"`
+symbol, for example `"S+\\*S-"` or `"Sz\\*Sz\\*Sz"`. 
 The result is an ITensor made by forming each operator 
 then contracting them together in a way corresponding
 to the usual operator product or matrix multiplication.
@@ -122,8 +200,8 @@ operators to MPS.
 
 # Example
 ```julia
-s = Index(2,"Site,S=1/2")
-Sz = op("Sz",s)
+s = Index(2, "Site,S=1/2")
+Sz = op("Sz", s)
 ```
 """
 function op(name::AbstractString,
@@ -229,11 +307,18 @@ op(s::Index,
 
 
 """
-  op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
+    op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
 
 Return an ITensor corresponding to the operator
 named `opname` for the n'th Index in the array 
 `sites`.
+
+# Example
+
+```julia
+s = siteinds("S=1/2", 4)
+Sz2 = op("Sz", s, 2)
+```
 """
 op(opname::AbstractString, s::Vector{<:Index},
    ns::Vararg{Int, N}; kwargs...) where {N} =

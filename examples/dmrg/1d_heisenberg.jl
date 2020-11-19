@@ -1,8 +1,6 @@
 using ITensors
 using Printf
 
-include("../src/electronk.jl")
-
 let
   N = 100
 
