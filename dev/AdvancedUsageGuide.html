@@ -297,8 +297,30 @@ Body::Number
 └──       return %12
 
 julia&gt; typeof(A[i=&gt;1, i&#39;=&gt;2])
-Float64</code></pre><p>Uh oh, that doesn&#39;t look good! Julia can&#39;t know ahead of time, based on  the inputs, what the type of the output is, besides that it will be a <code>Number</code> (though at runtime, the output has a concrete type, <code>Float64</code>).</p><p>So why is it designed this way? The main reason is to allow more  generic and dynamic code than traditional, statically-typed Arrays. This allows us to have code like:</p><pre><code class="language-julia">A = randomITensor(i&#39;, i)
-A .*= 2+1im</code></pre><p>Here, the type of the storage of A is changed in-place (allocations are performed only when needed). More generally, this allows ITensors to have more generic in-place  functionality, so you can write code where you don&#39;t know what the storage is until runtime.</p><p>This can lead to certain types of code having perfomance problems,  for example looping through ITensors with many elements can be slow:</p><pre><code class="language-julia">julia&gt; function myscale!(A::ITensor, x::Number)
+Float64</code></pre><p>Uh oh, that doesn&#39;t look good! Julia can&#39;t know ahead of time, based on  the inputs, what the type of the output is, besides that it will be a <code>Number</code> (though at runtime, the output has a concrete type, <code>Float64</code>).</p><p>So why is it designed this way? The main reason is to allow more  generic and dynamic code than traditional, statically-typed Arrays. This allows us to have code like:</p><pre><code class="language-julia">julia&gt; i = Index(2, &quot;i&quot;)
+(dim=2|id=811|&quot;i&quot;)
+
+julia&gt; A = emptyITensor(i&#39;, i);
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=811|&quot;i&quot;)&#39;
+Dim 2: (dim=2|id=811|&quot;i&quot;)
+NDTensors.Empty{Float64,NDTensors.Dense{Float64,Array{Float64,1}}}
+ 2×2
+
+
+
+julia&gt; A[i&#39; =&gt; 1, i =&gt; 2] = 1.2;
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=811|&quot;i&quot;)&#39;
+Dim 2: (dim=2|id=811|&quot;i&quot;)
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 0.0  1.2
+ 0.0  0.0</code></pre><p>Here, the type of the storage of A is changed in-place. It starts as an <code>Empty</code> storage, a special trivial storage. When we set an element, we then allocate the appropriate storage. Allocations are performed only when needed, so if another element is set then no allocation is performed. More generally, this allows ITensors to have more generic in-place  functionality, so you can write code where you don&#39;t know what the storage is until runtime.</p><p>This can lead to certain types of code having perfomance problems,  for example looping through ITensors with many elements can be slow:</p><pre><code class="language-julia">julia&gt; function myscale!(A::ITensor, x::Number)
          for n in 1:dim(A)
            A[n] = x * A[n]
          end
@@ -351,4 +373,4 @@ julia&gt; myscale2!(A::ITensor, x::Number) = myscale!(tensor(A), x)
 myscale2! (generic function with 1 method)
 
 julia&gt; @btime myscale2!(A, 2) setup = (A = randomITensor(i));
-  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AutoMPO.html">« AutoMPO</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 19 November 2020 14:51">Thursday 19 November 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AutoMPO.html">« AutoMPO</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 19 November 2020 15:01">Thursday 19 November 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
