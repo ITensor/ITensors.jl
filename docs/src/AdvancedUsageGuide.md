@@ -237,6 +237,96 @@ NDTensors.inds
 ```
 where the notation `r"..."` is Julia notation for making a string that will be interpreted as a [regular expression](https://docs.julialang.org/en/v1/manual/strings/#Regular-Expressions). Here, we are searching for any documentation that contains the string "ITensor" followed at some point by "IndexSet". The notation `.*` is regular expression notation for matching any number of any type of character.
 
+Based on the `apropos` function, we can make some helper functions that may be useful. For example:
+```julia
+using ITensors
+
+function finddocs(s)
+  io = IOBuffer()
+  apropos(io, s)
+  v = chomp(String(take!(io)))
+  return split(v, "\n")
+end
+
+function finddocs(s...)
+  intersect(finddocs.(s)...)
+end
+
+found_methods = finddocs("indices", "set difference")
+display(found_methods)
+```
+returns:
+```julia
+3-element Array{SubString{String},1}:
+ "ITensors.noncommoninds"
+ "Base.setdiff"
+ "ITensors.uniqueinds"
+```
+which are the functions that have docs that contain the strings `"indices"` and `"set difference"`. We can print the docs for `uniqueinds` to find:
+```julia
+help?> uniqueinds
+search: uniqueinds unique_siteinds uniqueind uniqueindex
+
+  uniqueinds(A, B; kwargs...)
+  uniqueinds(::Order{N}, A, B; kwargs...)
+
+
+  Return an IndexSet with indices that are unique to the set of
+  indices of A and not in B (the set difference).
+
+  Optionally, specify the desired number of indices as Order(N),
+  which adds a check and can be a bit more efficient.
+```
+
+We can also filter the results to only specify functions from certain modules, for example:
+```julia
+julia> filter(x -> startswith(x, "ITensors"), finddocs("indices", "set difference"))
+2-element Array{SubString{String},1}:
+ "ITensors.noncommoninds"
+ "ITensors.uniqueinds"
+
+julia> filter(x -> !startswith(x, "ITensors"), finddocs("indices", "set difference"))
+1-element Array{SubString{String},1}:
+ "Base.setdiff"
+```
+Ideally we could have `apropos` do a "smart" Google-like search of the appropriate docstrings, but this is a pretty good start.
+
+Additionally, the `names` function can be useful, which prints the names of all functions and types that are exported by a module. For example:
+```julia
+julia> names(ITensors)
+264-element Array{Symbol,1}:
+ Symbol("@OpName_str")
+ Symbol("@SiteType_str")
+ Symbol("@StateName_str")
+ Symbol("@TagType_str")
+ Symbol("@disable_warn_order")
+ Symbol("@reset_warn_order")
+ Symbol("@set_warn_order")
+ Symbol("@ts_str")
+ :AbstractObserver
+ :AutoMPO
+ :DMRGObserver
+ :ITensor
+ :ITensors
+ :Index
+[...]
+```
+Of course this is a very long list (and the methods are returned as `Symbol`s, which are like strings but not as easy to work with). However, we can convert the list to strings and filter the strings to find functions we are interested in, for example:
+```julia
+julia> filter(x -> contains(x, "common") && contains(x, "ind"), String.(names(ITensors)))
+8-element Array{String,1}:
+ "common_siteind"
+ "common_siteinds"
+ "commonind"
+ "commonindex"
+ "commoninds"
+ "hascommoninds"
+ "noncommonind"
+ "noncommoninds"
+```
+
+Julia types do not have member functions, so people coming from object oriented programming languages may find that at first it is more difficult to find methods that are applicable to a certain type. However, Julia has many fantastic tools for introspection that we can use to make this task easier.
+
 ## Make a small project based on ITensors.jl
 
 Once you start to have longer code, you will want to put your
