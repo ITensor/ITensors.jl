@@ -788,11 +788,32 @@ So why is it designed this way? The main reason is to allow more
 generic and dynamic code than traditional, statically-typed Arrays.
 This allows us to have code like:
 ```julia
-A = randomITensor(i', i)
-A .*= 2+1im
+julia> i = Index(2, "i")
+(dim=2|id=811|"i")
+
+julia> A = emptyITensor(i', i);
+
+julia> @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=811|"i")'
+Dim 2: (dim=2|id=811|"i")
+NDTensors.Empty{Float64,NDTensors.Dense{Float64,Array{Float64,1}}}
+ 2×2
+
+
+
+julia> A[i' => 1, i => 2] = 1.2;
+
+julia> @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=811|"i")'
+Dim 2: (dim=2|id=811|"i")
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 0.0  1.2
+ 0.0  0.0
 ```
-Here, the type of the storage of A is changed in-place (allocations
-are performed only when needed).
+Here, the type of the storage of A is changed in-place. It starts as an `Empty` storage, a special trivial storage. When we set an element, we then allocate the appropriate storage. Allocations are performed only when needed, so if another element is set then no allocation is performed.
 More generally, this allows ITensors to have more generic in-place 
 functionality, so you can write code where you don't know what the
 storage is until runtime.
