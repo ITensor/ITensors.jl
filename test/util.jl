@@ -1,7 +1,11 @@
 using ITensors
 using Random
 
-using ITensors: AbstractMPS, fill_trivial_coefficients
+using ITensors: AbstractMPS
+
+function fill_trivial_coefficients(ψ)
+  return ψ isa AbstractMPS ? (1, ψ) : ψ
+end
 
 function inner_add(α⃗ψ⃗::Tuple{<:Number, <:MPST}...) where {MPST <: AbstractMPS}
   Nₘₚₛ = length(α⃗ψ⃗)
@@ -11,8 +15,7 @@ function inner_add(α⃗ψ⃗::Tuple{<:Number, <:MPST}...) where {MPST <: Abstra
   return sum(N⃡)
 end
 
-inner_add(ψ⃗...) =
-  inner_add(fill_trivial_coefficients.(ψ⃗)...)
+inner_add(ψ⃗...) = inner_add(fill_trivial_coefficients.(ψ⃗)...)
 
 # TODO: this is no longer needed, use randomMPS
 function makeRandomMPS(sites;

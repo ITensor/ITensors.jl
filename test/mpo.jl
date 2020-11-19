@@ -262,7 +262,6 @@ end
   end
 
   @testset "+(::MPO, ::MPO)" begin
-    #N = 10
     conserve_qns = true
     s = siteinds("S=1/2", N; conserve_qns = conserve_qns)
 
@@ -278,7 +277,7 @@ end
     α₁ = 2.2
     α₂ = 3.4 + 1.2im
 
-    H = (α₁, H₁) + H₂
+    H = α₁ * H₁ + H₂
 
     @test inner(H, H) ≈ inner_add((α₁, H₁), H₂)
     @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
@@ -288,7 +287,7 @@ end
     @test inner(H, H) ≈ inner_add(H₁, (-1, H₂))
     @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
 
-    H = (α₁, H₁) - (α₂, H₂)
+    H = α₁ * H₁ - α₂ * H₂
 
     @test inner(H, H) ≈ inner_add((α₁, H₁), (-α₂, H₂))
     @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)

@@ -252,28 +252,28 @@ include("../examples/gate_evolution/qubit.jl")
     @test inner(ψ, ψ) ≈ inner_add(ψ₁, ψ₂)
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
 
-    ψ = (1, ψ₁) + (-1, ψ₂)
+    ψ = ψ₁ + (-ψ₂)
 
     @test inner(ψ, ψ) ≈ inner_add((1, ψ₁), (-1, ψ₂))
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
     
     α₁ = 2.2
     α₂ = -4.1
-    ψ = +((α₁, ψ₁), (α₂, ψ₂); cutoff = 1e-8)
+    ψ = +(α₁ * ψ₁, α₂ * ψ₂; cutoff = 1e-8)
 
     @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂))
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
 
     α₁ = 2 + 3im
     α₂ = -4 + 1im
-    ψ = (α₁, ψ₁) + (α₂, ψ₂)
+    ψ = α₁ * ψ₁ + α₂ * ψ₂
 
     @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂))
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
 
     α₁ = 2 + 3im
     α₂ = -4 + 1im
-    ψ = (α₁, ψ₁) + (α₂, ψ₂) + ψ₃
+    ψ = α₁ * ψ₁ + α₂ * ψ₂ + ψ₃
 
     @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂), ψ₃)
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂) + maxlinkdim(ψ₃)

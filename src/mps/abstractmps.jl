@@ -760,25 +760,12 @@ function site_combiners(ψ::AbstractMPS)
   return Cs
 end
 
-# Represents an AbstractMPS scaled by a scalar value
-const ScaledMPS{T, MPST} =
-  Tuple{T, MPST} where {T <: Number, MPST <: AbstractMPS}
-
-const MPSOrScaledMPS{T, MPST} =
-  Union{<:MPST, <:ScaledMPS{T, MPST}} where {T <: Number, MPST <: AbstractMPS}
-
 """
     +(A::MPS/MPO...; kwargs...)
     add(A::MPS/MPO...; kwargs...)
 
-    +(A::Tuple{Number, MPS/MPO}...; kwargs...)
-    add(A::Tuple{Number, MPS/MPO}...; kwargs...)
-
 Add arbitrary numbers of MPS/MPO with each other, with some optional
 truncation.
-
-In addition, coefficients of each MPS/MPO can be specified by putting
-the coefficient together with the MPS/MPO in a tuple.
 
 A cutoff of 1e-8 is used by default.
 
@@ -800,25 +787,32 @@ state = n -> isodd(n) ? "↑" : "↓"
 #
 # ψ = ψ₁ + ψ₂
 #
-# but generally you want to use a cutoff.
+# but generally you want to set a custom `cutoff` and `maxdim`.
 
 println()
 @show inner(ψ, ψ)
 @show inner(ψ₁, ψ₂) + inner(ψ₁, ψ₂) + inner(ψ₂, ψ₁) + inner(ψ₂, ψ₂)
 
 # Computes ψ₁ + 2ψ₂
-ψ = +(ψ₁, (2, ψ₂); cutoff = 1e-8)
+ψ = ψ₁ + 2ψ₂
 
 println()
 @show inner(ψ, ψ)
 @show inner(ψ₁, ψ₁) + 2 * inner(ψ₁, ψ₂) + 2 * inner(ψ₂, ψ₁) + 4 * inner(ψ₂, ψ₂)
+
+# Computes ψ₁ + 2ψ₂ + ψ₃
+ψ = ψ₁ + 2ψ₂ + ψ₃
+
+println()
+@show inner(ψ, ψ)
+@show inner(ψ₁, ψ₁) + 2 * inner(ψ₁, ψ₂) + inner(ψ₁, ψ₃) +
+      2 * inner(ψ₂, ψ₁) + 4 * inner(ψ₂, ψ₂) + 2 * inner(ψ₂, ψ₃) +
+      inner(ψ₃, ψ₁) + 2 * inner(ψ₃, ψ₂) + inner(ψ₃, ψ₃)
 ```
 """
-function +(α⃗ψ⃗::ScaledMPS{<:Number, MPST}...;
+function +(ψ⃗::MPST...;
            cutoff = 1e-8, kwargs...) where {MPST <: AbstractMPS}
-  Nₘₚₛ = length(α⃗ψ⃗)
-  α⃗ = first.(α⃗ψ⃗)
-  ψ⃗ = last.(α⃗ψ⃗)
+  Nₘₚₛ = length(ψ⃗)
 
   @assert all(ψᵢ -> length(ψ⃗[1]) == length(ψᵢ), ψ⃗)
 
@@ -864,7 +858,7 @@ function +(α⃗ψ⃗::ScaledMPS{<:Number, MPST}...;
     ρₙ = ρₙ₋₁
   end
 
-  ψ[1] = sum(α⃗ .* C⃗ₙ)
+  ψ[1] = sum(C⃗ₙ)
   ψ .*= dag.(X⃗)
 
   set_ortho_lims!(ψ, 1:1)
@@ -872,22 +866,9 @@ function +(α⃗ψ⃗::ScaledMPS{<:Number, MPST}...;
   return convert(MPST, ψ)
 end
 
-function fill_trivial_coefficients(ψ::MPSOrScaledMPS)
-  return ψ isa AbstractMPS ? (1, ψ) : ψ
-end
+add(ψ⃗::AbstractMPS...; kwargs...) = +(ψ⃗...; kwargs...)
 
-+(ψ⃗::MPSOrScaledMPS...; kwargs...) =
-  +(fill_trivial_coefficients.(ψ⃗)...; kwargs...)
-
-add(ψ⃗::MPSOrScaledMPS...; kwargs...) =
-  +(ψ⃗...; kwargs...)
-
--(ψ₁::MPSOrScaledMPS, ψ₂::MPSOrScaledMPS; kwargs...) =
-  -(fill_trivial_coefficients(ψ₁), fill_trivial_coefficients(ψ₂); kwargs...)
-
--(ψ::ScaledMPS) = (-first(ψ), last(ψ))
-
--(ψ₁::ScaledMPS, ψ₂::ScaledMPS; kwargs...) =
+-(ψ₁::AbstractMPS, ψ₂::AbstractMPS; kwargs...) =
   +(ψ₁, -ψ₂; kwargs...)
 
 add(A::T, B::T;
