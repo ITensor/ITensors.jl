@@ -117,7 +117,67 @@ NDTensors.mindim
 ITensors.block
 ITensors.hasinds
 ITensors.ITensor
-NDTensors.inds</code></pre><p>where the notation <code>r&quot;...&quot;</code> is Julia notation for making a string that will be interpreted as a <a href="https://docs.julialang.org/en/v1/manual/strings/#Regular-Expressions">regular expression</a>. Here, we are searching for any documentation that contains the string &quot;ITensor&quot; followed at some point by &quot;IndexSet&quot;. The notation <code>.*</code> is regular expression notation for matching any number of any type of character.</p><h2 id="Make-a-small-project-based-on-ITensors.jl-1"><a class="docs-heading-anchor" href="#Make-a-small-project-based-on-ITensors.jl-1">Make a small project based on ITensors.jl</a><a class="docs-heading-anchor-permalink" href="#Make-a-small-project-based-on-ITensors.jl-1" title="Permalink"></a></h2><p>Once you start to have longer code, you will want to put your code into one or more files. For example, you may have a short script with one or more functions based on ITensors.jl:</p><pre><code class="language-julia"># my_itensor_script.jl
+NDTensors.inds</code></pre><p>where the notation <code>r&quot;...&quot;</code> is Julia notation for making a string that will be interpreted as a <a href="https://docs.julialang.org/en/v1/manual/strings/#Regular-Expressions">regular expression</a>. Here, we are searching for any documentation that contains the string &quot;ITensor&quot; followed at some point by &quot;IndexSet&quot;. The notation <code>.*</code> is regular expression notation for matching any number of any type of character.</p><p>Based on the <code>apropos</code> function, we can make some helper functions that may be useful. For example:</p><pre><code class="language-julia">using ITensors
+
+function finddocs(s)
+  io = IOBuffer()
+  apropos(io, s)
+  v = chomp(String(take!(io)))
+  return split(v, &quot;\n&quot;)
+end
+
+function finddocs(s...)
+  intersect(finddocs.(s)...)
+end
+
+found_methods = finddocs(&quot;indices&quot;, &quot;set difference&quot;)
+display(found_methods)</code></pre><p>returns:</p><pre><code class="language-julia">3-element Array{SubString{String},1}:
+ &quot;ITensors.noncommoninds&quot;
+ &quot;Base.setdiff&quot;
+ &quot;ITensors.uniqueinds&quot;</code></pre><p>which are the functions that have docs that contain the strings <code>&quot;indices&quot;</code> and <code>&quot;set difference&quot;</code>. We can print the docs for <code>uniqueinds</code> to find:</p><pre><code class="language-julia">help?&gt; uniqueinds
+search: uniqueinds unique_siteinds uniqueind uniqueindex
+
+  uniqueinds(A, B; kwargs...)
+  uniqueinds(::Order{N}, A, B; kwargs...)
+
+
+  Return an IndexSet with indices that are unique to the set of
+  indices of A and not in B (the set difference).
+
+  Optionally, specify the desired number of indices as Order(N),
+  which adds a check and can be a bit more efficient.</code></pre><p>We can also filter the results to only specify functions from certain modules, for example:</p><pre><code class="language-julia">julia&gt; filter(x -&gt; startswith(x, &quot;ITensors&quot;), finddocs(&quot;indices&quot;, &quot;set difference&quot;))
+2-element Array{SubString{String},1}:
+ &quot;ITensors.noncommoninds&quot;
+ &quot;ITensors.uniqueinds&quot;
+
+julia&gt; filter(x -&gt; !startswith(x, &quot;ITensors&quot;), finddocs(&quot;indices&quot;, &quot;set difference&quot;))
+1-element Array{SubString{String},1}:
+ &quot;Base.setdiff&quot;</code></pre><p>Ideally we could have <code>apropos</code> do a &quot;smart&quot; Google-like search of the appropriate docstrings, but this is a pretty good start.</p><p>Additionally, the <code>names</code> function can be useful, which prints the names of all functions and types that are exported by a module. For example:</p><pre><code class="language-julia">julia&gt; names(ITensors)
+264-element Array{Symbol,1}:
+ Symbol(&quot;@OpName_str&quot;)
+ Symbol(&quot;@SiteType_str&quot;)
+ Symbol(&quot;@StateName_str&quot;)
+ Symbol(&quot;@TagType_str&quot;)
+ Symbol(&quot;@disable_warn_order&quot;)
+ Symbol(&quot;@reset_warn_order&quot;)
+ Symbol(&quot;@set_warn_order&quot;)
+ Symbol(&quot;@ts_str&quot;)
+ :AbstractObserver
+ :AutoMPO
+ :DMRGObserver
+ :ITensor
+ :ITensors
+ :Index
+[...]</code></pre><p>Of course this is a very long list (and the methods are returned as <code>Symbol</code>s, which are like strings but not as easy to work with). However, we can convert the list to strings and filter the strings to find functions we are interested in, for example:</p><pre><code class="language-julia">julia&gt; filter(x -&gt; contains(x, &quot;common&quot;) &amp;&amp; contains(x, &quot;ind&quot;), String.(names(ITensors)))
+8-element Array{String,1}:
+ &quot;common_siteind&quot;
+ &quot;common_siteinds&quot;
+ &quot;commonind&quot;
+ &quot;commonindex&quot;
+ &quot;commoninds&quot;
+ &quot;hascommoninds&quot;
+ &quot;noncommonind&quot;
+ &quot;noncommoninds&quot;</code></pre><p>Julia types do not have member functions, so people coming from object oriented programming languages may find that at first it is more difficult to find methods that are applicable to a certain type. However, Julia has many fantastic tools for introspection that we can use to make this task easier.</p><h2 id="Make-a-small-project-based-on-ITensors.jl-1"><a class="docs-heading-anchor" href="#Make-a-small-project-based-on-ITensors.jl-1">Make a small project based on ITensors.jl</a><a class="docs-heading-anchor-permalink" href="#Make-a-small-project-based-on-ITensors.jl-1" title="Permalink"></a></h2><p>Once you start to have longer code, you will want to put your code into one or more files. For example, you may have a short script with one or more functions based on ITensors.jl:</p><pre><code class="language-julia"># my_itensor_script.jl
 using ITensors
 
 function norm2(A::ITensor)
@@ -373,4 +433,4 @@ julia&gt; myscale2!(A::ITensor, x::Number) = myscale!(tensor(A), x)
 myscale2! (generic function with 1 method)
 
 julia&gt; @btime myscale2!(A, 2) setup = (A = randomITensor(i));
-  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AutoMPO.html">« AutoMPO</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 19 November 2020 15:01">Thursday 19 November 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AutoMPO.html">« AutoMPO</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 19 November 2020 15:52">Thursday 19 November 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
