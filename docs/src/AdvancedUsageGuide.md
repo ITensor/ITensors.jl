@@ -133,8 +133,8 @@ NDTensors.Dense{Float64,Array{Float64,1}}
  1.0763652402177477  0.030353720156277037
 ```
 
-A common place you might accidentally come across this is the 
-following:
+A common place you might accidentally come across this is when
+you are creating a Hamiltonian with `AutoMPO`:
 ```julia
 julia> N = 4;
 
@@ -143,7 +143,7 @@ julia> sites = siteinds("S=1/2",N);
 julia> ampo = AutoMPO();
 
 julia> for j=1:N-1
-         ampo += ("Sz", j, "Sz", j+1)
+         ampo += "Sz", j, "Sz", j+1
        end
 ERROR: UndefVarError: ampo not defined
 Stacktrace:
@@ -168,12 +168,81 @@ for more information.
 
 We recommend the package [OhMyREPL](https://kristofferc.github.io/OhMyREPL.jl/latest/) which adds syntax highlighting to the Julia REPL.
 
+## Finding documentation interactively
+
+Julia provides many tools for searching for documentation interactively at the REPL. Say that you want to learn more about how to use an ITensor from the command line. You can start by typing `?` followed by `ITensor`:
+```julia
+julia> using ITensors
+
+julia> ?ITensor
+search: ITensor ITensors itensor emptyITensor randomITensor
+
+  An ITensor is a tensor whose interface is independent of its
+  memory layout. Therefore it is not necessary to know the ordering
+  of an ITensor's indices, only which indices an ITensor has.
+  Operations like contraction and addition of ITensors automatically
+  handle any memory permutations.
+
+  Examples
+  ≡≡≡≡≡≡≡≡≡≡
+
+  julia> i = Index(2, "i")
+  (dim=2|id=287|"i")
+  
+  julia> A = randomITensor(i', i)
+  ITensor ord=2 (dim=2|id=287|"i")' (dim=2|id=287|"i")
+  NDTensors.Dense{Float64,Array{Float64,1}}
+  
+  julia> @show A;
+  A = ITensor ord=2
+  Dim 1: (dim=2|id=287|"i")'
+  Dim 2: (dim=2|id=287|"i")
+  NDTensors.Dense{Float64,Array{Float64,1}}
+   2×2
+   0.28358594718392427   1.4342219756446355
+   1.6620103556283987   -0.40952231269251566
+  
+  julia> @show inds(A);
+  inds(A) = IndexSet{2} (dim=2|id=287|"i")' (dim=2|id=287|"i") 
+[...]
+```
+(the specific output may be different for different versions of ITensors.jl as we update the docs). You can use the help prompt (which you get by typing `?` at the REPL) to print out documentation for types and methods.
+
+Another way to get information about types is with the function `fieldnames`:
+```julia
+julia> fieldnames(ITensor)
+(:store, :inds)
+```
+which shows the fields of a type. Note that in general the specific names of the fields and structures of types may change (we consider those to be internal details), however we often make functions to access the fields of a type that have the same name as the field, so it is a good place to get started. For example, you can access the storage and indices of an ITensor `A` with the functions `store(A)` and `inds(A)`.
+
+Another helpful function is `apropos`, which search through all documentation for a string (ignoring the case) and prints a list of all types and methods with documentation that contain the string. For example:
+```julia
+julia> apropos("IndexSet")
+ITensors.IndexSet
+ITensors.push
+ITensors.insertat
+ITensors.getfirst
+ITensors.commoninds
+ITensors.pushfirst
+NDTensors.mindim
+[...]
+```
+This can often return too much information. A helpful way to narrow down the search is with regular expressions, for example:
+```julia
+julia> apropos(r"ITensor.*IndexSet")
+ITensors.block
+ITensors.hasinds
+ITensors.ITensor
+NDTensors.inds
+```
+where the notation `r"..."` is Julia notation for making a string that will be interpreted as a [regular expression](https://docs.julialang.org/en/v1/manual/strings/#Regular-Expressions). Here, we are searching for any documentation that contains the string "ITensor" followed at some point by "IndexSet". The notation `.*` is regular expression notation for matching any number of any type of character.
+
 ## Make a small project based on ITensors.jl
 
 Once you start to have longer code, you will want to put your
 code into one or more files. For example, you may have a short script
 with one or more functions based on ITensors.jl:
-```
+```julia
 # my_itensor_script.jl
 using ITensors
 
