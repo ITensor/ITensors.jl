@@ -27,14 +27,35 @@ productMPS(::Type{<:Number}, ::Vector{<:IndexVal})
 MPO(::Int)
 MPO(::Type{<:Number}, ::Vector{<:Index}, ::Vector{String})
 MPO(::Type{<:Number}, ::Vector{<:Index}, ::String)
+MPO(::MPS)
 ```
 
 ## Properties
 
 ```@docs
 length(::ITensors.AbstractMPS)
+flux(::ITensors.AbstractMPS)
 maxlinkdim(::ITensors.AbstractMPS)
+hasqns(::ITensors.AbstractMPS)
+```
+
+## Obtaining and finding indices
+
+```@docs
+common_siteind(::ITensors.AbstractMPS, ::ITensors.AbstractMPS, ::Int)
+common_siteinds(::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
+findsite
+findsites
+firstsiteind
+firstsiteinds
 linkind(::ITensors.AbstractMPS,::Int)
+siteind(::MPS, ::Int)
+siteinds(::MPS)
+siteind(::MPO, ::Int)
+siteinds(::MPO)
+siteinds(::ITensors.AbstractMPS, ::Int)
+unique_siteind(::ITensors.AbstractMPS, ::ITensors.AbstractMPS, ::Int)
+unique_siteinds(::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
 ```
 
 ## Priming and tagging
@@ -61,11 +82,21 @@ settags!(::ITensors.AbstractMPS)
 ```@docs
 dag(::ITensors.AbstractMPS)
 dag!(::ITensors.AbstractMPS)
+dense(::ITensors.AbstractMPS)
+movesite(::ITensors.AbstractMPS, ::Pair{Int, Int};orthocenter::Int,kwargs...)
 orthogonalize!
-truncate!
 replacebond!(::MPS, ::Int, ::ITensor)
 sample(::MPS)
 sample!(::MPS)
+sample(::MPO)
+swapbondsites(::ITensors.AbstractMPS, ::Int; kwargs...)
+truncate!
+```
+
+## Gate evolution
+
+```@docs
+product(::Vector{ <: ITensor}, ::ITensors.AbstractMPS)
 ```
 
 ## Algebra Operations

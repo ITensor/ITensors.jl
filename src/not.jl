@@ -16,7 +16,7 @@ Represents the compliment of the input
 for pattern matching in priming, tagging
 and other IndexSet related functions.
 """
-not(p) = Not(p)
+function not end
 
 """
 parent(n::Not)

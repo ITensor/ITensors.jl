@@ -225,7 +225,10 @@ function check_environment(T,(Clu,Cru,Cld,Crd),(Al,Ar,Au,Ad))
   end
 end
 
-function ctmrg(T::Matrix{ITensor},(Clu,Cru,Cld,Crd),(Al,Ar,Au,Ad);verbose=false)
+function ctmrg(T::Matrix{ITensor},
+               (Clu, Cru, Cld, Crd),
+               (Al, Ar, Au, Ad);
+               verbose = false)
   ny,nx = size(T)
 
   verbose && println("Original:")

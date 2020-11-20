@@ -1,6 +1,4 @@
 
-import .NDTensors: mindim
-
 """
 A Sweeps objects holds information
 about the various parameters controlling
@@ -27,6 +25,61 @@ mutable struct Sweeps
   end
 
 end
+
+"""
+    Sweeps(d::AbstractMatrix)
+
+    Sweeps(nsweep::Int, d::AbstractMatrix)
+
+Make a sweeps object from a matrix of input values.
+The first row should be strings that define which
+variables are being set ("maxdim", "cutoff", "mindim",
+and "noise").
+
+If the number of sweeps are not specified, they
+are determined from the size of the input matrix.
+
+# Examples
+```julia
+julia> Sweeps([
+         "maxdim" "mindim" "cutoff" "noise"
+          50       10       1e-12    1E-7
+          100      20       1e-12    1E-8
+          200      20       1e-12    1E-10
+          400      20       1e-12    0
+          800      20       1e-12    1E-11
+          800      20       1e-12    0
+         ])
+Sweeps
+1 cutoff=1.0E-12, maxdim=50, mindim=10, noise=1.0E-07
+2 cutoff=1.0E-12, maxdim=100, mindim=20, noise=1.0E-08
+3 cutoff=1.0E-12, maxdim=200, mindim=20, noise=1.0E-10
+4 cutoff=1.0E-12, maxdim=400, mindim=20, noise=0.0E+00
+5 cutoff=1.0E-12, maxdim=800, mindim=20, noise=1.0E-11
+6 cutoff=1.0E-12, maxdim=800, mindim=20, noise=0.0E+00
+```
+"""
+function Sweeps(nsw::Int, d::AbstractMatrix)
+  sw = Sweeps(nsw)
+  vars = d[1, :]
+  for (n, var) in enumerate(vars)
+    inputs = d[2:end, n]
+    if var == "maxdim"
+      maxdim!(sw, inputs...)
+    elseif var == "cutoff"
+      cutoff!(sw, inputs...)
+    elseif var == "mindim"
+      mindim!(sw, inputs...)
+    elseif var == "noise"
+      noise!(sw, float.(inputs)...)
+    else
+      error("Sweeps object does not have the field $var")
+    end
+  end
+  return sw
+end
+
+Sweeps(d::AbstractMatrix) = Sweeps(size(d, 1) - 1, d)
 
 """
     nsweep(sw::Sweeps)
@@ -70,6 +123,11 @@ Noise term coefficient setting of the
 Sweeps object `sw` during sweep `n`
 """
 noise(sw::Sweeps,n::Int)::Float64  = sw.noise[n]
+
+get_maxdims(sw::Sweeps) = sw.maxdim
+get_mindims(sw::Sweeps) = sw.mindim
+get_cutoffs(sw::Sweeps) = sw.cutoff
+get_noises(sw::Sweeps) = sw.noise
 
 """
     maxdim!(sw::Sweeps,maxdims::Int...)

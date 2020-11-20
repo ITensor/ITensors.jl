@@ -1,18 +1,19 @@
-using ITensors,
-      Test
-import Random
+using ITensors
+using Test
 using Combinatorics: permutations
+import Random: seed!
 
-Random.seed!(12345)
+seed!(12345)
 
 digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
 
 @testset "Dense ITensor basic functionality" begin
 
 @testset "ITensor constructors" begin
-  i = Index(2,"i")
-  j = Index(2,"j")
-  k = Index(2,"k")
+  i = Index(2, "i")
+  j = Index(2, "j")
+  k = Index(2, "k")
+  l = Index(2, "l")
 
   @testset "Default" begin
     A = ITensor()
@@ -29,8 +30,43 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test store(A) isa NDTensors.Dense{Float64}
   end
 
+  @testset "Index set operations" begin
+    A = randomITensor(i, j)
+    B = randomITensor(j, k)
+    C = randomITensor(k, l)
+    @test hascommoninds(A, B)
+    @test hascommoninds(B, C)
+    @test !hascommoninds(A, C)
+  end
+
+  @testset "Get element with end" begin
+    a = Index(2)
+    b = Index(3)
+    A = randomITensor(a, b)
+    @test A[end, end] == A[a => 2, b => 3]
+  end
+
   @testset "Random" begin
-    A = randomITensor(i,j)
+    A = randomITensor(i, j)
+
+    # Test hasind, hasinds
+    @test hasind(A, i)
+    @test hasind(i)(A)
+
+    @test hasinds(A, i)
+    @test hasinds(A, j)
+    @test hasinds(A, [i, j])
+    @test hasinds([i, j])(A)
+    @test hasinds(A, IndexSet(j))
+    @test hasinds(A, j, i)
+    @test hasinds(A, (i, j))
+    @test hasinds(A, IndexSet(i, j))
+    @test hasinds(j, i)(A)
+    @test hasinds(i)(A)
+    @test hasinds(IndexSet(j))(A)
+    @test hasinds((i, j))(A)
+    @test hasinds(IndexSet(i, j))(A)
+
     @test store(A) isa NDTensors.Dense{Float64}
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
@@ -45,6 +81,23 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     A = randomITensor()
     @test eltype(A) == Float64
     @test ndims(A) == 0
+end
+
+@testset "ITensor iteration" begin
+  A = randomITensor(i, j)
+  Is = eachindex(A)
+  @test length(Is) == dim(A)
+  sumA = 0.0
+  for I in Is
+    sumA += A[I]
+  end
+  @test sumA ≈ sum(ITensors.data(A))
+  sumA = 0.0
+  for a in A
+    sumA += a
+  end
+  @test sumA ≈ sum(A)
+  @test sumA ≈ sum(A)
 end
 
   @testset "From matrix" begin
@@ -393,6 +446,14 @@ end
   T = setelt(i=>2)
   @test T[i(1)] ≈ 0.0
   @test T[i(2)] ≈ 1.0
+
+  j = Index(2,"j")
+
+  T = setelt(j=>2,i=>1)
+  @test T[j=>1,i=>1] ≈ 0.0
+  @test T[j=>2,i=>1] ≈ 1.0
+  @test T[j=>1,i=>2] ≈ 0.0
+  @test T[j=>2,i=>2] ≈ 0.0
 end
 
 
@@ -573,14 +634,25 @@ end
     @test hasinds(A2r,s2,ltmp',l'')
   end
   @testset "replacetags(::ITensor,::String,::String)" begin
-    s2tmp = replacetags(s2,"Site","Temp")
-    ltmp = replacetags(l,"Link","Temp")
+    s2tmp = replacetags(s2, "Site", "Temp")
 
-    A2r = replacetags(A2,"Site","Temp")
+    @test s2tmp == replacetags(s2, "Site" => "Temp")
+
+    ltmp = replacetags(l, "Link", "Temp")
+
+    A2r = replacetags(A2, "Site", "Temp")
     @test hasinds(A2r,s2tmp,l',l'')
+
+    A2r = replacetags(A2, "Site" => "Temp")
+    @test hasinds(A2r, s2tmp, l', l'')
 
     A2r = replacetags(A2,"Link","Temp")
     @test hasinds(A2r,s2,ltmp',ltmp'')
+
+    A2r = replacetags(A2, "Site" => "Link", "Link" => "Site")
+    @test hasinds(A2r, replacetags(s2, "Site" => "Link"),
+                       replacetags(l', "Link" => "Site"),
+                       replacetags(l'', "Link" => "Site"))
   end
   @testset "prime(::ITensor,::String)" begin
     A2p = prime(A2)
@@ -599,10 +671,20 @@ end
     @test hasinds(mapprime(A2,1,7),s2,l^7,l'')
     @test hasinds(mapprime(A2,0,1),s2',l',l'')
   end
-  @testset "setprime" begin
-    @test hasinds(setprime(A2,2,s2),s2'',l',l'')
-    @test hasinds(setprime(A2,0,l''),s2,l',l)
+
+  @testset "replaceprime" begin
+    @test hasinds(mapprime(A2, 1 => 7), s2, l^7, l'')
+    @test hasinds(mapprime(A2, 0 => 1), s2', l', l'')
+    @test hasinds(mapprime(A2, 1 => 7, 0 => 1), s2', l^7, l'')
+    @test hasinds(mapprime(A2, 1 => 2, 2 => 1), s2, l'', l')
+    @test hasinds(mapprime(A2, 1 => 0, 0 => 1), s2', l, l'')
   end
+
+  @testset "setprime" begin
+    @test hasinds(setprime(A2,2,s2), s2'', l', l'')
+    @test hasinds(setprime(A2,0,l''), s2, l', l)
+  end
+
   @testset "swapprime" begin
     @test hasinds(swapprime(A2,1,3),l''',s2,l'')
   end
@@ -610,11 +692,11 @@ end
 
 @testset "ITensor other index operations" begin
 
-  s1 = Index(2,"Site,s=1")
-  s2 = Index(2,"Site,s=2")
-  l = Index(3,"Link")
-  A1 = randomITensor(s1,l,l')
-  A2 = randomITensor(s2,l',l'')
+  s1 = Index(2, "Site,s=1")
+  s2 = Index(2, "Site,s=2")
+  l = Index(3, "Link")
+  A1 = randomITensor(s1, l, l')
+  A2 = randomITensor(s2, l', l'')
 
   @testset "ind(::ITensor)" begin
     @test ind(A1, 1) == s1
@@ -622,19 +704,34 @@ end
   end
 
   @testset "replaceind and replaceinds" begin
-    rA1 = replaceind(A1,s1,s2)
-    @test hasinds(rA1,s2,l,l')
-    @test hasinds(A1,s1,l,l')
+    rA1 = replaceind(A1, s1, s2)
+    @test hasinds(rA1, s2, l, l')
+    @test hasinds(A1, s1, l, l')
 
-    replaceind!(A1,s1,s2)
-    @test hasinds(A1,s2,l,l')
+    # Pair notation (like Julia's replace function)
+    rA1 = replaceind(A1, s1 => s2)
+    @test hasinds(rA1, s2, l, l')
+    @test hasinds(A1, s1, l, l')
 
-    rA2 = replaceinds(A2,(s2,l'),(s1,l))
-    @test hasinds(rA2,s1,l,l'')
-    @test hasinds(A2,s2,l',l'')
+    replaceind!(A1, s1, s2)
+    @test hasinds(A1, s2, l, l')
 
-    replaceinds!(A2,(s2,l'),(s1,l))
-    @test hasinds(A2,s1,l,l'')
+    rA2 = replaceinds(A2, (s2, l'), (s1, l))
+    @test hasinds(rA2, s1, l, l'')
+    @test hasinds(A2, s2, l', l'')
+
+    # Pair notation (like Julia's replace function)
+    rA2 = replaceinds(A2, s2 => s1, l' => l)
+    @test hassameinds(rA2, (s1, l, l''))
+    @test hassameinds(A2, (s2, l', l''))
+
+    # Test ignoring indices that don't exist
+    rA2 = replaceinds(A2, s1 => l, l' => l)
+    @test hassameinds(rA2, (s2, l, l''))
+    @test hassameinds(A2, (s2, l', l''))
+
+    replaceinds!(A2, (s2, l'), (s1, l))
+    @test hasinds(A2, s1, l, l'')
   end
 
   @testset "replaceinds fixed errors" begin
@@ -771,28 +868,28 @@ end
       U,S,V,spec,u,v = svd(A,(j,l))
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
-      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
-      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
+      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-13
+      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
     end
 
     @testset "Test SVD of an ITensor with different algorithms" begin
       U, S, V, spec, u, v = svd(A, j, l; alg = "recursive")
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
-      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
-      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
 
       U, S, V, spec, u, v = svd(A, j,l; alg = "divide_and_conquer")
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
-      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
-      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
 
       U, S, V, spec, u, v = svd(A, j,l; alg = "qr_iteration")
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
-      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-14
-      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-14
+      @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
+      @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
 
       @test_throws ErrorException svd(A, j,l; alg = "bad_alg")
     end
@@ -809,8 +906,8 @@ end
       v = commonind(V, S)
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
-      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-14
-      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-14
+      @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-13
+      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
     end
     @testset "Test SVD truncation" begin
         ii = Index(4)
@@ -824,8 +921,8 @@ end
     @testset "Test QR decomposition of an ITensor" begin
       Q,R,q = qr(A,(i,l))
       q = commonind(Q,R)
-      @test A ≈ Q*R atol=1e-14
-      @test Q*dag(prime(Q,q)) ≈ δ(SType,q,q') atol=1e-14
+      @test A ≈ Q*R atol=1e-13
+      @test Q*dag(prime(Q,q)) ≈ δ(SType,q,q') atol=1e-13
     end
 
     @testset "Test polar decomposition of an ITensor" begin
@@ -843,9 +940,9 @@ end
           jjp ∈ 1:dim(u[2])
         val = UUᵀ[u[1](ii),u[2](jj),u[1]'(iip),u[2]'(jjp)]
         if ii==iip && jj==jjp
-          @test val ≈ one(SType) atol=1e-14
+          @test val ≈ one(SType) atol=1e-13
         else
-          @test val ≈ zero(SType) atol=1e-14
+          @test val ≈ zero(SType) atol=1e-13
         end
       end
     end
@@ -902,7 +999,7 @@ end
         @test L * dag(prime(L, l)) ≈ δ(SType, l, l')
         @test R * dag(prime(R, l)) ≉ δ(SType, l, l')
 
-        @test_throws ErrorException factorize(A, i; svd_alg = "bad_alg")
+        @test_throws ErrorException factorize(A, i; which_decomp="svd", svd_alg = "bad_alg")
       end
 
     end # End factorize tests
@@ -946,6 +1043,121 @@ end # End Dense storage test
   @test v4[1] ≈ orig_elt
 end
 
+@testset "filter ITensor indices" begin
+  i = Index(2, "i")
+  A = randomITensor(i, i')
+  @test hassameinds(filterinds(A; plev = 0), (i,))
+  @test hassameinds(inds(A; plev = 0), (i,))
+  is = inds(A)
+  @test hassameinds(filterinds(is; plev = 0), (i,))
+  @test hassameinds(inds(is; plev = 0), (i,))
+end
+
+@testset "product" begin
+  s1 = Index(2, "s1")
+  s2 = Index(2, "s2")
+  s3 = Index(2, "s3")
+
+  rA = Index(3, "rA")
+  lA = Index(3, "lA")
+
+  rB = Index(3, "rB")
+  lB = Index(3, "lB")
+
+  # operator * operator
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), lB, rB)
+  AB = product(A, B)
+  @test hassameinds(AB, (s1', s2', s1, s2, lA, rA, lB, rB))
+  @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+
+  # operator * operator, common dangling indices
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), dag(lA), dag(rA))
+  AB = product(A, B)
+  @test hassameinds(AB, (s1', s2', s1, s2))
+  @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+
+  # operator * operator, apply_dag, common dangling indices
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), lB, rB)
+  ABAdag = product(A, B; apply_dag = true)
+  AB = mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+  Adag = swapprime(dag(A), 0 => 1; inds = (s1', s2', s1, s2))
+  @test hassameinds(ABAdag, (s1', s2', s1, s2, lB, rB))
+  @test ABAdag ≈ mapprime(prime(AB; inds = (s1', s2', s1, s2)) * Adag, 2 => 1)
+
+  # operator * operator, more complicated
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', s3', dag(s1), dag(s2), dag(s3), lB, rB, dag(rA))
+  AB = product(A, B)
+  @test hassameinds(AB, (s1', s2', s3', s1, s2, s3, lA, lB, rB))
+  @test AB ≈ mapprime(prime(A; inds = (s1', s2', s1, s2)) * B, 2 => 1)
+
+  # state * operator (1)
+  A = randomITensor(dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), lB, rB)
+  AB = product(A, B)
+  @test hassameinds(AB, (s1, s2, lA, rA, lB, rB))
+  @test AB ≈ mapprime(prime(A; inds = (s1, s2)) * B)
+
+  # state * operator (2)
+  A = randomITensor(dag(s1'), dag(s2'), lA, rA)
+  B = randomITensor(s1', s2', dag(s1), dag(s2), lB, rB)
+  @test_throws ErrorException product(A, B)
+
+  # operator * state (1)
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', lB, rB)
+  @test_throws ErrorException product(A, B)
+
+  # operator * state (2)
+  A = randomITensor(s1', s2', dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1, s2, lB, rB, dag(lA))
+  AB = product(A, B)
+  @test hassameinds(AB, (s1, s2, rA, lB, rB))
+  @test AB ≈ noprime(A * B)
+
+  # state * state (1)
+  A = randomITensor(dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1, s2, lB, rB)
+  AB = product(A, B)
+  @test hassameinds(AB, (lA, rA, lB, rB))
+  @test AB ≈ A * B
+
+  # state * state (2)
+  A = randomITensor(dag(s1'), dag(s2'), lA, rA)
+  B = randomITensor(s1, s2, lB, dag(rA))
+  AB = product(A, B)
+  @test hassameinds(AB, (s1', s2', s1, s2, lA, lB))
+  @test AB ≈ A * B
+
+  # state * state (3)
+  A = randomITensor(dag(s1'), dag(s2'), lA, rA)
+  B = randomITensor(s1, s2, lB, rB)
+  @test_throws ErrorException product(A, B)
+
+  # state * state (4)
+  A = randomITensor(dag(s1), dag(s2), lA, rA)
+  B = randomITensor(s1', s2', lB, rB)
+  @test_throws ErrorException product(A, B)
+
+  # state * state (5)
+  A = randomITensor(dag(s1'), dag(s2'), lA, rA)
+  B = randomITensor(s1', s2', lB, rB)
+  @test_throws ErrorException product(A, B)
+
+end
+
+@testset "hastags" begin
+  i = Index(2, "i, x")
+  j = Index(2, "j, x")
+  A = randomITensor(i, j)
+  @test hastags(A, "i")
+  @test anyhastags(A, "i")
+  @test !allhastags(A, "i")
+  @test allhastags(A, "x")
+end
 
 end # End Dense ITensor basic functionality
 

@@ -1,8 +1,16 @@
 # Introduction
 
-| **Documentation**                                                               | **Build Status**                                                                                |
-|:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensors.jl/stable/) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/) | [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
+| **Documentation**                                                               |
+|:-------------------------------------------------------------------------------:|
+| [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensors.jl/stable/) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/) |
+
+|**Build Status**                                                                                |
+:-----------------------------------------------------------------------------------------------:|
+| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
+
+|**Citation**                                                                    |
+|:-------------------------------------------------------------------------------:|
+|[![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
 
 ITensors is a library for rapidly creating correct and efficient
 tensor network algorithms. 
@@ -40,7 +48,7 @@ Or, equivalently, via the `Pkg` API:
 ```julia
 julia> import Pkg; Pkg.add("ITensors")
 ```
-Please note that right now, ITensors.jl requires that you use Julia v1.4 or later (since we are using a feature that was introduced in Julia v1.4). We will work on supporting older minor versions.
+Please note that right now, ITensors.jl requires that you use Julia v1.3 or later (since ITensors.jl relies on a feature that was introduced in Julia v1.3).
 
 We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions [here](https://github.com/JuliaComputing/MKL.jl).
 
@@ -48,6 +56,20 @@ We recommend using ITensors.jl with Intel MKL in order to get the best possible 
 
 - [**STABLE**](https://itensor.github.io/ITensors.jl/stable/) --  **documentation of the most recently tagged version.**
 - [**DEVEL**](https://itensor.github.io/ITensors.jl/dev/) -- *documentation of the in-development version.*
+
+## Citation
+
+If you use ITensors.jl in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
+
+```
+@misc{itensor,
+    title={The \mbox{ITensor} Software Library for Tensor Network Calculations},
+    author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
+    year={2020},
+    eprint={2007.14822},
+    archivePrefix={arXiv}
+}
+```
 
 ## Code Examples
 
@@ -234,9 +256,9 @@ let
   # (here we make the 1D Heisenberg model)
   ampo = AutoMPO()
   for j=1:N-1
-    ampo +=     ("Sz",j,"Sz",j+1)
-    ampo += (0.5,"S+",j,"S-",j+1)
-    ampo += (0.5,"S-",j,"S+",j+1)
+    ampo += "Sz",j,"Sz",j+1
+    ampo += 0.5,"S+",j,"S-",j+1
+    ampo += 0.5,"S-",j,"S+",j+1
   end
   H = MPO(ampo,sites)
 
@@ -276,3 +298,59 @@ After sweep 4 energy=-138.940086018149 maxlinkdim=100 time=4.179
 After sweep 5 energy=-138.940086075413 maxlinkdim=96 time=4.184
 Final energy = -138.94008607296038
 ```
+
+### More examples
+
+The ITensors.jl package contains a directory of examples, which we
+will continue to add to. You can run them as follows:
+```julia
+julia> using ITensors
+
+julia> cd(ITensors.examples_dir())
+
+julia> readdir()
+7-element Array{String,1}:
+ "basic_ops"
+ "ctmrg"
+ "dmrg"
+ "gate_evolution"
+ "krylov_methods"
+ "src"
+ "trg"
+
+julia> cd("dmrg")
+
+julia> readdir()
+8-element Array{String,1}:
+ "1d_heisenberg.jl"
+ "1d_heisenberg_conserve_spin.jl"
+ "1d_hubbard_extendend.jl"
+ "1d_ising_with_observer.jl"
+ "2d_heisenberg_conserve_spin.jl"
+ "2d_hubbard_conserve_momentum.jl"
+ "2d_hubbard_conserve_particles.jl"
+ "input_files"
+
+julia> include("1d_heisenberg.jl")
+sweeps = Sweeps
+1 cutoff=1.0E-11, maxdim=10, mindim=1, noise=0.0E+00
+2 cutoff=1.0E-11, maxdim=20, mindim=1, noise=0.0E+00
+3 cutoff=1.0E-11, maxdim=100, mindim=1, noise=0.0E+00
+4 cutoff=1.0E-11, maxdim=100, mindim=1, noise=0.0E+00
+5 cutoff=1.0E-11, maxdim=200, mindim=1, noise=0.0E+00
+
+After sweep 1 energy=-138.837988775764 maxlinkdim=10 time=13.760
+After sweep 2 energy=-138.937408365962 maxlinkdim=20 time=0.249
+After sweep 3 energy=-138.940084788852 maxlinkdim=100 time=1.867
+After sweep 4 energy=-138.940086091070 maxlinkdim=100 time=3.824
+After sweep 5 energy=-138.940086113999 maxlinkdim=122 time=4.527
+Final energy = -138.940086113999
+
+julia> pwd()
+"[path_to_package_installation]/ITensors/examples/dmrg"
+```
+You can use your favorite text editor to view these examples. If you
+would like to modify them, either copy them into your own directory,
+or checkout ITensors.jl in development mode using the instructions
+in [Developing ITensors.jl](@ref).
+

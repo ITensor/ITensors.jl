@@ -34,9 +34,9 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      ampo += "Sz",j,"Sz",j+1
+      ampo += 0.5,"S+",j,"S-",j+1
+      ampo += 0.5,"S-",j,"S+",j+1
     end
     H = MPO(ampo,sites)
 
@@ -80,6 +80,33 @@ using ITensors, Test, Random
     @test abs((energy-energy_exact)/energy_exact) < 1e-4
   end
 
+  @testset "Transverse field Ising, conserve Sz parity" begin
+    N = 32
+    sites = siteinds("S=1/2", N, conserve_szparity = true)
+    Random.seed!(432)
+
+    state = [isodd(j) ? "↑" : "↓" for j in 1:N]
+    psi0 = randomMPS(sites, state)
+
+    ampo = AutoMPO()
+    for j = 1:N
+      j < N && add!(ampo,-1.0,"Sx",j,"Sx",j+1)
+      add!(ampo,-0.5,"Sz",j)
+    end
+    H = MPO(ampo,sites)
+
+    sweeps = Sweeps(5)
+    maxdim!(sweeps,10,20)
+    cutoff!(sweeps,1E-12)
+    noise!(sweeps,1E-10)
+    energy,psi = dmrg(H,psi0,sweeps,outputlevel=0)
+
+    # Exact energy for transverse field Ising model
+    # with open boundary conditions at criticality
+    energy_exact = 0.25 - 0.25/sin(π/(2*(2*N+1)))
+    @test abs((energy-energy_exact)/energy_exact) < 1e-4
+  end
+
   @testset "DMRGObserver" begin
     N = 10
     sites = siteinds("S=1/2",N)
@@ -88,10 +115,10 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j = 1:N-1
-      add!(ampo,-1.0,"Sz",j,"Sz",j+1)
+      ampo += -1,"Sz",j,"Sz",j+1
     end
     for j = 1:N
-      add!(ampo,-0.2,"Sx",j)
+      ampo += -0.2,"Sx",j
     end
     H = MPO(ampo,sites)
 
@@ -122,14 +149,14 @@ using ITensors, Test, Random
 
     ampoZ = AutoMPO()
     for j=1:N-1
-      add!(ampoZ,"Sz",j,"Sz",j+1)
+      ampoZ += "Sz",j,"Sz",j+1
     end
     HZ = MPO(ampoZ,sites)
 
     ampoXY = AutoMPO()
     for j=1:N-1
-      add!(ampoXY,0.5,"S+",j,"S-",j+1)
-      add!(ampoXY,0.5,"S-",j,"S+",j+1)
+      ampoXY += 0.5,"S+",j,"S-",j+1
+      ampoXY += 0.5,"S-",j,"S+",j+1
     end
     HXY = MPO(ampoXY,sites)
 
@@ -154,9 +181,9 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      ampo += "Sz",j,"Sz",j+1
+      ampo += 0.5,"S+",j,"S-",j+1
+      ampo += 0.5,"S-",j,"S+",j+1
     end
     H = MPO(ampo,sites)
 
@@ -176,7 +203,7 @@ using ITensors, Test, Random
     @test energy1 > energy0
     @test energy1 < -11.1
 
-    @test inner(psi1,psi0) < 1E-6
+    @test inner(psi1,psi0) < 1E-5
   end
 
   @testset "Fermionic Hamiltonian" begin
@@ -195,13 +222,13 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j=1:N-1
-      ampo += (-t1, "Cdag", j,   "C", j+1)
-      ampo += (-t1, "Cdag", j+1, "C", j)
-      ampo += (  V, "N",    j,   "N", j+1)
+      ampo += -t1,"Cdag",j,"C",j+1
+      ampo += -t1,"Cdag",j+1,"C",j
+      ampo += V,"N",j,"N",j+1
     end
     for j=1:N-2
-      ampo += (-t2, "Cdag", j,   "C", j+2)
-      ampo += (-t2, "Cdag", j+2, "C", j)
+      ampo += -t2,"Cdag",j,"C",j+2
+      ampo += -t2,"Cdag",j+2,"C",j
     end
     H = MPO(ampo, s)
 
@@ -226,11 +253,11 @@ using ITensors, Test, Random
       ampo += (U,"Nupdn",i)
     end
     for b=1:N-1
-      ampo += (-t1,"Cdagup",b,"Cup",b+1)
-      ampo += (-t1,"Cdagup",b+1,"Cup",b)
-      ampo += (-t1,"Cdagdn",b,"Cdn",b+1)
-      ampo += (-t1,"Cdagdn",b+1,"Cdn",b)
-      ampo += (V1,"Ntot",b,"Ntot",b+1)
+      ampo += -t1,"Cdagup",b,"Cup",b+1
+      ampo += -t1,"Cdagup",b+1,"Cup",b
+      ampo += -t1,"Cdagdn",b,"Cdn",b+1
+      ampo += -t1,"Cdagdn",b+1,"Cdn",b
+      ampo += V1,"Ntot",b,"Ntot",b+1
     end
     H = MPO(ampo,sites)
     sweeps = Sweeps(6)

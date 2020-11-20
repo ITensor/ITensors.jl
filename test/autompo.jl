@@ -176,7 +176,7 @@ end
   @testset "Ising" begin
     ampo = AutoMPO()
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
+      ampo += "Sz",j,"Sz",j+1
     end
     sites = siteinds("S=1/2",N)
     Ha = MPO(ampo,sites)
@@ -190,7 +190,7 @@ end
   @testset "Ising-Different Order" begin
     ampo = AutoMPO()
     for j=1:N-1
-      add!(ampo,"Sz",j+1,"Sz",j)
+      ampo += "Sz",j,"Sz",j+1
     end
     sites = siteinds("S=1/2",N)
     Ha = MPO(ampo,sites)
@@ -205,12 +205,12 @@ end
     ampo = AutoMPO()
     h = rand(N) #random magnetic fields
     for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+      ampo += "Sz",j,"Sz",j+1
+      ampo += 0.5,"S+",j,"S-",j+1
+      ampo += 0.5,"S-",j,"S+",j+1
     end
     for j=1:N
-      add!(ampo,h[j],"Sz",j)
+      ampo += h[j],"Sz",j
     end
 
     sites = siteinds("S=1/2",N)
@@ -227,23 +227,23 @@ end
     sites = siteinds("S=1",N)
     ampo1 = AutoMPO()
     for j=1:N-1
-      add!(ampo1,"Sz",j,"Sz",j+1)
-      add!(ampo1,0.5,"S+",j,"S-",j+1)
-      add!(ampo1,0.5,"S-",j,"S+",j+1)
+      ampo1 += "Sz",j,"Sz",j+1
+      ampo1 += 0.5,"S+",j,"S-",j+1
+      ampo1 += 0.5,"S-",j,"S+",j+1
     end
     for j=1:N
-      add!(ampo1,"Sz*Sz",j)
+      ampo1 += "Sz*Sz",j
     end
     Ha1 = MPO(ampo1,sites)
 
     ampo2 = AutoMPO()
     for j=1:N-1
-      add!(ampo2,"Sz",j,"Sz",j+1)
-      add!(ampo2,0.5,"S+",j,"S-",j+1)
-      add!(ampo2,0.5,"S-",j,"S+",j+1)
+      ampo2 += "Sz",j,"Sz",j+1
+      ampo2 += 0.5,"S+",j,"S-",j+1
+      ampo2 += 0.5,"S-",j,"S+",j+1
     end
     for j=1:N
-      add!(ampo2,"Sz",j,"Sz",j)
+      ampo2 += "Sz",j,"Sz",j
     end
     Ha2 = MPO(ampo2,sites)
 
@@ -342,7 +342,7 @@ end
 
     @testset "Single creation op" begin
       ampo = AutoMPO()
-      ampo += ("Adagup",3)
+      ampo += "Adagup",3
       sites = siteinds("Electron",N)
       W = MPO(ampo,sites)
       psi = makeRandomMPS(sites)
@@ -354,7 +354,7 @@ end
     @testset "Ising" begin
       ampo = AutoMPO()
       for j=1:N-1
-        ampo += ("Sz",j,"Sz",j+1)
+        ampo += "Sz",j,"Sz",j+1
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -368,7 +368,7 @@ end
     @testset "Ising-Different Order" begin
       ampo = AutoMPO()
       for j=1:N-1
-        ampo += ("Sz",j+1,"Sz",j)
+        ampo += "Sz",j+1,"Sz",j
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -383,12 +383,12 @@ end
       ampo = AutoMPO()
       h = rand(N) #random magnetic fields
       for j=1:N-1
-        ampo += ("Sz",j,"Sz",j+1)
-        ampo += (0.5,"S+",j,"S-",j+1)
-        ampo += (0.5,"S-",j,"S+",j+1)
+        ampo += "Sz",j,"Sz",j+1
+        ampo += 0.5,"S+",j,"S-",j+1
+        ampo += 0.5,"S-",j,"S+",j+1
       end
       for j=1:N
-        ampo += (h[j],"Sz",j)
+        ampo += h[j],"Sz",j
       end
 
       sites = siteinds("S=1/2",N)
@@ -405,23 +405,23 @@ end
       sites = siteinds("S=1",N)
       ampo1 = AutoMPO()
       for j=1:N-1
-        ampo1 += ("Sz",j,"Sz",j+1)
-        ampo1 += (0.5,"S+",j,"S-",j+1)
-        ampo1 += (0.5,"S-",j,"S+",j+1)
+        ampo1 += "Sz",j,"Sz",j+1
+        ampo1 += 0.5,"S+",j,"S-",j+1
+        ampo1 += 0.5,"S-",j,"S+",j+1
       end
       for j=1:N
-        ampo1 += ("Sz*Sz",j)
+        ampo1 += "Sz*Sz",j
       end
       Ha1 = MPO(ampo1,sites)
 
       ampo2 = AutoMPO()
       for j=1:N-1
-        ampo2 += ("Sz",j,"Sz",j+1)
-        ampo2 += (0.5,"S+",j,"S-",j+1)
-        ampo2 += (0.5,"S-",j,"S+",j+1)
+        ampo2 += "Sz",j,"Sz",j+1
+        ampo2 += 0.5,"S+",j,"S-",j+1
+        ampo2 += 0.5,"S-",j,"S+",j+1
       end
       for j=1:N
-        ampo2 += ("Sz",j,"Sz",j)
+        ampo2 += "Sz",j,"Sz",j
       end
       Ha2 = MPO(ampo2,sites)
 
@@ -437,14 +437,14 @@ end
     @testset "Three-site ops" begin
       ampo = AutoMPO()
       # To test version of add! taking a coefficient
-      ampo += (1.0,"Sz",1,"Sz",2,"Sz",3)
+      ampo += 1.0,"Sz",1,"Sz",2,"Sz",3
       @test length(ITensors.data(ampo)) == 1
       for j=2:N-2
-        ampo += ("Sz",j,"Sz",j+1,"Sz",j+2)
+        ampo += "Sz",j,"Sz",j+1,"Sz",j+2
       end
       h = ones(N)
       for j=1:N
-        ampo += (h[j],"Sx",j)
+        ampo += h[j],"Sx",j
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -458,7 +458,7 @@ end
     @testset "Four-site ops" begin
       ampo = AutoMPO()
       for j=1:N-3
-        ampo += ("Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3)
+        ampo += "Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -474,14 +474,14 @@ end
       J1 = 1.0
       J2 = 0.5
       for j=1:N-1
-        ampo += (J1,  "Sz",j,"Sz",j+1)
-        ampo += (J1*0.5,"S+",j,"S-",j+1)
-        ampo += (J1*0.5,"S-",j,"S+",j+1)
+        ampo += J1,  "Sz",j,"Sz",j+1
+        ampo += J1*0.5,"S+",j,"S-",j+1
+        ampo += J1*0.5,"S-",j,"S+",j+1
       end
       for j=1:N-2
-        ampo += (J2,  "Sz",j,"Sz",j+2)
-        ampo += (J2*0.5,"S+",j,"S-",j+2)
-        ampo += (J2*0.5,"S-",j,"S+",j+2)
+        ampo += J2,  "Sz",j,"Sz",j+2
+        ampo += J2*0.5,"S+",j,"S-",j+2
+        ampo += J2*0.5,"S-",j,"S+",j+2
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -505,8 +505,8 @@ end
     @testset "Onsite Regression Test" begin
       sites = siteinds("S=1",4)
       ampo = AutoMPO()
-      ampo += (0.5, "Sx",1)
-      ampo += (0.5, "Sy",1)
+      ampo += 0.5, "Sx",1
+      ampo += 0.5, "Sy",1
       H = MPO(ampo, sites)
       l = commonind(H[1],H[2])
       T = setelt(l[1])*H[1]
@@ -516,8 +516,8 @@ end
         
       sites = siteinds("S=1",2)
       ampo = AutoMPO()
-      ampo += (0.5im, "Sx",1)
-      ampo += (0.5, "Sy",1)
+      ampo += 0.5im, "Sx",1
+      ampo += 0.5, "Sy",1
       H = MPO(ampo, sites)
       T = H[1]*H[2]
       O = im*op(sites[1],"Sx")*op(sites[2],"Id")+op(sites[1],"Sy")*op(sites[2],"Id")
@@ -538,7 +538,7 @@ end
 
     @testset "Single creation op" begin
       ampo = AutoMPO()
-      ampo .+= ("Adagup",3)
+      ampo .+= "Adagup",3
       sites = siteinds("Electron",N)
       W = MPO(ampo,sites)
       psi = makeRandomMPS(sites)
@@ -550,7 +550,7 @@ end
     @testset "Ising" begin
       ampo = AutoMPO()
       for j=1:N-1
-        ampo .+= ("Sz",j,"Sz",j+1)
+        ampo .+= "Sz",j,"Sz",j+1
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -564,7 +564,7 @@ end
     @testset "Ising-Different Order" begin
       ampo = AutoMPO()
       for j=1:N-1
-        ampo .+= ("Sz",j+1,"Sz",j)
+        ampo .+= "Sz",j+1,"Sz",j
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -579,12 +579,12 @@ end
       ampo = AutoMPO()
       h = rand(N) #random magnetic fields
       for j=1:N-1
-        ampo .+= ("Sz",j,"Sz",j+1)
-        ampo .+= (0.5,"S+",j,"S-",j+1)
-        ampo .+= (0.5,"S-",j,"S+",j+1)
+        ampo .+= "Sz",j,"Sz",j+1
+        ampo .+= 0.5,"S+",j,"S-",j+1
+        ampo .+= 0.5,"S-",j,"S+",j+1
       end
       for j=1:N
-        ampo .+= (h[j],"Sz",j)
+        ampo .+= h[j],"Sz",j
       end
 
       sites = siteinds("S=1/2",N)
@@ -601,23 +601,23 @@ end
       sites = siteinds("S=1",N)
       ampo1 = AutoMPO()
       for j=1:N-1
-        ampo1 .+= ("Sz",j,"Sz",j+1)
-        ampo1 .+= (0.5,"S+",j,"S-",j+1)
-        ampo1 .+= (0.5,"S-",j,"S+",j+1)
+        ampo1 .+= "Sz",j,"Sz",j+1
+        ampo1 .+= 0.5,"S+",j,"S-",j+1
+        ampo1 .+= 0.5,"S-",j,"S+",j+1
       end
       for j=1:N
-        ampo1 .+= ("Sz*Sz",j)
+        ampo1 .+= "Sz*Sz",j
       end
       Ha1 = MPO(ampo1,sites)
 
       ampo2 = AutoMPO()
       for j=1:N-1
-        ampo2 .+= ("Sz",j,"Sz",j+1)
-        ampo2 .+= (0.5,"S+",j,"S-",j+1)
-        ampo2 .+= (0.5,"S-",j,"S+",j+1)
+        ampo2 .+= "Sz",j,"Sz",j+1
+        ampo2 .+= 0.5,"S+",j,"S-",j+1
+        ampo2 .+= 0.5,"S-",j,"S+",j+1
       end
       for j=1:N
-        ampo2 .+= ("Sz",j,"Sz",j)
+        ampo2 .+= "Sz",j,"Sz",j
       end
       Ha2 = MPO(ampo2,sites)
 
@@ -633,14 +633,14 @@ end
     @testset "Three-site ops" begin
       ampo = AutoMPO()
       # To test version of add! taking a coefficient
-      ampo .+= (1.0,"Sz",1,"Sz",2,"Sz",3)
+      ampo .+= 1.0,"Sz",1,"Sz",2,"Sz",3
       @test length(ITensors.data(ampo)) == 1
       for j=2:N-2
-        ampo .+= ("Sz",j,"Sz",j+1,"Sz",j+2)
+        ampo .+= "Sz",j,"Sz",j+1,"Sz",j+2
       end
       h = ones(N)
       for j=1:N
-        ampo .+= (h[j],"Sx",j)
+        ampo .+= h[j],"Sx",j
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -654,7 +654,7 @@ end
     @testset "Four-site ops" begin
       ampo = AutoMPO()
       for j=1:N-3
-        ampo .+= ("Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3)
+        ampo .+= "Sz",j,"Sz",j+1,"Sz",j+2,"Sz",j+3
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -670,14 +670,14 @@ end
       J1 = 1.0
       J2 = 0.5
       for j=1:N-1
-        ampo .+= (J1,  "Sz",j,"Sz",j+1)
-        ampo .+= (J1*0.5,"S+",j,"S-",j+1)
-        ampo .+= (J1*0.5,"S-",j,"S+",j+1)
+        ampo .+= J1,  "Sz",j,"Sz",j+1
+        ampo .+= J1*0.5,"S+",j,"S-",j+1
+        ampo .+= J1*0.5,"S-",j,"S+",j+1
       end
       for j=1:N-2
-        ampo .+= (J2,  "Sz",j,"Sz",j+2)
-        ampo .+= (J2*0.5,"S+",j,"S-",j+2)
-        ampo .+= (J2*0.5,"S-",j,"S+",j+2)
+        ampo .+= J2,  "Sz",j,"Sz",j+2
+        ampo .+= J2*0.5,"S+",j,"S-",j+2
+        ampo .+= J2*0.5,"S-",j,"S+",j+2
       end
       sites = siteinds("S=1/2",N)
       Ha = MPO(ampo,sites)
@@ -693,8 +693,8 @@ end
     @testset "Onsite Regression Test" begin
       sites = siteinds("S=1",4)
       ampo = AutoMPO()
-      ampo .+= (0.5, "Sx",1)
-      ampo .+= (0.5, "Sy",1)
+      ampo .+= 0.5, "Sx",1
+      ampo .+= 0.5, "Sy",1
       H = MPO(ampo, sites)
       l = commonind(H[1],H[2])
       T = setelt(l[1])*H[1]
@@ -704,8 +704,8 @@ end
         
       sites = siteinds("S=1",2)
       ampo = AutoMPO()
-      ampo .+= (0.5im, "Sx",1)
-      ampo .+= (0.5, "Sy",1)
+      ampo .+= 0.5im, "Sx",1
+      ampo .+= 0.5, "Sy",1
       H = MPO(ampo, sites)
       T = H[1]*H[2]
       O = im*op(sites[1],"Sx")*op(sites[2],"Id")+op(sites[1],"Sy")*op(sites[2],"Id")
@@ -719,15 +719,15 @@ end
     s = siteinds("Fermion",N)
 
     a1 = AutoMPO()
-    a1 += ("Cdag",1,"C",3)
+    a1 += "Cdag",1,"C",3
     M1 = MPO(a1,s)
 
     a2 = AutoMPO()
-    a2 += (-1,"C",3,"Cdag",1)
+    a2 += -1,"C",3,"Cdag",1
     M2 = MPO(a2,s)
 
     a3 = AutoMPO()
-    a3 += ("Cdag",1,"N",2,"C",3)
+    a3 += "Cdag",1,"N",2,"C",3
     M3 = MPO(a3,s)
 
     p011 = productMPS(s,[1,2,2,1,1])
@@ -752,11 +752,11 @@ end
     s = siteinds("Electron",N;conserve_qns=true)
 
     a1 = AutoMPO()
-    a1 += ("Cdagup",1,"Cup",3)
+    a1 += "Cdagup",1,"Cup",3
     M1 = MPO(a1,s)
 
     a2 = AutoMPO()
-    a2 += (-1,"Cdn",3,"Cdagdn",1)
+    a2 += -1,"Cdn",3,"Cdagdn",1
     M2 = MPO(a2,s)
 
     p0uu = productMPS(s,[1,2,2,1,1])
@@ -782,8 +782,8 @@ end
       sites = siteinds("S=1/2",N;conserve_qns=use_qn)
       ampo = AutoMPO()
       for i=1:N-1
-        ampo += (+1im,"S+",i,"S-",i+1)
-        ampo += (-1im,"S-",i,"S+",i+1)
+        ampo += +1im,"S+",i,"S-",i+1
+        ampo += -1im,"S-",i,"S+",i+1
       end
       H = MPO(ampo,sites)
       psiud = productMPS(sites,[1,2,1,2])
@@ -791,6 +791,24 @@ end
       @test inner(psiud,H,psidu) ≈ +1im
       @test inner(psidu,H,psiud) ≈ -1im
     end
+  end
+
+  @testset "Fermion AutoMPO Issue 514 Regression Test" begin
+    N = 4
+    s = siteinds("Electron",N;conserve_qns=true)
+    ampo1 = AutoMPO()
+    ampo2 = AutoMPO()
+
+    ampo1 += "Nup",1
+    ampo2 += "Cdagup",1,"Cup",1
+
+    M1 = MPO(ampo1,s)
+    M2 = MPO(ampo2,s)
+
+    H1 = M1[1]*M1[2]*M1[3]*M1[4]
+    H2 = M2[1]*M2[2]*M2[3]*M2[4]
+
+    @test norm(H1-H2) ≈ 0.0
   end
 
 end

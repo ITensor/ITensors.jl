@@ -19,6 +19,7 @@ setelt(::IndexVal)
 
 ```@docs
 ITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
+ITensor(A::Array, inds::ITensors.QNIndexSet)
 ```
 
 ## Empty Constructors
@@ -89,6 +90,16 @@ settags(::ITensor, ::Any...)
 swaptags(::ITensor, ::Any...)
 ```
 
+## IndexSet set operations
+
+```@docs
+commoninds
+hascommoninds
+uniqueinds
+noncommoninds
+unioninds
+```
+
 ## Index Manipulations
 
 ```@docs
@@ -102,7 +113,7 @@ swapinds(::ITensor, ::Any...)
 
 ```@docs
 *(::ITensor, ::ITensor)
-exp(::ITensor, ::Any)
+exp(::ITensor, ::Any, ::Any)
 ```
 
 ## Decompositions

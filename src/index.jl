@@ -125,12 +125,28 @@ Obtain the TagSet of an Index.
 """
 tags(i::Index) = i.tags
 
+commontags(is::Index...) = commontags(tags.(is)...)
+
 """
     plev(i::Index)
 
 Obtain the prime level of an Index.
 """
 plev(i::Index) = i.plev
+
+"""
+    not(n::Int)
+
+Return Not{Int}(n).
+"""
+not(pl::Int) = Not(pl)
+
+"""
+    not(::IDType)
+
+Return Not{IDType}(n).
+"""
+not(id::IDType) = Not(id)
 
 """
     ==(i1::Index, i1::Index)
@@ -157,11 +173,7 @@ end
 
 Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
 """
-Base.copy(i::Index) = Index(id(i),
-                            copy(space(i)),
-                            dir(i),
-                            tags(i),
-                            plev(i))
+copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
 
 """
     sim(i::Index; tags = tags(i), plev = plev(i), dir = dir(i))
@@ -169,28 +181,15 @@ Base.copy(i::Index) = Index(id(i),
 Produces an `Index` with the same properties (dimension or QN structure)
 but with a new `id`.
 """
-sim(i::Index;
-    tags=copy(tags(i)),
-    plev=plev(i),
-    dir=dir(i)) = Index(rand(IDType),
-                        copy(space(i)),
-                        dir,
-                        tags,
-                        plev)
-
-# Used for internal use in NDTensors
-NDTensors.sim(i::Index) = sim(i)
+sim(i::Index; tags = copy(tags(i)), plev = plev(i), dir = dir(i)) =
+  Index(rand(IDType), copy(space(i)), dir, tags, plev)
 
 """
     dag(i::Index)
 
 Copy an index `i` and reverse its direction.
 """
-dag(i::Index) = Index(id(i),
-                      copy(space(i)),
-                      -dir(i),
-                      tags(i),
-                      plev(i))
+dag(i::Index) = Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
 
 # For internal use in NDTensors
 NDTensors.dag(i::Index) = dag(i)
@@ -238,7 +237,23 @@ false
 """
 hasplev(i::Index, pl::Int) = plev(i) == pl
 
+"""
+    hasplev(pl::Int)
+
+Returns an anonymous function `x -> hasplev(x, pl)`.
+
+Useful for passing to functions like `map`.
+"""
 hasplev(pl::Int) = x -> hasplev(x, pl)
+
+"""
+    hasind(i::Index)
+
+Returns an anonymous function `x -> hasind(x, i)`.
+
+Useful for passing to functions like `map`.
+"""
+hasind(s::Index) = x -> hasind(x, s)
 
 """
     hasid(i::Index, id::ITensors.IDType)
@@ -304,7 +319,8 @@ specified tags added to the existing ones.
 The `ts` argument can be a comma-separated 
 string of tags or a TagSet.
 """
-addtags(i::Index, ts) = settags(i, addtags(tags(i), ts))
+addtags(i::Index, ts) =
+  settags(i, addtags(tags(i), ts))
 
 """
     removetags(i::Index, ts)
@@ -313,20 +329,36 @@ Return a copy of Index `i` with the
 specified tags removed. The `ts` argument
 can be a comma-separated string of tags or a TagSet.
 """
-removetags(i::Index, ts) = settags(i, removetags(tags(i), ts))
+removetags(i::Index, ts) =
+  settags(i, removetags(tags(i), ts))
 
 """
     replacetags(i::Index, tsold, tsnew)
+
+    replacetags(i::Index, tsold => tsnew)
 
 If the tag set of `i` contains the tags specified by `tsold`,
 replaces these with the tags specified by `tsnew`, preserving
 any other tags. The arguments `tsold` and `tsnew` can be
 comma-separated strings of tags, or TagSet objects.
+
+# Examples
+```jldoctest; filter=r"id=[0-9]{1,3}"
+julia> i = Index(2; tags = "l,x", plev = 1)
+(dim=2|id=83|"l,x")'
+
+julia> replacetags(i, "l", "m")
+(dim=2|id=83|"m,x")'
+
+julia> replacetags(i, "l" => "m")
+(dim=2|id=83|"m,x")'
+```
 """
-replacetags(i::Index,
-            tsold,
-            tsnew) = settags(i,
-                             replacetags(tags(i), tsold, tsnew))
+replacetags(i::Index, tsold, tsnew) =
+  settags(i, replacetags(tags(i), tsold, tsnew))
+
+replacetags(i::Index, rep_ts::Pair) =
+  replacetags(i, rep_ts...)
 
 """
     prime(i::Index, plinc::Int = 1)

@@ -1,5 +1,8 @@
-
 export
+# From external modules
+  # LinearAlgebra
+  tr,
+
 # Modules
   LinearAlgebra,
   NDTensors,
@@ -11,12 +14,24 @@ export
   entropy,
   truncerror,
 
+# argsdict/argsdict.jl
+  argsdict,
+
 # decomp.jl
   eigen,
   factorize,
   polar,
   qr,
   svd,
+
+# global_variables.jl
+  disable_warn_order!,
+  get_warn_order,
+  set_warn_order!,
+  reset_warn_order!,
+  @disable_warn_order,
+  @reset_warn_order,
+  @set_warn_order,
 
 # index.jl
   # Types
@@ -27,6 +42,7 @@ export
   dim,
   dir,
   hasid,
+  hasind,
   hasplev,
   hasqns,
   id,
@@ -50,7 +66,10 @@ export
 # indexset.jl
   # Types
   IndexSet,
+  Order,
   # Methods
+  allhastags,
+  anyhastags,
   dims,
   firstintersect,
   firstsetdiff,
@@ -76,8 +95,10 @@ export
   # Types
   ITensor,
   # Methods
+  ⊙,
   addblock!,
   addtags!,
+  apply,
   array,
   axpy!,
   blockoffsets,
@@ -92,6 +113,9 @@ export
   diagITensor,
   dot,
   firstind,
+  filterinds,
+  hadamard_product,
+  hascommoninds,
   hasind,
   hasinds,
   hassameinds,
@@ -113,6 +137,8 @@ export
   order,
   permute,
   prime!,
+  product,
+  randn!,
   randomITensor,
   removetags!,
   replacetags!,
@@ -148,6 +174,8 @@ export
 # tagset.jl
   # Types
   TagSet,
+  # Macros
+  @ts_str,
   # Methods
   addtags,
   hastags,
@@ -156,12 +184,27 @@ export
   dmrg,
 
 # mps/abstractmps.jl
+  # Macros
+  @preserve_ortho,
+  # Methods
   add,
   contract,
+  common_siteind,
+  common_siteinds,
   dag!,
+  findfirstsiteind,
+  findfirstsiteinds,
+  findsite,
+  findsites,
+  firstsiteind,
+  firstsiteinds,
   logdot,
   loginner,
   lognorm,
+  movesite,
+  movesites,
+  ortho_lims,
+  siteinds,
 
 # mps/mpo.jl
   # Types
@@ -169,6 +212,7 @@ export
   # Methods
   error_contract,
   maxlinkdim,
+  orthogonalize,
   orthogonalize!,
   randomMPO,
   truncate!,
@@ -182,7 +226,10 @@ export
   ⋅,
   inner,
   isortho,
+  linkdim,
+  linkdims,
   linkind,
+  linkinds,
   productMPS,
   randomMPS,
   replacebond,
@@ -191,6 +238,8 @@ export
   sample!,
   siteind,
   siteinds,
+  replace_siteinds!,
+  replace_siteinds,
   swapbondsites,
   totalqn,
 
@@ -224,9 +273,15 @@ export
   Sweeps,
   cutoff,
   cutoff!,
+  get_cutoffs,
+  get_maxdims,
+  get_mindims,
+  get_noises,
   maxdim,
   maxdim!,
+  mindim,
   mindim!,
+  noise,
   noise!,
   nsweep,
   sweepnext,
@@ -244,10 +299,14 @@ export
 # physics/sitetype.jl
   SiteType,
   @SiteType_str,
+  StateName,
+  @StateName_str,
   op,
+  ops,
   OpName,
   @OpName_str,
   state,
+  TagType,
   @TagType_str,
   has_fermion_string,
 
@@ -262,4 +321,6 @@ export
 
 # qn/qnindex.jl
   flux,
-  hasqns
+  hasqns,
+  nblocks,
+  qn

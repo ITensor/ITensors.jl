@@ -13,24 +13,25 @@ let
   U  = 1.0
   V1 = 0.5
 
-  sites = siteinds("Electron",N; conserve_qns=true)
+  sites = siteinds("Electron", N;
+                   conserve_qns = true)
 
   ampo = AutoMPO()
-  for i=1:N
-    ampo += (U,"Nupdn",i)
-  end
   for b=1:N-1
-    ampo += (-t1,"Cdagup",b,"Cup",b+1)
-    ampo += (-t1,"Cdagup",b+1,"Cup",b)
-    ampo += (-t1,"Cdagdn",b,"Cdn",b+1)
-    ampo += (-t1,"Cdagdn",b+1,"Cdn",b)
-    ampo += (V1,"Ntot",b,"Ntot",b+1)
+    ampo += -t1, "Cdagup", b,    "Cup", b+1
+    ampo += -t1, "Cdagup", b+1,  "Cup", b
+    ampo += -t1, "Cdagdn", b,    "Cdn", b+1
+    ampo += -t1, "Cdagdn", b+1,  "Cdn", b
+    ampo +=  V1,   "Ntot", b,   "Ntot", b+1
   end
   for b=1:N-2
-    ampo += (-t2,"Cdagup",b,"Cup",b+2)
-    ampo += (-t2,"Cdagup",b+2,"Cup",b)
-    ampo += (-t2,"Cdagdn",b,"Cdn",b+2)
-    ampo += (-t2,"Cdagdn",b+2,"Cdn",b)
+    ampo += -t2, "Cdagup", b,   "Cup", b+2
+    ampo += -t2, "Cdagup", b+2, "Cup", b
+    ampo += -t2, "Cdagdn", b,   "Cdn", b+2
+    ampo += -t2, "Cdagdn", b+2, "Cdn", b
+  end
+  for i=1:N
+    ampo += U, "Nupdn", i
   end
   H = MPO(ampo,sites)
 
@@ -55,16 +56,16 @@ let
   # Initialize wavefunction to be bond 
   # dimension 10 random MPS with number
   # of particles the same as `state`
-  psi0 = randomMPS(sites,state,10)
+  psi0 = randomMPS(sites, state, 10)
 
   # Check total number of particles:
   @show flux(psi0)
 
   # Start DMRG calculation:
-  energy,psi = dmrg(H,psi0,sweeps)
+  energy, psi = dmrg(H, psi0, sweeps)
 
-  upd = fill(0.0,N)
-  dnd = fill(0.0,N)
+  upd = fill(0.0, N)
+  dnd = fill(0.0, N)
   for j=1:N
     orthogonalize!(psi,j)
     psidag_j = dag(prime(psi[j], "Site"))

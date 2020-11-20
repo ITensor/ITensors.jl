@@ -11,15 +11,35 @@ struct TagSet
   data::TagSetStorage
   length::Int
   function TagSet() 
-    ts = TagSetStorage(ntuple(_ -> IntTag(0),Val(4)))
-    new(ts,0)
+    ts = TagSetStorage(ntuple(_ -> IntTag(0), Val(4)))
+    new(ts, 0)
   end
-  TagSet(tags::TagSetStorage,len::Int) = new(tags,len)
+  TagSet(tags::TagSetStorage, len::Int) = new(tags, len)
 end
 
 TagSet(ts::TagSet) = ts
 
-not(ts::Union{AbstractString,TagSet}) = Not(TagSet(ts))
+function TagSet(t::Tag)
+  ts = MTagSetStorage(ntuple(_ -> IntTag(0), Val(maxTags)))
+  ts[1] = IntSmallString(t)
+  return TagSet(TagSetStorage(ts), 1)
+end
+
+macro ts_str(s)
+  TagSet(s)
+end
+
+"""
+    not(::TagSet)
+    !(::TagSet)
+
+Create a wrapper around a TagSet representing
+the set of indices that do not contain that TagSet.
+"""
+not(ts::TagSet) = Not(ts)
+Base.:!(ts::TagSet) = Not(ts)
+
+not(ts::AbstractString) = Not(ts)
 
 function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   for n = 1:ntags
@@ -201,6 +221,28 @@ function tagstring(T::TagSet)
   end
   res *= "$(Tag(T[N]))"
   return res
+end
+
+# TODO: add iteration
+#Base.iterate(ts::TagSet, args...) = iterate(data(ts), args...)
+
+commontags(ts::TagSet) = ts
+
+function commontags(ts1::TagSet, ts2::TagSet)
+  ts3 = TagSet()
+  N1 = length(ts1)
+  for n1 in 1:N1
+    t1 = ts1[n1]
+    if hastag(ts2, t1)
+      ts3 = addtags(ts3, t1)
+    end
+  end
+  return ts3
+end
+
+function commontags(ts1::TagSet, ts2::TagSet,
+                    ts3::TagSet, ts::TagSet...)
+  return commontags(commontags(ts1, ts2), ts3, ts...)
 end
 
 function Base.show(io::IO, T::TagSet)

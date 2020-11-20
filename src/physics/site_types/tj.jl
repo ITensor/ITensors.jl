@@ -1,118 +1,222 @@
 
-const tJSite = SiteType"tJ"
-
-function siteinds(::tJSite,
-                  N::Int; kwargs...)
-  conserve_qns = get(kwargs,:conserve_qns,false)
-  conserve_sz = get(kwargs,:conserve_sz,conserve_qns)
-  conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
-  conserve_parity = get(kwargs,:conserve_parity,conserve_qns)
+function space(::SiteType"tJ";
+               conserve_qns = false,
+               conserve_sz = conserve_qns,
+               conserve_nf = conserve_qns,
+               conserve_nfparity = conserve_qns,
+               qnname_sz = "Sz",
+               qnname_nf = "Nf",
+               qnname_nfparity = "NfParity",
+               # Deprecated
+               conserve_parity = nothing)
+  if !isnothing(conserve_parity)
+    conserve_nfparity = conserve_parity
+  end
   if conserve_sz && conserve_nf
-    em = QN(("Nf",0,-1),("Sz", 0)) => 1
-    up = QN(("Nf",1,-1),("Sz",+1)) => 1
-    dn = QN(("Nf",1,-1),("Sz",-1)) => 1
-    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
+    return [
+       QN((qnname_nf,0,-1),(qnname_sz, 0)) => 1
+       QN((qnname_nf,1,-1),(qnname_sz,+1)) => 1
+       QN((qnname_nf,1,-1),(qnname_sz,-1)) => 1
+      ]
   elseif conserve_nf
-    zer = QN("Nf",0,-1) => 1
-    one = QN("Nf",1,-1) => 2
-    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+    return [
+       QN(qnname_nf,0,-1) => 1
+       QN(qnname_nf,1,-1) => 2
+      ]
   elseif conserve_sz
-    em = QN(("Sz", 0),("Pf",0,-2)) => 1
-    up = QN(("Sz",+1),("Pf",1,-2)) => 1
-    dn = QN(("Sz",-1),("Pf",1,-2)) => 1
-    return [Index(em,up,dn;tags="Site,tJ,n=$n") for n=1:N]
-  elseif conserve_parity
-    zer = QN("Pf",0,-2) => 1
-    one = QN("Pf",1,-2) => 2
-    return [Index(zer,one;tags="Site,tJ,n=$n") for n=1:N]
+    return [
+       QN((qnname_sz, 0),(qnname_nfparity,0,-2)) => 1
+       QN((qnname_sz,+1),(qnname_nfparity,1,-2)) => 1
+       QN((qnname_sz,-1),(qnname_nfparity,1,-2)) => 1
+      ]
+  elseif conserve_nfparity
+    return [
+       QN(qnname_nfparity,0,-2) => 1
+       QN(qnname_nfparity,1,-2) => 2
+      ]
   end
-  return [Index(3,"Site,tJ,n=$n") for n=1:N]
+  return 3
 end
 
-function state(::tJSite,
-               st::AbstractString)
-  if st == "0" || st == "Emp"
-    return 1
-  elseif st == "Up" || st == "↑"
-    return 2
-  elseif st == "Dn" || st == "↓"
-    return 3
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for tJ site"))
-  return 0
+state(::SiteType"tJ",::StateName"Emp")  = 1
+state(::SiteType"tJ",::StateName"Up")   = 2
+state(::SiteType"tJ",::StateName"Dn")   = 3
+state(st::SiteType"tJ",::StateName"0")    = state(st,StateName("Emp"))
+state(st::SiteType"tJ",::StateName"↑")    = state(st,StateName("Up"))
+state(st::SiteType"tJ",::StateName"↓")    = state(st,StateName("Dn"))
+
+function op!(Op::ITensor,
+             ::OpName"Nup",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>2,s=>2] = 1.0
 end
 
-function op(::tJSite,
-            s::Index,
-            opname::AbstractString)::ITensor
-  Emp = s(1)
-  EmpP = s'(1)
-  Up = s(2)
-  UpP = s'(2)
-  Dn = s(3)
-  DnP = s'(3)
-
-  Op = emptyITensor(s',dag(s))
-  if opname == "Nup"
-    Op[UpP, Up] = 1.
-  elseif opname == "Ndn"
-    Op[DnP, Dn] = 1.
-  elseif opname == "Ntot"
-    Op[UpP, Up] = 1.
-    Op[DnP, Dn] = 1.
-  elseif opname == "Cup" || opname == "Aup"
-    Op[EmpP, Up] = 1.
-  elseif opname == "Cdagup" || opname == "Adagup"
-    Op[UpP, Emp] = 1.
-  elseif opname == "Cdn" || opname == "Adn"
-    Op[EmpP, Dn] = 1.
-  elseif opname == "Cdagdn" || opname == "Adagdn"
-    Op[DnP, Emp] = 1.
-  elseif opname == "FermiPhase" || opname == "FP"
-    Op[UpP, Up] = -1.
-    Op[EmpP, Emp] = 1.
-    Op[DnP, Dn] = -1.
-  elseif opname == "Fup"
-    Op[UpP, Up] = -1.
-    Op[EmpP, Emp] = 1.
-    Op[DnP, Dn] = 1.
-  elseif opname == "Fdn"
-    Op[UpP, Up] = 1.
-    Op[EmpP, Emp] = 1.
-    Op[DnP, Dn] = -1.
-  elseif opname == "Sᶻ" || opname == "Sz"
-    Op[UpP, Up] = 0.5
-    Op[DnP, Dn] = -0.5
-  elseif opname == "Sˣ" || opname == "Sx"
-    Op[UpP, Dn] = 1.0
-    Op[DnP, Up] = 1.0 
-  elseif opname == "S⁺" || opname == "Splus"
-    Op[UpP, Dn] = 1.
-  elseif opname == "S⁻" || opname == "Sminus"
-    Op[DnP, Up] = 1.
-  elseif opname == "Emp" || opname == "0"
-    pEmp = emptyITensor(s)
-    pEmp[Emp] = 1.
-    return pEmp
-  elseif opname == "Up" || opname == "↑"
-    pU = emptyITensor(s)
-    pU[Up] = 1.
-    return pU
-  elseif opname == "Dn" || opname == "↓"
-    pD = emptyITensor(s)
-    pD[Dn] = 1.
-    return pD
-  else
-    throw(ArgumentError("Operator name '$opname' not recognized for tJSite"))
-  end
-  return Op
+function op!(Op::ITensor,
+             ::OpName"Ndn",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>3,s=>3] = 1.0
 end
 
-function has_fermion_string(::tJSite,
-            s::Index,
-            opname::AbstractString)::Bool
-  if opname=="Cup" || opname=="Cdagup" || opname=="Cdn" || opname=="Cdagdn"
-    return true
-  end
-  return false
+function op!(Op::ITensor,
+             ::OpName"Ntot",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>2,s=>2] = 1.0
+  Op[s'=>3,s=>3] = 1.0
 end
+
+function op!(Op::ITensor,
+             ::OpName"Cup",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>1,s=>2] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Cdagup",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>2,s=>1] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Cdn",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>1,s=>3] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Cdagdn",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>3,s=>1] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Aup",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>1,s=>2] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Adagup",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>2,s=>1] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Adn",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>1,s=>3] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Adagdn",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>3,s=>1] = 1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"F",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>2,s=>2] = -1.0
+  Op[s'=>3,s=>3] = -1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Fup",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>2,s=>2] = -1.0
+  Op[s'=>3,s=>3] = +1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Fdn",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>2,s=>2] = +1.0
+  Op[s'=>3,s=>3] = -1.0
+end
+
+function op!(Op::ITensor,
+             ::OpName"Sz",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>2,s=>2] = +0.5
+  Op[s'=>3,s=>3] = -0.5
+end
+
+op!(Op::ITensor,
+    ::OpName"Sᶻ",
+    st::SiteType"tJ",
+    s::Index) = op!(Op,OpName("Sz"),st,s)
+
+function op!(Op::ITensor,
+             ::OpName"Sx",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>2,s=>3] = 0.5
+  Op[s'=>3,s=>2] = 0.5
+end
+
+op!(Op::ITensor,
+    ::OpName"Sˣ",
+    st::SiteType"tJ",
+    s::Index) = op!(Op,OpName("Sx"),st,s)
+
+function op!(Op::ITensor,
+             ::OpName"S+",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>2,s=>3] = 1.0
+end
+
+op!(Op::ITensor,
+    ::OpName"S⁺",
+    st::SiteType"tJ",
+    s::Index) = op!(Op,OpName("S+"),st,s)
+op!(Op::ITensor,
+    ::OpName"Sp",
+    st::SiteType"tJ",
+    s::Index) = op!(Op,OpName("S+"),st,s)
+op!(Op::ITensor,
+    ::OpName"Splus",
+    st::SiteType"tJ",
+    s::Index) = op!(Op,OpName("S+"),st,s)
+
+function op!(Op::ITensor,
+             ::OpName"S-",
+             ::SiteType"tJ",
+             s::Index)
+  Op[s'=>3,s=>2] = 1.0
+end
+
+op!(Op::ITensor,
+    ::OpName"S⁻",
+    st::SiteType"tJ",
+    s::Index) = op!(Op,OpName("S-"),st,s)
+op!(Op::ITensor,
+    ::OpName"Sm",
+    st::SiteType"tJ",
+    s::Index) = op!(Op,OpName("S-"),st,s)
+op!(Op::ITensor,
+    ::OpName"Sminus",
+    st::SiteType"tJ",
+    s::Index) = op!(Op,OpName("S-"),st,s)
+
+has_fermion_string(::OpName"Cup", ::SiteType"tJ") = true
+has_fermion_string(::OpName"Cdagup", ::SiteType"tJ") = true
+has_fermion_string(::OpName"Cdn", ::SiteType"tJ") = true
+has_fermion_string(::OpName"Cdagdn", ::SiteType"tJ") = true

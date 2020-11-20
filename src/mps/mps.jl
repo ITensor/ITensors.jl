@@ -9,11 +9,11 @@ mutable struct MPS <: AbstractMPS
   data::Vector{ITensor}
   llim::Int
   rlim::Int
-  function MPS(A::Vector{<:ITensor},
-               llim::Int = 0,
-               rlim::Int = length(A) + 1)
-    new(A, llim, rlim)
-  end
+end
+
+function MPS(A::Vector{<:ITensor};
+             ortho_lims::UnitRange = 1:length(A))
+  return MPS(A, first(ortho_lims)-1, last(ortho_lims)+1)
 end
 
 @doc """
@@ -35,7 +35,8 @@ MPS() = MPS(ITensor[], 0, 0)
 Construct an MPS with N sites with default constructed
 ITensors.
 """
-MPS(N::Int) = MPS(Vector{ITensor}(undef, N))
+MPS(N::Int; ortho_lims::UnitRange = 1:N) =
+  MPS(Vector{ITensor}(undef, N); ortho_lims = ortho_lims)
 
 """
     MPS([::Type{ElT} = Float64, ]sites)
@@ -99,7 +100,7 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
       G = randomU(s1,s2)
       T = noprime(G*M[b]*M[b+db])
       rinds = uniqueinds(M[b],M[b+db])
-      U,S,V = svd(T,rinds;maxdim=linkdim)
+      U,S,V = svd(T,rinds;maxdim=linkdim, utags = "Link,l=$(b-1)")
       M[b] = U
       M[b+db] = S*V
       M[b+db] /= norm(M[b+db])
@@ -250,34 +251,56 @@ end
 Construct a product state MPS with element type `Float64` and
 nonzero values determined from the input IndexVals.
 """
-productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64,
-                                                   ivals::Vector{<:IndexVal})
+productMPS(ivals::Vector{<:IndexVal}) =
+  productMPS(Float64,
+             ivals::Vector{<:IndexVal})
 
 """
-    productMPS(::Type{T},sites::Vector{<:Index},states)
+    productMPS(::Type{T},
+               sites::Vector{<:Index},
+               states::Union{Vector{String},
+                             Vector{Int},
+                             String,
+                             Int})
 
 Construct a product state MPS of element type `T`, having
 site indices `sites`, and which corresponds to the initial
-state given by the array `states`. The `states` array may
-consist of either an array of integers or strings, as 
-recognized by the `state` function defined for the relevant
-Index tag type.
+state given by the array `states`. The input `states` may
+be an array of strings or an array of ints recognized by the 
+`state` function defined for the relevant Index tag type.
+In addition, a single string or int can be input to create
+a uniform state.
 
-#Examples
+# Examples
 ```julia
 N = 10
-sites = siteinds("S=1/2",N)
+sites = siteinds("S=1/2", N)
 states = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi = productMPS(ComplexF64,sites,states)
+psi = productMPS(ComplexF64, sites, states)
+phi = productMPS(sites, "Up")
 ```
 """
 function productMPS(::Type{T},
-                    sites::Vector{<:Index},
-                    states) where {T<:Number}
+                    sites::Vector{ <: Index},
+                    states) where {T <: Number}
   if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial states don't match"))
   end
   ivals = [state(sites[n],states[n]) for n=1:length(sites)]
+  return productMPS(T, ivals)
+end
+
+function productMPS(::Type{T},
+                    sites::Vector{ <: Index},
+                    states::Union{String, Int}) where {T <: Number}
+  ivals = [state(sites[n], states) for n in 1:length(sites)]
+  return productMPS(T, ivals)
+end
+
+function productMPS(::Type{T},
+                    sites::Vector{ <: Index},
+                    states::Function) where {T <: Number}
+  ivals = [state(sites[n], states(n)) for n in 1:length(sites)]
   return productMPS(T, ivals)
 end
 
@@ -291,7 +314,7 @@ consist of either an array of integers or strings, as
 recognized by the `state` function defined for the relevant
 Index tag type.
 
-#Examples
+# Examples
 ```julia
 N = 10
 sites = siteinds("S=1/2",N)
@@ -299,28 +322,23 @@ states = [isodd(n) ? "Up" : "Dn" for n=1:N]
 psi = productMPS(sites,states)
 ```
 """
-productMPS(sites::Vector{<:Index},
-           states) = productMPS(Float64,
-                                sites,
-                                states)
+productMPS(sites::Vector{ <: Index},
+           states) =
+  productMPS(Float64, sites, states)
 
-function siteind(M::MPS, j::Int)
-  N = length(M)
-  (N==1) && return inds(M[1])[1]
+"""
+    siteind(M::MPS, j::Int; kwargs...)
 
-  if j == 1
-    si = uniqueind(M[j], M[j+1])
-  elseif j == N
-    si = uniqueind(M[j], M[j-1])
-  else
-    si = uniqueind(M[j], M[j-1], M[j+1])
-  end
-  return si
-end
+Get the site Index of the MPS.
+"""
+siteind(M::MPS, j::Int; kwargs...) = firstsiteind(M, j; kwargs...)
 
-function siteinds(M::MPS)
-  return [siteind(M, j) for j in 1:length(M)]
-end
+"""
+    siteinds(M::MPS)
+
+Get a vector of the site indices of the MPS.
+"""
+siteinds(M::MPS) = [siteind(M, j) for j in 1:length(M)]
 
 function replace_siteinds!(M::MPS, sites)
   for j in eachindex(M)
@@ -393,16 +411,6 @@ function replacebond(M0::MPS, b::Int, phi::ITensor;
 end
 
 """
-    swapbondsites(ψ::MPS, b::Int; kwargs...)
-
-Swap the sites `b` and `b+1`.
-"""
-function swapbondsites(ψ::MPS, b::Int; kwargs...)
-  kwargs = setindex(values(kwargs), true, :swapsites)
-  return replacebond(ψ, b, ψ[b] * ψ[b+1]; kwargs...)
-end
-
-"""
     sample!(m::MPS)
 
 Given a normalized MPS m, returns a `Vector{Int}`
@@ -457,15 +465,13 @@ function sample(m::MPS)
     while n <= d
       projn = ITensor(s)
       projn[s[n]] = 1.0
-      An = A*projn
+      An = A * dag(projn)
       pn = real(scalar(dag(An)*An))
       pdisc += pn
       (r < pdisc) && break
       n += 1
     end
-
     result[j] = n
-
     if j < N
       A = m[j+1]*An
       A *= (1.0/sqrt(pn))

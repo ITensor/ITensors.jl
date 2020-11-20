@@ -303,11 +303,41 @@ function combineblocks(i::QNIndex)
   return iR,perm,comb
 end
 
-removeqns(i::QNIndex) = Index(id(i),
-                              dim(i),
-                              Neither,
-                              tags(i),
-                              plev(i))
+removeqns(i::QNIndex) =
+  Index(id(i), dim(i), Neither, tags(i), plev(i))
+
+function addqns(i::Index, qns::QNBlocks; dir::Arrow = Out)
+  @assert dim(i) == dim(qns)
+  return Index(id(i), qns, dir, tags(i), plev(i))
+end
+  
+function addqns(i::QNIndex, qns::QNBlocks)
+  @assert dim(i) == dim(qns)
+  @assert nblocks(qns) == nblocks(i)
+  iqns = space(i)
+  j = copy(i)
+  jqn = space(j)
+  for n in 1:nblocks(i)
+    @assert blockdim(iqns, n) == blockdim(qns, n)
+    iqn_n = qn(iqns, n)
+    qn_n = qn(qns, n)
+    newqn = iqn_n
+    for nqv in 1:nactive(qn_n)
+      qv = qn_n[nqv]
+      newqn = addqnval(newqn, qv)
+    end
+    jqn[n] = newqn => blockdim(iqns, n)
+  end
+  return j
+end
+
+mutable_storage(::Type{Order{N}},
+                ::Type{IndexT}) where {N, IndexT <: QNIndex} =
+  SizedVector{N, IndexT}(undef)
+
+isfermionic(i::Index) = false
+
+isfermionic(i::QNIndex) = any(q -> isfermionic(qn(q)), space(i))
 
 function Base.show(io::IO,
                    i::QNIndex)

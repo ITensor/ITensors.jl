@@ -1,6 +1,23 @@
-using ITensors,
-      Random
+using ITensors
+using Random
 
+using ITensors: AbstractMPS
+
+function fill_trivial_coefficients(ψ)
+  return ψ isa AbstractMPS ? (1, ψ) : ψ
+end
+
+function inner_add(α⃗ψ⃗::Tuple{<:Number, <:MPST}...) where {MPST <: AbstractMPS}
+  Nₘₚₛ = length(α⃗ψ⃗)
+  α⃗ = first.(α⃗ψ⃗)
+  ψ⃗ = last.(α⃗ψ⃗)
+  N⃡ = (conj(α⃗[i]) * α⃗[j] * inner(ψ⃗[i], ψ⃗[j]) for i in 1:Nₘₚₛ, j in 1:Nₘₚₛ)
+  return sum(N⃡)
+end
+
+inner_add(ψ⃗...) = inner_add(fill_trivial_coefficients.(ψ⃗)...)
+
+# TODO: this is no longer needed, use randomMPS
 function makeRandomMPS(sites;
                        chi::Int=4)::MPS
   N = length(sites)

@@ -32,6 +32,10 @@ end
 
 removeqns(is::QNIndexSet) = map(i -> removeqns(i), is)
 
+anyfermionic(is::IndexSet) = any(isfermionic, is)
+
+allfermionic(is::IndexSet) = all(isfermionic, is)
+
 function Base.show(io::IO, is::QNIndexSet)
   print(io,"IndexSet{$(length(is))} ")
   for i in is

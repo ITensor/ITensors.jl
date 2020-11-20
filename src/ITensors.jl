@@ -10,6 +10,7 @@ module ITensors
 #####################################
 # External packages
 #
+using Compat
 using HDF5
 using KrylovKit
 using LinearAlgebra
@@ -21,15 +22,27 @@ using StaticArrays
 using TimerOutputs
 
 #####################################
-# Global Variables
+# Directory helper functions (useful for
+# running examples)
+#
+src_dir() = dirname(pathof(@__MODULE__))
+dir() = joinpath(src_dir(), "..")
+examples_dir() = joinpath(dir(), "examples")
+
+#####################################
+# Exports
 #
 include("exports.jl")
 
 #####################################
+# Imports
+#
+include("imports.jl")
+
+#####################################
 # Global Variables
 #
-const GLOBAL_PARAMS = Dict("WarnTensorOrder" => 14)
-const GLOBAL_TIMER = TimerOutput()
+include("global_variables.jl")
 
 #####################################
 # Index and IndexSet
@@ -87,8 +100,12 @@ include("physics/fermions.jl")
 include("physics/autompo.jl")
 
 #####################################
-# Package compilation
+# Argument parsing
 #
+include("argsdict/argsdict.jl")
+
+#####################################
+# Package compilation
 #
 include("packagecompile/compile.jl")
 

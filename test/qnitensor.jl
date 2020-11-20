@@ -16,6 +16,98 @@ Random.seed!(1234)
     @test nnzblocks(A) == 2
   end
 
+  @testset "Construct from Array" begin
+    i = Index([QN(0)=>1, QN(1)=>2], "i")
+
+    A = [1.0 0.0 0.0;
+         0.0 2.0 3.0;
+         0.0 1e-10 4.0]
+    T = ITensor(A, i', dag(i))
+    @test flux(T) == QN(0)
+    @test nnzblocks(T) == 2
+    @test (1,1) in nzblocks(T)
+    @test (2,2) in nzblocks(T)
+    @test T[1, 1] == 1.0
+    @test T[2, 2] == 2.0
+    @test T[2, 3] == 3.0
+    @test T[3, 2] == 1e-10
+    @test T[3, 3] == 4.0
+
+    T = itensor(A, i', dag(i))
+    @test flux(T) == QN(0)
+    @test nnzblocks(T) == 2
+    @test (1,1) in nzblocks(T)
+    @test (2,2) in nzblocks(T)
+    @test T[1, 1] == 1.0
+    @test T[2, 2] == 2.0
+    @test T[2, 3] == 3.0
+    @test T[3, 2] == 1e-10
+    @test T[3, 3] == 4.0
+
+    T = ITensor(A, i', dag(i); tol = 1e-9)
+    @test flux(T) == QN(0)
+    @test nnzblocks(T) == 2
+    @test (1,1) in nzblocks(T)
+    @test (2,2) in nzblocks(T)
+    @test T[1, 1] == 1.0
+    @test T[2, 2] == 2.0
+    @test T[2, 3] == 3.0
+    @test T[3, 2] == 0.0
+    @test T[3, 3] == 4.0
+
+    A = [1e-9 0.0 0.0;
+         0.0 2.0 3.0;
+         0.0 1e-10 4.0]
+    T = ITensor(A, i', dag(i); tol = 1e-8)
+    @test flux(T) == QN(0)
+    @test nnzblocks(T) == 1
+    @test (2,2) in nzblocks(T)
+    @test T[1, 1] == 0.0
+    @test T[2, 2] == 2.0
+    @test T[2, 3] == 3.0
+    @test T[3, 2] == 0.0
+    @test T[3, 3] == 4.0
+
+    A = [1e-9 2.0 3.0;
+         1e-9 1e-10 2e-10;
+         2e-9 1e-10 4e-10]
+    T = ITensor(A, i', dag(i); tol = 1e-8)
+    @test flux(T) == QN(-1)
+    @test nnzblocks(T) == 1
+    @test (1,2) in nzblocks(T)
+    @test T[1, 1] == 0.0
+    @test T[1, 2] == 2.0
+    @test T[1, 3] == 3.0
+    @test T[2, 2] == 0.0
+    @test T[2, 3] == 0.0
+    @test T[3, 2] == 0.0
+    @test T[3, 3] == 0.0
+
+    A = [1e-9 2.0 3.0;
+         1e-5 1e-10 2e-10;
+         2e-9 1e-10 4e-10]
+    @test_throws ErrorException ITensor(A, i', dag(i); tol = 1e-8)
+  end
+
+  @testset "ITensor iteration" begin
+    i = Index([QN(0)=>1,QN(1)=>2],"i")
+    j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
+
+    A = randomITensor(i, dag(j))
+    Is = eachindex(A)
+    @test length(Is) == dim(A)
+    sumA = 0.0
+    for I in Is
+      sumA += A[I]
+    end
+    @test sumA ≈ sum(ITensors.data(A))
+    sumA = 0.0
+    for a in A
+      sumA += a
+    end
+    @test sumA ≈ sum(A)
+  end
+
   @testset "Constructor (from Tuple)" begin
     i = Index([QN(0)=>1,QN(1)=>2],"i")
     j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
@@ -650,10 +742,10 @@ Random.seed!(1234)
       @test hassameinds(U, (i,j,u))
       @test hassameinds(D, (u,up))
 
-      @test norm(A - dag(U) * D * U') ≈ 0.0 atol=1e-11
-      @test norm(A - dag(U) * D * Ut) ≈ 0.0 atol=1e-11
-      @test norm(A * U - U' * D) ≈ 0.0 atol=1e-11
-      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-11
+      @test A ≈ dag(U) * D * U' atol=1e-11
+      @test A ≈ dag(U) * D * Ut atol=1e-11
+      @test A * U ≈ U' * D atol=1e-11
+      @test A * U ≈ Ut * D atol=1e-11
     end
 
     @testset "eigen hermitian (truncate)" begin
@@ -711,7 +803,7 @@ Random.seed!(1234)
       @test spec.truncerr ≤ cutoff
       err = sqrt(1-(Ap*dag(Ap))[]/(A*dag(A))[])
       @test err ≤ cutoff
-      @test err ≈ spec.truncerr rtol=1e-1
+      @test err ≈ spec.truncerr rtol=3e-1
 		end
 
     @testset "eigen non-hermitian" begin
@@ -736,10 +828,10 @@ Random.seed!(1234)
       @test hastags(up,"x")
       @test plev(up) == 1
 
-      @test norm(A - U' * D * dag(U)) ≉ 0.0 atol=1e-12
-      @test norm(A - Ut * D * dag(U)) ≉ 0.0 atol=1e-12
-      @test norm(A * U - U' * D) ≈ 0.0 atol=1e-12
-      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
+      @test A ≉ U' * D * dag(U) atol=1e-12
+      @test A ≉ Ut * D * dag(U) atol=1e-12
+      @test A * U ≈ U' * D atol=1e-12
+      @test A * U ≈ Ut * D atol=1e-12
     end
 
     @testset "eigen non-hermitian (general inds)" begin
@@ -773,8 +865,8 @@ Random.seed!(1234)
       @test hassameinds(U, (ĩ, j̃, r))
       @test hassameinds(Ut, (i, j, l))
 
-      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
-      @test norm(A - Ut * D * dag(U)) ≉ 0.0 atol=1e-12
+      @test A * U ≈ Ut * D atol=1e-12
+      @test A ≉ Ut * D * dag(U) atol=1e-12
     end
 
     @testset "eigen mixed arrows" begin
@@ -784,7 +876,7 @@ Random.seed!(1234)
       F = eigen(A, (i1, i1'), (i2', i2))
       D, U = F
       Ut = F.Vt
-      @test norm(A * U - Ut * D) ≈ 0.0 atol=1e-12
+      @test A * U ≈ Ut * D atol=1e-12
     end
 
   end
@@ -813,7 +905,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 2" begin
@@ -838,7 +930,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 3" begin
@@ -863,7 +955,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 4" begin
@@ -891,7 +983,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0,2)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 5" begin
@@ -919,7 +1011,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0,2)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd example 6" begin
@@ -947,7 +1039,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN(0,2)
       end
-      @test isapprox(norm(U*S*V-A),0.0; atol=1e-14)
+      @test U * S * V ≈ A atol=1e-14
     end
 
     @testset "svd truncation example 1" begin
@@ -1206,7 +1298,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V,b)==QN()
       end
-      @test norm(U*S*V-A) ≈ 0 atol=1e-15
+      @test U * S * V ≈ A atol=1e-15
     end
 
     @testset "SVD no truncate bug" begin

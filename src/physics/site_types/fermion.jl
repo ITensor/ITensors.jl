@@ -1,72 +1,86 @@
 
-const FermionSite = SiteType"Fermion"
-
-function siteinds(::FermionSite, 
-                  N::Int; kwargs...)
-  conserve_qns = get(kwargs,:conserve_qns,false)
-  conserve_nf = get(kwargs,:conserve_nf,conserve_qns)
-  conserve_parity = get(kwargs,:conserve_parity,conserve_qns)
-  if conserve_nf
-    zer = QN("Nf",0,-1) => 1
-    one = QN("Nf",1,-1) => 1
-    return [Index(zer,one;tags="Site,Fermion,n=$n") for n=1:N]
-  elseif conserve_parity
-    zer = QN("Pf",0,-2) => 1
-    one = QN("Pf",1,-2) => 1
-    return [Index(zer,one;tags="Site,Fermion,n=$n") for n=1:N]
+function space(::SiteType"Fermion"; 
+               conserve_qns=false,
+               conserve_nf=conserve_qns,
+               conserve_nfparity=conserve_qns,
+               qnname_nf = "Nf",
+               qnname_nfparity = "NfParity",
+               qnname_sz = "Sz",
+               conserve_sz = false,
+               # Deprecated
+               conserve_parity=nothing)
+  if !isnothing(conserve_parity)
+    conserve_nfparity = conserve_parity
   end
-  return [Index(2,"Site,Fermion,n=$n") for n=1:N]
+  if conserve_sz == true
+    conserve_sz = "Up"
+  end
+  if conserve_nf && conserve_sz == "Up"
+    zer = QN((qnname_nf,0,-1), (qnname_sz,0)) => 1
+    one = QN((qnname_nf,1,-1), (qnname_sz,1)) => 1
+    return [zer,one]
+  elseif conserve_nf && conserve_sz == "Dn"
+    zer = QN((qnname_nf,0,-1), (qnname_sz,0)) => 1
+    one = QN((qnname_nf,1,-1), (qnname_sz,-1)) => 1
+    return [zer,one]
+  elseif conserve_nfparity && conserve_sz == "Up"
+    zer = QN((qnname_nfparity,0,-2), (qnname_sz,0)) => 1
+    one = QN((qnname_nfparity,1,-2), (qnname_sz,1)) => 1
+    return [zer,one]
+  elseif conserve_nfparity && conserve_sz == "Dn"
+    zer = QN((qnname_nfparity,0,-2), (qnname_sz,0)) => 1
+    one = QN((qnname_nfparity,1,-2), (qnname_sz,-1)) => 1
+    return [zer,one]
+  elseif conserve_nf
+    zer = QN(qnname_nf,0,-1) => 1
+    one = QN(qnname_nf,1,-1) => 1
+    return [zer,one]
+  elseif conserve_nfparity
+    zer = QN(qnname_nfparity,0,-2) => 1
+    one = QN(qnname_nfparity,1,-2) => 1
+    return [zer,one]
+  end
+  return 2
 end
 
-function state(::FermionSite,
-               st::AbstractString)
-  if st == "Emp" || st == "0"
-    return 1
-  elseif st == "Occ" || st == "1"
-    return 2
-  end
-  throw(ArgumentError("State string \"$st\" not recognized for Fermion site"))
-  return 0
+state(::SiteType"Fermion",::StateName"Emp")  = 1
+state(::SiteType"Fermion",::StateName"Occ")  = 2
+state(st::SiteType"Fermion",::StateName"0") = state(st,StateName("Emp"))
+state(st::SiteType"Fermion",::StateName"1") = state(st,StateName("Occ"))
+
+function op!(Op::ITensor,
+             ::OpName"N",
+             ::SiteType"Fermion",
+             s::Index)
+  Op[s'=>2,s=>2] = 1.0
 end
 
-function op(::FermionSite,
-            s::Index,
-            opname::AbstractString)::ITensor
-  Emp   = s(1)
-  EmpP  = s'(1)
-  Occ   = s(2)
-  OccP  = s'(2)
-
-  Op = emptyITensor(s',dag(s))
-
-  if opname == "N"
-    Op[OccP, Occ] = 1.
-  elseif opname == "C"
-    Op[EmpP, Occ] = 1.
-  elseif opname == "Cdag"
-    Op[OccP, Emp] = 1.
-  elseif opname=="F" || opname=="FermiPhase" || opname=="FP"
-    Op[EmpP,Emp] =  1.
-    Op[OccP,Occ] = -1.
-  elseif opname == "Emp" || opname == "0"
-    pEmp = emptyITensor(s)
-    pEmp[Emp] = 1.0
-    return pEmp
-  elseif opname == "Occ" || opname == "1"
-    pOcc = emptyITensor(s)
-    pOcc[Occ] = 1.0
-    return pOcc
-  else
-    throw(ArgumentError("Operator name $opname not recognized for FermionSite"))
-  end
-  return Op
+function op!(Op::ITensor,
+             ::OpName"C",
+             ::SiteType"Fermion",
+             s::Index)
+  Op[s'=>1,s=>2] = 1.0
 end
 
-function has_fermion_string(::FermionSite,
-            s::Index,
-            opname::AbstractString)::Bool
-  if opname=="C" || opname=="Cdag"
-    return true
-  end
-  return false
+function op!(Op::ITensor,
+             ::OpName"Cdag",
+             ::SiteType"Fermion",
+             s::Index)
+  Op[s'=>2,s=>1] = 1.0
 end
+
+function op!(Op::ITensor,
+             ::OpName"F",
+             ::SiteType"Fermion",
+             s::Index)
+  Op[s'=>1,s=>1] = +1.0
+  Op[s'=>2,s=>2] = -1.0
+end
+
+
+has_fermion_string(::OpName"C",
+                   ::SiteType"Fermion") = true
+
+has_fermion_string(::OpName"Cdag",
+                   ::SiteType"Fermion") = true
+
