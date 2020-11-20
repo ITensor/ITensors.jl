@@ -187,8 +187,8 @@ argument that corresponds to one of the tags of
 the Index `s` and an `OpName"opname"` argument
 that corresponds to the input operator name.
 
-Operator names can be combined using the `"\\*"`
-symbol, for example `"S+\\*S-"` or `"Sz\\*Sz\\*Sz"`. 
+Operator names can be combined using the `"*"`
+symbol, for example `"S+*S-"` or `"Sz*Sz*Sz"`. 
 The result is an ITensor made by forming each operator 
 then contracting them together in a way corresponding
 to the usual operator product or matrix multiplication.
