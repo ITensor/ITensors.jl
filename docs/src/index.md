@@ -67,8 +67,7 @@ If you use ITensors.jl in your work, for now please cite the [arXiv preprint](ht
     author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
     year={2020},
     eprint={2007.14822},
-    archivePrefix={arXiv},
-    primaryClass={cs.MS}
+    archivePrefix={arXiv}
 }
 ```
 
