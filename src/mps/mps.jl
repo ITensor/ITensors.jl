@@ -9,11 +9,11 @@ mutable struct MPS <: AbstractMPS
   data::Vector{ITensor}
   llim::Int
   rlim::Int
-  function MPS(A::Vector{<:ITensor},
-               llim::Int = 0,
-               rlim::Int = length(A) + 1)
-    new(A, llim, rlim)
-  end
+end
+
+function MPS(A::Vector{<:ITensor};
+             ortho_lims::UnitRange = 1:length(A))
+  return MPS(A, first(ortho_lims)-1, last(ortho_lims)+1)
 end
 
 @doc """
@@ -35,7 +35,8 @@ MPS() = MPS(ITensor[], 0, 0)
 Construct an MPS with N sites with default constructed
 ITensors.
 """
-MPS(N::Int) = MPS(Vector{ITensor}(undef, N))
+MPS(N::Int; ortho_lims::UnitRange = 1:N) =
+  MPS(Vector{ITensor}(undef, N); ortho_lims = ortho_lims)
 
 """
     MPS([::Type{ElT} = Float64, ]sites)
@@ -99,7 +100,7 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
       G = randomU(s1,s2)
       T = noprime(G*M[b]*M[b+db])
       rinds = uniqueinds(M[b],M[b+db])
-      U,S,V = svd(T,rinds;maxdim=linkdim)
+      U,S,V = svd(T,rinds;maxdim=linkdim, utags = "Link,l=$(b-1)")
       M[b] = U
       M[b+db] = S*V
       M[b+db] /= norm(M[b+db])

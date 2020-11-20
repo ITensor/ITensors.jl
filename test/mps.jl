@@ -236,6 +236,54 @@ include("../examples/gate_evolution/qubit.jl")
     @test inner(sum(Ks), K123) ≈ inner(K123,K123)
   end
 
+  @testset "+ MPS with coefficients" begin
+    N = 20
+    conserve_qns = true
+
+    s = siteinds("S=1/2", N; conserve_qns = conserve_qns)
+    state = n -> isodd(n) ? "↑" : "↓"
+
+    ψ₁ = randomMPS(s, state, 4)
+    ψ₂ = randomMPS(s, state, 4)
+    ψ₃ = randomMPS(s, state, 4)
+
+    ψ = ψ₁ + ψ₂
+
+    @test inner(ψ, ψ) ≈ inner_add(ψ₁, ψ₂)
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+
+    ψ = ψ₁ + (-ψ₂)
+
+    @test inner(ψ, ψ) ≈ inner_add((1, ψ₁), (-1, ψ₂))
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+    
+    α₁ = 2.2
+    α₂ = -4.1
+    ψ = +(α₁ * ψ₁, α₂ * ψ₂; cutoff = 1e-8)
+
+    @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂))
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+
+    α₁ = 2 + 3im
+    α₂ = -4 + 1im
+    ψ = α₁ * ψ₁ + α₂ * ψ₂
+
+    @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂))
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+
+    α₁ = 2 + 3im
+    α₂ = -4 + 1im
+    ψ = α₁ * ψ₁ + α₂ * ψ₂ + ψ₃
+
+    @test inner(ψ, ψ) ≈ inner_add((α₁, ψ₁), (α₂, ψ₂), ψ₃)
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂) + maxlinkdim(ψ₃)
+
+    ψ = ψ₁ - ψ₂
+
+    @test inner(ψ, ψ) ≈ inner_add(ψ₁, (-1, ψ₂))
+    @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
+  end
+
   sites = siteinds(2,N)
   psi = MPS(sites)
   @test length(psi) == N # just make sure this works
@@ -379,7 +427,7 @@ end
   @testset "sample! method" begin
     N = 10
     sites = [Index(3,"Site,n=$n") for n in 1:N]
-    psi = makeRandomMPS(sites,chi=3)
+    psi = randomMPS(sites, 3)
     nrm2 = inner(psi,psi)
     psi[1] *= (1.0/sqrt(nrm2))
 
@@ -589,7 +637,7 @@ end
     @test siteind(M, 4; plev = 0) == s[4]
     @test siteind(M, 4; plev = 1) == s[4]'
     @test isnothing(siteind(M, 4; plev = 2))
-    @test siteinds(M, 3) == IndexSet(s[3], s[3]')
+    @test hassameinds(siteinds(M, 3), (s[3], s[3]'))
     @test siteinds(M, 3; plev = 1) == IndexSet(s[3]')
     @test siteinds(M, 3; plev = 0) == IndexSet(s[3])
     @test siteinds(M, 3; tags = "n=2") == IndexSet()

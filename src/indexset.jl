@@ -422,6 +422,13 @@ function maxdim(is::IndexSet)
   return md
 end
 
+"""
+    commontags(::IndexSet)
+
+Return a TagSet of the tags that are common to all of the indices.
+"""
+commontags(is::IndexSet) = commontags(is...)
+
 # 
 # Set operations
 #
