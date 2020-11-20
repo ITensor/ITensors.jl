@@ -6,8 +6,7 @@ pkg&gt; add ITensors</code></pre><p>Or, equivalently, via the <code>Pkg</code> A
     author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
     year={2020},
     eprint={2007.14822},
-    archivePrefix={arXiv},
-    primaryClass={cs.MS}
+    archivePrefix={arXiv}
 }</code></pre><h2 id="Code-Examples-1"><a class="docs-heading-anchor" href="#Code-Examples-1">Code Examples</a><a class="docs-heading-anchor-permalink" href="#Code-Examples-1" title="Permalink"></a></h2><h3 id="Basic-Overview-1"><a class="docs-heading-anchor" href="#Basic-Overview-1">Basic Overview</a><a class="docs-heading-anchor-permalink" href="#Basic-Overview-1" title="Permalink"></a></h3><p>ITensor construction, setting of elements, contraction, and addition. Before constructing an ITensor, one constructs Index objects representing tensor indices.</p><pre><code class="language-julia">using ITensors
 let
   i = Index(3)
