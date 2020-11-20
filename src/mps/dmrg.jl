@@ -93,24 +93,30 @@ function dmrg(PH,
   end
 
   which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
-  svd_alg::String = get(kwargs, :svd_alg, "recursive")
+  svd_alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
 
   # eigsolve kwargs
-  eigsolve_tol::Float64   = get(kwargs, :eigsolve_tol, 1e-14)
+  eigsolve_tol::Float64 = get(kwargs, :eigsolve_tol, 1e-14)
   eigsolve_krylovdim::Int = get(kwargs, :eigsolve_krylovdim, 3)
-  eigsolve_maxiter::Int   = get(kwargs, :eigsolve_maxiter, 1)
+  eigsolve_maxiter::Int = get(kwargs, :eigsolve_maxiter, 1)
   eigsolve_verbosity::Int = get(kwargs, :eigsolve_verbosity, 0)
 
   # TODO: add support for non-Hermitian DMRG
-  # get(kwargs, :ishermitian, true)
-  ishermitian::Bool = true
+  ishermitian::Bool = get(kwargs, :ishermitian, true)
 
   # TODO: add support for targeting other states with DMRG
   # (such as the state with the largest eigenvalue)
   # get(kwargs, :eigsolve_which_eigenvalue, :SR)
   eigsolve_which_eigenvalue::Symbol = :SR
+
+  # TODO: use this as preferred syntax for passing arguments
+  # to eigsolve
+  #default_eigsolve_args = (tol = 1e-14, krylovdim = 3, maxiter = 1,
+  #                         verbosity = 0, ishermitian = true,
+  #                         which_eigenvalue = :SR)
+  #eigsolve = get(kwargs, :eigsolve, default_eigsolve_args)
 
   # Keyword argument deprecations
   if haskey(kwargs, :maxiter)
