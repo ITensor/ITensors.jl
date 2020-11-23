@@ -75,7 +75,9 @@ include("util.jl")
     @suppress begin
       F = svd(T, i'; alg = "divide_and_conquer")
     end
-    @test isnothing(F)
+    # Depending on the LAPACK implementation,
+    # this sometimes works so don't test it
+    #@test isnothing(F)
 
     F = svd(T, i'; alg = "qr_iteration")
     @test !isnothing(F)
