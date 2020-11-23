@@ -909,7 +909,7 @@ end
       @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-13
-      @test_broken V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
+      @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
     end
     @testset "Test SVD truncation" begin
         ii = Index(4)
