@@ -1342,6 +1342,7 @@ function combinedind(T::ITensor)
   if storage(T) isa Combiner
     return inds(T)[1]
   end
+
   return nothing
 end
 
