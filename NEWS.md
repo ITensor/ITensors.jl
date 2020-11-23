@@ -1,3 +1,7 @@
+ITensors v0.1.27 Release Notes
+==============================
+* Use LAPACK's gesdd by default in SVD (PR #531).
+
 ITensors v0.1.26 Release Notes
 ==============================
 * Introduce a density matrix algorithm for summing arbitrary numbers of MPS/MPO (non-QN and QN) (PR #528).
