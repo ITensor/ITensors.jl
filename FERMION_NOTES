@@ -45,6 +45,11 @@ X have productMPS and similar functions put
   + default `compute_alpha` defined which always returns 1, but
     is overloaded in ITensors.jl (physics/fermions.jl) when
     the indsT1 and indsT2 arguments are of QNIndexSet type
+  + Base.permutedims! of BlockSparseTensor calls permfactor
+    (which is defaulted to 1 in NDTensors) on the inds of
+    the input tensor and includes the resulting factor 
+    in the block-level/dense permutedims!
+    --> this is important for permuting & adding ITensors!
 
 ## Important Functions & Changes in ITensors:
 
