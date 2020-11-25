@@ -15,13 +15,13 @@ struct TruncSVD{N1,N2}
 end
 
 # iteration for destructuring into components `U,S,V,spec,u,v = S`
-Base.iterate(S::TruncSVD) = (S.U, Val(:S))
-Base.iterate(S::TruncSVD, ::Val{:S}) = (S.S, Val(:V))
-Base.iterate(S::TruncSVD, ::Val{:V}) = (S.V, Val(:spec))
-Base.iterate(S::TruncSVD, ::Val{:spec}) = (S.spec, Val(:u))
-Base.iterate(S::TruncSVD, ::Val{:u}) = (S.u, Val(:v))
-Base.iterate(S::TruncSVD, ::Val{:v}) = (S.v, Val(:done))
-Base.iterate(S::TruncSVD, ::Val{:done}) = nothing
+iterate(S::TruncSVD) = (S.U, Val(:S))
+iterate(S::TruncSVD, ::Val{:S}) = (S.S, Val(:V))
+iterate(S::TruncSVD, ::Val{:V}) = (S.V, Val(:spec))
+iterate(S::TruncSVD, ::Val{:spec}) = (S.spec, Val(:u))
+iterate(S::TruncSVD, ::Val{:u}) = (S.u, Val(:v))
+iterate(S::TruncSVD, ::Val{:v}) = (S.v, Val(:done))
+iterate(S::TruncSVD, ::Val{:done}) = nothing
 
 @doc """
     svd(A::ITensor, inds::Index...; <keyword arguments>)
@@ -43,27 +43,25 @@ arguments provided.
 - `cutoff::Float64`: set the desired truncation error of the SVD, by default defined as the sum of the squares of the smallest singular values.
 - `lefttags::String = "Link,u"`: set the tags of the Index shared by `U` and `S`.
 - `righttags::String = "Link,v"`: set the tags of the Index shared by `S` and `V`.
-- `alg::String = "recursive"`. Options:
+- `alg::String = "divide_and_conquer"`. Options:
+  - `"divide_and_conquer"` - A divide-and-conquer algorithm. LAPACK's gesdd. Fast, but may lead to some innacurate singular values for very ill-conditioned matrices. Also may sometimes fail to converge, leading to errors (in which case "qr_iteration" or "recursive" can be tried).
+  - `"qr_iteration"` - Typically slower but more accurate for very ill-conditioned matrices compared to `"divide_and_conquer"`. LAPACK's gesvd.
   - `"recursive"` - ITensor's custom svd. Very reliable, but may be slow if high precision is needed. To get an `svd` of a matrix `A`, an eigendecomposition of ``A^{\\dagger} A`` is used to compute `U` and then a `qr` of ``A^{\\dagger} U`` is used to compute `V`. This is performed recursively to compute small singular values.
-  - `"divide_and_conquer"` - A divide-and-conquer algorithm. LAPACK's gesdd.
-  - `"qr_iteration"` - Typically slower but more accurate than `"divide_and_conquer"`. LAPACK's gesvd.
 - `use_absolute_cutoff::Bool = false`: set if all probability weights below the `cutoff` value should be discarded, rather than the sum of discarded weights.
 - `use_relative_cutoff::Bool = true`: set if the singular values should be normalized for the sake of truncation.
 
 See also: [`factorize`](@ref)
 """
-function LinearAlgebra.svd(A::ITensor,
-                           Linds...;
-                           kwargs...)
+function svd(A::ITensor, Linds...; kwargs...)
   utags::TagSet = get(kwargs, :lefttags,
                       get(kwargs, :utags, "Link,u"))
   vtags::TagSet = get(kwargs, :righttags,
                       get(kwargs, :vtags, "Link,v"))
 
   # Keyword argument deprecations
-  #if haskey(kwargs, :utags) || haskey(kwargs, :vtags)
-  #  @warn "Keyword arguments `utags` and `vtags` are deprecated in favor of `leftags` and `righttags`."
-  #end
+  if haskey(kwargs, :utags) || haskey(kwargs, :vtags)
+    println("Keyword arguments `utags` and `vtags` are deprecated in favor of `leftags` and `righttags`.")
+  end
 
   Lis = commoninds(A, IndexSet(Linds...))
   Ris = uniqueinds(A, Lis)
@@ -83,8 +81,12 @@ function LinearAlgebra.svd(A::ITensor,
     AC = permute(AC, cL, cR)
   end
 
-  Uₜ, Sₜ, Vₜ, spec = svd(tensor(AC); kwargs...)
-  UC, S, VC = itensor.((Uₜ, Sₜ, Vₜ))
+  USVₜ = svd(tensor(AC); kwargs...)
+  if isnothing(USVₜ)
+    return nothing
+  end
+  Uₜ, Sₜ, Vₜ, spec = USVₜ
+  UC, S, VC = itensor(Uₜ), itensor(Sₜ), itensor(Vₜ)
 
   u = commonind(S, UC)
   v = commonind(S, VC)
@@ -141,21 +143,20 @@ struct TruncEigen{N}
 end
 
 # iteration for destructuring into components `D, V, spec, l, r = E`
-Base.iterate(E::TruncEigen) = (E.D, Val(:V))
-Base.iterate(E::TruncEigen, ::Val{:V}) = (E.V, Val(:spec))
-Base.iterate(E::TruncEigen, ::Val{:spec}) = (E.spec, Val(:l))
-Base.iterate(E::TruncEigen, ::Val{:l}) = (E.l, Val(:r))
-Base.iterate(E::TruncEigen, ::Val{:r}) = (E.r, Val(:done))
-Base.iterate(E::TruncEigen, ::Val{:done}) = nothing
+iterate(E::TruncEigen) = (E.D, Val(:V))
+iterate(E::TruncEigen, ::Val{:V}) = (E.V, Val(:spec))
+iterate(E::TruncEigen, ::Val{:spec}) = (E.spec, Val(:l))
+iterate(E::TruncEigen, ::Val{:l}) = (E.l, Val(:r))
+iterate(E::TruncEigen, ::Val{:r}) = (E.r, Val(:done))
+iterate(E::TruncEigen, ::Val{:done}) = nothing
 
-function LinearAlgebra.eigen(A::ITensor{N},
-                             Linds,
-                             Rinds;
-                             kwargs...) where {N}
+function eigen(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
+  # Turn off debug check for Zygote
+  # TODO: define an ignore function/macro using ChainRulesCore
   #@debug begin
-    if hasqns(A)
-      @assert flux(A) == QN()
-    end
+  #  if hasqns(A)
+  #    @assert flux(A) == QN()
+  #  end
   #end
 
   NL = length(Linds)
@@ -254,17 +255,13 @@ function LinearAlgebra.eigen(A::ITensor{N},
   return TruncEigen(D, V, Vt, spec, l, r)
 end
 
-function LinearAlgebra.eigen(A::ITensor;
-                             kwargs...)
+function eigen(A::ITensor; kwargs...)
   Ris = filterinds(A; plev = 0)
   Lis = Ris'
-
   return eigen(A, Lis, Ris; kwargs...)
 end
 
-function LinearAlgebra.qr(A::ITensor,
-                          Linds...;
-                          kwargs...)
+function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
   Lis = commoninds(A,IndexSet(Linds...))
   Ris = uniqueinds(A,Lis)
@@ -279,9 +276,7 @@ function LinearAlgebra.qr(A::ITensor,
 end
 
 # TODO: allow custom tags in internal indices?
-function NDTensors.polar(A::ITensor,
-                         Linds...;
-                         kwargs...)
+function polar(A::ITensor, Linds...; kwargs...)
   Lis = commoninds(A, IndexSet(Linds...))
   Ris = uniqueinds(A, Lis)
   Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
@@ -294,9 +289,7 @@ function NDTensors.polar(A::ITensor,
   return U, P, commoninds(U, P)
 end
 
-function factorize_qr(A::ITensor,
-                      Linds...;
-                      kwargs...)
+function factorize_qr(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   if ortho == "left"
     L,R,q = qr(A,Linds...; kwargs...)
@@ -309,12 +302,14 @@ function factorize_qr(A::ITensor,
   return L,R
 end
 
-function factorize_svd(A::ITensor,
-                       Linds...;
-                       kwargs...)
+function factorize_svd(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
-  alg::String = get(kwargs, :svd_alg, "recursive")
-  U, S, V, spec, u, v = svd(A, Linds...; kwargs..., alg = alg)
+  alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
+  USV = svd(A, Linds...; kwargs..., alg = alg)
+  if isnothing(USV)
+    return nothing
+  end
+  U, S, V, spec, u, v = USV
   if ortho == "left"
     L, R = U, S * V
   elseif ortho == "right"
@@ -333,9 +328,7 @@ function factorize_svd(A::ITensor,
   return L, R, spec
 end
 
-function factorize_eigen(A::ITensor,
-                         Linds...;
-                         kwargs...)
+function factorize_eigen(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   delta_A2 = get(kwargs, :eigen_perturbation, nothing)
   if ortho == "left"
@@ -382,9 +375,7 @@ In the future, other decompositions like QR (for block-sparse ITensors), polar, 
 
 For truncation arguments, see: [`svd`](@ref)
 """
-function LinearAlgebra.factorize(A::ITensor,
-                                 Linds...;
-                                 kwargs...)
+function factorize(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   tags::TagSet = get(kwargs, :tags, "Link,fact")
   plev::Int = get(kwargs, :plev, 0)
@@ -414,8 +405,10 @@ function LinearAlgebra.factorize(A::ITensor,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
 
-  dL,dR = dim(IndexSet(Linds...)), dim(IndexSet(setdiff(inds(A),Linds)...))
-  maxdim = get(kwargs,:maxdim, min(dL, dR))
+  Lis = IndexSet(Linds...)
+  Ris = uniqueinds(A, Lis)
+  dL, dR = dim(Lis), dim(Ris)
+  maxdim = get(kwargs, :maxdim, min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
 
   if isnothing(which_decomp)
@@ -429,7 +422,11 @@ function LinearAlgebra.factorize(A::ITensor,
   end
 
   if which_decomp == "svd"
-    L, R, spec = factorize_svd(A, Linds...; kwargs...)
+    LR = factorize_svd(A, Linds...; kwargs...)
+    if isnothing(LR)
+      return nothing
+    end
+    L, R, spec = LR
   elseif which_decomp == "eigen"
     L, R, spec = factorize_eigen(A, Linds...; kwargs...)
   elseif which_decomp == "qr"

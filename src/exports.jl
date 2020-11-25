@@ -174,15 +174,19 @@ export
 # tagset.jl
   # Types
   TagSet,
+  # Macros
+  @ts_str,
   # Methods
   addtags,
   hastags,
-  @ts_str,
 
 # mps/dmrg.jl
   dmrg,
 
 # mps/abstractmps.jl
+  # Macros
+  @preserve_ortho,
+  # Methods
   add,
   contract,
   common_siteind,
@@ -199,6 +203,7 @@ export
   lognorm,
   movesite,
   movesites,
+  ortho_lims,
   siteinds,
 
 # mps/mpo.jl

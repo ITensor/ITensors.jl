@@ -422,6 +422,13 @@ function maxdim(is::IndexSet)
   return md
 end
 
+"""
+    commontags(::IndexSet)
+
+Return a TagSet of the tags that are common to all of the indices.
+"""
+commontags(is::IndexSet) = commontags(is...)
+
 # 
 # Set operations
 #
@@ -983,7 +990,7 @@ function _swaptags(f::Function,
   if f(i)
     if hastags(i, tags1)
       return replacetags(i, tags1, tags2)
-    elseif hasteags(i, tags2)
+    elseif hastags(i, tags2)
       return replacetags(i, tags2, tags1)
     end
     return i

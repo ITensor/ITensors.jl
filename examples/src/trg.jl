@@ -52,7 +52,8 @@ function trg(T::ITensor;
 
     sₕ, sᵥ = s̃ₕ, s̃ᵥ
 
-    trT = abs((T * δ(sₕ, sₕ') * δ(sᵥ, sᵥ'))[])
+    trT = abs((T * dense(δ(sₕ, sₕ')) * dense(δ(sᵥ, sᵥ')))[])
+    #trT = abs((T * δ(sₕ, sₕ') * δ(sᵥ, sᵥ'))[])
     T = T / trT
     κ *= trT ^ (1 / 2 ^ n)
   end

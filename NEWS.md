@@ -1,3 +1,17 @@
+ITensors v0.1.27 Release Notes
+==============================
+* Use LAPACK's gesdd by default in SVD (PR #531).
+
+ITensors v0.1.26 Release Notes
+==============================
+* Introduce a density matrix algorithm for summing arbitrary numbers of MPS/MPO (non-QN and QN) (PR #528).
+* Introduce @preserve_ortho macro, which indicates that a block of code preserves the orthogonality limits of a specified MPS/MPO or set of MPS/MPO (PR #528).
+* Introduce the ortho_lims(::MPS/MPO) function, that returns the orthogonality limits as a range (PR #528).
+* Improves the (::Number * ::MPS/MPO) function by ensuring the number scales an MPS/MPO tensor within the orthogonality limits (PR #528).
+* Improve functionality for making an MPO that is a product of operators. In particular, MPO(s, "Id") now works for QN sites, and it adds notation like: MPO(s, n -> isodd(n) ? "S+" : "S-") (PR #528).
+* Add SiteType and op documentation.
+* Add unexported function ITensors.examples_dir to get examples directory.
+
 ITensors v0.1.25 Release Notes
 ==============================
 * Introduce imports.jl to organize import statements (PR #511).

@@ -261,6 +261,38 @@ end
     end
   end
 
+  @testset "+(::MPO, ::MPO)" begin
+    conserve_qns = true
+    s = siteinds("S=1/2", N; conserve_qns = conserve_qns)
+
+    ops = n -> isodd(n) ? "Sz" : "Id"
+    H₁ = MPO(s, ops)
+    H₂ = MPO(s, ops)
+
+    H = H₁ + H₂
+
+    @test inner(H, H) ≈ inner_add(H₁, H₂)
+    @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
+
+    α₁ = 2.2
+    α₂ = 3.4 + 1.2im
+
+    H = α₁ * H₁ + H₂
+
+    @test inner(H, H) ≈ inner_add((α₁, H₁), H₂)
+    @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
+
+    H = H₁ - H₂
+
+    @test inner(H, H) ≈ inner_add(H₁, (-1, H₂))
+    @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
+
+    H = α₁ * H₁ - α₂ * H₂
+
+    @test inner(H, H) ≈ inner_add((α₁, H₁), (-α₂, H₂))
+    @test maxlinkdim(H) ≤ maxlinkdim(H₁) + maxlinkdim(H₂)
+  end
+
   @testset "contract(::MPO, ::MPO)" begin
     psi = randomMPS(sites)
     K = randomMPO(sites)

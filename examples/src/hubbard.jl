@@ -68,15 +68,7 @@ function hubbard_2d_ky(; Nx::Int, Ny::Int,
             s2 = x * Ny + (py - qy + Ny) % Ny + 1
             s3 = x * Ny + py + 1
             s4 = x * Ny + ky + 1
-            if s1 == s4 && s2 == s3
-              ampo .+= (U/Ny), "Ndn", s1, "Nup", s2
-            elseif s1 == s4
-              ampo .+= (U/Ny), "Ndn", s1, "Cdagup", s2, "Cup", s3
-            elseif s2 == s3
-              ampo .+= (U/Ny), "Cdagdn", s1, "Cdn", s4, "Nup", s2
-            else
-              ampo .+= (U/Ny), "Cdagdn", s1, "Cdagup", s2, "Cup", s3, "Cdn", s4
-            end
+            ampo .+= (U / Ny), "Cdagdn", s1, "Cdagup", s2, "Cup", s3, "Cdn", s4
           end
         end
       end

@@ -12,14 +12,18 @@ struct SiteOp
   site::Int
 end
 
+convert(::Type{SiteOp}, op::Pair{String, Int}) =
+  SiteOp(first(op), last(op))
+
 name(s::SiteOp) = s.name
 site(s::SiteOp) = s.site
 
-Base.show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
+show(io::IO,s::SiteOp) = print(io,"\"$(name(s))\"($(site(s)))")
 
-Base.:(==)(s1::SiteOp,s2::SiteOp) = (s1.site==s2.site && s1.name==s2.name)
+(s1::SiteOp == s2::SiteOp) =
+  (s1.site == s2.site && s1.name == s2.name)
 
-function Base.isless(s1::SiteOp,s2::SiteOp)::Bool
+function isless(s1::SiteOp, s2::SiteOp)
   if site(s1) != site(s2)
     return site(s1) < site(s2)
   end
@@ -32,8 +36,7 @@ end
 
 const OpTerm = Vector{SiteOp}
 
-function Base.:(==)(o1::OpTerm,
-                    o2::OpTerm)
+function (o1::OpTerm == o2::OpTerm)
   (length(o1)==length(o2)) || return false
   for n=1:length(o1)
     (o1[n]!=o2[n]) && return false
@@ -41,8 +44,7 @@ function Base.:(==)(o1::OpTerm,
   return true
 end
 
-function Base.isless(o1::OpTerm,
-                     o2::OpTerm)::Bool
+function isless(o1::OpTerm, o2::OpTerm)
   if length(o1) != length(o2) 
     return length(o1) < length(o2)
   end
@@ -77,14 +79,13 @@ end
 coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
 
-Base.copy(t::MPOTerm) = MPOTerm(coef(t),copy(ops(t)))
+copy(t::MPOTerm) = MPOTerm(coef(t),copy(ops(t)))
 
-function Base.:(==)(t1::MPOTerm,
-                    t2::MPOTerm)
+function (t1::MPOTerm == t2::MPOTerm)
   return coef(t1) ≈ coef(t2) && ops(t1) == ops(t2)
 end
 
-function Base.isless(t1::MPOTerm, t2::MPOTerm)::Bool
+function isless(t1::MPOTerm, t2::MPOTerm)
   if ops(t1) == ops(t2)
     if coef(t1) ≈ coef(t2)
       return false
@@ -179,6 +180,8 @@ AutoMPO() = AutoMPO(Vector{MPOTerm}())
 data(ampo::AutoMPO) = ampo.data
 setdata!(ampo::AutoMPO,ndata) = (ampo.data = ndata)
 
+push!(ampo::AutoMPO, term) = push!(data(ampo), term)
+
 Base.:(==)(ampo1::AutoMPO,
            ampo2::AutoMPO) = data(ampo1) == data(ampo2)
 
@@ -257,23 +260,27 @@ function add!(ampo::AutoMPO,
   return
 end
 
-add!(ampo::AutoMPO,
-     op1::String, i1::Int,
-     op2::String, i2::Int) = add!(ampo,1.0,op1,i1,op2,i2)
+add!(ampo::AutoMPO, op1::String, i1::Int, op2::String, i2::Int) =
+  add!(ampo,1.0,op1,i1,op2,i2)
 
 function add!(ampo::AutoMPO,
               coef::Number,
               op1::String, i1::Int,
               op2::String, i2::Int,
               ops...)
-  push!(data(ampo), MPOTerm(coef, op1, i1, op2, i2, ops...))
+  push!(ampo, MPOTerm(coef, op1, i1, op2, i2, ops...))
   return ampo
 end
 
-add!(ampo::AutoMPO,
-     op1::String, i1::Int,
-     op2::String, i2::Int,
-     ops...) = add!(ampo, 1.0, op1, i1, op2, i2, ops...)
+function add!(ampo::AutoMPO, op1::String, i1::Int,
+              op2::String, i2::Int, ops...)
+  return add!(ampo, 1.0, op1, i1, op2, i2, ops...)
+end
+
+function add!(ampo::AutoMPO, ops::Vector{Pair{String,Int64}})
+  push!(ampo, MPOTerm(1.0, ops))
+  return ampo
+end
 
 """
     subtract!(ampo::AutoMPO,
@@ -303,21 +310,25 @@ function subtract!(ampo::AutoMPO,
                    op1::String, i1::Int,
                    op2::String, i2::Int,
                    ops...)
-  push!(data(ampo), -MPOTerm(coef, op1, i1, op2, i2, ops...))
+  push!(ampo, -MPOTerm(coef, op1, i1, op2, i2, ops...))
   return ampo
 end
 
-Base.:-(t::MPOTerm) = MPOTerm(-coef(t), ops(t))
+-(t::MPOTerm) = MPOTerm(-coef(t), ops(t))
 
-function Base.:+(ampo::AutoMPO,
-                 term::Tuple)
+function (ampo::AutoMPO + term::Tuple)
   ampo_plus_term = copy(ampo)
   add!(ampo_plus_term, term...)
   return ampo_plus_term
 end
 
-function Base.:-(ampo::AutoMPO,
-                 term::Tuple)
+function (ampo::AutoMPO + term::Vector{Pair{String,Int64}})
+  ampo_plus_term = copy(ampo)
+  add!(ampo_plus_term, term)
+  return ampo_plus_term
+end
+
+function (ampo::AutoMPO - term::Tuple)
   ampo_plus_term = copy(ampo)
   subtract!(ampo_plus_term, term...)
   return ampo_plus_term

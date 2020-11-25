@@ -1,29 +1,70 @@
 using ITensors
 using LinearAlgebra
 using QuadGK
+using ArrayInterface # For Base.setindex on Array
+
+using Zygote: @adjoint
+
+# From Zygote draft PR:
+# https://github.com/FluxML/Zygote.jl/pull/785/files#diff-a9e025ac90a30d27e7512546971c5d92ea7c3496ba759336ae6bf1cace6db4b2R237-R248
+_ndims(::Base.HasShape{d}) where {d} = d
+_ndims(x) = Base.IteratorSize(x) isa Base.HasShape ? _ndims(Base.IteratorSize(x)) : 1
+
+@adjoint function Iterators.product(xs...)
+  d = 1
+  Iterators.product(xs...), dy -> ntuple(length(xs)) do n
+    nd = _ndims(xs[n])
+    dims = ntuple(i -> i<d ? i : i+nd, ndims(dy)-nd)
+    d += nd
+    reshape(sum(y->y[n], dy; dims=dims), axes(xs[n]))
+  end
+end
+
+Base.getindex(::Nothing, ::Int64) = nothing
+Base.:+(::Nothing, ::Nothing) = nothing
+Base.zero(::Nothing) = nothing
 
 function ising_mpo(pair_sₕ::Pair{<: Index, <: Index},
                    pair_sᵥ::Pair{<: Index, <: Index},
-                   β::Real, J::Real = 1.0;
+                   β::Real, h::Real = 0.0, J::Real = 1.0;
                    sz::Bool = false)
   sₕ, sₕ′ = pair_sₕ
   sᵥ, sᵥ′ = pair_sᵥ
   @assert dim(sₕ) == dim(sᵥ)
   d = dim(sₕ)
-  T = ITensor(sₕ, sₕ′, sᵥ, sᵥ′)
-  for i in 1:d
-    T[i, i, i, i] = 1.0
+
+  function f_ising(i, j, k, l, β, h)
+    if i == j == k == l
+      if i == 1
+        return exp(-β*h)
+      else
+        return exp(β*h)
+      end
+    end
+    return 0.0
   end
+
+  Tₐ = [f_ising(i, j, k, l, β, h) for i in 1:d, j in 1:d, k in 1:d, l in 1:d]
+  T = itensor(Tₐ, sₕ, sₕ′, sᵥ, sᵥ′)
+
+  #T = ITensor(sₕ, sₕ′, sᵥ, sᵥ′)
+  #for i in 1:d
+    # XXX Mutation doesn't work with Zygote
+    #T[i, i, i, i] = 1.0
+    #T = itensor(Base.setindex(array(T), 1.0, i, i, i, i), inds(T))
+  #end
+
   if sz
     T[1, 1, 1, 1] = -1.0
+    # XXX Mutation doesn't work with Zygote
+    #T = itensor(Base.setindex(array(T), -1.0, 1, 1, 1, 1), inds(T))
   end
   s̃ₕ, s̃ₕ′, s̃ᵥ, s̃ᵥ′ = sim.((sₕ, sₕ′, sᵥ, sᵥ′))
   T̃ = T * δ(sₕ, s̃ₕ) * δ(sₕ′, s̃ₕ′) * δ(sᵥ, s̃ᵥ) * δ(sᵥ′, s̃ᵥ′)
 
-  # Alternative method
-  #Q = [exp(β * J) exp(-β * J); exp(-β * J) exp(β * J)]
-  #X = √Q
-
+  # Analytical square root of Q:
+  # Q = [exp(β * J) exp(-β * J); exp(-β * J) exp(β * J)]
+  # X = √Q
   f(λ₊, λ₋) = [(λ₊ + λ₋) / 2 (λ₊ - λ₋) / 2
                (λ₊ - λ₋) / 2 (λ₊ + λ₋) / 2]
   λ₊ = √(exp(β * J) + exp(-β * J))
