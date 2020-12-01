@@ -1,5 +1,11 @@
-TBLIS is a permutation-free tensor contraction library (https://github.com/devinamatthews/tblis). By default, ITensors.jl performs tensor contractions by first permuting the tensors 
-so the contraction can be mapped to a matrix multiplication, which is then performed by BLAS.
+TBLIS is a permutation-free tensor contraction library 
+(https://github.com/devinamatthews/tblis). By default, ITensors.jl performs 
+tensor contractions by first permuting the tensors 
+so the contraction can be mapped to a matrix multiplication, which is then 
+performed by BLAS. Instead, TBLIS avoids BLAS entirely, using a generalization of 
+BLAS-like general matrix multiplication (GEMM) algorithms directly to tensor
+contractions. See also other implementations of GEMM-like tensor contractions 
+like GETT (https://github.com/HPAC/tccg).
 
 To use TBLIS as a contraction backend in ITensors.jl, first install TBLIS.jl: https://github.com/mtfishman/TBLIS.jl
 
