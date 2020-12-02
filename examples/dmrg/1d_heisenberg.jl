@@ -1,5 +1,8 @@
 using ITensors
 using Printf
+using Random
+
+Random.seed!(1234)
 
 let
   N = 100

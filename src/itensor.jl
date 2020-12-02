@@ -1253,9 +1253,9 @@ function mul!(C::ITensor, A::ITensor, B::ITensor,
                                                          inds(A),
                                                          inds(B))
   CT = NDTensors.contract!!(tensor(C), labelsC,
-                          tensor(A), labelsA,
-                          tensor(B), labelsB,
-                          α, β)
+                            tensor(A), labelsA,
+                            tensor(B), labelsB,
+                            α, β)
   C = itensor(CT)
   return C
 end
@@ -1267,8 +1267,8 @@ function mul!(C::ITensor, A::ITensor, B::ITensor)
                                                          inds(A),
                                                          inds(B))
   CT = NDTensors.contract!!(tensor(C), labelsC,
-                          tensor(A), labelsA,
-                          tensor(B), labelsB)
+                            tensor(A), labelsA,
+                            tensor(B), labelsB)
   C = itensor(CT)
   return C
 end

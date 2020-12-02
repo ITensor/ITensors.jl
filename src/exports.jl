@@ -10,7 +10,10 @@ export
 # NDTensors module
   # Types
   Spectrum,
+  # Methods
+  disable_tblis!,
   eigs,
+  enable_tblis!,
   entropy,
   truncerror,
 

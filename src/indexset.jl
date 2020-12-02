@@ -1082,9 +1082,15 @@ function compute_contraction_labels(Cis::IndexSet{NC},
   for i = 1:NC
     locA = findfirst(==(Cis[i]), Ais)
     if !isnothing(locA)
+      if Alabels[locA] < 0
+        error("The noncommon indices of $Ais and $Bis must be the same as the indices $Cis.")
+      end
       Clabels[i] = Alabels[locA]
     else
       locB = findfirst(==(Cis[i]), Bis)
+      if isnothing(locB) || Blabels[locB] < 0
+        error("The noncommon indices of $Ais and $Bis must be the same as the indices $Cis.")
+      end
       Clabels[i] = Blabels[locB]
     end
   end

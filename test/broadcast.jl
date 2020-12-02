@@ -147,7 +147,7 @@ using ITensors,
     C = randomITensor(i,i')
     @test_throws ErrorException C .= A .+ B
     @test_throws ErrorException C = A .+ B
-    @test_throws BoundsError C .= A .* B
+    @test_throws ErrorException C .= A .* B
   end
 
   @testset "Contraction" begin
