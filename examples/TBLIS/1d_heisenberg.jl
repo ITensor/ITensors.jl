@@ -25,8 +25,8 @@ let
   cutoff!(sweeps_compile, 1E-15)
 
   sweeps = Sweeps(6)
-  maxdim!(sweeps, 10,20,100,100,200,300)
-  cutoff!(sweeps, 1E-15)
+  maxdim!(sweeps, 20,100,200,300)
+  cutoff!(sweeps, 0.0)
   @show sweeps
 
   #
