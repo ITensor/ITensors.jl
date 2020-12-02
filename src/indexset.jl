@@ -920,6 +920,13 @@ settags(is::IndexSet,
         kwargs...) = settags(fmatch(args...; kwargs...),
                              is, tags)
 
+"""
+    CartesianIndices(is::IndexSet)
+
+Create a CartesianIndices iterator for an IndexSet.
+"""
+CartesianIndices(is::IndexSet) = CartesianIndices(dims(is))
+
 function removetags(f::Function,
                     is::IndexSet,
                     args...)

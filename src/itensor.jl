@@ -161,9 +161,35 @@ setstore(T::ITensor, st) = itensor(st,inds(T))
 """
     CartesianIndices(A::ITensor)
 
-Iterate over the CartesianIndices of an ITensor.
+Create a CartesianIndices iterator for an ITensor. Helpful for
+iterating over all elements of the ITensor.
+
+julia> i = Index(2, "i")
+(dim=2|id=90|"i")
+
+julia> j = Index(3, "j")
+(dim=3|id=554|"j")
+
+julia> A = randomITensor(i, j)
+ITensor ord=2 (dim=2|id=90|"i") (dim=3|id=554|"j")
+Dense{Float64,Array{Float64,1}}
+
+julia> C = CartesianIndices(A)
+2×3 CartesianIndices{2,Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}}:
+ CartesianIndex(1, 1)  CartesianIndex(1, 2)  CartesianIndex(1, 3)
+ CartesianIndex(2, 1)  CartesianIndex(2, 2)  CartesianIndex(2, 3)
+
+julia> for c in C
+         @show c, A[c]
+       end
+(c, A[c]) = (CartesianIndex(1, 1), 0.9867887290267864)
+(c, A[c]) = (CartesianIndex(2, 1), -0.5967323222288754)
+(c, A[c]) = (CartesianIndex(1, 2), 0.9675791778518225)
+(c, A[c]) = (CartesianIndex(2, 2), 0.2842549524334651)
+(c, A[c]) = (CartesianIndex(1, 3), -0.023483276282564795)
+(c, A[c]) = (CartesianIndex(2, 3), -0.4877709982071688)
 """
-CartesianIndices(A::ITensor) = CartesianIndices(dims(A))
+CartesianIndices(A::ITensor) = CartesianIndices(inds(A))
 
 #
 # ITensor constructors
@@ -604,13 +630,13 @@ A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 """
 function getindex(T::ITensor{N},
                   I::Vararg{Int,N}) where {N}
+  @boundscheck checkbounds(tensor(T), I...)
   return tensor(T)[I...]::Number
 end
 
 # Version accepting CartesianIndex, useful when iterating over
 # CartesianIndices
-getindex(T::ITensor{N}, I::CartesianIndex{N}) where {N} =
-  tensor(T)[I]::Number
+getindex(T::ITensor{N}, I::CartesianIndex{N}) where {N} = T[Tuple(I)...]
 
 """
     getindex(T::ITensor, ivs...)
@@ -656,9 +682,11 @@ Index ordering of the ITensor.
 i = Index(2; tags = "i")
 A = ITensor(i, i')
 A[1, 2] = 1.0 # same as: A[i => 1, i' => 2] = 1.0
+A[2, :] = [2.0 3.0]
 ```
 """
 function setindex!(T::ITensor, x::Number, I::Int...)
+  @boundscheck checkbounds(tensor(T), I...)
   fluxT = flux(T)
   if !isnothing(fluxT) && fluxT != flux(T, I...)
     error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
@@ -682,12 +710,35 @@ of `IndexVal`s or `Pair{<:Index, Int}`.
 i = Index(2; tags = "i")
 A = ITensor(i, i')
 A[i => 1, i' => 2] = 1.0 # same as: A[i' => 2, i => 1] = 1.0
+A[i => 2, i' => :] = [2.0 3.0]
 ```
 """
 function setindex!(T::ITensor, x::Number, ivs...)
   p = NDTensors.getperm(inds(T), ind.(ivs))
   vals = NDTensors.permute(val.(ivs), p)
   T[vals...] = x
+  return T
+end
+
+function setindex!(T::ITensor, A::AbstractArray, I...)
+  @boundscheck checkbounds(tensor(T), I...)
+  TR = setindex!!(tensor(T), A, I...)
+  setstore!(T, store(TR))
+  return T
+end
+
+function setindex!(T::ITensor, A::AbstractArray,
+                   ivs::Pair{<:Index}...)
+  input_inds = IndexSet(first.(ivs))
+  p = NDTensors.getperm(inds(T), input_inds)
+  # Base.to_indices changes Colons into proper ranges, here
+  # using the dimensions of the indices.
+  vals = to_indices(CartesianIndices(input_inds), last.(ivs))
+  # Lazily permute the array to correctly fit into the ITensor,
+  # accounting for the input indices being in a different order
+  # from the ITensor indices.
+  pvals = NDTensors.permute(vals, p)
+  T[pvals...] = PermutedDimsArray(reshape(A, length.(vals)), p)
   return T
 end
 
