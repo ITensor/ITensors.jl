@@ -18,7 +18,7 @@ include("util.jl")
   @testset "Real Matrix" begin
     M = rand(10,20)
     U,S,V = NDTensors.svd_recursive(M)
-    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-13
+    @test norm(U*LinearAlgebra.Diagonal(S)*V'-M) < 1E-12
 
     M = rand(20,10)
     U,S,V = NDTensors.svd_recursive(M)
