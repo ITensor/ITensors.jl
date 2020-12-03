@@ -664,7 +664,7 @@ function getindex(T::ITensor)
   return tensor(T)[]::Number
 end
 
-lastindex(A::ITensor, n::Int64) = dim(A, n)
+lastindex(A::ITensor, n::Int64) = error("`lastindex(::ITensor, ::Int)` is purposefully not defined (it doesn't work properly with the notation `A[j => end, i => end]` if `A` has indices ordered `(i, j)`).")
 
 # Implement when ITensors can be indexed by a single integer
 #lastindex(A::ITensor) = dim(A)
