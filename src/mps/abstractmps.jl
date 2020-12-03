@@ -760,6 +760,16 @@ function site_combiners(ψ::AbstractMPS)
   return Cs
 end
 
+# The maximum link dimensions when adding MPS/MPO
+function _add_maxlinkdims(ψ⃗::AbstractMPS...)
+  N = length(ψ⃗[1])
+  maxdims = Vector{Int}(undef, N-1)
+  for b in 1:N-1
+    maxdims[b] = sum(ψ -> linkdim(ψ, b), ψ⃗)
+  end
+  return maxdims
+end
+
 """
     +(A::MPS/MPO...; kwargs...)
     add(A::MPS/MPO...; kwargs...)
@@ -839,11 +849,15 @@ function +(ψ⃗::MPST...;
   ρ⃗ₙ = [prime(ψᵢ[N], s[N]) * dag(ψᵢ[N]) for ψᵢ in ψ⃗]
   ρₙ = sum(ρ⃗ₙ)
 
+  # Maximum theoretical link dimensions
+  add_maxlinkdims = _add_maxlinkdims(ψ⃗...)
+
   C⃗ₙ = last.(ψ⃗)
   for n in reverse(2:N)
     Dₙ, Vₙ, spec = eigen(ρₙ; ishermitian = true,
                              tags = tags(linkind(ψ⃗[1], n-1)),
                              cutoff = cutoff,
+                             maxdim = add_maxlinkdims[n-1],
                              kwargs...)
     lₙ₋₁ = commonind(Dₙ, Vₙ)
 
