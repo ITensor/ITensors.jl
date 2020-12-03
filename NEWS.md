@@ -1,3 +1,10 @@
+ITensors v0.1.28 Release Notes
+==============================
+* Add support for setting slices of an ITensor (PR #535).
+* Add bond dimension maximum in addition of MPS/MPO based on sums of bond dimensions of original MPS/MPO (PR # 535).
+* Add TBLIS contraction support. When TBLIS.jl is installed, the command "using TBLIS" turns on TBLIS support. enable_tblis!() and disable_tblis!() also turn TBLIS backend on and off (PR #533).
+* Add DMRG and contraction examples of using TBLIS contraction backend (PR #533).
+
 ITensors v0.1.27 Release Notes
 ==============================
 * Use LAPACK's gesdd by default in SVD (PR #531).
