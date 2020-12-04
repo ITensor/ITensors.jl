@@ -1,6 +1,18 @@
 
+# indexset.jl
+@deprecate store(is::IndexSet) data(is)
+
 # itensor.jl
 @deprecate addblock! insertblock!
+@deprecate commonindex(args...; kwargs...) commonind(args...; kwargs...)
+@deprecate findindex(args...; kwargs...) firstind(args...; kwargs...)
+@deprecate findinds(args...; kwargs...) inds(args...; kwargs...)
+@deprecate linkindex(args...; kwargs...) linkind(args...; kwargs...)
+@deprecate matmul(A::ITensor, B::ITensor) product(A, B)
+@deprecate replaceindex!(args...; kwargs...) replaceind!(args...; kwargs...)
+@deprecate siteindex(args...; kwargs...) siteind(args...; kwargs...)
+@deprecate uniqueindex(args...; kwargs...) uniqueind(args...; kwargs...)
+
 
 # mps/abstractmps.jl
 @deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
@@ -23,4 +35,7 @@
 
 # physics/autompo.jl
 @deprecate toMPO(args...; kwargs...) MPO(args...; kwargs...)
+
+# qn/qn.jl
+@deprecate store(qn::QN) data(qn)
 

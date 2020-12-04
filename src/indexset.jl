@@ -1406,5 +1406,3 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   return IndexSet(it)
 end
 
-@deprecate store(is::IndexSet) data(is)
-

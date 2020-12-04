@@ -1974,23 +1974,3 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   return itensor(store,inds)
 end
 
-#
-# Deprecations
-#
-
-@deprecate findindex(args...; kwargs...) firstind(args...; kwargs...)
-
-@deprecate findinds(args...; kwargs...) inds(args...; kwargs...)
-
-@deprecate commonindex(args...; kwargs...) commonind(args...; kwargs...)
-
-@deprecate uniqueindex(args...; kwargs...) uniqueind(args...; kwargs...)
-
-@deprecate replaceindex!(args...; kwargs...) replaceind!(args...; kwargs...)
-
-@deprecate siteindex(args...; kwargs...) siteind(args...; kwargs...)
-
-@deprecate linkindex(args...; kwargs...) linkind(args...; kwargs...)
-
-@deprecate matmul(A::ITensor, B::ITensor) product(A, B)
-
