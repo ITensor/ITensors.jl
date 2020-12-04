@@ -309,7 +309,7 @@ function factorize_svd(A::ITensor, Linds...; kwargs...)
   if ortho == "left"
     L, R = U, S * V
   elseif ortho == "right"
-    L,R = U*S,V
+    L,R = U * S, V
   elseif ortho == "none"
     sqrtS = S
     sqrtS .= sqrt.(S)
