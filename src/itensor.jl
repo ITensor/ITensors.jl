@@ -1779,10 +1779,10 @@ function checkflux(T::ITensor)
   return checkflux(T, fluxTb1)
 end
 
-function addblock!(T::ITensor, args...)
+function insertblock!(T::ITensor, args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) && 
    error("Block does not match current flux")
-  TR = addblock!!(tensor(T), args...)
+  TR = insertblock!!(tensor(T), args...)
   setstore!(T, store(TR))
   return T
 end

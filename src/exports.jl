@@ -103,7 +103,6 @@ export
   ITensor,
   # Methods
   ⊙,
-  addblock!,
   addtags!,
   apply,
   array,
@@ -128,6 +127,7 @@ export
   hassameinds,
   ind,
   inds,
+  insertblock!,
   itensor,
   mul!,
   matrix,

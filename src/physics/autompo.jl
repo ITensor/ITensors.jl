@@ -984,5 +984,3 @@ function MPO(ampo::AutoMPO,
   return svdMPO(ampo,sites;kwargs...)
 end
 
-@deprecate toMPO(args...; kwargs...) MPO(args...; kwargs...)
-

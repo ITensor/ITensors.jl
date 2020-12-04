@@ -66,7 +66,6 @@ import LinearAlgebra:
 
 import NDTensors:
   # functions
-  addblock!,
   array,
   blockoffsets,
   contract,
@@ -75,6 +74,7 @@ import NDTensors:
   dims,
   ind,
   inds,
+  insertblock!,
   matrix,
   #maxdim,
   mindim,
