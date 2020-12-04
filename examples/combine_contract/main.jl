@@ -12,8 +12,8 @@ function main(; Nmax = 8)
     println()
 
     d = 1
-    i = Index(QN(0) => d, QN(1) => d)
-    is = IndexSet(ntuple(n -> settags(i, "i$n"), Val(N)))
+    i = Index(QN(0, 2) => d, QN(1, 2) => d)
+    is = IndexSet(n -> settags(i, "i$n"), N)
     A = randomITensor(is'..., dag(is)...)
     B = randomITensor(is'..., dag(is)...)
 
