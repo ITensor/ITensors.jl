@@ -9,6 +9,7 @@ using Test
     "not.jl",
     "itensor.jl",
     "itensor_slice.jl",
+    "itensor_combine_contract.jl",
     "broadcast.jl",
     "diagitensor.jl",
     "contract.jl",
