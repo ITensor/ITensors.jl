@@ -28,10 +28,14 @@ export
   svd,
 
 # global_variables.jl
+  # Methods
+  disable_combine_contract!,
   disable_warn_order!,
+  enable_combine_contract!,
   get_warn_order,
   set_warn_order!,
   reset_warn_order!,
+  # Macros
   @disable_warn_order,
   @reset_warn_order,
   @set_warn_order,

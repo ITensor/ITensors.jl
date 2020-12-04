@@ -1267,6 +1267,54 @@ end
 (A::ITensor - B::ITensor) =
   error("cannot subtract ITensors with different numbers of indices")
 
+function _contract(A::ITensor, B::ITensor)
+  (labelsA,labelsB) = compute_contraction_labels(inds(A),inds(B))
+  CT = contract(tensor(A),labelsA,tensor(B),labelsB)
+  C = itensor(CT)
+  warnTensorOrder = get_warn_order()
+  if !isnothing(warnTensorOrder) > 0 &&
+     order(C) >= warnTensorOrder
+     #@warn "Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_order!(::Int)`, `reset_warn_order!()`, and `disable_warn_order!()`."
+     println("Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_order!(::Int)`, `reset_warn_order!()`, and `disable_warn_order!()`.")
+     show(stdout, MIME"text/plain"(), stacktrace())
+     println()
+  end
+  return C
+end
+
+_contract(T::ITensor, ::Nothing) = T
+
+dag(::Nothing) = nothing
+
+iscombiner(T::ITensor) = (store(T) isa Combiner)
+
+isdiag(T::ITensor) = (store(T) isa Diag || store(T) isa DiagBlockSparse)
+
+function can_combine_contract(A::ITensor, B::ITensor)
+  return hasqns(A) && hasqns(B) &&
+         !iscombiner(A) && !iscombiner(B) &&
+         !isdiag(A) && !isdiag(B)
+end
+
+function combine_contract(A::ITensor, B::ITensor)
+  # Combine first before contracting
+  C = if can_combine_contract(A, B)
+    uniqueindsA = uniqueinds(A, B)
+    uniqueindsB = uniqueinds(B, A)
+    commonindsAB = commoninds(A, B)
+    combinerA = isempty(uniqueindsA) ? nothing : combiner(uniqueindsA)
+    combinerB = isempty(uniqueindsB) ? nothing : combiner(uniqueindsB)
+    combinerAB = isempty(commonindsAB) ? nothing : combiner(commonindsAB)
+    AC = _contract(_contract(A, combinerA), combinerAB)
+    BC = _contract(_contract(B, combinerB), dag(combinerAB))
+    CC = _contract(AC, BC)
+    _contract(_contract(CC, dag(combinerA)), dag(combinerB))
+  else
+    _contract(A, B)
+  end
+  return C
+end
+
 """
     A::ITensor * B::ITensor
 
@@ -1279,17 +1327,7 @@ modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
 """
 function (A::ITensor * B::ITensor)
-  (labelsA,labelsB) = compute_contraction_labels(inds(A),inds(B))
-  CT = contract(tensor(A),labelsA,tensor(B),labelsB)
-  C = itensor(CT)
-  warnTensorOrder = get_warn_order()
-  if !isnothing(warnTensorOrder) > 0 &&
-     order(C) >= warnTensorOrder
-     #@warn "Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_order!(::Int)`, `reset_warn_order!()`, and `disable_warn_order!()`."
-     println("Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_order!(::Int)`, `reset_warn_order!()`, and `disable_warn_order!()`.")
-     show(stdout, MIME"text/plain"(), stacktrace())
-     println()
-  end
+  C = use_combine_contract() ? combine_contract(A, B) : _contract(A, B)
   return C
 end
 

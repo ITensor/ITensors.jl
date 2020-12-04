@@ -1,4 +1,8 @@
 
+#
+# Warn about the order of the ITensor after contractions
+#
+
 const default_warn_order = 14
 
 const warn_order =
@@ -121,5 +125,27 @@ macro reset_warn_order(block)
   end
 end
 
+#
+# A global timer used with TimerOutputs.jl
+#
+
 const GLOBAL_TIMER = TimerOutput()
+
+#
+# Turn enable or disable combining QN ITensors before contracting
+#
+
+const _use_combine_contract = Ref(false)
+
+use_combine_contract() = _use_combine_contract[]
+
+function enable_combine_contract!()
+  _use_combine_contract[] = true
+  return nothing
+end
+
+function disable_combine_contract!()
+  _use_combine_contract[] = false
+  return nothing
+end
 
