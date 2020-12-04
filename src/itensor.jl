@@ -1759,7 +1759,7 @@ function flux(T::ITensor)
   (!hasqns(T) || isempty(T)) && return nothing
   @debug checkflux(T)
   bofs = blockoffsets(T)
-  block1 = nzblock(bofs, 1)
+  block1 = first(first(bofs))
   return flux(T, block1)
 end
 

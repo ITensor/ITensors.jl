@@ -4,27 +4,25 @@ import Random: seed!
 
 seed!(12345)
 
-@testset "ITensor combine contract" begin
-  for N in 1:5
-    d = 1
-    i = Index(QN(0) => d, QN(1) => d)
-    is = IndexSet(ntuple(n -> settags(i, "i$n"), Val(N)))
-    A = randomITensor(is'..., dag(is)...)
-    B = randomITensor(is'..., dag(is)...)
+@testset "ITensor combine contract order $(2*N) tensors" for N in 1:5
+  d = 1
+  i = Index(QN(0) => d, QN(1) => d)
+  is = IndexSet(ntuple(n -> settags(i, "i$n"), Val(N)))
+  A = randomITensor(is'..., dag(is)...)
+  B = randomITensor(is'..., dag(is)...)
 
-    @test !ITensors.use_combine_contract()
+  @test !ITensors.use_combine_contract()
 
-    C_contract = A' * B
+  C_contract = A' * B
 
-    enable_combine_contract!()
-    @test ITensors.use_combine_contract()
+  enable_combine_contract!()
+  @test ITensors.use_combine_contract()
 
-    C_combine_contract = A' * B
+  C_combine_contract = A' * B
 
-    disable_combine_contract!()
-    @test !ITensors.use_combine_contract()
+  disable_combine_contract!()
+  @test !ITensors.use_combine_contract()
 
-    @test C_contract ≈ C_combine_contract
-  end
+  @test C_contract ≈ C_combine_contract
 end
 

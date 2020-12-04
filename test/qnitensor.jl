@@ -183,7 +183,7 @@ Random.seed!(1234)
   @testset "Check flux when setting elements" begin
     i = Index(QN(0)=>1,QN(1)=>1; tags="i")
     A = randomITensor(QN(0),i,dag(i'))
-    @test_throws ErrorException A[i(1),i'(2)] = 1.0
+    @test_throws KeyError A[i(1),i'(2)] = 1.0
   end
 
   @testset "Random constructor" begin
