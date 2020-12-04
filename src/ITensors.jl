@@ -22,24 +22,6 @@ using StaticArrays
 using TimerOutputs
 
 #####################################
-# Global flags
-#
-const _use_combine_contract = Ref(false)
-
-use_combine_contract() = _use_combine_contract[]
-
-function enable_combine_contract!()
-  _use_combine_contract[] = true
-  return nothing
-end
-
-function disable_combine_contract!()
-  _use_combine_contract[] = false
-  return nothing
-end
-
-
-#####################################
 # Directory helper functions (useful for
 # running examples)
 #
