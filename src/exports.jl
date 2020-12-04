@@ -118,6 +118,7 @@ export
   δ,
   diagITensor,
   dot,
+  eachnzblock,
   firstind,
   filterinds,
   hadamard_product,

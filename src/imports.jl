@@ -72,6 +72,7 @@ import NDTensors:
   dense,
   dim,
   dims,
+  eachnzblock,
   ind,
   inds,
   insertblock!,

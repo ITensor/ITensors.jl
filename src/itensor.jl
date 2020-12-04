@@ -1736,6 +1736,8 @@ mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
 
 hasqns(T::ITensor) = hasqns(inds(T))
 
+eachnzblock(T::ITensor) = eachnzblock(tensor(T))
+
 nnz(T::ITensor) = nnz(tensor(T))
 
 nnzblocks(T::ITensor) = nnzblocks(tensor(T))
