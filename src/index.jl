@@ -495,7 +495,7 @@ Return the Index of the IndexVal.
 """
 NDTensors.ind(iv::IndexVal) = iv.ind
 
-NDTensors.ind(iv::Pair{<:Index,Int}) = iv.first
+NDTensors.ind(iv::Pair{<:Index}) = first(iv)
 
 """
     val(iv::IndexVal)
@@ -504,7 +504,7 @@ Return the value of the IndexVal.
 """
 val(iv::IndexVal) = iv.val
 
-val(iv::Pair{<:Index,Int}) = iv.second
+val(iv::Pair{<:Index}) = last(iv)
 
 """
     isindequal(i::Index, iv::IndexVal)
