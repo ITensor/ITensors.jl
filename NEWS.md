@@ -1,3 +1,9 @@
+ITensors v0.1.29 Release Notes
+==============================
+* Add global flag for combining before contracting QN ITensors, control with enable/disable_combine_contract!(). This can speed up the contractions of high order QN ITensors (PR #536).
+* Fix bug when using "end" syntax when indexing ITensors where the Index ordering doesn't match the internal ITensor Index order (PR #537).
+* Increase NDTensors to v0.1.18, which includes a variety of dense and sparse contraction optimizations.
+
 ITensors v0.1.28 Release Notes
 ==============================
 * Add support for setting slices of an ITensor (PR #535).
