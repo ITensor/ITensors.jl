@@ -615,6 +615,21 @@ Same as `T[]`.
 """
 scalar(T::ITensor) = T[]::Number
 
+struct LastVal
+  n::Int
+end
+
+lastindex(A::ITensor, n::Int64) = LastVal(n)
+
+# Implement when ITensors can be indexed by a single integer
+#lastindex(A::ITensor) = dim(A)
+
+lastval_to_int(n::Int, ::LastVal) = n
+
+lastval_to_int(::Int, n::Int) = n
+
+lastval_to_int(T::ITensor, I...) = lastval_to_int.(dims(T), I)
+
 """
     getindex(T::ITensor, I::Int...)
 
@@ -629,7 +644,8 @@ A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 ```
 """
 function getindex(T::ITensor{N},
-                  I::Vararg{Int,N}) where {N}
+                  I::Vararg{Union{Int, LastVal}, N}) where {N}
+  I = lastval_to_int(T, I...)
   @boundscheck checkbounds(tensor(T), I...)
   return tensor(T)[I...]::Number
 end
@@ -663,11 +679,6 @@ function getindex(T::ITensor)
   end
   return tensor(T)[]::Number
 end
-
-lastindex(A::ITensor, n::Int64) = error("`lastindex(::ITensor, ::Int)` is purposefully not defined (it doesn't work properly with the notation `A[j => end, i => end]` if `A` has indices ordered `(i, j)`).")
-
-# Implement when ITensors can be indexed by a single integer
-#lastindex(A::ITensor) = dim(A)
 
 """
     setindex!(T::ITensor, x::Number, I::Int...)
