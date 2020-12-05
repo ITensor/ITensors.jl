@@ -43,7 +43,20 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     a = Index(2)
     b = Index(3)
     A = randomITensor(a, b)
-    @test_broken A[end, end] == A[a => 2, b => 3]
+    @test A[end, end] == A[a => 2, b => 3]
+    @test A[2, end] == A[a => 2, b => 3]
+    @test A[1, end] == A[a => 1, b => 3]
+    @test A[end, 2] == A[a => 2, b => 2]
+    @test A[a => end, b => end] == A[a => 2, b => 3]
+    @test A[a => 2, b => end] == A[a => 2, b => 3]
+    @test A[a => 1, b => end] == A[a => 1, b => 3]
+    @test A[a => end, b => 3] == A[a => 2, b => 3]
+    @test A[a => end, b => 2] == A[a => 2, b => 2]
+    @test A[b => end, a => end] == A[a => 2, b => 3]
+    @test A[b => 2, a => end] == A[a => 2, b => 2]
+    @test A[b => 1, a => end] == A[a => 2, b => 1]
+    @test A[b => end, a => 2] == A[a => 2, b => 3]
+    @test A[b => end, a => 1] == A[a => 1, b => 3]
   end
 
   @testset "Random" begin
