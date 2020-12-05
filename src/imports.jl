@@ -90,7 +90,9 @@ import NDTensors:
   sum,
   tensor,
   truncate!,
-  vector
+  vector,
+  # Deprecated
+  addblock!
 
 import Random:
   randn!

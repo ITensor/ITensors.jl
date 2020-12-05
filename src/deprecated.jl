@@ -3,7 +3,6 @@
 @deprecate store(is::IndexSet) data(is)
 
 # itensor.jl
-@deprecate addblock! insertblock!
 @deprecate commonindex(args...; kwargs...) commonind(args...; kwargs...)
 @deprecate findindex(args...; kwargs...) firstind(args...; kwargs...)
 @deprecate findinds(args...; kwargs...) inds(args...; kwargs...)

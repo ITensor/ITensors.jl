@@ -16,6 +16,8 @@ export
   enable_tblis!,
   entropy,
   truncerror,
+  # Deprecated
+  addblock!,
 
 # argsdict/argsdict.jl
   argsdict,
