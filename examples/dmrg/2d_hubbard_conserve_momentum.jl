@@ -1,4 +1,7 @@
 using ITensors
+using Random
+
+Random.seed!(1234)
 
 include(joinpath("..", "src", "electronk.jl"))
 include(joinpath("..", "src", "hubbard.jl"))
