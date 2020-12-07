@@ -1771,8 +1771,7 @@ If the ITensor is empty or it has no QNs, returns `nothing`.
 function flux(T::ITensor)
   (!hasqns(T) || isempty(T)) && return nothing
   @debug checkflux(T)
-  bofs = blockoffsets(T)
-  block1 = first(first(bofs))
+  block1 = first(eachnzblock(T))
   return flux(T, block1)
 end
 

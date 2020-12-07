@@ -1,11 +1,11 @@
 using BenchmarkTools
 using ITensors
 
-function main(; Nmax = 8)
+function main(; Nrange = 1:8)
   # Don't warn about large tensor orders
   disable_warn_order!()
 
-  for N in 1:Nmax
+  for N in Nrange
     println("#################################################")
     println("# order = ", 2 * N)
     println("#################################################")
