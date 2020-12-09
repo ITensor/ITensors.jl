@@ -30,11 +30,11 @@ leftlim(m::AbstractMPS) = m.llim
 
 rightlim(m::AbstractMPS) = m.rlim
 
-function setleftlim!(m::AbstractMPS, new_ll::Int)
+function setleftlim!(m::AbstractMPS, new_ll::Integer)
   m.llim = new_ll
 end
 
-function setrightlim!(m::AbstractMPS, new_rl::Int)
+function setrightlim!(m::AbstractMPS, new_rl::Integer)
   m.rlim = new_rl
 end
 
@@ -198,12 +198,12 @@ function dense(ψ::AbstractMPS)
 end
 
 """
-    unique_siteind(A::MPO, B::MPS, j::Int)
-    unique_siteind(A::MPO, B::MPO, j::Int)
+    unique_siteind(A::MPO, B::MPS, j::Integer)
+    unique_siteind(A::MPO, B::MPO, j::Integer)
 
 Get the site index of MPO `A` that is unique to `A` (not shared with MPS/MPO `B`).
 """
-function unique_siteind(A::AbstractMPS, B::AbstractMPS, j::Int)
+function unique_siteind(A::AbstractMPS, B::AbstractMPS, j::Integer)
   N = length(A)
   j == 1 && return uniqueind(A[j], A[j+1], B[j])
   j == N && return uniqueind(A[j], A[j-1], B[j])
@@ -221,12 +221,12 @@ function unique_siteinds(A::AbstractMPS, B::AbstractMPS)
 end
 
 """
-    common_siteind(A::MPO, B::MPS, j::Int)
-    common_siteind(A::MPO, B::MPO, j::Int)
+    common_siteind(A::MPO, B::MPS, j::Integer)
+    common_siteind(A::MPO, B::MPO, j::Integer)
 
 Get the site index of MPO `A` that is shared with MPS/MPO `B`.
 """
-function common_siteind(A::AbstractMPS, B::AbstractMPS, j::Int)
+function common_siteind(A::AbstractMPS, B::AbstractMPS, j::Integer)
   return commonind(A[j], B[j])
 end
 
@@ -331,7 +331,7 @@ function findfirstsiteinds(ψ::AbstractMPS,
 end
 
 """
-    firstsiteind(M::Union{MPS,MPO}, j::Int; kwargs...)
+    firstsiteind(M::Union{MPS,MPO}, j::Integer; kwargs...)
 
 Return the first site Index found on the MPS or MPO
 (the first Index unique to the `j`th MPS/MPO tensor).
@@ -339,7 +339,7 @@ Return the first site Index found on the MPS or MPO
 You can choose different filters, like prime level
 and tags, with the `kwargs`.
 """
-function firstsiteind(M::AbstractMPS, j::Int;
+function firstsiteind(M::AbstractMPS, j::Integer;
                       kwargs...)
   N = length(M)
   (N==1) && return firstind(M[1]; kwargs...)
@@ -354,7 +354,7 @@ function firstsiteind(M::AbstractMPS, j::Int;
 end
 
 """
-    siteinds(M::Union{MPS, MPO}}, j::Int; kwargs...)
+    siteinds(M::Union{MPS, MPO}}, j::Integer; kwargs...)
 
 Return the site Indices found of the MPO or MPO
 at the site `j` as an IndexSet.
@@ -362,7 +362,7 @@ at the site `j` as an IndexSet.
 Optionally filter prime tags and prime levels with
 keyword arguments like `plev` and `tags`.
 """
-function siteinds(M::AbstractMPS, j::Int; kwargs...)
+function siteinds(M::AbstractMPS, j::Integer; kwargs...)
   N = length(M)
   (N==1) && return inds(M[1]; kwargs...)
   if j == 1
@@ -375,7 +375,7 @@ function siteinds(M::AbstractMPS, j::Int; kwargs...)
   return si
 end
 
-function siteinds(::typeof(all), ψ::AbstractMPS, n::Int64; kwargs...)
+function siteinds(::typeof(all), ψ::AbstractMPS, n::Integer; kwargs...)
   return siteinds(ψ, n; kwargs...)
 end
 
@@ -599,16 +599,16 @@ function maxlinkdim(M::AbstractMPS)
 end
 
 """
-    linkind(M::MPS, j::Int)
+    linkind(M::MPS, j::Integer)
 
-    linkind(M::MPO, j::Int)
+    linkind(M::MPO, j::Integer)
 
 Get the link or bond Index connecting the
 MPS or MPO tensor on site j to site j+1.
 
 If there is no link Index, return `nothing`.
 """
-function linkind(M::AbstractMPS, j::Int)
+function linkind(M::AbstractMPS, j::Integer)
   N = length(M)
   (j ≥ length(M) || j < 1) && return nothing
   return commonind(M[j], M[j+1])
@@ -618,16 +618,16 @@ linkinds(ψ::AbstractMPS) =
   [linkind(ψ, b) for b in 1:length(ψ)-1]
 
 """
-    linkdim(M::MPS, j::Int)
+    linkdim(M::MPS, j::Integer)
 
-    linkdim(M::MPO, j::Int)
+    linkdim(M::MPO, j::Integer)
 
 Get the dimension of the link or bond connecting the
 MPS or MPO tensor on site j to site j+1.
 
 If there is no link Index, return `nothing`.
 """
-function linkdim(ψ::AbstractMPS, b::Int)
+function linkdim(ψ::AbstractMPS, b::Integer)
   l = linkind(ψ, b)
   isnothing(l) && return nothing
   return dim(l)
@@ -1044,9 +1044,9 @@ function setindex!(ψ::MPST, ϕ::MPST,
   return ψ
 end
 
-_isodd_fermionic_parity(s::Index, ::Int) = false
+_isodd_fermionic_parity(s::Index, ::Integer) = false
 
-function _isodd_fermionic_parity(s::QNIndex, n::Int)
+function _isodd_fermionic_parity(s::QNIndex, n::Integer)
   qn_n = qn(space(s)[n])
   fermionic_qn_pos = findfirst(q -> isfermionic(q), qn_n)
   isnothing(fermionic_qn_pos) && return false
@@ -1102,7 +1102,7 @@ should be within `r`.
 Optionally, permute the order of the sites with `perm`.
 """
 function setindex!(ψ::MPST, A::ITensor, r::UnitRange{Int};
-                   orthocenter::Int = last(r),
+                   orthocenter::Integer = last(r),
                    perm = nothing,
                    kwargs...) where {MPST <: AbstractMPS}
   # Replace the sites of ITensor ψ
@@ -1205,13 +1205,13 @@ by site according to the site indices `sites`.
 
 # Arguments
 - `leftinds = nothing`: optional left dangling indices. Indices that are not in `sites` and `leftinds` will be dangling off of the right side of the MPS/MPO.
-- `orthocenter::Int = length(sites)`: the desired final orthogonality center of the output MPS/MPO.
+- `orthocenter::Integer = length(sites)`: the desired final orthogonality center of the output MPS/MPO.
 - `cutoff`: the desired truncation error at each link.
 - `maxdim`: the maximum link dimension.
 """
 function (::Type{MPST})(A::ITensor, sites;
                         leftinds = nothing,
-                        orthocenter::Int = length(sites),
+                        orthocenter::Integer = length(sites),
                         kwargs...) where {MPST <: AbstractMPS}
   N = length(sites)
   for s in sites
@@ -1246,11 +1246,11 @@ function (::Type{MPST})(A::ITensor, sites;
 end
 
 """
-    swapbondsites(ψ::Union{MPS, MPO}, b::Int; kwargs...)
+    swapbondsites(ψ::Union{MPS, MPO}, b::Integer; kwargs...)
 
 Swap the sites `b` and `b+1`.
 """
-function swapbondsites(ψ::AbstractMPS, b::Int; kwargs...)
+function swapbondsites(ψ::AbstractMPS, b::Integer; kwargs...)
   ortho = get(kwargs, :ortho, "right")
   ψ = copy(ψ)
   if ortho == "left"
@@ -1279,7 +1279,7 @@ This is done with a series a pairwise swaps, and can introduce
 a lot of entanglement into your state, so use with caution.
 """
 function movesite(ψ::AbstractMPS, n1n2::Pair{Int, Int};
-                  orthocenter::Int = last(n1n2),
+                  orthocenter::Integer = last(n1n2),
                   kwargs...)
   n1, n2 = n1n2
   n1 == n2 && return copy(ψ)

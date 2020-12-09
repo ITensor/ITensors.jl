@@ -9,7 +9,7 @@ blockdim(qnblock::QNBlock) = qnblock.second
 
 blockdim(qnblocks::QNBlocks, b::Integer) = blockdim(qnblocks[b])
 
-qn(qnblocks::QNBlocks,b::Integer) = qn(qnblocks[b])
+qn(qnblocks::QNBlocks, b::Integer) = qn(qnblocks[b])
 
 nblocks(qnblocks::QNBlocks) = length(qnblocks)
 
@@ -70,7 +70,7 @@ end
 """
     Index(qnblocks::Vector{Pair{QN, Int64}}; dir::Arrow = Out,
                                              tags = "",
-                                             plev::Int = 0)
+                                             plev::Integer = 0)
 
 Construct a QN Index from a Vector of pairs of QN and block 
 dimensions.
@@ -93,7 +93,7 @@ end
 
 """
     Index(qnblocks::Vector{Pair{QN, Int64}}, tags; dir::Arrow = Out,
-                                                   plev::Int = 0)
+                                                   plev::Integer = 0)
 
 Construct a QN Index from a Vector of pairs of QN and block 
 dimensions.
@@ -106,14 +106,14 @@ Index([QN("Sz", -1) => 1, QN("Sz", 1) => 1], "i"; dir = In)
 Index(qnblocks::QNBlocks,
       tags;
       dir::Arrow = Out,
-      plev::Int = 0) = Index(qnblocks; dir = dir,
+      plev::Integer = 0) = Index(qnblocks; dir = dir,
                                        tags = tags,
                                        plev = plev)
 
 """
     Index(qnblocks::Pair{QN, Int64}...; dir::Arrow = Out,
                                         tags = "",
-                                        plev::Int = 0)
+                                        plev::Integer = 0)
 
 Construct a QN Index from a list of pairs of QN and block 
 dimensions.
@@ -208,7 +208,7 @@ end
 function outer(i1::QNIndex, i2::QNIndex;
                dir = nothing,
                tags = "",
-               plev::Int = 0)
+               plev::Integer = 0)
   if isnothing(dir)
     if ITensors.dir(i1) == ITensors.dir(i2)
       dir = ITensors.dir(i1)
@@ -227,7 +227,7 @@ end
 function outer(i::QNIndex;
                dir = nothing,
                tags = "",
-               plev::Int = 0)
+               plev::Integer = 0)
   if isnothing(dir)
     dir = ITensors.dir(i)
   end
@@ -273,25 +273,25 @@ function replaceqns(i::QNIndex,qns::QNBlocks)
   return Index(id(i),qns,dir(i),tags(i),plev(i))
 end
 
-function setblockdim!(i::QNIndex,newdim::Int,n::Int)
+function setblockdim!(i::QNIndex, newdim::Integer, n::Integer)
   qns = space(i)
   qns[n] = qn(qns[n]) => newdim
   return i
 end
 
-function setblockqn!(i::QNIndex,newqn::QN,n::Int)
+function setblockqn!(i::QNIndex, newqn::QN, n::Integer)
   qns = space(i)
   qns[n] = newqn => blockdim(qns[n])
   return i
 end
 
-function deleteat!(i::QNIndex,pos)
-  deleteat!(space(i),pos)
+function deleteat!(i::QNIndex, pos)
+  deleteat!(space(i), pos)
   return i
 end
 
-function resize!(i::QNIndex,n::Integer)
-  resize!(space(i),n)
+function resize!(i::QNIndex, n::Integer)
+  resize!(space(i), n)
   return i
 end
 

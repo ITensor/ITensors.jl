@@ -9,6 +9,7 @@ export
 
 # NDTensors module
   # Types
+  Block,
   Spectrum,
   # Methods
   disable_tblis!,

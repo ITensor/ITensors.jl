@@ -25,8 +25,8 @@ Random.seed!(1234)
     T = ITensor(A, i', dag(i))
     @test flux(T) == QN(0)
     @test nnzblocks(T) == 2
-    @test (1,1) in nzblocks(T)
-    @test (2,2) in nzblocks(T)
+    @test Block(1,1) in nzblocks(T)
+    @test Block(2,2) in nzblocks(T)
     @test T[1, 1] == 1.0
     @test T[2, 2] == 2.0
     @test T[2, 3] == 3.0
@@ -36,8 +36,8 @@ Random.seed!(1234)
     T = itensor(A, i', dag(i))
     @test flux(T) == QN(0)
     @test nnzblocks(T) == 2
-    @test (1,1) in nzblocks(T)
-    @test (2,2) in nzblocks(T)
+    @test Block(1,1) in nzblocks(T)
+    @test Block(2,2) in nzblocks(T)
     @test T[1, 1] == 1.0
     @test T[2, 2] == 2.0
     @test T[2, 3] == 3.0
@@ -47,8 +47,8 @@ Random.seed!(1234)
     T = ITensor(A, i', dag(i); tol = 1e-9)
     @test flux(T) == QN(0)
     @test nnzblocks(T) == 2
-    @test (1,1) in nzblocks(T)
-    @test (2,2) in nzblocks(T)
+    @test Block(1,1) in nzblocks(T)
+    @test Block(2,2) in nzblocks(T)
     @test T[1, 1] == 1.0
     @test T[2, 2] == 2.0
     @test T[2, 3] == 3.0
@@ -61,7 +61,7 @@ Random.seed!(1234)
     T = ITensor(A, i', dag(i); tol = 1e-8)
     @test flux(T) == QN(0)
     @test nnzblocks(T) == 1
-    @test (2,2) in nzblocks(T)
+    @test Block(2,2) in nzblocks(T)
     @test T[1, 1] == 0.0
     @test T[2, 2] == 2.0
     @test T[2, 3] == 3.0
@@ -74,7 +74,7 @@ Random.seed!(1234)
     T = ITensor(A, i', dag(i); tol = 1e-8)
     @test flux(T) == QN(-1)
     @test nnzblocks(T) == 1
-    @test (1,2) in nzblocks(T)
+    @test Block(1,2) in nzblocks(T)
     @test T[1, 1] == 0.0
     @test T[1, 2] == 2.0
     @test T[1, 3] == 3.0
