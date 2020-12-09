@@ -5,16 +5,15 @@ const QNBlocks = Vector{QNBlock}
 
 qn(qnblock::QNBlock) = qnblock.first
 
-NDTensors.blockdim(qnblock::QNBlock) = qnblock.second
+blockdim(qnblock::QNBlock) = qnblock.second
 
-NDTensors.blockdim(qnblocks::QNBlocks,
-                   b::Int) = blockdim(qnblocks[b])
+blockdim(qnblocks::QNBlocks, b::Integer) = blockdim(qnblocks[b])
 
-qn(qnblocks::QNBlocks,b::Int) = qn(qnblocks[b])
+qn(qnblocks::QNBlocks,b::Integer) = qn(qnblocks[b])
 
-NDTensors.nblocks(qnblocks::QNBlocks) = length(qnblocks)
+nblocks(qnblocks::QNBlocks) = length(qnblocks)
 
-function NDTensors.dim(qnblocks::QNBlocks)
+function dim(qnblocks::QNBlocks)
   dimtot = 0
   for (_,blockdim) in qnblocks
     dimtot += blockdim
@@ -22,16 +21,16 @@ function NDTensors.dim(qnblocks::QNBlocks)
   return dimtot
 end
 
-function Base.:-(qnb::QNBlock)
+function -(qnb::QNBlock)
   return QNBlock(-qn(qnb),blockdim(qnb))
 end
 
-function Base.:+(qn1::QNBlock,qn2::QNBlock)
+function (qn1::QNBlock + qn2::QNBlock)
   qn(qn1) != qn(qn2) && error("Cannot add qn blocks with different qns")
   return QNBlock(qn(qn1),blockdim(qn1)+blockdim(qn2))
 end
 
-function Base.:-(qns::QNBlocks)
+function -(qns::QNBlocks)
   qns_new = copy(qns)
   for i in 1:length(qns_new)
     qns_new[i] = -qns_new[i]
@@ -132,16 +131,15 @@ function Index(qnblocks::QNBlock...; dir::Arrow=Out,
                               plev = plev)
 end
 
-NDTensors.dim(i::QNIndex) = dim(space(i))
+dim(i::QNIndex) = dim(space(i))
 
-NDTensors.nblocks(i::QNIndex) = nblocks(space(i))
+nblocks(i::QNIndex) = nblocks(space(i))
 
-qn(ind::QNIndex,b::Int) = dir(ind)*qn(space(ind),b)
+qn(ind::QNIndex, b::Integer) = dir(ind)*qn(space(ind),b)
 
 qnblocks(ind::QNIndex) = space(ind)
 
-NDTensors.blockdim(ind::QNIndex,
-                   b::Int) = blockdim(space(ind),b)
+blockdim(ind::QNIndex, b::Integer) = blockdim(space(ind),b)
 
 function qn(iv::QNIndexVal)
   i = ind(iv)
@@ -183,11 +181,11 @@ have a unique QN.
 """
 qnblockdim(ind::QNIndex, q::QN) = blockdim(ind, qnblocknum(ind,q))
 
-function Base.:*(dir::Arrow, qnb::QNBlock)
+function (dir::Arrow * qnb::QNBlock)
   return QNBlock(dir*qn(qnb), blockdim(qnb))
 end
 
-function Base.:*(dir::Arrow, qn::QNBlocks)
+function (dir::Arrow * qn::QNBlocks)
   qnR = copy(qn)
   for i in 1:nblocks(qnR)
     qnR[i] = dir*qnR[i]
@@ -195,11 +193,11 @@ function Base.:*(dir::Arrow, qn::QNBlocks)
   return qnR
 end
 
-function Base.:*(qn1::QNBlock, qn2::QNBlock)
+function (qn1::QNBlock * qn2::QNBlock)
   return QNBlock(qn(qn1)+qn(qn2), blockdim(qn1)*blockdim(qn2))
 end
 
-function NDTensors.outer(qn1::QNBlocks, qn2::QNBlocks)
+function outer(qn1::QNBlocks, qn2::QNBlocks)
   qnR = ITensors.QNBlocks(undef,nblocks(qn1)*nblocks(qn2))
   for (i,t) in enumerate(Iterators.product(qn1,qn2))
     qnR[i] = prod(t)
@@ -207,10 +205,10 @@ function NDTensors.outer(qn1::QNBlocks, qn2::QNBlocks)
   return qnR
 end
 
-function NDTensors.outer(i1::QNIndex, i2::QNIndex;
-                         dir = nothing,
-                         tags = "",
-                         plev::Int = 0)
+function outer(i1::QNIndex, i2::QNIndex;
+               dir = nothing,
+               tags = "",
+               plev::Int = 0)
   if isnothing(dir)
     if ITensors.dir(i1) == ITensors.dir(i2)
       dir = ITensors.dir(i1)
@@ -226,10 +224,10 @@ function NDTensors.outer(i1::QNIndex, i2::QNIndex;
                plev = plev)
 end
 
-function NDTensors.outer(i::QNIndex;
-                         dir = nothing,
-                         tags = "",
-                         plev::Int = 0)
+function outer(i::QNIndex;
+               dir = nothing,
+               tags = "",
+               plev::Int = 0)
   if isnothing(dir)
     dir = ITensors.dir(i)
   end
@@ -240,11 +238,11 @@ function NDTensors.outer(i::QNIndex;
                plev = plev)
 end
 
-function Base.isless(qnb1::QNBlock, qnb2::QNBlock)
+function isless(qnb1::QNBlock, qnb2::QNBlock)
   return isless(qn(qnb1), qn(qnb2))
 end
 
-function NDTensors.permuteblocks(i::QNIndex, perm)
+function permuteblocks(i::QNIndex, perm)
   qnblocks_perm = space(i)[perm]
   return replaceqns(i, qnblocks_perm)
 end
@@ -275,7 +273,7 @@ function replaceqns(i::QNIndex,qns::QNBlocks)
   return Index(id(i),qns,dir(i),tags(i),plev(i))
 end
 
-function NDTensors.setblockdim!(i::QNIndex,newdim::Int,n::Int)
+function setblockdim!(i::QNIndex,newdim::Int,n::Int)
   qns = space(i)
   qns[n] = qn(qns[n]) => newdim
   return i
@@ -287,12 +285,12 @@ function setblockqn!(i::QNIndex,newqn::QN,n::Int)
   return i
 end
 
-function Base.deleteat!(i::QNIndex,pos)
+function deleteat!(i::QNIndex,pos)
   deleteat!(space(i),pos)
   return i
 end
 
-function Base.resize!(i::QNIndex,n::Integer)
+function resize!(i::QNIndex,n::Integer)
   resize!(space(i),n)
   return i
 end
@@ -339,8 +337,7 @@ isfermionic(i::Index) = false
 
 isfermionic(i::QNIndex) = any(q -> isfermionic(qn(q)), space(i))
 
-function Base.show(io::IO,
-                   i::QNIndex)
+function show(io::IO, i::QNIndex)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
     print(io,"(dim=$(dim(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))")
