@@ -173,12 +173,11 @@ op_matrix(::OpName"YY"; ϕ::Number) =
     im*sin(ϕ)          0          0     cos(ϕ)]
 
 # Ising (ZZ) coupling gate
-#op_matrix(::OpName"ZZ"; ϕ::Number) =
+op_matrix(::OpName"ZZ"; ϕ::Number) =
   [    exp(-im*ϕ)         0         0          0
             0     exp(im*ϕ)         0          0
             0             0 exp(im*ϕ)          0
             0             0         0 exp(-im*ϕ)]
-
 
 #
 # 3-Qubit gates
