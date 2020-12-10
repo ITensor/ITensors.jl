@@ -1073,7 +1073,7 @@ end
 
       @testset "Mixed state evolution" begin
         M = product(gates, M0; cutoff = 1e-15, maxdim = maxdim)
-        @test maxlinkdim(M) == 24
+        @test maxlinkdim(M) == 24 || maxlinkdim(M) == 25
         sM0 = siteinds(M0)
         sM = siteinds(M)
         for n in 1:N
