@@ -67,6 +67,7 @@ export
   replacetags!,
   setdir,
   setprime,
+  setspace,
   settags,
   sim,
   space,

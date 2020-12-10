@@ -1022,6 +1022,9 @@ swaptags(is::IndexSet,
 replaceinds(is::IndexSet, rep_inds::Pair{ <: Index, <: Index}...) =
   replaceinds(is, zip(rep_inds...)...)
 
+# Check that the QNs are all the same
+hassameqns(i1::Index, i2::Index) = (dim(i1) == dim(i2))
+
 function replaceinds(is::IndexSet, inds1, inds2)
   is1 = IndexSet(inds1)
   poss = indexin(is1, is)
@@ -1029,7 +1032,12 @@ function replaceinds(is::IndexSet, inds1, inds2)
     isnothing(pos) && continue
     i1 = is[pos]
     i2 = inds2[j]
-    space(i1) != space(i2) && error("Indices must have the same spaces to be replaced")
+
+    @show i1
+    @show i2
+    @show hassameqns(i1, i2)
+
+    !hassameqns(i1, i2) && error("Indices must have the same spaces to be replaced")
     i2 = setdir(i2, dir(i1))
     is = setindex(is, i2, pos)
   end

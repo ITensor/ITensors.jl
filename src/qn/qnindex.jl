@@ -135,23 +135,29 @@ dim(i::QNIndex) = dim(space(i))
 
 nblocks(i::QNIndex) = nblocks(space(i))
 
-qn(ind::QNIndex, b::Integer) = dir(ind)*qn(space(ind),b)
+function block(iv::Union{<:IndexVal, <:Pair{<:Index, <:Integer}})
+  i = ind(iv)
+  v = val(iv)
+  tdim = 0
+  for b in 1:nblocks(i)
+    tdim += blockdim(i,b)
+    (v <= tdim) && return b
+  end
+  error("qn: QNIndexVal out of range")
+  return 0
+end
+
+# Get the QN of the block
+qn(ind::QNIndex, b::Integer) = dir(ind) * qn(space(ind), b)
+
+# Get the QN of the block the IndexVal lies in
+function qn(iv::Union{<:IndexVal, <:Pair{<:Index, <:Integer}})
+  return qn(ind(iv), block(iv))
+end
 
 qnblocks(ind::QNIndex) = space(ind)
 
 blockdim(ind::QNIndex, b::Integer) = blockdim(space(ind),b)
-
-function qn(iv::QNIndexVal)
-  i = ind(iv)
-  v = val(iv)
-  tdim = 0
-  for b=1:nblocks(i)
-    tdim += blockdim(i,b)
-    (v <= tdim) && return qn(i,b)
-  end
-  error("qn: QNIndexVal out of range")
-  return QN()
-end
 
 """
     qnblocknum(ind::QNIndex,q::QN)
@@ -328,6 +334,19 @@ function addqns(i::QNIndex, qns::QNBlocks)
   end
   return j
 end
+
+# Check that the QNs are all the same
+function hassameqns(i1::QNIndex, i2::QNIndex)
+  dim_i1 = dim(i1)
+  dim_i1 ≠ dim(i2) && return false
+  for n in 1:dim_i1
+    qn(i1 => n) ≠ qn(i2 => n) && return false
+  end
+  return true
+end
+
+hassameqns(::QNIndex, ::Index) = false
+hassameqns(::Index, ::QNIndex) = false
 
 mutable_storage(::Type{Order{N}},
                 ::Type{IndexT}) where {N, IndexT <: QNIndex} =

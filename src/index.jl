@@ -305,11 +305,9 @@ julia> hastags(j, "n=4,Link")
 true
 ```
 """
-settags(i::Index, ts) = Index(id(i),
-                              copy(space(i)),
-                              dir(i),
-                              ts,
-                              plev(i))
+settags(i::Index, ts) = Index(id(i), copy(space(i)), dir(i), ts, plev(i))
+
+setspace(i::Index, s) = Index(id(i), s, dir(i), tags(i), plev(i))
 
 """
     addtags(i::Index,ts)
@@ -319,8 +317,7 @@ specified tags added to the existing ones.
 The `ts` argument can be a comma-separated 
 string of tags or a TagSet.
 """
-addtags(i::Index, ts) =
-  settags(i, addtags(tags(i), ts))
+addtags(i::Index, ts) = settags(i, addtags(tags(i), ts))
 
 """
     removetags(i::Index, ts)
