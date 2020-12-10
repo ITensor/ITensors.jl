@@ -9,6 +9,7 @@ export
 
 # NDTensors module
   # Types
+  Block,
   Spectrum,
   # Methods
   disable_tblis!,
@@ -16,6 +17,8 @@ export
   enable_tblis!,
   entropy,
   truncerror,
+  # Deprecated
+  addblock!,
 
 # argsdict/argsdict.jl
   argsdict,
@@ -103,7 +106,6 @@ export
   ITensor,
   # Methods
   ⊙,
-  addblock!,
   addtags!,
   apply,
   array,
@@ -119,6 +121,7 @@ export
   δ,
   diagITensor,
   dot,
+  eachnzblock,
   firstind,
   filterinds,
   hadamard_product,
@@ -128,6 +131,7 @@ export
   hassameinds,
   ind,
   inds,
+  insertblock!,
   itensor,
   mul!,
   matrix,

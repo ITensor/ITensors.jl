@@ -8,12 +8,11 @@ const QNIndices{N} = Union{QNIndexSet{N},
 # TODO: make a fillqns(inds::IndexSet) function that makes all indices
 # in inds have the same qns. Then, use a faster comparison:
 #   ==(flux(inds,block; assume_filled=true), qn; assume_filled=true)
-function NDTensors.nzblocks(qn::QN,
-                            inds::IndexSet{N}) where {N}
-  blocks = NTuple{N,Int}[]
+function nzblocks(qn::QN, inds::IndexSet{N}) where {N}
+  blocks = Block{N}[]
   for block in eachblock(inds)
-    if flux(inds,block) == qn
-      push!(blocks,Tuple(block))
+    if flux(inds, block) == qn
+      push!(blocks, block)
     end
   end
   return blocks

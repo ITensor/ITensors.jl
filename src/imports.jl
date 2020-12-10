@@ -17,6 +17,7 @@ import Base:
   copy,
   copyto!,
   deepcopy,
+  deleteat!,
   eachindex,
   eltype,
   fill!,
@@ -31,6 +32,7 @@ import Base:
   map!,
   ndims,
   push!,
+  resize!,
   setindex!,
   show,
   similar,
@@ -66,30 +68,38 @@ import LinearAlgebra:
 
 import NDTensors:
   # functions
-  addblock!,
   array,
+  blockdim,
   blockoffsets,
   contract,
   dense,
   dim,
   dims,
+  eachnzblock,
   ind,
   inds,
+  insertblock!,
   matrix,
   #maxdim,
   mindim,
+  nblocks,
   nnz,
   nnzblocks,
   nzblock,
   nzblocks,
+  outer,
+  permuteblocks,
   polar,
   scale!,
+  setblockdim!,
   sim,
   store,
   sum,
   tensor,
   truncate!,
-  vector
+  vector,
+  # Deprecated
+  addblock!
 
 import Random:
   randn!

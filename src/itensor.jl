@@ -1,5 +1,7 @@
 
 """
+    ITensor
+
 An ITensor is a tensor whose interface is 
 independent of its memory layout. Therefore
 it is not necessary to know the ordering
@@ -1747,6 +1749,8 @@ mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
 
 hasqns(T::ITensor) = hasqns(inds(T))
 
+eachnzblock(T::ITensor) = eachnzblock(tensor(T))
+
 nnz(T::ITensor) = nnz(tensor(T))
 
 nnzblocks(T::ITensor) = nnzblocks(tensor(T))
@@ -1769,8 +1773,7 @@ If the ITensor is empty or it has no QNs, returns `nothing`.
 function flux(T::ITensor)
   (!hasqns(T) || isempty(T)) && return nothing
   @debug checkflux(T)
-  bofs = blockoffsets(T)
-  block1 = nzblock(bofs, 1)
+  block1 = first(eachnzblock(T))
   return flux(T, block1)
 end
 
@@ -1790,10 +1793,10 @@ function checkflux(T::ITensor)
   return checkflux(T, fluxTb1)
 end
 
-function addblock!(T::ITensor, args...)
+function insertblock!(T::ITensor, args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) && 
    error("Block does not match current flux")
-  TR = addblock!!(tensor(T), args...)
+  TR = insertblock!!(tensor(T), args...)
   setstore!(T, store(TR))
   return T
 end
@@ -1984,24 +1987,4 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
 
   return itensor(store,inds)
 end
-
-#
-# Deprecations
-#
-
-@deprecate findindex(args...; kwargs...) firstind(args...; kwargs...)
-
-@deprecate findinds(args...; kwargs...) inds(args...; kwargs...)
-
-@deprecate commonindex(args...; kwargs...) commonind(args...; kwargs...)
-
-@deprecate uniqueindex(args...; kwargs...) uniqueind(args...; kwargs...)
-
-@deprecate replaceindex!(args...; kwargs...) replaceind!(args...; kwargs...)
-
-@deprecate siteindex(args...; kwargs...) siteind(args...; kwargs...)
-
-@deprecate linkindex(args...; kwargs...) linkind(args...; kwargs...)
-
-@deprecate matmul(A::ITensor, B::ITensor) product(A, B)
 

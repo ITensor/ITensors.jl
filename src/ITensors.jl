@@ -100,6 +100,11 @@ include("physics/fermions.jl")
 include("physics/autompo.jl")
 
 #####################################
+# Deprecations
+#
+include("deprecated.jl")
+
+#####################################
 # Argument parsing
 #
 include("argsdict/argsdict.jl")

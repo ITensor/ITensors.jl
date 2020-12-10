@@ -8,8 +8,7 @@ using ITensors,
 
     D = diagITensor(QN(),i,dag(i'))
 
-    for n in nnzblocks(D)
-      b = nzblock(D,n)
+    for b in eachnzblock(D)
       @test flux(D,b) == QN()
     end
 
@@ -33,8 +32,7 @@ using ITensors,
 
     D = diagITensor((i, dag(i')))
 
-    for n in nnzblocks(D)
-      b = nzblock(D, n)
+    for b in eachnzblock(D)
       @test flux(D, b) == QN()
     end
   end
@@ -66,8 +64,7 @@ using ITensors,
 
     δiĩ = δ((dag(i), ĩ))
 
-    for n in nnzblocks(δiĩ)
-      b = nzblock(δiĩ, n)
+    for b in eachnzblock(δiĩ)
       @test flux(δiĩ, b) == QN()
     end
   end

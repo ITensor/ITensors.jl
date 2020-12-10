@@ -406,5 +406,3 @@ function HDF5.read(parent::Union{HDF5File,HDF5Group},
   return QN(mqn)
 end
 
-@deprecate store(qn::QN) data(qn)
-

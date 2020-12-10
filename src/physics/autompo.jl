@@ -850,7 +850,7 @@ function qn_svdMPO(ampo::AutoMPO,
       #TODO: wrap following 3 lines into a function
       block = (rn,cn)
       T = BlockSparseTensor(ValType,[block],IndexSet(dag(ll),rl))
-      blockview(T,block) .= M
+      blockview(T, block) .= M
 
       IT = itensor(T)
       H[n] += IT * Op
@@ -983,6 +983,4 @@ function MPO(ampo::AutoMPO,
   end
   return svdMPO(ampo,sites;kwargs...)
 end
-
-@deprecate toMPO(args...; kwargs...) MPO(args...; kwargs...)
 

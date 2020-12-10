@@ -150,26 +150,26 @@ function dmrg(PH,
         checkflux(PH)
       end
 
-@timeit_debug GLOBAL_TIMER "position!" begin
+      @timeit_debug GLOBAL_TIMER "position!" begin
       position!(PH, psi, b)
-end
+      end
 
       @debug begin
         checkflux(psi)
         checkflux(PH)
       end
 
-@timeit_debug GLOBAL_TIMER "psi[b]*psi[b+1]" begin
+      @timeit_debug GLOBAL_TIMER "psi[b]*psi[b+1]" begin
       phi = psi[b] * psi[b+1]
-end
+      end
 
-@timeit_debug GLOBAL_TIMER "eigsolve" begin
+      @timeit_debug GLOBAL_TIMER "eigsolve" begin
       vals, vecs = eigsolve(PH, phi, 1, eigsolve_which_eigenvalue;
                             ishermitian = ishermitian,
                             tol = eigsolve_tol,
                             krylovdim = eigsolve_krylovdim,
                             maxiter = eigsolve_maxiter)
-end
+      end
       energy, phi = vals[1], vecs[1]
 
       ortho = ha == 1 ? "left" : "right"
@@ -184,7 +184,7 @@ end
         checkflux(phi)
       end
 
-@timeit_debug GLOBAL_TIMER "replacebond!" begin
+      @timeit_debug GLOBAL_TIMER "replacebond!" begin
       spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
                                        mindim = mindim(sweeps, sw),
                                        cutoff = cutoff(sweeps, sw),
@@ -193,7 +193,7 @@ end
                                        normalize = true,
                                        which_decomp = which_decomp,
                                        svd_alg = svd_alg)
-end
+      end
 
       @debug begin
         checkflux(psi)

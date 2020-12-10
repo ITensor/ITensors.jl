@@ -31,6 +31,7 @@ using Test
     "qn.jl",
     "qnindex.jl",
     "qnitensor.jl",
+    "qncombiner.jl",
     "qndiagitensor.jl",
     "empty.jl",
     "qnmpo.jl",
