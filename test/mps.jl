@@ -1065,7 +1065,7 @@ end
         ψ = product(gates, ψ0; cutoff = 1e-15)
         @test maxlinkdim(ψ) == 8
         prodψ = product(gates, prod(ψ0))
-        @test prod(ψ) ≈ prodψ
+        @test prod(ψ) ≈ prodψ rtol = 1e-12
       end
 
       M0 = MPO(s, "Id")
