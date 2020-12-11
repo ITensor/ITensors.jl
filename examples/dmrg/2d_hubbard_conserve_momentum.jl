@@ -11,7 +11,8 @@ function main(; Nx::Int = 6,
                 U::Float64 = 4.0,
                 t::Float64 = 1.0,
                 maxdim::Int = 3000,
-                conserve_ky = true)
+                conserve_ky = true,
+                use_splitblocks = false)
   N = Nx * Ny
 
   sweeps = Sweeps(10)
@@ -28,6 +29,18 @@ function main(; Nx::Int = 6,
 
   ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true) 
   H = MPO(ampo, sites)
+
+  # This step makes the MPO more sparse.
+  # It generally improves DMRG performance
+  # at large bond dimensions but makes DMRG slower at
+  # small bond dimensions.
+  if use_splitblocks
+    H = splitblocks(linkinds, H)
+  end
+
+  # Number of structural nonzero elements in a bulk
+  # Hamiltonian MPO tensor
+  @show nnz(H[end÷2])
 
   # Create start state
   state = Vector{String}(undef, N)
