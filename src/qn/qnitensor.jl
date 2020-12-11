@@ -7,41 +7,32 @@ Construct an ITensor with BlockSparse storage filled with `zero(ElT)` where the 
 
 If `ElT` is not specified it defaults to `Float64`.
 """
-function ITensor(::Type{ElT},
-                 flux::QN,
-                 inds::Indices) where {ElT <: Number}
+function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT <: Number}
   blocks = nzblocks(flux, IndexSet(inds))
   T = BlockSparseTensor(ElT, blocks, inds)
   return itensor(T)
 end
 
-function ITensor(::Type{ElT},
-                 flux::QN,
-                 inds::Index...) where {ElT <: Number}
+function ITensor(::Type{ElT}, flux::QN, inds::Index...) where {ElT <: Number}
   return ITensor(ElT, flux, IndexSet(inds...))
 end
 
 ITensor(flux::QN, inds::Indices) = ITensor(Float64, flux, inds)
 
-ITensor(flux::QN,
-        inds::Index...) = ITensor(Float64, flux, IndexSet(inds...))
+ITensor(flux::QN, inds::Index...) =
+  ITensor(Float64, flux, IndexSet(inds...))
 
-function ITensor(::Type{ElT},
-                 inds::QNIndices) where {ElT <: Number}
-  return ITensor(ElT, QN(), inds)
-end
+ITensor(::Type{ElT}, inds::QNIndices) where {ElT <: Number} =
+  ITensor(ElT, QN(), inds)
 
 ITensor(inds::QNIndices) = ITensor(Float64, QN(), inds)
 
-function ITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number} 
-  return ITensor(ElT, QN(), IndexSet(inds...))
-end
+ITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number} =
+  ITensor(ElT, QN(), IndexSet(inds...))
 
 ITensor(inds::QNIndex...) = ITensor(Float64, QN(), IndexSet(inds...))
 
-function _ITensor(A::Array{ElT},
-                  inds::QNIndexSet;
-                  tol = 0) where {ElT}
+function _ITensor(A::Array{ElT}, inds::QNIndexSet; tol = 0) where {ElT}
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, ::IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   T = emptyITensor(ElT, inds)
   A = reshape(A, dims(inds))
@@ -90,36 +81,24 @@ Block: (2, 2)
  0.0  4.0
 ```
 """
-ITensor(A::Array,
-        inds::QNIndexSet;
-        tol = 0) =
+ITensor(A::Array, inds::QNIndexSet; tol = 0) =
   _ITensor(A, inds; tol = tol)
 
 # Defined to fix ambiguity error
-ITensor(A::Array{ <: AbstractFloat},
-        inds::QNIndexSet;
-        tol = 0) =
+ITensor(A::Array{ <: AbstractFloat}, inds::QNIndexSet; tol = 0) =
   _ITensor(A, inds; tol = tol)
 
-ITensor(A::Array,
-        inds::QNIndex...;
-        tol = 0) =
+ITensor(A::Array, inds::QNIndex...; tol = 0) =
   _ITensor(A, IndexSet(inds...); tol = tol)
 
-itensor(A::Array,
-        inds::QNIndexSet;
-        tol = 0) =
+itensor(A::Array, inds::QNIndexSet; tol = 0) =
   ITensor(A, inds; tol = tol)
 
-itensor(A::Array,
-        inds::QNIndex...;
-        tol = 0) =
+itensor(A::Array, inds::QNIndex...; tol = 0) =
   ITensor(A, inds...; tol = tol)
 
 # Defined to fix ambiguity error
-itensor(A::Array{ <: Number},
-        inds::QNIndex...;
-        tol = 0) =
+itensor(A::Array{ <: Number}, inds::QNIndex...; tol = 0) =
   ITensor(A, inds...; tol = tol)
 
 """
@@ -147,32 +126,26 @@ Construct an ITensor with `NDTensors.BlockSparse` storage filled with random ele
 
 If `ElT` is not specified it defaults to `Float64`. If the flux is not specified it defaults to `QN()`.
 """
-function randomITensor(::Type{ElT},
-                       flux::QN,
-                       inds::Indices) where {ElT <: Number}
+function randomITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT <: Number}
   T = ITensor(ElT, flux, inds)
   randn!(T)
   return T
 end
 
-function randomITensor(::Type{ElT},
-                       flux::QN,
-                       inds::Index...) where {ElT<:Number}
-  return randomITensor(ElT, flux, IndexSet(inds...))
-end
+randomITensor(::Type{ElT}, flux::QN,
+              inds::Index...) where {ElT<:Number} =
+  randomITensor(ElT, flux, IndexSet(inds...))
 
 function randomITensor(::Type{ElT},
                        inds::QNIndices) where {ElT<:Number}
   return randomITensor(ElT, QN(), inds)
 end
 
-randomITensor(flux::QN,
-              inds::Indices) = randomITensor(Float64, flux, inds)
+randomITensor(flux::QN, inds::Indices) =
+  randomITensor(Float64, flux, inds)
 
-randomITensor(flux::QN,
-              inds::Index...) = randomITensor(Float64,
-                                              flux,
-                                              IndexSet(inds...))
+randomITensor(flux::QN, inds::Index...) =
+  randomITensor(Float64, flux, IndexSet(inds...))
 
 function randomITensor(::Type{ElT},
                        inds::QNIndex...) where {ElT<:Number}
@@ -191,8 +164,7 @@ function combiner(inds::QNIndices; kwargs...)
   new_ind = ⊗(inds...; kwargs...)
   new_ind = settags(new_ind,tags)
   comb_ind,perm,comb = combineblocks(new_ind)
-  return itensor(Combiner(perm,comb),
-                 IndexSet(comb_ind, dag.(inds)...))
+  return itensor(Combiner(perm,comb), IndexSet(comb_ind, dag.(inds)...))
 end
 
 #
@@ -291,4 +263,40 @@ function delta(::Type{ElT},
 end
 
 delta(inds::QNIndices) = delta(Float64, QN(), inds)
+
+function dropzeros(T::ITensor; tol = 0)
+  # XXX: replace with empty(T)
+  T̃ = emptyITensor(eltype(T), inds(T))
+  for b in eachnzblock(T)
+    Tb = T[b]
+    if norm(Tb) > tol
+      T̃[b] = Tb
+    end
+  end
+  return T̃
+end
+
+function δ_split(i1::Index, i2::Index)
+  d = emptyITensor(i1, i2)
+  for n in 1:min(dim(i1), dim(i2))
+    d[n, n] = 1
+  end
+  return d
+end
+
+function splitblocks(A::ITensor, is = inds(A); tol = 0)
+  isA = filterinds(A; inds = is)
+  for i in isA
+    i_split = splitblocks(i)
+    ĩ_split = sim(i_split)
+    # Ideally use norm δ tensor but currently
+    # it doesn't work properly:
+    #A *= δ(dag(i), ĩ_split)
+    d = δ_split(dag(i), ĩ_split)
+    A *= δ_split(dag(i), ĩ_split)
+    A = replaceind(A, ĩ_split, i_split)
+  end
+  A = dropzeros(A; tol = tol)
+  return A
+end
 

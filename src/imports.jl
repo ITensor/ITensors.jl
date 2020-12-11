@@ -9,6 +9,8 @@ import Base:
   *,
   /,
   ==,
+  <,
+  >,
   # functions
   adjoint,
   axes,
@@ -22,6 +24,7 @@ import Base:
   eltype,
   fill!,
   getindex,
+  hash,
   isapprox,
   isempty,
   isless,
@@ -37,7 +40,8 @@ import Base:
   show,
   similar,
   size,
-  summary
+  summary,
+  zero
 
 import Base.Broadcast:
   # types
@@ -49,6 +53,10 @@ import Base.Broadcast:
   broadcasted,
   broadcastable,
   instantiate
+
+import HDF5:
+  read,
+  write
 
 import LinearAlgebra:
   axpby!,

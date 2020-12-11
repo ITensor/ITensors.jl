@@ -5,11 +5,16 @@ const QNBlocks = Vector{QNBlock}
 
 qn(qnblock::QNBlock) = qnblock.first
 
+# Get the dimension of the specified block
 blockdim(qnblock::QNBlock) = qnblock.second
 
+# Get the dimension of the specified block
 blockdim(qnblocks::QNBlocks, b::Integer) = blockdim(qnblocks[b])
+blockdim(qnblocks::QNBlocks, b::Block{1}) = blockdim(qnblocks[only(b)])
 
+# Get the QN of the specified block
 qn(qnblocks::QNBlocks, b::Integer) = qn(qnblocks[b])
+qn(qnblocks::QNBlocks, b::Block{1}) = qn(qnblocks[only(b)])
 
 nblocks(qnblocks::QNBlocks) = length(qnblocks)
 
@@ -103,12 +108,8 @@ dimensions.
 Index([QN("Sz", -1) => 1, QN("Sz", 1) => 1], "i"; dir = In)
 ```
 """
-Index(qnblocks::QNBlocks,
-      tags;
-      dir::Arrow = Out,
-      plev::Integer = 0) = Index(qnblocks; dir = dir,
-                                       tags = tags,
-                                       plev = plev)
+Index(qnblocks::QNBlocks, tags; dir::Arrow = Out, plev::Integer = 0) =
+  Index(qnblocks; dir = dir, tags = tags, plev = plev)
 
 """
     Index(qnblocks::Pair{QN, Int64}...; dir::Arrow = Out,
@@ -123,45 +124,67 @@ dimensions.
 Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags = "i")
 ```
 """
-function Index(qnblocks::QNBlock...; dir::Arrow=Out,
-                                     tags="",
-                                     plev=0)
-  return Index([qnblocks...]; dir = dir,
-                              tags = tags,
-                              plev = plev)
-end
+Index(qnblocks::QNBlock...; dir::Arrow = Out, tags = "", plev = 0) =
+  Index([qnblocks...]; dir = dir, tags = tags, plev = plev)
 
 dim(i::QNIndex) = dim(space(i))
 
 nblocks(i::QNIndex) = nblocks(space(i))
 
-qn(ind::QNIndex, b::Integer) = dir(ind)*qn(space(ind),b)
-
-qnblocks(ind::QNIndex) = space(ind)
-
-blockdim(ind::QNIndex, b::Integer) = blockdim(space(ind),b)
-
-function qn(iv::QNIndexVal)
-  i = ind(iv)
-  v = val(iv)
+# Get the Block that the index value falls in
+# For example:
+# qns = [QN(0,2) => 2, QN(0,2) => 2]
+# block(qns, 1) == Block(1)
+# block(qns, 2) == Block(1)
+# block(qns, 3) == Block(2)
+# block(qns, 4) == Block(2)
+function block(qns::QNBlocks, n::Int)
   tdim = 0
-  for b=1:nblocks(i)
-    tdim += blockdim(i,b)
-    (v <= tdim) && return qn(i,b)
+  for b in 1:nblocks(qns)
+    tdim += blockdim(qns, Block(b))
+    (n <= tdim) && return Block(b)
   end
   error("qn: QNIndexVal out of range")
-  return QN()
+  return Block(0)
 end
 
+function block(iv::Union{<:IndexVal, <:Pair{<:Index, <:Integer}})
+  i = ind(iv)
+  v = val(iv)
+  return block(space(i), v)
+end
+
+# Get the QN of the block
+# XXX: deprecate the Integer version
+function qn(i::QNIndex, b::Block{1}; bare::Bool = false)
+  qn_b = qn(space(i), b)
+  if !bare
+    qn_b *= dir(i)
+  end
+  return qn_b
+end
+qn(i::QNIndex, b::Integer) = qn(i, Block(b))
+
+# Get the QN of the block the IndexVal lies in
+qn(iv::Union{<:IndexVal, <:Pair{<:Index, <:Integer}}) =
+  qn(ind(iv), block(iv))
+
+qnblocks(i::QNIndex) = space(i)
+
+# XXX: deprecate the Integer version
+blockdim(i::QNIndex, b::Block) = blockdim(space(i), b)
+blockdim(i::QNIndex, b::Integer) = blockdim(i, Block(b))
+
+# XXX: call this simply `block` and return a Block{1}
 """
-    qnblocknum(ind::QNIndex,q::QN)
+    qnblocknum(ind::QNIndex, q::QN)
 
 Given a QNIndex `ind` and QN `q`, return the 
 number of the block (from 1,...,nblocks(ind)) 
 of the QNIndex having QN equal to `q`. Assumes 
 all blocks of `ind` have a unique QN.
 """
-function qnblocknum(ind::QNIndex,q::QN) 
+function qnblocknum(ind::QNIndex, q::QN)
   for b=1:nblocks(ind)
     if qn(ind,b) == q
       return b
@@ -179,13 +202,13 @@ dimension of the block of the QNIndex having
 QN equal to `q`. Assumes all blocks of `ind` 
 have a unique QN.
 """
-qnblockdim(ind::QNIndex, q::QN) = blockdim(ind, qnblocknum(ind,q))
+qnblockdim(ind::QNIndex, q::QN) = blockdim(ind, qnblocknum(ind, q))
 
-function (dir::Arrow * qnb::QNBlock)
-  return QNBlock(dir*qn(qnb), blockdim(qnb))
-end
+(dir::Arrow * qnb::QNBlock) = QNBlock(dir * qn(qnb), blockdim(qnb))
 
 function (dir::Arrow * qn::QNBlocks)
+  # XXX use:
+  # dir .* qn
   qnR = copy(qn)
   for i in 1:nblocks(qnR)
     qnR[i] = dir*qnR[i]
@@ -193,9 +216,8 @@ function (dir::Arrow * qn::QNBlocks)
   return qnR
 end
 
-function (qn1::QNBlock * qn2::QNBlock)
-  return QNBlock(qn(qn1)+qn(qn2), blockdim(qn1)*blockdim(qn2))
-end
+(qn1::QNBlock * qn2::QNBlock) =
+  QNBlock(qn(qn1)+qn(qn2), blockdim(qn1)*blockdim(qn2))
 
 function outer(qn1::QNBlocks, qn2::QNBlocks)
   qnR = ITensors.QNBlocks(undef,nblocks(qn1)*nblocks(qn2))
@@ -205,10 +227,7 @@ function outer(qn1::QNBlocks, qn2::QNBlocks)
   return qnR
 end
 
-function outer(i1::QNIndex, i2::QNIndex;
-               dir = nothing,
-               tags = "",
-               plev::Integer = 0)
+function outer(i1::QNIndex, i2::QNIndex; dir = nothing, tags = "", plev::Integer = 0)
   if isnothing(dir)
     if ITensors.dir(i1) == ITensors.dir(i2)
       dir = ITensors.dir(i1)
@@ -224,10 +243,7 @@ function outer(i1::QNIndex, i2::QNIndex;
                plev = plev)
 end
 
-function outer(i::QNIndex;
-               dir = nothing,
-               tags = "",
-               plev::Integer = 0)
+function outer(i::QNIndex; dir = nothing, tags = "", plev::Integer = 0)
   if isnothing(dir)
     dir = ITensors.dir(i)
   end
@@ -238,9 +254,7 @@ function outer(i::QNIndex;
                plev = plev)
 end
 
-function isless(qnb1::QNBlock, qnb2::QNBlock)
-  return isless(qn(qnb1), qn(qnb2))
-end
+isless(qnb1::QNBlock, qnb2::QNBlock) = isless(qn(qnb1), qn(qnb2))
 
 function permuteblocks(i::QNIndex, perm)
   qnblocks_perm = space(i)[perm]
@@ -268,10 +282,18 @@ function combineblocks(qns::QNBlocks)
   return qnsC,perm,comb
 end
 
-# Make a new Index with the specified qn blocks
-function replaceqns(i::QNIndex,qns::QNBlocks)
-  return Index(id(i),qns,dir(i),tags(i),plev(i))
+function splitblocks(qns::QNBlocks)
+  idim = dim(qns)
+  split_qns = similar(qns, idim)
+  for n in 1:idim
+    b = block(qns, n)
+    split_qns[n] = qn(qns, b) => 1
+  end
+  return split_qns
 end
+
+# Make a new Index with the specified qn blocks
+replaceqns(i::QNIndex, qns::QNBlocks) = setspace(i, qns)
 
 function setblockdim!(i::QNIndex, newdim::Integer, n::Integer)
   qns = space(i)
@@ -301,12 +323,11 @@ function combineblocks(i::QNIndex)
   return iR,perm,comb
 end
 
-removeqns(i::QNIndex) =
-  Index(id(i), dim(i), Neither, tags(i), plev(i))
+removeqns(i::QNIndex) = setdir(setspace(i, dim(i)), Neither)
 
 function addqns(i::Index, qns::QNBlocks; dir::Arrow = Out)
   @assert dim(i) == dim(qns)
-  return Index(id(i), qns, dir, tags(i), plev(i))
+  return setdir(setspace(i, qns), dir)
 end
   
 function addqns(i::QNIndex, qns::QNBlocks)
@@ -328,6 +349,22 @@ function addqns(i::QNIndex, qns::QNBlocks)
   end
   return j
 end
+
+# Check that the QNs are all the same
+function hassameqns(i1::QNIndex, i2::QNIndex)
+  dim_i1 = dim(i1)
+  dim_i1 ≠ dim(i2) && return false
+  for n in 1:dim_i1
+    qn(i1 => n) ≠ qn(i2 => n) && return false
+  end
+  return true
+end
+
+hassameqns(::QNIndex, ::Index) = false
+hassameqns(::Index, ::QNIndex) = false
+
+# Split the blocks into blocks of size 1 with the same QNs
+splitblocks(i::Index) = setspace(i, splitblocks(space(i)))
 
 mutable_storage(::Type{Order{N}},
                 ::Type{IndexT}) where {N, IndexT <: QNIndex} =

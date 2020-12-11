@@ -1,6 +1,6 @@
 
 """
-    ITensor
+    ITensor{N}
 
 An ITensor is a tensor whose interface is 
 independent of its memory layout. Therefore
@@ -645,11 +645,15 @@ A = ITensor(2.0, i, i')
 A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 ```
 """
-function getindex(T::ITensor{N},
-                  I::Vararg{Union{Int, LastVal}, N}) where {N}
+function getindex(T::ITensor{N}, I::Vararg{Union{Int, LastVal}, N}) where {N}
   I = lastval_to_int(T, I...)
   @boundscheck checkbounds(tensor(T), I...)
   return tensor(T)[I...]::Number
+end
+
+function getindex(T::ITensor{N}, b::Block{N}) where {N}
+  # XXX: this should return an ITensor view
+  return tensor(T)[b]
 end
 
 # Version accepting CartesianIndex, useful when iterating over
@@ -733,12 +737,20 @@ function setindex!(T::ITensor, x::Number, ivs...)
   return T
 end
 
+Base.checkbounds(::Any, ::Block) = nothing
+
 function setindex!(T::ITensor, A::AbstractArray, I...)
   @boundscheck checkbounds(tensor(T), I...)
   TR = setindex!!(tensor(T), A, I...)
   setstore!(T, store(TR))
   return T
 end
+
+#function setindex!(T::ITensor, A::AbstractArray, b::Block)
+#  # XXX: use setindex!! syntax
+#  tensor(T)[b] = A
+#  return T
+#end
 
 function setindex!(T::ITensor, A::AbstractArray,
                    ivs::Pair{<:Index}...)
@@ -924,44 +936,21 @@ filterinds(A::ITensor) = inds(A)
 inds(A...; kwargs...) = filterinds(A...; kwargs...)
 
 # in-place versions of priming and tagging
-for fname in (:prime,
-              :setprime,
-              :noprime,
-              :mapprime,
-              :swapprime,
-              :addtags,
-              :removetags,
-              :replacetags,
-              :settags,
-              :swaptags,
-              :replaceind,
-              :replaceinds,
-              :swapind,
-              :swapinds)
+for fname in (:prime, :setprime, :noprime, :replaceprime, :swapprime,
+              :addtags, :removetags, :replacetags, :settags, :swaptags,
+              :replaceind, :replaceinds, :swapind, :swapinds)
   @eval begin
-    $fname(f::Function,
-           A::ITensor,
-           args...) = setinds(A,$fname(f,
-                                       inds(A),
-                                       args...))
+    $fname(f::Function, A::ITensor, args...) =
+      setinds(A, $fname(f, inds(A), args...))
 
-    $(Symbol(fname,:!))(f::Function,
-                        A::ITensor,
-                        args...) = setinds!(A,$fname(f,
-                                                     inds(A),
-                                                     args...))
+    $(Symbol(fname, :!))(f::Function, A::ITensor, args...) =
+      setinds!(A, $fname(f, inds(A), args...))
 
-    $fname(A::ITensor,
-           args...;
-           kwargs...) = setinds(A,$fname(inds(A),
-                                         args...;
-                                         kwargs...))
+    $fname(A::ITensor, args...; kwargs...) =
+      setinds(A, $fname(inds(A), args...; kwargs...))
 
-    $(Symbol(fname,:!))(A::ITensor,
-                        args...;
-                        kwargs...) = setinds!(A,$fname(inds(A),
-                                                       args...;
-                                                       kwargs...))
+    $(Symbol(fname, :!))(A::ITensor, args...; kwargs...) =
+      setinds!(A, $fname(inds(A), args...; kwargs...))
   end
 end
 
@@ -1006,9 +995,10 @@ $priming_tagging_doc
 """ noprime(::ITensor, ::Any...)
 
 @doc """
-    mapprime(A::ITensor, plold::Int, plnew::Int; <keyword arguments>) -> ITensor
+    replaceprime[!](A::ITensor, plold::Int, plnew::Int; <keyword arguments>) -> ITensor
+    replaceprime[!](A::ITensor, plold => plnew; <keyword arguments>) -> ITensor
 
-    mapprime!(A::ITensor, plold::Int, plnew::Int; <keyword arguments>)
+    mapprime[!](A::ITensor, <arguments>; <keyword arguments>) -> ITensor
 
 Set the prime level of the indices of an ITensor with prime level `plold` to `plnew`.
 
@@ -1016,9 +1006,8 @@ $priming_tagging_doc
 """ mapprime(::ITensor, ::Any...)
 
 @doc """
-    swapprime(A::ITensor, pl1::Int, pl2::Int; <keyword arguments>) -> ITensor
-
-    swapprime!(A::ITensor, pl1::Int, pl2::Int; <keyword arguments>)
+    swapprime[!](A::ITensor, pl1::Int, pl2::Int; <keyword arguments>) -> ITensor
+    swapprime[!](A::ITensor, pl1 => pl2; <keyword arguments>) -> ITensor
 
 Set the prime level of the indices of an ITensor with prime level `pl1` to `pl2`, and those with prime level `pl2` to `pl1`.
 
@@ -1026,9 +1015,7 @@ $priming_tagging_doc
 """ swapprime(::ITensor, ::Any...)
 
 @doc """
-    addtags(A::ITensor, ts::String; <keyword arguments>) -> ITensor
-
-    addtags!(A::ITensor, ts::String; <keyword arguments>)
+    addtags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
 
 Add the tags `ts` to the indices of an ITensor.
 
@@ -1036,9 +1023,7 @@ $priming_tagging_doc
 """ addtags(::ITensor, ::Any...)
 
 @doc """
-    removetags(A::ITensor, ts::String; <keyword arguments>) -> ITensor
-
-    removetags!(A::ITensor, ts::String; <keyword arguments>)
+    removetags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
 
 Remove the tags `ts` from the indices of an ITensor.
 
@@ -1046,9 +1031,7 @@ $priming_tagging_doc
 """ removetags(::ITensor, ::Any...)
 
 @doc """
-    settags(A::ITensor, ts::String; <keyword arguments>) -> ITensor
-
-    settags!(A::ITensor, ts::String; <keyword arguments>)
+    settags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
 
 Set the tags of the indices of an ITensor to `ts`.
 
@@ -1119,6 +1102,8 @@ The indices must have the same space (i.e. the same dimension and QNs, if applic
 The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
 """ swapinds(::ITensor, ::Any...)
 
+# XXX: rename to:
+# hastags(any, A, ts)
 """
     anyhastags(A::ITensor, ts::Union{String, TagSet})
     hastags(A::ITensor, ts::Union{String, TagSet})
@@ -1129,6 +1114,8 @@ anyhastags(A::ITensor, ts) = anyhastags(inds(A), ts)
 
 hastags(A::ITensor, ts) = hastags(inds(A), ts)
 
+# XXX: rename to:
+# hastags(all, A, ts)
 """
     allhastags(A::ITensor, ts::Union{String, TagSet})
 
@@ -1149,11 +1136,9 @@ function (A::ITensor == B::ITensor)
   return norm(A - B) == zero(promote_type(eltype(A),eltype(B)))
 end
 
-function isapprox(A::ITensor,
-                  B::ITensor;
-                  kwargs...)
-    B = permute(dense(B), inds(A))
-    return isapprox(array(A), array(B); kwargs...)
+function isapprox(A::ITensor, B::ITensor; kwargs...)
+  B = permute(dense(B), inds(A))
+  return isapprox(array(A), array(B); kwargs...)
 end
 
 randn!(T::ITensor) = randn!(tensor(T))
@@ -1351,13 +1336,10 @@ end
 
 function mul!(C::ITensor, A::ITensor, B::ITensor,
               α::Number, β::Number=0)
-  (labelsC,labelsA,labelsB) = compute_contraction_labels(inds(C),
-                                                         inds(A),
-                                                         inds(B))
-  CT = NDTensors.contract!!(tensor(C), labelsC,
-                            tensor(A), labelsA,
-                            tensor(B), labelsB,
-                            α, β)
+  labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
+  labelsC, labelsA, labelsB = labelsCAB
+  CT = NDTensors.contract!!(tensor(C), labelsC, tensor(A), labelsA,
+                            tensor(B), labelsB, α, β)
   C = itensor(CT)
   return C
 end
@@ -1365,11 +1347,9 @@ end
 # This is necessary for now since not all types implement contract!!
 # with non-trivial α and β
 function mul!(C::ITensor, A::ITensor, B::ITensor)
-  (labelsC,labelsA,labelsB) = compute_contraction_labels(inds(C),
-                                                         inds(A),
-                                                         inds(B))
-  CT = NDTensors.contract!!(tensor(C), labelsC,
-                            tensor(A), labelsA,
+  labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
+  labelsC, labelsA, labelsB = labelsCAB
+  CT = NDTensors.contract!!(tensor(C), labelsC, tensor(A), labelsA,
                             tensor(B), labelsB)
   C = itensor(CT)
   return C
@@ -1380,8 +1360,7 @@ dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 # Returns a tuple of pairs of indices, where the pairs
 # are determined by the prime level pairs `plev` and
 # tag pairs `tags`.
-function indpairs(T::ITensor;
-                  plev::Pair{Int, Int} = 0 => 1,
+function indpairs(T::ITensor; plev::Pair{Int, Int} = 0 => 1,
                   tags::Pair = ts"" => ts"")
   is1 = filterinds(T; plev = first(plev), tags = first(tags))
   is2 = filterinds(T, plev = last(plev), tags = last(tags))
@@ -1397,8 +1376,7 @@ end
 # Trace an ITensor over pairs of indices determined by
 # the prime levels and tags. Indices that are not in pairs
 # are not traced over, corresponding to a "batched" trace.
-function tr(T::ITensor;
-            plev::Pair{Int, Int} = 0 => 1,
+function tr(T::ITensor; plev::Pair{Int, Int} = 0 => 1,
             tags::Pair = ts"" => ts"")
   trpairs = indpairs(T; plev = plev, tags = tags)
   for indpair in trpairs
