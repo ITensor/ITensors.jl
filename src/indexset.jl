@@ -992,7 +992,7 @@ function replaceinds(is::IndexSet, inds1, inds2)
     i1 = is[pos]
     i2 = inds2[j]
     i2 = setdir(i2, dir(i1))
-    !hassameqns(i1, i2) && error("Indices must have the same spaces to be replaced")
+    space(i1) ≠ space(i2) && error("Indices must have the same spaces to be replaced")
     is = setindex(is, i2, pos)
   end
   return is
