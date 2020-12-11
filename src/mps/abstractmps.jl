@@ -184,6 +184,25 @@ iterate(M::AbstractMPS) = iterate(data(M))
 iterate(M::AbstractMPS, state) = iterate(data(M), state)
 
 """
+    linkind(M::MPS, j::Integer)
+
+    linkind(M::MPO, j::Integer)
+
+Get the link or bond Index connecting the
+MPS or MPO tensor on site j to site j+1.
+
+If there is no link Index, return `nothing`.
+"""
+function linkind(M::AbstractMPS, j::Integer)
+  N = length(M)
+  (j ≥ length(M) || j < 1) && return nothing
+  return commonind(M[j], M[j+1])
+end
+
+linkinds(ψ::AbstractMPS) =
+  [linkind(ψ, b) for b in 1:length(ψ)-1]
+
+"""
     dense(::MPS/MPO)
 
 Given an MPS (or MPO), return a new MPS (or MPO) 
@@ -379,9 +398,26 @@ function siteinds(::typeof(all), ψ::AbstractMPS, n::Integer; kwargs...)
   return siteinds(ψ, n; kwargs...)
 end
 
+function replaceinds!(::typeof(linkinds), M::AbstractMPS,
+                      l̃s::Vector{<:Index})
+  for i in eachindex(M)[1:end-1]
+    l = linkind(M, i)
+    l̃ = l̃s[i]
+    if !isnothing(l)
+      @preserve_ortho M begin
+        M[i] = replaceinds(M[i], l => l̃)
+        M[i+1] = replaceinds(M[i+1], l => l̃)
+      end
+    end
+  end
+  return M
+end
+
+replaceinds(::typeof(linkinds), M::ITensors.AbstractMPS,
+            l̃s::Vector{<:Index}) = replaceinds!(linkinds, copy(M), l̃s)
+
 # TODO: change kwarg from `set_limits` to `preserve_ortho`
-function map!(f::Function, M::AbstractMPS;
-              set_limits::Bool = true)
+function map!(f::Function, M::AbstractMPS; set_limits::Bool = true)
   for i in eachindex(M)
     M[i, set_limits = set_limits] = f(M[i])
   end
@@ -392,14 +428,8 @@ end
 Base.map(f::Function, M::AbstractMPS; set_limits::Bool = true) =
   map!(f, copy(M); set_limits = set_limits)
 
-for fname in (:dag,
-              :prime,
-              :setprime,
-              :noprime,
-              :addtags,
-              :removetags,
-              :replacetags,
-              :settags)
+for fname in (:dag, :prime, :setprime, :noprime, :addtags, :removetags,
+              :replacetags, :settags)
   fname_bang = Symbol(fname, :!)
 
   @eval begin
@@ -443,10 +473,15 @@ function map_linkinds!(f::Function, M::AbstractMPS)
   return M
 end
 
+# Change to:
+# map(f::Function, ::typeof(linkinds), M::AbstractMPS)
 map_linkinds(f::Function, M::AbstractMPS) = map_linkinds!(f, copy(M))
 
+# Change to:
+# map!(f::Function, ::typeof(commoninds), ::typeof(siteinds),
+#      M::AbstractMPS)
 function map_common_siteinds!(f::Function, M1::AbstractMPS,
-                                           M2::AbstractMPS)
+                              M2::AbstractMPS)
   length(M1) != length(M2) && error("MPOs/MPSs must be the same length")
   for i in eachindex(M1)
     s = common_siteind(M1, M2, i)
@@ -482,14 +517,8 @@ function map_unique_siteinds(f::Function, M1::AbstractMPS,
   return map_unique_siteinds!(f, copy(M1), M2)
 end
 
-for fname in (:sim,
-              :prime,
-              :setprime,
-              :noprime,
-              :addtags,
-              :removetags,
-              :replacetags,
-              :settags)
+for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
+              :replacetags, :settags)
   fname_linkinds = Symbol(fname, :_linkinds)
   fname_linkinds_inplace = Symbol(fname_linkinds, :!)
   fname_common_siteinds = Symbol(fname, :_common_siteinds)
@@ -597,25 +626,6 @@ function maxlinkdim(M::AbstractMPS)
   end
   md
 end
-
-"""
-    linkind(M::MPS, j::Integer)
-
-    linkind(M::MPO, j::Integer)
-
-Get the link or bond Index connecting the
-MPS or MPO tensor on site j to site j+1.
-
-If there is no link Index, return `nothing`.
-"""
-function linkind(M::AbstractMPS, j::Integer)
-  N = length(M)
-  (j ≥ length(M) || j < 1) && return nothing
-  return commonind(M[j], M[j+1])
-end
-
-linkinds(ψ::AbstractMPS) =
-  [linkind(ψ, b) for b in 1:length(ψ)-1]
 
 """
     linkdim(M::MPS, j::Integer)
@@ -1558,6 +1568,29 @@ function checkflux(M::AbstractMPS)
   end
   return nothing
 end
+
+"""
+    splitblocks[!](::typeof(linkinds), M::AbstractMPS; tol = 0)
+
+Split the QN blocks of the links of the MPS or MPO into dimension 1 blocks. Then, only keep the blocks with `norm(b) > tol`.
+
+This can make the ITensors of the MPS/MPO more sparse, and is particularly helpful as a preprocessing step on a local Hamiltonian MPO for DMRG.
+"""
+function splitblocks!(::typeof(linkinds), M::AbstractMPS; tol = 0)
+  for i in eachindex(M)[1:end-1]
+    l = linkind(M, i)
+    if !isnothing(l)
+      @preserve_ortho M begin
+        M[i] = splitblocks(M[i], l)
+        M[i+1] = splitblocks(M[i+1], l)
+      end
+    end
+  end
+  return M
+end
+
+splitblocks(::typeof(linkinds), M::AbstractMPS; tol = 0) =
+  splitblocks!(linkinds, copy(M); tol = 0)
 
 #
 # Broadcasting

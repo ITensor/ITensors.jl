@@ -71,6 +71,7 @@ export
   settags,
   sim,
   space,
+  splitblocks,
   tags,
   val,
 
@@ -95,6 +96,7 @@ export
   pushfirst,
   replaceind,
   replaceinds,
+  replaceprime,
   swapinds,
   setindex,
   swapind,

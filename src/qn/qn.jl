@@ -14,7 +14,7 @@ struct QNVal
 
 end
 
-QNVal(v::Int,m::Int=1) = QNVal("",v,m)
+QNVal(v::Int, m::Int=1) = QNVal("",v,m)
 QNVal() = QNVal("",0,0)
 
 name(qv::QNVal) = qv.name
@@ -22,25 +22,26 @@ val(qv::QNVal) = qv.val
 modulus(qv::QNVal) = qv.modulus
 isactive(qv::QNVal) = modulus(qv) != 0
 isfermionic(qv::QNVal) = modulus(qv) < 0
-Base.:<(qv1::QNVal,qv2::QNVal) = (name(qv1) < name(qv2))
+(qv1::QNVal < qv2::QNVal) = (name(qv1) < name(qv2))
 
-function qn_mod(val::Int,modulus::Int)
+function qn_mod(val::Int, modulus::Int)
   amod = abs(modulus)
   amod <= 1 && return val
   return mod(val,amod)
 end
 
-function Base.:-(qv::QNVal)
+function -(qv::QNVal)
   return QNVal(name(qv),qn_mod(-val(qv),modulus(qv)),modulus(qv))
 end
 
-Base.zero(qv::QNVal) = QNVal(name(qv),0,modulus(qv))
+zero(qv::QNVal) = QNVal(name(qv),0,modulus(qv))
 
-function Base.:*(dir::Arrow,qv::QNVal)
-  return QNVal(name(qv),Int(dir)*val(qv),modulus(qv))
-end
+(dir::Arrow * qv::QNVal) =
+  QNVal(name(qv),Int(dir)*val(qv),modulus(qv))
 
-function pm(qv1::QNVal,qv2::QNVal,fac::Int) 
+(qv::QNVal * dir::Arrow) = (dir * qv)
+
+function pm(qv1::QNVal,qv2::QNVal, fac::Int)
   if name(qv1) != name(qv2)
     error("Cannot add QNVals with different names \"$(name(qv1))\", \"$(name(qv2))\"")
   end
@@ -54,8 +55,8 @@ function pm(qv1::QNVal,qv2::QNVal,fac::Int)
   return QNVal(name(qv1),Base.mod(val(qv1)+fac*val(qv2),abs(m1)),m1)
 end
 
-Base.:+(qv1::QNVal,qv2::QNVal) = pm(qv1,qv2,+1)
-Base.:-(qv1::QNVal,qv2::QNVal) = pm(qv1,qv2,-1)
+(qv1::QNVal + qv2::QNVal) = pm(qv1,qv2,+1)
+(qv1::QNVal - qv2::QNVal) = pm(qv1,qv2,-1)
 
 const ZeroVal = QNVal()
 
@@ -92,7 +93,7 @@ QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
 
 isfermionic(qv::QN) = any(isfermionic, qv)
 
-function Base.hash(obj::QN, h::UInt)
+function hash(obj::QN, h::UInt)
   # TODO: use an MVector or SVector
   # for performance here; put non-zero QNVals
   # to front and slice when passing to hash
@@ -154,11 +155,11 @@ QN(val::Int,modulus::Int=1) = QN(("",val,modulus))
 
 data(qn::QN) = qn.data
 
-Base.getindex(q::QN,n::Int) = getindex(data(q),n)
+getindex(q::QN,n::Int) = getindex(data(q),n)
 
-Base.length(qn::QN) = length(data(qn))
+length(qn::QN) = length(data(qn))
 
-Base.lastindex(qn::QN) = length(qn)
+lastindex(qn::QN) = length(qn)
 
 isactive(qn::QN) = isactive(qn[1])
 
@@ -169,12 +170,12 @@ function nactive(q::QN)
   return maxQNs
 end
 
-function Base.iterate(qn::QN,state::Int=1)
+function iterate(qn::QN,state::Int=1)
   (state > length(qn)) && return nothing
   return (qn[state],state+1)
 end
 
-Base.keys(qn::QN) = keys(data(qn))
+keys(qn::QN) = keys(data(qn))
 
 """
     val(q::QN,name)
@@ -211,7 +212,7 @@ Returns a QN object containing
 the same names as q, but with
 all values set to zero.
 """
-function Base.zero(qn::QN)
+function zero(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
     mqn[i] = zero(qn[i])
@@ -219,7 +220,7 @@ function Base.zero(qn::QN)
   return QN(mqn)
 end
 
-function Base.:*(dir::Arrow,qn::QN)
+function (dir::Arrow * qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
     mqn[i] = dir*qn[i]
@@ -227,7 +228,9 @@ function Base.:*(dir::Arrow,qn::QN)
   return QN(mqn)
 end
 
-function Base.:-(qn::QN)
+(qn::QN * dir::Arrow) = (dir * qn)
+
+function -(qn::QN)
   mqn = MQNStorage(undef)
   for i in 1:length(mqn)
     mqn[i] = -qn[i]
@@ -235,7 +238,7 @@ function Base.:-(qn::QN)
   return QN(mqn)
 end
 
-function Base.:+(a::QN,b::QN)
+function (a::QN + b::QN)
   !isactive(b[1]) && return a
 
   ma = MQNStorage(data(a))
@@ -262,12 +265,10 @@ function Base.:+(a::QN,b::QN)
   return QN(QNStorage(ma))
 end
 
-function Base.:-(a::QN,b::QN)
-  return a+(-b)
-end
+(a::QN - b::QN) = (a + (-b))
 
 
-function hasname(qn::QN,qv_find::QNVal)
+function hasname(qn::QN, qv_find::QNVal)
   for qv in qn
     name(qv) == name(qv_find) && return true
   end
@@ -318,7 +319,7 @@ function isequal_assume_filled(qn1::QN,qn2::QN)
   return true
 end
 
-function Base.:(==)(qn1::QN,qn2::QN; assume_filled=false)
+function ==(qn1::QN, qn2::QN; assume_filled=false)
   if !assume_filled
     qn1,qn2 = fillqns(qn1,qn2)
   end
@@ -334,11 +335,11 @@ function isless_assume_filled(qn1::QN,qn2::QN)
   return false
 end
 
-function Base.isless(qn1::QN,qn2::QN; assume_filled=false)
+function isless(qn1::QN,qn2::QN; assume_filled=false)
   return <(qn1,qn2;assume_filled=assume_filled)
 end
 
-function Base.:<(qn1::QN,qn2::QN; assume_filled=false)
+function <(qn1::QN, qn2::QN; assume_filled=false)
   if !assume_filled
     qn1,qn2 = fillqns(qn1,qn2)
   end
@@ -359,7 +360,7 @@ function have_same_mods(qn1::QN,qn2::QN)
   return true
 end
 
-function Base.show(io::IO,q::QN)
+function show(io::IO,q::QN)
   print(io,"QN(")
   Na = nactive(q)
   for n=1:Na
@@ -378,9 +379,8 @@ function Base.show(io::IO,q::QN)
   print(io,")")
 end
 
-function HDF5.write(parent::Union{HDF5File, HDF5Group},
-                    gname::AbstractString,
-                    q::QN)
+function write(parent::Union{HDF5File, HDF5Group},
+               gname::AbstractString, q::QN)
   g = g_create(parent, gname)
   attrs(g)["type"] = "QN"
   attrs(g)["version"] = 1
@@ -392,9 +392,8 @@ function HDF5.write(parent::Union{HDF5File, HDF5Group},
   write(g,"mods",mods)
 end
 
-function HDF5.read(parent::Union{HDF5File,HDF5Group},
-                   name::AbstractString,
-                   ::Type{QN})
+function read(parent::Union{HDF5File,HDF5Group},
+              name::AbstractString, ::Type{QN})
   g = g_open(parent,name)
   if read(attrs(g)["type"]) != "QN"
     error("HDF5 group or file does not contain QN data")

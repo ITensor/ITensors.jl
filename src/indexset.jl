@@ -3,12 +3,9 @@
 struct IndexSet{N, IndexT <: Index, DataT <: Tuple}
   data::DataT
 
-  IndexSet{N,
-           IndexT,
-           DataT}(data) where {N,
-                               IndexT,
-                               DataT <: NTuple{N, IndexT}} =
-    new{N, IndexT, DataT}(data)
+  function IndexSet{N, IndexT, DataT}(data) where {N, IndexT, DataT <: NTuple{N, IndexT}}
+    return new{N, IndexT, DataT}(data)
+  end
 
   """
       IndexSet{Any}()
@@ -24,6 +21,7 @@ end
 # Order value type
 #
 
+# More complicated definition makes Order(Ref(2)[]) faster
 @eval struct Order{N}
   (OrderT::Type{ <: Order})() = $(Expr(:new, :OrderT))
 end
@@ -871,54 +869,39 @@ swapprime(is::IndexSet, pl1pl2::Pair{Int, Int}, args...; kwargs...) =
 swapprime(is::IndexSet, pl1::Int, pl2::Int, args...; kwargs...) =
   swapprime(fmatch(args...; kwargs...), is, pl1 => pl2)
 
-mapprime(f::Function, is::IndexSet, 
-         pl1::Int, pl2::Int) = mapprime(f, is, pl1 => pl2)
+replaceprime(f::Function, is::IndexSet, pl1::Int, pl2::Int) =
+  replaceprime(f, is, pl1 => pl2)
 
-mapprime(is::IndexSet, pl1::Int, pl2::Int,
-         args...; kwargs...) = mapprime(fmatch(args...; kwargs...),
-                                        is, pl1 => pl2)
+replaceprime(is::IndexSet, pl1::Int, pl2::Int, args...; kwargs...) =
+  replaceprime(fmatch(args...; kwargs...), is, pl1 => pl2)
 
-function _mapprime(i::Index,
-                   rep_pls::Pair{Int, Int}...)
+const mapprime = replaceprime
+
+function _replaceprime(i::Index, rep_pls::Pair{Int, Int}...)
   for (pl1, pl2) in rep_pls
     hasplev(i, pl1) && return setprime(i, pl2)
   end
   return i
 end
 
-function mapprime(f::Function,
-                  is::IndexSet,
-                  rep_pls::Pair{Int, Int}...)
-  return map(i -> f(i) ? _mapprime(i, rep_pls...) : i, is)
+function replaceprime(f::Function, is::IndexSet, rep_pls::Pair{Int, Int}...)
+  return map(i -> f(i) ? _replaceprime(i, rep_pls...) : i, is)
 end
 
-mapprime(is::IndexSet,
-         rep_pls::Pair{Int, Int}...;
-         kwargs...) = mapprime(fmatch(; kwargs...),
-                               is, rep_pls...)
+replaceprime(is::IndexSet, rep_pls::Pair{Int, Int}...; kwargs...) =
+  replaceprime(fmatch(; kwargs...), is, rep_pls...)
 
-function addtags(f::Function,
-                 is::IndexSet,
-                 args...)
-  return map(i -> f(i) ? addtags(i, args...) : i, is)
-end
+addtags(f::Function, is::IndexSet, args...) =
+  map(i -> f(i) ? addtags(i, args...) : i, is)
 
-addtags(is::IndexSet,
-        tags,
-        args...; kwargs...) = addtags(fmatch(args...; kwargs...),
-                                      is, tags)
+addtags(is::IndexSet, tags, args...; kwargs...) =
+  addtags(fmatch(args...; kwargs...), is, tags)
 
-function settags(f::Function,
-                 is::IndexSet,
-                 args...)
-  return map(i -> f(i) ? settags(i, args...) : i, is)
-end
+settags(f::Function, is::IndexSet, args...) =
+  map(i -> f(i) ? settags(i, args...) : i, is)
 
-settags(is::IndexSet,
-        tags,
-        args...;
-        kwargs...) = settags(fmatch(args...; kwargs...),
-                             is, tags)
+settags(is::IndexSet, tags, args...; kwargs...) =
+  settags(fmatch(args...; kwargs...), is, tags)
 
 """
     CartesianIndices(is::IndexSet)
@@ -927,37 +910,33 @@ Create a CartesianIndices iterator for an IndexSet.
 """
 CartesianIndices(is::IndexSet) = CartesianIndices(dims(is))
 
-function removetags(f::Function,
-                    is::IndexSet,
-                    args...)
-  return map(i -> f(i) ? removetags(i, args...) : i, is)
-end
+removetags(f::Function, is::IndexSet, args...) =
+  map(i -> f(i) ? removetags(i, args...) : i, is)
 
-removetags(is::IndexSet,
-           tags,
-           args...;
-           kwargs...) = removetags(fmatch(args...; kwargs...),
-                                   is, tags)
+removetags(is::IndexSet, tags, args...; kwargs...) =
+  removetags(fmatch(args...; kwargs...), is, tags)
 
-function _replacetags(i::Index,
-                      rep_ts::Pair...)
+function _replacetags(i::Index, rep_ts::Pair...)
   for (tags1, tags2) in rep_ts
     hastags(i, tags1) && return replacetags(i, tags1, tags2)
   end
   return i
 end
 
+# XXX new syntax
+# hastags(any, is, ts)
 """
     anyhastags(is::IndexSet, ts::Union{String, TagSet})
     hastags(is::IndexSet, ts::Union{String, TagSet})
 
 Check if any of the indices in the IndexSet have the specified tags.
 """
-anyhastags(is::IndexSet, ts) =
-  any(i -> hastags(i, ts), is)
+anyhastags(is::IndexSet, ts) = any(i -> hastags(i, ts), is)
 
 hastags(is::IndexSet, ts) = anyhastags(is, ts)
 
+# XXX new syntax
+# hastags(all, is, ts)
 """
     allhastags(is::IndexSet, ts::Union{String, TagSet})
 
@@ -967,33 +946,20 @@ allhastags(is::IndexSet, ts::String) =
   all(i -> hastags(i, ts), is)
 
 # Version taking a list of Pairs
-replacetags(f::Function,
-            is::IndexSet,
-            rep_ts::Pair...) =
+replacetags(f::Function, is::IndexSet, rep_ts::Pair...) =
   map(i -> f(i) ? _replacetags(i, rep_ts...) : i, is)
 
-replacetags(is::IndexSet,
-            rep_ts::Pair...;
-            kwargs...) = replacetags(fmatch(; kwargs...),
-                                     is, rep_ts...)
+replacetags(is::IndexSet, rep_ts::Pair...; kwargs...) =
+  replacetags(fmatch(; kwargs...), is, rep_ts...)
 
 # Version taking two input TagSets/Strings
-replacetags(f::Function,
-            is::IndexSet,
-            tags1,
-            tags2) = replacetags(f, is, tags1 => tags2)
+replacetags(f::Function, is::IndexSet, tags1, tags2) =
+  replacetags(f, is, tags1 => tags2)
 
-replacetags(is::IndexSet,
-            tags1,
-            tags2,
-            args...;
-            kwargs...) = replacetags(fmatch(args...; kwargs...),
-                                     is, tags1 => tags2)
+replacetags(is::IndexSet, tags1, tags2, args...; kwargs...) =
+  replacetags(fmatch(args...; kwargs...), is, tags1 => tags2)
 
-function _swaptags(f::Function,
-                   i::Index,
-                   tags1,
-                   tags2)
+function _swaptags(f::Function, i::Index, tags1, tags2)
   if f(i)
     if hastags(i, tags1)
       return replacetags(i, tags1, tags2)
@@ -1005,19 +971,12 @@ function _swaptags(f::Function,
   return i
 end
 
-function swaptags(f::Function,
-                  is::IndexSet, 
-                  tags1,
-                  tags2)
+function swaptags(f::Function, is::IndexSet, tags1, tags2)
   return map(i -> _swaptags(f, i, tags1, tags2), is)
 end
 
-swaptags(is::IndexSet,
-         tags1,
-         tags2,
-         args...;
-         kwargs...) = swaptags(fmatch(args...; kwargs...),
-                               is, tags1, tags2)
+swaptags(is::IndexSet, tags1, tags2, args...; kwargs...) =
+  swaptags(fmatch(args...; kwargs...), is, tags1, tags2)
 
 replaceinds(is::IndexSet, rep_inds::Pair{ <: Index, <: Index}...) =
   replaceinds(is, zip(rep_inds...)...)
@@ -1039,13 +998,14 @@ function replaceinds(is::IndexSet, inds1, inds2)
   return is
 end
 
-replaceind(is::IndexSet, i1::Index, i2::Index) = replaceinds(is, (i1,), (i2,))
+replaceind(is::IndexSet, i1::Index, i2::Index) =
+  replaceinds(is, (i1,), (i2,))
 
-replaceind(is::IndexSet, rep_i::Pair{ <: Index, <: Index}) = replaceinds(is, rep_i)
+replaceind(is::IndexSet, rep_i::Pair{ <: Index, <: Index}) =
+  replaceinds(is, rep_i)
 
-function swapinds(is::IndexSet, inds1, inds2)
-  return replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
-end
+swapinds(is::IndexSet, inds1, inds2) =
+  replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
 
 swapind(is::IndexSet, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
@@ -1195,28 +1155,23 @@ NDTensors.insertat(is1::IndexSet,
 
 Insert the indices is2 after position pos.
 """
-function insertafter(is::IndexSet, I...)
-  return IndexSet(NDTensors.insertafter(Tuple(is), I...))
-end
+insertafter(is::IndexSet, I...) =
+  IndexSet(NDTensors.insertafter(Tuple(is), I...))
 
 # Overload the unexported NDTensors version
-NDTensors.insertafter(is::IndexSet,
-                    I...) = insertafter(is, I...)
+NDTensors.insertafter(is::IndexSet, I...) = insertafter(is, I...)
 
-function deleteat(is::IndexSet, I...)
-  return IndexSet(NDTensors.deleteat(Tuple(is),I...))
-end
+deleteat(is::IndexSet, I...) =
+  IndexSet(NDTensors.deleteat(Tuple(is),I...))
 
 # Overload the unexported NDTensors version
 NDTensors.deleteat(is::IndexSet,
                    I...) = deleteat(is, I...)
 
-function getindices(is::IndexSet, I...)
-  return IndexSet(NDTensors.getindices(Tuple(is), I...))
-end
+getindices(is::IndexSet, I...) =
+  IndexSet(NDTensors.getindices(Tuple(is), I...))
 
-NDTensors.getindices(is::IndexSet,
-                     I...) = getindices(is, I...)
+NDTensors.getindices(is::IndexSet, I...) = getindices(is, I...)
 
 #
 # QN functions

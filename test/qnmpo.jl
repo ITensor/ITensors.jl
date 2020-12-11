@@ -168,4 +168,37 @@ using ITensors,
   @test isnothing(linkind(MPO(fill(ITensor(), N), 0, N + 1), 1))
 end
 
+@testset "splitblocks" begin
+  N = 4
+  sites = siteinds("S=1", N; conserve_qns = true)
+  ampo = AutoMPO()
+  for j=1:N-1
+    ampo .+= 0.5, "S+", j, "S-", j+1
+    ampo .+= 0.5, "S-", j, "S+", j+1
+    ampo .+=      "Sz", j, "Sz", j+1
+  end
+  H = MPO(ampo, sites)
+
+  # Split the tensors to make them more sparse
+  # Drops zero blocks by default
+  H̃ = splitblocks(linkinds, H)
+
+  @test prod(H) ≈ prod(H̃)
+
+  @test nnz(H[1]) == 13
+  @test nnz(H[2]) == 51
+  @test nnz(H[3]) == 51
+  @test nnz(H[4]) == 13
+
+  @test nnzblocks(H[1]) == 7
+  @test nnzblocks(H[2]) == 11
+  @test nnzblocks(H[3]) == 11
+  @test nnzblocks(H[4]) == 7
+
+  @test nnz(H̃[1]) == nnzblocks(H̃[1]) == count(≠(0), H[1]) == count(≠(0), H̃[1]) == 9
+  @test nnz(H̃[2]) == nnzblocks(H̃[2]) == count(≠(0), H[2]) == count(≠(0), H̃[2]) == 18
+  @test nnz(H̃[3]) == nnzblocks(H̃[3]) == count(≠(0), H[3]) == count(≠(0), H̃[3]) == 18
+  @test nnz(H̃[4]) == nnzblocks(H̃[4]) == count(≠(0), H[4]) == count(≠(0), H̃[4]) == 9
+end
+
 nothing
