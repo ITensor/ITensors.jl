@@ -1,6 +1,6 @@
 
 """
-    ITensor
+    ITensor{N}
 
 An ITensor is a tensor whose interface is 
 independent of its memory layout. Therefore
@@ -645,11 +645,15 @@ A = ITensor(2.0, i, i')
 A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 ```
 """
-function getindex(T::ITensor{N},
-                  I::Vararg{Union{Int, LastVal}, N}) where {N}
+function getindex(T::ITensor{N}, I::Vararg{Union{Int, LastVal}, N}) where {N}
   I = lastval_to_int(T, I...)
   @boundscheck checkbounds(tensor(T), I...)
   return tensor(T)[I...]::Number
+end
+
+function getindex(T::ITensor{N}, b::Block{N}) where {N}
+  # XXX: this should return an ITensor view
+  return tensor(T)[b]
 end
 
 # Version accepting CartesianIndex, useful when iterating over
@@ -733,12 +737,20 @@ function setindex!(T::ITensor, x::Number, ivs...)
   return T
 end
 
+Base.checkbounds(::Any, ::Block) = nothing
+
 function setindex!(T::ITensor, A::AbstractArray, I...)
   @boundscheck checkbounds(tensor(T), I...)
   TR = setindex!!(tensor(T), A, I...)
   setstore!(T, store(TR))
   return T
 end
+
+#function setindex!(T::ITensor, A::AbstractArray, b::Block)
+#  # XXX: use setindex!! syntax
+#  tensor(T)[b] = A
+#  return T
+#end
 
 function setindex!(T::ITensor, A::AbstractArray,
                    ivs::Pair{<:Index}...)

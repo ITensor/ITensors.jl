@@ -39,9 +39,7 @@ end
 
 ITensor(inds::QNIndex...) = ITensor(Float64, QN(), IndexSet(inds...))
 
-function _ITensor(A::Array{ElT},
-                  inds::QNIndexSet;
-                  tol = 0) where {ElT}
+function _ITensor(A::Array{ElT}, inds::QNIndexSet; tol = 0) where {ElT}
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, ::IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   T = emptyITensor(ElT, inds)
   A = reshape(A, dims(inds))
@@ -90,36 +88,24 @@ Block: (2, 2)
  0.0  4.0
 ```
 """
-ITensor(A::Array,
-        inds::QNIndexSet;
-        tol = 0) =
+ITensor(A::Array, inds::QNIndexSet; tol = 0) =
   _ITensor(A, inds; tol = tol)
 
 # Defined to fix ambiguity error
-ITensor(A::Array{ <: AbstractFloat},
-        inds::QNIndexSet;
-        tol = 0) =
+ITensor(A::Array{ <: AbstractFloat}, inds::QNIndexSet; tol = 0) =
   _ITensor(A, inds; tol = tol)
 
-ITensor(A::Array,
-        inds::QNIndex...;
-        tol = 0) =
+ITensor(A::Array, inds::QNIndex...; tol = 0) =
   _ITensor(A, IndexSet(inds...); tol = tol)
 
-itensor(A::Array,
-        inds::QNIndexSet;
-        tol = 0) =
+itensor(A::Array, inds::QNIndexSet; tol = 0) =
   ITensor(A, inds; tol = tol)
 
-itensor(A::Array,
-        inds::QNIndex...;
-        tol = 0) =
+itensor(A::Array, inds::QNIndex...; tol = 0) =
   ITensor(A, inds...; tol = tol)
 
 # Defined to fix ambiguity error
-itensor(A::Array{ <: Number},
-        inds::QNIndex...;
-        tol = 0) =
+itensor(A::Array{ <: Number}, inds::QNIndex...; tol = 0) =
   ITensor(A, inds...; tol = tol)
 
 """
@@ -291,4 +277,16 @@ function delta(::Type{ElT},
 end
 
 delta(inds::QNIndices) = delta(Float64, QN(), inds)
+
+function dropzeros(T::ITensor; tol = 0)
+  # XXX: replace with empty(T)
+  T̃ = emptyITensor(eltype(T), inds(T))
+  for b in eachnzblock(T)
+    Tb = T[b]
+    if norm(Tb) > tol
+      T̃[b] = Tb
+    end
+  end
+  return T̃
+end
 
