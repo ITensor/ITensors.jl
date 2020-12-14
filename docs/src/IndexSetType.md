@@ -7,17 +7,27 @@ IndexSet(::Vector{<:Index})
 ## Priming and tagging methods
 
 ```@docs
-prime(::IndexSet, ::Int)
+prime(::ITensor, ::Any...)
+setprime(::ITensor, ::Any...)
+noprime(::ITensor, ::Any...)
+mapprime(::ITensor, ::Any...)
+swapprime(::ITensor, ::Any...)
+addtags(::ITensor, ::Any...)
+removetags(::ITensor, ::Any...)
+replacetags(::ITensor, ::Any...)
+settags(::ITensor, ::Any...)
+swaptags(::ITensor, ::Any...)
 map(::Function, ::IndexSet)
 ```
 
 ## Set operations
 
 ```@docs
-intersect(::IndexSet, ::IndexSet)
-firstintersect(::IndexSet, ::IndexSet)
-setdiff(::IndexSet, ::IndexSet)
-firstsetdiff(::IndexSet, ::IndexSet)
+commoninds
+hascommoninds
+uniqueinds
+noncommoninds
+unioninds
 ```
 
 ## Subsets

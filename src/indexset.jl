@@ -532,7 +532,7 @@ end
 """
     setdiff(A::IndexSet, Bs::IndexSet...)
 
-Output the IndexSet with Indices in `A` but not in
+Output the Vector of Indices with Indices in `A` but not in
 the IndexSets `Bs`.
 """
 Base.setdiff(A::IndexSet, Bs::IndexSet...; kwargs...) =
@@ -545,7 +545,7 @@ Base.setdiff(O::Order, A::IndexSet, Bs::IndexSet...;
 """
   setdiff(f::Function, ::Order{N}, A::IndexSet, B::IndexSet...)
 
-Output the IndexSet in the set difference of `A` and `B`,
+Output the Vector of Indices in the set difference of `A` and `B`,
 optionally filtering by the function `f`.
 
 Specify the number of output indices with `Order(N)`.
@@ -568,6 +568,7 @@ function firstsetdiff(f::Function,
   return nothing
 end
 
+# XXX: use the interface setdiff(first, A, Bs...)
 """
     firstsetdiff(A::IndexSet, Bs::IndexSet...)
 
@@ -634,7 +635,7 @@ end
 
     intersect(f::Function, ::Order{N}, A::IndexSet, B::IndexSet)
 
-Output the IndexSet in the intersection of `A` and `B`,
+Output the Vector of Indices in the intersection of `A` and `B`,
 optionally filtering with keyword arguments `tags`, `plev`, etc. 
 or by a function `f(::Index) -> Bool`.
 
@@ -650,6 +651,7 @@ function firstintersect(f::Function, A::IndexSet, B::IndexSet)
   return nothing
 end
 
+# XXX: use interface intersect(first, A, B)
 """
     firstintersect(A::IndexSet, B::IndexSet; kwargs...)
 

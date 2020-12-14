@@ -852,7 +852,7 @@ hassameinds(A, B) =
     commoninds(A, B; kwargs...)
     commoninds(::Order{N}, A, B; kwargs...)
 
-Return an IndexSet with indices that are common (in the interesection) between the indices of `A` and `B`.
+Return an IndexSet with indices that are common between the indices of `A` and `B` (the set intersection, similar to `Base.intersect`).
 
 Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
@@ -871,7 +871,7 @@ commonind(A...; kwargs...) =
     noncommoninds(A, B; kwargs...)
     noncommoninds(::Order{N}, A, B; kwargs...)
 
-Return an IndexSet with indices that are not common between the indices of `A` and `B` (the symmetric set difference).
+Return an IndexSet with indices that are not common between the indices of `A` and `B` (the symmetric set difference, similar to `Base.symdiff`).
 
 Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
@@ -890,7 +890,7 @@ noncommonind(A...; kwargs...) =
     uniqueinds(A, B; kwargs...)
     uniqueinds(::Order{N}, A, B; kwargs...)
 
-Return an IndexSet with indices that are unique to the set of indices of `A` and not in `B` (the set difference).
+Return an IndexSet with indices that are unique to the set of indices of `A` and not in `B` (the set difference, similar to `Base.setdiff`).
 
 Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
@@ -909,7 +909,7 @@ uniqueind(A...; kwargs...) =
     unioninds(A, B; kwargs...)
     unioninds(::Order{N}, A, B; kwargs...)
 
-Return an IndexSet with indices that are the union of the indices of `A` and `B`.
+Return an IndexSet with indices that are the union of the indices of `A` and `B` (the set union, similar to `Base.union`).
 
 Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
@@ -961,35 +961,35 @@ Optionally, only modify the indices with the specified keyword arguments.
 - `tags = nothing`: if specified, only modify Index `i` if `hastags(i, tags) == true`. 
 - `plev = nothing`: if specified, only modify Index `i` if `hasplev(i, plev) == true`.
 
-In both versions above, the ITensor storage is not modified or copied (so the first version returns an ITensor with a view of the original storage).
+The ITensor functions come in two versions, `f` and `f!`. The latter modifies the ITensor in-place. In both versions, the ITensor storage is not modified or copied (so it returns an ITensor with a view of the original storage).
 """
 
 @doc """
-    prime(A::ITensor, plinc::Int = 1; <keyword arguments>) -> ITensor
+    prime[!](A::ITensor, plinc::Int = 1; <keyword arguments>) -> ITensor
 
-    prime!(A::ITensor, plinc::Int = 1; <keyword arguments>)
+    prime(is::IndexSet, plinc::Int = 1; <keyword arguments>) -> IndexSet
 
-Increase the prime level of the indices of an ITensor.
+Increase the prime level of the indices of an ITensor or IndexSet.
 
 $priming_tagging_doc
 """ prime(::ITensor, ::Any...)
 
 @doc """
-    setprime(A::ITensor, plev::Int; <keyword arguments>) -> ITensor
+    setprime[!](A::ITensor, plev::Int; <keyword arguments>) -> ITensor
 
-    setprime!(A::ITensor, plev::Int; <keyword arguments>)
+    setprime(is::IndexSet, plev::Int; <keyword arguments>) -> IndexSet
 
-Set the prime level of the indices of an ITensor.
+Set the prime level of the indices of an ITensor or IndexSet.
 
 $priming_tagging_doc
 """ setprime(::ITensor, ::Any...)
 
 @doc """
-    noprime(A::ITensor; <keyword arguments>) -> ITensor
+    noprime[!](A::ITensor; <keyword arguments>) -> ITensor
 
-    noprime!(A::ITensor; <keyword arguments>)
+    noprime(is::IndexSet; <keyword arguments>) -> IndexSet
 
-Set the prime level of the indices of an ITensor to zero.
+Set the prime level of the indices of an ITensor or IndexSet to zero.
 
 $priming_tagging_doc
 """ noprime(::ITensor, ::Any...)
@@ -997,10 +997,13 @@ $priming_tagging_doc
 @doc """
     replaceprime[!](A::ITensor, plold::Int, plnew::Int; <keyword arguments>) -> ITensor
     replaceprime[!](A::ITensor, plold => plnew; <keyword arguments>) -> ITensor
-
     mapprime[!](A::ITensor, <arguments>; <keyword arguments>) -> ITensor
 
-Set the prime level of the indices of an ITensor with prime level `plold` to `plnew`.
+    replaceprime(is::IndexSet, plold::Int, plnew::Int; <keyword arguments>) -> IndexSet
+    replaceprime(is::IndexSet, plold => plnew; <keyword arguments>) -> IndexSet
+    mapprime(is::IndexSet, <arguments>; <keyword arguments>) -> IndexSet
+
+Set the prime level of the indices of an ITensor or IndexSet with prime level `plold` to `plnew`.
 
 $priming_tagging_doc
 """ mapprime(::ITensor, ::Any...)
@@ -1009,7 +1012,10 @@ $priming_tagging_doc
     swapprime[!](A::ITensor, pl1::Int, pl2::Int; <keyword arguments>) -> ITensor
     swapprime[!](A::ITensor, pl1 => pl2; <keyword arguments>) -> ITensor
 
-Set the prime level of the indices of an ITensor with prime level `pl1` to `pl2`, and those with prime level `pl2` to `pl1`.
+    swapprime(is::ITensor, pl1::Int, pl2::Int; <keyword arguments>) -> IndexSet
+    swapprime(is::ITensor, pl1 => pl2; <keyword arguments>) -> IndexSet
+
+Set the prime level of the indices of an ITensor or IndexSetwith prime level `pl1` to `pl2`, and those with prime level `pl2` to `pl1`.
 
 $priming_tagging_doc
 """ swapprime(::ITensor, ::Any...)
@@ -1017,7 +1023,9 @@ $priming_tagging_doc
 @doc """
     addtags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
 
-Add the tags `ts` to the indices of an ITensor.
+    addtags(is::IndexSet, ts::String; <keyword arguments>) -> IndexSet
+
+Add the tags `ts` to the indices of an ITensor or IndexSet.
 
 $priming_tagging_doc
 """ addtags(::ITensor, ::Any...)
@@ -1025,7 +1033,9 @@ $priming_tagging_doc
 @doc """
     removetags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
 
-Remove the tags `ts` from the indices of an ITensor.
+    removetags(is::IndexSet, ts::String; <keyword arguments>) -> IndexSet
+
+Remove the tags `ts` from the indices of an ITensor or IndexSet.
 
 $priming_tagging_doc
 """ removetags(::ITensor, ::Any...)
@@ -1033,15 +1043,17 @@ $priming_tagging_doc
 @doc """
     settags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
 
-Set the tags of the indices of an ITensor to `ts`.
+    settags(is::IndexSet, ts::String; <keyword arguments>) -> IndexSet
+
+Set the tags of the indices of an ITensor or IndexSet to `ts`.
 
 $priming_tagging_doc
 """ settags(::ITensor, ::Any...)
 
 @doc """
-    replacetags(A::ITensor, tsold::String, tsnew::String; <keyword arguments>) -> ITensor
+    replacetags[!](A::ITensor, tsold::String, tsnew::String; <keyword arguments>) -> ITensor
 
-    replacetags!(A::ITensor, tsold::String, tsnew::String; <keyword arguments>)
+    replacetags(is::IndexSet, tsold::String, tsnew::String; <keyword arguments>) -> IndexSet
 
 Replace the tags `tsold` with `tsnew` for the indices of an ITensor.
 
@@ -1049,9 +1061,9 @@ $priming_tagging_doc
 """ replacetags(::ITensor, ::Any...)
 
 @doc """
-    swaptags(A::ITensor, ts1::String, ts2::String; <keyword arguments>) -> ITensor
+    swaptags[!](A::ITensor, ts1::String, ts2::String; <keyword arguments>) -> ITensor
 
-    swaptags!(A::ITensor, ts1::String, ts2::String; <keyword arguments>)
+    swaptags(is::IndexSet, ts1::String, ts2::String; <keyword arguments>) -> IndexSet
 
 Swap the tags `ts1` with `ts2` for the indices of an ITensor.
 
@@ -1059,9 +1071,7 @@ $priming_tagging_doc
 """ swaptags(::ITensor, ::Any...)
 
 @doc """
-    replaceind(A::ITensor, i1::Index, i2::Index) -> ITensor
-
-    replaceind!(A::ITensor, i1::Index, i2::Index)
+    replaceind[!](A::ITensor, i1::Index, i2::Index) -> ITensor
 
 Replace the Index `i1` with the Index `i2` in the ITensor.
 

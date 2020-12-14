@@ -157,6 +157,8 @@ end
 # Get the QN of the block
 qn(i::QNIndex, b::Block{1}) = qn(space(i), b)
 
+qn(ib::Pair{<:Index, Block{1}}) = qn(first(ib), last(ib))
+
 # XXX: deprecate the Integer version
 qn(i::QNIndex, b::Integer) = qn(i, Block(b))
 

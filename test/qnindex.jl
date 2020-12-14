@@ -33,6 +33,24 @@ import ITensors: In, Out, Neither
     @test dir(j) == In
   end
 
+  @testset "flux and qn" begin
+    i = dag(Index([QN(0)=>2, QN(1)=>2], "i"))
+
+    @test flux(i => 1) == QN(0)
+    @test flux(i => 2) == QN(0)
+    @test flux(i => 3) == QN(-1)
+    @test flux(i => 4) == QN(-1)
+    @test flux(i => Block(1)) == QN(0)
+    @test flux(i => Block(2)) == QN(-1)
+
+    @test qn(i => 1) == QN(0)
+    @test qn(i => 2) == QN(0)
+    @test qn(i => 3) == QN(1)
+    @test qn(i => 4) == QN(1)
+    @test qn(i => Block(1)) == QN(0)
+    @test qn(i => Block(2)) == QN(1)
+
+  end
 end
 
 nothing
