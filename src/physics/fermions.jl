@@ -23,23 +23,25 @@ isfermionic(qv::QNVal) = (modulus(qv) < 0)
 
 isfermionic(qn::QN) = any(isfermionic,qn)
  
-has_fermionic_sectors(i::Index) = false
+has_fermionic_subspaces(i::Index) = false
 
-function has_fermionic_sectors(i::QNIndex)
+function has_fermionic_subspaces(i::QNIndex)
   for b=1:nblocks(i)
     isfermionic(qn(i,b)) && (return true)
   end
   return false
 end
 
-has_fermionic_sectors(is::IndexSet) = false
+has_fermionic_subspaces(is::IndexSet) = false
 
-function has_fermionic_sectors(is::QNIndexSet)
+function has_fermionic_subspaces(is::QNIndexSet)
   for i in is, b=1:nblocks(i)
     isfermionic(qn(i,b)) && (return true)
   end
   return false
 end
+
+has_fermionic_subspaces(T) = has_fermionic_subspaces(inds(T))
 
 """
     fparity(qn::QN)

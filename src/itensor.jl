@@ -1350,7 +1350,7 @@ norm(T::ITensor) = norm(tensor(T))
 
 # TODO: change to storage(TT)
 function dag(T::ITensor; always_copy=false)
-  if has_fermionic_sectors(inds(T)) # <fermions>
+  if has_fermionic_subspaces(inds(T)) # <fermions>
     TT = conj(tensor(T);always_copy=true)
     N = length(inds(T))
     perm = ntuple(i->(N-i+1),N) # reverse permutation
