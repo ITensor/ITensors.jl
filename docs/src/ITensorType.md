@@ -75,7 +75,7 @@ inds(::ITensor)
 ind(::ITensor, ::Int)
 ```
 
-## Priming and tagging
+## [Priming and tagging](@id Priming_and_tagging_ITensor)
 
 ```@docs
 prime(::ITensor, ::Any...)
@@ -94,10 +94,14 @@ swaptags(::ITensor, ::Any...)
 
 ```@docs
 commoninds
-hascommoninds
+commonind
 uniqueinds
+uniqueind
 noncommoninds
+noncommonind
 unioninds
+unionind
+hascommoninds
 ```
 
 ## Index Manipulations

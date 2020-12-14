@@ -863,6 +863,13 @@ commoninds(::Order{N}, A...; kwargs...) where {N} =
   intersect(Order(N), itensor2inds.(A)...; kwargs...)
 
 # firstintersect
+"""
+    commonind(A, B; kwargs...)
+
+Return the first `Index` common between the indices of `A` and `B`.
+
+See also [`commoninds`](@ref).
+"""
 commonind(A...; kwargs...) =
   firstintersect(itensor2inds.(A)...; kwargs...)
 
@@ -882,6 +889,13 @@ noncommoninds(::Order{N}, A...; kwargs...) where {N} =
   IndexSet{N}(symdiff(itensor2inds.(A)...; kwargs...)...)
 
 # firstsymdiff
+"""
+    noncommonind(A, B; kwargs...)
+
+Return the first `Index` not common between the indices of `A` and `B`.
+
+See also [`noncommoninds`](@ref).
+"""
 noncommonind(A...; kwargs...) =
   getfirst(symdiff(itensor2inds.(A)...; kwargs...))
 
@@ -901,6 +915,13 @@ uniqueinds(::Order{N}, A...; kwargs...) where {N} =
   setdiff(Order(N), ITensors.itensor2inds.(A)...; kwargs...)
 
 # firstsetdiff
+"""
+    uniqueind(A, B; kwargs...)
+
+Return the first `Index` unique to the set of indices of `A` and not in `B`.
+
+See also [`uniqueinds`](@ref).
+"""
 uniqueind(A...; kwargs...) =
   firstsetdiff(itensor2inds.(A)...; kwargs...)
 
@@ -920,6 +941,13 @@ unioninds(::Order{N}, A...; kwargs...) where {N} =
   IndexSet{N}(union(ITensors.itensor2inds.(A)...; kwargs...)...)
 
 # firstunion
+"""
+    unionind(A, B; kwargs...)
+
+Return the first `Index` in the union of the indices of `A` and `B`.
+
+See also [`unioninds`](@ref).
+"""
 unionind(A...; kwargs...) =
   getfirst(union(itensor2inds.(A)...; kwargs...))
 
