@@ -185,9 +185,9 @@ using Compat
   end
   @testset "strides" begin
     I = IndexSet(i, j)
-    @test NDTensors.strides(I) == (1, idim)
-    @test NDTensors.stride(I, 1) == 1
-    @test NDTensors.stride(I, 2) == idim
+    @test NDTensors.dim_to_strides(I) == (1, idim)
+    @test NDTensors.dim_to_stride(I, 1) == 1
+    @test NDTensors.dim_to_stride(I, 2) == idim
   end
   @testset "setprime" begin
     I = IndexSet(i, j)

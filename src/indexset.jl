@@ -303,22 +303,6 @@ Get the dimension of the Index n of the IndexSet.
 NDTensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
 
 """
-    NDTensors.strides(is::IndexSet)
-
-Get the strides of the n-dimensional tensor if it had
-this IndexSet.
-"""
-NDTensors.strides(is::IndexSet) = Base.size_to_strides(1, dims(is)...)
-
-"""
-    NDTensors.stride(is::IndexSet. i::Int)
-
-Get the stride of the n-dimensional tensor if it had
-this IndexSet in the dimension `i`.
-"""
-NDTensors.stride(is::IndexSet, k::Int) = NDTensors.strides(is)[k]
-
-"""
     dag(is::IndexSet)
 
 Return a new IndexSet with the indices daggered (flip
@@ -982,7 +966,7 @@ replaceinds(is::IndexSet, rep_inds::Pair{ <: Index, <: Index}...) =
   replaceinds(is, zip(rep_inds...)...)
 
 # Check that the QNs are all the same
-hassameqns(i1::Index, i2::Index) = (dim(i1) == dim(i2))
+hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))
 
 function replaceinds(is::IndexSet, inds1, inds2)
   is1 = IndexSet(inds1)
@@ -1273,7 +1257,7 @@ function flux(inds::IndexSet, block)
   qntot = QN()
   for n in 1:length(inds)
     ind = inds[n]
-    qntot += qn(ind, block[n])
+    qntot += flux(ind, Block(block[n]))
   end
   return qntot
 end

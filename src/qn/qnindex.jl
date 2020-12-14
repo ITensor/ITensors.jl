@@ -155,19 +155,21 @@ function block(iv::Union{<:IndexVal, <:Pair{<:Index, <:Integer}})
 end
 
 # Get the QN of the block
+qn(i::QNIndex, b::Block{1}) = qn(space(i), b)
+
 # XXX: deprecate the Integer version
-function qn(i::QNIndex, b::Block{1}; bare::Bool = false)
-  qn_b = qn(space(i), b)
-  if !bare
-    qn_b *= dir(i)
-  end
-  return qn_b
-end
 qn(i::QNIndex, b::Integer) = qn(i, Block(b))
 
 # Get the QN of the block the IndexVal lies in
 qn(iv::Union{<:IndexVal, <:Pair{<:Index, <:Integer}}) =
   qn(ind(iv), block(iv))
+
+flux(i::QNIndex, b::Block{1}) = dir(i) * qn(i, b)
+
+flux(ib::Pair{<:Index, Block{1}}) = flux(first(ib), last(ib))
+
+flux(iv::Union{<:IndexVal, <:Pair{<:Index, <:Integer}}) =
+  flux(ind(iv), block(iv))
 
 qnblocks(i::QNIndex) = space(i)
 
@@ -175,7 +177,21 @@ qnblocks(i::QNIndex) = space(i)
 blockdim(i::QNIndex, b::Block) = blockdim(space(i), b)
 blockdim(i::QNIndex, b::Integer) = blockdim(i, Block(b))
 
+eachblock(i::Index) = (Block(n) for n in 1:nblocks(i))
+
+# Return the first block of the QNIndex with the flux q
+function block(::typeof(first), ind::QNIndex, q::QN)
+  for b in eachblock(ind)
+    if flux(ind => b) == q
+      return b
+    end
+  end
+  error("No block found with QN equal to $q")
+  return Block(0)
+end
+
 # XXX: call this simply `block` and return a Block{1}
+# Deprecate this
 """
     qnblocknum(ind::QNIndex, q::QN)
 
@@ -185,8 +201,8 @@ of the QNIndex having QN equal to `q`. Assumes
 all blocks of `ind` have a unique QN.
 """
 function qnblocknum(ind::QNIndex, q::QN)
-  for b=1:nblocks(ind)
-    if qn(ind,b) == q
+  for b = 1:nblocks(ind)
+    if flux(ind => Block(b)) == q
       return b
     end
   end
@@ -194,6 +210,9 @@ function qnblocknum(ind::QNIndex, q::QN)
   return 0
 end
 
+blockdim(ind::QNIndex, q::QN) = blockdim(ind, block(first, ind, q))
+
+# XXX: deprecate in favor of blockdim
 """
     qnblockdim(ind::QNIndex, q::QN)
 
@@ -351,17 +370,17 @@ function addqns(i::QNIndex, qns::QNBlocks)
 end
 
 # Check that the QNs are all the same
-function hassameqns(i1::QNIndex, i2::QNIndex)
+function hassameflux(i1::QNIndex, i2::QNIndex)
   dim_i1 = dim(i1)
   dim_i1 ≠ dim(i2) && return false
   for n in 1:dim_i1
-    qn(i1 => n) ≠ qn(i2 => n) && return false
+    flux(i1 => n) ≠ flux(i2 => n) && return false
   end
   return true
 end
 
-hassameqns(::QNIndex, ::Index) = false
-hassameqns(::Index, ::QNIndex) = false
+hassameflux(::QNIndex, ::Index) = false
+hassameflux(::Index, ::QNIndex) = false
 
 # Split the blocks into blocks of size 1 with the same QNs
 splitblocks(i::Index) = setspace(i, splitblocks(space(i)))

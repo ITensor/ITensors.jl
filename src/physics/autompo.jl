@@ -783,9 +783,11 @@ function qn_svdMPO(ampo::AutoMPO,
     rl = llinks[n+1]
 
     function defaultMat(ll,rl,lqn,rqn) 
-      ldim = qnblockdim(ll,lqn)
-      rdim = qnblockdim(rl,rqn)
-      return zeros(ValType,ldim,rdim)
+      #ldim = qnblockdim(ll,lqn)
+      #rdim = qnblockdim(rl,rqn)
+      ldim = blockdim(ll, lqn)
+      rdim = blockdim(rl, rqn)
+      return zeros(ValType, ldim, rdim)
     end
 
     idTerm = [SiteOp("Id",n)]
@@ -844,13 +846,16 @@ function qn_svdMPO(ampo::AutoMPO,
       sq = flux(Op)
       cq = rq-sq
 
-      rn = qnblocknum(ll,rq)
-      cn = qnblocknum(rl,cq)
+      #rn = qnblocknum(ll,rq)
+      #cn = qnblocknum(rl,cq)
+      rn = block(first, ll, rq)
+      cn = block(first, rl, cq)
 
       #TODO: wrap following 3 lines into a function
-      block = (rn,cn)
-      T = BlockSparseTensor(ValType,[block],IndexSet(dag(ll),rl))
-      blockview(T, block) .= M
+      _block = Block(rn, cn)
+      T = BlockSparseTensor(ValType,[_block],IndexSet(dag(ll),rl))
+      #blockview(T, _block) .= M
+      T[_block] .= M
 
       IT = itensor(T)
       H[n] += IT * Op
