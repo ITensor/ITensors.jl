@@ -118,6 +118,7 @@ end
 
 #
 # TODO: specialize this *just* for QNIndex as an optimization
+#       (only remains to do this for input_indsR, if possible)
 #       probably requires parameterizing IndexSet over the Index type
 #
 function NDTensors.compute_alpha(labelsR,blockR,input_indsR,
@@ -133,6 +134,10 @@ function NDTensors.compute_alpha(labelsR,blockR,input_indsR,
   nlabelsT1 = sort(orig_labelsT1;rev=true)
   nlabelsT2 = sort(orig_labelsT2)
 
+  # Make orig_labelsR from the order of
+  # indices that would result by just 
+  # taking the uncontracted indices of
+  # T1 and T2 in their input order:
   NR = length(labelsR)
   orig_labelsR = zeros(Int,NR)
   u = 1
@@ -165,3 +170,150 @@ function NDTensors.compute_alpha(labelsR,blockR,input_indsR,
   return alpha1*alpha2*alphaR*alpha_arrows
 end
 
+# Flip signs of selected blocks of T prior to
+# it being multiplied by a combiner ITensor
+# labelsR gives the ordering of indices after the product
+function NDTensors.mult_combiner_signs(C,
+                                       labelsC,indsC::QNIndexSet,
+                                       T,
+                                       labelsT,indsT::QNIndexSet,
+                                       labelsR)
+  if !has_fermionic_subspaces(T)
+    println("Not copying T in combiner_signs")
+    return T
+  end
+
+  println("Fermionic case: copying T in combiner_signs")
+  T = copy(T)
+
+  orig_labelsC = [l for l in labelsC]
+  orig_labelsT = [l for l in labelsT]
+
+  #NR = length(labelsR)
+  #orig_labelsR = zeros(Int,NR)
+  #u = 1
+  #for l in (nlabelsC...,nlabelsT...)
+  #  if l > 0 
+  #    orig_labelsR[u] = l
+  #    u += 1
+  #  end
+  #end
+
+  ci = cinds(store(C))[1]
+  combining = (orig_labelsC[ci] > 0)
+  @show combining
+
+  isconj = NDTensors.isconj(store(C))
+  @show isconj
+
+  #@show orig_labelsC
+  #@show orig_labelsT
+  #@show orig_labelsR
+  #@show nlabelsC
+  #@show nlabelsT
+  #@show labelsR
+
+  #permC = NDTensors.getperm(tuple(nlabelsC...),tuple(orig_labelsC...))
+  #permT = NDTensors.getperm(tuple(nlabelsT...),tuple(orig_labelsT...))
+  #permR = NDTensors.getperm(tuple(labelsR...),tuple(orig_labelsR...))
+
+  # NOTES:
+  # X already included alphaT below
+  # - handle alphaC by just assuming combiner is either:
+  #    > not permuted at all for regular case
+  #    > reverse-permuted for dagger case (how to determine combiner block then?)
+  # - use assumptions about combiner logic to simplify alphaR?
+  # INITIAL DESIGN:
+  # - for un-daggered combiner, assume:
+  #   > permC is trivial i.e. alphaC is +1 always
+  #   > permR is also trivial so alphaR is +1
+  #   > thus signs come only from alphaT and arrows
+  # - for daggered case: ...
+
+  # <Case #1>
+  if combining && !isconj
+
+    nlabelsT = sort(orig_labelsT)
+    permT = NDTensors.getperm(tuple(nlabelsT...),tuple(orig_labelsT...))
+
+    for (blockT,_) in blockoffsets(T)
+      alphaT = NDTensors.permfactor(permT,blockT,indsT)
+
+      alpha_arrows = 1
+      for n in 1:length(indsT)
+        l = orig_labelsT[n]
+        i = indsT[n]
+        qi = qn(i,blockT[n])
+        if l < 0 && dir(i)==In && fparity(qi)==1
+          alpha_arrows *= -1
+        end
+      end
+      fac = alphaT*alpha_arrows
+      if fac != 1
+        Tb = blockview(T,blockT)
+        scale!(Tb,fac)
+      end
+    end
+  # <Case #2>:
+  elseif !combining && !isconj
+    nlabelsT = sort(orig_labelsT;rev=true)
+    nlabelsC = sort(orig_labelsC)
+    @show labelsC
+    @show labelsT
+    @show nlabelsT
+    @show labelsR
+
+    NR = length(labelsR)
+    orig_labelsR = zeros(Int,NR)
+    u = 1
+    for l in (nlabelsT...,nlabelsC...)
+      if l > 0 
+        orig_labelsR[u] = l
+        u += 1
+      end
+    end
+    @show orig_labelsR
+
+    permT = NDTensors.getperm(tuple(nlabelsT...),tuple(orig_labelsT...))
+    permR = NDTensors.getperm(tuple(labelsR...),tuple(orig_labelsR...))
+    @show permR
+
+    for (blockT,_) in blockoffsets(T)
+      @show permT
+      @show blockT
+      @show indsT
+      alphaT = NDTensors.permfactor(permT,blockT,indsT)
+
+      #
+      # TODO:
+      # Issue here is whether "indsR" below and blockR
+      # can be built from information of combined version of T
+      # or whether we need to loop over blocks of *uncombined*
+      # version of T - maybe the second, but still get alphaT
+      # from the labels use prior to uncombining
+      #
+      #alphaR = NDTensors.permfactor(permR,blockR,indsR)
+
+      alpha_arrows = 1
+      for n in 1:length(indsT)
+        l = orig_labelsT[n]
+        i = indsT[n]
+        qi = qn(i,blockT[n])
+        #TODO: check that Out here is the correct direction:
+        if l < 0 && dir(i)==Out && fparity(qi)==1
+          alpha_arrows *= -1
+        end
+      end
+
+      #TODO: include alphaR here:
+      fac = alphaT*alpha_arrows#*alphaR
+      @show fac
+      if fac != 1
+        Tb = blockview(T,blockT)
+        scale!(Tb,fac)
+      end
+    end
+  end
+
+  return T
+end
