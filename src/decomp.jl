@@ -96,7 +96,7 @@ function svd(A::ITensor, Linds...; kwargs...)
     for b in nzblocks(UC)
       i1 = inds(UC)[1]
       i2 = inds(UC)[2]
-      newqn = -dir(i2)*qn(i1,b[1])
+      newqn = -dir(i2)*flux(i1 => Block(b[1]))
       setblockqn!(i2,newqn,b[2])
       setblockqn!(u,newqn,b[2])
     end
@@ -104,7 +104,7 @@ function svd(A::ITensor, Linds...; kwargs...)
     for b in nzblocks(VC)
       i1 = inds(VC)[1]
       i2 = inds(VC)[2]
-      newqn = -dir(i2)*qn(i1,b[1])
+      newqn = -dir(i2)*flux(i1 => Block(b[1]))
       setblockqn!(i2,newqn,b[2])
       setblockqn!(v,newqn,b[2])
     end
@@ -217,7 +217,7 @@ function eigen(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
     i1, i2 = inds(VC)
     for b in nzblocks(VC)
       if flux(VC, b) != QN()
-        new_flux = dir(i1)*qn(i1, b[1])
+        new_flux = dir(i1) * flux(i1 => Block(b[1]))
         setblockqn!(i2, new_flux, b[2])
         setblockqn!(d, new_flux, b[2])
       end
