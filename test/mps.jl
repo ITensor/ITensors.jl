@@ -1141,7 +1141,8 @@ end
       
       s0 = siteinds(M0)
       
-      M = apply(gates, M0; apply_dag = true, cutoff = 1e-15, maxdim = 500)
+      M = apply(gates, M0; apply_dag = true, cutoff = 1e-15,
+                maxdim = 500, svd_alg = "qr_iteration")
       
       s = siteinds(M)
       for n in 1:N
