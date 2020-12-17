@@ -129,7 +129,7 @@ end
 # A global timer used with TimerOutputs.jl
 #
 
-const GLOBAL_TIMER = TimerOutput()
+using NDTensors: timer
 
 #
 # Turn enable or disable combining QN ITensors before contracting
