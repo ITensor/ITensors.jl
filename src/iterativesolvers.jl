@@ -82,9 +82,7 @@ function davidson(A,
     error("linear size of A and dimension of phi should match in davidson")
   end
 
-@timeit_debug GLOBAL_TIMER "A(q)" begin
   Aphi = A(phi)
-end
 
   V = ITensorT[copy(phi)]
   AV = ITensorT[Aphi]
@@ -110,26 +108,18 @@ end
 
     last_lambda = lambda
 
-@timeit_debug GLOBAL_TIMER "orthogonalize!" begin
     for pass = 1:Northo_pass
       orthogonalize!(q,V,ni)
     end
-end
 
-@timeit_debug GLOBAL_TIMER "A(q)" begin
     Aq = A(q)
-end
 
     push!(V,copy(q))
     push!(AV,Aq)
 
-@timeit_debug GLOBAL_TIMER "expand_krylov_space" begin
     M = expand_krylov_space(M,V,AV,ni)
-end
 
-@timeit_debug GLOBAL_TIMER "get_vecs!" begin
     lambda = get_vecs!((phi,q),M,V,AV,ni+1)
-end
 
   end #for ni=1:actual_maxiter+1
 

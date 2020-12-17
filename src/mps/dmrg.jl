@@ -1,4 +1,19 @@
 
+IndexSet_ignore_missing(is::Union{Index, Nothing}...) =
+  IndexSet(filter(i -> i isa Index, is))
+
+function permute(M::AbstractMPS, ::Tuple{typeof(linkind), typeof(siteinds), typeof(linkind)})
+  M̃ = MPO(length(M))
+  for n in 1:length(M)
+    lₙ₋₁ = linkind(M, n-1)
+    lₙ = linkind(M, n)
+    s⃗ₙ = IndexSet(sort(Tuple(siteinds(M, n)); by = plev))
+    M̃[n] = permute(M[n], IndexSet_ignore_missing(lₙ₋₁, s⃗ₙ..., lₙ))
+  end
+  set_ortho_lims!(M̃, ortho_lims(M))
+  return M̃
+end
+
 """
     dmrg(H::MPO,psi0::MPS,sweeps::Sweeps;kwargs...)
                     
@@ -14,10 +29,10 @@ Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(H::MPO,
-              psi0::MPS,
-              sweeps::Sweeps;
-              kwargs...)
+function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
+  # Permute the indices to have a better memory layout
+  # and minimize permutations
+  H = permute(H, (linkind, siteinds, linkind))
   PH = ProjMPO(H)
   return dmrg(PH,psi0,sweeps;kwargs...)
 end
@@ -43,10 +58,8 @@ Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(Hs::Vector{MPO},
-              psi0::MPS,
-              sweeps::Sweeps;
-              kwargs...)
+function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
+  Hs .= permute.(Hs, Ref((linkind, siteinds, linkind)))
   PHS = ProjMPOSum(Hs)
   return dmrg(PHS,psi0,sweeps;kwargs...)
 end
@@ -71,21 +84,16 @@ Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(H::MPO,
-              Ms::Vector{MPS},
-              psi0::MPS,
-              sweeps::Sweeps;
-              kwargs...)
+function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
+  H = permute(H, (linkind, siteinds, linkind))
+  Ms .= permute.(Ms, Ref((linkind, siteinds, linkind)))
   weight = get(kwargs,:weight,1.0)
   PMM = ProjMPO_MPS(H,Ms;weight=weight)
   return dmrg(PMM,psi0,sweeps;kwargs...)
 end
 
 
-function dmrg(PH,
-              psi0::MPS,
-              sweeps::Sweeps;
-              kwargs...)
+function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   # Debug level checks
   @debug begin
     checkflux(psi0)
@@ -150,7 +158,7 @@ function dmrg(PH,
         checkflux(PH)
       end
 
-      @timeit_debug GLOBAL_TIMER "position!" begin
+      @timeit_debug timer "dmrg: position!" begin
       position!(PH, psi, b)
       end
 
@@ -159,11 +167,11 @@ function dmrg(PH,
         checkflux(PH)
       end
 
-      @timeit_debug GLOBAL_TIMER "psi[b]*psi[b+1]" begin
+      @timeit_debug timer "dmrg: psi[b]*psi[b+1]" begin
       phi = psi[b] * psi[b+1]
       end
 
-      @timeit_debug GLOBAL_TIMER "eigsolve" begin
+      @timeit_debug timer "dmrg: eigsolve" begin
       vals, vecs = eigsolve(PH, phi, 1, eigsolve_which_eigenvalue;
                             ishermitian = ishermitian,
                             tol = eigsolve_tol,
@@ -184,7 +192,7 @@ function dmrg(PH,
         checkflux(phi)
       end
 
-      @timeit_debug GLOBAL_TIMER "replacebond!" begin
+      @timeit_debug timer "dmrg: replacebond!" begin
       spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
                                        mindim = mindim(sweeps, sw),
                                        cutoff = cutoff(sweeps, sw),

@@ -163,7 +163,6 @@ export
   scale!,
   scalar,
   setelt,
-  setwarnorder!,
   store,
   setprime!,
   swapprime!,

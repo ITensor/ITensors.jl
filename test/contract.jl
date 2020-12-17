@@ -124,7 +124,7 @@ digits(::Type{T},i,j,k) where {T} = T(i*10^2+j*10+k)
     @testset "Test contract ITensors (3-Tensor*Scalar -> 3-Tensor)" begin
       Aijk = permute(Aijk,i,j,k)
       C = Aijk*A
-      @test array(permute(C,i,j,k))==scalar(A)*array(Aijk)
+      @test array(permute(C,i,j,k)) ≈ scalar(A)*array(Aijk)
     end
     @testset "Test contract ITensors (3-Tensor*Vector -> Matrix)" begin
       Aijk = permute(Aijk,i,j,k)

@@ -1372,13 +1372,15 @@ end
 #  A2::ITensor,
 #  A3::ITensor, As::ITensor...)
 
+# XXX: rename contract!
 function mul!(C::ITensor, A::ITensor, B::ITensor,
               α::Number, β::Number=0)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(tensor(C), labelsC, tensor(A), labelsA,
                             tensor(B), labelsB, α, β)
-  C = itensor(CT)
+  setstore!(C, store(CT))
+  setinds!(C, inds(C))
   return C
 end
 
@@ -1389,7 +1391,8 @@ function mul!(C::ITensor, A::ITensor, B::ITensor)
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(tensor(C), labelsC, tensor(A), labelsA,
                             tensor(B), labelsB)
-  C = itensor(CT)
+  setstore!(C, store(CT))
+  setinds!(C, inds(C))
   return C
 end
 
@@ -1958,10 +1961,6 @@ function readcpp(io::IO,
   else
     throw(ArgumentError("read ITensor: format=$format not supported"))
   end
-end
-
-function setwarnorder!(ord::Int)
-  ITensors.GLOBAL_PARAMS["WarnTensorOrder"] = ord
 end
 
 function HDF5.write(parent::Union{HDF5File,HDF5Group},

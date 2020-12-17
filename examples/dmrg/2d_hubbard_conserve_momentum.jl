@@ -12,7 +12,7 @@ function main(; Nx::Int = 6,
                 t::Float64 = 1.0,
                 maxdim::Int = 3000,
                 conserve_ky = true,
-                use_splitblocks = false)
+                use_splitblocks = true)
   N = Nx * Ny
 
   sweeps = Sweeps(10)
@@ -64,7 +64,7 @@ function main(; Nx::Int = 6,
 
   psi0 = randomMPS(sites, state, 10)
 
-  energy, psi = dmrg(H, psi0, sweeps; svd_alg = "divide_and_conquer")
+  energy, psi = @time dmrg(H, psi0, sweeps; svd_alg = "divide_and_conquer")
   @show Nx, Ny
   @show t, U
   @show flux(psi)
