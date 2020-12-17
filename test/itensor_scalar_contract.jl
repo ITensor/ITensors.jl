@@ -16,7 +16,7 @@ Random.seed!(1234)
   B = ITensor(2, α, α', α'')
 
   C = A * B
-  @assert C ≈ B[1, 1, 1] * A * ITensor(1, inds(B))
+  @test C ≈ B[1, 1, 1] * A * ITensor(1, inds(B))
 
   C = emptyITensor(is..., α', α'')
   C .= A .* B
