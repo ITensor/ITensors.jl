@@ -260,6 +260,7 @@ export
   # Types
   AbstractObserver,
   DMRGObserver,
+  DMRGMeasurement,
   NoObserver,
   # Methods
   checkdone!,
