@@ -22,7 +22,9 @@ settings = Dict(
                                  "DMRG" => [
                                             "DMRG.md",
                                             "ProjMPO.md",
-                                            "ProjMPOSum.md"
+                                            "ProjMPOSum.md",
+                                            "Observer.md",
+                                            "DMRGObserver.md"
                                            ],
                                  "AutoMPO" => "AutoMPO.md"
                                 ],
