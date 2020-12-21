@@ -2,6 +2,10 @@ using ITensors
 using Random
 
 Random.seed!(1234)
+BLAS.set_num_threads(1)
+Strided.set_num_threads(1)
+#NDTensors.enable_threaded_blocksparse!()
+NDTensors.disable_threaded_blocksparse!()
 
 include(joinpath("..", "src", "electronk.jl"))
 include(joinpath("..", "src", "hubbard.jl"))
