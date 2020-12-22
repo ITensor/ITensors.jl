@@ -351,6 +351,7 @@ end
 
 """
     firstsiteind(M::Union{MPS,MPO}, j::Integer; kwargs...)
+    siteind(::typeof(first), M::Union{MPS,MPO}, j::Integer; kwargs...)
 
 Return the first site Index found on the MPS or MPO
 (the first Index unique to the `j`th MPS/MPO tensor).
@@ -371,6 +372,9 @@ function firstsiteind(M::AbstractMPS, j::Integer;
   end
   return si
 end
+
+siteind(::typeof(first), M::AbstractMPS, j::Integer; kwargs...) =
+  firstsiteind(M, j; kwargs...)
 
 """
     siteinds(M::Union{MPS, MPO}}, j::Integer; kwargs...)

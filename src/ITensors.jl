@@ -125,6 +125,10 @@ include("packagecompile/compile.jl")
 #
 include("developer_tools.jl")
 
+function __init__()
+  resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
+end
+
 #####################################
 # Precompile certain functions
 # (generated from precompile/make_precompile.jl

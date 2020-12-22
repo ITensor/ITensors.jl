@@ -978,15 +978,16 @@ hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))
 function replaceinds(is::IndexSet, inds1, inds2)
   is1 = IndexSet(inds1)
   poss = indexin(is1, is)
+  is_tuple = Tuple(is)
   for (j, pos) in enumerate(poss)
     isnothing(pos) && continue
-    i1 = is[pos]
+    i1 = is_tuple[pos]
     i2 = inds2[j]
     i2 = setdir(i2, dir(i1))
     space(i1) ≠ space(i2) && error("Indices must have the same spaces to be replaced")
-    is = setindex(is, i2, pos)
+    is_tuple = setindex(is_tuple, i2, pos)
   end
-  return is
+  return IndexSet(is_tuple)
 end
 
 replaceind(is::IndexSet, i1::Index, i2::Index) =
