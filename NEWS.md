@@ -1,3 +1,8 @@
+ITensors v0.1.32 Release Notes
+==============================
+* Update to NDTensors v0.1.21, which includes a bug fix for scalar-like tensor contractions involving mixed element types (NDTensors PR #58).
+* Docs for observer system and DMRGObserver (PR #546).
+
 ITensors v0.1.31 Release Notes
 ==============================
 * Update to NDTensors v0.1.20, which includes some more general block sparse slicing operations as well as optimizations for contracting scalar-like (length 1) tensors (NDTensors PR #57).
