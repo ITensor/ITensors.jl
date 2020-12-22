@@ -45,6 +45,11 @@ include("imports.jl")
 include("global_variables.jl")
 
 #####################################
+# Debug checking
+#
+include("debug_checks.jl")
+
+#####################################
 # Index and IndexSet
 #
 include("smallstring.jl")

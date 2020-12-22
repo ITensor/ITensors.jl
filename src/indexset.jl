@@ -4,6 +4,11 @@ struct IndexSet{N, IndexT <: Index, DataT <: Tuple}
   data::DataT
 
   function IndexSet{N, IndexT, DataT}(data) where {N, IndexT, DataT <: NTuple{N, IndexT}}
+    @debug_check begin
+      if !allunique(data)
+        error("Trying to create IndexSet with collection of indices $data. Indices must be unique.")
+      end
+    end
     return new{N, IndexT, DataT}(data)
   end
 

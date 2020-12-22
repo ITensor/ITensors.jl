@@ -94,8 +94,9 @@ end
 
 
 function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
-  # Debug level checks
-  @debug begin
+  @debug_checks begin
+    # Debug level checks
+    # Enable with ITensors.enable_debug_checks()
     checkflux(psi0)
     checkflux(PH)
   end
@@ -153,7 +154,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
     for (b, ha) in sweepnext(N)
 
-      @debug begin
+      @debug_checks begin
         checkflux(psi)
         checkflux(PH)
       end
@@ -162,7 +163,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
       position!(PH, psi, b)
       end
 
-      @debug begin
+      @debug_checks begin
         checkflux(psi)
         checkflux(PH)
       end
@@ -188,7 +189,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         drho = noise(sweeps, sw) * noiseterm(PH,phi,ortho)
       end
 
-      @debug begin
+      @debug_checks begin
         checkflux(phi)
       end
 
@@ -203,7 +204,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
                                        svd_alg = svd_alg)
       end
 
-      @debug begin
+      @debug_checks begin
         checkflux(psi)
         checkflux(PH)
       end
