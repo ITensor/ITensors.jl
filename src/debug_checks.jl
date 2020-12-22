@@ -5,7 +5,7 @@ use_debug_checks() = false
 macro debug_check(ex)
   quote
     if use_debug_checks()
-      return $(esc(ex))
+      $(esc(ex))
     end
   end
 end
