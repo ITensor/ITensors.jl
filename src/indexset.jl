@@ -1014,12 +1014,18 @@ end
 
 function compute_contraction_labels(Ais::IndexSet{NA},
                                     Bis::IndexSet{NB}) where {NA,NB}
+  have_qns = hasqns(Ais) && hasqns(Bis)
   Alabels = MVector{NA,Int}(ntuple(_->0,Val(NA)))
   Blabels = MVector{NB,Int}(ntuple(_->0,Val(NB)))
 
   ncont = 0
   for i = 1:NA, j = 1:NB
-    if Ais[i] == Bis[j]
+    Ais_i = @inbounds Ais[i]
+    Bis_j = @inbounds Bis[j]
+    if Ais_i == Bis_j
+      if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
+        error("Attempting to contract IndexSet:\n$(Ais)with IndexSet:\n$(Bis)QN indices must have opposite direction to contract.")
+      end
       Alabels[i] = Blabels[j] = -(1+ncont)
       ncont += 1
     end

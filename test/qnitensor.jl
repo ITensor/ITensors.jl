@@ -1445,6 +1445,13 @@ end
     @test exp(dense(A), (i1, i1'), (i2', i2)) ≈ dense(expA)
   end
 
+  @testset "Test contraction direction error" begin
+    i = Index([QN(0)=>1, QN(1)=>1], "i")
+    A = randomITensor(i', dag(i))
+    A² = A' * A
+    @test dense(A²) ≈ dense(A') * dense(A)
+    @test_throws ErrorException A' * dag(A)
+  end
 end
 
 end
