@@ -1448,7 +1448,7 @@ computed internally.
 function exp(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
   ishermitian=get(kwargs,:ishermitian,false)
 
-  @debug_checks begin
+  @debug_check begin
     if hasqns(A)
       @assert flux(A) == QN()
     end
@@ -1791,7 +1791,7 @@ If the ITensor is empty or it has no QNs, returns `nothing`.
 """
 function flux(T::ITensor)
   (!hasqns(T) || isempty(T)) && return nothing
-  @debug_checks checkflux(T)
+  @debug_check checkflux(T)
   block1 = first(eachnzblock(T))
   return flux(T, block1)
 end
