@@ -2,6 +2,9 @@ ITensors v0.1.32 Release Notes
 ==============================
 * Update to NDTensors v0.1.21, which includes a bug fix for scalar-like tensor contractions involving mixed element types (NDTensors PR #58).
 * Docs for observer system and DMRGObserver (PR #546).
+* Add `ITensors.@debug_check`, `ITensors.enable_debug_checks()`, and `ITensors.disable_debug_checks()` for denoting that a block of code is a debug check, and turning on and off debug checks (off by default). Use to check for repeated indices in IndexSet construction and other checks (PR #547).
+* Add `index_id_rng()`, an RNG specifically for generating Index IDs. Set the seed with `Random.seed!(index_id_rng(), 1234)`. This makes the random stream of number seperate for Index IDs and random elements, and helps avoid Index ID clashes with reading and writing (PR #547).
+* Add back checking for proper QN Index directions in contraction (PR #547).
 
 ITensors v0.1.31 Release Notes
 ==============================
