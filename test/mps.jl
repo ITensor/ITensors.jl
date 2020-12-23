@@ -1370,6 +1370,20 @@ end
     @test sz1 ≈ qsz1
   end
 
+  @testset "inner of MPS with more than one site Index" begin
+    s = siteinds("S=½", 4)
+    sout = addtags.(s, "out")
+    sin = addtags.(s, "in")
+    sinds = IndexSet.(sout, sin)
+    Cs = combiner.(sinds)
+    cinds = combinedind.(Cs)
+    ψ = randomMPS(cinds)
+    @test norm(ψ) ≈ 1
+    @test inner(ψ, ψ) ≈ 1
+    ψ .*= dag.(Cs)
+    @test norm(ψ) ≈ 1
+    @test inner(ψ, ψ) ≈ 1
+  end
 end
 
 nothing

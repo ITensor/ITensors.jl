@@ -1,3 +1,7 @@
+ITensors v0.1.33 Release Notes
+==============================
+* Fix bug introduced in v0.1.32 involving inner(::MPS, ::MPS) if the MPS have more than one site Index per tensor (PR #549).
+
 ITensors v0.1.32 Release Notes
 ==============================
 * Update to NDTensors v0.1.21, which includes a bug fix for scalar-like tensor contractions involving mixed element types (NDTensors PR #58).

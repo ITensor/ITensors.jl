@@ -343,15 +343,24 @@ function siteind(::typeof(only), M::MPS, j::Int; kwargs...)
   if isempty(is)
     return nothing
   end
-  return only(siteinds(M, j; kwargs...))
+  return only(is)
 end
 
 """
     siteinds(M::MPS)
+    siteinds(::typeof(first), M::MPS)
 
-Get a vector of the site indices of the MPS.
+Get a vector of the first site Index found on each tensor of the MPS.
+
+    siteinds(::typeof(only), M::MPS)
+
+Get a vector of the only site Index found on each tensor of the MPS. Errors if more than one is found.
+
+    siteinds(::typeof(all), M::MPS)
+
+Get a vector of the all site Indices found on each tensor of the MPS. Returns a Vector of IndexSets.
 """
-siteinds(M::MPS) = [siteind(M, j) for j in 1:length(M)]
+siteinds(M::MPS; kwargs...) = siteinds(first, M; kwargs...)
 
 function replace_siteinds!(M::MPS, sites)
   for j in eachindex(M)

@@ -993,6 +993,9 @@ end
 replaceind(is::IndexSet, i1::Index, i2::Index) =
   replaceinds(is, (i1,), (i2,))
 
+replaceind(is::IndexSet, i1::Index, i2::IndexSet{1}) =
+  replaceinds(is, (i1,), i2)
+
 replaceind(is::IndexSet, rep_i::Pair{ <: Index, <: Index}) =
   replaceinds(is, rep_i)
 
