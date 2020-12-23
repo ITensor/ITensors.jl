@@ -1,3 +1,7 @@
+ITensors v0.1.34 Release Notes
+==============================
+* Allow operator names in the `op` system that are longer than 8 characters (PR #551).
+
 ITensors v0.1.33 Release Notes
 ==============================
 * Fix bug introduced in v0.1.32 involving inner(::MPS, ::MPS) if the MPS have more than one site Index per tensor (PR #549).
