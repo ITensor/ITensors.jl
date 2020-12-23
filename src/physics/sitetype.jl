@@ -150,12 +150,12 @@ macro notation: `OpName"MyTag"`.
 To make an OpName value or object, you can use
 the notation: `OpName("myop")`
 """
-OpName(s::AbstractString) = OpName{SmallString(s)}()
-OpName(s::SmallString) = OpName{s}()
+OpName(s::AbstractString) = OpName{Symbol(s)}()
+OpName(s::Symbol) = OpName{s}()
 name(::OpName{N}) where {N} = N
 
 macro OpName_str(s)
-  OpName{SmallString(s)}
+  OpName{Symbol(s)}
 end
 
 # Default implementations of op and op!

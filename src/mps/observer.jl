@@ -12,6 +12,13 @@ argument for DMRG routines taking an AbstractObserver
 struct NoObserver <: AbstractObserver
 end
 
+"""
+A DMRGMeasurement object is an alias for `Vector{Vector{Float64}}`,
+in other words an array of arrays of real numbers.
+
+Given a DMRGMeasurement `M`,the result for the 
+measurement on sweep `n` and site `i` as `M[n][i]`.
+"""
 const DMRGMeasurement = Vector{Vector{Float64}}
 
 """
@@ -30,24 +37,82 @@ struct DMRGObserver <: AbstractObserver
   etol::Float64
   minsweeps::Int64
 
-  function DMRGObserver(energy_tol=0.0, 
-                        minsweeps=2) 
-    new([],[],Dict{String,DMRGMeasurement}(),[],[],energy_tol,minsweeps)
-  end
 
-  function DMRGObserver(ops::Vector{String}, 
-                        sites::Vector{<:Index};
-                        energy_tol=0.0,
-                        minsweeps=2)
-    measurements = Dict(o => DMRGMeasurement() for o in ops)
-    return new(ops,sites,measurements,[],[],energy_tol,minsweeps)
-  end
 end
 
+"""
+    DMRGObserver(energy_tol=0.0,
+                 minsweeps=2)
+
+Construct a DMRGObserver by providing the energy
+tolerance used for early stopping, and minimum number
+of sweeps that must be done.
+    - energy_tol: if the energy from one sweep to the
+      next no longer changes by more than this amount,
+      stop after the current sweep
+    - minsweeps: do at least this many sweeps
+"""
+function DMRGObserver(energy_tol=0.0, 
+                      minsweeps=2) 
+  DMRGObserver([],[],Dict{String,DMRGMeasurement}(),[],[],energy_tol,minsweeps)
+end
+
+"""
+    DMRGObserver(ops::Vector{String}, 
+                 sites::Vector{<:Index};
+                 energy_tol=0.0,
+                 minsweeps=2)
+
+Construct a DMRGObserver, provide an array
+of `ops` of operator names which are strings 
+recognized by the `op` function. Each of
+these operators will be measured on every site
+during every step of DMRG and the results 
+recorded inside the DMRGOberver for later
+analysis. The array `sites` is the basis
+of sites used to define the MPS and MPO for
+the DMRG calculation.
+
+Optionally, one can provide an energy
+tolerance used for early stopping, and minimum number
+of sweeps that must be done.
+    - energy_tol: if the energy from one sweep to the
+      next no longer changes by more than this amount,
+      stop after the current sweep
+    - minsweeps: do at least this many sweeps
+"""
+function DMRGObserver(ops::Vector{String}, 
+                      sites::Vector{<:Index};
+                      energy_tol=0.0,
+                      minsweeps=2)
+  measurements = Dict(o => DMRGMeasurement() for o in ops)
+  return DMRGObserver(ops,sites,measurements,[],[],energy_tol,minsweeps)
+end
+
+"""
+    measurements(o::DMRGObserver)
+
+After using a DMRGObserver object `o` within
+a DMRG calculation, retrieve a dictionary
+of measurement results, with the keys being
+operator names and values being DMRGMeasurement
+objects.
+"""
 measurements(o::DMRGObserver) = o.measurements
+
+"""
+    energies(o::DMRGObserver)
+
+After using a DMRGObserver object `o` within
+a DMRG calculation, retrieve an array of the 
+energy after each sweep.
+"""
 energies(o::DMRGObserver) = o.energies
+
 sites(obs::DMRGObserver) = obs.sites
+
 ops(obs::DMRGObserver) = obs.ops
+
 truncerrors(obs::DMRGObserver) = obs.truncerrs
 
 function measurelocalops!(obs::DMRGObserver,

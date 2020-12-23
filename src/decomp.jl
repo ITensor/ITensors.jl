@@ -149,7 +149,7 @@ iterate(E::TruncEigen, ::Val{:r}) = (E.r, Val(:done))
 iterate(E::TruncEigen, ::Val{:done}) = nothing
 
 function eigen(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
-  @debug begin
+  @debug_check begin
     if hasqns(A)
       @assert flux(A) == QN()
     end
@@ -240,7 +240,7 @@ function eigen(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
   # The right eigenvectors, after being applied to A
   Vt = replaceinds(V, (Ris..., r), (Lis..., l))
 
-  @debug begin
+  @debug_check begin
     if hasqns(A)
       @assert flux(D) == QN()
       @assert flux(V) == QN()

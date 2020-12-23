@@ -329,20 +329,42 @@ productMPS(sites::Vector{ <: Index},
 """
     siteind(M::MPS, j::Int; kwargs...)
 
-Get the site Index of the MPS.
+Get the first site Index of the MPS. Return `nothing` if none is found.
 """
-siteind(M::MPS, j::Int; kwargs...) = firstsiteind(M, j; kwargs...)
+siteind(M::MPS, j::Int; kwargs...) = siteind(first, M, j; kwargs...)
+
+"""
+    siteind(::typeof(only), M::MPS, j::Int; kwargs...)
+
+Get the only site Index of the MPS. Return `nothing` if none is found.
+"""
+function siteind(::typeof(only), M::MPS, j::Int; kwargs...)
+  is = siteinds(M, j; kwargs...)
+  if isempty(is)
+    return nothing
+  end
+  return only(is)
+end
 
 """
     siteinds(M::MPS)
+    siteinds(::typeof(first), M::MPS)
 
-Get a vector of the site indices of the MPS.
+Get a vector of the first site Index found on each tensor of the MPS.
+
+    siteinds(::typeof(only), M::MPS)
+
+Get a vector of the only site Index found on each tensor of the MPS. Errors if more than one is found.
+
+    siteinds(::typeof(all), M::MPS)
+
+Get a vector of the all site Indices found on each tensor of the MPS. Returns a Vector of IndexSets.
 """
-siteinds(M::MPS) = [siteind(M, j) for j in 1:length(M)]
+siteinds(M::MPS; kwargs...) = siteinds(first, M; kwargs...)
 
 function replace_siteinds!(M::MPS, sites)
   for j in eachindex(M)
-    sj = siteind(M, j)
+    sj = siteind(only, M, j)
     replaceind!(M[j], sj, sites[j])
   end
   return M

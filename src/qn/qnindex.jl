@@ -93,7 +93,7 @@ function Index(qnblocks::QNBlocks; dir::Arrow = Out, tags = "", plev = 0)
   # TODO: make this a debug check?
   #have_same_qns(qnblocks) || error("When creating a QN Index, the QN blocks must have the same QNs")
   #have_same_mods(qnblocks) || error("When creating a QN Index, the QN blocks must have the same mods")
-  return Index(rand(IDType), qnblocks, dir, tags, plev)
+  return Index(rand(index_id_rng(), IDType), qnblocks, dir, tags, plev)
 end
 
 """

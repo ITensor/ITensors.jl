@@ -45,6 +45,11 @@ include("imports.jl")
 include("global_variables.jl")
 
 #####################################
+# Debug checking
+#
+include("debug_checks.jl")
+
+#####################################
 # Index and IndexSet
 #
 include("smallstring.jl")
@@ -119,6 +124,10 @@ include("packagecompile/compile.jl")
 # use only
 #
 include("developer_tools.jl")
+
+function __init__()
+  resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
+end
 
 #####################################
 # Precompile certain functions

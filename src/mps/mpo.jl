@@ -132,26 +132,26 @@ function MPO(A::MPS; kwargs...)
   return M
 end
 
+# XXX: rename originalsiteind?
 """
     siteind(M::MPO, j::Int; plev = 0, kwargs...)
 
 Get the first site Index of the MPO found, by
 default with prime level 0. 
 """
-siteind(M::MPO, j::Int; kwargs...) =
-  firstsiteind(M, j; plev = 0, kwargs...)
+siteind(M::MPO, j::Int; kwargs...) = siteind(first, M, j; plev = 0, kwargs...)
 
 # TODO: make this return the site indices that would have
-# been used to create the MPO, i.e.:
+# been used to create the MPO? I.e.:
 # [dag(siteinds(M, j; plev = 0, kwargs...)) for j in 1:length(M)]
 """
     siteinds(M::MPO; kwargs...)
 
-Get a Vector of IndexSets the all of the site indices of M.
+Get a Vector of IndexSets of all the site indices of M.
 """
-siteinds(M::MPO; kwargs...) =
-  [siteinds(M, j; kwargs...) for j in 1:length(M)]
+siteinds(M::MPO; kwargs...) = siteinds(all, M; kwargs...)
 
+# XXX: rename originalsiteinds?
 """
     firstsiteinds(M::MPO; kwargs...)
 
@@ -159,8 +159,7 @@ Get a Vector of the first site Index found on each site of M.
 
 By default, it finds the first site Index with prime level 0.
 """
-firstsiteinds(M::MPO; kwargs...) =
-  [siteind(M, j; kwargs...) for j in 1:length(M)]
+firstsiteinds(M::MPO; kwargs...) = siteinds(first, M; plev = 0, kwargs...)
 
 """
     dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
