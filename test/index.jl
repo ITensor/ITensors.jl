@@ -1,4 +1,6 @@
 using ITensors
+using ITensors.NDTensors
+using Random
 using Test
 import ITensors: In, Out, Neither
 
@@ -72,6 +74,78 @@ import ITensors: In, Out, Neither
       @test n == i(c)
       c += 1
     end
+  end
+  @testset "Index ID random seed" begin
+    Random.seed!(index_id_rng(), 1234)
+    i = Index(2)
+    j = Index(2)
+    Random.seed!(index_id_rng(), 1234)
+    ĩ = Index(2)
+    j̃ = Index(2)
+    Random.seed!(index_id_rng(), 123)
+    ĩ′ = Index(2)
+    j̃′ = Index(2)
+    @test id(i) == id(ĩ)
+    @test id(j) == id(j̃)
+    @test id(i) ≠ id(ĩ′)
+    @test id(j) ≠ id(j̃′)
+
+    Random.seed!(index_id_rng(), 1234)
+    Random.seed!(1234)
+    i = Index(2)
+    j = Index(2)
+    Random.seed!(1234)
+    ĩ = Index(2)
+    j̃ = Index(2)
+    Random.seed!(123)
+    ĩ′ = Index(2)
+    j̃′ = Index(2)
+    @test id(i) ≠ id(ĩ)
+    @test id(j) ≠ id(j̃)
+    @test id(i) ≠ id(ĩ′)
+    @test id(j) ≠ id(j̃′)
+
+    Random.seed!(index_id_rng(), 1234)
+    Random.seed!(1234)
+    i = Index(2)
+    j = Index(2)
+    A = randomITensor(i, j)
+    Random.seed!(1234)
+    ĩ = Index(2)
+    j̃ = Index(2)
+    Ã = randomITensor(ĩ, j̃)
+    Random.seed!(123)
+    ĩ′ = Index(2)
+    j̃′ = Index(2)
+    Ã′ = randomITensor(ĩ′, j̃′)
+    @test id(i) ≠ id(ĩ)
+    @test id(j) ≠ id(j̃)
+    @test id(i) ≠ id(ĩ′)
+    @test id(j) ≠ id(j̃′)
+    @test all(tensor(A) .== tensor(Ã))
+    @test all(tensor(A) .≠ tensor(Ã′))
+
+    Random.seed!(index_id_rng(), 1234)
+    Random.seed!(1234)
+    i = Index(2)
+    j = Index(2)
+    A = randomITensor(i, j)
+    Random.seed!(index_id_rng(), 1234)
+    Random.seed!(1234)
+    ĩ = Index(2)
+    j̃ = Index(2)
+    Ã = randomITensor(ĩ, j̃)
+    Random.seed!(index_id_rng(), 1234)
+    Random.seed!(123)
+    ĩ′ = Index(2)
+    j̃′ = Index(2)
+    Ã′ = randomITensor(ĩ′, j̃′)
+    @test id(i) == id(ĩ)
+    @test id(j) == id(j̃)
+    @test id(i) == id(ĩ′)
+    @test id(j) == id(j̃′)
+    @test all(tensor(A) .== tensor(Ã))
+    @test all(tensor(A) .≠ tensor(Ã′))
   end
 end
 

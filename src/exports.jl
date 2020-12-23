@@ -20,6 +20,9 @@ export
   # Deprecated
   addblock!,
 
+# ITensors.jl
+  index_id_rng,
+
 # argsdict/argsdict.jl
   argsdict,
 

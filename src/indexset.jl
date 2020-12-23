@@ -4,6 +4,11 @@ struct IndexSet{N, IndexT <: Index, DataT <: Tuple}
   data::DataT
 
   function IndexSet{N, IndexT, DataT}(data) where {N, IndexT, DataT <: NTuple{N, IndexT}}
+    @debug_check begin
+      if !allunique(data)
+        error("Trying to create IndexSet with collection of indices $data. Indices must be unique.")
+      end
+    end
     return new{N, IndexT, DataT}(data)
   end
 
@@ -973,15 +978,16 @@ hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))
 function replaceinds(is::IndexSet, inds1, inds2)
   is1 = IndexSet(inds1)
   poss = indexin(is1, is)
+  is_tuple = Tuple(is)
   for (j, pos) in enumerate(poss)
     isnothing(pos) && continue
-    i1 = is[pos]
+    i1 = is_tuple[pos]
     i2 = inds2[j]
     i2 = setdir(i2, dir(i1))
     space(i1) ≠ space(i2) && error("Indices must have the same spaces to be replaced")
-    is = setindex(is, i2, pos)
+    is_tuple = setindex(is_tuple, i2, pos)
   end
-  return is
+  return IndexSet(is_tuple)
 end
 
 replaceind(is::IndexSet, i1::Index, i2::Index) =
@@ -1008,12 +1014,18 @@ end
 
 function compute_contraction_labels(Ais::IndexSet{NA},
                                     Bis::IndexSet{NB}) where {NA,NB}
+  have_qns = hasqns(Ais) && hasqns(Bis)
   Alabels = MVector{NA,Int}(ntuple(_->0,Val(NA)))
   Blabels = MVector{NB,Int}(ntuple(_->0,Val(NB)))
 
   ncont = 0
   for i = 1:NA, j = 1:NB
-    if Ais[i] == Bis[j]
+    Ais_i = @inbounds Ais[i]
+    Bis_j = @inbounds Bis[j]
+    if Ais_i == Bis_j
+      if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
+        error("Attempting to contract IndexSet:\n$(Ais)with IndexSet:\n$(Bis)QN indices must have opposite direction to contract.")
+      end
       Alabels[i] = Blabels[j] = -(1+ncont)
       ncont += 1
     end

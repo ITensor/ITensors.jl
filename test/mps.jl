@@ -1,6 +1,9 @@
 using Combinatorics
 using ITensors
+using Random
 using Test
+
+Random.seed!(1234)
 
 include("util.jl")
 include("../examples/gate_evolution/qubit.jl")
@@ -237,6 +240,8 @@ include("../examples/gate_evolution/qubit.jl")
   end
 
   @testset "+ MPS with coefficients" begin
+    Random.seed!(1234)
+
     N = 20
     conserve_qns = true
 

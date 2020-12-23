@@ -3,6 +3,9 @@ using Test
 using Combinatorics: permutations
 import Random: seed!
 
+# Enable debug checking for these tests
+ITensors.enable_debug_checks()
+
 seed!(12345)
 
 digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
@@ -1176,5 +1179,8 @@ end
 end
 
 end # End Dense ITensor basic functionality
+
+# Disable debug checking once tests are completed
+ITensors.disable_debug_checks()
 
 nothing

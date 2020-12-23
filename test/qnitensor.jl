@@ -1413,18 +1413,18 @@ end
     Aexp = exp(A)
     Amat = Array(A, i1,i2, i1', i2')
     Amatexp = reshape(exp(reshape(Amat,9,9)),3,3,3,3)
-    @test isapprox(norm(Array(Aexp,i1,i2,i1',i2') - Amatexp),0.0, atol=1e-14)
+    @test Array(Aexp,i1,i2,i1',i2') ≈ Amatexp rtol=1e-14
     @test flux(Aexp) == QN()
     @test length(setdiff(inds(Aexp),inds(A)))==0
 
-    @test isapprox(norm(exp(A, (i1,i2), (i1',i2')) - Aexp),0.0, atol=5e-14)
+    @test exp(A, (i1,i2), (i1',i2')) ≈ Aexp rtol=5e-14
 
     # test the case where indices are permuted
     A = randomITensor(QN(),i1,dag(i1)', dag(i2)',i2)
     Aexp = exp(A, (i1,i2), (i1',i2'))
     Amat = Array(A, i1,i2,i1', i2')
     Amatexp = reshape(exp(reshape(Amat,9,9)),3,3,3,3)
-    @test isapprox(norm(Array(Aexp,i1,i2,i1',i2') - Amatexp),0.0,atol=1e-14)
+    @test Array(Aexp,i1,i2,i1',i2') ≈ Amatexp rtol=1e-14
 
     # test exponentiation in the Hermitian case
     i1 = Index([QN(0)=>2,QN(1)=>2,QN(2)=>3],"i1")
@@ -1434,7 +1434,7 @@ end
     Amat = Array(Ah ,i1', i1)
     Aexp = exp(Ah; ishermitian=true)
     Amatexp= exp(LinearAlgebra.Hermitian(Amat))
-    @test isapprox(norm(Array(Aexp,i1,i1')-Amatexp),0.0,atol=5e-14)
+    @test Array(Aexp,i1,i1') ≈ Amatexp rtol=5e-14
   end
 
   @testset "Mixed arrows" begin
@@ -1445,6 +1445,13 @@ end
     @test exp(dense(A), (i1, i1'), (i2', i2)) ≈ dense(expA)
   end
 
+  @testset "Test contraction direction error" begin
+    i = Index([QN(0)=>1, QN(1)=>1], "i")
+    A = randomITensor(i', dag(i))
+    A² = A' * A
+    @test dense(A²) ≈ dense(A') * dense(A)
+    @test_throws ErrorException A' * dag(A)
+  end
 end
 
 end

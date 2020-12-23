@@ -15,6 +15,7 @@ using Test
     "diagitensor.jl",
     "contract.jl",
     "combiner.jl",
+    "debug_checks.jl",
     "trg.jl",
     "ctmrg.jl",
     "iterativesolvers.jl",
