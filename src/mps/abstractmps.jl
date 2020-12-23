@@ -359,8 +359,8 @@ Return the first site Index found on the MPS or MPO
 You can choose different filters, like prime level
 and tags, with the `kwargs`.
 """
-function firstsiteind(M::AbstractMPS, j::Integer;
-                      kwargs...)
+function siteind(::typeof(first), M::AbstractMPS, j::Integer;
+                 kwargs...)
   N = length(M)
   (N==1) && return firstind(M[1]; kwargs...)
   if j == 1
@@ -373,8 +373,8 @@ function firstsiteind(M::AbstractMPS, j::Integer;
   return si
 end
 
-siteind(::typeof(first), M::AbstractMPS, j::Integer; kwargs...) =
-  firstsiteind(M, j; kwargs...)
+firstsiteind(M::AbstractMPS, j::Integer; kwargs...) =
+  siteind(first, M, j; kwargs...)
 
 """
     siteinds(M::Union{MPS, MPO}}, j::Integer; kwargs...)
@@ -401,6 +401,15 @@ end
 function siteinds(::typeof(all), ψ::AbstractMPS, n::Integer; kwargs...)
   return siteinds(ψ, n; kwargs...)
 end
+
+siteinds(::typeof(first), ψ::AbstractMPS; kwargs...) =
+  [siteind(first, ψ, j; kwargs...) for j in 1:length(ψ)]
+
+siteinds(::typeof(only), ψ::AbstractMPS; kwargs...) =
+  [siteind(only, ψ, j; kwargs...) for j in 1:length(ψ)]
+
+siteinds(::typeof(all), ψ::AbstractMPS; kwargs...) =
+  [siteinds(ψ, j; kwargs...) for j in 1:length(ψ)]
 
 function replaceinds!(::typeof(linkinds), M::AbstractMPS,
                       l̃s::Vector{<:Index})
@@ -519,6 +528,22 @@ end
 function map_unique_siteinds(f::Function, M1::AbstractMPS,
                                         M2::AbstractMPS)
   return map_unique_siteinds!(f, copy(M1), M2)
+end
+
+function hassameinds(::typeof(siteinds), M1::AbstractMPS, M2::AbstractMPS)
+  length(M1) ≠ length(M2) && return false
+  for n in 1:length(M1)
+    !hassameinds(siteinds(all, M1, n), siteinds(all, M2, n)) && return false
+  end
+  return true
+end
+
+function hassamenuminds(::typeof(siteinds), M1::AbstractMPS, M2::AbstractMPS)
+  length(M1) ≠ length(M2) && return false
+  for n in 1:length(M1)
+    length(siteinds(M1, n)) ≠ length(siteinds(M2, n)) && return false
+  end
+  return true
 end
 
 for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
@@ -660,8 +685,18 @@ function _log_or_not_dot(M1::MPST,
   end
   M1dag = dag(M1)
   sim_linkinds!(M1dag)
+  siteindsM1dag = siteinds(all, M1dag)
+  siteindsM2 = siteinds(all, M2)
+  if any(n -> length(n) > 1, siteindsM1dag) ||
+     any(n -> length(n) > 1, siteindsM2) ||
+     !hassamenuminds(siteinds, M1, M2)
+    # If the MPS have more than one site Indices on any site or they don't have
+    # the same number of site indices on each site, don't try to make the
+    # indices match
+    make_inds_match = false
+  end
   if make_inds_match
-    replace_siteinds!(M1dag, siteinds(M2))
+    replace_siteinds!(M1dag, siteindsM2)
   end
   O = M1dag[1] * M2[1]
 
