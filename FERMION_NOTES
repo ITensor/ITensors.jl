@@ -8,6 +8,10 @@ X have productMPS and similar functions put
   MPS always consist of bosonic ITensors on
   all or at most one site
 
+- Make combiner fermionic:
+  * work through 4 identified cases with unit tests
+  * put unit tests into test/ folder
+
 - Fix issue where hopping Hamiltonian for
   Electron sites giving non-Hermitian 
   result in AutoMPO
