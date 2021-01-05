@@ -9,6 +9,8 @@ in the tensors, the second mode can lead to fewer blocks being contracted,
 which can lead to a speedup depending on the number of blocks, the sizes
 of the blocks, the order of the ITensors being contracted, etc.
 
+Use the commands `ITensors.enable_combine_contract()` and `ITensors.disable_combine_contract()` to change between the different contraction modes.
+
 Run the example using parity symmetry as follows:
 ```julia
 julia> include("main.jl")
@@ -19,10 +21,10 @@ julia> main(Nmax = 8)
 #################################################
 
 Contract:
-  2.410 μs (76 allocations: 5.70 KiB)
+  1.609 μs (51 allocations: 4.83 KiB)
 
 Combine then contract:
-  48.111 μs (899 allocations: 92.98 KiB)
+  45.714 μs (888 allocations: 95.20 KiB)
 
 C_contract ≈ C_combine_contract = true
 
@@ -31,10 +33,10 @@ C_contract ≈ C_combine_contract = true
 #################################################
 
 Contract:
-  11.329 μs (311 allocations: 24.73 KiB)
+  4.285 μs (60 allocations: 9.66 KiB)
 
 Combine then contract:
-  111.227 μs (1628 allocations: 182.69 KiB)
+  109.065 μs (1631 allocations: 187.13 KiB)
 
 C_contract ≈ C_combine_contract = true
 
@@ -43,10 +45,10 @@ C_contract ≈ C_combine_contract = true
 #################################################
 
 Contract:
-  119.332 μs (2125 allocations: 200.11 KiB)
+  40.041 μs (83 allocations: 55.81 KiB)
 
 Combine then contract:
-  284.701 μs (4019 allocations: 470.45 KiB)
+  288.204 μs (3889 allocations: 466.31 KiB)
 
 C_contract ≈ C_combine_contract = true
 
@@ -55,10 +57,10 @@ C_contract ≈ C_combine_contract = true
 #################################################
 
 Contract:
-  1.291 ms (16988 allocations: 1.75 MiB)
+  302.242 μs (99 allocations: 467.00 KiB)
 
 Combine then contract:
-  1.250 ms (18801 allocations: 1.75 MiB)
+  1.039 ms (13404 allocations: 1.54 MiB)
 
 C_contract ≈ C_combine_contract = true
 
@@ -67,10 +69,10 @@ C_contract ≈ C_combine_contract = true
 #################################################
 
 Contract:
-  13.555 ms (138908 allocations: 16.22 MiB)
+  3.580 ms (115 allocations: 3.21 MiB)
 
 Combine then contract:
-  6.233 ms (103211 allocations: 8.28 MiB)
+  5.208 ms (76632 allocations: 7.13 MiB)
 
 C_contract ≈ C_combine_contract = true
 
@@ -79,10 +81,10 @@ C_contract ≈ C_combine_contract = true
 #################################################
 
 Contract:
-  165.222 ms (1261274 allocations: 141.49 MiB)
+  45.379 ms (131 allocations: 21.20 MiB)
 
 Combine then contract:
-  37.353 ms (492436 allocations: 41.43 MiB)
+  31.002 ms (369134 allocations: 37.03 MiB)
 
 C_contract ≈ C_combine_contract = true
 
@@ -91,10 +93,10 @@ C_contract ≈ C_combine_contract = true
 #################################################
 
 Contract:
-  2.256 s (10387274 allocations: 1.24 GiB)
+  670.578 ms (150 allocations: 184.92 MiB)
 
 Combine then contract:
-  187.437 ms (2158837 allocations: 187.26 MiB)
+  144.652 ms (1576569 allocations: 165.32 MiB)
 
 C_contract ≈ C_combine_contract = true
 
@@ -103,10 +105,10 @@ C_contract ≈ C_combine_contract = true
 #################################################
 
 Contract:
-  28.637 s (104661017 allocations: 14.86 GiB)
+  13.581 s (12583081 allocations: 4.12 GiB)
 
 Combine then contract:
-  1.416 s (17813407 allocations: 1.32 GiB)
+  1.211 s (14995656 allocations: 1.22 GiB)
 
 C_contract ≈ C_combine_contract = true
 

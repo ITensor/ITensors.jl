@@ -1,28 +1,8 @@
 using ITensors
 using ITensors.Strided
+using ITensors.NDTensors
 using LinearAlgebra
 using Random
-
-# Choose whether or not to use block sparse multithreading
-# Must start Julia with multiple threads, for example with:
-#
-# $ julia -t 4
-#
-# for 4 threads
-ITensors.disable_threaded_blocksparse()
-#ITensors.enable_threaded_blocksparse()
-
-# Control the number of BLAS threads (multithreads matrix
-# multiplication and other linear algebra operations)
-# Only use 1 BLAS thread with block sparse multithreading
-if ITensors.using_threaded_blocksparse()
-  BLAS.set_num_threads(1)
-else
-  BLAS.set_num_threads(Sys.CPU_THREADS)
-end
-
-# Strided implements multithreaded tensor permutations
-Strided.set_num_threads(1)
 
 include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
@@ -33,15 +13,29 @@ function main(; Nx::Int = 6,
                 t::Float64 = 1.0,
                 maxdim::Int = 3000,
                 conserve_ky = true,
-                use_splitblocks = true)
+                use_splitblocks = true,
+                nsweeps = 8,
+                blas_num_threads = Sys.CPU_THREADS,
+                use_threaded_blocksparse = true)
   Random.seed!(1234)
+  Strided.set_num_threads(1)
+  if use_threaded_blocksparse
+    ITensors.enable_threaded_blocksparse()
+    BLAS.set_num_threads(1)
+  else
+    ITensors.disable_threaded_blocksparse()
+    BLAS.set_num_threads(blas_num_threads)
+  end
 
   @show Threads.nthreads()
+  @show Strided.get_num_threads()
+  @show NDTensors.blas_get_num_threads()
   @show ITensors.using_threaded_blocksparse()
+  println()
 
   N = Nx * Ny
 
-  sweeps = Sweeps(10)
+  sweeps = Sweeps(nsweeps)
   maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
   maxdim!(sweeps, maxdims...)
   cutoff!(sweeps, 1e-6)
@@ -55,6 +49,8 @@ function main(; Nx::Int = 6,
 
   ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true) 
   H = MPO(ampo, sites)
+
+  @show use_splitblocks
 
   # This step makes the MPO more sparse.
   # It generally improves DMRG performance
@@ -99,5 +95,17 @@ function main(; Nx::Int = 6,
   @show energy
 end
 
-main()
+println("################################")
+println("Compilation:")
+println("################################")
+println()
+main(nsweeps = 2, use_threaded_blocksparse = false)
+println()
+
+println("################################")
+println("Runtime:")
+println("################################")
+main(nsweeps = 8, use_threaded_blocksparse = false)
+println()
+
 

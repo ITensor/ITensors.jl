@@ -78,17 +78,13 @@ mutable struct ITensor{N}
 
   This is an internal constructor for an ITensor where the ITensor stores a view of the `NDTensors.TensorStorage`.
   """
-  ITensor{N}(is,
-             st::TensorStorage) where {N} = new{N}(st, is)
+  ITensor{N}(is, st::TensorStorage) where {N} = new{N}(st, is)
 
-  ITensor{Any}(is,
-               st::Empty) = new{Any}(st, is)
+  ITensor{Any}(is, st::Empty) = new{Any}(st, is)
 end
 
-function ITensor{Any}(is,
-                      st::TensorStorage)
+ITensor{Any}(is, st::TensorStorage) =
   error("Can only make an ITensor with Any number of indices with NDTensors.Empty storage")
-end
 
 """
     itensor(st::TensorStorage, is)
@@ -144,8 +140,7 @@ data(T::ITensor) = NDTensors.data(store(T))
 
 similar(T::ITensor) = itensor(similar(tensor(T)))
 
-similar(T::ITensor,
-        ::Type{ElT}) where {ElT<:Number} =
+similar(T::ITensor, ::Type{ElT}) where {ElT<:Number} =
   itensor(similar(tensor(T),ElT))
 
 setinds!(T::ITensor,is) = (T.inds = is; return T)
@@ -1310,9 +1305,10 @@ function _contract(A::ITensor, B::ITensor)
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 &&
      order(C) >= warnTensorOrder
-     #@warn "Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_order!(::Int)`, `reset_warn_order!()`, and `disable_warn_order!()`."
-     println("Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with functions like `set_warn_order!(::Int)`, `reset_warn_order!()`, and `disable_warn_order!()`.")
-     show(stdout, MIME"text/plain"(), stacktrace())
+     println("Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with macros like `@set_warn_order N`, `@reset_warn_order`, and `@disable_warn_order` or functions like `ITensors.set_warn_order(N::Int)`, `ITensors.reset_warn_order()`, and `ITensors.disable_warn_order()`.")
+     # This prints a vector, not formatted well
+     #show(stdout, MIME"text/plain"(), stacktrace())
+     Base.show_backtrace(stdout, backtrace())
      println()
   end
   return C
@@ -1363,7 +1359,7 @@ modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
 """
 function (A::ITensor * B::ITensor)
-  C = use_combine_contract() ? combine_contract(A, B) : _contract(A, B)
+  C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
   return C
 end
 

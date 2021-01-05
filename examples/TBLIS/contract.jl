@@ -27,7 +27,7 @@ let
   # Use BLAS
   #
 
-  disable_tblis!()
+  ITensors.disable_tblis()
   BLAS.set_num_threads(nthreads)
 
   println()
@@ -43,7 +43,7 @@ let
   # Use TBLIS
   #
 
-  enable_tblis!()
+  ITensors.enable_tblis()
   TBLIS.set_num_threads(4)
 
   println()

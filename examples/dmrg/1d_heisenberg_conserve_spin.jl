@@ -1,6 +1,5 @@
 using ITensors
-using ITensors.NDTensors
-using NDTensors.Strided
+using ITensors.Strided
 using LinearAlgebra
 using Printf
 using Random
@@ -8,8 +7,8 @@ using Random
 Random.seed!(1234)
 BLAS.set_num_threads(1)
 Strided.set_num_threads(1)
-NDTensors.enable_threaded_blocksparse!()
-#NDTensors.disable_threaded_blocksparse!()
+ITensors.enable_threaded_blocksparse()
+#ITensors.disable_threaded_blocksparse()
 
 let
   N = 100
