@@ -226,7 +226,7 @@ end
 """
     iterate(is::TagSet[, state])
 
-Iterate over the tags in a TagSet.
+Iterate over the Tag's in a TagSet.
 
 # Example
 ```jldoctest
@@ -238,7 +238,7 @@ julia> for tag in tagset
          println(tag)
        end
 l
-tag
+tags
 ```
 """
 Base.iterate(ts::TagSet, state) = state < length(ts) ? (ts[state + 1], state + 1) : nothing
