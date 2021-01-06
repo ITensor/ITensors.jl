@@ -84,7 +84,7 @@ using ITensors,
 
   @testset "Iterate Tagset" begin
     ts = TagSet("Site, n=2")
-    @test [tag for tags in ts] == [ts[1], ts[2]]
+    @test [tag for tag in ts] == [ts[1], ts[2]]
   end
 
   @testset "addtags" begin
