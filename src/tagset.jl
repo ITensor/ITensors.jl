@@ -241,7 +241,7 @@ l
 tag
 ```
 """
-Base.iterate(ts::TagSet, state) = state < ts.length ? (ts[state + 1], state + 1) : nothing
+Base.iterate(ts::TagSet, state) = state < length(ts) ? (ts[state + 1], state + 1) : nothing
 
 Base.iterate(ts::TagSet) = (ts[1], 1)
 
