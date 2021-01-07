@@ -223,8 +223,27 @@ function tagstring(T::TagSet)
   return res
 end
 
-# TODO: add iteration
-#Base.iterate(ts::TagSet, args...) = iterate(data(ts), args...)
+"""
+    iterate(is::TagSet[, state])
+
+Iterate over the Tag's in a TagSet.
+
+# Example
+```jldoctest
+julia> using ITensors;
+
+julia> tagset = TagSet("l, tags");
+
+julia> for tag in tagset
+         println(tag)
+       end
+l
+tags
+```
+"""
+Base.iterate(ts::TagSet, state) = state < length(ts) ? (ts[state + 1], state + 1) : nothing
+
+Base.iterate(ts::TagSet) = (ts[1], 1)
 
 commontags(ts::TagSet) = ts
 

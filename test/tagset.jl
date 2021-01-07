@@ -82,6 +82,11 @@ using ITensors,
     @test length(sprint(show,ts)) > 1
   end
 
+  @testset "Iterate Tagset" begin
+    ts = TagSet("Site, n=2")
+    @test [tag for tag in ts] == [ts[1], ts[2]]
+  end
+
   @testset "addtags" begin
     ts = TagSet("Blue")
     @test hastags(ts,"Blue")
