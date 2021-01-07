@@ -910,6 +910,8 @@ function permute(is1::IndexSet, is2::IndexSet)
   return NDTensors.permute(is1, perm)
 end
 
+Base.reverse(is::IndexSet{N}) where {N} = IndexSet(reverse(is.data))
+
 #
 # Helper functions for contracting ITensors
 #
