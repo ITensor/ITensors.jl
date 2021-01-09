@@ -221,7 +221,7 @@ function NDTensors.mult_combiner_signs(C,
     #
     println("Doing Case #1")
     nlabelsT = sort(orig_labelsT)
-    nlabelsT[1:Ncomb] = orig_labelsC[2:end]
+    #nlabelsT[1:Ncomb] = orig_labelsC[2:end]
 
     permT = NDTensors.getperm(nlabelsT,orig_labelsT)
 
@@ -253,8 +253,6 @@ function NDTensors.mult_combiner_signs(C,
     #
     println("Doing Case #2")
     nlabelsT = sort(orig_labelsT)
-    @show orig_labelsT
-    @show nlabelsT
 
     permT = NDTensors.getperm(nlabelsT,orig_labelsT)
 
@@ -293,6 +291,9 @@ function NDTensors.mult_combiner_signs(C,
     #
     println("Doing Case #4")
     nlabelsT = sort(orig_labelsT)
+    #
+    # TODO: implement in terms of Case #2
+    #
     @show orig_labelsT
     @show orig_labelsC
     @show nlabelsT
