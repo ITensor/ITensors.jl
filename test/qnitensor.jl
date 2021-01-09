@@ -301,6 +301,14 @@ Random.seed!(1234)
     end
   end
 
+  @testset "Check arrows when summing" begin
+    s = siteinds("S=1/2",4;conserve_qns=true)
+    Tout = randomITensor(QN("Sz"=>2),s[2],s[1],s[3],s[4])
+    Tin = randomITensor(QN("Sz"=>2),dag(s[1]),dag(s[2]),dag(s[3]),dag(s[4]))
+    @test norm(Tout-Tout) < 1E-10 # this is ok
+    @test_throws ErrorException (Tout+Tin)         # not ok
+  end
+
   @testset "Copy" begin
     s = Index([QN(0)=>1,QN(1)=>1],"s")
     T = randomITensor(QN(0),s,s')

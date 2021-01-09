@@ -1281,7 +1281,14 @@ permute(T::ITensor,
 
 -(A::ITensor) = itensor(-tensor(A))
 
+function check_add_arrows(A::ITensor{N},B::ITensor{N}) where {N}
+  if hasqns(A) && hasqns(B)
+
+  end
+end
+
 function (A::ITensor{N} + B::ITensor{N}) where {N}
+  check_add_arrows(A,B)
   C = copy(A)
   C .+= B
   return C
@@ -1707,6 +1714,17 @@ function map!(f::Function,
               T2::ITensor{N}) where {N}
   R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
   perm = NDTensors.getperm(inds(R),inds(T2))
+
+  if hasqns(T2) && hasqns(R)
+    # Check that Index arrows match
+    for (n,p) in enumerate(perm)
+      if dir(inds(R)[n]) != dir(inds(T2)[p])
+        #println("Mismatched Index: \n$(inds(R)[n])")
+        error("Index arrows must be the same to add, subtract, map, or scale QN ITensors")
+      end
+    end
+  end
+
   TR,TT = tensor(R),tensor(T2)
 
   # TODO: Include type promotion from α
