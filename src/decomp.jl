@@ -336,7 +336,9 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
   if !isnothing(delta_A2)
     # This assumes delta_A2 has indices:
     # (Lis..., prime(Lis)...)
-    A2 += replaceinds(delta_A2, prime(Lis), simLis)
+    delta_A2 = replaceinds(delta_A2, Lis, dag(simLis))
+    noprime!(delta_A2)
+    A2 += delta_A2
   end
   F = eigen(A2, Lis, simLis; ishermitian=true,
                              kwargs...)
