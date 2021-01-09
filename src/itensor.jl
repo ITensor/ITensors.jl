@@ -1730,11 +1730,6 @@ function map!(f::Function,
   # TODO: Include type promotion from α
   TR = convert(promote_type(typeof(TR),typeof(TT)),TR)
   TR = permutedims!!(TR,TT,perm,f)
-  @show perm
-  @show typeof(TR)
-  @show inds(TR)
-  @show inds(TT)
-  @show inds(R)
 
   setstore!(R,store(TR))
   setinds!(R,inds(TR))
