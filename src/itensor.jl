@@ -1719,7 +1719,7 @@ function map!(f::Function,
     # Check that Index arrows match
     for (n,p) in enumerate(perm)
       if dir(inds(R)[n]) != dir(inds(T2)[p])
-        println("Mismatched Index: \n$(inds(R)[n])")
+        #println("Mismatched Index: \n$(inds(R)[n])")
         error("Index arrows must be the same to add, subtract, map, or scale QN ITensors")
       end
     end
