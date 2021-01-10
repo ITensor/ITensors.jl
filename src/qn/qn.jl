@@ -90,9 +90,7 @@ end
 QN(mqn::MQNStorage) = QN(QNStorage(mqn))
 QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
 
-isfermionic(qv::QN) = any(isfermionic, qv)
-
-function Base.hash(obj::QN, h::UInt)
+function hash(obj::QN, h::UInt)
   # TODO: use an MVector or SVector
   # for performance here; put non-zero QNVals
   # to front and slice when passing to hash
