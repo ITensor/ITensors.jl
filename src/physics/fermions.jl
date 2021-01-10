@@ -94,27 +94,29 @@ function NDTensors.permfactor(p,pairs::Vararg{Pair{QNIndex,Int},N}) where {N}
   return compute_permfactor(p,ivs...)
 end
 
-function NDTensors.permfactor(p,block::NTuple{N,Int},inds::QNIndexSet) where {N}
+function NDTensors.permfactor(perm,
+                              block::NDTensors.Block{N},
+                              inds::QNIndexSet) where {N}
   qns = ntuple(n->qn(inds[n],block[n]),N)
-  return compute_permfactor(p,qns...)
+  return compute_permfactor(perm,qns...)
 end
 
-internal_factor(block::NTuple{N,Int},inds) where {N} = 1
-
-function internal_factor(block::NTuple{N,Int},inds::QNIndexSet) where {N}
-  qns = ntuple(n->qn(inds[n],block[n]),N)
-  fac = 1
-  for q in qns
-    for v in q
-      !isactive(v) && break
-      if isfermionic(v) && mod(abs(val(v)),4) >= 2
-        fac *= -1
-      end
-      #@show q,v,fac
-    end
-  end
-  return fac
-end
+#internal_factor(block::NTuple{N,Int},inds) where {N} = 1
+#
+#function internal_factor(block::NTuple{N,Int},inds::QNIndexSet) where {N}
+#  qns = ntuple(n->qn(inds[n],block[n]),N)
+#  fac = 1
+#  for q in qns
+#    for v in q
+#      !isactive(v) && break
+#      if isfermionic(v) && mod(abs(val(v)),4) >= 2
+#        fac *= -1
+#      end
+#      #@show q,v,fac
+#    end
+#  end
+#  return fac
+#end
 
 #
 # TODO: specialize this *just* for QNIndex as an optimization
@@ -125,6 +127,11 @@ function NDTensors.compute_alpha(ElType,
                                  labelsR,blockR,input_indsR,
                                  labelsT1,blockT1,indsT1::QNIndexSet,
                                  labelsT2,blockT2,indsT2::QNIndexSet)
+  α = one(ElType)
+  if !has_fermionic_subspaces(indsT1) || !has_fermionic_subspaces(indsT2)
+    return α
+  end
+
   # the "indsR" argument to compute_alpha from NDTensors
   # may be a tuple of QNIndex, so convert to an IndexSet
   indsR = IndexSet(input_indsR)
@@ -168,7 +175,6 @@ function NDTensors.compute_alpha(ElType,
   end
   #@show alpha1,alpha2,alphaR,alpha_arrows
 
-  α = one(ElType)
   α *= alpha1*alpha2*alphaR*alpha_arrows
 
   return α
@@ -185,11 +191,11 @@ function NDTensors.mult_combiner_signs(C,
                                        indsT::QNIndexSet,
                                        labelsR)
   if !has_fermionic_subspaces(T)
-    println("Not copying T in combiner_signs")
+    #println("Not copying T in combiner_signs")
     return T
   end
 
-  println("Fermionic case: copying T in combiner_signs")
+  #println("Fermionic case: copying T in combiner_signs")
   T = copy(T)
 
   orig_labelsC = [l for l in labelsC]
@@ -197,13 +203,13 @@ function NDTensors.mult_combiner_signs(C,
 
   ci = cinds(store(C))[1]
   combining = (orig_labelsC[ci] > 0)
-  @show combining
+  #@show combining
 
   # Ncomb = number combined
   Ncomb = length(orig_labelsC)-1
 
   isconj = NDTensors.isconj(store(C))
-  @show isconj
+  #@show isconj
 
   # NOTES:
   # X already included alphaT below
@@ -223,13 +229,13 @@ function NDTensors.mult_combiner_signs(C,
     # <Case #1> ---------------------------
     # combining, unconjugated
     #
-    println("Doing Case #1")
+    #println("Doing Case #1")
     nlabelsT = sort(orig_labelsT)
     #nlabelsT[1:Ncomb] = orig_labelsC[2:end]
 
     permT = NDTensors.getperm(nlabelsT,orig_labelsT)
 
-    for (blockT,_) in blockoffsets(T)
+    for blockT in keys(blockoffsets(T))
       alphaT = NDTensors.permfactor(permT,blockT,indsT)
 
       alpha_arrows = 1
@@ -255,12 +261,12 @@ function NDTensors.mult_combiner_signs(C,
     # <Case #2> ---------------------------
     # uncombining, unconjugated
     #
-    println("Doing Case #2")
+    #println("Doing Case #2")
     nlabelsT = sort(orig_labelsT)
 
     permT = NDTensors.getperm(nlabelsT,orig_labelsT)
 
-    for (blockT,_) in blockoffsets(T)
+    for blockT in keys(blockoffsets(T))
       alphaT = NDTensors.permfactor(permT,blockT,indsT)
 
       alpha_arrows = 1
@@ -276,7 +282,7 @@ function NDTensors.mult_combiner_signs(C,
       end
 
       fac = alphaT*alphaC*alpha_arrows
-      println("Case 2 fac = $fac (alphaT=$alphaT, alphaC=$alphaC, alpha_arrows=$alpha_arrows)")
+      #println("Case 2 fac = $fac (alphaT=$alphaT, alphaC=$alphaC, alpha_arrows=$alpha_arrows)")
       if fac != 1
         Tb = blockview(T,blockT)
         scale!(Tb,fac)
@@ -287,24 +293,24 @@ function NDTensors.mult_combiner_signs(C,
     # <Case #3> ---------------------------
     # combining, conjugated
     #
-    println("Doing Case #3")
+    #println("Doing Case #3")
   elseif !combining && isconj
     #
     # <Case #4> ---------------------------
     # uncombining, conjugated
     #
-    println("Doing Case #4")
+    #println("Doing Case #4")
     nlabelsT = sort(orig_labelsT)
     #
     # TODO: implement in terms of Case #2
     #
-    @show orig_labelsT
-    @show orig_labelsC
-    @show nlabelsT
+    #@show orig_labelsT
+    #@show orig_labelsC
+    #@show nlabelsT
 
     permT = NDTensors.getperm(nlabelsT,orig_labelsT)
 
-    for (blockT,_) in blockoffsets(T)
+    for blockT in keys(blockoffsets(T))
       alphaT = NDTensors.permfactor(permT,blockT,indsT)
 
       alpha_arrows = 1
@@ -318,7 +324,7 @@ function NDTensors.mult_combiner_signs(C,
       end
 
       fac = alphaT*alpha_arrows
-      println("Case 4 fac = $fac")
+      #println("Case 4 fac = $fac")
       if fac != 1
         Tb = blockview(T,blockT)
         scale!(Tb,fac)
