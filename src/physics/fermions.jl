@@ -121,7 +121,8 @@ end
 #       (only remains to do this for input_indsR, if possible)
 #       probably requires parameterizing IndexSet over the Index type
 #
-function NDTensors.compute_alpha(labelsR,blockR,input_indsR,
+function NDTensors.compute_alpha(ElType,
+                                 labelsR,blockR,input_indsR,
                                  labelsT1,blockT1,indsT1::QNIndexSet,
                                  labelsT2,blockT2,indsT2::QNIndexSet)
   # the "indsR" argument to compute_alpha from NDTensors
@@ -167,7 +168,10 @@ function NDTensors.compute_alpha(labelsR,blockR,input_indsR,
   end
   #@show alpha1,alpha2,alphaR,alpha_arrows
 
-  return alpha1*alpha2*alphaR*alpha_arrows
+  α = one(ElType)
+  α *= alpha1*alpha2*alphaR*alpha_arrows
+
+  return α
 end
 
 # Flip signs of selected blocks of T prior to
