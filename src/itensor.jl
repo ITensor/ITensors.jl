@@ -1354,7 +1354,7 @@ function dag(T::ITensor; always_copy=false)
     TT = conj(tensor(T);always_copy=true)
     N = length(inds(T))
     perm = ntuple(i->(N-i+1),N) # reverse permutation
-    NDTensors.scale_blocks!(TT,b->NDTensors.permfactor(perm,b,inds(T)))
+    NDTensors.scale_blocks!(TT,block->NDTensors.permfactor(perm,block,inds(T)))
     #NDTensors.scale_blocks!(TT,b->internal_factor(b,inds(T)))
   else
     TT = conj(tensor(T); always_copy=always_copy)
