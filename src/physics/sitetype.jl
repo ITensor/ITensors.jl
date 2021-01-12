@@ -490,8 +490,6 @@ end
 
 has_fermion_string(::OpName, ::SiteType) = nothing
 
-has_fermion_string(::AbstractString, ::Nothing) = false
-
 function has_fermion_string(opname::AbstractString,
                             s::Index;
                             kwargs...)::Bool
@@ -516,46 +514,3 @@ function has_fermion_string(opname::AbstractString,
   end
   return false
 end
-
-function has_fermion_string(opname::AbstractString,
-                            st::SiteType;
-                            kwargs...)::Bool
-  opname = strip(opname)
-
-  # Interpret operator names joined by *
-  # as acting sequentially on the same site
-  starpos = findfirst("*", opname)
-  if !isnothing(starpos)
-    op1 = opname[1:starpos.start-1]
-    op2 = opname[starpos.start+1:end]
-    return xor(has_fermion_string(op1,st; kwargs...),
-               has_fermion_string(op2,st; kwargs...))
-  end
-  opn = OpName(opname)
-  res = has_fermion_string(opn, st)
-  !isnothing(res) && return res
-  return false
-end
-
-function has_fermionic_sitetype(s::Index)
-  Ntags = length(tags(s))
-  stypes = _sitetypes(s)
-  opn = OpName("Id")
-  for st in stypes
-    res = has_fermion_string(opn, st)
-    !isnothing(res) && return true
-  end
-  return false
-end
-
-function fermionic_sitetype(s::Index)::Union{Nothing, SiteType}
-  Ntags = length(tags(s))
-  stypes = _sitetypes(s)
-  opn = OpName("Id")
-  for st in stypes
-    res = has_fermion_string(opn, st)
-    !isnothing(res) && return st
-  end
-  return nothing
-end
-

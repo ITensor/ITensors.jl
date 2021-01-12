@@ -58,20 +58,10 @@ end
 
 mult(t1::OpTerm,t2::OpTerm) = isempty(t2) ? t1 : vcat(t1,t2)
 
-function isfermionic(t::OpTerm, sites::Vector{<: Index})::Bool
+function isfermionic(t::OpTerm, sites)::Bool
   p = +1
   for op in t
     if has_fermion_string(name(op), sites[site(op)])
-      p *= -1
-    end
-  end
-  return (p == -1)
-end
-
-function isfermionic(t::OpTerm, fermionic_sitetypes::Vector{Union{Nothing, SiteType}})::Bool
-  p = +1
-  for op in t
-    if has_fermion_string(name(op), fermionic_sitetypes[site(op)])
       p *= -1
     end
   end
@@ -525,7 +515,6 @@ function svdMPO(ampo::AutoMPO,
   rightmap = OpTerm[]
   next_rightmap = OpTerm[]
   
-  fermionic_sitetypes = Union{Nothing, SiteType}[fermionic_sitetype(site) for site in sites]
   for n=1:N
 
     leftbond_coefs = MatElem{ValType}[]
@@ -554,9 +543,7 @@ function svdMPO(ampo::AutoMPO,
         site_coef = coef(term)
       end
       if isempty(onsite)
-        if isfermionic(right, fermionic_sitetypes)
-          # Same as checking:
-          # isfermionic(right, sites)
+        if isfermionic(right, sites)
           push!(onsite,SiteOp("F",n))
         else
           push!(onsite,SiteOp("Id",n))
@@ -691,7 +678,6 @@ function qn_svdMPO(ampo::AutoMPO,
   # of a certain type
   op_cache = Dict{Pair{String, Int}, ITensor}()
 
-  fermionic_sitetypes = Union{Nothing, SiteType}[fermionic_sitetype(site) for site in sites]
   for n=1:N
 
     leftbond_coefs = Dict{QN,Vector{MatElem{ValType}}}()
@@ -741,9 +727,7 @@ function qn_svdMPO(ampo::AutoMPO,
         site_coef = coef(term)
       end
       if isempty(onsite)
-        if isfermionic(right, fermionic_sitetypes)
-          # Same as checking:
-          # isfermionic(right, sites)
+        if isfermionic(right, sites)
           push!(onsite,SiteOp("F",n))
         else
           push!(onsite,SiteOp("Id",n))
@@ -903,7 +887,6 @@ function sorteachterm!(ampo::AutoMPO, sites)
   ampo = copy(ampo)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
   N = length(sites)
-  fermionic_sitetypes = [fermionic_sitetype(site) for site in sites]
   for t in data(ampo)
     Nt = length(t.ops)
     prevsite = N+1 #keep track of whether we are switching
@@ -924,7 +907,7 @@ function sorteachterm!(ampo::AutoMPO, sites)
     for n=Nt:-1:1
       currsite = site(t.ops[n])
       fermionic = has_fermion_string(name(t.ops[n]),
-                                     fermionic_sitetypes[site(t.ops[n])])
+                                     sites[site(t.ops[n])])
       if (rhs_parity==-1) && (currsite < prevsite)
         # Put local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right
