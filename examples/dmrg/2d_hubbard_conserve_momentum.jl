@@ -1,28 +1,4 @@
 using ITensors
-using ITensors.Strided
-using LinearAlgebra
-using Random
-
-# Choose whether or not to use block sparse multithreading
-# Must start Julia with multiple threads, for example with:
-#
-# $ julia -t 4
-#
-# for 4 threads
-ITensors.disable_threaded_blocksparse()
-#ITensors.enable_threaded_blocksparse()
-
-# Control the number of BLAS threads (multithreads matrix
-# multiplication and other linear algebra operations)
-# Only use 1 BLAS thread with block sparse multithreading
-if ITensors.using_threaded_blocksparse()
-  BLAS.set_num_threads(1)
-else
-  BLAS.set_num_threads(Sys.CPU_THREADS)
-end
-
-# Strided implements multithreaded tensor permutations
-Strided.set_num_threads(1)
 
 include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
@@ -34,8 +10,6 @@ function main(; Nx::Int = 6,
                 maxdim::Int = 3000,
                 conserve_ky = true,
                 use_splitblocks = true)
-  Random.seed!(1234)
-
   @show Threads.nthreads()
   @show ITensors.using_threaded_blocksparse()
 
@@ -97,7 +71,6 @@ function main(; Nx::Int = 6,
   @show flux(psi)
   @show maxlinkdim(psi)
   @show energy
+  return energy, H, psi
 end
-
-main()
 
