@@ -248,3 +248,4 @@ has_fermion_string(::OpName"Cup", ::SiteType"Electron") = true
 has_fermion_string(::OpName"Cdagup", ::SiteType"Electron") = true
 has_fermion_string(::OpName"Cdn", ::SiteType"Electron") = true
 has_fermion_string(::OpName"Cdagdn", ::SiteType"Electron") = true
+has_fermion_string(::OpName, ::SiteType"Electron") = false

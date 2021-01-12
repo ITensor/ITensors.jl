@@ -220,3 +220,5 @@ has_fermion_string(::OpName"Cup", ::SiteType"tJ") = true
 has_fermion_string(::OpName"Cdagup", ::SiteType"tJ") = true
 has_fermion_string(::OpName"Cdn", ::SiteType"tJ") = true
 has_fermion_string(::OpName"Cdagdn", ::SiteType"tJ") = true
+has_fermion_string(::OpName, ::SiteType"tJ") = false
+

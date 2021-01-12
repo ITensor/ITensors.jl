@@ -490,6 +490,8 @@ end
 
 has_fermion_string(::OpName, ::SiteType) = nothing
 
+has_fermion_string(::AbstractString, ::Nothing) = false
+
 function has_fermion_string(opname::AbstractString,
                             s::Index;
                             kwargs...)::Bool
@@ -514,3 +516,26 @@ function has_fermion_string(opname::AbstractString,
   end
   return false
 end
+
+function has_fermionic_sitetype(s::Index)
+  Ntags = length(tags(s))
+  stypes = _sitetypes(s)
+  opn = OpName("Id")
+  for st in stypes
+    res = has_fermion_string(opn, st)
+    !isnothing(res) && return true
+  end
+  return false
+end
+
+function fermionic_sitetype(s::Index)::Union{Nothing, SiteType}
+  Ntags = length(tags(s))
+  stypes = _sitetypes(s)
+  opn = OpName("Id")
+  for st in stypes
+    res = has_fermion_string(opn, st)
+    !isnothing(res) && return st
+  end
+  return nothing
+end
+
