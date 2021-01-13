@@ -178,14 +178,14 @@ dimensions or QN blocks).
 function dot(y::MPS, A::MPO, x::MPS;
              make_inds_match::Bool = true)::Number
   N = length(A)
-  if length(y) != N || length(x) != N
-    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
-  end
+  check_hascommoninds(siteinds, A, x)
   ydag = dag(y)
   sim_linkinds!(ydag)
   if make_inds_match
     sAx = unique_siteinds(A, x)
     replace_siteinds!(ydag, sAx)
+  else
+    check_hascommoninds(siteinds, A, y)
   end
   O = ydag[1] * A[1] * x[1]
   for j in 2:N
@@ -194,7 +194,7 @@ function dot(y::MPS, A::MPO, x::MPS;
   return O[]
 end
 
-inner(y::MPS, A::MPO, x::MPS) = dot(y, A, x)
+inner(y::MPS, A::MPO, x::MPS; kwargs...) = dot(y, A, x; kwargs...)
 
 """
     dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
