@@ -108,6 +108,12 @@ using ITensors, Test, Random
   end
 
   @testset "DMRGObserver" begin
+
+    # Test that basic constructors work
+    observer = DMRGObserver()
+    observer = DMRGObserver(;minsweeps=2,energy_tol=1E-4)
+
+    # Test in a DMRG calculation
     N = 10
     sites = siteinds("S=1/2",N)
     Random.seed!(42)

@@ -34,7 +34,7 @@ end
 ## Constructors
 
 ```@docs
-DMRGObserver(energy_tol::Float64,minsweeps::Int)
+DMRGObserver(;energy_tol::Float64,minsweeps::Int)
 DMRGObserver(ops::Vector{String},sites::Vector{<:Index};energy_tol::Float64,minsweeps::Int)
 ```
 
