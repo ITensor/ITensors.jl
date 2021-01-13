@@ -111,7 +111,6 @@ using ITensors, Test, Random
 
     # Test that basic constructors work
     observer = DMRGObserver()
-    observer = DMRGObserver(1E-4,2)
     observer = DMRGObserver(;minsweeps=2,energy_tol=1E-4)
 
     # Test in a DMRG calculation

@@ -47,18 +47,16 @@ end
 Construct a DMRGObserver by providing the energy
 tolerance used for early stopping, and minimum number
 of sweeps that must be done.
-    - energy_tol: if the energy from one sweep to the
-      next no longer changes by more than this amount,
-      stop after the current sweep
-    - minsweeps: do at least this many sweeps
+
+  - energy_tol: if the energy from one sweep to the
+    next no longer changes by more than this amount,
+    stop after the current sweep
+  - minsweeps: do at least this many sweeps
 """
 function DMRGObserver(;energy_tol=0.0, 
                       minsweeps=2) 
   DMRGObserver([],Index[],Dict{String,DMRGMeasurement}(),[],[],energy_tol,minsweeps)
 end
-
-# Without named arguments for backwards compatibility:
-DMRGObserver(energy_tol=0.0, minsweeps=2) = DMRGObserver(;energy_tol,minsweeps)
 
 
 """
@@ -80,10 +78,11 @@ the DMRG calculation.
 Optionally, one can provide an energy
 tolerance used for early stopping, and minimum number
 of sweeps that must be done.
-    - energy_tol: if the energy from one sweep to the
-      next no longer changes by more than this amount,
-      stop after the current sweep
-    - minsweeps: do at least this many sweeps
+
+  - energy_tol: if the energy from one sweep to the
+    next no longer changes by more than this amount,
+    stop after the current sweep
+  - minsweeps: do at least this many sweeps
 """
 function DMRGObserver(ops::Vector{String}, 
                       sites::Vector{<:Index};
