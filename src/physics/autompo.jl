@@ -444,15 +444,21 @@ function Base.isless(m1::QNMatElem{T},m2::QNMatElem{T})::Bool where {T}
   return m1.val < m2.val
 end
 
-function posInLink!(linkmap::Vector{OpTerm},
-                    op::OpTerm)::Int
-  isempty(op) && return -1
-  for n=1:length(linkmap)
-    (linkmap[n]==op) && return n
+isempty(op_qn::Pair{OpTerm,QN}) = isempty(op_qn.first)
+
+# the key type is OpTerm for the dense case
+# and is Pair{OpTerm,QN} for the QN conserving case
+function posInLink!(linkmap::Dict{K,Int},
+                    k::K)::Int where {K}
+  isempty(k) && return -1
+  pos = get(linkmap,k,-1)
+  if pos == -1
+    pos = length(linkmap)+1
+    linkmap[k] = pos
   end
-  push!(linkmap,op)
-  return length(linkmap)
+  return pos
 end
+
 
 function determineValType(terms::Vector{MPOTerm})
   for t in terms
@@ -512,14 +518,14 @@ function svdMPO(ampo::AutoMPO,
 
   crosses_bond(t::MPOTerm,n::Int) = (ops(t)[1].site <= n <= ops(t)[end].site)
 
-  rightmap = OpTerm[]
-  next_rightmap = OpTerm[]
+  rightmap = Dict{OpTerm,Int}()
+  next_rightmap = Dict{OpTerm,Int}()
   
   for n=1:N
 
     leftbond_coefs = MatElem{ValType}[]
 
-    leftmap = OpTerm[]
+    leftmap = Dict{OpTerm,Int}()
     for term in data(ampo)
       crosses_bond(term,n) || continue
 
@@ -553,7 +559,7 @@ function svdMPO(ampo::AutoMPO,
       push!(tempMPO[n],el)
     end
     rightmap = next_rightmap
-    next_rightmap = OpTerm[]
+    next_rightmap = Dict{OpTerm,Int}()
 
     remove_dups!(tempMPO[n])
 
@@ -671,8 +677,8 @@ function qn_svdMPO(ampo::AutoMPO,
 
   crosses_bond(t::MPOTerm,n::Int) = (ops(t)[1].site <= n <= ops(t)[end].site)
 
-  rightmap = Dict{QN,Vector{OpTerm}}()
-  next_rightmap = Dict{QN,Vector{OpTerm}}()
+  rightmap = Dict{Pair{OpTerm,QN},Int}()
+  next_rightmap = Dict{Pair{OpTerm,QN},Int}()
   
   # A cache of the ITensor operators on a certain site
   # of a certain type
@@ -682,7 +688,7 @@ function qn_svdMPO(ampo::AutoMPO,
 
     leftbond_coefs = Dict{QN,Vector{MatElem{ValType}}}()
 
-    leftmap = Dict{QN,Vector{OpTerm}}()
+    leftmap = Dict{Pair{OpTerm,QN},Int}()
     for term in data(ampo)
       crosses_bond(term,n) || continue
 
@@ -705,23 +711,19 @@ function qn_svdMPO(ampo::AutoMPO,
       lqn = calcQN(left)
       sqn = calcQN(onsite)
 
-      q_leftmap = get!(leftmap,lqn,OpTerm[])
-      q_rightmap = get!(rightmap,lqn,OpTerm[])
-
       bond_row = -1
       bond_col = -1
       if !isempty(left)
-        bond_row = posInLink!(q_leftmap,left)
-        bond_col = posInLink!(q_rightmap,mult(onsite,right))
+        bond_row = posInLink!(leftmap,left=>lqn)
+        bond_col = posInLink!(rightmap,mult(onsite,right)=>lqn)
         bond_coef = convert(ValType,coef(term))
         q_leftbond_coefs = get!(leftbond_coefs,lqn,MatElem{ValType}[])
         push!(q_leftbond_coefs,MatElem(bond_row,bond_col,bond_coef))
       end
 
       rqn = sqn+lqn
-      q_next_rightmap = get!(next_rightmap,rqn,OpTerm[])
       A_row = bond_col
-      A_col = posInLink!(q_next_rightmap,right)
+      A_col = posInLink!(next_rightmap,right=>rqn)
       site_coef = 1.0+0.0im
       if A_row == -1
         site_coef = coef(term)
@@ -737,7 +739,7 @@ function qn_svdMPO(ampo::AutoMPO,
       push!(tempMPO[n],el)
     end
     rightmap = next_rightmap
-    next_rightmap = Dict{QN,Vector{OpTerm}}()
+    next_rightmap = Dict{Pair{OpTerm,QN},Int}()
 
     remove_dups!(tempMPO[n])
 
