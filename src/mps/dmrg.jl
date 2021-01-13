@@ -30,6 +30,8 @@ Returns:
 * `psi::MPS` - optimized MPS
 """
 function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
+  check_hascommoninds(siteinds, H, psi0)
+  check_hascommoninds(siteinds, H, psi0')
   # Permute the indices to have a better memory layout
   # and minimize permutations
   H = permute(H, (linkind, siteinds, linkind))
@@ -59,6 +61,10 @@ Returns:
 * `psi::MPS` - optimized MPS
 """
 function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
+  for H in Hs
+    check_hascommoninds(siteinds, H, psi0)
+    check_hascommoninds(siteinds, H, psi0')
+  end
   Hs .= permute.(Hs, Ref((linkind, siteinds, linkind)))
   PHS = ProjMPOSum(Hs)
   return dmrg(PHS,psi0,sweeps;kwargs...)
@@ -85,6 +91,11 @@ Returns:
 * `psi::MPS` - optimized MPS
 """
 function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
+  check_hascommoninds(siteinds, H, psi0)
+  check_hascommoninds(siteinds, H, psi0')
+  for M in Ms
+    check_hascommoninds(siteinds, M, psi0)
+  end
   H = permute(H, (linkind, siteinds, linkind))
   Ms .= permute.(Ms, Ref((linkind, siteinds, linkind)))
   weight = get(kwargs,:weight,1.0)
