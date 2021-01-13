@@ -41,8 +41,8 @@ struct DMRGObserver <: AbstractObserver
 end
 
 """
-    DMRGObserver(energy_tol=0.0,
-                 minsweeps=2)
+    DMRGObserver(;energy_tol=0.0,
+                  minsweeps=2)
 
 Construct a DMRGObserver by providing the energy
 tolerance used for early stopping, and minimum number
@@ -52,10 +52,14 @@ of sweeps that must be done.
       stop after the current sweep
     - minsweeps: do at least this many sweeps
 """
-function DMRGObserver(energy_tol=0.0, 
+function DMRGObserver(;energy_tol=0.0, 
                       minsweeps=2) 
-  DMRGObserver([],[],Dict{String,DMRGMeasurement}(),[],[],energy_tol,minsweeps)
+  DMRGObserver([],Index[],Dict{String,DMRGMeasurement}(),[],[],energy_tol,minsweeps)
 end
+
+# Without named arguments for backwards compatibility:
+DMRGObserver(energy_tol=0.0, minsweeps=2) = DMRGObserver(;energy_tol,minsweeps)
+
 
 """
     DMRGObserver(ops::Vector{String}, 

@@ -109,9 +109,10 @@ using ITensors, Test, Random
 
   @testset "DMRGObserver" begin
 
-    # Test basic constructors
+    # Test that basic constructors work
     observer = DMRGObserver()
     observer = DMRGObserver(1E-4,2)
+    observer = DMRGObserver(;minsweeps=2,energy_tol=1E-4)
 
     # Test in a DMRG calculation
     N = 10
