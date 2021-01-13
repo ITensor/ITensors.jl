@@ -518,8 +518,10 @@ function svdMPO(ampo::AutoMPO,
 
   crosses_bond(t::MPOTerm,n::Int) = (ops(t)[1].site <= n <= ops(t)[end].site)
 
-  rightmap = Dict{OpTerm,Int}()
-  next_rightmap = Dict{OpTerm,Int}()
+  isfermionic_cache = Dict{OpTerm, Bool}()
+
+  rightmap = OpTerm[]
+  next_rightmap = OpTerm[]
   
   for n=1:N
 
@@ -549,7 +551,12 @@ function svdMPO(ampo::AutoMPO,
         site_coef = coef(term)
       end
       if isempty(onsite)
-        if isfermionic(right, sites)
+        _isfermionic = get(isfermionic_cache, right, nothing)
+        if _isfermionic === nothing
+          _isfermionic = isfermionic(right, sites)
+          isfermionic_cache[right] = _isfermionic
+        end
+        if _isfermionic
           push!(onsite,SiteOp("F",n))
         else
           push!(onsite,SiteOp("Id",n))
@@ -683,6 +690,7 @@ function qn_svdMPO(ampo::AutoMPO,
   # A cache of the ITensor operators on a certain site
   # of a certain type
   op_cache = Dict{Pair{String, Int}, ITensor}()
+  isfermionic_cache = Dict{OpTerm, Bool}()
 
   for n=1:N
 
@@ -729,7 +737,12 @@ function qn_svdMPO(ampo::AutoMPO,
         site_coef = coef(term)
       end
       if isempty(onsite)
-        if isfermionic(right, sites)
+        _isfermionic = get(isfermionic_cache, right, nothing)
+        if _isfermionic === nothing
+          _isfermionic = isfermionic(right, sites)
+          isfermionic_cache[right] = _isfermionic
+        end
+        if _isfermionic
           push!(onsite,SiteOp("F",n))
         else
           push!(onsite,SiteOp("Id",n))
@@ -888,6 +901,9 @@ end #qn_svdMPO
 function sorteachterm!(ampo::AutoMPO, sites)
   ampo = copy(ampo)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
+
+  has_fermion_string_cache = Dict{Pair{String, Int}, Bool}()
+
   N = length(sites)
   for t in data(ampo)
     Nt = length(t.ops)
@@ -908,8 +924,11 @@ function sorteachterm!(ampo::AutoMPO, sites)
     rhs_parity = +1
     for n=Nt:-1:1
       currsite = site(t.ops[n])
-      fermionic = has_fermion_string(name(t.ops[n]),
-                                     sites[site(t.ops[n])])
+      fermionic = get(has_fermion_string_cache, name(t.ops[n]) => site(t.ops[n]), nothing)
+      if fermionic === nothing
+        fermionic = has_fermion_string(name(t.ops[n]), sites[site(t.ops[n])])
+        has_fermion_string_cache[name(t.ops[n]) => site(t.ops[n])] = fermionic
+      end
       if (rhs_parity==-1) && (currsite < prevsite)
         # Put local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right

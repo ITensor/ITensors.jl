@@ -474,6 +474,26 @@ for fname in (:dag, :prime, :setprime, :noprime, :addtags, :removetags,
   end
 end
 
+adjoint(M::AbstractMPS) = prime(M)
+
+function hascommoninds(::typeof(siteinds), A::AbstractMPS, B::AbstractMPS)
+  N = length(A)
+  for n in 1:N
+    !hascommoninds(siteinds(A, n), siteinds(B, n)) && return false
+  end
+  return true
+end
+
+function check_hascommoninds(::typeof(siteinds), A::AbstractMPS, B::AbstractMPS)
+  N = length(A)
+  if length(B) ≠ N
+    throw(DimensionMismatch("$(typeof(A)) and $(typeof(B)) have mismatched lengths $N and $(length(B))."))
+  end
+  for n in 1:N
+    !hascommoninds(siteinds(A, n), siteinds(B, n)) && error("$(typeof(A)) A and $(typeof(B)) B must share site indices. On site $n, A has site indices $(siteinds(A, n)) while B has site indices $(siteinds(B, n)).")
+  end
+end
+
 function map_linkinds!(f::Function, M::AbstractMPS)
   for i in eachindex(M)[1:end-1]
     l = linkind(M, i)
