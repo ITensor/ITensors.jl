@@ -78,9 +78,6 @@ function op!(Op::ITensor,
 end
 
 
-has_fermion_string(::OpName"C",
-                   ::SiteType"Fermion") = true
-
-has_fermion_string(::OpName"Cdag",
-                   ::SiteType"Fermion") = true
+has_fermion_string(::OpName"C", ::SiteType"Fermion") = true
+has_fermion_string(::OpName"Cdag", ::SiteType"Fermion") = true
 

@@ -1281,14 +1281,7 @@ permute(T::ITensor,
 
 -(A::ITensor) = itensor(-tensor(A))
 
-function check_add_arrows(A::ITensor{N},B::ITensor{N}) where {N}
-  if hasqns(A) && hasqns(B)
-
-  end
-end
-
 function (A::ITensor{N} + B::ITensor{N}) where {N}
-  check_add_arrows(A,B)
   C = copy(A)
   C .+= B
   return C
