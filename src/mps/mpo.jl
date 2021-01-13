@@ -604,12 +604,12 @@ function sample(M::MPO)
   return result
 end
 
-function HDF5.write(parent::Union{HDF5File,HDF5Group},
+function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
                     name::AbstractString,
                     M::MPO)
-  g = g_create(parent,name)
-  attrs(g)["type"] = "MPO"
-  attrs(g)["version"] = 1
+  g = create_group(parent,name)
+  attributes(g)["type"] = "MPO"
+  attributes(g)["version"] = 1
   N = length(M)
   write(g, "rlim", M.rlim)
   write(g, "llim", M.llim)
@@ -619,11 +619,11 @@ function HDF5.write(parent::Union{HDF5File,HDF5Group},
   end
 end
 
-function HDF5.read(parent::Union{HDF5File,HDF5Group},
+function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
                    name::AbstractString,
                    ::Type{MPO})
-  g = g_open(parent,name)
-  if read(attrs(g)["type"]) != "MPO"
+  g = open_group(parent,name)
+  if read(attributes(g)["type"]) != "MPO"
     error("HDF5 group or file does not contain MPO data")
   end
   N = read(g, "length")
