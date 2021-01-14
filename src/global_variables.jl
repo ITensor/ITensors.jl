@@ -136,13 +136,31 @@ end
 using NDTensors: timer
 
 #
+# Get the current number of BLAS threads
+# For VERSION >= v"1.6" this will become
+# using LinearAlgebra; BLAS.get_num_threads()
+#
+
+using NDTensors: blas_get_num_threads
+
+#
 # Block sparse multithreading
 #
 
-using NDTensors:
-  disable_threaded_blocksparse,
-  enable_threaded_blocksparse,
-  using_threaded_blocksparse
+"""
+$(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
+"""
+using_threaded_blocksparse() = NDTensors._using_threaded_blocksparse[]
+
+"""
+$(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
+"""
+enable_threaded_blocksparse() = NDTensors._enable_threaded_blocksparse()
+
+"""
+$(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
+"""
+disable_threaded_blocksparse() = NDTensors._disable_threaded_blocksparse()
 
 #
 # Turn enable or disable combining QN ITensors before contracting

@@ -28,7 +28,10 @@ settings = Dict(
                                            ],
                                  "AutoMPO" => "AutoMPO.md"
                                 ],
-             "Advanced usage guide" => "AdvancedUsageGuide.md",
+             "Advanced usage guide" => [
+                                        "Advanced usage guide" => "AdvancedUsageGuide.md",
+                                        "Multithreading" => "Multithreading.md"
+                                       ]
            ],
   :format => Documenter.HTML(assets = ["assets/favicon.ico"],
                              prettyurls = false),

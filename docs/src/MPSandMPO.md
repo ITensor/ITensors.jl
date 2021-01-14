@@ -46,10 +46,10 @@ common_siteind(::ITensors.AbstractMPS, ::ITensors.AbstractMPS, ::Int)
 common_siteinds(::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
 findsite
 findsites
-firstsiteind
 firstsiteinds
 linkind(::ITensors.AbstractMPS,::Int)
 siteind(::MPS, ::Int)
+siteind(::typeof(first), ::MPS, ::Int)
 siteinds(::MPS)
 siteind(::MPO, ::Int)
 siteinds(::MPO)

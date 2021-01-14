@@ -1,11 +1,10 @@
 using BenchmarkTools
 using ITensors
-using ITensors.Strided
 using LinearAlgebra
 
-function main(; d = 2, order = 4)
+function main(; d = 20, order = 4)
   BLAS.set_num_threads(1)
-  Strided.set_num_threads(1)
+  ITensors.Strided.disable_threads()
 
   println("#################################################")
   println("# order = ", order)
@@ -13,8 +12,14 @@ function main(; d = 2, order = 4)
   println("#################################################")
   println()
 
-  i = Index(QN(0, 2) => d, QN(1, 2) => d)
-  is = IndexSet(n -> settags(i, "i$n"), order ÷ 2)
+  @show Threads.nthreads()
+  @show Sys.CPU_THREADS
+  @show ITensors.blas_get_num_threads()
+  @show ITensors.Strided.get_num_threads()
+  println()
+
+  i(n) = Index(QN(0) => d, QN(1) => d; tags = "i$n")
+  is = IndexSet(i, order ÷ 2)
   A = randomITensor(is'..., dag(is)...)
   B = randomITensor(is'..., dag(is)...)
 
