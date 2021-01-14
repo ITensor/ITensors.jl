@@ -499,6 +499,110 @@ using ITensors,
 
   end
 
+  @testset "Fermionic SVD" begin
+
+    N = 4
+    s = siteinds("Fermion",N;conserve_qns=true)
+
+    A = randomITensor(QN("Nf",2,-1),s[1],s[2],s[3],s[4])
+    for n1=1:4, n2=1:4
+      (n1 == n2) && continue
+      U,S,V = svd(A,(s[n1],s[n2]))
+      @test norm(U*S*V-A) < 1E-10
+    end
+    for n1=1:4, n2=1:4, n3=1:4
+      (n1 == n2) && continue
+      (n1 == n3) && continue
+      (n2 == n3) && continue
+      U,S,V = svd(A,(s[n1],s[n2],s[n3]))
+      @test norm(U*S*V-A) < 1E-10
+    end
+
+
+    B = randomITensor(QN("Nf",3,-1),s[1],s[2],s[3],s[4])
+    for n1=1:4, n2=1:4
+      (n1 == n2) && continue
+      U,S,V = svd(B,(s[n1],s[n2]))
+      @test norm(U*S*V-B) < 1E-10
+    end
+    for n1=1:4, n2=1:4, n3=1:4
+      (n1 == n2) && continue
+      (n1 == n3) && continue
+      (n2 == n3) && continue
+      U,S,V = svd(B,(s[n1],s[n2],s[n3]))
+      @test norm(U*S*V-B) < 1E-10
+    end
+
+  end # Fermionic SVD tests
+
+  @testset "Fermion Contraction with Combined Indices" begin
+
+    N = 10
+    s = siteinds("Fermion",N;conserve_qns=true)
+
+    begin
+      A = randomITensor(QN("Nf",3,-1),s[1],s[2],s[3],s[4])
+      B = randomITensor(QN("Nf",2,-1),s[1],s[3],s[4])
+
+      CC = combiner(s[1],s[3])
+
+      cA = CC*A
+      cB = CC*B
+
+      R1 = dag(cA)*cB
+      R2 = dag(A)*B
+
+      @test norm(R1-R2) < 1E-10
+    end
+
+    begin
+      A = randomITensor(QN("Nf",3,-1),s[1],s[2],s[3],s[4])
+      B = randomITensor(QN("Nf",2,-1),s[1],s[3],s[4])
+
+      CC = combiner(s[1],s[3])
+
+      cA = CC*A
+      cdB = dag(CC)*dag(B)
+
+      R1 = cA*cdB
+      R2 = A*dag(B)
+
+      @test norm(R1-R2) < 1E-10
+    end
+
+    begin
+      A = randomITensor(QN("Nf",3,-1),s[1],s[2],s[3],s[4])
+      B = randomITensor(QN("Nf",2,-1),s[1],s[3],s[4])
+
+      CC = combiner(s[1],s[4],s[3])
+
+      cA = CC*A
+      cdB = dag(CC)*dag(B)
+
+      R1 = cA*cdB
+      R2 = A*dag(B)
+
+      @test norm(R1-R2) < 1E-10
+    end
+
+    begin
+      CC = combiner(s[3],s[4])
+      c = combinedind(CC)
+
+      A = randomITensor(QN("Nf",3,-1),c,s[1],s[2])
+      B = randomITensor(QN("Nf",2,-1),s[1],c,s[5])
+
+      uA = dag(CC)*A
+      uB = dag(CC)*B
+
+      R1 = dag(uA)*uB
+      R2 = dag(A)*B
+
+      @test norm(R1-R2) < 1E-10
+    end
+
+  end # Fermion Contraction with Combined Indices
+
 end
 
 nothing
