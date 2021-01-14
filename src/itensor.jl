@@ -1974,22 +1974,22 @@ function readcpp(io::IO,
   end
 end
 
-function HDF5.write(parent::Union{HDF5File,HDF5Group},
+function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
                     name::AbstractString,
                     T::ITensor)
-  g = g_create(parent,name)
-  attrs(g)["type"] = "ITensor"
-  attrs(g)["version"] = 1
+  g = create_group(parent,name)
+  attributes(g)["type"] = "ITensor"
+  attributes(g)["version"] = 1
   write(g,"inds", inds(T))
   write(g,"store", store(T))
 end
 
-#function HDF5.read(parent::Union{HDF5File,HDF5Group},
+#function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
 #                   name::AbstractString)
-#  g = g_open(parent,name)
+#  g = open_group(parent,name)
 #
 #  try
-#    typestr = read(attrs(g)["type"])
+#    typestr = read(attributes(g)["type"])
 #    type_t = eval(Meta.parse(typestr))
 #    res = read(parent,"name",type_t)
 #    return res
@@ -1997,16 +1997,16 @@ end
 #  return 
 #end
 
-function HDF5.read(parent::Union{HDF5File,HDF5Group},
+function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
                    name::AbstractString,
                    ::Type{ITensor})
-  g = g_open(parent,name)
-  if read(attrs(g)["type"]) != "ITensor"
+  g = open_group(parent,name)
+  if read(attributes(g)["type"]) != "ITensor"
     error("HDF5 group or file does not contain ITensor data")
   end
   inds = read(g,"inds",IndexSet)
 
-  stypestr = read(attrs(g_open(g,"store"))["type"])
+  stypestr = read(attributes(open_group(g,"store"))["type"])
   stype = eval(Meta.parse(stypestr))
 
   store = read(g,"store",stype)
