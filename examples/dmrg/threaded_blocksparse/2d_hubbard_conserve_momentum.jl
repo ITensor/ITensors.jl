@@ -1,6 +1,4 @@
 using ITensors
-using ITensors.Strided
-using ITensors.NDTensors
 using LinearAlgebra
 using Random
 
@@ -14,22 +12,22 @@ function main(; Nx::Int = 6,
                 maxdim::Int = 3000,
                 conserve_ky = true,
                 use_splitblocks = true,
-                nsweeps = 8,
-                blas_num_threads = Sys.CPU_THREADS,
-                use_threaded_blocksparse = true)
+                nsweeps = 10,
+                blas_num_threads = 1, #Sys.CPU_THREADS,
+                use_threaded_blocksparse = true,
+                outputlevel = 1)
   Random.seed!(1234)
-  Strided.set_num_threads(1)
+  ITensors.Strided.set_num_threads(1)
+  BLAS.set_num_threads(blas_num_threads)
   if use_threaded_blocksparse
     ITensors.enable_threaded_blocksparse()
-    BLAS.set_num_threads(1)
   else
     ITensors.disable_threaded_blocksparse()
-    BLAS.set_num_threads(blas_num_threads)
   end
 
   @show Threads.nthreads()
-  @show Strided.get_num_threads()
-  @show NDTensors.blas_get_num_threads()
+  @show blas_num_threads
+  @show ITensors.Strided.get_num_threads()
   @show ITensors.using_threaded_blocksparse()
   println()
 
@@ -87,7 +85,7 @@ function main(; Nx::Int = 6,
 
   psi0 = randomMPS(sites, state, 10)
 
-  energy, psi = @time dmrg(H, psi0, sweeps; svd_alg = "divide_and_conquer")
+  energy, psi = @time dmrg(H, psi0, sweeps; outputlevel = outputlevel)
   @show Nx, Ny
   @show t, U
   @show flux(psi)
@@ -96,16 +94,24 @@ function main(; Nx::Int = 6,
 end
 
 println("################################")
-println("Compilation:")
+println("Compilation")
 println("################################")
+println("Without threaded block sparse:\n")
+main(nsweeps = 2, use_splitblocks = true, use_threaded_blocksparse = false, outputlevel = 0)
 println()
-main(nsweeps = 2, use_threaded_blocksparse = false)
+println("With threaded block sparse:\n")
+main(nsweeps = 2, use_splitblocks = true, use_threaded_blocksparse = true, outputlevel = 0)
 println()
 
 println("################################")
-println("Runtime:")
+println("Runtime")
 println("################################")
-main(nsweeps = 8, use_threaded_blocksparse = false)
+println()
+println("Without threaded block sparse:\n")
+main(nsweeps = 10, use_splitblocks = false, use_threaded_blocksparse = false)
+println()
+println("With threaded block sparse:\n")
+main(nsweeps = 10, use_splitblocks = false, use_threaded_blocksparse = true)
 println()
 
 
