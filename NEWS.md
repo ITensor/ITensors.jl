@@ -1,3 +1,19 @@
+ITensors v0.1.35 Release Notes
+==============================
+Closed issues:
+
+- Should we define iterate for TagSet? (#542)
+- AutoMPO slower than expected (#555)
+
+Merged pull requests:
+
+- Implement iterate for TagSet (#553) (@tomohiro-soejima)
+- Add check for Index arrows for map! (includes sum and difference etc) (#554) (@emstoudenmire)
+- Optimize AutoMPO (#556) (@mtfishman)
+- Add checks for common site indices in DMRG, dot, and inner (#557) (@mtfishman)
+- Fix and Improve DMRGObserver Constructor (#558) (@emstoudenmire)
+- Update HDF5 to versions 0.14, 0.15 (#559) (@emstoudenmire)
+
 ITensors v0.1.34 Release Notes
 ==============================
 * Allow operator names in the `op` system that are longer than 8 characters (PR #551).
