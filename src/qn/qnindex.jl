@@ -409,12 +409,12 @@ function show(io::IO, i::QNIndex)
   end
 end
 
-function HDF5.write(parent::Union{HDF5File, HDF5Group},
+function HDF5.write(parent::Union{HDF5.File, HDF5.Group},
                     name::AbstractString,
                     B::QNBlocks)
-  g = g_create(parent, name)
-  attrs(g)["type"] = "QNBlocks"
-  attrs(g)["version"] = 1
+  g = create_group(parent, name)
+  attributes(g)["type"] = "QNBlocks"
+  attributes(g)["version"] = 1
   write(g,"length",length(B))
   dims = [block[2] for block in B]
   write(g,"dims",dims)
@@ -423,11 +423,11 @@ function HDF5.write(parent::Union{HDF5File, HDF5Group},
   end
 end
 
-function HDF5.read(parent::Union{HDF5File,HDF5Group},
+function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
                    name::AbstractString,
                    ::Type{QNBlocks})
-  g = g_open(parent,name)
-  if read(attrs(g)["type"]) != "QNBlocks"
+  g = open_group(parent,name)
+  if read(attributes(g)["type"]) != "QNBlocks"
     error("HDF5 group or file does not contain QNBlocks data")
   end
   N = read(g,"length")

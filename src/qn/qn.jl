@@ -379,11 +379,11 @@ function show(io::IO,q::QN)
   print(io,")")
 end
 
-function write(parent::Union{HDF5File, HDF5Group},
+function write(parent::Union{HDF5.File, HDF5.Group},
                gname::AbstractString, q::QN)
-  g = g_create(parent, gname)
-  attrs(g)["type"] = "QN"
-  attrs(g)["version"] = 1
+  g = create_group(parent, gname)
+  attributes(g)["type"] = "QN"
+  attributes(g)["version"] = 1
   names = [String(name(q[n])) for n=1:maxQNs]
   vals = [val(q[n]) for n=1:maxQNs]
   mods = [modulus(q[n]) for n=1:maxQNs]
@@ -392,10 +392,10 @@ function write(parent::Union{HDF5File, HDF5Group},
   write(g,"mods",mods)
 end
 
-function read(parent::Union{HDF5File,HDF5Group},
+function read(parent::Union{HDF5.File,HDF5.Group},
               name::AbstractString, ::Type{QN})
-  g = g_open(parent,name)
-  if read(attrs(g)["type"]) != "QN"
+  g = open_group(parent,name)
+  if read(attributes(g)["type"]) != "QN"
     error("HDF5 group or file does not contain QN data")
   end
   names = read(g,"names")
