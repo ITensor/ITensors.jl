@@ -1,10 +1,7 @@
 using ITensors
-using Random
 
-Random.seed!(1234)
-
-include(joinpath("..", "src", "electronk.jl"))
-include(joinpath("..", "src", "hubbard.jl"))
+include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
+include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 
 function main(; Nx::Int = 6,
                 Ny::Int = 3,
@@ -13,6 +10,9 @@ function main(; Nx::Int = 6,
                 maxdim::Int = 3000,
                 conserve_ky = true,
                 use_splitblocks = true)
+  @show Threads.nthreads()
+  @show ITensors.using_threaded_blocksparse()
+
   N = Nx * Ny
 
   sweeps = Sweeps(10)
@@ -41,6 +41,7 @@ function main(; Nx::Int = 6,
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
   @show nnz(H[end÷2])
+  @show nnzblocks(H[end÷2])
 
   # Create start state
   state = Vector{String}(undef, N)
@@ -70,7 +71,6 @@ function main(; Nx::Int = 6,
   @show flux(psi)
   @show maxlinkdim(psi)
   @show energy
+  return energy, H, psi
 end
-
-main()
 

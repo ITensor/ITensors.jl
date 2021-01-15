@@ -1,8 +1,14 @@
 using ITensors
+using ITensors.Strided
+using LinearAlgebra
 using Printf
 using Random
 
 Random.seed!(1234)
+BLAS.set_num_threads(1)
+Strided.set_num_threads(1)
+ITensors.enable_threaded_blocksparse()
+#ITensors.disable_threaded_blocksparse()
 
 let
   N = 100

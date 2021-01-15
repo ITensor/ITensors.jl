@@ -75,7 +75,9 @@ import LinearAlgebra:
   tr
 
 import NDTensors:
-  # functions
+  # Modules
+  Strided, # to control threading
+  # Methods
   array,
   blockdim,
   blockoffsets,
@@ -83,7 +85,9 @@ import NDTensors:
   dense,
   dim,
   dims,
+  disable_tblis,
   eachnzblock,
+  enable_tblis,
   ind,
   inds,
   insertblock!,
@@ -105,6 +109,7 @@ import NDTensors:
   sum,
   tensor,
   truncate!,
+  using_tblis,
   vector,
   # Deprecated
   addblock!

@@ -33,14 +33,14 @@ let
   # Using BLAS backend
   #
  
-  disable_tblis!()
+  ITensors.disable_tblis()
   BLAS.set_num_threads(nthreads)
 
   # Compile
   dmrg(H, psi0, sweeps_compile; outputlevel = 0)
 
   println("Using BLAS with $nthreads threads\n")
-  energy, psi = dmrg(H, psi0, sweeps)
+  energy, psi = @time dmrg(H, psi0, sweeps)
   @printf("Final energy = %.12f\n",energy)
   println()
 
@@ -48,7 +48,7 @@ let
   # Using TBLIS backend
   #
 
-  enable_tblis!()
+  ITensors.enable_tblis()
   BLAS.set_num_threads(1)
   TBLIS.set_num_threads(nthreads)
 
@@ -56,7 +56,7 @@ let
   dmrg(H, psi0, sweeps_compile; outputlevel = 0)
 
   println("Using TBLIS with $(TBLIS.get_num_threads()) threads (and 1 BLAS thread)\n")
-  energy, psi = dmrg(H, psi0, sweeps)
+  energy, psi = @time dmrg(H, psi0, sweeps)
   @printf("Final energy = %.12f\n",energy)
 end
 

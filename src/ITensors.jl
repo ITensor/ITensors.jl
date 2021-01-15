@@ -16,6 +16,7 @@ using KrylovKit
 using LinearAlgebra
 using NDTensors
 using PackageCompiler
+using Pkg
 using Printf
 using Random
 using StaticArrays
@@ -26,8 +27,16 @@ using TimerOutputs
 # running examples)
 #
 src_dir() = dirname(pathof(@__MODULE__))
-dir() = joinpath(src_dir(), "..")
-examples_dir() = joinpath(dir(), "examples")
+pkg_dir() = joinpath(src_dir(), "..")
+examples_dir() = joinpath(pkg_dir(), "examples")
+
+#####################################
+# Determine version and uuid of the package
+#
+_parse_project_toml(field::String) =
+  Pkg.TOML.parsefile(joinpath(pkg_dir(), "Project.toml"))[field]
+version() = VersionNumber(_parse_project_toml("version"))
+uuid() = Base.UUID(_parse_project_toml("uuid"))
 
 #####################################
 # Exports
@@ -43,11 +52,6 @@ include("imports.jl")
 # Global Variables
 #
 include("global_variables.jl")
-
-#####################################
-# Debug checking
-#
-include("debug_checks.jl")
 
 #####################################
 # Index and IndexSet

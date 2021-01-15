@@ -19,11 +19,11 @@ julia> using TBLIS
 ```
 You can disable the use of TBLIS with the command:
 ```julia
-julia> disable_tblis!()
+julia> ITensors.disable_tblis()
 ```
 and enable it again with the command:
 ```julia
-julia> enable_tblis!()
+julia> ITensors.enable_tblis()
 ```
 and you can set the number of threads with:
 ```julia
