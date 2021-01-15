@@ -285,6 +285,36 @@ using ITensors, Test, Random
     @test (-8.02 < energy < -8.01)
   end
 
+  @testset "Input Without Ortho Center or Not at 1" begin
+    N = 6
+    sites = siteinds("S=1",N)
+
+    ampo = AutoMPO()
+    for j=1:N-1
+      add!(ampo,"Sz",j,"Sz",j+1)
+      add!(ampo,0.5,"S+",j,"S-",j+1)
+      add!(ampo,0.5,"S-",j,"S+",j+1)
+    end
+    H = MPO(ampo,sites)
+
+
+    sweeps = Sweeps(1)
+    maxdim!(sweeps,10)
+    cutoff!(sweeps,1E-11)
+
+    psi0 = randomMPS(sites,4)
+
+    # Test that input works with wrong ortho center:
+    orthogonalize!(psi0,5)
+    energy,psi = dmrg(H, psi0, sweeps; outputlevel=0)
+
+    # Test that input works with no ortho center:
+    for j=1:N
+      psi0[j] = randomITensor(inds(psi0[j]))
+    end
+    energy,psi = dmrg(H, psi0, sweeps; outputlevel=0)
+  end
+
 end
 
 nothing

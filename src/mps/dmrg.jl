@@ -157,7 +157,12 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   psi = copy(psi0)
   N = length(psi)
 
-  position!(PH, psi0, 1)
+  if !isortho(psi) || orthocenter(psi) != 1
+    orthogonalize!(psi,1)
+  end
+  @assert isortho(psi) && orthocenter(psi) == 1
+
+  position!(PH, psi, 1)
   energy = 0.0
 
   for sw=1:nsweep(sweeps)
