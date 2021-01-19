@@ -603,6 +603,21 @@ using ITensors,
 
   end # Fermion Contraction with Combined Indices
 
+  @testset "SVD DiagBlockSparse Regression Test" begin
+    l1 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Link,l=1")
+    s2 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Site,n=2")
+    s3 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Site,n=3")
+    l3 = Index(QN("Nf",2,-1) => 1;tags="Link,l=3")
+
+    phi = randomITensor(QN("Nf",4,-1),l1,s2,s3,l3)
+
+    U,S,V = svd(phi,(l1,s2))
+
+    @test norm((U*S)*V - phi) < 1E-10
+    @test norm(U*(S*V) - phi) < 1E-10
+  end
+
+
 end
 
 nothing
