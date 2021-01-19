@@ -1,3 +1,8 @@
+ITensors v0.1.36 Release Notes
+==============================
+- Bump to v0.1.22 of NDTensors which introduces block sparse multithreading. Add documentation and examples for using block sparse multithreading (PR #561) (@mtfishman).
+- Make dmrg set ortho center to 1 before starting (PR #562) (@emstoudenmire).
+
 ITensors v0.1.35 Release Notes
 ==============================
 Closed issues:
