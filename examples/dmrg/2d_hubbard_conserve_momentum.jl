@@ -1,15 +1,14 @@
 using ITensors
+using Random
 
 include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 
-function main(; Nx::Int = 6,
-                Ny::Int = 3,
-                U::Float64 = 4.0,
-                t::Float64 = 1.0,
-                maxdim::Int = 3000,
-                conserve_ky = true,
-                use_splitblocks = true)
+function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0,
+                t::Float64 = 1.0, maxdim::Int = 3000,
+                conserve_ky = true, use_splitblocks = true,
+                seed = 1234)
+  Random.seed!(seed)
   @show Threads.nthreads()
   @show ITensors.using_threaded_blocksparse()
 
@@ -22,10 +21,8 @@ function main(; Nx::Int = 6,
   noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
   @show sweeps
 
-  sites = siteinds("ElecK", N;
-                   conserve_qns = true,
-                   conserve_ky = conserve_ky,
-                   modulus_ky = Ny)
+  sites = siteinds("ElecK", N; conserve_qns = true,
+                   conserve_ky = conserve_ky, modulus_ky = Ny)
 
   ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true) 
   H = MPO(ampo, sites)
