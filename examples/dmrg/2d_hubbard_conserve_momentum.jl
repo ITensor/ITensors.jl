@@ -1,15 +1,13 @@
 using ITensors
+using Random
 
 include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 
-function main(; Nx::Int = 6,
-                Ny::Int = 3,
-                U::Float64 = 4.0,
-                t::Float64 = 1.0,
-                maxdim::Int = 3000,
-                conserve_ky = true,
-                use_splitblocks = true)
+function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
+                maxdim::Int = 3000, conserve_ky = true, use_splitblocks = true,
+                seed = 1234)
+  Random.seed!(seed)
   @show Threads.nthreads()
   @show ITensors.using_threaded_blocksparse()
 
