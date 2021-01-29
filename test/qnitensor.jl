@@ -1460,6 +1460,30 @@ end
     @test dense(A²) ≈ dense(A') * dense(A)
     @test_throws ErrorException A' * dag(A)
   end
+
+  @testset "Contraction resulting in no blocks with threading bug" begin
+    i = Index([QN(0) => 1, QN(1) => 1])
+    A = emptyITensor(i', dag(i))
+    B = emptyITensor(i', dag(i))
+    A[i' => 1, i => 1] = 11.0
+    B[i' => 2, i => 2] = 22.0
+
+    using_threaded_blocksparse = ITensors.disable_threaded_blocksparse()
+    C1 = A' * B
+    ITensors.enable_threaded_blocksparse()
+    C2 = A' * B
+    if using_threaded_blocksparse
+      ITensors.enable_threaded_blocksparse()
+    else
+      ITensors.disable_threaded_blocksparse()
+    end
+
+    @test nnzblocks(C1) == 0
+    @test nnzblocks(C2) == 0
+    @test nnz(C1) == 0
+    @test nnz(C2) == 0
+    @test C1 ≈ C2
+  end
 end
 
 end
