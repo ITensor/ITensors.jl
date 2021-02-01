@@ -1,3 +1,7 @@
+ITensors v0.1.37 Release Notes
+==============================
+- Bump to NDTensors v0.1.23 which fixes a bug in block sparse multithreading when a block sparse tensor contraction results in a tensor with no blocks (PR #565) (@mtfishman).
+
 ITensors v0.1.36 Release Notes
 ==============================
 - Bump to v0.1.22 of NDTensors which introduces block sparse multithreading. Add documentation and examples for using block sparse multithreading (PR #561) (@mtfishman).
