@@ -250,6 +250,7 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   AC = A * CR * CL
 
+
   cL = combinedind(CL)
   cR = combinedind(CR)
   if inds(AC) != IndexSet(cL, cR)
@@ -276,6 +277,8 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   # The right eigenvectors, after being applied to A
   Vt = replaceinds(V, (Ris..., r), (Lis..., l))
+
+  #@show norm(dag(V)*D*Vt-A)
 
   @debug_check begin
     if hasqns(A)

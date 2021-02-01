@@ -63,6 +63,9 @@ end
 
 fparity(iv::IndexVal) = fparity(qn(iv))
 
+Base.isodd(q::QN) = isodd(fparity(q))
+Base.isodd(iv::IndexVal) = isodd(fparity(iv))
+
 """
     compute_permfactor(p,iv_or_qn::Vararg{T,N})
 
