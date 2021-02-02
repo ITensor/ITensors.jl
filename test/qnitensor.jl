@@ -1484,6 +1484,15 @@ end
     @test nnz(C2) == 0
     @test C1 ≈ C2
   end
+
+  @testset "Contraction with scalar ITensor" begin
+    i = Index([QN(0)=>2, QN(1)=>2])
+    A = randomITensor(i', dag(i))
+    A1 = A * ITensor(1)
+    A2 = ITensor(1) * A
+    @test A1 ≈ A
+    @test A2 ≈ A
+  end
 end
 
 end
