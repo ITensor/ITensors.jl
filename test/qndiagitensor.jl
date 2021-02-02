@@ -91,6 +91,23 @@ using ITensors,
     @test dense(A2) ≈ denseA2
     @test A2[] ≈ 4
   end
+
+  @testset "Regression test for printing a QN Diag ITensor" begin
+    # https://github.com/ITensor/NDTensors.jl/issues/61
+    i = Index([QN()=>2])
+    A = randomITensor(i', dag(i))
+    U, S, V = svd(A, i')
+    # Test printing S
+    io = IOBuffer()
+    show(io, S)
+    sS = String(take!(io))
+    @test sS isa String
+    # Test printing U
+    io = IOBuffer()
+    show(io, U)
+    sU = String(take!(io))
+    @test sU isa String
+  end
 end
 
 nothing
