@@ -11,16 +11,16 @@ seed!(12345)
   A = randomITensor(is'..., dag(is)...)
   B = randomITensor(is'..., dag(is)...)
 
-  @test !ITensors.use_combine_contract()
+  @test !ITensors.using_combine_contract()
 
   C_contract = A' * B
 
-  enable_combine_contract!()
-  @test ITensors.use_combine_contract()
+  ITensors.enable_combine_contract()
+  @test ITensors.using_combine_contract()
 
   C_combine_contract = A' * B
 
-  disable_combine_contract!()
+  ITensors.disable_combine_contract()
   @test !ITensors.use_combine_contract()
 
   @test C_contract ≈ C_combine_contract
