@@ -69,6 +69,28 @@ using ITensors,
     end
   end
 
+  @testset "Regression test for QN delta contraction bug" begin
+    # http://itensor.org/support/2814/block-sparse-itensor-wrong-results-multiplying-delta-tensor
+    s = Index([QN(("N",i,1))=>1 for i = 1:2])
+    l = dag(addtags(s,"left"))
+    r = addtags(s,"right")
+    u = addtags(s,"up")
+    d = dag(addtags(s,"down"))
+    A = emptyITensor(l,r,u,d)
+    A[1,1,1,1] = 1.0
+    A[1,1,2,2] = 1.0
+    A[2,2,1,1] = 1.0
+    A[2,2,2,2] = 1.0
+    δlr = δ(dag(l), dag(r))
+    δud = δ(dag(u), dag(d))
+    A1 = A * δlr
+    denseA1 = dense(A) * dense(δlr)
+    A2 = A1 * δud
+    denseA2 = denseA1 * dense(δud)
+    @test dense(A1) ≈ denseA1
+    @test dense(A2) ≈ denseA2
+    @test A2[] ≈ 4
+  end
 end
 
 nothing
