@@ -8,15 +8,16 @@ X have productMPS and similar functions put
   MPS always consist of bosonic ITensors on
   all or at most one site
 
-- Make combiner fermionic:
+X Make combiner fermionic:
   * work through 4 identified cases with unit tests
   * put unit tests into test/ folder
 
-- Fix issue where hopping Hamiltonian for
+X Fix issue where hopping Hamiltonian for
   Electron sites giving non-Hermitian 
   result in AutoMPO
 
-- dim=1 'tag' Index for fermion-odd MPS?
+- Fig eigen issue (see eigen notes below)
+  Maybe easier to streamline how it works on master first.
 
 - replace `has_fermion_string` system used by 
   AutoMPO with logic that computes ITensors of
@@ -26,6 +27,21 @@ X have productMPS and similar functions put
 
 - provide a helper system for users to convert
   fermionic operators to bosonic operators
+
+- dim=1 'tag' Index for fermion-odd MPS?
+
+
+# Eigen notes
+
+
+  NDTensors src/blocksparse/linearalgebra.jl line 191
+
+  NDTensors eigen does not put in QNs properly,
+  and just assumes new index is a sim of one of 
+  the original ones.
+  Look to C++ version for correct treatment.
+  If not implementable in NDTensors, use a callback?
+
 
 # Oct 2020 Fermions Revisit
 
