@@ -1267,7 +1267,9 @@ permute(T::ITensor,
         inds::Index...; vargs...) = permute(T,
                                             IndexSet(inds...); vargs...)
 
-(T::ITensor * x::Number) = itensor(x * tensor(T))
+function (T::ITensor{N} * x::Number)::ITensor{N} where {N}
+  return itensor(x * tensor(T))
+end
 
 (x::Number * T::ITensor) = T * x
 
@@ -1362,6 +1364,9 @@ function (A::ITensor * B::ITensor)
   C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
   return C
 end
+
+(A::ITensor{0} * B::ITensor) = A[] * B
+(A::ITensor * B::ITensor{0}) = A * B[]
 
 # TODO: define for contraction order optimization
 #*(A1::ITensor,
