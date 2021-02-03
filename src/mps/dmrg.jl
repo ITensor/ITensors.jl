@@ -105,6 +105,10 @@ end
 
 
 function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
+  if length(psi0) == 1
+    error("`dmrg` currently does not support system sizes of 1. You can diagonalize the MPO tensor directly with tools like `LinearAlgebra.eigen`, `KrylovKit.eigsolve`, etc.")
+  end
+
   @debug_check begin
     # Debug level checks
     # Enable with ITensors.enable_debug_checks()

@@ -224,6 +224,7 @@ Get the site index of MPO `A` that is unique to `A` (not shared with MPS/MPO `B`
 """
 function unique_siteind(A::AbstractMPS, B::AbstractMPS, j::Integer)
   N = length(A)
+  N == 1 && return uniqueind(A[j], B[j])
   j == 1 && return uniqueind(A[j], A[j+1], B[j])
   j == N && return uniqueind(A[j], A[j-1], B[j])
   return uniqueind(A[j], A[j-1], A[j+1], B[j])

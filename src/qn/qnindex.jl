@@ -192,6 +192,20 @@ function block(::typeof(first), ind::QNIndex, q::QN)
   return Block(0)
 end
 
+# Find the first block that matches the pattern f,
+# for example `f(blockind) = qn(blockind) == target_qn`.
+# `f` accepts a pair of `i => Block(n)` where `n`
+# runs over `nblocks(i)`.
+function findfirstblock(f, i::QNIndex)
+  for b in ITensors.eachblock(i)
+    if f(i => b)
+      return b
+    end
+  end
+  error("No block of Index $i matching the specified pattern.")
+  return Block(0)
+end
+
 # XXX: call this simply `block` and return a Block{1}
 # Deprecate this
 """
