@@ -356,6 +356,10 @@ Base.:*(ψ::MPS, A::MPO; kwargs...) = *(A, ψ; kwargs...)
 function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   n = length(A)
   n != length(ψ) && throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(ψ))) do not match"))
+  if n == 1
+    return MPS([A[1] * ψ[1]])
+  end
+
   ψ_out         = similar(ψ)
   cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
   maxdim::Int     = get(kwargs,:maxdim,maxlinkdim(ψ))
@@ -463,6 +467,11 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   mindim::Int = max(get(kwargs,:mindim,1), 1)
   N = length(A)
   N != length(B) && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
+
+  if N == 1
+    return MPO([A[1] * B[1]])
+  end
+
   A_ = copy(A)
   orthogonalize!(A_, 1)
   B_ = copy(B)
@@ -512,13 +521,21 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
                            sites_B[i+1],
                            commonind(res[i+1], res[i+2]))
   end
-  clust = nfork * A_[N-1] * B_[N-1]
+  clust = if N > 2
+    nfork * A_[N-1] * B_[N-1]
+  else
+    A_[N-1] * B_[N-1]
+  end
   nfork = clust * A_[N] * B_[N]
 
   # in case we primed A
   A_ind = uniqueind(filterinds(A_[N-1]; tags = "Site"),
                     filterinds(B_[N-1]; tags = "Site"))
-  Lis = IndexSet(A_ind, sites_B[N-1], commonind(res[N-2], res[N-1]))
+  Lis = if N > 2
+    IndexSet(A_ind, sites_B[N-1], commonind(res[N-2], res[N-1]))
+  else
+    IndexSet(A_ind, sites_B[N-1])
+  end
   U, V = factorize(nfork, Lis; 
                    ortho="right",
                    cutoff=cutoff,

@@ -201,4 +201,48 @@ end
   @test nnz(H̃[4]) == nnzblocks(H̃[4]) == count(≠(0), H[4]) == count(≠(0), H̃[4]) == 9
 end
 
+@testset "MPO operations with one or two sites" begin
+  for N in 1:4, conserve_szparity in (true, false)
+    s = siteinds("S=1/2", N; conserve_szparity = conserve_szparity)
+    a = AutoMPO()
+    h = 0.5
+    for j in 1:N-1
+      a .+= -1,"Sx",j,"Sx",j+1
+    end
+    for j in 1:N
+      a .+= h, "Sz", j
+    end
+    H = MPO(a, s)
+    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
+
+    # MPO * MPS
+    Hψ = H * ψ
+    @test prod(Hψ) ≈ prod(H) * prod(ψ)
+
+    # MPO * MPO
+    H² = H' * H
+    @test prod(H²) ≈ prod(H') * prod(H)
+
+    # DMRG
+    sweeps = Sweeps(3)
+    maxdim!(sweeps, 10)
+    if N == 1
+      @test_throws ErrorException dmrg(H, ψ, sweeps; eigsolve_maxiter = 10, eigsolve_krylovdim = 10, outputlevel = 0)
+    else
+      e, ψgs = dmrg(H, ψ, sweeps; eigsolve_maxiter = 10, eigsolve_krylovdim = 10, outputlevel = 0)
+      @test prod(H) * prod(ψgs) ≈ e * prod(ψgs)'
+      D, V = eigen(prod(H); ishermitian = true)
+      if hasqns(ψ)
+        fluxψ = flux(ψ)
+        d = commonind(D, V)
+        b = ITensors.findfirstblock(indblock -> ITensors.qn(indblock) == fluxψ, d)
+        @test e ≈ minimum(store(D[Block(b, b)]))
+      else
+        @test e ≈ minimum(store(D))
+      end
+    end
+  end
+
+end
+
 nothing
