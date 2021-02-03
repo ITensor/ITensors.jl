@@ -1268,9 +1268,6 @@ permute(T::ITensor,
                                             IndexSet(inds...); vargs...)
 
 function (T::ITensor{N} * x::Number)::ITensor{N} where {N}
-  if isone(x)
-    return T
-  end
   return itensor(x * tensor(T))
 end
 
