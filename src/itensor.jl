@@ -1378,7 +1378,7 @@ function (A::ITensor{0} * B::ITensor{0})
   if iscombiner(A) || iscombiner(B)
     return A * B
   end
-  A[] * B[]
+  return ITensor(A[] * B[])
 end
 
 # TODO: define for contraction order optimization
