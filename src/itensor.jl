@@ -1366,19 +1366,13 @@ function (A::ITensor * B::ITensor)
 end
 
 function (A::ITensor{0} * B::ITensor)
-  if iscombiner(A)
-    return A * B
-  end
-  return A[] * B
+  return iscombiner(A) ? _contract(A, B) : A[] * B
 end
 
 (A::ITensor * B::ITensor{0}) = B * A
 
 function (A::ITensor{0} * B::ITensor{0})
-  if iscombiner(A) || iscombiner(B)
-    return A * B
-  end
-  return ITensor(A[] * B[])
+  return (iscombiner(A) || iscombiner(B)) ? _contract(A, B) : ITensor(A[] * B[])
 end
 
 # TODO: define for contraction order optimization
