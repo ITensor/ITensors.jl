@@ -213,7 +213,11 @@ end
       a .+= h, "Sz", j
     end
     H = MPO(a, s)
-    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
+    if conserve_szparity
+      ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
+    else
+      ψ = randomMPS(s)
+    end
 
     # MPO * MPS
     Hψ = H * ψ
