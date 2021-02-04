@@ -1384,6 +1384,26 @@ end
     @test norm(ψ) ≈ 1
     @test inner(ψ, ψ) ≈ 1
   end
+
+  @testset "inner(::MPS, ::MPO, ::MPS) with more than one site Index" begin
+    N = 8
+    s = siteinds("S=1/2", N)
+    a = AutoMPO()
+    for j in 1:N-1
+      a .+= 0.5, "S+", j, "S-", j+1
+      a .+= 0.5, "S-", j, "S+", j+1
+      a .+=      "Sz", j, "Sz", j+1
+    end
+    H = MPO(a, s)
+    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓", 10)
+    # Create MPO/MPS with pairs of sites merged
+    H2 = MPO([H[b] * H[b+1] for b in 1:2:N])
+    ψ2 = MPS([ψ[b] * ψ[b+1] for b in 1:2:N])
+    @test inner(ψ, ψ) ≈ inner(ψ2, ψ2)
+    @test inner(ψ', H, ψ) ≈ inner(ψ2', H2, ψ2)
+    @test_throws ErrorException inner(ψ2, ψ2')
+    @test_throws ErrorException inner(ψ2, H2, ψ2)
+  end
 end
 
 nothing

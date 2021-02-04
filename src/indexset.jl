@@ -1313,9 +1313,12 @@ block(inds::IndexSet,
 
 function Base.show(io::IO, is::IndexSet)
   print(io,"IndexSet{$(length(is))} ")
-  for i in is
+  for n in eachindex(is)
+    i = is[n]
     print(io, i)
-    print(io, " ")
+    if n < lastindex(is)
+      print(io, " ")
+    end
   end
 end
 
