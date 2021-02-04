@@ -21,7 +21,7 @@ seed!(12345)
   C_combine_contract = A' * B
 
   ITensors.disable_combine_contract()
-  @test !ITensors.use_combine_contract()
+  @test !ITensors.using_combine_contract()
 
   @test C_contract ≈ C_combine_contract
 end

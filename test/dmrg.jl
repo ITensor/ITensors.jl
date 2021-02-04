@@ -318,7 +318,7 @@ using ITensors, Test, Random
   @testset "Bug fixed in threaded block sparse" begin
     maxdim = 10
     nsweeps = 2
-    outputlevel = 1
+    outputlevel = 0
     cutoff = 0.0
     Nx = 4
     Ny = 2

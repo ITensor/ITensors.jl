@@ -1365,8 +1365,21 @@ function (A::ITensor * B::ITensor)
   return C
 end
 
-(A::ITensor{0} * B::ITensor) = A[] * B
-(A::ITensor * B::ITensor{0}) = A * B[]
+function (A::ITensor{0} * B::ITensor)
+  if iscombiner(A)
+    return A * B
+  end
+  return A[] * B
+end
+
+(A::ITensor * B::ITensor{0}) = B * A
+
+function (A::ITensor{0} * B::ITensor{0})
+  if iscombiner(A) || iscombiner(B)
+    return A * B
+  end
+  A[] * B[]
+end
 
 # TODO: define for contraction order optimization
 #*(A1::ITensor,

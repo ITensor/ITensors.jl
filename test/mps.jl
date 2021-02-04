@@ -6,7 +6,7 @@ using Test
 Random.seed!(1234)
 
 include("util.jl")
-include("../examples/gate_evolution/qubit.jl")
+include(joinpath(pkgdir(ITensors), "examples", "gate_evolution", "qubit.jl"))
 
 @testset "MPS Basics" begin
 
