@@ -151,6 +151,19 @@ Get a Vector of IndexSets of all the site indices of M.
 """
 siteinds(M::MPO; kwargs...) = siteinds(all, M; kwargs...)
 
+siteinds(Mψ::Tuple{MPO, MPS}, n::Int; kwargs...) =
+  unique_siteinds(Mψ[1], Mψ[2], n; kwargs...)
+
+function nsites(Mψ::Tuple{MPO, MPS})
+  M, ψ = Mψ
+  N = length(M)
+  @assert N == length(ψ)
+  return N
+end
+
+siteinds(Mψ::Tuple{MPO, MPS}; kwargs...) =
+  [siteinds(Mψ, n; kwargs...) for n in 1:nsites(Mψ)]
+
 # XXX: rename originalsiteinds?
 """
     firstsiteinds(M::MPO; kwargs...)
@@ -160,6 +173,15 @@ Get a Vector of the first site Index found on each site of M.
 By default, it finds the first site Index with prime level 0.
 """
 firstsiteinds(M::MPO; kwargs...) = siteinds(first, M; plev = 0, kwargs...)
+
+function hassameinds(::typeof(siteinds), ψ::MPS, Hϕ::Tuple{MPO, MPS})
+  N = length(ψ)
+  @assert N == length(Hϕ[1]) == length(Hϕ[1])
+  for n in 1:N
+    !hassameinds(siteinds(Hϕ, n), siteinds(ψ, n)) && return false
+  end
+  return true
+end
 
 """
     dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
@@ -181,9 +203,23 @@ function dot(y::MPS, A::MPO, x::MPS;
   check_hascommoninds(siteinds, A, x)
   ydag = dag(y)
   sim_linkinds!(ydag)
-  if make_inds_match
-    sAx = unique_siteinds(A, x)
-    replace_siteinds!(ydag, sAx)
+  if !hassameinds(siteinds, y, (A, x))
+    sAx = siteinds((A, x))
+    if any(s -> length(s) > 1, sAx)
+      n = findfirst(n -> !hassameinds(siteinds(y, n), siteinds((A, x), n)), 1:N)
+      error("""Calling `dot(ϕ::MPS, H::MPO, ψ::MPS)` with multiple site indices per MPO/MPS tensor but the site indices don't match. Even with `make_inds_match = true`, the case of multiple site indices per MPO/MPS is not handled automatically. The sites with unmatched site indices are:
+
+                inds(ϕ[$n]) = $(inds(y[n]))
+
+                inds(H[$n]) = $(inds(A[n]))
+
+                inds(ψ[$n]) = $(inds(x[n]))
+
+            Make sure the site indices of your MPO/MPS match. You may need to prime one of the MPS, such as `dot(ϕ', H, ψ)`.""")
+    end
+    if make_inds_match
+      replace_siteinds!(ydag, sAx)
+    end
   else
     check_hascommoninds(siteinds, A, y)
   end

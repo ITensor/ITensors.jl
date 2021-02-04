@@ -217,17 +217,17 @@ function dense(ψ::AbstractMPS)
 end
 
 """
-    unique_siteind(A::MPO, B::MPS, j::Integer)
-    unique_siteind(A::MPO, B::MPO, j::Integer)
+    unique_siteind[s](A::MPO, B::MPS, j::Integer)
+    unique_siteind[s](A::MPO, B::MPO, j::Integer)
 
-Get the site index of MPO `A` that is unique to `A` (not shared with MPS/MPO `B`).
+Get the site index (or indices) of MPO `A` that is unique to `A` (not shared with MPS/MPO `B`).
 """
-function unique_siteind(A::AbstractMPS, B::AbstractMPS, j::Integer)
+function unique_siteinds(A::AbstractMPS, B::AbstractMPS, j::Integer)
   N = length(A)
-  N == 1 && return uniqueind(A[j], B[j])
-  j == 1 && return uniqueind(A[j], A[j+1], B[j])
-  j == N && return uniqueind(A[j], A[j-1], B[j])
-  return uniqueind(A[j], A[j-1], A[j+1], B[j])
+  N == 1 && return uniqueinds(A[j], B[j])
+  j == 1 && return uniqueinds(A[j], A[j+1], B[j])
+  j == N && return uniqueinds(A[j], A[j-1], B[j])
+  return uniqueinds(A[j], A[j-1], A[j+1], B[j])
 end
 
 """
@@ -696,9 +696,7 @@ end
 linkdims(ψ::AbstractMPS) =
   [linkdim(ψ, b) for b in 1:length(ψ)-1]
 
-function _log_or_not_dot(M1::MPST,
-                         M2::MPST,
-                         loginner::Bool;
+function _log_or_not_dot(M1::MPST, M2::MPST, loginner::Bool;
                          make_inds_match::Bool = true)::Number where {MPST <: AbstractMPS}
   N = length(M1)
   if length(M2) != N
@@ -714,6 +712,16 @@ function _log_or_not_dot(M1::MPST,
     # If the MPS have more than one site Indices on any site or they don't have
     # the same number of site indices on each site, don't try to make the
     # indices match
+    if !hassameinds(siteinds, M1, M2)
+      n = findfirst(n -> !hassameinds(siteinds(M1, n), siteinds(M2, n)), 1:N)
+      error("""Calling `dot(ϕ::MPS/MPO, ψ::MPS/MPO)` with multiple site indices per MPS/MPO tensor but the site indices don't match. Even with `make_inds_match = true`, the case of multiple site indices per MPS/MPO is not handled automatically. The sites with unmatched site indices are:
+
+                inds(ϕ[$n]) = $(inds(M1[n]))
+
+                inds(ψ[$n]) = $(inds(M2[n]))
+
+            Make sure the site indices of your MPO/MPS match. You may need to prime one of the MPS, such as `dot(ϕ', ψ)`.""")
+    end
     make_inds_match = false
   end
   if make_inds_match
