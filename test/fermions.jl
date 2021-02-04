@@ -617,6 +617,23 @@ using ITensors,
     @test norm(U*(S*V) - phi) < 1E-10
   end
 
+  @testset "Eigen Positive Semi Def Regression Test" begin
+    #
+    # Test was failing without using combiners in
+    # eigen which were conjugates of each other
+    #
+    cutoff = 1E-12
+    N = 2
+    s = siteinds("Fermion",N;conserve_qns=true)
+
+    T = ITensor(QN("Nf",0,-1),s[1]',dag(s[1]))
+    T[2,2] = 1
+
+    D,U = eigen(T;ishermitian=true,cutoff)
+
+    @test norm(prime(U)*D*dag(U)-T) < 1E-10
+  end
+
 
 end
 
