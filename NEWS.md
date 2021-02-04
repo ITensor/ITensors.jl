@@ -1,3 +1,10 @@
+ITensors v0.1.38 Release Notes
+==============================
+- Add support for `inner(::MPS, ::MPO, ::MPS)` with multiple siteinds per tensor (PR #573) (@mtfishman).
+- Fix `MPO*MPS`, `MPO*MPO` for system sizes 1 and 2 (PR #572) (@mtfishman).
+- Add generic support for scalar ITensor contraction (PR #569) (@mtfishman).
+- Fix and add tests for printing QN diag ITensors (PR #568) (@mtfishman).
+
 ITensors v0.1.37 Release Notes
 ==============================
 - Bump to NDTensors v0.1.23 which fixes a bug in block sparse multithreading when a block sparse tensor contraction results in a tensor with no blocks (PR #565) (@mtfishman).
