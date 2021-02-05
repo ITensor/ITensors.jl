@@ -1,5 +1,6 @@
 ITensors v0.1.38 Release Notes
 ==============================
+- New MPS/MPO index manipulation interface (PR #575) (@mtfishman).
 - Add support for `inner(::MPS, ::MPO, ::MPS)` with multiple siteinds per tensor (PR #573) (@mtfishman).
 - Fix `MPO*MPS`, `MPO*MPO` for system sizes 1 and 2 (PR #572) (@mtfishman).
 - Add generic support for scalar ITensor contraction (PR #569) (@mtfishman).
