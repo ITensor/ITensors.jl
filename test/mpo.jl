@@ -61,7 +61,7 @@ end
 
   @testset "norm MPO" begin
     A = randomMPO(sites)
-    Adag = ITensors.sim_linkinds(dag(A))
+    Adag = sim(linkinds, dag(A))
     A² = ITensor(1)
     for j = 1:N
       A² *= Adag[j] * A[j]
@@ -79,7 +79,7 @@ end
     for j in 1:N
       A[j] .*= j
     end
-    Adag = ITensors.sim_linkinds(dag(A))
+    Adag = sim(linkinds, dag(A))
     A² = ITensor(1)
     for j = 1:N
       A² *= Adag[j] * A[j]

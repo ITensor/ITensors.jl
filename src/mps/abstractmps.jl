@@ -148,9 +148,7 @@ macro preserve_ortho(ψ, block)
   end
 end
 
-function setindex!(M::AbstractMPS,
-                   T::ITensor,
-                   n::Integer;
+function setindex!(M::AbstractMPS, T::ITensor, n::Integer;
                    set_limits::Bool = true)
   if set_limits
     (n <= leftlim(M)) && setleftlim!(M,n-1)
@@ -185,7 +183,6 @@ iterate(M::AbstractMPS, state) = iterate(data(M), state)
 
 """
     linkind(M::MPS, j::Integer)
-
     linkind(M::MPO, j::Integer)
 
 Get the link or bond Index connecting the
@@ -217,47 +214,51 @@ function dense(ψ::AbstractMPS)
 end
 
 """
-    unique_siteind[s](A::MPO, B::MPS, j::Integer)
-    unique_siteind[s](A::MPO, B::MPO, j::Integer)
+    siteinds(uniqueinds, A::MPO, B::MPS, j::Integer; kwargs...)
+    siteinds(uniqueind, A::MPO, B::MPS, j::Integer; kwargs...)
 
 Get the site index (or indices) of MPO `A` that is unique to `A` (not shared with MPS/MPO `B`).
 """
-function unique_siteinds(A::AbstractMPS, B::AbstractMPS, j::Integer)
+function siteinds(f::Union{typeof(uniqueinds), typeof(uniqueind)},
+                  A::AbstractMPS, B::AbstractMPS, j::Integer; kwargs...)
   N = length(A)
-  N == 1 && return uniqueinds(A[j], B[j])
-  j == 1 && return uniqueinds(A[j], A[j+1], B[j])
-  j == N && return uniqueinds(A[j], A[j-1], B[j])
-  return uniqueinds(A[j], A[j-1], A[j+1], B[j])
+  N == 1 && return f(A[j], B[j]; kwargs...)
+  j == 1 && return f(A[j], A[j+1], B[j]; kwargs...)
+  j == N && return f(A[j], A[j-1], B[j]; kwargs...)
+  return f(A[j], A[j-1], A[j+1], B[j]; kwargs...)
 end
 
 """
-    unique_siteinds(A::MPO, B::MPS)
-    unique_siteinds(A::MPO, B::MPO)
+    siteinds(uniqueinds, A::MPO, B::MPS)
+    siteinds(uniqueind, A::MPO, B::MPO)
 
 Get the site indices of MPO `A` that are unique to `A` (not shared with MPS/MPO `B`), as a `Vector{<:Index}`.
 """
-function unique_siteinds(A::AbstractMPS, B::AbstractMPS)
-  return [unique_siteind(A, B, j) for j in eachindex(A)]
+function siteinds(f::Union{typeof(uniqueinds), typeof(uniqueind)},
+                  A::AbstractMPS, B::AbstractMPS; kwargs...)
+  return [siteinds(f, A, B, j; kwargs...) for j in eachindex(A)]
 end
 
 """
-    common_siteind(A::MPO, B::MPS, j::Integer)
-    common_siteind(A::MPO, B::MPO, j::Integer)
+    siteinds(commoninds, A::MPO, B::MPS, j::Integer; kwargs...)
+    siteinds(commonind, A::MPO, B::MPO, j::Integer; kwargs...)
 
-Get the site index of MPO `A` that is shared with MPS/MPO `B`.
+Get the site index (or indices) of  the `j`th MPO tensor of `A` that is shared with MPS/MPO `B`.
 """
-function common_siteind(A::AbstractMPS, B::AbstractMPS, j::Integer)
-  return commonind(A[j], B[j])
+function siteinds(f::Union{typeof(commoninds), typeof(commonind)},
+                  A::AbstractMPS, B::AbstractMPS, j::Integer; kwargs...)
+  return f(A[j], B[j]; kwargs...)
 end
 
 """
-    common_siteinds(A::MPO, B::MPS)
-    common_siteinds(A::MPO, B::MPO)
+    siteinds(commoninds, A::MPO, B::MPS; kwargs...)
+    siteinds(commonind, A::MPO, B::MPO; kwargs...)
 
-Get the site indices of MPO `A` that are shared with MPS/MPO `B`, as a `Vector{<:Index}`.
+Get a vector of the site index (or indices) of MPO `A` that is shared with MPS/MPO `B`.
 """
-function common_siteinds(A::AbstractMPS, B::AbstractMPS)
-  return [common_siteind(A, B, j) for j in eachindex(A)]
+function siteinds(f::Union{typeof(commoninds), typeof(commonind)},
+                  A::AbstractMPS, B::AbstractMPS; kwargs...)
+  return [siteinds(f, A, B, j) for j in eachindex(A)]
 end
 
 keys(ψ::AbstractMPS) = keys(data(ψ))
@@ -295,6 +296,12 @@ findsite(ψ::AbstractMPS, is) = findfirst(hascommoninds(is), ψ)
 
 findsite(ψ::AbstractMPS, s::Index) = findsite(ψ, IndexSet(s))
 
+#
+# TODO: Maybe make:
+# findall(f::Function, siteindsM::Tuple{typeof(siteinds), ::AbstractMPS})
+# findall(siteindsM::Tuple{typeof(siteinds), <:AbstractMPS}, is) =
+#   findall(hassameinds(is), siteindsM)
+#
 """
     findsites(M::Union{MPS, MPO}, is)
 
@@ -316,42 +323,40 @@ findsites(M, (s[4]', s[4])) == [4]
 findsites(M, (s[4]', s[3])) == [3, 4]
 ```
 """
-findsites(ψ::ITensors.AbstractMPS, is) =
+findsites(ψ::AbstractMPS, is) =
   findall(hascommoninds(is), ψ)
 
-findsites(ψ::ITensors.AbstractMPS, s::Index) =
- findsites(ψ, IndexSet(s))
+findsites(ψ::AbstractMPS, s::Index) =
+  findsites(ψ, IndexSet(s))
 
-# TODO: depracate in favor of findsite.
+#
+# TODO: Maybe make:
+# findfirst(f::Function, siteindsM::Tuple{typeof(siteinds), ::AbstractMPS})
+# findfirst(siteindsM::Tuple{typeof(siteinds), <:AbstractMPS}, is) =
+#   findfirst(hassameinds(is), siteindsM)
+#
 """
     findfirstsiteind(M::MPS, i::Index)
-
     findfirstsiteind(M::MPO, i::Index)
 
 Return the first site of the MPS or MPO that has the
 site index `i`.
 """
-function findfirstsiteind(ψ::AbstractMPS,
-                          s::Index)
-  return findfirst(hasind(s), ψ)
-end
+findfirstsiteind(ψ::AbstractMPS, s::Index) =
+  findfirst(hasind(s), ψ)
 
 # TODO: depracate in favor of findsite.
 """
-    findfirstsiteind(M::MPS, is)
-
-    findfirstsiteind(M::MPO, is)
+    findfirstsiteinds(M::MPS, is)
+    findfirstsiteinds(M::MPO, is)
 
 Return the first site of the MPS or MPO that has the
 site indices `is`.
 """
-function findfirstsiteinds(ψ::AbstractMPS,
-                           s)
-  return findfirst(hasinds(s), ψ)
-end
+findfirstsiteinds(ψ::AbstractMPS, s) =
+  findfirst(hasinds(s), ψ)
 
 """
-    firstsiteind(M::Union{MPS,MPO}, j::Integer; kwargs...)
     siteind(::typeof(first), M::Union{MPS,MPO}, j::Integer; kwargs...)
 
 Return the first site Index found on the MPS or MPO
@@ -373,9 +378,6 @@ function siteind(::typeof(first), M::AbstractMPS, j::Integer;
   end
   return si
 end
-
-firstsiteind(M::AbstractMPS, j::Integer; kwargs...) =
-  siteind(first, M, j; kwargs...)
 
 """
     siteinds(M::Union{MPS, MPO}}, j::Integer; kwargs...)
@@ -427,8 +429,8 @@ function replaceinds!(::typeof(linkinds), M::AbstractMPS,
   return M
 end
 
-replaceinds(::typeof(linkinds), M::ITensors.AbstractMPS,
-            l̃s::Vector{<:Index}) = replaceinds!(linkinds, copy(M), l̃s)
+replaceinds(::typeof(linkinds), M::AbstractMPS, l̃s::Vector{<:Index}) =
+  replaceinds!(linkinds, copy(M), l̃s)
 
 # TODO: change kwarg from `set_limits` to `preserve_ortho`
 function map!(f::Function, M::AbstractMPS; set_limits::Bool = true)
@@ -439,7 +441,7 @@ function map!(f::Function, M::AbstractMPS; set_limits::Bool = true)
 end
 
 # TODO: change kwarg from `set_limits` to `preserve_ortho`
-Base.map(f::Function, M::AbstractMPS; set_limits::Bool = true) =
+map(f::Function, M::AbstractMPS; set_limits::Bool = true) =
   map!(f, copy(M); set_limits = set_limits)
 
 for fname in (:dag, :prime, :setprime, :noprime, :addtags, :removetags,
@@ -449,7 +451,6 @@ for fname in (:dag, :prime, :setprime, :noprime, :addtags, :removetags,
   @eval begin
     """
         $($fname)(M::MPS, args...; kwargs...)
-
         $($fname)(M::MPO, args...; kwargs...)
 
     Apply $($fname) to all ITensors of an MPS/MPO, returning a new MPS/MPO.
@@ -463,7 +464,6 @@ for fname in (:dag, :prime, :setprime, :noprime, :addtags, :removetags,
 
     """
         $($fname_bang)(M::MPS, args...; kwargs...)
-
         $($fname_bang)(M::MPO, args...; kwargs...)
 
     Apply $($fname) to all ITensors of an MPS/MPO in-place.
@@ -495,7 +495,7 @@ function check_hascommoninds(::typeof(siteinds), A::AbstractMPS, B::AbstractMPS)
   end
 end
 
-function map_linkinds!(f::Function, M::AbstractMPS)
+function map!(f::Function, ::typeof(linkinds), M::AbstractMPS)
   for i in eachindex(M)[1:end-1]
     l = linkind(M, i)
     if !isnothing(l)
@@ -507,48 +507,42 @@ function map_linkinds!(f::Function, M::AbstractMPS)
   return M
 end
 
-# Change to:
-# map(f::Function, ::typeof(linkinds), M::AbstractMPS)
-map_linkinds(f::Function, M::AbstractMPS) = map_linkinds!(f, copy(M))
+map(f::Function, ::typeof(linkinds), M::AbstractMPS) = map!(f, linkinds, copy(M))
 
-# Change to:
-# map!(f::Function, ::typeof(commoninds), ::typeof(siteinds),
-#      M::AbstractMPS)
-function map_common_siteinds!(f::Function, M1::AbstractMPS,
-                              M2::AbstractMPS)
+function map!(f::Function, ::typeof(siteinds), ::typeof(commoninds),
+              M1::AbstractMPS, M2::AbstractMPS)
   length(M1) != length(M2) && error("MPOs/MPSs must be the same length")
   for i in eachindex(M1)
-    s = common_siteind(M1, M2, i)
-    if !isnothing(s)
-      s̃ = f(s)
-      M1[i, set_limits = false] = replaceind(M1[i], s, s̃)
-      M2[i, set_limits = false] = replaceind(M2[i], s, s̃)
+    s = siteinds(commoninds, M1, M2, i)
+    if !isempty(s)
+      s̃ = f.(s)
+      @preserve_ortho (M1, M2) begin
+        M1[i] = replaceinds(M1[i], s .=> s̃)
+        M2[i] = replaceinds(M2[i], s .=> s̃)
+      end
     end
   end
   return M1, M2
 end
 
-function map_common_siteinds(f::Function, M1::AbstractMPS,
-                                          M2::AbstractMPS)
-  return map_common_siteinds!(f, copy(M1), copy(M2))
-end
-
-function map_unique_siteinds!(f::Function, M1::AbstractMPS,
-                                           M2::AbstractMPS)
+function map!(f::Function, ::typeof(siteinds), ::typeof(uniqueinds),
+              M1::AbstractMPS, M2::AbstractMPS)
   length(M1) != length(M2) && error("MPOs/MPSs must be the same length")
   for i in eachindex(M1)
-    s = unique_siteind(M1, M2, i)
-    if !isnothing(s)
-      s̃ = f(s)
-      M1[i, set_limits = false] = replaceind(M1[i], s, s̃)
+    s = siteinds(uniqueinds, M1, M2, i)
+    if !isempty(s)
+      @preserve_ortho M1 begin
+        M1[i] = replaceinds(M1[i], s .=> f.(s))
+      end
     end
   end
   return M1
 end
 
-function map_unique_siteinds(f::Function, M1::AbstractMPS,
-                                        M2::AbstractMPS)
-  return map_unique_siteinds!(f, copy(M1), M2)
+function map(f::Function, ffilter::typeof(siteinds),
+             fsubset::Union{typeof(commoninds), typeof(uniqueinds)},
+             M1::AbstractMPS, M2::AbstractMPS)
+  return map!(f, ffilter, fsubset, copy(M1), copy(M2))
 end
 
 function hassameinds(::typeof(siteinds), M1::AbstractMPS, M2::AbstractMPS)
@@ -569,93 +563,71 @@ end
 
 for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
               :replacetags, :settags)
-  fname_linkinds = Symbol(fname, :_linkinds)
-  fname_linkinds_inplace = Symbol(fname_linkinds, :!)
-  fname_common_siteinds = Symbol(fname, :_common_siteinds)
-  fname_common_siteinds_inplace = Symbol(fname_common_siteinds, :!)
-  fname_unique_siteinds = Symbol(fname, :_unique_siteinds)
-  fname_unique_siteinds_inplace = Symbol(fname_unique_siteinds, :!)
-
+  fname! = Symbol(fname, :!)
   @eval begin
     """
-        $($fname_linkinds)(M::MPS, args...; kwargs...)
-
-        $($fname_linkinds)(M::MPO, args...; kwargs...)
+        $($fname)(linkinds, M::MPS, args...; kwargs...)
+        $($fname)(linkinds, M::MPO, args...; kwargs...)
 
     Apply $($fname) to all link indices of an MPS/MPO, returning a new MPS/MPO.
     
     The ITensors of the MPS/MPO will be a view of the storage of the original ITensors.
     """
-    $fname_linkinds(M::AbstractMPS, args...; kwargs...) =
-      map_linkinds(i -> $fname(i, args...; kwargs...), M)
+    $fname(ffilter::typeof(linkinds), M::AbstractMPS, args...; kwargs...) =
+      map(i -> $fname(i, args...; kwargs...), ffilter, M)
 
     """
-        $($fname_linkinds)!(M::MPS, args...; kwargs...)
-
-        $($fname_linkinds)!(M::MPO, args...; kwargs...)
+        $($fname)!(linkinds, M::MPS, args...; kwargs...)
+        $($fname)!(linkinds, M::MPO, args...; kwargs...)
 
     Apply $($fname) to all link indices of the ITensors of an MPS/MPO in-place.
     """
-    $fname_linkinds_inplace(M::AbstractMPS, args...; kwargs...) =
-      map_linkinds!(i -> $fname(i, args...; kwargs...), M)
+    $(fname!)(ffilter::typeof(linkinds), M::AbstractMPS, args...; kwargs...) =
+      map!(i -> $fname(i, args...; kwargs...), ffilter, M)
 
     """
-        $($fname_common_siteinds)(M1::MPO, M2::MPS, args...; kwargs...)
-
-        $($fname_common_siteinds)(M1::MPO, M2::MPO, args...; kwargs...)
+        $($fname)(siteinds, commoninds, M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname)(siteinds, commoninds, M1::MPO, M2::MPO, args...; kwargs...)
 
     Apply $($fname) to the site indices that are shared by `M1` and `M2`.
     
     Returns new MPSs/MPOs. The ITensors of the MPSs/MPOs will be a view of the storage of the original ITensors.
     """
-    function $fname_common_siteinds(M1::AbstractMPS,
-                                    M2::AbstractMPS,
-                                    args...;
-                                    kwargs...)
-      return map_common_siteinds(i -> $fname(i, args...;
-                                             kwargs...), M1, M2)
-    end
+    $fname(ffilter::typeof(siteinds), fsubset::typeof(commoninds), M1::AbstractMPS,
+           M2::AbstractMPS, args...; kwargs...) =
+      map(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
     """
-        $($fname_common_siteinds)!(M1::MPO, M2::MPS, args...; kwargs...)
-
-        $($fname_common_siteinds)!(M1::MPO, M2::MPO, args...; kwargs...)
+        $($fname)!(siteinds, commoninds, M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname)!(siteinds, commoninds, M1::MPO, M2::MPO, args...; kwargs...)
 
     Apply $($fname) to the site indices that are shared by `M1` and `M2`. Returns new MPSs/MPOs.
     
     Modifies the input MPSs/MPOs in-place.
     """
-    $fname_common_siteinds_inplace(M1::AbstractMPS, M2::AbstractMPS,
-                                   args...; kwargs...) =
-      map_common_siteinds!(i -> $fname(i, args...; kwargs...), M1, M2)
+    $(fname!)(ffilter::typeof(siteinds), fsubset::typeof(commoninds), M1::AbstractMPS,
+              M2::AbstractMPS, args...; kwargs...) =
+      map!(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
     """
-        $($fname_unique_siteinds)(M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname)(siteinds, uniqueinds, M1::MPO, M2::MPS, args...; kwargs...)
 
     Apply $($fname) to the site indices of `M1` that are not shared with `M2`. Returns new MPSs/MPOs.
     
     The ITensors of the MPSs/MPOs will be a view of the storage of the original ITensors.
     """
-    function $fname_unique_siteinds(M1::AbstractMPS,
-                                    M2::AbstractMPS,
-                                    args...;
-                                    kwargs...)
-      return map_unique_siteinds(i -> $fname(i, args...;
-                                             kwargs...), M1, M2)
-    end
+    $fname(ffilter::typeof(siteinds), fsubset::typeof(uniqueinds), M1::AbstractMPS,
+                    M2::AbstractMPS, args...; kwargs...) =
+      map(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
     """
-        $($fname_unique_siteinds)!(M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname)!(siteinds, uniqueinds, M1::MPO, M2::MPS, args...; kwargs...)
 
     Apply $($fname) to the site indices of `M1` that are not shared with `M2`. Modifies the input MPSs/MPOs in-place.
     """
-    function $fname_unique_siteinds_inplace(M1::AbstractMPS,
-                                            M2::AbstractMPS,
-                                            args...;
-                                            kwargs...)
-      return map_unique_siteinds!(i -> $fname(i, args...;
-                                              kwargs...), M1, M2)
-    end
+    $(fname!)(ffilter::typeof(siteinds), fsubset::typeof(uniqueinds), M1::AbstractMPS,
+              M2::AbstractMPS, args...; kwargs...) =
+      map!(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
   end
 end
 
@@ -703,7 +675,7 @@ function _log_or_not_dot(M1::MPST, M2::MPST, loginner::Bool;
     throw(DimensionMismatch("inner: mismatched lengths $N and $(length(M2))"))
   end
   M1dag = dag(M1)
-  sim_linkinds!(M1dag)
+  sim!(linkinds, M1dag)
   siteindsM1dag = siteinds(all, M1dag)
   siteindsM2 = siteinds(all, M2)
   if any(n -> length(n) > 1, siteindsM1dag) ||
@@ -771,9 +743,8 @@ For now, `make_inds_match` is only supported for MPSs.
 
 See also `logdot`/`loginner`.
 """
-function dot(M1::MPST, M2::MPST; kwargs...) where {MPST <: AbstractMPS}
-  return _log_or_not_dot(M1, M2, false; kwargs...)
-end
+dot(M1::MPST, M2::MPST; kwargs...) where {MPST <: AbstractMPS} =
+  _log_or_not_dot(M1, M2, false; kwargs...)
 
 """
     logdot(A::MPS, B::MPS; make_inds_match = true)
@@ -900,8 +871,7 @@ println()
       inner(ψ₃, ψ₁) + 2 * inner(ψ₃, ψ₂) + inner(ψ₃, ψ₃)
 ```
 """
-function +(ψ⃗::MPST...;
-           cutoff = 1e-15, kwargs...) where {MPST <: AbstractMPS}
+function +(ψ⃗::MPST...; cutoff = 1e-15, kwargs...) where {MPST <: AbstractMPS}
   Nₘₚₛ = length(ψ⃗)
 
   @assert all(ψᵢ -> length(ψ⃗[1]) == length(ψᵢ), ψ⃗)
@@ -976,8 +946,7 @@ add(A::T, B::T;
 Add multiple MPS/MPO with each other, with some optional
 truncation.
 """
-function Base.sum(ψ⃗::Vector{T};
-                  kwargs...) where {T <: AbstractMPS}
+function sum(ψ⃗::Vector{T}; kwargs...) where {T <: AbstractMPS}
   length(ψ⃗) == 0 && return T()
   length(ψ⃗) == 1 && return A[1]
   return +(ψ⃗...; kwargs...)
@@ -1000,9 +969,7 @@ bond indices is performed. Afterward, tensors
 Either modify in-place with `orthogonalize!` or
 out-of-place with `orthogonalize`.
 """
-function orthogonalize!(M::AbstractMPS,
-                        j::Int;
-                        kwargs...)
+function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
   while leftlim(M) < (j-1)
     (leftlim(M) < 0) && setleftlim!(M, 0)
     b = leftlim(M)+1
@@ -1045,7 +1012,6 @@ end
 
 """
     truncate!(M::MPS; kwargs...)
-
     truncate!(M::MPO; kwargs...)
 
 Perform a truncation of all bonds of an MPS/MPO,
@@ -1069,6 +1035,12 @@ function truncate!(M::AbstractMPS; kwargs...)
     setrightlim!(M, j)
   end
   return M
+end
+
+function truncate(ψ0::AbstractMPS; kwargs...)
+  ψ = copy(ψ0)
+  truncate!(ψ; kwargs...)
+  return ψ
 end
 
 contract(A::AbstractMPS, B::AbstractMPS; kwargs...) =
@@ -1155,15 +1127,9 @@ end
 # TODO: add a version that determines the sites
 # from common site indices of ψ and A
 """
-    setindex!(ψ::Union{MPS, MPO},
-              A::ITensor,
-              r::UnitRange{Int};
-              orthocenter::Int = last(r),
-              perm = nothing,
-              kwargs...)
-
+    setindex!(ψ::Union{MPS, MPO}, A::ITensor, r::UnitRange{Int};
+              orthocenter::Int = last(r), perm = nothing, kwargs...)
     replacesites!([...])
-
     replacesites([...])
 
 Replace the sites in the range `r` with tensors made
@@ -1181,8 +1147,7 @@ Optionally, permute the order of the sites with `perm`.
 """
 function setindex!(ψ::MPST, A::ITensor, r::UnitRange{Int};
                    orthocenter::Integer = last(r),
-                   perm = nothing,
-                   kwargs...) where {MPST <: AbstractMPS}
+                   perm = nothing, kwargs...) where {MPST <: AbstractMPS}
   # Replace the sites of ITensor ψ
   # with the tensor A, splitting up A
   # into MPS tensors
@@ -1275,7 +1240,6 @@ _number_inds(sites) = sum(_number_inds(s) for s in sites)
 
 """
     MPS(A::ITensor, sites; <keyword arguments>)
-
     MPO(A::ITensor, sites; <keyword arguments>)
 
 Construct an MPS/MPO from an ITensor `A` by decomposing it site
@@ -1287,8 +1251,7 @@ by site according to the site indices `sites`.
 - `cutoff`: the desired truncation error at each link.
 - `maxdim`: the maximum link dimension.
 """
-function (::Type{MPST})(A::ITensor, sites;
-                        leftinds = nothing,
+function (::Type{MPST})(A::ITensor, sites; leftinds = nothing,
                         orthocenter::Integer = length(sites),
                         kwargs...) where {MPST <: AbstractMPS}
   N = length(sites)
@@ -1377,8 +1340,7 @@ end
 
 # Helper function for permuting a vector for the 
 # movesites function.
-function _movesite(ns::Vector{Int},
-                   n1n2::Pair{Int, Int})
+function _movesite(ns::Vector{Int}, n1n2::Pair{Int, Int})
   n1, n2 = n1n2
   n1 == n2 && return copy(ns)
   r = n1:n2-1
@@ -1406,8 +1368,8 @@ end
 # TODO: make a permutesites(::MPS/MPO, perm)
 # function that takes a permutation of the sites
 # p(1:N) for N sites
-function movesites(ψ::AbstractMPS,
-                   nsns′::Vector{Pair{Int, Int}}; kwargs...)
+function movesites(ψ::AbstractMPS, nsns′::Vector{Pair{Int, Int}};
+                   kwargs...)
   ns = first.(nsns′)
   ns′ = last.(nsns′)
   ψ = copy(ψ)
@@ -1424,8 +1386,7 @@ function movesites(ψ::AbstractMPS,
 end
 
 # TODO: call the Vector{Pair{Int, Int}} version
-function movesites(ψ::AbstractMPS,
-                   ns, ns′; kwargs...)
+function movesites(ψ::AbstractMPS, ns, ns′; kwargs...)
   ψ = copy(ψ)
   N = length(ns)
   @assert N == length(ns′)
@@ -1458,12 +1419,8 @@ to false.
 # Arguments
 - `move_sites_back::Bool = true`: after the ITensor is applied to the MPS or MPO, move the sites of the MPS or MPO back to their original locations.
 """
-function product(o::ITensor,
-                 ψ::AbstractMPS,
-                 ns = findsites(ψ, o);
-                 move_sites_back::Bool = true,
-                 apply_dag::Bool = false,
-                 kwargs...)
+function product(o::ITensor, ψ::AbstractMPS, ns = findsites(ψ, o);
+                 move_sites_back::Bool = true, apply_dag::Bool = false, kwargs...)
   N = length(ns)
   ns = sort(ns)
 

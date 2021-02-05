@@ -5,17 +5,26 @@
 
 BroadcastStyle(::Type{<:IndexSet}) = Style{IndexSet}()
 
+BroadcastStyle(::AbstractArrayStyle{0}, b::Style{IndexSet}) = b
+BroadcastStyle(a::AbstractArrayStyle, ::Style{IndexSet}) = a
+BroadcastStyle(a::Style{Tuple}, ::Style{IndexSet}) = a
+
+instantiate(bc::Broadcasted{Style{IndexSet}, Nothing}) = bc
+function instantiate(bc::Broadcasted{Style{IndexSet}})
+  check_broadcast_axes(bc.axes, bc.args...)
+  return bc
+end
+
 broadcastable(t::IndexSet) = t
 
-# This is required for speed and type stability
-# (not sure why, but I guess the default is slow)
-instantiate(bc::Broadcasted{Style{IndexSet}, Nothing}) = bc
+indexset_or_tuple(t::Tuple{Vararg{<:Index}}) = IndexSet(t)
+indexset_or_tuple(t) = t
 
-function Base.copy(bc::Broadcasted{Style{IndexSet}})
-  dim = axes(bc)
-  length(dim) == 1 || throw(DimensionMismatch("IndexSet only supports one dimension"))
-  N = length(dim[1])
-  return IndexSet(ntuple(k -> bc[k], Val(N)))
+@inline function copy(bc::Broadcasted{Style{IndexSet}})
+    dim = axes(bc)
+    length(dim) == 1 || throw(DimensionMismatch("tuple only supports one dimension"))
+    N = length(dim[1])
+    return indexset_or_tuple(ntuple(k -> @inbounds(_broadcast_getindex(bc, k)), Val(N)))
 end
 
 #

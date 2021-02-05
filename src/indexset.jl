@@ -969,8 +969,17 @@ end
 swaptags(is::IndexSet, tags1, tags2, args...; kwargs...) =
   swaptags(fmatch(args...; kwargs...), is, tags1, tags2)
 
-replaceinds(is::IndexSet, rep_inds::Pair{ <: Index, <: Index}...) =
+replaceinds(is::IndexSet, rep_inds::Pair{<: Index, <: Index}...) =
   replaceinds(is, zip(rep_inds...)...)
+
+replaceinds(is::IndexSet, rep_inds::Vector{Pair{<: Index, <: Index}}) =
+  replaceinds(is, rep_inds...)
+
+replaceinds(is::IndexSet, rep_inds::Tuple{Vararg{Pair{<: Index, <: Index}}}) =
+  replaceinds(is, rep_inds...)
+
+replaceinds(is::IndexSet, rep_inds::Pair) =
+  replaceinds(is, Tuple(first(rep_inds)) .=> Tuple(last(rep_inds)))
 
 # Check that the QNs are all the same
 hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))

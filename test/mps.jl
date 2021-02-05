@@ -173,7 +173,7 @@ include(joinpath(pkgdir(ITensors), "examples", "gate_evolution", "qubit.jl"))
   
   @testset "norm MPS" begin
     psi = randomMPS(sites,10)
-    psidag = ITensors.sim_linkinds(dag(psi))
+    psidag = sim(linkinds, dag(psi))
     psi² = ITensor(1)
     for j = 1:N
       psi² *= psidag[j] * psi[j]
@@ -191,7 +191,7 @@ include(joinpath(pkgdir(ITensors), "examples", "gate_evolution", "qubit.jl"))
     for j in 1:N
       psi[j] .*= j
     end
-    psidag = ITensors.sim_linkinds(dag(psi))
+    psidag = sim(linkinds, dag(psi))
     psi² = ITensor(1)
     for j = 1:N
       psi² *= psidag[j] * psi[j]
@@ -633,16 +633,16 @@ end
   @testset "[first]siteind[s](::MPS/MPO, j::Int)" begin
     s = siteinds("S=1/2", 5)
     ψ = randomMPS(s)
-    @test firstsiteind(ψ, 3) == s[3]
+    @test siteind(first, ψ, 3) == s[3]
     @test siteind(ψ, 4) == s[4]
     @test isnothing(siteind(ψ, 4; plev = 1))
     @test siteinds(ψ, 3) == IndexSet(s[3])
     @test siteinds(ψ, 3; plev = 1) == IndexSet()
 
     M = randomMPO(s)
-    @test noprime(firstsiteind(M, 4)) == s[4]
-    @test firstsiteind(M, 4; plev = 0) == s[4]
-    @test firstsiteind(M, 4; plev = 1) == s[4]'
+    @test noprime(siteind(first, M, 4)) == s[4]
+    @test siteind(first, M, 4; plev = 0) == s[4]
+    @test siteind(first, M, 4; plev = 1) == s[4]'
     @test siteind(M, 4) == s[4]
     @test siteind(M, 4; plev = 0) == s[4]
     @test siteind(M, 4; plev = 1) == s[4]'
