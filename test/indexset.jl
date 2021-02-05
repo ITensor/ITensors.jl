@@ -258,11 +258,74 @@ using Compat
   end
 
   @testset "broadcasting" begin
-    I = IndexSet(i, j)
+    x = Index([QN(n) => 1 for n in 0:1], "x")
+    y = Index([QN(n) => 2 for n in 0:1], "y")
+    I = IndexSet(x, y)
+
+    # prime
     J = prime.(I)
-    @test J isa IndexSet
-    @test i' ∈ J
-    @test j' ∈ J
+    @inferred broadcast(prime, I)
+    @test J isa IndexSet{2}
+    @test x' ∈ J
+    @test y' ∈ J
+
+    # prime 2
+    J = prime.(I, 2)
+    @inferred broadcast(prime, I, 2)
+    @test J isa IndexSet{2}
+    @test x'' ∈ J
+    @test y'' ∈ J
+
+    # tag
+    J = addtags.(I, "t")
+    @inferred broadcast(addtags, I, "t")
+    @test J isa IndexSet{2}
+    @test addtags(x, "t") ∈ J
+    @test addtags(y, "t") ∈ J
+
+    # dag
+    J = dag.(I)
+    @inferred broadcast(dag, I)
+    @test J isa IndexSet{2}
+    @test x ∈ J
+    @test y ∈ J
+    @test dir(J[1]) == -dir(I[1])
+    @test dir(J[2]) == -dir(I[2])
+
+    # dir
+    dirsI = dir.(I)
+    @inferred broadcast(dir, I)
+    @test dirsI isa Tuple{ITensors.Arrow,ITensors.Arrow}
+    @test dirsI == (ITensors.Out, ITensors.Out)
+
+    # dims
+    dimsI = dim.(I)
+    @inferred broadcast(dim, I)
+    @test dimsI isa Tuple{Int, Int}
+    @test dimsI == (2, 4)
+
+    # pairs
+    J = prime.(I)
+    pairsI = I .=> J
+    @inferred broadcast(=>, I, J)
+    @test pairsI isa Tuple{<:Pair, <:Pair}
+    @test pairsI == (x => x', y => y')
+
+    pairsI = I .=> 1
+    @inferred broadcast(=>, I, 1)
+    @test pairsI isa Tuple{<:Pair, <:Pair}
+    @test pairsI == (x => 1, y => 1)
+
+    pairsI = I .=> (1, 2)
+    @inferred broadcast(=>, I, (1, 2))
+    @test pairsI isa Tuple{<:Pair, <:Pair}
+    @test pairsI == (x => 1, y => 2)
+
+    pairsI = I .=> [1, 2]
+    @inferred broadcast(=>, I, [1, 2])
+    @test pairsI isa Vector{<:Pair}
+    @test pairsI == [x => 1, y => 2]
+
   end
 end
 

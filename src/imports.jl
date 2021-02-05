@@ -32,6 +32,7 @@ import Base:
   keys,
   lastindex,
   length,
+  map,
   map!,
   ndims,
   push!,
@@ -45,11 +46,13 @@ import Base:
 
 import Base.Broadcast:
   # types
+  AbstractArrayStyle,
   Broadcasted,
   BroadcastStyle,
   DefaultArrayStyle,
   Style,
   # functions
+  _broadcast_getindex,
   broadcasted,
   broadcastable,
   instantiate

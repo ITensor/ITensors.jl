@@ -152,7 +152,7 @@ Get a Vector of IndexSets of all the site indices of M.
 siteinds(M::MPO; kwargs...) = siteinds(all, M; kwargs...)
 
 siteinds(Mψ::Tuple{MPO, MPS}, n::Int; kwargs...) =
-  unique_siteinds(Mψ[1], Mψ[2], n; kwargs...)
+  siteinds(uniqueinds, Mψ[1], Mψ[2], n; kwargs...)
 
 function nsites(Mψ::Tuple{MPO, MPS})
   M, ψ = Mψ
@@ -202,7 +202,7 @@ function dot(y::MPS, A::MPO, x::MPS;
   N = length(A)
   check_hascommoninds(siteinds, A, x)
   ydag = dag(y)
-  sim_linkinds!(ydag)
+  sim!(linkinds, ydag)
   if !hassameinds(siteinds, y, (A, x))
     sAx = siteinds((A, x))
     if any(s -> length(s) > 1, sAx)
@@ -220,9 +220,8 @@ function dot(y::MPS, A::MPO, x::MPS;
     if make_inds_match
       replace_siteinds!(ydag, sAx)
     end
-  else
-    check_hascommoninds(siteinds, A, y)
   end
+  check_hascommoninds(siteinds, A, y)
   O = ydag[1] * A[1] * x[1]
   for j in 2:N
     O = O * ydag[j] * A[j] * x[j]
@@ -402,21 +401,21 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   mindim::Int     = max(get(kwargs,:mindim,1), 1)
   normalize::Bool = get(kwargs, :normalize, false) 
 
-  any(i -> isnothing(i), common_siteinds(A, ψ)) && error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
+  any(i -> isempty(i), siteinds(commoninds, A, ψ)) && error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
 
   # In case A and ψ have the same link indices
-  A = sim_linkinds(A)
+  A = sim(linkinds, A)
 
   ψ_c = dag(ψ)
   A_c = dag(A)
 
   # To not clash with the link indices of A and ψ
-  sim_linkinds!(A_c)
-  sim_linkinds!(ψ_c)
-  sim_common_siteinds!(A_c, ψ_c)
+  sim!(linkinds, A_c)
+  sim!(linkinds, ψ_c)
+  sim!(siteinds, commoninds, A_c, ψ_c)
 
   # A version helpful for making the density matrix
-  simA_c = sim_unique_siteinds(A_c, ψ_c)
+  simA_c = sim(siteinds, uniqueinds, A_c, ψ_c)
 
   # Store the left environment tensors
   E = Vector{ITensor}(undef, n-1)
@@ -430,26 +429,23 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   ρ = E[n-1] * R * simR_c
   l = linkind(ψ, n-1)
   ts = isnothing(l) ? "" : tags(l)
-  s = unique_siteind(A, ψ, n)
-  s̃ = unique_siteind(simA_c, ψ_c, n)
-  Lis = IndexSet(s)
-  Ris = IndexSet(s̃)
-  F = eigen(ρ, Lis, Ris; ishermitian=true, 
-                         tags=ts, 
-                         kwargs...)
+  Lis = siteinds(uniqueinds, A, ψ, n)
+  Ris = siteinds(uniqueinds, simA_c, ψ_c, n)
+  F = eigen(ρ, Lis, Ris; ishermitian = true, 
+                         tags = ts, kwargs...)
   D, U, Ut = F.D, F.V, F.Vt
   l_renorm, r_renorm = F.l, F.r
   ψ_out[n] = Ut
   R = R * dag(Ut) * ψ[n-1] * A[n-1]
   simR_c = simR_c * U * ψ_c[n-1] * simA_c[n-1]
   for j in reverse(2:n-1)
-    s = unique_siteind(A, ψ, j)
-    s̃ = unique_siteind(simA_c, ψ_c, j)
+    s = siteinds(uniqueinds, A, ψ, j)
+    s̃ = siteinds(uniqueinds, simA_c, ψ_c, j)
     ρ = E[j-1] * R * simR_c
     l = linkind(ψ, j-1)
     ts = isnothing(l) ? "" : tags(l)
-    Lis = IndexSet(s, l_renorm)
-    Ris = IndexSet(s̃, r_renorm)
+    Lis = IndexSet(s..., l_renorm)
+    Ris = IndexSet(s̃..., r_renorm)
     F = eigen(ρ, Lis, Ris; ishermitian=true,
                            tags=ts, 
                            kwargs...)
