@@ -13,10 +13,10 @@ function tfimMPO(sites,
   N = length(sites)
   ampo = AutoMPO()
   for j=1:N-1
-    ampo += -1,"Sz",j,"Sz",j+1
+    ampo += -1,"Z",j,"Z",j+1
   end
   for j=1:N
-    ampo += h,"Sx",j
+    ampo += h,"X",j
   end
   # Convert these terms to an MPO tensor network
   return MPO(ampo,sites)
@@ -57,10 +57,10 @@ let
 
 
   let
-    println("\nRunning DMRG for TFIM with h=0.5 (critical point)")
+    println("\nRunning DMRG for TFIM with h=1.0 (critical point)")
     println("================================")
     Sz_observer= DMRGObserver(["Sz"],sites,energy_tol=1E-7)
-    H = tfimMPO(sites,0.5)
+    H = tfimMPO(sites,1.0)
     energy, psi = dmrg(H,psi0,sweeps,observer=Sz_observer)
 
     for (i,Szs) in enumerate(measurements(Sz_observer)["Sz"])

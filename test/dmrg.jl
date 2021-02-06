@@ -90,8 +90,8 @@ using ITensors, Test, Random
 
     ampo = AutoMPO()
     for j = 1:N
-      j < N && add!(ampo,-1.0,"Sx",j,"Sx",j+1)
-      add!(ampo,-0.5,"Sz",j)
+      j < N && add!(ampo,-1.0,"X",j,"X",j+1)
+      add!(ampo,-1.0,"Z",j)
     end
     H = MPO(ampo,sites)
 
@@ -103,7 +103,7 @@ using ITensors, Test, Random
 
     # Exact energy for transverse field Ising model
     # with open boundary conditions at criticality
-    energy_exact = 0.25 - 0.25/sin(π/(2*(2*N+1)))
+    energy_exact = 1.0 - 1.0/sin(π/(4*N+2))
     @test abs((energy-energy_exact)/energy_exact) < 1e-4
   end
 
