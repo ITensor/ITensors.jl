@@ -27,6 +27,14 @@ state(st::SiteType"S=1/2", ::StateName"↓") =
   state(st, StateName("Dn"))
 
 function op!(Op::ITensor,
+             ::OpName"Z",
+             ::SiteType"S=1/2",
+             s::Index)
+  Op[s'=>1, s=>1] = 1.0
+  Op[s'=>2, s=>2] = -1.0
+end
+
+function op!(Op::ITensor,
              ::OpName"Sz",
              ::SiteType"S=1/2",
              s::Index)
@@ -74,12 +82,21 @@ op!(Op::ITensor,
     s::Index) = op!(Op, OpName("S-"), t, s)
 
 function op!(Op::ITensor,
+             ::OpName"X",
+             ::SiteType"S=1/2",
+             s::Index)
+  Op[s'=>1, s=>2] = 1.0
+  Op[s'=>2, s=>1] = 1.0
+end
+
+function op!(Op::ITensor,
              ::OpName"Sx",
              ::SiteType"S=1/2",
              s::Index)
   Op[s'=>1, s=>2] = 0.5
   Op[s'=>2, s=>1] = 0.5
 end
+
 
 op!(Op::ITensor,
     ::OpName"Sˣ",
@@ -98,6 +115,15 @@ op!(Op::ITensor,
     ::OpName"iSʸ",
     t::SiteType"S=1/2",
     s::Index) = op!(Op, OpName("iSy"), t, s)
+
+function op!(Op::ITensor,
+             ::OpName"Y",
+             ::SiteType"S=1/2",
+             s::Index)
+  complex!(Op)
+  Op[s'=>1, s=>2] = -1.0im
+  Op[s'=>2, s=>1] = 1.0im
+end
 
 function op!(Op::ITensor,
              ::OpName"Sy",
