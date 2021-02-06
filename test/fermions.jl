@@ -365,6 +365,23 @@ using ITensors,
     @test norm(B-TB) < 1E-8
   end
 
+  @testset "Orthogonalize of Product MPS" begin
+    N = 3
+
+    sites = siteinds("Fermion",N;conserve_qns=true)
+
+    state = [1 for n=1:N]
+    state[1] = 2
+    state[2] = 2
+    psi = productMPS(sites,state)
+    psi_fluxes = [flux(psi[n]) for n=1:N]
+
+    psi_orig = copy(psi)
+    orthogonalize!(psi,1)
+    @test inner(psi_orig,psi) ≈ 1.0
+    @test inner(psi,psi_orig) ≈ 1.0
+  end
+
   #@testset "Dag regression tests" begin
   #  @testset "Dag regression test #1" begin
   #    s = Index(QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1,tags="s")
@@ -632,6 +649,22 @@ using ITensors,
     D,U = eigen(T;ishermitian=true,cutoff)
 
     @test norm(prime(U)*D*dag(U)-T) < 1E-10
+  end
+
+  @testset "Contraction Regression Test" begin
+    s = siteinds("Fermion",3;conserve_qns=true)
+    l = Index(QN("Nf",1,-1)=>1;tags="l")
+
+    q2 = QN("Nf",2,-1)
+    q0 = QN("Nf",0,-1)
+
+    T1 = ITensor(q2,s[1],s[2],l)
+    T1[s[1]=>1,s[2]=>2,l=>1] = 1.0
+
+    T2 = ITensor(q0,dag(l),s[3])
+    T2[dag(l)=>1,s[3]=>2] = 1.0
+
+    @test norm(T1*T2 - T2*T1) < 1E-10
   end
 
 
