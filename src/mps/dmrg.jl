@@ -171,6 +171,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
   for sw=1:nsweep(sweeps)
     sw_time = @elapsed begin
+    maxtruncerr = 0.0
 
     for (b, ha) in sweepnext(N)
 
@@ -223,6 +224,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
                                        which_decomp = which_decomp,
                                        svd_alg = svd_alg)
       end
+      maxtruncerr = max(maxtruncerr,spec.truncerr)
 
       @debug_check begin
         checkflux(psi)
@@ -232,23 +234,25 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
       if outputlevel >= 2
         @printf("Sweep %d, half %d, bond (%d,%d) energy=%.12f\n",sw,ha,b,b+1,energy)
-        @printf("(Truncated using cutoff=%.1E maxdim=%d mindim=%d)\n",
+        @printf("  Truncated using cutoff=%.1E maxdim=%d mindim=%d\n",
                 cutoff(sweeps, sw),maxdim(sweeps, sw),mindim(sweeps, sw))
-        @printf("Trunc. err=%.1E, bond dimension %d\n\n",spec.truncerr,dim(linkind(psi,b)))
+        @printf("  Trunc. err=%.2E, bond dimension %d\n",spec.truncerr,dim(linkind(psi,b)))
       end
 
-      measure!(obs; energy = energy,
-                    psi = psi,
+      sweep_is_done = (b==1 && ha==2)
+      measure!(obs; energy=energy,
+                    psi=psi,
                     bond = b,
                     sweep = sw,
                     half_sweep = ha,
-                    spec = spec,
-                    outputlevel = outputlevel)
+                    spec=spec,
+                    outputlevel=outputlevel,
+                    sweep_is_done=sweep_is_done)
     end
     end
     if outputlevel >= 1
-      @printf("After sweep %d energy=%.12f maxlinkdim=%d time=%.3f\n",
-              sw, energy, maxlinkdim(psi), sw_time)
+      @printf("After sweep %d energy=%.12f maxlinkdim=%d maxerr=%.2E time=%.3f\n",
+              sw, energy, maxlinkdim(psi), maxtruncerr, sw_time)
     end
     isdone = checkdone!(obs;energy=energy,
                             psi=psi,
