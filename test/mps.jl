@@ -1404,6 +1404,16 @@ end
     @test_throws ErrorException inner(ψ2, ψ2')
     @test_throws ErrorException inner(ψ2, H2, ψ2)
   end
+
+  @testset "orothogonalize! on MPS with no link indices" begin
+    N = 4
+    s = siteinds("S=1/2", N)
+    ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
+    ϕ = orthogonalize(ψ, 2)
+    distance(ψ::MPS, ϕ::MPS) = sqrt(abs(inner(ψ, ψ) + inner(ϕ, ϕ) - 2 * real(inner(ψ, ϕ))))
+    @test ortho_lims(ϕ) == 2:2
+    @test distance(ψ, ϕ) ≈ 0 atol = 1e-7
+  end
 end
 
 nothing

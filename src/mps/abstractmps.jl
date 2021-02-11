@@ -974,7 +974,12 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
     (leftlim(M) < 0) && setleftlim!(M, 0)
     b = leftlim(M)+1
     linds = uniqueinds(M[b], M[b+1])
-    ltags = tags(linkind(M, b))
+    lb = linkind(M, b)
+    if !isnothing(lb)
+      ltags = tags(lb)
+    else
+      ltags = TagSet("Link,l=$b")
+    end
     L,R = factorize(M[b], linds; tags = ltags, kwargs...)
     M[b] = L
     M[b+1] *= R
@@ -991,7 +996,12 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
     (rightlim(M) > (N+1)) && setrightlim!(M,N+1)
     b = rightlim(M)-2
     rinds = uniqueinds(M[b+1],M[b])
-    ltags = tags(linkind(M, b))
+    lb = linkind(M, b)
+    if !isnothing(lb)
+      ltags = tags(lb)
+    else
+      ltags = TagSet("Link,l=$b")
+    end
     L,R = factorize(M[b+1], rinds; tags = ltags, kwargs...)
     M[b+1] = L
     M[b] *= R
