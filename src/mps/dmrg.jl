@@ -240,24 +240,24 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
       end
 
       sweep_is_done = (b==1 && ha==2)
-      measure!(obs; energy,
-                    psi,
+      measure!(obs; energy=energy,
+                    psi=psi,
                     bond = b,
                     sweep = sw,
                     half_sweep = ha,
-                    spec,
-                    outputlevel,
-                    sweep_is_done)
+                    spec=spec,
+                    outputlevel=outputlevel,
+                    sweep_is_done=sweep_is_done)
     end
     end
     if outputlevel >= 1
       @printf("After sweep %d energy=%.12f maxlinkdim=%d maxerr=%.2E time=%.3f\n",
               sw, energy, maxlinkdim(psi), maxtruncerr, sw_time)
     end
-    isdone = checkdone!(obs;energy,
-                            psi,
+    isdone = checkdone!(obs;energy=energy,
+                            psi=psi,
                             sweep=sw,
-                            outputlevel) 
+                            outputlevel=outputlevel) 
 
     isdone && break
   end
