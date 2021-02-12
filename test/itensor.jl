@@ -944,6 +944,15 @@ end
       @test Q*dag(prime(Q,q)) ≈ δ(SType,q,q') atol=1e-13
     end
 
+    @testset "Regression test for QR decomposition of an ITensor with all indices on one side" begin
+      a = Index(2, "a")
+      b = Index(2, "b")
+      Vab = randomITensor(a, b)
+      Q, R = qr(Vab, (a, b))
+      @test hasinds(Q, (a, b))
+      @test Vab ≈ Q * R atol = 1e-13
+    end
+
     @testset "Test polar decomposition of an ITensor" begin
       U,P,u = polar(A,(k,l))
       @test A ≈ U*P atol=1e-13

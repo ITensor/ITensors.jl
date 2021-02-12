@@ -118,6 +118,8 @@ end
 MPO(A::ITensor, sites::Vector{<:Index}; kwargs...) =
   MPO(A, IndexSet.(prime.(sites), dag.(sites)); kwargs...)
 
+# TODO: write this in a better way with density matrices instead
+# of contracting the MPS tensors individually at the beginning
 """
     MPO(A::MPS; kwargs...)
 
@@ -125,12 +127,7 @@ For an MPS `|A>`, make the MPO `|A><A|`.
 Keyword arguments like `cutoff` can be used to
 truncate the resulting MPO.
 """
-function MPO(A::MPS; kwargs...)
-  N = length(A)
-  M = MPO([A[n]' * dag(A[n]) for n in 1:N])
-  truncate!(M; kwargs...)
-  return M
-end
+MPO(A::MPS; kwargs...) = truncate!(MPO(prime.(A) .* dag.(A)); kwargs...)
 
 # XXX: rename originalsiteind?
 """

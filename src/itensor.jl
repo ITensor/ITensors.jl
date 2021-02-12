@@ -1178,7 +1178,6 @@ randn!(T::ITensor) = randn!(tensor(T))
 
 """
     randomITensor([::Type{ElT <: Number} = Float64, ]inds)
-
     randomITensor([::Type{ElT <: Number} = Float64, ]inds::Index...)
 
 Construct an ITensor with type `ElT` and indices `inds`, whose elements are normally distributed random numbers. If the element type is not specified, it defaults to `Float64`.

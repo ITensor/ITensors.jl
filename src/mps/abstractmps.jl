@@ -196,8 +196,71 @@ function linkind(M::AbstractMPS, j::Integer)
   return commonind(M[j], M[j+1])
 end
 
+"""
+    linkinds(M::MPS, j::Integer)
+    linkinds(M::MPO, j::Integer)
+
+Get all of the link or bond Indices connecting the
+MPS or MPO tensor on site j to site j+1.
+"""
+function linkinds(M::AbstractMPS, j::Integer)
+  N = length(M)
+  (j ≥ length(M) || j < 1) && return IndexSet()
+  return commoninds(M[j], M[j+1])
+end
+
 linkinds(ψ::AbstractMPS) =
   [linkind(ψ, b) for b in 1:length(ψ)-1]
+
+linkinds(::typeof(all), ψ::AbstractMPS) =
+  IndexSet[linkinds(ψ, b) for b in 1:length(ψ)-1]
+
+#
+# Internal tools for checking for default link tags
+#
+
+"""
+    ITensors.defaultlinktags(b::Integer)
+
+Default link tags for link index connecting sites `b` to `b+1`.
+"""
+defaultlinktags(b::Integer) = TagSet("Link,l=$b")
+
+"""
+    ITensors.hasdefaultlinktags(ψ::MPS/MPO)
+
+Return true if the MPS/MPO has default link tags.
+"""
+function hasdefaultlinktags(ψ::AbstractMPS)
+  ls = linkinds(all, ψ)
+  for (b, lb) in enumerate(ls)
+    if length(lb) ≠ 1 || tags(only(lb)) ≠ defaultlinktags(b)
+      return false
+    end
+  end
+  return true
+end
+
+"""
+    ITensors.insertlinkinds(ψ::MPS/MPO)
+
+If any link indices are missing, insert default ones.
+"""
+function insertlinkinds(ψ::AbstractMPS)
+  ψ = copy(ψ)
+  space = hasqns(ψ) ? [QN() => 1] : 1
+  linkind(b::Integer) = Index(space; tags = defaultlinktags(b))
+  for b in 1:length(ψ)-1
+    if length(linkinds(ψ, b)) == 0
+      lb = ITensor(1, linkind(b))
+      @preserve_ortho ψ begin
+        ψ[b] = ψ[b] * lb
+        ψ[b+1] = ψ[b+1] * dag(lb)
+      end
+    end
+  end
+  return ψ
+end
 
 """
     dense(::MPS/MPO)
@@ -634,7 +697,6 @@ end
 
 """
     maxlinkdim(M::MPS)
-
     maxlinkdim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
@@ -651,7 +713,6 @@ end
 
 """
     linkdim(M::MPS, j::Integer)
-
     linkdim(M::MPO, j::Integer)
 
 Get the dimension of the link or bond connecting the
@@ -777,7 +838,6 @@ loginner(M1::MPST, M2::MPST; kwargs...) where {MPST <: AbstractMPS} =
 
 """
     norm(A::MPS)
-
     norm(A::MPO)
 
 Compute the norm of the MPS or MPO.
@@ -788,7 +848,6 @@ norm(M::AbstractMPS) = sqrt(dot(M, M))
 
 """
     lognorm(A::MPS)
-
     lognorm(A::MPO)
 
 Compute the logarithm of the norm of the MPS or MPO. 
@@ -798,6 +857,17 @@ This is useful for larger MPS/MPO that are not gauged, where in the limit of lar
 See also `norm` and `loginner`/`logdot`.
 """
 lognorm(M::AbstractMPS) = 0.5 * logdot(M, M)
+
+"""
+    dist(A::MPS, B::MPS)
+    dist(A::MPO, B::MPO)
+
+Compute the Euclidean distance between to MPS/MPO. Equivalent to `norm(A - B)` but done more efficiently as:
+`sqrt(abs(inner(A, A) + inner(B, B) - 2 * real(inner(A, B))))`.
+
+Note that if the MPS/MPO are not normalized, the normalizations may diverge and this may not be accurate. For those cases, likely it is best to use `norm(A - B)` directly (or `lognorm(A - B)` if you expect the result may be very large).
+"""
+dist(A::AbstractMPS, B::AbstractMPS) = sqrt(abs(inner(A, A) + inner(B, B) - 2 * real(inner(A, B))))
 
 function site_combiners(ψ::AbstractMPS)
   N = length(ψ)
@@ -983,7 +1053,6 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
     L,R = factorize(M[b], linds; tags = ltags, kwargs...)
     M[b] = L
     M[b+1] *= R
-
     setleftlim!(M,b)
     if rightlim(M) < leftlim(M)+2
       setrightlim!(M, leftlim(M)+2)

@@ -257,6 +257,8 @@ function eigen(A::ITensor; kwargs...)
   return eigen(A, Lis, Ris; kwargs...)
 end
 
+# TODO: write this in terms of combiners and then
+# call qr on the order-2 tensors directly
 function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
   Lis = commoninds(A,IndexSet(Linds...))
