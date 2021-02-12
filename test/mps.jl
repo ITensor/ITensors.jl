@@ -1429,6 +1429,26 @@ end
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
   end
 
+  @testset "MPO from MPS with no link indices" begin
+    N = 4
+    s = siteinds("S=1/2", N)
+    ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
+    ρ = MPO(ψ)
+    @test ITensors.hasnolinkinds(ρ)
+    @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
+    @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
+  end
+
+  @testset "Truncate MPO with no link indices" begin
+    N = 4
+    s = siteinds("S=1/2", N)
+    M = MPO([itensor(randn(ComplexF64, 2, 2), s[n]', dag(s[n])) for n in 1:N])
+    @test ITensors.hasnolinkinds(M)
+    Mt = truncate(M; cutoff = 1e-15)
+    @test ITensors.hasdefaultlinktags(Mt)
+    @test norm(M - Mt) ≈ 0 atol = 1e-12
+  end
+
 end
 
 nothing

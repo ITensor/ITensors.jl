@@ -242,6 +242,34 @@ function hasdefaultlinktags(ψ::AbstractMPS)
 end
 
 """
+    ITensors.eachlinkinds(ψ::MPS/MPO)
+
+Return an iterator over each of the sets of link indices of the MPS/MPO.
+"""
+eachlinkinds(ψ::AbstractMPS) = (linkinds(ψ, n) for n in eachindex(ψ)[1:end-1])
+
+"""
+    ITensors.eachsiteinds(ψ::MPS/MPO)
+
+Return an iterator over each of the sets of site indices of the MPS/MPO.
+"""
+eachsiteinds(ψ::AbstractMPS) = (siteinds(ψ, n) for n in eachindex(ψ))
+
+"""
+    ITensors.hasnolinkinds(ψ::MPS/MPO)
+
+Return true if the MPS/MPO has no link indices.
+"""
+function hasnolinkinds(ψ::AbstractMPS)
+  for l in eachlinkinds(ψ)
+    if length(l) > 0
+      return false
+    end
+  end
+  return true
+end
+
+"""
     ITensors.insertlinkinds(ψ::MPS/MPO)
 
 If any link indices are missing, insert default ones.

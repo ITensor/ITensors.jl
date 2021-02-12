@@ -127,7 +127,13 @@ For an MPS `|A>`, make the MPO `|A><A|`.
 Keyword arguments like `cutoff` can be used to
 truncate the resulting MPO.
 """
-MPO(A::MPS; kwargs...) = truncate!(MPO(prime.(A) .* dag.(A)); kwargs...)
+function MPO(A::MPS; kwargs...)
+  M = MPO(prime.(A) .* dag.(A))
+  if !hasnolinkinds(M) #any(l -> length(l) > 0, linkinds(all, M))
+    truncate!(M; kwargs...)
+  end
+  return M
+end
 
 # XXX: rename originalsiteind?
 """
