@@ -107,14 +107,32 @@ using ITensors,
   @testset "Eigen QN flux regression test" begin
     cutoff = 1E-12
     N = 4
-    s = siteinds("S=1",N;conserve_qns=true)
-    A = randomITensor(QN("Sz",2),s[1],s[2],s[3])
 
-    R = A*dag(prime(A,s[1],s[2]))
-    F = eigen(R,(s[1],s[2]),(s[1]',s[2]'))
+    let
+      s = siteinds("S=1",N;conserve_qns=true)
+      A = randomITensor(QN("Sz",2),s[1],s[2],s[3])
 
-    @test flux(F.Vt)==QN("Sz",0)
+      R = A*dag(prime(A,s[1],s[2]))
+      F = eigen(R,(s[1],s[2]),(s[1]',s[2]'))
+
+      @test flux(F.Vt)==QN("Sz",0)
+    end
+
+    let
+      s = siteinds("Fermion",N;conserve_qns=true)
+      A = randomITensor(QN("Nf",2,-1),s[1],s[2],s[3])
+      U,R = factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff,ortho="left")
+
+      #
+      # flux(U) was failing to be zero
+      # unless certain QN-specific "patch"
+      # code fixed the indices resulting
+      # from NDTensors eigen
+      #
+      @test flux(U)==QN("Nf",0,-1)
+    end
   end
+
 end
 
 nothing
