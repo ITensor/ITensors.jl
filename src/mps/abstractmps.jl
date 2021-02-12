@@ -537,29 +537,23 @@ map(f::Function, M::AbstractMPS; set_limits::Bool = true) =
 
 for fname in (:dag, :prime, :setprime, :noprime, :addtags, :removetags,
               :replacetags, :settags)
-  fname_bang = Symbol(fname, :!)
+  fname! = Symbol(fname, :!)
 
   @eval begin
     """
-        $($fname)(M::MPS, args...; kwargs...)
-        $($fname)(M::MPO, args...; kwargs...)
+        $($fname)[!](M::MPS, args...; kwargs...)
+        $($fname)[!](M::MPO, args...; kwargs...)
 
     Apply $($fname) to all ITensors of an MPS/MPO, returning a new MPS/MPO.
 
-    The ITensors of the MPS/MPO will be a view of the storage of the original ITensors.
+    The ITensors of the MPS/MPO will be a view of the storage of the original ITensors. Alternatively apply the function in-place.
     """
     $fname(M::AbstractMPS, args...;
            set_limits::Bool = false, kwargs...) =
       map(m -> $fname(m, args...; kwargs...), M;
           set_limits = set_limits)
 
-    """
-        $($fname_bang)(M::MPS, args...; kwargs...)
-        $($fname_bang)(M::MPO, args...; kwargs...)
-
-    Apply $($fname) to all ITensors of an MPS/MPO in-place.
-    """
-    $fname_bang(M::AbstractMPS, args...;
+    $(fname!)(M::AbstractMPS, args...;
                 set_limits::Bool = false, kwargs...) =
       map!(m -> $fname(m, args...; kwargs...), M;
            set_limits = set_limits)
@@ -588,11 +582,13 @@ end
 
 function map!(f::Function, ::typeof(linkinds), M::AbstractMPS)
   for i in eachindex(M)[1:end-1]
-    l = linkind(M, i)
-    if !isnothing(l)
+    l = linkinds(M, i)
+    if !isempty(l)
       l̃ = f(l)
-      M[i, set_limits = false] = replaceind(M[i], l, l̃)
-      M[i+1, set_limits = false] = replaceind(M[i+1], l, l̃)
+      @preserve_ortho M begin
+        M[i] = replaceinds(M[i], l, l̃)
+        M[i+1] = replaceinds(M[i+1], l, l̃)
+      end
     end
   end
   return M
@@ -600,13 +596,27 @@ end
 
 map(f::Function, ::typeof(linkinds), M::AbstractMPS) = map!(f, linkinds, copy(M))
 
+function map!(f::Function, ::typeof(siteinds), M::AbstractMPS)
+  for i in eachindex(M)
+    s = siteinds(M, i)
+    if !isempty(s)
+      @preserve_ortho M begin
+        M[i] = replaceinds(M[i], s, f(s))
+      end
+    end
+  end
+  return M
+end
+
+map(f::Function, ::typeof(siteinds), M::AbstractMPS) = map!(f, siteinds, copy(M))
+
 function map!(f::Function, ::typeof(siteinds), ::typeof(commoninds),
               M1::AbstractMPS, M2::AbstractMPS)
   length(M1) != length(M2) && error("MPOs/MPSs must be the same length")
   for i in eachindex(M1)
     s = siteinds(commoninds, M1, M2, i)
     if !isempty(s)
-      s̃ = f.(s)
+      s̃ = f(s)
       @preserve_ortho (M1, M2) begin
         M1[i] = replaceinds(M1[i], s .=> s̃)
         M2[i] = replaceinds(M2[i], s .=> s̃)
@@ -623,7 +633,7 @@ function map!(f::Function, ::typeof(siteinds), ::typeof(uniqueinds),
     s = siteinds(uniqueinds, M1, M2, i)
     if !isempty(s)
       @preserve_ortho M1 begin
-        M1[i] = replaceinds(M1[i], s .=> f.(s))
+        M1[i] = replaceinds(M1[i], s .=> f(s))
       end
     end
   end
@@ -657,8 +667,8 @@ for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
   fname! = Symbol(fname, :!)
   @eval begin
     """
-        $($fname)(linkinds, M::MPS, args...; kwargs...)
-        $($fname)(linkinds, M::MPO, args...; kwargs...)
+        $($fname)[!](linkinds, M::MPS, args...; kwargs...)
+        $($fname)[!](linkinds, M::MPO, args...; kwargs...)
 
     Apply $($fname) to all link indices of an MPS/MPO, returning a new MPS/MPO.
     
@@ -667,18 +677,26 @@ for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
     $fname(ffilter::typeof(linkinds), M::AbstractMPS, args...; kwargs...) =
       map(i -> $fname(i, args...; kwargs...), ffilter, M)
 
-    """
-        $($fname)!(linkinds, M::MPS, args...; kwargs...)
-        $($fname)!(linkinds, M::MPO, args...; kwargs...)
-
-    Apply $($fname) to all link indices of the ITensors of an MPS/MPO in-place.
-    """
     $(fname!)(ffilter::typeof(linkinds), M::AbstractMPS, args...; kwargs...) =
       map!(i -> $fname(i, args...; kwargs...), ffilter, M)
 
     """
-        $($fname)(siteinds, commoninds, M1::MPO, M2::MPS, args...; kwargs...)
-        $($fname)(siteinds, commoninds, M1::MPO, M2::MPO, args...; kwargs...)
+        $($fname)[!](siteinds, M::MPS, args...; kwargs...)
+        $($fname)[!](siteinds, M::MPO, args...; kwargs...)
+
+    Apply $($fname) to all site indices of an MPS/MPO, returning a new MPS/MPO.
+    
+    The ITensors of the MPS/MPO will be a view of the storage of the original ITensors.
+    """
+    $fname(ffilter::typeof(siteinds), M::AbstractMPS, args...; kwargs...) =
+      map(i -> $fname(i, args...; kwargs...), ffilter, M)
+
+    $(fname!)(ffilter::typeof(siteinds), M::AbstractMPS, args...; kwargs...) =
+      map!(i -> $fname(i, args...; kwargs...), ffilter, M)
+
+    """
+        $($fname)[!](siteinds, commoninds, M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname)[!](siteinds, commoninds, M1::MPO, M2::MPO, args...; kwargs...)
 
     Apply $($fname) to the site indices that are shared by `M1` and `M2`.
     
@@ -688,20 +706,12 @@ for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
            M2::AbstractMPS, args...; kwargs...) =
       map(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
-    """
-        $($fname)!(siteinds, commoninds, M1::MPO, M2::MPS, args...; kwargs...)
-        $($fname)!(siteinds, commoninds, M1::MPO, M2::MPO, args...; kwargs...)
-
-    Apply $($fname) to the site indices that are shared by `M1` and `M2`. Returns new MPSs/MPOs.
-    
-    Modifies the input MPSs/MPOs in-place.
-    """
     $(fname!)(ffilter::typeof(siteinds), fsubset::typeof(commoninds), M1::AbstractMPS,
               M2::AbstractMPS, args...; kwargs...) =
       map!(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
     """
-        $($fname)(siteinds, uniqueinds, M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname)[!](siteinds, uniqueinds, M1::MPO, M2::MPS, args...; kwargs...)
 
     Apply $($fname) to the site indices of `M1` that are not shared with `M2`. Returns new MPSs/MPOs.
     
@@ -711,11 +721,6 @@ for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
                     M2::AbstractMPS, args...; kwargs...) =
       map(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
-    """
-        $($fname)!(siteinds, uniqueinds, M1::MPO, M2::MPS, args...; kwargs...)
-
-    Apply $($fname) to the site indices of `M1` that are not shared with `M2`. Modifies the input MPSs/MPOs in-place.
-    """
     $(fname!)(ffilter::typeof(siteinds), fsubset::typeof(uniqueinds), M1::AbstractMPS,
               M2::AbstractMPS, args...; kwargs...) =
       map!(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
