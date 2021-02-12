@@ -523,17 +523,11 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
     replaceind!(res[i+1], ci, new_ci)
     @assert commonind(res[i], res[i+1]) != commonind(A[i], A[i+1])
   end
-  sites_A = Index[]
-  sites_B = Index[]
-  for (AA, BB) in zip(data(A_), data(B_))
-    sda = setdiff(filterinds(AA; tags="Site"), filterinds(BB; tags="Site"))
-    sdb = setdiff(filterinds(BB; tags="Site"), filterinds(AA; tags="Site"))
-    length(sda) != 1 && error("In contract(::MPO, ::MPO), MPOs must have exactly one shared site index")
-    length(sdb) != 1 && error("In contract(::MPO, ::MPO), MPOs must have exactly one shared site index")
-    push!(sites_A, sda[1])
-    push!(sites_B, sdb[1])
-  end
-  res[1] = emptyITensor(sites_A[1], sites_B[1], commonind(res[1], res[2]))
+
+  sites_A = siteinds(uniqueinds, A, B)
+  sites_B = siteinds(uniqueinds, B, A)
+
+  res[1] = emptyITensor(sites_A[1]..., sites_B[1]..., commonind(res[1], res[2]))
   for i in 1:N-2
     if i == 1
       clust = A_[i] * B_[i]
@@ -552,8 +546,8 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
                               mindim=mindim)
     mid = dag(commonind(res[i], nfork))
     res[i+1] = emptyITensor(mid,
-                           sites_A[i+1],
-                           sites_B[i+1],
+                           sites_A[i+1]...,
+                           sites_B[i+1]...,
                            commonind(res[i+1], res[i+2]))
   end
   clust = if N > 2
@@ -567,9 +561,9 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   A_ind = uniqueind(filterinds(A_[N-1]; tags = "Site"),
                     filterinds(B_[N-1]; tags = "Site"))
   Lis = if N > 2
-    IndexSet(A_ind, sites_B[N-1], commonind(res[N-2], res[N-1]))
+    IndexSet(A_ind, sites_B[N-1]..., commonind(res[N-2], res[N-1]))
   else
-    IndexSet(A_ind, sites_B[N-1])
+    IndexSet(A_ind, sites_B[N-1]...)
   end
   U, V = factorize(nfork, Lis; 
                    ortho="right",
