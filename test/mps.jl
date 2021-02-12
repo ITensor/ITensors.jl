@@ -1424,7 +1424,7 @@ end
     s = siteinds("S=1/2", N)
     ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
     ρ = MPO(ψ)
-    @test ITensors.hasdefaultlinktags(ρ)
+    @test ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
   end

@@ -129,7 +129,7 @@ truncate the resulting MPO.
 """
 function MPO(A::MPS; kwargs...)
   M = MPO(prime.(A) .* dag.(A))
-  if !hasnolinkinds(M) #any(l -> length(l) > 0, linkinds(all, M))
+  if !hasnolinkinds(M)
     truncate!(M; kwargs...)
   end
   return M
