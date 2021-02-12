@@ -196,8 +196,99 @@ function linkind(M::AbstractMPS, j::Integer)
   return commonind(M[j], M[j+1])
 end
 
+"""
+    linkinds(M::MPS, j::Integer)
+    linkinds(M::MPO, j::Integer)
+
+Get all of the link or bond Indices connecting the
+MPS or MPO tensor on site j to site j+1.
+"""
+function linkinds(M::AbstractMPS, j::Integer)
+  N = length(M)
+  (j ≥ length(M) || j < 1) && return IndexSet()
+  return commoninds(M[j], M[j+1])
+end
+
 linkinds(ψ::AbstractMPS) =
   [linkind(ψ, b) for b in 1:length(ψ)-1]
+
+linkinds(::typeof(all), ψ::AbstractMPS) =
+  IndexSet[linkinds(ψ, b) for b in 1:length(ψ)-1]
+
+#
+# Internal tools for checking for default link tags
+#
+
+"""
+    ITensors.defaultlinktags(b::Integer)
+
+Default link tags for link index connecting sites `b` to `b+1`.
+"""
+defaultlinktags(b::Integer) = TagSet("Link,l=$b")
+
+"""
+    ITensors.hasdefaultlinktags(ψ::MPS/MPO)
+
+Return true if the MPS/MPO has default link tags.
+"""
+function hasdefaultlinktags(ψ::AbstractMPS)
+  ls = linkinds(all, ψ)
+  for (b, lb) in enumerate(ls)
+    if length(lb) ≠ 1 || tags(only(lb)) ≠ defaultlinktags(b)
+      return false
+    end
+  end
+  return true
+end
+
+"""
+    ITensors.eachlinkinds(ψ::MPS/MPO)
+
+Return an iterator over each of the sets of link indices of the MPS/MPO.
+"""
+eachlinkinds(ψ::AbstractMPS) = (linkinds(ψ, n) for n in eachindex(ψ)[1:end-1])
+
+"""
+    ITensors.eachsiteinds(ψ::MPS/MPO)
+
+Return an iterator over each of the sets of site indices of the MPS/MPO.
+"""
+eachsiteinds(ψ::AbstractMPS) = (siteinds(ψ, n) for n in eachindex(ψ))
+
+"""
+    ITensors.hasnolinkinds(ψ::MPS/MPO)
+
+Return true if the MPS/MPO has no link indices.
+"""
+function hasnolinkinds(ψ::AbstractMPS)
+  for l in eachlinkinds(ψ)
+    if length(l) > 0
+      return false
+    end
+  end
+  return true
+end
+
+"""
+    ITensors.insertlinkinds(ψ::MPS/MPO)
+
+If any link indices are missing, insert default ones.
+"""
+function insertlinkinds(ψ::AbstractMPS)
+  ψ = copy(ψ)
+  space = hasqns(ψ) ? [QN() => 1] : 1
+  linkind(b::Integer) = Index(space; tags = defaultlinktags(b))
+  for b in 1:length(ψ)-1
+    if length(linkinds(ψ, b)) == 0
+      lb = ITensor(1, linkind(b))
+      @preserve_ortho ψ begin
+        ψ[b] = ψ[b] * lb
+        ψ[b+1] = ψ[b+1] * dag(lb)
+      end
+    end
+  end
+  return ψ
+end
 
 """
     dense(::MPS/MPO)
@@ -446,29 +537,23 @@ map(f::Function, M::AbstractMPS; set_limits::Bool = true) =
 
 for fname in (:dag, :prime, :setprime, :noprime, :addtags, :removetags,
               :replacetags, :settags)
-  fname_bang = Symbol(fname, :!)
+  fname! = Symbol(fname, :!)
 
   @eval begin
     """
-        $($fname)(M::MPS, args...; kwargs...)
-        $($fname)(M::MPO, args...; kwargs...)
+        $($fname)[!](M::MPS, args...; kwargs...)
+        $($fname)[!](M::MPO, args...; kwargs...)
 
     Apply $($fname) to all ITensors of an MPS/MPO, returning a new MPS/MPO.
 
-    The ITensors of the MPS/MPO will be a view of the storage of the original ITensors.
+    The ITensors of the MPS/MPO will be a view of the storage of the original ITensors. Alternatively apply the function in-place.
     """
     $fname(M::AbstractMPS, args...;
            set_limits::Bool = false, kwargs...) =
       map(m -> $fname(m, args...; kwargs...), M;
           set_limits = set_limits)
 
-    """
-        $($fname_bang)(M::MPS, args...; kwargs...)
-        $($fname_bang)(M::MPO, args...; kwargs...)
-
-    Apply $($fname) to all ITensors of an MPS/MPO in-place.
-    """
-    $fname_bang(M::AbstractMPS, args...;
+    $(fname!)(M::AbstractMPS, args...;
                 set_limits::Bool = false, kwargs...) =
       map!(m -> $fname(m, args...; kwargs...), M;
            set_limits = set_limits)
@@ -497,11 +582,13 @@ end
 
 function map!(f::Function, ::typeof(linkinds), M::AbstractMPS)
   for i in eachindex(M)[1:end-1]
-    l = linkind(M, i)
-    if !isnothing(l)
+    l = linkinds(M, i)
+    if !isempty(l)
       l̃ = f(l)
-      M[i, set_limits = false] = replaceind(M[i], l, l̃)
-      M[i+1, set_limits = false] = replaceind(M[i+1], l, l̃)
+      @preserve_ortho M begin
+        M[i] = replaceinds(M[i], l, l̃)
+        M[i+1] = replaceinds(M[i+1], l, l̃)
+      end
     end
   end
   return M
@@ -509,13 +596,27 @@ end
 
 map(f::Function, ::typeof(linkinds), M::AbstractMPS) = map!(f, linkinds, copy(M))
 
+function map!(f::Function, ::typeof(siteinds), M::AbstractMPS)
+  for i in eachindex(M)
+    s = siteinds(M, i)
+    if !isempty(s)
+      @preserve_ortho M begin
+        M[i] = replaceinds(M[i], s, f(s))
+      end
+    end
+  end
+  return M
+end
+
+map(f::Function, ::typeof(siteinds), M::AbstractMPS) = map!(f, siteinds, copy(M))
+
 function map!(f::Function, ::typeof(siteinds), ::typeof(commoninds),
               M1::AbstractMPS, M2::AbstractMPS)
   length(M1) != length(M2) && error("MPOs/MPSs must be the same length")
   for i in eachindex(M1)
     s = siteinds(commoninds, M1, M2, i)
     if !isempty(s)
-      s̃ = f.(s)
+      s̃ = f(s)
       @preserve_ortho (M1, M2) begin
         M1[i] = replaceinds(M1[i], s .=> s̃)
         M2[i] = replaceinds(M2[i], s .=> s̃)
@@ -532,7 +633,7 @@ function map!(f::Function, ::typeof(siteinds), ::typeof(uniqueinds),
     s = siteinds(uniqueinds, M1, M2, i)
     if !isempty(s)
       @preserve_ortho M1 begin
-        M1[i] = replaceinds(M1[i], s .=> f.(s))
+        M1[i] = replaceinds(M1[i], s .=> f(s))
       end
     end
   end
@@ -566,8 +667,8 @@ for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
   fname! = Symbol(fname, :!)
   @eval begin
     """
-        $($fname)(linkinds, M::MPS, args...; kwargs...)
-        $($fname)(linkinds, M::MPO, args...; kwargs...)
+        $($fname)[!](linkinds, M::MPS, args...; kwargs...)
+        $($fname)[!](linkinds, M::MPO, args...; kwargs...)
 
     Apply $($fname) to all link indices of an MPS/MPO, returning a new MPS/MPO.
     
@@ -576,18 +677,26 @@ for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
     $fname(ffilter::typeof(linkinds), M::AbstractMPS, args...; kwargs...) =
       map(i -> $fname(i, args...; kwargs...), ffilter, M)
 
-    """
-        $($fname)!(linkinds, M::MPS, args...; kwargs...)
-        $($fname)!(linkinds, M::MPO, args...; kwargs...)
-
-    Apply $($fname) to all link indices of the ITensors of an MPS/MPO in-place.
-    """
     $(fname!)(ffilter::typeof(linkinds), M::AbstractMPS, args...; kwargs...) =
       map!(i -> $fname(i, args...; kwargs...), ffilter, M)
 
     """
-        $($fname)(siteinds, commoninds, M1::MPO, M2::MPS, args...; kwargs...)
-        $($fname)(siteinds, commoninds, M1::MPO, M2::MPO, args...; kwargs...)
+        $($fname)[!](siteinds, M::MPS, args...; kwargs...)
+        $($fname)[!](siteinds, M::MPO, args...; kwargs...)
+
+    Apply $($fname) to all site indices of an MPS/MPO, returning a new MPS/MPO.
+    
+    The ITensors of the MPS/MPO will be a view of the storage of the original ITensors.
+    """
+    $fname(ffilter::typeof(siteinds), M::AbstractMPS, args...; kwargs...) =
+      map(i -> $fname(i, args...; kwargs...), ffilter, M)
+
+    $(fname!)(ffilter::typeof(siteinds), M::AbstractMPS, args...; kwargs...) =
+      map!(i -> $fname(i, args...; kwargs...), ffilter, M)
+
+    """
+        $($fname)[!](siteinds, commoninds, M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname)[!](siteinds, commoninds, M1::MPO, M2::MPO, args...; kwargs...)
 
     Apply $($fname) to the site indices that are shared by `M1` and `M2`.
     
@@ -597,20 +706,12 @@ for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
            M2::AbstractMPS, args...; kwargs...) =
       map(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
-    """
-        $($fname)!(siteinds, commoninds, M1::MPO, M2::MPS, args...; kwargs...)
-        $($fname)!(siteinds, commoninds, M1::MPO, M2::MPO, args...; kwargs...)
-
-    Apply $($fname) to the site indices that are shared by `M1` and `M2`. Returns new MPSs/MPOs.
-    
-    Modifies the input MPSs/MPOs in-place.
-    """
     $(fname!)(ffilter::typeof(siteinds), fsubset::typeof(commoninds), M1::AbstractMPS,
               M2::AbstractMPS, args...; kwargs...) =
       map!(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
     """
-        $($fname)(siteinds, uniqueinds, M1::MPO, M2::MPS, args...; kwargs...)
+        $($fname)[!](siteinds, uniqueinds, M1::MPO, M2::MPS, args...; kwargs...)
 
     Apply $($fname) to the site indices of `M1` that are not shared with `M2`. Returns new MPSs/MPOs.
     
@@ -620,11 +721,6 @@ for fname in (:sim, :prime, :setprime, :noprime, :addtags, :removetags,
                     M2::AbstractMPS, args...; kwargs...) =
       map(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
 
-    """
-        $($fname)!(siteinds, uniqueinds, M1::MPO, M2::MPS, args...; kwargs...)
-
-    Apply $($fname) to the site indices of `M1` that are not shared with `M2`. Modifies the input MPSs/MPOs in-place.
-    """
     $(fname!)(ffilter::typeof(siteinds), fsubset::typeof(uniqueinds), M1::AbstractMPS,
               M2::AbstractMPS, args...; kwargs...) =
       map!(i -> $fname(i, args...; kwargs...), ffilter, fsubset, M1, M2)
@@ -634,7 +730,6 @@ end
 
 """
     maxlinkdim(M::MPS)
-
     maxlinkdim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
@@ -651,7 +746,6 @@ end
 
 """
     linkdim(M::MPS, j::Integer)
-
     linkdim(M::MPO, j::Integer)
 
 Get the dimension of the link or bond connecting the
@@ -777,7 +871,6 @@ loginner(M1::MPST, M2::MPST; kwargs...) where {MPST <: AbstractMPS} =
 
 """
     norm(A::MPS)
-
     norm(A::MPO)
 
 Compute the norm of the MPS or MPO.
@@ -788,7 +881,6 @@ norm(M::AbstractMPS) = sqrt(dot(M, M))
 
 """
     lognorm(A::MPS)
-
     lognorm(A::MPO)
 
 Compute the logarithm of the norm of the MPS or MPO. 
@@ -798,6 +890,17 @@ This is useful for larger MPS/MPO that are not gauged, where in the limit of lar
 See also `norm` and `loginner`/`logdot`.
 """
 lognorm(M::AbstractMPS) = 0.5 * logdot(M, M)
+
+"""
+    dist(A::MPS, B::MPS)
+    dist(A::MPO, B::MPO)
+
+Compute the Euclidean distance between to MPS/MPO. Equivalent to `norm(A - B)` but done more efficiently as:
+`sqrt(abs(inner(A, A) + inner(B, B) - 2 * real(inner(A, B))))`.
+
+Note that if the MPS/MPO are not normalized, the normalizations may diverge and this may not be accurate. For those cases, likely it is best to use `norm(A - B)` directly (or `lognorm(A - B)` if you expect the result may be very large).
+"""
+dist(A::AbstractMPS, B::AbstractMPS) = sqrt(abs(inner(A, A) + inner(B, B) - 2 * real(inner(A, B))))
 
 function site_combiners(ψ::AbstractMPS)
   N = length(ψ)
@@ -974,11 +1077,15 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
     (leftlim(M) < 0) && setleftlim!(M, 0)
     b = leftlim(M)+1
     linds = uniqueinds(M[b], M[b+1])
-    ltags = tags(linkind(M, b))
+    lb = linkind(M, b)
+    if !isnothing(lb)
+      ltags = tags(lb)
+    else
+      ltags = TagSet("Link,l=$b")
+    end
     L,R = factorize(M[b], linds; tags = ltags, kwargs...)
     M[b] = L
     M[b+1] *= R
-
     setleftlim!(M,b)
     if rightlim(M) < leftlim(M)+2
       setrightlim!(M, leftlim(M)+2)
@@ -991,7 +1098,12 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
     (rightlim(M) > (N+1)) && setrightlim!(M,N+1)
     b = rightlim(M)-2
     rinds = uniqueinds(M[b+1],M[b])
-    ltags = tags(linkind(M, b))
+    lb = linkind(M, b)
+    if !isnothing(lb)
+      ltags = tags(lb)
+    else
+      ltags = TagSet("Link,l=$b")
+    end
     L,R = factorize(M[b+1], rinds; tags = ltags, kwargs...)
     M[b+1] = L
     M[b] *= R

@@ -42,6 +42,7 @@ import Base:
   similar,
   size,
   summary,
+  truncate,
   zero
 
 import Base.Broadcast:
