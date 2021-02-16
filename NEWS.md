@@ -1,3 +1,11 @@
+ITensors v0.1.39 Release Notes
+==============================
+- Add Pauli X,Y,Z to S=1/2 site type (PR #576) (@emstoudenmire).
+- Add truncation error output to DMRG (PR #577) (@emstoudenmire).
+- Bump StaticArrays version to v1.0 (PR #578) (@mtfishman).
+- Fix orthogonalize when there are missing MPS link indices (PR #579) (@mtfishman). 
+- Simplify MPO * MPO contraction and make more robust for MPOs with multiple site indices per tensor (PR #585) (@mtfishman).
+
 ITensors v0.1.38 Release Notes
 ==============================
 - New MPS/MPO index manipulation interface (PR #575) (@mtfishman).
