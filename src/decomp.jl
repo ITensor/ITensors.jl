@@ -245,6 +245,12 @@ function eigen(A::ITensor; kwargs...)
   return eigen(A, Lis, Ris; kwargs...)
 end
 
+noinds_error_message(decomp::String) = "$decomp without any input indices is currently not defined. In the future it may be defined as performing a $decomp decomposition treating the ITensor as a matrix from the primed to the unprimed indices."
+
+qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
+
+# TODO: write this in terms of combiners and then
+# call qr on the order-2 tensors directly
 function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
   Lis = commoninds(A,IndexSet(Linds...))
@@ -258,6 +264,8 @@ function qr(A::ITensor, Linds...; kwargs...)
   q = settags(q,tags)
   return Q,R,q
 end
+
+polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
 
 # TODO: allow custom tags in internal indices?
 function polar(A::ITensor, Linds...; kwargs...)
@@ -338,6 +346,8 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
   end
   return L, R, spec
 end
+
+factorize(A::ITensor; kwargs...) = error(noinds_error_message("factorize"))
 
 """
     factorize(A::ITensor, Linds::Index...; <keyword arguments>)

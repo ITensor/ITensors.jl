@@ -118,6 +118,8 @@ end
 MPO(A::ITensor, sites::Vector{<:Index}; kwargs...) =
   MPO(A, IndexSet.(prime.(sites), dag.(sites)); kwargs...)
 
+# TODO: write this in a better way with density matrices instead
+# of contracting the MPS tensors individually at the beginning
 """
     MPO(A::MPS; kwargs...)
 
@@ -126,9 +128,10 @@ Keyword arguments like `cutoff` can be used to
 truncate the resulting MPO.
 """
 function MPO(A::MPS; kwargs...)
-  N = length(A)
-  M = MPO([A[n]' * dag(A[n]) for n in 1:N])
-  truncate!(M; kwargs...)
+  M = MPO(prime.(A) .* dag.(A))
+  if !hasnolinkinds(M)
+    truncate!(M; kwargs...)
+  end
   return M
 end
 
@@ -492,6 +495,7 @@ function _contract_naive(A::MPO, ψ::MPS; kwargs...)::MPS
   return ψ_out
 end
 
+# TODO: form density matrices using a trace
 function Base.:*(A::MPO, B::MPO; kwargs...)
   cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
   resp_degen::Bool = get(kwargs, :respect_degenerate, true)
@@ -499,85 +503,30 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   mindim::Int = max(get(kwargs,:mindim,1), 1)
   N = length(A)
   N != length(B) && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
-
-  if N == 1
-    return MPO([A[1] * B[1]])
-  end
-
-  A_ = copy(A)
-  orthogonalize!(A_, 1)
-  B_ = copy(B)
-  orthogonalize!(B_, 1)
-
-  links_A = filterinds.(A.data; tags = "Link")
-  links_B = filterinds.(B.data; tags = "Link")
-
-  res = deepcopy(A_)
-  for i in 1:N-1
-    ci = commonind(res[i], res[i+1])
-    new_ci = sim(ci)
-    replaceind!(res[i], ci, new_ci)
-    replaceind!(res[i+1], ci, new_ci)
-    @assert commonind(res[i], res[i+1]) != commonind(A[i], A[i+1])
-  end
-  sites_A = Index[]
-  sites_B = Index[]
-  for (AA, BB) in zip(data(A_), data(B_))
-    sda = setdiff(filterinds(AA; tags="Site"), filterinds(BB; tags="Site"))
-    sdb = setdiff(filterinds(BB; tags="Site"), filterinds(AA; tags="Site"))
-    length(sda) != 1 && error("In contract(::MPO, ::MPO), MPOs must have exactly one shared site index")
-    length(sdb) != 1 && error("In contract(::MPO, ::MPO), MPOs must have exactly one shared site index")
-    push!(sites_A, sda[1])
-    push!(sites_B, sdb[1])
-  end
-  res[1] = emptyITensor(sites_A[1], sites_B[1], commonind(res[1], res[2]))
+  # Special case for a single site
+  N == 1 && return MPO([A[1] * B[1]])
+  A = orthogonalize(A, 1)
+  B = orthogonalize(B, 1)
+  A = sim(linkinds, A)
+  sA = siteinds(uniqueinds, A, B)
+  sB = siteinds(uniqueinds, B, A)
+  C = MPO(N)
+  lCᵢ = IndexSet()
+  R = ITensor(1)
   for i in 1:N-2
-    if i == 1
-      clust = A_[i] * B_[i]
-    else
-      clust = nfork * A_[i] * B_[i]
-    end
-    lA = commonind(A_[i], A_[i+1])
-    lB = commonind(B_[i], B_[i+1])
-    nfork = emptyITensor(lA, lB, commonind(res[i], res[i+1]))
-    res[i], nfork = factorize(clust,
-                              inds(res[i]),
-                              ortho="left",
-                              tags=tags(lA),
-                              cutoff=cutoff,
-                              maxdim=maxdim,
-                              mindim=mindim)
-    mid = dag(commonind(res[i], nfork))
-    res[i+1] = emptyITensor(mid,
-                           sites_A[i+1],
-                           sites_B[i+1],
-                           commonind(res[i+1], res[i+2]))
+    RABᵢ = R * A[i] * B[i]
+    C[i], R = factorize(RABᵢ, (sA[i]..., sB[i]..., lCᵢ...);
+                        ortho = "left", tags = commontags(linkinds(A, i)),
+                        cutoff = cutoff, maxdim = maxdim, mindim = mindim)
+    lCᵢ = dag(commoninds(C[i], R))
   end
-  clust = if N > 2
-    nfork * A_[N-1] * B_[N-1]
-  else
-    A_[N-1] * B_[N-1]
-  end
-  nfork = clust * A_[N] * B_[N]
-
-  # in case we primed A
-  A_ind = uniqueind(filterinds(A_[N-1]; tags = "Site"),
-                    filterinds(B_[N-1]; tags = "Site"))
-  Lis = if N > 2
-    IndexSet(A_ind, sites_B[N-1], commonind(res[N-2], res[N-1]))
-  else
-    IndexSet(A_ind, sites_B[N-1])
-  end
-  U, V = factorize(nfork, Lis; 
-                   ortho="right",
-                   cutoff=cutoff,
-                   tags="Link,n=$(N-1)",
-                   maxdim=maxdim,
-                   mindim=mindim)
-  res[N-1] = U
-  res[N] = V
-  truncate!(res;kwargs...)
-  return res
+  i = N-1
+  RABᵢ = R * A[i] * B[i] * A[i+1] * B[i+1]
+  C[N-1], C[N] = factorize(RABᵢ, (sA[i]..., sB[i]..., lCᵢ...); 
+                           ortho = "right", tags = commontags(linkinds(A, i)),
+                           cutoff = cutoff, maxdim = maxdim, mindim = mindim)
+  truncate!(C; kwargs...)
+  return C
 end
 
 """

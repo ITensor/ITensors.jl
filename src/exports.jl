@@ -224,6 +224,7 @@ export
   orthogonalize,
   orthogonalize!,
   randomMPO,
+  truncate,
   truncate!,
   unique_siteind,
   unique_siteinds,

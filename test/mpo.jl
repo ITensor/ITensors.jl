@@ -564,6 +564,48 @@ end
     @test_throws ErrorException dmrg(H1, [psi2], psi1, sweeps)
     @test_throws ErrorException dmrg([H1, H2], psi1, sweeps)
   end
+
+  @testset "MPO*MPO contraction with multiple site indices" begin
+    N = 8
+    s = siteinds("S=1/2", N)
+    a = AutoMPO()
+    for j in 1:N-1
+      a .+= 0.5, "S+", j, "S-", j+1
+      a .+= 0.5, "S-", j, "S+", j+1
+      a .+=      "Sz", j, "Sz", j+1
+    end
+    H = MPO(a, s)
+    # Create MPO/MPS with pairs of sites merged
+    H2 = MPO([H[b] * H[b+1] for b in 1:2:N])
+    @test @disable_warn_order prod(H) ≈ prod(H2)
+    HH = H' * H
+    H2H2 = H2' * H2
+    @test @disable_warn_order prod(HH) ≈ prod(H2H2)
+  end
+
+  @testset "MPO*MPO contraction with multiple and combined site indices" begin
+    N = 8
+    s = siteinds("S=1/2", N)
+    a = AutoMPO()
+    for j in 1:N-1
+      a .+= 0.5, "S+", j, "S-", j+1
+      a .+= 0.5, "S-", j, "S+", j+1
+      a .+=      "Sz", j, "Sz", j+1
+    end
+    H = MPO(a, s)
+    HH = setprime(H' * H, 1; plev = 2)
+
+    # Create MPO/MPS with pairs of sites merged
+    H2 = MPO([H[b] * H[b+1] for b in 1:2:N])
+    @test @disable_warn_order prod(H) ≈ prod(H2)
+    s = siteinds(H2; plev = 1)
+    C = combiner.(s; tags = "X")
+    H2 .*= C
+    H2H2 = prime(H2; tags = !ts"X") * dag(H2)
+    @test @disable_warn_order prod(HH) ≈ prod(H2H2)
+  end
+
+
 end
 
 nothing
