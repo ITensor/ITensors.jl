@@ -212,18 +212,6 @@ function eigen(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
   DT, VT, spec = eigen(AT; kwargs...)
   D, VC = itensor(DT), itensor(VT)
 
-  if hasqns(A)
-    d = uniqueind(D)
-    i1, i2 = inds(VC)
-    for b in nzblocks(VC)
-      if flux(VC, b) != QN()
-        new_flux = dir(i1) * flux(i1 => Block(b[1]))
-        setblockqn!(i2, new_flux, b[2])
-        setblockqn!(d, new_flux, b[2])
-      end
-    end
-  end
-
   V = VC * CR
 
   # Set right index tags

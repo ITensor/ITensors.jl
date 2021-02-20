@@ -103,6 +103,18 @@ using ITensors,
     @test_throws ErrorException entropy(Spectrum(nothing, 1.0))
     @test truncerror(Spectrum(nothing, 1.0)) == 1.0
   end
+
+  @testset "Eigen QN flux regression test" begin
+    cutoff = 1E-12
+    N = 4
+    s = siteinds("S=1",N;conserve_qns=true)
+    A = randomITensor(QN("Sz",2),s[1],s[2],s[3])
+
+    R = A*dag(prime(A,s[1],s[2]))
+    F = eigen(R,(s[1],s[2]),(s[1]',s[2]'))
+
+    @test flux(F.Vt)==QN("Sz",0)
+  end
 end
 
 nothing
