@@ -268,17 +268,15 @@ end
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
 
 # TODO: allow custom tags in internal indices?
+# TODO: return the new common indices?
 function polar(A::ITensor, Linds...; kwargs...)
-  Lis = commoninds(A, IndexSet(Linds...))
-  Ris = uniqueinds(A, Lis)
-  Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
-  UT, PT = polar(tensor(A), Lpos, Rpos)
-  U, P = itensor(UT), itensor(PT)
-  u = commoninds(U, P)
-  p = uniqueinds(P, U)
-  replaceinds!(U, u, p')
-  replaceinds!(P, u, p')
-  return U, P, commoninds(U, P)
+  U, S, V = svd(A, Linds...; kwargs...)
+  u = commoninds(S, U)
+  v = commoninds(S, V)
+  Vᵤ′ = replaceinds(V', v' => u)
+  Q = U * Vᵤ′
+  P = dag(Vᵤ′) * S * V
+  return Q, P, commoninds(Q, P)
 end
 
 function factorize_qr(A::ITensor, Linds...; kwargs...)
