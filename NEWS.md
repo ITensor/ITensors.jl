@@ -1,3 +1,9 @@
+ITensors v0.1.40 Release Notes
+==============================
+- Remove eigen QN fix code (simplify ITensors eigen code by handling QNs better in NDTensors eigen) (PR #587) (@emstoudenmire).
+- More general polar decomposition that works with QNs (PR #588) (@mtfishman).
+- Bump to v0.1.28 of NDTensors, which includes some bug fixes for BlockDiag storage and makes ArrayInterface setindex compatiblity more general (NDTensors PR #68) (@mtfishman).
+
 ITensors v0.1.39 Release Notes
 ==============================
 - Add Pauli X,Y,Z to S=1/2 site type (PR #576) (@emstoudenmire).
