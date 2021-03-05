@@ -65,6 +65,12 @@ include("index.jl")
 include("indexset.jl")
 
 #####################################
+# ContractionSequenceOptimization
+#
+include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
+using .ContractionSequenceOptimization
+
+#####################################
 # ITensor
 #
 include("itensor.jl")

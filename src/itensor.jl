@@ -1350,6 +1350,7 @@ end
 
 """
     A::ITensor * B::ITensor
+    contract(A::ITensor, B::ITensor)
 
 Contract ITensors A and B to obtain a new ITensor. This 
 contraction `*` operator finds all matching indices common
@@ -1359,7 +1360,9 @@ indices from matching, their prime level or tags can be
 modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
 """
-function (A::ITensor * B::ITensor)
+(A::ITensor * B::ITensor) = contract(A, B)
+
+function contract(A::ITensor, B::ITensor)
   C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
   return C
 end
@@ -1374,10 +1377,29 @@ function (A::ITensor{0} * B::ITensor{0})
   return (iscombiner(A) || iscombiner(B)) ? _contract(A, B) : ITensor(A[] * B[])
 end
 
-# TODO: define for contraction order optimization
-#*(A1::ITensor,
-#  A2::ITensor,
-#  A3::ITensor, As::ITensor...)
+"""
+    *(As::ITensor...; sequence = contraction_sequence(As))
+    contract(As::ITensor...; sequence = contraction_sequence(As))
+
+Contract the set of ITensors according to the contraction sequence.
+
+The sequence should be provided as a binary tree where the leaves are
+integers `n` specifying the ITensor `As[n]` and branches are accessed
+by indexing with `1` or `2`, i.e. `sequence = Any[Any[1, 3], Any[2, 4]]`.
+"""
+function contract(As::ITensor...; sequence = contraction_sequence(inds.(As)))
+  return _contract(As, sequence)
+end
+
+_contract(As::Tuple{Vararg{ITensor}}, sequence::Int) = As[sequence]
+
+# Given a contraction sequence, contract the tensors recursively according
+# to that sequence.
+function _contract(As::Tuple{Vararg{ITensor}}, sequence)
+  return _contract(_contract(As, sequence[1]), _contract(As, sequence[2]))
+end
+
+*(As::ITensor...; kwargs...) = contract(As...; kwargs...)
 
 # XXX: rename contract!
 function mul!(C::ITensor, A::ITensor, B::ITensor,
