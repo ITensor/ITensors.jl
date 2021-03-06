@@ -651,6 +651,16 @@ using ITensors,
     @test norm(prime(U)*D*dag(U)-T) < 1E-10
   end
 
+  @testset "Factorize Eigen Regression Test" begin
+    N = 3
+    s = siteinds("Fermion",N;conserve_qns=true)
+    A = ITensor(QN("Nf",2,-1),s[1],s[2],s[3])
+    A[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
+
+    U,R = factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
+    @test_broken norm(U*R-A) < 1E-12
+  end
+
   @testset "Contraction Regression Test" begin
     s = siteinds("Fermion",3;conserve_qns=true)
     l = Index(QN("Nf",1,-1)=>1;tags="l")
