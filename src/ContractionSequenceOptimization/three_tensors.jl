@@ -22,12 +22,12 @@ function three_tensor_contraction_sequence(which_sequence::Int)::Vector{Any}
   end
 end
 
-function contraction_sequence(is1, is2, is3)
+function optimized_contraction_sequence(is1, is2, is3)
   N1 = length(is1)
   N2 = length(is2)
   N3 = length(is3)
-  dim2 = _dim(is2)
-  dim3 = _dim(is3)
+  dim2 = dim(is2)
+  dim3 = dim(is3)
   dim11 = 1
   dim12 = 1
   dim31 = 1
@@ -37,20 +37,20 @@ function contraction_sequence(is1, is2, is3)
     if isnothing(n2)
       n3 = findfirst(==(i1), is3)
       if isnothing(n3)
-        dim11 *= _dim(i1)
+        dim11 *= dim(i1)
         continue
       end
-      dim31 *= _dim(i1)
+      dim31 *= dim(i1)
       continue
     end
-    dim12 *= _dim(i1)
+    dim12 *= dim(i1)
   end
   dim23 = 1
   @inbounds for n2 in 1:length(is2)
     i2 = is2[n2]
     n3 = findfirst(==(i2), is3)
     if !isnothing(n3)
-      dim23 *= _dim(i2)
+      dim23 *= dim(i2)
     end
   end
   dim22 = dim2 ÷ (dim12 * dim23)

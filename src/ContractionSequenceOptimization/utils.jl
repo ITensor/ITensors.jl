@@ -7,15 +7,22 @@
 # Contracting index sets and getting costs
 #
 
-# Used for a Vector{Int}, Vector{Index}, or IndexSet
-function _dim(is)
-  isempty(is) && return one(Int)
-  length(is) == 1 && return Int(is)
-  return mapreduce(Int, *, is)
-end
+# TODO: make a type:
+# SBitSet{T <: Unsigned}
+#   data::T
+# end
+#
+# That is like a BitSet/BitVector but with a maximum set size.
+# Aliases such as:
+#
+# const SBitSet64 = SBitSet{UInt64}
+#
+# would be helpful to specify a BitSet with a maximum number of
+# 64 elements in the set.
+# (See https://discourse.julialang.org/t/parse-an-array-of-bits-bitarray-to-an-integer/42361/11).
 
 # `is` could be Vector{Int} for BitSet
-function _dim(is::IndexSetT, ind_dims::Vector) where {IndexSetT <: Union{Vector{Int}, BitSet}}
+function dim(is::IndexSetT, ind_dims::Vector) where {IndexSetT <: Union{Vector{Int}, BitSet}}
   isempty(is) && return one(eltype(inds_dims))
   dim = one(eltype(ind_dims))
   for i in is
@@ -24,7 +31,7 @@ function _dim(is::IndexSetT, ind_dims::Vector) where {IndexSetT <: Union{Vector{
   return dim
 end
 
-function _dim(is::Unsigned, ind_dims::Vector{DimT}) where {DimT}
+function dim(is::Unsigned, ind_dims::Vector{DimT}) where {DimT}
   _isemptyset(is) && return one(eltype(ind_dims))
   dim = one(eltype(ind_dims))
   i = 1
@@ -42,9 +49,9 @@ end
 
 function contraction_cost(indsTᵃ::BitSet, indsTᵇ::BitSet, dims::Vector)
   indsTᵃTᵇ = _symdiff(indsTᵃ, indsTᵇ)
-  dim_a = _dim(indsTᵃ, dims)
-  dim_b = _dim(indsTᵇ, dims)
-  dim_ab = _dim(indsTᵃTᵇ, dims)
+  dim_a = dim(indsTᵃ, dims)
+  dim_b = dim(indsTᵇ, dims)
+  dim_ab = dim(indsTᵃTᵇ, dims)
   # Perform the sqrt first to avoid overflow.
   # Alternatively, use a larger integer type.
   cost = round(Int, sqrt(dim_a) * sqrt(dim_b) * sqrt(dim_ab))
@@ -53,7 +60,7 @@ end
 
 function contraction_cost(indsTᵃ::IndexSetT, indsTᵇ::IndexSetT, dims::Vector) where {IndexSetT <: Unsigned}
   unionTᵃTᵇ = _union(indsTᵃ, indsTᵇ)
-  cost = _dim(unionTᵃTᵇ, dims)
+  cost = dim(unionTᵃTᵇ, dims)
   indsTᵃTᵇ = _setdiff(unionTᵃTᵇ, _intersect(indsTᵃ, indsTᵇ))
   return cost, indsTᵃTᵇ
 end
@@ -178,7 +185,7 @@ function label_dims(::Type{DimT}, is) where {DimT <: Integer}
     @inbounds for n in 1:length(labelsᵢ)
       lₙ = labelsᵢ[n]
       if iszero(dims[lₙ])
-        dims[lₙ] = _dim(isᵢ[n])
+        dims[lₙ] = dim(isᵢ[n])
       end
     end
   end
@@ -278,7 +285,7 @@ function adjacencymatrix(T::Vector, alldims::Vector)
   N = length(T)
   _adjacencymatrix = falses(N, N)
   for nᵢ in 1:N-1, nⱼ in nᵢ+1:N
-    if _dim(_intersect(T[nᵢ], T[nⱼ]), alldims) > 1
+    if dim(_intersect(T[nᵢ], T[nⱼ]), alldims) > 1
       _adjacencymatrix[nᵢ, nⱼ] = _adjacencymatrix[nⱼ, nᵢ] = true
     end
   end

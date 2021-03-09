@@ -81,6 +81,7 @@ function breadth_first_constructive(::Type{TensorSetT},
 end
 
 # Apply breadth_first_constructive to a single disconnected subnetwork
+# Based on: https://arxiv.org/abs/1304.6112 and https://github.com/Jutho/TensorOperations.jl/blob/v3.1.0/src/indexnotation/optimaltree.jl
 function _breadth_first_constructive(::Type{TensorSetT},
                                      Tlabels::Vector,
                                      T::Vector{LabelSetT},
@@ -112,9 +113,11 @@ function _breadth_first_constructive(::Type{TensorSetT},
   # Maybe use the cost of the trivial contraction [4, [3, [2, 1]]]?
   tensordims = Vector{DimT}(undef, n)
   for k in 1:n
-    tensordims[k] = _dim(T[k], alldims)
+    tensordims[k] = dim(T[k], alldims)
   end
-  initialcost = min(maxcost, Base.Checked.checked_mul(maximum(tensordims), minimum(tensordims)))
+  _initialcost, overflow = Base.Checked.mul_with_overflow(maximum(tensordims), minimum(tensordims))
+  _initialcost = overflow ? typemax(DimT) : _initialcost
+  initialcost = min(maxcost, _initialcost)
 
   # Factor to increase the cost cap by each iteration
   costfac = maximum(alldims)
@@ -158,7 +161,7 @@ function _breadth_first_constructive(::Type{TensorSetT},
           cache_a = cache[d][a]
           cache_b = cache[c-d][b]
 
-          if _dim(_intersect(cache_a.inds, cache_b.inds), alldims) < 2
+          if dim(_intersect(cache_a.inds, cache_b.inds), alldims) < 2
             # XXX: For now, ignore outer products contractions.
             # In the future, handle this in a more sophisticated way.
             continue

@@ -11,6 +11,7 @@ using Test
     "itensor_slice.jl",
     "itensor_scalar_contract.jl",
     "itensor_combine_contract.jl",
+    "itensor_contraction_sequence_optimization.jl",
     "broadcast.jl",
     "diagitensor.jl",
     "contract.jl",

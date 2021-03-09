@@ -23,6 +23,12 @@ using StaticArrays
 using TimerOutputs
 
 #####################################
+# ContractionSequenceOptimization
+#
+include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
+using .ContractionSequenceOptimization
+
+#####################################
 # Directory helper functions (useful for
 # running examples)
 #
@@ -63,12 +69,6 @@ include("tagset.jl")
 include("arrow.jl")
 include("index.jl")
 include("indexset.jl")
-
-#####################################
-# ContractionSequenceOptimization
-#
-include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
-using .ContractionSequenceOptimization
 
 #####################################
 # ITensor
