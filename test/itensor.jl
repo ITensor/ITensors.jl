@@ -123,7 +123,7 @@ end
 
     @test M ≈ Matrix(A,i,j)
     @test M' ≈ Matrix(A,j,i)
-    @test_throws MethodError vector(A)
+    @test_throws DimensionMismatch vector(A)
 
     @test size(A,1) == size(M,1) == 2
     @test_throws BoundsError size(A,3)
@@ -154,7 +154,7 @@ end
     end
 
     T3 = randomITensor(i,j,k)
-    @test_throws MethodError Matrix(T3,i,j)
+    @test_throws DimensionMismatch Matrix(T3,i,j)
   end
 
   @testset "To Vector" begin
@@ -178,7 +178,7 @@ end
     end
 
     T2 = randomITensor(i,j)
-    @test_throws MethodError vector(T2)
+    @test_throws DimensionMismatch vector(T2)
   end
 
   @testset "Complex" begin
@@ -814,7 +814,7 @@ end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
       @test A[j=>jj,k=>kk,i=>ii]==digits(SType,ii,jj,kk)
     end
-    @test_throws MethodError A[1]
+    @test_throws DimensionMismatch A[1]
   end
   @testset "Test permute(ITensor,Index...)" begin
     A = randomITensor(SType,i,k,j)

@@ -1,25 +1,25 @@
 
 # TODO: extend type restriction to `IndexT <: Union{<: Index, <: IndexVal}`
-struct IndexSet{N, IndexT <: Index, DataT <: Tuple}
-  data::DataT
+struct IndexSet{IndexT <: Index}
+  data::Tuple{Vararg{IndexT}}
 
-  function IndexSet{N, IndexT, DataT}(data) where {N, IndexT, DataT <: NTuple{N, IndexT}}
+  function IndexSet{IndexT}(data) where {IndexT}
     @debug_check begin
       if !allunique(data)
         error("Trying to create IndexSet with collection of indices $data. Indices must be unique.")
       end
     end
-    return new{N, IndexT, DataT}(data)
+    return new{IndexT}(data)
   end
 
   """
-      IndexSet{Any}()
+      IndexSet()
 
-  Create a special "empty" IndexSet with data `Tuple{}` and `Any` number of indices.
+  Create a special "empty" IndexSet with data `Tuple{}` and any number of indices.
 
   This is used as the IndexSet of an `emptyITensor()`, an ITensor with `NDTensors.Empty` storage and any number of indices.
   """
-  IndexSet{Any}() = new{Any, Union{}, Tuple{}}()
+  IndexSet() = new{Union{}}(())
 end
 
 #
@@ -63,108 +63,61 @@ IndexSet(f::Function, ::Order{N}) where {N} =
   IndexSet(ntuple(f, Val(N)))
 
 # Definition to help with generic code
-const Indices{N, IndexT} = Union{IndexSet{N,
-                                          IndexT,
-                                          NTuple{N, IndexT}},
-                                 NTuple{N, IndexT}}
-
-function (IndexSet{N, IndexT}(inds)::IndexSet{N, IndexT, NTuple{N, IndexT}}) where {N, IndexT}
-  data = NTuple{N, IndexT}(inds)
-  return IndexSet{N, IndexT, NTuple{N, IndexT}}(data)
-end
+const Indices{N, IndexT} = Union{IndexSet{IndexT},
+                                 Tuple{Vararg{IndexT}}}
 
 """
-    IndexSet{N, IndexT}(inds)
-    IndexSet{N, IndexT}(inds::Index...)
+    IndexSet{IndexT}(inds)
+    IndexSet{IndexT}(inds::Index...)
 
 Construct an IndexSet of order N and element type IndexT
 from a collection of indices (any collection that is convertable to a Tuple).
 """
-function IndexSet{N, IndexT}(inds::Index...) where {N, IndexT}
-  return IndexSet{N, IndexT}(inds)
+function IndexSet{IndexT}(inds::Index...) where {IndexT}
+  return IndexSet{IndexT}(inds)
 end
-
-"""
-    IndexSet{N}(inds)
-    IndexSet{N}(inds::Index...)
-
-Construct an IndexSet of order `N` from a collection of indices
-(any collection that is convertable to a Tuple).
-"""
-IndexSet{N}(inds) where {N} =
-  IndexSet{N, eltype(inds)}(inds)
-
-IndexSet{N}(inds::NTuple{N, IndexT}) where {N, IndexT} =
-  IndexSet{N, IndexT, NTuple{N, IndexT}}(inds)
-
-IndexSet{N}(inds::Index...) where {N} = IndexSet{N}(inds)
-
-IndexSet{N}(is::IndexSet{N}) where {N} = is
-
-IndexSet{0}(::Tuple{}) = IndexSet{0, Union{}, Tuple{}}(())
-
-IndexSet{0}() = IndexSet{0}(())
 
 """
     IndexSet(inds)
     IndexSet(inds::Index...)
 
 Construct an IndexSet from a collection of indices
-(any collection that is convertable to a Tuple).
+(any collection that is convertable to a `Tuple`).
 """
-IndexSet(inds) = IndexSet{length(inds)}(inds)
+IndexSet(inds) = IndexSet{eltype(inds)}(inds)
 
-IndexSet(inds::NTuple{N, IndexT}) where {N, IndexT} = IndexSet{N, IndexT, NTuple{N, IndexT}}(inds)
-
-IndexSet(::Tuple{}) = IndexSet{0, Union{}, Tuple{}}(())
-
-IndexSet() = IndexSet(())
+IndexSet(inds::NTuple{N, IndexT}) where {N, IndexT} =
+  IndexSet{IndexT}(inds)
 
 IndexSet(inds::Index...) = IndexSet(inds)
 
 IndexSet(is::IndexSet) = is
 
+IndexSet(::Tuple{}) = IndexSet{Union{}}(())
+
 """
     convert(::Type{IndexSet}, t)
 
-Convert the collection to an IndexSet,
-as long as it can be converted to a Tuple.
+Convert the collection to an `IndexSet`,
+as long as it can be converted to a `Tuple`.
 """
 Base.convert(::Type{IndexSet}, t) = IndexSet(t)
 
 Base.convert(::Type{IndexSet}, is::IndexSet) = is
 
-Base.convert(::Type{IndexSet{N}}, t) where {N} = IndexSet{N}(t)
+Base.convert(::Type{IndexSet{IndexT}}, t) where {IndexT} = IndexSet{IndexT}(t)
 
-Base.convert(::Type{IndexSet{N}}, is::IndexSet{N}) where {N} = is
-
-Base.convert(::Type{IndexSet{N,IndexT}}, t) where {N,IndexT} = IndexSet{N,IndexT}(t)
-
-Base.convert(::Type{IndexSet{N,IndexT}}, is::IndexSet{N,IndexT}) where {N,IndexT} = is
+Base.convert(::Type{IndexSet{IndexT}}, is::IndexSet{IndexT}) where {IndexT} = is
 
 Base.Tuple(is::IndexSet) = Tuple(data(is))
 
 """
     IndexSet(inds::Vector{<:Index})
 
-Convert a Vector of indices to an IndexSet.
-
-Warning: this is not type stable, since a Vector
-is dynamically sized and an IndexSet is statically sized.
-Consider using the constructor `IndexSet{N}(inds::Vector)`.
+Convert a `Vector` of indices to an `IndexSet`.
 """
 IndexSet(inds::Vector{IndexT}) where {IndexT} = IndexSet(tuple(inds...))
 
-"""
-    IndexSet{N}(inds::Vector{<:Index})
-
-Convert a Vector of indices to an IndexSet of size N.
-
-Type stable conversion of a Vector of indices to an IndexSet
-(in contrast to `IndexSet(::Vector{<:Index})`).
-"""
-IndexSet{N}(inds::Vector{IndexT}) where {N, IndexT} =
-  IndexSet{N, IndexT, NTuple{N, IndexT}}(tuple(inds...))
 
 """
     not(inds::Union{IndexSet, Tuple{Vararg{<:Index}}})
@@ -188,25 +141,28 @@ Base.:!(inds::Tuple{Vararg{<:Index}}) = not(inds)
     NDTensors.data(is::IndexSet)
 
 Return the raw storage data for the indices.
-Currently the storage is a Tuple.
+Currently the storage is a `Tuple`.
 
 This is mostly for internal usage, please
 contact us if there is functionality you want
-availabe for IndexSet.
+availabe for `IndexSet`.
 """
 data(is::IndexSet) = is.data
 
 # This is used in type promotion in the Tensor contraction code
 Base.promote_rule(::Type{<:IndexSet},
-                  ::Type{Val{N}}) where {N} = IndexSet{N}
+                  ::Type{Val{N}}) where {N} = IndexSet
 
-NDTensors.ValLength(::Type{<:IndexSet{N}}) where {N} = Val{N}
+#NDTensors.ValLength(::Type{<:IndexSet}) = Val(length(is))
 
-NDTensors.ValLength(::IndexSet{N}) where {N} = Val(N)
+NDTensors.ValLength(s::IndexSet) = Val(length(s))
+function NDTensors._permute(s::T, perm) where {T<:IndexSet}
+  return ntuple(i->s[perm[i]], length(s))
+end
 
-Order(::IndexSet{N}) where {N} = Order(N)
+Order(is::IndexSet) = Order(length(is))
 
-Order(::Type{<:IndexSet{N}}) where {N} = Order(N)
+#Order(::Type{<:IndexSet{N}}) where {N} = Order(N)
 
 # Convert to an Index if there is only one
 # TODO: also define the function `only`
@@ -220,7 +176,7 @@ end
 
 Get the Index of the IndexSet in the dimension n.
 """
-Base.getindex(is::IndexSet, n) = getindex(data(is), n)
+Base.getindex(is::IndexSet, n) = length(is) == 0 ? nothing : getindex(data(is), n)
 
 """
     getindex(is::IndexSet, v::AbstractVector)
@@ -255,14 +211,7 @@ end
 
 The number of indices in the IndexSet.
 """
-Base.length(::IndexSet{N}) where {N} = N
-
-"""
-length(::Type{<:IndexSet})
-
-The number of indices in the IndexSet type.
-"""
-Base.length(::Type{<:IndexSet{N}}) where {N} = N
+Base.length(is::IndexSet) = length(is.data)
 
 """
     size(is::IndexSet)
@@ -284,7 +233,7 @@ like for broadcasting.
 """
 Base.axes(is::IndexSet) = axes(data(is))
 
-NDTensors.dims(is::IndexSet{N}) where {N} = dims(Tuple(is))
+NDTensors.dims(is::IndexSet) = dims(Tuple(is))
 
 NDTensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
 
@@ -296,8 +245,6 @@ of the IndexSet (the total dimension of the space).
 """
 NDTensors.dim(is::IndexSet) = dim(Tuple(is))
 
-NDTensors.dim(is::IndexSet{0}) = 1
-
 NDTensors.dim(is::Tuple{Vararg{<:Index}}) = prod(dims(is))
 
 """
@@ -306,6 +253,14 @@ NDTensors.dim(is::Tuple{Vararg{<:Index}}) = prod(dims(is))
 Get the dimension of the Index n of the IndexSet.
 """
 NDTensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
+
+"""
+    dim(is::NTuple{N, <:Index}, n::Int)
+
+Get the dimension of the Index n of the `NTuple`.
+"""
+NDTensors.dim(is::NTuple{N, <:Index}, pos::Int) where {N} = dim(is[pos])
+
 
 """
     dag(is::IndexSet)
@@ -350,23 +305,22 @@ Base.lastindex(is::IndexSet) = length(is)
 
 Get the element type of the IndexSet.
 """
-Base.eltype(is::IndexSet{<: Any, IndexT}) where {IndexT} = IndexT
+Base.eltype(is::IndexSet{IndexT}) where {IndexT} = IndexT
 
-Base.eltype(::Type{<: IndexSet{<: Any,
-                               IndexT}}) where {IndexT} = IndexT
+Base.eltype(::Type{<: IndexSet{IndexT}}) where {IndexT} = IndexT
 
 # Needed for findfirst (I think)
-Base.keys(is::IndexSet{N}) where {N} = 1:N
+Base.keys(is::IndexSet) = 1:length(is)
 
 # This is to help with some generic programming in the Tensor
 # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
 # only known thing for dispatch is a concrete type such
 # as IndexSet{4})
 NDTensors.similar_type(::Type{<:IndexSet},
-                       ::Val{N}) where {N} = IndexSet{N}
+                       ::Val{N}) where {N} = IndexSet
 
 NDTensors.similar_type(::Type{<:IndexSet},
-                       ::Type{Val{N}}) where {N} = IndexSet{N}
+                       ::Type{Val{N}}) where {N} = IndexSet
 
 """
     sim(is::IndexSet)
@@ -557,11 +511,11 @@ Specify the number of output indices with `Order(N)`.
 """
 function Base.setdiff(f::Function,
                       ::Order{N},
-                      A::IndexSet{<:Any, IndexT},
+                      A::IndexSet{IndexT},
                       B::IndexSet...) where {N, IndexT}
   r = mutable_storage(Order{N}, IndexT)
   setdiff!(f, r, A, B...)
-  return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(r))
+  return IndexSet{IndexT}(Tuple(r))
 end
 
 function firstsetdiff(f::Function,
@@ -601,11 +555,11 @@ mutable_storage(::Type{Order{N}},
 
 function Base.intersect(f::Function,
                         ::Order{N},
-                        A::IndexSet{<:Any, IndexT},
+                        A::IndexSet{IndexT},
                         B::IndexSet) where {N, IndexT}
   R = mutable_storage(Order{N}, IndexT)
   intersect!(f, R, A, B)
-  return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(R))
+  return IndexSet{IndexT}(Tuple(R))
 end
 
 Base.intersect(O::Order,
@@ -698,7 +652,7 @@ Base.filter(is::IndexSet, tags::String; kwargs...) =
 
 function Base.filter!(f::Function,
                       r,
-                      is::IndexSet{<:Any, IndexT}) where {IndexT}
+                      is::IndexSet{IndexT}) where {IndexT}
   N = length(r)
   j = 1
   for i in is
@@ -714,12 +668,12 @@ end
 
 function Base.filter(f::Function,
                      O::Order{N},
-                     is::IndexSet{<:Any, IndexT}) where {N, IndexT}
+                     is::IndexSet{IndexT}) where {N, IndexT}
   #t = filter(f, Tuple(is))
   #return IndexSet{N, IndexT, NTuple{N, IndexT}}(t)
   r = mutable_storage(Order{N}, IndexT)
   filter!(f, r, is)
-  return IndexSet{N, IndexT, NTuple{N, IndexT}}(Tuple(r))
+  return IndexSet{IndexT}(Tuple(r))
 end
 
 Base.filter(O::Order, is::IndexSet, args...; kwargs...) =
@@ -1002,8 +956,10 @@ end
 replaceind(is::IndexSet, i1::Index, i2::Index) =
   replaceinds(is, (i1,), (i2,))
 
-replaceind(is::IndexSet, i1::Index, i2::IndexSet{1}) =
-  replaceinds(is, (i1,), i2)
+function replaceind(is::IndexSet, i1::Index, i2::IndexSet)
+    length(i2) != 1 && throw(ArgumentError("cannot use replaceind with an IndexSet of length $(length(i2))"))
+    replaceinds(is, (i1,), i2)
+end
 
 replaceind(is::IndexSet, rep_i::Pair{ <: Index, <: Index}) =
   replaceinds(is, rep_i)
@@ -1015,7 +971,8 @@ swapind(is::IndexSet, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
 removeqns(is::IndexSet) = is
 
-function permute(is1::IndexSet{N}, is2::IndexSet{N}) where {N}
+function permute(is1::IndexSet, is2::IndexSet)
+  length(is1) != length(is2) && throw(ArgumentError("length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))"))
   perm = NDTensors.getperm(is1, is2)
   return NDTensors.permute(is1, perm)
 end
@@ -1024,9 +981,10 @@ end
 # Helper functions for contracting ITensors
 #
 
-function compute_contraction_labels(Ais::IndexSet{NA},
-                                    Bis::IndexSet{NB}) where {NA,NB}
+function compute_contraction_labels(Ais::IndexSet, Bis::IndexSet)
   have_qns = hasqns(Ais) && hasqns(Bis)
+  NA = length(Ais)
+  NB = length(Bis)
   Alabels = MVector{NA,Int}(ntuple(_->0,Val(NA)))
   Blabels = MVector{NB,Int}(ntuple(_->0,Val(NB)))
 
@@ -1054,9 +1012,12 @@ function compute_contraction_labels(Ais::IndexSet{NA},
   return (Tuple(Alabels),Tuple(Blabels))
 end
 
-function compute_contraction_labels(Cis::IndexSet{NC},
-                                    Ais::IndexSet{NA},
-                                    Bis::IndexSet{NB}) where {NC,NA,NB}
+function compute_contraction_labels(Cis::IndexSet,
+                                    Ais::IndexSet,
+                                    Bis::IndexSet)
+  NA = length(Ais)
+  NB = length(Bis)
+  NC = length(Cis)
   Alabels,Blabels = compute_contraction_labels(Ais, Bis)
   Clabels = MVector{NC,Int}(ntuple(_->0,Val(NC)))
   for i = 1:NC
@@ -1114,12 +1075,9 @@ push(is::IndexSet,
 NDTensors.push(is::IndexSet,
              i::Index) = push(is, i)
 
-push(is::IndexSet{0},
-     i::Index) = IndexSet(i)
-
 # Overload the unexported NDTensors version
-NDTensors.push(is::IndexSet{0},
-             i::Index) = push(is, i)
+#NDTensors.push(is::IndexSet{0},
+#             i::Index) = push(is, i)
 
 """
     pushfirst(is::IndexSet, i::Index)
@@ -1132,13 +1090,6 @@ pushfirst(is::IndexSet,
 
 # Overload the unexported NDTensors version
 NDTensors.pushfirst(is::IndexSet,
-                  i::Index) = pushfirst(is, i)
-
-pushfirst(is::IndexSet{0},
-          i::Index) = IndexSet(i)
-
-# Overload the unexported NDTensors version
-NDTensors.pushfirst(is::IndexSet{0},
                   i::Index) = pushfirst(is, i)
 
 """
@@ -1192,8 +1143,8 @@ NDTensors.getindices(is::IndexSet, I...) = getindices(is, I...)
 
 Return a new IndexSet with indices `setdir(is[i], dirs[i])`.
 """
-function setdirs(is::IndexSet{N}, dirs) where {N}
-  return IndexSet(ntuple(i -> setdir(is[i], dirs[i]), Val(N)))
+function setdirs(is::IndexSet, dirs)
+  return IndexSet(ntuple(i -> setdir(is[i], dirs[i]), Val(length(is))))
 end
 
 """
@@ -1212,7 +1163,7 @@ Return a tuple of the directions of the indices `inds` in
 the IndexSet `is`, in the order they are found in `inds`.
 """
 function dirs(is1::IndexSet, inds)
-  return ntuple(i -> dir(is1, inds[i]), Val(length(inds)))
+  return ntuple(i -> dir(is1, inds[i]), length(inds))
 end
 
 """
@@ -1220,9 +1171,7 @@ end
 
 Return a tuple of the directions of the indices `is`.
 """
-function dirs(is::IndexSet{N}) where {N}
-  return ntuple(i -> dir(is[i]), Val(N))
-end
+dirs(is::IndexSet) = ntuple(i -> dir(is[i]), length(is))
 
 hasqns(is::IndexSet) = any(hasqns,is)
 
@@ -1245,9 +1194,7 @@ end
 A tuple of the number of blocks in each
 dimension.
 """
-function NDTensors.nblocks(inds::IndexSet{N}) where {N}
-  return ntuple(i->nblocks(inds,i),Val(N))
-end
+NDTensors.nblocks(inds::IndexSet) = ntuple(i->nblocks(inds,i),length(inds))
 
 function NDTensors.nblocks(inds::NTuple{N,<:Index}) where {N}
   return nblocks(IndexSet(inds))
@@ -1262,8 +1209,8 @@ end
 
 # TODO: turn this into an iterator instead
 # of returning a Vector
-function eachdiagblock(inds::IndexSet{N}) where {N}
-  return [ntuple(_->i,Val(N)) for i in 1:ndiagblocks(inds)]
+function eachdiagblock(inds::IndexSet)
+  return [ntuple(_->i,length(inds)) for i in 1:ndiagblocks(inds)]
 end
 
 """

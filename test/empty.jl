@@ -49,8 +49,8 @@ using ITensors,
     E = emptyITensor(Any)
 
     @test isnothing(flux(E))
-    @test order(E) == Any
-    @test_throws ErrorException E[i' => 1, i => 3] = 0
+    @test order(E) == 0
+    @test_throws BoundsError E[i' => 1, i => 3] = 0
 
     A = randomITensor(i', dag(i))
     E += A

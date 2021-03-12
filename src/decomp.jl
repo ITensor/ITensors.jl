@@ -6,9 +6,9 @@ ITensor factorization type for a truncated singular-value
 decomposition, returned by `svd`.
 """
 struct TruncSVD{N1,N2}
-  U::ITensor{N1}
-  S::ITensor{2}
-  V::ITensor{N2}
+  U::ITensor
+  S::ITensor
+  V::ITensor
   spec::Spectrum
   u::Index
   v::Index
@@ -121,7 +121,7 @@ function svd(A::ITensor, Linds...; kwargs...)
   u = settags(u,utags)
   v = settags(v,vtags)
 
-  return TruncSVD(U,S,V,spec,u,v)
+  return TruncSVD{ndims(U), ndims(V)}(U,S,V,spec,u,v)
 end
 
 
@@ -132,9 +132,9 @@ ITensor factorization type for a truncated eigenvalue
 decomposition, returned by `eigen`.
 """
 struct TruncEigen{N}
-  D::ITensor{2}
-  V::ITensor{N}
-  Vt::ITensor{N}
+  D::ITensor
+  V::ITensor
+  Vt::ITensor
   spec::Spectrum
   l::Index
   r::Index
@@ -148,17 +148,18 @@ iterate(E::TruncEigen, ::Val{:l}) = (E.l, Val(:r))
 iterate(E::TruncEigen, ::Val{:r}) = (E.r, Val(:done))
 iterate(E::TruncEigen, ::Val{:done}) = nothing
 
-function eigen(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
+function eigen(A::ITensor, Linds, Rinds; kwargs...)
   @debug_check begin
     if hasqns(A)
       @assert flux(A) == QN()
     end
   end
 
-  NL = length(Linds)
-  NR = length(Rinds)
-  NL != NR && error("Must have equal number of left and right indices")
-  N != NL + NR && error("Number of left and right indices must add up to total number of indices")
+  N   = ndims(A)
+  NL  = length(Linds)
+  NR  = length(Rinds)
+  NL != NR      && error("Must have equal number of left and right indices")
+  N  != NL + NR && error("Number of left and right indices must add up to total number of indices")
 
   ishermitian::Bool = get(kwargs, :ishermitian, false)
 
@@ -236,7 +237,7 @@ function eigen(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
     end
   end
 
-  return TruncEigen(D, V, Vt, spec, l, r)
+  return TruncEigen{ndims(V)}(D, V, Vt, spec, l, r)
 end
 
 function eigen(A::ITensor; kwargs...)
