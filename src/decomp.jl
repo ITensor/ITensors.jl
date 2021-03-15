@@ -1,11 +1,11 @@
 
 """
-    TruncSVD{N}
+    TruncSVD
 
 ITensor factorization type for a truncated singular-value 
 decomposition, returned by `svd`.
 """
-struct TruncSVD{N1,N2}
+struct TruncSVD
   U::ITensor
   S::ITensor
   V::ITensor
@@ -121,17 +121,17 @@ function svd(A::ITensor, Linds...; kwargs...)
   u = settags(u,utags)
   v = settags(v,vtags)
 
-  return TruncSVD{ndims(U), ndims(V)}(U,S,V,spec,u,v)
+  return TruncSVD(U,S,V,spec,u,v)
 end
 
 
 """
-    TruncEigen{N}
+    TruncEigen
 
 ITensor factorization type for a truncated eigenvalue 
 decomposition, returned by `eigen`.
 """
-struct TruncEigen{N}
+struct TruncEigen
   D::ITensor
   V::ITensor
   Vt::ITensor
@@ -237,7 +237,7 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
     end
   end
 
-  return TruncEigen{ndims(V)}(D, V, Vt, spec, l, r)
+  return TruncEigen(D, V, Vt, spec, l, r)
 end
 
 function eigen(A::ITensor; kwargs...)
