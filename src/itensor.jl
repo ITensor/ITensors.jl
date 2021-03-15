@@ -207,13 +207,18 @@ has the same indices.
 """
 itensor(T::Tensor) = itensor(store(T), inds(T))
 
+const ValCacheLength = 100
+const ValCache = Dict([n=>Val(n) for n in 0:ValCacheLength])
+_NTuple(::Val{N}, v::Vector{T}) where {N, T} = ntuple(n -> v[n], Val(N))
+_Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v)], v)
+
 """
     tensor(::ITensor)
 
 Convert the ITensor to a Tensor that shares the same
 storage and indices as the ITensor.
 """
-tensor(A::ITensor) = tensor(store(A), inds(A))
+tensor(A::ITensor) = tensor(store(A), _Tuple(inds(A).data))
 
 """
     ITensor([::Type{ElT} = Float64, ]inds)
@@ -836,17 +841,11 @@ hassameinds(A, B) =
 # intersect
 """
     commoninds(A, B; kwargs...)
-    commoninds(::Order{N}, A, B; kwargs...)
 
 Return an IndexSet with indices that are common between the indices of `A` and `B` (the set intersection, similar to `Base.intersect`).
-
-Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
 commoninds(A...; kwargs...) =
   IndexSet(intersect(itensor2inds.(A)...; kwargs...))
-
-commoninds(::Order{N}, A...; kwargs...) where {N} =
-  intersect(Order(N), itensor2inds.(A)...; kwargs...)
 
 # firstintersect
 """
@@ -862,17 +861,11 @@ commonind(A...; kwargs...) =
 # symdiff
 """
     noncommoninds(A, B; kwargs...)
-    noncommoninds(::Order{N}, A, B; kwargs...)
 
 Return an IndexSet with indices that are not common between the indices of `A` and `B` (the symmetric set difference, similar to `Base.symdiff`).
-
-Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
 noncommoninds(A...; kwargs...) =
   IndexSet(symdiff(itensor2inds.(A)...; kwargs...)...)
-
-noncommoninds(::Order{N}, A...; kwargs...) where {N} =
-  IndexSet{N}(symdiff(itensor2inds.(A)...; kwargs...)...)
 
 # firstsymdiff
 """
@@ -888,17 +881,11 @@ noncommonind(A...; kwargs...) =
 # setdiff
 """
     uniqueinds(A, B; kwargs...)
-    uniqueinds(::Order{N}, A, B; kwargs...)
 
 Return an IndexSet with indices that are unique to the set of indices of `A` and not in `B` (the set difference, similar to `Base.setdiff`).
-
-Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
 uniqueinds(A...; kwargs...) =
   IndexSet(setdiff(itensor2inds.(A)...; kwargs...)...)
-
-uniqueinds(::Order{N}, A...; kwargs...) where {N} =
-  setdiff(Order(N), ITensors.itensor2inds.(A)...; kwargs...)
 
 # firstsetdiff
 """
@@ -914,17 +901,11 @@ uniqueind(A...; kwargs...) =
 # union
 """
     unioninds(A, B; kwargs...)
-    unioninds(::Order{N}, A, B; kwargs...)
 
 Return an IndexSet with indices that are the union of the indices of `A` and `B` (the set union, similar to `Base.union`).
-
-Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
 unioninds(A...; kwargs...) =
   IndexSet(union(itensor2inds.(A)...; kwargs...)...)
-
-unioninds(::Order{N}, A...; kwargs...) where {N} =
-  IndexSet{N}(union(ITensors.itensor2inds.(A)...; kwargs...)...)
 
 # firstunion
 """
@@ -1280,6 +1261,12 @@ function (A::ITensor + B::ITensor)
 end
 
 function (A::ITensor - B::ITensor)
+  if ndims(A) == 0 && ndims(B) > 0
+    return -copy(B)
+  end
+  if ndims(B) == 0 && ndims(A) > 0
+    return copy(A)
+  end
   ndims(A) != ndims(B) && throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
   C = copy(A)
   C .-= B
@@ -1699,7 +1686,6 @@ function map!(f::Function,
               T2::ITensor)
   R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
   perm = NDTensors.getperm(inds(R),inds(T2))
-
   if hasqns(T2) && hasqns(R)
     # Check that Index arrows match
     for (n,p) in enumerate(perm)

@@ -1,7 +1,7 @@
 
 # TODO: extend type restriction to `IndexT <: Union{<: Index, <: IndexVal}`
 struct IndexSet{IndexT <: Index}
-  data::Tuple{Vararg{IndexT}}
+  data::Vector{IndexT}
 
   function IndexSet{IndexT}(data) where {IndexT}
     @debug_check begin
@@ -9,55 +9,34 @@ struct IndexSet{IndexT <: Index}
         error("Trying to create IndexSet with collection of indices $data. Indices must be unique.")
       end
     end
-    return new{IndexT}(data)
+    return new{IndexT}([data...])
   end
 
   """
       IndexSet()
 
-  Create a special "empty" IndexSet with data `Tuple{}` and any number of indices.
+  Create a special "empty" `IndexSet` with data `[]` and any number of indices.
 
-  This is used as the IndexSet of an `emptyITensor()`, an ITensor with `NDTensors.Empty` storage and any number of indices.
+  This is used as the `IndexSet` of an `emptyITensor()`, an ITensor with `NDTensors.Empty` storage and any number of indices.
   """
-  IndexSet() = new{Union{}}(())
+  IndexSet() = new{Union{}}([])
 end
 
-#
-# Order value type
-#
-
-# More complicated definition makes Order(Ref(2)[]) faster
 @eval struct Order{N}
-  (OrderT::Type{ <: Order})() = $(Expr(:new, :OrderT))
-end
+      (OrderT::Type{ <: Order})() = $(Expr(:new, :OrderT))
+  end
 
 @doc """
-    Order{N}
-
+   Order{N}
 A value type representing the order of an ITensor.
 """ Order
 
 """
-    Order(N) = Order{N}()
-
+   Order(N) = Order{N}()
 Create an instance of the value type Order representing
 the order of an ITensor.
 """
 Order(N) = Order{N}()
-
-"""
-    IndexSet(::Function, ::Order{N})
-
-Construct an IndexSet of length N from a function that accepts
-an integer between 1:N and returns an Index.
-
-# Examples
-```julia
-IndexSet(n -> Index(1, "i\$n"), Order(4))
-```
-"""
-IndexSet(f::Function, N::Int) =
-  IndexSet(ntuple(f, N))
 
 IndexSet(f::Function, ::Order{N}) where {N} =
   IndexSet(ntuple(f, Val(N)))
@@ -70,8 +49,8 @@ const Indices{N, IndexT} = Union{IndexSet{IndexT},
     IndexSet{IndexT}(inds)
     IndexSet{IndexT}(inds::Index...)
 
-Construct an IndexSet of order N and element type IndexT
-from a collection of indices (any collection that is convertable to a Tuple).
+Construct an `IndexSet` of element type `IndexT`
+from a collection of indices (any collection that is convertable to a `Vector`).
 """
 function IndexSet{IndexT}(inds::Index...) where {IndexT}
   return IndexSet{IndexT}(inds)
@@ -82,18 +61,18 @@ end
     IndexSet(inds::Index...)
 
 Construct an IndexSet from a collection of indices
-(any collection that is convertable to a `Tuple`).
+(any collection that is convertable to a `Vector`).
 """
 IndexSet(inds) = IndexSet{eltype(inds)}(inds)
 
 IndexSet(inds::NTuple{N, IndexT}) where {N, IndexT} =
-  IndexSet{IndexT}(inds)
+    IndexSet{IndexT}(inds)
 
 IndexSet(inds::Index...) = IndexSet(inds)
 
 IndexSet(is::IndexSet) = is
 
-IndexSet(::Tuple{}) = IndexSet{Union{}}(())
+IndexSet(::Tuple{}) = IndexSet{Union{}}([])
 
 """
     convert(::Type{IndexSet}, t)
@@ -160,10 +139,6 @@ function NDTensors._permute(s::T, perm) where {T<:IndexSet}
   return ntuple(i->s[perm[i]], length(s))
 end
 
-Order(is::IndexSet) = Order(length(is))
-
-#Order(::Type{<:IndexSet{N}}) where {N} = Order(N)
-
 # Convert to an Index if there is only one
 # TODO: also define the function `only`
 function Index(is::IndexSet)
@@ -203,7 +178,7 @@ the proper Arrow directions.
 function Base.setindex(is::IndexSet,
                        i::Index,
                        n::Int)
-  return IndexSet(setindex(data(is), i, n))
+  return IndexSet(setindex!(data(is), i, n))
 end
 
 """
@@ -318,6 +293,9 @@ Base.keys(is::IndexSet) = 1:length(is)
 # as IndexSet{4})
 NDTensors.similar_type(::Type{<:IndexSet},
                        ::Val{N}) where {N} = IndexSet
+
+NDTensors.similar_type(::Type{<:Tuple{Vararg{<:Index}}},
+                       ::Type{Val{N}}) where {N} = NTuple{N, Index}
 
 NDTensors.similar_type(::Type{<:IndexSet},
                        ::Type{Val{N}}) where {N} = IndexSet
@@ -485,9 +463,6 @@ function Base.setdiff(f::Function,
   return R
 end
 
-#Base.setdiff(f::Function, is1::IndexSet, iss::IndexSet...) =
-#  setdiff(Order(count(i -> f(i) && all(is -> i ∉ is, iss), is1)), f, is1, iss...)
-
 """
     setdiff(A::IndexSet, Bs::IndexSet...)
 
@@ -496,27 +471,6 @@ the IndexSets `Bs`.
 """
 Base.setdiff(A::IndexSet, Bs::IndexSet...; kwargs...) =
   setdiff(fmatch(; kwargs...), A, Bs...)
-
-Base.setdiff(O::Order, A::IndexSet, Bs::IndexSet...;
-             kwargs...) =
-  setdiff(fmatch(; kwargs...), O, A, Bs...)
-
-"""
-  setdiff(f::Function, ::Order{N}, A::IndexSet, B::IndexSet...)
-
-Output the Vector of Indices in the set difference of `A` and `B`,
-optionally filtering by the function `f`.
-
-Specify the number of output indices with `Order(N)`.
-"""
-function Base.setdiff(f::Function,
-                      ::Order{N},
-                      A::IndexSet{IndexT},
-                      B::IndexSet...) where {N, IndexT}
-  r = mutable_storage(Order{N}, IndexT)
-  setdiff!(f, r, A, B...)
-  return IndexSet{IndexT}(Tuple(r))
-end
 
 function firstsetdiff(f::Function,
                       A::IndexSet,
@@ -546,28 +500,6 @@ function Base.intersect(f::Function, A::IndexSet, B::IndexSet)
   return R
 end
 
-#Base.intersect(f::Function, is1::IndexSet, is2::IndexSet) =
-#  intersect(f, Order(count(i -> f(i) && i ∈ is2, is1)), is1, is2)
-
-mutable_storage(::Type{Order{N}},
-                ::Type{IndexT}) where {N, IndexT <: Index} =
-  MVector{N, IndexT}(undef)
-
-function Base.intersect(f::Function,
-                        ::Order{N},
-                        A::IndexSet{IndexT},
-                        B::IndexSet) where {N, IndexT}
-  R = mutable_storage(Order{N}, IndexT)
-  intersect!(f, R, A, B)
-  return IndexSet{IndexT}(Tuple(R))
-end
-
-Base.intersect(O::Order,
-               A::IndexSet,
-               B::IndexSet;
-               kwargs...) where {N} =
-  intersect(fmatch(; kwargs...), O, A, B)
-
 function Base.intersect!(f::Function,
                          R::AbstractVector,
                          A::IndexSet,
@@ -590,15 +522,9 @@ end
 
     intersect(f::Function, A::IndexSet, B::IndexSet)
 
-    intersect(:Order{N}, A::IndexSet, B::IndexSet; kwargs...)
-
-    intersect(f::Function, ::Order{N}, A::IndexSet, B::IndexSet)
-
 Output the Vector of Indices in the intersection of `A` and `B`,
 optionally filtering with keyword arguments `tags`, `plev`, etc. 
 or by a function `f(::Index) -> Bool`.
-
-Specify the output number of indices `N` with `Order(N)`.
 """
 Base.intersect(A::IndexSet, B::IndexSet; kwargs...) =
   intersect(fmatch(; kwargs...), A, B)
@@ -628,16 +554,11 @@ firstintersect(A::IndexSet, B::IndexSet; kwargs...) =
 """
     filter(f::Function, inds::IndexSet)
 
-    filter(f::Function, ::Order{N}, inds::IndexSet)
-
 Filter the IndexSet by the given function (output a new
 IndexSet with indices `i` for which `f(i)` returns true).
 
 Note that this function is not type stable, since the number
 of output indices is not known at compile time.
-
-To make it type stable, specify the desired order by
-passing an instance of the type `Order`.
 """
 Base.filter(f::Function,
             is::IndexSet) =
@@ -665,19 +586,6 @@ function Base.filter!(f::Function,
   j ≤ N && error("Too few intersects found")
   return r 
 end
-
-function Base.filter(f::Function,
-                     O::Order{N},
-                     is::IndexSet{IndexT}) where {N, IndexT}
-  #t = filter(f, Tuple(is))
-  #return IndexSet{N, IndexT, NTuple{N, IndexT}}(t)
-  r = mutable_storage(Order{N}, IndexT)
-  filter!(f, r, is)
-  return IndexSet{IndexT}(Tuple(r))
-end
-
-Base.filter(O::Order, is::IndexSet, args...; kwargs...) =
-  filter(ITensors.fmatch(args...; kwargs...), O, is)
 
 """
     getfirst(is::IndexSet)
@@ -1144,7 +1052,7 @@ NDTensors.getindices(is::IndexSet, I...) = getindices(is, I...)
 Return a new IndexSet with indices `setdir(is[i], dirs[i])`.
 """
 function setdirs(is::IndexSet, dirs)
-  return IndexSet(ntuple(i -> setdir(is[i], dirs[i]), Val(length(is))))
+  return map(i->setdir(is[i], dirs[i]), 1:length(is))
 end
 
 """
@@ -1163,7 +1071,7 @@ Return a tuple of the directions of the indices `inds` in
 the IndexSet `is`, in the order they are found in `inds`.
 """
 function dirs(is1::IndexSet, inds)
-  return ntuple(i -> dir(is1, inds[i]), length(inds))
+  return map(i->dir(is1, inds[i]), 1:length(inds))
 end
 
 """
