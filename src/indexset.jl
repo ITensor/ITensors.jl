@@ -23,7 +23,7 @@ struct IndexSet{IndexT <: Index}
 end
 
 function IndexSet{Union{}}(data::Vector{<:Any})
-    return IndexSet{Union{}}(copy(data))
+    return IndexSet()
 end
 IndexSet{Union{}}(())                 = IndexSet{Union{}}(Any[])
 IndexSet{IndexT}(data) where {IndexT} = IndexSet{IndexT}(collect(data))
@@ -60,8 +60,8 @@ IndexSet(f::Function, ::Order{N}) where {N} =
   IndexSet(ntuple(f, Val(N)))
 
 # Definition to help with generic code
-const Indices{N, IndexT} = Union{IndexSet{IndexT},
-                                 Tuple{Vararg{IndexT}}}
+const Indices{IndexT} = Union{IndexSet{IndexT},
+                              Tuple{Vararg{IndexT}}}
 
 """
     IndexSet{IndexT}(inds)
@@ -117,7 +117,7 @@ Base.Tuple(is::IndexSet) = _Tuple(data(is))
 
 Convert a `Vector` of indices to an `IndexSet`.
 """
-IndexSet(inds::Vector{IndexT}) where {IndexT} = IndexSet(tuple(inds...))
+IndexSet(inds::Vector{IndexT}) where {IndexT} = IndexSet{IndexT}(inds)
 
 
 """
