@@ -42,11 +42,11 @@ using ITensors,
     @test_throws ErrorException E[i' => 2, i => 3] = 3.2
   end
 
-  @testset "emptyITensor(Any)" begin
+  @testset "emptyITensor()" begin
     i = Index(QN(0) => 2,
               QN(1) => 2; tags="i")
 
-    E = emptyITensor(Any)
+    E = emptyITensor()
 
     @test isnothing(flux(E))
     @test order(E) == 0

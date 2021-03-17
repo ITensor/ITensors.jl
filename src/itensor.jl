@@ -78,8 +78,6 @@ mutable struct ITensor
   This is an internal constructor for an ITensor where the ITensor stores a view of the `NDTensors.TensorStorage`.
   """
   ITensor(is, st::TensorStorage) = new(st, is)
-
-  ITensor(is, st::Empty) = new(st, is)
 end
 
 """
@@ -304,17 +302,6 @@ function emptyITensor(::Type{ElT}) where {ElT <: Number}
 end
 
 emptyITensor() = emptyITensor(Float64)
-
-"""
-    emptyITensor([::Type{ElT} = Float64, ]::Type{Any})
-
-Construct an ITensor with empty storage and `Any` number of indices.
-"""
-function emptyITensor(::Type{ElT}, ::Type{Any}) where {ElT <: Number}
-  return itensor(EmptyTensor(ElT, IndexSet()))
-end
-
-emptyITensor(::Type{Any}) = emptyITensor(Float64, Any)
 
 #
 # Construct from Array
