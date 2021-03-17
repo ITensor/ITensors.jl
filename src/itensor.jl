@@ -207,18 +207,13 @@ has the same indices.
 """
 itensor(T::Tensor) = itensor(store(T), inds(T))
 
-const ValCacheLength = 100
-const ValCache = Dict([n=>Val(n) for n in 0:ValCacheLength])
-_NTuple(::Val{N}, v::Vector{T}) where {N, T} = ntuple(n -> v[n], Val(N))
-_Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v)], v)
-
 """
     tensor(::ITensor)
 
 Convert the ITensor to a Tensor that shares the same
 storage and indices as the ITensor.
 """
-tensor(A::ITensor) = tensor(store(A), _Tuple(inds(A).data))
+tensor(A::ITensor) = tensor(store(A), Tuple(inds(A)))
 
 """
     ITensor([::Type{ElT} = Float64, ]inds)

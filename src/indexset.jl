@@ -3,13 +3,13 @@
 struct IndexSet{IndexT <: Index}
   data::Vector{IndexT}
 
-  function IndexSet{IndexT}(data) where {IndexT}
+  function IndexSet{IndexT}(data::Vector{IndexT}) where {IndexT}
     @debug_check begin
       if !allunique(data)
         error("Trying to create IndexSet with collection of indices $data. Indices must be unique.")
       end
     end
-    return new{IndexT}([data...])
+    return new{IndexT}(data)
   end
 
   """
@@ -19,8 +19,14 @@ struct IndexSet{IndexT <: Index}
 
   This is used as the `IndexSet` of an `emptyITensor()`, an ITensor with `NDTensors.Empty` storage and any number of indices.
   """
-  IndexSet() = new{Union{}}([])
+  IndexSet()   = new{Union{}}(Any[])
 end
+
+function IndexSet{Union{}}(data::Vector{<:Any})
+    return IndexSet{Union{}}(copy(data))
+end
+IndexSet{Union{}}(())                 = IndexSet{Union{}}(Any[])
+IndexSet{IndexT}(data) where {IndexT} = IndexSet{IndexT}(collect(data))
 
 @eval struct Order{N}
       (OrderT::Type{ <: Order})() = $(Expr(:new, :OrderT))
@@ -37,6 +43,18 @@ Create an instance of the value type Order representing
 the order of an ITensor.
 """
 Order(N) = Order{N}()
+
+"""
+    IndexSet(::Function, ::Order{N})
+Construct an IndexSet of length N from a function that accepts
+an integer between 1:N and returns an Index.
+# Examples
+```julia
+IndexSet(n -> Index(1, "i\$n"), Order(4))
+```
+"""
+IndexSet(f::Function, N::Int) =
+  IndexSet(ntuple(f, N))
 
 IndexSet(f::Function, ::Order{N}) where {N} =
   IndexSet(ntuple(f, Val(N)))
@@ -72,7 +90,7 @@ IndexSet(inds::Index...) = IndexSet(inds)
 
 IndexSet(is::IndexSet) = is
 
-IndexSet(::Tuple{}) = IndexSet{Union{}}([])
+IndexSet(::Tuple{}) = IndexSet()#IndexSet{Union{}}(Any[])
 
 """
     convert(::Type{IndexSet}, t)
@@ -88,7 +106,11 @@ Base.convert(::Type{IndexSet{IndexT}}, t) where {IndexT} = IndexSet{IndexT}(t)
 
 Base.convert(::Type{IndexSet{IndexT}}, is::IndexSet{IndexT}) where {IndexT} = is
 
-Base.Tuple(is::IndexSet) = Tuple(data(is))
+const ValCacheLength = 100
+const ValCache = Dict([n=>Val(n) for n in 0:ValCacheLength])
+_NTuple(::Val{N}, v::Vector{T}) where {N, T} = ntuple(n -> v[n], Val(N))
+_Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v)], v)
+Base.Tuple(is::IndexSet) = _Tuple(data(is))
 
 """
     IndexSet(inds::Vector{<:Index})
@@ -178,7 +200,7 @@ the proper Arrow directions.
 function Base.setindex(is::IndexSet,
                        i::Index,
                        n::Int)
-  return IndexSet(setindex!(data(is), i, n))
+  return IndexSet(setindex!(copy(data(is)), i, n))
 end
 
 """
@@ -291,6 +313,9 @@ Base.keys(is::IndexSet) = 1:length(is)
 # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
 # only known thing for dispatch is a concrete type such
 # as IndexSet{4})
+
+NDTensors.similar(T::NDTensors.DenseTensor,
+                  inds::NTuple) = NDTensors._similar(T, inds)
 NDTensors.similar_type(::Type{<:IndexSet},
                        ::Val{N}) where {N} = IndexSet
 
@@ -561,8 +586,8 @@ Note that this function is not type stable, since the number
 of output indices is not known at compile time.
 """
 Base.filter(f::Function,
-            is::IndexSet) =
-  IndexSet(filter(f, Tuple(is)))
+            is::IndexSet) = 
+    IndexSet(filter(f, Tuple(is)))
 
 Base.filter(is::IndexSet, args...; kwargs...) =
   filter(fmatch(args...; kwargs...), is)
