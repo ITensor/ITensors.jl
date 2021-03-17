@@ -473,7 +473,7 @@ end
 end
 
 
-@testset "add and axpy" begin
+@testset "add, subtract, and axpy" begin
   i = Index(2,"i")
   a = [1.0; 2.0]
   b = [3.0; 4.0]
@@ -494,7 +494,37 @@ end
   B = itensor(b,i)
   c = [8.0; 12.0]
   @test (A .= 2.0 .* A .+ 2.0 .* B) == itensor(c, i) 
-  
+  a = [1.0; 2.0]
+  A = itensor(a,i)
+  B = ITensor(2.0)
+  @test A + B == itensor([3.0; 4.0], i)
+  a = [1.0; 2.0]
+  A = itensor(a,i)
+  B = ITensor()
+  @test A + B == A
+  a = [1.0; 2.0]
+  A = itensor(a,i)
+  B = ITensor(2.0)
+  @test A - B == itensor([-1.0; 0.0], i)
+  a = [1.0; 2.0]
+  A = itensor(a,i)
+  B = ITensor()
+  @test A - B == A
+  a = [1.0; 2.0]
+  A = itensor(a,i)
+  B = ITensor(2.0)
+  @test B - A == itensor([1.0; 0.0], i)
+  a = [1.0; 2.0]
+  A = itensor(a,i)
+  B = ITensor()
+  @test B - A == -A
+  a = [1.0; 2.0]
+  b = [3.0; 4.0]
+  A = itensor(a,i)
+  B = itensor(b,i)
+  c = [2.0; 2.0]
+  @test B - A == itensor(c, i) 
+  @test A - B == -itensor(c, i) 
 end
 
 @testset "mul! and rmul!" begin

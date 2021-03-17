@@ -1244,10 +1244,22 @@ end
 
 function (A::ITensor + B::ITensor)
   if ndims(A) == 0 && ndims(B) > 0
-    return copy(B)
+    if store(A) isa NDTensors.Empty
+      return copy(B)
+    else # A is a scalar
+      C = copy(B)
+      C .+= A[]
+      return C
+    end
   end
   if ndims(B) == 0 && ndims(A) > 0
-    return copy(A)
+    if store(B) isa NDTensors.Empty
+      return copy(A)
+    else # B is a scalar
+      C = copy(A)
+      C .+= B[]
+      return C
+    end
   end
   ndims(A) != ndims(B) && throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
   C = copy(A)
@@ -1257,10 +1269,22 @@ end
 
 function (A::ITensor - B::ITensor)
   if ndims(A) == 0 && ndims(B) > 0
-    return -copy(B)
+    if store(A) isa NDTensors.Empty
+      return -copy(B)
+    else # A is a scalar
+      C = -copy(B)
+      C .+= A[]
+      return C
+    end
   end
   if ndims(B) == 0 && ndims(A) > 0
-    return copy(A)
+    if store(B) isa NDTensors.Empty
+      return copy(A)
+    else # B is a scalar
+      C = copy(A)
+      C .+= -B[]
+      return C
+    end
   end
   ndims(A) != ndims(B) && throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
   C = copy(A)
