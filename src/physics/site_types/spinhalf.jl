@@ -86,6 +86,9 @@ op(::OpName"Sx",::SiteType"S=1/2") =
 op(::OpName"Sˣ",t::SiteType"S=1/2") = 
   op(OpName("Sx"),t)
 
+op(::OpName"iY",::SiteType"S=1/2") =
+  [ 0 1
+   -1 0]
 
 op(::OpName"iSy",::SiteType"S=1/2") =
   [ 0.0  0.5
@@ -154,3 +157,9 @@ state(::SiteType"S=½", n::StateName) =
 op(o::OpName, ::SiteType"S=½") =
   op(o, SiteType("S=1/2"))
 
+# Support operators defined with the
+# "Qubit" SiteType for "S=1/2" and
+# equivalent tags:
+
+op(o::OpName, ::SiteType"S=1/2") =
+  op(o, SiteType("Qubit"))

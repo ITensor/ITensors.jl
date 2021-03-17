@@ -321,6 +321,10 @@ op(s::Index,
    kwargs...) = op(opname, s; kwargs...)
 
 
+# To ease calling of other op overloads,
+# allow passing a string as the op name
+op(opname::AbstractString,t::SiteType) = op(OpName(opname),t)
+
 """
     op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
 
