@@ -640,7 +640,7 @@ A = ITensor(2.0, i, i')
 A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 ```
 """
-function getindex(T::ITensor{N}, I::Vararg{Union{Int, LastVal}, N}) where {N}
+function getindex(T::ITensor, I::Union{Int, LastVal}...)
   I = lastval_to_int(T, I...)
   @boundscheck checkbounds(tensor(T), I...)
   return tensor(T)[I...]::Number
@@ -697,7 +697,8 @@ A[1, 2] = 1.0 # same as: A[i => 1, i' => 2] = 1.0
 A[2, :] = [2.0 3.0]
 ```
 """
-function setindex!(T::ITensor, x::Number, I::Int...)
+function setindex!(T::ITensor, x::Number, I::Union{Int, LastVal}...)
+  I = lastval_to_int(T, I...)
   @boundscheck checkbounds(tensor(T), I...)
   fluxT = flux(T)
   if !isnothing(fluxT) && fluxT != flux(T, I...)

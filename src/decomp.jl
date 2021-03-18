@@ -273,9 +273,11 @@ function polar(A::ITensor, Linds...; kwargs...)
   U, S, V = svd(A, Linds...; kwargs...)
   u = commoninds(S, U)
   v = commoninds(S, V)
-  Vᵤ′ = replaceinds(V', v' => u)
-  Q = U * Vᵤ′
-  P = dag(Vᵤ′) * S * V
+  δᵤᵥ′ = δ(u..., v'...)
+  Q = U * δᵤᵥ′ * V'
+  # TODO: fix conjugation for δ
+  #P = dag(V') * dag(δᵤᵥ′) * S * V
+  P = dag(V') * δ(dag(v')..., dag(u)...) * S * V
   return Q, P, commoninds(Q, P)
 end
 

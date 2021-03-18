@@ -62,6 +62,23 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test A[b => end, a => 1] == A[a => 1, b => 3]
   end
 
+  @testset "Set element with end" begin
+    _i = Index(2, "i")
+    _j = Index(3, "j")
+
+    A = ITensor(_i, _j)
+    A[_i => end, _j => end] = 2.5
+    @test A[_i => dim(_i), _j => dim(_j)] == 2.5
+
+    A = ITensor(_i, _j)
+    A[_j => end, _i => end] = 3.5
+    @test A[_i => dim(_i), _j => dim(_j)] == 3.5
+
+    A = ITensor(_i, _j)
+    A[_j => end, _i => 1] = 4.5
+    @test A[_i => 1, _j => dim(_j)] == 4.5
+  end
+
   @testset "Random" begin
     A = randomITensor(i, j)
 
