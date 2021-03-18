@@ -1,5 +1,5 @@
 using ITensors
-include("qubit.jl")
+#include("qubit.jl")
 
 N = 10
 s = siteinds("Qubit", N)
