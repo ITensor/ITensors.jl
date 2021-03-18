@@ -55,7 +55,7 @@ using ITensors,
     A = randomITensor(i', dag(i))
     E += A
 
-    @test E == A
+    @test norm(E-A) < 1E-8
   end
 end
 
