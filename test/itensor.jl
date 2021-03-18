@@ -20,7 +20,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
   @testset "Default" begin
     A = ITensor()
-    @test store(A) isa NDTensors.Empty{Float64}
+    @test store(A) isa NDTensors.Dense{Float64}
   end
 
   @testset "Undef with index" begin
@@ -501,7 +501,8 @@ end
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor()
-  @test A + B == A
+  @test_throws DimensionMismatch A + B
+  a = [1.0; 2.0]
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor(2.0)
@@ -509,7 +510,7 @@ end
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor()
-  @test A - B == A
+  @test_throws DimensionMismatch A - B
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor(2.0)
@@ -517,7 +518,7 @@ end
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor()
-  @test B - A == -A
+  @test_throws DimensionMismatch B - A
   a = [1.0; 2.0]
   b = [3.0; 4.0]
   A = itensor(a,i)
