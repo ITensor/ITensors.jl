@@ -140,7 +140,7 @@ end
 # (generated from precompile/make_precompile.jl
 # using SnoopCompile.jl)
 #
-include("../precompile/precompile.jl")
-_precompile_()
+#include("../precompile/precompile.jl")
+#_precompile_()
 
 end # module ITensors

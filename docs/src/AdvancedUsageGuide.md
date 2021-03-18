@@ -756,8 +756,8 @@ Advanced users might notice something strange about the definition
 of the ITensor type, that it is often not "type stable". Some of 
 this is by design. The definition for ITensor is:
 ```julia
-mutable struct ITensor{N}
-  inds::IndexSet{N}
+mutable struct ITensor
+  inds::IndexSet
   store::TensorStorage
 end
 ```
@@ -774,7 +774,7 @@ julia> A = randomITensor(i, i');
 julia> @code_warntype A[i=>1, i'=>2]
 Variables
   #self#::Core.Compiler.Const(getindex, false)
-  T::ITensor{1}
+  T::ITensor
   ivs::Tuple{Pair{Index{Int64},Int64}}
   p::Tuple{Union{Nothing, Int64}}
   vals::Tuple{Any}
@@ -789,7 +789,7 @@ Body::Number
 │   %7  = Base.broadcasted(ITensors.val, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(val),Tuple{Tuple{Pair{Index{Int64},Int64}}}}
 │   %8  = Base.materialize(%7)::Tuple{Int64}
 │         (vals = (%6)(%8, p))
-│   %10 = Core.tuple(T)::Tuple{ITensor{1}}
+│   %10 = Core.tuple(T)::Tuple{ITensor}
 │   %11 = Core._apply_iterate(Base.iterate, Base.getindex, %10, vals)::Number
 │   %12 = Core.typeassert(%11, ITensors.Number)::Number
 └──       return %12

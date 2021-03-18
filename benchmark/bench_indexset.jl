@@ -15,9 +15,7 @@ suite["constructor"]["function"] = @benchmarkable IndexSet($(n -> i^(n-1)), $(Or
 suite["filter"] = BenchmarkGroup()
 
 suite["filter"]["kwargs"] = @benchmarkable filter($is; plev = 3)
-suite["filter"]["order_kwargs"] = @benchmarkable filter($(Order(1)), $is; plev = 3)
 suite["filter"]["function"] = @benchmarkable filter($(i -> plev(i) < 2), $is)
-suite["filter"]["function_order"] = @benchmarkable filter($(i -> plev(i) < 2), $(Order(2)), $is)
 
 i,j,k,l = Index.(2, ("i", "j", "k", "l"))
 
@@ -33,11 +31,6 @@ suite["uniqueinds"]["nofilter0"] = @benchmarkable uniqueinds($Iij, $Iijk)
 suite["uniqueinds"]["filter_tags"] = @benchmarkable uniqueinds($Iijk, $Ikl; tags = $(ts"i"))
 suite["uniqueinds"]["filter_not_tags"] = @benchmarkable uniqueinds($Iijk, $Ikl; tags = $(not("i")))
 suite["uniqueinds"]["3_inputs"] = @benchmarkable uniqueinds($Iijk, $Ijl, $Ikl)
-suite["uniqueinds"]["order2"] = @benchmarkable uniqueinds($(Order(2)), $Iijk, $Ikl)
-suite["uniqueinds"]["order0"] = @benchmarkable uniqueinds($(Order(0)), $Iij, $Iijk)
-suite["uniqueinds"]["order_filter_tags"] = @benchmarkable uniqueinds($(Order(1)), $Iijk, $Ikl; tags = $(ts"i"))
-suite["uniqueinds"]["order_filter_not_tags"] = @benchmarkable uniqueinds($(Order(1)), $Iijk, $Ikl; tags = $(not("i")))
-suite["uniqueinds"]["order_3_inputs"] = @benchmarkable uniqueinds($(Order(1)), $Iijk, $Ijl, $Ikl)
 
 end
 

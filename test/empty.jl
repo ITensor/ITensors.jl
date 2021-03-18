@@ -42,20 +42,20 @@ using ITensors,
     @test_throws ErrorException E[i' => 2, i => 3] = 3.2
   end
 
-  @testset "emptyITensor(Any)" begin
+  @testset "emptyITensor()" begin
     i = Index(QN(0) => 2,
               QN(1) => 2; tags="i")
 
-    E = emptyITensor(Any)
+    E = emptyITensor()
 
     @test isnothing(flux(E))
-    @test order(E) == Any
-    @test_throws ErrorException E[i' => 1, i => 3] = 0
+    @test order(E) == 0
+    @test_throws BoundsError E[i' => 1, i => 3] = 0
 
     A = randomITensor(i', dag(i))
     E += A
 
-    @test E == A
+    @test norm(E-A) < 1E-8
   end
 end
 

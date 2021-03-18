@@ -6,21 +6,21 @@ using Test
 
   @test !ITensors.using_debug_checks()
   # Test that no error is thrown in constructor
-  @test IndexSet(i, i) isa IndexSet{2}
-  @test IndexSet(i, i') isa IndexSet{2}
+  @test IndexSet(i, i) isa IndexSet
+  @test IndexSet(i, i') isa IndexSet
 
   # Turn on debug checks
   ITensors.enable_debug_checks()
   @test ITensors.using_debug_checks()
   @test_throws ErrorException IndexSet(i, i)
   # Test that no error is thrown in constructor
-  @test IndexSet(i, i') isa IndexSet{2}
+  @test IndexSet(i, i') isa IndexSet
 
   # Turn off debug checks
   ITensors.disable_debug_checks()
   @test !ITensors.using_debug_checks()
   # Test that no error is thrown in constructor
-  @test IndexSet(i, i) isa IndexSet{2}
-  @test IndexSet(i, i') isa IndexSet{2}
+  @test IndexSet(i, i) isa IndexSet
+  @test IndexSet(i, i') isa IndexSet
 end
 
