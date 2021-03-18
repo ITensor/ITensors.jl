@@ -253,7 +253,7 @@ function op(name::AbstractString,
   end
 
   #
-  # Try calling a function of the form:
+  # otherwise try calling a function of the form:
   #    op(::OpName, ::SiteType; kwargs...)
   # which returns a Julia matrix
   #
