@@ -25,7 +25,7 @@ space(::SiteType"Qubit";
       qnname_parity="Parity",
       qnname_number="Number") =
   space(SiteType("S=1/2");
-        conserve_qns,
+        conserve_qns=conserve_qns,
         conserve_sz=conserve_number,
         conserve_szparity=conserve_parity,
         qnname_sz=qnname_number,
