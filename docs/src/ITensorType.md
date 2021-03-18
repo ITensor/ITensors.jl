@@ -53,17 +53,17 @@ delta(::Type{<:Number}, ::QN, ::ITensors.Indices)
 ## Convert to Array
 
 ```@docs
-Array{ElT, N}(::ITensor{N}, ::Vararg{Index, N}) where {ElT, N}
+Array{ElT, N}(::ITensor, ::Vararg{Index, N}) where {ElT, N}
 array(::ITensor)
-matrix(::ITensor{2})
-vector(::ITensor{1})
+matrix(::ITensor)
+vector(::ITensor)
 ```
 
 ## Getting and setting elements
 
 ```@docs
 getindex(::ITensor, ::Any...)
-getindex(::ITensor{N}, ::Vararg{Int,N}) where {N}
+getindex(::ITensor, ::Vararg{Int,N}) where {N}
 setindex!(::ITensor, ::Number, ::Any...)
 setindex!(::ITensor, ::Number, ::Int...)
 ```
