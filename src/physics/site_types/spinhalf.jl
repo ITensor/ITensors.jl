@@ -143,8 +143,8 @@ space(::SiteType"SpinHalf"; kwargs...) =
 state(::SiteType"SpinHalf", n::StateName) =
   state(SiteType("S=1/2"), n)
 
-op(o::OpName, ::SiteType"SpinHalf") =
-  op(o, SiteType("S=1/2"))
+op(o::OpName, ::SiteType"SpinHalf";kwargs...) =
+  op(o, SiteType("S=1/2");kwargs...)
 
 # Support the tag "S=½" as equivalent to "S=1/2"
 
@@ -154,12 +154,6 @@ space(::SiteType"S=½"; kwargs...) =
 state(::SiteType"S=½", n::StateName) =
   state(SiteType("S=1/2"), n)
 
-op(o::OpName, ::SiteType"S=½") =
-  op(o, SiteType("S=1/2"))
+op(o::OpName, ::SiteType"S=½";kwargs...) =
+  op(o, SiteType("S=1/2");kwargs...)
 
-# Support operators defined with the
-# "Qubit" SiteType for "S=1/2" and
-# equivalent tags:
-
-op(o::OpName, ::SiteType"S=1/2") =
-  op(o, SiteType("Qubit"))
