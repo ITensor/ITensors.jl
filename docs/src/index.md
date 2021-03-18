@@ -299,7 +299,7 @@ It originates in physics with the purpose of finding
 eigenvectors of Hamiltonian (energy) matrices which model
 the behavior of quantum systems.
 
-```jldoctest; output=false, filter=[r"After sweep [1-5] energy=\-[0-9]{3}\.[0-9]{10,16} maxlinkdim=[0-9]{1,3} time=[0-9]{1,2}\.[0-9]{3}", r"Final energy = \-138\.[0-9]{10,16}"]
+```jldoctest; output=false, filter=[r"After sweep [1-5] energy=\-[0-9]{3}\.[0-9]{10,16} maxlinkdim=[0-9]{1,3} maxerr=[0-9]{1,2}\.[0-9]{1,3}E\-[0-9]{1,2} time=[0-9]{1,2}\.[0-9]{3}", r"Final energy = \-138\.[0-9]{10,16}"]
 using ITensors
 let
   # Create 100 spin-one indices
@@ -347,11 +347,10 @@ sweeps = Sweeps
 4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
 5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
 
-After sweep 1 energy=-137.845841178879 maxlinkdim=9 time=8.538
-After sweep 2 energy=-138.935378608196 maxlinkdim=20 time=0.316
-After sweep 3 energy=-138.940079710492 maxlinkdim=88 time=1.904
-After sweep 4 energy=-138.940086018149 maxlinkdim=100 time=4.179
-After sweep 5 energy=-138.940086075413 maxlinkdim=96 time=4.184
-Final energy = -138.94008607296038
+After sweep 1 energy=-137.954199761732 maxlinkdim=9 maxerr=2.43E-16 time=9.356
+After sweep 2 energy=-138.935058943878 maxlinkdim=20 maxerr=4.97E-06 time=0.671
+After sweep 3 energy=-138.940080155429 maxlinkdim=92 maxerr=1.00E-10 time=4.522
+After sweep 4 energy=-138.940086009318 maxlinkdim=100 maxerr=1.05E-10 time=11.644
+After sweep 5 energy=-138.940086058840 maxlinkdim=96 maxerr=1.00E-10 time=12.771
+Final energy = -138.94008605883985
 ```
-

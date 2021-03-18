@@ -5,6 +5,53 @@ using ITensors,
 
   N = 10
 
+  @testset "Qubit sites" begin
+
+    s = siteind("Qubit")
+    @test hastags(s,"Qubit,Site")
+    @test dim(s) == 2
+
+    s = siteinds("Qubit", N)
+    @test state(s[1],"0") == s[1](1)
+    @test state(s[1],"1") == s[1](2)
+    @test_throws ArgumentError state(s[1],"Fake")
+
+    s = siteind("Qubit"; conserve_parity = true)
+    @test hastags(s, "Qubit,Site")
+    @test dim(s) == 2
+    @test nblocks(s) == 2
+    @test qn(s,1) == QN("Parity", 1, 2)
+    @test qn(s,2) == QN("Parity", 0, 2)
+
+    s = siteind("Qubit"; conserve_number = true,
+                         conserve_parity = true)
+    @test hastags(s, "Qubit,Site")
+    @test dim(s) == 2
+    @test nblocks(s) == 2
+    @test qn(s,1) == QN(("Parity", 1, 2), ("Number", +1))
+    @test qn(s,2) == QN(("Parity", 0, 2), ("Number", -1))
+
+    s = siteinds("Qubit", N)
+
+    Z = op("Z",s,5)
+    @test hasinds(Z,s[5]',s[5])
+     
+    @test_throws ArgumentError op(s, "Fake", 2)
+    @test Array(op("Id",s,3),s[3]',s[3]) ≈ [ 1.0  0.0; 0.0  1.0]
+    @test Array(op("√NOT",s,3),s[3]',s[3]) ≈ [(1+im)/2 (1-im)/2; (1-im)/2 (1+im)/2]
+    @test Array(op("H",s,3),s[3]',s[3]) ≈ [1/sqrt(2) 1/sqrt(2); 1/sqrt(2) -1/sqrt(2)]
+    @test Array(op("Phase",s,3),s[3]',s[3]) ≈ [1 0; 0 im]
+    @test Array(op("P",s,3),s[3]',s[3]) ≈ [1 0; 0 im]
+    @test Array(op("S",s,3),s[3]',s[3]) ≈ [1 0; 0 im]
+    @test Array(op("π/8",s,3),s[3]',s[3]) ≈ [1 0; 0 (1+im)/sqrt(2)]
+    @test Array(op("T",s,3),s[3]',s[3]) ≈ [1 0; 0 (1+im)/sqrt(2)]
+    θ = randn()
+    @test Array(op("Rx",s,3;θ=θ),s[3]',s[3]) ≈ [cos(θ/2) -im*sin(θ/2); -im*sin(θ/2) cos(θ/2)]
+
+    # Test obtaining S=1/2 operators using Qubit tag
+    @test Array(op("X",s,3),s[3]',s[3])   ≈ [ 0.0  1.0; 1.0  0.0]
+  end
+
   @testset "Spin Half sites" begin
 
     s = siteind("S=1/2")
@@ -60,6 +107,9 @@ using ITensors,
     @test Array(op("projUp",s,2),s[2]',s[2])  ≈ [ 1.0  0.0; 0.0 0.0]
     @test Array(op("ProjDn",s,2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
     @test Array(op("projDn",s,2),s[2]',s[2])  ≈ [ 0.0  0.0; 0.0 1.0]
+
+    # Test obtaining Qubit operators using S=1/2 tag:
+    @test Array(op("√NOT",s,3),s[3]',s[3])  ≈ [(1+im)/2 (1-im)/2; (1-im)/2 (1+im)/2]
   end
 
   @testset "Spin One sites" begin

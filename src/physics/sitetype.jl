@@ -159,6 +159,7 @@ macro OpName_str(s)
 end
 
 # Default implementations of op and op!
+op(::OpName, ::SiteType; kwargs...) = nothing
 op(::OpName, ::SiteType, ::Index...; kwargs...) = nothing
 op(::OpName, ::SiteType, ::SiteType,
    sitetypes_inds::Union{SiteType, Index}...; kwargs...) = nothing
@@ -228,6 +229,7 @@ function op(name::AbstractString,
   push!(common_stypes,SiteType("Generic"))
   opn = OpName(name)
 
+
   #
   # Try calling a function of the form:
   #    op(::OpName, ::SiteType, ::Index; kwargs...)
@@ -247,6 +249,19 @@ function op(name::AbstractString,
     op!(Op, opn, st, s...; kwargs...)
     if !isempty(Op)
       return Op
+    end
+  end
+
+  #
+  # otherwise try calling a function of the form:
+  #    op(::OpName, ::SiteType; kwargs...)
+  # which returns a Julia matrix
+  #
+  for st in common_stypes
+    op_mat = op(opn, st; kwargs...)
+    if !isnothing(op_mat)
+      rs = reverse(s)
+      return itensor(op_mat, prime.(rs)..., dag.(rs)...)
     end
   end
 
@@ -305,6 +320,10 @@ op(s::Index,
    opname::AbstractString;
    kwargs...) = op(opname, s; kwargs...)
 
+
+# To ease calling of other op overloads,
+# allow passing a string as the op name
+op(opname::AbstractString,t::SiteType) = op(OpName(opname),t)
 
 """
     op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
