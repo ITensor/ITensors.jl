@@ -46,7 +46,7 @@ using ITensors,
     @test Array(op("π/8",s,3),s[3]',s[3]) ≈ [1 0; 0 (1+im)/sqrt(2)]
     @test Array(op("T",s,3),s[3]',s[3]) ≈ [1 0; 0 (1+im)/sqrt(2)]
     θ = randn()
-    @test Array(op("Rx",s,3;θ),s[3]',s[3]) ≈ [cos(θ/2) -im*sin(θ/2); -im*sin(θ/2) cos(θ/2)]
+    @test Array(op("Rx",s,3;θ=θ),s[3]',s[3]) ≈ [cos(θ/2) -im*sin(θ/2); -im*sin(θ/2) cos(θ/2)]
 
     # Test obtaining S=1/2 operators using Qubit tag
     @test Array(op("X",s,3),s[3]',s[3])   ≈ [ 0.0  1.0; 1.0  0.0]
