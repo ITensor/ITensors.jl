@@ -1787,8 +1787,8 @@ end
 #  lAs = [linkind(A, i) for i in 1:N-1]
 #  prime!(A, rand_plev, "Link")
 #
-#  first  = Vector{ITensor{2}}(undef,N-1)
-#  second = Vector{ITensor{2}}(undef,N-1)
+#  first  = Vector{ITensor}(undef,N-1)
+#  second = Vector{ITensor}(undef,N-1)
 #  for i in 1:N-1
 #    lA = linkind(A, i)
 #    lB = linkind(B, i)

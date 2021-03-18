@@ -55,7 +55,7 @@ function rproj(P::ProjMPO)
 end
 
 """
-    product(P::ProjMPO,v::ITensor{N})::ITensor{N}
+    product(P::ProjMPO,v::ITensor)::ITensor
 
     (P::ProjMPO)(v::ITensor)
 
@@ -69,7 +69,7 @@ as `v`. The operator overload `P(v)` is
 shorthand for `product(P,v)`.
 """
 function product(P::ProjMPO,
-                 v::ITensor{N})::ITensor{N} where N
+                 v::ITensor)::ITensor
   Hv = v
   if isnothing(lproj(P))
     if !isnothing(rproj(P))

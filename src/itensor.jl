@@ -1,6 +1,5 @@
-
 """
-    ITensor{N}
+    ITensor
 
 An ITensor is a tensor whose interface is 
 independent of its memory layout. Therefore
@@ -67,24 +66,19 @@ NDTensors.Dense{Float64,Array{Float64,1}}
   1.2579101497658178  -1.3559959053693322
 ```
 """
-mutable struct ITensor{N}
+mutable struct ITensor
   store::TensorStorage
-  inds::IndexSet{N}
+  inds::IndexSet
 
   # TODO: check that the storage is consistent with the 
   # indices (possibly only in debug mode);
   """
-      ITensor{N}(is::IndexSet{N}, st::TensorStorage)
+      ITensor(is::IndexSet, st::TensorStorage)
 
   This is an internal constructor for an ITensor where the ITensor stores a view of the `NDTensors.TensorStorage`.
   """
-  ITensor{N}(is, st::TensorStorage) where {N} = new{N}(st, is)
-
-  ITensor{Any}(is, st::Empty) = new{Any}(st, is)
+  ITensor(is, st::TensorStorage) = new(st, is)
 end
-
-ITensor{Any}(is, st::TensorStorage) =
-  error("Can only make an ITensor with Any number of indices with NDTensors.Empty storage")
 
 """
     itensor(st::TensorStorage, is)
@@ -93,7 +87,7 @@ Constructor for an ITensor from a TensorStorage
 and a set of indices.
 The ITensor stores a view of the TensorStorage.
 """
-itensor(st::TensorStorage, is) = ITensor{length(is)}(is, st)
+itensor(st::TensorStorage, is) = ITensor(is, st)
 
 """
     ITensor(st::TensorStorage, is)
@@ -201,11 +195,7 @@ indices.
 To make an ITensor that shares the same storage as the Tensor,
 is the function `itensor(::Tensor)`.
 """
-ITensor(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),
-                                                      inds(T))
-
-ITensor{N}(T::Tensor{<:Number,N}) where {N} = ITensor{N}(store(T),
-                                                         inds(T))
+ITensor(T::Tensor{<:Number,N}) where {N} = ITensor(store(T), inds(T))
 
 """
     itensor(::Tensor)
@@ -221,7 +211,7 @@ itensor(T::Tensor) = itensor(store(T), inds(T))
 Convert the ITensor to a Tensor that shares the same
 storage and indices as the ITensor.
 """
-tensor(A::ITensor) = tensor(store(A),inds(A))
+tensor(A::ITensor) = tensor(store(A), Tuple(inds(A)))
 
 """
     ITensor([::Type{ElT} = Float64, ]inds)
@@ -312,17 +302,6 @@ function emptyITensor(::Type{ElT}) where {ElT <: Number}
 end
 
 emptyITensor() = emptyITensor(Float64)
-
-"""
-    emptyITensor([::Type{ElT} = Float64, ]::Type{Any})
-
-Construct an ITensor with empty storage and `Any` number of indices.
-"""
-function emptyITensor(::Type{ElT}, ::Type{Any}) where {ElT <: Number}
-  return itensor(EmptyTensor(ElT, IndexSet{Any}()))
-end
-
-emptyITensor(::Type{Any}) = emptyITensor(Float64, Any)
 
 #
 # Construct from Array
@@ -511,7 +490,7 @@ The number of indices, `length(inds(A))`.
 """
 order(T::ITensor) = ndims(T)
 
-ndims(::ITensor{N}) where {N} = N
+ndims(T::ITensor) = length(inds(T))
 
 """
     dim(A::ITensor)
@@ -547,9 +526,7 @@ dim(T::ITensor, n::Int) = dims(T)[n]
 
 Tuple containing `dim(inds(A)[d]) for d in 1:ndims(A)`.
 """
-(dims(T::ITensor{N})::NTuple{N,Int}) where {N} =
-  dims(inds(T))
-
+dims(T::ITensor) = dims(inds(T))
 
 axes(T::ITensor) = map(Base.OneTo, dims(T))
 
@@ -574,32 +551,32 @@ an Array with a copy of the ITensor's elements. The
 order in which the indices are provided indicates
 the order of the data in the resulting Array.
 """
-function Array{ElT, N}(T::ITensor{N},
+function Array{ElT, N}(T::ITensor,
                        is::Vararg{Index, N}) where {ElT, N}
+  ndims(T) != N && throw(DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."))
   TT = tensor(permute(T, is...; always_copy = true))
   return Array{ElT, N}(TT)::Array{ElT, N}
 end
 
-function Array{ElT}(T::ITensor{N},
-                    is::Vararg{Index, N}) where {ElT, N}
-  return Array{ElT, N}(T, is...)
+function Array{ElT}(T::ITensor, is::Vararg{Index, N}) where {ElT, N}
+    return Array{ElT, N}(T, is...)
 end
 
-function Array(T::ITensor{N},
-               is::Vararg{Index, N}) where {N}
+function Array(T::ITensor, is::Vararg{Index, N}) where {N}
   return Array{eltype(T), N}(T, is...)::Array{<:Number, N}
 end
 
-function Array{<:Any, N}(T::ITensor{N},
+function Array{<:Any, N}(T::ITensor,
                          is::Vararg{Index, N}) where {N}
   return Array(T, is...)
 end
 
-function Vector{ElT}(T::ITensor{1}) where {ElT}
+function Vector{ElT}(T::ITensor) where {ElT}
+  ndims(T) != 1 && throw(DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to a Vector."))
   return Array{ElT}(T,inds(T)...)
 end
 
-function Vector(T::ITensor{1})
+function Vector(T::ITensor)
   return Array(T,inds(T)...)
 end
 
@@ -640,20 +617,21 @@ A = ITensor(2.0, i, i')
 A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 ```
 """
-function getindex(T::ITensor, I::Union{Int, LastVal}...)
+function getindex(T::ITensor, I::Vararg{Union{Int, LastVal}, N}) where {N}
+  ndims(T) != N && throw(DimensionMismatch())
   I = lastval_to_int(T, I...)
   @boundscheck checkbounds(tensor(T), I...)
   return tensor(T)[I...]::Number
 end
 
-function getindex(T::ITensor{N}, b::Block{N}) where {N}
+function getindex(T::ITensor, b::Block{N}) where {N}
   # XXX: this should return an ITensor view
   return tensor(T)[b]
 end
 
 # Version accepting CartesianIndex, useful when iterating over
 # CartesianIndices
-getindex(T::ITensor{N}, I::CartesianIndex{N}) where {N} = T[Tuple(I)...]
+getindex(T::ITensor, I::CartesianIndex{N}) where {N} = T[Tuple(I)...]
 
 """
     getindex(T::ITensor, ivs...)
@@ -763,9 +741,9 @@ function setindex!(T::ITensor, A::AbstractArray,
   return T
 end
 
-function setindex!(::ITensor{Any}, ::Number, ivs...)
-  error("Cannot set the element of an emptyITensor(). Must define indices to set elements")
-end
+#function setindex!(::ITensor{Any}, ::Number, ivs...)
+#  error("Cannot set the element of an emptyITensor(). Must define indices to set elements")
+#end
 
 """
     eachindex(A::ITensor)
@@ -846,17 +824,11 @@ hassameinds(A, B) =
 # intersect
 """
     commoninds(A, B; kwargs...)
-    commoninds(::Order{N}, A, B; kwargs...)
 
 Return an IndexSet with indices that are common between the indices of `A` and `B` (the set intersection, similar to `Base.intersect`).
-
-Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
 commoninds(A...; kwargs...) =
   IndexSet(intersect(itensor2inds.(A)...; kwargs...))
-
-commoninds(::Order{N}, A...; kwargs...) where {N} =
-  intersect(Order(N), itensor2inds.(A)...; kwargs...)
 
 # firstintersect
 """
@@ -872,17 +844,11 @@ commonind(A...; kwargs...) =
 # symdiff
 """
     noncommoninds(A, B; kwargs...)
-    noncommoninds(::Order{N}, A, B; kwargs...)
 
 Return an IndexSet with indices that are not common between the indices of `A` and `B` (the symmetric set difference, similar to `Base.symdiff`).
-
-Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
 noncommoninds(A...; kwargs...) =
   IndexSet(symdiff(itensor2inds.(A)...; kwargs...)...)
-
-noncommoninds(::Order{N}, A...; kwargs...) where {N} =
-  IndexSet{N}(symdiff(itensor2inds.(A)...; kwargs...)...)
 
 # firstsymdiff
 """
@@ -898,17 +864,11 @@ noncommonind(A...; kwargs...) =
 # setdiff
 """
     uniqueinds(A, B; kwargs...)
-    uniqueinds(::Order{N}, A, B; kwargs...)
 
 Return an IndexSet with indices that are unique to the set of indices of `A` and not in `B` (the set difference, similar to `Base.setdiff`).
-
-Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
 uniqueinds(A...; kwargs...) =
   IndexSet(setdiff(itensor2inds.(A)...; kwargs...)...)
-
-uniqueinds(::Order{N}, A...; kwargs...) where {N} =
-  setdiff(Order(N), ITensors.itensor2inds.(A)...; kwargs...)
 
 # firstsetdiff
 """
@@ -924,17 +884,11 @@ uniqueind(A...; kwargs...) =
 # union
 """
     unioninds(A, B; kwargs...)
-    unioninds(::Order{N}, A, B; kwargs...)
 
 Return an IndexSet with indices that are the union of the indices of `A` and `B` (the set union, similar to `Base.union`).
-
-Optionally, specify the desired number of indices as `Order(N)`, which adds a check and can be a bit more efficient.
 """
 unioninds(A...; kwargs...) =
   IndexSet(union(itensor2inds.(A)...; kwargs...)...)
-
-unioninds(::Order{N}, A...; kwargs...) where {N} =
-  IndexSet{N}(union(ITensors.itensor2inds.(A)...; kwargs...)...)
 
 # firstunion
 """
@@ -1231,8 +1185,6 @@ function combinedind(T::ITensor)
   return nothing
 end
 
-combinedind(T::ITensor{0}) = nothing
-
 norm(T::ITensor) = norm(tensor(T))
 
 function dag(T::ITensor; always_copy=false)
@@ -1253,21 +1205,21 @@ Therefore, it may return a view. Use `always_copy = true`
 if you never want it to return an ITensor with a view
 of the original ITensor.
 """
-function permute(T::ITensor{N},
-                 new_inds; always_copy::Bool = false) where {N}
+function permute(T::ITensor,
+                 new_inds; always_copy::Bool = false)
   perm = NDTensors.getperm(new_inds, inds(T))
   if !always_copy && NDTensors.is_trivial_permutation(perm)
     return T
   end
   Tp = permutedims(tensor(T), perm)
-  return itensor(Tp)::ITensor{N}
+  return itensor(Tp)::ITensor
 end
 
 permute(T::ITensor,
         inds::Index...; vargs...) = permute(T,
                                             IndexSet(inds...); vargs...)
 
-function (T::ITensor{N} * x::Number)::ITensor{N} where {N}
+function (T::ITensor * x::Number)::ITensor
   return itensor(x * tensor(T))
 end
 
@@ -1278,27 +1230,31 @@ end
 
 -(A::ITensor) = itensor(-tensor(A))
 
-function (A::ITensor{N} + B::ITensor{N}) where {N}
+function (A::ITensor + B::ITensor)
+  if ndims(A) == 0 && ndims(B) > 0 && store(A) isa NDTensors.Empty
+    return copy(B)
+  end
+  if ndims(B) == 0 && ndims(A) > 0 && store(B) isa NDTensors.Empty
+    return copy(A)
+  end
+  ndims(A) != ndims(B) && throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
   C = copy(A)
   C .+= B
   return C
 end
 
-function (A::ITensor{N} - B::ITensor{N}) where {N}
+function (A::ITensor - B::ITensor)
+  if ndims(A) == 0 && ndims(B) > 0 && store(A) isa NDTensors.Empty
+    return -copy(B)
+  end
+  if ndims(B) == 0 && ndims(A) > 0 && store(B) isa NDTensors.Empty
+    return copy(A)
+  end
+  ndims(A) != ndims(B) && throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
   C = copy(A)
   C .-= B
   return C
 end
-
-(A::ITensor{Any} + B::ITensor) = copy(B)
-
-(A::ITensor + B::ITensor{Any}) = B + A
-
-(A::ITensor + B::ITensor) =
-  error("cannot add ITensors with different numbers of indices")
-
-(A::ITensor - B::ITensor) =
-  error("cannot subtract ITensors with different numbers of indices")
 
 function _contract(A::ITensor, B::ITensor)
   (labelsA,labelsB) = compute_contraction_labels(inds(A),inds(B))
@@ -1361,19 +1317,16 @@ modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
 """
 function (A::ITensor * B::ITensor)
-  C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
-  return C
+  if ndims(A) == 0
+    return iscombiner(A) ? _contract(A, B) : A[] * B
+  elseif ndims(B) == 0
+    return iscombiner(B) ? _contract(B, A) : B[] * A
+  else
+    C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
+    return C
+  end
 end
 
-function (A::ITensor{0} * B::ITensor)
-  return iscombiner(A) ? _contract(A, B) : A[] * B
-end
-
-(A::ITensor * B::ITensor{0}) = B * A
-
-function (A::ITensor{0} * B::ITensor{0})
-  return (iscombiner(A) || iscombiner(B)) ? _contract(A, B) : ITensor(A[] * B[])
-end
 
 # TODO: define for contraction order optimization
 #*(A1::ITensor,
@@ -1453,7 +1406,7 @@ length in the dense case), and appear in `A` with opposite directions.
 When `ishermitian=true` the exponential of `Hermitian(A_{lr})` is
 computed internally.
 """
-function exp(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
+function exp(A::ITensor, Linds, Rinds; kwargs...)
   ishermitian=get(kwargs,:ishermitian,false)
 
   @debug_check begin
@@ -1462,10 +1415,11 @@ function exp(A::ITensor{N}, Linds, Rinds; kwargs...) where {N}
     end
   end
 
+  N  = ndims(A)
   NL = length(Linds)
   NR = length(Rinds)
   NL != NR && error("Must have equal number of left and right indices")
-  N != NL + NR && error("Number of left and right indices must add up to total number of indices")
+  N  != NL + NR && error("Number of left and right indices must add up to total number of indices")
 
   # Linds, Rinds may not have the correct directions
   Lis = IndexSet(Linds...)
@@ -1503,17 +1457,17 @@ function exp(A::ITensor; kwargs...)
 end
 
 """
-    hadamard_product!(C::ITensor{N}, A::ITensor{N}, B::ITensor{N})
-    hadamard_product(A::ITensor{N}, B::ITensor{N})
-    ⊙(A::ITensor{N}, B::ITensor{N})
+    hadamard_product!(C::ITensor, A::ITensor, B::ITensor)
+    hadamard_product(A::ITensor, B::ITensor)
+    ⊙(A::ITensor, B::ITensor)
 
 Elementwise product of 2 ITensors with the same indices.
 
 Alternative syntax `⊙` can be typed in the REPL with `\\odot <tab>`.
 """
-function hadamard_product!(R::ITensor{N},
-                           T1::ITensor{N},
-                           T2::ITensor{N}) where {N}
+function hadamard_product!(R::ITensor,
+                           T1::ITensor,
+                           T2::ITensor)
   if !hassameinds(T1, T2)
     error("ITensors must have some indices to perform Hadamard product")
   end
@@ -1704,18 +1658,17 @@ Copy the contents of ITensor A into ITensor B.
 B .= A
 ```
 """
-function copyto!(R::ITensor{N}, T::ITensor{N}) where {N}
+function copyto!(R::ITensor, T::ITensor)
   R .= T
   return R
 end
 
 function map!(f::Function,
-              R::ITensor{N},
-              T1::ITensor{N},
-              T2::ITensor{N}) where {N}
+              R::ITensor,
+              T1::ITensor,
+              T2::ITensor)
   R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
   perm = NDTensors.getperm(inds(R),inds(T2))
-
   if hasqns(T2) && hasqns(R)
     # Check that Index arrows match
     for (n,p) in enumerate(perm)
@@ -1880,7 +1833,10 @@ column, depends on the internal layout of the ITensor.
 *Therefore this method is intended for developer use
 only and not recommended for use in ITensor applications.*
 """
-matrix(T::ITensor{2}) = array(tensor(T))
+function matrix(T::ITensor)
+    ndims(T) != 2 && throw(DimensionMismatch())
+    return array(tensor(T))
+end
 
 """
     vector(T::ITensor)
@@ -1889,8 +1845,10 @@ Given an ITensor `T` with one index, returns
 a Vector with a copy of the ITensor's elements,
 or a view in the case the ITensor's storage is Dense.
 """
-vector(T::ITensor{1}) = array(tensor(T))
-
+function vector(T::ITensor)
+    ndims(T) != 1 && throw(DimensionMismatch())
+    return array(tensor(T))
+end
 #######################################################################
 #
 # Printing, reading and writing ITensors
@@ -1911,12 +1869,6 @@ function summary(io::IO, T::ITensor)
     println(io)
   end
   print(io, typeof(store(T)))
-end
-
-function summary(io::IO, T::ITensor{Any})
-  print(io,"ITensor ord=$(order(T))")
-  print(io," \n", typeof(inds(T)))
-  print(io," \n", typeof(store(T)))
 end
 
 # TODO: make a specialized printing from Diag
@@ -2016,9 +1968,7 @@ function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
 
   stypestr = read(attributes(open_group(g,"store"))["type"])
   stype = eval(Meta.parse(stypestr))
-
   store = read(g,"store",stype)
-
   return itensor(store,inds)
 end
 
