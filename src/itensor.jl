@@ -235,7 +235,7 @@ ITensor(is::Indices) = ITensor(Float64, is)
 ITensor(inds::Index...) = ITensor(Float64, IndexSet(inds...))
 
 # To fix ambiguity with QN Index version
-ITensor() = emptyITensor()
+ITensor() = ITensor(Float64, IndexSet())
 
 """
     ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
@@ -1230,12 +1230,6 @@ end
 -(A::ITensor) = itensor(-tensor(A))
 
 function (A::ITensor + B::ITensor)
-  if ndims(A) == 0 && ndims(B) > 0 && store(A) isa NDTensors.Empty
-    return copy(B)
-  end
-  if ndims(B) == 0 && ndims(A) > 0 && store(B) isa NDTensors.Empty
-    return copy(A)
-  end
   ndims(A) != ndims(B) && throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
   C = copy(A)
   C .+= B
@@ -1243,12 +1237,6 @@ function (A::ITensor + B::ITensor)
 end
 
 function (A::ITensor - B::ITensor)
-  if ndims(A) == 0 && ndims(B) > 0 && store(A) isa NDTensors.Empty
-    return -copy(B)
-  end
-  if ndims(B) == 0 && ndims(A) > 0 && store(B) isa NDTensors.Empty
-    return copy(A)
-  end
   ndims(A) != ndims(B) && throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
   C = copy(A)
   C .-= B
