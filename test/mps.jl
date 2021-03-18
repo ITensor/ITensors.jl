@@ -1047,8 +1047,6 @@ end
 
       osZ = [("Z", n) for n in 1:N]
 
-      osRand = [("randn", n) for n in 1:N]
-
       osSw = [("SWAP", n, n+1) for n in 1:N-2]
 
       osCx = [("CX", n, n+3) for n in 1:N-3]
@@ -1059,9 +1057,9 @@ end
 
       osXX = [("XX", (n, n+1), (ϕ = π/8,)) for n in 1:N-1]
 
-      os_noise = [("noise", n, n+2, n+4) for n in 1:N-4]
+      #os_noise = [("noise", n, n+2, n+4) for n in 1:N-4]
 
-      os = vcat(osRand, osX, osXX, osSw, osRx, osZ, osCx, osT)
+      os = vcat(osX, osXX, osSw, osRx, osZ, osCx, osT)
       s = siteinds("Qubit", N)
       gates = ops(os, s)
 
@@ -1090,39 +1088,39 @@ end
         end
       end
 
-      @testset "Mixed state noisy evolution" begin
-        prepend!(os, os_noise)
-        gates = ops(os, s)
-        M = product(gates, M0; apply_dag = true,
-                    cutoff = 1e-15, maxdim = maxdim)
-        @test maxlinkdim(M) == 64
-        sM0 = siteinds(M0)
-        sM = siteinds(M)
-        for n in 1:N
-          @test hassameinds(sM[n], sM0[n])
-        end
-        @set_warn_order 16 begin
-          prodM = product(gates, prod(M0); apply_dag = true)
-          @test prod(M) ≈ prodM rtol = 1e-7
-        end
-      end
+      #@testset "Mixed state noisy evolution" begin
+      #  prepend!(os, os_noise)
+      #  gates = ops(os, s)
+      #  M = product(gates, M0; apply_dag = true,
+      #              cutoff = 1e-15, maxdim = maxdim)
+      #  @test maxlinkdim(M) == 64
+      #  sM0 = siteinds(M0)
+      #  sM = siteinds(M)
+      #  for n in 1:N
+      #    @test hassameinds(sM[n], sM0[n])
+      #  end
+      #  @set_warn_order 16 begin
+      #    prodM = product(gates, prod(M0); apply_dag = true)
+      #    @test prod(M) ≈ prodM rtol = 1e-7
+      #  end
+      #end
 
-      @testset "Mixed state noisy evolution" begin
-        prepend!(os, os_noise)
-        gates = ops(os, s)
-        M = product(gates, M0;
-                    apply_dag = true, cutoff = 1e-15, maxdim = maxdim-1)
-        @test maxlinkdim(M) == 64
-        sM0 = siteinds(M0)
-        sM = siteinds(M)
-        for n in 1:N
-          @test hassameinds(sM[n], sM0[n])
-        end
-        @set_warn_order 16 begin
-          prodM = product(gates, prod(M0); apply_dag = true)
-          @test prod(M) ≈ prodM rtol = 1e-7
-        end
-      end
+      #@testset "Mixed state noisy evolution" begin
+      #  prepend!(os, os_noise)
+      #  gates = ops(os, s)
+      #  M = product(gates, M0;
+      #              apply_dag = true, cutoff = 1e-15, maxdim = maxdim-1)
+      #  @test maxlinkdim(M) == 64
+      #  sM0 = siteinds(M0)
+      #  sM = siteinds(M)
+      #  for n in 1:N
+      #    @test hassameinds(sM[n], sM0[n])
+      #  end
+      #  @set_warn_order 16 begin
+      #    prodM = product(gates, prod(M0); apply_dag = true)
+      #    @test prod(M) ≈ prodM rtol = 1e-7
+      #  end
+      #end
 
     end
 
@@ -1134,8 +1132,7 @@ end
       osCx = [("CX", n, n+3) for n in 1:N-3]
       osT = [("CCX", n, n+1, n+3) for n in 1:N-3]
       osRx = [("Rx", n, (θ = π,)) for n in 1:N]
-      os_noise = [("noise", n, n+2, n+4) for n in 1:N-4]
-      os = vcat(osX, osSw, osRx, osZ, osCx, osT, os_noise)
+      os = vcat(osX, osSw, osRx, osZ, osCx, osT )
       
       s = siteinds("Qubit", N)
       gates = ops(os, s)
@@ -1163,14 +1160,12 @@ end
     @testset "Gate evolution state" begin
       N = 10
 
-      osRand = [("randn", n) for n in 1:N]
       osX = [("X", n) for n in 1:N]
       osZ = [("Z", n) for n in 1:N]
       osSw = [("SWAP", n, n+1) for n in 1:N-1]
       osCx = [("CX", n, n+1) for n in 1:N-1]
-      osRand = [("randn", n, n+1) for n in 1:N-1]
       osT = [("CCX", n, n+2, n+4) for n in 1:N-4]
-      os = vcat(osRand, osX, osSw, osZ, osCx, osT)
+      os = vcat(osX, osSw, osZ, osCx, osT)
       
       s = siteinds("Qubit", N)
       gates = ops(os, s)
