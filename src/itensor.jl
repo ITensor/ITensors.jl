@@ -1940,7 +1940,9 @@ function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
   attributes(g)["type"] = "ITensor"
   attributes(g)["version"] = 1
   write(g,"inds", inds(T))
-  write(g,"store", store(T))
+  if !(store(T) isa NDTensors.Empty)
+      write(g,"store", store(T))
+  end
 end
 
 #function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
@@ -1965,11 +1967,13 @@ function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
   end
   inds = read(g,"inds",IndexSet)
 
-  stypestr = read(attributes(open_group(g,"store"))["type"])
-  stype = eval(Meta.parse(stypestr))
-
-  store = read(g,"store",stype)
-
-  return itensor(store,inds)
+  if haskey(g, "store")
+    stypestr = read(attributes(open_group(g,"store"))["type"])
+    stype = eval(Meta.parse(stypestr))
+    store = read(g,"store",stype)
+    return itensor(store,inds)
+  else
+    return ITensor()
+  end
 end
 
