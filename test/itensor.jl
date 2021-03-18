@@ -20,7 +20,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
   @testset "Default" begin
     A = ITensor()
-    @test store(A) isa NDTensors.Dense{Float64}
+    @test store(A) isa NDTensors.Empty{Float64}
   end
 
   @testset "Undef with index" begin
@@ -497,7 +497,7 @@ end
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor(2.0)
-  @test A + B == itensor([3.0; 4.0], i)
+  @test_throws DimensionMismatch A + B
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor()
@@ -505,7 +505,7 @@ end
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor(2.0)
-  @test A - B == itensor([-1.0; 0.0], i)
+  @test_throws DimensionMismatch A - B
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor()
@@ -513,7 +513,7 @@ end
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor(2.0)
-  @test B - A == itensor([1.0; 0.0], i)
+  @test_throws DimensionMismatch B - A
   a = [1.0; 2.0]
   A = itensor(a,i)
   B = ITensor()
@@ -523,8 +523,8 @@ end
   A = itensor(a,i)
   B = itensor(b,i)
   c = [2.0; 2.0]
-  @test B - A == itensor(c, i) 
-  @test A - B == -itensor(c, i) 
+  @test B - A == itensor(c, i)
+  @test A - B == -itensor(c, i)
 end
 
 @testset "mul! and rmul!" begin
