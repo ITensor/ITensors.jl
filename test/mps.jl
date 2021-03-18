@@ -6,7 +6,6 @@ using Test
 Random.seed!(1234)
 
 include("util.jl")
-include(joinpath(pkgdir(ITensors), "examples", "gate_evolution"))
 
 @testset "MPS Basics" begin
 
@@ -839,7 +838,7 @@ end
     N = 6
     s = siteinds("Qubit", N)
 
-    I  = [op("I", s, n) for n in 1:N]
+    I  = [op("Id", s, n) for n in 1:N]
     X = [op("X", s, n) for n in 1:N]
     Y = [op("Y", s, n) for n in 1:N]
     Z = [op("Z", s, n) for n in 1:N]
@@ -1003,9 +1002,10 @@ end
 
     @testset "Contraction order of operations" begin
       s = siteind("Qubit")
-      @test product(ops([s], [("Y", 1), ("X", 1)]), setelt(s => 1)) ≈ itensor(op_matrix("X") * op_matrix("Y") * [1; 0], s)
-      @test product(ops([s], [("Y", 1), ("Z", 1)]), setelt(s => 1)) ≈ itensor(op_matrix("Z") * op_matrix("Y") * [1; 0], s)
-      @test product(ops([s], [("X", 1), ("Y", 1)]), setelt(s => 1)) ≈ itensor(op_matrix("Y") * op_matrix("X") * [1; 0], s)
+      Q = SiteType("Qubit")
+      @test product(ops([s], [("Y", 1), ("X", 1)]), setelt(s => 1)) ≈ itensor(op("X",Q) * op("Y",Q) * [1; 0], s)
+      @test product(ops([s], [("Y", 1), ("Z", 1)]), setelt(s => 1)) ≈ itensor(op("Z",Q) * op("Y",Q) * [1; 0], s)
+      @test product(ops([s], [("X", 1), ("Y", 1)]), setelt(s => 1)) ≈ itensor(op("Y",Q) * op("X",Q) * [1; 0], s)
     end
 
     @testset "Simple on-site state evolution" begin
