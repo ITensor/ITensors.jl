@@ -675,7 +675,8 @@ A[1, 2] = 1.0 # same as: A[i => 1, i' => 2] = 1.0
 A[2, :] = [2.0 3.0]
 ```
 """
-function setindex!(T::ITensor, x::Number, I::Int...)
+function setindex!(T::ITensor, x::Number, I::Union{Int, LastVal}...)
+  I = lastval_to_int(T, I...)
   @boundscheck checkbounds(tensor(T), I...)
   fluxT = flux(T)
   if !isnothing(fluxT) && fluxT != flux(T, I...)
