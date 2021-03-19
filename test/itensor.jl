@@ -89,6 +89,12 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test size(A) == dims(A) == (2,2)
     @test dim(A) == 4
 
+    At = randomITensor(Index(2), Index(3))
+    @test maxdim(At) == 3
+    @test mindim(At) == 2
+    @test dim(At, 1) == 2
+    @test dim(At, 2) == 3
+
     B = randomITensor(IndexSet(i,j))
     @test store(B) isa NDTensors.Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
