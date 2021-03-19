@@ -21,9 +21,20 @@ using Compat
     @test l ∈ IndexSet(I..., l) 
     @test l ∈ IndexSet(l, I...)
     @test length(IndexSet(i,j)) == 2
+    # construct with function
+    ind_list = [i, j, k]
+    I = IndexSet(ii->ind_list[ii], 3)
+    @test i ∈ I
+    @test j ∈ I
+    @test k ∈ I
+    I = IndexSet(ii->ind_list[ii], Order(3))
+    @test i ∈ I
+    @test j ∈ I
+    @test k ∈ I
   end
   @testset "length of IndexSet and friends" begin
     @test length(IndexSet(i,j)) == 2
+    @test size(IndexSet(i,j)) == (length(IndexSet(i,j)),)
   end
   @testset "Convert to Index" begin
     @test Index(IndexSet(i)) === i
@@ -269,7 +280,11 @@ using Compat
     @test x ∈ J
     @test y ∈ J
     @test dir(J[1]) == -dir(I[1])
+    @test dir(J, x) == -dir(I, x)
     @test dir(J[2]) == -dir(I[2])
+    @test dir(J, y) == -dir(I, y)
+    @test ITensors.dirs(J, (x, y)) == [-dir(I, x), -dir(I, y)]
+    @test ITensors.dirs(J) == (-dir(I, x), -dir(I, y))
 
     # dir
     dirsI = dir.(I)

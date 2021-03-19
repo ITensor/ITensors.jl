@@ -293,6 +293,9 @@ using ITensors,
     @test C[1,2] ≈ A[1,2] * B[2,1]
     @test C[2,1] ≈ A[2,1] * B[1,2]
     @test C[2,2] ≈ A[2,2] * B[2,2]
+
+    D = randomITensor(i', Index(2))
+    @test_throws ErrorException A ⊙ D
   end
 
 end
