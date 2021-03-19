@@ -75,6 +75,11 @@ function Index(dim::Int; tags="", plev=0)
   return Index(rand(index_id_rng(), IDType), dim, Neither, tags, plev)
 end
 
+# TODO: decide if these are good definitions, using
+# them for generic code in ContractionSequenceOptimization
+Base.Int(i::Index) = dim(i)
+length(i::Index) = 1
+
 """
     Index(dim::Integer, tags::Union{AbstractString, TagSet}; plev::Int = 0)
 

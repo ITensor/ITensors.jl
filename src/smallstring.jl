@@ -5,6 +5,14 @@ const smallLength = 8
 const SmallStringStorage = SVector{smallLength,IntChar}
 const MSmallStringStorage = MVector{smallLength,IntChar}
 
+# Similar types are implemented in various packages:
+# https://github.com/JuliaComputing/FixedSizeStrings.jl
+# https://gist.github.com/SimonDanisch/02e74622e0577f199c1b1a8a65390c24#file-fixedstring-jl
+# https://github.com/JuliaStrings/StringViews.jl
+# https://github.com/JuliaString/ShortStrings.jl
+# https://discourse.julialang.org/t/way-to-make-sharedarray-over-fixed-length-strings/7082
+# https://github.com/djsegal/FixedLengthStrings.jl
+# TODO: make this more generic by parametrizing over the length and Char size. Also, store the length of the string.
 struct SmallString
   data::SmallStringStorage
 

@@ -1276,8 +1276,10 @@ _contract(T::ITensor, ::Nothing) = T
 
 dag(::Nothing) = nothing
 
+# TODO: add iscombiner(::Tensor) to NDTensors
 iscombiner(T::ITensor) = (store(T) isa Combiner)
 
+# TODO: add isdiag(::Tensor) to NDTensors
 isdiag(T::ITensor) = (store(T) isa Diag || store(T) isa DiagBlockSparse)
 
 function can_combine_contract(A::ITensor, B::ITensor)
@@ -1307,6 +1309,7 @@ end
 
 """
     A::ITensor * B::ITensor
+    contract(A::ITensor, B::ITensor)
 
 Contract ITensors A and B to obtain a new ITensor. This 
 contraction `*` operator finds all matching indices common
@@ -1316,10 +1319,16 @@ indices from matching, their prime level or tags can be
 modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
 """
-function (A::ITensor * B::ITensor)
-  if ndims(A) == 0
+(A::ITensor * B::ITensor) = contract(A, B)
+
+function contract(A::ITensor, B::ITensor)
+  NA = ndims(A)
+  NB = ndims(B)
+  if NA == 0 && NB == 0
+    return (iscombiner(A) || iscombiner(B)) ? _contract(A, B) : ITensor(A[] * B[])
+  elseif NA == 0
     return iscombiner(A) ? _contract(A, B) : A[] * B
-  elseif ndims(B) == 0
+  elseif NB == 0
     return iscombiner(B) ? _contract(B, A) : B[] * A
   else
     C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
@@ -1327,11 +1336,84 @@ function (A::ITensor * B::ITensor)
   end
 end
 
+function optimized_contraction_sequence(A::Union{Vector{<: ITensor}, Tuple{Vararg{<: ITensor}}})
+  if length(A) == 1
+    return optimized_contraction_sequence(A[1])
+  elseif length(A) == 2
+    return optimized_contraction_sequence(A[1], A[2])
+  elseif length(A) == 3
+    return optimized_contraction_sequence(A[1], A[2], A[3])
+  else
+    return _optimized_contraction_sequence(A)
+  end
+end
 
-# TODO: define for contraction order optimization
-#*(A1::ITensor,
-#  A2::ITensor,
-#  A3::ITensor, As::ITensor...)
+optimized_contraction_sequence(A::ITensor) = Any[1]
+optimized_contraction_sequence(A1::ITensor, A2::ITensor) = Any[1, 2]
+optimized_contraction_sequence(A1::ITensor, A2::ITensor, A3::ITensor) =
+  optimized_contraction_sequence(inds(A1), inds(A2), inds(A3))
+optimized_contraction_sequence(As::ITensor...) = _optimized_contraction_sequence(As)
+
+_optimized_contraction_sequence(As::Tuple{<: ITensor}) = Any[1]
+_optimized_contraction_sequence(As::Tuple{<: ITensor, <: ITensor}) = Any[1, 2]
+_optimized_contraction_sequence(As::Tuple{<: ITensor, <: ITensor, <: ITensor}) =
+  optimized_contraction_sequence(inds(As[1]), inds(As[2]), inds(As[3]))
+_optimized_contraction_sequence(As::Tuple{Vararg{<: ITensor}}) =
+  __optimized_contraction_sequence(As)
+
+_optimized_contraction_sequence(As::Vector{<: ITensor}) =
+  __optimized_contraction_sequence(As)
+
+function __optimized_contraction_sequence(As)
+  indsAs = [inds(A) for A in As]
+  return optimized_contraction_sequence(indsAs)
+end
+
+default_sequence() = using_contraction_sequence_optimization() ? "automatic" : "left_associative"
+
+# TODO: support "left_associative" (like `foldl`) and "right_associative" (like `foldr`)
+# TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
+"""
+    *(As::ITensor...; sequence = default_sequence(), kwargs...)
+    *(As::Vector{<: ITensor}; sequence = default_sequence(), kwargs...)
+    contract(As::ITensor...; sequence = default_sequence(), kwargs...)
+
+Contract the set of ITensors according to the contraction sequence.
+
+The default sequence is "automatic" if `ITensors.using_contraction_sequence_optimization()`
+is true, otherwise it is "left_associative" (the ITensors are contracted from left to right).
+
+You can change the default with `ITensors.enable_contraction_sequence_optimization()` and
+`ITensors.disable_contraction_sequence_optimization()`.
+
+For a custom sequence, the sequence should be provided as a binary tree where the leaves are
+integers `n` specifying the ITensor `As[n]` and branches are accessed
+by indexing with `1` or `2`, i.e. `sequence = Any[Any[1, 3], Any[2, 4]]`.
+"""
+function contract(As::Union{Vector{<: ITensor}, Tuple{Vararg{<: ITensor}}};
+                  sequence = default_sequence(), kwargs...)
+  if sequence == "left_associative"
+    return foldl((A, B) -> contract(A, B; kwargs...), As)
+  elseif sequence == "right_associative"
+    return foldr((A, B) -> contract(A, B; kwargs...), As)
+  elseif sequence == "automatic"
+    return _contract(As, optimized_contraction_sequence(As); kwargs...)
+  else
+    return _contract(As, sequence; kwargs...)
+  end
+end
+
+contract(As::ITensor...; kwargs...) = contract(As; kwargs...)
+
+_contract(As, sequence::Int) = As[sequence]
+
+# Given a contraction sequence, contract the tensors recursively according
+# to that sequence.
+function _contract(As, sequence; kwargs...)
+  return contract(_contract(As, sequence[1]), _contract(As, sequence[2]); kwargs...)
+end
+
+*(As::ITensor...; kwargs...) = contract(As...; kwargs...)
 
 # XXX: rename contract!
 function mul!(C::ITensor, A::ITensor, B::ITensor,
@@ -1407,8 +1489,8 @@ When `ishermitian=true` the exponential of `Hermitian(A_{lr})` is
 computed internally.
 """
 function exp(A::ITensor, Linds, Rinds; kwargs...)
-  ishermitian=get(kwargs,:ishermitian,false)
-
+  ishermitian=get(kwargs, :ishermitian, false)
+  
   @debug_check begin
     if hasqns(A)
       @assert flux(A) == QN()

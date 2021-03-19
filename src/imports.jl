@@ -58,6 +58,9 @@ import Base.Broadcast:
   broadcastable,
   instantiate
 
+import ITensors.ContractionSequenceOptimization:
+  optimized_contraction_sequence
+
 import HDF5:
   read,
   write

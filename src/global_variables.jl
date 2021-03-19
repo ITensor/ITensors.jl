@@ -206,3 +206,21 @@ function disable_debug_checks()
   end
 end
 
+#
+# Turn contraction sequence optimizations on and off
+#
+
+const _using_contraction_sequence_optimization = Ref(false)
+
+using_contraction_sequence_optimization() = _using_contraction_sequence_optimization[]
+
+function enable_contraction_sequence_optimization()
+  _using_contraction_sequence_optimization[] = true
+  return nothing
+end
+
+function disable_contraction_sequence_optimization()
+  _using_contraction_sequence_optimization[] = false
+  return nothing
+end
+
