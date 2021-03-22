@@ -35,11 +35,11 @@ set_debug(val::Bool) = (global itdebug = val)
 get_debug() = itdebug
 
 
-function printnz(T::ITensor{N}) where {N}
+function printnz(T::ITensor)
   print("ITensor ord=$(order(T))")
   print(" \n", inds(T))
   println(" \n", typeof(store(T)))
-  for ind in Iterators.product(ntuple(n->1:dim(inds(T)[n]),N)...)
+  for ind in Iterators.product(ntuple(n->1:dim(inds(T)[n]),order(T))...)
     val = T[ind...]
     if abs(val) > 1E-10
       print("  $ind $val\n")
@@ -48,7 +48,7 @@ function printnz(T::ITensor{N}) where {N}
   println()
 end
 
-function printnz(name::String,T::ITensor{N}) where {N}
+function printnz(name::String,T::ITensor)
   println(name)
   printnz(T)
 end
