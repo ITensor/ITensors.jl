@@ -34,7 +34,7 @@ end
 
 has_fermionic_subspaces(is::IndexSet) = false
 
-function has_fermionic_subspaces(is::QNIndexSet)
+function has_fermionic_subspaces(is::Union{QNIndexSet,NTuple{N,QNIndex}}) where {N}
   for i in is, b=1:nblocks(i)
     isfermionic(qn(i,b)) && (return true)
   end
@@ -99,40 +99,10 @@ end
 
 function NDTensors.permfactor(perm,
                               block::NDTensors.Block{N},
-                              inds::QNIndexSet) where {N}
+                              inds::Union{QNIndexSet,NTuple{N,QNIndex}}) where {N}
   qns = ntuple(n->qn(inds[n],block[n]),N)
   return compute_permfactor(perm,qns...)
 end
-
-#
-# This version needed because permfactor called from
-# within NDTensors (blocksparse/combiner.jl) on a 
-# 'slice' of indices of a QNITensor storage/index array
-# which there is an NTuple:
-#
-function NDTensors.permfactor(perm,
-                              block::NDTensors.Block{N},
-                              inds::NTuple{N,QNIndex}) where {N}
-  qns = ntuple(n->qn(inds[n],block[n]),N)
-  return compute_permfactor(perm,qns...)
-end
-
-#internal_factor(block::NTuple{N,Int},inds) where {N} = 1
-#
-#function internal_factor(block::NTuple{N,Int},inds::QNIndexSet) where {N}
-#  qns = ntuple(n->qn(inds[n],block[n]),N)
-#  fac = 1
-#  for q in qns
-#    for v in q
-#      !isactive(v) && break
-#      if isfermionic(v) && mod(abs(val(v)),4) >= 2
-#        fac *= -1
-#      end
-#      #@show q,v,fac
-#    end
-#  end
-#  return fac
-#end
 
 #
 # TODO: specialize this *just* for QNIndex as an optimization
@@ -141,8 +111,8 @@ end
 #
 function NDTensors.compute_alpha(ElType,
                                  labelsR,blockR,input_indsR,
-                                 labelsT1,blockT1,indsT1::QNIndexSet,
-                                 labelsT2,blockT2,indsT2::QNIndexSet)
+                                 labelsT1,blockT1,indsT1::NTuple{N1,QNIndex},
+                                 labelsT2,blockT2,indsT2::NTuple{N2,QNIndex}) where {N1,N2}
   α = one(ElType)
   if !has_fermionic_subspaces(indsT1) || !has_fermionic_subspaces(indsT2)
     return α
@@ -201,11 +171,11 @@ end
 # labelsR gives the ordering of indices after the product
 function NDTensors.mult_combiner_signs(C,
                                        labelsC_,
-                                       indsC::QNIndexSet,
+                                       indsC::NTuple{NC,QNIndex},
                                        T,
                                        labelsT_,
-                                       indsT::QNIndexSet,
-                                       labelsR_)
+                                       indsT::NTuple{NT,QNIndex},
+                                       labelsR_) where {NC,NT}
   if !has_fermionic_subspaces(T)
     #println("Not copying T in combiner_signs")
     return T
