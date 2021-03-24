@@ -46,7 +46,7 @@ function main(; N = 10, cutoff = 1E-8,
   # for Nsteps steps
   psi = psi0
   for step in 1:Nsteps
-    psi = apply(gates, psi; cutoff)
+    psi = apply(gates, psi; cutoff=cutoff)
     t += δt
     Sz = measure_Sz(psi,c)
     println("$t $Sz")
@@ -56,7 +56,7 @@ function main(; N = 10, cutoff = 1E-8,
   rho0 = MPO(psi0)
   rho = rho0
   for step in 1:Nsteps
-    rho = apply(gates, rho; cutoff, apply_dag = true)
+    rho = apply(gates, rho; cutoff=cutoff, apply_dag = true)
     t += δt
   end
   @show inner(psi, rho, psi)
