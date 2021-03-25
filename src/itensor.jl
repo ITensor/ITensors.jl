@@ -1193,6 +1193,13 @@ function dag(T::ITensor; always_copy=false)
 end
 
 """
+    dir(A::ITensor, i::Index)
+
+Return the direction of the Index `i` in the ITensor `A`.
+"""
+dir(A::ITensor, i::Index) = dir(inds(A), i)
+
+"""
     permute(T::ITensors, inds; always_copy::Bool = false)
     permute(T::ITensors, inds::Index...; always_copy::Bool = false)
 

@@ -25,12 +25,16 @@ import ITensors: In, Out, Neither
     @test dim(i) == 3
     @test hastags(i,"i")
     @test dir(i) == Out
+    @test dir(i => 2) == Out
+    @test dir(IndexVal(i => 2)) == Out
 
     j = Index(QN(0)=>1,QN(1)=>2;tags="j",dir=In)
     @test hasqns(j)
     @test dim(j) == 3
     @test hastags(j,"j")
     @test dir(j) == In
+    @test dir(j => 2) == In
+    @test dir(IndexVal(j => 2)) == In
   end
 
   @testset "flux and qn" begin

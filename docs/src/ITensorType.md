@@ -73,6 +73,7 @@ setindex!(::ITensor, ::Number, ::Int...)
 ```@docs
 inds(::ITensor)
 ind(::ITensor, ::Int)
+dir(::ITensor, ::Index)
 ```
 
 ## [Priming and tagging](@id Priming_and_tagging_ITensor)
@@ -123,10 +124,11 @@ exp(::ITensor, ::Any, ::Any)
 ## Decompositions
 ```@docs
 svd(::ITensor, ::Any...)
+eigen(::ITensor, ::Any...)
 factorize(::ITensor, ::Any...)
 ```
 
-## Operations
+## Memory operations
 
 ```@docs
 permute(::ITensor, ::Any)
