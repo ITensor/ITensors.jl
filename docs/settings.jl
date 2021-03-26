@@ -30,7 +30,8 @@ settings = Dict(
                                 ],
              "Advanced usage guide" => [
                                         "Advanced usage guide" => "AdvancedUsageGuide.md",
-                                        "Multithreading" => "Multithreading.md"
+                                        "Multithreading" => "Multithreading.md",
+                                        "Symmetric tensor background and usage" => "QNTricks.md"
                                        ]
            ],
   :format => Documenter.HTML(assets = ["assets/favicon.ico"],

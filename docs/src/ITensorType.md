@@ -124,7 +124,7 @@ exp(::ITensor, ::Any, ::Any)
 ## Decompositions
 ```@docs
 svd(::ITensor, ::Any...)
-eigen(::ITensor, ::Any...)
+eigen(::ITensor, ::Any, ::Any)
 factorize(::ITensor, ::Any...)
 ```
 

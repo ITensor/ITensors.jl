@@ -148,7 +148,7 @@ iterate(E::TruncEigen, ::Val{:l}) = (E.l, Val(:r))
 iterate(E::TruncEigen, ::Val{:r}) = (E.r, Val(:done))
 iterate(E::TruncEigen, ::Val{:done}) = nothing
 
-@doc """
+"""
     eigen(A::ITensor[, Linds, Rinds]; <keyword arguments>)
 
 Eigendecomposition of an ITensor `A`, computed
