@@ -23,3 +23,9 @@ getfirst(::Function, ::IndexSet)
 getfirst(::IndexSet)
 filter(::Function, ::IndexSet)
 ```
+
+## Symmetry related properties
+
+```@docs
+dir(::IndexSet, ::Index)
+```

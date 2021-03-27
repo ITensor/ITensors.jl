@@ -17,7 +17,6 @@ noiseterm(::ProjMPOSum,::ITensor,::String)
 ## Properties
 
 ```@docs
-length(::ProjMPOSum)
 eltype(::ProjMPOSum)
 size(::ProjMPOSum)
 ```

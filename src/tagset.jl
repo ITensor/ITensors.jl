@@ -160,6 +160,9 @@ end
 
 function addtags(ts::TagSet, tagsadd)
   if length(ts) == maxTags
+    if hastags(ts, tagsadd)
+      return ts
+    end
     throw(ErrorException("Cannot add tag: TagSet already maximum size"))
   end
   tsadd = TagSet(tagsadd)

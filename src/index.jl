@@ -71,7 +71,7 @@ julia> tags(i)
 "l"
 ```
 """
-function Index(dim::Int; tags="", plev=0)
+function Index(dim::Integer; tags="", plev=0)
   return Index(rand(index_id_rng(), IDType), dim, Neither, tags, plev)
 end
 
@@ -100,7 +100,7 @@ julia> tags(i)
 "l,tag"
 ```
 """
-Index(dim::Int,
+Index(dim::Integer,
       tags::Union{AbstractString, TagSet};
       plev::Int = 0) = Index(dim; tags = tags, plev = plev)
 
@@ -124,8 +124,11 @@ space(i::Index) = i.space
 
 """
     dir(i::Index)
+    dir(iv::IndexVal)
 
-Obtain the direction of an Index (In, Out, or Neither).
+Return the direction of an `Index` (`ITensors.In`, `ITensors.Out`, or `ITensors.Neither`).
+For an `IndexVal` `iv`, returns returns the direction of the `Index` in the `IndexVal`,
+i.e. `dir(ind(iv))`.
 """
 dir(i::Index) = i.dir
 
@@ -194,7 +197,7 @@ end
 """
     copy(i::Index)
 
-Create a copy of index `i` with identical `id`, `dim`, `dir` and `tags`.
+Create a copy of index `i` with identical `id`, `space`, `dir` and `tags`.
 """
 copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
 
@@ -552,6 +555,8 @@ prime(iv::IndexVal,
 dag(iv::IndexVal) = IndexVal(dag(ind(iv)), val(iv))
 
 Base.adjoint(iv::IndexVal) = IndexVal(prime(ind(iv)), val(iv))
+
+dir(iv::IndexValOrPairIndexInt) = dir(ind(iv))
 
 #
 # Printing, reading, and writing
