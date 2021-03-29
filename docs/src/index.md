@@ -15,6 +15,10 @@
 ITensors is a library for rapidly creating correct and efficient
 tensor network algorithms. 
 
+The source code for ITensors can be found here: [https://github.com/ITensor/ITensors.jl](https://github.com/ITensor/ITensors.jl).  
+
+Additional documentation can be found on the ITensor website [itensor.org](https://itensor.org/).
+
 An ITensor is a tensor whose interface 
 is independent of its memory layout. ITensor indices are
 objects which carry extra information and which
