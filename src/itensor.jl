@@ -15,6 +15,9 @@ handle any memory permutations.
 julia> i = Index(2, "i")
 (dim=2|id=287|"i")
 
+#
+# Make an ITensor with random elements:
+#
 julia> A = randomITensor(i', i)
 ITensor ord=2 (dim=2|id=287|"i")' (dim=2|id=287|"i")
 NDTensors.Dense{Float64,Array{Float64,1}}
@@ -31,6 +34,9 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 julia> @show inds(A);
 inds(A) = IndexSet{2} (dim=2|id=287|"i")' (dim=2|id=287|"i") 
 
+#
+# Set the i==1, i'==2 element to 1.0:
+#
 julia> A[i => 1, i' => 2] = 1;
 
 julia> @show A;
@@ -56,6 +62,10 @@ NDTensors.Dense{Float64,Array{Float64,1}}
  -0.6510816500352691   0.2579101497658179
   0.256266641521826   -0.9464735926768166
 
+#
+# Can add or subtract ITensors as long as they
+# have the same indices, in any order:
+#
 julia> @show A + B;
 A + B = ITensor ord=2
 Dim 1: (dim=2|id=287|"i")'
@@ -220,6 +230,17 @@ tensor(A::ITensor) = tensor(store(A), Tuple(inds(A)))
 Construct an ITensor filled with zeros having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
 
 The storage will have `NDTensors.Dense` type.
+
+# Examples
+
+```julia
+i = Index(2,"index_i")
+j = Index(4,"index_j")
+k = Index(3,"index_k")
+
+A = ITensor(i,j)
+B = ITensor(ComplexF64,k,j)
+```
 """
 ITensor(::Type{ElT}, inds::Indices) where {ElT <: Number} =
   itensor(Dense(ElT, dim(inds)), inds)
@@ -241,9 +262,20 @@ ITensor() = ITensor(Float64, IndexSet())
     ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
     ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::Index...)
 
-Construct an ITensor filled with undefined elements having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
+Construct an ITensor filled with undefined elements having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`. One purpose for using this constructor is that initializing the elements in an undefined way is faster than initializing them to a set value such as zero.
 
 The storage will have `NDTensors.Dense` type.
+
+# Examples 
+
+```julia
+i = Index(2,"index_i")
+j = Index(4,"index_j")
+k = Index(3,"index_k")
+
+A = ITensor(undef,i,j)
+B = ITensor(ComplexF64,undef,k,j)
+```
 """
 ITensor(::Type{ElT}, ::UndefInitializer,
         inds::Indices) where {ElT <: Number} =
@@ -266,6 +298,16 @@ ITensor(::UndefInitializer, inds::Index...) =
 Construct an ITensor with all elements set to `float(x)` and indices `inds`.
 
 The storage will have `NDTensors.Dense` type.
+
+# Examples
+
+```julia
+i = Index(2,"index_i"); j = Index(4,"index_j"); k = Index(3,"index_k");
+
+A = ITensor(1.0)
+B = ITensor(1.0,i,j)
+C = ITensor(2.0+3.0im,j,k)
+```
 """
 ITensor(x::Number, inds::Indices) =
   itensor(Dense(float(x), dim(inds)), inds)
@@ -333,6 +375,17 @@ Construct an ITensor from an Array `A` and indices `inds`.
 The ITensor will be the closest floating point storage to the
 Array (`float(A)`), and the storage will store a copy of the Array
 data.
+
+# Examples
+
+```julia
+i = Index(2,"index_i")
+j = Index(2,"index_j")
+
+M = [1 2;
+     3 4]
+T = ITensor(M,i,j)
+```
 """
 ITensor(A::Array{<:AbstractFloat},
         inds::Indices) = itensor(copy(A), inds)
@@ -1136,6 +1189,17 @@ randn!(T::ITensor) = randn!(tensor(T))
     randomITensor([::Type{ElT <: Number} = Float64, ]inds::Index...)
 
 Construct an ITensor with type `ElT` and indices `inds`, whose elements are normally distributed random numbers. If the element type is not specified, it defaults to `Float64`.
+
+# Examples 
+
+```julia
+i = Index(2,"index_i")
+j = Index(4,"index_j")
+k = Index(3,"index_k")
+
+A = randomITensor(i,j)
+B = randomITensor(ComplexF64,undef,k,j)
+```
 """
 function randomITensor(::Type{S},
                        inds::Indices) where {S <: Number}
@@ -1211,6 +1275,17 @@ If `always_copy = false`, it avoids copying data if possible.
 Therefore, it may return a view. Use `always_copy = true`
 if you never want it to return an ITensor with a view
 of the original ITensor.
+
+# Examples
+
+```julia
+i = Index(2,"index_i"); j = Index(4,"index_j"); k = Index(3,"index_k");
+T = randomITensor(i,j,k)
+
+pT_1 = permute(T,k,i,j)
+
+pT_2 = permute(T,j,i,k)
+```
 """
 function permute(T::ITensor,
                  new_inds; always_copy::Bool = false)
@@ -1325,6 +1400,28 @@ have only the unique indices of A and B. To prevent
 indices from matching, their prime level or tags can be 
 modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
+
+# Examples
+
+```julia
+i = Index(2,"index_i"); j = Index(4,"index_j"); k = Index(3,"index_k")
+
+A = randomITensor(i,j)
+B = randomITensor(j,k)
+C = A * B # contract over Index j
+
+A = randomITensor(i,i')
+B = randomITensor(i,i'')
+C = A * B # contract over Index i
+
+A = randomITensor(i)
+B = randomITensor(j)
+C = A * B # outer product of A and B, no contraction
+
+A = randomITensor(i,j,k)
+B = randomITensor(k,i,j)
+C = A * B # inner product of A and B, all indices contracted
+```
 """
 (A::ITensor * B::ITensor) = contract(A, B)
 
