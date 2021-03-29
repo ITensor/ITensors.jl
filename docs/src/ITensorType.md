@@ -11,8 +11,16 @@ ITensor
 ```@docs
 ITensor(::Type{<:Number}, ::ITensors.Indices)
 ITensor(::Type{<:Number}, ::UndefInitializer, ::ITensors.Indices)
+ITensor(::Number, ::ITensors.Indices)
+ITensor(::Array{<:AbstractFloat},::ITensors.Indices)
 randomITensor(::Type{<:Number}, ::ITensors.Indices)
 setelt(::IndexVal)
+```
+
+## Dense View Constructors
+
+```@docs
+itensor(::Array{<:Number},::ITensors.Indices)
 ```
 
 ## QN BlockSparse Constructors
