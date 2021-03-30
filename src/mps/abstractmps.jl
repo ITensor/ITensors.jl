@@ -1733,9 +1733,9 @@ splitblocks(::typeof(linkinds), M::AbstractMPS; tol = 0) =
 #
 
 BroadcastStyle(MPST::Type{<:AbstractMPS}) = Style{MPST}()
-BroadcastStyle(::DefaultArrayStyle{1}, ::Style{MPST}) where {MPST<:AbstractMPS} = Style{MPST}()
-BroadcastStyle(::Style{MPST}, ::DefaultArrayStyle{1}) where {MPST<:AbstractMPS} = Style{MPST}()
+BroadcastStyle(::Style{MPST}, ::DefaultArrayStyle{N}) where {N, MPST<:AbstractMPS} = Style{MPST}()
 
+broadcastable(ψ::AbstractMPS) = ψ
 copyto!(ψ::AbstractMPS, b::Broadcasted) = copyto!(data(ψ), b)
 
 similar(::Broadcasted{Style{MPST}}, ::Type{ElType}, dims) where {N,ElType,MPST<:AbstractMPS} =
