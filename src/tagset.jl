@@ -3,7 +3,6 @@ const Tag = SmallString
 const maxTagLength = smallLength
 const MTagStorage = MSmallStringStorage # A mutable tag storage
 const IntTag = IntSmallString  # An integer that can be cast to a Tag
-const emptyIntTag = IntTag(0)
 const maxTags = 4
 const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
@@ -33,18 +32,6 @@ end
 macro ts_str(s)
   TagSet(s)
 end
-
-"""
-    not(::TagSet)
-    !(::TagSet)
-
-Create a wrapper around a TagSet representing
-the set of indices that do not contain that TagSet.
-"""
-not(ts::TagSet) = Not(ts)
-Base.:!(ts::TagSet) = Not(ts)
-
-not(ts::AbstractString) = Not(ts)
 
 function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   for n = 1:ntags
@@ -122,6 +109,24 @@ const TagSet = GenericTagSet{IntTag,maxTags}
 
 Base.convert(::Type{TagSet}, str::String) = TagSet(str)
 
+
+
+
+"""
+    not(::TagSet)
+    !(::TagSet)
+
+Create a wrapper around a TagSet representing
+the set of indices that do not contain that TagSet.
+"""
+not(ts::TagSet) = Not(ts)
+Base.:!(ts::TagSet) = Not(ts)
+
+not(ts::AbstractString) = Not(ts)
+
+
+
+
 """
 ITensors.data(T::TagSet)
 
@@ -190,7 +195,7 @@ function _removetag!(ts::MTagSetStorage, ntags::Int, t::Tag)
       for j = n:ntags-1
         @inbounds ts[j] = ts[j+1]
       end
-      @inbounds ts[ntags] = emptyIntTag
+      @inbounds ts[ntags] = emptytag(IntTag)
       return ntags -= 1
     end
   end
