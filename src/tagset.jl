@@ -30,14 +30,14 @@ end
 
 GenericTagSet{IntTag,N}(t::Tag) where {N} = GenericTagSet{IntTag,N}(IntTag(t))
 
-function _hastag(ts::MTagSetStorage{T,N}, ntags::Int, tag::T) where {T,N}
+function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   for n = 1:ntags
     @inbounds ts[n] == tag && return true
   end
   return false
 end
 
-function _addtag_ordered!(ts::MTagSetStorage{T,N}, ntags::Int, tag::T) where {T,N}
+function _addtag_ordered!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   if iszero(ntags) || tag > @inbounds ts[ntags]
     @inbounds setindex!(ts,tag,ntags+1)
   else
@@ -53,7 +53,7 @@ function _addtag_ordered!(ts::MTagSetStorage{T,N}, ntags::Int, tag::T) where {T,
   return ntags+1
 end
 
-function _addtag!(ts::MTagSetStorage{T,N}, ntags::Int, tag::T) where {T,N}
+function _addtag!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   t = Tag(tag)
   if !isnull(t)
     if isint(t)
