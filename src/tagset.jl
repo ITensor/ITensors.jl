@@ -9,14 +9,14 @@ const vmaxTags = Val(maxTags)
 const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
-emptytag(::IntTag) = IntTag(0)
+emptytag(::Type{IntTag}) = IntTag(0)
 
 #TODO: decide which functions on TagSet should be made generic.
 struct GenericTagSet{T,N}
   data::TagSetStorage{T,N}
   length::Int
   function GenericTagSet{T,N}() where {T,N}
-    ts = TagSetStorage(ntuple(_ -> emptytag(T) , N))
+    ts = TagSetStorage(ntuple(_ -> emptytag(T) , Val(N)))
     new(ts, 0)
   end
   GenericTagSet{T,N}(tags::TagSetStorage{T,N}, len::Int) where {T,N} = new(tags, len)
@@ -25,7 +25,7 @@ end
 GenericTagSet(ts::GenericTagSet) = ts
 
 function GenericTagSet{T,N}(t::T) where {T,N}
-  ts = MTagSetStorage(ntuple(_ -> emptytag(T) , N))
+  ts = MTagSetStorage(ntuple(_ -> emptytag(T) , Val(N)))
   ts[1] = IntTag(t)
   return GenericTagSet(TagSetStorage(ts), 1)
 end
@@ -95,7 +95,7 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # TODO: refactor the Val here.
   current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
   # Mutable fixed-size vector as temporary TagSet storage
-  ts = MTagSetStorage(ntuple(_ -> emptytag(T),N))
+  ts = MTagSetStorage(ntuple(_ -> emptytag(T),Val(N)))
   nchar = 0
   ntags = 0
   for current_char in str
