@@ -252,8 +252,12 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   cL = combinedind(CL)
   cR = dag(combinedind(CR))
-  if inds(AC) != IndexSet(cL, cR)
-    AC = permute(AC, cL, cR)
+  #if inds(AC) != IndexSet(cL, cR)
+  #  AC = permute(AC, cL, cR)
+  #end
+  # <fermions>
+  if inds(AC) != IndexSet(cR, cL)
+    AC = permute(AC, cR, cL)
   end
 
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
