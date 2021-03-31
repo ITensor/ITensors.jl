@@ -1,20 +1,19 @@
 
-struct QNVal 
+struct QNVal{T<:Integer} 
   name::SmallString
-  val::Int
+  val::T
   modulus::Int
 
-  function QNVal(name,v::Int,m::Int=1)
+  function QNVal(name,v::T,m::Int=1) where {T}
     am = abs(m)
     if am > 1
-      return new(SmallString(name),mod(v,am),m)
+      return new{T}(SmallString(name),mod(v,am),m)
     end
-    new(SmallString(name),v,m)
+    new{T}(SmallString(name),v,m)
   end
-
 end
 
-QNVal(v::Int, m::Int=1) = QNVal("",v,m)
+QNVal(v::Integer, m::Int=1) = QNVal("",v,m)
 QNVal() = QNVal("",0,0)
 
 name(qv::QNVal) = qv.name
@@ -24,7 +23,7 @@ isactive(qv::QNVal) = modulus(qv) != 0
 isfermionic(qv::QNVal) = modulus(qv) < 0
 (qv1::QNVal < qv2::QNVal) = (name(qv1) < name(qv2))
 
-function qn_mod(val::Int, modulus::Int)
+function qn_mod(val::Integer, modulus::Int)
   amod = abs(modulus)
   amod <= 1 && return val
   return mod(val,amod)
@@ -34,12 +33,8 @@ function -(qv::QNVal)
   return QNVal(name(qv),qn_mod(-val(qv),modulus(qv)),modulus(qv))
 end
 
-zero(qv::QNVal) = QNVal(name(qv),0,modulus(qv))
+zero(qv::QNVal) = QNVal(name(qv),zero(val(qv)),modulus(qv))
 
-(dir::Arrow * qv::QNVal) =
-  QNVal(name(qv),Int(dir)*val(qv),modulus(qv))
-
-(qv::QNVal * dir::Arrow) = (dir * qv)
 
 function pm(qv1::QNVal,qv2::QNVal, fac::Int)
   if name(qv1) != name(qv2)
@@ -58,11 +53,19 @@ end
 (qv1::QNVal + qv2::QNVal) = pm(qv1,qv2,+1)
 (qv1::QNVal - qv2::QNVal) = pm(qv1,qv2,-1)
 
+
+(dir::Arrow * qv::QNVal) =
+  QNVal(name(qv),Int(dir)*val(qv),modulus(qv))
+
+(qv::QNVal * dir::Arrow) = (dir * qv)
+
+
 const ZeroVal = QNVal()
 
 const maxQNs = 4
-const QNStorage = SVector{maxQNs,QNVal}
-const MQNStorage = MVector{maxQNs,QNVal}
+const QIntType = Int
+const QNStorage = SVector{maxQNs,QNVal{QIntType}}
+const MQNStorage = MVector{maxQNs,QNVal{QIntType}}
 
 """
 A QN object stores a collection of up to four
@@ -89,7 +92,7 @@ struct QN
 end
 
 QN(mqn::MQNStorage) = QN(QNStorage(mqn))
-QN(mqn::NTuple{N,QNVal}) where {N} = QN(QNStorage(mqn))
+QN(mqn::NTuple{N,<:QNVal}) where {N} = QN(QNStorage(mqn))
 
 isfermionic(qv::QN) = any(isfermionic, qv)
 
@@ -97,7 +100,7 @@ function hash(obj::QN, h::UInt)
   # TODO: use an MVector or SVector
   # for performance here; put non-zero QNVals
   # to front and slice when passing to hash
-  nzqv = QNVal[]
+  nzqv = QNVal{QIntType}[]
   for qv in obj.data
     if val(qv) != 0
       push!(nzqv,qv)
