@@ -5,26 +5,26 @@ const MTagStorage = MSmallStringStorage # A mutable tag storage
 const IntTag = IntSmallString  # An integer that can be cast to a Tag
 const emptyIntTag = IntTag(0)
 const maxTags = 4
-const vmaxTags = Val(maxTags)
 const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
 emptytag(::Type{IntTag}) = IntTag(0)
-empty_tagsetstorage{T,N}() where {T,N} = TagSetStorage(ntuple(_ -> emptytag(T) , Val(N)))
-empty_mtagsetstorage{T,N}() where {T,N} = MTagSetStorage(ntuple(_ -> emptytag(T) , Val(N))) 
+empty_storage(::Type{TagSetStorage{T,N}}) where {T,N} =  TagSetStorage(ntuple(_ -> emptytag(T) , N))
+empty_storage(::Type{MTagSetStorage{T,N}}) where {T,N} =  MTagSetStorage(ntuple(_ -> emptytag(T) , N))
+
 
 #TODO: decide which functions on TagSet should be made generic.
 struct GenericTagSet{T,N}
   data::TagSetStorage{T,N}
   length::Int
-  GenericTagSet{T,N}() where {T,N} = new(empty_tagsetstorage{T,N}(),0)
+  GenericTagSet{T,N}() where {T,N} = new(empty_storage(TagSetStorage{T,N}),0)
   GenericTagSet{T,N}(tags::TagSetStorage{T,N}, len::Int) where {T,N} = new(tags, len)
 end
 
 GenericTagSet{T,N}(ts::GenericTagSet{T,N}) where {T,N} = ts
 
 function GenericTagSet{T,N}(t::T) where {T,N}
-  ts = empty_mtagsetstorage{T,N}()
+  ts = empty_storage(MTagSetStorage{T,N})
   ts[1] = IntTag(t)
   return GenericTagSet(TagSetStorage(ts), 1)
 end
@@ -93,7 +93,7 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # TODO: refactor the Val here.
   current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
   # Mutable fixed-size vector as temporary TagSet storage
-  ts = empty_mtagsetstorage{T,N}()
+  ts =  empty_storage(MTagSetStorage{T,N})
   nchar = 0
   ntags = 0
   for current_char in str
@@ -285,7 +285,7 @@ function readcpp(io::IO,::Type{TagSet}; kwargs...)
   format = get(kwargs,:format,"v3")
   ts = TagSet()
   if format=="v3"
-    mstore = MTagSetStorage(ntuple(_ -> emptyIntTag,vmaxTags))
+    mstore = empty_storage(MTagSetStorage{IntTag,4})
     ntags = 0
     for n=1:4
       t = readcpp(io,Tag;kwargs...)
