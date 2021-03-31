@@ -6,26 +6,31 @@ const IntTag = IntSmallString  # An integer that can be cast to a Tag
 const emptyIntTag = IntTag(0)
 const maxTags = 4
 const vmaxTags = Val(maxTags)
-const TagSetStorage = SVector{maxTags,IntTag}
-const MTagSetStorage = MVector{maxTags,IntTag}  # A mutable tag storage
+const TagSetStorage{T,N} = SVector{N,T}
+const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
-struct TagSet
-  data::TagSetStorage
+emptytag(::IntTag) = IntTag(0)
+
+#TODO: decide which functions on TagSet should be made generic.
+struct GenericTagSet{T,N}
+  data::TagSetStorage{T,N}
   length::Int
-  function TagSet() 
-    ts = TagSetStorage(ntuple(_ -> emptyIntTag, vmaxTags))
+  function GenericTagSet{T,N}() where {T,N}
+    ts = TagSetStorage(ntuple(_ -> emptytag(T) , N))
     new(ts, 0)
   end
-  TagSet(tags::TagSetStorage, len::Int) = new(tags, len)
+  GenericTagSet{T,N}(tags::TagSetStorage{T,N}, len::Int) where {T,N} = new(tags, len)
 end
 
-TagSet(ts::TagSet) = ts
+GenericTagSet(ts::GenericTagSet) = ts
 
-function TagSet(t::Tag)
-  ts = MTagSetStorage(ntuple(_ -> emptyIntTag, vmaxTags))
+function GenericTagSet{T,N}(t::T) where {T,N}
+  ts = MTagSetStorage(ntuple(_ -> emptytag(T) , N))
   ts[1] = IntTag(t)
-  return TagSet(TagSetStorage(ts), 1)
+  return GenericTagSet(TagSetStorage(ts), 1)
 end
+
+const TagSet = GenericTagSet{IntTag,maxTags}
 
 macro ts_str(s)
   TagSet(s)
@@ -84,11 +89,13 @@ function reset!(v::MTagStorage, nchar::Int)
   end
 end
 
-function TagSet(str::AbstractString)
+#TODO:
+function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # Mutable fixed-size vector as temporary Tag storage
+  # TODO: refactor the Val here.
   current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
   # Mutable fixed-size vector as temporary TagSet storage
-  ts = MTagSetStorage(ntuple(_ -> emptyIntTag,vmaxTags))
+  ts = MTagSetStorage(ntuple(_ -> emptytag(T),N))
   nchar = 0
   ntags = 0
   for current_char in str
@@ -109,7 +116,7 @@ function TagSet(str::AbstractString)
   if nchar != 0
     ntags = _addtag!(ts,ntags,cast_to_uint(current_tag))
   end
-  return TagSet(TagSetStorage(ts),ntags)
+  return GenericTagSet{T,N}(TagSetStorage(ts),ntags)
 end
 
 Base.convert(::Type{TagSet}, str::String) = TagSet(str)
