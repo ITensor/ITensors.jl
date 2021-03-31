@@ -4,42 +4,31 @@ const maxTagLength = smallLength
 const MTagStorage = MSmallStringStorage # A mutable tag storage
 const IntTag = IntSmallString  # An integer that can be cast to a Tag
 const maxTags = 4
-const TagSetStorage = SVector{maxTags,IntTag}
-const MTagSetStorage = MVector{maxTags,IntTag}  # A mutable tag storage
+const TagSetStorage{T,N} = SVector{N,T}
+const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
-struct TagSet
-  data::TagSetStorage
+emptytag(::Type{IntTag}) = IntTag(0)
+empty_storage(::Type{TagSetStorage{T,N}}) where {T,N} =  TagSetStorage(ntuple(_ -> emptytag(T) , N))
+empty_storage(::Type{MTagSetStorage{T,N}}) where {T,N} =  MTagSetStorage(ntuple(_ -> emptytag(T) , N))
+
+
+#TODO: decide which functions on TagSet should be made generic.
+struct GenericTagSet{T,N}
+  data::TagSetStorage{T,N}
   length::Int
-  function TagSet() 
-    ts = TagSetStorage(ntuple(_ -> IntTag(0), Val(4)))
-    new(ts, 0)
-  end
-  TagSet(tags::TagSetStorage, len::Int) = new(tags, len)
+  GenericTagSet{T,N}() where {T,N} = new(empty_storage(TagSetStorage{T,N}),0)
+  GenericTagSet{T,N}(tags::TagSetStorage{T,N}, len::Int) where {T,N} = new(tags, len)
 end
 
-TagSet(ts::TagSet) = ts
+GenericTagSet{T,N}(ts::GenericTagSet{T,N}) where {T,N} = ts
 
-function TagSet(t::Tag)
-  ts = MTagSetStorage(ntuple(_ -> IntTag(0), Val(maxTags)))
-  ts[1] = IntSmallString(t)
-  return TagSet(TagSetStorage(ts), 1)
+function GenericTagSet{T,N}(t::T) where {T,N}
+  ts = empty_storage(MTagSetStorage{T,N})
+  ts[1] = T(t)
+  return GenericTagSet{T,N}(TagSetStorage(ts), 1)
 end
 
-macro ts_str(s)
-  TagSet(s)
-end
-
-"""
-    not(::TagSet)
-    !(::TagSet)
-
-Create a wrapper around a TagSet representing
-the set of indices that do not contain that TagSet.
-"""
-not(ts::TagSet) = Not(ts)
-Base.:!(ts::TagSet) = Not(ts)
-
-not(ts::AbstractString) = Not(ts)
+GenericTagSet{IntTag,N}(t::Tag) where {N} = GenericTagSet{IntTag,N}(IntTag(t))
 
 function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   for n = 1:ntags
@@ -49,7 +38,7 @@ function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
 end
 
 function _addtag_ordered!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
-  if ntags == 0 || tag > @inbounds ts[ntags]
+  if iszero(ntags) || tag > @inbounds ts[ntags]
     @inbounds setindex!(ts,tag,ntags+1)
   else
     # check for repeated tags
@@ -82,11 +71,12 @@ function reset!(v::MTagStorage, nchar::Int)
   end
 end
 
-function TagSet(str::AbstractString)
+function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # Mutable fixed-size vector as temporary Tag storage
+  # TODO: refactor the Val here.
   current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
   # Mutable fixed-size vector as temporary TagSet storage
-  ts = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
+  ts =  empty_storage(MTagSetStorage{T,N})
   nchar = 0
   ntags = 0
   for current_char in str
@@ -107,10 +97,34 @@ function TagSet(str::AbstractString)
   if nchar != 0
     ntags = _addtag!(ts,ntags,cast_to_uint(current_tag))
   end
-  return TagSet(TagSetStorage(ts),ntags)
+  return GenericTagSet{T,N}(TagSetStorage(ts),ntags)
+end
+
+const TagSet = GenericTagSet{IntTag,maxTags}
+
+macro ts_str(s)
+  TagSet(s)
 end
 
 Base.convert(::Type{TagSet}, str::String) = TagSet(str)
+
+
+
+
+"""
+    not(::TagSet)
+    !(::TagSet)
+
+Create a wrapper around a TagSet representing
+the set of indices that do not contain that TagSet.
+"""
+not(ts::TagSet) = Not(ts)
+Base.:!(ts::TagSet) = Not(ts)
+
+not(ts::AbstractString) = Not(ts)
+
+
+
 
 """
 ITensors.data(T::TagSet)
@@ -169,7 +183,7 @@ function addtags(ts::TagSet, tagsadd)
   res_ts = MVector(data(ts))
   ntags = length(ts)
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntSmallString(tsadd[n]))
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntTag(tsadd[n]))
   end
   return TagSet(TagSetStorage(res_ts),ntags)
 end
@@ -180,7 +194,7 @@ function _removetag!(ts::MTagSetStorage, ntags::Int, t::Tag)
       for j = n:ntags-1
         @inbounds ts[j] = ts[j+1]
       end
-      @inbounds ts[ntags] = IntTag(0)
+      @inbounds ts[ntags] = emptytag(IntTag)
       return ntags -= 1
     end
   end
@@ -210,7 +224,7 @@ function replacetags(ts::TagSet, tagsremove, tagsadd)
     @inbounds ntags = _removetag!(res_ts, ntags, tsremove[n])
   end
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntSmallString(tsadd[n]))
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntTag(tsadd[n]))
   end
   return TagSet(TagSetStorage(res_ts),ntags)
 end
@@ -275,12 +289,12 @@ function readcpp(io::IO,::Type{TagSet}; kwargs...)
   format = get(kwargs,:format,"v3")
   ts = TagSet()
   if format=="v3"
-    mstore = MTagSetStorage(ntuple(_ -> IntTag(0),Val(maxTags)))
+    mstore = empty_storage(MTagSetStorage{IntTag,4})
     ntags = 0
     for n=1:4
       t = readcpp(io,Tag;kwargs...)
       if t != Tag()
-        ntags = _addtag_ordered!(mstore,ntags,IntSmallString(t))
+        ntags = _addtag_ordered!(mstore,ntags,IntTag(t))
       end
     end
     ts = TagSet(TagSetStorage(mstore),ntags)
