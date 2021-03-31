@@ -5,6 +5,7 @@ const MTagStorage = MSmallStringStorage # A mutable tag storage
 const IntTag = IntSmallString  # An integer that can be cast to a Tag
 const emptyIntTag = IntTag(0)
 const maxTags = 4
+const vmaxTags = Val(maxTags)
 const TagSetStorage = SVector{maxTags,IntTag}
 const MTagSetStorage = MVector{maxTags,IntTag}  # A mutable tag storage
 
@@ -12,7 +13,7 @@ struct TagSet
   data::TagSetStorage
   length::Int
   function TagSet() 
-    ts = TagSetStorage(ntuple(_ -> emptyIntTag, Val(maxTags)))
+    ts = TagSetStorage(ntuple(_ -> emptyIntTag, vmaxTags))
     new(ts, 0)
   end
   TagSet(tags::TagSetStorage, len::Int) = new(tags, len)
@@ -21,7 +22,7 @@ end
 TagSet(ts::TagSet) = ts
 
 function TagSet(t::Tag)
-  ts = MTagSetStorage(ntuple(_ -> emptyIntTag, Val(maxTags)))
+  ts = MTagSetStorage(ntuple(_ -> emptyIntTag, vmaxTags))
   ts[1] = IntTag(t)
   return TagSet(TagSetStorage(ts), 1)
 end
@@ -87,7 +88,7 @@ function TagSet(str::AbstractString)
   # Mutable fixed-size vector as temporary Tag storage
   current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
   # Mutable fixed-size vector as temporary TagSet storage
-  ts = MTagSetStorage(ntuple(_ -> emptyIntTag,Val(maxTags)))
+  ts = MTagSetStorage(ntuple(_ -> emptyIntTag,vmaxTags))
   nchar = 0
   ntags = 0
   for current_char in str
@@ -276,7 +277,7 @@ function readcpp(io::IO,::Type{TagSet}; kwargs...)
   format = get(kwargs,:format,"v3")
   ts = TagSet()
   if format=="v3"
-    mstore = MTagSetStorage(ntuple(_ -> emptyIntTag,Val(maxTags)))
+    mstore = MTagSetStorage(ntuple(_ -> emptyIntTag,vmaxTags))
     ntags = 0
     for n=1:4
       t = readcpp(io,Tag;kwargs...)
