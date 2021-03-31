@@ -24,23 +24,20 @@ GenericTagSet{T,N}(ts::GenericTagSet{T,N}) where {T,N} = ts
 
 function GenericTagSet{T,N}(t::T) where {T,N}
   ts = empty_storage(MTagSetStorage{T,N})
-  ts[1] = IntTag(t)
-  return GenericTagSet(TagSetStorage(ts), 1)
+  ts[1] = T(t)
+  return GenericTagSet{T,N}(TagSetStorage(ts), 1)
 end
 
+GenericTagSet{IntTag,N}(t::Tag) where {N} = GenericTagSet{IntTag,N}(IntTag(t))
 
-macro ts_str(s)
-  TagSet(s)
-end
-
-function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
+function _hastag(ts::MTagSetStorage{T,N}, ntags::Int, tag::T) where {T,N}
   for n = 1:ntags
     @inbounds ts[n] == tag && return true
   end
   return false
 end
 
-function _addtag_ordered!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
+function _addtag_ordered!(ts::MTagSetStorage{T,N}, ntags::Int, tag::T) where {T,N}
   if iszero(ntags) || tag > @inbounds ts[ntags]
     @inbounds setindex!(ts,tag,ntags+1)
   else
@@ -56,7 +53,7 @@ function _addtag_ordered!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   return ntags+1
 end
 
-function _addtag!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
+function _addtag!(ts::MTagSetStorage{T,N}, ntags::Int, tag::T) where {T,N}
   t = Tag(tag)
   if !isnull(t)
     if isint(t)
@@ -74,7 +71,6 @@ function reset!(v::MTagStorage, nchar::Int)
   end
 end
 
-#TODO: figure out why this isn't specializing properly.
 function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # Mutable fixed-size vector as temporary Tag storage
   # TODO: refactor the Val here.
@@ -106,6 +102,9 @@ end
 
 const TagSet = GenericTagSet{IntTag,maxTags}
 
+macro ts_str(s)
+  TagSet(s)
+end
 
 Base.convert(::Type{TagSet}, str::String) = TagSet(str)
 
