@@ -22,7 +22,7 @@ struct GenericTagSet{T,N}
   GenericTagSet{T,N}(tags::TagSetStorage{T,N}, len::Int) where {T,N} = new(tags, len)
 end
 
-GenericTagSet(ts::GenericTagSet) = ts
+GenericTagSet{T,N}(ts::GenericTagSet{T,N}) where {T,N} = ts
 
 function GenericTagSet{T,N}(t::T) where {T,N}
   ts = MTagSetStorage(ntuple(_ -> emptytag(T) , Val(N)))
