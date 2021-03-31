@@ -10,27 +10,25 @@ const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
 emptytag(::Type{IntTag}) = IntTag(0)
+empty_tagsetstorage{T,N}() where {T,N} = TagSetStorage(ntuple(_ -> emptytag(T) , Val(N)))
+empty_mtagsetstorage{T,N}() where {T,N} = MTagSetStorage(ntuple(_ -> emptytag(T) , Val(N))) 
 
 #TODO: decide which functions on TagSet should be made generic.
 struct GenericTagSet{T,N}
   data::TagSetStorage{T,N}
   length::Int
-  function GenericTagSet{T,N}() where {T,N}
-    ts = TagSetStorage(ntuple(_ -> emptytag(T) , Val(N)))
-    new(ts, 0)
-  end
+  GenericTagSet{T,N}() where {T,N} = new(empty_tagsetstorage{T,N}(),0)
   GenericTagSet{T,N}(tags::TagSetStorage{T,N}, len::Int) where {T,N} = new(tags, len)
 end
 
 GenericTagSet{T,N}(ts::GenericTagSet{T,N}) where {T,N} = ts
 
 function GenericTagSet{T,N}(t::T) where {T,N}
-  ts = MTagSetStorage(ntuple(_ -> emptytag(T) , Val(N)))
+  ts = empty_mtagsetstorage{T,N}()
   ts[1] = IntTag(t)
   return GenericTagSet(TagSetStorage(ts), 1)
 end
 
-const TagSet = GenericTagSet{IntTag,maxTags}
 
 macro ts_str(s)
   TagSet(s)
@@ -89,13 +87,13 @@ function reset!(v::MTagStorage, nchar::Int)
   end
 end
 
-#TODO:
+#TODO: figure out why this isn't specializing properly.
 function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # Mutable fixed-size vector as temporary Tag storage
   # TODO: refactor the Val here.
   current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
   # Mutable fixed-size vector as temporary TagSet storage
-  ts = MTagSetStorage(ntuple(_ -> emptytag(T),Val(N)))
+  ts = empty_mtagsetstorage{T,N}()
   nchar = 0
   ntags = 0
   for current_char in str
@@ -118,6 +116,9 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   end
   return GenericTagSet{T,N}(TagSetStorage(ts),ntags)
 end
+
+const TagSet = GenericTagSet{IntTag,maxTags}
+
 
 Base.convert(::Type{TagSet}, str::String) = TagSet(str)
 
