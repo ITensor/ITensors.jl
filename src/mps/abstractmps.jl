@@ -1738,8 +1738,10 @@ BroadcastStyle(::Style{MPST}, ::DefaultArrayStyle{N}) where {N, MPST<:AbstractMP
 broadcastable(ψ::AbstractMPS) = ψ
 copyto!(ψ::AbstractMPS, b::Broadcasted) = copyto!(data(ψ), b)
 
-similar(::Broadcasted{Style{MPST}}, ::Type{ElType}, dims) where {N,ElType,MPST<:AbstractMPS} =
+similar(::Broadcasted{Style{MPST}}, ::Type{ElType}, dims) where {ElType,MPST<:AbstractMPS} =
     similar(Array{ElType}, dims)
+similar(bc::Broadcasted{Style{MPST}}, ::Type{ElType}) where {ElType,MPST<:AbstractMPS} =
+    similar(Array{ElType}, axes(bc))
 #
 # Printing functions
 #
