@@ -88,8 +88,7 @@ function orthocenter(m::T) where {T<:AbstractMPS}
   return leftlim(m)+1
 end
 
-getindex(M::AbstractMPS, n::Integer) =
-  getindex(data(M), n)
+getindex(M::AbstractMPS, n) = getindex(data(M), n)
 
 lastindex(M::AbstractMPS) =
   lastindex(data(M))
@@ -1734,9 +1733,15 @@ splitblocks(::typeof(linkinds), M::AbstractMPS; tol = 0) =
 #
 
 BroadcastStyle(MPST::Type{<:AbstractMPS}) = Style{MPST}()
+BroadcastStyle(::Style{MPST}, ::DefaultArrayStyle{N}) where {N, MPST<:AbstractMPS} = Style{MPST}()
 
+broadcastable(ψ::AbstractMPS) = ψ
 copyto!(ψ::AbstractMPS, b::Broadcasted) = copyto!(data(ψ), b)
 
+similar(::Broadcasted{Style{MPST}}, ::Type{ElType}, dims) where {ElType,MPST<:AbstractMPS} =
+    similar(Array{ElType}, dims)
+similar(bc::Broadcasted{Style{MPST}}, ::Type{ElType}) where {ElType,MPST<:AbstractMPS} =
+    similar(Array{ElType}, axes(bc))
 #
 # Printing functions
 #
