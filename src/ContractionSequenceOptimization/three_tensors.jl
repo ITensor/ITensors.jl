@@ -22,7 +22,7 @@ function three_tensor_contraction_sequence(which_sequence::Int)::Vector{Any}
   end
 end
 
-function optimized_contraction_sequence(is1, is2, is3)
+function optimal_contraction_sequence(is1, is2, is3)
   N1 = length(is1)
   N2 = length(is2)
   N3 = length(is3)

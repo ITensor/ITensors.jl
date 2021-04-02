@@ -1440,40 +1440,45 @@ function contract(A::ITensor, B::ITensor)
   end
 end
 
-function optimized_contraction_sequence(A::Union{Vector{<: ITensor}, Tuple{Vararg{<: ITensor}}})
+function optimal_contraction_sequence(A::Union{Vector{<: ITensor}, Tuple{Vararg{<: ITensor}}})
   if length(A) == 1
-    return optimized_contraction_sequence(A[1])
+    return optimal_contraction_sequence(A[1])
   elseif length(A) == 2
-    return optimized_contraction_sequence(A[1], A[2])
+    return optimal_contraction_sequence(A[1], A[2])
   elseif length(A) == 3
-    return optimized_contraction_sequence(A[1], A[2], A[3])
+    return optimal_contraction_sequence(A[1], A[2], A[3])
   else
-    return _optimized_contraction_sequence(A)
+    return _optimal_contraction_sequence(A)
   end
 end
 
-optimized_contraction_sequence(A::ITensor) = Any[1]
-optimized_contraction_sequence(A1::ITensor, A2::ITensor) = Any[1, 2]
-optimized_contraction_sequence(A1::ITensor, A2::ITensor, A3::ITensor) =
-  optimized_contraction_sequence(inds(A1), inds(A2), inds(A3))
-optimized_contraction_sequence(As::ITensor...) = _optimized_contraction_sequence(As)
+optimal_contraction_sequence(A::ITensor) = Any[1]
+optimal_contraction_sequence(A1::ITensor, A2::ITensor) = Any[1, 2]
+optimal_contraction_sequence(A1::ITensor, A2::ITensor, A3::ITensor) =
+  optimal_contraction_sequence(inds(A1), inds(A2), inds(A3))
+optimal_contraction_sequence(As::ITensor...) = _optimal_contraction_sequence(As)
 
-_optimized_contraction_sequence(As::Tuple{<: ITensor}) = Any[1]
-_optimized_contraction_sequence(As::Tuple{<: ITensor, <: ITensor}) = Any[1, 2]
-_optimized_contraction_sequence(As::Tuple{<: ITensor, <: ITensor, <: ITensor}) =
-  optimized_contraction_sequence(inds(As[1]), inds(As[2]), inds(As[3]))
-_optimized_contraction_sequence(As::Tuple{Vararg{<: ITensor}}) =
-  __optimized_contraction_sequence(As)
+_optimal_contraction_sequence(As::Tuple{<: ITensor}) = Any[1]
+_optimal_contraction_sequence(As::Tuple{<: ITensor, <: ITensor}) = Any[1, 2]
+_optimal_contraction_sequence(As::Tuple{<: ITensor, <: ITensor, <: ITensor}) =
+  optimal_contraction_sequence(inds(As[1]), inds(As[2]), inds(As[3]))
+_optimal_contraction_sequence(As::Tuple{Vararg{<: ITensor}}) =
+  __optimal_contraction_sequence(As)
 
-_optimized_contraction_sequence(As::Vector{<: ITensor}) =
-  __optimized_contraction_sequence(As)
+_optimal_contraction_sequence(As::Vector{<: ITensor}) =
+  __optimal_contraction_sequence(As)
 
-function __optimized_contraction_sequence(As)
+function __optimal_contraction_sequence(As)
   indsAs = [inds(A) for A in As]
-  return optimized_contraction_sequence(indsAs)
+  return optimal_contraction_sequence(indsAs)
 end
 
 default_sequence() = using_contraction_sequence_optimization() ? "automatic" : "left_associative"
+
+function contraction_cost(As::Union{Vector{<: ITensor}, Tuple{Vararg{<: ITensor}}}; kwargs...)
+  indsAs = [inds(A) for A in As]
+  return contraction_cost(indsAs; kwargs...)
+end
 
 # TODO: support "left_associative" (like `foldl`) and "right_associative" (like `foldr`)
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
@@ -1501,7 +1506,7 @@ function contract(As::Union{Vector{<: ITensor}, Tuple{Vararg{<: ITensor}}};
   elseif sequence == "right_associative"
     return foldr((A, B) -> contract(A, B; kwargs...), As)
   elseif sequence == "automatic"
-    return _contract(As, optimized_contraction_sequence(As); kwargs...)
+    return _contract(As, optimal_contraction_sequence(As); kwargs...)
   else
     return _contract(As, sequence; kwargs...)
   end

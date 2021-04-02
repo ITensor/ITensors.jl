@@ -71,7 +71,7 @@ julia> tags(i)
 "l"
 ```
 """
-function Index(dim::Integer; tags="", plev=0)
+function Index(dim::Number; tags="", plev=0)
   return Index(rand(index_id_rng(), IDType), dim, Neither, tags, plev)
 end
 
@@ -100,7 +100,7 @@ julia> tags(i)
 "l,tag"
 ```
 """
-Index(dim::Integer,
+Index(dim::Number,
       tags::Union{AbstractString, TagSet};
       plev::Int = 0) = Index(dim; tags = tags, plev = plev)
 

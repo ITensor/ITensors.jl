@@ -51,7 +51,7 @@ seed!(12345)
   @test !ITensors.using_contraction_sequence_optimization()
 
   # This is not the only sequence
-  @test ITensors.optimized_contraction_sequence([A, A'', A']) == Any[1, Any[2, 3]]
+  @test ITensors.optimal_contraction_sequence([A, A'', A']) == Any[1, Any[2, 3]]
 
   time_without_opt = @elapsed A * A'' * A'
 
@@ -78,7 +78,7 @@ seed!(12345)
   @test !ITensors.using_contraction_sequence_optimization()
 
   # This is not the only sequence
-  @test ITensors.optimized_contraction_sequence([A, A'', A', A''']) == Any[Any[1, 3], Any[2, 4]]
+  @test ITensors.optimal_contraction_sequence([A, A'', A', A''']) == Any[Any[1, 3], Any[2, 4]]
 
   time_without_opt = @elapsed A * A'' * A' * A'''
 
