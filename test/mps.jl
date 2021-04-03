@@ -661,7 +661,8 @@ end
     @test siteinds(M, 3; tags = "n=2") == IndexSet()
   end
 
-  @testset "movesites $N sites" for N in 1:7
+
+  @testset "movesites $N sites" for N in 1:4
     s0 = siteinds("S=1/2", N)
     for perm in permutations(1:N)
       s = s0[perm]
@@ -768,6 +769,7 @@ end
     end
   end
 
+
   @testset "movesites subsets of sites" begin
     N = 6
     s = siteinds("S=1/2", N)
@@ -806,40 +808,40 @@ end
       @test maxlinkdim(ψ̃) == 1
     end
 
-    for i in 1:N, j in 1:N, k in 1:N, l in 1:N
-      ns = [i, j, k, l]
-      !allunique(ns) && continue
-      min_ns = minimum(ns)
-      ns′ = collect(min_ns:min_ns+length(ns)-1)
-      ψ′ = movesites(ψ, ns .=> ns′; cutoff = 1e-15)
-      @test siteind(ψ′, min_ns) == siteind(ψ, i)
-      @test siteind(ψ′, min_ns+1) == siteind(ψ, j)
-      @test siteind(ψ′, min_ns+2) == siteind(ψ, k)
-      @test siteind(ψ′, min_ns+3) == siteind(ψ, l)
-      @test maxlinkdim(ψ′) == 1
-      ψ̃ = movesites(ψ′, ns′ .=> ns; cutoff = 1e-15)
-      for n in 1:N
-        @test siteind(ψ̃, n) == siteind(ψ, n)
-      end
-      @test maxlinkdim(ψ̃) == 1
-    end
+    #for i in 1:N, j in 1:N, k in 1:N, l in 1:N
+    #  ns = [i, j, k, l]
+    #  !allunique(ns) && continue
+    #  min_ns = minimum(ns)
+    #  ns′ = collect(min_ns:min_ns+length(ns)-1)
+    #  ψ′ = movesites(ψ, ns .=> ns′; cutoff = 1e-15)
+    #  @test siteind(ψ′, min_ns) == siteind(ψ, i)
+    #  @test siteind(ψ′, min_ns+1) == siteind(ψ, j)
+    #  @test siteind(ψ′, min_ns+2) == siteind(ψ, k)
+    #  @test siteind(ψ′, min_ns+3) == siteind(ψ, l)
+    #  @test maxlinkdim(ψ′) == 1
+    #  ψ̃ = movesites(ψ′, ns′ .=> ns; cutoff = 1e-15)
+    #  for n in 1:N
+    #    @test siteind(ψ̃, n) == siteind(ψ, n)
+    #  end
+    #  @test maxlinkdim(ψ̃) == 1
+    #end
 
-    for i in 1:N, j in 1:N, k in 1:N, l in 1:N, m in 1:N
-      ns = [i, j, k, l, m]
-      !allunique(ns) && continue
-      min_ns = minimum(ns)
-      ns′ = collect(min_ns:min_ns+length(ns)-1)
-      ψ′ = movesites(ψ, ns .=> ns′; cutoff = 1e-15)
-      for n in 1:length(ns)
-        @test siteind(ψ′, min_ns+n-1) == siteind(ψ, ns[n])
-      end
-      @test maxlinkdim(ψ′) == 1
-      ψ̃ = movesites(ψ′, ns′ .=> ns; cutoff = 1e-15)
-      for n in 1:N
-        @test siteind(ψ̃, n) == siteind(ψ, n)
-      end
-      @test maxlinkdim(ψ̃) == 1
-    end
+    #for i in 1:N, j in 1:N, k in 1:N, l in 1:N, m in 1:N
+    #  ns = [i, j, k, l, m]
+    #  !allunique(ns) && continue
+    #  min_ns = minimum(ns)
+    #  ns′ = collect(min_ns:min_ns+length(ns)-1)
+    #  ψ′ = movesites(ψ, ns .=> ns′; cutoff = 1e-15)
+    #  for n in 1:length(ns)
+    #    @test siteind(ψ′, min_ns+n-1) == siteind(ψ, ns[n])
+    #  end
+    #  @test maxlinkdim(ψ′) == 1
+    #  ψ̃ = movesites(ψ′, ns′ .=> ns; cutoff = 1e-15)
+    #  for n in 1:N
+    #    @test siteind(ψ̃, n) == siteind(ψ, n)
+    #  end
+    #  @test maxlinkdim(ψ̃) == 1
+    #end
 
   end
 
