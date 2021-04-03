@@ -116,10 +116,15 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
   end
 end
 
-function randomCircuitMPS(::Type{Float64},
+
+function randomCircuitMPS(::Type{ElT},
                           sites::Vector{<:Index},
                           linkdim::Int;
-                          kwargs...)
+                          kwargs...) where {ElT<:Number}
+
+  _rmatrix(::Type{Float64},n,m) = NDTensors.random_orthog(n,m)
+  _rmatrix(::Type{ComplexF64},n,m) = NDTensors.random_unitary(n,m)
+
   N = length(sites)
   M = MPS(N)
 
@@ -134,19 +139,19 @@ function randomCircuitMPS(::Type{Float64},
   d = dim(sites[N])
   chi = min(linkdim,d)
   l[N-1] = Index(chi,"Link,l=$(N-1)")
-  O = NDTensors.random_orthog(chi,d)
+  O = _rmatrix(ElT,chi,d)
   M[N] = itensor(O,l[N-1],sites[N])
 
   for j=N-1:-1:2
     chi *= dim(sites[j])
     chi = min(linkdim,chi)
     l[j-1] = Index(chi,"Link,l=$(j-1)")
-    O = NDTensors.random_orthog(chi,dim(sites[j])*dim(l[j]))
+    O = _rmatrix(ElT,chi,dim(sites[j])*dim(l[j]))
     T = reshape(O,(chi,dim(sites[j]),dim(l[j])))
     M[j] = itensor(T,l[j-1],sites[j],l[j])
   end
 
-  O = NDTensors.random_orthog(1,dim(sites[1])*dim(l[1]))
+  O = _rmatrix(ElT,1,dim(sites[1])*dim(l[1]))
   l0 = Index(1,"Link,l=0")
   T = reshape(O,(1,dim(sites[1]),dim(l[1])))
   M[1] = itensor(T,l0,sites[1],l[1])

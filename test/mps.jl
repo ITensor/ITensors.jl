@@ -135,14 +135,18 @@ include("util.jl")
 
   @testset "randomMPS with chi==1" begin
     phi = randomMPS(sites)
+    phic = randomMPS(ComplexF64,sites)
 
     @test maxlinkdim(phi) == 1
+    @test maxlinkdim(phic) == 1
 
     @test hasind(phi[1],sites[1])
     @test norm(phi[1])≈1.0
+    @test norm(phic[1])≈1.0
 
     @test hasind(phi[4],sites[4])
     @test norm(phi[4])≈1.0
+    @test norm(phic[4])≈1.0
   end
 
   @testset "inner different MPS" begin
@@ -485,6 +489,11 @@ end
       r = linkind(M,j-1)
       @test norm(R-delta(r,r')) < 1E-10
     end
+
+    # Complex case
+    Mc = randomMPS(sites,chi)
+    @test inner(Mc,Mc) ≈ 1.0+0.0im
+
   end
 
   @testset "randomMPS from initial state (QN case)" begin
