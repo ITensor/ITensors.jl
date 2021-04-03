@@ -150,7 +150,7 @@ function randomCircuitMPS(::Type{Float64},
   l0 = Index(1,"Link,l=0")
   T = reshape(O,(1,dim(sites[1]),dim(l[1])))
   M[1] = itensor(T,l0,sites[1],l[1])
-  M[1] *= setelt(l0=>1)
+  M[1] *= onehot(l0=>1)
 
   M.llim = 0
   M.rlim = 2

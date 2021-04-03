@@ -14,7 +14,7 @@ ITensor(::Type{<:Number}, ::UndefInitializer, ::ITensors.Indices)
 ITensor(::Number, ::ITensors.Indices)
 ITensor(::Array{<:AbstractFloat},::ITensors.Indices)
 randomITensor(::Type{<:Number}, ::ITensors.Indices)
-setelt(::IndexVal)
+onehot(::IndexVal)
 ```
 
 ## Dense View Constructors
