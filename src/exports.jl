@@ -144,6 +144,7 @@ export
   nzblocks,
   nzblock,
   nnz,
+  onehot,
   order,
   permute,
   prime!,

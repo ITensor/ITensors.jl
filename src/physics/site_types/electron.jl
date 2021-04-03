@@ -158,7 +158,7 @@ function op!(Op::ITensor,
              ::SiteType"Electron",
              s::Index)
   Op[s'=>3,s=>1] = 1.0
-  Op[s'=>2,s=>4] = 1.0
+  Op[s'=>4,s=>2] = 1.0
 end
 
 function op!(Op::ITensor,

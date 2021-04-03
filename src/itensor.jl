@@ -484,6 +484,7 @@ delta(is::Index...) = delta(Float64, IndexSet(is...))
 const δ = delta
 
 """
+    onehot(ivs...)
     setelt(ivs...)
 
 Create an ITensor with all zeros except the specified value,
@@ -492,19 +493,21 @@ which is set to 1.
 # Examples
 ```julia
 i = Index(2,"i")
-A = setelt(i=>2)
+A = onehot(i=>2)
 # A[i=>2] == 1, all other elements zero
 
 j = Index(3,"j")
-B = setelt(i=>1,j=>3)
+B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function setelt(ivs::IndexValOrPairIndexInt...)
+function onehot(ivs::IndexValOrPairIndexInt...)
   A = emptyITensor(ind.(ivs)...)
   A[val.(ivs)...] = 1.0
   return A
 end
+
+setelt(ivs::IndexValOrPairIndexInt...) = onehot(ivs...)
 
 """
     dense(T::ITensor)

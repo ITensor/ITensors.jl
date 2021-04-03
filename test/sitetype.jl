@@ -312,6 +312,20 @@ using ITensors,
     @test isnothing(siteind("Missing"))
   end
 
+  @testset "Various ops input types" begin
+    s = siteinds("S=1/2", 4)
+
+    # Vector{Tuple{String,Int}} input
+    oa = ops(s, [("Sz", n) for n in 1:length(s)])
+    @test length(oa) == length(s)
+    @test norm(oa[2]-op("Sz",s,2)) < 1E-8
+
+    # Vector{Tuple} input
+    oa = ops(s, Tuple[("Sz", n) for n in 1:length(s)])
+    @test length(oa) == length(s)
+    @test norm(oa[2]-op("Sz",s,2)) < 1E-8
+  end
+
 end
 
 nothing
