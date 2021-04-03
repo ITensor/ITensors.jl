@@ -1,11 +1,12 @@
 using ITensors
 
-import ITensors: optimized_contraction_sequence
+import ITensors: optimal_contraction_sequence
 
 # This is for daggering and Empty ITensor
 using ITensors.NDTensors
 Base.conj(s::Empty; kwargs...) = s
 
+# TODO: use ITensors.contraction_cost
 contraction_cost(A::Vector{<: ITensor}, sequence) = _contraction_cost(A, sequence, 0)
 function _contraction_cost(A::Vector{<: ITensor}, sequence, previouscost)
   inds1, cost1 = _contraction_cost(A, sequence[1], previouscost)
@@ -70,7 +71,7 @@ function tebd(dχ, ds = 2; indlabels = indlabels)
   λ³ = randomITensor(g, h)
   U = randomITensor(cₛ, fₛ, iₛ, jₛ)
   network = [λ¹, Γ¹, λ², Γ², λ³, U]
-  sequence = @time optimized_contraction_sequence(network)
+  sequence = @time optimal_contraction_sequence(network)
 
   # Analyze the sequence
   network_labels = [:λ¹, :Γ¹, :λ², :Γ², :λ³, :U]
@@ -94,7 +95,7 @@ function ttn_1d_3_to_1(dχ; indlabels = indlabels)
   W²ᴴ = replaceinds(dag(W²), (c, f) => (b, g))
   Ρ = emptyITensor(l, f, h, g)
   network = [W², H, W¹ᴴ, W²ᴴ, Ρ]
-  sequence = @time optimized_contraction_sequence(network)
+  sequence = @time optimal_contraction_sequence(network)
 
   # Analyze the sequence
   network_labels = [:W², :H, :W¹ᴴ, :W²ᴴ, :Ρ]
@@ -122,7 +123,7 @@ function ttn_2d_9_to_1(dχ; indlabels = indlabels)
   W⁴ᴴ = dag(replaceinds(W⁴, (i, b) => (l, e)))
   Ρ = emptyITensor(ψ, c, a, b, f, g, d, e)
   network = [W², W³, W⁴, H, W¹ᴴ, W²ᴴ, W³ᴴ, W⁴ᴴ, Ρ]
-  sequence = @time optimized_contraction_sequence(network)
+  sequence = @time optimal_contraction_sequence(network)
 
   # Analyze the sequence
   network_labels = [:W², :W³, :W⁴, :H, :W¹ᴴ, :W²ᴴ, :W³ᴴ, :W⁴ᴴ, :Ρ]
@@ -189,7 +190,7 @@ function mera_2d_4_to_1(dχ; indlabels = indlabels)
   W⁹ᴴ = dag(emptyITensor(ι̅, p̅, u̅, v̅, ε̅))
   Ρ   =     emptyITensor(w̅, x̅, q, r, w, x, γ̅, Δ̅, ε̅, ρ̅, σ̅, τ̅, υ̅, φ̅, χ̅, ψ̅, ω̅, a̅)
   network = [W², W³, W⁴, W⁵, W⁶, W⁷, W⁸, W⁹, U¹, U², U³, U⁴, H, U¹ᴴ, U²ᴴ, U³ᴴ, U⁴ᴴ, W¹ᴴ, W²ᴴ, W³ᴴ, W⁴ᴴ, W⁵ᴴ, W⁶ᴴ, W⁷ᴴ, W⁸ᴴ, W⁹ᴴ, Ρ]
-  sequence = @time optimized_contraction_sequence(network)
+  sequence = @time optimal_contraction_sequence(network)
 
   # Analyze the sequence
   network_labels = [:W², :W³, :W⁴, :W⁵, :W⁶, :W⁷, :W⁸, :W⁹, :U¹, :U², :U³, :U⁴, :H, :U¹ᴴ, :U²ᴴ, :U³ᴴ, :U⁴ᴴ, :W¹ᴴ, :W²ᴴ, :W³ᴴ, :W⁴ᴴ, :W⁵ᴴ, :W⁶ᴴ, :W⁷ᴴ, :W⁸ᴴ, :W⁹ᴴ, :Ρ]

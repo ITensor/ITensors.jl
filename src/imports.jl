@@ -59,7 +59,9 @@ import Base.Broadcast:
   instantiate
 
 import ITensors.ContractionSequenceOptimization:
-  optimized_contraction_sequence
+  contraction_cost,
+  optimal_contraction_sequence
+
 
 import HDF5:
   read,

@@ -31,7 +31,9 @@ settings = Dict(
              "Advanced usage guide" => [
                                         "Advanced usage guide" => "AdvancedUsageGuide.md",
                                         "Multithreading" => "Multithreading.md",
-                                        "Symmetric tensor background and usage" => "QNTricks.md"
+                                        "Symmetric tensor background and usage" => "QNTricks.md",
+                                        "Timing and profiling" => "CodeTiming.md",
+                                        "Contraction sequence optimization" => "ContractionSequenceOptimization.md"
                                        ]
            ],
   :format => Documenter.HTML(assets = ["assets/favicon.ico"],
