@@ -1206,7 +1206,7 @@ B = randomITensor(ComplexF64,undef,k,j)
 """
 function randomITensor(::Type{S},
                        inds::Indices) where {S <: Number}
-  T = ITensor(S, inds)
+  T = ITensor(S,undef,inds)
   randn!(T)
   return T
 end
