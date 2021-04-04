@@ -143,7 +143,7 @@ Construct an ITensor with `NDTensors.BlockSparse` storage filled with random ele
 If `ElT` is not specified it defaults to `Float64`. If the flux is not specified it defaults to `QN()`.
 """
 function randomITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT <: Number}
-  T = ITensor(ElT, flux, inds)
+  T = ITensor(ElT, undef, flux, inds)
   randn!(T)
   return T
 end
