@@ -6,6 +6,25 @@
 Construct an ITensor with BlockSparse storage filled with `zero(ElT)` where the nonzero blocks are determined by `flux`.
 
 If `ElT` is not specified it defaults to `Float64`.
+
+# Examples
+
+```julia
+i = Index([QN(0)=>1, QN(1)=>2], "i")
+
+# QN ITensors with flux of QN(0):
+
+A = ITensor(i',dag(i))
+B = ITensor(QN(0),i',dag(i))
+
+# QN ITensor with flux of QN(1):
+
+C = ITensor(QN(1),i',dag(i))
+
+# Complex QN ITensor with flux of QN(1):
+
+C = ITensor(ComplexF64,QN(1),i',dag(i))
+```
 """
 function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT <: Number}
   blocks = nzblocks(flux, IndexSet(inds))
@@ -31,6 +50,22 @@ ITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number} =
   ITensor(ElT, QN(), IndexSet(inds...))
 
 ITensor(inds::QNIndex...) = ITensor(Float64, QN(), IndexSet(inds...))
+
+"""
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::Index...)
+
+Construct an ITensor with indices `inds` and BlockSparse storage with undefined elements of type `ElT`, where the nonzero (allocated) blocks are determined by the provided QN `flux`. One purpose for using this constructor is that initializing the elements in an undefined way is faster than initializing them to a set value such as zero.
+
+The storage will have `NDTensors.BlockSparse` type.
+"""
+function ITensor(::Type{ElT}, ::UndefInitializer, 
+                 flux::QN, inds::Indices) where {ElT <: Number}
+  blocks = nzblocks(flux, IndexSet(inds))
+  T = BlockSparseTensor(ElT,undef,blocks,inds)
+  return itensor(T)
+end
+
 
 function _ITensor(A::Array{ElT}, inds::QNIndexSet; tol = 0) where {ElT}
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, ::IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
@@ -127,7 +162,7 @@ Construct an ITensor with `NDTensors.BlockSparse` storage filled with random ele
 If `ElT` is not specified it defaults to `Float64`. If the flux is not specified it defaults to `QN()`.
 """
 function randomITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT <: Number}
-  T = ITensor(ElT, flux, inds)
+  T = ITensor(ElT, undef, flux, inds)
   randn!(T)
   return T
 end

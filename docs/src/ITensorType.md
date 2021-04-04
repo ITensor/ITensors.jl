@@ -28,6 +28,7 @@ itensor(::Array{<:Number},::ITensors.Indices)
 ```@docs
 ITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
 ITensor(A::Array, inds::ITensors.QNIndexSet)
+ITensor(::Type{<:Number}, ::UndefInitializer, ::QN, ::ITensors.Indices)
 ```
 
 ## Empty Constructors

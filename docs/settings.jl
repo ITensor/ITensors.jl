@@ -21,6 +21,7 @@ settings = Dict(
                                  "SiteType and op" => "SiteType.md",
                                  "DMRG" => [
                                             "DMRG.md",
+                                            "Sweeps.md",
                                             "ProjMPO.md",
                                             "ProjMPOSum.md",
                                             "Observer.md",
