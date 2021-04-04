@@ -6,6 +6,25 @@
 Construct an ITensor with BlockSparse storage filled with `zero(ElT)` where the nonzero blocks are determined by `flux`.
 
 If `ElT` is not specified it defaults to `Float64`.
+
+# Examples
+
+```julia
+i = Index([QN(0)=>1, QN(1)=>2], "i")
+
+# QN ITensors with flux of QN(0):
+
+A = ITensor(i',dag(i))
+B = ITensor(QN(0),i',dag(i))
+
+# QN ITensor with flux of QN(1):
+
+C = ITensor(QN(1),i',dag(i))
+
+# Complex QN ITensor with flux of QN(1):
+
+C = ITensor(ComplexF64,QN(1),i',dag(i))
+```
 """
 function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT <: Number}
   blocks = nzblocks(flux, IndexSet(inds))
