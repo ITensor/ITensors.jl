@@ -32,6 +32,22 @@ ITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number} =
 
 ITensor(inds::QNIndex...) = ITensor(Float64, QN(), IndexSet(inds...))
 
+"""
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::Index...)
+
+Construct an ITensor with indices `inds` and BlockSparse storage with undefined elements of type `ElT`, where the nonzero (allocated) blocks are determined by the provided QN `flux`. One purpose for using this constructor is that initializing the elements in an undefined way is faster than initializing them to a set value such as zero.
+
+The storage will have `NDTensors.BlockSparse` type.
+"""
+function ITensor(::Type{ElT}, ::UndefInitializer, 
+                 flux::QN, inds::Indices) where {ElT <: Number}
+  blocks = nzblocks(flux, IndexSet(inds))
+  T = BlockSparseTensor(ElT,undef,blocks,inds)
+  return itensor(T)
+end
+
+
 function _ITensor(A::Array{ElT}, inds::QNIndexSet; tol = 0) where {ElT}
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, ::IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   T = emptyITensor(ElT, inds)
