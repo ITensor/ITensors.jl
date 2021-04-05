@@ -89,6 +89,13 @@ Random.seed!(1234)
     @test_throws ErrorException ITensor(A, i', dag(i); tol = 1e-8)
   end
 
+  @testset "Constructor Leads to No Blocks" begin
+    i=Index(QN(0)=>2,QN(1)=>3;tags="i")
+    j=Index(QN(1)=>2,QN(2)=>1;tags="j")
+    @test_throws ErrorException ITensor(i,j)
+    @test_throws ErrorException ITensor(QN(0),i,j)
+  end
+
   @testset "ITensor iteration" begin
     i = Index([QN(0)=>1,QN(1)=>2],"i")
     j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
