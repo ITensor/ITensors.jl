@@ -28,6 +28,9 @@ C = ITensor(ComplexF64,QN(1),i',dag(i))
 """
 function ITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT <: Number}
   blocks = nzblocks(flux, IndexSet(inds))
+  if length(blocks)==0
+    error("ITensor with flux=$flux resulted in no allowed blocks")
+  end
   T = BlockSparseTensor(ElT, blocks, inds)
   return itensor(T)
 end
