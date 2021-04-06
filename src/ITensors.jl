@@ -23,6 +23,12 @@ using StaticArrays
 using TimerOutputs
 
 #####################################
+# NDTensors (definitions that will be moved to NDTensors
+# module)
+#
+include("NDTensors/NDTensors.jl")
+
+#####################################
 # ContractionSequenceOptimization
 #
 include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")

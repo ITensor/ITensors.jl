@@ -155,7 +155,11 @@ itensor(A::Array, inds::QNIndex...; tol = 0) =
   ITensor(A, inds...; tol = tol)
 
 # Defined to fix ambiguity error
-itensor(A::Array{ <: Number}, inds::QNIndex...; tol = 0) =
+itensor(A::Array{<: Number}, inds::QNIndex...; tol = 0) =
+  ITensor(A, inds...; tol = tol)
+
+# Defined to fix ambiguity error
+itensor(A::Array{<: RealOrComplex{Int}}, inds::QNIndex...; tol = 0) =
   ITensor(A, inds...; tol = tol)
 
 """

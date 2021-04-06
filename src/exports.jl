@@ -160,7 +160,7 @@ export
   scale!,
   scalar,
   setelt,
-  store,
+  storage,
   setprime!,
   swapprime!,
   settags!,
