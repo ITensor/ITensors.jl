@@ -5,7 +5,7 @@ ITensor v0.2.0 Release Notes
 - Contraction sequence optimization (PR #589) (@mtfishman).
 - Make TagSet code cleaner and more generic, and improve constructor from String performance (PR #610) (@saolof).
 - Define some missing methods for AbstractMPS broadcasting (#609) (@kshyatt).
-- ITensor constructors from Array now only convert to floating point for `Array{Int}` and `Array{Complex{Int}}` (IS #612).
+- ITensor constructors from Array now only convert to floating point for `Array{Int}` and `Array{Complex{Int}}`. That same conversion is added for QN ITensor constructors to be consistent with non-QN versions (IS #612).
 - New ITensor constructors like `itensor(Int, [0 1; 1 0], i, j)` to specify the exact element type desired (IS #612).
 - Speed up randomITensor with undef constructor (PR #616) (@emstoudenmire).
 - Fix definition of Adagdn for Electron (PR #615) (@emstoudenmire).

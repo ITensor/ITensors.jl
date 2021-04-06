@@ -89,6 +89,53 @@ Random.seed!(1234)
     @test_throws ErrorException ITensor(A, i', dag(i); tol = 1e-8)
   end
 
+  @testset "QN ITensor Array constructor view behavior" begin
+    d = 2
+    i = Index([QN(0) => d ÷ 2, QN(1) => d ÷ 2])
+
+    # no view
+    A = diagm(randn(Float64, d))
+    T = itensor(A, i', dag(i); tol = 1e-12)
+    @test storage(T) isa NDTensors.BlockSparse{Float64}
+    A[1, 1] = 2.0
+    T[1, 1] ≠ 2.0
+
+    # no view
+    A = diagm(rand(Int, d))
+    T = itensor(Int, A, i', dag(i); tol = 1e-12)
+    @test storage(T) isa NDTensors.BlockSparse{Int}
+    A[1, 1] = 2
+    T[1, 1] ≠ 2
+
+    # no view
+    A = diagm(rand(Int, d))
+    T = itensor(A, i', dag(i); tol = 1e-12)
+    @test storage(T) isa NDTensors.BlockSparse{Float64}
+    A[1, 1] = 2
+    T[1, 1] ≠ 2
+
+    # no view
+    A = diagm(randn(Float64, d))
+    T = ITensor(A, i', dag(i); tol = 1e-12)
+    @test storage(T) isa NDTensors.BlockSparse{Float64}
+    A[1, 1] = 2
+    T[1, 1] ≠ 2
+
+    # no view
+    A = diagm(rand(Int, d))
+    T = ITensor(Int, A, i', dag(i); tol = 1e-12)
+    @test storage(T) isa NDTensors.BlockSparse{Int}
+    A[1, 1] = 2
+    T[1, 1] ≠ 2
+
+    # no view
+    A = diagm(rand(Int, d))
+    T = ITensor(A, i', dag(i); tol = 1e-12)
+    @test storage(T) isa NDTensors.BlockSparse{Float64}
+    A[1, 1] = 2
+    T[1, 1] ≠ 2
+  end
+
   @testset "Constructor Leads to No Blocks" begin
     i=Index(QN(0)=>2,QN(1)=>3;tags="i")
     j=Index(QN(1)=>2,QN(2)=>1;tags="j")

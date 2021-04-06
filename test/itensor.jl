@@ -611,6 +611,53 @@ end
   @test T[i => 1, j => 1] == 3.3
 end
 
+@testset "ITensor Array constructor view behavior" begin
+  d = 2
+  i = Index(d)
+
+  # view
+  A = randn(Float64, d, d)
+  T = itensor(A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Float64}
+  A[1, 1] = 2.0
+  T[1, 1] == 2.0
+
+  # view
+  A = rand(Int, d, d)
+  T = itensor(Int, A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Int}
+  A[1, 1] = 2
+  T[1, 1] == 2
+
+  # no view
+  A = rand(Int, d, d)
+  T = itensor(A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Float64}
+  A[1, 1] = 2
+  T[1, 1] ≠ 2
+
+  # no view
+  A = randn(Float64, d, d)
+  T = ITensor(A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Float64}
+  A[1, 1] = 2
+  T[1, 1] ≠ 2
+
+  # no view
+  A = rand(Int, d, d)
+  T = ITensor(Int, A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Int}
+  A[1, 1] = 2
+  T[1, 1] ≠ 2
+
+  # no view
+  A = rand(Int, d, d)
+  T = ITensor(A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Float64}
+  A[1, 1] = 2
+  T[1, 1] ≠ 2
+end
+
 @testset "Convert to Array" begin
   i = Index(2,"i")
   j = Index(3,"j")
