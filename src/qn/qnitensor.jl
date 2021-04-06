@@ -142,10 +142,18 @@ ITensor(A::Array, inds::QNIndexSet; tol = 0) =
   _ITensor(A, inds; tol = tol)
 
 # Defined to fix ambiguity error
-ITensor(A::Array{ <: AbstractFloat}, inds::QNIndexSet; tol = 0) =
+ITensor(A::Array{<: AbstractFloat}, inds::QNIndexSet; tol = 0) =
+  _ITensor(A, inds; tol = tol)
+
+# Defined to fix ambiguity error
+ITensor(A::Array{<: RealOrComplex{Int}}, inds::QNIndexSet; tol = 0) =
   _ITensor(A, inds; tol = tol)
 
 ITensor(A::Array, inds::QNIndex...; tol = 0) =
+  _ITensor(A, IndexSet(inds...); tol = tol)
+
+# Defined to fix ambiguity error
+ITensor(A::Array{<: RealOrComplex{Int}}, inds::QNIndex...; tol = 0) =
   _ITensor(A, IndexSet(inds...); tol = tol)
 
 itensor(A::Array, inds::QNIndexSet; tol = 0) =
