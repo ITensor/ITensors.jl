@@ -201,6 +201,34 @@ Random.seed!(1234)
     @test nnzblocks(B) == 2
   end
 
+  @testset "Complex Number Operations" begin
+    i = Index([QN(0)=>1,QN(1)=>2],"i")
+    j = Index([QN(0)=>3,QN(1)=>4,QN(2)=>5],"j")
+
+    A = randomITensor(ComplexF64,QN(0),i,dag(j))
+
+    @test flux(A) == QN(0)
+    @test nnzblocks(A) == 2
+
+    rA = real(A)
+    iA = imag(A)
+    @test nnzblocks(rA) == nnzblocks(A)
+    @test nnzblocks(iA) == nnzblocks(A)
+    @test norm(rA+1im*iA - A) < 1E-8
+    @test eltype(rA) == Float64
+    @test eltype(iA) == Float64
+
+    cA = conj(A)
+    @test eltype(cA) == ComplexF64
+    @test norm(cA) ≈ norm(A)
+
+    B = randomITensor(Float64,QN(0),i,dag(j))
+
+    cB = conj(B)
+    @test eltype(cB) == Float64
+    @test norm(cB) ≈ norm(B)
+  end
+
 
   @testset "QN setelt" begin
     i = Index(QN(0)=>2,QN(1)=>2,tags="i")
