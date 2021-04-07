@@ -46,7 +46,7 @@ using ITensors,
 
     δiĩ = δ(dag(i), ĩ)
 
-    @test store(δiĩ) isa NDTensors.DiagBlockSparse{ElT,
+    @test storage(δiĩ) isa NDTensors.DiagBlockSparse{ElT,
                                                    ElT} where {ElT<:Number}
 
     B = A * δiĩ

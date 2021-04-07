@@ -72,7 +72,7 @@ include("util.jl")
     fi = h5open("data.h5","r")
     rT = read(fi,"defaultT",ITensor)
     close(fi)
-    @test typeof(store(T)) == typeof(store(ITensor()))
+    @test typeof(storage(T)) == typeof(storage(ITensor()))
 
     # real case
     T = randomITensor(i,j,k)

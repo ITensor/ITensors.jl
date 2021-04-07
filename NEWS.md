@@ -1,3 +1,25 @@
+ITensor v0.2.0 Release Notes
+==============================
+- Remove size type parameter from ITensor and IndexSet (PR #591) (@kshyatt).
+- Add support for using end in setindex! for ITensors (PR #596) (@mtfishman).
+- Contraction sequence optimization (PR #589) (@mtfishman).
+- Make TagSet code cleaner and more generic, and improve constructor from String performance (PR #610) (@saolof).
+- Define some missing methods for AbstractMPS broadcasting (#609) (@kshyatt).
+- ITensor constructors from Array now only convert to floating point for `Array{Int}` and `Array{Complex{Int}}`. That same conversion is added for QN ITensor constructors to be consistent with non-QN versions (PR #620) (@mtfishman).
+- New ITensor constructors like `itensor(Int, [0 1; 1 0], i, j)` to specify the exact element type desired (PR #620) (@mtfishman).
+- Speed up randomITensor with undef constructor (PR #616) (@emstoudenmire).
+- Fix definition of Adagdn for Electron (PR #615) (@emstoudenmire).
+- Make ops less strict about input (PR #602) (@emstoudenmire).
+- Add onehot as new name for setelt (PR #580) (@emstoudenmire).
+- Support randomMPS(ComplexF64,s,chi) (PR #377) (@emstoudenmire).
+
+Deprecations:
+- `store` is deprecated in favor of `storage` for getting the storage of an ITensor. Similarly `ITensors.setstore[!]` -> `ITensors.setstorage[!]`.
+
+ITensors v0.1.41 Release Notes
+==============================
+- Add "Qubit" site type (alias for "S=1/2"), along with many quantum gate definitions (PR #592) (@emstoudenmire).
+
 ITensors v0.1.40 Release Notes
 ==============================
 - Remove eigen QN fix code (simplify ITensors eigen code by handling QNs better in NDTensors eigen) (PR #587) (@emstoudenmire).

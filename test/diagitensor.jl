@@ -145,7 +145,7 @@ using ITensors,
       D = diagITensor(v,i,j,k)
       T = dense(D)
       
-      @test store(T) isa NDTensors.Dense{Float64}
+      @test storage(T) isa NDTensors.Dense{Float64}
       for ii = 1:d, jj = 1:d, kk = 1:d
         if ii == jj == kk
           @test T[ii,ii,ii] == ii
@@ -356,7 +356,7 @@ using ITensors,
       D = δ(i,j,k)
       T = dense(D)
 
-      @test store(T) isa NDTensors.Dense{Float64}
+      @test storage(T) isa NDTensors.Dense{Float64}
       for ii = 1:d, jj = 1:d, kk = 1:d
         if ii == jj == kk
           @test T[ii,ii,ii] == 1.0

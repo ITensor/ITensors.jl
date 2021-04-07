@@ -240,9 +240,9 @@ end
         fluxψ = flux(ψ)
         d = commonind(D, V)
         b = ITensors.findfirstblock(indblock -> ITensors.qn(indblock) == fluxψ, d)
-        @test e ≈ minimum(store(D[Block(b, b)]))
+        @test e ≈ minimum(storage(D[Block(b, b)]))
       else
-        @test e ≈ minimum(store(D))
+        @test e ≈ minimum(storage(D))
       end
     end
   end

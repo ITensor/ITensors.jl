@@ -237,6 +237,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         @printf("  Truncated using cutoff=%.1E maxdim=%d mindim=%d\n",
                 cutoff(sweeps, sw),maxdim(sweeps, sw),mindim(sweeps, sw))
         @printf("  Trunc. err=%.2E, bond dimension %d\n",spec.truncerr,dim(linkind(psi,b)))
+        flush(stdout)
       end
 
       sweep_is_done = (b==1 && ha==2)
@@ -253,6 +254,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
     if outputlevel >= 1
       @printf("After sweep %d energy=%.12f maxlinkdim=%d maxerr=%.2E time=%.3f\n",
               sw, energy, maxlinkdim(psi), maxtruncerr, sw_time)
+      flush(stdout)
     end
     isdone = checkdone!(obs;energy=energy,
                             psi=psi,

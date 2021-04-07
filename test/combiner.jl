@@ -12,7 +12,7 @@ A = randomITensor(i, j, k, l)
 
 @testset "Basic combiner properties" begin
   C = combiner(i, j, k)
-  @test eltype(store(C)) === Number
+  @test eltype(storage(C)) === Number
   @test_throws ErrorException ITensors.data(C)
   @test NDTensors.uncombinedinds(NDTensors.tensor(C)) == (i, j, k)
 end

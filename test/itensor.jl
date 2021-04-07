@@ -20,17 +20,17 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
 
   @testset "Default" begin
     A = ITensor()
-    @test store(A) isa NDTensors.Dense{Float64}
+    @test storage(A) isa NDTensors.Dense{Float64}
   end
 
   @testset "Undef with index" begin
     A = ITensor(undef, i)
-    @test store(A) isa NDTensors.Dense{Float64}
+    @test storage(A) isa NDTensors.Dense{Float64}
   end
 
   @testset "Default with indices" begin
     A = ITensor(i,j)
-    @test store(A) isa NDTensors.Dense{Float64}
+    @test storage(A) isa NDTensors.Dense{Float64}
   end
 
   @testset "Index set operations" begin
@@ -100,7 +100,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test hasinds((i, j))(A)
     @test hasinds(IndexSet(i, j))(A)
 
-    @test store(A) isa NDTensors.Dense{Float64}
+    @test storage(A) isa NDTensors.Dense{Float64}
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
     @test size(A) == dims(A) == (2,2)
@@ -113,7 +113,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test dim(At, 2) == 3
 
     B = randomITensor(IndexSet(i,j))
-    @test store(B) isa NDTensors.Dense{Float64}
+    @test storage(B) isa NDTensors.Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
     @test size(B) == dims(B) == (2,2)
 
@@ -142,7 +142,7 @@ end
   @testset "From matrix" begin
     M = [1 2; 3 4]
     A = itensor(M,i,j)
-    @test store(A) isa NDTensors.Dense{Float64}
+    @test storage(A) isa NDTensors.Dense{Float64}
 
     @test M ≈ Matrix(A,i,j)
     @test M' ≈ Matrix(A,j,i)
@@ -152,12 +152,13 @@ end
     @test_throws BoundsError size(A,3)
     @test_throws BoundsError size(A,0)
     @test_throws ErrorException size(M,0)
-    # setstore changes the internal data but not indices
+    # setstorage changes the internal data but not indices
     N = [5 6; 7 8]
     A = itensor(M, i, j)
-    B = ITensors.setstore(A, N)
+    B = ITensors.setstorage(A, NDTensors.Dense(vec(N)))
     @test N == Matrix(B, i, j)
-    @test store(B) isa NDTensors.Dense{Float64}
+    @test storage(A) isa NDTensors.Dense{Float64}
+    @test storage(B) isa NDTensors.Dense{Int}
 
     M = [1 2 3; 4 5 6]
     @test_throws DimensionMismatch itensor(M,i,j)
@@ -206,18 +207,18 @@ end
 
   @testset "Complex" begin
     A = ITensor(Complex,i,j)
-    @test store(A) isa NDTensors.Dense{Complex}
+    @test storage(A) isa NDTensors.Dense{Complex}
   end
 
   @testset "Random complex" begin
     A = randomITensor(ComplexF64,i,j)
-    @test store(A) isa NDTensors.Dense{ComplexF64}
+    @test storage(A) isa NDTensors.Dense{ComplexF64}
   end
 
   @testset "From complex matrix" begin
     M = [1+2im 2; 3 4]
     A = itensor(M,i,j)
-    @test store(A) isa NDTensors.Dense{ComplexF64}
+    @test storage(A) isa NDTensors.Dense{ComplexF64}
   end
 
 end
@@ -262,7 +263,7 @@ end
   B = similar(A)
   @test inds(B) == inds(A)
   Ac = similar(A, ComplexF32)
-  @test store(Ac) isa NDTensors.Dense{ComplexF32}
+  @test storage(Ac) isa NDTensors.Dense{ComplexF32}
 end
 
 @testset "fill!" begin
@@ -597,6 +598,89 @@ end
   @test ITensors.data(mul!(B, A, 2.0)) == 2.0*vec(transpose(M))
 end
 
+@testset "Construct from Array" begin
+  i = Index(2,"index_i")
+  j = Index(2,"index_j")
+
+  M = [1. 2;
+       3 4]
+  T = itensor(M, i, j)
+  T[i => 1, j => 1] = 3.3
+  @test M[1, 1] == 3.3
+  @test T[i => 1, j => 1] == 3.3
+  @test storage(T) isa Dense{Float64}
+
+  M = [1 2;
+       3 4]
+  T = itensor(M, i, j)
+  T[i => 1, j => 1] = 3.3
+  @test M[1, 1] == 1
+  @test T[i => 1, j => 1] == 3.3
+  @test storage(T) isa Dense{Float64}
+
+  M = [1 2;
+       3 4]
+  T = itensor(Int, M, i, j)
+  T[i => 1, j => 1] = 6
+  @test M[1, 1] == 6
+  @test T[i => 1, j => 1] == 6
+  @test storage(T) isa Dense{Int}
+
+  M = [1. 2;
+       3 4]
+  T = ITensor(M, i, j)
+  T[i => 1, j => 1] = 3.3
+  @test M[1, 1] == 1
+  @test T[i => 1, j => 1] == 3.3
+end
+
+@testset "ITensor Array constructor view behavior" begin
+  d = 2
+  i = Index(d)
+
+  # view
+  A = randn(Float64, d, d)
+  T = itensor(A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Float64}
+  A[1, 1] = 2.0
+  T[1, 1] == 2.0
+
+  # view
+  A = rand(Int, d, d)
+  T = itensor(Int, A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Int}
+  A[1, 1] = 2
+  T[1, 1] == 2
+
+  # no view
+  A = rand(Int, d, d)
+  T = itensor(A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Float64}
+  A[1, 1] = 2
+  T[1, 1] ≠ 2
+
+  # no view
+  A = randn(Float64, d, d)
+  T = ITensor(A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Float64}
+  A[1, 1] = 2
+  T[1, 1] ≠ 2
+
+  # no view
+  A = rand(Int, d, d)
+  T = ITensor(Int, A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Int}
+  A[1, 1] = 2
+  T[1, 1] ≠ 2
+
+  # no view
+  A = rand(Int, d, d)
+  T = ITensor(A, i', dag(i))
+  @test storage(T) isa NDTensors.Dense{Float64}
+  A[1, 1] = 2
+  T[1, 1] ≠ 2
+end
+
 @testset "Convert to Array" begin
   i = Index(2,"i")
   j = Index(3,"j")
@@ -864,8 +948,8 @@ end #End "ITensor other index operations"
 
     S1 = TC+TR
     S2 = TR+TC
-    @test typeof(S1.store) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
-    @test typeof(S2.store) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(S1.storage) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(S2.storage) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
     for ii=1:dim(i),jj=1:dim(j)
       @test S1[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
       @test S2[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
@@ -959,7 +1043,7 @@ end
 
     @testset "Test SVD of an ITensor" begin
       U,S,V,spec,u,v = svd(A,(j,l))
-      @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+      @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A≈U*S*V
       @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-13
       @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
@@ -967,19 +1051,19 @@ end
 
     @testset "Test SVD of an ITensor with different algorithms" begin
       U, S, V, spec, u, v = svd(A, j, l; alg = "recursive")
-      @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+      @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
       @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
       @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
 
       U, S, V, spec, u, v = svd(A, j,l; alg = "divide_and_conquer")
-      @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+      @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
       @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
       @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
 
       U, S, V, spec, u, v = svd(A, j,l; alg = "qr_iteration")
-      @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+      @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       @test A ≈ U * S * V
       @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
       @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
@@ -999,7 +1083,7 @@ end
     #  V = itensor(Vt)
     #  u = commonind(U, S)
     #  v = commonind(V, S)
-    #  @test store(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+    #  @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
     #  @test A≈U*S*V
     #  @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-13
     #  @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
