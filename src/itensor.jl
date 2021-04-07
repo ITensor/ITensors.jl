@@ -1341,6 +1341,12 @@ function (A::ITensor - B::ITensor)
   return C
 end
 
+Base.real(T::ITensor) = itensor(real(tensor(T)))
+
+Base.imag(T::ITensor) = itensor(imag(tensor(T)))
+
+Base.conj(T::ITensor) = itensor(conj(tensor(T)))
+
 function _contract(A::ITensor, B::ITensor)
   (labelsA,labelsB) = compute_contraction_labels(inds(A),inds(B))
   CT = contract(tensor(A),labelsA,tensor(B),labelsB)

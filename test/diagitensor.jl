@@ -96,6 +96,19 @@ using ITensors,
         end
       end
     end
+
+    @testset "Complex operations" begin
+      xr = randn(d)
+      xi = randn(d)
+      D = diagITensor(xr+im*xi,i,j,k)
+      @test eltype(D) == ComplexF64
+      rD = real(D)
+      iD = imag(D)
+      @test eltype(rD) == Float64
+      @test eltype(iD) == Float64
+      @test typeof(rD.store) <: NDTensors.Diag
+      @test norm(rD+im*iD-D) < 1E-8
+    end
     
     @testset "fill!" begin
       D = diagITensor(ones(d), i,j,k)
