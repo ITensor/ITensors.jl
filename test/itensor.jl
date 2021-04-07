@@ -232,6 +232,29 @@ end
   end
 end
 
+@testset "Complex Number Operations" begin
+  i = Index(3,"i")
+  j = Index(4,"j")
+
+  A = randomITensor(ComplexF64,i,j)
+
+  rA = real(A)
+  iA = imag(A)
+  @test norm(rA+1im*iA - A) < 1E-8
+  @test eltype(rA) == Float64
+  @test eltype(iA) == Float64
+
+  cA = conj(A)
+  @test eltype(cA) == ComplexF64
+  @test norm(cA) ≈ norm(A)
+
+  B = randomITensor(Float64,i,j)
+
+  cB = conj(B)
+  @test eltype(cB) == Float64
+  @test norm(cB) ≈ norm(B)
+end
+
 @testset "similar" begin
   i = Index(2,"i")
   j = Index(2,"j")
