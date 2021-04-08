@@ -609,12 +609,15 @@ end
 
 
 """
-    expect(psi::MPS,ops::AbstractString...)
+    expect(psi::MPS,ops::AbstractString...;kwargs...)
 
 Given an MPS `psi` and an operator name, returns
 a vector of the expected value of the operator on 
 each site of the MPS. If multiple operator names are
 provided, returns a tuple of expectation value vectors.
+
+# Optional Keyword Arguments
+- `site_range = 1:length(psi)`: compute expected values only for sites in the given range
 
 # Examples
 
@@ -623,7 +626,7 @@ N = 10
 
 s = siteinds("S=1/2",N)
 psi = randomMPS(s,8)
-Z = expect(psi,"Sz")
+Z = expect(psi,"Sz";site_range=2:6)
 
 s = siteinds("Electron",N)
 psi = randomMPS(s,8)
@@ -634,15 +637,20 @@ updens,dndens = expect(psi,"Nup","Ndn")
 function expect(psi::MPS,
                 ops::AbstractString...;
                 kwargs...)
+  N = length(psi)
+  site_range::UnitRange{Int} = get(kwargs,:site_range,1:N)
+
+  Ns = length(site_range)
+  offset = first(site_range)-1
+
   psi = copy(psi)
   Nops = length(ops)
-  N = length(psi)
   s = siteinds(psi)
-  ex = ntuple(n->zeros(N),Nops)
-  for j=1:N
+  ex = ntuple(n->zeros(Ns),Nops)
+  for j=site_range
     orthogonalize!(psi,j)
     for n=1:Nops
-      ex[n][j] = scalar(psi[j]*op(ops[n],s[j])*dag(prime(psi[j],s[j])))
+      ex[n][j-offset] = scalar(psi[j]*op(ops[n],s[j])*dag(prime(psi[j],s[j])))
     end
   end
   return Nops==1 ? ex[1] : ex

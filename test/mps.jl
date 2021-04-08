@@ -524,7 +524,7 @@ end
     @test flux(M) == QN("Sz",-4)
   end
 
-  @testset "Correlations" begin
+  @testset "Expected value and Correlations" begin
     N = 8
     m = 4
 
@@ -540,6 +540,9 @@ end
     end
     PM = expect(psi,"S+*S-")
     @test norm(PM-diag(Cpm)) < 1E-8
+
+    range = 3:7
+    @test norm(PM[range] - expect(psi,"S+*S-";site_range=range)) < 1E-8
 
     # With start_site, end_site arguments:
     s = siteinds("S=1/2",N)
