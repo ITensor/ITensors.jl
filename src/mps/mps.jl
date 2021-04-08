@@ -507,6 +507,85 @@ function sample(m::MPS)
   return result
 end
 
+"""
+    correlator(M::MPS,
+               Op1::AbstractString,
+               Op2::AbstractString;
+               kwargs...)
+
+Given an MPS psi and two strings denoting
+operators (as recognized by the `op` function), 
+computes the two-point correlation function 
+C[i,j] = <psi|Op1_i Op2_j|psi>
+using efficient MPS techniques.
+Returns the matrix C.
+
+For an MPS of length N and typical
+bond dimension m, the scaling
+of this algorithm is N^2*m^3.
+
+# Examples
+```julia
+N = 30
+m = 4
+
+s = siteinds("S=1/2",N)
+psi = randomMPS(s,m)
+Czz = correlator(psi,"Sz","Sz")
+
+s = siteinds("Electron",N; conserve_qns=true)
+psi = randomMPS(s,n->isodd(n) ? "Up" : "Dn",m)
+Cuu = correlator(psi,"Cdagup","Cup")
+```
+"""
+function correlator(M::MPS,
+                    Op1::AbstractString,
+                    Op2::AbstractString;
+                    kwargs...)
+  psi = copy(M)
+  orthogonalize!(psi,1)
+  N = length(psi)
+  s = siteinds(psi)
+  fermionic2 = has_fermion_string(Op2,s[1])
+
+  C = zeros(N,N)
+  L = ITensor(1.)
+  for i=1:N-1
+    Li = L*psi[i]
+
+    # Get j == i diagonal correlations
+    rind = commonind(psi[i],psi[i+1])
+    C[i,i] = scalar( Li*op("$Op1*$Op2",s,i)*prime(dag(psi[i]),not(rind)) )
+
+    # Get j > i correlations
+    if fermionic2
+      Li = Li*op("$Op1*F",s,i)*dag(prime(psi[i]))
+    else
+      Li = Li*op("$Op1",s,i)*dag(prime(psi[i]))
+    end
+    for j=i+1:N
+      lind = commonind(psi[j],Li)
+      Li *= psi[j]
+
+      cij = Li*op("$Op2",s,j)*dag(prime(prime(psi[j],"Site"),lind))
+      C[i,j] = scalar(cij)
+      C[j,i] = C[i,j]
+
+      if fermionic2
+        Li *= op("F",s,j)*dag(prime(psi[j]))
+      else
+        Li *= dag(prime(psi[j],"Link"))
+      end
+    end
+    L *= psi[i]*dag(prime(psi[i],"Link"))
+  end
+
+  # Get last diagonal element of C
+  C[N,N] = scalar( L*psi[N]*op("$Op1*$Op2",s,N)*prime(dag(psi[N])) )
+
+  return C
+end
+
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
                     name::AbstractString,
                     M::MPS)
