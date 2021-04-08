@@ -552,6 +552,8 @@ function correlation_matrix(psi::MPS,
 
   psi = copy(psi)
   orthogonalize!(psi,start_site)
+  psi[start_site] ./= norm(psi[start_site])
+
   s = siteinds(psi)
   onsiteOp = "$Op1*$Op2"
   fermionic2 = has_fermion_string(Op2,s[1])
@@ -646,7 +648,11 @@ function expect(psi::MPS,
 
   site_range::UnitRange{Int} = get(kwargs,:site_range,1:N)
   Ns = length(site_range)
-  offset = first(site_range)-1
+  start_site = first(site_range)
+  offset = start_site-1
+
+  orthogonalize!(psi,start_site)
+  psi[start_site] ./= norm(psi[start_site])
 
   ex = ntuple(n->zeros(ElT,Ns),Nops)
   for j=site_range
