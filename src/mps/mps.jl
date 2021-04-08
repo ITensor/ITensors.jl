@@ -607,6 +607,47 @@ function correlation_matrix(psi::MPS,
   return C
 end
 
+
+"""
+    expect(psi::MPS,ops::AbstractString...)
+
+Given an MPS `psi` and an operator name, returns
+a vector of the expected value of the operator on 
+each site of the MPS. If multiple operator names are
+provided, returns a tuple of expectation value vectors.
+
+# Examples
+
+```julia
+N = 10
+
+s = siteinds("S=1/2",N)
+psi = randomMPS(s,8)
+Z = expect(psi,"Sz")
+
+s = siteinds("Electron",N)
+psi = randomMPS(s,8)
+dens = expect(psi,"Ntot")
+updens,dndens = expect(psi,"Nup","Ndn")
+```
+"""
+function expect(psi::MPS,
+                ops::AbstractString...;
+                kwargs...)
+  psi = copy(psi)
+  Nops = length(ops)
+  N = length(psi)
+  s = siteinds(psi)
+  ex = ntuple(n->zeros(N),Nops)
+  for j=1:N
+    orthogonalize!(psi,j)
+    for n=1:Nops
+      ex[n][j] = scalar(psi[j]*op(ops[n],s[j])*dag(prime(psi[j],s[j])))
+    end
+  end
+  return Nops==1 ? ex[1] : ex
+end
+
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
                     name::AbstractString,
                     M::MPS)

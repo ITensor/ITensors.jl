@@ -236,6 +236,7 @@ export
   # Methods
   ⋅,
   correlation_matrix,
+  expect,
   inner,
   isortho,
   linkdim,

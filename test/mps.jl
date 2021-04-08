@@ -1,6 +1,7 @@
 using Combinatorics
 using ITensors
 using Random
+using LinearAlgebra: diag
 using Test
 
 Random.seed!(1234)
@@ -524,7 +525,6 @@ end
   end
 
   @testset "Correlations" begin
-
     N = 8
     m = 4
 
@@ -538,6 +538,8 @@ end
       a += "S+",i,"S-",j
       @test inner(psi,MPO(a,s),psi) ≈ Cpm[i,j]
     end
+    PM = expect(psi,"S+*S-")
+    @test norm(PM-diag(Cpm)) < 1E-8
 
     # With start_site, end_site arguments:
     s = siteinds("S=1/2",N)
