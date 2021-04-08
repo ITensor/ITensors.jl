@@ -531,7 +531,7 @@ end
     # Non-fermionic case - spin system
     s = siteinds("S=1/2",N;conserve_qns=true)
     psi = randomMPS(s,n->isodd(n) ? "Up" : "Dn",m)
-    Cpm = correlator(psi,"S+","S-")
+    Cpm = correlation_matrix(psi,"S+","S-")
     # Check using AutoMPO:
     for i=1:N,j=i:N
       a = AutoMPO()
@@ -544,7 +544,8 @@ end
     psi = randomMPS(s,m)
     ss,es = 3,6
     Nb = es-ss+1
-    Cpm = correlator(psi,"S+","S-";start_site=ss,end_site=es)
+    Cpm = correlation_matrix(psi,"S+","S-";site_range=ss:es)
+    Czz = correlation_matrix(psi,"Sz","Sz";site_range=ss:es)
     @test size(Cpm) == (Nb,Nb)
     # Check using AutoMPO:
     for i=ss:es,j=i:es
@@ -556,7 +557,7 @@ end
     # Fermionic case
     s = siteinds("Electron",N)
     psi = randomMPS(s,m)
-    Cuu = correlator(psi,"Cdagup","Cup")
+    Cuu = correlation_matrix(psi,"Cdagup","Cup")
     # Check using AutoMPO:
     for i=1:N,j=i:N
       a = AutoMPO()

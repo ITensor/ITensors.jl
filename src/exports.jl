@@ -235,7 +235,7 @@ export
   MPS,
   # Methods
   ⋅,
-  correlator,
+  correlation_matrix,
   inner,
   isortho,
   linkdim,

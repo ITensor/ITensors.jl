@@ -508,10 +508,10 @@ function sample(m::MPS)
 end
 
 """
-    correlator(psi::MPS,
-               Op1::AbstractString,
-               Op2::AbstractString;
-               kwargs...)
+    correlation_matrix(psi::MPS,
+                       Op1::AbstractString,
+                       Op2::AbstractString;
+                       kwargs...)
 
 Given an MPS psi and two strings denoting
 operators (as recognized by the `op` function), 
@@ -520,8 +520,7 @@ C[i,j] = <psi| Op1i Op2j |psi>
 using efficient MPS techniques. Returns the matrix C.
 
 # Optional Keyword Arguments
-- `start_site::Int = 1`: measure the correlator starting from this site of the MPS
-- `end_site::Int = length(psi)`: measure the correlator up to and including this site of the MPS
+- `site_range = 1:length(psi)`: compute correlations only for sites in the given range
 
 For a correlation matrix of size NxN and an MPS of typical
 bond dimension m, the scaling of this algorithm is N^2*m^3.
@@ -537,19 +536,20 @@ Czz = correlator(psi,"Sz","Sz")
 
 s = siteinds("Electron",N; conserve_qns=true)
 psi = randomMPS(s,n->isodd(n) ? "Up" : "Dn",m)
-Cuu = correlator(psi,"Cdagup","Cup";start_site=2,end_site=8)
+Cuu = correlator(psi,"Cdagup","Cup";site_range=2:8)
 ```
 """
-function correlator(M::MPS,
-                    Op1::AbstractString,
-                    Op2::AbstractString;
-                    kwargs...)
-  N = length(M)
+function correlation_matrix(psi::MPS,
+                            Op1::AbstractString,
+                            Op2::AbstractString;
+                            kwargs...)
+  N = length(psi)
 
-  start_site::Int = get(kwargs, :start_site, 1)
-  end_site::Int = get(kwargs, :end_site, N)
+  site_range::UnitRange{Int} = get(kwargs,:site_range,1:N)
+  start_site = first(site_range)
+  end_site = last(site_range)
 
-  psi = copy(M)
+  psi = copy(psi)
   orthogonalize!(psi,start_site)
   s = siteinds(psi)
   onsiteOp = "$Op1*$Op2"
