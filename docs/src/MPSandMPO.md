@@ -33,10 +33,11 @@ MPO(::MPS)
 ## Properties
 
 ```@docs
-length(::ITensors.AbstractMPS)
+eltype(::ITensors.AbstractMPS)
 flux(::ITensors.AbstractMPS)
-maxlinkdim(::ITensors.AbstractMPS)
 hasqns(::ITensors.AbstractMPS)
+length(::ITensors.AbstractMPS)
+maxlinkdim(::ITensors.AbstractMPS)
 ```
 
 ## Obtaining and finding indices
