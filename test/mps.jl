@@ -523,6 +523,35 @@ end
     @test flux(M) == QN("Sz",-4)
   end
 
+  @testset "Correlations" begin
+
+    N = 8
+    m = 4
+
+    # Non-fermionic case - spin system
+    s = siteinds("S=1/2",N;conserve_qns=true)
+    psi = randomMPS(s,n->isodd(n) ? "Up" : "Dn",m)
+    Cpm = correlator(psi,"S+","S-")
+    # Check using AutoMPO:
+    for i=1:N,j=i:N
+      a = AutoMPO()
+      a += "S+",i,"S-",j
+      @test inner(psi,MPO(a,s),psi) ≈ Cpm[i,j]
+    end
+
+    # Fermionic case
+    s = siteinds("Electron",N)
+    psi = randomMPS(s,m)
+    Cuu = correlator(psi,"Cdagup","Cup")
+    # Check using AutoMPO:
+    for i=1:N,j=i:N
+      a = AutoMPO()
+      a += "Cdagup",i,"Cup",j
+      @test inner(psi,MPO(a,s),psi) ≈ Cuu[i,j]
+    end
+
+  end
+
   @testset "swapbondsites" begin
     N = 5
     sites = siteinds("S=1/2", N)
