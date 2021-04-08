@@ -544,6 +544,7 @@ function correlation_matrix(psi::MPS,
                             Op2::AbstractString;
                             kwargs...)
   N = length(psi)
+  ElT = eltype(psi)
 
   site_range::UnitRange{Int} = get(kwargs,:site_range,1:N)
   start_site = first(site_range)
@@ -561,7 +562,7 @@ function correlation_matrix(psi::MPS,
   # Nb = size of block of correlation matrix
   Nb = end_site-start_site+1
 
-  C = zeros(Nb,Nb)
+  C = zeros(ElT,Nb,Nb)
 
   if start_site == 1
     L = ITensor(1.)
@@ -588,7 +589,7 @@ function correlation_matrix(psi::MPS,
 
       val = Li*op(Op2,s,j)*dag(prime(prime(psi[j],"Site"),lind))
       C[ci,cj] = scalar(val)
-      C[cj,ci] = C[ci,cj]
+      C[cj,ci] = conj(C[ci,cj])
 
       if fermionic2
         Li *= op("F",s,j)*dag(prime(psi[j]))
@@ -637,22 +638,24 @@ updens,dndens = expect(psi,"Nup","Ndn")
 function expect(psi::MPS,
                 ops::AbstractString...;
                 kwargs...)
+  psi = copy(psi)
   N = length(psi)
-  site_range::UnitRange{Int} = get(kwargs,:site_range,1:N)
+  ElT = real(eltype(psi))
+  Nops = length(ops)
+  s = siteinds(psi)
 
+  site_range::UnitRange{Int} = get(kwargs,:site_range,1:N)
   Ns = length(site_range)
   offset = first(site_range)-1
 
-  psi = copy(psi)
-  Nops = length(ops)
-  s = siteinds(psi)
-  ex = ntuple(n->zeros(Ns),Nops)
+  ex = ntuple(n->zeros(ElT,Ns),Nops)
   for j=site_range
     orthogonalize!(psi,j)
     for n=1:Nops
-      ex[n][j-offset] = scalar(psi[j]*op(ops[n],s[j])*dag(prime(psi[j],s[j])))
+      ex[n][j-offset] = real(scalar(psi[j]*op(ops[n],s[j])*dag(prime(psi[j],s[j]))))
     end
   end
+
   return Nops==1 ? ex[1] : ex
 end
 

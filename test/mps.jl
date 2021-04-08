@@ -546,7 +546,7 @@ end
 
     # With start_site, end_site arguments:
     s = siteinds("S=1/2",N)
-    psi = randomMPS(s,m)
+    psi = randomMPS(ComplexF64,s,m)
     ss,es = 3,6
     Nb = es-ss+1
     Cpm = correlation_matrix(psi,"S+","S-";site_range=ss:es)
