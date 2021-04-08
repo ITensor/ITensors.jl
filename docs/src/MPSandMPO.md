@@ -105,6 +105,7 @@ settags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITen
 ## Operations
 
 ```@docs
+expect(::MPS,::AbstractString...)
 correlator(::MPS,::AbstractString,::AbstractString)
 dag(::ITensors.AbstractMPS)
 dense(::ITensors.AbstractMPS)
