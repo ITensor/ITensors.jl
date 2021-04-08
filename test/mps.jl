@@ -539,6 +539,20 @@ end
       @test inner(psi,MPO(a,s),psi) ≈ Cpm[i,j]
     end
 
+    # With start_site, end_site arguments:
+    s = siteinds("S=1/2",N)
+    psi = randomMPS(s,m)
+    ss,es = 3,6
+    Nb = es-ss+1
+    Cpm = correlator(psi,"S+","S-";start_site=ss,end_site=es)
+    @test size(Cpm) == (Nb,Nb)
+    # Check using AutoMPO:
+    for i=ss:es,j=i:es
+      a = AutoMPO()
+      a += "S+",i,"S-",j
+      @test inner(psi,MPO(a,s),psi) ≈ Cpm[i-ss+1,j-ss+1]
+    end
+
     # Fermionic case
     s = siteinds("Electron",N)
     psi = randomMPS(s,m)
@@ -549,7 +563,6 @@ end
       a += "Cdagup",i,"Cup",j
       @test inner(psi,MPO(a,s),psi) ≈ Cuu[i,j]
     end
-
   end
 
   @testset "swapbondsites" begin

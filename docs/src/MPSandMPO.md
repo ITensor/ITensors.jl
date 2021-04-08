@@ -105,6 +105,7 @@ settags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITen
 ## Operations
 
 ```@docs
+correlator(::MPS,::AbstractString,::AbstractString)
 dag(::ITensors.AbstractMPS)
 dense(::ITensors.AbstractMPS)
 movesite(::ITensors.AbstractMPS, ::Pair{Int, Int};orthocenter::Int,kwargs...)

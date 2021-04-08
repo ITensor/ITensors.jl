@@ -508,21 +508,23 @@ function sample(m::MPS)
 end
 
 """
-    correlator(M::MPS,
+    correlator(psi::MPS,
                Op1::AbstractString,
                Op2::AbstractString;
                kwargs...)
 
 Given an MPS psi and two strings denoting
 operators (as recognized by the `op` function), 
-computes the two-point correlation function 
-C[i,j] = <psi|Op1_i Op2_j|psi>
-using efficient MPS techniques.
-Returns the matrix C.
+computes the two-point correlation function matrix
+C[i,j] = <psi| Op1i Op2j |psi>
+using efficient MPS techniques. Returns the matrix C.
 
-For an MPS of length N and typical
-bond dimension m, the scaling
-of this algorithm is N^2*m^3.
+# Optional Keyword Arguments
+- `start_site::Int = 1`: measure the correlator starting from this site of the MPS
+- `end_site::Int = length(psi)`: measure the correlator up to and including this site of the MPS
+
+For a correlation matrix of size NxN and an MPS of typical
+bond dimension m, the scaling of this algorithm is N^2*m^3.
 
 # Examples
 ```julia
@@ -535,41 +537,58 @@ Czz = correlator(psi,"Sz","Sz")
 
 s = siteinds("Electron",N; conserve_qns=true)
 psi = randomMPS(s,n->isodd(n) ? "Up" : "Dn",m)
-Cuu = correlator(psi,"Cdagup","Cup")
+Cuu = correlator(psi,"Cdagup","Cup";start_site=2,end_site=8)
 ```
 """
 function correlator(M::MPS,
                     Op1::AbstractString,
                     Op2::AbstractString;
                     kwargs...)
-  psi = copy(M)
-  orthogonalize!(psi,1)
-  N = length(psi)
-  s = siteinds(psi)
-  fermionic2 = has_fermion_string(Op2,s[1])
+  N = length(M)
 
-  C = zeros(N,N)
-  L = ITensor(1.)
-  for i=1:N-1
+  start_site::Int = get(kwargs, :start_site, 1)
+  end_site::Int = get(kwargs, :end_site, N)
+
+  psi = copy(M)
+  orthogonalize!(psi,start_site)
+  s = siteinds(psi)
+  onsiteOp = "$Op1*$Op2"
+  fermionic2 = has_fermion_string(Op2,s[1])
+  if fermionic2
+    Op1 = "$Op1*F"
+  end
+
+  # Nb = size of block of correlation matrix
+  Nb = end_site-start_site+1
+
+  C = zeros(Nb,Nb)
+
+  if start_site == 1
+    L = ITensor(1.)
+  else
+    lind = commonind(psi[start_site],psi[start_site-1])
+    L = delta(lind,lind')
+  end
+
+  for i=start_site:end_site-1
+    ci = i-start_site+1
+
     Li = L*psi[i]
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i],psi[i+1])
-    C[i,i] = scalar( Li*op("$Op1*$Op2",s,i)*prime(dag(psi[i]),not(rind)) )
+    C[ci,ci] = scalar( Li*op(onsiteOp,s,i)*prime(dag(psi[i]),not(rind)) )
 
     # Get j > i correlations
-    if fermionic2
-      Li = Li*op("$Op1*F",s,i)*dag(prime(psi[i]))
-    else
-      Li = Li*op("$Op1",s,i)*dag(prime(psi[i]))
-    end
-    for j=i+1:N
+    Li = Li*op(Op1,s,i)*dag(prime(psi[i]))
+    for j=i+1:end_site
+      cj = j-start_site+1
       lind = commonind(psi[j],Li)
       Li *= psi[j]
 
-      cij = Li*op("$Op2",s,j)*dag(prime(prime(psi[j],"Site"),lind))
-      C[i,j] = scalar(cij)
-      C[j,i] = C[i,j]
+      val = Li*op(Op2,s,j)*dag(prime(prime(psi[j],"Site"),lind))
+      C[ci,cj] = scalar(val)
+      C[cj,ci] = C[ci,cj]
 
       if fermionic2
         Li *= op("F",s,j)*dag(prime(psi[j]))
@@ -581,7 +600,9 @@ function correlator(M::MPS,
   end
 
   # Get last diagonal element of C
-  C[N,N] = scalar( L*psi[N]*op("$Op1*$Op2",s,N)*prime(dag(psi[N])) )
+  i = end_site
+  lind = commonind(psi[i],psi[i-1])
+  C[Nb,Nb] = scalar( L*psi[i]*op(onsiteOp,s,i)*prime(prime(dag(psi[i]),"Site"),lind) )
 
   return C
 end
