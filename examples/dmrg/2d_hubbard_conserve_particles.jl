@@ -7,9 +7,9 @@ function main(; Nx = 6,
   N = Nx * Ny
 
   sweeps = Sweeps(10)
-  maxdim!(sweeps, 100, 200, 400, 800, 1600)
-  cutoff!(sweeps, 1e-6)
-  noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
+  setmaxdim!(sweeps, 100, 200, 400, 800, 1600)
+  setcutoff!(sweeps, 1e-6)
+  setnoise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
   @show sweeps
 
   sites = siteinds("Electron", N;

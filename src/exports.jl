@@ -298,6 +298,10 @@ export
   noise,
   noise!,
   nsweep,
+  setmaxdim!,
+  setmindim!,
+  setcutoff!,
+  setnoise!,
   sweepnext,
 
 # physics/autompo.jl

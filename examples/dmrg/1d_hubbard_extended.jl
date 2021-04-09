@@ -36,8 +36,8 @@ let
   H = MPO(ampo,sites)
 
   sweeps = Sweeps(6)
-  maxdim!(sweeps,50,100,200,400,800,800)
-  cutoff!(sweeps,1E-12)
+  setmaxdim!(sweeps,50,100,200,400,800,800)
+  setcutoff!(sweeps,1E-12)
   @show sweeps
 
   state = ["Emp" for n=1:N]
