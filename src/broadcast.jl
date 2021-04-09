@@ -3,28 +3,46 @@
 # Broadcasting for IndexSets
 #
 
-BroadcastStyle(::Type{<:IndexSet}) = Style{IndexSet}()
+# We're using a specialized type `IndexVector` since `IndexSet` has
+# a compile time check that all indices are unique, but `similar`
+# in general won't make a unique IndexSet. We need a specialized type
+# to dispatch on `copyto!`. This is like 
+struct IndexVector{T} <: AbstractVector{T}
+  data::Vector{T}
+end
+size(v::IndexVector) = size(v.data)
 
-BroadcastStyle(::AbstractArrayStyle{0}, b::Style{IndexSet}) = b
-BroadcastStyle(a::AbstractArrayStyle, ::Style{IndexSet}) = a
-BroadcastStyle(a::Style{Tuple}, ::Style{IndexSet}) = a
+struct IndexSetStyle <: Broadcast.BroadcastStyle end
 
-instantiate(bc::Broadcasted{Style{IndexSet}, Nothing}) = bc
-function instantiate(bc::Broadcasted{Style{IndexSet}})
-  check_broadcast_axes(bc.axes, bc.args...)
-  return bc
+BroadcastStyle(::Type{<: IndexSet}) = IndexSetStyle()
+
+BroadcastStyle(::IndexSetStyle, ::BroadcastStyle) = IndexSetStyle()
+
+broadcastable(is::IndexSet) = is
+
+function _similar(bc::Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT}
+  return similar(Array{ElT}, axes(bc))
 end
 
-broadcastable(t::IndexSet) = t
+# In the case when the output type is inferred to be `<: Index`,
+# then output an IndexSet (like `prime.(is)`)
+function similar(bc::Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT <: Index}
+  is = _similar(bc, ElT)
+  # We're using a specialized type `IndexVector` since `IndexSet` has
+  # a compile time check that all indices are unique, but `similar`
+  # in general won't make a unique IndexSet. We need a specialized type
+  # to dispatch on `copyto!`
+  return IndexVector(_similar(bc, ElT))
+end
 
-indexset_or_tuple(t::Tuple{Vararg{<:Index}}) = IndexSet(t)
-indexset_or_tuple(t) = t
+# In general, the output type will be a Vector{ElT} (like `dim.(is)`)
+function similar(bc::Broadcast.Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT}
+  return _similar(bc, ElT)
+end
 
-@inline function copy(bc::Broadcasted{Style{IndexSet}})
-    dim = axes(bc)
-    length(dim) == 1 || throw(DimensionMismatch("tuple only supports one dimension"))
-    N = length(dim[1])
-    return indexset_or_tuple(ntuple(k -> @inbounds(_broadcast_getindex(bc, k)), Val(N)))
+function copyto!(dest::IndexVector, bc::Broadcast.Broadcasted{IndexSetStyle})
+  copyto!(dest.data, bc)
+  return IndexSet(dest.data)
 end
 
 #

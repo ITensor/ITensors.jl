@@ -106,7 +106,7 @@ using ITensors,
       iD = imag(D)
       @test eltype(rD) == Float64
       @test eltype(iD) == Float64
-      @test typeof(rD.store) <: NDTensors.Diag
+      @test typeof(storage(rD)) <: NDTensors.Diag
       @test norm(rD+im*iD-D) < 1E-8
     end
     

@@ -38,12 +38,12 @@ using Compat
   end
   @testset "Convert to Index" begin
     @test Index(IndexSet(i)) === i
-    @test_throws ErrorException Index(IndexSet(i, j))
+    @test_throws BoundsError Index(IndexSet(i, j))
   end
   @testset "Index dimensions" begin
     I = IndexSet(i,j,k)
     @test dim(I) == idim*jdim*kdim
-    @test dims(I) == (idim,jdim,kdim)
+    @test dims(I) == [idim,jdim,kdim]
     @test dim(I,1) == idim
     @test dim(I,2) == jdim
     @test dim(I,3) == kdim
@@ -284,42 +284,42 @@ using Compat
     @test dir(J[2]) == -dir(I[2])
     @test dir(J, y) == -dir(I, y)
     @test ITensors.dirs(J, (x, y)) == [-dir(I, x), -dir(I, y)]
-    @test ITensors.dirs(J) == (-dir(I, x), -dir(I, y))
+    @test ITensors.dirs(J) == [-dir(I, x), -dir(I, y)]
 
     # dir
     dirsI = dir.(I)
     # broken for now
     #@inferred broadcast(dir, I)
-    @test dirsI isa Tuple{ITensors.Arrow,ITensors.Arrow}
-    @test dirsI == (ITensors.Out, ITensors.Out)
+    @test dirsI isa Vector{ITensors.Arrow}
+    @test dirsI == [ITensors.Out, ITensors.Out]
 
     # dims
     dimsI = dim.(I)
     # broken for now
     #@inferred broadcast(dim, I)
-    @test dimsI isa Tuple{Int, Int}
-    @test dimsI == (2, 4)
+    @test dimsI isa Vector{Int}
+    @test dimsI == [2, 4]
 
     # pairs
     J = prime.(I)
     pairsI = I .=> J
     #@inferred broadcast(=>, I, J)
-    @test pairsI isa Tuple{<:Pair, <:Pair}
-    @test pairsI == (x => x', y => y')
+    @test pairsI isa Vector{<: Pair}
+    @test pairsI == [x => x', y => y']
 
     pairsI = I .=> 1
     #@inferred broadcast(=>, I, 1)
-    @test pairsI isa Tuple{<:Pair, <:Pair}
-    @test pairsI == (x => 1, y => 1)
+    @test pairsI isa Vector{<: Pair}
+    @test pairsI == [x => 1, y => 1]
 
     pairsI = I .=> (1, 2)
     #@inferred broadcast(=>, I, (1, 2))
-    @test pairsI isa Tuple{<:Pair, <:Pair}
-    @test pairsI == (x => 1, y => 2)
+    @test pairsI isa Vector{<: Pair}
+    @test pairsI == [x => 1, y => 2]
 
     pairsI = I .=> [1, 2]
     #@inferred broadcast(=>, I, [1, 2])
-    @test pairsI isa Vector{<:Pair}
+    @test pairsI isa Vector{<: Pair}
     @test pairsI == [x => 1, y => 2]
 
   end

@@ -1437,7 +1437,7 @@ Random.seed!(1234)
       insertblock!(A, (2,4))
       insertblock!(A, (1,5))
       U,S,V = svd(A, s; cutoff=0)
-      @test dims(S) == (0,0)
+      @test dims(S) == [0, 0]
       @test U*S*V ≈ A
     end
 

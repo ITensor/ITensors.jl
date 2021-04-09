@@ -193,6 +193,9 @@ julia> for c in C
 (c, A[c]) = (CartesianIndex(2, 2), 0.2842549524334651)
 (c, A[c]) = (CartesianIndex(1, 3), -0.023483276282564795)
 (c, A[c]) = (CartesianIndex(2, 3), -0.4877709982071688)
+
+!!! warning
+    Unlike standard `AbstractArray{T, N}` types, `ITensor`s do not have their order as type paramater, and therefore iterating using `CartesianIndices` is generally slow. If you are performing operations that use iterating over individual elements of an ITensor it is best to convert to `NDTensors.Tensor`.
 """
 CartesianIndices(A::ITensor) = CartesianIndices(inds(A))
 
@@ -235,6 +238,7 @@ storage and indices as the ITensor.
 See `Tensor(::ITensor)` for a version that makes a copy.
 """
 tensor(A::ITensor) = tensor(storage(A), Tuple(inds(A)))
+tensor(A::ITensor, indsA::Tuple) = tensor(storage(A), indsA)
 
 """
     ITensor([::Type{ElT} = Float64, ]inds)
@@ -708,17 +712,16 @@ function Array(T::ITensor, is::Vararg{Index, N}) where {N}
   return Array{eltype(T), N}(T, is...)::Array{<:Number, N}
 end
 
-function Array{<:Any, N}(T::ITensor,
-                         is::Vararg{Index, N}) where {N}
+function Array{<:Any, N}(T::ITensor, is::Vararg{Index, N}) where {N}
   return Array(T, is...)
 end
 
-function Vector{ElT}(T::ITensor) where {ElT}
+function Vector{ElT}(T::ITensor)::Vector{ElT} where {ElT}
   ndims(T) != 1 && throw(DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to a Vector."))
   return Array{ElT}(T,inds(T)...)
 end
 
-function Vector(T::ITensor)
+function Vector(T::ITensor)::Vector
   return Array(T,inds(T)...)
 end
 
@@ -729,11 +732,21 @@ Extract the element of an order zero ITensor.
 
 Same as `T[]`.
 """
-scalar(T::ITensor) = T[]::Number
+scalar(T::ITensor)::Any = T[]
 
-struct LastVal
+struct LastVal <: Number
   n::Int
 end
+
+# TODO: make these definition work for notation
+# A[1, end-1]
+#(l::LastVal + n::Number) = LastVal(l.n + n)
+#(n::Number + l::LastVal) = l + n
+#(l::LastVal * n::Number) = LastVal(l.n * n)
+#(n::Number * l::LastVal) = l * n
+#(l::LastVal - n::Number) = LastVal(l.n - n)
+#(n::Number - l::LastVal) = LastVal(n - l.n)
+#(-l::LastVal) = LastVal(-l.n)
 
 lastindex(A::ITensor, n::Int64) = LastVal(n)
 
@@ -741,10 +754,9 @@ lastindex(A::ITensor, n::Int64) = LastVal(n)
 #lastindex(A::ITensor) = dim(A)
 
 lastval_to_int(n::Int, ::LastVal) = n
-
 lastval_to_int(::Int, n::Int) = n
-
-lastval_to_int(T::ITensor, I...) = lastval_to_int.(dims(T), I)
+lastval_to_int(dimsT::Tuple, I::Tuple) = lastval_to_int.(dimsT, I)
+lastval_to_int(A::Tensor, I::Tuple) = lastval_to_int(size(A), I)
 
 """
     getindex(T::ITensor, I::Int...)
@@ -759,21 +771,24 @@ A = ITensor(2.0, i, i')
 A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 ```
 """
-function getindex(T::ITensor, I::Vararg{Union{Int, LastVal}, N}) where {N}
-  ndims(T) != N && throw(DimensionMismatch())
-  I = lastval_to_int(T, I...)
-  @boundscheck checkbounds(tensor(T), I...)
-  return tensor(T)[I...]::Number
-end
+@propagate_inbounds getindex(T::ITensor, I::Integer...)::Any = tensor(T)[I...]
 
-function getindex(T::ITensor, b::Block{N}) where {N}
+# TODO: move to NDTensors (would require moving `LastVal` to NDTensors)
+@propagate_inbounds _getindex(T::Tensor, I::Vararg{Union{Integer, LastVal}}) = T[lastval_to_int(T, I)...]
+
+# Special case that handles indexing with `end` like `A[i => end, j => 3]`
+@propagate_inbounds getindex(T::ITensor, I::Vararg{Union{Integer, LastVal}})::Any = _getindex(tensor(T), I...)
+
+# Simple version with just integer indexing, bounds checking gets done by NDTensors
+
+@propagate_inbounds function getindex(T::ITensor, b::Block{N}) where {N}
   # XXX: this should return an ITensor view
   return tensor(T)[b]
 end
 
 # Version accepting CartesianIndex, useful when iterating over
 # CartesianIndices
-getindex(T::ITensor, I::CartesianIndex{N}) where {N} = T[Tuple(I)...]
+@propagate_inbounds getindex(T::ITensor, I::CartesianIndex)::Any = T[Tuple(I)...]
 
 """
     getindex(T::ITensor, ivs...)
@@ -788,17 +803,31 @@ A = ITensor(2.0, i, i')
 A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 ```
 """
-function getindex(T::ITensor, ivs...)
+@propagate_inbounds function getindex(T::ITensor, ivs...)
   p = NDTensors.getperm(inds(T), ind.(ivs))
   vals = NDTensors.permute(val.(ivs), p)
   return T[vals...]::Number
 end
 
-function getindex(T::ITensor) 
+@propagate_inbounds function getindex(T::ITensor) 
   if order(T) != 0
     throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."))
   end
   return tensor(T)[]::Number
+end
+
+# Function barrier for type instability of inds(T)
+function _setindex!(T::ITensor, indsT, x::Number, I::Union{Int, LastVal}...)
+  I = lastval_to_int(dims(indsT), I)
+  Tₜ = tensor(T, indsT)
+  @boundscheck checkbounds(Tₜ, I...)
+  fluxT = flux(T)
+  if !isnothing(fluxT) && fluxT != flux(T, I...)
+    error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
+  end
+  Rₜ = setindex!!(Tₜ, x, I...)
+  setstorage!(T, storage(Rₜ))
+  return T
 end
 
 """
@@ -817,22 +846,19 @@ A[1, 2] = 1.0 # same as: A[i => 1, i' => 2] = 1.0
 A[2, :] = [2.0 3.0]
 ```
 """
-function setindex!(T::ITensor, x::Number, I::Union{Int, LastVal}...)
-  I = lastval_to_int(T, I...)
-  @boundscheck checkbounds(tensor(T), I...)
-  fluxT = flux(T)
-  if !isnothing(fluxT) && fluxT != flux(T, I...)
-    error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
-  end
-  TR = setindex!!(tensor(T), x, I...)
-  # TODO: replace with storage(TR) when
-  # storage is introduced in NDTensors
-  setstorage!(T, storage(TR))
-  return T
-end
+setindex!(T::ITensor, x::Number, I::Union{Int, LastVal}...) =
+  _setindex!(T, Tuple(inds(T)), x, I...)
 
 setindex!(T::ITensor, x::Number, I::CartesianIndex) =
   setindex!(T, x, Tuple(I)...)
+
+# Function barrier for type instability of inds(T)
+function _setindex!(T::ITensor, indsT, x::Number, inds, vals)
+  p = NDTensors.getperm(indsT, inds)
+  vals = NDTensors.permute(vals, p)
+  T[vals...] = x
+  return T
+end
 
 """
     setindex!(T::ITensor, x::Number, ivs...)
@@ -848,12 +874,8 @@ A[i => 1, i' => 2] = 1.0 # same as: A[i' => 2, i => 1] = 1.0
 A[i => 2, i' => :] = [2.0 3.0]
 ```
 """
-function setindex!(T::ITensor, x::Number, ivs...)
-  p = NDTensors.getperm(inds(T), ind.(ivs))
-  vals = NDTensors.permute(val.(ivs), p)
-  T[vals...] = x
-  return T
-end
+setindex!(T::ITensor, x::Number, ivs...) =
+  _setindex!(T, Tuple(inds(T)), x, ind.(ivs), val.(ivs))
 
 Base.checkbounds(::Any, ::Block) = nothing
 
@@ -1334,7 +1356,7 @@ function combiner(; kwargs...)
 end
 
 function combinedind(T::ITensor)
-  if storage(T) isa Combiner
+  if storage(T) isa Combiner && order(T) > 0
     return inds(T)[1]
   end
   return nothing
@@ -1438,9 +1460,15 @@ Base.imag(T::ITensor) = itensor(imag(tensor(T)))
 
 Base.conj(T::ITensor) = itensor(conj(tensor(T)))
 
+# Function barrier
+function _contract(Aₜ::Tensor{<: Number, NA}, labelsA::Vector,
+                   Bₜ::Tensor{<: Number, NB}, labelsB::Vector) where {NA, NB}
+  return contract(Aₜ, _NTuple(Val(NA), labelsA), Bₜ, _NTuple(Val(NB), labelsB))
+end
+
 function _contract(A::ITensor, B::ITensor)
-  (labelsA,labelsB) = compute_contraction_labels(inds(A),inds(B))
-  CT = contract(tensor(A),labelsA,tensor(B),labelsB)
+  labelsA, labelsB = compute_contraction_labels(inds(A),inds(B))
+  CT = _contract(tensor(A), labelsA, tensor(B), labelsB)
   C = itensor(CT)
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 &&
@@ -1629,8 +1657,8 @@ function mul!(C::ITensor, A::ITensor, B::ITensor,
               α::Number, β::Number=0)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(tensor(C), labelsC, tensor(A), labelsA,
-                            tensor(B), labelsB, α, β)
+  CT = NDTensors.contract!!(tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA),
+                            tensor(B), _Tuple(labelsB), α, β)
   setstorage!(C, storage(CT))
   setinds!(C, inds(C))
   return C
@@ -1642,8 +1670,8 @@ end
 function mul!(C::ITensor, A::ITensor, B::ITensor)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(tensor(C), labelsC, tensor(A), labelsA,
-                            tensor(B), labelsB)
+  CT = NDTensors.contract!!(tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA),
+                            tensor(B), _Tuple(labelsB))
   setstorage!(C, storage(CT))
   setinds!(C, inds(C))
   return C

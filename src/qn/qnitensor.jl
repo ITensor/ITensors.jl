@@ -74,7 +74,7 @@ C = ITensor(ComplexF64,undef,QN(0),i',dag(i))
 function ITensor(::Type{ElT}, ::UndefInitializer, 
                  flux::QN, inds::Indices) where {ElT <: Number}
   blocks = nzblocks(flux, IndexSet(inds))
-  T = BlockSparseTensor(ElT,undef,blocks,inds)
+  T = BlockSparseTensor(ElT, undef, blocks, Tuple(inds))
   return itensor(T)
 end
 
@@ -126,7 +126,7 @@ Block: (2, 2)
 function itensor(::Type{ElT}, A::Array{<: Number}, inds::QNIndexSet; tol = 0) where {ElT <: Number}
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, ::IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   T = emptyITensor(ElT, inds)
-  A = reshape(A, dims(inds))
+  A = reshape(A, dims(inds)...)
   for vs in eachindex(T)
     Avs = A[vs]
     if abs(Avs) > tol

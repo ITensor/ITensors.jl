@@ -8,7 +8,7 @@ ITensors.enable_debug_checks()
 
 seed!(12345)
 
-digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
+invdigits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
 
 @testset "Dense ITensor basic functionality" begin
 
@@ -103,7 +103,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test storage(A) isa NDTensors.Dense{Float64}
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
-    @test size(A) == dims(A) == (2,2)
+    @test size(A) == dims(A) == [2, 2]
     @test dim(A) == 4
 
     At = randomITensor(Index(2), Index(3))
@@ -115,7 +115,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     B = randomITensor(IndexSet(i,j))
     @test storage(B) isa NDTensors.Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
-    @test size(B) == dims(B) == (2,2)
+    @test size(B) == dims(B) == [2, 2]
 
     A = randomITensor()
     @test eltype(A) == Float64
@@ -970,12 +970,12 @@ end
   @testset "Set and get values with IndexVals" begin
     A = ITensor(SType,i,j,k)
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      A[k=>kk,j=>jj,i=>ii] = digits(SType,ii,jj,kk)
+      A[k=>kk,j=>jj,i=>ii] = invdigits(SType,ii,jj,kk)
     end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test A[j=>jj,k=>kk,i=>ii]==digits(SType,ii,jj,kk)
+      @test A[j=>jj,k=>kk,i=>ii]==invdigits(SType,ii,jj,kk)
     end
-    @test_throws DimensionMismatch A[1]
+    @test A[1] == invdigits(SType, 1, 1, 1)
   end
   @testset "Test permute(ITensor,Index...)" begin
     A = randomITensor(SType,i,k,j)
@@ -1009,11 +1009,11 @@ end
     A = ITensor(SType,i,j,k)
     A = permute(A,k,i,j)
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      A[kk,ii,jj] = digits(SType,ii,jj,kk)
+      A[kk,ii,jj] = invdigits(SType,ii,jj,kk)
     end
     A = permute(A,i,j,k)
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test A[ii,jj,kk]==digits(SType,ii,jj,kk)
+      @test A[ii,jj,kk]==invdigits(SType,ii,jj,kk)
     end
   end
   @testset "Test scalar(ITensor)" begin

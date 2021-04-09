@@ -147,16 +147,17 @@ function Base.:(==)(ts1::TagSet,ts2::TagSet)
   l2 = length(ts2)
   l1 != l2 && return false
   for n in 1:l1
-    @inbounds ts1[n] != ts2[n] && return false
+    @inbounds data(ts1)[n] != data(ts2)[n] && return false
   end
   return true
 end
 
+# Assumes it is an integer
 function hastag(ts::TagSet, tag)
   l = length(ts)
   l < 1 && return false
   for n = 1:l
-    @inbounds Tag(tag) == ts[n] && return true
+    @inbounds tag == data(ts)[n] && return true
   end
   return false
 end
@@ -167,23 +168,23 @@ function hastags(ts2::TagSet, tags1)
   l2 = length(ts2)
   l1 > l2 && return false
   for n1 = 1:l1
-    @inbounds !hastag(ts2,ts1[n1]) && return false
+    @inbounds !hastag(ts2, data(ts1)[n1]) && return false
   end
   return true
 end
 
 function addtags(ts::TagSet, tagsadd)
+  tsadd = TagSet(tagsadd)
   if length(ts) == maxTags
     if hastags(ts, tagsadd)
       return ts
     end
     throw(ErrorException("Cannot add tag: TagSet already maximum size"))
   end
-  tsadd = TagSet(tagsadd)
   res_ts = MVector(data(ts))
   ntags = length(ts)
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntTag(tsadd[n]))
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
   end
   return TagSet(TagSetStorage(res_ts),ntags)
 end
@@ -268,7 +269,7 @@ function commontags(ts1::TagSet, ts2::TagSet)
   ts3 = TagSet()
   N1 = length(ts1)
   for n1 in 1:N1
-    t1 = ts1[n1]
+    t1 = data(ts1)[n1]
     if hastag(ts2, t1)
       ts3 = addtags(ts3, t1)
     end

@@ -56,6 +56,8 @@ Please note that right now, ITensors.jl requires that you use Julia v1.3 or late
 
 We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions [here](https://github.com/JuliaComputing/MKL.jl).
 
+The MKL.jl package doesn't work by default for Julia v1.6 right now, but can be patched with the workaround described [here](https://github.com/JuliaLinearAlgebra/MKL.jl/issues/60#issuecomment-808329869).
+
 ## Documentation
 
 - [**STABLE**](https://itensor.github.io/ITensors.jl/stable/) --  **documentation of the most recently tagged version.**

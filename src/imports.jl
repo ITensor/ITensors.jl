@@ -43,7 +43,9 @@ import Base:
   size,
   summary,
   truncate,
-  zero
+  zero,
+  # macros
+  @propagate_inbounds
 
 import Base.Broadcast:
   # types
