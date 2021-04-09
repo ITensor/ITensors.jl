@@ -103,7 +103,7 @@ julia> readdir()
 8-element Array{String,1}:
  "1d_heisenberg.jl"
  "1d_heisenberg_conserve_spin.jl"
- "1d_hubbard_extendend.jl"
+ "1d_hubbard_extended.jl"
  "1d_ising_with_observer.jl"
  "2d_heisenberg_conserve_spin.jl"
  "2d_hubbard_conserve_momentum.jl"
