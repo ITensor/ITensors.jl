@@ -138,13 +138,9 @@ If fewer values are provided, the last value
 is repeated for the remaining sweeps.
 """
 function maxdim!(sw::Sweeps,maxdims::Int...)::Nothing
-  Nm = length(maxdims)
-  N = min(nsweep(sw),Nm)
-  for i=1:N
-    sw.maxdim[i] = maxdims[i]
-  end
-  for i=Nm+1:nsweep(sw)
-    sw.maxdim[i] = maxdims[Nm]
+  mdims = collect(maxdims)
+  for i=1:nsweep(sw)
+    sw.maxdim[i] = get(mdims,i,maxdims[end])
   end
 end
 
@@ -157,13 +153,9 @@ If fewer values are provided, the last value
 is repeated for the remaining sweeps.
 """
 function mindim!(sw::Sweeps,mindims::Int...)::Nothing
-  Nm = length(mindims)
-  N = min(nsweep(sw),Nm)
-  for i=1:N
-    sw.mindim[i] = mindims[i]
-  end
-  for i=Nm+1:nsweep(sw)
-    sw.mindim[i] = mindims[Nm]
+  mdims = collect(mindims)
+  for i=1:nsweep(sw)
+    sw.mindim[i] = get(mdims,i,mindims[end])
   end
 end
 
@@ -176,13 +168,9 @@ If fewer values are provided, the last value
 is repeated for the remaining sweeps.
 """
 function cutoff!(sw::Sweeps,cutoffs::Float64...)::Nothing
-  Nm = length(cutoffs)
-  N = min(nsweep(sw),Nm)
-  for i=1:N
-    sw.cutoff[i] = cutoffs[i]
-  end
-  for i=Nm+1:nsweep(sw)
-    sw.cutoff[i] = cutoffs[Nm]
+  cuts = collect(cutoffs)
+  for i=1:nsweep(sw)
+    sw.cutoff[i] = get(cuts,i,cutoffs[end])
   end
 end
 
@@ -195,13 +183,9 @@ If fewer values are provided, the last value
 is repeated for the remaining sweeps.
 """
 function noise!(sw::Sweeps,noises::Float64...)::Nothing
-  Nm = length(noises)
-  N = min(nsweep(sw),Nm)
-  for i=1:N
-    sw.noise[i] = noises[i]
-  end
-  for i=Nm+1:nsweep(sw)
-    sw.noise[i] = noises[Nm]
+  nvals = collect(noises)
+  for i=1:nsweep(sw)
+    sw.noise[i] = get(nvals,i,noises[end])
   end
 end
 
