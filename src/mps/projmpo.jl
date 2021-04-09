@@ -227,20 +227,24 @@ function noiseterm(P::ProjMPO,
   if nsite(P) != 2
     error("noise term only defined for 2-site ProjMPO")
   end
+
   if ortho == "left"
-    nt = P.H[P.lpos+1]*phi
+    AL = P.H[P.lpos+1]
     if !isnothing(lproj(P))
-      nt *= lproj(P)
+      AL = lproj(P)*AL
     end
+    nt = AL*phi
   elseif ortho == "right"
-    nt = phi*P.H[P.rpos-1]
+    AR = P.H[P.rpos-1]
     if !isnothing(rproj(P))
-      nt *= rproj(P)
+      AR = AR*rproj(P)
     end
+    nt = phi*AR
   else
     error("In noiseterm, got ortho = $ortho, only supports `left` and `right`")
   end
   nt = nt*dag(noprime(nt))
+
   return nt
 end
 
