@@ -206,8 +206,10 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
       drho = nothing
       if noise(sweeps, sw) > 0.0
-        # Use noise term when determining new MPS basis
-        drho = noise(sweeps, sw) * noiseterm(PH,phi,ortho)
+        @timeit_debug timer "dmrg: noiseterm" begin
+          # Use noise term when determining new MPS basis
+          drho = noise(sweeps, sw) * noiseterm(PH,phi,ortho)
+        end
       end
 
       @debug_check begin
