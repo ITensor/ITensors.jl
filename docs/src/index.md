@@ -330,8 +330,8 @@ let
   # for each sweep and maximum truncation cutoff
   # used when adapting internal dimensions:
   sweeps = Sweeps(5)
-  maxdim!(sweeps, 10,20,100,100,200)
-  cutoff!(sweeps, 1E-10)
+  setmaxdim!(sweeps, 10,20,100,100,200)
+  setcutoff!(sweeps, 1E-10)
   @show sweeps
 
   # Run the DMRG algorithm, returning energy 

@@ -16,9 +16,9 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0,
 
   sweeps = Sweeps(10)
   maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
-  maxdim!(sweeps, maxdims...)
-  cutoff!(sweeps, 1e-6)
-  noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
+  setmaxdim!(sweeps, maxdims...)
+  setcutoff!(sweeps, 1e-6)
+  setnoise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
   @show sweeps
 
   sites = siteinds("ElecK", N; conserve_qns = true,

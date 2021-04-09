@@ -29,8 +29,8 @@ let
 
   # define parameters for DMRG sweeps
   sweeps = Sweeps(15)
-  maxdim!(sweeps, 10,20,100,100,200)
-  cutoff!(sweeps, 1E-10)
+  setmaxdim!(sweeps, 10,20,100,100,200)
+  setcutoff!(sweeps, 1E-10)
 
   #=
   create observer which will measure Sᶻ at each
