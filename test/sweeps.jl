@@ -114,6 +114,19 @@ using Test
     @test noise(sw, 4) == 0
     @test noise(sw, 5) == 1e-11
   end
+
+  @testset "Variable types of input" begin
+    sw = Sweeps(5)
+    setnoise!(sw,1E-8,0)
+    @test noise(sw,1) ≈ 1E-8
+    @test noise(sw,2) ≈ 0.0
+    @test noise(sw,3) ≈ 0.0
+    setcutoff!(sw,0,1E-8,0,1E-12)
+    @test cutoff(sw,1) ≈ 0.0
+    @test cutoff(sw,2) ≈ 1E-8
+    @test cutoff(sw,3) ≈ 0.0
+    @test cutoff(sw,4) ≈ 1E-12
+  end
 end
 
 nothing
