@@ -71,8 +71,8 @@ julia> tags(i)
 "l"
 ```
 """
-function Index(dim::Number; tags="", plev=0)
-  return Index(rand(index_id_rng(), IDType), dim, Neither, tags, plev)
+function Index(dim::Number; tags = "", plev = 0, dir = Neither)
+  return Index(rand(index_id_rng(), IDType), dim, dir, tags, plev)
 end
 
 # TODO: decide if these are good definitions, using
