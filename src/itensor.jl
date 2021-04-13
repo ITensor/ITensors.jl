@@ -32,7 +32,7 @@ NDTensors.Dense{Float64,Array{Float64,1}}
  1.6620103556283987   -0.40952231269251566
 
 julia> @show inds(A);
-inds(A) = IndexSet{2} (dim=2|id=287|"i")' (dim=2|id=287|"i") 
+inds(A) = ((dim=2|id=287|"i")', (dim=2|id=287|"i"))
 
 #
 # Set the i==1, i'==2 element to 1.0:
@@ -78,6 +78,8 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 """
 mutable struct ITensor
   tensor::Tensor
+  # TODO: add an inner constructor with a debug check that
+  # the indices of the ITensor/Tensor are unique
 end
 
 """
@@ -97,7 +99,7 @@ itensor(args...) = ITensor(args...)
 """
     inds(T::ITensor)
 
-Return the indices of the ITensor as an IndexSet.
+Return the indices of the ITensor as a Tuple.
 """
 inds(T::ITensor) = inds(Tensor(T))
 
@@ -106,7 +108,7 @@ inds(T::ITensor) = inds(Tensor(T))
 
 Get the Index of the ITensor along dimension i.
 """
-ind(T::ITensor, i::Int) = ind(Tensor(T, i))
+ind(T::ITensor, i::Int) = ind(Tensor(T), i)
 
 """
     storage(T::ITensor)
@@ -229,15 +231,18 @@ ITensor(::Type{ElT}, inds::Indices) where {ElT <: Number} =
   ITensor(Dense(ElT, dim(inds)), inds)
 
 ITensor(::Type{ElT}, inds::Index...) where {ElT <: Number} =
-  ITensor(ElT, IndexSet(inds...))
+  ITensor(ElT, inds)
 
 ITensor(is::Indices) = ITensor(Float64, is)
-
-ITensor(inds::Index...) = ITensor(Float64, IndexSet(inds...))
+ITensor(inds::Index...) = ITensor(Float64, inds)
 
 # To fix ambiguity with QN Index version
 # TODO: define as `emptyITensor(ElT)`
-ITensor(ElT::Type{<: Number} = Float64) = ITensor(ElT, IndexSet())
+ITensor(ElT::Type{<: Number} = Float64) = ITensor(ElT, ())
+
+# TODO: define as `emptyITensor(ElT)`
+ITensor(::Type{ElT}, inds::Tuple{}) where {ElT <: Number} =
+  ITensor(Dense(ElT, dim(inds)), inds)
 
 """
     ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
@@ -264,13 +269,13 @@ ITensor(::Type{ElT}, ::UndefInitializer,
 
 ITensor(::Type{ElT}, ::UndefInitializer,
         inds::Index...) where {ElT} =
-  ITensor(ElT, undef, IndexSet(inds...))
+  ITensor(ElT, undef, inds)
 
 ITensor(::UndefInitializer, inds::Indices) =
   ITensor(Float64, undef, inds)
 
 ITensor(::UndefInitializer, inds::Index...) =
-  ITensor(Float64, undef, IndexSet(inds...))
+  ITensor(Float64, undef, inds)
 
 const RealOrComplex{T} = Union{T, Complex{T}}
 
@@ -298,11 +303,11 @@ B = ITensor(2.0+3.0im, j, k)
 !!! warning
     In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on.
 """
-ITensor(::Type{ElT}, x::Number, inds::IndexSet) where {ElT <: Number} =
+ITensor(::Type{ElT}, x::Number, inds::Indices) where {ElT <: Number} =
   ITensor(Dense(convert(ElT, x), dim(inds)), inds)
 
 ITensor(::Type{ElT}, x::Number, inds...) where {ElT <: Number} =
-  ITensor(ElT, x, IndexSet(inds...))
+  ITensor(ElT, x, inds)
 
 ITensor(x::ElT, inds...) where {ElT <: Number} =
   ITensor(ElT, x, inds...)
@@ -325,15 +330,15 @@ function emptyITensor(::Type{ElT}, inds::Indices) where {ElT <: Number}
 end
 
 function emptyITensor(::Type{ElT}, inds::Index...) where {ElT <: Number}
-  return emptyITensor(ElT, IndexSet(inds...))
+  return emptyITensor(ElT, inds)
 end
 
 emptyITensor(is::Indices) = emptyITensor(Float64, is)
 
-emptyITensor(inds::Index...) = emptyITensor(Float64, IndexSet(inds...))
+emptyITensor(inds::Index...) = emptyITensor(Float64, inds)
 
 function emptyITensor(ElT::Type{<: Number} = Float64)
-  return ITensor(EmptyTensor(ElT, IndexSet()))
+  return ITensor(EmptyTensor(ElT, ()))
 end
 
 #
@@ -378,14 +383,14 @@ T[i => 1, j => 1] == 3.3
 !!! warning
     In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `ITensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
 """
-function ITensor(::Type{ElT}, A::Array{<:Number}, inds::IndexSet; kwargs...) where {ElT <: Number}
-  length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, ::IndexSet), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
+function ITensor(::Type{ElT}, A::Array{<:Number}, inds::Indices; kwargs...) where {ElT <: Number}
+  length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, inds), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"))
   data = convert(AbstractArray{ElT}, A)
   return ITensor(Dense(vec(data)), inds)
 end
 
 function ITensor(::Type{ElT}, A::Array{<:Number}, inds...; kwargs...) where {ElT <: Number}
-  return ITensor(ElT, A, IndexSet(inds...); kwargs...)
+  return ITensor(ElT, A, inds; kwargs...)
 end
 
 function ITensor(A::Array{ElT}, inds...; kwargs...) where {ElT}
@@ -468,11 +473,10 @@ diagITensor(::Type{ElT}, is::Indices) where {ElT} =
   ITensor(Diag(ElT, mindim(is)), is)
 
 diagITensor(::Type{ElT}, inds::Index...) where {ElT} =
-  diagITensor(ElT, IndexSet(inds...))
+  diagITensor(ElT, inds)
 
 diagITensor(is::Indices) = diagITensor(Float64, is)
-
-diagITensor(inds::Index...) = diagITensor(Float64, IndexSet(inds...))
+diagITensor(inds::Index...) = diagITensor(Float64, inds)
 
 """
     diagITensor(v::Vector{T}, inds)
@@ -492,7 +496,7 @@ function diagITensor(v::Vector{<:Number}, is::Indices)
 end
 
 function diagITensor(v::Vector{<:Number}, is::Index...)
-  return diagITensor(v, IndexSet(is...))
+  return diagITensor(v, is)
 end
 
 diagITensor(v::Vector{RealOrComplex{Int}}, inds...) = diagITensor(float(v), inds...)
@@ -511,7 +515,7 @@ function diagITensor(x::Number, is::Indices)
 end
 
 function diagITensor(x::Number, is::Index...)
-  return diagITensor(x, IndexSet(is...))
+  return diagITensor(x, is)
 end
 
 """
@@ -523,19 +527,16 @@ Make a uniform diagonal ITensor with all diagonal elements
 
 This function has an alias `δ`.
 """
-function delta(::Type{T},
-               is::Indices) where {T<:Number}
+function delta(::Type{T}, is::Indices) where {T <: Number}
   return ITensor(Diag(one(T)), is)
 end
 
-function delta(::Type{T},
-               is::Index...) where {T<:Number}
-  return delta(T, IndexSet(is...))
+function delta(::Type{T}, is::Index...) where {T <: Number}
+  return delta(T, is)
 end
 
 delta(is::Indices) = delta(Float64, is)
-
-delta(is::Index...) = delta(Float64, IndexSet(is...))
+delta(is::Index...) = delta(Float64, is)
 
 const δ = delta
 
@@ -782,20 +783,6 @@ end
   return tensor(T)[]::Number
 end
 
-# Function barrier for type instability of inds(T)
-function _setindex!(T::ITensor, indsT, x::Number, I::Union{Int, LastVal}...)
-  I = lastval_to_int(dims(indsT), I)
-  Tₜ = tensor(T, indsT)
-  @boundscheck checkbounds(Tₜ, I...)
-  fluxT = flux(T)
-  if !isnothing(fluxT) && fluxT != flux(T, I...)
-    error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
-  end
-  Rₜ = setindex!!(Tₜ, x, I...)
-  setstorage!(T, storage(Rₜ))
-  return T
-end
-
 """
     setindex!(T::ITensor, x::Number, I::Int...)
 
@@ -812,19 +799,23 @@ A[1, 2] = 1.0 # same as: A[i => 1, i' => 2] = 1.0
 A[2, :] = [2.0 3.0]
 ```
 """
-setindex!(T::ITensor, x::Number, I::Union{Int, LastVal}...) =
-  _setindex!(T, Tuple(inds(T)), x, I...)
+function setindex!(T::ITensor, x::Number, I::Union{Int, LastVal}...)
+  Tₜ = Tensor(T)
+  I = lastval_to_int(Tₜ, I)
+  @boundscheck checkbounds(Tₜ, I...)
+  fluxT = flux(T)
+  if !isnothing(fluxT) && fluxT != flux(T, I...)
+    error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
+  end
+  TR = setindex!!(Tₜ, x, I...)
+  # TODO: replace with storage(TR) when
+  # storage is introduced in NDTensors
+  setstorage!(T, storage(TR))
+  return T
+end
 
 setindex!(T::ITensor, x::Number, I::CartesianIndex) =
   setindex!(T, x, Tuple(I)...)
-
-# Function barrier for type instability of inds(T)
-function _setindex!(T::ITensor, indsT, x::Number, inds, vals)
-  p = NDTensors.getperm(indsT, inds)
-  vals = NDTensors.permute(vals, p)
-  T[vals...] = x
-  return T
-end
 
 """
     setindex!(T::ITensor, x::Number, ivs...)
@@ -840,8 +831,12 @@ A[i => 1, i' => 2] = 1.0 # same as: A[i' => 2, i => 1] = 1.0
 A[i => 2, i' => :] = [2.0 3.0]
 ```
 """
-setindex!(T::ITensor, x::Number, ivs...) =
-  _setindex!(T, Tuple(inds(T)), x, ind.(ivs), val.(ivs))
+function setindex!(T::ITensor, x::Number, ivs...)
+  p = NDTensors.getperm(inds(T), ind.(ivs))
+  vals = NDTensors.permute(val.(ivs), p)
+  T[vals...] = x
+  return T
+end
 
 Base.checkbounds(::Any, ::Block) = nothing
 
@@ -860,7 +855,7 @@ end
 
 function setindex!(T::ITensor, A::AbstractArray,
                    ivs::Pair{<:Index}...)
-  input_inds = IndexSet(first.(ivs))
+  input_inds = (first.(ivs),)
   p = NDTensors.getperm(inds(T), input_inds)
   # Base.to_indices changes Colons into proper ranges, here
   # using the dimensions of the indices.
@@ -907,12 +902,9 @@ function fill!(T::ITensor, x::Number)
   return T
 end
 
-# TODO: name this `indexset` or `IndexSet`,
-# or maybe just `inds`?
+# TODO: name this `inds`?
 itensor2inds(A::ITensor) = inds(A)
-itensor2inds(i::Index) = IndexSet(i)
-itensor2inds(is::Vector{<:Index}) = IndexSet(is)
-itensor2inds(is::Tuple{Vararg{<:Index}}) = IndexSet(is)
+itensor2inds(i::Index) = (i,)
 itensor2inds(A) = A
 
 # in
@@ -920,7 +912,7 @@ hasind(A, i::Index) = i ∈ itensor2inds(A)
 
 # issubset
 hasinds(A, is) = is ⊆ itensor2inds(A)
-hasinds(A, is::Index...) = hasinds(A, IndexSet(is...))
+hasinds(A, is::Index...) = hasinds(A, is)
 
 """
     hasinds(is...)
@@ -930,8 +922,7 @@ accepts an ITensor or IndexSet and returns `true` if the
 ITensor or IndexSet has the indices `is`.
 """
 hasinds(is::Indices) = x -> hasinds(x, is)
-hasinds(is::Vector{ <: Index}) = x -> hasinds(x, is)
-hasinds(is::Index...) = hasinds(IndexSet(is...))
+hasinds(is::Index...) = hasinds(is)
 
 """
     hascommoninds(A, B; kwargs...)
@@ -957,10 +948,10 @@ hassameinds(A, B) =
 """
     commoninds(A, B; kwargs...)
 
-Return an IndexSet with indices that are common between the indices of `A` and `B` (the set intersection, similar to `Base.intersect`).
+Return a Vector with indices that are common between the indices of `A` and `B` (the set intersection, similar to `Base.intersect`).
 """
 commoninds(A...; kwargs...) =
-  IndexSet(intersect(itensor2inds.(A)...; kwargs...))
+  intersect(itensor2inds.(A)...; kwargs...)
 
 # firstintersect
 """
@@ -977,10 +968,10 @@ commonind(A...; kwargs...) =
 """
     noncommoninds(A, B; kwargs...)
 
-Return an IndexSet with indices that are not common between the indices of `A` and `B` (the symmetric set difference, similar to `Base.symdiff`).
+Return a Vector with indices that are not common between the indices of `A` and `B` (the symmetric set difference, similar to `Base.symdiff`).
 """
 noncommoninds(A...; kwargs...) =
-  IndexSet(symdiff(itensor2inds.(A)...; kwargs...)...)
+  symdiff(itensor2inds.(A)...; kwargs...)
 
 # firstsymdiff
 """
@@ -997,10 +988,10 @@ noncommonind(A...; kwargs...) =
 """
     uniqueinds(A, B; kwargs...)
 
-Return an IndexSet with indices that are unique to the set of indices of `A` and not in `B` (the set difference, similar to `Base.setdiff`).
+Return Vector with indices that are unique to the set of indices of `A` and not in `B` (the set difference, similar to `Base.setdiff`).
 """
 uniqueinds(A...; kwargs...) =
-  IndexSet(setdiff(itensor2inds.(A)...; kwargs...)...)
+  setdiff(itensor2inds.(A)...; kwargs...)
 
 # firstsetdiff
 """
@@ -1017,10 +1008,10 @@ uniqueind(A...; kwargs...) =
 """
     unioninds(A, B; kwargs...)
 
-Return an IndexSet with indices that are the union of the indices of `A` and `B` (the set union, similar to `Base.union`).
+Return a Vector with indices that are the union of the indices of `A` and `B` (the set union, similar to `Base.union`).
 """
 unioninds(A...; kwargs...) =
-  IndexSet(union(itensor2inds.(A)...; kwargs...)...)
+  union(itensor2inds.(A)...; kwargs...)
 
 # firstunion
 """
@@ -1077,9 +1068,9 @@ The ITensor functions come in two versions, `f` and `f!`. The latter modifies th
 @doc """
     prime[!](A::ITensor, plinc::Int = 1; <keyword arguments>) -> ITensor
 
-    prime(is::IndexSet, plinc::Int = 1; <keyword arguments>) -> IndexSet
+    prime(inds, plinc::Int = 1; <keyword arguments>) -> IndexSet
 
-Increase the prime level of the indices of an ITensor or IndexSet.
+Increase the prime level of the indices of an ITensor or collection of indices.
 
 $priming_tagging_doc
 """ prime(::ITensor, ::Any...)
@@ -1087,9 +1078,9 @@ $priming_tagging_doc
 @doc """
     setprime[!](A::ITensor, plev::Int; <keyword arguments>) -> ITensor
 
-    setprime(is::IndexSet, plev::Int; <keyword arguments>) -> IndexSet
+    setprime(inds, plev::Int; <keyword arguments>) -> IndexSet
 
-Set the prime level of the indices of an ITensor or IndexSet.
+Set the prime level of the indices of an ITensor or collection of indices.
 
 $priming_tagging_doc
 """ setprime(::ITensor, ::Any...)
@@ -1097,9 +1088,9 @@ $priming_tagging_doc
 @doc """
     noprime[!](A::ITensor; <keyword arguments>) -> ITensor
 
-    noprime(is::IndexSet; <keyword arguments>) -> IndexSet
+    noprime(inds; <keyword arguments>) -> IndexSet
 
-Set the prime level of the indices of an ITensor or IndexSet to zero.
+Set the prime level of the indices of an ITensor or collection of indices to zero.
 
 $priming_tagging_doc
 """ noprime(::ITensor, ::Any...)
@@ -1109,11 +1100,11 @@ $priming_tagging_doc
     replaceprime[!](A::ITensor, plold => plnew; <keyword arguments>) -> ITensor
     mapprime[!](A::ITensor, <arguments>; <keyword arguments>) -> ITensor
 
-    replaceprime(is::IndexSet, plold::Int, plnew::Int; <keyword arguments>) -> IndexSet
-    replaceprime(is::IndexSet, plold => plnew; <keyword arguments>) -> IndexSet
-    mapprime(is::IndexSet, <arguments>; <keyword arguments>) -> IndexSet
+    replaceprime(inds, plold::Int, plnew::Int; <keyword arguments>)
+    replaceprime(inds::IndexSet, plold => plnew; <keyword arguments>)
+    mapprime(inds, <arguments>; <keyword arguments>)
 
-Set the prime level of the indices of an ITensor or IndexSet with prime level `plold` to `plnew`.
+Set the prime level of the indices of an ITensor or collection of indices with prime level `plold` to `plnew`.
 
 $priming_tagging_doc
 """ mapprime(::ITensor, ::Any...)
@@ -1122,10 +1113,10 @@ $priming_tagging_doc
     swapprime[!](A::ITensor, pl1::Int, pl2::Int; <keyword arguments>) -> ITensor
     swapprime[!](A::ITensor, pl1 => pl2; <keyword arguments>) -> ITensor
 
-    swapprime(is::ITensor, pl1::Int, pl2::Int; <keyword arguments>) -> IndexSet
-    swapprime(is::ITensor, pl1 => pl2; <keyword arguments>) -> IndexSet
+    swapprime(inds, pl1::Int, pl2::Int; <keyword arguments>)
+    swapprime(inds, pl1 => pl2; <keyword arguments>)
 
-Set the prime level of the indices of an ITensor or IndexSetwith prime level `pl1` to `pl2`, and those with prime level `pl2` to `pl1`.
+Set the prime level of the indices of an ITensor or collection of indices with prime level `pl1` to `pl2`, and those with prime level `pl2` to `pl1`.
 
 $priming_tagging_doc
 """ swapprime(::ITensor, ::Any...)
@@ -1133,9 +1124,9 @@ $priming_tagging_doc
 @doc """
     addtags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
 
-    addtags(is::IndexSet, ts::String; <keyword arguments>) -> IndexSet
+    addtags(inds, ts::String; <keyword arguments>)
 
-Add the tags `ts` to the indices of an ITensor or IndexSet.
+Add the tags `ts` to the indices of an ITensor or collection of indices.
 
 $priming_tagging_doc
 """ addtags(::ITensor, ::Any...)
@@ -1143,9 +1134,9 @@ $priming_tagging_doc
 @doc """
     removetags[!](A::ITensor, ts::String; <keyword arguments>) -> ITensor
 
-    removetags(is::IndexSet, ts::String; <keyword arguments>) -> IndexSet
+    removetags(inds, ts::String; <keyword arguments>)
 
-Remove the tags `ts` from the indices of an ITensor or IndexSet.
+Remove the tags `ts` from the indices of an ITensor or collection of indices.
 
 $priming_tagging_doc
 """ removetags(::ITensor, ::Any...)
@@ -1287,38 +1278,33 @@ function randomITensor(::Type{S},
   return T
 end
 
-function randomITensor(::Type{S},
-                       inds::Index...) where {S <: Number}
-  return randomITensor(S, IndexSet(inds...))
+function randomITensor(::Type{S}, inds::Index...) where {S <: Number}
+  return randomITensor(S, inds)
 end
 
 # To fix ambiguity errors with QN version
 function randomITensor(::Type{ElT}) where {ElT <: Number}
-  return randomITensor(ElT, IndexSet())
+  return randomITensor(ElT, ())
 end
 
 randomITensor(inds::Indices) = randomITensor(Float64, inds)
-
-randomITensor(inds::Index...) = randomITensor(Float64,
-                                              IndexSet(inds...))
+randomITensor(inds::Index...) = randomITensor(Float64, inds)
 
 # To fix ambiguity errors with QN version
-randomITensor() = randomITensor(Float64, IndexSet())
+randomITensor() = randomITensor(Float64, ())
 
-function combiner(inds::Indices;
-                  kwargs...)
+function combiner(inds::Indices; kwargs...)
   tags = get(kwargs, :tags, "CMB,Link")
   new_ind = Index(prod(dims(inds)), tags)
-  new_is = IndexSet(new_ind, inds...)
+  new_is = (new_ind, inds...)
   return ITensor(Combiner(), new_is)
 end
 
-combiner(inds::Index...;
-         kwargs...) = combiner(IndexSet(inds...); kwargs...)
+combiner(inds::Index...; kwargs...) = combiner(inds; kwargs...)
 
 # Special case when no indices are combined (useful for generic code)
 function combiner(; kwargs...)
-  return ITensor(Combiner(), IndexSet())
+  return ITensor(Combiner(), ())
 end
 
 function combinedind(T::ITensor)
@@ -1367,8 +1353,7 @@ pT_1 = permute(T,k,i,j)
 pT_2 = permute(T,j,i,k)
 ```
 """
-function permute(T::ITensor,
-                 new_inds; always_copy::Bool = false)
+function permute(T::ITensor, new_inds; always_copy::Bool = false)
   perm = NDTensors.getperm(new_inds, inds(T))
   if !always_copy && NDTensors.is_trivial_permutation(perm)
     return T
@@ -1377,9 +1362,8 @@ function permute(T::ITensor,
   return ITensor(Tp)::ITensor
 end
 
-permute(T::ITensor,
-        inds::Index...; vargs...) = permute(T,
-                                            IndexSet(inds...); vargs...)
+permute(T::ITensor, inds::Index...; vargs...) =
+  permute(T, inds; vargs...)
 
 function (T::ITensor * x::Number)::ITensor
   return ITensor(x * tensor(T))
@@ -1708,8 +1692,9 @@ function exp(A::ITensor, Linds, Rinds; kwargs...)
   N  != NL + NR && error("Number of left and right indices must add up to total number of indices")
 
   # Linds, Rinds may not have the correct directions
-  Lis = IndexSet(Linds...)
-  Ris = IndexSet(Rinds...)
+  # TODO: does the need a conversion?
+  Lis = Linds
+  Ris = Rinds
 
   # Ensure the indices have the correct directions,
   # QNs, etc.
@@ -2191,6 +2176,7 @@ function readcpp(io::IO,
                  kwargs...)
   format = get(kwargs,:format,"v3")
   if format=="v3"
+    # TODO: use Vector{Index} here?
     inds = readcpp(io,IndexSet;kwargs...)
     read(io,12) # ignore scale factor by reading 12 bytes
     storage_type = read(io,Int32)
@@ -2250,6 +2236,7 @@ function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
   if read(attributes(g)["type"]) != "ITensor"
     error("HDF5 group or file does not contain ITensor data")
   end
+  # TODO: use Vector{Index} here?
   inds = read(g,"inds",IndexSet)
 
   stypestr = read(attributes(open_group(g,"storage"))["type"])

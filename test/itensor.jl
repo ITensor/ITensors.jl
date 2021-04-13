@@ -948,8 +948,8 @@ end #End "ITensor other index operations"
 
     S1 = TC+TR
     S2 = TR+TC
-    @test typeof(S1.storage) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
-    @test typeof(S2.storage) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(storage(S1)) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(storage(S2)) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
     for ii=1:dim(i),jj=1:dim(j)
       @test S1[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
       @test S2[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]

@@ -3,47 +3,48 @@
 # Broadcasting for IndexSets
 #
 
-# We're using a specialized type `IndexVector` since `IndexSet` has
-# a compile time check that all indices are unique, but `similar`
-# in general won't make a unique IndexSet. We need a specialized type
-# to dispatch on `copyto!`. This is like 
-struct IndexVector{T} <: AbstractVector{T}
-  data::Vector{T}
-end
-size(v::IndexVector) = size(v.data)
-
-struct IndexSetStyle <: Broadcast.BroadcastStyle end
-
-BroadcastStyle(::Type{<: IndexSet}) = IndexSetStyle()
-
-BroadcastStyle(::IndexSetStyle, ::BroadcastStyle) = IndexSetStyle()
-
-broadcastable(is::IndexSet) = is
-
-function _similar(bc::Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT}
-  return similar(Array{ElT}, axes(bc))
-end
-
-# In the case when the output type is inferred to be `<: Index`,
-# then output an IndexSet (like `prime.(is)`)
-function similar(bc::Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT <: Index}
-  is = _similar(bc, ElT)
-  # We're using a specialized type `IndexVector` since `IndexSet` has
-  # a compile time check that all indices are unique, but `similar`
-  # in general won't make a unique IndexSet. We need a specialized type
-  # to dispatch on `copyto!`
-  return IndexVector(_similar(bc, ElT))
-end
-
-# In general, the output type will be a Vector{ElT} (like `dim.(is)`)
-function similar(bc::Broadcast.Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT}
-  return _similar(bc, ElT)
-end
-
-function copyto!(dest::IndexVector, bc::Broadcast.Broadcasted{IndexSetStyle})
-  copyto!(dest.data, bc)
-  return IndexSet(dest.data)
-end
+# TODO: delete
+## # We're using a specialized type `IndexVector` since `IndexSet` has
+## # a compile time check that all indices are unique, but `similar`
+## # in general won't make a unique IndexSet. We need a specialized type
+## # to dispatch on `copyto!`. This is like 
+## struct IndexVector{T} <: AbstractVector{T}
+##   data::Vector{T}
+## end
+## size(v::IndexVector) = size(v.data)
+## 
+## struct IndexSetStyle <: Broadcast.BroadcastStyle end
+## 
+## BroadcastStyle(::Type{<: IndexSet}) = IndexSetStyle()
+## 
+## BroadcastStyle(::IndexSetStyle, ::BroadcastStyle) = IndexSetStyle()
+## 
+## broadcastable(is::IndexSet) = is
+## 
+## function _similar(bc::Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT}
+##   return similar(Array{ElT}, axes(bc))
+## end
+## 
+## # In the case when the output type is inferred to be `<: Index`,
+## # then output an IndexSet (like `prime.(is)`)
+## function similar(bc::Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT <: Index}
+##   is = _similar(bc, ElT)
+##   # We're using a specialized type `IndexVector` since `IndexSet` has
+##   # a compile time check that all indices are unique, but `similar`
+##   # in general won't make a unique IndexSet. We need a specialized type
+##   # to dispatch on `copyto!`
+##   return IndexVector(_similar(bc, ElT))
+## end
+## 
+## # In general, the output type will be a Vector{ElT} (like `dim.(is)`)
+## function similar(bc::Broadcast.Broadcasted{IndexSetStyle}, ::Type{ElT}) where {ElT}
+##   return _similar(bc, ElT)
+## end
+## 
+## function copyto!(dest::IndexVector, bc::Broadcast.Broadcasted{IndexSetStyle})
+##   copyto!(dest.data, bc)
+##   return IndexSet(dest.data)
+## end
 
 #
 # Broadcasting for ITensors
