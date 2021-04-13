@@ -115,6 +115,8 @@ import NDTensors:
   polar,
   scale!,
   setblockdim!,
+  setinds,
+  setstorage,
   sim,
   store,
   sum,

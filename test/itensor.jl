@@ -103,7 +103,7 @@ invdigits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:l
     @test storage(A) isa NDTensors.Dense{Float64}
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
-    @test size(A) == dims(A) == [2, 2]
+    @test size(A) == dims(A) == (2, 2)
     @test dim(A) == 4
 
     At = randomITensor(Index(2), Index(3))
@@ -115,7 +115,7 @@ invdigits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:l
     B = randomITensor(IndexSet(i,j))
     @test storage(B) isa NDTensors.Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
-    @test size(B) == dims(B) == [2, 2]
+    @test size(B) == dims(B) == (2, 2)
 
     A = randomITensor()
     @test eltype(A) == Float64
