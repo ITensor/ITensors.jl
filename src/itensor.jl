@@ -78,12 +78,14 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 """
 mutable struct ITensor
   tensor::Tensor
-  # TODO: add an inner constructor with a debug check that
-  # the indices of the ITensor/Tensor are unique
   function ITensor(T::Tensor)
-    @assert inds(T) isa Tuple
-    # new(setinds(T, Tuple(inds(T))))
-    new(T)
+    is = Tuple(inds(T))
+    @debug_check begin
+      if !allunique(is)
+        error("Trying to create ITensors with collection of indices $is. Indices must be unique.")
+      end
+    end
+    new(setinds(T, is))
   end
 end
 

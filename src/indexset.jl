@@ -130,8 +130,8 @@ _Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v) + 1], v)
 _Tuple(t::Tuple) = t
 
 # TODO: define in terms of IndexSet
-Base.Tuple(is::AbstractVector{<: Index}) = _Tuple(is)
-Base.NTuple{N}(is::AbstractVector{<: Index}) where {N} = _NTuple(Val(N), is)
+Tuple(is::AbstractVector{<: Index}) = _Tuple(is)
+NTuple{N}(is::AbstractVector{<: Index}) where {N} = _NTuple(Val(N), is)
 
 ## """
 ##     IndexSet(inds::Vector{<:Index})
@@ -154,25 +154,26 @@ indices).
 """
 not(is::Indices) = Not(is)
 not(inds::Index...) = not(inds)
-Base.:!(is::Indices) = not(is)
-Base.:!(inds::Index...) = not(inds...)
+!(is::Indices) = not(is)
+!(inds::Index...) = not(inds...)
 
-"""
-    NDTensors.data(is::IndexSet)
-
-Return the raw storage data for the indices.
-Currently the storage is a `Tuple`.
-
-This is mostly for internal usage, please
-contact us if there is functionality you want
-availabe for `IndexSet`.
-"""
-data(is::IndexSet) = is.data
-data(is) = is
-
-# This is used in type promotion in the Tensor contraction code
-Base.promote_rule(::Type{<:IndexSet},
-                  ::Type{Val{N}}) where {N} = IndexSet
+## # TODO: delete
+## """
+##     NDTensors.data(is::IndexSet)
+## 
+## Return the raw storage data for the indices.
+## Currently the storage is a `Tuple`.
+## 
+## This is mostly for internal usage, please
+## contact us if there is functionality you want
+## availabe for `IndexSet`.
+## """
+## data(is::IndexSet) = is.data
+## data(is) = is
+## 
+## # TODO: delete
+## # This is used in type promotion in the Tensor contraction code
+## promote_rule(::Type{<:IndexSet}, ::Type{Val{N}}) where {N} = IndexSet
 
 # TODO: delete
 #NDTensors.ValLength(::Type{<:IndexSet}) = Val(length(is))
@@ -185,7 +186,7 @@ Base.promote_rule(::Type{<:IndexSet},
 #
 # which should be written in a different way to avoid this.
 #
-NDTensors.ValLength(s::Indices) = Val(length(s))
+# NDTensors.ValLength(s::Indices) = Val(length(s))
 
 # TODO: delete
 #function NDTensors._permute(s::T, perm) where {T<:IndexSet}
@@ -213,20 +214,21 @@ Index(is::Indices) = is[]
 ## getindex(is::IndexSet, v) =
 ##   IndexSet(getindex(data(is), v))
 
-"""
-    setindex(is::IndexSet, i::Index, n::Int)
-
-Set the Index of the IndexSet in the dimension n.
-
-This function is mostly for internal use, if you want to
-replace the indices of an IndexSet, use the `replaceind`,
-`replaceind!`, `replaceinds`, and `replaceinds!` functions,
-which check for compatibility of the indices and ensure
-the proper Arrow directions.
-"""
-function Base.setindex(is::IndexSet, i::Index, n::Int)
-  return IndexSet(setindex!(copy(data(is)), i, n))
-end
+## # TODO: delete
+## """
+##     setindex(is::IndexSet, i::Index, n::Int)
+## 
+## Set the Index of the IndexSet in the dimension n.
+## 
+## This function is mostly for internal use, if you want to
+## replace the indices of an IndexSet, use the `replaceind`,
+## `replaceind!`, `replaceinds`, and `replaceinds!` functions,
+## which check for compatibility of the indices and ensure
+## the proper Arrow directions.
+## """
+## function Base.setindex(is::IndexSet, i::Index, n::Int)
+##   return IndexSet(setindex!(copy(data(is)), i, n))
+## end
 
 ## """
 ##     length(is::IndexSet)
@@ -413,9 +415,9 @@ Indices equality (order dependent). For order
 independent equality use `issetequal` or
 `hassameinds`.
 """
-function Base.:(==)(A::Indices, B::Indices)
+function ==(A::Indices, B::Indices)
   length(A) ≠ length(B) && return false
-  for (a,b) in zip(A,B)
+  for (a, b) in zip(A, B)
     a ≠ b && return false
   end
   return true
@@ -489,11 +491,17 @@ indmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
 # filter
 #
 
-function Base.setdiff!(f::Function,
-                       r,
-                       A::Indices,
-                       Bs::Indices...)
-  
+function allunique(v::Indices)
+  n = length(v)
+  @inbounds for i in 1:n, j in i+1:n
+    if v[i] == v[j]
+      return false
+    end
+  end
+  return true
+end
+
+function setdiff!(f::Function, r, A::Indices, Bs::Indices...)
   N = length(r)
   j = 1
   for a in A
@@ -507,9 +515,7 @@ function Base.setdiff!(f::Function,
   return r
 end
 
-function Base.setdiff(f::Function,
-                      A::Indices,
-                      Bs::Indices...)
+function setdiff(f::Function, A::Indices, Bs::Indices...)
   R = eltype(A)[]
   for a ∈ A
     f(a) && all(B -> a ∉ B, Bs) && push!(R, a)
@@ -523,7 +529,7 @@ end
 Output the Vector of Indices with Indices in `A` but not in
 the Indicess `Bs`.
 """
-Base.setdiff(A::Indices, Bs::Indices...; kwargs...) =
+setdiff(A::Indices, Bs::Indices...; kwargs...) =
   setdiff(fmatch(; kwargs...), A, Bs...)
 
 function firstsetdiff(f::Function,
@@ -542,11 +548,10 @@ end
 Output the first Index in `A` that is not in the Indicess `Bs`.
 Otherwise, return a default constructed Index.
 """
-firstsetdiff(A::Indices,
-             Bs::Indices...;
-             kwargs...) = firstsetdiff(fmatch(; kwargs...), A, Bs...)
+firstsetdiff(A::Indices, Bs::Indices...; kwargs...) =
+  firstsetdiff(fmatch(; kwargs...), A, Bs...)
 
-function Base.intersect(f::Function, A::Indices, B::Indices)
+function intersect(f::Function, A::Indices, B::Indices)
   R = eltype(A)[]
   for a in A
     f(a) && a ∈ B && push!(R,a)
@@ -554,10 +559,7 @@ function Base.intersect(f::Function, A::Indices, B::Indices)
   return R
 end
 
-function Base.intersect!(f::Function,
-                         R::AbstractVector,
-                         A::Indices,
-                         B::Indices)
+function intersect!(f::Function, R::AbstractVector, A::Indices, B::Indices)
   N = length(R)
   j = 1
   for a in A
@@ -580,8 +582,7 @@ Output the Vector of Indices in the intersection of `A` and `B`,
 optionally filtering with keyword arguments `tags`, `plev`, etc. 
 or by a function `f(::Index) -> Bool`.
 """
-Base.intersect(A::Indices, B::Indices; kwargs...) =
-  intersect(fmatch(; kwargs...), A, B)
+intersect(A::Indices, B::Indices; kwargs...) = intersect(fmatch(; kwargs...), A, B)
 
 function firstintersect(f::Function, A::Indices, B::Indices)
   for a in A
@@ -614,7 +615,7 @@ Indices with indices `i` for which `f(i)` returns true).
 Note that this function is not type stable, since the number
 of output indices is not known at compile time.
 """
-Base.filter(f::Function, is::Tuple{Vararg{Index}}) = filter(f, collect(is))
+filter(f::Function, is::Tuple{Vararg{Index}}) = filter(f, collect(is))
 
 # TODO: is this definition needed?
 Base.filter(is::Tuple{Vararg{Index}}) = is
@@ -626,9 +627,7 @@ Base.filter(is::Indices, args...; kwargs...) =
 Base.filter(is::Indices, tags::String; kwargs...) =
   filter(fmatch(tags; kwargs...),is)
 
-function Base.filter!(f::Function,
-                      r,
-                      is::Indices{IndexT}) where {IndexT}
+function filter!(f::Function, r, is::Indices{IndexT}) where {IndexT}
   N = length(r)
   j = 1
   for i in is
@@ -666,13 +665,11 @@ function getfirst(f::Function, is::Indices)
   return nothing
 end
 
-getfirst(is::Indices,
-         args...; kwargs...) = getfirst(fmatch(args...;
-                                               kwargs...),is)
+getfirst(is::Indices, args...; kwargs...) =
+  getfirst(fmatch(args...; kwargs...),is)
 
-Base.findall(is::Indices,
-             args...; kwargs...) = findall(fmatch(args...;
-                                                  kwargs...), is)
+Base.findall(is::Indices, args...; kwargs...) =
+  findall(fmatch(args...; kwargs...), is)
 
 """
     indexin(ais::Indices, bis::Indices)
@@ -680,18 +677,18 @@ Base.findall(is::Indices,
 For collections of Indices, returns the first location in 
 `bis` for each value in `ais`.
 """
-function Base.indexin(ais::Indices,
-                      bis::Indices)
+function Base.indexin(ais::Indices, bis::Indices)
   return [findfirst(bis, ais[i]) for i in 1:length(ais)]
 end
 
-Base.findfirst(is::Indices, args...; kwargs...) =
+findfirst(is::Indices, args...; kwargs...) =
   findfirst(fmatch(args...; kwargs...), is)
 
 #
 # Tagging functions
 #
 
+# TODO: delete
 ## function prime(f::Function, is::Indices, args...)
 ##   isᵣ = similar(data(is))
 ##   map!(i -> f(i) ? prime(i, args...) : i, isᵣ, is)
@@ -721,11 +718,9 @@ prime(is::Indices, args...; kwargs...) = prime(is, 1, args...; kwargs...)
 
 For is' notation.
 """
-Base.adjoint(is::Indices) = prime(is)
+adjoint(is::Indices) = prime(is)
 
-function setprime(f::Function,
-                  is::Indices,
-                  args...)
+function setprime(f::Function, is::Indices, args...)
   return map(i -> f(i) ? setprime(i, args...) : i, is)
 end
 
@@ -1038,55 +1033,55 @@ NDTensors.push(is::IndexSet, i::Index) = push(is, i)
 #NDTensors.push(is::Indices{0},
 #             i::Index) = push(is, i)
 
-# TODO: define directly for Vector
-"""
-    pushfirst(is::Indices, i::Index)
+## # TODO: define directly for Vector
+## """
+##     pushfirst(is::Indices, i::Index)
+## 
+## Make a new Indices with the Index i inserted
+## at the beginning.
+## """
+## pushfirst(is::IndexSet, i::Index) = NDTensors.pushfirst(Tuple(is), i)
+## 
+## # Overload the unexported NDTensors version
+## NDTensors.pushfirst(is::IndexSet, i::Index) = pushfirst(is, i)
 
-Make a new Indices with the Index i inserted
-at the beginning.
-"""
-pushfirst(is::IndexSet, i::Index) = NDTensors.pushfirst(Tuple(is), i)
+## # TODO: don't convert to Tuple
+## """
+##     instertat(is1::Indices, is2, pos::Int)
+## 
+## Remove the index at pos and insert the indices
+## is2 starting at that position.
+## """
+## function insertat(is1::IndexSet, is2, pos::Int)
+##   return NDTensors.insertat(Tuple(is1), Tuple((is2)), pos)
+## end
+## 
+## # Overload the unexported NDTensors version
+## NDTensors.insertat(is1::IndexSet, is2, pos::Int) = insertat(is1, is2, pos)
 
-# Overload the unexported NDTensors version
-NDTensors.pushfirst(is::IndexSet, i::Index) = pushfirst(is, i)
-
-# TODO: don't convert to Tuple
-"""
-    instertat(is1::Indices, is2, pos::Int)
-
-Remove the index at pos and insert the indices
-is2 starting at that position.
-"""
-function insertat(is1::IndexSet, is2, pos::Int)
-  return NDTensors.insertat(Tuple(is1), Tuple((is2)), pos)
-end
-
-# Overload the unexported NDTensors version
-NDTensors.insertat(is1::IndexSet, is2, pos::Int) = insertat(is1, is2, pos)
-
-# TODO: don't convert to Tuple
-"""
-    instertafter(is1::Indices, is2, pos)
-
-Insert the indices is2 after position pos.
-"""
-insertafter(is::IndexSet, I...) =
-  (NDTensors.insertafter(Tuple(is), I...))
-
-# Overload the unexported NDTensors version
-NDTensors.insertafter(is::IndexSet, I...) = insertafter(is, I...)
-
-# TODO: don't convert to Tuple here
-deleteat(is::IndexSet, I...) =
-  (NDTensors.deleteat(Tuple(is),I...))
-
-# Overload the unexported NDTensors version
-NDTensors.deleteat(is::IndexSet, I...) = deleteat(is, I...)
-
-# TODO: don't convert to Tuple
-getindices(is::IndexSet, I...) = NDTensors.getindices(Tuple(is), I...)
-
-NDTensors.getindices(is::IndexSet, I...) = getindices(is, I...)
+## # TODO: don't convert to Tuple
+## """
+##     instertafter(is1::Indices, is2, pos)
+## 
+## Insert the indices is2 after position pos.
+## """
+## insertafter(is::IndexSet, I...) =
+##   (NDTensors.insertafter(Tuple(is), I...))
+## 
+## # Overload the unexported NDTensors version
+## NDTensors.insertafter(is::IndexSet, I...) = insertafter(is, I...)
+## 
+## # TODO: don't convert to Tuple here
+## deleteat(is::IndexSet, I...) =
+##   (NDTensors.deleteat(Tuple(is),I...))
+## 
+## # Overload the unexported NDTensors version
+## NDTensors.deleteat(is::IndexSet, I...) = deleteat(is, I...)
+## 
+## # TODO: don't convert to Tuple
+## getindices(is::IndexSet, I...) = NDTensors.getindices(Tuple(is), I...)
+## 
+## NDTensors.getindices(is::IndexSet, I...) = getindices(is, I...)
 
 #
 # QN functions
@@ -1234,7 +1229,7 @@ ITensors.block(is, 1, 2) == (1,1)
 """
 block(inds::Indices, vals::Int...) = blockindex(inds, vals...)[2]
 
-function Base.show(io::IO, is::IndexSet)
+function show(io::IO, is::IndexSet)
   print(io,"IndexSet{$(length(is))} ")
   for n in eachindex(is)
     i = is[n]
@@ -1249,7 +1244,7 @@ end
 # Read and write
 #
 
-function readcpp(io::IO,::Type{<:IndexSet};kwargs...)
+function readcpp(io::IO,::Type{<:Indices};kwargs...)
   format = get(kwargs,:format,"v3")
   is = IndexSet()
   if format=="v3"
@@ -1268,7 +1263,7 @@ end
 
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
                     name::AbstractString,
-                    is::IndexSet)
+                    is::Indices)
   g = create_group(parent,name)
   attributes(g)["type"] = "IndexSet"
   attributes(g)["version"] = 1
@@ -1281,12 +1276,12 @@ end
 
 function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
                    name::AbstractString,
-                   ::Type{<:IndexSet})
+                   T::Type{<:Indices})
   g = open_group(parent,name)
   if read(attributes(g)["type"]) != "IndexSet"
     error("HDF5 group or file does not contain IndexSet data")
   end
   N = read(g,"length")
-  return IndexSet(n->read(g,"index_$n",Index),N)
+  return T(n->read(g, "index_$n", Index), N)
 end
 
