@@ -1,4 +1,5 @@
 
+# Represents a static order of an ITensor
 @eval struct Order{N}
   (OrderT::Type{ <: Order})() = $(Expr(:new, :OrderT))
 end
@@ -15,13 +16,13 @@ the order of an ITensor.
 """
 Order(N) = Order{N}()
 
-# Definition to help with generic code
-const Indices{IndexT <: Index} = Union{Vector{IndexT}, Tuple{Vararg{IndexT}}}
-
-# This is only for backwards compatibility, in general just use Vector
+# Helpful if we want code to work generically
+# for other Index-like types (such as IndexRange)
 const IndexSet{IndexT <: Index} = Vector{IndexT}
+const IndexTuple{IndexT <: Index} = Tuple{Vararg{IndexT}}
 
-# TODO: also define IndexTuple?
+# Definition to help with generic code
+const Indices{IndexT <: Index} = Union{IndexSet{IndexT}, IndexTuple{IndexT}}
 
 # To help with backwards compatibility
 IndexSet(inds::IndexSet) = inds
@@ -30,97 +31,6 @@ IndexSet(inds::Index...) = collect(inds)
 IndexSet(f::Function, N::Int) = map(f, 1:N)
 IndexSet(f::Function, ::Order{N}) where {N} = IndexSet(f, N)
 
-# TODO: extend type restriction to `IndexT <: Union{<: Index, <: IndexVal}`
-## struct IndexSet{IndexT <: Index} <: AbstractVector{IndexT}
-##   data::Vector{IndexT}
-## 
-##   function IndexSet{IndexT}(data::AbstractVector{IndexT}) where {IndexT}
-##     @debug_check begin
-##       if !allunique(data)
-##         error("Trying to create IndexSet with collection of indices $data. Indices must be unique.")
-##       end
-##     end
-##     return new{IndexT}(data)
-##   end
-## 
-##   """
-##       IndexSet()
-## 
-##   Create a special "empty" `IndexSet` with data `[]` and any number of indices.
-## 
-##   This is used as the `IndexSet` of an `emptyITensor()`, an ITensor with `NDTensors.Empty` storage and any number of indices.
-##   """
-##   IndexSet()   = new{Union{}}(Any[])
-## end
-
-## function IndexSet{Union{}}(data::Vector{<:Any})
-##   return IndexSet()
-## end
-## IndexSet{Union{}}(())                 = IndexSet{Union{}}(Any[])
-## IndexSet{IndexT}(data) where {IndexT} = IndexSet{IndexT}(collect(data))
-
-## """
-##     IndexSet(::Function, ::Order{N})
-## Construct an IndexSet of length N from a function that accepts
-## an integer between 1:N and returns an Index.
-## # Examples
-## ```julia
-## IndexSet(n -> Index(1, "i\$n"), Order(4))
-## ```
-## """
-## IndexSet(f::Function, N::Int) = IndexSet(map(f, 1:N))
-## 
-## IndexSet(f::Function, ::Order{N}) where {N} = IndexSet(f, N)
-
-## """
-##     IndexSet{IndexT}(inds)
-##     IndexSet{IndexT}(inds::Index...)
-## 
-## Construct an `IndexSet` of element type `IndexT`
-## from a collection of indices (any collection that is convertable to a `Vector`).
-## """
-## function IndexSet{IndexT}(inds::Index...) where {IndexT}
-##   return IndexSet{IndexT}(inds)
-## end
-
-## """
-##     IndexSet(inds)
-##     IndexSet(inds::Index...)
-## 
-## Construct an IndexSet from a collection of indices
-## (any collection that is convertable to a `Vector`).
-## """
-## IndexSet(inds) = IndexSet{eltype(inds)}(inds)
-## 
-## IndexSet(inds::NTuple{N, IndexT}) where {N, IndexT} =
-##     IndexSet{IndexT}(inds)
-## 
-## IndexSet(inds::Index...) = IndexSet(inds)
-## 
-## IndexSet(is::IndexSet) = is
-## 
-## IndexSet(::Tuple{}) = IndexSet()#IndexSet{Union{}}(Any[])
-## 
-## """
-##     convert(::Type{IndexSet}, t)
-## 
-## Convert the collection to an `IndexSet`,
-## as long as it can be converted to a `Tuple`.
-## """
-## Base.convert(::Type{IndexSet}, t) = IndexSet(t)
-## 
-## Base.convert(::Type{IndexSet}, is::IndexSet) = is
-## 
-## Base.convert(::Type{IndexSet{IndexT}}, t) where {IndexT} = IndexSet{IndexT}(t)
-## 
-## Base.convert(::Type{IndexSet{IndexT}}, is::IndexSet{IndexT}) where {IndexT} = is
-
-# This is not defined on purpose because in general it won't make
-# unique indices, use a Vector{<: Index} instead
-#Base.similar(is::IndexSet) = IndexSet(similar(data(is)))
-
-# TODO: define for Vector{<: Index}
-
 # This is a cache of [Val(1), Val(2), ...]
 # Hard-coded for now to only handle tensors up to order 100
 const ValCache = Val[Val(n) for n in 0:100]
@@ -128,18 +38,8 @@ const ValCache = Val[Val(n) for n in 0:100]
 _NTuple(::Val{N}, v::Vector{T}) where {N, T} = ntuple(n -> v[n], Val(N))
 _Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v) + 1], v)
 _Tuple(t::Tuple) = t
-
-# TODO: define in terms of IndexSet
-Tuple(is::AbstractVector{<: Index}) = _Tuple(is)
-NTuple{N}(is::AbstractVector{<: Index}) where {N} = _NTuple(Val(N), is)
-
-## """
-##     IndexSet(inds::Vector{<:Index})
-## 
-## Convert a `Vector` of indices to an `IndexSet`.
-## """
-## IndexSet(inds::Vector{IndexT}) where {IndexT} = IndexSet{IndexT}(inds)
-
+Tuple(is::IndexSet) = _Tuple(is)
+NTuple{N}(is::IndexSet) where {N} = _NTuple(Val(N), is)
 
 """
     not(inds::Union{IndexSet, Tuple{Vararg{<:Index}}})
@@ -157,111 +57,11 @@ not(inds::Index...) = not(inds)
 !(is::Indices) = not(is)
 !(inds::Index...) = not(inds...)
 
-## # TODO: delete
-## """
-##     NDTensors.data(is::IndexSet)
-## 
-## Return the raw storage data for the indices.
-## Currently the storage is a `Tuple`.
-## 
-## This is mostly for internal usage, please
-## contact us if there is functionality you want
-## availabe for `IndexSet`.
-## """
-## data(is::IndexSet) = is.data
-## data(is) = is
-## 
-## # TODO: delete
-## # This is used in type promotion in the Tensor contraction code
-## promote_rule(::Type{<:IndexSet}, ::Type{Val{N}}) where {N} = IndexSet
-
-# TODO: delete
-#NDTensors.ValLength(::Type{<:IndexSet}) = Val(length(is))
-
-# TODO: delete
-#
-# This is only needed for
-#
-# block(inds::IndexSet, vals::Int...) = blockindex(inds, vals...)[2]
-#
-# which should be written in a different way to avoid this.
-#
-# NDTensors.ValLength(s::Indices) = Val(length(s))
-
-# TODO: delete
-#function NDTensors._permute(s::T, perm) where {T<:IndexSet}
-#  return ntuple(i->s[perm[i]], length(s))
-#end
-
 # Convert to an Index if there is only one
 # TODO: also define the function `only`
 Index(is::Indices) = is[]
 
-## """
-##     getindex(is::IndexSet, n::Integer)
-## 
-## Get the Index of the IndexSet in the dimension n.
-## """
-## getindex(is::IndexSet, n::Union{Integer, CartesianIndex{1}}) = getindex(data(is), n)
-## getindex(is::IndexSet) = getindex(data(is))
-## 
-## """
-##     getindex(is::IndexSet, v)
-## 
-## Get the indices of the IndexSet in the dimensions
-## specified in the collection v, returning an IndexSet.
-## """
-## getindex(is::IndexSet, v) =
-##   IndexSet(getindex(data(is), v))
-
-## # TODO: delete
-## """
-##     setindex(is::IndexSet, i::Index, n::Int)
-## 
-## Set the Index of the IndexSet in the dimension n.
-## 
-## This function is mostly for internal use, if you want to
-## replace the indices of an IndexSet, use the `replaceind`,
-## `replaceind!`, `replaceinds`, and `replaceinds!` functions,
-## which check for compatibility of the indices and ensure
-## the proper Arrow directions.
-## """
-## function Base.setindex(is::IndexSet, i::Index, n::Int)
-##   return IndexSet(setindex!(copy(data(is)), i, n))
-## end
-
-## """
-##     length(is::IndexSet)
-## 
-## The number of indices in the IndexSet.
-## """
-## Base.length(is::IndexSet) = length(is.data)
-## 
-## """
-##     size(is::IndexSet)
-## 
-## The size of the IndexSet, the same as `(length(is),)`.
-## 
-## Mostly for internal use for compatability with Base methods,
-## like for broadcasting.
-## """
-## Base.size(is::IndexSet) = size(data(is))
-## 
-## """
-##     axes(is::IndexSet)
-## 
-## The axes of the IndexSet, the same as `(Base.OneTo(length(is)),)`.
-## 
-## Mostly for internal use for compatability with Base methods,
-## like for broadcasting.
-## """
-## Base.axes(is::IndexSet) = axes(data(is))
-
-NDTensors.dims(is::Indices) = dim.(is)
-
-# TODO: is this needed in NDTensors?
-# Is the above generic definition just as fast?
-NDTensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
+NDTensors.dims(is::IndexSet) = dim.(is)
 
 """
     dim(is::Indices)
@@ -269,26 +69,14 @@ NDTensors.dims(is::NTuple{N,<:Index}) where {N} = ntuple(i->dim(is[i]),Val(N))
 Get the product of the dimensions of the indices
 of the Indices (the total dimension of the space).
 """
-NDTensors.dim(is::Indices) = prod(dim, is; init = 1)
-
-# TODO: is this needed in NDTensors?
-NDTensors.dim(is::Tuple{Vararg{<:Index}}) = prod(dims(is))
+NDTensors.dim(is::IndexSet) = prod(dim, is; init = 1)
 
 """
-    dim(is::Indices, n::Int)
+    dim(is::IndexSet, n::Int)
 
 Get the dimension of the Index n of the Indices.
 """
-NDTensors.dim(is::Indices, pos::Int) = dim(is[pos])
-
-# TODO: is this needed in NDTensors?
-"""
-    dim(is::NTuple{N, <:Index}, n::Int)
-
-Get the dimension of the Index n of the `NTuple`.
-"""
-NDTensors.dim(is::NTuple{N, <:Index}, pos::Int) where {N} = dim(is[pos])
-
+NDTensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
 
 """
     dag(is::Indices)
@@ -298,63 +86,26 @@ all of the arrow directions).
 """
 dag(is::Indices) = map(i -> dag(i), is)
 
-## """
-##     iterate(is::Indices[, state])
-## 
-## Iterate over the indices of an Indices.
-## 
-## # Example
-## ```jldoctest
-## julia> using ITensors;
-## 
-## julia> i = Index(2);
-## 
-## julia> is = (i,i');
-## 
-## julia> for j in is
-##          println(plev(j))
-##        end
-## 0
-## 1
-## ```
-## """
-## Base.iterate(is::IndexSet, state) = iterate(data(is), state)
-## 
-## Base.iterate(is::IndexSet) = iterate(data(is))
-## 
-## # To allow for the syntax is[end]
-## Base.firstindex(::IndexSet) = 1
-## 
-## # To allow for the syntax is[begin]
-## Base.lastindex(is::IndexSet) = length(is)
-## 
-## """
-##     eltype(::Indices)
-## 
-## Get the element type of the Indices.
-## """
-## Base.eltype(is::IndexSet{IndexT}) where {IndexT} = IndexT
-## 
-## Base.eltype(::Type{<: IndexSet{IndexT}}) where {IndexT} = IndexT
-## 
-## # Needed for findfirst (I think)
-## Base.keys(is::IndexSet) = 1:length(is)
+# TODO: move to NDTensors
+NDTensors.dim(is::Tuple, pos::Int) = dim(is[pos])
 
-# This is to help with some generic programming in the Tensor
-# code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
-# only known thing for dispatch is a concrete type such
-# as IndexSet{4})
+# TODO: this fixes an ambiguity error with base, move to NDTensors
+NDTensors.similar(T::NDTensors.DenseTensor, inds::Tuple) = NDTensors._similar(T, inds)
 
-NDTensors.similar(T::NDTensors.DenseTensor,
-                  inds::NTuple) = NDTensors._similar(T, inds)
-NDTensors.similar_type(::Type{<:IndexSet},
-                       ::Val{N}) where {N} = IndexSet
-
-NDTensors.similar_type(::Type{<:Tuple{Vararg{<:Index}}},
-                       ::Type{Val{N}}) where {N} = NTuple{N, Index}
-
-NDTensors.similar_type(::Type{<:IndexSet},
-                       ::Type{Val{N}}) where {N} = IndexSet
+## 
+## # This is to help with some generic programming in the Tensor
+## # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
+## # only known thing for dispatch is a concrete type such
+## # as IndexSet{4})
+## 
+## #NDTensors.similar_type(::Type{<:IndexSet},
+## #                       ::Val{N}) where {N} = IndexSet
+## 
+## #NDTensors.similar_type(::Type{<:Tuple{Vararg{<:Index}}},
+## #                       ::Type{Val{N}}) where {N} = NTuple{N, Index}
+## 
+## #NDTensors.similar_type(::Type{<:IndexSet},
+## #                       ::Type{Val{N}}) where {N} = IndexSet
 
 """
     sim(is::Indices)
@@ -438,8 +189,7 @@ fmatch("s")(i) == true
 ```
 """
 fmatch(is::Indices) = in(is)
-fmatch(is::Tuple{Vararg{<:Index}}) = fmatch(IndexSet(is))
-fmatch(is::Index...) = fmatch(IndexSet(is...))
+fmatch(is::Index...) = fmatch(is)
 
 fmatch(pl::Int) = hasplev(pl)
 
@@ -465,14 +215,8 @@ An internal function that returns a function
 that accepts an Index that checks if the
 Index matches the provided conditions.
 """
-function fmatch(; inds = nothing,
-                  tags = nothing,
-                  plev = nothing,
-                  id = nothing)
-  return i -> fmatch(inds)(i) &&
-              fmatch(plev)(i) &&
-              fmatch(id)(i) &&
-              fmatch(tags)(i)
+function fmatch(; inds = nothing, tags = nothing, plev = nothing, id = nothing)
+  return i -> fmatch(inds)(i) && fmatch(plev)(i) && fmatch(id)(i) && fmatch(tags)(i)
 end
 
 """
@@ -501,19 +245,27 @@ function allunique(v::Indices)
   return true
 end
 
-function setdiff!(f::Function, r, A::Indices, Bs::Indices...)
-  N = length(r)
-  j = 1
-  for a in A
-    if f(a) && all(B -> a ∉ B, Bs)
-      j > N && error("Too many intersects found")
-      r[j] = a
-      j += 1
-    end
-  end
-  j ≤ N && error("Too few intersects found")
-  return r
-end
+## # TODO: delete
+## # XXX: this is inconsistent with the definition of Base.setdiff!
+## function setdiff!(f::Function, r, A::Indices, Bs::Indices...)
+##   N = length(r)
+##   j = 1
+##   for a in A
+##     if f(a) && all(B -> a ∉ B, Bs)
+##       j > N && error("Too many intersects found")
+##       r[j] = a
+##       j += 1
+##     end
+##   end
+##   j ≤ N && error("Too few intersects found")
+##   return r
+## end
+
+#
+# XXX: these functions aren't quite set functions, since
+# they assume that the indices are unique to begin with.
+# Maybe rename `setdiff_assume_unique`, etc?
+#
 
 function setdiff(f::Function, A::Indices, Bs::Indices...)
   R = eltype(A)[]
@@ -532,9 +284,7 @@ the Indicess `Bs`.
 setdiff(A::Indices, Bs::Indices...; kwargs...) =
   setdiff(fmatch(; kwargs...), A, Bs...)
 
-function firstsetdiff(f::Function,
-                      A::Indices,
-                      Bs::Indices...)
+function firstsetdiff(f::Function, A::Indices, Bs::Indices...)
   for a in A
     f(a) && all(B -> a ∉ B, Bs) && return a
   end
@@ -559,19 +309,21 @@ function intersect(f::Function, A::Indices, B::Indices)
   return R
 end
 
-function intersect!(f::Function, R::AbstractVector, A::Indices, B::Indices)
-  N = length(R)
-  j = 1
-  for a in A
-    if f(a) && a ∈ B
-      j > N && error("Too many intersects found")
-      R[j] = a
-      j += 1
-    end
-  end
-  j ≤ N && error("Too few intersects found")
-  return R
-end
+## # TODO: delete
+## # XXX: this is inconsistent with the definition of Base.intersect!
+## function intersect!(f::Function, R::AbstractVector, A::Indices, B::Indices)
+##   N = length(R)
+##   j = 1
+##   for a in A
+##     if f(a) && a ∈ B
+##       j > N && error("Too many intersects found")
+##       R[j] = a
+##       j += 1
+##     end
+##   end
+##   j ≤ N && error("Too few intersects found")
+##   return R
+## end
 
 """
     intersect(A::Indices, B::Indices; kwargs...)
@@ -618,28 +370,30 @@ of output indices is not known at compile time.
 filter(f::Function, is::Tuple{Vararg{Index}}) = filter(f, collect(is))
 
 # TODO: is this definition needed?
-Base.filter(is::Tuple{Vararg{Index}}) = is
+filter(is::Tuple{Vararg{Index}}) = is
 
-Base.filter(is::Indices, args...; kwargs...) =
+filter(is::Indices, args...; kwargs...) =
   filter(fmatch(args...; kwargs...), is)
 
 # To fix ambiguity error with Base function
-Base.filter(is::Indices, tags::String; kwargs...) =
+filter(is::Indices, tags::String; kwargs...) =
   filter(fmatch(tags; kwargs...),is)
 
-function filter!(f::Function, r, is::Indices{IndexT}) where {IndexT}
-  N = length(r)
-  j = 1
-  for i in is
-    if f(i)
-      j > N && error("Too many intersects found")
-      r[j] = i
-      j += 1
-    end
-  end
-  j ≤ N && error("Too few intersects found")
-  return r 
-end
+## # TODO: delete
+## # XXX: this is inconsistent with the definition of Base.filter!
+## function filter!(f::Function, r, is::Indices{IndexT}) where {IndexT}
+##   N = length(r)
+##   j = 1
+##   for i in is
+##     if f(i)
+##       j > N && error("Too many intersects found")
+##       r[j] = i
+##       j += 1
+##     end
+##   end
+##   j ≤ N && error("Too few intersects found")
+##   return r 
+## end
 
 """
     getfirst(is::Indices)
@@ -671,6 +425,8 @@ getfirst(is::Indices, args...; kwargs...) =
 Base.findall(is::Indices, args...; kwargs...) =
   findall(fmatch(args...; kwargs...), is)
 
+# In general this isn't defined for Tuple but is 
+# defined for Vector
 """
     indexin(ais::Indices, bis::Indices)
 
@@ -687,13 +443,6 @@ findfirst(is::Indices, args...; kwargs...) =
 #
 # Tagging functions
 #
-
-# TODO: delete
-## function prime(f::Function, is::Indices, args...)
-##   isᵣ = similar(data(is))
-##   map!(i -> f(i) ? prime(i, args...) : i, isᵣ, is)
-##   return (isᵣ)
-## end
 
 function prime(f::Function, is::Indices, args...)
   return map(i -> f(i) ? prime(i, args...) : i, is)
@@ -936,6 +685,7 @@ end
 # Helper functions for contracting ITensors
 #
 
+# TODO: make a special Tuple version
 function compute_contraction_labels(Ais::Indices, Bis::Indices)
   have_qns = hasqns(Ais) && hasqns(Bis)
   NA = length(Ais)
@@ -967,6 +717,7 @@ function compute_contraction_labels(Ais::Indices, Bis::Indices)
   return Alabels, Blabels
 end
 
+# TODO: make a special Tuple version
 function compute_contraction_labels(Cis::Indices,
                                     Ais::Indices,
                                     Bis::Indices)

@@ -215,6 +215,9 @@ storage and indices as the ITensor.
 """
 Tensor(A::ITensor) = A.tensor
 
+# For backwards compatibility
+tensor(args...; kwargs...) = Tensor(args...; kwargs...)
+
 """
     ITensor([::Type{ElT} = Float64, ]inds)
     ITensor([::Type{ElT} = Float64, ]inds::Index...)
@@ -582,7 +585,7 @@ For example, an ITensor with Diag storage will become Dense storage,
 filled with zeros except for the diagonal values.
 """
 function dense(A::ITensor)
-  T = dense(tensor(A))
+  T = dense(Tensor(A))
   return ITensor(storage(T), removeqns(inds(A)))
 end
 
@@ -591,16 +594,16 @@ end
 
 Convert to the complex version of the storage.
 """
-complex(T::ITensor) = ITensor(complex(tensor(T)))
+complex(T::ITensor) = ITensor(complex(Tensor(T)))
 
 function complex!(T::ITensor)
-  ct = complex(tensor(T))
+  ct = complex(Tensor(T))
   setstorage!(T, storage(ct))
   setinds!(T, inds(ct))
   return T
 end
 
-eltype(T::ITensor) = eltype(tensor(T))
+eltype(T::ITensor) = eltype(Tensor(T))
 
 """
     order(A::ITensor)
@@ -654,7 +657,7 @@ size(T::ITensor) = dims(T)
 
 size(A::ITensor, d::Int) = dim(inds(A), d)
 
-copy(T::ITensor) = ITensor(copy(tensor(T)))
+copy(T::ITensor) = ITensor(copy(Tensor(T)))
 
 """
     Array{ElT}(T::ITensor, i:Index...)
@@ -674,7 +677,7 @@ the order of the data in the resulting Array.
 function Array{ElT, N}(T::ITensor,
                        is::Vararg{Index, N}) where {ElT, N}
   ndims(T) != N && throw(DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."))
-  TT = tensor(permute(T, is...; always_copy = true))
+  TT = Tensor(permute(T, is...; always_copy = true))
   return Array{ElT, N}(TT)::Array{ElT, N}
 end
 
@@ -745,19 +748,19 @@ A = ITensor(2.0, i, i')
 A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 ```
 """
-@propagate_inbounds getindex(T::ITensor, I::Integer...)::Any = tensor(T)[I...]
+@propagate_inbounds getindex(T::ITensor, I::Integer...)::Any = Tensor(T)[I...]
 
 # TODO: move to NDTensors (would require moving `LastVal` to NDTensors)
 @propagate_inbounds _getindex(T::Tensor, I::Vararg{Union{Integer, LastVal}}) = T[lastval_to_int(T, I)...]
 
 # Special case that handles indexing with `end` like `A[i => end, j => 3]`
-@propagate_inbounds getindex(T::ITensor, I::Vararg{Union{Integer, LastVal}})::Any = _getindex(tensor(T), I...)
+@propagate_inbounds getindex(T::ITensor, I::Vararg{Union{Integer, LastVal}})::Any = _getindex(Tensor(T), I...)
 
 # Simple version with just integer indexing, bounds checking gets done by NDTensors
 
 @propagate_inbounds function getindex(T::ITensor, b::Block{N}) where {N}
   # XXX: this should return an ITensor view
-  return tensor(T)[b]
+  return Tensor(T)[b]
 end
 
 # Version accepting CartesianIndex, useful when iterating over
@@ -787,7 +790,7 @@ end
   if order(T) != 0
     throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."))
   end
-  return tensor(T)[]::Number
+  return Tensor(T)[]::Number
 end
 
 """
@@ -848,15 +851,15 @@ end
 Base.checkbounds(::Any, ::Block) = nothing
 
 function setindex!(T::ITensor, A::AbstractArray, I...)
-  @boundscheck checkbounds(tensor(T), I...)
-  TR = setindex!!(tensor(T), A, I...)
+  @boundscheck checkbounds(Tensor(T), I...)
+  TR = setindex!!(Tensor(T), A, I...)
   setstorage!(T, storage(TR))
   return T
 end
 
 #function setindex!(T::ITensor, A::AbstractArray, b::Block)
 #  # XXX: use setindex!! syntax
-#  tensor(T)[b] = A
+#  Tensor(T)[b] = A
 #  return T
 #end
 
@@ -888,14 +891,14 @@ zero elements for sparse tensors).
 For example, for dense tensors this may return `1:length(A)`, while for sparse tensors
 it may return a Cartesian range.
 """
-eachindex(A::ITensor) = eachindex(tensor(A))
+eachindex(A::ITensor) = eachindex(Tensor(A))
 
 """
     iterate(A::ITensor, args...)
 
 Iterate over the elements of an ITensor.
 """
-iterate(A::ITensor, args...) = iterate(tensor(A), args...)
+iterate(A::ITensor, args...) = iterate(Tensor(A), args...)
 
 """
     fill!(T::ITensor, x::Number)
@@ -905,7 +908,7 @@ Fill all values of the ITensor with the specified value.
 function fill!(T::ITensor, x::Number)
   # TODO: automatically switch storage type if needed?
   # Use broadcasting `T .= x`?
-  fill!(tensor(T), x)
+  fill!(Tensor(T), x)
   return T
 end
 
@@ -1259,7 +1262,7 @@ function isapprox(A::ITensor, B::ITensor; kwargs...)
   return isapprox(array(A), array(B); kwargs...)
 end
 
-randn!(T::ITensor) = randn!(tensor(T))
+randn!(T::ITensor) = randn!(Tensor(T))
 
 """
     randomITensor([::Type{ElT <: Number} = Float64, ]inds)
@@ -1321,11 +1324,11 @@ function combinedind(T::ITensor)
   return nothing
 end
 
-norm(T::ITensor) = norm(tensor(T))
+norm(T::ITensor) = norm(Tensor(T))
 
 # TODO: change to storage(TT)
 function dag(T::ITensor; always_copy=false)
-  TT = conj(tensor(T); always_copy=always_copy)
+  TT = conj(Tensor(T); always_copy=always_copy)
   return ITensor(storage(TT),dag(inds(T)))
 end
 
@@ -1365,7 +1368,7 @@ function permute(T::ITensor, new_inds; always_copy::Bool = false)
   if !always_copy && NDTensors.is_trivial_permutation(perm)
     return T
   end
-  Tp = permutedims(tensor(T), perm)
+  Tp = permutedims(Tensor(T), perm)
   return ITensor(Tp)::ITensor
 end
 
@@ -1373,7 +1376,7 @@ permute(T::ITensor, inds::Index...; vargs...) =
   permute(T, inds; vargs...)
 
 function (T::ITensor * x::Number)::ITensor
-  return ITensor(x * tensor(T))
+  return ITensor(x * Tensor(T))
 end
 
 (x::Number * T::ITensor) = T * x
@@ -1381,7 +1384,7 @@ end
 #TODO: make a proper element-wise division
 (A::ITensor / x::Number) = A*(1.0/x)
 
--(A::ITensor) = ITensor(-tensor(A))
+-(A::ITensor) = ITensor(-Tensor(A))
 
 # TODO: move the order-0 Empty ITensor special to NDTensors
 function (A::ITensor + B::ITensor)
@@ -1411,11 +1414,11 @@ function (A::ITensor - B::ITensor)
   return C
 end
 
-Base.real(T::ITensor) = ITensor(real(tensor(T)))
+Base.real(T::ITensor) = ITensor(real(Tensor(T)))
 
-Base.imag(T::ITensor) = ITensor(imag(tensor(T)))
+Base.imag(T::ITensor) = ITensor(imag(Tensor(T)))
 
-Base.conj(T::ITensor) = ITensor(conj(tensor(T)))
+Base.conj(T::ITensor) = ITensor(conj(Tensor(T)))
 
 # Function barrier
 function _contract(Aₜ::Tensor{<: Number, NA}, labelsA::Vector,
@@ -1425,7 +1428,7 @@ end
 
 function _contract(A::ITensor, B::ITensor)
   labelsA, labelsB = compute_contraction_labels(inds(A),inds(B))
-  CT = _contract(tensor(A), labelsA, tensor(B), labelsB)
+  CT = _contract(Tensor(A), labelsA, Tensor(B), labelsB)
   C = ITensor(CT)
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 &&
@@ -1614,8 +1617,8 @@ function mul!(C::ITensor, A::ITensor, B::ITensor,
               α::Number, β::Number=0)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA),
-                            tensor(B), _Tuple(labelsB), α, β)
+  CT = NDTensors.contract!!(Tensor(C), _Tuple(labelsC), Tensor(A), _Tuple(labelsA),
+                            Tensor(B), _Tuple(labelsB), α, β)
   setstorage!(C, storage(CT))
   setinds!(C, inds(C))
   return C
@@ -1627,8 +1630,8 @@ end
 function mul!(C::ITensor, A::ITensor, B::ITensor)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA),
-                            tensor(B), _Tuple(labelsB))
+  CT = NDTensors.contract!!(Tensor(C), _Tuple(labelsC), Tensor(A), _Tuple(labelsA),
+                            Tensor(B), _Tuple(labelsB))
   setstorage!(C, storage(CT))
   setinds!(C, inds(C))
   return C
@@ -1724,7 +1727,7 @@ function exp(A::ITensor, Linds, Rinds; kwargs...)
   CL = combiner(Lis...; dir = Out)
   CR = combiner(Ris...; dir = In)
   AC = A * CR * CL
-  expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
+  expAT = ishermitian ? exp(Hermitian(Tensor(AC))) : exp(Tensor(AC))
   return ITensor(expAT) * dag(CR) * dag(CL)
 end
 
@@ -1753,7 +1756,7 @@ function hadamard_product!(R::ITensor,
   #if inds(A) ≠ inds(B)
   #  B = permute(B, inds(A))
   #end
-  #tensor(C) .= tensor(A) .* tensor(B)
+  #Tensor(C) .= Tensor(A) .* Tensor(B)
   map!((t1, t2) -> *(t1, t2), R, T1, T2)
   return R
 end
@@ -1957,7 +1960,7 @@ function map!(f::Function,
     end
   end
 
-  TR,TT = tensor(R),tensor(T2)
+  TR,TT = Tensor(R),Tensor(T2)
 
   # TODO: Include type promotion from α
   TR = convert(promote_type(typeof(TR),typeof(TT)),TR)
@@ -2018,17 +2021,19 @@ mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
 
 hasqns(T::ITensor) = hasqns(inds(T))
 
-eachnzblock(T::ITensor) = eachnzblock(tensor(T))
+eachnzblock(T::ITensor) = eachnzblock(Tensor(T))
 
-nnz(T::ITensor) = nnz(tensor(T))
+nnz(T::ITensor) = nnz(Tensor(T))
 
-nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+nblocks(T::ITensor, args...) = nblocks(Tensor(T), args...)
 
-nzblock(T::ITensor, args...) = nzblock(tensor(T), args...)
+nnzblocks(T::ITensor) = nnzblocks(Tensor(T))
 
-nzblocks(T::ITensor) = nzblocks(tensor(T))
+nzblock(T::ITensor, args...) = nzblock(Tensor(T), args...)
 
-blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+nzblocks(T::ITensor) = nzblocks(Tensor(T))
+
+blockoffsets(T::ITensor) = blockoffsets(Tensor(T))
 
 flux(T::ITensor, args...) = flux(inds(T), args...)
 
@@ -2065,7 +2070,7 @@ end
 function insertblock!(T::ITensor, args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) && 
    error("Block does not match current flux")
-  TR = insertblock!!(tensor(T), args...)
+  TR = insertblock!!(Tensor(T), args...)
   setstorage!(T, storage(TR))
   return T
 end
@@ -2077,7 +2082,7 @@ Returns `true` if the ITensor contains no elements.
 
 An ITensor with `Empty` storage always returns `true`.
 """
-isempty(T::ITensor) = isempty(tensor(T))
+isempty(T::ITensor) = isempty(Tensor(T))
 
 
 #######################################################################
@@ -2097,7 +2102,7 @@ column, depends on the internal layout of the ITensor.
 *Therefore this method is intended for developer use
 only and not recommended for use in ITensor applications.*
 """
-array(T::ITensor) = array(tensor(T))
+array(T::ITensor) = array(Tensor(T))
 
 """
     matrix(T::ITensor)
@@ -2113,7 +2118,7 @@ only and not recommended for use in ITensor applications.*
 """
 function matrix(T::ITensor)
     ndims(T) != 2 && throw(DimensionMismatch())
-    return array(tensor(T))
+    return array(Tensor(T))
 end
 
 """
@@ -2125,7 +2130,7 @@ or a view in the case the ITensor's storage is Dense.
 """
 function vector(T::ITensor)
     ndims(T) != 1 && throw(DimensionMismatch())
-    return array(tensor(T))
+    return array(Tensor(T))
 end
 #######################################################################
 #
@@ -2153,7 +2158,7 @@ end
 # that emphasizes the missing elements
 function show(io::IO, T::ITensor)
   println(io,"ITensor ord=$(order(T))")
-  show(io, MIME"text/plain"(), tensor(T))
+  show(io, MIME"text/plain"(), Tensor(T))
 end
 
 function show(io::IO,

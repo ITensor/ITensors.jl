@@ -130,6 +130,8 @@ Index(qnblocks::QNBlock...; dir::Arrow = Out, tags = "", plev = 0) =
 dim(i::QNIndex) = dim(space(i))
 
 nblocks(i::QNIndex) = nblocks(space(i))
+# Define to be 1 for non-QN Index
+nblocks(i::Index) = 1
 
 # Get the Block that the index value falls in
 # For example:
