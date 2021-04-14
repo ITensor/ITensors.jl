@@ -127,6 +127,7 @@ const ValCache = Val[Val(n) for n in 0:100]
 # Faster conversions of collection to tuple than `Tuple(::AbstractVector)`
 _NTuple(::Val{N}, v::Vector{T}) where {N, T} = ntuple(n -> v[n], Val(N))
 _Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v) + 1], v)
+_Tuple(t::Tuple) = t
 
 # TODO: define in terms of IndexSet
 Base.Tuple(is::AbstractVector{<: Index}) = _Tuple(is)
@@ -1011,15 +1012,16 @@ pop(is::Indices) = (NDTensors.pop(Tuple(is)))
 # Overload the unexported NDTensors version
 NDTensors.pop(is::Indices) = pop(is)
 
+# TODO: don't convert to Tuple
 """
     popfirst(is::Indices)
 
 Return a new Indices with the first Index removed.
 """
-popfirst(is::Indices) = (NDTensors.popfirst(Tuple(is))) 
+popfirst(is::IndexSet) = (NDTensors.popfirst(Tuple(is))) 
 
 # Overload the unexported NDTensors version
-NDTensors.popfirst(is::Indices) = popfirst(is)
+NDTensors.popfirst(is::IndexSet) = popfirst(is)
 
 """
     push(is::Indices, i::Index)
@@ -1048,7 +1050,7 @@ pushfirst(is::IndexSet, i::Index) = NDTensors.pushfirst(Tuple(is), i)
 # Overload the unexported NDTensors version
 NDTensors.pushfirst(is::IndexSet, i::Index) = pushfirst(is, i)
 
-# TODO: define directly for Vector
+# TODO: don't convert to Tuple
 """
     instertat(is1::Indices, is2, pos::Int)
 
@@ -1062,27 +1064,29 @@ end
 # Overload the unexported NDTensors version
 NDTensors.insertat(is1::IndexSet, is2, pos::Int) = insertat(is1, is2, pos)
 
+# TODO: don't convert to Tuple
 """
     instertafter(is1::Indices, is2, pos)
 
 Insert the indices is2 after position pos.
 """
-insertafter(is::Indices, I...) =
+insertafter(is::IndexSet, I...) =
   (NDTensors.insertafter(Tuple(is), I...))
 
 # Overload the unexported NDTensors version
-NDTensors.insertafter(is::Indices, I...) = insertafter(is, I...)
+NDTensors.insertafter(is::IndexSet, I...) = insertafter(is, I...)
 
 # TODO: don't convert to Tuple here
-deleteat(is::AbstractVector, I...) =
+deleteat(is::IndexSet, I...) =
   (NDTensors.deleteat(Tuple(is),I...))
 
 # Overload the unexported NDTensors version
 NDTensors.deleteat(is::IndexSet, I...) = deleteat(is, I...)
 
-getindices(is::Indices, I...) = NDTensors.getindices(Tuple(is), I...)
+# TODO: don't convert to Tuple
+getindices(is::IndexSet, I...) = NDTensors.getindices(Tuple(is), I...)
 
-NDTensors.getindices(is::Indices, I...) = getindices(is, I...)
+NDTensors.getindices(is::IndexSet, I...) = getindices(is, I...)
 
 #
 # QN functions

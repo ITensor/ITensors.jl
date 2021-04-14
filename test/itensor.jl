@@ -626,11 +626,12 @@ end
   @test T[i => 1, j => 1] == 6
   @test storage(T) isa Dense{Int}
 
+  # TODO: should this case be a copy or a view?
   M = [1. 2;
        3 4]
   T = ITensor(M, i, j)
   T[i => 1, j => 1] = 3.3
-  @test M[1, 1] == 1
+  @test M[1, 1] == 3.3
   @test T[i => 1, j => 1] == 3.3
 end
 

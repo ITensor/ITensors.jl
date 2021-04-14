@@ -33,7 +33,7 @@ Random.seed!(1234)
     @test T[3, 2] == 1e-10
     @test T[3, 3] == 4.0
 
-    T = itensor(A, i', dag(i))
+    T = ITensor(A, i', dag(i))
     @test flux(T) == QN(0)
     @test nnzblocks(T) == 2
     @test Block(1,1) in nzblocks(T)
@@ -95,21 +95,21 @@ Random.seed!(1234)
 
     # no view
     A = diagm(randn(Float64, d))
-    T = itensor(A, i', dag(i); tol = 1e-12)
+    T = ITensor(A, i', dag(i); tol = 1e-12)
     @test storage(T) isa NDTensors.BlockSparse{Float64}
     A[1, 1] = 2.0
     T[1, 1] ≠ 2.0
 
     # no view
     A = diagm(rand(Int, d))
-    T = itensor(Int, A, i', dag(i); tol = 1e-12)
+    T = ITensor(Int, A, i', dag(i); tol = 1e-12)
     @test storage(T) isa NDTensors.BlockSparse{Int}
     A[1, 1] = 2
     T[1, 1] ≠ 2
 
     # no view
     A = diagm(rand(Int, d))
-    T = itensor(A, i', dag(i); tol = 1e-12)
+    T = ITensor(A, i', dag(i); tol = 1e-12)
     @test storage(T) isa NDTensors.BlockSparse{Float64}
     A[1, 1] = 2
     T[1, 1] ≠ 2
@@ -1437,7 +1437,7 @@ Random.seed!(1234)
       insertblock!(A, (2,4))
       insertblock!(A, (1,5))
       U,S,V = svd(A, s; cutoff=0)
-      @test dims(S) == [0, 0]
+      @test dims(S) == (0, 0)
       @test U*S*V ≈ A
     end
 

@@ -80,6 +80,11 @@ mutable struct ITensor
   tensor::Tensor
   # TODO: add an inner constructor with a debug check that
   # the indices of the ITensor/Tensor are unique
+  function ITensor(T::Tensor)
+    @assert inds(T) isa Tuple
+    # new(setinds(T, Tuple(inds(T))))
+    new(T)
+  end
 end
 
 """
@@ -94,7 +99,7 @@ ITensor(st::TensorStorage, is) = ITensor(Tensor(st, Tuple(is)))
 ITensor(is, st::TensorStorage) = ITensor(st, is)
 
 # TODO: deprecated
-itensor(args...) = ITensor(args...)
+itensor(args...; kwargs...) = ITensor(args...; kwargs...)
 
 """
     inds(T::ITensor)
@@ -855,7 +860,7 @@ end
 
 function setindex!(T::ITensor, A::AbstractArray,
                    ivs::Pair{<:Index}...)
-  input_inds = (first.(ivs),)
+  input_inds = first.(ivs)
   p = NDTensors.getperm(inds(T), input_inds)
   # Base.to_indices changes Colons into proper ranges, here
   # using the dimensions of the indices.
