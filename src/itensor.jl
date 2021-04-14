@@ -215,9 +215,6 @@ storage and indices as the ITensor.
 """
 Tensor(A::ITensor) = A.tensor
 
-# For backwards compatibility
-tensor(args...; kwargs...) = Tensor(args...; kwargs...)
-
 """
     ITensor([::Type{ElT} = Float64, ]inds)
     ITensor([::Type{ElT} = Float64, ]inds::Index...)

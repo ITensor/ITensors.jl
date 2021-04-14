@@ -92,7 +92,10 @@ NDTensors.dim(is::Tuple, pos::Int) = dim(is[pos])
 # TODO: this fixes an ambiguity error with base, move to NDTensors
 NDTensors.similar(T::NDTensors.DenseTensor, inds::Tuple) = NDTensors._similar(T, inds)
 
-## 
+# TODO: this is a weird definition, fix it
+NDTensors.similar_type(::Type{<: Tuple{Vararg{IndexT}}}, ::Type{Val{N}}) where {IndexT, N} = NTuple{N, IndexT}
+
+
 ## # This is to help with some generic programming in the Tensor
 ## # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
 ## # only known thing for dispatch is a concrete type such
@@ -100,9 +103,6 @@ NDTensors.similar(T::NDTensors.DenseTensor, inds::Tuple) = NDTensors._similar(T,
 ## 
 ## #NDTensors.similar_type(::Type{<:IndexSet},
 ## #                       ::Val{N}) where {N} = IndexSet
-## 
-## #NDTensors.similar_type(::Type{<:Tuple{Vararg{<:Index}}},
-## #                       ::Type{Val{N}}) where {N} = NTuple{N, Index}
 ## 
 ## #NDTensors.similar_type(::Type{<:IndexSet},
 ## #                       ::Type{Val{N}}) where {N} = IndexSet
