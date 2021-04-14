@@ -824,6 +824,9 @@ function setindex!(T::ITensor, x::Number, I::Union{Int, LastVal}...)
   if !isnothing(fluxT) && fluxT != flux(T, I...)
     error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
   end
+  if !isreal(x) && eltype(T)<:Real
+    complex!(T)
+  end
   TR = setindex!!(tensor(T), x, I...)
   # TODO: replace with storage(TR) when
   # storage is introduced in NDTensors

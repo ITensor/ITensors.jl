@@ -956,6 +956,14 @@ end #End "ITensor other index operations"
     end
   end
 
+  @testset "Set element to complex" begin
+    i = Index(2,"i")
+    T = randomITensor(i)
+    T[i=>1] = 1.0im
+    @test T[i=>1] ≈ 1.0im
+    @test eltype(T) == ComplexF64
+  end
+
 end
 
 
