@@ -36,8 +36,9 @@ struct Index{T}
   dir::Arrow
   tags::TagSet
   plev::Int
+  hash::UInt
   function Index{T}(id, space::T, dir, tags, plev) where {T}
-    return new{T}(id, space, dir, tags, plev)
+    return new{T}(id, space, dir, tags, plev, hash(IndexID(id, tags, plev)))
   end
 end
 
@@ -174,6 +175,24 @@ Return Not{IDType}(n).
 """
 not(id::IDType) = Not(id)
 
+# Information essential to the
+# identity of an Index
+# Helpful for identity and hashing
+struct IndexID
+  id::IDType
+  tags::TagSet
+  plev::Int
+end
+
+IndexID(i::Index) = IndexID(id(i), tags(i), plev(i))
+
+# Internal hash function to call at construction
+_hash(i::Index) = _hash(i, zero(UInt))
+_hash(i::Index, h::UInt) = _hash(IndexID(i), h)
+
+hash(i::Index) = UInt(i.hash)
+hash(i::Index, h::UInt) = h + hash(i)
+
 """
     ==(i1::Index, i1::Index)
 
@@ -189,9 +208,9 @@ end
 
 # This is so that when IndexSets are converted
 # to Julia Base Sets, the hashing is done correctly
-function Base.hash(i::Index, h::UInt)
-  return hash((id(i), tags(i), plev(i)), h)
-end
+#function Base.hash(i::Index, h::UInt)
+#  return hash((id(i), tags(i), plev(i)), h)
+#end
 
 
 """

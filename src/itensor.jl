@@ -909,10 +909,12 @@ function fill!(T::ITensor, x::Number)
   return T
 end
 
-# TODO: name this `inds`?
-itensor2inds(A::ITensor) = inds(A)
+# TODO: name this `inds` or `indscollection`?
+itensor2inds(A::ITensor)::Any = inds(A)
+itensor2inds(A::Tensor) = inds(A)
 itensor2inds(i::Index) = (i,)
 itensor2inds(A) = A
+map_itensor2inds(A::Tuple{Vararg{<: Any, N}}) where {N} = ntuple(i -> itensor2inds(A[i]), Val(N))
 
 # in
 hasind(A, i::Index) = i ∈ itensor2inds(A)
@@ -948,97 +950,101 @@ hascommoninds(A, B; kwargs...) =
 hascommoninds(B; kwargs...) = x -> hascommoninds(x, B; kwargs...)
 
 # issetequal
-hassameinds(A, B) =
-  issetequal(itensor2inds(A), itensor2inds(B))
+hassameinds(A, B) = issetequal(itensor2inds(A), itensor2inds(B))
+
+# Apply the Index set function and then filter the results
+function filter_inds_set_function(ffilter::Function, fset::Function, A::Vararg{<:Any,N}) where {N}
+  return filter(ffilter, fset(map_itensor2inds(A)...))
+end
+
+filter_inds_set_function(fset::Function, A...; kwargs...) =
+  filter_inds_set_function(fmatch(; kwargs...), fset, A...)
+
+for (finds, fset) in ((:commoninds, :intersect), (:noncommoninds, :symdiff),
+                      (:uniqueinds, :setdiff), (:unioninds, :union))
+  @eval begin
+    $finds(args...; kwargs...) = filter_inds_set_function($fset, args...; kwargs...)
+  end
+end
+
+for find in (:commonind, :noncomonind, :uniqueind, :unionind)
+  @eval begin
+    $find(args...; kwargs...) = getfirst($(Symbol(find, :s))(args...; kwargs...))
+  end
+end
 
 # intersect
-"""
+@doc """
     commoninds(A, B; kwargs...)
 
 Return a Vector with indices that are common between the indices of `A` and `B` (the set intersection, similar to `Base.intersect`).
-"""
-commoninds(A...; kwargs...) =
-  intersect(itensor2inds.(A)...; kwargs...)
+""" commoninds
 
 # firstintersect
-"""
+@doc """
     commonind(A, B; kwargs...)
 
 Return the first `Index` common between the indices of `A` and `B`.
 
 See also [`commoninds`](@ref).
-"""
-commonind(A...; kwargs...) =
-  firstintersect(itensor2inds.(A)...; kwargs...)
+""" commonind
 
 # symdiff
-"""
+@doc """
     noncommoninds(A, B; kwargs...)
 
 Return a Vector with indices that are not common between the indices of `A` and `B` (the symmetric set difference, similar to `Base.symdiff`).
-"""
-noncommoninds(A...; kwargs...) =
-  symdiff(itensor2inds.(A)...; kwargs...)
+""" noncommoninds
 
 # firstsymdiff
-"""
+@doc """
     noncommonind(A, B; kwargs...)
 
 Return the first `Index` not common between the indices of `A` and `B`.
 
 See also [`noncommoninds`](@ref).
-"""
-noncommonind(A...; kwargs...) =
-  getfirst(symdiff(itensor2inds.(A)...; kwargs...))
+""" noncommonind
 
 # setdiff
-"""
+@doc """
     uniqueinds(A, B; kwargs...)
 
 Return Vector with indices that are unique to the set of indices of `A` and not in `B` (the set difference, similar to `Base.setdiff`).
-"""
-uniqueinds(A...; kwargs...) =
-  setdiff(itensor2inds.(A)...; kwargs...)
+""" uniqueinds
 
 # firstsetdiff
-"""
+@doc """
     uniqueind(A, B; kwargs...)
 
 Return the first `Index` unique to the set of indices of `A` and not in `B`.
 
 See also [`uniqueinds`](@ref).
-"""
-uniqueind(A...; kwargs...) =
-  firstsetdiff(itensor2inds.(A)...; kwargs...)
+""" uniqueind
 
 # union
-"""
+@doc """
     unioninds(A, B; kwargs...)
 
 Return a Vector with indices that are the union of the indices of `A` and `B` (the set union, similar to `Base.union`).
-"""
-unioninds(A...; kwargs...) =
-  union(itensor2inds.(A)...; kwargs...)
+""" unioninds
 
 # firstunion
-"""
+@doc """
     unionind(A, B; kwargs...)
 
 Return the first `Index` in the union of the indices of `A` and `B`.
 
 See also [`unioninds`](@ref).
-"""
-unionind(A...; kwargs...) =
-  getfirst(union(itensor2inds.(A)...; kwargs...))
+""" unionind
 
-firstind(A...; kwargs...) =
-  getfirst(itensor2inds.(A)...; kwargs...)
+firstind(A...; kwargs...) = getfirst(map_itensor2inds(A)...; kwargs...)
 
-filterinds(A...; kwargs...) =
-  filter(itensor2inds.(A)...; kwargs...)
+filterinds(f::Function, A...) = filter(f, map_itensor2inds(A)...)
+filterinds(A...; kwargs...) = filter(map_itensor2inds(A)...; kwargs...)
 
 # Faster version when no filtering is requested
 filterinds(A::ITensor) = inds(A)
+filterinds(is::Indices) = is
 
 # For backwards compatibility
 inds(A...; kwargs...) = filterinds(A...; kwargs...)

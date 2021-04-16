@@ -226,175 +226,6 @@ Checks if the Index matches the provided conditions.
 """
 indmatch(i::Index; kwargs...) = fmatch(; kwargs...)(i)
 
-# Set functions
-#
-# setdiff
-# intersect
-# symdiff
-# union
-# filter
-#
-
-function allunique(v::Indices)
-  n = length(v)
-  @inbounds for i in 1:n, j in i+1:n
-    if v[i] == v[j]
-      return false
-    end
-  end
-  return true
-end
-
-## # TODO: delete
-## # XXX: this is inconsistent with the definition of Base.setdiff!
-## function setdiff!(f::Function, r, A::Indices, Bs::Indices...)
-##   N = length(r)
-##   j = 1
-##   for a in A
-##     if f(a) && all(B -> a ∉ B, Bs)
-##       j > N && error("Too many intersects found")
-##       r[j] = a
-##       j += 1
-##     end
-##   end
-##   j ≤ N && error("Too few intersects found")
-##   return r
-## end
-
-#
-# XXX: these functions aren't quite set functions, since
-# they assume that the indices are unique to begin with.
-# Maybe rename `setdiff_assume_unique`, etc?
-#
-
-function setdiff(f::Function, A::Indices, Bs::Indices...)
-  R = eltype(A)[]
-  for a ∈ A
-    f(a) && all(B -> a ∉ B, Bs) && push!(R, a)
-  end
-  return R
-end
-
-"""
-    setdiff(A::Indices, Bs::Indices...)
-
-Output the Vector of Indices with Indices in `A` but not in
-the Indicess `Bs`.
-"""
-setdiff(A::Indices, Bs::Indices...; kwargs...) =
-  setdiff(fmatch(; kwargs...), A, Bs...)
-
-function firstsetdiff(f::Function, A::Indices, Bs::Indices...)
-  for a in A
-    f(a) && all(B -> a ∉ B, Bs) && return a
-  end
-  return nothing
-end
-
-# XXX: use the interface setdiff(first, A, Bs...)
-"""
-    firstsetdiff(A::Indices, Bs::Indices...)
-
-Output the first Index in `A` that is not in the Indicess `Bs`.
-Otherwise, return a default constructed Index.
-"""
-firstsetdiff(A::Indices, Bs::Indices...; kwargs...) =
-  firstsetdiff(fmatch(; kwargs...), A, Bs...)
-
-function intersect(f::Function, A::Indices, B::Indices)
-  R = eltype(A)[]
-  for a in A
-    f(a) && a ∈ B && push!(R,a)
-  end
-  return R
-end
-
-## # TODO: delete
-## # XXX: this is inconsistent with the definition of Base.intersect!
-## function intersect!(f::Function, R::AbstractVector, A::Indices, B::Indices)
-##   N = length(R)
-##   j = 1
-##   for a in A
-##     if f(a) && a ∈ B
-##       j > N && error("Too many intersects found")
-##       R[j] = a
-##       j += 1
-##     end
-##   end
-##   j ≤ N && error("Too few intersects found")
-##   return R
-## end
-
-"""
-    intersect(A::Indices, B::Indices; kwargs...)
-
-    intersect(f::Function, A::Indices, B::Indices)
-
-Output the Vector of Indices in the intersection of `A` and `B`,
-optionally filtering with keyword arguments `tags`, `plev`, etc. 
-or by a function `f(::Index) -> Bool`.
-"""
-intersect(A::Indices, B::Indices; kwargs...) = intersect(fmatch(; kwargs...), A, B)
-
-function firstintersect(f::Function, A::Indices, B::Indices)
-  for a in A
-    f(a) && a ∈ B && return a
-  end
-  return nothing
-end
-
-# XXX: use interface intersect(first, A, B)
-"""
-    firstintersect(A::Indices, B::Indices; kwargs...)
-
-    firstintersect(f::Function, A::Indices, B::Indices)
-
-Output the first Index common to `A` and `B`, optionally
-filtering by tags, prime level, etc. or by a function
-`f`.
-
-If no common Index is found, return `nothing`.
-"""
-firstintersect(A::Indices, B::Indices; kwargs...) =
-  firstintersect(fmatch(; kwargs...), A, B)
-
-"""
-    filter(f::Function, inds::Indices)
-
-Filter the Indices by the given function (output a new
-Indices with indices `i` for which `f(i)` returns true).
-
-Note that this function is not type stable, since the number
-of output indices is not known at compile time.
-"""
-filter(f::Function, is::Tuple{Vararg{Index}}) = filter(f, collect(is))
-
-# TODO: is this definition needed?
-filter(is::Tuple{Vararg{Index}}) = is
-
-filter(is::Indices, args...; kwargs...) =
-  filter(fmatch(args...; kwargs...), is)
-
-# To fix ambiguity error with Base function
-filter(is::Indices, tags::String; kwargs...) =
-  filter(fmatch(tags; kwargs...),is)
-
-## # TODO: delete
-## # XXX: this is inconsistent with the definition of Base.filter!
-## function filter!(f::Function, r, is::Indices{IndexT}) where {IndexT}
-##   N = length(r)
-##   j = 1
-##   for i in is
-##     if f(i)
-##       j > N && error("Too many intersects found")
-##       r[j] = i
-##       j += 1
-##     end
-##   end
-##   j ≤ N && error("Too few intersects found")
-##   return r 
-## end
-
 """
     getfirst(is::Indices)
 
@@ -473,18 +304,14 @@ function setprime(f::Function, is::Indices, args...)
   return map(i -> f(i) ? setprime(i, args...) : i, is)
 end
 
-setprime(is::Indices,
-         plev::Integer,
-         args...; kwargs...) = setprime(fmatch(args...; kwargs...),
-                                        is, plev)
+setprime(is::Indices, plev::Integer, args...; kwargs...) =
+  setprime(fmatch(args...; kwargs...), is, plev)
 
-noprime(f::Function,
-        is::Indices,
-        args...) = setprime(is, 0, args...; kwargs...)
+noprime(f::Function, is::Indices, args...) =
+  setprime(is, 0, args...; kwargs...)
 
-noprime(is::Indices,
-        args...;
-        kwargs...) = setprime(is, 0, args...; kwargs...)
+noprime(is::Indices, args...; kwargs...) =
+  setprime(is, 0, args...; kwargs...)
 
 function _swapprime(f::Function, i::Index, pl1pl2::Pair{Int, Int})
   pl1, pl2 = pl1pl2
@@ -780,59 +607,20 @@ push(is::IndexSet, i::Index) = NDTensors.push(is, i)
 # Overload the unexported NDTensors version
 NDTensors.push(is::IndexSet, i::Index) = push(is, i)
 
-# Overload the unexported NDTensors version
-#NDTensors.push(is::Indices{0},
-#             i::Index) = push(is, i)
+# TODO: deprecate
+for fset in (:intersect, :symdiff, :setdiff, :union)
+  @eval begin
+    $(Symbol(:first, fset))(args...; kwargs...) = getfirst($fset(args...; kwargs...))
+  end
+end
 
-## # TODO: define directly for Vector
-## """
-##     pushfirst(is::Indices, i::Index)
-## 
-## Make a new Indices with the Index i inserted
-## at the beginning.
-## """
-## pushfirst(is::IndexSet, i::Index) = NDTensors.pushfirst(Tuple(is), i)
-## 
-## # Overload the unexported NDTensors version
-## NDTensors.pushfirst(is::IndexSet, i::Index) = pushfirst(is, i)
+# TODO: deprecate in favor of `filterinds` (abuse of Base notation)
+filter(is::Indices, args...; kwargs...) =
+  filter(fmatch(args...; kwargs...), is)
 
-## # TODO: don't convert to Tuple
-## """
-##     instertat(is1::Indices, is2, pos::Int)
-## 
-## Remove the index at pos and insert the indices
-## is2 starting at that position.
-## """
-## function insertat(is1::IndexSet, is2, pos::Int)
-##   return NDTensors.insertat(Tuple(is1), Tuple((is2)), pos)
-## end
-## 
-## # Overload the unexported NDTensors version
-## NDTensors.insertat(is1::IndexSet, is2, pos::Int) = insertat(is1, is2, pos)
-
-## # TODO: don't convert to Tuple
-## """
-##     instertafter(is1::Indices, is2, pos)
-## 
-## Insert the indices is2 after position pos.
-## """
-## insertafter(is::IndexSet, I...) =
-##   (NDTensors.insertafter(Tuple(is), I...))
-## 
-## # Overload the unexported NDTensors version
-## NDTensors.insertafter(is::IndexSet, I...) = insertafter(is, I...)
-## 
-## # TODO: don't convert to Tuple here
-## deleteat(is::IndexSet, I...) =
-##   (NDTensors.deleteat(Tuple(is),I...))
-## 
-## # Overload the unexported NDTensors version
-## NDTensors.deleteat(is::IndexSet, I...) = deleteat(is, I...)
-## 
-## # TODO: don't convert to Tuple
-## getindices(is::IndexSet, I...) = NDTensors.getindices(Tuple(is), I...)
-## 
-## NDTensors.getindices(is::IndexSet, I...) = getindices(is, I...)
+# For ambiguity with Base.filter
+filter(is::Indices, args::String; kwargs...) =
+  filter(fmatch(args; kwargs...), is)
 
 #
 # QN functions
