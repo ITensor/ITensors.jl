@@ -176,6 +176,19 @@ function NDTensors.mult_combiner_signs(C,
                                        labelsT_,
                                        indsT::NTuple{NT,QNIndex},
                                        labelsR_) where {NC,NT}
+  #
+  # Notes:
+  #  - can use qn(i=>n) to get the QN of the subspace 
+  #    corresponding to i=>n
+  #  - could use convention of how combined ind is 
+  #    mapped to uncombined to work out the "internal"
+  #    parity of subspaces of the combined ind
+  #    (similar to particle number mod 4)
+  #  - can get setting of combined ind from blockT
+  #    when looping over blockoffsets(T) or similar
+  #    (or of uncombined ind when combining but then
+  #     don't need to back out internal parity)
+  #
   if !has_fermionic_subspaces(T)
     #println("Not copying T in combiner_signs")
     return T
