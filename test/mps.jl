@@ -1,6 +1,7 @@
 using Combinatorics
 using ITensors
 using Random
+using LinearAlgebra: diag
 using Test
 
 Random.seed!(1234)
@@ -521,6 +522,53 @@ end
     state[3] = 2
     M = randomMPS(sites,state,chi)
     @test flux(M) == QN("Sz",-4)
+  end
+
+  @testset "Expected value and Correlations" begin
+    N = 8
+    m = 4
+
+    # Non-fermionic case - spin system
+    s = siteinds("S=1/2",N;conserve_qns=true)
+    psi = randomMPS(s,n->isodd(n) ? "Up" : "Dn",m)
+    Cpm = correlation_matrix(psi,"S+","S-")
+    # Check using AutoMPO:
+    for i=1:N,j=i:N
+      a = AutoMPO()
+      a += "S+",i,"S-",j
+      @test inner(psi,MPO(a,s),psi) ≈ Cpm[i,j]
+    end
+    PM = expect(psi,"S+*S-")
+    @test norm(PM-diag(Cpm)) < 1E-8
+
+    range = 3:7
+    @test norm(PM[range] - expect(psi,"S+*S-";site_range=range)) < 1E-8
+
+    # With start_site, end_site arguments:
+    s = siteinds("S=1/2",N)
+    psi = randomMPS(ComplexF64,s,m)
+    ss,es = 3,6
+    Nb = es-ss+1
+    Cpm = correlation_matrix(psi,"S+","S-";site_range=ss:es)
+    Czz = correlation_matrix(psi,"Sz","Sz";site_range=ss:es)
+    @test size(Cpm) == (Nb,Nb)
+    # Check using AutoMPO:
+    for i=ss:es,j=i:es
+      a = AutoMPO()
+      a += "S+",i,"S-",j
+      @test inner(psi,MPO(a,s),psi) ≈ Cpm[i-ss+1,j-ss+1]
+    end
+
+    # Fermionic case
+    s = siteinds("Electron",N)
+    psi = randomMPS(s,m)
+    Cuu = correlation_matrix(psi,"Cdagup","Cup")
+    # Check using AutoMPO:
+    for i=1:N,j=i:N
+      a = AutoMPO()
+      a += "Cdagup",i,"Cup",j
+      @test inner(psi,MPO(a,s),psi) ≈ Cuu[i,j]
+    end
   end
 
   @testset "swapbondsites" begin

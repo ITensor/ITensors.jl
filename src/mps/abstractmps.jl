@@ -17,6 +17,24 @@ size(m::AbstractMPS) = size(data(m))
 ndims(m::AbstractMPS) = ndims(data(m))
 
 """
+    eltype(m::MPS)
+    eltype(m::MPO)
+
+Return the common element type of the
+tensors in the MPS or MPO. For example,
+if all tensors have type Float64 then
+return Float64. But if one or more tensors
+have type ComplexF64, return ComplexF64.
+"""
+function eltype(m::AbstractMPS)
+  T = eltype(m[1])
+  for n=2:length(m)
+    T = promote_type(T,eltype(m[n]))
+  end
+  return T
+end
+
+"""
     ITensors.data(::MPS/MPO)
 
 Returns a view of the Vector storage of an MPS/MPO.

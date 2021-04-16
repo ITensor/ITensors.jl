@@ -3,7 +3,6 @@ const Tag = SmallString
 const maxTagLength = smallLength
 const MTagStorage = MSmallStringStorage # A mutable tag storage
 const IntTag = IntSmallString  # An integer that can be cast to a Tag
-const maxTags = 4
 const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
@@ -100,7 +99,9 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   return GenericTagSet{T,N}(TagSetStorage(ts),ntags)
 end
 
-const TagSet = GenericTagSet{IntTag,maxTags}
+const TagSet = GenericTagSet{IntTag, 4}
+
+maxlength(::GenericTagSet{<: Any, N}) where {N} = N
 
 macro ts_str(s)
   TagSet(s)
@@ -174,8 +175,7 @@ function hastags(ts2::TagSet, tags1)
 end
 
 function addtags(ts::TagSet, tagsadd)
-  tsadd = TagSet(tagsadd)
-  if length(ts) == maxTags
+  if length(ts) == maxlength(ts)
     if hastags(ts, tagsadd)
       return ts
     end

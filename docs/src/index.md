@@ -105,7 +105,7 @@ julia> readdir()
 8-element Array{String,1}:
  "1d_heisenberg.jl"
  "1d_heisenberg_conserve_spin.jl"
- "1d_hubbard_extendend.jl"
+ "1d_hubbard_extended.jl"
  "1d_ising_with_observer.jl"
  "2d_heisenberg_conserve_spin.jl"
  "2d_hubbard_conserve_momentum.jl"
@@ -332,8 +332,8 @@ let
   # for each sweep and maximum truncation cutoff
   # used when adapting internal dimensions:
   sweeps = Sweeps(5)
-  maxdim!(sweeps, 10,20,100,100,200)
-  cutoff!(sweeps, 1E-10)
+  setmaxdim!(sweeps, 10,20,100,100,200)
+  setcutoff!(sweeps, 1E-10)
   @show sweeps
 
   # Run the DMRG algorithm, returning energy 

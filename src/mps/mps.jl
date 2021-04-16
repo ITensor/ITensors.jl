@@ -507,6 +507,164 @@ function sample(m::MPS)
   return result
 end
 
+"""
+    correlation_matrix(psi::MPS,
+                       Op1::AbstractString,
+                       Op2::AbstractString;
+                       kwargs...)
+
+Given an MPS psi and two strings denoting
+operators (as recognized by the `op` function), 
+computes the two-point correlation function matrix
+C[i,j] = <psi| Op1i Op2j |psi>
+using efficient MPS techniques. Returns the matrix C.
+
+# Optional Keyword Arguments
+- `site_range = 1:length(psi)`: compute correlations only for sites in the given range
+
+For a correlation matrix of size NxN and an MPS of typical
+bond dimension m, the scaling of this algorithm is N^2*m^3.
+
+# Examples
+```julia
+N = 30
+m = 4
+
+s = siteinds("S=1/2",N)
+psi = randomMPS(s,m)
+Czz = correlator(psi,"Sz","Sz")
+
+s = siteinds("Electron",N; conserve_qns=true)
+psi = randomMPS(s,n->isodd(n) ? "Up" : "Dn",m)
+Cuu = correlator(psi,"Cdagup","Cup";site_range=2:8)
+```
+"""
+function correlation_matrix(psi::MPS,
+                            Op1::AbstractString,
+                            Op2::AbstractString;
+                            kwargs...)
+  N = length(psi)
+  ElT = eltype(psi)
+
+  site_range::UnitRange{Int} = get(kwargs,:site_range,1:N)
+  start_site = first(site_range)
+  end_site = last(site_range)
+
+  psi = copy(psi)
+  orthogonalize!(psi,start_site)
+  psi[start_site] ./= norm(psi[start_site])
+
+  s = siteinds(psi)
+  onsiteOp = "$Op1*$Op2"
+  fermionic2 = has_fermion_string(Op2,s[1])
+  if fermionic2
+    Op1 = "$Op1*F"
+  end
+
+  # Nb = size of block of correlation matrix
+  Nb = end_site-start_site+1
+
+  C = zeros(ElT,Nb,Nb)
+
+  if start_site == 1
+    L = ITensor(1.)
+  else
+    lind = commonind(psi[start_site],psi[start_site-1])
+    L = delta(lind,lind')
+  end
+
+  for i=start_site:end_site-1
+    ci = i-start_site+1
+
+    Li = L*psi[i]
+
+    # Get j == i diagonal correlations
+    rind = commonind(psi[i],psi[i+1])
+    C[ci,ci] = scalar( Li*op(onsiteOp,s,i)*prime(dag(psi[i]),not(rind)) )
+
+    # Get j > i correlations
+    Li = Li*op(Op1,s,i)*dag(prime(psi[i]))
+    for j=i+1:end_site
+      cj = j-start_site+1
+      lind = commonind(psi[j],Li)
+      Li *= psi[j]
+
+      val = Li*op(Op2,s,j)*dag(prime(prime(psi[j],"Site"),lind))
+      C[ci,cj] = scalar(val)
+      C[cj,ci] = conj(C[ci,cj])
+
+      if fermionic2
+        Li *= op("F",s,j)*dag(prime(psi[j]))
+      else
+        Li *= dag(prime(psi[j],"Link"))
+      end
+    end
+    L *= psi[i]*dag(prime(psi[i],"Link"))
+  end
+
+  # Get last diagonal element of C
+  i = end_site
+  lind = commonind(psi[i],psi[i-1])
+  C[Nb,Nb] = scalar( L*psi[i]*op(onsiteOp,s,i)*prime(prime(dag(psi[i]),"Site"),lind) )
+
+  return C
+end
+
+
+"""
+    expect(psi::MPS,ops::AbstractString...;kwargs...)
+
+Given an MPS `psi` and an operator name, returns
+a vector of the expected value of the operator on 
+each site of the MPS. If multiple operator names are
+provided, returns a tuple of expectation value vectors.
+
+# Optional Keyword Arguments
+- `site_range = 1:length(psi)`: compute expected values only for sites in the given range
+
+# Examples
+
+```julia
+N = 10
+
+s = siteinds("S=1/2",N)
+psi = randomMPS(s,8)
+Z = expect(psi,"Sz";site_range=2:6)
+
+s = siteinds("Electron",N)
+psi = randomMPS(s,8)
+dens = expect(psi,"Ntot")
+updens,dndens = expect(psi,"Nup","Ndn")
+```
+"""
+function expect(psi::MPS,
+                ops::AbstractString...;
+                kwargs...)
+  psi = copy(psi)
+  N = length(psi)
+  ElT = real(eltype(psi))
+  Nops = length(ops)
+  s = siteinds(psi)
+
+  site_range::UnitRange{Int} = get(kwargs,:site_range,1:N)
+  Ns = length(site_range)
+  start_site = first(site_range)
+  offset = start_site-1
+
+  orthogonalize!(psi,start_site)
+  psi[start_site] ./= norm(psi[start_site])
+
+  ex = ntuple(n->zeros(ElT,Ns),Nops)
+  for j=site_range
+    orthogonalize!(psi,j)
+    for n=1:Nops
+      ex[n][j-offset] = real(scalar(psi[j]*op(ops[n],s[j])*dag(prime(psi[j],s[j]))))
+    end
+  end
+
+  return Nops==1 ? ex[1] : ex
+end
+
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
                     name::AbstractString,
                     M::MPS)

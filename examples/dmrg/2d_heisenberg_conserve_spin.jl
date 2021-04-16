@@ -26,8 +26,8 @@ let
   psi0 = randomMPS(sites,state,20)
 
   sweeps = Sweeps(10)
-  maxdim!(sweeps,20,60,100,100,200,400,800)
-  cutoff!(sweeps,1E-8)
+  setmaxdim!(sweeps,20,60,100,100,200,400,800)
+  setcutoff!(sweeps,1E-8)
   @show sweeps
 
   energy,psi = dmrg(H,psi0,sweeps)

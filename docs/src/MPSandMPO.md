@@ -33,10 +33,11 @@ MPO(::MPS)
 ## Properties
 
 ```@docs
-length(::ITensors.AbstractMPS)
+eltype(::ITensors.AbstractMPS)
 flux(::ITensors.AbstractMPS)
-maxlinkdim(::ITensors.AbstractMPS)
 hasqns(::ITensors.AbstractMPS)
+length(::ITensors.AbstractMPS)
+maxlinkdim(::ITensors.AbstractMPS)
 ```
 
 ## Obtaining and finding indices
@@ -105,6 +106,8 @@ settags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITen
 ## Operations
 
 ```@docs
+expect(::MPS,::AbstractString...)
+correlator(::MPS,::AbstractString,::AbstractString)
 dag(::ITensors.AbstractMPS)
 dense(::ITensors.AbstractMPS)
 movesite(::ITensors.AbstractMPS, ::Pair{Int, Int};orthocenter::Int,kwargs...)
