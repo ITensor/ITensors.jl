@@ -70,8 +70,8 @@ using Compat
     @test hassameinds(@inferred(intersect(I1, IndexSet(j, l))), IndexSet(j))
     @test @inferred(Nothing, firstintersect(I1, IndexSet(j, l))) == j
     @test @inferred(intersect(I1, IndexSet(j, k))) == [j, k]
-    @test hassameinds(@inferred(intersect(I1, (j, k)), IndexSet(j, k)))
-    @test hassameinds(@inferred(intersect(I1, (j, k, l)), (j, k)))
+    @test hassameinds(@inferred(intersect(I1, (j, k))), IndexSet(j, k))
+    @test hassameinds(@inferred(intersect(I1, (j, k, l))), (j, k))
     @test @inferred(filterinds(I1, "i")) == IndexSet(i)
     @test @inferred(filterinds(I1; tags = "i")) == IndexSet(i)
     @test @inferred(filterinds(I1; inds = j)) == IndexSet(j)

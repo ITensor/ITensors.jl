@@ -1,15 +1,12 @@
 
-const Tag = SmallString
-const maxTagLength = smallLength
-const MTagStorage = MSmallStringStorage # A mutable tag storage
-const IntTag = IntSmallString  # An integer that can be cast to a Tag
+const IntTag = UInt128  # An integer that can be cast to a Tag
+const MTagStorage = MVector{8, IntTag} # A mutable tag storage, holding 8 characters
 const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
 emptytag(::Type{IntTag}) = IntTag(0)
 empty_storage(::Type{TagSetStorage{T,N}}) where {T,N} =  TagSetStorage(ntuple(_ -> emptytag(T) , N))
 empty_storage(::Type{MTagSetStorage{T,N}}) where {T,N} =  MTagSetStorage(ntuple(_ -> emptytag(T) , N))
-
 
 #TODO: decide which functions on TagSet should be made generic.
 struct GenericTagSet{T,N}
@@ -27,7 +24,7 @@ function GenericTagSet{T,N}(t::T) where {T,N}
   return GenericTagSet{T,N}(TagSetStorage(ts), 1)
 end
 
-GenericTagSet{IntTag,N}(t::Tag) where {N} = GenericTagSet{IntTag,N}(IntTag(t))
+#GenericTagSet{IntTag,N}(t::Tag) where {N} = GenericTagSet{IntTag,N}(IntTag(t))
 
 function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   for n = 1:ntags
@@ -66,14 +63,14 @@ end
 
 function reset!(v::MTagStorage, nchar::Int)
   for i = 1:nchar
-    @inbounds v[i] = IntChar(0)
+    @inbounds v[i] = IntTag(0)
   end
 end
 
 function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # Mutable fixed-size vector as temporary Tag storage
   # TODO: refactor the Val here.
-  current_tag = MTagStorage(ntuple(_ -> IntChar(0),Val(maxTagLength)))
+  current_tag = empty_storage(MTagStorage)
   # Mutable fixed-size vector as temporary TagSet storage
   ts =  empty_storage(MTagSetStorage{T,N})
   nchar = 0
@@ -87,7 +84,7 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
         nchar = 0
       end
     elseif current_char != ' ' # TagSet constructor ignores whitespace
-      nchar == maxTagLength && error("Currently, tags can only have up to $maxTagLength characters")
+      nchar == length(current_tag) && error("Currently, tags can only have up to $(length(current_tag)) characters")
       nchar += 1
       @inbounds current_tag[nchar] = current_char
     end
@@ -140,7 +137,7 @@ available.
 data(T::TagSet) = T.data
 
 Base.length(T::TagSet) = T.length
-Base.getindex(T::TagSet,n::Int) = Tag(getindex(data(T),n))
+Base.getindex(T::TagSet,n::Int) = getindex(data(T),n)
 Base.copy(ts::TagSet) = TagSet(data(ts),length(ts))
 
 function Base.:(==)(ts1::TagSet,ts2::TagSet)
@@ -175,8 +172,9 @@ function hastags(ts2::TagSet, tags1)
 end
 
 function addtags(ts::TagSet, tagsadd)
+  tsadd = TagSet(tagsadd)
   if length(ts) == maxlength(ts)
-    if hastags(ts, tagsadd)
+    if hastags(ts, tsadd)
       return ts
     end
     throw(ErrorException("Cannot add tag: TagSet already maximum size"))
@@ -184,14 +182,14 @@ function addtags(ts::TagSet, tagsadd)
   res_ts = MVector(data(ts))
   ntags = length(ts)
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags, tsadd[n])
   end
   return TagSet(TagSetStorage(res_ts),ntags)
 end
 
-function _removetag!(ts::MTagSetStorage, ntags::Int, t::Tag)
+function _removetag!(ts::MTagSetStorage, ntags::Int, t)
   for n = 1:ntags
-    if @inbounds Tag(ts[n]) == t
+    if @inbounds ts[n] == t
       for j = n:ntags-1
         @inbounds ts[j] = ts[j+1]
       end

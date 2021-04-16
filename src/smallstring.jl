@@ -1,6 +1,8 @@
 
 const IntChar = UInt16
 const IntSmallString = UInt128
+
+# XXX: remove smallLength as a global constant, bad for type inference
 const smallLength = 8
 const SmallStringStorage = SVector{smallLength,IntChar}
 const MSmallStringStorage = MVector{smallLength,IntChar}
@@ -24,6 +26,8 @@ struct SmallString
   end
 
 end
+
+const Tag = SmallString
 
 data(ss::SmallString) = ss.data
 
