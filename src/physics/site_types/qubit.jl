@@ -32,9 +32,11 @@ space(::SiteType"Qubit";
         qnname_szparity=qnname_parity)
 
 
-state(::SiteType"Qubit", ::StateName"0") = 1
+val(::ValName"0",st::SiteType"Qubit") = 1
+val(::ValName"1",st::SiteType"Qubit") = 2
 
-state(::SiteType"Qubit", ::StateName"1") = 2
+state(::StateName"0",::SiteType"Qubit") = [1.,0.]
+state(::StateName"1",::SiteType"Qubit") = [0.,1.]
 
 # Use S=1/2 definition of any operators 
 # called using Qubit SiteType
