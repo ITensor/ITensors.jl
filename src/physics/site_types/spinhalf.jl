@@ -30,13 +30,26 @@ function space(::SiteType"S=1/2";
   return 2
 end
 
-state(::SiteType"S=1/2", ::StateName"Up") = 1
-state(::SiteType"S=1/2", ::StateName"Dn") = 2
+val(::ValName"Up",::SiteType"S=1/2") = 1
+val(::ValName"Dn",::SiteType"S=1/2") = 2
 
-state(st::SiteType"S=1/2", ::StateName"↑") =
-  state(st, StateName("Up"))
-state(st::SiteType"S=1/2", ::StateName"↓") =
-  state(st, StateName("Dn"))
+val(::ValName"↑",st::SiteType"S=1/2") = 1
+val(::ValName"↓",st::SiteType"S=1/2") = 2
+
+state(::StateName"Up",::SiteType"S=1/2") = [1.,0.]
+state(::StateName"Dn",::SiteType"S=1/2") = [0.,1.]
+
+state(::StateName"↑",st::SiteType"S=1/2") = [1.,0.]
+state(::StateName"↓",st::SiteType"S=1/2") = [0.,1.]
+
+state(::StateName"Z+",st::SiteType"S=1/2") = [1.,0.]
+state(::StateName"Z-",st::SiteType"S=1/2") = [0.,1.]
+
+state(::StateName"X+",st::SiteType"S=1/2") = [1/sqrt(2),1/sqrt(2)]
+state(::StateName"X-",st::SiteType"S=1/2") = [1/sqrt(2),-1/sqrt(2)]
+
+state(::StateName"Y+",st::SiteType"S=1/2") = [1/sqrt(2),im/sqrt(2)]
+state(::StateName"Y-",st::SiteType"S=1/2") = [1/sqrt(2),-im/sqrt(2)]
 
 
 op(::OpName"Z",::SiteType"S=1/2") =
@@ -140,8 +153,8 @@ op(::OpName"projDn",t::SiteType"S=1/2") =
 space(::SiteType"SpinHalf"; kwargs...) =
   space(SiteType("S=1/2"); kwargs...)
 
-state(::SiteType"SpinHalf", n::StateName) =
-  state(SiteType("S=1/2"), n)
+val(name::ValName,::SiteType"SpinHalf") =
+  val(SiteType("S=1/2"), name)
 
 op(o::OpName, ::SiteType"SpinHalf";kwargs...) =
   op(o, SiteType("S=1/2");kwargs...)
@@ -151,8 +164,8 @@ op(o::OpName, ::SiteType"SpinHalf";kwargs...) =
 space(::SiteType"S=½"; kwargs...) =
   space(SiteType("S=1/2"); kwargs...)
 
-state(::SiteType"S=½", n::StateName) =
-  state(SiteType("S=1/2"), n)
+val(name::ValName,::SiteType"S=½") =
+  val(SiteType("S=1/2"), name)
 
 op(o::OpName, ::SiteType"S=½";kwargs...) =
   op(o, SiteType("S=1/2");kwargs...)
