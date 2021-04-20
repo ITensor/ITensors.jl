@@ -57,6 +57,11 @@ function space(::SiteType"Fermion";
   return 2
 end
 
+val(::SiteType"Fermion",::ValName"Emp")  = 1
+val(::SiteType"Fermion",::ValName"Occ")  = 2
+val(st::SiteType"Fermion",::ValName"0") = val(st,ValName("Emp"))
+val(st::SiteType"Fermion",::ValName"1") = val(st,ValName("Occ"))
+
 state(::SiteType"Fermion",::StateName"Emp")  = 1
 state(::SiteType"Fermion",::StateName"Occ")  = 2
 state(st::SiteType"Fermion",::StateName"0") = state(st,StateName("Emp"))

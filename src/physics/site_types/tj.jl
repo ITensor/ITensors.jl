@@ -52,12 +52,19 @@ function space(::SiteType"tJ";
   return 3
 end
 
-state(::SiteType"tJ",::StateName"Emp")  = 1
-state(::SiteType"tJ",::StateName"Up")   = 2
-state(::SiteType"tJ",::StateName"Dn")   = 3
-state(st::SiteType"tJ",::StateName"0")    = state(st,StateName("Emp"))
-state(st::SiteType"tJ",::StateName"↑")    = state(st,StateName("Up"))
-state(st::SiteType"tJ",::StateName"↓")    = state(st,StateName("Dn"))
+val(::SiteType"tJ",::ValName"Emp")  = 1
+val(::SiteType"tJ",::ValName"Up")   = 2
+val(::SiteType"tJ",::ValName"Dn")   = 3
+val(st::SiteType"tJ",::ValName"0")  = val(st,ValName("Emp"))
+val(st::SiteType"tJ",::ValName"↑")  = val(st,ValName("Up"))
+val(st::SiteType"tJ",::ValName"↓")  = val(st,ValName("Dn"))
+
+state(::SiteType"tJ",::StateName"Emp")  = [1.,0,0]
+state(::SiteType"tJ",::StateName"Up")   = [0.,1,0]
+state(::SiteType"tJ",::StateName"Dn")   = [0.,0,1]
+state(st::SiteType"tJ",::StateName"0")  = state(st,StateName("Emp"))
+state(st::SiteType"tJ",::StateName"↑")  = state(st,StateName("Up"))
+state(st::SiteType"tJ",::StateName"↓")  = state(st,StateName("Dn"))
 
 function op!(Op::ITensor,
              ::OpName"Nup",

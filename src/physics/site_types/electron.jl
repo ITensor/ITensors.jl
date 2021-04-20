@@ -56,14 +56,23 @@ function space(::SiteType"Electron";
   return 4
 end
 
-state(::SiteType"Electron",::StateName"Emp")  = 1
-state(::SiteType"Electron",::StateName"Up")   = 2
-state(::SiteType"Electron",::StateName"Dn")   = 3
-state(::SiteType"Electron",::StateName"UpDn") = 4
-state(st::SiteType"Electron",::StateName"0")    = state(st,StateName("Emp"))
-state(st::SiteType"Electron",::StateName"↑")    = state(st,StateName("Up"))
-state(st::SiteType"Electron",::StateName"↓")    = state(st,StateName("Dn"))
-state(st::SiteType"Electron",::StateName"↑↓")   = state(st,StateName("UpDn"))
+val(::SiteType"Electron",::ValName"Emp")  = 1
+val(::SiteType"Electron",::ValName"Up")   = 2
+val(::SiteType"Electron",::ValName"Dn")   = 3
+val(::SiteType"Electron",::ValName"UpDn") = 4
+val(st::SiteType"Electron",::ValName"0")  = val(st,ValName("Emp"))
+val(st::SiteType"Electron",::ValName"↑")  = val(st,ValName("Up"))
+val(st::SiteType"Electron",::ValName"↓")  = val(st,ValName("Dn"))
+val(st::SiteType"Electron",::ValName"↑↓") = vaval(st,ValName("UpDn"))
+
+state(::SiteType"Electron",::StateName"Emp")  = [1.,0,0,0]
+state(::SiteType"Electron",::StateName"Up")   = [0.,1,0,0]
+state(::SiteType"Electron",::StateName"Dn")   = [0.,0,1,0]
+state(::SiteType"Electron",::StateName"UpDn") = [0.,0,0,1]
+state(st::SiteType"Electron",::StateName"0")  = state(st,StateName("Emp"))
+state(st::SiteType"Electron",::StateName"↑")  = state(st,StateName("Up"))
+state(st::SiteType"Electron",::StateName"↓")  = state(st,StateName("Dn"))
+state(st::SiteType"Electron",::StateName"↑↓") = state(st,StateName("UpDn"))
 
 function op!(Op::ITensor,
              ::OpName"Nup",
