@@ -36,6 +36,9 @@ val(::ValName"Dn",::SiteType"S=1/2") = 2
 val(::ValName"↑",st::SiteType"S=1/2") = 1
 val(::ValName"↓",st::SiteType"S=1/2") = 2
 
+val(::ValName"Z+",::SiteType"S=1/2") = 1
+val(::ValName"Z-",::SiteType"S=1/2") = 2
+
 state(::StateName"Up",::SiteType"S=1/2") = [1.,0.]
 state(::StateName"Dn",::SiteType"S=1/2") = [0.,1.]
 
