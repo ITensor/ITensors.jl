@@ -208,14 +208,15 @@ M ≈ U * S * V = true
 ### Singular Value Decomposition (SVD) of a Tensor
 
 In this example, we create a random 4x4x4x4 tensor 
-and compute its SVD, temporarily treating the first
-and third indices (i and k) as the "row" index and the second
-and fourth indices (j and l) as the "column" index for the purposes
-of the SVD. The resulting factors can 
+and compute its SVD, temporarily treating the indices i and k
+together as the "row" index and j and l as the "column" index 
+for the purposes of the SVD. The resulting factors can 
 be simply multiplied back together using the
 ITensor `*` operation, which automatically recognizes
 the matching indices between U and S, and between S and V
 and contracts (sums over) them.
+
+![](svd_tensor.png)
 
 ```jldoctest; output=false
 using ITensors
