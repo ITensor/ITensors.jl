@@ -21,14 +21,37 @@ function space(::SiteType"S=1";
   return 3
 end
 
-state(::SiteType"S=1",::StateName"Up") = 1
-state(::SiteType"S=1",::StateName"Z0") = 2
-state(::SiteType"S=1",::StateName"Dn") = 3
+val(::ValName"Up",::SiteType"S=1") = 1
+val(::ValName"Z0",::SiteType"S=1") = 2
+val(::ValName"Dn",::SiteType"S=1") = 3
 
-state(st::SiteType"S=1",::StateName"↑") = state(st,StateName("Up"))
-state(st::SiteType"S=1",::StateName"0") = state(st,StateName("Z0"))
-state(st::SiteType"S=1",::StateName"↓") = state(st,StateName("Dn"))
+val(::ValName"↑",st::SiteType"S=1") = 1
+val(::ValName"0",st::SiteType"S=1") = 2
+val(::ValName"↓",st::SiteType"S=1") = 3
 
+val(::ValName"Z+",::SiteType"S=1") = 1
+# -- Z0 is already defined above --
+val(::ValName"Z-",::SiteType"S=1") = 3
+
+state(::StateName"Up",::SiteType"S=1") = [1.,0.,0.]
+state(::StateName"Z0",::SiteType"S=1") = [0.,1.,0.]
+state(::StateName"Dn",::SiteType"S=1") = [0.,0.,1.]
+
+state(::StateName"↑",st::SiteType"S=1") = [1.,0.,0.]
+state(::StateName"0",st::SiteType"S=1") = [0.,1.,0.]
+state(::StateName"↓",st::SiteType"S=1") = [0.,0.,1.]
+
+state(::StateName"Z+",st::SiteType"S=1") = [1.,0.,0.]
+# -- Z0 is already defined above --
+state(::StateName"Z-",st::SiteType"S=1") = [0.,0.,1.]
+
+state(::StateName"X+",::SiteType"S=1") = [1/2,1/sqrt(2),1/2]
+state(::StateName"X0",::SiteType"S=1") = [-1/sqrt(2),0,1/sqrt(2)]
+state(::StateName"X-",::SiteType"S=1") = [1/2,-1/sqrt(2),1/2]
+
+state(::StateName"Y+",::SiteType"S=1") = [-1/2,-im/sqrt(2),1/2]
+state(::StateName"Y0",::SiteType"S=1") = [1/sqrt(2),0,1/sqrt(2)]
+state(::StateName"Y-",::SiteType"S=1") = [-1/2,im/sqrt(2),1/2]
 
 function op!(Op::ITensor,
              ::OpName"Sz",
