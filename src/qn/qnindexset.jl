@@ -37,7 +37,7 @@ allfermionic(is::Indices) = all(isfermionic, is)
 
 # TODO: specialize for Vector vs. Tuple
 function Base.show(io::IO, is::QNIndices)
-  print(io, "Index collect of length $(length(is)) ")
+  print(io, "$(length(is)) Indices\n")
   for i in is
     print(io, i)
     println(io)

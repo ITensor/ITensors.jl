@@ -136,6 +136,14 @@ dir(i::Index) = i.dir
 # Used for generic code in NDTensors
 NDTensors.dir(i::Index) = dir(i)
 
+# Trait to determine if an Index, Index collection, Tensor, or ITensor
+# has symmetries
+abstract type SymmetryStyle end
+
+struct NonQN <: SymmetryStyle end
+
+symmetrystyle(::Index) = NonQN()
+
 """
     setdir(i::Index, dir::Arrow)
 

@@ -116,7 +116,7 @@ import NDTensors:
   inds,
   insertblock!,
   matrix,
-  #maxdim,
+  maxdim,
   mindim,
   nblocks,
   nnz,

@@ -1,4 +1,12 @@
 
+@propagate_inbounds @inline function _setindex!!(::HasQNs, T::Tensor, x::Number, I::Integer...)
+  fluxT = flux(T)
+  if !isnothing(fluxT) && fluxT != flux(T, I...)
+    error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
+  end
+  return setindex!!(T, x, I...)
+end
+
 """
     ITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)
     ITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...)

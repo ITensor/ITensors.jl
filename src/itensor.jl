@@ -110,6 +110,12 @@ Return the indices of the ITensor as a Tuple.
 """
 inds(T::ITensor) = inds(Tensor(T))
 
+# Help to check if there are QNs
+indstype(T::Tensor) = typeof(inds(T))
+
+symmetrystyle(T::Tensor) = symmetrystyle(inds(T))
+symmetrystyle(T::ITensor)::SymmetryStyle = symmetrystyle(Tensor(T))
+
 """
     ind(T::ITensor, i::Int)
 
@@ -408,60 +414,6 @@ function ITensor(A::Array{ElT}, inds...; kwargs...) where {ElT <: RealOrComplex{
   return ITensor(float(ElT), A, inds...; kwargs...)
 end
 
-## """
-##     ITensor([ElT::Type, ]A::Array, inds)
-##     ITensor([ElT::Type, ]A::Array, inds::Index...)
-## 
-## Construct an ITensor from an Array `A` and indices `inds`.
-## 
-## Similar to `ITensor` but the ITensor is never a view of the
-## input array.
-## 
-## If the element type of `A` is `Int` or `Complex{Int}` and
-## the desired element type isn't specified, it will
-## be converted to `Float64` or `Complex{Float64}` automatically.
-## To keep the element type as an integer, specify it explicitly
-## as the first input.
-## 
-## # Examples
-## 
-## ```julia
-## i = Index(2,"index_i")
-## j = Index(2,"index_j")
-## 
-## M = [1. 2;
-##      3 4]
-## T = ITensor(M, i, j)
-## T[i => 1, j => 1] = 3.3
-## M[1, 1] == 1
-## T[i => 1, j => 1] == 3.3
-## ```
-## 
-## !!! warning
-##     In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `ITensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
-## 
-##     Also, in the future this may create views of the input data when possible, like the `ITensor` constructor. The particular copy/view behavior should therefore not be relied upon, and in general `ITensor` is probably preferred.
-## """
-## function ITensor(::Type{ElT}, A::Array{ElT}, inds::IndexSet; kwargs...) where {ElT}
-##   return ITensor(ElT, copy(A), inds; kwargs...)
-## end
-## 
-## function ITensor(::Type{ElT}, A::Array{ElT}, inds...; kwargs...) where {ElT}
-##   return ITensor(ElT, A, IndexSet(inds...); kwargs...)
-## end
-## 
-## # This version will in general do a conversion internally, so no need for an
-## # extra copy
-## function ITensor(::Type{ElT}, A::Array, inds...; kwargs...) where {ElT}
-##   return ITensor(ElT, A, inds...; kwargs...)
-## end
-## 
-## ITensor(A::Array{ElT}, inds...; kwargs...) where {ElT} = ITensor(ElT, A, inds...; kwargs...)
-## 
-## # Internally `ITensor` does a conversion in this case, so
-## # don't copy
-## ITensor(A::Array{ElT}, inds...; kwargs...) where {ElT <: RealOrComplex{Int}} = ITensor(A, inds...; kwargs...)
-
 #
 # Diag ITensor constructors
 #
@@ -610,35 +562,35 @@ The number of indices, `length(inds(A))`.
 """
 order(T::ITensor) = ndims(T)
 
-ndims(T::ITensor) = length(inds(T))
+ndims(T::ITensor) = ndims(Tensor(T))
 
 """
     dim(A::ITensor)
 
 The total dimension of the space the tensor lives in, `prod(dims(A))`.
 """
-dim(T::ITensor) = dim(inds(T))
+dim(T::ITensor) = dim(Tensor(T))
 
 """
     maxdim(A::ITensor)
 
 The maximum dimension of the tensor indices.
 """
-maxdim(T::ITensor) = maxdim(inds(T))
+maxdim(T::ITensor) = maxdim(Tensor(T))
 
 """
     mindim(A::ITensor)
 
 The minimum dimension of the tensor indices.
 """
-mindim(T::ITensor) = mindim(inds(T))
+mindim(T::ITensor) = mindim(Tensor(T))
 
 """
     dim(A::ITensor, n::Int)
 
 Get the nth dimension of the ITensors.
 """
-dim(T::ITensor, n::Int) = dims(T)[n]
+dim(T::ITensor, n::Int) = dim(Tensor(T), n)
 
 """
     dims(A::ITensor)
@@ -646,13 +598,13 @@ dim(T::ITensor, n::Int) = dims(T)[n]
 
 Tuple containing `dim(inds(A)[d]) for d in 1:ndims(A)`.
 """
-dims(T::ITensor) = dims(inds(T))
+dims(T::ITensor) = dims(Tensor(T))
 
-axes(T::ITensor) = map(Base.OneTo, dims(T))
+axes(T::ITensor) = axes(Tensor(T))
 
 size(T::ITensor) = dims(T)
 
-size(A::ITensor, d::Int) = dim(inds(A), d)
+size(A::ITensor, d::Int) = size(Tensor(A), d)
 
 copy(T::ITensor) = ITensor(copy(Tensor(T)))
 
@@ -671,8 +623,7 @@ an Array with a copy of the ITensor's elements. The
 order in which the indices are provided indicates
 the order of the data in the resulting Array.
 """
-function Array{ElT, N}(T::ITensor,
-                       is::Vararg{Index, N}) where {ElT, N}
+function Array{ElT, N}(T::ITensor, is::Vararg{Index, N}) where {ElT, N}
   ndims(T) != N && throw(DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."))
   TT = Tensor(permute(T, is...; always_copy = true))
   return Array{ElT, N}(TT)::Array{ElT, N}
@@ -747,11 +698,13 @@ A[1, 2] # 2.0, same as: A[i => 1, i' => 2]
 """
 @propagate_inbounds getindex(T::ITensor, I::Integer...)::Any = Tensor(T)[I...]
 
+@propagate_inbounds @inline _getindex(T::Tensor, I::Integer...) = T[I...]
+
 # TODO: move to NDTensors (would require moving `LastVal` to NDTensors)
-@propagate_inbounds _getindex(T::Tensor, I::Vararg{Union{Integer, LastVal}}) = T[lastval_to_int(T, I)...]
+@propagate_inbounds @inline _getindex(T::Tensor, I::Union{Integer, LastVal}...) = T[lastval_to_int(T, I)...]
 
 # Special case that handles indexing with `end` like `A[i => end, j => 3]`
-@propagate_inbounds getindex(T::ITensor, I::Vararg{Union{Integer, LastVal}})::Any = _getindex(Tensor(T), I...)
+@propagate_inbounds getindex(T::ITensor, I::Union{Integer, LastVal}...)::Any = _getindex(Tensor(T), I...)
 
 # Simple version with just integer indexing, bounds checking gets done by NDTensors
 
@@ -763,6 +716,12 @@ end
 # Version accepting CartesianIndex, useful when iterating over
 # CartesianIndices
 @propagate_inbounds getindex(T::ITensor, I::CartesianIndex)::Any = T[Tuple(I)...]
+
+@propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any, N}) where {N}
+  # Tried ind.(ivs), val.(ivs) but it is slower
+  p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
+  return _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
+end
 
 """
     getindex(T::ITensor, ivs...)
@@ -777,77 +736,95 @@ A = ITensor(2.0, i, i')
 A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 ```
 """
-@propagate_inbounds function getindex(T::ITensor, ivs...)
-  p = NDTensors.getperm(inds(T), ind.(ivs))
-  vals = NDTensors.permute(val.(ivs), p)
-  return T[vals...]::Number
-end
+@propagate_inbounds (getindex(T::ITensor, ivs::Vararg{<: Any, N})::Any) where {N} = _getindex(Tensor(T), ivs...)
 
-@propagate_inbounds function getindex(T::ITensor) 
+@propagate_inbounds function getindex(T::ITensor)::Any 
   if order(T) != 0
     throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."))
   end
-  return Tensor(T)[]::Number
+  return Tensor(T)[]
 end
 
-"""
-    setindex!(T::ITensor, x::Number, I::Int...)
-
-    setindex!(T::ITensor, x::Number, I::CartesianIndex)
-
-Set the specified element of the ITensor, using internal
-Index ordering of the ITensor.
-
-# Example
-```julia
-i = Index(2; tags = "i")
-A = ITensor(i, i')
-A[1, 2] = 1.0 # same as: A[i => 1, i' => 2] = 1.0
-A[2, :] = [2.0 3.0]
-```
-"""
-function setindex!(T::ITensor, x::Number, I::Union{Int, LastVal}...)
-  Tₜ = Tensor(T)
-  I = lastval_to_int(Tₜ, I)
-  @boundscheck checkbounds(Tₜ, I...)
-  fluxT = flux(T)
-  if !isnothing(fluxT) && fluxT != flux(T, I...)
-    error("In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.")
-  end
-  TR = setindex!!(Tₜ, x, I...)
-  # TODO: replace with storage(TR) when
-  # storage is introduced in NDTensors
-  setstorage!(T, storage(TR))
-  return T
+# Defining this with the type signature `I::Vararg{Integer, N}` instead of `I::Integere...` is much faster:
+#
+# 58.720 ns (1 allocation: 368 bytes)
+#
+# instead of:
+#
+# 465.454 ns (7 allocations: 1.86 KiB)
+#
+# for some reason! Maybe it helps with inlining?
+#
+@propagate_inbounds @inline function _setindex!!(::SymmetryStyle, T::Tensor, x::Number, I::Vararg{Integer, N}) where {N}
+  # Generic version, doesn't check the flux
+  return setindex!!(T, x, I...)
 end
 
-setindex!(T::ITensor, x::Number, I::CartesianIndex) =
-  setindex!(T, x, Tuple(I)...)
+@propagate_inbounds @inline function _setindex!!(T::Tensor, x::Number, I::Vararg{Integer, N}) where {N}
+  # Use type trait dispatch to split off between QN version that checks the flux
+  # and non-QN version that doesn't
+
+  return _setindex!!(symmetrystyle(T), T, x, I...)
+end
+
+@propagate_inbounds @inline function _setindex!!(T::Tensor, x::Number, I::Vararg{Union{Integer, LastVal}, N}) where {N}
+  return _setindex!!(T, x, lastval_to_int(T, I)...)
+end
 
 """
     setindex!(T::ITensor, x::Number, ivs...)
 
-Set the specified element of the ITensor using a list
-of `IndexVal`s or `Pair{<:Index, Int}`.
+    setindex!(T::ITensor, x::Number, I::Integer...)
+
+    setindex!(T::ITensor, x::Number, I::CartesianIndex)
+
+Set the specified element of the ITensor, using a list
+of `Pair{<:Index, Integer}` (or `IndexVal`).
+
+If just integers are used, set the specified element of the ITensor
+using internal Index ordering of the ITensor (only for advanced usage,
+only use if you know the axact ordering of the indices).
 
 # Example
 ```julia
 i = Index(2; tags = "i")
 A = ITensor(i, i')
 A[i => 1, i' => 2] = 1.0 # same as: A[i' => 2, i => 1] = 1.0
+A[1, 2] = 1.0 # same as: A[i => 1, i' => 2] = 1.0
+
+# Some simple slicing is also supported
 A[i => 2, i' => :] = [2.0 3.0]
+A[2, :] = [2.0 3.0]
 ```
 """
-function setindex!(T::ITensor, x::Number, ivs...)
-  p = NDTensors.getperm(inds(T), ind.(ivs))
-  vals = NDTensors.permute(val.(ivs), p)
-  T[vals...] = x
+@propagate_inbounds @inline function setindex!(T::ITensor, x::Number, I::Vararg{Integer, N}) where {N}
+  # XXX: for some reason this is slow (257.467 ns (6 allocations: 1.14 KiB) for `A[1, 1, 1] = 1`)
+  # Calling `setindex!` directly here is faster (56.635 ns (1 allocation: 368 bytes) for `A[1, 1, 1] = 1`)
+  # but of course less generic. Can't figure out how to optimize it,
+  # even the generic IndexVal version above is faster (126.818 ns (5 allocations: 768 bytes) for `A[i'' => 1, i' => 1, i => 1] = 1`)
+  settensor!(T, _setindex!!(Tensor(T), x, I...))
   return T
 end
 
+@propagate_inbounds setindex!(T::ITensor, x::Number, I::CartesianIndex) =
+  setindex!(T, x, Tuple(I)...)
+
+@propagate_inbounds @inline function _setindex!!(T::Tensor, x::Number, ivs::Vararg{<:Any, N}) where {N}
+  # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
+  # but it was slower.
+  p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
+  return _setindex!!(T, x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
+end
+
+@propagate_inbounds @inline function setindex!(T::ITensor, x::Number, I::Vararg{<: Any, N}) where {N}
+  settensor!(T, _setindex!!(Tensor(T), x, I...))
+  return T
+end
+
+# XXX: what is this definition for?
 Base.checkbounds(::Any, ::Block) = nothing
 
-function setindex!(T::ITensor, A::AbstractArray, I...)
+@propagate_inbounds function setindex!(T::ITensor, A::AbstractArray, I...)
   @boundscheck checkbounds(Tensor(T), I...)
   TR = setindex!!(Tensor(T), A, I...)
   setstorage!(T, storage(TR))
@@ -860,8 +837,7 @@ end
 #  return T
 #end
 
-function setindex!(T::ITensor, A::AbstractArray,
-                   ivs::Pair{<:Index}...)
+function setindex!(T::ITensor, A::AbstractArray, ivs::Pair{<:Index}...)
   input_inds = first.(ivs)
   p = NDTensors.getperm(inds(T), input_inds)
   # Base.to_indices changes Colons into proper ranges, here
@@ -1055,16 +1031,22 @@ for fname in (:prime, :setprime, :noprime, :replaceprime, :swapprime,
               :replaceind, :replaceinds, :swapind, :swapinds)
   @eval begin
     $fname(f::Function, A::ITensor, args...) =
-      setinds(A, $fname(f, inds(A), args...))
+      ITensor($fname(f, Tensor(A), args...))
+
+    $fname(f::Function, A::Tensor, args...) =
+    setinds(A, $fname(f, inds(A), args...))
 
     $(Symbol(fname, :!))(f::Function, A::ITensor, args...) =
-      setinds!(A, $fname(f, inds(A), args...))
+      settensor!(A, $fname(f, Tensor(A), args...))
 
     $fname(A::ITensor, args...; kwargs...) =
+      ITensor($fname(Tensor(A), args...; kwargs...))
+
+    $fname(A::Tensor, args...; kwargs...) =
       setinds(A, $fname(inds(A), args...; kwargs...))
 
     $(Symbol(fname, :!))(A::ITensor, args...; kwargs...) =
-      setinds!(A, $fname(inds(A), args...; kwargs...))
+      settensor!(A, $fname(Tensor(A), args...; kwargs...))
   end
 end
 
@@ -1424,15 +1406,16 @@ Base.imag(T::ITensor) = ITensor(imag(Tensor(T)))
 Base.conj(T::ITensor) = ITensor(conj(Tensor(T)))
 
 # Function barrier
-function _contract(Aₜ::Tensor{<: Number, NA}, labelsA::Vector,
-                   Bₜ::Tensor{<: Number, NB}, labelsB::Vector) where {NA, NB}
-  return contract(Aₜ, _NTuple(Val(NA), labelsA), Bₜ, _NTuple(Val(NB), labelsB))
+function _contract(A::Tensor, B::Tensor)
+  labelsA, labelsB = compute_contraction_labels(inds(A),inds(B))
+  return contract(A, labelsA, B, labelsB)
+  # TODO: Alternative to try (`noncommoninds` is too slow right now)
+  #return _contract!!(EmptyTensor(Float64, _Tuple(noncommoninds(inds(A), inds(B)))), A, B)
 end
 
+
 function _contract(A::ITensor, B::ITensor)
-  labelsA, labelsB = compute_contraction_labels(inds(A),inds(B))
-  CT = _contract(Tensor(A), labelsA, Tensor(B), labelsB)
-  C = ITensor(CT)
+  C = ITensor(_contract(Tensor(A), Tensor(B)))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 &&
      order(C) >= warnTensorOrder
@@ -1616,8 +1599,8 @@ end
 *(As::ITensor...; kwargs...) = contract(As...; kwargs...)
 
 # XXX: rename contract!
-function mul!(C::ITensor, A::ITensor, B::ITensor,
-              α::Number, β::Number=0)
+function contract!(C::ITensor, A::ITensor, B::ITensor,
+                   α::Number, β::Number=0)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(Tensor(C), _Tuple(labelsC), Tensor(A), _Tuple(labelsA),
@@ -1627,18 +1610,22 @@ function mul!(C::ITensor, A::ITensor, B::ITensor,
   return C
 end
 
-# This is necessary for now since not all types implement contract!!
-# with non-trivial α and β
-# TODO: rename to `contract!
-function mul!(C::ITensor, A::ITensor, B::ITensor)
+function _contract!!(C::Tensor, A::Tensor, B::Tensor)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(Tensor(C), _Tuple(labelsC), Tensor(A), _Tuple(labelsA),
-                            Tensor(B), _Tuple(labelsB))
-  setstorage!(C, storage(CT))
-  setinds!(C, inds(C))
+  CT = NDTensors.contract!!(C, labelsC, A, labelsA, B, labelsB)
+  return CT
+end
+
+# This is necessary for now since not all types implement contract!!
+# with non-trivial α and β
+function contract!(C::ITensor, A::ITensor, B::ITensor)
+  CT = _contract!!(Tensor(C), Tensor(A), Tensor(B))
+  settensor!(C, CT)
   return C
 end
+
+mul!(C::ITensor, A::ITensor, B::ITensor, args...) = contract!(C, A, B, args...)
 
 dot(A::ITensor, B::ITensor) = (dag(A)*B)[]
 
@@ -2022,7 +2009,7 @@ mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
 # (Maybe create fallback definitions for dense tensors)
 #
 
-hasqns(T::ITensor) = hasqns(inds(T))
+hasqns(T::Union{Tensor, ITensor}) = hasqns(inds(T))
 
 eachnzblock(T::ITensor) = eachnzblock(Tensor(T))
 
@@ -2038,7 +2025,7 @@ nzblocks(T::ITensor) = nzblocks(Tensor(T))
 
 blockoffsets(T::ITensor) = blockoffsets(Tensor(T))
 
-flux(T::ITensor, args...) = flux(inds(T), args...)
+flux(T::Union{Tensor, ITensor}, args...) = flux(inds(T), args...)
 
 """
     flux(T::ITensor)
@@ -2047,14 +2034,14 @@ Returns the flux of the ITensor.
 
 If the ITensor is empty or it has no QNs, returns `nothing`.
 """
-function flux(T::ITensor)
+function flux(T::Union{Tensor, ITensor})
   (!hasqns(T) || isempty(T)) && return nothing
   @debug_check checkflux(T)
   block1 = first(eachnzblock(T))
   return flux(T, block1)
 end
 
-function checkflux(T::ITensor, flux_check)
+function checkflux(T::Union{Tensor, ITensor}, flux_check)
   for b in nzblocks(T)
     fluxTb = flux(T, b)
     if fluxTb != flux_check
@@ -2064,7 +2051,7 @@ function checkflux(T::ITensor, flux_check)
   return nothing
 end
 
-function checkflux(T::ITensor)
+function checkflux(T::Union{Tensor, ITensor})
   b1 = first(nzblocks(T))
   fluxTb1 = flux(T, b1)
   return checkflux(T, fluxTb1)
@@ -2260,3 +2247,64 @@ function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
   return ITensor(storage,inds)
 end
 
+#
+# Old behavior
+#
+
+##
+## This code handled the behavior of ensuring the ITensor constructor
+## never creates a view
+##
+## """
+##     ITensor([ElT::Type, ]A::Array, inds)
+##     ITensor([ElT::Type, ]A::Array, inds::Index...)
+## 
+## Construct an ITensor from an Array `A` and indices `inds`.
+## 
+## Similar to `ITensor` but the ITensor is never a view of the
+## input array.
+## 
+## If the element type of `A` is `Int` or `Complex{Int}` and
+## the desired element type isn't specified, it will
+## be converted to `Float64` or `Complex{Float64}` automatically.
+## To keep the element type as an integer, specify it explicitly
+## as the first input.
+## 
+## # Examples
+## 
+## ```julia
+## i = Index(2,"index_i")
+## j = Index(2,"index_j")
+## 
+## M = [1. 2;
+##      3 4]
+## T = ITensor(M, i, j)
+## T[i => 1, j => 1] = 3.3
+## M[1, 1] == 1
+## T[i => 1, j => 1] == 3.3
+## ```
+## 
+## !!! warning
+##     In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `ITensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
+## 
+##     Also, in the future this may create views of the input data when possible, like the `ITensor` constructor. The particular copy/view behavior should therefore not be relied upon, and in general `ITensor` is probably preferred.
+## """
+## function ITensor(::Type{ElT}, A::Array{ElT}, inds::IndexSet; kwargs...) where {ElT}
+##   return ITensor(ElT, copy(A), inds; kwargs...)
+## end
+## 
+## function ITensor(::Type{ElT}, A::Array{ElT}, inds...; kwargs...) where {ElT}
+##   return ITensor(ElT, A, IndexSet(inds...); kwargs...)
+## end
+## 
+## # This version will in general do a conversion internally, so no need for an
+## # extra copy
+## function ITensor(::Type{ElT}, A::Array, inds...; kwargs...) where {ElT}
+##   return ITensor(ElT, A, inds...; kwargs...)
+## end
+## 
+## ITensor(A::Array{ElT}, inds...; kwargs...) where {ElT} = ITensor(ElT, A, inds...; kwargs...)
+## 
+## # Internally `ITensor` does a conversion in this case, so
+## # don't copy
+## ITensor(A::Array{ElT}, inds...; kwargs...) where {ElT <: RealOrComplex{Int}} = ITensor(A, inds...; kwargs...)

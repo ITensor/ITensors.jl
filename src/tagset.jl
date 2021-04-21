@@ -137,7 +137,7 @@ available.
 data(T::TagSet) = T.data
 
 Base.length(T::TagSet) = T.length
-Base.getindex(T::TagSet,n::Int) = getindex(data(T),n)
+@propagate_inbounds getindex(T::TagSet, n::Integer) = Tag(data(T)[n])
 Base.copy(ts::TagSet) = TagSet(data(ts),length(ts))
 
 function Base.:(==)(ts1::TagSet,ts2::TagSet)
@@ -182,7 +182,7 @@ function addtags(ts::TagSet, tagsadd)
   res_ts = MVector(data(ts))
   ntags = length(ts)
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags, tsadd[n])
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
   end
   return TagSet(TagSetStorage(res_ts),ntags)
 end
@@ -206,7 +206,7 @@ function removetags(ts::TagSet, tagsremove)
   res_ts = MVector(data(ts))
   ntags = length(ts)
   for n=1:length(tsremove)
-    @inbounds ntags = _removetag!(res_ts, ntags, tsremove[n])
+    @inbounds ntags = _removetag!(res_ts, ntags, data(tsremove)[n])
   end
   return TagSet(TagSetStorage(res_ts),ntags)
 end
@@ -218,12 +218,12 @@ function replacetags(ts::TagSet, tagsremove, tagsadd)
   res_ts = MVector(data(ts))
   ntags = length(ts)
   # The TagSet must have the tags to be replaced
-  !hastags(ts,tsremove) && return ts
+  !hastags(ts, tsremove) && return ts
   for n = 1:length(tsremove)
-    @inbounds ntags = _removetag!(res_ts, ntags, tsremove[n])
+    @inbounds ntags = _removetag!(res_ts, ntags, data(tsremove)[n])
   end
   for n = 1:length(tsadd)
-    @inbounds ntags = _addtag_ordered!(res_ts, ntags,IntTag(tsadd[n]))
+    @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
   end
   return TagSet(TagSetStorage(res_ts),ntags)
 end
@@ -233,9 +233,9 @@ function tagstring(T::TagSet)
   N = length(T)
   N == 0 && return res
   for n=1:N-1
-    res *= "$(Tag(T[n])),"
+    res *= "$(Tag(data(T)[n])),"
   end
-  res *= "$(Tag(T[N]))"
+  res *= "$(Tag(data(T)[N]))"
   return res
 end
 

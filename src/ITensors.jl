@@ -73,6 +73,7 @@ include("readwrite.jl")
 include("not.jl")
 include("tagset.jl")
 include("arrow.jl")
+include("symmetrystyle.jl")
 include("index.jl")
 include("indexset.jl")
 

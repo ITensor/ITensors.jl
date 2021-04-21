@@ -512,13 +512,12 @@ end
 # Helper functions for contracting ITensors
 #
 
-# TODO: make a special Tuple version
-function compute_contraction_labels(Ais::Indices, Bis::Indices)
+function compute_contraction_labels(Ais::Tuple, Bis::Tuple)
   have_qns = hasqns(Ais) && hasqns(Bis)
   NA = length(Ais)
   NB = length(Bis)
-  Alabels = fill(0, NA)
-  Blabels = fill(0, NB)
+  Alabels = MVector{NA,Int}(ntuple(_->0,Val(NA)))
+  Blabels = MVector{NB,Int}(ntuple(_->0,Val(NB)))
 
   ncont = 0
   for i = 1:NA, j = 1:NB
@@ -526,7 +525,7 @@ function compute_contraction_labels(Ais::Indices, Bis::Indices)
     Bis_j = @inbounds Bis[j]
     if Ais_i == Bis_j
       if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
-        error("Attempting to contract Indices:\n$(Ais)with Indices:\n$(Bis)QN indices must have opposite direction to contract.")
+        error("Attempting to contract IndexSet:\n$(Ais)with IndexSet:\n$(Bis)QN indices must have opposite direction to contract.")
       end
       Alabels[i] = Blabels[j] = -(1+ncont)
       ncont += 1
@@ -541,18 +540,15 @@ function compute_contraction_labels(Ais::Indices, Bis::Indices)
     if(Blabels[j]==0) Blabels[j] = (u+=1) end
   end
 
-  return Alabels, Blabels
+  return (Tuple(Alabels),Tuple(Blabels))
 end
 
-# TODO: make a special Tuple version
-function compute_contraction_labels(Cis::Indices,
-                                    Ais::Indices,
-                                    Bis::Indices)
+function compute_contraction_labels(Cis::Tuple, Ais::Tuple, Bis::Tuple)
   NA = length(Ais)
   NB = length(Bis)
   NC = length(Cis)
-  Alabels, Blabels = compute_contraction_labels(Ais, Bis)
-  Clabels = fill(0, NC)
+  Alabels,Blabels = compute_contraction_labels(Ais, Bis)
+  Clabels = MVector{NC,Int}(ntuple(_->0,Val(NC)))
   for i = 1:NC
     locA = findfirst(==(Cis[i]), Ais)
     if !isnothing(locA)
@@ -568,7 +564,7 @@ function compute_contraction_labels(Cis::Indices,
       Clabels[i] = Blabels[locB]
     end
   end
-  return Clabels, Alabels, Blabels
+  return (Tuple(Clabels),Alabels,Blabels)
 end
 
 #
