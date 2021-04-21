@@ -694,84 +694,118 @@ using ITensors,
 
   end # Fermion Contraction with Combined Indices
 
-  @testset "SVD DiagBlockSparse Regression Test" begin
-    l1 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Link,l=1")
-    s2 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Site,n=2")
-    s3 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Site,n=3")
-    l3 = Index(QN("Nf",2,-1) => 1;tags="Link,l=3")
+  @testset "DMRG Tests" begin
+    N = 8
+    t1 = 1.0
+    V1 = 4.0
 
-    phi = randomITensor(QN("Nf",4,-1),l1,s2,s3,l3)
-
-    U,S,V = svd(phi,(l1,s2))
-
-    @test norm((U*S)*V - phi) < 1E-10
-    @test norm(U*(S*V) - phi) < 1E-10
-  end
-
-  @testset "Eigen Positive Semi Def Regression Test" begin
-    #
-    # Test was failing without using combiners in
-    # eigen which were conjugates of each other
-    #
-    cutoff = 1E-12
-    N = 2
     s = siteinds("Fermion",N;conserve_qns=true)
 
-    T = ITensor(QN("Nf",0,-1),dag(s[1]),s[1]')
-    T[2,2] = 1
+    ampo = AutoMPO()
+    for b=1:N-1
+      ampo += -t1,"Cdag",b,  "C",b+1
+      ampo += -t1,"Cdag",b+1,"C",b
+      ampo += V1,"N",b,"N",b+1
+    end
+    H = MPO(ampo,s)
 
-    #@test_throws MethodError D,U = eigen(T;ishermitian=true,cutoff)
-    F = eigen(T;ishermitian=true,cutoff)
-    D,U,spec = F
-    Ut = F.Vt
+    state = ["Emp" for n=1:N]
+    for i=1:2:N
+      state[i] = "Occ"
+    end
+    psi0 = productMPS(s, state)
 
-    @test norm(dag(U)*D*Ut-T) < 1E-10
+    sweeps = Sweeps(3)
+    maxdim!(sweeps,20,20,40,80,200)
+    cutoff!(sweeps,1E-10)
+
+    energy, psi = dmrg(H, psi0, sweeps;outputlevel=0)
+
+    correct_energy = -2.859778
+    @test abs(energy-correct_energy) < 1E-4
   end
 
-  @testset "Factorize Eigen Regression Test" begin
-    N = 3
-    s = siteinds("Fermion",N;conserve_qns=true)
-    A = ITensor(QN("Nf",2,-1),s[1],s[2],s[3])
-    A[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
+  @testset "Regression Tests" begin
 
-    #@test_throws MethodError U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
-    U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
+    @testset "SVD DiagBlockSparse Regression Test" begin
+      l1 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Link,l=1")
+      s2 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Site,n=2")
+      s3 = Index(QN("Nf",0,-1) => 1,QN("Nf",1,-1) => 1;tags="Site,n=3")
+      l3 = Index(QN("Nf",2,-1) => 1;tags="Link,l=3")
 
-    @test norm(U*R-A) < 1E-12
-  end
+      phi = randomITensor(QN("Nf",4,-1),l1,s2,s3,l3)
 
-  @testset "Contraction Regression Test" begin
-    s = siteinds("Fermion",3;conserve_qns=true)
-    l = Index(QN("Nf",1,-1)=>1;tags="l")
+      U,S,V = svd(phi,(l1,s2))
 
-    q2 = QN("Nf",2,-1)
-    q0 = QN("Nf",0,-1)
+      @test norm((U*S)*V - phi) < 1E-10
+      @test norm(U*(S*V) - phi) < 1E-10
+    end
 
-    T1 = ITensor(q2,s[1],s[2],l)
-    T1[s[1]=>1,s[2]=>2,l=>1] = 1.0
+    @testset "Eigen Positive Semi Def Regression Test" begin
+      #
+      # Test was failing without using combiners in
+      # eigen which were conjugates of each other
+      #
+      cutoff = 1E-12
+      N = 2
+      s = siteinds("Fermion",N;conserve_qns=true)
 
-    T2 = ITensor(q0,dag(l),s[3])
-    T2[dag(l)=>1,s[3]=>2] = 1.0
+      T = ITensor(QN("Nf",0,-1),dag(s[1]),s[1]')
+      T[2,2] = 1
 
-    @test norm(T1*T2 - T2*T1) < 1E-10
-  end
+      #@test_throws MethodError D,U = eigen(T;ishermitian=true,cutoff)
+      F = eigen(T;ishermitian=true,cutoff)
+      D,U,spec = F
+      Ut = F.Vt
 
-  @testset "SVD Regression Test" begin
-    Pf0 = QN("Pf",0,-2)
-    Pf1 = QN("Pf",1,-2)
+      @test norm(dag(U)*D*Ut-T) < 1E-10
+    end
 
-    l22 = Index([Pf0=>1,Pf1=>1],"Link,dir=2,n=2")
-    l23 = Index([Pf0=>1,Pf1=>1],"Link,dir=3,n=2")
-    s1 = Index([Pf0=>1,Pf1=>1,Pf1=>1,Pf0=>1],"Site,n=1")
-    l11 = Index([Pf0=>1,Pf1=>1],"Link,dir=1,n=1")
+    @testset "Factorize Eigen Regression Test" begin
+      N = 3
+      s = siteinds("Fermion",N;conserve_qns=true)
+      A = ITensor(QN("Nf",2,-1),s[1],s[2],s[3])
+      A[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
 
-    T = randomITensor(dag(l22),dag(l23),s1,l11)
+      #@test_throws MethodError U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
+      U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
 
-    U,S,V = svd(T,dag(l22),dag(l23),s1)
+      @test norm(U*R-A) < 1E-12
+    end
 
-    @test norm(T-U*S*V) < 1E-10
-  end
+    @testset "Contraction Regression Test" begin
+      s = siteinds("Fermion",3;conserve_qns=true)
+      l = Index(QN("Nf",1,-1)=>1;tags="l")
 
+      q2 = QN("Nf",2,-1)
+      q0 = QN("Nf",0,-1)
+
+      T1 = ITensor(q2,s[1],s[2],l)
+      T1[s[1]=>1,s[2]=>2,l=>1] = 1.0
+
+      T2 = ITensor(q0,dag(l),s[3])
+      T2[dag(l)=>1,s[3]=>2] = 1.0
+
+      @test norm(T1*T2 - T2*T1) < 1E-10
+    end
+
+    @testset "SVD Regression Test" begin
+      Pf0 = QN("Pf",0,-2)
+      Pf1 = QN("Pf",1,-2)
+
+      l22 = Index([Pf0=>1,Pf1=>1],"Link,dir=2,n=2")
+      l23 = Index([Pf0=>1,Pf1=>1],"Link,dir=3,n=2")
+      s1 = Index([Pf0=>1,Pf1=>1,Pf1=>1,Pf0=>1],"Site,n=1")
+      l11 = Index([Pf0=>1,Pf1=>1],"Link,dir=1,n=1")
+
+      T = randomITensor(dag(l22),dag(l23),s1,l11)
+
+      U,S,V = svd(T,dag(l22),dag(l23),s1)
+
+      @test norm(T-U*S*V) < 1E-10
+    end
+
+  end # Regression Tests
 
 end
 
