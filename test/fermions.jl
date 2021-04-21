@@ -388,7 +388,7 @@ using ITensors,
       Cp111 = C*p111
       dCp111 = dag(Cp111)
       dp111_U = C*dCp111
-      @test_broken dp111_U ≈ dp111
+      @test dp111_U ≈ dp111
     end
 
 
