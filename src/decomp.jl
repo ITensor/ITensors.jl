@@ -79,6 +79,10 @@ function svd(A::ITensor, Linds...; kwargs...)
     AC = permute(AC, cL, cR)
   end
 
+  #uA = AC * dag(CL) * dag(CR)
+  #@show norm(uA-A)
+  #pause()
+
   USVT = svd(tensor(AC); kwargs...)
   if isnothing(USVT)
     return nothing
@@ -89,7 +93,7 @@ function svd(A::ITensor, Linds...; kwargs...)
   u = commonind(S,UC)
   v = commonind(S,VC)
 
-  if hasqns(A)
+  if hasqns(A) #--------------------
     # Fix the flux of UC,S,VC
     # such that flux(UC) == flux(VC) == QN()
     # and flux(S) == flux(A)
@@ -108,10 +112,16 @@ function svd(A::ITensor, Linds...; kwargs...)
       setblockqn!(i2,newqn,b[2])
       setblockqn!(v,newqn,b[2])
     end
-  end
+  end #-----------------------------
+
+  #@show norm(UC*S*VC-AC)
+  #@show inds(UC)
+  #@show inds(CL)
 
   U = UC*dag(CL)
   V = VC*dag(CR)
+
+  #@show norm(U*S*V-A)
 
   settags!(U,utags,u)
   settags!(S,utags,u)
@@ -252,10 +262,10 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   cL = combinedind(CL)
   cR = dag(combinedind(CR))
-  #if inds(AC) != IndexSet(cL, cR)
-  #  AC = permute(AC, cL, cR)
-  #end
+
   # <fermions>
+  @assert dir(cR)==In
+  @assert dir(cL)==Out
   if inds(AC) != IndexSet(cR, cL)
     AC = permute(AC, cR, cL)
   end
@@ -263,23 +273,28 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
 
   DT, VT, spec = eigen(AT; kwargs...)
-  D, VC = itensor(DT), itensor(VT)
+  D, VLC = itensor(DT), itensor(VT)
 
-  V = VC * dag(CR)
+  VRC = copy(VLC)
+  ol = commonind(D,VLC)
+  or = uniqueind(D,VLC)
+  l = setprime(settags(ol, lefttags), leftplev)
+  r = setprime(settags(or, righttags), rightplev)
+  replaceind!(VLC,ol,l)
+  replaceinds!(D, (ol,or), (l,r))
+  replaceinds!(VRC,(cL,ol),(cR,r))
 
-  # Set right index tags
-  l = uniqueind(D, V)
-  r = commonind(D, V)
-  l̃ = setprime(settags(l, lefttags), leftplev)
-  r̃ = setprime(settags(l̃, righttags), rightplev)
+  #@show norm(dag(VLC)*D*VRC-AC)
 
-  replaceinds!(D, (l, r), (l̃, r̃))
-  replaceind!(V, r, r̃)
- 
-  l, r = l̃, r̃
+  VL = VLC * CL
+  VR = VRC * CR
 
-  # The right eigenvectors, after being applied to A
-  Vt = replaceinds(V, (Ris..., r), (Lis..., l))
+  #@show norm(dag(VL)*D*VR-A)
+
+  V = dag(VR)
+  Vt = dag(VL)
+
+  #@show norm(dag(V)*D*Vt-A)
 
   @debug_check begin
     if hasqns(A)
@@ -391,7 +406,7 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
   end
   F = eigen(A2, Lis, simLis; ishermitian=true,
                              kwargs...)
-  D, _, spec = F
+  _, _, spec = F
   L = F.Vt
   R = dag(L) * A
   if ortho == "right"
