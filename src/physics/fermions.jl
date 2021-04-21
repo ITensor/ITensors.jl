@@ -194,6 +194,7 @@ function NDTensors.mult_combiner_signs(C,
     return T
   end
 
+
   #println("Fermionic case: copying T in combiner_signs")
   T = copy(T)
 
@@ -208,79 +209,85 @@ function NDTensors.mult_combiner_signs(C,
   # number of uncombined indices
   Nuc = length(labelsC)-1
 
-  to_tuple(b::NDTensors.Block{N}) where {N} = ntuple(n->convert(Int,b[n]),N)
-
   if combining
     #println("Combining <<<<<<<<<<<<<<<<<<<<<<<<<<<")
     #(!isconj) ? println("Doing Case #1") : println("Doing Case #3")
 
-    # Compute sign for permuting uncombined indices to front
-    # in reverse order from that on the combiner itself
-    # (sign alphaT to be computed for each block below):
-    nlabelsT = sort(labelsT)
-    if isconj
-      # If combiner is conjugated, put uncombined
-      # indices in *same* order as on combiner
+    if !isconj
+      # Permute uncombined indices to front
+      # in same order as that on the combiner itself
+      nlabelsT = sort(labelsT)
       nlabelsT[1:Nuc] = labelsC[2:end]
+    else
+      # If combiner is conjugated, put uncombined
+      # indices in *opposite* order as on combiner
+      nlabelsT = sort(labelsT)
     end
+
+    # Compute permutation that moves uncombined indices to front
     permT = NDTensors.getperm(nlabelsT,labelsT)
 
     for blockT in keys(blockoffsets(T))
+      # Compute sign from permuting uncombined indices to front:
       alphaT = NDTensors.permfactor(permT,blockT,indsT)
 
+      neg_dir = !isconj ? In : Out
       alpha_arrows = 1
-      alphaC = 1
+      #alphaC = 1
       for n in 1:length(indsT)
         i = indsT[n]
         qi = qn(i,blockT[n])
         if labelsT[n] < 0 && fparity(qi)==1
-          alpha_arrows *= (dir(i)==In) ? -1 : +1
-          alphaC *= -1
+          alpha_arrows *= (dir(i)==neg_dir) ? -1 : +1
+          #alphaC *= -1
         end
       end
 
-      fac = alphaT*alpha_arrows
-      if isconj
-        fac *= alphaC
-      end
+      #@show blockT,alphaT,alpha_arrows
+      fac = alphaT#*alpha_arrows
+
       if fac != 1
         Tb = blockview(T,blockT)
         scale!(Tb,fac)
       end
-    end
+    end # for blockT
+
   elseif !combining 
     #
     # Uncombining ---------------------------
     #
     #println("Uncombining >>>>>>>>>>>>>>>>>>>>>>>>>>>")
-    #(!isconj) ? println("Doing Case #2") : println("Doing Case #4")
-
+  
     # Compute sign for permuting combined index to front
     # (sign alphaT to be computed for each block below):
     nlabelsT = sort(labelsT)
     permT = NDTensors.getperm(nlabelsT,labelsT)
 
+    #
+    # Note: other permutation of labelsT which
+    # relates to two treatments of isconj==true/false
+    # in combining case above is handled as a 
+    # post-processing step in NDTensors src/blocksparse/combiner.jl
+    #
+
     for blockT in keys(blockoffsets(T))
       alphaT = NDTensors.permfactor(permT,blockT,indsT)
 
+      neg_dir = !isconj ? Out : In
       alpha_arrows = 1
-      alphaC = 1
+      #alphaC = 1
       for n in 1:length(indsT)
         l = labelsT[n]
         i = indsT[n]
         if l < 0 && fparity(qn(i,blockT[n]))==1
-          alpha_arrows = (dir(i)==In) ? -1 : +1
-          alphaC = -1
+          alpha_arrows = (dir(i)==neg_dir) ? -1 : +1
+          #alphaC = -1
           break 
         end
       end
 
-      if !isconj
-        fac = alphaT*alphaC*alpha_arrows
-      else
-        fac = alphaT*alpha_arrows
-      end
-      #println("Case 2 fac = $fac (alphaT=$alphaT, alphaC=$alphaC, alpha_arrows=$alpha_arrows)")
+      #@show blockT,alphaT,alpha_arrows
+      fac = alphaT#*alpha_arrows
       if fac != 1
         Tb = blockview(T,blockT)
         scale!(Tb,fac)
