@@ -717,12 +717,15 @@ using ITensors,
     N = 2
     s = siteinds("Fermion",N;conserve_qns=true)
 
-    T = ITensor(QN("Nf",0,-1),s[1]',dag(s[1]))
+    T = ITensor(QN("Nf",0,-1),dag(s[1]),s[1]')
     T[2,2] = 1
 
-    @test_throws MethodError D,U = eigen(T;ishermitian=true,cutoff)
+    #@test_throws MethodError D,U = eigen(T;ishermitian=true,cutoff)
+    F = eigen(T;ishermitian=true,cutoff)
+    D,U,spec = F
+    Ut = F.Vt
 
-    @test_broken norm(prime(U)*D*dag(U)-T) < 1E-10
+    @test norm(dag(U)*D*Ut-T) < 1E-10
   end
 
   @testset "Factorize Eigen Regression Test" begin
@@ -731,9 +734,10 @@ using ITensors,
     A = ITensor(QN("Nf",2,-1),s[1],s[2],s[3])
     A[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
 
-    @test_throws MethodError U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
+    #@test_throws MethodError U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
+    U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
 
-    @test_broken norm(U*R-A) < 1E-12
+    @test norm(U*R-A) < 1E-12
   end
 
   @testset "Contraction Regression Test" begin
@@ -765,7 +769,7 @@ using ITensors,
 
     U,S,V = svd(T,dag(l22),dag(l23),s1)
 
-    @test_broken norm(T-U*S*V) < 1E-10
+    @test norm(T-U*S*V) < 1E-10
   end
 
 
