@@ -717,11 +717,15 @@ using ITensors,
 
     sweeps = Sweeps(3)
     maxdim!(sweeps,20,20,40,80,200)
-    cutoff!(sweeps,1E-10)
-
-    energy, psi = dmrg(H, psi0, sweeps;outputlevel=0)
+    cutoff!(sweeps,1E-6)
 
     correct_energy = -2.859778
+
+    energy, psi = dmrg(H, psi0, sweeps;outputlevel=0)
+    @test abs(energy-correct_energy) < 1E-4
+
+    # Test using SVD within DMRG too:
+    energy, psi = dmrg(H, psi0, sweeps;outputlevel=0,which_decomp="svd")
     @test abs(energy-correct_energy) < 1E-4
   end
 
