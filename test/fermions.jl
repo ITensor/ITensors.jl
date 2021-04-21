@@ -678,6 +678,22 @@ using ITensors,
     @test norm(T1*T2 - T2*T1) < 1E-10
   end
 
+  @testset "SVD Regression Test" begin
+    Pf0 = QN("Pf",0,-2)
+    Pf1 = QN("Pf",1,-2)
+
+    l22 = Index([Pf0=>1,Pf1=>1],"Link,dir=2,n=2")
+    l23 = Index([Pf0=>1,Pf1=>1],"Link,dir=3,n=2")
+    s1 = Index([Pf0=>1,Pf1=>1,Pf1=>1,Pf0=>1],"Site,n=1")
+    l11 = Index([Pf0=>1,Pf1=>1],"Link,dir=1,n=1")
+
+    T = randomITensor(dag(l22),dag(l23),s1,l11)
+
+    U,S,V = svd(T,dag(l22),dag(l23),s1)
+
+    @test norm(T-U*S*V) < 1E-10
+  end
+
 
 end
 
