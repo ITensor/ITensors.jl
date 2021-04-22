@@ -13,6 +13,9 @@
 
 # indexset.jl
 @deprecate store(is::IndexSet) data(is)
+@deprecate firstintersect(is...; kwargs...) getfirst(intersect(is...); kwargs...)
+@deprecate firstsetdiff(is...; kwargs...) getfirst(setdiff(is...); kwargs...)
+
 
 # itensor.jl
 @deprecate commonindex(args...; kwargs...) commonind(args...; kwargs...)

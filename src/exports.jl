@@ -79,8 +79,6 @@ export
   allhastags,
   anyhastags,
   dims,
-  firstintersect,
-  firstsetdiff,
   getfirst,
   mapprime,
   maxdim,

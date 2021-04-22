@@ -34,7 +34,9 @@ end
 # and assumes the elements of each input set are already unique.
 _intersect(s) = Base.copymutable(s)
 _intersect(s, itr, itrs...) = _intersect!(_intersect(s, itr), itrs...)
-_intersect(s, itr) = Base.mapfilter(in(s), push!, itr, Base.emptymutable(s, eltype(s)))
+# XXX: Base has `s` and `itr` swapped in the definition, which one is correct?
+# Is this special case needed, or is `filter!` sufficient?
+_intersect(s, itr) = Base.mapfilter(in(itr), push!, s, Base.emptymutable(s, eltype(s)))
 function _intersect!(s, itrs...)
   for x in itrs
     _intersect!(s, x)

@@ -57,18 +57,18 @@ using Compat
     I3 = @inferred(IndexSet(j, l))
     @test I1 isa Vector{Index{Int}}
     @test @inferred(hassameinds(I1, (k, j, i)))
-    @test @inferred(Nothing, firstsetdiff(I1, I2, I3)) == i
-    @test isnothing(@inferred(Nothing, firstsetdiff(I1, IndexSet(k, j, i))))
+    @test @inferred(Nothing, getfirst(setdiff(I1, I2, I3))) == i
+    @test isnothing(@inferred(Nothing, getfirst(setdiff(I1, IndexSet(k, j, i)))))
     @test @inferred(setdiff(I1, I2)) == [i, j]
     @test hassameinds(@inferred(setdiff(I1, I2)), IndexSet(i, j))
     @test hassameinds(@inferred(setdiff(I1, I2)), (j, i))
     @test I1 ∩ I2 == [k]
     @test hassameinds(I1 ∩ I2, IndexSet(k))
-    @test @inferred(Nothing, firstintersect(I1, I2)) == k
-    @test isnothing(@inferred(Nothing, firstintersect(I1, IndexSet(l))))
+    @test @inferred(Nothing, getfirst(intersect(I1, I2))) == k
+    @test isnothing(@inferred(Nothing, getfirst(intersect(I1, IndexSet(l)))))
     @test @inferred(intersect(I1, IndexSet(j, l))) == [j]
     @test hassameinds(@inferred(intersect(I1, IndexSet(j, l))), IndexSet(j))
-    @test @inferred(Nothing, firstintersect(I1, IndexSet(j, l))) == j
+    @test @inferred(Nothing, getfirst(intersect(I1, IndexSet(j, l)))) == j
     @test @inferred(intersect(I1, IndexSet(j, k))) == [j, k]
     @test hassameinds(@inferred(intersect(I1, (j, k))), IndexSet(j, k))
     @test hassameinds(@inferred(intersect(I1, (j, k, l))), (j, k))

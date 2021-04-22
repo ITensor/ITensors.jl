@@ -603,13 +603,6 @@ push(is::IndexSet, i::Index) = NDTensors.push(is, i)
 # Overload the unexported NDTensors version
 NDTensors.push(is::IndexSet, i::Index) = push(is, i)
 
-# TODO: deprecate
-for fset in (:intersect, :symdiff, :setdiff, :union)
-  @eval begin
-    $(Symbol(:first, fset))(args...; kwargs...) = getfirst($fset(args...; kwargs...))
-  end
-end
-
 # TODO: deprecate in favor of `filterinds` (abuse of Base notation)
 filter(is::Indices, args...; kwargs...) =
   filter(fmatch(args...; kwargs...), is)
