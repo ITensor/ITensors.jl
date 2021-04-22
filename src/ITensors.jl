@@ -75,6 +75,7 @@ include("tagset.jl")
 include("arrow.jl")
 include("symmetrystyle.jl")
 include("index.jl")
+include("set_operations.jl")
 include("indexset.jl")
 
 #####################################

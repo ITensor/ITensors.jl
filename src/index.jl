@@ -36,9 +36,8 @@ struct Index{T}
   dir::Arrow
   tags::TagSet
   plev::Int
-  hash::UInt
   function Index{T}(id, space::T, dir, tags, plev) where {T}
-    return new{T}(id, space, dir, tags, plev, hash(IndexID(id, tags, plev)))
+    return new{T}(id, space, dir, tags, plev)
   end
 end
 
@@ -184,22 +183,15 @@ Return Not{IDType}(n).
 not(id::IDType) = Not(id)
 
 # Information essential to the
-# identity of an Index
-# Helpful for identity and hashing
+# identity of an Index.
+# Currently only used for hashing an Index.
 struct IndexID
   id::IDType
   tags::TagSet
   plev::Int
 end
-
 IndexID(i::Index) = IndexID(id(i), tags(i), plev(i))
-
-# Internal hash function to call at construction
-_hash(i::Index) = _hash(i, zero(UInt))
-_hash(i::Index, h::UInt) = _hash(IndexID(i), h)
-
-hash(i::Index) = UInt(i.hash)
-hash(i::Index, h::UInt) = h + hash(i)
+hash(i::Index, h::UInt) = hash(IndexID(i), h)
 
 """
     ==(i1::Index, i1::Index)

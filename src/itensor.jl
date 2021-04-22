@@ -936,8 +936,8 @@ end
 filter_inds_set_function(fset::Function, A...; kwargs...) =
   filter_inds_set_function(fmatch(; kwargs...), fset, A...)
 
-for (finds, fset) in ((:commoninds, :intersect), (:noncommoninds, :symdiff),
-                      (:uniqueinds, :setdiff), (:unioninds, :union))
+for (finds, fset) in ((:commoninds, :_intersect), (:noncommoninds, :_symdiff),
+                      (:uniqueinds, :_setdiff), (:unioninds, :_union))
   @eval begin
     $finds(args...; kwargs...) = filter_inds_set_function($fset, args...; kwargs...)
   end
@@ -1033,8 +1033,9 @@ for fname in (:prime, :setprime, :noprime, :replaceprime, :swapprime,
     $fname(f::Function, A::ITensor, args...) =
       ITensor($fname(f, Tensor(A), args...))
 
-    $fname(f::Function, A::Tensor, args...) =
-    setinds(A, $fname(f, inds(A), args...))
+    # Inlining makes the ITensor functions slower
+    @noinline $fname(f::Function, A::Tensor, args...) =
+      setinds(A, $fname(f, inds(A), args...))
 
     $(Symbol(fname, :!))(f::Function, A::ITensor, args...) =
       settensor!(A, $fname(f, Tensor(A), args...))
@@ -1042,7 +1043,8 @@ for fname in (:prime, :setprime, :noprime, :replaceprime, :swapprime,
     $fname(A::ITensor, args...; kwargs...) =
       ITensor($fname(Tensor(A), args...; kwargs...))
 
-    $fname(A::Tensor, args...; kwargs...) =
+    # Inlining makes the ITensor functions slower
+    @noinline $fname(A::Tensor, args...; kwargs...) =
       setinds(A, $fname(inds(A), args...; kwargs...))
 
     $(Symbol(fname, :!))(A::ITensor, args...; kwargs...) =
