@@ -747,7 +747,14 @@ end
 @testset "permute, NeverAlias()/AllowAlias()" begin
   i = Index(2)
   A = ITensor(i, i')
-  Ap = permute(NeverAlias(), A, i, i')
+  Ap = permute(A, i, i')
+  A[i => 1, i' => 1] = 1
+  @test A[i => 1, i' => 1] == 1
+  @test Ap[i => 1, i' => 1] == 0
+
+  i = Index(2)
+  A = ITensor(i, i')
+  Ap = permute(ITensors.NeverAlias(), A, i, i')
   A[i => 1, i' => 1] = 1
   @test A[i => 1, i' => 1] == 1
   @test Ap[i => 1, i' => 1] == 0
@@ -757,18 +764,24 @@ end
   k = Index(3, "index_k");
   T = randomITensor(i, j, k)
 
-  # NeverAlias()
+  # NeverAlias()/allow_alias = false by default
   pT_noalias_1 = permute(T, i, j, k)
   pT_noalias_1[1, 1, 1] = 12
   @test T[1, 1, 1] != pT_noalias_1[1, 1, 1]
 
-  pT_noalias_2 = permute(NeverAlias(), T, i, j, k)
+  pT_noalias_2 = permute(T, i, j, k; allow_alias = false)
   pT_noalias_2[1, 1, 1] = 12
   @test T[1, 1, 1] != pT_noalias_1[1, 1, 1]
 
-  pT_alias = permute(AllowAlias(), T, i, j, k)
+  cT = copy(T)
+  pT_alias = permute(cT, i, j, k; allow_alias = true)
   pT_alias[1, 1, 1] = 12
-  @test T[1, 1, 1] == pT_alias[1, 1, 1]
+  @test cT[1, 1, 1] == pT_alias[1, 1, 1]
+
+  cT = copy(T)
+  pT_alias = permute(ITensors.AllowAlias(), cT, i, j, k)
+  pT_alias[1, 1, 1] = 12
+  @test cT[1, 1, 1] == pT_alias[1, 1, 1]
 end
 
 @testset "ITensor tagging and priming" begin
@@ -1232,7 +1245,13 @@ end # End Dense storage test
   @test v1[1] ≈ cv1[1]
 
   v2 = randomITensor(i)
-  cv2 = dag(NeverAlias(), v2)
+  cv2 = dag(ITensors.NeverAlias(), v2)
+  orig_elt = v2[1]
+  cv2[1] = -1
+  @test v2[1] ≈ orig_elt
+
+  v2 = randomITensor(i)
+  cv2 = dag(v2; allow_alias = false)
   orig_elt = v2[1]
   cv2[1] = -1
   @test v2[1] ≈ orig_elt

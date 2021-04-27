@@ -9,9 +9,7 @@ export
 
 # NDTensors module
   # Types
-  AllowAlias,
   Block,
-  NeverAlias,
   Spectrum,
   # Methods
   eigs,
@@ -118,6 +116,7 @@ export
   delta,
   dense,
   δ,
+  diagitensor,
   diagITensor,
   dot,
   eachnzblock,

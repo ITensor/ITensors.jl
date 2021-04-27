@@ -266,7 +266,7 @@ ITensor(inds::Index...) = ITensor(Float64, inds)
 
 # To fix ambiguity with QN Index version
 # TODO: define as `emptyITensor(ElT)`
-ITensor(ElT::Type{<: Number} = Float64) = ITensor(ElT, ())
+ITensor(::Type{ElT} = Float64) where {ElT <: Number} = ITensor(ElT, ())
 
 # TODO: define as `emptyITensor(ElT)`
 ITensor(::Type{ElT}, inds::Tuple{}) where {ElT <: Number} =
@@ -294,8 +294,7 @@ B = ITensor(ComplexF64,undef,k,j)
 ITensor(::Type{ElT}, ::UndefInitializer, inds::Indices) where {ElT <: Number} =
   itensor(Dense(ElT, undef, dim(inds)), inds)
 
-ITensor(::Type{ElT}, ::UndefInitializer,
-        inds::Index...) where {ElT} =
+ITensor(::Type{ElT}, ::UndefInitializer, inds::Index...) where {ElT} =
   ITensor(ElT, undef, inds)
 
 ITensor(::UndefInitializer, inds::Indices) =
@@ -364,7 +363,7 @@ emptyITensor(is::Indices) = emptyITensor(Float64, is)
 
 emptyITensor(inds::Index...) = emptyITensor(Float64, inds)
 
-function emptyITensor(ElT::Type{<: Number} = Float64)
+function emptyITensor(::Type{ElT} = Float64) where {ElT <: Number}
   return itensor(EmptyTensor(ElT, ()))
 end
 
@@ -460,50 +459,67 @@ diagITensor(::Type{ElT}, inds::Index...) where {ElT} =
 diagITensor(is::Indices) = diagITensor(Float64, is)
 diagITensor(inds::Index...) = diagITensor(Float64, inds)
 
-# XXX TODO: define diagitensor, using `AliasStyle`
 """
-    diagITensor(v::Vector{T}, inds)
-    diagITensor(v::Vector{T}, inds::Index...)
+    diagITensor([ElT::Type, ]v::Vector, inds...)
+    diagitensor([ElT::Type, ]v::Vector, inds...)
 
 Make a sparse ITensor with non-zero elements only along the diagonal. 
-The diagonal elements will be set to the values stored in `v` and 
-When possible, the ITensor storage will be a view of the input data.
+In general, the diagonal elements will be those stored in `v` and
+the ITensor will have element type `eltype(v)`, unless specified explicitly
+by `ElT`. The storage will have `NDTensors.Diag` type.
 
-When `eltype(v) <: Int` or `eltype(v) <: Complex{Int}`, the ITensor will have element type `float(T)`.
+In the case when `eltype(v) isa Union{Int, Complex{Int}}`, by default it will
+be converted to `float(v)`. Note that this behavior is subject to change
+in the future.
 
-The storage will have type `NDTensors.Diag`.
+The version `diagITensor` will never output an ITensor whose storage data
+is an alias of the input vector data.
+
+The version `diagitensor` might output an ITensor whose storage data
+is an alias of the input vector data in order to minimize operations.
 """
-function diagITensor(v::Vector{<:Number}, is::Indices)
+function diagITensor(as::AliasStyle, ::Type{ElT}, v::Vector{<:Number}, is...) where {ElT <: Number}
   length(v) ≠ mindim(is) && error("Length of vector for diagonal must equal minimum of the dimension of the input indices")
-  return ITensor(Diag(float(v)), is)
+  data = Vector{ElT}(as, v)
+  return itensor(Diag(data), is)
 end
 
-function diagITensor(v::Vector{<:Number}, is::Index...)
-  return diagITensor(v, is)
+function diagITensor(as::AliasStyle, v::Vector, is...)
+  return diagITensor(as, eltype(v), v, is...)
 end
 
-diagITensor(v::Vector{RealOrComplex{Int}}, inds...) = diagITensor(float(v), inds...)
+diagITensor(as::AliasStyle, v::Vector{<: RealOrComplex{Int}}, is...) = diagITensor(AllowAlias(), float(eltype(v)), v, is...)
+
+diagITensor(args...; kwargs...) = diagITensor(NeverAlias(), args...; kwargs...)
+diagitensor(args...; kwargs...) = diagITensor(AllowAlias(), args...; kwargs...)
+diagITensor(::AliasStyle, args...; kwargs...) = error("Specifed diagITensor constructor not defined")
+diagitensor(::AliasStyle, args...; kwargs...) = error("Specifed diagitensor constructor not defined")
 
 # XXX TODO: explain conversion from Int
+# XXX TODO: proper conversion
 """
-    diagITensor(x::Number, inds)
-    diagITensor(x::Number, inds::Index...)
+    diagITensor([ElT::Type, ]x::Number, inds...)
+    diagitensor([ElT::Type, ]x::Number, inds...)
 
 Make a sparse ITensor with non-zero elements only along the diagonal. 
-The diagonal elements will be set to the value `float(x)` and
-the ITensor will have element type `float(eltype(x))`.
-The storage will have `NDTensors.Diag` type.
+In general, the diagonal elements will be set to the value `x` and
+the ITensor will have element type `eltype(x)`, unless specified explicitly
+by `ElT`. The storage will have `NDTensors.Diag` type.
+
+In the case when `x isa Union{Int, Complex{Int}}`, by default it will
+be converted to `float(x)`. Note that this behavior is subject to change
+in the future.
 """
-function diagITensor(x::Number, is::Indices)
-  return itensor(Diag(float(x), mindim(is)), is)
+function diagITensor(as::AliasStyle, ::Type{ElT}, x::Number, is...) where {ElT <: Number}
+  return diagITensor(AllowAlias(), ElT, fill(ElT(x), mindim(is)), is...)
 end
 
-function diagITensor(x::RealOrComplex{Int}, is::Indices)
-  return diagITensor(float(x), is::Indices)
+function diagITensor(as::AliasStyle, x::Number, is...)
+  return diagITensor(as, typeof(x), x, is...)
 end
 
-function diagITensor(x::Number, is::Index...)
-  return diagITensor(x, is)
+function diagITensor(as::AliasStyle, x::RealOrComplex{Int}, is...)
+  return diagITensor(as, float(typeof(x)), x, is...)
 end
 
 """
@@ -1350,15 +1366,36 @@ function dag(as::AliasStyle, T::ITensor)
   return itensor(dag(as, tensor(T)))
 end
 
-# TODO: deprecate `always_copy`
-function dag(T::ITensor; kwargs...)
-  always_copy::Union{Nothing, Bool} = get(kwargs, :always_copy, nothing)
-  if !isnothing(always_copy)
-    Base.depwarn("Notation `dag(T::ITensor; always_copy = [true|false])` is deprecated in favor of `dag([NeverAlias()|AllowAlias()], T::ITensor)`.", :dag)
+# Helper function for deprecating a keyword argument
+function deprecated_keyword_argument(::Type{T}, kwargs; new_kw, old_kw, default, funcsym, map = identity)::T where {T}
+  has_new_kw = haskey(kwargs, new_kw)
+  has_old_kw = haskey(kwargs, old_kw)
+  res::T = if has_old_kw
+    Base.depwarn("In `$func`, keyword argument `$old_kw` is deprecated in favor of `$new_kw`.", func)
+    if has_new_kw
+      println("Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`.")
+      kwargs[new_kw]
+    else
+      map(kwargs[old_kw])
+    end
   else
-    always_copy = false
+    get(kwargs, new_kw, default)
   end
-  aliasstyle::Union{NeverAlias, AllowAlias} = always_copy ? NeverAlias() : AllowAlias()
+  return res
+end
+
+"""
+   dag(T::ITensor; allow_alias = true)
+
+Complex conjugate the elements of the ITensor `T` and dagger the indices.
+
+By default, an alias of the ITensor is returned (i.e. the output ITensor
+may share data with the input ITensor). If `allow_alias = false`,
+an alias is never returned.
+"""
+function dag(T::ITensor; kwargs...)
+  allow_alias::Bool = deprecated_keyword_argument(Bool, kwargs; new_kw = :allow_alias, old_kw = :always_copy, default = true, funcsym = :dag, map = !)
+  aliasstyle::Union{AllowAlias, NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
   return dag(aliasstyle, T)
 end
 
@@ -1370,21 +1407,19 @@ Return the direction of the Index `i` in the ITensor `A`.
 dir(A::ITensor, i::Index) = dir(inds(A), i)
 
 """
-    permute(T::ITensor, inds...)
-    permute(::AllowAlias, T::ITensor, inds...)
-    permute(::NeverAlias, T::ITensor, inds...)
+    permute(T::ITensor, inds...; allow_alias = false)
 
 Return a new ITensor `T` with indices permuted according
 to the input indices `inds`. The storage of the ITensor
 is permuted accordingly.
 
-If called like `permute(AllowAlias(), T, inds...)`, it avoids
+If called with `allow_alias = true`, it avoids
 copying data if possible. Therefore, it may return an alias
-of the input ITensor (an ITensor that shares the same data).
+of the input ITensor (an ITensor that shares the same data),
+such as if the permutation turns out to be trivial.
 
-If called like `permute(NeverAlias(), T, inds...)`, it never
-returns an alias of the input ITensor. The default is
-`permute(T, inds...) = permute(NeverAlias(), T, inds...)`.
+By default, `allow_alias = false`, and it never
+returns an alias of the input ITensor.
 
 # Examples
 
@@ -1399,23 +1434,18 @@ pT_noalias_1 = permute(T, i, j, k)
 pT_noalias_1[1, 1, 1] = 12
 T[1, 1, 1] != pT_noalias_1[1, 1, 1]
 
-pT_noalias_2 = permute(NeverAlias(), T, i, j, k)
+pT_noalias_2 = permute(T, i, j, k; allow_alias = false)
 pT_noalias_2[1, 1, 1] = 12
 T[1, 1, 1] != pT_noalias_1[1, 1, 1]
 
-pT_alias = permute(AllowAlias(), T, i, j, k)
+pT_alias = permute(T, i, j, k; allow_alias = true)
 pT_alias[1, 1, 1] = 12
 T[1, 1, 1] == pT_alias[1, 1, 1]
 ```
 """
 function permute(T::ITensor, new_inds...; kwargs...)
-  always_copy::Union{Nothing, Bool} = get(kwargs, :always_copy, nothing)
-  if !isnothing(always_copy)
-    Base.depwarn("Notation `permute(T::ITensor, inds...; always_copy = [true|false])` is deprecated in favor of `permute([NeverAlias()|AllowAlias()], T::ITensor)`.", :dag)
-  else
-    always_copy = true
-  end
-  aliasstyle::Union{NeverAlias, AllowAlias} = always_copy ? NeverAlias() : AllowAlias()
+  allow_alias = deprecated_keyword_argument(Bool, kwargs; new_kw = :allow_alias, old_kw = :always_copy, default = false, funcsym = :permute, map = !)
+  aliasstyle::Union{AllowAlias, NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
   return permute(aliasstyle, T, new_inds...)
 end
 
