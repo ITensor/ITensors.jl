@@ -44,8 +44,9 @@ import Base:
   length,
   map,
   map!,
-  promote_rule,
   ndims,
+  permutedims,
+  promote_rule,
   push!,
   resize!,
   setdiff,
@@ -101,6 +102,10 @@ import LinearAlgebra:
 import NDTensors:
   # Modules
   Strided, # to control threading
+  # Types
+  AliasStyle,
+  AllowAlias,
+  NeverAlias,
   # Methods
   array,
   blockdim,

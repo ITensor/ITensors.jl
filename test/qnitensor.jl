@@ -1470,25 +1470,25 @@ Random.seed!(1234)
 
   v1 = randomITensor(QN(1),i,j)
   orig_elt = v1[1,3]
-  cv1 = dag(v1;always_copy=false)
+  cv1 = dag(AllowAlias(), v1)
   cv1[1,3] = 123.45
   @test v1[1,3] ≈ cv1[1,3]
 
   v2 = randomITensor(QN(1),i,j)
   orig_elt = v2[1,3]
-  cv2 = dag(v2;always_copy=true)
+  cv2 = dag(NeverAlias(), v2)
   cv2[1,3] = 123.45
   @test v2[1,3] ≈ orig_elt
 
   v3 = randomITensor(ComplexF64,QN(1),i,j)
   orig_elt = v3[1,3]
-  cv3 = dag(v3;always_copy=false)
+  cv3 = dag(AllowAlias(), v3)
   cv3[1,3] = 123.45
   @test v3[1,3] ≈ orig_elt
 
   v4 = randomITensor(ComplexF64,QN(1),i,j)
   orig_elt = v4[1,3]
-  cv4 = dag(v4;always_copy=true)
+  cv4 = dag(NeverAlias(), v4)
   cv4[1,3] = 123.45
   @test v4[1,3] ≈ orig_elt
 

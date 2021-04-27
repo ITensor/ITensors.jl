@@ -9,7 +9,9 @@ export
 
 # NDTensors module
   # Types
+  AllowAlias,
   Block,
+  NeverAlias,
   Spectrum,
   # Methods
   eigs,

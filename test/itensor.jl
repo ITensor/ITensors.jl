@@ -626,12 +626,12 @@ end
   @test T[i => 1, j => 1] == 6
   @test storage(T) isa Dense{Int}
 
-  # TODO: should this case be a copy or a view?
+  # This version makes a copy
   M = [1. 2;
        3 4]
   T = ITensor(M, i, j)
   T[i => 1, j => 1] = 3.3
-  @test M[1, 1] == 3.3
+  @test M[1, 1] == 1
   @test T[i => 1, j => 1] == 3.3
 end
 
@@ -735,22 +735,40 @@ end
   @test B≈A
 end
 
-@testset "permute, always_copy = false" begin
+@testset "permute" begin
   i = Index(2)
   A = ITensor(i, i')
   Ap = permute(A, i, i')
   A[i => 1, i' => 1] = 1
   @test A[i => 1, i' => 1] == 1
-  @test Ap[i => 1, i' => 1] == 1
+  @test Ap[i => 1, i' => 1] == 0
 end
 
-@testset "permute, always_copy = true" begin
+@testset "permute, NeverAlias()/AllowAlias()" begin
   i = Index(2)
   A = ITensor(i, i')
-  Ap = permute(A, i, i'; always_copy = true)
+  Ap = permute(NeverAlias(), A, i, i')
   A[i => 1, i' => 1] = 1
   @test A[i => 1, i' => 1] == 1
   @test Ap[i => 1, i' => 1] == 0
+
+  i = Index(2, "index_i")
+  j = Index(4, "index_j")
+  k = Index(3, "index_k");
+  T = randomITensor(i, j, k)
+
+  # NeverAlias()
+  pT_noalias_1 = permute(T, i, j, k)
+  pT_noalias_1[1, 1, 1] = 12
+  @test T[1, 1, 1] != pT_noalias_1[1, 1, 1]
+
+  pT_noalias_2 = permute(NeverAlias(), T, i, j, k)
+  pT_noalias_2[1, 1, 1] = 12
+  @test T[1, 1, 1] != pT_noalias_1[1, 1, 1]
+
+  pT_alias = permute(AllowAlias(), T, i, j, k)
+  pT_alias[1, 1, 1] = 12
+  @test T[1, 1, 1] == pT_alias[1, 1, 1]
 end
 
 @testset "ITensor tagging and priming" begin
@@ -1214,7 +1232,7 @@ end # End Dense storage test
   @test v1[1] ≈ cv1[1]
 
   v2 = randomITensor(i)
-  cv2 = dag(v2;always_copy=true)
+  cv2 = dag(NeverAlias(), v2)
   orig_elt = v2[1]
   cv2[1] = -1
   @test v2[1] ≈ orig_elt
@@ -1226,7 +1244,7 @@ end # End Dense storage test
   @test v3[1] ≈ orig_elt
 
   v4 = randomITensor(ComplexF64,i)
-  cv4 = dag(v4;always_copy=true)
+  cv4 = dag(NeverAlias(), v4)
   orig_elt = v4[1]
   cv4[1] = -1
   @test v4[1] ≈ orig_elt

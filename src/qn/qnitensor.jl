@@ -128,7 +128,7 @@ Block: (2, 2)
  0.0  4.0
 ```
 """
-function ITensor(::Type{ElT}, A::Array{<: Number}, inds::QNIndices; tol = 0) where {ElT <: Number}
+function ITensor(::AliasStyle, ::Type{ElT}, A::Array{<: Number}, inds::QNIndices; tol = 0) where {ElT <: Number}
   is = Tuple(inds)
   length(A) ≠ dim(inds) && throw(DimensionMismatch("In ITensor(::Array, inds), length of Array ($(length(A))) must match total dimension of the indices ($(dim(is)))"))
   T = emptyITensor(ElT, is)
@@ -141,11 +141,6 @@ function ITensor(::Type{ElT}, A::Array{<: Number}, inds::QNIndices; tol = 0) whe
   end
   return T
 end
-
-# Short-circuit the non-QN version that does a copy here
-#function ITensor(::Type{ElT}, A::Array{ElT}, inds::QNIndexSet; kwargs...) where {ElT}
-#  return itensor(ElT, A, inds; kwargs...)
-#end
 
 """
     emptyITensor([::Type{ElT} = Float64, ]inds)
@@ -224,7 +219,7 @@ function diagITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT <: Number}
   is = Tuple(inds)
   blocks = nzdiagblocks(flux, is)
   T = DiagBlockSparseTensor(ElT, blocks, is)
-  return ITensor(T)
+  return itensor(T)
 end
 
 function diagITensor(::Type{ElT}, flux::QN, inds::Index...) where {ElT <: Number}
