@@ -208,6 +208,155 @@ trA = A * delta(i,l)
 
 ![](itensor_trace_figures/trace_A.png)
 
+## Factoring ITensors (SVD, QR, etc.)
+
+The ITensor approach to tensor factorizations emphasizes the structure
+of the factorization, and does not require knowing the index ordering.
+
+ITensor offers various tensor factorizations, such as the 
+singular value decomposition (SVD) and the QR factorization. 
+These are extended to the case of tensors by treating some of the indices
+as the "row" indices and the rest of the indices as the "column" indices,
+reshaping the tensor into a matrix to carry out the factorization, then
+restoring the tensor structure at the end. All of these steps are done
+for you by the ITensor system as we will see below.
+
+**Singular Value Decomposition**
+
+The singular value decomposition (SVD) is a matrix factorization
+that is also extremely useful for general tensors.
+
+As a brief review, the SVD is a factorization of a matrix M into the product
+```math
+M = U S V^\dagger
+```
+with U and V having the property ``U^\dagger U = 1`` and ``V^\dagger V = 1``.
+The matrix S is diagonal and has real, non-negative entries known as the singular
+values, which are typically ordered from largest to smallest. 
+The SVD is well-defined for any matrix, including rectangular matrices. It also
+leads to a controlled approximation, where the error due to discarding columns of U and V
+is small if the corresponding singular values discarded are small.
+
+To compute the SVD of an ITensor, you only need to specify which indices are (collectively) 
+the "row" indices (thinking of the ITensor as a matrix), with the rest assumed to be the "column" 
+indices.
+
+Say we have an ITensor with indices i,j, and k
+
+```julia
+T = ITensor(i,j,k)
+```
+
+and we want to treat i and k as the "row" indices for the purpose of the SVD.
+
+To perform this SVD, we can call the function `svd` as follows:
+
+```julia
+U,S,V = svd(T,(i,k))
+```
+
+Diagrammatically the SVD operation above looks like:
+
+![](itensor_factorization_figures/SVD_Ex1.png)
+
+The guarantee of the `svd` function is that the ITensor 
+product `U*S*V` gives us back an ITensor identical to T:
+
+```julia
+@show norm(U*S*V - T) # typical output: norm(U*S*V-T) = 1E-14
+```
+
+*Full working example:*
+
+```julia
+i = Index(3,"i")
+j = Index(4,"j")
+k = Index(5,"k")
+
+T = randomITensor(i,j,k)
+
+U,S,V = svd(T,(i,k))
+
+@show norm(U*S*V-T)
+```
+
+**Truncated SVD**
+
+An important use of the SVD is approximating a higher-rank tensor
+by a product of lower-rank tensors whose indices range over only
+a modest set of values.
+
+To obtain an approximate SVD in ITensor, pass one or more of
+the following accuracy parameters as named arguments:
+
+* `cutoff` --- real number ``\epsilon``. Discard the smallest singular values
+  ``\lambda\_n`` such that the <i>truncation error</i> is less than ``\epsilon``:
+  $$
+  \frac{\sum\_{n\in\text{discarded}} \lambda^2\_n}{\sum\_{n} \lambda^2\_n} < \epsilon \:.
+  $$
+  Using a cutoff allows the SVD algorithm to truncate as many states as possible while still
+  ensuring a certain accuracy.
+
+* `maxdim` --- integer M. If the number of singular values exceeds M, only the largest M will be retained.
+
+* `mindim` --- integer m. At least m singular values will be retained, even if some fall below the cutoff
+
+Let us revisit the example above, but also provide some of these accuracy parameters
+
+```julia
+i = Index(10,"i")
+j = Index(40,"j")
+k = Index(20,"k")
+T = randomITensor(i,j,k)
+
+U,S,V = svd(T,(i,k),cutoff=1E-2)
+```
+
+Note that we have also made the indices larger so that the truncation performed will be
+non-trivial.
+In the code above, we specified that a cutoff of ``\epsilon=10^{-2}`` be used. We can check that the resulting factorization is now approximate by computing the squared relative error:
+
+```julia
+truncerr = (norm(U*S*V - T)/norm(T))^2
+@show truncerr
+# typical output: truncerr = 8.24E-03
+```
+
+Note how the computed error is below the cutoff ``\epsilon`` we requested.
+
+*Full working example including truncation:*
+
+```julia
+i = Index(10,"i");
+j = Index(40,"j");
+k = Index(20,"k");
+
+T = randomITensor(i,j,k)
+
+U,S,V = svd(T,(i,k),cutoff=1E-2)
+
+@show norm(U*S*V-T)
+@show (norm(U*S*V - T)/norm(T))^2
+```
+
+**QR Factorization**
+
+Computing the QR factorization of an ITensor works in a similar way as for the SVD.
+In addition to passing the ITensor you want to factorize, you must also pass
+the indices you want to end up on the tensor `Q`, in other words to be treated
+as the "row" indices for the purpose of defining the QR factorization.
+
+Say we want to compute the QR factorization of an ITensor `T` with indices `i,j,k`,
+putting the indices `i` and `k` onto `Q` and the remaining indices onto `R`. We
+can do this as follows:
+
+![](itensor_factorization_figures/QR_Ex1.png)
+
+```julia
+T = randomITensor(i,j,k)
+Q,R = qr(T,(i,k))
+```
+
 ## Write and Read an ITensor to Disk with HDF5
 
 Saving ITensors to disk can be very useful. For example, you
