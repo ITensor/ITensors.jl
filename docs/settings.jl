@@ -11,6 +11,11 @@ settings = Dict(
   :modules => [ITensors],
   :pages => [
              "Introduction" => "index.md",
+             "Code Examples" => ["ITensor Examples" => "examples/ITensor.md",
+                                 "MPS and MPO Examples" => "examples/MPSandMPO.md",
+                                 "DMRG Examples" => "examples/DMRG.md",
+                                 "Physics System Examples" => "examples/Physics.md"
+                                ],
              "Documentation" => [
                                  "Index" => "IndexType.md",
                                  "IndexVal" => "IndexValType.md",
