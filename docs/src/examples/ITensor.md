@@ -18,6 +18,38 @@ println("T inds = ",inds(T))
 ```
 
 
+## Tracing an ITensor
+
+An important operation involving a single tensor is tracing out certain
+pairs of indices. Say we have an ITensor `A` with indices `i,j,l`:
+
+```julia
+i = Index(4,"i")
+j = Index(3,"j")
+l = Index(4,"l")
+
+A = randomITensor(i,j,l)
+```
+
+and we want to trace `A` by summing over the indices `i` and `l` locked together,
+in other words: ``\sum_{i} A^{iji}``.
+
+To do this in ITensor, we can use a `delta` tensor, which you can think of as
+an identity operator or more generally a Kronecker delta or "hyper-edge":
+
+![](itensor_trace_figures/delta_itensor.png)
+
+Viewed as an array, a delta tensor has all diagonal elements equal to 1.0 and
+zero otherwise.
+
+Now we can compute the trace by contracting `A` with the delta tensor:
+
+```julia
+trA = A * delta(i,l)
+```
+
+![](itensor_trace_figures/trace_A.png)
+
 ## Write and Read an ITensor to Disk with HDF5
 
 Saving ITensors to disk can be very useful. For example, you
@@ -67,4 +99,6 @@ Note the `ITensor` argument to the read function, which tells Julia which read f
 to call and how to interpret the data stored in the HDF5 dataset named "T". In the
 future we might lift the requirement of providing the type and have it be detected
 automatically from the data stored in the file.
+
+
 
