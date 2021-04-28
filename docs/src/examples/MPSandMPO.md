@@ -11,12 +11,12 @@ Say we have an operator ``G^{s'_3}_{s_3}`` which
 which acts non-trivially on site 3 of our MPS `psi`
 as in the following diagram:
 
-![](operator_app_mps.png)
+![](mps_onesite_figures/operator_app_mps.png)
 
 To carry out this operation, contract the operator G with the MPS tensor for site 3,
 removing the prime from the ``s'_3`` index afterward:
 
-![](operator_contract.png)
+![](mps_onesite_figures/operator_contract.png)
 
 ```julia
 newA = G * psi[3]
@@ -31,7 +31,7 @@ psi[3] = newA
 
 Afterward, we can visualize the modified MPS as:
 
-![](updated_mps.png)
+![](mps_onesite_figures/updated_mps.png)
 
 As a technical note, if you are working in a context where gauge or orthogonality
 properties of the MPS are important, such as in time evolution using two-site gates, 
