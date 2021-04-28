@@ -1263,7 +1263,7 @@ end # End Dense storage test
   @test v3[1] ≈ orig_elt
 
   v4 = randomITensor(ComplexF64,i)
-  cv4 = dag(NeverAlias(), v4)
+  cv4 = dag(ITensors.NeverAlias(), v4)
   orig_elt = v4[1]
   cv4[1] = -1
   @test v4[1] ≈ orig_elt
