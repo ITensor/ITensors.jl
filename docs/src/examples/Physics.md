@@ -375,18 +375,18 @@ s = siteind("S=1/2")
 Sz = op("Sz",s)
 ```
 
-to automatically create the @@S^z@@ operator for an Index `s` based on the 
+to automatically create the ``S^z`` operator for an Index `s` based on the 
 `"S=1/2"` tag it carries. A major reason to define such `op` overloads
 is to allow the AutoMPO system to recognize new operator names, as
 discussed more below.
 
 Let's see how to introduce a new operator name into the ITensor `SiteType`
 system for this existing site type of `"S=1/2"`. The operator we will
-introduce is the projector onto the up spin state @@P\_\uparrow@@ which
+introduce is the projector onto the up spin state ``P_\uparrow`` which
 we will denote with the string `"Pup"`. 
 
-As a matrix acting on the space @@\{ |\!\uparrow\rangle, |\!\downarrow\rangle \}@@,
-the @@P\_\uparrow@@ operator is given by
+As a matrix acting on the space ``\{ |\!\uparrow\rangle, |\!\downarrow\rangle \}``,
+the ``P_\uparrow`` operator is given by
 
 ```math
 \begin{aligned}
@@ -413,6 +413,9 @@ function ITensors.op!(Op::ITensor,
   Op[s'=>1,s=>1] = 1.0
 end
 ```
+
+This code can be defined anywhere, such as in your own personal application code and does 
+not have to be put into the ITensor library source code.
 
 Note that we have to name the function `ITensors.op!` and not just `op!` so that it overloads
 other functions of the name `op!` inside the ITensors module. 
