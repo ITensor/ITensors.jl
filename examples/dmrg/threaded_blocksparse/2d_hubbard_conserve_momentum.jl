@@ -5,11 +5,21 @@ using Random
 include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 
-function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
-                maxdim::Int = 3000, conserve_ky = true, use_splitblocks = true,
-                nsweeps = 10, blas_num_threads = 1, strided_num_threads = 1,
-                use_threaded_blocksparse = true, outputlevel = 1,
-                seed = 1234)
+function main(;
+  Nx::Int=6,
+  Ny::Int=3,
+  U::Float64=4.0,
+  t::Float64=1.0,
+  maxdim::Int=3000,
+  conserve_ky=true,
+  use_splitblocks=true,
+  nsweeps=10,
+  blas_num_threads=1,
+  strided_num_threads=1,
+  use_threaded_blocksparse=true,
+  outputlevel=1,
+  seed=1234,
+)
   Random.seed!(seed)
   ITensors.Strided.set_num_threads(strided_num_threads)
   BLAS.set_num_threads(blas_num_threads)
@@ -40,10 +50,9 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
     @show sweeps
   end
 
-  sites = siteinds("ElecK", N; conserve_qns = true,
-                   conserve_ky = conserve_ky, modulus_ky = Ny)
+  sites = siteinds("ElecK", N; conserve_qns=true, conserve_ky=conserve_ky, modulus_ky=Ny)
 
-  ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true) 
+  ampo = hubbard(; Nx=Nx, Ny=Ny, t=t, U=U, ky=true)
   H = MPO(ampo, sites)
 
   if outputlevel > 0
@@ -61,8 +70,8 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
   if outputlevel > 0
-    @show nnz(H[end÷2])
-    @show nnzblocks(H[end÷2])
+    @show nnz(H[end ÷ 2])
+    @show nnzblocks(H[end ÷ 2])
   end
 
   # Create start state
@@ -87,7 +96,7 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
 
   psi0 = randomMPS(sites, state, 10)
 
-  energy, psi = @time dmrg(H, psi0, sweeps; outputlevel = outputlevel)
+  energy, psi = @time dmrg(H, psi0, sweeps; outputlevel=outputlevel)
 
   if outputlevel > 0
     @show Nx, Ny
@@ -103,10 +112,10 @@ println("################################")
 println("Compilation")
 println("################################")
 println("Without threaded block sparse:\n")
-main(nsweeps = 2, use_threaded_blocksparse = false, outputlevel = 0)
+main(; nsweeps=2, use_threaded_blocksparse=false, outputlevel=0)
 println()
 println("With threaded block sparse:\n")
-main(nsweeps = 2, use_threaded_blocksparse = true, outputlevel = 0)
+main(; nsweeps=2, use_threaded_blocksparse=true, outputlevel=0)
 println()
 
 println("################################")
@@ -114,9 +123,8 @@ println("Runtime")
 println("################################")
 println()
 println("Without threaded block sparse:\n")
-main(nsweeps = 10, use_threaded_blocksparse = false)
+main(; nsweeps=10, use_threaded_blocksparse=false)
 println()
 println("With threaded block sparse:\n")
-main(nsweeps = 10, use_threaded_blocksparse = true)
+main(; nsweeps=10, use_threaded_blocksparse=true)
 println()
-

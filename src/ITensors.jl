@@ -45,8 +45,9 @@ examples_dir() = joinpath(pkg_dir(), "examples")
 #####################################
 # Determine version and uuid of the package
 #
-_parse_project_toml(field::String) =
-  Pkg.TOML.parsefile(joinpath(pkg_dir(), "Project.toml"))[field]
+function _parse_project_toml(field::String)
+  return Pkg.TOML.parsefile(joinpath(pkg_dir(), "Project.toml"))[field]
+end
 version() = VersionNumber(_parse_project_toml("version"))
 uuid() = Base.UUID(_parse_project_toml("uuid"))
 
@@ -146,7 +147,7 @@ include("packagecompile/compile.jl")
 include("developer_tools.jl")
 
 function __init__()
-  resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
+  return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 end
 
 #####################################

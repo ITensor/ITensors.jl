@@ -33,7 +33,6 @@ for filename in (
   #"readwrite.jl",
   #"readme.jl",
   #"examples.jl",
-  )
+)
   include("../../test/$filename")
 end
-

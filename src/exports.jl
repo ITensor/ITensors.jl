@@ -1,13 +1,13 @@
 export
-# From external modules
+  # From external modules
   # LinearAlgebra
   tr,
 
-# Modules
+  # Modules
   LinearAlgebra,
   NDTensors,
 
-# NDTensors module
+  # NDTensors module
   # Types
   Block,
   Spectrum,
@@ -18,20 +18,20 @@ export
   # Deprecated
   addblock!,
 
-# ITensors.jl
+  # ITensors.jl
   index_id_rng,
 
-# argsdict/argsdict.jl
+  # argsdict/argsdict.jl
   argsdict,
 
-# decomp.jl
+  # decomp.jl
   eigen,
   factorize,
   polar,
   qr,
   svd,
 
-# global_variables.jl
+  # global_variables.jl
   # Methods
 
   # Macros
@@ -39,7 +39,7 @@ export
   @reset_warn_order,
   @set_warn_order,
 
-# index.jl
+  # index.jl
   # Types
   Index,
   IndexVal,
@@ -71,7 +71,7 @@ export
   tags,
   val,
 
-# indexset.jl
+  # indexset.jl
   # Types
   IndexSet,
   Order,
@@ -98,7 +98,7 @@ export
   swapprime,
   swaptags,
 
-# itensor.jl
+  # itensor.jl
   # Types
   ITensor,
   # Methods
@@ -171,16 +171,16 @@ export
   vector,
   emptyITensor,
 
-# iterativesolvers.jl
+  # iterativesolvers.jl
   davidson,
 
-# not.jl
+  # not.jl
   not,
 
-# readwrite.jl
+  # readwrite.jl
   readcpp,
 
-# tagset.jl
+  # tagset.jl
   # Types
   TagSet,
   # Macros
@@ -189,10 +189,10 @@ export
   addtags,
   hastags,
 
-# mps/dmrg.jl
+  # mps/dmrg.jl
   dmrg,
 
-# mps/abstractmps.jl
+  # mps/abstractmps.jl
   # Macros
   @preserve_ortho,
   # Methods
@@ -215,7 +215,7 @@ export
   ortho_lims,
   siteinds,
 
-# mps/mpo.jl
+  # mps/mpo.jl
   # Types
   MPO,
   # Methods
@@ -229,7 +229,7 @@ export
   unique_siteind,
   unique_siteinds,
 
-# mps/mps.jl
+  # mps/mps.jl
   # Types
   MPS,
   # Methods
@@ -255,7 +255,7 @@ export
   swapbondsites,
   totalqn,
 
-# mps/observer.jl
+  # mps/observer.jl
   # Types
   AbstractObserver,
   DMRGObserver,
@@ -268,7 +268,7 @@ export
   measurements,
   truncerrors,
 
-# mps/projmpo.jl
+  # mps/projmpo.jl
   ProjMPO,
   lproj,
   product,
@@ -276,13 +276,13 @@ export
   noiseterm,
   position!,
 
-# mps/projmposum.jl
+  # mps/projmposum.jl
   ProjMPOSum,
 
-# mps/projmpo_mps.jl
+  # mps/projmpo_mps.jl
   ProjMPO_MPS,
 
-# mps/sweeps.jl
+  # mps/sweeps.jl
   Sweeps,
   cutoff,
   cutoff!,
@@ -303,17 +303,17 @@ export
   setnoise!,
   sweepnext,
 
-# physics/autompo.jl
+  # physics/autompo.jl
   AutoMPO,
   add!,
 
-# physics/lattices.jl
+  # physics/lattices.jl
   Lattice,
   LatticeBond,
   square_lattice,
   triangular_lattice,
 
-# physics/sitetype.jl
+  # physics/sitetype.jl
   SiteType,
   @SiteType_str,
   StateName,
@@ -327,7 +327,7 @@ export
   @TagType_str,
   has_fermion_string,
 
-# qn/qn.jl
+  # qn/qn.jl
   # Types
   QN,
   # Methods
@@ -336,7 +336,7 @@ export
   modulus,
   val,
 
-# qn/qnindex.jl
+  # qn/qnindex.jl
   flux,
   hasqns,
   nblocks,

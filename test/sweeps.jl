@@ -11,16 +11,15 @@ using Test
   #5 cutoff=1.0E-12, maxdim=800, mindim=20, noise=1.0E-11
   #6 cutoff=1.0E-12, maxdim=800, mindim=20, noise=0.0E+00
 
-  sweep_args =
-    [
-     "maxdim" "mindim" "cutoff" "noise"
-      50       10       1e-12    1e-7
-      100      20       1e-12    1e-8
-      200      20       1e-12    1e-10
-      400      20       1e-12    0
-      800      20       1e-12    1e-11
-      800      20       1e-12    0
-     ]
+  sweep_args = [
+    "maxdim" "mindim" "cutoff" "noise"
+    50 10 1e-12 1e-7
+    100 20 1e-12 1e-8
+    200 20 1e-12 1e-10
+    400 20 1e-12 0
+    800 20 1e-12 1e-11
+    800 20 1e-12 0
+  ]
 
   @testset "Don't specify nsweep" begin
     nsw = size(sweep_args, 1) - 1
@@ -117,15 +116,15 @@ using Test
 
   @testset "Variable types of input" begin
     sw = Sweeps(5)
-    setnoise!(sw,1E-8,0)
-    @test noise(sw,1) ≈ 1E-8
-    @test noise(sw,2) ≈ 0.0
-    @test noise(sw,3) ≈ 0.0
-    setcutoff!(sw,0,1E-8,0,1E-12)
-    @test cutoff(sw,1) ≈ 0.0
-    @test cutoff(sw,2) ≈ 1E-8
-    @test cutoff(sw,3) ≈ 0.0
-    @test cutoff(sw,4) ≈ 1E-12
+    setnoise!(sw, 1E-8, 0)
+    @test noise(sw, 1) ≈ 1E-8
+    @test noise(sw, 2) ≈ 0.0
+    @test noise(sw, 3) ≈ 0.0
+    setcutoff!(sw, 0, 1E-8, 0, 1E-12)
+    @test cutoff(sw, 1) ≈ 0.0
+    @test cutoff(sw, 2) ≈ 1E-8
+    @test cutoff(sw, 3) ≈ 0.0
+    @test cutoff(sw, 4) ≈ 1E-12
   end
 end
 

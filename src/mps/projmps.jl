@@ -5,11 +5,7 @@ mutable struct ProjMPS
   nsite::Int
   M::MPS
   LR::Vector{ITensor}
-  ProjMPS(M::MPS) = new(0,
-                        length(M)+1,
-                        2,
-                        M,
-                        Vector{ITensor}(undef, length(M)))
+  ProjMPS(M::MPS) = new(0, length(M) + 1, 2, M, Vector{ITensor}(undef, length(M)))
 end
 
 nsite(P::ProjMPS) = P.nsite
@@ -22,27 +18,26 @@ function lproj(P::ProjMPS)
 end
 
 function rproj(P::ProjMPS)
-  (P.rpos >= length(P)+1) && return nothing
+  (P.rpos >= length(P) + 1) && return nothing
   return P.LR[P.rpos]
 end
 
-function product(P::ProjMPS,
-                 v::ITensor)::ITensor
+function product(P::ProjMPS, v::ITensor)::ITensor
   if nsite(P) != 2
     error("Only two-site ProjMPS currently supported")
   end
 
-  Lpm = dag(prime(P.M[P.lpos+1],"Link"))
+  Lpm = dag(prime(P.M[P.lpos + 1], "Link"))
   !isnothing(lproj(P)) && (Lpm *= lproj(P))
 
-  Rpm = dag(prime(P.M[P.rpos-1],"Link"))
+  Rpm = dag(prime(P.M[P.rpos - 1], "Link"))
   !isnothing(rproj(P)) && (Rpm *= rproj(P))
 
-  pm = Lpm*Rpm
+  pm = Lpm * Rpm
 
-  pv = scalar(pm*v)
+  pv = scalar(pm * v)
 
-  Mv = pv*dag(pm)
+  Mv = pv * dag(pm)
 
   return noprime(Mv)
 end
@@ -61,7 +56,7 @@ end
 #  return elT
 #end
 
-(P::ProjMPS)(v::ITensor) = product(P,v)
+(P::ProjMPS)(v::ITensor) = product(P, v)
 
 #function Base.size(P::ProjMPS)::Tuple{Int,Int}
 #  d = 1
@@ -77,46 +72,39 @@ end
 #  return (d,d)
 #end
 
-function makeL!(P::ProjMPS,
-                psi::MPS,
-                k::Int)
+function makeL!(P::ProjMPS, psi::MPS, k::Int)
   while P.lpos < k
     ll = P.lpos
     if ll <= 0
-      P.LR[1] = psi[1]*dag(prime(P.M[1],"Link"))
+      P.LR[1] = psi[1] * dag(prime(P.M[1], "Link"))
       P.lpos = 1
     else
-      P.LR[ll+1] = P.LR[ll]*psi[ll+1]*dag(prime(P.M[ll+1],"Link"))
+      P.LR[ll + 1] = P.LR[ll] * psi[ll + 1] * dag(prime(P.M[ll + 1], "Link"))
       P.lpos += 1
     end
   end
 end
 
-function makeR!(P::ProjMPS,
-                psi::MPS,
-                k::Int)
+function makeR!(P::ProjMPS, psi::MPS, k::Int)
   N = length(P.M)
   while P.rpos > k
     rl = P.rpos
-    if rl >= N+1
-      P.LR[N] = psi[N]*dag(prime(P.M[N],"Link"))
+    if rl >= N + 1
+      P.LR[N] = psi[N] * dag(prime(P.M[N], "Link"))
       P.rpos = N
     else
-      P.LR[rl-1] = P.LR[rl]*psi[rl-1]*dag(prime(P.M[rl-1],"Link"))
+      P.LR[rl - 1] = P.LR[rl] * psi[rl - 1] * dag(prime(P.M[rl - 1], "Link"))
       P.rpos -= 1
     end
   end
 end
 
-function position!(P::ProjMPS,
-                   psi::MPS, 
-                   pos::Int)
-  makeL!(P,psi,pos-1)
-  makeR!(P,psi,pos+nsite(P))
+function position!(P::ProjMPS, psi::MPS, pos::Int)
+  makeL!(P, psi, pos - 1)
+  makeR!(P, psi, pos + nsite(P))
 
   #These next two lines are needed 
   #when moving lproj and rproj backward
-  P.lpos = pos-1
-  P.rpos = pos+nsite(P)
+  P.lpos = pos - 1
+  return P.rpos = pos + nsite(P)
 end
-

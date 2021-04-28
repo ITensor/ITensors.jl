@@ -1,18 +1,22 @@
 
 const IntTag = UInt128  # An integer that can be cast to a Tag
-const MTagStorage = MVector{8, IntTag} # A mutable tag storage, holding 8 characters
+const MTagStorage = MVector{8,IntTag} # A mutable tag storage, holding 8 characters
 const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
 emptytag(::Type{IntTag}) = IntTag(0)
-empty_storage(::Type{TagSetStorage{T,N}}) where {T,N} =  TagSetStorage(ntuple(_ -> emptytag(T) , N))
-empty_storage(::Type{MTagSetStorage{T,N}}) where {T,N} =  MTagSetStorage(ntuple(_ -> emptytag(T) , N))
+function empty_storage(::Type{TagSetStorage{T,N}}) where {T,N}
+  return TagSetStorage(ntuple(_ -> emptytag(T), N))
+end
+function empty_storage(::Type{MTagSetStorage{T,N}}) where {T,N}
+  return MTagSetStorage(ntuple(_ -> emptytag(T), N))
+end
 
 #TODO: decide which functions on TagSet should be made generic.
 struct GenericTagSet{T,N}
   data::TagSetStorage{T,N}
   length::Int
-  GenericTagSet{T,N}() where {T,N} = new(empty_storage(TagSetStorage{T,N}),0)
+  GenericTagSet{T,N}() where {T,N} = new(empty_storage(TagSetStorage{T,N}), 0)
   GenericTagSet{T,N}(tags::TagSetStorage{T,N}, len::Int) where {T,N} = new(tags, len)
 end
 
@@ -27,7 +31,7 @@ end
 #GenericTagSet{IntTag,N}(t::Tag) where {N} = GenericTagSet{IntTag,N}(IntTag(t))
 
 function _hastag(ts::MTagSetStorage, ntags::Int, tag::IntTag)
-  for n = 1:ntags
+  for n in 1:ntags
     @inbounds ts[n] == tag && return true
   end
   return false
@@ -35,18 +39,18 @@ end
 
 function _addtag_ordered!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   if iszero(ntags) || tag > @inbounds ts[ntags]
-    @inbounds setindex!(ts,tag,ntags+1)
+    @inbounds setindex!(ts, tag, ntags + 1)
   else
     # check for repeated tags
-    _hastag(ts,ntags,tag) && return ntags
-    pos = ntags+1   # position new tag should go
-    while pos > 1 && tag < @inbounds ts[pos-1]
+    _hastag(ts, ntags, tag) && return ntags
+    pos = ntags + 1   # position new tag should go
+    while pos > 1 && tag < @inbounds ts[pos - 1]
       pos -= 1
-      @inbounds setindex!(ts,ts[pos],pos+1)
+      @inbounds setindex!(ts, ts[pos], pos + 1)
     end
-    @inbounds setindex!(ts,tag,pos)
+    @inbounds setindex!(ts, tag, pos)
   end
-  return ntags+1
+  return ntags + 1
 end
 
 function _addtag!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
@@ -55,14 +59,14 @@ function _addtag!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
     if isint(t)
       error("Cannot use a bare integer as a tag.")
     else
-      ntags = _addtag_ordered!(ts, ntags,tag)  
+      ntags = _addtag_ordered!(ts, ntags, tag)
     end
   end
   return ntags
 end
 
 function reset!(v::MTagStorage, nchar::Int)
-  for i = 1:nchar
+  for i in 1:nchar
     @inbounds v[i] = IntTag(0)
   end
 end
@@ -72,42 +76,40 @@ function GenericTagSet{T,N}(str::AbstractString) where {T,N}
   # TODO: refactor the Val here.
   current_tag = empty_storage(MTagStorage)
   # Mutable fixed-size vector as temporary TagSet storage
-  ts =  empty_storage(MTagSetStorage{T,N})
+  ts = empty_storage(MTagSetStorage{T,N})
   nchar = 0
   ntags = 0
   for current_char in str
     if current_char == ','
       if nchar != 0
-        ntags = _addtag!(ts,ntags,cast_to_uint(current_tag))
+        ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
         # Reset the current tag
-        reset!(current_tag,nchar)
+        reset!(current_tag, nchar)
         nchar = 0
       end
     elseif current_char != ' ' # TagSet constructor ignores whitespace
-      nchar == length(current_tag) && error("Currently, tags can only have up to $(length(current_tag)) characters")
+      nchar == length(current_tag) &&
+        error("Currently, tags can only have up to $(length(current_tag)) characters")
       nchar += 1
       @inbounds current_tag[nchar] = current_char
     end
   end
   # Store the final tag
   if nchar != 0
-    ntags = _addtag!(ts,ntags,cast_to_uint(current_tag))
+    ntags = _addtag!(ts, ntags, cast_to_uint(current_tag))
   end
-  return GenericTagSet{T,N}(TagSetStorage(ts),ntags)
+  return GenericTagSet{T,N}(TagSetStorage(ts), ntags)
 end
 
-const TagSet = GenericTagSet{IntTag, 4}
+const TagSet = GenericTagSet{IntTag,4}
 
-maxlength(::GenericTagSet{<: Any, N}) where {N} = N
+maxlength(::GenericTagSet{<:Any,N}) where {N} = N
 
 macro ts_str(s)
-  TagSet(s)
+  return TagSet(s)
 end
 
 Base.convert(::Type{TagSet}, str::String) = TagSet(str)
-
-
-
 
 """
     not(::TagSet)
@@ -120,9 +122,6 @@ not(ts::TagSet) = Not(ts)
 Base.:!(ts::TagSet) = Not(ts)
 
 not(ts::AbstractString) = Not(ts)
-
-
-
 
 """
 ITensors.data(T::TagSet)
@@ -138,9 +137,9 @@ data(T::TagSet) = T.data
 
 Base.length(T::TagSet) = T.length
 @propagate_inbounds getindex(T::TagSet, n::Integer) = Tag(data(T)[n])
-Base.copy(ts::TagSet) = TagSet(data(ts),length(ts))
+Base.copy(ts::TagSet) = TagSet(data(ts), length(ts))
 
-function Base.:(==)(ts1::TagSet,ts2::TagSet)
+function Base.:(==)(ts1::TagSet, ts2::TagSet)
   l1 = length(ts1)
   l2 = length(ts2)
   l1 != l2 && return false
@@ -154,7 +153,7 @@ end
 function hastag(ts::TagSet, tag)
   l = length(ts)
   l < 1 && return false
-  for n = 1:l
+  for n in 1:l
     @inbounds tag == data(ts)[n] && return true
   end
   return false
@@ -165,7 +164,7 @@ function hastags(ts2::TagSet, tags1)
   l1 = length(ts1)
   l2 = length(ts2)
   l1 > l2 && return false
-  for n1 = 1:l1
+  for n1 in 1:l1
     @inbounds !hastag(ts2, data(ts1)[n1]) && return false
   end
   return true
@@ -181,17 +180,17 @@ function addtags(ts::TagSet, tagsadd)
   end
   res_ts = MVector(data(ts))
   ntags = length(ts)
-  for n = 1:length(tsadd)
+  for n in 1:length(tsadd)
     @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
   end
-  return TagSet(TagSetStorage(res_ts),ntags)
+  return TagSet(TagSetStorage(res_ts), ntags)
 end
 
 function _removetag!(ts::MTagSetStorage, ntags::Int, t)
-  for n = 1:ntags
+  for n in 1:ntags
     if @inbounds ts[n] == t
-      for j = n:ntags-1
-        @inbounds ts[j] = ts[j+1]
+      for j in n:(ntags - 1)
+        @inbounds ts[j] = ts[j + 1]
       end
       @inbounds ts[ntags] = emptytag(IntTag)
       return ntags -= 1
@@ -205,10 +204,10 @@ function removetags(ts::TagSet, tagsremove)
   tsremove = TagSet(tagsremove)
   res_ts = MVector(data(ts))
   ntags = length(ts)
-  for n=1:length(tsremove)
+  for n in 1:length(tsremove)
     @inbounds ntags = _removetag!(res_ts, ntags, data(tsremove)[n])
   end
-  return TagSet(TagSetStorage(res_ts),ntags)
+  return TagSet(TagSetStorage(res_ts), ntags)
 end
 
 #TODO: optimize this function
@@ -219,20 +218,20 @@ function replacetags(ts::TagSet, tagsremove, tagsadd)
   ntags = length(ts)
   # The TagSet must have the tags to be replaced
   !hastags(ts, tsremove) && return ts
-  for n = 1:length(tsremove)
+  for n in 1:length(tsremove)
     @inbounds ntags = _removetag!(res_ts, ntags, data(tsremove)[n])
   end
-  for n = 1:length(tsadd)
+  for n in 1:length(tsadd)
     @inbounds ntags = _addtag_ordered!(res_ts, ntags, data(tsadd)[n])
   end
-  return TagSet(TagSetStorage(res_ts),ntags)
+  return TagSet(TagSetStorage(res_ts), ntags)
 end
 
 function tagstring(T::TagSet)
   res = ""
   N = length(T)
   N == 0 && return res
-  for n=1:N-1
+  for n in 1:(N - 1)
     res *= "$(Tag(data(T)[n])),"
   end
   res *= "$(Tag(data(T)[N]))"
@@ -275,51 +274,47 @@ function commontags(ts1::TagSet, ts2::TagSet)
   return ts3
 end
 
-function commontags(ts1::TagSet, ts2::TagSet,
-                    ts3::TagSet, ts::TagSet...)
+function commontags(ts1::TagSet, ts2::TagSet, ts3::TagSet, ts::TagSet...)
   return commontags(commontags(ts1, ts2), ts3, ts...)
 end
 
 function Base.show(io::IO, T::TagSet)
-  print(io, "\"$(tagstring(T))\"")
+  return print(io, "\"$(tagstring(T))\"")
 end
 
-function readcpp(io::IO,::Type{TagSet}; kwargs...)
-  format = get(kwargs,:format,"v3")
+function readcpp(io::IO, ::Type{TagSet}; kwargs...)
+  format = get(kwargs, :format, "v3")
   ts = TagSet()
-  if format=="v3"
+  if format == "v3"
     mstore = empty_storage(MTagSetStorage{IntTag,4})
     ntags = 0
-    for n=1:4
-      t = readcpp(io,Tag;kwargs...)
+    for n in 1:4
+      t = readcpp(io, Tag; kwargs...)
       if t != Tag()
-        ntags = _addtag_ordered!(mstore,ntags,IntTag(t))
+        ntags = _addtag_ordered!(mstore, ntags, IntTag(t))
       end
     end
-    ts = TagSet(TagSetStorage(mstore),ntags)
+    ts = TagSet(TagSetStorage(mstore), ntags)
   else
     throw(ArgumentError("read TagSet: format=$format not supported"))
   end
   return ts
 end
 
-function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
-                    name::AbstractString,
-                    T::TagSet)
-  g = create_group(parent,name)
+function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, T::TagSet)
+  g = create_group(parent, name)
   attributes(g)["type"] = "TagSet"
   attributes(g)["version"] = 1
-  write(g,"tags", tagstring(T))
+  return write(g, "tags", tagstring(T))
 end
 
-function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
-                   name::AbstractString,
-                   ::Type{TagSet})
-  g = open_group(parent,name)
+function HDF5.read(
+  parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{TagSet}
+)
+  g = open_group(parent, name)
   if read(attributes(g)["type"]) != "TagSet"
     error("HDF5 group '$name' does not contain TagSet data")
   end
-  tstring = read(g,"tags")
+  tstring = read(g, "tags")
   return TagSet(tstring)
 end
-

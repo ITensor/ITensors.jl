@@ -29,14 +29,19 @@ function main()
     k_val = krange[iₖ]
     d_val = 4
 
-    TN = tensor_network(; m = m_val, k = k_val, d = d_val)
+    TN = tensor_network(; m=m_val, k=k_val, d=d_val)
     sequence = optimal_contraction_sequence(TN)
-    cost = contraction_cost(TN; sequence = sequence)
+    cost = contraction_cost(TN; sequence=sequence)
 
     @variables m, k, d
-    TN_symbolic = tensor_network(; m = m, k = k, d = d)
-    cost_symbolic = contraction_cost(TN_symbolic; sequence = sequence)
-    sequence_cost = (dims = (m = m_val, k = k_val, d = d_val), sequence = sequence, cost = cost, symbolic_cost = cost_symbolic)
+    TN_symbolic = tensor_network(; m=m, k=k, d=d)
+    cost_symbolic = contraction_cost(TN_symbolic; sequence=sequence)
+    sequence_cost = (
+      dims=(m=m_val, k=k_val, d=d_val),
+      sequence=sequence,
+      cost=cost,
+      symbolic_cost=cost_symbolic,
+    )
     sequence_costs[iₘ, iₖ] = sequence_cost
   end
   return sequence_costs
@@ -56,4 +61,3 @@ println("\nSymbolic contraction cost with d = 4")
 @variables d
 var_sub = Dict(d => 4)
 display(substitute.(sum.(getindex.(sequence_costs, :symbolic_cost)), (var_sub,)))
-

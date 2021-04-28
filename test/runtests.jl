@@ -42,7 +42,7 @@ using Test
     "readwrite.jl",
     "readme.jl",
     "examples.jl",
-   ]
+  ]
     println("Running $filename")
     include(filename)
   end

@@ -23,11 +23,11 @@ let
   h3 = Index(10, "h3,Link,H")
   a1 = Index(100, "a1,Link")
   a3 = Index(100, "a3,Link")
-  phi = randomITensor(a1, s1,  s2, a3)
-  H1  = randomITensor(h1, s1', s1, h2)
-  H2  = randomITensor(h2, s2', s2, h3)
-  L   = randomITensor(h1, a1', a1)
-  R   = randomITensor(h3, a3', a3)
+  phi = randomITensor(a1, s1, s2, a3)
+  H1 = randomITensor(h1, s1', s1, h2)
+  H2 = randomITensor(h2, s2', s2, h3)
+  L = randomITensor(h1, a1', a1)
+  R = randomITensor(h3, a3', a3)
 
   suite["heff_2site"] = @benchmarkable $phi * $L * $H1 * $H2 * $R
 end

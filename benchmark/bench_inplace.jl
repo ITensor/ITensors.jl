@@ -5,7 +5,7 @@ using ITensors
 
 suite = BenchmarkGroup()
 
-i = Index(100);
+i = Index(100)
 A = randomITensor(i', i)
 B = randomITensor(i, i')
 

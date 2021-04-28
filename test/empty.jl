@@ -1,8 +1,6 @@
-using ITensors,
-      Test
+using ITensors, Test
 
 @testset "emptyITensor (Empty)" begin
-
   @testset "emptyITensor set elements" begin
     i = Index(2; tags="i")
 
@@ -21,8 +19,7 @@ using ITensors,
   end
 
   @testset "emptyITensor set elements (QN)" begin
-    i = Index(QN(0) => 2,
-              QN(1) => 2; tags="i")
+    i = Index(QN(0) => 2, QN(1) => 2; tags="i")
 
     E = emptyITensor(i', dag(i))
 
@@ -43,8 +40,7 @@ using ITensors,
   end
 
   @testset "emptyITensor()" begin
-    i = Index(QN(0) => 2,
-              QN(1) => 2; tags="i")
+    i = Index(QN(0) => 2, QN(1) => 2; tags="i")
 
     E = emptyITensor()
 
@@ -55,7 +51,7 @@ using ITensors,
     A = randomITensor(i', dag(i))
     E += A
 
-    @test norm(E-A) < 1E-8
+    @test norm(E - A) < 1E-8
   end
 end
 

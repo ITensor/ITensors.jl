@@ -65,7 +65,9 @@ function svd(A::ITensor, Linds...; kwargs...)
   Ris = uniqueinds(A, Lis)
 
   if length(Lis) == 0 || length(Ris) == 0
-    error("In `svd`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.")
+    error(
+      "In `svd`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.",
+    )
   end
 
   CL = combiner(Lis...)
@@ -86,8 +88,8 @@ function svd(A::ITensor, Linds...; kwargs...)
   UT, ST, VT, spec = USVT
   UC, S, VC = itensor(UT), itensor(ST), itensor(VT)
 
-  u = commonind(S,UC)
-  v = commonind(S,VC)
+  u = commonind(S, UC)
+  v = commonind(S, VC)
 
   if hasqns(A)
     # Fix the flux of UC,S,VC
@@ -96,34 +98,33 @@ function svd(A::ITensor, Linds...; kwargs...)
     for b in nzblocks(UC)
       i1 = inds(UC)[1]
       i2 = inds(UC)[2]
-      newqn = -dir(i2)*flux(i1 => Block(b[1]))
-      setblockqn!(i2,newqn,b[2])
-      setblockqn!(u,newqn,b[2])
+      newqn = -dir(i2) * flux(i1 => Block(b[1]))
+      setblockqn!(i2, newqn, b[2])
+      setblockqn!(u, newqn, b[2])
     end
 
     for b in nzblocks(VC)
       i1 = inds(VC)[1]
       i2 = inds(VC)[2]
-      newqn = -dir(i2)*flux(i1 => Block(b[1]))
-      setblockqn!(i2,newqn,b[2])
-      setblockqn!(v,newqn,b[2])
+      newqn = -dir(i2) * flux(i1 => Block(b[1]))
+      setblockqn!(i2, newqn, b[2])
+      setblockqn!(v, newqn, b[2])
     end
   end
 
-  U = UC*dag(CL)
-  V = VC*dag(CR)
+  U = UC * dag(CL)
+  V = VC * dag(CR)
 
-  settags!(U,utags,u)
-  settags!(S,utags,u)
-  settags!(S,vtags,v)
-  settags!(V,vtags,v)
+  settags!(U, utags, u)
+  settags!(S, utags, u)
+  settags!(S, vtags, v)
+  settags!(V, vtags, v)
 
-  u = settags(u,utags)
-  v = settags(v,vtags)
+  u = settags(u, utags)
+  v = settags(v, vtags)
 
-  return TruncSVD(U,S,V,spec,u,v)
+  return TruncSVD(U, S, V, spec, u, v)
 end
-
 
 """
     TruncEigen
@@ -203,11 +204,12 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
     end
   end
 
-  N   = ndims(A)
-  NL  = length(Linds)
-  NR  = length(Rinds)
-  NL != NR      && error("Must have equal number of left and right indices")
-  N  != NL + NR && error("Number of left and right indices must add up to total number of indices")
+  N = ndims(A)
+  NL = length(Linds)
+  NR = length(Rinds)
+  NL != NR && error("Must have equal number of left and right indices")
+  N != NL + NR &&
+    error("Number of left and right indices must add up to total number of indices")
 
   ishermitian::Bool = get(kwargs, :ishermitian, false)
 
@@ -245,8 +247,8 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
     end
   end
 
-  CL = combiner(Lis...; dir = Out, tags = "CMB,left")
-  CR = combiner(Ris...; dir = In, tags = "CMB,right")
+  CL = combiner(Lis...; dir=Out, tags="CMB,left")
+  CR = combiner(Ris...; dir=In, tags="CMB,right")
 
   AC = A * CR * CL
 
@@ -271,7 +273,7 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   replaceinds!(D, (l, r), (l̃, r̃))
   replaceind!(V, r, r̃)
- 
+
   l, r = l̃, r̃
 
   # The right eigenvectors, after being applied to A
@@ -289,12 +291,14 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 end
 
 function eigen(A::ITensor; kwargs...)
-  Ris = filterinds(A; plev = 0)
+  Ris = filterinds(A; plev=0)
   Lis = Ris'
   return eigen(A, Lis, Ris; kwargs...)
 end
 
-noinds_error_message(decomp::String) = "$decomp without any input indices is currently not defined. In the future it may be defined as performing a $decomp decomposition treating the ITensor as a matrix from the primed to the unprimed indices."
+function noinds_error_message(decomp::String)
+  return "$decomp without any input indices is currently not defined. In the future it may be defined as performing a $decomp decomposition treating the ITensor as a matrix from the primed to the unprimed indices."
+end
 
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 
@@ -302,16 +306,16 @@ qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 # call qr on the order-2 tensors directly
 function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
-  Lis = commoninds(A,IndexSet(Linds...))
-  Ris = uniqueinds(A,Lis)
-  Lpos,Rpos = NDTensors.getperms(inds(A),Lis,Ris)
-  QT,RT = qr(tensor(A),Lpos,Rpos;kwargs...)
-  Q,R = itensor(QT),itensor(RT)
-  q = commonind(Q,R)
-  settags!(Q,tags,q)
-  settags!(R,tags,q)
-  q = settags(q,tags)
-  return Q,R,q
+  Lis = commoninds(A, IndexSet(Linds...))
+  Ris = uniqueinds(A, Lis)
+  Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
+  QT, RT = qr(tensor(A), Lpos, Rpos; kwargs...)
+  Q, R = itensor(QT), itensor(RT)
+  q = commonind(Q, R)
+  settags!(Q, tags, q)
+  settags!(R, tags, q)
+  q = settags(q, tags)
+  return Q, R, q
 end
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
@@ -331,20 +335,22 @@ end
 function factorize_qr(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   if ortho == "left"
-    L,R,q = qr(A,Linds...; kwargs...)
+    L, R, q = qr(A, Linds...; kwargs...)
   elseif ortho == "right"
-    Lis = uniqueinds(A,IndexSet(Linds...))
-    R,L,q = qr(A,Lis...; kwargs...)
+    Lis = uniqueinds(A, IndexSet(Linds...))
+    R, L, q = qr(A, Lis...; kwargs...)
   else
-    error("In factorize using qr decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
+    error(
+      "In factorize using qr decomposition, ortho keyword $ortho not supported. Supported options are left or right.",
+    )
   end
-  return L,R
+  return L, R
 end
 
 function factorize_svd(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
-  USV = svd(A, Linds...; kwargs..., alg = alg)
+  USV = svd(A, Linds...; kwargs..., alg=alg)
   if isnothing(USV)
     return nothing
   end
@@ -352,14 +358,16 @@ function factorize_svd(A::ITensor, Linds...; kwargs...)
   if ortho == "left"
     L, R = U, S * V
   elseif ortho == "right"
-    L,R = U * S, V
+    L, R = U * S, V
   elseif ortho == "none"
     sqrtS = S
     sqrtS .= sqrt.(S)
     L, R = U * sqrtS, sqrtS * V
     replaceind!(L, v, u)
   else
-    error("In factorize using svd decomposition, ortho keyword $ortho not supported. Supported options are left, right, or none.")
+    error(
+      "In factorize using svd decomposition, ortho keyword $ortho not supported. Supported options are left, right, or none.",
+    )
   end
   return L, R, spec
 end
@@ -372,7 +380,9 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
   elseif ortho == "right"
     Lis = uniqueinds(A, IndexSet(Linds...))
   else
-    error("In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.")
+    error(
+      "In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.",
+    )
   end
   simLis = sim(Lis)
   A2 = A * replaceinds(dag(A), Lis, simLis)
@@ -383,8 +393,7 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
     noprime!(delta_A2)
     A2 += delta_A2
   end
-  F = eigen(A2, Lis, simLis; ishermitian=true,
-                             kwargs...)
+  F = eigen(A2, Lis, simLis; ishermitian=true, kwargs...)
   D, _, spec = F
   L = F.Vt
   R = dag(L) * A
@@ -419,7 +428,7 @@ function factorize(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   tags::TagSet = get(kwargs, :tags, "Link,fact")
   plev::Int = get(kwargs, :plev, 0)
-  which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
+  which_decomp::Union{String,Nothing} = get(kwargs, :which_decomp, nothing)
   cutoff = get(kwargs, :cutoff, nothing)
   eigen_perturbation = get(kwargs, :eigen_perturbation, nothing)
   if !isnothing(eigen_perturbation)
@@ -433,8 +442,10 @@ function factorize(A::ITensor, Linds...; kwargs...)
 
   # Deprecated keywords
   if haskey(kwargs, :dir)
-    error("""dir keyword in factorize has been replace by ortho.
-    Note that the default is now `left`, meaning for the results L,R = factorize(A), L forms an orthogonal basis.""")
+    error(
+      """dir keyword in factorize has been replace by ortho.
+Note that the default is now `left`, meaning for the results L,R = factorize(A), L forms an orthogonal basis.""",
+    )
   end
 
   if haskey(kwargs, :which_factorization)
@@ -445,17 +456,17 @@ function factorize(A::ITensor, Linds...; kwargs...)
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
 
-  dL,dR = dim(IndexSet(Linds...)), dim(IndexSet(setdiff(inds(A),Linds)...))
-  maxdim = get(kwargs,:maxdim, min(dL, dR))
+  dL, dR = dim(IndexSet(Linds...)), dim(IndexSet(setdiff(inds(A), Linds)...))
+  maxdim = get(kwargs, :maxdim, min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
 
   if isnothing(which_decomp)
     if !might_truncate && !hasqns(A) && ortho != "none"
-      which_decomp="qr"
+      which_decomp = "qr"
     elseif isnothing(cutoff) || cutoff ≤ automatic_cutoff
-      which_decomp="svd"
+      which_decomp = "svd"
     elseif cutoff > automatic_cutoff
-      which_decomp="eigen"
+      which_decomp = "eigen"
     end
   end
 
@@ -469,10 +480,14 @@ function factorize(A::ITensor, Linds...; kwargs...)
     L, R, spec = factorize_eigen(A, Linds...; kwargs...)
   elseif which_decomp == "qr"
     hasqns(A) && error("QR factorization of an ITensor with QNs is not yet supported.")
-    L,R = factorize_qr(A,Linds...; kwargs...)
-    spec = Spectrum(nothing,0.0)
+    L, R = factorize_qr(A, Linds...; kwargs...)
+    spec = Spectrum(nothing, 0.0)
   else
-    throw(ArgumentError("""In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, `"qr"` or `nothing`."""))
+    throw(
+      ArgumentError(
+        """In factorize, factorization $which_decomp is not currently supported. Use `"svd"`, `"eigen"`, `"qr"` or `nothing`.""",
+      ),
+    )
   end
 
   # Set the tags and prime level
@@ -484,4 +499,3 @@ function factorize(A::ITensor, Linds...; kwargs...)
 
   return L, R, spec, l
 end
-

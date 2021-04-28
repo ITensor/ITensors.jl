@@ -6,12 +6,12 @@ let
   N = 4
   sites = siteinds("S=1", N)
   ampo = AutoMPO()
-  for j=1:N-1
-    ampo .+= ("Sz",j,"Sz",j+1)
-    ampo .+= (0.5,"S+",j,"S-",j+1)
-    ampo .+= (0.5,"S-",j,"S+",j+1)
+  for j in 1:(N - 1)
+    ampo .+= ("Sz", j, "Sz", j + 1)
+    ampo .+= (0.5, "S+", j, "S-", j + 1)
+    ampo .+= (0.5, "S-", j, "S+", j + 1)
   end
-  H = MPO(ampo,sites)
+  H = MPO(ampo, sites)
   psi0 = randomMPS(sites, 10)
   sweeps = Sweeps(1)
   maxdim!(sweeps, 10)
@@ -35,29 +35,35 @@ let
     # This loop causes problems for precompilation
     #for (b, ha) in sweepnext(N)
     b, ha = 1, 1
-      ITensors.position!(PH, psi, b)
-      phi = psi[b] * psi[b+1]
-      vals, vecs = ITensors.KrylovKit.eigsolve(PH, phi, 1, eigsolve_which_eigenvalue;
-                                               ishermitian = ishermitian,
-                                               tol = eigsolve_tol,
-                                               krylovdim = eigsolve_krylovdim,
-                                               maxiter = eigsolve_maxiter)
-      energy, phi = vals[1], vecs[1]
-      ortho = ha == 1 ? "left" : "right"
-      drho = nothing
-      spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
-                                       mindim = mindim(sweeps, sw),
-                                       cutoff = cutoff(sweeps, sw),
-                                       eigen_perturbation = drho,
-                                       ortho = ortho,
-                                       which_decomp = which_decomp)
-      measure!(obs; energy = energy,
-                    psi = psi,
-                    bond = b,
-                    sweep = sw,
-                    half_sweep = ha,
-                    spec = spec,
-                    quiet = quiet)
+    ITensors.position!(PH, psi, b)
+    phi = psi[b] * psi[b + 1]
+    vals, vecs = ITensors.KrylovKit.eigsolve(
+      PH,
+      phi,
+      1,
+      eigsolve_which_eigenvalue;
+      ishermitian=ishermitian,
+      tol=eigsolve_tol,
+      krylovdim=eigsolve_krylovdim,
+      maxiter=eigsolve_maxiter,
+    )
+    energy, phi = vals[1], vecs[1]
+    ortho = ha == 1 ? "left" : "right"
+    drho = nothing
+    spec = replacebond!(
+      psi,
+      b,
+      phi;
+      maxdim=maxdim(sweeps, sw),
+      mindim=mindim(sweeps, sw),
+      cutoff=cutoff(sweeps, sw),
+      eigen_perturbation=drho,
+      ortho=ortho,
+      which_decomp=which_decomp,
+    )
+    measure!(
+      obs; energy=energy, psi=psi, bond=b, sweep=sw, half_sweep=ha, spec=spec, quiet=quiet
+    )
     #end
   end
 end

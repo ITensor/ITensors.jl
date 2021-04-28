@@ -109,14 +109,14 @@ SiteType(t::Tag) = SiteType{t}()
 tag(::SiteType{T}) where {T} = T
 
 macro SiteType_str(s)
-  SiteType{Tag(s)}
+  return SiteType{Tag(s)}
 end
 
 # Keep TagType defined for backwards
 # compatibility; will be deprecated later
 const TagType = SiteType
 macro TagType_str(s)
-  TagType{Tag(s)}
+  return TagType{Tag(s)}
 end
 
 #---------------------------------------
@@ -156,17 +156,28 @@ OpName(s::Symbol) = OpName{s}()
 name(::OpName{N}) where {N} = N
 
 macro OpName_str(s)
-  OpName{Symbol(s)}
+  return OpName{Symbol(s)}
 end
 
 # Default implementations of op and op!
 op(::OpName, ::SiteType; kwargs...) = nothing
 op(::OpName, ::SiteType, ::Index...; kwargs...) = nothing
-op(::OpName, ::SiteType, ::SiteType,
-   sitetypes_inds::Union{SiteType, Index}...; kwargs...) = nothing
-op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...) = nothing 
-op!(::ITensor, ::OpName, ::SiteType, ::SiteType,
-    sitetypes_inds::Union{SiteType, Index}...; kwargs...) = nothing 
+function op(
+  ::OpName, ::SiteType, ::SiteType, sitetypes_inds::Union{SiteType,Index}...; kwargs...
+)
+  return nothing
+end
+op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...) = nothing
+function op!(
+  ::ITensor,
+  ::OpName,
+  ::SiteType,
+  ::SiteType,
+  sitetypes_inds::Union{SiteType,Index}...;
+  kwargs...,
+)
+  return nothing
+end
 
 # Deprecated version, for backwards compatibility
 op(::SiteType, ::Index, ::AbstractString; kwargs...) = nothing
@@ -206,10 +217,7 @@ s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
 """
-function op(name::AbstractString,
-            s::Index...;
-            kwargs...)
-
+function op(name::AbstractString, s::Index...; kwargs...)
   name = strip(name)
 
   # TODO: filter out only commons tags
@@ -220,16 +228,14 @@ function op(name::AbstractString,
   # as acting sequentially on the same site
   starpos = findfirst("*", name)
   if !isnothing(starpos)
-    op1 = name[1:starpos.start-1]
-    op2 = name[starpos.start+1:end]
-    return product(op(op1, s...; kwargs...),
-                   op(op2, s...; kwargs...))
+    op1 = name[1:(starpos.start - 1)]
+    op2 = name[(starpos.start + 1):end]
+    return product(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
   end
 
-  common_stypes  = _sitetypes(commontags_s)
-  push!(common_stypes,SiteType("Generic"))
+  common_stypes = _sitetypes(commontags_s)
+  push!(common_stypes, SiteType("Generic"))
   opn = OpName(name)
-
 
   #
   # Try calling a function of the form:
@@ -294,7 +300,9 @@ function op(name::AbstractString,
         return Op
       end
     end
-    error("Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::OpName, ::SiteType..., ::Index...)` or `op!(::ITensor, ::OpName, ::SiteType..., ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).")
+    error(
+      "Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::OpName, ::SiteType..., ::Index...)` or `op!(::ITensor, ::OpName, ::SiteType..., ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).",
+    )
   end
 
   #
@@ -312,19 +320,20 @@ function op(name::AbstractString,
     end
   end
 
-  throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(commontags_s))"))
+  return throw(
+    ArgumentError(
+      "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(commontags_s))",
+    ),
+  )
 end
 
 # For backwards compatibility, version of `op`
 # taking the arguments in the other order:
-op(s::Index,
-   opname::AbstractString;
-   kwargs...) = op(opname, s; kwargs...)
-
+op(s::Index, opname::AbstractString; kwargs...) = op(opname, s; kwargs...)
 
 # To ease calling of other op overloads,
 # allow passing a string as the op name
-op(opname::AbstractString,t::SiteType) = op(OpName(opname),t)
+op(opname::AbstractString, t::SiteType) = op(OpName(opname), t)
 
 """
     op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
@@ -340,37 +349,37 @@ s = siteinds("S=1/2", 4)
 Sz2 = op("Sz", s, 2)
 ```
 """
-op(opname::AbstractString, s::Vector{<:Index},
-   ns::Vararg{Int, N}; kwargs...) where {N} =
-  op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
+function op(
+  opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Int,N}; kwargs...
+) where {N}
+  return op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
+end
 
-op(s::Vector{ <: Index}, opname::AbstractString,
-   ns::Int...; kwargs...) =
-  op(opname, s, ns...; kwargs...)
+function op(s::Vector{<:Index}, opname::AbstractString, ns::Int...; kwargs...)
+  return op(opname, s, ns...; kwargs...)
+end
 
-op(s::Vector{ <: Index}, opname::AbstractString,
-   ns::Tuple{Vararg{Int}}, kwargs::NamedTuple) =
-  op(opname, s, ns...; kwargs...)
+function op(
+  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Int}}, kwargs::NamedTuple
+)
+  return op(opname, s, ns...; kwargs...)
+end
 
-op(s::Vector{ <: Index}, opname::AbstractString,
-   ns::Int, kwargs::NamedTuple) =
-  op(opname, s, ns; kwargs...)
+function op(s::Vector{<:Index}, opname::AbstractString, ns::Int, kwargs::NamedTuple)
+  return op(opname, s, ns; kwargs...)
+end
 
 # This version helps with call like `op.(Ref(s), os)` where `os`
 # is a vector of tuples.
-op(s::Vector{ <: Index}, os::Tuple{String, Vararg}) =
-  op(s, os...)
+op(s::Vector{<:Index}, os::Tuple{String,Vararg}) = op(s, os...)
 
 # Here, Ref is used to not broadcast over the vector of indices
 # TODO: consider overloading broadcast for `op` with the example
 # here: https://discourse.julialang.org/t/how-to-broadcast-over-only-certain-function-arguments/19274/5
 # so that `Ref` isn't needed.
-ops(s::Vector{ <: Index},
-    os::AbstractArray{ <: Tuple}) =
-  op.(Ref(s), os)
+ops(s::Vector{<:Index}, os::AbstractArray{<:Tuple}) = op.(Ref(s), os)
 
-ops(os::Vector{ <: Tuple}, s::Vector{ <: Index}) =
-  op.(Ref(s), os)
+ops(os::Vector{<:Tuple}, s::Vector{<:Index}) = op.(Ref(s), os)
 
 #---------------------------------------
 #
@@ -387,35 +396,36 @@ StateName(s::SmallString) = StateName{s}()
 name(::StateName{N}) where {N} = N
 
 macro StateName_str(s)
-  StateName{SmallString(s)}
+  return StateName{SmallString(s)}
 end
 
 state(::SiteType, ::StateName) = nothing
 state(::SiteType, ::AbstractString) = nothing
 
-function state(s::Index,
-               name::AbstractString)::IndexVal
-  stypes  = _sitetypes(s)
+function state(s::Index, name::AbstractString)::IndexVal
+  stypes = _sitetypes(s)
   sname = StateName(name)
 
   # Try calling state(::SiteType"Tag",::StateName"Name")
   for st in stypes
-    res = state(st,sname)
+    res = state(st, sname)
     !isnothing(res) && return s(res)
   end
 
   # Try calling state(::SiteType"Tag","Name")
   for st in stypes
-    res = state(st,name)
+    res = state(st, name)
     !isnothing(res) && return s(res)
   end
 
-  throw(ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))"))
+  return throw(
+    ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))")
+  )
 end
 
-state(s::Index,n::Integer) = s[n]
+state(s::Index, n::Integer) = s[n]
 
-state(sset::Vector{<:Index},j::Integer,st) = state(sset[j],st)
+state(sset::Vector{<:Index}, j::Integer, st) = state(sset[j], st)
 
 #---------------------------------------
 #
@@ -425,14 +435,13 @@ state(sset::Vector{<:Index},j::Integer,st) = state(sset[j],st)
 
 space(st::SiteType; kwargs...) = nothing
 
-space(st::SiteType, n::Int; kwargs...) =
-  space(st; kwargs...)
+space(st::SiteType, n::Int; kwargs...) = space(st; kwargs...)
 
 function space_error_message(st::SiteType)
   return "Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))"
 end
 
-function siteind(st::SiteType; addtags = "", kwargs...) 
+function siteind(st::SiteType; addtags="", kwargs...)
   sp = space(st; kwargs...)
   isnothing(sp) && return nothing
   return Index(sp, "Site, $(tag(st)), $addtags")
@@ -446,15 +455,13 @@ function siteind(st::SiteType, n; kwargs...)
   return Index(sp, "Site, $(tag(st)), n=$n")
 end
 
-siteind(tag::String; kwargs...) =
-  siteind(SiteType(tag); kwargs...)
+siteind(tag::String; kwargs...) = siteind(SiteType(tag); kwargs...)
 
-siteind(tag::String, n; kwargs...) =
-  siteind(SiteType(tag), n; kwargs...)
+siteind(tag::String, n; kwargs...) = siteind(SiteType(tag), n; kwargs...)
 
 # Special case of `siteind` where integer (dim) provided
 # instead of a tag string
-siteind(d::Integer,n::Integer; kwargs...) = Index(d,"Site,n=$n")
+siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
 
 #---------------------------------------
 #
@@ -472,16 +479,15 @@ Keyword arguments can be used to specify quantum number conservation,
 see the `space` function corresponding to the site type `tag` for
 supported keyword arguments.
 """
-function siteinds(tag::String,
-                  N::Integer; kwargs...)
+function siteinds(tag::String, N::Integer; kwargs...)
   st = SiteType(tag)
 
-  si = siteinds(st,N;kwargs...)
+  si = siteinds(st, N; kwargs...)
   if !isnothing(si)
     return si
   end
 
-  return [siteind(st,j; kwargs...) for j=1:N]
+  return [siteind(st, j; kwargs...) for j in 1:N]
 end
 
 """
@@ -490,16 +496,14 @@ end
 Create an array of `N` physical site indices where the site type at site `n` is given
 by `f(n)` (`f` should return a string).
 """
-function siteinds(f::Function,
-                  N::Integer; kwargs...)
-  [siteind(f(n),n; kwargs...) for n=1:N]
+function siteinds(f::Function, N::Integer; kwargs...)
+  return [siteind(f(n), n; kwargs...) for n in 1:N]
 end
 
 # Special case of `siteinds` where integer (dim)
 # provided instead of a tag string
-function siteinds(d::Integer,
-                  N::Integer; kwargs...)
-  return [siteind(d,n; kwargs...) for n=1:N]
+function siteinds(d::Integer, N::Integer; kwargs...)
+  return [siteind(d, n; kwargs...) for n in 1:N]
 end
 
 #---------------------------------------
@@ -510,19 +514,16 @@ end
 
 has_fermion_string(::OpName, ::SiteType) = nothing
 
-function has_fermion_string(opname::AbstractString,
-                            s::Index;
-                            kwargs...)::Bool
+function has_fermion_string(opname::AbstractString, s::Index; kwargs...)::Bool
   opname = strip(opname)
 
   # Interpret operator names joined by *
   # as acting sequentially on the same site
   starpos = findfirst("*", opname)
   if !isnothing(starpos)
-    op1 = opname[1:starpos.start-1]
-    op2 = opname[starpos.start+1:end]
-    return xor(has_fermion_string(op1,s; kwargs...),
-               has_fermion_string(op2,s; kwargs...))
+    op1 = opname[1:(starpos.start - 1)]
+    op2 = opname[(starpos.start + 1):end]
+    return xor(has_fermion_string(op1, s; kwargs...), has_fermion_string(op2, s; kwargs...))
   end
 
   Ntags = length(tags(s))

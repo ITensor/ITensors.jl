@@ -21,9 +21,8 @@ mutable struct Sweeps
   noise::Vector{Float64}
 
   function Sweeps(nsw::Int)
-    return new(nsw,fill(1,nsw),zeros(nsw),fill(1,nsw), zeros(nsw))
+    return new(nsw, fill(1, nsw), zeros(nsw), fill(1, nsw), zeros(nsw))
   end
-
 end
 
 """
@@ -98,7 +97,7 @@ Base.length(sw::Sweeps)::Int = sw.nsweep
 Maximum MPS bond dimension allowed by the
 Sweeps object `sw` during sweep `n`
 """
-maxdim(sw::Sweeps,n::Int)::Int = sw.maxdim[n]
+maxdim(sw::Sweeps, n::Int)::Int = sw.maxdim[n]
 
 """
     mindim(sw::Sweeps,n::Int)
@@ -106,7 +105,7 @@ maxdim(sw::Sweeps,n::Int)::Int = sw.maxdim[n]
 Minimum MPS bond dimension allowed by the
 Sweeps object `sw` during sweep `n`
 """
-mindim(sw::Sweeps,n::Int)::Int = sw.mindim[n]
+mindim(sw::Sweeps, n::Int)::Int = sw.mindim[n]
 
 """
     cutoff(sw::Sweeps,n::Int)
@@ -114,7 +113,7 @@ mindim(sw::Sweeps,n::Int)::Int = sw.mindim[n]
 Truncation error cutoff setting of the
 Sweeps object `sw` during sweep `n`
 """
-cutoff(sw::Sweeps,n::Int)::Float64 = sw.cutoff[n]
+cutoff(sw::Sweeps, n::Int)::Float64 = sw.cutoff[n]
 
 """
     noise(sw::Sweeps,n::Int)
@@ -122,7 +121,7 @@ cutoff(sw::Sweeps,n::Int)::Float64 = sw.cutoff[n]
 Noise term coefficient setting of the
 Sweeps object `sw` during sweep `n`
 """
-noise(sw::Sweeps,n::Int)::Float64  = sw.noise[n]
+noise(sw::Sweeps, n::Int)::Float64 = sw.noise[n]
 
 get_maxdims(sw::Sweeps) = sw.maxdim
 get_mindims(sw::Sweeps) = sw.mindim
@@ -137,13 +136,13 @@ sweep by providing up to `nsweep(sw)` values.
 If fewer values are provided, the last value
 is repeated for the remaining sweeps.
 """
-function setmaxdim!(sw::Sweeps,maxdims::Int...)::Nothing
+function setmaxdim!(sw::Sweeps, maxdims::Int...)::Nothing
   mdims = collect(maxdims)
-  for i=1:nsweep(sw)
-    sw.maxdim[i] = get(mdims,i,maxdims[end])
+  for i in 1:nsweep(sw)
+    sw.maxdim[i] = get(mdims, i, maxdims[end])
   end
 end
-maxdim!(sw::Sweeps,maxdims::Int...) = setmaxdim!(sw,maxdims...)
+maxdim!(sw::Sweeps, maxdims::Int...) = setmaxdim!(sw, maxdims...)
 
 """
     mindim!(sw::Sweeps,maxdims::Int...)
@@ -153,13 +152,13 @@ sweep by providing up to `nsweep(sw)` values.
 If fewer values are provided, the last value
 is repeated for the remaining sweeps.
 """
-function setmindim!(sw::Sweeps,mindims::Int...)::Nothing
+function setmindim!(sw::Sweeps, mindims::Int...)::Nothing
   mdims = collect(mindims)
-  for i=1:nsweep(sw)
-    sw.mindim[i] = get(mdims,i,mindims[end])
+  for i in 1:nsweep(sw)
+    sw.mindim[i] = get(mdims, i, mindims[end])
   end
 end
-mindim!(sw::Sweeps,mindims::Int...) = setmindim!(sw,mindims...)
+mindim!(sw::Sweeps, mindims::Int...) = setmindim!(sw, mindims...)
 
 """
     cutoff!(sw::Sweeps,maxdims::Int...)
@@ -169,13 +168,13 @@ sweep by providing up to `nsweep(sw)` values.
 If fewer values are provided, the last value
 is repeated for the remaining sweeps.
 """
-function setcutoff!(sw::Sweeps,cutoffs::Real...)::Nothing
+function setcutoff!(sw::Sweeps, cutoffs::Real...)::Nothing
   cuts = collect(cutoffs)
-  for i=1:nsweep(sw)
-    sw.cutoff[i] = get(cuts,i,cutoffs[end])
+  for i in 1:nsweep(sw)
+    sw.cutoff[i] = get(cuts, i, cutoffs[end])
   end
 end
-cutoff!(sw::Sweeps,cutoffs::Real...) = setcutoff!(sw,cutoffs...)
+cutoff!(sw::Sweeps, cutoffs::Real...) = setcutoff!(sw, cutoffs...)
 
 """
     noise!(sw::Sweeps,maxdims::Int...)
@@ -185,19 +184,26 @@ sweep by providing up to `nsweep(sw)` values.
 If fewer values are provided, the last value
 is repeated for the remaining sweeps.
 """
-function setnoise!(sw::Sweeps,noises::Real...)::Nothing
+function setnoise!(sw::Sweeps, noises::Real...)::Nothing
   nvals = collect(noises)
-  for i=1:nsweep(sw)
-    sw.noise[i] = get(nvals,i,noises[end])
+  for i in 1:nsweep(sw)
+    sw.noise[i] = get(nvals, i, noises[end])
   end
 end
-noise!(sw::Sweeps,noises::Real...) = setnoise!(sw,noises...)
+noise!(sw::Sweeps, noises::Real...) = setnoise!(sw, noises...)
 
-function Base.show(io::IO,
-                   sw::Sweeps)
-  println(io,"Sweeps")
-  for n=1:nsweep(sw)
-    @printf(io,"%d cutoff=%.1E, maxdim=%d, mindim=%d, noise=%.1E\n",n,cutoff(sw,n),maxdim(sw,n),mindim(sw,n),noise(sw,n))
+function Base.show(io::IO, sw::Sweeps)
+  println(io, "Sweeps")
+  for n in 1:nsweep(sw)
+    @printf(
+      io,
+      "%d cutoff=%.1E, maxdim=%d, mindim=%d, noise=%.1E\n",
+      n,
+      cutoff(sw, n),
+      maxdim(sw, n),
+      mindim(sw, n),
+      noise(sw, n)
+    )
   end
 end
 
@@ -216,32 +222,31 @@ number. Takes an optional named argument
 `ncenter` for use with an n-site MPS or DMRG
 algorithm, with a default of 2-site.
 """
-function sweepnext(N::Int;ncenter::Int=2)::SweepNext 
+function sweepnext(N::Int; ncenter::Int=2)::SweepNext
   if ncenter < 0
     error("ncenter must be non-negative")
   end
-  return SweepNext(N,ncenter)
+  return SweepNext(N, ncenter)
 end
-   
-function Base.iterate(sn::SweepNext,state=(0,1))
-  b,ha = state
-  if ha==1
+
+function Base.iterate(sn::SweepNext, state=(0, 1))
+  b, ha = state
+  if ha == 1
     inc = 1
-    bstop = sn.N-sn.ncenter+2
+    bstop = sn.N - sn.ncenter + 2
   else
     inc = -1
     bstop = 0
   end
-  new_b = b+inc
+  new_b = b + inc
   new_ha = ha
   done = false
-  if new_b==bstop
+  if new_b == bstop
     new_b -= inc
     new_ha += 1
-    if ha==2
+    if ha == 2
       return nothing
     end
   end
-  return ((new_b,new_ha),(new_b,new_ha))
+  return ((new_b, new_ha), (new_b, new_ha))
 end
-

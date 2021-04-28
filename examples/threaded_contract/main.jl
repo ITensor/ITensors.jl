@@ -2,7 +2,7 @@ using BenchmarkTools
 using ITensors
 using LinearAlgebra
 
-function main(; d = 20, order = 4)
+function main(; d=20, order=4)
   BLAS.set_num_threads(1)
   ITensors.Strided.disable_threads()
 
@@ -18,7 +18,7 @@ function main(; d = 20, order = 4)
   @show ITensors.Strided.get_num_threads()
   println()
 
-  i(n) = Index(QN(0) => d, QN(1) => d; tags = "i$n")
+  i(n) = Index(QN(0) => d, QN(1) => d; tags="i$n")
   is = IndexSet(i, order ÷ 2)
   A = randomITensor(is'..., dag(is)...)
   B = randomITensor(is'..., dag(is)...)
@@ -41,4 +41,3 @@ function main(; d = 20, order = 4)
   @show C_contract ≈ C_threaded_contract
   return nothing
 end
-

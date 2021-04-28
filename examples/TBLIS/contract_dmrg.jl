@@ -45,7 +45,7 @@ let
 
   println()
   println("Time (BLAS) = ", time_blas, " seconds")
-  println("Allocated (BLAS) = ", allocated_blas / 1024^2 , " MiB")
+  println("Allocated (BLAS) = ", allocated_blas / 1024^2, " MiB")
 
   #
   # Use TBLIS
@@ -73,4 +73,3 @@ let
   println()
   println("Time (TBLIS) / Time (BLAS) = ", time_tblis / time_blas)
 end
-

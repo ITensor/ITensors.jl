@@ -17,9 +17,7 @@ using SnoopCompile
 # ```
 # to precompile.jl after it is generated.
 
-inf_timing = @snoopi tmin=0.01 include("snoop/snoop.jl")
+inf_timing = @snoopi tmin = 0.01 include("snoop/snoop.jl")
 pc = SnoopCompile.parcel(inf_timing)
 SnoopCompile.write("tmp", pc)
-cp("tmp/precompile_ITensors.jl",
-   "precompile.jl";
-   force=true)
+cp("tmp/precompile_ITensors.jl", "precompile.jl"; force=true)
