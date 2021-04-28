@@ -62,6 +62,36 @@ el = T[j=>1,i=>2,k=>3]
 println("The (i,j,k) = (2,1,3) element of T is ",el)
 ```
 
+## Constructing ITensors from Arrays
+
+To initialize all of the elements of an ITensor at once, you
+can pass a Julia array into the ITensor constructor.
+
+For example, if we want to construct an ITensor `A` with indices 
+`i,j` we can initialize it from a matrix as follows:
+
+```julia
+M = [1.0 2.0;
+     3.0 4.0]
+
+i = Index(2,"i")
+j = Index(2,"j")
+
+A = ITensor(M,i,j)
+```
+
+More generally we can use an nth-order (n-dimensional) Julia array to initialize an ITensor:
+
+```julia
+T = randn(4,7,2)
+
+k = Index(4,"index_k")
+l = Index(7,"index_l")
+m = Index(2,"index_m")
+
+B = ITensor(T,k,l,m)
+```
+
 ## Arithmetic With ITensors
 
 ITensors can be added and subtracted and multiplied by scalars just like plain tensors can. But ITensors have the additional feature that you can add and subtract them even if their indices are in a different order from each other, as long as they have the same collection of indices.
@@ -81,9 +111,9 @@ Above we have initialized these ITensors to have random elements, just for the s
 We can then add or subtract these ITensors
 
 ```julia
-R1 = A+B
-R2 = A-B
-R3 = A+B-C
+R1 = A + B
+R2 = A - B
+R3 = A + B - C
 ```
 
 or do more complicated operations involving real and complex scalars too:
@@ -102,40 +132,42 @@ ITensors support Julia broadcasting operations, making it quite easy to carry ou
 i = Index(2,"i")
 j = Index(3,"j")
 
-T = randomITensor(i,j)
+A = randomITensor(i,j)
 ```
 
 Here are some examples of basic element-wise operations we can do using Julia's dotted operator broadcasting syntax.
 
 ```julia
-# Multiply every element of `T` by 2.0:
-T .*= 2.0
+# Multiply every element of `A` by 2.0:
+A .*= 2.0
 ```
 
 ```julia
-# Add 1.5 to every element of T
-T .+= 1.5
+# Add 1.5 to every element of A
+A .+= 1.5
 ```
 
 The dotted notation works for functions too:
 
 ```julia
-# Replace every element in T by its absolute value:
-T .= abs.(T)
+# Replace every element in A by its absolute value:
+A .= abs.(A)
 ```
 
 ```julia
-# Replace every element in T by the number 1.0
-T .= one.(T)
+# Replace every element in A by the number 1.0
+A .= one.(A)
 ```
 
-If have another ITensor `A = ITensor(j,i)`, which has the same set of indices
+If have another ITensor `B = ITensor(j,i)`, which has the same set of indices
 though possibly in a different order, then we can also do element-wise operations
 involving both ITensors:
 
 ```julia
-# Add elements of A and T element-wise
-A .= A .+ T
+# Add elements of A and B element-wise
+A .= A .+ B
+# Add elements of A and B element-wise with coefficients included
+A .= (2.0 .* A) .+ (-3.0 .* B)
 ```
 
 Last but not least, it is possible to make custom functions yourself and broadcast them across elements of ITensors:
@@ -144,7 +176,6 @@ Last but not least, it is possible to make custom functions yourself and broadca
 myf(x) = 1.0/(1.0+exp(-x))
 T .= myf.(T)
 ```
-
 
 
 ## Tracing an ITensor
@@ -179,6 +210,155 @@ trA = A * delta(i,l)
 
 ![](itensor_trace_figures/trace_A.png)
 
+## Factoring ITensors (SVD, QR, etc.)
+
+The ITensor approach to tensor factorizations emphasizes the structure
+of the factorization, and does not require knowing the index ordering.
+
+ITensor offers various tensor factorizations, such as the 
+singular value decomposition (SVD) and the QR factorization. 
+These are extended to the case of tensors by treating some of the indices
+as the "row" indices and the rest of the indices as the "column" indices,
+reshaping the tensor into a matrix to carry out the factorization, then
+restoring the tensor structure at the end. All of these steps are done
+for you by the ITensor system as we will see below.
+
+**Singular Value Decomposition**
+
+The singular value decomposition (SVD) is a matrix factorization
+that is also extremely useful for general tensors.
+
+As a brief review, the SVD is a factorization of a matrix M into the product
+```math
+M = U S V^\dagger
+```
+with U and V having the property ``U^\dagger U = 1`` and ``V^\dagger V = 1``.
+The matrix S is diagonal and has real, non-negative entries known as the singular
+values, which are typically ordered from largest to smallest. 
+The SVD is well-defined for any matrix, including rectangular matrices. It also
+leads to a controlled approximation, where the error due to discarding columns of U and V
+is small if the corresponding singular values discarded are small.
+
+To compute the SVD of an ITensor, you only need to specify which indices are (collectively) 
+the "row" indices (thinking of the ITensor as a matrix), with the rest assumed to be the "column" 
+indices.
+
+Say we have an ITensor with indices i,j, and k
+
+```julia
+T = ITensor(i,j,k)
+```
+
+and we want to treat i and k as the "row" indices for the purpose of the SVD.
+
+To perform this SVD, we can call the function `svd` as follows:
+
+```julia
+U,S,V = svd(T,(i,k))
+```
+
+Diagrammatically the SVD operation above looks like:
+
+![](itensor_factorization_figures/SVD_Ex1.png)
+
+The guarantee of the `svd` function is that the ITensor 
+product `U*S*V` gives us back an ITensor identical to T:
+
+```julia
+@show norm(U*S*V - T) # typical output: norm(U*S*V-T) = 1E-14
+```
+
+*Full working example:*
+
+```julia
+i = Index(3,"i")
+j = Index(4,"j")
+k = Index(5,"k")
+
+T = randomITensor(i,j,k)
+
+U,S,V = svd(T,(i,k))
+
+@show norm(U*S*V-T)
+```
+
+**Truncated SVD**
+
+An important use of the SVD is approximating a higher-rank tensor
+by a product of lower-rank tensors whose indices range over only
+a modest set of values.
+
+To obtain an approximate SVD in ITensor, pass one or more of
+the following accuracy parameters as named arguments:
+
+* `cutoff` --- real number ``\epsilon``. Discard the smallest singular values
+  ``\lambda\_n`` such that the <i>truncation error</i> is less than ``\epsilon``:
+  $$
+  \frac{\sum\_{n\in\text{discarded}} \lambda^2\_n}{\sum\_{n} \lambda^2\_n} < \epsilon \:.
+  $$
+  Using a cutoff allows the SVD algorithm to truncate as many states as possible while still
+  ensuring a certain accuracy.
+
+* `maxdim` --- integer M. If the number of singular values exceeds M, only the largest M will be retained.
+
+* `mindim` --- integer m. At least m singular values will be retained, even if some fall below the cutoff
+
+Let us revisit the example above, but also provide some of these accuracy parameters
+
+```julia
+i = Index(10,"i")
+j = Index(40,"j")
+k = Index(20,"k")
+T = randomITensor(i,j,k)
+
+U,S,V = svd(T,(i,k),cutoff=1E-2)
+```
+
+Note that we have also made the indices larger so that the truncation performed will be
+non-trivial.
+In the code above, we specified that a cutoff of ``\epsilon=10^{-2}`` be used. We can check that the resulting factorization is now approximate by computing the squared relative error:
+
+```julia
+truncerr = (norm(U*S*V - T)/norm(T))^2
+@show truncerr
+# typical output: truncerr = 8.24E-03
+```
+
+Note how the computed error is below the cutoff ``\epsilon`` we requested.
+
+*Full working example including truncation:*
+
+```julia
+i = Index(10,"i");
+j = Index(40,"j");
+k = Index(20,"k");
+
+T = randomITensor(i,j,k)
+
+U,S,V = svd(T,(i,k),cutoff=1E-2)
+
+@show norm(U*S*V-T)
+@show (norm(U*S*V - T)/norm(T))^2
+```
+
+**QR Factorization**
+
+Computing the QR factorization of an ITensor works in a similar way as for the SVD.
+In addition to passing the ITensor you want to factorize, you must also pass
+the indices you want to end up on the tensor `Q`, in other words to be treated
+as the "row" indices for the purpose of defining the QR factorization.
+
+Say we want to compute the QR factorization of an ITensor `T` with indices `i,j,k`,
+putting the indices `i` and `k` onto `Q` and the remaining indices onto `R`. We
+can do this as follows:
+
+![](itensor_factorization_figures/QR_Ex1.png)
+
+```julia
+T = randomITensor(i,j,k)
+Q,R = qr(T,(i,k))
+```
+
 ## Write and Read an ITensor to Disk with HDF5
 
 Saving ITensors to disk can be very useful. For example, you
@@ -200,7 +380,7 @@ from a calculation. To write it to an HDF5 file named "myfile.h5"
 you can use the following pattern:
 
 ```julia
-using HDF5
+using ITensors.HDF5
 f = h5open("myfile.h5","w")
 write(f,"T",T)
 close(f)
@@ -211,6 +391,8 @@ or "Result Tensor" and doesn't have to have the same name as the reference `T`.
 Closing the file `f` is optional and you can also write other objects to the same
 file before closing it.
 
+[*Above we did `using ITensors.HDF5` since HDF5 is already included as a dependency with ITensor. You can also do `using HDF5` but must add the HDF5 package beforehand for that to work.*]
+
 **Reading an ITensor from an HDF5 File**
 
 Say you have an HDF5 file "myfile.h5" which contains an ITensor stored as a dataset with the
@@ -218,7 +400,7 @@ name "T". (Which would be the situation if you wrote it as in the example above.
 To read this ITensor back from the HDF5 file, use the following pattern:
 
 ```julia
-using HDF5
+using ITensors.HDF5
 f = h5open("myfile.h5","r")
 T = read(f,"T",ITensor)
 close(f)

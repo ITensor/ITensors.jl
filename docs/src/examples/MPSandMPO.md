@@ -149,7 +149,7 @@ from a calculation. To write it to an HDF5 file named "myfile.h5"
 you can use the following pattern:
 
 ```julia
-using HDF5
+using ITensors.HDF5
 f = h5open("myfile.h5","w")
 write(f,"psi",psi)
 close(f)
@@ -160,6 +160,8 @@ or "Result MPS" and doesn't have to have the same name as the reference `psi`.
 Closing the file `f` is optional and you can also write other objects to the same
 file before closing it.
 
+[*Above we did `using ITensors.HDF5` since HDF5 is already included as a dependency with ITensor. You can also do `using HDF5` but must add the HDF5 package beforehand for that to work.*]
+
 **Reading an MPS from an HDF5 File**
 
 Say you have an HDF5 file "myfile.h5" which contains an MPS stored as a dataset with the
@@ -167,7 +169,7 @@ name "psi". (Which would be the situation if you wrote it as in the example abov
 To read this ITensor back from the HDF5 file, use the following pattern:
 
 ```julia
-using HDF5
+using ITensors.HDF5
 f = h5open("myfile.h5","r")
 psi = read(f,"psi",MPS)
 close(f)
