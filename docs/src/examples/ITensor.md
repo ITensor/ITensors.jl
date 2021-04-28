@@ -94,7 +94,9 @@ R4 = 2.0*A - B + C/(1+1im)
 
 ## Elementwise Operations on ITensors
 
-ITensor objects support Julia broadcasting operations, making it quite easy to carry out element-wise operations on them in a very similar way as for regular Julia arrays. As a concrete example, consider the following ITensor initialized with random elements
+[*Note: currently elementwise operations are only defined for dense ITensors, not for block-sparse QN ITensors.*]
+
+ITensors support Julia broadcasting operations, making it quite easy to carry out element-wise operations on them in a very similar way as for regular Julia arrays. As a concrete example, consider the following ITensor initialized with random elements
 
 ```julia
 i = Index(2,"i")
