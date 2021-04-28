@@ -32,9 +32,7 @@ function main()
   Aₗ = ITensor(lᵥ, lᵥ', sₕ)
   Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 1] = 1.0
 
-  Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax = χmax,
-                              cutoff = cutoff,
-                              nsteps = nsteps)
+  Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax=χmax, cutoff=cutoff, nsteps=nsteps)
 
   lᵥ = commonind(Cₗᵤ, Aₗ)
   lₕ = uniqueind(Cₗᵤ, Aₗ)
@@ -50,11 +48,10 @@ function main()
   @show κ, exp(-β * ising_free_energy(β))
 
   # Calculate magnetization
-  Tsz = ising_mpo(sₕ, sᵥ, β; sz = true)
+  Tsz = ising_mpo(sₕ, sᵥ, β; sz=true)
   ACTszₗ = prime(ACₗ * dag(Aᵤ') * Tsz * Aᵤ, -1)
   m = (ACTszₗ * dag(ACₗ))[] / κ
   @show m, ising_magnetization(β)
 end
 
 main()
-

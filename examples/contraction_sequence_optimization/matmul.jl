@@ -3,7 +3,7 @@ using ProfileView
 
 # Examples of optimizing simple chained matrix multiplications,
 # useful for getting an idea for the overhead.
-function main(d = 100)
+function main(d=100)
   i = Index(d, "i")
   A = randomITensor(i', dag(i))
 
@@ -54,7 +54,10 @@ function main(d = 100)
   println("Starting from non-optimal sequence")
   @btime $A'' * $A * $A'
 
-  f(A, N) = for _ in 1:N A'' * A' * A end
+  f(A, N) =
+    for _ in 1:N
+      A'' * A' * A
+    end
   @profview f(A, 1e6)
 
   ITensors.disable_contraction_sequence_optimization()
@@ -116,6 +119,5 @@ function main(d = 100)
   println("Starting from non-optimal sequence")
   @btime $A'' * $A'''' * $A * $A''' * $A'
 
-  ITensors.disable_contraction_sequence_optimization()
+  return ITensors.disable_contraction_sequence_optimization()
 end
-

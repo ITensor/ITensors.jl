@@ -1,34 +1,32 @@
-using ITensors,
-      Test
+using ITensors, Test
 
 @testset "diagITensor (DiagBlockSparse)" begin
-
   @testset "diagITensor get and set elements" begin
-    i = Index(QN(0)=>2,QN(1)=>3; tags="i")
+    i = Index(QN(0) => 2, QN(1) => 3; tags="i")
 
-    D = diagITensor(QN(),i,dag(i'))
+    D = diagITensor(QN(), i, dag(i'))
 
     for b in eachnzblock(D)
-      @test flux(D,b) == QN()
+      @test flux(D, b) == QN()
     end
 
-    D[i(1),i'(1)] = 1
-    D[i(2),i'(2)] = 2
-    D[i(3),i'(3)] = 3
-    D[i(4),i'(4)] = 4
-    D[i(5),i'(5)] = 5
+    D[i(1), i'(1)] = 1
+    D[i(2), i'(2)] = 2
+    D[i(3), i'(3)] = 3
+    D[i(4), i'(4)] = 4
+    D[i(5), i'(5)] = 5
 
-    @test_throws ErrorException D[i(1),i'(2)] = 2.0
+    @test_throws ErrorException D[i(1), i'(2)] = 2.0
 
-    @test D[i(1),i'(1)] == 1
-    @test D[i(2),i'(2)] == 2
-    @test D[i(3),i'(3)] == 3
-    @test D[i(4),i'(4)] == 4
-    @test D[i(5),i'(5)] == 5
+    @test D[i(1), i'(1)] == 1
+    @test D[i(2), i'(2)] == 2
+    @test D[i(3), i'(3)] == 3
+    @test D[i(4), i'(4)] == 4
+    @test D[i(5), i'(5)] == 5
   end
 
   @testset "diagITensor Tuple constructor" begin
-    i = Index(QN(0)=>2, QN(1)=>3; tags="i")
+    i = Index(QN(0) => 2, QN(1) => 3; tags="i")
 
     D = diagITensor((i, dag(i')))
 
@@ -38,28 +36,26 @@ using ITensors,
   end
 
   @testset "delta" begin
-    i = Index(QN(0)=>2,QN(1)=>3; tags="i")
+    i = Index(QN(0) => 2, QN(1) => 3; tags="i")
     ĩ = sim(i; tags="i_sim")
-    j = Index(QN(0)=>2,QN(1)=>3,QN(2)=>4; tags="j")
+    j = Index(QN(0) => 2, QN(1) => 3, QN(2) => 4; tags="j")
 
     A = randomITensor(QN(), i, dag(j))
 
     δiĩ = δ(dag(i), ĩ)
 
-    @test storage(δiĩ) isa NDTensors.DiagBlockSparse{ElT,
-                                                   ElT} where {ElT<:Number}
+    @test storage(δiĩ) isa NDTensors.DiagBlockSparse{ElT,ElT} where {ElT<:Number}
 
     B = A * δiĩ
 
     A = permute(A, i, j)
     B = permute(B, ĩ, j)
 
-    @test norm(dense(NDTensors.tensor(A)) -
-               dense(NDTensors.tensor(B))) ≈ 0
+    @test norm(dense(NDTensors.tensor(A)) - dense(NDTensors.tensor(B))) ≈ 0
   end
 
   @testset "delta Tuple constructor" begin
-    i = Index(QN(0)=>2, QN(1)=>3; tags="i")
+    i = Index(QN(0) => 2, QN(1) => 3; tags="i")
     ĩ = sim(i; tags="i_sim")
 
     δiĩ = δ((dag(i), ĩ))
@@ -71,16 +67,16 @@ using ITensors,
 
   @testset "Regression test for QN delta contraction bug" begin
     # http://itensor.org/support/2814/block-sparse-itensor-wrong-results-multiplying-delta-tensor
-    s = Index([QN(("N",i,1))=>1 for i = 1:2])
-    l = dag(addtags(s,"left"))
-    r = addtags(s,"right")
-    u = addtags(s,"up")
-    d = dag(addtags(s,"down"))
-    A = emptyITensor(l,r,u,d)
-    A[1,1,1,1] = 1.0
-    A[1,1,2,2] = 1.0
-    A[2,2,1,1] = 1.0
-    A[2,2,2,2] = 1.0
+    s = Index([QN(("N", i, 1)) => 1 for i in 1:2])
+    l = dag(addtags(s, "left"))
+    r = addtags(s, "right")
+    u = addtags(s, "up")
+    d = dag(addtags(s, "down"))
+    A = emptyITensor(l, r, u, d)
+    A[1, 1, 1, 1] = 1.0
+    A[1, 1, 2, 2] = 1.0
+    A[2, 2, 1, 1] = 1.0
+    A[2, 2, 2, 2] = 1.0
     δlr = δ(dag(l), dag(r))
     δud = δ(dag(u), dag(d))
     A1 = A * δlr
@@ -94,7 +90,7 @@ using ITensors,
 
   @testset "Regression test for printing a QN Diag ITensor" begin
     # https://github.com/ITensor/NDTensors.jl/issues/61
-    i = Index([QN()=>2])
+    i = Index([QN() => 2])
     A = randomITensor(i', dag(i))
     U, S, V = svd(A, i')
     # Test printing S

@@ -31,7 +31,8 @@ using Test
   @test @inferred(ITensors.symmetrystyle(iqn', i)) == ITensors.HasQNs()
   @test @inferred(ITensors.symmetrystyle(i', i, iqn)) == ITensors.HasQNs()
   @test @inferred(ITensors.symmetrystyle((i', i, iqn))) == ITensors.HasQNs()
-  @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle([i', i, iqn])) == ITensors.HasQNs()
+  @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle([i', i, iqn])) ==
+        ITensors.HasQNs()
 
   A = randomITensor(i', dag(i))
   Aqn = randomITensor(iqn', dag(iqn))
@@ -45,11 +46,11 @@ using Test
   @test @inferred(ITensors.symmetrystyle(T)) == ITensors.NonQN()
   @test @inferred(ITensors.symmetrystyle(Tqn)) == ITensors.HasQNs()
 
-  sqn = siteinds("S=1/2", 10; conserve_qns = true)
+  sqn = siteinds("S=1/2", 10; conserve_qns=true)
   s = removeqns(sqn)
   psi = MPS(s)
   psiqn = MPS(sqn)
   @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(psi)) == ITensors.NonQN()
-  @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(psiqn)) == ITensors.HasQNs()
+  @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(psiqn)) ==
+        ITensors.HasQNs()
 end
-

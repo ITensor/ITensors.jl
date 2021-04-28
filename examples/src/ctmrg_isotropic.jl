@@ -1,13 +1,8 @@
 using ITensors
 
-function ctmrg(T::ITensor,
-               Cₗᵤ::ITensor,
-               Aₗ::ITensor;
-               χmax::Int,
-               cutoff = 0.0,
-               nsteps::Int)
+function ctmrg(T::ITensor, Cₗᵤ::ITensor, Aₗ::ITensor; χmax::Int, cutoff=0.0, nsteps::Int)
   sₕ = commonind(T, Aₗ)
-  sᵥ = uniqueind(T, Aₗ, Aₗ'; plev = 0)
+  sᵥ = uniqueind(T, Aₗ, Aₗ'; plev=0)
   lᵥ = commonind(Cₗᵤ, Aₗ)
   lₕ = uniqueind(Cₗᵤ, Aₗ)
   Aᵤ = replaceinds(Aₗ, lᵥ => lₕ, lᵥ' => lₕ', sₕ => sᵥ)
@@ -19,12 +14,16 @@ function ctmrg(T::ITensor,
     ## Diagonalize the grown CTM
     # TODO: replace with
     # eigen(Cₗᵤ⁽¹⁾, "horiz" => "vert"; tags = "horiz" => "vert", kwargs...)
-    Cₗᵤ, Uᵥ = eigen(Cₗᵤ⁽¹⁾, (lₕ', sₕ'), (lᵥ', sᵥ');
-                    ishermitian = true,
-                    cutoff = cutoff,
-                    maxdim = χmax,
-                    lefttags = tags(lₕ),
-                    righttags = tags(lᵥ))
+    Cₗᵤ, Uᵥ = eigen(
+      Cₗᵤ⁽¹⁾,
+      (lₕ', sₕ'),
+      (lᵥ', sᵥ');
+      ishermitian=true,
+      cutoff=cutoff,
+      maxdim=χmax,
+      lefttags=tags(lₕ),
+      righttags=tags(lᵥ),
+    )
     Cₗᵤ = dense(Cₗᵤ)
     lᵥ = commonind(Cₗᵤ, Uᵥ)
     lₕ = uniqueind(Cₗᵤ, Uᵥ)
@@ -32,7 +31,7 @@ function ctmrg(T::ITensor,
     # The renormalized CTM is the diagonal matrix of eigenvalues
     # Normalize the CTM
     Cₗ = Cₗᵤ * prime(dag(Cₗᵤ), lₕ)
-    normC = (Cₗ * dag(Cₗ))[] ^ (1 / 4)
+    normC = (Cₗ * dag(Cₗ))[]^(1 / 4)
     Cₗᵤ = Cₗᵤ / normC
 
     # Calculate the renormalized half row transfer matrix (HRTM)
@@ -48,4 +47,3 @@ function ctmrg(T::ITensor,
   end
   return Cₗᵤ, Aₗ
 end
-

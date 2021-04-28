@@ -1,7 +1,7 @@
 
 const QNIndexSet = IndexSet{QNIndex}
 
-const QNIndices = Union{QNIndexSet, Tuple{Vararg{QNIndex}}}
+const QNIndices = Union{QNIndexSet,Tuple{Vararg{QNIndex}}}
 
 # Get a list of the non-zero blocks given a desired flux
 # TODO: make a fillqns(inds::Indices) function that makes all indices
@@ -22,8 +22,8 @@ function nzdiagblocks(qn::QN, inds::Indices)
   N = length(inds)
   blocks = NTuple{N,Int}[]
   for block in eachdiagblock(inds)
-    if flux(inds,block) == qn
-      push!(blocks,Tuple(block))
+    if flux(inds, block) == qn
+      push!(blocks, Tuple(block))
     end
   end
   return blocks
@@ -43,4 +43,3 @@ function Base.show(io::IO, is::QNIndices)
     println(io)
   end
 end
-

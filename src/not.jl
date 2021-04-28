@@ -24,4 +24,3 @@ parent(n::Not)
 Get the original pattern.
 """
 Base.parent(n::Not) = n.pattern
-

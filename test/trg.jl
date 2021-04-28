@@ -18,7 +18,7 @@ include(joinpath(@__DIR__, "..", "examples", "src", "2d_classical_ising.jl"))
 
   χmax = 20
   nsteps = 20
-  κ, T = trg(T; χmax = χmax, nsteps = nsteps)
+  κ, T = trg(T; χmax=χmax, nsteps=nsteps)
 
   @test κ ≈ exp(-β * ising_free_energy(β)) atol = 1e-4
 end

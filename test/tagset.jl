@@ -1,15 +1,14 @@
-using ITensors,
-      Test
+using ITensors, Test
 
 @testset "TagSet" begin
   ts = TagSet("t3,t2,t1")
   ts2 = copy(ts)
   @test ts == ts2
-  @test hastags(ts,"t1")
-  @test hastags(ts,"t2")
-  @test hastags(ts,"t3")
-  @test hastags(ts,"t3,t1")
-  @test !hastags(ts,"t4")
+  @test hastags(ts, "t1")
+  @test hastags(ts, "t2")
+  @test hastags(ts, "t3")
+  @test hastags(ts, "t3,t1")
+  @test !hastags(ts, "t4")
   @test TagSet(ts) === ts
 
   t1 = TagSet("t1")
@@ -30,16 +29,16 @@ using ITensors,
 
   @testset "Ignore Whitespace" begin
     ts = TagSet(" aaa , bb bb  , ccc    ")
-    @test hastags(ts," aaa ")
-    @test hastags(ts,"aaa")
-    @test hastags(ts," aa a ")
-    @test hastags(ts,"bbbb")
+    @test hastags(ts, " aaa ")
+    @test hastags(ts, "aaa")
+    @test hastags(ts, " aa a ")
+    @test hastags(ts, "bbbb")
   end
 
   @testset "Remove tags" begin
     ts1 = TagSet("x,y,z")
     ts2 = TagSet("x,z")
-    @test removetags(ts1,"y") == ts2
+    @test removetags(ts1, "y") == ts2
   end
 
   @testset "Unicode tags" begin
@@ -79,7 +78,7 @@ using ITensors,
 
   @testset "Show TagSet" begin
     ts = TagSet("Site,n=2")
-    @test length(sprint(show,ts)) > 1
+    @test length(sprint(show, ts)) > 1
   end
 
   @testset "Iterate Tagset" begin
@@ -89,24 +88,24 @@ using ITensors,
 
   @testset "addtags" begin
     ts = TagSet("Blue")
-    @test hastags(ts,"Blue")
+    @test hastags(ts, "Blue")
 
-    ts = addtags(ts,"Red")
-    @test hastags(ts,"Blue")
-    @test hastags(ts,"Red")
+    ts = addtags(ts, "Red")
+    @test hastags(ts, "Blue")
+    @test hastags(ts, "Red")
 
-    ts = addtags(ts,"Green")
-    @test hastags(ts,"Blue")
-    @test hastags(ts,"Red")
-    @test hastags(ts,"Green")
+    ts = addtags(ts, "Green")
+    @test hastags(ts, "Blue")
+    @test hastags(ts, "Red")
+    @test hastags(ts, "Green")
 
-    ts = addtags(ts,"Yellow")
-    @test hastags(ts,"Blue")
-    @test hastags(ts,"Red")
-    @test hastags(ts,"Green")
-    @test hastags(ts,"Yellow")
+    ts = addtags(ts, "Yellow")
+    @test hastags(ts, "Blue")
+    @test hastags(ts, "Red")
+    @test hastags(ts, "Green")
+    @test hastags(ts, "Yellow")
 
-    @test_throws ErrorException addtags(ts,"Orange")
+    @test_throws ErrorException addtags(ts, "Orange")
   end
 end
 

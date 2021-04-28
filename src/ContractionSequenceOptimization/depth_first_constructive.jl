@@ -4,12 +4,14 @@
 # but it is more difficult to cap the costs so scales very badly
 #
 
-function depth_first_constructive(T::Vector{<: ITensor}) where {LabelSetT}
+function depth_first_constructive(T::Vector{<:ITensor}) where {LabelSetT}
   indsT = [inds(Tₙ) for Tₙ in T]
   return depth_first_constructive(DimT, indsT)
 end
 
-function depth_first_constructive(::Type{DimT}, T::Vector{IndexSetT}) where {IndexSetT <: IndexSet, DimT}
+function depth_first_constructive(
+  ::Type{DimT}, T::Vector{IndexSetT}
+) where {IndexSetT<:IndexSet,DimT}
   labels, dims = label_dims(DimT, T)
   nlabels = length(dims)
   if nlabels ≤ 16
@@ -25,28 +27,38 @@ function depth_first_constructive(::Type{DimT}, T::Vector{IndexSetT}) where {Ind
   end
 end
 
-function depth_first_constructive(::Type{LabelSetT}, labels::Vector, dims::Vector) where {LabelSetT}
+function depth_first_constructive(
+  ::Type{LabelSetT}, labels::Vector, dims::Vector
+) where {LabelSetT}
   return depth_first_constructive(map(label -> bitset(LabelSetT, label), labels), dims)
 end
 
-function depth_first_constructive(::Type{LabelSetT}, ::Type{DimT}, T::Vector{<: ITensor}) where {LabelSetT, DimT}
+function depth_first_constructive(
+  ::Type{LabelSetT}, ::Type{DimT}, T::Vector{<:ITensor}
+) where {LabelSetT,DimT}
   indsT = [inds(Tₙ) for Tₙ in T]
   return depth_first_constructive(LabelSetT, DimT, indsT)
 end
 
-function depth_first_constructive(::Type{LabelSetT}, ::Type{DimT}, T::Vector{IndexSetT}) where {IndexSetT <: IndexSet, LabelSetT, DimT}
+function depth_first_constructive(
+  ::Type{LabelSetT}, ::Type{DimT}, T::Vector{IndexSetT}
+) where {IndexSetT<:IndexSet,LabelSetT,DimT}
   labels, dims = label_dims(DimT, T)
   return depth_first_constructive(map(label -> bitset(LabelSetT, label), labels), dims)
 end
 
 function depth_first_constructive(T::Vector, ind_dims::Vector)
   optimal_cost = Ref(typemax(eltype(ind_dims)))
-  optimal_sequence = Vector{Pair{Int, Int}}(undef, length(T)-1)
-  _depth_first_constructive!(optimal_sequence, optimal_cost, Pair{Int, Int}[], T, ind_dims, collect(1:length(T)), 0)
+  optimal_sequence = Vector{Pair{Int,Int}}(undef, length(T) - 1)
+  _depth_first_constructive!(
+    optimal_sequence, optimal_cost, Pair{Int,Int}[], T, ind_dims, collect(1:length(T)), 0
+  )
   return pair_sequence_to_tree(optimal_sequence, length(T))
 end
 
-function _depth_first_constructive!(optimal_sequence, optimal_cost, sequence, T, ind_dims, remaining, cost)
+function _depth_first_constructive!(
+  optimal_sequence, optimal_cost, sequence, T, ind_dims, remaining, cost
+)
   if length(remaining) == 1
     # Only should get here if the contraction was the best
     # Otherwise it would have hit the `continue` below
@@ -54,7 +66,7 @@ function _depth_first_constructive!(optimal_sequence, optimal_cost, sequence, T,
     optimal_cost[] = cost
     optimal_sequence .= sequence
   end
-  for aᵢ in 1:length(remaining)-1, bᵢ in aᵢ+1:length(remaining)
+  for aᵢ in 1:(length(remaining) - 1), bᵢ in (aᵢ + 1):length(remaining)
     a = remaining[aᵢ]
     b = remaining[bᵢ]
     current_cost, Tᵈ = contraction_cost(T[a], T[b], ind_dims)
@@ -66,7 +78,8 @@ function _depth_first_constructive!(optimal_sequence, optimal_cost, sequence, T,
     new_T = push!(copy(T), Tᵈ)
     new_remaining = deleteat!(copy(remaining), (aᵢ, bᵢ))
     push!(new_remaining, length(new_T))
-    _depth_first_constructive!(optimal_sequence, optimal_cost, new_sequence, new_T, ind_dims, new_remaining, new_cost)
+    _depth_first_constructive!(
+      optimal_sequence, optimal_cost, new_sequence, new_T, ind_dims, new_remaining, new_cost
+    )
   end
 end
-

@@ -1,16 +1,11 @@
 
-default_compile_dir() = joinpath(homedir(),
-                                 ".julia",
-                                 "sysimages")
+default_compile_dir() = joinpath(homedir(), ".julia", "sysimages")
 
 default_compile_filename() = "sys_itensors.so"
 
-default_compile_path() = joinpath(default_compile_dir(),
-                                  default_compile_filename())
+default_compile_path() = joinpath(default_compile_dir(), default_compile_filename())
 
-
-function compile_note(; dir = default_compile_dir(),
-                        filename = default_compile_filename())
+function compile_note(; dir=default_compile_dir(), filename=default_compile_filename())
   path = joinpath(dir, filename)
   return """
   You will be able to start Julia with a compiled version of ITensors using:
@@ -32,20 +27,25 @@ function compile_note(; dir = default_compile_dir(),
   """
 end
 
-function compile(; dir::AbstractString = default_compile_dir(),
-                 filename::AbstractString = default_compile_filename())
+function compile(;
+  dir::AbstractString=default_compile_dir(),
+  filename::AbstractString=default_compile_filename(),
+)
   if !isdir(dir)
     println("""The directory "$dir" doesn't exist yet, creating it now.""")
     println()
     mkdir(dir)
   end
   path = joinpath(dir, filename)
-  println("""Creating the system image "$path" containing the compiled version of ITensors. This may take a few minutes.""")
-  create_sysimage(:ITensors;
-                  sysimage_path = path,
-                  precompile_execution_file = joinpath(@__DIR__,
-                                                       "precompile_itensors.jl"))
-  println(compile_note(; dir = dir, filename = filename))
+  println(
+    """Creating the system image "$path" containing the compiled version of ITensors. This may take a few minutes.""",
+  )
+  create_sysimage(
+    :ITensors;
+    sysimage_path=path,
+    precompile_execution_file=joinpath(@__DIR__, "precompile_itensors.jl"),
+  )
+  println(compile_note(; dir=dir, filename=filename))
   return path
 end
 

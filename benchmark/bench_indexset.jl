@@ -6,21 +6,23 @@ using ITensors
 suite = BenchmarkGroup()
 
 i = Index(2)
-is = IndexSet(n -> i^(n-1), Order(10))
-is_tuple = ntuple(n -> i^(n-1), Val(10))
+is = IndexSet(n -> i^(n - 1), Order(10))
+is_tuple = ntuple(n -> i^(n - 1), Val(10))
 
 suite["constructor"] = BenchmarkGroup()
 
-suite["constructor"]["function"] = @benchmarkable IndexSet($(n -> i^(n-1)), $(Order(6)))
-suite["constructor"]["function, tuple"] = @benchmarkable ntuple($(n -> i^(n-1)), $(Val(6)))
+suite["constructor"]["function"] = @benchmarkable IndexSet($(n -> i^(n - 1)), $(Order(6)))
+suite["constructor"]["function, tuple"] = @benchmarkable ntuple(
+  $(n -> i^(n - 1)), $(Val(6))
+)
 
 suite["filter"] = BenchmarkGroup()
 
-suite["filter"]["kwargs"] = @benchmarkable filter($is; plev = 3)
+suite["filter"]["kwargs"] = @benchmarkable filter($is; plev=3)
 suite["filter"]["function"] = @benchmarkable filter($(i -> plev(i) < 2), $is)
 suite["filter"]["function, tuple"] = @benchmarkable filter($(i -> plev(i) < 2), $is_tuple)
 
-i,j,k,l = Index.(2, ("i", "j", "k", "l"))
+i, j, k, l = Index.(2, ("i", "j", "k", "l"))
 
 Iij = (i, j)
 Ijl = (j, l)
@@ -32,9 +34,15 @@ suite["set_functions"] = BenchmarkGroup()
 suite["set_functions"]["uniqueinds"] = BenchmarkGroup()
 suite["set_functions"]["uniqueinds"]["nofilter2"] = @benchmarkable uniqueinds($Iijk, $Ikl)
 suite["set_functions"]["uniqueinds"]["nofilter0"] = @benchmarkable uniqueinds($Iij, $Iijk)
-suite["set_functions"]["uniqueinds"]["filter_tags"] = @benchmarkable uniqueinds($Iijk, $Ikl; tags = $(ts"i"))
-suite["set_functions"]["uniqueinds"]["filter_not_tags"] = @benchmarkable uniqueinds($Iijk, $Ikl; tags = $(not("i")))
-suite["set_functions"]["uniqueinds"]["3_inputs"] = @benchmarkable uniqueinds($Iijk, $Ijl, $Ikl)
+suite["set_functions"]["uniqueinds"]["filter_tags"] = @benchmarkable uniqueinds(
+  $Iijk, $Ikl; tags=$(ts"i")
+)
+suite["set_functions"]["uniqueinds"]["filter_not_tags"] = @benchmarkable uniqueinds(
+  $Iijk, $Ikl; tags=$(not("i"))
+)
+suite["set_functions"]["uniqueinds"]["3_inputs"] = @benchmarkable uniqueinds(
+  $Iijk, $Ijl, $Ikl
+)
 
 A = randomITensor(i'', i', i)
 

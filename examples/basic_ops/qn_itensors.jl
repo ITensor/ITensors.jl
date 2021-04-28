@@ -29,4 +29,3 @@ println()
 comb = combiner(i', dag(i))
 @show A * comb
 println()
-

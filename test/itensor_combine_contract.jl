@@ -25,4 +25,3 @@ seed!(12345)
 
   @test C_contract ≈ C_combine_contract
 end
-

@@ -12,6 +12,10 @@
 |:-------------------------------------------------------------------------------:|
 |[![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
 
+|**Style Guide**
+|:-------------------------------------------------------------------------------:|
+|[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|
+
 ITensors is a library for rapidly creating correct and efficient
 tensor network algorithms. 
 

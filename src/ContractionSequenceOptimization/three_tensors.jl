@@ -3,8 +3,7 @@
 # Special case for three tensors
 #
 
-function compute_cost(external_dims::Tuple{Int, Int, Int},
-                      internal_dims::Tuple{Int, Int, Int})
+function compute_cost(external_dims::Tuple{Int,Int,Int}, internal_dims::Tuple{Int,Int,Int})
   dim11, dim22, dim33 = external_dims
   dim12, dim23, dim31 = internal_dims
   cost12 = dim11 * dim22 * dim12 * dim23 * dim31
@@ -68,4 +67,3 @@ function optimal_contraction_sequence(is1, is2, is3)
   sequence = three_tensor_contraction_sequence(which_sequence)
   return sequence
 end
-

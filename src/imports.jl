@@ -75,13 +75,9 @@ import Base.Broadcast:
   instantiate
 
 import ITensors.ContractionSequenceOptimization:
-  contraction_cost,
-  optimal_contraction_sequence
+  contraction_cost, optimal_contraction_sequence
 
-
-import HDF5:
-  read,
-  write
+import HDF5: read, write
 
 import LinearAlgebra:
   axpby!,
@@ -145,6 +141,4 @@ import NDTensors:
   # Deprecated
   addblock!
 
-import Random:
-  randn!
-
+import Random: randn!

@@ -10,12 +10,10 @@
 @deprecate use_combine_contract() ITensors.using_combine_contract()
 @deprecate use_debug_checks() ITensors.using_debug_checks()
 
-
 # indexset.jl
 @deprecate store(is::IndexSet) data(is)
 @deprecate firstintersect(is...; kwargs...) getfirst(intersect(is...); kwargs...)
 @deprecate firstsetdiff(is...; kwargs...) getfirst(setdiff(is...); kwargs...)
-
 
 # itensor.jl
 @deprecate commonindex(args...; kwargs...) commonind(args...; kwargs...)
@@ -30,7 +28,6 @@
 @deprecate setstore!(T::ITensor, st) setstorage!(T, st) false
 @deprecate setstore(T::ITensor, st) setstorage(T, st) false
 @deprecate uniqueindex(args...; kwargs...) uniqueind(args...; kwargs...)
-
 
 # mps/abstractmps.jl
 @deprecate orthoCenter(args...; kwargs...) orthocenter(args...; kwargs...)
@@ -56,4 +53,3 @@
 
 # qn/qn.jl
 @deprecate store(qn::QN) data(qn)
-

@@ -25,13 +25,13 @@ seed!(12345)
   A3 = A'' * A' * A
   @test hassameinds(A3, (i''', i))
   @test contract([A'', A', A]) ≈ A3
-  @test contract([A'', A', A]; sequence = "automatic") ≈ A3
-  @test contract([A'', A', A]; sequence = "left_associative") ≈ A3
-  @test contract([A'', A', A]; sequence = "right_associative") ≈ A3
-  @test contract([A'', A', A]; sequence = [[1, 2], 3]) ≈ A3
-  @test contract([A'', A', A]; sequence = [[2, 3], 1]) ≈ A3
+  @test contract([A'', A', A]; sequence="automatic") ≈ A3
+  @test contract([A'', A', A]; sequence="left_associative") ≈ A3
+  @test contract([A'', A', A]; sequence="right_associative") ≈ A3
+  @test contract([A'', A', A]; sequence=[[1, 2], 3]) ≈ A3
+  @test contract([A'', A', A]; sequence=[[2, 3], 1]) ≈ A3
   # A bad sequence
-  @test contract([A'', A', A]; sequence = [[1, 3], 2]) ≈ A3
+  @test contract([A'', A', A]; sequence=[[1, 3], 2]) ≈ A3
 
   ITensors.enable_contraction_sequence_optimization()
   @test ITensors.using_contraction_sequence_optimization()
@@ -40,12 +40,12 @@ seed!(12345)
   @test A * A'' * A' ≈ A3
   @test contract([A'', A', A]) ≈ A3
   @test contract([A, A'', A']) ≈ A3
-  @test contract([A'', A', A]; sequence = "automatic") ≈ A3
-  @test contract([A'', A', A]; sequence = "left_associative") ≈ A3
-  @test contract([A'', A', A]; sequence = "right_associative") ≈ A3
-  @test contract([A'', A', A]; sequence = [[1, 2], 3]) ≈ A3
-  @test contract([A'', A', A]; sequence = [[2, 3], 1]) ≈ A3
-  @test contract([A'', A', A]; sequence = [[1, 3], 2]) ≈ A3
+  @test contract([A'', A', A]; sequence="automatic") ≈ A3
+  @test contract([A'', A', A]; sequence="left_associative") ≈ A3
+  @test contract([A'', A', A]; sequence="right_associative") ≈ A3
+  @test contract([A'', A', A]; sequence=[[1, 2], 3]) ≈ A3
+  @test contract([A'', A', A]; sequence=[[2, 3], 1]) ≈ A3
+  @test contract([A'', A', A]; sequence=[[1, 3], 2]) ≈ A3
 
   ITensors.disable_contraction_sequence_optimization()
   @test !ITensors.using_contraction_sequence_optimization()
@@ -67,7 +67,7 @@ seed!(12345)
 
   A4 = A''' * A'' * A' * A
   @test hassameinds(A4, (i'''', i))
-  @test contract([A''', A'', A', A]; sequence = [[[1, 2], 3], 4]) ≈ A4
+  @test contract([A''', A'', A', A]; sequence=[[[1, 2], 3], 4]) ≈ A4
 
   ITensors.enable_contraction_sequence_optimization()
   @test ITensors.using_contraction_sequence_optimization()
@@ -78,7 +78,8 @@ seed!(12345)
   @test !ITensors.using_contraction_sequence_optimization()
 
   # This is not the only sequence
-  @test ITensors.optimal_contraction_sequence([A, A'', A', A''']) == Any[Any[1, 3], Any[2, 4]]
+  @test ITensors.optimal_contraction_sequence([A, A'', A', A''']) ==
+        Any[Any[1, 3], Any[2, 4]]
 
   time_without_opt = @elapsed A * A'' * A' * A'''
 
@@ -92,4 +93,3 @@ seed!(12345)
   ITensors.disable_contraction_sequence_optimization()
   @test !ITensors.using_contraction_sequence_optimization()
 end
-

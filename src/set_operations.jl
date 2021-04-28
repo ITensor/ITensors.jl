@@ -48,7 +48,9 @@ _intersect!(s, s2) = filter!(in(s2), s)
 # A version of Base.symdiff that scales quadratically in the number of elements
 # and assumes the elements of each input set are already unique.
 _symdiff(s) = Base.copymutable(s)
-_symdiff(s, itrs...) = _symdiff!(Base.emptymutable(s, Base.promote_eltype(s, itrs...)), s, itrs...)
+function _symdiff(s, itrs...)
+  return _symdiff!(Base.emptymutable(s, Base.promote_eltype(s, itrs...)), s, itrs...)
+end
 function _symdiff!(s, itrs...)
   for x in itrs
     _symdiff!(s, x)
@@ -70,7 +72,9 @@ end
 # A version of Base.union that scales quadratically in the number of elements
 # and assumes the elements of each input set are already unique.
 _union(s) = Base.copymutable(s)
-_union(s, sets...) = _union!(Base.emptymutable(s, Base.promote_eltype(s, sets...)), s, sets...)
+function _union(s, sets...)
+  return _union!(Base.emptymutable(s, Base.promote_eltype(s, sets...)), s, sets...)
+end
 function _union!(s, sets...)
   for x in sets
     _union!(s, x)
@@ -84,4 +88,3 @@ function _union!(s, itr)
   end
   return s
 end
-

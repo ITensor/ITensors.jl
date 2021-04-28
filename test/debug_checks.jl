@@ -34,4 +34,3 @@ using Test
   end
   @test ITensors.using_debug_checks() == initially_using_debug_checks
 end
-

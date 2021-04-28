@@ -1,7 +1,7 @@
 
 # Represents a static order of an ITensor
 @eval struct Order{N}
-  (OrderT::Type{ <: Order})() = $(Expr(:new, :OrderT))
+  (OrderT::Type{<:Order})() = $(Expr(:new, :OrderT))
 end
 
 @doc """
@@ -18,11 +18,11 @@ Order(N) = Order{N}()
 
 # Helpful if we want code to work generically
 # for other Index-like types (such as IndexRange)
-const IndexSet{IndexT <: Index} = Vector{IndexT}
-const IndexTuple{IndexT <: Index} = Tuple{Vararg{IndexT}}
+const IndexSet{IndexT<:Index} = Vector{IndexT}
+const IndexTuple{IndexT<:Index} = Tuple{Vararg{IndexT}}
 
 # Definition to help with generic code
-const Indices{IndexT <: Index} = Union{IndexSet{IndexT}, IndexTuple{IndexT}}
+const Indices{IndexT<:Index} = Union{IndexSet{IndexT},IndexTuple{IndexT}}
 
 # To help with backwards compatibility
 IndexSet(inds::IndexSet) = inds
@@ -35,7 +35,7 @@ IndexSet(f::Function, ::Order{N}) where {N} = IndexSet(f, N)
 # Hard-coded for now to only handle tensors up to order 100
 const ValCache = Val[Val(n) for n in 0:100]
 # Faster conversions of collection to tuple than `Tuple(::AbstractVector)`
-_NTuple(::Val{N}, v::Vector{T}) where {N, T} = ntuple(n -> v[n], Val(N))
+_NTuple(::Val{N}, v::Vector{T}) where {N,T} = ntuple(n -> v[n], Val(N))
 _Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v) + 1], v)
 _Tuple(t::Tuple) = t
 Tuple(is::IndexSet) = _Tuple(is)
@@ -69,7 +69,7 @@ NDTensors.dims(is::IndexSet) = dim.(is)
 Get the product of the dimensions of the indices
 of the Indices (the total dimension of the space).
 """
-NDTensors.dim(is::IndexSet) = Compat.mapreduce(dim, *, is; init = 1)
+NDTensors.dim(is::IndexSet) = Compat.mapreduce(dim, *, is; init=1)
 
 """
     dim(is::IndexSet, n::Int)
@@ -93,8 +93,11 @@ NDTensors.dim(is::Tuple, pos::Int) = dim(is[pos])
 NDTensors.similar(T::NDTensors.DenseTensor, inds::Tuple) = NDTensors._similar(T, inds)
 
 # TODO: this is a weird definition, fix it
-NDTensors.similar_type(::Type{<: Tuple{Vararg{IndexT}}}, ::Type{Val{N}}) where {IndexT, N} = NTuple{N, IndexT}
-
+function NDTensors.similar_type(
+  ::Type{<:Tuple{Vararg{IndexT}}}, ::Type{Val{N}}
+) where {IndexT,N}
+  return NTuple{N,IndexT}
+end
 
 ## # This is to help with some generic programming in the Tensor
 ## # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
@@ -142,8 +145,8 @@ Returns 1 if the Indices is empty.
 function maxdim(is::Indices)
   length(is) == 0 && (return 1)
   md = dim(is[1])
-  for n ∈ 2:length(is)
-    md = max(md,dim(is[n]))
+  for n in 2:length(is)
+    md = max(md, dim(is[n]))
   end
   return md
 end
@@ -215,7 +218,7 @@ An internal function that returns a function
 that accepts an Index that checks if the
 Index matches the provided conditions.
 """
-function fmatch(; inds = nothing, tags = nothing, plev = nothing, id = nothing)
+function fmatch(; inds=nothing, tags=nothing, plev=nothing, id=nothing)
   return i -> fmatch(inds)(i) && fmatch(plev)(i) && fmatch(id)(i) && fmatch(tags)(i)
 end
 
@@ -250,11 +253,9 @@ function getfirst(f::Function, is::Indices)
   return nothing
 end
 
-getfirst(is::Indices, args...; kwargs...) =
-  getfirst(fmatch(args...; kwargs...),is)
+getfirst(is::Indices, args...; kwargs...) = getfirst(fmatch(args...; kwargs...), is)
 
-Base.findall(is::Indices, args...; kwargs...) =
-  findall(fmatch(args...; kwargs...), is)
+Base.findall(is::Indices, args...; kwargs...) = findall(fmatch(args...; kwargs...), is)
 
 # In general this isn't defined for Tuple but is 
 # defined for Vector
@@ -268,8 +269,7 @@ function Base.indexin(ais::Indices, bis::Indices)
   return [findfirst(bis, ais[i]) for i in 1:length(ais)]
 end
 
-findfirst(is::Indices, args...; kwargs...) =
-  findfirst(fmatch(args...; kwargs...), is)
+findfirst(is::Indices, args...; kwargs...) = findfirst(fmatch(args...; kwargs...), is)
 
 #
 # Tagging functions
@@ -286,8 +286,9 @@ Increase the prime level of the indices by the specified amount.
 Filter which indices are primed using keyword arguments
 tags, plev and id.
 """
-prime(is::Indices, plinc::Integer, args...; kwargs...) =
-  prime(fmatch(args...; kwargs...), is, plinc)
+function prime(is::Indices, plinc::Integer, args...; kwargs...)
+  return prime(fmatch(args...; kwargs...), is, plinc)
+end
 
 prime(f::Function, is::Indices) = prime(f, is, 1)
 
@@ -304,16 +305,15 @@ function setprime(f::Function, is::Indices, args...)
   return map(i -> f(i) ? setprime(i, args...) : i, is)
 end
 
-setprime(is::Indices, plev::Integer, args...; kwargs...) =
-  setprime(fmatch(args...; kwargs...), is, plev)
+function setprime(is::Indices, plev::Integer, args...; kwargs...)
+  return setprime(fmatch(args...; kwargs...), is, plev)
+end
 
-noprime(f::Function, is::Indices, args...) =
-  setprime(is, 0, args...; kwargs...)
+noprime(f::Function, is::Indices, args...) = setprime(is, 0, args...; kwargs...)
 
-noprime(is::Indices, args...; kwargs...) =
-  setprime(is, 0, args...; kwargs...)
+noprime(is::Indices, args...; kwargs...) = setprime(is, 0, args...; kwargs...)
 
-function _swapprime(f::Function, i::Index, pl1pl2::Pair{Int, Int})
+function _swapprime(f::Function, i::Index, pl1pl2::Pair{Int,Int})
   pl1, pl2 = pl1pl2
   if f(i)
     if hasplev(i, pl1)
@@ -326,51 +326,56 @@ function _swapprime(f::Function, i::Index, pl1pl2::Pair{Int, Int})
   return i
 end
 
-swapprime(f::Function, is::Indices, pl1pl2::Pair{Int, Int}) =
-  map(i -> _swapprime(f, i, pl1pl2), is)
+function swapprime(f::Function, is::Indices, pl1pl2::Pair{Int,Int})
+  return map(i -> _swapprime(f, i, pl1pl2), is)
+end
 
-swapprime(f::Function, is::Indices, pl1::Int, pl2::Int) =
-  swapprime(f, is::Indices, pl1 => pl2)
+function swapprime(f::Function, is::Indices, pl1::Int, pl2::Int)
+  return swapprime(f, is::Indices, pl1 => pl2)
+end
 
-swapprime(is::Indices, pl1pl2::Pair{Int, Int}, args...; kwargs...) =
-  swapprime(fmatch(args...; kwargs...), is, pl1pl2)
+function swapprime(is::Indices, pl1pl2::Pair{Int,Int}, args...; kwargs...)
+  return swapprime(fmatch(args...; kwargs...), is, pl1pl2)
+end
 
-swapprime(is::Indices, pl1::Int, pl2::Int, args...; kwargs...) =
-  swapprime(fmatch(args...; kwargs...), is, pl1 => pl2)
+function swapprime(is::Indices, pl1::Int, pl2::Int, args...; kwargs...)
+  return swapprime(fmatch(args...; kwargs...), is, pl1 => pl2)
+end
 
-replaceprime(f::Function, is::Indices, pl1::Int, pl2::Int) =
-  replaceprime(f, is, pl1 => pl2)
+replaceprime(f::Function, is::Indices, pl1::Int, pl2::Int) = replaceprime(f, is, pl1 => pl2)
 
-replaceprime(is::Indices, pl1::Int, pl2::Int, args...; kwargs...) =
-  replaceprime(fmatch(args...; kwargs...), is, pl1 => pl2)
+function replaceprime(is::Indices, pl1::Int, pl2::Int, args...; kwargs...)
+  return replaceprime(fmatch(args...; kwargs...), is, pl1 => pl2)
+end
 
 const mapprime = replaceprime
 
-function _replaceprime(i::Index, rep_pls::Pair{Int, Int}...)
+function _replaceprime(i::Index, rep_pls::Pair{Int,Int}...)
   for (pl1, pl2) in rep_pls
     hasplev(i, pl1) && return setprime(i, pl2)
   end
   return i
 end
 
-function replaceprime(f::Function, is::Indices, rep_pls::Pair{Int, Int}...)
+function replaceprime(f::Function, is::Indices, rep_pls::Pair{Int,Int}...)
   return map(i -> f(i) ? _replaceprime(i, rep_pls...) : i, is)
 end
 
-replaceprime(is::Indices, rep_pls::Pair{Int, Int}...; kwargs...) =
-  replaceprime(fmatch(; kwargs...), is, rep_pls...)
+function replaceprime(is::Indices, rep_pls::Pair{Int,Int}...; kwargs...)
+  return replaceprime(fmatch(; kwargs...), is, rep_pls...)
+end
 
-addtags(f::Function, is::Indices, args...) =
-  map(i -> f(i) ? addtags(i, args...) : i, is)
+addtags(f::Function, is::Indices, args...) = map(i -> f(i) ? addtags(i, args...) : i, is)
 
-addtags(is::Indices, tags, args...; kwargs...) =
-  addtags(fmatch(args...; kwargs...), is, tags)
+function addtags(is::Indices, tags, args...; kwargs...)
+  return addtags(fmatch(args...; kwargs...), is, tags)
+end
 
-settags(f::Function, is::Indices, args...) =
-  map(i -> f(i) ? settags(i, args...) : i, is)
+settags(f::Function, is::Indices, args...) = map(i -> f(i) ? settags(i, args...) : i, is)
 
-settags(is::Indices, tags, args...; kwargs...) =
-  settags(fmatch(args...; kwargs...), is, tags)
+function settags(is::Indices, tags, args...; kwargs...)
+  return settags(fmatch(args...; kwargs...), is, tags)
+end
 
 """
     CartesianIndices(is::Indices)
@@ -379,11 +384,13 @@ Create a CartesianIndices iterator for an Indices.
 """
 CartesianIndices(is::Indices) = CartesianIndices(_Tuple(dims(is)))
 
-removetags(f::Function, is::Indices, args...) =
-  map(i -> f(i) ? removetags(i, args...) : i, is)
+function removetags(f::Function, is::Indices, args...)
+  return map(i -> f(i) ? removetags(i, args...) : i, is)
+end
 
-removetags(is::Indices, tags, args...; kwargs...) =
-  removetags(fmatch(args...; kwargs...), is, tags)
+function removetags(is::Indices, tags, args...; kwargs...)
+  return removetags(fmatch(args...; kwargs...), is, tags)
+end
 
 function _replacetags(i::Index, rep_ts::Pair...)
   for (tags1, tags2) in rep_ts
@@ -411,22 +418,23 @@ hastags(is::Indices, ts) = anyhastags(is, ts)
 
 Check if all of the indices in the Indices have the specified tags.
 """
-allhastags(is::Indices, ts::String) =
-  all(i -> hastags(i, ts), is)
+allhastags(is::Indices, ts::String) = all(i -> hastags(i, ts), is)
 
 # Version taking a list of Pairs
-replacetags(f::Function, is::Indices, rep_ts::Pair...) =
-  map(i -> f(i) ? _replacetags(i, rep_ts...) : i, is)
+function replacetags(f::Function, is::Indices, rep_ts::Pair...)
+  return map(i -> f(i) ? _replacetags(i, rep_ts...) : i, is)
+end
 
-replacetags(is::Indices, rep_ts::Pair...; kwargs...) =
-  replacetags(fmatch(; kwargs...), is, rep_ts...)
+function replacetags(is::Indices, rep_ts::Pair...; kwargs...)
+  return replacetags(fmatch(; kwargs...), is, rep_ts...)
+end
 
 # Version taking two input TagSets/Strings
-replacetags(f::Function, is::Indices, tags1, tags2) =
-  replacetags(f, is, tags1 => tags2)
+replacetags(f::Function, is::Indices, tags1, tags2) = replacetags(f, is, tags1 => tags2)
 
-replacetags(is::Indices, tags1, tags2, args...; kwargs...) =
-  replacetags(fmatch(args...; kwargs...), is, tags1 => tags2)
+function replacetags(is::Indices, tags1, tags2, args...; kwargs...)
+  return replacetags(fmatch(args...; kwargs...), is, tags1 => tags2)
+end
 
 function _swaptags(f::Function, i::Index, tags1, tags2)
   if f(i)
@@ -444,20 +452,25 @@ function swaptags(f::Function, is::Indices, tags1, tags2)
   return map(i -> _swaptags(f, i, tags1, tags2), is)
 end
 
-swaptags(is::Indices, tags1, tags2, args...; kwargs...) =
-  swaptags(fmatch(args...; kwargs...), is, tags1, tags2)
+function swaptags(is::Indices, tags1, tags2, args...; kwargs...)
+  return swaptags(fmatch(args...; kwargs...), is, tags1, tags2)
+end
 
-replaceinds(is::Indices, rep_inds::Pair{<: Index, <: Index}...) =
-  replaceinds(is, zip(rep_inds...)...)
+function replaceinds(is::Indices, rep_inds::Pair{<:Index,<:Index}...)
+  return replaceinds(is, zip(rep_inds...)...)
+end
 
-replaceinds(is::Indices, rep_inds::Vector{<: Pair{<: Index, <: Index}}) =
-  replaceinds(is, rep_inds...)
+function replaceinds(is::Indices, rep_inds::Vector{<:Pair{<:Index,<:Index}})
+  return replaceinds(is, rep_inds...)
+end
 
-replaceinds(is::Indices, rep_inds::Tuple{Vararg{Pair{<: Index, <: Index}}}) =
-  replaceinds(is, rep_inds...)
+function replaceinds(is::Indices, rep_inds::Tuple{Vararg{Pair{<:Index,<:Index}}})
+  return replaceinds(is, rep_inds...)
+end
 
-replaceinds(is::Indices, rep_inds::Pair) =
-  replaceinds(is, Tuple(first(rep_inds)) .=> Tuple(last(rep_inds)))
+function replaceinds(is::Indices, rep_inds::Pair)
+  return replaceinds(is, Tuple(first(rep_inds)) .=> Tuple(last(rep_inds)))
+end
 
 # Check that the QNs are all the same
 hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))
@@ -477,19 +490,19 @@ function replaceinds(is::Indices, inds1, inds2)
   return (is_tuple)
 end
 
-replaceind(is::Indices, i1::Index, i2::Index) =
-  replaceinds(is, (i1,), (i2,))
+replaceind(is::Indices, i1::Index, i2::Index) = replaceinds(is, (i1,), (i2,))
 
 function replaceind(is::Indices, i1::Index, i2::Indices)
-    length(i2) != 1 && throw(ArgumentError("cannot use replaceind with an Indices of length $(length(i2))"))
-    replaceinds(is, (i1,), i2)
+  length(i2) != 1 &&
+    throw(ArgumentError("cannot use replaceind with an Indices of length $(length(i2))"))
+  return replaceinds(is, (i1,), i2)
 end
 
-replaceind(is::Indices, rep_i::Pair{ <: Index, <: Index}) =
-  replaceinds(is, rep_i)
+replaceind(is::Indices, rep_i::Pair{<:Index,<:Index}) = replaceinds(is, rep_i)
 
-swapinds(is::Indices, inds1, inds2) =
-  replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
+function swapinds(is::Indices, inds1, inds2)
+  return replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
+end
 
 swapind(is::Indices, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
@@ -503,7 +516,11 @@ removeqns(is::Indices) = is
 # setdirs(is1::Indices, is2::Indices)
 #
 function permute(is1::Indices, is2::Indices)
-  length(is1) != length(is2) && throw(ArgumentError("length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))"))
+  length(is1) != length(is2) && throw(
+    ArgumentError(
+      "length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))",
+    ),
+  )
   perm = getperm(is1, is2)
   return is1[perm]
 end
@@ -516,55 +533,65 @@ function compute_contraction_labels(Ais::Tuple, Bis::Tuple)
   have_qns = hasqns(Ais) && hasqns(Bis)
   NA = length(Ais)
   NB = length(Bis)
-  Alabels = MVector{NA,Int}(ntuple(_->0,Val(NA)))
-  Blabels = MVector{NB,Int}(ntuple(_->0,Val(NB)))
+  Alabels = MVector{NA,Int}(ntuple(_ -> 0, Val(NA)))
+  Blabels = MVector{NB,Int}(ntuple(_ -> 0, Val(NB)))
 
   ncont = 0
-  for i = 1:NA, j = 1:NB
+  for i in 1:NA, j in 1:NB
     Ais_i = @inbounds Ais[i]
     Bis_j = @inbounds Bis[j]
     if Ais_i == Bis_j
       if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
-        error("Attempting to contract IndexSet:\n$(Ais)with IndexSet:\n$(Bis)QN indices must have opposite direction to contract.")
+        error(
+          "Attempting to contract IndexSet:\n$(Ais)with IndexSet:\n$(Bis)QN indices must have opposite direction to contract.",
+        )
       end
-      Alabels[i] = Blabels[j] = -(1+ncont)
+      Alabels[i] = Blabels[j] = -(1 + ncont)
       ncont += 1
     end
   end
 
   u = ncont
-  for i = 1:NA
-    if(Alabels[i]==0) Alabels[i] = (u+=1) end
+  for i in 1:NA
+    if (Alabels[i] == 0)
+      Alabels[i] = (u += 1)
+    end
   end
-  for j = 1:NB
-    if(Blabels[j]==0) Blabels[j] = (u+=1) end
+  for j in 1:NB
+    if (Blabels[j] == 0)
+      Blabels[j] = (u += 1)
+    end
   end
 
-  return (Tuple(Alabels),Tuple(Blabels))
+  return (Tuple(Alabels), Tuple(Blabels))
 end
 
 function compute_contraction_labels(Cis::Tuple, Ais::Tuple, Bis::Tuple)
   NA = length(Ais)
   NB = length(Bis)
   NC = length(Cis)
-  Alabels,Blabels = compute_contraction_labels(Ais, Bis)
-  Clabels = MVector{NC,Int}(ntuple(_->0,Val(NC)))
-  for i = 1:NC
+  Alabels, Blabels = compute_contraction_labels(Ais, Bis)
+  Clabels = MVector{NC,Int}(ntuple(_ -> 0, Val(NC)))
+  for i in 1:NC
     locA = findfirst(==(Cis[i]), Ais)
     if !isnothing(locA)
       if Alabels[locA] < 0
-        error("The noncommon indices of $Ais and $Bis must be the same as the indices $Cis.")
+        error(
+          "The noncommon indices of $Ais and $Bis must be the same as the indices $Cis."
+        )
       end
       Clabels[i] = Alabels[locA]
     else
       locB = findfirst(==(Cis[i]), Bis)
       if isnothing(locB) || Blabels[locB] < 0
-        error("The noncommon indices of $Ais and $Bis must be the same as the indices $Cis.")
+        error(
+          "The noncommon indices of $Ais and $Bis must be the same as the indices $Cis."
+        )
       end
       Clabels[i] = Blabels[locB]
     end
   end
-  return (Tuple(Clabels),Alabels,Blabels)
+  return (Tuple(Clabels), Alabels, Blabels)
 end
 
 #
@@ -576,7 +603,7 @@ end
 
 Return a new Indices with the last Index removed.
 """
-pop(is::Indices) = (NDTensors.pop(Tuple(is))) 
+pop(is::Indices) = (NDTensors.pop(Tuple(is)))
 
 # Overload the unexported NDTensors version
 NDTensors.pop(is::Indices) = pop(is)
@@ -587,7 +614,7 @@ NDTensors.pop(is::Indices) = pop(is)
 
 Return a new Indices with the first Index removed.
 """
-popfirst(is::IndexSet) = (NDTensors.popfirst(Tuple(is))) 
+popfirst(is::IndexSet) = (NDTensors.popfirst(Tuple(is)))
 
 # Overload the unexported NDTensors version
 NDTensors.popfirst(is::IndexSet) = popfirst(is)
@@ -604,12 +631,10 @@ push(is::IndexSet, i::Index) = NDTensors.push(is, i)
 NDTensors.push(is::IndexSet, i::Index) = push(is, i)
 
 # TODO: deprecate in favor of `filterinds` (abuse of Base notation)
-filter(is::Indices, args...; kwargs...) =
-  filter(fmatch(args...; kwargs...), is)
+filter(is::Indices, args...; kwargs...) = filter(fmatch(args...; kwargs...), is)
 
 # For ambiguity with Base.filter
-filter(is::Indices, args::String; kwargs...) =
-  filter(fmatch(args; kwargs...), is)
+filter(is::Indices, args::String; kwargs...) = filter(fmatch(args; kwargs...), is)
 
 #
 # QN functions
@@ -621,7 +646,7 @@ filter(is::Indices, args::String; kwargs...) =
 Return a new Indices with indices `setdir(is[i], dirs[i])`.
 """
 function setdirs(is::Indices, dirs)
-  return map(i->setdir(is[i], dirs[i]), 1:length(is))
+  return map(i -> setdir(is[i], dirs[i]), 1:length(is))
 end
 
 """
@@ -640,7 +665,7 @@ Return a tuple of the directions of the indices `inds` in
 the Indices `is`, in the order they are found in `inds`.
 """
 function dirs(is1::Indices, inds)
-  return map(i->dir(is1, inds[i]), 1:length(inds))
+  return map(i -> dir(is1, inds[i]), 1:length(inds))
 end
 
 """
@@ -650,7 +675,7 @@ Return a tuple of the directions of the indices `is`.
 """
 dirs(is::Indices) = dir.(is)
 
-hasqns(is::Indices) = any(hasqns,is)
+hasqns(is::Indices) = any(hasqns, is)
 
 """
     getperm(col1, col2)
@@ -671,7 +696,7 @@ end
 The number of blocks in the specified dimension.
 """
 function NDTensors.nblocks(inds::IndexSet, i::Int)
-  return nblocks(Tuple(inds),i)
+  return nblocks(Tuple(inds), i)
 end
 
 # TODO: don't convert to Tuple
@@ -758,7 +783,7 @@ ITensors.block(is, 1, 2) == (1,1)
 block(inds::Indices, vals::Int...) = blockindex(inds, vals...)[2]
 
 function show(io::IO, is::IndexSet)
-  print(io,"IndexSet{$(length(is))} ")
+  print(io, "IndexSet{$(length(is))} ")
   for n in eachindex(is)
     i = is[n]
     print(io, i)
@@ -772,44 +797,41 @@ end
 # Read and write
 #
 
-function readcpp(io::IO,::Type{<:Indices};kwargs...)
-  format = get(kwargs,:format,"v3")
+function readcpp(io::IO, ::Type{<:Indices}; kwargs...)
+  format = get(kwargs, :format, "v3")
   is = IndexSet()
-  if format=="v3"
-    size = read(io,Int)
-    function readind(io,n)
-      i = readcpp(io,Index;kwargs...)
-      stride = read(io,UInt64)
+  if format == "v3"
+    size = read(io, Int)
+    function readind(io, n)
+      i = readcpp(io, Index; kwargs...)
+      stride = read(io, UInt64)
       return i
     end
-    is = IndexSet(n -> readind(io,n), size)
+    is = IndexSet(n -> readind(io, n), size)
   else
     throw(ArgumentError("read IndexSet: format=$format not supported"))
   end
   return is
 end
 
-function HDF5.write(parent::Union{HDF5.File,HDF5.Group},
-                    name::AbstractString,
-                    is::Indices)
-  g = create_group(parent,name)
+function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, is::Indices)
+  g = create_group(parent, name)
   attributes(g)["type"] = "IndexSet"
   attributes(g)["version"] = 1
   N = length(is)
-  write(g,"length",N)
-  for n=1:N
-    write(g,"index_$n",is[n])
+  write(g, "length", N)
+  for n in 1:N
+    write(g, "index_$n", is[n])
   end
 end
 
-function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
-                   name::AbstractString,
-                   T::Type{<:Indices})
-  g = open_group(parent,name)
+function HDF5.read(
+  parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, T::Type{<:Indices}
+)
+  g = open_group(parent, name)
   if read(attributes(g)["type"]) != "IndexSet"
     error("HDF5 group or file does not contain IndexSet data")
   end
-  N = read(g,"length")
-  return T(n->read(g, "index_$n", Index), N)
+  N = read(g, "length")
+  return T(n -> read(g, "index_$n", Index), N)
 end
-
