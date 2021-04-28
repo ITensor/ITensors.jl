@@ -28,7 +28,12 @@ function isingMPO(sites)::MPO
   return H
 end
 
+#! format: off
+# JuliaFormatter tries to change this line to:
+# heisenbergMPO(sites, h::Vector{Float64}; onsite::String="Sz")
+# so turn it off for this line.
 function heisenbergMPO(sites, h::Vector{Float64}, onsite::String="Sz")::MPO
+#! format: on
   H = MPO(sites)
   N = length(H)
   link = Vector{Index}(undef, N + 1)

@@ -196,7 +196,20 @@ type `Float64`.
 """
 randomMPS(sites::Vector{<:Index}, linkdim::Int=1) = randomMPS(Float64, sites, linkdim)
 
-"""
+#! format: off
+# JuliaFormatter tries to change this line to:
+# randomMPS(sites::Vector{<:Index}, state; linkdim::Int=1)
+# so turn it off for this line.
+function randomMPS(sites::Vector{<:Index}, state, linkdim::Int=1)::MPS
+#! format: on
+  M = productMPS(sites, state)
+  if linkdim > 1
+    randomizeMPS!(M, sites, linkdim)
+  end
+  return M
+end
+
+@doc """
     randomMPS(sites::Vector{<:Index}, state, linkdim=1)
 
 Construct a real, random MPS with link dimension `linkdim`,
@@ -205,14 +218,7 @@ made by randomizing an initial product state specified by
 QN-conserving random MPS (consisting of QNITensors). The initial
 `state` array provided determines the total QN of the resulting
 random MPS.
-"""
-function randomMPS(sites::Vector{<:Index}, state, linkdim::Int=1)::MPS
-  M = productMPS(sites, state)
-  if linkdim > 1
-    randomizeMPS!(M, sites, linkdim)
-  end
-  return M
-end
+""" randomMPS(::Vector{<:Index}, ::Any, ::Int)
 
 """
     productMPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
