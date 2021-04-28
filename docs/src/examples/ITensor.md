@@ -62,6 +62,36 @@ el = T[j=>1,i=>2,k=>3]
 println("The (i,j,k) = (2,1,3) element of T is ",el)
 ```
 
+## Constructing ITensors from Arrays
+
+To initialize all of the elements of an ITensor at once, you
+can pass a Julia array into the ITensor constructor.
+
+For example, if we want to construct an ITensor `A` with indices 
+`i,j` we can initialize it from a matrix as follows:
+
+```julia
+M = [1.0 2.0;
+     3.0 4.0]
+
+i = Index(2,"i")
+j = Index(2,"j")
+
+A = ITensor(M,i,j)
+```
+
+More generally we can use an nth-order (n-dimensional) Julia array to initialize an ITensor:
+
+```julia
+T = randn(4,7,2)
+
+k = Index(4,"index_k")
+l = Index(7,"index_l")
+m = Index(2,"index_m")
+
+B = ITensor(T,k,l,m)
+```
+
 ## Arithmetic With ITensors
 
 ITensors can be added and subtracted and multiplied by scalars just like plain tensors can. But ITensors have the additional feature that you can add and subtract them even if their indices are in a different order from each other, as long as they have the same collection of indices.
