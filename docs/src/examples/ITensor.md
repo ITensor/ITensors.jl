@@ -17,6 +17,133 @@ or this
 println("T inds = ",inds(T))
 ```
 
+## Getting and Setting Elements of an ITensor
+
+Say we have an ITensor constructed as:
+
+```julia
+i = Index(3,"index_i")
+j = Index(2,"index_j")
+k = Index(4,"index_k")
+
+T = ITensor(i,j,k)
+```
+
+An ITensor constructed this way starts with all of its elements
+equal to zero. (Technically it allocates no storage at all but this is
+an implementation detail.)
+
+**Setting Elements**
+
+To set an element of this ITensor, such as the element where `(i,j,k) = (2,1,3)`,
+you can do the following:
+
+```julia
+T[i=>2,j=>1,k=>3] = -3.2
+```
+
+In the Julia language, the notation `a=>b` is a built-in notation for making a `Pair(a,b)`
+object.
+
+Because the Index objects are passed to `T` along with their values, passing them in a different order has exactly the same effect:
+
+```julia
+# Both of these lines of code do the same thing:
+T[j=>1,i=>2,k=>3] = -3.2
+T[j=>1,k=>3,i=>2] = -3.2
+```
+
+**Getting Elements**
+
+You can retrieve individual elements of an ITensor by accessing them through the same notation used to set elements:
+
+```julia
+el = T[j=>1,i=>2,k=>3]
+println("The (i,j,k) = (2,1,3) element of T is ",el)
+```
+
+## Arithmetic With ITensors
+
+ITensors can be added and subtracted and multiplied by scalars just like plain tensors can. But ITensors have the additional feature that you can add and subtract them even if their indices are in a different order from each other, as long as they have the same collection of indices.
+
+For example, say we have ITensors `A`, `B`, and `C`:
+```julia
+i = Index(3,"i")
+j = Index(2,"j")
+k = Index(4,"k")
+
+A = randomITensor(i,j,k)
+B = randomITensor(i,j,k)
+C = randomITensor(k,i,j)
+```
+Above we have initialized these ITensors to have random elements, just for the sake of this example.
+
+We can then add or subtract these ITensors
+
+```julia
+R1 = A+B
+R2 = A-B
+R3 = A+B-C
+```
+
+or do more complicated operations involving real and complex scalars too:
+
+```julia
+R4 = 2.0*A - B + C/(1+1im)
+```
+
+## Elementwise Operations on ITensors
+
+ITensor objects support Julia broadcasting operations, making it quite easy to carry out element-wise operations on them in a very similar way as for regular Julia arrays. As a concrete example, consider the following ITensor initialized with random elements
+
+```julia
+i = Index(2,"i")
+j = Index(3,"j")
+
+T = randomITensor(i,j)
+```
+
+Here are some examples of basic element-wise operations we can do using Julia's dotted operator broadcasting syntax.
+
+```julia
+# Multiply every element of `T` by 2.0:
+T .*= 2.0
+```
+
+```julia
+# Add 1.5 to every element of T
+T .+= 1.5
+```
+
+The dotted notation works for functions too:
+
+```julia
+# Replace every element in T by its absolute value:
+T .= abs.(T)
+```
+
+```julia
+# Replace every element in T by the number 1.0
+T .= one.(T)
+```
+
+If have another ITensor `A = ITensor(j,i)`, which has the same set of indices
+though possibly in a different order, then we can also do element-wise operations
+involving both ITensors:
+
+```julia
+# Add elements of A and T element-wise
+A .= A .+ T
+```
+
+Last but not least, it is possible to make custom functions yourself and broadcast them across elements of ITensors:
+
+```julia
+myf(x) = 1.0/(1.0+exp(-x))
+T .= myf.(T)
+```
+
+
 
 ## Tracing an ITensor
 
