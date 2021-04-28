@@ -69,7 +69,7 @@ NDTensors.dims(is::IndexSet) = dim.(is)
 Get the product of the dimensions of the indices
 of the Indices (the total dimension of the space).
 """
-NDTensors.dim(is::IndexSet) = prod(dim, is; init = 1)
+NDTensors.dim(is::IndexSet) = Compat.mapreduce(dim, *, is; init = 1)
 
 """
     dim(is::IndexSet, n::Int)

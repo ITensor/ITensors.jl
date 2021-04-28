@@ -375,7 +375,12 @@ end
 Array{ElT, N}(::NeverAlias, A::AbstractArray) where {ElT, N} = Array{ElT, N}(A)
 Array{ElT, N}(::AllowAlias, A::AbstractArray) where {ElT, N} = convert(Array{ElT, N}, A)
 Array{ElT}(as::AliasStyle, A::AbstractArray{ElTA, N}) where {ElT, N, ElTA} = Array{ElT, N}(as, A)
-(Array{ElT, N} where {ElT})(as::AliasStyle, A::AbstractArray{ElTA, N}) where {N, ElTA} = Array{ElTA, N}(as, A)
+
+# TODO: Change to:
+# (Array{ElT, N} where {ElT})([...]) = [...]
+# once support for `VERSION < v"1.6"` is dropped.
+# Previous to Julia v1.6 `where` syntax couldn't be used in a function name
+Array{<:Any, N}(as::AliasStyle, A::AbstractArray{ElTA, N}) where {N, ElTA} = Array{ElTA, N}(as, A)
 
 """
     ITensor([ElT::Type, ]A::Array, inds)
