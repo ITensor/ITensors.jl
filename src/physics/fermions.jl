@@ -201,31 +201,44 @@ function NDTensors.mult_combiner_signs(C,
   labelsC = [l for l in labelsC_]
   labelsT = [l for l in labelsT_]
 
+  # number of uncombined indices
+  Nuc = NC-1
+
   ci = cinds(store(C))[1]
   combining = (labelsC[ci] > 0)
 
   isconj = NDTensors.isconj(store(C))
 
-  # number of uncombined indices
-  Nuc = length(labelsC)-1
-
   if combining
-    #println("Combining <<<<<<<<<<<<<<<<<<<<<<<<<<<")
+    println("Combining <<<<<<<<<<<<<<<<<<<<<<<<<<<")
     #(!isconj) ? println("Doing Case #1") : println("Doing Case #3")
+
+    nlabelsT = Int[]
 
     if !isconj
       # Permute uncombined indices to front
-      # in same order as that on the combiner itself
-      nlabelsT = sort(labelsT)
-      nlabelsT[1:Nuc] = labelsC[2:end]
-    else
+      # in same order as indices passed to the
+      # combiner constructor
+      append!(nlabelsT,labelsC[2:end])
+    else # isconj
       # If combiner is conjugated, put uncombined
       # indices in *opposite* order as on combiner
-      nlabelsT = sort(labelsT)
+      append!(nlabelsT,reverse(labelsC[2:end]))
     end
+    for l in labelsT
+      if l > 0 #uncontracted
+        append!(nlabelsT,l)
+      end
+    end
+
+    @assert length(nlabelsT)==NT
+    @show labelsC
+    @show labelsT
+    @show nlabelsT
 
     # Compute permutation that moves uncombined indices to front
     permT = NDTensors.getperm(nlabelsT,labelsT)
+    @show permT
 
     for blockT in keys(blockoffsets(T))
       # Compute sign from permuting uncombined indices to front:
@@ -238,13 +251,27 @@ function NDTensors.mult_combiner_signs(C,
         i = indsT[n]
         qi = qn(i,blockT[n])
         if labelsT[n] < 0 && fparity(qi)==1
+          # vv DEBUG
+          #arrow_sign = (dir(i)==neg_dir) ? -1 : +1
+          #if arrow_sign == -1
+          #  @show i,qi
+          #end
+          # ^^ DEBUG
           alpha_arrows *= (dir(i)==neg_dir) ? -1 : +1
           #alphaC *= -1
         end
       end
 
-      #@show blockT,alphaT,alpha_arrows
-      fac = alphaT#*alpha_arrows
+      fac = alphaT*alpha_arrows
+      @show blockT,alphaT,alpha_arrows,fac
+
+      #fac = alphaT
+      #if !isconj
+      #  fac *= alpha_arrows
+      #  @show blockT,alphaT,alpha_arrows,fac
+      #else
+      #  @show blockT,alphaT,fac
+      #end
 
       if fac != 1
         Tb = blockview(T,blockT)
