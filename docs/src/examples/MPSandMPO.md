@@ -85,14 +85,16 @@ Assign these two tensors back into the MPS to update it.
 ![](twosite_figures/gate_svd.png)
 
 ```julia
-U,S,V = svd(wf,inds(psi[3]),cutoff=1E-8)
+inds3 = uniqueinds(psi[3],psi[4])
+U,S,V = svd(wf,inds3,cutoff=1E-8)
 psi[3] = U
 psi[4] = S*V
 ```
 
-Passing `inds(psi[3])` to the `svd` function tells it to treat any indices of
-the ITensor `wf` that are shared with `psi[3]` as "row" indices which should
-go onto the `U` tensor afterward.
+The call to `uniqueinds(psi[3])` analyzes the indices of `psi[3]` and `psi[4]` 
+and finds any which are unique to just `psi[3]`, saving this collection of indices as `inds3`.
+Passing this collection of indices to the `svd` function tells it to treat any indices 
+that are unique to `psi[3]` as the indices which should go onto the `U` tensor afterward.
 We also set a truncation error cutoff of 1E-8 in the call to `svd` to truncate 
 the smallest singular values and control the size of the resulting MPS.
 Other cutoff values can be used, depending on the desired accuracy,
@@ -106,7 +108,8 @@ orthogonalize!(psi,3)
 wf = (psi[3] * psi[4]) * G
 noprime!(wf)
 
-U,S,V = svd(wf,inds(psi[3]),cutoff=1E-8)
+inds3 = uniqueinds(psi[3],psi[4])
+U,S,V = svd(wf,inds3,cutoff=1E-8)
 psi[3] = U
 psi[4] = S*V
 ```
