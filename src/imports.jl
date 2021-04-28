@@ -3,6 +3,8 @@ import Base:
   Array,
   CartesianIndices,
   Vector,
+  NTuple,
+  Tuple,
   # symbols
   +,
   -,
@@ -11,8 +13,10 @@ import Base:
   ==,
   <,
   >,
+  !,
   # functions
   adjoint,
+  allunique,
   axes,
   complex,
   convert,
@@ -23,8 +27,14 @@ import Base:
   eachindex,
   eltype,
   fill!,
+  filter,
+  filter!,
+  findall,
+  findfirst,
   getindex,
   hash,
+  intersect,
+  intersect!,
   isapprox,
   isempty,
   isless,
@@ -35,15 +45,21 @@ import Base:
   map,
   map!,
   ndims,
+  permutedims,
+  promote_rule,
   push!,
   resize!,
+  setdiff,
+  setdiff!,
   setindex!,
   show,
   similar,
   size,
   summary,
   truncate,
-  zero
+  zero,
+  # macros
+  @propagate_inbounds
 
 import Base.Broadcast:
   # types
@@ -86,6 +102,10 @@ import LinearAlgebra:
 import NDTensors:
   # Modules
   Strided, # to control threading
+  # Types
+  AliasStyle,
+  AllowAlias,
+  NeverAlias,
   # Methods
   array,
   blockdim,
@@ -101,7 +121,7 @@ import NDTensors:
   inds,
   insertblock!,
   matrix,
-  #maxdim,
+  maxdim,
   mindim,
   nblocks,
   nnz,
@@ -113,6 +133,8 @@ import NDTensors:
   polar,
   scale!,
   setblockdim!,
+  setinds,
+  setstorage,
   sim,
   store,
   sum,

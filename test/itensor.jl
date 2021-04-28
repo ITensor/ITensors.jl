@@ -8,7 +8,7 @@ ITensors.enable_debug_checks()
 
 seed!(12345)
 
-digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
+invdigits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:length(x)]))
 
 @testset "Dense ITensor basic functionality" begin
 
@@ -103,7 +103,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     @test storage(A) isa NDTensors.Dense{Float64}
 
     @test ndims(A) == order(A) == 2 == length(inds(A))
-    @test size(A) == dims(A) == (2,2)
+    @test size(A) == dims(A) == (2, 2)
     @test dim(A) == 4
 
     At = randomITensor(Index(2), Index(3))
@@ -115,7 +115,7 @@ digits(::Type{T},x...) where {T} = T(sum([x[length(x)-k+1]*10^(k-1) for k=1:leng
     B = randomITensor(IndexSet(i,j))
     @test storage(B) isa NDTensors.Dense{Float64}
     @test ndims(B) == order(B) == 2 == length(inds(B))
-    @test size(B) == dims(B) == (2,2)
+    @test size(B) == dims(B) == (2, 2)
 
     A = randomITensor()
     @test eltype(A) == Float64
@@ -626,6 +626,7 @@ end
   @test T[i => 1, j => 1] == 6
   @test storage(T) isa Dense{Int}
 
+  # This version makes a copy
   M = [1. 2;
        3 4]
   T = ITensor(M, i, j)
@@ -734,22 +735,53 @@ end
   @test B≈A
 end
 
-@testset "permute, always_copy = false" begin
+@testset "permute" begin
   i = Index(2)
   A = ITensor(i, i')
   Ap = permute(A, i, i')
   A[i => 1, i' => 1] = 1
   @test A[i => 1, i' => 1] == 1
-  @test Ap[i => 1, i' => 1] == 1
+  @test Ap[i => 1, i' => 1] == 0
 end
 
-@testset "permute, always_copy = true" begin
+@testset "permute, NeverAlias()/AllowAlias()" begin
   i = Index(2)
   A = ITensor(i, i')
-  Ap = permute(A, i, i'; always_copy = true)
+  Ap = permute(A, i, i')
   A[i => 1, i' => 1] = 1
   @test A[i => 1, i' => 1] == 1
   @test Ap[i => 1, i' => 1] == 0
+
+  i = Index(2)
+  A = ITensor(i, i')
+  Ap = permute(ITensors.NeverAlias(), A, i, i')
+  A[i => 1, i' => 1] = 1
+  @test A[i => 1, i' => 1] == 1
+  @test Ap[i => 1, i' => 1] == 0
+
+  i = Index(2, "index_i")
+  j = Index(4, "index_j")
+  k = Index(3, "index_k");
+  T = randomITensor(i, j, k)
+
+  # NeverAlias()/allow_alias = false by default
+  pT_noalias_1 = permute(T, i, j, k)
+  pT_noalias_1[1, 1, 1] = 12
+  @test T[1, 1, 1] != pT_noalias_1[1, 1, 1]
+
+  pT_noalias_2 = permute(T, i, j, k; allow_alias = false)
+  pT_noalias_2[1, 1, 1] = 12
+  @test T[1, 1, 1] != pT_noalias_1[1, 1, 1]
+
+  cT = copy(T)
+  pT_alias = permute(cT, i, j, k; allow_alias = true)
+  pT_alias[1, 1, 1] = 12
+  @test cT[1, 1, 1] == pT_alias[1, 1, 1]
+
+  cT = copy(T)
+  pT_alias = permute(ITensors.AllowAlias(), cT, i, j, k)
+  pT_alias[1, 1, 1] = 12
+  @test cT[1, 1, 1] == pT_alias[1, 1, 1]
 end
 
 @testset "ITensor tagging and priming" begin
@@ -948,8 +980,8 @@ end #End "ITensor other index operations"
 
     S1 = TC+TR
     S2 = TR+TC
-    @test typeof(S1.storage) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
-    @test typeof(S2.storage) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(storage(S1)) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
+    @test typeof(storage(S2)) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
     for ii=1:dim(i),jj=1:dim(j)
       @test S1[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
       @test S2[i=>ii,j=>jj] ≈ TC[i=>ii,j=>jj]+TR[i=>ii,j=>jj]
@@ -970,12 +1002,12 @@ end
   @testset "Set and get values with IndexVals" begin
     A = ITensor(SType,i,j,k)
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      A[k=>kk,j=>jj,i=>ii] = digits(SType,ii,jj,kk)
+      A[k=>kk,j=>jj,i=>ii] = invdigits(SType,ii,jj,kk)
     end
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test A[j=>jj,k=>kk,i=>ii]==digits(SType,ii,jj,kk)
+      @test A[j=>jj,k=>kk,i=>ii]==invdigits(SType,ii,jj,kk)
     end
-    @test_throws DimensionMismatch A[1]
+    @test A[1] == invdigits(SType, 1, 1, 1)
   end
   @testset "Test permute(ITensor,Index...)" begin
     A = randomITensor(SType,i,k,j)
@@ -1009,11 +1041,11 @@ end
     A = ITensor(SType,i,j,k)
     A = permute(A,k,i,j)
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      A[kk,ii,jj] = digits(SType,ii,jj,kk)
+      A[kk,ii,jj] = invdigits(SType,ii,jj,kk)
     end
     A = permute(A,i,j,k)
     for ii ∈ 1:dim(i), jj ∈ 1:dim(j), kk ∈ 1:dim(k)
-      @test A[ii,jj,kk]==digits(SType,ii,jj,kk)
+      @test A[ii,jj,kk]==invdigits(SType,ii,jj,kk)
     end
   end
   @testset "Test scalar(ITensor)" begin
@@ -1213,7 +1245,13 @@ end # End Dense storage test
   @test v1[1] ≈ cv1[1]
 
   v2 = randomITensor(i)
-  cv2 = dag(v2;always_copy=true)
+  cv2 = dag(ITensors.NeverAlias(), v2)
+  orig_elt = v2[1]
+  cv2[1] = -1
+  @test v2[1] ≈ orig_elt
+
+  v2 = randomITensor(i)
+  cv2 = dag(v2; allow_alias = false)
   orig_elt = v2[1]
   cv2[1] = -1
   @test v2[1] ≈ orig_elt
@@ -1225,7 +1263,7 @@ end # End Dense storage test
   @test v3[1] ≈ orig_elt
 
   v4 = randomITensor(ComplexF64,i)
-  cv4 = dag(v4;always_copy=true)
+  cv4 = dag(ITensors.NeverAlias(), v4)
   orig_elt = v4[1]
   cv4[1] = -1
   @test v4[1] ≈ orig_elt

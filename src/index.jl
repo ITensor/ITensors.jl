@@ -135,6 +135,14 @@ dir(i::Index) = i.dir
 # Used for generic code in NDTensors
 NDTensors.dir(i::Index) = dir(i)
 
+# Trait to determine if an Index, Index collection, Tensor, or ITensor
+# has symmetries
+abstract type SymmetryStyle end
+
+struct NonQN <: SymmetryStyle end
+
+symmetrystyle(::Index) = NonQN()
+
 """
     setdir(i::Index, dir::Arrow)
 
@@ -174,6 +182,17 @@ Return Not{IDType}(n).
 """
 not(id::IDType) = Not(id)
 
+# Information essential to the
+# identity of an Index.
+# Currently only used for hashing an Index.
+struct IndexID
+  id::IDType
+  tags::TagSet
+  plev::Int
+end
+IndexID(i::Index) = IndexID(id(i), tags(i), plev(i))
+hash(i::Index, h::UInt) = hash(IndexID(i), h)
+
 """
     ==(i1::Index, i1::Index)
 
@@ -181,17 +200,13 @@ Compare indices for equality. First the id's are compared,
 then the prime levels are compared, and finally the
 tags are compared.
 """
-function Base.:(==)(i1::Index, i2::Index)
-  return id(i1) == id(i2) &&
-         plev(i1) == plev(i2) &&
-         tags(i1) == tags(i2)
-end
+(i1::Index == i2::Index) = (id(i1) == id(i2)) && (plev(i1) == plev(i2)) && (tags(i1) == tags(i2))
 
 # This is so that when IndexSets are converted
 # to Julia Base Sets, the hashing is done correctly
-function Base.hash(i::Index, h::UInt)
-  return hash((id(i), tags(i), plev(i)), h)
-end
+#function Base.hash(i::Index, h::UInt)
+#  return hash((id(i), tags(i), plev(i)), h)
+#end
 
 
 """

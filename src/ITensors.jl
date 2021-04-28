@@ -68,12 +68,14 @@ include("global_variables.jl")
 #####################################
 # Index and IndexSet
 #
-include("smallstring.jl")
+include("smallstring.jl") # Not currently using in TagSet
 include("readwrite.jl")
 include("not.jl")
 include("tagset.jl")
 include("arrow.jl")
+include("symmetrystyle.jl")
 include("index.jl")
+include("set_operations.jl")
 include("indexset.jl")
 
 #####################################

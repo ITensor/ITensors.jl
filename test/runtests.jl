@@ -4,6 +4,7 @@ using Test
   @testset "$filename" for filename in [
     "tagset.jl",
     "smallstring.jl",
+    "symmetrystyle.jl",
     "index.jl",
     "indexset.jl",
     "not.jl",

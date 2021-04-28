@@ -15,6 +15,10 @@ A = randomITensor(i, j, k, l)
   @test eltype(storage(C)) === Number
   @test_throws ErrorException ITensors.data(C)
   @test NDTensors.uncombinedinds(NDTensors.tensor(C)) == (i, j, k)
+  C2 = copy(C)
+  @test eltype(storage(C2)) === Number
+  @test_throws ErrorException ITensors.data(C2)
+  @test NDTensors.uncombinedinds(NDTensors.tensor(C2)) == (i, j, k)
 end
 
 @testset "Empty combiner" begin

@@ -1687,7 +1687,11 @@ end
 Return true if the MPS or MPO has
 tensors which carry quantum numbers.
 """
-hasqns(M::AbstractMPS) = hasqns(M[1])
+hasqns(M::AbstractMPS) = any(hasqns, data(M))
+
+# Trait type version of hasqns
+# Note this is not inferrable, so hasqns would be preferred
+symmetrystyle(M::AbstractMPS) = symmetrystyle(data(M))
 
 """
     flux(M::MPS)

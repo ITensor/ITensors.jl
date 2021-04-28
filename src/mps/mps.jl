@@ -39,11 +39,13 @@ MPS(N::Int; ortho_lims::UnitRange = 1:N) =
   MPS(Vector{ITensor}(undef, N); ortho_lims = ortho_lims)
 
 """
-    MPS([::Type{ElT} = Float64, ]sites)
+    MPS([::Type{ElT} = Float64, ]sites, linkdim = 1)
 
 Construct an MPS filled with Empty ITensors of type `ElT` from a collection of indices.
+
+Optionally specify the link dimension, which by default is 1.
 """
-function MPS(::Type{T}, sites::Vector{<:Index}) where {T <: Number}
+function MPS(::Type{T}, sites::Vector{<:Index}, linkdim = 1) where {T <: Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   if N==1
@@ -51,21 +53,27 @@ function MPS(::Type{T}, sites::Vector{<:Index}) where {T <: Number}
     return MPS(v)
   end
 
-  l = [Index(1, "Link,l=$ii") for ii=1:N-1]
+  space = if hasqns(sites)
+    [QN() => linkdim]
+  else
+    linkdim
+  end
+
+  l = [Index(space, "Link,l=$ii") for ii=1:N-1]
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
-      v[ii] = emptyITensor(T,l[ii], s)
+      v[ii] = emptyITensor(T, l[ii], s)
     elseif ii == N
-      v[ii] = emptyITensor(T,l[ii-1], s)
+      v[ii] = emptyITensor(T, dag(l[ii-1]), s)
     else
-      v[ii] = emptyITensor(T,l[ii-1],s,l[ii])
+      v[ii] = emptyITensor(T, dag(l[ii-1]), s, l[ii])
     end
   end
   return MPS(v)
 end
 
-MPS(sites::Vector{<:Index}) = MPS(Float64, sites)
+MPS(sites::Vector{<:Index}, args...) = MPS(Float64, sites, args...)
 
 function randomU(s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)

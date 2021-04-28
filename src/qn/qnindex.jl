@@ -54,6 +54,15 @@ const QNIndex = Index{QNBlocks}
 
 const QNIndexVal = IndexVal{QNIndex}
 
+# Trait for the symmetry type (QN or not QN)
+struct HasQNs <: SymmetryStyle end
+
+symmetrystyle(::QNIndex) = HasQNs()
+symmetrystyle(::HasQNs, ::HasQNs) = HasQNs()
+symmetrystyle(::NonQN, ::NonQN) = NonQN()
+symmetrystyle(::HasQNs, ::NonQN) = HasQNs()
+symmetrystyle(::NonQN, ::HasQNs) = HasQNs()
+
 hasqns(::QNIndex) = true
 
 function have_same_qns(qnblocks::QNBlocks)
@@ -130,6 +139,8 @@ Index(qnblocks::QNBlock...; dir::Arrow = Out, tags = "", plev = 0) =
 dim(i::QNIndex) = dim(space(i))
 
 nblocks(i::QNIndex) = nblocks(space(i))
+# Define to be 1 for non-QN Index
+nblocks(i::Index) = 1
 
 # Get the Block that the index value falls in
 # For example:

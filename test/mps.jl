@@ -15,6 +15,13 @@ include("util.jl")
   psi = MPS(sites)
   @test length(psi) == N
   @test length(MPS()) == 0
+  @test linkdims(psi) == fill(1, N-1)
+  @test isnothing(flux(psi))
+
+  psi = MPS(sites, 3)
+  @test length(psi) == N
+  @test length(MPS()) == 0
+  @test linkdims(psi) == fill(3, N-1)
   @test isnothing(flux(psi))
 
   str = split(sprint(show, psi), '\n')

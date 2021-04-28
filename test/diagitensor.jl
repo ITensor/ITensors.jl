@@ -13,7 +13,7 @@ using ITensors,
   p = Index(d,"p")
   q = Index(d,"q")
 
-  v = [1:d...]
+  v = collect(1:d)
   vr = randn(d)
 
   @testset "non-uniform diagonal values" begin
@@ -110,6 +110,60 @@ using ITensors,
       @test norm(rD+im*iD-D) < 1E-8
     end
     
+    @testset "Constructor AllowAlias/NeverAlias" begin
+      vv = ones(d)
+      D = diagITensor(vv, i, j)
+      @test eltype(D) === Float64
+      D[1, 1] = 5.0
+      @test vv[1] == 1.0
+      @test vv[1] != D[1, 1]
+
+      vv = ones(Int, d)
+      D = diagITensor(vv, i, j)
+      @test eltype(D) === Float64
+      D[1, 1] = 5.0
+      @test vv[1] == 1.0
+      @test vv[1] != D[1, 1]
+
+      vv = ones(Int, d)
+      D = diagITensor(Int, vv, i, j)
+      @test eltype(D) === Int
+      D[1, 1] = 5
+      @test vv[1] == 1
+      @test vv[1] != D[1, 1]
+
+      vv = ones(d)
+      D = diagitensor(vv, i, j)
+      @test eltype(D) === Float64
+      D[1, 1] = 5.0
+      @test vv[1] == 5.0
+      @test vv[1] == D[1, 1]
+
+      vv = ones(Int, d)
+      D = diagitensor(vv, i, j)
+      @test eltype(D) === Float64
+      D[1, 1] = 5.0
+      @test vv[1] == 1.0
+      @test vv[1] != D[1, 1]
+
+      vv = ones(Int, d)
+      D = diagitensor(Int, vv, i, j)
+      @test eltype(D) === Int
+      D[1, 1] = 5
+      @test vv[1] == 5
+      @test vv[1] == D[1, 1]
+
+      D = diagITensor(1, i, j)
+      @test eltype(D) === Float64
+      D[1, 1] = 5
+      @test D[1, 1] == 5
+
+      D = diagITensor(Int, 1, i, j)
+      @test eltype(D) === Int
+      D[1, 1] = 5
+      @test D[1, 1] == 5
+    end
+
     @testset "fill!" begin
       D = diagITensor(ones(d), i,j,k)
       D = fill!(D, 2.0)

@@ -67,6 +67,7 @@ include("util.jl")
     @test norm(U*S*V-T)/norm(T) < 1E-10
   end
 
+  # TODO: remove this test, it takes a long time
   @testset "Ill-conditioned matrix" begin
     d = 5000
     i = Index(d, "i")

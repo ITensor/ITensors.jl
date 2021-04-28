@@ -103,6 +103,7 @@ and operators that are defined [here](https://github.com/ITensor/ITensors.jl/tre
 """
 SiteType(s::AbstractString) = SiteType{Tag(s)}()
 
+SiteType(t::Integer) = SiteType{Tag(t)}()
 SiteType(t::Tag) = SiteType{t}()
 
 tag(::SiteType{T}) where {T} = T
@@ -172,7 +173,7 @@ op(::SiteType, ::Index, ::AbstractString; kwargs...) = nothing
 
 function _sitetypes(ts::TagSet)
   Ntags = length(ts)
-  return SiteType[SiteType(ts[n]) for n in 1:Ntags]
+  return SiteType[SiteType(data(ts)[n]) for n in 1:Ntags]
 end
 
 _sitetypes(i::Index) = _sitetypes(tags(i))

@@ -33,7 +33,7 @@ Random.seed!(1234)
     @test T[3, 2] == 1e-10
     @test T[3, 3] == 4.0
 
-    T = itensor(A, i', dag(i))
+    T = ITensor(A, i', dag(i))
     @test flux(T) == QN(0)
     @test nnzblocks(T) == 2
     @test Block(1,1) in nzblocks(T)
@@ -95,21 +95,21 @@ Random.seed!(1234)
 
     # no view
     A = diagm(randn(Float64, d))
-    T = itensor(A, i', dag(i); tol = 1e-12)
+    T = ITensor(A, i', dag(i); tol = 1e-12)
     @test storage(T) isa NDTensors.BlockSparse{Float64}
     A[1, 1] = 2.0
     T[1, 1] ≠ 2.0
 
     # no view
     A = diagm(rand(Int, d))
-    T = itensor(Int, A, i', dag(i); tol = 1e-12)
+    T = ITensor(Int, A, i', dag(i); tol = 1e-12)
     @test storage(T) isa NDTensors.BlockSparse{Int}
     A[1, 1] = 2
     T[1, 1] ≠ 2
 
     # no view
     A = diagm(rand(Int, d))
-    T = itensor(A, i', dag(i); tol = 1e-12)
+    T = ITensor(A, i', dag(i); tol = 1e-12)
     @test storage(T) isa NDTensors.BlockSparse{Float64}
     A[1, 1] = 2
     T[1, 1] ≠ 2
@@ -1437,7 +1437,7 @@ Random.seed!(1234)
       insertblock!(A, (2,4))
       insertblock!(A, (1,5))
       U,S,V = svd(A, s; cutoff=0)
-      @test dims(S) == (0,0)
+      @test dims(S) == (0, 0)
       @test U*S*V ≈ A
     end
 
@@ -1470,25 +1470,49 @@ Random.seed!(1234)
 
   v1 = randomITensor(QN(1),i,j)
   orig_elt = v1[1,3]
-  cv1 = dag(v1;always_copy=false)
+  cv1 = dag(v1; allow_alias = true)
+  cv1[1,3] = 123.45
+  @test v1[1,3] ≈ cv1[1,3]
+
+  v1 = randomITensor(QN(1),i,j)
+  orig_elt = v1[1,3]
+  cv1 = dag(ITensors.AllowAlias(), v1)
   cv1[1,3] = 123.45
   @test v1[1,3] ≈ cv1[1,3]
 
   v2 = randomITensor(QN(1),i,j)
   orig_elt = v2[1,3]
-  cv2 = dag(v2;always_copy=true)
+  cv2 = dag(v2; allow_alias = false)
+  cv2[1,3] = 123.45
+  @test v2[1,3] ≈ orig_elt
+
+  v2 = randomITensor(QN(1),i,j)
+  orig_elt = v2[1,3]
+  cv2 = dag(ITensors.NeverAlias(), v2)
   cv2[1,3] = 123.45
   @test v2[1,3] ≈ orig_elt
 
   v3 = randomITensor(ComplexF64,QN(1),i,j)
   orig_elt = v3[1,3]
-  cv3 = dag(v3;always_copy=false)
+  cv3 = dag(v3; allow_alias = true)
+  cv3[1,3] = 123.45
+  @test v3[1,3] ≈ orig_elt
+
+  v3 = randomITensor(ComplexF64,QN(1),i,j)
+  orig_elt = v3[1,3]
+  cv3 = dag(ITensors.AllowAlias(), v3)
   cv3[1,3] = 123.45
   @test v3[1,3] ≈ orig_elt
 
   v4 = randomITensor(ComplexF64,QN(1),i,j)
   orig_elt = v4[1,3]
-  cv4 = dag(v4;always_copy=true)
+  cv4 = dag(v4; allow_alias = false)
+  cv4[1,3] = 123.45
+  @test v4[1,3] ≈ orig_elt
+
+  v4 = randomITensor(ComplexF64,QN(1),i,j)
+  orig_elt = v4[1,3]
+  cv4 = dag(ITensors.NeverAlias(), v4)
   cv4[1,3] = 123.45
   @test v4[1,3] ≈ orig_elt
 
