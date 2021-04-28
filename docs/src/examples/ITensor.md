@@ -111,9 +111,9 @@ Above we have initialized these ITensors to have random elements, just for the s
 We can then add or subtract these ITensors
 
 ```julia
-R1 = A+B
-R2 = A-B
-R3 = A+B-C
+R1 = A + B
+R2 = A - B
+R3 = A + B - C
 ```
 
 or do more complicated operations involving real and complex scalars too:
