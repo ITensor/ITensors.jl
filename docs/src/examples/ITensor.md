@@ -130,40 +130,42 @@ ITensor objects support Julia broadcasting operations, making it quite easy to c
 i = Index(2,"i")
 j = Index(3,"j")
 
-T = randomITensor(i,j)
+A = randomITensor(i,j)
 ```
 
 Here are some examples of basic element-wise operations we can do using Julia's dotted operator broadcasting syntax.
 
 ```julia
-# Multiply every element of `T` by 2.0:
-T .*= 2.0
+# Multiply every element of `A` by 2.0:
+A .*= 2.0
 ```
 
 ```julia
-# Add 1.5 to every element of T
-T .+= 1.5
+# Add 1.5 to every element of A
+A .+= 1.5
 ```
 
 The dotted notation works for functions too:
 
 ```julia
-# Replace every element in T by its absolute value:
-T .= abs.(T)
+# Replace every element in A by its absolute value:
+A .= abs.(A)
 ```
 
 ```julia
-# Replace every element in T by the number 1.0
-T .= one.(T)
+# Replace every element in A by the number 1.0
+A .= one.(A)
 ```
 
-If have another ITensor `A = ITensor(j,i)`, which has the same set of indices
+If have another ITensor `B = ITensor(j,i)`, which has the same set of indices
 though possibly in a different order, then we can also do element-wise operations
 involving both ITensors:
 
 ```julia
-# Add elements of A and T element-wise
-A .= A .+ T
+# Add elements of A and B element-wise
+A .= A .+ B
+# Add elements of A and B element-wise with coefficients included
+A .= (2.0 .* A) .+ (-3.0 .* B)
 ```
 
 Last but not least, it is possible to make custom functions yourself and broadcast them across elements of ITensors:
@@ -172,7 +174,6 @@ Last but not least, it is possible to make custom functions yourself and broadca
 myf(x) = 1.0/(1.0+exp(-x))
 T .= myf.(T)
 ```
-
 
 
 ## Tracing an ITensor
