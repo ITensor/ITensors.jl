@@ -77,7 +77,7 @@ If you use ITensors.jl in your work, for now please cite the [arXiv preprint](ht
 }
 ```
 
-## Code Examples
+## Full Example Codes
 
 The ITensors.jl package contains a directory of examples, which we
 will continue to add to. You can find them online [here](https://github.com/ITensor/ITensors.jl/tree/master/examples).
@@ -134,6 +134,8 @@ You can use your favorite text editor to view these examples. If you
 would like to modify them, either copy them into your own directory,
 or checkout ITensors.jl in development mode using the instructions
 in [Developing ITensors.jl](@ref).
+
+## ITensor Code Samples
 
 ### Basic Overview
 
