@@ -95,6 +95,11 @@ import LinearAlgebra:
   svd,
   tr
 
+using NDTensors:
+  EmptyNumber,
+  fill!!,
+  randn!!
+
 import NDTensors:
   # Modules
   Strided, # to control threading

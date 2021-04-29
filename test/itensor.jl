@@ -21,7 +21,7 @@ end
 
     @testset "Default" begin
       A = ITensor()
-      @test storage(A) isa NDTensors.Dense{Float64}
+      @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
     end
 
     @testset "Undef with index" begin
@@ -31,7 +31,7 @@ end
 
     @testset "Default with indices" begin
       A = ITensor(i, j)
-      @test storage(A) isa NDTensors.Dense{Float64}
+      @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
     end
 
     @testset "Index set operations" begin
@@ -208,7 +208,7 @@ end
 
     @testset "Complex" begin
       A = ITensor(Complex, i, j)
-      @test storage(A) isa NDTensors.Dense{Complex}
+      @test storage(A) isa NDTensors.EmptyStorage{Complex}
     end
 
     @testset "Random complex" begin

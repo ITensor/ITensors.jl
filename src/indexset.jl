@@ -93,7 +93,7 @@ NDTensors.dim(is::Tuple, pos::Int) = dim(is[pos])
 NDTensors.similar(T::NDTensors.DenseTensor, inds::Tuple) = NDTensors._similar(T, inds)
 
 # TODO: this is a weird definition, fix it
-function NDTensors.similar_type(
+function NDTensors.similartype(
   ::Type{<:Tuple{Vararg{IndexT}}}, ::Type{Val{N}}
 ) where {IndexT,N}
   return NTuple{N,IndexT}
@@ -104,11 +104,11 @@ end
 ## # only known thing for dispatch is a concrete type such
 ## # as IndexSet{4})
 ## 
-## #NDTensors.similar_type(::Type{<:IndexSet},
-## #                       ::Val{N}) where {N} = IndexSet
+## #NDTensors.similartype(::Type{<:IndexSet},
+## #                      ::Val{N}) where {N} = IndexSet
 ## 
-## #NDTensors.similar_type(::Type{<:IndexSet},
-## #                       ::Type{Val{N}}) where {N} = IndexSet
+## #NDTensors.similartype(::Type{<:IndexSet},
+## #                      ::Type{Val{N}}) where {N} = IndexSet
 
 """
     sim(is::Indices)
