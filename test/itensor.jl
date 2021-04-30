@@ -568,7 +568,11 @@ end
     a = [1.0; 2.0]
     A = itensor(a, i)
     B = ITensor()
-    @test_throws DimensionMismatch A - B
+    C = A - B
+    @test C ≈ A
+    A[1] = 5
+    @test C[1] == 5
+    #@test_throws DimensionMismatch A - B
     a = [1.0; 2.0]
     A = itensor(a, i)
     B = ITensor(2.0)
@@ -583,7 +587,7 @@ end
     C = B - A
     @test C ≈ -A
     A[1] = 5
-    @test C[1] = -1
+    @test C[1] == -1
     a = [1.0; 2.0]
     b = [3.0; 4.0]
     A = itensor(a, i)

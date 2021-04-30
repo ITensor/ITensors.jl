@@ -346,10 +346,10 @@ ITensor(x::RealOrComplex{Int}, inds...) = ITensor(float(x), inds...)
 #
 
 """
-    emptyITensor([::Type{ElT} = Float64, ]inds)
-    emptyITensor([::Type{ElT} = Float64, ]inds::Index...)
+    emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds)
+    emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds::Index...)
 
-Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
+Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.EmptyNumber`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
 """
 function emptyITensor(::Type{ElT}, inds::Indices) where {ElT<:Number}
   return itensor(EmptyTensor(ElT, inds))
@@ -359,11 +359,11 @@ function emptyITensor(::Type{ElT}, inds::Index...) where {ElT<:Number}
   return emptyITensor(ElT, inds)
 end
 
-emptyITensor(is::Indices) = emptyITensor(Float64, is)
+emptyITensor(is::Indices) = emptyITensor(EmptyNumber, is)
 
-emptyITensor(inds::Index...) = emptyITensor(Float64, inds)
+emptyITensor(inds::Index...) = emptyITensor(EmptyNumber, inds)
 
-function emptyITensor(::Type{ElT}=Float64) where {ElT<:Number}
+function emptyITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number}
   return itensor(EmptyTensor(ElT, ()))
 end
 
@@ -2293,7 +2293,8 @@ Returns `true` if the ITensor contains no elements.
 
 An ITensor with `EmptyStorage` storage always returns `true`.
 """
-isemptystorage(T::ITensor) = isempty(tensor(T))
+isemptystorage(T::ITensor) = isemptystorage(tensor(T))
+isemptystorage(T::Tensor) = isempty(T)
 isempty(T::ITensor) = isemptystorage(T)
 
 #######################################################################

@@ -604,6 +604,7 @@ function svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
 
     s = sites[n]
     #H[n] = emptyITensor(dag(s),s',ll,rl)
+    #TODO: replace with ITensor()
     H[n] = emptyITensor()
     for (op, M) in finalMPO
       T = itensor(M, ll, rl)
