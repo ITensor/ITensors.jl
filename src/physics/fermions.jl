@@ -159,7 +159,6 @@ function NDTensors.compute_alpha(ElType,
       alpha_arrows *= -1
     end
   end
-  #@show alpha1,alpha2,alphaR,alpha_arrows
 
   α *= alpha1*alpha2*alphaR*alpha_arrows
 
@@ -169,33 +168,19 @@ end
 # Flip signs of selected blocks of T prior to
 # it being multiplied by a combiner ITensor
 # labelsR gives the ordering of indices after the product
-function NDTensors.mult_combiner_signs(C,
-                                       labelsC_,
-                                       indsC::NTuple{NC,QNIndex},
-                                       T,
-                                       labelsT_,
-                                       indsT::NTuple{NT,QNIndex},
-                                       labelsR_) where {NC,NT}
-  #
-  # Notes:
-  #  - can use qn(i=>n) to get the QN of the subspace 
-  #    corresponding to i=>n
-  #  - could use convention of how combined ind is 
-  #    mapped to uncombined to work out the "internal"
-  #    parity of subspaces of the combined ind
-  #    (similar to particle number mod 4)
-  #  - can get setting of combined ind from blockT
-  #    when looping over blockoffsets(T) or similar
-  #    (or of uncombined ind when combining but then
-  #     don't need to back out internal parity)
-  #
+function NDTensors.before_combiner_signs(T,
+                                         labelsT_,
+                                         indsT::NTuple{NT,QNIndex},
+                                         C,
+                                         labelsC_,
+                                         indsC::NTuple{NC,QNIndex},
+                                         labelsR,
+                                         indsR::NTuple{NR,QNIndex}
+                                         ) where {NC,NT,NR}
   if !has_fermionic_subspaces(T)
-    #println("Not copying T in combiner_signs")
     return T
   end
 
-
-  #println("Fermionic case: copying T in combiner_signs")
   T = copy(T)
 
   labelsC = [l for l in labelsC_]
@@ -210,8 +195,7 @@ function NDTensors.mult_combiner_signs(C,
   isconj = NDTensors.isconj(store(C))
 
   if combining
-    println("Combining <<<<<<<<<<<<<<<<<<<<<<<<<<<")
-    #(!isconj) ? println("Doing Case #1") : println("Doing Case #3")
+    #println("Combining <<<<<<<<<<<<<<<<<<<<<<<<<<<")
 
     nlabelsT = Int[]
 
@@ -225,20 +209,17 @@ function NDTensors.mult_combiner_signs(C,
       # indices in *opposite* order as on combiner
       append!(nlabelsT,reverse(labelsC[2:end]))
     end
+    @assert all(l->l<0,nlabelsT)
+
     for l in labelsT
       if l > 0 #uncontracted
         append!(nlabelsT,l)
       end
     end
-
     @assert length(nlabelsT)==NT
-    @show labelsC
-    @show labelsT
-    @show nlabelsT
 
     # Compute permutation that moves uncombined indices to front
     permT = NDTensors.getperm(nlabelsT,labelsT)
-    @show permT
 
     for blockT in keys(blockoffsets(T))
       # Compute sign from permuting uncombined indices to front:
@@ -246,32 +227,22 @@ function NDTensors.mult_combiner_signs(C,
 
       neg_dir = !isconj ? In : Out
       alpha_arrows = 1
-      #alphaC = 1
+      alpha_mixed_arrow = 1
+      C_dir = dir(indsC[1])
       for n in 1:length(indsT)
         i = indsT[n]
         qi = qn(i,blockT[n])
         if labelsT[n] < 0 && fparity(qi)==1
-          # vv DEBUG
-          #arrow_sign = (dir(i)==neg_dir) ? -1 : +1
-          #if arrow_sign == -1
-          #  @show i,qi
-          #end
-          # ^^ DEBUG
+          alpha_mixed_arrow *= (dir(i)!=C_dir) ? -1 : +1
           alpha_arrows *= (dir(i)==neg_dir) ? -1 : +1
-          #alphaC *= -1
         end
       end
 
       fac = alphaT*alpha_arrows
-      @show blockT,alphaT,alpha_arrows,fac
 
-      #fac = alphaT
-      #if !isconj
-      #  fac *= alpha_arrows
-      #  @show blockT,alphaT,alpha_arrows,fac
-      #else
-      #  @show blockT,alphaT,fac
-      #end
+      if isconj
+        fac *= alpha_mixed_arrow
+      end
 
       if fac != 1
         Tb = blockview(T,blockT)
@@ -284,37 +255,36 @@ function NDTensors.mult_combiner_signs(C,
     # Uncombining ---------------------------
     #
     #println("Uncombining >>>>>>>>>>>>>>>>>>>>>>>>>>>")
+
+    nc = findfirst(l->l<0,labelsT)
+    nlabelsT = [labelsT[nc]]
+    ic = indsT[nc]
+
+    for l in labelsT
+      (l > 0) && append!(nlabelsT,l)
+    end
   
     # Compute sign for permuting combined index to front
     # (sign alphaT to be computed for each block below):
-    nlabelsT = sort(labelsT)
     permT = NDTensors.getperm(nlabelsT,labelsT)
 
     #
     # Note: other permutation of labelsT which
     # relates to two treatments of isconj==true/false
     # in combining case above is handled as a 
-    # post-processing step in NDTensors src/blocksparse/combiner.jl
+    # post-processing step in NDTensors.after_combiner_signs
+    # implemented below
     #
 
     for blockT in keys(blockoffsets(T))
       alphaT = NDTensors.permfactor(permT,blockT,indsT)
 
       neg_dir = !isconj ? Out : In
-      alpha_arrows = 1
-      #alphaC = 1
-      for n in 1:length(indsT)
-        l = labelsT[n]
-        i = indsT[n]
-        if l < 0 && fparity(qn(i,blockT[n]))==1
-          alpha_arrows = (dir(i)==neg_dir) ? -1 : +1
-          #alphaC = -1
-          break 
-        end
-      end
+      qic = qn(ic,blockT[nc])
+      alpha_arrows = (fparity(qic)==1 && dir(ic)==neg_dir) ? -1 : +1
 
-      #@show blockT,alphaT,alpha_arrows
-      fac = alphaT#*alpha_arrows
+      fac = alphaT*alpha_arrows
+
       if fac != 1
         Tb = blockview(T,blockT)
         scale!(Tb,fac)
@@ -323,4 +293,52 @@ function NDTensors.mult_combiner_signs(C,
   end
 
   return T
-end #NDTensors.mult_combiner_signs
+end #NDTensors.before_combiner_signs
+
+function NDTensors.after_combiner_signs(R,
+                                        labelsR,
+                                        indsR::NTuple{NR,QNIndex},
+                                        C,
+                                        labelsC,
+                                        indsC::NTuple{NC,QNIndex},
+                                        ) where {NC,NT,NR}
+  ci = cinds(store(C))[1]
+  combining = (labelsC[ci] > 0)
+  combining && error("NDTensors.after_combiner_signs only for uncombining")
+
+  !has_fermionic_subspaces(R) && return R
+
+  R = copy(R)
+
+  # number of uncombined indices
+  Nuc = NC-1
+
+  isconj = NDTensors.isconj(store(C))
+
+  if !combining
+    if !isconj
+      #println("!!! Doing uncombining post-processing step")
+      rperm = ntuple(i->(Nuc-i+1),Nuc) # reverse permutation
+      NDTensors.scale_blocks!(R,block->NDTensors.permfactor(rperm,block[1:Nuc],indsR[1:Nuc]))
+    else
+      #println("!!! Doing conjugate uncombining post-processing step")
+      C_dir = dir(inds(C)[1])
+
+      function mixed_arrow_sign(block)
+        alpha_mixed_arrow = 1
+        for n=1:Nuc
+          i = indsR[n]
+          qi = qn(i,block[n])
+          if dir(i)==C_dir && fparity(qi)==1
+            alpha_mixed_arrow *= -1
+          end
+        end
+        return alpha_mixed_arrow
+      end
+
+      NDTensors.scale_blocks!(R,block->mixed_arrow_sign(block))
+    end
+  end
+
+  return R
+end #NDTensors.after_combiner_signs

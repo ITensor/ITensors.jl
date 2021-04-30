@@ -394,6 +394,62 @@ using ITensors,
 
   end
 
+  @testset "Mixed Arrow Combiner Tests" begin
+
+    @testset "One wrong-way arrow" begin
+      q1 = QN("Nf",1,-1)
+
+      s0 = Index([q1=>1];tags="s0")
+      s1 = Index([q1=>1];tags="s1")
+      s2 = Index([q1=>1];tags="s2")
+      s3 = Index([q1=>1];tags="s3")
+      s4 = Index([q1=>1];tags="s4")
+
+      A = randomITensor(QN("Nf",0,-1),s0,s1,dag(s2),dag(s3))
+      B = randomITensor(QN("Nf",0,-1),s3,s2,dag(s1),dag(s4))
+      A .= one.(A)
+      B .= one.(B)
+      @test norm(A) ≈ 1.0
+      @test norm(B) ≈ 1.0
+
+      Ru = A*B
+
+      C = combiner(s3,s2,dag(s1))
+      Bc = C*B
+      Ac = A*dag(C)
+      Rc = Ac*Bc
+
+      @test norm(Ru-Rc) < 1E-8
+    end
+
+    @testset "Two wrong-way arrows" begin
+      q1 = QN("Nf",1,-1)
+
+      s0 = Index([q1=>1];tags="s0")
+      s1 = Index([q1=>1];tags="s1")
+      s2 = Index([q1=>1];tags="s2")
+      s3 = Index([q1=>1];tags="s3")
+      s4 = Index([q1=>1];tags="s4")
+
+      A = randomITensor(QN("Nf",2,-1),s0,s1,s2,dag(s3))
+      B = randomITensor(QN("Nf",-2,-1),s3,dag(s2),dag(s1),dag(s4))
+      A .= one.(A)
+      B .= one.(B)
+      @test norm(A) ≈ 1.0
+      @test norm(B) ≈ 1.0
+
+      Ru = A*B
+
+      C = combiner(s3,dag(s2),dag(s1))
+      Bc = C*B
+      Ac = A*dag(C)
+      Rc = Ac*Bc
+
+      @test norm(Ru-Rc) < 1E-8
+    end
+
+  end
+
   @testset "Permutedims Regression Test" begin
     s1 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s1")
     s2 = Index([QN("N",0,-1)=>1,QN("N",1,-1)=>1],"s2")
