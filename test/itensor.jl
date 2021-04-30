@@ -544,6 +544,21 @@ end
     a = [1.0; 2.0]
     A = itensor(a, i)
     B = ITensor()
+    C = A + B
+    @test C ≈ A
+    A[1] = 5
+    @test C[1] == 5
+    a = [1.0; 2.0]
+    A = itensor(a, i)
+    B = ITensor(0)
+    @test_throws DimensionMismatch A + B
+    a = [1.0; 2.0]
+    A = itensor(a, i)
+    B = ITensor(ComplexF64)
+    @test_throws DimensionMismatch A + B
+    a = [1.0; 2.0]
+    A = itensor(a, i)
+    B = ITensor(Float64)
     @test_throws DimensionMismatch A + B
     a = [1.0; 2.0]
     a = [1.0; 2.0]
@@ -560,8 +575,15 @@ end
     @test_throws DimensionMismatch B - A
     a = [1.0; 2.0]
     A = itensor(a, i)
-    B = ITensor()
+    B = ITensor(Float64)
     @test_throws DimensionMismatch B - A
+    a = [1.0; 2.0]
+    A = itensor(a, i)
+    B = ITensor()
+    C = B - A
+    @test C ≈ -A
+    A[1] = 5
+    @test C[1] = -1
     a = [1.0; 2.0]
     b = [3.0; 4.0]
     A = itensor(a, i)

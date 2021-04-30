@@ -1581,7 +1581,10 @@ end
 #TODO: make a proper element-wise division
 (A::ITensor / x::Number) = A * (1.0 / x)
 
--(A::ITensor) = ITensor(-tensor(A))
+-(A::ITensor) = itensor(-tensor(A))
+
+_isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
+_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
 
 # TODO: move the order-0 EmptyStorage ITensor special case to NDTensors.
 # Unfortunately this is more complicated than it might seem since it
@@ -1590,10 +1593,9 @@ function (A::ITensor + B::ITensor)
   # TODO: in these special cases, perform element type
   # promotion based on the element type of the Empty tensor
   # storage.
-  if ndims(A) == 0 && ndims(B) > 0 && isemptystorage(A)
+  if _isemptyscalar(A) && ndims(B) > 0
     return B
-  end
-  if ndims(B) == 0 && ndims(A) > 0 && isemptystorage(B)
+  elseif _isemptyscalar(B) && ndims(A) > 0
     return A
   end
   ndims(A) != ndims(B) &&
@@ -1605,11 +1607,10 @@ end
 
 # TODO: move the order-0 EmptyStorage ITensor special to NDTensors
 function (A::ITensor - B::ITensor)
-  if ndims(A) == 0 && ndims(B) > 0 && storage(A) isa NDTensors.EmptyStorage
-    return -copy(B)
-  end
-  if ndims(B) == 0 && ndims(A) > 0 && storage(B) isa NDTensors.EmptyStorage
-    return copy(A)
+  if _isemptyscalar(A) && ndims(B) > 0
+    return -B
+  elseif _isemptyscalar(B) && ndims(A) > 0
+    return A
   end
   ndims(A) != ndims(B) &&
     throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
