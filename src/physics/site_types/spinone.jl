@@ -70,7 +70,6 @@ end
 op!(Op::ITensor, ::OpName"iSʸ", t::SiteType"S=1", s::Index) = op!(Op, OpName("iSy"), t, s)
 
 function op!(Op::ITensor, ::OpName"Sy", ::SiteType"S=1", s::Index)
-  complex!(Op)
   Op[s' => 2, s => 1] = -1im / sqrt(2)
   Op[s' => 1, s => 2] = +1im / sqrt(2)
   Op[s' => 3, s => 2] = -1im / sqrt(2)

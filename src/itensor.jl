@@ -1586,23 +1586,26 @@ end
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
 _isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
 
+function _add(A::Tensor, B::Tensor)
+  if _isemptyscalar(A) && ndims(B) > 0
+    return itensor(B)
+  elseif _isemptyscalar(B) && ndims(A) > 0
+    return itensor(A)
+  end
+  ndims(A) != ndims(B) &&
+    throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
+  itA = itensor(A)
+  itB = itensor(B)
+  itC = copy(itA)
+  itC .+= itB
+  return itC
+end
+
 # TODO: move the order-0 EmptyStorage ITensor special case to NDTensors.
 # Unfortunately this is more complicated than it might seem since it
 # has to pass through the broadcasting mechanism first.
 function (A::ITensor + B::ITensor)
-  # TODO: in these special cases, perform element type
-  # promotion based on the element type of the Empty tensor
-  # storage.
-  if _isemptyscalar(A) && ndims(B) > 0
-    return B
-  elseif _isemptyscalar(B) && ndims(A) > 0
-    return A
-  end
-  ndims(A) != ndims(B) &&
-    throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
-  C = copy(A)
-  C .+= B
-  return C
+  return _add(tensor(A), tensor(B))
 end
 
 # TODO: move the order-0 EmptyStorage ITensor special to NDTensors
@@ -2159,8 +2162,9 @@ function copyto!(R::ITensor, T::ITensor)
   return R
 end
 
-function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
-  R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
+# Note this already assumes R === T1, which will be lifted
+# in the future.
+function _map!!(f::Function, R::Tensor, T1::Tensor, T2::Tensor)
   perm = NDTensors.getperm(inds(R), inds(T2))
   if hasqns(T2) && hasqns(R)
     # Check that Index arrows match
@@ -2171,14 +2175,12 @@ function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
       end
     end
   end
+  return permutedims!!(R, T2, perm, f)
+end
 
-  TR, TT = Tensor(R), Tensor(T2)
-
-  # TODO: Include type promotion from α
-  TR = convert(promote_type(typeof(TR), typeof(TT)), TR)
-  TR = permutedims!!(TR, TT, perm, f)
-
-  return settensor!(R, TR)
+function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
+  R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
+  return settensor!(R, _map!!(f, tensor(R), tensor(T1), tensor(T2)))
 end
 
 """
