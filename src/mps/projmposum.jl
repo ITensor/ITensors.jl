@@ -57,6 +57,13 @@ function product(P::ProjMPOSum, v::ITensor)::ITensor
   return Pv
 end
 
+"""
+    eltype(P::ProjMPOSum)
+
+Deduce the element type (such as Float64
+or ComplexF64) of the tensors in the ProjMPOSum
+`P`.
+"""
 function Base.eltype(P::ProjMPOSum)
   elT = eltype(P.pm[1])
   for n in 2:length(P.pm)

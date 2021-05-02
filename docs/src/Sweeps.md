@@ -8,10 +8,10 @@ Sweeps(nsw::Int, d::AbstractMatrix)
 ## Modifying Sweeps Objects
 
 ```@docs
-maxdim!
-cutoff!
-noise!
-mindim!
+setmaxdim!
+setcutoff!
+setnoise!
+setmindim!
 ```
 
 ## Getting Sweeps Object Data
