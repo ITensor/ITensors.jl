@@ -58,7 +58,7 @@ Explanation of the sample commands above:
 
 Installing the Julia version of ITensor is easy once you
 have the Julia language installed. For more information about
-installing Julia, please see [the Julia language downloads page])(https://julialang.org/downloads/).
+installing Julia, please see [the Julia language downloads page](https://julialang.org/downloads/).
 
 Once you have installed Julia on your machine,
 
@@ -66,7 +66,7 @@ Once you have installed Julia on your machine,
 2. Type `]` to enter the package manager (`pkg>` prompt should now show)
 3. Enter the command `add ITensors`
 4. After installation completes, press backspace to return to the normal `julia>` prompt
-5. [Optional but Recommended] Enter the command `julia> using ITensors; ITensors.compile()`
+5. _Optional but Recommended_: Enter the command `julia> using ITensors; ITensors.compile()`
    to compile a large fraction of the ITensor library code and following the instructions afterward to make an alias for loading a pre-built ITensor system image with Julia. This step can take up to 10 minutes to complete but only has to be done once for each version of ITensor. See the section on compiling ITensor for more information.
 
 Sample screenshot:

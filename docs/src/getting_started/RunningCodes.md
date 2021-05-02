@@ -17,8 +17,8 @@ let
 end
 ```
 
-The reason we recommend the `let...end` block is that global scope 
- in Julia can have some surprising behaviors, at least through Julia version 1.4. 
+The reason we recommend the `let...end` block is that code written
+in the Julia global scope can have some surprising behaviors.
 Putting your code into a `let` block avoids these issues.
 
 ## Running a Script
@@ -37,8 +37,9 @@ such as on a cluster.
 
 However, sometimes you want to do rapid development when first writing and 
 testing a code. For this kind of work, the long startup and compilation times
-currently incurred by the 1.x versions of Julia can be a nuisance. Fortunately
-there is a nice solution: repeatedly load your code into a running Julia session.
+currently incurred by the Julia compiler can be a nuisance. Fortunately
+a nice solution is to alternate between modifying your code then running it
+by loading it into an already running Julia session.
 
 To set up this kind of session, take the following steps:
 
