@@ -12,8 +12,8 @@ settings = Dict(
       "Installing Julia and ITensor" => "getting_started/Installing.md",
       "Running ITensor and Julia Codes" => "getting_started/RunningCodes.md",
       "Tutorials" => "getting_started/Tutorials.md",
-      "Next Steps" => "getting_started/NextSteps.md"
-     ],
+      "Next Steps" => "getting_started/NextSteps.md",
+    ],
     "Code Examples" => [
       "ITensor Examples" => "examples/ITensor.md",
       "MPS and MPO Examples" => "examples/MPSandMPO.md",
