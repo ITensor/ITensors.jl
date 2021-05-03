@@ -21,6 +21,24 @@ The reason we recommend the `let...end` block is that code written
 in the Julia global scope can have some surprising behaviors.
 Putting your code into a `let` block avoids these issues.
 
+Alternatively, you can wrap your code in a function:
+```julia
+using ITensors
+
+function main(; d1 = 2, d2 = 3)
+  # ... your own code goes here ...
+  # For example:
+  i = Index(d1,"i")
+  j = Index(d2,"j")
+  T = randomITensor(i,j)
+  @show T
+end
+
+main(; d1 = 4, d2 = 5)
+```
+which can be useful in interactive mode, particularly if you might want to
+run your code with a variety of different arguments.
+
 ## Running a Script
 
 Now say you put the above code into a file named `code.jl`. Then you can run
