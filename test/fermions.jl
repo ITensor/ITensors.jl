@@ -478,60 +478,60 @@ ITensors.enable_auto_fermion()
     @test A ≈ C
   end
 
-#  @testset "Product MPS consistency checks" begin
-#    s = siteinds("Fermion",3;conserve_qns=true)
-#
-#    pA = productMPS(s,[2,1,2])
-#    TA = emptyITensor(s[1],s[2],s[3])
-#    TA[s[1]=>2,s[2]=>1,s[3]=>2] = 1.0
-#    A = pA[1]*pA[2]*pA[3]
-#    @test norm(A-TA) < 1E-8
-#
-#    pB = productMPS(s,[1,2,2])
-#    TB = emptyITensor(s[1],s[2],s[3])
-#    TB[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
-#    B = pB[1]*pB[2]*pB[3]
-#    @test norm(B-TB) < 1E-8
-#  end
-#
-#  @testset "Orthogonalize of Product MPS" begin
-#    N = 3
-#
-#    sites = siteinds("Fermion",N;conserve_qns=true)
-#
-#    state = [1 for n=1:N]
-#    state[1] = 2
-#    state[2] = 2
-#    psi = productMPS(sites,state)
-#    psi_fluxes = [flux(psi[n]) for n=1:N]
-#
-#    psi_orig = copy(psi)
-#    orthogonalize!(psi,1)
-#    @test inner(psi_orig,psi) ≈ 1.0
-#    @test inner(psi,psi_orig) ≈ 1.0
-#  end
-#
-#  #@testset "Dag regression tests" begin
-#  #  @testset "Dag regression test #1" begin
-#  #    s = Index(QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1,tags="s")
-#  #    l1 = Index(QN("Nf",1,-1)=>1,tags="l1")
-#  #    l2 = Index(QN("Nf",2,-1)=>1,tags="l2")
-#  #    T = ITensor(l1,s,l2)
-#  #    T[1,2,1] = 1.0
-#  #    dT = dag(T)
-#  #    @test dT[1,2,1] ≈ 1.0
-#  #  end
-#
-#  #  @testset "Dag regression test #2" begin
-#  #  end
-#  #end
-#
-#  @testset "MPS inner regression test" begin
-#    sites = siteinds("Fermion",3;conserve_qns=true)
-#    psi = productMPS(sites,[2,2,1])
-#    @test inner(psi,psi) ≈ 1.0
-#  end
-#
+  @testset "Product MPS consistency checks" begin
+    s = siteinds("Fermion",3;conserve_qns=true)
+
+    pA = productMPS(s,[2,1,2])
+    TA = emptyITensor(s[1],s[2],s[3])
+    TA[s[1]=>2,s[2]=>1,s[3]=>2] = 1.0
+    A = pA[1]*pA[2]*pA[3]
+    @test norm(A-TA) < 1E-8
+
+    pB = productMPS(s,[1,2,2])
+    TB = emptyITensor(s[1],s[2],s[3])
+    TB[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
+    B = pB[1]*pB[2]*pB[3]
+    @test norm(B-TB) < 1E-8
+  end
+
+  @testset "Orthogonalize of Product MPS" begin
+    N = 3
+
+    sites = siteinds("Fermion",N;conserve_qns=true)
+
+    state = [1 for n=1:N]
+    state[1] = 2
+    state[2] = 2
+    psi = productMPS(sites,state)
+    psi_fluxes = [flux(psi[n]) for n=1:N]
+
+    psi_orig = copy(psi)
+    orthogonalize!(psi,1)
+    @test inner(psi_orig,psi) ≈ 1.0
+    @test inner(psi,psi_orig) ≈ 1.0
+  end
+
+  #@testset "Dag regression tests" begin
+  #  @testset "Dag regression test #1" begin
+  #    s = Index(QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1,tags="s")
+  #    l1 = Index(QN("Nf",1,-1)=>1,tags="l1")
+  #    l2 = Index(QN("Nf",2,-1)=>1,tags="l2")
+  #    T = ITensor(l1,s,l2)
+  #    T[1,2,1] = 1.0
+  #    dT = dag(T)
+  #    @test dT[1,2,1] ≈ 1.0
+  #  end
+
+  #  @testset "Dag regression test #2" begin
+  #  end
+  #end
+
+  @testset "MPS inner regression test" begin
+    sites = siteinds("Fermion",3;conserve_qns=true)
+    psi = productMPS(sites,[2,2,1])
+    @test inner(psi,psi) ≈ 1.0
+  end
+
 #  @testset "Fermionic AutoMPO Tests" begin
 #
 #    @testset "Spinless Fermion Hamiltonian" begin
