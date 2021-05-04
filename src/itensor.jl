@@ -801,6 +801,9 @@ end
 
 @propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
+  if N != ndims(T)
+    throw(DimensionMismatch("$N index values passed to ITensor getindex, expected $(ndims(T))"))
+  end
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
   return _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
 end
@@ -910,6 +913,9 @@ end
 ) where {N}
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
+  if N != ndims(T)
+    throw(DimensionMismatch("$N index values passed to ITensor setindex!, expected $(ndims(T))"))
+  end
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
   return _setindex!!(
     T, x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
