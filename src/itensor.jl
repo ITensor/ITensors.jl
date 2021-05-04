@@ -1380,7 +1380,7 @@ function (A::ITensor == B::ITensor)
 end
 
 function isapprox(A::ITensor, B::ITensor; kwargs...)
-  B = permute(dense(B), inds(A))
+  B = permute(B, inds(A))
   return isapprox(array(A), array(B); kwargs...)
 end
 
