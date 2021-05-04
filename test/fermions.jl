@@ -178,126 +178,126 @@ ITensors.enable_auto_fermion()
 
   end
  
-#  @testset "C Cdag operators" begin
-#    s = siteinds("Fermion",3;conserve_qns=true)
-#
-#    p110 = emptyITensor(s[1],s[2],s[3])
-#    p110[s[1]=>2,s[2]=>2,s[3]=>1] = 1.0
-#
-#    p011 = emptyITensor(s[1],s[2],s[3])
-#    p011[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
-#
-#    np011 = emptyITensor(s[1],s[2],s[3])
-#    np011[s[1]=>1,s[3]=>2,s[2]=>2] = 1.0
-#
-#    dag_p011 = emptyITensor(dag(s[3]),dag(s[2]),dag(s[1]))
-#    dag_p011[s[3]=>2,s[2]=>2,s[1]=>1] = 1.0
-#
-#    @test norm(dag(p011) - dag_p011) ≈ 0
-#
-#    C1 = op(s,"C",1)
-#    Cdag3 = op(s,"Cdag",3)
-#
-#    # Anti-commutator
-#    @test norm(Cdag3*C1 + C1*Cdag3) ≈ 0.0
-#
-#    # Commutator
-#    @test norm(Cdag3*C1 - C1*Cdag3) ≈ 2.0
-#
-#    let # <011|Cdag3*C1|110> = -1
-#      t1 = noprime(C1*p110)
-#      t2 = noprime(Cdag3*t1)
-#      @test scalar(dag_p011*t2) ≈ -1.0
-#    end
-#
-#    let # <011|C1*Cdag3|110> = +1
-#      t1 = noprime(Cdag3*p110)
-#      t2 = noprime(C1*t1)
-#      @test scalar(dag_p011*t2) ≈ +1.0
-#    end
-#
-#    let # <011|(Cdag3*C1)|110> = -1
-#      t = noprime((Cdag3*C1)*p110)
-#      @test scalar(dag(p011)*t) ≈ -1.0
-#    end
-#
-#    let # <011|(C1*Cdag3)|110> = +1
-#      t = noprime((C1*Cdag3)*p110)
-#      @test scalar(dag(p011)*t) ≈ +1.0
-#    end
-#
-#    #
-#    # Commuting B tensors
-#    #
-#    # These commute by carrying additional
-#    # g-indices (Grassman indices)
-#    # 
-#    
-#    g = Index(QN("Nf",1,-1)=>1,tags="g")
-#
-#    Bdag3 = Cdag3*setelt(dag(g)(1))
-#    B1 = setelt(g(1))*C1 
-#
-#    # Commutator
-#    @test norm(Bdag3*B1 - B1*Bdag3) ≈ 0.0
-#
-#    # Anti-commutator
-#    @test norm(Bdag3*B1 + B1*Bdag3) ≈ 2.0
-#
-#    let # <011|Cdag3*C1|110> = <011|Bdag3*B1|110> = -1
-#      t1 = noprime(B1*p110)
-#      t2 = noprime(Bdag3*t1)
-#      @test scalar(dag(p011)*t2) ≈ -1.0
-#    end
-#
-#    let # <011|(Cdag3*C1)|110> = <011|(Bdag3*B1)|110> = -1
-#      t = noprime((Bdag3*B1)*p110)
-#      @test scalar(dag(p011)*t) ≈ -1.0
-#    end
-#
-#    let # <011|Cdag3*C1|110> = <011|B1*Bdag3|110> = -1
-#      t1 = noprime(Bdag3*p110)
-#      t2 = noprime(B1*t1)
-#      @test scalar(dag(p011)*t2) ≈ -1.0
-#    end
-#
-#    let # <011|(Cdag3*C1)|110> = <011|(B1*Bdag3)|110> = -1
-#      t = noprime((B1*Bdag3)*p110)
-#      @test scalar(dag(p011)*t) ≈ -1.0
-#    end
-#
-#    #
-#    # Leave out middle fermion, test for cases <001|...|100>
-#    #
-#    p100 = emptyITensor(s[1],s[2],s[3])
-#    p100[s[1]=>2,s[2]=>1,s[3]=>1] = 1.0
-#
-#    p001 = emptyITensor(s[1],s[2],s[3])
-#    p001[s[1]=>1,s[2]=>1,s[3]=>2] = 1.0
-#
-#    let # <001|Cdag3*C1|100> = <001|Bdag3*B1|100> = +1
-#      t1 = noprime(B1*p100)
-#      t2 = noprime(Bdag3*t1)
-#      @test scalar(dag(p001)*t2) ≈ +1.0
-#    end
-#
-#    let # <001|Cdag3*C1|100> = <001|(Bdag3*B1)|100> = +1
-#      t = noprime((Bdag3*B1)*p100)
-#      @test scalar(dag(p001)*t) ≈ +1.0
-#    end
-#
-#    let # <001|Cdag3*C1|100> = <001|B1*Bdag3|100> = +1
-#      t1 = noprime(Bdag3*p100)
-#      t2 = noprime(B1*t1)
-#      @test scalar(dag(p001)*t2) ≈ +1.0
-#    end
-#
-#    let # <001|Cdag3*C1|100> = <001|(B1*Bdag3)|100> = +1
-#      t = noprime((B1*Bdag3)*p100)
-#      @test scalar(dag(p001)*t) ≈ +1.0
-#    end
-#  end
-#
+  @testset "C Cdag operators" begin
+    s = siteinds("Fermion",3;conserve_qns=true)
+
+    p110 = emptyITensor(s[1],s[2],s[3])
+    p110[s[1]=>2,s[2]=>2,s[3]=>1] = 1.0
+
+    p011 = emptyITensor(s[1],s[2],s[3])
+    p011[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
+
+    np011 = emptyITensor(s[1],s[2],s[3])
+    np011[s[1]=>1,s[3]=>2,s[2]=>2] = 1.0
+
+    dag_p011 = emptyITensor(dag(s[3]),dag(s[2]),dag(s[1]))
+    dag_p011[s[3]=>2,s[2]=>2,s[1]=>1] = 1.0
+
+    @test norm(dag(p011) - dag_p011) ≈ 0
+
+    C1 = op(s,"C",1)
+    Cdag3 = op(s,"Cdag",3)
+
+    # Anti-commutator
+    @test norm(Cdag3*C1 + C1*Cdag3) ≈ 0.0
+
+    # Commutator
+    @test norm(Cdag3*C1 - C1*Cdag3) ≈ 2.0
+
+    let # <011|Cdag3*C1|110> = -1
+      t1 = noprime(C1*p110)
+      t2 = noprime(Cdag3*t1)
+      @test scalar(dag_p011*t2) ≈ -1.0
+    end
+
+    let # <011|C1*Cdag3|110> = +1
+      t1 = noprime(Cdag3*p110)
+      t2 = noprime(C1*t1)
+      @test scalar(dag_p011*t2) ≈ +1.0
+    end
+
+    let # <011|(Cdag3*C1)|110> = -1
+      t = noprime((Cdag3*C1)*p110)
+      @test scalar(dag(p011)*t) ≈ -1.0
+    end
+
+    let # <011|(C1*Cdag3)|110> = +1
+      t = noprime((C1*Cdag3)*p110)
+      @test scalar(dag(p011)*t) ≈ +1.0
+    end
+
+    #
+    # Commuting B tensors
+    #
+    # These commute by carrying additional
+    # g-indices (Grassman indices)
+    # 
+    
+    g = Index(QN("Nf",1,-1)=>1,tags="g")
+
+    Bdag3 = Cdag3*setelt(dag(g)(1))
+    B1 = setelt(g(1))*C1 
+
+    # Commutator
+    @test norm(Bdag3*B1 - B1*Bdag3) ≈ 0.0
+
+    # Anti-commutator
+    @test norm(Bdag3*B1 + B1*Bdag3) ≈ 2.0
+
+    let # <011|Cdag3*C1|110> = <011|Bdag3*B1|110> = -1
+      t1 = noprime(B1*p110)
+      t2 = noprime(Bdag3*t1)
+      @test scalar(dag(p011)*t2) ≈ -1.0
+    end
+
+    let # <011|(Cdag3*C1)|110> = <011|(Bdag3*B1)|110> = -1
+      t = noprime((Bdag3*B1)*p110)
+      @test scalar(dag(p011)*t) ≈ -1.0
+    end
+
+    let # <011|Cdag3*C1|110> = <011|B1*Bdag3|110> = -1
+      t1 = noprime(Bdag3*p110)
+      t2 = noprime(B1*t1)
+      @test scalar(dag(p011)*t2) ≈ -1.0
+    end
+
+    let # <011|(Cdag3*C1)|110> = <011|(B1*Bdag3)|110> = -1
+      t = noprime((B1*Bdag3)*p110)
+      @test scalar(dag(p011)*t) ≈ -1.0
+    end
+
+    #
+    # Leave out middle fermion, test for cases <001|...|100>
+    #
+    p100 = emptyITensor(s[1],s[2],s[3])
+    p100[s[1]=>2,s[2]=>1,s[3]=>1] = 1.0
+
+    p001 = emptyITensor(s[1],s[2],s[3])
+    p001[s[1]=>1,s[2]=>1,s[3]=>2] = 1.0
+
+    let # <001|Cdag3*C1|100> = <001|Bdag3*B1|100> = +1
+      t1 = noprime(B1*p100)
+      t2 = noprime(Bdag3*t1)
+      @test scalar(dag(p001)*t2) ≈ +1.0
+    end
+
+    let # <001|Cdag3*C1|100> = <001|(Bdag3*B1)|100> = +1
+      t = noprime((Bdag3*B1)*p100)
+      @test scalar(dag(p001)*t) ≈ +1.0
+    end
+
+    let # <001|Cdag3*C1|100> = <001|B1*Bdag3|100> = +1
+      t1 = noprime(Bdag3*p100)
+      t2 = noprime(B1*t1)
+      @test scalar(dag(p001)*t2) ≈ +1.0
+    end
+
+    let # <001|Cdag3*C1|100> = <001|(B1*Bdag3)|100> = +1
+      t = noprime((B1*Bdag3)*p100)
+      @test scalar(dag(p001)*t) ≈ +1.0
+    end
+  end
+
 #  @testset "Combine Uncombine Permute Test" begin
 #    s = siteinds("Fermion",4;conserve_qns=true)
 #

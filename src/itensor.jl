@@ -1450,7 +1450,15 @@ end
 norm(T::ITensor) = norm(tensor(T))
 
 function dag(as::AliasStyle, T::Tensor)
-  return setinds(conj(as, T), dag(inds(T)))
+  if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
+    CT = conj(NeverAlias(),T)
+    N = length(inds(T))
+    perm = ntuple(i->(N-i+1),N) # reverse permutation
+    NDTensors.scale_blocks!(CT,block->NDTensors.permfactor(perm,block,inds(T)))
+    return setinds(CT, dag(inds(T)))
+  else
+    return setinds(conj(as, T), dag(inds(T)))
+  end
 end
 
 function dag(as::AliasStyle, T::ITensor)
