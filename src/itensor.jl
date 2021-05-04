@@ -452,10 +452,10 @@ end
 
 # For now, it's not well defined to construct an ITensor without indices
 # from a non-zero dimensional Array
-function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}; kwargs...
-)
-  error("Cannot construct an ITensor from an Array without any indices. To make a scalar ITensor, input a number, such as `ITensor(2.3)`.")
+function ITensor(as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}; kwargs...)
+  return error(
+    "Cannot construct an ITensor from an Array without any indices. To make a scalar ITensor, input a number, such as `ITensor(2.3)`.",
+  )
 end
 
 function ITensor(as::AliasStyle, A::Array{ElT}, inds...; kwargs...) where {ElT}

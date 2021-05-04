@@ -11,7 +11,6 @@ using Test
   @test scalar(A) == 2.4
   @test ITensors.symmetrystyle(A) == ITensors.NonQN()
 
-
   A[] = 3.4
   @test ndims(A) == 0
   @test order(A) == 0

@@ -8,7 +8,8 @@ using Test
   B = ITensor(j, k)
   C = A * B
   @test hassameinds(C, (i, k))
-  @test storage(C) isa ITensors.EmptyStorage{ITensors.EmptyNumber,<:ITensors.Dense{ITensors.EmptyNumber}}
+  @test storage(C) isa
+        ITensors.EmptyStorage{ITensors.EmptyNumber,<:ITensors.Dense{ITensors.EmptyNumber}}
 
   A = ITensor(Float64, i, j)
   B = ITensor(j, k)
@@ -48,12 +49,16 @@ end
   i = Index([QN(0) => 1, QN(1) => 1])
   A = ITensor(i', dag(i))
 
-  @test storage(A) isa ITensors.EmptyStorage{ITensors.EmptyNumber,<:ITensors.BlockSparse{ITensors.EmptyNumber}}
+  @test storage(A) isa ITensors.EmptyStorage{
+    ITensors.EmptyNumber,<:ITensors.BlockSparse{ITensors.EmptyNumber}
+  }
 
   C = A' * A
 
   @test hassameinds(C, (i'', i))
-  @test storage(C) isa ITensors.EmptyStorage{ITensors.EmptyNumber,<:ITensors.BlockSparse{ITensors.EmptyNumber}}
+  @test storage(C) isa ITensors.EmptyStorage{
+    ITensors.EmptyNumber,<:ITensors.BlockSparse{ITensors.EmptyNumber}
+  }
 
   B = randomITensor(dag(i), i')
 

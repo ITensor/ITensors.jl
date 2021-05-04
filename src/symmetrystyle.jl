@@ -3,7 +3,9 @@
 # has symmetries
 abstract type SymmetryStyle end
 
-symmetrystyle(T) = error("No SymmetryStyle defined for the specified object $T of type $(typeof(T))")
+function symmetrystyle(T)
+  return error("No SymmetryStyle defined for the specified object $T of type $(typeof(T))")
+end
 
 symmetrystyle(T, S, U, V...)::SymmetryStyle = (
   Base.@_inline_meta; symmetrystyle(symmetrystyle(T), symmetrystyle(S, U, V...))
