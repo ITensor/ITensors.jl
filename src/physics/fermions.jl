@@ -192,10 +192,10 @@ function NDTensors.before_combiner_signs(T,
   # number of uncombined indices
   Nuc = NC-1
 
-  ci = cinds(store(C))[1]
+  ci = cinds(storage(C))[1]
   combining = (labelsC[ci] > 0)
 
-  isconj = NDTensors.isconj(store(C))
+  isconj = NDTensors.isconj(storage(C))
 
   if combining
     #println("Combining <<<<<<<<<<<<<<<<<<<<<<<<<<<")
