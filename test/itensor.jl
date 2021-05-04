@@ -606,7 +606,7 @@ end
     T[i => 1, j => 1] = 3.3
     @test M[1, 1] == 3.3
     @test T[i => 1, j => 1] == 3.3
-    @test storage(T) isa Dense{Float64}
+    @test storage(T) isa NDTensors.Dense{Float64}
 
     M = [
       1 2
@@ -616,7 +616,7 @@ end
     T[i => 1, j => 1] = 3.3
     @test M[1, 1] == 1
     @test T[i => 1, j => 1] == 3.3
-    @test storage(T) isa Dense{Float64}
+    @test storage(T) isa NDTensors.Dense{Float64}
 
     M = [
       1 2
@@ -626,7 +626,7 @@ end
     T[i => 1, j => 1] = 6
     @test M[1, 1] == 6
     @test T[i => 1, j => 1] == 6
-    @test storage(T) isa Dense{Int}
+    @test storage(T) isa NDTensors.Dense{Int}
 
     # This version makes a copy
     M = [
