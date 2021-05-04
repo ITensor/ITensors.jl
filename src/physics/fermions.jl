@@ -76,6 +76,7 @@ according to p, then return -1. Otherwise return +1.
 """
 
 function compute_permfactor(p,iv_or_qn::Vararg{T,N}) where {T,N}
+  !using_auto_fermion() && return 1
   oddp = @MVector zeros(Int,N)
   n = 0
   for j=1:N
@@ -93,6 +94,7 @@ NDTensors.permfactor(p,ivs...) where {N} = 1.0
 NDTensors.permfactor(p,ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p,ivs...)
 
 function NDTensors.permfactor(p,pairs::Vararg{Pair{QNIndex,Int},N}) where {N} 
+  !using_auto_fermion() && return 1
   ivs = ntuple(i->IndexVal(pairs[i]),N)
   return compute_permfactor(p,ivs...)
 end
@@ -100,6 +102,7 @@ end
 function NDTensors.permfactor(perm,
                               block::NDTensors.Block{N},
                               inds::Union{QNIndexSet,NTuple{N,QNIndex}}) where {N}
+  !using_auto_fermion() && return 1
   qns = ntuple(n->qn(inds[n],block[n]),N)
   return compute_permfactor(perm,qns...)
 end
@@ -114,7 +117,7 @@ function NDTensors.compute_alpha(ElType,
                                  labelsT1,blockT1,indsT1::NTuple{N1,QNIndex},
                                  labelsT2,blockT2,indsT2::NTuple{N2,QNIndex}) where {N1,N2}
   α = one(ElType)
-  if !has_fermionic_subspaces(indsT1) || !has_fermionic_subspaces(indsT2)
+  if !using_auto_fermion() || !has_fermionic_subspaces(indsT1) || !has_fermionic_subspaces(indsT2)
     return α
   end
 
@@ -177,7 +180,7 @@ function NDTensors.before_combiner_signs(T,
                                          labelsR,
                                          indsR::NTuple{NR,QNIndex}
                                          ) where {NC,NT,NR}
-  if !has_fermionic_subspaces(T)
+  if !using_auto_fermion() || !has_fermionic_subspaces(T)
     return T
   end
 
@@ -306,7 +309,9 @@ function NDTensors.after_combiner_signs(R,
   combining = (labelsC[ci] > 0)
   combining && error("NDTensors.after_combiner_signs only for uncombining")
 
-  !has_fermionic_subspaces(R) && return R
+  if !using_auto_fermion() || !has_fermionic_subspaces(R) 
+    return R
+  end
 
   R = copy(R)
 
