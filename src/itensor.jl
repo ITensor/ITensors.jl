@@ -814,7 +814,8 @@ end
 @propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  return _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
+  fac = NDTensors.permfactor(p,ivs...) #<fermions> possible sign
+  return fac*_getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
 end
 
 """
@@ -922,8 +923,9 @@ end
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
+  fac = NDTensors.permfactor(p,ivs...) #<fermions> possible sign
   return _setindex!!(
-    T, x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
+    T,fac*x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
   )
 end
 

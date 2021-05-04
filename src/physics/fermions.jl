@@ -76,7 +76,7 @@ according to p, then return -1. Otherwise return +1.
 """
 
 function compute_permfactor(p,iv_or_qn::Vararg{T,N}) where {T,N}
-  !using_auto_fermion() && return 1
+  using_auto_fermion() || return 1
   oddp = @MVector zeros(Int,N)
   n = 0
   for j=1:N
@@ -94,7 +94,7 @@ NDTensors.permfactor(p,ivs...) where {N} = 1.0
 NDTensors.permfactor(p,ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p,ivs...)
 
 function NDTensors.permfactor(p,pairs::Vararg{Pair{QNIndex,Int},N}) where {N} 
-  !using_auto_fermion() && return 1
+  using_auto_fermion() || return 1
   ivs = ntuple(i->IndexVal(pairs[i]),N)
   return compute_permfactor(p,ivs...)
 end
@@ -102,7 +102,7 @@ end
 function NDTensors.permfactor(perm,
                               block::NDTensors.Block{N},
                               inds::Union{QNIndexSet,NTuple{N,QNIndex}}) where {N}
-  !using_auto_fermion() && return 1
+  using_auto_fermion() || return 1
   qns = ntuple(n->qn(inds[n],block[n]),N)
   return compute_permfactor(perm,qns...)
 end
