@@ -78,17 +78,22 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 """
 mutable struct ITensor
   tensor::Tensor
-  function ITensor(::AllowAlias, T::Tensor)
-    is = Tuple(inds(T))
+  function ITensor(::AllowAlias, T::Tensor{<:Any,<:Any,<:TensorStorage,<:Tuple})
     @debug_check begin
+      is = inds(T)
       if !allunique(is)
         error(
           "Trying to create ITensors with collection of indices $is. Indices must be unique.",
         )
       end
     end
-    return new(setinds(T, is))
+    return new(T)
   end
+end
+
+# Version where the indices are not Tuple, so convert to Tuple
+function ITensor(::AllowAlias, T::Tensor)
+  return ITensor(AllowAlias(), setinds(T, NTuple{ndims(T)}(inds(T))))
 end
 
 ITensor(::NeverAlias, T::Tensor) = ITensor(AllowAlias(), copy(T))
@@ -150,7 +155,7 @@ that is not currently available.
 """
 data(T::ITensor) = NDTensors.data(tensor(T))
 
-similar(T::ITensor, args...) = itensor(similar(tensor(T), args...))
+similar(T::ITensor, args...) = itensor(NDTensors.similar(tensor(T), args...))
 
 function settensor!(T::ITensor, t)
   T.tensor = t
@@ -440,9 +445,17 @@ function ITensor(
 end
 
 function ITensor(
-  as::AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds...; kwargs...
-) where {ElT<:Number}
-  return ITensor(as, ElT, A, inds; kwargs...)
+  as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}, inds...; kwargs...
+)
+  return ITensor(as, eltype, A, inds; kwargs...)
+end
+
+# For now, it's not well defined to construct an ITensor without indices
+# from a non-zero dimensional Array
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}; kwargs...
+)
+  error("Cannot construct an ITensor from an Array without any indices. To make a scalar ITensor, input a number, such as `ITensor(2.3)`.")
 end
 
 function ITensor(as::AliasStyle, A::Array{ElT}, inds...; kwargs...) where {ElT}
@@ -1637,7 +1650,7 @@ function _contract(A::Tensor, B::Tensor)
 end
 
 function _contract(A::ITensor, B::ITensor)
-  C = itensor(_contract(tensor(A), Tensor(B)))
+  C = itensor(_contract(tensor(A), tensor(B)))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
     println(

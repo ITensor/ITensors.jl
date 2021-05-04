@@ -140,7 +140,9 @@ abstract type SymmetryStyle end
 
 struct NonQN <: SymmetryStyle end
 
-symmetrystyle(::Index) = NonQN()
+symmetrystyle(i::Index) = NonQN()
+# Fallback definition for scalar ITensors (without any indices)
+symmetrystyle() = NonQN()
 
 """
     setdir(i::Index, dir::Arrow)

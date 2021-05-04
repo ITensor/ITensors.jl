@@ -56,17 +56,13 @@ ITensor(flux::QN, inds::Indices) = ITensor(Float64, flux, inds)
 
 ITensor(flux::QN, inds::Index...) = ITensor(Float64, flux, inds)
 
-# TODO: make this emptyITensor(ElT, inds)
-ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} = ITensor(ElT, QN(), inds)
+ITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number} = emptyITensor(ElT, inds)
 
-# TODO: make this emptyITensor(inds)
-ITensor(inds::QNIndices) = ITensor(Float64, QN(), inds)
+ITensor(inds::QNIndices) = emptyITensor(inds)
 
-# TODO: make this emptyITensor(ElT, inds)
-ITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number} = ITensor(ElT, QN(), inds)
+ITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number} = emptyITensor(ElT, inds)
 
-# TODO: make this emptyITensor(inds)
-ITensor(inds::QNIndex...) = ITensor(Float64, QN(), inds)
+ITensor(inds::QNIndex...) = emptyITensor(inds)
 
 """
     ITensor([::Type{ElT} = Float64,] ::UndefInitializer, flux::QN, inds)
@@ -173,8 +169,7 @@ function emptyITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
   return itensor(EmptyBlockSparseTensor(ElT, inds))
 end
 
-# TODO: make this emptyITensor(EmptyNumber, inds)
-emptyITensor(inds::QNIndices) = emptyITensor(Float64, inds)
+emptyITensor(inds::QNIndices) = emptyITensor(EmptyNumber, inds)
 
 """
     randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)

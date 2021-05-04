@@ -8,6 +8,7 @@ using Test
     "index.jl",
     "indexset.jl",
     "not.jl",
+    "itensor_scalar.jl",
     "itensor.jl",
     "itensor_slice.jl",
     "itensor_scalar_contract.jl",

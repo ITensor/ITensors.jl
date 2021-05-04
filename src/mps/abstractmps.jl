@@ -1283,7 +1283,7 @@ function _isodd_fermionic_parity(s::QNIndex, n::Integer)
 end
 
 function _fermionic_swap(s1::Index, s2::Index)
-  T = ITensor(s1', s2', dag(s1), dag(s2))
+  T = ITensor(QN(), s1', s2', dag(s1), dag(s2))
   for b in nzblocks(T)
     dval = 1.0
     # Must be a diagonal block
