@@ -126,7 +126,7 @@ its eigenvalue `energy` are returned.
 
 After the `dmrg` function returns, you can take the returned MPS `psi` and do further calculations with it, such as measuring local operators or computing entanglement entropy.
 
-## Conserving Quantum Numbers in DMRG
+## Conserving Quantum Numbers (QNs) in DMRG
 
 An important technique in DMRG calculations of quantum Hamiltonians
 is the conservation of _quantum numbers_. Examples of these are the
@@ -137,7 +137,7 @@ it can be important for simulating physical systems with conservation
 laws and for obtaining ground states in different symmetry sectors.
 Note that ITensor currently only supports Abelian quantum numbers.
 
-**Necessary Changes**
+#### Necessary Changes
 
 Setting up a quantum-number conserving DMRG calculation in ITensor requires
 only very small changes to a DMRG code. The main changes are:
@@ -154,13 +154,13 @@ Of course, your Hamiltonian should conserve all of the QN's that you would
 like to use. If it doesn't, you will get an error when you try to construct
 it out of the QN-enabled tensor indices.
 
-**Making the Changes**
+#### Making the Changes
 
 Let's see how to make these two changes to the DMRG code from the 
 [Getting Started with DMRG](@ref) tutorial above. At the end,
 we will put together these changes for a complete, working code.
 
-_Change 1: QN Site Indices_
+**Change 1: QN Site Indices**
 
 To make change (1), we will change the line
 
@@ -203,7 +203,7 @@ Sample output:
 
 In the sample output above, note than in addition to the dimension of these indices being 3, each of the three settings of the Index have a unique QN associated to them. The number after the QN on each line is the dimension of that subspace, which is 1 for each subspace of the Index objects above. Note also that `"Sz"` quantum numbers in ITensor are measured in units of ``1/2``, so `QN("Sz",2)` corresponds to ``S^z=1`` in conventional physics units.
 
-_Change 2: Initial State_
+**Change 2: Initial State**
 
 To make change (2), instead of constructing the initial MPS `psi0` to be an arbitrary, random MPS, we will make it a specific state with a well-defined total ``S^z``. 
 So we will replace the line
@@ -235,7 +235,45 @@ computing the quantum-number flux of `psi0`
 # Output: flux(psi0) = QN("Sz",0)
 ```
 
-## Putting it All Together
+!!! info "Setting Other Total QN Values"
+
+    The above example shows the case of setting a total "Sz" quantum
+    number of zero, since the initial state alternates between "Up"
+    and "Dn" on every site with an even number of sites.
+    
+    To obtain other total QN values, just set the initial state to
+    be one which has the total QN you want. To be concrete
+    let's take the example of a system with `N=10` sites of 
+    ``S=1`` spins.
+
+    For example if you want a total "Sz" of +20 (= `QN("Sz",20)`) in ITensor units,
+    or ``S^z=10`` in physical units, for a system with 10 sites, 
+    use the initial state:
+    ```julia
+    state = ["Up" for n=1:N]
+    psi0 = productMPS(sites,state)
+    ```
+    Or to initialize this 10-site system to have a total "Sz" of +16
+    in ITensor units (``S^z=8`` in physical units):
+    ```julia
+    state = ["Dn","Up","Up","Up","Up","Up","Up","Up","Up","Up"]
+    psi0 = productMPS(sites,state)
+    ```
+    would work (as would any `state` with one "Dn" and nine "Up"'s
+    in any order).
+    Or you could initialize to a total "Sz" of +18
+    in ITensor units (``S^z=9`` in physical units) as
+    ```julia
+    state = ["Z0","Up","Up","Up","Up","Up","Up","Up","Up","Up"]
+    psi0 = productMPS(sites,state)
+    ```
+    where "Z0" refers to the ``S^z=0`` state of a spin-one spin.
+
+    Finally, the same kind of logic as above applies to other
+    physical site types, whether "S=1/2", "Electron", "Boson",
+    etc.
+
+#### Putting it All Together
 
 Let's take the DMRG code from the _Getting Started with DMRG_
 tutorial above and make the changes above to it, to turn it into a code which conserves 
