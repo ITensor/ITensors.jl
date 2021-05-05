@@ -255,8 +255,10 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   cR = dag(combinedind(CR))
 
   # <fermions>
-  @assert dir(cR)==In
-  @assert dir(cL)==Out
+  if using_auto_fermion()
+    @assert dir(cR)==In
+    @assert dir(cL)==Out
+  end
   if inds(AC) != IndexSet(cR, cL)
     AC = permute(AC, cR, cL)
   end
