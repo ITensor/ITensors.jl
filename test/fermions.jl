@@ -511,21 +511,6 @@ ITensors.enable_auto_fermion()
     @test inner(psi,psi_orig) ≈ 1.0
   end
 
-  #@testset "Dag regression tests" begin
-  #  @testset "Dag regression test #1" begin
-  #    s = Index(QN("Nf",0,-1)=>1,QN("Nf",1,-1)=>1,tags="s")
-  #    l1 = Index(QN("Nf",1,-1)=>1,tags="l1")
-  #    l2 = Index(QN("Nf",2,-1)=>1,tags="l2")
-  #    T = ITensor(l1,s,l2)
-  #    T[1,2,1] = 1.0
-  #    dT = dag(T)
-  #    @test dT[1,2,1] ≈ 1.0
-  #  end
-
-  #  @testset "Dag regression test #2" begin
-  #  end
-  #end
-
   @testset "MPS inner regression test" begin
     sites = siteinds("Fermion",3;conserve_qns=true)
     psi = productMPS(sites,[2,2,1])
@@ -798,16 +783,6 @@ ITensors.enable_auto_fermion()
       # Test using SVD within DMRG too:
       energy, psi = dmrg([Ht,HV], psi0, sweeps;outputlevel=0,which_decomp="svd")
       @test abs(energy-correct_energy) < 1E-4
-
-      #C = correlation_matrix(psi,"Cdag","C")
-      #energy_t = inner(psi,Ht,psi)
-      #@show energy_t
-      #C_energy_t = 0.0
-      #for j=1:N-1
-      #  C_energy_t += -t1*C[j,j+1]
-      #end
-      #@show C_energy_t
-      #@show 2*C_energy_t
     end
 
     @testset "Further Neighbor and Correlations" begin
@@ -840,14 +815,14 @@ ITensors.enable_auto_fermion()
 
       energy, psi = dmrg(Ht, psi0, sweeps;outputlevel=0)
 
-      energy_t = inner(psi,Ht,psi)
+      energy_inner = inner(psi,Ht,psi)
 
       C = correlation_matrix(psi,"Cdag","C")
-      C_energy_t = sum(j->-2t1*C[j,j+1],1:N-1) +
-                   sum(j->-2t2*C[j,j+2],1:N-2)
+      C_energy = sum(j->-2t1*C[j,j+1],1:N-1) +
+                 sum(j->-2t2*C[j,j+2],1:N-2)
 
-      @test energy_t ≈ energy
-      @test C_energy_t ≈ energy_t
+      @test energy_inner ≈ energy
+      @test C_energy ≈ energy
     end
   end
 
@@ -879,7 +854,6 @@ ITensors.enable_auto_fermion()
       T = ITensor(QN("Nf",0,-1),dag(s[1]),s[1]')
       T[2,2] = 1
 
-      #@test_throws MethodError D,U = eigen(T;ishermitian=true,cutoff)
       F = eigen(T;ishermitian=true,cutoff)
       D,U,spec = F
       Ut = F.Vt
@@ -893,7 +867,6 @@ ITensors.enable_auto_fermion()
       A = ITensor(QN("Nf",2,-1),s[1],s[2],s[3])
       A[s[1]=>1,s[2]=>2,s[3]=>2] = 1.0
 
-      #@test_throws MethodError U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
       U,R=factorize(A,(s[1],s[2]);which_decomp="eigen",cutoff=1E-18,ortho="left")
 
       @test norm(U*R-A) < 1E-12
