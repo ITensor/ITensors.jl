@@ -735,7 +735,11 @@ function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
         # Make sure QN=zero is first in list of sectors
         insert!(qi, 1, q => d0 + cols)
       else
-        push!(qi, q => cols)
+        if using_auto_fermion() # <fermions>
+          push!(qi, (-q) => cols)
+        else
+          push!(qi, q => cols)
+        end
       end
     end
     # Set dir=In for fermionic ordering, avoid arrow sign

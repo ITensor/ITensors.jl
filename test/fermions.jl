@@ -904,6 +904,15 @@ ITensors.enable_auto_fermion()
       @test norm(T-U*S*V) < 1E-10
     end
 
+    @testset "AutoMPO Regression Test" begin
+      N = 3
+      s = siteinds("Fermion", N; conserve_qns=true)
+
+      a = AutoMPO()
+      a += "Cdag", 1, "C", 3
+      @test_nowarn H = MPO(a, s)
+    end
+
   end # Regression Tests
 
 ITensors.disable_auto_fermion()
