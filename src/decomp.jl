@@ -204,12 +204,11 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
     end
   end
 
-  N = ndims(A)
-  NL = length(Linds)
-  NR = length(Rinds)
-  NL != NR && error("Must have equal number of left and right indices")
-  N != NL + NR &&
-    error("Number of left and right indices must add up to total number of indices")
+  N   = ndims(A)
+  NL  = length(Linds)
+  NR  = length(Rinds)
+  NL != NR      && error("Must have equal number of left and right indices")
+  N  != NL + NR && error("Number of left and right indices must add up to total number of indices")
 
   ishermitian::Bool = get(kwargs, :ishermitian, false)
 
@@ -247,37 +246,46 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
     end
   end
 
-  CL = combiner(Lis...; dir=Out, tags="CMB,left")
-  CR = combiner(Ris...; dir=In, tags="CMB,right")
+  CL = combiner(Lis...; dir = Out, tags = "CMB,left")
+  CR = combiner(dag(Ris)...; dir = Out, tags = "CMB,right")
 
-  AC = A * CR * CL
+  AC = A * dag(CR) * CL
 
   cL = combinedind(CL)
-  cR = combinedind(CR)
-  if inds(AC) != IndexSet(cL, cR)
-    AC = permute(AC, cL, cR)
+  cR = dag(combinedind(CR))
+
+  # <fermions>
+  @assert dir(cR)==In
+  @assert dir(cL)==Out
+  if inds(AC) != IndexSet(cR, cL)
+    AC = permute(AC, cR, cL)
   end
 
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
 
   DT, VT, spec = eigen(AT; kwargs...)
-  D, VC = itensor(DT), itensor(VT)
+  D, VLC = itensor(DT), itensor(VT)
 
-  V = VC * CR
+  VRC = copy(VLC)
+  ol = commonind(D,VLC)
+  or = uniqueind(D,VLC)
+  l = setprime(settags(ol, lefttags), leftplev)
+  r = setprime(settags(or, righttags), rightplev)
+  replaceind!(VLC,ol,l)
+  replaceinds!(D, (ol,or), (l,r))
+  replaceinds!(VRC,(cL,ol),(cR,r))
 
-  # Set right index tags
-  l = uniqueind(D, V)
-  r = commonind(D, V)
-  l̃ = setprime(settags(l, lefttags), leftplev)
-  r̃ = setprime(settags(l̃, righttags), rightplev)
+  #@show norm(dag(VLC)*D*VRC-AC)
 
-  replaceinds!(D, (l, r), (l̃, r̃))
-  replaceind!(V, r, r̃)
+  VL = VLC * CL
+  VR = VRC * CR
 
-  l, r = l̃, r̃
+  #@show norm(dag(VL)*D*VR-A)
 
-  # The right eigenvectors, after being applied to A
-  Vt = replaceinds(V, (Ris..., r), (Lis..., l))
+  V = dag(VR)
+  Vt = dag(VL)
+
+  #@show norm(dag(V)*D*Vt-A)
 
   @debug_check begin
     if hasqns(A)
