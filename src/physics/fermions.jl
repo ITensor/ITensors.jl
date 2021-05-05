@@ -22,7 +22,7 @@ end
 isfermionic(qv::QNVal) = (modulus(qv) < 0)
 
 isfermionic(qn::QN) = any(isfermionic,qn)
- 
+
 has_fermionic_subspaces(i::Index) = false
 
 function has_fermionic_subspaces(i::QNIndex)
@@ -31,6 +31,8 @@ function has_fermionic_subspaces(i::QNIndex)
   end
   return false
 end
+
+isfermionic(i::Index) = has_fermionic_subspaces(i)
 
 has_fermionic_subspaces(is::IndexSet) = false
 
@@ -42,6 +44,7 @@ function has_fermionic_subspaces(is::Union{QNIndexSet,NTuple{N,QNIndex}}) where 
 end
 
 has_fermionic_subspaces(T) = has_fermionic_subspaces(inds(T))
+
 
 """
     fparity(qn::QN)
