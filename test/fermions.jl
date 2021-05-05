@@ -762,38 +762,93 @@ ITensors.enable_auto_fermion()
   end # Fermion Contraction with Combined Indices
 
   @testset "DMRG Tests" begin
-    N = 8
-    t1 = 1.0
-    V1 = 4.0
 
-    s = siteinds("Fermion",N;conserve_qns=true)
+    @testset "Nearest Neighbor Fermions" begin
+      N = 8
+      t1 = 1.0
+      V1 = 4.0
 
-    ampo = AutoMPO()
-    for b=1:N-1
-      ampo += -t1,"Cdag",b,  "C",b+1
-      ampo += -t1,"Cdag",b+1,"C",b
-      ampo += V1,"N",b,"N",b+1
+      s = siteinds("Fermion",N;conserve_qns=true)
+
+      ampot = AutoMPO()
+      ampoV = AutoMPO()
+      for b=1:N-1
+        ampot += -t1,"Cdag",b,  "C",b+1
+        ampot += -t1,"Cdag",b+1,"C",b
+        ampoV += V1,"N",b,"N",b+1
+      end
+      Ht = MPO(ampot,s)
+      HV = MPO(ampoV,s)
+
+      state = ["Emp" for n=1:N]
+      for i=1:2:N
+        state[i] = "Occ"
+      end
+      psi0 = productMPS(s, state)
+
+      sweeps = Sweeps(3)
+      maxdim!(sweeps,20,20,40,80,200)
+      cutoff!(sweeps,1E-6)
+
+      correct_energy = -2.859778
+
+      energy, psi = dmrg([Ht,HV], psi0, sweeps;outputlevel=0)
+      @test abs(energy-correct_energy) < 1E-4
+
+      # Test using SVD within DMRG too:
+      energy, psi = dmrg([Ht,HV], psi0, sweeps;outputlevel=0,which_decomp="svd")
+      @test abs(energy-correct_energy) < 1E-4
+
+      #C = correlation_matrix(psi,"Cdag","C")
+      #energy_t = inner(psi,Ht,psi)
+      #@show energy_t
+      #C_energy_t = 0.0
+      #for j=1:N-1
+      #  C_energy_t += -t1*C[j,j+1]
+      #end
+      #@show C_energy_t
+      #@show 2*C_energy_t
     end
-    H = MPO(ampo,s)
 
-    state = ["Emp" for n=1:N]
-    for i=1:2:N
-      state[i] = "Occ"
+    @testset "Further Neighbor and Correlations" begin
+      N = 8
+      t1 = 1.0
+      t2 = 0.2
+
+      s = siteinds("Fermion",N;conserve_qns=true)
+
+      ampot = AutoMPO()
+      for b=1:N-1
+        ampot += -t1,"Cdag",b,  "C",b+1
+        ampot += -t1,"Cdag",b+1,"C",b
+      end
+      for b=1:N-2
+        ampot += -t2,"Cdag",b,  "C",b+2
+        ampot += -t2,"Cdag",b+2,"C",b
+      end
+      Ht = MPO(ampot,s)
+
+      state = ["Emp" for n=1:N]
+      for i=1:2:N
+        state[i] = "Occ"
+      end
+      psi0 = productMPS(s, state)
+
+      sweeps = Sweeps(3)
+      maxdim!(sweeps,20,20,40,80,200)
+      cutoff!(sweeps,1E-6)
+
+      energy, psi = dmrg(Ht, psi0, sweeps;outputlevel=0)
+
+      energy_t = inner(psi,Ht,psi)
+
+      C = correlation_matrix(psi,"Cdag","C")
+      C_energy_t = sum(j->-2t1*C[j,j+1],1:N-1) +
+                   sum(j->-2t2*C[j,j+2],1:N-2)
+
+      @test energy_t ≈ energy
+      @test C_energy_t ≈ energy_t
     end
-    psi0 = productMPS(s, state)
-
-    sweeps = Sweeps(3)
-    maxdim!(sweeps,20,20,40,80,200)
-    cutoff!(sweeps,1E-6)
-
-    correct_energy = -2.859778
-
-    energy, psi = dmrg(H, psi0, sweeps;outputlevel=0)
-    @test abs(energy-correct_energy) < 1E-4
-
-    # Test using SVD within DMRG too:
-    energy, psi = dmrg(H, psi0, sweeps;outputlevel=0,which_decomp="svd")
-    @test abs(energy-correct_energy) < 1E-4
   end
 
   @testset "Regression Tests" begin

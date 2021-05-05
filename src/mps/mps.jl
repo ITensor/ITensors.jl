@@ -559,7 +559,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
   s = siteinds(psi)
   onsiteOp = "$Op1*$Op2"
   fermionic2 = has_fermion_string(Op2, s[1])
-  if fermionic2
+  if !using_auto_fermion() && fermionic2
     Op1 = "$Op1*F"
   end
 
@@ -595,7 +595,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
       C[ci, cj] = scalar(val)
       C[cj, ci] = conj(C[ci, cj])
 
-      if fermionic2
+      if !using_auto_fermion() && fermionic2
         Li *= op("F", s, j) * dag(prime(psi[j]))
       else
         Li *= dag(prime(psi[j], "Link"))
