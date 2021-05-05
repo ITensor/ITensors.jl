@@ -146,6 +146,8 @@ end
 @testset "AutoMPO" begin
   N = 10
 
+  @test !ITensors.using_auto_fermion()
+
   @testset "Show MPOTerm" begin
     ampo = AutoMPO()
     add!(ampo, "Sz", 1, "Sz", 2)

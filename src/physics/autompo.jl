@@ -514,7 +514,7 @@ function svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
         site_coef = coef(term)
       end
       if isempty(onsite)
-        if isfermionic(right, sites)
+        if !using_auto_fermion() && isfermionic(right, sites)
           push!(onsite, SiteOp("F", n))
         else
           push!(onsite, SiteOp("Id", n))
@@ -603,19 +603,17 @@ function svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
     end
 
     s = sites[n]
-    #H[n] = emptyITensor(dag(s),s',ll,rl)
-    #TODO: replace with ITensor()
-    H[n] = emptyITensor()
+    H[n] = ITensor()
     for (op, M) in finalMPO
       T = itensor(M, ll, rl)
       H[n] += T * computeSiteProd(sites, op)
     end
   end
 
-  L = emptyITensor(llinks[1])
+  L = ITensor(llinks[1])
   L[startState] = 1.0
 
-  R = emptyITensor(llinks[N + 1])
+  R = ITensor(llinks[N + 1])
   R[endState] = 1.0
 
   H[1] *= L
@@ -689,7 +687,7 @@ function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
         site_coef = coef(term)
       end
       if isempty(onsite)
-        if isfermionic(right, sites)
+        if !using_auto_fermion() && isfermionic(right, sites)
           push!(onsite, SiteOp("F", n))
         else
           push!(onsite, SiteOp("Id", n))
@@ -721,7 +719,10 @@ function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
   #
   d0 = 2
   llinks = Vector{QNIndex}(undef, N + 1)
-  llinks[1] = Index(QN() => d0; tags="Link,l=0")
+  # Set dir=In for fermionic ordering, avoid arrow sign
+  # <fermions>:
+  linkdir = using_auto_fermion() ? In : Out;
+  llinks[1] = Index(QN() => d0; tags="Link,l=0", dir=linkdir)
   for n in 1:N
     qi = Vector{Pair{QN,Int}}()
     if !haskey(Vs[n + 1], QN())
@@ -737,7 +738,9 @@ function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
         push!(qi, q => cols)
       end
     end
-    llinks[n + 1] = Index(qi...; tags="Link,l=$n")
+    # Set dir=In for fermionic ordering, avoid arrow sign
+    # <fermions>:
+    llinks[n + 1] = Index(qi...; tags="Link,l=$n", dir=linkdir)
   end
 
   H = MPO(N)
@@ -806,8 +809,7 @@ function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
     end
 
     s = sites[n]
-    #H[n] = emptyITensor(dag(s),s',dag(ll),rl)
-    H[n] = emptyITensor()
+    H[n] = ITensor()
     for (q_op, M) in finalMPO
       op_prod = q_op[2]
       Op = computeSiteProd(sites, op_prod)
@@ -816,10 +818,19 @@ function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
       sq = flux(Op)
       cq = rq - sq
 
-      #rn = qnblocknum(ll,rq)
-      #cn = qnblocknum(rl,cq)
-      rn = block(first, ll, rq)
-      cn = block(first, rl, cq)
+      if using_auto_fermion()
+        # <fermions>:
+        # MPO is defined with Index order
+        # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
+        # so compute sign that would result by permuting cl from
+        # second position to last position:
+        if fparity(sq) == 1 && fparity(cq) == 1
+          Op .*= -1
+        end
+      end
+
+      rn = qnblocknum(ll, rq)
+      cn = qnblocknum(rl, cq)
 
       #TODO: wrap following 3 lines into a function
       _block = Block(rn, cn)
@@ -832,10 +843,10 @@ function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
     end
   end
 
-  L = emptyITensor(llinks[1])
+  L = ITensor(llinks[1])
   L[startState] = 1.0
 
-  R = emptyITensor(dag(llinks[N + 1]))
+  R = ITensor(dag(llinks[N + 1]))
   R[endState] = 1.0
 
   H[1] *= L
@@ -864,11 +875,11 @@ function sorteachterm!(ampo::AutoMPO, sites)
     # Identify fermionic operators,
     # zeroing perm for bosonic operators,
     # and inserting string "F" operators
-    rhs_parity = +1
+    parity = +1
     for n in Nt:-1:1
       currsite = site(t.ops[n])
       fermionic = has_fermion_string(name(t.ops[n]), sites[site(t.ops[n])])
-      if (rhs_parity == -1) && (currsite < prevsite)
+      if !using_auto_fermion() && (parity == -1) && (currsite < prevsite)
         # Put local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
@@ -877,21 +888,21 @@ function sorteachterm!(ampo::AutoMPO, sites)
       prevsite = currsite
 
       if fermionic
-        rhs_parity = -rhs_parity
+        parity = -parity
       else
         # Ignore bosonic operators in perm
         # by zeroing corresponding entries
         perm[n] = 0
       end
     end
-    if rhs_parity == -1
-      error("Total parity-odd fermionic terms not yet supported by AutoMPO")
+    if parity == -1
+      error("Parity-odd fermionic terms not yet supported by AutoMPO")
     end
+
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero, perm)
-    # Account for anti-commuting, fermionic operators 
+    # and account for anti-commuting, fermionic operators 
     # during above sort; put resulting sign into coef
-
     t.coef *= parity_sign(perm)
   end
   return ampo
