@@ -29,6 +29,10 @@ using Combinatorics: permutations
     AC = C * A
     @test A == AC
 
+    R = ITensor(0.0, j, l, k, i)
+    R .= A .* C
+    @test R == A
+
     R = ITensor(j, l, k, i)
     R .= A .* C
     @test R == A

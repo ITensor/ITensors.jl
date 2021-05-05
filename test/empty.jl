@@ -8,7 +8,7 @@ using ITensors, Test
 
     @test hassameinds(E, (i', i))
     @test order(E) == 2
-    @test_broken E[i' => 1, i => 1] == 0
+    @test E[i' => 1, i => 1] == 0
 
     E[i' => 1, i => 2] = 2.3
 
@@ -26,7 +26,7 @@ using ITensors, Test
     @test hassameinds(E, (i', i))
     @test order(E) == 2
     @test isnothing(flux(E))
-    @test_broken E[i' => 1, i => 3] == 0
+    @test E[i' => 1, i => 3] == 0
 
     E[i' => 3, i => 2] = 2.3
 

@@ -25,13 +25,12 @@ function makeRandomMPS(sites; chi::Int=4)::MPS
   for n in 1:N
     s = sites[n]
     if n == 1
-      v[n] = ITensor(l[n], s)
+      v[n] = randomITensor(l[n], s)
     elseif n == N
-      v[n] = ITensor(l[n - 1], s)
+      v[n] = randomITensor(l[n - 1], s)
     else
-      v[n] = ITensor(l[n - 1], l[n], s)
+      v[n] = randomITensor(l[n - 1], l[n], s)
     end
-    randn!(v[n])
     normalize!(v[n])
   end
   return MPS(v, 0, N + 1)

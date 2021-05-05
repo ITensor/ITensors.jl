@@ -144,7 +144,8 @@ Random.seed!(1234)
   @testset "Constructor Leads to No Blocks" begin
     i = Index(QN(0) => 2, QN(1) => 3; tags="i")
     j = Index(QN(1) => 2, QN(2) => 1; tags="j")
-    @test_throws ErrorException ITensor(i, j)
+    A = ITensor(i, j)
+    @test storage(A) isa NDTensors.EmptyStorage
     @test_throws ErrorException ITensor(QN(0), i, j)
   end
 
@@ -183,8 +184,8 @@ Random.seed!(1234)
 
     A = ITensor(i, dag(j))
 
-    @test flux(A) == QN(0)
-    @test nnzblocks(A) == 2
+    @test flux(A) === nothing
+    @test nnzblocks(A) == 0
   end
 
   @testset "Constructor (Tuple, no flux specified)" begin
@@ -193,8 +194,8 @@ Random.seed!(1234)
 
     A = ITensor((i, dag(j)))
 
-    @test flux(A) == QN(0)
-    @test nnzblocks(A) == 2
+    @test flux(A) === nothing
+    @test nnzblocks(A) == 0
   end
 
   @testset "No indices getindex" begin

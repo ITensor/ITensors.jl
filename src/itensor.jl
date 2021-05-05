@@ -78,17 +78,22 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 """
 mutable struct ITensor
   tensor::Tensor
-  function ITensor(::AllowAlias, T::Tensor)
-    is = Tuple(inds(T))
+  function ITensor(::AllowAlias, T::Tensor{<:Any,<:Any,<:TensorStorage,<:Tuple})
     @debug_check begin
+      is = inds(T)
       if !allunique(is)
         error(
           "Trying to create ITensors with collection of indices $is. Indices must be unique.",
         )
       end
     end
-    return new(setinds(T, is))
+    return new(T)
   end
+end
+
+# Version where the indices are not Tuple, so convert to Tuple
+function ITensor(::AllowAlias, T::Tensor)
+  return ITensor(AllowAlias(), setinds(T, NTuple{ndims(T)}(inds(T))))
 end
 
 ITensor(::NeverAlias, T::Tensor) = ITensor(AllowAlias(), copy(T))
@@ -150,7 +155,7 @@ that is not currently available.
 """
 data(T::ITensor) = NDTensors.data(tensor(T))
 
-similar(T::ITensor, args...) = ITensor(similar(tensor(T), args...))
+similar(T::ITensor, args...) = itensor(NDTensors.similar(tensor(T), args...))
 
 function settensor!(T::ITensor, t)
   T.tensor = t
@@ -159,22 +164,20 @@ end
 
 function setinds!(T::ITensor, is)
   # TODO: always convert to Tuple with Tensor type?
-  settensor!(T, setinds(tensor(T), Tuple(is)))
-  return T
+  return settensor!(T, setinds(tensor(T), Tuple(is)))
 end
 
 function setstorage!(T::ITensor, st)
-  settensor!(T, setstorage(tensor(T), st))
-  return T
+  return settensor!(T, setstorage(tensor(T), st))
 end
 
 function setinds(T::ITensor, is)
   # TODO: always convert to Tuple with Tensor type?
-  return ITensor(setinds(tensor(T), Tuple(is)))
+  return itensor(setinds(tensor(T), Tuple(is)))
 end
 
 function setstorage(T::ITensor, st)
-  return ITensor(setstorage(tensor(T), st))
+  return itensor(setstorage(tensor(T), st))
 end
 
 #
@@ -258,21 +261,22 @@ B = ITensor(ComplexF64,k,j)
 ```
 """
 function ITensor(::Type{ElT}, inds::Indices) where {ElT<:Number}
-  return itensor(Dense(ElT, dim(inds)), inds)
+  #return itensor(Dense(ElT, dim(inds)), inds)
+  return itensor(EmptyStorage(ElT), inds)
 end
 
 ITensor(::Type{ElT}, inds::Index...) where {ElT<:Number} = ITensor(ElT, inds)
 
-ITensor(is::Indices) = ITensor(Float64, is)
-ITensor(inds::Index...) = ITensor(Float64, inds)
+ITensor(is::Indices) = ITensor(EmptyNumber, is)
+ITensor(inds::Index...) = ITensor(inds)
 
 # To fix ambiguity with QN Index version
 # TODO: define as `emptyITensor(ElT)`
-ITensor(::Type{ElT}=Float64) where {ElT<:Number} = ITensor(ElT, ())
+ITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number} = ITensor(ElT, ())
 
 # TODO: define as `emptyITensor(ElT)`
 function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-  return ITensor(Dense(ElT, dim(inds)), inds)
+  return ITensor(EmptyStorage(ElT), inds)
 end
 
 """
@@ -343,14 +347,14 @@ ITensor(x::ElT, inds...) where {ElT<:Number} = ITensor(ElT, x, inds...)
 ITensor(x::RealOrComplex{Int}, inds...) = ITensor(float(x), inds...)
 
 #
-# Empty ITensor constructors
+# EmptyStorage ITensor constructors
 #
 
 """
-    emptyITensor([::Type{ElT} = Float64, ]inds)
-    emptyITensor([::Type{ElT} = Float64, ]inds::Index...)
+    emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds)
+    emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds::Index...)
 
-Construct an ITensor with storage type `NDTensors.Empty`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
+Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.EmptyNumber`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
 """
 function emptyITensor(::Type{ElT}, inds::Indices) where {ElT<:Number}
   return itensor(EmptyTensor(ElT, inds))
@@ -360,11 +364,11 @@ function emptyITensor(::Type{ElT}, inds::Index...) where {ElT<:Number}
   return emptyITensor(ElT, inds)
 end
 
-emptyITensor(is::Indices) = emptyITensor(Float64, is)
+emptyITensor(is::Indices) = emptyITensor(EmptyNumber, is)
 
-emptyITensor(inds::Index...) = emptyITensor(Float64, inds)
+emptyITensor(inds::Index...) = emptyITensor(EmptyNumber, inds)
 
-function emptyITensor(::Type{ElT}=Float64) where {ElT<:Number}
+function emptyITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number}
   return itensor(EmptyTensor(ElT, ()))
 end
 
@@ -441,9 +445,17 @@ function ITensor(
 end
 
 function ITensor(
-  as::AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds...; kwargs...
-) where {ElT<:Number}
-  return ITensor(as, ElT, A, inds; kwargs...)
+  as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}, inds...; kwargs...
+)
+  return ITensor(as, eltype, A, inds; kwargs...)
+end
+
+# For now, it's not well defined to construct an ITensor without indices
+# from a non-zero dimensional Array
+function ITensor(as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}; kwargs...)
+  return error(
+    "Cannot construct an ITensor from an Array without any indices. To make a scalar ITensor, input a number, such as `ITensor(2.3)`.",
+  )
 end
 
 function ITensor(as::AliasStyle, A::Array{ElT}, inds...; kwargs...) where {ElT}
@@ -897,8 +909,7 @@ A[2, :] = [2.0 3.0]
   # Calling `setindex!` directly here is faster (56.635 ns (1 allocation: 368 bytes) for `A[1, 1, 1] = 1`)
   # but of course less generic. Can't figure out how to optimize it,
   # even the generic IndexVal version above is faster (126.818 ns (5 allocations: 768 bytes) for `A[i'' => 1, i' => 1, i => 1] = 1`)
-  settensor!(T, _setindex!!(tensor(T), x, I...))
-  return T
+  return settensor!(T, _setindex!!(tensor(T), x, I...))
 end
 
 @propagate_inbounds function setindex!(T::ITensor, x::Number, I::CartesianIndex)
@@ -919,8 +930,7 @@ end
 @propagate_inbounds @inline function setindex!(
   T::ITensor, x::Number, I::Vararg{<:Any,N}
 ) where {N}
-  settensor!(T, _setindex!!(tensor(T), x, I...))
-  return T
+  return settensor!(T, _setindex!!(tensor(T), x, I...))
 end
 
 # XXX: what is this definition for?
@@ -981,10 +991,8 @@ iterate(A::ITensor, args...) = iterate(tensor(A), args...)
 Fill all values of the ITensor with the specified value.
 """
 function fill!(T::ITensor, x::Number)
-  # TODO: automatically switch storage type if needed?
   # Use broadcasting `T .= x`?
-  fill!(tensor(T), x)
-  return T
+  return settensor!(T, fill!!(tensor(T), x))
 end
 
 # TODO: name this `inds` or `indscollection`?
@@ -1374,7 +1382,9 @@ function isapprox(A::ITensor, B::ITensor; kwargs...)
   return isapprox(array(A), array(B); kwargs...)
 end
 
-randn!(T::ITensor) = randn!(tensor(T))
+function randn!(T::ITensor)
+  return settensor!(T, randn!!(tensor(T)))
+end
 
 """
     randomITensor([::Type{ElT <: Number} = Float64, ]inds)
@@ -1578,35 +1588,45 @@ function (T::ITensor * x::Number)::ITensor
   return itensor(x * tensor(T))
 end
 
+# TODO: what about noncommutative number types?
 (x::Number * T::ITensor) = T * x
 
 #TODO: make a proper element-wise division
 (A::ITensor / x::Number) = A * (1.0 / x)
 
--(A::ITensor) = ITensor(-tensor(A))
+-(A::ITensor) = itensor(-tensor(A))
 
-# TODO: move the order-0 Empty ITensor special to NDTensors
-function (A::ITensor + B::ITensor)
-  if ndims(A) == 0 && ndims(B) > 0 && storage(A) isa NDTensors.Empty
-    return copy(B)
-  end
-  if ndims(B) == 0 && ndims(A) > 0 && storage(B) isa NDTensors.Empty
-    return copy(A)
+_isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
+_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
+
+function _add(A::Tensor, B::Tensor)
+  if _isemptyscalar(A) && ndims(B) > 0
+    return itensor(B)
+  elseif _isemptyscalar(B) && ndims(A) > 0
+    return itensor(A)
   end
   ndims(A) != ndims(B) &&
     throw(DimensionMismatch("cannot add ITensors with different numbers of indices"))
-  C = copy(A)
-  C .+= B
-  return C
+  itA = itensor(A)
+  itB = itensor(B)
+  itC = copy(itA)
+  itC .+= itB
+  return itC
 end
 
-# TODO: move the order-0 Empty ITensor special to NDTensors
+# TODO: move the order-0 EmptyStorage ITensor special case to NDTensors.
+# Unfortunately this is more complicated than it might seem since it
+# has to pass through the broadcasting mechanism first.
+function (A::ITensor + B::ITensor)
+  return _add(tensor(A), tensor(B))
+end
+
+# TODO: move the order-0 EmptyStorage ITensor special to NDTensors
 function (A::ITensor - B::ITensor)
-  if ndims(A) == 0 && ndims(B) > 0 && storage(A) isa NDTensors.Empty
-    return -copy(B)
-  end
-  if ndims(B) == 0 && ndims(A) > 0 && storage(B) isa NDTensors.Empty
-    return copy(A)
+  if _isemptyscalar(A) && ndims(B) > 0
+    return -B
+  elseif _isemptyscalar(B) && ndims(A) > 0
+    return A
   end
   ndims(A) != ndims(B) &&
     throw(DimensionMismatch("cannot subtract ITensors with different numbers of indices"))
@@ -1630,7 +1650,7 @@ function _contract(A::Tensor, B::Tensor)
 end
 
 function _contract(A::ITensor, B::ITensor)
-  C = itensor(_contract(tensor(A), Tensor(B)))
+  C = itensor(_contract(tensor(A), tensor(B)))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
     println(
@@ -1846,9 +1866,7 @@ end
 # This is necessary for now since not all types implement contract!!
 # with non-trivial α and β
 function contract!(C::ITensor, A::ITensor, B::ITensor)
-  CT = _contract!!(Tensor(C), tensor(A), Tensor(B))
-  settensor!(C, CT)
-  return C
+  return settensor!(C, _contract!!(Tensor(C), tensor(A), Tensor(B)))
 end
 
 mul!(C::ITensor, A::ITensor, B::ITensor, args...) = contract!(C, A, B, args...)
@@ -2157,8 +2175,9 @@ function copyto!(R::ITensor, T::ITensor)
   return R
 end
 
-function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
-  R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
+# Note this already assumes R === T1, which will be lifted
+# in the future.
+function _map!!(f::Function, R::Tensor, T1::Tensor, T2::Tensor)
   perm = NDTensors.getperm(inds(R), inds(T2))
   if hasqns(T2) && hasqns(R)
     # Check that Index arrows match
@@ -2169,16 +2188,12 @@ function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
       end
     end
   end
+  return permutedims!!(R, T2, perm, f)
+end
 
-  TR, TT = Tensor(R), Tensor(T2)
-
-  # TODO: Include type promotion from α
-  TR = convert(promote_type(typeof(TR), typeof(TT)), TR)
-  TR = permutedims!!(TR, TT, perm, f)
-
-  setstorage!(R, storage(TR))
-  setinds!(R, inds(TR))
-  return R
+function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
+  R !== T1 && error("`map!(f, R, T1, T2)` only supports `R === T1` right now")
+  return settensor!(R, _map!!(f, tensor(R), tensor(T1), tensor(T2)))
 end
 
 """
@@ -2285,14 +2300,17 @@ function insertblock!(T::ITensor, args...)
   return T
 end
 
+# XXX: rename isemptystorage?
 """
-    isempty(T::ITensor)
+    isemptystorage(T::ITensor)
 
 Returns `true` if the ITensor contains no elements.
 
-An ITensor with `Empty` storage always returns `true`.
+An ITensor with `EmptyStorage` storage always returns `true`.
 """
-isempty(T::ITensor) = isempty(tensor(T))
+isemptystorage(T::ITensor) = isemptystorage(tensor(T))
+isemptystorage(T::Tensor) = isempty(T)
+isempty(T::ITensor) = isemptystorage(T)
 
 #######################################################################
 #
