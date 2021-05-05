@@ -826,6 +826,44 @@ ITensors.enable_auto_fermion()
     end
   end
 
+  @testset "MPS gate system" begin
+    @testset "Fermion sites" begin
+      N = 3
+
+      s = siteinds("Fermion", N; conserve_qns=true)
+
+      # Ground state |000⟩
+      ψ000 = productMPS(s, "0")
+
+      # Start state |011⟩
+      ψ011 = productMPS(s, n -> n == 2 || n == 3 ? "1" : "0")
+
+      # Reference state |110⟩
+      ψ110 = productMPS(s, n -> n == 1 || n == 2 ? "1" : "0")
+
+      function ITensors.op(::OpName"CdagC", ::SiteType, s1::Index, s2::Index)
+        return op("Cdag", s1) * op("C", s2)
+      end
+
+      os = [("CdagC", 1, 3)]
+      Os = ops(os, s)
+
+      # Results in -|110⟩
+      ψ1 = product(Os, ψ011; cutoff=1e-15)
+
+      @test inner(ψ1, ψ110) == -1
+
+      a = AutoMPO()
+      a += "Cdag", 1, "C", 3
+      H = MPO(a, s)
+
+      # Results in -|110⟩
+      ψ2 = noprime(contract(H, ψ011; cutoff=1e-15))
+
+      @test inner(ψ2, ψ110) == -1
+    end
+  end
+
   @testset "Regression Tests" begin
 
     @testset "SVD DiagBlockSparse Regression Test" begin
