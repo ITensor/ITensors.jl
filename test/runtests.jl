@@ -40,11 +40,12 @@ using Test
     "qnitensor.jl",
     "qncombiner.jl",
     "qndiagitensor.jl",
+    "fermions.jl",
     "empty.jl",
     "qnmpo.jl",
     "readwrite.jl",
     "readme.jl",
-    "examples.jl",
+    "examples.jl"
   ]
     println("Running $filename")
     include(filename)
