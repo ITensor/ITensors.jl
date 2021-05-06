@@ -8,10 +8,10 @@ model such as a quantum Hamiltonian.
 LatticeBond has the following data fields:
 * s1::Int -- number of site 1
 * s2::Int -- number of site 2
-* x1::Int -- x coordinate of site 1
-* y1::Int -- y coordinate of site 1
-* x2::Int -- x coordinate of site 2
-* y2::Int -- y coordinate of site 2
+* x1::Float64 -- x coordinate of site 1
+* y1::Float64 -- y coordinate of site 1
+* x2::Float64 -- x coordinate of site 2
+* y2::Float64 -- y coordinate of site 2
 * type::String -- optional description of bond type
 """
 struct LatticeBond
@@ -64,7 +64,7 @@ objects) corresponding to the two-dimensional
 square lattice of dimensions (Nx,Ny).
 By default the lattice has open boundaries,
 but can be made periodic in the y direction
-by specifying the keyword argument 
+by specifying the keyword argument
 `yperiodic=true`.
 """
 function square_lattice(Nx::Int, Ny::Int; kwargs...)::Lattice
@@ -102,7 +102,7 @@ objects) corresponding to the two-dimensional
 triangular lattice of dimensions (Nx,Ny).
 By default the lattice has open boundaries,
 but can be made periodic in the y direction
-by specifying the keyword argument 
+by specifying the keyword argument
 `yperiodic=true`.
 """
 function triangular_lattice(Nx::Int, Ny::Int; kwargs...)::Lattice
