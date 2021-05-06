@@ -54,6 +54,60 @@ using ITensors, Test, Random
     @test energy < -12.0
   end
 
+  @testset "QN-conserving Spin-one Heisenberg with disk caching" begin
+    N = 10
+    sites = siteinds("S=1", N; conserve_qns=true)
+
+    ampo = AutoMPO()
+    for j in 1:(N - 1)
+      ampo += "Sz", j, "Sz", j + 1
+      ampo += 0.5, "S+", j, "S-", j + 1
+      ampo += 0.5, "S-", j, "S+", j + 1
+    end
+    H = MPO(ampo, sites)
+
+    state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+    psi = randomMPS(sites, state, 4)
+
+    sweeps = Sweeps(3)
+    @test length(sweeps) == 3
+    maxdim!(sweeps, 10, 20, 40)
+    mindim!(sweeps, 1, 10)
+    cutoff!(sweeps, 1E-11)
+    noise!(sweeps, 1E-10)
+    str = split(sprint(show, sweeps), '\n')
+    @test length(str) > 1
+    energy, psi = dmrg(H, psi, sweeps; outputlevel=0, write_when_maxdim_exceeds=15)
+    @test energy < -12.0
+  end
+
+  @testset "ProjMPO with disk caching" begin
+    N = 10
+    sites = siteinds("S=1", N; conserve_qns=true)
+
+    ampo = AutoMPO()
+    for j in 1:(N - 1)
+      ampo += "Sz", j, "Sz", j + 1
+      ampo += 0.5, "S+", j, "S-", j + 1
+      ampo += 0.5, "S-", j, "S+", j + 1
+    end
+    H = MPO(ampo, sites)
+
+    state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+    psi = randomMPS(sites, state, 4)
+    PH = ProjMPO(H)
+    orthogonalize!(psi, 1)
+    position!(PH, psi, 1)
+    PHdisk = ITensors.disk(PH)
+    @test length(PH) == N
+    @test length(PHdisk) == N
+    @test rproj(PH) ≈ rproj(PHdisk)
+    @test PHdisk.LR isa ITensors.DiskVector{ITensor}
+    @test PHdisk.LR[PHdisk.rpos] ≈ PHdisk.Rcache
+    position!(PH, psi, N)
+    @test PH.lpos == N-1
+  end
+
   @testset "Transverse field Ising" begin
     N = 32
     sites = siteinds("S=1/2", N)

@@ -19,6 +19,7 @@ using PackageCompiler
 using Pkg
 using Printf
 using Random
+using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
 
@@ -103,7 +104,9 @@ include("mps/deprecated.jl")
 include("mps/mps.jl")
 include("mps/mpo.jl")
 include("mps/sweeps.jl")
+include("mps/abstractprojmpo.jl")
 include("mps/projmpo.jl")
+include("mps/diskprojmpo.jl")
 include("mps/projmposum.jl")
 include("mps/projmps.jl")
 include("mps/projmpo_mps.jl")

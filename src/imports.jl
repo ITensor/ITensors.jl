@@ -144,3 +144,10 @@ import NDTensors:
   addblock!
 
 import Random: randn!
+
+using SerializedElementArrays: SerializedElementVector
+
+const DiskVector{T} = SerializedElementVector{T}
+
+import SerializedElementArrays: disk
+
