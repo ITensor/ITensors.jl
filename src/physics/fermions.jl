@@ -78,11 +78,14 @@ odd undergo an odd permutation (odd number of swaps)
 according to p, then return -1. Otherwise return +1.
 """
 
-function compute_permfactor(p,iv_or_qn::Vararg{T,N}) where {T,N}
+function compute_permfactor(p,
+                            iv_or_qn::Vararg{T,N};
+                            range=1:N
+                           ) where {T,N}
   using_auto_fermion() || return 1
   oddp = @MVector zeros(Int,N)
   n = 0
-  for j=1:N
+  for j=range
     if fparity(iv_or_qn[p[j]]) == 1
       n += 1
       oddp[n] = p[j]
@@ -92,29 +95,29 @@ function compute_permfactor(p,iv_or_qn::Vararg{T,N}) where {T,N}
 end
 
 # Default implementation for non-QN IndexVals
-NDTensors.permfactor(p,ivs...) where {N} = 1.0
+NDTensors.permfactor(p,ivs...) = 1.0
 
 NDTensors.permfactor(p,ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p,ivs...)
 
-function NDTensors.permfactor(p,pairs::Vararg{Pair{QNIndex,Int},N}) where {N} 
+function NDTensors.permfactor(p,
+                              pairs::Vararg{Pair{QNIndex,Int},N};
+                              kwargs...
+                             ) where {N} 
   using_auto_fermion() || return 1
   ivs = ntuple(i->IndexVal(pairs[i]),N)
-  return compute_permfactor(p,ivs...)
+  return compute_permfactor(p,ivs...;kwargs...)
 end
 
 function NDTensors.permfactor(perm,
                               block::NDTensors.Block{N},
-                              inds::Union{QNIndexSet,NTuple{N,QNIndex}}) where {N}
+                              inds::Union{QNIndexSet,NTuple{N,QNIndex}};
+                              kwargs...
+                             ) where {N}
   using_auto_fermion() || return 1
   qns = ntuple(n->qn(inds[n],block[n]),N)
-  return compute_permfactor(perm,qns...)
+  return compute_permfactor(perm,qns...;kwargs...)
 end
 
-#
-# TODO: specialize this *just* for QNIndex as an optimization
-#       (only remains to do this for input_indsR, if possible)
-#       probably requires parameterizing IndexSet over the Index type
-#
 function NDTensors.compute_alpha(ElType,
                                  labelsR,blockR,input_indsR,
                                  labelsT1,blockT1,indsT1::NTuple{N1,QNIndex},
@@ -195,7 +198,7 @@ function NDTensors.before_combiner_signs(T,
   # number of uncombined indices
   Nuc = NC-1
 
-  ci = cinds(storage(C))[1]
+  ci = NDTensors.cinds(storage(C))[1]
   combining = (labelsC[ci] > 0)
 
   isconj = NDTensors.isconj(storage(C))
@@ -308,7 +311,7 @@ function NDTensors.after_combiner_signs(R,
                                         labelsC,
                                         indsC::NTuple{NC,QNIndex},
                                         ) where {NC,NT,NR}
-  ci = cinds(store(C))[1]
+  ci = NDTensors.cinds(store(C))[1]
   combining = (labelsC[ci] > 0)
   combining && error("NDTensors.after_combiner_signs only for uncombining")
 
@@ -327,7 +330,7 @@ function NDTensors.after_combiner_signs(R,
     if !isconj
       #println("!!! Doing uncombining post-processing step")
       rperm = ntuple(i->(Nuc-i+1),Nuc) # reverse permutation
-      NDTensors.scale_blocks!(R,block->NDTensors.permfactor(rperm,block[1:Nuc],indsR[1:Nuc]))
+      NDTensors.scale_blocks!(R,block->NDTensors.permfactor(rperm,block,indsR;range=1:Nuc))
     else
       #println("!!! Doing conjugate uncombining post-processing step")
       C_dir = dir(inds(C)[1])
