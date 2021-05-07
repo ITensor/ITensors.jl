@@ -33,6 +33,11 @@ end
 #similar(S::TensorStorage) = setdata(S,similar(data(S)))
 #similar(S::TensorStorage,::Type{ElT}) where {ElT} = setdata(S,similar(data(S),ElT))
 
+# Define Base.similar in terms of NDTensors.similar
+Base.similar(t::TensorStorage, args...) = similar(t, args...)
+# To fix method ambiguity
+#Base.similar(t::TensorStorage) = similar(t)
+
 # Needed for passing Tensor{T,2} to BLAS/LAPACK
 function Base.unsafe_convert(::Type{Ptr{ElT}}, T::TensorStorage{ElT}) where {ElT}
   return Base.unsafe_convert(Ptr{ElT}, data(T))

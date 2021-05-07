@@ -114,6 +114,9 @@ Base.real(T::Tensor) = setstorage(T, real(storage(T)))
 
 Base.imag(T::Tensor) = setstorage(T, imag(storage(T)))
 
+# Define Base.similar in terms of NDTensors.similar
+Base.similar(T::Tensor, args...) = similar(T, args...)
+
 #
 # Necessary to overload since the generic fallbacks are
 # slow

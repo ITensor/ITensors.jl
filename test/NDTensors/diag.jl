@@ -22,9 +22,7 @@ using ITensors.NDTensors, Test
   D = tensor(Diag(vr), (d, d))
   @test Array(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
   @test matrix(D) == NDTensors.LinearAlgebra.diagm(0 => vr)
-  # fails because of missing similar method for NonuniformDiag :(
-  #@test permutedims(D, (2, 1)) == tensor(diagITensor(vr, j, i))
-  #@test permutedims(tensor(diagITensor(2.0, j, i)), (2, 1)) == tensor(diagITensor(2.0, j, i))
+  @test permutedims(D, (2, 1)) == D
 end
 
 nothing
