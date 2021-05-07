@@ -1452,7 +1452,7 @@ function (::Type{MPST})(
     if !isnothing(l)
       Lis = unioninds(Lis, l)
     end
-    L, R = factorize(Ã, Lis; kwargs..., ortho="left")
+    L, R = factorize(Ã, Lis; kwargs..., tags="Link,n=$n", ortho="left")
     l = commonind(L, R)
     ψ[n] = L
     Ã = R
@@ -1463,6 +1463,12 @@ function (::Type{MPST})(
   setrightlim!(M, N + 1)
   orthogonalize!(M, orthocenter)
   return M
+end
+
+function (::Type{MPST})(
+  A::Array{ElT}, sites; kwargs...
+) where {MPST<:AbstractMPS,ElT<:Number,N}
+  return MPST(ITensor(A, sites...), sites; kwargs...)
 end
 
 """
