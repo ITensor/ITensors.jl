@@ -1059,7 +1059,7 @@ end
       @test prod(CCNOTijk_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
     end
 
-    for i in 1:N, j in 1:N, k in 1:N, l in 1:N
+    for i in 1:N, j in i:N, k in 1:N, l in k:N
       ns = (i, j, k, l)
       !allunique(ns) && continue
       # Don't move sites back
@@ -1293,7 +1293,7 @@ end
     end
 
     @testset "Spinless fermion (gate evolution)" begin
-      N = 10
+      N = 6
 
       s = siteinds("Fermion", N; conserve_qns=true)
 
@@ -1340,11 +1340,11 @@ end
         ampo += "Cdag", i, "C", j
         G3 = MPO(ampo, s)
 
-        A_OP = prod(product(G1, ψ0; cutoff=1e-16))
+        A_OP = prod(product(G1, ψ0; cutoff=1e-6))
 
         A_OPS = noprime(G2 * prod(ψ0))
 
-        A_MPO = noprime(prod(contract(G3, ψ0; cutoff=1e-16)))
+        A_MPO = noprime(prod(contract(G3, ψ0; cutoff=1e-6)))
 
         @test A_OP ≈ A_OPS
         @test A_OP ≈ A_MPO
@@ -1413,9 +1413,9 @@ end
         ampo += "Cdagup", i, "Cup", j
         G1 = MPO(ampo, s)
         G2 = op("CCup", s, i, j)
-        A_MPO = prod(noprime(contract(G1, ψ; cutoff=1e-16)))
-        A_OP = prod(product(G2, ψ; cutoff=1e-16))
-        @test A_MPO ≈ A_OP
+        A_MPO = prod(noprime(contract(G1, ψ; cutoff=1e-8)))
+        A_OP = prod(product(G2, ψ; cutoff=1e-8))
+        @test A_MPO ≈ A_OP atol = 1E-4
       end
     end
   end
