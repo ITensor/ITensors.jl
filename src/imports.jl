@@ -95,8 +95,7 @@ import LinearAlgebra:
   svd,
   tr
 
-using ITensors.NDTensors:
-  EmptyNumber, blas_get_num_threads, fill!!, randn!!, timer
+using ITensors.NDTensors: EmptyNumber, blas_get_num_threads, fill!!, randn!!, timer
 
 import ITensors.NDTensors:
   # Modules

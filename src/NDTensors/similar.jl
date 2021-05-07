@@ -16,7 +16,7 @@ const WrappedArray{T,AW} = Union{
   UnitUpperTriangular{T,AW},
   UnitLowerTriangular{T,AW},
   Diagonal{T,AW},
-  SubArray{T,<:Any,AW}
+  SubArray{T,<:Any,AW},
 }
 
 # In general define NDTensors.similar = Base.similar
