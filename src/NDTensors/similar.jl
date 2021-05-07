@@ -4,8 +4,24 @@
 # More extensive than Base.similar
 #
 
+# A union type of AbstractArrays that are wrappers that define `Base.parent`.
+const WrappedArray{T,AW} = Union{
+  ReshapedArray{T,<:Any,AW},
+  Transpose{T,AW},
+  Adjoint{T,AW},
+  Symmetric{T,AW},
+  Hermitian{T,AW},
+  UpperTriangular{T,AW},
+  LowerTriangular{T,AW},
+  UnitUpperTriangular{T,AW},
+  UnitLowerTriangular{T,AW},
+  Diagonal{T,AW},
+  SubArray{T,<:Any,AW}
+}
+
 # In general define NDTensors.similar = Base.similar
-similar(a::AbstractArray, args...) = Base.similar(a, args...)
+similar(a::Array, args...) = Base.similar(a, args...)
+similar(a::WrappedArray, args...) = Base.similar(a, args...)
 
 # XXX: this is type piracy but why doesn't base have something like this?
 # This type piracy is pretty bad, consider making an internal `NDTensors.similar` function.
@@ -29,21 +45,6 @@ end
 similartype(::Type{<:Array{<:Any,N}}, eltype::Type) where {N} = Array{eltype,N}
 
 #similartype(::Type{LinearAlgebra.Adjoint{Float64, Matrix{Float64}}}, ::Type{Float64})
-
-# A union type of AbstractArrays that are wrappers that define `Base.parent`.
-#const WrappedArray = Union{ReshapedArray,Adjoint,Transpose,SubArray}
-const WrappedArray{T,AW} = Union{
-  ReshapedArray{T,<:Any,AW},
-  Transpose{T,AW},
-  Adjoint{T,AW},
-  Symmetric{T,AW},
-  Hermitian{T,AW},
-  UpperTriangular{T,AW},
-  LowerTriangular{T,AW},
-  UnitUpperTriangular{T,AW},
-  UnitLowerTriangular{T,AW},
-  Diagonal{T,AW},
-}
 
 parenttype(::Type{<:WrappedArray{<:Any,P}}) where {P} = P
 
