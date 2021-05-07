@@ -11,8 +11,8 @@ ITensor
 ```@docs
 ITensor(::Type{<:Number}, ::ITensors.Indices)
 ITensor(::Type{<:Number}, ::UndefInitializer, ::ITensors.Indices)
-ITensor(::Number, ::ITensors.Indices)
-ITensor(::Array{<:AbstractFloat},::ITensors.Indices)
+ITensor(::Type{ElT}, x::Number, inds::ITensors.Indices) where {ElT<:Number}
+ITensor(as::ITensors.AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds::ITensors.Indices; kwargs...) where {ElT<:Number}
 randomITensor(::Type{<:Number}, ::ITensors.Indices)
 onehot(::IndexVal)
 ```
@@ -27,7 +27,7 @@ itensor(::Array{<:Number},::ITensors.Indices)
 
 ```@docs
 ITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
-ITensor(A::Array, inds::ITensors.QNIndexSet)
+ITensor(::ITensors.AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds::ITensors.QNIndices; tol=0) where {ElT<:Number}
 ITensor(::Type{<:Number}, ::UndefInitializer, ::QN, ::ITensors.Indices)
 ```
 
@@ -46,9 +46,9 @@ emptyITensor(::Type{<:Number}, ::ITensors.QNIndices)
 ## Diagonal constructors
 
 ```@docs
-diagITensor(::Type{<:Number}, ::ITensors.Indices)
-diagITensor(::Vector{<:Number}, ::ITensors.Indices)
-diagITensor(::Number, ::ITensors.Indices)
+diagITensor(::Type{ElT}, is::ITensors.Indices) where {ElT}
+diagITensor(as::ITensors.AliasStyle, ::Type{ElT}, v::Vector{<:Number}, is...) where {ElT<:Number}
+diagITensor(as::ITensors.AliasStyle, ::Type{ElT}, x::Number, is...) where {ElT<:Number}
 delta(::Type{<:Number}, ::ITensors.Indices)
 ```
 
@@ -72,8 +72,6 @@ vector(::ITensor)
 
 ```@docs
 getindex(::ITensor, ::Any...)
-getindex(::ITensor, ::Vararg{Int,N}) where {N}
-setindex!(::ITensor, ::Number, ::Any...)
 setindex!(::ITensor, ::Number, ::Int...)
 ```
 
