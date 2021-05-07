@@ -1465,9 +1465,7 @@ function (::Type{MPST})(
   return M
 end
 
-function (::Type{MPST})(
-  A::Array{ElT}, sites; kwargs...
-) where {MPST<:AbstractMPS,ElT<:Number,N}
+function (::Type{MPST})(A::AbstractArray, sites; kwargs...) where {MPST<:AbstractMPS}
   return MPST(ITensor(A, sites...), sites; kwargs...)
 end
 
