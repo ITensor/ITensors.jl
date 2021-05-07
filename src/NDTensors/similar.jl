@@ -8,7 +8,7 @@
 # Base.similar(t::Tensor, args...) = similar(t, args...)
 
 # In general define NDTensors.similar = Base.similar
-similar(a::Array, args...) = Base.similar(a, args...)
+similar(a::AbstractArray, args...) = Base.similar(a, args...)
 
 # XXX: this is type piracy but why doesn't base have something like this?
 # This type piracy is pretty bad, consider making an internal `NDTensors.similar` function.
@@ -18,7 +18,6 @@ similar(a::Array, args...) = Base.similar(a, args...)
 # [...]
 similar(::Type{<:Array{T}}, dims) where {T} = Array{T,length(dims)}(undef, dims)
 
-# XXX: this is type piracy but why doesn't base have something like this?
 function similar(::Type{ArrayT}, ::Type{ElT}, size) where {ArrayT<:AbstractArray,ElT}
   return similar(similartype(ArrayT, ElT), size)
 end

@@ -1,11 +1,5 @@
 using ITensors.NDTensors, Test
 
-@static if VERSION >= v"1.5"
-  using Pkg
-  Pkg.add("Octavian")
-  using Octavian
-end
-
 @testset "Dense Tensors" begin
   @testset "DenseTensor basic functionality" begin
     A = Tensor(3, 4)
@@ -237,6 +231,10 @@ end
       @test NDTensors.auto_select_backend(typeof.((a, b, c))...) ==
             NDTensors.GemmBackend(:BLAS)
       res1 = NDTensors._gemm!('N', 'N', 2.0, a, b, 0.2, copy(c))
+
+      @test_throws UndefVarError backend_octavian()
+
+      using Octavian
       backend_octavian()
       @test NDTensors.gemm_backend[] == :Octavian
       res4 = NDTensors._gemm!('N', 'N', 2.0, a, b, 0.2, copy(c))
