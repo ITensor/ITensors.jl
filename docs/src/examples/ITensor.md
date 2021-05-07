@@ -223,7 +223,7 @@ reshaping the tensor into a matrix to carry out the factorization, then
 restoring the tensor structure at the end. All of these steps are done
 for you by the ITensor system as we will see below.
 
-**Singular Value Decomposition**
+#### Singular Value Decomposition
 
 The singular value decomposition (SVD) is a matrix factorization
 that is also extremely useful for general tensors.
@@ -341,7 +341,7 @@ U,S,V = svd(T,(i,k),cutoff=1E-2)
 @show (norm(U*S*V - T)/norm(T))^2
 ```
 
-**QR Factorization**
+#### QR Factorization
 
 Computing the QR factorization of an ITensor works in a similar way as for the SVD.
 In addition to passing the ITensor you want to factorize, you must also pass
