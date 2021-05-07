@@ -95,9 +95,10 @@ import LinearAlgebra:
   svd,
   tr
 
-using NDTensors: EmptyNumber, fill!!, randn!!
+using ITensors.NDTensors:
+  EmptyNumber, blas_get_num_threads, fill!!, randn!!, timer
 
-import NDTensors:
+import ITensors.NDTensors:
   # Modules
   Strided, # to control threading
   # Types
@@ -134,13 +135,14 @@ import NDTensors:
   setinds,
   setstorage,
   sim,
-  store,
+  storage,
   sum,
   tensor,
   truncate!,
   using_tblis,
   vector,
   # Deprecated
-  addblock!
+  addblock!,
+  store
 
 import Random: randn!

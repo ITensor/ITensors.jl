@@ -14,7 +14,6 @@ using Compat
 using HDF5
 using KrylovKit
 using LinearAlgebra
-using NDTensors
 using PackageCompiler
 using Pkg
 using Printf
@@ -23,10 +22,10 @@ using StaticArrays
 using TimerOutputs
 
 #####################################
-# NDTensors (definitions that will be moved to NDTensors
-# module)
+# NDTensors
 #
 include("NDTensors/NDTensors.jl")
+using .NDTensors
 
 #####################################
 # ContractionSequenceOptimization
