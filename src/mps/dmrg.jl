@@ -177,9 +177,12 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
     sw_time = @elapsed begin
       maxtruncerr = 0.0
 
-      if !isnothing(write_when_maxdim_exceeds) && maxdim(sweeps, sw) > write_when_maxdim_exceeds
+      if !isnothing(write_when_maxdim_exceeds) &&
+         maxdim(sweeps, sw) > write_when_maxdim_exceeds
         if outputlevel >= 2
-          println("write_when_maxdim_exceeds = $write_when_maxdim_exceeds and maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk")
+          println(
+            "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk",
+          )
         end
         PH = disk(PH)
       end

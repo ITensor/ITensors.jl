@@ -33,9 +33,25 @@ mutable struct DiskProjMPO <: AbstractProjMPO
   rposcache::Union{Int,Nothing}
 end
 
-DiskProjMPO(H::MPO) = new(0, length(H) + 1, 2, H, disk(Vector{ITensor}(undef, length(H))), nothing, nothing, nothing, nothing)
+function DiskProjMPO(H::MPO)
+  return new(
+    0,
+    length(H) + 1,
+    2,
+    H,
+    disk(Vector{ITensor}(undef, length(H))),
+    nothing,
+    nothing,
+    nothing,
+    nothing,
+  )
+end
 
-disk(pm::ProjMPO) = DiskProjMPO(pm.lpos, pm.rpos, pm.nsite, pm.H, disk(pm.LR), lproj(pm), pm.lpos, rproj(pm), pm.rpos)
+function disk(pm::ProjMPO)
+  return DiskProjMPO(
+    pm.lpos, pm.rpos, pm.nsite, pm.H, disk(pm.LR), lproj(pm), pm.lpos, rproj(pm), pm.rpos
+  )
+end
 disk(pm::DiskProjMPO) = pm
 
 # Special overload of lproj which uses the cached
@@ -73,4 +89,3 @@ function makeR!(P::DiskProjMPO, psi::MPS, k::Int)
   _makeR!(P, psi, k)
   return P
 end
-

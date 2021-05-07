@@ -105,7 +105,7 @@ using ITensors, Test, Random
     @test PHdisk.LR isa ITensors.DiskVector{ITensor}
     @test PHdisk.LR[PHdisk.rpos] ≈ PHdisk.Rcache
     position!(PH, psi, N)
-    @test PH.lpos == N-1
+    @test PH.lpos == N - 1
   end
 
   @testset "Transverse field Ising" begin
