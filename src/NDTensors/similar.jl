@@ -4,12 +4,6 @@
 # More extensive than Base.similar
 #
 
-# TODO: define
-Base.similar(t::Tensor, args...) = similar(t, args...)
-Base.similar(t::TensorStorage, args...) = similar(t, args...)
-# To fix method ambiguity
-Base.similar(t::TensorStorage) = similar(t)
-
 # In general define NDTensors.similar = Base.similar
 similar(a::AbstractArray, args...) = Base.similar(a, args...)
 
