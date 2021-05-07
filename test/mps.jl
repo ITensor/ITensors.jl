@@ -776,15 +776,13 @@ end
     #
     # Construct from regular Julia tensor
     # 
-    Ajt = randn(2,2,2,2,2) # Julia tensor
-    ψ = MPS(Ajt,s)
-    @test prod(ψ) ≈ ITensor(Ajt,s...)
+    Ajt = randn(2, 2, 2, 2, 2) # Julia tensor
+    ψ = MPS(Ajt, s)
+    @test prod(ψ) ≈ ITensor(Ajt, s...)
 
     Ajv = randn(2^N) # Julia vector
-    ψ = MPS(Ajv,s)
-    @test prod(ψ) ≈ ITensor(Ajv,s...)
-
-
+    ψ = MPS(Ajv, s)
+    @test prod(ψ) ≈ ITensor(Ajv, s...)
   end
 
   @testset "Set range of MPS tensors" begin
