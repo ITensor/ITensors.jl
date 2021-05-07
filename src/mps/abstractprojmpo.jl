@@ -129,39 +129,49 @@ function Base.size(P::AbstractProjMPO)::Tuple{Int,Int}
   return (d, d)
 end
 
-function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)
+function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
+  # Save the last `L` that is made to help with caching
+  # for DiskProjMPO
+  L = nothing
   while P.lpos < k
     ll = P.lpos
     if ll <= 0
-      P.LR[1] = psi[1] * P.H[1] * dag(prime(psi[1]))
+      L = psi[1] * P.H[1] * dag(prime(psi[1]))
+      P.LR[1] = L
       P.lpos = 1
     else
-      P.LR[ll + 1] = P.LR[ll] * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
+      L = P.LR[ll] * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
+      P.LR[ll + 1] = L
       P.lpos += 1
     end
   end
   # Needed when moving lproj backward
   P.lpos = k
-  return P
+  return L
 end
 
 makeL!(P::AbstractProjMPO, psi::MPS, k::Int) = _makeL!(P, psi, k)
 
-function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)
+function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
+  # Save the last `R` that is made to help with caching
+  # for DiskProjMPO
+  R = nothing
   N = length(P.H)
   while P.rpos > k
     rl = P.rpos
     if rl >= N + 1
-      P.LR[N] = psi[N] * P.H[N] * dag(prime(psi[N]))
+      R = psi[N] * P.H[N] * dag(prime(psi[N]))
+      P.LR[N] = R
       P.rpos = N
     else
-      P.LR[rl - 1] = P.LR[rl] * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
+      R = P.LR[rl] * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
+      P.LR[rl - 1] = R
       P.rpos -= 1
     end
   end
   # Needed when moving rproj backward
   P.rpos = k
-  return P
+  return R
 end
 
 makeR!(P::AbstractProjMPO, psi::MPS, k::Int) = _makeR!(P, psi, k)

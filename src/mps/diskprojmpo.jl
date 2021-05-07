@@ -81,11 +81,21 @@ function rproj(P::DiskProjMPO)::Union{ITensor,Nothing}
 end
 
 function makeL!(P::DiskProjMPO, psi::MPS, k::Int)
-  _makeL!(P, psi, k)
-  return P
+  L = _makeL!(P, psi, k)
+  if !isnothing(L)
+    # Cache the result
+    P.Lcache = L
+    P.lposcache = P.lpos
+  end
+  return L
 end
 
 function makeR!(P::DiskProjMPO, psi::MPS, k::Int)
-  _makeR!(P, psi, k)
-  return P
+  R = _makeR!(P, psi, k)
+  if !isnothing(R)
+    # Cache the result
+    P.Rcache = R
+    P.rposcache = P.rpos
+  end
+  return R
 end
