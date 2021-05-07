@@ -129,20 +129,6 @@ macro reset_warn_order(block)
 end
 
 #
-# A global timer used with TimerOutputs.jl
-#
-
-using NDTensors: timer
-
-#
-# Get the current number of BLAS threads
-# For VERSION >= v"1.6" this will become
-# using LinearAlgebra; BLAS.get_num_threads()
-#
-
-using NDTensors: blas_get_num_threads
-
-#
 # Block sparse multithreading
 #
 

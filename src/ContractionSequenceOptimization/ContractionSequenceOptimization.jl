@@ -1,10 +1,6 @@
 
 module ContractionSequenceOptimization
 
-using NDTensors
-
-import NDTensors: dim
-
 export optimal_contraction_sequence, contraction_cost
 
 include("utils.jl")
