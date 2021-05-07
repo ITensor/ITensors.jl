@@ -223,17 +223,21 @@ using ITensors.NDTensors, Test
     backend_auto()
   end
 
-  @static if VERSION >= v"1.5"
-    @testset "change backends" begin
-      a, b, c = [randn(5, 5) for i in 1:3]
-      backend_auto()
-      @test NDTensors.gemm_backend[] == :Auto
-      @test NDTensors.auto_select_backend(typeof.((a, b, c))...) ==
-            NDTensors.GemmBackend(:BLAS)
-      res1 = NDTensors._gemm!('N', 'N', 2.0, a, b, 0.2, copy(c))
-
-      @test_throws UndefVarError backend_octavian()
-
+  @testset "change backends" begin
+    a, b, c = [randn(5, 5) for i in 1:3]
+    backend_auto()
+    @test NDTensors.gemm_backend[] == :Auto
+    @test NDTensors.auto_select_backend(typeof.((a, b, c))...) ==
+          NDTensors.GemmBackend(:BLAS)
+    res1 = NDTensors._gemm!('N', 'N', 2.0, a, b, 0.2, copy(c))
+    @test_throws UndefVarError backend_octavian()
+    if VERSION >= v"1.5"
+      # Octavian only support Julia 1.5
+      # Need to install it here instead of
+      # putting it as a dependency in the Project.toml
+      # since otherwise it fails for older Julia versions.
+      import Pkg
+      Pkg.add("Octavian")
       using Octavian
       backend_octavian()
       @test NDTensors.gemm_backend[] == :Octavian
