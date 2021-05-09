@@ -1,5 +1,9 @@
 # MPS and MPO Examples
 
+The following examples demonstrate operations available in ITensor
+to work with [matrix product state (MPS)](http://tensornetwork.org/mps/)
+(or tensor train) and matrix product operator (MPO) tensor networks.
+
 ## Creating an MPS from a Tensor
 
 ![](mps_from_tensor.png)
@@ -69,6 +73,39 @@ maxdim = 10
 M = MPS(A,sites;cutoff=cutoff,maxdim=maxdim)
 ```
 
+## Expected Value of Local Operators
+
+When using an MPS to represent a quantum wavefunction ``|\psi\rangle``
+a common operation is computed the expected value ``\langle\psi|\hat{A}_j|\psi\rangle``
+of a local operator ``\hat{A}_j`` acting on site ``j``. This can be accomplished
+efficiently and conveniently using the `expect` function as:
+
+```julia
+Avals = expect(psi,"A")
+```
+
+where `"A"` must be an operator associated with the physical site type, or site tags, of
+the sites of the MPS `psi`. (For more information about defining such operators yourself,
+see the section on [Extending an Existing Local Hilbert Space](@ref).)
+
+As a concrete example, consider computing the expectation value of ``S^z_j`` on
+every site of an MPS representing a system of N spins of size ``S=1/2``. In the
+following example we will use a random MPS of bond dimension ``\chi=4`` but the
+MPS could be obtained other ways such as through a DMRG calculation.
+
+```@example expect
+using ITensors # hide
+N = 10
+chi = 4
+sites = siteinds("S=1/2",N)
+psi = randomMPS(sites,chi)
+magz = expect(psi,"Sz")
+for (j,mz) in enumerate(magz)
+    println("$j $mz")
+end
+```
+
+![](mps_expect.png)
 
 ## Applying a Single-site Operator to an MPS
 
