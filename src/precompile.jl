@@ -219,7 +219,6 @@ function _precompile_()
   @assert Base.precompile(Tuple{typeof(replaceinds),DenseTensor{Float64, 3, Tuple{Index{Int64}, Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}},Vector{Index{Int64}},Vector{Index{Int64}}})   # time: 0.07100896
   @assert Base.precompile(Tuple{typeof(_permute),NeverAlias,DenseTensor{Float64, 4, NTuple{4, Index{Int64}}, Dense{Float64, Vector{Float64}}},Vector{Index{Int64}}})   # time: 0.060088485
   @assert Base.precompile(Tuple{typeof(contract),ITensor,ITensor,ITensor,ITensor})   # time: 0.05387871
-  @assert isdefined(ITensors, Symbol("#869#870")) && Base.precompile(Tuple{getfield(ITensors, Symbol("#869#870")),Int64})   # time: 0.053106412
   @assert Base.precompile(Tuple{typeof(randomMPS),Vector{Index{Int64}},Int64})   # time: 0.037780974
   @assert Base.precompile(Tuple{Core.kwftype(typeof(combiner)),NamedTuple{(:dir, :tags), Tuple{Arrow, String}},typeof(combiner),Index{Int64}})   # time: 0.035185322
   @assert Base.precompile(Tuple{Core.kwftype(typeof(factorize)),NamedTuple{(:which_decomp, :tags, :maxdim, :mindim, :cutoff, :eigen_perturbation, :ortho, :normalize, :svd_alg), Tuple{Nothing, TagSet, Int64, Int64, Float64, Nothing, String, Bool, String}},typeof(factorize),ITensor,Tuple{Index{Int64}, Index{Int64}}})   # time: 0.035102397
@@ -249,7 +248,6 @@ function _precompile_()
   @assert Base.precompile(Tuple{typeof(sim),Vector{Index{Int64}}})   # time: 0.007713519
   @assert Base.precompile(Tuple{typeof(_setdiff),Tuple{Index{Int64}, Index{Int64}},Tuple{Index{Int64}, Index{Int64}, Index{Int64}}})   # time: 0.007117971
   @assert Base.precompile(Tuple{typeof(setcutoff!),Sweeps,Float64})   # time: 0.00675207
-  @assert Base.precompile(Tuple{typeof(copyto!),ITensor,Broadcasted{ITensorOpScalarStyle, _A, typeof(/), Tuple{ITensor, Float64}} where _A})   # time: 0.006613353
   @assert Base.precompile(Tuple{typeof(setmaxdim!),Sweeps,Int64,Int64,Int64,Int64,Int64})   # time: 0.006474703
   @assert Base.precompile(Tuple{Core.kwftype(typeof(combiner)),NamedTuple{(:dir, :tags), Tuple{Arrow, String}},typeof(combiner),Index{Int64},Index{Int64}})   # time: 0.006264304
   @assert Base.precompile(Tuple{typeof(==),Tuple{Index{Int64}, Index{Int64}},Vector{Index{Int64}}})   # time: 0.006087399
@@ -277,7 +275,6 @@ function _precompile_()
   @assert Base.precompile(Tuple{typeof(_setdiff),NTuple{4, Index{Int64}},NTuple{4, Index{Int64}},Vararg{NTuple{4, Index{Int64}}, N} where N})   # time: 0.002390298
   @assert Base.precompile(Tuple{Type{Sweeps},Int64})   # time: 0.002360926
   @assert Base.precompile(Tuple{typeof(_intersect),Tuple{Index{Int64}, Index{Int64}},Tuple{Index{Int64}, Index{Int64}}})   # time: 0.002323905
-  @assert isdefined(ITensors, Symbol("#798#799")) && Base.precompile(Tuple{getfield(ITensors, Symbol("#798#799")),Int64})   # time: 0.002300552
   @assert Base.precompile(Tuple{typeof(dag),AllowAlias,DenseTensor{Float64, 3, Tuple{Index{Int64}, Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}}})   # time: 0.002021084
   @assert Base.precompile(Tuple{typeof(isint),SmallString})   # time: 0.002003834
   @assert Base.precompile(Tuple{typeof(_setindex!!),NonQN,EmptyTensor{EmptyNumber, 1, Tuple{Index{Int64}}, EmptyStorage{EmptyNumber, Dense{EmptyNumber, Vector{EmptyNumber}}}},Float64,Int64})   # time: 0.001985102
@@ -308,6 +305,9 @@ function _precompile_()
   #Base.precompile(Tuple{typeof(op!),ITensor,OpName{Symbol("S+")},ITensors.SiteType{S=1},Index{Int64}})   # time: 0.005026562
   #Base.precompile(Tuple{typeof(op!),ITensor,OpName{:Sz},ITensors.SiteType{S=1},Index{Int64}})   # time: 0.032288317
 
+  # XXX: precompile failure
+  #@assert Base.precompile(Tuple{typeof(copyto!),ITensor,Broadcasted{ITensorOpScalarStyle, _A, typeof(/), Tuple{ITensor, Float64}} where _A})   # time: 0.006613353
+
   #
   # NDTensors dmrg
   #
@@ -332,24 +332,26 @@ function _precompile_()
   @assert Base.precompile(Tuple{typeof(NDTensors.contract_labels),Type{Val{3}},NTuple{4, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.00309218
   @assert Base.precompile(Tuple{typeof(NDTensors.contract_labels),Type{Val{5}},NTuple{5, Int64},NTuple{4, Int64}})   # time: 0.003011967
   @assert Base.precompile(Tuple{typeof(NDTensors.contract_labels),Type{Val{4}},NTuple{5, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.002952535
-  @assert Base.precompile(Tuple{typeof(NDTensors.drop_singletons),Order{2},Tuple{Int64, Int64},Tuple{Int64, Int64}})   # time: 0.002948757
-  @assert Base.precompile(Tuple{typeof(NDTensors.intersect_positions),Tuple{Int64, Int64, Int64},Tuple{Vararg{Any, _A}} where _A})   # time: 0.002942353
   @assert Base.precompile(Tuple{typeof(NDTensors.intersect_positions),Tuple{Int64, Int64, Int64},Tuple{Int64, Int64}})   # time: 0.002808216
   @assert Base.precompile(Tuple{typeof(NDTensors.contract_labels),Type{Val{4}},Tuple{Int64, Int64, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.002597248
   @assert Base.precompile(Tuple{Type{NDTensors.ContractionProperties},Tuple{Int64, Int64, Int64},Tuple{Int64, Int64, Int64},NTuple{4, Int64}})   # time: 0.002550134
   @assert Base.precompile(Tuple{Type{NDTensors.ContractionProperties},NTuple{4, Int64},Tuple{Int64, Int64, Int64},NTuple{5, Int64}})   # time: 0.002516212
   @assert Base.precompile(Tuple{Type{NDTensors.ContractionProperties},NTuple{4, Int64},NTuple{4, Int64},NTuple{4, Int64}})   # time: 0.002458303
   @assert Base.precompile(Tuple{typeof(NDTensors.contract_labels),Type{Val{2}},Tuple{Int64, Int64, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.002254591
-  @assert Base.precompile(Tuple{typeof(permute),Tuple{Int64, Int64, Int64},Tuple})   # time: 0.002173489
   @assert Base.precompile(Tuple{typeof(NDTensors.contract_labels),Type{Val{4}},NTuple{4, Int64},NTuple{4, Int64}})   # time: 0.002049893
   @assert Base.precompile(Tuple{typeof(NDTensors.contract_labels),Type{Val{0}},NTuple{4, Int64},NTuple{4, Int64}})   # time: 0.00202476
-  @assert Base.precompile(Tuple{typeof(NDTensors.intersect_positions),Tuple{Int64, Int64},Tuple{Vararg{Any, _A}} where _A})   # time: 0.002010062
   @assert Base.precompile(Tuple{typeof(NDTensors.intersect_positions),Tuple{Int64, Int64, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.001726414
-  @assert Base.precompile(Tuple{typeof(NDTensors.drop_singletons),Order{2},Tuple{Int64, Int64, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.001650279
   @assert Base.precompile(Tuple{Type{NDTensors.ContractionProperties},Tuple{Int64, Int64, Int64},Tuple{Int64},Tuple{Int64, Int64}})   # time: 0.001404129
   @assert Base.precompile(Tuple{Type{NDTensors.ContractionProperties},Tuple{Int64, Int64},Tuple{Int64, Int64, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.001299593
   @assert Base.precompile(Tuple{Type{NDTensors.ContractionProperties},Tuple{Int64, Int64, Int64},Tuple{Int64, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.001215327
   @assert Base.precompile(Tuple{Type{NDTensors.ContractionProperties},NTuple{4, Int64},NTuple{4, Int64},Tuple{}})   # time: 0.001178936
+
+  # XXX: precompile failure
+  #@assert Base.precompile(Tuple{typeof(NDTensors.drop_singletons),Order{2},Tuple{Int64, Int64},Tuple{Int64, Int64}})   # time: 0.002948757
+  #@assert Base.precompile(Tuple{typeof(NDTensors.drop_singletons),Order{2},Tuple{Int64, Int64, Int64},Tuple{Int64, Int64, Int64}})   # time: 0.001650279
+  #@assert Base.precompile(Tuple{typeof(NDTensors.intersect_positions),Tuple{Int64, Int64, Int64},Tuple{Vararg{Any, _A}} where _A})   # time: 0.002942353
+  #@assert Base.precompile(Tuple{typeof(NDTensors.intersect_positions),Tuple{Int64, Int64},Tuple{Vararg{Any, _A}} where _A})   # time: 0.002010062
+  #@assert Base.precompile(Tuple{typeof(permute),Tuple{Int64, Int64, Int64},Tuple})   # time: 0.002173489
 
 end
 
