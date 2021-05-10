@@ -9,6 +9,7 @@ using Test
     "index.jl",
     "indexset.jl",
     "not.jl",
+    "inference.jl",
     "itensor_scalar.jl",
     "itensor.jl",
     "itensor_slice.jl",

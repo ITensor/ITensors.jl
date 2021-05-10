@@ -1842,7 +1842,7 @@ function _contract(As, sequence; kwargs...)::ITensor
   return contract(_contract(As, sequence[1]), _contract(As, sequence[2]); kwargs...)
 end
 
-*(As::ITensor...; kwargs...):::ITensor = contract(As...; kwargs...)
+*(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
 # XXX: rename contract!
 function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
