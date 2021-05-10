@@ -21,6 +21,10 @@
 # 64 elements in the set.
 # (See https://discourse.julialang.org/t/parse-an-array-of-bits-bitarray-to-an-integer/42361/11).
 
+# Previously we used the definition in NDTensors:
+#import NDTensors: dim
+import ITensors: dim
+
 # `is` could be Vector{Int} for BitSet
 function dim(is::IndexSetT, ind_dims::Vector) where {IndexSetT<:Union{Vector{Int},BitSet}}
   isempty(is) && return one(eltype(inds_dims))

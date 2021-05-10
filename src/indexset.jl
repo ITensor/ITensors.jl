@@ -87,7 +87,7 @@ all of the arrow directions).
 dag(is::Indices) = map(i -> dag(i), is)
 
 # TODO: move to NDTensors
-NDTensors.dim(is::Tuple, pos::Int) = dim(is[pos])
+NDTensors.dim(is::Tuple, pos::Integer) = dim(is[pos])
 
 # TODO: this fixes an ambiguity error with base, move to NDTensors
 NDTensors.similar(T::NDTensors.DenseTensor, inds::Tuple) = NDTensors._similar(T, inds)

@@ -2,6 +2,7 @@ using Test
 
 @testset "ITensors.jl" begin
   @testset "$filename" for filename in [
+    "NDTensors/runtests.jl",
     "tagset.jl",
     "smallstring.jl",
     "symmetrystyle.jl",

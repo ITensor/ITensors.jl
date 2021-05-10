@@ -1,5 +1,75 @@
 # MPS and MPO Examples
 
+## Creating an MPS from a Tensor
+
+![](mps_from_tensor.png)
+
+A matrix product state (MPS) made of N tensors, each with
+one site or physical index, is a way of representing a single
+tensor with N indices. One way of obtaining the MPS form of an
+N-index tensor `T` is by repeatedly factorizing `T` into N 
+separate tensors using a factorization such as the [Singular Value Decomposition](@ref) (SVD). 
+This algorithm for obtaining an MPS is known in the mathematics
+literature as the "tensor train SVD" or "TT-SVD" algorithm.
+
+To turn an N-index (order-N) tensor T into an MPS, you can just
+construct an MPS by passing T as the first argument, along with
+keyword arguments that control the approximations used in factorizing
+T. Let's look at a few specific cases.
+
+#### ITensor to MPS Example
+
+If you have a tensor `T` which is an ITensor and has indices `i,j,k,l,m`,
+you can create an MPS approximation of `T` where the MPS has site indices
+`i,j,k,l,m` as follows:
+
+```julia
+cutoff = 1E-8
+maxdim = 10
+T = randomITensor(i,j,k,l,m)
+M = MPS(T,(i,j,k,l,m);cutoff=cutoff,maxdim=maxdim)
+```
+
+Here we used a random ITensor for illustrative purposes, but it could be any ITensor and
+typically tensors with additional structure are more well approximated by MPS.
+
+#### Julia Tensor to MPS Example
+
+Another situation could be where you have a Julia array or Julia tensor of
+dimension ``d^N`` and want to approximate it as an MPS with ``N`` site indices,
+each of dimension ``d``. For example, we could have the following random Julia
+array of dimension ``2\times 2\times 2 \times 2 \times 2``:
+
+```julia
+d = 2
+N = 5
+A = randn(d,d,d,d,d)
+```
+
+Alternatively, the array could be just a one dimensional array of length ``d^N``:
+
+```julia
+A = randn(d^N)
+```
+
+To convert this array to an MPS, we will first need a collection of Index objects
+to use as the site indices of the MPS. We can conveniently construct an array of
+four indices of dimension 2 as follows:
+
+```julia
+sites = siteinds(d,N)
+```
+
+Finally, we can pass our array `A` and our `sites` to the MPS constructor along with
+parameters controlling the truncation level of the factorizations used:
+
+```julia
+cutoff = 1E-8
+maxdim = 10
+M = MPS(A,sites;cutoff=cutoff,maxdim=maxdim)
+```
+
+
 ## Applying a Single-site Operator to an MPS
 
 In many applications one needs to modify a matrix product 
