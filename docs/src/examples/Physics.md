@@ -226,11 +226,11 @@ operator names into AutoMPO and it will know how to use these operators.
 **Further Steps**
 
 See how the built-in site types are defined inside the ITensor library:
-* [S=1/2 sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/spinhalf.jl)
-* [S=1 sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/spinone.jl)
-* [Fermion sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/fermion.jl)
-* [Electron sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/electron.jl)
-* [tJ sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/tj.jl)
+* [S=1/2 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinhalf.jl)
+* [S=1 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinone.jl)
+* [Fermion sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/fermion.jl)
+* [Electron sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/electron.jl)
+* [tJ sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/tj.jl)
 
 
 

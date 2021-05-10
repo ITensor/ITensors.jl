@@ -99,7 +99,7 @@ Many operators are available, for example:
 - ...
 
 You can view the source code for the internal SiteType definitions
-and operators that are defined [here](https://github.com/ITensor/ITensors.jl/tree/master/src/physics/site_types).
+and operators that are defined [here](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types).
 """
 SiteType(s::AbstractString) = SiteType{Tag(s)}()
 

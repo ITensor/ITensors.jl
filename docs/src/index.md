@@ -6,7 +6,7 @@
 
 |**Build Status**                                                                                |
 :-----------------------------------------------------------------------------------------------:|
-| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
+| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
 
 |**Citation**                                                                    |
 |:-------------------------------------------------------------------------------:|
@@ -84,7 +84,7 @@ If you use ITensors.jl in your work, for now please cite the [arXiv preprint](ht
 ## Full Example Codes
 
 The ITensors.jl package contains a directory of examples, which we
-will continue to add to. You can find them online [here](https://github.com/ITensor/ITensors.jl/tree/master/examples).
+will continue to add to. You can find them online [here](https://github.com/ITensor/ITensors.jl/tree/main/examples).
 Additionally, once you have installed ITensors.jl you can find a local version
 of the examples in the directory `ITensors.examples_dir()`, and you can run them
 as follows from the Julia REPL:
