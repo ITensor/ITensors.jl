@@ -2,6 +2,23 @@ using ITensors
 using ITensors.NDTensors
 using Test
 
+@testset "ITensors priming and tagging" begin
+  i = Index(2)
+  T1 = randomITensor(i'', i')
+  T2 = randomITensor(i', i)
+
+  @test inds(@inferred(adjoint(T1))) == (i''', i'')
+  @test inds(@inferred(prime(T1, 2))) == (i'''', i''')
+  @test inds(@inferred(addtags(T1, "x"))) == (addtags(i, "x")'', addtags(i, "x")')
+  @test inds(@inferred(T1 * T2)) == (i'', i)
+
+  @test @inferred(order(T1)) == 2
+  @test @inferred(ndims(T1)) == 2
+  @test @inferred(dim(T1)) == 4
+  @test @inferred(maxdim(T1)) == 2
+
+end
+
 @testset "NDTensors Dense contract" begin
   i = Index(2)
   T1 = randomTensor((i'', i'))
@@ -43,5 +60,22 @@ end
   B2 = T2[b]
   BR = R[b]
   @test @inferred(NDTensors.contract!(BR, labelsR, B1, labelsT1, B2, labelsT2, 1.0, 0.0)) isa DenseTensor
+end
+
+@testset "dmrg" begin
+  N = 10
+  sites = siteinds("S=1", N)
+  ampo = AutoMPO()
+  for j in 1:(N - 1)
+    ampo += "Sz", j, "Sz", j + 1
+    ampo += 0.5, "S+", j, "S-", j + 1
+    ampo += 0.5, "S-", j, "S+", j + 1
+  end
+  H = MPO(ampo, sites)
+  psi0 = randomMPS(sites, 10)
+  sweeps = Sweeps(5)
+  setmaxdim!(sweeps, 10, 20, 100, 100, 200)
+  setcutoff!(sweeps, 1E-11)
+  @test @inferred(Tuple{Any,MPS}, dmrg(H, psi0, sweeps; outputlevel=0)) isa Tuple{Float64,MPS}
 end
 

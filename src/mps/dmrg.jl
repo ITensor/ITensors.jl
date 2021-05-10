@@ -1,15 +1,15 @@
 
-function IndexSet_ignore_missing(is::Union{Index,Nothing}...)
-  return IndexSet(filter(i -> i isa Index, is))
-end
+#function IndexSet_ignore_missing(is::Union{Index,Nothing}...)
+#  return IndexSet(filter(i -> i isa Index, is))
+#end
 
 function permute(M::AbstractMPS, ::Tuple{typeof(linkind),typeof(siteinds),typeof(linkind)})
   M̃ = MPO(length(M))
   for n in 1:length(M)
     lₙ₋₁ = linkind(M, n - 1)
     lₙ = linkind(M, n)
-    s⃗ₙ = IndexSet(sort(Tuple(siteinds(M, n)); by=plev))
-    M̃[n] = permute(M[n], IndexSet_ignore_missing(lₙ₋₁, s⃗ₙ..., lₙ))
+    s⃗ₙ = sort(Tuple(siteinds(M, n)); by=plev)
+    M̃[n] = permute(M[n], filter(!isnothing, (lₙ₋₁, s⃗ₙ..., lₙ)))
   end
   set_ortho_lims!(M̃, ortho_lims(M))
   return M̃
@@ -104,7 +104,7 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   return dmrg(PMM, psi0, sweeps; kwargs...)
 end
 
-function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
+function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number, MPS}
   if length(psi0) == 1
     error(
       "`dmrg` currently does not support system sizes of 1. You can diagonalize the MPO tensor directly with tools like `LinearAlgebra.eigen`, `KrylovKit.eigsolve`, etc.",
@@ -204,9 +204,10 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
             tol=eigsolve_tol,
             krylovdim=eigsolve_krylovdim,
             maxiter=eigsolve_maxiter,
-          )
+         )
         end
-        energy, phi = vals[1], vecs[1]
+        energy::Number = vals[1]
+        phi::ITensor = vecs[1]
 
         ortho = ha == 1 ? "left" : "right"
 

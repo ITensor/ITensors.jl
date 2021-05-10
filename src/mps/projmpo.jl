@@ -109,7 +109,7 @@ Deduce the element type (such as Float64
 or ComplexF64) of the tensors in the ProjMPO
 `P`.
 """
-function Base.eltype(P::ProjMPO)
+function Base.eltype(P::ProjMPO)::Type
   elT = eltype(P.H[P.lpos + 1])
   for j in (P.lpos + 2):(P.rpos - 1)
     elT = promote_type(elT, eltype(P.H[j]))
