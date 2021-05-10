@@ -22,17 +22,17 @@ function _precompile_()
   # ITensor
   #
 
-  Base.precompile(Tuple{Type{ITensor},NDTensors.DenseTensor{Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}}})   # time: 0.001092367
-  Base.precompile(Tuple{typeof(adjoint),ITensor})   # time: 0.002728018
-  Base.precompile(Tuple{typeof(randomITensor),Index{Int64},Index{Int64}})   # time: 0.16231188
-  Base.precompile(Tuple{typeof(prime),DenseTensor{Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}}})   # time: 0.003458208
+  @assert Base.precompile(Tuple{Type{ITensor},NDTensors.DenseTensor{Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}}})   # time: 0.001092367
+  @assert Base.precompile(Tuple{typeof(adjoint),ITensor})   # time: 0.002728018
+  @assert Base.precompile(Tuple{typeof(randomITensor),Index{Int64},Index{Int64}})   # time: 0.16231188
+  @assert Base.precompile(Tuple{typeof(prime),DenseTensor{Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}}})   # time: 0.003458208
 
   #
   # ITensor contraction
   #
 
-  Base.precompile(Tuple{typeof(*),ITensor,ITensor})   # time: 0.43056896
-  Base.precompile(Tuple{typeof(_contract),NDTensors.DenseTensor{Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}},DenseTensor{Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}}})   # time: 2.0952775
+  @assert Base.precompile(Tuple{typeof(*),ITensor,ITensor})   # time: 0.43056896
+  @assert Base.precompile(Tuple{typeof(_contract),DenseTensor{Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}},DenseTensor{Float64, 2, Tuple{Index{Int64}, Index{Int64}}, Dense{Float64, Vector{Float64}}}})   # time: 2.0952775
 
   ###################################################################################
   # ITensors.NDTensors
@@ -50,12 +50,16 @@ function _precompile_()
 
   @assert Base.precompile(Tuple{typeof(NDTensors.compute_perms!),NDTensors.ContractionProperties{2, 2, 2}})   # time: 0.02025035
   @assert Base.precompile(Tuple{Type{NDTensors.ContractionProperties},Tuple{Int64, Int64},Tuple{Int64, Int64},Tuple{Int64, Int64}})   # time: 0.001703243
+  @assert Base.precompile(Tuple{typeof(NDTensors.contract_labels),Type{Val{2}},Tuple{Int64, Int64},Tuple{Int64, Int64}})   # time: 0.037068952
+
+
 
   #
   # Storage types
   #
 
   @assert Base.precompile(Tuple{typeof(randn),Type{Dense{Float64, VecT} where VecT<:(AbstractVector{T} where T)},Int64})   # time: 0.018067434
+  @assert Base.precompile(Tuple{typeof(randn!),Dense{Float64, Vector{Float64}}})   # time: 0.01703788
 
   #
   # Dense contraction

@@ -92,11 +92,11 @@ mutable struct ITensor
 end
 
 # Version where the indices are not Tuple, so convert to Tuple
-function ITensor(::AllowAlias, T::Tensor)
+function ITensor(::AllowAlias, T::Tensor)::ITensor
   return ITensor(AllowAlias(), setinds(T, NTuple{ndims(T)}(inds(T))))
 end
 
-ITensor(::NeverAlias, T::Tensor) = ITensor(AllowAlias(), copy(T))
+ITensor(::NeverAlias, T::Tensor)::ITensor = ITensor(AllowAlias(), copy(T))
 
 """
     ITensor(st::TensorStorage, is)
@@ -105,8 +105,8 @@ Constructor for an ITensor from a TensorStorage
 and a set of indices.
 The ITensor stores a view of the TensorStorage.
 """
-ITensor(as::AliasStyle, st::TensorStorage, is) = ITensor(as, Tensor(as, st, Tuple(is)))
-ITensor(as::AliasStyle, is, st::TensorStorage) = ITensor(as, st, is)
+ITensor(as::AliasStyle, st::TensorStorage, is)::ITensor = ITensor(as, Tensor(as, st, Tuple(is)))
+ITensor(as::AliasStyle, is, st::TensorStorage)::ITensor = ITensor(as, st, is)
 
 """
     itensor(args...; kwargs...)
@@ -114,9 +114,9 @@ ITensor(as::AliasStyle, is, st::TensorStorage) = ITensor(as, st, is)
 Like the `ITensor` constructor, but with attempt to make a view
 of the input data when possible.
 """
-itensor(args...; kwargs...) = ITensor(AllowAlias(), args...; kwargs...)
+itensor(args...; kwargs...)::ITensor = ITensor(AllowAlias(), args...; kwargs...)
 
-ITensor(args...; kwargs...) = ITensor(NeverAlias(), args...; kwargs...)
+ITensor(args...; kwargs...)::ITensor = ITensor(NeverAlias(), args...; kwargs...)
 
 """
     inds(T::ITensor)
@@ -141,7 +141,7 @@ ind(T::ITensor, i::Int) = ind(tensor(T), i)
 
 Return a view of the TensorStorage of the ITensor.
 """
-storage(T::ITensor) = storage(tensor(T))
+storage(T::ITensor)::TensorStorage = storage(tensor(T))
 
 """
     data(T::ITensor)
@@ -155,28 +155,28 @@ that is not currently available.
 """
 data(T::ITensor) = NDTensors.data(tensor(T))
 
-similar(T::ITensor, args...) = itensor(NDTensors.similar(tensor(T), args...))
+similar(T::ITensor, args...)::ITensor = itensor(NDTensors.similar(tensor(T), args...))
 
-function settensor!(T::ITensor, t)
+function settensor!(T::ITensor, t)::ITensor
   T.tensor = t
   return T
 end
 
-function setinds!(T::ITensor, is)
+function setinds!(T::ITensor, is)::ITensor
   # TODO: always convert to Tuple with Tensor type?
   return settensor!(T, setinds(tensor(T), Tuple(is)))
 end
 
-function setstorage!(T::ITensor, st)
+function setstorage!(T::ITensor, st)::ITensor
   return settensor!(T, setstorage(tensor(T), st))
 end
 
-function setinds(T::ITensor, is)
+function setinds(T::ITensor, is)::ITensor
   # TODO: always convert to Tuple with Tensor type?
   return itensor(setinds(tensor(T), Tuple(is)))
 end
 
-function setstorage(T::ITensor, st)
+function setstorage(T::ITensor, st)::ITensor
   return itensor(setstorage(tensor(T), st))
 end
 
@@ -230,8 +230,8 @@ CartesianIndices(A::ITensor) = CartesianIndices(tensor(A))
 Create a `Tensor` that stores a copy of the storage and
 indices of the input `ITensor`.
 """
-Tensor(T::ITensor) = Tensor(NeverAlias(), T)
-Tensor(as::NeverAlias, T::ITensor) = Tensor(AllowAlias(), copy(T))
+Tensor(T::ITensor)::Tensor = Tensor(NeverAlias(), T)
+Tensor(as::NeverAlias, T::ITensor)::Tensor = Tensor(AllowAlias(), copy(T))
 
 """
     tensor(::ITensor)
@@ -645,37 +645,37 @@ eltype(T::ITensor) = eltype(tensor(T))
 
 The number of indices, `length(inds(A))`.
 """
-order(T::ITensor) = ndims(T)
+order(T::ITensor)::Int = ndims(T)
 
-ndims(T::ITensor) = ndims(tensor(T))
+ndims(T::ITensor)::Int = ndims(tensor(T))
 
 """
     dim(A::ITensor)
 
 The total dimension of the space the tensor lives in, `prod(dims(A))`.
 """
-dim(T::ITensor) = dim(tensor(T))
+dim(T::ITensor)::Int = dim(tensor(T))
 
 """
     maxdim(A::ITensor)
 
 The maximum dimension of the tensor indices.
 """
-maxdim(T::ITensor) = maxdim(tensor(T))
+maxdim(T::ITensor)::Int = maxdim(tensor(T))
 
 """
     mindim(A::ITensor)
 
 The minimum dimension of the tensor indices.
 """
-mindim(T::ITensor) = mindim(tensor(T))
+mindim(T::ITensor)::Int = mindim(tensor(T))
 
 """
     dim(A::ITensor, n::Int)
 
 Get the nth dimension of the ITensors.
 """
-dim(T::ITensor, n::Int) = dim(tensor(T), n)
+dim(T::ITensor, n::Int)::Int = dim(tensor(T), n)
 
 """
     dims(A::ITensor)
@@ -691,7 +691,7 @@ size(T::ITensor) = dims(T)
 
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
-copy(T::ITensor) = ITensor(copy(tensor(T)))
+copy(T::ITensor)::ITensor = ITensor(copy(tensor(T)))
 
 """
     Array{ElT}(T::ITensor, i:Index...)
@@ -1635,11 +1635,11 @@ function (A::ITensor - B::ITensor)
   return C
 end
 
-Base.real(T::ITensor) = itensor(real(tensor(T)))
+Base.real(T::ITensor)::ITensor = itensor(real(tensor(T)))
 
-Base.imag(T::ITensor) = itensor(imag(tensor(T)))
+Base.imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
 
-Base.conj(T::ITensor) = itensor(conj(tensor(T)))
+Base.conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
 
 # Function barrier
 function _contract(A::Tensor, B::Tensor)
@@ -1649,7 +1649,7 @@ function _contract(A::Tensor, B::Tensor)
   #return _contract!!(EmptyTensor(Float64, _Tuple(noncommoninds(inds(A), inds(B)))), A, B)
 end
 
-function _contract(A::ITensor, B::ITensor)
+function _contract(A::ITensor, B::ITensor)::ITensor
   C = itensor(_contract(tensor(A), tensor(B)))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
@@ -1669,12 +1669,12 @@ _contract(T::ITensor, ::Nothing) = T
 dag(::Nothing) = nothing
 
 # TODO: add iscombiner(::Tensor) to NDTensors
-iscombiner(T::ITensor) = (storage(T) isa Combiner)
+iscombiner(T::ITensor)::Bool = (storage(T) isa Combiner)
 
 # TODO: add isdiag(::Tensor) to NDTensors
-isdiag(T::ITensor) = (storage(T) isa Diag || storage(T) isa DiagBlockSparse)
+isdiag(T::ITensor)::Bool = (storage(T) isa Diag || storage(T) isa DiagBlockSparse)
 
-function can_combine_contract(A::ITensor, B::ITensor)
+function can_combine_contract(A::ITensor, B::ITensor)::Bool
   return hasqns(A) &&
          hasqns(B) &&
          !iscombiner(A) &&
@@ -1683,9 +1683,9 @@ function can_combine_contract(A::ITensor, B::ITensor)
          !isdiag(B)
 end
 
-function combine_contract(A::ITensor, B::ITensor)
+function combine_contract(A::ITensor, B::ITensor)::ITensor
   # Combine first before contracting
-  C = if can_combine_contract(A, B)
+  C::ITensor = if can_combine_contract(A, B)
     uniqueindsA = uniqueinds(A, B)
     uniqueindsB = uniqueinds(B, A)
     commonindsAB = commoninds(A, B)
@@ -1736,11 +1736,11 @@ B = randomITensor(k,i,j)
 C = A * B # inner product of A and B, all indices contracted
 ```
 """
-(A::ITensor * B::ITensor) = contract(A, B)
+(A::ITensor * B::ITensor)::ITensor = contract(A, B)
 
-function contract(A::ITensor, B::ITensor)
-  NA = ndims(A)
-  NB = ndims(B)
+function contract(A::ITensor, B::ITensor)::ITensor
+  NA::Int = ndims(A)
+  NB::Int = ndims(B)
   if NA == 0 && NB == 0
     return (iscombiner(A) || iscombiner(B)) ? _contract(A, B) : ITensor(A[] * B[])
   elseif NA == 0
@@ -1820,7 +1820,7 @@ function contract(
   As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
   sequence=default_sequence(),
   kwargs...,
-)
+)::ITensor
   if sequence == "left_associative"
     return foldl((A, B) -> contract(A, B; kwargs...), As)
   elseif sequence == "right_associative"
@@ -1832,20 +1832,20 @@ function contract(
   end
 end
 
-contract(As::ITensor...; kwargs...) = contract(As; kwargs...)
+contract(As::ITensor...; kwargs...)::ITensor = contract(As; kwargs...)
 
 _contract(As, sequence::Int) = As[sequence]
 
 # Given a contraction sequence, contract the tensors recursively according
 # to that sequence.
-function _contract(As, sequence; kwargs...)
+function _contract(As, sequence; kwargs...)::ITensor
   return contract(_contract(As, sequence[1]), _contract(As, sequence[2]); kwargs...)
 end
 
-*(As::ITensor...; kwargs...) = contract(As...; kwargs...)
+*(As::ITensor...; kwargs...):::ITensor = contract(As...; kwargs...)
 
 # XXX: rename contract!
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)
+function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
@@ -1865,11 +1865,11 @@ end
 
 # This is necessary for now since not all types implement contract!!
 # with non-trivial α and β
-function contract!(C::ITensor, A::ITensor, B::ITensor)
+function contract!(C::ITensor, A::ITensor, B::ITensor)::ITensor
   return settensor!(C, _contract!!(Tensor(C), tensor(A), Tensor(B)))
 end
 
-mul!(C::ITensor, A::ITensor, B::ITensor, args...) = contract!(C, A, B, args...)
+mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
 
 dot(A::ITensor, B::ITensor) = (dag(A) * B)[]
 
