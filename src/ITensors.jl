@@ -151,10 +151,10 @@ end
 
 #####################################
 # Precompile certain functions
-# (generated from precompile/make_precompile.jl
-# using SnoopCompile.jl)
 #
-#include("../precompile/precompile.jl")
-#_precompile_()
+if Base.VERSION >= v"1.4.2"
+  include("precompile.jl")
+  _precompile_()
+end
 
 end # module ITensors

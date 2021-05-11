@@ -537,10 +537,14 @@ function contraction_output(T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR)
   return R
 end
 
+# Version where output labels aren't supplied
+function contract(T1::Tensor, labelsT1, T2::Tensor, labelsT2)
+  labelsR = contract_labels(labelsT1, labelsT2)
+  return contract(T1, labelsT1, T2, labelsT2, labelsR)
+end
+
 # TODO: move to tensor.jl?
-function contract(
-  T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR=contract_labels(labelsT1, labelsT2)
-)
+function contract(T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR)
   #@timeit_debug timer "dense contract" begin
   # TODO: put the contract_inds logic into contraction_output,
   # call like R = contraction_ouput(T1,labelsT1,T2,labelsT2)
