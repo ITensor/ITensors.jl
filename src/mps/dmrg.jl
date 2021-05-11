@@ -3,8 +3,8 @@
 #  return IndexSet(filter(i -> i isa Index, is))
 #end
 
-function permute(M::AbstractMPS, ::Tuple{typeof(linkind),typeof(siteinds),typeof(linkind)})
-  M̃ = MPO(length(M))
+function permute(M::AbstractMPS, ::Tuple{typeof(linkind),typeof(siteinds),typeof(linkind)})::typeof(M)
+  M̃ = typeof(M)(length(M))
   for n in 1:length(M)
     lₙ₋₁ = linkind(M, n - 1)
     lₙ = linkind(M, n)
@@ -30,7 +30,7 @@ Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
+function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   # Permute the indices to have a better memory layout
@@ -61,7 +61,7 @@ Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
+function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   for H in Hs
     check_hascommoninds(siteinds, H, psi0)
     check_hascommoninds(siteinds, H, psi0')
@@ -91,7 +91,7 @@ Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
+function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   for M in Ms
@@ -104,7 +104,7 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   return dmrg(PMM, psi0, sweeps; kwargs...)
 end
 
-function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number, MPS}
+function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   if length(psi0) == 1
     error(
       "`dmrg` currently does not support system sizes of 1. You can diagonalize the MPO tensor directly with tools like `LinearAlgebra.eigen`, `KrylovKit.eigsolve`, etc.",
