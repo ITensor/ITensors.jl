@@ -78,14 +78,16 @@ M = MPS(A,sites;cutoff=cutoff,maxdim=maxdim)
 When using an MPS to represent a quantum wavefunction ``|\psi\rangle``
 a common operation is computed the expected value ``\langle\psi|\hat{A}_j|\psi\rangle``
 of a local operator ``\hat{A}_j`` acting on site ``j``. This can be accomplished
-efficiently and conveniently using the `expect` function as:
+efficiently and conveniently using the [`expect`](@ref) function as:
 
 ```julia
 Avals = expect(psi,"A")
 ```
 
 where `"A"` must be an operator associated with the physical site type, or site tags, of
-the sites of the MPS `psi`. (For more information about defining such operators yourself,
+the sites of the MPS `psi`. For example, the operator name could be 
+`"Sz"` for spin sites or `"Ntot"` for electron sites.
+(For more information about defining such operators yourself,
 see the section on [Extending an Existing Local Hilbert Space](@ref).)
 
 As a concrete example, consider computing the expectation value of ``S^z_j`` on
@@ -106,6 +108,42 @@ end
 ```
 
 ![](mps_expect.png)
+
+## Computing Correlation Functions
+
+In addition to expected values of local operators
+discussed above, another type of observable that is very important
+in physics studies are correlation functions of the form
+
+```math
+C_{ij} = \langle\psi| A_i B_j |\psi\rangle
+```
+
+These can be computed efficiently for an MPS `psi` in ITensor
+using the [`correlation_matrix`](@ref) function:
+
+```julia
+C = correlation_matrix(psi,"A","B")
+```
+
+where `"A"` and `"B"` must be an operator names associated with the physical site type, 
+or site tags, of the sites of the MPS `psi`. For example, these strings could be 
+`"Sz"`, `"S+"`, or `"S-"` for spin sites, or `"Cdagup"` and `"Cup"` for electron sites.
+(For more information about defining such operators yourself,
+see the section on [Extending an Existing Local Hilbert Space](@ref).)
+
+As a concrete example, say we have an MPS `psi` for a system of spins and 
+want to compute the correlator ``\langle\psi|S^z_i S^z_j|\psi\rangle``.
+We can compute this as:
+
+```julia
+zzcorr = correlation_matrix(psi,"Sz","Sz")
+```
+
+![](mps_zz_correlation.png)
+
+See the [`correlation_matrix`](@ref) docs for more details about additional arguments you can pass
+to this function.
 
 ## Applying a Single-site Operator to an MPS
 
