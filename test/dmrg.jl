@@ -96,11 +96,19 @@ using ITensors, Test, Random
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
     psi = randomMPS(sites, state, 4)
     PH = ProjMPO(H)
-    orthogonalize!(psi, 1)
-    position!(PH, psi, 1)
+
+    n = 4
+    orthogonalize!(psi, n)
+    position!(PH, psi, n)
     PHdisk = ITensors.disk(PH)
+
     @test length(PH) == N
     @test length(PHdisk) == N
+    @test ITensors.site_range(PH) == n:(n + 1)
+    @test eltype(PH) == Float64
+    @test size(PH) == (3^2 * 4^2, 3^2 * 4^2)
+    @test PH.lpos == n - 1
+    @test PH.rpos == n + 2
     @test rproj(PH) ≈ rproj(PHdisk)
     @test PHdisk.LR isa ITensors.DiskVector{ITensor}
     @test PHdisk.LR[PHdisk.rpos] ≈ PHdisk.Rcache

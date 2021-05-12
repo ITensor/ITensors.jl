@@ -7,9 +7,10 @@ struct OneITensor end
 
 abstract type AbstractProjMPO end
 
-# XXX: delete (only for development purposes)
-isnothing(::OneITensor) = error("isnothing(::OneITensor) not defined")
-
+# This is to help with generic promote_type code
+# in eltype(::AbstractProjMPO)
+eltype(::OneITensor) = Bool
+dim(::OneITensor) = 1
 isoneitensor(::OneITensor) = true
 isoneitensor(::ITensor) = false
 
@@ -20,6 +21,9 @@ Retrieve the number of unprojected (open)
 site indices of the ProjMPO object `P`
 """
 nsite(P::AbstractProjMPO) = P.nsite
+
+# The range of center sites
+site_range(P::AbstractProjMPO) = (P.lpos + 1):(P.rpos - 1)
 
 """
     length(P::ProjMPO)
@@ -54,16 +58,23 @@ as `v`. The operator overload `P(v)` is
 shorthand for `product(P,v)`.
 """
 function product(P::AbstractProjMPO, v::ITensor)::ITensor
-  Hv = v
-  L = lproj(P)
-  R = rproj(P)
-  # TODO: add reverse if L isa OneITensor
-  site_range = (P.lpos + 1):(P.rpos - 1)
-  Hv *= L
-  for j in site_range
-    Hv *= P.H[j]
+  itensor_map = Union{ITensor,OneITensor}[lproj(P)]
+  append!(itensor_map, P.H[site_range(P)])
+  push!(itensor_map, rproj(P))
+
+  # Reverse the contraction order of the map if
+  # the first tensor is a scalar (for example we
+  # are at the left edge of the system)
+  if dim(first(itensor_map)) == 1
+    reverse!(itensor_map)
   end
-  Hv *= R
+
+  # Apply the map
+  Hv = v
+  for it in itensor_map
+    Hv *= it
+  end
+
   if order(Hv) != order(v)
     error(
       string(
@@ -76,6 +87,7 @@ function product(P::AbstractProjMPO, v::ITensor)::ITensor
       ),
     )
   end
+
   return noprime(Hv)
 end
 
@@ -88,18 +100,12 @@ Deduce the element type (such as Float64
 or ComplexF64) of the tensors in the ProjMPO
 `P`.
 """
-function Base.eltype(P::AbstractProjMPO)
-  elT = eltype(P.H[P.lpos + 1])
-  for j in (P.lpos + 2):(P.rpos - 1)
-    elT = promote_type(elT, eltype(P.H[j]))
+function Base.eltype(P::AbstractProjMPO)::Type
+  ElType = eltype(lproj(P))
+  for j in site_range(P)
+    ElType = promote_type(ElType, eltype(P.H[j]))
   end
-  if !isnothing(lproj(P))
-    elT = promote_type(elT, eltype(lproj(P)))
-  end
-  if !isnothing(rproj(P))
-    elT = promote_type(elT, eltype(rproj(P)))
-  end
-  return elT
+  return promote_type(ElType, eltype(rproj(P)))
 end
 
 """
@@ -116,25 +122,21 @@ then the size is `(d,d)` where
 """
 function Base.size(P::AbstractProjMPO)::Tuple{Int,Int}
   d = 1
-  if !isnothing(lproj(P))
-    for i in inds(lproj(P))
-      plev(i) > 0 && (d *= dim(i))
-    end
+  for i in inds(lproj(P))
+    plev(i) > 0 && (d *= dim(i))
   end
-  for j in (P.lpos + 1):(P.rpos - 1)
+  for j in site_range(P)
     for i in inds(P.H[j])
       plev(i) > 0 && (d *= dim(i))
     end
   end
-  if !isnothing(rproj(P))
-    for i in inds(rproj(P))
-      plev(i) > 0 && (d *= dim(i))
-    end
+  for i in inds(rproj(P))
+    plev(i) > 0 && (d *= dim(i))
   end
   return (d, d)
 end
 
-function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,OneITensor}
+function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
   # Save the last `L` that is made to help with caching
   # for DiskProjMPO
   ll = P.lpos
@@ -143,50 +145,54 @@ function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,OneITensor
     # Still need to change the position if lproj is
     # being moved backward.
     P.lpos = k
-    return OneITensor()
+    return nothing
   end
-  ll < 0 && error("`lpos` of `$(typeof(P))` isa $ll, cannot be less than 0")
+  # Make sure ll is at least 0 for the generic logic below
+  ll = max(ll, 0)
   L = lproj(P)
   while ll < k
     L = L * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
     P.LR[ll + 1] = L
     ll += 1
-    P.lpos = ll
   end
   # Needed when moving lproj backward.
   P.lpos = k
   return L
 end
 
-makeL!(P::AbstractProjMPO, psi::MPS, k::Int) = _makeL!(P, psi, k)
+function makeL!(P::AbstractProjMPO, psi::MPS, k::Int)
+  _makeL!(P, psi, k)
+  return P
+end
 
-function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,OneITensor}
+function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
   # Save the last `R` that is made to help with caching
   # for DiskProjMPO
-  R = OneITensor()
-  N = length(P.H)
-  while P.rpos > k
-    rl = P.rpos
-    if rl >= N + 1
-      R = psi[N] * P.H[N] * dag(prime(psi[N]))
-      P.LR[N] = R
-      P.rpos = N
-    else
-      if R isa OneITensor #isnothing(R)
-        R = P.LR[rl] * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
-      else
-        R = R * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
-      end
-      P.LR[rl - 1] = R
-      P.rpos -= 1
-    end
+  rl = P.rpos
+  if rl ≤ k
+    # Special case when nothing has to be done.
+    # Still need to change the position if rproj is
+    # being moved backward.
+    P.rpos = k
+    return nothing
   end
-  # Needed when moving rproj backward
+  N = length(P.H)
+  # Make sure rl is no bigger than `N + 1` for the generic logic below
+  rl = min(rl, N + 1)
+  R = rproj(P)
+  while rl > k
+    R = R * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
+    P.LR[rl - 1] = R
+    rl -= 1
+  end
   P.rpos = k
   return R
 end
 
-makeR!(P::AbstractProjMPO, psi::MPS, k::Int) = _makeR!(P, psi, k)
+function makeR!(P::AbstractProjMPO, psi::MPS, k::Int)
+  _makeR!(P, psi, k)
+  return P
+end
 
 """
     position!(P::ProjMPO, psi::MPS, pos::Int)
@@ -219,22 +225,19 @@ ProjMPO `P`, and `ortho` is a String which can take
 the values `"left"` or `"right"` depending on the 
 sweeping direction of the DMRG calculation.
 """
-function noiseterm(P::AbstractProjMPO, phi::ITensor, ortho::String)
+function noiseterm(P::AbstractProjMPO, phi::ITensor, ortho::String)::ITensor
   if nsite(P) != 2
     error("noise term only defined for 2-site ProjMPO")
   end
 
+  site_range_P = site_range(P)
   if ortho == "left"
-    AL = P.H[P.lpos + 1]
-    if !isnothing(lproj(P))
-      AL = lproj(P) * AL
-    end
+    AL = P.H[first(site_range_P)]
+    AL = lproj(P) * AL
     nt = AL * phi
   elseif ortho == "right"
-    AR = P.H[P.rpos - 1]
-    if !isnothing(rproj(P))
-      AR = AR * rproj(P)
-    end
+    AR = P.H[last(site_range_P)]
+    AR = AR * rproj(P)
     nt = phi * AR
   else
     error("In noiseterm, got ortho = $ortho, only supports `left` and `right`")
@@ -251,4 +254,5 @@ function checkflux(P::AbstractProjMPO)
       checkflux(P.LR[n])
     end
   end
+  return nothing
 end

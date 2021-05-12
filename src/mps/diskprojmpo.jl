@@ -27,9 +27,9 @@ mutable struct DiskProjMPO <: AbstractProjMPO
   nsite::Int
   H::MPO
   LR::DiskVector{ITensor}
-  Lcache::Union{ITensor,Nothing}
+  Lcache::Union{ITensor,OneITensor}
   lposcache::Union{Int,Nothing}
-  Rcache::Union{ITensor,Nothing}
+  Rcache::Union{ITensor,OneITensor}
   rposcache::Union{Int,Nothing}
 end
 
@@ -40,20 +40,16 @@ function DiskProjMPO(H::MPO)
     2,
     H,
     disk(Vector{ITensor}(undef, length(H))),
-    nothing, #OneITensor,
+    OneITensor,
     nothing,
-    nothing, #OneITensor,
+    OneITensor,
     nothing,
   )
 end
 
 function disk(pm::ProjMPO)
-  L = lproj(pm)
-  L = L isa OneITensor ? nothing : L
-  R = rproj(pm)
-  R = R isa OneITensor ? nothing : R
   return DiskProjMPO(
-    pm.lpos, pm.rpos, pm.nsite, pm.H, disk(pm.LR), L, pm.lpos, R, pm.rpos
+    pm.lpos, pm.rpos, pm.nsite, pm.H, disk(pm.LR), lproj(pm), pm.lpos, rproj(pm), pm.rpos
   )
 end
 disk(pm::DiskProjMPO) = pm
@@ -86,20 +82,20 @@ end
 
 function makeL!(P::DiskProjMPO, psi::MPS, k::Int)
   L = _makeL!(P, psi, k)
-  if !(L isa OneITensor) #L isa ITensor
+  if !isnothing(L)
     # Cache the result
     P.Lcache = L
     P.lposcache = P.lpos
   end
-  return L
+  return P
 end
 
 function makeR!(P::DiskProjMPO, psi::MPS, k::Int)
   R = _makeR!(P, psi, k)
-  if !(R isa OneITensor) #R isa ITensor
+  if !isnothing(R)
     # Cache the result
     P.Rcache = R
     P.rposcache = P.rpos
   end
-  return R
+  return P
 end
