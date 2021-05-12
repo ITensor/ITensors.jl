@@ -140,7 +140,11 @@ function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
       P.LR[1] = L
       P.lpos = 1
     else
-      L = P.LR[ll] * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
+      if isnothing(L)
+        L = P.LR[ll] * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
+      else
+        L = L * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
+      end
       P.LR[ll + 1] = L
       P.lpos += 1
     end
@@ -164,7 +168,11 @@ function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
       P.LR[N] = R
       P.rpos = N
     else
-      R = P.LR[rl] * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
+      if isnothing(R)
+        R = P.LR[rl] * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
+      else
+        R = R * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
+      end
       P.LR[rl - 1] = R
       P.rpos -= 1
     end
