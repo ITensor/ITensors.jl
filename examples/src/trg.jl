@@ -42,9 +42,7 @@ function trg(T::ITensor; χmax::Int, nsteps::Int, cutoff=0.0, svd_alg="divide_an
     Fᵥ′ *= δ(dag(s̃ᵥ), s̃ᵥ')
 
     T =
-      (Fₕ * δ(dag(sₕ'), sₕ)) *
-      (Fᵥ * δ(dag(sᵥ'), sᵥ)) *
-      (Fₕ′ * δ(dag(sₕ), sₕ')) *
+      (Fₕ * δ(dag(sₕ'), sₕ)) * (Fᵥ * δ(dag(sᵥ'), sᵥ)) * (Fₕ′ * δ(dag(sₕ), sₕ')) *
       (Fᵥ′ * δ(dag(sᵥ), sᵥ'))
 
     sₕ, sᵥ = s̃ₕ, s̃ᵥ

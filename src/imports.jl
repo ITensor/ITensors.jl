@@ -145,3 +145,9 @@ import ITensors.NDTensors:
   store
 
 import Random: randn!
+
+using SerializedElementArrays: SerializedElementVector
+
+const DiskVector{T} = SerializedElementVector{T}
+
+import SerializedElementArrays: disk

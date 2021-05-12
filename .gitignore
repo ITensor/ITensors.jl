@@ -1,5 +1,6 @@
 *.o
 *.swp
+.tmp
 benchmark/mult
 Manifest.toml
 test/data.h5
