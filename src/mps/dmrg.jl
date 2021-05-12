@@ -123,7 +123,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
 
-  write_when_maxdim_exceeds::Int = get(kwargs, :write_when_maxdim_exceeds, nothing)
+  write_when_maxdim_exceeds::Union{Int,Nothing} = get(kwargs, :write_when_maxdim_exceeds, nothing)
 
   # eigsolve kwargs
   eigsolve_tol::Float64 = get(kwargs, :eigsolve_tol, 1e-14)
