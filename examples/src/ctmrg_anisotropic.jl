@@ -65,15 +65,8 @@ function calc_κ(iy, ix, T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir="left")
     Clu[iy, ix] * Cld[iy, ix] * Au[iy, ix] * Ad[iy, ix] * Cru[iy, ixp] * Crd[iy, ixp]
   )
   normT = scalar(
-    Clu[iy, ix] *
-    Al[iy, ix] *
-    Cld[iyp, ix] *
-    Au[iy, ix] *
-    T[iy, ix] *
-    Ad[iyp, ix] *
-    Cru[iy, ixp] *
-    Ar[iy, ixp] *
-    Crd[iyp, ixp],
+    Clu[iy, ix] * Al[iy, ix] * Cld[iyp, ix] * Au[iy, ix] * T[iy, ix] *
+    Ad[iyp, ix] * Cru[iy, ixp] * Ar[iy, ixp] * Crd[iyp, ixp],
   )
   return normT, normAlr, normAud, normC
 end
@@ -148,24 +141,12 @@ function leftright_move!(T, (Clu, Cru, Cld, Crd), (Al, Ar, Au, Ad); dir="left", 
       iyp = per(iy + 1, ny)
 
       Cu =
-        Al[iym, ix] *
-        Clu[iym, ix] *
-        Au[iym, ix] *
-        T[iym, ix] *
-        Au[iym, ixp] *
-        T[iym, ixp] *
-        Cru[iym, ixpp] *
-        Ar[iym, ixpp]
+        Al[iym, ix] * Clu[iym, ix] * Au[iym, ix] * T[iym, ix] * Au[iym, ixp] *
+        T[iym, ixp] * Cru[iym, ixpp] * Ar[iym, ixpp]
       @assert order(Cu) == 4
       Cd =
-        Al[iy, ix] *
-        Cld[iyp, ix] *
-        Ad[iyp, ix] *
-        T[iy, ix] *
-        Ad[iyp, ixp] *
-        T[iy, ixp] *
-        Crd[iyp, ixpp] *
-        Ar[iy, ixpp]
+        Al[iy, ix] * Cld[iyp, ix] * Ad[iyp, ix] * T[iy, ix] * Ad[iyp, ixp] *
+        T[iy, ixp] * Crd[iyp, ixpp] * Ar[iy, ixpp]
       @assert order(Cd) == 4
       if dir == "left" || dir == "up"
         li = commonindex(Cru[iy, ixpp], Crd[iy, ixpp])
