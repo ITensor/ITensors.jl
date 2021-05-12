@@ -40,16 +40,20 @@ function DiskProjMPO(H::MPO)
     2,
     H,
     disk(Vector{ITensor}(undef, length(H))),
+    nothing, #OneITensor,
     nothing,
-    nothing,
-    nothing,
+    nothing, #OneITensor,
     nothing,
   )
 end
 
 function disk(pm::ProjMPO)
+  L = lproj(pm)
+  L = L isa OneITensor ? nothing : L
+  R = rproj(pm)
+  R = R isa OneITensor ? nothing : R
   return DiskProjMPO(
-    pm.lpos, pm.rpos, pm.nsite, pm.H, disk(pm.LR), lproj(pm), pm.lpos, rproj(pm), pm.rpos
+    pm.lpos, pm.rpos, pm.nsite, pm.H, disk(pm.LR), L, pm.lpos, R, pm.rpos
   )
 end
 disk(pm::DiskProjMPO) = pm
@@ -57,8 +61,8 @@ disk(pm::DiskProjMPO) = pm
 # Special overload of lproj which uses the cached
 # version of the left projected MPO, and if the
 # cache doesn't exist it loads it from disk.
-function lproj(P::DiskProjMPO)::Union{ITensor,Nothing}
-  (P.lpos <= 0) && return nothing
+function lproj(P::DiskProjMPO)::Union{ITensor,OneITensor}
+  (P.lpos <= 0) && return OneITensor()
   if (P.lpos ≠ P.lposcache) || (P.lpos == 1)
     # Need to update the cache
     P.Lcache = P.LR[P.lpos]
@@ -70,8 +74,8 @@ end
 # Special overload of rproj which uses the cached
 # version of the right projected MPO, and if the
 # cache doesn't exist it loads it from disk.
-function rproj(P::DiskProjMPO)::Union{ITensor,Nothing}
-  (P.rpos >= length(P) + 1) && return nothing
+function rproj(P::DiskProjMPO)::Union{ITensor,OneITensor}
+  (P.rpos >= length(P) + 1) && return OneITensor()
   if (P.rpos ≠ P.rposcache) || (P.rpos == length(P))
     # Need to update the cache
     P.Rcache = P.LR[P.rpos]
@@ -82,7 +86,7 @@ end
 
 function makeL!(P::DiskProjMPO, psi::MPS, k::Int)
   L = _makeL!(P, psi, k)
-  if !isnothing(L)
+  if !(L isa OneITensor) #L isa ITensor
     # Cache the result
     P.Lcache = L
     P.lposcache = P.lpos
@@ -92,7 +96,7 @@ end
 
 function makeR!(P::DiskProjMPO, psi::MPS, k::Int)
   R = _makeR!(P, psi, k)
-  if !isnothing(R)
+  if !(R isa OneITensor) #R isa ITensor
     # Cache the result
     P.Rcache = R
     P.rposcache = P.rpos

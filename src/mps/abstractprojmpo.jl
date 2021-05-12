@@ -1,5 +1,13 @@
 
+# Scalar identity ITensor
+struct OneITensor end
+
+(::OneITensor * A::ITensor) = A
+(A::ITensor * ::OneITensor) = A
+
 abstract type AbstractProjMPO end
+
+isnothing(::OneITensor) = error("isnothing(::OneITensor) not defined")
 
 """
     nsite(P::ProjMPO)
@@ -18,12 +26,12 @@ the length of the MPO used to construct it
 Base.length(P::AbstractProjMPO) = length(P.H)
 
 function lproj(P::AbstractProjMPO)
-  (P.lpos <= 0) && return nothing
+  (P.lpos <= 0) && return OneITensor()
   return P.LR[P.lpos]
 end
 
 function rproj(P::AbstractProjMPO)
-  (P.rpos >= length(P) + 1) && return nothing
+  (P.rpos >= length(P) + 1) && return OneITensor()
   return P.LR[P.rpos]
 end
 
@@ -43,22 +51,15 @@ shorthand for `product(P,v)`.
 """
 function product(P::AbstractProjMPO, v::ITensor)::ITensor
   Hv = v
-  if isnothing(lproj(P))
-    if !isnothing(rproj(P))
-      Hv *= rproj(P)
-    end
-    for j in (P.rpos - 1):-1:(P.lpos + 1)
-      Hv *= P.H[j]
-    end
-  else #if lproj exists
-    Hv *= lproj(P)
-    for j in (P.lpos + 1):(P.rpos - 1)
-      Hv *= P.H[j]
-    end
-    if !isnothing(rproj(P))
-      Hv *= rproj(P)
-    end
+  L = lproj(P)
+  R = rproj(P)
+  # TODO: add reverse if L isa OneITensor
+  site_range = (P.lpos + 1):(P.rpos - 1)
+  Hv *= L
+  for j in site_range
+    Hv *= P.H[j]
   end
+  Hv *= R
   if order(Hv) != order(v)
     error(
       string(
@@ -129,10 +130,10 @@ function Base.size(P::AbstractProjMPO)::Tuple{Int,Int}
   return (d, d)
 end
 
-function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
+function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,OneITensor}
   # Save the last `L` that is made to help with caching
   # for DiskProjMPO
-  L = nothing
+  L = OneITensor()
   while P.lpos < k
     ll = P.lpos
     if ll <= 0
@@ -140,7 +141,7 @@ function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
       P.LR[1] = L
       P.lpos = 1
     else
-      if isnothing(L)
+      if L isa OneITensor #isnothing(L)
         L = P.LR[ll] * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
       else
         L = L * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
@@ -156,10 +157,10 @@ end
 
 makeL!(P::AbstractProjMPO, psi::MPS, k::Int) = _makeL!(P, psi, k)
 
-function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
+function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,OneITensor}
   # Save the last `R` that is made to help with caching
   # for DiskProjMPO
-  R = nothing
+  R = OneITensor()
   N = length(P.H)
   while P.rpos > k
     rl = P.rpos
@@ -168,7 +169,7 @@ function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
       P.LR[N] = R
       P.rpos = N
     else
-      if isnothing(R)
+      if R isa OneITensor #isnothing(R)
         R = P.LR[rl] * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
       else
         R = R * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
