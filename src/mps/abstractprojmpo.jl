@@ -7,7 +7,11 @@ struct OneITensor end
 
 abstract type AbstractProjMPO end
 
+# XXX: delete (only for development purposes)
 isnothing(::OneITensor) = error("isnothing(::OneITensor) not defined")
+
+isoneitensor(::OneITensor) = true
+isoneitensor(::ITensor) = false
 
 """
     nsite(P::ProjMPO)
@@ -25,12 +29,12 @@ the length of the MPO used to construct it
 """
 Base.length(P::AbstractProjMPO) = length(P.H)
 
-function lproj(P::AbstractProjMPO)
+function lproj(P::AbstractProjMPO)::Union{ITensor,OneITensor}
   (P.lpos <= 0) && return OneITensor()
   return P.LR[P.lpos]
 end
 
-function rproj(P::AbstractProjMPO)
+function rproj(P::AbstractProjMPO)::Union{ITensor,OneITensor}
   (P.rpos >= length(P) + 1) && return OneITensor()
   return P.LR[P.rpos]
 end
@@ -133,24 +137,23 @@ end
 function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,OneITensor}
   # Save the last `L` that is made to help with caching
   # for DiskProjMPO
-  L = OneITensor()
-  while P.lpos < k
-    ll = P.lpos
-    if ll <= 0
-      L = psi[1] * P.H[1] * dag(prime(psi[1]))
-      P.LR[1] = L
-      P.lpos = 1
-    else
-      if L isa OneITensor #isnothing(L)
-        L = P.LR[ll] * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
-      else
-        L = L * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
-      end
-      P.LR[ll + 1] = L
-      P.lpos += 1
-    end
+  ll = P.lpos
+  if ll ≥ k
+    # Special case when nothing has to be done.
+    # Still need to change the position if lproj is
+    # being moved backward.
+    P.lpos = k
+    return OneITensor()
   end
-  # Needed when moving lproj backward
+  ll < 0 && error("`lpos` of `$(typeof(P))` isa $ll, cannot be less than 0")
+  L = lproj(P)
+  while ll < k
+    L = L * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
+    P.LR[ll + 1] = L
+    ll += 1
+    P.lpos = ll
+  end
+  # Needed when moving lproj backward.
   P.lpos = k
   return L
 end
