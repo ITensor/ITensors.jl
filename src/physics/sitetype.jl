@@ -355,13 +355,13 @@ function op(
   return op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
 end
 
-function op(
-  opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...
-)
+function op(opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...)
   return op(opname, s, ns; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}; kwargs...)
+function op(
+  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}; kwargs...
+)
   return op(opname, s, ns...; kwargs...)
 end
 

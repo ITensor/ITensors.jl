@@ -1047,10 +1047,8 @@ end
     @test prod(product(X[1], ψ)) ≈ prod(MPS(s, n -> n == 1 ? "1" : "0"))
     @test prod(product(X[1], product(X[2], ψ))) ≈
           prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
-    @test prod(product(X[1] * X[2], ψ)) ≈
-          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
-    @test prod(product([X[2], X[1]], ψ)) ≈
-          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+    @test prod(product(X[1] * X[2], ψ)) ≈ prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+    @test prod(product([X[2], X[1]], ψ)) ≈ prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
     @test prod(product(CX[1, 2], ψ)) ≈ prod(MPS(s, "0"))
     @test prod(product(CX[1, 2], product(X[1], ψ))) ≈
           prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
