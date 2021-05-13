@@ -21,10 +21,20 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   and tensor(store::TensorStorage, inds) constructors.
   """
   function Tensor{ElT,N,StoreT,IndsT}(
-    ::AllowAlias, storage::TensorStorage, inds
+    ::AllowAlias, storage::TensorStorage, inds::Tuple
   ) where {ElT,N,StoreT<:TensorStorage,IndsT}
     return new{ElT,N,StoreT,IndsT}(storage, inds)
   end
+end
+
+# Automatically convert to Tuple if the indices are not a Tuple
+# already (like a Vector). In the future this may be lifted
+# to allow for very large tensor orders in which case Tuple
+# operations may become too slow.
+function Tensor{ElT,N,StoreT,IndsT}(
+  as::AllowAlias, storage::TensorStorage, inds
+) where {ElT,N,StoreT<:TensorStorage,IndsT}
+  return Tensor{ElT,N,StoreT,IndsT}(as, storage, Tuple(inds))
 end
 
 function Tensor{ElT,N,StoreT,IndsT}(

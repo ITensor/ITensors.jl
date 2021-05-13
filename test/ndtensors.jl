@@ -25,4 +25,3 @@ using Test
     @test_throws ErrorException blockdim(1, 1)
   end
 end
-

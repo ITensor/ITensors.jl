@@ -190,7 +190,9 @@ qnblocks(i::QNIndex) = space(i)
 blockdim(i::QNIndex, b::Block) = blockdim(space(i), b)
 blockdim(i::QNIndex, b::Integer) = blockdim(i, Block(b))
 function blockdim(i::Index, b::Union{Block,Integer})
-  error("`blockdim(i::Index, b)` not currently defined for non-QN Index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.")
+  return error(
+    "`blockdim(i::Index, b)` not currently defined for non-QN Index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.",
+  )
 end
 
 eachblock(i::Index) = (Block(n) for n in 1:nblocks(i))
