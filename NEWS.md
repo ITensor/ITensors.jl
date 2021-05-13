@@ -1,5 +1,6 @@
 ITensor v0.2.0 Release Notes
 ==============================
+- Fix bug in `MPO(::AutoMPO, ::Vector{<:Index})` where for fermionic models the AutoMPO was being modified in-place (PR #659) (@mtfishman).
 - Remove size type parameter from ITensor and IndexSet (PR #591) (@kshyatt).
 - Add support for using end in setindex! for ITensors (PR #596) (@mtfishman).
 - Contraction sequence optimization (PR #589) (@mtfishman).
@@ -15,6 +16,13 @@ ITensor v0.2.0 Release Notes
 
 Deprecations:
 - `store` is deprecated in favor of `storage` for getting the storage of an ITensor. Similarly `ITensors.setstore[!]` -> `ITensors.setstorage[!]`.
+
+Breaking changes:
+- The tensor order type paramater has been removed from the `ITensor` type, so you can no longer write `ITensor{3}` to specify an order 3 ITensor (PR #591).
+- ITensors now store a `Tuple` of `Index` instead of an `IndexSet` (PR #).
+- The `IndexSet{T}` type has been redefined as a type alias for `Vector{T<:Index}` (which is subject to change). Therefore it no longer has a type parameter for the number of indices, similar to the change to the `ITensor` type. If you were using the plain `IndexSet` type, code should generally still work properly. In general you should not have to use `IndexSet`, and can just use `Tuple` or `Vector` of `Index` instead, such as `is = (i, j, k)` or `is = [i, j, k]`. Priming, tagging, and set operations now work generically on those types.
+- `ITensor` constructors from collections of `Index`, such as `ITensor(i, j, k)`, now return an `ITensor` with `EmptyStorage` (previously called `Empty`) storage instead of `Dense` or `BlockSparse` storage filled with 0 values. Most operations should still work that worked previously, but please contact us if there are issues.
+- The `NDTensors` module has been moved into the `ITensors` package, so `ITensors` no longer depends on the standalone `NDTensors` package. This should only effect users who were using both `NDTensors` and `ITensors` seperately. If you want to use the latest `NDTensors` library, you should do `using ITensors.NDTensors`. Note the current `NDTensors.jl` packge will still exist, but for now developmentof `NDTensors` will occur within `ITensors.jl`.
 
 ITensors v0.1.41 Release Notes
 ==============================
