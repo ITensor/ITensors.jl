@@ -802,6 +802,22 @@ end
 
     @test norm(H1 - H2) ≈ 0.0
   end
+
+  @testset "AutoMPO in-place modification regression test" begin
+    N = 2
+    t = 1.0
+    ampo = AutoMPO()
+    for n in 1:(N - 1)
+      ampo .+= -t, "Cdag", n, "C", n + 1
+      ampo .+= -t, "Cdag", n + 1, "C", n
+    end
+    s = siteinds("Fermion", N; conserve_qns=true)
+    ampo_original = deepcopy(ampo)
+    for i in 1:4
+      MPO(ampo, s)
+      @test ampo == ampo_original
+    end
+  end
 end
 
 nothing

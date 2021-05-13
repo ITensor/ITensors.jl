@@ -175,6 +175,10 @@ Base.:(==)(ampo1::AutoMPO, ampo2::AutoMPO) = data(ampo1) == data(ampo2)
 
 Base.copy(ampo::AutoMPO) = AutoMPO(copy(data(ampo)))
 
+function Base.deepcopy(ampo::AutoMPO)
+  return AutoMPO(map(copy, data(ampo)))
+end
+
 Base.size(ampo::AutoMPO) = size(data(ampo))
 
 """
@@ -944,6 +948,7 @@ H = MPO(ampo,sites)
 function MPO(ampo::AutoMPO, sites::Vector{<:Index}; kwargs...)::MPO
   length(data(ampo)) == 0 && error("AutoMPO has no terms")
 
+  ampo = deepcopy(ampo)
   sorteachterm!(ampo, sites)
   sortmergeterms!(ampo)
 
