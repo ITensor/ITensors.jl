@@ -944,6 +944,7 @@ H = MPO(ampo,sites)
 function MPO(ampo::AutoMPO, sites::Vector{<:Index}; kwargs...)::MPO
   length(data(ampo)) == 0 && error("AutoMPO has no terms")
 
+  ampo = deepcopy(ampo)
   sorteachterm!(ampo, sites)
   sortmergeterms!(ampo)
 
