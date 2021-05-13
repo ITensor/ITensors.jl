@@ -94,6 +94,29 @@ Random.seed!(1234)
     @test_throws ErrorException ITensor(A, i', dag(i); tol=1e-8)
   end
 
+  @testset "Construct from Array regression test" begin
+    i = Index([QN(0) => 2, QN(1) => 2])
+    T = itensor([0, 0, 1, 2], i)
+    @test flux(T) == QN(1)
+    @test nnzblocks(T) == 1
+    @test !(Block(1) in nzblocks(T))
+    @test Block(2) in nzblocks(T)
+    @test T[1] == 0
+    @test T[2] == 0
+    @test T[3] == 1
+    @test T[4] == 2
+    @test flux(T, 1) == QN(0)
+    @test flux(T, 2) == QN(0)
+    @test flux(T, 3) == QN(1)
+    @test flux(T, 4) == QN(1)
+    @test_throws BoundsError flux(T, 5)
+    @test_throws BoundsError flux(T, 0)
+    @test flux(T, Block(1)) == QN(0)
+    @test flux(T, Block(2)) == QN(1)
+    @test_throws BoundsError flux(T, Block(0))
+    @test_throws BoundsError flux(T, Block(3))
+  end
+
   @testset "QN ITensor Array constructor view behavior" begin
     d = 2
     i = Index([QN(0) => d ÷ 2, QN(1) => d ÷ 2])

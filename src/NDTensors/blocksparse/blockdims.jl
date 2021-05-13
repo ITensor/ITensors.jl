@@ -153,7 +153,12 @@ end
 
 # Given a CartesianIndex in the range dims(T), get the block it is in
 # and the index within that block
-function blockindex(T, i::Vararg{Int,N}) where {ElT,N}
+function blockindex(T, i::Vararg{Integer,N}) where {ElT,N}
+  # Bounds check.
+  # Do something more robust like:
+  # @boundscheck Base.checkbounds_indices(Bool, map(Base.oneto, dims(T)), i) || throw_boundserror(T, i)
+  @boundscheck any(iszero, i) && Base.throw_boundserror(T, i)
+
   # Start in the (1,1,...,1) block
   current_block_loc = @MVector ones(Int, N)
   current_block_dims = blockdims(T, Tuple(current_block_loc))

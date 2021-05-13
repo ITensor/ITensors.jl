@@ -39,13 +39,16 @@ function MPS(N::Int; ortho_lims::UnitRange=1:N)
 end
 
 """
-    MPS([::Type{ElT} = Float64, ]sites, linkdim = 1)
+    MPS([::Type{ElT} = Float64, ]sites; linkdim=1)
 
 Construct an MPS filled with Empty ITensors of type `ElT` from a collection of indices.
 
-Optionally specify the link dimension, which by default is 1.
+Optionally specify the link dimension with the keyword argument `linkdim`, which by default is 1.
+
+In the future we may generalize `linkdim` to allow specifying each individual link dimension as a vector,
+and additionally allow specifying quantum numbers.
 """
-function MPS(::Type{T}, sites::Vector{<:Index}, linkdim=1) where {T<:Number}
+function MPS(::Type{T}, sites::Vector{<:Index}; linkdim::Integer=1) where {T<:Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   if N == 1
@@ -73,7 +76,7 @@ function MPS(::Type{T}, sites::Vector{<:Index}, linkdim=1) where {T<:Number}
   return MPS(v)
 end
 
-MPS(sites::Vector{<:Index}, args...) = MPS(Float64, sites, args...)
+MPS(sites::Vector{<:Index}, args...; kwargs...) = MPS(Float64, sites, args...; kwargs...)
 
 function randomU(s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)
@@ -202,7 +205,7 @@ randomMPS(sites::Vector{<:Index}, linkdim::Int=1) = randomMPS(Float64, sites, li
 # so turn it off for this line.
 function randomMPS(sites::Vector{<:Index}, state, linkdim::Int=1)::MPS
 #! format: on
-  M = productMPS(sites, state)
+  M = MPS(sites, state)
   if linkdim > 1
     randomizeMPS!(M, sites, linkdim)
   end
@@ -221,12 +224,13 @@ random MPS.
 """ randomMPS(::Vector{<:Index}, ::Any, ::Int)
 
 """
+    MPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
     productMPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
 
 Construct a product state MPS with element type `T` and
 nonzero values determined from the input IndexVals.
 """
-function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
+function MPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
   N = length(ivals)
   M = MPS(N)
 
@@ -253,21 +257,25 @@ function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
   return M
 end
 
+# For backwards compatibility
+const productMPS = MPS
+
 """
+    MPS(ivals::Vector{<:IndexVal})
     productMPS(ivals::Vector{<:IndexVal})
 
 Construct a product state MPS with element type `Float64` and
 nonzero values determined from the input IndexVals.
 """
-productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64, ivals::Vector{<:IndexVal})
+MPS(ivals::Vector{<:IndexVal}) = MPS(Float64, ivals::Vector{<:IndexVal})
 
 """
-    productMPS(::Type{T},
-               sites::Vector{<:Index},
-               states::Union{Vector{String},
-                             Vector{Int},
-                             String,
-                             Int})
+    MPS(::Type{T},
+        sites::Vector{<:Index},
+        states::Union{Vector{String},
+                      Vector{Int},
+                      String,
+                      Int})
 
 Construct a product state MPS of element type `T`, having
 site indices `sites`, and which corresponds to the initial
@@ -282,31 +290,32 @@ a uniform state.
 N = 10
 sites = siteinds("S=1/2", N)
 states = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi = productMPS(ComplexF64, sites, states)
-phi = productMPS(sites, "Up")
+psi = MPS(ComplexF64, sites, states)
+phi = MPS(sites, "Up")
 ```
 """
-function productMPS(::Type{T}, sites::Vector{<:Index}, states) where {T<:Number}
+function MPS(::Type{T}, sites::Vector{<:Index}, states) where {T<:Number}
   if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial states don't match"))
   end
   ivals = [state(sites[n], states[n]) for n in 1:length(sites)]
-  return productMPS(T, ivals)
+  return MPS(T, ivals)
 end
 
-function productMPS(
-  ::Type{T}, sites::Vector{<:Index}, states::Union{String,Int}
+function MPS(
+  ::Type{T}, sites::Vector{<:Index}, states::Union{String,Integer}
 ) where {T<:Number}
   ivals = [state(sites[n], states) for n in 1:length(sites)]
-  return productMPS(T, ivals)
+  return MPS(T, ivals)
 end
 
-function productMPS(::Type{T}, sites::Vector{<:Index}, states::Function) where {T<:Number}
+function MPS(::Type{T}, sites::Vector{<:Index}, states::Function) where {T<:Number}
   ivals = [state(sites[n], states(n)) for n in 1:length(sites)]
-  return productMPS(T, ivals)
+  return MPS(T, ivals)
 end
 
 """
+    MPS(sites::Vector{<:Index},states)
     productMPS(sites::Vector{<:Index},states)
 
 Construct a product state MPS having
@@ -321,10 +330,10 @@ Index tag type.
 N = 10
 sites = siteinds("S=1/2",N)
 states = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi = productMPS(sites,states)
+psi = MPS(sites,states)
 ```
 """
-productMPS(sites::Vector{<:Index}, states) = productMPS(Float64, sites, states)
+MPS(sites::Vector{<:Index}, states) = MPS(Float64, sites, states)
 
 """
     siteind(M::MPS, j::Int; kwargs...)

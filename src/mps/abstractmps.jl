@@ -1661,7 +1661,7 @@ s = siteinds("S=1/2", N)
 gates = ops(os, s)
 
 # Starting state |↑↑↑⟩
-ψ0 = productMPS(s, "↑")
+ψ0 = MPS(s, "↑")
 
 # Apply the gates.
 ψ = apply(gates, ψ0; cutoff = 1e-15)
@@ -1672,7 +1672,7 @@ prodψ = apply(gates, prod(ψ0))
 
 # The result is:
 # σz₃ σz₂ σz₁ σx₃ σx₂ σx₁ |↑↑↑⟩ = -|↓↓↓⟩
-@show inner(ψ, productMPS(s, "↓")) == -1
+@show inner(ψ, MPS(s, "↓")) == -1
 ```
 Apply nonlocal two-site gates and one-site gates to an MPS:
 ```julia
@@ -1690,12 +1690,12 @@ os = [("CX", 1, 3), ("σz", 3)]
 @show os
 
 # Start with the state |↓↑↑⟩
-ψ0 = productMPS(s, n -> n == 1 ? "↓" : "↑")
+ψ0 = MPS(s, n -> n == 1 ? "↓" : "↑")
 
 # The result is:
 # σz₃ CX₁₃ |↓↑↑⟩ = -|↓↑↓⟩
 ψ = apply(ops(os, s), ψ0; cutoff = 1e-15)
-@show inner(ψ, productMPS(s, n -> n == 1 || n == 3 ? "↓" : "↑")) == -1
+@show inner(ψ, MPS(s, n -> n == 1 || n == 3 ? "↓" : "↑")) == -1
 ```
 Perform TEBD-like time evolution:
 ```julia
@@ -1711,7 +1711,7 @@ end
 τ = -0.1im
 os = [("expS⋅S", (1, 2), (τ = τ,)),
       ("expS⋅S", (2, 3), (τ = τ,))]
-ψ0 = productMPS(s, n -> n == 1 ? "↓" : "↑")
+ψ0 = MPS(s, n -> n == 1 ? "↓" : "↑")
 expτH = ops(os, s)
 ψτ = apply(expτH, ψ0)
 ```
