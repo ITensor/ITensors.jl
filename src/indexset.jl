@@ -721,7 +721,7 @@ ndiagblocks(inds) = minimum(nblocks(inds))
 
 # TODO: generic to Indices and BlockDims
 function eachblock(inds::Indices)
-  return CartesianIndices(_Tuple(nblocks(inds)))
+  return (Block(b) for b in CartesianIndices(_Tuple(nblocks(inds))))
 end
 
 # TODO: turn this into an iterator instead
