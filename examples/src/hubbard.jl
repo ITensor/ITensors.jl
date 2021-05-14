@@ -1,12 +1,11 @@
 
-function hubbard_1d(; N::Int,
-                      t = 1.0, U = 0.0)
+function hubbard_1d(; N::Int, t=1.0, U=0.0)
   ampo = AutoMPO()
-  for b in 1:N-1
-    ampo .+= -t, "Cdagup",   b, "Cup", b+1
-    ampo .+= -t, "Cdagup", b+1, "Cup", b
-    ampo .+= -t, "Cdagdn",   b, "Cdn", b+1
-    ampo .+= -t, "Cdagdn", b+1, "Cdn", b
+  for b in 1:(N - 1)
+    ampo .+= -t, "Cdagup", b, "Cup", b + 1
+    ampo .+= -t, "Cdagup", b + 1, "Cup", b
+    ampo .+= -t, "Cdagdn", b, "Cdn", b + 1
+    ampo .+= -t, "Cdagdn", b + 1, "Cdn", b
   end
   if U ≠ 0
     for n in 1:N
@@ -15,12 +14,10 @@ function hubbard_1d(; N::Int,
   end
   return ampo
 end
-                      
-function hubbard_2d(; Nx::Int, Ny::Int,
-                      t = 1.0, U = 0.0,
-                      yperiodic::Bool = true)
+
+function hubbard_2d(; Nx::Int, Ny::Int, t=1.0, U=0.0, yperiodic::Bool=true)
   N = Nx * Ny
-  lattice = square_lattice(Nx, Ny; yperiodic = yperiodic)
+  lattice = square_lattice(Nx, Ny; yperiodic=yperiodic)
   ampo = AutoMPO()
   for b in lattice
     ampo .+= -t, "Cdagup", b.s1, "Cup", b.s2
@@ -36,11 +33,10 @@ function hubbard_2d(; Nx::Int, Ny::Int,
   return ampo
 end
 
-function hubbard_2d_ky(; Nx::Int, Ny::Int,
-                         t = 1.0, U = 0.0)
+function hubbard_2d_ky(; Nx::Int, Ny::Int, t=1.0, U=0.0)
   ampo = AutoMPO()
-  for x in 0:Nx-1
-    for ky in 0:Ny-1
+  for x in 0:(Nx - 1)
+    for ky in 0:(Ny - 1)
       s = x * Ny + ky + 1
       disp = -2 * t * cos((2 * π / Ny) * ky)
       if abs(disp) > 1e-12
@@ -49,8 +45,8 @@ function hubbard_2d_ky(; Nx::Int, Ny::Int,
       end
     end
   end
-  for x in 0:Nx-2
-    for ky in 0:Ny-1
+  for x in 0:(Nx - 2)
+    for ky in 0:(Ny - 1)
       s1 = x * Ny + ky + 1
       s2 = (x + 1) * Ny + ky + 1
       ampo .+= -t, "Cdagup", s1, "Cup", s2
@@ -60,10 +56,10 @@ function hubbard_2d_ky(; Nx::Int, Ny::Int,
     end
   end
   if U ≠ 0
-    for x in 0:Nx-1
-      for ky in 0:Ny-1
-        for py in 0:Ny-1
-          for qy in 0:Ny-1
+    for x in 0:(Nx - 1)
+      for ky in 0:(Ny - 1)
+        for py in 0:(Ny - 1)
+          for qy in 0:(Ny - 1)
             s1 = x * Ny + (ky + qy + Ny) % Ny + 1
             s2 = x * Ny + (py - qy + Ny) % Ny + 1
             s3 = x * Ny + py + 1
@@ -77,17 +73,13 @@ function hubbard_2d_ky(; Nx::Int, Ny::Int,
   return ampo
 end
 
-function hubbard(; Nx::Int, Ny::Int = 1,
-                   t = 1.0, U = 0.0,
-                   yperiodic::Bool = true,
-                   ky::Bool = false)
+function hubbard(; Nx::Int, Ny::Int=1, t=1.0, U=0.0, yperiodic::Bool=true, ky::Bool=false)
   if Ny == 1
-    ampo = hubbard_1d(; N = Nx, t = t, U = U)
+    ampo = hubbard_1d(; N=Nx, t=t, U=U)
   elseif ky
-    ampo = hubbard_2d_ky(; Nx = Nx, Ny = Ny, t = t, U = U)
+    ampo = hubbard_2d_ky(; Nx=Nx, Ny=Ny, t=t, U=U)
   else
-    ampo = hubbard_2d(; Nx = Nx, Ny = Ny, yperiodic = yperiodic, t = t, U = U)
+    ampo = hubbard_2d(; Nx=Nx, Ny=Ny, yperiodic=yperiodic, t=t, U=U)
   end
   return ampo
 end
-

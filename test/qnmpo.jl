@@ -1,10 +1,9 @@
-using ITensors,
-      Test
+using ITensors, Test
 
 @testset "MPO Basics" begin
   N = 6
-  sites = [Index(QN(-1)=>1, QN(1)=>1; tags="Site,n=$n") for n=1:N]
-  links = [Index(QN()=>1; tags="Links,l=$n") for n=1:N-1]
+  sites = [Index(QN(-1) => 1, QN(1) => 1; tags="Site,n=$n") for n in 1:N]
+  links = [Index(QN() => 1; tags="Links,l=$n") for n in 1:(N - 1)]
   @test length(MPO()) == 0
   #O = MPO(sites)
   O = MPO(N)
@@ -14,50 +13,50 @@ using ITensors,
   @test length(O) == N
 
   O[1] = emptyITensor(sites[1], prime(sites[1]))
-  @test hasind(O[1],sites[1])
-  @test hasind(O[1],prime(sites[1]))
+  @test hasind(O[1], sites[1])
+  @test hasind(O[1], prime(sites[1]))
   P = copy(O)
-  @test hasind(P[1],sites[1])
-  @test hasind(P[1],prime(sites[1]))
+  @test hasind(P[1], sites[1])
+  @test hasind(P[1], prime(sites[1]))
   # test constructor from Vector{ITensor}
 
   K = MPO(N)
   K[1] = randomITensor(QN(), dag(sites[1]), sites[1]', links[1])
-  for i in 2:N-1
-    K[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i-1]), links[i])
+  for i in 2:(N - 1)
+    K[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
-  K[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N-1]))
+  K[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
 
   J = MPO(N)
   J[1] = randomITensor(QN(), dag(sites[1]), sites[1]', links[1])
-  for i in 2:N-1
-    J[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i-1]), links[i])
+  for i in 2:(N - 1)
+    J[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
-  J[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N-1]))
+  J[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
 
   L = MPO(N)
   L[1] = randomITensor(QN(), dag(sites[1]), sites[1]', links[1])
-  for i in 2:N-1
-    L[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i-1]), links[i])
+  for i in 2:(N - 1)
+    L[i] = randomITensor(QN(), dag(sites[i]), sites[i]', dag(links[i - 1]), links[i])
   end
-  L[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N-1]))
+  L[N] = randomITensor(QN(), dag(sites[N]), sites[N]', dag(links[N - 1]))
 
   @test length(K) == N
   @test ITensors.data(MPO(copy(ITensors.data(K)))) == ITensors.data(K)
 
   phi = MPS(N)
   phi[1] = randomITensor(QN(-1), sites[1], links[1])
-  for i in 2:N-1
-    phi[i] = randomITensor(QN(-1), sites[i], dag(links[i-1]), links[i])
+  for i in 2:(N - 1)
+    phi[i] = randomITensor(QN(-1), sites[i], dag(links[i - 1]), links[i])
   end
-  phi[N] = randomITensor(QN(-1), sites[N], dag(links[N-1]))
+  phi[N] = randomITensor(QN(-1), sites[N], dag(links[N - 1]))
 
   psi = MPS(N)
   psi[1] = randomITensor(QN(-1), sites[1], links[1])
-  for i in 2:N-1
-    psi[i] = randomITensor(QN(-1), sites[i], dag(links[i-1]), links[i])
+  for i in 2:(N - 1)
+    psi[i] = randomITensor(QN(-1), sites[i], dag(links[i - 1]), links[i])
   end
-  psi[N] = randomITensor(QN(-1), sites[N], dag(links[N-1]))
+  psi[N] = randomITensor(QN(-1), sites[N], dag(links[N - 1]))
 
   @testset "orthogonalize!" begin
     orthogonalize!(phi, 1)
@@ -72,9 +71,9 @@ using ITensors,
     @test maxlinkdim(K) == 1
     phidag = dag(phi)
     prime!(phidag)
-    phiKpsi = phidag[1]*K[1]*psi[1]
-    for j = 2:N
-      phiKpsi *= phidag[j]*K[j]*psi[j]
+    phiKpsi = phidag[1] * K[1] * psi[1]
+    for j in 2:N
+      phiKpsi *= phidag[j] * K[j] * psi[j]
     end
     @test phiKpsi[] ≈ inner(phi, K, psi)
   end
@@ -84,35 +83,36 @@ using ITensors,
     prime!(phidag, 2)
     Jdag = dag(J)
     prime!(Jdag)
-    for j ∈ eachindex(Jdag)
-      swapprime!(Jdag[j],2,3)
-      swapprime!(Jdag[j],1,2)
-      swapprime!(Jdag[j],3,1)
+    for j in eachindex(Jdag)
+      swapprime!(Jdag[j], 2, 3)
+      swapprime!(Jdag[j], 1, 2)
+      swapprime!(Jdag[j], 3, 1)
     end
 
-    phiJdagKpsi = phidag[1]*Jdag[1]*K[1]*psi[1]
-    for j ∈ eachindex(psi)[2:end]
-      phiJdagKpsi = phiJdagKpsi*phidag[j]*Jdag[j]*K[j]*psi[j]
+    phiJdagKpsi = phidag[1] * Jdag[1] * K[1] * psi[1]
+    for j in eachindex(psi)[2:end]
+      phiJdagKpsi = phiJdagKpsi * phidag[j] * Jdag[j] * K[j] * psi[j]
     end
 
-    @test phiJdagKpsi[] ≈ inner(J,phi,K,psi)
+    @test phiJdagKpsi[] ≈ inner(J, phi, K, psi)
 
-    badsites = [Index(2,"Site") for n=1:N+1]
+    badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badpsi = randomMPS(badsites)
-    @test_throws DimensionMismatch inner(J,phi,K,badpsi)
+    @test_throws DimensionMismatch inner(J, phi, K, badpsi)
   end
 
   @testset "error_contract" begin
-    dist = sqrt(abs(1 + (inner(phi,phi) - 2*real(inner(phi,K,psi)))
-                        /inner(K,psi,K,psi)))
-    @test dist ≈ error_contract(phi,K,psi)
+    dist = sqrt(
+      abs(1 + (inner(phi, phi) - 2 * real(inner(phi, K, psi))) / inner(K, psi, K, psi))
+    )
+    @test dist ≈ error_contract(phi, K, psi)
   end
 
   @testset "contract" begin
     @test maxlinkdim(K) == 1
-    psi_out = contract(K, psi, maxdim=1)
-    @test inner(phi,psi_out) ≈ inner(phi,K,psi)
-    @test_throws ArgumentError contract(K, psi, method="fakemethod")
+    psi_out = contract(K, psi; maxdim=1)
+    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
+    @test_throws ArgumentError contract(K, psi; method="fakemethod")
   end
 
   # TODO: implement add for QN MPOs and add this test back
@@ -146,22 +146,22 @@ using ITensors,
   @testset "contract(::MPO, ::MPO)" begin
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
-    KL = contract(prime(K), L; maxdim = 1)
-    Lpsi = contract(L, psi; maxdim = 1)
-    psi_kl_out = contract(prime(K), Lpsi; maxdim = 1)
-    @test inner(psi,KL,psi) ≈ inner(psi, psi_kl_out) atol=5e-3
+    KL = contract(prime(K), L; maxdim=1)
+    Lpsi = contract(L, psi; maxdim=1)
+    psi_kl_out = contract(prime(K), Lpsi; maxdim=1)
+    @test inner(psi, KL, psi) ≈ inner(psi, psi_kl_out) atol = 5e-3
   end
 
   @testset "*(::MPO, ::MPO)" begin
     @test maxlinkdim(K) == 1
     @test maxlinkdim(L) == 1
-    KL = *(prime(K), L; maxdim = 1)
-    psi_kl_out = *(prime(K), *(L, psi; maxdim = 1); maxdim = 1)
-    @test ⋅(psi, KL, psi) ≈ dot(psi, psi_kl_out) atol=5e-3
+    KL = *(prime(K), L; maxdim=1)
+    psi_kl_out = *(prime(K), *(L, psi; maxdim=1); maxdim=1)
+    @test ⋅(psi, KL, psi) ≈ dot(psi, psi_kl_out) atol = 5e-3
   end
 
-  sites = siteinds("S=1/2",N)
-  O = MPO(sites,"Sz")
+  sites = siteinds("S=1/2", N)
+  O = MPO(sites, "Sz")
   @test length(O) == N # just make sure this works
 
   @test_throws ArgumentError randomMPO(sites, 2)
@@ -170,12 +170,12 @@ end
 
 @testset "splitblocks" begin
   N = 4
-  sites = siteinds("S=1", N; conserve_qns = true)
+  sites = siteinds("S=1", N; conserve_qns=true)
   ampo = AutoMPO()
-  for j=1:N-1
-    ampo .+= 0.5, "S+", j, "S-", j+1
-    ampo .+= 0.5, "S-", j, "S+", j+1
-    ampo .+=      "Sz", j, "Sz", j+1
+  for j in 1:(N - 1)
+    ampo .+= 0.5, "S+", j, "S-", j + 1
+    ampo .+= 0.5, "S-", j, "S+", j + 1
+    ampo .+= "Sz", j, "Sz", j + 1
   end
   H = MPO(ampo, sites)
 
@@ -203,11 +203,11 @@ end
 
 @testset "MPO operations with one or two sites" begin
   for N in 1:4, conserve_szparity in (true, false)
-    s = siteinds("S=1/2", N; conserve_szparity = conserve_szparity)
+    s = siteinds("S=1/2", N; conserve_szparity=conserve_szparity)
     a = AutoMPO()
     h = 0.5
-    for j in 1:N-1
-      a .+= -1,"Sx",j,"Sx",j+1
+    for j in 1:(N - 1)
+      a .+= -1, "Sx", j, "Sx", j + 1
     end
     for j in 1:N
       a .+= h, "Sz", j
@@ -231,11 +231,13 @@ end
     sweeps = Sweeps(3)
     maxdim!(sweeps, 10)
     if N == 1
-      @test_throws ErrorException dmrg(H, ψ, sweeps; eigsolve_maxiter = 10, eigsolve_krylovdim = 10, outputlevel = 0)
+      @test_throws ErrorException dmrg(
+        H, ψ, sweeps; eigsolve_maxiter=10, eigsolve_krylovdim=10, outputlevel=0
+      )
     else
-      e, ψgs = dmrg(H, ψ, sweeps; eigsolve_maxiter = 10, eigsolve_krylovdim = 10, outputlevel = 0)
+      e, ψgs = dmrg(H, ψ, sweeps; eigsolve_maxiter=10, eigsolve_krylovdim=10, outputlevel=0)
       @test prod(H) * prod(ψgs) ≈ e * prod(ψgs)'
-      D, V = eigen(prod(H); ishermitian = true)
+      D, V = eigen(prod(H); ishermitian=true)
       if hasqns(ψ)
         fluxψ = flux(ψ)
         d = commonind(D, V)
@@ -246,7 +248,6 @@ end
       end
     end
   end
-
 end
 
 nothing

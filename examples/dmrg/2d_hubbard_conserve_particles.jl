@@ -1,9 +1,6 @@
 using ITensors
 
-function main(; Nx = 6,
-                Ny = 3,
-                U = 4.0,
-                t = 1.0)
+function main(; Nx=6, Ny=3, U=4.0, t=1.0)
   N = Nx * Ny
 
   sweeps = Sweeps(10)
@@ -12,11 +9,9 @@ function main(; Nx = 6,
   setnoise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
   @show sweeps
 
-  sites = siteinds("Electron", N;
-                   conserve_qns = true)
+  sites = siteinds("Electron", N; conserve_qns=true)
 
-  lattice = square_lattice(Nx, Ny;
-                           yperiodic = true)
+  lattice = square_lattice(Nx, Ny; yperiodic=true)
 
   ampo = AutoMPO()
   for b in lattice
@@ -28,7 +23,7 @@ function main(; Nx = 6,
   for n in 1:N
     ampo += U, "Nupdn", n
   end
-  H = MPO(ampo,sites)
+  H = MPO(ampo, sites)
 
   # Half filling
   state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
@@ -38,14 +33,13 @@ function main(; Nx = 6,
   # numbers as `state`
   psi0 = randomMPS(sites, state)
 
-  energy,psi = dmrg(H, psi0, sweeps)
+  energy, psi = dmrg(H, psi0, sweeps)
   @show t, U
   @show flux(psi)
   @show maxlinkdim(psi)
   @show energy
 
-  return
+  return nothing
 end
 
 main()
-

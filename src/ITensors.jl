@@ -14,19 +14,19 @@ using Compat
 using HDF5
 using KrylovKit
 using LinearAlgebra
-using NDTensors
 using PackageCompiler
 using Pkg
 using Printf
 using Random
+using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
 
 #####################################
-# NDTensors (definitions that will be moved to NDTensors
-# module)
+# NDTensors
 #
 include("NDTensors/NDTensors.jl")
+using .NDTensors
 
 #####################################
 # ContractionSequenceOptimization
@@ -45,8 +45,9 @@ examples_dir() = joinpath(pkg_dir(), "examples")
 #####################################
 # Determine version and uuid of the package
 #
-_parse_project_toml(field::String) =
-  Pkg.TOML.parsefile(joinpath(pkg_dir(), "Project.toml"))[field]
+function _parse_project_toml(field::String)
+  return Pkg.TOML.parsefile(joinpath(pkg_dir(), "Project.toml"))[field]
+end
 version() = VersionNumber(_parse_project_toml("version"))
 uuid() = Base.UUID(_parse_project_toml("uuid"))
 
@@ -68,12 +69,14 @@ include("global_variables.jl")
 #####################################
 # Index and IndexSet
 #
-include("smallstring.jl")
+include("smallstring.jl") # Not currently using in TagSet
 include("readwrite.jl")
 include("not.jl")
 include("tagset.jl")
 include("arrow.jl")
+include("symmetrystyle.jl")
 include("index.jl")
+include("set_operations.jl")
 include("indexset.jl")
 
 #####################################
@@ -100,7 +103,9 @@ include("mps/deprecated.jl")
 include("mps/mps.jl")
 include("mps/mpo.jl")
 include("mps/sweeps.jl")
+include("mps/abstractprojmpo.jl")
 include("mps/projmpo.jl")
+include("mps/diskprojmpo.jl")
 include("mps/projmposum.jl")
 include("mps/projmps.jl")
 include("mps/projmpo_mps.jl")
@@ -144,7 +149,7 @@ include("packagecompile/compile.jl")
 include("developer_tools.jl")
 
 function __init__()
-  resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
+  return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 end
 
 #####################################

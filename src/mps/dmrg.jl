@@ -1,13 +1,14 @@
 
-IndexSet_ignore_missing(is::Union{Index, Nothing}...) =
-  IndexSet(filter(i -> i isa Index, is))
+function IndexSet_ignore_missing(is::Union{Index,Nothing}...)
+  return IndexSet(filter(i -> i isa Index, is))
+end
 
-function permute(M::AbstractMPS, ::Tuple{typeof(linkind), typeof(siteinds), typeof(linkind)})
+function permute(M::AbstractMPS, ::Tuple{typeof(linkind),typeof(siteinds),typeof(linkind)})
   M̃ = MPO(length(M))
   for n in 1:length(M)
-    lₙ₋₁ = linkind(M, n-1)
+    lₙ₋₁ = linkind(M, n - 1)
     lₙ = linkind(M, n)
-    s⃗ₙ = IndexSet(sort(Tuple(siteinds(M, n)); by = plev))
+    s⃗ₙ = IndexSet(sort(Tuple(siteinds(M, n)); by=plev))
     M̃[n] = permute(M[n], IndexSet_ignore_missing(lₙ₋₁, s⃗ₙ..., lₙ))
   end
   set_ortho_lims!(M̃, ortho_lims(M))
@@ -36,7 +37,7 @@ function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
   # and minimize permutations
   H = permute(H, (linkind, siteinds, linkind))
   PH = ProjMPO(H)
-  return dmrg(PH,psi0,sweeps;kwargs...)
+  return dmrg(PH, psi0, sweeps; kwargs...)
 end
 
 """
@@ -67,7 +68,7 @@ function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
   end
   Hs .= permute.(Hs, Ref((linkind, siteinds, linkind)))
   PHS = ProjMPOSum(Hs)
-  return dmrg(PHS,psi0,sweeps;kwargs...)
+  return dmrg(PHS, psi0, sweeps; kwargs...)
 end
 
 """
@@ -98,15 +99,16 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   end
   H = permute(H, (linkind, siteinds, linkind))
   Ms .= permute.(Ms, Ref((linkind, siteinds, linkind)))
-  weight = get(kwargs,:weight,1.0)
-  PMM = ProjMPO_MPS(H,Ms;weight=weight)
-  return dmrg(PMM,psi0,sweeps;kwargs...)
+  weight = get(kwargs, :weight, 1.0)
+  PMM = ProjMPO_MPS(H, Ms; weight=weight)
+  return dmrg(PMM, psi0, sweeps; kwargs...)
 end
-
 
 function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   if length(psi0) == 1
-    error("`dmrg` currently does not support system sizes of 1. You can diagonalize the MPO tensor directly with tools like `LinearAlgebra.eigen`, `KrylovKit.eigsolve`, etc.")
+    error(
+      "`dmrg` currently does not support system sizes of 1. You can diagonalize the MPO tensor directly with tools like `LinearAlgebra.eigen`, `KrylovKit.eigsolve`, etc.",
+    )
   end
 
   @debug_check begin
@@ -116,10 +118,14 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
     checkflux(PH)
   end
 
-  which_decomp::Union{String, Nothing} = get(kwargs, :which_decomp, nothing)
+  which_decomp::Union{String,Nothing} = get(kwargs, :which_decomp, nothing)
   svd_alg::String = get(kwargs, :svd_alg, "divide_and_conquer")
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
+
+  write_when_maxdim_exceeds::Union{Int,Nothing} = get(
+    kwargs, :write_when_maxdim_exceeds, nothing
+  )
 
   # eigsolve kwargs
   eigsolve_tol::Float64 = get(kwargs, :eigsolve_tol, 1e-14)
@@ -162,109 +168,140 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   N = length(psi)
 
   if !isortho(psi) || orthocenter(psi) != 1
-    orthogonalize!(psi,1)
+    orthogonalize!(psi, 1)
   end
   @assert isortho(psi) && orthocenter(psi) == 1
 
   position!(PH, psi, 1)
   energy = 0.0
 
-  for sw=1:nsweep(sweeps)
+  for sw in 1:nsweep(sweeps)
     sw_time = @elapsed begin
-    maxtruncerr = 0.0
+      maxtruncerr = 0.0
 
-    for (b, ha) in sweepnext(N)
-
-      @debug_check begin
-        checkflux(psi)
-        checkflux(PH)
-      end
-
-      @timeit_debug timer "dmrg: position!" begin
-      position!(PH, psi, b)
-      end
-
-      @debug_check begin
-        checkflux(psi)
-        checkflux(PH)
-      end
-
-      @timeit_debug timer "dmrg: psi[b]*psi[b+1]" begin
-      phi = psi[b] * psi[b+1]
-      end
-
-      @timeit_debug timer "dmrg: eigsolve" begin
-      vals, vecs = eigsolve(PH, phi, 1, eigsolve_which_eigenvalue;
-                            ishermitian = ishermitian,
-                            tol = eigsolve_tol,
-                            krylovdim = eigsolve_krylovdim,
-                            maxiter = eigsolve_maxiter)
-      end
-      energy, phi = vals[1], vecs[1]
-
-      ortho = ha == 1 ? "left" : "right"
-
-      drho = nothing
-      if noise(sweeps, sw) > 0.0
-        @timeit_debug timer "dmrg: noiseterm" begin
-          # Use noise term when determining new MPS basis
-          drho = noise(sweeps, sw) * noiseterm(PH,phi,ortho)
+      if !isnothing(write_when_maxdim_exceeds) &&
+         maxdim(sweeps, sw) > write_when_maxdim_exceeds
+        if outputlevel >= 2
+          println(
+            "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk",
+          )
         end
+        PH = disk(PH)
       end
 
-      @debug_check begin
-        checkflux(phi)
+      for (b, ha) in sweepnext(N)
+        @debug_check begin
+          checkflux(psi)
+          checkflux(PH)
+        end
+
+        @timeit_debug timer "dmrg: position!" begin
+          position!(PH, psi, b)
+        end
+
+        @debug_check begin
+          checkflux(psi)
+          checkflux(PH)
+        end
+
+        @timeit_debug timer "dmrg: psi[b]*psi[b+1]" begin
+          phi = psi[b] * psi[b + 1]
+        end
+
+        @timeit_debug timer "dmrg: eigsolve" begin
+          vals, vecs = eigsolve(
+            PH,
+            phi,
+            1,
+            eigsolve_which_eigenvalue;
+            ishermitian=ishermitian,
+            tol=eigsolve_tol,
+            krylovdim=eigsolve_krylovdim,
+            maxiter=eigsolve_maxiter,
+          )
+        end
+        energy, phi = vals[1], vecs[1]
+
+        ortho = ha == 1 ? "left" : "right"
+
+        drho = nothing
+        if noise(sweeps, sw) > 0.0
+          @timeit_debug timer "dmrg: noiseterm" begin
+            # Use noise term when determining new MPS basis
+            drho = noise(sweeps, sw) * noiseterm(PH, phi, ortho)
+          end
+        end
+
+        @debug_check begin
+          checkflux(phi)
+        end
+
+        @timeit_debug timer "dmrg: replacebond!" begin
+          spec = replacebond!(
+            psi,
+            b,
+            phi;
+            maxdim=maxdim(sweeps, sw),
+            mindim=mindim(sweeps, sw),
+            cutoff=cutoff(sweeps, sw),
+            eigen_perturbation=drho,
+            ortho=ortho,
+            normalize=true,
+            which_decomp=which_decomp,
+            svd_alg=svd_alg,
+          )
+        end
+        maxtruncerr = max(maxtruncerr, spec.truncerr)
+
+        @debug_check begin
+          checkflux(psi)
+          checkflux(PH)
+        end
+
+        if outputlevel >= 2
+          @printf(
+            "Sweep %d, half %d, bond (%d,%d) energy=%.12f\n", sw, ha, b, b + 1, energy
+          )
+          @printf(
+            "  Truncated using cutoff=%.1E maxdim=%d mindim=%d\n",
+            cutoff(sweeps, sw),
+            maxdim(sweeps, sw),
+            mindim(sweeps, sw)
+          )
+          @printf(
+            "  Trunc. err=%.2E, bond dimension %d\n", spec.truncerr, dim(linkind(psi, b))
+          )
+          flush(stdout)
+        end
+
+        sweep_is_done = (b == 1 && ha == 2)
+        measure!(
+          obs;
+          energy=energy,
+          psi=psi,
+          bond=b,
+          sweep=sw,
+          half_sweep=ha,
+          spec=spec,
+          outputlevel=outputlevel,
+          sweep_is_done=sweep_is_done,
+        )
       end
-
-      @timeit_debug timer "dmrg: replacebond!" begin
-      spec = replacebond!(psi, b, phi; maxdim = maxdim(sweeps, sw),
-                                       mindim = mindim(sweeps, sw),
-                                       cutoff = cutoff(sweeps, sw),
-                                       eigen_perturbation = drho,
-                                       ortho = ortho,
-                                       normalize = true,
-                                       which_decomp = which_decomp,
-                                       svd_alg = svd_alg)
-      end
-      maxtruncerr = max(maxtruncerr,spec.truncerr)
-
-      @debug_check begin
-        checkflux(psi)
-        checkflux(PH)
-      end
-
-
-      if outputlevel >= 2
-        @printf("Sweep %d, half %d, bond (%d,%d) energy=%.12f\n",sw,ha,b,b+1,energy)
-        @printf("  Truncated using cutoff=%.1E maxdim=%d mindim=%d\n",
-                cutoff(sweeps, sw),maxdim(sweeps, sw),mindim(sweeps, sw))
-        @printf("  Trunc. err=%.2E, bond dimension %d\n",spec.truncerr,dim(linkind(psi,b)))
-        flush(stdout)
-      end
-
-      sweep_is_done = (b==1 && ha==2)
-      measure!(obs; energy=energy,
-                    psi=psi,
-                    bond = b,
-                    sweep = sw,
-                    half_sweep = ha,
-                    spec=spec,
-                    outputlevel=outputlevel,
-                    sweep_is_done=sweep_is_done)
-    end
     end
     if outputlevel >= 1
-      @printf("After sweep %d energy=%.12f maxlinkdim=%d maxerr=%.2E time=%.3f\n",
-              sw, energy, maxlinkdim(psi), maxtruncerr, sw_time)
+      @printf(
+        "After sweep %d energy=%.12f maxlinkdim=%d maxerr=%.2E time=%.3f\n",
+        sw,
+        energy,
+        maxlinkdim(psi),
+        maxtruncerr,
+        sw_time
+      )
       flush(stdout)
     end
-    isdone = checkdone!(obs;energy=energy,
-                            psi=psi,
-                            sweep=sw,
-                            outputlevel=outputlevel) 
+    isdone = checkdone!(obs; energy=energy, psi=psi, sweep=sw, outputlevel=outputlevel)
 
     isdone && break
   end
   return (energy, psi)
 end
-

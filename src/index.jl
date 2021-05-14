@@ -16,8 +16,7 @@ const INDEX_ID_RNGs = MersenneTwister[]
   end
   return MT
 end
-@noinline _index_id_rng_length_assert() =  @assert false "0 < tid <= length(INDEX_ID_RNGs)"
-
+@noinline _index_id_rng_length_assert() = @assert false "0 < tid <= length(INDEX_ID_RNGs)"
 
 """
 An `Index` represents a single tensor index with fixed dimension `dim`. Copies of an Index compare equal unless their 
@@ -71,7 +70,7 @@ julia> tags(i)
 "l"
 ```
 """
-function Index(dim::Number; tags = "", plev = 0, dir = Neither)
+function Index(dim::Number; tags="", plev=0, dir=Neither)
   return Index(rand(index_id_rng(), IDType), dim, dir, tags, plev)
 end
 
@@ -100,9 +99,9 @@ julia> tags(i)
 "l,tag"
 ```
 """
-Index(dim::Number,
-      tags::Union{AbstractString, TagSet};
-      plev::Int = 0) = Index(dim; tags = tags, plev = plev)
+function Index(dim::Number, tags::Union{AbstractString,TagSet}; plev::Int=0)
+  return Index(dim; tags=tags, plev=plev)
+end
 
 """
     id(i::Index)
@@ -135,13 +134,23 @@ dir(i::Index) = i.dir
 # Used for generic code in NDTensors
 NDTensors.dir(i::Index) = dir(i)
 
+# Trait to determine if an Index, Index collection, Tensor, or ITensor
+# has symmetries
+abstract type SymmetryStyle end
+
+struct NonQN <: SymmetryStyle end
+
+symmetrystyle(i::Index) = NonQN()
+# Fallback definition for scalar ITensors (without any indices)
+symmetrystyle() = NonQN()
+
 """
     setdir(i::Index, dir::Arrow)
 
 Create a copy of Index i with the specified direction.
 """
 function setdir(i::Index, dir::Arrow)
-  return Index(id(i),copy(space(i)),dir,copy(tags(i)),plev(i))
+  return Index(id(i), copy(space(i)), dir, copy(tags(i)), plev(i))
 end
 
 """
@@ -174,6 +183,17 @@ Return Not{IDType}(n).
 """
 not(id::IDType) = Not(id)
 
+# Information essential to the
+# identity of an Index.
+# Currently only used for hashing an Index.
+struct IndexID
+  id::IDType
+  tags::TagSet
+  plev::Int
+end
+IndexID(i::Index) = IndexID(id(i), tags(i), plev(i))
+hash(i::Index, h::UInt) = hash(IndexID(i), h)
+
 """
     ==(i1::Index, i1::Index)
 
@@ -181,18 +201,14 @@ Compare indices for equality. First the id's are compared,
 then the prime levels are compared, and finally the
 tags are compared.
 """
-function Base.:(==)(i1::Index, i2::Index)
-  return id(i1) == id(i2) &&
-         plev(i1) == plev(i2) &&
-         tags(i1) == tags(i2)
-end
+(i1::Index == i2::Index) =
+  (id(i1) == id(i2)) && (plev(i1) == plev(i2)) && (tags(i1) == tags(i2))
 
 # This is so that when IndexSets are converted
 # to Julia Base Sets, the hashing is done correctly
-function Base.hash(i::Index, h::UInt)
-  return hash((id(i), tags(i), plev(i)), h)
-end
-
+#function Base.hash(i::Index, h::UInt)
+#  return hash((id(i), tags(i), plev(i)), h)
+#end
 
 """
     copy(i::Index)
@@ -207,8 +223,9 @@ copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
 Produces an `Index` with the same properties (dimension or QN structure)
 but with a new `id`.
 """
-sim(i::Index; tags = copy(tags(i)), plev = plev(i), dir = dir(i)) =
-  Index(rand(index_id_rng(), IDType), copy(space(i)), dir, tags, plev)
+function sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
+  return Index(rand(index_id_rng(), IDType), copy(space(i)), dir, tags, plev)
+end
 
 """
     dag(i::Index)
@@ -239,10 +256,9 @@ julia> hastags(i, "Link")
 false
 ```
 """
-hastags(i::Index,
-        ts::Union{AbstractString,TagSet}) = hastags(tags(i),ts)
+hastags(i::Index, ts::Union{AbstractString,TagSet}) = hastags(tags(i), ts)
 
-hastags(ts::Union{AbstractString,TagSet}) = x->hastags(x,ts)
+hastags(ts::Union{AbstractString,TagSet}) = x -> hastags(x, ts)
 
 """
     hasplev(i::Index, plev::Int)
@@ -352,8 +368,7 @@ Return a copy of Index `i` with the
 specified tags removed. The `ts` argument
 can be a comma-separated string of tags or a TagSet.
 """
-removetags(i::Index, ts) =
-  settags(i, removetags(tags(i), ts))
+removetags(i::Index, ts) = settags(i, removetags(tags(i), ts))
 
 """
     replacetags(i::Index, tsold, tsnew)
@@ -377,11 +392,9 @@ julia> replacetags(i, "l" => "m")
 (dim=2|id=83|"m,x")'
 ```
 """
-replacetags(i::Index, tsold, tsnew) =
-  settags(i, replacetags(tags(i), tsold, tsnew))
+replacetags(i::Index, tsold, tsnew) = settags(i, replacetags(tags(i), tsold, tsnew))
 
-replacetags(i::Index, rep_ts::Pair) =
-  replacetags(i, rep_ts...)
+replacetags(i::Index, rep_ts::Pair) = replacetags(i, rep_ts...)
 
 """
     prime(i::Index, plinc::Int = 1)
@@ -389,7 +402,7 @@ replacetags(i::Index, rep_ts::Pair) =
 Return a copy of Index `i` with its
 prime level incremented by the amount `plinc`
 """
-prime(i::Index, plinc::Int = 1) = setprime(i, plev(i) + plinc)
+prime(i::Index, plinc::Int=1) = setprime(i, plev(i) + plinc)
 
 """
     setprime(i::Index, plev::Int)
@@ -397,11 +410,7 @@ prime(i::Index, plinc::Int = 1) = setprime(i, plev(i) + plinc)
 Return a copy of Index `i` with its
 prime level set to `plev`
 """
-setprime(i::Index, plev::Int) = Index(id(i),
-                                      copy(space(i)),
-                                      dir(i),
-                                      tags(i),
-                                      plev)
+setprime(i::Index, plev::Int) = Index(id(i), copy(space(i)), dir(i), tags(i), plev)
 
 """
     noprime(i::Index)
@@ -428,22 +437,18 @@ Base.:^(i::Index, pl::Int) = prime(i, pl)
 """
 Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
 """
-function Base.iterate(i::Index, state::Int = 1)
+function Base.iterate(i::Index, state::Int=1)
   (state > dim(i)) && return nothing
-  return (i(state), state+1)
+  return (i(state), state + 1)
 end
 
 # This is a trivial definition for use in NDTensors
-NDTensors.outer(i::Index;
-                dir = dir(i),
-                tags = "",
-                plev::Int = 0) =
-  sim(i; tags = tags,
-         plev = plev,
-         dir = dir)
+function NDTensors.outer(i::Index; dir=dir(i), tags="", plev::Int=0)
+  return sim(i; tags=tags, plev=plev, dir=dir)
+end
 
 # This is for use in NDTensors
-function NDTensors.outer(i1::Index, i2::Index; tags = "")
+function NDTensors.outer(i1::Index, i2::Index; tags="")
   return Index(dim(i1) * dim(i2), tags)
 end
 
@@ -475,11 +480,10 @@ An IndexVal represents an Index object set to a certain value.
 struct IndexVal{IndexT<:Index}
   ind::IndexT
   val::Int
-  function IndexVal(i::IndexT,
-                    n::Int) where {IndexT <: Index}
-    n>dim(i) && throw(ErrorException("Value $n greater than size of Index $i"))
-    dim(i)>0 && n<1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
-    dim(i)==0 && n<0 && throw(ErrorException("Index value must be >= 1 (was $n)"))
+  function IndexVal(i::IndexT, n::Int) where {IndexT<:Index}
+    n > dim(i) && throw(ErrorException("Value $n greater than size of Index $i"))
+    dim(i) > 0 && n < 1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
+    dim(i) == 0 && n < 0 && throw(ErrorException("Index value must be >= 1 (was $n)"))
     return new{IndexT}(i, n)
   end
 end
@@ -496,16 +500,16 @@ Create an `IndexVal` from a pair of `Index` and `Int`.
 
 Alternatively, you can use the syntax `i(n)`.
 """
-IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first,iv.second)
+IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first, iv.second)
 
 # Help treat a Pair{IndexT, Int} like an IndexVal{IndexT}
-const IndexValOrPairIndexInt{IndexT} = Union{IndexVal{IndexT},
-                                             Pair{IndexT, Int}}
+const IndexValOrPairIndexInt{IndexT} = Union{IndexVal{IndexT},Pair{IndexT,Int}}
 
 Base.convert(::Type{IndexVal}, iv::Pair{<:Index,Int}) = IndexVal(iv)
 
-Base.convert(::Type{IndexVal{IndexT}},
-             iv::Pair{IndexT, Int}) where {IndexT<:Index} = IndexVal(iv)
+function Base.convert(::Type{IndexVal{IndexT}}, iv::Pair{IndexT,Int}) where {IndexT<:Index}
+  return IndexVal(iv)
+end
 
 Base.getindex(i::Index, j::Int) = IndexVal(i, j)
 
@@ -538,19 +542,15 @@ val(iv::Pair{<:Index}) = last(iv)
 
 Check if the Index and IndexVal have the same indices.
 """
-isindequal(i::Index,
-           iv::IndexValOrPairIndexInt) = i == ind(iv)
+isindequal(i::Index, iv::IndexValOrPairIndexInt) = i == ind(iv)
 
-isindequal(iv::IndexValOrPairIndexInt,
-           i::Index) = isindequal(i, iv)
+isindequal(iv::IndexValOrPairIndexInt, i::Index) = isindequal(i, iv)
 
-isindequal(iv1::IndexValOrPairIndexInt,
-           iv2::IndexValOrPairIndexInt) = ind(iv1) == ind(iv2)
+isindequal(iv1::IndexValOrPairIndexInt, iv2::IndexValOrPairIndexInt) = ind(iv1) == ind(iv2)
 
 plev(iv::IndexValOrPairIndexInt) = plev(ind(iv))
 
-prime(iv::IndexVal,
-      inc::Integer = 1) = IndexVal(prime(ind(iv), inc), val(iv))
+prime(iv::IndexVal, inc::Integer=1) = IndexVal(prime(ind(iv), inc), val(iv))
 
 dag(iv::IndexVal) = IndexVal(dag(ind(iv)), val(iv))
 
@@ -563,10 +563,10 @@ dir(iv::IndexValOrPairIndexInt) = dir(ind(iv))
 #
 
 function primestring(plev)
-  if plev<0
+  if plev < 0
     return " (warning: prime level $plev is less than 0)"
   end
-  if plev==0
+  if plev == 0
     return ""
   elseif plev > 3
     return "'$plev"
@@ -575,13 +575,14 @@ function primestring(plev)
   end
 end
 
-function Base.show(io::IO,
-                   i::Index) 
+function Base.show(io::IO, i::Index)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
-    print(io,"(dim=$(space(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))")
+    print(
+      io, "(dim=$(space(i))|id=$(idstr)|\"$(tagstring(tags(i)))\")$(primestring(plev(i)))"
+    )
   else
-    print(io,"(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")
+    print(io, "(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")
   end
 end
 
@@ -601,9 +602,7 @@ function readcpp(io::IO, ::Type{Index}; kwargs...)
   return Index(id, dim, dir, tags)
 end
 
-function HDF5.write(parent::Union{HDF5.File, HDF5.Group},
-                    name::AbstractString,
-                    I::Index)
+function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, I::Index)
   g = create_group(parent, name)
   attributes(g)["type"] = "Index"
   attributes(g)["version"] = 1
@@ -616,33 +615,30 @@ function HDF5.write(parent::Union{HDF5.File, HDF5.Group},
     attributes(g)["space_type"] = "Int"
   elseif typeof(space(I)) == QNBlocks
     attributes(g)["space_type"] = "QNBlocks"
-    write(g,"space",space(I))
+    write(g, "space", space(I))
   else
     error("Index space type not recognized")
   end
 end
 
-function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
-                   name::AbstractString,
-                   ::Type{Index})
-  g = open_group(parent,name)
+function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{Index})
+  g = open_group(parent, name)
   if read(attributes(g)["type"]) != "Index"
     error("HDF5 group or file does not contain Index data")
   end
-  id = read(g,"id")
-  dim = read(g,"dim")
-  dir = Arrow(read(g,"dir"))
-  tags = read(g,"tags",TagSet)
-  plev = read(g,"plev")
+  id = read(g, "id")
+  dim = read(g, "dim")
+  dir = Arrow(read(g, "dir"))
+  tags = read(g, "tags", TagSet)
+  plev = read(g, "plev")
   space_type = "Int"
-  if haskey(attributes(g),"space_type")
+  if haskey(attributes(g), "space_type")
     space_type = read(attributes(g)["space_type"])
   end
   if space_type == "Int"
     space = dim
   elseif space_type == "QNBlocks"
-    space = read(g,"space",QNBlocks)
+    space = read(g, "space", QNBlocks)
   end
-  return Index(id,space,dir,tags,plev)
+  return Index(id, space, dir, tags, plev)
 end
-

@@ -16,15 +16,14 @@ Base.size(M::ITensorMap) = dim(IndexSet(filterinds(M.A; plev=0)...))
   A = randomITensor(ComplexF64, i, i')
   A = mapprime(A * mapprime(dag(A), 0 => 2), 2 => 1)
   M = ITensorMap(A)
-    
+
   v = randomITensor(i)
-  λ, v = davidson(M, v; maxiter = 10)
+  λ, v = davidson(M, v; maxiter=10)
   @test M(v) ≈ λ * v
-    
+
   v = randomITensor(ComplexF64, i)
-  λ, v = davidson(M, v; maxiter = 10)
+  λ, v = davidson(M, v; maxiter=10)
   @test M(v) ≈ λ * v
-    
 end
 
 nothing

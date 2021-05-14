@@ -13,8 +13,8 @@ intended for small permutations only.
 function parity_sign(P)::Int
   L = length(P)
   s = +1
-  for i=1:L, j=i+1:L
-    s *= sign(P[j]-P[i])
+  for i in 1:L, j in (i + 1):L
+    s *= sign(P[j] - P[i])
   end
   return s
 end

@@ -2,10 +2,13 @@ using ITensors
 using LinearAlgebra
 using QuadGK
 
-function ising_mpo(pair_sₕ::Pair{<: Index, <: Index},
-                   pair_sᵥ::Pair{<: Index, <: Index},
-                   β::Real, J::Real = 1.0;
-                   sz::Bool = false)
+function ising_mpo(
+  pair_sₕ::Pair{<:Index,<:Index},
+  pair_sᵥ::Pair{<:Index,<:Index},
+  β::Real,
+  J::Real=1.0;
+  sz::Bool=false,
+)
   sₕ, sₕ′ = pair_sₕ
   sᵥ, sᵥ′ = pair_sᵥ
   @assert dim(sₕ) == dim(sᵥ)
@@ -24,8 +27,10 @@ function ising_mpo(pair_sₕ::Pair{<: Index, <: Index},
   #Q = [exp(β * J) exp(-β * J); exp(-β * J) exp(β * J)]
   #X = √Q
 
-  f(λ₊, λ₋) = [(λ₊ + λ₋) / 2 (λ₊ - λ₋) / 2
-               (λ₊ - λ₋) / 2 (λ₊ + λ₋) / 2]
+  f(λ₊, λ₋) = [
+    (λ₊ + λ₋)/2 (λ₊ - λ₋)/2
+    (λ₊ - λ₋)/2 (λ₊ + λ₋)/2
+  ]
   λ₊ = √(exp(β * J) + exp(-β * J))
   λ₋ = √(exp(β * J) - exp(-β * J))
   X = f(λ₊, λ₋)
@@ -36,21 +41,19 @@ function ising_mpo(pair_sₕ::Pair{<: Index, <: Index},
   return T̃ * Xₕ′ * Xᵥ′ * Xₕ * Xᵥ
 end
 
-ising_mpo(sₕ::Index, sᵥ::Index, args...; kwargs...) =
-  ising_mpo(sₕ => sₕ', sᵥ => sᵥ', args...; kwargs...)
+function ising_mpo(sₕ::Index, sᵥ::Index, args...; kwargs...)
+  return ising_mpo(sₕ => sₕ', sᵥ => sᵥ', args...; kwargs...)
+end
 
-function ising_mpo_dual(sh::Tuple{Index, Index},
-                        sv::Tuple{Index, Index},
-                        β::Real, J::Real = 1.0)
+function ising_mpo_dual(
+  sh::Tuple{Index,Index}, sv::Tuple{Index,Index}, β::Real, J::Real=1.0
+)
   d = dim(sh[1])
   T = ITensor(sh[1], sh[2], sv[1], sv[2])
   sig(s) = 1.0 - 2.0 * (s - 1)
   E0 = -4.0
   for s1 in 1:d, s2 in 1:d, s3 in 1:d, s4 in 1:d
-    E = sig(s1) * sig(s2) +
-        sig(s2) * sig(s3) +
-        sig(s3) * sig(s4) +
-        sig(s4) * sig(s1)
+    E = sig(s1) * sig(s2) + sig(s2) * sig(s3) + sig(s3) * sig(s4) + sig(s4) * sig(s1)
     val = exp(-β * (E - E0))
     T[sh[1] => s1, sv[2] => s2, sh[2] => s3, sv[1] => s4] = val
   end
@@ -58,13 +61,12 @@ function ising_mpo_dual(sh::Tuple{Index, Index},
 end
 
 function ising_partition(sh, sv, β)
-  ny,nx = size(sh)
+  ny, nx = size(sh)
   T = Matrix{ITensor}(undef, ny, nx)
   for iy in 1:ny, ix in 1:nx
     ixp = per(ix + 1, nx)
     iyp = per(iy + 1, ny)
-    T[iy, ix] = ising_mpo(sh[iy, ix] => sh[iy, ixp],
-                          sv[iy, ix] => sv[iyp, ix], β)
+    T[iy, ix] = ising_mpo(sh[iy, ix] => sh[iy, ixp], sv[iy, ix] => sv[iyp, ix], β)
   end
   return T
 end
@@ -75,19 +77,18 @@ end
 
 const βc = 0.5 * log(√2 + 1)
 
-function ising_free_energy(β::Real, J::Real = 1.0)
+function ising_free_energy(β::Real, J::Real=1.0)
   k = β * J
   c = cosh(2 * k)
   s = sinh(2 * k)
   xmin = 0.0
   xmax = π
   integrand(x) = log(c^2 + √(s^4 + 1 - 2 * s^2 * cos(x)))
-  integral, err = quadgk(integrand, xmin, xmax)::Tuple{Float64, Float64}
+  integral, err = quadgk(integrand, xmin, xmax)::Tuple{Float64,Float64}
   return -(log(2) + integral / π) / (2 * β)
 end
 
 function ising_magnetization(β::Real)
- β > βc && return (1 - sinh(2 * β)^(-4))^(1 / 8)
- return 0.0
+  β > βc && return (1 - sinh(2 * β)^(-4))^(1 / 8)
+  return 0.0
 end
-

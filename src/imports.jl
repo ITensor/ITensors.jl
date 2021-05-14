@@ -3,6 +3,8 @@ import Base:
   Array,
   CartesianIndices,
   Vector,
+  NTuple,
+  Tuple,
   # symbols
   +,
   -,
@@ -11,8 +13,10 @@ import Base:
   ==,
   <,
   >,
+  !,
   # functions
   adjoint,
+  allunique,
   axes,
   complex,
   convert,
@@ -23,8 +27,14 @@ import Base:
   eachindex,
   eltype,
   fill!,
+  filter,
+  filter!,
+  findall,
+  findfirst,
   getindex,
   hash,
+  intersect,
+  intersect!,
   isapprox,
   isempty,
   isless,
@@ -35,15 +45,21 @@ import Base:
   map,
   map!,
   ndims,
+  permutedims,
+  promote_rule,
   push!,
   resize!,
+  setdiff,
+  setdiff!,
   setindex!,
   show,
   similar,
   size,
   summary,
   truncate,
-  zero
+  zero,
+  # macros
+  @propagate_inbounds
 
 import Base.Broadcast:
   # types
@@ -59,13 +75,9 @@ import Base.Broadcast:
   instantiate
 
 import ITensors.ContractionSequenceOptimization:
-  contraction_cost,
-  optimal_contraction_sequence
+  contraction_cost, optimal_contraction_sequence
 
-
-import HDF5:
-  read,
-  write
+import HDF5: read, write
 
 import LinearAlgebra:
   axpby!,
@@ -83,9 +95,15 @@ import LinearAlgebra:
   svd,
   tr
 
-import NDTensors:
+using ITensors.NDTensors: EmptyNumber, blas_get_num_threads, fill!!, randn!!, timer
+
+import ITensors.NDTensors:
   # Modules
   Strided, # to control threading
+  # Types
+  AliasStyle,
+  AllowAlias,
+  NeverAlias,
   # Methods
   array,
   blockdim,
@@ -101,7 +119,7 @@ import NDTensors:
   inds,
   insertblock!,
   matrix,
-  #maxdim,
+  maxdim,
   mindim,
   nblocks,
   nnz,
@@ -113,16 +131,23 @@ import NDTensors:
   polar,
   scale!,
   setblockdim!,
+  setinds,
+  setstorage,
   sim,
-  store,
+  storage,
   sum,
   tensor,
   truncate!,
   using_tblis,
   vector,
   # Deprecated
-  addblock!
+  addblock!,
+  store
 
-import Random:
-  randn!
+import Random: randn!
 
+using SerializedElementArrays: SerializedElementVector
+
+const DiskVector{T} = SerializedElementVector{T}
+
+import SerializedElementArrays: disk

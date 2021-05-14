@@ -49,24 +49,30 @@ returned ITensor will have the same indices
 as `v`. The operator overload `P(v)` is
 shorthand for `product(P,v)`.
 """
-function product(P::ProjMPOSum,
-                 v::ITensor)::ITensor
-  Pv = product(P.pm[1],v)
-  for n=2:length(P.pm)
-    Pv += product(P.pm[n],v)
+function product(P::ProjMPOSum, v::ITensor)::ITensor
+  Pv = product(P.pm[1], v)
+  for n in 2:length(P.pm)
+    Pv += product(P.pm[n], v)
   end
   return Pv
 end
 
+"""
+    eltype(P::ProjMPOSum)
+
+Deduce the element type (such as Float64
+or ComplexF64) of the tensors in the ProjMPOSum
+`P`.
+"""
 function Base.eltype(P::ProjMPOSum)
   elT = eltype(P.pm[1])
-  for n=2:length(P.pm)
-    elT = promote_type(elT,eltype(P.pm[n]))
+  for n in 2:length(P.pm)
+    elT = promote_type(elT, eltype(P.pm[n]))
   end
   return elT
 end
 
-(P::ProjMPOSum)(v::ITensor) = product(P,v)
+(P::ProjMPOSum)(v::ITensor) = product(P, v)
 
 """
     size(P::ProjMPOSum)
@@ -94,9 +100,9 @@ The MPS `psi` must have compatible bond indices with
 the previous projected MPO tensors for this
 operation to succeed.
 """
-function position!(P::ProjMPOSum,psi::MPS,pos::Int) 
+function position!(P::ProjMPOSum, psi::MPS, pos::Int)
   for M in P.pm
-    position!(M,psi,pos)
+    position!(M, psi, pos)
   end
 end
 
@@ -113,12 +119,10 @@ ProjMPOSum `P`, and `ortho` is a String which can take
 the values `"left"` or `"right"` depending on the 
 sweeping direction of the DMRG calculation.
 """
-function noiseterm(P::ProjMPOSum,
-                   phi::ITensor,
-                   dir::String)
-  nt = noiseterm(P.pm[1],phi,dir)
-  for n=2:length(P.pm)
-    nt += noiseterm(P.pm[n],phi,dir)
+function noiseterm(P::ProjMPOSum, phi::ITensor, dir::String)
+  nt = noiseterm(P.pm[1], phi, dir)
+  for n in 2:length(P.pm)
+    nt += noiseterm(P.pm[n], phi, dir)
   end
   return nt
 end

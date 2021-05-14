@@ -21,7 +21,6 @@ struct ITensorMatrix
 end
 (A::ITensorMatrix)(v::ITensorVector) = ITensorVector(noprime(A.A * v.A))
 
-
 i = Index(4, "i")
 A = ITensorMatrix(randomITensor(i', dag(i)))
 b = ITensorVector(randomITensor(i))
@@ -31,4 +30,3 @@ x, _ = linsolve(A, b, x0)
 err = A(x)
 axpy!(-1, b, err)
 @show norm(err)
-

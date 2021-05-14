@@ -18,13 +18,13 @@ import ITensors: In, Out, Neither
     @test id(i) == 1
     @test dim(i) == 2
     @test dir(i) == In
-    @test plev(i) == 1 
+    @test plev(i) == 1
     @test tags(i) == TagSet("Link")
     j = copy(i)
     @test id(j) == 1
     @test dim(j) == 2
     @test dir(j) == In
-    @test plev(j) == 1 
+    @test plev(j) == 1
     @test tags(j) == TagSet("Link")
     @test j == i
   end
@@ -32,7 +32,7 @@ import ITensors: In, Out, Neither
     i = Index(2)
     @test plev(i) == 0
     i2 = prime(i, 2)
-    @test plev(i2) == 2 
+    @test plev(i2) == 2
     i1 = i'
     @test plev(i1) == 1
     i2 = i''
@@ -55,17 +55,17 @@ import ITensors: In, Out, Neither
     @test isindequal(IndexVal(i, 2), i)
     @test plev(i(2)') == 1
     @test val(i(2)') == 2
-    @test plev(prime(i(2),4)) == 4
+    @test plev(prime(i(2), 4)) == 4
     #@test i[:] == [i(1); i(2)]
-    @test sprint(show, i(2)) == sprint(show, i)*"=>2"
+    @test sprint(show, i(2)) == sprint(show, i) * "=>2"
 
-    @test dag(i(1)) != IndexVal(dag(i)=>2)
-    @test dag(i(2)) == IndexVal(dag(i)=>2)
-    @test plev(i=>2) == 0
-    @test plev(i'=>2) == 1
+    @test dag(i(1)) != IndexVal(dag(i) => 2)
+    @test dag(i(2)) == IndexVal(dag(i) => 2)
+    @test plev(i => 2) == 0
+    @test plev(i' => 2) == 1
     @test prime(i(2)) == i'(2)
-    @test IndexVal(prime(i)=>2) == i'(2)
-    @test IndexVal(i'=>1) == i'(1)
+    @test IndexVal(prime(i) => 2) == i'(2)
+    @test IndexVal(i' => 1) == i'(1)
   end
   @testset "Iteration" begin
     i = Index(10)

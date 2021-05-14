@@ -35,8 +35,8 @@ because new releases may be breaking.
 
 To try the "development branch" of ITensors.jl (for example, if 
 there is a feature or fix we added that hasn't been released yet), 
-you can do `add ITensors#master`. You can switch back to the latest
-released version with `add ITensors`. Using the development/master
+you can do `add ITensors#main`. You can switch back to the latest
+released version with `add ITensors`. Using the development/main
 branch is generally not encouraged unless you know what you are doing.
 
 ## Using ITensors.jl in the REPL
@@ -732,7 +732,7 @@ process more automated in the future.
 
 Julia has great built-in tools for benchmarking and profiling.
 For benchmarking fast code at the command line, you can use
-[BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl/blob/master/doc/manual.md):
+[BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl/blob/main/doc/manual.md):
 ```julia
 julia> using ITensors;
 

@@ -29,7 +29,7 @@ include(joinpath(src_dir, "2d_classical_ising.jl"))
   Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 1] = 1.0
   Aₗ[lᵥ => 1, lᵥ' => 1, sₕ => 2] = 0.0
 
-  Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax = 20, nsteps = 100)
+  Cₗᵤ, Aₗ = ctmrg(T, Cₗᵤ, Aₗ; χmax=20, nsteps=100)
 
   lᵥ = commonind(Cₗᵤ, Aₗ)
   lₕ = noncommoninds(Cₗᵤ, Aₗ)[1]
@@ -45,7 +45,7 @@ include(joinpath(src_dir, "2d_classical_ising.jl"))
   @test κ ≈ exp(-β * ising_free_energy(β))
 
   # Calculate magnetization
-  Tsz = ising_mpo(sₕ, sᵥ, β; sz = true)
+  Tsz = ising_mpo(sₕ, sᵥ, β; sz=true)
   ACTszₗ = prime(ACₗ * dag(Aᵤ') * Tsz * Aᵤ, -1)
   m = (ACTszₗ * dag(ACₗ))[] / κ
   @test abs(m) ≈ ising_magnetization(β)

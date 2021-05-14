@@ -21,8 +21,12 @@
 # 64 elements in the set.
 # (See https://discourse.julialang.org/t/parse-an-array-of-bits-bitarray-to-an-integer/42361/11).
 
+# Previously we used the definition in NDTensors:
+#import NDTensors: dim
+import ITensors: dim
+
 # `is` could be Vector{Int} for BitSet
-function dim(is::IndexSetT, ind_dims::Vector) where {IndexSetT <: Union{Vector{Int}, BitSet}}
+function dim(is::IndexSetT, ind_dims::Vector) where {IndexSetT<:Union{Vector{Int},BitSet}}
   isempty(is) && return one(eltype(inds_dims))
   dim = one(eltype(ind_dims))
   for i in is
@@ -58,7 +62,9 @@ function contraction_cost(indsTᵃ::BitSet, indsTᵇ::BitSet, dims::Vector)
   return cost, indsTᵃTᵇ
 end
 
-function contraction_cost(indsTᵃ::IndexSetT, indsTᵇ::IndexSetT, dims::Vector) where {IndexSetT <: Unsigned}
+function contraction_cost(
+  indsTᵃ::IndexSetT, indsTᵇ::IndexSetT, dims::Vector
+) where {IndexSetT<:Unsigned}
   unionTᵃTᵇ = _union(indsTᵃ, indsTᵇ)
   cost = dim(unionTᵃTᵇ, dims)
   indsTᵃTᵇ = _setdiff(unionTᵃTᵇ, _intersect(indsTᵃ, indsTᵇ))
@@ -108,8 +114,10 @@ function contraction_labels!(labels, is)
   nextlabel = 1
   # Loop through each tensor pair searching for
   # common indices
-  @inbounds for n1 in 1:ntensors-1, n2 in n1+1:ntensors
-    nextlabel = common_contraction_labels!(labels[n1], labels[n2], is[n1], is[n2], nextlabel)
+  @inbounds for n1 in 1:(ntensors - 1), n2 in (n1 + 1):ntensors
+    nextlabel = common_contraction_labels!(
+      labels[n1], labels[n2], is[n1], is[n2], nextlabel
+    )
   end
   @inbounds for n in 1:ntensors
     nextlabel = uncommon_contraction_labels!(labels[n], is[n], nextlabel)
@@ -145,17 +153,16 @@ contraction_labels(is...) = contraction_labels(is)
 # it in `depth_first_constructive`/`breadth_first_constructive`
 #
 
-contraction_labels_caching(is) =
-  contraction_labels_caching(eltype(eltype(is)), is)
+contraction_labels_caching(is) = contraction_labels_caching(eltype(eltype(is)), is)
 
 function contraction_labels_caching(::Type{IndexT}, is) where {IndexT}
   labels = empty_labels(is)
-  contraction_labels_caching!(labels, IndexT, is)
+  return contraction_labels_caching!(labels, IndexT, is)
 end
 
 function contraction_labels_caching!(labels, ::Type{IndexT}, is) where {IndexT}
   N = length(is)
-  ind_to_label = Dict{IndexT, Int}()
+  ind_to_label = Dict{IndexT,Int}()
   label = 0
   @inbounds for n in 1:N
     isₙ = is[n]
@@ -175,7 +182,7 @@ end
 # Compute the labels and also return a data structure storing the dims.
 #
 
-function label_dims(::Type{DimT}, is) where {DimT <: Integer}
+function label_dims(::Type{DimT}, is) where {DimT<:Integer}
   labels = empty_labels(is)
   nlabels = contraction_labels!(labels, is)
   dims = fill(zero(DimT), nlabels)
@@ -196,7 +203,7 @@ label_dims(is...) = label_dims(is)
 
 # Convert a contraction sequence in pair form to tree format.
 # This is used in `depth_first_constructive` to convert the output.
-function pair_sequence_to_tree(pairs::Vector{Pair{Int, Int}}, N::Int)
+function pair_sequence_to_tree(pairs::Vector{Pair{Int,Int}}, N::Int)
   trees = Any[1:N...]
   for p in pairs
     push!(trees, Any[trees[p[1]], trees[p[2]]])
@@ -222,11 +229,11 @@ _isless(A::BitSet, B::BitSet) = _cmp(A, B) < 0
 
 bitset(::Type{BitSet}, ints) = BitSet(ints)
 
-function bitset(::Type{T}, ints) where {T <: Unsigned}
+function bitset(::Type{T}, ints) where {T<:Unsigned}
   set = zero(T)
   u = one(T)
   for i in ints
-    set |= (u<<(i-1))
+    set |= (u << (i - 1))
   end
   return set
 end
@@ -251,7 +258,7 @@ function findfirst_nonzero_bit(i::Unsigned)
   n = 0
   @inbounds while !iszero(i)
     if isodd(i)
-      return n+1
+      return n + 1
     end
     i = i >> 1
     n += 1
@@ -259,7 +266,7 @@ function findfirst_nonzero_bit(i::Unsigned)
   return n
 end
 
-_isless(s1::T, s2::T) where {T <: Unsigned} = s1 < s2
+_isless(s1::T, s2::T) where {T<:Unsigned} = s1 < s2
 _intersect(s1::BitSet, s2::BitSet) = intersect(s1, s2)
 _intersect(s1::T, s2::T) where {T<:Unsigned} = s1 & s2
 _union(s1::BitSet, s2::BitSet) = union(s1, s2)
@@ -284,7 +291,7 @@ function adjacencymatrix(T::Vector, alldims::Vector)
   # First break up the network into disconnected parts
   N = length(T)
   _adjacencymatrix = falses(N, N)
-  for nᵢ in 1:N-1, nⱼ in nᵢ+1:N
+  for nᵢ in 1:(N - 1), nⱼ in (nᵢ + 1):N
     if dim(_intersect(T[nᵢ], T[nⱼ]), alldims) > 1
       _adjacencymatrix[nᵢ, nⱼ] = _adjacencymatrix[nⱼ, nᵢ] = true
     end
@@ -302,14 +309,14 @@ function connectedcomponents(A::AbstractMatrix{Bool})
   @assert size(A, 2) == n
   components = Vector{Vector{Int}}(undef, 0)
   assignedlist = falses((n,))
-  for i = 1:n
+  for i in 1:n
     if !assignedlist[i]
       assignedlist[i] = true
       checklist = [i]
       currentcomponent = [i]
       while !isempty(checklist)
         j = pop!(checklist)
-        for k = findall(A[j, :])
+        for k in findall(A[j, :])
           if !assignedlist[k]
             push!(currentcomponent, k)
             push!(checklist, k)
@@ -325,6 +332,6 @@ end
 
 # For a network of tensors T (stored as index labels), return the connected components
 # (splits up T into the connected components).
-connectedcomponents(T::Vector, alldims::Vector) =
-  connectedcomponents(adjacencymatrix(T, alldims))
-
+function connectedcomponents(T::Vector, alldims::Vector)
+  return connectedcomponents(adjacencymatrix(T, alldims))
+end

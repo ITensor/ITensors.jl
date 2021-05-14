@@ -1,8 +1,6 @@
-using ITensors,
-      Test
+using ITensors, Test
 
 @testset "emptyITensor (Empty)" begin
-
   @testset "emptyITensor set elements" begin
     i = Index(2; tags="i")
 
@@ -10,7 +8,7 @@ using ITensors,
 
     @test hassameinds(E, (i', i))
     @test order(E) == 2
-    @test_broken E[i' => 1, i => 1] == 0
+    @test E[i' => 1, i => 1] == 0
 
     E[i' => 1, i => 2] = 2.3
 
@@ -21,15 +19,14 @@ using ITensors,
   end
 
   @testset "emptyITensor set elements (QN)" begin
-    i = Index(QN(0) => 2,
-              QN(1) => 2; tags="i")
+    i = Index(QN(0) => 2, QN(1) => 2; tags="i")
 
     E = emptyITensor(i', dag(i))
 
     @test hassameinds(E, (i', i))
     @test order(E) == 2
     @test isnothing(flux(E))
-    @test_broken E[i' => 1, i => 3] == 0
+    @test E[i' => 1, i => 3] == 0
 
     E[i' => 3, i => 2] = 2.3
 
@@ -43,19 +40,18 @@ using ITensors,
   end
 
   @testset "emptyITensor()" begin
-    i = Index(QN(0) => 2,
-              QN(1) => 2; tags="i")
+    i = Index(QN(0) => 2, QN(1) => 2; tags="i")
 
     E = emptyITensor()
 
     @test isnothing(flux(E))
     @test order(E) == 0
-    @test_throws BoundsError E[i' => 1, i => 3] = 0
+    @test_throws MethodError E[i' => 1, i => 3] = 0
 
     A = randomITensor(i', dag(i))
     E += A
 
-    @test norm(E-A) < 1E-8
+    @test norm(E - A) < 1E-8
   end
 end
 

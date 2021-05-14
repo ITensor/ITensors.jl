@@ -61,4 +61,3 @@ let
   println()
   println("Time (TBLIS) / Time (BLAS) = ", time_tblis / time_blas)
 end
-

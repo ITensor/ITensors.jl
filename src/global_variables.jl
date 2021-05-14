@@ -5,8 +5,7 @@
 
 const default_warn_order = 14
 
-const warn_order =
-  Ref{Union{Int, Nothing}}(default_warn_order)
+const warn_order = Ref{Union{Int,Nothing}}(default_warn_order)
 
 """
     ITensors.get_warn_order()
@@ -30,7 +29,7 @@ set to before this function was called).
 You can get the current threshold with the function `ITensors.get_warn_order(N::Int)`. You can reset to the default value with
 `ITensors.reset_warn_order()`.
 """
-function set_warn_order(N::Union{Int, Nothing})
+function set_warn_order(N::Union{Int,Nothing})
   N_init = get_warn_order()
   warn_order[] = N
   return N_init
@@ -130,20 +129,6 @@ macro reset_warn_order(block)
 end
 
 #
-# A global timer used with TimerOutputs.jl
-#
-
-using NDTensors: timer
-
-#
-# Get the current number of BLAS threads
-# For VERSION >= v"1.6" this will become
-# using LinearAlgebra; BLAS.get_num_threads()
-#
-
-using NDTensors: blas_get_num_threads
-
-#
 # Block sparse multithreading
 #
 
@@ -223,4 +208,3 @@ function disable_contraction_sequence_optimization()
   _using_contraction_sequence_optimization[] = false
   return nothing
 end
-

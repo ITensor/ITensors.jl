@@ -14,7 +14,7 @@ MPS(::Int)
 MPS(::Type{<:Number}, ::Vector{<:Index})
 randomMPS(sites::Vector{<:Index}; linkdim=1)
 randomMPS(::Type{<:Number}, sites::Vector{<:Index}; linkdim=1)
-randomMPS(sites::Vector{<:Index}, state; linkdim=1)
+randomMPS(sites::Vector{<:Index}, state, linkdim::Int)
 productMPS(::Vector{<:Index},states)
 productMPS(::Type{<:Number},::Vector{<:Index},states)
 productMPS(::Vector{<:IndexVal})
@@ -107,7 +107,7 @@ settags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITen
 
 ```@docs
 expect(::MPS,::AbstractString...)
-correlator(::MPS,::AbstractString,::AbstractString)
+correlation_matrix(::MPS,::AbstractString,::AbstractString)
 dag(::ITensors.AbstractMPS)
 dense(::ITensors.AbstractMPS)
 movesite(::ITensors.AbstractMPS, ::Pair{Int, Int};orthocenter::Int,kwargs...)

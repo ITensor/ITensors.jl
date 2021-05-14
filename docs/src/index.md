@@ -6,11 +6,15 @@
 
 |**Build Status**                                                                                |
 :-----------------------------------------------------------------------------------------------:|
-| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
+| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
 
 |**Citation**                                                                    |
 |:-------------------------------------------------------------------------------:|
 |[![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
+
+|**Style Guide**
+|:-------------------------------------------------------------------------------:|
+|[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|
 
 ITensors is a library for rapidly creating correct and efficient
 tensor network algorithms. 
@@ -56,6 +60,8 @@ Please note that right now, ITensors.jl requires that you use Julia v1.3 or late
 
 We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions [here](https://github.com/JuliaComputing/MKL.jl).
 
+Also note that the MKL.jl package currently doesn't work if you are using Julia v1.6, but you can patch it with the instructions described [here](https://github.com/JuliaLinearAlgebra/MKL.jl/issues/60#issuecomment-808329869).
+
 ## Documentation
 
 - [**STABLE**](https://itensor.github.io/ITensors.jl/stable/) --  **documentation of the most recently tagged version.**
@@ -75,10 +81,10 @@ If you use ITensors.jl in your work, for now please cite the [arXiv preprint](ht
 }
 ```
 
-## Code Examples
+## Full Example Codes
 
 The ITensors.jl package contains a directory of examples, which we
-will continue to add to. You can find them online [here](https://github.com/ITensor/ITensors.jl/tree/master/examples).
+will continue to add to. You can find them online [here](https://github.com/ITensor/ITensors.jl/tree/main/examples).
 Additionally, once you have installed ITensors.jl you can find a local version
 of the examples in the directory `ITensors.examples_dir()`, and you can run them
 as follows from the Julia REPL:
@@ -132,6 +138,8 @@ You can use your favorite text editor to view these examples. If you
 would like to modify them, either copy them into your own directory,
 or checkout ITensors.jl in development mode using the instructions
 in [Developing ITensors.jl](@ref).
+
+## ITensor Code Samples
 
 ### Basic Overview
 
@@ -208,14 +216,15 @@ M ≈ U * S * V = true
 ### Singular Value Decomposition (SVD) of a Tensor
 
 In this example, we create a random 4x4x4x4 tensor 
-and compute its SVD, temporarily treating the first
-and third indices (i and k) as the "row" index and the second
-and fourth indices (j and l) as the "column" index for the purposes
-of the SVD. The resulting factors can 
+and compute its SVD, temporarily treating the indices i and k
+together as the "row" index and j and l as the "column" index 
+for the purposes of the SVD. The resulting factors can 
 be simply multiplied back together using the
 ITensor `*` operation, which automatically recognizes
 the matching indices between U and S, and between S and V
 and contracts (sums over) them.
+
+![](svd_tensor.png)
 
 ```jldoctest; output=false
 using ITensors
