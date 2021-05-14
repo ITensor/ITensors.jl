@@ -27,7 +27,6 @@ productMPS(::Type{<:Number}, ::Vector{<:IndexVal})
 MPO(::Int)
 MPO(::Type{<:Number}, ::Vector{<:Index}, ::Vector{String})
 MPO(::Type{<:Number}, ::Vector{<:Index}, ::String)
-MPO(::MPS)
 ```
 
 ## Properties
@@ -134,6 +133,9 @@ logdot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
 norm(::ITensors.AbstractMPS)
 lognorm(::ITensors.AbstractMPS)
 +(::MPS, ::MPS)
-*(::MPO, ::MPS)
+contract(::MPO, ::MPS)
+contract(::MPO, ::MPO)
+outer(::MPS, ::MPS)
+projector(::MPS)
 ```
 

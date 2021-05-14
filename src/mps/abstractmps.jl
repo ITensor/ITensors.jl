@@ -99,10 +99,13 @@ function set_ortho_lims!(ψ::AbstractMPS, r::UnitRange{Int})
   return ψ
 end
 
+reset_ortho_lims!(ψ::AbstractMPS) = set_ortho_lims!(ψ, 1:length(N))
+
 isortho(m::AbstractMPS) = leftlim(m) + 1 == rightlim(m) - 1
 
-function orthocenter(m::T) where {T<:AbstractMPS}
-  !isortho(m) && error("$T has no well-defined orthogonality center")
+# Could also define as `only(ortho_lims)`
+function orthocenter(m::AbstractMPS)
+  !isortho(m) && error("$(typeof(m)) has no well-defined orthogonality center")
   return leftlim(m) + 1
 end
 
@@ -559,8 +562,18 @@ function map(f::Function, M::AbstractMPS; set_limits::Bool=true)
   return map!(f, copy(M); set_limits=set_limits)
 end
 
-for fname in
-    (:dag, :prime, :setprime, :noprime, :addtags, :removetags, :replacetags, :settags)
+for fname in (
+  :dag,
+  :prime,
+  :setprime,
+  :noprime,
+  :swapprime,
+  :replaceprime,
+  :addtags,
+  :removetags,
+  :replacetags,
+  :settags,
+)
   fname! = Symbol(fname, :!)
 
   @eval begin
@@ -798,12 +811,15 @@ end
     maxlinkdim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
+
+The minimum this will return is `1`, even if there
+are no link indices.
 """
 function maxlinkdim(M::AbstractMPS)
-  md = 0
+  md = 1
   for b in eachindex(M)[1:(end - 1)]
     l = linkind(M, b)
-    linkdim = isnothing(l) ? 0 : dim(l)
+    linkdim = isnothing(l) ? 1 : dim(l)
     md = max(md, linkdim)
   end
   return md
@@ -941,9 +957,16 @@ end
 
 Compute the norm of the MPS or MPO.
 
-See also `lognorm`.
+If the MPS or MPO has a well defined orthogonality center, this reduces to the norm of the orthogonality center tensor. Otherwise, it computes the norm with the full inner product of the MPS/MPO with itself.
+
+See also [`lognorm`](@ref).
 """
-norm(M::AbstractMPS) = sqrt(dot(M, M))
+function norm(M::AbstractMPS)
+  if isortho(M)
+    return norm(M[orthocenter(M)])
+  end
+  return sqrt(dot(M, M))
+end
 
 """
     lognorm(A::MPS)
@@ -953,9 +976,14 @@ Compute the logarithm of the norm of the MPS or MPO.
 
 This is useful for larger MPS/MPO that are not gauged, where in the limit of large numbers of sites the norm can diverge or approach zero.
 
-See also `norm` and `loginner`/`logdot`.
+See also [`norm`](@ref), [`loginner`](@ref), [`logdot`](@ref).
 """
-lognorm(M::AbstractMPS) = 0.5 * logdot(M, M)
+function lognorm(M::AbstractMPS)
+  if isortho(M)
+    return log(norm(M[orthocenter(M)]))
+  end
+  return 0.5 * logdot(M, M)
+end
 
 """
     dist(A::MPS, B::MPS)
@@ -1224,7 +1252,8 @@ function truncate(ψ0::AbstractMPS; kwargs...)
   return ψ
 end
 
-contract(A::AbstractMPS, B::AbstractMPS; kwargs...) = *(A, B; kwargs...)
+# Make `*` and alias for `contract` of two `AbstractMPS`
+*(A::AbstractMPS, B::AbstractMPS; kwargs...) = contract(A, B; kwargs...)
 
 """
     α::Number * ψ::MPS/MPO

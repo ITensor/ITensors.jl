@@ -135,34 +135,38 @@ function Base.show(io::IO, op::MPOTerm)
 end
 
 ############################
-## AutoMPO                 #
+## OpSum                 #
 ############################
 
 """
-An AutoMPO stores a collection of
-operator terms, to be later summed
-together into an MPO by calling
-the function `MPO` on the AutoMPO object. 
+An `OpSum` represents a sum of operator
+terms.
+
+Often it is used to create matrix
+product operator (`MPO`) approximation
+of the sum of the terms in the `OpSum` oject.
 Each term is a product of local operators
-specified by names such as "Sz" or "N",
+specified by names such as `"Sz"` or `"N"`,
 times an optional coefficient which
 can be real or complex.
 
 Which local operator names are available
 is determined by the function `op`
-associated with the TagType defined by
-special Index tags, such as "S=1/2","S=1",
-"Fermion", and "Electron".
+associated with the `TagType` defined by
+special Index tags, such as `"S=1/2"`, `"S=1"`,
+`"Fermion"`, and `"Electron"`.
 """
-mutable struct AutoMPO
+mutable struct OpSum
   data::Vector{MPOTerm}
-  AutoMPO(terms::Vector{MPOTerm}) = new(terms)
+  OpSum(terms::Vector{MPOTerm}) = new(terms)
 end
 
+const AutoMPO = OpSum
+
 """
-    AutoMPO()
+    OpSum()
     
-Construct an empty AutoMPO
+Construct an empty `OpSum`.
 """
 AutoMPO() = AutoMPO(Vector{MPOTerm}())
 

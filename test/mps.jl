@@ -225,9 +225,18 @@ include("util.jl")
     end
     @test psi²[] ≈ psi ⋅ psi
     @test sqrt(psi²[]) ≈ norm(psi)
+
+    psi = randomMPS(sites, 10)
+    psi .*= 1:N
+    @test norm(psi) ≈ factorial(N)
+
     for j in 1:N
       psi[j] .*= j
     end
+    # This fails because it modifies the MPS ITensors
+    # directly, which ruins the orthogonality
+    @test norm(psi) ≉ factorial(N)
+    reset_ortho_lims!(psi)
     @test norm(psi) ≈ factorial(N)
   end
 
@@ -242,6 +251,11 @@ include("util.jl")
       psi² *= psidag[j] * psi[j]
     end
     @test psi²[] ≈ psi ⋅ psi
+    @test 0.5 * log(psi²[]) ≉ lognorm(psi)
+    @test lognorm(psi) ≉ log(factorial(N))
+    # Need to manually change the orthogonality
+    # limits back to 1:length(psi)
+    reset_ortho_lims!(psi)
     @test 0.5 * log(psi²[]) ≈ lognorm(psi)
     @test lognorm(psi) ≈ log(factorial(N))
   end
@@ -1517,16 +1531,12 @@ end
     N = 4
     s = siteinds("S=1/2", N)
     ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
-    ρ = MPO(ψ)
+    ρ = outer(ψ, ψ)
     @test ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
-  end
 
-  @testset "MPO from MPS with no link indices" begin
-    N = 4
-    s = siteinds("S=1/2", N)
-    ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
+    # Deprecated syntax
     ρ = MPO(ψ)
     @test ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
