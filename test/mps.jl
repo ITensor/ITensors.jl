@@ -230,6 +230,7 @@ include("util.jl")
     psi .*= 1:N
     @test norm(psi) ≈ factorial(N)
 
+    psi = randomMPS(sites, 10)
     for j in 1:N
       psi[j] .*= j
     end

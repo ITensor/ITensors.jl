@@ -309,6 +309,7 @@ export
 
   # physics/autompo.jl
   AutoMPO,
+  OpSum,
   add!,
 
   # physics/lattices.jl

@@ -66,10 +66,10 @@ and operators `ops` on each site.
 """
 function MPO(::Type{ElT}, sites::Vector{<:Index}, ops::Vector{String}) where {ElT<:Number}
   N = length(sites)
-  ampo = AutoMPO() + [ops[n] => n for n in 1:N]
+  ampo = OpSum() + [ops[n] => n for n in 1:N]
   M = MPO(ampo, sites)
 
-  # Currently, AutoMPO does not output the optimally truncated
+  # Currently, OpSum does not output the optimally truncated
   # MPO (see https://github.com/ITensor/ITensors.jl/issues/526)
   # So here, we need to first normalize, then truncate, then
   # return the normalization.

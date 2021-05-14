@@ -168,46 +168,46 @@ const AutoMPO = OpSum
     
 Construct an empty `OpSum`.
 """
-AutoMPO() = AutoMPO(Vector{MPOTerm}())
+OpSum() = OpSum(Vector{MPOTerm}())
 
-data(ampo::AutoMPO) = ampo.data
-setdata!(ampo::AutoMPO, ndata) = (ampo.data = ndata)
+data(ampo::OpSum) = ampo.data
+setdata!(ampo::OpSum, ndata) = (ampo.data = ndata)
 
-push!(ampo::AutoMPO, term) = push!(data(ampo), term)
+push!(ampo::OpSum, term) = push!(data(ampo), term)
 
-Base.:(==)(ampo1::AutoMPO, ampo2::AutoMPO) = data(ampo1) == data(ampo2)
+Base.:(==)(ampo1::OpSum, ampo2::OpSum) = data(ampo1) == data(ampo2)
 
-Base.copy(ampo::AutoMPO) = AutoMPO(copy(data(ampo)))
+Base.copy(ampo::OpSum) = OpSum(copy(data(ampo)))
 
-function Base.deepcopy(ampo::AutoMPO)
-  return AutoMPO(map(copy, data(ampo)))
+function Base.deepcopy(ampo::OpSum)
+  return OpSum(map(copy, data(ampo)))
 end
 
-Base.size(ampo::AutoMPO) = size(data(ampo))
+Base.size(ampo::OpSum) = size(data(ampo))
 
 """
-    add!(ampo::AutoMPO,
+    add!(ampo::OpSum,
          op1::String, i1::Int)
 
-    add!(ampo::AutoMPO,
+    add!(ampo::OpSum,
          coef::Number,
          op1::String, i1::Int)
 
-    add!(ampo::AutoMPO,
+    add!(ampo::OpSum,
          op1::String, i1::Int,
          op2::String, i2::Int,
          ops...)
 
-    add!(ampo::AutoMPO,
+    add!(ampo::OpSum,
          coef::Number,
          op1::String, i1::Int,
          op2::String, i2::Int,
          ops...)
 
-    +(ampo:AutoMPO, term::Tuple)
+    +(ampo:OpSum, term::Tuple)
 
 Add a single- or multi-site operator 
-term to the AutoMPO `ampo`. Each operator
+term to the OpSum `ampo`. Each operator
 is specified by a name (String) and a
 site number (Int). The second version
 accepts a real or complex coefficient.
@@ -219,14 +219,14 @@ accepts a tuple with entries either
 where these tuple values are the same
 as valid inputs to the `add!` function.
 For inputting a very large number of
-terms (tuples) to an AutoMPO, consider
+terms (tuples) to an OpSum, consider
 using the broadcasted operator `.+=`
-which avoids reallocating the AutoMPO
+which avoids reallocating the OpSum
 after each addition.
 
 # Examples
 ```julia
-ampo = AutoMPO()
+ampo = OpSum()
 
 add!(ampo,"Sz",2,"Sz",3)
 
@@ -237,62 +237,62 @@ ampo += (0.5,"S+",4,"S-",5)
 ampo .+= (0.5,"S+",5,"S-",6)
 ```
 """
-function add!(ampo::AutoMPO, coef::Number, op::String, i::Int)
+function add!(ampo::OpSum, coef::Number, op::String, i::Int)
   push!(data(ampo), MPOTerm(coef, op, i))
   return nothing
 end
 
-add!(ampo::AutoMPO, op::String, i::Int) = add!(ampo, 1.0, op, i)
+add!(ampo::OpSum, op::String, i::Int) = add!(ampo, 1.0, op, i)
 
-function add!(ampo::AutoMPO, coef::Number, op1::String, i1::Int, op2::String, i2::Int)
+function add!(ampo::OpSum, coef::Number, op1::String, i1::Int, op2::String, i2::Int)
   push!(data(ampo), MPOTerm(coef, op1, i1, op2, i2))
   return nothing
 end
 
-function add!(ampo::AutoMPO, op1::String, i1::Int, op2::String, i2::Int)
+function add!(ampo::OpSum, op1::String, i1::Int, op2::String, i2::Int)
   return add!(ampo, 1.0, op1, i1, op2, i2)
 end
 
 function add!(
-  ampo::AutoMPO, coef::Number, op1::String, i1::Int, op2::String, i2::Int, ops...
+  ampo::OpSum, coef::Number, op1::String, i1::Int, op2::String, i2::Int, ops...
 )
   push!(ampo, MPOTerm(coef, op1, i1, op2, i2, ops...))
   return ampo
 end
 
-function add!(ampo::AutoMPO, op1::String, i1::Int, op2::String, i2::Int, ops...)
+function add!(ampo::OpSum, op1::String, i1::Int, op2::String, i2::Int, ops...)
   return add!(ampo, 1.0, op1, i1, op2, i2, ops...)
 end
 
-function add!(ampo::AutoMPO, ops::Vector{Pair{String,Int64}})
+function add!(ampo::OpSum, ops::Vector{Pair{String,Int64}})
   push!(ampo, MPOTerm(1.0, ops))
   return ampo
 end
 
 """
-    subtract!(ampo::AutoMPO,
+    subtract!(ampo::OpSum,
               op1::String, i1::Int,
               op2::String, i2::Int,
               ops...)
 
-    subtract!(ampo::AutoMPO,
+    subtract!(ampo::OpSum,
               coef::Number,
               op1::String, i1::Int,
               op2::String, i2::Int,
               ops...)
 
 Subtract a multi-site operator term
-from the AutoMPO `ampo`. Each operator
+from the OpSum `ampo`. Each operator
 is specified by a name (String) and a
 site number (Int). The second version
 accepts a real or complex coefficient.
 """
-function subtract!(ampo::AutoMPO, op1::String, i1::Int, op2::String, i2::Int, ops...)
+function subtract!(ampo::OpSum, op1::String, i1::Int, op2::String, i2::Int, ops...)
   return add!(ampo, -1.0, op1, i1, op2, i2, ops...)
 end
 
 function subtract!(
-  ampo::AutoMPO, coef::Number, op1::String, i1::Int, op2::String, i2::Int, ops...
+  ampo::OpSum, coef::Number, op1::String, i1::Int, op2::String, i2::Int, ops...
 )
   push!(ampo, -MPOTerm(coef, op1, i1, op2, i2, ops...))
   return ampo
@@ -300,19 +300,19 @@ end
 
 -(t::MPOTerm) = MPOTerm(-coef(t), ops(t))
 
-function (ampo::AutoMPO + term::Tuple)
+function (ampo::OpSum + term::Tuple)
   ampo_plus_term = copy(ampo)
   add!(ampo_plus_term, term...)
   return ampo_plus_term
 end
 
-function (ampo::AutoMPO + term::Vector{Pair{String,Int64}})
+function (ampo::OpSum + term::Vector{Pair{String,Int64}})
   ampo_plus_term = copy(ampo)
   add!(ampo_plus_term, term)
   return ampo_plus_term
 end
 
-function (ampo::AutoMPO - term::Tuple)
+function (ampo::OpSum - term::Tuple)
   ampo_plus_term = copy(ampo)
   subtract!(ampo_plus_term, term...)
   return ampo_plus_term
@@ -322,18 +322,18 @@ end
 # ampo .+= ("Sz",1) syntax using broadcasting
 #
 
-struct AutoMPOStyle <: Broadcast.BroadcastStyle end
-Base.BroadcastStyle(::Type{<:AutoMPO}) = AutoMPOStyle()
+struct OpSumStyle <: Broadcast.BroadcastStyle end
+Base.BroadcastStyle(::Type{<:OpSum}) = OpSumStyle()
 
-struct AutoMPOAddTermStyle <: Broadcast.BroadcastStyle end
+struct OpSumAddTermStyle <: Broadcast.BroadcastStyle end
 
-Base.broadcastable(ampo::AutoMPO) = ampo
+Base.broadcastable(ampo::OpSum) = ampo
 
-Base.BroadcastStyle(::AutoMPOStyle, ::Broadcast.Style{Tuple}) = AutoMPOAddTermStyle()
+Base.BroadcastStyle(::OpSumStyle, ::Broadcast.Style{Tuple}) = OpSumAddTermStyle()
 
-Broadcast.instantiate(bc::Broadcast.Broadcasted{AutoMPOAddTermStyle}) = bc
+Broadcast.instantiate(bc::Broadcast.Broadcasted{OpSumAddTermStyle}) = bc
 
-function Base.copyto!(ampo, bc::Broadcast.Broadcasted{AutoMPOAddTermStyle,<:Any,typeof(+)})
+function Base.copyto!(ampo, bc::Broadcast.Broadcasted{OpSumAddTermStyle,<:Any,typeof(+)})
   add!(ampo, bc.args[2]...)
   return ampo
 end
@@ -342,13 +342,13 @@ end
 # ampo .-= ("Sz",1) syntax using broadcasting
 #
 
-function Base.copyto!(ampo, bc::Broadcast.Broadcasted{AutoMPOAddTermStyle,<:Any,typeof(-)})
+function Base.copyto!(ampo, bc::Broadcast.Broadcasted{OpSumAddTermStyle,<:Any,typeof(-)})
   subtract!(ampo, bc.args[2]...)
   return ampo
 end
 
-function Base.show(io::IO, ampo::AutoMPO)
-  println(io, "AutoMPO:")
+function Base.show(io::IO, ampo::OpSum)
+  println(io, "OpSum:")
   for term in data(ampo)
     println(io, "  $term")
   end
@@ -478,7 +478,7 @@ function remove_dups!(v::Vector{T}) where {T}
   return nothing
 end #remove_dups!
 
-function svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
+function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, 10000)
   cutoff::Float64 = get(kwargs, :cutoff, 1E-13)
@@ -632,7 +632,7 @@ function svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
   return H
 end #svdMPO
 
-function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
+function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, 10000)
   cutoff::Float64 = get(kwargs, :cutoff, 1E-13)
@@ -852,7 +852,7 @@ function qn_svdMPO(ampo::AutoMPO, sites; kwargs...)::MPO
   return H
 end #qn_svdMPO
 
-function sorteachterm!(ampo::AutoMPO, sites)
+function sorteachterm!(ampo::OpSum, sites)
   ampo = copy(ampo)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
   N = length(sites)
@@ -893,7 +893,7 @@ function sorteachterm!(ampo::AutoMPO, sites)
       end
     end
     if rhs_parity == -1
-      error("Total parity-odd fermionic terms not yet supported by AutoMPO")
+      error("Total parity-odd fermionic terms not yet supported by OpSum")
     end
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero, perm)
@@ -905,7 +905,7 @@ function sorteachterm!(ampo::AutoMPO, sites)
   return ampo
 end
 
-function sortmergeterms!(ampo::AutoMPO)
+function sortmergeterms!(ampo::OpSum)
   sort!(data(ampo))
 
   # Merge (add) terms with same operators
@@ -927,20 +927,20 @@ function sortmergeterms!(ampo::AutoMPO)
 end
 
 """
-    MPO(ampo::AutoMPO,sites::Vector{<:Index};kwargs...)
+    MPO(ampo::OpSum,sites::Vector{<:Index};kwargs...)
        
-Convert an AutoMPO object `ampo` to an
+Convert an OpSum object `ampo` to an
 MPO, with indices given by `sites`. The
 resulting MPO will have the indices
 `sites[1], sites[1]', sites[2], sites[2]'`
 etc. The conversion is done by an algorithm
 that compresses the MPO resulting from adding
-the AutoMPO terms together, often achieving
+the OpSum terms together, often achieving
 the minimum possible bond dimension.
 
 # Examples
 ```julia
-ampo = AutoMPO()
+ampo = OpSum()
 ampo += ("Sz",1,"Sz",2)
 ampo += ("Sz",2,"Sz",3)
 ampo += ("Sz",3,"Sz",4)
@@ -949,8 +949,8 @@ sites = siteinds("S=1/2",4)
 H = MPO(ampo,sites)
 ```
 """
-function MPO(ampo::AutoMPO, sites::Vector{<:Index}; kwargs...)::MPO
-  length(data(ampo)) == 0 && error("AutoMPO has no terms")
+function MPO(ampo::OpSum, sites::Vector{<:Index}; kwargs...)::MPO
+  length(data(ampo)) == 0 && error("OpSum has no terms")
 
   ampo = deepcopy(ampo)
   sorteachterm!(ampo, sites)

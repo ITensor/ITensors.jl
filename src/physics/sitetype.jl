@@ -206,7 +206,7 @@ The result is an ITensor made by forming each operator
 then contracting them together in a way corresponding
 to the usual operator product or matrix multiplication.
 
-The `op` system is used by the AutoMPO
+The `op` system is used by the OpSum
 system to convert operator names into ITensors,
 and can be used directly such as for applying
 operators to MPS.
