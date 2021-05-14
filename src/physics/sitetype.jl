@@ -482,11 +482,11 @@ macro ValName_str(s)
   ValName{SmallString(s)}
 end
 
-val(::SiteType, ::ValName) = nothing
-val(::SiteType, ::AbstractString) = nothing
+val(::ValName,::SiteType) = nothing
+val(::AbstractString,::SiteType) = nothing
 
 function val(s::Index,
-               name::AbstractString)::IndexVal
+             name::AbstractString)::IndexVal
   stypes  = _sitetypes(s)
   sname = ValName(name)
 

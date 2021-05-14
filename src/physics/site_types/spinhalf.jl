@@ -147,8 +147,7 @@ op(::OpName"projDn", t::SiteType"S=1/2") = op(OpName("ProjDn"), t)
 
 space(::SiteType"SpinHalf"; kwargs...) = space(SiteType("S=1/2"); kwargs...)
 
-val(name::ValName,::SiteType"SpinHalf") =
-  val(SiteType("S=1/2"), name)
+val(name::ValName,::SiteType"SpinHalf") = val(name,SiteType("S=1/2"))
 
 op(o::OpName, ::SiteType"SpinHalf"; kwargs...) = op(o, SiteType("S=1/2"); kwargs...)
 
@@ -157,8 +156,7 @@ op(o::OpName, ::SiteType"SpinHalf"; kwargs...) = op(o, SiteType("S=1/2"); kwargs
 space(::SiteType"S=½"; kwargs...) =
   space(SiteType("S=1/2"); kwargs...)
 
-val(name::ValName,::SiteType"S=½") =
-  val(SiteType("S=1/2"), name)
+val(name::ValName,::SiteType"S=½") = val(name,SiteType("S=1/2"))
 
 state(::SiteType"S=½", n::StateName) = state(SiteType("S=1/2"), n)
 

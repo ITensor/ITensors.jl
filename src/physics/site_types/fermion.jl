@@ -59,15 +59,15 @@ function space(
   return 2
 end
 
-val(::SiteType"Fermion",::ValName"Emp")  = 1
-val(::SiteType"Fermion",::ValName"Occ")  = 2
-val(st::SiteType"Fermion",::ValName"0") = val(st,ValName("Emp"))
-val(st::SiteType"Fermion",::ValName"1") = val(st,ValName("Occ"))
+val(::ValName"Emp",::SiteType"Fermion")  = 1
+val(::ValName"Occ",::SiteType"Fermion")  = 2
+val(::ValName"0",st::SiteType"Fermion") = val(ValName("Emp"),st)
+val(::ValName"1",st::SiteType"Fermion") = val(ValName("Occ"),st)
 
-state(::SiteType"Fermion",::StateName"Emp")  = 1
-state(::SiteType"Fermion",::StateName"Occ")  = 2
-state(st::SiteType"Fermion",::StateName"0") = state(st,StateName("Emp"))
-state(st::SiteType"Fermion",::StateName"1") = state(st,StateName("Occ"))
+state(::StateName"Emp",::SiteType"Fermion")  = 1
+state(::StateName"Occ",::SiteType"Fermion")  = 2
+state(::StateName"0",st::SiteType"Fermion") = state(StateName("Emp"),st)
+state(::StateName"1",st::SiteType"Fermion") = state(StateName("Occ"),st)
 
 function op!(Op::ITensor, ::OpName"N", ::SiteType"Fermion", s::Index)
   return Op[s' => 2, s => 2] = 1.0
