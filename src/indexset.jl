@@ -727,7 +727,7 @@ end
 # TODO: turn this into an iterator instead
 # of returning a Vector
 function eachdiagblock(inds::Indices)
-  return [fill(i, length(inds)) for i in 1:ndiagblocks(inds)]
+  return (Block(ntuple(_ -> i, length(inds))) for i in 1:ndiagblocks(inds))
 end
 
 """

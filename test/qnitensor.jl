@@ -1,4 +1,7 @@
-using ITensors, Test, Random
+using ITensors
+using LinearAlgebra
+using Random
+using Test
 
 Random.seed!(1234)
 
@@ -1382,9 +1385,9 @@ Random.seed!(1234)
 
       A = emptyITensor(ElT, l, s, dag(r))
 
-      insertblock!(A, (2, 1, 2))
-      insertblock!(A, (1, 2, 2))
-      insertblock!(A, (2, 2, 3))
+      insertblock!(A, Block(2, 1, 2))
+      insertblock!(A, Block(1, 2, 2))
+      insertblock!(A, Block(2, 2, 3))
 
       for b in nzblocks(A)
         @test flux(A, b) == QN()
@@ -1413,10 +1416,10 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 2))
-      insertblock!(A, (4, 3))
-      insertblock!(A, (3, 4))
-      insertblock!(A, (2, 5))
+      insertblock!(A, Block(5, 2))
+      insertblock!(A, Block(4, 3))
+      insertblock!(A, Block(3, 4))
+      insertblock!(A, Block(2, 5))
       randn!(A)
       U, S, V = svd(A, s)
       @test U * S * V ≈ A
@@ -1431,11 +1434,11 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 1))
-      insertblock!(A, (4, 2))
-      insertblock!(A, (3, 3))
-      insertblock!(A, (2, 4))
-      insertblock!(A, (1, 5))
+      insertblock!(A, Block(5, 1))
+      insertblock!(A, Block(4, 2))
+      insertblock!(A, Block(3, 3))
+      insertblock!(A, Block(2, 4))
+      insertblock!(A, Block(1, 5))
       U, S, V = svd(A, s)
       @test dims(S) == dims(A)
       @test U * S * V ≈ A
@@ -1450,11 +1453,11 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 1))
-      insertblock!(A, (4, 2))
-      insertblock!(A, (3, 3))
-      insertblock!(A, (2, 4))
-      insertblock!(A, (1, 5))
+      insertblock!(A, Block(5, 1))
+      insertblock!(A, Block(4, 2))
+      insertblock!(A, Block(3, 3))
+      insertblock!(A, Block(2, 4))
+      insertblock!(A, Block(1, 5))
       U, S, V = svd(A, s; cutoff=0)
       @test dims(S) == (0, 0)
       @test U * S * V ≈ A
