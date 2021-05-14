@@ -721,13 +721,13 @@ ndiagblocks(inds) = minimum(nblocks(inds))
 
 # TODO: generic to Indices and BlockDims
 function eachblock(inds::Indices)
-  return CartesianIndices(_Tuple(nblocks(inds)))
+  return (Block(b) for b in CartesianIndices(_Tuple(nblocks(inds))))
 end
 
 # TODO: turn this into an iterator instead
 # of returning a Vector
 function eachdiagblock(inds::Indices)
-  return [fill(i, length(inds)) for i in 1:ndiagblocks(inds)]
+  return (Block(ntuple(_ -> i, length(inds))) for i in 1:ndiagblocks(inds))
 end
 
 """
@@ -737,13 +737,13 @@ Get the flux of the specified block, for example:
 ```
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))
-flux(is, (1,1)) == QN(0)
-flux(is, (2,1)) == QN(1)
-flux(is, (1,2)) == QN(-1)
-flux(is, (2,2)) == QN(0)
+flux(is, Block(1, 1)) == QN(0)
+flux(is, Block(2, 1)) == QN(1)
+flux(is, Block(1, 2)) == QN(-1)
+flux(is, Block(2, 2)) == QN(0)
 ```
 """
-function flux(inds::Indices, block)
+function flux(inds::Indices, block::Block)
   qntot = QN()
   for n in 1:length(inds)
     ind = inds[n]
@@ -753,7 +753,7 @@ function flux(inds::Indices, block)
 end
 
 """
-    flux(inds::Indices, I::Int...)
+    flux(inds::Indices, I::Integer...)
 
 Get the flux of the block that the specified
 index falls in.
@@ -764,10 +764,10 @@ flux(is, 3, 1) == QN(1)
 flux(is, 1, 2) == QN(0)
 ```
 """
-flux(inds, vals...) = flux(inds, block(inds, vals...))
+flux(inds::Indices, vals::Integer...) = flux(inds, block(inds, vals...))
 
 """
-    ITensors.block(inds::Indices, I::Int...)
+    ITensors.block(inds::Indices, I::Integer...)
 
 Get the block that the specified index falls in.
 
@@ -780,7 +780,7 @@ ITensors.block(is, 3, 1) == (2,1)
 ITensors.block(is, 1, 2) == (1,1)
 ```
 """
-block(inds::Indices, vals::Int...) = blockindex(inds, vals...)[2]
+block(inds::Indices, vals::Integer...) = blockindex(inds, vals...)[2]
 
 function show(io::IO, is::IndexSet)
   print(io, "IndexSet{$(length(is))} ")

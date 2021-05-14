@@ -350,36 +350,62 @@ Sz2 = op("Sz", s, 2)
 ```
 """
 function op(
-  opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Int,N}; kwargs...
+  opname::AbstractString, s::Vector{<:Index}, ns::NTuple{N,Integer}; kwargs...
 ) where {N}
   return op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Int...; kwargs...)
-  return op(opname, s, ns...; kwargs...)
+function op(opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...)
+  return op(opname, s, ns; kwargs...)
 end
 
 function op(
-  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Int}}, kwargs::NamedTuple
+  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}; kwargs...
 )
   return op(opname, s, ns...; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Int, kwargs::NamedTuple)
+function op(s::Vector{<:Index}, opname::AbstractString, ns::Integer...; kwargs...)
   return op(opname, s, ns; kwargs...)
+end
+
+function op(
+  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}, kwargs::NamedTuple
+)
+  return op(opname, s, ns; kwargs...)
+end
+
+function op(s::Vector{<:Index}, opname::AbstractString, ns::Integer, kwargs::NamedTuple)
+  return op(opname, s, (ns,); kwargs...)
 end
 
 # This version helps with call like `op.(Ref(s), os)` where `os`
 # is a vector of tuples.
-op(s::Vector{<:Index}, os::Tuple{String,Vararg}) = op(s, os...)
+op(s::Vector{<:Index}, os::Tuple{AbstractString,Vararg}) = op(s, os...)
+op(os::Tuple{AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
 
 # Here, Ref is used to not broadcast over the vector of indices
 # TODO: consider overloading broadcast for `op` with the example
 # here: https://discourse.julialang.org/t/how-to-broadcast-over-only-certain-function-arguments/19274/5
 # so that `Ref` isn't needed.
-ops(s::Vector{<:Index}, os::AbstractArray{<:Tuple}) = op.(Ref(s), os)
+ops(s::Vector{<:Index}, os::AbstractArray) = op.(Ref(s), os)
+ops(os::AbstractVector, s::Vector{<:Index}) = op.(Ref(s), os)
 
-ops(os::Vector{<:Tuple}, s::Vector{<:Index}) = op.(Ref(s), os)
+@doc """
+    ops(s::Vector{<:Index}, os::Vector)
+    ops(os::Vector, s::Vector{<:Index})
+
+Given a list of operators, create ITensors using the collection
+of indices.
+
+# Examples
+```julia
+s = siteinds("Qubit", 4)
+os = [("H", 1), ("X", 2), ("CX", 2, 4)]
+# gates = ops(s, os)
+gates = ops(os, s)
+```
+""" ops(::Vector{<:Index}, ::AbstractArray)
 
 #---------------------------------------
 #

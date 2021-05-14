@@ -1,4 +1,7 @@
-using ITensors, Test, Random
+using ITensors
+using LinearAlgebra
+using Random
+using Test
 
 Random.seed!(1234)
 
@@ -92,6 +95,29 @@ Random.seed!(1234)
       2e-9 1e-10 4e-10
     ]
     @test_throws ErrorException ITensor(A, i', dag(i); tol=1e-8)
+  end
+
+  @testset "Construct from Array regression test" begin
+    i = Index([QN(0) => 2, QN(1) => 2])
+    T = itensor([0, 0, 1, 2], i)
+    @test flux(T) == QN(1)
+    @test nnzblocks(T) == 1
+    @test !(Block(1) in nzblocks(T))
+    @test Block(2) in nzblocks(T)
+    @test T[1] == 0
+    @test T[2] == 0
+    @test T[3] == 1
+    @test T[4] == 2
+    @test flux(T, 1) == QN(0)
+    @test flux(T, 2) == QN(0)
+    @test flux(T, 3) == QN(1)
+    @test flux(T, 4) == QN(1)
+    @test_throws BoundsError flux(T, 5)
+    @test_throws BoundsError flux(T, 0)
+    @test flux(T, Block(1)) == QN(0)
+    @test flux(T, Block(2)) == QN(1)
+    @test_throws BoundsError flux(T, Block(0))
+    @test_throws BoundsError flux(T, Block(3))
   end
 
   @testset "QN ITensor Array constructor view behavior" begin
@@ -1359,9 +1385,9 @@ Random.seed!(1234)
 
       A = emptyITensor(ElT, l, s, dag(r))
 
-      insertblock!(A, (2, 1, 2))
-      insertblock!(A, (1, 2, 2))
-      insertblock!(A, (2, 2, 3))
+      insertblock!(A, Block(2, 1, 2))
+      insertblock!(A, Block(1, 2, 2))
+      insertblock!(A, Block(2, 2, 3))
 
       for b in nzblocks(A)
         @test flux(A, b) == QN()
@@ -1390,10 +1416,10 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 2))
-      insertblock!(A, (4, 3))
-      insertblock!(A, (3, 4))
-      insertblock!(A, (2, 5))
+      insertblock!(A, Block(5, 2))
+      insertblock!(A, Block(4, 3))
+      insertblock!(A, Block(3, 4))
+      insertblock!(A, Block(2, 5))
       randn!(A)
       U, S, V = svd(A, s)
       @test U * S * V ≈ A
@@ -1408,11 +1434,11 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 1))
-      insertblock!(A, (4, 2))
-      insertblock!(A, (3, 3))
-      insertblock!(A, (2, 4))
-      insertblock!(A, (1, 5))
+      insertblock!(A, Block(5, 1))
+      insertblock!(A, Block(4, 2))
+      insertblock!(A, Block(3, 3))
+      insertblock!(A, Block(2, 4))
+      insertblock!(A, Block(1, 5))
       U, S, V = svd(A, s)
       @test dims(S) == dims(A)
       @test U * S * V ≈ A
@@ -1427,11 +1453,11 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 1))
-      insertblock!(A, (4, 2))
-      insertblock!(A, (3, 3))
-      insertblock!(A, (2, 4))
-      insertblock!(A, (1, 5))
+      insertblock!(A, Block(5, 1))
+      insertblock!(A, Block(4, 2))
+      insertblock!(A, Block(3, 3))
+      insertblock!(A, Block(2, 4))
+      insertblock!(A, Block(1, 5))
       U, S, V = svd(A, s; cutoff=0)
       @test dims(S) == (0, 0)
       @test U * S * V ≈ A

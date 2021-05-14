@@ -17,7 +17,7 @@ include("util.jl")
   @test linkdims(psi) == fill(1, N - 1)
   @test isnothing(flux(psi))
 
-  psi = MPS(sites, 3)
+  psi = MPS(sites; linkdims=3)
   @test length(psi) == N
   @test length(MPS()) == 0
   @test linkdims(psi) == fill(3, N - 1)
@@ -67,16 +67,27 @@ include("util.jl")
       for j in 1:N
         state[j] = isodd(j) ? "Up" : "Dn"
       end
+      psi = MPS(sites, state)
+      for j in 1:N
+        sign = isodd(j) ? +1.0 : -1.0
+        @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
+      end
       psi = productMPS(sites, state)
       for j in 1:N
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
+      @test_throws DimensionMismatch MPS(sites, fill("", N - 1))
       @test_throws DimensionMismatch productMPS(sites, fill("", N - 1))
     end
 
     @testset "String input" begin
       sites = siteinds("S=1/2", N)
+      psi = MPS(sites, "Dn")
+      for j in 1:N
+        sign = -1.0
+        @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
+      end
       psi = productMPS(sites, "Dn")
       for j in 1:N
         sign = -1.0
@@ -86,6 +97,11 @@ include("util.jl")
 
     @testset "Int input" begin
       sites = siteinds("S=1/2", N)
+      psi = MPS(sites, 2)
+      for j in 1:N
+        sign = -1.0
+        @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
+      end
       psi = productMPS(sites, 2)
       for j in 1:N
         sign = -1.0
@@ -98,6 +114,11 @@ include("util.jl")
       state = fill(0, N)
       for j in 1:N
         state[j] = isodd(j) ? 1 : 2
+      end
+      psi = MPS(sites, state)
+      for j in 1:N
+        sign = isodd(j) ? +1.0 : -1.0
+        @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
       psi = productMPS(sites, state)
       for j in 1:N
@@ -113,6 +134,11 @@ include("util.jl")
         states[j] = isodd(j) ? 1 : 2
       end
       ivals = [state(sites[n], states[n]) for n in 1:length(sites)]
+      psi = MPS(ivals)
+      for j in 1:N
+        sign = isodd(j) ? +1.0 : -1.0
+        @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
+      end
       psi = productMPS(ivals)
       for j in 1:N
         sign = isodd(j) ? +1.0 : -1.0
@@ -121,6 +147,10 @@ include("util.jl")
 
       @testset "ComplexF64 eltype" begin
         sites = siteinds("S=1/2", N)
+        psi = MPS(ComplexF64, sites, fill(1, N))
+        for j in 1:N
+          @test eltype(psi[j]) <: ComplexF64
+        end
         psi = productMPS(ComplexF64, sites, fill(1, N))
         for j in 1:N
           @test eltype(psi[j]) <: ComplexF64
@@ -130,9 +160,15 @@ include("util.jl")
 
     @testset "N=1 case" begin
       site = Index(2, "Site,n=1")
+      psi = MPS([site], [1])
+      @test psi[1][1] ≈ 1.0
+      @test psi[1][2] ≈ 0.0
       psi = productMPS([site], [1])
       @test psi[1][1] ≈ 1.0
       @test psi[1][2] ≈ 0.0
+      psi = MPS([site], [2])
+      @test psi[1][1] ≈ 0.0
+      @test psi[1][2] ≈ 1.0
       psi = productMPS([site], [2])
       @test psi[1][1] ≈ 0.0
       @test psi[1][2] ≈ 1.0
@@ -362,7 +398,7 @@ end
   N = 8
   sites = siteinds("S=1/2", N; conserve_qns=true)
   init_state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-  psi0 = productMPS(sites, init_state)
+  psi0 = MPS(sites, init_state)
   orthogonalize!(psi0, 4)
   @test ITensors.leftlim(psi0) == 3
   @test ITensors.rightlim(psi0) == 5
@@ -596,7 +632,7 @@ end
   @testset "map!" begin
     N = 5
     s = siteinds("S=½", N)
-    M0 = productMPS(s, "↑")
+    M0 = MPS(s, "↑")
 
     # Test map! with limits getting set
     M = orthogonalize(M0, 1)
@@ -631,14 +667,14 @@ end
     N = 4
     s = siteinds("S=½", N)
     ψ = randomMPS(s)
-    ϕ = productMPS(s, "↑")
+    ϕ = MPS(s, "↑")
     orthogonalize!(ϕ, 1)
     ψ[:] = ϕ
     @test ITensors.orthocenter(ψ) == 1
     @test inner(ψ, ϕ) ≈ 1
 
     ψ = randomMPS(s)
-    ϕ = productMPS(s, "↑")
+    ϕ = MPS(s, "↑")
     orthogonalize!(ϕ, 1)
     ψ[:] = ITensors.data(ϕ)
     @test ITensors.leftlim(ψ) == 0
@@ -709,7 +745,7 @@ end
     s0 = siteinds("S=1/2", N)
     for perm in permutations(1:N)
       s = s0[perm]
-      ψ = productMPS(s, rand(("↑", "↓"), N))
+      ψ = MPS(s, rand(("↑", "↓"), N))
       ns′ = [findfirst(==(i), s0) for i in s]
       @test ns′ == perm
       ψ′ = movesites(ψ, 1:N .=> ns′; cutoff=1e-15)
@@ -741,7 +777,7 @@ end
     @test ITensors.orthocenter(ψ) == N
     @test maxlinkdim(ψ) == 4
 
-    ψ0 = productMPS(s, "↑")
+    ψ0 = MPS(s, "↑")
     A = prod(ψ0)
     ψ = MPS(A, s; cutoff=1e-15)
     @test prod(ψ) ≈ A
@@ -1007,35 +1043,33 @@ end
     # Apply to an MPS
     #
 
-    ψ = productMPS(s, "0")
-    @test prod(product(X[1], ψ)) ≈ prod(productMPS(s, n -> n == 1 ? "1" : "0"))
+    ψ = MPS(s, "0")
+    @test prod(product(X[1], ψ)) ≈ prod(MPS(s, n -> n == 1 ? "1" : "0"))
     @test prod(product(X[1], product(X[2], ψ))) ≈
-          prod(productMPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
-    @test prod(product(X[1] * X[2], ψ)) ≈
-          prod(productMPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
-    @test prod(product([X[2], X[1]], ψ)) ≈
-          prod(productMPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
-    @test prod(product(CX[1, 2], ψ)) ≈ prod(productMPS(s, "0"))
+          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+    @test prod(product(X[1] * X[2], ψ)) ≈ prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+    @test prod(product([X[2], X[1]], ψ)) ≈ prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+    @test prod(product(CX[1, 2], ψ)) ≈ prod(MPS(s, "0"))
     @test prod(product(CX[1, 2], product(X[1], ψ))) ≈
-          prod(productMPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
     @test prod(product(product(CX[1, 2], X[1]), ψ)) ≈
-          prod(productMPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
     @test prod(product([X[1], CX[1, 2]], ψ)) ≈
-          prod(productMPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
 
     for i in 1:N, j in 1:N
       !allunique((i, j)) && continue
       # Don't move sites back
       CXij_ψ = product([X[i], CX[i, j]], ψ; move_sites_back=false, cutoff=1e-15)
       @test maxlinkdim(CXij_ψ) == 1
-      @test prod(CXij_ψ) ≈ prod(productMPS(s, n -> n == i || n == j ? "1" : "0"))
+      @test prod(CXij_ψ) ≈ prod(MPS(s, n -> n == i || n == j ? "1" : "0"))
 
       # Move sites back
       CXij_ψ = product([X[i], CX[i, j]], ψ)
       for n in 1:N
         @test siteind(CXij_ψ, n) == siteind(ψ, n)
       end
-      @test prod(CXij_ψ) ≈ prod(productMPS(s, n -> n == i || n == j ? "1" : "0"))
+      @test prod(CXij_ψ) ≈ prod(MPS(s, n -> n == i || n == j ? "1" : "0"))
     end
 
     for i in 1:N, j in 1:N, k in 1:N
@@ -1046,7 +1080,7 @@ end
         [X[j], X[i], CCNOT[ns...]], ψ; move_sites_back=false, cutoff=1e-15
       )
       @test maxlinkdim(CCNOTijk_ψ) == 1
-      @test prod(CCNOTijk_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
+      @test prod(CCNOTijk_ψ) ≈ prod(MPS(s, n -> n ∈ ns ? "1" : "0"))
 
       # Move sites back
       CCNOTijk_ψ = product([X[j], X[i], CCNOT[ns...]], ψ; cutoff=1e-15)
@@ -1054,7 +1088,7 @@ end
       for n in 1:N
         @test siteind(CCNOTijk_ψ, n) == siteind(ψ, n)
       end
-      @test prod(CCNOTijk_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
+      @test prod(CCNOTijk_ψ) ≈ prod(MPS(s, n -> n ∈ ns ? "1" : "0"))
     end
 
     for i in 1:N, j in i:N, k in 1:N, l in k:N
@@ -1065,7 +1099,7 @@ end
         [X[i], X[j], X[k], CCCNOT[ns...]], ψ; move_sites_back=false, cutoff=1e-15
       )
       @test maxlinkdim(CCCNOTijkl_ψ) == 1
-      @test prod(CCCNOTijkl_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
+      @test prod(CCCNOTijkl_ψ) ≈ prod(MPS(s, n -> n ∈ ns ? "1" : "0"))
 
       # Move sites back
       CCCNOTijkl_ψ = product([X[i], X[j], X[k], CCCNOT[ns...]], ψ; cutoff=1e-15)
@@ -1073,7 +1107,7 @@ end
       for n in 1:N
         @test siteind(CCCNOTijkl_ψ, n) == siteind(ψ, n)
       end
-      @test prod(CCCNOTijkl_ψ) ≈ prod(productMPS(s, n -> n ∈ ns ? "1" : "0"))
+      @test prod(CCCNOTijkl_ψ) ≈ prod(MPS(s, n -> n ∈ ns ? "1" : "0"))
     end
   end
 
@@ -1096,7 +1130,7 @@ end
 
       s = siteinds("Qubit", N)
       gates = ops(s, pos)
-      ψ0 = productMPS(s, "0")
+      ψ0 = MPS(s, "0")
 
       # Apply the gates
       ψ = product(gates, ψ0)
@@ -1140,7 +1174,7 @@ end
       gates = ops(os, s)
 
       @testset "Pure state evolution" begin
-        ψ0 = productMPS(s, "0")
+        ψ0 = MPS(s, "0")
         ψ = product(gates, ψ0; cutoff=1e-15)
         @test maxlinkdim(ψ) == 8
         prodψ = product(gates, prod(ψ0))
@@ -1245,7 +1279,7 @@ end
       s = siteinds("Qubit", N)
       gates = ops(os, s)
 
-      ψ0 = productMPS(s, "0")
+      ψ0 = MPS(s, "0")
 
       # Apply the gates
       ψ = apply(gates, ψ0; cutoff=1e-15, maxdim=100)
@@ -1260,13 +1294,13 @@ end
       s = siteinds("Fermion", N; conserve_qns=true)
 
       # Ground state |000⟩
-      ψ000 = productMPS(s, "0")
+      ψ000 = MPS(s, "0")
 
       # Start state |011⟩
-      ψ011 = productMPS(s, n -> n == 2 || n == 3 ? "1" : "0")
+      ψ011 = MPS(s, n -> n == 2 || n == 3 ? "1" : "0")
 
       # Reference state |110⟩
-      ψ110 = productMPS(s, n -> n == 1 || n == 2 ? "1" : "0")
+      ψ110 = MPS(s, n -> n == 1 || n == 2 ? "1" : "0")
 
       function ITensors.op(::OpName"CdagC", ::SiteType, s1::Index, s2::Index)
         return op("Cdag", s1) * op("C", s2)
@@ -1296,7 +1330,7 @@ end
       s = siteinds("Fermion", N; conserve_qns=true)
 
       # Starting state
-      ψ0 = productMPS(s, n -> isodd(n) ? "0" : "1")
+      ψ0 = MPS(s, n -> isodd(n) ? "0" : "1")
 
       t = 1.0
       U = 1.0
