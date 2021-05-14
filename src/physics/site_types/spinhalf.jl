@@ -147,26 +147,18 @@ op(::OpName"projDn", t::SiteType"S=1/2") = op(OpName("ProjDn"), t)
 
 space(::SiteType"SpinHalf"; kwargs...) = space(SiteType("S=1/2"); kwargs...)
 
-<<<<<<< HEAD
 val(name::ValName,::SiteType"SpinHalf") =
   val(SiteType("S=1/2"), name)
-=======
-state(::SiteType"SpinHalf", n::StateName) = state(SiteType("S=1/2"), n)
->>>>>>> main
 
 op(o::OpName, ::SiteType"SpinHalf"; kwargs...) = op(o, SiteType("S=1/2"); kwargs...)
 
 # Support the tag "S=½" as equivalent to "S=1/2"
 
-<<<<<<< HEAD
 space(::SiteType"S=½"; kwargs...) =
   space(SiteType("S=1/2"); kwargs...)
 
 val(name::ValName,::SiteType"S=½") =
   val(SiteType("S=1/2"), name)
-=======
-space(::SiteType"S=½"; kwargs...) = space(SiteType("S=1/2"); kwargs...)
->>>>>>> main
 
 state(::SiteType"S=½", n::StateName) = state(SiteType("S=1/2"), n)
 
