@@ -56,7 +56,7 @@ include("util.jl")
     @test isnothing(linkind(psi, 1))
     @test isnothing(linkind(psi, 5))
     @test isnothing(linkind(psi, N))
-    @test maxlinkdim(psi) == 0
+    @test maxlinkdim(psi) == 1
     @test psi ⋅ psi ≈ *(dag(psi)..., psi...)[]
   end
 
@@ -764,7 +764,7 @@ end
       @test ns′ == perm
       ψ′ = movesites(ψ, 1:N .=> ns′; cutoff=1e-15)
       if N == 1
-        @test maxlinkdim(ψ′) == 0
+        @test maxlinkdim(ψ′) == 1
       else
         @test maxlinkdim(ψ′) == 1
       end
@@ -1532,13 +1532,13 @@ end
     s = siteinds("S=1/2", N)
     ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
     ρ = outer(ψ, ψ)
-    @test ITensors.hasnolinkinds(ρ)
+    @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
 
     # Deprecated syntax
     ρ = MPO(ψ)
-    @test ITensors.hasnolinkinds(ρ)
+    @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
   end

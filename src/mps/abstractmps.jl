@@ -99,7 +99,7 @@ function set_ortho_lims!(ψ::AbstractMPS, r::UnitRange{Int})
   return ψ
 end
 
-reset_ortho_lims!(ψ::AbstractMPS) = set_ortho_lims!(ψ, 1:length(N))
+reset_ortho_lims!(ψ::AbstractMPS) = set_ortho_lims!(ψ, 1:length(ψ))
 
 isortho(m::AbstractMPS) = leftlim(m) + 1 == rightlim(m) - 1
 

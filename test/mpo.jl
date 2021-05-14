@@ -71,6 +71,7 @@ end
     for j in 1:N
       A[j] ./= j
     end
+    reset_ortho_lims!(A)
     @test norm(A) ≈ 1 / factorial(N)
   end
 
@@ -79,6 +80,7 @@ end
     for j in 1:N
       A[j] .*= j
     end
+    reset_ortho_lims!(A)
     Adag = sim(linkinds, dag(A))
     A² = ITensor(1)
     for j in 1:N
