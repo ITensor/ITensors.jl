@@ -13,7 +13,7 @@ function main(; Nx=6, Ny=3, U=4.0, t=1.0)
 
   lattice = square_lattice(Nx, Ny; yperiodic=true)
 
-  ampo = AutoMPO()
+  ampo = OpSum()
   for b in lattice
     ampo += -t, "Cdagup", b.s1, "Cup", b.s2
     ampo += -t, "Cdagup", b.s2, "Cup", b.s1

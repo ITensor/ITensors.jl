@@ -5,7 +5,7 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       add!(ampo, "Sz", j, "Sz", j + 1)
       add!(ampo, 0.5, "S+", j, "S-", j + 1)
@@ -31,7 +31,7 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N; conserve_qns=true)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
       ampo += 0.5, "S+", j, "S-", j + 1
@@ -58,7 +58,7 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N; conserve_qns=true)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
       ampo += 0.5, "S+", j, "S-", j + 1
@@ -85,7 +85,7 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N; conserve_qns=true)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
       ampo += 0.5, "S+", j, "S-", j + 1
@@ -122,7 +122,7 @@ using ITensors, Test, Random
     Random.seed!(432)
     psi0 = randomMPS(sites)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:N
       j < N && add!(ampo, -1.0, "Z", j, "Z", j + 1)
       add!(ampo, -1.0, "X", j)
@@ -149,7 +149,7 @@ using ITensors, Test, Random
     state = [isodd(j) ? "↑" : "↓" for j in 1:N]
     psi0 = randomMPS(sites, state)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:N
       j < N && add!(ampo, -1.0, "X", j, "X", j + 1)
       add!(ampo, -1.0, "Z", j)
@@ -180,7 +180,7 @@ using ITensors, Test, Random
     Random.seed!(42)
     psi0 = randomMPS(sites)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += -1, "Sz", j, "Sz", j + 1
     end
@@ -214,13 +214,13 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N)
 
-    ampoZ = AutoMPO()
+    ampoZ = OpSum()
     for j in 1:(N - 1)
       ampoZ += "Sz", j, "Sz", j + 1
     end
     HZ = MPO(ampoZ, sites)
 
-    ampoXY = AutoMPO()
+    ampoXY = OpSum()
     for j in 1:(N - 1)
       ampoXY += 0.5, "S+", j, "S-", j + 1
       ampoXY += 0.5, "S-", j, "S+", j + 1
@@ -246,7 +246,7 @@ using ITensors, Test, Random
     sites[1] = Index(2, "S=1/2,n=1,Site")
     sites[N] = Index(2, "S=1/2,n=$N,Site")
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
       ampo += 0.5, "S+", j, "S-", j + 1
@@ -287,7 +287,7 @@ using ITensors, Test, Random
     state[7] = 2
     psi0 = productMPS(s, state)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += -t1, "Cdag", j, "C", j + 1
       ampo += -t1, "Cdag", j + 1, "C", j
@@ -315,7 +315,7 @@ using ITensors, Test, Random
     U = 1.0
     V1 = 0.5
     sites = siteinds("Electron", N; conserve_qns=true)
-    ampo = AutoMPO()
+    ampo = OpSum()
     for i in 1:N
       ampo += (U, "Nupdn", i)
     end
@@ -340,7 +340,7 @@ using ITensors, Test, Random
     N = 6
     sites = siteinds("S=1", N)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       add!(ampo, "Sz", j, "Sz", j + 1)
       add!(ampo, 0.5, "S+", j, "S-", j + 1)
@@ -382,7 +382,7 @@ using ITensors, Test, Random
     noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
     sites = siteinds("Electron", N; conserve_qns=true)
     lattice = square_lattice(Nx, Ny; yperiodic=true)
-    ampo = AutoMPO()
+    ampo = OpSum()
     for b in lattice
       ampo .+= -t, "Cdagup", b.s1, "Cup", b.s2
       ampo .+= -t, "Cdagup", b.s2, "Cup", b.s1

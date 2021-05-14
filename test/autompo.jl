@@ -143,24 +143,24 @@ function fourSiteIsingMPO(sites)::MPO
   return H
 end
 
-@testset "AutoMPO" begin
+@testset "OpSum" begin
   N = 10
 
   @testset "Show MPOTerm" begin
-    ampo = AutoMPO()
+    ampo = OpSum()
     add!(ampo, "Sz", 1, "Sz", 2)
     @test length(sprint(show, ITensors.data(ampo)[1])) > 1
   end
 
-  @testset "Show AutoMPO" begin
-    ampo = AutoMPO()
+  @testset "Show OpSum" begin
+    ampo = OpSum()
     add!(ampo, "Sz", 1, "Sz", 2)
     add!(ampo, "Sz", 2, "Sz", 3)
     @test length(sprint(show, ampo)) > 1
   end
 
   @testset "Single creation op" begin
-    ampo = AutoMPO()
+    ampo = OpSum()
     add!(ampo, "Adagup", 3)
     sites = siteinds("Electron", N)
     W = MPO(ampo, sites)
@@ -171,7 +171,7 @@ end
   end
 
   @testset "Ising" begin
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
     end
@@ -185,7 +185,7 @@ end
   end
 
   @testset "Ising-Different Order" begin
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
     end
@@ -199,7 +199,7 @@ end
   end
 
   @testset "Heisenberg" begin
-    ampo = AutoMPO()
+    ampo = OpSum()
     h = rand(N) #random magnetic fields
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
@@ -221,7 +221,7 @@ end
 
   @testset "Multiple Onsite Ops" begin
     sites = siteinds("S=1", N)
-    ampo1 = AutoMPO()
+    ampo1 = OpSum()
     for j in 1:(N - 1)
       ampo1 += "Sz", j, "Sz", j + 1
       ampo1 += 0.5, "S+", j, "S-", j + 1
@@ -232,7 +232,7 @@ end
     end
     Ha1 = MPO(ampo1, sites)
 
-    ampo2 = AutoMPO()
+    ampo2 = OpSum()
     for j in 1:(N - 1)
       ampo2 += "Sz", j, "Sz", j + 1
       ampo2 += 0.5, "S+", j, "S-", j + 1
@@ -253,7 +253,7 @@ end
   end
 
   @testset "Three-site ops" begin
-    ampo = AutoMPO()
+    ampo = OpSum()
     # To test version of add! taking a coefficient
     add!(ampo, 1.0, "Sz", 1, "Sz", 2, "Sz", 3)
     @test length(ITensors.data(ampo)) == 1
@@ -274,7 +274,7 @@ end
   end
 
   @testset "Four-site ops" begin
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 3)
       add!(ampo, "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3)
     end
@@ -288,7 +288,7 @@ end
   end
 
   @testset "Next-neighbor Heisenberg" begin
-    ampo = AutoMPO()
+    ampo = OpSum()
     J1 = 1.0
     J2 = 0.5
     for j in 1:(N - 1)
@@ -314,7 +314,7 @@ end
 
   @testset "Onsite Regression Test" begin
     sites = siteinds("S=1", 4)
-    ampo = AutoMPO()
+    ampo = OpSum()
     add!(ampo, 0.5, "Sx", 1)
     add!(ampo, 0.5, "Sy", 1)
     H = MPO(ampo, sites)
@@ -324,7 +324,7 @@ end
     @test norm(T - 0.5 * O) < 1E-8
 
     sites = siteinds("S=1", 2)
-    ampo = AutoMPO()
+    ampo = OpSum()
     add!(ampo, 0.5im, "Sx", 1)
     add!(ampo, 0.5, "Sy", 1)
     H = MPO(ampo, sites)
@@ -336,7 +336,7 @@ end
 
   @testset "+ syntax" begin
     @testset "Single creation op" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       ampo += "Adagup", 3
       sites = siteinds("Electron", N)
       W = MPO(ampo, sites)
@@ -347,7 +347,7 @@ end
     end
 
     @testset "Ising" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       for j in 1:(N - 1)
         ampo += "Sz", j, "Sz", j + 1
       end
@@ -361,7 +361,7 @@ end
     end
 
     @testset "Ising-Different Order" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       for j in 1:(N - 1)
         ampo += "Sz", j + 1, "Sz", j
       end
@@ -375,7 +375,7 @@ end
     end
 
     @testset "Heisenberg" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       h = rand(N) #random magnetic fields
       for j in 1:(N - 1)
         ampo += "Sz", j, "Sz", j + 1
@@ -397,7 +397,7 @@ end
 
     @testset "Multiple Onsite Ops" begin
       sites = siteinds("S=1", N)
-      ampo1 = AutoMPO()
+      ampo1 = OpSum()
       for j in 1:(N - 1)
         ampo1 += "Sz", j, "Sz", j + 1
         ampo1 += 0.5, "S+", j, "S-", j + 1
@@ -408,7 +408,7 @@ end
       end
       Ha1 = MPO(ampo1, sites)
 
-      ampo2 = AutoMPO()
+      ampo2 = OpSum()
       for j in 1:(N - 1)
         ampo2 += "Sz", j, "Sz", j + 1
         ampo2 += 0.5, "S+", j, "S-", j + 1
@@ -429,7 +429,7 @@ end
     end
 
     @testset "Three-site ops" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       # To test version of add! taking a coefficient
       ampo += 1.0, "Sz", 1, "Sz", 2, "Sz", 3
       @test length(ITensors.data(ampo)) == 1
@@ -450,7 +450,7 @@ end
     end
 
     @testset "Four-site ops" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       for j in 1:(N - 3)
         ampo += "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3
       end
@@ -464,7 +464,7 @@ end
     end
 
     @testset "Next-neighbor Heisenberg" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       J1 = 1.0
       J2 = 0.5
       for j in 1:(N - 1)
@@ -489,16 +489,16 @@ end
     end
 
     #@testset "-= syntax" begin
-    #  ampo = AutoMPO()
+    #  ampo = OpSum()
     #  ampo += (-1,"Sz",1,"Sz",2)
-    #  ampo2 = AutoMPO()
+    #  ampo2 = OpSum()
     #  ampo2 -= ("Sz",1,"Sz",2)
     #  @test ampo == ampo2
     #end
 
     @testset "Onsite Regression Test" begin
       sites = siteinds("S=1", 4)
-      ampo = AutoMPO()
+      ampo = OpSum()
       ampo += 0.5, "Sx", 1
       ampo += 0.5, "Sy", 1
       H = MPO(ampo, sites)
@@ -508,7 +508,7 @@ end
       @test norm(T - 0.5 * O) < 1E-8
 
       sites = siteinds("S=1", 2)
-      ampo = AutoMPO()
+      ampo = OpSum()
       ampo += 0.5im, "Sx", 1
       ampo += 0.5, "Sy", 1
       H = MPO(ampo, sites)
@@ -523,15 +523,15 @@ end
   @testset ".+= and .-= syntax" begin
 
     #@testset ".-= syntax" begin
-    #  ampo = AutoMPO()
+    #  ampo = OpSum()
     #  ampo .+= (-1,"Sz",1,"Sz",2)
-    #  ampo2 = AutoMPO()
+    #  ampo2 = OpSum()
     #  ampo2 .-= ("Sz",1,"Sz",2)
     #  @test ampo == ampo2
     #end
 
     @testset "Single creation op" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       ampo .+= "Adagup", 3
       sites = siteinds("Electron", N)
       W = MPO(ampo, sites)
@@ -542,7 +542,7 @@ end
     end
 
     @testset "Ising" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       for j in 1:(N - 1)
         ampo .+= "Sz", j, "Sz", j + 1
       end
@@ -556,7 +556,7 @@ end
     end
 
     @testset "Ising-Different Order" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       for j in 1:(N - 1)
         ampo .+= "Sz", j + 1, "Sz", j
       end
@@ -570,7 +570,7 @@ end
     end
 
     @testset "Heisenberg" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       h = rand(N) #random magnetic fields
       for j in 1:(N - 1)
         ampo .+= "Sz", j, "Sz", j + 1
@@ -592,7 +592,7 @@ end
 
     @testset "Multiple Onsite Ops" begin
       sites = siteinds("S=1", N)
-      ampo1 = AutoMPO()
+      ampo1 = OpSum()
       for j in 1:(N - 1)
         ampo1 .+= "Sz", j, "Sz", j + 1
         ampo1 .+= 0.5, "S+", j, "S-", j + 1
@@ -603,7 +603,7 @@ end
       end
       Ha1 = MPO(ampo1, sites)
 
-      ampo2 = AutoMPO()
+      ampo2 = OpSum()
       for j in 1:(N - 1)
         ampo2 .+= "Sz", j, "Sz", j + 1
         ampo2 .+= 0.5, "S+", j, "S-", j + 1
@@ -624,7 +624,7 @@ end
     end
 
     @testset "Three-site ops" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       # To test version of add! taking a coefficient
       ampo .+= 1.0, "Sz", 1, "Sz", 2, "Sz", 3
       @test length(ITensors.data(ampo)) == 1
@@ -645,7 +645,7 @@ end
     end
 
     @testset "Four-site ops" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       for j in 1:(N - 3)
         ampo .+= "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3
       end
@@ -659,7 +659,7 @@ end
     end
 
     @testset "Next-neighbor Heisenberg" begin
-      ampo = AutoMPO()
+      ampo = OpSum()
       J1 = 1.0
       J2 = 0.5
       for j in 1:(N - 1)
@@ -685,7 +685,7 @@ end
 
     @testset "Onsite Regression Test" begin
       sites = siteinds("S=1", 4)
-      ampo = AutoMPO()
+      ampo = OpSum()
       ampo .+= 0.5, "Sx", 1
       ampo .+= 0.5, "Sy", 1
       H = MPO(ampo, sites)
@@ -695,7 +695,7 @@ end
       @test norm(T - 0.5 * O) < 1E-8
 
       sites = siteinds("S=1", 2)
-      ampo = AutoMPO()
+      ampo = OpSum()
       ampo .+= 0.5im, "Sx", 1
       ampo .+= 0.5, "Sy", 1
       H = MPO(ampo, sites)
@@ -711,15 +711,15 @@ end
     N = 5
     s = siteinds("Fermion", N)
 
-    a1 = AutoMPO()
+    a1 = OpSum()
     a1 += "Cdag", 1, "C", 3
     M1 = MPO(a1, s)
 
-    a2 = AutoMPO()
+    a2 = OpSum()
     a2 += -1, "C", 3, "Cdag", 1
     M2 = MPO(a2, s)
 
-    a3 = AutoMPO()
+    a3 = OpSum()
     a3 += "Cdag", 1, "N", 2, "C", 3
     M3 = MPO(a3, s)
 
@@ -744,11 +744,11 @@ end
 
     s = siteinds("Electron", N; conserve_qns=true)
 
-    a1 = AutoMPO()
+    a1 = OpSum()
     a1 += "Cdagup", 1, "Cup", 3
     M1 = MPO(a1, s)
 
-    a2 = AutoMPO()
+    a2 = OpSum()
     a2 += -1, "Cdn", 3, "Cdagdn", 1
     M2 = MPO(a2, s)
 
@@ -767,12 +767,12 @@ end
     @test inner(pd00, M2, p00d) ≈ +1.0
   end
 
-  @testset "Complex AutoMPO Coefs" begin
+  @testset "Complex OpSum Coefs" begin
     N = 4
 
     for use_qn in [false, true]
       sites = siteinds("S=1/2", N; conserve_qns=use_qn)
-      ampo = AutoMPO()
+      ampo = OpSum()
       for i in 1:(N - 1)
         ampo += +1im, "S+", i, "S-", i + 1
         ampo += -1im, "S-", i, "S+", i + 1
@@ -785,11 +785,11 @@ end
     end
   end
 
-  @testset "Fermion AutoMPO Issue 514 Regression Test" begin
+  @testset "Fermion OpSum Issue 514 Regression Test" begin
     N = 4
     s = siteinds("Electron", N; conserve_qns=true)
-    ampo1 = AutoMPO()
-    ampo2 = AutoMPO()
+    ampo1 = OpSum()
+    ampo2 = OpSum()
 
     ampo1 += "Nup", 1
     ampo2 += "Cdagup", 1, "Cup", 1
@@ -803,10 +803,10 @@ end
     @test norm(H1 - H2) ≈ 0.0
   end
 
-  @testset "AutoMPO in-place modification regression test" begin
+  @testset "OpSum in-place modification regression test" begin
     N = 2
     t = 1.0
-    ampo = AutoMPO()
+    ampo = OpSum()
     for n in 1:(N - 1)
       ampo .+= -t, "Cdag", n, "C", n + 1
       ampo .+= -t, "Cdag", n + 1, "C", n

@@ -582,9 +582,9 @@ end
     s = siteinds("S=1/2", N; conserve_qns=true)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn", m)
     Cpm = correlation_matrix(psi, "S+", "S-")
-    # Check using AutoMPO:
+    # Check using OpSum:
     for i in 1:N, j in i:N
-      a = AutoMPO()
+      a = OpSum()
       a += "S+", i, "S-", j
       @test inner(psi, MPO(a, s), psi) ≈ Cpm[i, j]
     end
@@ -602,9 +602,9 @@ end
     Cpm = correlation_matrix(psi, "S+", "S-"; site_range=ss:es)
     Czz = correlation_matrix(psi, "Sz", "Sz"; site_range=ss:es)
     @test size(Cpm) == (Nb, Nb)
-    # Check using AutoMPO:
+    # Check using OpSum:
     for i in ss:es, j in i:es
-      a = AutoMPO()
+      a = OpSum()
       a += "S+", i, "S-", j
       @test inner(psi, MPO(a, s), psi) ≈ Cpm[i - ss + 1, j - ss + 1]
     end
@@ -613,9 +613,9 @@ end
     s = siteinds("Electron", N)
     psi = randomMPS(s, m)
     Cuu = correlation_matrix(psi, "Cdagup", "Cup")
-    # Check using AutoMPO:
+    # Check using OpSum:
     for i in 1:N, j in i:N
-      a = AutoMPO()
+      a = OpSum()
       a += "Cdagup", i, "Cup", j
       @test inner(psi, MPO(a, s), psi) ≈ Cuu[i, j]
     end
@@ -1329,7 +1329,7 @@ end
 
       @test inner(ψ1, ψ110) == -1
 
-      a = AutoMPO()
+      a = OpSum()
       a += "Cdag", 1, "C", 3
       H = MPO(a, s)
 
@@ -1349,7 +1349,7 @@ end
 
       t = 1.0
       U = 1.0
-      ampo = AutoMPO()
+      ampo = OpSum()
       for b in 1:(N - 1)
         ampo .+= -t, "Cdag", b, "C", b + 1
         ampo .+= -t, "Cdag", b + 1, "C", b
@@ -1383,7 +1383,7 @@ end
           G2 *= op("C", s, j)
         end
 
-        ampo = AutoMPO()
+        ampo = OpSum()
         ampo += "Cdag", i, "C", j
         G3 = MPO(ampo, s)
 
@@ -1414,7 +1414,7 @@ end
           end
           G2 *= op("C", s, l)
 
-          ampo = AutoMPO()
+          ampo = OpSum()
           ampo += "Cdag", i, "Cdag", j, "C", k, "C", l
           G3 = MPO(ampo, s)
 
@@ -1435,7 +1435,7 @@ end
       ψ0 = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
       t = 1.0
       U = 1.0
-      ampo = AutoMPO()
+      ampo = OpSum()
       for b in 1:(N - 1)
         ampo .+= -t, "Cdagup", b, "Cup", b + 1
         ampo .+= -t, "Cdagup", b + 1, "Cup", b
@@ -1456,7 +1456,7 @@ end
       end
 
       for i in 1:(N - 1), j in (i + 1):N
-        ampo = AutoMPO()
+        ampo = OpSum()
         ampo += "Cdagup", i, "Cup", j
         G1 = MPO(ampo, s)
         G2 = op("CCup", s, i, j)
@@ -1497,7 +1497,7 @@ end
   @testset "inner(::MPS, ::MPO, ::MPS) with more than one site Index" begin
     N = 8
     s = siteinds("S=1/2", N)
-    a = AutoMPO()
+    a = OpSum()
     for j in 1:(N - 1)
       a .+= 0.5, "S+", j, "S-", j + 1
       a .+= 0.5, "S-", j, "S+", j + 1

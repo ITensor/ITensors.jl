@@ -599,8 +599,8 @@ end
     s2 = siteinds("S=1/2", N)
     psi1 = randomMPS(s1)
     psi2 = randomMPS(s2)
-    H1 = MPO(AutoMPO() + ("Id", 1), s1)
-    H2 = MPO(AutoMPO() + ("Id", 1), s2)
+    H1 = MPO(OpSum() + ("Id", 1), s1)
+    H2 = MPO(OpSum() + ("Id", 1), s2)
 
     @test_throws ErrorException inner(psi1, H2, psi1)
     @test_throws ErrorException inner(psi1, H2, psi2; make_inds_match=false)
@@ -616,7 +616,7 @@ end
   @testset "MPO*MPO contraction with multiple site indices" begin
     N = 8
     s = siteinds("S=1/2", N)
-    a = AutoMPO()
+    a = OpSum()
     for j in 1:(N - 1)
       a .+= 0.5, "S+", j, "S-", j + 1
       a .+= 0.5, "S-", j, "S+", j + 1
@@ -634,7 +634,7 @@ end
   @testset "MPO*MPO contraction with multiple and combined site indices" begin
     N = 8
     s = siteinds("S=1/2", N)
-    a = AutoMPO()
+    a = OpSum()
     for j in 1:(N - 1)
       a .+= 0.5, "S+", j, "S-", j + 1
       a .+= 0.5, "S-", j, "S+", j + 1
