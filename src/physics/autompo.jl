@@ -253,9 +253,7 @@ function add!(ampo::OpSum, op1::String, i1::Int, op2::String, i2::Int)
   return add!(ampo, 1.0, op1, i1, op2, i2)
 end
 
-function add!(
-  ampo::OpSum, coef::Number, op1::String, i1::Int, op2::String, i2::Int, ops...
-)
+function add!(ampo::OpSum, coef::Number, op1::String, i1::Int, op2::String, i2::Int, ops...)
   push!(ampo, MPOTerm(coef, op1, i1, op2, i2, ops...))
   return ampo
 end
