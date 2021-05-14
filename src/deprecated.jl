@@ -48,6 +48,17 @@
 @deprecate simlinks!(args...; kwargs...) ITensors.sim_linkinds!(args...; kwargs...)
 @deprecate mul(A::AbstractMPS, B::AbstractMPS; kwargs...) contract(A, B; kwargs...)
 
+# mps/mps.jl
+@deprecate randomMPS(sites::Vector{<:Index}, linkdims::Integer) randomMPS(
+  sites; linkdims=linkdims
+)
+@deprecate randomMPS(ElType::Type, sites::Vector{<:Index}, linkdims::Integer) randomMPS(
+  ElType, sites; linkdims=linkdims
+)
+@deprecate randomMPS(sites::Vector{<:Index}, state, linkdims::Integer) randomMPS(
+  sites, state; linkdims=linkdims
+)
+
 # physics/autompo.jl
 @deprecate toMPO(args...; kwargs...) MPO(args...; kwargs...)
 
