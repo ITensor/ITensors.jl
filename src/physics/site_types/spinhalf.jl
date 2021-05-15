@@ -32,29 +32,29 @@ function space(
   return 2
 end
 
-val(::ValName"Up",::SiteType"S=1/2") = 1
-val(::ValName"Dn",::SiteType"S=1/2") = 2
+val(::ValName"Up", ::SiteType"S=1/2") = 1
+val(::ValName"Dn", ::SiteType"S=1/2") = 2
 
-val(::ValName"↑",st::SiteType"S=1/2") = 1
-val(::ValName"↓",st::SiteType"S=1/2") = 2
+val(::ValName"↑", st::SiteType"S=1/2") = 1
+val(::ValName"↓", st::SiteType"S=1/2") = 2
 
-val(::ValName"Z+",::SiteType"S=1/2") = 1
-val(::ValName"Z-",::SiteType"S=1/2") = 2
+val(::ValName"Z+", ::SiteType"S=1/2") = 1
+val(::ValName"Z-", ::SiteType"S=1/2") = 2
 
-state(::StateName"Up",::SiteType"S=1/2") = [1.,0.]
-state(::StateName"Dn",::SiteType"S=1/2") = [0.,1.]
+state(::StateName"Up", ::SiteType"S=1/2") = [1.0, 0.0]
+state(::StateName"Dn", ::SiteType"S=1/2") = [0.0, 1.0]
 
-state(::StateName"↑",st::SiteType"S=1/2") = [1.,0.]
-state(::StateName"↓",st::SiteType"S=1/2") = [0.,1.]
+state(::StateName"↑", st::SiteType"S=1/2") = [1.0, 0.0]
+state(::StateName"↓", st::SiteType"S=1/2") = [0.0, 1.0]
 
-state(::StateName"Z+",st::SiteType"S=1/2") = [1.,0.]
-state(::StateName"Z-",st::SiteType"S=1/2") = [0.,1.]
+state(::StateName"Z+", st::SiteType"S=1/2") = [1.0, 0.0]
+state(::StateName"Z-", st::SiteType"S=1/2") = [0.0, 1.0]
 
-state(::StateName"X+",st::SiteType"S=1/2") = [1/sqrt(2),1/sqrt(2)]
-state(::StateName"X-",st::SiteType"S=1/2") = [1/sqrt(2),-1/sqrt(2)]
+state(::StateName"X+", st::SiteType"S=1/2") = [1 / sqrt(2), 1 / sqrt(2)]
+state(::StateName"X-", st::SiteType"S=1/2") = [1 / sqrt(2), -1 / sqrt(2)]
 
-state(::StateName"Y+",st::SiteType"S=1/2") = [1/sqrt(2),im/sqrt(2)]
-state(::StateName"Y-",st::SiteType"S=1/2") = [1/sqrt(2),-im/sqrt(2)]
+state(::StateName"Y+", st::SiteType"S=1/2") = [1 / sqrt(2), im / sqrt(2)]
+state(::StateName"Y-", st::SiteType"S=1/2") = [1 / sqrt(2), -im / sqrt(2)]
 
 op(::OpName"Z", ::SiteType"S=1/2") = [
   1 0
@@ -147,16 +147,15 @@ op(::OpName"projDn", t::SiteType"S=1/2") = op(OpName("ProjDn"), t)
 
 space(::SiteType"SpinHalf"; kwargs...) = space(SiteType("S=1/2"); kwargs...)
 
-val(name::ValName,::SiteType"SpinHalf") = val(name,SiteType("S=1/2"))
+val(name::ValName, ::SiteType"SpinHalf") = val(name, SiteType("S=1/2"))
 
 op(o::OpName, ::SiteType"SpinHalf"; kwargs...) = op(o, SiteType("S=1/2"); kwargs...)
 
 # Support the tag "S=½" as equivalent to "S=1/2"
 
-space(::SiteType"S=½"; kwargs...) =
-  space(SiteType("S=1/2"); kwargs...)
+space(::SiteType"S=½"; kwargs...) = space(SiteType("S=1/2"); kwargs...)
 
-val(name::ValName,::SiteType"S=½") = val(name,SiteType("S=1/2"))
+val(name::ValName, ::SiteType"S=½") = val(name, SiteType("S=1/2"))
 
 state(::SiteType"S=½", n::StateName) = state(SiteType("S=1/2"), n)
 

@@ -18,44 +18,41 @@ function space(
   return 3
 end
 
-val(::ValName"Up",::SiteType"S=1") = 1
-val(::ValName"Z0",::SiteType"S=1") = 2
-val(::ValName"Dn",::SiteType"S=1") = 3
+val(::ValName"Up", ::SiteType"S=1") = 1
+val(::ValName"Z0", ::SiteType"S=1") = 2
+val(::ValName"Dn", ::SiteType"S=1") = 3
 
-val(::ValName"↑",st::SiteType"S=1") = 1
-val(::ValName"0",st::SiteType"S=1") = 2
-val(::ValName"↓",st::SiteType"S=1") = 3
+val(::ValName"↑", st::SiteType"S=1") = 1
+val(::ValName"0", st::SiteType"S=1") = 2
+val(::ValName"↓", st::SiteType"S=1") = 3
 
-val(::ValName"Z+",::SiteType"S=1") = 1
+val(::ValName"Z+", ::SiteType"S=1") = 1
 # -- Z0 is already defined above --
-val(::ValName"Z-",::SiteType"S=1") = 3
+val(::ValName"Z-", ::SiteType"S=1") = 3
 
-state(::StateName"Up",::SiteType"S=1") = [1.,0.,0.]
-state(::StateName"Z0",::SiteType"S=1") = [0.,1.,0.]
-state(::StateName"Dn",::SiteType"S=1") = [0.,0.,1.]
+state(::StateName"Up", ::SiteType"S=1") = [1.0, 0.0, 0.0]
+state(::StateName"Z0", ::SiteType"S=1") = [0.0, 1.0, 0.0]
+state(::StateName"Dn", ::SiteType"S=1") = [0.0, 0.0, 1.0]
 
-state(::StateName"↑",st::SiteType"S=1") = [1.,0.,0.]
-state(::StateName"0",st::SiteType"S=1") = [0.,1.,0.]
-state(::StateName"↓",st::SiteType"S=1") = [0.,0.,1.]
+state(::StateName"↑", st::SiteType"S=1") = [1.0, 0.0, 0.0]
+state(::StateName"0", st::SiteType"S=1") = [0.0, 1.0, 0.0]
+state(::StateName"↓", st::SiteType"S=1") = [0.0, 0.0, 1.0]
 
-state(::StateName"Z+",st::SiteType"S=1") = [1.,0.,0.]
+state(::StateName"Z+", st::SiteType"S=1") = [1.0, 0.0, 0.0]
 # -- Z0 is already defined above --
-state(::StateName"Z-",st::SiteType"S=1") = [0.,0.,1.]
+state(::StateName"Z-", st::SiteType"S=1") = [0.0, 0.0, 1.0]
 
-state(::StateName"X+",::SiteType"S=1") = [1/2,1/sqrt(2),1/2]
-state(::StateName"X0",::SiteType"S=1") = [-1/sqrt(2),0,1/sqrt(2)]
-state(::StateName"X-",::SiteType"S=1") = [1/2,-1/sqrt(2),1/2]
+state(::StateName"X+", ::SiteType"S=1") = [1 / 2, 1 / sqrt(2), 1 / 2]
+state(::StateName"X0", ::SiteType"S=1") = [-1 / sqrt(2), 0, 1 / sqrt(2)]
+state(::StateName"X-", ::SiteType"S=1") = [1 / 2, -1 / sqrt(2), 1 / 2]
 
-state(::StateName"Y+",::SiteType"S=1") = [-1/2,-im/sqrt(2),1/2]
-state(::StateName"Y0",::SiteType"S=1") = [1/sqrt(2),0,1/sqrt(2)]
-state(::StateName"Y-",::SiteType"S=1") = [-1/2,im/sqrt(2),1/2]
+state(::StateName"Y+", ::SiteType"S=1") = [-1 / 2, -im / sqrt(2), 1 / 2]
+state(::StateName"Y0", ::SiteType"S=1") = [1 / sqrt(2), 0, 1 / sqrt(2)]
+state(::StateName"Y-", ::SiteType"S=1") = [-1 / 2, im / sqrt(2), 1 / 2]
 
-function op!(Op::ITensor,
-             ::OpName"Sz",
-             ::SiteType"S=1",
-             s::Index)
-  Op[s'=>1,s=>1] = +1.0
-  Op[s'=>3,s=>3] = -1.0
+function op!(Op::ITensor, ::OpName"Sz", ::SiteType"S=1", s::Index)
+  Op[s' => 1, s => 1] = +1.0
+  return Op[s' => 3, s => 3] = -1.0
 end
 
 op!(Op::ITensor, ::OpName"Sᶻ", t::SiteType"S=1", s::Index) = op!(Op, OpName("Sz"), t, s)
@@ -94,20 +91,14 @@ function op!(Op::ITensor, ::OpName"iSy", ::SiteType"S=1", s::Index)
   return Op[s' => 2, s => 3] = +1 / sqrt(2)
 end
 
-op!(Op::ITensor,
-    ::OpName"iSʸ",
-    t::SiteType"S=1",
-    s::Index) = op!(Op, OpName("iSy"), t, s)
+op!(Op::ITensor, ::OpName"iSʸ", t::SiteType"S=1", s::Index) = op!(Op, OpName("iSy"), t, s)
 
-function op!(Op::ITensor,
-             ::OpName"Sy",
-             ::SiteType"S=1",
-             s::Index)
+function op!(Op::ITensor, ::OpName"Sy", ::SiteType"S=1", s::Index)
   complex!(Op)
-  Op[s'=>2,s=>1] = +1im/sqrt(2)
-  Op[s'=>1,s=>2] = -1im/sqrt(2)
-  Op[s'=>3,s=>2] = +1im/sqrt(2)
-  Op[s'=>2,s=>3] = -1im/sqrt(2)
+  Op[s' => 2, s => 1] = +1im / sqrt(2)
+  Op[s' => 1, s => 2] = -1im / sqrt(2)
+  Op[s' => 3, s => 2] = +1im / sqrt(2)
+  return Op[s' => 2, s => 3] = -1im / sqrt(2)
 end
 
 op!(Op::ITensor, ::OpName"Sʸ", t::SiteType"S=1", s::Index) = op!(Op, OpName("Sy"), t, s)

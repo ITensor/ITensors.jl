@@ -54,19 +54,19 @@ function space(
   return 3
 end
 
-val(::ValName"Emp",::SiteType"tJ")  = 1
-val(::ValName"Up" ,::SiteType"tJ")  = 2
-val(::ValName"Dn" ,::SiteType"tJ")  = 3
-val(::ValName"0",st::SiteType"tJ")  = val(ValName("Emp"),st)
-val(::ValName"↑",st::SiteType"tJ")  = val(ValName("Up"),st)
-val(::ValName"↓",st::SiteType"tJ")  = val(ValName("Dn"),st)
+val(::ValName"Emp", ::SiteType"tJ") = 1
+val(::ValName"Up", ::SiteType"tJ") = 2
+val(::ValName"Dn", ::SiteType"tJ") = 3
+val(::ValName"0", st::SiteType"tJ") = val(ValName("Emp"), st)
+val(::ValName"↑", st::SiteType"tJ") = val(ValName("Up"), st)
+val(::ValName"↓", st::SiteType"tJ") = val(ValName("Dn"), st)
 
-state(::StateName"Emp",::SiteType"tJ")  = [1.,0,0]
-state(::StateName"Up" ,::SiteType"tJ")  = [0.,1,0]
-state(::StateName"Dn" ,::SiteType"tJ")  = [0.,0,1]
-state(::StateName"0",st::SiteType"tJ")  = state(StateName("Emp"),st)
-state(::StateName"↑",st::SiteType"tJ")  = state(StateName("Up"),st)
-state(::StateName"↓",st::SiteType"tJ")  = state(StateName("Dn"),st)
+state(::StateName"Emp", ::SiteType"tJ") = [1.0, 0, 0]
+state(::StateName"Up", ::SiteType"tJ") = [0.0, 1, 0]
+state(::StateName"Dn", ::SiteType"tJ") = [0.0, 0, 1]
+state(::StateName"0", st::SiteType"tJ") = state(StateName("Emp"), st)
+state(::StateName"↑", st::SiteType"tJ") = state(StateName("Up"), st)
+state(::StateName"↓", st::SiteType"tJ") = state(StateName("Dn"), st)
 
 function op!(Op::ITensor, ::OpName"Nup", ::SiteType"tJ", s::Index)
   return Op[s' => 2, s => 2] = 1.0
