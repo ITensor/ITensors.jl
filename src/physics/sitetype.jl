@@ -425,33 +425,86 @@ macro StateName_str(s)
   return StateName{SmallString(s)}
 end
 
-state(::SiteType, ::StateName) = nothing
-state(::SiteType, ::AbstractString) = nothing
+state(::StateName, ::SiteType, ::Index) = nothing
+state!(::ITensor, ::StateName, ::SiteType, ::Index) = nothing
 
-function state(s::Index, name::AbstractString)::IndexVal
+function state(s::Index, name::AbstractString; kwargs...)::ITensor
   stypes = _sitetypes(s)
   sname = StateName(name)
 
-  # Try calling state(::SiteType"Tag",::StateName"Name")
+  # Try calling state(::StateName"Name",::SiteType"Tag",s::Index)
   for st in stypes
-    res = state(st, sname)
-    !isnothing(res) && return s(res)
+    res = state(sname, st, s; kwargs...)
+    !isnothing(res) && return res
   end
 
-  # Try calling state(::SiteType"Tag","Name")
+  # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index)
+  T = emptyITensor(s)
   for st in stypes
-    res = state(st, name)
+    state!(T, sname, st, s)
+    !isempty(T) && return T
+  end
+
+  #
+  # otherwise try calling a function of the form:
+  #    state(::StateName"Name", ::SiteType"Tag"; kwargs...)
+  # which returns a Julia vector
+  #
+  for st in stypes
+    v = state(sname, st)
+    !isnothing(v) && return itensor(v, s)
+  end
+
+  return throw(
+    ArgumentError(
+      "Overload of \"state\" or \"state!\" functions not found for state name \"$name\" and Index tags $(tags(s))",
+    ),
+  )
+end
+
+state(s::Index, n::Integer) = onehot(s => n)
+
+state(sset::Vector{<:Index}, j::Integer, st) = state(sset[j], st)
+
+#---------------------------------------
+#
+# val system
+#
+#---------------------------------------
+
+@eval struct ValName{Name}
+  (f::Type{<:ValName})() = $(Expr(:new, :f))
+end
+
+ValName(s::AbstractString) = ValName{SmallString(s)}()
+ValName(s::SmallString) = ValName{s}()
+name(::ValName{N}) where {N} = N
+
+macro ValName_str(s)
+  return ValName{SmallString(s)}
+end
+
+val(::ValName, ::SiteType) = nothing
+val(::AbstractString, ::SiteType) = nothing
+
+function val(s::Index, name::AbstractString)::IndexVal
+  stypes = _sitetypes(s)
+  sname = ValName(name)
+
+  # Try calling val(::StateName"Name",::SiteType"Tag",)
+  for st in stypes
+    res = val(sname, st)
     !isnothing(res) && return s(res)
   end
 
   return throw(
-    ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))")
+    ArgumentError("Overload of \"val\" function not found for Index tags $(tags(s))")
   )
 end
 
-state(s::Index, n::Integer) = s[n]
+val(s::Index, n::Integer) = s[n]
 
-state(sset::Vector{<:Index}, j::Integer, st) = state(sset[j], st)
+val(sset::Vector{<:Index}, j::Integer, st) = val(sset[j], st)
 
 #---------------------------------------
 #

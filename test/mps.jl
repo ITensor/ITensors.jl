@@ -133,7 +133,7 @@ include("util.jl")
       for j in 1:N
         states[j] = isodd(j) ? 1 : 2
       end
-      ivals = [state(sites[n], states[n]) for n in 1:length(sites)]
+      ivals = [val(sites[n], states[n]) for n in 1:length(sites)]
       psi = MPS(ivals)
       for j in 1:N
         sign = isodd(j) ? +1.0 : -1.0
@@ -950,8 +950,8 @@ end
     CSWAP = [op("CSWAP", s, n, m, k) for n in 1:N, m in 1:N, k in 1:N]
     CCCNOT = [op("CCCNOT", s, n, m, k, l) for n in 1:N, m in 1:N, k in 1:N, l in 1:N]
 
-    v0 = [setelt(state(s, n, "0")) for n in 1:N]
-    v1 = [setelt(state(s, n, "1")) for n in 1:N]
+    v0 = [setelt(val(s, n, "0")) for n in 1:N]
+    v1 = [setelt(val(s, n, "1")) for n in 1:N]
 
     # Single qubit
     @test product(I[1], v0[1]) ≈ v0[1]

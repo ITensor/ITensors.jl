@@ -297,23 +297,23 @@ psi = MPS(ComplexF64, sites, states)
 phi = MPS(sites, "Up")
 ```
 """
-function MPS(::Type{T}, sites::Vector{<:Index}, states) where {T<:Number}
-  if length(sites) != length(states)
-    throw(DimensionMismatch("Number of sites and and initial states don't match"))
+function MPS(::Type{T}, sites::Vector{<:Index}, vals) where {T<:Number}
+  if length(sites) != length(vals)
+    throw(DimensionMismatch("Number of sites and and initial vals don't match"))
   end
-  ivals = [state(sites[n], states[n]) for n in 1:length(sites)]
+  ivals = [val(sites[n], vals[n]) for n in 1:length(sites)]
   return MPS(T, ivals)
 end
 
 function MPS(
-  ::Type{T}, sites::Vector{<:Index}, states::Union{String,Integer}
+  ::Type{T}, sites::Vector{<:Index}, vals::Union{String,Integer}
 ) where {T<:Number}
-  ivals = [state(sites[n], states) for n in 1:length(sites)]
+  ivals = [val(sites[n], vals) for n in 1:length(sites)]
   return MPS(T, ivals)
 end
 
-function MPS(::Type{T}, sites::Vector{<:Index}, states::Function) where {T<:Number}
-  ivals = [state(sites[n], states(n)) for n in 1:length(sites)]
+function MPS(::Type{T}, sites::Vector{<:Index}, vals::Function) where {T<:Number}
+  ivals = [val(sites[n], vals(n)) for n in 1:length(sites)]
   return MPS(T, ivals)
 end
 
