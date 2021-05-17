@@ -123,11 +123,8 @@ space(i::Index) = i.space
 
 """
     dir(i::Index)
-    dir(iv::IndexVal)
 
 Return the direction of an `Index` (`ITensors.In`, `ITensors.Out`, or `ITensors.Neither`).
-For an `IndexVal` `iv`, returns returns the direction of the `Index` in the `IndexVal`,
-i.e. `dir(ind(iv))`.
 """
 dir(i::Index) = i.dir
 
@@ -470,100 +467,10 @@ Removes the QNs from the Index, if it has any.
 """
 removeqns(i::Index) = i
 
-#
-# IndexVal
-#
-
-"""
-An IndexVal represents an Index object set to a certain value.
-"""
-struct IndexVal{IndexT<:Index}
-  ind::IndexT
-  val::Int
-  function IndexVal(i::IndexT, n::Int) where {IndexT<:Index}
-    n > dim(i) && throw(ErrorException("Value $n greater than size of Index $i"))
-    dim(i) > 0 && n < 1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
-    dim(i) == 0 && n < 0 && throw(ErrorException("Index value must be >= 1 (was $n)"))
-    return new{IndexT}(i, n)
-  end
-end
-
-"""
-    IndexVal(i::Index, n::Int)
-
-    IndexVal(iv::Pair{<:Index, Int})
-
-    getindex(i::Index,n::Int)
-
-    (i::Index)(n::Int)
-
-
-Create an `IndexVal` from a pair of `Index` and `Int`.
-
-Alternatively, you can use the syntax `i[n]`.
-"""
-IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first, iv.second)
-
-Base.convert(::Type{IndexVal}, iv::Pair{<:Index,Int}) = IndexVal(iv)
-
-function Base.convert(::Type{IndexVal{IndexT}}, iv::Pair{IndexT,Int}) where {IndexT<:Index}
-  return IndexVal(iv)
-end
-
-Base.getindex(i::Index, n::Int) = IndexVal(i, n)
-
-(i::Index)(n::Int) = IndexVal(i, n)
-
-"""
-    IndexVal(i::Index, s::AbstractString)
-
-    IndexVal(is::Pair{<:Index, String})
-
-    getindex(i::Index,n::AbstractString)
-
-    (i::Index)(s::String)
-
-
-Create an `IndexVal` from an `Index` and a `String`.
-
-Alternatively, you can use the syntax `i[s]`.
-"""
-IndexVal(i::Index, s::AbstractString) = IndexVal(i, val(i, s))
-
-IndexVal(iv::Pair{<:Index,String}) = IndexVal(iv.first, iv.second)
-
-Base.convert(::Type{IndexVal}, iv::Pair{<:Index,String}) = IndexVal(iv)
-
-function Base.convert(
-  ::Type{IndexVal{IndexT}}, iv::Pair{IndexT,String}
-) where {IndexT<:Index}
-  return IndexVal(iv)
-end
-
-Base.getindex(i::Index, s::AbstractString) = IndexVal(i, s)
-
-(i::Index)(s::AbstractString) = IndexVal(i, s)
-
-# Help treat a Pair{IndexT, V} like an IndexVal{IndexT}
-const IndexValOrPairIndexValue{IndexT} = Union{
-  IndexVal{IndexT},Pair{IndexT,Int},Pair{IndexT,String}
-}
-
-"""
-    ind(iv::IndexVal)
-
-Return the Index of the IndexVal.
-"""
-NDTensors.ind(iv::IndexVal) = iv.ind
+# Keep partial backwards compatibility by defining IndexVal as follows:
+const IndexVal{IndexT} = Pair{IndexT,Int}
 
 NDTensors.ind(iv::Pair{<:Index}) = first(iv)
-
-"""
-    val(iv::IndexVal)
-
-Return the value of the IndexVal.
-"""
-val(iv::IndexVal) = iv.val
 
 val(iv::Pair{<:Index}) = val(iv.first, iv.second)
 
@@ -576,23 +483,21 @@ val(iv::Pair{<:Index}) = val(iv.first, iv.second)
 
 Check if the Index and IndexVal have the same indices.
 """
-isindequal(i::Index, iv::IndexValOrPairIndexValue) = i == ind(iv)
+isindequal(i::Index, iv::Pair{<:Index}) = (i == ind(iv))
 
-isindequal(iv::IndexValOrPairIndexValue, i::Index) = isindequal(i, iv)
+isindequal(iv::Pair{<:Index}, i::Index) = isindequal(i, iv)
 
-function isindequal(iv1::IndexValOrPairIndexValue, iv2::IndexValOrPairIndexValue)
-  return ind(iv1) == ind(iv2)
-end
+isindequal(iv1::Pair{<:Index}, iv2::Pair{<:Index}) = (ind(iv1) == ind(iv2))
 
-plev(iv::IndexValOrPairIndexValue) = plev(ind(iv))
+plev(iv::Pair{<:Index}) = plev(ind(iv))
 
-prime(iv::IndexVal, inc::Integer=1) = IndexVal(prime(ind(iv), inc), val(iv))
+prime(iv::Pair{<:Index}, inc::Integer=1) = (prime(ind(iv), inc) => val(iv))
 
-dag(iv::IndexVal) = IndexVal(dag(ind(iv)), val(iv))
+dag(iv::Pair{<:Index}) = (dag(ind(iv)) => val(iv))
 
-Base.adjoint(iv::IndexVal) = IndexVal(prime(ind(iv)), val(iv))
+Base.adjoint(iv::Pair{<:Index}) = (prime(ind(iv)) => val(iv))
 
-dir(iv::IndexValOrPairIndexValue) = dir(ind(iv))
+dir(iv::Pair{<:Index}) = dir(ind(iv))
 
 #
 # Printing, reading, and writing
@@ -622,7 +527,7 @@ function Base.show(io::IO, i::Index)
   end
 end
 
-Base.show(io::IO, iv::IndexVal) = print(io, ind(iv), "=>$(val(iv))")
+Base.show(io::IO, iv::Pair{<:Index}) = print(io, ind(iv), "=>$(val(iv))")
 
 function readcpp(io::IO, ::Type{Index}; kwargs...)
   format = get(kwargs, :format, "v3")

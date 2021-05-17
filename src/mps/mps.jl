@@ -233,7 +233,7 @@ random MPS.
 Construct a product state MPS with element type `T` and
 nonzero values determined from the input IndexVals.
 """
-function MPS(::Type{T}, ivals::Vector{<:IndexValOrPairIndexValue}) where {T<:Number}
+function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
   N = length(ivals)
   M = MPS(N)
 
@@ -270,7 +270,7 @@ const productMPS = MPS
 Construct a product state MPS with element type `Float64` and
 nonzero values determined from the input IndexVals.
 """
-MPS(ivals::Vector{<:IndexValOrPairIndexValue}) = MPS(Float64, ivals)
+MPS(ivals::Vector{<:Pair{<:Index}}) = MPS(Float64, ivals)
 
 """
     MPS(::Type{T},
@@ -301,19 +301,19 @@ function MPS(::Type{T}, sites::Vector{<:Index}, vals) where {T<:Number}
   if length(sites) != length(vals)
     throw(DimensionMismatch("Number of sites and and initial vals don't match"))
   end
-  ivals = [IndexVal(sites[n], vals[n]) for n in 1:length(sites)]
+  ivals = [sites[n] => vals[n] for n in 1:length(sites)]
   return MPS(T, ivals)
 end
 
 function MPS(
   ::Type{T}, sites::Vector{<:Index}, val::Union{String,Integer}
 ) where {T<:Number}
-  ivals = [IndexVal(sites[n], val) for n in 1:length(sites)]
+  ivals = [sites[n] => val for n in 1:length(sites)]
   return MPS(T, ivals)
 end
 
 function MPS(::Type{T}, sites::Vector{<:Index}, vals::Function) where {T<:Number}
-  ivals = [IndexVal(sites[n], vals(n)) for n in 1:length(sites)]
+  ivals = [sites[n] => vals(n) for n in 1:length(sites)]
   return MPS(T, ivals)
 end
 

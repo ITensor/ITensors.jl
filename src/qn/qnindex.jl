@@ -52,8 +52,6 @@ dimensions of the blocks of the Index.
 """
 const QNIndex = Index{QNBlocks}
 
-const QNIndexVal = IndexVal{QNIndex}
-
 # Trait for the symmetry type (QN or not QN)
 struct HasQNs <: SymmetryStyle end
 
@@ -157,11 +155,11 @@ function block(qns::QNBlocks, n::Int)
     tdim += blockdim(qns, Block(b))
     (n <= tdim) && return Block(b)
   end
-  error("qn: QNIndexVal out of range")
+  error("qn: QN Index value out of range")
   return Block(0)
 end
 
-function block(iv::Union{<:IndexVal,<:Pair{<:Index,<:Integer}})
+function block(iv::Pair{<:Index})
   i = ind(iv)
   v = val(iv)
   return block(space(i), v)
@@ -176,13 +174,13 @@ qn(ib::Pair{<:Index,Block{1}}) = qn(first(ib), last(ib))
 qn(i::QNIndex, b::Integer) = qn(i, Block(b))
 
 # Get the QN of the block the IndexVal lies in
-qn(iv::Union{<:IndexVal,<:Pair{<:Index,<:Integer}}) = qn(ind(iv), block(iv))
+qn(iv::Pair{<:Index}) = qn(ind(iv), block(iv))
 
 flux(i::QNIndex, b::Block{1}) = dir(i) * qn(i, b)
 
 flux(ib::Pair{<:Index,Block{1}}) = flux(first(ib), last(ib))
 
-flux(iv::Union{<:IndexVal,<:Pair{<:Index,<:Integer}}) = flux(ind(iv), block(iv))
+flux(iv::Pair{<:Index}) = flux(ind(iv), block(iv))
 
 qnblocks(i::QNIndex) = space(i)
 
