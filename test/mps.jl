@@ -56,7 +56,7 @@ include("util.jl")
     @test isnothing(linkind(psi, 1))
     @test isnothing(linkind(psi, 5))
     @test isnothing(linkind(psi, N))
-    @test maxlinkdim(psi) == 0
+    @test maxlinkdim(psi) == 1
     @test psi ⋅ psi ≈ *(dag(psi)..., psi...)[]
   end
 
@@ -149,12 +149,14 @@ include("util.jl")
         sites = siteinds("S=1/2", N)
         psi = MPS(ComplexF64, sites, fill(1, N))
         for j in 1:N
-          @test eltype(psi[j]) <: ComplexF64
+          @test eltype(psi[j]) == ComplexF64
         end
         psi = productMPS(ComplexF64, sites, fill(1, N))
         for j in 1:N
-          @test eltype(psi[j]) <: ComplexF64
+          @test eltype(psi[j]) == ComplexF64
         end
+        @test eltype(psi) == ITensor
+        @test ITensors.promote_itensor_eltype(psi) == ComplexF64
       end
     end
 
@@ -205,6 +207,26 @@ include("util.jl")
     @test_throws DimensionMismatch inner(phi, badpsi)
   end
 
+  @testset "broadcasting" begin
+    psi = randomMPS(sites)
+    orthogonalize!(psi, 1)
+    @test ortho_lims(psi) == 1:1
+    @test dim.(psi) == fill(2, length(psi))
+    psi′ = prime.(psi)
+    @test ortho_lims(psi′) == 1:length(psi′)
+    @test ortho_lims(psi) == 1:1
+    for n in 1:length(psi)
+      @test prime(psi[n]) == psi′[n]
+    end
+    psi_copy = copy(psi)
+    psi_copy .= addtags(psi_copy, "x")
+    @test ortho_lims(psi_copy) == 1:length(psi_copy)
+    @test ortho_lims(psi) == 1:1
+    for n in 1:length(psi)
+      @test addtags(psi[n], "x") == psi_copy[n]
+    end
+  end
+
   @testset "inner same MPS" begin
     psi = randomMPS(sites)
     psidag = dag(psi)
@@ -225,9 +247,19 @@ include("util.jl")
     end
     @test psi²[] ≈ psi ⋅ psi
     @test sqrt(psi²[]) ≈ norm(psi)
+
+    psi = randomMPS(sites, 10)
+    psi .*= 1:N
+    @test norm(psi) ≈ factorial(N)
+
+    psi = randomMPS(sites, 10)
     for j in 1:N
       psi[j] .*= j
     end
+    # This fails because it modifies the MPS ITensors
+    # directly, which ruins the orthogonality
+    @test norm(psi) ≉ factorial(N)
+    reset_ortho_lims!(psi)
     @test norm(psi) ≈ factorial(N)
   end
 
@@ -242,6 +274,11 @@ include("util.jl")
       psi² *= psidag[j] * psi[j]
     end
     @test psi²[] ≈ psi ⋅ psi
+    @test 0.5 * log(psi²[]) ≉ lognorm(psi)
+    @test lognorm(psi) ≉ log(factorial(N))
+    # Need to manually change the orthogonality
+    # limits back to 1:length(psi)
+    reset_ortho_lims!(psi)
     @test 0.5 * log(psi²[]) ≈ lognorm(psi)
     @test lognorm(psi) ≈ log(factorial(N))
   end
@@ -567,9 +604,9 @@ end
     s = siteinds("S=1/2", N; conserve_qns=true)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn", m)
     Cpm = correlation_matrix(psi, "S+", "S-")
-    # Check using AutoMPO:
+    # Check using OpSum:
     for i in 1:N, j in i:N
-      a = AutoMPO()
+      a = OpSum()
       a += "S+", i, "S-", j
       @test inner(psi, MPO(a, s), psi) ≈ Cpm[i, j]
     end
@@ -587,9 +624,9 @@ end
     Cpm = correlation_matrix(psi, "S+", "S-"; site_range=ss:es)
     Czz = correlation_matrix(psi, "Sz", "Sz"; site_range=ss:es)
     @test size(Cpm) == (Nb, Nb)
-    # Check using AutoMPO:
+    # Check using OpSum:
     for i in ss:es, j in i:es
-      a = AutoMPO()
+      a = OpSum()
       a += "S+", i, "S-", j
       @test inner(psi, MPO(a, s), psi) ≈ Cpm[i - ss + 1, j - ss + 1]
     end
@@ -598,9 +635,9 @@ end
     s = siteinds("Electron", N)
     psi = randomMPS(s, m)
     Cuu = correlation_matrix(psi, "Cdagup", "Cup")
-    # Check using AutoMPO:
+    # Check using OpSum:
     for i in 1:N, j in i:N
-      a = AutoMPO()
+      a = OpSum()
       a += "Cdagup", i, "Cup", j
       @test inner(psi, MPO(a, s), psi) ≈ Cuu[i, j]
     end
@@ -750,7 +787,7 @@ end
       @test ns′ == perm
       ψ′ = movesites(ψ, 1:N .=> ns′; cutoff=1e-15)
       if N == 1
-        @test maxlinkdim(ψ′) == 0
+        @test maxlinkdim(ψ′) == 1
       else
         @test maxlinkdim(ψ′) == 1
       end
@@ -1314,7 +1351,7 @@ end
 
       @test inner(ψ1, ψ110) == -1
 
-      a = AutoMPO()
+      a = OpSum()
       a += "Cdag", 1, "C", 3
       H = MPO(a, s)
 
@@ -1334,7 +1371,7 @@ end
 
       t = 1.0
       U = 1.0
-      ampo = AutoMPO()
+      ampo = OpSum()
       for b in 1:(N - 1)
         ampo .+= -t, "Cdag", b, "C", b + 1
         ampo .+= -t, "Cdag", b + 1, "C", b
@@ -1368,7 +1405,7 @@ end
           G2 *= op("C", s, j)
         end
 
-        ampo = AutoMPO()
+        ampo = OpSum()
         ampo += "Cdag", i, "C", j
         G3 = MPO(ampo, s)
 
@@ -1399,7 +1436,7 @@ end
           end
           G2 *= op("C", s, l)
 
-          ampo = AutoMPO()
+          ampo = OpSum()
           ampo += "Cdag", i, "Cdag", j, "C", k, "C", l
           G3 = MPO(ampo, s)
 
@@ -1420,7 +1457,7 @@ end
       ψ0 = randomMPS(s, n -> isodd(n) ? "↑" : "↓")
       t = 1.0
       U = 1.0
-      ampo = AutoMPO()
+      ampo = OpSum()
       for b in 1:(N - 1)
         ampo .+= -t, "Cdagup", b, "Cup", b + 1
         ampo .+= -t, "Cdagup", b + 1, "Cup", b
@@ -1441,7 +1478,7 @@ end
       end
 
       for i in 1:(N - 1), j in (i + 1):N
-        ampo = AutoMPO()
+        ampo = OpSum()
         ampo += "Cdagup", i, "Cup", j
         G1 = MPO(ampo, s)
         G2 = op("CCup", s, i, j)
@@ -1482,7 +1519,7 @@ end
   @testset "inner(::MPS, ::MPO, ::MPS) with more than one site Index" begin
     N = 8
     s = siteinds("S=1/2", N)
-    a = AutoMPO()
+    a = OpSum()
     for j in 1:(N - 1)
       a .+= 0.5, "S+", j, "S-", j + 1
       a .+= 0.5, "S-", j, "S+", j + 1
@@ -1517,18 +1554,14 @@ end
     N = 4
     s = siteinds("S=1/2", N)
     ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
-    ρ = MPO(ψ)
-    @test ITensors.hasnolinkinds(ρ)
+    ρ = outer(ψ, ψ)
+    @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
-  end
 
-  @testset "MPO from MPS with no link indices" begin
-    N = 4
-    s = siteinds("S=1/2", N)
-    ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
+    # Deprecated syntax
     ρ = MPO(ψ)
-    @test ITensors.hasnolinkinds(ρ)
+    @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
   end

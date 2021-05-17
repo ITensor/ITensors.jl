@@ -147,6 +147,13 @@ import ITensors: In, Out, Neither
     @test all(tensor(A) .== tensor(Ã))
     @test all(tensor(A) .≠ tensor(Ã′))
   end
+  @testset "directsum" begin
+    i = Index(2, "i")
+    j = Index(3, "j")
+    ij = ITensors.directsum(i, j; tags="test")
+    @test dim(ij) == 5
+    @test hastags(ij, "test")
+  end
 end
 
 nothing

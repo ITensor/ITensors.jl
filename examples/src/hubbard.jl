@@ -1,6 +1,6 @@
 
 function hubbard_1d(; N::Int, t=1.0, U=0.0)
-  ampo = AutoMPO()
+  ampo = OpSum()
   for b in 1:(N - 1)
     ampo .+= -t, "Cdagup", b, "Cup", b + 1
     ampo .+= -t, "Cdagup", b + 1, "Cup", b
@@ -18,7 +18,7 @@ end
 function hubbard_2d(; Nx::Int, Ny::Int, t=1.0, U=0.0, yperiodic::Bool=true)
   N = Nx * Ny
   lattice = square_lattice(Nx, Ny; yperiodic=yperiodic)
-  ampo = AutoMPO()
+  ampo = OpSum()
   for b in lattice
     ampo .+= -t, "Cdagup", b.s1, "Cup", b.s2
     ampo .+= -t, "Cdagup", b.s2, "Cup", b.s1
@@ -34,7 +34,7 @@ function hubbard_2d(; Nx::Int, Ny::Int, t=1.0, U=0.0, yperiodic::Bool=true)
 end
 
 function hubbard_2d_ky(; Nx::Int, Ny::Int, t=1.0, U=0.0)
-  ampo = AutoMPO()
+  ampo = OpSum()
   for x in 0:(Nx - 1)
     for ky in 0:(Ny - 1)
       s = x * Ny + ky + 1

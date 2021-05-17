@@ -34,12 +34,3 @@ removeqns(is::QNIndices) = map(i -> removeqns(i), is)
 anyfermionic(is::Indices) = any(isfermionic, is)
 
 allfermionic(is::Indices) = all(isfermionic, is)
-
-# TODO: specialize for Vector vs. Tuple
-function Base.show(io::IO, is::QNIndices)
-  print(io, "$(length(is)) Indices\n")
-  for i in is
-    print(io, i)
-    println(io)
-  end
-end

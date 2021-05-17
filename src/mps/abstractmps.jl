@@ -17,22 +17,34 @@ size(m::AbstractMPS) = size(data(m))
 ndims(m::AbstractMPS) = ndims(data(m))
 
 """
-    eltype(m::MPS)
-    eltype(m::MPO)
+    promote_itensor_eltype(m::MPS)
+    promote_itensor_eltype(m::MPO)
 
-Return the common element type of the
+Return the promotion of the elements type of the
 tensors in the MPS or MPO. For example,
-if all tensors have type Float64 then
-return Float64. But if one or more tensors
-have type ComplexF64, return ComplexF64.
+if all tensors have type `Float64` then
+return `Float64`. But if one or more tensors
+have type `ComplexF64`, return `ComplexF64`.
 """
-function eltype(m::AbstractMPS)
-  T = eltype(m[1])
+function promote_itensor_eltype(m::AbstractMPS)
+  T = isassigned(m, 1) ? eltype(m[1]) : Number
   for n in 2:length(m)
-    T = promote_type(T, eltype(m[n]))
+    Tn = isassigned(m, n) ? eltype(m[n]) : Number
+    T = promote_type(T, Tn)
   end
   return T
 end
+
+"""
+    eltype(m::MPS)
+    eltype(m::MPO)
+
+The element type of the MPS/MPO. Always returns `ITensor`.
+
+For the element type of the ITensors of the MPS/MPO,
+use `common_itensor_eltype`.
+"""
+eltype(::AbstractMPS) = ITensor
 
 """
     ITensors.data(::MPS/MPO)
@@ -99,14 +111,19 @@ function set_ortho_lims!(ψ::AbstractMPS, r::UnitRange{Int})
   return ψ
 end
 
+reset_ortho_lims!(ψ::AbstractMPS) = set_ortho_lims!(ψ, 1:length(ψ))
+
 isortho(m::AbstractMPS) = leftlim(m) + 1 == rightlim(m) - 1
 
-function orthocenter(m::T) where {T<:AbstractMPS}
-  !isortho(m) && error("$T has no well-defined orthogonality center")
+# Could also define as `only(ortho_lims)`
+function orthocenter(m::AbstractMPS)
+  !isortho(m) && error("$(typeof(m)) has no well-defined orthogonality center")
   return leftlim(m) + 1
 end
 
 getindex(M::AbstractMPS, n) = getindex(data(M), n)
+
+isassigned(M::AbstractMPS, n) = isassigned(data(M), n)
 
 lastindex(M::AbstractMPS) = lastindex(data(M))
 
@@ -559,8 +576,18 @@ function map(f::Function, M::AbstractMPS; set_limits::Bool=true)
   return map!(f, copy(M); set_limits=set_limits)
 end
 
-for fname in
-    (:dag, :prime, :setprime, :noprime, :addtags, :removetags, :replacetags, :settags)
+for fname in (
+  :dag,
+  :prime,
+  :setprime,
+  :noprime,
+  :swapprime,
+  :replaceprime,
+  :addtags,
+  :removetags,
+  :replacetags,
+  :settags,
+)
   fname! = Symbol(fname, :!)
 
   @eval begin
@@ -798,12 +825,15 @@ end
     maxlinkdim(M::MPO)
 
 Get the maximum link dimension of the MPS or MPO.
+
+The minimum this will return is `1`, even if there
+are no link indices.
 """
 function maxlinkdim(M::AbstractMPS)
-  md = 0
+  md = 1
   for b in eachindex(M)[1:(end - 1)]
     l = linkind(M, b)
-    linkdim = isnothing(l) ? 0 : dim(l)
+    linkdim = isnothing(l) ? 1 : dim(l)
     md = max(md, linkdim)
   end
   return md
@@ -941,9 +971,16 @@ end
 
 Compute the norm of the MPS or MPO.
 
-See also `lognorm`.
+If the MPS or MPO has a well defined orthogonality center, this reduces to the norm of the orthogonality center tensor. Otherwise, it computes the norm with the full inner product of the MPS/MPO with itself.
+
+See also [`lognorm`](@ref).
 """
-norm(M::AbstractMPS) = sqrt(dot(M, M))
+function norm(M::AbstractMPS)
+  if isortho(M)
+    return norm(M[orthocenter(M)])
+  end
+  return sqrt(dot(M, M))
+end
 
 """
     lognorm(A::MPS)
@@ -953,9 +990,14 @@ Compute the logarithm of the norm of the MPS or MPO.
 
 This is useful for larger MPS/MPO that are not gauged, where in the limit of large numbers of sites the norm can diverge or approach zero.
 
-See also `norm` and `loginner`/`logdot`.
+See also [`norm`](@ref), [`loginner`](@ref), [`logdot`](@ref).
 """
-lognorm(M::AbstractMPS) = 0.5 * logdot(M, M)
+function lognorm(M::AbstractMPS)
+  if isortho(M)
+    return log(norm(M[orthocenter(M)]))
+  end
+  return 0.5 * logdot(M, M)
+end
 
 """
     dist(A::MPS, B::MPS)
@@ -1224,7 +1266,8 @@ function truncate(ψ0::AbstractMPS; kwargs...)
   return ψ
 end
 
-contract(A::AbstractMPS, B::AbstractMPS; kwargs...) = *(A, B; kwargs...)
+# Make `*` and alias for `contract` of two `AbstractMPS`
+*(A::AbstractMPS, B::AbstractMPS; kwargs...) = contract(A, B; kwargs...)
 
 """
     α::Number * ψ::MPS/MPO
@@ -1818,18 +1861,27 @@ function BroadcastStyle(::Style{MPST}, ::DefaultArrayStyle{N}) where {N,MPST<:Ab
 end
 
 broadcastable(ψ::AbstractMPS) = ψ
-copyto!(ψ::AbstractMPS, b::Broadcasted) = copyto!(data(ψ), b)
-
-function similar(
-  ::Broadcasted{Style{MPST}}, ::Type{ElType}, dims
-) where {ElType,MPST<:AbstractMPS}
-  return similar(Array{ElType}, dims)
+function copyto!(ψ::AbstractMPS, b::Broadcasted)
+  copyto!(data(ψ), b)
+  # In general, we assume the broadcast operation
+  # will mess up the orthogonality
+  # TODO: special case for `prime`, `settags`, etc.
+  reset_ortho_lims!(ψ)
+  return ψ
 end
-function similar(
-  bc::Broadcasted{Style{MPST}}, ::Type{ElType}
-) where {ElType,MPST<:AbstractMPS}
+
+function similar(bc::Broadcasted{Style{MPST}}, ElType::Type) where {MPST<:AbstractMPS}
   return similar(Array{ElType}, axes(bc))
 end
+
+function similar(bc::Broadcasted{Style{MPST}}, ::Type{ITensor}) where {MPST<:AbstractMPS}
+  # In general, we assume the broadcast operation
+  # will mess up the orthogonality so we use
+  # a generic constructor where we don't specify
+  # the orthogonality limits.
+  return MPST(similar(Array{ITensor}, axes(bc)))
+end
+
 #
 # Printing functions
 #
@@ -1837,11 +1889,16 @@ end
 function Base.show(io::IO, M::AbstractMPS)
   print(io, "$(typeof(M))")
   (length(M) > 0) && print(io, "\n")
-  for (i, A) in enumerate(data(M))
-    if order(A) != 0
-      println(io, "[$i] $(inds(A))")
+  for i in eachindex(M)
+    if !isassigned(M, i)
+      println(io, "#undef")
     else
-      println(io, "[$i] ITensor()")
+      A = M[i]
+      if order(A) != 0
+        println(io, "[$i] $(inds(A))")
+      else
+        println(io, "[$i] ITensor()")
+      end
     end
   end
 end

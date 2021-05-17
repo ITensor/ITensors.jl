@@ -32,7 +32,7 @@ let
   N = 100
   sites = siteinds("S=1",N)
 
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j=1:N-1
     ampo += "Sz",j,"Sz",j+1
     ampo += 1/2,"S+",j,"S-",j+1
@@ -77,7 +77,7 @@ Try printing out some of these indices to verify their properties:
 The next part of the code builds the Hamiltonian:
 
 ```julia
-ampo = AutoMPO()
+ampo = OpSum()
 for j=1:N-1
   ampo += "Sz",j,"Sz",j+1
   ampo += 1/2,"S+",j,"S-",j+1
@@ -86,7 +86,7 @@ end
 H = MPO(ampo,sites)
 ```
 
-An `AutoMPO` is an object which accumulates Hamiltonian terms such as `"Sz",1,"Sz",2`
+An `OpSum` is an object which accumulates Hamiltonian terms such as `"Sz",1,"Sz",2`
 so that they can be summed afterward into a matrix product operator (MPO) tensor network. 
 The line of code `H = MPO(ampo,sites)` constructs the Hamiltonian in the MPO format, with
 physical indices given by the array `sites`.
@@ -285,7 +285,7 @@ let
   N = 100
   sites = siteinds("S=1",N;conserve_qns=true)
 
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j=1:N-1
     ampo += "Sz",j,"Sz",j+1
     ampo += 1/2,"S+",j,"S-",j+1

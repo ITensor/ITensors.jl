@@ -11,7 +11,7 @@ let
 
   N = 100
   sites = siteinds("S=1", N)
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j in 1:(N - 1)
     ampo += 0.5, "S+", j, "S-", j + 1
     ampo += 0.5, "S-", j, "S+", j + 1

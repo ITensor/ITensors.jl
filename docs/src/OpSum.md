@@ -1,14 +1,14 @@
-# AutoMPO
+# OpSum
 
 ## Description
 
 ```@docs
-AutoMPO
+OpSum
 ```
 
 ## Methods
 
 ```@docs
 add!
-MPO(::AutoMPO,::Vector{<:Index})
+MPO(::OpSum,::Vector{<:Index})
 ```

@@ -134,13 +134,13 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 ```
 
 A common place you might accidentally come across this is when
-you are creating a Hamiltonian with `AutoMPO`:
+you are creating a Hamiltonian with `OpSum`:
 ```julia
 julia> N = 4;
 
 julia> sites = siteinds("S=1/2",N);
 
-julia> ampo = AutoMPO();
+julia> ampo = OpSum();
 
 julia> for j=1:N-1
          ampo += "Sz", j, "Sz", j+1
@@ -304,7 +304,7 @@ julia> names(ITensors)
  Symbol("@set_warn_order")
  Symbol("@ts_str")
  :AbstractObserver
- :AutoMPO
+ :OpSum
  :DMRGObserver
  :ITensor
  :ITensors

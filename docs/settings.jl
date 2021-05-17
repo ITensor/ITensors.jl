@@ -36,7 +36,7 @@ settings = Dict(
         "Observer.md",
         "DMRGObserver.md",
       ],
-      "AutoMPO" => "AutoMPO.md",
+      "OpSum" => "OpSum.md",
     ],
     "Advanced usage guide" => [
       "Advanced usage guide" => "AdvancedUsageGuide.md",

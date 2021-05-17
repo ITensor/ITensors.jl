@@ -7,7 +7,7 @@ suite = BenchmarkGroup()
 
 let N = 100
   sites = siteinds("S=1", N)
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j in 1:(N - 1)
     ampo .+= ("Sz", j, "Sz", j + 1)
     ampo .+= (0.5, "S+", j, "S-", j + 1)
@@ -28,7 +28,7 @@ end
 
 let N = 100
   sites = siteinds("S=1", N; conserve_qns=true)
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j in 1:(N - 1)
     ampo .+= ("Sz", j, "Sz", j + 1)
     ampo .+= (0.5, "S+", j, "S-", j + 1)
@@ -52,7 +52,7 @@ end
 #  N = Nx * Ny
 #  sites = siteinds("S=1/2", N)
 #  lattice = square_lattice(Nx, Ny; yperiodic = false)
-#  ampo = AutoMPO()
+#  ampo = OpSum()
 #  for b in lattice
 #    ampo .+= (0.5, "S+", b.s1, "S-", b.s2)
 #    ampo .+= (0.5, "S-", b.s1, "S+", b.s2)

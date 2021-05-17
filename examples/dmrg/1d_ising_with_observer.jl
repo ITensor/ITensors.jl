@@ -9,7 +9,7 @@ using ITensors
 function tfimMPO(sites, h::Float64)
   # Input operator terms which define a Hamiltonian
   N = length(sites)
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j in 1:(N - 1)
     ampo += -1, "Z", j, "Z", j + 1
   end

@@ -174,7 +174,7 @@ let
 
   s = siteinds("S=1/2",N)
 
-  a = AutoMPO()
+  a = OpSum()
   for n=1:N-1
     a += "Sz",n,"Sz",n+1
     a += 0.5,"S+",n,"S-",n+1
