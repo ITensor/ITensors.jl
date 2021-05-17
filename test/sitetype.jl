@@ -182,9 +182,9 @@ using ITensors, Test
     function ITensors.op(::SiteType"_Custom_", s::Index, opname::AbstractString)
       Op = emptyITensor(s', dag(s))
       if opname == "S+"
-        Op[s'(1), s(2)] = sqrt(3)
-        Op[s'(2), s(3)] = 2
-        Op[s'(3), s(4)] = sqrt(3)
+        Op[s'=>1, s=>2] = sqrt(3)
+        Op[s'=>2, s=>3] = 2
+        Op[s'=>3, s=>4] = sqrt(3)
       else
         error("Name $opname not recognized for tag \"Custom\"")
       end
@@ -193,9 +193,9 @@ using ITensors, Test
 
     s = Index(4, "_Custom_")
     Sp = op("S+", s)
-    @test Sp[s'(1), s(2)] ≈ sqrt(3)
-    @test Sp[s'(2), s(3)] ≈ 2
-    @test Sp[s'(3), s(4)] ≈ sqrt(3)
+    @test Sp[s'=>1, s=>2] ≈ sqrt(3)
+    @test Sp[s'=>2, s=>3] ≈ 2
+    @test Sp[s'=>3, s=>4] ≈ sqrt(3)
   end
 
   @testset "siteind defined by space overload" begin
@@ -306,22 +306,13 @@ using ITensors, Test
     @test norm(oa[2] - op("Sz", s, 2)) < 1E-8
   end
 
-  @testset "IndexVals Made From Strings" begin
+  @testset "Index Values From Strings" begin
     @testset "Val function" begin
       s = siteind("Electron")
       @test val(s, "0") == 1
       @test val(s, "Up") == 2
       @test val(s, "Dn") == 3
       @test val(s, "UpDn") == 4
-    end
-
-    @testset "IndexVal Constructors" begin
-      s = siteind("Electron")
-      @test IndexVal(s, "0") == IndexVal(s, 1)
-      @test IndexVal(s, "Dn") == IndexVal(s, 3)
-
-      @test IndexVal(s => "0") == IndexVal(s, 1)
-      @test IndexVal(s => "Dn") == IndexVal(s, 3)
     end
 
     @testset "Strings in ITensor get and set" begin
