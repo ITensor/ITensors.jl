@@ -332,7 +332,6 @@ Random.seed!(1234)
   end
 
   @testset "setindex!" begin
-    println("In setindex!")
     @testset "Test 1" begin
       s1 = Index([QN("N", 0, -1) => 1, QN("N", 1, -1) => 1], "s1")
       s2 = Index([QN("N", 0, -1) => 1, QN("N", 1, -1) => 1], "s2")
