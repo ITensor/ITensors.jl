@@ -15,14 +15,14 @@ X = ITensor(b, c)
 Y = ITensor(b, c)
 
 # Set some elements
-Z[a(1), b(1)] = 1.0
-Z[a(2), b(2)] = -1.0
+Z[a=>1, b=>1] = 1.0
+Z[a=>2, b=>2] = -1.0
 
-X[b(1), c(2)] = 1.0
-X[b(2), c(1)] = 1.0
+X[b=>1, c=>2] = 1.0
+X[b=>2, c=>1] = 1.0
 
-Y[b(1), c(1)] = 1.0
-Y[b(2), c(2)] = 1.0
+Y[b=>1, c=>1] = 1.0
+Y[b=>2, c=>2] = 1.0
 
 # Operations with tensors
 R = Z * X
