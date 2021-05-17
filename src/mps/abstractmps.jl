@@ -1870,15 +1870,11 @@ function copyto!(ψ::AbstractMPS, b::Broadcasted)
   return ψ
 end
 
-function similar(
-  bc::Broadcasted{Style{MPST}}, ElType::Type
-) where {MPST<:AbstractMPS}
+function similar(bc::Broadcasted{Style{MPST}}, ElType::Type) where {MPST<:AbstractMPS}
   return similar(Array{ElType}, axes(bc))
 end
 
-function similar(
-  bc::Broadcasted{Style{MPST}}, ::Type{ITensor}
-) where {MPST<:AbstractMPS}
+function similar(bc::Broadcasted{Style{MPST}}, ::Type{ITensor}) where {MPST<:AbstractMPS}
   # In general, we assume the broadcast operation
   # will mess up the orthogonality so we use
   # a generic constructor where we don't specify
@@ -1894,7 +1890,6 @@ function Base.show(io::IO, M::AbstractMPS)
   print(io, "$(typeof(M))")
   (length(M) > 0) && print(io, "\n")
   for i in eachindex(M)
-  #for (i, A) in enumerate(data(M))
     if !isassigned(M, i)
       println(io, "#undef")
     else

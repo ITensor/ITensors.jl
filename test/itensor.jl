@@ -1404,6 +1404,38 @@ end
     @test !allhastags(A, "i")
     @test allhastags(A, "x")
   end
+
+  @testset "directsum" begin
+    x = Index(2, "x")
+    i1 = Index(3, "i1")
+    j1 = Index(4, "j1")
+    i2 = Index(5, "i2")
+    j2 = Index(6, "j2")
+
+    A1 = randomITensor(i1, x, j1)
+    A2 = randomITensor(x, j2, i2)
+    S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags=["sum_i", "sum_j"])
+
+    @test hassameinds(S, (x, s...))
+    @test hastags(s[1], "sum_i")
+    @test hastags(s[2], "sum_j")
+
+    for vx in 1:dim(x)
+      proj = dag(onehot(x => vx))
+      A1_vx = A1 * proj
+      A2_vx = A2 * proj
+      S_vx = S * proj
+      for m in 1:dim(s[1]), n in 1:dim(s[2])
+        if m ≤ dim(i1) && n ≤ dim(j1)
+          @test S_vx[s[1] => m, s[2] => n] == A1_vx[i1 => m, j1 => n]
+        elseif m > dim(i1) && n > dim(j1)
+          @test S_vx[s[1] => m, s[2] => n] == A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
+        else
+          @test S_vx[s[1] => m, s[2] => n] == 0
+        end
+      end
+    end
+  end
 end # End Dense ITensor basic functionality
 
 # Disable debug checking once tests are completed

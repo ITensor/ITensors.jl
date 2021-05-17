@@ -195,6 +195,8 @@ function blockdim(i::Index, b::Union{Block,Integer})
   )
 end
 
+dim(i::QNIndex, b::Block) = blockdim(space(i), b)
+
 eachblock(i::Index) = (Block(n) for n in 1:nblocks(i))
 
 # Return the first block of the QNIndex with the flux q
@@ -269,6 +271,7 @@ end
 
 (qn1::QNBlock * qn2::QNBlock) = QNBlock(qn(qn1) + qn(qn2), blockdim(qn1) * blockdim(qn2))
 
+# TODO: rename tensorproduct with ⊗ alias
 function outer(qn1::QNBlocks, qn2::QNBlocks)
   qnR = ITensors.QNBlocks(undef, nblocks(qn1) * nblocks(qn2))
   for (i, t) in enumerate(Iterators.product(qn1, qn2))
@@ -277,6 +280,7 @@ function outer(qn1::QNBlocks, qn2::QNBlocks)
   return qnR
 end
 
+# TODO: rename tensorproduct with ⊗ alias
 function outer(i1::QNIndex, i2::QNIndex; dir=nothing, tags="", plev::Integer=0)
   if isnothing(dir)
     if ITensors.dir(i1) == ITensors.dir(i2)
@@ -289,12 +293,23 @@ function outer(i1::QNIndex, i2::QNIndex; dir=nothing, tags="", plev::Integer=0)
   return Index(newspace; dir=dir, tags=tags, plev=plev)
 end
 
+# TODO: rename tensorproduct with ⊗ alias
 function outer(i::QNIndex; dir=nothing, tags="", plev::Integer=0)
   if isnothing(dir)
     dir = ITensors.dir(i)
   end
   newspace = dir * (ITensors.dir(i) * space(i))
   return Index(newspace; dir=dir, tags=tags, plev=plev)
+end
+
+# TODO: add ⊕ alias
+function directsum(
+  i::Index{Vector{Pair{QN,Int}}}, j::Index{Vector{Pair{QN,Int}}}; tags="sum"
+)
+  dir(i) ≠ dir(j) && error(
+    "To direct sum two indices, they must have the same direction. Trying to direct sum indices $i and $j.",
+  )
+  return Index(vcat(space(i), space(j)); dir=dir(i), tags=tags)
 end
 
 isless(qnb1::QNBlock, qnb2::QNBlock) = isless(qn(qnb1), qn(qnb2))

@@ -549,7 +549,7 @@ Cuu = correlator(psi,"Cdagup","Cup";site_range=2:8)
 """
 function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; kwargs...)
   N = length(psi)
-  ElT = eltype(psi)
+  ElT = promote_itensor_eltype(psi)
 
   site_range::UnitRange{Int} = get(kwargs, :site_range, 1:N)
   start_site = first(site_range)

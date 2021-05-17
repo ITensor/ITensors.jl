@@ -443,14 +443,20 @@ function Base.iterate(i::Index, state::Int=1)
 end
 
 # This is a trivial definition for use in NDTensors
+# XXX: rename tensorproduct with ⊗ alias
 function NDTensors.outer(i::Index; dir=dir(i), tags="", plev::Int=0)
   return sim(i; tags=tags, plev=plev, dir=dir)
 end
 
 # This is for use in NDTensors
+# XXX: rename tensorproduct with ⊗ alias
 function NDTensors.outer(i1::Index, i2::Index; tags="")
   return Index(dim(i1) * dim(i2), tags)
 end
+
+# Non-qn Index
+# TODO: add ⊕ alias
+directsum(i::Index, j::Index; tags="sum") = Index(dim(i) + dim(j); tags=tags)
 
 #
 # QN related functions
