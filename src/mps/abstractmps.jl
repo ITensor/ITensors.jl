@@ -17,22 +17,34 @@ size(m::AbstractMPS) = size(data(m))
 ndims(m::AbstractMPS) = ndims(data(m))
 
 """
-    eltype(m::MPS)
-    eltype(m::MPO)
+    promote_itensor_eltype(m::MPS)
+    promote_itensor_eltype(m::MPO)
 
-Return the common element type of the
+Return the promotion of the elements type of the
 tensors in the MPS or MPO. For example,
-if all tensors have type Float64 then
-return Float64. But if one or more tensors
-have type ComplexF64, return ComplexF64.
+if all tensors have type `Float64` then
+return `Float64`. But if one or more tensors
+have type `ComplexF64`, return `ComplexF64`.
 """
-function eltype(m::AbstractMPS)
-  T = eltype(m[1])
+function promote_itensor_eltype(m::AbstractMPS)
+  T = isassigned(m, 1) ? eltype(m[1]) : Number
   for n in 2:length(m)
-    T = promote_type(T, eltype(m[n]))
+    Tn = isassigned(m, n) ? eltype(m[n]) : Number
+    T = promote_type(T, Tn)
   end
   return T
 end
+
+"""
+    eltype(m::MPS)
+    eltype(m::MPO)
+
+The element type of the MPS/MPO. Always returns `ITensor`.
+
+For the element type of the ITensors of the MPS/MPO,
+use `common_itensor_eltype`.
+"""
+eltype(::AbstractMPS) = ITensor
 
 """
     ITensors.data(::MPS/MPO)
@@ -110,6 +122,8 @@ function orthocenter(m::AbstractMPS)
 end
 
 getindex(M::AbstractMPS, n) = getindex(data(M), n)
+
+isassigned(M::AbstractMPS, n) = isassigned(data(M), n)
 
 lastindex(M::AbstractMPS) = lastindex(data(M))
 
@@ -1847,18 +1861,31 @@ function BroadcastStyle(::Style{MPST}, ::DefaultArrayStyle{N}) where {N,MPST<:Ab
 end
 
 broadcastable(ψ::AbstractMPS) = ψ
-copyto!(ψ::AbstractMPS, b::Broadcasted) = copyto!(data(ψ), b)
+function copyto!(ψ::AbstractMPS, b::Broadcasted)
+  copyto!(data(ψ), b)
+  # In general, we assume the broadcast operation
+  # will mess up the orthogonality
+  # TODO: special case for `prime`, `settags`, etc.
+  reset_ortho_lims!(ψ)
+  return ψ
+end
 
 function similar(
-  ::Broadcasted{Style{MPST}}, ::Type{ElType}, dims
-) where {ElType,MPST<:AbstractMPS}
-  return similar(Array{ElType}, dims)
-end
-function similar(
-  bc::Broadcasted{Style{MPST}}, ::Type{ElType}
-) where {ElType,MPST<:AbstractMPS}
+  bc::Broadcasted{Style{MPST}}, ElType::Type
+) where {MPST<:AbstractMPS}
   return similar(Array{ElType}, axes(bc))
 end
+
+function similar(
+  bc::Broadcasted{Style{MPST}}, ::Type{ITensor}
+) where {MPST<:AbstractMPS}
+  # In general, we assume the broadcast operation
+  # will mess up the orthogonality so we use
+  # a generic constructor where we don't specify
+  # the orthogonality limits.
+  return MPST(similar(Array{ITensor}, axes(bc)))
+end
+
 #
 # Printing functions
 #
@@ -1866,11 +1893,17 @@ end
 function Base.show(io::IO, M::AbstractMPS)
   print(io, "$(typeof(M))")
   (length(M) > 0) && print(io, "\n")
-  for (i, A) in enumerate(data(M))
-    if order(A) != 0
-      println(io, "[$i] $(inds(A))")
+  for i in eachindex(M)
+  #for (i, A) in enumerate(data(M))
+    if !isassigned(M, i)
+      println(io, "#undef")
     else
-      println(io, "[$i] ITensor()")
+      A = M[i]
+      if order(A) != 0
+        println(io, "[$i] $(inds(A))")
+      else
+        println(io, "[$i] ITensor()")
+      end
     end
   end
 end

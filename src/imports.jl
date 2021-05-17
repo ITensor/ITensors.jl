@@ -36,6 +36,7 @@ import Base:
   intersect,
   intersect!,
   isapprox,
+  isassigned,
   isempty,
   isless,
   iterate,

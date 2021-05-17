@@ -149,12 +149,14 @@ include("util.jl")
         sites = siteinds("S=1/2", N)
         psi = MPS(ComplexF64, sites, fill(1, N))
         for j in 1:N
-          @test eltype(psi[j]) <: ComplexF64
+          @test eltype(psi[j]) == ComplexF64
         end
         psi = productMPS(ComplexF64, sites, fill(1, N))
         for j in 1:N
-          @test eltype(psi[j]) <: ComplexF64
+          @test eltype(psi[j]) == ComplexF64
         end
+        @test eltype(psi) == ITensor
+        @test ITensors.promote_itensor_eltype(psi) == ComplexF64
       end
     end
 
@@ -203,6 +205,26 @@ include("util.jl")
     badsites = [Index(2) for n in 1:(N + 1)]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi, badpsi)
+  end
+
+  @testset "broadcasting" begin
+    psi = randomMPS(sites)
+    orthogonalize!(psi, 1)
+    @test ortho_lims(psi) == 1:1
+    @test dim.(psi) == fill(2, length(psi))
+    psi′ = prime.(psi)
+    @test ortho_lims(psi′) == 1:length(psi′)
+    @test ortho_lims(psi) == 1:1
+    for n in 1:length(psi)
+      @test prime(psi[n]) == psi′[n]
+    end
+    psi_copy = copy(psi)
+    psi_copy .= addtags(psi_copy, "x")
+    @test ortho_lims(psi_copy) == 1:length(psi_copy)
+    @test ortho_lims(psi) == 1:1
+    for n in 1:length(psi)
+      @test addtags(psi[n], "x") == psi_copy[n]
+    end
   end
 
   @testset "inner same MPS" begin
