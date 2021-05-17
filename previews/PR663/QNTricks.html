@@ -4,48 +4,48 @@
 julia&gt; # This is a short code showing how a combiner
        # can be used to &quot;flip&quot; the direction of an Index
        i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)
-(dim=5|id=752|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=424|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; j = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;)
-(dim=5|id=202|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=850|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; A = randomITensor(i, dag(j))
 ITensor ord=2
-(dim=5|id=752|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=424|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=202|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=850|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 ITensors.NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
 
 julia&gt; C = combiner(i, dag(j); tags = &quot;c&quot;, dir = dir(i))
 ITensor ord=3
-(dim=25|id=817|&quot;c&quot;) &lt;Out&gt;
+(dim=25|id=854|&quot;c&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 6
  2: QN(0) =&gt; 13
  3: QN(1) =&gt; 6
-(dim=5|id=752|&quot;i&quot;) &lt;In&gt;
+(dim=5|id=424|&quot;i&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=202|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=850|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 ITensors.NDTensors.Combiner
 
 julia&gt; inds(A)
-((dim=5|id=752|&quot;i&quot;) &lt;Out&gt;
+((dim=5|id=424|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3, (dim=5|id=202|&quot;j&quot;) &lt;In&gt;
+ 2: QN(1) =&gt; 3, (dim=5|id=850|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3)
 
 julia&gt; inds(A * C)
-((dim=25|id=817|&quot;c&quot;) &lt;Out&gt;
+((dim=25|id=854|&quot;c&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 6
  2: QN(0) =&gt; 13
  3: QN(1) =&gt; 6,)</code></pre><p>You can see that the combiner reshapes the indices of <code>A</code> into a single Index that contains the tensor product of the two input spaces. The spaces have size <code>QN(-1) =&gt; 2 * 3</code>, <code>QN(0) =&gt; 2 * 2 + 3 * 3</code>, and <code>QN(0) =&gt; 2 * 3</code> (determined from all of the combinations of combining the sectors of the different indices, where the QNs are added and the block dimensions are multiplied). The ordering of the sectors is determined internally by ITensors.jl.</p><p>You can also use a combiner on a single Index, which can be helpful for changing the direction of an Index or combining multiple sectors of the same symmetry into a single sector:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
@@ -53,45 +53,45 @@ julia&gt; inds(A * C)
 julia&gt; # This is a short code showing how a combiner
        # can be used to &quot;flip&quot; the direction of an Index
        i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)
-(dim=5|id=275|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=952|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; j = dag(Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;))
-(dim=5|id=943|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=294|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; A = randomITensor(i, j)
 ITensor ord=2
-(dim=5|id=275|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=952|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=943|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=294|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 ITensors.NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
 
 julia&gt; C = combiner(j; tags = &quot;jflip&quot;, dir = -dir(j))
 ITensor ord=2
-(dim=5|id=335|&quot;jflip&quot;) &lt;Out&gt;
+(dim=5|id=288|&quot;jflip&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 3
  2: QN(0) =&gt; 2
-(dim=5|id=943|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=294|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 ITensors.NDTensors.Combiner
 
 julia&gt; inds(A)
-((dim=5|id=275|&quot;i&quot;) &lt;Out&gt;
+((dim=5|id=952|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3, (dim=5|id=943|&quot;j&quot;) &lt;In&gt;
+ 2: QN(1) =&gt; 3, (dim=5|id=294|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3)
 
 julia&gt; inds(A * C)
-((dim=5|id=335|&quot;jflip&quot;) &lt;Out&gt;
+((dim=5|id=288|&quot;jflip&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 3
- 2: QN(0) =&gt; 2, (dim=5|id=275|&quot;i&quot;) &lt;Out&gt;
+ 2: QN(0) =&gt; 2, (dim=5|id=952|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3)</code></pre><p>Unless you are writing very specialized custom code with symmetric tensors, this is generally not needed.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 17 May 2021 19:44">Monday 17 May 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 2: QN(1) =&gt; 3)</code></pre><p>Unless you are writing very specialized custom code with symmetric tensors, this is generally not needed.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 17 May 2021 20:11">Monday 17 May 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
