@@ -488,22 +488,22 @@ struct IndexVal{IndexT<:Index}
   end
 end
 
+
 """
     IndexVal(i::Index, n::Int)
 
     IndexVal(iv::Pair{<:Index, Int})
+
+    getindex(i::Index,n::Int)
 
     (i::Index)(n::Int)
 
 
 Create an `IndexVal` from a pair of `Index` and `Int`.
 
-Alternatively, you can use the syntax `i(n)`.
+Alternatively, you can use the syntax `i[n]`.
 """
 IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first, iv.second)
-
-# Help treat a Pair{IndexT, Int} like an IndexVal{IndexT}
-const IndexValOrPairIndexInt{IndexT} = Union{IndexVal{IndexT},Pair{IndexT,Int}}
 
 Base.convert(::Type{IndexVal}, iv::Pair{<:Index,Int}) = IndexVal(iv)
 
@@ -511,9 +511,43 @@ function Base.convert(::Type{IndexVal{IndexT}}, iv::Pair{IndexT,Int}) where {Ind
   return IndexVal(iv)
 end
 
-Base.getindex(i::Index, j::Int) = IndexVal(i, j)
+Base.getindex(i::Index, n::Int) = IndexVal(i, n)
 
 (i::Index)(n::Int) = IndexVal(i, n)
+
+
+"""
+    IndexVal(i::Index, s::AbstractString)
+
+    IndexVal(is::Pair{<:Index, String})
+
+    getindex(i::Index,n::AbstractString)
+
+    (i::Index)(s::String)
+
+
+Create an `IndexVal` from an `Index` and a `String`.
+
+Alternatively, you can use the syntax `i[s]`.
+"""
+IndexVal(i::Index,s::AbstractString) = IndexVal(i, val(i,s))
+
+IndexVal(iv::Pair{<:Index,String}) = IndexVal(iv.first, iv.second)
+
+Base.convert(::Type{IndexVal}, iv::Pair{<:Index,String}) = IndexVal(iv)
+
+function Base.convert(::Type{IndexVal{IndexT}}, iv::Pair{IndexT,String}) where {IndexT<:Index}
+  return IndexVal(iv)
+end
+
+Base.getindex(i::Index, s::AbstractString) = IndexVal(i, s)
+
+(i::Index)(s::AbstractString) = IndexVal(i, s)
+
+
+# Help treat a Pair{IndexT, V} like an IndexVal{IndexT}
+const IndexValOrPairIndexValue{IndexT} = Union{IndexVal{IndexT},Pair{IndexT,Int},Pair{IndexT,String}}
+
 
 """
     ind(iv::IndexVal)
@@ -531,7 +565,7 @@ Return the value of the IndexVal.
 """
 val(iv::IndexVal) = iv.val
 
-val(iv::Pair{<:Index}) = last(iv)
+val(iv::Pair{<:Index}) = val(iv.first,iv.second)
 
 """
     isindequal(i::Index, iv::IndexVal)
@@ -542,13 +576,13 @@ val(iv::Pair{<:Index}) = last(iv)
 
 Check if the Index and IndexVal have the same indices.
 """
-isindequal(i::Index, iv::IndexValOrPairIndexInt) = i == ind(iv)
+isindequal(i::Index, iv::IndexValOrPairIndexValue) = i == ind(iv)
 
-isindequal(iv::IndexValOrPairIndexInt, i::Index) = isindequal(i, iv)
+isindequal(iv::IndexValOrPairIndexValue, i::Index) = isindequal(i, iv)
 
-isindequal(iv1::IndexValOrPairIndexInt, iv2::IndexValOrPairIndexInt) = ind(iv1) == ind(iv2)
+isindequal(iv1::IndexValOrPairIndexValue, iv2::IndexValOrPairIndexValue) = ind(iv1) == ind(iv2)
 
-plev(iv::IndexValOrPairIndexInt) = plev(ind(iv))
+plev(iv::IndexValOrPairIndexValue) = plev(ind(iv))
 
 prime(iv::IndexVal, inc::Integer=1) = IndexVal(prime(ind(iv), inc), val(iv))
 
@@ -556,7 +590,7 @@ dag(iv::IndexVal) = IndexVal(dag(ind(iv)), val(iv))
 
 Base.adjoint(iv::IndexVal) = IndexVal(prime(ind(iv)), val(iv))
 
-dir(iv::IndexValOrPairIndexInt) = dir(ind(iv))
+dir(iv::IndexValOrPairIndexValue) = dir(ind(iv))
 
 #
 # Printing, reading, and writing

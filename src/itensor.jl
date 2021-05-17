@@ -602,13 +602,13 @@ B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function onehot(ivs::IndexValOrPairIndexInt...)
+function onehot(ivs::IndexValOrPairIndexValue...)
   A = emptyITensor(ind.(ivs)...)
   A[val.(ivs)...] = 1.0
   return A
 end
 
-setelt(ivs::IndexValOrPairIndexInt...) = onehot(ivs...)
+setelt(ivs::IndexValOrPairIndexValue...) = onehot(ivs...)
 
 """
     dense(T::ITensor)
