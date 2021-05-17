@@ -470,6 +470,8 @@ removeqns(i::Index) = i
 # Keep partial backwards compatibility by defining IndexVal as follows:
 const IndexVal{IndexT} = Pair{IndexT,Int}
 
+IndexVal(i::Index,n::Int) = (i=>n)
+
 NDTensors.ind(iv::Pair{<:Index}) = first(iv)
 
 val(iv::Pair{<:Index}) = val(iv.first, iv.second)
