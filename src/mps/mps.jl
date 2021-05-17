@@ -646,7 +646,7 @@ updens,dndens = expect(psi,"Nup","Ndn")
 function expect(psi::MPS, ops::AbstractString...; kwargs...)
   psi = copy(psi)
   N = length(psi)
-  ElT = real(eltype(psi))
+  ElT = real(promote_itensor_eltype(psi))
   Nops = length(ops)
   s = siteinds(psi)
 
