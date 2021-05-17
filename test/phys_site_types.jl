@@ -113,7 +113,7 @@ using ITensors, Test
     s = siteinds("S=1", N)
 
     @test val(s[1], "Up") == 1
-    @test val(s[1], "0")  == 2
+    @test val(s[1], "0") == 2
     @test val(s[1], "Dn") == 3
     @test_throws ArgumentError val(s[1], "Fake")
 
@@ -199,9 +199,9 @@ using ITensors, Test
   @testset "Electron sites" begin
     s = siteind("Electron")
 
-    @test val(s, "0")    == 1
-    @test val(s, "Up")   == 2
-    @test val(s, "Dn")   == 3
+    @test val(s, "0") == 1
+    @test val(s, "Up") == 2
+    @test val(s, "Dn") == 3
     @test val(s, "UpDn") == 4
     @test_throws ArgumentError val(s, "Fake")
 
@@ -268,7 +268,7 @@ using ITensors, Test
   @testset "tJ sites" begin
     s = siteind("tJ")
 
-    @test val(s, "0")  == 1
+    @test val(s, "0") == 1
     @test val(s, "Up") == 2
     @test val(s, "Dn") == 3
     @test_throws ArgumentError val(s, "Fake")

@@ -488,7 +488,6 @@ struct IndexVal{IndexT<:Index}
   end
 end
 
-
 """
     IndexVal(i::Index, n::Int)
 
@@ -515,7 +514,6 @@ Base.getindex(i::Index, n::Int) = IndexVal(i, n)
 
 (i::Index)(n::Int) = IndexVal(i, n)
 
-
 """
     IndexVal(i::Index, s::AbstractString)
 
@@ -530,13 +528,15 @@ Create an `IndexVal` from an `Index` and a `String`.
 
 Alternatively, you can use the syntax `i[s]`.
 """
-IndexVal(i::Index,s::AbstractString) = IndexVal(i, val(i,s))
+IndexVal(i::Index, s::AbstractString) = IndexVal(i, val(i, s))
 
 IndexVal(iv::Pair{<:Index,String}) = IndexVal(iv.first, iv.second)
 
 Base.convert(::Type{IndexVal}, iv::Pair{<:Index,String}) = IndexVal(iv)
 
-function Base.convert(::Type{IndexVal{IndexT}}, iv::Pair{IndexT,String}) where {IndexT<:Index}
+function Base.convert(
+  ::Type{IndexVal{IndexT}}, iv::Pair{IndexT,String}
+) where {IndexT<:Index}
   return IndexVal(iv)
 end
 
@@ -544,10 +544,10 @@ Base.getindex(i::Index, s::AbstractString) = IndexVal(i, s)
 
 (i::Index)(s::AbstractString) = IndexVal(i, s)
 
-
 # Help treat a Pair{IndexT, V} like an IndexVal{IndexT}
-const IndexValOrPairIndexValue{IndexT} = Union{IndexVal{IndexT},Pair{IndexT,Int},Pair{IndexT,String}}
-
+const IndexValOrPairIndexValue{IndexT} = Union{
+  IndexVal{IndexT},Pair{IndexT,Int},Pair{IndexT,String}
+}
 
 """
     ind(iv::IndexVal)
@@ -565,7 +565,7 @@ Return the value of the IndexVal.
 """
 val(iv::IndexVal) = iv.val
 
-val(iv::Pair{<:Index}) = val(iv.first,iv.second)
+val(iv::Pair{<:Index}) = val(iv.first, iv.second)
 
 """
     isindequal(i::Index, iv::IndexVal)
@@ -580,7 +580,9 @@ isindequal(i::Index, iv::IndexValOrPairIndexValue) = i == ind(iv)
 
 isindequal(iv::IndexValOrPairIndexValue, i::Index) = isindequal(i, iv)
 
-isindequal(iv1::IndexValOrPairIndexValue, iv2::IndexValOrPairIndexValue) = ind(iv1) == ind(iv2)
+function isindequal(iv1::IndexValOrPairIndexValue, iv2::IndexValOrPairIndexValue)
+  return ind(iv1) == ind(iv2)
+end
 
 plev(iv::IndexValOrPairIndexValue) = plev(ind(iv))
 
