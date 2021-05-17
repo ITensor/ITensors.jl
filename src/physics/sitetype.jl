@@ -487,14 +487,14 @@ end
 val(::ValName, ::SiteType) = nothing
 val(::AbstractString, ::SiteType) = nothing
 
-function val(s::Index, name::AbstractString)::IndexVal
+function val(s::Index, name::AbstractString)::Int
   stypes = _sitetypes(s)
   sname = ValName(name)
 
   # Try calling val(::StateName"Name",::SiteType"Tag",)
   for st in stypes
     res = val(sname, st)
-    !isnothing(res) && return s(res)
+    !isnothing(res) && return res
   end
 
   return throw(
@@ -502,7 +502,7 @@ function val(s::Index, name::AbstractString)::IndexVal
   )
 end
 
-val(s::Index, n::Integer) = s[n]
+val(s::Index, n::Integer) = n
 
 val(sset::Vector{<:Index}, j::Integer, st) = val(sset[j], st)
 
