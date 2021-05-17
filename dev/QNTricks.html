@@ -1,104 +1,97 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Symmetric tensor background and usage · ITensors.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="ITensors.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">ITensors.jl</span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="index.html">Introduction</a></li><li><span class="tocitem">Getting Started with ITensor</span><ul><li><a class="tocitem" href="getting_started/Installing.html">Installing Julia and ITensor</a></li><li><a class="tocitem" href="getting_started/RunningCodes.html">Running ITensor and Julia Codes</a></li><li><a class="tocitem" href="getting_started/Tutorials.html">Tutorials</a></li><li><a class="tocitem" href="getting_started/NextSteps.html">Next Steps</a></li></ul></li><li><span class="tocitem">Code Examples</span><ul><li><a class="tocitem" href="examples/ITensor.html">ITensor Examples</a></li><li><a class="tocitem" href="examples/MPSandMPO.html">MPS and MPO Examples</a></li><li><a class="tocitem" href="examples/DMRG.html">DMRG Examples</a></li><li><a class="tocitem" href="examples/Physics.html">Physics System Examples</a></li></ul></li><li><span class="tocitem">Documentation</span><ul><li><a class="tocitem" href="IndexType.html">Index</a></li><li><a class="tocitem" href="IndexValType.html">IndexVal</a></li><li><a class="tocitem" href="IndexSetType.html">IndexSet</a></li><li><a class="tocitem" href="ITensorType.html">ITensor</a></li><li><a class="tocitem" href="MPSandMPO.html">MPS and MPO</a></li><li><a class="tocitem" href="QN.html">QN</a></li><li><a class="tocitem" href="SiteType.html">SiteType and op</a></li><li><input class="collapse-toggle" id="menuitem-4-8" type="checkbox"/><label class="tocitem" for="menuitem-4-8"><span class="docs-label">DMRG</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="DMRG.html">DMRG</a></li><li><a class="tocitem" href="Sweeps.html">Sweeps</a></li><li><a class="tocitem" href="ProjMPO.html">ProjMPO</a></li><li><a class="tocitem" href="ProjMPOSum.html">ProjMPOSum</a></li><li><a class="tocitem" href="Observer.html">Observer System for DMRG</a></li><li><a class="tocitem" href="DMRGObserver.html">DMRGObserver</a></li></ul></li><li><a class="tocitem" href="AutoMPO.html">AutoMPO</a></li></ul></li><li><span class="tocitem">Advanced usage guide</span><ul><li><a class="tocitem" href="AdvancedUsageGuide.html">Advanced usage guide</a></li><li><a class="tocitem" href="Multithreading.html">Multithreading</a></li><li class="is-active"><a class="tocitem" href="QNTricks.html">Symmetric tensor background and usage</a><ul class="internal"><li><a class="tocitem" href="#Combiners-and-Symmetric-Tensors-1"><span>Combiners and Symmetric Tensors</span></a></li></ul></li><li><a class="tocitem" href="CodeTiming.html">Timing and profiling</a></li><li><a class="tocitem" href="ContractionSequenceOptimization.html">Contraction sequence optimization</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Advanced usage guide</a></li><li class="is-active"><a href="QNTricks.html">Symmetric tensor background and usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="QNTricks.html">Symmetric tensor background and usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ITensor/ITensors.jl/blob/master/docs/src/QNTricks.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Symmetric-Tensor-Background-and-Usage-1"><a class="docs-heading-anchor" href="#Symmetric-Tensor-Background-and-Usage-1">Symmetric Tensor Background and Usage</a><a class="docs-heading-anchor-permalink" href="#Symmetric-Tensor-Background-and-Usage-1" title="Permalink"></a></h1><p>Here is a collection of background material and example codes for understanding how symmetric tensors (tensors with conserved quantum numbers) work in ITensors.jl</p><h2 id="Combiners-and-Symmetric-Tensors-1"><a class="docs-heading-anchor" href="#Combiners-and-Symmetric-Tensors-1">Combiners and Symmetric Tensors</a><a class="docs-heading-anchor-permalink" href="#Combiners-and-Symmetric-Tensors-1" title="Permalink"></a></h2><p>In ITensors.jl, combiners are special sparse tensors that represent the action of taking the tensor product of one or more indices. It generalizes the idea of reshaping and permuting. For dense ITensors, a combiner is just the action of permuting and reshaping the data of the tensor. For symmetric tensors (quantum number conserving tensors represented as block sparse tensors), the combiner also fuses symmetry sectors together. They can be used for various purposes. Generally they are used internally in the library, for example in order to reshape a high order ITensor into an order 2 ITensor to perform a matrix decomposition like an SVD or eigendecomposition.</p><p>For example:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Symmetric tensor background and usage · ITensors.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="ITensors.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit">ITensors.jl</span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="index.html">Introduction</a></li><li><span class="tocitem">Getting Started with ITensor</span><ul><li><a class="tocitem" href="getting_started/Installing.html">Installing Julia and ITensor</a></li><li><a class="tocitem" href="getting_started/RunningCodes.html">Running ITensor and Julia Codes</a></li><li><a class="tocitem" href="getting_started/Tutorials.html">Tutorials</a></li><li><a class="tocitem" href="getting_started/NextSteps.html">Next Steps</a></li></ul></li><li><span class="tocitem">Code Examples</span><ul><li><a class="tocitem" href="examples/ITensor.html">ITensor Examples</a></li><li><a class="tocitem" href="examples/MPSandMPO.html">MPS and MPO Examples</a></li><li><a class="tocitem" href="examples/DMRG.html">DMRG Examples</a></li><li><a class="tocitem" href="examples/Physics.html">Physics System Examples</a></li></ul></li><li><span class="tocitem">Documentation</span><ul><li><a class="tocitem" href="IndexType.html">Index</a></li><li><a class="tocitem" href="IndexValType.html">IndexVal</a></li><li><a class="tocitem" href="IndexSetType.html">IndexSet</a></li><li><a class="tocitem" href="ITensorType.html">ITensor</a></li><li><a class="tocitem" href="MPSandMPO.html">MPS and MPO</a></li><li><a class="tocitem" href="QN.html">QN</a></li><li><a class="tocitem" href="SiteType.html">SiteType and op</a></li><li><input class="collapse-toggle" id="menuitem-4-8" type="checkbox"/><label class="tocitem" for="menuitem-4-8"><span class="docs-label">DMRG</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="DMRG.html">DMRG</a></li><li><a class="tocitem" href="Sweeps.html">Sweeps</a></li><li><a class="tocitem" href="ProjMPO.html">ProjMPO</a></li><li><a class="tocitem" href="ProjMPOSum.html">ProjMPOSum</a></li><li><a class="tocitem" href="Observer.html">Observer System for DMRG</a></li><li><a class="tocitem" href="DMRGObserver.html">DMRGObserver</a></li></ul></li><li><a class="tocitem" href="OpSum.html">OpSum</a></li></ul></li><li><span class="tocitem">Advanced usage guide</span><ul><li><a class="tocitem" href="AdvancedUsageGuide.html">Advanced usage guide</a></li><li><a class="tocitem" href="Multithreading.html">Multithreading</a></li><li class="is-active"><a class="tocitem" href="QNTricks.html">Symmetric tensor background and usage</a><ul class="internal"><li><a class="tocitem" href="#Combiners-and-Symmetric-Tensors-1"><span>Combiners and Symmetric Tensors</span></a></li></ul></li><li><a class="tocitem" href="CodeTiming.html">Timing and profiling</a></li><li><a class="tocitem" href="ContractionSequenceOptimization.html">Contraction sequence optimization</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Advanced usage guide</a></li><li class="is-active"><a href="QNTricks.html">Symmetric tensor background and usage</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="QNTricks.html">Symmetric tensor background and usage</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ITensor/ITensors.jl/blob/master/docs/src/QNTricks.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Symmetric-Tensor-Background-and-Usage-1"><a class="docs-heading-anchor" href="#Symmetric-Tensor-Background-and-Usage-1">Symmetric Tensor Background and Usage</a><a class="docs-heading-anchor-permalink" href="#Symmetric-Tensor-Background-and-Usage-1" title="Permalink"></a></h1><p>Here is a collection of background material and example codes for understanding how symmetric tensors (tensors with conserved quantum numbers) work in ITensors.jl</p><h2 id="Combiners-and-Symmetric-Tensors-1"><a class="docs-heading-anchor" href="#Combiners-and-Symmetric-Tensors-1">Combiners and Symmetric Tensors</a><a class="docs-heading-anchor-permalink" href="#Combiners-and-Symmetric-Tensors-1" title="Permalink"></a></h2><p>In ITensors.jl, combiners are special sparse tensors that represent the action of taking the tensor product of one or more indices. It generalizes the idea of reshaping and permuting. For dense ITensors, a combiner is just the action of permuting and reshaping the data of the tensor. For symmetric tensors (quantum number conserving tensors represented as block sparse tensors), the combiner also fuses symmetry sectors together. They can be used for various purposes. Generally they are used internally in the library, for example in order to reshape a high order ITensor into an order 2 ITensor to perform a matrix decomposition like an SVD or eigendecomposition.</p><p>For example:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
 
 julia&gt; # This is a short code showing how a combiner
        # can be used to &quot;flip&quot; the direction of an Index
        i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)
-(dim=5|id=291|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=994|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; j = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;)
-(dim=5|id=98|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=743|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; A = randomITensor(i, dag(j))
 ITensor ord=2
-(dim=5|id=291|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=994|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=98|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=743|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 ITensors.NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
 
 julia&gt; C = combiner(i, dag(j); tags = &quot;c&quot;, dir = dir(i))
 ITensor ord=3
-(dim=25|id=641|&quot;c&quot;) &lt;Out&gt;
+(dim=25|id=655|&quot;c&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 6
  2: QN(0) =&gt; 13
  3: QN(1) =&gt; 6
-(dim=5|id=291|&quot;i&quot;) &lt;In&gt;
+(dim=5|id=994|&quot;i&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=98|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=743|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 ITensors.NDTensors.Combiner
 
 julia&gt; inds(A)
-2 Indices
-(dim=5|id=291|&quot;i&quot;) &lt;Out&gt;
+((dim=5|id=994|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3
-(dim=5|id=98|&quot;j&quot;) &lt;In&gt;
+ 2: QN(1) =&gt; 3, (dim=5|id=743|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3
+ 2: QN(1) =&gt; 3)
 
 julia&gt; inds(A * C)
-1 Indices
-(dim=25|id=641|&quot;c&quot;) &lt;Out&gt;
+((dim=25|id=655|&quot;c&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 6
  2: QN(0) =&gt; 13
- 3: QN(1) =&gt; 6</code></pre><p>You can see that the combiner reshapes the indices of <code>A</code> into a single Index that contains the tensor product of the two input spaces. The spaces have size <code>QN(-1) =&gt; 2 * 3</code>, <code>QN(0) =&gt; 2 * 2 + 3 * 3</code>, and <code>QN(0) =&gt; 2 * 3</code> (determined from all of the combinations of combining the sectors of the different indices, where the QNs are added and the block dimensions are multiplied). The ordering of the sectors is determined internally by ITensors.jl.</p><p>You can also use a combiner on a single Index, which can be helpful for changing the direction of an Index or combining multiple sectors of the same symmetry into a single sector:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
+ 3: QN(1) =&gt; 6,)</code></pre><p>You can see that the combiner reshapes the indices of <code>A</code> into a single Index that contains the tensor product of the two input spaces. The spaces have size <code>QN(-1) =&gt; 2 * 3</code>, <code>QN(0) =&gt; 2 * 2 + 3 * 3</code>, and <code>QN(0) =&gt; 2 * 3</code> (determined from all of the combinations of combining the sectors of the different indices, where the QNs are added and the block dimensions are multiplied). The ordering of the sectors is determined internally by ITensors.jl.</p><p>You can also use a combiner on a single Index, which can be helpful for changing the direction of an Index or combining multiple sectors of the same symmetry into a single sector:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
 
 julia&gt; # This is a short code showing how a combiner
        # can be used to &quot;flip&quot; the direction of an Index
        i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)
-(dim=5|id=364|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=803|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; j = dag(Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;))
-(dim=5|id=317|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=671|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; A = randomITensor(i, j)
 ITensor ord=2
-(dim=5|id=364|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=803|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=317|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=671|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 ITensors.NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
 
 julia&gt; C = combiner(j; tags = &quot;jflip&quot;, dir = -dir(j))
 ITensor ord=2
-(dim=5|id=980|&quot;jflip&quot;) &lt;Out&gt;
+(dim=5|id=272|&quot;jflip&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 3
  2: QN(0) =&gt; 2
-(dim=5|id=317|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=671|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 ITensors.NDTensors.Combiner
 
 julia&gt; inds(A)
-2 Indices
-(dim=5|id=364|&quot;i&quot;) &lt;Out&gt;
+((dim=5|id=803|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3
-(dim=5|id=317|&quot;j&quot;) &lt;In&gt;
+ 2: QN(1) =&gt; 3, (dim=5|id=671|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3
+ 2: QN(1) =&gt; 3)
 
 julia&gt; inds(A * C)
-2 Indices
-(dim=5|id=980|&quot;jflip&quot;) &lt;Out&gt;
+((dim=5|id=272|&quot;jflip&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 3
- 2: QN(0) =&gt; 2
-(dim=5|id=364|&quot;i&quot;) &lt;Out&gt;
+ 2: QN(0) =&gt; 2, (dim=5|id=803|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3</code></pre><p>Unless you are writing very specialized custom code with symmetric tensors, this is generally not needed.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 16 May 2021 04:09">Sunday 16 May 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 2: QN(1) =&gt; 3)</code></pre><p>Unless you are writing very specialized custom code with symmetric tensors, this is generally not needed.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 17 May 2021 21:21">Monday 17 May 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
