@@ -69,6 +69,7 @@ include("global_variables.jl")
 #####################################
 # Index and IndexSet
 #
+include("lastval.jl")
 include("smallstring.jl") # Not currently using in TagSet
 include("readwrite.jl")
 include("not.jl")
