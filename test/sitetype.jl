@@ -305,6 +305,41 @@ using ITensors, Test
     @test length(oa) == length(s)
     @test norm(oa[2] - op("Sz", s, 2)) < 1E-8
   end
+
+  @testset "IndexVals Made From Strings" begin
+
+    @testset "Val function" begin
+      s = siteind("Electron")
+      @test val(s,"0")    == 1
+      @test val(s,"Up")   == 2
+      @test val(s,"Dn")   == 3
+      @test val(s,"UpDn") == 4
+    end
+
+    @testset "IndexVal Constructors" begin
+      s = siteind("Electron")
+      @test IndexVal(s,"0")  == IndexVal(s,1)
+      @test IndexVal(s,"Dn") == IndexVal(s,3)
+
+      @test IndexVal(s=>"0")  == IndexVal(s,1)
+      @test IndexVal(s=>"Dn") == IndexVal(s,3)
+    end
+
+    @testset "Strings in ITensor get and set" begin
+      s = siteind("S=1";conserve_qns=true)
+      T = ITensor(s',dag(s))
+      T[s'=>"Up",s=>"Up"] = +1.0
+      T[s'=>"Z0",s=>"Z0"] = +2.0
+      T[s'=>"Dn",s=>"Dn"] = -1.0
+      @test T[1,1] ≈ +1.0
+      @test T[2,2] ≈ +2.0
+      @test T[3,3] ≈ -1.0
+
+      o = onehot(s=>"Z0")
+      @test vector(o) ≈ [0,1,0]
+    end
+
+  end
 end
 
 nothing
