@@ -217,7 +217,7 @@ include("util.jl")
   end
 
   @testset "norm MPS" begin
-    psi = randomMPS(sites, 10)
+    psi = randomMPS(sites;linkdims=10)
     psidag = sim(linkinds, dag(psi))
     psi² = ITensor(1)
     for j in 1:N
@@ -232,7 +232,7 @@ include("util.jl")
   end
 
   @testset "lognorm MPS" begin
-    psi = randomMPS(sites, 10)
+    psi = randomMPS(sites;linkdims=10)
     for j in 1:N
       psi[j] .*= j
     end
@@ -247,7 +247,7 @@ include("util.jl")
   end
 
   @testset "scaling MPS" begin
-    psi = randomMPS(sites)
+    psi = randomMPS(sites;linkdims=4)
     twopsidag = 2.0 * dag(psi)
     #ITensors.prime_linkinds!(twopsidag)
     @test inner(twopsidag, psi) ≈ 2.0 * inner(psi, psi)
@@ -293,9 +293,9 @@ include("util.jl")
     s = siteinds("S=1/2", N; conserve_qns=conserve_qns)
     state = n -> isodd(n) ? "↑" : "↓"
 
-    ψ₁ = randomMPS(s, state, 4)
-    ψ₂ = randomMPS(s, state, 4)
-    ψ₃ = randomMPS(s, state, 4)
+    ψ₁ = randomMPS(s, state;linkdims=4)
+    ψ₂ = randomMPS(s, state;linkdims=4)
+    ψ₃ = randomMPS(s, state;linkdims=4)
 
     ψ = ψ₁ + ψ₂
 
@@ -477,7 +477,7 @@ end
   @testset "sample! method" begin
     N = 10
     sites = [Index(3, "Site,n=$n") for n in 1:N]
-    psi = randomMPS(sites, 3)
+    psi = randomMPS(sites,linkdims=3)
     nrm2 = inner(psi, psi)
     psi[1] *= (1.0 / sqrt(nrm2))
 
@@ -508,7 +508,7 @@ end
     N = 20
     chi = 8
     sites = siteinds(2, N)
-    M = randomMPS(sites, chi)
+    M = randomMPS(sites,linkdims=chi)
 
     @test ITensors.leftlim(M) == 0
     @test ITensors.rightlim(M) == 2
