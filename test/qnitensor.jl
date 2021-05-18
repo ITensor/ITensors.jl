@@ -253,13 +253,13 @@ Random.seed!(1234)
     @test hasinds(A, i, i')
     @test isnothing(flux(A))
 
-    A[i=>1, i'=>1] = 1.0
+    A[i => 1, i' => 1] = 1.0
 
     @test nnzblocks(A) == 1
     @test nnz(A) == 1
     @test flux(A) == QN(0)
 
-    A[i=>2, i'=>2] = 1.0
+    A[i => 2, i' => 2] = 1.0
 
     @test nnzblocks(A) == 2
     @test nnz(A) == 5
@@ -269,7 +269,7 @@ Random.seed!(1234)
   @testset "Check flux when setting elements" begin
     i = Index(QN(0) => 1, QN(1) => 1; tags="i")
     A = randomITensor(QN(0), i, dag(i'))
-    @test_throws ErrorException A[i=>1, i'=>2] = 1.0
+    @test_throws ErrorException A[i => 1, i' => 2] = 1.0
   end
 
   @testset "Random constructor" begin
@@ -318,17 +318,17 @@ Random.seed!(1234)
   @testset "QN onehot" begin
     i = Index(QN(0) => 2, QN(1) => 2; tags="i")
 
-    T = onehot(i=>1)
-    @test T[i=>1] ≈ 1.0
-    @test T[i=>2] ≈ 0.0
-    @test T[i=>3] ≈ 0.0
-    @test T[i=>4] ≈ 0.0
+    T = onehot(i => 1)
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
+    @test T[i => 3] ≈ 0.0
+    @test T[i => 4] ≈ 0.0
 
-    T = onehot(i=>2)
-    @test T[i=>1] ≈ 0.0
-    @test T[i=>2] ≈ 1.0
-    @test T[i=>3] ≈ 0.0
-    @test T[i=>4] ≈ 0.0
+    T = onehot(i => 2)
+    @test T[i => 1] ≈ 0.0
+    @test T[i => 2] ≈ 1.0
+    @test T[i => 3] ≈ 0.0
+    @test T[i => 4] ≈ 0.0
   end
 
   @testset "setindex!" begin
@@ -346,15 +346,15 @@ Random.seed!(1234)
 
       @test nnzblocks(A) == 1
       @test nnz(A) == 1
-      @test A[s1=>2, s2=>1] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 2, s2 => 1] ≈ 1.0 / sqrt(2)
       @test flux(A) == QN("N", 1, -1)
 
       A[1, 2] = 1.0 / sqrt(2)
 
       @test nnzblocks(A) == 2
       @test nnz(A) == 2
-      @test A[s1=>2, s2=>1] ≈ 1.0 / sqrt(2)
-      @test A[s1=>1, s2=>2] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 2, s2 => 1] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 1, s2 => 2] ≈ 1.0 / sqrt(2)
       @test flux(A) == QN("N", 1, -1)
     end
 
@@ -372,15 +372,15 @@ Random.seed!(1234)
 
       @test nnzblocks(A) == 1
       @test nnz(A) == 1
-      @test A[s1=>1, s2=>2] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 1, s2 => 2] ≈ 1.0 / sqrt(2)
       @test flux(A) == QN("N", 1, -1)
 
       A[2, 1] = 1.0 / sqrt(2)
 
       @test nnzblocks(A) == 2
       @test nnz(A) == 2
-      @test A[s1=>2, s2=>1] ≈ 1.0 / sqrt(2)
-      @test A[s1=>1, s2=>2] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 2, s2 => 1] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 1, s2 => 2] ≈ 1.0 / sqrt(2)
       @test flux(A) == QN("N", 1, -1)
     end
   end

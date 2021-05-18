@@ -133,7 +133,7 @@ include("util.jl")
       for j in 1:N
         states[j] = isodd(j) ? 1 : 2
       end
-      ivals = [sites[n]=>states[n] for n in 1:length(sites)]
+      ivals = [sites[n] => states[n] for n in 1:length(sites)]
       psi = MPS(ivals)
       for j in 1:N
         sign = isodd(j) ? +1.0 : -1.0

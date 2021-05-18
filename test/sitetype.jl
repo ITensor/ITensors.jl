@@ -182,9 +182,9 @@ using ITensors, Test
     function ITensors.op(::SiteType"_Custom_", s::Index, opname::AbstractString)
       Op = emptyITensor(s', dag(s))
       if opname == "S+"
-        Op[s'=>1, s=>2] = sqrt(3)
-        Op[s'=>2, s=>3] = 2
-        Op[s'=>3, s=>4] = sqrt(3)
+        Op[s' => 1, s => 2] = sqrt(3)
+        Op[s' => 2, s => 3] = 2
+        Op[s' => 3, s => 4] = sqrt(3)
       else
         error("Name $opname not recognized for tag \"Custom\"")
       end
@@ -193,9 +193,9 @@ using ITensors, Test
 
     s = Index(4, "_Custom_")
     Sp = op("S+", s)
-    @test Sp[s'=>1, s=>2] ≈ sqrt(3)
-    @test Sp[s'=>2, s=>3] ≈ 2
-    @test Sp[s'=>3, s=>4] ≈ sqrt(3)
+    @test Sp[s' => 1, s => 2] ≈ sqrt(3)
+    @test Sp[s' => 2, s => 3] ≈ 2
+    @test Sp[s' => 3, s => 4] ≈ sqrt(3)
   end
 
   @testset "siteind defined by space overload" begin

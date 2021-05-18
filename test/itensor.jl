@@ -494,21 +494,21 @@ end
   @testset "onehot (setelt)" begin
     i = Index(2, "i")
 
-    T = onehot(i=>1)
-    @test T[i=>1] ≈ 1.0
-    @test T[i=>2] ≈ 0.0
+    T = onehot(i => 1)
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
 
-    T = setelt(i=>2)
-    @test T[i=>1] ≈ 0.0
-    @test T[i=>2] ≈ 1.0
+    T = setelt(i => 2)
+    @test T[i => 1] ≈ 0.0
+    @test T[i => 2] ≈ 1.0
 
     j = Index(2, "j")
 
     T = onehot(j => 2, i => 1)
-    @test T[j=>1,i=>1] ≈ 0.0
-    @test T[j=>2,i=>1] ≈ 1.0
-    @test T[j=>1,i=>2] ≈ 0.0
-    @test T[j=>2,i=>2] ≈ 0.0
+    @test T[j => 1, i => 1] ≈ 0.0
+    @test T[j => 2, i => 1] ≈ 1.0
+    @test T[j => 1, i => 2] ≈ 0.0
+    @test T[j => 2, i => 2] ≈ 0.0
   end
 
   @testset "add, subtract, and axpy" begin
@@ -1179,7 +1179,7 @@ end
         # TODO: use a combiner to combine the u indices to make
         # this test simpler
         for ii in 1:dim(u[1]), jj in 1:dim(u[2]), iip in 1:dim(u[1]), jjp in 1:dim(u[2])
-          val = UUᵀ[u[1]=>ii, u[2]=>jj, u[1]'=>iip, u[2]'=>jjp]
+          val = UUᵀ[u[1] => ii, u[2] => jj, u[1]' => iip, u[2]' => jjp]
           if ii == iip && jj == jjp
             @test val ≈ one(SType) atol = 1e-13
           else

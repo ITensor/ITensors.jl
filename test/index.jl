@@ -46,24 +46,24 @@ import ITensors: In, Out, Neither
   end
   @testset "IndexVal" begin
     i = Index(2)
-    @test val(i=>1) == 1
-    @test ind(i=>1) == i
-    @test isindequal(i, i=>2)
-    @test isindequal(i=>2, i)
-    @test plev(i'=>2) == 1
-    @test val(i'=>2) == 2
-    @test plev(prime(i=>2, 4)) == 4
-    @test sprint(show, i=>2) == sprint(show, i) * "=>2"
+    @test val(i => 1) == 1
+    @test ind(i => 1) == i
+    @test isindequal(i, i => 2)
+    @test isindequal(i => 2, i)
+    @test plev(i' => 2) == 1
+    @test val(i' => 2) == 2
+    @test plev(prime(i => 2, 4)) == 4
+    @test sprint(show, i => 2) == sprint(show, i) * "=>2"
 
     @test plev(i => 2) == 0
     @test plev(i' => 2) == 1
-    @test prime(i=>2) == (i'=>2)
+    @test prime(i => 2) == (i' => 2)
   end
   @testset "Iteration" begin
     i = Index(10)
     c = 1
     for n in i
-      @test n == (i=>c)
+      @test n == (i => c)
       c += 1
     end
   end
