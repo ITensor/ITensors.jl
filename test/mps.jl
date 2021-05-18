@@ -227,6 +227,27 @@ include("util.jl")
     end
   end
 
+  @testset "copy and deepcopy" begin
+    s = siteinds("S=1/2", 3)
+    M1 = randomMPS(s; linkdims=3)
+    @test norm(M1) ≈ 1
+
+    M2 = deepcopy(M1)
+    M2[1] .*= 2 # Modifies the tensor data
+    @test norm(M1) ≈ 1
+    @test norm(M2) ≈ 2
+
+    M3 = copy(M1)
+    M3[1] *= 3
+    @test norm(M1) ≈ 1
+    @test norm(M3) ≈ 3
+
+    M4 = copy(M1)
+    M4[1] .*= 4
+    @test norm(M1) ≈ 4
+    @test norm(M4) ≈ 4
+  end
+
   @testset "inner same MPS" begin
     psi = randomMPS(sites)
     psidag = dag(psi)
@@ -641,6 +662,38 @@ end
       a += "Cdagup", i, "Cup", j
       @test inner(psi, MPO(a, s), psi) ≈ Cuu[i, j]
     end
+  end
+
+  @testset "expect regression test for in-place modification of input MPS" begin
+    s = siteinds("S=1/2", 5)
+    psi = randomMPS(s; linkdims=3)
+    orthogonalize!(psi, 1)
+    expect_init = expect(psi, "Sz")
+    norm_scale = 10
+    psi[1] *= norm_scale
+    @test ortho_lims(psi) == 1:1
+    @test norm(psi) ≈ norm_scale
+    expect_Sz = expect(psi, "Sz")
+    @test all(≤(1 / 2), expect_Sz)
+    @test expect_Sz ≈ expect_init
+    @test ortho_lims(psi) == 1:1
+    @test norm(psi) ≈ norm_scale
+  end
+
+  @testset "correlation_matrix regression test for in-place modification of input MPS" begin
+    s = siteinds("S=1/2", 5)
+    psi = randomMPS(s; linkdims=3)
+    orthogonalize!(psi, 1)
+    correlation_matrix_init = correlation_matrix(psi, "Sz", "Sz")
+    norm_scale = 10
+    psi[1] *= norm_scale
+    @test ortho_lims(psi) == 1:1
+    @test norm(psi) ≈ norm_scale
+    correlation_matrix_SzSz = correlation_matrix(psi, "Sz", "Sz")
+    @test all(≤(1 / 2), correlation_matrix_SzSz)
+    @test correlation_matrix_SzSz ≈ correlation_matrix_init
+    @test ortho_lims(psi) == 1:1
+    @test norm(psi) ≈ norm_scale
   end
 
   @testset "swapbondsites" begin

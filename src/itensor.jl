@@ -1061,7 +1061,7 @@ for (finds, fset) in (
   end
 end
 
-for find in (:commonind, :noncomonind, :uniqueind, :unionind)
+for find in (:commonind, :noncommonind, :uniqueind, :unionind)
   @eval begin
     $find(args...; kwargs...) = getfirst($(Symbol(find, :s))(args...; kwargs...))
   end
