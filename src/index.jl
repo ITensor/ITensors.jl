@@ -436,7 +436,7 @@ Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
 """
 function Base.iterate(i::Index, state::Int=1)
   (state > dim(i)) && return nothing
-  return (i=>state, state + 1)
+  return (i => state, state + 1)
 end
 
 # This is a trivial definition for use in NDTensors
@@ -470,13 +470,13 @@ removeqns(i::Index) = i
 # Keep partial backwards compatibility by defining IndexVal as follows:
 const IndexVal{IndexT} = Pair{IndexT,Int}
 
-IndexVal(i::Index,n::Int) = (i=>n)
+IndexVal(i::Index, n::Int) = (i => n)
 
 NDTensors.ind(iv::Pair{<:Index}) = first(iv)
 
 val(iv::Pair{<:Index}) = val(iv.first, iv.second)
 
-val(i::Index,::LastVal) = dim(i)
+val(i::Index, ::LastVal) = dim(i)
 
 """
     isindequal(i::Index, iv::IndexVal)
