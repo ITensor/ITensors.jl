@@ -60,7 +60,7 @@ include("util.jl")
     @test psi ⋅ psi ≈ *(dag(psi)..., psi...)[]
   end
 
-  @testset "productMPS" begin
+  @testset "MPS" begin
     @testset "vector of string input" begin
       sites = siteinds("S=1/2", N)
       state = fill("", N)
@@ -72,13 +72,13 @@ include("util.jl")
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(sites, state)
+      psi = MPS(sites, state)
       for j in 1:N
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
       @test_throws DimensionMismatch MPS(sites, fill("", N - 1))
-      @test_throws DimensionMismatch productMPS(sites, fill("", N - 1))
+      @test_throws DimensionMismatch MPS(sites, fill("", N - 1))
     end
 
     @testset "String input" begin
@@ -88,7 +88,7 @@ include("util.jl")
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(sites, "Dn")
+      psi = MPS(sites, "Dn")
       for j in 1:N
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
@@ -102,7 +102,7 @@ include("util.jl")
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(sites, 2)
+      psi = MPS(sites, 2)
       for j in 1:N
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
@@ -120,7 +120,7 @@ include("util.jl")
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(sites, state)
+      psi = MPS(sites, state)
       for j in 1:N
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
@@ -139,7 +139,7 @@ include("util.jl")
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      psi = productMPS(ivals)
+      psi = MPS(ivals)
       for j in 1:N
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
@@ -151,7 +151,7 @@ include("util.jl")
         for j in 1:N
           @test eltype(psi[j]) == ComplexF64
         end
-        psi = productMPS(ComplexF64, sites, fill(1, N))
+        psi = MPS(ComplexF64, sites, fill(1, N))
         for j in 1:N
           @test eltype(psi[j]) == ComplexF64
         end
@@ -165,13 +165,13 @@ include("util.jl")
       psi = MPS([site], [1])
       @test psi[1][1] ≈ 1.0
       @test psi[1][2] ≈ 0.0
-      psi = productMPS([site], [1])
+      psi = MPS([site], [1])
       @test psi[1][1] ≈ 1.0
       @test psi[1][2] ≈ 0.0
       psi = MPS([site], [2])
       @test psi[1][1] ≈ 0.0
       @test psi[1][2] ≈ 1.0
-      psi = productMPS([site], [2])
+      psi = MPS([site], [2])
       @test psi[1][1] ≈ 0.0
       @test psi[1][2] ≈ 1.0
     end
@@ -260,7 +260,7 @@ include("util.jl")
   end
 
   @testset "norm MPS" begin
-    psi = randomMPS(sites, 10)
+    psi = randomMPS(sites; linkdims=10)
     psidag = sim(linkinds, dag(psi))
     psi² = ITensor(1)
     for j in 1:N
@@ -269,11 +269,11 @@ include("util.jl")
     @test psi²[] ≈ psi ⋅ psi
     @test sqrt(psi²[]) ≈ norm(psi)
 
-    psi = randomMPS(sites, 10)
+    psi = randomMPS(sites; linkdims=10)
     psi .*= 1:N
     @test norm(psi) ≈ factorial(N)
 
-    psi = randomMPS(sites, 10)
+    psi = randomMPS(sites; linkdims=10)
     for j in 1:N
       psi[j] .*= j
     end
@@ -285,7 +285,7 @@ include("util.jl")
   end
 
   @testset "lognorm MPS" begin
-    psi = randomMPS(sites, 10)
+    psi = randomMPS(sites; linkdims=10)
     for j in 1:N
       psi[j] .*= j
     end
@@ -351,9 +351,9 @@ include("util.jl")
     s = siteinds("S=1/2", N; conserve_qns=conserve_qns)
     state = n -> isodd(n) ? "↑" : "↓"
 
-    ψ₁ = randomMPS(s, state, 4)
-    ψ₂ = randomMPS(s, state, 4)
-    ψ₃ = randomMPS(s, state, 4)
+    ψ₁ = randomMPS(s, state; linkdims=4)
+    ψ₂ = randomMPS(s, state; linkdims=4)
+    ψ₃ = randomMPS(s, state; linkdims=4)
 
     ψ = ψ₁ + ψ₂
 
@@ -535,7 +535,7 @@ end
   @testset "sample! method" begin
     N = 10
     sites = [Index(3, "Site,n=$n") for n in 1:N]
-    psi = randomMPS(sites, 3)
+    psi = randomMPS(sites; linkdims=3)
     nrm2 = inner(psi, psi)
     psi[1] *= (1.0 / sqrt(nrm2))
 
@@ -566,7 +566,7 @@ end
     N = 20
     chi = 8
     sites = siteinds(2, N)
-    M = randomMPS(sites, chi)
+    M = randomMPS(sites; linkdims=chi)
 
     @test ITensors.leftlim(M) == 0
     @test ITensors.rightlim(M) == 2
@@ -586,7 +586,7 @@ end
     end
 
     # Complex case
-    Mc = randomMPS(sites, chi)
+    Mc = randomMPS(sites; linkdims=chi)
     @test inner(Mc, Mc) ≈ 1.0 + 0.0im
   end
 
@@ -597,7 +597,7 @@ end
 
     # Make flux-zero random MPS
     state = [isodd(n) ? 1 : 2 for n in 1:N]
-    M = randomMPS(sites, state, chi)
+    M = randomMPS(sites, state; linkdims=chi)
     @test flux(M) == QN("Sz", 0)
 
     @test ITensors.leftlim(M) == 0
@@ -610,10 +610,10 @@ end
 
     # Test making random MPS with different flux
     state[1] = 2
-    M = randomMPS(sites, state, chi)
+    M = randomMPS(sites, state; linkdims=chi)
     @test flux(M) == QN("Sz", -2)
     state[3] = 2
-    M = randomMPS(sites, state, chi)
+    M = randomMPS(sites, state; linkdims=chi)
     @test flux(M) == QN("Sz", -4)
   end
 
@@ -623,7 +623,7 @@ end
 
     # Non-fermionic case - spin system
     s = siteinds("S=1/2", N; conserve_qns=true)
-    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn", m)
+    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     Cpm = correlation_matrix(psi, "S+", "S-")
     # Check using OpSum:
     for i in 1:N, j in i:N
@@ -639,7 +639,7 @@ end
 
     # With start_site, end_site arguments:
     s = siteinds("S=1/2", N)
-    psi = randomMPS(ComplexF64, s, m)
+    psi = randomMPS(ComplexF64, s; linkdims=m)
     ss, es = 3, 6
     Nb = es - ss + 1
     Cpm = correlation_matrix(psi, "S+", "S-"; site_range=ss:es)
@@ -654,7 +654,7 @@ end
 
     # Fermionic case
     s = siteinds("Electron", N)
-    psi = randomMPS(s, m)
+    psi = randomMPS(s; linkdims=m)
     Cuu = correlation_matrix(psi, "Cdagup", "Cup")
     # Check using OpSum:
     for i in 1:N, j in i:N
@@ -874,7 +874,7 @@ end
     @test ITensors.orthocenter(ψ) == N
     @test maxlinkdim(ψ) == 1
 
-    ψ0 = randomMPS(s, 2)
+    ψ0 = randomMPS(s; linkdims=2)
     A = prod(ψ0)
     ψ = MPS(A, s; cutoff=1e-15, orthocenter=2)
     @test prod(ψ) ≈ A
@@ -914,7 +914,7 @@ end
   @testset "Set range of MPS tensors" begin
     N = 5
     s = siteinds("S=1/2", N)
-    ψ0 = randomMPS(s, 3)
+    ψ0 = randomMPS(s; linkdims=3)
 
     ψ = orthogonalize(ψ0, 2)
     A = prod(ITensors.data(ψ)[2:(N - 1)])
@@ -1545,7 +1545,7 @@ end
   @testset "dense conversion of MPS" begin
     N = 4
     s = siteinds("S=1/2", N; conserve_qns=true)
-    QM = randomMPS(s, ["Up", "Dn", "Up", "Dn"], 4)
+    QM = randomMPS(s, ["Up", "Dn", "Up", "Dn"]; linkdims=4)
     qsz1 = scalar(QM[1] * op("Sz", s[1]) * dag(prime(QM[1], "Site")))
 
     M = dense(QM)
@@ -1579,7 +1579,7 @@ end
       a .+= "Sz", j, "Sz", j + 1
     end
     H = MPO(a, s)
-    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓", 10)
+    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=10)
     # Create MPO/MPS with pairs of sites merged
     H2 = MPO([H[b] * H[b + 1] for b in 1:2:N])
     ψ2 = MPS([ψ[b] * ψ[b + 1] for b in 1:2:N])

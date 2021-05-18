@@ -40,7 +40,7 @@ using ITensors, Test, Random
     H = MPO(ampo, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state, 4)
+    psi = randomMPS(sites, state; linkdims=4)
 
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
@@ -67,7 +67,7 @@ using ITensors, Test, Random
     H = MPO(ampo, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state, 4)
+    psi = randomMPS(sites, state; linkdims=4)
 
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
@@ -94,7 +94,7 @@ using ITensors, Test, Random
     H = MPO(ampo, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state, 4)
+    psi = randomMPS(sites, state; linkdims=4)
     PH = ProjMPO(H)
 
     n = 4
@@ -254,7 +254,7 @@ using ITensors, Test, Random
     end
     H = MPO(ampo, sites)
 
-    psi0i = randomMPS(sites, 10)
+    psi0i = randomMPS(sites; linkdims=10)
 
     sweeps = Sweeps(4)
     maxdim!(sweeps, 10, 20, 100, 100)
@@ -264,7 +264,7 @@ using ITensors, Test, Random
     energy0, psi0 = dmrg(H, psi0i, sweeps; outputlevel=0)
     @test energy0 < -11.5
 
-    psi1i = randomMPS(sites, 10)
+    psi1i = randomMPS(sites; linkdims=10)
     energy1, psi1 = dmrg(H, [psi0], psi1i, sweeps; outputlevel=0, weight=weight)
 
     @test energy1 > energy0
@@ -285,7 +285,7 @@ using ITensors, Test, Random
     state[3] = 2
     state[5] = 2
     state[7] = 2
-    psi0 = productMPS(s, state)
+    psi0 = MPS(s, state)
 
     ampo = OpSum()
     for j in 1:(N - 1)
@@ -331,7 +331,7 @@ using ITensors, Test, Random
     maxdim!(sweeps, 50, 100, 200, 400, 800, 800)
     cutoff!(sweeps, 1E-10)
     state = ["Up", "Dn", "Dn", "Up", "Emp", "Up", "Up", "Emp", "Dn", "Dn"]
-    psi0 = randomMPS(sites, state, 10)
+    psi0 = randomMPS(sites, state; linkdims=10)
     energy, psi = dmrg(H, psi0, sweeps; outputlevel=0)
     @test (-8.02 < energy < -8.01)
   end
@@ -352,7 +352,7 @@ using ITensors, Test, Random
     maxdim!(sweeps, 10)
     cutoff!(sweeps, 1E-11)
 
-    psi0 = randomMPS(sites, 4)
+    psi0 = randomMPS(sites; linkdims=4)
 
     # Test that input works with wrong ortho center:
     orthogonalize!(psi0, 5)
@@ -395,7 +395,7 @@ using ITensors, Test, Random
     H = MPO(ampo, sites)
     Hsplit = splitblocks(linkinds, H)
     state = [isodd(n) ? "↑" : "↓" for n in 1:N]
-    ψ0 = productMPS(sites, state)
+    ψ0 = MPS(sites, state)
     using_threaded_blocksparse = ITensors.enable_threaded_blocksparse()
     energy, _ = dmrg(H, ψ0, sweeps; outputlevel=outputlevel)
     energy_split, _ = dmrg(Hsplit, ψ0, sweeps; outputlevel=outputlevel)

@@ -1774,7 +1774,7 @@ function product(
   @show ortho_lims(ψ)
 
   if first(ortho_lims(ψ)) < first(ns_range) || last(ortho_lims(ψ)) > last(ns_range)
-    error("Orthogonality center limits are $(ortho_lims(ψ)), but gate is being applied to $ns′. Must be within the range of where the gates are being applied.")
+    error("Orthogonality center limits are $(ortho_lims(ψ)), but gate is being applied to sites $ns_range. Orthogonality center must be within the range of where the gates are being applied.")
   end
 
   ϕ = prod(ψ[ns_range])

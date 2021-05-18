@@ -15,10 +15,10 @@ MPS(::Type{<:Number}, ::Vector{<:Index})
 randomMPS(sites::Vector{<:Index})
 randomMPS(::Type{<:Number}, sites::Vector{<:Index})
 randomMPS(::Vector{<:Index}, ::Any)
-productMPS(::Vector{<:Index}, ::Any)
-productMPS(::Type{<:Number}, ::Vector{<:Index}, ::Any)
-productMPS(::Vector{<:IndexVal})
-productMPS(::Type{<:Number}, ::Vector{<:IndexVal})
+MPS(::Vector{<:Index}, ::Any)
+MPS(::Type{<:Number}, ::Vector{<:Index}, ::Any)
+MPS(::Vector{<:IndexVal})
+MPS(::Type{<:Number}, ::Vector{<:IndexVal})
 ```
 
 ## MPO Constructors
