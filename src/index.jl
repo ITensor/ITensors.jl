@@ -565,8 +565,6 @@ function Base.show(io::IO, i::Index)
   end
 end
 
-Base.show(io::IO, iv::Pair{<:Index}) = print(io, ind(iv), "=>$(val(iv))")
-
 function readcpp(io::IO, ::Type{Index}; kwargs...)
   format = get(kwargs, :format, "v3")
   if format != "v3"
