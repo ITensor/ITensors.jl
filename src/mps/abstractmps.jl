@@ -199,11 +199,100 @@ end
 
 setindex!(M::AbstractMPS, v::Vector{<:ITensor}, ::Colon) = setindex!(M, MPS(v), :)
 
+"""
+    copy(::MPS)
+    copy(::MPO)
+
+Make a shallow copy of an MPS or MPO. By shallow copy, it means that a new MPS/MPO
+is returned, but the data of the tensors are still shared between the returned MPS/MPO
+and the original MPS/MPO.
+
+Therefore, replacing an entire tensor of the returned MPS/MPO will not modify the input MPS/MPO,
+but modifying the data of the returned MPS/MPO will modify the input MPS/MPO.
+
+Use [`deepcopy`](@ref) for an alternative that copies the ITensors as well.
+
+# Examples
+```julia
+julia> using ITensors
+
+julia> s = siteinds("S=1/2", 3);
+
+julia> M1 = randomMPS(s; linkdims=3);
+
+julia> norm(M1)
+0.9999999999999999
+
+julia> M2 = copy(M1);
+
+julia> M2[1] *= 2;
+
+julia> norm(M1)
+0.9999999999999999
+
+julia> norm(M2)
+1.9999999999999998
+
+julia> M3 = copy(M1);
+
+julia> M3[1] .*= 3; # Modifies the tensor data
+
+julia> norm(M1)
+3.0000000000000004
+
+julia> norm(M3)
+3.0000000000000004
+```
+"""
 copy(m::AbstractMPS) = typeof(m)(copy(data(m)), leftlim(m), rightlim(m))
 
 similar(m::AbstractMPS) = typeof(m)(similar(data(m)), 0, length(m))
 
-deepcopy(m::AbstractMPS) = typeof(m)(deepcopy(data(m)), leftlim(m), rightlim(m))
+"""
+    deepcopy(::MPS)
+    deepcopy(::MPO)
+
+Make a deep copy of an MPS or MPO. By deep copy, it means that a new MPS/MPO
+is returned that doesn't share any data with the input MPS/MPO.
+
+Therefore, modifying the resulting MPS/MPO will note modify the original MPS/MPO.
+
+Use [`copy`](@ref) for an alternative that performs a shallow copy that avoids
+copying the ITensor data.
+
+# Examples
+```julia
+julia> using ITensors
+
+julia> s = siteinds("S=1/2", 3);
+
+julia> M1 = randomMPS(s; linkdims=3);
+
+julia> norm(M1)
+1.0
+
+julia> M2 = deepcopy(M1);
+
+julia> M2[1] .*= 2; # Modifies the tensor data
+
+julia> norm(M1)
+1.0
+
+julia> norm(M2)
+2.0
+
+julia> M3 = copy(M1);
+
+julia> M3[1] .*= 3; # Modifies the tensor data
+
+julia> norm(M1)
+3.0
+
+julia> norm(M3)
+3.0
+```
+"""
+deepcopy(m::AbstractMPS) = typeof(m)(copy.(data(m)), leftlim(m), rightlim(m))
 
 eachindex(m::AbstractMPS) = 1:length(m)
 
@@ -990,7 +1079,7 @@ Compute the logarithm of the norm of the MPS or MPO.
 
 This is useful for larger MPS/MPO that are not gauged, where in the limit of large numbers of sites the norm can diverge or approach zero.
 
-See also [`norm`](@ref), [`loginner`](@ref), [`logdot`](@ref).
+See also [`norm`](@ref), [`logdot`](@ref).
 """
 function lognorm(M::AbstractMPS)
   if isortho(M)

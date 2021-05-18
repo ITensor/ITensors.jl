@@ -227,6 +227,27 @@ include("util.jl")
     end
   end
 
+  @testset "copy and deepcopy" begin
+    s = siteinds("S=1/2", 3)
+    M1 = randomMPS(s; linkdims=3)
+    @test norm(M1) ≈ 1
+
+    M2 = deepcopy(M1)
+    M2[1] .*= 2 # Modifies the tensor data
+    @test norm(M1) ≈ 1
+    @test norm(M2) ≈ 2
+
+    M3 = copy(M1)
+    M3[1] *= 3
+    @test norm(M1) ≈ 1
+    @test norm(M3) ≈ 3
+
+    M4 = copy(M1)
+    M4[1] .*= 4
+    @test norm(M1) ≈ 4
+    @test norm(M4) ≈ 4
+  end
+
   @testset "inner same MPS" begin
     psi = randomMPS(sites)
     psidag = dag(psi)

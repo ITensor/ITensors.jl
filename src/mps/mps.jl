@@ -610,9 +610,9 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
   # Get last diagonal element of C
   i = end_site
   lind = commonind(psi[i], psi[i - 1])
-  C[Nb, Nb] = scalar(
-    L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)
-  ) / norm2_psi
+  C[Nb, Nb] =
+    scalar(L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)) /
+    norm2_psi
 
   return C
 end
