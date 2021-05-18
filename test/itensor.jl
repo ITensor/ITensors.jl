@@ -13,6 +13,7 @@ function invdigits(::Type{T}, x...) where {T}
 end
 
 @testset "Dense ITensor basic functionality" begin
+
   @testset "ITensor constructors" begin
     i = Index(2, "i")
     j = Index(2, "j")
@@ -169,13 +170,13 @@ end
       TM = randomITensor(i, j)
 
       M1 = matrix(TM)
-      for ni in i, nj in j
-        @test M1[val(ni), val(nj)] ≈ TM[ni, nj]
+      for ni in eachval(i), nj in eachval(j)
+        @test M1[ni, nj] ≈ TM[i=>ni, j=>nj]
       end
 
       M2 = Matrix(TM, j, i)
-      for ni in i, nj in j
-        @test M2[val(nj), val(ni)] ≈ TM[ni, nj]
+      for ni in eachval(i), nj in eachval(j)
+        @test M2[nj, ni] ≈ TM[i=>ni, j=>nj]
       end
 
       T3 = randomITensor(i, j, k)
@@ -186,19 +187,19 @@ end
       TV = randomITensor(i)
 
       V = vector(TV)
-      for ni in i
+      for ni in eachindval(i)
         @test V[val(ni)] ≈ TV[ni]
       end
       V = Vector(TV)
-      for ni in i
+      for ni in eachindval(i)
         @test V[val(ni)] ≈ TV[ni]
       end
       V = Vector(TV, i)
-      for ni in i
+      for ni in eachindval(i)
         @test V[val(ni)] ≈ TV[ni]
       end
       V = Vector{ComplexF64}(TV)
-      for ni in i
+      for ni in eachindval(i)
         @test V[val(ni)] ≈ complex(TV[ni])
       end
 
@@ -228,7 +229,7 @@ end
     j = Index(2, "j")
     A = randomITensor(i, j)
     B = complex(A)
-    for ii in dim(i), jj in dim(j)
+    for ii in 1:dim(i), jj in 1:dim(j)
       @test complex(A[i => ii, j => jj]) == B[i => ii, j => jj]
     end
   end

@@ -60,10 +60,17 @@ import ITensors: In, Out, Neither
     @test prime(i => 2) == (i' => 2)
   end
   @testset "Iteration" begin
-    i = Index(10)
+    i = Index(3)
+
     c = 1
-    for n in i
-      @test n == (i => c)
+    for iv in eachindval(i)
+      @test iv == (i => c)
+      c += 1
+    end
+
+    c = 1
+    for n in eachval(i)
+      @test n == c
       c += 1
     end
   end

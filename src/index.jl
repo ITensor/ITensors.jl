@@ -439,6 +439,9 @@ function Base.iterate(i::Index, state::Int=1)
   return (i => state, state + 1)
 end
 
+eachval(i::Index) = 1:dim(i)
+eachindval(i::Index) = (i => n for n in eachval(i))
+
 # This is a trivial definition for use in NDTensors
 function NDTensors.outer(i::Index; dir=dir(i), tags="", plev::Int=0)
   return sim(i; tags=tags, plev=plev, dir=dir)
