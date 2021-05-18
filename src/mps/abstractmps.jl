@@ -1437,8 +1437,8 @@ end
 # TODO: add a version that determines the sites
 # from common site indices of ψ and A
 """
-    setindex!(ψ::Union{MPS, MPO}, A::ITensor, r::UnitRange{Int};
-              orthocenter::Int = last(r), perm = nothing, kwargs...)
+    setindex!(ψ::Union{MPS,MPO}, A::ITensor, r::UnitRange{Int};
+              orthocenter::Int=last(r), perm=nothing, kwargs...)
     replacesites!([...])
     replacesites([...])
 
@@ -1739,6 +1739,10 @@ function product(
   next_gate::Union{ITensor,Nothing}=nothing,
   kwargs...,
 )
+
+  println("\n###################################")
+  println("product(::ITensor, ::$(typeof(ψ)))\n")
+
   N = length(ns)
   ns = sort(ns)
 
@@ -1746,12 +1750,6 @@ function product(
 
   @show ns
   @show next_ns
-
-  if !isnothing(next_ns)
-    if first(next_ns) > last(ns)
-      @show first(next_ns) > last(ns)
-    end
-  end
 
   diff_ns = diff(ns)
   ns′ = ns
@@ -1780,7 +1778,33 @@ function product(
   ϕ = prod(ψ[ns_range])
   ϕ = product(o, ϕ; apply_dag=apply_dag)
 
-  ψ[ns_range, kwargs...] = ϕ
+  println("\n Determine next desired orthocenter")
+
+  @show ns_range
+  @show next_ns
+
+  # Anticipate where the next orthogonality
+  # center should be based on the position
+  # of the next gate being applied
+  orthocenter = if !isnothing(next_ns)
+    if first(next_ns) > last(ns_range)
+      @show first(next_ns) > last(ns_range)
+      last(ns_range)
+    elseif last(next_ns) < first(ns_range)
+      first(ns_range)
+    else
+      last(next_ns)
+    end
+  else
+    last(ns_range)
+  end
+
+  @show orthocenter
+
+  ψ[ns_range, orthocenter=orthocenter, kwargs...] = ϕ
+
+  @show ortho_lims(ψ)
+
   if move_sites_back
     # Move the sites back to their original positions
     ψ = movesites(ψ, ns′ .=> ns; kwargs...)
