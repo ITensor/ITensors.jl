@@ -431,15 +431,32 @@ Prime an Index using the notation `i^3`.
 """
 Base.:^(i::Index, pl::Int) = prime(i, pl)
 
-"""
-Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
-"""
-function Base.iterate(i::Index, state::Int=1)
-  (state > dim(i)) && return nothing
-  return (i => state, state + 1)
-end
+#"""
+#Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
+#"""
+#function Base.iterate(i::Index, state::Int=1)
+#  (state > dim(i)) && return nothing
+#  return (i => state, state + 1)
+#end
 
+"""
+    eachval(i::Index)
+
+Create an iterator whose values range
+over the dimension of the provided `Index`.
+"""
 eachval(i::Index) = 1:dim(i)
+
+"""
+    eachindval(i::Index)
+
+Create an iterator whose values are Pairs of
+the form `i=>n` with `n` from `1:dim(i)`.
+This iterator is useful for accessing elements of
+an ITensor in a loop without needing to know 
+the ordering of the indices. See also
+[`eachindval(is::Index...)`](@ref).
+"""
 eachindval(i::Index) = (i => n for n in eachval(i))
 
 # This is a trivial definition for use in NDTensors

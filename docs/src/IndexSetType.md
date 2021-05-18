@@ -24,6 +24,14 @@ getfirst(::IndexSet)
 filter(::Function, ::IndexSet)
 ```
 
+## Iterating
+
+```@docs
+eachval(::Index...)
+eachindval(::Index...)
+```
+
+
 ## Symmetry related properties
 
 ```@docs
