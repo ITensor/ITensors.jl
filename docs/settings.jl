@@ -22,8 +22,7 @@ settings = Dict(
     ],
     "Documentation" => [
       "Index" => "IndexType.md",
-      #"IndexVal" => "IndexValType.md",
-      "IndexSet" => "IndexSetType.md",
+      "Index collections" => "IndexSetType.md",
       "ITensor" => "ITensorType.md",
       "MPS and MPO" => "MPSandMPO.md",
       "QN" => "QN.md",
@@ -36,7 +35,7 @@ settings = Dict(
         "Observer.md",
         "DMRGObserver.md",
       ],
-      "AutoMPO" => "AutoMPO.md",
+      "OpSum" => "OpSum.md",
     ],
     "Advanced usage guide" => [
       "Advanced usage guide" => "AdvancedUsageGuide.md",

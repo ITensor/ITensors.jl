@@ -804,7 +804,10 @@ Get the block that the specified index falls in.
 
 This is mostly an internal function, and the interface
 is subject to change.
-```
+
+# Examples
+
+```julia
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))
 ITensors.block(is, 3, 1) == (2,1)
@@ -813,16 +816,7 @@ ITensors.block(is, 1, 2) == (1,1)
 """
 block(inds::Indices, vals::Integer...) = blockindex(inds, vals...)[2]
 
-function show(io::IO, is::IndexSet)
-  print(io, "IndexSet{$(length(is))} ")
-  for n in eachindex(is)
-    i = is[n]
-    print(io, i)
-    if n < lastindex(is)
-      print(io, " ")
-    end
-  end
-end
+#show(io::IO, is::IndexSet) = show(io, MIME"text/plain"(), is)
 
 #
 # Read and write

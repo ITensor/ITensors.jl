@@ -51,6 +51,9 @@
 @deprecate simlinks!(args...; kwargs...) ITensors.sim_linkinds!(args...; kwargs...)
 @deprecate mul(A::AbstractMPS, B::AbstractMPS; kwargs...) contract(A, B; kwargs...)
 
+# mps/mpo.jl
+@deprecate MPO(A::MPS; kwargs...) outer(A, A; kwargs...)
+
 # mps/mps.jl
 @deprecate randomMPS(sites::Vector{<:Index}, linkdims::Integer) randomMPS(
   sites; linkdims=linkdims

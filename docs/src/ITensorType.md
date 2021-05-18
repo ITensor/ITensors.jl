@@ -98,7 +98,7 @@ settags(::ITensor, ::Any...)
 swaptags(::ITensor, ::Any...)
 ```
 
-## IndexSet set operations
+## Index collections set operations
 
 ```@docs
 commoninds

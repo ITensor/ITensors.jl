@@ -16,12 +16,12 @@ denotes a special Index tag which hooks into a system that knows "S=1" indices h
 a dimension of 3 and how to create common physics operators like "Sz" for them.
 
 Next we'll make our Hamiltonian matrix product operator (MPO). A very 
-convenient way to do this is to use the AutoMPO helper type which lets 
+convenient way to do this is to use the OpSum helper type which lets 
 us input a Hamiltonian (or any sum of local operators) in similar notation
 to pencil-and-paper notation:
 
 ```julia
-ampo = AutoMPO()
+ampo = OpSum()
 for j=1:N-1
   ampo += 0.5,"S+",j,"S-",j+1
   ampo += 0.5,"S-",j,"S+",j+1
@@ -30,7 +30,7 @@ end
 H = MPO(ampo,sites)
 ```
 
-In the last line above we convert the AutoMPO helper object to an actual MPO.
+In the last line above we convert the OpSum helper object to an actual MPO.
 
 Before beginning the calculation, we need to specify how many DMRG sweeps to do and
 what schedule we would like for the parameters controlling the accuracy.
@@ -72,7 +72,7 @@ let
   N = 100
   sites = siteinds("S=1",N)
 
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j=1:N-1
     ampo += 0.5,"S+",j,"S-",j+1
     ampo += 0.5,"S-",j,"S+",j+1
@@ -104,7 +104,7 @@ Note that the only difference from a regular ITensor DMRG calculation
 is that the `sites` array has Index objects which alternate in dimension
 and in which physical tag type they carry, whether `"S=1/2"` or `"S=1"`.
 (Try printing out the sites array to see!)
-These tags tell the AutoMPO system which local operators to use for these
+These tags tell the OpSum system which local operators to use for these
 sites when building the Hamiltonian MPO.
 
 ```julia
@@ -125,7 +125,7 @@ let
   Jhh = 0.5 # half-half coupling
   Joo = 0.5 # one-one coupling
 
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j=1:N-1
     ampo += 0.5*Jho,"S+",j,"S-",j+1
     ampo += 0.5*Jho,"S-",j,"S+",j+1
@@ -157,10 +157,10 @@ end
 
 ## Make a 2D Hamiltonian for DMRG
 
-You can use the AutoMPO system to make 2D Hamiltonians
+You can use the OpSum system to make 2D Hamiltonians
 much in the same way you make 1D Hamiltonians: by looping over
 all of the bonds and adding the interactions on these bonds to
-the AutoMPO. 
+the OpSum. 
 
 To help with the logic of 2D lattices, ITensor pre-defines
 some helper functions which
@@ -200,7 +200,7 @@ let
   lattice = square_lattice(Nx, Ny; yperiodic = false)
 
   # Define the Heisenberg spin Hamiltonian on this lattice
-  ampo = AutoMPO()
+  ampo = OpSum()
   for b in lattice
     ampo .+= 0.5, "S+", b.s1, "S-", b.s2
     ampo .+= 0.5, "S-", b.s1, "S+", b.s2
@@ -275,13 +275,13 @@ let
 
 
   #
-  # Use the AutoMPO feature to create the
+  # Use the OpSum feature to create the
   # transverse field Ising model
   #
   # Factors of 4 and 2 are to rescale
   # spin operators into Pauli matrices
   #
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j=1:N-1
     ampo += -4,"Sz",j,"Sz",j+1
   end

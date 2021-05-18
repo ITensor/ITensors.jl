@@ -1039,7 +1039,7 @@ for (finds, fset) in (
   end
 end
 
-for find in (:commonind, :noncomonind, :uniqueind, :unionind)
+for find in (:commonind, :noncommonind, :uniqueind, :unionind)
   @eval begin
     $find(args...; kwargs...) = getfirst($(Symbol(find, :s))(args...; kwargs...))
   end
@@ -1977,6 +1977,89 @@ function hadamard_product(A::ITensor, B::ITensor)
 end
 
 ⊙(A::ITensor, B::ITensor) = hadamard_product(A, B)
+
+# Helper tensors for performing a partial direct sum
+function directsum_itensors(i::Index, j::Index, ij::Index)
+  S1 = zeros(dim(i), dim(ij))
+  for ii in 1:dim(i)
+    S1[ii, ii] = 1
+  end
+  S2 = zeros(dim(j), dim(ij))
+  for jj in 1:dim(j)
+    S2[jj, dim(i) + jj] = 1
+  end
+  D1 = itensor(S1, dag(i), ij)
+  D2 = itensor(S2, dag(j), ij)
+  return D1, D2
+end
+
+function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
+  A, I = A_and_I
+  B, J = B_and_J
+  return directsum(A, B, I, J; kwargs...)
+end
+
+"""
+    directsum(A::Pair{ITensor}, B::Pair{ITensor}, ...; tags)
+
+Given a list of pairs of ITensors and collections of indices, perform a partial
+direct sum of the tensors over the specified indices. Indices that are
+not specified to be summed must match between the tensors.
+
+If all indices are specified then the operation is equivalent to creating
+a block diagonal tensor.
+
+Returns the ITensor representing the partial direct sum as well as the new
+direct summed indices. The tags of the direct summed indices are specified
+by the keyword arguments.
+
+See Section 2.3 of https://arxiv.org/abs/1405.7786 for a definition of a partial
+direct sum of tensors.
+
+# Examples
+```julia
+x = Index(2, "x")
+i1 = Index(3, "i1")
+j1 = Index(4, "j1")
+i2 = Index(5, "i2")
+j2 = Index(6, "j2")
+
+A1 = randomITensor(i1, x, j1)
+A2 = randomITensor(x, j2, i2)
+S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+```
+"""
+function directsum(
+  A_and_I::Pair{ITensor},
+  B_and_J::Pair{ITensor},
+  C_and_K::Pair{ITensor},
+  itensor_and_inds...;
+  tags=["sum$i" for i in 1:length(last(A_and_I))],
+)
+  return directsum(
+    Pair(directsum(A_and_I, B_and_J; kwargs...)...), C_and_K, itensor_and_inds...; tags=tags
+  )
+end
+
+function directsum(A::ITensor, B::ITensor, I, J; tags)
+  N = length(I)
+  (N != length(J)) &&
+    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
+  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
+  for n in 1:N
+    In = I[n]
+    Jn = J[n]
+    In = dir(A, In) != dir(In) ? dag(In) : In
+    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
+    IJn = directsum(In, Jn; tags=tags[n])
+    D1, D2 = directsum_itensors(In, Jn, IJn)
+    IJ[n] = IJn
+    A *= D1
+    B *= D2
+  end
+  C = A + B
+  return C, IJ
+end
 
 """
     product(A::ITensor, B::ITensor)

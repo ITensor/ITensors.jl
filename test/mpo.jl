@@ -71,6 +71,7 @@ end
     for j in 1:N
       A[j] ./= j
     end
+    reset_ortho_lims!(A)
     @test norm(A) ≈ 1 / factorial(N)
   end
 
@@ -79,6 +80,7 @@ end
     for j in 1:N
       A[j] .*= j
     end
+    reset_ortho_lims!(A)
     Adag = sim(linkinds, dag(A))
     A² = ITensor(1)
     for j in 1:N
@@ -530,8 +532,47 @@ end
     M = A' * dag(A)
     ψ = MPS(A, [i, j])
     @test prod(ψ) ≈ A
+    ρ = outer(ψ, ψ)
+    @test prod(ρ) ≈ M
+    ρ = projector(ψ; normalize=false)
+    @test prod(ρ) ≈ M
+    # Deprecated syntax
     ρ = MPO(ψ)
     @test prod(ρ) ≈ M
+  end
+
+  @testset "outer(::MPS, ::MPS) and projector(::MPS)" begin
+    N = 40
+    s = siteinds("S=1/2", N; conserve_qns=true)
+    state(n) = isodd(n) ? "Up" : "Dn"
+    χψ = 3
+    ψ = randomMPS(ComplexF64, s, state; linkdims=χψ)
+    χϕ = 4
+    ϕ = randomMPS(ComplexF64, s, state; linkdims=χϕ)
+
+    ψ[only(ortho_lims(ψ))] *= 2
+
+    Pψ = projector(ψ; normalize=false, cutoff=1e-8)
+    Pψᴴ = swapprime(dag(Pψ), 0 => 1)
+    @test maxlinkdim(Pψ) == χψ^2
+    @test sqrt(inner(Pψ, Pψ) + inner(ψ, ψ)^2 - inner(ψ, Pψ, ψ) - inner(ψ, Pψᴴ, ψ)) /
+          abs(inner(ψ, ψ)) ≈ 0 atol = 1e-5 * N
+
+    normψ = norm(ψ)
+    Pψ = projector(ψ; cutoff=1e-8)
+    Pψᴴ = swapprime(dag(Pψ), 0 => 1)
+    @test maxlinkdim(Pψ) == χψ^2
+    @test sqrt(
+      inner(Pψ, Pψ) * normψ^4 + inner(ψ, ψ)^2 - inner(ψ, Pψ, ψ) * normψ^2 -
+      inner(ψ, Pψᴴ, ψ) * normψ^2,
+    ) / abs(inner(ψ, ψ)) ≈ 0 atol = 1e-5 * N
+
+    ψϕ = outer(ψ, ϕ; cutoff=1e-8)
+    ϕψ = swapprime(dag(ψϕ), 0 => 1)
+    @test maxlinkdim(ψϕ) == χψ * χϕ
+    @test sqrt(
+      inner(ψϕ, ψϕ) + inner(ψ, ψ) * inner(ϕ, ϕ) - inner(ψ, ψϕ, ϕ) - inner(ϕ, ϕψ, ψ)
+    ) / sqrt(inner(ψ, ψ) * inner(ϕ, ϕ)) ≈ 0 atol = 1e-5 * N
   end
 
   @testset "tr(::MPO)" begin
@@ -558,8 +599,8 @@ end
     s2 = siteinds("S=1/2", N)
     psi1 = randomMPS(s1)
     psi2 = randomMPS(s2)
-    H1 = MPO(AutoMPO() + ("Id", 1), s1)
-    H2 = MPO(AutoMPO() + ("Id", 1), s2)
+    H1 = MPO(OpSum() + ("Id", 1), s1)
+    H2 = MPO(OpSum() + ("Id", 1), s2)
 
     @test_throws ErrorException inner(psi1, H2, psi1)
     @test_throws ErrorException inner(psi1, H2, psi2; make_inds_match=false)
@@ -575,7 +616,7 @@ end
   @testset "MPO*MPO contraction with multiple site indices" begin
     N = 8
     s = siteinds("S=1/2", N)
-    a = AutoMPO()
+    a = OpSum()
     for j in 1:(N - 1)
       a .+= 0.5, "S+", j, "S-", j + 1
       a .+= 0.5, "S-", j, "S+", j + 1
@@ -593,7 +634,7 @@ end
   @testset "MPO*MPO contraction with multiple and combined site indices" begin
     N = 8
     s = siteinds("S=1/2", N)
-    a = AutoMPO()
+    a = OpSum()
     for j in 1:(N - 1)
       a .+= 0.5, "S+", j, "S-", j + 1
       a .+= 0.5, "S-", j, "S+", j + 1
