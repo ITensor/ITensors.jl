@@ -22,7 +22,7 @@ settings = Dict(
     ],
     "Documentation" => [
       "Index" => "IndexType.md",
-      "IndexVal" => "IndexValType.md",
+      #"IndexVal" => "IndexValType.md",
       "IndexSet" => "IndexSetType.md",
       "ITensor" => "ITensorType.md",
       "MPS and MPO" => "MPSandMPO.md",
