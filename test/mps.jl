@@ -643,6 +643,38 @@ end
     end
   end
 
+  @testset "expect regression test for in-place modification of input MPS" begin
+    s = siteinds("S=1/2", 5)
+    psi = randomMPS(s; linkdims=3)
+    orthogonalize!(psi, 1)
+    expect_init = expect(psi, "Sz")
+    norm_scale = 10
+    psi[1] *= norm_scale
+    @test ortho_lims(psi) == 1:1
+    @test norm(psi) ≈ norm_scale
+    expect_Sz = expect(psi, "Sz")
+    @test all(≤(1 / 2), expect_Sz)
+    @test expect_Sz ≈ expect_init
+    @test ortho_lims(psi) == 1:1
+    @test norm(psi) ≈ norm_scale
+  end
+
+  @testset "correlation_matrix regression test for in-place modification of input MPS" begin
+    s = siteinds("S=1/2", 5)
+    psi = randomMPS(s; linkdims=3)
+    orthogonalize!(psi, 1)
+    correlation_matrix_init = correlation_matrix(psi, "Sz", "Sz")
+    norm_scale = 10
+    psi[1] *= norm_scale
+    @test ortho_lims(psi) == 1:1
+    @test norm(psi) ≈ norm_scale
+    correlation_matrix_SzSz = correlation_matrix(psi, "Sz", "Sz")
+    @test all(≤(1 / 2), correlation_matrix_SzSz)
+    @test correlation_matrix_SzSz ≈ correlation_matrix_init
+    @test ortho_lims(psi) == 1:1
+    @test norm(psi) ≈ norm_scale
+  end
+
   @testset "swapbondsites" begin
     N = 5
     sites = siteinds("S=1/2", N)

@@ -557,7 +557,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
 
   psi = copy(psi)
   orthogonalize!(psi, start_site)
-  psi[start_site] ./= norm(psi[start_site])
+  norm2_psi = norm(psi[start_site])^2
 
   s = siteinds(psi)
   onsiteOp = "$Op1*$Op2"
@@ -585,7 +585,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
-    C[ci, ci] = scalar(Li * op(onsiteOp, s, i) * prime(dag(psi[i]), not(rind)))
+    C[ci, ci] = scalar(Li * op(onsiteOp, s, i) * prime(dag(psi[i]), not(rind))) / norm2_psi
 
     # Get j > i correlations
     Li = Li * op(Op1, s, i) * dag(prime(psi[i]))
@@ -595,7 +595,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
       Li *= psi[j]
 
       val = Li * op(Op2, s, j) * dag(prime(prime(psi[j], "Site"), lind))
-      C[ci, cj] = scalar(val)
+      C[ci, cj] = scalar(val) / norm2_psi
       C[cj, ci] = conj(C[ci, cj])
 
       if fermionic2
@@ -612,7 +612,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
   lind = commonind(psi[i], psi[i - 1])
   C[Nb, Nb] = scalar(
     L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)
-  )
+  ) / norm2_psi
 
   return C
 end
@@ -656,13 +656,14 @@ function expect(psi::MPS, ops::AbstractString...; kwargs...)
   offset = start_site - 1
 
   orthogonalize!(psi, start_site)
-  psi[start_site] ./= norm(psi[start_site])
+  norm2_psi = norm(psi)^2
 
   ex = ntuple(n -> zeros(ElT, Ns), Nops)
   for j in site_range
     orthogonalize!(psi, j)
     for n in 1:Nops
-      ex[n][j - offset] = real(scalar(psi[j] * op(ops[n], s[j]) * dag(prime(psi[j], s[j]))))
+      ex[n][j - offset] =
+        real(scalar(psi[j] * op(ops[n], s[j]) * dag(prime(psi[j], s[j])))) / norm2_psi
     end
   end
 
