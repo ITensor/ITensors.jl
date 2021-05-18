@@ -10,19 +10,19 @@ using ITensors, Test
       @test flux(D, b) == QN()
     end
 
-    D[i(1), i'(1)] = 1
-    D[i(2), i'(2)] = 2
-    D[i(3), i'(3)] = 3
-    D[i(4), i'(4)] = 4
-    D[i(5), i'(5)] = 5
+    D[i=>1, i'=>1] = 1
+    D[i=>2, i'=>2] = 2
+    D[i=>3, i'=>3] = 3
+    D[i=>4, i'=>4] = 4
+    D[i=>5, i'=>5] = 5
 
-    @test_throws ErrorException D[i(1), i'(2)] = 2.0
+    @test_throws ErrorException D[i=>1, i'=>2] = 2.0
 
-    @test D[i(1), i'(1)] == 1
-    @test D[i(2), i'(2)] == 2
-    @test D[i(3), i'(3)] == 3
-    @test D[i(4), i'(4)] == 4
-    @test D[i(5), i'(5)] == 5
+    @test D[i=>1, i'=>1] == 1
+    @test D[i=>2, i'=>2] == 2
+    @test D[i=>3, i'=>3] == 3
+    @test D[i=>4, i'=>4] == 4
+    @test D[i=>5, i'=>5] == 5
   end
 
   @testset "diagITensor Tuple constructor" begin
