@@ -415,8 +415,6 @@ end
 eachindval(is::Index...) = eachindval(tuple(is...))
 eachindval(is::Tuple{Vararg{Index}}) = (is .=> Tuple(ns) for ns in eachval(is))
 
-
-
 function removetags(f::Function, is::Indices, args...)
   return map(i -> f(i) ? removetags(i, args...) : i, is)
 end

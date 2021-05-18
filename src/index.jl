@@ -435,7 +435,9 @@ Base.:^(i::Index, pl::Int) = prime(i, pl)
 Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
 """
 function Base.iterate(i::Index, state::Int=1)
-  Base.depwarn("iteration of `Index` is deprecated, use `eachindval` or `eachval` instead.", :iterate)
+  Base.depwarn(
+    "iteration of `Index` is deprecated, use `eachindval` or `eachval` instead.", :iterate
+  )
   (state > dim(i)) && return nothing
   return (i => state, state + 1)
 end
@@ -494,8 +496,8 @@ const IndexVal{IndexT} = Pair{IndexT,Int}
 IndexVal(i::Index, n::Int) = (i => n)
 
 function (i::Index)(n::Integer)
-  Base.depwarn("Index(::Int) is deprecated, for an Index i use i=>n instead.",:Index)
-  return i=>n
+  Base.depwarn("Index(::Int) is deprecated, for an Index i use i=>n instead.", :Index)
+  return i => n
 end
 
 NDTensors.ind(iv::Pair{<:Index}) = first(iv)

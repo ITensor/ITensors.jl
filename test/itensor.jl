@@ -13,7 +13,6 @@ function invdigits(::Type{T}, x...) where {T}
 end
 
 @testset "Dense ITensor basic functionality" begin
-
   @testset "ITensor constructors" begin
     i = Index(2, "i")
     j = Index(2, "j")
@@ -171,12 +170,12 @@ end
 
       M1 = matrix(TM)
       for ni in eachval(i), nj in eachval(j)
-        @test M1[ni, nj] ≈ TM[i=>ni, j=>nj]
+        @test M1[ni, nj] ≈ TM[i => ni, j => nj]
       end
 
       M2 = Matrix(TM, j, i)
       for ni in eachval(i), nj in eachval(j)
-        @test M2[nj, ni] ≈ TM[i=>ni, j=>nj]
+        @test M2[nj, ni] ≈ TM[i => ni, j => nj]
       end
 
       T3 = randomITensor(i, j, k)
