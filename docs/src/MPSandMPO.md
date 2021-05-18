@@ -33,6 +33,7 @@ MPO(::Type{<:Number}, ::Vector{<:Index}, ::String)
 
 ```@docs
 eltype(::ITensors.AbstractMPS)
+ITensors.promote_itensor_eltype(::ITensors.AbstractMPS)
 flux(::ITensors.AbstractMPS)
 hasqns(::ITensors.AbstractMPS)
 length(::ITensors.AbstractMPS)

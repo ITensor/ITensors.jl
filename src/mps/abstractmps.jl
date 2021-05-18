@@ -42,7 +42,7 @@ end
 The element type of the MPS/MPO. Always returns `ITensor`.
 
 For the element type of the ITensors of the MPS/MPO,
-use `common_itensor_eltype`.
+use [`ITensors.promote_itensor_eltype`](@ref).
 """
 eltype(::AbstractMPS) = ITensor
 
@@ -1624,7 +1624,7 @@ function movesites(ψ::AbstractMPS, ns, ns′; kwargs...)
 end
 
 """
-    product(o::ITensor, ψ::Union{MPS, MPO}, [ns::Vector{Int}]; <keyword argument>)
+    product(o::ITensor, ψ::Union{MPS,MPO}, [ns::Vector{Int}]; <keyword argument>)
     apply([...])
 
 Get the product of the operator `o` with the MPS/MPO `ψ`,
@@ -1647,28 +1647,51 @@ function product(
   ns=findsites(ψ, o);
   move_sites_back::Bool=true,
   apply_dag::Bool=false,
+  next_gate::Union{ITensor,Nothing}=nothing,
   kwargs...,
 )
   N = length(ns)
   ns = sort(ns)
 
-  # TODO: make this smarter by minimizing
-  # distance to orthogonalization.
-  # For example, if ITensors.orthocenter(ψ) > ns[end],
-  # set to ns[end].
-  ψ = orthogonalize(ψ, ns[1])
+  next_ns = isnothing(next_gate) ? nothing : sort(findsites(ψ, next_gate))
+
+  @show ns
+  @show next_ns
+
+  if !isnothing(next_ns)
+    if first(next_ns) > last(ns)
+      @show first(next_ns) > last(ns)
+    end
+  end
+
   diff_ns = diff(ns)
   ns′ = ns
   if any(!=(1), diff_ns)
     ns′ = [ns[1] + n - 1 for n in 1:N]
     ψ = movesites(ψ, ns .=> ns′; kwargs...)
   end
-  ϕ = ψ[ns′[1]]
-  for n in 2:N
-    ϕ *= ψ[ns′[n]]
+  ns_range = first(ns′):last(ns′)
+
+  @show ns_range
+  @show ortho_lims(ψ)
+  # Minimize distance to orthogonalize
+  if first(ortho_lims(ψ)) > last(ns_range)
+    ψ = orthogonalize(ψ, last(ns_range))
+  elseif last(ortho_lims(ψ)) < first(ns_range)
+    ψ = orthogonalize(ψ, first(ns_range))
   end
+
+  @show ns_range
+  @show ortho_lims(ψ)
+
+  if first(ortho_lims(ψ)) < first(ns_range) || last(ortho_lims(ψ)) > last(ns_range)
+    error("Orthogonality center limits are $(ortho_lims(ψ)), but gate is being applied to $ns′. Must be within the range of where the gates are being applied.")
+  end
+
+  ϕ = prod(ψ[ns_range])
   ϕ = product(o, ϕ; apply_dag=apply_dag)
-  ψ[ns′[1]:ns′[end], kwargs...] = ϕ
+
+  ψ[ns_range, kwargs...] = ϕ
   if move_sites_back
     # Move the sites back to their original positions
     ψ = movesites(ψ, ns′ .=> ns; kwargs...)
@@ -1763,8 +1786,10 @@ function product(
   As::Vector{<:ITensor}, ψ::AbstractMPS; move_sites_back::Bool=true, kwargs...
 )
   Aψ = ψ
-  for A in As
-    Aψ = product(A, Aψ; move_sites_back=false, kwargs...)
+  for n in eachindex(As)
+    An = As[n]
+    next_gate = n == lastindex(As) ? nothing : As[n + 1]
+    Aψ = product(An, Aψ; move_sites_back=false, next_gate=next_gate, kwargs...)
   end
   if move_sites_back
     s = siteinds(Aψ)
