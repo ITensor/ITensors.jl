@@ -392,7 +392,7 @@ Create an iterator whose values correspond to a
 Cartesian indexing over the dimensions
 of the provided `Index` objects.
 """
-eachval(is::Index...) = eachval(tuple(is...))
+eachval(is::Index...) = eachval(is)
 eachval(is::Tuple{Vararg{Index}}) = CartesianIndices(dims(is))
 
 """
@@ -412,7 +412,7 @@ for iv in eachindval(i,j)
 end
 ```
 """
-eachindval(is::Index...) = eachindval(tuple(is...))
+eachindval(is::Index...) = eachindval(is)
 eachindval(is::Tuple{Vararg{Index}}) = (is .=> Tuple(ns) for ns in eachval(is))
 
 function removetags(f::Function, is::Indices, args...)
