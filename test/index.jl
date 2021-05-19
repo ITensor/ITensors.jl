@@ -53,7 +53,6 @@ import ITensors: In, Out, Neither
     @test plev(i' => 2) == 1
     @test val(i' => 2) == 2
     @test plev(prime(i => 2, 4)) == 4
-    @test sprint(show, i => 2) == sprint(show, i) * "=>2"
 
     @test plev(i => 2) == 0
     @test plev(i' => 2) == 1
