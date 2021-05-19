@@ -166,7 +166,7 @@ using ITensors, Test
       D = diagITensor(ones(d), i, j, k)
       D = fill!(D, 2.0)
       for ii in 1:d
-        @test D[i => ii, j(ii), k(ii)] == 2.0
+        @test D[i => ii, j => ii, k => ii] == 2.0
       end
 
       @test eltype(D) == Float64
@@ -176,7 +176,7 @@ using ITensors, Test
       D = diagITensor(i, j, k)
 
       for ii in 1:d
-        D[i => ii, j(ii), k(ii)] = ii
+        D[i => ii, j => ii, k => ii] = ii
       end
 
       @test eltype(D) == Float64
@@ -189,8 +189,8 @@ using ITensors, Test
       end
 
       # Can't set off-diagonal elements
-      @test_throws ErrorException D[i(2), j(1), k(1)] = 0.0
-      @test_throws ErrorException D[i(1), j(2), k(1)] = 0.0
+      @test_throws ErrorException D[i => 2, j => 1, k => 1] = 0.0
+      @test_throws ErrorException D[i => 1, j => 2, k => 1] = 0.0
     end
 
     @testset "Convert diag to dense" begin
@@ -397,9 +397,9 @@ using ITensors, Test
       # Can't set elements of uniform diag tensor
       # TODO: should we make a function that converts
       # to a version that can?
-      @test_throws ErrorException D[i(1), j(1), k(1)] = 2.0
-      @test_throws ErrorException D[i(2), j(1), k(1)] = 4.3
-      @test_throws ErrorException D[i(1), j(2), k(1)] = 2
+      @test_throws ErrorException D[i => 1, j => 1, k => 1] = 2.0
+      @test_throws ErrorException D[i => 2, j => 1, k => 1] = 4.3
+      @test_throws ErrorException D[i => 1, j => 2, k => 1] = 2
     end
 
     @testset "Convert diag uniform to dense" begin

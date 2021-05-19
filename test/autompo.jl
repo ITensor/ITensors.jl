@@ -14,10 +14,10 @@ function isingMPO(sites)::MPO
     ll = link[n]
     rl = link[n + 1]
     H[n] = ITensor(dag(ll), dag(s), s', rl)
-    H[n] += setelt(ll[1]) * setelt(rl[1]) * op(sites, "Id", n)
-    H[n] += setelt(ll[3]) * setelt(rl[3]) * op(sites, "Id", n)
-    H[n] += setelt(ll[2]) * setelt(rl[1]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[3]) * setelt(rl[2]) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 1) * setelt(rl => 1) * op(sites, "Id", n)
+    H[n] += setelt(ll => 3) * setelt(rl => 3) * op(sites, "Id", n)
+    H[n] += setelt(ll => 2) * setelt(rl => 1) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 3) * setelt(rl => 2) * op(sites, "Sz", n)
   end
   LE = ITensor(link[1])
   LE[3] = 1.0
@@ -45,18 +45,18 @@ function heisenbergMPO(sites, h::Vector{Float64}, onsite::String="Sz")::MPO
     ll = link[n]
     rl = link[n + 1]
     H[n] = ITensor(ll, s, s', rl)
-    H[n] += setelt(ll[1]) * setelt(rl[1]) * op(sites, "Id", n)
-    H[n] += setelt(ll[5]) * setelt(rl[5]) * op(sites, "Id", n)
-    H[n] += setelt(ll[2]) * setelt(rl[1]) * op(sites, "S+", n)
-    H[n] += setelt(ll[3]) * setelt(rl[1]) * op(sites, "S-", n)
-    H[n] += setelt(ll[4]) * setelt(rl[1]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[5]) * setelt(rl[2]) * op(sites, "S-", n) * 0.5
-    H[n] += setelt(ll[5]) * setelt(rl[3]) * op(sites, "S+", n) * 0.5
-    H[n] += setelt(ll[5]) * setelt(rl[4]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[5]) * setelt(rl[1]) * op(sites, onsite, n) * h[n]
+    H[n] += setelt(ll => 1) * setelt(rl => 1) * op(sites, "Id", n)
+    H[n] += setelt(ll => 5) * setelt(rl => 5) * op(sites, "Id", n)
+    H[n] += setelt(ll => 2) * setelt(rl => 1) * op(sites, "S+", n)
+    H[n] += setelt(ll => 3) * setelt(rl => 1) * op(sites, "S-", n)
+    H[n] += setelt(ll => 4) * setelt(rl => 1) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 5) * setelt(rl => 2) * op(sites, "S-", n) * 0.5
+    H[n] += setelt(ll => 5) * setelt(rl => 3) * op(sites, "S+", n) * 0.5
+    H[n] += setelt(ll => 5) * setelt(rl => 4) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 5) * setelt(rl => 1) * op(sites, onsite, n) * h[n]
   end
-  H[1] *= setelt(link[1][5])
-  H[N] *= setelt(link[N + 1][1])
+  H[1] *= setelt(link[1] => 5)
+  H[N] *= setelt(link[N + 1] => 1)
   return H
 end
 
@@ -72,26 +72,26 @@ function NNheisenbergMPO(sites, J1::Float64, J2::Float64)::MPO
     ll = link[n]
     rl = link[n + 1]
     H[n] = ITensor(ll, s, s', rl)
-    H[n] += setelt(ll[1]) * setelt(rl[1]) * op(sites, "Id", n)
-    H[n] += setelt(ll[8]) * setelt(rl[8]) * op(sites, "Id", n)
+    H[n] += setelt(ll => 1) * setelt(rl => 1) * op(sites, "Id", n)
+    H[n] += setelt(ll => 8) * setelt(rl => 8) * op(sites, "Id", n)
 
-    H[n] += setelt(ll[2]) * setelt(rl[1]) * op(sites, "S-", n)
-    H[n] += setelt(ll[5]) * setelt(rl[2]) * op(sites, "Id", n)
-    H[n] += setelt(ll[8]) * setelt(rl[2]) * op(sites, "S+", n) * J1 / 2
-    H[n] += setelt(ll[8]) * setelt(rl[5]) * op(sites, "S+", n) * J2 / 2
+    H[n] += setelt(ll => 2) * setelt(rl => 1) * op(sites, "S-", n)
+    H[n] += setelt(ll => 5) * setelt(rl => 2) * op(sites, "Id", n)
+    H[n] += setelt(ll => 8) * setelt(rl => 2) * op(sites, "S+", n) * J1 / 2
+    H[n] += setelt(ll => 8) * setelt(rl => 5) * op(sites, "S+", n) * J2 / 2
 
-    H[n] += setelt(ll[3]) * setelt(rl[1]) * op(sites, "S+", n)
-    H[n] += setelt(ll[6]) * setelt(rl[3]) * op(sites, "Id", n)
-    H[n] += setelt(ll[8]) * setelt(rl[3]) * op(sites, "S-", n) * J1 / 2
-    H[n] += setelt(ll[8]) * setelt(rl[6]) * op(sites, "S-", n) * J2 / 2
+    H[n] += setelt(ll => 3) * setelt(rl => 1) * op(sites, "S+", n)
+    H[n] += setelt(ll => 6) * setelt(rl => 3) * op(sites, "Id", n)
+    H[n] += setelt(ll => 8) * setelt(rl => 3) * op(sites, "S-", n) * J1 / 2
+    H[n] += setelt(ll => 8) * setelt(rl => 6) * op(sites, "S-", n) * J2 / 2
 
-    H[n] += setelt(ll[4]) * setelt(rl[1]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[7]) * setelt(rl[4]) * op(sites, "Id", n)
-    H[n] += setelt(ll[8]) * setelt(rl[4]) * op(sites, "Sz", n) * J1
-    H[n] += setelt(ll[8]) * setelt(rl[7]) * op(sites, "Sz", n) * J2
+    H[n] += setelt(ll => 4) * setelt(rl => 1) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 7) * setelt(rl => 4) * op(sites, "Id", n)
+    H[n] += setelt(ll => 8) * setelt(rl => 4) * op(sites, "Sz", n) * J1
+    H[n] += setelt(ll => 8) * setelt(rl => 7) * op(sites, "Sz", n) * J2
   end
-  H[1] *= setelt(link[1][8])
-  H[N] *= setelt(link[N + 1][1])
+  H[1] *= setelt(link[1] => 8)
+  H[N] *= setelt(link[N + 1] => 1)
   return H
 end
 
@@ -107,15 +107,15 @@ function threeSiteIsingMPO(sites, h::Vector{Float64})::MPO
     ll = link[n]
     rl = link[n + 1]
     H[n] = ITensor(ll, s, s', rl)
-    H[n] += setelt(ll[1]) * setelt(rl[1]) * op(sites, "Id", n)
-    H[n] += setelt(ll[4]) * setelt(rl[4]) * op(sites, "Id", n)
-    H[n] += setelt(ll[2]) * setelt(rl[1]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[3]) * setelt(rl[2]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[4]) * setelt(rl[3]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[4]) * setelt(rl[1]) * op(sites, "Sx", n) * h[n]
+    H[n] += setelt(ll => 1) * setelt(rl => 1) * op(sites, "Id", n)
+    H[n] += setelt(ll => 4) * setelt(rl => 4) * op(sites, "Id", n)
+    H[n] += setelt(ll => 2) * setelt(rl => 1) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 3) * setelt(rl => 2) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 4) * setelt(rl => 3) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 4) * setelt(rl => 1) * op(sites, "Sx", n) * h[n]
   end
-  H[1] *= setelt(link[1][4])
-  H[N] *= setelt(link[N + 1][1])
+  H[1] *= setelt(link[1] => 4)
+  H[N] *= setelt(link[N + 1] => 1)
   return H
 end
 
@@ -131,15 +131,15 @@ function fourSiteIsingMPO(sites)::MPO
     ll = link[n]
     rl = link[n + 1]
     H[n] = ITensor(ll, s, s', rl)
-    H[n] += setelt(ll[1]) * setelt(rl[1]) * op(sites, "Id", n)
-    H[n] += setelt(ll[5]) * setelt(rl[5]) * op(sites, "Id", n)
-    H[n] += setelt(ll[2]) * setelt(rl[1]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[3]) * setelt(rl[2]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[4]) * setelt(rl[3]) * op(sites, "Sz", n)
-    H[n] += setelt(ll[5]) * setelt(rl[4]) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 1) * setelt(rl => 1) * op(sites, "Id", n)
+    H[n] += setelt(ll => 5) * setelt(rl => 5) * op(sites, "Id", n)
+    H[n] += setelt(ll => 2) * setelt(rl => 1) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 3) * setelt(rl => 2) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 4) * setelt(rl => 3) * op(sites, "Sz", n)
+    H[n] += setelt(ll => 5) * setelt(rl => 4) * op(sites, "Sz", n)
   end
-  H[1] *= setelt(link[1][5])
-  H[N] *= setelt(link[N + 1][1])
+  H[1] *= setelt(link[1] => 5)
+  H[N] *= setelt(link[N + 1] => 1)
   return H
 end
 
@@ -319,7 +319,7 @@ end
     add!(ampo, 0.5, "Sy", 1)
     H = MPO(ampo, sites)
     l = commonind(H[1], H[2])
-    T = setelt(l[1]) * H[1]
+    T = setelt(l => 1) * H[1]
     O = op(sites[1], "Sx") + op(sites[1], "Sy")
     @test norm(T - 0.5 * O) < 1E-8
 
@@ -503,7 +503,7 @@ end
       ampo += 0.5, "Sy", 1
       H = MPO(ampo, sites)
       l = commonind(H[1], H[2])
-      T = setelt(l[1]) * H[1]
+      T = setelt(l => 1) * H[1]
       O = op(sites[1], "Sx") + op(sites[1], "Sy")
       @test norm(T - 0.5 * O) < 1E-8
 
@@ -690,7 +690,7 @@ end
       ampo .+= 0.5, "Sy", 1
       H = MPO(ampo, sites)
       l = commonind(H[1], H[2])
-      T = setelt(l[1]) * H[1]
+      T = setelt(l => 1) * H[1]
       O = op(sites[1], "Sx") + op(sites[1], "Sy")
       @test norm(T - 0.5 * O) < 1E-8
 

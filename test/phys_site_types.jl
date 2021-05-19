@@ -9,8 +9,8 @@ using ITensors, Test
     @test dim(s) == 2
 
     s = siteinds("Qubit", N)
-    @test val(s[1], "0") == s[1](1)
-    @test val(s[1], "1") == s[1](2)
+    @test val(s[1], "0") == 1
+    @test val(s[1], "1") == 2
     @test_throws ArgumentError val(s[1], "Fake")
 
     s = siteind("Qubit"; conserve_parity=true)
@@ -77,8 +77,8 @@ using ITensors, Test
     @test qn(s, 2) == QN(("SzParity", 0, 2), ("Sz", -1))
 
     s = siteinds("S=1/2", N)
-    @test val(s[1], "Up") == s[1](1)
-    @test val(s[1], "Dn") == s[1](2)
+    @test val(s[1], "Up") == 1
+    @test val(s[1], "Dn") == 2
     @test_throws ArgumentError val(s[1], "Fake")
 
     Sz5 = op("Sz", s, 5)
@@ -112,9 +112,9 @@ using ITensors, Test
   @testset "Spin One sites" begin
     s = siteinds("S=1", N)
 
-    @test val(s[1], "Up") == s[1](1)
-    @test val(s[1], "0") == s[1](2)
-    @test val(s[1], "Dn") == s[1](3)
+    @test val(s[1], "Up") == 1
+    @test val(s[1], "0") == 2
+    @test val(s[1], "Dn") == 3
     @test_throws ArgumentError val(s[1], "Fake")
 
     Sz5 = op("Sz", s, 5)
@@ -143,8 +143,8 @@ using ITensors, Test
   @testset "Fermion sites" begin
     s = siteind("Fermion")
 
-    @test val(s, "0") == s(1)
-    @test val(s, "1") == s(2)
+    @test val(s, "0") == 1
+    @test val(s, "1") == 2
     @test_throws ArgumentError val(s, "Fake")
 
     N = op(s, "N")
@@ -199,10 +199,10 @@ using ITensors, Test
   @testset "Electron sites" begin
     s = siteind("Electron")
 
-    @test val(s, "0") == s(1)
-    @test val(s, "Up") == s(2)
-    @test val(s, "Dn") == s(3)
-    @test val(s, "UpDn") == s(4)
+    @test val(s, "0") == 1
+    @test val(s, "Up") == 2
+    @test val(s, "Dn") == 3
+    @test val(s, "UpDn") == 4
     @test_throws ArgumentError val(s, "Fake")
 
     Nup = op(s, "Nup")
@@ -268,9 +268,9 @@ using ITensors, Test
   @testset "tJ sites" begin
     s = siteind("tJ")
 
-    @test val(s, "0") == s(1)
-    @test val(s, "Up") == s(2)
-    @test val(s, "Dn") == s(3)
+    @test val(s, "0") == 1
+    @test val(s, "Up") == 2
+    @test val(s, "Dn") == 3
     @test_throws ArgumentError val(s, "Fake")
 
     @test_throws ArgumentError op(s, "Fake")

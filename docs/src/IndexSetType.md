@@ -17,6 +17,14 @@ getfirst(::Function, ::IndexSet)
 getfirst(::IndexSet)
 ```
 
+## Iterating
+
+```@docs
+eachval(::Index...)
+eachindval(::Index...)
+```
+
+
 ## Symmetry related properties
 
 ```@docs

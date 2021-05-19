@@ -384,6 +384,37 @@ Create a CartesianIndices iterator for an Indices.
 """
 CartesianIndices(is::Indices) = CartesianIndices(_Tuple(dims(is)))
 
+"""
+    eachval(is::Index...)
+    eachval(is::Tuple{Vararg{Index}})
+
+Create an iterator whose values correspond to a 
+Cartesian indexing over the dimensions
+of the provided `Index` objects.
+"""
+eachval(is::Index...) = eachval(is)
+eachval(is::Tuple{Vararg{Index}}) = CartesianIndices(dims(is))
+
+"""
+    eachindval(is::Index...)
+    eachindval(is::Tuple{Vararg{Index}})
+
+Create an iterator whose values are Index=>value pairs
+corresponding to a Cartesian indexing over the dimensions
+of the provided `Index` objects.
+# Example
+```julia
+i = Index(3; tags = "i")
+j = Index(2; tags = "j")
+T = randomITensor(j,i)
+for iv in eachindval(i,j)
+  @show T[iv...]
+end
+```
+"""
+eachindval(is::Index...) = eachindval(is)
+eachindval(is::Tuple{Vararg{Index}}) = (is .=> Tuple(ns) for ns in eachval(is))
+
 function removetags(f::Function, is::Indices, args...)
   return map(i -> f(i) ? removetags(i, args...) : i, is)
 end

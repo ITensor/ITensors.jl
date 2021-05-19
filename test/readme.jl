@@ -10,9 +10,9 @@ using ITensors, Test
     A = ITensor(i, j, k)
     B = ITensor(j, l)
 
-    A[i(1), j(1), k(1)] = 11.1
-    A[i(2), j(1), k(2)] = -21.2
-    A[k(1), i(3), j(1)] = 31.1  # can provide Index values in any order
+    A[i => 1, j => 1, k => 1] = 11.1
+    A[i => 2, j => 1, k => 2] = -21.2
+    A[k => 1, i => 3, j => 1] = 31.1  # can provide Index values in any order
     # ...
 
     # Contract over shared index j

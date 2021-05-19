@@ -47,6 +47,8 @@ export
   dag,
   dim,
   dir,
+  eachval,
+  eachindval,
   hasid,
   hasind,
   hasplev,

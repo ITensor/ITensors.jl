@@ -10,6 +10,9 @@
 @deprecate use_combine_contract() ITensors.using_combine_contract()
 @deprecate use_debug_checks() ITensors.using_debug_checks()
 
+# index.jl
+@deprecate getindex(i::Index, n::Int) IndexVal(i, n)
+
 # indexset.jl
 @deprecate store(is::IndexSet) data(is)
 @deprecate firstintersect(is...; kwargs...) getfirst(intersect(is...); kwargs...)
