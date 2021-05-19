@@ -1490,7 +1490,7 @@ function setindex!(
   # For MPO case, restrict to 0 prime level
   #sites = filter(hasplev(0), sites)
 
-  if !isnothing(perm)
+  if !isnothing(perm) # TODO: also check if it is a trivial permutation like [1,2,3]
     sites0 = sites
     sites = sites0[[perm...]]
     # Check if the site indices
@@ -1526,12 +1526,8 @@ function setindex!(
       end
     end
   end
-
   ψA = MPST(A, sites; leftinds=lind, orthocenter=orthocenter - first(r) + 1, kwargs...)
-  #@assert prod(ψA) ≈ A
-
   ψ[firstsite:lastsite] = ψA
-
   return ψ
 end
 
@@ -1570,30 +1566,34 @@ function (::Type{MPST})(
     @assert hasinds(A, s)
   end
   @assert isnothing(leftinds) || hasinds(A, leftinds)
-
   @assert 1 ≤ orthocenter ≤ N
 
+  l = isnothing(leftinds) ? Index[] : leftinds
+  # Need to flatten with reduce(vcat, sites)
+  r = uniqueinds(A, reduce(vcat, sites), l)
   ψ = Vector{ITensor}(undef, N)
   Ã = A
-  l = leftinds
-  # TODO: To minimize work, loop from
-  # 1:orthocenter and reverse(orthocenter:N)
-  # so the orthogonality center is set correctly.
-  for n in 1:(N - 1)
-    Lis = IndexSet(sites[n])
-    if !isnothing(l)
-      Lis = unioninds(Lis, l)
-    end
+
+  # Sweep left to orthocenter
+  for n in 1:(orthocenter - 1)
+    Lis = unioninds(sites[n], l)
     L, R = factorize(Ã, Lis; kwargs..., tags="Link,n=$n", ortho="left")
-    l = commonind(L, R)
+    l = commoninds(L, R)
     ψ[n] = L
     Ã = R
   end
-  ψ[N] = Ã
-  M = MPST(ψ)
-  setleftlim!(M, N - 1)
-  setrightlim!(M, N + 1)
-  orthogonalize!(M, orthocenter)
+
+  # Sweep right to orthocenter
+  for n in reverse((orthocenter + 1):N)
+    Ris = unioninds(sites[n], r)
+    R, L = factorize(Ã, Ris; kwargs..., tags="Link,n=$n", ortho="left")
+    r = commonind(R, L)
+    ψ[n] = R
+    Ã = L
+  end
+  ψ[orthocenter] = Ã
+  M = MPST(ψ; ortho_lims=orthocenter:orthocenter)
+  @assert ortho_lims(M) == orthocenter:orthocenter
   return M
 end
 
@@ -1739,18 +1739,10 @@ function product(
   next_gate::Union{ITensor,Nothing}=nothing,
   kwargs...,
 )
-
-  println("\n###################################")
-  println("product(::ITensor, ::$(typeof(ψ)))\n")
-
   N = length(ns)
   ns = sort(ns)
 
   next_ns = isnothing(next_gate) ? nothing : sort(findsites(ψ, next_gate))
-
-  @show ns
-  @show next_ns
-
   diff_ns = diff(ns)
   ns′ = ns
   if any(!=(1), diff_ns)
@@ -1758,18 +1750,12 @@ function product(
     ψ = movesites(ψ, ns .=> ns′; kwargs...)
   end
   ns_range = first(ns′):last(ns′)
-
-  @show ns_range
-  @show ortho_lims(ψ)
   # Minimize distance to orthogonalize
   if first(ortho_lims(ψ)) > last(ns_range)
     ψ = orthogonalize(ψ, last(ns_range))
   elseif last(ortho_lims(ψ)) < first(ns_range)
     ψ = orthogonalize(ψ, first(ns_range))
   end
-
-  @show ns_range
-  @show ortho_lims(ψ)
 
   if first(ortho_lims(ψ)) < first(ns_range) || last(ortho_lims(ψ)) > last(ns_range)
     error("Orthogonality center limits are $(ortho_lims(ψ)), but gate is being applied to sites $ns_range. Orthogonality center must be within the range of where the gates are being applied.")
@@ -1778,17 +1764,11 @@ function product(
   ϕ = prod(ψ[ns_range])
   ϕ = product(o, ϕ; apply_dag=apply_dag)
 
-  println("\n Determine next desired orthocenter")
-
-  @show ns_range
-  @show next_ns
-
   # Anticipate where the next orthogonality
   # center should be based on the position
   # of the next gate being applied
   orthocenter = if !isnothing(next_ns)
     if first(next_ns) > last(ns_range)
-      @show first(next_ns) > last(ns_range)
       last(ns_range)
     elseif last(next_ns) < first(ns_range)
       first(ns_range)
@@ -1798,13 +1778,7 @@ function product(
   else
     last(ns_range)
   end
-
-  @show orthocenter
-
   ψ[ns_range, orthocenter=orthocenter, kwargs...] = ϕ
-
-  @show ortho_lims(ψ)
-
   if move_sites_back
     # Move the sites back to their original positions
     ψ = movesites(ψ, ns′ .=> ns; kwargs...)
