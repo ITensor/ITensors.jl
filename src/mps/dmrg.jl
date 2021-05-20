@@ -123,6 +123,10 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
 
+  write_when_maxdim_exceeds::Union{Int,Nothing} = get(
+    kwargs, :write_when_maxdim_exceeds, nothing
+  )
+
   # eigsolve kwargs
   eigsolve_tol::Float64 = get(kwargs, :eigsolve_tol, 1e-14)
   eigsolve_krylovdim::Int = get(kwargs, :eigsolve_krylovdim, 3)
@@ -174,6 +178,16 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   for sw in 1:nsweep(sweeps)
     sw_time = @elapsed begin
       maxtruncerr = 0.0
+
+      if !isnothing(write_when_maxdim_exceeds) &&
+         maxdim(sweeps, sw) > write_when_maxdim_exceeds
+        if outputlevel >= 2
+          println(
+            "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk",
+          )
+        end
+        PH = disk(PH)
+      end
 
       for (b, ha) in sweepnext(N)
         @debug_check begin

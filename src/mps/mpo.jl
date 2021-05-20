@@ -66,10 +66,10 @@ and operators `ops` on each site.
 """
 function MPO(::Type{ElT}, sites::Vector{<:Index}, ops::Vector{String}) where {ElT<:Number}
   N = length(sites)
-  ampo = AutoMPO() + [ops[n] => n for n in 1:N]
+  ampo = OpSum() + [ops[n] => n for n in 1:N]
   M = MPO(ampo, sites)
 
-  # Currently, AutoMPO does not output the optimally truncated
+  # Currently, OpSum does not output the optimally truncated
   # MPO (see https://github.com/ITensor/ITensors.jl/issues/526)
   # So here, we need to first normalize, then truncate, then
   # return the normalization.
@@ -113,21 +113,48 @@ function MPO(A::ITensor, sites::Vector{<:Index}; kwargs...)
   return MPO(A, IndexSet.(prime.(sites), dag.(sites)); kwargs...)
 end
 
-# TODO: write this in a better way with density matrices instead
-# of contracting the MPS tensors individually at the beginning
 """
-    MPO(A::MPS; kwargs...)
+    outer(x::MPS, y::MPS; <keyword argument>) -> MPO
 
-For an MPS `|A>`, make the MPO `|A><A|`.
-Keyword arguments like `cutoff` can be used to
-truncate the resulting MPO.
+Compute the outer product of `MPS` `x` and `MPS` `y`,
+returning an `MPO` approximation.
+
+Note that `y` will be conjugated, and the site indices
+of `x` will be primed.
+
+In Dirac notation, this is the operation `|x⟩⟨y|`.
+
+The keyword arguments determine the truncation, and accept
+the same arguments as `contract(::MPO, ::MPO; kw...)`.
+
+See also [`product`](@ref), [`contract`](@ref).
 """
-function MPO(A::MPS; kwargs...)
-  M = MPO(prime.(A) .* dag.(A))
-  if !hasnolinkinds(M)
-    truncate!(M; kwargs...)
+function outer(ψ::MPS, ϕ::MPS; kw...)
+  ψmat = convert(MPO, ψ')
+  ϕmat = convert(MPO, dag(ϕ))
+  return contract(ψmat, ϕmat; kw...)
+end
+
+"""
+    projector(x::MPS; <keyword argument>) -> MPO
+
+Computes the projector onto the state `x`. In Dirac notation, this is the operation `|x⟩⟨x|/|⟨x|x⟩|²`.
+
+Use keyword arguments to control the level of truncation, which are
+the same as those accepted by `contract(::MPO, ::MPO; kw...)`.
+
+# Keywords
+- `normalize::Bool=true`: whether or not to normalize the input MPS before forming the projector. If `normalize==false` and the input MPS is not already normalized, this function will not output a proper project, and simply outputs `outer(x, x) = |x⟩⟨x|`, i.e. the projector scaled by `norm(x)^2`.
+- truncation keyword arguments accepted by `contract(::MPO, ::MPO; kw...)`.
+
+See also [`outer`](@ref), [`contract`](@ref).
+"""
+function projector(ψ::MPS; normalize::Bool=true, kw...)
+  ψψᴴ = outer(ψ, ψ; kw...)
+  if normalize
+    normalize!(ψψᴴ[orthocenter(ψψᴴ)])
   end
-  return M
+  return ψψᴴ
 end
 
 # XXX: rename originalsiteind?
@@ -350,20 +377,7 @@ end
 
 error_contract(y::MPS, x::MPS, A::MPO) = error_contract(y, A, x)
 
-"""
-    contract(::MPS, ::MPO; kwargs...)
-    *(::MPS, ::MPO; kwargs...)
-
-    contract(::MPO, ::MPS; kwargs...)
-    *(::MPO, ::MPS; kwargs...)
-
-Contract the MPO with the MPS, returning an MPS with the unique
-site indices of the MPO.
-
-Choose the method with the `method` keyword, for example
-"densitymatrix" and "naive".
-"""
-function *(A::MPO, ψ::MPS; kwargs...)
+function contract(A::MPO, ψ::MPS; kwargs...)
   method = get(kwargs, :method, "densitymatrix")
 
   # Keyword argument deprecations
@@ -387,7 +401,43 @@ function *(A::MPO, ψ::MPS; kwargs...)
   return Aψ
 end
 
-Base.:*(ψ::MPS, A::MPO; kwargs...) = *(A, ψ; kwargs...)
+contract_mpo_mps_doc = """
+    contract(ψ::MPS, A::MPO; kwargs...) -> MPS
+    *(::MPS, ::MPO; kwargs...) -> MPS
+
+    contract(A::MPO, ψ::MPS; kwargs...) -> MPS
+    *(::MPO, ::MPS; kwargs...) -> MPS
+
+Contract the `MPO` `A` with the `MPS` `ψ`, returning an `MPS` with the unique
+site indices of the `MPO`.
+
+Choose the method with the `method` keyword, for example
+`"densitymatrix"` and `"naive"`.
+
+# Keywords
+- `cutoff::Float64=1e-13`: the cutoff value for truncating the density matrix eigenvalues. Note that the default is somewhat arbitrary and subject to change, in general you should set a `cutoff` value.
+- `maxdim::Int=maxlinkdim(A) * maxlinkdim(ψ))`: the maximal bond dimension of the results MPS.
+- `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
+- `normalize::Bool=false`: whether or not to normalize the resulting MPS.
+- `method::String="densitymatrix"`: the algorithm to use for the contraction.
+"""
+
+@doc """
+$contract_mpo_mps_doc
+""" contract(::MPO, ::MPS)
+
+contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
+
+*(A::MPO, B::MPS; kwargs...) = contract(A, B; kwargs...)
+*(A::MPS, B::MPO; kwargs...) = contract(A, B; kwargs...)
+
+# TODO: try this to copy the docstring
+# Causing an error in Revise
+#@doc """
+#$contract_mpo_mps_doc
+#""" *(::MPO, ::MPS)
+
+#@doc (@doc contract(::MPO, ::MPS)) *(::MPO, ::MPS)
 
 function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   n = length(A)
@@ -399,7 +449,7 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
 
   ψ_out = similar(ψ)
   cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
-  maxdim::Int = get(kwargs, :maxdim, maxlinkdim(ψ))
+  maxdim::Int = get(kwargs, :maxdim, maxlinkdim(A) * maxlinkdim(ψ))
   mindim::Int = max(get(kwargs, :mindim, 1), 1)
   normalize::Bool = get(kwargs, :normalize, false)
 
@@ -492,8 +542,7 @@ function _contract_naive(A::MPO, ψ::MPS; kwargs...)::MPS
   return ψ_out
 end
 
-# TODO: form density matrices using a trace
-function Base.:*(A::MPO, B::MPO; kwargs...)
+function contract(A::MPO, B::MPO; kwargs...)
   cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
   resp_degen::Bool = get(kwargs, :respect_degenerate, true)
   maxdim::Int = get(kwargs, :maxdim, maxlinkdim(A) * maxlinkdim(B))
@@ -509,13 +558,14 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   sA = siteinds(uniqueinds, A, B)
   sB = siteinds(uniqueinds, B, A)
   C = MPO(N)
-  lCᵢ = IndexSet()
+  lCᵢ = Index[]
   R = ITensor(1)
   for i in 1:(N - 2)
     RABᵢ = R * A[i] * B[i]
+    left_inds = [sA[i]..., sB[i]..., lCᵢ...]
     C[i], R = factorize(
       RABᵢ,
-      (sA[i]..., sB[i]..., lCᵢ...);
+      left_inds;
       ortho="left",
       tags=commontags(linkinds(A, i)),
       cutoff=cutoff,
@@ -526,9 +576,10 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   end
   i = N - 1
   RABᵢ = R * A[i] * B[i] * A[i + 1] * B[i + 1]
+  left_inds = [sA[i]..., sB[i]..., lCᵢ...]
   C[N - 1], C[N] = factorize(
     RABᵢ,
-    (sA[i]..., sB[i]..., lCᵢ...);
+    left_inds;
     ortho="right",
     tags=commontags(linkinds(A, i)),
     cutoff=cutoff,
@@ -538,6 +589,33 @@ function Base.:*(A::MPO, B::MPO; kwargs...)
   truncate!(C; kwargs...)
   return C
 end
+
+contract_mpo_mpo_doc = """
+    contract(A::MPO, B::MPO; kwargs...) -> MPO
+    *(::MPO, ::MPO; kwargs...) -> MPO
+
+Contract the `MPO` `A` with the `MPO` `B`, returning an `MPO` with the 
+site indices that are not shared between `A` and `B`.
+
+# Keywords
+- `cutoff::Float64=1e-13`: the cutoff value for truncating the density matrix eigenvalues. Note that the default is somewhat arbitrary and subject to change, in general you should set a `cutoff` value.
+- `maxdim::Int=maxlinkdim(A) * maxlinkdim(B))`: the maximal bond dimension of the results MPS.
+- `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
+"""
+
+@doc """
+$contract_mpo_mpo_doc
+""" contract(::MPO, ::MPO)
+
+*(A::MPO, B::MPO; kwargs...) = contract(A, B; kwargs...)
+
+# TODO: try this to copy the docstring
+# Causing an error in Revise
+#@doc """
+#$contract_mpo_mpo_doc
+#""" *(::MPO, ::MPO)
+
+#@doc (@doc contract(::MPO, ::MPO)) *(::MPO, ::MPO)
 
 """
     sample(M::MPO)

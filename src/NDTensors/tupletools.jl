@@ -9,6 +9,10 @@ ValLength(::Type{NTuple{N,T}}) where {N,T} = Val{N}
 """
 ValLength(::NTuple{N}) where {N} = Val(N)
 
+# Only to help with backwards compatibility, this
+# is not type stable and therefore not efficient.
+ValLength(v::Vector) = Val(length(v))
+
 ValLength(::Tuple{Vararg{<:Any,N}}) where {N} = Val(N)
 
 ValLength(::Type{<:Tuple{Vararg{<:Any,N}}}) where {N} = Val{N}

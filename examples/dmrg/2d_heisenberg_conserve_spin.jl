@@ -10,7 +10,7 @@ let
 
   lattice = square_lattice(Nx, Ny; yperiodic=false)
 
-  ampo = AutoMPO()
+  ampo = OpSum()
   for b in lattice
     ampo .+= 0.5, "S+", b.s1, "S-", b.s2
     ampo .+= 0.5, "S-", b.s1, "S+", b.s2

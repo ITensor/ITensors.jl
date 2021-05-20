@@ -98,6 +98,12 @@ function blockdim(ind::BlockDim, i::Integer)
   return ind[i]
 end
 
+function blockdim(ind::Integer, i)
+  return error(
+    "`blockdim(i::Integer, b)` not currently defined for non-block index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.",
+  )
+end
+
 """
     blockdim(::BlockDims,block,::Integer)
 
@@ -153,7 +159,12 @@ end
 
 # Given a CartesianIndex in the range dims(T), get the block it is in
 # and the index within that block
-function blockindex(T, i::Vararg{Int,N}) where {ElT,N}
+function blockindex(T, i::Vararg{Integer,N}) where {ElT,N}
+  # Bounds check.
+  # Do something more robust like:
+  # @boundscheck Base.checkbounds_indices(Bool, map(Base.oneto, dims(T)), i) || throw_boundserror(T, i)
+  @boundscheck any(iszero, i) && Base.throw_boundserror(T, i)
+
   # Start in the (1,1,...,1) block
   current_block_loc = @MVector ones(Int, N)
   current_block_dims = blockdims(T, Tuple(current_block_loc))

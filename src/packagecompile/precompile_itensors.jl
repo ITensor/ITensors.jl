@@ -14,7 +14,7 @@ sweeps = Sweeps(3)
 maxdim!(sweeps, 10)
 cutoff!(sweeps, 1E-13)
 
-ampo = AutoMPO()
+ampo = OpSum()
 for j in 1:(N - 1)
   ampo .+= "Sz", j, "Sz", j + 1
   ampo .+= 0.5, "S+", j, "S-", j + 1

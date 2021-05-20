@@ -384,6 +384,37 @@ Create a CartesianIndices iterator for an Indices.
 """
 CartesianIndices(is::Indices) = CartesianIndices(_Tuple(dims(is)))
 
+"""
+    eachval(is::Index...)
+    eachval(is::Tuple{Vararg{Index}})
+
+Create an iterator whose values correspond to a 
+Cartesian indexing over the dimensions
+of the provided `Index` objects.
+"""
+eachval(is::Index...) = eachval(is)
+eachval(is::Tuple{Vararg{Index}}) = CartesianIndices(dims(is))
+
+"""
+    eachindval(is::Index...)
+    eachindval(is::Tuple{Vararg{Index}})
+
+Create an iterator whose values are Index=>value pairs
+corresponding to a Cartesian indexing over the dimensions
+of the provided `Index` objects.
+# Example
+```julia
+i = Index(3; tags = "i")
+j = Index(2; tags = "j")
+T = randomITensor(j,i)
+for iv in eachindval(i,j)
+  @show T[iv...]
+end
+```
+"""
+eachindval(is::Index...) = eachindval(is)
+eachindval(is::Tuple{Vararg{Index}}) = (is .=> Tuple(ns) for ns in eachval(is))
+
 function removetags(f::Function, is::Indices, args...)
   return map(i -> f(i) ? removetags(i, args...) : i, is)
 end
@@ -721,13 +752,13 @@ ndiagblocks(inds) = minimum(nblocks(inds))
 
 # TODO: generic to Indices and BlockDims
 function eachblock(inds::Indices)
-  return CartesianIndices(_Tuple(nblocks(inds)))
+  return (Block(b) for b in CartesianIndices(_Tuple(nblocks(inds))))
 end
 
 # TODO: turn this into an iterator instead
 # of returning a Vector
 function eachdiagblock(inds::Indices)
-  return [fill(i, length(inds)) for i in 1:ndiagblocks(inds)]
+  return (Block(ntuple(_ -> i, length(inds))) for i in 1:ndiagblocks(inds))
 end
 
 """
@@ -737,13 +768,13 @@ Get the flux of the specified block, for example:
 ```
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))
-flux(is, (1,1)) == QN(0)
-flux(is, (2,1)) == QN(1)
-flux(is, (1,2)) == QN(-1)
-flux(is, (2,2)) == QN(0)
+flux(is, Block(1, 1)) == QN(0)
+flux(is, Block(2, 1)) == QN(1)
+flux(is, Block(1, 2)) == QN(-1)
+flux(is, Block(2, 2)) == QN(0)
 ```
 """
-function flux(inds::Indices, block)
+function flux(inds::Indices, block::Block)
   qntot = QN()
   for n in 1:length(inds)
     ind = inds[n]
@@ -753,7 +784,7 @@ function flux(inds::Indices, block)
 end
 
 """
-    flux(inds::Indices, I::Int...)
+    flux(inds::Indices, I::Integer...)
 
 Get the flux of the block that the specified
 index falls in.
@@ -764,34 +795,28 @@ flux(is, 3, 1) == QN(1)
 flux(is, 1, 2) == QN(0)
 ```
 """
-flux(inds, vals...) = flux(inds, block(inds, vals...))
+flux(inds::Indices, vals::Integer...) = flux(inds, block(inds, vals...))
 
 """
-    ITensors.block(inds::Indices, I::Int...)
+    ITensors.block(inds::Indices, I::Integer...)
 
 Get the block that the specified index falls in.
 
 This is mostly an internal function, and the interface
 is subject to change.
-```
+
+# Examples
+
+```julia
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))
 ITensors.block(is, 3, 1) == (2,1)
 ITensors.block(is, 1, 2) == (1,1)
 ```
 """
-block(inds::Indices, vals::Int...) = blockindex(inds, vals...)[2]
+block(inds::Indices, vals::Integer...) = blockindex(inds, vals...)[2]
 
-function show(io::IO, is::IndexSet)
-  print(io, "IndexSet{$(length(is))} ")
-  for n in eachindex(is)
-    i = is[n]
-    print(io, i)
-    if n < lastindex(is)
-      print(io, " ")
-    end
-  end
-end
+#show(io::IO, is::IndexSet) = show(io, MIME"text/plain"(), is)
 
 #
 # Read and write

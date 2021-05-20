@@ -123,11 +123,8 @@ space(i::Index) = i.space
 
 """
     dir(i::Index)
-    dir(iv::IndexVal)
 
 Return the direction of an `Index` (`ITensors.In`, `ITensors.Out`, or `ITensors.Neither`).
-For an `IndexVal` `iv`, returns returns the direction of the `Index` in the `IndexVal`,
-i.e. `dir(ind(iv))`.
 """
 dir(i::Index) = i.dir
 
@@ -438,19 +435,48 @@ Base.:^(i::Index, pl::Int) = prime(i, pl)
 Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
 """
 function Base.iterate(i::Index, state::Int=1)
+  Base.depwarn(
+    "iteration of `Index` is deprecated, use `eachindval` or `eachval` instead.", :iterate
+  )
   (state > dim(i)) && return nothing
-  return (i(state), state + 1)
+  return (i => state, state + 1)
 end
 
+"""
+    eachval(i::Index)
+
+Create an iterator whose values range
+over the dimension of the provided `Index`.
+"""
+eachval(i::Index) = 1:dim(i)
+
+"""
+    eachindval(i::Index)
+
+Create an iterator whose values are Pairs of
+the form `i=>n` with `n` from `1:dim(i)`.
+This iterator is useful for accessing elements of
+an ITensor in a loop without needing to know 
+the ordering of the indices. See also
+[`eachindval(is::Index...)`](@ref).
+"""
+eachindval(i::Index) = (i => n for n in eachval(i))
+
 # This is a trivial definition for use in NDTensors
+# XXX: rename tensorproduct with ⊗ alias
 function NDTensors.outer(i::Index; dir=dir(i), tags="", plev::Int=0)
   return sim(i; tags=tags, plev=plev, dir=dir)
 end
 
 # This is for use in NDTensors
+# XXX: rename tensorproduct with ⊗ alias
 function NDTensors.outer(i1::Index, i2::Index; tags="")
   return Index(dim(i1) * dim(i2), tags)
 end
+
+# Non-qn Index
+# TODO: add ⊕ alias
+directsum(i::Index, j::Index; tags="sum") = Index(dim(i) + dim(j); tags=tags)
 
 #
 # QN related functions
@@ -470,68 +496,21 @@ Removes the QNs from the Index, if it has any.
 """
 removeqns(i::Index) = i
 
-#
-# IndexVal
-#
+# Keep partial backwards compatibility by defining IndexVal as follows:
+const IndexVal{IndexT} = Pair{IndexT,Int}
 
-"""
-An IndexVal represents an Index object set to a certain value.
-"""
-struct IndexVal{IndexT<:Index}
-  ind::IndexT
-  val::Int
-  function IndexVal(i::IndexT, n::Int) where {IndexT<:Index}
-    n > dim(i) && throw(ErrorException("Value $n greater than size of Index $i"))
-    dim(i) > 0 && n < 1 && throw(ErrorException("Index value must be >= 1 (was $n)"))
-    dim(i) == 0 && n < 0 && throw(ErrorException("Index value must be >= 1 (was $n)"))
-    return new{IndexT}(i, n)
-  end
+IndexVal(i::Index, n::Int) = (i => n)
+
+function (i::Index)(n::Integer)
+  Base.depwarn("Index(::Int) is deprecated, for an Index i use i=>n instead.", :Index)
+  return i => n
 end
-
-"""
-    IndexVal(i::Index, n::Int)
-
-    IndexVal(iv::Pair{<:Index, Int})
-
-    (i::Index)(n::Int)
-
-
-Create an `IndexVal` from a pair of `Index` and `Int`.
-
-Alternatively, you can use the syntax `i(n)`.
-"""
-IndexVal(iv::Pair{<:Index,Int}) = IndexVal(iv.first, iv.second)
-
-# Help treat a Pair{IndexT, Int} like an IndexVal{IndexT}
-const IndexValOrPairIndexInt{IndexT} = Union{IndexVal{IndexT},Pair{IndexT,Int}}
-
-Base.convert(::Type{IndexVal}, iv::Pair{<:Index,Int}) = IndexVal(iv)
-
-function Base.convert(::Type{IndexVal{IndexT}}, iv::Pair{IndexT,Int}) where {IndexT<:Index}
-  return IndexVal(iv)
-end
-
-Base.getindex(i::Index, j::Int) = IndexVal(i, j)
-
-(i::Index)(n::Int) = IndexVal(i, n)
-
-"""
-    ind(iv::IndexVal)
-
-Return the Index of the IndexVal.
-"""
-NDTensors.ind(iv::IndexVal) = iv.ind
 
 NDTensors.ind(iv::Pair{<:Index}) = first(iv)
 
-"""
-    val(iv::IndexVal)
+val(iv::Pair{<:Index}) = val(iv.first, iv.second)
 
-Return the value of the IndexVal.
-"""
-val(iv::IndexVal) = iv.val
-
-val(iv::Pair{<:Index}) = last(iv)
+val(i::Index, ::LastVal) = dim(i)
 
 """
     isindequal(i::Index, iv::IndexVal)
@@ -542,21 +521,21 @@ val(iv::Pair{<:Index}) = last(iv)
 
 Check if the Index and IndexVal have the same indices.
 """
-isindequal(i::Index, iv::IndexValOrPairIndexInt) = i == ind(iv)
+isindequal(i::Index, iv::Pair{<:Index}) = (i == ind(iv))
 
-isindequal(iv::IndexValOrPairIndexInt, i::Index) = isindequal(i, iv)
+isindequal(iv::Pair{<:Index}, i::Index) = isindequal(i, iv)
 
-isindequal(iv1::IndexValOrPairIndexInt, iv2::IndexValOrPairIndexInt) = ind(iv1) == ind(iv2)
+isindequal(iv1::Pair{<:Index}, iv2::Pair{<:Index}) = (ind(iv1) == ind(iv2))
 
-plev(iv::IndexValOrPairIndexInt) = plev(ind(iv))
+plev(iv::Pair{<:Index}) = plev(ind(iv))
 
-prime(iv::IndexVal, inc::Integer=1) = IndexVal(prime(ind(iv), inc), val(iv))
+prime(iv::Pair{<:Index}, inc::Integer=1) = (prime(ind(iv), inc) => val(iv))
 
-dag(iv::IndexVal) = IndexVal(dag(ind(iv)), val(iv))
+dag(iv::Pair{<:Index}) = (dag(ind(iv)) => val(iv))
 
-Base.adjoint(iv::IndexVal) = IndexVal(prime(ind(iv)), val(iv))
+Base.adjoint(iv::Pair{<:Index}) = (prime(ind(iv)) => val(iv))
 
-dir(iv::IndexValOrPairIndexInt) = dir(ind(iv))
+dir(iv::Pair{<:Index}) = dir(ind(iv))
 
 #
 # Printing, reading, and writing
@@ -585,8 +564,6 @@ function Base.show(io::IO, i::Index)
     print(io, "(dim=$(space(i))|id=$(idstr))$(primestring(plev(i)))")
   end
 end
-
-Base.show(io::IO, iv::IndexVal) = print(io, ind(iv), "=>$(val(iv))")
 
 function readcpp(io::IO, ::Type{Index}; kwargs...)
   format = get(kwargs, :format, "v3")

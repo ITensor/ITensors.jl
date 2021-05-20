@@ -46,32 +46,30 @@ import ITensors: In, Out, Neither
   end
   @testset "IndexVal" begin
     i = Index(2)
-    @test_throws ErrorException IndexVal(i, 4)
-    @test_throws ErrorException IndexVal(i, 0)
-    @test i(2) == IndexVal(i, 2)
-    @test val(IndexVal(i, 1)) == 1
-    @test ind(IndexVal(i, 1)) == i
-    @test isindequal(i, IndexVal(i, 2))
-    @test isindequal(IndexVal(i, 2), i)
-    @test plev(i(2)') == 1
-    @test val(i(2)') == 2
-    @test plev(prime(i(2), 4)) == 4
-    #@test i[:] == [i(1); i(2)]
-    @test sprint(show, i(2)) == sprint(show, i) * "=>2"
+    @test val(i => 1) == 1
+    @test ind(i => 1) == i
+    @test isindequal(i, i => 2)
+    @test isindequal(i => 2, i)
+    @test plev(i' => 2) == 1
+    @test val(i' => 2) == 2
+    @test plev(prime(i => 2, 4)) == 4
 
-    @test dag(i(1)) != IndexVal(dag(i) => 2)
-    @test dag(i(2)) == IndexVal(dag(i) => 2)
     @test plev(i => 2) == 0
     @test plev(i' => 2) == 1
-    @test prime(i(2)) == i'(2)
-    @test IndexVal(prime(i) => 2) == i'(2)
-    @test IndexVal(i' => 1) == i'(1)
+    @test prime(i => 2) == (i' => 2)
   end
   @testset "Iteration" begin
-    i = Index(10)
+    i = Index(3)
+
     c = 1
-    for n in i
-      @test n == i(c)
+    for iv in eachindval(i)
+      @test iv == (i => c)
+      c += 1
+    end
+
+    c = 1
+    for n in eachval(i)
+      @test n == c
       c += 1
     end
   end
@@ -146,6 +144,13 @@ import ITensors: In, Out, Neither
     @test id(j) == id(j̃′)
     @test all(tensor(A) .== tensor(Ã))
     @test all(tensor(A) .≠ tensor(Ã′))
+  end
+  @testset "directsum" begin
+    i = Index(2, "i")
+    j = Index(3, "j")
+    ij = ITensors.directsum(i, j; tags="test")
+    @test dim(ij) == 5
+    @test hastags(ij, "test")
   end
 end
 

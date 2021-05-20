@@ -5,10 +5,7 @@ using Printf
 using Random
 
 Random.seed!(1234)
-BLAS.set_num_threads(1)
 Strided.set_num_threads(1)
-ITensors.enable_threaded_blocksparse()
-#ITensors.disable_threaded_blocksparse()
 
 let
   N = 100
@@ -41,6 +38,6 @@ let
   @show sweeps
 
   # Run the DMRG algorithm, returning energy and optimized MPS
-  energy, psi = dmrg(H, psi0, sweeps)
+  energy, psi = dmrg(H, psi0, sweeps; write_when_maxdim_exceeds=25)
   @printf("Final energy = %.12f\n", energy)
 end

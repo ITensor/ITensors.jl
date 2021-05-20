@@ -14,7 +14,7 @@ ITensor(::Type{<:Number}, ::UndefInitializer, ::ITensors.Indices)
 ITensor(::Type{ElT}, x::Number, inds::ITensors.Indices) where {ElT<:Number}
 ITensor(as::ITensors.AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds::ITensors.Indices; kwargs...) where {ElT<:Number}
 randomITensor(::Type{<:Number}, ::ITensors.Indices)
-onehot(::IndexVal)
+onehot
 ```
 
 ## Dense View Constructors
@@ -98,7 +98,7 @@ settags(::ITensor, ::Any...)
 swaptags(::ITensor, ::Any...)
 ```
 
-## IndexSet set operations
+## Index collections set operations
 
 ```@docs
 commoninds

@@ -1,4 +1,7 @@
-using ITensors, Test, Random
+using ITensors
+using LinearAlgebra
+using Random
+using Test
 
 Random.seed!(1234)
 
@@ -92,6 +95,29 @@ Random.seed!(1234)
       2e-9 1e-10 4e-10
     ]
     @test_throws ErrorException ITensor(A, i', dag(i); tol=1e-8)
+  end
+
+  @testset "Construct from Array regression test" begin
+    i = Index([QN(0) => 2, QN(1) => 2])
+    T = itensor([0, 0, 1, 2], i)
+    @test flux(T) == QN(1)
+    @test nnzblocks(T) == 1
+    @test !(Block(1) in nzblocks(T))
+    @test Block(2) in nzblocks(T)
+    @test T[1] == 0
+    @test T[2] == 0
+    @test T[3] == 1
+    @test T[4] == 2
+    @test flux(T, 1) == QN(0)
+    @test flux(T, 2) == QN(0)
+    @test flux(T, 3) == QN(1)
+    @test flux(T, 4) == QN(1)
+    @test_throws BoundsError flux(T, 5)
+    @test_throws BoundsError flux(T, 0)
+    @test flux(T, Block(1)) == QN(0)
+    @test flux(T, Block(2)) == QN(1)
+    @test_throws BoundsError flux(T, Block(0))
+    @test_throws BoundsError flux(T, Block(3))
   end
 
   @testset "QN ITensor Array constructor view behavior" begin
@@ -227,13 +253,13 @@ Random.seed!(1234)
     @test hasinds(A, i, i')
     @test isnothing(flux(A))
 
-    A[i(1), i'(1)] = 1.0
+    A[i => 1, i' => 1] = 1.0
 
     @test nnzblocks(A) == 1
     @test nnz(A) == 1
     @test flux(A) == QN(0)
 
-    A[i(2), i'(2)] = 1.0
+    A[i => 2, i' => 2] = 1.0
 
     @test nnzblocks(A) == 2
     @test nnz(A) == 5
@@ -243,7 +269,7 @@ Random.seed!(1234)
   @testset "Check flux when setting elements" begin
     i = Index(QN(0) => 1, QN(1) => 1; tags="i")
     A = randomITensor(QN(0), i, dag(i'))
-    @test_throws ErrorException A[i(1), i'(2)] = 1.0
+    @test_throws ErrorException A[i => 1, i' => 2] = 1.0
   end
 
   @testset "Random constructor" begin
@@ -289,27 +315,20 @@ Random.seed!(1234)
     @test norm(cB) ≈ norm(B)
   end
 
-  @testset "QN setelt" begin
+  @testset "QN onehot" begin
     i = Index(QN(0) => 2, QN(1) => 2; tags="i")
 
-    T = setelt(i(1))
-    @test T[i(1)] ≈ 1.0
-    @test T[i(2)] ≈ 0.0
-    @test T[i(3)] ≈ 0.0
-    @test T[i(4)] ≈ 0.0
+    T = onehot(i => 1)
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
+    @test T[i => 3] ≈ 0.0
+    @test T[i => 4] ≈ 0.0
 
-    T = setelt(i(2))
-    @test T[i(1)] ≈ 0.0
-    @test T[i(2)] ≈ 1.0
-    @test T[i(3)] ≈ 0.0
-    @test T[i(4)] ≈ 0.0
-
-    # Test setelt taking Pair{Index,Int}
-    T = setelt(i => 3)
-    @test T[i(1)] ≈ 0.0
-    @test T[i(2)] ≈ 0.0
-    @test T[i(3)] ≈ 1.0
-    @test T[i(4)] ≈ 0.0
+    T = onehot(i => 2)
+    @test T[i => 1] ≈ 0.0
+    @test T[i => 2] ≈ 1.0
+    @test T[i => 3] ≈ 0.0
+    @test T[i => 4] ≈ 0.0
   end
 
   @testset "setindex!" begin
@@ -327,15 +346,15 @@ Random.seed!(1234)
 
       @test nnzblocks(A) == 1
       @test nnz(A) == 1
-      @test A[s1(2), s2(1)] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 2, s2 => 1] ≈ 1.0 / sqrt(2)
       @test flux(A) == QN("N", 1, -1)
 
       A[1, 2] = 1.0 / sqrt(2)
 
       @test nnzblocks(A) == 2
       @test nnz(A) == 2
-      @test A[s1(2), s2(1)] ≈ 1.0 / sqrt(2)
-      @test A[s1(1), s2(2)] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 2, s2 => 1] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 1, s2 => 2] ≈ 1.0 / sqrt(2)
       @test flux(A) == QN("N", 1, -1)
     end
 
@@ -353,15 +372,15 @@ Random.seed!(1234)
 
       @test nnzblocks(A) == 1
       @test nnz(A) == 1
-      @test A[s1(1), s2(2)] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 1, s2 => 2] ≈ 1.0 / sqrt(2)
       @test flux(A) == QN("N", 1, -1)
 
       A[2, 1] = 1.0 / sqrt(2)
 
       @test nnzblocks(A) == 2
       @test nnz(A) == 2
-      @test A[s1(2), s2(1)] ≈ 1.0 / sqrt(2)
-      @test A[s1(1), s2(2)] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 2, s2 => 1] ≈ 1.0 / sqrt(2)
+      @test A[s1 => 1, s2 => 2] ≈ 1.0 / sqrt(2)
       @test flux(A) == QN("N", 1, -1)
     end
   end
@@ -1359,9 +1378,9 @@ Random.seed!(1234)
 
       A = emptyITensor(ElT, l, s, dag(r))
 
-      insertblock!(A, (2, 1, 2))
-      insertblock!(A, (1, 2, 2))
-      insertblock!(A, (2, 2, 3))
+      insertblock!(A, Block(2, 1, 2))
+      insertblock!(A, Block(1, 2, 2))
+      insertblock!(A, Block(2, 2, 3))
 
       for b in nzblocks(A)
         @test flux(A, b) == QN()
@@ -1390,10 +1409,10 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 2))
-      insertblock!(A, (4, 3))
-      insertblock!(A, (3, 4))
-      insertblock!(A, (2, 5))
+      insertblock!(A, Block(5, 2))
+      insertblock!(A, Block(4, 3))
+      insertblock!(A, Block(3, 4))
+      insertblock!(A, Block(2, 5))
       randn!(A)
       U, S, V = svd(A, s)
       @test U * S * V ≈ A
@@ -1408,11 +1427,11 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 1))
-      insertblock!(A, (4, 2))
-      insertblock!(A, (3, 3))
-      insertblock!(A, (2, 4))
-      insertblock!(A, (1, 5))
+      insertblock!(A, Block(5, 1))
+      insertblock!(A, Block(4, 2))
+      insertblock!(A, Block(3, 3))
+      insertblock!(A, Block(2, 4))
+      insertblock!(A, Block(1, 5))
       U, S, V = svd(A, s)
       @test dims(S) == dims(A)
       @test U * S * V ≈ A
@@ -1427,11 +1446,11 @@ Random.seed!(1234)
         QN("Sz", 4) => 1,
       )
       A = emptyITensor(ElT, s, s')
-      insertblock!(A, (5, 1))
-      insertblock!(A, (4, 2))
-      insertblock!(A, (3, 3))
-      insertblock!(A, (2, 4))
-      insertblock!(A, (1, 5))
+      insertblock!(A, Block(5, 1))
+      insertblock!(A, Block(4, 2))
+      insertblock!(A, Block(3, 3))
+      insertblock!(A, Block(2, 4))
+      insertblock!(A, Block(1, 5))
       U, S, V = svd(A, s; cutoff=0)
       @test dims(S) == (0, 0)
       @test U * S * V ≈ A
@@ -1591,6 +1610,38 @@ Random.seed!(1234)
       A2 = ITensor(1) * A
       @test A1 ≈ A
       @test A2 ≈ A
+    end
+  end
+
+  @testset "directsum" begin
+    x = Index([QN(0) => 1, QN(1) => 1], "x")
+    i1 = Index([QN(0) => 1, QN(1) => 2], "i1")
+    j1 = Index([QN(0) => 2, QN(1) => 2], "j1")
+    i2 = Index([QN(0) => 2, QN(1) => 3], "i2")
+    j2 = Index([QN(0) => 3, QN(1) => 3], "j2")
+
+    A1 = randomITensor(i1, x, j1)
+    A2 = randomITensor(x, j2, i2)
+    S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags=["sum_i", "sum_j"])
+
+    @test hassameinds(S, (x, s...))
+    @test hastags(s[1], "sum_i")
+    @test hastags(s[2], "sum_j")
+
+    for vx in 1:dim(x)
+      proj = dag(onehot(x => vx))
+      A1_vx = A1 * proj
+      A2_vx = A2 * proj
+      S_vx = S * proj
+      for m in 1:dim(s[1]), n in 1:dim(s[2])
+        if m ≤ dim(i1) && n ≤ dim(j1)
+          @test S_vx[s[1] => m, s[2] => n] == A1_vx[i1 => m, j1 => n]
+        elseif m > dim(i1) && n > dim(j1)
+          @test S_vx[s[1] => m, s[2] => n] == A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
+        else
+          @test S_vx[s[1] => m, s[2] => n] == 0
+        end
+      end
     end
   end
 end

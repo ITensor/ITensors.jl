@@ -47,6 +47,8 @@ export
   dag,
   dim,
   dir,
+  eachval,
+  eachindval,
   hasid,
   hasind,
   hasplev,
@@ -213,6 +215,8 @@ export
   movesite,
   movesites,
   ortho_lims,
+  reset_ortho_lims!,
+  set_ortho_lims!,
   siteinds,
 
   # mps/mpo.jl
@@ -223,6 +227,8 @@ export
   maxlinkdim,
   orthogonalize,
   orthogonalize!,
+  outer,
+  projector,
   randomMPO,
   truncate,
   truncate!,
@@ -305,6 +311,7 @@ export
 
   # physics/autompo.jl
   AutoMPO,
+  OpSum,
   add!,
 
   # physics/fermions.jl

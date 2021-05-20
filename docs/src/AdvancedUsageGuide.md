@@ -35,8 +35,8 @@ because new releases may be breaking.
 
 To try the "development branch" of ITensors.jl (for example, if 
 there is a feature or fix we added that hasn't been released yet), 
-you can do `add ITensors#master`. You can switch back to the latest
-released version with `add ITensors`. Using the development/master
+you can do `add ITensors#main`. You can switch back to the latest
+released version with `add ITensors`. Using the development/main
 branch is generally not encouraged unless you know what you are doing.
 
 ## Using ITensors.jl in the REPL
@@ -134,13 +134,13 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 ```
 
 A common place you might accidentally come across this is when
-you are creating a Hamiltonian with `AutoMPO`:
+you are creating a Hamiltonian with `OpSum`:
 ```julia
 julia> N = 4;
 
 julia> sites = siteinds("S=1/2",N);
 
-julia> ampo = AutoMPO();
+julia> ampo = OpSum();
 
 julia> for j=1:N-1
          ampo += "Sz", j, "Sz", j+1
@@ -304,7 +304,7 @@ julia> names(ITensors)
  Symbol("@set_warn_order")
  Symbol("@ts_str")
  :AbstractObserver
- :AutoMPO
+ :OpSum
  :DMRGObserver
  :ITensor
  :ITensors
@@ -732,7 +732,7 @@ process more automated in the future.
 
 Julia has great built-in tools for benchmarking and profiling.
 For benchmarking fast code at the command line, you can use
-[BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl/blob/master/doc/manual.md):
+[BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl/blob/main/doc/manual.md):
 ```julia
 julia> using ITensors;
 

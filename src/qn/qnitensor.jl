@@ -5,7 +5,7 @@
   fluxT = flux(T)
   if !isnothing(fluxT) && fluxT != flux(T, I...)
     error(
-      "In `setindex!`, the element you are trying to set is in a block that does not have the same flux as the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.",
+      "In `setindex!`, the element $I of ITensor: \n$(T)\n you are trying to set is in a block with flux $(flux(T, I...)), which is different from the flux $fluxT of the other blocks of the ITensor. You may be trying to create an ITensor that does not have a well defined quantum number flux.",
     )
   end
   return setindex!!(T, x, I...)

@@ -12,11 +12,11 @@ MPO
 ```@docs
 MPS(::Int)
 MPS(::Type{<:Number}, ::Vector{<:Index})
-randomMPS(sites::Vector{<:Index}; linkdim=1)
-randomMPS(::Type{<:Number}, sites::Vector{<:Index}; linkdim=1)
-randomMPS(sites::Vector{<:Index}, state, linkdim::Int)
-productMPS(::Vector{<:Index},states)
-productMPS(::Type{<:Number},::Vector{<:Index},states)
+randomMPS(sites::Vector{<:Index})
+randomMPS(::Type{<:Number}, sites::Vector{<:Index})
+randomMPS(::Vector{<:Index}, ::Any)
+productMPS(::Vector{<:Index}, ::Any)
+productMPS(::Type{<:Number}, ::Vector{<:Index}, ::Any)
 productMPS(::Vector{<:IndexVal})
 productMPS(::Type{<:Number}, ::Vector{<:IndexVal})
 ```
@@ -27,7 +27,13 @@ productMPS(::Type{<:Number}, ::Vector{<:IndexVal})
 MPO(::Int)
 MPO(::Type{<:Number}, ::Vector{<:Index}, ::Vector{String})
 MPO(::Type{<:Number}, ::Vector{<:Index}, ::String)
-MPO(::MPS)
+```
+
+## Copying behavior
+
+```@docs
+copy(::ITensors.AbstractMPS)
+deepcopy(::ITensors.AbstractMPS)
 ```
 
 ## Properties
@@ -134,6 +140,9 @@ logdot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
 norm(::ITensors.AbstractMPS)
 lognorm(::ITensors.AbstractMPS)
 +(::MPS, ::MPS)
-*(::MPO, ::MPS)
+contract(::MPO, ::MPS)
+contract(::MPO, ::MPO)
+outer(::MPS, ::MPS)
+projector(::MPS)
 ```
 

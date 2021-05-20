@@ -320,16 +320,16 @@ psi = read(f,"psi",MPS)
 close(f)
 ```
 
-Many functions which involve MPS, such as the `dmrg` function or the `AutoMPO` system
+Many functions which involve MPS, such as the `dmrg` function or the `OpSum` system
 require that you use an array of site indices which match the MPS. So when reading in
 an MPS from disk, do not construct a new array of site indices. Instead, you can
 obtain them like this: `sites = siteinds(psi)`.
 
-So for example, to create an MPO from an AutoMPO which has the same site indices
+So for example, to create an MPO from an OpSum which has the same site indices
 as your MPS `psi`, do the following:
 
 ```julia
-ampo = AutoMPO()
+ampo = OpSum()
 # Then put operators into ampo...
 
 sites = siteinds(psi) # Get site indices from your MPS

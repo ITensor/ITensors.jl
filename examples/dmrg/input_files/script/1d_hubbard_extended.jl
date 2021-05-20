@@ -25,7 +25,7 @@ sweeps = Sweeps(nsweep, sweeps_args)
 
 sites = siteinds("Electron", N; conserve_qns=true)
 
-ampo = AutoMPO()
+ampo = OpSum()
 for i in 1:N
   ampo .+= U, "Nupdn", i
 end

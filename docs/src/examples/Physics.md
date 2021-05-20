@@ -161,8 +161,8 @@ putting other Index tags that are conventional for site indices.
 The `op` function is really the heart of the `SiteType` system. This is
 the function that lets you define custom local operators associated
 to the physical degrees of freedom of your `SiteType`. Then for example 
-you can use indices carrying your custom tag with AutoMPO and the 
-AutoMPO system will know how to automatically convert names of operators
+you can use indices carrying your custom tag with OpSum and the 
+OpSum system will know how to automatically convert names of operators
 such as `"Sz"` or `"S+"` into ITensors so that it can make an actual MPO.
 
 In our example above, we defined this function for the case of the `"Sz"`
@@ -219,18 +219,18 @@ Sp3 = op("S+",sites[3])
 Alternatively, you can write the lines of code above in the style
 of `Sz1 = op("Sz",sites,1)`.
 
-This same `op` function is used inside of AutoMPO when it converts its input into
+This same `op` function is used inside of OpSum when it converts its input into
 an actual MPO. So by defining custom operator names you can pass any of these
-operator names into AutoMPO and it will know how to use these operators.
+operator names into OpSum and it will know how to use these operators.
 
 **Further Steps**
 
 See how the built-in site types are defined inside the ITensor library:
-* [S=1/2 sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/spinhalf.jl)
-* [S=1 sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/spinone.jl)
-* [Fermion sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/fermion.jl)
-* [Electron sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/electron.jl)
-* [tJ sites](https://github.com/ITensor/ITensors.jl/blob/master/src/physics/site_types/tj.jl)
+* [S=1/2 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinhalf.jl)
+* [S=1 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinone.jl)
+* [Fermion sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/fermion.jl)
+* [Electron sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/electron.jl)
+* [tJ sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/tj.jl)
 
 
 
@@ -377,7 +377,7 @@ Sz = op("Sz",s)
 
 to automatically create the ``S^z`` operator for an Index `s` based on the 
 `"S=1/2"` tag it carries. A major reason to define such `op` overloads
-is to allow the AutoMPO system to recognize new operator names, as
+is to allow the OpSum system to recognize new operator names, as
 discussed more below.
 
 Let's see how to introduce a new operator name into the ITensor `SiteType`
@@ -438,20 +438,20 @@ Pup3 = op("Pup",s[3])
 ```
 
 
-**Using Custom Operators in AutoMPO**
+**Using Custom Operators in OpSum**
 
 A key use of these `op` system extensions is allowing additional operator names to
-be recognized by the AutoMPO system for constructing matrix product operator (MPO)
+be recognized by the OpSum system for constructing matrix product operator (MPO)
 tensor networks. With the code above defining the `"Pup"` operator, we are now 
-allowed to use this operator name in any AutoMPO code involving `"S=1/2"` site 
+allowed to use this operator name in any OpSum code involving `"S=1/2"` site 
 indices.
 
-For example, we could now make an AutoMPO such as:
+For example, we could now make an OpSum such as:
 
 ```julia
 N = 100
 sites = siteinds("S=1/2",N)
-ampo = AutoMPO()
+ampo = OpSum()
 for n=1:N
   ampo += "Pup",n
 end

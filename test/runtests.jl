@@ -8,6 +8,7 @@ using Test
     "symmetrystyle.jl",
     "index.jl",
     "indexset.jl",
+    "ndtensors.jl",
     "not.jl",
     "itensor_scalar.jl",
     "itensor.jl",

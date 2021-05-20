@@ -99,7 +99,7 @@ Many operators are available, for example:
 - ...
 
 You can view the source code for the internal SiteType definitions
-and operators that are defined [here](https://github.com/ITensor/ITensors.jl/tree/master/src/physics/site_types).
+and operators that are defined [here](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types).
 """
 SiteType(s::AbstractString) = SiteType{Tag(s)}()
 
@@ -206,7 +206,7 @@ The result is an ITensor made by forming each operator
 then contracting them together in a way corresponding
 to the usual operator product or matrix multiplication.
 
-The `op` system is used by the AutoMPO
+The `op` system is used by the OpSum
 system to convert operator names into ITensors,
 and can be used directly such as for applying
 operators to MPS.
@@ -350,36 +350,62 @@ Sz2 = op("Sz", s, 2)
 ```
 """
 function op(
-  opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Int,N}; kwargs...
+  opname::AbstractString, s::Vector{<:Index}, ns::NTuple{N,Integer}; kwargs...
 ) where {N}
   return op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Int...; kwargs...)
-  return op(opname, s, ns...; kwargs...)
+function op(opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...)
+  return op(opname, s, ns; kwargs...)
 end
 
 function op(
-  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Int}}, kwargs::NamedTuple
+  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}; kwargs...
 )
   return op(opname, s, ns...; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Int, kwargs::NamedTuple)
+function op(s::Vector{<:Index}, opname::AbstractString, ns::Integer...; kwargs...)
   return op(opname, s, ns; kwargs...)
+end
+
+function op(
+  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}, kwargs::NamedTuple
+)
+  return op(opname, s, ns; kwargs...)
+end
+
+function op(s::Vector{<:Index}, opname::AbstractString, ns::Integer, kwargs::NamedTuple)
+  return op(opname, s, (ns,); kwargs...)
 end
 
 # This version helps with call like `op.(Ref(s), os)` where `os`
 # is a vector of tuples.
-op(s::Vector{<:Index}, os::Tuple{String,Vararg}) = op(s, os...)
+op(s::Vector{<:Index}, os::Tuple{AbstractString,Vararg}) = op(s, os...)
+op(os::Tuple{AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
 
 # Here, Ref is used to not broadcast over the vector of indices
 # TODO: consider overloading broadcast for `op` with the example
 # here: https://discourse.julialang.org/t/how-to-broadcast-over-only-certain-function-arguments/19274/5
 # so that `Ref` isn't needed.
-ops(s::Vector{<:Index}, os::AbstractArray{<:Tuple}) = op.(Ref(s), os)
+ops(s::Vector{<:Index}, os::AbstractArray) = op.(Ref(s), os)
+ops(os::AbstractVector, s::Vector{<:Index}) = op.(Ref(s), os)
 
-ops(os::Vector{<:Tuple}, s::Vector{<:Index}) = op.(Ref(s), os)
+@doc """
+    ops(s::Vector{<:Index}, os::Vector)
+    ops(os::Vector, s::Vector{<:Index})
+
+Given a list of operators, create ITensors using the collection
+of indices.
+
+# Examples
+```julia
+s = siteinds("Qubit", 4)
+os = [("H", 1), ("X", 2), ("CX", 2, 4)]
+# gates = ops(s, os)
+gates = ops(os, s)
+```
+""" ops(::Vector{<:Index}, ::AbstractArray)
 
 #---------------------------------------
 #
@@ -399,33 +425,86 @@ macro StateName_str(s)
   return StateName{SmallString(s)}
 end
 
-state(::SiteType, ::StateName) = nothing
-state(::SiteType, ::AbstractString) = nothing
+state(::StateName, ::SiteType, ::Index) = nothing
+state!(::ITensor, ::StateName, ::SiteType, ::Index) = nothing
 
-function state(s::Index, name::AbstractString)::IndexVal
+function state(s::Index, name::AbstractString; kwargs...)::ITensor
   stypes = _sitetypes(s)
   sname = StateName(name)
 
-  # Try calling state(::SiteType"Tag",::StateName"Name")
+  # Try calling state(::StateName"Name",::SiteType"Tag",s::Index)
   for st in stypes
-    res = state(st, sname)
-    !isnothing(res) && return s(res)
+    res = state(sname, st, s; kwargs...)
+    !isnothing(res) && return res
   end
 
-  # Try calling state(::SiteType"Tag","Name")
+  # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index)
+  T = emptyITensor(s)
   for st in stypes
-    res = state(st, name)
-    !isnothing(res) && return s(res)
+    state!(T, sname, st, s)
+    !isempty(T) && return T
+  end
+
+  #
+  # otherwise try calling a function of the form:
+  #    state(::StateName"Name", ::SiteType"Tag"; kwargs...)
+  # which returns a Julia vector
+  #
+  for st in stypes
+    v = state(sname, st)
+    !isnothing(v) && return itensor(v, s)
   end
 
   return throw(
-    ArgumentError("Overload of \"state\" function not found for Index tags $(tags(s))")
+    ArgumentError(
+      "Overload of \"state\" or \"state!\" functions not found for state name \"$name\" and Index tags $(tags(s))",
+    ),
   )
 end
 
-state(s::Index, n::Integer) = s[n]
+state(s::Index, n::Integer) = onehot(s => n)
 
 state(sset::Vector{<:Index}, j::Integer, st) = state(sset[j], st)
+
+#---------------------------------------
+#
+# val system
+#
+#---------------------------------------
+
+@eval struct ValName{Name}
+  (f::Type{<:ValName})() = $(Expr(:new, :f))
+end
+
+ValName(s::AbstractString) = ValName{SmallString(s)}()
+ValName(s::SmallString) = ValName{s}()
+name(::ValName{N}) where {N} = N
+
+macro ValName_str(s)
+  return ValName{SmallString(s)}
+end
+
+val(::ValName, ::SiteType) = nothing
+val(::AbstractString, ::SiteType) = nothing
+
+function val(s::Index, name::AbstractString)::Int
+  stypes = _sitetypes(s)
+  sname = ValName(name)
+
+  # Try calling val(::StateName"Name",::SiteType"Tag",)
+  for st in stypes
+    res = val(sname, st)
+    !isnothing(res) && return res
+  end
+
+  return throw(
+    ArgumentError("Overload of \"val\" function not found for Index tags $(tags(s))")
+  )
+end
+
+val(s::Index, n::Integer) = n
+
+val(sset::Vector{<:Index}, j::Integer, st) = val(sset[j], st)
 
 #---------------------------------------
 #

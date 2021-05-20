@@ -57,6 +57,7 @@ removeqns(::Index)
 ## Iterating
 
 ```@docs
-iterate(::Index)
+eachval(::Index)
+eachindval(::Index)
 ```
 
