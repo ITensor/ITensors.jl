@@ -872,7 +872,7 @@ using ITensors, Test
       T = ITensor(QN("Nf", 0, -1), dag(s[1]), s[1]')
       T[2, 2] = 1
 
-      F = eigen(T; ishermitian=true, cutoff)
+      F = eigen(T; ishermitian=true, cutoff=cutoff)
       D, U, spec = F
       Ut = F.Vt
 
