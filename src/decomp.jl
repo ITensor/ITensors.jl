@@ -204,11 +204,12 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
     end
   end
 
-  N   = ndims(A)
-  NL  = length(Linds)
-  NR  = length(Rinds)
-  NL != NR      && error("Must have equal number of left and right indices")
-  N  != NL + NR && error("Number of left and right indices must add up to total number of indices")
+  N = ndims(A)
+  NL = length(Linds)
+  NR = length(Rinds)
+  NL != NR && error("Must have equal number of left and right indices")
+  N != NL + NR &&
+    error("Number of left and right indices must add up to total number of indices")
 
   ishermitian::Bool = get(kwargs, :ishermitian, false)
 
@@ -246,8 +247,8 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
     end
   end
 
-  CL = combiner(Lis...; dir = Out, tags = "CMB,left")
-  CR = combiner(dag(Ris)...; dir = Out, tags = "CMB,right")
+  CL = combiner(Lis...; dir=Out, tags="CMB,left")
+  CR = combiner(dag(Ris)...; dir=Out, tags="CMB,right")
 
   AC = A * dag(CR) * CL
 
@@ -256,8 +257,8 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   # <fermions>
   if using_auto_fermion()
-    @assert dir(cR)==In
-    @assert dir(cL)==Out
+    @assert dir(cR) == In
+    @assert dir(cL) == Out
   end
   if inds(AC) != IndexSet(cR, cL)
     AC = permute(AC, cR, cL)
@@ -269,13 +270,13 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   D, VLC = itensor(DT), itensor(VT)
 
   VRC = copy(VLC)
-  ol = commonind(D,VLC)
-  or = uniqueind(D,VLC)
+  ol = commonind(D, VLC)
+  or = uniqueind(D, VLC)
   l = setprime(settags(ol, lefttags), leftplev)
   r = setprime(settags(l, righttags), rightplev)
-  replaceind!(VLC,ol,l)
-  replaceinds!(D, (ol,or), (l,r))
-  replaceinds!(VRC,(cL,ol),(cR,r))
+  replaceind!(VLC, ol, l)
+  replaceinds!(D, (ol, or), (l, r))
+  replaceinds!(VRC, (cL, ol), (cR, r))
 
   #@show norm(dag(VLC)*D*VRC-AC)
 

@@ -46,7 +46,7 @@ using Test
     "qnmpo.jl",
     "readwrite.jl",
     "readme.jl",
-    "examples.jl"
+    "examples.jl",
   ]
     println("Running $filename")
     include(filename)

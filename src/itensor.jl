@@ -792,8 +792,9 @@ end
 @propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  fac = NDTensors.permfactor(p,ivs...) #<fermions> possible sign
-  return fac*_getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
+  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
+  return fac *
+         _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
 end
 
 """
@@ -901,9 +902,9 @@ end
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  fac = NDTensors.permfactor(p,ivs...) #<fermions> possible sign
+  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
   return _setindex!!(
-    T,fac*x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
+    T, fac * x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
   )
 end
 
@@ -1429,10 +1430,10 @@ norm(T::ITensor) = norm(tensor(T))
 
 function dag(as::AliasStyle, T::Tensor)
   if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
-    CT = conj(NeverAlias(),T)
+    CT = conj(NeverAlias(), T)
     N = length(inds(T))
-    perm = ntuple(i->(N-i+1),N) # reverse permutation
-    NDTensors.scale_blocks!(CT,block->NDTensors.permfactor(perm,block,inds(T)))
+    perm = ntuple(i -> (N - i + 1), N) # reverse permutation
+    NDTensors.scale_blocks!(CT, block -> NDTensors.permfactor(perm, block, inds(T)))
     return setinds(CT, dag(inds(T)))
   else
     return setinds(conj(as, T), dag(inds(T)))

@@ -237,35 +237,35 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
   N = length(ivals)
   M = MPS(N)
 
-  if N==1
-    M[1] = emptyITensor(T,ind(ivals[1]))
+  if N == 1
+    M[1] = emptyITensor(T, ind(ivals[1]))
     M[1][ivals[1]] = one(T)
     return M
   end
 
   if hasqns(ind(ivals[1]))
     lflux = QN()
-    for j=1:N-1
+    for j in 1:(N - 1)
       lflux += qn(ivals[j])
     end
-    links = Vector{QNIndex}(undef,N-1)
-    for j=N-1:-1:1
-      links[j] = Index(lflux=>1;tags="Link,l=$j",dir=In)
+    links = Vector{QNIndex}(undef, N - 1)
+    for j in (N - 1):-1:1
+      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
       lflux -= qn(ivals[j])
     end
   else
-    links = [Index(1,"Link,l=$n") for n=1:N-1]
+    links = [Index(1, "Link,l=$n") for n in 1:(N - 1)]
   end
 
-  M[1] = emptyITensor(T,ind(ivals[1]), links[1])
-  M[1][ivals[1],links[1]=>1] = one(T)
-  for n=2:N-1
+  M[1] = emptyITensor(T, ind(ivals[1]), links[1])
+  M[1][ivals[1], links[1] => 1] = one(T)
+  for n in 2:(N - 1)
     s = ind(ivals[n])
-    M[n] = emptyITensor(T,dag(links[n-1]),s,links[n])
-    M[n][links[n-1]=>1,ivals[n],links[n]=>1] = one(T)
+    M[n] = emptyITensor(T, dag(links[n - 1]), s, links[n])
+    M[n][links[n - 1] => 1, ivals[n], links[n] => 1] = one(T)
   end
-  M[N] = emptyITensor(T,dag(links[N-1]),ind(ivals[N]))
-  M[N][links[N-1]=>1,ivals[N]] = one(T)
+  M[N] = emptyITensor(T, dag(links[N - 1]), ind(ivals[N]))
+  M[N][links[N - 1] => 1, ivals[N]] = one(T)
 
   return M
 end

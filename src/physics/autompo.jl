@@ -727,7 +727,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   llinks = Vector{QNIndex}(undef, N + 1)
   # Set dir=In for fermionic ordering, avoid arrow sign
   # <fermions>:
-  linkdir = using_auto_fermion() ? In : Out;
+  linkdir = using_auto_fermion() ? In : Out
   llinks[1] = Index(QN() => d0; tags="Link,l=0", dir=linkdir)
   for n in 1:N
     qi = Vector{Pair{QN,Int}}()

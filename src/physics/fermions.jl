@@ -13,21 +13,21 @@ intended for small permutations only.
 function parity_sign(P)::Int
   L = length(P)
   s = +1
-  for i=1:L, j=i+1:L
-    s *= sign(P[j]-P[i])
+  for i in 1:L, j in (i + 1):L
+    s *= sign(P[j] - P[i])
   end
   return s
 end
 
 isfermionic(qv::QNVal) = (modulus(qv) < 0)
 
-isfermionic(qn::QN) = any(isfermionic,qn)
+isfermionic(qn::QN) = any(isfermionic, qn)
 
 has_fermionic_subspaces(i::Index) = false
 
 function has_fermionic_subspaces(i::QNIndex)
-  for b=1:nblocks(i)
-    isfermionic(qn(i,b)) && (return true)
+  for b in 1:nblocks(i)
+    isfermionic(qn(i, b)) && (return true)
   end
   return false
 end
@@ -37,14 +37,13 @@ isfermionic(i::Index) = has_fermionic_subspaces(i)
 has_fermionic_subspaces(is::IndexSet) = false
 
 function has_fermionic_subspaces(is::Union{QNIndexSet,NTuple{N,QNIndex}}) where {N}
-  for i in is, b=1:nblocks(i)
-    isfermionic(qn(i,b)) && (return true)
+  for i in is, b in 1:nblocks(i)
+    isfermionic(qn(i, b)) && (return true)
   end
   return false
 end
 
 has_fermionic_subspaces(T) = has_fermionic_subspaces(inds(T))
-
 
 """
     fparity(qn::QN)
@@ -61,7 +60,7 @@ function fparity(qn::QN)
       p += val(qv)
     end
   end
-  return mod(p,2)
+  return mod(p, 2)
 end
 
 fparity(iv::IndexVal) = fparity(qn(iv))
@@ -78,14 +77,11 @@ odd undergo an odd permutation (odd number of swaps)
 according to p, then return -1. Otherwise return +1.
 """
 
-function compute_permfactor(p,
-                            iv_or_qn::Vararg{T,N};
-                            range=1:N
-                           ) where {T,N}
+function compute_permfactor(p, iv_or_qn::Vararg{T,N}; range=1:N) where {T,N}
   using_auto_fermion() || return 1
-  oddp = @MVector zeros(Int,N)
+  oddp = @MVector zeros(Int, N)
   n = 0
-  for j=range
+  for j in range
     if fparity(iv_or_qn[p[j]]) == 1
       n += 1
       oddp[n] = p[j]
@@ -95,46 +91,51 @@ function compute_permfactor(p,
 end
 
 # Default implementation for non-QN IndexVals
-NDTensors.permfactor(p,ivs...) = 1.0
+NDTensors.permfactor(p, ivs...) = 1.0
 
-NDTensors.permfactor(p,ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p,ivs...)
+NDTensors.permfactor(p, ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p, ivs...)
 
-function NDTensors.permfactor(p,
-                              pairs::Vararg{Pair{QNIndex,Int},N};
-                              kwargs...
-                             ) where {N} 
+function NDTensors.permfactor(p, pairs::Vararg{Pair{QNIndex,Int},N}; kwargs...) where {N}
   using_auto_fermion() || return 1
-  ivs = ntuple(i->IndexVal(pairs[i]),N)
-  return compute_permfactor(p,ivs...;kwargs...)
+  ivs = ntuple(i -> IndexVal(pairs[i]), N)
+  return compute_permfactor(p, ivs...; kwargs...)
 end
 
-function NDTensors.permfactor(perm,
-                              block::NDTensors.Block{N},
-                              inds::Union{QNIndexSet,NTuple{N,QNIndex}};
-                              kwargs...
-                             ) where {N}
+function NDTensors.permfactor(
+  perm, block::NDTensors.Block{N}, inds::Union{QNIndexSet,NTuple{N,QNIndex}}; kwargs...
+) where {N}
   using_auto_fermion() || return 1
-  qns = ntuple(n->qn(inds[n],block[n]),N)
-  return compute_permfactor(perm,qns...;kwargs...)
+  qns = ntuple(n -> qn(inds[n], block[n]), N)
+  return compute_permfactor(perm, qns...; kwargs...)
 end
 
-function NDTensors.compute_alpha(ElType,
-                                 labelsR,blockR,input_indsR,
-                                 labelsT1,blockT1,indsT1::NTuple{N1,QNIndex},
-                                 labelsT2,blockT2,indsT2::NTuple{N2,QNIndex}) where {N1,N2}
+function NDTensors.compute_alpha(
+  ElType,
+  labelsR,
+  blockR,
+  input_indsR,
+  labelsT1,
+  blockT1,
+  indsT1::NTuple{N1,QNIndex},
+  labelsT2,
+  blockT2,
+  indsT2::NTuple{N2,QNIndex},
+) where {N1,N2}
   α = one(ElType)
-  if !using_auto_fermion() || !has_fermionic_subspaces(indsT1) || !has_fermionic_subspaces(indsT2)
+  if !using_auto_fermion() ||
+     !has_fermionic_subspaces(indsT1) ||
+     !has_fermionic_subspaces(indsT2)
     return α
   end
 
   # the "indsR" argument to compute_alpha from NDTensors
   # may be a tuple of QNIndex, so convert to an IndexSet
   indsR = IndexSet(input_indsR)
-  
+
   orig_labelsT1 = [l for l in labelsT1]
   orig_labelsT2 = [l for l in labelsT2]
 
-  nlabelsT1 = sort(orig_labelsT1;rev=true)
+  nlabelsT1 = sort(orig_labelsT1; rev=true)
   nlabelsT2 = sort(orig_labelsT2)
 
   # Make orig_labelsR from the order of
@@ -142,34 +143,34 @@ function NDTensors.compute_alpha(ElType,
   # taking the uncontracted indices of
   # T1 and T2 in their input order:
   NR = length(labelsR)
-  orig_labelsR = zeros(Int,NR)
+  orig_labelsR = zeros(Int, NR)
   u = 1
-  for l in (nlabelsT1...,nlabelsT2...)
-    if l > 0 
+  for l in (nlabelsT1..., nlabelsT2...)
+    if l > 0
       orig_labelsR[u] = l
       u += 1
     end
   end
 
-  permT1 = NDTensors.getperm(nlabelsT1,orig_labelsT1)
-  permT2 = NDTensors.getperm(nlabelsT2,orig_labelsT2)
-  permR  = NDTensors.getperm(labelsR,orig_labelsR)
+  permT1 = NDTensors.getperm(nlabelsT1, orig_labelsT1)
+  permT2 = NDTensors.getperm(nlabelsT2, orig_labelsT2)
+  permR = NDTensors.getperm(labelsR, orig_labelsR)
 
-  alpha1 = NDTensors.permfactor(permT1,blockT1,indsT1)
-  alpha2 = NDTensors.permfactor(permT2,blockT2,indsT2)
-  alphaR = NDTensors.permfactor(permR,blockR,indsR)
+  alpha1 = NDTensors.permfactor(permT1, blockT1, indsT1)
+  alpha2 = NDTensors.permfactor(permT2, blockT2, indsT2)
+  alphaR = NDTensors.permfactor(permR, blockR, indsR)
 
   alpha_arrows = 1
   for n in 1:length(indsT1)
     l = orig_labelsT1[n]
     i = indsT1[n]
-    qi = qn(i,blockT1[n])
-    if l < 0 && dir(i)==Out && fparity(qi)==1
+    qi = qn(i, blockT1[n])
+    if l < 0 && dir(i) == Out && fparity(qi) == 1
       alpha_arrows *= -1
     end
   end
 
-  α *= alpha1*alpha2*alphaR*alpha_arrows
+  α *= alpha1 * alpha2 * alphaR * alpha_arrows
 
   return α
 end
@@ -177,15 +178,16 @@ end
 # Flip signs of selected blocks of T prior to
 # it being multiplied by a combiner ITensor
 # labelsR gives the ordering of indices after the product
-function NDTensors.before_combiner_signs(T,
-                                         labelsT_,
-                                         indsT::NTuple{NT,QNIndex},
-                                         C,
-                                         labelsC_,
-                                         indsC::NTuple{NC,QNIndex},
-                                         labelsR,
-                                         indsR::NTuple{NR,QNIndex}
-                                         ) where {NC,NT,NR}
+function NDTensors.before_combiner_signs(
+  T,
+  labelsT_,
+  indsT::NTuple{NT,QNIndex},
+  C,
+  labelsC_,
+  indsC::NTuple{NC,QNIndex},
+  labelsR,
+  indsR::NTuple{NR,QNIndex},
+) where {NC,NT,NR}
   if !using_auto_fermion() || !has_fermionic_subspaces(T)
     return T
   end
@@ -196,7 +198,7 @@ function NDTensors.before_combiner_signs(T,
   labelsT = [l for l in labelsT_]
 
   # number of uncombined indices
-  Nuc = NC-1
+  Nuc = NC - 1
 
   ci = NDTensors.cinds(storage(C))[1]
   combining = (labelsC[ci] > 0)
@@ -212,27 +214,27 @@ function NDTensors.before_combiner_signs(T,
       # Permute uncombined indices to front
       # in same order as indices passed to the
       # combiner constructor
-      append!(nlabelsT,labelsC[2:end])
+      append!(nlabelsT, labelsC[2:end])
     else # isconj
       # If combiner is conjugated, put uncombined
       # indices in *opposite* order as on combiner
-      append!(nlabelsT,reverse(labelsC[2:end]))
+      append!(nlabelsT, reverse(labelsC[2:end]))
     end
-    @assert all(l->l<0,nlabelsT)
+    @assert all(l -> l < 0, nlabelsT)
 
     for l in labelsT
       if l > 0 #uncontracted
-        append!(nlabelsT,l)
+        append!(nlabelsT, l)
       end
     end
-    @assert length(nlabelsT)==NT
+    @assert length(nlabelsT) == NT
 
     # Compute permutation that moves uncombined indices to front
-    permT = NDTensors.getperm(nlabelsT,labelsT)
+    permT = NDTensors.getperm(nlabelsT, labelsT)
 
     for blockT in keys(blockoffsets(T))
       # Compute sign from permuting uncombined indices to front:
-      alphaT = NDTensors.permfactor(permT,blockT,indsT)
+      alphaT = NDTensors.permfactor(permT, blockT, indsT)
 
       neg_dir = !isconj ? In : Out
       alpha_arrows = 1
@@ -240,42 +242,42 @@ function NDTensors.before_combiner_signs(T,
       C_dir = dir(indsC[1])
       for n in 1:length(indsT)
         i = indsT[n]
-        qi = qn(i,blockT[n])
-        if labelsT[n] < 0 && fparity(qi)==1
-          alpha_mixed_arrow *= (dir(i)!=C_dir) ? -1 : +1
-          alpha_arrows *= (dir(i)==neg_dir) ? -1 : +1
+        qi = qn(i, blockT[n])
+        if labelsT[n] < 0 && fparity(qi) == 1
+          alpha_mixed_arrow *= (dir(i) != C_dir) ? -1 : +1
+          alpha_arrows *= (dir(i) == neg_dir) ? -1 : +1
         end
       end
 
-      fac = alphaT*alpha_arrows
+      fac = alphaT * alpha_arrows
 
       if isconj
         fac *= alpha_mixed_arrow
       end
 
       if fac != 1
-        Tb = blockview(T,blockT)
-        scale!(Tb,fac)
+        Tb = blockview(T, blockT)
+        scale!(Tb, fac)
       end
     end # for blockT
 
-  elseif !combining 
+  elseif !combining
     #
     # Uncombining ---------------------------
     #
     #println("Uncombining >>>>>>>>>>>>>>>>>>>>>>>>>>>")
 
-    nc = findfirst(l->l<0,labelsT)
+    nc = findfirst(l -> l < 0, labelsT)
     nlabelsT = [labelsT[nc]]
     ic = indsT[nc]
 
     for l in labelsT
-      (l > 0) && append!(nlabelsT,l)
+      (l > 0) && append!(nlabelsT, l)
     end
-  
+
     # Compute sign for permuting combined index to front
     # (sign alphaT to be computed for each block below):
-    permT = NDTensors.getperm(nlabelsT,labelsT)
+    permT = NDTensors.getperm(nlabelsT, labelsT)
 
     #
     # Note: other permutation of labelsT which
@@ -286,17 +288,17 @@ function NDTensors.before_combiner_signs(T,
     #
 
     for blockT in keys(blockoffsets(T))
-      alphaT = NDTensors.permfactor(permT,blockT,indsT)
+      alphaT = NDTensors.permfactor(permT, blockT, indsT)
 
       neg_dir = !isconj ? Out : In
-      qic = qn(ic,blockT[nc])
-      alpha_arrows = (fparity(qic)==1 && dir(ic)==neg_dir) ? -1 : +1
+      qic = qn(ic, blockT[nc])
+      alpha_arrows = (fparity(qic) == 1 && dir(ic) == neg_dir) ? -1 : +1
 
-      fac = alphaT*alpha_arrows
+      fac = alphaT * alpha_arrows
 
       if fac != 1
-        Tb = blockview(T,blockT)
-        scale!(Tb,fac)
+        Tb = blockview(T, blockT)
+        scale!(Tb, fac)
       end
     end
   end
@@ -304,50 +306,48 @@ function NDTensors.before_combiner_signs(T,
   return T
 end #NDTensors.before_combiner_signs
 
-function NDTensors.after_combiner_signs(R,
-                                        labelsR,
-                                        indsR::NTuple{NR,QNIndex},
-                                        C,
-                                        labelsC,
-                                        indsC::NTuple{NC,QNIndex},
-                                        ) where {NC,NT,NR}
+function NDTensors.after_combiner_signs(
+  R, labelsR, indsR::NTuple{NR,QNIndex}, C, labelsC, indsC::NTuple{NC,QNIndex}
+) where {NC,NT,NR}
   ci = NDTensors.cinds(store(C))[1]
   combining = (labelsC[ci] > 0)
   combining && error("NDTensors.after_combiner_signs only for uncombining")
 
-  if !using_auto_fermion() || !has_fermionic_subspaces(R) 
+  if !using_auto_fermion() || !has_fermionic_subspaces(R)
     return R
   end
 
   R = copy(R)
 
   # number of uncombined indices
-  Nuc = NC-1
+  Nuc = NC - 1
 
   isconj = NDTensors.isconj(store(C))
 
   if !combining
     if !isconj
       #println("!!! Doing uncombining post-processing step")
-      rperm = ntuple(i->(Nuc-i+1),Nuc) # reverse permutation
-      NDTensors.scale_blocks!(R,block->NDTensors.permfactor(rperm,block,indsR;range=1:Nuc))
+      rperm = ntuple(i -> (Nuc - i + 1), Nuc) # reverse permutation
+      NDTensors.scale_blocks!(
+        R, block -> NDTensors.permfactor(rperm, block, indsR; range=1:Nuc)
+      )
     else
       #println("!!! Doing conjugate uncombining post-processing step")
       C_dir = dir(inds(C)[1])
 
       function mixed_arrow_sign(block)
         alpha_mixed_arrow = 1
-        for n=1:Nuc
+        for n in 1:Nuc
           i = indsR[n]
-          qi = qn(i,block[n])
-          if dir(i)==C_dir && fparity(qi)==1
+          qi = qn(i, block[n])
+          if dir(i) == C_dir && fparity(qi) == 1
             alpha_mixed_arrow *= -1
           end
         end
         return alpha_mixed_arrow
       end
 
-      NDTensors.scale_blocks!(R,block->mixed_arrow_sign(block))
+      NDTensors.scale_blocks!(R, block -> mixed_arrow_sign(block))
     end
   end
 

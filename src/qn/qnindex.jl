@@ -426,7 +426,6 @@ function mutable_storage(::Type{Order{N}}, ::Type{IndexT}) where {N,IndexT<:QNIn
   return SizedVector{N,IndexT}(undef)
 end
 
-
 function show(io::IO, i::QNIndex)
   idstr = "$(id(i) % 1000)"
   if length(tags(i)) > 0
