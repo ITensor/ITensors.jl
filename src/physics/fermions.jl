@@ -63,10 +63,10 @@ function fparity(qn::QN)
   return mod(p, 2)
 end
 
-fparity(iv::IndexVal) = fparity(qn(iv))
+fparity(iv::Pair{<:Index}) = fparity(qn(iv))
 
 Base.isodd(q::QN) = isodd(fparity(q))
-Base.isodd(iv::IndexVal) = isodd(fparity(iv))
+Base.isodd(iv::Pair{<:Index}) = isodd(fparity(iv))
 
 """
     compute_permfactor(p,iv_or_qn::Vararg{T,N})
@@ -76,9 +76,9 @@ if the subset of index vals which are fermion-parity
 odd undergo an odd permutation (odd number of swaps)
 according to p, then return -1. Otherwise return +1.
 """
-
-function compute_permfactor(p, iv_or_qn::Vararg{T,N}; range=1:N) where {T,N}
+function compute_permfactor(p, iv_or_qn...; range=1:length(iv_or_qn))::Int
   using_auto_fermion() || return 1
+  N = length(iv_or_qn)
   oddp = @MVector zeros(Int, N)
   n = 0
   for j in range
@@ -91,13 +91,10 @@ function compute_permfactor(p, iv_or_qn::Vararg{T,N}; range=1:N) where {T,N}
 end
 
 # Default implementation for non-QN IndexVals
-NDTensors.permfactor(p, ivs...) = 1.0
+NDTensors.permfactor(p, ivs...) = 1
 
-NDTensors.permfactor(p, ivs::Vararg{QNIndexVal,N}) where {N} = compute_permfactor(p, ivs...)
-
-function NDTensors.permfactor(p, pairs::Vararg{Pair{QNIndex,Int},N}; kwargs...) where {N}
+function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex},N}; kwargs...) where {N}
   using_auto_fermion() || return 1
-  ivs = ntuple(i -> IndexVal(pairs[i]), N)
   return compute_permfactor(p, ivs...; kwargs...)
 end
 
