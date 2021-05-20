@@ -1712,6 +1712,53 @@ function movesites(ψ::AbstractMPS, ns, ns′; kwargs...)
   return ψ
 end
 
+eachfront(itr, n = 1) = Iterators.take(itr, length(itr) - n)
+
+function areconsecutive(v)
+  for n in eachfront(eachindex(v))
+    if v[n] + 1 ≠ v[n + 1]
+      return false
+    end
+  end
+  return true
+end
+
+function minimal_swap_range(ns, ::Nothing)
+  new_start = first(ns)
+  return new_start:(new_start + length(ns) - 1)
+end
+
+# Compute the contiguous range of sites that
+# involve the minimal number of swaps to apply 
+# the current gate and the next gate
+function minimal_swap_range(ns, next_ns)
+  N = length(ns)
+  new_start = if first(next_ns) > last(ns)
+    # Next gate is completely to the right of the current gate
+    @show first(next_ns) > last(ns)
+    last(ns) - N + 1
+  elseif last(next_ns) < first(ns)
+    # Next gate is completely to the left of the current gate
+    @show last(next_ns) < first(ns)
+    first(ns)
+  elseif first(ns) < first(next_ns) && last(ns) < last(next_ns) && last(ns) ≥ first(next_ns)
+    @show first(ns) < first(next_ns) && last(ns) < last(next_ns) && last(ns) ≥ first(next_ns)
+    first(next_ns) - N + 1
+  elseif first(ns) ≤ first(next_ns) && last(ns) ≥ last(next_ns)
+    @show first(ns) ≤ first(next_ns) && last(ns) ≥ last(next_ns)
+    first(next_ns)
+  elseif first(ns) < first(next_ns) && last(ns) < last(next_ns)
+    @show first(ns) < first(next_ns) && last(ns) < last(next_ns)
+    first(ns)
+  elseif first(ns) ≥ first(next_ns) && last(ns) ≥ last(next_ns)
+    @show first(ns) ≥ first(next_ns) && last(ns) ≥ last(next_ns)
+    last(ns) - N + 1
+  else
+    error("The current gate is being applied to the sites $ns and the next gate is being applied to the sites $next_ns. Could not determine where to move the current sites to make the contiguous.")
+  end
+  return new_start:(new_start + N - 1)
+end
+
 """
     product(o::ITensor, ψ::Union{MPS,MPO}, [ns::Vector{Int}]; <keyword argument>)
     apply([...])
@@ -1743,10 +1790,21 @@ function product(
   ns = sort(ns)
 
   next_ns = isnothing(next_gate) ? nothing : sort(findsites(ψ, next_gate))
-  diff_ns = diff(ns)
   ns′ = ns
-  if any(!=(1), diff_ns)
-    ns′ = [ns[1] + n - 1 for n in 1:N]
+
+  println("\n##############################")
+  println("Inside product(::ITensor, ::$(typeof(ψ)))")
+  @show ns
+  @show next_ns
+  @show areconsecutive(ns)
+
+  if !areconsecutive(ns) #any(!=(1), diff_ns)
+    # TODO: change the new position depending on next_ns
+    ns′ = minimal_swap_range(ns, next_ns)
+
+    #ns′ = [ns[1] + n - 1 for n in 1:N]
+    @show ns′
+
     ψ = movesites(ψ, ns .=> ns′; kwargs...)
   end
   ns_range = first(ns′):last(ns′)

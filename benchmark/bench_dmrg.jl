@@ -45,6 +45,12 @@ let N = 100
   dmrg(H, psi, sweeps; outputlevel=0)
 
   suite["1d_S=1_heisenberg_qn"] = @benchmarkable dmrg($H, $psi, $sweeps; outputlevel=0)
+
+  # Precompile
+  H_splitblocks = splitblocks(linkinds, H)
+  dmrg(H_splitblocks, psi, sweeps; outputlevel=0)
+
+  suite["1d_S=1_heisenberg_qn_splitblocks"] = @benchmarkable dmrg($H_splitblocks, $psi, $sweeps; outputlevel=0)
 end
 
 #let Ny = 6,
