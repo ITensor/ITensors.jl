@@ -80,6 +80,21 @@ end
       @test A[_i => 1, _j => dim(_j)] == 4.5
     end
 
+    @testset "Get and Set with Wrong Number of Values" begin
+      _i = Index(2, "i")
+      _j = Index(3, "j")
+
+      T = randomITensor(_i, _j)
+
+      @test_throws DimensionMismatch T[]
+      @test_throws DimensionMismatch T[_i => 1]
+      @test_throws DimensionMismatch T[_i => 1, j => 2, j' => 3]
+
+      @test_throws DimensionMismatch T[] = 1.0
+      @test_throws DimensionMismatch T[_i => 1] = 1.0
+      @test_throws DimensionMismatch T[_i => 1, j => 2, j' => 3] = 1.0
+    end
+
     @testset "Random" begin
       A = randomITensor(i, j)
 

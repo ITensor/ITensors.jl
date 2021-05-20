@@ -1,3 +1,10 @@
+Checklist for Formatting ITensor Code
+--------------------------------------
+- cd to the top level of the source code
+- open a Julia REPL session
+- run: using JuliaFormatter; format("."; verbose = true)
+- result will be true if code already formatted
+
 Checklist for Tagging a New Release
 --------------------------------------
 - Update the version = "x.y.z" line near the top of Project.toml
