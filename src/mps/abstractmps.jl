@@ -1792,6 +1792,7 @@ function product(
   move_sites_back::Bool=true,
   apply_dag::Bool=false,
   next_gate::Union{ITensor,Nothing}=nothing,
+  swap_alg="minimize",
   (nswaps!)=nothing,
   kwargs...,
 )
@@ -1801,8 +1802,14 @@ function product(
   ns_next = isnothing(next_gate) ? nothing : sort(findsites(ψ, next_gate))
   ns′ = ns
 
-  if !areconsecutive(ns) #any(!=(1), diff_ns)
-    ns′ = minimal_swap_range(ns, ns_next)
+  if !areconsecutive(ns)
+    ns′ = if swap_alg == "minimize"
+      minimal_swap_range(ns, ns_next)
+    elseif swap_alg == "left"
+      ns′ = first(ns):(first(ns) + N - 1)
+    elseif swap_alg == "right"
+      ns′ = (last(ns) - N + 1):last(ns)
+    end
     ψ = movesites(ψ, ns .=> ns′; (nswaps!)=nswaps!, kwargs...)
   else
     if !isnothing(nswaps!)
