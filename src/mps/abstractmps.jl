@@ -1729,15 +1729,56 @@ function areconsecutive(v)
   return true
 end
 
-function minimal_swap_range(ns, ::Nothing)
+abstract type SwapAlgorithm end
+struct SwapMinimal <: SwapAlgorithm end
+struct SwapMinimalSimple <: SwapAlgorithm end
+struct SwapLeft <: SwapAlgorithm end
+struct SwapRight <: SwapAlgorithm end
+struct SwapMiddle <: SwapAlgorithm end
+
+function consecutive_range(::SwapLeft, ns, ns_next)
+  N = length(ns)
   new_start = first(ns)
-  return new_start:(new_start + length(ns) - 1)
+  return new_start:(new_start + N - 1)
 end
 
-# Compute the contiguous range of sites that
-# involve the minimal number of swaps to apply 
-# the current gate and the next gate
-function minimal_swap_range(ns, ns_next)
+function consecutive_range(::SwapRight, ns, ns_next)
+  N = length(ns)
+  new_stop = last(ns)
+  return (new_stop - N + 1):new_stop
+end
+
+function consecutive_range(::SwapMiddle, ns, ns_next)
+  N = length(ns)
+  new_start = (first(ns) + last(ns)) ÷ 2 - (length(ns) - 1) ÷ 2
+  return new_start:(new_start + N - 1)
+end
+
+function consecutive_range(::SwapMinimalSimple, ns, ns_next)
+  N = length(ns)
+  N_next = length(ns_next)
+  new_start = if last(ns) ≤ first(ns_next)
+    # Next gate is to the right of the current gate
+    # Move right towards the current gate
+    last(ns) - N + 1
+  elseif first(ns) ≥ last(ns_next)
+    # Next gate is to the left of the current gate
+    # Move left towards the current gate
+    first(ns)
+  else
+    # If neither is true, just swap left
+    first(ns)
+  end
+  return new_start:(new_start + N - 1)
+end
+
+consecutive_range(::SwapMinimalSimple, ns, ns_next::Nothing) = consecutive_range(SwapRight(), ns, ns_next)
+
+# Compute a contiguous range of sites 
+# based on the current range of sites the gate
+# is being applied to as well as the range of
+# sites the next gate will be applied to
+function consecutive_range(::SwapMinimal, ns, ns_next)
   N = length(ns)
   N_next = length(ns_next)
   new_start = if last(ns) ≤ first(ns_next)
@@ -1766,6 +1807,8 @@ function minimal_swap_range(ns, ns_next)
   end
   return new_start:(new_start + N - 1)
 end
+
+consecutive_range(::SwapMinimal, ns, ns_next::Nothing) = consecutive_range(SwapRight(), ns, ns_next)
 
 """
     product(o::ITensor, ψ::Union{MPS,MPO}, [ns::Vector{Int}]; <keyword argument>)
@@ -1804,11 +1847,15 @@ function product(
 
   if !areconsecutive(ns)
     ns′ = if swap_alg == "minimize"
-      minimal_swap_range(ns, ns_next)
+      consecutive_range(SwapMinimal(), ns, ns_next)
+    elseif swap_alg == "simple_minimize"
+      consecutive_range(SwapMinimalSimple(), ns, ns_next)
     elseif swap_alg == "left"
-      ns′ = first(ns):(first(ns) + N - 1)
+      consecutive_range(SwapLeft(), ns, ns_next)
     elseif swap_alg == "right"
-      ns′ = (last(ns) - N + 1):last(ns)
+      consecutive_range(SwapRight(), ns, ns_next)
+    elseif swap_alg == "middle"
+      consecutive_range(SwapMiddle(), ns, ns_next)
     end
     ψ = movesites(ψ, ns .=> ns′; (nswaps!)=nswaps!, kwargs...)
   else
