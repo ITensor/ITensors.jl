@@ -1731,30 +1731,32 @@ end
 # Compute the contiguous range of sites that
 # involve the minimal number of swaps to apply 
 # the current gate and the next gate
-function minimal_swap_range(ns, next_ns)
+function minimal_swap_range(ns, ns_next)
   N = length(ns)
-  new_start = if first(next_ns) > last(ns)
-    # Next gate is completely to the right of the current gate
-    @show first(next_ns) > last(ns)
+  N_next = length(ns_next)
+  new_start = if last(ns) ≤ first(ns_next)
+    # Next gate is to the right of the current gate
+    # Move right towards the current gate
     last(ns) - N + 1
-  elseif last(next_ns) < first(ns)
-    # Next gate is completely to the left of the current gate
-    @show last(next_ns) < first(ns)
+  elseif first(ns) ≥ last(ns_next)
+    # Next gate is to the left of the current gate
+    # Move left towards the current gate
     first(ns)
-  elseif first(ns) < first(next_ns) && last(ns) < last(next_ns) && last(ns) ≥ first(next_ns)
-    @show first(ns) < first(next_ns) && last(ns) < last(next_ns) && last(ns) ≥ first(next_ns)
-    first(next_ns) - N + 1
-  elseif first(ns) ≤ first(next_ns) && last(ns) ≥ last(next_ns)
-    @show first(ns) ≤ first(next_ns) && last(ns) ≥ last(next_ns)
-    first(next_ns)
-  elseif first(ns) < first(next_ns) && last(ns) < last(next_ns)
-    @show first(ns) < first(next_ns) && last(ns) < last(next_ns)
+  elseif first(ns) ≤ first(ns_next) && last(ns) ≥ last(ns_next)
+    # Next gate is completely within the current gate,
+    # move inwards to the start of the current gate
+    first(ns_next)
+  elseif first(ns) ≥ first(ns_next) && last(ns) ≤ last(ns_next)
+    # Current gate is completely within the next gate
     first(ns)
-  elseif first(ns) ≥ first(next_ns) && last(ns) ≥ last(next_ns)
-    @show first(ns) ≥ first(next_ns) && last(ns) ≥ last(next_ns)
-    last(ns) - N + 1
+  elseif first(ns) ≤ first(ns_next) && last(ns) ≤ last(ns_next)
+    # Next gate is overlapping to the right of the current gate
+    last(ns_next) - N_next - 1
+  elseif first(ns) ≥ first(ns_next) && last(ns) ≥ last(ns_next)
+    # Next gate is overlapping to the left of the current gate
+    first(ns_next) + N_next
   else
-    error("The current gate is being applied to the sites $ns and the next gate is being applied to the sites $next_ns. Could not determine where to move the current sites to make the contiguous.")
+    error("The current gate is being applied to the sites $ns and the next gate is being applied to the sites $ns_next. Could not determine where to move the current sites to make the contiguous.")
   end
   return new_start:(new_start + N - 1)
 end
@@ -1789,18 +1791,18 @@ function product(
   N = length(ns)
   ns = sort(ns)
 
-  next_ns = isnothing(next_gate) ? nothing : sort(findsites(ψ, next_gate))
+  ns_next = isnothing(next_gate) ? nothing : sort(findsites(ψ, next_gate))
   ns′ = ns
 
   println("\n##############################")
   println("Inside product(::ITensor, ::$(typeof(ψ)))")
   @show ns
-  @show next_ns
+  @show ns_next
   @show areconsecutive(ns)
 
   if !areconsecutive(ns) #any(!=(1), diff_ns)
-    # TODO: change the new position depending on next_ns
-    ns′ = minimal_swap_range(ns, next_ns)
+    # TODO: change the new position depending on ns_next
+    ns′ = minimal_swap_range(ns, ns_next)
 
     #ns′ = [ns[1] + n - 1 for n in 1:N]
     @show ns′
@@ -1825,13 +1827,13 @@ function product(
   # Anticipate where the next orthogonality
   # center should be based on the position
   # of the next gate being applied
-  orthocenter = if !isnothing(next_ns)
-    if first(next_ns) > last(ns_range)
+  orthocenter = if !isnothing(ns_next)
+    if first(ns_next) > last(ns_range)
       last(ns_range)
-    elseif last(next_ns) < first(ns_range)
+    elseif last(ns_next) < first(ns_range)
       first(ns_range)
     else
-      last(next_ns)
+      last(ns_next)
     end
   else
     last(ns_range)
