@@ -1666,13 +1666,19 @@ function _movesite(ns::Vector{Int}, n1n2::Pair{Int,Int})
   return ns
 end
 
-function _movesites(ψ::AbstractMPS, ns::Vector{Int}, ns′::Vector{Int}; kwargs...)
+function _movesites(ψ::AbstractMPS, ns::Vector{Int}, ns′::Vector{Int}; (nswaps!)=nothing, kwargs...)
   ψ = copy(ψ)
   N = length(ns)
   @assert N == length(ns′)
+  nswaps = 0
   for i in 1:N
-    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
-    ns = _movesite(ns, ns[i] => ns′[i])
+    n1, n2 = ns[i], ns′[i]
+    nswaps += n1 > n2 ? length(n2:(n1 - 1)) : length(n1:(n2 - 1))
+    ψ = movesite(ψ, n1 => n2; kwargs...)
+    ns = _movesite(ns, n1 => n2)
+  end
+  if !isnothing(nswaps!)
+    push!(nswaps!, nswaps)
   end
   return ψ, ns
 end
@@ -1680,7 +1686,7 @@ end
 # TODO: make a permutesites(::MPS/MPO, perm)
 # function that takes a permutation of the sites
 # p(1:N) for N sites
-function movesites(ψ::AbstractMPS, nsns′::Vector{Pair{Int,Int}}; kwargs...)
+function movesites(ψ::AbstractMPS, nsns′::Vector{Pair{Int,Int}}; (nswaps!)=nothing, kwargs...)
   ns = first.(nsns′)
   ns′ = last.(nsns′)
   ψ = copy(ψ)
@@ -1691,26 +1697,26 @@ function movesites(ψ::AbstractMPS, nsns′::Vector{Pair{Int,Int}}; kwargs...)
   ns′ = ns′[p]
   ns = collect(ns)
   while ns ≠ ns′
-    ψ, ns = _movesites(ψ, ns, ns′; kwargs...)
+    ψ, ns = _movesites(ψ, ns, ns′; (nswaps!)=nswaps!, kwargs...)
   end
   return ψ
 end
 
 # TODO: call the Vector{Pair{Int, Int}} version
-function movesites(ψ::AbstractMPS, ns, ns′; kwargs...)
-  ψ = copy(ψ)
-  N = length(ns)
-  @assert N == length(ns′)
-  p = sortperm(ns′)
-  ns = ns[p]
-  ns′ = ns′[p]
-  ns = collect(ns)
-  for i in 1:N
-    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
-    ns = _movesite(ns, ns[i] => ns′[i])
-  end
-  return ψ
-end
+## function movesites(ψ::AbstractMPS, ns, ns′; kwargs...)
+##   ψ = copy(ψ)
+##   N = length(ns)
+##   @assert N == length(ns′)
+##   p = sortperm(ns′)
+##   ns = ns[p]
+##   ns′ = ns′[p]
+##   ns = collect(ns)
+##   for i in 1:N
+##     ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
+##     ns = _movesite(ns, ns[i] => ns′[i])
+##   end
+##   return ψ
+## end
 
 eachfront(itr, n = 1) = Iterators.take(itr, length(itr) - n)
 
@@ -1751,10 +1757,10 @@ function minimal_swap_range(ns, ns_next)
     first(ns)
   elseif first(ns) ≤ first(ns_next) && last(ns) ≤ last(ns_next)
     # Next gate is overlapping to the right of the current gate
-    last(ns_next) - N_next - 1
+    first(ns_next) - 1
   elseif first(ns) ≥ first(ns_next) && last(ns) ≥ last(ns_next)
     # Next gate is overlapping to the left of the current gate
-    first(ns_next) + N_next
+    last(ns_next) + 2 - N
   else
     error("The current gate is being applied to the sites $ns and the next gate is being applied to the sites $ns_next. Could not determine where to move the current sites to make the contiguous.")
   end
@@ -1786,6 +1792,7 @@ function product(
   move_sites_back::Bool=true,
   apply_dag::Bool=false,
   next_gate::Union{ITensor,Nothing}=nothing,
+  (nswaps!)=nothing,
   kwargs...,
 )
   N = length(ns)
@@ -1794,20 +1801,13 @@ function product(
   ns_next = isnothing(next_gate) ? nothing : sort(findsites(ψ, next_gate))
   ns′ = ns
 
-  println("\n##############################")
-  println("Inside product(::ITensor, ::$(typeof(ψ)))")
-  @show ns
-  @show ns_next
-  @show areconsecutive(ns)
-
   if !areconsecutive(ns) #any(!=(1), diff_ns)
-    # TODO: change the new position depending on ns_next
     ns′ = minimal_swap_range(ns, ns_next)
-
-    #ns′ = [ns[1] + n - 1 for n in 1:N]
-    @show ns′
-
-    ψ = movesites(ψ, ns .=> ns′; kwargs...)
+    ψ = movesites(ψ, ns .=> ns′; (nswaps!)=nswaps!, kwargs...)
+  else
+    if !isnothing(nswaps!)
+      push!(nswaps!, 0)
+    end
   end
   ns_range = first(ns′):last(ns′)
   # Minimize distance to orthogonalize
@@ -1815,10 +1815,10 @@ function product(
     ψ = orthogonalize(ψ, last(ns_range))
   elseif last(ortho_lims(ψ)) < first(ns_range)
     ψ = orthogonalize(ψ, first(ns_range))
-  end
-
-  if first(ortho_lims(ψ)) < first(ns_range) || last(ortho_lims(ψ)) > last(ns_range)
-    error("Orthogonality center limits are $(ortho_lims(ψ)), but gate is being applied to sites $ns_range. Orthogonality center must be within the range of where the gates are being applied.")
+  elseif first(ortho_lims(ψ)) < first(ns_range)
+    ψ = orthogonalize(ψ, first(ns_range))
+  elseif last(ortho_lims(ψ)) > last(ns_range)
+    ψ = orthogonalize(ψ, last(ns_range))
   end
 
   ϕ = prod(ψ[ns_range])
@@ -1833,7 +1833,7 @@ function product(
     elseif last(ns_next) < first(ns_range)
       first(ns_range)
     else
-      last(ns_next)
+      last(ns_range)
     end
   else
     last(ns_range)
