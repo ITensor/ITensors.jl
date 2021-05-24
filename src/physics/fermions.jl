@@ -106,8 +106,19 @@ function NDTensors.permfactor(
   return compute_permfactor(perm, qns...; kwargs...)
 end
 
-function NDTensors.compute_alpha(
-  ElType,
+# Version of getperm which is type stable
+# and works for Tuple or Vector inputs
+function vec_getperm(s1,s2)
+  N = length(s1)
+  p = Vector{Int}(undef,N)
+  for i=1:N
+    @inbounds p[i] = NDTensors._findfirst(==(@inbounds s1[i]),s2)
+  end
+  return p
+end
+
+@inline function NDTensors.compute_alpha(
+  ElR,
   labelsR,
   blockR,
   input_indsR,
@@ -118,11 +129,11 @@ function NDTensors.compute_alpha(
   blockT2,
   indsT2::NTuple{N2,QNIndex},
 ) where {N1,N2}
-  α = one(ElType)
-  if !using_auto_fermion() ||
+
+  if !using_auto_fermion()
      !has_fermionic_subspaces(indsT1) ||
      !has_fermionic_subspaces(indsT2)
-    return α
+    return one(ElR)
   end
 
   # the "indsR" argument to compute_alpha from NDTensors
@@ -142,22 +153,22 @@ function NDTensors.compute_alpha(
   NR = length(labelsR)
   orig_labelsR = zeros(Int, NR)
   u = 1
-  for l in (nlabelsT1..., nlabelsT2...)
+  for ls in (nlabelsT1,nlabelsT2), l in ls
     if l > 0
       orig_labelsR[u] = l
       u += 1
     end
   end
 
-  permT1 = NDTensors.getperm(nlabelsT1, orig_labelsT1)
-  permT2 = NDTensors.getperm(nlabelsT2, orig_labelsT2)
-  permR = NDTensors.getperm(labelsR, orig_labelsR)
+  permT1 = vec_getperm(nlabelsT1, orig_labelsT1)
+  permT2 = vec_getperm(nlabelsT2, orig_labelsT2)
+  permR = vec_getperm(labelsR, orig_labelsR)
 
   alpha1 = NDTensors.permfactor(permT1, blockT1, indsT1)
   alpha2 = NDTensors.permfactor(permT2, blockT2, indsT2)
   alphaR = NDTensors.permfactor(permR, blockR, indsR)
 
-  alpha_arrows = 1
+  alpha_arrows = one(ElR)
   for n in 1:length(indsT1)
     l = orig_labelsT1[n]
     i = indsT1[n]
@@ -167,7 +178,7 @@ function NDTensors.compute_alpha(
     end
   end
 
-  α *= alpha1 * alpha2 * alphaR * alpha_arrows
+  α = alpha1 * alpha2 * alphaR * alpha_arrows
 
   return α
 end
@@ -227,7 +238,7 @@ function NDTensors.before_combiner_signs(
     @assert length(nlabelsT) == NT
 
     # Compute permutation that moves uncombined indices to front
-    permT = NDTensors.getperm(nlabelsT, labelsT)
+    permT = vec_getperm(nlabelsT, labelsT)
 
     for blockT in keys(blockoffsets(T))
       # Compute sign from permuting uncombined indices to front:
@@ -274,7 +285,7 @@ function NDTensors.before_combiner_signs(
 
     # Compute sign for permuting combined index to front
     # (sign alphaT to be computed for each block below):
-    permT = NDTensors.getperm(nlabelsT, labelsT)
+    permT = vec_getperm(nlabelsT, labelsT)
 
     #
     # Note: other permutation of labelsT which
