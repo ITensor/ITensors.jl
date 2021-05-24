@@ -81,7 +81,7 @@ function compute_permfactor(p, iv_or_qn...; range=1:length(iv_or_qn))::Int
   N = length(iv_or_qn)
   oddp = @MVector zeros(Int, N)
   n = 0
-  for j in range
+  @inbounds for j in range
     if fparity(iv_or_qn[p[j]]) == 1
       n += 1
       oddp[n] = p[j]
@@ -140,11 +140,8 @@ end
   # may be a tuple of QNIndex, so convert to an IndexSet
   indsR = IndexSet(input_indsR)
 
-  orig_labelsT1 = [l for l in labelsT1]
-  orig_labelsT2 = [l for l in labelsT2]
-
-  nlabelsT1 = sort(orig_labelsT1; rev=true)
-  nlabelsT2 = sort(orig_labelsT2)
+  nlabelsT1 = NDTensors.sort(labelsT1; rev=true)
+  nlabelsT2 = NDTensors.sort(labelsT2)
 
   # Make orig_labelsR from the order of
   # indices that would result by just 
@@ -160,8 +157,8 @@ end
     end
   end
 
-  permT1 = vec_getperm(nlabelsT1, orig_labelsT1)
-  permT2 = vec_getperm(nlabelsT2, orig_labelsT2)
+  permT1 = NDTensors.getperm(nlabelsT1, labelsT1)
+  permT2 = NDTensors.getperm(nlabelsT2, labelsT2)
   permR = vec_getperm(labelsR, orig_labelsR)
 
   alpha1 = NDTensors.permfactor(permT1, blockT1, indsT1)
@@ -170,7 +167,7 @@ end
 
   alpha_arrows = one(ElR)
   for n in 1:length(indsT1)
-    l = orig_labelsT1[n]
+    l = labelsT1[n]
     i = indsT1[n]
     qi = qn(i, blockT1[n])
     if l < 0 && dir(i) == Out && fparity(qi) == 1
