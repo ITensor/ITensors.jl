@@ -570,6 +570,9 @@ function contract!(
   contraction_plan,
 ) where {ElR<:Number,NR}
   already_written_to = Dict{Block{NR},Bool}()
+  indsR = inds(R)
+  indsT1 = inds(T1)
+  indsT2 = inds(T2)
   # In R .= α .* (T1 * T2) .+ β .* R
   α = one(ElR)
   for (block1, block2, blockR) in contraction_plan
@@ -579,7 +582,7 @@ function contract!(
 
     # <fermions>
     α = compute_alpha(
-      ElR, labelsR, blockR, inds(R), labelsT1, block1, inds(T1), labelsT2, block2, inds(T2)
+      ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
     )
 
     β = one(ElR)
