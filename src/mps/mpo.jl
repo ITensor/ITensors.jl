@@ -457,7 +457,14 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
     error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
 
   # In case A and ψ have the same link indices
+  # For example, ψ could be A projected onto a product state,
+  # like `|ψ⟩ = A|0⟩`.
   A = sim(linkinds, A)
+
+  # Dangling indices of ψ. For now, only support dangling
+  # indices on the edges of the system.
+  sψ = siteinds(uniqueinds, ψ, A)
+  any(n -> n ≠ firstindex(sψ) && n ≠ lastindex(sψ) && !isempty(sψ[n]), eachindex(sψ)) && error("In `contract(A::MPO, x::MPS)`, `x` can only have dangling indices on the first and last tensor.")
 
   ψ_c = dag(ψ)
   A_c = dag(A)
@@ -467,13 +474,17 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   sim!(linkinds, ψ_c)
   sim!(siteinds, commoninds, A_c, ψ_c)
 
+  # Prime any dangling indices on the ends of ψ
+  prime!(siteinds, uniqueinds, ψ_c, A_c)
+
   # A version helpful for making the density matrix
   simA_c = sim(siteinds, uniqueinds, A_c, ψ_c)
 
   # Store the left environment tensors
   E = Vector{ITensor}(undef, n - 1)
-
-  E[1] = ψ[1] * A[1] * A_c[1] * ψ_c[1]
+  sψ1 = sψ[1]
+  sψ1_c = sψ1'
+  E[1] = ψ[1] * A[1] * A_c[1] * replaceinds(ψ_c[1], sψ1_c => sψ1)
   for j in 2:(n - 1)
     E[j] = E[j - 1] * ψ[j] * A[j] * A_c[j] * ψ_c[j]
   end
@@ -481,11 +492,15 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   simR_c = ψ_c[n] * simA_c[n]
   ρ = E[n - 1] * R * simR_c
   l = linkind(ψ, n - 1)
-  ts = isnothing(l) ? "" : tags(l)
-  Lis = siteinds(uniqueinds, A, ψ, n)
-  Ris = siteinds(uniqueinds, simA_c, ψ_c, n)
-  F = eigen(ρ, Lis, Ris; ishermitian=true, tags=ts, kwargs...)
+  tsₙ = isnothing(l) ? "" : tags(l)
+  plₙ = isnothing(l) ? 0 : plev(l)
+  sψn = sψ[n]
+  sψn_c = sψn'
+  Lis = unioninds(siteinds(uniqueinds, A, ψ, n), sψn)
+  Ris = unioninds(siteinds(uniqueinds, simA_c, ψ_c, n), sψn_c)
+  F = eigen(ρ, Lis, Ris; ishermitian=true, tags=tsₙ, plev=plₙ, kwargs...)
   D, U, Ut = F.D, F.V, F.Vt
+  Ut = setprime(Ut, plₙ; inds=commoninds(Ut, D))
   l_renorm, r_renorm = F.l, F.r
   ψ_out[n] = Ut
   R = R * dag(Ut) * ψ[n - 1] * A[n - 1]
@@ -495,11 +510,13 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
     s̃ = siteinds(uniqueinds, simA_c, ψ_c, j)
     ρ = E[j - 1] * R * simR_c
     l = linkind(ψ, j - 1)
-    ts = isnothing(l) ? "" : tags(l)
-    Lis = IndexSet(s..., l_renorm)
-    Ris = IndexSet(s̃..., r_renorm)
-    F = eigen(ρ, Lis, Ris; ishermitian=true, tags=ts, kwargs...)
+    tsⱼ = isnothing(l) ? "" : tags(l)
+    plⱼ = isnothing(l) ? 0 : plev(l)
+    Lis = [s..., l_renorm]
+    Ris = [s̃..., r_renorm]
+    F = eigen(ρ, Lis, Ris; ishermitian=true, tags=tsⱼ, plev=plⱼ, kwargs...)
     D, U, Ut = F.D, F.V, F.Vt
+    Ut = setprime(Ut, plₙ; inds=commoninds(Ut, D))
     l_renorm, r_renorm = F.l, F.r
     ψ_out[j] = Ut
     R = R * dag(Ut) * ψ[j - 1] * A[j - 1]
