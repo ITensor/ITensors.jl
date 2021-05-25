@@ -32,6 +32,7 @@ using Test
     "lattices.jl",
     "mps.jl",
     "mpo.jl",
+    "apply.jl",
     "sweeps.jl",
     "sweepnext.jl",
     "autompo.jl",

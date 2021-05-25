@@ -285,7 +285,7 @@ using ITensors, Test, Random
     state[3] = 2
     state[5] = 2
     state[7] = 2
-    psi0 = productMPS(s, state)
+    psi0 = MPS(s, state)
 
     ampo = OpSum()
     for j in 1:(N - 1)
@@ -395,7 +395,7 @@ using ITensors, Test, Random
     H = MPO(ampo, sites)
     Hsplit = splitblocks(linkinds, H)
     state = [isodd(n) ? "↑" : "↓" for n in 1:N]
-    ψ0 = productMPS(sites, state)
+    ψ0 = MPS(sites, state)
     using_threaded_blocksparse = ITensors.enable_threaded_blocksparse()
     energy, _ = dmrg(H, ψ0, sweeps; outputlevel=outputlevel)
     energy_split, _ = dmrg(Hsplit, ψ0, sweeps; outputlevel=outputlevel)

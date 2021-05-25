@@ -723,15 +723,15 @@ end
     a3 += "Cdag", 1, "N", 2, "C", 3
     M3 = MPO(a3, s)
 
-    p011 = productMPS(s, [1, 2, 2, 1, 1])
-    p110 = productMPS(s, [2, 2, 1, 1, 1])
+    p011 = MPS(s, [1, 2, 2, 1, 1])
+    p110 = MPS(s, [2, 2, 1, 1, 1])
 
     @test inner(p110, M1, p011) ≈ -1.0
     @test inner(p110, M2, p011) ≈ -1.0
     @test inner(p110, M3, p011) ≈ -1.0
 
-    p001 = productMPS(s, [1, 1, 2, 1, 1])
-    p100 = productMPS(s, [2, 1, 1, 1, 1])
+    p001 = MPS(s, [1, 1, 2, 1, 1])
+    p100 = MPS(s, [2, 1, 1, 1, 1])
 
     @test inner(p100, M1, p001) ≈ +1.0
     @test inner(p100, M2, p001) ≈ +1.0
@@ -752,14 +752,14 @@ end
     a2 += -1, "Cdn", 3, "Cdagdn", 1
     M2 = MPO(a2, s)
 
-    p0uu = productMPS(s, [1, 2, 2, 1, 1])
-    puu0 = productMPS(s, [2, 2, 1, 1, 1])
-    p0ud = productMPS(s, [1, 2, 3, 1, 1])
-    pdu0 = productMPS(s, [3, 2, 1, 1, 1])
-    p00u = productMPS(s, [1, 1, 2, 1, 1])
-    pu00 = productMPS(s, [2, 1, 1, 1, 1])
-    p00d = productMPS(s, [1, 1, 3, 1, 1])
-    pd00 = productMPS(s, [3, 1, 1, 1, 1])
+    p0uu = MPS(s, [1, 2, 2, 1, 1])
+    puu0 = MPS(s, [2, 2, 1, 1, 1])
+    p0ud = MPS(s, [1, 2, 3, 1, 1])
+    pdu0 = MPS(s, [3, 2, 1, 1, 1])
+    p00u = MPS(s, [1, 1, 2, 1, 1])
+    pu00 = MPS(s, [2, 1, 1, 1, 1])
+    p00d = MPS(s, [1, 1, 3, 1, 1])
+    pd00 = MPS(s, [3, 1, 1, 1, 1])
 
     @test inner(puu0, M1, p0uu) ≈ -1.0
     @test inner(pdu0, M2, p0ud) ≈ -1.0
@@ -778,8 +778,8 @@ end
         ampo += -1im, "S-", i, "S+", i + 1
       end
       H = MPO(ampo, sites)
-      psiud = productMPS(sites, [1, 2, 1, 2])
-      psidu = productMPS(sites, [2, 1, 1, 2])
+      psiud = MPS(sites, [1, 2, 1, 2])
+      psidu = MPS(sites, [2, 1, 1, 2])
       @test inner(psiud, H, psidu) ≈ +1im
       @test inner(psidu, H, psiud) ≈ -1im
     end

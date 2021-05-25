@@ -42,7 +42,7 @@ end
 The element type of the MPS/MPO. Always returns `ITensor`.
 
 For the element type of the ITensors of the MPS/MPO,
-use `common_itensor_eltype`.
+use [`ITensors.promote_itensor_eltype`](@ref).
 """
 eltype(::AbstractMPS) = ITensor
 
@@ -813,7 +813,7 @@ function hassamenuminds(::typeof(siteinds), M1::AbstractMPS, M2::AbstractMPS)
 end
 
 for fname in
-    (:sim, :prime, :setprime, :noprime, :addtags, :removetags, :replacetags, :settags)
+    (:sim, :prime, :setprime, :noprime, :replaceprime, :swapprime, :addtags, :removetags, :replacetags, :settags)
   fname! = Symbol(fname, :!)
   @eval begin
     """
@@ -1437,8 +1437,8 @@ end
 # TODO: add a version that determines the sites
 # from common site indices of ψ and A
 """
-    setindex!(ψ::Union{MPS, MPO}, A::ITensor, r::UnitRange{Int};
-              orthocenter::Int = last(r), perm = nothing, kwargs...)
+    setindex!(ψ::Union{MPS,MPO}, A::ITensor, r::UnitRange{Int};
+              orthocenter::Int=last(r), perm=nothing, kwargs...)
     replacesites!([...])
     replacesites([...])
 
@@ -1490,7 +1490,7 @@ function setindex!(
   # For MPO case, restrict to 0 prime level
   #sites = filter(hasplev(0), sites)
 
-  if !isnothing(perm)
+  if !isnothing(perm) # TODO: also check if it is a trivial permutation like [1,2,3]
     sites0 = sites
     sites = sites0[[perm...]]
     # Check if the site indices
@@ -1526,12 +1526,8 @@ function setindex!(
       end
     end
   end
-
   ψA = MPST(A, sites; leftinds=lind, orthocenter=orthocenter - first(r) + 1, kwargs...)
-  #@assert prod(ψA) ≈ A
-
   ψ[firstsite:lastsite] = ψA
-
   return ψ
 end
 
@@ -1570,30 +1566,34 @@ function (::Type{MPST})(
     @assert hasinds(A, s)
   end
   @assert isnothing(leftinds) || hasinds(A, leftinds)
-
   @assert 1 ≤ orthocenter ≤ N
 
+  l = isnothing(leftinds) ? Index[] : leftinds
+  # Need to flatten with reduce(vcat, sites)
+  r = uniqueinds(A, reduce(vcat, sites), l)
   ψ = Vector{ITensor}(undef, N)
   Ã = A
-  l = leftinds
-  # TODO: To minimize work, loop from
-  # 1:orthocenter and reverse(orthocenter:N)
-  # so the orthogonality center is set correctly.
-  for n in 1:(N - 1)
-    Lis = IndexSet(sites[n])
-    if !isnothing(l)
-      Lis = unioninds(Lis, l)
-    end
-    L, R = factorize(Ã, Lis; kwargs..., tags="Link,n=$n", ortho="left")
-    l = commonind(L, R)
+
+  # Sweep left to orthocenter
+  for n in 1:(orthocenter - 1)
+    Lis = unioninds(sites[n], l)
+    L, R = factorize(Ã, Lis; kwargs..., tags="Link,l=$n", ortho="left")
+    l = commoninds(L, R)
     ψ[n] = L
     Ã = R
   end
-  ψ[N] = Ã
-  M = MPST(ψ)
-  setleftlim!(M, N - 1)
-  setrightlim!(M, N + 1)
-  orthogonalize!(M, orthocenter)
+
+  # Sweep right to orthocenter
+  for n in reverse((orthocenter + 1):N)
+    Ris = unioninds(sites[n], r)
+    R, L = factorize(Ã, Ris; kwargs..., tags="Link,l=$n", ortho="left")
+    r = commonind(R, L)
+    ψ[n] = R
+    Ã = L
+  end
+  ψ[orthocenter] = Ã
+  M = MPST(ψ; ortho_lims=orthocenter:orthocenter)
+  @assert ortho_lims(M) == orthocenter:orthocenter
   return M
 end
 
@@ -1666,13 +1666,19 @@ function _movesite(ns::Vector{Int}, n1n2::Pair{Int,Int})
   return ns
 end
 
-function _movesites(ψ::AbstractMPS, ns::Vector{Int}, ns′::Vector{Int}; kwargs...)
+function _movesites(ψ::AbstractMPS, ns::Vector{Int}, ns′::Vector{Int}; (nswaps!)=nothing, kwargs...)
   ψ = copy(ψ)
   N = length(ns)
   @assert N == length(ns′)
+  nswaps = 0
   for i in 1:N
-    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
-    ns = _movesite(ns, ns[i] => ns′[i])
+    n1, n2 = ns[i], ns′[i]
+    nswaps += n1 > n2 ? length(n2:(n1 - 1)) : length(n1:(n2 - 1))
+    ψ = movesite(ψ, n1 => n2; kwargs...)
+    ns = _movesite(ns, n1 => n2)
+  end
+  if !isnothing(nswaps!)
+    push!(nswaps!, nswaps)
   end
   return ψ, ns
 end
@@ -1680,7 +1686,7 @@ end
 # TODO: make a permutesites(::MPS/MPO, perm)
 # function that takes a permutation of the sites
 # p(1:N) for N sites
-function movesites(ψ::AbstractMPS, nsns′::Vector{Pair{Int,Int}}; kwargs...)
+function movesites(ψ::AbstractMPS, nsns′::Vector{Pair{Int,Int}}; (nswaps!)=nothing, kwargs...)
   ns = first.(nsns′)
   ns′ = last.(nsns′)
   ψ = copy(ψ)
@@ -1691,29 +1697,121 @@ function movesites(ψ::AbstractMPS, nsns′::Vector{Pair{Int,Int}}; kwargs...)
   ns′ = ns′[p]
   ns = collect(ns)
   while ns ≠ ns′
-    ψ, ns = _movesites(ψ, ns, ns′; kwargs...)
+    ψ, ns = _movesites(ψ, ns, ns′; (nswaps!)=nswaps!, kwargs...)
   end
   return ψ
 end
 
 # TODO: call the Vector{Pair{Int, Int}} version
-function movesites(ψ::AbstractMPS, ns, ns′; kwargs...)
-  ψ = copy(ψ)
-  N = length(ns)
-  @assert N == length(ns′)
-  p = sortperm(ns′)
-  ns = ns[p]
-  ns′ = ns′[p]
-  ns = collect(ns)
-  for i in 1:N
-    ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
-    ns = _movesite(ns, ns[i] => ns′[i])
+## function movesites(ψ::AbstractMPS, ns, ns′; kwargs...)
+##   ψ = copy(ψ)
+##   N = length(ns)
+##   @assert N == length(ns′)
+##   p = sortperm(ns′)
+##   ns = ns[p]
+##   ns′ = ns′[p]
+##   ns = collect(ns)
+##   for i in 1:N
+##     ψ = movesite(ψ, ns[i] => ns′[i]; kwargs...)
+##     ns = _movesite(ns, ns[i] => ns′[i])
+##   end
+##   return ψ
+## end
+
+eachfront(itr, n = 1) = Iterators.take(itr, length(itr) - n)
+
+function areconsecutive(v)
+  for n in eachfront(eachindex(v))
+    if v[n] + 1 ≠ v[n + 1]
+      return false
+    end
   end
-  return ψ
+  return true
 end
 
+abstract type SwapAlgorithm end
+struct SwapMinimal <: SwapAlgorithm end
+struct SwapMinimalSimple <: SwapAlgorithm end
+struct SwapLeft <: SwapAlgorithm end
+struct SwapRight <: SwapAlgorithm end
+struct SwapMiddle <: SwapAlgorithm end
+
+function consecutive_range(::SwapLeft, ns, ns_next)
+  N = length(ns)
+  new_start = first(ns)
+  return new_start:(new_start + N - 1)
+end
+
+function consecutive_range(::SwapRight, ns, ns_next)
+  N = length(ns)
+  new_stop = last(ns)
+  return (new_stop - N + 1):new_stop
+end
+
+function consecutive_range(::SwapMiddle, ns, ns_next)
+  N = length(ns)
+  new_start = (first(ns) + last(ns)) ÷ 2 - (length(ns) - 1) ÷ 2
+  return new_start:(new_start + N - 1)
+end
+
+function consecutive_range(::SwapMinimalSimple, ns, ns_next)
+  N = length(ns)
+  N_next = length(ns_next)
+  new_start = if last(ns) ≤ first(ns_next)
+    # Next gate is to the right of the current gate
+    # Move right towards the current gate
+    last(ns) - N + 1
+  elseif first(ns) ≥ last(ns_next)
+    # Next gate is to the left of the current gate
+    # Move left towards the current gate
+    first(ns)
+  else
+    # If neither is true, just swap left
+    first(ns)
+  end
+  return new_start:(new_start + N - 1)
+end
+
+consecutive_range(::SwapMinimalSimple, ns, ns_next::Nothing) = consecutive_range(SwapRight(), ns, ns_next)
+
+# Compute a contiguous range of sites 
+# based on the current range of sites the gate
+# is being applied to as well as the range of
+# sites the next gate will be applied to
+function consecutive_range(::SwapMinimal, ns, ns_next)
+  N = length(ns)
+  N_next = length(ns_next)
+  new_start = if last(ns) ≤ first(ns_next)
+    # Next gate is to the right of the current gate
+    # Move right towards the current gate
+    last(ns) - N + 1
+  elseif first(ns) ≥ last(ns_next)
+    # Next gate is to the left of the current gate
+    # Move left towards the current gate
+    first(ns)
+  elseif first(ns) ≤ first(ns_next) && last(ns) ≥ last(ns_next)
+    # Next gate is completely within the current gate,
+    # move inwards to the start of the current gate
+    first(ns_next)
+  elseif first(ns) ≥ first(ns_next) && last(ns) ≤ last(ns_next)
+    # Current gate is completely within the next gate
+    first(ns)
+  elseif first(ns) ≤ first(ns_next) && last(ns) ≤ last(ns_next)
+    # Next gate is overlapping to the right of the current gate
+    first(ns_next) - 1
+  elseif first(ns) ≥ first(ns_next) && last(ns) ≥ last(ns_next)
+    # Next gate is overlapping to the left of the current gate
+    last(ns_next) + 2 - N
+  else
+    error("The current gate is being applied to the sites $ns and the next gate is being applied to the sites $ns_next. Could not determine where to move the current sites to make the contiguous.")
+  end
+  return new_start:(new_start + N - 1)
+end
+
+consecutive_range(::SwapMinimal, ns, ns_next::Nothing) = consecutive_range(SwapRight(), ns, ns_next)
+
 """
-    product(o::ITensor, ψ::Union{MPS, MPO}, [ns::Vector{Int}]; <keyword argument>)
+    product(o::ITensor, ψ::Union{MPS,MPO}, [ns::Vector{Int}]; <keyword argument>)
     apply([...])
 
 Get the product of the operator `o` with the MPS/MPO `ψ`,
@@ -1736,28 +1834,65 @@ function product(
   ns=findsites(ψ, o);
   move_sites_back::Bool=true,
   apply_dag::Bool=false,
+  next_gate::Union{ITensor,Nothing}=nothing,
+  swap_alg="minimize",
+  (nswaps!)=nothing,
   kwargs...,
 )
   N = length(ns)
   ns = sort(ns)
 
-  # TODO: make this smarter by minimizing
-  # distance to orthogonalization.
-  # For example, if ITensors.orthocenter(ψ) > ns[end],
-  # set to ns[end].
-  ψ = orthogonalize(ψ, ns[1])
-  diff_ns = diff(ns)
+  ns_next = isnothing(next_gate) ? nothing : sort(findsites(ψ, next_gate))
   ns′ = ns
-  if any(!=(1), diff_ns)
-    ns′ = [ns[1] + n - 1 for n in 1:N]
-    ψ = movesites(ψ, ns .=> ns′; kwargs...)
+
+  if !areconsecutive(ns)
+    ns′ = if swap_alg == "minimize"
+      consecutive_range(SwapMinimal(), ns, ns_next)
+    elseif swap_alg == "simple_minimize"
+      consecutive_range(SwapMinimalSimple(), ns, ns_next)
+    elseif swap_alg == "left"
+      consecutive_range(SwapLeft(), ns, ns_next)
+    elseif swap_alg == "right"
+      consecutive_range(SwapRight(), ns, ns_next)
+    elseif swap_alg == "middle"
+      consecutive_range(SwapMiddle(), ns, ns_next)
+    end
+    ψ = movesites(ψ, ns .=> ns′; (nswaps!)=nswaps!, kwargs...)
+  else
+    if !isnothing(nswaps!)
+      push!(nswaps!, 0)
+    end
   end
-  ϕ = ψ[ns′[1]]
-  for n in 2:N
-    ϕ *= ψ[ns′[n]]
+  ns_range = first(ns′):last(ns′)
+  # Minimize distance to orthogonalize
+  if first(ortho_lims(ψ)) > last(ns_range)
+    ψ = orthogonalize(ψ, last(ns_range))
+  elseif last(ortho_lims(ψ)) < first(ns_range)
+    ψ = orthogonalize(ψ, first(ns_range))
+  elseif first(ortho_lims(ψ)) < first(ns_range)
+    ψ = orthogonalize(ψ, first(ns_range))
+  elseif last(ortho_lims(ψ)) > last(ns_range)
+    ψ = orthogonalize(ψ, last(ns_range))
   end
+
+  ϕ = prod(ψ[ns_range])
   ϕ = product(o, ϕ; apply_dag=apply_dag)
-  ψ[ns′[1]:ns′[end], kwargs...] = ϕ
+
+  # Anticipate where the next orthogonality
+  # center should be based on the position
+  # of the next gate being applied
+  orthocenter = if !isnothing(ns_next)
+    if first(ns_next) > last(ns_range)
+      last(ns_range)
+    elseif last(ns_next) < first(ns_range)
+      first(ns_range)
+    else
+      last(ns_range)
+    end
+  else
+    last(ns_range)
+  end
+  ψ[ns_range, orthocenter=orthocenter, kwargs...] = ϕ
   if move_sites_back
     # Move the sites back to their original positions
     ψ = movesites(ψ, ns′ .=> ns; kwargs...)
@@ -1852,8 +1987,10 @@ function product(
   As::Vector{<:ITensor}, ψ::AbstractMPS; move_sites_back::Bool=true, kwargs...
 )
   Aψ = ψ
-  for A in As
-    Aψ = product(A, Aψ; move_sites_back=false, kwargs...)
+  for n in eachindex(As)
+    An = As[n]
+    next_gate = n == lastindex(As) ? nothing : As[n + 1]
+    Aψ = product(An, Aψ; move_sites_back=false, next_gate=next_gate, kwargs...)
   end
   if move_sites_back
     s = siteinds(Aψ)

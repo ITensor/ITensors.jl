@@ -216,7 +216,7 @@ by the lines
 
 ```julia
 state = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi0 = productMPS(sites,state)
+psi0 = MPS(sites,state)
 ```
 
 The first line of the new code above makes an array of strings which 
@@ -251,13 +251,13 @@ computing the quantum-number flux of `psi0`
     use the initial state:
     ```julia
     state = ["Up" for n=1:N]
-    psi0 = productMPS(sites,state)
+    psi0 = MPS(sites,state)
     ```
     Or to initialize this 10-site system to have a total "Sz" of +16
     in ITensor units (``S^z=8`` in physical units):
     ```julia
     state = ["Dn","Up","Up","Up","Up","Up","Up","Up","Up","Up"]
-    psi0 = productMPS(sites,state)
+    psi0 = MPS(sites,state)
     ```
     would work (as would any `state` with one "Dn" and nine "Up"'s
     in any order).
@@ -265,7 +265,7 @@ computing the quantum-number flux of `psi0`
     in ITensor units (``S^z=9`` in physical units) as
     ```julia
     state = ["Z0","Up","Up","Up","Up","Up","Up","Up","Up","Up"]
-    psi0 = productMPS(sites,state)
+    psi0 = MPS(sites,state)
     ```
     where "Z0" refers to the ``S^z=0`` state of a spin-one spin.
 
@@ -294,7 +294,7 @@ let
   H = MPO(ampo,sites)
 
   state = [isodd(n) ? "Up" : "Dn" for n=1:N]
-  psi0 = productMPS(sites,state)
+  psi0 = MPS(sites,state)
   @show flux(psi0)
 
   sweeps = Sweeps(5)
@@ -413,7 +413,7 @@ let
   end
 
   # Initialize psi to be a product state (alternating up and down)
-  psi = productMPS(s, n -> isodd(n) ? "Up" : "Dn")
+  psi = MPS(s, n -> isodd(n) ? "Up" : "Dn")
 
   c = div(N,2)
 
@@ -490,7 +490,7 @@ we will take to be near the center of the MPS. The details of this
 function are outside the scope of this tutorial, but are explained in the
 example code for measuring MPS.
 
-The line of code `psi = productMPS(s, n -> isodd(n) ? "Up" : "Dn")`
+The line of code `psi = MPS(s, n -> isodd(n) ? "Up" : "Dn")`
 initializes our MPS `psi` as a product state of alternating 
 up and down spins. We call `measure_Sz` before starting the
 time evolution.
