@@ -456,28 +456,33 @@ function swaptags(is::Indices, tags1, tags2, args...; kwargs...)
   return swaptags(fmatch(args...; kwargs...), is, tags1, tags2)
 end
 
-function replaceinds(is::Indices, rep_inds::Pair{<:Index,<:Index}...)
-  return replaceinds(is, zip(rep_inds...)...)
-end
-
-function replaceinds(is::Indices, rep_inds::Vector{<:Pair{<:Index,<:Index}})
-  return replaceinds(is, rep_inds...)
-end
-
-function replaceinds(is::Indices, rep_inds::Tuple{Vararg{Pair{<:Index,<:Index}}})
-  return replaceinds(is, rep_inds...)
-end
-
-function replaceinds(is::Indices, rep_inds::Pair)
-  return replaceinds(is, Tuple(first(rep_inds)) .=> Tuple(last(rep_inds)))
-end
-
 # Check that the QNs are all the same
 hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))
 
+# For notation:
+# `replaceinds(is, [i, j] => [k, l])`
+# `replaceinds(is, (i, j) => (k, l))`
+function replaceinds(is::Indices, rep_inds::Pair)
+  return replaceinds(is, first(rep_inds), last(rep_inds))
+end
+
+# For notation:
+# `replaceinds(is, [i => k, j => l])`
+# `replaceinds(is, (i => k, j => l))`
+function replaceinds(is::Indices, inds1_inds2)
+  @assert all(x -> x isa Pair, inds1_inds2)
+  return replaceinds(is, first.(inds1_inds2), last.(inds1_inds2))
+end
+
+# For notation:
+# `replaceinds(is, [i, j], [k, l])`
+# `replaceinds(is, (i, j), (k, l))`
 function replaceinds(is::Indices, inds1, inds2)
+  @assert length(inds1) == length(inds2)
+  isempty(inds1) && return is
   is1 = (inds1)
   poss = indexin(is1, is)
+  # TODO: don't convert to Tuple in the case of a Vector
   is_tuple = Tuple(is)
   for (j, pos) in enumerate(poss)
     isnothing(pos) && continue

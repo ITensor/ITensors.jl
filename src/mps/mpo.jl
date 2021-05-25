@@ -500,7 +500,6 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   Ris = unioninds(siteinds(uniqueinds, simA_c, ψ_c, n), sψn_c)
   F = eigen(ρ, Lis, Ris; ishermitian=true, tags=tsₙ, plev=plₙ, kwargs...)
   D, U, Ut = F.D, F.V, F.Vt
-  Ut = setprime(Ut, plₙ; inds=commoninds(Ut, D))
   l_renorm, r_renorm = F.l, F.r
   ψ_out[n] = Ut
   R = R * dag(Ut) * ψ[n - 1] * A[n - 1]
@@ -516,7 +515,6 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
     Ris = [s̃..., r_renorm]
     F = eigen(ρ, Lis, Ris; ishermitian=true, tags=tsⱼ, plev=plⱼ, kwargs...)
     D, U, Ut = F.D, F.V, F.Vt
-    Ut = setprime(Ut, plₙ; inds=commoninds(Ut, D))
     l_renorm, r_renorm = F.l, F.r
     ψ_out[j] = Ut
     R = R * dag(Ut) * ψ[j - 1] * A[j - 1]
@@ -528,6 +526,9 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   ψ_out[1] = R
   setleftlim!(ψ_out, 0)
   setrightlim!(ψ_out, 2)
+  # TODO: set the prime levels to those
+  # of the link indices of ψ
+  setprime!(linkinds, ψ_out, 0)
   return ψ_out
 end
 

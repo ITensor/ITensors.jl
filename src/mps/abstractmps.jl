@@ -813,7 +813,7 @@ function hassamenuminds(::typeof(siteinds), M1::AbstractMPS, M2::AbstractMPS)
 end
 
 for fname in
-    (:sim, :prime, :setprime, :noprime, :addtags, :removetags, :replacetags, :settags)
+    (:sim, :prime, :setprime, :noprime, :replaceprime, :swapprime, :addtags, :removetags, :replacetags, :settags)
   fname! = Symbol(fname, :!)
   @eval begin
     """
@@ -1577,7 +1577,7 @@ function (::Type{MPST})(
   # Sweep left to orthocenter
   for n in 1:(orthocenter - 1)
     Lis = unioninds(sites[n], l)
-    L, R = factorize(Ã, Lis; kwargs..., tags="Link,n=$n", ortho="left")
+    L, R = factorize(Ã, Lis; kwargs..., tags="Link,l=$n", ortho="left")
     l = commoninds(L, R)
     ψ[n] = L
     Ã = R
@@ -1586,7 +1586,7 @@ function (::Type{MPST})(
   # Sweep right to orthocenter
   for n in reverse((orthocenter + 1):N)
     Ris = unioninds(sites[n], r)
-    R, L = factorize(Ã, Ris; kwargs..., tags="Link,n=$n", ortho="left")
+    R, L = factorize(Ã, Ris; kwargs..., tags="Link,l=$n", ortho="left")
     r = commonind(R, L)
     ψ[n] = R
     Ã = L
