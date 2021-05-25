@@ -4,34 +4,34 @@ using Test
 @testset "apply" begin
 
   @testset "ITensors.minimal_swap_range" begin
-    @test ITensors.minimal_swap_range([1, 2], [1, 2]) == 1:2
-    @test ITensors.minimal_swap_range([1, 2], [3, 4]) == 1:2
-    @test ITensors.minimal_swap_range([1, 3], [5, 6]) == 2:3
-    @test ITensors.minimal_swap_range([1, 4], [5, 6]) == 3:4
-    @test ITensors.minimal_swap_range([3, 6], [1, 4]) == 4:5
-    @test ITensors.minimal_swap_range([1, 5], [5, 6]) == 4:5
-    @test ITensors.minimal_swap_range([1, 6], [5, 6]) == 5:6
-    @test ITensors.minimal_swap_range([1, 6], [4, 5, 6]) == 4:5
-    @test ITensors.minimal_swap_range([1, 3, 5], [7, 8]) == 3:5
-    @test ITensors.minimal_swap_range([1, 5], [2, 3]) == 2:3
-    @test ITensors.minimal_swap_range([1, 5], [2, 4]) == 2:3
-    @test ITensors.minimal_swap_range([1, 3, 5], [2, 4]) == 2:4
-    @test ITensors.minimal_swap_range([1, 3, 5], [5, 8]) == 3:5
-    @test ITensors.minimal_swap_range([3, 4], [1, 2]) == 3:4
-    @test ITensors.minimal_swap_range([4, 6], [1, 2]) == 4:5
-    @test ITensors.minimal_swap_range([4, 6], [1, 3]) == 4:5
-    @test ITensors.minimal_swap_range([4, 6], [1, 4]) == 4:5
-    @test ITensors.minimal_swap_range([2, 6], [1, 6]) == 2:3
-    @test ITensors.minimal_swap_range([2, 6], [1, 7]) == 2:3
-    @test ITensors.minimal_swap_range([2, 6], [1, 5]) == 5:6
-    @test ITensors.minimal_swap_range([1, 5], [2, 6]) == 1:2
-    @test ITensors.minimal_swap_range([1, 3, 5], [2, 6]) == 1:3
-    @test ITensors.minimal_swap_range([2, 5, 6], [1, 5]) == 4:6
-    @test ITensors.minimal_swap_range([1, 5], [2, 6]) == 1:2
-    @test ITensors.minimal_swap_range([4, 8], [3, 8]) == 4:5
-    @test ITensors.minimal_swap_range([4, 6, 8], [3, 5]) == 4:6
-    @test ITensors.minimal_swap_range([4, 6, 8], [3, 4]) == 4:6
-    @test ITensors.minimal_swap_range([4, 6, 8], [3, 8]) == 4:6
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 2], [1, 2]) == 1:2
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 2], [3, 4]) == 1:2
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 3], [5, 6]) == 2:3
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 4], [5, 6]) == 3:4
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [3, 6], [1, 4]) == 4:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 5], [5, 6]) == 4:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 6], [5, 6]) == 5:6
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 6], [4, 5, 6]) == 4:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 3, 5], [7, 8]) == 3:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 5], [2, 3]) == 2:3
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 5], [2, 4]) == 2:3
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 3, 5], [2, 4]) == 2:4
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 3, 5], [5, 8]) == 3:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [3, 4], [1, 2]) == 3:4
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [4, 6], [1, 2]) == 4:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [4, 6], [1, 3]) == 4:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [4, 6], [1, 4]) == 4:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [2, 6], [1, 6]) == 2:3
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [2, 6], [1, 7]) == 2:3
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [2, 6], [1, 5]) == 5:6
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 5], [2, 6]) == 1:2
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 3, 5], [2, 6]) == 1:3
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [2, 5, 6], [1, 5]) == 4:6
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [1, 5], [2, 6]) == 1:2
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [4, 8], [3, 8]) == 4:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [4, 6, 8], [3, 5]) == 4:6
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [4, 6, 8], [3, 4]) == 4:6
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [4, 6, 8], [3, 8]) == 4:6
   end
 
   @testset "apply swap" begin
@@ -85,12 +85,12 @@ using Test
 
     nswaps = Int[]
     ψ = apply(CX[1, 3], ψ0; (nswaps!)=nswaps, kwargs...)
-    @test ortho_lims(ψ) == 2:2
+    @test ortho_lims(ψ) == 3:3
     @test nswaps == [1]
 
     nswaps = Int[]
     ψ = apply(CX[1, 4], ψ0; (nswaps!)=nswaps, kwargs...)
-    @test ortho_lims(ψ) == 2:2
+    @test ortho_lims(ψ) == 4:4
     @test nswaps == [2]
 
     nswaps = Int[]
@@ -109,7 +109,7 @@ using Test
     ψ = apply([CX[3, 6], CX[1, 3]], ψ0; (nswaps!)=nswaps, kwargs...)
     @test nswaps == [2, 1]
 
-    @test ITensors.minimal_swap_range([3, 6], [1, 4]) == 4:5
+    @test ITensors.consecutive_range(ITensors.SwapMinimal(), [3, 6], [1, 4]) == 4:5
     nswaps = Int[]
     ψ = apply([CX[3, 6], CX[1, 4]], ψ0; (nswaps!)=nswaps, kwargs...)
     @test nswaps == [2, 1]

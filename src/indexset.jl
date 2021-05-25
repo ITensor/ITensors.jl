@@ -467,6 +467,18 @@ function replaceinds(is::Indices, rep_inds::Pair)
 end
 
 # For notation:
+# `replaceinds(is, i => k, j => l)`
+function replaceinds(is::Indices, rep_inds::Pair{<:Index,<:Index}...)
+  return replaceinds(is, first.(rep_inds), last.(rep_inds))
+end
+
+# For notation:
+# `replaceinds(is, i, k)`
+function replaceinds(is::Indices, inds1::Index, inds2::Index)
+  return replaceinds(is, (inds1,), (inds2,))
+end
+
+# For notation:
 # `replaceinds(is, [i => k, j => l])`
 # `replaceinds(is, (i => k, j => l))`
 function replaceinds(is::Indices, inds1_inds2)
