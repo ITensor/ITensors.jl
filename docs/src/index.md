@@ -16,10 +16,10 @@
 |:-------------------------------------------------------------------------------:|
 |[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|
 
-ITensors is a library for rapidly creating correct and efficient
+ITensor is a library for rapidly creating correct and efficient
 tensor network algorithms. 
 
-The source code for ITensors can be found here: [https://github.com/ITensor/ITensors.jl](https://github.com/ITensor/ITensors.jl).  
+The source code for ITensor can be found here: [https://github.com/ITensor/ITensors.jl](https://github.com/ITensor/ITensors.jl).  
 
 Additional documentation can be found on the ITensor website [itensor.org](https://itensor.org/).
 
@@ -69,7 +69,7 @@ Also note that versions 0.4.0 and below of the MKL.jl package currently don't wo
 
 ## Citation
 
-If you use ITensors.jl in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
+If you use ITensor in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
 
 ```
 @misc{itensor,
