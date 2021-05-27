@@ -28,7 +28,7 @@ end
 (S::TensorStorage * x::Number) = setdata(S, x * data(S))
 (x::Number * S::TensorStorage) = S * x
 
--(S::TensorStorage) = setdata(S,-data(S))
+-(S::TensorStorage) = setdata(S, -data(S))
 
 similar(S::TensorStorage) = setdata(S, similar(data(S)))
 similar(S::TensorStorage, x) = setdata(S, similar(data(S), x))
