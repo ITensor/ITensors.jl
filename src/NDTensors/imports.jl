@@ -6,6 +6,7 @@ import Base:
   Tuple,
   # Symbols
   +,
+  -,
   *,
   # Methods
   checkbounds,
