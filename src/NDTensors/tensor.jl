@@ -127,6 +127,9 @@ Base.imag(T::Tensor) = setstorage(T, imag(storage(T)))
 # Define Base.similar in terms of NDTensors.similar
 Base.similar(T::Tensor, args...) = similar(T, args...)
 
+# To fix ambiguity error with Base.similar(::AbstractArray, ...)
+Base.similar(T::Tensor, ::Type{ElT}) where {ElT} = similar(T, ElT)
+
 #
 # Necessary to overload since the generic fallbacks are
 # slow

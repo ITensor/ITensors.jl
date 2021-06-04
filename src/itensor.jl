@@ -116,7 +116,13 @@ of the input data when possible.
 """
 itensor(args...; kwargs...) = ITensor(AllowAlias(), args...; kwargs...)
 
-ITensor(args...; kwargs...) = ITensor(NeverAlias(), args...; kwargs...)
+#ITensor(args...; kwargs...) = ITensor(NeverAlias(), args...; kwargs...)
+# By default, forward to NeverAlias version
+ITensor(T::Tensor) = ITensor(NeverAlias(), T)
+ITensor(st::TensorStorage, is) = ITensor(NeverAlias(), st, is)
+ITensor(is, st::TensorStorage) = ITensor(NeverAlias(), is, st)
+ITensor(a::Array, args...; kw...) = ITensor(NeverAlias(), a, args...; kw...)
+ITensor(ElT::Type, a::Array, args...; kw...) = ITensor(NeverAlias(), ElT, a, args...; kw...)
 
 """
     inds(T::ITensor)
@@ -1381,14 +1387,24 @@ A = randomITensor(i,j)
 B = randomITensor(ComplexF64,undef,k,j)
 ```
 """
-function randomITensor(::Type{S}, inds::Indices) where {S<:Number}
-  T = ITensor(S, undef, inds)
+function randomITensor(::Type{ElT}, inds::Indices) where {ElT<:Number}
+  return _randomITensor(ElT, inds)
+end
+
+# Fixes ambiguity with QN version
+function randomITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
+  return _randomITensor(ElT, inds)
+end
+
+# Call for case of empty and non-empty collections of indices
+function _randomITensor(::Type{ElT}, inds) where {ElT<:Number}
+  T = ITensor(ElT, undef, inds)
   randn!(T)
   return T
 end
 
-function randomITensor(::Type{S}, inds::Index...) where {S<:Number}
-  return randomITensor(S, inds)
+function randomITensor(::Type{ElT}, inds::Index...) where {ElT<:Number}
+  return randomITensor(ElT, inds)
 end
 
 # To fix ambiguity errors with QN version

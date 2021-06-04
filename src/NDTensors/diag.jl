@@ -32,7 +32,14 @@ const UniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:Number}
 
 getindex(D::UniformDiag, i::Int) = data(D)
 
+#getindex(D::UniformDiag, i::Int) = data(D)
+
 function setindex!(D::UniformDiag, val, i::Int)
+  return error("Cannot set elements of a uniform Diag storage")
+end
+
+function fill!(D::UniformDiag, val)
+
   return error("Cannot set elements of a uniform Diag storage")
 end
 
