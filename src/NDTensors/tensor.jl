@@ -146,6 +146,8 @@ scale!(T::Tensor, α::Number) = rmul!(storage(T), α)
 fill!!(T::Tensor, α::Number) = fill!(T, α)
 fill!(T::Tensor, α::Number) = (fill!(storage(T), α); T)
 
+-(T::Tensor) = setstorage(T, -storage(T))
+
 #function similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
 #  return tensor(similar(StoreT,dim(dims)),dims)
 #end
