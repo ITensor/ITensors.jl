@@ -691,7 +691,7 @@ size(T::ITensor) = dims(T)
 
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
-copy(T::ITensor) = ITensor(copy(tensor(T)))
+copy(T::ITensor) = itensor(copy(tensor(T)))
 
 """
     Array{ElT}(T::ITensor, i:Index...)
@@ -1150,7 +1150,7 @@ for fname in (
       return settensor!(A, $fname(f, tensor(A), args...))
     end
 
-    $fname(A::ITensor, args...; kwargs...) = ITensor($fname(tensor(A), args...; kwargs...))
+    $fname(A::ITensor, args...; kwargs...) = itensor($fname(tensor(A), args...; kwargs...))
 
     # Inlining makes the ITensor functions slower
     @noinline function $fname(A::Tensor, args...; kwargs...)
