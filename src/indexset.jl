@@ -269,6 +269,10 @@ function Base.indexin(ais::Indices, bis::Indices)
   return [findfirst(bis, ais[i]) for i in 1:length(ais)]
 end
 
+#function Base.indexin(a::Index, bis::Indices)
+#  return [findfirst(bis, a)]
+#end
+
 findfirst(is::Indices, args...; kwargs...) = findfirst(fmatch(args...; kwargs...), is)
 
 #
@@ -487,6 +491,10 @@ function swaptags(is::Indices, tags1, tags2, args...; kwargs...)
   return swaptags(fmatch(args...; kwargs...), is, tags1, tags2)
 end
 
+function swaptags(is::Indices, tags12::Pair, args...; kwargs...)
+  return swaptags(is, first(tags12), last(tags12), args...; kwargs...)
+end
+
 function replaceinds(is::Indices, rep_inds::Pair{<:Index,<:Index}...)
   return replaceinds(is, zip(rep_inds...)...)
 end
@@ -507,7 +515,7 @@ end
 hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))
 
 function replaceinds(is::Indices, inds1, inds2)
-  is1 = (inds1)
+  is1 = inds1
   poss = indexin(is1, is)
   is_tuple = Tuple(is)
   for (j, pos) in enumerate(poss)
@@ -533,6 +541,14 @@ replaceind(is::Indices, rep_i::Pair{<:Index,<:Index}) = replaceinds(is, rep_i)
 
 function swapinds(is::Indices, inds1, inds2)
   return replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
+end
+
+function swapinds(is::Indices, inds1::Index, inds2::Index)
+  return swapinds(is, (inds1,), (inds2,))
+end
+
+function swapinds(is::Indices, inds12::Pair)
+  return swapinds(is, first(inds12), last(inds12))
 end
 
 swapind(is::Indices, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))

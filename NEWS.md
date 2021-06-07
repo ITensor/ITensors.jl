@@ -1,28 +1,68 @@
+This file is a (mostly) comprehensive list of changes made in each release of ITensors.jl (for a completely comprehensive but more verbose list, see the [commit history on Github](https://github.com/ITensor/ITensors.jl/commits/main).
+
+While we are in v0.x of the package, we will follow the convention that updating from v0.x.y to v0.x.(y+1) (for example v0.1.15 to v0.1.16) should not break your code, unless you are using internal/undocumented features of the code, while updating from `v0.x.y` to `v0.(x+1).y` might break your code, though we will try to add deprecation warnings when possible, such as for simple cases where the name of a function changes.
+
+Note that as of Julia v1.5, in order to see deprecation warnings you will need to start Julia with `julia --depwarn=yes` (previously they were on by default). Please run your code like this before upgrading between minor versions of the code (for example from v0.1.41 to v0.2.0).
+
+After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
+
 ITensor v0.2.0 Release Notes
 ==============================
-- Fix bug in `MPO(::AutoMPO, ::Vector{<:Index})` where for fermionic models the AutoMPO was being modified in-place (PR #659) (@mtfishman).
-- Remove size type parameter from ITensor and IndexSet (PR #591) (@kshyatt).
-- Add support for using end in setindex! for ITensors (PR #596) (@mtfishman).
-- Contraction sequence optimization (PR #589) (@mtfishman).
-- Make TagSet code cleaner and more generic, and improve constructor from String performance (PR #610) (@saolof).
-- Define some missing methods for AbstractMPS broadcasting (#609) (@kshyatt).
-- ITensor constructors from Array now only convert to floating point for `Array{Int}` and `Array{Complex{Int}}`. That same conversion is added for QN ITensor constructors to be consistent with non-QN versions (PR #620) (@mtfishman).
-- New ITensor constructors like `itensor(Int, [0 1; 1 0], i, j)` to specify the exact element type desired (PR #620) (@mtfishman).
-- Speed up randomITensor with undef constructor (PR #616) (@emstoudenmire).
-- Fix definition of Adagdn for Electron (PR #615) (@emstoudenmire).
-- Make ops less strict about input (PR #602) (@emstoudenmire).
-- Add onehot as new name for setelt (PR #580) (@emstoudenmire).
-- Support randomMPS(ComplexF64,s,chi) (PR #377) (@emstoudenmire).
-
-Deprecations:
-- `store` is deprecated in favor of `storage` for getting the storage of an ITensor. Similarly `ITensors.setstore[!]` -> `ITensors.setstorage[!]`.
 
 Breaking changes:
-- The tensor order type paramater has been removed from the `ITensor` type, so you can no longer write `ITensor{3}` to specify an order 3 ITensor (PR #591).
-- ITensors now store a `Tuple` of `Index` instead of an `IndexSet` (PR #).
-- The `IndexSet{T}` type has been redefined as a type alias for `Vector{T<:Index}` (which is subject to change). Therefore it no longer has a type parameter for the number of indices, similar to the change to the `ITensor` type. If you were using the plain `IndexSet` type, code should generally still work properly. In general you should not have to use `IndexSet`, and can just use `Tuple` or `Vector` of `Index` instead, such as `is = (i, j, k)` or `is = [i, j, k]`. Priming, tagging, and set operations now work generically on those types.
-- `ITensor` constructors from collections of `Index`, such as `ITensor(i, j, k)`, now return an `ITensor` with `EmptyStorage` (previously called `Empty`) storage instead of `Dense` or `BlockSparse` storage filled with 0 values. Most operations should still work that worked previously, but please contact us if there are issues.
-- The `NDTensors` module has been moved into the `ITensors` package, so `ITensors` no longer depends on the standalone `NDTensors` package. This should only effect users who were using both `NDTensors` and `ITensors` seperately. If you want to use the latest `NDTensors` library, you should do `using ITensors.NDTensors`. Note the current `NDTensors.jl` packge will still exist, but for now developmentof `NDTensors` will occur within `ITensors.jl`.
+-----------------
+
+- Change QN convention of the Qubit site type to track the total number of 1 bits instead of the net number of 1 bits vs 0 bits (i.e. change the QN from +1/-1 to 0/1) (PR #676).
+- Remove `IndexVal` type in favor of `Pair{<:Index}`. `IndexVal{IndexT}` is now an alias for `Pair{IndexT,Int}`, so code using `IndexVal` such as `IndexVal(i, 2)` should generally still work. However, users should change from `IndexVal(i, 2)` to `i => 2` (PR #665).
+- Rename the `state` functions currently defined for various site types to `val` for mapping a string name for an index to an index value (used in ITensor indexing and MPS construction). `state` functions now return single-index ITensors representing various single-site states (PR #664).
+- `maxlinkdim(::MPO/MPS)` returns a minimum of `1` (previously it returned 0 for MPS/MPO without and link indices) (PR #663).
+- The `NDTensors` module has been moved into the `ITensors` package, so `ITensors` no longer depends on the standalone `NDTensors` package. This should only effect users who were using both `NDTensors` and `ITensors` seperately. If you want to use the latest `NDTensors` library, you should do `using ITensors.NDTensors` instead of `using NDTensors`, and will need to install `ITensors` with `using Pkg; Pkg.add("ITensors")` in order to use the latest versions of `NDTensors`. Note the current `NDTensors.jl` package will still exist, but for now developmentof `NDTensors` will occur within `ITensors.jl` (PR # 650).
+- `ITensor` constructors from collections of `Index`, such as `ITensor(i, j, k)`, now return an `ITensor` with `EmptyStorage` (previously called `Empty`) storage instead of `Dense` or `BlockSparse` storage filled with 0 values. Most operations should still work that worked previously, but please contact us if there are issues (PR #641).
+- ITensors now store a `Tuple` of `Index` instead of an `IndexSet` (PR #626).
+- The ITensor type no longer has separate field `inds` and `store`, just a single field `tensor` (PR #626).
+- The `IndexSet{T}` type has been redefined as a type alias for `Vector{T<:Index}` (which is subject to change to some other collection of indices, and likely will be removed in ITensors v0.3). Therefore it no longer has a type parameter for the number of indices, similar to the change to the `ITensor` type. If you were using the plain `IndexSet` type, code should generally still work properly. In general you should not have to use `IndexSet`, and can just use `Tuple` or `Vector` of `Index` instead, such as `is = (i, j, k)` or `is = [i, j, k]`. Priming, tagging, and set operations now work generically on those types (PR #626).
+- ITensor constructors from Array now only convert to floating point for `Array{Int}` and `Array{Complex{Int}}`. That same conversion is added for QN ITensor constructors to be consistent with non-QN versions (PR #620) (@mtfishman).
+- The tensor order type paramater has been removed from the `ITensor` type, so you can no longer write `ITensor{3}` to specify an order 3 ITensor (PR #591) (@kshyatt).
+
+Deprecations:
+-----------------
+
+- `Index(::Int)` and `getindex(i::Index, n::Int)` are deprecated in favor of `Pair` syntax (using `i => 3` instead of `i(3)` or `i[3]`) (PR #665).
+- `Base.iterate(i::Index, state = 1)` is deprecated in favor of `eachindval` (PR #665).
+- Deprecate `MPO(::MPS)` in favor of `outer(::MPS, ::MPS)` (PR #663).
+- Add `OpSum` as alternative (preferred) name to `AutoMPO` (PR #663).
+- `noise!(::Sweeps, ...)` and `cutoff!(::Sweeps, ...)` are deprecated in favor of `setnoise!` and `setsweeps!` (PR #624).
+- `emptyITensor(Any)` is deprecated in favor of `emptyITensor()` (PR #620).
+- `store` is deprecated in favor of `storage` for getting the storage of an ITensor. Similarly `ITensors.setstore[!]` -> `ITensors.setstorage[!]` (PR #620).
+
+Bug fixes and new features:
+-----------------
+
+- Fix negating of QN ITensor (PR #672) (@emstoudenmire).
+- Add support for indexing into ITensors with strings, such as `s = siteind("S=1/2"); T = randomITensor(s); T[s => "Up"]` (indices must have tags that have `val` overloads) (PR #665).
+- Add `eachindval(::Index)` and `eachval(::Index)` for iterating through the values of an Index (PR #665).
+- Rename the `state` functions currently defined for various site types to `val` for mapping a string name for an index to an index value (used in ITensor indexing and MPS construction). `state` functions now return single-index ITensors representing various single-site states (PR #664).
+- Out-of-place broadcasting on MPS that maps ITensors to ITensors like `2 .* psi` will return an MPS (previously it returned a `Vector{ITensor}`) (PR #663).
+- Add `outer(psi::MPS, phi::MPS)::MPO -> |psi><phi|` to do an outer product of two `MPS` and `projector(psi::MPS)::MPO -> |psi><psi|`, deprecate `MPO(::MPS)` in favor of these (PR #663).
+- Redefine `eltype(::MPS/MPO)` as ITensor, i.e. the actual element type of the storage data, thinking about the MPS as a `Vector{ITensor}`. This matches better with how `eltype` is used in general in Julia, and therefore helps MPS by more compatible with what generic Julia code expects (like broadcasting, where an issue related to this came up). A new function `promote_itensor_eltype(::MPS/MPO)` returns the promoted element types of the ITensors of the MPS to replace the old functionality (PR #663).
+- Fix a bug in broadcasting an MPS/MPO such as `psi .*= 2` where previously it wasn't expanding the orthogonality limits to the edge of the system. Also now out-of-place broadcasting like `2 .* psi` will return an MPS (previously it returned a Vector{ITensor}) (PR #663).
+- Fix bug in `MPO(::AutoMPO, ::Vector{<:Index})` where for fermionic models the AutoMPO was being modified in-place (PR #659) (@mtfishman).
+- Add `Array` to `MPS` constructor (PR #649).
+- Faster noise term in DMRG (PR #623)
+- Add `expect` and `correlation_matrix` to help measure expectation values and correlation matrices of MPS (PR #622).
+- Add `real`, `imag`, `conj` for ITensors (PR #621).
+- ITensor constructors from Array now only convert to floating point for `Array{Int}` and `Array{Complex{Int}}`. That same conversion is added for QN ITensor constructors to be consistent with non-QN versions (PR #620) (@mtfishman).
+- New ITensor constructors like `itensor(Int, [0 1; 1 0], i, j)` to specify the exact element type desired (PR #620) (@mtfishman).
+- Make QN ITensor constructor error in case of no blocks (PR #617).
+- Speed up `randomITensor` with `undef` constructor (PR #616) (@emstoudenmire).
+- Fix definition of `Adagdn` for Electron (PR #615) (@emstoudenmire).
+- Add `onehot` as new name for `setelt` (PR #615) (@emstoudenmire).
+- Support `randomMPS(ComplexF64,s,chi)` (PR #615) (@emstoudenmire).
+- Make TagSet code cleaner and more generic, and improve constructor from String performance (PR #610) (@saolof).
+- Define some missing methods for AbstractMPS broadcasting (#609) (@kshyatt).
+- Make ops less strict about input (PR #602) (@emstoudenmire).
+- Add support for using `end` in `setindex!` for ITensors (PR #596) (@mtfishman).
+- Contraction sequence optimization (PR #589) (@mtfishman).
 
 ITensors v0.1.41 Release Notes
 ==============================

@@ -104,6 +104,7 @@ end
       @test storage(A) isa NDTensors.Dense{Float64}
 
       @test ndims(A) == order(A) == 2 == length(inds(A))
+      @test Order(A) == Order(2)
       @test size(A) == dims(A) == (2, 2)
       @test dim(A) == 4
 

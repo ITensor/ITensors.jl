@@ -37,6 +37,8 @@ settings = Dict(
       ],
       "OpSum" => "OpSum.md",
     ],
+    "Upgrade guide" => "UpgradeGuide.md",
+    "ITensor indices and Einstein notation" => "Einsum.md",
     "Advanced usage guide" => [
       "Advanced usage guide" => "AdvancedUsageGuide.md",
       "Multithreading" => "Multithreading.md",
