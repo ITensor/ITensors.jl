@@ -38,6 +38,7 @@ Deprecations:
 Bug fixes and new features:
 -----------------
 
+- Allow Pair inputs in `swaptags` and `swapinds`, i.e. `swaptags(A, "i" => "j")` and `swapinds(A, i => j)` (PR #676).
 - Fix negating of QN ITensor (PR #672) (@emstoudenmire).
 - Add support for indexing into ITensors with strings, such as `s = siteind("S=1/2"); T = randomITensor(s); T[s => "Up"]` (indices must have tags that have `val` overloads) (PR #665).
 - Add `eachindval(::Index)` and `eachval(::Index)` for iterating through the values of an Index (PR #665).
