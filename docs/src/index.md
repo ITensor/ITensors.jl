@@ -37,7 +37,7 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 ## News
 
-ITensors.jl v0.2 will be released, with a few breaking changes as well as a variety of bug fixes
+ITensors.jl v0.2 has been released, with a few breaking changes as well as a variety of bug fixes
 and new features. Take a look at the [upgrade guide](https://itensor.github.io/ITensors.jl/dev/UpgradeGuide.html)
 for help upgrading your code as well as the [change log](https://github.com/ITensor/ITensors.jl/blob/main/NEWS.md)
 for a comprehensive list of changes.
