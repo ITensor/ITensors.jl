@@ -43,5 +43,4 @@ let
   # Run the DMRG algorithm, returning energy and optimized MPS
   energy, psi = dmrg(H, psi0, sweeps)
   @printf("Final energy = %.12f\n", energy)
-
 end

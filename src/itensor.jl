@@ -752,7 +752,7 @@ Same as `T[]`.
 """
 scalar(T::ITensor)::Any = T[]
 
-lastindex(A::ITensor, n::Int64) = LastVal(n)
+lastindex(A::ITensor, n::Int64) = LastVal()
 
 """
     getindex(T::ITensor, I::Int...)

@@ -43,24 +43,44 @@ end
       @test !hascommoninds(A, C)
     end
 
-    @testset "Get element with end" begin
+    @testset "Get element with end (lastindex, LastIndex)" begin
       a = Index(2)
       b = Index(3)
       A = randomITensor(a, b)
       @test A[end, end] == A[a => 2, b => 3]
+      @test A[end - 1, end] == A[a => 1, b => 3]
+      @test A[end - 1, end - 1] == A[a => 1, b => 2]
+      @test A[end - 1, end - 2] == A[a => 1, b => 1]
+      @test A[end - 1, 2 * (end - 2)] == A[a => 1, b => 2]
       @test A[2, end] == A[a => 2, b => 3]
+      @test A[2, end - 1] == A[a => 2, b => 2]
       @test A[1, end] == A[a => 1, b => 3]
+      @test A[1, end - 2] == A[a => 1, b => 1]
       @test A[end, 2] == A[a => 2, b => 2]
+      @test A[end - 1, 2] == A[a => 1, b => 2]
       @test A[a => end, b => end] == A[a => 2, b => 3]
+      @test A[a => end - 1, b => end] == A[a => 1, b => 3]
+      @test A[a => end, b => end - 1] == A[a => 2, b => 2]
+      @test A[a => end - 1, b => 2 * (end - 2)] == A[a => 1, b => 2]
+      @test A[a => 2, b => end] == A[a => 2, b => 3]
       @test A[a => 2, b => end] == A[a => 2, b => 3]
       @test A[a => 1, b => end] == A[a => 1, b => 3]
       @test A[a => end, b => 3] == A[a => 2, b => 3]
       @test A[a => end, b => 2] == A[a => 2, b => 2]
       @test A[b => end, a => end] == A[a => 2, b => 3]
+      @test A[b => end - 1, a => end] == A[a => 2, b => 2]
+      @test A[b => end - 1, a => end - 1] == A[a => 1, b => 2]
+      @test A[b => end - 2, a => end - 1] == A[a => 1, b => 1]
+      @test A[b => 2 * (end - 2), a => end - 1] == A[a => 1, b => 2]
       @test A[b => 2, a => end] == A[a => 2, b => 2]
+      @test A[b => 2, a => end - 1] == A[a => 1, b => 2]
       @test A[b => 1, a => end] == A[a => 2, b => 1]
+      @test A[b => 1, a => end - 1] == A[a => 1, b => 1]
       @test A[b => end, a => 2] == A[a => 2, b => 3]
+      @test A[b => end - 1, a => 2] == A[a => 2, b => 2]
       @test A[b => end, a => 1] == A[a => 1, b => 3]
+      @test A[b => end - 2, a => 1] == A[a => 1, b => 1]
+      @test A[b => end^2 - 7, a => 1] == A[a => 1, b => 2]
     end
 
     @testset "Set element with end" begin
