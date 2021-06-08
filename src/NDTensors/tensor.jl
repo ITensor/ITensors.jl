@@ -86,6 +86,10 @@ ind(T::Tensor, j::Integer) = inds(T)[j]
 
 eachindex(T::Tensor) = CartesianIndices(dims(inds(T)))
 
+eachblock(T::Tensor) = eachblock(inds(T))
+
+eachdiagblock(T::Tensor) = eachdiagblock(inds(T))
+
 eltype(::Tensor{ElT}) where {ElT} = ElT
 
 strides(T::Tensor) = dim_to_strides(inds(T))

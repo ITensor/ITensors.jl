@@ -1,5 +1,5 @@
 """
-BlockDim
+    BlockDim
 
 An index for a BlockSparseTensor.
 """
@@ -9,7 +9,7 @@ const BlockDim = Vector{Int}
 dim(d::BlockDim) = sum(d)
 
 """
-BlockDims{N}
+    BlockDims{N}
 
 Dimensions used for BlockSparse NDTensors.
 Each entry lists the block sizes in each dimension.
@@ -52,7 +52,7 @@ function dim(ds::BlockDims{N}) where {N}
 end
 
 """
-nblocks(::BlockDim)
+    nblocks(::BlockDim)
 
 The number of blocks of the BlockDim.
 """
@@ -61,7 +61,16 @@ function nblocks(ind::BlockDim)
 end
 
 """
-nblocks(::BlockDims,i::Integer)
+    ndiagblocks(::Any)
+
+The number of blocks along the diagonal.
+"""
+function ndiagblocks(x)
+  return minimum(nblocks(x))
+end
+
+"""
+    nblocks(::BlockDims,i::Integer)
 
 The number of blocks in the specified dimension.
 """
@@ -70,7 +79,7 @@ function nblocks(inds::Tuple, i::Integer)
 end
 
 """
-nblocks(::BlockDims,is)
+    nblocks(::BlockDims,is)
 
 The number of blocks in the specified dimensions.
 """
@@ -79,13 +88,21 @@ function nblocks(inds::Tuple, is::NTuple{N,Int}) where {N}
 end
 
 """
-nblocks(::BlockDims)
+    nblocks(::BlockDims)
 
 A tuple of the number of blocks in each
 dimension.
 """
 function nblocks(inds::NTuple{N,<:Any}) where {N}
   return ntuple(i -> nblocks(inds, i), Val(N))
+end
+
+function eachblock(inds::Tuple)
+  return (Block(b) for b in CartesianIndices(_Tuple(nblocks(inds))))
+end
+
+function eachdiagblock(inds::Tuple)
+  return (Block(ntuple(_ -> i, length(inds))) for i in 1:ndiagblocks(inds))
 end
 
 """
@@ -133,7 +150,7 @@ function blockdim(inds, block)
 end
 
 """
-blockdiaglength(inds::BlockDims,block)
+    blockdiaglength(inds::BlockDims,block)
 
 The length of the diagonal of the specified block.
 """

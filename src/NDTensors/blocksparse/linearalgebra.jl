@@ -302,14 +302,23 @@ function LinearAlgebra.eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
-function LinearAlgebra.exp(
+function exp(
   T::Union{BlockSparseMatrix{ElT},Hermitian{ElT,<:BlockSparseMatrix{ElT}}}
 ) where {ElT<:Union{Real,Complex}}
   expT = BlockSparseTensor(ElT, undef, nzblocks(T), inds(T))
   for b in eachnzblock(T)
     all(==(b[1]), b) || error("exp currently supports only block-diagonal matrices")
+  end
+  for b in eachdiagblock(T)
     blockT = blockview(T, b)
-    blockview(expT, b) .= exp(blockT)
+    if isnothing(blockT)
+      # Block was not found in the list, treat as 0
+      id_block = Matrix{ElT}(I, blockdims(T, b))
+      insertblock!(expT, b)
+      blockview(expT, b) .= id_block
+    else
+      blockview(expT, b) .= exp(blockT)
+    end
   end
   return expT
 end

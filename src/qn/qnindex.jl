@@ -195,7 +195,7 @@ end
 
 dim(i::QNIndex, b::Block) = blockdim(space(i), b)
 
-eachblock(i::Index) = (Block(n) for n in 1:nblocks(i))
+NDTensors.eachblock(i::Index) = (Block(n) for n in 1:nblocks(i))
 
 # Return the first block of the QNIndex with the flux q
 function block(::typeof(first), ind::QNIndex, q::QN)

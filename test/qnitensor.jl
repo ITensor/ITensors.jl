@@ -1563,6 +1563,21 @@ Random.seed!(1234)
       @test Array(Aexp, i1, i1') ≈ Amatexp rtol = 5e-14
     end
 
+    @testset "Regression test for exp of QN ITensor with missing diagonal blocks" begin
+      i = Index([QN(0) => 2, QN(1) => 3])
+      A[1, 1] = 1.2
+      expA = exp(A; ishermitian=false)
+      for n in 1:mindim(A)
+        @test expA[n, n] == exp(A[n, n])
+      end
+      @test expA ≈ exp(dense(A))
+      expA = exp(A; ishermitian=true)
+      for n in 1:mindim(A)
+        @test expA[n, n] == exp(A[n, n])
+      end
+      @test expA ≈ exp(dense(A))
+    end
+
     @testset "Mixed arrows" begin
       i1 = Index([QN(0) => 1, QN(1) => 2], "i1")
       i2 = Index([QN(0) => 1, QN(1) => 2], "i2")
