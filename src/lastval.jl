@@ -17,9 +17,6 @@ LastVal() = LastVal(identity)
 (-l::LastVal) = LastVal(x -> -l.f(x))
 ^(l::LastVal, n::Integer) = LastVal(x -> l.f(x)^n)
 
-# Implement when ITensors can be indexed by a single integer
-#lastindex(A::ITensor) = dim(A)
-
 lastval_to_int(n::Int, l::LastVal) = l.f(n)
 lastval_to_int(::Int, n::Int) = n
 lastval_to_int(dimsT::Tuple, I::Tuple) = lastval_to_int.(dimsT, I)

@@ -81,6 +81,12 @@ end
       @test A[b => end, a => 1] == A[a => 1, b => 3]
       @test A[b => end - 2, a => 1] == A[a => 1, b => 1]
       @test A[b => end^2 - 7, a => 1] == A[a => 1, b => 2]
+
+      B = randomITensor(i)
+      @test B[i => end] == B[i => dim(i)]
+      @test B[i => end-1] == B[i => dim(i)-1]
+      @test B[end] == B[dim(i)]
+      @test B[end-1] == B[dim(i)-1]
     end
 
     @testset "Set element with end (lastindex, LastIndex)" begin
