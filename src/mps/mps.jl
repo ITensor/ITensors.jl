@@ -227,8 +227,7 @@ random MPS.
 """ randomMPS(::Vector{<:Index}, ::Any)
 
 """
-    MPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
-    productMPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
+    MPS(::Type{T<:Number}, ivals::Vector{<:Pair{<:Index}})
 
 Construct a product state MPS with element type `T` and
 nonzero values determined from the input IndexVals.
@@ -264,8 +263,7 @@ end
 const productMPS = MPS
 
 """
-    MPS(ivals::Vector{<:IndexVal})
-    productMPS(ivals::Vector{<:IndexVal})
+    MPS(ivals::Vector{<:Pair{<:Index}})
 
 Construct a product state MPS with element type `Float64` and
 nonzero values determined from the input IndexVals.
@@ -319,7 +317,6 @@ end
 
 """
     MPS(sites::Vector{<:Index},states)
-    productMPS(sites::Vector{<:Index},states)
 
 Construct a product state MPS having
 site indices `sites`, and which corresponds to the initial
