@@ -1565,6 +1565,7 @@ Random.seed!(1234)
 
     @testset "Regression test for exp of QN ITensor with missing diagonal blocks" begin
       i = Index([QN(0) => 2, QN(1) => 3])
+      A = ITensor(i', dag(i))
       A[1, 1] = 1.2
       expA = exp(A; ishermitian=false)
       for n in 1:mindim(A)

@@ -23,7 +23,8 @@ eachdiagblock(H::Hermitian{<:Number,<:Tensor}) = eachdiagblock(parent(H))
 
 nblocks(H::Hermitian{<:Number,<:Tensor}) = nblocks(parent(H))
 
-blockview(H::Hermitian{<:Number,<:Tensor}, block) = _blockview(H, blockview(parent(H), block))
+function blockview(H::Hermitian{<:Number,<:Tensor}, block)
+  return _blockview(H, blockview(parent(H), block))
+end
 _blockview(::Hermitian{<:Number,<:Tensor}, blockviewH) = Hermitian(blockviewH)
 _blockview(::Hermitian{<:Number,<:Tensor}, ::Nothing) = nothing
-
