@@ -26,14 +26,17 @@ function space(
   qnname_parity="Parity",
   qnname_number="Number",
 )
-  return space(
-    SiteType("S=1/2");
-    conserve_qns=conserve_qns,
-    conserve_sz=conserve_number,
-    conserve_szparity=conserve_parity,
-    qnname_sz=qnname_number,
-    qnname_szparity=qnname_parity,
-  )
+  if conserve_number && conserve_parity
+    return [
+      QN((qnname_number, 0), (qnname_parity, 0, 2)) => 1,
+      QN((qnname_number, 1), (qnname_parity, 1, 2)) => 1,
+    ]
+  elseif conserve_number
+    return [QN(qnname_number, 0) => 1, QN(qnname_number, 1) => 1]
+  elseif conserve_parity
+    return [QN(qnname_parity, 0, 2) => 1, QN(qnname_parity, 1, 2) => 1]
+  end
+  return 2
 end
 
 val(::ValName"0", st::SiteType"Qubit") = 1

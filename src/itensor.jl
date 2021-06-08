@@ -647,6 +647,8 @@ The number of indices, `length(inds(A))`.
 """
 order(T::ITensor) = ndims(T)
 
+Order(T::ITensor) = Order(order(T))
+
 ndims(T::ITensor) = ndims(tensor(T))
 
 """

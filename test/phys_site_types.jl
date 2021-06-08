@@ -17,15 +17,15 @@ using ITensors, Test
     @test hastags(s, "Qubit,Site")
     @test dim(s) == 2
     @test nblocks(s) == 2
-    @test qn(s, 1) == QN("Parity", 1, 2)
-    @test qn(s, 2) == QN("Parity", 0, 2)
+    @test qn(s, 1) == QN("Parity", 0, 2)
+    @test qn(s, 2) == QN("Parity", 1, 2)
 
     s = siteind("Qubit"; conserve_number=true, conserve_parity=true)
     @test hastags(s, "Qubit,Site")
     @test dim(s) == 2
     @test nblocks(s) == 2
-    @test qn(s, 1) == QN(("Parity", 1, 2), ("Number", +1))
-    @test qn(s, 2) == QN(("Parity", 0, 2), ("Number", -1))
+    @test qn(s, 1) == QN(("Parity", 0, 2), ("Number", 0))
+    @test qn(s, 2) == QN(("Parity", 1, 2), ("Number", 1))
 
     s = siteinds("Qubit", N)
 
