@@ -28,10 +28,16 @@ replace the current BLAS and LAPACK implementation used by Julia with
 MKL by using the MKL.jl package. Please follow the instructions 
 [here](https://github.com/JuliaComputing/MKL.jl).
 
-To use the latest version of ITensors.jl, use `update ITensors`. 
-We will commonly release new minor versions with bug fixes and 
-improvements. However, make sure to double check before doing this, 
-because new releases may be breaking.
+To use the latest registered (stable) version of ITensors.jl, use `update ITensors`
+in `Pkg` mode or `import Pkg; Pkg.update("ITensors")`.
+We will commonly release new patch versions (such as updating from `v0.1.12` to 
+`v0.1.13`) with bug fixes and improvements. However, make sure to double check before
+updating between minor versions (such as from `v0.1.41` to `v0.2.0`) because new minor
+releases may be breaking.
+
+Remember that if you are compiling system images of ITensors.jl, such as with the
+`ITensors.compile()` command, you will need to rerurn this command to compile
+the new version of ITensor after an update.
 
 To try the "development branch" of ITensors.jl (for example, if 
 there is a feature or fix we added that hasn't been released yet), 

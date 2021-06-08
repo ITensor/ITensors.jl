@@ -243,6 +243,14 @@ function contract!!(
   return RR
 end
 
+# For ambiguity with versions in combiner.jl
+function contract!!(
+  R::EmptyTensor, labelsR, T1::EmptyTensor, labelsT1, T2::CombinerTensor, labelsT2
+)
+  RR = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
+  return RR
+end
+
 promote_rule(::Type{EmptyNumber}, ::Type{T}) where {T<:Number} = T
 
 function promote_rule(

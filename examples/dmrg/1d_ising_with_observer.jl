@@ -23,7 +23,7 @@ end
 let
   N = 100
   sites = siteinds("S=1/2", N)
-  psi0 = randomMPS(sites, 10)
+  psi0 = randomMPS(sites; linkdims=10)
 
   # define parameters for DMRG sweeps
   sweeps = Sweeps(15)

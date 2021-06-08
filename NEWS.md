@@ -38,6 +38,7 @@ Deprecations:
 Bug fixes and new features:
 -----------------
 
+- Fix bug when taking the exponential of a QN ITensor with missing diagonal blocks (PR #682).
 - Generalize indexing to with `end` to allow arithmetic such as `A[i => end - 1, j => 2]` (PR #679).
 - Allow Pair inputs in `swaptags` and `swapinds`, i.e. `swaptags(A, "i" => "j")` and `swapinds(A, i => j)` (PR #676).
 - Fix negating of QN ITensor (PR #672) (@emstoudenmire).

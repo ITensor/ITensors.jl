@@ -37,9 +37,7 @@ settings = Dict(
       ],
       "OpSum" => "OpSum.md",
     ],
-    "Upgrade guides" => [
-      "Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md",
-    ],
+    "Upgrade guides" => ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
     "ITensor indices and Einstein notation" => "Einsum.md",
     "Advanced usage guide" => [
       "Advanced usage guide" => "AdvancedUsageGuide.md",

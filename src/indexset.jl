@@ -31,13 +31,6 @@ IndexSet(inds::Index...) = collect(inds)
 IndexSet(f::Function, N::Int) = map(f, 1:N)
 IndexSet(f::Function, ::Order{N}) where {N} = IndexSet(f, N)
 
-# This is a cache of [Val(1), Val(2), ...]
-# Hard-coded for now to only handle tensors up to order 100
-const ValCache = Val[Val(n) for n in 0:100]
-# Faster conversions of collection to tuple than `Tuple(::AbstractVector)`
-_NTuple(::Val{N}, v::Vector{T}) where {N,T} = ntuple(n -> v[n], Val(N))
-_Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v) + 1], v)
-_Tuple(t::Tuple) = t
 Tuple(is::IndexSet) = _Tuple(is)
 NTuple{N}(is::IndexSet) where {N} = _NTuple(Val(N), is)
 
@@ -765,17 +758,6 @@ function NDTensors.nblocks(inds::NTuple{N,<:Index}) where {N}
 end
 
 ndiagblocks(inds) = minimum(nblocks(inds))
-
-# TODO: generic to Indices and BlockDims
-function eachblock(inds::Indices)
-  return (Block(b) for b in CartesianIndices(_Tuple(nblocks(inds))))
-end
-
-# TODO: turn this into an iterator instead
-# of returning a Vector
-function eachdiagblock(inds::Indices)
-  return (Block(ntuple(_ -> i, length(inds))) for i in 1:ndiagblocks(inds))
-end
 
 """
     flux(inds::Indices, block::Tuple{Vararg{Int}})
