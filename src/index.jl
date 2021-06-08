@@ -510,7 +510,7 @@ NDTensors.ind(iv::Pair{<:Index}) = first(iv)
 
 val(iv::Pair{<:Index}) = val(iv.first, iv.second)
 
-val(i::Index, ::LastVal) = dim(i)
+val(i::Index, l::LastVal) = l.f(dim(i))
 
 """
     isindequal(i::Index, iv::IndexVal)
