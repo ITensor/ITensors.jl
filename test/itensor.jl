@@ -83,7 +83,7 @@ end
       @test A[b => end^2 - 7, a => 1] == A[a => 1, b => 2]
     end
 
-    @testset "Set element with end" begin
+    @testset "Set element with end (lastindex, LastIndex)" begin
       _i = Index(2, "i")
       _j = Index(3, "j")
 
@@ -98,6 +98,10 @@ end
       A = ITensor(_i, _j)
       A[_j => end, _i => 1] = 4.5
       @test A[_i => 1, _j => dim(_j)] == 4.5
+
+      A = ITensor(_i, _j)
+      A[_j => end - 1, _i => 1] = 4.5
+      @test A[_i => 1, _j => dim(_j) - 1] == 4.5
     end
 
     @testset "Random" begin
