@@ -537,11 +537,11 @@ m = 4
 
 s = siteinds("S=1/2",N)
 psi = randomMPS(s; linkdims=m)
-Czz = correlator(psi,"Sz","Sz")
+Czz = correlation_matrix(psi,"Sz","Sz")
 
 s = siteinds("Electron",N; conserve_qns=true)
 psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
-Cuu = correlator(psi,"Cdagup","Cup";site_range=2:8)
+Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
 ```
 """
 function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; kwargs...)
