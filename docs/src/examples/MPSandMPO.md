@@ -73,6 +73,49 @@ maxdim = 10
 M = MPS(A,sites;cutoff=cutoff,maxdim=maxdim)
 ```
 
+## Obtaining Elements of a Tensor Represented by an MPS
+
+A matrix product state (MPS) or tensor train (TT) is a format for representing a large tensor having N indices in terms of N smaller tensors. Given an MPS represeting a tensor T
+we can obtain a particular element ``T^{s_1 s_2 s_3 \cdots s_N}``
+of that tensor using code similar to the following code below.
+
+In the example code below we will obtain the element ``T^{1,2,1,1,2,1,2,2,2,1}`` of the tensor T
+which is (implicitly) defined by the MPS psi:
+
+```@example mps_element
+using ITensors # hide
+let # hide
+N = 10
+s = siteinds(2,N)
+chi = 4
+psi = randomMPS(s;linkdims=chi)
+
+# Make an array of integers of the element we
+# want to obtain
+el = [1,2,1,1,2,1,2,2,2,1]
+
+V = ITensor(1.)
+for j=1:N
+  V *= (psi[j]*state(s[j],el[j]))
+end
+v = scalar(V)
+
+# v is the element we wanted to obtain:
+@show v
+end # hide
+```
+
+The call to `state(s[j],el[j])` in the code above makes a single-index ITensor
+with the Index `s[j]` and the entry at location `el[j]` set to 1.0, with all other 
+entries set to 0.0. Contracting this tensor with the MPS tensor at site `j` 
+can be viewed as "clamping" or "fixing" the index to a set value. The resulting
+tensors are contracted sequentially, overwriting the ITensor `V`, and the final
+scalar value of `V` is the tensor element we seek.
+
+See below for a visual depiction of what the above code is doing:
+
+![](mps_element.png)
+
 ## Expected Value of Local Operators
 
 When using an MPS to represent a quantum wavefunction ``|\psi\rangle``
