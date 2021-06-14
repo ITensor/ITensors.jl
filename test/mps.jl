@@ -93,6 +93,11 @@ include("util.jl")
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
+
+      psi = MPS(sites, "X+")
+      for j in 1:N
+        @test (psi[j] * op(sites, "X", j) * dag(prime(psi[j], "Site")))[] ≈ 1.0
+      end
     end
 
     @testset "Int input" begin
