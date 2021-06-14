@@ -302,21 +302,21 @@ function MPS(::Type{T}, sites::Vector{<:Index}, states) where {T<:Number}
   M = MPS(N)
 
   if N == 1
-    M[1] = state(sites[1],states[1])
+    M[1] = state(sites[1], states[1])
     return M
   end
 
   space = hasqns(sites[1]) ? QN() => 1 : 1
   links = [Index(space; tags="Link,l=$n") for n in 1:N]
 
-  M[1] = ITensor(T,sites[1],links[1])
-  M[1] += state(sites[1],states[1]) * state(links[1],1)
+  M[1] = ITensor(T, sites[1], links[1])
+  M[1] += state(sites[1], states[1]) * state(links[1], 1)
   for n in 2:(N - 1)
-    M[n] = ITensor(T,dag(links[n-1]),sites[n],links[n])
-    M[n] += state(dag(links[n-1]),1)*state(sites[n],states[n])*state(links[n],1)
+    M[n] = ITensor(T, dag(links[n - 1]), sites[n], links[n])
+    M[n] += state(dag(links[n - 1]), 1) * state(sites[n], states[n]) * state(links[n], 1)
   end
-  M[N] = ITensor(T,dag(links[N-1]),sites[N])
-  M[N] += state(dag(links[N-1]),1)*state(sites[N],states[N])
+  M[N] = ITensor(T, dag(links[N - 1]), sites[N])
+  M[N] += state(dag(links[N - 1]), 1) * state(sites[N], states[N])
 
   return M
 end
@@ -324,12 +324,12 @@ end
 function MPS(
   ::Type{T}, sites::Vector{<:Index}, state::Union{String,Integer}
 ) where {T<:Number}
-  return MPS(T, sites, fill(state,length(sites)))
+  return MPS(T, sites, fill(state, length(sites)))
 end
 
 function MPS(::Type{T}, sites::Vector{<:Index}, states::Function) where {T<:Number}
   states_vec = [states(n) for n in 1:length(sites)]
-  return MPS(T, sites,states_vec)
+  return MPS(T, sites, states_vec)
 end
 
 """

@@ -149,7 +149,7 @@ space(::SiteType"SpinHalf"; kwargs...) = space(SiteType("S=1/2"); kwargs...)
 
 val(name::ValName, ::SiteType"SpinHalf") = val(name, SiteType("S=1/2"))
 
-state(name::StateName, ::SiteType"SpinHalf") = state(name,SiteType("S=1/2"))
+state(name::StateName, ::SiteType"SpinHalf") = state(name, SiteType("S=1/2"))
 
 op(o::OpName, ::SiteType"SpinHalf"; kwargs...) = op(o, SiteType("S=1/2"); kwargs...)
 
@@ -159,6 +159,6 @@ space(::SiteType"S=½"; kwargs...) = space(SiteType("S=1/2"); kwargs...)
 
 val(name::ValName, ::SiteType"S=½") = val(name, SiteType("S=1/2"))
 
-state(name::StateName,::SiteType"S=½") = state(name,SiteType("S=1/2"))
+state(name::StateName, ::SiteType"S=½") = state(name, SiteType("S=1/2"))
 
 op(o::OpName, ::SiteType"S=½"; kwargs...) = op(o, SiteType("S=1/2"); kwargs...)
