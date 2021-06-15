@@ -4,9 +4,7 @@ import Random: seed!
 
 seed!(12345)
 
-using ITensors.ContractionSequenceOptimization:
-  optimal_contraction_sequence,
-  deepmap
+using ITensors.ContractionSequenceOptimization: optimal_contraction_sequence, deepmap
 
 @testset "ITensor contraction sequence optimization" begin
   d = 100
@@ -147,9 +145,8 @@ end
     tmp * As[n]
     allocations_right_associative_pairwise += @allocated tmp = tmp * As[n]
   end
-  @test allocations_right_associative_pairwise ≈ allocations_right_associative_1 rtol=0.1
-  @test allocations_right_associative_pairwise ≈ allocations_right_associative_2 rtol=0.1
-  @test allocations_right_associative_pairwise ≈ allocations_right_associative_3 rtol=0.2
-  @test allocations_right_associative_pairwise ≈ allocations_right_associative_4 rtol=0.1
+  @test allocations_right_associative_pairwise ≈ allocations_right_associative_1 rtol = 0.1
+  @test allocations_right_associative_pairwise ≈ allocations_right_associative_2 rtol = 0.1
+  @test allocations_right_associative_pairwise ≈ allocations_right_associative_3 rtol = 0.2
+  @test allocations_right_associative_pairwise ≈ allocations_right_associative_4 rtol = 0.1
 end
-

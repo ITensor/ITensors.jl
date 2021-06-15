@@ -1796,10 +1796,7 @@ For a custom sequence, the sequence should be provided as a binary tree where th
 integers `n` specifying the ITensor `As[n]` and branches are accessed
 by indexing with `1` or `2`, i.e. `sequence = Any[Any[1, 3], Any[2, 4]]`.
 """
-function contract(
-  tn::AbstractVector;
-  kwargs...,
-)
+function contract(tn::AbstractVector; kwargs...)
   return if all(x -> x isa ITensor, tn)
     contract(convert(Vector{ITensor}, tn); kwargs...)
   else
@@ -1815,9 +1812,7 @@ function deepcontract(tn::AbstractVector)
 end
 
 function contract(
-  As::Union{Vector{ITensor},Tuple{Vararg{ITensor}}};
-  sequence=default_sequence(),
-  kwargs...,
+  As::Union{Vector{ITensor},Tuple{Vararg{ITensor}}}; sequence=default_sequence(), kwargs...
 )
   if sequence == "left_associative"
     return foldl((A, B) -> contract(A, B; kwargs...), As)

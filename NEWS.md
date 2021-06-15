@@ -6,6 +6,11 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensor v0.2.2 Release Notes
+==============================
+
+- Add interface `contract([A, [B, C]])` for recursively contracting a tensor network tree, equivalent to `contract([A, B, C]; sequence=[1, [2, 3]])` (PR #686).
+
 ITensor v0.2.1 Release Notes
 ==============================
 
