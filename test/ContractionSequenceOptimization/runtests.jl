@@ -1,8 +1,7 @@
 using Test
 
 @testset "ITensors.ContractionSequenceOptimization" begin
-  @testset "$filename" for filename in
-                           ["linearalgebra.jl", "dense.jl", "blocksparse.jl", "diag.jl"]
+  @testset "$filename" for filename in ["itensor_contract.jl"]
     println("Running $filename")
     include(filename)
   end
