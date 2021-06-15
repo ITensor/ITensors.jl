@@ -1778,7 +1778,6 @@ function contraction_cost(As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
   return contraction_cost(indsAs; kwargs...)
 end
 
-# TODO: support "left_associative" (like `foldl`) and "right_associative" (like `foldr`)
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
 """
     *(As::ITensor...; sequence = default_sequence(), kwargs...)
@@ -1798,7 +1797,25 @@ integers `n` specifying the ITensor `As[n]` and branches are accessed
 by indexing with `1` or `2`, i.e. `sequence = Any[Any[1, 3], Any[2, 4]]`.
 """
 function contract(
-  As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
+  tn::AbstractVector;
+  kwargs...,
+)
+  return if all(x -> x isa ITensor, tn)
+    contract(convert(Vector{ITensor}, tn); kwargs...)
+  else
+    deepcontract(tn; kwargs...)
+  end
+end
+
+# Contract a tensor network such as:
+# [A, B, [[C, D], [E, [F, G]]]]
+deepcontract(t::ITensor, ts::ITensor...) = *(t, ts...)
+function deepcontract(tn::AbstractVector)
+  return deepcontract(deepcontract.(tn)...)
+end
+
+function contract(
+  As::Union{Vector{ITensor},Tuple{Vararg{ITensor}}};
   sequence=default_sequence(),
   kwargs...,
 )
@@ -1819,8 +1836,8 @@ _contract(As, sequence::Int) = As[sequence]
 
 # Given a contraction sequence, contract the tensors recursively according
 # to that sequence.
-function _contract(As, sequence; kwargs...)
-  return contract(_contract(As, sequence[1]), _contract(As, sequence[2]); kwargs...)
+function _contract(As, sequence::AbstractVector; kwargs...)
+  return contract(_contract.((As,), sequence)...; kwargs...)
 end
 
 *(As::ITensor...; kwargs...) = contract(As...; kwargs...)
