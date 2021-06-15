@@ -6,6 +6,12 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensor v0.2.1 Release Notes
+==============================
+
+- Fix MPS product state constructor to use new state function system, and fix some incorrect site type overloads (for Fermion and S=1/2) (PR #685)
+- Improve and update documentation in various places
+
 ITensor v0.2.0 Release Notes
 ==============================
 
