@@ -18,7 +18,7 @@ settings = Dict(
       "ITensor Examples" => "examples/ITensor.md",
       "MPS and MPO Examples" => "examples/MPSandMPO.md",
       "DMRG Examples" => "examples/DMRG.md",
-      "Physics System Examples" => "examples/Physics.md",
+      "Physics (SiteType) System Examples" => "examples/Physics.md",
     ],
     "Documentation" => [
       "Index" => "IndexType.md",
@@ -26,7 +26,7 @@ settings = Dict(
       "ITensor" => "ITensorType.md",
       "MPS and MPO" => "MPSandMPO.md",
       "QN" => "QN.md",
-      "SiteType and op" => "SiteType.md",
+      "SiteType and op, state, val functions" => "SiteType.md",
       "DMRG" => [
         "DMRG.md",
         "Sweeps.md",
@@ -35,7 +35,7 @@ settings = Dict(
         "Observer.md",
         "DMRGObserver.md",
       ],
-      "OpSum" => "OpSum.md",
+      "OpSum (AutoMPO)" => "OpSum.md",
     ],
     "Upgrade guides" => ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
     "ITensor indices and Einstein notation" => "Einsum.md",

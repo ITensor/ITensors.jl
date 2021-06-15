@@ -1,4 +1,4 @@
-# Physics System Examples
+# Physics (SiteType) System Examples
 
 ## Make a Custom Local Hilbert Space / Physical Degree of Freedom
 
