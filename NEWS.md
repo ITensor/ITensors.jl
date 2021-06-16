@@ -10,6 +10,7 @@ ITensor v0.2.2 Release Notes
 ==============================
 
 - Add interface `contract([A, [B, C]])` for recursively contracting a tensor network tree, equivalent to `contract([A, B, C]; sequence=[1, [2, 3]])` (PR #686).
+- Allow plain integer tags, such as `Index(2, "1")` (PR #686).
 
 ITensor v0.2.1 Release Notes
 ==============================
