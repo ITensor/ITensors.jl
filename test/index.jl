@@ -73,6 +73,20 @@ import ITensors: In, Out, Neither
       c += 1
     end
   end
+  @testset "Broadcasting" begin
+    N = 3
+    i = Index(2)
+    ps = (n - 1 for n in 1:4)
+    is = prime.(i, ps)
+    @test is[1] == i
+    @test is[2] == i'
+    @test is[3] == i''
+    ts = ("i$n" for n in 1:4)
+    is = settags.(i, ts)
+    @test is[1] == addtags(i, "i1")
+    @test is[2] == addtags(i, "i2")
+    @test is[3] == addtags(i, "i3")
+  end
   @testset "Index ID random seed" begin
     Random.seed!(index_id_rng(), 1234)
     i = Index(2)

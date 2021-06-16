@@ -442,6 +442,20 @@ function Base.iterate(i::Index, state::Int=1)
   return (i => state, state + 1)
 end
 
+# Treat Index as a scalar for the sake of broadcast.
+# This allows:
+#
+# i = Index(2)
+# ps = (n - 1 for n in 1:4)
+# is = prime.(i, ps)
+#
+# or
+#
+# ts = ("i$n" for n in 1:4)
+# is = settags.(i, ts)
+#
+Base.broadcastable(i::Index) = Ref(i)
+
 """
     eachval(i::Index)
 
