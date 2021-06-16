@@ -101,8 +101,8 @@ end
   # so that tensor allocations dominate over network
   # analysis for testing the number of allocations below.
   d0 = 2
-  δd = 500
-  ntensors = 8
+  δd = 1000
+  ntensors = 6
   ElType = Float64
   d = [d0 + (n - 1) * δd for n in 1:ntensors]
   t = ["$n" for n in 1:ntensors]
@@ -120,7 +120,7 @@ end
     tmp * As[n]
     allocations_left_associative_pairwise += @allocated tmp = tmp * As[n]
   end
-  @test allocations_left_associative == allocations_left_associative_pairwise
+  @test allocations_left_associative ≈ allocations_left_associative_pairwise rtol = 0.01
 
   sequence = foldr((x, y) -> [x, y], 1:ntensors)
   @test sequence == optimal_contraction_sequence(As)
@@ -149,4 +149,9 @@ end
   @test allocations_right_associative_pairwise ≈ allocations_right_associative_2 rtol = 0.1
   @test allocations_right_associative_pairwise ≈ allocations_right_associative_3 rtol = 0.2
   @test allocations_right_associative_pairwise ≈ allocations_right_associative_4 rtol = 0.1
+
+  @test allocations_right_associative_1 < allocations_left_associative
+  @test allocations_right_associative_2 < allocations_left_associative
+  @test allocations_right_associative_3 < allocations_left_associative
+  @test allocations_right_associative_4 < allocations_left_associative
 end
