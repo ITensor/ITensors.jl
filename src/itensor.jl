@@ -1355,6 +1355,7 @@ adjoint(A::ITensor) = prime(A)
 dirs(A::ITensor, is) = dirs(inds(A), is)
 
 function (A::ITensor == B::ITensor)
+  !hassameinds(A, B) && return false
   return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
 end
 
