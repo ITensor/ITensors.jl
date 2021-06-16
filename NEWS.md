@@ -10,6 +10,8 @@ ITensor v0.2.2 Release Notes
 ==============================
 
 - Make Index non-broadcastable so you can do: `i = Index(2); i .^ (0, 1, 2)` (PR #689).
+- Add interface `contract([A, [B, C]])` for recursively contracting a tensor network tree, equivalent to `contract([A, B, C]; sequence=[1, [2, 3]])` (PR #686).
+- Allow plain integer tags, such as `Index(2, "1")` (PR #686).
 
 ITensor v0.2.1 Release Notes
 ==============================
