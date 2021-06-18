@@ -391,6 +391,18 @@ function dense(T::TensorT) where {TensorT<:DiagBlockSparseTensor}
   return R
 end
 
+# convert to BlockSparse
+function denseblocks(D::Tensor)
+  nzblocksD = nzblocks(D)
+  T = BlockSparseTensor(eltype(D), nzblocksD, inds(D))
+  for b in nzblocksD
+    for n in 1:diaglength(D)
+      setdiagindex!(T, getdiagindex(D, n), n)
+    end
+  end
+  return T
+end
+
 function outer!(
   R::DenseTensor{<:Number,NR},
   T1::DiagBlockSparseTensor{<:Number,N1},

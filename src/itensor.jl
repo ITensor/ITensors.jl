@@ -619,9 +619,10 @@ For example, an ITensor with Diag storage will become Dense storage,
 filled with zeros except for the diagonal values.
 """
 function dense(A::ITensor)
-  T = dense(tensor(A))
-  return ITensor(storage(T), removeqns(inds(A)))
+  return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
 end
+
+denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
 """
     complex(T::ITensor)
