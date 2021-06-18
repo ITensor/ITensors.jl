@@ -270,7 +270,7 @@ computing the quantum-number flux of `psi0`
     where "Z0" refers to the ``S^z=0`` state of a spin-one spin.
 
     Finally, the same kind of logic as above applies to other
-    physical site types, whether "S=1/2", "Electron", "Boson",
+    physical site types, whether "S=1/2", "Electron",
     etc.
 
 #### Putting it All Together
