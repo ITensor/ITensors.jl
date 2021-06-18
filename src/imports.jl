@@ -121,6 +121,7 @@ import ITensors.NDTensors:
   blockoffsets,
   contract,
   dense,
+  denseblocks,
   dim,
   dims,
   disable_tblis,
