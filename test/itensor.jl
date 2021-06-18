@@ -88,7 +88,16 @@ end
       @test B[end] == B[dim(i)]
       @test B[end - 1] == B[dim(i) - 1]
     end
-
+    @testset "ITensor equality" begin
+      Aij = randomITensor(i, j)
+      Aji = permute(Aij, j, i)
+      Bij′ = randomITensor(i, j')
+      Cij′ = randomITensor(i, j')
+      @test Aij == Aij
+      @test Aij == Aji
+      @test Bij′ != Cij′
+      @test Bij′ != Aij
+    end
     @testset "Set element with end (lastindex, LastIndex)" begin
       _i = Index(2, "i")
       _j = Index(3, "j")
