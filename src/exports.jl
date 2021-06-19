@@ -117,6 +117,7 @@ export
   complex!,
   delta,
   dense,
+  denseblocks,
   δ,
   diagitensor,
   diagITensor,
