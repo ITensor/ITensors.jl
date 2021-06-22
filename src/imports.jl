@@ -9,6 +9,7 @@ import Base:
   +,
   -,
   *,
+  ^,
   /,
   ==,
   <,
@@ -96,7 +97,16 @@ import LinearAlgebra:
   svd,
   tr
 
-using ITensors.NDTensors: EmptyNumber, blas_get_num_threads, fill!!, randn!!, timer
+using ITensors.NDTensors:
+  EmptyNumber,
+  _Tuple,
+  _NTuple,
+  blas_get_num_threads,
+  eachblock,
+  eachdiagblock,
+  fill!!,
+  randn!!,
+  timer
 
 import ITensors.NDTensors:
   # Modules
@@ -111,6 +121,7 @@ import ITensors.NDTensors:
   blockoffsets,
   contract,
   dense,
+  denseblocks,
   dim,
   dims,
   disable_tblis,

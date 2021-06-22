@@ -619,9 +619,10 @@ For example, an ITensor with Diag storage will become Dense storage,
 filled with zeros except for the diagonal values.
 """
 function dense(A::ITensor)
-  T = dense(tensor(A))
-  return ITensor(storage(T), removeqns(inds(A)))
+  return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
 end
+
+denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
 """
     complex(T::ITensor)
@@ -646,6 +647,8 @@ eltype(T::ITensor) = eltype(tensor(T))
 The number of indices, `length(inds(A))`.
 """
 order(T::ITensor) = ndims(T)
+
+Order(T::ITensor) = Order(order(T))
 
 ndims(T::ITensor) = ndims(tensor(T))
 
@@ -691,7 +694,7 @@ size(T::ITensor) = dims(T)
 
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
-copy(T::ITensor) = ITensor(copy(tensor(T)))
+copy(T::ITensor) = itensor(copy(tensor(T)))
 
 """
     Array{ElT}(T::ITensor, i:Index...)
@@ -750,7 +753,8 @@ Same as `T[]`.
 """
 scalar(T::ITensor)::Any = T[]
 
-lastindex(A::ITensor, n::Int64) = LastVal(n)
+lastindex(A::ITensor, n::Int64) = LastVal()
+lastindex(A::ITensor) = LastVal()
 
 """
     getindex(T::ITensor, I::Int...)
@@ -1153,7 +1157,7 @@ for fname in (
       return settensor!(A, $fname(f, tensor(A), args...))
     end
 
-    $fname(A::ITensor, args...; kwargs...) = ITensor($fname(tensor(A), args...; kwargs...))
+    $fname(A::ITensor, args...; kwargs...) = itensor($fname(tensor(A), args...; kwargs...))
 
     # Inlining makes the ITensor functions slower
     @noinline function $fname(A::Tensor, args...; kwargs...)
@@ -1355,6 +1359,7 @@ adjoint(A::ITensor) = prime(A)
 dirs(A::ITensor, is) = dirs(inds(A), is)
 
 function (A::ITensor == B::ITensor)
+  !hassameinds(A, B) && return false
   return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
 end
 
@@ -1783,7 +1788,6 @@ function contraction_cost(As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
   return contraction_cost(indsAs; kwargs...)
 end
 
-# TODO: support "left_associative" (like `foldl`) and "right_associative" (like `foldr`)
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
 """
     *(As::ITensor...; sequence = default_sequence(), kwargs...)
@@ -1802,10 +1806,23 @@ For a custom sequence, the sequence should be provided as a binary tree where th
 integers `n` specifying the ITensor `As[n]` and branches are accessed
 by indexing with `1` or `2`, i.e. `sequence = Any[Any[1, 3], Any[2, 4]]`.
 """
+function contract(tn::AbstractVector; kwargs...)
+  return if all(x -> x isa ITensor, tn)
+    contract(convert(Vector{ITensor}, tn); kwargs...)
+  else
+    deepcontract(tn; kwargs...)
+  end
+end
+
+# Contract a tensor network such as:
+# [A, B, [[C, D], [E, [F, G]]]]
+deepcontract(t::ITensor, ts::ITensor...) = *(t, ts...)
+function deepcontract(tn::AbstractVector)
+  return deepcontract(deepcontract.(tn)...)
+end
+
 function contract(
-  As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
-  sequence=default_sequence(),
-  kwargs...,
+  As::Union{Vector{ITensor},Tuple{Vararg{ITensor}}}; sequence=default_sequence(), kwargs...
 )
   if sequence == "left_associative"
     return foldl((A, B) -> contract(A, B; kwargs...), As)
@@ -1824,8 +1841,8 @@ _contract(As, sequence::Int) = As[sequence]
 
 # Given a contraction sequence, contract the tensors recursively according
 # to that sequence.
-function _contract(As, sequence; kwargs...)
-  return contract(_contract(As, sequence[1]), _contract(As, sequence[2]); kwargs...)
+function _contract(As, sequence::AbstractVector; kwargs...)
+  return contract(_contract.((As,), sequence)...; kwargs...)
 end
 
 *(As::ITensor...; kwargs...) = contract(As...; kwargs...)

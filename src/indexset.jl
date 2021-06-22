@@ -31,13 +31,6 @@ IndexSet(inds::Index...) = collect(inds)
 IndexSet(f::Function, N::Int) = map(f, 1:N)
 IndexSet(f::Function, ::Order{N}) where {N} = IndexSet(f, N)
 
-# This is a cache of [Val(1), Val(2), ...]
-# Hard-coded for now to only handle tensors up to order 100
-const ValCache = Val[Val(n) for n in 0:100]
-# Faster conversions of collection to tuple than `Tuple(::AbstractVector)`
-_NTuple(::Val{N}, v::Vector{T}) where {N,T} = ntuple(n -> v[n], Val(N))
-_Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v) + 1], v)
-_Tuple(t::Tuple) = t
 Tuple(is::IndexSet) = _Tuple(is)
 NTuple{N}(is::IndexSet) where {N} = _NTuple(Val(N), is)
 
@@ -269,6 +262,10 @@ function Base.indexin(ais::Indices, bis::Indices)
   return [findfirst(bis, ais[i]) for i in 1:length(ais)]
 end
 
+#function Base.indexin(a::Index, bis::Indices)
+#  return [findfirst(bis, a)]
+#end
+
 findfirst(is::Indices, args...; kwargs...) = findfirst(fmatch(args...; kwargs...), is)
 
 #
@@ -487,6 +484,10 @@ function swaptags(is::Indices, tags1, tags2, args...; kwargs...)
   return swaptags(fmatch(args...; kwargs...), is, tags1, tags2)
 end
 
+function swaptags(is::Indices, tags12::Pair, args...; kwargs...)
+  return swaptags(is, first(tags12), last(tags12), args...; kwargs...)
+end
+
 function replaceinds(is::Indices, rep_inds::Pair{<:Index,<:Index}...)
   return replaceinds(is, zip(rep_inds...)...)
 end
@@ -507,7 +508,7 @@ end
 hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))
 
 function replaceinds(is::Indices, inds1, inds2)
-  is1 = (inds1)
+  is1 = inds1
   poss = indexin(is1, is)
   is_tuple = Tuple(is)
   for (j, pos) in enumerate(poss)
@@ -533,6 +534,14 @@ replaceind(is::Indices, rep_i::Pair{<:Index,<:Index}) = replaceinds(is, rep_i)
 
 function swapinds(is::Indices, inds1, inds2)
   return replaceinds(is, (inds1..., inds2...), (inds2..., inds1...))
+end
+
+function swapinds(is::Indices, inds1::Index, inds2::Index)
+  return swapinds(is, (inds1,), (inds2,))
+end
+
+function swapinds(is::Indices, inds12::Pair)
+  return swapinds(is, first(inds12), last(inds12))
 end
 
 swapind(is::Indices, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
@@ -749,17 +758,6 @@ function NDTensors.nblocks(inds::NTuple{N,<:Index}) where {N}
 end
 
 ndiagblocks(inds) = minimum(nblocks(inds))
-
-# TODO: generic to Indices and BlockDims
-function eachblock(inds::Indices)
-  return (Block(b) for b in CartesianIndices(_Tuple(nblocks(inds))))
-end
-
-# TODO: turn this into an iterator instead
-# of returning a Vector
-function eachdiagblock(inds::Indices)
-  return (Block(ntuple(_ -> i, length(inds))) for i in 1:ndiagblocks(inds))
-end
 
 """
     flux(inds::Indices, block::Tuple{Vararg{Int}})

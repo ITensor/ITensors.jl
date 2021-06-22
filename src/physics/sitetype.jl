@@ -428,6 +428,35 @@ end
 state(::StateName, ::SiteType, ::Index) = nothing
 state!(::ITensor, ::StateName, ::SiteType, ::Index) = nothing
 
+"""
+    state(s::Index, name::String; kwargs...)
+
+Return an ITensor corresponding to the state
+named `name` for the Index `s`. The returned
+ITensor will have `s` as its only index.
+
+The terminology here is based on the idea of a 
+single-site state or wavefunction in physics. 
+
+The `state` function is implemented for various
+Index tags by overloading either the
+`state` or `state!` methods which take a `SiteType`
+argument corresponding to one of the tags of
+the Index `s` and an `StateName"name"` argument
+that corresponds to the input state name.
+
+The `state` system is used by the MPS type
+to construct product-state MPS and for other purposes.
+
+# Example
+```julia
+s = Index(2, "Site,S=1/2")
+sup = state(s,"Up")
+sdn = state(s,"Dn")
+sxp = state(s,"X+")
+sxm = state(s,"X-")
+```
+"""
 function state(s::Index, name::AbstractString; kwargs...)::ITensor
   stypes = _sitetypes(s)
   sname = StateName(name)
@@ -487,6 +516,31 @@ end
 val(::ValName, ::SiteType) = nothing
 val(::AbstractString, ::SiteType) = nothing
 
+"""
+    val(s::Index, name::String)
+
+Return an integer corresponding to the `name`
+of a certain value the Index `s` can take.
+In other words, the `val` function maps strings
+to specific integer values within the range `1:dim(s)`.
+
+The `val` function is implemented for various
+Index tags by overloading methods named `val`
+which take a `SiteType` argument corresponding to 
+one of the tags of the Index `s` and an `ValName"name"` 
+argument that corresponds to the input name.
+
+# Example
+```julia
+s = Index(2, "Site,S=1/2")
+val(s,"Up") == 1
+val(s,"Dn") == 2
+
+s = Index(2, "Site,Fermion")
+val(s,"Emp") == 1
+val(s,"Occ") == 2
+```
+"""
 function val(s::Index, name::AbstractString)::Int
   stypes = _sitetypes(s)
   sname = ValName(name)

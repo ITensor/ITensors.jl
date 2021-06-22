@@ -16,10 +16,10 @@
 |:-------------------------------------------------------------------------------:|
 |[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|
 
-ITensors is a library for rapidly creating correct and efficient
+ITensor is a library for rapidly creating correct and efficient
 tensor network algorithms. 
 
-The source code for ITensors can be found here: [https://github.com/ITensor/ITensors.jl](https://github.com/ITensor/ITensors.jl).  
+The source code for ITensor can be found [on Github](https://github.com/ITensor/ITensors.jl).  
 
 Additional documentation can be found on the ITensor website [itensor.org](https://itensor.org/).
 
@@ -35,6 +35,12 @@ the DMRG algorithm.
 
 Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.
 
+## News
+
+ITensors.jl v0.2 has been released, with a few breaking changes as well as a variety of bug fixes
+and new features. Take a look at the [upgrade guide](https://itensor.github.io/ITensors.jl/stable/UpgradeGuide_0.1_to_0.2.html)
+for help upgrading your code as well as the [change log](https://github.com/ITensor/ITensors.jl/blob/main/NEWS.md)
+for a comprehensive list of changes.
 
 ## Installation
 
@@ -60,8 +66,6 @@ Please note that right now, ITensors.jl requires that you use Julia v1.3 or late
 
 We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions [here](https://github.com/JuliaComputing/MKL.jl).
 
-Also note that versions 0.4.0 and below of the MKL.jl package currently don't work if you are using Julia v1.6, but you can patch it with the instructions described [here](https://github.com/JuliaLinearAlgebra/MKL.jl/issues/60#issuecomment-808329869). This will be fixed in MKL.jl v0.4.1.
-
 ## Documentation
 
 - [**STABLE**](https://itensor.github.io/ITensors.jl/stable/) --  **documentation of the most recently tagged version.**
@@ -69,7 +73,7 @@ Also note that versions 0.4.0 and below of the MKL.jl package currently don't wo
 
 ## Citation
 
-If you use ITensors.jl in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
+If you use ITensor in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
 
 ```
 @misc{itensor,

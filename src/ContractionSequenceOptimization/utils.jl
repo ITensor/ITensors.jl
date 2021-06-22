@@ -3,12 +3,47 @@
 # General helper functionality
 #
 
+#
+# Operations for tree data structures
+#
+
+"""
+    deepmap(f, tree; filter=(x -> x isa AbstractArray))
+
+Recursive map on a tree-like data structure.
+`filter` is a function that returns `true` if the iteration
+should continue `false` if the iteration should
+stop (for example, because we are at a leaf and the function
+`f` should be applied).
+
+```julia
+julia> deepmap(x -> 2x, [1, [2, [3, 4]]])
+[2, [4, [6, 8]]]
+
+julia> deepmap(x -> 2 .* x, [1, (2, [3, 4])])
+2-element Vector{Any}:
+ 2
+  (4, [6, 8])
+
+julia> deepmap(x -> 3x, [[1 2; 3 4], [5 6; 7 8]])
+2-element Vector{Matrix{Int64}}:
+ [3 6; 9 12]
+ [15 18; 21 24]
+
+julia> deepmap(x -> 2x, (1, (2, (3, 4))); filter=(x -> x isa Tuple))
+(2, (4, (6, 8)))
+```
+"""
+function deepmap(f, tree; filter=(x -> x isa AbstractArray))
+  return filter(tree) ? map(t -> deepmap(f, t; filter=filter), tree) : f(tree)
+end
+
 # 
 # Contracting index sets and getting costs
 #
 
 # TODO: make a type:
-# SBitSet{T <: Unsigned}
+# ShortBitSet{T <: Unsigned}
 #   data::T
 # end
 #

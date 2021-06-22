@@ -64,8 +64,8 @@ val(::ValName"Occ", ::SiteType"Fermion") = 2
 val(::ValName"0", st::SiteType"Fermion") = val(ValName("Emp"), st)
 val(::ValName"1", st::SiteType"Fermion") = val(ValName("Occ"), st)
 
-state(::StateName"Emp", ::SiteType"Fermion") = 1
-state(::StateName"Occ", ::SiteType"Fermion") = 2
+state(::StateName"Emp", ::SiteType"Fermion") = [1.0 0.0]
+state(::StateName"Occ", ::SiteType"Fermion") = [0.0 1.0]
 state(::StateName"0", st::SiteType"Fermion") = state(StateName("Emp"), st)
 state(::StateName"1", st::SiteType"Fermion") = state(StateName("Occ"), st)
 

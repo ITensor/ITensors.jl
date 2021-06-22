@@ -227,8 +227,7 @@ random MPS.
 """ randomMPS(::Vector{<:Index}, ::Any)
 
 """
-    MPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
-    productMPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
+    MPS(::Type{T<:Number}, ivals::Vector{<:Pair{<:Index}})
 
 Construct a product state MPS with element type `T` and
 nonzero values determined from the input IndexVals.
@@ -274,8 +273,7 @@ end
 const productMPS = MPS
 
 """
-    MPS(ivals::Vector{<:IndexVal})
-    productMPS(ivals::Vector{<:IndexVal})
+    MPS(ivals::Vector{<:Pair{<:Index}})
 
 Construct a product state MPS with element type `Float64` and
 nonzero values determined from the input IndexVals.
@@ -307,29 +305,46 @@ psi = MPS(ComplexF64, sites, states)
 phi = MPS(sites, "Up")
 ```
 """
-function MPS(::Type{T}, sites::Vector{<:Index}, vals) where {T<:Number}
-  if length(sites) != length(vals)
+function MPS(::Type{T}, sites::Vector{<:Index}, states) where {T<:Number}
+  if length(sites) != length(states)
     throw(DimensionMismatch("Number of sites and and initial vals don't match"))
   end
-  ivals = [sites[n] => vals[n] for n in 1:length(sites)]
-  return MPS(T, ivals)
+  N = length(states)
+  M = MPS(N)
+
+  if N == 1
+    M[1] = state(sites[1], states[1])
+    return M
+  end
+
+  space = hasqns(sites[1]) ? QN() => 1 : 1
+  links = [Index(space; tags="Link,l=$n") for n in 1:N]
+
+  M[1] = ITensor(T, sites[1], links[1])
+  M[1] += state(sites[1], states[1]) * state(links[1], 1)
+  for n in 2:(N - 1)
+    M[n] = ITensor(T, dag(links[n - 1]), sites[n], links[n])
+    M[n] += state(dag(links[n - 1]), 1) * state(sites[n], states[n]) * state(links[n], 1)
+  end
+  M[N] = ITensor(T, dag(links[N - 1]), sites[N])
+  M[N] += state(dag(links[N - 1]), 1) * state(sites[N], states[N])
+
+  return M
 end
 
 function MPS(
-  ::Type{T}, sites::Vector{<:Index}, val::Union{String,Integer}
+  ::Type{T}, sites::Vector{<:Index}, state::Union{String,Integer}
 ) where {T<:Number}
-  ivals = [sites[n] => val for n in 1:length(sites)]
-  return MPS(T, ivals)
+  return MPS(T, sites, fill(state, length(sites)))
 end
 
-function MPS(::Type{T}, sites::Vector{<:Index}, vals::Function) where {T<:Number}
-  ivals = [sites[n] => vals(n) for n in 1:length(sites)]
-  return MPS(T, ivals)
+function MPS(::Type{T}, sites::Vector{<:Index}, states::Function) where {T<:Number}
+  states_vec = [states(n) for n in 1:length(sites)]
+  return MPS(T, sites, states_vec)
 end
 
 """
     MPS(sites::Vector{<:Index},states)
-    productMPS(sites::Vector{<:Index},states)
 
 Construct a product state MPS having
 site indices `sites`, and which corresponds to the initial
@@ -550,11 +565,11 @@ m = 4
 
 s = siteinds("S=1/2",N)
 psi = randomMPS(s; linkdims=m)
-Czz = correlator(psi,"Sz","Sz")
+Czz = correlation_matrix(psi,"Sz","Sz")
 
 s = siteinds("Electron",N; conserve_qns=true)
 psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
-Cuu = correlator(psi,"Cdagup","Cup";site_range=2:8)
+Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
 ```
 """
 function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; kwargs...)

@@ -1,22 +1,23 @@
 
-struct LastVal <: Number
-  n::Int
+struct LastVal{F}
+  f::F
 end
+
+LastVal() = LastVal(identity)
 
 # TODO: make these definition work for notation
 # A[1, end-1]
-#(l::LastVal + n::Number) = LastVal(l.n + n)
-#(n::Number + l::LastVal) = l + n
-#(l::LastVal * n::Number) = LastVal(l.n * n)
-#(n::Number * l::LastVal) = l * n
-#(l::LastVal - n::Number) = LastVal(l.n - n)
-#(n::Number - l::LastVal) = LastVal(n - l.n)
-#(-l::LastVal) = LastVal(-l.n)
 
-# Implement when ITensors can be indexed by a single integer
-#lastindex(A::ITensor) = dim(A)
+(l::LastVal + n::Integer) = LastVal(x -> l.f(x) + n)
+(n::Integer + l::LastVal) = LastVal(x -> n + l.f(x))
+(l::LastVal - n::Integer) = LastVal(x -> l.f(x) - n)
+(n::Integer - l::LastVal) = LastVal(x -> n - l.f(x))
+(l::LastVal * n::Integer) = LastVal(x -> l.f(x) * n)
+(n::Integer * l::LastVal) = LastVal(x -> n * l.f(x))
+(-l::LastVal) = LastVal(x -> -l.f(x))
+^(l::LastVal, n::Integer) = LastVal(x -> l.f(x)^n)
 
-lastval_to_int(n::Int, ::LastVal) = n
+lastval_to_int(n::Int, l::LastVal) = l.f(n)
 lastval_to_int(::Int, n::Int) = n
 lastval_to_int(dimsT::Tuple, I::Tuple) = lastval_to_int.(dimsT, I)
 lastval_to_int(A::Tensor, I::Tuple) = lastval_to_int(size(A), I)

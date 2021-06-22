@@ -45,4 +45,6 @@ import Base:
 
 import Base.Broadcast: Broadcasted, BroadcastStyle
 
+import LinearAlgebra: exp
+
 import TupleTools: isperm

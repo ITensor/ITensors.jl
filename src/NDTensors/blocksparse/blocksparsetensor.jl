@@ -274,7 +274,16 @@ getindex(T::BlockSparseTensor, block::Block) = blockview(T, block)
 to_indices(T::Tensor{<:Any,N}, b::Tuple{Block{N}}) where {N} = blockindices(T, b...)
 
 function blockview(T::BlockSparseTensor, block::Block)
-  return blockview(T, BlockOffset(block, offset(T, block)))
+  return blockview(T, block, offset(T, block))
+end
+
+function blockview(T::BlockSparseTensor, block::Block, offset::Integer)
+  return blockview(T, BlockOffset(block, offset))
+end
+
+# Case where the block isn't found, return nothing
+function blockview(T::BlockSparseTensor, block::Block, ::Nothing)
+  return nothing
 end
 
 blockview(T::BlockSparseTensor, block) = blockview(T, Block(block))

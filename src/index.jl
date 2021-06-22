@@ -442,6 +442,20 @@ function Base.iterate(i::Index, state::Int=1)
   return (i => state, state + 1)
 end
 
+# Treat Index as a scalar for the sake of broadcast.
+# This allows:
+#
+# i = Index(2)
+# ps = (n - 1 for n in 1:4)
+# is = prime.(i, ps)
+#
+# or
+#
+# ts = ("i$n" for n in 1:4)
+# is = settags.(i, ts)
+#
+Base.broadcastable(i::Index) = Ref(i)
+
 """
     eachval(i::Index)
 
@@ -510,7 +524,7 @@ NDTensors.ind(iv::Pair{<:Index}) = first(iv)
 
 val(iv::Pair{<:Index}) = val(iv.first, iv.second)
 
-val(i::Index, ::LastVal) = dim(i)
+val(i::Index, l::LastVal) = l.f(dim(i))
 
 """
     isindequal(i::Index, iv::IndexVal)

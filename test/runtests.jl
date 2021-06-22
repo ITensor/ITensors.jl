@@ -3,6 +3,7 @@ using Test
 @testset "ITensors.jl" begin
   @testset "$filename" for filename in [
     "NDTensors/runtests.jl",
+    "ContractionSequenceOptimization/runtests.jl",
     "tagset.jl",
     "smallstring.jl",
     "symmetrystyle.jl",
@@ -15,7 +16,6 @@ using Test
     "itensor_slice.jl",
     "itensor_scalar_contract.jl",
     "itensor_combine_contract.jl",
-    "itensor_contraction_sequence_optimization.jl",
     "broadcast.jl",
     "emptyitensor.jl",
     "diagitensor.jl",
