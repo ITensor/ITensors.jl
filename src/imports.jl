@@ -130,6 +130,7 @@ import ITensors.NDTensors:
   ind,
   inds,
   insertblock!,
+  insert_diag_blocks!,
   matrix,
   maxdim,
   mindim,

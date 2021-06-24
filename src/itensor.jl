@@ -2370,11 +2370,26 @@ function checkflux(T::Union{Tensor,ITensor})
   return checkflux(T, fluxTb1)
 end
 
+function checkflux(T::Union{Tensor,ITensor})
+  b1 = first(nzblocks(T))
+  fluxTb1 = flux(T, b1)
+  return checkflux(T, fluxTb1)
+end
+
 function insertblock!(T::ITensor, args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
     error("Block does not match current flux")
   TR = insertblock!!(tensor(T), args...)
   setstorage!(T, storage(TR))
+  return T
+end
+
+function insert_diag_blocks!(T::ITensor)
+  ## TODO: Add a check that all diag blocks
+  ## have the correct flux
+  ## (!isnothing(flux(T)) && check_diagblock_flux(T)) &&
+  ##   error("Block does not match current flux")
+  insert_diag_blocks!(tensor(T))
   return T
 end
 
