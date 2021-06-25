@@ -42,7 +42,7 @@ settings = Dict(
     "Advanced usage guide" => [
       "Advanced usage guide" => "AdvancedUsageGuide.md",
       "Multithreading" => "Multithreading.md",
-      "Symmetric tensor background and usage" => "QNTricks.md",
+      "Symmetric (QN conserving) tensors: background and usage" => "QNTricks.md",
       "Timing and profiling" => "CodeTiming.md",
       "Contraction sequence optimization" => "ContractionSequenceOptimization.md",
     ],

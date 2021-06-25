@@ -243,6 +243,17 @@ end
 
 insertblock!(T::BlockSparseTensor, block) = insertblock!(T, Block(block))
 
+# Insert missing diagonal blocks as zero blocks
+function insert_diag_blocks!(T::AbstractArray{ElT}) where {ElT}
+  for b in eachdiagblock(T)
+    blockT = blockview(T, b)
+    if isnothing(blockT)
+      # Block was not found in the list, insert it
+      insertblock!(T, b)
+    end
+  end
+end
+
 # TODO: Add a checkbounds
 @propagate_inbounds function setindex!(
   T::BlockSparseTensor{ElT,N}, val, i::Vararg{Int,N}

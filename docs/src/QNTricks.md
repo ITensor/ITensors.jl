@@ -1,4 +1,4 @@
-# Symmetric Tensor Background and Usage
+# Symmetric (QN Conserving) Tensors: Background and Usage
 
 Here is a collection of background material and example codes for understanding how symmetric tensors (tensors with conserved quantum numbers) work in ITensors.jl
 
@@ -35,4 +35,47 @@ inds(A)
 inds(A * C)
 ```
 Unless you are writing very specialized custom code with symmetric tensors, this is generally not needed.
+
+## Block Sparsity and Quantum Numbers
+
+In general, not all blocks that are allowed according to the flux will actually exist in the tensor (which helps in many cases for efficiency). Usually this would happen when the tensor is first constructed and not all blocks are explicitly set:
+```@repl
+using ITensors
+
+i = Index([QN(0) => 1, QN(1) => 1])
+A = ITensor(i', dag(i));
+A[2, 2] = 1.0;
+@show A;
+D, U = eigen(A; ishermitian=true);
+@show D;
+@show U;
+```
+If we had set `A[1, 1] = 0.0` as well, then all of the allowed blocks (according to the flux `QN(0)` would exist and would be included in the eigendecomposition:
+```@repl
+using ITensors
+
+i = Index([QN(0) => 1, QN(1) => 1])
+A = ITensor(i', dag(i));
+A[2, 2] = 1.0;
+A[1, 1] = 0.0;
+@show A;
+D, U = eigen(A; ishermitian=true);
+@show D;
+@show U;
+```
+"Missing" blocks can also occur with tensor contractions, since the final blocks of the output tensor are made from combinations of contractions of blocks from the input tensors, and there is no guarantee that all flux-consistent blocks will end up in the result:
+```@repl
+using ITensors
+
+i = Index([QN(0) => 1, QN(1) => 1])
+j = Index([QN(0) => 1])
+A = ITensor(i, dag(j));
+A[2, 1] = 1.0;
+@show A;
+A2 = prime(A, i) * dag(A);
+@show A2;
+D, U = eigen(A2; ishermitian=true);
+@show D;
+@show U;
+```
 

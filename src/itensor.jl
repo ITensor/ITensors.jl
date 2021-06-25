@@ -2386,6 +2386,15 @@ function insertblock!(T::ITensor, args...)
   return T
 end
 
+function insert_diag_blocks!(T::ITensor)
+  ## TODO: Add a check that all diag blocks
+  ## have the correct flux
+  ## (!isnothing(flux(T)) && check_diagblock_flux(T)) &&
+  ##   error("Block does not match current flux")
+  insert_diag_blocks!(tensor(T))
+  return T
+end
+
 # XXX: rename isemptystorage?
 """
     isemptystorage(T::ITensor)
