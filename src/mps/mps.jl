@@ -317,7 +317,7 @@ function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
     return M
   end
 
-  states = [state(sites[j],states_[j]) for j=1:N]
+  states = [state(sites[j], states_[j]) for j in 1:N]
 
   if hasqns(states[1])
     lflux = QN()

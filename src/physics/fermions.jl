@@ -108,11 +108,11 @@ end
 
 # Version of getperm which is type stable
 # and works for Tuple or Vector inputs
-function vec_getperm(s1,s2)
+function vec_getperm(s1, s2)
   N = length(s1)
-  p = Vector{Int}(undef,N)
-  for i=1:N
-    @inbounds p[i] = NDTensors._findfirst(==(@inbounds s1[i]),s2)
+  p = Vector{Int}(undef, N)
+  for i in 1:N
+    @inbounds p[i] = NDTensors._findfirst(==(@inbounds s1[i]), s2)
   end
   return p
 end
@@ -129,10 +129,8 @@ end
   blockT2,
   indsT2::NTuple{N2,QNIndex},
 ) where {N1,N2}
-
   if !using_auto_fermion()
-     !has_fermionic_subspaces(indsT1) ||
-     !has_fermionic_subspaces(indsT2)
+    !has_fermionic_subspaces(indsT1) || !has_fermionic_subspaces(indsT2)
     return one(ElR)
   end
 
@@ -150,7 +148,7 @@ end
   NR = length(labelsR)
   orig_labelsR = zeros(Int, NR)
   u = 1
-  for ls in (nlabelsT1,nlabelsT2), l in ls
+  for ls in (nlabelsT1, nlabelsT2), l in ls
     if l > 0
       orig_labelsR[u] = l
       u += 1

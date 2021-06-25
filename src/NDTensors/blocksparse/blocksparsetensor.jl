@@ -1002,7 +1002,7 @@ function _threaded_contract!(
     Rblock = R[blockR]
     contraction_plan_blocks[ncontracted] = (T1block, T2block, Rblock)
   end
-  
+
   indsR = inds(R)
   indsT1 = inds(T1)
   indsT2 = inds(T2)
@@ -1019,7 +1019,9 @@ function _threaded_contract!(
         # R .= α .* (T1 * T2) .+ β .* R
 
         # <fermions>:
-        α = compute_alpha(ElR,labelsR,blockR,indsR,labelsT1,block1,indsT1,labelsT2,block2,indsT2)
+        α = compute_alpha(
+          ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
+        )
 
         contract!(blockR, labelsR, blockT1, labelsT1, blockT2, labelsT2, α, β)
         # Now keep adding to the block, since it has
@@ -1056,7 +1058,9 @@ function contract!(
   for (block1, block2, blockR) in contraction_plan
 
     #<fermions>
-    α = compute_alpha(ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2)
+    α = compute_alpha(
+      ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
+    )
 
     T1block = T1[block1]
     T2block = T2[block2]
