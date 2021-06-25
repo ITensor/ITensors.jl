@@ -620,11 +620,15 @@ packages, which automatically detects changes you are making in a
 package so you can edit code and not have to restart your Julia 
 session.
 
+If you make changes to ITensors such as fixing bugs or adding new features,
+please consider making a [pull request](https://github.com/ITensor/ITensors.jl/compare).
+However, please ask us first before doing so -- either by raising an [issue on Github](https://github.com/ITensor/ITensors.jl/issues) or asking a question on the [ITensor support forum](http://itensor.org/support/) --
+to make sure it is a change or addition that we will want to include or to check that it is not something
+we are currently working on. Coordinating with us in that way will help save your time and energy as well as ours!
+
 !!! info "Coming soon"
 
-    A more extended guide for contributing to ITensors.jl, including 
-    contributing to the related NDTensors.jl as well as a style 
-    guide, is coming soon.
+    A more extended guide for contributing to ITensors.jl, including formatting your code with [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl), is coming soon.
 
 ## Compiling ITensors.jl
 
