@@ -712,8 +712,12 @@ function permutedims!(
 
     # <fermions>
     pfac = permfactor(perm, blockT, inds(T))
-    fac_f = (r, t) -> f(r, pfac * t)
-    permutedims!(Rblock, Tblock, perm, fac_f)
+    if pfac == 1
+      permutedims!(Rblock, Tblock, perm, f)
+    else
+      fac_f = (r, t) -> f(r, pfac * t)
+      permutedims!(Rblock, Tblock, perm, fac_f)
+    end
   end
   return R
 end
