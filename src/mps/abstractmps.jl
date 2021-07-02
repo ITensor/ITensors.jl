@@ -42,7 +42,7 @@ end
 The element type of the MPS/MPO. Always returns `ITensor`.
 
 For the element type of the ITensors of the MPS/MPO,
-use `common_itensor_eltype`.
+use `promote_itensor_eltype`.
 """
 eltype(::AbstractMPS) = ITensor
 
