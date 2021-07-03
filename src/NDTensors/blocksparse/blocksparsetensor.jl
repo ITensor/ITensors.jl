@@ -1029,10 +1029,10 @@ function _threaded_contract!(
           blockR,
           inds(R),
           labelsT1,
-          block1,
+          blockT1,
           inds(T1),
           labelsT2,
-          block2,
+          blockT2,
           inds(T2),
         )
 
