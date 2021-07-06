@@ -6,6 +6,10 @@ using Test
 
   A = ITensor(i, j)
   B = ITensor(j, k)
+
+  @test norm(A) == 0.0
+  @test norm(B) == 0.0
+
   C = A * B
   @test hassameinds(C, (i, k))
   @test storage(C) isa
@@ -19,6 +23,11 @@ using Test
 
   A = ITensor(i, j)
   B = ITensor(ComplexF64, j, k)
+
+  @test norm(A) == 0.0
+  @test norm(B) == 0.0
+  @test norm(B) isa Float64
+
   C = A * B
   @test hassameinds(C, (i, k))
   @test storage(C) isa ITensors.EmptyStorage{ComplexF64,<:ITensors.Dense{ComplexF64}}
