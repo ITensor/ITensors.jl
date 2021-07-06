@@ -11,6 +11,9 @@ struct EmptyOrder end
 
 struct EmptyNumber <: Number end
 
+zero(::Type{EmptyNumber}) = zero(Float64)
+zero(n::EmptyNumber) = zero(typeof(n))
+
 # This is a backup definition to make:
 # A = ITensor(i, j)
 # complex!(A)
@@ -39,6 +42,8 @@ function emptytype(::Type{StoreT}) where {StoreT}
 end
 
 empty(::Type{StoreT}) where {StoreT} = emptytype(StoreT)()
+
+norm(::EmptyStorage{ElT}) where {ElT} = norm(zero(ElT))
 
 # Defaults to Dense
 function EmptyStorage(::Type{ElT}) where {ElT}
