@@ -8,11 +8,11 @@ function _truncated_blockdim(
 )
   !truncate && return diaglength(S)
   newdim = 0
-  val = singular_values ? getdiagindex(S, newdim + 1)^2 : getdiagindex(S, newdim + 1)
+  val = singular_values ? getdiagindex(S, newdim + 1)^2 : abs(getdiagindex(S, newdim + 1))
   while newdim + 1 ≤ diaglength(S) && val > docut
     newdim += 1
     if newdim + 1 ≤ diaglength(S)
-      val = singular_values ? getdiagindex(S, newdim + 1)^2 : getdiagindex(S, newdim + 1)
+      val = singular_values ? getdiagindex(S, newdim + 1)^2 : abs(getdiagindex(S, newdim + 1))
     end
   end
   return newdim

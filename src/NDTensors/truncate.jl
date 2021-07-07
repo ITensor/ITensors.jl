@@ -22,16 +22,19 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
   origm = length(P)
   docut = 0.0
 
-  if P[1] <= 0.0
-    P[1] = 0.0
-    resize!(P, 1)
-    return 0.0, 0.0
-  end
+  #if P[1] <= 0.0
+  #  P[1] = 0.0
+  #  resize!(P, 1)
+  #  return 0.0, 0.0
+  #end
 
   if origm == 1
-    docut = P[1] / 2
+    docut = abs(P[1])/2
     return 0.0, docut
   end
+
+  s = sign(P[1])
+  s != 1.0 && (P .*= s)
 
   #Zero out any negative weight
   for n in origm:-1:1
@@ -81,6 +84,7 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
     end
   end
 
+  P .*= s
   resize!(P, n)
 
   return truncerr, docut
