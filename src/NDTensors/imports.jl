@@ -41,10 +41,11 @@ import Base:
   to_indices,
   unsafe_convert,
   view,
+  zero,
   zeros
 
 import Base.Broadcast: Broadcasted, BroadcastStyle
 
-import LinearAlgebra: exp
+import LinearAlgebra: exp, norm
 
 import TupleTools: isperm
