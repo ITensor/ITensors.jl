@@ -182,7 +182,11 @@ flux(ib::Pair{<:Index,Block{1}}) = flux(first(ib), last(ib))
 
 flux(iv::Pair{<:Index}) = flux(ind(iv), block(iv))
 
-flux(i::Index,b::Block) = error("Cannot compute flux: Index has no QNs. Try setting conserve_qns=true in siteinds or constructing Index with QN subspaces.")
+function flux(i::Index, b::Block)
+  return error(
+    "Cannot compute flux: Index has no QNs. Try setting conserve_qns=true in siteinds or constructing Index with QN subspaces.",
+  )
+end
 
 qnblocks(i::QNIndex) = space(i)
 

@@ -29,7 +29,7 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
   #end
 
   if origm == 1
-    docut = abs(P[1])/2
+    docut = abs(P[1]) / 2
     return 0.0, docut
   end
 
