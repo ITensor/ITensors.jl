@@ -279,41 +279,30 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   cL = combinedind(CL)
   cR = dag(combinedind(CR))
-
-  # <fermions>
-  if using_auto_fermion()
-    @assert dir(cR) == In
-    @assert dir(cL) == Out
-  end
-  if inds(AC) != IndexSet(cR, cL)
-    AC = permute(AC, cR, cL)
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
   end
 
   AT = ishermitian ? Hermitian(tensor(AC)) : tensor(AC)
 
   DT, VT, spec = eigen(AT; kwargs...)
-  D, VLC = itensor(DT), itensor(VT)
+  D, VC = itensor(DT), itensor(VT)
 
-  VRC = copy(VLC)
-  ol = commonind(D, VLC)
-  or = uniqueind(D, VLC)
-  l = setprime(settags(ol, lefttags), leftplev)
-  r = setprime(settags(l, righttags), rightplev)
-  replaceind!(VLC, ol, l)
-  replaceinds!(D, (ol, or), (l, r))
-  replaceinds!(VRC, (cL, ol), (cR, r))
+  V = VC * dag(CR)
 
-  #@show norm(dag(VLC)*D*VRC-AC)
+  # Set right index tags
+  l = uniqueind(D, V)
+  r = commonind(D, V)
+  l̃ = setprime(settags(l, lefttags), leftplev)
+  r̃ = setprime(settags(l̃, righttags), rightplev)
 
-  VL = VLC * CL
-  VR = VRC * CR
+  replaceinds!(D, (l, r), (l̃, r̃))
+  replaceind!(V, r, r̃)
 
-  #@show norm(dag(VL)*D*VR-A)
+  l, r = l̃, r̃
 
-  V = dag(VR)
-  Vt = dag(VL)
-
-  #@show norm(dag(V)*D*Vt-A)
+  # The right eigenvectors, after being applied to A
+  Vt = replaceinds(V, (Ris..., r), (Lis..., l))
 
   @debug_check begin
     if hasqns(A)
