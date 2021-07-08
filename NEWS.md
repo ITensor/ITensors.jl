@@ -9,7 +9,7 @@ After we release v1 of the package, we will start following [semantic versioning
 ITensor v0.2.4 Release Notes
 ==============================
 
-- Add `sim(::Pair{<:Index})`
+- Add `sim(::Pair{<:Index})` (#701)
 - Add `norm(::EmptyStorage)` (#699) 
 
 ITensor v0.2.3 Release Notes
