@@ -208,3 +208,21 @@ function disable_contraction_sequence_optimization()
   _using_contraction_sequence_optimization[] = false
   return nothing
 end
+
+#
+# Turn the auto fermion system on and off
+#
+
+const _using_auto_fermion = Ref(false)
+
+using_auto_fermion() = _using_auto_fermion[]
+
+function enable_auto_fermion()
+  _using_auto_fermion[] = true
+  return nothing
+end
+
+function disable_auto_fermion()
+  _using_auto_fermion[] = false
+  return nothing
+end

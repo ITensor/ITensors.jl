@@ -242,8 +242,19 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
     return M
   end
 
-  space = hasqns(ind(ivals[1])) ? QN() => 1 : 1
-  links = [Index(space; tags="Link,l=$n") for n in 1:N]
+  if hasqns(ind(ivals[1]))
+    lflux = QN()
+    for j in 1:(N - 1)
+      lflux += qn(ivals[j])
+    end
+    links = Vector{QNIndex}(undef, N - 1)
+    for j in (N - 1):-1:1
+      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
+      lflux -= qn(ivals[j])
+    end
+  else
+    links = [Index(1, "Link,l=$n") for n in 1:(N - 1)]
+  end
 
   M[1] = emptyITensor(T, ind(ivals[1]), links[1])
   M[1][ivals[1], links[1] => 1] = one(T)
@@ -294,29 +305,42 @@ psi = MPS(ComplexF64, sites, states)
 phi = MPS(sites, "Up")
 ```
 """
-function MPS(::Type{T}, sites::Vector{<:Index}, states) where {T<:Number}
-  if length(sites) != length(states)
+function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
+  if length(sites) != length(states_)
     throw(DimensionMismatch("Number of sites and and initial vals don't match"))
   end
-  N = length(states)
+  N = length(states_)
   M = MPS(N)
 
   if N == 1
-    M[1] = state(sites[1], states[1])
+    M[1] = state(sites[1], states_[1])
     return M
   end
 
-  space = hasqns(sites[1]) ? QN() => 1 : 1
-  links = [Index(space; tags="Link,l=$n") for n in 1:N]
+  states = [state(sites[j], states_[j]) for j in 1:N]
+
+  if hasqns(states[1])
+    lflux = QN()
+    for j in 1:(N - 1)
+      lflux += flux(states[j])
+    end
+    links = Vector{QNIndex}(undef, N - 1)
+    for j in (N - 1):-1:1
+      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
+      lflux -= flux(states[j])
+    end
+  else
+    links = [Index(1; tags="Link,l=$n") for n in 1:N]
+  end
 
   M[1] = ITensor(T, sites[1], links[1])
-  M[1] += state(sites[1], states[1]) * state(links[1], 1)
+  M[1] += states[1] * state(links[1], 1)
   for n in 2:(N - 1)
     M[n] = ITensor(T, dag(links[n - 1]), sites[n], links[n])
-    M[n] += state(dag(links[n - 1]), 1) * state(sites[n], states[n]) * state(links[n], 1)
+    M[n] += state(dag(links[n - 1]), 1) * states[n] * state(links[n], 1)
   end
   M[N] = ITensor(T, dag(links[N - 1]), sites[N])
-  M[N] += state(dag(links[N - 1]), 1) * state(sites[N], states[N])
+  M[N] += state(dag(links[N - 1]), 1) * states[N]
 
   return M
 end
@@ -576,7 +600,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
   s = siteinds(psi)
   onsiteOp = "$Op1*$Op2"
   fermionic2 = has_fermion_string(Op2, s[1])
-  if fermionic2
+  if !using_auto_fermion() && fermionic2
     Op1 = "$Op1*F"
   end
 
@@ -612,7 +636,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
       C[ci, cj] = scalar(val) / norm2_psi
       C[cj, ci] = conj(C[ci, cj])
 
-      if fermionic2
+      if !using_auto_fermion() && fermionic2
         Li *= op("F", s, j) * dag(prime(psi[j]))
       else
         Li *= dag(prime(psi[j], "Link"))

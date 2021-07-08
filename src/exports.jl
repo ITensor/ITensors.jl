@@ -315,6 +315,10 @@ export
   OpSum,
   add!,
 
+  # physics/fermions.jl
+  fparity,
+  isfermionic,
+
   # physics/lattices.jl
   Lattice,
   LatticeBond,

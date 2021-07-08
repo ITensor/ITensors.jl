@@ -706,7 +706,7 @@ function scale_blocks!(
 end
 
 # <fermions>
-permfactor(perm, block, inds) = 1.0
+permfactor(perm, block, inds) = 1
 
 # Version where it is known that R has the same blocks
 # as T
@@ -723,9 +723,12 @@ function permutedims!(
 
     # <fermions>
     pfac = permfactor(perm, blockT, inds(T))
-    fac_f = (r, t) -> f(r, pfac * t)
-
-    permutedims!(Rblock, Tblock, perm, fac_f)
+    if pfac == 1
+      permutedims!(Rblock, Tblock, perm, f)
+    else
+      fac_f = (r, t) -> f(r, pfac * t)
+      permutedims!(Rblock, Tblock, perm, fac_f)
+    end
   end
   return R
 end
@@ -1011,6 +1014,10 @@ function _threaded_contract!(
     contraction_plan_blocks[ncontracted] = (T1block, T2block, Rblock)
   end
 
+  indsR = inds(R)
+  indsT1 = inds(T1)
+  indsT2 = inds(T2)
+
   α = one(ElR)
   @sync for repeats_partition in
             Iterators.partition(repeats, max(1, length(repeats) ÷ nthreads()))
@@ -1024,16 +1031,7 @@ function _threaded_contract!(
 
         # <fermions>:
         α = compute_alpha(
-          ElR,
-          labelsR,
-          blockR,
-          inds(R),
-          labelsT1,
-          blockT1,
-          inds(T1),
-          labelsT2,
-          blockT2,
-          inds(T2),
+          ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
         )
 
         contract!(blockR, labelsR, blockT1, labelsT1, blockT2, labelsT2, α, β)
@@ -1064,12 +1062,15 @@ function contract!(
     return R
   end
   already_written_to = Dict{Block{NR},Bool}()
+  indsR = inds(R)
+  indsT1 = inds(T1)
+  indsT2 = inds(T2)
   # In R .= α .* (T1 * T2) .+ β .* R
   for (block1, block2, blockR) in contraction_plan
 
     #<fermions>
     α = compute_alpha(
-      ElR, labelsR, blockR, inds(R), labelsT1, block1, inds(T1), labelsT2, block2, inds(T2)
+      ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
     )
 
     T1block = T1[block1]

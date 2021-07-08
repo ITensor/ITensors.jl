@@ -796,7 +796,9 @@ end
 @propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  return _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
+  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
+  return fac *
+         _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
 end
 
 """
@@ -904,8 +906,9 @@ end
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
+  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
   return _setindex!!(
-    T, x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
+    T, fac * x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
   )
 end
 
@@ -1361,7 +1364,7 @@ function (A::ITensor == B::ITensor)
 end
 
 function isapprox(A::ITensor, B::ITensor; kwargs...)
-  B = permute(dense(B), inds(A))
+  B = permute(B, inds(A))
   return isapprox(array(A), array(B); kwargs...)
 end
 
@@ -1430,7 +1433,12 @@ end
 
 norm(T::ITensor) = norm(tensor(T))
 
-function dag(as::AliasStyle, T::Tensor)
+function dag(as::AliasStyle, T::Tensor{ElT,N}) where {ElT,N}
+  if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
+    CT = conj(NeverAlias(), T)
+    NDTensors.scale_blocks!(CT, block -> NDTensors.permfactor(reverse(1:N), block, inds(T)))
+    return setinds(CT, dag(inds(T)))
+  end
   return setinds(conj(as, T), dag(inds(T)))
 end
 
