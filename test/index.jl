@@ -57,6 +57,10 @@ import ITensors: In, Out, Neither
     @test plev(i => 2) == 0
     @test plev(i' => 2) == 1
     @test prime(i => 2) == (i' => 2)
+    iv = i => 2
+    ĩv = sim(i => 2)
+    @test ind(iv) ≠ ind(ĩv)
+    @test val(iv) == val(ĩv)
   end
   @testset "Iteration" begin
     i = Index(3)

@@ -6,6 +6,12 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensor v0.2.4 Release Notes
+==============================
+
+- Add `sim(::Pair{<:Index})`
+- Add `norm(::EmptyStorage)` (#699) 
+
 ITensor v0.2.3 Release Notes
 ==============================
 
