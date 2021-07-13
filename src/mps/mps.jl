@@ -613,7 +613,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
     L = ITensor(1.0)
   else
     lind = commonind(psi[start_site], psi[start_site - 1])
-    L = delta(lind, lind')
+    L = delta(dag(lind), lind')
   end
 
   for i in start_site:(end_site - 1)
