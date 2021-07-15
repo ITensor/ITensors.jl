@@ -151,7 +151,9 @@ val(name::ValName, ::SiteType"SpinHalf") = val(name, SiteType("S=1/2"))
 
 ITensors.state(name::StateName, ::SiteType"SpinHalf") = state(name, SiteType("S=1/2"))
 
-ITensors.op(o::OpName, ::SiteType"SpinHalf"; kwargs...) = op(o, SiteType("S=1/2"); kwargs...)
+function ITensors.op(o::OpName, ::SiteType"SpinHalf"; kwargs...)
+  return op(o, SiteType("S=1/2"); kwargs...)
+end
 
 # Support the tag "S=½" as equivalent to "S=1/2"
 

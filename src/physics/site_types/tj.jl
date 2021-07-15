@@ -136,29 +136,43 @@ function ITensors.op!(Op::ITensor, ::OpName"Sz", ::SiteType"tJ", s::Index)
   return Op[s' => 3, s => 3] = -0.5
 end
 
-ITensors.op!(Op::ITensor, ::OpName"Sᶻ", st::SiteType"tJ", s::Index) = op!(Op, OpName("Sz"), st, s)
+function ITensors.op!(Op::ITensor, ::OpName"Sᶻ", st::SiteType"tJ", s::Index)
+  return op!(Op, OpName("Sz"), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Sx", ::SiteType"tJ", s::Index)
   Op[s' => 2, s => 3] = 0.5
   return Op[s' => 3, s => 2] = 0.5
 end
 
-ITensors.op!(Op::ITensor, ::OpName"Sˣ", st::SiteType"tJ", s::Index) = op!(Op, OpName("Sx"), st, s)
+function ITensors.op!(Op::ITensor, ::OpName"Sˣ", st::SiteType"tJ", s::Index)
+  return op!(Op, OpName("Sx"), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"S+", ::SiteType"tJ", s::Index)
   return Op[s' => 2, s => 3] = 1.0
 end
 
-ITensors.op!(Op::ITensor, ::OpName"S⁺", st::SiteType"tJ", s::Index) = op!(Op, OpName("S+"), st, s)
-ITensors.op!(Op::ITensor, ::OpName"Sp", st::SiteType"tJ", s::Index) = op!(Op, OpName("S+"), st, s)
-ITensors.op!(Op::ITensor, ::OpName"Splus", st::SiteType"tJ", s::Index) = op!(Op, OpName("S+"), st, s)
+function ITensors.op!(Op::ITensor, ::OpName"S⁺", st::SiteType"tJ", s::Index)
+  return op!(Op, OpName("S+"), st, s)
+end
+function ITensors.op!(Op::ITensor, ::OpName"Sp", st::SiteType"tJ", s::Index)
+  return op!(Op, OpName("S+"), st, s)
+end
+function ITensors.op!(Op::ITensor, ::OpName"Splus", st::SiteType"tJ", s::Index)
+  return op!(Op, OpName("S+"), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"S-", ::SiteType"tJ", s::Index)
   return Op[s' => 3, s => 2] = 1.0
 end
 
-ITensors.op!(Op::ITensor, ::OpName"S⁻", st::SiteType"tJ", s::Index) = op!(Op, OpName("S-"), st, s)
-ITensors.op!(Op::ITensor, ::OpName"Sm", st::SiteType"tJ", s::Index) = op!(Op, OpName("S-"), st, s)
+function ITensors.op!(Op::ITensor, ::OpName"S⁻", st::SiteType"tJ", s::Index)
+  return op!(Op, OpName("S-"), st, s)
+end
+function ITensors.op!(Op::ITensor, ::OpName"Sm", st::SiteType"tJ", s::Index)
+  return op!(Op, OpName("S-"), st, s)
+end
 function ITensors.op!(Op::ITensor, ::OpName"Sminus", st::SiteType"tJ", s::Index)
   return op!(Op, OpName("S-"), st, s)
 end

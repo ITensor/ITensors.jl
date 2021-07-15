@@ -57,10 +57,12 @@ ITensors.op(::OpName"σx", t::SiteType"S=1/2") = op("X", t)
 
 ITensors.op(::OpName"σ1", t::SiteType"S=1/2") = op("X", t)
 
-ITensors.op(::OpName"√NOT", ::SiteType"S=1/2") = [
-  (1 + im)/2 (1 - im)/2
-  (1 - im)/2 (1 + im)/2
-]
+function ITensors.op(::OpName"√NOT", ::SiteType"S=1/2")
+  return [
+    (1 + im)/2 (1 - im)/2
+    (1 - im)/2 (1 + im)/2
+  ]
+end
 
 ITensors.op(::OpName"√X", t::SiteType"S=1/2") = op("√NOT", t)
 

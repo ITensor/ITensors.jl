@@ -55,25 +55,35 @@ function ITensors.op!(Op::ITensor, ::OpName"Sz", ::SiteType"S=1", s::Index)
   return Op[s' => 3, s => 3] = -1.0
 end
 
-ITensors.op!(Op::ITensor, ::OpName"Sᶻ", t::SiteType"S=1", s::Index) = op!(Op, OpName("Sz"), t, s)
+function ITensors.op!(Op::ITensor, ::OpName"Sᶻ", t::SiteType"S=1", s::Index)
+  return op!(Op, OpName("Sz"), t, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"S+", ::SiteType"S=1", s::Index)
   Op[s' => 2, s => 3] = sqrt(2)
   return Op[s' => 1, s => 2] = sqrt(2)
 end
 
-ITensors.op!(Op::ITensor, ::OpName"S⁺", t::SiteType"S=1", s::Index) = op!(Op, OpName("S+"), t, s)
+function ITensors.op!(Op::ITensor, ::OpName"S⁺", t::SiteType"S=1", s::Index)
+  return op!(Op, OpName("S+"), t, s)
+end
 
-ITensors.op!(Op::ITensor, ::OpName"Splus", t::SiteType"S=1", s::Index) = op!(Op, OpName("S+"), t, s)
+function ITensors.op!(Op::ITensor, ::OpName"Splus", t::SiteType"S=1", s::Index)
+  return op!(Op, OpName("S+"), t, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"S-", ::SiteType"S=1", s::Index)
   Op[s' => 3, s => 2] = sqrt(2)
   return Op[s' => 2, s => 1] = sqrt(2)
 end
 
-ITensors.op!(Op::ITensor, ::OpName"S⁻", t::SiteType"S=1", s::Index) = op!(Op, OpName("S-"), t, s)
+function ITensors.op!(Op::ITensor, ::OpName"S⁻", t::SiteType"S=1", s::Index)
+  return op!(Op, OpName("S-"), t, s)
+end
 
-ITensors.op!(Op::ITensor, ::OpName"Sminus", t::SiteType"S=1", s::Index) = op!(Op, OpName("S-"), t, s)
+function ITensors.op!(Op::ITensor, ::OpName"Sminus", t::SiteType"S=1", s::Index)
+  return op!(Op, OpName("S-"), t, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Sx", ::SiteType"S=1", s::Index)
   Op[s' => 2, s => 1] = 1 / sqrt(2)
@@ -82,7 +92,9 @@ function ITensors.op!(Op::ITensor, ::OpName"Sx", ::SiteType"S=1", s::Index)
   return Op[s' => 2, s => 3] = 1 / sqrt(2)
 end
 
-ITensors.op!(Op::ITensor, ::OpName"Sˣ", t::SiteType"S=1", s::Index) = op!(Op, OpName("Sx"), t, s)
+function ITensors.op!(Op::ITensor, ::OpName"Sˣ", t::SiteType"S=1", s::Index)
+  return op!(Op, OpName("Sx"), t, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"iSy", ::SiteType"S=1", s::Index)
   Op[s' => 2, s => 1] = -1 / sqrt(2)
@@ -91,7 +103,9 @@ function ITensors.op!(Op::ITensor, ::OpName"iSy", ::SiteType"S=1", s::Index)
   return Op[s' => 2, s => 3] = +1 / sqrt(2)
 end
 
-ITensors.op!(Op::ITensor, ::OpName"iSʸ", t::SiteType"S=1", s::Index) = op!(Op, OpName("iSy"), t, s)
+function ITensors.op!(Op::ITensor, ::OpName"iSʸ", t::SiteType"S=1", s::Index)
+  return op!(Op, OpName("iSy"), t, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Sy", ::SiteType"S=1", s::Index)
   complex!(Op)
@@ -101,7 +115,9 @@ function ITensors.op!(Op::ITensor, ::OpName"Sy", ::SiteType"S=1", s::Index)
   return Op[s' => 2, s => 3] = -1im / sqrt(2)
 end
 
-ITensors.op!(Op::ITensor, ::OpName"Sʸ", t::SiteType"S=1", s::Index) = op!(Op, OpName("Sy"), t, s)
+function ITensors.op!(Op::ITensor, ::OpName"Sʸ", t::SiteType"S=1", s::Index)
+  return op!(Op, OpName("Sy"), t, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Sz2", ::SiteType"S=1", s::Index)
   Op[s' => 1, s => 1] = +1.0
@@ -128,4 +144,6 @@ ITensors.space(::SiteType"SpinOne"; kwargs...) = space(SiteType("S=1"); kwargs..
 
 ITensors.state(::SiteType"SpinOne", st::AbstractString) = state(SiteType("S=1"), st)
 
-ITensors.op!(Op::ITensor, o::OpName, ::SiteType"SpinOne", s::Index) = op!(Op, o, SiteType("S=1"), s)
+function ITensors.op!(Op::ITensor, o::OpName, ::SiteType"SpinOne", s::Index)
+  return op!(Op, o, SiteType("S=1"), s)
+end
