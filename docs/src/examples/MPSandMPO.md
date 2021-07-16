@@ -327,6 +327,45 @@ The call to the `svd` routine says to treat the link (virtual or bond) Index con
 
 The code in the `for` loop iterates over the diagonal elements of the `S` tensor (which are the singular values from the SVD), computes their squares to obtain the probabilities of observing the various states in the Schmidt basis (i.e. eigenvectors of the left-right bipartition reduced density matrices), and puts them into the von Neumann entanglement entropy formula ``S_\text{vN} = - \sum_{n} p_{n} \log{p_{n}}``.
 
+## Sampling from an MPS
+
+A matrix product state (MPS) can be viewed as defining a probability distribution 
+through the Born rule, as is the case when the MPS represents a quantum wavefunction. 
+To sample from the distribution defined by an MPS, you can use the function `sample`
+provided in ITensor. For an MPS `psi` call to `sample(psi)` returns a random
+sample from the distribution defined by `psi`. (Note that each sample is drawn anew
+and not from a Markov chain seeded by a previous sample; this is possible because 
+the algorithm for sampling MPS is a `perfect' sampling algorithm with no autocorrelation.)
+
+In more detail, say we have a set of `N` site indices `s` and define a random MPS
+with these sites:
+```@example sample_mps; continued=true
+using ITensors # hide
+N = 10 # number of sites
+d = 3  # dimension of each site
+chi = 16 # bond dimension of the MPS
+s = siteinds(d,N)
+psi = randomMPS(s;linkdims=chi)
+```
+
+We can now draw some samples from this MPS as
+
+```@example sample_mps
+v1 = sample(psi)
+v2 = sample(psi)
+v3 = sample(psi)
+println(v1)
+println(v2)
+println(v3)
+```
+
+The integers in each of the samples represent settings of each of the MPS indices
+in the "computational basis".
+
+For reasons of efficiency, the `sample` function requires the MPS to be in orthogonal
+form, orthogonalized to the first site. If it is not already in this form, it
+can be brought into orthogonal form by calling `orthogonalize!(psi,1)`.
+
 
 ## Write and Read an MPS or MPO to Disk with HDF5
 
