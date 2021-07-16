@@ -129,8 +129,9 @@ of the array in the code above.
 Note that for efficiency reasons, the array returned by the `array` function will
 sometimes be a *view* of the ITensor, such that changing an element of `A` would
 also change the corresponding element of `T`. This is not always the case though:
-for example if `T` is a block-sparse ITensor then the `array` function returns a 
-copy of `T`'s data (since the missing zero elements will need to be filled in).
+for example if the indices are passed in a different order from how the internal
+ITensor storage is arranged, or if  `T` is a block-sparse ITensor, since the 
+(not stored) zero blocks will need to be filled in.
 
 
 ## Arithmetic With ITensors
