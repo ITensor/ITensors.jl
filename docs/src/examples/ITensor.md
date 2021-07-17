@@ -219,6 +219,43 @@ myf(x) = 1.0/(1.0+exp(-x))
 T .= myf.(T)
 ```
 
+## Making an ITensor with a Single Non-Zero Element
+
+It is often useful to make ITensors with all elements zero
+except for a specific element that is equal to 1.0. 
+Use cases can include making product-state quantum wavefunctions
+or contracting single-element ITensors with other ITensors to
+set their indices to a fixed value.
+
+To make such an ITensor, use the [`onehot`](@ref) function. Borrowing terminology from engineering,
+a "one hot" vector or tensor has a single element equal to 1.0 and
+the rest zero. (In previous versions of ITensor this function was called `setelt`.) 
+
+The ITensor function [`onehot`](@ref) takes one or more 
+Index-value Pairs such as `i=>2` and `j=>1` and returns an ITensor
+with a 1.0 in the location specified by the Index values:
+
+```@example onehot_1
+using ITensors # hide
+i = Index(2)
+O1 = onehot(i=>1)
+println(O1)
+```
+    
+```@example onehot_2
+using ITensors # hide
+i = Index(2) # hide
+O2 = onehot(i=>2)
+println(O2)
+```
+
+```@example onehot_3
+using ITensors # hide
+i = Index(2) # hide
+j = Index(3)
+T = onehot(i=>2,j=>3)
+println(T)
+```
 
 ## Tracing an ITensor
 
