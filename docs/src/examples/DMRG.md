@@ -92,6 +92,16 @@ let
 end
 ```
 
+## Using a Custom Observer for DMRG
+
+An Observer is any object which can be used to perform custom measurements throughout
+a DMRG calculation and to stop a DMRG calculation early. Because an Observer has
+access to the entire wavefunction at every step, a wide range of customization is
+possible.
+
+For detailed examples of making custom Observers, see the [Observer](@ref observer)
+section of the documentation.
+
 
 ## DMRG Calculation with Mixed Local Hilbert Space Types
 
