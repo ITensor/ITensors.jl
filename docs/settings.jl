@@ -38,9 +38,9 @@ settings = Dict(
       "OpSum (AutoMPO)" => "OpSum.md",
     ],
     "Frequently Asked Questions" => [
-       "Programming Language (Julia, C++, ...) FAQs" => "faq/JuliaAndCpp.md",
-       "DMRG FAQs" => "faq/DMRG.md",
-       "ITensor Development FAQs" => "faq/Development.md"
+      "Programming Language (Julia, C++, ...) FAQs" => "faq/JuliaAndCpp.md",
+      "DMRG FAQs" => "faq/DMRG.md",
+      "ITensor Development FAQs" => "faq/Development.md",
     ],
     "Upgrade guides" => ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
     "ITensor indices and Einstein notation" => "Einsum.md",
