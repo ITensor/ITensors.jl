@@ -705,8 +705,11 @@ function expect(psi::MPS, ops::AbstractString...; kwargs...)
     end
   end
 
-  v = Nops == 1 ? ex[1] : ex
-  return Ns==1 ? v[1] : v
+  if Nops == 1
+    return Ns==1 ? ex[1][1] : ex[1]
+  else
+    return Ns==1 ? [x[1] for x in ex] : ex
+  end
 end
 
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPS)
