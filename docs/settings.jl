@@ -14,9 +14,9 @@ settings = Dict(
       "Next Steps" => "getting_started/NextSteps.md",
     ],
     "Tutorials" => [
-      "DMRG" => "tutorials/DMRG.md", 
-      "Quantum Number Conserving DMRG" => "tutorials/QN_DMRG.md", 
-      "MPS Time Evolution" => "tutorials/MPSTimeEvolution.md", 
+      "DMRG" => "tutorials/DMRG.md",
+      "Quantum Number Conserving DMRG" => "tutorials/QN_DMRG.md",
+      "MPS Time Evolution" => "tutorials/MPSTimeEvolution.md",
     ],
     "Code Examples" => [
       "ITensor Examples" => "examples/ITensor.md",
