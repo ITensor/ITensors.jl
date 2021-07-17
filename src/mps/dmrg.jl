@@ -29,6 +29,11 @@ control the DMRG algorithm.
 Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
+
+Optional keyword arguments:
+* `outputlevel::Int = 1` - larger outputlevel values make DMRG print more information and 0 means no output
+* `observer` - object implementing the [Observer](@ref observer) interface which can perform measurements and stop DMRG early
+* `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this value, begin saving tensors to disk to free memory in large calculations
 """
 function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
   check_hascommoninds(siteinds, H, psi0)

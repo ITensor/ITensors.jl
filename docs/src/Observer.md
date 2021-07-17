@@ -29,7 +29,7 @@ this struct a subtype of `AbstractObserver`.
 For example, let's make a type called `DemoObserver`
 as:
 
-```
+```julia
 mutable struct DemoObserver <: AbstractObserver
    energy_tol::Float64
    last_energy::Float64
@@ -67,7 +67,7 @@ end of a sweep).
 In our example, we will just compare the `energy` keyword
 argument to the `last_energy` variable held inside the `DemoObserver`:
 
-```
+```julia
 function ITensors.checkdone!(o::DemoObserver;kwargs...)
   sw = kwargs[:sweep]
   energy = kwargs[:energy]
@@ -106,7 +106,7 @@ For our minimal `DemoObserver` example here, we will just make a `measure!` func
 that prints out some of the information above, but in a more realistic setting one 
 could use the MPS `psi` to perform essentially arbitrary measurements.
 
-```
+```julia
 function ITensors.measure!(o::DemoObserver; kwargs...)
   energy = kwargs[:energy]
   sweep = kwargs[:sweep]
@@ -128,14 +128,14 @@ using the `observer` keyword argument.
 
 Continuing with our `DemoObserver` example above:
 
-```
+```julia
 obs = DemoObserver(1E-4) # use an energy tolerance of 1E-4
 energy, psi = dmrg(H,psi0,sweeps; observer=obs, outputlevel=1)
 ```
 
 ## Complete Sample Code
 
-```
+```julia
 using ITensors
 
 mutable struct DemoObserver <: AbstractObserver
