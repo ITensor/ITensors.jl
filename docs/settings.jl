@@ -11,8 +11,12 @@ settings = Dict(
     "Getting Started with ITensor" => [
       "Installing Julia and ITensor" => "getting_started/Installing.md",
       "Running ITensor and Julia Codes" => "getting_started/RunningCodes.md",
-      "Tutorials" => "getting_started/Tutorials.md",
       "Next Steps" => "getting_started/NextSteps.md",
+    ],
+    "Tutorials" => [
+      "DMRG" => "tutorials/DMRG.md", 
+      "Quantum Number Conserving DMRG" => "tutorials/QN_DMRG.md", 
+      "MPS Time Evolution" => "tutorials/MPSTimeEvolution.md", 
     ],
     "Code Examples" => [
       "ITensor Examples" => "examples/ITensor.md",
