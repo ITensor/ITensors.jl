@@ -207,6 +207,20 @@ using ITensors, Test
       end
     end
 
+    @testset "Convert diag to dense with denseblocks" begin
+      D = diagITensor(v, i, j, k)
+      T = denseblocks(D)
+
+      @test storage(T) isa NDTensors.Dense{Float64}
+      for ii in 1:d, jj in 1:d, kk in 1:d
+        if ii == jj == kk
+          @test T[ii, ii, ii] == ii
+        else
+          @test T[i => ii, j => jj, k => kk] == 0.0
+        end
+      end
+    end
+
     @testset "Add (Diag + Diag)" begin
       v1 = randn(d)
       v2 = randn(d)

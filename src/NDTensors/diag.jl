@@ -275,6 +275,8 @@ function dense(T::TensorT) where {TensorT<:DiagTensor}
   return R
 end
 
+denseblocks(T::DiagTensor) = dense(T)
+
 function outer!(
   R::DenseTensor{<:Number,NR}, T1::DiagTensor{<:Number,N1}, T2::DiagTensor{<:Number,N2}
 ) where {NR,N1,N2}

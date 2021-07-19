@@ -2382,7 +2382,7 @@ function insertblock!(T::ITensor, args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
     error("Block does not match current flux")
   TR = insertblock!!(tensor(T), args...)
-  setstorage!(T, storage(TR))
+  settensor!(T, TR)
   return T
 end
 

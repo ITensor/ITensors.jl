@@ -583,7 +583,7 @@ function compute_contraction_labels(Ais::Tuple, Bis::Tuple)
     if Ais_i == Bis_j
       if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
         error(
-          "Attempting to contract IndexSet:\n$(Ais)with IndexSet:\n$(Bis)QN indices must have opposite direction to contract.",
+          "Attempting to contract IndexSet:\n\n$(Ais)\n\nwith IndexSet:\n\n$(Bis)\n\nQN indices must have opposite direction to contract, but indices:\n\n$(Ais_i)\n\nand:\n\n$(Bis_j)\n\ndo not have opposite directions.",
         )
       end
       Alabels[i] = Blabels[j] = -(1 + ncont)
