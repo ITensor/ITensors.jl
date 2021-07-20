@@ -6,6 +6,18 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensor v0.2.4 Release Notes
+==============================
+
+- Add `sim(::Pair{<:Index})` (#701)
+- Add `norm(::EmptyStorage)` (#699) 
+
+ITensor v0.2.3 Release Notes
+==============================
+
+- Add `denseblocks` to convert from `DiagBlockSparse` to `BlockSparse` storage (PR #693).
+- Make A == B return false if ITensors A and B have different indices (PR #690).
+
 ITensor v0.2.2 Release Notes
 ==============================
 

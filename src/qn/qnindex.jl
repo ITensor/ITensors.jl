@@ -182,6 +182,12 @@ flux(ib::Pair{<:Index,Block{1}}) = flux(first(ib), last(ib))
 
 flux(iv::Pair{<:Index}) = flux(ind(iv), block(iv))
 
+function flux(i::Index, b::Block)
+  return error(
+    "Cannot compute flux: Index has no QNs. Try setting conserve_qns=true in siteinds or constructing Index with QN subspaces.",
+  )
+end
+
 qnblocks(i::QNIndex) = space(i)
 
 # XXX: deprecate the Integer version
@@ -425,10 +431,6 @@ splitblocks(i::Index) = setspace(i, splitblocks(space(i)))
 function mutable_storage(::Type{Order{N}}, ::Type{IndexT}) where {N,IndexT<:QNIndex}
   return SizedVector{N,IndexT}(undef)
 end
-
-isfermionic(i::Index) = false
-
-isfermionic(i::QNIndex) = any(q -> isfermionic(qn(q)), space(i))
 
 function show(io::IO, i::QNIndex)
   idstr = "$(id(i) % 1000)"

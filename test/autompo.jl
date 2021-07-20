@@ -146,6 +146,8 @@ end
 @testset "OpSum" begin
   N = 10
 
+  @test !ITensors.using_auto_fermion()
+
   @testset "Show MPOTerm" begin
     ampo = OpSum()
     add!(ampo, "Sz", 1, "Sz", 2)

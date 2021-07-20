@@ -117,6 +117,7 @@ export
   complex!,
   delta,
   dense,
+  denseblocks,
   δ,
   diagitensor,
   diagITensor,
@@ -313,6 +314,10 @@ export
   AutoMPO,
   OpSum,
   add!,
+
+  # physics/fermions.jl
+  fparity,
+  isfermionic,
 
   # physics/lattices.jl
   Lattice,

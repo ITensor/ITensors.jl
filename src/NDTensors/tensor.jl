@@ -136,7 +136,7 @@ Base.similar(T::Tensor, args...) = similar(T, args...)
 # slow
 #
 
-LinearAlgebra.norm(T::Tensor) = norm(storage(T))
+norm(T::Tensor) = norm(storage(T))
 
 conj(as::AliasStyle, T::Tensor) = setstorage(T, conj(as, storage(T)))
 conj(T::Tensor) = conj(AllowAlias(), T)

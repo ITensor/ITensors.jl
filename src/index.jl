@@ -543,7 +543,11 @@ isindequal(iv1::Pair{<:Index}, iv2::Pair{<:Index}) = (ind(iv1) == ind(iv2))
 
 plev(iv::Pair{<:Index}) = plev(ind(iv))
 
+# TODO:
+# Implement a macro with a general definition:
+# f(iv::Pair{<:Index}, args...) = (f(ind(iv), args...) => val(iv))
 prime(iv::Pair{<:Index}, inc::Integer=1) = (prime(ind(iv), inc) => val(iv))
+sim(iv::Pair{<:Index}, args...) = (sim(ind(iv), args...) => val(iv))
 
 dag(iv::Pair{<:Index}) = (dag(ind(iv)) => val(iv))
 

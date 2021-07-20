@@ -638,8 +638,11 @@ end
     end
     PM = expect(psi, "S+*S-")
     @test norm(PM - diag(Cpm)) < 1E-8
-
+    #Test site_range feature
     range = 3:7
+    Cpm37 = correlation_matrix(psi, "S+", "S-"; site_range=range)
+    @test norm(Cpm37 - Cpm[range, range]) < 1E-8
+
     @test norm(PM[range] - expect(psi, "S+*S-"; site_range=range)) < 1E-8
 
     # With start_site, end_site arguments:

@@ -273,12 +273,12 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   end
 
   CL = combiner(Lis...; dir=Out, tags="CMB,left")
-  CR = combiner(Ris...; dir=In, tags="CMB,right")
+  CR = combiner(dag(Ris)...; dir=Out, tags="CMB,right")
 
-  AC = A * CR * CL
+  AC = A * dag(CR) * CL
 
   cL = combinedind(CL)
-  cR = combinedind(CR)
+  cR = dag(combinedind(CR))
   if inds(AC) != IndexSet(cL, cR)
     AC = permute(AC, cL, cR)
   end
@@ -288,7 +288,7 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   DT, VT, spec = eigen(AT; kwargs...)
   D, VC = itensor(DT), itensor(VT)
 
-  V = VC * CR
+  V = VC * dag(CR)
 
   # Set right index tags
   l = uniqueind(D, V)

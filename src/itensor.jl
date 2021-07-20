@@ -619,9 +619,10 @@ For example, an ITensor with Diag storage will become Dense storage,
 filled with zeros except for the diagonal values.
 """
 function dense(A::ITensor)
-  T = dense(tensor(A))
-  return ITensor(storage(T), removeqns(inds(A)))
+  return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
 end
+
+denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
 """
     complex(T::ITensor)
@@ -795,7 +796,9 @@ end
 @propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  return _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
+  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
+  return fac *
+         _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
 end
 
 """
@@ -903,8 +906,9 @@ end
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
+  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
   return _setindex!!(
-    T, x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
+    T, fac * x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
   )
 end
 
@@ -1355,11 +1359,12 @@ adjoint(A::ITensor) = prime(A)
 dirs(A::ITensor, is) = dirs(inds(A), is)
 
 function (A::ITensor == B::ITensor)
+  !hassameinds(A, B) && return false
   return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
 end
 
 function isapprox(A::ITensor, B::ITensor; kwargs...)
-  B = permute(dense(B), inds(A))
+  B = permute(B, inds(A))
   return isapprox(array(A), array(B); kwargs...)
 end
 
@@ -1428,7 +1433,12 @@ end
 
 norm(T::ITensor) = norm(tensor(T))
 
-function dag(as::AliasStyle, T::Tensor)
+function dag(as::AliasStyle, T::Tensor{ElT,N}) where {ElT,N}
+  if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
+    CT = conj(NeverAlias(), T)
+    NDTensors.scale_blocks!(CT, block -> NDTensors.permfactor(reverse(1:N), block, inds(T)))
+    return setinds(CT, dag(inds(T)))
+  end
   return setinds(conj(as, T), dag(inds(T)))
 end
 
@@ -2372,7 +2382,16 @@ function insertblock!(T::ITensor, args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
     error("Block does not match current flux")
   TR = insertblock!!(tensor(T), args...)
-  setstorage!(T, storage(TR))
+  settensor!(T, TR)
+  return T
+end
+
+function insert_diag_blocks!(T::ITensor)
+  ## TODO: Add a check that all diag blocks
+  ## have the correct flux
+  ## (!isnothing(flux(T)) && check_diagblock_flux(T)) &&
+  ##   error("Block does not match current flux")
+  insert_diag_blocks!(tensor(T))
   return T
 end
 

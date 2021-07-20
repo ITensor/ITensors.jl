@@ -206,7 +206,7 @@ function LinearAlgebra.eigen(
   DM, VM = eigen(matrix(T))
 
   # Sort by largest to smallest eigenvalues
-  p = sortperm(DM; rev=true)
+  p = sortperm(DM; rev=true, by=abs)
   DM = DM[p]
   VM = VM[:, p]
 

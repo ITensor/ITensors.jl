@@ -62,7 +62,7 @@ el = T[j=>1,i=>2,k=>3]
 println("The (i,j,k) = (2,1,3) element of T is ",el)
 ```
 
-## Constructing ITensors from Arrays
+## Making ITensors from Arrays
 
 To initialize all of the elements of an ITensor at once, you
 can pass a Julia array into the ITensor constructor.
@@ -91,6 +91,48 @@ m = Index(2,"index_m")
 
 B = ITensor(T,k,l,m)
 ```
+
+## Making Arrays from ITensors
+
+Not only can we make an ITensor from a Julia array, but we can also convert
+an ITensor back into a Julia array.
+
+Say we have made an ITensor with two indices:
+
+```@example from_array
+using ITensors # hide
+k = Index(4,"index_k")
+m = Index(2,"index_m")
+
+T = randomITensor(k,m)
+@show T
+display(T) # hide
+```
+
+Here we used the `randomITensor` constructor to fill T with random elements
+but we could make an ITensor some other way too.
+
+Now to convert `T` into a regular Julia array `A`, use the [`Array`](@ref) constructor
+and pass the indices of `T` in the order that you want:
+
+```@example from_array
+A = Array(T,k,m)
+@show A
+```
+
+The reason you have to pass the indices is that the ordering of ITensor indices
+is an implementation detail and not part of the user interface. So when leaving the
+ITensor system and converting to a regular array, you must say what ordering of the
+indices you want. Making the array as `A = Array(T,m,k)` would give the transpose
+of the array in the code above.
+
+Note that for efficiency reasons, the array returned by the `array` function will
+sometimes be a *view* of the ITensor, such that changing an element of `A` would
+also change the corresponding element of `T`. This is not always the case though:
+for example if the indices are passed in a different order from how the internal
+ITensor storage is arranged, or if  `T` is a block-sparse ITensor, since the 
+(not stored) zero blocks will need to be filled in.
+
 
 ## Arithmetic With ITensors
 
@@ -177,6 +219,43 @@ myf(x) = 1.0/(1.0+exp(-x))
 T .= myf.(T)
 ```
 
+## Making an ITensor with a Single Non-Zero Element
+
+It is often useful to make ITensors with all elements zero
+except for a specific element that is equal to 1.0. 
+Use cases can include making product-state quantum wavefunctions
+or contracting single-element ITensors with other ITensors to
+set their indices to a fixed value.
+
+To make such an ITensor, use the [`onehot`](@ref) function. Borrowing terminology from engineering,
+a "one hot" vector or tensor has a single element equal to 1.0 and
+the rest zero. (In previous versions of ITensor this function was called `setelt`.) 
+
+The ITensor function [`onehot`](@ref) takes one or more 
+Index-value Pairs such as `i=>2` and `j=>1` and returns an ITensor
+with a 1.0 in the location specified by the Index values:
+
+```@example onehot_1
+using ITensors # hide
+i = Index(2)
+O1 = onehot(i=>1)
+println(O1)
+```
+    
+```@example onehot_2
+using ITensors # hide
+i = Index(2) # hide
+O2 = onehot(i=>2)
+println(O2)
+```
+
+```@example onehot_3
+using ITensors # hide
+i = Index(2) # hide
+j = Index(3)
+T = onehot(i=>2,j=>3)
+println(T)
+```
 
 ## Tracing an ITensor
 
@@ -356,8 +435,12 @@ can do this as follows:
 
 ```julia
 T = randomITensor(i,j,k)
-Q,R = qr(T,(i,k))
+Q,R = qr(T,(i,k);positive=true)
 ```
+
+Note the use of the optional `positive=true` keyword argument, which ensures that
+the diagonal elements of `R` are non-negative. With this option, the QR factorization
+is *unique*, which can be useful in certain cases.
 
 ## Write and Read an ITensor to Disk with HDF5
 

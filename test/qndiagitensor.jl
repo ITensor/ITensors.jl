@@ -65,6 +65,17 @@ using ITensors, Test
     end
   end
 
+  @testset "denseblocks: convert DiagBlockSparse to BlockSparse" begin
+    i = Index([QN(0) => 2, QN(1) => 3])
+    A = diagITensor(i', dag(i))
+    randn!(ITensors.data(A))
+    B = denseblocks(A)
+    for n in 1:dim(i)
+      @test A[n, n] == B[n, n]
+    end
+    @test dense(A) == dense(B)
+  end
+
   @testset "Regression test for QN delta contraction bug" begin
     # http://itensor.org/support/2814/block-sparse-itensor-wrong-results-multiplying-delta-tensor
     s = Index([QN(("N", i, 1)) => 1 for i in 1:2])
