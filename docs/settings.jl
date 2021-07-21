@@ -57,6 +57,6 @@ settings = Dict(
     ],
   ],
   :format => Documenter.HTML(; assets=["assets/favicon.ico"], prettyurls=false),
-  :doctest => true,
+  :doctest => false,
   :checkdocs => :none,
 )
