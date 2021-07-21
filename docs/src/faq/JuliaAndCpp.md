@@ -20,7 +20,8 @@ However, there are certainly good reasons to use the C++ version of ITensor:
 
 ## Which is faster: Julia or C++ ?
 
-Both Julia and C++ offer roughly the same performance. 
+Julia and C++ offer about the same performance. 
+
 Each language gets compiled to optimized assembly code and offer arrays and containers
 which can efficiently stored and iterated. Well-written Julia code can be even faster
 than comparable C++ codes in many cases.

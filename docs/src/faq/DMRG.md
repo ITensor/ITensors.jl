@@ -2,7 +2,104 @@
 
 ## Ensuring a DMRG calculation is converged
 
+While DMRG calculations can be extremely quick to converge in the best cases,
+convergence can be slower for cases such as gapless systems or quasi-two-dimensional systems.
+So it becomes important to know if a DMRG calculation is converged i.e. has been run
+long enough with enough resources (large enough MPS bond dimension).
+
+Unfortunately **there is no automatic or bulletproof check for DMRG convergence**.
+However, there are a number of reliable heuristics you can use to check convergence.
+We list some of these with the most fundamental and important ones first:
+
+* Run your DMRG calculation on a **smaller system** and compare with another method, such
+  as an exact diagonalization. If the agreement is good, then gradually try larger
+  systems and see if the physical properties are roughly consistent and similar (i.e.
+  the density profile has similar features).
+
+* Make sure to check a **wide range of properties** - not just the energy. See if these
+  look plausible by plotting and visually inspecting them. For example: if your system has 
+  left-right reflection symmetry, does the density or magnetization also have this symmetry? 
+  If the ground  state of your system is expected to have a total ``S^z`` of zero, does your 
+  ground state have this property?
+
+* Make sure to run your DMRG calculation for **different numbers of sweeps** to see if 
+  the results change. For example, if you run DMRG for 5 sweeps but are unsure of convergence,
+  try running it for 10 sweeps: is the energy the same or has it significantly decreased?
+  If 10 sweeps made a difference, try 20 sweeps.
+
+* Inspect the the **DMRG output**. 
+  The ITensor DMRG code reports the maximum bond or link dimension and maximum truncation error
+  after each sweep. (The maximums here mean over each DMRG substep making up one sweep.)
+  Is the maximum dimension or "maxlinkdim" reported by the DMRG output quickly reaching 
+  and saturating the maxdim value you set for each sweep? Is the maximum truncation error 
+  "maxerr" consistently reaching large values, larger than 1E-5? 
+  Then it you may need to raise the maxdim parameter for your later sweeps, 
+  so that DMRG is allowed to use a larger bond dimension and thus reach a better accuracy.
+
+* Compute the **energy variance** of an MPS to check whether it is an eigenstate. To do this
+  in ITensor, you can use the following code where `H` is your Hamiltonian MPO
+  and `psi` is the wavefunction you want to check:
+
+  ```julia
+  H2 = inner(H,psi,H,psi)
+  E = inner(psi,H,psi)
+  var = H2-E^2
+  @show var
+  ```
+  
+  Here `var` is the quantity ``\langle H^2 \rangle - \langle H \rangle^2``.
+  The closer `var` is to zero, the more precisely `psi` is an eigenstate of `H`. Note
+  that this check does not ensure that `psi` is the ground state, but only one of the 
+  eigenstates.
+
+
 ## Preventing DMRG from getting stuck in a local minimum
+
+While DMRG has very robust convergence properties when the initial MPS is close to the global
+minimum, if it is far from the global minumum then there is _no guarantee_ that DMRG will
+be able to find the true ground state. This problem is exacerbated for quantum number conserving
+DMRG where the search space is more constrained.
+
+Thus it is very important to perform a number of checks to ensure that the result you
+get from DMRG is actually converged. To learn about these checks, see the previous question.
+
+When DMRG is failing to converge, here are some of the steps you can take to improve things:
+
+* _The most important and useful technique_ is to turn on the **noise term** feature of DMRG.
+  To do this, just set the `noise` parameter of each sweep to a small, non-zero value, making
+  this value very small (1E-11, say) or zero by the last sweep. (Experiment with different
+  values on small systems to see which noise magnitudes help.) Here is an example of 
+  a `Sweeps` parameter object with setting the noise of each sweep:
+
+  ```julia
+  sweeps = Sweeps(10)
+  setmaxdim!(sweeps, 100, 200, 400, 800, 1600)
+  setcutoff!(sweeps, 1e-6)
+  setnoise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
+  @show sweeps
+  ```
+
+* Try using a initial MPS with properties close to the ground state you are looking for.
+  For example, the ground state of a system of electrons typically has a density which is
+  spread out over the whole system. So if your initial state has all of the electrons bunched
+  up on the left-hand side only, it can take DMRG a very long time to converge.
+
+* Try using a randomMPS with a modestly large bond dimension. ITensor offers a function
+  called [`randomMPS`](@ref) which can be used to make randomMPS in both the quantum number (QN)
+  conserving and non-QN conserving cases. Because random MPS have very "typical" properties,
+  they can often be better inputs for DMRG.
+
+* Try DMRG on a closely related Hamiltonian for which convergence is easier to obtain
+  (be creative here: it could be your Hamiltonian with interactions turned off, or
+   with interactions only within, but not between, small local patches). Take the
+  output of this first calculation and use it as input for DMRG with the full Hamiltonian.
+
+* In stubborn cases, try other methods for finding the ground state which are slower, but
+  have a better chance of succeeding. A key example is imaginary time evolution, which 
+  always reaches the ground state if (a) performed accurately on (b) a state which is 
+  not orthogonal to the ground state. After doing some amount of imaginary time evolution,
+  use the resulting MPS as an initial state for DMRG obtain a higher-accuracy solution.
+
 
 ## What boundary conditions should I choose: open, periodic, or infinite?
 
