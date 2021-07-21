@@ -463,12 +463,12 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
 
   # Try calling state(::StateName"Name",::SiteType"Tag",s::Index)
   for st in stypes
-    res = state(sname, st, s; kwargs...)
-    !isnothing(res) && return res
+    v = state(sname, st, s; kwargs...)
+    !isnothing(v) && return itensor(v, s)
   end
 
   # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index)
-  T = emptyITensor(s)
+  T = ITensor(s)
   for st in stypes
     state!(T, sname, st, s)
     !isempty(T) && return T
