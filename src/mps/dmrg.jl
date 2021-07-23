@@ -29,6 +29,11 @@ control the DMRG algorithm.
 Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
+
+Optional keyword arguments:
+* `outputlevel::Int = 1` - larger outputlevel values make DMRG print more information and 0 means no output
+* `observer` - object implementing the [Observer](@ref observer) interface which can perform measurements and stop DMRG early
+* `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this value, begin saving tensors to disk to free memory in large calculations
 """
 function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   check_hascommoninds(siteinds, H, psi0)
@@ -123,6 +128,10 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   obs = get(kwargs, :observer, NoObserver())
   outputlevel::Int = get(kwargs, :outputlevel, 1)
 
+  write_when_maxdim_exceeds::Union{Int,Nothing} = get(
+    kwargs, :write_when_maxdim_exceeds, nothing
+  )
+
   # eigsolve kwargs
   eigsolve_tol::Float64 = get(kwargs, :eigsolve_tol, 1e-14)
   eigsolve_krylovdim::Int = get(kwargs, :eigsolve_krylovdim, 3)
@@ -174,6 +183,16 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   for sw in 1:nsweep(sweeps)
     sw_time = @elapsed begin
       maxtruncerr = 0.0
+
+      if !isnothing(write_when_maxdim_exceeds) &&
+         maxdim(sweeps, sw) > write_when_maxdim_exceeds
+        if outputlevel >= 2
+          println(
+            "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk",
+          )
+        end
+        PH = disk(PH)
+      end
 
       for (b, ha) in sweepnext(N)
         @debug_check begin

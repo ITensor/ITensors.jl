@@ -28,6 +28,8 @@ end
 (S::TensorStorage * x::Number) = setdata(S, x * data(S))
 (x::Number * S::TensorStorage) = S * x
 
+-(S::TensorStorage) = setdata(S, -data(S))
+
 similar(S::TensorStorage) = setdata(S, similar(data(S)))
 similar(S::TensorStorage, x) = setdata(S, similar(data(S), x))
 
@@ -75,7 +77,7 @@ LinearAlgebra.rmul!(S::TensorStorage, v::Number) = (rmul!(data(S), v); S)
 
 scale!(S::TensorStorage, v::Number) = rmul!(S, v)
 
-LinearAlgebra.norm(S::TensorStorage) = norm(data(S))
+norm(S::TensorStorage) = norm(data(S))
 
 Base.convert(::Type{T}, S::T) where {T<:TensorStorage} = S
 

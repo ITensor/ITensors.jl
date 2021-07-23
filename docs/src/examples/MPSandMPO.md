@@ -1,5 +1,9 @@
 # MPS and MPO Examples
 
+The following examples demonstrate operations available in ITensor
+to work with [matrix product state (MPS)](http://tensornetwork.org/mps/)
+(or tensor train) and matrix product operator (MPO) tensor networks.
+
 ## Creating an MPS from a Tensor
 
 ![](mps_from_tensor.png)
@@ -69,6 +73,120 @@ maxdim = 10
 M = MPS(A,sites;cutoff=cutoff,maxdim=maxdim)
 ```
 
+## Obtaining Elements of a Tensor Represented by an MPS
+
+A matrix product state (MPS) or tensor train (TT) is a format for representing a large tensor having N indices in terms of N smaller tensors. Given an MPS represeting a tensor T
+we can obtain a particular element ``T^{s_1 s_2 s_3 \cdots s_N}``
+of that tensor using code similar to the following code below.
+
+In the example code below we will obtain the element ``T^{1,2,1,1,2,1,2,2,2,1}`` of the tensor T
+which is (implicitly) defined by the MPS psi:
+
+```@example mps_element
+using ITensors # hide
+let # hide
+N = 10
+s = siteinds(2,N)
+chi = 4
+psi = randomMPS(s;linkdims=chi)
+
+# Make an array of integers of the element we
+# want to obtain
+el = [1,2,1,1,2,1,2,2,2,1]
+
+V = ITensor(1.)
+for j=1:N
+  V *= (psi[j]*state(s[j],el[j]))
+end
+v = scalar(V)
+
+# v is the element we wanted to obtain:
+@show v
+end # hide
+```
+
+The call to `state(s[j],el[j])` in the code above makes a single-index ITensor
+with the Index `s[j]` and the entry at location `el[j]` set to 1.0, with all other 
+entries set to 0.0. Contracting this tensor with the MPS tensor at site `j` 
+can be viewed as "clamping" or "fixing" the index to a set value. The resulting
+tensors are contracted sequentially, overwriting the ITensor `V`, and the final
+scalar value of `V` is the tensor element we seek.
+
+See below for a visual depiction of what the above code is doing:
+
+![](mps_element.png)
+
+## Expected Value of Local Operators
+
+When using an MPS to represent a quantum wavefunction ``|\psi\rangle``
+a common operation is computed the expected value ``\langle\psi|\hat{A}_j|\psi\rangle``
+of a local operator ``\hat{A}_j`` acting on site ``j``. This can be accomplished
+efficiently and conveniently using the [`expect`](@ref) function as:
+
+```julia
+Avals = expect(psi,"A")
+```
+
+where `"A"` must be an operator associated with the physical site type, or site tags, of
+the sites of the MPS `psi`. For example, the operator name could be 
+`"Sz"` for spin sites or `"Ntot"` for electron sites.
+(For more information about defining such operators yourself,
+see the section on [Extending an Existing Local Hilbert Space](@ref).)
+
+As a concrete example, consider computing the expectation value of ``S^z_j`` on
+every site of an MPS representing a system of N spins of size ``S=1/2``. In the
+following example we will use a random MPS of bond dimension ``\chi=4`` but the
+MPS could be obtained other ways such as through a DMRG calculation.
+
+```@example expect
+using ITensors # hide
+N = 10
+chi = 4
+sites = siteinds("S=1/2",N)
+psi = randomMPS(sites,chi)
+magz = expect(psi,"Sz")
+for (j,mz) in enumerate(magz)
+    println("$j $mz")
+end
+```
+
+![](mps_expect.png)
+
+## Computing Correlation Functions
+
+In addition to expected values of local operators
+discussed above, another type of observable that is very important
+in physics studies are correlation functions of the form
+
+```math
+C_{ij} = \langle\psi| A_i B_j |\psi\rangle
+```
+
+These can be computed efficiently for an MPS `psi` in ITensor
+using the [`correlation_matrix`](@ref) function:
+
+```julia
+C = correlation_matrix(psi,"A","B")
+```
+
+where `"A"` and `"B"` must be an operator names associated with the physical site type, 
+or site tags, of the sites of the MPS `psi`. For example, these strings could be 
+`"Sz"`, `"S+"`, or `"S-"` for spin sites, or `"Cdagup"` and `"Cup"` for electron sites.
+(For more information about defining such operators yourself,
+see the section on [Extending an Existing Local Hilbert Space](@ref).)
+
+As a concrete example, say we have an MPS `psi` for a system of spins and 
+want to compute the correlator ``\langle\psi|S^z_i S^z_j|\psi\rangle``.
+We can compute this as:
+
+```julia
+zzcorr = correlation_matrix(psi,"Sz","Sz")
+```
+
+![](mps_zz_correlation.png)
+
+See the [`correlation_matrix`](@ref) docs for more details about additional arguments you can pass
+to this function.
 
 ## Applying a Single-site Operator to an MPS
 
@@ -209,6 +327,45 @@ The call to the `svd` routine says to treat the link (virtual or bond) Index con
 
 The code in the `for` loop iterates over the diagonal elements of the `S` tensor (which are the singular values from the SVD), computes their squares to obtain the probabilities of observing the various states in the Schmidt basis (i.e. eigenvectors of the left-right bipartition reduced density matrices), and puts them into the von Neumann entanglement entropy formula ``S_\text{vN} = - \sum_{n} p_{n} \log{p_{n}}``.
 
+## Sampling from an MPS
+
+A matrix product state (MPS) can be viewed as defining a probability distribution 
+through the Born rule, as is the case when the MPS represents a quantum wavefunction. 
+To sample from the distribution defined by an MPS, you can use the function `sample`
+provided in ITensor. For an MPS `psi` call to `sample(psi)` returns a random
+sample from the distribution defined by `psi`. (Note that each sample is drawn anew
+and not from a Markov chain seeded by a previous sample; this is possible because 
+the algorithm for sampling MPS is a `perfect' sampling algorithm with no autocorrelation.)
+
+In more detail, say we have a set of `N` site indices `s` and define a random MPS
+with these sites:
+```@example sample_mps; continued=true
+using ITensors # hide
+N = 10 # number of sites
+d = 3  # dimension of each site
+chi = 16 # bond dimension of the MPS
+s = siteinds(d,N)
+psi = randomMPS(s;linkdims=chi)
+```
+
+We can now draw some samples from this MPS as
+
+```@example sample_mps
+v1 = sample(psi)
+v2 = sample(psi)
+v3 = sample(psi)
+println(v1)
+println(v2)
+println(v3)
+```
+
+The integers in each of the samples represent settings of each of the MPS indices
+in the "computational basis".
+
+For reasons of efficiency, the `sample` function requires the MPS to be in orthogonal
+form, orthogonalized to the first site. If it is not already in this form, it
+can be brought into orthogonal form by calling `orthogonalize!(psi,1)`.
+
 
 ## Write and Read an MPS or MPO to Disk with HDF5
 
@@ -245,16 +402,16 @@ psi = read(f,"psi",MPS)
 close(f)
 ```
 
-Many functions which involve MPS, such as the `dmrg` function or the `AutoMPO` system
+Many functions which involve MPS, such as the `dmrg` function or the `OpSum` system
 require that you use an array of site indices which match the MPS. So when reading in
 an MPS from disk, do not construct a new array of site indices. Instead, you can
 obtain them like this: `sites = siteinds(psi)`.
 
-So for example, to create an MPO from an AutoMPO which has the same site indices
+So for example, to create an MPO from an OpSum which has the same site indices
 as your MPS `psi`, do the following:
 
 ```julia
-ampo = AutoMPO()
+ampo = OpSum()
 # Then put operators into ampo...
 
 sites = siteinds(psi) # Get site indices from your MPS

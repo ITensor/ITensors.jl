@@ -28,15 +28,21 @@ replace the current BLAS and LAPACK implementation used by Julia with
 MKL by using the MKL.jl package. Please follow the instructions 
 [here](https://github.com/JuliaComputing/MKL.jl).
 
-To use the latest version of ITensors.jl, use `update ITensors`. 
-We will commonly release new minor versions with bug fixes and 
-improvements. However, make sure to double check before doing this, 
-because new releases may be breaking.
+To use the latest registered (stable) version of ITensors.jl, use `update ITensors`
+in `Pkg` mode or `import Pkg; Pkg.update("ITensors")`.
+We will commonly release new patch versions (such as updating from `v0.1.12` to 
+`v0.1.13`) with bug fixes and improvements. However, make sure to double check before
+updating between minor versions (such as from `v0.1.41` to `v0.2.0`) because new minor
+releases may be breaking.
+
+Remember that if you are compiling system images of ITensors.jl, such as with the
+`ITensors.compile()` command, you will need to rerurn this command to compile
+the new version of ITensor after an update.
 
 To try the "development branch" of ITensors.jl (for example, if 
 there is a feature or fix we added that hasn't been released yet), 
-you can do `add ITensors#master`. You can switch back to the latest
-released version with `add ITensors`. Using the development/master
+you can do `add ITensors#main`. You can switch back to the latest
+released version with `add ITensors`. Using the development/main
 branch is generally not encouraged unless you know what you are doing.
 
 ## Using ITensors.jl in the REPL
@@ -134,13 +140,13 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 ```
 
 A common place you might accidentally come across this is when
-you are creating a Hamiltonian with `AutoMPO`:
+you are creating a Hamiltonian with `OpSum`:
 ```julia
 julia> N = 4;
 
 julia> sites = siteinds("S=1/2",N);
 
-julia> ampo = AutoMPO();
+julia> ampo = OpSum();
 
 julia> for j=1:N-1
          ampo += "Sz", j, "Sz", j+1
@@ -304,7 +310,7 @@ julia> names(ITensors)
  Symbol("@set_warn_order")
  Symbol("@ts_str")
  :AbstractObserver
- :AutoMPO
+ :OpSum
  :DMRGObserver
  :ITensor
  :ITensors
@@ -614,11 +620,15 @@ packages, which automatically detects changes you are making in a
 package so you can edit code and not have to restart your Julia 
 session.
 
+If you make changes to ITensors such as fixing bugs or adding new features,
+please consider making a [pull request](https://github.com/ITensor/ITensors.jl/compare).
+However, please ask us first before doing so -- either by raising an [issue on Github](https://github.com/ITensor/ITensors.jl/issues) or asking a question on the [ITensor support forum](http://itensor.org/support/) --
+to make sure it is a change or addition that we will want to include or to check that it is not something
+we are currently working on. Coordinating with us in that way will help save your time and energy as well as ours!
+
 !!! info "Coming soon"
 
-    A more extended guide for contributing to ITensors.jl, including 
-    contributing to the related NDTensors.jl as well as a style 
-    guide, is coming soon.
+    A more extended guide for contributing to ITensors.jl, including formatting your code with [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl), is coming soon.
 
 ## Compiling ITensors.jl
 
@@ -732,7 +742,7 @@ process more automated in the future.
 
 Julia has great built-in tools for benchmarking and profiling.
 For benchmarking fast code at the command line, you can use
-[BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl/blob/master/doc/manual.md):
+[BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl/blob/main/doc/manual.md):
 ```julia
 julia> using ITensors;
 

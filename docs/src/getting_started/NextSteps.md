@@ -1,10 +1,12 @@
 # Next Steps
 
-* Browse the [ITensor Code Examples](@ref) in the next section of the ITensor documentation
+* Try one of the [Tutorials](@ref dmrg_tutorial) in the next section of the ITensor documentation
 
-* Read the [Advanced ITensor usage guide](@ref)
+* Browse the [Code Examples](@ref itensor_examples).
 
 * Read the [ITensor Paper](https://arxiv.org/abs/2007.14822) for a long-form introduction to the design and main features of the ITensor library
+
+* Read the [Advanced ITensor usage guide](@ref)
 
 * More Julia language tutorials and resources
     - [From zero to Julia!](https://techytok.com/from-zero-to-julia/)

@@ -10,19 +10,19 @@ using ITensors, Test
       @test flux(D, b) == QN()
     end
 
-    D[i(1), i'(1)] = 1
-    D[i(2), i'(2)] = 2
-    D[i(3), i'(3)] = 3
-    D[i(4), i'(4)] = 4
-    D[i(5), i'(5)] = 5
+    D[i => 1, i' => 1] = 1
+    D[i => 2, i' => 2] = 2
+    D[i => 3, i' => 3] = 3
+    D[i => 4, i' => 4] = 4
+    D[i => 5, i' => 5] = 5
 
-    @test_throws ErrorException D[i(1), i'(2)] = 2.0
+    @test_throws ErrorException D[i => 1, i' => 2] = 2.0
 
-    @test D[i(1), i'(1)] == 1
-    @test D[i(2), i'(2)] == 2
-    @test D[i(3), i'(3)] == 3
-    @test D[i(4), i'(4)] == 4
-    @test D[i(5), i'(5)] == 5
+    @test D[i => 1, i' => 1] == 1
+    @test D[i => 2, i' => 2] == 2
+    @test D[i => 3, i' => 3] == 3
+    @test D[i => 4, i' => 4] == 4
+    @test D[i => 5, i' => 5] == 5
   end
 
   @testset "diagITensor Tuple constructor" begin
@@ -63,6 +63,17 @@ using ITensors, Test
     for b in eachnzblock(δiĩ)
       @test flux(δiĩ, b) == QN()
     end
+  end
+
+  @testset "denseblocks: convert DiagBlockSparse to BlockSparse" begin
+    i = Index([QN(0) => 2, QN(1) => 3])
+    A = diagITensor(i', dag(i))
+    randn!(ITensors.data(A))
+    B = denseblocks(A)
+    for n in 1:dim(i)
+      @test A[n, n] == B[n, n]
+    end
+    @test dense(A) == dense(B)
   end
 
   @testset "Regression test for QN delta contraction bug" begin

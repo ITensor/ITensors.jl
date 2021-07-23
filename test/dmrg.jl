@@ -5,7 +5,7 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       add!(ampo, "Sz", j, "Sz", j + 1)
       add!(ampo, 0.5, "S+", j, "S-", j + 1)
@@ -31,7 +31,7 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N; conserve_qns=true)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
       ampo += 0.5, "S+", j, "S-", j + 1
@@ -40,7 +40,7 @@ using ITensors, Test, Random
     H = MPO(ampo, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
-    psi = randomMPS(sites, state, 4)
+    psi = randomMPS(sites, state; linkdims=4)
 
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
@@ -54,13 +54,75 @@ using ITensors, Test, Random
     @test energy < -12.0
   end
 
+  @testset "QN-conserving Spin-one Heisenberg with disk caching" begin
+    N = 10
+    sites = siteinds("S=1", N; conserve_qns=true)
+
+    ampo = OpSum()
+    for j in 1:(N - 1)
+      ampo += "Sz", j, "Sz", j + 1
+      ampo += 0.5, "S+", j, "S-", j + 1
+      ampo += 0.5, "S-", j, "S+", j + 1
+    end
+    H = MPO(ampo, sites)
+
+    state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+    psi = randomMPS(sites, state; linkdims=4)
+
+    sweeps = Sweeps(3)
+    @test length(sweeps) == 3
+    maxdim!(sweeps, 10, 20, 40)
+    mindim!(sweeps, 1, 10)
+    cutoff!(sweeps, 1E-11)
+    noise!(sweeps, 1E-10)
+    str = split(sprint(show, sweeps), '\n')
+    @test length(str) > 1
+    energy, psi = dmrg(H, psi, sweeps; outputlevel=0, write_when_maxdim_exceeds=15)
+    @test energy < -12.0
+  end
+
+  @testset "ProjMPO with disk caching" begin
+    N = 10
+    sites = siteinds("S=1", N; conserve_qns=true)
+
+    ampo = OpSum()
+    for j in 1:(N - 1)
+      ampo += "Sz", j, "Sz", j + 1
+      ampo += 0.5, "S+", j, "S-", j + 1
+      ampo += 0.5, "S-", j, "S+", j + 1
+    end
+    H = MPO(ampo, sites)
+
+    state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+    psi = randomMPS(sites, state; linkdims=4)
+    PH = ProjMPO(H)
+
+    n = 4
+    orthogonalize!(psi, n)
+    position!(PH, psi, n)
+    PHdisk = ITensors.disk(PH)
+
+    @test length(PH) == N
+    @test length(PHdisk) == N
+    @test ITensors.site_range(PH) == n:(n + 1)
+    @test eltype(PH) == Float64
+    @test size(PH) == (3^2 * 4^2, 3^2 * 4^2)
+    @test PH.lpos == n - 1
+    @test PH.rpos == n + 2
+    @test rproj(PH) ≈ rproj(PHdisk)
+    @test PHdisk.LR isa ITensors.DiskVector{ITensor}
+    @test PHdisk.LR[PHdisk.rpos] ≈ PHdisk.Rcache
+    position!(PH, psi, N)
+    @test PH.lpos == N - 1
+  end
+
   @testset "Transverse field Ising" begin
     N = 32
     sites = siteinds("S=1/2", N)
     Random.seed!(432)
     psi0 = randomMPS(sites)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:N
       j < N && add!(ampo, -1.0, "Z", j, "Z", j + 1)
       add!(ampo, -1.0, "X", j)
@@ -87,7 +149,7 @@ using ITensors, Test, Random
     state = [isodd(j) ? "↑" : "↓" for j in 1:N]
     psi0 = randomMPS(sites, state)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:N
       j < N && add!(ampo, -1.0, "X", j, "X", j + 1)
       add!(ampo, -1.0, "Z", j)
@@ -118,7 +180,7 @@ using ITensors, Test, Random
     Random.seed!(42)
     psi0 = randomMPS(sites)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += -1, "Sz", j, "Sz", j + 1
     end
@@ -152,13 +214,13 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N)
 
-    ampoZ = AutoMPO()
+    ampoZ = OpSum()
     for j in 1:(N - 1)
       ampoZ += "Sz", j, "Sz", j + 1
     end
     HZ = MPO(ampoZ, sites)
 
-    ampoXY = AutoMPO()
+    ampoXY = OpSum()
     for j in 1:(N - 1)
       ampoXY += 0.5, "S+", j, "S-", j + 1
       ampoXY += 0.5, "S-", j, "S+", j + 1
@@ -184,7 +246,7 @@ using ITensors, Test, Random
     sites[1] = Index(2, "S=1/2,n=1,Site")
     sites[N] = Index(2, "S=1/2,n=$N,Site")
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += "Sz", j, "Sz", j + 1
       ampo += 0.5, "S+", j, "S-", j + 1
@@ -192,7 +254,7 @@ using ITensors, Test, Random
     end
     H = MPO(ampo, sites)
 
-    psi0i = randomMPS(sites, 10)
+    psi0i = randomMPS(sites; linkdims=10)
 
     sweeps = Sweeps(4)
     maxdim!(sweeps, 10, 20, 100, 100)
@@ -202,7 +264,7 @@ using ITensors, Test, Random
     energy0, psi0 = dmrg(H, psi0i, sweeps; outputlevel=0)
     @test energy0 < -11.5
 
-    psi1i = randomMPS(sites, 10)
+    psi1i = randomMPS(sites; linkdims=10)
     energy1, psi1 = dmrg(H, [psi0], psi1i, sweeps; outputlevel=0, weight=weight)
 
     @test energy1 > energy0
@@ -225,7 +287,7 @@ using ITensors, Test, Random
     state[7] = 2
     psi0 = productMPS(s, state)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       ampo += -t1, "Cdag", j, "C", j + 1
       ampo += -t1, "Cdag", j + 1, "C", j
@@ -253,7 +315,7 @@ using ITensors, Test, Random
     U = 1.0
     V1 = 0.5
     sites = siteinds("Electron", N; conserve_qns=true)
-    ampo = AutoMPO()
+    ampo = OpSum()
     for i in 1:N
       ampo += (U, "Nupdn", i)
     end
@@ -269,7 +331,7 @@ using ITensors, Test, Random
     maxdim!(sweeps, 50, 100, 200, 400, 800, 800)
     cutoff!(sweeps, 1E-10)
     state = ["Up", "Dn", "Dn", "Up", "Emp", "Up", "Up", "Emp", "Dn", "Dn"]
-    psi0 = randomMPS(sites, state, 10)
+    psi0 = randomMPS(sites, state; linkdims=10)
     energy, psi = dmrg(H, psi0, sweeps; outputlevel=0)
     @test (-8.02 < energy < -8.01)
   end
@@ -278,7 +340,7 @@ using ITensors, Test, Random
     N = 6
     sites = siteinds("S=1", N)
 
-    ampo = AutoMPO()
+    ampo = OpSum()
     for j in 1:(N - 1)
       add!(ampo, "Sz", j, "Sz", j + 1)
       add!(ampo, 0.5, "S+", j, "S-", j + 1)
@@ -290,7 +352,7 @@ using ITensors, Test, Random
     maxdim!(sweeps, 10)
     cutoff!(sweeps, 1E-11)
 
-    psi0 = randomMPS(sites, 4)
+    psi0 = randomMPS(sites; linkdims=4)
 
     # Test that input works with wrong ortho center:
     orthogonalize!(psi0, 5)
@@ -320,7 +382,7 @@ using ITensors, Test, Random
     noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
     sites = siteinds("Electron", N; conserve_qns=true)
     lattice = square_lattice(Nx, Ny; yperiodic=true)
-    ampo = AutoMPO()
+    ampo = OpSum()
     for b in lattice
       ampo .+= -t, "Cdagup", b.s1, "Cup", b.s2
       ampo .+= -t, "Cdagup", b.s2, "Cup", b.s1

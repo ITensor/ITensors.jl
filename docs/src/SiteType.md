@@ -1,4 +1,4 @@
-# SiteType and op
+# SiteType and op, state, val functions
 
 ## Description
 
@@ -10,6 +10,8 @@ SiteType
 
 ```@docs
 op
+state
+val
 space
 ```
 

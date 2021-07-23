@@ -171,7 +171,7 @@ end
 @testset "splitblocks" begin
   N = 4
   sites = siteinds("S=1", N; conserve_qns=true)
-  ampo = AutoMPO()
+  ampo = OpSum()
   for j in 1:(N - 1)
     ampo .+= 0.5, "S+", j, "S-", j + 1
     ampo .+= 0.5, "S-", j, "S+", j + 1
@@ -204,7 +204,7 @@ end
 @testset "MPO operations with one or two sites" begin
   for N in 1:4, conserve_szparity in (true, false)
     s = siteinds("S=1/2", N; conserve_szparity=conserve_szparity)
-    a = AutoMPO()
+    a = OpSum()
     h = 0.5
     for j in 1:(N - 1)
       a .+= -1, "Sx", j, "Sx", j + 1

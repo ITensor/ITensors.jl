@@ -72,8 +72,10 @@ using ITensors, Test
     @test_throws ErrorException TagSet("ijklmnopqr,abcd")
   end
 
-  @testset "Check for Integer Tags" begin
-    @test_throws ErrorException TagSet("123")
+  @testset "Integer Tags" begin
+    ts = TagSet("123")
+    @test length(ts) == 1
+    @test hastags(ts, "123")
   end
 
   @testset "Show TagSet" begin

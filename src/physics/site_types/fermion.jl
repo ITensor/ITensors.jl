@@ -13,7 +13,7 @@ Create the Hilbert space for a site of type "Fermion".
 
 Optionally specify the conserved symmetries and their quantum number labels.
 """
-function space(
+function ITensors.space(
   ::SiteType"Fermion";
   conserve_qns=false,
   conserve_nf=conserve_qns,
@@ -59,27 +59,32 @@ function space(
   return 2
 end
 
-state(::SiteType"Fermion", ::StateName"Emp") = 1
-state(::SiteType"Fermion", ::StateName"Occ") = 2
-state(st::SiteType"Fermion", ::StateName"0") = state(st, StateName("Emp"))
-state(st::SiteType"Fermion", ::StateName"1") = state(st, StateName("Occ"))
+ITensors.val(::ValName"Emp", ::SiteType"Fermion") = 1
+ITensors.val(::ValName"Occ", ::SiteType"Fermion") = 2
+ITensors.val(::ValName"0", st::SiteType"Fermion") = val(ValName("Emp"), st)
+ITensors.val(::ValName"1", st::SiteType"Fermion") = val(ValName("Occ"), st)
 
-function op!(Op::ITensor, ::OpName"N", ::SiteType"Fermion", s::Index)
+ITensors.state(::StateName"Emp", ::SiteType"Fermion") = [1.0 0.0]
+ITensors.state(::StateName"Occ", ::SiteType"Fermion") = [0.0 1.0]
+ITensors.state(::StateName"0", st::SiteType"Fermion") = state(StateName("Emp"), st)
+ITensors.state(::StateName"1", st::SiteType"Fermion") = state(StateName("Occ"), st)
+
+function ITensors.op!(Op::ITensor, ::OpName"N", ::SiteType"Fermion", s::Index)
   return Op[s' => 2, s => 2] = 1.0
 end
 
-function op!(Op::ITensor, ::OpName"C", ::SiteType"Fermion", s::Index)
+function ITensors.op!(Op::ITensor, ::OpName"C", ::SiteType"Fermion", s::Index)
   return Op[s' => 1, s => 2] = 1.0
 end
 
-function op!(Op::ITensor, ::OpName"Cdag", ::SiteType"Fermion", s::Index)
+function ITensors.op!(Op::ITensor, ::OpName"Cdag", ::SiteType"Fermion", s::Index)
   return Op[s' => 2, s => 1] = 1.0
 end
 
-function op!(Op::ITensor, ::OpName"F", ::SiteType"Fermion", s::Index)
+function ITensors.op!(Op::ITensor, ::OpName"F", ::SiteType"Fermion", s::Index)
   Op[s' => 1, s => 1] = +1.0
   return Op[s' => 2, s => 2] = -1.0
 end
 
-has_fermion_string(::OpName"C", ::SiteType"Fermion") = true
-has_fermion_string(::OpName"Cdag", ::SiteType"Fermion") = true
+ITensors.has_fermion_string(::OpName"C", ::SiteType"Fermion") = true
+ITensors.has_fermion_string(::OpName"Cdag", ::SiteType"Fermion") = true

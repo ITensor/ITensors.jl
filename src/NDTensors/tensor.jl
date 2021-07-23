@@ -21,31 +21,41 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   and tensor(store::TensorStorage, inds) constructors.
   """
   function Tensor{ElT,N,StoreT,IndsT}(
-    ::AllowAlias, storage::TensorStorage, inds
+    ::AllowAlias, storage::TensorStorage, inds::Tuple
   ) where {ElT,N,StoreT<:TensorStorage,IndsT}
     return new{ElT,N,StoreT,IndsT}(storage, inds)
   end
 end
 
 function Tensor{ElT,N,StoreT,IndsT}(
-  vs::NeverAlias, storage::TensorStorage, inds
+  ::NeverAlias, storage::TensorStorage, inds
 ) where {ElT,N,StoreT<:TensorStorage,IndsT}
   return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), copy(storage), inds)
 end
 
 # Allow the storage and indices to be input in opposite ordering
-(T::Type{<:Tensor})(vs::AliasStyle, inds, storage::TensorStorage) = T(vs, storage, inds)
+(T::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage) = T(as, storage, inds)
 
 """
-    Tensor(store::TensorStorage, inds)
+    Tensor(storage::TensorStorage, inds)
 
 Construct a Tensor from a tensor storage and indices.
-The Tensor holds a view of the storage data.
+The Tensor holds a copy of the storage data.
+
+The indices `inds` will be converted to a `Tuple`.
 """
-function Tensor(
-  vs::AliasStyle, store::StoreT, inds::IndsT
-) where {StoreT<:TensorStorage,IndsT}
-  return Tensor{eltype(store),length(inds),StoreT,IndsT}(vs, inds, store)
+function Tensor(as::AliasStyle, storage::TensorStorage, inds::Tuple)
+  return Tensor{eltype(storage),length(inds),typeof(storage),typeof(inds)}(
+    as, storage, inds
+  )
+end
+
+# Automatically convert to Tuple if the indices are not a Tuple
+# already (like a Vector). In the future this may be lifted
+# to allow for very large tensor orders in which case Tuple
+# operations may become too slow.
+function Tensor(as::AliasStyle, storage::TensorStorage, inds)
+  return Tensor(as, storage, Tuple(inds))
 end
 
 tensor(args...; kwargs...) = Tensor(AllowAlias(), args...; kwargs...)
@@ -75,6 +85,10 @@ inds(T::Tensor) = T.inds
 ind(T::Tensor, j::Integer) = inds(T)[j]
 
 eachindex(T::Tensor) = CartesianIndices(dims(inds(T)))
+
+eachblock(T::Tensor) = eachblock(inds(T))
+
+eachdiagblock(T::Tensor) = eachdiagblock(inds(T))
 
 eltype(::Tensor{ElT}) where {ElT} = ElT
 
@@ -122,9 +136,9 @@ Base.similar(T::Tensor, args...) = similar(T, args...)
 # slow
 #
 
-LinearAlgebra.norm(T::Tensor) = norm(storage(T))
+norm(T::Tensor) = norm(storage(T))
 
-conj(vs::AliasStyle, T::Tensor) = setstorage(T, conj(vs, storage(T)))
+conj(as::AliasStyle, T::Tensor) = setstorage(T, conj(as, storage(T)))
 conj(T::Tensor) = conj(AllowAlias(), T)
 
 randn!!(T::Tensor) = (randn!(T); T)
@@ -135,6 +149,8 @@ scale!(T::Tensor, α::Number) = rmul!(storage(T), α)
 
 fill!!(T::Tensor, α::Number) = fill!(T, α)
 fill!(T::Tensor, α::Number) = (fill!(storage(T), α); T)
+
+-(T::Tensor) = setstorage(T, -storage(T))
 
 #function similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
 #  return tensor(similar(StoreT,dim(dims)),dims)

@@ -39,13 +39,16 @@ function MPS(N::Int; ortho_lims::UnitRange=1:N)
 end
 
 """
-    MPS([::Type{ElT} = Float64, ]sites, linkdim = 1)
+    MPS([::Type{ElT} = Float64, ]sites; linkdims=1)
 
 Construct an MPS filled with Empty ITensors of type `ElT` from a collection of indices.
 
-Optionally specify the link dimension, which by default is 1.
+Optionally specify the link dimension with the keyword argument `linkdims`, which by default is 1.
+
+In the future we may generalize `linkdims` to allow specifying each individual link dimension as a vector,
+and additionally allow specifying quantum numbers.
 """
-function MPS(::Type{T}, sites::Vector{<:Index}, linkdim=1) where {T<:Number}
+function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:Number}
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   if N == 1
@@ -54,9 +57,9 @@ function MPS(::Type{T}, sites::Vector{<:Index}, linkdim=1) where {T<:Number}
   end
 
   space = if hasqns(sites)
-    [QN() => linkdim]
+    [QN() => linkdims]
   else
-    linkdim
+    linkdims
   end
 
   l = [Index(space, "Link,l=$ii") for ii in 1:(N - 1)]
@@ -73,7 +76,7 @@ function MPS(::Type{T}, sites::Vector{<:Index}, linkdim=1) where {T<:Number}
   return MPS(v)
 end
 
-MPS(sites::Vector{<:Index}, args...) = MPS(Float64, sites, args...)
+MPS(sites::Vector{<:Index}, args...; kwargs...) = MPS(Float64, sites, args...; kwargs...)
 
 function randomU(s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)
@@ -168,65 +171,68 @@ function randomCircuitMPS(
   return M
 end
 
-function randomCircuitMPS(sites::Vector{<:Index}, linkdim::Int; kwargs...)
+function randomCircuitMPS(sites::Vector{<:Index}, linkdim::Integer; kwargs...)
   return randomCircuitMPS(Float64, sites, linkdim; kwargs...)
 end
 
 """
-    randomMPS(::Type{ElT<:Number}, sites::Vector{<:Index}, linkdim=1)
+    randomMPS(::Type{ElT<:Number}, sites::Vector{<:Index}; linkdims=1)
 
-Construct a random MPS with link dimension `linkdim` of 
+Construct a random MPS with link dimension `linkdims` of 
 type `ElT`.
 """
-function randomMPS(::Type{ElT}, sites::Vector{<:Index}, linkdim::Int=1) where {ElT<:Number}
-  if hasqns(sites[1])
+function randomMPS(
+  ::Type{ElT}, sites::Vector{<:Index}; linkdims::Integer=1
+) where {ElT<:Number}
+  if any(hasqns, sites)
     error("initial state required to use randomMPS with QNs")
   end
 
   # For non-QN-conserving MPS, instantiate
   # the random MPS directly as a circuit:
-  return randomCircuitMPS(ElT, sites, linkdim)
+  return randomCircuitMPS(ElT, sites, linkdims)
 end
 
 """
-    randomMPS(sites::Vector{<:Index}, linkdim=1)
+    randomMPS(sites::Vector{<:Index}; linkdims=1)
 
 Construct a random MPS with link dimension `linkdim` of 
 type `Float64`.
 """
-randomMPS(sites::Vector{<:Index}, linkdim::Int=1) = randomMPS(Float64, sites, linkdim)
+function randomMPS(sites::Vector{<:Index}; linkdims::Integer=1)
+  return randomMPS(Float64, sites; linkdims=linkdims)
+end
 
-#! format: off
-# JuliaFormatter tries to change this line to:
-# randomMPS(sites::Vector{<:Index}, state; linkdim::Int=1)
-# so turn it off for this line.
-function randomMPS(sites::Vector{<:Index}, state, linkdim::Int=1)::MPS
-#! format: on
-  M = productMPS(sites, state)
-  if linkdim > 1
-    randomizeMPS!(M, sites, linkdim)
+function randomMPS(sites::Vector{<:Index}, state; linkdims::Integer=1)
+  return randomMPS(Float64, sites, state; linkdims=linkdims)
+end
+
+function randomMPS(ElType::Type, sites::Vector{<:Index}, state; linkdims::Integer=1)::MPS
+  M = MPS(ElType, sites, state)
+  if linkdims > 1
+    randomizeMPS!(M, sites, linkdims)
   end
   return M
 end
 
 @doc """
-    randomMPS(sites::Vector{<:Index}, state, linkdim=1)
+    randomMPS(sites::Vector{<:Index}, state; linkdims=1)
 
-Construct a real, random MPS with link dimension `linkdim`,
+Construct a real, random MPS with link dimension `linkdims`,
 made by randomizing an initial product state specified by
 `state`. This version of `randomMPS` is necessary when creating
 QN-conserving random MPS (consisting of QNITensors). The initial
 `state` array provided determines the total QN of the resulting
 random MPS.
-""" randomMPS(::Vector{<:Index}, ::Any, ::Int)
+""" randomMPS(::Vector{<:Index}, ::Any)
 
 """
-    productMPS(::Type{T<:Number}, ivals::Vector{<:IndexVal})
+    MPS(::Type{T<:Number}, ivals::Vector{<:Pair{<:Index}})
 
 Construct a product state MPS with element type `T` and
 nonzero values determined from the input IndexVals.
 """
-function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
+function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
   N = length(ivals)
   M = MPS(N)
 
@@ -237,37 +243,50 @@ function productMPS(::Type{T}, ivals::Vector{<:IndexVal}) where {T<:Number}
   end
 
   if hasqns(ind(ivals[1]))
-    links = [Index(QN() => 1; tags="Link,l=$n") for n in 1:N]
+    lflux = QN()
+    for j in 1:(N - 1)
+      lflux += qn(ivals[j])
+    end
+    links = Vector{QNIndex}(undef, N - 1)
+    for j in (N - 1):-1:1
+      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
+      lflux -= qn(ivals[j])
+    end
   else
-    links = [Index(1, "Link,l=$n") for n in 1:N]
+    links = [Index(1, "Link,l=$n") for n in 1:(N - 1)]
   end
+
   M[1] = emptyITensor(T, ind(ivals[1]), links[1])
-  M[1][ivals[1], links[1](1)] = one(T)
+  M[1][ivals[1], links[1] => 1] = one(T)
   for n in 2:(N - 1)
     s = ind(ivals[n])
     M[n] = emptyITensor(T, dag(links[n - 1]), s, links[n])
-    M[n][links[n - 1](1), ivals[n], links[n](1)] = one(T)
+    M[n][links[n - 1] => 1, ivals[n], links[n] => 1] = one(T)
   end
   M[N] = emptyITensor(T, dag(links[N - 1]), ind(ivals[N]))
-  M[N][links[N - 1](1), ivals[N]] = one(T)
+  M[N][links[N - 1] => 1, ivals[N]] = one(T)
+
   return M
 end
 
+# For backwards compatibility
+const productMPS = MPS
+
 """
-    productMPS(ivals::Vector{<:IndexVal})
+    MPS(ivals::Vector{<:Pair{<:Index}})
 
 Construct a product state MPS with element type `Float64` and
 nonzero values determined from the input IndexVals.
 """
-productMPS(ivals::Vector{<:IndexVal}) = productMPS(Float64, ivals::Vector{<:IndexVal})
+MPS(ivals::Vector{<:Pair{<:Index}}) = MPS(Float64, ivals)
 
 """
-    productMPS(::Type{T},
-               sites::Vector{<:Index},
-               states::Union{Vector{String},
-                             Vector{Int},
-                             String,
-                             Int})
+    MPS(::Type{T},
+        sites::Vector{<:Index},
+        states::Union{Vector{String},
+                      Vector{Int},
+                      String,
+                      Int})
 
 Construct a product state MPS of element type `T`, having
 site indices `sites`, and which corresponds to the initial
@@ -282,32 +301,63 @@ a uniform state.
 N = 10
 sites = siteinds("S=1/2", N)
 states = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi = productMPS(ComplexF64, sites, states)
-phi = productMPS(sites, "Up")
+psi = MPS(ComplexF64, sites, states)
+phi = MPS(sites, "Up")
 ```
 """
-function productMPS(::Type{T}, sites::Vector{<:Index}, states) where {T<:Number}
-  if length(sites) != length(states)
-    throw(DimensionMismatch("Number of sites and and initial states don't match"))
+function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
+  if length(sites) != length(states_)
+    throw(DimensionMismatch("Number of sites and and initial vals don't match"))
   end
-  ivals = [state(sites[n], states[n]) for n in 1:length(sites)]
-  return productMPS(T, ivals)
+  N = length(states_)
+  M = MPS(N)
+
+  if N == 1
+    M[1] = state(sites[1], states_[1])
+    return M
+  end
+
+  states = [state(sites[j], states_[j]) for j in 1:N]
+
+  if hasqns(states[1])
+    lflux = QN()
+    for j in 1:(N - 1)
+      lflux += flux(states[j])
+    end
+    links = Vector{QNIndex}(undef, N - 1)
+    for j in (N - 1):-1:1
+      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
+      lflux -= flux(states[j])
+    end
+  else
+    links = [Index(1; tags="Link,l=$n") for n in 1:N]
+  end
+
+  M[1] = ITensor(T, sites[1], links[1])
+  M[1] += states[1] * state(links[1], 1)
+  for n in 2:(N - 1)
+    M[n] = ITensor(T, dag(links[n - 1]), sites[n], links[n])
+    M[n] += state(dag(links[n - 1]), 1) * states[n] * state(links[n], 1)
+  end
+  M[N] = ITensor(T, dag(links[N - 1]), sites[N])
+  M[N] += state(dag(links[N - 1]), 1) * states[N]
+
+  return M
 end
 
-function productMPS(
-  ::Type{T}, sites::Vector{<:Index}, states::Union{String,Int}
+function MPS(
+  ::Type{T}, sites::Vector{<:Index}, state::Union{String,Integer}
 ) where {T<:Number}
-  ivals = [state(sites[n], states) for n in 1:length(sites)]
-  return productMPS(T, ivals)
+  return MPS(T, sites, fill(state, length(sites)))
 end
 
-function productMPS(::Type{T}, sites::Vector{<:Index}, states::Function) where {T<:Number}
-  ivals = [state(sites[n], states(n)) for n in 1:length(sites)]
-  return productMPS(T, ivals)
+function MPS(::Type{T}, sites::Vector{<:Index}, states::Function) where {T<:Number}
+  states_vec = [states(n) for n in 1:length(sites)]
+  return MPS(T, sites, states_vec)
 end
 
 """
-    productMPS(sites::Vector{<:Index},states)
+    MPS(sites::Vector{<:Index},states)
 
 Construct a product state MPS having
 site indices `sites`, and which corresponds to the initial
@@ -321,10 +371,10 @@ Index tag type.
 N = 10
 sites = siteinds("S=1/2",N)
 states = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi = productMPS(sites,states)
+psi = MPS(sites,states)
 ```
 """
-productMPS(sites::Vector{<:Index}, states) = productMPS(Float64, sites, states)
+MPS(sites::Vector{<:Index}, states) = MPS(Float64, sites, states)
 
 """
     siteind(M::MPS, j::Int; kwargs...)
@@ -487,7 +537,7 @@ function sample(m::MPS)
     pn = 0.0
     while n <= d
       projn = ITensor(s)
-      projn[s[n]] = 1.0
+      projn[s => n] = 1.0
       An = A * dag(projn)
       pn = real(scalar(dag(An) * An))
       pdisc += pn
@@ -527,17 +577,17 @@ N = 30
 m = 4
 
 s = siteinds("S=1/2",N)
-psi = randomMPS(s,m)
-Czz = correlator(psi,"Sz","Sz")
+psi = randomMPS(s; linkdims=m)
+Czz = correlation_matrix(psi,"Sz","Sz")
 
 s = siteinds("Electron",N; conserve_qns=true)
-psi = randomMPS(s,n->isodd(n) ? "Up" : "Dn",m)
-Cuu = correlator(psi,"Cdagup","Cup";site_range=2:8)
+psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
+Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
 ```
 """
 function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; kwargs...)
   N = length(psi)
-  ElT = eltype(psi)
+  ElT = promote_itensor_eltype(psi)
 
   site_range::UnitRange{Int} = get(kwargs, :site_range, 1:N)
   start_site = first(site_range)
@@ -545,12 +595,12 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
 
   psi = copy(psi)
   orthogonalize!(psi, start_site)
-  psi[start_site] ./= norm(psi[start_site])
+  norm2_psi = norm(psi[start_site])^2
 
   s = siteinds(psi)
   onsiteOp = "$Op1*$Op2"
   fermionic2 = has_fermion_string(Op2, s[1])
-  if fermionic2
+  if !using_auto_fermion() && fermionic2
     Op1 = "$Op1*F"
   end
 
@@ -563,7 +613,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
     L = ITensor(1.0)
   else
     lind = commonind(psi[start_site], psi[start_site - 1])
-    L = delta(lind, lind')
+    L = delta(dag(lind), lind')
   end
 
   for i in start_site:(end_site - 1)
@@ -573,7 +623,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
-    C[ci, ci] = scalar(Li * op(onsiteOp, s, i) * prime(dag(psi[i]), not(rind)))
+    C[ci, ci] = scalar(Li * op(onsiteOp, s, i) * prime(dag(psi[i]), not(rind))) / norm2_psi
 
     # Get j > i correlations
     Li = Li * op(Op1, s, i) * dag(prime(psi[i]))
@@ -583,10 +633,10 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
       Li *= psi[j]
 
       val = Li * op(Op2, s, j) * dag(prime(prime(psi[j], "Site"), lind))
-      C[ci, cj] = scalar(val)
+      C[ci, cj] = scalar(val) / norm2_psi
       C[cj, ci] = conj(C[ci, cj])
 
-      if fermionic2
+      if !using_auto_fermion() && fermionic2
         Li *= op("F", s, j) * dag(prime(psi[j]))
       else
         Li *= dag(prime(psi[j], "Link"))
@@ -598,9 +648,9 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
   # Get last diagonal element of C
   i = end_site
   lind = commonind(psi[i], psi[i - 1])
-  C[Nb, Nb] = scalar(
-    L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)
-  )
+  C[Nb, Nb] =
+    scalar(L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)) /
+    norm2_psi
 
   return C
 end
@@ -622,11 +672,11 @@ provided, returns a tuple of expectation value vectors.
 N = 10
 
 s = siteinds("S=1/2",N)
-psi = randomMPS(s,8)
+psi = randomMPS(s; linkdims=8)
 Z = expect(psi,"Sz";site_range=2:6)
 
 s = siteinds("Electron",N)
-psi = randomMPS(s,8)
+psi = randomMPS(s; linkdims=8)
 dens = expect(psi,"Ntot")
 updens,dndens = expect(psi,"Nup","Ndn")
 ```
@@ -634,7 +684,7 @@ updens,dndens = expect(psi,"Nup","Ndn")
 function expect(psi::MPS, ops::AbstractString...; kwargs...)
   psi = copy(psi)
   N = length(psi)
-  ElT = real(eltype(psi))
+  ElT = real(promote_itensor_eltype(psi))
   Nops = length(ops)
   s = siteinds(psi)
 
@@ -644,17 +694,22 @@ function expect(psi::MPS, ops::AbstractString...; kwargs...)
   offset = start_site - 1
 
   orthogonalize!(psi, start_site)
-  psi[start_site] ./= norm(psi[start_site])
+  norm2_psi = norm(psi)^2
 
   ex = ntuple(n -> zeros(ElT, Ns), Nops)
   for j in site_range
     orthogonalize!(psi, j)
     for n in 1:Nops
-      ex[n][j - offset] = real(scalar(psi[j] * op(ops[n], s[j]) * dag(prime(psi[j], s[j]))))
+      ex[n][j - offset] =
+        real(scalar(psi[j] * op(ops[n], s[j]) * dag(prime(psi[j], s[j])))) / norm2_psi
     end
   end
 
-  return Nops == 1 ? ex[1] : ex
+  if Nops == 1
+    return Ns == 1 ? ex[1][1] : ex[1]
+  else
+    return Ns == 1 ? [x[1] for x in ex] : ex
+  end
 end
 
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPS)

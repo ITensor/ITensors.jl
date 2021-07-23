@@ -6,6 +6,7 @@ import Base:
   Tuple,
   # Symbols
   +,
+  -,
   *,
   # Methods
   checkbounds,
@@ -40,8 +41,11 @@ import Base:
   to_indices,
   unsafe_convert,
   view,
+  zero,
   zeros
 
 import Base.Broadcast: Broadcasted, BroadcastStyle
+
+import LinearAlgebra: exp, norm
 
 import TupleTools: isperm

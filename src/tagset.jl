@@ -55,12 +55,9 @@ end
 
 function _addtag!(ts::MTagSetStorage, ntags::Int, tag::IntTag)
   t = Tag(tag)
+  # TODO: change to isempty, remove isnull
   if !isnull(t)
-    if isint(t)
-      error("Cannot use a bare integer as a tag.")
-    else
-      ntags = _addtag_ordered!(ts, ntags, tag)
-    end
+    ntags = _addtag_ordered!(ts, ntags, tag)
   end
   return ntags
 end

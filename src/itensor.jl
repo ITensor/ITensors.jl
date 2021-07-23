@@ -602,13 +602,13 @@ B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function onehot(ivs::IndexValOrPairIndexInt...)
+function onehot(ivs::Pair{<:Index}...)
   A = emptyITensor(ind.(ivs)...)
   A[val.(ivs)...] = 1.0
   return A
 end
 
-setelt(ivs::IndexValOrPairIndexInt...) = onehot(ivs...)
+setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
 """
     dense(T::ITensor)
@@ -619,9 +619,10 @@ For example, an ITensor with Diag storage will become Dense storage,
 filled with zeros except for the diagonal values.
 """
 function dense(A::ITensor)
-  T = dense(tensor(A))
-  return ITensor(storage(T), removeqns(inds(A)))
+  return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
 end
+
+denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
 """
     complex(T::ITensor)
@@ -646,6 +647,8 @@ eltype(T::ITensor) = eltype(tensor(T))
 The number of indices, `length(inds(A))`.
 """
 order(T::ITensor)::Int = ndims(T)
+
+Order(T::ITensor) = Order(order(T))
 
 ndims(T::ITensor)::Int = ndims(tensor(T))
 
@@ -691,7 +694,7 @@ size(T::ITensor) = dims(T)
 
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
-copy(T::ITensor)::ITensor = ITensor(copy(tensor(T)))
+copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 
 """
     Array{ElT}(T::ITensor, i:Index...)
@@ -750,29 +753,8 @@ Same as `T[]`.
 """
 scalar(T::ITensor)::Any = T[]
 
-struct LastVal <: Number
-  n::Int
-end
-
-# TODO: make these definition work for notation
-# A[1, end-1]
-#(l::LastVal + n::Number) = LastVal(l.n + n)
-#(n::Number + l::LastVal) = l + n
-#(l::LastVal * n::Number) = LastVal(l.n * n)
-#(n::Number * l::LastVal) = l * n
-#(l::LastVal - n::Number) = LastVal(l.n - n)
-#(n::Number - l::LastVal) = LastVal(n - l.n)
-#(-l::LastVal) = LastVal(-l.n)
-
-lastindex(A::ITensor, n::Int64) = LastVal(n)
-
-# Implement when ITensors can be indexed by a single integer
-#lastindex(A::ITensor) = dim(A)
-
-lastval_to_int(n::Int, ::LastVal) = n
-lastval_to_int(::Int, n::Int) = n
-lastval_to_int(dimsT::Tuple, I::Tuple) = lastval_to_int.(dimsT, I)
-lastval_to_int(A::Tensor, I::Tuple) = lastval_to_int(size(A), I)
+lastindex(A::ITensor, n::Int64) = LastVal()
+lastindex(A::ITensor) = LastVal()
 
 """
     getindex(T::ITensor, I::Int...)
@@ -814,7 +796,9 @@ end
 @propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
-  return _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
+  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
+  return fac *
+         _getindex(T, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...)
 end
 
 """
@@ -922,8 +906,9 @@ end
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
+  fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
   return _setindex!!(
-    T, x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
+    T, fac * x, NDTensors.permute(ntuple(n -> val(@inbounds ivs[n]), Val(N)), p)...
   )
 end
 
@@ -1061,7 +1046,7 @@ for (finds, fset) in (
   end
 end
 
-for find in (:commonind, :noncomonind, :uniqueind, :unionind)
+for find in (:commonind, :noncommonind, :uniqueind, :unionind)
   @eval begin
     $find(args...; kwargs...) = getfirst($(Symbol(find, :s))(args...; kwargs...))
   end
@@ -1172,7 +1157,7 @@ for fname in (
       return settensor!(A, $fname(f, tensor(A), args...))
     end
 
-    $fname(A::ITensor, args...; kwargs...) = ITensor($fname(tensor(A), args...; kwargs...))
+    $fname(A::ITensor, args...; kwargs...) = itensor($fname(tensor(A), args...; kwargs...))
 
     # Inlining makes the ITensor functions slower
     @noinline function $fname(A::Tensor, args...; kwargs...)
@@ -1374,11 +1359,12 @@ adjoint(A::ITensor) = prime(A)
 dirs(A::ITensor, is) = dirs(inds(A), is)
 
 function (A::ITensor == B::ITensor)
+  !hassameinds(A, B) && return false
   return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
 end
 
 function isapprox(A::ITensor, B::ITensor; kwargs...)
-  B = permute(dense(B), inds(A))
+  B = permute(B, inds(A))
   return isapprox(array(A), array(B); kwargs...)
 end
 
@@ -1447,7 +1433,12 @@ end
 
 norm(T::ITensor) = norm(tensor(T))
 
-function dag(as::AliasStyle, T::Tensor)
+function dag(as::AliasStyle, T::Tensor{ElT,N}) where {ElT,N}
+  if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
+    CT = conj(NeverAlias(), T)
+    NDTensors.scale_blocks!(CT, block -> NDTensors.permfactor(reverse(1:N), block, inds(T)))
+    return setinds(CT, dag(inds(T)))
+  end
   return setinds(conj(as, T), dag(inds(T)))
 end
 
@@ -1797,7 +1788,6 @@ function contraction_cost(As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
   return contraction_cost(indsAs; kwargs...)
 end
 
-# TODO: support "left_associative" (like `foldl`) and "right_associative" (like `foldr`)
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
 """
     *(As::ITensor...; sequence = default_sequence(), kwargs...)
@@ -1816,10 +1806,23 @@ For a custom sequence, the sequence should be provided as a binary tree where th
 integers `n` specifying the ITensor `As[n]` and branches are accessed
 by indexing with `1` or `2`, i.e. `sequence = Any[Any[1, 3], Any[2, 4]]`.
 """
+function contract(tn::AbstractVector; kwargs...)
+  return if all(x -> x isa ITensor, tn)
+    contract(convert(Vector{ITensor}, tn); kwargs...)
+  else
+    deepcontract(tn; kwargs...)
+  end
+end
+
+# Contract a tensor network such as:
+# [A, B, [[C, D], [E, [F, G]]]]
+deepcontract(t::ITensor, ts::ITensor...) = *(t, ts...)
+function deepcontract(tn::AbstractVector)
+  return deepcontract(deepcontract.(tn)...)
+end
+
 function contract(
-  As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
-  sequence=default_sequence(),
-  kwargs...,
+  As::Union{Vector{ITensor},Tuple{Vararg{ITensor}}}; sequence=default_sequence(), kwargs...
 )::ITensor
   if sequence == "left_associative"
     return foldl((A, B) -> contract(A, B; kwargs...), As)
@@ -1838,8 +1841,8 @@ _contract(As, sequence::Int) = As[sequence]
 
 # Given a contraction sequence, contract the tensors recursively according
 # to that sequence.
-function _contract(As, sequence; kwargs...)::ITensor
-  return contract(_contract(As, sequence[1]), _contract(As, sequence[2]); kwargs...)
+function _contract(As, sequence::AbstractVector; kwargs...)::ITensor
+  return contract(_contract.((As,), sequence)...; kwargs...)
 end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
@@ -1999,6 +2002,89 @@ function hadamard_product(A::ITensor, B::ITensor)
 end
 
 ⊙(A::ITensor, B::ITensor) = hadamard_product(A, B)
+
+# Helper tensors for performing a partial direct sum
+function directsum_itensors(i::Index, j::Index, ij::Index)
+  S1 = zeros(dim(i), dim(ij))
+  for ii in 1:dim(i)
+    S1[ii, ii] = 1
+  end
+  S2 = zeros(dim(j), dim(ij))
+  for jj in 1:dim(j)
+    S2[jj, dim(i) + jj] = 1
+  end
+  D1 = itensor(S1, dag(i), ij)
+  D2 = itensor(S2, dag(j), ij)
+  return D1, D2
+end
+
+function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
+  A, I = A_and_I
+  B, J = B_and_J
+  return directsum(A, B, I, J; kwargs...)
+end
+
+"""
+    directsum(A::Pair{ITensor}, B::Pair{ITensor}, ...; tags)
+
+Given a list of pairs of ITensors and collections of indices, perform a partial
+direct sum of the tensors over the specified indices. Indices that are
+not specified to be summed must match between the tensors.
+
+If all indices are specified then the operation is equivalent to creating
+a block diagonal tensor.
+
+Returns the ITensor representing the partial direct sum as well as the new
+direct summed indices. The tags of the direct summed indices are specified
+by the keyword arguments.
+
+See Section 2.3 of https://arxiv.org/abs/1405.7786 for a definition of a partial
+direct sum of tensors.
+
+# Examples
+```julia
+x = Index(2, "x")
+i1 = Index(3, "i1")
+j1 = Index(4, "j1")
+i2 = Index(5, "i2")
+j2 = Index(6, "j2")
+
+A1 = randomITensor(i1, x, j1)
+A2 = randomITensor(x, j2, i2)
+S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+```
+"""
+function directsum(
+  A_and_I::Pair{ITensor},
+  B_and_J::Pair{ITensor},
+  C_and_K::Pair{ITensor},
+  itensor_and_inds...;
+  tags=["sum$i" for i in 1:length(last(A_and_I))],
+)
+  return directsum(
+    Pair(directsum(A_and_I, B_and_J; kwargs...)...), C_and_K, itensor_and_inds...; tags=tags
+  )
+end
+
+function directsum(A::ITensor, B::ITensor, I, J; tags)
+  N = length(I)
+  (N != length(J)) &&
+    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
+  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
+  for n in 1:N
+    In = I[n]
+    Jn = J[n]
+    In = dir(A, In) != dir(In) ? dag(In) : In
+    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
+    IJn = directsum(In, Jn; tags=tags[n])
+    D1, D2 = directsum_itensors(In, Jn, IJn)
+    IJ[n] = IJn
+    A *= D1
+    B *= D2
+  end
+  C = A + B
+  return C, IJ
+end
 
 """
     product(A::ITensor, B::ITensor)
@@ -2296,7 +2382,16 @@ function insertblock!(T::ITensor, args...)
   (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
     error("Block does not match current flux")
   TR = insertblock!!(tensor(T), args...)
-  setstorage!(T, storage(TR))
+  settensor!(T, TR)
+  return T
+end
+
+function insert_diag_blocks!(T::ITensor)
+  ## TODO: Add a check that all diag blocks
+  ## have the correct flux
+  ## (!isnothing(flux(T)) && check_diagblock_flux(T)) &&
+  ##   error("Block does not match current flux")
+  insert_diag_blocks!(tensor(T))
   return T
 end
 

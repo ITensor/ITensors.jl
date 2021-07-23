@@ -52,8 +52,6 @@ dimensions of the blocks of the Index.
 """
 const QNIndex = Index{QNBlocks}
 
-const QNIndexVal = IndexVal{QNIndex}
-
 # Trait for the symmetry type (QN or not QN)
 struct HasQNs <: SymmetryStyle end
 
@@ -157,11 +155,11 @@ function block(qns::QNBlocks, n::Int)
     tdim += blockdim(qns, Block(b))
     (n <= tdim) && return Block(b)
   end
-  error("qn: QNIndexVal out of range")
+  error("qn: QN Index value out of range")
   return Block(0)
 end
 
-function block(iv::Union{<:IndexVal,<:Pair{<:Index,<:Integer}})
+function block(iv::Pair{<:Index})
   i = ind(iv)
   v = val(iv)
   return block(space(i), v)
@@ -176,21 +174,34 @@ qn(ib::Pair{<:Index,Block{1}}) = qn(first(ib), last(ib))
 qn(i::QNIndex, b::Integer) = qn(i, Block(b))
 
 # Get the QN of the block the IndexVal lies in
-qn(iv::Union{<:IndexVal,<:Pair{<:Index,<:Integer}}) = qn(ind(iv), block(iv))
+qn(iv::Pair{<:Index}) = qn(ind(iv), block(iv))
 
 flux(i::QNIndex, b::Block{1}) = dir(i) * qn(i, b)
 
 flux(ib::Pair{<:Index,Block{1}}) = flux(first(ib), last(ib))
 
-flux(iv::Union{<:IndexVal,<:Pair{<:Index,<:Integer}}) = flux(ind(iv), block(iv))
+flux(iv::Pair{<:Index}) = flux(ind(iv), block(iv))
+
+function flux(i::Index, b::Block)
+  return error(
+    "Cannot compute flux: Index has no QNs. Try setting conserve_qns=true in siteinds or constructing Index with QN subspaces.",
+  )
+end
 
 qnblocks(i::QNIndex) = space(i)
 
 # XXX: deprecate the Integer version
 blockdim(i::QNIndex, b::Block) = blockdim(space(i), b)
 blockdim(i::QNIndex, b::Integer) = blockdim(i, Block(b))
+function blockdim(i::Index, b::Union{Block,Integer})
+  return error(
+    "`blockdim(i::Index, b)` not currently defined for non-QN Index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.",
+  )
+end
 
-eachblock(i::Index) = (Block(n) for n in 1:nblocks(i))
+dim(i::QNIndex, b::Block) = blockdim(space(i), b)
+
+NDTensors.eachblock(i::Index) = (Block(n) for n in 1:nblocks(i))
 
 # Return the first block of the QNIndex with the flux q
 function block(::typeof(first), ind::QNIndex, q::QN)
@@ -264,6 +275,7 @@ end
 
 (qn1::QNBlock * qn2::QNBlock) = QNBlock(qn(qn1) + qn(qn2), blockdim(qn1) * blockdim(qn2))
 
+# TODO: rename tensorproduct with ⊗ alias
 function outer(qn1::QNBlocks, qn2::QNBlocks)
   qnR = ITensors.QNBlocks(undef, nblocks(qn1) * nblocks(qn2))
   for (i, t) in enumerate(Iterators.product(qn1, qn2))
@@ -272,6 +284,7 @@ function outer(qn1::QNBlocks, qn2::QNBlocks)
   return qnR
 end
 
+# TODO: rename tensorproduct with ⊗ alias
 function outer(i1::QNIndex, i2::QNIndex; dir=nothing, tags="", plev::Integer=0)
   if isnothing(dir)
     if ITensors.dir(i1) == ITensors.dir(i2)
@@ -284,12 +297,23 @@ function outer(i1::QNIndex, i2::QNIndex; dir=nothing, tags="", plev::Integer=0)
   return Index(newspace; dir=dir, tags=tags, plev=plev)
 end
 
+# TODO: rename tensorproduct with ⊗ alias
 function outer(i::QNIndex; dir=nothing, tags="", plev::Integer=0)
   if isnothing(dir)
     dir = ITensors.dir(i)
   end
   newspace = dir * (ITensors.dir(i) * space(i))
   return Index(newspace; dir=dir, tags=tags, plev=plev)
+end
+
+# TODO: add ⊕ alias
+function directsum(
+  i::Index{Vector{Pair{QN,Int}}}, j::Index{Vector{Pair{QN,Int}}}; tags="sum"
+)
+  dir(i) ≠ dir(j) && error(
+    "To direct sum two indices, they must have the same direction. Trying to direct sum indices $i and $j.",
+  )
+  return Index(vcat(space(i), space(j)); dir=dir(i), tags=tags)
 end
 
 isless(qnb1::QNBlock, qnb2::QNBlock) = isless(qn(qnb1), qn(qnb2))
@@ -407,10 +431,6 @@ splitblocks(i::Index) = setspace(i, splitblocks(space(i)))
 function mutable_storage(::Type{Order{N}}, ::Type{IndexT}) where {N,IndexT<:QNIndex}
   return SizedVector{N,IndexT}(undef)
 end
-
-isfermionic(i::Index) = false
-
-isfermionic(i::QNIndex) = any(q -> isfermionic(qn(q)), space(i))
 
 function show(io::IO, i::QNIndex)
   idstr = "$(id(i) % 1000)"

@@ -43,27 +43,62 @@ end
       @test !hascommoninds(A, C)
     end
 
-    @testset "Get element with end" begin
+    @testset "Get element with end (lastindex, LastIndex)" begin
       a = Index(2)
       b = Index(3)
       A = randomITensor(a, b)
       @test A[end, end] == A[a => 2, b => 3]
+      @test A[end - 1, end] == A[a => 1, b => 3]
+      @test A[end - 1, end - 1] == A[a => 1, b => 2]
+      @test A[end - 1, end - 2] == A[a => 1, b => 1]
+      @test A[end - 1, 2 * (end - 2)] == A[a => 1, b => 2]
       @test A[2, end] == A[a => 2, b => 3]
+      @test A[2, end - 1] == A[a => 2, b => 2]
       @test A[1, end] == A[a => 1, b => 3]
+      @test A[1, end - 2] == A[a => 1, b => 1]
       @test A[end, 2] == A[a => 2, b => 2]
+      @test A[end - 1, 2] == A[a => 1, b => 2]
       @test A[a => end, b => end] == A[a => 2, b => 3]
+      @test A[a => end - 1, b => end] == A[a => 1, b => 3]
+      @test A[a => end, b => end - 1] == A[a => 2, b => 2]
+      @test A[a => end - 1, b => 2 * (end - 2)] == A[a => 1, b => 2]
+      @test A[a => 2, b => end] == A[a => 2, b => 3]
       @test A[a => 2, b => end] == A[a => 2, b => 3]
       @test A[a => 1, b => end] == A[a => 1, b => 3]
       @test A[a => end, b => 3] == A[a => 2, b => 3]
       @test A[a => end, b => 2] == A[a => 2, b => 2]
       @test A[b => end, a => end] == A[a => 2, b => 3]
+      @test A[b => end - 1, a => end] == A[a => 2, b => 2]
+      @test A[b => end - 1, a => end - 1] == A[a => 1, b => 2]
+      @test A[b => end - 2, a => end - 1] == A[a => 1, b => 1]
+      @test A[b => 2 * (end - 2), a => end - 1] == A[a => 1, b => 2]
       @test A[b => 2, a => end] == A[a => 2, b => 2]
+      @test A[b => 2, a => end - 1] == A[a => 1, b => 2]
       @test A[b => 1, a => end] == A[a => 2, b => 1]
+      @test A[b => 1, a => end - 1] == A[a => 1, b => 1]
       @test A[b => end, a => 2] == A[a => 2, b => 3]
+      @test A[b => end - 1, a => 2] == A[a => 2, b => 2]
       @test A[b => end, a => 1] == A[a => 1, b => 3]
-    end
+      @test A[b => end - 2, a => 1] == A[a => 1, b => 1]
+      @test A[b => end^2 - 7, a => 1] == A[a => 1, b => 2]
 
-    @testset "Set element with end" begin
+      B = randomITensor(i)
+      @test B[i => end] == B[i => dim(i)]
+      @test B[i => end - 1] == B[i => dim(i) - 1]
+      @test B[end] == B[dim(i)]
+      @test B[end - 1] == B[dim(i) - 1]
+    end
+    @testset "ITensor equality" begin
+      Aij = randomITensor(i, j)
+      Aji = permute(Aij, j, i)
+      Bij′ = randomITensor(i, j')
+      Cij′ = randomITensor(i, j')
+      @test Aij == Aij
+      @test Aij == Aji
+      @test Bij′ != Cij′
+      @test Bij′ != Aij
+    end
+    @testset "Set element with end (lastindex, LastIndex)" begin
       _i = Index(2, "i")
       _j = Index(3, "j")
 
@@ -78,6 +113,10 @@ end
       A = ITensor(_i, _j)
       A[_j => end, _i => 1] = 4.5
       @test A[_i => 1, _j => dim(_j)] == 4.5
+
+      A = ITensor(_i, _j)
+      A[_j => end - 1, _i => 1] = 4.5
+      @test A[_i => 1, _j => dim(_j) - 1] == 4.5
     end
 
     @testset "Random" begin
@@ -104,6 +143,7 @@ end
       @test storage(A) isa NDTensors.Dense{Float64}
 
       @test ndims(A) == order(A) == 2 == length(inds(A))
+      @test Order(A) == Order(2)
       @test size(A) == dims(A) == (2, 2)
       @test dim(A) == 4
 
@@ -169,13 +209,13 @@ end
       TM = randomITensor(i, j)
 
       M1 = matrix(TM)
-      for ni in i, nj in j
-        @test M1[val(ni), val(nj)] ≈ TM[ni, nj]
+      for ni in eachval(i), nj in eachval(j)
+        @test M1[ni, nj] ≈ TM[i => ni, j => nj]
       end
 
       M2 = Matrix(TM, j, i)
-      for ni in i, nj in j
-        @test M2[val(nj), val(ni)] ≈ TM[ni, nj]
+      for ni in eachval(i), nj in eachval(j)
+        @test M2[nj, ni] ≈ TM[i => ni, j => nj]
       end
 
       T3 = randomITensor(i, j, k)
@@ -186,19 +226,19 @@ end
       TV = randomITensor(i)
 
       V = vector(TV)
-      for ni in i
+      for ni in eachindval(i)
         @test V[val(ni)] ≈ TV[ni]
       end
       V = Vector(TV)
-      for ni in i
+      for ni in eachindval(i)
         @test V[val(ni)] ≈ TV[ni]
       end
       V = Vector(TV, i)
-      for ni in i
+      for ni in eachindval(i)
         @test V[val(ni)] ≈ TV[ni]
       end
       V = Vector{ComplexF64}(TV)
-      for ni in i
+      for ni in eachindval(i)
         @test V[val(ni)] ≈ complex(TV[ni])
       end
 
@@ -228,7 +268,7 @@ end
     j = Index(2, "j")
     A = randomITensor(i, j)
     B = complex(A)
-    for ii in dim(i), jj in dim(j)
+    for ii in 1:dim(i), jj in 1:dim(j)
       @test complex(A[i => ii, j => jj]) == B[i => ii, j => jj]
     end
   end
@@ -494,18 +534,13 @@ end
   @testset "onehot (setelt)" begin
     i = Index(2, "i")
 
-    T = onehot(i(1))
-    @test T[i(1)] ≈ 1.0
-    @test T[i(2)] ≈ 0.0
+    T = onehot(i => 1)
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
 
-    T = setelt(i(2))
-    @test T[i(1)] ≈ 0.0
-    @test T[i(2)] ≈ 1.0
-
-    # Test onehot taking Pair{Index,Int}
-    T = onehot(i => 2)
-    @test T[i(1)] ≈ 0.0
-    @test T[i(2)] ≈ 1.0
+    T = setelt(i => 2)
+    @test T[i => 1] ≈ 0.0
+    @test T[i => 2] ≈ 1.0
 
     j = Index(2, "j")
 
@@ -1184,7 +1219,7 @@ end
         # TODO: use a combiner to combine the u indices to make
         # this test simpler
         for ii in 1:dim(u[1]), jj in 1:dim(u[2]), iip in 1:dim(u[1]), jjp in 1:dim(u[2])
-          val = UUᵀ[u[1](ii), u[2](jj), u[1]'(iip), u[2]'(jjp)]
+          val = UUᵀ[u[1] => ii, u[2] => jj, u[1]' => iip, u[2]' => jjp]
           if ii == iip && jj == jjp
             @test val ≈ one(SType) atol = 1e-13
           else
@@ -1403,6 +1438,38 @@ end
     @test anyhastags(A, "i")
     @test !allhastags(A, "i")
     @test allhastags(A, "x")
+  end
+
+  @testset "directsum" begin
+    x = Index(2, "x")
+    i1 = Index(3, "i1")
+    j1 = Index(4, "j1")
+    i2 = Index(5, "i2")
+    j2 = Index(6, "j2")
+
+    A1 = randomITensor(i1, x, j1)
+    A2 = randomITensor(x, j2, i2)
+    S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags=["sum_i", "sum_j"])
+
+    @test hassameinds(S, (x, s...))
+    @test hastags(s[1], "sum_i")
+    @test hastags(s[2], "sum_j")
+
+    for vx in 1:dim(x)
+      proj = dag(onehot(x => vx))
+      A1_vx = A1 * proj
+      A2_vx = A2 * proj
+      S_vx = S * proj
+      for m in 1:dim(s[1]), n in 1:dim(s[2])
+        if m ≤ dim(i1) && n ≤ dim(j1)
+          @test S_vx[s[1] => m, s[2] => n] == A1_vx[i1 => m, j1 => n]
+        elseif m > dim(i1) && n > dim(j1)
+          @test S_vx[s[1] => m, s[2] => n] == A2_vx[i2 => m - dim(i1), j2 => n - dim(j1)]
+        else
+          @test S_vx[s[1] => m, s[2] => n] == 0
+        end
+      end
+    end
   end
 end # End Dense ITensor basic functionality
 

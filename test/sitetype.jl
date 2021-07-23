@@ -182,9 +182,9 @@ using ITensors, Test
     function ITensors.op(::SiteType"_Custom_", s::Index, opname::AbstractString)
       Op = emptyITensor(s', dag(s))
       if opname == "S+"
-        Op[s'(1), s(2)] = sqrt(3)
-        Op[s'(2), s(3)] = 2
-        Op[s'(3), s(4)] = sqrt(3)
+        Op[s' => 1, s => 2] = sqrt(3)
+        Op[s' => 2, s => 3] = 2
+        Op[s' => 3, s => 4] = sqrt(3)
       else
         error("Name $opname not recognized for tag \"Custom\"")
       end
@@ -193,9 +193,9 @@ using ITensors, Test
 
     s = Index(4, "_Custom_")
     Sp = op("S+", s)
-    @test Sp[s'(1), s(2)] ≈ sqrt(3)
-    @test Sp[s'(2), s(3)] ≈ 2
-    @test Sp[s'(3), s(4)] ≈ sqrt(3)
+    @test Sp[s' => 1, s => 2] ≈ sqrt(3)
+    @test Sp[s' => 2, s => 3] ≈ 2
+    @test Sp[s' => 3, s => 4] ≈ sqrt(3)
   end
 
   @testset "siteind defined by space overload" begin
@@ -304,6 +304,59 @@ using ITensors, Test
     oa = ops(s, Tuple[("Sz", n) for n in 1:length(s)])
     @test length(oa) == length(s)
     @test norm(oa[2] - op("Sz", s, 2)) < 1E-8
+  end
+
+  @testset "Index Values From Strings" begin
+    @testset "Val function" begin
+      s = siteind("Electron")
+      @test val(s, "0") == 1
+      @test val(s, "Up") == 2
+      @test val(s, "Dn") == 3
+      @test val(s, "UpDn") == 4
+    end
+
+    @testset "Strings in ITensor get and set" begin
+      s = siteind("S=1"; conserve_qns=true)
+      T = ITensor(s', dag(s))
+      T[s' => "Up", s => "Up"] = +1.0
+      T[s' => "Z0", s => "Z0"] = +2.0
+      T[s' => "Dn", s => "Dn"] = -1.0
+      @test T[1, 1] ≈ +1.0
+      @test T[2, 2] ≈ +2.0
+      @test T[3, 3] ≈ -1.0
+
+      o = onehot(s => "Z0")
+      @test vector(o) ≈ [0, 1, 0]
+    end
+  end
+
+  @testset "state with variable dimension (Qudit/Boson)" begin
+    ITensors.space(::SiteType"Qudit"; dim=2) = dim
+
+    function ITensors.state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
+      n = parse(Int, String(N))
+      st = zeros(dim(s))
+      st[n + 1] = 1.0
+      return st
+    end
+
+    s = siteind("Qudit"; dim=3)
+    v0 = state(s, "0")
+    v1 = state(s, "1")
+    v2 = state(s, "2")
+    @test dim(v0) == 3
+    @test dim(v1) == 3
+    @test dim(v2) == 3
+    @test v0[s => 1] == 1
+    @test v0[s => 2] == 0
+    @test v0[s => 3] == 0
+    @test v1[s => 1] == 0
+    @test v1[s => 2] == 1
+    @test v1[s => 3] == 0
+    @test v2[s => 1] == 0
+    @test v2[s => 2] == 0
+    @test v2[s => 3] == 1
+    @test_throws BoundsError state(s, "3")
   end
 end
 

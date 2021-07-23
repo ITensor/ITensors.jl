@@ -11,6 +11,9 @@ struct EmptyOrder end
 
 struct EmptyNumber <: Number end
 
+zero(::Type{EmptyNumber}) = zero(Float64)
+zero(n::EmptyNumber) = zero(typeof(n))
+
 # This is a backup definition to make:
 # A = ITensor(i, j)
 # complex!(A)
@@ -39,6 +42,8 @@ function emptytype(::Type{StoreT}) where {StoreT}
 end
 
 empty(::Type{StoreT}) where {StoreT} = emptytype(StoreT)()
+
+norm(::EmptyStorage{ElT}) where {ElT} = norm(zero(ElT))
 
 # Defaults to Dense
 function EmptyStorage(::Type{ElT}) where {ElT}
@@ -240,6 +245,14 @@ function contract!!(
   R::EmptyTensor, labelsR, T1::Tensor, labelsT1, T2::CombinerTensor, labelsT2
 )
   RR = contract(T1, labelsT1, T2, labelsT2, labelsR)
+  return RR
+end
+
+# For ambiguity with versions in combiner.jl
+function contract!!(
+  R::EmptyTensor, labelsR, T1::EmptyTensor, labelsT1, T2::CombinerTensor, labelsT2
+)
+  RR = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
   return RR
 end
 

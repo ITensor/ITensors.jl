@@ -9,6 +9,7 @@ import Base:
   +,
   -,
   *,
+  ^,
   /,
   ==,
   <,
@@ -36,6 +37,7 @@ import Base:
   intersect,
   intersect!,
   isapprox,
+  isassigned,
   isempty,
   isless,
   iterate,
@@ -95,7 +97,16 @@ import LinearAlgebra:
   svd,
   tr
 
-using ITensors.NDTensors: EmptyNumber, blas_get_num_threads, fill!!, randn!!, timer
+using ITensors.NDTensors:
+  EmptyNumber,
+  _Tuple,
+  _NTuple,
+  blas_get_num_threads,
+  eachblock,
+  eachdiagblock,
+  fill!!,
+  randn!!,
+  timer
 
 import ITensors.NDTensors:
   # Modules
@@ -110,6 +121,7 @@ import ITensors.NDTensors:
   blockoffsets,
   contract,
   dense,
+  denseblocks,
   dim,
   dims,
   disable_tblis,
@@ -118,6 +130,7 @@ import ITensors.NDTensors:
   ind,
   inds,
   insertblock!,
+  insert_diag_blocks!,
   matrix,
   maxdim,
   mindim,
@@ -145,3 +158,9 @@ import ITensors.NDTensors:
   store
 
 import Random: randn!
+
+using SerializedElementArrays: SerializedElementVector
+
+const DiskVector{T} = SerializedElementVector{T}
+
+import SerializedElementArrays: disk

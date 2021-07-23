@@ -9,23 +9,23 @@ using ITensors, Test
     @test dim(s) == 2
 
     s = siteinds("Qubit", N)
-    @test state(s[1], "0") == s[1](1)
-    @test state(s[1], "1") == s[1](2)
-    @test_throws ArgumentError state(s[1], "Fake")
+    @test val(s[1], "0") == 1
+    @test val(s[1], "1") == 2
+    @test_throws ArgumentError val(s[1], "Fake")
 
     s = siteind("Qubit"; conserve_parity=true)
     @test hastags(s, "Qubit,Site")
     @test dim(s) == 2
     @test nblocks(s) == 2
-    @test qn(s, 1) == QN("Parity", 1, 2)
-    @test qn(s, 2) == QN("Parity", 0, 2)
+    @test qn(s, 1) == QN("Parity", 0, 2)
+    @test qn(s, 2) == QN("Parity", 1, 2)
 
     s = siteind("Qubit"; conserve_number=true, conserve_parity=true)
     @test hastags(s, "Qubit,Site")
     @test dim(s) == 2
     @test nblocks(s) == 2
-    @test qn(s, 1) == QN(("Parity", 1, 2), ("Number", +1))
-    @test qn(s, 2) == QN(("Parity", 0, 2), ("Number", -1))
+    @test qn(s, 1) == QN(("Parity", 0, 2), ("Number", 0))
+    @test qn(s, 2) == QN(("Parity", 1, 2), ("Number", 1))
 
     s = siteinds("Qubit", N)
 
@@ -77,9 +77,9 @@ using ITensors, Test
     @test qn(s, 2) == QN(("SzParity", 0, 2), ("Sz", -1))
 
     s = siteinds("S=1/2", N)
-    @test state(s[1], "Up") == s[1](1)
-    @test state(s[1], "Dn") == s[1](2)
-    @test_throws ArgumentError state(s[1], "Fake")
+    @test val(s[1], "Up") == 1
+    @test val(s[1], "Dn") == 2
+    @test_throws ArgumentError val(s[1], "Fake")
 
     Sz5 = op("Sz", s, 5)
     @test hasinds(Sz5, s[5]', s[5])
@@ -112,10 +112,10 @@ using ITensors, Test
   @testset "Spin One sites" begin
     s = siteinds("S=1", N)
 
-    @test state(s[1], "Up") == s[1](1)
-    @test state(s[1], "0") == s[1](2)
-    @test state(s[1], "Dn") == s[1](3)
-    @test_throws ArgumentError state(s[1], "Fake")
+    @test val(s[1], "Up") == 1
+    @test val(s[1], "0") == 2
+    @test val(s[1], "Dn") == 3
+    @test_throws ArgumentError val(s[1], "Fake")
 
     Sz5 = op("Sz", s, 5)
     @test hasinds(Sz5, s[5]', s[5])
@@ -130,8 +130,9 @@ using ITensors, Test
     @test Array(op("Sˣ", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
     @test Array(op("iSy", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
     @test Array(op("iSʸ", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
-    @test Array(op("Sy", s, 3), s[3]', s[3]) ≈ [0 -1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
-    @test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ [0 -1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
+    @test Array(op("Sy", s, 3), s[3]', s[3]) ≈ (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
+    @test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
+    #@test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ [0 +1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
     @test Array(op("Sz", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
     @test Array(op("Sᶻ", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
     @test Array(op("Sz2", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 +1.0]
@@ -142,9 +143,9 @@ using ITensors, Test
   @testset "Fermion sites" begin
     s = siteind("Fermion")
 
-    @test state(s, "0") == s(1)
-    @test state(s, "1") == s(2)
-    @test_throws ArgumentError state(s, "Fake")
+    @test val(s, "0") == 1
+    @test val(s, "1") == 2
+    @test_throws ArgumentError val(s, "Fake")
 
     N = op(s, "N")
     @test hasinds(N, s', s)
@@ -198,11 +199,11 @@ using ITensors, Test
   @testset "Electron sites" begin
     s = siteind("Electron")
 
-    @test state(s, "0") == s(1)
-    @test state(s, "Up") == s(2)
-    @test state(s, "Dn") == s(3)
-    @test state(s, "UpDn") == s(4)
-    @test_throws ArgumentError state(s, "Fake")
+    @test val(s, "0") == 1
+    @test val(s, "Up") == 2
+    @test val(s, "Dn") == 3
+    @test val(s, "UpDn") == 4
+    @test_throws ArgumentError val(s, "Fake")
 
     Nup = op(s, "Nup")
     @test hasinds(Nup, s', s)
@@ -267,10 +268,10 @@ using ITensors, Test
   @testset "tJ sites" begin
     s = siteind("tJ")
 
-    @test state(s, "0") == s(1)
-    @test state(s, "Up") == s(2)
-    @test state(s, "Dn") == s(3)
-    @test_throws ArgumentError state(s, "Fake")
+    @test val(s, "0") == 1
+    @test val(s, "Up") == 2
+    @test val(s, "Dn") == 3
+    @test_throws ArgumentError val(s, "Fake")
 
     @test_throws ArgumentError op(s, "Fake")
     Nup = op(s, "Nup")

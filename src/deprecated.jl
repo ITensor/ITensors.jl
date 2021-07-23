@@ -10,6 +10,9 @@
 @deprecate use_combine_contract() ITensors.using_combine_contract()
 @deprecate use_debug_checks() ITensors.using_debug_checks()
 
+# index.jl
+@deprecate getindex(i::Index, n::Int) IndexVal(i, n)
+
 # indexset.jl
 @deprecate store(is::IndexSet) data(is)
 @deprecate firstintersect(is...; kwargs...) getfirst(intersect(is...); kwargs...)
@@ -47,6 +50,20 @@
 @deprecate primelinks!(args...; kwargs...) ITensors.prime_linkinds!(args...; kwargs...)
 @deprecate simlinks!(args...; kwargs...) ITensors.sim_linkinds!(args...; kwargs...)
 @deprecate mul(A::AbstractMPS, B::AbstractMPS; kwargs...) contract(A, B; kwargs...)
+
+# mps/mpo.jl
+@deprecate MPO(A::MPS; kwargs...) outer(A, A; kwargs...)
+
+# mps/mps.jl
+@deprecate randomMPS(sites::Vector{<:Index}, linkdims::Integer) randomMPS(
+  sites; linkdims=linkdims
+)
+@deprecate randomMPS(ElType::Type, sites::Vector{<:Index}, linkdims::Integer) randomMPS(
+  ElType, sites; linkdims=linkdims
+)
+@deprecate randomMPS(sites::Vector{<:Index}, state, linkdims::Integer) randomMPS(
+  sites, state; linkdims=linkdims
+)
 
 # physics/autompo.jl
 @deprecate toMPO(args...; kwargs...) MPO(args...; kwargs...)

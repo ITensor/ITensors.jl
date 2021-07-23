@@ -1,5 +1,5 @@
 """
-BlockDim
+    BlockDim
 
 An index for a BlockSparseTensor.
 """
@@ -9,7 +9,7 @@ const BlockDim = Vector{Int}
 dim(d::BlockDim) = sum(d)
 
 """
-BlockDims{N}
+    BlockDims{N}
 
 Dimensions used for BlockSparse NDTensors.
 Each entry lists the block sizes in each dimension.
@@ -52,7 +52,7 @@ function dim(ds::BlockDims{N}) where {N}
 end
 
 """
-nblocks(::BlockDim)
+    nblocks(::BlockDim)
 
 The number of blocks of the BlockDim.
 """
@@ -61,7 +61,16 @@ function nblocks(ind::BlockDim)
 end
 
 """
-nblocks(::BlockDims,i::Integer)
+    ndiagblocks(::Any)
+
+The number of blocks along the diagonal.
+"""
+function ndiagblocks(x)
+  return minimum(nblocks(x))
+end
+
+"""
+    nblocks(::BlockDims,i::Integer)
 
 The number of blocks in the specified dimension.
 """
@@ -70,7 +79,7 @@ function nblocks(inds::Tuple, i::Integer)
 end
 
 """
-nblocks(::BlockDims,is)
+    nblocks(::BlockDims,is)
 
 The number of blocks in the specified dimensions.
 """
@@ -79,13 +88,21 @@ function nblocks(inds::Tuple, is::NTuple{N,Int}) where {N}
 end
 
 """
-nblocks(::BlockDims)
+    nblocks(::BlockDims)
 
 A tuple of the number of blocks in each
 dimension.
 """
 function nblocks(inds::NTuple{N,<:Any}) where {N}
   return ntuple(i -> nblocks(inds, i), Val(N))
+end
+
+function eachblock(inds::Tuple)
+  return (Block(b) for b in CartesianIndices(_Tuple(nblocks(inds))))
+end
+
+function eachdiagblock(inds::Tuple)
+  return (Block(ntuple(_ -> i, length(inds))) for i in 1:ndiagblocks(inds))
 end
 
 """
@@ -96,6 +113,12 @@ dimension.
 """
 function blockdim(ind::BlockDim, i::Integer)
   return ind[i]
+end
+
+function blockdim(ind::Integer, i)
+  return error(
+    "`blockdim(i::Integer, b)` not currently defined for non-block index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.",
+  )
 end
 
 """
@@ -127,7 +150,7 @@ function blockdim(inds, block)
 end
 
 """
-blockdiaglength(inds::BlockDims,block)
+    blockdiaglength(inds::BlockDims,block)
 
 The length of the diagonal of the specified block.
 """
@@ -153,7 +176,12 @@ end
 
 # Given a CartesianIndex in the range dims(T), get the block it is in
 # and the index within that block
-function blockindex(T, i::Vararg{Int,N}) where {ElT,N}
+function blockindex(T, i::Vararg{Integer,N}) where {ElT,N}
+  # Bounds check.
+  # Do something more robust like:
+  # @boundscheck Base.checkbounds_indices(Bool, map(Base.oneto, dims(T)), i) || throw_boundserror(T, i)
+  @boundscheck any(iszero, i) && Base.throw_boundserror(T, i)
+
   # Start in the (1,1,...,1) block
   current_block_loc = @MVector ones(Int, N)
   current_block_dims = blockdims(T, Tuple(current_block_loc))

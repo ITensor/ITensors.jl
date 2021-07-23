@@ -37,7 +37,32 @@ The first three return arguments are `U`, `S`, and `V`, such that
 Whether or not the SVD performs a trunction depends on the keyword
 arguments provided. 
 
-# Arguments
+# Examples
+
+```julia
+i = Index(2)
+j = Index(5)
+k = Index(2)
+
+A = randomITensor(i, j, k)
+U, S, V = svd(A, i, k);
+@show norm(A - U * S * V) <= 10 * eps() * norm(A)
+
+# This will truncate the last 2 singular values.
+# The norm of the difference with the original tensor
+# will be the sqrt root of the sum of the squares of the
+# singular values that get truncated.
+Utrunc, Strunc, Vtrunc = svd(A, i, k; maxdim=2);
+@show norm(A - Utrunc * Strunc * Vtrunc) ≈ sqrt(S[3, 3]^2 + S[4, 4]^2)
+
+# Alternatively we can specify that we want to truncate
+# the weights of the singular values up to a certain cutoff,
+# so the error will be no larger than the cutoff.
+Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
+@show norm(A - Utrunc2 * Strunc2 * Vtrunc2) <= 1e-10
+```
+
+# Keywords
 - `maxdim::Int`: the maximum number of singular values to keep.
 - `mindim::Int`: the minimum number of singular values to keep.
 - `cutoff::Float64`: set the desired truncation error of the SVD, by default defined as the sum of the squares of the smallest singular values.
@@ -248,12 +273,12 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   end
 
   CL = combiner(Lis...; dir=Out, tags="CMB,left")
-  CR = combiner(Ris...; dir=In, tags="CMB,right")
+  CR = combiner(dag(Ris)...; dir=Out, tags="CMB,right")
 
-  AC = A * CR * CL
+  AC = A * dag(CR) * CL
 
   cL = combinedind(CL)
-  cR = combinedind(CR)
+  cR = dag(combinedind(CR))
   if inds(AC) != IndexSet(cL, cR)
     AC = permute(AC, cL, cR)
   end
@@ -263,7 +288,7 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   DT, VT, spec = eigen(AT; kwargs...)
   D, VC = itensor(DT), itensor(VT)
 
-  V = VC * CR
+  V = VC * dag(CR)
 
   # Set right index tags
   l = uniqueind(D, V)

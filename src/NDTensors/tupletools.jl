@@ -1,4 +1,12 @@
 
+# This is a cache of [Val(1), Val(2), ...]
+# Hard-coded for now to only handle tensors up to order 100
+const ValCache = Val[Val(n) for n in 0:100]
+# Faster conversions of collection to tuple than `Tuple(::AbstractVector)`
+_NTuple(::Val{N}, v::Vector{T}) where {N,T} = ntuple(n -> v[n], Val(N))
+_Tuple(v::Vector{T}) where {T} = _NTuple(ValCache[length(v) + 1], v)
+_Tuple(t::Tuple) = t
+
 """
     ValLength(::Type{NTuple{N}}) = Val{N}
 """
@@ -8,6 +16,10 @@ ValLength(::Type{NTuple{N,T}}) where {N,T} = Val{N}
     ValLength(::NTuple{N}) = Val(N)
 """
 ValLength(::NTuple{N}) where {N} = Val(N)
+
+# Only to help with backwards compatibility, this
+# is not type stable and therefore not efficient.
+ValLength(v::Vector) = Val(length(v))
 
 ValLength(::Tuple{Vararg{<:Any,N}}) where {N} = Val(N)
 

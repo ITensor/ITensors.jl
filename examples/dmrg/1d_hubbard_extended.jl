@@ -15,7 +15,7 @@ let
 
   sites = siteinds("Electron", N; conserve_qns=true)
 
-  ampo = AutoMPO()
+  ampo = OpSum()
   for b in 1:(N - 1)
     ampo += -t1, "Cdagup", b, "Cup", b + 1
     ampo += -t1, "Cdagup", b + 1, "Cup", b
