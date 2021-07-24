@@ -21,7 +21,9 @@
    Github will give you the option to make a 
    pull request (PR) out of your branch that will be submitted to us, and which
    you can view under the list of ITensors.jl pull requests.
-   If your PR's tests pass and we approve your changes, we will merge it. Otherwise
-   we might give you feedback about changes.
+   If your PR's tests pass and we approve your changes, we will merge it or 
+   ask you to merge it. If you merge your PR, _please use the Squash and Merge_ option. 
+   We may also ask you to make more changes to bring your PR in line with our
+   design goals or technical requirements.
 
 

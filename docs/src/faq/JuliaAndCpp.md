@@ -2,21 +2,19 @@
 
 ## Should I use the Julia or C++ version of ITensor?
 
-We recommend the Julia version of ITensor for most people,
-for the following reasons:
+We recommend the Julia version of ITensor for most people, because:
 * Julia ITensor has more and newer features than C++ ITensor, and we are developing it more rapidly
-* Julia is a more productive language than C++
+* Julia is a more productive language than C++ with more built-in features, such as linear algebra, iteration tools, etc.
 * Julia is a compiled language with performance rivaling C++ (see next question below for a longer discussion)
-* Julia has a rich ecosystem with a package manager and many well-designed libraries
+* Julia has a rich ecosystem with a package manager, many well-designed libraries, and helpful tutorials
 
 Even if Julia is not available by default on your computer cluster, it is easy to set up your own local install of Julia on a cluster.
 
-However, there are certainly good reasons to use the C++ version of ITensor:
+However, some good reasons to use the C++ version of ITensor are:
 * using ITensor within existing C++ codes
-* you are already familiar with C++
-* multithreading support in C++, such as with OpenMP, has certain features which are more sophisticated than Julia multithreading (though Julia's support for multithreading has other benefits such as composability)
+* you already have expertise in C++ programming
+* multithreading support in C++, such as with OpenMP, offer certain sophisticated features compared to Julia multithreading (though Julia's support for multithreading has other benefits such as composability and is rapidly improving)
 * you need other specific features of C++, such as control over memory management or instant start-up times
-
 
 ## Which is faster: Julia or C++ ?
 
