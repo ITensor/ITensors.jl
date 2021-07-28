@@ -25,8 +25,9 @@ references:
     identifiers: "arXiv:2007.14822"
     url: "https://arxiv.org/abs/2007.14822"
 date-released: 2020-07-28
-repository-code: "https://github.com/ITensor/ITensors.jl"
+repository-code: "https://arxiv.org/abs/2007.14822"
 message: "Please cite the following article when using this software."
 license: "Apache-2.0"
 version: "0.2"
-title: "ITensor"
+volume: "arXiv:2007.14822"
+title: "The ITensor Software Library for Tensor Network Calculations"
