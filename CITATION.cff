@@ -29,5 +29,7 @@ repository-code: "https://arxiv.org/abs/2007.14822"
 message: "Please cite the following article when using this software."
 license: "Apache-2.0"
 version: "0.2"
-volume: "arXiv:2007.14822"
+identifiers:
+  - type: "other"
+    value: "arXiv:2007.14822"
 title: "The ITensor Software Library for Tensor Network Calculations"
