@@ -2568,17 +2568,15 @@ function HDF5.read(
   # check input file for key name of ITensor data
   # ITensors.jl <= v0.1.x uses `store` as key 
   # whereas ITensors.jl >= v0.2.x uses `storage` as key
-  if haskey(g, "storage")
-    stypestr = read(attributes(open_group(g, "storage"))["type"])
-    stype = eval(Meta.parse(stypestr))
-    storage = read(g, "storage", stype)
-    return itensor(storage, inds)
-  elseif haskey(g, "store")
-    stypestr = read(attributes(open_group(g, "store"))["type"])
-    stype = eval(Meta.parse(stypestr))
-    store = read(g, "store", stype)
-    return itensor(store, inds)
-  else
-    error("HDF5 file: $(g) does not contain correct ITensor data.\nNeither key `store` nor `storage` could be found.")
+  for key in ["storage", "store"]
+    if haskey(g, key)
+      stypestr = read(attributes(open_group(g, key))["type"])
+      stype = eval(Meta.parse(stypestr))
+      storage = read(g, key, stype)
+      return itensor(storage, inds)
+    end
   end
+  return error(
+    "HDF5 file: $(g) does not contain correct ITensor data.\nNeither key `store` nor `storage` could be found.",
+  )
 end
