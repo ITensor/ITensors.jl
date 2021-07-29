@@ -161,8 +161,7 @@ include("util.jl")
     # ITensor version <= v0.1.41 uses the `store` key for ITensor data storage
     # whereas v >= 0.2 uses `storage` as key
     @test haskey(read(fi, ITensorName), "store")
-
-    @test typeof(read(fi, ITensorName, ITensor)) == ITensor
+    @test read(fi, ITensorName, ITensor) isa ITensor
     close(fi)
   end
 
