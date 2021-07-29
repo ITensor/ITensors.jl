@@ -1,0 +1,35 @@
+cff-version: 1.1.0
+authors: 
+  - family-names: Fishman
+    given-names: Matthew
+  - family-names: White
+    given-names: Steven R.
+    orcid: "https://orcid.org/0000-0003-3496-0707"
+  - family-names: Stoudenmire
+    given-names: E. Miles
+    orcid: "https://orcid.org/0000-0003-3389-9692"
+references:
+  - type: article
+    authors:
+      - family-names: Fishman
+        given-names: Matthew
+      - family-names: White
+        given-names: Steven R.
+        orcid: "https://orcid.org/0000-0003-3496-0707"
+      - family-names: Stoudenmire
+        given-names: E. Miles
+        orcid: "https://orcid.org/0000-0003-3389-9692"
+    title: "The ITensor Software Library for Tensor Network Calculations"
+    status: "preprint"
+    number: "2007.14822"
+    identifiers: "arXiv:2007.14822"
+    url: "https://arxiv.org/abs/2007.14822"
+date-released: 2020-07-28
+repository-code: "https://arxiv.org/abs/2007.14822"
+message: "Please cite the following article when using this software."
+license: "Apache-2.0"
+version: "0.2"
+identifiers:
+  - type: "other"
+    value: "arXiv:2007.14822"
+title: "The ITensor Software Library for Tensor Network Calculations"

@@ -329,6 +329,35 @@ using ITensors, Test
       @test vector(o) ≈ [0, 1, 0]
     end
   end
+
+  @testset "state with variable dimension (Qudit/Boson)" begin
+    ITensors.space(::SiteType"Qudit"; dim=2) = dim
+
+    function ITensors.state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
+      n = parse(Int, String(N))
+      st = zeros(dim(s))
+      st[n + 1] = 1.0
+      return st
+    end
+
+    s = siteind("Qudit"; dim=3)
+    v0 = state(s, "0")
+    v1 = state(s, "1")
+    v2 = state(s, "2")
+    @test dim(v0) == 3
+    @test dim(v1) == 3
+    @test dim(v2) == 3
+    @test v0[s => 1] == 1
+    @test v0[s => 2] == 0
+    @test v0[s => 3] == 0
+    @test v1[s => 1] == 0
+    @test v1[s => 2] == 1
+    @test v1[s => 3] == 0
+    @test v2[s => 1] == 0
+    @test v2[s => 2] == 0
+    @test v2[s => 3] == 1
+    @test_throws BoundsError state(s, "3")
+  end
 end
 
 nothing

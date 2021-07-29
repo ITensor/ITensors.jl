@@ -9,6 +9,12 @@ After we release v1 of the package, we will start following [semantic versioning
 ITensor v0.2.4 Release Notes
 ==============================
 
+- Fix state function when overloading version that accepts an Index (#711)
+- Started work on FAQs (#709)
+- Add denseblocks definition for Diag storage (#710)
+- Code examples about making an array from an ITensor, QR with postive R, and sampling an MPS (#705)
+- Prepend site type functions with ITensors to make it clearer to users how they should write their own overloads (#704)
+- Fix issue with Index arrow for QN case of `correlation_matrix` (#702)
 - Add `sim(::Pair{<:Index})` (#701)
 - Add `norm(::EmptyStorage)` (#699) 
 

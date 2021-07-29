@@ -1,4 +1,4 @@
-# ITensor Code Examples
+# [ITensor Code Examples](@id itensor_examples)
 
 
 ## Print Indices of an ITensor
