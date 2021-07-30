@@ -105,7 +105,8 @@ Constructor for an ITensor from a TensorStorage
 and a set of indices.
 The ITensor stores a view of the TensorStorage.
 """
-ITensor(as::AliasStyle, st::TensorStorage, is)::ITensor = ITensor(as, Tensor(as, st, Tuple(is)))
+ITensor(as::AliasStyle, st::TensorStorage, is)::ITensor =
+  ITensor(as, Tensor(as, st, Tuple(is)))
 ITensor(as::AliasStyle, is, st::TensorStorage)::ITensor = ITensor(as, st, is)
 
 """
@@ -1848,7 +1849,7 @@ end
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
 # XXX: rename contract!
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
+function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number; β::Number=0)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(

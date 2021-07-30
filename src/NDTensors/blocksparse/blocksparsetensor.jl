@@ -868,7 +868,9 @@ function _threaded_contract_blockoffsets(
   labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
     labels1, labels2, labelsR
   )
-  contraction_plans = Vector{Tuple{Block{N1},Block{N2},Block{NR}}}[Tuple{Block{N1},Block{N2},Block{NR}}[] for _ in 1:nthreads()]
+  contraction_plans = Vector{Tuple{Block{N1},Block{N2},Block{NR}}}[
+    Tuple{Block{N1},Block{N2},Block{NR}}[] for _ in 1:nthreads()
+  ]
 
   #
   # Reserve some capacity

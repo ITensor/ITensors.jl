@@ -93,9 +93,7 @@ end
 #  return nothing
 #end
 
-function contract_inds(
-  T1is, T1labels::Labels{0}, T2is, T2labels::Labels{0}, Rlabels
-)
+function contract_inds(T1is, T1labels::Labels{0}, T2is, T2labels::Labels{0}, Rlabels)
   return ()
 end
 

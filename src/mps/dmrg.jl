@@ -3,7 +3,9 @@
 #  return IndexSet(filter(i -> i isa Index, is))
 #end
 
-function permute(M::AbstractMPS, ::Tuple{typeof(linkind),typeof(siteinds),typeof(linkind)})::typeof(M)
+function permute(
+  M::AbstractMPS, ::Tuple{typeof(linkind),typeof(siteinds),typeof(linkind)}
+)::typeof(M)
   M̃ = typeof(M)(length(M))
   for n in 1:length(M)
     lₙ₋₁ = linkind(M, n - 1)
@@ -96,7 +98,9 @@ Returns:
 * `energy::Float64` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
+function dmrg(
+  H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...
+)::Tuple{Number,MPS}
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   for M in Ms
@@ -223,7 +227,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
             tol=eigsolve_tol,
             krylovdim=eigsolve_krylovdim,
             maxiter=eigsolve_maxiter,
-         )
+          )
         end
         energy::Number = vals[1]
         phi::ITensor = vecs[1]
