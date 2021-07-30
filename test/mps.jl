@@ -1621,7 +1621,7 @@ end
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
 
     # Deprecated syntax
-    ρ = MPO(ψ)
+    ρ = @test_deprecated MPO(ψ)
     @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
     @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2

@@ -11,7 +11,7 @@
 @deprecate use_debug_checks() ITensors.using_debug_checks()
 
 # index.jl
-@deprecate getindex(i::Index, n::Int) IndexVal(i, n)
+@deprecate getindex(i::Index, n::Int) (i => n)
 
 # indexset.jl
 @deprecate store(is::IndexSet) data(is)
