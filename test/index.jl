@@ -46,6 +46,7 @@ import ITensors: In, Out, Neither
   end
   @testset "IndexVal" begin
     i = Index(2)
+    @test_deprecated i[1]
     @test val(i => 1) == 1
     @test ind(i => 1) == i
     @test isindequal(i, i => 2)

@@ -93,18 +93,28 @@ end
 #  return nothing
 #end
 
-function contract_inds(
-  T1is, T1labels::Labels{N1}, T2is, T2labels::Labels{N2}, Rlabels::Labels{NR}
-) where {N1,N2,NR}
-  if length(T1is) == 0 && length(T2is) == 0
-    return ()
-  end
+function contract_inds(T1is, T1labels::Labels{0}, T2is, T2labels::Labels{0}, Rlabels)
+  return ()
+end
+
+# isbitstype that returns a Val for dispatch
+isbitsval(T) = Val(isbitstype(T))
+
+function contract_inds(T1is, T1labels, T2is, T2labels, Rlabels)
   IndT = promote_type(eltype(T1is), eltype(T2is))
-  if (length(T1is) > 0 && isbits(T1is[1])) || isbits(T2is[1])
-    Ris = MVector{NR,IndT}(undef)
-  else
-    Ris = SizedVector{NR,IndT}(undef)
-  end
+  return _contract_inds(isbitsval(IndT), IndT, T1is, T1labels, T2is, T2labels, Rlabels)
+end
+
+# isbits
+function _contract_inds(::Val{true}, IndT, T1is, T1labels, T2is, T2labels, Rlabels)
+  Ris = MVector{length(Rlabels),IndT}(undef)
+  _contract_inds!(Ris, T1is, T1labels, T2is, T2labels, Rlabels)
+  return Tuple(Ris)
+end
+
+# !isbits
+function _contract_inds(::Val{false}, IndT, T1is, T1labels, T2is, T2labels, Rlabels)
+  Ris = SizedVector{length(Rlabels),IndT}(undef)
   _contract_inds!(Ris, T1is, T1labels, T2is, T2labels, Rlabels)
   return Tuple(Ris)
 end

@@ -53,7 +53,7 @@ using ITensors, Test
   @testset "Get and Set Elements" begin
     s = Index([QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 1], "s")
 
-    N = emptyITensor(s', dag(s))
+    N = ITensor(s', dag(s))
 
     N[s' => 2, s => 2] = 1.0
     @test N[s' => 2, s => 2] ≈ +1.0
@@ -63,13 +63,13 @@ using ITensors, Test
     @test N[s' => 2, s => 2] ≈ -1.0
     @test N[s => 2, s' => 2] ≈ 1.0
 
-    C = emptyITensor(s', dag(s))
+    C = ITensor(s', dag(s))
 
     C[s' => 1, s => 2] = 1.0
     @test C[s' => 1, s => 2] ≈ 1.0
     @test C[s => 2, s' => 1] ≈ 1.0
 
-    I = emptyITensor(s', dag(s))
+    I = ITensor(s', dag(s))
     I[s' => 1, s => 1] = 1.0
     I[s' => 2, s => 2] = 1.0
     @test I[s' => 1, s => 1] ≈ 1.0
@@ -82,18 +82,18 @@ using ITensors, Test
   @testset "Making operators different ways" begin
     s = Index([QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 1], "s")
 
-    N1 = emptyITensor(s', dag(s))
+    N1 = ITensor(s', dag(s))
     N1[s' => 2, s => 2] = +1.0
 
-    N2 = emptyITensor(dag(s), s')
+    N2 = ITensor(dag(s), s')
     N2[s' => 2, s => 2] = +1.0
     @test norm(N1 - N2) ≈ 0.0
 
-    N3 = emptyITensor(s', dag(s))
+    N3 = ITensor(s', dag(s))
     N3[s => 2, s' => 2] = -1.0
     @test norm(N1 - N3) ≈ 0.0
 
-    N4 = emptyITensor(dag(s), s')
+    N4 = ITensor(dag(s), s')
     N4[s => 2, s' => 2] = -1.0
     @test norm(N1 - N4) ≈ 0.0
   end
@@ -102,10 +102,10 @@ using ITensors, Test
     @testset "Permute Operators" begin
       s = Index([QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 1], "s")
 
-      N1 = emptyITensor(s', dag(s))
+      N1 = ITensor(s', dag(s))
       N1[s' => 2, s => 2] = 1.0
 
-      N2 = emptyITensor(dag(s), s')
+      N2 = ITensor(dag(s), s')
       N2[s' => 2, s => 2] = 1.0
 
       pN1 = permute(N1, dag(s), s')
@@ -120,10 +120,10 @@ using ITensors, Test
     @testset "Add Operators" begin
       s = Index([QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 1], "sn")
 
-      N1 = emptyITensor(s', dag(s))
+      N1 = ITensor(s', dag(s))
       N1[s' => 2, s => 2] = 1.0
 
-      N2 = emptyITensor(dag(s), s')
+      N2 = ITensor(dag(s), s')
       N2[s' => 2, s => 2] = 1.0
 
       NN = N1 + N2
@@ -176,16 +176,16 @@ using ITensors, Test
   @testset "C Cdag operators" begin
     s = siteinds("Fermion", 3; conserve_qns=true)
 
-    p110 = emptyITensor(s[1], s[2], s[3])
+    p110 = ITensor(s[1], s[2], s[3])
     p110[s[1] => 2, s[2] => 2, s[3] => 1] = 1.0
 
-    p011 = emptyITensor(s[1], s[2], s[3])
+    p011 = ITensor(s[1], s[2], s[3])
     p011[s[1] => 1, s[2] => 2, s[3] => 2] = 1.0
 
-    np011 = emptyITensor(s[1], s[2], s[3])
+    np011 = ITensor(s[1], s[2], s[3])
     np011[s[1] => 1, s[3] => 2, s[2] => 2] = 1.0
 
-    dag_p011 = emptyITensor(dag(s[3]), dag(s[2]), dag(s[1]))
+    dag_p011 = ITensor(dag(s[3]), dag(s[2]), dag(s[1]))
     dag_p011[s[3] => 2, s[2] => 2, s[1] => 1] = 1.0
 
     @test norm(dag(p011) - dag_p011) ≈ 0
@@ -264,10 +264,10 @@ using ITensors, Test
     #
     # Leave out middle fermion, test for cases <001|...|100>
     #
-    p100 = emptyITensor(s[1], s[2], s[3])
+    p100 = ITensor(s[1], s[2], s[3])
     p100[s[1] => 2, s[2] => 1, s[3] => 1] = 1.0
 
-    p001 = emptyITensor(s[1], s[2], s[3])
+    p001 = ITensor(s[1], s[2], s[3])
     p001[s[1] => 1, s[2] => 1, s[3] => 2] = 1.0
 
     let # <001|Cdag3*C1|100> = <001|Bdag3*B1|100> = +1
@@ -306,7 +306,7 @@ using ITensors, Test
     s = siteinds("Fermion", 4; conserve_qns=true)
 
     @testset "Two Site Test" begin
-      p11 = emptyITensor(s[1], s[2])
+      p11 = ITensor(s[1], s[2])
       p11[s[1] => 2, s[2] => 2] = 1.0
 
       C = combiner(s[1], s[2])
@@ -384,7 +384,7 @@ using ITensors, Test
     end
 
     @testset "Three Site Test" begin
-      p111 = emptyITensor(s[1], s[2], s[3])
+      p111 = ITensor(s[1], s[2], s[3])
       p111[s[1] => 2, s[2] => 2, s[3] => 2] = 1.0
 
       dp111 = dag(p111)
@@ -457,14 +457,14 @@ using ITensors, Test
     i = Index([QN("N", 0, -1) => 1, QN("N", 1, -1) => 1, QN("N", 2, -1) => 1], "i")
 
     A = ITensor(QN("N", 4, -1), s1, s2, i)
-    A[s1[2], s2[2], i[3]] = 223
+    A[s1 => 2, s2 => 2, i => 3] = 223
 
     B = ITensor(QN("N", 4, -1), s1, i, s2)
-    B[s1[2], i[3], s2[2]] = 223
+    B[s1 => 2, i => 3, s2 => 2] = 223
     @test A ≈ B
 
     C = ITensor(QN("N", 4, -1), s1, i, s2)
-    C[s2[2], i[3], s1[2]] = -223
+    C[s2 => 2, i => 3, s1 => 2] = -223
     @test A ≈ C
   end
 
@@ -472,13 +472,13 @@ using ITensors, Test
     s = siteinds("Fermion", 3; conserve_qns=true)
 
     pA = productMPS(s, [2, 1, 2])
-    TA = emptyITensor(s[1], s[2], s[3])
+    TA = ITensor(s[1], s[2], s[3])
     TA[s[1] => 2, s[2] => 1, s[3] => 2] = 1.0
     A = pA[1] * pA[2] * pA[3]
     @test norm(A - TA) < 1E-8
 
     pB = productMPS(s, [1, 2, 2])
-    TB = emptyITensor(s[1], s[2], s[3])
+    TB = ITensor(s[1], s[2], s[3])
     TB[s[1] => 1, s[2] => 2, s[3] => 2] = 1.0
     B = pB[1] * pB[2] * pB[3]
     @test norm(B - TB) < 1E-8

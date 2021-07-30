@@ -11,6 +11,7 @@ using Test
     "indexset.jl",
     "ndtensors.jl",
     "not.jl",
+    "inference.jl",
     "itensor_scalar.jl",
     "itensor.jl",
     "itensor_slice.jl",

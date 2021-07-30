@@ -722,6 +722,7 @@ function check_hascommoninds(::typeof(siteinds), A::AbstractMPS, B::AbstractMPS)
       "$(typeof(A)) A and $(typeof(B)) B must share site indices. On site $n, A has site indices $(siteinds(A, n)) while B has site indices $(siteinds(B, n)).",
     )
   end
+  return nothing
 end
 
 function map!(f::Function, ::typeof(linkinds), M::AbstractMPS)
