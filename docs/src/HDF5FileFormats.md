@@ -122,7 +122,8 @@ Attributes:
 
 Datasets and Subgroups:
 * "inds" [group] = indices of the ITensor
-* "store" [group] = storage of the ITensor
+* "storage" [group] = storage of the ITensor
+  (note that some earlier versions of ITensors.jl may call this group "store")
 
 
 ## [NDTensors.Dense](@id dense_hdf5)
