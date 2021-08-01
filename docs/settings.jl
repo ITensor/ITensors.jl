@@ -54,6 +54,7 @@ settings = Dict(
       "Symmetric (QN conserving) tensors: background and usage" => "QNTricks.md",
       "Timing and profiling" => "CodeTiming.md",
       "Contraction sequence optimization" => "ContractionSequenceOptimization.md",
+      "HDF5 File Formats" => "HDF5FileFormats.md",
     ],
   ],
   :format => Documenter.HTML(; assets=["assets/favicon.ico"], prettyurls=false),
