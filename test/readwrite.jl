@@ -152,6 +152,19 @@ include("util.jl")
     close(fi)
     @test prod([norm(rmps[i] - mps[i]) / norm(mps[i]) < 1E-10 for i in 1:N])
   end
+
+  @testset "DownwardCompat" begin
+    fi = h5open("testfilev0.1.41.h5", "r")
+
+    ITensorName = "ITensorv0.1.41"
+
+    # ITensor version <= v0.1.41 uses the `store` key for ITensor data storage
+    # whereas v >= 0.2 uses `storage` as key
+    @test haskey(read(fi, ITensorName), "store")
+    @test read(fi, ITensorName, ITensor) isa ITensor
+    close(fi)
+  end
+
   #
   # Clean up the test hdf5 file
   #
