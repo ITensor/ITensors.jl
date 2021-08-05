@@ -1087,7 +1087,15 @@ function HDF5.read(
   if ElT == Nothing
     return Dense{Nothing}()
   end
-  data = read(g, "data")
+  # Attribute __complex__ is attached to the "data" dataset
+  # by the h5 library used by C++ version of ITensor:
+  if haskey(attributes(g["data"]),"__complex__")
+    M = read(g, "data")
+    nelt = size(M,1)*size(M,2)
+    data = Vector(reinterpret(ComplexF64,reshape(M,nelt)))
+  else
+    data = read(g, "data")
+  end
   return Dense{ElT}(data)
 end
 
