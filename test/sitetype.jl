@@ -361,9 +361,11 @@ using ITensors, Test
 
   @testset "Regression test for state overload" begin
     ITensors.space(::SiteType"Xev") = 8
-    ITensors.state(::StateName"0", ::SiteType"Xev") = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    function ITensors.state(::StateName"0", ::SiteType"Xev")
+      return [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    end
     s = siteind("Xev")
-    @test state(s,"0") ≈ ITensor([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],s)
+    @test state(s, "0") ≈ ITensor([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], s)
   end
 end
 
