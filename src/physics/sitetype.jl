@@ -425,6 +425,7 @@ macro StateName_str(s)
   return StateName{SmallString(s)}
 end
 
+state(::StateName, ::SiteType) = nothing
 state(::StateName, ::SiteType, ::Index) = nothing
 state!(::ITensor, ::StateName, ::SiteType, ::Index) = nothing
 

@@ -358,6 +358,15 @@ using ITensors, Test
     @test v2[s => 3] == 1
     @test_throws BoundsError state(s, "3")
   end
+
+  @testset "Regression test for state overload" begin
+    ITensors.space(::SiteType"Xev") = 8
+    function ITensors.state(::StateName"0", ::SiteType"Xev")
+      return [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    end
+    s = siteind("Xev")
+    @test state(s, "0") ≈ ITensor([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], s)
+  end
 end
 
 nothing
