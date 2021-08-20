@@ -7,7 +7,7 @@ If you are concerned about the performance of your code, a good place to start i
 
 ## Timing and benchmarking
 
-Julia has many nice timing tools available. Tools like (@time)[https://docs.julialang.org/en/v1/base/base/#Base.@time] can be used to measure the time of specific lines of code. For microbenchmarking, we recommend the [BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl) package.
+Julia has many nice timing tools available. Tools like [@time](https://docs.julialang.org/en/v1/base/base/#Base.@time) can be used to measure the time of specific lines of code. For microbenchmarking, we recommend the [BenchmarkTools](https://github.com/JuliaCI/BenchmarkTools.jl) package.
 
 ## ProfileView.jl
 
