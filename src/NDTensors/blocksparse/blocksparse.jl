@@ -211,8 +211,16 @@ function HDF5.read(
     error("HDF5 group or file does not contain $typestr data")
   end
   N = read(g, "ndims")
-  data = read(g, "data")
   off_array = read(g, "offsets")
   boff = array_to_offsets(off_array, N)
+  # Attribute __complex__ is attached to the "data" dataset
+  # by the h5 library used by C++ version of ITensor:
+  if haskey(attributes(g["data"]), "__complex__")
+    M = read(g, "data")
+    nelt = size(M, 1) * size(M, 2)
+    data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
+  else
+    data = read(g, "data")
+  end
   return BlockSparse(data, boff)
 end
