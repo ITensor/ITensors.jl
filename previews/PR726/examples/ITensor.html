@@ -23,8 +23,8 @@ m = Index(2,&quot;index_m&quot;)
 
 T = randomITensor(k,m)
 @show T</code></pre><pre class="documenter-example-output">T = ITensor ord=2
-Dim 1: (dim=4|id=277|&quot;index_k&quot;)
-Dim 2: (dim=2|id=832|&quot;index_m&quot;)
+Dim 1: (dim=4|id=46|&quot;index_k&quot;)
+Dim 2: (dim=2|id=673|&quot;index_m&quot;)
 ITensors.NDTensors.Dense{Float64, Vector{Float64}}
  4×2
   0.4751826349484905   1.0018399414103412
@@ -57,21 +57,21 @@ A .= (2.0 .* A) .+ (-3.0 .* B)</code></pre><p>Last but not least, it is possible
 T .= myf.(T)</code></pre><h2 id="Making-an-ITensor-with-a-Single-Non-Zero-Element"><a class="docs-heading-anchor" href="#Making-an-ITensor-with-a-Single-Non-Zero-Element">Making an ITensor with a Single Non-Zero Element</a><a id="Making-an-ITensor-with-a-Single-Non-Zero-Element-1"></a><a class="docs-heading-anchor-permalink" href="#Making-an-ITensor-with-a-Single-Non-Zero-Element" title="Permalink"></a></h2><p>It is often useful to make ITensors with all elements zero except for a specific element that is equal to 1.0.  Use cases can include making product-state quantum wavefunctions or contracting single-element ITensors with other ITensors to set their indices to a fixed value.</p><p>To make such an ITensor, use the <a href="../ITensorType.html#ITensors.onehot"><code>onehot</code></a> function. Borrowing terminology from engineering, a &quot;one hot&quot; vector or tensor has a single element equal to 1.0 and the rest zero. (In previous versions of ITensor this function was called <code>setelt</code>.) </p><p>The ITensor function <a href="../ITensorType.html#ITensors.onehot"><code>onehot</code></a> takes one or more  Index-value Pairs such as <code>i=&gt;2</code> and <code>j=&gt;1</code> and returns an ITensor with a 1.0 in the location specified by the Index values:</p><pre><code class="language-julia">i = Index(2)
 O1 = onehot(i=&gt;1)
 println(O1)</code></pre><pre class="documenter-example-output">ITensor ord=1
-Dim 1: (dim=2|id=342)
+Dim 1: (dim=2|id=73)
 ITensors.NDTensors.Dense{Float64, Vector{Float64}}
  2-element
  1.0
  0.0</pre><pre><code class="language-julia">O2 = onehot(i=&gt;2)
 println(O2)</code></pre><pre class="documenter-example-output">ITensor ord=1
-Dim 1: (dim=2|id=941)
+Dim 1: (dim=2|id=845)
 ITensors.NDTensors.Dense{Float64, Vector{Float64}}
  2-element
  0.0
  1.0</pre><pre><code class="language-julia">j = Index(3)
 T = onehot(i=&gt;2,j=&gt;3)
 println(T)</code></pre><pre class="documenter-example-output">ITensor ord=2
-Dim 1: (dim=2|id=919)
-Dim 2: (dim=3|id=841)
+Dim 1: (dim=2|id=697)
+Dim 2: (dim=3|id=16)
 ITensors.NDTensors.Dense{Float64, Vector{Float64}}
  2×3
  0.0  0.0  0.0
