@@ -6,6 +6,21 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensor v0.2.6 Release Notes
+==============================
+
+- Add Qudit site type with QNs as well as Boson alias (#727) 
+- Tighten accuracy cutoff for OpSum/AutoMPO (#726)
+- Add support for complex data written by C++ ITensor for block sparse tensors (#724)
+
+ITensor v0.2.5 Release Notes
+==============================
+
+- Fixed bug involving missing default case for state function (#719)
+- Add support for reading complex ITensors written from C++ (#720)
+- Fix HDF5 read compatilibity between ITensors v0.1 and v0.2 (#715) (@tschneider) 
+- Improve inference in NDTensors contraction and start writing a new precompile file (off by default) (#655)
+
 ITensor v0.2.4 Release Notes
 ==============================
 
