@@ -820,6 +820,45 @@ end
       @test ampo == ampo_original
     end
   end
+
+  @testset "Accuracy Regression Test (Issue 725)" begin
+    ITensors.space(::SiteType"HardCore") = 2
+
+    ITensors.state(::StateName"0", ::SiteType"HardCore") = [1.0, 0.0]
+    ITensors.state(::StateName"1", ::SiteType"HardCore") = [0.0, 1.0]
+
+    function ITensors.op!(Op::ITensor, ::OpName"N", ::SiteType"HardCore", s::Index)
+      return Op[s' => 2, s => 2] = 1
+    end
+
+    function ITensors.op!(Op::ITensor, ::OpName"Adag", ::SiteType"HardCore", s::Index)
+      return Op[s' => 1, s => 2] = 1
+    end
+
+    function ITensors.op!(Op::ITensor, ::OpName"A", ::SiteType"HardCore", s::Index)
+      return Op[s' => 2, s => 1] = 1
+    end
+
+    t = 1.0
+    V1 = 1E-3
+    V2 = 2E-5
+
+    N = 20
+    sites = siteinds("HardCore", N)
+
+    ampo = OpSum()
+    for j in 1:(N - 1)
+      ampo += -t, "Adag", j, "A", j + 1
+      ampo += -t, "A", j, "Adag", j + 1
+      ampo += V1, "N", j, "N", j + 1
+    end
+    for j in 1:(N - 2)
+      ampo += V2, "N", j, "N", j + 2
+    end
+    H = MPO(ampo, sites)
+    psi0 = productMPS(sites, n -> isodd(n) ? "0" : "1")
+    @test abs(inner(psi0, H, psi0) - 0.00018) < 1E-10
+  end
 end
 
 nothing
