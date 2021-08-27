@@ -479,7 +479,7 @@ end #remove_dups!
 function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, 10000)
-  cutoff::Float64 = get(kwargs, :cutoff, 1E-13)
+  cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
 
   N = length(sites)
 
@@ -631,7 +631,7 @@ end #svdMPO
 function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, 10000)
-  cutoff::Float64 = get(kwargs, :cutoff, 1E-13)
+  cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
 
   N = length(sites)
 
