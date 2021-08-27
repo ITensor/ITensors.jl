@@ -119,6 +119,8 @@ itensor(args...; kwargs...)::ITensor = ITensor(AllowAlias(), args...; kwargs...)
 
 ITensor(args...; kwargs...)::ITensor = ITensor(NeverAlias(), args...; kwargs...)
 
+ITensor(::AliasStyle, args...; kwargs...)::ITensor = error("ITensor constructor with input arguments of types `$(typeof.(args))` not defined.")
+
 """
     inds(T::ITensor)
 
@@ -270,6 +272,10 @@ ITensor(::Type{ElT}, inds::Index...) where {ElT<:Number} = ITensor(ElT, inds)
 
 ITensor(is::Indices) = ITensor(EmptyNumber, is)
 ITensor(inds::Index...) = ITensor(inds)
+
+indices(is::Vector) = reduce(vcat, is)
+indices(is::Tuple) = reduce(vcat, is)
+ITensor(is) = ITensor(indices(is))
 
 # To fix ambiguity with QN Index version
 # TODO: define as `emptyITensor(ElT)`
