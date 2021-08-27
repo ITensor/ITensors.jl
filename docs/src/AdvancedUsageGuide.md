@@ -626,6 +626,9 @@ However, please ask us first before doing so -- either by raising an [issue on G
 to make sure it is a change or addition that we will want to include or to check that it is not something
 we are currently working on. Coordinating with us in that way will help save your time and energy as well as ours!
 
+[Here](https://www.youtube.com/watch?v=QVmU29rCjaA) is a great introduction to Julia package development
+as well as making pull requests to existing Julia packages by the amazing Chris Rackauckas.
+
 !!! info "Coming soon"
 
     A more extended guide for contributing to ITensors.jl, including formatting your code with [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl), is coming soon.
