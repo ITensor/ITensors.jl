@@ -312,6 +312,47 @@ using ITensors, Test
     @test has_fermion_string("Cdagdn", s)
     @test !has_fermion_string("N", s)
   end
+
+  @testset "$st" for st in ["Qudit", "Boson"]
+    s = siteinds(st, 4; dim=3)
+    @test dim(s[1]) == 3
+    @test dim(s[2]) == 3
+    @test dim(s[3]) == 3
+    @test dim(s[4]) == 3
+    v = state(s, 2, "0")
+    @test v == itensor([1, 0, 0], s[2])
+    v = state(s, 3, "1")
+    @test v == itensor([0, 1, 0], s[3])
+    v = state(s, 4, "2")
+    @test v == itensor([0, 0, 1], s[4])
+    @test_throws BoundsError state(s, 4, "3")
+    v = val(s, 2, "0")
+    @test v == 1
+    v = val(s, 3, "1")
+    @test v == 2
+    v = val(s, 4, "2")
+    @test v == 3
+    @test op(s, "Id", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
+    @test op(s, "N", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
+    @test op(s, "n", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
+    @test op(s, "Adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
+    @test op(s, "adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
+    @test op(s, "a†", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
+    @test op(s, "A", 2) ≈ itensor([0 1 0; 0 0 √2; 0 0 0], s[2]', dag(s[2]))
+    @test op(s, "a", 2) ≈ itensor([0 1 0; 0 0 √2; 0 0 0], s[2]', dag(s[2]))
+
+    # With QNs
+    s = siteinds(st, 4; dim=3, conserve_qns=true)
+    @test all(hasqns, s)
+    @test op(s, "Id", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
+    @test op(s, "N", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
+    @test op(s, "n", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
+    @test op(s, "Adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
+    @test op(s, "adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
+    @test op(s, "a†", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
+    @test op(s, "A", 2) ≈ itensor([0 1 0; 0 0 √2; 0 0 0], s[2]', dag(s[2]))
+    @test op(s, "a", 2) ≈ itensor([0 1 0; 0 0 √2; 0 0 0], s[2]', dag(s[2]))
+  end
 end
 
 nothing

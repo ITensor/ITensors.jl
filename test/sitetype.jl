@@ -330,17 +330,17 @@ using ITensors, Test
     end
   end
 
-  @testset "state with variable dimension (Qudit/Boson)" begin
-    ITensors.space(::SiteType"Qudit"; dim=2) = dim
+  @testset "state with variable dimension" begin
+    ITensors.space(::SiteType"MyQudit"; dim=2) = dim
 
-    function ITensors.state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
+    function ITensors.state(::StateName{N}, ::SiteType"MyQudit", s::Index) where {N}
       n = parse(Int, String(N))
       st = zeros(dim(s))
       st[n + 1] = 1.0
       return st
     end
 
-    s = siteind("Qudit"; dim=3)
+    s = siteind("MyQudit"; dim=3)
     v0 = state(s, "0")
     v1 = state(s, "1")
     v2 = state(s, "2")
