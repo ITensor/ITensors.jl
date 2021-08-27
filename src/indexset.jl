@@ -24,6 +24,31 @@ const IndexTuple{IndexT<:Index} = Tuple{Vararg{IndexT}}
 # Definition to help with generic code
 const Indices{IndexT<:Index} = Union{IndexSet{IndexT},IndexTuple{IndexT}}
 
+# Flatten combinations of tuples and vectors into a single collection
+# of indices
+tuple_vcat(t::Tuple) = t
+tuple_vcat() = ()
+tuple_vcat(t) = (t,)
+tuple_vcat(a, args...) = (tuple_vcat(a)..., tuple_vcat(args...)...)
+
+tuple_to_vector(t::Tuple) = collect(t)
+tuple_to_vector(t) = t
+
+indices(t1::Tuple, t2::Index) = (t1..., t2)
+indices(t1::Index, t2::Tuple) = (t1, t2...)
+indices(t1::Vector, t2::Index) = vcat(t1, t2)
+indices(t1::Index, t2::Vector) = vcat(t1, t2)
+indices(t1::Tuple, t2::Vector) = vcat(collect(t1), t2)
+indices(t1::Vector, t2::Tuple) = vcat(t1, collect(t2))
+
+indices(is::Vector{<:Index}) = is
+indices(is::Vector) = reduce(indices, is)
+indices(is::Tuple{Vararg{<:Index}}) = is
+indices(is::Tuple{Vararg{Union{<:Vector,<:Index}}}) = vcat(is...)
+indices(is::Tuple{Vararg{Union{<:Tuple,<:Index}}}) = tuple_vcat(is...)
+indices(is::Tuple{Vararg{Union{<:Tuple,<:Vector,<:Index}}}) = indices(tuple_to_vector.(is))
+indices(is::Union{<:Tuple,<:Vector,<:Index}...) = indices(is)
+
 # To help with backwards compatibility
 IndexSet(inds::IndexSet) = inds
 IndexSet(inds::Indices) = collect(inds)
@@ -186,6 +211,7 @@ fmatch("s")(i) == true
 """
 fmatch(is::Indices) = in(is)
 fmatch(is::Index...) = fmatch(is)
+fmatch(i::Index) = fmatch((i,))
 
 fmatch(pl::Int) = hasplev(pl)
 

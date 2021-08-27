@@ -14,6 +14,7 @@ using Test
     "inference.jl",
     "itensor_scalar.jl",
     "itensor.jl",
+    "indices.jl",
     "itensor_slice.jl",
     "itensor_scalar_contract.jl",
     "itensor_combine_contract.jl",

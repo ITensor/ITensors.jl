@@ -103,6 +103,12 @@ function Index(dim::Number, tags::Union{AbstractString,TagSet}; plev::Int=0)
   return Index(dim; tags=tags, plev=plev)
 end
 
+# Collect into a tuple
+Base.Tuple(i::Index) = (i,)
+
+# Collect into a 0-dimensional Vector
+Base.collect(i::Index) = fill(i, ())
+
 """
     id(i::Index)
 
@@ -158,6 +164,7 @@ Obtain the TagSet of an Index.
 tags(i::Index) = i.tags
 
 commontags(is::Index...) = commontags(tags.(is)...)
+commontags(is::Index) = tags(is)
 
 """
     plev(i::Index)
