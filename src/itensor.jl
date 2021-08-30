@@ -98,6 +98,8 @@ end
 
 ITensor(::NeverAlias, T::Tensor)::ITensor = ITensor(AllowAlias(), copy(T))
 
+ITensor(T::Tensor)::ITensor = ITensor(NeverAlias(), T)
+
 """
     ITensor(st::TensorStorage, is)
 
@@ -339,13 +341,18 @@ B = ITensor(2.0+3.0im, j, k)
 !!! warning
     In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on.
 """
-function ITensor(::Type{ElT}, x::Number, is::Indices) where {ElT<:Number}
-  return ITensor(Dense(convert(ElT, x), dim(is)), is)
+ITensor(eltype::Type{<:Number}, x::Number, is::Indices) = _ITensor(eltype, x, is)
+
+# For disambiguation with QN version
+ITensor(eltype::Type{<:Number}, x::Number, is::Tuple{}) = _ITensor(eltype, x, is)
+
+function _ITensor(eltype::Type{<:Number}, x::Number, is::Indices)
+  return ITensor(Dense(convert(eltype, x), dim(is)), is)
 end
 
-ITensor(::Type{ElT}, x::Number, is...) where {ElT<:Number} = ITensor(ElT, x, indices(is...))
+ITensor(eltype::Type{<:Number}, x::Number, is...) = ITensor(eltype, x, indices(is...))
 
-ITensor(x::ElT, is...) where {ElT<:Number} = ITensor(ElT, x, is...)
+ITensor(x::Number, is...) = ITensor(eltype(x), x, is...)
 
 ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 
@@ -551,7 +558,7 @@ function diagITensor(as::AliasStyle, v::Vector{<:RealOrComplex{Int}}, is...)
   return diagITensor(AllowAlias(), float(eltype(v)), v, is...)
 end
 
-diagITensor(v::Vector{<:Number}, is...) = diagITensor(eltype(v), v, is...)
+diagITensor(v::Vector{<:Number}, is...) = diagITensor(NeverAlias(), v, is...)
 function diagITensor(eltype::Type{<:Number}, v::Vector{<:Number}, is...)
   return diagITensor(NeverAlias(), eltype, v, is...)
 end
@@ -589,7 +596,9 @@ function diagITensor(as::AliasStyle, x::RealOrComplex{Int}, is...)
   return diagITensor(as, float(typeof(x)), x, is...)
 end
 
-diagITensor(eltype::Type{<:Number}, x::Number, is...) = diagITensor(NeverAlias(), x, is...)
+function diagITensor(eltype::Type{<:Number}, x::Number, is...)
+  return diagITensor(NeverAlias(), eltype, x, is...)
+end
 
 diagITensor(x::Number, is...) = diagITensor(NeverAlias(), x, is...)
 
@@ -659,7 +668,7 @@ denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
 Convert to the complex version of the storage.
 """
-complex(T::ITensor) = ITensor(complex(tensor(T)))
+complex(T::ITensor) = itensor(complex(tensor(T)))
 
 function complex!(T::ITensor)
   ct = complex(tensor(T))

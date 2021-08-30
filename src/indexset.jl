@@ -22,7 +22,7 @@ const IndexSet{IndexT<:Index} = Vector{IndexT}
 const IndexTuple{IndexT<:Index} = Tuple{Vararg{IndexT}}
 
 # Definition to help with generic code
-const Indices{IndexT<:Index} = Union{IndexSet{IndexT},IndexTuple{IndexT}}
+const Indices{IndexT<:Index} = Union{Vector{IndexT},Tuple{Vararg{IndexT}}}
 
 # Flatten combinations of tuples and vectors into a single collection
 # of indices
