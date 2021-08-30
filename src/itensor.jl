@@ -460,10 +460,18 @@ end
 # For now, it's not well defined to construct an ITensor without indices
 # from a non-zero dimensional Array
 function ITensor(as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}; kwargs...)
-  return error(
-    "Cannot construct an ITensor from an Array without any indices. To make a scalar ITensor, input a number, such as `ITensor(2.3)`.",
-  )
+  if length(A) > 1
+    error(
+      "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
+    )
+  end
+  return ITensor(eltype, A[]; kwargs...)
 end
+
+function ITensor(eltype::Type{<:Number}, A::Array{<:Number}; kwargs...)
+  return ITensor(NeverAlias(), eltype, A; kwargs...)
+end
+ITensor(A::Array{<:Number}; kwargs...) = ITensor(NeverAlias(), eltype(A), A; kwargs...)
 
 function ITensor(as::AliasStyle, A::Array{ElT}, is...; kwargs...) where {ElT<:Number}
   return ITensor(as, ElT, A, indices(is...); kwargs...)

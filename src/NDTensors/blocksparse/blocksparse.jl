@@ -18,6 +18,10 @@ function BlockSparse(
   return BlockSparse(zeros(ElT, dim), blockoffsets; vargs...)
 end
 
+function BlockSparse(x::Number, blockoffsets::BlockOffsets, dim::Integer; vargs...)
+  return BlockSparse(fill(x, dim), blockoffsets; vargs...)
+end
+
 function BlockSparse(
   ::Type{ElT}, ::UndefInitializer, blockoffsets::BlockOffsets, dim::Integer; vargs...
 ) where {ElT<:Number}

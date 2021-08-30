@@ -99,6 +99,54 @@ function ITensor(::UndefInitializer, flux::QN, is...)
 end
 
 """
+    ITensor([ElT::Type, ]x::Number, flux::QN, inds)
+    ITensor([ElT::Type, ]x::Number, flux::QN, inds::Index...)
+
+Construct an ITensor with all elements consistent with QN flux `flux` set to `x` and indices `inds`.
+
+If `x isa Int` or `x isa Complex{Int}` then the elements will be set to `float(x)`
+unless specified otherwise by the first input.
+
+The storage will have `NDTensors.BlockSparse` type.
+
+# Examples
+
+```julia
+i = Index([QN(0)=>1, QN(1)=>2], "i")
+A = ITensor(2.3, QN(0), i', dag(i))
+B = ITensor(Float64, 3.5, QN(0), i', dag(i))
+C = ITensor(ComplexF64, 4, QN(0), i', dag(i))
+```
+
+!!! warning
+    In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on.
+"""
+function ITensor(eltype::Type{<:Number}, x::Number, flux::QN, is::Indices)
+  is_tuple = Tuple(is)
+  blocks = nzblocks(flux, is_tuple)
+  if length(blocks) == 0
+    error("ITensor with flux=$flux resulted in no allowed blocks")
+  end
+  T = BlockSparseTensor(eltype(x), blocks, is_tuple)
+  return itensor(T)
+end
+
+function ITensor(eltype::Type{<:Number}, x::Number, flux::QN, is...)
+  return ITensor(eltype, x, flux, indices(is...))
+end
+
+ITensor(x::Number, flux::QN, is...) = ITensor(eltype(x), x, flux, is...)
+
+ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), flux, is...)
+
+ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, QN(), is)
+
+# Don't need, calls generic non-QN versions
+#ITensor(eltype::Type{<:Number}, x::Number, is::QNIndex...) = ITensor(eltype, x, indices(is...))
+#ITensor(x::Number, is...) = ITensor(eltype(x), x, is...)
+#ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), is...)
+
+"""
     ITensor([ElT::Type, ]::Array, inds; tol = 0)
 
 Create a block sparse ITensor from the input Array, and collection 
@@ -154,20 +202,24 @@ function ITensor(
 end
 
 """
-    emptyITensor([::Type{ElT} = Float64, ]inds)
-    emptyITensor([::Type{ElT} = Float64, ]inds::QNIndex...)
+    emptyITensor([::Type{ElT} = EmptyNumber, ]inds)
+    emptyITensor([::Type{ElT} = EmptyNumber, ]inds::QNIndex...)
 
 Construct an ITensor with `NDTensors.BlockSparse` storage of element type `ElT` with the no blocks.
 
-If `ElT` is not specified it defaults to `Float64`.
-
-In the future, this will use the storage `NDTensors.EmptyBlockSparse`.
+If `ElT` is not specified it defaults to `NDTensors.EmptyNumber`.
 """
 function emptyITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
   return itensor(EmptyBlockSparseTensor(ElT, inds))
 end
-
 emptyITensor(inds::QNIndices) = emptyITensor(EmptyNumber, inds)
+
+function emptyITensor(eltype::Type{<:Number}, flux::QN, is...)
+  return error(
+    "Trying to create an empty ITensor with flux $flux, cannot create empty ITensor with a specified flux.",
+  )
+end
+emptyITensor(flux::QN, is...) = emptyITensor(EmptyNumber, flux, is...)
 
 """
     randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)

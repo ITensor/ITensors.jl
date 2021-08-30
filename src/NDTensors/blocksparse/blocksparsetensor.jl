@@ -99,6 +99,14 @@ function BlockSparseTensor(
   return tensor(storage, inds)
 end
 
+function BlockSparseTensor(
+  x::Number, blocks::Vector{BlockT}, inds
+) where {BlockT<:Union{Block,NTuple}}
+  boffs, nnz = blockoffsets(blocks, inds)
+  storage = BlockSparse(x, boffs, nnz)
+  return tensor(storage, inds)
+end
+
 #complex(::Type{BlockSparseTensor{ElT,N,StoreT,IndsT}}) where {ElT<:Number,N,StoreT<:BlockSparse
 #  = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
