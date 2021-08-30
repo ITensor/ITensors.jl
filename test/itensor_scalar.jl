@@ -58,7 +58,12 @@ using Test
   @test scalar(A) == 4.4
   @test ITensors.symmetrystyle(A) == ITensors.NonQN()
 
-  @test_throws ErrorException ITensor([2.5])
+  x = 2.3
+  ITensor(fill(x, ())) == ITensor(x)
+  ITensor(fill(x, (1))) == ITensor(x)
+  ITensor(fill(x, (1, 1))) == ITensor(x)
+  ITensor(fill(x, (1, 1, 1))) == ITensor(x)
+  @test_throws ErrorException ITensor(fill(x, (2, 2)))
 end
 
 nothing
