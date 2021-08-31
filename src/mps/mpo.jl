@@ -571,6 +571,7 @@ function contract(A::MPO, B::MPO; kwargs...)
       cutoff=cutoff,
       maxdim=maxdim,
       mindim=mindim,
+      kwargs...,
     )
     lCᵢ = dag(commoninds(C[i], R))
   end
@@ -585,6 +586,7 @@ function contract(A::MPO, B::MPO; kwargs...)
     cutoff=cutoff,
     maxdim=maxdim,
     mindim=mindim,
+    kwargs...,
   )
   truncate!(C; kwargs...)
   return C
