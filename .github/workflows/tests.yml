@@ -14,6 +14,7 @@ jobs:
         version:
           - '1.3'
           - '1'
+          - '1.7'
         os:
           - ubuntu-latest
           - windows-latest
@@ -26,6 +27,8 @@ jobs:
           # Only test all os on the latest release
           - {version: '1.3', os: 'windows-latest'}
           - {version: '1.3', os: 'macOS-latest'}
+          - {version: '1.7', os: 'windows-latest'}
+          - {version: '1.7', os: 'macOS-latest'}
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
