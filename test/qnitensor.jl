@@ -910,7 +910,7 @@ Random.seed!(1234)
       @test spec.truncerr ≤ cutoff
       err = sqrt(1 - (Ap * dag(Ap))[] / (A * dag(A))[])
       @test err ≤ cutoff
-      @test err ≈ spec.truncerr rtol = 3e-1
+      @test err ≈ spec.truncerr rtol = 4e-1
     end
 
     @testset "eigen non-hermitian" begin
