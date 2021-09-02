@@ -623,7 +623,9 @@ function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, I
   end
 end
 
-function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, T::Type{Index})
+function HDF5.read(
+  parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, T::Type{Index}
+)
   g = open_group(parent, name)
   if HDF5.read(attributes(g)["type"]) != "$(hdf5_type(T))"
     error("HDF5 group or file does not contain Index data")
