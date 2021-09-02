@@ -850,10 +850,10 @@ function readcpp(io::IO, ::Type{<:Indices}; kwargs...)
   format = get(kwargs, :format, "v3")
   is = IndexSet()
   if format == "v3"
-    size = read(io, Int)
+    size = HDF5.read(io, Int)
     function readind(io, n)
       i = readcpp(io, Index; kwargs...)
-      stride = read(io, UInt64)
+      stride = HDF5.read(io, UInt64)
       return i
     end
     is = IndexSet(n -> readind(io, n), size)
@@ -878,9 +878,9 @@ function HDF5.read(
   parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, T::Type{<:Indices}
 )
   g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "IndexSet"
+  if HDF5.read(attributes(g)["type"]) != "IndexSet"
     error("HDF5 group or file does not contain IndexSet data")
   end
-  N = read(g, "length")
-  return T(n -> read(g, "index_$n", Index), N)
+  N = HDF5.read(g, "length")
+  return T(n -> HDF5.read(g, "index_$n", Index), N)
 end

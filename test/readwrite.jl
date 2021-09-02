@@ -184,6 +184,10 @@ include("util.jl")
       read(file, "X", ITensors.AutoType)
     end
     @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      ITensors.read(file, "X")
+    end
+    @test all(X .== X̃)
 
     X = [i i'; i'' i''']
     h5open("data.h5", "w") do file
@@ -197,6 +201,10 @@ include("util.jl")
       read(file, "X", ITensors.AutoType)
     end
     @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      ITensors.read(file, "X")
+    end
+    @test all(X .== X̃)
 
     X = [ts"a" ts"b"; ts"c" ts"d"]
     h5open("data.h5", "w") do file
@@ -208,6 +216,10 @@ include("util.jl")
     @test all(X .== X̃)
     X̃ = h5open("data.h5", "r") do file
       read(file, "X", ITensors.AutoType)
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      ITensors.read(file, "X")
     end
     @test all(X .== X̃)
   end

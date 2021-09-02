@@ -464,14 +464,14 @@ function HDF5.read(
   parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{QNBlocks}
 )
   g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "QNBlocks"
+  if HDF5.read(attributes(g)["type"]) != "QNBlocks"
     error("HDF5 group or file does not contain QNBlocks data")
   end
-  N = read(g, "length")
-  dims = read(g, "dims")
+  N = HDF5.read(g, "length")
+  dims = HDF5.read(g, "dims")
   B = QNBlocks(undef, N)
   for n in 1:length(B)
-    B[n] = QNBlock(read(g, "QN[$n]", QN), dims[n])
+    B[n] = QNBlock(HDF5.read(g, "QN[$n]", QN), dims[n])
   end
   return B
 end

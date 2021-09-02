@@ -309,9 +309,9 @@ function HDF5.read(
   parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{TagSet}
 )
   g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "TagSet"
+  if HDF5.read(attributes(g)["type"]) != "TagSet"
     error("HDF5 group '$name' does not contain TagSet data")
   end
-  tstring = read(g, "tags")
+  tstring = HDF5.read(g, "tags")
   return TagSet(tstring)
 end

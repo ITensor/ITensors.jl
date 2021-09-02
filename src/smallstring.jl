@@ -139,7 +139,7 @@ function readcpp(io::IO, ::Type{SmallString}; kwargs...)
   s = SmallString()
   if format == "v3"
     for n in 1:7
-      c = read(io, Char)
+      c = HDF5.read(io, Char)
       s = setindex(s, c, n)
     end
   else

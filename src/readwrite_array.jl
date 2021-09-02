@@ -26,13 +26,13 @@ function HDF5.read(
   T::Type{<:Array{<:ITensorHDF5Types}},
 )
   g = open_group(parent, name)
-  g_type = read(attributes(g)["type"])
+  g_type = HDF5.read(attributes(g)["type"])
   if g_type != string(T)
     error(
       "HDF5 group or file does not contain $T data, instead it has data of type $g_type"
     )
   end
-  g_size = read(g, "size")
+  g_size = HDF5.read(g, "size")
   eltype_T = eltype(T)
-  return [read(g, "$(Tuple(c))", eltype_T) for c in CartesianIndices(Tuple(g_size))]
+  return [HDF5.read(g, "$(Tuple(c))", eltype_T) for c in CartesianIndices(Tuple(g_size))]
 end

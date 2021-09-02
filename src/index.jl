@@ -596,17 +596,17 @@ function readcpp(io::IO, ::Type{Index}; kwargs...)
     throw(ArgumentError("read Index: format=$format not supported"))
   end
   tags = readcpp(io, TagSet; kwargs...)
-  id = read(io, IDType)
-  dim = convert(Int64, read(io, Int32))
-  dir_int = read(io, Int32)
+  id = HDF5.read(io, IDType)
+  dim = convert(Int64, HDF5.read(io, Int32))
+  dir_int = HDF5.read(io, Int32)
   dir = dir_int < 0 ? In : Out
-  read(io, 8) # Read default IQIndexDat size, 8 bytes
+  HDF5.read(io, 8) # Read default IQIndexDat size, 8 bytes
   return Index(id, dim, dir, tags)
 end
 
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, I::Index)
   g = create_group(parent, name)
-  attributes(g)["type"] = "Index"
+  attributes(g)["type"] = "$(hdf5_type(I))"
   attributes(g)["version"] = 1
   write(g, "id", id(I))
   write(g, "dim", dim(I))
@@ -623,24 +623,24 @@ function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, I
   end
 end
 
-function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{Index})
+function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, T::Type{Index})
   g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "Index"
+  if HDF5.read(attributes(g)["type"]) != "$(hdf5_type(T))"
     error("HDF5 group or file does not contain Index data")
   end
-  id = read(g, "id")
-  dim = read(g, "dim")
-  dir = Arrow(read(g, "dir"))
-  tags = read(g, "tags", TagSet)
-  plev = read(g, "plev")
+  id = HDF5.read(g, "id")
+  dim = HDF5.read(g, "dim")
+  dir = Arrow(HDF5.read(g, "dir"))
+  tags = HDF5.read(g, "tags", TagSet)
+  plev = HDF5.read(g, "plev")
   space_type = "Int"
   if haskey(attributes(g), "space_type")
-    space_type = read(attributes(g)["space_type"])
+    space_type = HDF5.read(attributes(g)["space_type"])
   end
   if space_type == "Int"
     space = dim
   elseif space_type == "QNBlocks"
-    space = read(g, "space", QNBlocks)
+    space = HDF5.read(g, "space", QNBlocks)
   end
   return Index(id, space, dir, tags, plev)
 end

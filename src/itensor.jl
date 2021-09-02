@@ -2533,10 +2533,10 @@ end
 function readcpp(io::IO, ::Type{Dense{ValT}}; kwargs...) where {ValT}
   format = get(kwargs, :format, "v3")
   if format == "v3"
-    size = read(io, UInt64)
+    size = HDF5.read(io, UInt64)
     data = Vector{ValT}(undef, size)
     for n in 1:size
-      data[n] = read(io, ValT)
+      data[n] = HDF5.read(io, ValT)
     end
     return Dense(data)
   else
@@ -2549,8 +2549,8 @@ function readcpp(io::IO, ::Type{ITensor}; kwargs...)
   if format == "v3"
     # TODO: use Vector{Index} here?
     inds = readcpp(io, IndexSet; kwargs...)
-    read(io, 12) # ignore scale factor by reading 12 bytes
-    storage_type = read(io, Int32)
+    HDF5.read(io, 12) # ignore scale factor by reading 12 bytes
+    storage_type = HDF5.read(io, Int32)
     if storage_type == 0 # Null
       storage = Dense{Nothing}()
     elseif storage_type == 1  # DenseReal
@@ -2590,9 +2590,9 @@ end
 #  g = open_group(parent,name)
 #
 #  try
-#    typestr = read(attributes(g)["type"])
+#    typestr = HDF5.read(attributes(g)["type"])
 #    type_t = eval(Meta.parse(typestr))
-#    res = read(parent,"name",type_t)
+#    res = HDF5.read(parent,"name",type_t)
 #    return res
 #  end
 #  return 
@@ -2602,20 +2602,20 @@ function HDF5.read(
   parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{ITensor}
 )
   g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "ITensor"
+  if HDF5.read(attributes(g)["type"]) != "ITensor"
     error("HDF5 group or file does not contain ITensor data")
   end
   # TODO: use Vector{Index} here?
-  inds = read(g, "inds", IndexSet)
+  inds = HDF5.read(g, "inds", IndexSet)
 
   # check input file for key name of ITensor data
   # ITensors.jl <= v0.1.x uses `store` as key 
   # whereas ITensors.jl >= v0.2.x uses `storage` as key
   for key in ["storage", "store"]
     if haskey(g, key)
-      stypestr = read(attributes(open_group(g, key))["type"])
+      stypestr = HDF5.read(attributes(open_group(g, key))["type"])
       stype = eval(Meta.parse(stypestr))
-      storage = read(g, key, stype)
+      storage = HDF5.read(g, key, stype)
       return itensor(storage, inds)
     end
   end
