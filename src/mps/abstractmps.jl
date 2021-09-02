@@ -123,6 +123,14 @@ end
 
 getindex(M::AbstractMPS, n) = getindex(data(M), n)
 
+function getindex(ψ::AbstractMPS, r::UnitRange)
+  ψdataʳ = data(ψ)[r]
+  c = ortho_lims(ψ)
+  cʳ = c .- (first(r) - 1)
+  cʳ = max(first(cʳ), 1):min(last(cʳ), length(r))
+  return typeof(ψ)(ψdataʳ; ortho_lims=cʳ)
+end
+
 isassigned(M::AbstractMPS, n) = isassigned(data(M), n)
 
 lastindex(M::AbstractMPS) = lastindex(data(M))

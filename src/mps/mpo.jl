@@ -479,11 +479,14 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   end
   R = ψ[n] * A[n]
   simR_c = ψ_c[n] * simA_c[n]
+  l_dangling = uniqueinds(ψ[n], ψ[n - 1], A[n])
+  l̃_dangling = sim(l_dangling)
+  simR_c = replaceinds(simR_c, l_dangling => l̃_dangling)
   ρ = E[n - 1] * R * simR_c
   l = linkind(ψ, n - 1)
   ts = isnothing(l) ? "" : tags(l)
-  Lis = siteinds(uniqueinds, A, ψ, n)
-  Ris = siteinds(uniqueinds, simA_c, ψ_c, n)
+  Lis = unioninds(siteinds(uniqueinds, A, ψ, n), l_dangling)
+  Ris = unioninds(siteinds(uniqueinds, simA_c, ψ_c, n), l̃_dangling)
   F = eigen(ρ, Lis, Ris; ishermitian=true, tags=ts, kwargs...)
   D, U, Ut = F.D, F.V, F.Vt
   l_renorm, r_renorm = F.l, F.r
