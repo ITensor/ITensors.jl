@@ -1,6 +1,3 @@
-
-struct AutoType end
-
 """
     auto_parse(::Union{Type,AutoType}, val)
 

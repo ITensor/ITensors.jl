@@ -13,3 +13,11 @@ function readcpp(io::IO, ::Type{Vector{T}}; kwargs...) where {T}
   end
   return v
 end
+
+function HDF5.read(
+  parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{AutoType}
+)
+  g = open_group(parent, name)
+  T = Core.eval(Main, Meta.parse(read(attributes(g)["type"])))
+  return HDF5.read(parent, name, T)
+end

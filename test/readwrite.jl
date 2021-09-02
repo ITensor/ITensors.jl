@@ -165,6 +165,53 @@ include("util.jl")
     close(fi)
   end
 
+  @testset "Arrays containing ITensor objects" begin
+    i = Index(2)
+    A = randomITensor(i)
+    B = randomITensor(i)
+    C = randomITensor(i)
+    D = randomITensor(i)
+
+    X = [A B; C D]
+    h5open("data.h5", "w") do file
+      @write file X
+    end
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", Array{ITensor})
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", ITensors.AutoType)
+    end
+    @test all(X .== X̃)
+
+    X = [i i'; i'' i''']
+    h5open("data.h5", "w") do file
+      @write file X
+    end
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", Array{Index})
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", ITensors.AutoType)
+    end
+    @test all(X .== X̃)
+
+    X = [ts"a" ts"b"; ts"c" ts"d"]
+    h5open("data.h5", "w") do file
+      @write file X
+    end
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", Array{TagSet})
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", ITensors.AutoType)
+    end
+    @test all(X .== X̃)
+  end
+
   #
   # Clean up the test hdf5 file
   #
