@@ -17,13 +17,28 @@ end
 function HDF5.read(
   parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{AutoType}
 )
-  g = open_group(parent, name)
-  T = Core.eval(Main, Meta.parse(HDF5.read(attributes(g)["type"])))
+  type_string = try
+    @suppress_err begin
+      g = open_group(parent, name)
+      type_attribute = attributes(g)["type"]
+      HDF5.read(type_attribute)
+    end
+  catch
+    # If the file doesn't have the format
+    # expected of ITensor HDF5 files, return `nothing`
+    return nothing
+  end
+  T = Core.eval(Main, Meta.parse(type_string))
   return HDF5.read(parent, name, T)
 end
 
+# Tries to automatically determine the type from the "type" attribute.
+# If the file is doesn't have the structure expected of an ITensor HDF5 file,
+# try to read it with a general HDF5 fallback.
 function read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString)
-  return HDF5.read(parent, name, AutoType)
+  r = HDF5.read(parent, name, AutoType)
+  isnothing(r) && return HDF5.read(parent, name)
+  return r
 end
 
 function save(filename::AbstractString, args...)

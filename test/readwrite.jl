@@ -282,6 +282,34 @@ include("util.jl")
     ITensors.save("data.h5", "X", X)
     X̃ = ITensors.load("data.h5", "X")
     @test all(X .== X̃)
+
+    N = 6
+    sites = siteinds("S=1/2", N)
+
+    M1 = makeRandomMPS(sites)
+    M2 = makeRandomMPS(sites)
+    X = [M1, M2]
+    ITensors.save("data.h5", "X", X)
+    X̃ = ITensors.load("data.h5", "X")
+    @test all((all(X[n] .== X̃[n]) for n in 1:length(X)))
+
+    M1 = makeRandomMPO(sites)
+    M2 = makeRandomMPO(sites)
+    X = [M1, M2]
+    ITensors.save("data.h5", "X", X)
+    X̃ = ITensors.load("data.h5", "X")
+    @test all((all(X[n] .== X̃[n]) for n in 1:length(X)))
+
+    # save/load basic native Julia types
+    X = [1, 2, 3]
+    ITensors.save("data.h5", "X", X)
+    X̃ = ITensors.load("data.h5", "X")
+    @test X == X̃
+
+    X = randn(ComplexF64, 3, 4, 5)
+    ITensors.save("data.h5", "X", X)
+    X̃ = ITensors.load("data.h5", "X")
+    @test X == X̃
   end
 
   #

@@ -1,9 +1,10 @@
-ITensorHDF5Types = Union{TagSet,Index,ITensor}
+# A Union of ITensor-defined types that can be read and
+# written when stored in Arrays
+ITensorHDF5Types = Union{TagSet,Index,ITensor,MPS,MPO}
 
-hdf5_type(::Type{ITensor}) = ITensor
 hdf5_type(::Type{<:Index}) = Index
-hdf5_type(::Type{TagSet}) = TagSet
 hdf5_type(::Type{<:AbstractArray{T}}) where {T} = Array{hdf5_type(T)}
+hdf5_type(::Type{T}) where {T} = T
 hdf5_type(::T) where {T} = hdf5_type(T)
 
 function HDF5.write(
