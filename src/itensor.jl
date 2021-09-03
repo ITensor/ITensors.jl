@@ -388,7 +388,9 @@ end
 
 # Helper functions for different view behaviors
 Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = Array{ElT,N}(A)
-Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N} = convert(Array{ElT,N}, A)
+function Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
+  return convert(AbstractArray{ElT,N}, A)
+end
 function Array{ElT}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {ElT,N,ElTA}
   return Array{ElT,N}(as, A)
 end
@@ -443,30 +445,36 @@ T[i => 1, j => 1] == 3.3
     In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
 """
 function ITensor(
-  as::AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds::Indices; kwargs...
-) where {ElT<:Number}
+  as::AliasStyle,
+  eltype::Type{<:Number},
+  A::AbstractArray{<:Number},
+  inds::Indices{Index{Int}};
+  kwargs...,
+)
   length(A) ≠ dim(inds) && throw(
     DimensionMismatch(
-      "In ITensor(::Array, inds), length of Array ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+      "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
     ),
   )
-  data = Array{ElT}(as, A)
+  data = Array{eltype}(as, A)
   return itensor(Dense(vec(data)), inds)
 end
 
 function ITensor(
-  as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}, is...; kwargs...
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
 )
   return ITensor(as, eltype, A, indices(is...); kwargs...)
 end
 
-function ITensor(eltype::Type{<:Number}, A::Array{<:Number}, is...; kwargs...)
+function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
   return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
 end
 
 # For now, it's not well defined to construct an ITensor without indices
 # from a non-zero dimensional Array
-function ITensor(as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}; kwargs...)
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
+)
   if length(A) > 1
     error(
       "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
@@ -475,22 +483,26 @@ function ITensor(as::AliasStyle, eltype::Type{<:Number}, A::Array{<:Number}; kwa
   return ITensor(eltype, A[]; kwargs...)
 end
 
-function ITensor(eltype::Type{<:Number}, A::Array{<:Number}; kwargs...)
+function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
   return ITensor(NeverAlias(), eltype, A; kwargs...)
 end
-ITensor(A::Array{<:Number}; kwargs...) = ITensor(NeverAlias(), eltype(A), A; kwargs...)
+function ITensor(A::AbstractArray{<:Number}; kwargs...)
+  return ITensor(NeverAlias(), eltype(A), A; kwargs...)
+end
 
-function ITensor(as::AliasStyle, A::Array{ElT}, is...; kwargs...) where {ElT<:Number}
+function ITensor(
+  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
+) where {ElT<:Number}
   return ITensor(as, ElT, A, indices(is...); kwargs...)
 end
 
 function ITensor(
-  as::AliasStyle, A::Array{ElT}, is...; kwargs...
+  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
 ) where {ElT<:RealOrComplex{Int}}
   return ITensor(as, float(ElT), A, is...; kwargs...)
 end
 
-function ITensor(A::Array{<:Number}, is...; kwargs...)
+function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
   return ITensor(NeverAlias(), A, is...; kwargs...)
 end
 
