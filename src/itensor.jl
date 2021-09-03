@@ -454,13 +454,6 @@ function ITensor(
   return itensor(Dense(vec(data)), inds)
 end
 
-## function ITensor(
-##   as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds::Vector; kwargs...
-## )
-##   # identity.(inds) narrows the Index type to a concrete type
-##   return ITensor(as, eltype, A, indices(inds); kwargs...)
-## end
-
 function ITensor(
   as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
 )

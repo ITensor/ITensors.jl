@@ -233,6 +233,8 @@ end
   i = Index(2)
   @test ITensors.indices([i'', i', i]) == Index{Int}[i'', i', i]
   @test ITensors.indices((i'', i', i)) == (i'', i', i)
+  @test ITensors.indices(((i'',), (i',), i)) == (i'', i', i)
+  @test ITensors.indices(((i'', i',), (i,))) == (i'', i', i)
   @test ITensors.indices([(i'',), (i',), (i,)]) == Index{Int}[i'', i', i]
   @test ITensors.indices(Any[(i'',), (i',), (i,)]) == Index{Int}[i'', i', i]
   @test ITensors.indices([(i'',), (i',), [i]]) == Index{Int}[i'', i', i]
