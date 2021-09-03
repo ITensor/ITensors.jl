@@ -700,6 +700,23 @@ end
     @test T[i => 1, j => 1] == 3.3
   end
 
+  @testset "Construct from AbstractArray" begin
+    i = Index(2, "index_i")
+    j = Index(2, "index_j")
+
+    X = [
+      1.0 2 0
+      3 4 0
+      0 0 0
+    ]
+    M = @view X[1:2, 1:2]
+    T = itensor(M, i, j)
+    T[i => 1, j => 1] = 3.3
+    @test M[1, 1] == 3.3
+    @test T[i => 1, j => 1] == 3.3
+    @test storage(T) isa NDTensors.Dense{Float64}
+  end
+
   @testset "ITensor Array constructor view behavior" begin
     d = 2
     i = Index(d)

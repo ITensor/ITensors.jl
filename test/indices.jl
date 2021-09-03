@@ -234,7 +234,7 @@ end
   @test ITensors.indices([i'', i', i]) == Index{Int}[i'', i', i]
   @test ITensors.indices((i'', i', i)) == (i'', i', i)
   @test ITensors.indices(((i'',), (i',), i)) == (i'', i', i)
-  @test ITensors.indices(((i'', i',), (i,))) == (i'', i', i)
+  @test ITensors.indices(((i'', i'), (i,))) == (i'', i', i)
   @test ITensors.indices([(i'',), (i',), (i,)]) == Index{Int}[i'', i', i]
   @test ITensors.indices(Any[(i'',), (i',), (i,)]) == Index{Int}[i'', i', i]
   @test ITensors.indices([(i'',), (i',), [i]]) == Index{Int}[i'', i', i]
@@ -242,4 +242,3 @@ end
   @test ITensors.indices(Any[(i'',), i', [i]]) == Index{Int}[i'', i', i]
   @test ITensors.indices(((i'',), i', [i])) == Index{Int}[i'', i', i]
 end
-

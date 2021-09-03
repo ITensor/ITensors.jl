@@ -34,7 +34,9 @@ tuple_vcat(a, args...) = (tuple_vcat(a)..., tuple_vcat(args...)...)
 tuple_to_vector(t::Tuple) = collect(t)
 tuple_to_vector(t) = t
 
-_narrow_eltype(v::Vector{T}) where {T} = convert(Vector{mapreduce(typeof, promote_type, v)}, v)
+function _narrow_eltype(v::Vector{T}) where {T}
+  return convert(Vector{mapreduce(typeof, promote_type, v)}, v)
+end
 narrow_eltype(v::Vector{T}) where {T} = isconcretetype(T) ? v : _narrow_eltype(v)
 
 push_or_append!(v, x::Union{Vector,Tuple}) = append!(v, x)
