@@ -18,9 +18,14 @@ include("util.jl")
     close(fi)
     @test rts == ts
 
-    # save/load
-    ITensors.save("data.h5", "tags", ts)
-    rts = ITensors.load("data.h5", "tags")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "tags", ts)
+    ITensors.h5write("data.h5", "x/tags", ts)
+    rts = ITensors.h5read("data.h5", "tags")
+    @test rts == ts
+    rts = ITensors.h5read("data.h5", "x/tags")
     @test rts == ts
   end
 
@@ -47,9 +52,11 @@ include("util.jl")
     close(fi)
     @test ri == i
 
-    # save/load
-    ITensors.save("data.h5", "index", i)
-    ri = ITensors.load("data.h5", "index")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "index", i)
+    ri = ITensors.h5read("data.h5", "index")
     @test ri == i
   end
 
@@ -65,9 +72,11 @@ include("util.jl")
     close(fi)
     @test ris == is
 
-    # save/load
-    ITensors.save("data.h5", "inds", is)
-    ris = ITensors.load("data.h5", "inds")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "inds", is)
+    ris = ITensors.h5read("data.h5", "inds")
     @test ris == is
   end
 
@@ -97,9 +106,11 @@ include("util.jl")
     close(fi)
     @test norm(rT - T) / norm(T) < 1E-10
 
-    # save/load
-    ITensors.save("data.h5", "T", T)
-    rT = ITensors.load("data.h5", "T")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "T", T)
+    rT = ITensors.h5read("data.h5", "T")
     @test rT ≈ T
 
     # complex case
@@ -114,9 +125,11 @@ include("util.jl")
     close(fi)
     @test norm(rT - T) / norm(T) < 1E-10
 
-    # save/load
-    ITensors.save("data.h5", "T", T)
-    rT = ITensors.load("data.h5", "T")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "T", T)
+    rT = ITensors.h5read("data.h5", "T")
     @test rT ≈ T
   end
 
@@ -137,9 +150,11 @@ include("util.jl")
     close(fi)
     @test rT ≈ T
 
-    # save/load
-    ITensors.save("data.h5", "T", T)
-    rT = ITensors.load("data.h5", "T")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "T", T)
+    rT = ITensors.h5read("data.h5", "T")
 
     @test rT ≈ T
     # complex case
@@ -154,9 +169,11 @@ include("util.jl")
     close(fi)
     @test rT ≈ T
 
-    # save/load
-    ITensors.save("data.h5", "T", T)
-    rT = ITensors.load("data.h5", "T")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "T", T)
+    rT = ITensors.h5read("data.h5", "T")
     @test rT ≈ T
   end
 
@@ -176,9 +193,11 @@ include("util.jl")
     close(fi)
     @test prod([norm(rmpo[i] - mpo[i]) / norm(mpo[i]) < 1E-10 for i in 1:N])
 
-    # save/load
-    ITensors.save("data.h5", "mpo", mpo)
-    rmpo = ITensors.load("data.h5", "mpo")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "mpo", mpo)
+    rmpo = ITensors.h5read("data.h5", "mpo")
     @test all(rmpo .≈ mpo)
 
     # MPS
@@ -192,9 +211,11 @@ include("util.jl")
     close(fi)
     @test prod([norm(rmps[i] - mps[i]) / norm(mps[i]) < 1E-10 for i in 1:N])
 
-    # save/load
-    ITensors.save("data.h5", "mps", mps)
-    rmps = ITensors.load("data.h5", "mps")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "mps", mps)
+    rmps = ITensors.h5read("data.h5", "mps")
     @test all(rmps .≈ mps)
   end
 
@@ -219,7 +240,7 @@ include("util.jl")
 
     X = [A B; C D]
     h5open("data.h5", "w") do file
-      @write file X
+      write(file, "X", X)
     end
     X̃ = h5open("data.h5", "r") do file
       read(file, "X", Array{ITensor})
@@ -234,14 +255,16 @@ include("util.jl")
     end
     @test all(X .== X̃)
 
-    # save/load
-    ITensors.save("data.h5", "X", X)
-    X̃ = ITensors.load("data.h5", "X")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
     @test all(X .== X̃)
 
     X = [i i'; i'' i''']
     h5open("data.h5", "w") do file
-      @write file X
+      write(file, "X", X)
     end
     X̃ = h5open("data.h5", "r") do file
       read(file, "X", Array{Index})
@@ -256,14 +279,16 @@ include("util.jl")
     end
     @test all(X .== X̃)
 
-    # save/load
-    ITensors.save("data.h5", "X", X)
-    X̃ = ITensors.load("data.h5", "X")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
     @test all(X .== X̃)
 
     X = [ts"a" ts"b"; ts"c" ts"d"]
     h5open("data.h5", "w") do file
-      @write file X
+      write(file, "X", X)
     end
     X̃ = h5open("data.h5", "r") do file
       read(file, "X", Array{TagSet})
@@ -278,37 +303,50 @@ include("util.jl")
     end
     @test all(X .== X̃)
 
-    # save/load
-    ITensors.save("data.h5", "X", X)
-    X̃ = ITensors.load("data.h5", "X")
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
     @test all(X .== X̃)
 
     N = 6
     sites = siteinds("S=1/2", N)
 
+    rm("data.h5")
+
     M1 = makeRandomMPS(sites)
     M2 = makeRandomMPS(sites)
     X = [M1, M2]
-    ITensors.save("data.h5", "X", X)
-    X̃ = ITensors.load("data.h5", "X")
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
     @test all((all(X[n] .== X̃[n]) for n in 1:length(X)))
+
+    rm("data.h5")
 
     M1 = makeRandomMPO(sites)
     M2 = makeRandomMPO(sites)
     X = [M1, M2]
-    ITensors.save("data.h5", "X", X)
-    X̃ = ITensors.load("data.h5", "X")
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
     @test all((all(X[n] .== X̃[n]) for n in 1:length(X)))
 
-    # save/load basic native Julia types
+    rm("data.h5")
+
+    # h5write/h5read basic native Julia types
     X = [1, 2, 3]
-    ITensors.save("data.h5", "X", X)
-    X̃ = ITensors.load("data.h5", "X")
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
     @test X == X̃
 
+    rm("data.h5")
+
     X = randn(ComplexF64, 3, 4, 5)
-    ITensors.save("data.h5", "X", X)
-    X̃ = ITensors.load("data.h5", "X")
+    ITensors.h5write("data.h5", "X", X)
+    ITensors.h5write("data.h5", "Y/X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
+    @test X == X̃
+    X̃ = ITensors.h5read("data.h5", "Y/X")
     @test X == X̃
   end
 

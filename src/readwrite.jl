@@ -41,13 +41,13 @@ function read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString)
   return r
 end
 
-function save(filename::AbstractString, args...)
-  h5open(filename, "w") do file
+function h5write(filename::AbstractString, args...)
+  h5open(filename, "cw") do file
     write(file, args...)
   end
 end
 
-function load(filename::AbstractString, args...)
+function h5read(filename::AbstractString, args...)
   h5open(filename, "r") do file
     read(file, args...)
   end
