@@ -34,20 +34,34 @@ tuple_vcat(a, args...) = (tuple_vcat(a)..., tuple_vcat(args...)...)
 tuple_to_vector(t::Tuple) = collect(t)
 tuple_to_vector(t) = t
 
-indices(t1::Tuple, t2::Index) = (t1..., t2)
-indices(t1::Index, t2::Tuple) = (t1, t2...)
-indices(t1::Vector, t2::Index) = vcat(t1, t2)
-indices(t1::Index, t2::Vector) = vcat(t1, t2)
-indices(t1::Tuple, t2::Vector) = vcat(collect(t1), t2)
-indices(t1::Vector, t2::Tuple) = vcat(t1, collect(t2))
+_narrow_eltype(v::Vector{T}) where {T} = convert(Vector{mapreduce(typeof, promote_type, v)}, v)
+narrow_eltype(v::Vector{T}) where {T} = isconcretetype(T) ? v : _narrow_eltype(v)
 
-indices(is::Vector{<:Index}) = is
-indices(is::Vector) = reduce(indices, is)
+push_or_append!(v, x::Union{Vector,Tuple}) = append!(v, x)
+push_or_append!(v, x) = push!(v, x)
+
+function _indices(is::Vector)
+  isempty(is) && return is
+  is_flat = Index[]
+  for i in is
+    push_or_append!(is_flat, i)
+  end
+  return narrow_eltype(is_flat)
+end
+indices(is::Vector{<:Index}) = narrow_eltype(is)
+
+_indices(is::Tuple{Vararg{<:Index}}) = is
+_indices(is::Tuple{Vararg{Union{<:Vector,<:Index}}}) = vcat(is...)
+_indices(is::Tuple{Vararg{Union{<:Tuple,<:Index}}}) = tuple_vcat(is...)
+_indices(is::Tuple{Vararg{Union{<:Tuple,<:Vector,<:Index}}}) = indices(tuple_to_vector.(is))
 indices(is::Tuple{Vararg{<:Index}}) = is
-indices(is::Tuple{Vararg{Union{<:Vector,<:Index}}}) = vcat(is...)
-indices(is::Tuple{Vararg{Union{<:Tuple,<:Index}}}) = tuple_vcat(is...)
-indices(is::Tuple{Vararg{Union{<:Tuple,<:Vector,<:Index}}}) = indices(tuple_to_vector.(is))
+indices(is::Tuple) = _indices(is)
 indices(is::Union{<:Tuple,<:Vector,<:Index}...) = indices(is)
+function indices(is::Vector)
+  # This narrows the type. Also handles the empty case.
+  all(i -> i isa Index, is) && return narrow_eltype(is)
+  return _indices(is)
+end
 
 # To help with backwards compatibility
 IndexSet(inds::IndexSet) = inds

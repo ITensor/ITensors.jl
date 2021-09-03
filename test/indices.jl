@@ -1,5 +1,6 @@
 using Test
 using ITensors
+using ITensors.NDTensors
 
 @testset "Allow general mixtures of collections of indices" begin
   d = 2
@@ -210,3 +211,33 @@ end
   @test_throws ErrorException hassameinds(emptyITensor(Float64, QN(), is2), is)
   @test_throws ErrorException hassameinds(emptyITensor(Float64, QN(), is1...), is)
 end
+
+@testset "Test Index collection as Vector of abstract type" begin
+  d = 2
+  i = Index(d)
+  A = randn(d, d)
+  T = itensor(A, Index[i', dag(i)])
+  @test storage(T) isa NDTensors.Dense{Float64}
+  T = itensor(A, Any[i', dag(i)])
+  @test storage(T) isa NDTensors.Dense{Float64}
+
+  i = Index([QN() => d])
+  A = randn(d, d)
+  T = itensor(A, Index[i', dag(i)])
+  @test storage(T) isa NDTensors.BlockSparse{Float64}
+  T = itensor(A, Any[i', dag(i)])
+  @test storage(T) isa NDTensors.BlockSparse{Float64}
+end
+
+@testset "Test output types of ITensors.indices" begin
+  i = Index(2)
+  @test ITensors.indices([i'', i', i]) == Index{Int}[i'', i', i]
+  @test ITensors.indices((i'', i', i)) == (i'', i', i)
+  @test ITensors.indices([(i'',), (i',), (i,)]) == Index{Int}[i'', i', i]
+  @test ITensors.indices(Any[(i'',), (i',), (i,)]) == Index{Int}[i'', i', i]
+  @test ITensors.indices([(i'',), (i',), [i]]) == Index{Int}[i'', i', i]
+  @test ITensors.indices([(i'',), i', [i]]) == Index{Int}[i'', i', i]
+  @test ITensors.indices(Any[(i'',), i', [i]]) == Index{Int}[i'', i', i]
+  @test ITensors.indices(((i'',), i', [i])) == Index{Int}[i'', i', i]
+end
+

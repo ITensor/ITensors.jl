@@ -147,7 +147,7 @@ ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, Q
 #ITensor(x::RealOrComplex{Int}, flux::QN, is...) = ITensor(float(x), is...)
 
 """
-    ITensor([ElT::Type, ]::Array, inds; tol = 0)
+    ITensor([ElT::Type, ]::AbstractArray, inds; tol = 0)
 
 Create a block sparse ITensor from the input Array, and collection 
 of QN indices. Zeros are dropped and nonzero blocks are determined
@@ -182,12 +182,12 @@ Block: (2, 2)
 ```
 """
 function ITensor(
-  ::AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds::QNIndices; tol=0
+  ::AliasStyle, ::Type{ElT}, A::AbstractArray{<:Number}, inds::QNIndices; tol=0
 ) where {ElT<:Number}
   is = Tuple(inds)
   length(A) ≠ dim(inds) && throw(
     DimensionMismatch(
-      "In ITensor(::Array, inds), length of Array ($(length(A))) must match total dimension of the indices ($(dim(is)))",
+      "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of the indices ($(dim(is)))",
     ),
   )
   T = emptyITensor(ElT, is)

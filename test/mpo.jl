@@ -537,7 +537,7 @@ end
     ρ = projector(ψ; normalize=false)
     @test prod(ρ) ≈ M
     # Deprecated syntax
-    ρ = MPO(ψ)
+    ρ = @test_deprecated MPO(ψ)
     @test prod(ρ) ≈ M
   end
 
