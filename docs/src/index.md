@@ -17,19 +17,19 @@
 |[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|
 
 ITensor is a library for rapidly creating correct and efficient
-tensor network algorithms. 
+tensor network algorithms.
 
-The source code for ITensor can be found [on Github](https://github.com/ITensor/ITensors.jl).  
+The source code for ITensor can be found [on Github](https://github.com/ITensor/ITensors.jl).
 
 Additional documentation can be found on the ITensor website [itensor.org](https://itensor.org/).
 
-An ITensor is a tensor whose interface 
+An ITensor is a tensor whose interface
 is independent of its memory layout. ITensor indices are
 objects which carry extra information and which
 'recognize' each other (compare equal to each other).
 
-The ITensor library also includes composable and extensible 
-algorithms for optimizing and transforming tensor networks, such as 
+The ITensor library also includes composable and extensible
+algorithms for optimizing and transforming tensor networks, such as
 matrix product state and matrix product operators, such as
 the DMRG algorithm.
 
@@ -75,7 +75,7 @@ We recommend using ITensors.jl with Intel MKL in order to get the best possible 
 
 If you use ITensor in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
 
-```
+```bib
 @misc{itensor,
     title={The \mbox{ITensor} Software Library for Tensor Network Calculations},
     author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
@@ -191,8 +191,8 @@ hasinds(C, i, k, l) = true
 
 ### Singular Value Decomposition (SVD) of a Matrix
 
-In this example, we create a random 10x20 matrix 
-and compute its SVD. The resulting factors can 
+In this example, we create a random 10x20 matrix
+and compute its SVD. The resulting factors can
 be simply multiplied back together using the
 ITensor `*` operation, which automatically recognizes
 the matching indices between U and S, and between S and V
@@ -217,10 +217,10 @@ M ≈ U * S * V = true
 
 ### Singular Value Decomposition (SVD) of a Tensor
 
-In this example, we create a random 4x4x4x4 tensor 
+In this example, we create a random 4x4x4x4 tensor
 and compute its SVD, temporarily treating the indices i and k
-together as the "row" index and j and l as the "column" index 
-for the purposes of the SVD. The resulting factors can 
+together as the "row" index and j and l as the "column" index
+for the purposes of the SVD. The resulting factors can
 be simply multiplied back together using the
 ITensor `*` operation, which automatically recognizes
 the matching indices between U and S, and between S and V
@@ -256,12 +256,12 @@ T ≈ U * S * V = true
 Before making an ITensor, you have to define its indices.
 Tensor Index objects carry extra information beyond just their dimension.
 
-All Index objects carry a permanent, immutable id number which is 
+All Index objects carry a permanent, immutable id number which is
 determined when it is constructed, and allow it to be matched
 (compare equal) with copies of itself.
 
 Additionally, an Index can have up to four tag strings, and an
-integer primelevel. If two Index objects have different tags or 
+integer primelevel. If two Index objects have different tags or
 different prime levels, they do not compare equal even if they
 have the same id.
 
@@ -321,7 +321,7 @@ let
   N = 100
   sites = siteinds("S=1",N)
 
-  # Input operator terms which define 
+  # Input operator terms which define
   # a Hamiltonian matrix, and convert
   # these terms to an MPO tensor network
   # (here we make the 1D Heisenberg model)
@@ -337,7 +337,7 @@ let
   psi0 = randomMPS(sites)
 
   # Plan to do 5 passes or 'sweeps' of DMRG,
-  # setting maximum MPS internal dimensions 
+  # setting maximum MPS internal dimensions
   # for each sweep and maximum truncation cutoff
   # used when adapting internal dimensions:
   sweeps = Sweeps(5)
@@ -345,7 +345,7 @@ let
   setcutoff!(sweeps, 1E-10)
   @show sweeps
 
-  # Run the DMRG algorithm, returning energy 
+  # Run the DMRG algorithm, returning energy
   # (dominant eigenvalue) and optimized MPS
   energy, psi = dmrg(H,psi0, sweeps)
   println("Final energy = $energy")
