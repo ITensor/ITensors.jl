@@ -17,6 +17,16 @@ include("util.jl")
     rts = read(fi, "tags", TagSet)
     close(fi)
     @test rts == ts
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "tags", ts)
+    ITensors.h5write("data.h5", "x/tags", ts)
+    rts = ITensors.h5read("data.h5", "tags")
+    @test rts == ts
+    rts = ITensors.h5read("data.h5", "x/tags")
+    @test rts == ts
   end
 
   @testset "Index" begin
@@ -41,6 +51,13 @@ include("util.jl")
     ri = read(fi, "index", Index)
     close(fi)
     @test ri == i
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "index", i)
+    ri = ITensors.h5read("data.h5", "index")
+    @test ri == i
   end
 
   @testset "IndexSet" begin
@@ -53,6 +70,13 @@ include("util.jl")
     fi = h5open("data.h5", "r")
     ris = read(fi, "inds", IndexSet)
     close(fi)
+    @test ris == is
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "inds", is)
+    ris = ITensors.h5read("data.h5", "inds")
     @test ris == is
   end
 
@@ -82,6 +106,13 @@ include("util.jl")
     close(fi)
     @test norm(rT - T) / norm(T) < 1E-10
 
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "T", T)
+    rT = ITensors.h5read("data.h5", "T")
+    @test rT ≈ T
+
     # complex case
     T = randomITensor(ComplexF64, i, j, k)
 
@@ -93,6 +124,13 @@ include("util.jl")
     rT = read(fi, "complexT", ITensor)
     close(fi)
     @test norm(rT - T) / norm(T) < 1E-10
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "T", T)
+    rT = ITensors.h5read("data.h5", "T")
+    @test rT ≈ T
   end
 
   @testset "QN ITensor" begin
@@ -112,6 +150,13 @@ include("util.jl")
     close(fi)
     @test rT ≈ T
 
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "T", T)
+    rT = ITensors.h5read("data.h5", "T")
+
+    @test rT ≈ T
     # complex case
     T = randomITensor(ComplexF64, i, j, k)
 
@@ -122,6 +167,13 @@ include("util.jl")
     fi = h5open("data.h5", "r")
     rT = read(fi, "complexT", ITensor)
     close(fi)
+    @test rT ≈ T
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "T", T)
+    rT = ITensors.h5read("data.h5", "T")
     @test rT ≈ T
   end
 
@@ -141,6 +193,13 @@ include("util.jl")
     close(fi)
     @test prod([norm(rmpo[i] - mpo[i]) / norm(mpo[i]) < 1E-10 for i in 1:N])
 
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "mpo", mpo)
+    rmpo = ITensors.h5read("data.h5", "mpo")
+    @test all(rmpo .≈ mpo)
+
     # MPS
     mps = makeRandomMPS(sites)
     fo = h5open("data.h5", "w")
@@ -151,6 +210,13 @@ include("util.jl")
     rmps = read(fi, "mps", MPS)
     close(fi)
     @test prod([norm(rmps[i] - mps[i]) / norm(mps[i]) < 1E-10 for i in 1:N])
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "mps", mps)
+    rmps = ITensors.h5read("data.h5", "mps")
+    @test all(rmps .≈ mps)
   end
 
   @testset "DownwardCompat" begin
@@ -163,6 +229,125 @@ include("util.jl")
     @test haskey(read(fi, ITensorName), "store")
     @test read(fi, ITensorName, ITensor) isa ITensor
     close(fi)
+  end
+
+  @testset "Arrays containing ITensor objects" begin
+    i = Index(2)
+    A = randomITensor(i)
+    B = randomITensor(i)
+    C = randomITensor(i)
+    D = randomITensor(i)
+
+    X = [A B; C D]
+    h5open("data.h5", "w") do file
+      write(file, "X", X)
+    end
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", Array{ITensor})
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", ITensors.AutoType)
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      ITensors.read(file, "X")
+    end
+    @test all(X .== X̃)
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
+    @test all(X .== X̃)
+
+    X = [i i'; i'' i''']
+    h5open("data.h5", "w") do file
+      write(file, "X", X)
+    end
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", Array{Index})
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", ITensors.AutoType)
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      ITensors.read(file, "X")
+    end
+    @test all(X .== X̃)
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
+    @test all(X .== X̃)
+
+    X = [ts"a" ts"b"; ts"c" ts"d"]
+    h5open("data.h5", "w") do file
+      write(file, "X", X)
+    end
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", Array{TagSet})
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      read(file, "X", ITensors.AutoType)
+    end
+    @test all(X .== X̃)
+    X̃ = h5open("data.h5", "r") do file
+      ITensors.read(file, "X")
+    end
+    @test all(X .== X̃)
+
+    rm("data.h5")
+
+    # h5write/h5read
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
+    @test all(X .== X̃)
+
+    N = 6
+    sites = siteinds("S=1/2", N)
+
+    rm("data.h5")
+
+    M1 = makeRandomMPS(sites)
+    M2 = makeRandomMPS(sites)
+    X = [M1, M2]
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
+    @test all((all(X[n] .== X̃[n]) for n in 1:length(X)))
+
+    rm("data.h5")
+
+    M1 = makeRandomMPO(sites)
+    M2 = makeRandomMPO(sites)
+    X = [M1, M2]
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
+    @test all((all(X[n] .== X̃[n]) for n in 1:length(X)))
+
+    rm("data.h5")
+
+    # h5write/h5read basic native Julia types
+    X = [1, 2, 3]
+    ITensors.h5write("data.h5", "X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
+    @test X == X̃
+
+    rm("data.h5")
+
+    X = randn(ComplexF64, 3, 4, 5)
+    ITensors.h5write("data.h5", "X", X)
+    ITensors.h5write("data.h5", "Y/X", X)
+    X̃ = ITensors.h5read("data.h5", "X")
+    @test X == X̃
+    X̃ = ITensors.h5read("data.h5", "Y/X")
+    @test X == X̃
   end
 
   #

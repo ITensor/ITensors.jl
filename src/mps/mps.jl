@@ -727,12 +727,12 @@ end
 
 function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{MPS})
   g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "MPS"
+  if HDF5.read(attributes(g)["type"]) != "MPS"
     error("HDF5 group or file does not contain MPS data")
   end
-  N = read(g, "length")
-  rlim = read(g, "rlim")
-  llim = read(g, "llim")
-  v = [read(g, "MPS[$(i)]", ITensor) for i in 1:N]
+  N = HDF5.read(g, "length")
+  rlim = HDF5.read(g, "rlim")
+  llim = HDF5.read(g, "llim")
+  v = [HDF5.read(g, "MPS[$(i)]", ITensor) for i in 1:N]
   return MPS(v, llim, rlim)
 end

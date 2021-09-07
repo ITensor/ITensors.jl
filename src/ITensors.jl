@@ -20,6 +20,7 @@ using Printf
 using Random
 using SerializedElementArrays
 using StaticArrays
+using Suppressor
 using TimerOutputs
 
 #####################################
@@ -64,6 +65,7 @@ include("imports.jl")
 #####################################
 # Global Variables
 #
+include("autotype.jl")
 include("global_variables.jl")
 
 #####################################
@@ -129,6 +131,11 @@ include("physics/site_types/qudit.jl") # EXPERIMENTAL
 include("physics/site_types/boson.jl") # EXPERIMENTAL
 include("physics/fermions.jl")
 include("physics/autompo.jl")
+
+#####################################
+# General HDF5 read/write functionality for Arrays
+#
+include("readwrite_array.jl")
 
 #####################################
 # Deprecations

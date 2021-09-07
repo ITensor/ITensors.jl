@@ -79,7 +79,7 @@ import Base.Broadcast:
 import ITensors.ContractionSequenceOptimization:
   contraction_cost, optimal_contraction_sequence
 
-import HDF5: read, write
+import HDF5: write
 
 import LinearAlgebra:
   axpby!,

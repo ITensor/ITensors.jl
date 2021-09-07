@@ -707,12 +707,12 @@ end
 
 function HDF5.read(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{MPO})
   g = open_group(parent, name)
-  if read(attributes(g)["type"]) != "MPO"
+  if HDF5.read(attributes(g)["type"]) != "MPO"
     error("HDF5 group or file does not contain MPO data")
   end
-  N = read(g, "length")
-  rlim = read(g, "rlim")
-  llim = read(g, "llim")
-  v = [read(g, "MPO[$(i)]", ITensor) for i in 1:N]
+  N = HDF5.read(g, "length")
+  rlim = HDF5.read(g, "rlim")
+  llim = HDF5.read(g, "llim")
+  v = [HDF5.read(g, "MPO[$(i)]", ITensor) for i in 1:N]
   return MPO(v, llim, rlim)
 end

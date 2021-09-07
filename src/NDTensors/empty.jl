@@ -317,7 +317,7 @@ function HDF5.read(
 ) where {StoreT<:EmptyStorage}
   g = open_group(parent, name)
   typestr = string(StoreT)
-  if read(attributes(g)["type"]) != typestr
+  if HDF5.read(attributes(g)["type"]) != typestr
     error("HDF5 group or file does not contain $typestr data")
   end
   return StoreT()
