@@ -652,6 +652,38 @@ end
     H2H2 = prime(H2; tags=!ts"X") * dag(H2)
     @test @disable_warn_order prod(HH) ≈ prod(H2H2)
   end
+
+  @testset "Bond dimensions of MPO*MPS in default contract" begin
+    N = 8
+    chi1 = 6
+    chi2 = 2
+    s = siteinds(2,N)
+
+    A = begin
+      l = [Index(chi1,"n=$n,Link") for n=1:N]
+      M = MPO(N)
+      M[1] = randomITensor(dag(s[1]),l[1],s'[1])
+      for n=2:N-1
+        M[n] = randomITensor(dag(s[n]),dag(l[n-1]),l[n],s'[n])
+      end
+      M[N] = randomITensor(dag(s[N]),dag(l[N-1]),s'[N])
+      nrm = inner(M,M)
+      for n=1:N
+        M[n] ./= (nrm)^(1/(2N))
+      end
+      truncate!(M;cutoff=1E-10)
+      M
+    end
+
+    psi = randomMPS(s,chi2)
+
+    Apsi = contract(A,psi)
+
+    dims = linkdims(Apsi)
+    for d in dims
+      @test d <= chi1*chi2
+    end
+  end
 end
 
 nothing
