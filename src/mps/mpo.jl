@@ -495,8 +495,8 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
     # Determine smallest maxdim to use
     cip = commoninds(ψ[j], E[j - 1])
     ciA = commoninds(A[j], E[j - 1])
-    prod_dims = dim(cip)*dim(ciA)
-    maxdim = min(prod_dims,requested_maxdim)
+    prod_dims = dim(cip) * dim(ciA)
+    maxdim = min(prod_dims, requested_maxdim)
 
     s = siteinds(uniqueinds, A, ψ, j)
     s̃ = siteinds(uniqueinds, simA_c, ψ_c, j)
