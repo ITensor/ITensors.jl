@@ -449,7 +449,6 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
 
   ψ_out = similar(ψ)
   cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
-  maxdim_defined = haskey(kwargs, :maxdim)
   requested_maxdim::Int = get(kwargs, :maxdim, maxlinkdim(A) * maxlinkdim(ψ))
   mindim::Int = max(get(kwargs, :mindim, 1), 1)
   normalize::Bool = get(kwargs, :normalize, false)
