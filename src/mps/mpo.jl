@@ -450,7 +450,7 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   ψ_out = similar(ψ)
   cutoff::Float64 = get(kwargs, :cutoff, 1e-13)
   maxdim_defined = haskey(kwargs, :maxdim)
-  max_maxdim::Int = get(kwargs, :maxdim, maxlinkdim(A) * maxlinkdim(ψ))
+  requested_maxdim::Int = get(kwargs, :maxdim, maxlinkdim(A) * maxlinkdim(ψ))
   mindim::Int = max(get(kwargs, :mindim, 1), 1)
   normalize::Bool = get(kwargs, :normalize, false)
 
@@ -492,16 +492,12 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   R = R * dag(Ut) * ψ[n - 1] * A[n - 1]
   simR_c = simR_c * U * ψ_c[n - 1] * simA_c[n - 1]
   for j in reverse(2:(n - 1))
-    if maxdim_defined
-      maxdim = max_maxdim
-    else
-      maxdim = 1
-      cip = commonind(ψ[j], E[j - 1])
-      ciA = commonind(A[j], E[j - 1])
-      (cip != nothing) && (maxdim *= dim(cip))
-      (ciA != nothing) && (maxdim *= dim(ciA))
-      (cip == nothing && ciA == nothing) && (maxdim = max_maxdim)
-    end
+    # Determine smallest maxdim to use
+    cip = commoninds(ψ[j], E[j - 1])
+    ciA = commoninds(A[j], E[j - 1])
+    prod_dims = dim(cip)*dim(ciA)
+    maxdim = min(prod_dims,requested_maxdim)
+
     s = siteinds(uniqueinds, A, ψ, j)
     s̃ = siteinds(uniqueinds, simA_c, ψ_c, j)
     ρ = E[j - 1] * R * simR_c
