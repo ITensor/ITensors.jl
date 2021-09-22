@@ -1,7 +1,15 @@
 using ITensors
+using Test
+using LinearAlgebra
 
 @testset "Threading" begin
-  @test "Threaded contraction" begin
+  blas_num_threads = BLAS.get_num_threads()
+  strided_num_threads = ITensors.NDTensors.Strided.get_num_threads()
+
+  BLAS.set_num_threads(1)
+  ITensors.NDTensors.Strided.set_num_threads(1)
+
+  @testset "Threaded contraction" begin
     i = Index([QN(0) => 500, QN(1) => 500])
     A = randomITensor(i', dag(i))
 
@@ -55,4 +63,7 @@ using ITensors
     @test nnz(C2) == 0
     @test C1 ≈ C2
   end
+
+  BLAS.set_num_threads(blas_num_threads)
+  ITensors.NDTensors.Strided.set_num_threads(strided_num_threads)
 end
