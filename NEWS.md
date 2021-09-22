@@ -6,6 +6,19 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensor v0.2.7 Release Notes
+==============================
+
+- Fix bug in threaded block sparse contraction, add CI tests for threading (#746)
+- Limit `maxdim` in default ("densitymatrix") contract `MPO * MPS` code (#744)
+- Add highlighting to ITensor paper bibtex in README (#738) 
+- Generalize `Array` -> `ITensor` constructor to allow `AbstractArray` (#737)
+- Fix dispatch issue when indices input into ITensor constructor had abstract element types like `Vector{Index}` (#737)
+- Pass kwargs in MPO contract (#733)
+- Use Compat to make blas_get_num_threads simpler (#731)
+- Generalize ITensor constructors to allow mixtures of collections of indices (`Tuple`s and `Vector`s) (#728)
+- Add some more ITensor constructors like `ITensor([2.3])` and `ITensor(2.3, QN(), i', dag(i))` (#728)
+
 ITensor v0.2.6 Release Notes
 ==============================
 
