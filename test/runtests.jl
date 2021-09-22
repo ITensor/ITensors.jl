@@ -58,7 +58,7 @@ if Threads.nthreads() == 1
 else if Threads.nthreads() > 1
   @testset "ITensors.jl threaded" begin
     @testset "$filename" for filename in [
-      "threads.jl",
+      "threading.jl",
     ]
       println("Running $filename")
       include(filename)
