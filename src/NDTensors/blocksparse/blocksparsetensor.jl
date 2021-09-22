@@ -1041,7 +1041,7 @@ function _threaded_contract!(
 
         # <fermions>:
         α = compute_alpha(
-          ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
+          ElR, labelsR, blockR, indsR, labelsT1, blockT1, indsT1, labelsT2, blockT2, indsT2
         )
 
         contract!(blockR, labelsR, blockT1, labelsT1, blockT2, labelsT2, α, β)
