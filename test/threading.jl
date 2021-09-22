@@ -24,15 +24,11 @@ using LinearAlgebra
 
     @test R ≈ Rthreaded
 
-    ITensors.disable_threaded_blocksparse()
-
-    time = @elapsed B = A' * A
-
-    ITensors.enable_threaded_blocksparse()
-
-    time_threaded = @elapsed B = A' * A
-
-    @test time > time_threaded
+    #ITensors.disable_threaded_blocksparse()
+    #time = @elapsed B = A' * A
+    #ITensors.enable_threaded_blocksparse()
+    #time_threaded = @elapsed B = A' * A
+    #@test time > time_threaded
 
     if using_threaded_blocksparse
       ITensors.enable_threaded_blocksparse()
