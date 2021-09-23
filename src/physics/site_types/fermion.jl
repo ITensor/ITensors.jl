@@ -76,17 +76,23 @@ alias(::OpName"n") = OpName("N")
 function ITensors.op!(Op::ITensor, ::OpName"N", ::SiteType"Fermion", s::Index)
   return Op[s' => 2, s => 2] = 1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"n", st::SiteType"Fermion", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"n", st::SiteType"Fermion", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"C", ::SiteType"Fermion", s::Index)
   return Op[s' => 1, s => 2] = 1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"c", st::SiteType"Fermion", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"c", st::SiteType"Fermion", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cdag", ::SiteType"Fermion", s::Index)
   return Op[s' => 2, s => 1] = 1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"c†", st::SiteType"Fermion", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"c†", st::SiteType"Fermion", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"F", ::SiteType"Fermion", s::Index)
   Op[s' => 1, s => 1] = +1.0
@@ -94,7 +100,10 @@ function ITensors.op!(Op::ITensor, ::OpName"F", ::SiteType"Fermion", s::Index)
 end
 
 ITensors.has_fermion_string(::OpName"C", ::SiteType"Fermion") = true
-ITensors.has_fermion_string(on::OpName"c", st::SiteType"Fermion") = has_fermion_string(alias(on), st)
+function ITensors.has_fermion_string(on::OpName"c", st::SiteType"Fermion")
+  return has_fermion_string(alias(on), st)
+end
 ITensors.has_fermion_string(::OpName"Cdag", ::SiteType"Fermion") = true
-ITensors.has_fermion_string(on::OpName"c†", st::SiteType"Fermion") = has_fermion_string(alias(on), st)
-
+function ITensors.has_fermion_string(on::OpName"c†", st::SiteType"Fermion")
+  return has_fermion_string(alias(on), st)
+end

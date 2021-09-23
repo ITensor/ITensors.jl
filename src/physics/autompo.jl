@@ -289,9 +289,7 @@ function subtract!(ampo::OpSum, op1::String, i1::Int, ops...)
   return add!(ampo, -1.0, op1, i1, ops...)
 end
 
-function subtract!(
-  ampo::OpSum, coef::Number, op1::String, i1::Int, ops...
-)
+function subtract!(ampo::OpSum, coef::Number, op1::String, i1::Int, ops...)
   push!(ampo, -MPOTerm(coef, op1, i1, ops...))
   return ampo
 end

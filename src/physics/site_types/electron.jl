@@ -91,43 +91,57 @@ function ITensors.op!(Op::ITensor, ::OpName"Nup", ::SiteType"Electron", s::Index
   Op[s' => 2, s => 2] = 1.0
   return Op[s' => 4, s => 4] = 1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"n↑", st::SiteType"Electron", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"n↑", st::SiteType"Electron", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Ndn", ::SiteType"Electron", s::Index)
   Op[s' => 3, s => 3] = 1.0
   return Op[s' => 4, s => 4] = 1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"n↓", st::SiteType"Electron", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"n↓", st::SiteType"Electron", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Nupdn", ::SiteType"Electron", s::Index)
   return Op[s' => 4, s => 4] = 1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"n↑↓", st::SiteType"Electron", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"n↑↓", st::SiteType"Electron", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Ntot", ::SiteType"Electron", s::Index)
   Op[s' => 2, s => 2] = 1.0
   Op[s' => 3, s => 3] = 1.0
   return Op[s' => 4, s => 4] = 2.0
 end
-ITensors.op!(Op::ITensor, on::OpName"ntot", st::SiteType"Electron", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"ntot", st::SiteType"Electron", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cup", ::SiteType"Electron", s::Index)
   Op[s' => 1, s => 2] = 1.0
   return Op[s' => 3, s => 4] = 1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"c↑", st::SiteType"Electron", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"c↑", st::SiteType"Electron", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cdagup", ::SiteType"Electron", s::Index)
   Op[s' => 2, s => 1] = 1.0
   return Op[s' => 4, s => 3] = 1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"c†↑", st::SiteType"Electron", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"c†↑", st::SiteType"Electron", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cdn", ::SiteType"Electron", s::Index)
   Op[s' => 1, s => 3] = 1.0
   return Op[s' => 2, s => 4] = -1.0
 end
-ITensors.op!(Op::ITensor, on::OpName"c↓", st::SiteType"Electron", s::Index) = op!(Op, alias(on), st, s)
+function ITensors.op!(Op::ITensor, on::OpName"c↓", st::SiteType"Electron", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cdagdn", ::SiteType"Electron", s::Index)
   Op[s' => 3, s => 1] = 1.0
@@ -243,10 +257,18 @@ function ITensors.op!(Op::ITensor, ::OpName"Sminus", st::SiteType"Electron", s::
 end
 
 ITensors.has_fermion_string(::OpName"Cup", ::SiteType"Electron") = true
-ITensors.has_fermion_string(on::OpName"c↑", st::SiteType"Electron") = has_fermion_string(alias(on), st)
+function ITensors.has_fermion_string(on::OpName"c↑", st::SiteType"Electron")
+  return has_fermion_string(alias(on), st)
+end
 ITensors.has_fermion_string(::OpName"Cdagup", ::SiteType"Electron") = true
-ITensors.has_fermion_string(on::OpName"c†↑", st::SiteType"Electron") = has_fermion_string(alias(on), st)
+function ITensors.has_fermion_string(on::OpName"c†↑", st::SiteType"Electron")
+  return has_fermion_string(alias(on), st)
+end
 ITensors.has_fermion_string(::OpName"Cdn", ::SiteType"Electron") = true
-ITensors.has_fermion_string(on::OpName"c↓", st::SiteType"Electron") = has_fermion_string(alias(on), st)
+function ITensors.has_fermion_string(on::OpName"c↓", st::SiteType"Electron")
+  return has_fermion_string(alias(on), st)
+end
 ITensors.has_fermion_string(::OpName"Cdagdn", ::SiteType"Electron") = true
-ITensors.has_fermion_string(on::OpName"c†↓", st::SiteType"Electron") = has_fermion_string(alias(on), st)
+function ITensors.has_fermion_string(on::OpName"c†↓", st::SiteType"Electron")
+  return has_fermion_string(alias(on), st)
+end
