@@ -154,6 +154,28 @@ end
     @test length(sprint(show, ITensors.data(ampo)[1])) > 1
   end
 
+  @testset "Multisite operator" begin
+    os = OpSum()
+    os += ("CX", (1, 2))
+    os += (2.3, "R", (3, 4), "S", 2)
+    os += ("X", 3)
+    @test length(os) == 3
+    @test ITensors.coef(os[1]) == 1
+    @test length(ITensors.ops(os[1])) == 1
+    @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
+    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
+    @test ITensors.coef(os[2]) == 2.3
+    @test length(ITensors.ops(os[2])) == 2
+    @test ITensors.name(ITensors.ops(os[2])[1]) == "R"
+    @test ITensors.sites(ITensors.ops(os[2])[1]) == (3, 4)
+    @test ITensors.name(ITensors.ops(os[2])[2]) == "S"
+    @test ITensors.sites(ITensors.ops(os[2])[2]) == (2,)
+    @test ITensors.coef(os[3]) == 1
+    @test length(ITensors.ops(os[3])) == 1
+    @test ITensors.name(ITensors.ops(os[3])[1]) == "X"
+    @test ITensors.sites(ITensors.ops(os[3])[1]) == (3,)
+  end
+
   @testset "Show OpSum" begin
     ampo = OpSum()
     add!(ampo, "Sz", 1, "Sz", 2)
