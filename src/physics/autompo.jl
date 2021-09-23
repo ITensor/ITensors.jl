@@ -285,14 +285,12 @@ is specified by a name (String) and a
 site number (Int). The second version
 accepts a real or complex coefficient.
 """
-function subtract!(ampo::OpSum, op1::String, i1::Int, op2::String, i2::Int, ops...)
-  return add!(ampo, -1.0, op1, i1, op2, i2, ops...)
+function subtract!(ampo::OpSum, op1::String, i1::Int, ops...)
+  return add!(ampo, -1.0, op1, i1, ops...)
 end
 
-function subtract!(
-  ampo::OpSum, coef::Number, op1::String, i1::Int, op2::String, i2::Int, ops...
-)
-  push!(ampo, -MPOTerm(coef, op1, i1, op2, i2, ops...))
+function subtract!(ampo::OpSum, coef::Number, op1::String, i1::Int, ops...)
+  push!(ampo, -MPOTerm(coef, op1, i1, ops...))
   return ampo
 end
 

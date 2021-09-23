@@ -78,7 +78,9 @@ using ITensors, Test
 
     s = siteinds("S=1/2", N)
     @test val(s[1], "Up") == 1
+    @test val(s[1], "↑") == 1
     @test val(s[1], "Dn") == 2
+    @test val(s[1], "↓") == 2
     @test_throws ArgumentError val(s[1], "Fake")
 
     Sz5 = op("Sz", s, 5)
@@ -113,8 +115,10 @@ using ITensors, Test
     s = siteinds("S=1", N)
 
     @test val(s[1], "Up") == 1
+    @test val(s[1], "↑") == 1
     @test val(s[1], "0") == 2
     @test val(s[1], "Dn") == 3
+    @test val(s[1], "↓") == 3
     @test_throws ArgumentError val(s[1], "Fake")
 
     Sz5 = op("Sz", s, 5)
@@ -153,19 +157,31 @@ using ITensors, Test
     @test_throws ArgumentError op(s, "Fake")
     N = Array(op(s, "N"), s', s)
     @test N ≈ [0.0 0; 0 1]
+    N = Array(op(s, "n"), s', s)
+    @test N ≈ [0.0 0; 0 1]
     C = Array(op(s, "C"), s', s)
     @test C ≈ [0.0 1; 0 0]
+    C = Array(op(s, "c"), s', s)
+    @test C ≈ [0.0 1; 0 0]
     Cdag = Array(op(s, "Cdag"), s', s)
+    @test Cdag ≈ [0.0 0; 1 0]
+    Cdag = Array(op(s, "c†"), s', s)
     @test Cdag ≈ [0.0 0; 1 0]
     F = Array(op(s, "F"), s', s)
     @test F ≈ [1.0 0; 0 -1]
 
     @test has_fermion_string("C", s)
+    @test has_fermion_string("c", s)
     @test has_fermion_string("Cdag", s)
+    @test has_fermion_string("c†", s)
     @test has_fermion_string("C*F", s)
+    @test has_fermion_string("c*F", s)
     @test has_fermion_string("F*Cdag*F", s)
+    @test has_fermion_string("F*c†*F", s)
     @test !has_fermion_string("N", s)
+    @test !has_fermion_string("n", s)
     @test !has_fermion_string("N*F", s)
+    @test !has_fermion_string("n*F", s)
 
     s = siteind("Fermion"; conserve_nf=true)
     @test qn(s, 1) == QN("Nf", 0, -1)
@@ -199,10 +215,14 @@ using ITensors, Test
   @testset "Electron sites" begin
     s = siteind("Electron")
 
+    @test val(s, "Emp") == 1
     @test val(s, "0") == 1
     @test val(s, "Up") == 2
+    @test val(s, "↑") == 2
     @test val(s, "Dn") == 3
+    @test val(s, "↓") == 3
     @test val(s, "UpDn") == 4
+    @test val(s, "↑↓") == 4
     @test_throws ArgumentError val(s, "Fake")
 
     Nup = op(s, "Nup")
@@ -211,42 +231,77 @@ using ITensors, Test
     @test_throws ArgumentError op(s, "Fake")
     Nup = Array(op(s, "Nup"), s', s)
     @test Nup ≈ [0.0 0 0 0; 0 1 0 0; 0 0 0 0; 0 0 0 1]
+    Nup = Array(op(s, "n↑"), s', s)
+    @test Nup ≈ [0.0 0 0 0; 0 1 0 0; 0 0 0 0; 0 0 0 1]
     Ndn = Array(op(s, "Ndn"), s', s)
+    @test Ndn ≈ [0.0 0 0 0; 0 0 0 0; 0 0 1 0; 0 0 0 1]
+    Ndn = Array(op(s, "n↓"), s', s)
     @test Ndn ≈ [0.0 0 0 0; 0 0 0 0; 0 0 1 0; 0 0 0 1]
     Ntot = Array(op(s, "Ntot"), s', s)
     @test Ntot ≈ [0.0 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 2]
+    Ntot = Array(op(s, "ntot"), s', s)
+    @test Ntot ≈ [0.0 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 2]
     Cup = Array(op(s, "Cup"), s', s)
+    @test Cup ≈ [0.0 1 0 0; 0 0 0 0; 0 0 0 1; 0 0 0 0]
+    Cup = Array(op(s, "c↑"), s', s)
     @test Cup ≈ [0.0 1 0 0; 0 0 0 0; 0 0 0 1; 0 0 0 0]
     Cdagup = Array(op(s, "Cdagup"), s', s)
     @test Cdagup ≈ [0.0 0 0 0; 1 0 0 0; 0 0 0 0; 0 0 1 0]
+    Cdagup = Array(op(s, "c†↑"), s', s)
+    @test Cdagup ≈ [0.0 0 0 0; 1 0 0 0; 0 0 0 0; 0 0 1 0]
     Cdn = Array(op(s, "Cdn"), s', s)
     @test Cdn ≈ [0.0 0 1 0; 0 0 0 -1; 0 0 0 0; 0 0 0 0]
+    Cdn = Array(op(s, "c↓"), s', s)
+    @test Cdn ≈ [0.0 0 1 0; 0 0 0 -1; 0 0 0 0; 0 0 0 0]
     Cdagdn = Array(op(s, "Cdagdn"), s', s)
+    @test Cdagdn ≈ [0.0 0 0 0; 0 0 0 0; 1 0 0 0; 0 -1 0 0]
+    Cdagdn = Array(op(s, "c†↓"), s', s)
     @test Cdagdn ≈ [0.0 0 0 0; 0 0 0 0; 1 0 0 0; 0 -1 0 0]
     F = Array(op(s, "F"), s', s)
     @test F ≈ [1.0 0 0 0; 0 -1 0 0; 0 0 -1 0; 0 0 0 1]
     Fup = Array(op(s, "Fup"), s', s)
     @test Fup ≈ [1.0 0 0 0; 0 -1 0 0; 0 0 1 0; 0 0 0 -1]
+    Fup = Array(op(s, "F↑"), s', s)
+    @test Fup ≈ [1.0 0 0 0; 0 -1 0 0; 0 0 1 0; 0 0 0 -1]
     Fdn3 = Array(op(s, "Fdn"), s', s)
+    @test Fdn3 ≈ [1.0 0 0 0; 0 1 0 0; 0 0 -1 0; 0 0 0 -1]
+    Fdn3 = Array(op(s, "F↓"), s', s)
     @test Fdn3 ≈ [1.0 0 0 0; 0 1 0 0; 0 0 -1 0; 0 0 0 -1]
     Sz3 = Array(op(s, "Sz"), s', s)
     @test Sz3 ≈ [0.0 0 0 0; 0 0.5 0 0; 0 0 -0.5 0; 0 0 0 0]
+    Sz3 = Array(op(s, "Sᶻ"), s', s)
+    @test Sz3 ≈ [0.0 0 0 0; 0 0.5 0 0; 0 0 -0.5 0; 0 0 0 0]
     Sx3 = Array(op(s, "Sx"), s', s)
+    @test Sx3 ≈ [0.0 0 0 0; 0 0 0.5 0; 0 0.5 0 0; 0 0 0 0]
+    Sx3 = Array(op(s, "Sˣ"), s', s)
     @test Sx3 ≈ [0.0 0 0 0; 0 0 0.5 0; 0 0.5 0 0; 0 0 0 0]
     Sp3 = Array(op(s, "S+"), s', s)
     @test Sp3 ≈ [0.0 0 0 0; 0 0 1 0; 0 0 0 0; 0 0 0 0]
+    Sp3 = Array(op(s, "S⁺"), s', s)
+    @test Sp3 ≈ [0.0 0 0 0; 0 0 1 0; 0 0 0 0; 0 0 0 0]
     Sm3 = Array(op(s, "S-"), s', s)
+    @test Sm3 ≈ [0.0 0 0 0; 0 0 0 0; 0 1 0 0; 0 0 0 0]
+    Sm3 = Array(op(s, "S⁻"), s', s)
     @test Sm3 ≈ [0.0 0 0 0; 0 0 0 0; 0 1 0 0; 0 0 0 0]
 
     @test has_fermion_string("Cup", s)
+    @test has_fermion_string("c↑", s)
     @test has_fermion_string("Cup*F", s)
+    @test has_fermion_string("c↑*F", s)
     @test has_fermion_string("Cdagup", s)
+    @test has_fermion_string("c†↑", s)
     @test has_fermion_string("F*Cdagup", s)
+    @test has_fermion_string("F*c†↑", s)
     @test has_fermion_string("Cdn", s)
+    @test has_fermion_string("c↓", s)
     @test has_fermion_string("Cdn*F", s)
+    @test has_fermion_string("c↓*F", s)
     @test has_fermion_string("Cdagdn", s)
+    @test has_fermion_string("c†↓", s)
     @test !has_fermion_string("N", s)
+    @test !has_fermion_string("n", s)
     @test !has_fermion_string("F*N", s)
+    @test !has_fermion_string("F*n", s)
 
     s = siteind("Electron"; conserve_nf=true)
     @test qn(s, 1) == QN("Nf", 0, -1)
@@ -268,49 +323,84 @@ using ITensors, Test
   @testset "tJ sites" begin
     s = siteind("tJ")
 
+    @test val(s, "Emp") == 1
     @test val(s, "0") == 1
     @test val(s, "Up") == 2
+    @test val(s, "↑") == 2
     @test val(s, "Dn") == 3
+    @test val(s, "↓") == 3
     @test_throws ArgumentError val(s, "Fake")
 
     @test_throws ArgumentError op(s, "Fake")
     Nup = op(s, "Nup")
     @test Nup[2, 2] ≈ 1.0
+    Nup = op(s, "n↑")
+    @test Nup[2, 2] ≈ 1.0
     Ndn = op(s, "Ndn")
     @test Ndn[3, 3] ≈ 1.0
+    Ndn = op(s, "n↓")
+    @test Ndn[3, 3] ≈ 1.0
     Ntot = op(s, "Ntot")
+    @test Ntot[2, 2] ≈ 1.0
+    @test Ntot[3, 3] ≈ 1.0
+    Ntot = op(s, "ntot")
     @test Ntot[2, 2] ≈ 1.0
     @test Ntot[3, 3] ≈ 1.0
     Id = Array(op(s, "Id"), s', s)
     @test Id ≈ [1.0 0 0; 0 1 0; 0 0 1]
     Cup = Array(op(s, "Cup"), s', s)
     @test Cup ≈ [0.0 1 0; 0 0 0; 0 0 0]
+    Cup = Array(op(s, "c↑"), s', s)
+    @test Cup ≈ [0.0 1 0; 0 0 0; 0 0 0]
     Cdup = Array(op(s, "Cdagup"), s', s)
+    @test Cdup ≈ [0 0 0; 1.0 0 0; 0 0 0]
+    Cdup = Array(op(s, "c†↑"), s', s)
     @test Cdup ≈ [0 0 0; 1.0 0 0; 0 0 0]
     Cdn = Array(op(s, "Cdn"), s', s)
     @test Cdn ≈ [0.0 0.0 1; 0 0 0; 0 0 0]
+    Cdn = Array(op(s, "c↓"), s', s)
+    @test Cdn ≈ [0.0 0.0 1; 0 0 0; 0 0 0]
     Cddn = Array(op(s, "Cdagdn"), s', s)
+    @test Cddn ≈ [0 0 0; 0.0 0 0; 1 0 0]
+    Cddn = Array(op(s, "c†↓"), s', s)
     @test Cddn ≈ [0 0 0; 0.0 0 0; 1 0 0]
     FP = Array(op(s, "F"), s', s)
     @test FP ≈ [1.0 0.0 0; 0 -1.0 0; 0 0 -1.0]
     Fup = Array(op(s, "Fup"), s', s)
     @test Fup ≈ [1.0 0.0 0; 0 -1.0 0; 0 0 1.0]
+    Fup = Array(op(s, "F↑"), s', s)
+    @test Fup ≈ [1.0 0.0 0; 0 -1.0 0; 0 0 1.0]
     Fdn = Array(op(s, "Fdn"), s', s)
+    @test Fdn ≈ [1.0 0.0 0; 0 1.0 0; 0 0 -1.0]
+    Fdn = Array(op(s, "F↓"), s', s)
     @test Fdn ≈ [1.0 0.0 0; 0 1.0 0; 0 0 -1.0]
     Sz = Array(op(s, "Sz"), s', s)
     @test Sz ≈ [0.0 0.0 0; 0 0.5 0; 0 0 -0.5]
+    Sz = Array(op(s, "Sᶻ"), s', s)
+    @test Sz ≈ [0.0 0.0 0; 0 0.5 0; 0 0 -0.5]
     Sx = Array(op(s, "Sx"), s', s)
+    @test Sx ≈ [0.0 0.0 0; 0 0 0.5; 0 0.5 0]
+    Sx = Array(op(s, "Sˣ"), s', s)
     @test Sx ≈ [0.0 0.0 0; 0 0 0.5; 0 0.5 0]
     Sp = Array(op(s, "Splus"), s', s)
     @test Sp ≈ [0.0 0.0 0; 0 0 1.0; 0 0 0]
+    Sp = Array(op(s, "S⁺"), s', s)
+    @test Sp ≈ [0.0 0.0 0; 0 0 1.0; 0 0 0]
     Sm = Array(op(s, "Sminus"), s', s)
+    @test Sm ≈ [0.0 0.0 0; 0 0 0; 0 1.0 0]
+    Sm = Array(op(s, "S⁻"), s', s)
     @test Sm ≈ [0.0 0.0 0; 0 0 0; 0 1.0 0]
 
     @test has_fermion_string("Cup", s)
+    @test has_fermion_string("c↑", s)
     @test has_fermion_string("Cdagup", s)
+    @test has_fermion_string("c†↑", s)
     @test has_fermion_string("Cdn", s)
+    @test has_fermion_string("c↓", s)
     @test has_fermion_string("Cdagdn", s)
+    @test has_fermion_string("c†↓", s)
     @test !has_fermion_string("N", s)
+    @test !has_fermion_string("n", s)
   end
 
   @testset "$st" for st in ["Qudit", "Boson"]

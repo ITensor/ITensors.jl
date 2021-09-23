@@ -71,46 +71,79 @@ ITensors.state(::StateName"↓", st::SiteType"tJ") = state(StateName("Dn"), st)
 function ITensors.op!(Op::ITensor, ::OpName"Nup", ::SiteType"tJ", s::Index)
   return Op[s' => 2, s => 2] = 1.0
 end
+function ITensors.op!(Op::ITensor, on::OpName"n↑", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Ndn", ::SiteType"tJ", s::Index)
   return Op[s' => 3, s => 3] = 1.0
+end
+function ITensors.op!(Op::ITensor, on::OpName"n↓", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
 end
 
 function ITensors.op!(Op::ITensor, ::OpName"Ntot", ::SiteType"tJ", s::Index)
   Op[s' => 2, s => 2] = 1.0
   return Op[s' => 3, s => 3] = 1.0
 end
+function ITensors.op!(Op::ITensor, on::OpName"ntot", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cup", ::SiteType"tJ", s::Index)
   return Op[s' => 1, s => 2] = 1.0
+end
+function ITensors.op!(Op::ITensor, on::OpName"c↑", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
 end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cdagup", ::SiteType"tJ", s::Index)
   return Op[s' => 2, s => 1] = 1.0
 end
+function ITensors.op!(Op::ITensor, on::OpName"c†↑", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cdn", ::SiteType"tJ", s::Index)
   return Op[s' => 1, s => 3] = 1.0
+end
+function ITensors.op!(Op::ITensor, on::OpName"c↓", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
 end
 
 function ITensors.op!(Op::ITensor, ::OpName"Cdagdn", ::SiteType"tJ", s::Index)
   return Op[s' => 3, s => 1] = 1.0
 end
+function ITensors.op!(Op::ITensor, on::OpName"c†↓", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Aup", ::SiteType"tJ", s::Index)
   return Op[s' => 1, s => 2] = 1.0
+end
+function ITensors.op!(Op::ITensor, on::OpName"a↑", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
 end
 
 function ITensors.op!(Op::ITensor, ::OpName"Adagup", ::SiteType"tJ", s::Index)
   return Op[s' => 2, s => 1] = 1.0
 end
+function ITensors.op!(Op::ITensor, on::OpName"a†↑", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Adn", ::SiteType"tJ", s::Index)
   return Op[s' => 1, s => 3] = 1.0
 end
+function ITensors.op!(Op::ITensor, on::OpName"a↓", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Adagdn", ::SiteType"tJ", s::Index)
   return Op[s' => 3, s => 1] = 1.0
+end
+function ITensors.op!(Op::ITensor, on::OpName"a†↓", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
 end
 
 function ITensors.op!(Op::ITensor, ::OpName"F", ::SiteType"tJ", s::Index)
@@ -124,11 +157,17 @@ function ITensors.op!(Op::ITensor, ::OpName"Fup", ::SiteType"tJ", s::Index)
   Op[s' => 2, s => 2] = -1.0
   return Op[s' => 3, s => 3] = +1.0
 end
+function ITensors.op!(Op::ITensor, on::OpName"F↑", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"Fdn", ::SiteType"tJ", s::Index)
   Op[s' => 1, s => 1] = +1.0
   Op[s' => 2, s => 2] = +1.0
   return Op[s' => 3, s => 3] = -1.0
+end
+function ITensors.op!(Op::ITensor, on::OpName"F↓", st::SiteType"tJ", s::Index)
+  return op!(Op, alias(on), st, s)
 end
 
 function ITensors.op!(Op::ITensor, ::OpName"Sz", ::SiteType"tJ", s::Index)
@@ -178,6 +217,18 @@ function ITensors.op!(Op::ITensor, ::OpName"Sminus", st::SiteType"tJ", s::Index)
 end
 
 ITensors.has_fermion_string(::OpName"Cup", ::SiteType"tJ") = true
+function ITensors.has_fermion_string(on::OpName"c↑", st::SiteType"tJ")
+  return has_fermion_string(alias(on), st)
+end
 ITensors.has_fermion_string(::OpName"Cdagup", ::SiteType"tJ") = true
+function ITensors.has_fermion_string(on::OpName"c†↑", st::SiteType"tJ")
+  return has_fermion_string(alias(on), st)
+end
 ITensors.has_fermion_string(::OpName"Cdn", ::SiteType"tJ") = true
+function ITensors.has_fermion_string(on::OpName"c↓", st::SiteType"tJ")
+  return has_fermion_string(alias(on), st)
+end
 ITensors.has_fermion_string(::OpName"Cdagdn", ::SiteType"tJ") = true
+function ITensors.has_fermion_string(on::OpName"c†↓", st::SiteType"tJ")
+  return has_fermion_string(alias(on), st)
+end
