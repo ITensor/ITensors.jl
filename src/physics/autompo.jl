@@ -10,14 +10,20 @@
 struct SiteOp{N}
   name::String
   site::NTuple{N,Int}
+  params::NamedTuple
 end
-SiteOp(name::String, site::Int) = SiteOp(name, (site,))
+SiteOp(name::String, site::Tuple) = SiteOp(name, site, (;))
+SiteOp(name::String, site::Int...) = SiteOp(name, site)
+SiteOp(name::String, site_params::Union{Int,NamedTuple}...) = SiteOp(name, Base.front(site_params), last(site_params))
+SiteOp(name::String, params::NamedTuple, site::Tuple) = SiteOp(name, site, params)
+SiteOp(name::String, params::NamedTuple, site::Int...) = SiteOp(name, site, params)
 
 convert(::Type{SiteOp}, op::Pair{String,Int}) = SiteOp(first(op), last(op))
 
 name(s::SiteOp) = s.name
 site(s::SiteOp) = only(s.site)
 sites(s::SiteOp) = s.site
+params(s::SiteOp) = s.params
 
 site_or_sites(s::SiteOp{1}) = site(s)
 site_or_sites(s::SiteOp) = sites(s)
@@ -105,23 +111,36 @@ function isless(t1::MPOTerm, t2::MPOTerm)
   return ops(t1) < ops(t2)
 end
 
-function MPOTerm(c::Number, op1::String, i1)
-  return MPOTerm(convert(ComplexF64, c), [SiteOp(op1, i1)])
-end
-
-function MPOTerm(c::Number, op1::String, i1, op2::String, i2)
-  return MPOTerm(convert(ComplexF64, c), [SiteOp(op1, i1), SiteOp(op2, i2)])
-end
-
-function MPOTerm(c::Number, op1::String, i1, op2::String, i2, ops...)
-  vop = OpTerm(undef, 2 + div(length(ops), 2))
-  vop[1] = SiteOp(op1, i1)
-  vop[2] = SiteOp(op2, i2)
-  for n in 1:div(length(ops), 2)
-    vop[2 + n] = SiteOp(ops[2 * n - 1], ops[2 * n])
+function MPOTerm(c::Number, op1::String, ops_rest...)
+  ops = (op1, ops_rest...)
+  starts = findall(x -> x isa String, ops)
+  N = length(starts)
+  vop = OpTerm(undef, N)
+  for n in 1:N
+    start = starts[n]
+    stop = (n == N) ? lastindex(ops) : (starts[n + 1] - 1)
+    vop[n] = SiteOp(ops[start:stop]...)
   end
-  return MPOTerm(convert(ComplexF64, c), vop)
+  return MPOTerm(c, vop)
 end
+
+#function MPOTerm(c::Number, op1::String, i1)
+#  return MPOTerm(convert(ComplexF64, c), [SiteOp(op1, i1)])
+#end
+#
+#function MPOTerm(c::Number, op1::String, i1, op2::String, i2)
+#  return MPOTerm(convert(ComplexF64, c), [SiteOp(op1, i1), SiteOp(op2, i2)])
+#end
+#
+#function MPOTerm(c::Number, op1::String, i1, op2::String, i2, ops...)
+#  vop = OpTerm(undef, 2 + div(length(ops), 2))
+#  vop[1] = SiteOp(op1, i1)
+#  vop[2] = SiteOp(op2, i2)
+#  for n in 1:div(length(ops), 2)
+#    vop[2 + n] = SiteOp(ops[2 * n - 1], ops[2 * n])
+#  end
+#  return MPOTerm(convert(ComplexF64, c), vop)
+#end
 
 function MPOTerm(op1::String, ops...)
   return MPOTerm(one(Float64), op1, ops...)
