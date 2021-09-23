@@ -182,59 +182,59 @@ end
     @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
     @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
 
-    os = OpSum() + ("CX", 1, 2, (ϕ=π/3,))
+    os = OpSum() + ("CX", 1, 2, (ϕ=π / 3,))
     @test length(os) == 1
     @test ITensors.coef(os[1]) == 1
     @test length(ITensors.ops(os[1])) == 1
     @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
     @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π/3,)
+    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
 
-    os = OpSum() + ("CX", 1, 2, (ϕ=π/3,), "CZ", 3, 4, (θ=π/2,))
+    os = OpSum() + ("CX", 1, 2, (ϕ=π / 3,), "CZ", 3, 4, (θ=π / 2,))
     @test length(os) == 1
     @test ITensors.coef(os[1]) == 1
     @test length(ITensors.ops(os[1])) == 2
     @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
     @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π/3,)
+    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
     @test ITensors.name(ITensors.ops(os[1])[2]) == "CZ"
     @test ITensors.sites(ITensors.ops(os[1])[2]) == (3, 4)
-    @test ITensors.params(ITensors.ops(os[1])[2]) == (θ=π/2,)
+    @test ITensors.params(ITensors.ops(os[1])[2]) == (θ=π / 2,)
 
-    os = OpSum() + ("CX", (ϕ=π/3,), 1, 2, "CZ", (θ=π/2,), 3, 4)
+    os = OpSum() + ("CX", (ϕ=π / 3,), 1, 2, "CZ", (θ=π / 2,), 3, 4)
     @test length(os) == 1
     @test ITensors.coef(os[1]) == 1
     @test length(ITensors.ops(os[1])) == 2
     @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
     @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π/3,)
+    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
     @test ITensors.name(ITensors.ops(os[1])[2]) == "CZ"
     @test ITensors.sites(ITensors.ops(os[1])[2]) == (3, 4)
-    @test ITensors.params(ITensors.ops(os[1])[2]) == (θ=π/2,)
+    @test ITensors.params(ITensors.ops(os[1])[2]) == (θ=π / 2,)
 
-    os = OpSum() + ("CX", (1, 2), (ϕ=π/3,))
+    os = OpSum() + ("CX", (1, 2), (ϕ=π / 3,))
     @test length(os) == 1
     @test ITensors.coef(os[1]) == 1
     @test length(ITensors.ops(os[1])) == 1
     @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
     @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π/3,)
+    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
 
-    os = OpSum() + ("CRz", (ϕ=π/3,), 1, 2)
+    os = OpSum() + (1 + 2im, "CRz", (ϕ=π / 3,), 1, 2)
+    @test length(os) == 1
+    @test ITensors.coef(os[1]) == 1 + 2im
+    @test length(ITensors.ops(os[1])) == 1
+    @test ITensors.name(ITensors.ops(os[1])[1]) == "CRz"
+    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
+    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
+
+    os = OpSum() + ("CRz", (ϕ=π / 3,), (1, 2))
     @test length(os) == 1
     @test ITensors.coef(os[1]) == 1
     @test length(ITensors.ops(os[1])) == 1
     @test ITensors.name(ITensors.ops(os[1])[1]) == "CRz"
     @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π/3,)
-
-    os = OpSum() + ("CRz", (ϕ=π/3,), (1, 2))
-    @test length(os) == 1
-    @test ITensors.coef(os[1]) == 1
-    @test length(ITensors.ops(os[1])) == 1
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CRz"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π/3,)
+    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
   end
 
   @testset "Show OpSum" begin

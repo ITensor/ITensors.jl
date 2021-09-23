@@ -14,7 +14,9 @@ struct SiteOp{N}
 end
 SiteOp(name::String, site::Tuple) = SiteOp(name, site, (;))
 SiteOp(name::String, site::Int...) = SiteOp(name, site)
-SiteOp(name::String, site_params::Union{Int,NamedTuple}...) = SiteOp(name, Base.front(site_params), last(site_params))
+function SiteOp(name::String, site_params::Union{Int,NamedTuple}...)
+  return SiteOp(name, Base.front(site_params), last(site_params))
+end
 SiteOp(name::String, params::NamedTuple, site::Tuple) = SiteOp(name, site, params)
 SiteOp(name::String, params::NamedTuple, site::Int...) = SiteOp(name, site, params)
 
