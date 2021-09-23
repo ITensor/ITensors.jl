@@ -653,10 +653,10 @@ function has_fermion_string(opname::AbstractString, s::Index; kwargs...)::Bool
 
   # Interpret operator names joined by *
   # as acting sequentially on the same site
-  starpos = findfirst("*", opname)
+  starpos = findfirst(isequal('*'), opname)
   if !isnothing(starpos)
-    op1 = opname[1:(starpos.start - 1)]
-    op2 = opname[(starpos.start + 1):end]
+    op1 = opname[1:prevind(opname, starpos)]
+    op2 = opname[nextind(opname, starpos):end]
     return xor(has_fermion_string(op1, s; kwargs...), has_fermion_string(op2, s; kwargs...))
   end
 

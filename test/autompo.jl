@@ -186,6 +186,20 @@ end
     @test Oa ≈ Oe
   end
 
+  @testset "Ising" begin
+    ampo = OpSum()
+    for j in 1:(N - 1)
+      ampo -= "Sz", j, "Sz", j + 1
+    end
+    sites = siteinds("S=1/2", N)
+    Ha = MPO(ampo, sites)
+    He = -isingMPO(sites)
+    psi = makeRandomMPS(sites)
+    Oa = inner(psi, Ha, psi)
+    Oe = inner(psi, He, psi)
+    @test Oa ≈ Oe
+  end
+
   @testset "Ising-Different Order" begin
     ampo = OpSum()
     for j in 1:(N - 1)
