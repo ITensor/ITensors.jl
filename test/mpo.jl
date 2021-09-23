@@ -675,7 +675,7 @@ end
       M
     end
 
-    psi = randomMPS(s, chi2)
+    psi = randomMPS(s; linkdims=chi2)
 
     Apsi = contract(A, psi)
 
