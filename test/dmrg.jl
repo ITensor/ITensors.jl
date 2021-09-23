@@ -364,7 +364,6 @@ using ITensors, Test, Random
     end
     energy, psi = dmrg(H, psi0, sweeps; outputlevel=0)
   end
-
 end
 
 nothing
