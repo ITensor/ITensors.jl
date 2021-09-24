@@ -131,6 +131,10 @@ function MPOTerm(op1::String, ops...)
   return MPOTerm(one(Float64), op1, ops...)
 end
 
+function MPOTerm(ops::Vector{Pair{String,Int}})
+  return MPOTerm(Iterators.flatten(ops)...)
+end
+
 function Base.show(io::IO, op::MPOTerm)
   c = coef(op)
   if iszero(imag(c))
