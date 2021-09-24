@@ -12,7 +12,8 @@ struct SiteOp{N}
   site::NTuple{N,Int}
   params::NamedTuple
 end
-SiteOp(name::String, site::Tuple) = SiteOp(name, site, (;))
+# Change NamedTuple() to (;) when we drop older Julia versions
+SiteOp(name::String, site::Tuple) = SiteOp(name, site, NamedTuple())
 SiteOp(name::String, site::Int...) = SiteOp(name, site)
 function SiteOp(name::String, site_params::Union{Int,NamedTuple}...)
   return SiteOp(name, Base.front(site_params), last(site_params))
@@ -126,32 +127,9 @@ function MPOTerm(c::Number, op1::String, ops_rest...)
   return MPOTerm(c, vop)
 end
 
-#function MPOTerm(c::Number, op1::String, i1)
-#  return MPOTerm(convert(ComplexF64, c), [SiteOp(op1, i1)])
-#end
-#
-#function MPOTerm(c::Number, op1::String, i1, op2::String, i2)
-#  return MPOTerm(convert(ComplexF64, c), [SiteOp(op1, i1), SiteOp(op2, i2)])
-#end
-#
-#function MPOTerm(c::Number, op1::String, i1, op2::String, i2, ops...)
-#  vop = OpTerm(undef, 2 + div(length(ops), 2))
-#  vop[1] = SiteOp(op1, i1)
-#  vop[2] = SiteOp(op2, i2)
-#  for n in 1:div(length(ops), 2)
-#    vop[2 + n] = SiteOp(ops[2 * n - 1], ops[2 * n])
-#  end
-#  return MPOTerm(convert(ComplexF64, c), vop)
-#end
-
 function MPOTerm(op1::String, ops...)
   return MPOTerm(one(Float64), op1, ops...)
 end
-
-#function MPOTerm(c::Number,
-#                 ops::OpTerm)
-#  return MPOTerm(convert(ComplexF64,c),ops)
-#end
 
 function Base.show(io::IO, op::MPOTerm)
   c = coef(op)
