@@ -163,6 +163,19 @@ end
       @test ndims(A) == 0
     end
 
+    @testset "trace (tr)" begin
+      i, j, k, l = Index.((2, 3, 4, 5), ("i", "j", "k", "l"))
+      T = randomITensor(j, k', i', k, j', i)
+      trT1 = tr(T)
+      trT2 = (T * δ(i, i') * δ(j, j') * δ(k, k'))[]
+      @test trT1 ≈ trT2
+
+      T = randomITensor(j, k', i', l, k, j', i)
+      trT1 = tr(T)
+      trT2 = T * δ(i, i') * δ(j, j') * δ(k, k')
+      @test trT1 ≈ trT2
+    end
+
     @testset "ITensor iteration" begin
       A = randomITensor(i, j)
       Is = eachindex(A)

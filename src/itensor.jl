@@ -1943,7 +1943,7 @@ function indpairs(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"
     mapprime(is_first, first(plev) => last(plev)), first(tags) => last(tags)
   )
   is_last = permute(commoninds(T, is_last), is_last)
-  return Tuple(is_first) .=> Tuple(is_last)
+  return is_first .=> is_last
 end
 
 # Trace an ITensor over pairs of indices determined by
@@ -1951,13 +1951,16 @@ end
 # are not traced over, corresponding to a "batched" trace.
 function tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   trpairs = indpairs(T; plev=plev, tags=tags)
-  for indpair in trpairs
-    T *= δ(dag.(Tuple(indpair)))
+  Cᴸ = combiner(first.(trpairs))
+  Cᴿ = combiner(last.(trpairs))
+  Tᶜ = T * Cᴸ * Cᴿ
+  cᴸ = uniqueind(Cᴸ, T)
+  cᴿ = uniqueind(Cᴿ, T)
+  Tᶜ *= δ(dag((cᴸ, cᴿ)))
+  if order(Tᶜ) == 0
+    return Tᶜ[]
   end
-  if order(T) == 0
-    return T[]
-  end
-  return T
+  return Tᶜ
 end
 
 """
