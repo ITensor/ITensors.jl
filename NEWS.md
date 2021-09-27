@@ -9,6 +9,7 @@ After we release v1 of the package, we will start following [semantic versioning
 ITensor v0.2.8 Release Notes
 ==============================
 
+- Fix bug in `permute` (and therefore `indpairs` and `tr(::ITensor)`) (#750)
 - Add support for multisite operators and passing parameters into operators in `OpSum` (no support in `MPO` construction yet) (#749)
 - Fix subtraction of term from `OpSum`. Add more unicode operator name aliases (#748)
 
