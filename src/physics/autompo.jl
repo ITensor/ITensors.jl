@@ -7,17 +7,34 @@
 # SiteOp                  # 
 ###########################
 
-struct SiteOp
+struct SiteOp{N}
   name::String
-  site::Int
+  site::NTuple{N,Int}
+  params::NamedTuple
 end
+# Change NamedTuple() to (;) when we drop older Julia versions
+SiteOp(name::String, site::Tuple) = SiteOp(name, site, NamedTuple())
+SiteOp(name::String, site::Int...) = SiteOp(name, site)
+function SiteOp(name::String, site_params::Union{Int,NamedTuple}...)
+  return SiteOp(name, Base.front(site_params), last(site_params))
+end
+SiteOp(name::String, params::NamedTuple, site::Tuple) = SiteOp(name, site, params)
+SiteOp(name::String, params::NamedTuple, site::Int...) = SiteOp(name, site, params)
 
 convert(::Type{SiteOp}, op::Pair{String,Int}) = SiteOp(first(op), last(op))
 
 name(s::SiteOp) = s.name
-site(s::SiteOp) = s.site
+site(s::SiteOp) = only(s.site)
+sites(s::SiteOp) = s.site
+params(s::SiteOp) = s.params
 
-show(io::IO, s::SiteOp) = print(io, "\"$(name(s))\"($(site(s)))")
+site_or_sites(s::SiteOp{1}) = site(s)
+site_or_sites(s::SiteOp) = sites(s)
+
+string_site_or_sites(s::SiteOp{1}) = string(site(s))
+string_site_or_sites(s::SiteOp) = string(sites(s))[2:(end - 1)]
+
+show(io::IO, s::SiteOp) = print(io, "\"$(name(s))\"($(string_site_or_sites(s)))")
 
 (s1::SiteOp == s2::SiteOp) = (s1.site == s2.site && s1.name == s2.name)
 
@@ -97,28 +114,26 @@ function isless(t1::MPOTerm, t2::MPOTerm)
   return ops(t1) < ops(t2)
 end
 
-function MPOTerm(c::Number, op1::String, i1::Int)
-  return MPOTerm(convert(ComplexF64, c), [SiteOp(op1, i1)])
-end
-
-function MPOTerm(c::Number, op1::String, i1::Int, op2::String, i2::Int)
-  return MPOTerm(convert(ComplexF64, c), [SiteOp(op1, i1), SiteOp(op2, i2)])
-end
-
-function MPOTerm(c::Number, op1::String, i1::Int, op2::String, i2::Int, ops...)
-  vop = OpTerm(undef, 2 + div(length(ops), 2))
-  vop[1] = SiteOp(op1, i1)
-  vop[2] = SiteOp(op2, i2)
-  for n in 1:div(length(ops), 2)
-    vop[2 + n] = SiteOp(ops[2 * n - 1], ops[2 * n])
+function MPOTerm(c::Number, op1::String, ops_rest...)
+  ops = (op1, ops_rest...)
+  starts = findall(x -> x isa String, ops)
+  N = length(starts)
+  vop = OpTerm(undef, N)
+  for n in 1:N
+    start = starts[n]
+    stop = (n == N) ? lastindex(ops) : (starts[n + 1] - 1)
+    vop[n] = SiteOp(ops[start:stop]...)
   end
-  return MPOTerm(convert(ComplexF64, c), vop)
+  return MPOTerm(c, vop)
 end
 
-#function MPOTerm(c::Number,
-#                 ops::OpTerm)
-#  return MPOTerm(convert(ComplexF64,c),ops)
-#end
+function MPOTerm(op1::String, ops...)
+  return MPOTerm(one(Float64), op1, ops...)
+end
+
+function MPOTerm(ops::Vector{Pair{String,Int}})
+  return MPOTerm(Iterators.flatten(ops)...)
+end
 
 function Base.show(io::IO, op::MPOTerm)
   c = coef(op)
@@ -130,7 +145,7 @@ function Base.show(io::IO, op::MPOTerm)
     print(io, "($c) ")
   end
   for o in ops(op)
-    print(io, "\"$(name(o))\"($(site(o))) ")
+    print(io, "\"$(name(o))\"($(string_site_or_sites(o))) ")
   end
 end
 
@@ -160,6 +175,9 @@ mutable struct OpSum
   data::Vector{MPOTerm}
   OpSum(terms::Vector{MPOTerm}) = new(terms)
 end
+
+length(os::OpSum) = length(data(os))
+getindex(os::OpSum, I...) = data(os)[I...]
 
 const AutoMPO = OpSum
 
@@ -237,35 +255,9 @@ ampo += (0.5,"S+",4,"S-",5)
 ampo .+= (0.5,"S+",5,"S-",6)
 ```
 """
-function add!(ampo::OpSum, coef::Number, op::String, i::Int)
-  push!(data(ampo), MPOTerm(coef, op, i))
-  return nothing
-end
+add!(os::OpSum, t::MPOTerm) = push!(os, t)
 
-add!(ampo::OpSum, op::String, i::Int) = add!(ampo, 1.0, op, i)
-
-function add!(ampo::OpSum, coef::Number, op1::String, i1::Int, op2::String, i2::Int)
-  push!(data(ampo), MPOTerm(coef, op1, i1, op2, i2))
-  return nothing
-end
-
-function add!(ampo::OpSum, op1::String, i1::Int, op2::String, i2::Int)
-  return add!(ampo, 1.0, op1, i1, op2, i2)
-end
-
-function add!(ampo::OpSum, coef::Number, op1::String, i1::Int, op2::String, i2::Int, ops...)
-  push!(ampo, MPOTerm(coef, op1, i1, op2, i2, ops...))
-  return ampo
-end
-
-function add!(ampo::OpSum, op1::String, i1::Int, op2::String, i2::Int, ops...)
-  return add!(ampo, 1.0, op1, i1, op2, i2, ops...)
-end
-
-function add!(ampo::OpSum, ops::Vector{Pair{String,Int64}})
-  push!(ampo, MPOTerm(1.0, ops))
-  return ampo
-end
+add!(os::OpSum, args...) = add!(os, MPOTerm(args...))
 
 """
     subtract!(ampo::OpSum,
@@ -285,14 +277,7 @@ is specified by a name (String) and a
 site number (Int). The second version
 accepts a real or complex coefficient.
 """
-function subtract!(ampo::OpSum, op1::String, i1::Int, ops...)
-  return add!(ampo, -1.0, op1, i1, ops...)
-end
-
-function subtract!(ampo::OpSum, coef::Number, op1::String, i1::Int, ops...)
-  push!(ampo, -MPOTerm(coef, op1, i1, ops...))
-  return ampo
-end
+subtract!(os::OpSum, args...) = add!(os, -MPOTerm(args...))
 
 -(t::MPOTerm) = MPOTerm(-coef(t), ops(t))
 
@@ -444,10 +429,10 @@ function determineValType(terms::Vector{MPOTerm})
 end
 
 function computeSiteProd(sites, ops::OpTerm)::ITensor
-  i = ops[1].site
+  i = site(ops[1])
   T = op(sites[i], ops[1].name)
   for j in 2:length(ops)
-    (ops[j].site != i) && error("Mismatch of site number in computeSiteProd")
+    (site(ops[j]) != i) && error("Mismatch of site number in computeSiteProd")
     opj = op(sites[i], ops[j].name)
     T = product(T, opj)
   end
@@ -486,7 +471,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
   tempMPO = [MatElem{MPOTerm}[] for n in 1:N]
 
-  crosses_bond(t::MPOTerm, n::Int) = (ops(t)[1].site <= n <= ops(t)[end].site)
+  crosses_bond(t::MPOTerm, n::Int) = (site(ops(t)[1]) <= n <= site(ops(t)[end]))
 
   rightmap = Dict{OpTerm,Int}()
   next_rightmap = Dict{OpTerm,Int}()
@@ -498,9 +483,9 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     for term in data(ampo)
       crosses_bond(term, n) || continue
 
-      left::OpTerm = filter(t -> (t.site < n), ops(term))
-      onsite::OpTerm = filter(t -> (t.site == n), ops(term))
-      right::OpTerm = filter(t -> (t.site > n), ops(term))
+      left::OpTerm = filter(t -> (site(t) < n), ops(term))
+      onsite::OpTerm = filter(t -> (site(t) == n), ops(term))
+      right::OpTerm = filter(t -> (site(t) > n), ops(term))
 
       bond_row = -1
       bond_col = -1
@@ -638,7 +623,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   Vs = [Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
   tempMPO = [QNMatElem{MPOTerm}[] for n in 1:N]
 
-  crosses_bond(t::MPOTerm, n::Int) = (ops(t)[1].site <= n <= ops(t)[end].site)
+  crosses_bond(t::MPOTerm, n::Int) = (site(ops(t)[1]) <= n <= site(ops(t)[end]))
 
   rightmap = Dict{Pair{OpTerm,QN},Int}()
   next_rightmap = Dict{Pair{OpTerm,QN},Int}()
@@ -654,9 +639,9 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     for term in data(ampo)
       crosses_bond(term, n) || continue
 
-      left::OpTerm = filter(t -> (t.site < n), ops(term))
-      onsite::OpTerm = filter(t -> (t.site == n), ops(term))
-      right::OpTerm = filter(t -> (t.site > n), ops(term))
+      left::OpTerm = filter(t -> (site(t) < n), ops(term))
+      onsite::OpTerm = filter(t -> (site(t) == n), ops(term))
+      right::OpTerm = filter(t -> (site(t) > n), ops(term))
 
       function calcQN(term::OpTerm)
         q = QN()
