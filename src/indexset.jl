@@ -604,7 +604,7 @@ function permute(is1::Indices, is2::Indices)
     ),
   )
   perm = getperm(is1, is2)
-  return is1[perm]
+  return is1[invperm(perm)]
 end
 
 #

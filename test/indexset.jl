@@ -1,5 +1,6 @@
 using ITensors
 using Test
+using Combinatorics
 using Compat
 
 @testset "IndexSet" begin
@@ -321,6 +322,47 @@ using Compat
     #@inferred broadcast(=>, I, [1, 2])
     @test pairsI isa Vector{<:Pair}
     @test pairsI == [x => 1, y => 2]
+  end
+
+  @testset "ITensors.indpairs" begin
+    si = [QN(0) => 1, QN(1) => 2, QN(2) => 3]
+    sj = [QN(0) => 2, QN(1) => 3, QN(2) => 4]
+    sk = [QN(0) => 3, QN(1) => 4, QN(2) => 5]
+    sl = [QN(0) => 2]
+    i, j, k, l = Index.((si, sj, sk, sl), ("i", "j", "k", "l"))
+    T = randomITensor(dag(j), k', i', dag(k), j', dag(i))
+    ip = ITensors.indpairs(T)
+    i1 = first.(ip)
+    i2 = last.(ip)
+    @test i1' == i2
+    for x in i1
+      @test dir(x) == dir(T, x)
+    end
+    for x in i2
+      @test dir(x) == dir(T, x)
+    end
+  end
+
+  @testset "permute" begin
+    i, j, k = Index.(Ref([QN() => 2]), ("i", "j", "k"))
+    is1 = (dag(i), j, dag(k))
+    is2 = (i, dag(j), k)
+    for x1 in permutations(is1), x2 in permutations(is2)
+      # permute x1 into the ordering of x2
+      px1 = permute(x1, x2)
+      @test px1 == x2
+      for y in x1
+        @test dir(x1, y) == dir(px1, y)
+        @test -dir(x2, y) == dir(px1, y)
+      end
+      # permute x2 into the ordering of x1
+      px2 = permute(x2, x1)
+      @test px2 == x1
+      for y in x2
+        @test dir(x2, y) == dir(px2, y)
+        @test -dir(x1, y) == dir(px2, y)
+      end
+    end
   end
 end
 

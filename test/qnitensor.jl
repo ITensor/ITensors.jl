@@ -120,6 +120,23 @@ Random.seed!(1234)
     @test_throws BoundsError flux(T, Block(3))
   end
 
+  @testset "trace (tr)" begin
+    si = [QN(0) => 1, QN(1) => 2, QN(2) => 3]
+    sj = [QN(0) => 2, QN(1) => 3, QN(2) => 4]
+    sk = [QN(0) => 3, QN(1) => 4, QN(2) => 5]
+    sl = [QN(0) => 2]
+    i, j, k, l = Index.((si, sj, sk, sl), ("i", "j", "k", "l"))
+    T = randomITensor(dag(j), k', i', dag(k), j', dag(i))
+    trT1 = tr(T)
+    trT2 = (T * δ(i, dag(i)') * δ(j, dag(j)') * δ(k, dag(k)'))[]
+    @test trT1 ≈ trT2
+
+    T = randomITensor(dag(j), k', i', l, dag(k), j', dag(i))
+    trT1 = tr(T)
+    trT2 = T * δ(i, dag(i)') * δ(j, dag(j)') * δ(k, dag(k)')
+    @test trT1 ≈ trT2
+  end
+
   @testset "QN ITensor Array constructor view behavior" begin
     d = 2
     i = Index([QN(0) => d ÷ 2, QN(1) => d ÷ 2])
