@@ -14,27 +14,25 @@ end
 
 @testset "Dense ITensor basic functionality" begin
   @testset "ITensor constructors" begin
-    i = Index(2, "i")
-    j = Index(2, "j")
-    k = Index(2, "k")
-    l = Index(2, "l")
-
     @testset "Default" begin
       A = ITensor()
       @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
     end
 
     @testset "Undef with index" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = ITensor(undef, i)
       @test storage(A) isa NDTensors.Dense{Float64}
     end
 
     @testset "Default with indices" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = ITensor(i, j)
       @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
     end
 
     @testset "Index set operations" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = randomITensor(i, j)
       B = randomITensor(j, k)
       C = randomITensor(k, l)
@@ -82,6 +80,7 @@ end
       @test A[b => end - 2, a => 1] == A[a => 1, b => 1]
       @test A[b => end^2 - 7, a => 1] == A[a => 1, b => 2]
 
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       B = randomITensor(i)
       @test B[i => end] == B[i => dim(i)]
       @test B[i => end - 1] == B[i => dim(i) - 1]
@@ -89,6 +88,7 @@ end
       @test B[end - 1] == B[dim(i) - 1]
     end
     @testset "ITensor equality" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       Aij = randomITensor(i, j)
       Aji = permute(Aij, j, i)
       Bij′ = randomITensor(i, j')
@@ -120,6 +120,7 @@ end
     end
 
     @testset "Random" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = randomITensor(i, j)
 
       # Test hasind, hasinds
@@ -177,6 +178,7 @@ end
     end
 
     @testset "ITensor iteration" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = randomITensor(i, j)
       Is = eachindex(A)
       @test length(Is) == dim(A)
@@ -194,6 +196,7 @@ end
     end
 
     @testset "From matrix" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       M = [1 2; 3 4]
       A = itensor(M, i, j)
       @test storage(A) isa NDTensors.Dense{Float64}
@@ -219,6 +222,7 @@ end
     end
 
     @testset "To Matrix" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       TM = randomITensor(i, j)
 
       M1 = matrix(TM)
@@ -236,6 +240,7 @@ end
     end
 
     @testset "To Vector" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       TV = randomITensor(i)
 
       V = vector(TV)
@@ -260,16 +265,19 @@ end
     end
 
     @testset "Complex" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = ITensor(Complex, i, j)
       @test storage(A) isa NDTensors.EmptyStorage{Complex}
     end
 
     @testset "Random complex" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = randomITensor(ComplexF64, i, j)
       @test storage(A) isa NDTensors.Dense{ComplexF64}
     end
 
     @testset "From complex matrix" begin
+      i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       M = [1+2im 2; 3 4]
       A = itensor(M, i, j)
       @test storage(A) isa NDTensors.Dense{ComplexF64}
