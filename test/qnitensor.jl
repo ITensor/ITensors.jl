@@ -1341,9 +1341,68 @@ Random.seed!(1234)
       @test isapprox(err, spec.truncerr; rtol=1e-6)
     end
 
+    # This test happened to have different behavior because of an
+    # accidental degeneracy in the singular values with a change
+    # in the random number generator intoduced in Julia 1.7
+    if (ElT == Float64) && (VERSION ≥ v"1.7.0-0")
+      @testset "svd truncation example 5 (accidental degeneracy)" begin
+        i = Index(QN(0, 2) => 2, QN(1, 2) => 3; tags="i")
+        j = settags(i, "j")
+        copy!(
+          Random.default_rng(),
+          Xoshiro(
+            0x4ea8944fb1006ec4, 0xec60c93e7daf5295, 0x7c967091b08e72b3, 0x13bc39357cddea97
+          ),
+        )
+        A = randomITensor(ElT, QN(1, 2), i, j, dag(i'), dag(j'))
+
+        maxdim = 4
+        U, S, V, spec = svd(A, i, j'; utags="x", vtags="y", maxdim=maxdim)
+
+        @test storage(U) isa NDTensors.BlockSparse
+        @test storage(S) isa NDTensors.DiagBlockSparse
+        @test storage(V) isa NDTensors.BlockSparse
+
+        u = commonind(S, U)
+        v = commonind(S, V)
+
+        @test hastags(u, "x")
+        @test hastags(v, "y")
+
+        @test hassameinds(U, (i, j', u))
+        @test hassameinds(V, (i', j, v))
+
+        for b in nzblocks(A)
+          @test flux(A, b) == QN(1, 2)
+        end
+        for b in nzblocks(U)
+          @test flux(U, b) == QN(0, 2)
+        end
+        for b in nzblocks(S)
+          @test flux(S, b) == QN(1, 2)
+        end
+        for b in nzblocks(V)
+          @test flux(V, b) == QN(0, 2)
+        end
+
+        @test minimum(dims(S)) == maxdim - 1
+        @test_broken minimum(dims(S)) == length(spec.eigs)
+        @test minimum(dims(S)) < dim(i) * dim(j)
+
+        _, Sfull, _ = svd(A, i, j'; utags="x", vtags="y")
+        s = sort(diag(array(Sfull)); rev=true)
+        @test (s[4] - s[5]) / norm(s) < 1e-4
+
+        Ap = U * S * V
+        err = 1 - (Ap * dag(Ap))[] / (A * dag(A))[]
+        @test_broken isapprox(err, spec.truncerr; rtol=1e-6)
+      end
+    end
+
     @testset "svd truncation example 5" begin
       i = Index(QN(0, 2) => 2, QN(1, 2) => 3; tags="i")
       j = settags(i, "j")
+      Random.seed!(123)
       A = randomITensor(ElT, QN(1, 2), i, j, dag(i'), dag(j'))
 
       maxdim = 4
