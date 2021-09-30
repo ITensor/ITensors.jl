@@ -1348,7 +1348,12 @@ Random.seed!(1234)
       @testset "svd truncation example 5 (accidental degeneracy)" begin
         i = Index(QN(0, 2) => 2, QN(1, 2) => 3; tags="i")
         j = settags(i, "j")
-        copy!(Random.default_rng(), Xoshiro(0x4ea8944fb1006ec4, 0xec60c93e7daf5295, 0x7c967091b08e72b3, 0x13bc39357cddea97))
+        copy!(
+          Random.default_rng(),
+          Xoshiro(
+            0x4ea8944fb1006ec4, 0xec60c93e7daf5295, 0x7c967091b08e72b3, 0x13bc39357cddea97
+          ),
+        )
         A = randomITensor(ElT, QN(1, 2), i, j, dag(i'), dag(j'))
 
         maxdim = 4
