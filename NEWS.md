@@ -6,6 +6,12 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensor v0.2.9 Release Notes
+==============================
+
+- Fix test truncation test for Julia 1.7 (#755)
+- Fix contraction ordering in correlation matrix (#754)
+
 ITensor v0.2.8 Release Notes
 ==============================
 
