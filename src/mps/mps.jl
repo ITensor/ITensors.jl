@@ -623,7 +623,8 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
-    C[ci, ci] = scalar((Li * op(onsiteOp, s, i)) * prime(dag(psi[i]), not(rind))) / norm2_psi
+    C[ci, ci] =
+      scalar((Li * op(onsiteOp, s, i)) * prime(dag(psi[i]), not(rind))) / norm2_psi
 
     # Get j > i correlations
     Li = (Li * op(Op1, s, i)) * dag(prime(psi[i]))
@@ -642,7 +643,7 @@ function correlation_matrix(psi::MPS, Op1::AbstractString, Op2::AbstractString; 
         Li *= dag(prime(psi[j], "Link"))
       end
     end
-    L = (L*psi[i]) * dag(prime(psi[i], "Link"))
+    L = (L * psi[i]) * dag(prime(psi[i], "Link"))
   end
 
   # Get last diagonal element of C
