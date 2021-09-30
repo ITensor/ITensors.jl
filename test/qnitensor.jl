@@ -1341,7 +1341,10 @@ Random.seed!(1234)
       @test isapprox(err, spec.truncerr; rtol=1e-6)
     end
 
-    if ElT == Float64
+    # This test happened to have different behavior because of an
+    # accidental degeneracy in the singular values with a change
+    # in the random number generator intoduced in Julia 1.7
+    if (ElT == Float64) && (VERSION ≥ v"1.7.0-beta1")
       @testset "svd truncation example 5 (accidental degeneracy)" begin
         i = Index(QN(0, 2) => 2, QN(1, 2) => 3; tags="i")
         j = settags(i, "j")
