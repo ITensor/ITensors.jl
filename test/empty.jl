@@ -6,6 +6,9 @@ using ITensors, Test
 
     E = emptyITensor(i', dag(i))
 
+    @test conj(E) == E
+    @test 1.2 * E == E
+
     @test hassameinds(E, (i', i))
     @test order(E) == 2
     @test E[i' => 1, i => 1] == 0
