@@ -10,11 +10,11 @@ using ITensors.LinearAlgebra
 
 function cp_als(X, R; maxiter=1000, test_period=1, tol=1e-10)
     # initialize with spheric-random colunms
-    A = map([randomITensor(Iₙ, Index(R)) for Iₙ in X.inds]) do An
+    A = map([randomITensor(Iₙ, Index(R)) for Iₙ in inds(X)]) do An
         aλ = columnnorms(An)
         rr = Index(R)
-        iλ = diagITensor(aλ.^-1, rr, An.inds[2])
-        replaceind(An, An.inds[2], rr) * iλ
+        iλ = diagITensor(aλ.^-1, rr, inds(An)[2])
+        replaceind(An, inds(An)[2], rr) * iλ
     end
     cp_als_(X, R, A, maxiter=maxiter, test_period=test_period, tol=tol)
 end
@@ -22,7 +22,7 @@ end
 function cp_als_(X, R, A; maxiter=1000, test_period=1, tol=1e-10)
     N = order(X)
 
-    rind = [An.inds[2] for An in A]
+    rind = [inds(An)[2] for An in A]
     λ = nothing
     iteration = nothing
 
@@ -35,14 +35,14 @@ function cp_als_(X, R, A; maxiter=1000, test_period=1, tol=1e-10)
 
             W = reduce(khatrirao, [A[m] for m in N:-1:1 if m != n])
             Xn = unfold(X,n)
-            qq = diagITensor(ones(Xn.inds[2].space), Xn.inds[2], W.inds[1])
+            qq = diagITensor(ones(inds(Xn)[2].space), inds(Xn)[2], inds(W)[1])
 
             rr = Index(R)
-            newAn = Xn * qq * W * itensor(Vinv, W.inds[2], rr)
+            newAn = Xn * qq * W * itensor(Vinv, inds(W)[2], rr)
 
             aλ = columnnorms(newAn)
             λ = diagITensor(aλ, rind...)
-            iλ = diagITensor(aλ.^-1, rr, A[n].inds[2])
+            iλ = diagITensor(aλ.^-1, rr, inds(A[n])[2])
 
             A[n] = newAn * iλ
         end
@@ -61,15 +61,15 @@ end
 
 """Mode-n matricization of tensor X, or X₍ₙ₎ in Kolda & Bader 2009."""
 function unfold(X, n)
-    matn,_ = combiner(uniqueinds(X, IndexSet(X.inds[n])))
+    matn = combiner(uniqueinds(X, IndexSet(inds(X)[n])))
     X*matn
 end
 
 """The Khatri-Rao product, or A ⊙ B."""
 function khatrirao(A, B)
-    K = A.inds[2].space
-    AB = A * B * diagITensor(ones(K), A.inds[2], B.inds[2], Index(K))
-    matk,_ = combiner(B.inds[1], A.inds[1])
+    K = inds(A)[2].space
+    AB = A * B * diagITensor(ones(K), inds(A)[2], inds(B)[2], Index(K))
+    matk = combiner(inds(B)[1], inds(A)[1])
     matk * AB
 end
 

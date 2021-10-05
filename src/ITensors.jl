@@ -87,6 +87,7 @@ include("itensor.jl")
 include("broadcast.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
+include("cp_als.jl")
 
 #####################################
 # QNs
