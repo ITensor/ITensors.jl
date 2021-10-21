@@ -131,6 +131,11 @@ include("physics/fermions.jl")
 include("physics/autompo.jl")
 
 #####################################
+# ITensorChainRules
+#
+include("ITensorChainRules/ITensorChainRules.jl")
+
+#####################################
 # Deprecations
 #
 include("deprecated.jl")
