@@ -958,8 +958,8 @@ function _log_or_not_dot(
   siteindsM1dag = siteinds(all, M1dag)
   siteindsM2 = siteinds(all, M2)
   if any(n -> length(n) > 1, siteindsM1dag) ||
-     any(n -> length(n) > 1, siteindsM2) ||
-     !hassamenuminds(siteinds, M1, M2)
+    any(n -> length(n) > 1, siteindsM2) ||
+    !hassamenuminds(siteinds, M1, M2)
     # If the MPS have more than one site Indices on any site or they don't have
     # the same number of site indices on each site, don't try to make the
     # indices match
@@ -1514,16 +1514,16 @@ function setindex!(
         end
       elseif ψ isa MPO
         @warn "In setindex!(MPO, ::ITensor, ::UnitRange), " *
-              "fermionic signs are only not handled properly for non-trivial " *
-              "permutations of sites. Please inform the developers of ITensors " *
-              "if you require this feature (otherwise, fermionic signs can be " *
-              "put in manually with fermionic swap gates)."
+          "fermionic signs are only not handled properly for non-trivial " *
+          "permutations of sites. Please inform the developers of ITensors " *
+          "if you require this feature (otherwise, fermionic signs can be " *
+          "put in manually with fermionic swap gates)."
       else
         @warn "In setindex!(::Union{MPS, MPO}, ::ITensor, ::UnitRange), " *
-              "fermionic signs are only handled properly for permutations involving 2 sites. " *
-              "The original sites are $sites0, with a permutation $perm. " *
-              "To have the fermion sign handled correctly, we recommend performing your permutation " *
-              "pairwise."
+          "fermionic signs are only handled properly for permutations involving 2 sites. " *
+          "The original sites are $sites0, with a permutation $perm. " *
+          "To have the fermion sign handled correctly, we recommend performing your permutation " *
+          "pairwise."
       end
     end
   end

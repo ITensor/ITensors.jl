@@ -3,7 +3,7 @@ using Test
 
 using ChainRulesCore: rrule_via_ad
 
-include("utils.jl")
+include("utils/chainrulestestutils.jl")
 
 using Zygote: ZygoteRuleConfig
 

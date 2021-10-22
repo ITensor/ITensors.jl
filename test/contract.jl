@@ -119,7 +119,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
       C = Aij * Akl
       for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k), ll in 1:dim(l)
         @test C[i => ii, j => jj, k => kk, l => ll] ≈
-              Aij[i => ii, j => jj] * Akl[k => kk, l => ll]
+          Aij[i => ii, j => jj] * Akl[k => kk, l => ll]
       end
     end
     @testset "Test contract ITensors (3-Tensor*Scalar -> 3-Tensor)" begin

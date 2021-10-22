@@ -2,10 +2,13 @@ using ITensors
 using OptimKit
 using Zygote
 using Test
+using Random: seed!
+
+include("utils/circuit.jl")
 
 @testset "optimization" begin
   @testset "Energy minimization" begin
-    N = 6
+    N = 3
     s = siteinds("S=1/2", N; conserve_qns=true)
     os = OpSum()
     for n in 1:(N - 1)
@@ -28,7 +31,7 @@ using Test
     linesearch = HagerZhangLineSearch(;
       c₁=0.1, c₂=0.9, ϵ=1e-6, θ=1 / 2, γ=2 / 3, ρ=5.0, verbosity=0
     )
-    algorithm = LBFGS(3; maxiter=30, gradtol=1e-8, linesearch=linesearch)
+    algorithm = LBFGS(3; maxiter=20, gradtol=1e-8, linesearch=linesearch)
     ψ, fψ, gψ, numfg, normgradhistory = optimize(fg, ψ₀, algorithm)
     D, _ = eigen(H; ishermitian=true)
     @test E(H, ψ) < E(H, ψ₀)
@@ -67,7 +70,7 @@ using Test
     ∇E(ψ) = E'(ψ)
     fg(ψ) = (E(ψ), ∇E(ψ))
     linesearch = HagerZhangLineSearch(; c₁=0.1, c₂=0.9, ϵ=1e-6, θ=1 / 2, γ=2 / 3, ρ=5.0)
-    algorithm = LBFGS(5; maxiter=100, gradtol=1e-8, linesearch=linesearch, verbosity=0)
+    algorithm = LBFGS(5; maxiter=20, gradtol=1e-8, linesearch=linesearch, verbosity=0)
     ψ, fψ, gψ, numfg, normgradhistory = optimize(fg, ψ₀, algorithm)
     sweeps = Sweeps(5)
     setmaxdim!(sweeps, χ)
@@ -75,5 +78,45 @@ using Test
     time_Eψ = @elapsed E(ψ)
     time_∇Eψ = @elapsed E'(ψ)
     @test E(H, ψ) ≈ inner(ψmps, Hmpo, ψmps) / inner(ψmps, ψmps)
+  end
+  @testset "Circuit optimization" begin
+    function Rylayer(N, θ⃗)
+      return [("Ry", (n,), (θ=θ⃗[n],)) for n in 1:N]
+    end
+
+    function CXlayer(N)
+      return [("CX", (n, n + 1)) for n in 1:2:(N - 1)]
+    end
+
+    # The variational circuit we want to optimize
+    function variational_circuit(θ⃗)
+      N = length(θ⃗)
+      return vcat(Rylayer(N, θ⃗), CXlayer(N), Rylayer(N, θ⃗), CXlayer(N))
+    end
+
+    N = 4
+    seed!(1234)
+    θ⃗ = 2π .* rand(N)
+    gates = variational_circuit(θ⃗)
+
+    s = siteinds("Qubit", N)
+    ψₘₚₛ = MPS(s, "0")
+    ψ = prod(ψₘₚₛ)
+    U = buildcircuit(gates, s)
+    # Create the target state
+    Uψ = apply(U, ψ)
+
+    @test inner_circuit(Uψ, U, ψ) ≈ 1
+
+    function loss(θ⃗)
+      gates = variational_circuit(θ⃗)
+      U = buildcircuit(gates, s)
+      return -abs(inner_circuit(Uψ, U, ψ))^2
+    end
+
+    θ⃗₀ = randn!(copy(θ⃗))
+    fg(x) = (loss(x), convert(Vector, loss'(x)))
+    θ⃗ₒₚₜ, fₒₚₜ, gₒₚₜ, numfg, normgradhistory = optimize(fg, θ⃗₀, GradientDescent())
+    @test loss(θ⃗ₒₚₜ) ≈ loss(θ⃗) rtol=1e-2
   end
 end

@@ -194,7 +194,7 @@ end
 function ChainRulesCore.rrule(::typeof(itensor), x::Array, a...)
   y = itensor(x, a...)
   function itensor_pullback(ȳ)
-    x̄ = array(unthunk(ȳ))
+    x̄ = reshape(array(unthunk(ȳ)), size(x))
     ā = broadcast_notangent(a)
     return (NoTangent(), x̄, ā...)
   end
@@ -247,5 +247,8 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 @non_differentiable delta(::Any...)
 @non_differentiable dag(::Index)
 @non_differentiable inds(::Any...)
+@non_differentiable commoninds(::Any...)
+@non_differentiable noncommoninds(::Any...)
+@non_differentiable uniqueinds(::Any...)
 
 end

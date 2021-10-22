@@ -48,4 +48,3 @@ function ChainRulesTestUtils.rand_tangent(
 )
   return NoTangent()
 end
-

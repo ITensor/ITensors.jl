@@ -1165,10 +1165,10 @@ end
       C = A + B
       for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
         @test C[i => ii, j => jj, k => kk] ==
-              A[j => jj, i => ii, k => kk] + B[i => ii, k => kk, j => jj]
+          A[j => jj, i => ii, k => kk] + B[i => ii, k => kk, j => jj]
       end
       @test array(permute(C, i, j, k)) ==
-            array(permute(A, i, j, k)) + array(permute(B, i, j, k))
+        array(permute(A, i, j, k)) + array(permute(B, i, j, k))
     end
 
     @testset "Test factorizations of an ITensor" begin
