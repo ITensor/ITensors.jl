@@ -117,6 +117,6 @@ include("utils/circuit.jl")
     θ⃗₀ = randn!(copy(θ⃗))
     fg(x) = (loss(x), convert(Vector, loss'(x)))
     θ⃗ₒₚₜ, fₒₚₜ, gₒₚₜ, numfg, normgradhistory = optimize(fg, θ⃗₀, GradientDescent())
-    @test loss(θ⃗ₒₚₜ) ≈ loss(θ⃗) rtol=1e-2
+    @test loss(θ⃗ₒₚₜ) ≈ loss(θ⃗) rtol = 1e-2
   end
 end

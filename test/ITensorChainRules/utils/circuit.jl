@@ -13,12 +13,12 @@ function inner_circuit(ϕ::ITensor, U::Vector{ITensor}, ψ::ITensor)
 end
 
 name(g::Tuple{String,Vararg}) = g[1]
-sites(g::Tuple{<:Any,Tuple{Vararg{Int}},Vararg}) = g[2]
+gate_sites(g::Tuple{<:Any,Tuple{Vararg{Int}},Vararg}) = g[2]
 params(g::Tuple{<:Any,<:Any,<:NamedTuple}) = g[3]
 params(g::Tuple{<:Any,<:Any}) = (;)
 
 function gate(g::Tuple, s::Vector{<:Index})
-  return gate(name(g), params(g), s[collect(sites(g))])
+  return gate(name(g), params(g), s[collect(gate_sites(g))])
 end
 
 function gate(gn::String, params::NamedTuple, s::Vector{<:Index})
