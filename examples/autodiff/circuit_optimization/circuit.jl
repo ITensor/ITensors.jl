@@ -12,6 +12,18 @@ function inner_circuit(ϕ::ITensor, U::Vector{ITensor}, ψ::ITensor)
   return (ϕ * Uψ)[]
 end
 
+# Write a custom `rrule` for this.
+function rayleigh_quotient(H::ITensor, Uψ::Tuple{Vector{ITensor},ITensor})
+  U, ψ = Uψ
+  Uψ = ψ
+  for u in U
+    s = commoninds(u, Uψ)
+    s′ = s'
+    Uψ = replaceinds(u * Uψ, s′ => s)
+  end
+  return (dag(Uψ)' * H * Uψ)[]
+end
+
 name(g::Tuple{String,Vararg}) = g[1]
 sites(g::Tuple{<:Any,Tuple{Vararg{Int}},Vararg}) = g[2]
 params(g::Tuple{<:Any,<:Any,<:NamedTuple}) = g[3]
