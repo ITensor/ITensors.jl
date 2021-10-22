@@ -15,7 +15,7 @@ end
 name(g::Tuple{String,Vararg}) = g[1]
 gate_sites(g::Tuple{<:Any,Tuple{Vararg{Int}},Vararg}) = g[2]
 params(g::Tuple{<:Any,<:Any,<:NamedTuple}) = g[3]
-params(g::Tuple{<:Any,<:Any}) = (;)
+params(g::Tuple{<:Any,<:Any}) = NamedTuple()
 
 function gate(g::Tuple, s::Vector{<:Index})
   return gate(name(g), params(g), s[collect(gate_sites(g))])
