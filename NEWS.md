@@ -6,20 +6,25 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
-ITensor v0.2.9 Release Notes
+ITensors v0.2.10 Release Notes
+==============================
+
+- Add ChainRules rules for basic reverse mode AD operations with ITensors (#761)
+
+ITensors v0.2.9 Release Notes
 ==============================
 
 - Fix test truncation test for Julia 1.7 (#755)
 - Fix contraction ordering in correlation matrix (#754)
 
-ITensor v0.2.8 Release Notes
+ITensors v0.2.8 Release Notes
 ==============================
 
 - Fix bug in `permute` (and therefore `indpairs` and `tr(::ITensor)`) (#750)
 - Add support for multisite operators and passing parameters into operators in `OpSum` (no support in `MPO` construction yet) (#749)
 - Fix subtraction of term from `OpSum`. Add more unicode operator name aliases (#748)
 
-ITensor v0.2.7 Release Notes
+ITensors v0.2.7 Release Notes
 ==============================
 
 - Fix bug in threaded block sparse contraction, add CI tests for threading (#746)
@@ -32,14 +37,14 @@ ITensor v0.2.7 Release Notes
 - Generalize ITensor constructors to allow mixtures of collections of indices (`Tuple`s and `Vector`s) (#728)
 - Add some more ITensor constructors like `ITensor([2.3])` and `ITensor(2.3, QN(), i', dag(i))` (#728)
 
-ITensor v0.2.6 Release Notes
+ITensors v0.2.6 Release Notes
 ==============================
 
 - Add Qudit site type with QNs as well as Boson alias (#727) 
 - Tighten accuracy cutoff for OpSum/AutoMPO (#726)
 - Add support for complex data written by C++ ITensor for block sparse tensors (#724)
 
-ITensor v0.2.5 Release Notes
+ITensors v0.2.5 Release Notes
 ==============================
 
 - Fixed bug involving missing default case for state function (#719)
@@ -47,7 +52,7 @@ ITensor v0.2.5 Release Notes
 - Fix HDF5 read compatilibity between ITensors v0.1 and v0.2 (#715) (@tschneider) 
 - Improve inference in NDTensors contraction and start writing a new precompile file (off by default) (#655)
 
-ITensor v0.2.4 Release Notes
+ITensors v0.2.4 Release Notes
 ==============================
 
 - Fix state function when overloading version that accepts an Index (#711)
@@ -59,26 +64,26 @@ ITensor v0.2.4 Release Notes
 - Add `sim(::Pair{<:Index})` (#701)
 - Add `norm(::EmptyStorage)` (#699) 
 
-ITensor v0.2.3 Release Notes
+ITensors v0.2.3 Release Notes
 ==============================
 
 - Add `denseblocks` to convert from `DiagBlockSparse` to `BlockSparse` storage (PR #693).
 - Make A == B return false if ITensors A and B have different indices (PR #690).
 
-ITensor v0.2.2 Release Notes
+ITensors v0.2.2 Release Notes
 ==============================
 
 - Make Index non-broadcastable so you can do: `i = Index(2); i .^ (0, 1, 2)` (PR #689).
 - Add interface `contract([A, [B, C]])` for recursively contracting a tensor network tree, equivalent to `contract([A, B, C]; sequence=[1, [2, 3]])` (PR #686).
 - Allow plain integer tags, such as `Index(2, "1")` (PR #686).
 
-ITensor v0.2.1 Release Notes
+ITensors v0.2.1 Release Notes
 ==============================
 
 - Fix MPS product state constructor to use new state function system, and fix some incorrect site type overloads (for Fermion and S=1/2) (PR #685)
 - Improve and update documentation in various places
 
-ITensor v0.2.0 Release Notes
+ITensors v0.2.0 Release Notes
 ==============================
 
 Breaking changes:
