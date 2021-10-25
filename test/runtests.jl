@@ -5,6 +5,7 @@ if Threads.nthreads() == 1
     @testset "$filename" for filename in [
       "NDTensors/runtests.jl",
       "ContractionSequenceOptimization/runtests.jl",
+      "ITensorChainRules/runtests.jl",
       "tagset.jl",
       "smallstring.jl",
       "symmetrystyle.jl",

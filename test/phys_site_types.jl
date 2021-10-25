@@ -35,7 +35,7 @@ using ITensors, Test
     @test_throws ArgumentError op(s, "Fake", 2)
     @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0; 0.0 1.0]
     @test Array(op("√NOT", s, 3), s[3]', s[3]) ≈
-          [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
+      [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
     @test Array(op("H", s, 3), s[3]', s[3]) ≈ [1/sqrt(2) 1/sqrt(2); 1/sqrt(2) -1/sqrt(2)]
     @test Array(op("Phase", s, 3), s[3]', s[3]) ≈ [1 0; 0 im]
     @test Array(op("P", s, 3), s[3]', s[3]) ≈ [1 0; 0 im]
@@ -44,7 +44,7 @@ using ITensors, Test
     @test Array(op("T", s, 3), s[3]', s[3]) ≈ [1 0; 0 (1 + im)/sqrt(2)]
     θ = randn()
     @test Array(op("Rx", s, 3; θ=θ), s[3]', s[3]) ≈
-          [cos(θ / 2) -im*sin(θ / 2); -im*sin(θ / 2) cos(θ / 2)]
+      [cos(θ / 2) -im*sin(θ / 2); -im*sin(θ / 2) cos(θ / 2)]
 
     # Test obtaining S=1/2 operators using Qubit tag
     @test Array(op("X", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 1.0 0.0]
@@ -108,7 +108,7 @@ using ITensors, Test
 
     # Test obtaining Qubit operators using S=1/2 tag:
     @test Array(op("√NOT", s, 3), s[3]', s[3]) ≈
-          [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
+      [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
   end
 
   @testset "Spin One sites" begin
