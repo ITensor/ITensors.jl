@@ -91,7 +91,7 @@ include("utils/circuit.jl")
     # The variational circuit we want to optimize
     function variational_circuit(θ⃗)
       N = length(θ⃗)
-      return vcat(Rylayer(N, θ⃗), CXlayer(N), Rylayer(N, θ⃗), CXlayer(N))
+      return vcat(Rylayer(N, θ⃗), CXlayer(N))
     end
 
     N = 4

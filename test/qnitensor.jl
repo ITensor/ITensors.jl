@@ -1075,7 +1075,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V, b) == QN(0)
       end
-      @test U * S * V ≈ A atol = 1e-14
+      @test U * S * V ≈ A atol = 1e-12
     end
 
     @testset "svd example 4" begin
