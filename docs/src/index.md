@@ -228,7 +228,7 @@ and contracts (sums over) them.
 
 ![](svd_tensor.png)
 
-```jldoctest; output=false
+```julia
 using ITensors
 let
   i = Index(4,"i")
