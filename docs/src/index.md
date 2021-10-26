@@ -151,7 +151,7 @@ ITensor construction, setting of elements, contraction, and addition.
 Before constructing an ITensor, one constructs Index objects
 representing tensor indices.
 
-```jldoctest; output=false
+```julia
 using ITensors
 let
   i = Index(3)
@@ -198,7 +198,7 @@ ITensor `*` operation, which automatically recognizes
 the matching indices between U and S, and between S and V
 and contracts (sums over) them.
 
-```jldoctest; output=false
+```julia
 using ITensors
 let
   i = Index(10)           # index of dimension 10
@@ -269,7 +269,7 @@ Tags are also useful for identifying Index objects when printing
 tensors, and for performing certain Index manipulations (e.g.
 priming indices having certain sets of tags).
 
-```jldoctest; output=false, filter=r"0x[0-9a-f]{16}"
+```julia
 using ITensors
 let
   i = Index(3)     # Index of dimension 3
@@ -314,7 +314,7 @@ It originates in physics with the purpose of finding
 eigenvectors of Hamiltonian (energy) matrices which model
 the behavior of quantum systems.
 
-```jldoctest; output=false, filter=[r"After sweep [1-5] energy=\-[0-9]{3}\.[0-9]{10,16} maxlinkdim=[0-9]{1,3} maxerr=[0-9]{1,2}\.[0-9]{1,3}E\-[0-9]{1,2} time=[0-9]{1,2}\.[0-9]{3}", r"Final energy = \-138\.[0-9]{10,16}"]
+```julia
 using ITensors
 let
   # Create 100 spin-one indices
