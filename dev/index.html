@@ -79,7 +79,11 @@ let
   R = A + D
 
   nothing
-end</code></pre><h3 id="Singular-Value-Decomposition-(SVD)-of-a-Matrix"><a class="docs-heading-anchor" href="#Singular-Value-Decomposition-(SVD)-of-a-Matrix">Singular Value Decomposition (SVD) of a Matrix</a><a id="Singular-Value-Decomposition-(SVD)-of-a-Matrix-1"></a><a class="docs-heading-anchor-permalink" href="#Singular-Value-Decomposition-(SVD)-of-a-Matrix" title="Permalink"></a></h3><p>In this example, we create a random 10x20 matrix and compute its SVD. The resulting factors can be simply multiplied back together using the ITensor <code>*</code> operation, which automatically recognizes the matching indices between U and S, and between S and V and contracts (sums over) them.</p><pre><code class="language-julia">using ITensors
+end
+
+# output
+
+hasinds(C, i, k, l) = true</code></pre><h3 id="Singular-Value-Decomposition-(SVD)-of-a-Matrix"><a class="docs-heading-anchor" href="#Singular-Value-Decomposition-(SVD)-of-a-Matrix">Singular Value Decomposition (SVD) of a Matrix</a><a id="Singular-Value-Decomposition-(SVD)-of-a-Matrix-1"></a><a class="docs-heading-anchor-permalink" href="#Singular-Value-Decomposition-(SVD)-of-a-Matrix" title="Permalink"></a></h3><p>In this example, we create a random 10x20 matrix and compute its SVD. The resulting factors can be simply multiplied back together using the ITensor <code>*</code> operation, which automatically recognizes the matching indices between U and S, and between S and V and contracts (sums over) them.</p><pre><code class="language-julia">using ITensors
 let
   i = Index(10)           # index of dimension 10
   j = Index(20)           # index of dimension 20
@@ -88,7 +92,11 @@ let
   @show M ≈ U*S*V         # = true
 
   nothing
-end</code></pre><h3 id="Singular-Value-Decomposition-(SVD)-of-a-Tensor"><a class="docs-heading-anchor" href="#Singular-Value-Decomposition-(SVD)-of-a-Tensor">Singular Value Decomposition (SVD) of a Tensor</a><a id="Singular-Value-Decomposition-(SVD)-of-a-Tensor-1"></a><a class="docs-heading-anchor-permalink" href="#Singular-Value-Decomposition-(SVD)-of-a-Tensor" title="Permalink"></a></h3><p>In this example, we create a random 4x4x4x4 tensor and compute its SVD, temporarily treating the indices i and k together as the &quot;row&quot; index and j and l as the &quot;column&quot; index for the purposes of the SVD. The resulting factors can be simply multiplied back together using the ITensor <code>*</code> operation, which automatically recognizes the matching indices between U and S, and between S and V and contracts (sums over) them.</p><p><img src="svd_tensor.png" alt/></p><pre><code class="language-julia">using ITensors
+end
+
+# output
+
+M ≈ U * S * V = true</code></pre><h3 id="Singular-Value-Decomposition-(SVD)-of-a-Tensor"><a class="docs-heading-anchor" href="#Singular-Value-Decomposition-(SVD)-of-a-Tensor">Singular Value Decomposition (SVD) of a Tensor</a><a id="Singular-Value-Decomposition-(SVD)-of-a-Tensor-1"></a><a class="docs-heading-anchor-permalink" href="#Singular-Value-Decomposition-(SVD)-of-a-Tensor" title="Permalink"></a></h3><p>In this example, we create a random 4x4x4x4 tensor and compute its SVD, temporarily treating the indices i and k together as the &quot;row&quot; index and j and l as the &quot;column&quot; index for the purposes of the SVD. The resulting factors can be simply multiplied back together using the ITensor <code>*</code> operation, which automatically recognizes the matching indices between U and S, and between S and V and contracts (sums over) them.</p><p><img src="svd_tensor.png" alt/></p><pre><code class="language-julia">using ITensors
 let
   i = Index(4,&quot;i&quot;)
   j = Index(4,&quot;j&quot;)
@@ -124,7 +132,17 @@ let
   @show i1 == i # = false, prime levels do not match
 
   nothing
-end</code></pre><h3 id="DMRG-Calculation"><a class="docs-heading-anchor" href="#DMRG-Calculation">DMRG Calculation</a><a id="DMRG-Calculation-1"></a><a class="docs-heading-anchor-permalink" href="#DMRG-Calculation" title="Permalink"></a></h3><p>DMRG is an iterative algorithm for finding the dominant eigenvector of an exponentially large, Hermitian matrix. It originates in physics with the purpose of finding eigenvectors of Hamiltonian (energy) matrices which model the behavior of quantum systems.</p><pre><code class="language-julia">using ITensors
+end
+
+# output
+
+dim(i) = 3
+id(i) = 0x5d28aa559dd13001
+ci == i = true
+j == i = false
+hastags(s, &quot;Site&quot;) = true
+hastags(s, &quot;n=1&quot;) = true
+i1 == i = false</code></pre><h3 id="DMRG-Calculation"><a class="docs-heading-anchor" href="#DMRG-Calculation">DMRG Calculation</a><a id="DMRG-Calculation-1"></a><a class="docs-heading-anchor-permalink" href="#DMRG-Calculation" title="Permalink"></a></h3><p>DMRG is an iterative algorithm for finding the dominant eigenvector of an exponentially large, Hermitian matrix. It originates in physics with the purpose of finding eigenvectors of Hamiltonian (energy) matrices which model the behavior of quantum systems.</p><pre><code class="language-julia">using ITensors
 let
   # Create 100 spin-one indices
   N = 100
@@ -160,4 +178,20 @@ let
   println(&quot;Final energy = $energy&quot;)
 
   nothing
-end</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/Installing.html">Installing Julia and ITensor »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Tuesday 26 October 2021 17:02">Tuesday 26 October 2021</span>. Using Julia version 1.6.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end
+
+# output
+
+sweeps = Sweeps
+1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
+2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
+3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
+4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
+5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
+
+After sweep 1 energy=-137.954199761732 maxlinkdim=9 maxerr=2.43E-16 time=9.356
+After sweep 2 energy=-138.935058943878 maxlinkdim=20 maxerr=4.97E-06 time=0.671
+After sweep 3 energy=-138.940080155429 maxlinkdim=92 maxerr=1.00E-10 time=4.522
+After sweep 4 energy=-138.940086009318 maxlinkdim=100 maxerr=1.05E-10 time=11.644
+After sweep 5 energy=-138.940086058840 maxlinkdim=96 maxerr=1.00E-10 time=12.771
+Final energy = -138.94008605883985</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/Installing.html">Installing Julia and ITensor »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Tuesday 26 October 2021 17:47">Tuesday 26 October 2021</span>. Using Julia version 1.6.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
