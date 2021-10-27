@@ -3,6 +3,8 @@ module ITensorNetworkMaps
 using ..ITensors
 using LinearMaps
 
+using ITensors: promote_itensor_eltype
+
 import Base: *
 
 export ITensorNetworkMap, input_inds, output_inds
@@ -38,6 +40,7 @@ struct ITensorMap <: AbstractITensorMap
   end
 end
 Base.size(T::AbstractITensorMap) = (dim(output_inds(T)), dim(input_inds(T)))
+Base.eltype(T::AbstractITensorMap) = promote_itensor_eltype(T.itensors)
 (T::ITensorMap * v::ITensor) = T.scalar * contract(pushfirst!(copy(T.itensors), v))
 function Base.transpose(T::ITensorMap)
   return ITensorMap(reverse(T.itensors), output_inds(T), input_inds(T))
@@ -92,12 +95,12 @@ function output_inds(A::LinearMaps.LinearCombination)
 end
 
 function input_inds(A::LinearMaps.CompositeMap)
-  # TODO: it is actually an ITensorNetworkMap
-  return input_inds(A.maps[1])
+  # TODO: Check it is actually an ITensorNetworkMap
+  return input_inds(first(A.maps))
 end
 function output_inds(A::LinearMaps.CompositeMap)
-  # TODO: it is actually an ITensorNetworkMap
-  return output_inds(A.maps[end])
+  # TODO: Check it is actually an ITensorNetworkMap
+  return output_inds(last(A.maps))
 end
 
 LinearAlgebra.adjoint(A::ITensorNetworkMap) = ITensorNetworkMap(adjoint(A.A))
@@ -134,7 +137,9 @@ end
 (A::LinearMaps.LinearCombination * v::ITensor) = apply(*, A, v)
 
 function _replaceinds(::typeof(callable), A::LinearMaps.CompositeMap, v::ITensor)
-  return replaceinds(v, output_inds(A.maps[end]) => input_inds(A.maps[1]))
+  output_inds_A = output_inds(A)
+  input_inds_A = input_inds(A)
+  return replaceinds(v, output_inds_A => input_inds_A)
 end
 function _replaceinds(::typeof(*), A::LinearMaps.CompositeMap, v::ITensor)
   return v
