@@ -13,25 +13,36 @@ export ITensorNetworkMap, input_inds, output_inds
 tuple_to_vector(t::Tuple) = collect(t)
 tuple_to_vector(v::Vector) = v
 
+function default_input_inds(itensors::Vector{ITensor})
+  return filter(i -> plev(i) == 0, noncommoninds(itensors...))
+end
+
 # Represents the action of applying the
 # vector of ITensors to a starting state and then mapping
 # them back (from output_inds to input_inds)
 struct ITensorNetworkMap{T} <: LinearMap{T}
   itensors::Vector{ITensor}
-  scalar::Number
   input_inds::Vector{Index}
   output_inds::Vector{Index}
-  function ITensorNetworkMap(itensors::Vector{ITensor}, scalar, input_inds, output_inds)
+  function ITensorNetworkMap(itensors::Vector{ITensor}, input_inds, output_inds)
     inds_in = tuple_to_vector(input_inds)
     inds_out = tuple_to_vector(output_inds)
-    return new{promote_itensor_eltype(itensors)}(itensors, scalar, inds_in, inds_out)
+    return new{promote_itensor_eltype(itensors)}(itensors, inds_in, inds_out)
   end
 end
+function ITensorNetworkMap(
+  itensors::Vector{ITensor};
+  input_inds=default_input_inds(itensors),
+  output_inds=dag(input_inds'),
+)
+  return ITensorNetworkMap(itensors, input_inds, output_inds)
+end
+
 Base.size(T::ITensorNetworkMap) = (dim(output_inds(T)), dim(input_inds(T)))
 Base.eltype(T::ITensorNetworkMap) = promote_itensor_eltype(T.itensors)
 input_inds(T::ITensorNetworkMap) = T.input_inds
 output_inds(T::ITensorNetworkMap) = T.output_inds
-(T::ITensorNetworkMap * v::ITensor) = T.scalar * contract(pushfirst!(copy(T.itensors), v))
+(T::ITensorNetworkMap * v::ITensor) = contract(pushfirst!(copy(T.itensors), v))
 (T::ITensorNetworkMap)(v::ITensor) = replaceinds(T * v, output_inds(T) => input_inds(T))
 function Base.transpose(T::ITensorNetworkMap)
   return ITensorNetworkMap(reverse(T.itensors), output_inds(T), input_inds(T))
@@ -40,22 +51,6 @@ end
 # This is actually a Hermitian conjugation, not priming
 function Base.adjoint(T::ITensorNetworkMap)
   return ITensorNetworkMap(reverse(dag.(T.itensors)), dag(output_inds(T)), dag(input_inds(T)))
-end
-
-function ITensorNetworkMap(itensors::Vector{ITensor}, input_inds, output_inds)
-  return ITensorNetworkMap(itensors, true, input_inds, output_inds)
-end
-
-function default_input_inds(itensors::Vector{ITensor})
-  return filter(i -> plev(i) == 0, noncommoninds(itensors...))
-end
-
-function ITensorNetworkMap(
-  itensors::Vector{ITensor};
-  input_inds=default_input_inds(itensors),
-  output_inds=dag(input_inds'),
-)
-  return ITensorNetworkMap(itensors, input_inds, output_inds)
 end
 
 function input_inds(A::LinearMaps.LinearCombination)
