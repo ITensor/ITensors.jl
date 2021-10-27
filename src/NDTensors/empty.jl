@@ -63,6 +63,14 @@ nnzblocks(::EmptyStorage) = 0
 
 nnz(::EmptyStorage) = 0
 
+function conj(::AllowAlias, S::EmptyStorage)
+  return S
+end
+
+# TODO: promote the element type properly
+(S::EmptyStorage * x::Number) = S
+(x::Number * S::EmptyStorage) = S * x
+
 function Base.real(::Type{<:EmptyStorage{ElT,StoreT}}) where {ElT,StoreT}
   return EmptyStorage{real(ElT),real(StoreT)}
 end
