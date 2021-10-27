@@ -9,13 +9,6 @@ import Base: *
 
 export ITensorNetworkMap, input_inds, output_inds
 
-############################################################################
-abstract type AbstractITensorMap end
-
-input_inds(T::AbstractITensorMap) = T.input_inds
-output_inds(T::AbstractITensorMap) = T.output_inds
-(T::AbstractITensorMap)(v::ITensor) = replaceinds(T * v, output_inds(T) => input_inds(T))
-
 # convert from Tuple to Vector
 tuple_to_vector(t::Tuple) = collect(t)
 tuple_to_vector(v::Vector) = v
@@ -23,64 +16,46 @@ tuple_to_vector(v::Vector) = v
 # Represents the action of applying the
 # vector of ITensors to a starting state and then mapping
 # them back (from output_inds to input_inds)
-# TODO: rename ITensorNetworkMap?
-# TODO: maybe parametrize the type to allow storing just 1 ITensor?
-# TODO: contraction order optimization!
-struct ITensorMap <: AbstractITensorMap
+struct ITensorNetworkMap{T} <: LinearMap{T}
   itensors::Vector{ITensor}
   scalar::Number
   input_inds::Vector{Index}
   output_inds::Vector{Index}
-  function ITensorMap(itensors::Vector{ITensor}, scalar, input_inds, output_inds)
+  function ITensorNetworkMap(itensors::Vector{ITensor}, scalar, input_inds, output_inds)
     inds_in = tuple_to_vector(input_inds)
     inds_out = tuple_to_vector(output_inds)
-    #inds_eltype = promote_type(eltype(input_inds), eltype(output_inds))
-    #return new{inds_eltype}(itensors, inds_in, inds_out)
-    return new(itensors, scalar, inds_in, inds_out)
+    return new{promote_itensor_eltype(itensors)}(itensors, scalar, inds_in, inds_out)
   end
 end
-Base.size(T::AbstractITensorMap) = (dim(output_inds(T)), dim(input_inds(T)))
-Base.eltype(T::AbstractITensorMap) = promote_itensor_eltype(T.itensors)
-(T::ITensorMap * v::ITensor) = T.scalar * contract(pushfirst!(copy(T.itensors), v))
-function Base.transpose(T::ITensorMap)
-  return ITensorMap(reverse(T.itensors), output_inds(T), input_inds(T))
+Base.size(T::ITensorNetworkMap) = (dim(output_inds(T)), dim(input_inds(T)))
+Base.eltype(T::ITensorNetworkMap) = promote_itensor_eltype(T.itensors)
+input_inds(T::ITensorNetworkMap) = T.input_inds
+output_inds(T::ITensorNetworkMap) = T.output_inds
+(T::ITensorNetworkMap * v::ITensor) = T.scalar * contract(pushfirst!(copy(T.itensors), v))
+(T::ITensorNetworkMap)(v::ITensor) = replaceinds(T * v, output_inds(T) => input_inds(T))
+function Base.transpose(T::ITensorNetworkMap)
+  return ITensorNetworkMap(reverse(T.itensors), output_inds(T), input_inds(T))
 end
 
 # This is actually a Hermitian conjugation, not priming
-function Base.adjoint(T::ITensorMap)
-  return ITensorMap(reverse(dag.(T.itensors)), dag(output_inds(T)), dag(input_inds(T)))
+function Base.adjoint(T::ITensorNetworkMap)
+  return ITensorNetworkMap(reverse(dag.(T.itensors)), dag(output_inds(T)), dag(input_inds(T)))
 end
 
-function ITensorMap(itensors::Vector{ITensor}, input_inds, output_inds)
-  return ITensorMap(itensors, true, input_inds, output_inds)
+function ITensorNetworkMap(itensors::Vector{ITensor}, input_inds, output_inds)
+  return ITensorNetworkMap(itensors, true, input_inds, output_inds)
 end
 
 function default_input_inds(itensors::Vector{ITensor})
   return filter(i -> plev(i) == 0, noncommoninds(itensors...))
 end
 
-function ITensorMap(
+function ITensorNetworkMap(
   itensors::Vector{ITensor};
   input_inds=default_input_inds(itensors),
   output_inds=dag(input_inds'),
 )
-  return ITensorMap(itensors, input_inds, output_inds)
-end
-############################################################################
-
-struct ITensorNetworkMap{T} <: LinearMap{T}
-  A::ITensorMap
-end
-ITensorNetworkMap(A::ITensorMap) = ITensorNetworkMap{eltype(A)}(A)
-ITensorNetworkMap(tn::Vector{ITensor}; kwargs...) = ITensorNetworkMap(ITensorMap(tn; kwargs...))
-
-Base.size(A::ITensorNetworkMap) = size(A.A)
-
-function input_inds(A::ITensorNetworkMap)
-  return input_inds(A.A)
-end
-function output_inds(A::ITensorNetworkMap)
-  return output_inds(A.A)
+  return ITensorNetworkMap(itensors, input_inds, output_inds)
 end
 
 function input_inds(A::LinearMaps.LinearCombination)
@@ -103,19 +78,7 @@ function output_inds(A::LinearMaps.CompositeMap)
   return output_inds(last(A.maps))
 end
 
-LinearAlgebra.adjoint(A::ITensorNetworkMap) = ITensorNetworkMap(adjoint(A.A))
-LinearAlgebra.transpose(A::ITensorNetworkMap) = ITensorNetworkMap(transpose(A.A))
-
 callable(x, y) = x(y)
-
-function apply(f, A::ITensorMap, v::ITensor)
-  return f(A, v)
-end
-
-# Application on ITensor
-apply(f, A::ITensorNetworkMap, v::ITensor) = f(A.A, v)
-(A::ITensorNetworkMap)(v::ITensor) = apply(callable, A, v)
-(A::ITensorNetworkMap * v::ITensor) = apply(*, A, v)
 
 apply(f, A::LinearMaps.ScaledMap, v::ITensor) = (A.λ * f(A.lmap, v))
 (A::LinearMaps.ScaledMap)(v::ITensor) = apply(callable, A, v)
