@@ -136,6 +136,11 @@ include("physics/autompo.jl")
 include("ITensorChainRules/ITensorChainRules.jl")
 
 #####################################
+# ITensorNetworkMaps
+#
+include("ITensorNetworkMaps/ITensorNetworkMaps.jl")
+
+#####################################
 # Deprecations
 #
 include("deprecated.jl")

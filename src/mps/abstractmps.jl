@@ -26,7 +26,9 @@ if all tensors have type `Float64` then
 return `Float64`. But if one or more tensors
 have type `ComplexF64`, return `ComplexF64`.
 """
-function promote_itensor_eltype(m::AbstractMPS)
+promote_itensor_eltype(m::AbstractMPS) = promote_itensor_eltype(data(m))
+
+function promote_itensor_eltype(m::Vector{ITensor})
   T = isassigned(m, 1) ? eltype(m[1]) : Number
   for n in 2:length(m)
     Tn = isassigned(m, n) ? eltype(m[n]) : Number
