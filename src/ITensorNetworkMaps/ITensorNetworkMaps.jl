@@ -7,6 +7,8 @@ using ITensors: promote_itensor_eltype
 
 import Base: *
 
+import ITensors: contract
+
 export ITensorNetworkMap, input_inds, output_inds
 
 # convert from Tuple to Vector
@@ -42,15 +44,22 @@ Base.size(T::ITensorNetworkMap) = (dim(output_inds(T)), dim(input_inds(T)))
 Base.eltype(T::ITensorNetworkMap) = promote_itensor_eltype(T.itensors)
 input_inds(T::ITensorNetworkMap) = T.input_inds
 output_inds(T::ITensorNetworkMap) = T.output_inds
+
 (T::ITensorNetworkMap * v::ITensor) = contract(pushfirst!(copy(T.itensors), v))
 (T::ITensorNetworkMap)(v::ITensor) = replaceinds(T * v, output_inds(T) => input_inds(T))
+
+(v::ITensor * T::LinearMap) = transpose(T) * v
+contract(T::LinearMap) = T * ITensor(1)
+
 function Base.transpose(T::ITensorNetworkMap)
   return ITensorNetworkMap(reverse(T.itensors), output_inds(T), input_inds(T))
 end
 
 # This is actually a Hermitian conjugation, not priming
 function Base.adjoint(T::ITensorNetworkMap)
-  return ITensorNetworkMap(reverse(dag.(T.itensors)), dag(output_inds(T)), dag(input_inds(T)))
+  return ITensorNetworkMap(
+    reverse(dag.(T.itensors)), dag(output_inds(T)), dag(input_inds(T))
+  )
 end
 
 function input_inds(A::LinearMaps.LinearCombination)
@@ -77,11 +86,10 @@ callable(x, y) = x(y)
 
 apply(f, A::LinearMaps.ScaledMap, v::ITensor) = (A.λ * f(A.lmap, v))
 (A::LinearMaps.ScaledMap)(v::ITensor) = apply(callable, A, v)
-(A::LinearMaps.ScaledMap * v::ITensor) = apply(*, A, v)
+(A::LinearMap * v::ITensor) = apply(*, A, v)
 
 apply(f, A::LinearMaps.UniformScalingMap, v::ITensor) = (A.λ * v)
 (A::LinearMaps.UniformScalingMap)(v::ITensor) = apply(callable, A, v)
-(A::LinearMaps.UniformScalingMap * v::ITensor) = apply(*, A, v)
 
 function apply(f, A::LinearMaps.LinearCombination, v::ITensor)
   N = length(A.maps)
@@ -92,7 +100,6 @@ function apply(f, A::LinearMaps.LinearCombination, v::ITensor)
   return Av
 end
 (A::LinearMaps.LinearCombination)(v::ITensor) = apply(callable, A, v)
-(A::LinearMaps.LinearCombination * v::ITensor) = apply(*, A, v)
 
 function _replaceinds(::typeof(callable), A::LinearMaps.CompositeMap, v::ITensor)
   output_inds_A = output_inds(A)
@@ -113,7 +120,6 @@ function apply(f, A::LinearMaps.CompositeMap, v::ITensor)
   return Av
 end
 (A::LinearMaps.CompositeMap)(v::ITensor) = apply(callable, A, v)
-(A::LinearMaps.CompositeMap * v::ITensor) = apply(*, A, v)
 
 function apply(f, A::LinearMaps.BlockMap, v::Vector{ITensor})
   nrows = length(A.rows)
