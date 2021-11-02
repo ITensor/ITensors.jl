@@ -228,8 +228,8 @@ function op(name::AbstractString, s::Index...; kwargs...)
   # as acting sequentially on the same site
   starpos = findfirst("*", name)
   if !isnothing(starpos)
-    op1 = name[1:(starpos.start - 1)]
-    op2 = name[(starpos.start + 1):end]
+    op1 = name[1:prevind(name, starpos.start)]
+    op2 = name[nextind(name, starpos.start):end]
     return product(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
   end
 
