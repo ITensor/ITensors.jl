@@ -35,6 +35,18 @@ include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
 using .ContractionSequenceOptimization
 
 #####################################
+# LazyApply
+#
+include("LazyApply/LazyApply.jl")
+using .LazyApply
+
+#####################################
+# Ops
+#
+include("Ops/Ops.jl")
+using .Ops
+
+#####################################
 # Directory helper functions (useful for
 # running examples)
 #
