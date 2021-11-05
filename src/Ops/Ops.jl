@@ -89,6 +89,8 @@ convert(O::Type{<:SumScaledProdOp}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{ScaledProdOp{T}}, o::ScaledOp) where {T} = convert(T, coefficient(o)) * ∏([op(o)])
 convert(O::Type{SumScaledProdOp{T}}, o::ScaledOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
 
+convert(O::Type{ScaledProdOp{T}}, o::ProdOp) where {T} = one(T) * o
+
 convert(O::Type{SumScaledProdOp{T}}, o::ScaledProdOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
 
 promote_rule(::Type{Op}, O::Type{<:ScaledOp}) = O
@@ -98,6 +100,8 @@ promote_rule(::Type{Op}, O::Type{<:ScaledProdOp}) = O
 promote_rule(::Type{Op}, O::Type{<:SumScaledProdOp}) = O
 
 promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledOp{S}}) where {T,S} = ScaledOp{promote_type(T, S)}
+promote_rule(::Type{ScaledOp{T}}, ::Type{ProdOp}) where {T} = ScaledProdOp{T}
+promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S} = ScaledProdOp{promote_type(T, S)}
 promote_rule(::Type{ScaledOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S} = SumScaledProdOp{promote_type(T, S)}
 
 promote_rule(::Type{ScaledProdOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S} = SumScaledProdOp{promote_type(T, S)}

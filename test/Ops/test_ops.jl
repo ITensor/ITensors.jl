@@ -10,6 +10,17 @@ using LinearAlgebra
   o3 = Op("CX", 1, 2)
   o4 = Op("Ry", 4, (θ = π / 3,))
 
+  @test 2o2 isa Ops.ScaledOp
+  @test -o2 isa Ops.ScaledOp
+  @test o1 * o2 isa Ops.ProdOp
+  @test 2o1 * o2 isa Ops.ScaledProdOp
+  @test o1 * o2 + o3 isa Ops.SumProdOp
+  @test o1 * o2 + o1 * o3 isa Ops.SumProdOp
+  @test o1 * o2 + 2o3 isa Ops.SumScaledProdOp
+  @test o1 * o2 - o3 isa Ops.SumScaledProdOp
+  @test 2o1 * o2 + 2o3 isa Ops.SumScaledProdOp
+  @test 2o1 * o2 - 2o3 isa Ops.SumScaledProdOp
+
   N = 4
   s = siteinds("Qubit", N)
   t1 = ITensor(o1, s)
