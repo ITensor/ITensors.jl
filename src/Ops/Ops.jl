@@ -114,24 +114,90 @@ end
 # Versions where the type paramater is left out.
 convert(O::Type{SumScaledProdOp}, o) = convert(SumScaledProdOp{coefficient_type(o)}, o)
 
+#
+# Promotion rules.
+#
+# Rules for promoting Op-like objects when they are being added together.
+#
+# Should cover promotions between these types:
+#
+# Op
+# ScaledOp{T}
+# ProdOp
+# SumOp
+# SumScaledOp{T}
+# ScaledProdOp{T}
+# SumProdOp
+# SumScaledProdOp{T}
+#
+
+# Conversion of `Op`
 promote_rule(::Type{Op}, O::Type{<:ScaledOp}) = O
 promote_rule(::Type{Op}, O::Type{<:ProdOp}) = O
 promote_rule(::Type{Op}, O::Type{<:SumOp}) = O
+promote_rule(::Type{Op}, O::Type{<:SumScaledOp}) = O
 promote_rule(::Type{Op}, O::Type{<:ScaledProdOp}) = O
+promote_rule(::Type{Op}, O::Type{<:SumProdOp}) = O
 promote_rule(::Type{Op}, O::Type{<:SumScaledProdOp}) = O
 
+# Conversion of `ScaledOp`
 function promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledOp{S}}) where {T,S}
   return ScaledOp{promote_type(T, S)}
 end
 promote_rule(::Type{ScaledOp{T}}, ::Type{ProdOp}) where {T} = ScaledProdOp{T}
+promote_rule(::Type{ScaledOp{T}}, ::Type{SumOp}) where {T} = SumScaledOp{T}
+function promote_rule(::Type{ScaledOp{T}}, ::Type{SumScaledOp{S}}) where {T,S}
+  return SumScaledOp{promote_type(T, S)}
+end
 function promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S}
   return ScaledProdOp{promote_type(T, S)}
+end
+function promote_rule(::Type{ScaledOp{T}}, ::Type{SumProdOp}) where {T}
+  return SumScaledProdOp{T}
 end
 function promote_rule(::Type{ScaledOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
   return SumScaledProdOp{promote_type(T, S)}
 end
 
+# Conversion of `ProdOp`
+promote_rule(::Type{ProdOp}, ::Type{SumOp}) = SumProdOp
+promote_rule(::Type{ProdOp}, ::Type{SumScaledOp{S}}) where {S} = SumScaledProdOp{S}
+promote_rule(::Type{ProdOp}, ::Type{ScaledProdOp{S}}) where {S} = ScaledProdOp{S}
+promote_rule(::Type{ProdOp}, ::Type{SumProdOp}) = SumProdOp
+promote_rule(::Type{ProdOp}, ::Type{SumScaledProdOp{S}}) where {S} = SumScaledProdOp{S}
+
+# Conversion of `SumOp`
+promote_rule(::Type{SumOp}, ::Type{SumScaledOp{S}}) where {S} = SumScaledOp{S}
+promote_rule(::Type{SumOp}, ::Type{ScaledProdOp{S}}) where {S} = SumScaledProdOp{S}
+promote_rule(::Type{SumOp}, ::Type{SumProdOp}) = SumProdOp
+promote_rule(::Type{SumOp}, ::Type{SumScaledProdOp{S}}) where {S} = SumScaledProdOp{S}
+
+# Conversion of `SumScaledOp`
+function promote_rule(::Type{SumScaledOp{T}}, ::Type{SumScaledOp{S}}) where {T,S}
+  return SumScaledOp{promote_type(T, S)}
+end
+function promote_rule(::Type{SumScaledOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S}
+  return SumScaledProdOp{promote_type(T, S)}
+end
+promote_rule(::Type{SumScaledOp{T}}, ::Type{SumProdOp}) where {T} = SumScaledProdOp{T}
+function promote_rule(::Type{SumScaledOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
+  return SumScaledProdOp{promote_type(T, S)}
+end
+
+# Conversion of `ScaledProdOp`
+function promote_rule(::Type{ScaledProdOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S}
+  return ScaledProdOp{promote_type(T, S)}
+end
+promote_rule(::Type{ScaledProdOp{T}}, ::Type{SumProdOp}) where {T} = SumScaledProdOp{T}
 function promote_rule(::Type{ScaledProdOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
+  return SumScaledProdOp{promote_type(T, S)}
+end
+
+# Conversion of `SumProdOp`
+promote_rule(::Type{SumProdOp}, ::Type{SumScaledProdOp{S}}) where {S} = SumScaledProdOp{S}
+
+# Conversion of `SumScaledProdOp`
+function promote_rule(::Type{SumScaledProdOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
   return SumScaledProdOp{promote_type(T, S)}
 end
 
@@ -178,11 +244,19 @@ end
 (arg1::OpExpr - arg2::Tuple) = arg1 - Op(arg2)
 (arg1::Tuple - arg2::OpExpr) = Op(arg1) - arg2
 
-function show(io::IO, ::MIME"text/plain", o::Op)
-  print(io, "(", which_op(o))
-  for s in sites(o)
-    print(io, ", ", s)
+function print_sites(io::IO, sites)
+  nsites = length(sites)
+  for n in 1:nsites
+    print(io, sites[n])
+    if n < nsites
+      print(io, ", ")
+    end
   end
+end
+
+function show(io::IO, ::MIME"text/plain", o::Op)
+  print(io, which_op(o), "(")
+  print_sites(io, sites(o))
   if !isempty(params(o))
     print(io, ", ", params(o))
   end
@@ -198,13 +272,23 @@ function show(io::IO, ::MIME"text/plain", o::ProdOp)
   end
 end
 
+function print_coefficient(io::IO, o)
+  return print(io, o)
+end
+
+function print_coefficient(io::IO, o::Complex)
+  return print(io, "(", o, ")")
+end
+
 function show(io::IO, ::MIME"text/plain", o::Union{ScaledOp,ScaledProdOp})
-  print(io, "(", coefficient(o), ")")
-  print(io, " * ")
+  print_coefficient(io, coefficient(o))
+  print(io, " ")
   return print(io, op(o))
 end
 
-function show(io::IO, ::MIME"text/plain", o::Union{SumOp,SumProdOp,SumScaledProdOp})
+function show(
+  io::IO, ::MIME"text/plain", o::Union{SumOp,SumScaledOp,SumProdOp,SumScaledProdOp}
+)
   for n in 1:length(o)
     print(io, o[n])
     if n < length(o)

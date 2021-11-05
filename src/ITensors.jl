@@ -131,11 +131,6 @@ include("mps/observer.jl")
 include("mps/dmrg.jl")
 
 #####################################
-# Ops to MPO conversions
-#
-include("Ops/ops_mpo.jl")
-
-#####################################
 # Physics
 #
 include("physics/sitetype.jl")
@@ -151,6 +146,11 @@ include("physics/site_types/qudit.jl") # EXPERIMENTAL
 include("physics/site_types/boson.jl") # EXPERIMENTAL
 include("physics/fermions.jl")
 include("physics/autompo.jl")
+
+#####################################
+# Ops to MPO conversions
+#
+include("Ops/ops_mpo.jl")
 
 #####################################
 # ITensorChainRules

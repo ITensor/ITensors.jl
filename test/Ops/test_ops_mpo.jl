@@ -29,3 +29,35 @@ using LinearAlgebra
   @test prod(MPO(X(1) + 3.3Z(2), s)) ≈ T(X(1)) * T(Id(2)) + 3.3T(Id(1)) * T(Z(2))
   @test prod(MPO((X(1) + Z(2)) / 2, s)) ≈ 0.5T(X(1)) * T(Id(2)) + 0.5T(Id(1)) * T(Z(2))
 end
+
+function old_opsum(N)
+  os = OpSum()
+  for j in 1:(N - 1)
+    os += "Sz", j, "Sz", j + 1
+    os += 0.5, "S+", j, "S-", j + 1
+    os += 0.5, "S-", j, "S+", j + 1
+  end
+  return os
+end
+
+function new_opsum(N)
+  os = Ops.OpSum()
+  for j in 1:(N - 1)
+    os += "Sz", j, "Sz", j + 1
+    os += 0.5, "S+", j, "S-", j + 1
+    os += 0.5, "S-", j, "S+", j + 1
+  end
+  return os
+end
+
+@testset "OpSum comparison" begin
+  N = 4
+  s = siteinds("S=1/2", N)
+  os_old = old_opsum(N)
+  os_new = new_opsum(N)
+  @test os_old isa OpSum
+  @test os_new isa Ops.OpSum
+  Hold = MPO(os_old, s)
+  Hnew = MPO(os_new, s)
+  @test prod(Hold) ≈ prod(Hnew)
+end
