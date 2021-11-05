@@ -11,7 +11,11 @@ using LinearAlgebra
   o4 = Op("Ry", 4, (θ = π / 3,))
 
   @test 2o2 isa Ops.ScaledOp
+  @test coefficient(2o2) == 2
+  @test o2 / 2 isa Ops.ScaledOp
+  @test coefficient(o2 / 2) ≈ 0.5
   @test -o2 isa Ops.ScaledOp
+  @test 1o2 + o1 isa Ops.SumScaledOp
   @test o1 * o2 isa Ops.ProdOp
   @test 2o1 * o2 isa Ops.ScaledProdOp
   @test o1 * o2 + o3 isa Ops.SumProdOp
@@ -20,6 +24,11 @@ using LinearAlgebra
   @test o1 * o2 - o3 isa Ops.SumScaledProdOp
   @test 2o1 * o2 + 2o3 isa Ops.SumScaledProdOp
   @test 2o1 * o2 - 2o3 isa Ops.SumScaledProdOp
+  @test (2o1 * o2 - 2o3) / 3 isa Ops.SumScaledProdOp
+
+  o = (2o1 * o2 - 2o3) / 3
+  @test coefficient(o[1]) ≈ 2 / 3
+  @test coefficient(o[2]) ≈ -2 / 3
 
   N = 4
   s = siteinds("Qubit", N)

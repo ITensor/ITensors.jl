@@ -81,6 +81,9 @@ _mul(arg1::Number, arg2) = Mul(arg1, arg2)
 (arg1::Number * arg2::Applied) = _mul(arg1, arg2)
 (arg1::Number * arg2::Prod) = _mul(arg1, arg2)
 
+# Scalar division
+(arg1::Applied / arg2::Number) = inv(arg2) * arg1
+
 # Put the scalar value first by convention
 _mul(arg1, arg2::Number) = Mul(arg2, arg1)
 (arg1::Applied * arg2::Number) = _mul(arg1, arg2)

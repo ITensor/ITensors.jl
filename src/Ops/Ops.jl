@@ -58,6 +58,7 @@ Tuple(o::Op) = (which_op(o), sites(o), params(o))
 const ScaledOp{T} = Mul{Tuple{T,Op}}
 const ProdOp = Prod{Tuple{Vector{Op}}}
 const SumOp = Sum{Tuple{Vector{Op}}}
+const SumScaledOp{T} = Sum{Tuple{Vector{ScaledOp{T}}}}
 const ScaledProdOp{T} = ScaledProd{T,Tuple{Vector{Op}}}
 const SumProdOp = Sum{Tuple{Vector{ProdOp}}}
 const SumScaledProdOp{T} = Sum{Tuple{Vector{ScaledProdOp{T}}}}
@@ -71,6 +72,13 @@ const OpSum{T} = SumScaledProdOp{T}
 ScaledOp() = ScaledOp{One}()
 ScaledProdOp() = ScaledProdOp{One}()
 SumScaledProdOp() = SumScaledProdOp{One}()
+
+# Helper function for determing the cofficient type of an `Op` related type.
+coefficient_type(o) = One
+coefficient_type(o::ScaledOp{T}) where {T} = T
+coefficient_type(o::ScaledProdOp{T}) where {T} = T
+coefficient_type(o::SumScaledOp{T}) where {T} = T
+coefficient_type(o::SumScaledProdOp{T}) where {T} = T
 
 # Type promotion and conversion
 convert(::Type{ScaledOp{T}}, o::Op) where {T} = one(T) * o
@@ -90,8 +98,14 @@ convert(O::Type{ScaledProdOp{T}}, o::ScaledOp) where {T} = convert(T, coefficien
 convert(O::Type{SumScaledProdOp{T}}, o::ScaledOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
 
 convert(O::Type{ScaledProdOp{T}}, o::ProdOp) where {T} = one(T) * o
+convert(O::Type{SumScaledProdOp{T}}, o::ProdOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
+
+convert(O::Type{SumScaledProdOp{T}}, o::SumProdOp) where {T} = one(T) * o
 
 convert(O::Type{SumScaledProdOp{T}}, o::ScaledProdOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
+
+# Versions where the type paramater is left out.
+convert(O::Type{SumScaledProdOp}, o) = convert(SumScaledProdOp{coefficient_type(o)}, o)
 
 promote_rule(::Type{Op}, O::Type{<:ScaledOp}) = O
 promote_rule(::Type{Op}, O::Type{<:ProdOp}) = O
@@ -136,6 +150,7 @@ end
 
 # Lazy operations with Op
 (arg1::Number * arg2::Op) = Mul(arg1, arg2)
+(arg1::Op / arg2::Number) = inv(arg2) * arg1
 (arg1::Op * arg2::Op) = ∏([arg1, arg2])
 (arg1::Op + arg2::Op) = ∑([arg1, arg2])
 -(o::Op) = -𝟏 * o
