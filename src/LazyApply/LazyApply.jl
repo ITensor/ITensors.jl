@@ -1,5 +1,6 @@
 module LazyApply
 
+using Compat
 using Zeros
 
 import Base: *, +, -, /, exp, adjoint, show, ==, convert, getindex, length, iterate

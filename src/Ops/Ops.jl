@@ -1,5 +1,6 @@
 module Ops
 
+using Compat
 using LinearAlgebra
 using Zeros
 using ..LazyApply
@@ -94,6 +95,12 @@ convert(O::Type{<:ProdOp}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:SumOp}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:ScaledProdOp}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:SumScaledProdOp}, o::Tuple) = convert(O, Op(o))
+convert(O::Type{SumScaledProdOp}, o::Tuple) = convert(O, Op(o))
+
+SumScaledProdOp(o::Tuple) = convert(SumScaledProdOp, o)
+SumScaledProdOp(o::Vector{<:Union{OpExpr,Tuple}}) = reduce(+, o; init=SumScaledProdOp())
+SumScaledProdOp(o::WhichOp, args...) = convert(SumScaledProdOp, Op(o, args...))
+SumScaledProdOp(c::Number, o::WhichOp, args...) = convert(SumScaledProdOp, Op(c, o, args...))
 
 function convert(O::Type{ScaledProdOp{T}}, o::ScaledOp) where {T}
   return convert(T, coefficient(o)) * ∏([op(o)])

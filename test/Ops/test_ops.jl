@@ -94,4 +94,9 @@ using LinearAlgebra
   @test length(H[3]) == 1
   @test Ops.sites(H[3]) == [2]
   @test Ops.params(H[3]) == (θ=π / 3,)
+
+  Ops.OpSum(("X", 1)) isa Ops.OpSum
+  Ops.OpSum((2.3, "X", 1)) isa Ops.OpSum
+  Ops.OpSum("X", 1) isa Ops.OpSum
+  Ops.OpSum(2, "X", 1) isa Ops.OpSum
 end
