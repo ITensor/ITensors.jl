@@ -9,11 +9,18 @@ function ITensor(I::UniformScaling, is...)
 end
 
 # Using ITensors.jl definitions
-function _ITensor(which_op::AbstractString, sites::Tuple, params::NamedTuple, s::Vector{<:Index})
+function _ITensor(
+  which_op::AbstractString, sites::Tuple, params::NamedTuple, s::Vector{<:Index}
+)
   return op(which_op, s, sites; params...)
 end
 
-function _ITensor(which_op::Union{AbstractMatrix,UniformScaling}, sites::Tuple, params::NamedTuple, s::Vector{<:Index})
+function _ITensor(
+  which_op::Union{AbstractMatrix,UniformScaling},
+  sites::Tuple,
+  params::NamedTuple,
+  s::Vector{<:Index},
+)
   sₙ = s[collect(sites)]
   return itensor(which_op, sₙ', dag(sₙ))
 end
@@ -36,14 +43,14 @@ function Matrix(o::∑, s::Vector{<:Index})
   if hassamesites(o)
     return o.f([Matrix(arg, s) for arg in o])
   end
-  error("Not implemented")
+  return error("Not implemented")
 end
 
 function Matrix(o::∏, s::Vector{<:Index})
   if hassamesites(o)
     return o.f([Matrix(arg, s) for arg in o])
   end
-  error("Not implemented")
+  return error("Not implemented")
 end
 
 function Matrix(o::Scaled, s::Vector{<:Index})

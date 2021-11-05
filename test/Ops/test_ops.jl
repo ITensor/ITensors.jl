@@ -8,7 +8,7 @@ using LinearAlgebra
   y1 = Op("Y", 1)
   o2 = Op("Y", 2)
   o3 = Op("CX", 1, 2)
-  o4 = Op("Ry", 4, (θ = π / 3,))
+  o4 = Op("Ry", 4, (θ=π / 3,))
 
   @test 2o2 isa Ops.ScaledOp
   @test coefficient(2o2) == 2
@@ -58,7 +58,8 @@ using LinearAlgebra
   @test ITensor(2o1 * o1, s) ≈ ITensor(Op([2 0; 0 2], 1), s)
   @test ITensor(o1 * y1, s) ≈ ITensor(Op([im 0; 0 -im], 1), s)
   @test ITensor(y1 * o1, s) ≈ ITensor(Op([-im 0; 0 im], 1), s)
-  @test ITensor(2o1 * o1 + y1, s) ≈ ITensor(2 * [1 0; 0 1] + [0 -im; im 0], s[1]', dag(s[1]))
+  @test ITensor(2o1 * o1 + y1, s) ≈
+    ITensor(2 * [1 0; 0 1] + [0 -im; im 0], s[1]', dag(s[1]))
 
   @test y1'' == y1
 
@@ -66,7 +67,8 @@ using LinearAlgebra
 
   @test ITensor(exp(o1), s) ≈ ITensor(Op(exp([0 1; 1 0]), 1), s)
   @test ITensor(exp(2o1 * o1), s) ≈ ITensor(exp(2 * [1 0; 0 1]), s[1]', dag(s[1]))
-  @test ITensor(exp(2o1 * o1 + y1), s) ≈ ITensor(exp(2 * [1 0; 0 1] + [0 -im; im 0]), s[1]', dag(s[1]))
+  @test ITensor(exp(2o1 * o1 + y1), s) ≈
+    ITensor(exp(2 * [1 0; 0 1] + [0 -im; im 0]), s[1]', dag(s[1]))
 
   @test ITensor(I1, s) ≈ ITensor([1 0; 0 1], s[1]', dag(s[1]))
 
@@ -79,7 +81,7 @@ using LinearAlgebra
   H = Ops.OpSum()
   H -= 2.3, "X", 1, "X", 2
   H += 1.2, "Z", 1
-  H += 1.3, "Z", 2, (θ = π / 3,)
+  H += 1.3, "Z", 2, (θ=π / 3,)
   @test H isa Ops.OpSum
   @test length(H) == 3
   @test coefficient(H[1]) == -2.3
@@ -91,5 +93,5 @@ using LinearAlgebra
   @test coefficient(H[3]) == 1.3
   @test length(H[3]) == 1
   @test Ops.sites(H[3]) == [2]
-  @test Ops.params(H[3]) == (θ = π / 3,)
+  @test Ops.params(H[3]) == (θ=π / 3,)
 end

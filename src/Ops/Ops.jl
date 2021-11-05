@@ -4,7 +4,8 @@ using LinearAlgebra
 using Zeros
 using ..LazyApply
 
-using ..LazyApply: SumOrProd, ∑, Sum, Add, ∏, Prod, Mul, Scaled, ScaledProd, coefficient, Applied
+using ..LazyApply:
+  SumOrProd, ∑, Sum, Add, ∏, Prod, Mul, Scaled, ScaledProd, coefficient, Applied
 
 import ..LazyApply: coefficient, _prod
 
@@ -94,15 +95,21 @@ convert(O::Type{<:SumOp}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:ScaledProdOp}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:SumScaledProdOp}, o::Tuple) = convert(O, Op(o))
 
-convert(O::Type{ScaledProdOp{T}}, o::ScaledOp) where {T} = convert(T, coefficient(o)) * ∏([op(o)])
-convert(O::Type{SumScaledProdOp{T}}, o::ScaledOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
+function convert(O::Type{ScaledProdOp{T}}, o::ScaledOp) where {T}
+  return convert(T, coefficient(o)) * ∏([op(o)])
+end
+function convert(O::Type{SumScaledProdOp{T}}, o::ScaledOp) where {T}
+  return ∑([convert(ScaledProdOp{T}, o)])
+end
 
 convert(O::Type{ScaledProdOp{T}}, o::ProdOp) where {T} = one(T) * o
 convert(O::Type{SumScaledProdOp{T}}, o::ProdOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
 
 convert(O::Type{SumScaledProdOp{T}}, o::SumProdOp) where {T} = one(T) * o
 
-convert(O::Type{SumScaledProdOp{T}}, o::ScaledProdOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
+function convert(O::Type{SumScaledProdOp{T}}, o::ScaledProdOp) where {T}
+  return ∑([convert(ScaledProdOp{T}, o)])
+end
 
 # Versions where the type paramater is left out.
 convert(O::Type{SumScaledProdOp}, o) = convert(SumScaledProdOp{coefficient_type(o)}, o)
@@ -113,12 +120,20 @@ promote_rule(::Type{Op}, O::Type{<:SumOp}) = O
 promote_rule(::Type{Op}, O::Type{<:ScaledProdOp}) = O
 promote_rule(::Type{Op}, O::Type{<:SumScaledProdOp}) = O
 
-promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledOp{S}}) where {T,S} = ScaledOp{promote_type(T, S)}
+function promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledOp{S}}) where {T,S}
+  return ScaledOp{promote_type(T, S)}
+end
 promote_rule(::Type{ScaledOp{T}}, ::Type{ProdOp}) where {T} = ScaledProdOp{T}
-promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S} = ScaledProdOp{promote_type(T, S)}
-promote_rule(::Type{ScaledOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S} = SumScaledProdOp{promote_type(T, S)}
+function promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S}
+  return ScaledProdOp{promote_type(T, S)}
+end
+function promote_rule(::Type{ScaledOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
+  return SumScaledProdOp{promote_type(T, S)}
+end
 
-promote_rule(::Type{ScaledProdOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S} = SumScaledProdOp{promote_type(T, S)}
+function promote_rule(::Type{ScaledProdOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
+  return SumScaledProdOp{promote_type(T, S)}
+end
 
 op(o::Scaled) = o.args[2]
 sites(o::Scaled) = sites(op(o))
@@ -140,7 +155,9 @@ Op(o::Tuple) = Op(o...)
 Op(which_op::WhichOp, sites::Tuple; kwargs...) = Op(which_op, sites, values(kwargs))
 Op(which_op::WhichOp, sites::Int...; kwargs...) = Op(which_op, sites; kwargs...)
 Op(which_op::WhichOp, sites::Vector{Int}; kwargs...) = Op(which_op, Tuple(sites); kwargs...)
-Op(which_op::WhichOp, sites_params::Union{Int,<:NamedTuple}...) = Op(which_op, Base.front(sites_params), last(sites_params))
+function Op(which_op::WhichOp, sites_params::Union{Int,<:NamedTuple}...)
+  return Op(which_op, Base.front(sites_params), last(sites_params))
+end
 Op(α::Number, which_op::WhichOp, args...; kwargs...) = α * Op(which_op, args...; kwargs...)
 function Op(which_op::WhichOp, sites_params::Union{Int,WhichOp,NamedTuple}...)
   ts = split(x -> x isa WhichOp, (which_op, sites_params...))
@@ -169,7 +186,7 @@ function show(io::IO, ::MIME"text/plain", o::Op)
   if !isempty(params(o))
     print(io, ", ", params(o))
   end
-  print(io, ")")
+  return print(io, ")")
 end
 
 function show(io::IO, ::MIME"text/plain", o::ProdOp)
@@ -184,7 +201,7 @@ end
 function show(io::IO, ::MIME"text/plain", o::Union{ScaledOp,ScaledProdOp})
   print(io, "(", coefficient(o), ")")
   print(io, " * ")
-  print(io, op(o))
+  return print(io, op(o))
 end
 
 function show(io::IO, ::MIME"text/plain", o::Union{SumOp,SumProdOp,SumScaledProdOp})

@@ -13,7 +13,7 @@ struct Applied{F,Args}
     return new{F,Args}(f, args)
   end
 end
-Applied(f, args::Tuple) = Applied{typeof(f), typeof(args)}(f, args)
+Applied(f, args::Tuple) = Applied{typeof(f),typeof(args)}(f, args)
 Applied(f, args...) = Applied(f, args)
 
 # TODO: This makes shorthands like `Add(1, 2)` work, but probably
@@ -91,7 +91,8 @@ _mul(arg1, arg2::Number) = Mul(arg2, arg1)
 
 # Scalar multiplication (specialized rules)
 (arg1::Number * arg2::Scaled) = Mul(arg1 * arg2.args[1], arg2.args[2])
-(arg1::Scaled * arg2::Scaled) = Mul(arg1.args[1] * arg2.args[1], arg1.args[2] * arg2.args[2])
+(arg1::Scaled * arg2::Scaled) =
+  Mul(arg1.args[1] * arg2.args[1], arg1.args[2] * arg2.args[2])
 (arg1::Scaled * arg2) = Mul(arg1.args[1], arg1.args[2] * arg2)
 (arg1 * arg2::Scaled) = Mul(arg2.args[1], arg1 * arg2.args[2])
 # Scalars are treated special for the sake of multiplication
@@ -168,7 +169,7 @@ function _print(io::IO, a::AbstractVector, args...)
       print(io, ",\n")
     end
   end
-  print(io, "]")
+  return print(io, "]")
 end
 
 function show(io::IO, m::MIME"text/plain", a::Applied)
@@ -179,7 +180,7 @@ function show(io::IO, m::MIME"text/plain", a::Applied)
       print(io, ", ")
     end
   end
-  print(io, "\n)")
+  return print(io, "\n)")
 end
 show(io::IO, a::Applied) = show(io, MIME("text/plain"), a)
 end
