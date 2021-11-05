@@ -192,6 +192,9 @@ export
   addtags,
   hastags,
 
+  # LazyApply/LazyApply.jl
+  coefficient,
+
   # mps/dmrg.jl
   dmrg,
 
@@ -309,6 +312,10 @@ export
   setcutoff!,
   setnoise!,
   sweepnext,
+
+  # Ops/Ops.jl
+  Ops,
+  Op,
 
   # physics/autompo.jl
   AutoMPO,

@@ -4,6 +4,8 @@ using Zeros
 
 import Base: *, +, -, /, exp, adjoint, show, ==, convert, getindex, length, iterate
 
+export coefficient
+
 struct Applied{F,Args}
   f::F
   args::Args
@@ -63,7 +65,12 @@ Base.convert(::Type{Applied{F,Args}}, arg::Applied{F,Args}) where {F,Args} = arg
 
 # For some reasons this conversion isn't being done automatically.
 function convert(::Type{Applied{F,Args1}}, arg2::Applied{F,Args2}) where {F,Args1,Args2}
-  return Applied{F,Args1}(arg2.f, convert(Args2, arg2.args))
+  return Applied{F,Args1}(arg2.f, convert(Args1, arg2.args))
+end
+
+function try_promote(x::T, y::S) where {T,S}
+  R = promote_type(T, S)
+  return (convert(R, x), convert(R, y))
 end
 
 # Conversion
@@ -88,29 +95,35 @@ _mul(arg1, arg2::Number) = Mul(arg2, arg1)
 Mul(arg1::Number, arg2::Number) = arg1 * arg2
 Mul(arg1::Number, arg2::Scaled) = arg1 * arg2
 Mul(arg1::Scaled, arg2::Number) = arg1 * arg2
-(arg1::Number * arg2::Sum) = Sum(Mul.(arg1, arg2.args...))
+(arg1::Number * arg2::Sum) = Sum(Mul.(arg1, arg2))
 (arg1::Number * arg2::Add) = Add(Mul.(arg1, arg2.args))
 
+# Types should implement `__sum`.
+_sum(arg1, arg2) = __sum(try_promote(arg1, arg2)...)
+
 # Addition (general rules)
-_sum(arg1, arg2) = Sum(vcat(arg1, arg2))
+__sum(arg1, arg2) = Sum(vcat(arg1, arg2))
 (arg1::Applied + arg2::Applied) = _sum(arg1, arg2)
 (arg1::Applied + arg2) = _sum(arg1, arg2)
 (arg1 + arg2::Applied) = _sum(arg1, arg2)
 
 # Subtraction (general rules)
-(arg1::Applied - arg2::Applied) = _sum(arg1, -arg2)
-(arg1::Applied - arg2) = _sum(arg1, -arg2)
-(arg1 - arg2::Applied) = _sum(arg1, -arg2)
+_subtract(arg1, arg2) = _sum(arg1, Mul(-𝟏, arg2))
+(arg1::Applied - arg2::Applied) = _subtract(arg1, arg2)
+(arg1::Applied - arg2) = _subtract(arg1, arg2)
+(arg1 - arg2::Applied) = _subtract(arg1, arg2)
 
 # Addition (specialized rules)
-(arg1::Sum + arg2::Sum) = Sum(vcat(arg1.args..., arg2.args...))
+__sum(arg1::Sum, arg2::Sum) = Sum(vcat(arg1.args..., arg2.args...))
+(arg1::Sum + arg2::Sum) = _sum(arg1, arg2)
 (arg1::Add + arg2::Add) = Add(arg1.args..., arg2.args...)
 
-_sum(arg1::Sum, arg2) = Sum(vcat(arg1.args..., arg2))
+__sum(arg1::Sum, arg2) = Sum(vcat(arg1.args..., arg2))
+__sum(arg1, arg2::Sum) = Sum(vcat(arg1, arg2.args...))
 (arg1::Sum + arg2) = _sum(arg1, arg2)
 (arg1::Sum + arg2::Applied) = _sum(arg1, arg2)
 
-(arg1 + arg2::Sum) = Sum(vcat(arg1, arg2.args...))
+(arg1 + arg2::Sum) = _sum(arg1, arg2)
 (arg1::Add + arg2) = Add(arg1.args..., arg2)
 (arg1 + arg2::Add) = Add(arg1, arg2.args...)
 
@@ -143,34 +156,27 @@ materialize(a::AbstractString) = a
 materialize(a::Vector) = materialize.(a)
 materialize(a::Applied) = a.f(materialize.(a.args)...)
 
-tab(n) = "  " ^ n
-
-function _show(io::IO, a::AbstractArray; layer=1)
-  print(io, tab(layer - 1), "[\n")
-  if !isempty(a)
-    print(io, tab(layer + 1), a[1], "\n")
-    for n in 2:length(a)
-      print(io, tab(layer + 1), a[n], "\n")
+_print(io::IO, args...) = print(io, args...)
+function _print(io::IO, a::AbstractVector, args...)
+  print(io, "[")
+  for n in 1:length(a)
+    _print(io, a[n], args...)
+    if n < length(a)
+      print(io, ",\n")
     end
   end
-  print(io, tab(layer), "]")
+  print(io, "]")
 end
 
-function show(io::IO, m::MIME"text/plain", a::Applied; layer=1)
+function show(io::IO, m::MIME"text/plain", a::Applied)
   print(io, a.f, "(\n")
-  for x in a.args
-    print(io, "  " ^ layer)
-    if x isa Applied
-      show(io, m, x; layer=layer + 1)
-    elseif x isa AbstractArray
-      _show(io, x; layer=layer)
-    else
-      show(io, m, x)
+  for n in 1:length(a.args)
+    _print(io, a.args[n])
+    if n < length(a.args)
+      print(io, ", ")
     end
-    print(io, ",")
-    println(io)
   end
-  print(io, "  " ^ (layer - 1), ")")
+  print(io, "\n)")
 end
 show(io::IO, a::Applied) = show(io, MIME("text/plain"), a)
 end

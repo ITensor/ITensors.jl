@@ -109,6 +109,11 @@ include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
 
 #####################################
+# Ops to ITensor conversions
+#
+include("Ops/ops_itensor.jl")
+
+#####################################
 # MPS/MPO
 #
 include("mps/abstractmps.jl")
@@ -124,6 +129,11 @@ include("mps/projmps.jl")
 include("mps/projmpo_mps.jl")
 include("mps/observer.jl")
 include("mps/dmrg.jl")
+
+#####################################
+# Ops to MPO conversions
+#
+include("Ops/ops_mpo.jl")
 
 #####################################
 # Physics
