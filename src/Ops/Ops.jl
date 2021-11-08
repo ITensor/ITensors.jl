@@ -5,10 +5,9 @@ using LinearAlgebra
 using Zeros
 using ..LazyApply
 
-using ..LazyApply:
-  SumOrProd, ∑, Sum, Add, ∏, Prod, Mul, Scaled, ScaledProd, coefficient, Applied
+using ..LazyApply: ∑, ∏, α, coefficient, Applied
 
-import ..LazyApply: coefficient, _prod
+import ..LazyApply: coefficient
 
 import Base: show, *, /, +, -, Tuple, one, exp, adjoint, promote_rule, convert
 
@@ -16,6 +15,10 @@ export Op, sites, params
 
 # TODO: Add this once merged with ITensors.jl.
 #export OpSum
+
+#####################################################################################
+# General functionality
+#
 
 # Helper function to split a `Tuple` according to the function `f`.
 # For example:
@@ -34,6 +37,26 @@ function split(f, t::Tuple)
   return ti, ts..., tf
 end
 
+#
+# General functionality
+#####################################################################################
+
+#####################################################################################
+# LazyApply extensions
+# TODO: Move to `LazyApply`
+#
+
+# Helper function for determing the cofficient type of an `Op` related type.
+coefficient_type(o::Type) = One
+coefficient_type(o::Type{<:α{<:Any,T}}) where {T} = T
+coefficient_type(o::Type{<:∑{T}}) where {T} = coefficient_type(T)
+
+coefficient_type(o::Applied) = coefficient_type(typeof(o))
+
+#
+# LazyApply extensions
+#####################################################################################
+
 const WhichOp = Union{String,AbstractMatrix,UniformScaling}
 
 struct Op
@@ -45,7 +68,8 @@ which_op(o::Op) = o.which_op
 sites(o::Op) = o.sites
 params(o::Op) = o.params
 op(o::Op) = o
-coefficient(o::Op) = 𝟏
+coefficient_type(o::Op) = One
+coefficient(o::Op) = one(coefficient_type(o))
 
 params(o::Vector{Op}) = params(only(o))
 
@@ -57,69 +81,73 @@ adjoint(o::Op) = Applied(adjoint, o)
 
 Tuple(o::Op) = (which_op(o), sites(o), params(o))
 
-const ScaledOp{T} = Mul{Tuple{T,Op}}
-const ProdOp = Prod{Tuple{Vector{Op}}}
-const SumOp = Sum{Tuple{Vector{Op}}}
-const SumScaledOp{T} = Sum{Tuple{Vector{ScaledOp{T}}}}
-const ScaledProdOp{T} = ScaledProd{T,Tuple{Vector{Op}}}
-const SumProdOp = Sum{Tuple{Vector{ProdOp}}}
-const SumScaledProdOp{T} = Sum{Tuple{Vector{ScaledProdOp{T}}}}
-
-const OpExpr = Union{Op,ScaledOp,ProdOp,SumOp,SumProdOp,ScaledProdOp,SumScaledProdOp}
+const OpExpr = Union{Op,∏{Op},∑{Op},∑{∏{Op}},α{Op},α{∏{Op}},∑{<:α{∏{Op}}}}
 
 # Using `OpSum` for external interface.
-const OpSum{T} = SumScaledProdOp{T}
-
-# Default constructors
-ScaledOp() = ScaledOp{One}()
-ScaledProdOp() = ScaledProdOp{One}()
-SumScaledProdOp() = SumScaledProdOp{One}()
-
-# Helper function for determing the cofficient type of an `Op` related type.
-coefficient_type(o) = One
-coefficient_type(o::ScaledOp{T}) where {T} = T
-coefficient_type(o::ScaledProdOp{T}) where {T} = T
-coefficient_type(o::SumScaledOp{T}) where {T} = T
-coefficient_type(o::SumScaledProdOp{T}) where {T} = T
+const OpSum{T} = ∑{α{∏{Op},T}}
 
 # Type promotion and conversion
-convert(::Type{ScaledOp{T}}, o::Op) where {T} = one(T) * o
-convert(::Type{ProdOp}, o::Op) = ∏([o])
-convert(::Type{SumOp}, o::Op) = ∑([o])
-convert(::Type{ScaledProdOp{T}}, o::Op) where {T} = one(T) * convert(ProdOp, o)
-convert(::Type{SumScaledProdOp{T}}, o::Op) where {T} = ∑([convert(ScaledProdOp{T}, o)])
+convert(::Type{α{Op,T}}, o::Op) where {T} = one(T) * o
+convert(::Type{∏{Op}}, o::Op) = ∏([o])
+convert(::Type{∑{Op}}, o::Op) = ∑([o])
+convert(::Type{α{∏{Op},T}}, o::Op) where {T} = one(T) * convert(∏{Op}, o)
+function convert(::Type{∑{α{∏{Op},T}}}, o::Op) where {T}
+  return ∑([convert(α{∏{Op},T}, o)])
+end
 
 convert(O::Type{<:Op}, o::Tuple) = O(o)
-convert(O::Type{<:ScaledOp}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{<:ProdOp}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{<:SumOp}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{<:ScaledProdOp}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{<:SumScaledProdOp}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{SumScaledProdOp}, o::Tuple) = convert(O, Op(o))
+convert(O::Type{<:α{Op}}, o::Tuple) = convert(O, Op(o))
+convert(O::Type{<:∏{Op}}, o::Tuple) = convert(O, Op(o))
+convert(O::Type{<:∑{Op}}, o::Tuple) = convert(O, Op(o))
+convert(O::Type{<:α{∏{Op}}}, o::Tuple) = convert(O, Op(o))
+convert(O::Type{<:∑{α{∏{Op},T}} where {T}}, o::Tuple) = convert(O, Op(o))
+convert(O::Type{∑{α{∏{Op},T}} where {T}}, o::Tuple) = convert(O, Op(o))
 
-SumScaledProdOp(o::Tuple) = convert(SumScaledProdOp, o)
-SumScaledProdOp(o::Vector{<:Union{OpExpr,Tuple}}) = reduce(+, o; init=SumScaledProdOp())
-SumScaledProdOp(o::WhichOp, args...) = convert(SumScaledProdOp, Op(o, args...))
-SumScaledProdOp(c::Number, o::WhichOp, args...) = convert(SumScaledProdOp, Op(c, o, args...))
+convert(::Type{∑{<:α{∏{Op}}}}, o) = convert(∑{α{∏{Op},T}} where {T}, o)
+∑{<:α{∏{Op}}}(o) = (∑{α{∏{Op},T}} where {T})(o)
 
-function convert(O::Type{ScaledProdOp{T}}, o::ScaledOp) where {T}
+function (∑{α{∏{Op},T}} where {T})(o::OpExpr)
+  return convert(∑{α{∏{Op},T}} where {T}, o)
+end
+function (∑{α{∏{Op},T}} where {T})(o::Tuple)
+  return convert(∑{α{∏{Op},T}} where {T}, o)
+end
+function (∑{α{∏{Op},T}} where {T})(o::Vector{<:Union{OpExpr,Tuple}})
+  return reduce(+, o; init=(∑{α{∏{Op},T}} where {T})())
+end
+function (∑{α{∏{Op},T}} where {T})(o::WhichOp, args...)
+  return convert(∑{α{∏{Op},T}} where {T}, Op(o, args...))
+end
+function (∑{α{∏{Op},T}} where {T})(c::Number, o::WhichOp, args...)
+  return convert(∑{α{∏{Op},T}} where {T}, Op(c, o, args...))
+end
+
+# Default constructors
+(∑{α{∏{S},T}} where {T})() where {S} = ∑{α{∏{S},Zero}}()
+(∑{α{∏{Op},T}} where {T})(o) = convert(∑{α{∏{Op},T}} where {T}, o)
+
+function convert(O::Type{α{∏{Op},T}}, o::α{Op}) where {T}
   return convert(T, coefficient(o)) * ∏([op(o)])
 end
-function convert(O::Type{SumScaledProdOp{T}}, o::ScaledOp) where {T}
-  return ∑([convert(ScaledProdOp{T}, o)])
+function convert(O::Type{∑{α{∏{Op},T}}}, o::α{Op}) where {T}
+  return ∑([convert(α{∏{Op},T}, o)])
 end
 
-convert(O::Type{ScaledProdOp{T}}, o::ProdOp) where {T} = one(T) * o
-convert(O::Type{SumScaledProdOp{T}}, o::ProdOp) where {T} = ∑([convert(ScaledProdOp{T}, o)])
+convert(O::Type{∑{∏{Op}}}, o::∏{Op}) = ∑([o])
+convert(O::Type{α{∏{Op},T}}, o::∏{Op}) where {T} = one(T) * o
+function convert(O::Type{∑{α{∏{Op},T}}}, o::∏{Op}) where {T}
+  return ∑([convert(α{∏{Op},T}, o)])
+end
+convert(O::Type{∑{α{∏{Op},T}}}, o::∑{∏{Op}}) where {T} = one(T) * o
 
-convert(O::Type{SumScaledProdOp{T}}, o::SumProdOp) where {T} = one(T) * o
-
-function convert(O::Type{SumScaledProdOp{T}}, o::ScaledProdOp) where {T}
-  return ∑([convert(ScaledProdOp{T}, o)])
+function convert(O::Type{∑{α{∏{Op},T}}}, o::α{∏{Op}}) where {T}
+  return ∑([convert(α{∏{Op},T}, o)])
 end
 
 # Versions where the type paramater is left out.
-convert(O::Type{SumScaledProdOp}, o) = convert(SumScaledProdOp{coefficient_type(o)}, o)
+function convert(O::Type{∑{α{∏{Op},T}} where {T}}, o)
+  return convert(∑{α{∏{Op},coefficient_type(o)}}, o)
+end
 
 #
 # Promotion rules.
@@ -129,93 +157,107 @@ convert(O::Type{SumScaledProdOp}, o) = convert(SumScaledProdOp{coefficient_type(
 # Should cover promotions between these types:
 #
 # Op
-# ScaledOp{T}
-# ProdOp
-# SumOp
-# SumScaledOp{T}
-# ScaledProdOp{T}
-# SumProdOp
-# SumScaledProdOp{T}
+# α{Op,T}
+# ∏{Op}
+# ∑{Op}
+# ∑{α{Op,T}}
+# α{∏{Op},T}}
+# ∑{∏{Op}}
+# ∑{α{∏{Op},T}}
 #
 
 # Conversion of `Op`
-promote_rule(::Type{Op}, O::Type{<:ScaledOp}) = O
-promote_rule(::Type{Op}, O::Type{<:ProdOp}) = O
-promote_rule(::Type{Op}, O::Type{<:SumOp}) = O
-promote_rule(::Type{Op}, O::Type{<:SumScaledOp}) = O
-promote_rule(::Type{Op}, O::Type{<:ScaledProdOp}) = O
-promote_rule(::Type{Op}, O::Type{<:SumProdOp}) = O
-promote_rule(::Type{Op}, O::Type{<:SumScaledProdOp}) = O
+promote_rule(::Type{Op}, O::Type{<:α{Op}}) = O
+promote_rule(::Type{Op}, O::Type{<:∏{Op}}) = O
+promote_rule(::Type{Op}, O::Type{<:∑{Op}}) = O
+promote_rule(::Type{Op}, O::Type{<:∑{α{Op}}}) = O
+promote_rule(::Type{Op}, O::Type{<:α{∏{Op}}}) = O
+promote_rule(::Type{Op}, O::Type{<:∑{∏{Op}}}) = O
+promote_rule(::Type{Op}, O::Type{<:∑{α{∏{Op}}}}) = O
 
-# Conversion of `ScaledOp`
-function promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledOp{S}}) where {T,S}
-  return ScaledOp{promote_type(T, S)}
+# Conversion of `α{Op}`
+function promote_rule(::Type{α{Op,T}}, ::Type{α{Op,S}}) where {T,S}
+  return α{Op,promote_type(T, S)}
 end
-promote_rule(::Type{ScaledOp{T}}, ::Type{ProdOp}) where {T} = ScaledProdOp{T}
-promote_rule(::Type{ScaledOp{T}}, ::Type{SumOp}) where {T} = SumScaledOp{T}
-function promote_rule(::Type{ScaledOp{T}}, ::Type{SumScaledOp{S}}) where {T,S}
-  return SumScaledOp{promote_type(T, S)}
+promote_rule(::Type{α{Op,T}}, ::Type{∏{Op}}) where {T} = α{∏{Op},T}
+promote_rule(::Type{α{Op,T}}, ::Type{∑{Op}}) where {T} = ∑{α{Op,T}}
+function promote_rule(::Type{α{Op,T}}, ::Type{∑{α{Op,S}}}) where {T,S}
+  return ∑{α{Op,promote_type(T, S)}}
 end
-function promote_rule(::Type{ScaledOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S}
-  return ScaledProdOp{promote_type(T, S)}
+function promote_rule(::Type{α{Op,T}}, ::Type{α{∏{Op},S}}) where {T,S}
+  return α{∏{Op},promote_type(T, S)}
 end
-function promote_rule(::Type{ScaledOp{T}}, ::Type{SumProdOp}) where {T}
-  return SumScaledProdOp{T}
+function promote_rule(::Type{α{Op,T}}, ::Type{∑{∏{Op}}}) where {T}
+  return ∑{α{∏{Op},T}}
 end
-function promote_rule(::Type{ScaledOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
-  return SumScaledProdOp{promote_type(T, S)}
-end
-
-# Conversion of `ProdOp`
-promote_rule(::Type{ProdOp}, ::Type{SumOp}) = SumProdOp
-promote_rule(::Type{ProdOp}, ::Type{SumScaledOp{S}}) where {S} = SumScaledProdOp{S}
-promote_rule(::Type{ProdOp}, ::Type{ScaledProdOp{S}}) where {S} = ScaledProdOp{S}
-promote_rule(::Type{ProdOp}, ::Type{SumProdOp}) = SumProdOp
-promote_rule(::Type{ProdOp}, ::Type{SumScaledProdOp{S}}) where {S} = SumScaledProdOp{S}
-
-# Conversion of `SumOp`
-promote_rule(::Type{SumOp}, ::Type{SumScaledOp{S}}) where {S} = SumScaledOp{S}
-promote_rule(::Type{SumOp}, ::Type{ScaledProdOp{S}}) where {S} = SumScaledProdOp{S}
-promote_rule(::Type{SumOp}, ::Type{SumProdOp}) = SumProdOp
-promote_rule(::Type{SumOp}, ::Type{SumScaledProdOp{S}}) where {S} = SumScaledProdOp{S}
-
-# Conversion of `SumScaledOp`
-function promote_rule(::Type{SumScaledOp{T}}, ::Type{SumScaledOp{S}}) where {T,S}
-  return SumScaledOp{promote_type(T, S)}
-end
-function promote_rule(::Type{SumScaledOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S}
-  return SumScaledProdOp{promote_type(T, S)}
-end
-promote_rule(::Type{SumScaledOp{T}}, ::Type{SumProdOp}) where {T} = SumScaledProdOp{T}
-function promote_rule(::Type{SumScaledOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
-  return SumScaledProdOp{promote_type(T, S)}
+function promote_rule(::Type{α{Op,T}}, ::Type{∑{α{∏{Op},S}}}) where {T,S}
+  return ∑{α{∏{Op},promote_type(T, S)}}
 end
 
-# Conversion of `ScaledProdOp`
-function promote_rule(::Type{ScaledProdOp{T}}, ::Type{ScaledProdOp{S}}) where {T,S}
-  return ScaledProdOp{promote_type(T, S)}
+# Conversion of `∏{Op}`
+promote_rule(::Type{∏{Op}}, ::Type{∑{Op}}) = ∑{∏{Op}}
+function promote_rule(::Type{∏{Op}}, ::Type{∑{α{Op,S}}}) where {S}
+  return ∑{α{∏{Op},S}}
 end
-promote_rule(::Type{ScaledProdOp{T}}, ::Type{SumProdOp}) where {T} = SumScaledProdOp{T}
-function promote_rule(::Type{ScaledProdOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
-  return SumScaledProdOp{promote_type(T, S)}
-end
-
-# Conversion of `SumProdOp`
-promote_rule(::Type{SumProdOp}, ::Type{SumScaledProdOp{S}}) where {S} = SumScaledProdOp{S}
-
-# Conversion of `SumScaledProdOp`
-function promote_rule(::Type{SumScaledProdOp{T}}, ::Type{SumScaledProdOp{S}}) where {T,S}
-  return SumScaledProdOp{promote_type(T, S)}
+promote_rule(::Type{∏{Op}}, ::Type{α{∏{Op},S}}) where {S} = α{∏{Op},S}
+promote_rule(::Type{∏{Op}}, ::Type{∑{∏{Op}}}) = ∑{∏{Op}}
+function promote_rule(::Type{∏{Op}}, ::Type{∑{α{∏{Op},S}}}) where {S}
+  return ∑{α{∏{Op},S}}
 end
 
-op(o::Scaled) = o.args[2]
-sites(o::Scaled) = sites(op(o))
+# Conversion of `∑{Op}`
+promote_rule(::Type{∑{Op}}, ::Type{∑{α{Op,S}}}) where {S} = ∑{α{Op,S}}
+function promote_rule(::Type{∑{Op}}, ::Type{α{∏{Op},S}}) where {S}
+  return ∑{α{∏{Op},S}}
+end
+promote_rule(::Type{∑{Op}}, ::Type{∑{∏{Op}}}) = ∑{∏{Op}}
+function promote_rule(::Type{∑{Op}}, ::Type{∑{α{∏{Op},S}}}) where {S}
+  return ∑{α{∏{Op},S}}
+end
 
-which_op(o::ScaledOp) = which_op(op(o))
-params(o::ScaledOp) = params(op(o))
-one(o::ScaledOp) = one(coefficient(o))
+# Conversion of `∑{α{Op,T}}`
+function promote_rule(::Type{∑{α{Op,T}}}, ::Type{∑{α{Op,S}}}) where {T,S}
+  return ∑{α{Op,promote_type(T, S)}}
+end
+function promote_rule(::Type{∑{α{Op,T}}}, ::Type{α{∏{Op},S}}) where {T,S}
+  return ∑{α{∏{Op},promote_type(T, S)}}
+end
+function promote_rule(::Type{∑{α{Op,T}}}, ::Type{∑{∏{Op}}}) where {T}
+  return ∑{α{∏{Op},T}}
+end
+function promote_rule(::Type{∑{α{Op,T}}}, ::Type{∑{α{∏{Op},S}}}) where {T,S}
+  return ∑{α{∏{Op},promote_type(T, S)}}
+end
 
-sites(o::SumOrProd) = unique(Iterators.flatten(Iterators.map(sites, o)))
+# Conversion of `α{∏{Op},T}`
+function promote_rule(::Type{α{∏{Op},T}}, ::Type{α{∏{Op},S}}) where {T,S}
+  return α{∏{Op},promote_type(T, S)}
+end
+function promote_rule(::Type{α{∏{Op},T}}, ::Type{∑{∏{Op}}}) where {T}
+  return ∑{α{∏{Op},T}}
+end
+function promote_rule(::Type{α{∏{Op},T}}, ::Type{∑{α{∏{Op},S}}}) where {T,S}
+  return ∑{α{∏{Op},promote_type(T, S)}}
+end
+
+# Conversion of `∑{∏{Op}}`
+function promote_rule(::Type{∑{∏{Op}}}, ::Type{∑{α{∏{Op},S}}}) where {S}
+  return ∑{α{∏{Op},S}}
+end
+
+# Conversion of `∑{α{∏{Op},T}}`
+function promote_rule(::Type{∑{α{∏{Op},T}}}, ::Type{∑{α{∏{Op},S}}}) where {T,S}
+  return ∑{α{∏{Op},promote_type(T, S)}}
+end
+
+op(o::α) = o.args[2]
+sites(o::α) = sites(op(o))
+
+which_op(o::α{Op}) = which_op(op(o))
+params(o::α{Op}) = params(op(o))
+one(o::α{Op}) = one(coefficient(o))
+
+sites(o::Union{∑,∏}) = unique(Iterators.flatten(Iterators.map(sites, o)))
 
 # General definition for single-tensor operations like `exp` or `adjoint`.
 # F: exp, adjoint, etc.
@@ -239,7 +281,7 @@ function Op(which_op::WhichOp, sites_params::Union{Int,WhichOp,NamedTuple}...)
 end
 
 # Lazy operations with Op
-(arg1::Number * arg2::Op) = Mul(arg1, arg2)
+(arg1::Number * arg2::Op) = α(arg1, arg2)
 (arg1::Op / arg2::Number) = inv(arg2) * arg1
 (arg1::Op * arg2::Op) = ∏([arg1, arg2])
 (arg1::Op + arg2::Op) = ∑([arg1, arg2])
@@ -270,7 +312,7 @@ function show(io::IO, ::MIME"text/plain", o::Op)
   return print(io, ")")
 end
 
-function show(io::IO, ::MIME"text/plain", o::ProdOp)
+function show(io::IO, ::MIME"text/plain", o::∏{Op})
   for n in 1:length(o)
     print(io, o[n])
     if n < length(o)
@@ -287,15 +329,13 @@ function print_coefficient(io::IO, o::Complex)
   return print(io, "(", o, ")")
 end
 
-function show(io::IO, ::MIME"text/plain", o::Union{ScaledOp,ScaledProdOp})
+function show(io::IO, ::MIME"text/plain", o::Union{α{Op},α{∏{Op}}})
   print_coefficient(io, coefficient(o))
   print(io, " ")
   return print(io, op(o))
 end
 
-function show(
-  io::IO, ::MIME"text/plain", o::Union{SumOp,SumScaledOp,SumProdOp,SumScaledProdOp}
-)
+function show(io::IO, ::MIME"text/plain", o::Union{∑{Op},∑{<:α{Op}},∑{∏{Op}},∑{<:α{∏{Op}}}})
   for n in 1:length(o)
     print(io, o[n])
     if n < length(o)

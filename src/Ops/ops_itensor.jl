@@ -1,5 +1,3 @@
-using .LazyApply: ∑, ∏, Scaled, Applied
-
 function itensor(I::UniformScaling, is...)
   return ITensor(I, is...)
 end
@@ -53,7 +51,7 @@ function Matrix(o::∏, s::Vector{<:Index})
   return error("Not implemented")
 end
 
-function Matrix(o::Scaled, s::Vector{<:Index})
+function Matrix(o::α, s::Vector{<:Index})
   return coefficient(o) * Matrix(Ops.op(o), s)
 end
 

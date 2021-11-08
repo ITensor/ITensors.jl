@@ -2,6 +2,8 @@ using Test
 using ITensors
 using LinearAlgebra
 
+using ITensors.Ops: α, ∏, ∑, expand
+
 @testset "Ops" begin
   o1 = Op("X", 1)
   I1 = Op(I, 1)
@@ -10,21 +12,22 @@ using LinearAlgebra
   o3 = Op("CX", 1, 2)
   o4 = Op("Ry", 4, (θ=π / 3,))
 
-  @test 2o2 isa Ops.ScaledOp
+  @test 2o2 isa α{Op}
   @test coefficient(2o2) == 2
-  @test o2 / 2 isa Ops.ScaledOp
+  @test o2 / 2 isa α{Op}
   @test coefficient(o2 / 2) ≈ 0.5
-  @test -o2 isa Ops.ScaledOp
-  @test 1o2 + o1 isa Ops.SumScaledOp
-  @test o1 * o2 isa Ops.ProdOp
-  @test 2o1 * o2 isa Ops.ScaledProdOp
-  @test o1 * o2 + o3 isa Ops.SumProdOp
-  @test o1 * o2 + o1 * o3 isa Ops.SumProdOp
-  @test o1 * o2 + 2o3 isa Ops.SumScaledProdOp
-  @test o1 * o2 - o3 isa Ops.SumScaledProdOp
-  @test 2o1 * o2 + 2o3 isa Ops.SumScaledProdOp
-  @test 2o1 * o2 - 2o3 isa Ops.SumScaledProdOp
-  @test (2o1 * o2 - 2o3) / 3 isa Ops.SumScaledProdOp
+  @test -o2 isa α{Op}
+  @test 1o2 + o1 isa ∑{<:α{Op}}
+  @test 1o2 + o1 isa ∑{α{Op,Int}}
+  @test o1 * o2 isa ∏{Op}
+  @test 2o1 * o2 isa α{∏{Op}}
+  @test o1 * o2 + o3 isa ∑{∏{Op}}
+  @test o1 * o2 + o1 * o3 isa ∑{∏{Op}}
+  @test o1 * o2 + 2o3 isa ∑{<:α{∏{Op}}}
+  @test o1 * o2 - o3 isa ∑{<:α{∏{Op}}}
+  @test 2o1 * o2 + 2o3 isa ∑{<:α{∏{Op}}}
+  @test 2o1 * o2 - 2o3 isa ∑{<:α{∏{Op}}}
+  @test (2o1 * o2 - 2o3) / 3 isa ∑{<:α{∏{Op}}}
 
   o = (2o1 * o2 - 2o3) / 3
   @test coefficient(o[1]) ≈ 2 / 3
@@ -72,6 +75,11 @@ using LinearAlgebra
 
   @test ITensor(I1, s) ≈ ITensor([1 0; 0 1], s[1]', dag(s[1]))
 
+  @test exp(Op("X", 1)) * Op("Y", 2) isa ∏{Any}
+  @test ITensor(exp(Op("X", 1)) * Op("Y", 1), s) ≈
+    product(exp(ITensor(Op("X", 1), s)), ITensor(Op("Y", 1), s))
+  @test 2exp(Op("X", 1)) * Op("Y", 2) isa α{∏{Any}}
+
   H = Ops.OpSum() - Op("X", 1)
   @test H isa Ops.OpSum
   @test length(H) == 1
@@ -100,4 +108,28 @@ using LinearAlgebra
   @test Ops.OpSum("X", 1) isa Ops.OpSum
   @test Ops.OpSum(2, "X", 1) isa Ops.OpSum
   @test Ops.OpSum([Op("X", 1), 2Op("Y", 1)]) isa Ops.OpSum
+
+  @testset "Expand expression, 2 products" begin
+    expr = (Op("X", 1) + Op("Y", 2)) * (Op("Z", 1) + Op("W", 2))
+    expr_expanded =
+      Op("X", 1) * Op("Z", 1) +
+      Op("Y", 2) * Op("Z", 1) +
+      Op("X", 1) * Op("W", 2) +
+      Op("Y", 2) * Op("W", 2)
+    @test expand(expr) == expr_expanded
+  end
+
+  @testset "Expand expression, 3 products" begin
+    expr = (Op("X", 1) + Op("Y", 2)) * (Op("Z", 1) + Op("W", 2)) * (Op("A", 1) + Op("B", 2))
+    expr_expanded =
+      Op("X", 1) * Op("Z", 1) * Op("A", 1) +
+      Op("Y", 2) * Op("Z", 1) * Op("A", 1) +
+      Op("X", 1) * Op("W", 2) * Op("A", 1) +
+      Op("Y", 2) * Op("W", 2) * Op("A", 1) +
+      Op("X", 1) * Op("Z", 1) * Op("B", 2) +
+      Op("Y", 2) * Op("Z", 1) * Op("B", 2) +
+      Op("X", 1) * Op("W", 2) * Op("B", 2) +
+      Op("Y", 2) * Op("W", 2) * Op("B", 2)
+    @test expand(expr) == expr_expanded
+  end
 end

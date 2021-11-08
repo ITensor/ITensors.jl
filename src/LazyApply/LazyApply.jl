@@ -3,9 +3,10 @@ module LazyApply
 using Compat
 using Zeros
 
-import Base: *, +, -, /, exp, adjoint, show, ==, convert, getindex, length, iterate
+import Base:
+  *, +, -, /, exp, adjoint, show, ==, convert, getindex, length, iterate, lastindex
 
-export coefficient
+export coefficient, expand, Sum, Prod, coefficient
 
 struct Applied{F,Args}
   f::F
@@ -24,6 +25,21 @@ Applied{F,Args}(args...) where {F,Args} = Applied{F,Args}(args)
 Applied{F}(args::Tuple) where {F} = Applied{F,typeof(args)}(args)
 Applied{F}(args...) where {F} = Applied{F}(args)
 
+# For `Scaled(3.2, "X")`
+(Applied{F,Tuple{A,B}} where {A,B})(args::Tuple) where {F} = Applied{F}(args)
+(Applied{F,Tuple{A,B}} where {A,B})(args...) where {F} = Applied{F}(args)
+
+# For `Scaled{ComplexF64}(3.2, "X")`
+function (Applied{F,Tuple{A,B}} where {A})(args::Tuple{Arg1,Arg2}) where {F,B,Arg1,Arg2}
+  return Applied{F,Tuple{Arg1,B}}(args)
+end
+function (Applied{F,Tuple{A,B}} where {A})(args...) where {F,B}
+  return (Applied{F,Tuple{A,B}} where {A})(args)
+end
+
+# For `Sum([1, 2, 3])` and `Prod([1, 2, 3])`
+(Applied{F,Tuple{Vector{T}}} where {T})(args::Vector) where {F} = Applied{F}((args,))
+
 _empty(::Type{T}) where {T} = error("_empty not implemented for type $T.")
 _empty(::Type{Tuple{T}}) where {T} = (_empty(T),)
 _empty(::Type{Vector{T}}) where {T} = Vector{T}()
@@ -32,30 +48,42 @@ function Applied{F,Args}() where {F,Args}
   return Applied{F,Args}(_empty(Args))
 end
 
+_initialvalue_type(::Type{typeof(+)}) = Zero
+_initialvalue_type(::Type{typeof(sum)}) = Zero
+_initialvalue_type(::Type{typeof(*)}) = One
+_initialvalue_type(::Type{typeof(prod)}) = One
+
+# For `Sum() == Sum{Zero}()` and `Prod() == Prod{One}()`
+function (Applied{F,Tuple{Vector{T}}} where {T})() where {F}
+  return Applied{F,Tuple{Vector{_initialvalue_type(F)}}}()
+end
+
 function (arg1::Applied == arg2::Applied)
   return (arg1.f == arg2.f) && (arg1.args == arg2.args)
 end
 
 # Shorthands
-const Scaled{A,B} = Applied{typeof(*),Tuple{A,B}} where {A<:Number}
 const Add{T} = Applied{typeof(+),T}
-const Sum{T} = Applied{typeof(sum),T}
-const Prod{T} = Applied{typeof(prod),T}
-# TODO: Why does the order of the type parameters need to be switched?
-const ScaledProd{A,T} = Scaled{Prod{T},A}
 const Mul{T} = Applied{typeof(*),T}
+# By default, `A` is the scalar, but the type constraint isn't
+# working for some reason.
+# A scaled operator scaled by a `Float64` of type `Scaled{Op,Float64}`.
+# A scaled operator with an unspecified scalar type is of type `Scaled{Op}`.
+const Scaled{B,A} = Applied{typeof(*),Tuple{A,B}}
+const Sum{T} = Applied{typeof(sum),Tuple{Vector{T}}}
+const Prod{T} = Applied{typeof(prod),Tuple{Vector{T}}}
 const ∑ = Sum
 const ∏ = Prod
+const α = Scaled
 
-const Exp{T} = Applied{typeof(exp),T}
+const Exp{T} = Applied{typeof(exp),Tuple{T}}
 
 coefficient(arg::Applied) = 𝟏
 
-const SumOrProd{T} = Union{Sum{T},Prod{T}}
-
-length(arg::SumOrProd) = length(arg.args...)
-getindex(arg::SumOrProd, n) = getindex(arg.args..., n)
-iterate(arg::SumOrProd, args...) = iterate(arg.args..., args...)
+length(arg::Union{Sum,Prod}) = length(arg.args...)
+lastindex(arg::Union{Sum,Prod}) = length(arg)
+getindex(arg::Union{Sum,Prod}, n) = getindex(arg.args..., n)
+iterate(arg::Union{Sum,Prod}, args...) = iterate(arg.args..., args...)
 
 length(arg::Scaled) = length(arg.args[2])
 getindex(arg::Scaled, n) = getindex(arg.args[2], n)
@@ -69,6 +97,8 @@ function convert(::Type{Applied{F,Args1}}, arg2::Applied{F,Args2}) where {F,Args
   return Applied{F,Args1}(arg2.f, convert(Args1, arg2.args))
 end
 
+# Just like `Base.promote`, but this doesn't error if
+# a conversion doesn't happen.
 function try_promote(x::T, y::S) where {T,S}
   R = promote_type(T, S)
   return (convert(R, x), convert(R, y))
@@ -76,6 +106,7 @@ end
 
 # Conversion
 Sum(arg::Add) = Sum(collect(arg.args))
+Sum(arg::Sum) = arg
 
 # Scalar multiplication (general rules)
 _mul(arg1::Number, arg2) = Mul(arg1, arg2)
@@ -139,6 +170,8 @@ __sum(arg1, arg2::Sum) = Sum(vcat(arg1, arg2.args...))
 (arg1::Prod * arg2::Prod) = Prod(vcat(arg1.args..., arg2.args...))
 (arg1::Sum * arg2::Sum) = Prod([arg1, arg2])
 
+_prod(arg1::Prod{One}, arg2) = Prod(vcat(arg2))
+_prod(arg1::Prod{One}, arg2::Vector) = Prod(arg2)
 _prod(arg1::Prod, arg2) = Prod(vcat(arg1.args..., arg2))
 (arg1::Prod * arg2) = _prod(arg1, arg2)
 (arg1::Prod * arg2::Applied) = _prod(arg1, arg2)
@@ -146,6 +179,10 @@ _prod(arg1::Prod, arg2) = Prod(vcat(arg1.args..., arg2))
 _prod(arg1, arg2::Prod) = Prod(vcat(arg1, arg2...))
 (arg1 * arg2::Prod) = _prod(arg1, arg2)
 (arg1::Applied * arg2::Prod) = _prod(arg1, arg2)
+
+# Generically make products
+(arg1::Applied * arg2) = Prod(vcat(arg1, arg2))
+(arg1 * arg2::Applied) = Prod(vcat(arg1, arg2))
 
 # Other lazy operations
 exp(arg::Applied) = Applied(exp, arg)
@@ -160,6 +197,20 @@ materialize(a::Number) = a
 materialize(a::AbstractString) = a
 materialize(a::Vector) = materialize.(a)
 materialize(a::Applied) = a.f(materialize.(a.args)...)
+
+function _expand(a1::Sum, a2::Sum)
+  return ∑(vec([a1[i] * a2[j] for i in 1:length(a1), j in 1:length(a2)]))
+end
+
+# Expression manipulation
+function expand(a::Prod{<:Sum})
+  if length(a) == 1
+    return a[1]
+  elseif length(a) ≥ 2
+    a12 = _expand(a[1], a[2])
+    return expand(∏(vcat(a12, a[3:end])))
+  end
+end
 
 _print(io::IO, args...) = print(io, args...)
 function _print(io::IO, a::AbstractVector, args...)

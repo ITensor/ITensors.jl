@@ -2,19 +2,19 @@ function SiteOp(o::Op)
   return SiteOp(Ops.which_op(o), Ops.sites(o), Ops.params(o))
 end
 
-function MPOTerm(o::Ops.ScaledProdOp)
+function MPOTerm(o::Scaled{Prod{Op}})
   return MPOTerm(coefficient(o), [SiteOp(oₙ) for oₙ in o])
 end
 
-function OpSum(o::Ops.OpSum)
+function OpSum(o::Sum{<:Scaled{Prod{Op}}})
   return OpSum([MPOTerm(oₙ) for oₙ in o])
 end
 
-function MPO(o::Ops.OpSum, s::Vector{<:Index}; kwargs...)
-  return MPO(OpSum(o), s; kwargs...)
+function OpSum(o::Union{Op,Applied})
+  return OpSum(Sum{<:Scaled{Prod{Op}}}(o))
 end
 
 # Conversions from other formats
 function MPO(o::Union{Op,Applied}, s::Vector{<:Index}; kwargs...)
-  return MPO(convert(Ops.SumScaledProdOp, o), s; kwargs...)
+  return MPO(OpSum(o), s; kwargs...)
 end
