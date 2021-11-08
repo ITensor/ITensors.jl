@@ -4,6 +4,16 @@ using LinearAlgebra
 
 using ITensors.Ops: α, ∏, ∑, expand
 
+function heisenberg(N)
+  os = Ops.OpSum()
+  for j in 1:(N - 1)
+    os += "Sz", j, "Sz", j + 1
+    os += 0.5, "S+", j, "S-", j + 1
+    os += 0.5, "S-", j, "S+", j + 1
+  end
+  return os
+end
+
 @testset "Ops" begin
   o1 = Op("X", 1)
   I1 = Op(I, 1)
@@ -132,4 +142,10 @@ using ITensors.Ops: α, ∏, ∑, expand
       Op("Y", 2) * Op("W", 2) * Op("B", 2)
     @test expand(expr) == expr_expanded
   end
+
+  H = heisenberg(4)
+  @test length(H) == 9
+  @test H ^ 2 == H * H
+  @test length(H ^ 2) == 2
+  @test length(expand(H ^ 2)) == 81
 end

@@ -4,7 +4,7 @@ using Compat
 using Zeros
 
 import Base:
-  *, +, -, /, exp, adjoint, show, ==, convert, getindex, length, iterate, lastindex
+  *, ^, +, -, /, exp, adjoint, show, ==, convert, getindex, length, iterate, lastindex
 
 export coefficient, expand, Sum, Prod, coefficient
 
@@ -183,6 +183,14 @@ _prod(arg1, arg2::Prod) = Prod(vcat(arg1, arg2...))
 # Generically make products
 (arg1::Applied * arg2) = Prod(vcat(arg1, arg2))
 (arg1 * arg2::Applied) = Prod(vcat(arg1, arg2))
+
+function (arg1::Applied ^ arg2::Integer)
+  res = ∏()
+  for n in 1:arg2
+    res *= arg1
+  end
+  return res
+end
 
 # Other lazy operations
 exp(arg::Applied) = Applied(exp, arg)
