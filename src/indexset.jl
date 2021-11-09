@@ -856,7 +856,16 @@ ITensors.block(is, 1, 2) == (1,1)
 """
 block(inds::Indices, vals::Integer...) = blockindex(inds, vals...)[2]
 
-#show(io::IO, is::IndexSet) = show(io, MIME"text/plain"(), is)
+function show(io::IO, mime::MIME"text/plain", is::Indices)
+  for i in is
+    println(io, i)
+  end
+end
+
+function show(io::IO, is::Indices)
+  !isempty(is) && println(io)
+  return show(io, MIME"text/plain"(), is)
+end
 
 #
 # Read and write
