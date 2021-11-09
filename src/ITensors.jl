@@ -21,6 +21,7 @@ using Random
 using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
+using Zeros
 
 #####################################
 # NDTensors
@@ -151,6 +152,11 @@ include("physics/autompo.jl")
 # Ops to MPO conversions
 #
 include("Ops/ops_mpo.jl")
+
+#####################################
+# Trotter-Suzuki decomposition
+#
+include("Ops/trotter.jl")
 
 #####################################
 # ITensorChainRules

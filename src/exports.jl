@@ -194,6 +194,9 @@ export
 
   # LazyApply/LazyApply.jl
   coefficient,
+  Scaled,
+  Sum,
+  Prod,
 
   # mps/dmrg.jl
   dmrg,
@@ -316,6 +319,9 @@ export
   # Ops/Ops.jl
   Ops,
   Op,
+
+  # Ops/trotter.jl
+  Trotter,
 
   # physics/autompo.jl
   AutoMPO,

@@ -2,16 +2,16 @@ function SiteOp(o::Op)
   return SiteOp(Ops.which_op(o), Ops.sites(o), Ops.params(o))
 end
 
-function MPOTerm(o::Scaled{Prod{Op}})
+function MPOTerm(o::α{∏{Op}})
   return MPOTerm(coefficient(o), [SiteOp(oₙ) for oₙ in o])
 end
 
-function OpSum(o::Sum{<:Scaled{Prod{Op}}})
+function OpSum(o::∑{<:α{∏{Op}}})
   return OpSum([MPOTerm(oₙ) for oₙ in o])
 end
 
 function OpSum(o::Union{Op,Applied})
-  return OpSum(Sum{<:Scaled{Prod{Op}}}(o))
+  return OpSum(∑{<:α{∏{Op}}}(o))
 end
 
 # Conversions from other formats

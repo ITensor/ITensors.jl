@@ -658,7 +658,7 @@ function onehot(ivs::Pair{<:Index}...)
   A[val.(ivs)...] = 1.0
   return A
 end
-
+onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
 """

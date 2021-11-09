@@ -4,7 +4,7 @@ using Compat
 using Zeros
 
 import Base:
-  *, ^, +, -, /, exp, adjoint, show, ==, convert, getindex, length, iterate, lastindex
+  *, ^, +, -, /, exp, adjoint, reverse, show, ==, convert, getindex, length, iterate, lastindex
 
 export coefficient, expand, Sum, Prod, coefficient
 
@@ -199,6 +199,9 @@ exp(arg::Applied) = Applied(exp, arg)
 adjoint(arg::Applied) = Applied(adjoint, arg)
 adjoint(arg::Applied{typeof(adjoint)}) = only(arg.args)
 adjoint(arg::Prod) = ∏(reverse(adjoint.(arg)))
+
+# reverse
+reverse(arg::Prod) = Prod(reverse(arg.args...))
 
 # Materialize
 materialize(a::Number) = a

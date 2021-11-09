@@ -13,9 +13,6 @@ import Base: show, *, /, +, -, Tuple, one, exp, adjoint, promote_rule, convert
 
 export Op, sites, params
 
-# TODO: Add this once merged with ITensors.jl.
-#export OpSum
-
 #####################################################################################
 # General functionality
 #
@@ -81,10 +78,7 @@ adjoint(o::Op) = Applied(adjoint, o)
 
 Tuple(o::Op) = (which_op(o), sites(o), params(o))
 
-const OpExpr = Union{Op,∏{Op},∑{Op},∑{∏{Op}},α{Op},α{∏{Op}},∑{<:α{∏{Op}}}}
-
-# Using `OpSum` for external interface.
-const OpSum{T} = ∑{α{∏{Op},T}}
+const OpExpr = Union{Op,∑{Op},α{Op},∑{<:α{Op}},∏{Op},∑{∏{Op}},α{∏{Op}},∑{<:α{∏{Op}}}}
 
 # Type promotion and conversion
 convert(::Type{α{Op,T}}, o::Op) where {T} = one(T) * o
@@ -105,6 +99,7 @@ convert(O::Type{∑{α{∏{Op},T}} where {T}}, o::Tuple) = convert(O, Op(o))
 
 convert(::Type{∑{<:α{∏{Op}}}}, o) = convert(∑{α{∏{Op},T}} where {T}, o)
 ∑{<:α{∏{Op}}}(o) = (∑{α{∏{Op},T}} where {T})(o)
+∑{<:α{∏{Op}}}() = (∑{α{∏{Op},T}} where {T})()
 
 function (∑{α{∏{Op},T}} where {T})(o::OpExpr)
   return convert(∑{α{∏{Op},T}} where {T}, o)
@@ -129,8 +124,8 @@ end
 function convert(O::Type{α{∏{Op},T}}, o::α{Op}) where {T}
   return convert(T, coefficient(o)) * ∏([op(o)])
 end
-function convert(O::Type{∑{α{∏{Op},T}}}, o::α{Op}) where {T}
-  return ∑([convert(α{∏{Op},T}, o)])
+function convert(O::Type{∑{T}}, o::α{Op}) where {T <: Union{α{Op},α{∏{Op}}}}
+  return ∑([convert(T, o)])
 end
 
 convert(O::Type{∑{∏{Op}}}, o::∏{Op}) = ∑([o])
@@ -266,6 +261,9 @@ sites(o::Applied{F}) where {F} = sites(op(o))
 which_op(o::Applied{F}) where {F} = which_op(op(o))
 params(o::Applied{F}) where {F} = params(op(o))
 
+const OpTuple = Union{Tuple{<:WhichOp,Vararg},Tuple{<:Number,<:WhichOp,Vararg}}
+
+# Conversion from Tuple
 Op(o::Tuple) = Op(o...)
 Op(which_op::WhichOp, sites::Tuple; kwargs...) = Op(which_op, sites, values(kwargs))
 Op(which_op::WhichOp, sites::Int...; kwargs...) = Op(which_op, sites; kwargs...)
@@ -280,6 +278,13 @@ function Op(which_op::WhichOp, sites_params::Union{Int,WhichOp,NamedTuple}...)
   return ∏(collect(Op.(args)))
 end
 
+# Conversion to `∑{Op}` (replacement for `OpSum`)
+∑{Op}(o::Vector{<:OpExpr}) = ∑(o)
+∑{Op}(o::OpExpr) = ∑{Op}() + o
+∑{Op}(o::OpTuple) = ∑{Op}(Op(o))
+∑{Op}(which_op::WhichOp, args...; kwargs...) = ∑{Op}(Op(which_op, args...; kwargs...))
+∑{Op}(α::Number, which_op::WhichOp, args...; kwargs...) = ∑{Op}(Op(α, which_op, args...; kwargs...))
+
 # Lazy operations with Op
 (arg1::Number * arg2::Op) = α(arg1, arg2)
 (arg1::Op / arg2::Number) = inv(arg2) * arg1
@@ -287,11 +292,13 @@ end
 (arg1::Op + arg2::Op) = ∑([arg1, arg2])
 -(o::Op) = -𝟏 * o
 
-# Rules for adding and subtracting Tuples
+# Rules for adding, subtracting, and multiplying with Tuples
 (arg1::OpExpr + arg2::Tuple) = arg1 + Op(arg2)
 (arg1::Tuple + arg2::OpExpr) = Op(arg1) + arg2
 (arg1::OpExpr - arg2::Tuple) = arg1 - Op(arg2)
 (arg1::Tuple - arg2::OpExpr) = Op(arg1) - arg2
+(arg1::OpExpr * arg2::Tuple) = arg1 * Op(arg2)
+(arg1::Tuple * arg2::OpExpr) = Op(arg1) * arg2
 
 function print_sites(io::IO, sites)
   nsites = length(sites)
