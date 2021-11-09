@@ -2017,9 +2017,9 @@ function Base.show(io::IO, M::AbstractMPS)
       else
         A = M[i]
         if order(A) != 0
-          " $(inds(A))"
+          "[$i] $(inds(A))"
         else
-          " ITensor()"
+          "[$i] ITensor()"
         end
       end
   end
