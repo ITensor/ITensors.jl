@@ -2001,7 +2001,7 @@ function Base.show(io::IO, M::AbstractMPS)
   print(io, "$(typeof(M))")
   if length(M) > compact_show_cutoff[]
     indsl = @view eachindex(M)[1:compact_show_cutoff[]÷2]
-    indsr = @view eachindex(M)[(end - compact_show_cutoff[]÷2 - 1):end]
+    indsr = @view eachindex(M)[(end - compact_show_cutoff[]÷2):end]
   else
     indsl = eachindex(M)
     indsr = 1:0
@@ -2010,7 +2010,7 @@ function Base.show(io::IO, M::AbstractMPS)
 
   (length(M) > 0) && print(io, " ")
   itr = Iterators.map(is) do i
-    if i == compact_show_cutoff[] ÷2 + 1
+    if i == compact_show_cutoff[] ÷2
       "... "
       elseif !isassigned(M, i)
         "#undef"
