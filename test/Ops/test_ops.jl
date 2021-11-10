@@ -166,9 +166,9 @@ end
 
   H = heisenberg(4)
   @test length(H) == 9
-  @test H ^ 2 == H * H
-  @test length(H ^ 2) == 2
-  @test length(expand(H ^ 2)) == 81
+  @test H^2 == H * H
+  @test length(H^2) == 2
+  @test length(expand(H^2)) == 81
 
   @testset "Conversion to Sum of ITensors" begin
     H = Sum{Op}() + ("X", 1) + ("Y", 2)

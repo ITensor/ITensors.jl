@@ -29,5 +29,5 @@ end
 
 function exp(trotter::Trotter, o::∑)
   expδo = exp_one_step(one(trotter), o / trotter.nsteps)
-  return expδo ^ trotter.nsteps
+  return expδo^trotter.nsteps
 end

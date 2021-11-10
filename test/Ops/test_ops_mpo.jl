@@ -65,9 +65,9 @@ end
 @testset "Square Hamiltonian" begin
   N = 4
   ℋ = heisenberg(N)
-  ℋ² = expand(ℋ ^ 2)
+  ℋ² = expand(ℋ^2)
   s = siteinds("S=1/2", N)
   H = MPO(ℋ, s)
   H² = MPO(ℋ², s)
-  @test norm(replaceprime(H' * H, 2 => 1) - H²) ≈ 0 atol=1e-14
+  @test norm(replaceprime(H' * H, 2 => 1) - H²) ≈ 0 atol = 1e-14
 end

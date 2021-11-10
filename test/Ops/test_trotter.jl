@@ -10,10 +10,10 @@ using ITensors: ∑, ∏
 
   for nsteps in [10, 100, 1000]
     expHᵉˣᵃᶜᵗ = ITensor(exp(H), s)
-    @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{1}(nsteps)), s) rtol=1/nsteps
-    @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{2}(nsteps)), s) rtol=(1/nsteps)^2
-    @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{4}(nsteps)), s) rtol=(1/nsteps)^2
-    @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{8}(nsteps)), s) rtol=(1/nsteps)^2
+    @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{1}(nsteps)), s) rtol = 1 / nsteps
+    @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{2}(nsteps)), s) rtol = (1 / nsteps)^2
+    @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{4}(nsteps)), s) rtol = (1 / nsteps)^2
+    @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{8}(nsteps)), s) rtol = (1 / nsteps)^2
 
     # Convert to ITensors
     t = 1.0
@@ -22,7 +22,7 @@ using ITensors: ∑, ∏
     ψ₀ = onehot(s .=> "0")
     Uᵉˣᵃᶜᵗψ₀ = Uᵉˣᵃᶜᵗ(ψ₀)
     Uψ₀ = U(ψ₀)
-    @test Uᵉˣᵃᶜᵗψ₀ ≈ Uψ₀ rtol=(1/nsteps)^2
+    @test Uᵉˣᵃᶜᵗψ₀ ≈ Uψ₀ rtol = (1 / nsteps)^2
   end
 end
 
@@ -48,8 +48,8 @@ end
       U = ∏{ITensor}(𝒰, s)
       H = ITensor(ℋ, s)
       Uʳᵉᶠψ₀ = replaceprime(exp(im * t * H) * prod(ψ₀), 1 => 0)
-      atol = max(1e-6, 1 / nsteps ^ order)
-      @test prod(U(ψ₀)) ≈ Uʳᵉᶠψ₀ atol=atol
+      atol = max(1e-6, 1 / nsteps^order)
+      @test prod(U(ψ₀)) ≈ Uʳᵉᶠψ₀ atol = atol
     end
   end
 end

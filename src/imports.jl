@@ -158,9 +158,7 @@ import ITensors.NDTensors:
   addblock!,
   store
 
-import ITensors.Ops:
-  Prod,
-  Sum
+import ITensors.Ops: Prod, Sum
 
 import Random: randn!
 

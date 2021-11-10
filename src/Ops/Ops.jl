@@ -124,7 +124,7 @@ end
 function convert(O::Type{α{∏{Op},T}}, o::α{Op}) where {T}
   return convert(T, coefficient(o)) * ∏([op(o)])
 end
-function convert(O::Type{∑{T}}, o::α{Op}) where {T <: Union{α{Op},α{∏{Op}}}}
+function convert(O::Type{∑{T}}, o::α{Op}) where {T<:Union{α{Op},α{∏{Op}}}}
   return ∑([convert(T, o)])
 end
 
@@ -283,7 +283,9 @@ end
 ∑{Op}(o::OpExpr) = ∑{Op}() + o
 ∑{Op}(o::OpTuple) = ∑{Op}(Op(o))
 ∑{Op}(which_op::WhichOp, args...; kwargs...) = ∑{Op}(Op(which_op, args...; kwargs...))
-∑{Op}(α::Number, which_op::WhichOp, args...; kwargs...) = ∑{Op}(Op(α, which_op, args...; kwargs...))
+function ∑{Op}(α::Number, which_op::WhichOp, args...; kwargs...)
+  return ∑{Op}(Op(α, which_op, args...; kwargs...))
+end
 
 # Lazy operations with Op
 (arg1::Number * arg2::Op) = α(arg1, arg2)
