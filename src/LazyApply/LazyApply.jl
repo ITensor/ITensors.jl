@@ -39,20 +39,38 @@ Applied{F,Args}(args...) where {F,Args} = Applied{F,Args}(args)
 Applied{F}(args::Tuple) where {F} = Applied{F,typeof(args)}(args)
 Applied{F}(args...) where {F} = Applied{F}(args)
 
+# if VERSION < v"1.6"
+const AppliedTupleAB{F} = Applied{F,Tuple{A,B}} where {A,B}
+const AppliedTupleA{F,B} = Applied{F,Tuple{A,B}} where {A}
+const AppliedTupleVector{F} = Applied{F,Tuple{Vector{T}}} where {T}
+
 # For `Scaled(3.2, "X")`
-(Applied{F,Tuple{A,B}} where {A,B})(args::Tuple) where {F} = Applied{F}(args)
-(Applied{F,Tuple{A,B}} where {A,B})(args...) where {F} = Applied{F}(args)
+## if VERSION > v"1.5"
+##   (Applied{F,Tuple{A,B}} where {A,B})(args::Tuple) where {F} = Applied{F}(args)
+##   (Applied{F,Tuple{A,B}} where {A,B})(args...) where {F} = Applied{F}(args)
+## else
+AppliedTupleAB{F}(args::Tuple) where {F} = Applied{F}(args)
+AppliedTupleAB{F}(args...) where {F} = Applied{F}(args)
 
 # For `Scaled{ComplexF64}(3.2, "X")`
-function (Applied{F,Tuple{A,B}} where {A})(args::Tuple{Arg1,Arg2}) where {F,B,Arg1,Arg2}
+## if VERSION > v"1.5"
+##   function (Applied{F,Tuple{A,B}} where {A})(args::Tuple{Arg1,Arg2}) where {F,B,Arg1,Arg2}
+##     return Applied{F,Tuple{Arg1,B}}(args)
+##   end
+##   function (Applied{F,Tuple{A,B}} where {A})(args...) where {F,B}
+##     return (Applied{F,Tuple{A,B}} where {A})(args)
+##   end
+## end
+function AppliedTupleA{F,B}(args::Tuple{Arg1,Arg2}) where {F,B,Arg1,Arg2}
   return Applied{F,Tuple{Arg1,B}}(args)
 end
-function (Applied{F,Tuple{A,B}} where {A})(args...) where {F,B}
+function AppliedTupleA{F,B}(args...) where {F,B}
   return (Applied{F,Tuple{A,B}} where {A})(args)
 end
 
 # For `Sum([1, 2, 3])` and `Prod([1, 2, 3])`
-(Applied{F,Tuple{Vector{T}}} where {T})(args::Vector) where {F} = Applied{F}((args,))
+## (Applied{F,Tuple{Vector{T}}} where {T})(args::Vector) where {F} = Applied{F}((args,))
+AppliedTupleVector{F}(args::Vector) where {F} = Applied{F}((args,))
 
 _empty(::Type{T}) where {T} = error("_empty not implemented for type $T.")
 _empty(::Type{Tuple{T}}) where {T} = (_empty(T),)
@@ -68,7 +86,10 @@ _initialvalue_type(::Type{typeof(*)}) = One
 _initialvalue_type(::Type{typeof(prod)}) = One
 
 # For `Sum() == Sum{Zero}()` and `Prod() == Prod{One}()`
-function (Applied{F,Tuple{Vector{T}}} where {T})() where {F}
+## function (Applied{F,Tuple{Vector{T}}} where {T})() where {F}
+##   return Applied{F,Tuple{Vector{_initialvalue_type(F)}}}()
+## end
+function AppliedTupleVector{F}() where {F}
   return Applied{F,Tuple{Vector{_initialvalue_type(F)}}}()
 end
 

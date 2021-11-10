@@ -89,37 +89,63 @@ function convert(::Type{∑{α{∏{Op},T}}}, o::Op) where {T}
   return ∑([convert(α{∏{Op},T}, o)])
 end
 
+# if VERSION < v"1.6"
+const ∑α∏Op = ∑{α{∏{Op},T}} where {T}
+const ∑α∏{S} = ∑{α{∏{S},T}} where {T}
+
 convert(O::Type{<:Op}, o::Tuple) = O(o)
 convert(O::Type{<:α{Op}}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:∏{Op}}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:∑{Op}}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:α{∏{Op}}}, o::Tuple) = convert(O, Op(o))
 convert(O::Type{<:∑{α{∏{Op},T}} where {T}}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{∑{α{∏{Op},T}} where {T}}, o::Tuple) = convert(O, Op(o))
+## convert(O::Type{∑{α{∏{Op},T}} where {T}}, o::Tuple) = convert(O, Op(o))
+convert(O::Type{∑α∏Op}, o::Tuple) = convert(O, Op(o))
 
 convert(::Type{∑{<:α{∏{Op}}}}, o) = convert(∑{α{∏{Op},T}} where {T}, o)
 ∑{<:α{∏{Op}}}(o) = (∑{α{∏{Op},T}} where {T})(o)
 ∑{<:α{∏{Op}}}() = (∑{α{∏{Op},T}} where {T})()
 
-function (∑{α{∏{Op},T}} where {T})(o::OpExpr)
+# if VERSION > v"1.5"
+## function (∑{α{∏{Op},T}} where {T})(o::OpExpr)
+##   return convert(∑{α{∏{Op},T}} where {T}, o)
+## end
+## function (∑{α{∏{Op},T}} where {T})(o::Tuple)
+##   return convert(∑{α{∏{Op},T}} where {T}, o)
+## end
+## function (∑{α{∏{Op},T}} where {T})(o::Vector{<:Union{OpExpr,Tuple}})
+##   return reduce(+, o; init=(∑{α{∏{Op},T}} where {T})())
+## end
+## function (∑{α{∏{Op},T}} where {T})(o::WhichOp, args...)
+##   return convert(∑{α{∏{Op},T}} where {T}, Op(o, args...))
+## end
+## function (∑{α{∏{Op},T}} where {T})(c::Number, o::WhichOp, args...)
+##   return convert(∑{α{∏{Op},T}} where {T}, Op(c, o, args...))
+## end
+# if VERSION < v"1.6"
+function ∑α∏Op(o::OpExpr)
   return convert(∑{α{∏{Op},T}} where {T}, o)
 end
-function (∑{α{∏{Op},T}} where {T})(o::Tuple)
+function ∑α∏Op(o::Tuple)
   return convert(∑{α{∏{Op},T}} where {T}, o)
 end
-function (∑{α{∏{Op},T}} where {T})(o::Vector{<:Union{OpExpr,Tuple}})
+function ∑α∏Op(o::Vector{<:Union{OpExpr,Tuple}})
   return reduce(+, o; init=(∑{α{∏{Op},T}} where {T})())
 end
-function (∑{α{∏{Op},T}} where {T})(o::WhichOp, args...)
+function ∑α∏Op(o::WhichOp, args...)
   return convert(∑{α{∏{Op},T}} where {T}, Op(o, args...))
 end
-function (∑{α{∏{Op},T}} where {T})(c::Number, o::WhichOp, args...)
+function ∑α∏Op(c::Number, o::WhichOp, args...)
   return convert(∑{α{∏{Op},T}} where {T}, Op(c, o, args...))
 end
 
 # Default constructors
-(∑{α{∏{S},T}} where {T})() where {S} = ∑{α{∏{S},Zero}}()
-(∑{α{∏{Op},T}} where {T})(o) = convert(∑{α{∏{Op},T}} where {T}, o)
+# if VERSION > v"1.5"
+## (∑{α{∏{S},T}} where {T})() where {S} = ∑{α{∏{S},Zero}}()
+## (∑{α{∏{Op},T}} where {T})(o) = convert(∑{α{∏{Op},T}} where {T}, o)
+# if VERSION < v"1.6"
+∑α∏{S}() where {S} = ∑{α{∏{S},Zero}}()
+∑α∏Op(o) = convert(∑{α{∏{Op},T}} where {T}, o)
 
 function convert(O::Type{α{∏{Op},T}}, o::α{Op}) where {T}
   return convert(T, coefficient(o)) * ∏([op(o)])
