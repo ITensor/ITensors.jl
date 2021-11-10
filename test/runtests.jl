@@ -6,6 +6,8 @@ if Threads.nthreads() == 1
       "NDTensors/runtests.jl",
       "ContractionSequenceOptimization/runtests.jl",
       "ITensorChainRules/runtests.jl",
+      "LazyApply/runtests.jl",
+      "Ops/runtests.jl",
       "tagset.jl",
       "smallstring.jl",
       "symmetrystyle.jl",

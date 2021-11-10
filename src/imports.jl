@@ -139,6 +139,7 @@ import ITensors.NDTensors:
   nnzblocks,
   nzblock,
   nzblocks,
+  one,
   outer,
   permuteblocks,
   polar,
@@ -156,6 +157,8 @@ import ITensors.NDTensors:
   # Deprecated
   addblock!,
   store
+
+import ITensors.Ops: Prod, Sum
 
 import Random: randn!
 

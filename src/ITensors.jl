@@ -21,6 +21,7 @@ using Random
 using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
+using Zeros
 
 #####################################
 # NDTensors
@@ -33,6 +34,18 @@ using .NDTensors
 #
 include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
 using .ContractionSequenceOptimization
+
+#####################################
+# LazyApply
+#
+include("LazyApply/LazyApply.jl")
+using .LazyApply: Applied, Sum, ∑, Prod, ∏, Scaled, α, coefficient
+
+#####################################
+# Ops
+#
+include("Ops/Ops.jl")
+using .Ops
 
 #####################################
 # Directory helper functions (useful for
@@ -97,6 +110,11 @@ include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
 
 #####################################
+# Ops to ITensor conversions
+#
+include("Ops/ops_itensor.jl")
+
+#####################################
 # MPS/MPO
 #
 include("mps/abstractmps.jl")
@@ -129,6 +147,16 @@ include("physics/site_types/qudit.jl") # EXPERIMENTAL
 include("physics/site_types/boson.jl") # EXPERIMENTAL
 include("physics/fermions.jl")
 include("physics/autompo.jl")
+
+#####################################
+# Ops to MPO conversions
+#
+include("Ops/ops_mpo.jl")
+
+#####################################
+# Trotter-Suzuki decomposition
+#
+include("Ops/trotter.jl")
 
 #####################################
 # ITensorChainRules

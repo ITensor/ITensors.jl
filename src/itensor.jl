@@ -658,7 +658,7 @@ function onehot(ivs::Pair{<:Index}...)
   A[val.(ivs)...] = 1.0
   return A
 end
-
+onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
 """
@@ -1415,6 +1415,11 @@ function (A::ITensor == B::ITensor)
 end
 
 function isapprox(A::ITensor, B::ITensor; kwargs...)
+  if !hassameinds(A, B)
+    error(
+      "In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors do not match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the second ITensor has indices: \n\n$(inds(B))",
+    )
+  end
   B = permute(B, inds(A))
   return isapprox(array(A), array(B); kwargs...)
 end
@@ -1590,6 +1595,11 @@ T[1, 1, 1] == pT_alias[1, 1, 1]
 ```
 """
 function permute(T::ITensor, new_inds...; kwargs...)
+  if !hassameinds(T, indices(new_inds))
+    error(
+      "In `permute(::ITensor, inds...)`, the input ITensor has indices: \n\n$(inds(T))\n\nbut the desired Index ordering is: \n\n$(indices(new_inds))",
+    )
+  end
   allow_alias = deprecated_keyword_argument(
     Bool,
     kwargs;
