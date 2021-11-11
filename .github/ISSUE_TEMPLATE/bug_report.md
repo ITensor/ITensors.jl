@@ -7,30 +7,26 @@ assignees: ''
 
 ---
 
-# Expected Behavior
+**Description of bug**
+Describe the bug clearly and concisely.
 
-Please describe the behavior you are expecting
 
-# Current Behavior
+**How to reproduce**
+Detail steps to reproduce the behavior.
 
-What is the current behavior?
 
-# Failure Information
+**Expected behavior**
+Describe what you expected to happen.
 
-Please help provide information about the failure if this is a bug.
 
-## Steps to Reproduce
+**Actual behavior**
+Describe what actually happened.
 
-Please provide detailed steps for reproducing the issue.
 
-1. step 1
-2. step 2
-3. you get it...
+**Code demonstrating bug**
+If applicable, provide a minimal working example of the bug.
 
-## Context
 
-Please provide any relevant information about your setup. This is important in case the issue is not reproducible except for under certain conditions.
-
-* ITensors version:
-* Julia version:
-* BLAS version:
+**Version information**
+ - output from `versioninfo()` surrounded by backticks (``)
+ - output from `] status ITensors` surrounded by backticks (``)
