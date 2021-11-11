@@ -1994,21 +1994,21 @@ function Base.show(io::IO, ::MIME"text/plain", M::AbstractMPS)
     end
   end
 end
-                                                                                                                                        
+
+function Base.show(io::IO, M::AbstractMPS)
+  print(io, typeof(M), "(", length(M), ")")
+end
+
 macro show_verbose(exs...)
   blk = Expr(:block)
   for ex in exs
-    push!(blk.args, :(println($(sprint(show_unquoted,ex)*" = "),
+    push!(blk.args, :(println($(sprint(Base.show_unquoted,ex)*" = "),
                               repr("text/plain", begin local value = $(esc(ex)) end))))
   end
   isempty(exs) || push!(blk.args, :value)
   return blk
 end
 
-function Base.show(io::IO, M::AbstractMPS)
-  print(io, typeof(M), "(", length(M), ")")
-end
-#
 # Old code for adding MPS/MPO
 #
 
