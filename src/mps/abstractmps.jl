@@ -1995,35 +1995,8 @@ function Base.show(io::IO, ::MIME"text/plain", M::AbstractMPS)
   end
 end
 
-const compact_show_cutoff = Ref(10)
-
 function Base.show(io::IO, M::AbstractMPS)
-  print(io, "$(typeof(M))")
-  if length(M) > compact_show_cutoff[]
-    indsl = @view eachindex(M)[1:compact_show_cutoff[]÷2]
-    indsr = @view eachindex(M)[(end - compact_show_cutoff[]÷2):end]
-  else
-    indsl = eachindex(M)
-    indsr = 1:0
-  end
-  is = [indsl; indsr]
-
-  (length(M) > 0) && print(io, " ")
-  itr = Iterators.map(is) do i
-    if i == compact_show_cutoff[] ÷2
-      "... "
-      elseif !isassigned(M, i)
-        "#undef"
-      else
-        A = M[i]
-        if order(A) != 0
-          "[$i] $(inds(A))"
-        else
-          "[$i] ITensor()"
-        end
-      end
-  end
-  join(io, itr, ", ")
+  print(io, typeof(M), "(", length(M), ")")
 end
 #
 # Old code for adding MPS/MPO
