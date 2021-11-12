@@ -194,15 +194,16 @@ end
 function ChainRulesCore.rrule(::typeof(itensor), x::Array, a...)
   y = itensor(x, a...)
   function itensor_pullback(ȳ)
-    uȳ = permute(unthunk(ȳ), a...)
-    x̄ = reshape(array(uȳ), size(x))
+    # TODO: Call `indices` inside `permute`.
+    pȳ = permute(unthunk(ȳ), ITensors.indices(a)...)
+    x̄ = reshape(array(pȳ), size(x))
     ā = broadcast_notangent(a)
     return (NoTangent(), x̄, ā...)
   end
   return y, itensor_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(ITensor), x::Array{<:Number}, a::Index...)
+function ChainRulesCore.rrule(::Type{ITensor}, x::Array{<:Number}, a::Index...)
   y = ITensor(x, a...)
   function ITensor_pullback(ȳ)
     # TODO: define `Array(::ITensor)` directly
@@ -213,7 +214,7 @@ function ChainRulesCore.rrule(::typeof(ITensor), x::Array{<:Number}, a::Index...
   return y, ITensor_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(ITensor), x::Number)
+function ChainRulesCore.rrule(::Type{ITensor}, x::Number)
   y = ITensor(x)
   function ITensor_pullback(ȳ)
     x̄ = ȳ[]
@@ -251,5 +252,15 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 @non_differentiable commoninds(::Any...)
 @non_differentiable noncommoninds(::Any...)
 @non_differentiable uniqueinds(::Any...)
+@non_differentiable ITensors.commontags(::Any...)
+@non_differentiable Ops.which_op(::Any...)
+@non_differentiable Ops.sites(::Any...)
+@non_differentiable OpName(::Any...)
+@non_differentiable SiteType(::Any...)
+@non_differentiable ITensors.Tag(::Any...)
+@non_differentiable TagSet(::Any...)
+
+# TODO: Cover version that takes an element.
+@non_differentiable onehot(::Any...)
 
 end
