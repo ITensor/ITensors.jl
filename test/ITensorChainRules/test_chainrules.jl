@@ -43,6 +43,26 @@ using Zygote: ZygoteRuleConfig
   test_rrule(dag, A; check_inferred=false)
   test_rrule(permute, A, reverse(inds(A)); check_inferred=false)
 
+  f = function (x)
+    j = Index(2, "j")
+    b = itensor([0, 0, 1, 1], i, j)
+    k = itensor([0, 1, 0, 0], i, j)
+    T = itensor([0 x x^2 1; 0 0 sin(x) 0; 0 cos(x) 0 exp(x); x 0 0 0], i', j', i, j)
+    return x * real((b' * T * k)[])
+  end
+  args = (0.3,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+
+  f = function (x)
+    j = Index(2, "j")
+    b = itensor([0, 0, 1, 1], i, j)
+    k = itensor([0, 1, 0, 0], i, j)
+    T = itensor([0 x x^2 1; 0 0 sin(x) 0; 0 cos(x) 0 exp(x); x 0 0 0], i, j, i', j')
+    return x * real((b' * T * k)[])
+  end
+  args = (0.3,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+
   f = x -> sin(scalar(x)^3)
   args = (C,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
