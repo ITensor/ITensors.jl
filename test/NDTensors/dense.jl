@@ -8,6 +8,15 @@ using ITensors.NDTensors, Test
       @test A[I] == 0
     end
 
+    @test A[2, 1] isa Float64
+    @test dims(A[1:2, 1]) == (2,)
+    @test dims(A[1:2, 2]) == (2,)
+    @test dims(A[2:3, 2]) == (2,)
+    @test dims(A[2, 2:4]) == (3,)
+    @test dims(A[2:3, 2:4]) == (2, 3)
+    @test dims(A[2:3, 2:end]) == (2, 3)
+    @test dims(A[3, 2:end]) == (3,)
+
     randn!(A)
 
     for I in eachindex(A)

@@ -227,30 +227,30 @@ similar(T::DenseTensor, inds::Dims) = _similar(T, inds)
 #
 
 @propagate_inbounds function getindex(
-  T::DenseTensor{<:Number,N}, I::Vararg{Integer,N}
-) where {N}
+  T::DenseTensor{<:Number}, I::Integer...
+)
   Base.@_inline_meta
   return getindex(data(T), Base._sub2ind(T, I...))
 end
 
 @propagate_inbounds function getindex(
-  T::DenseTensor{<:Number,N}, I::CartesianIndex{N}
-) where {N}
+  T::DenseTensor{<:Number}, I::CartesianIndex
+)
   Base.@_inline_meta
   return getindex(T, I.I...)
 end
 
 @propagate_inbounds function setindex!(
-  T::DenseTensor{<:Number,N}, x::Number, I::Vararg{Integer,N}
-) where {N}
+  T::DenseTensor{<:Number}, x::Number, I::Vararg{Integer}
+)
   Base.@_inline_meta
   setindex!(data(T), x, Base._sub2ind(T, I...))
   return T
 end
 
 @propagate_inbounds function setindex!(
-  T::DenseTensor{<:Number,N}, x::Number, I::CartesianIndex{N}
-) where {N}
+  T::DenseTensor{<:Number}, x::Number, I::CartesianIndex
+)
   Base.@_inline_meta
   setindex!(T, x, I.I...)
   return T
@@ -272,16 +272,23 @@ end
 # Create a DenseView that stores a Dense and an offset?
 #
 
-@propagate_inbounds function _getindex(
-  T::DenseTensor{ElT,N}, I::CartesianIndices{N}
-) where {ElT,N}
-  storeR = Dense(vec(@view array(T)[I]))
-  indsR = Tuple(I[end] - I[1] + CartesianIndex(ntuple(_ -> 1, Val(N))))
-  return tensor(storeR, indsR)
-end
+## @propagate_inbounds function _getindex(
+##   T::DenseTensor{ElT,N}, I::CartesianIndices{N}
+## ) where {ElT,N}
+##   storeR = Dense(vec(@view array(T)[I]))
+##   indsR = Tuple(I[end] - I[1] + CartesianIndex(ntuple(_ -> 1, Val(N))))
+##   return tensor(storeR, indsR)
+## end
+## 
+## @propagate_inbounds function getindex(T::DenseTensor{ElT,N}, I...) where {ElT,N}
+##   return _getindex(T, CartesianIndices(I))
+## end
 
-@propagate_inbounds function getindex(T::DenseTensor{ElT,N}, I...) where {ElT,N}
-  return _getindex(T, CartesianIndices(I))
+@propagate_inbounds function getindex(T::DenseTensor, I...) 
+  AI = @view array(T)[I...]
+  storeR = Dense(vec(AI))
+  indsR = size(AI)
+  return tensor(storeR, indsR)
 end
 
 # Reshape a DenseTensor using the specified dimensions
