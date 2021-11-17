@@ -13,6 +13,7 @@ import Base:
   adjoint,
   reverse,
   show,
+  size,
   ==,
   convert,
   getindex,
@@ -115,6 +116,7 @@ const Exp{T} = Applied{typeof(exp),Tuple{T}}
 
 coefficient(arg::Applied) = 𝟏
 
+size(arg::Union{Sum,Prod}) = size(arg.args...)
 length(arg::Union{Sum,Prod}) = length(arg.args...)
 lastindex(arg::Union{Sum,Prod}) = length(arg)
 getindex(arg::Union{Sum,Prod}, n) = getindex(arg.args..., n)
@@ -241,7 +243,7 @@ reverse(arg::Prod) = Prod(reverse(arg.args...))
 # Materialize
 materialize(a::Number) = a
 materialize(a::AbstractString) = a
-materialize(a::Vector) = materialize.(a)
+materialize(a::Array) = materialize.(a)
 materialize(a::Applied) = a.f(materialize.(a.args)...)
 
 function _expand(a1::Sum, a2::Sum)

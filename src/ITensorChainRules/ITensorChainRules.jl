@@ -2,10 +2,13 @@ module ITensorChainRules
 
 using ChainRulesCore
 using ..ITensors
+using ITensors.LazyApply: Applied
+
+import ChainRulesCore: rrule
 
 include("zygoterules.jl")
 
-function ChainRulesCore.rrule(::typeof(getindex), x::ITensor, I...)
+function rrule(::typeof(getindex), x::ITensor, I...)
   y = getindex(x, I...)
   function getindex_pullback(ȳ)
     # TODO: add definition `ITensor(::Tuple{}) = ITensor()`
@@ -21,7 +24,7 @@ end
 # Specialized version in order to avoid call to `setindex!`
 # within the pullback, should be better for taking higher order
 # derivatives in Zygote.
-function ChainRulesCore.rrule(::typeof(getindex), x::ITensor)
+function rrule(::typeof(getindex), x::ITensor)
   y = x[]
   function getindex_pullback(ȳ)
     x̄ = ITensor(unthunk(ȳ))
@@ -103,7 +106,7 @@ for fname in (
   :swapinds,
 )
   @eval begin
-    function ChainRulesCore.rrule(f::typeof($fname), x::ITensor, a...; kwargs...)
+    function rrule(f::typeof($fname), x::ITensor, a...; kwargs...)
       y = f(x, a...; kwargs...)
       function f_pullback(ȳ)
         x̄ = inv_op(f, unthunk(ȳ), a...; kwargs...)
@@ -123,7 +126,7 @@ end
 # TODO: This is not being called by Zygote for some reason,
 # using a Zygote overload directly instead. Figure out
 # why, maybe raise an issue.
-#function ChainRulesCore.rrule(::typeof(adjoint), x::ITensor)
+#function rrule(::typeof(adjoint), x::ITensor)
 #  y = prime(x)
 #  function adjoint_pullback(ȳ)
 #    return setinds_pullback(ȳ, x)
@@ -132,7 +135,7 @@ end
 #end
 
 # Special case for contracting a pair of ITensors
-function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::ITensor)
+function rrule(::typeof(*), x1::ITensor, x2::ITensor)
   y = x1 * x2
   function contract_pullback(ȳ)
     x̄1 = ȳ * dag(x2)
@@ -142,7 +145,7 @@ function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::ITensor)
   return y, contract_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(*), x1::Number, x2::ITensor)
+function rrule(::typeof(*), x1::Number, x2::ITensor)
   y = x1 * x2
   function contract_pullback(ȳ)
     x̄1 = ȳ * dag(x2)
@@ -153,7 +156,7 @@ function ChainRulesCore.rrule(::typeof(*), x1::Number, x2::ITensor)
   return y, contract_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::Number)
+function rrule(::typeof(*), x1::ITensor, x2::Number)
   y = x1 * x2
   function contract_pullback(ȳ)
     x̄1 = ȳ * dag(ITensor(x2))
@@ -164,7 +167,7 @@ function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::Number)
 end
 
 # TODO: use some contraction sequence optimization here
-function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::ITensor, xs::ITensor...)
+function rrule(::typeof(*), x1::ITensor, x2::ITensor, xs::ITensor...)
   y = *(x1, x2, xs...)
   function contract_pullback(ȳ)
     tn = [x1, x2, xs...]
@@ -183,7 +186,7 @@ function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::ITensor, xs::ITensor
   return y, contract_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(+), x1::ITensor, x2::ITensor)
+function rrule(::typeof(+), x1::ITensor, x2::ITensor)
   y = x1 + x2
   function add_pullback(ȳ)
     return (NoTangent(), ȳ, ȳ)
@@ -191,7 +194,7 @@ function ChainRulesCore.rrule(::typeof(+), x1::ITensor, x2::ITensor)
   return y, add_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(itensor), x::Array, a...)
+function rrule(::typeof(itensor), x::Array, a...)
   y = itensor(x, a...)
   function itensor_pullback(ȳ)
     # TODO: Call `indices` inside `permute`.
@@ -203,7 +206,7 @@ function ChainRulesCore.rrule(::typeof(itensor), x::Array, a...)
   return y, itensor_pullback
 end
 
-function ChainRulesCore.rrule(::Type{ITensor}, x::Array{<:Number}, a::Index...)
+function rrule(::Type{ITensor}, x::Array{<:Number}, a::Index...)
   y = ITensor(x, a...)
   function ITensor_pullback(ȳ)
     # TODO: define `Array(::ITensor)` directly
@@ -214,7 +217,7 @@ function ChainRulesCore.rrule(::Type{ITensor}, x::Array{<:Number}, a::Index...)
   return y, ITensor_pullback
 end
 
-function ChainRulesCore.rrule(::Type{ITensor}, x::Number)
+function rrule(::Type{ITensor}, x::Number)
   y = ITensor(x)
   function ITensor_pullback(ȳ)
     x̄ = ȳ[]
@@ -223,7 +226,7 @@ function ChainRulesCore.rrule(::Type{ITensor}, x::Number)
   return y, ITensor_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(dag), x::ITensor)
+function rrule(::typeof(dag), x::ITensor)
   y = dag(x)
   function dag_pullback(ȳ)
     x̄ = dag(unthunk(ȳ))
@@ -232,7 +235,7 @@ function ChainRulesCore.rrule(::typeof(dag), x::ITensor)
   return y, dag_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(permute), x::ITensor, a...)
+function rrule(::typeof(permute), x::ITensor, a...)
   y = permute(x, a...)
   function permute_pullback(ȳ)
     x̄ = permute(unthunk(ȳ), inds(x))
@@ -245,22 +248,64 @@ end
 broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 
 @non_differentiable broadcast_notangent(::Any)
+
+# Index.jl
 @non_differentiable Index(::Any...)
-@non_differentiable delta(::Any...)
 @non_differentiable dag(::Index)
 @non_differentiable inds(::Any...)
 @non_differentiable commoninds(::Any...)
 @non_differentiable noncommoninds(::Any...)
 @non_differentiable uniqueinds(::Any...)
+@non_differentiable unioninds(::Any...)
 @non_differentiable ITensors.commontags(::Any...)
-@non_differentiable Ops.which_op(::Any...)
-@non_differentiable Ops.sites(::Any...)
-@non_differentiable OpName(::Any...)
 @non_differentiable SiteType(::Any...)
 @non_differentiable ITensors.Tag(::Any...)
 @non_differentiable TagSet(::Any...)
 
 # TODO: Cover version that takes an element.
+# ITensor.jl
 @non_differentiable onehot(::Any...)
+@non_differentiable delta(::Any...)
+
+#
+# LazyApply/LazyApply.jl
+#
+
+# Inner constructor of Applied
+function rrule(::Type{Applied{F,Args}}, f, a::Tuple) where {F,Args}
+  y = Applied{F,Args}(f, a)
+  function Applied_pullback(ȳ)
+    f̄ = ȳ.f
+    ā = ȳ.args
+    return  (NoTangent(), f̄, ā)
+  end
+  return y, Applied_pullback
+end
+
+#
+# Ops/Ops.jl
+#
+
+function rrule(::Type{Prod{ITensor}}, f::typeof(prod), x::Tuple{Vector{ITensor}})
+  y = Prod{ITensor}(x)
+  function ProdITensor_pullback(ȳ)
+    x̄ = (ȳ,)
+    return (NoTangent(), x̄)
+  end
+  return y, ProdITensor_pullback
+end
+
+## function rrule(::Type{Prod{Prod{ITensor}}}, x)
+##   @show typeof(x)
+##   y = Prod{Prod{ITensor}}(x)
+##   function ProdITensor_pullback(ȳ)
+##     x̄ = (ȳ,)
+##     return (NoTangent(), x̄)
+##   end
+##   return y, ProdITensor_pullback
+## end
+
+@non_differentiable Ops.sites(::Any...)
+@non_differentiable OpName(::Any...)
 
 end

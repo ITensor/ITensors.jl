@@ -68,6 +68,8 @@ op(o::Op) = o
 coefficient_type(o::Op) = One
 coefficient(o::Op) = one(coefficient_type(o))
 
+set_which_op(o::Op, which_op) = Op(which_op, sites(o))
+
 params(o::Vector{Op}) = params(only(o))
 
 # exp
@@ -286,6 +288,8 @@ op(o::Applied{F}) where {F} = o.args[1]
 sites(o::Applied{F}) where {F} = sites(op(o))
 which_op(o::Applied{F}) where {F} = which_op(op(o))
 params(o::Applied{F}) where {F} = params(op(o))
+
+set_which_op(o::Applied{F}, which_op) where {F} = Op(which_op, sites(o))
 
 const OpTuple = Union{Tuple{<:WhichOp,Vararg},Tuple{<:Number,<:WhichOp,Vararg}}
 
