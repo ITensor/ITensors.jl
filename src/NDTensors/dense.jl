@@ -226,16 +226,12 @@ similar(T::DenseTensor, inds::Dims) = _similar(T, inds)
 # Single index
 #
 
-@propagate_inbounds function getindex(
-  T::DenseTensor{<:Number}, I::Integer...
-)
+@propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::Integer...)
   Base.@_inline_meta
   return getindex(data(T), Base._sub2ind(T, I...))
 end
 
-@propagate_inbounds function getindex(
-  T::DenseTensor{<:Number}, I::CartesianIndex
-)
+@propagate_inbounds function getindex(T::DenseTensor{<:Number}, I::CartesianIndex)
   Base.@_inline_meta
   return getindex(T, I.I...)
 end
@@ -284,7 +280,7 @@ end
 ##   return _getindex(T, CartesianIndices(I))
 ## end
 
-@propagate_inbounds function getindex(T::DenseTensor, I...) 
+@propagate_inbounds function getindex(T::DenseTensor, I...)
   AI = @view array(T)[I...]
   storeR = Dense(vec(AI))
   indsR = size(AI)
