@@ -26,7 +26,7 @@ using Zeros
 #####################################
 # NDTensors
 #
-include("NDTensors/NDTensors.jl")
+include("../NDTensors/src/NDTensors.jl")
 using .NDTensors
 
 #####################################
