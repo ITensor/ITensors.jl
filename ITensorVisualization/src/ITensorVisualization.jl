@@ -1,11 +1,11 @@
 module ITensorVisualization
 
-using ITensors
 using AbstractTrees
-using Colors
 using GeometryBasics
-using MetaGraphs
+using Graphs
+using ITensors
 using LinearAlgebra
+using MetaGraphs
 using NetworkLayout
 using SparseArrays
 using Statistics

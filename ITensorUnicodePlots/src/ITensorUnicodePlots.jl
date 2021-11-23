@@ -5,7 +5,6 @@ using NetworkLayout
 using Reexport
 using Statistics
 @reexport using ITensorVisualization
-using UnicodePlots: UnicodePlots
 
 using ITensorVisualization:
   @Backend_str,
@@ -20,6 +19,8 @@ using ITensorVisualization:
   default_arrow_size,
   default_siteinds_direction,
   is_self_loop
+
+using UnicodePlots: UnicodePlots
 
 import ITensorVisualization:
   visualize

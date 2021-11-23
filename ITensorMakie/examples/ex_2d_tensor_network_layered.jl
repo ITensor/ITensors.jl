@@ -1,15 +1,11 @@
 using ITensors
-using ITensorVisualization
-using LayeredLayouts
+using ITensorMakie
 using Graphs
 using GLMakie
 
-function layout(g)
-  xs, ys, _ = solve_positions(Zarate(), g)
-  return Point.(zip(xs, ys))
-end
+include("utils/layered_layout.jl")
 
 tn = itensornetwork(grid((4, 4)); linkspaces=3)
-@visualize fig tn arrow_show = true layout = layout backend = "Makie"
+@visualize fig tn arrow_show = true layout = layered_layout
 
 fig

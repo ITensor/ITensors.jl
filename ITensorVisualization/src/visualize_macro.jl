@@ -151,14 +151,14 @@ function sequence_labels(sequence, all_sequences, vertex_labels)
   return all_labels
 end
 
+function _graphplot(backend::Backend, graph; all_labels)
+  error("Not implemented for backend $backend.")
+end
+
 function visualize_sequence(sequence, vertex_labels)
   graph, all_sequences = tree_to_graph(sequence)
   all_labels = sequence_labels(sequence, all_sequences, vertex_labels)
-  fig, ax, plt = graphplot(
-    reverse(graph); arrow_show=false, nlabels=all_labels, layout=Buchheim()
-  )
-  hidedecorations!(ax)
-  #hidespines!(ax)
+  fig = _graphplot(Backend"Makie"(), graph; all_labels=all_labels)
   return fig
 end
 

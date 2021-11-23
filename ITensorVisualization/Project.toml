@@ -5,7 +5,6 @@ version = "0.2.0"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
-Colors = "5ae59095-9a9b-59fe-a467-6f913c188581"
 GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
@@ -16,9 +15,12 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
+AbstractTrees = "0.3.4"
+GeometryBasics = "0.4.1"
 Graphs = "1.4.1"
 ITensors = "0.2"
-NetworkLayout = "0.4.3"
+MetaGraphs = "0.7.1"
+NetworkLayout = "0.4.0"
 julia = "1.3"
 
 [extras]
