@@ -30,8 +30,7 @@ using Graphs:
 
 using ITensors: data, QNIndex
 
-export
-  @visualize,
+export @visualize,
   @visualize!,
   @visualize_noeval,
   @visualize_noeval!,

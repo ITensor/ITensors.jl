@@ -33,7 +33,7 @@ function visualize(
   g::AbstractGraph;
   interactive=false, # TODO: change to `default_interactive(b)`
   ndims=2, # TODO: change to `default_ndims(b)`
-  layout=Spring(dim=ndims), # TODO: change to `default_layout(b, ndims)`
+  layout=Spring(; dim=ndims), # TODO: change to `default_layout(b, ndims)`
 
   # vertex
   vertex_labels_prefix=default_vertex_labels_prefix(b, g),
@@ -52,7 +52,6 @@ function visualize(
 
   # siteinds direction
   siteinds_direction=default_siteinds_direction(b, g),
-
   width=50,
   height=20,
 )
@@ -104,7 +103,11 @@ function visualize(
     end
   end
   if length(vertex_labels) ≠ nv(g)
-    throw(DimensionMismatch("Number of vertex labels must equal the number of vertices. Vertex labels $(vertex_labels) of length $(length(vertex_labels)) does not equal the number of vertices $(nv(g))."))
+    throw(
+      DimensionMismatch(
+        "Number of vertex labels must equal the number of vertices. Vertex labels $(vertex_labels) of length $(length(vertex_labels)) does not equal the number of vertices $(nv(g)).",
+      ),
+    )
   end
   for v in vertices(g)
     x, y = node_pos[v]

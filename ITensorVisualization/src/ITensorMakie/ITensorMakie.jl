@@ -6,7 +6,7 @@ using GraphMakie.Makie:
   hidedecorations!,
   hidespines!,
   deregister_interaction!,
-  register_interaction! 
+  register_interaction!
 
 fill_number(a::AbstractVector, n::Integer) = a
 fill_number(x::Number, n::Integer) = fill(x, n)
@@ -17,12 +17,7 @@ function visualize(b::Backend"Makie", g::AbstractGraph; kwargs...)
   return f
 end
 
-function visualize!(
-  b::Backend"Makie",
-  f::Figure,
-  g::AbstractGraph;
-  kwargs...
-)
+function visualize!(b::Backend"Makie", f::Figure, g::AbstractGraph; kwargs...)
   visualize!(b, f[1, 1], g; kwargs...)
   return f
 end
@@ -33,7 +28,7 @@ function visualize!(
   g::AbstractGraph;
   interactive=true,
   ndims=2,
-  layout=Spring(dim=ndims),
+  layout=Spring(; dim=ndims),
 
   # vertex
   vertex_labels_prefix=default_vertex_labels_prefix(b, g),
@@ -49,20 +44,25 @@ function visualize!(
   # arrow
   arrow_show=default_arrow_show(b, g),
   arrow_size=default_arrow_size(b, g),
-
   siteinds_direction=default_siteinds_direction(b, g),
 )
   if ismissing(Makie.current_backend[])
-    error("""
-      You have not loaded a backend.  Please load one (`using GLMakie` or `using CairoMakie`)
-      before trying to visualize a graph.
-    """)
+    error(
+      """
+  You have not loaded a backend.  Please load one (`using GLMakie` or `using CairoMakie`)
+  before trying to visualize a graph.
+"""
+    )
   end
 
   edge_labels = ITensorVisualization.edge_labels(b, edge_labels, g)
 
   if length(vertex_labels) ≠ nv(g)
-    throw(DimensionMismatch("$(length(vertex_labels)) vertex labels $(vertex_labels) were specified but there are $(nv(g)) tensors in the diagram, please specify the correct number of labels."))
+    throw(
+      DimensionMismatch(
+        "$(length(vertex_labels)) vertex labels $(vertex_labels) were specified but there are $(nv(g)) tensors in the diagram, please specify the correct number of labels.",
+      ),
+    )
   end
 
   graphplot_kwargs = (;

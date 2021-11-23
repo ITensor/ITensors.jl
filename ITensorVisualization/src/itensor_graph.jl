@@ -62,9 +62,9 @@ default_sitespaces() = 1
 default(x, x_default) = x
 default(x::Nothing, x_default) = x_default
 
-function itensornetwork(g::AbstractGraph;
-                        linkspaces=default_linkspaces(),
-                        sitespaces=nothing)
+function itensornetwork(
+  g::AbstractGraph; linkspaces=default_linkspaces(), sitespaces=nothing
+)
   N = nv(g)
   if !isnothing(sitespaces) && !any_self_loops(g)
     g = copy(g)

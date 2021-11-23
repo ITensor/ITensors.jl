@@ -11,7 +11,9 @@ include("utils/layered_layout.jl")
 Nx, Ny = 3, 3
 N = Nx * Ny
 # TODO: change to (Nx, Ny) with PastaQ v0.0.16
-gates = randomcircuit(Nx, Ny; depth=4, twoqubitgates="CX", onequbitgates="Rn", layered=false, rotated=false)
+gates = randomcircuit(
+  Nx, Ny; depth=4, twoqubitgates="CX", onequbitgates="Rn", layered=false, rotated=false
+)
 
 s = siteinds("Qubit", N)
 
@@ -23,8 +25,10 @@ tn = [prod(ψ), U..., prod(ψ̃)]
 original_backend = ITensorVisualization.set_backend!("Makie")
 
 edge_labels = (; plevs=true)
-@visualize fig tn arrow_show=true edge_labels=edge_labels layout=layered_layout edge_textsize=20
-@visualize! fig[2, 1] tn ndims=3 arrow_show=true edge_labels=edge_labels edge_textsize=10
+@visualize fig tn arrow_show = true edge_labels = edge_labels layout = layered_layout edge_textsize =
+  20
+@visualize! fig[2, 1] tn ndims = 3 arrow_show = true edge_labels = edge_labels edge_textsize =
+  10
 
 ITensorVisualization.set_backend!(original_backend)
 

@@ -16,7 +16,9 @@ function subscript(n::Integer)
 end
 
 default_vertex_labels_prefix(b::Backend, g) = "T"
-function default_vertex_labels(b::Backend, g::AbstractGraph, vertex_labels_prefix=default_vertex_labels_prefix(b))
+function default_vertex_labels(
+  b::Backend, g::AbstractGraph, vertex_labels_prefix=default_vertex_labels_prefix(b)
+)
   return [string(vertex_labels_prefix, subscript(v)) for v in vertices(g)]
 end
 
@@ -60,13 +62,14 @@ end
 IndexLabels(; kwargs...) = IndexLabels(Backend(); kwargs...)
 IndexLabels(backend; kwargs...) = IndexLabels(Backend(backend); kwargs...)
 
-function IndexLabels(b::Backend;
+function IndexLabels(
+  b::Backend;
   dims=default_dims(b),
   tags=default_tags(b),
   ids=default_ids(b),
   plevs=default_plevs(b),
   qns=default_qns(b),
-  newlines=default_newlines(b)
+  newlines=default_newlines(b),
 )
   return IndexLabels(dims, tags, ids, plevs, qns, newlines)
 end

@@ -36,10 +36,10 @@ can_inplaces = [false, true]
   tn = [ELn0, ψn1n2, hn1, hn2, ERn2]
 
   if can_display
-    R = @visualize ELn0 * ψn1n2 * hn1 * hn2 * ERn2 backend=backend
-    R1 = @visualize ELn0 * ψn1n2 * hn1 backend=backend
-    R2 = @visualize R1 * hn2 * ERn2 vertex_labels=["T1", "T2", "T3"] backend=backend
-    tn2 = @visualize tn backend=backend
+    R = @visualize ELn0 * ψn1n2 * hn1 * hn2 * ERn2 backend = backend
+    R1 = @visualize ELn0 * ψn1n2 * hn1 backend = backend
+    R2 = @visualize R1 * hn2 * ERn2 vertex_labels = ["T1", "T2", "T3"] backend = backend
+    tn2 = @visualize tn backend = backend
 
     @test R ≈ ELn0 * ψn1n2 * hn1 * hn2 * ERn2
     @test R1 ≈ ELn0 * ψn1n2 * hn1
@@ -47,29 +47,31 @@ can_inplaces = [false, true]
     @test all(tn .== tn2)
   end
 
-  R = @visualize figR ELn0 * ψn1n2 * hn1 * hn2 * ERn2 backend=backend
-  R1 = @visualize figR1 ELn0 * ψn1n2 * hn1 backend=backend
-  R2 = @visualize figR2 R1 * hn2 * ERn2 vertex_labels=["T1", "T2", "T3"] backend=backend
+  R = @visualize figR ELn0 * ψn1n2 * hn1 * hn2 * ERn2 backend = backend
+  R1 = @visualize figR1 ELn0 * ψn1n2 * hn1 backend = backend
+  R2 = @visualize figR2 R1 * hn2 * ERn2 vertex_labels = ["T1", "T2", "T3"] backend = backend
 
-  fig_tn = @visualize_noeval tn backend=backend
+  fig_tn = @visualize_noeval tn backend = backend
 
   by = extension == "png" ? psnr_equality(0.5) : isequal
 
-  @test_reference "references/R.$extension" figR by=by
-  @test_reference "references/R1.$extension" figR1 by=by
-  @test_reference "references/R2.$extension" figR2 by=by
-  @test_reference "references/tn.$extension" fig_tn by=by
+  @test_reference "references/R.$extension" figR by = by
+  @test_reference "references/R1.$extension" figR1 by = by
+  @test_reference "references/R2.$extension" figR2 by = by
+  @test_reference "references/tn.$extension" fig_tn by = by
 
   if can_inplace
-    R = @visualize fig_grid ELn0 * ψn1n2 * hn1 * hn2 * ERn2 backend=backend
-    R1 = @visualize! fig_grid[1, 2] ELn0 * ψn1n2 * hn1 backend=backend
-    R2 = @visualize! fig_grid[2, 1] R1 * hn2 * ERn2 vertex_labels=["T1", "T2", "T3"] backend=backend
-    @visualize_noeval! fig_grid[2, 2] tn backend=backend
+    R = @visualize fig_grid ELn0 * ψn1n2 * hn1 * hn2 * ERn2 backend = backend
+    R1 = @visualize! fig_grid[1, 2] ELn0 * ψn1n2 * hn1 backend = backend
+    R2 = @visualize! fig_grid[2, 1] R1 * hn2 * ERn2 vertex_labels = ["T1", "T2", "T3"] backend =
+      backend
+    @visualize_noeval! fig_grid[2, 2] tn backend = backend
 
     # XXX: Broken, passes locally but fails on CI with:
     # Warning: test fails because PSNR -0.6602330207824707 < 1
     #@test_reference "references/grid.$extension" fig_grid by=by
   end
 
-  @test_throws DimensionMismatch @visualize fig R1 * hn2 * ERn2 vertex_labels=["T1", "T2"] backend=backend
+  @test_throws DimensionMismatch @visualize fig R1 * hn2 * ERn2 vertex_labels = ["T1", "T2"] backend =
+    backend
 end

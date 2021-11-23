@@ -103,7 +103,9 @@ function visualize(tn::Tuple{Vector{ITensor}}, args...; kwargs...)
   return visualize(only(tn), args...; kwargs...)
 end
 visualize(ψ::MPS, args...; kwargs...) = visualize(data(ψ), args...; kwargs...)
-visualize(tn::Tuple{Vararg{ITensor}}, args...; kwargs...) = visualize(collect(tn), args...; kwargs...)
+function visualize(tn::Tuple{Vararg{ITensor}}, args...; kwargs...)
+  return visualize(collect(tn), args...; kwargs...)
+end
 visualize(tn::ITensor...; kwargs...) = visualize(collect(tn); kwargs...)
 
 function visualize!(fig, g::AbstractGraph; backend=get_backend(), kwargs...)
@@ -114,13 +116,17 @@ function visualize!(fig, tn::Vector{ITensor}, sequence=nothing; kwargs...)
   return visualize!(fig, MetaDiGraph(tn); kwargs...)
 end
 visualize!(fig, ψ::MPS, sequence=nothing; kwargs...) = visualize!(fig, data(ψ); kwargs...)
-visualize!(fig, tn::Tuple{Vararg{ITensor}}, sequence=nothing; kwargs...) = visualize!(fig, collect(tn); kwargs...)
+function visualize!(fig, tn::Tuple{Vararg{ITensor}}, sequence=nothing; kwargs...)
+  return visualize!(fig, collect(tn); kwargs...)
+end
 visualize!(fig, tn::ITensor...; kwargs...) = visualize!(fig, collect(tn); kwargs...)
 
 function visualize!(fig, tn::Tuple{Vector{ITensor}}, sequence=nothing; kwargs...)
   return visualize!(fig, tn[1], sequence; kwargs...)
 end
-function visualize!(fig, f::Function, tn::Tuple{Vararg{ITensor}}, sequence=nothing; kwargs...)
+function visualize!(
+  fig, f::Function, tn::Tuple{Vararg{ITensor}}, sequence=nothing; kwargs...
+)
   return visualize!(fig, tn, sequence; kwargs...)
 end
 
@@ -135,7 +141,7 @@ function visualize!(fig, f::Union{Function,Type}, As...; kwargs...)
 end
 
 function _visualize_sequence!(fig, tn, sequence, n; kwargs...)
-  error("Not implemented")
+  return error("Not implemented")
 end
 
 function sequence_labels(sequence, all_sequences, vertex_labels)
@@ -148,7 +154,9 @@ end
 function visualize_sequence(sequence, vertex_labels)
   graph, all_sequences = tree_to_graph(sequence)
   all_labels = sequence_labels(sequence, all_sequences, vertex_labels)
-  fig, ax, plt = graphplot(reverse(graph); arrow_show=false, nlabels=all_labels, layout=Buchheim())
+  fig, ax, plt = graphplot(
+    reverse(graph); arrow_show=false, nlabels=all_labels, layout=Buchheim()
+  )
   hidedecorations!(ax)
   #hidespines!(ax)
   return fig
@@ -160,25 +168,27 @@ function default_sequence(tn::Vector{ITensor})
 end
 
 function visualize_sequence(
-  f::Union{Function,Type},
-  tn::Vector{ITensor},
-  sequence::Nothing;
-  kwargs...
+  f::Union{Function,Type}, tn::Vector{ITensor}, sequence::Nothing; kwargs...
 )
   return visualize_sequence(f, tn, default_sequence(tn); kwargs...)
 end
 
 function visualize_sequence(
-  f::Union{Function,Type},
-  tn::Vector{ITensor},
-  sequence=default_sequence(tn);
-  kwargs...
+  f::Union{Function,Type}, tn::Vector{ITensor}, sequence=default_sequence(tn); kwargs...
 )
   N = length(tn)
 
   # TODO: clean this up a bit
-  vertex_labels_prefix = get(kwargs, :vertex_labels_prefix, default_vertex_labels_prefix(Backend("Makie"), MetaDiGraph(tn)))
-  vertex_labels = get(kwargs, :vertex_labels, default_vertex_labels(Backend(""), MetaDiGraph(tn), vertex_labels_prefix))
+  vertex_labels_prefix = get(
+    kwargs,
+    :vertex_labels_prefix,
+    default_vertex_labels_prefix(Backend("Makie"), MetaDiGraph(tn)),
+  )
+  vertex_labels = get(
+    kwargs,
+    :vertex_labels,
+    default_vertex_labels(Backend(""), MetaDiGraph(tn), vertex_labels_prefix),
+  )
 
   fig = visualize_sequence(sequence, vertex_labels)
 
@@ -195,7 +205,9 @@ function visualize_sequence(
   return fig
 end
 
-function visualize_sequence(f::Union{Function,Type}, tn::Tuple{Vector{ITensor}}, sequence; kwargs...)
+function visualize_sequence(
+  f::Union{Function,Type}, tn::Tuple{Vector{ITensor}}, sequence; kwargs...
+)
   return visualize_sequence(f, tn[1], sequence; kwargs...)
 end
 
@@ -276,7 +288,9 @@ function func_args_sequence_kwargs(ex, vis_kwargs...)
   sequence = get_kwarg(kwargs, :sequence)
   vertex_labels_kw, vertex_labels_arg = vertex_labels_kwargs(args, iscollection)
   # Merge labels kwarg with kwargs
-  vis_kwargs_dict = Dict([vis_kwarg.args[1] => vis_kwarg.args[2] for vis_kwarg in vis_kwargs])
+  vis_kwargs_dict = Dict([
+    vis_kwarg.args[1] => vis_kwarg.args[2] for vis_kwarg in vis_kwargs
+  ])
   vertex_labels_kwarg_dict = Dict(vertex_labels_kw => vertex_labels_arg)
   merged_kwargs_dict = merge(vertex_labels_kwarg_dict, vis_kwargs_dict)
   merged_kwargs_expr = [:($k = $v) for (k, v) in pairs(merged_kwargs_dict)]
