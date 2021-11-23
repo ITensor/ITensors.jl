@@ -1,5 +1,5 @@
 using ITensors
-using ITensorsVisualization
+using ITensorVisualization
 using GLMakie
 
 s = siteinds("S=1/2", 5; conserve_qns=true)

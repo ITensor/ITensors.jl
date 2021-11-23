@@ -1,5 +1,5 @@
 using ITensors
-using ITensorsVisualization
+using ITensorVisualization
 using LayeredLayouts
 using Graphs
 using GLMakie

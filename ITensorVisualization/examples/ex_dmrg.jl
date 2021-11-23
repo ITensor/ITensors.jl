@@ -1,5 +1,5 @@
 using ITensors
-using ITensorsVisualization
+using ITensorVisualization
 
 N = 10
 sites(n) = Index([QN("Sz", 0) => 1, QN("Sz", 1) => 1]; tags="S=1/2,Site,n=$n")
@@ -21,7 +21,7 @@ ELn0 = randomITensor(l⃗[n - 1]', h⃗[n - 1], dag(l⃗[n - 1]))
 ERn2 = randomITensor(l⃗[n + 1]', dag(h⃗[n + 1]), dag(l⃗[n + 1]))
 
 backend = "Makie"
-original_backend = ITensorsVisualization.set_backend!(backend)
+original_backend = ITensorVisualization.set_backend!(backend)
 
 edge_labels = (; plevs=true)
 
@@ -33,7 +33,7 @@ R1 = @visualize fig2 ELn0 * ψn1n2 * hn1 edge_labels=edge_labels vertex_size=50
 R2 = @visualize fig3 R1 * hn2 * ERn2 edge_labels=edge_labels vertex_size=50
 @show R2 ≈ ELn0 * ψn1n2 * hn1 * hn2 * ERn2
 
-ITensorsVisualization.set_backend!(original_backend)
+ITensorVisualization.set_backend!(original_backend)
 
 display(fig1)
 display(fig2)
