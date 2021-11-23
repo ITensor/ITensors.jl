@@ -1,4 +1,31 @@
+module ITensorUnicodePlots
+
+using Graphs
+using NetworkLayout
+using Reexport
+using Statistics
+@reexport using ITensorVisualization
 using UnicodePlots: UnicodePlots
+
+using ITensorVisualization:
+  @Backend_str,
+  default_vertex_labels_prefix,
+  default_vertex_size,
+  default_vertex_textsize,
+  default_edge_textsize,
+  default_edge_widths,
+  default_edge_labels,
+  default_arrow_show,
+  default_arrow_size,
+  default_siteinds_direction,
+  is_self_loop
+
+import ITensorVisualization:
+  visualize
+
+function __init__()
+  ITensorVisualization.set_backend!(Backend"UnicodePlots"())
+end
 
 function plot(::Backend"UnicodePlots"; xlim, ylim, width, height)
   plot = UnicodePlots.lineplot(
@@ -115,4 +142,6 @@ function visualize(
     annotate!(b, plt, x, y, node_label)
   end
   return plt
+end
+
 end

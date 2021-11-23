@@ -3,6 +3,7 @@ struct Backend{backend} end
 Backend(b::Backend) = b
 Backend(s::AbstractString) = Backend{Symbol(s)}()
 Backend(s::Symbol) = Backend{s}()
+Backend(s::Nothing) = Backend{s}()
 backend(::Backend{N}) where {N} = N
 Backend() = Backend{Symbol()}()
 
@@ -12,6 +13,8 @@ end
 
 const current_backend = Ref{Union{Nothing,Backend}}(nothing)
 
+visualize(::Backend{nothing}, args...; kwargs...) = nothing
+
 set_backend!(::Nothing) = (current_backend[] = nothing)
 function set_backend!(backend::Backend)
   original_backend = current_backend[]
@@ -20,7 +23,6 @@ function set_backend!(backend::Backend)
 end
 set_backend!(backend::Union{Symbol,String}) = set_backend!(Backend(backend))
 
-default_backend() = Backend("UnicodePlots")
 get_backend() = isnothing(current_backend[]) ? default_backend() : current_backend[]
 
 function plot(::Backend{T}, args...; kwargs...) where {T}
