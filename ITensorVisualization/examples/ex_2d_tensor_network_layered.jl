@@ -9,7 +9,7 @@ function layout(g)
  return Point.(zip(xs, ys))
 end
 
-tn = itensornetwork(Grid((4, 4)); linkspaces=3)
+tn = itensornetwork(grid((4, 4)); linkspaces=3)
 @visualize fig tn arrow_show=true layout=layout backend="Makie"
 
 fig
