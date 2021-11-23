@@ -3,7 +3,7 @@ using Test
 if Threads.nthreads() == 1
   @testset "ITensors.jl" begin
     @testset "$filename" for filename in [
-      "NDTensors/runtests.jl",
+      "../NDTensors/runtests.jl",
       "ContractionSequenceOptimization/runtests.jl",
       "ITensorChainRules/runtests.jl",
       "LazyApply/runtests.jl",
