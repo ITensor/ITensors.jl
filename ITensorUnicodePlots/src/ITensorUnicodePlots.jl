@@ -9,6 +9,7 @@ using UnicodePlots: UnicodePlots
 
 using ITensorVisualization:
   @Backend_str,
+  default_vertex_labels,
   default_vertex_labels_prefix,
   default_vertex_size,
   default_vertex_textsize,

@@ -1,14 +1,12 @@
 using ITensors
-using ITensorVisualization
-using LayeredLayouts
+using ITensorUnicodePlots
 using Graphs
-using GLMakie
 
-include("utils/circuit_network.jl")
 include("utils/layered_layout.jl")
+include("utils/circuit_network.jl")
 
-N = 10
-layers = 10
+N = 6
+layers = 6
 ndelete = 0
 
 s = siteinds("Qubit", N)
@@ -30,6 +28,6 @@ U, s̃ = circuit_network(gates, s)
 tn = [ψ, U..., ψ̃]
 
 edge_labels = (; plevs=true)
-@visualize fig tn arrow_show = true edge_labels = edge_labels layout = layered_layout backend = "Makie"
+@visualize fig tn arrow_show = true edge_labels = edge_labels layout = layered_layout width = 90 height = 40
 
 fig
