@@ -1,6 +1,5 @@
 using ITensors
-using ITensorMakie
-using GLMakie
+using ITensorGLMakie
 
 N = 10
 sites(n) = Index([QN("Sz", 0) => 1, QN("Sz", 1) => 1]; tags="S=1/2,Site,n=$n")

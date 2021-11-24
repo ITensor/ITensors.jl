@@ -1,10 +1,9 @@
 using ITensors
-using ITensorMakie
-using GLMakie
+using ITensorGLMakie
 using ReferenceTests
 using Test
 
-@testset "Basic test for ITensorMakie" begin
+@testset "Basic test for ITensorGLMakie" begin
   extension = "png"
 
   N = 10

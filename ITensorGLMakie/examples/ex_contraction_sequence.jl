@@ -1,6 +1,5 @@
 using ITensors
-using ITensorMakie
-using GLMakie
+using ITensorGLMakie
 using Graphs: Graph
 using Random
 

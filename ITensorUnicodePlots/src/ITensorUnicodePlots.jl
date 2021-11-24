@@ -22,11 +22,10 @@ using ITensorVisualization:
 
 using UnicodePlots: UnicodePlots
 
-import ITensorVisualization:
-  visualize
+import ITensorVisualization: visualize
 
 function __init__()
-  ITensorVisualization.set_backend!(Backend"UnicodePlots"())
+  return ITensorVisualization.set_backend!(Backend"UnicodePlots"())
 end
 
 function plot(::Backend"UnicodePlots"; xlim, ylim, width, height)

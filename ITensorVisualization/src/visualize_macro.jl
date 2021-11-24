@@ -152,7 +152,7 @@ function sequence_labels(sequence, all_sequences, vertex_labels)
 end
 
 function _graphplot(backend::Backend, graph; all_labels)
-  error("Not implemented for backend $backend.")
+  return error("Not implemented for backend $backend.")
 end
 
 function visualize_sequence(sequence, vertex_labels)

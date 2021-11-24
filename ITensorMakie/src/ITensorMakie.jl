@@ -31,13 +31,10 @@ using ITensorVisualization:
   is_self_loop,
   _ndims
 
-import ITensorVisualization:
-  visualize,
-  visualize!,
-  _graphplot
+import ITensorVisualization: visualize, visualize!, _graphplot
 
 function __init__()
-  ITensorVisualization.set_backend!(Backend"Makie"())
+  return ITensorVisualization.set_backend!(Backend"Makie"())
 end
 
 fill_number(a::AbstractVector, n::Integer) = a
