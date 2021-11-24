@@ -12,7 +12,7 @@ jobs:
         with:
           version: 1
       - name: Install dependencies
-        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"; pkg"dev NDTensors"'
       - name: Run benchmarks
         run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
       - name: Post results
