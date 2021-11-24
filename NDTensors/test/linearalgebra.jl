@@ -1,5 +1,6 @@
-using ITensors.NDTensors, Test
+using NDTensors
 using LinearAlgebra
+using Test
 
 @testset "random_orthog" begin
   n, m = 10, 4

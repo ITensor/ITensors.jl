@@ -16,24 +16,12 @@ jobs:
         version:
           - '1.3'
           - '1'
-          - '^1.7.0-0'
         os:
           - ubuntu-latest
-          - windows-latest
-          - macOS-latest
         threads:
           - '1'
-          - '2'
         arch:
           - x64
-        exclude:
-          # MacOS not available on x86
-          - {os: 'macOS-latest', arch: 'x86'}
-          # Only test all os on the latest release
-          - {version: '1.3', os: 'windows-latest'}
-          - {version: '1.3', os: 'macOS-latest'}
-          - {version: '^1.7.0-0', os: 'windows-latest'}
-          - {version: '^1.7.0-0', os: 'macOS-latest'}
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
@@ -46,7 +34,7 @@ jobs:
         run: |
           using Pkg;
           # dev mono repo versions
-          pkg"dev . ./ITensorVisualization"
+          pkg"dev . ITensorVisualization NDTensors"
       #- uses: julia-actions/julia-runtest@latest
       - name: Run the tests
         continue-on-error: true

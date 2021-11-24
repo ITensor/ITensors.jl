@@ -1,5 +1,5 @@
 using Test
-using ITensors.NDTensors
+using NDTensors
 
 @testset "Test non-exported tuple tools" begin
   @test NDTensors.diff((1, 3, 6, 4)) == (2, 3, -2)

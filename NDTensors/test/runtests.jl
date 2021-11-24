@@ -1,6 +1,7 @@
 using Test
+using NDTensors
 
-@testset "ITensors.NDTensors" begin
+@testset "NDTensors" begin
   @testset "$filename" for filename in
                            ["linearalgebra.jl", "dense.jl", "blocksparse.jl", "diag.jl"]
     println("Running $filename")
