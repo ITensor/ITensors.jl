@@ -1,4 +1,4 @@
-using ITensors.NDTensors, Test
+using NDTensors, Test
 using HDF5
 
 @testset "Write to Disk and Read from Disk" begin
