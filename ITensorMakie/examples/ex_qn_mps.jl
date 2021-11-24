@@ -1,5 +1,5 @@
 using ITensors
-using ITensorVisualization
+using ITensorMakie
 using GLMakie
 
 s = siteinds("S=1/2", 5; conserve_qns=true)
@@ -9,6 +9,6 @@ orthogonalize!(ψ, 2)
 tn = [ψ..., ψdag...]
 
 edge_labels = (; plevs=true, qns=true)
-@visualize fig tn edge_labels = edge_labels edge_textsize = 20 backend = "Makie"
+@visualize fig tn edge_labels = edge_labels edge_textsize = 20
 
 fig

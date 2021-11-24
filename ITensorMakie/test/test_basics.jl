@@ -1,13 +1,13 @@
-using GLMakie
 using ITensors
-using ITensorVisualization
+using ITensorMakie
+using GLMakie
 using ReferenceTests
 using Test
 
-backends = ["UnicodePlots", "Makie"]
-extensions = ["txt", "png"]
-can_displays = [true, false]
-can_inplaces = [false, true]
+backends = ["Makie"]
+extensions = ["png"]
+can_displays = [false]
+can_inplaces = [true]
 @testset "Basic test for $(backends[n])" for n in eachindex(backends)
   backend = backends[n]
   extension = extensions[n]

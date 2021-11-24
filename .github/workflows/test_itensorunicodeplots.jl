@@ -1,4 +1,4 @@
-name: TestITensorVisualization
+name: TestITensorUnicodePlots
 on:
   push:
     branches:
@@ -34,12 +34,12 @@ jobs:
         run: |
           using Pkg;
           # dev mono repo versions
-          pkg"dev . ./ITensorVisualization"
+          pkg"dev . ./ITensorUnicodePlots"
       #- uses: julia-actions/julia-runtest@latest
       - name: Run the tests
         continue-on-error: true
         run: >
-          julia --project=monorepo -e 'using Pkg; Pkg.test("ITensorVisualization", coverage=true)'
+          julia --project=monorepo -e 'using Pkg; Pkg.test("ITensorUnicodePlots", coverage=true)'
           && echo "TESTS_SUCCESSFUL=true" >> $GITHUB_ENV 
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
