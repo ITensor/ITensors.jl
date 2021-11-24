@@ -2,7 +2,6 @@
 *.swp
 .tmp
 benchmark/mult
-Manifest.toml
 test/data.h5
 docs/build/
 precompile/tmp
@@ -10,3 +9,14 @@ precompile/tmp
 benchmark/*.json
 .benchmarkci
 .vscode/
+
+ITensorUnicodePlots/Manifest.toml
+ITensorUnicodePlots/test/Manifest.toml
+ITensorMakie/Manifest.toml
+ITensorMakie/test/Manifest.toml
+ITensorGLMakie/Manifest.toml
+ITensorGLMakie/test/Manifest.toml
+ITensorVisualization/Manifest.toml
+ITensorVisualization/test/Manifest.toml
+/Manifest.toml
+NDTensors/test/Manifest.toml
