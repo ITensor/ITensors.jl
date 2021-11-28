@@ -34,7 +34,7 @@ jobs:
         run: |
           using Pkg;
           # dev mono repo versions
-          pkg"dev . ./ITensorMakie"
+          pkg"dev NDTensors . ./ITensorVisualization ./ITensorMakie"
       #- uses: julia-actions/julia-runtest@latest
       - name: Run the tests
         continue-on-error: true
