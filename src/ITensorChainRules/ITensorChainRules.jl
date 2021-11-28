@@ -194,7 +194,8 @@ end
 function ChainRulesCore.rrule(::typeof(itensor), x::Array, a...)
   y = itensor(x, a...)
   function itensor_pullback(ȳ)
-    x̄ = reshape(array(unthunk(ȳ)), size(x))
+    uȳ = permute(unthunk(ȳ), a...)
+    x̄ = reshape(array(uȳ), size(x))
     ā = broadcast_notangent(a)
     return (NoTangent(), x̄, ā...)
   end
