@@ -28,14 +28,12 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      #- uses: julia-actions/julia-buildpkg@latest
       - name: Install Julia dependencies
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
           # dev mono repo versions
           pkg"dev NDTensors . ./ITensorVisualization ./ITensorMakie ./ITensorGLMakie"
-      #- uses: julia-actions/julia-runtest@latest
       - name: Run the tests
         continue-on-error: true
         run: >
