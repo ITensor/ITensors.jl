@@ -1,4 +1,5 @@
-using ITensors.NDTensors, Test
+using NDTensors
+using Test
 
 @testset "DiagTensor basic functionality" begin
   t = tensor(Diag(rand(ComplexF64, 100)), (100, 100))

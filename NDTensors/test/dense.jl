@@ -1,4 +1,5 @@
-using ITensors.NDTensors, Test
+using NDTensors
+using Test
 
 @testset "Dense Tensors" begin
   @testset "DenseTensor basic functionality" begin
