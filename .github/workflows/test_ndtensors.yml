@@ -39,8 +39,5 @@ jobs:
       - name: Run the tests
         continue-on-error: true
         run: >
-          julia --project=monorepo -e 'using Pkg; Pkg.test("NDTensors", coverage=true)'
+          julia --project=monorepo -e 'using Pkg; Pkg.test("NDTensors")'
           && echo "TESTS_SUCCESSFUL=true" >> $GITHUB_ENV 
-      - uses: julia-actions/julia-uploadcodecov@latest
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
