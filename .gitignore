@@ -10,6 +10,7 @@ benchmark/*.json
 .benchmarkci
 .vscode/
 
+NDTensors/test/Manifest.toml
 ITensorUnicodePlots/Manifest.toml
 ITensorUnicodePlots/test/Manifest.toml
 ITensorMakie/Manifest.toml
@@ -19,4 +20,4 @@ ITensorGLMakie/test/Manifest.toml
 ITensorVisualization/Manifest.toml
 ITensorVisualization/test/Manifest.toml
 /Manifest.toml
-NDTensors/test/Manifest.toml
+docs/Manifest.toml
