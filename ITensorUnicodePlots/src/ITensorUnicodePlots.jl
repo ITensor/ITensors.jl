@@ -44,7 +44,7 @@ function plot(::Backend"UnicodePlots"; xlim, ylim, width, height)
 end
 
 function draw_edge!(b::Backend"UnicodePlots", plot, v1, v2; color)
-  UnicodePlots.lineplot!(plot, [v1[1], v2[1]], [v1[2], v2[2]]; color)
+  UnicodePlots.lineplot!(plot, [v1[1], v2[1]], [v1[2], v2[2]]; color=color)
   return plot
 end
 

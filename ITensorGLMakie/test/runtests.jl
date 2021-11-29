@@ -1,5 +1,5 @@
 using ITensors
-using ITensorMakie
+using ITensorGLMakie
 using Test
 
 starts_and_ends_with(file, st, en) = startswith(file, st) && endswith(file, en)

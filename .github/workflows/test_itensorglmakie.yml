@@ -35,7 +35,5 @@ jobs:
           # dev mono repo versions
           pkg"dev NDTensors . ./ITensorVisualization ./ITensorMakie ./ITensorGLMakie"
       - name: Run the tests
-        continue-on-error: true
-        run: >
-          julia --project=monorepo -e 'using Pkg; Pkg.test("ITensorGLMakie")'
-          && echo "TESTS_SUCCESSFUL=true" >> $GITHUB_ENV 
+        run: |
+          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGLMakie")'

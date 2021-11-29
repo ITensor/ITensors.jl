@@ -2,10 +2,10 @@ using ITensors
 using ITensorMakie
 using Graphs
 using GLMakie
-
-include("utils/layered_layout.jl")
+using LayeredLayouts
 
 tn = itensornetwork(grid((4, 4)); linkspaces=3)
-@visualize fig tn arrow_show = true layout = layered_layout
+layout(g) = layered_layout(solve_positions(Zarate(), g))
+@visualize fig tn arrow_show = true layout = layout
 
 fig

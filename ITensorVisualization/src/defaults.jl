@@ -164,7 +164,7 @@ end
 function label_string(is; is_self_loop=false, dims, tags, plevs, ids, qns, newlines)
   str = ""
   for n in eachindex(is)
-    str *= label_string(is[n]; dims, tags, plevs, ids, qns)
+    str *= label_string(is[n]; dims=dims, tags=tags, plevs=plevs, ids=ids, qns=qns)
     if n ≠ lastindex(is)
       if any((dims, tags, ids, qns))
         str *= "⊗"
