@@ -31,6 +31,4 @@ R1 = @visualize fig2 ELn0 * ψn1n2 * hn1 edge_labels = edge_labels vertex_size =
 R2 = @visualize fig3 R1 * hn2 * ERn2 edge_labels = edge_labels vertex_size = 50
 @show R2 ≈ ELn0 * ψn1n2 * hn1 * hn2 * ERn2
 
-display(fig1)
-display(fig2)
-display(fig3)
+fig1, fig2, fig3
