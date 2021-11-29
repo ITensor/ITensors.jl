@@ -1,6 +1,7 @@
 *.o
 *.swp
 .tmp
+*.cov
 benchmark/mult
 test/data.h5
 docs/build/
