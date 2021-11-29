@@ -45,8 +45,10 @@ jobs:
           using Pkg;
           pkg"dev NDTensors ."
       - name: Run the tests
+        shell: julia --project=monorepo {0}
         run: |
-          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test(; coverage=true)'
+          using Pkg;
+          Pkg.test("ITensors"; coverage=true)
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
