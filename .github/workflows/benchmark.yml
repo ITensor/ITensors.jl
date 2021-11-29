@@ -12,15 +12,10 @@ jobs:
         with:
           version: 1
       - name: Install dependencies
-        shell: julia --project=benchmark/ {0}
-        run: |
-          using Pkg;
-          pkg"add PkgBenchmark BenchmarkCI@0.1";
-          pkg"dev NDTensors .";
-          Pkg.instantiate()
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
       - name: Run benchmarks
-        run: julia --project=benchmark/ -e 'using Pkg; using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
+        run: julia -e 'using Pkg; using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
       - name: Post results
-        run: rm benchmark/Manifest.toml && julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
