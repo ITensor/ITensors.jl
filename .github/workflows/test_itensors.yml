@@ -23,7 +23,6 @@ jobs:
           - macOS-latest
         threads:
           - '1'
-          - '2'
         arch:
           - x64
         exclude:

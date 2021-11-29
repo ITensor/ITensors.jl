@@ -1,4 +1,4 @@
-name: TestITensorVisualization
+name: TestITensors
 on:
   push:
     branches:
@@ -19,7 +19,7 @@ jobs:
         os:
           - ubuntu-latest
         threads:
-          - '1'
+          - '2'
         arch:
           - x64
     steps:
@@ -34,13 +34,10 @@ jobs:
         run: |
           using Pkg;
           # dev mono repo versions
-          pkg"dev . ITensorVisualization NDTensors"
+          pkg"dev . NDTensors"
       #- uses: julia-actions/julia-runtest@latest
       - name: Run the tests
         continue-on-error: true
         run: >
-          julia --project=monorepo -e 'using Pkg; Pkg.test("ITensorVisualization", coverage=true)'
-          && echo "TESTS_SUCCESSFUL=true" >> $GITHUB_ENV 
-      - uses: julia-actions/julia-uploadcodecov@latest
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          julia --project=monorepo -e 'using Pkg; Pkg.test("ITensors")'
+          && echo "TESTS_SUCCESSFUL=true" >> $GITHUB_ENV

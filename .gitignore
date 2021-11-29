@@ -9,7 +9,6 @@ precompile/tmp
 benchmark/*.json
 .benchmarkci
 .vscode/
-
 NDTensors/test/Manifest.toml
 ITensorUnicodePlots/Manifest.toml
 ITensorUnicodePlots/test/Manifest.toml

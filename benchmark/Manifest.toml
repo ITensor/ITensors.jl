@@ -79,10 +79,10 @@ uuid = "0234f1f7-429e-5d53-9886-15a909be8d59"
 version = "1.12.0+1"
 
 [[ITensors]]
-deps = ["ChainRulesCore", "Compat", "Dictionaries", "HDF5", "KrylovKit", "LinearAlgebra", "LinearMaps", "PackageCompiler", "Pkg", "Printf", "Random", "Requires", "SerializedElementArrays", "StaticArrays", "Strided", "TimerOutputs", "TupleTools", "Zeros", "ZygoteRules"]
-git-tree-sha1 = "8106cac614eeaf030e394eba40c4bdd8713f7879"
+deps = ["ChainRulesCore", "Compat", "Dictionaries", "HDF5", "KrylovKit", "LinearAlgebra", "LinearMaps", "NDTensors", "PackageCompiler", "Pkg", "Printf", "Random", "Requires", "SerializedElementArrays", "StaticArrays", "Strided", "TimerOutputs", "TupleTools", "Zeros", "ZygoteRules"]
+path = ".."
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
-version = "0.2.11"
+version = "0.2.12"
 
 [[Indexing]]
 git-tree-sha1 = "ce1566720fd6b19ff3411404d4b977acd4814f9f"

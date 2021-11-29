@@ -1,11 +1,11 @@
 module ITensorVisualization
 
-using ITensors
 using AbstractTrees
-using Colors
 using GeometryBasics
-using MetaGraphs
+using Graphs
+using ITensors
 using LinearAlgebra
+using MetaGraphs
 using NetworkLayout
 using SparseArrays
 using Statistics
@@ -51,10 +51,5 @@ include("itensor_graph.jl")
 
 # Visualizing ITensor networks
 include("visualize_macro.jl")
-
-# Backends
-# TODO: split off into seperate packages
-include("ITensorUnicodePlots/ITensorUnicodePlots.jl")
-include("ITensorMakie/ITensorMakie.jl")
 
 end

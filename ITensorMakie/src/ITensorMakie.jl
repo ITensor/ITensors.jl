@@ -1,4 +1,12 @@
+module ITensorMakie
+
+using Colors
+using Graphs
+using NetworkLayout
+using Reexport
 using GraphMakie
+@reexport using ITensorVisualization
+
 using GraphMakie.Makie:
   Makie,
   Figure,
@@ -7,6 +15,27 @@ using GraphMakie.Makie:
   hidespines!,
   deregister_interaction!,
   register_interaction!
+
+using ITensorVisualization:
+  @Backend_str,
+  default_vertex_labels,
+  default_vertex_labels_prefix,
+  default_vertex_size,
+  default_vertex_textsize,
+  default_edge_textsize,
+  default_edge_widths,
+  default_edge_labels,
+  default_arrow_show,
+  default_arrow_size,
+  default_siteinds_direction,
+  is_self_loop,
+  _ndims
+
+import ITensorVisualization: visualize, visualize!, _graphplot
+
+function __init__()
+  return ITensorVisualization.set_backend!(Backend"Makie"())
+end
 
 fill_number(a::AbstractVector, n::Integer) = a
 fill_number(x::Number, n::Integer) = fill(x, n)
@@ -123,4 +152,17 @@ function visualize!(
     end
   end
   return f
+end
+
+# For use in sequence visualization.
+# TODO: Make this more generalizable to other backends.
+function _graphplot(::Backend"Makie", graph; all_labels)
+  fig, ax, plt = graphplot(
+    reverse(graph); arrow_show=false, nlabels=all_labels, layout=Buchheim()
+  )
+  hidedecorations!(ax)
+  #hidespines!(ax)
+  return fig
+end
+
 end
