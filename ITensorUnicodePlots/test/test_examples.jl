@@ -8,7 +8,7 @@ using Test
     println("Testing file $(file_path)")
     empty!(ARGS)
     push!(ARGS, "false")
-    include(file_path)
+    @test !isnothing(include(file_path))
     empty!(ARGS)
   end
 end

@@ -1,6 +1,7 @@
 using ITensors
 using ITensorUnicodePlots
 using Graphs
+using GeometryBasics
 using NetworkLayout
 
 N = 10
