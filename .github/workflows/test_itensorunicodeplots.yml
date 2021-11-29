@@ -39,5 +39,4 @@ jobs:
       - name: Run the tests
         continue-on-error: true
         run: >
-          julia --project=monorepo -e 'using Pkg; Pkg.test("ITensorUnicodePlots")'
-          && echo "TESTS_SUCCESSFUL=true" >> $GITHUB_ENV 
+          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorUnicodePlots")'
