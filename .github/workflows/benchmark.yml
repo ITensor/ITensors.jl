@@ -21,6 +21,6 @@ jobs:
       - name: Run benchmarks
         run: julia --project=benchmark/ -e 'using Pkg; using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
       - name: Post results
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
+        run: rm benchmark/Manifest.toml && julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
