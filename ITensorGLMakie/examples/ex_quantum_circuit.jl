@@ -3,9 +3,6 @@ using ITensorGLMakie
 using LayeredLayouts
 using Graphs
 
-include("utils/layered_layout.jl")
-include("utils/circuit_network.jl")
-
 N = 10
 layers = 10
 ndelete = 0
@@ -29,6 +26,7 @@ U, s̃ = circuit_network(gates, s)
 tn = [ψ, U..., ψ̃]
 
 edge_labels = (; plevs=true)
-@visualize fig tn arrow_show = true edge_labels = edge_labels layout = layered_layout
+layout(g) = layered_layout(solve_positions(Zarate(), g))
+@visualize fig tn arrow_show = true edge_labels = edge_labels layout = layout
 
 fig

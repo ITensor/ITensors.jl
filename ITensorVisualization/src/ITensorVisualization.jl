@@ -36,11 +36,16 @@ export @visualize,
   @visualize_noeval!,
   @visualize_sequence,
   @visualize_sequence_noeval,
+  circuit_network,
   itensornetwork,
+  layered_layout,
   IndexLabels
 
 # Some general graph functionality
 include("graphs.jl")
+
+# Some general layout functionality
+include("layered_layout.jl")
 
 # Backends interface
 include("backends_interface.jl")

@@ -20,9 +20,6 @@ hn2 = randomITensor(dag(h⃗[n]), s⃗[n + 1]', dag(s⃗[n + 1]), h⃗[n + 1])
 ELn0 = randomITensor(l⃗[n - 1]', h⃗[n - 1], dag(l⃗[n - 1]))
 ERn2 = randomITensor(l⃗[n + 1]', dag(h⃗[n + 1]), dag(l⃗[n + 1]))
 
-backend = "Makie"
-original_backend = ITensorVisualization.set_backend!(backend)
-
 edge_labels = (; plevs=true)
 
 R = @visualize fig1 ELn0 * ψn1n2 * hn1 * hn2 * ERn2 edge_labels = edge_labels vertex_size =
@@ -33,8 +30,6 @@ R = @visualize fig1 ELn0 * ψn1n2 * hn1 * hn2 * ERn2 edge_labels = edge_labels v
 R1 = @visualize fig2 ELn0 * ψn1n2 * hn1 edge_labels = edge_labels vertex_size = 50
 R2 = @visualize fig3 R1 * hn2 * ERn2 edge_labels = edge_labels vertex_size = 50
 @show R2 ≈ ELn0 * ψn1n2 * hn1 * hn2 * ERn2
-
-ITensorVisualization.set_backend!(original_backend)
 
 display(fig1)
 display(fig2)
