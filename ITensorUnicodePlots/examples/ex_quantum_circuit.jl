@@ -27,7 +27,7 @@ tn = [ψ, U..., ψ̃]
 
 edge_labels = (; plevs=true)
 layout(g) = layered_layout(solve_positions(Zarate(), g))
-@visualize fig tn arrow_show = true edge_labels = edge_labels layout = layout width =
-  90 height = 40
+@visualize fig tn arrow_show = true edge_labels = edge_labels layout = layout width = 90 height =
+  40
 
 fig
