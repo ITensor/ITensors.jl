@@ -5,6 +5,7 @@ using Compat
 using GeometryBasics
 using Graphs
 using ITensors
+using ITensorVisualizationCore
 using LinearAlgebra
 using MetaGraphs
 using NetworkLayout
@@ -31,6 +32,11 @@ using Graphs:
 
 using ITensors: data, QNIndex
 
+import ITensorVisualizationCore:
+  visualize,
+  visualize!,
+  visualize_sequence
+
 export @visualize,
   @visualize!,
   @visualize_noeval,
@@ -56,6 +62,6 @@ include("defaults.jl")
 include("itensor_graph.jl")
 
 # Visualizing ITensor networks
-include("visualize_macro.jl")
+include("visualize.jl")
 
 end

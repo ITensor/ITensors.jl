@@ -1,0 +1,13 @@
+name = "ITensorVisualizationCore"
+uuid = "76d49726-b270-43b0-b4da-8168ebd2d015"
+authors = ["Matthew Fishman <mfishman@flatironinstitute.org> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1.3"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
