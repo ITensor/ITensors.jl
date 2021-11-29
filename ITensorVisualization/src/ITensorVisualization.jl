@@ -1,6 +1,7 @@
 module ITensorVisualization
 
 using AbstractTrees
+using Compat
 using GeometryBasics
 using Graphs
 using ITensors
