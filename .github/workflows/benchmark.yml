@@ -16,7 +16,8 @@ jobs:
         run: |
           using Pkg;
           pkg"add PkgBenchmark BenchmarkCI@0.1";
-          pkg"dev NDTensors ."
+          pkg"dev NDTensors .";
+          Pkg.instantiate()
       - name: Run benchmarks
         run: julia --project=benchmark/ -e 'using Pkg; using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
       - name: Post results
