@@ -2,6 +2,7 @@ using ITensors
 using ITensorMakie
 using GLMakie
 using Graphs
+using GeometryBasics
 using NetworkLayout
 
 N = 10
