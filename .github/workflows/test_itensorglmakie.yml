@@ -32,8 +32,7 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          # dev mono repo versions
-          pkg"dev NDTensors . ./ITensorVisualization ./ITensorMakie ./ITensorGLMakie"
+          pkg"dev NDTensors ./ITensorVisualizationCore . ./ITensorVisualization ./ITensorMakie ./ITensorGLMakie"
       - name: Run the tests
         run: |
           julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGLMakie")'

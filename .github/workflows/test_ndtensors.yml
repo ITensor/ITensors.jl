@@ -32,7 +32,6 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          # dev mono repo versions
           pkg"dev NDTensors"
       - name: Run the tests
         run: |
