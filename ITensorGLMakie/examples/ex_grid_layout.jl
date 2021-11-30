@@ -1,6 +1,7 @@
 using ITensors
 using ITensorGLMakie
 using Graphs
+using GeometryBasics
 using NetworkLayout
 
 N = 10
