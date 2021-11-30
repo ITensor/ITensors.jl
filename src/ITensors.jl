@@ -12,6 +12,7 @@ module ITensors
 #
 using Compat
 using HDF5
+using ITensorVisualizationCore
 using KrylovKit
 using LinearAlgebra
 using NDTensors
