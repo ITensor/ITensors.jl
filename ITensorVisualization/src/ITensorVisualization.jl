@@ -5,7 +5,7 @@ using Compat
 using GeometryBasics
 using Graphs
 using ITensors
-using ITensorVisualizationCore
+using ITensors.ITensorVisualizationCore
 using LinearAlgebra
 using MetaGraphs
 using NetworkLayout
@@ -32,7 +32,7 @@ using Graphs:
 
 using ITensors: data, QNIndex
 
-import ITensorVisualizationCore: visualize, visualize!, visualize_sequence
+import ITensors.ITensorVisualizationCore: visualize, visualize!, visualize_sequence
 
 export @visualize,
   @visualize!,

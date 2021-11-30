@@ -43,7 +43,7 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          pkg"dev NDTensors ./ITensorVisualizationCore ."
+          pkg"dev ./NDTensors ."
       - name: Run the tests
         shell: julia --project=monorepo {0}
         run: |
