@@ -78,8 +78,14 @@ git-tree-sha1 = "fd83fa0bde42e01952757f01149dd968c06c4dba"
 uuid = "0234f1f7-429e-5d53-9886-15a909be8d59"
 version = "1.12.0+1"
 
+[[ITensorVisualizationCore]]
+deps = ["Compat"]
+path = "../ITensorVisualizationCore"
+uuid = "76d49726-b270-43b0-b4da-8168ebd2d015"
+version = "0.1.0"
+
 [[ITensors]]
-deps = ["ChainRulesCore", "Compat", "Dictionaries", "HDF5", "KrylovKit", "LinearAlgebra", "LinearMaps", "NDTensors", "PackageCompiler", "Pkg", "Printf", "Random", "Requires", "SerializedElementArrays", "StaticArrays", "Strided", "TimerOutputs", "TupleTools", "Zeros", "ZygoteRules"]
+deps = ["ChainRulesCore", "Compat", "Dictionaries", "HDF5", "ITensorVisualizationCore", "KrylovKit", "LinearAlgebra", "LinearMaps", "NDTensors", "PackageCompiler", "Pkg", "Printf", "Random", "Requires", "SerializedElementArrays", "StaticArrays", "Strided", "TimerOutputs", "TupleTools", "Zeros", "ZygoteRules"]
 path = ".."
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 version = "0.2.12"

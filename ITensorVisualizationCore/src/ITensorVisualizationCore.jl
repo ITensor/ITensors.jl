@@ -1,5 +1,7 @@
 module ITensorVisualizationCore
 
+using Compat
+
 export @visualize,
   @visualize!,
   @visualize_noeval,

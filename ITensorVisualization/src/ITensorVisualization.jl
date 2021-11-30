@@ -32,10 +32,7 @@ using Graphs:
 
 using ITensors: data, QNIndex
 
-import ITensorVisualizationCore:
-  visualize,
-  visualize!,
-  visualize_sequence
+import ITensorVisualizationCore: visualize, visualize!, visualize_sequence
 
 export @visualize,
   @visualize!,
