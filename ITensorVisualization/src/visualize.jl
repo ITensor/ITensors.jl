@@ -9,7 +9,8 @@ function _contract(label1::String, label2::String)
 end
 
 function _contract(tensor1::ITensor, tensor2::ITensor)
-  return ITensor(noncommoninds(tensor1, tensor2))
+  indsR = noncommoninds(tensor1, tensor2)
+  return isempty(indsR) ? ITensor() : ITensor(indsR)
 end
 
 sequence_traversal(sequence) = reverse(collect(StatelessBFS(sequence)))
@@ -196,9 +197,10 @@ function visualize_sequence(
 
   traversal = sequence_traversal(sequence)
   labels_sequence = contraction_sequence(vertex_labels, sequence, traversal)
+
   tn_sequence = contraction_sequence(tn, sequence, traversal)
 
-  for n in 1:(length(tn_sequence) - 1)
+  for n in 1:length(tn_sequence)
     visualize!(fig[1, n + 2], tn_sequence[n]; vertex_labels=labels_sequence[n], kwargs...)
   end
 
