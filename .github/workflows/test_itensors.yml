@@ -16,7 +16,6 @@ jobs:
         version:
           - '1.3'
           - '1'
-          - '^1.7.0-0'
         os:
           - ubuntu-latest
           - windows-latest
@@ -31,8 +30,6 @@ jobs:
           # Only test all os on the latest release
           - {version: '1.3', os: 'windows-latest'}
           - {version: '1.3', os: 'macOS-latest'}
-          - {version: '^1.7.0-0', os: 'windows-latest'}
-          - {version: '^1.7.0-0', os: 'macOS-latest'}
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
@@ -43,7 +40,7 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          pkg"dev NDTensors ./ITensorVisualizationCore ."
+          pkg"dev ./NDTensors ."
       - name: Run the tests
         shell: julia --project=monorepo {0}
         run: |

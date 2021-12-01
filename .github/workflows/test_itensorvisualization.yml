@@ -32,7 +32,7 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          pkg"dev NDTensors ./ITensorVisualizationCore . ./ITensorVisualization"
+          pkg"dev ./NDTensors . ./ITensorVisualization"
       - name: Run the tests
         run: |
           julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorVisualization")'

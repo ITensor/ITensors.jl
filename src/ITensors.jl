@@ -12,7 +12,6 @@ module ITensors
 #
 using Compat
 using HDF5
-using ITensorVisualizationCore
 using KrylovKit
 using LinearAlgebra
 using NDTensors
@@ -163,6 +162,12 @@ include("ITensorChainRules/ITensorChainRules.jl")
 # ITensorNetworkMaps
 #
 include("ITensorNetworkMaps/ITensorNetworkMaps.jl")
+
+#####################################
+# ITensorVisualizationCore
+#
+include("ITensorVisualizationCore/ITensorVisualizationCore.jl")
+using .ITensorVisualizationCore
 
 #####################################
 # Deprecations

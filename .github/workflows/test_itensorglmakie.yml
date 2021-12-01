@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         version:
-          - '1.3'
+          - '1.6'
           - '1'
         os:
           - ubuntu-latest
@@ -28,11 +28,22 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+      - run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
       - name: Install Julia dependencies
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          pkg"dev NDTensors ./ITensorVisualizationCore . ./ITensorVisualization ./ITensorMakie ./ITensorGLMakie"
+          pkg"dev ./NDTensors . ./ITensorVisualization ./ITensorMakie ./ITensorGLMakie"
       - name: Run the tests
         run: |
-          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGLMakie")'
+          DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGLMakie")'
