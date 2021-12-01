@@ -15,7 +15,7 @@ UnicodePlots = "b8865327-cd53-5732-bb35-84acbb429228"
 
 [compat]
 Graphs = "1.4.1"
-ITensorVisualizationBase = "0.2.0"
+ITensorVisualizationBase = "0.1.0"
 ITensors = "0.2.12"
 NetworkLayout = "0.4.3"
 Reexport = "1.2.2"
