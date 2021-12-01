@@ -1,5 +1,5 @@
 using ITensors
-using ITensorVisualization
+using ITensorVisualizationBase
 using Graphs
 
 tn = itensornetwork(grid((3, 3, 3)))

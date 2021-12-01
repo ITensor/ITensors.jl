@@ -4,9 +4,9 @@ using Graphs
 using NetworkLayout
 using Reexport
 using Statistics
-@reexport using ITensorVisualization
+@reexport using ITensorVisualizationBase
 
-using ITensorVisualization:
+using ITensorVisualizationBase:
   @Backend_str,
   default_vertex_labels,
   default_vertex_labels_prefix,
@@ -22,10 +22,10 @@ using ITensorVisualization:
 
 using UnicodePlots: UnicodePlots
 
-import ITensorVisualization: visualize
+import ITensorVisualizationBase: visualize
 
 function __init__()
-  return ITensorVisualization.set_backend!(Backend"UnicodePlots"())
+  return ITensorVisualizationBase.set_backend!(Backend"UnicodePlots"())
 end
 
 function plot(::Backend"UnicodePlots"; xlim, ylim, width, height)
@@ -85,7 +85,7 @@ function visualize(
 )
   edge_color = :blue # TODO: make into keyword argument
 
-  edge_labels = ITensorVisualization.edge_labels(b, edge_labels, g)
+  edge_labels = ITensorVisualizationBase.edge_labels(b, edge_labels, g)
 
   node_pos = layout(g)
   edge_pos = [node_pos[src(edge)] => node_pos[dst(edge)] for edge in edges(g)]

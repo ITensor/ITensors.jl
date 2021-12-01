@@ -17,7 +17,7 @@ ITensorMakie/Manifest.toml
 ITensorMakie/test/Manifest.toml
 ITensorGLMakie/Manifest.toml
 ITensorGLMakie/test/Manifest.toml
-ITensorVisualization/Manifest.toml
-ITensorVisualization/test/Manifest.toml
+ITensorVisualizationBase/Manifest.toml
+ITensorVisualizationBase/test/Manifest.toml
 /Manifest.toml
 docs/Manifest.toml

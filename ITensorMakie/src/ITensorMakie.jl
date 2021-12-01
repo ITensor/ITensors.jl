@@ -5,7 +5,7 @@ using Graphs
 using NetworkLayout
 using Reexport
 using GraphMakie
-@reexport using ITensorVisualization
+@reexport using ITensorVisualizationBase
 
 using GraphMakie.Makie:
   Makie,
@@ -16,7 +16,7 @@ using GraphMakie.Makie:
   deregister_interaction!,
   register_interaction!
 
-using ITensorVisualization:
+using ITensorVisualizationBase:
   @Backend_str,
   default_vertex_labels,
   default_vertex_labels_prefix,
@@ -31,10 +31,10 @@ using ITensorVisualization:
   is_self_loop,
   _ndims
 
-import ITensorVisualization: visualize, visualize!, _graphplot
+import ITensorVisualizationBase: visualize, visualize!, _graphplot
 
 function __init__()
-  return ITensorVisualization.set_backend!(Backend"Makie"())
+  return ITensorVisualizationBase.set_backend!(Backend"Makie"())
 end
 
 fill_number(a::AbstractVector, n::Integer) = a
@@ -84,7 +84,7 @@ function visualize!(
     )
   end
 
-  edge_labels = ITensorVisualization.edge_labels(b, edge_labels, g)
+  edge_labels = ITensorVisualizationBase.edge_labels(b, edge_labels, g)
 
   if length(vertex_labels) ≠ nv(g)
     throw(

@@ -1,5 +1,5 @@
 using ITensors
-using ITensorVisualization
+using ITensorVisualizationBase
 using Graphs
 using LayeredLayouts
 using PastaQ: randomcircuit

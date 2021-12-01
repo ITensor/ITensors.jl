@@ -1,5 +1,5 @@
 using ITensors
-using ITensorVisualization
+using ITensorVisualizationBase
 
 s = siteinds("S=1/2", 5; conserve_qns=true)
 ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=2)
