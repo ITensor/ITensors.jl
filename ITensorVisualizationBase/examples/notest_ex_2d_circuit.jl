@@ -1,7 +1,6 @@
 using ITensors
-using ITensorMakie
+using ITensorVisualizationBase
 using Graphs
-using GLMakie
 using LayeredLayouts
 using PastaQ: randomcircuit
 
@@ -23,7 +22,5 @@ edge_labels = (; plevs=true)
 layout(g) = layered_layout(solve_positions(Zarate(), g))
 @visualize fig tn arrow_show = true edge_labels = edge_labels layout = layout edge_textsize =
   20
-@visualize! fig[2, 1] tn ndims = 3 arrow_show = true edge_labels = edge_labels edge_textsize =
-  10
 
 fig

@@ -1,5 +1,5 @@
 using ITensors
-using ITensorVisualization
+using ITensorVisualizationBase
 using Test
 
 @testset "Basic tests without any backend" begin

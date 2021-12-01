@@ -85,7 +85,7 @@ function edge_labels(b::Backend, l::IndexLabels, g::AbstractGraph)
 end
 
 function edge_labels(l::IndexLabels, g::AbstractGraph)
-  return [edge_label(l, g, e) for e in edges(g)]
+  return String[edge_label(l, g, e) for e in edges(g)]
 end
 
 function edge_labels(b::Backend, params::NamedTuple, g::AbstractGraph)
@@ -186,7 +186,7 @@ function width(inds)
 end
 
 function default_edge_widths(b::Backend, g::AbstractGraph)
-  return [width(get_prop(g, e, :inds)) for e in edges(g)]
+  return Float64[width(get_prop(g, e, :inds)) for e in edges(g)]
 end
 
 #############################################################################

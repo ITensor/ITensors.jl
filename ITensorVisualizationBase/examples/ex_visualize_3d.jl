@@ -1,6 +1,5 @@
 using ITensors
-using ITensorMakie
-using GLMakie
+using ITensorVisualizationBase
 using Graphs
 
 tn = itensornetwork(grid((3, 3, 3)))

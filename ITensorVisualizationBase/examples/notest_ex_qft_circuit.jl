@@ -1,7 +1,6 @@
 using ITensors
-using ITensorMakie
+using ITensorVisualizationBase
 using Graphs
-using GLMakie
 using LayeredLayouts
 using PastaQ: qft
 
@@ -19,7 +18,5 @@ edge_labels = (; tags=true, plevs=true)
 layout(g) = layered_layout(solve_positions(Zarate(), g))
 @visualize fig tn arrow_show = true edge_labels = edge_labels edge_textsize = 20 layout =
   layout
-edge_labels = (; plevs=true)
-@visualize! fig[1, 2] tn ndims = 3 edge_labels = edge_labels edge_textsize = 20
 
 fig

@@ -1,4 +1,4 @@
-module ITensorVisualization
+module ITensorVisualizationBase
 
 using AbstractTrees
 using Compat

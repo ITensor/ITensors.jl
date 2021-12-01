@@ -114,7 +114,7 @@ The contraction should be written in terms of a series of ITensors contracted wi
 # Examples
 ```julia
 using ITensors
-using ITensorVisualization
+using ITensorUnicodePlots # Must load a backend or else no plots will be made
 
 i = Index(2, "index_i")
 j = Index(10, "index_j")

@@ -1,5 +1,5 @@
 using ITensors
-using ITensorVisualization
+using ITensorVisualizationBase
 using GeometryBasics
 using Graphs
 using NetworkLayout

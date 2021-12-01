@@ -1,9 +1,9 @@
-# ITensorVisualization
+# ITensorVisualizationBase
 
 This is a package for visualizing tensor networks. The main purpose is to use it with the [ITensors.jl](https://github.com/ITensor/ITensors.jl) package to view and debug tensor network contractions, for example:
 ```julia
 using ITensors
-using ITensorVisualization
+using ITensorVisualizationBase
 
 i = Index(2, "i")
 j = Index(10, "j")
@@ -29,7 +29,7 @@ load a Makie backend and specify you want Makie as your backend:
 ```julia
 using GLMakie
 
-ITensorVisualization.set_backend!("Makie")
+ITensorVisualizationBase.set_backend!("Makie")
 
 ABC = @visualize A * B * C edge_labels=(tags=true,);
 ```
