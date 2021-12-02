@@ -1,0 +1,50 @@
+include:
+      - 'https://raw.githubusercontent.com/JuliaGPU/gitlab-ci/master/templates/v6.yml'
+
+test:1.4:
+  extends:
+    - .julia:1.4
+    - .test
+  tags:
+    - nvidia
+    - cuda_11.0
+  script:
+    - julia --project -e 'using Pkg; Pkg.develop(["ITensors", "CUDA", "GPUArrays", "GPUCompiler"]);'
+    - julia --project -e 'using Pkg; Pkg.test("ITensorGPU"; coverage=true)'
+  variables:
+    JULIA_CUDA_VERSION: '11.0'
+    JULIA_CUDA_USE_BINARYBUILDER: 'true'
+
+test:1.5:
+  extends:
+    - .julia:1.5
+    - .test
+  tags:
+    - nvidia
+    - cuda_11.0
+  script:
+    - julia --project -e 'using Pkg; Pkg.develop(["ITensors", "CUDA", "GPUArrays", "GPUCompiler"]);'
+    - julia --project -e 'using Pkg; Pkg.test("ITensorGPU"; coverage=true)'
+  variables:
+    JULIA_CUDA_VERSION: '11.0'
+    JULIA_CUDA_USE_BINARYBUILDER: 'true'
+
+test:nightly:
+  extends:
+    - .julia:nightly
+    - .test
+  tags:
+    - nvidia
+    - cuda_11.0
+  script:
+    - julia --project -e 'using Pkg; Pkg.develop(["ITensors", "CUDA", "GPUArrays", "GPUCompiler"]);'
+    - julia --project -e 'using Pkg; Pkg.test("ITensorGPU")'
+  allow_failure: true
+  variables:
+    JULIA_CUDA_VERSION: '11.0'
+    JULIA_CUDA_USE_BINARYBUILDER: 'true'
+
+coverage:
+  extends:
+    - .julia:nightly
+    - .coverage
