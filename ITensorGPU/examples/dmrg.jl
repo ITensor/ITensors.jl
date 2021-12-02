@@ -8,12 +8,12 @@ N = 50
 sites = siteinds("S=1", N)
 
 ampo = AutoMPO()
-for j=1:N-1
-  ampo .+= 0.5, "S+", j, "S-", j+1
-  ampo .+= 0.5, "S-", j, "S+", j+1
-  ampo .+=      "Sz", j, "Sz", j+1
+for j in 1:(N - 1)
+  ampo .+= 0.5, "S+", j, "S-", j + 1
+  ampo .+= 0.5, "S-", j, "S+", j + 1
+  ampo .+= "Sz", j, "Sz", j + 1
 end
-H = gpu(MPO(ampo,sites))
+H = gpu(MPO(ampo, sites))
 
 ψ₀ = gpu(randomMPS(sites))
 

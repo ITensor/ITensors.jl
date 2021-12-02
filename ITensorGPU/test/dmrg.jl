@@ -1,30 +1,29 @@
 using ITensorGPU, ITensors, Test, Random
 
 @testset "Basic DMRG" begin
-
   @testset "Spin-one Heisenberg" begin
     N = 10
-    sites = siteinds("S=1",N)
+    sites = siteinds("S=1", N)
 
     ampo = AutoMPO()
-    for j=1:N-1
-      add!(ampo,"Sz",j,"Sz",j+1)
-      add!(ampo,0.5,"S+",j,"S-",j+1)
-      add!(ampo,0.5,"S-",j,"S+",j+1)
+    for j in 1:(N - 1)
+      add!(ampo, "Sz", j, "Sz", j + 1)
+      add!(ampo, 0.5, "S+", j, "S-", j + 1)
+      add!(ampo, 0.5, "S-", j, "S+", j + 1)
     end
-    H = cuMPO(MPO(ampo,sites))
+    H = cuMPO(MPO(ampo, sites))
 
     psi = randomCuMPS(sites)
 
     sweeps = Sweeps(3)
     @test length(sweeps) == 3
-    maxdim!(sweeps,10,20,40)
-    mindim!(sweeps,1,10)
-    cutoff!(sweeps,1E-11)
-    noise!(sweeps,1E-10)
+    maxdim!(sweeps, 10, 20, 40)
+    mindim!(sweeps, 1, 10)
+    cutoff!(sweeps, 1E-11)
+    noise!(sweeps, 1E-10)
     str = split(sprint(show, sweeps), '\n')
     @test length(str) > 1
-    energy,psi = dmrg(H, psi, sweeps; outputlevel=0)
+    energy, psi = dmrg(H, psi, sweeps; outputlevel=0)
     @test energy < -12.0
   end
 
@@ -57,27 +56,27 @@ using ITensorGPU, ITensors, Test, Random
 
   @testset "Transverse field Ising" begin
     N = 32
-    sites = siteinds("S=1/2",N)
+    sites = siteinds("S=1/2", N)
     Random.seed!(432)
     psi0 = randomCuMPS(sites)
 
     ampo = AutoMPO()
-    for j = 1:N
-      j < N && add!(ampo,-1.0,"Sz",j,"Sz",j+1)
-      add!(ampo,-0.5,"Sx",j)
+    for j in 1:N
+      j < N && add!(ampo, -1.0, "Sz", j, "Sz", j + 1)
+      add!(ampo, -0.5, "Sx", j)
     end
-    H = cuMPO(MPO(ampo,sites))
+    H = cuMPO(MPO(ampo, sites))
 
     sweeps = Sweeps(5)
-    maxdim!(sweeps,10,20)
-    cutoff!(sweeps,1E-12)
-    noise!(sweeps,1E-10)
-    energy,psi = dmrg(H,psi0,sweeps,outputlevel=0)
+    maxdim!(sweeps, 10, 20)
+    cutoff!(sweeps, 1E-12)
+    noise!(sweeps, 1E-10)
+    energy, psi = dmrg(H, psi0, sweeps; outputlevel=0)
 
     # Exact energy for transverse field Ising model
     # with open boundary conditions at criticality
-    energy_exact = 0.25 - 0.25/sin(π/(2*(2*N+1)))
-    @test abs((energy-energy_exact)/energy_exact) < 1e-2
+    energy_exact = 0.25 - 0.25 / sin(π / (2 * (2 * N + 1)))
+    @test abs((energy - energy_exact) / energy_exact) < 1e-2
   end
 
   #=@testset "DMRGObserver" begin

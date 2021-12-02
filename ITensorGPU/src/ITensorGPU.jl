@@ -29,16 +29,59 @@ function __init__()
   dev_cols[] = 1
 end
 =#
-import ITensors: randn!, compute_contraction_labels,
-                 eigen, tensor,
-                 scale!, unioninds, array, matrix, vector,
-                 polar, tensors, truncate!, leftlim, rightlim,
-                 permute, BroadcastStyle, Indices
-import ITensors.NDTensors: similartype, ContractionProperties, contract!!, _contract!!, _contract!, contract!, contract,
-                         contraction_output, UniformDiagTensor, CombinerTensor, contraction_output_type,
-                         UniformDiag, Diag, DiagTensor, NonuniformDiag, NonuniformDiagTensor, zero_contraction_output,
-                         outer!, outer!!, is_trivial_permutation, ind, permutedims!!, Dense, DenseTensor, Combiner,
-                         Tensor, data, getperm, compute_contraction_properties!, Atrans, Btrans, Ctrans, _contract_scalar!, _contract_scalar_noperm!
+import ITensors:
+  randn!,
+  compute_contraction_labels,
+  eigen,
+  tensor,
+  scale!,
+  unioninds,
+  array,
+  matrix,
+  vector,
+  polar,
+  tensors,
+  truncate!,
+  leftlim,
+  rightlim,
+  permute,
+  BroadcastStyle,
+  Indices
+import ITensors.NDTensors:
+  similartype,
+  ContractionProperties,
+  contract!!,
+  _contract!!,
+  _contract!,
+  contract!,
+  contract,
+  contraction_output,
+  UniformDiagTensor,
+  CombinerTensor,
+  contraction_output_type,
+  UniformDiag,
+  Diag,
+  DiagTensor,
+  NonuniformDiag,
+  NonuniformDiagTensor,
+  zero_contraction_output,
+  outer!,
+  outer!!,
+  is_trivial_permutation,
+  ind,
+  permutedims!!,
+  Dense,
+  DenseTensor,
+  Combiner,
+  Tensor,
+  data,
+  getperm,
+  compute_contraction_properties!,
+  Atrans,
+  Btrans,
+  Ctrans,
+  _contract_scalar!,
+  _contract_scalar_noperm!
 import Base.*, Base.permutedims!
 import Base: similar
 include("tensor/cudense.jl")
@@ -52,16 +95,9 @@ include("mps/cumps.jl")
 include("mps/cumpo.jl")
 
 #const ContractionPlans = Dict{String, Tuple{cutensorAlgo_t, cutensorContractionPlan_t}}()
-const ContractionPlans = Dict{String, cutensorAlgo_t}()
+const ContractionPlans = Dict{String,cutensorAlgo_t}()
 
 export cu,
-       cpu,
-       cuITensor,
-       randomCuITensor,
-       cuMPS,
-       randomCuMPS,
-       productCuMPS,
-       randomCuMPO,
-       cuMPO
+  cpu, cuITensor, randomCuITensor, cuMPS, randomCuMPS, productCuMPS, randomCuMPO, cuMPO
 
 end #module

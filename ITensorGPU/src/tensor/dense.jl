@@ -1,28 +1,33 @@
-function contract!!(R::DenseTensor{<:Number,NR},
-                    labelsR::NTuple{NR},
-                    T1::DenseTensor{<:Number,N1},
-                    labelsT1::NTuple{N1},
-                    T2::DenseTensor{<:Number,N2},
-                    labelsT2::NTuple{N2}, α::Number=1, β::Number=0) where {NR,N1,N2}
-  if N1==0
+function contract!!(
+  R::DenseTensor{<:Number,NR},
+  labelsR::NTuple{NR},
+  T1::DenseTensor{<:Number,N1},
+  labelsT1::NTuple{N1},
+  T2::DenseTensor{<:Number,N2},
+  labelsT2::NTuple{N2},
+  α::Number=1,
+  β::Number=0,
+) where {NR,N1,N2}
+  if N1 == 0
     (α ≠ 1 || β ≠ 0) &&
       error("contract!! not yet implemented for scalar ITensor with non-trivial α and β")
     # TODO: replace with an add! function?
     # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
-    perm = getperm(labelsR,labelsT2)
-    R = permutedims!!(R,T2,perm,(r,t2)->T1[]*t2)
-  elseif N2==0
+    perm = getperm(labelsR, labelsT2)
+    R = permutedims!!(R, T2, perm, (r, t2) -> T1[] * t2)
+  elseif N2 == 0
     (α ≠ 1 || β ≠ 0) &&
       error("contract!! not yet implemented for scalar ITensor with non-trivial α and β")
-    perm = getperm(labelsR,labelsT1)
-    R = permutedims!!(R,T1,perm,(r,t1)->T2[]*t1)
-  elseif N1+N2==NR
-    (α ≠ 1 || β ≠ 0) &&
-      error("contract!! not yet implemented for outer product tensor contraction with non-trivial α and β")
+    perm = getperm(labelsR, labelsT1)
+    R = permutedims!!(R, T1, perm, (r, t1) -> T2[] * t1)
+  elseif N1 + N2 == NR
+    (α ≠ 1 || β ≠ 0) && error(
+      "contract!! not yet implemented for outer product tensor contraction with non-trivial α and β",
+    )
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
-    R = outer!!(R,T1,T2)
+    R = outer!!(R, T1, T2)
     labelsRp = (labelsT1..., labelsT2...)
     perm = getperm(labelsR, labelsRp)
     if !is_trivial_permutation(perm)
@@ -32,89 +37,89 @@ function contract!!(R::DenseTensor{<:Number,NR},
     #if dim(T1) > 2^13 && dim(T2) > 2^13 
     #    R = _big_contract!!(R,labelsR,T1,labelsT1,T2,labelsT2, α, β)
     #else
-        if α ≠ 1 || β ≠ 0
-          R = _contract!!(R, labelsR,
-                          T1, labelsT1,
-                          T2, labelsT2,
-                          α, β)
-        else
-          R = _contract!!(R, labelsR,
-                          T1, labelsT1,
-                          T2, labelsT2)
-        end
+    if α ≠ 1 || β ≠ 0
+      R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
+    else
+      R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
+    end
     #end
   end
   return R
 end
 
-function _big_contract!!(R::DenseTensor{<:Number,NR},
-                         labelsR,
-                         T1::DenseTensor{ElT1,N1},
-                         labelsT1,
-                         T2::DenseTensor{ElT2,N2},
-                         labelsT2,
-                         α::Number=1,
-                         β::Number=0) where {ElT1,ElT2,N1,N2,NR}
-  props = ContractionProperties(labelsT1,labelsT2,labelsR)
-  compute_contraction_properties!(props,T1,T2,R)
-  _big_contract!(R,T1,T2,props,α,β)
+function _big_contract!!(
+  R::DenseTensor{<:Number,NR},
+  labelsR,
+  T1::DenseTensor{ElT1,N1},
+  labelsT1,
+  T2::DenseTensor{ElT2,N2},
+  labelsT2,
+  α::Number=1,
+  β::Number=0,
+) where {ElT1,ElT2,N1,N2,NR}
+  props = ContractionProperties(labelsT1, labelsT2, labelsR)
+  compute_contraction_properties!(props, T1, T2, R)
+  _big_contract!(R, T1, T2, props, α, β)
   #val, t, _ = @timed _blasmg_contract!(R,T1,T2,props,α,β)
   return R
 end
 
-function _big_contract!(CT::DenseTensor{El,NC},
-                        AT::DenseTensor{El,NA},
-                        BT::DenseTensor{El,NB},
-                        props::ContractionProperties,
-                        α::Number=one(El),β::Number=zero(El)) where {El,NC,NA,NB}
+function _big_contract!(
+  CT::DenseTensor{El,NC},
+  AT::DenseTensor{El,NA},
+  BT::DenseTensor{El,NB},
+  props::ContractionProperties,
+  α::Number=one(El),
+  β::Number=zero(El),
+) where {El,NC,NA,NB}
   Ainds = inds(AT)
   Adims = dims(Ainds)
   Binds = inds(BT)
   Bdims = dims(Binds)
   Cinds = inds(CT)
   Cdims = dims(Cinds)
-  Adata = reshape(data(store(AT)),Adims)
-  Bdata = reshape(data(store(BT)),Bdims)
-  Cdata = reshape(data(store(CT)),Cdims)
+  Adata = reshape(data(store(AT)), Adims)
+  Bdata = reshape(data(store(BT)), Bdims)
+  Cdata = reshape(data(store(CT)), Cdims)
   contracted = commoninds(Ainds, Binds)
   A_only = uniqueinds(Ainds, Binds)
   B_only = uniqueinds(Binds, Ainds)
   ind_dict = Vector{Index}()
   for (idx, i) in enumerate(contracted)
-      push!(ind_dict, i)
+    push!(ind_dict, i)
   end
   if length(A_only) > 0
-      for (idx, i) in enumerate(A_only)
-          push!(ind_dict, i)
-      end
+    for (idx, i) in enumerate(A_only)
+      push!(ind_dict, i)
+    end
   end
   if length(B_only) > 0
-      for (idx, i) in enumerate(B_only)
-          push!(ind_dict, i)
-      end
+    for (idx, i) in enumerate(B_only)
+      push!(ind_dict, i)
+    end
   end
   ctainds = zeros(Int, length(Ainds))
   ctbinds = zeros(Int, length(Binds))
   ctcinds = zeros(Int, length(Cinds))
   for (ii, ia) in enumerate(Ainds)
-      ctainds[ii] = findfirst(x->x==ia, ind_dict)
+    ctainds[ii] = findfirst(x -> x == ia, ind_dict)
   end
   for (ii, ib) in enumerate(Binds)
-      ctbinds[ii] = findfirst(x->x==ib, ind_dict)
+    ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
   end
   for (ii, ic) in enumerate(Cinds)
-      ctcinds[ii] = findfirst(x->x==ic, ind_dict)
+    ctcinds[ii] = findfirst(x -> x == ic, ind_dict)
   end
-  id_op    = CUDA.CUTENSOR.CUTENSOR_OP_IDENTITY
+  id_op = CUDA.CUTENSOR.CUTENSOR_OP_IDENTITY
   dict_key = ""
   for cc in zip(ctcinds, Cdims)
-      dict_key *= string(cc[1]) * "," * string(cc[2]) * ","
-  end 
+    dict_key *= string(cc[1]) * "," * string(cc[2]) * ","
+  end
   for aa in zip(ctainds, Adims)
-      dict_key *= string(aa[1]) * "," * string(aa[2]) * ","
-  end 
+    dict_key *= string(aa[1]) * "," * string(aa[2]) * ","
+  end
   for bb in zip(ctbinds, Bdims)
-      dict_key *= string(bb[1]) * "," * string(bb[2]) * ","
+    dict_key *= string(bb[1]) * "," * string(bb[2]) * ","
   end
   #=synchronize()
   if haskey(ENV, "CUTENSOR_AUTOTUNE") && tryparse(Int, ENV["CUTENSOR_AUTOTUNE"]) == 1
@@ -180,7 +185,9 @@ function _big_contract!(CT::DenseTensor{El,NC},
   #@assert !any(isnan.(AC))
   #@assert !any(isnan.(BC))
   #@assert !any(isnan.(CC))
-  Cdata = CUDA.CUTENSOR.contraction!(α, Adata, ctainds, id_op, Bdata, ctbinds, id_op, β, Cdata, ctcinds, id_op, id_op)
+  Cdata = CUDA.CUTENSOR.contraction!(
+    α, Adata, ctainds, id_op, Bdata, ctbinds, id_op, β, Cdata, ctcinds, id_op, id_op
+  )
   synchronize()
   #end
   #CCh = collect(CC)
@@ -192,12 +199,14 @@ function _big_contract!(CT::DenseTensor{El,NC},
   return parent(Cdata)
 end
 
-function _blasmg_contract!(CT::DenseTensor{El,NC},
-                    AT::DenseTensor{El,NA},
-                    BT::DenseTensor{El,NB},
-                    props::ContractionProperties,
-                    α::Number=one(El),
-                    β::Number=zero(El)) where {El,NC,NA,NB}
+function _blasmg_contract!(
+  CT::DenseTensor{El,NC},
+  AT::DenseTensor{El,NA},
+  BT::DenseTensor{El,NB},
+  props::ContractionProperties,
+  α::Number=one(El),
+  β::Number=zero(El),
+) where {El,NC,NA,NB}
   # TODO: directly use Tensor instead of Array
   C = array(CT)
   A = array(AT)
@@ -212,10 +221,10 @@ function _blasmg_contract!(CT::DenseTensor{El,NC},
   else
     #A doesn't have to be permuted
     if Atrans(props)
-      AM = reshape(A,props.dmid,props.dleft)
+      AM = reshape(A, props.dmid, props.dleft)
       tA = 'T'
     else
-      AM = reshape(A,props.dleft,props.dmid)
+      AM = reshape(A, props.dleft, props.dmid)
     end
   end
 
@@ -226,10 +235,10 @@ function _blasmg_contract!(CT::DenseTensor{El,NC},
     BM = reshape(Bp, props.dmid, props.dright)
   else
     if Btrans(props)
-      BM = reshape(B,props.dright,props.dmid)
+      BM = reshape(B, props.dright, props.dmid)
       tB = 'T'
     else
-      BM = reshape(B,props.dmid,props.dright)
+      BM = reshape(B, props.dmid, props.dright)
     end
   end
 
@@ -240,9 +249,9 @@ function _blasmg_contract!(CT::DenseTensor{El,NC},
     CM = reshape(copy(C), props.dleft, props.dright)
   else
     if Ctrans(props)
-      CM = reshape(C,props.dleft,props.dright)
-      (AM,BM) = (BM,AM)
-      if tA==tB
+      CM = reshape(C, props.dleft, props.dright)
+      (AM, BM) = (BM, AM)
+      if tA == tB
         tA = tB = (tA == 'T' ? 'N' : 'T')
       end
     else
@@ -251,14 +260,25 @@ function _blasmg_contract!(CT::DenseTensor{El,NC},
   end
 
   if length(AM) > 4096 && length(BM) > 4096 && length(CM) > 4096
-    CM = CUBLASMG.mg_gemm!(tA,tB,El(α),AM,BM,El(β),CM,devs=devs[], dev_rows=dev_rows[],dev_cols=dev_cols[])
+    CM = CUBLASMG.mg_gemm!(
+      tA,
+      tB,
+      El(α),
+      AM,
+      BM,
+      El(β),
+      CM;
+      devs=devs[],
+      dev_rows=dev_rows[],
+      dev_cols=dev_cols[],
+    )
   else
-    BLAS.gemm!(tA,tB,El(α),AM,BM,El(β),CM)
+    BLAS.gemm!(tA, tB, El(α), AM, BM, El(β), CM)
   end
 
   if props.permuteC
     pC = NTuple{NC,Int}(props.PC)
-    Cr = reshape(CM,props.newCrange...)
+    Cr = reshape(CM, props.newCrange...)
     @strided C .= permutedims(Cr, pC)
   end
   return C
