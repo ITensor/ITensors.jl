@@ -1,5 +1,6 @@
 module ITensorGaussianMPS
 
+using Compat
 using ITensors
 using ITensors.NDTensors
 using LinearAlgebra
