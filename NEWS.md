@@ -6,6 +6,17 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.2.11 Release Notes
+==============================
+
+- Fix bug when slicing a Dense Tensor with mixed ranges and integers (#775)
+- Fix rrule for Array to ITensor constructor when forward and reverse indices are in different orders (#773)
+- Fix MPO OpSum for operator names with unicode (#767)
+- Lazy Op system (#769)
+- Add ITensorNetworkMap (#764)
+- Fix conj and scalar multiplication of EmptyStorage (#756)
+- Fix the link for the qudit sitetype (#762)
+
 ITensors v0.2.10 Release Notes
 ==============================
 

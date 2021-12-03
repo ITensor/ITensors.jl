@@ -1,0 +1,10 @@
+[deps]
+GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+LayeredLayouts = "f4a74d36-062a-4d48-97cd-1356bad1de4e"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+ReferenceTests = "324d217c-45ce-50fc-942e-d289b448e8cf"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
