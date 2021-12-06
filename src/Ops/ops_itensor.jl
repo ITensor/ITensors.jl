@@ -151,6 +151,14 @@ end
 # (O₁ * O₂)|x⟩ = O₁ * (O₂|x⟩)
 apply(o::∏{ITensor}, x; kwargs...) = apply([oₙ for oₙ in reverse(o)], x; kwargs...)
 
+## function apply(o::∏{ITensor}, x::ITensor; kwargs...)
+##   @show o
+##   @show x
+##   for oₙ in reverse(o)
+##     x = apply([oₙ for oₙ in reverse(o)], x; kwargs...)
+##   end
+## end
+
 #
 # Deprecated
 #
