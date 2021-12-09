@@ -35,7 +35,7 @@ function cp_als_(X, R, A; maxiter=1000, test_period=1, tol=1e-10)
 
             W = reduce(khatrirao, [A[m] for m in N:-1:1 if m != n])
             Xn = unfold(X,n)
-            qq = diagITensor(ones(inds(Xn)[2].space), inds(Xn)[2], inds(W)[1])
+            qq = diagITensor(ones(dim(inds(Xn)[2])), inds(Xn)[2], inds(W)[1])
 
             rr = Index(R)
             newAn = Xn * qq * W * itensor(Vinv, inds(W)[2], rr)
@@ -67,14 +67,17 @@ end
 
 """The Khatri-Rao product, or A ⊙ B."""
 function khatrirao(A, B)
-    K = inds(A)[2].space
+    K = dim(inds(A)[2])
     AB = A * B * diagITensor(ones(K), inds(A)[2], inds(B)[2], Index(K))
     matk = combiner(inds(B)[1], inds(A)[1])
     matk * AB
 end
 
 function columnnorms(A)
-    aA = array(A)
-    R = size(aA)[2]
-    [norm(aA[:,r]) for r in 1:R]
+    slicenorms(A, inds(A)[2])
 end
+
+function slicenorm(A::ITensor, i::Index, val::Int)
+  return norm(A * onehot(i => val))
+end
+slicenorms(A::ITensor, i::Index) = [slicenorm(A, i, n) for n in 1:dim(i)]
