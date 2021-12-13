@@ -11,7 +11,7 @@ pipeline {
         stage('julia-1.6') {
           agent {
             dockerfile {
-              label 'gpu'
+              label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
               additionalBuildArgs  '--build-arg JULIA=1.6'
@@ -24,7 +24,6 @@ pipeline {
             JULIA_NUM_THREADS = 4
           }
           steps {
-            sh 'env'
             sh '''
               julia --project=monorepo -e 'using Pkg; pkg"dev ./NDTensors . ./ITensorGPU";'
             '''
@@ -36,7 +35,7 @@ pipeline {
         stage('julia-1.7') {
           agent {
             dockerfile {
-              label 'gpu'
+              label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
               additionalBuildArgs  '--build-arg JULIA=1.7'
