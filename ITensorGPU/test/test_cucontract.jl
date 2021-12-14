@@ -206,16 +206,20 @@ using ITensors,
       inds_b = vcat(b_only_inds, shared_inds)
       cA_ = permute(cA, inds_a...)
       cB_ = permute(cB, inds_b...)
-      C = cA_ * cB_
-      Ccpu = cpu(cA_) * cpu(cB_)
+      @disable_warn_order begin
+        C = cA_ * cB_
+        Ccpu = cpu(cA_) * cpu(cB_)
+      end
       @test Ccpu ≈ cpu(C)
       for shuffles in 1:1 # too many permutations to test all
         inds_a = shuffle(vcat(a_only_inds, shared_inds))
         inds_b = shuffle(vcat(b_only_inds, shared_inds))
         cA_ = permute(cA, inds_a...)
         cB_ = permute(cB, inds_b...)
-        C = cA_ * cB_
-        Ccpu = cpu(cA_) * cpu(cB_)
+        @disable_warn_order begin
+          C = cA_ * cB_
+          Ccpu = cpu(cA_) * cpu(cB_)
+        end
         @test Ccpu ≈ cpu(C)
       end
     end

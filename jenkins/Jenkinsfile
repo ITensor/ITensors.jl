@@ -1,0 +1,62 @@
+pipeline {
+  agent none
+  options {
+    disableConcurrentBuilds()
+    buildDiscarder(logRotator(numToKeepStr: '8', daysToKeepStr: '20'))
+    timeout(time: 1, unit: 'HOURS')
+  }
+  stages {
+    stage('ITensorGPU test') {
+      parallel {
+        stage('julia-1.6') {
+          agent {
+            dockerfile {
+              label 'gpu&&v100'
+              filename 'Dockerfile'
+              dir 'jenkins'
+              additionalBuildArgs  '--build-arg JULIA=1.6'
+              args '--gpus "device=0"'
+            }
+          }
+          environment {
+            HOME = pwd(tmp:true)
+            OMP_NUM_THREADS = 4
+            JULIA_NUM_THREADS = 4
+          }
+          steps {
+            sh '''
+              julia --project=monorepo -e 'using Pkg; pkg"dev ./NDTensors . ./ITensorGPU";'
+            '''
+            sh '''
+              julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGPU")'
+            '''
+          }
+        }
+        stage('julia-1.7') {
+          agent {
+            dockerfile {
+              label 'gpu&&v100'
+              filename 'Dockerfile'
+              dir 'jenkins'
+              additionalBuildArgs  '--build-arg JULIA=1.7'
+              args '--gpus "device=1"'
+            }
+          }
+          environment {
+            HOME = pwd(tmp:true)
+            OMP_NUM_THREADS = 4
+            JULIA_NUM_THREADS = 4
+          }
+          steps {
+            sh '''
+              julia --project=monorepo -e 'using Pkg; pkg"dev ./NDTensors . ./ITensorGPU";'
+            '''
+            sh '''
+              julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGPU")'
+            '''
+          }
+        }
+      }
+    }
+  }
+}

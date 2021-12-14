@@ -35,7 +35,7 @@ using ITensors,
     @test i == inds(permA)[3]
     A = cpu(CA)
     for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
-      @test A[k(kk), i(ii), j(jj)] == permA[i(ii), j(jj), k(kk)]
+      @test A[k => kk, i => ii, j => jj] == permA[i => ii, j => jj, k => kk]
     end
   end
   @testset "Test permute(cuITensor,Index...) for large tensors" begin
@@ -95,7 +95,8 @@ using ITensors,
     @test CuArray(permute(C, i, j, k)) ==
       CuArray(permute(A, i, j, k)) + CuArray(permute(B, i, j, k))
     for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
-      @test C[i(ii), j(jj), k(kk)] == A[j(jj), i(ii), k(kk)] + B[i(ii), k(kk), j(jj)]
+      @test C[i => ii, j => jj, k => kk] ==
+        A[j => jj, i => ii, k => kk] + B[i => ii, k => kk, j => jj]
     end
   end
 
