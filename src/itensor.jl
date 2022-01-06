@@ -360,6 +360,7 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 # EmptyStorage ITensor constructors
 #
 
+# TODO: Deprecated!
 """
     emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds)
     emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds::Index...)
