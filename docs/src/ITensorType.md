@@ -27,8 +27,7 @@ itensor(::Array{<:Number}, ::ITensors.Indices)
 
 ```@docs
 ITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
-ITensor(::Type{<:Number}, ::ITensors.QNIndices)
-ITensor(::ITensors.AliasStyle, ::Type{<:Number}, A::Array{<:Number}, inds::ITensors.QNIndices; tol=0)
+ITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Array{<:Number}, ::ITensors.QNIndices; tol=0)
 ITensor(::Type{<:Number}, ::UndefInitializer, ::QN, ::ITensors.Indices)
 ```
 
