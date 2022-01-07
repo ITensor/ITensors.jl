@@ -1553,13 +1553,14 @@ _number_inds(s::IndexSet) = length(s)
 _number_inds(sites) = sum(_number_inds(s) for s in sites)
 
 """
-    MPS(A::ITensor, sites; <keyword arguments>)
-    MPO(A::ITensor, sites; <keyword arguments>)
+    MPS(A::ITensor, sites; kwargs...)
+    MPO(A::ITensor, sites; kwargs...)
 
 Construct an MPS/MPO from an ITensor `A` by decomposing it site
 by site according to the site indices `sites`.
 
-# Arguments
+# Keywords
+
 - `leftinds = nothing`: optional left dangling indices. Indices that are not in `sites` and `leftinds` will be dangling off of the right side of the MPS/MPO.
 - `orthocenter::Integer = length(sites)`: the desired final orthogonality center of the output MPS/MPO.
 - `cutoff`: the desired truncation error at each link.
@@ -1716,8 +1717,8 @@ function movesites(ψ::AbstractMPS, ns, ns′; kwargs...)
 end
 
 """
-    product(o::ITensor, ψ::Union{MPS, MPO}, [ns::Vector{Int}]; <keyword argument>)
-    apply([...])
+    apply(o::ITensor, ψ::Union{MPS, MPO}, [ns::Vector{Int}]; kwargs...)
+    product([...])
 
 Get the product of the operator `o` with the MPS/MPO `ψ`,
 where the operator is applied to the sites `ns`. If `ns`
@@ -1730,8 +1731,12 @@ back to their original locations. You can leave them where
 they are by setting the keyword argument `move_sites_back`
 to false.
 
-# Arguments
-- `move_sites_back::Bool = true`: after the ITensor is applied to the MPS or MPO, move the sites of the MPS or MPO back to their original locations.
+# Keywords
+
+- `cutoff::Real`: singular value truncation cutoff.
+- `maxdim::Int`: maximum MPS/MPO dimension.
+- `apply_dag::Bool = false`: apply the gate and the dagger of the gate (only relevant for MPO evolution).
+- `move_sites_back::Bool = true`: after the ITensors are applied to the MPS or MPO, move the sites of the MPS or MPO back to their original locations.
 """
 function product(
   o::ITensor,
@@ -1769,10 +1774,17 @@ function product(
 end
 
 """
-    product(As::Vector{<:ITensor}, M::Union{MPS, MPO}; <keyword arguments>)
-    apply([...])
+    apply(As::Vector{<:ITensor}, M::Union{MPS, MPO}; kwargs...)
+    product([...])
 
 Apply the ITensors `As` to the MPS or MPO `M`, treating them as gates or matrices from pairs of prime or unprimed indices.
+
+# Keywords
+
+- `cutoff::Real`: singular value truncation cutoff.
+- `maxdim::Int`: maximum MPS/MPO dimension.
+- `apply_dag::Bool = false`: apply the gate and the dagger of the gate (only relevant for MPO evolution).
+- `move_sites_back::Bool = true`: after the ITensor is applied to the MPS or MPO, move the sites of the MPS or MPO back to their original locations.
 
 # Examples
 
