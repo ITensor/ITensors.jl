@@ -30,7 +30,7 @@ Once you have all of the dependencies installed, you can then go ahead and insta
 ```
 julia> ]
 
-pkg> add https://github.com/ITensor/ITensorGPU.jl.git
+pkg> add ITensorGPU
 ```
 
 To check if this has all worked, you can run the package tests using:
