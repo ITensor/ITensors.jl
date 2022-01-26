@@ -18,6 +18,15 @@ export
   # Deprecated
   addblock!,
 
+  # ITensorVisualizationCore module
+  # Macros
+  @visualize,
+  @visualize!,
+  @visualize_noeval,
+  @visualize_noeval!,
+  @visualize_sequence,
+  @visualize_sequence_noeval,
+
   # ITensors.jl
   index_id_rng,
 

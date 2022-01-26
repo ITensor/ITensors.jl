@@ -14,6 +14,7 @@ using Compat
 using HDF5
 using KrylovKit
 using LinearAlgebra
+using NDTensors
 using PackageCompiler
 using Pkg
 using Printf
@@ -22,12 +23,6 @@ using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
 using Zeros
-
-#####################################
-# NDTensors
-#
-include("NDTensors/NDTensors.jl")
-using .NDTensors
 
 #####################################
 # ContractionSequenceOptimization
@@ -167,6 +162,12 @@ include("ITensorChainRules/ITensorChainRules.jl")
 # ITensorNetworkMaps
 #
 include("ITensorNetworkMaps/ITensorNetworkMaps.jl")
+
+#####################################
+# ITensorVisualizationCore
+#
+include("ITensorVisualizationCore/ITensorVisualizationCore.jl")
+using .ITensorVisualizationCore
 
 #####################################
 # Deprecations

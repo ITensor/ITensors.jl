@@ -11,8 +11,8 @@ ITensor
 ```@docs
 ITensor(::Type{<:Number}, ::ITensors.Indices)
 ITensor(::Type{<:Number}, ::UndefInitializer, ::ITensors.Indices)
-ITensor(::Type{ElT}, x::Number, inds::ITensors.Indices) where {ElT<:Number}
-ITensor(as::ITensors.AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds::ITensors.Indices; kwargs...) where {ElT<:Number}
+ITensor(::Type{<:Number}, ::Number, ::ITensors.Indices)
+ITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Array{<:Number}, ::ITensors.Indices{Index{Int}}; kwargs...)
 randomITensor(::Type{<:Number}, ::ITensors.Indices)
 onehot
 ```
@@ -20,35 +20,23 @@ onehot
 ## Dense View Constructors
 
 ```@docs
-itensor(::Array{<:Number},::ITensors.Indices)
+itensor(::Array{<:Number}, ::ITensors.Indices)
 ```
 
 ## QN BlockSparse Constructors
 
 ```@docs
 ITensor(::Type{<:Number}, ::QN, ::ITensors.Indices)
-ITensor(::ITensors.AliasStyle, ::Type{ElT}, A::Array{<:Number}, inds::ITensors.QNIndices; tol=0) where {ElT<:Number}
+ITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Array{<:Number}, ::ITensors.QNIndices; tol=0)
 ITensor(::Type{<:Number}, ::UndefInitializer, ::QN, ::ITensors.Indices)
-```
-
-## Empty Constructors
-
-```@docs
-emptyITensor(::Type{<:Number}, ::ITensors.Indices)
-```
-
-## QN Empty Constructors
-
-```@docs
-emptyITensor(::Type{<:Number}, ::ITensors.QNIndices)
 ```
 
 ## Diagonal constructors
 
 ```@docs
-diagITensor(::Type{ElT}, is::ITensors.Indices) where {ElT}
-diagITensor(as::ITensors.AliasStyle, ::Type{ElT}, v::Vector{<:Number}, is...) where {ElT<:Number}
-diagITensor(as::ITensors.AliasStyle, ::Type{ElT}, x::Number, is...) where {ElT<:Number}
+diagITensor(::Type{<:Number}, ::ITensors.Indices)
+diagITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Vector{<:Number}, ::ITensors.Indices)
+diagITensor(::ITensors.AliasStyle, ::Type{<:Number}, ::Number, ::ITensors.Indices)
 delta(::Type{<:Number}, ::ITensors.Indices)
 ```
 
