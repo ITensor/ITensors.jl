@@ -360,6 +360,7 @@ ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 # EmptyStorage ITensor constructors
 #
 
+# TODO: Deprecated!
 """
     emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds)
     emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds::Index...)
@@ -1909,11 +1910,7 @@ end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-#! format: off
-# Turns off formatting since JuliaFormatter tries to change β to a keyword argument, i.e.
-# contract!(C::ITensor, A::ITensor, B::ITensor, α::Number; β::Number=0)::ITensor
 function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
-#! format: on
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(

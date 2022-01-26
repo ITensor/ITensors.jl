@@ -1,0 +1,7 @@
+[deps]
+GeometryBasics = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+ITensors = "9136182c-28ba-11e9-034c-db9fb085ebd5"
+LayeredLayouts = "f4a74d36-062a-4d48-97cd-1356bad1de4e"
+NetworkLayout = "46757867-2c16-5918-afeb-47bfcb05e46a"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
