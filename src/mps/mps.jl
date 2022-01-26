@@ -123,7 +123,7 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
   setleftlim!(M, 0)
   setrightlim!(M, 2)
   if dim(commonind(M[c], M[c + 1])) < linkdim
-    error("MPS center bond dim less than requested")
+    @warn "MPS center bond dimension is less than requested (you requested $linkdim, but in practice it is $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities of truncating quantum number sectors."
   end
 end
 
