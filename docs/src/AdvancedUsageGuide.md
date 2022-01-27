@@ -609,29 +609,143 @@ and ideas for organizing your package.
 
 ## Developing ITensors.jl
 
-To make your own changes to ITensors.jl, type `dev ITensors`
-in Pkg mode (by typing `]` at the Julia prompt). This 
-will create a local clone of the Github repository in the directory 
-`~/.julia/dev/ITensors`. Changes to that directory will be reflected 
-when you do `using ITensors` in a new session.
+This section is for someone who is interested in modifying the source code of ITensors.jl,
+and then possibly contribute you changes to the official ITensors.jl package.
 
-We highly recommend using the [Revise](https://timholy.github.io/Revise.jl/stable/) package when you are developing 
-packages, which automatically detects changes you are making in a 
-package so you can edit code and not have to restart your Julia 
-session.
+This should not be necessary for most people. If for whatever reason you think that the functionality
+of ITensors.jl needs to be modified, oftentimes you can add new functions outside of ITensors.jl
+or directly overload a function of ITensors.jl (for example with the [import](https://docs.julialang.org/en/v1/manual/modules/#using-and-import-with-specific-identifiers,-and-adding-methods) keyword).
 
-If you make changes to ITensors such as fixing bugs or adding new features,
-please consider making a [pull request](https://github.com/ITensor/ITensors.jl/compare).
+However, if you would like to only modify parts of the internals of an ITensors.jl function,
+and/or plan to contribute changes like bug fixes or new features to the official ITensors.jl
+package, this section is for you.
+
+If you install a package like ITensors with the package manager using the standard `Pkg.add` command:
+```julia
+julia> using Pkg
+
+julia> Pkg.add("ITensors")
+```
+it will automatically clone the latest registered/tagged version of `ITensors` in a randomly
+generated directory inside `~/.julia/packages`. You can find out what version you are using with `Pkg.status`:
+```julia
+julia> Pkg.status("ITensors")
+      Status `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ITensors v0.2.12
+```
+and you can use [`pkgdir`](https://docs.julialang.org/en/v1/base/base/#Base.pkgdir-Tuple{Module})
+to find out the directory of the source code of a package that you have loaded:
+```julia
+julia> using ITensors
+
+julia> pkgdir(ITensors)
+"/home/mfishman/.julia/packages/ITensors/cu9Bo"
+```
+The source code of a package loaded in this way is read-only, so you won't be able to modify it.
+
+If you want to modify the source code of ITensors.jl, you can check it out in development
+mode with `Pkg.develop`:
+```julia
+julia> Pkg.develop("ITensors")
+   Resolving package versions...
+    Updating `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ~ ITensors v0.2.12 ⇒ v0.2.12 `~/.julia/dev/ITensors`
+    Updating `~/.julia/environments/v1.7/Manifest.toml`
+  [9136182c] ~ ITensors v0.2.12 ⇒ v0.2.12 `~/.julia/dev/ITensors`
+
+julia> Pkg.status("ITensors")
+      Status `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ITensors v0.2.12 `~/.julia/dev/ITensors`
+```
+Then, Julia will use the version of ITensors.jl living in the directory `~/.julia/dev/ITensors`.
+By default, you will have to restart Julia for modifications of the code in `~/.julia/dev/ITensors`
+to be reflected in practice.
+
+A way around this issue is the [Revise](https://timholy.github.io/Revise.jl/stable/) package.
+We highly recommend using the [Revise](https://timholy.github.io/Revise.jl/stable/) package
+when you are developing packages, which automatically detects changes you are making to
+a package you have checked out for development and edit code and not have to restart your Julia session.
+In short, if you have `Revise.jl` loaded, you can edit the code in `~/.julia/dev/ITensors` and
+the changes you make will be reflected on the fly as you use the package.
+
+Note that the code in `~/.julia/dev/ITensors` is just a git repository cloned from
+the repository https://github.com/ITensor/ITensors.jl, so you can do anything that
+you would with any other git repository (use forks of the project, check out branches,
+push and pull changes, etc.).
+
+The standard procedure for submitting a bug fix or new feature to ITensors.jl would then
+be to first [fork the ITensors.jl repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
+Then, check out your fork for development with:
+```julia
+julia> using Pkg
+
+julia> Pkg.develop(url="https://github.com/mtfishman/ITensors.jl")
+```
+where you would replace `mtfishman` with your own Github username.
+Make the changes to the code in `~/.julia/dev/ITensors`, push the changes to your fork, and then
+[make a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) to the [ITensors.jl Github repository](https://github.com/ITensor/ITensors.jl/compare).
+
+To go back to the official version of the ITensors.jl package, you can use the command `Pkg.free("ITensors")`:
+```julia
+julia> Pkg.free("ITensors")
+   Resolving package versions...
+    Updating `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ~ ITensors v0.2.12 `~/.julia/dev/ITensors` ⇒ v0.2.12
+    Updating `~/.julia/environments/v1.7/Manifest.toml`
+  [9136182c] ~ ITensors v0.2.12 `~/.julia/dev/ITensors` ⇒ v0.2.12
+
+julia> Pkg.status("ITensors")
+      Status `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ITensors v0.2.12
+```
+so it returns to the version of the package you would have just after installing with `Pkg.add`.
+
+Some of the Julia package development workflow definitely takes some getting used to,
+but once you figure out the "flow" and have a picture of what is going on there are
+only a small set of commands you really need to use.
+
+A small note is that we follow the [Blue style guide](https://github.com/invenia/BlueStyle)
+for formatting the source code in ITensors.jl.
+To make this more automated, we use the wonderful package
+[JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl).
+To format your developed version of ITensors.jl, all you have to do is change your directory
+to `~/.julia/dev/ITensors` and run the command `format(".")` after loading the `JuliaFormatter`
+package:
+```julia
+julia> using Pkg
+
+julia> Pkg.status("ITensors")
+      Status `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ITensors v0.2.12 `~/.julia/dev/ITensors`
+
+julia> using ITensors
+
+julia> pkgdir(ITensors)
+"/home/mfishman/.julia/dev/ITensors"
+
+julia> cd(pkgdir(ITensors))
+
+julia> using JuliaFormatter
+
+julia> format(".")
+false
+
+julia> format(".") # Check the formatting succeeded
+true
+```
+This will automatically change the style of the code according to the `Blue` style guide.
+The `format` command returns `false` if the code was not already formatted (and therefore
+if the command made changes to the source code to follow the style guide), and
+returns `true` otherwise.
+
+If you make changes to ITensors that you think will be useful to others, such as fixing bugs
+or adding new features, please consider making a [pull request](https://github.com/ITensor/ITensors.jl/compare).
 However, please ask us first before doing so -- either by raising an [issue on Github](https://github.com/ITensor/ITensors.jl/issues) or asking a question on the [ITensor support forum](http://itensor.org/support/) --
 to make sure it is a change or addition that we will want to include or to check that it is not something
 we are currently working on. Coordinating with us in that way will help save your time and energy as well as ours!
 
 [Here](https://www.youtube.com/watch?v=QVmU29rCjaA) is a great introduction to Julia package development
-as well as making pull requests to existing Julia packages by the amazing Chris Rackauckas.
-
-!!! info "Coming soon"
-
-    A more extended guide for contributing to ITensors.jl, including formatting your code with [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl), is coming soon.
+as well as making pull requests to existing Julia packages by the irreplacable Chris Rackauckas.
 
 ## Compiling ITensors.jl
 
