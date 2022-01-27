@@ -1,8 +1,8 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
-title: "[ENHANCEMENT]"
-labels: enhancement
+name: PACKAGE.jl feature request
+about: Suggest an idea for PACKAGE.jl
+title: "[PACKAGE] [ENHANCEMENT]"
+labels: ["PACKAGE", "enhancement"]
 assignees: ''
 
 ---
