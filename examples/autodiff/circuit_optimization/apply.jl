@@ -56,7 +56,7 @@ H = MPO(ℋ, s)
 ψ = MPS(s, "0")
 
 N = 4
-nlayers = 2
+nlayers = 1
 
 function loss(θ⃗)
   gates = variational_circuit(N, nlayers, θ⃗)
