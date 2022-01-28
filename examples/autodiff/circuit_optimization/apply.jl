@@ -1,5 +1,6 @@
 using ITensors
 using Random
+using OptimKit
 using Zygote
 
 include("circuit.jl")
@@ -55,7 +56,7 @@ H = MPO(ℋ, s)
 ψ = MPS(s, "0")
 
 N = 4
-nlayers = 5
+nlayers = 2
 
 function loss(θ⃗)
   gates = variational_circuit(N, nlayers, θ⃗)
@@ -81,4 +82,4 @@ display(normgradhistory)
 
 Uₒₚₜ = buildcircuit(variational_circuit(N, nlayers, θ⃗ₒₚₜ), s)
 Uₒₚₜψ = apply(Uₒₚₜ, ψ)
-@show (Uₒₚₜψ' * H * Uₒₚₜψ)[]
+@show inner(Uₒₚₜψ, H, Uₒₚₜψ)

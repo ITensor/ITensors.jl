@@ -295,7 +295,7 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
     x̄1 = similar(x1)
     for n in 1:length(x1)
       x1dag_ȳ′ = prime(x1dag_ȳ[n + 1], inds(x1[n]; plev=0))
-      x̄1[n] = _contract(ITensor, x1dag_ȳ[n + 1], x1x2dag[n])
+      x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n])
     end
     x̄2 = x1dag_ȳ[end]
 
@@ -309,7 +309,7 @@ function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs
   function inner_pullback(ȳ)
     x̄1 = ȳ * dag(noprime(contract(x2, x3)))
     x̄2 = ȳ * dag(_contract(MPO, x1', x3))
-    x̄3 = ȳ * dag(contract(x2, x1))
+    x̄3 = ȳ * dag(noprime(contract(x2, x1)))
     return (NoTangent(), x̄1, x̄2, x̄3)
   end
   return y, inner_pullback
