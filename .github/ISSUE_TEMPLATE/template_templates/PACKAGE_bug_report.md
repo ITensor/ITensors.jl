@@ -1,8 +1,8 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: "[BUG]"
-labels: bug
+name: PACKAGE.jl report
+about: Create a report to help us improve PACKAGE.jl
+title: "[PACKAGE] [BUG]"
+labels: ["PACKAGE", "bug"]
 assignees: ''
 
 ---
