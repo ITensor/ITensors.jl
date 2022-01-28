@@ -252,4 +252,62 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 @non_differentiable noncommoninds(::Any...)
 @non_differentiable uniqueinds(::Any...)
 
+#
+# MPO/MPS
+#
+
+# TODO: Define a more general version in ITensors.jl
+function _contract(ψ::MPS, ϕ::MPS)
+  T = ITensor(1)
+  for n in 1:length(ψ)
+    T = T * ψ[n] * ϕ[n]
+  end
+  return T
+end
+
+function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwargs...)
+  y = apply(x1, x2)
+  function apply_pullback(ȳ)
+    N = length(x1) + 1
+
+    # Apply circuit and store intermediates in the forward direction
+    x1x2 = Vector{MPS}(undef, N)
+    x1x2[1] = x2
+    for n in 2:N
+      x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=false)
+    end
+    x1x2dag = dag.(x1x2)
+
+    # Apply circuit and store intermediates in the reverse direction
+    x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
+    x1dag_ȳ = Vector{MPS}(undef, N)
+    x1dag_ȳ[end] = ȳ
+    for n in (N - 1):-1:1
+      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1])
+    end
+
+    x̄1 = similar(x1)
+    for n in 1:length(x1)
+      x1dag_ȳ′ = prime(x1dag_ȳ[n + 1], inds(x1[n]; plev=0))
+      x̄1[n] = contract(x1dag_ȳ[n + 1], x1x2dag[n])
+    end
+    x̄2 = x1dag_ȳ[end]
+
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, apply_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
+  y = inner(x1, x2, x3)
+  function inner_pullback(ȳ)
+    error("Not implemented")
+    x̄1 = ȳ * contract(x2, x3)
+    x̄2 = ȳ * contract(x1, x3)
+    x̄3 = ȳ * contract(x1, x2)
+    return (NoTangent(), x̄1, x̄2, x̄3)
+  end
+  return y, inner_pullback
+end
+
 end
