@@ -274,7 +274,7 @@ function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
   return contract(ψmat, ϕmat; kwargs...)
 end
 
-function ChainRulesCore.rrule(::typeof(apply),x1::Vector{ ITensor },x2::MPS;kwargs...)
+function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwargs...)
   y = apply(x1, x2; kwargs...)
   function apply_pullback(ȳ)
     N = length(x1) + 1
