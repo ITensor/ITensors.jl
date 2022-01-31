@@ -250,5 +250,4 @@ include("utils/circuit.jl")
 
     @test loss(θ⃗ₒₚₜ) ≈ e_dmrg rtol = 1e-1
   end
-
 end
