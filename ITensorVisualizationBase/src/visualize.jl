@@ -130,9 +130,16 @@ function visualize!(
   return visualize!(fig, tn, sequence; kwargs...)
 end
 
-function visualize(f::Union{Function,Type}, As...; kwargs...)
+# Macro outputs a 1-tuple of the function arguments
+function visualize(f::Union{Function,Type}, tn::Tuple{T}, sequence; kwargs...) where {T}
   # TODO: specialize on the function type. Also accept a general collection.
-  return visualize(As...; kwargs...)
+  return visualize(only(tn), sequence; kwargs...)
+end
+
+# Macro outputs a tuple of ITensors to visualize
+function visualize(f::Union{Function,Type}, tn::Tuple{Vararg{ITensor}}, sequence; kwargs...)
+  # TODO: specialize on the function type. Also accept a general collection.
+  return visualize(tn, sequence; kwargs...)
 end
 
 function visualize!(fig, f::Union{Function,Type}, As...; kwargs...)
