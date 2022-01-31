@@ -251,13 +251,16 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 @non_differentiable commoninds(::Any...)
 @non_differentiable noncommoninds(::Any...)
 @non_differentiable uniqueinds(::Any...)
+@non_differentiable SiteType(::Any)
+@non_differentiable ITensors._sitetypes(::Any)
+@non_differentiable addtags(::TagSet, ::Any)
 
 #
 # MPO/MPS
 #
 
 # TODO: Define a more general version in ITensors.jl
-function _contract(::Type{ITensor}, ψ::MPS, ϕ::MPS)
+function _contract(::Type{ITensor}, ψ::MPS, ϕ::MPS; kwargs...)
   T = ITensor(1)
   for n in 1:length(ψ)
     T = T * ψ[n] * ϕ[n]
@@ -272,7 +275,7 @@ function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
 end
 
 function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwargs...)
-  y = apply(x1, x2)
+  y = apply(x1, x2; kwargs...)
   function apply_pullback(ȳ)
     N = length(x1) + 1
 
@@ -289,13 +292,13 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
     x1dag_ȳ = Vector{MPS}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
-      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1])
+      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; kwargs...)
     end
 
     x̄1 = similar(x1)
     for n in 1:length(x1)
       x1dag_ȳ′ = prime(x1dag_ȳ[n + 1], inds(x1[n]; plev=0))
-      x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n])
+      x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n]; kwargs...)
     end
     x̄2 = x1dag_ȳ[end]
 
@@ -305,11 +308,11 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
 end
 
 function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
-  y = inner(x1, x2, x3)
+  y = inner(x1, x2, x3; kwargs...)
   function inner_pullback(ȳ)
-    x̄1 = ȳ * dag(noprime(contract(x2, x3)))
-    x̄2 = ȳ * dag(_contract(MPO, x1', x3))
-    x̄3 = ȳ * dag(noprime(contract(x2, x1)))
+    x̄1 = ȳ * dag(noprime(contract(x2, x3; kwargs...)))
+    x̄2 = ȳ * dag(_contract(MPO, x1', x3; kwargs...))
+    x̄3 = ȳ * dag(noprime(contract(x2, x1; kwargs...)))
     return (NoTangent(), x̄1, x̄2, x̄3)
   end
   return y, inner_pullback

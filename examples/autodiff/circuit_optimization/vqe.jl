@@ -1,86 +1,83 @@
 using ITensors
 using OptimKit
+using Random
 using Zygote
-using Random: seed!
 
-include("circuit.jl")
+nsites = 20 # Number of sites
+nlayers = 4 # Layers of gates in the ansatz
+gradtol = 1e-4 # Tolerance for stopping gradient descent
 
-function gate(::Val{:Ry}; θ)
-  return [
-    cos(θ / 2) -sin(θ / 2)
-    sin(θ / 2) cos(θ / 2)
-  ]
+# The Hamiltonian we are minimizing
+function ising_hamiltonian(nsites; h)
+  ℋ = OpSum()
+  for j in 1:(nsites - 1)
+    ℋ += -1, "Z", j, "Z", j + 1
+  end
+  for j in 1:nsites
+    ℋ += h, "X", j
+  end
+  return ℋ
 end
 
-function gate(::Val{:CX})
-  return [
-    1 0 0 0
-    0 1 0 0
-    0 0 0 1
-    0 0 1 0
-  ]
+# A layer of the circuit we want to optimize
+function layer(nsites, θ⃗)
+  RY_layer = [("Ry", (n,), (θ=θ⃗[n],)) for n in 1:nsites]
+  CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites - 1)]
+  return [RY_layer; CX_layer]
 end
-
-function Rylayer(N, θ⃗)
-  return [("Ry", (n,), (θ=θ⃗[n],)) for n in 1:N]
-end
-
-function CXlayer(N)
-  return [("CX", (n, n + 1)) for n in 1:2:(N - 1)]
-end
-
-layer(N, θ⃗) = vcat(Rylayer(N, θ⃗), CXlayer(N))
 
 # The variational circuit we want to optimize
-function variational_circuit(N, nlayers, θ⃗)
-  range = 1:N
-  circuit = layer(N, θ⃗[range])
+function variational_circuit(nsites, nlayers, θ⃗)
+  range = 1:nsites
+  circuit = layer(nsites, θ⃗[range])
   for n in 1:(nlayers - 1)
-    circuit = vcat(circuit, layer(N, θ⃗[range .+ n * N]))
+    circuit = [circuit; layer(nsites, θ⃗[range .+ n * nsites])]
   end
   return circuit
 end
 
-N = 4
-s = siteinds("Qubit", N)
+s = siteinds("Qubit", nsites)
 
 h = 1.3
-ℋ = OpSum()
-for j in 1:(N - 1)
-  ℋ .+= -1, "Z", j, "Z", j + 1
-end
-for j in 1:N
-  ℋ .+= h, "X", j
-end
-H = prod(MPO(ℋ, s))
-ψ = prod(MPS(s, "0"))
+ℋ = ising_hamiltonian(nsites; h)
+H = MPO(ℋ, s)
+ψ0 = MPS(s, "0")
 
-N = 4
-nlayers = 5
-
+#
+# The loss function, a function of the gate parameters
+# and implicitly depending on the Hamiltonian and state:
+#
+# loss(θ⃗) = ⟨0|U(θ⃗)† H U(θ⃗)|0⟩ = ⟨θ⃗|H|θ⃗⟩
+#
 function loss(θ⃗)
-  gates = variational_circuit(N, nlayers, θ⃗)
-  U = buildcircuit(gates, s)
-  return rayleigh_quotient(H, (U, ψ))
+  nsites = length(ψ0)
+  s = siteinds(ψ0)
+  𝒰θ⃗ = variational_circuit(nsites, nlayers, θ⃗)
+  Uθ⃗ = ops(𝒰θ⃗, s)
+  ψθ⃗ = apply(Uθ⃗, ψ0; cutoff=1e-8)
+  return inner(ψθ⃗, H, ψθ⃗; cutoff=1e-8)
 end
 
-seed!(1234)
-θ⃗₀ = 2π * rand(N * nlayers)
-@show θ⃗₀
+Random.seed!(1234)
+θ⃗₀ = 2π * rand(nsites * nlayers)
+
 @show loss(θ⃗₀)
-@show loss'(θ⃗₀)
 
-fg(x) = (loss(x), convert(Vector, loss'(x)))
-θ⃗ₒₚₜ, fₒₚₜ, gₒₚₜ, numfg, normgradhistory = optimize(fg, θ⃗₀, GradientDescent())
-@show θ⃗ₒₚₜ
-@show fₒₚₜ
-@show gₒₚₜ
-@show numfg
-println("normgradhistory = ")
-display(normgradhistory)
+println("\nOptimize circuit with gradient optimization")
 
-Uₒₚₜ = buildcircuit(variational_circuit(N, nlayers, θ⃗ₒₚₜ), s)
-Uₒₚₜψ = apply(Uₒₚₜ, ψ)
-@show (Uₒₚₜψ' * H * Uₒₚₜψ)[]
+loss_∇loss(x) = (loss(x), convert(Vector, loss'(x)))
+algorithm = LBFGS(; gradtol=1e-3, verbosity=2)
+θ⃗ₒₚₜ, lossₒₚₜ, ∇lossₒₚₜ, numfg, normgradhistory = optimize(loss_∇loss, θ⃗₀, algorithm)
+
+@show loss(θ⃗ₒₚₜ)
+
+println("\nRun DMRG as a comparison")
+
+sweeps = Sweeps(5)
+setmaxdim!(sweeps, 10)
+e_dmrg, ψ_dmrg = dmrg(H, ψ0, sweeps)
+
+println("\nCompare variational circuit energy to DMRG energy")
+@show loss(θ⃗ₒₚₜ), e_dmrg
 
 nothing

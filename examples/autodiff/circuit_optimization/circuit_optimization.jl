@@ -1,75 +1,65 @@
 using ITensors
 using OptimKit
+using Random
 using Zygote
-using Random: seed!
 
-include("circuit.jl")
+nsites = 20 # Number of sites
+nlayers = 3 # Layers of gates in the ansatz
+gradtol = 1e-4 # Tolerance for stopping gradient descent
 
-function gate(::Val{:Ry}; θ)
-  return [
-    cos(θ / 2) -sin(θ / 2)
-    sin(θ / 2) cos(θ / 2)
-  ]
-end
-
-function gate(::Val{:CX})
-  return [
-    1 0 0 0
-    0 1 0 0
-    0 0 0 1
-    0 0 1 0
-  ]
-end
-
-function Rylayer(N, θ⃗)
-  return [("Ry", (n,), (θ=θ⃗[n],)) for n in 1:N]
-end
-
-function CXlayer(N)
-  return [("CX", (n, n + 1)) for n in 1:2:(N - 1)]
+# A layer of the circuit we want to optimize
+function layer(nsites, θ⃗)
+  RY_layer = [("Ry", (n,), (θ=θ⃗[n],)) for n in 1:nsites]
+  CX_layer = [("CX", (n, n + 1)) for n in 1:2:(nsites - 1)]
+  return [RY_layer; CX_layer]
 end
 
 # The variational circuit we want to optimize
-function variational_circuit(θ⃗)
-  N = length(θ⃗)
-  return vcat(Rylayer(N, θ⃗), CXlayer(N), Rylayer(N, θ⃗), CXlayer(N))
-end
-
-N = 4
-θ⃗ = 2π .* rand(N)
-gates = variational_circuit(θ⃗)
-
-s = siteinds("Qubit", N)
-ψₘₚₛ = MPS(s, "0")
-ψ = prod(ψₘₚₛ)
-U = buildcircuit(gates, s)
-# Create the target state
-Uψ = apply(U, ψ)
-
-@show inner_circuit(Uψ, U, ψ);
-
-function loss(θ⃗)
-  gates = variational_circuit(θ⃗)
-  U = buildcircuit(gates, s)
-  return -abs(inner_circuit(Uψ, U, ψ))^2
+function variational_circuit(nsites, nlayers, θ⃗)
+  range = 1:nsites
+  circuit = layer(nsites, θ⃗[range])
+  for n in 1:(nlayers - 1)
+    circuit = [circuit; layer(nsites, θ⃗[range .+ n * nsites])]
+  end
+  return circuit
 end
 
 seed!(1234)
-θ⃗₀ = randn!(copy(θ⃗))
-@show θ⃗
-@show loss(θ⃗)
-@show loss'(θ⃗)
-@show θ⃗₀
-@show loss(θ⃗₀)
-@show loss'(θ⃗₀)
 
-fg(x) = (loss(x), convert(Vector, loss'(x)))
-θ⃗ₒₚₜ, fₒₚₜ, gₒₚₜ, numfg, normgradhistory = optimize(fg, θ⃗₀, GradientDescent())
-@show θ⃗ₒₚₜ
-@show fₒₚₜ
-@show gₒₚₜ
-@show numfg
-println("normgradhistory = ")
-display(normgradhistory)
+θ⃗ᵗᵃʳᵍᵉᵗ = 2π * rand(nsites * nlayers)
+𝒰ᵗᵃʳᵍᵉᵗ = variational_circuit(nsites, nlayers, θ⃗ᵗᵃʳᵍᵉᵗ)
+
+s = siteinds("Qubit", nsites)
+Uᵗᵃʳᵍᵉᵗ = ops(𝒰ᵗᵃʳᵍᵉᵗ, s)
+
+ψ0 = MPS(s, "0")
+
+# Create the random target state
+ψᵗᵃʳᵍᵉᵗ = apply(Uᵗᵃʳᵍᵉᵗ, ψ0; cutoff=1e-8)
+
+#
+# The loss function, a function of the gate parameters
+# and implicitly depending on the target state:
+#
+# loss(θ⃗) = -|⟨θ⃗ᵗᵃʳᵍᵉᵗ|U(θ⃗)|0⟩|² = -|⟨θ⃗ᵗᵃʳᵍᵉᵗ|θ⃗⟩|²
+#
+function loss(θ⃗)
+  nsites = length(ψ0)
+  s = siteinds(ψ0)
+  𝒰θ⃗ = variational_circuit(nsites, nlayers, θ⃗)
+  Uθ⃗ = ops(𝒰θ⃗, s)
+  ψθ⃗ = apply(Uθ⃗, ψ0)
+  return -abs(inner(ψᵗᵃʳᵍᵉᵗ, ψθ⃗))^2
+end
+
+θ⃗₀ = randn!(copy(θ⃗ᵗᵃʳᵍᵉᵗ))
+
+@show loss(θ⃗₀), loss(θ⃗ᵗᵃʳᵍᵉᵗ)
+
+loss_∇loss(x) = (loss(x), convert(Vector, loss'(x)))
+algorithm = LBFGS(; gradtol=gradtol, verbosity=2)
+θ⃗ₒₚₜ, lossₒₚₜ, ∇lossₒₚₜ, numfg, normgradhistory = optimize(loss_∇loss, θ⃗₀, algorithm)
+
+@show loss(θ⃗ₒₚₜ), loss(θ⃗ᵗᵃʳᵍᵉᵗ)
 
 nothing
