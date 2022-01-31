@@ -178,7 +178,7 @@ include("utils/circuit.jl")
     algorithm = LBFGS(; gradtol=gradtol, verbosity=0)
     θ⃗ₒₚₜ, lossₒₚₜ, ∇lossₒₚₜ, numfg, normgradhistory = optimize(loss_∇loss, θ⃗₀, algorithm)
 
-    @test loss(θ⃗ₒₚₜ) ≈ loss(θ⃗ᵗᵃʳᵍᵉᵗ) rtol=1e-5
+    @test loss(θ⃗ₒₚₜ) ≈ loss(θ⃗ᵗᵃʳᵍᵉᵗ) rtol = 1e-5
   end
 
   @testset "VQE (MPS)" begin
