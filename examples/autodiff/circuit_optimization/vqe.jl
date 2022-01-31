@@ -3,8 +3,8 @@ using OptimKit
 using Random
 using Zygote
 
-nsites = 20 # Number of sites
-nlayers = 4 # Layers of gates in the ansatz
+nsites = 4 # Number of sites
+nlayers = 2 # Layers of gates in the ansatz
 gradtol = 1e-4 # Tolerance for stopping gradient descent
 
 # The Hamiltonian we are minimizing
