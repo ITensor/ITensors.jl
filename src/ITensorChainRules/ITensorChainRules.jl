@@ -251,5 +251,81 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 @non_differentiable commoninds(::Any...)
 @non_differentiable noncommoninds(::Any...)
 @non_differentiable uniqueinds(::Any...)
+@non_differentiable SiteType(::Any)
+@non_differentiable ITensors._sitetypes(::Any)
+@non_differentiable addtags(::TagSet, ::Any)
+
+#
+# MPO/MPS
+#
+
+# TODO: Define a more general version in ITensors.jl
+function _contract(::Type{ITensor}, ψ::MPS, ϕ::MPS; kwargs...)
+  T = ITensor(1)
+  for n in 1:length(ψ)
+    T = T * ψ[n] * ϕ[n]
+  end
+  return T
+end
+
+function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
+  ψmat = convert(MPO, ψ)
+  ϕmat = convert(MPO, ϕ)
+  return contract(ψmat, ϕmat; kwargs...)
+end
+
+function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwargs...)
+  y = apply(x1, x2; kwargs...)
+  function apply_pullback(ȳ)
+    N = length(x1) + 1
+
+    # Apply circuit and store intermediates in the forward direction
+    x1x2 = Vector{MPS}(undef, N)
+    x1x2[1] = x2
+    for n in 2:N
+      x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=false)
+    end
+    x1x2dag = dag.(x1x2)
+
+    # Apply circuit and store intermediates in the reverse direction
+    x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
+    x1dag_ȳ = Vector{MPS}(undef, N)
+    x1dag_ȳ[end] = ȳ
+    for n in (N - 1):-1:1
+      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; kwargs...)
+    end
+
+    x̄1 = similar(x1)
+    for n in 1:length(x1)
+      x1dag_ȳ′ = prime(x1dag_ȳ[n + 1], inds(x1[n]; plev=0))
+      x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n]; kwargs...)
+    end
+    x̄2 = x1dag_ȳ[end]
+
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, apply_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
+  y = inner(x1, x2, x3; kwargs...)
+  function inner_pullback(ȳ)
+    x̄1 = ȳ * dag(noprime(contract(x2, x3; kwargs...)))
+    x̄2 = ȳ * dag(_contract(MPO, x1', x3; kwargs...))
+    x̄3 = ȳ * dag(noprime(contract(x2, x1; kwargs...)))
+    return (NoTangent(), x̄1, x̄2, x̄3)
+  end
+  return y, inner_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPS; kwargs...)
+  y = inner(x1, x2)
+  function inner_pullback(ȳ)
+    x̄1 = ȳ * dag(x2)
+    x̄2 = dag(x1) * ȳ
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, inner_pullback
+end
 
 end

@@ -7,7 +7,7 @@ include("utils/chainrulestestutils.jl")
 
 using Zygote: ZygoteRuleConfig
 
-@testset "ChainRules rrules" begin
+@testset "ChainRules rrules: basic ITensor operations" begin
   i = Index(2, "i")
   A = randomITensor(i', dag(i))
   Ac = randomITensor(ComplexF64, i', dag(i))
@@ -192,4 +192,11 @@ using Zygote: ZygoteRuleConfig
   f = x -> prime(x; plev=1)[1, 1]
   args = (A,)
   @test_throws ErrorException f'(args...)
+end
+
+@testset "ChainRules rrules: op" begin
+  s = siteinds("Qubit", 4)
+  f = x -> op("Ry", s, 1; θ=x)[1, 2]
+  args = (0.2,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 end

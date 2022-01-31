@@ -3,21 +3,9 @@ using OptimKit
 using Random
 using Zygote
 
-nsites = 4 # Number of sites
-nlayers = 2 # Layers of gates in the ansatz
+nsites = 20 # Number of sites
+nlayers = 3 # Layers of gates in the ansatz
 gradtol = 1e-4 # Tolerance for stopping gradient descent
-
-# The Hamiltonian we are minimizing
-function ising_hamiltonian(nsites; h)
-  ℋ = OpSum()
-  for j in 1:(nsites - 1)
-    ℋ += -1, "Z", j, "Z", j + 1
-  end
-  for j in 1:nsites
-    ℋ += h, "X", j
-  end
-  return ℋ
-end
 
 # A layer of the circuit we want to optimize
 function layer(nsites, θ⃗)
@@ -36,48 +24,42 @@ function variational_circuit(nsites, nlayers, θ⃗)
   return circuit
 end
 
-s = siteinds("Qubit", nsites)
+seed!(1234)
 
-h = 1.3
-ℋ = ising_hamiltonian(nsites; h=h)
-H = MPO(ℋ, s)
+θ⃗ᵗᵃʳᵍᵉᵗ = 2π * rand(nsites * nlayers)
+𝒰ᵗᵃʳᵍᵉᵗ = variational_circuit(nsites, nlayers, θ⃗ᵗᵃʳᵍᵉᵗ)
+
+s = siteinds("Qubit", nsites)
+Uᵗᵃʳᵍᵉᵗ = ops(𝒰ᵗᵃʳᵍᵉᵗ, s)
+
 ψ0 = MPS(s, "0")
+
+# Create the random target state
+ψᵗᵃʳᵍᵉᵗ = apply(Uᵗᵃʳᵍᵉᵗ, ψ0; cutoff=1e-8)
 
 #
 # The loss function, a function of the gate parameters
-# and implicitly depending on the Hamiltonian and state:
+# and implicitly depending on the target state:
 #
-# loss(θ⃗) = ⟨0|U(θ⃗)† H U(θ⃗)|0⟩ = ⟨θ⃗|H|θ⃗⟩
+# loss(θ⃗) = -|⟨θ⃗ᵗᵃʳᵍᵉᵗ|U(θ⃗)|0⟩|² = -|⟨θ⃗ᵗᵃʳᵍᵉᵗ|θ⃗⟩|²
 #
 function loss(θ⃗)
   nsites = length(ψ0)
   s = siteinds(ψ0)
   𝒰θ⃗ = variational_circuit(nsites, nlayers, θ⃗)
   Uθ⃗ = ops(𝒰θ⃗, s)
-  ψθ⃗ = apply(Uθ⃗, ψ0; cutoff=1e-8)
-  return inner(ψθ⃗, H, ψθ⃗; cutoff=1e-8)
+  ψθ⃗ = apply(Uθ⃗, ψ0)
+  return -abs(inner(ψᵗᵃʳᵍᵉᵗ, ψθ⃗))^2
 end
 
-Random.seed!(1234)
-θ⃗₀ = 2π * rand(nsites * nlayers)
+θ⃗₀ = randn!(copy(θ⃗ᵗᵃʳᵍᵉᵗ))
 
-@show loss(θ⃗₀)
-
-println("\nOptimize circuit with gradient optimization")
+@show loss(θ⃗₀), loss(θ⃗ᵗᵃʳᵍᵉᵗ)
 
 loss_∇loss(x) = (loss(x), convert(Vector, loss'(x)))
-algorithm = LBFGS(; gradtol=1e-3, verbosity=2)
+algorithm = LBFGS(; gradtol=gradtol, verbosity=2)
 θ⃗ₒₚₜ, lossₒₚₜ, ∇lossₒₚₜ, numfg, normgradhistory = optimize(loss_∇loss, θ⃗₀, algorithm)
 
-@show loss(θ⃗ₒₚₜ)
-
-println("\nRun DMRG as a comparison")
-
-sweeps = Sweeps(5)
-setmaxdim!(sweeps, 10)
-e_dmrg, ψ_dmrg = dmrg(H, ψ0, sweeps)
-
-println("\nCompare variational circuit energy to DMRG energy")
-@show loss(θ⃗ₒₚₜ), e_dmrg
+@show loss(θ⃗ₒₚₜ), loss(θ⃗ᵗᵃʳᵍᵉᵗ)
 
 nothing
