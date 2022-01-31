@@ -248,7 +248,7 @@ include("utils/circuit.jl")
     setmaxdim!(sweeps, 10)
     e_dmrg, ψ_dmrg = dmrg(H, ψ0, sweeps; output_level=0)
 
-    @test loss(θ⃗ₒₚₜ) ≈ e_dmrg rtol=1e-1
+    @test loss(θ⃗ₒₚₜ) ≈ e_dmrg rtol = 1e-1
   end
 
 end
