@@ -218,7 +218,7 @@ include("utils/circuit.jl")
     s = siteinds("Qubit", nsites)
 
     h = 1.3
-    ℋ = ising_hamiltonian(nsites; h)
+    ℋ = ising_hamiltonian(nsites; h=h)
     H = MPO(ℋ, s)
     ψ0 = MPS(s, "0")
 

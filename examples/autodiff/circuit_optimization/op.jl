@@ -45,7 +45,7 @@ x0 = 0
 γ = 2.0 # Learning rate
 nsteps = 30 # Number of steps of gradient descent
 grad_tol = 1e-4 # Stop if gradient falls below this value
-x, loss_x, ∇loss_x = gradient_descent(loss, x0; γ, nsteps, grad_tol)
+x, loss_x, ∇loss_x = gradient_descent(loss, x0; γ=γ, nsteps=nsteps, grad_tol=grad_tol)
 
 @show x0, loss(x0)
 @show x, loss(x)
