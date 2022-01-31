@@ -222,7 +222,7 @@ dimensions or QN blocks).
 
 `A` and `x` must have common site indices.
 """
-function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true)::Number
+function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
   N = length(A)
   check_hascommoninds(siteinds, A, x)
   ydag = dag(y)
@@ -272,7 +272,7 @@ dimensions or QN blocks).
 `A` and `x` must have common site indices, and `B` and `y`
 must have common site indices.
 """
-function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true)::Number
+function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
   !make_inds_match && error(
     "make_inds_match = false not currently supported in dot(::MPO, ::MPS, ::MPO, ::MPS)"
   )
@@ -314,7 +314,7 @@ end
 # inner((β, B, y), (α, A, x))
 inner(B::MPO, y::MPS, A::MPO, x::MPS) = dot(B, y, A, x)
 
-function dot(M1::MPO, M2::MPO; make_inds_match::Bool=false)
+function dot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   if make_inds_match
     error("In dot(::MPO, ::MPO), make_inds_match is not currently supported")
   end
@@ -323,7 +323,7 @@ end
 
 # TODO: implement by combing the MPO indices and converting
 # to MPS
-function logdot(M1::MPO, M2::MPO; make_inds_match::Bool=false)
+function logdot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   if make_inds_match
     error("In dot(::MPO, ::MPO), make_inds_match is not currently supported")
   end

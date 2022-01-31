@@ -234,7 +234,7 @@ function op(name::AbstractString, s::Index...; kwargs...)
   end
 
   common_stypes = _sitetypes(commontags_s)
-  push!(common_stypes, SiteType("Generic"))
+  @ignore_derivatives push!(common_stypes, SiteType("Generic"))
   opn = OpName(name)
 
   #
@@ -251,7 +251,7 @@ function op(name::AbstractString, s::Index...; kwargs...)
   # otherwise try calling a function of the form:
   #    op!(::ITensor, ::OpName, ::SiteType, ::Index; kwargs...)
   #
-  Op = emptyITensor(prime.(s)..., dag.(s)...)
+  Op = ITensor(prime.(s)..., dag.(s)...)
   for st in common_stypes
     op!(Op, opn, st, s...; kwargs...)
     if !isempty(Op)
@@ -293,7 +293,7 @@ function op(name::AbstractString, s::Index...; kwargs...)
       end
     end
 
-    Op = emptyITensor(prime.(s)..., dag.(s)...)
+    Op = ITensor(prime.(s)..., dag.(s)...)
     for st in Iterators.product(stypes...)
       op!(Op, opn, st..., s...; kwargs...)
       if !isempty(Op)

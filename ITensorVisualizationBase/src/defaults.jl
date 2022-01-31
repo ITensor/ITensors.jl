@@ -92,7 +92,7 @@ function edge_labels(b::Backend, params::NamedTuple, g::AbstractGraph)
   return IndexLabels(b; params...)(g)
 end
 
-function edge_label(l::IndexLabels, g, e)
+function edge_label(l::IndexLabels, g::AbstractGraph, e)
   indsₑ = get_prop(g, e, :inds)
   return label_string(
     indsₑ;
@@ -105,6 +105,13 @@ function edge_label(l::IndexLabels, g, e)
     newlines=l.newlines,
   )
 end
+
+function _edge_label(l, g::Graph, e)
+  return string(e)
+end
+
+edge_label(l::IndexLabels, g::Graph, e) = _edge_label(l, g, e)
+edge_label(l, g::Graph, e) = _edge_label(l, g, e)
 
 #function default_edge_labels(b::Backend, g; kwargs...)
 #  return [edge_label(g, e; kwargs...) for e in edges(g)]
@@ -189,6 +196,10 @@ function default_edge_widths(b::Backend, g::AbstractGraph)
   return Float64[width(get_prop(g, e, :inds)) for e in edges(g)]
 end
 
+function default_edge_widths(b::Backend, g::Graph)
+  return [1.0 for e in edges(g)]
+end
+
 #############################################################################
 # arrow
 #
@@ -196,6 +207,7 @@ end
 default_arrow_size(b::Backend, g) = 30
 
 _hasqns(tn::Vector{ITensor}) = any(hasqns, tn)
+
 function _hasqns(g::AbstractGraph)
   if iszero(ne(g))
     if has_prop(g, first(vertices(g)), :inds)
@@ -206,6 +218,8 @@ function _hasqns(g::AbstractGraph)
   end
   return hasqns(get_prop(g, first(edges(g)), :inds))
 end
+
+_hasqns(g::Graph) = false
 
 default_arrow_show(b::Backend, g) = _hasqns(g)
 

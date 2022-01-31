@@ -1,42 +1,35 @@
-name: format-check
-
+name: Format check
 on:
   push:
-    branches:
-      - 'main'
-      - 'release-'
-    tags: '*'
+    branches: [master]
+    tags: [v*]
   pull_request:
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        julia-version: [1.6.0]
-        julia-arch: [x86]
-        os: [ubuntu-latest]
+  format:
+    name: "Format Check"
+    runs-on: ubuntu-latest
     steps:
-      - uses: julia-actions/setup-julia@latest
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@v1
         with:
-          version: ${{ matrix.julia-version }}
-
-      - uses: actions/checkout@v1
+          version: 1
       - name: Install JuliaFormatter and format
-        # This will use the latest version by default but you can set the version like so:
-        #
-        # julia  -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter", version="0.13.0"))'
         run: |
           julia  -e 'using Pkg; Pkg.add(PackageSpec(name="JuliaFormatter"))'
           julia  -e 'using JuliaFormatter; format(".", verbose=true)'
-      - name: Format check
+      - name: Check format
         run: |
           julia -e '
           out = Cmd(`git diff --name-only`) |> read |> String
           if out == ""
               exit(0)
           else
-              @error "Some files have not been formatted !!!"
+              @error "The following files have not been formatted:"
               write(stdout, out)
+              out_diff = Cmd(`git diff`) |> read |> String
+              @error "Diff:"
+              write(stdout, out_diff)
               exit(1)
+              @error ""
           end'

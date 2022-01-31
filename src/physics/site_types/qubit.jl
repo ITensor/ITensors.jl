@@ -44,6 +44,8 @@ ITensors.val(::ValName"1", st::SiteType"Qubit") = 2
 
 ITensors.state(::StateName"0", ::SiteType"Qubit") = [1.0, 0.0]
 ITensors.state(::StateName"1", ::SiteType"Qubit") = [0.0, 1.0]
+ITensors.state(::StateName"+", ::SiteType"Qubit") = [1.0, 1.0] / √2
+ITensors.state(::StateName"-", ::SiteType"Qubit") = [1.0, -1.0] / √2
 
 # Use S=1/2 definition of any operators 
 # called using Qubit SiteType
