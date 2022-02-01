@@ -1648,8 +1648,7 @@ end
 # TODO: what about noncommutative number types?
 (x::Number * T::ITensor) = T * x
 
-#TODO: make a proper element-wise division
-(A::ITensor / x::Number) = A * (1.0 / x)
+(A::ITensor / x::Number) = itensor(tensor(A) / x)
 
 -(A::ITensor) = itensor(-tensor(A))
 
