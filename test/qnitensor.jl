@@ -302,6 +302,37 @@ Random.seed!(1234)
 
     @test flux(B) == QN()
     @test nnzblocks(B) == 2
+
+    # Scalar algebra
+    C = 2 * B
+    @test C[1, 1] == 2 * B[1, 1]
+    @test flux(B) == QN()
+    @test flux(C) == QN()
+    @test nnzblocks(B) == 2
+    @test nnzblocks(C) == 2
+
+    C = B / 2
+    @test C[1, 1] == B[1, 1] / 2
+    @test flux(B) == QN()
+    @test flux(C) == QN()
+    @test nnzblocks(B) == 2
+    @test nnzblocks(C) == 2
+  end
+
+  @testset "eltype promotion with scalar * and /" begin
+    i = Index([QN(0) => 2, QN(1) => 3])
+    @test eltype(ITensor(1f0, i', dag(i)) * 2) === Float32
+    @test eltype(ITensor(1f0, i', dag(i)) .* 2) === Float32
+    @test eltype(ITensor(1f0, i', dag(i)) / 2) === Float32
+    @test eltype(ITensor(1f0, i', dag(i)) ./ 2) === Float32
+    @test eltype(ITensor(1f0, i', dag(i)) * 2f0) === Float32
+    @test eltype(ITensor(1f0, i', dag(i)) .* 2f0) === Float32
+    @test eltype(ITensor(1f0, i', dag(i)) / 2f0) === Float32
+    @test eltype(ITensor(1f0, i', dag(i)) ./ 2f0) === Float32
+    @test eltype(ITensor(1f0, i', dag(i)) * 2.0) === Float64
+    @test eltype(ITensor(1f0, i', dag(i)) .* 2.0) === Float64
+    @test eltype(ITensor(1f0, i', dag(i)) / 2.0) === Float64
+    @test eltype(ITensor(1f0, i', dag(i)) ./ 2.0) === Float64
   end
 
   @testset "Complex Number Operations" begin
