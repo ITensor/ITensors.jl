@@ -27,6 +27,7 @@ end
 
 (S::TensorStorage * x::Number) = setdata(S, x * data(S))
 (x::Number * S::TensorStorage) = S * x
+(S::TensorStorage / x::Number) = setdata(S, data(S) / x)
 
 -(S::TensorStorage) = setdata(S, -data(S))
 

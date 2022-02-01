@@ -26,6 +26,20 @@ using Test
   # Test different ways of getting nnz
   @test nnz(blockoffsets(A), inds(A)) == nnz(A)
 
+  B = 2 * A
+  @test B[1, 1] == 2 * A[1, 1]
+  @test nnz(A) == 2 * 5 + 3 * 4
+  @test nnz(B) == 2 * 5 + 3 * 4
+  @test nnzblocks(A) == 2
+  @test nnzblocks(B) == 2
+
+  B = A / 2
+  @test B[1, 1] == A[1, 1] / 2
+  @test nnz(A) == 2 * 5 + 3 * 4
+  @test nnz(B) == 2 * 5 + 3 * 4
+  @test nnzblocks(A) == 2
+  @test nnzblocks(B) == 2
+
   A[1, 5] = 15
   A[2, 5] = 25
 
