@@ -285,18 +285,18 @@ end
   end
 
   @testset "eltype promotion with scalar * and /" begin
-    @test eltype(ITensor(1f0, Index(2)) * 2) === Float32
-    @test eltype(ITensor(1f0, Index(2)) .* 2) === Float32
-    @test eltype(ITensor(1f0, Index(2)) / 2) === Float32
-    @test eltype(ITensor(1f0, Index(2)) ./ 2) === Float32
-    @test eltype(ITensor(1f0, Index(2)) * 2f0) === Float32
-    @test eltype(ITensor(1f0, Index(2)) .* 2f0) === Float32
-    @test eltype(ITensor(1f0, Index(2)) / 2f0) === Float32
-    @test eltype(ITensor(1f0, Index(2)) ./ 2f0) === Float32
-    @test eltype(ITensor(1f0, Index(2)) * 2.0) === Float64
-    @test eltype(ITensor(1f0, Index(2)) .* 2.0) === Float64
-    @test eltype(ITensor(1f0, Index(2)) / 2.0) === Float64
-    @test eltype(ITensor(1f0, Index(2)) ./ 2.0) === Float64
+    @test eltype(ITensor(1.0f0, Index(2)) * 2) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) .* 2) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) / 2) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) ./ 2) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) * 2.0f0) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) .* 2.0f0) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) / 2.0f0) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) ./ 2.0f0) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) * 2.0) === Float64
+    @test eltype(ITensor(1.0f0, Index(2)) .* 2.0) === Float64
+    @test eltype(ITensor(1.0f0, Index(2)) / 2.0) === Float64
+    @test eltype(ITensor(1.0f0, Index(2)) ./ 2.0) === Float64
   end
 
   @testset "Convert to complex" begin
