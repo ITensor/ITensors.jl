@@ -6,7 +6,7 @@ Fixes # (issue)
 
 # How Has This Been Tested?
 
-Please describe the tests that you ran to verify your changes. Please also note any relevant details for your test configuration.
+Please describe the tests that you ran to verify your changes.
 
 - [ ] Test A
 - [ ] Test B
