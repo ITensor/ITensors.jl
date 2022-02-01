@@ -1,5 +1,6 @@
 import Base:
   # Types
+  AbstractFloat,
   Array,
   CartesianIndex,
   Complex,
