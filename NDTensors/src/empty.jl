@@ -9,16 +9,39 @@ struct EmptyOrder end
 # Represents a number that can be set to any type.
 #
 
-struct EmptyNumber <: Number end
+struct EmptyNumber <: Real end
 
-zero(::Type{EmptyNumber}) = zero(Float64)
+zero(::Type{EmptyNumber}) = EmptyNumber()
 zero(n::EmptyNumber) = zero(typeof(n))
 
+# This helps handle a lot of basic algebra, like:
+# EmptyNumber() + 2.3 == 2.3
+convert(::Type{T}, x::EmptyNumber) where {T<:Number} = T(zero(T))
+
+# TODO: Should this be implemented?
+#Complex(x::Real, ::EmptyNumber) = x
+
+# This is to help define `float(::EmptyNumber) = 0.0`.
+# This helps with defining `norm` of `EmptyStorage{EmptyNumber}`.
+AbstractFloat(::NDTensors.EmptyNumber) = zero(AbstractFloat)
+
+# Basic arithmetic
+(::EmptyNumber + ::EmptyNumber) = EmptyNumber()
+(::EmptyNumber - ::EmptyNumber) = EmptyNumber()
+(::Number * ::EmptyNumber) = EmptyNumber()
+(::EmptyNumber * ::Number) = EmptyNumber()
+(::EmptyNumber * ::EmptyNumber) = EmptyNumber()
+(::EmptyNumber / ::Number) = EmptyNumber()
+(::Number / ::EmptyNumber) = throw(DivideError())
+(::EmptyNumber / ::EmptyNumber) = throw(DivideError())
+-(::EmptyNumber) = EmptyNumber()
+
+# TODO: Delete this.
 # This is a backup definition to make:
 # A = ITensor(i, j)
 # complex!(A)
 # work. It acts as if the "default" type is `Float64`
-complex(::Type{EmptyNumber}) = ComplexF64
+## complex(::Type{EmptyNumber}) = ComplexF64
 
 function similartype(::Type{StoreT}, ::Type{ElT}) where {StoreT<:Dense{EmptyNumber},ElT}
   return Dense{ElT,similartype(datatype(StoreT), ElT)}
@@ -50,6 +73,7 @@ function EmptyStorage(::Type{ElT}) where {ElT}
   return emptytype(Dense{ElT,Vector{ElT}})()
 end
 
+# TODO: should this be `EmptyNumber`?
 EmptyStorage() = EmptyStorage(Float64)
 
 similar(S::EmptyStorage) = S
@@ -104,7 +128,10 @@ end
 
 # XXX TODO: add bounds checking
 getindex(T::EmptyTensor, I::Integer...) = zero(eltype(T))
-getindex(T::EmptyTensor{EmptyNumber}, I::Integer...) = zero(Float64)
+getindex(T::EmptyTensor{EmptyNumber}, I::Integer...) = EmptyNumber()
+function getindex(T::EmptyTensor{Complex{EmptyNumber}}, I::Integer...)
+  return Complex(NDTensors.EmptyNumber(), NDTensors.EmptyNumber())
+end
 
 similar(T::EmptyTensor, inds::Tuple) = setinds(T, inds)
 function similar(T::EmptyTensor, ::Type{ElT}) where {ElT<:Number}
@@ -185,9 +212,17 @@ end
 insertblock!!(T::EmptyTensor{<:Number,N}, block) where {N} = insertblock(T, block)
 
 # Special case with element type of EmptyNumber: storage takes the type
-# of the input
+# of the input.
 @propagate_inbounds function _setindex(T::EmptyTensor{EmptyNumber}, x, I...)
   R = zeros(typeof(x), T)
+  R[I...] = x
+  return R
+end
+
+# Special case with element type of Complex{EmptyNumber}: storage takes the type
+# of the complex version of the input.
+@propagate_inbounds function _setindex(T::EmptyTensor{Complex{EmptyNumber}}, x, I...)
+  R = zeros(typeof(complex(x)), T)
   R[I...] = x
   return R
 end

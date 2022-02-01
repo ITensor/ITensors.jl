@@ -284,6 +284,21 @@ end
     end
   end
 
+  @testset "eltype promotion with scalar * and /" begin
+    @test eltype(ITensor(1.0f0, Index(2)) * 2) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) .* 2) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) / 2) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) ./ 2) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) * 2.0f0) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) .* 2.0f0) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) / 2.0f0) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) ./ 2.0f0) === Float32
+    @test eltype(ITensor(1.0f0, Index(2)) * 2.0) === Float64
+    @test eltype(ITensor(1.0f0, Index(2)) .* 2.0) === Float64
+    @test eltype(ITensor(1.0f0, Index(2)) / 2.0) === Float64
+    @test eltype(ITensor(1.0f0, Index(2)) ./ 2.0) === Float64
+  end
+
   @testset "Convert to complex" begin
     i = Index(2, "i")
     j = Index(2, "j")
@@ -1148,7 +1163,7 @@ end
         @test A[ii, jj, kk] == invdigits(SType, ii, jj, kk)
       end
     end
-    @testset "Test scalar(ITensor)" begin
+    @testset "Test scalar(::ITensor)" begin
       x = SType(34)
       A = ITensor(x)
       @test x == scalar(A)
@@ -1158,6 +1173,12 @@ end
     @testset "Test norm(ITensor)" begin
       A = randomITensor(SType, i, j, k)
       @test norm(A) ≈ sqrt(scalar(dag(A) * A))
+    end
+    @testset "Test dag(::Number)" begin
+      x = 1.2 + 2.3im
+      @test dag(x) == 1.2 - 2.3im
+      x = 1.4
+      @test dag(x) == 1.4
     end
     @testset "Test add ITensors" begin
       A = randomITensor(SType, i, j, k)

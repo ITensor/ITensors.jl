@@ -388,6 +388,10 @@ function (x::Number * T::Tensor)
 end
 (T::Tensor * x::Number) = x * T
 
+function (T::Tensor / x::Number)
+  return tensor(storage(T) / x, inds(T))
+end
+
 function permutedims!(
   R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm, f::Function
 ) where {N}

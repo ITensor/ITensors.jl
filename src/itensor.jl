@@ -1504,6 +1504,9 @@ function dag(as::AliasStyle, T::ITensor)
   return itensor(dag(as, tensor(T)))
 end
 
+# Helpful for generic code
+dag(x::Number) = conj(x)
+
 # Helper function for deprecating a keyword argument
 function deprecated_keyword_argument(
   ::Type{T}, kwargs; new_kw, old_kw, default, funcsym, map=identity
@@ -1645,8 +1648,7 @@ end
 # TODO: what about noncommutative number types?
 (x::Number * T::ITensor) = T * x
 
-#TODO: make a proper element-wise division
-(A::ITensor / x::Number) = A * (1.0 / x)
+(A::ITensor / x::Number) = itensor(tensor(A) / x)
 
 -(A::ITensor) = itensor(-tensor(A))
 
