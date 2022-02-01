@@ -24,7 +24,7 @@ function variational_circuit(nsites, nlayers, θ⃗)
   return circuit
 end
 
-seed!(1234)
+Random.seed!(1234)
 
 θ⃗ᵗᵃʳᵍᵉᵗ = 2π * rand(nsites * nlayers)
 𝒰ᵗᵃʳᵍᵉᵗ = variational_circuit(nsites, nlayers, θ⃗ᵗᵃʳᵍᵉᵗ)
