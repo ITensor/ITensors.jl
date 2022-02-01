@@ -1,8 +1,8 @@
 ---
-name: ITensors.jl pull request
-about: Propose an addition or modification to ITensors.jl
-title: "[ITensors]"
-labels: ["ITensors"]
+name: NDTensors.jl pull request
+about: Propose an addition or modification to NDTensors.jl
+title: "[NDTensors]"
+labels: ["NDTensors"]
 assignees: ''
 
 ---
