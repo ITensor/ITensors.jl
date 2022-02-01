@@ -146,8 +146,7 @@ function ChainRulesCore.rrule(::typeof(*), x1::Number, x2::ITensor)
   y = x1 * x2
   function contract_pullback(ȳ)
     x̄1 = ȳ * dag(x2)
-    # TODO: define `dag(::Number)` to help with generic code
-    x̄2 = dag(ITensor(x1)) * ȳ
+    x̄2 = dag(x1) * ȳ
     return (NoTangent(), x̄1[], x̄2)
   end
   return y, contract_pullback
@@ -156,7 +155,7 @@ end
 function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::Number)
   y = x1 * x2
   function contract_pullback(ȳ)
-    x̄1 = ȳ * dag(ITensor(x2))
+    x̄1 = ȳ * dag(x2)
     x̄2 = dag(x1) * ȳ
     return (NoTangent(), x̄1, x̄2[])
   end

@@ -1504,6 +1504,9 @@ function dag(as::AliasStyle, T::ITensor)
   return itensor(dag(as, tensor(T)))
 end
 
+# Helpful for generic code
+dag(x::Number) = conj(x)
+
 # Helper function for deprecating a keyword argument
 function deprecated_keyword_argument(
   ::Type{T}, kwargs; new_kw, old_kw, default, funcsym, map=identity

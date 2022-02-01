@@ -2,12 +2,14 @@ import Base:
   # Types
   Array,
   CartesianIndex,
+  Complex,
   IndexStyle,
   Tuple,
   # Symbols
   +,
   -,
   *,
+  /,
   # Methods
   checkbounds,
   complex,

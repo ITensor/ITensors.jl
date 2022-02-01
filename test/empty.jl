@@ -1,10 +1,12 @@
-using ITensors, Test
+using ITensors
+using ITensors.NDTensors
+using Test
 
-@testset "emptyITensor (Empty)" begin
-  @testset "emptyITensor set elements" begin
+@testset "ITensor (Empty)" begin
+  @testset "ITensor set elements" begin
     i = Index(2; tags="i")
 
-    E = emptyITensor(i', dag(i))
+    E = ITensor(i', dag(i))
 
     @test conj(E) == E
     @test 1.2 * E == E
@@ -21,10 +23,30 @@ using ITensors, Test
     @test E[i' => 2, i => 2] == 0
   end
 
-  @testset "emptyITensor set elements (QN)" begin
+  @testset "ITensor (Empty) convert to complex" begin
+    i = Index(2; tags="i")
+    E = ITensor(i', dag(i))
+    @test eltype(E) == NDTensors.EmptyNumber
+
+    Ec = complex(E)
+    @test eltype(Ec) == Complex{NDTensors.EmptyNumber}
+    Ec[1, 1] = 2.3
+    @test eltype(Ec) == ComplexF64
+
+    Ec = complex(E)
+    @test eltype(Ec) == Complex{NDTensors.EmptyNumber}
+    Ec[1, 1] = 2.3f0
+    @test eltype(Ec) == ComplexF32
+
+    E2 = copy(E)
+    E2c = complex!(E2)
+    @test eltype(E2c) == Complex{NDTensors.EmptyNumber}
+  end
+
+  @testset "ITensor set elements (QN)" begin
     i = Index(QN(0) => 2, QN(1) => 2; tags="i")
 
-    E = emptyITensor(i', dag(i))
+    E = ITensor(i', dag(i))
 
     @test hassameinds(E, (i', i))
     @test order(E) == 2
@@ -42,10 +64,10 @@ using ITensors, Test
     @test_throws ErrorException E[i' => 2, i => 3] = 3.2
   end
 
-  @testset "emptyITensor()" begin
+  @testset "ITensor()" begin
     i = Index(QN(0) => 2, QN(1) => 2; tags="i")
 
-    E = emptyITensor()
+    E = ITensor()
 
     @test isnothing(flux(E))
     @test order(E) == 0
