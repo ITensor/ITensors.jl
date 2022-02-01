@@ -49,7 +49,10 @@ include("utils/circuit.jl")
       os .+= "Sz", n, "Sz", n + 1
     end
     Hmpo = MPO(os, s)
+
+    seed!(1234)
     ψ₀mps = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=χ)
+
     H = ITensors.data(Hmpo)
     ψ₀ = ITensors.data(ψ₀mps)
     # The Rayleigh quotient to minimize
@@ -71,12 +74,12 @@ include("utils/circuit.jl")
     ∇E(ψ) = E'(ψ)
     fg(ψ) = (E(ψ), ∇E(ψ))
     linesearch = HagerZhangLineSearch(; c₁=0.1, c₂=0.9, ϵ=1e-6, θ=1 / 2, γ=2 / 3, ρ=5.0)
-    algorithm = LBFGS(5; maxiter=50, gradtol=1e-8, linesearch=linesearch, verbosity=0)
+    algorithm = LBFGS(5; maxiter=50, gradtol=1e-4, linesearch=linesearch, verbosity=0)
     ψ, fψ, gψ, numfg, normgradhistory = optimize(fg, ψ₀, algorithm)
     sweeps = Sweeps(5)
     setmaxdim!(sweeps, χ)
     fψmps, ψmps = dmrg(Hmpo, ψ₀mps, sweeps; outputlevel=0)
-    @test E(H, ψ) ≈ inner(ψmps, Hmpo, ψmps) / inner(ψmps, ψmps)
+    @test E(H, ψ) ≈ inner(ψmps, Hmpo, ψmps) / inner(ψmps, ψmps) rtol = 1e-2
   end
 
   @testset "State preparation (full state)" begin
@@ -246,7 +249,7 @@ include("utils/circuit.jl")
 
     sweeps = Sweeps(5)
     setmaxdim!(sweeps, 10)
-    e_dmrg, ψ_dmrg = dmrg(H, ψ0, sweeps; output_level=0)
+    e_dmrg, ψ_dmrg = dmrg(H, ψ0, sweeps; outputlevel=0)
 
     @test loss(θ⃗ₒₚₜ) ≈ e_dmrg rtol = 1e-1
   end

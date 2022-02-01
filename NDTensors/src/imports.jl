@@ -1,13 +1,16 @@
 import Base:
   # Types
+  AbstractFloat,
   Array,
   CartesianIndex,
+  Complex,
   IndexStyle,
   Tuple,
   # Symbols
   +,
   -,
   *,
+  /,
   # Methods
   checkbounds,
   complex,
