@@ -287,7 +287,14 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
     x1x2dag = dag.(x1x2)
 
     # Apply circuit and store intermediates in the reverse direction
-    x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
+
+    # XXX: Which one is correct?
+    # This works to optimize "Ry" but not "Rx"
+    x1dag = [swapprime(x, 0 => 1) for x in x1]
+
+    # This fails to optimize "Ry" and "Rx"
+    #x1dag = [dag(x) for x in x1]
+
     x1dag_ȳ = Vector{MPS}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
