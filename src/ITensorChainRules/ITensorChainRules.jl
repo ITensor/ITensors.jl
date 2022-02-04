@@ -105,7 +105,9 @@ for fname in (
   :swapinds,
 )
   @eval begin
-    function ChainRulesCore.rrule(f::typeof($fname), x::Union{ITensor,MPS,MPO}, a...; kwargs...)
+    function ChainRulesCore.rrule(
+      f::typeof($fname), x::Union{ITensor,MPS,MPO}, a...; kwargs...
+    )
       y = f(x, a...; kwargs...)
       function f_pullback(ȳ)
         x̄ = inv_op(f, unthunk(ȳ), a...; kwargs...)
