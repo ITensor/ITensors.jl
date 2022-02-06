@@ -590,7 +590,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
   ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
 
-  Op1=_Op1 #make copies into which we can insert "F" string operators.
+  Op1 = _Op1 #make copies into which we can insert "F" string operators.
   Op2=_Op2
   onsiteOp = "$Op1*$Op2"
   fermionic1 = has_fermion_string(Op1, s[1])
