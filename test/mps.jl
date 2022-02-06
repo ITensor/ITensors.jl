@@ -481,18 +481,18 @@ function basicRandomMPS(N::Int; dim=4)
   return M
 end
 
-function TestCorreltationMatrix(psi::MPS,ops::Vector{Tuple{String, String}})
-  N=length(psi)
-  s=siteinds(psi)
+function TestCorreltationMatrix(psi::MPS, ops::Vector{Tuple{String,String}})
+  N = length(psi)
+  s = siteinds(psi)
   for op in ops
     Cpm = correlation_matrix(psi, op[1], op[2])
     # Check using OpSum:
     for i in 1:N, j in 1:N
       a = OpSum()
       a += op[1], i, op[2], j
-      @test inner(psi, MPO(a, s), psi) ≈ Cpm[i, j] atol=5e-15
+      @test inner(psi, MPO(a, s), psi) ≈ Cpm[i, j] atol = 5e-15
     end
-    PM = expect(psi, op[1]*"*"*op[2])
+    PM = expect(psi, op[1] * "*" * op[2])
     @test norm(PM - diag(Cpm)) < 1E-8
   end
 end
@@ -641,24 +641,38 @@ end
   @testset "Expected value and Correlations" begin
     N = 8
     m = 4
-  
+
     # Non-fermionic real case - spin system with QNs (very restrictive on allowed ops)
     s = siteinds("S=1/2", N; conserve_qns=true)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
-    TestCorreltationMatrix(psi,[("S-","S+"),("S+","S-")])
-  
+    TestCorreltationMatrix(psi, [("S-", "S+"), ("S+", "S-")])
+
     s = siteinds("S=1/2", N; conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
-    TestCorreltationMatrix(psi,[("Sz","Sz"),("iSy","iSy"),("Sx","Sx"),("Sz","Sx"),("S+","S+"),("S-","S+"),("S+","S-"),("Sx","S+"),("iSy","iSy"),("Sx","iSy")])
+    TestCorreltationMatrix(
+      psi,
+      [
+        ("Sz", "Sz"),
+        ("iSy", "iSy"),
+        ("Sx", "Sx"),
+        ("Sz", "Sx"),
+        ("S+", "S+"),
+        ("S-", "S+"),
+        ("S+", "S-"),
+        ("Sx", "S+"),
+        ("iSy", "iSy"),
+        ("Sx", "iSy"),
+      ],
+    )
     #Test site_range feature
     PM = expect(psi, "S+*S-")
     Cpm = correlation_matrix(psi, "S+", "S-")
     range = 3:7
     Cpm37 = correlation_matrix(psi, "S+", "S-"; site_range=range)
     @test norm(Cpm37 - Cpm[range, range]) < 1E-8
-  
+
     @test norm(PM[range] - expect(psi, "S+*S-"; site_range=range)) < 1E-8
-  
+
     # With start_site, end_site arguments:
     s = siteinds("S=1/2", N)
     psi = randomMPS(ComplexF64, s; linkdims=m)
@@ -673,47 +687,56 @@ end
       a += "S+", i, "S-", j
       @test inner(psi, MPO(a, s), psi) ≈ Cpm[i - ss + 1, j - ss + 1]
     end
-  
+
     # Electron case
     s = siteinds("Electron", N)
     psi = randomMPS(s; linkdims=m)
-    TestCorreltationMatrix(psi,[("Cdagup", "Cup"),("Cup", "Cdagup"),("Cup", "Cdn"),
-        ("Cdagdn", "Cdn")])
-  
+    TestCorreltationMatrix(
+      psi, [("Cdagup", "Cup"), ("Cup", "Cdagup"), ("Cup", "Cdn"), ("Cdagdn", "Cdn")]
+    )
+
     s = siteinds("Electron", N; conserve_qns=false)
     psi = randomMPS(s; linkdims=m)
-    TestCorreltationMatrix(psi,[("Ntot","Ntot"),("Nup","Nup"),("Ndn","Ndn"),
-    ("Cdagup","Cup"),("Adagup","Aup"),
-    ("Cdn","Cdagdn"),("Adn","Adagdn"),
-    ("Sz","Sz"),("S+","S-")])
+    TestCorreltationMatrix(
+      psi,
+      [
+        ("Ntot", "Ntot"),
+        ("Nup", "Nup"),
+        ("Ndn", "Ndn"),
+        ("Cdagup", "Cup"),
+        ("Adagup", "Aup"),
+        ("Cdn", "Cdagdn"),
+        ("Adn", "Adagdn"),
+        ("Sz", "Sz"),
+        ("S+", "S-"),
+      ],
+    )
     # can't test ,("Cdn","Cdn") yet, because AutoMPO thinks this is antisymmetric 
-  
+
     #trigger unsupported error
     let err = nothing
       try
-        TestCorreltationMatrix(psi,[("Cup", "Aup")])
+        TestCorreltationMatrix(psi, [("Cup", "Aup")])
       catch err
       end
-  
+
       @test err isa Exception
-      @test sprint(showerror, err) == "correlation_matrix: Mixed fermionic and bosonic operators are not supported yet."
+      @test sprint(showerror, err) ==
+        "correlation_matrix: Mixed fermionic and bosonic operators are not supported yet."
     end
-  
-  
+
     # Fermion case
     s = siteinds("Fermion", N)
     psi = randomMPS(s; linkdims=m)
-    TestCorreltationMatrix(psi,[("N","N"),("Cdag","C"),("C","Cdag")])
-   
+    TestCorreltationMatrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag")])
+
     s = siteinds("Fermion", N; conserve_qns=false)
     psi = randomMPS(s; linkdims=m)
-    TestCorreltationMatrix(psi,[("N","N"),("Cdag","C"),("C","Cdag")])
+    TestCorreltationMatrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag")])
     # can't test ,("C","C") yet, because AutoMPO thinks this is antisymmetric 
-  
-    
-  
+
   end #testset
-  
+
   @testset "expect regression test for in-place modification of input MPS" begin
     s = siteinds("S=1/2", 5)
     psi = randomMPS(s; linkdims=3)
