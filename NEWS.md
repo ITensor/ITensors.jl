@@ -6,6 +6,26 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.2.13 Release Notes
+==============================
+
+- Fix eltype promotion dividing ITensor by scalar (#813)
+- Make getindex on EmptyStorage return EmptyNumber (#812)
+- Add variational circuit optimization (#811)
+- Expand ITensor development guide (#809)
+- Add issue templates for all subdir packages (#808)
+- Change randomMPS bond dim error to warning (#806)
+- Add docs for enabling debug checks (#801)
+- Remove ignore comments for JuliaFormatter (#799)
+- Improve docstrings for apply and ITensor constructors (#797)
+- FAQ on the relationship of ITensor to other tensor libraries (#795)
+- Move ITensorVisualizationCore into ITensors module (#787)
+
+ITensors v0.2.12 Release Notes
+==============================
+
+- Use registered subdir version of NDTensors (#780)
+
 ITensors v0.2.11 Release Notes
 ==============================
 

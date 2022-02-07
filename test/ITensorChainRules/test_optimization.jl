@@ -50,7 +50,7 @@ include("utils/circuit.jl")
     end
     Hmpo = MPO(os, s)
 
-    seed!(1234)
+    Random.seed!(1234)
     ψ₀mps = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=χ)
 
     H = ITensors.data(Hmpo)
@@ -98,7 +98,7 @@ include("utils/circuit.jl")
     end
 
     N = 4
-    seed!(1234)
+    Random.seed!(1234)
     θ⃗ = 2π .* rand(N)
     gates = variational_circuit(θ⃗)
 
@@ -145,7 +145,7 @@ include("utils/circuit.jl")
       return circuit
     end
 
-    seed!(1234)
+    Random.seed!(1234)
 
     θ⃗ᵗᵃʳᵍᵉᵗ = 2π * rand(nsites * nlayers)
     𝒰ᵗᵃʳᵍᵉᵗ = variational_circuit(nsites, nlayers, θ⃗ᵗᵃʳᵍᵉᵗ)
@@ -240,7 +240,7 @@ include("utils/circuit.jl")
       return inner(ψθ⃗, H, ψθ⃗; cutoff=1e-8)
     end
 
-    seed!(1234)
+    Random.seed!(1234)
     θ⃗₀ = 2π * rand(nsites * nlayers)
 
     loss_∇loss(x) = (loss(x), convert(Vector, loss'(x)))
