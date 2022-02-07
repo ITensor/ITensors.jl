@@ -749,8 +749,9 @@ size(A::ITensor, d::Int) = size(tensor(A), d)
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 
 """
-    Array{ElT}(T::ITensor, i:Index...)
-    Array(T::ITensor, i:Index...)
+    Array{ElT, N}(T::ITensor, is:Index...)
+    Array{ElT}(T::ITensor, is:Index...)
+    Array(T::ITensor, is:Index...)
 
     Matrix{ElT}(T::ITensor, row_i:Index, col_i::Index)
     Matrix(T::ITensor, row_i:Index, col_i::Index)
@@ -763,26 +764,34 @@ an Array with a copy of the ITensor's elements. The
 order in which the indices are provided indicates
 the order of the data in the resulting Array.
 """
-function Array{ElT,N}(T::ITensor, is::Vararg{Index,N}) where {ElT,N}
+function Array{ElT,N}(T::ITensor, is::Indices) where {ElT,N}
   ndims(T) != N && throw(
     DimensionMismatch(
       "cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."
     ),
   )
-  TT = tensor(permute(T, is...))
+  TT = tensor(permute(T, is))
   return Array{ElT,N}(TT)::Array{ElT,N}
 end
 
-function Array{ElT}(T::ITensor, is::Vararg{Index,N}) where {ElT,N}
-  return Array{ElT,N}(T, is...)
+function Array{ElT,N}(T::ITensor, is...) where {ElT,N}
+  return Array{ElT,N}(T, indices(is...))
 end
 
-function Array(T::ITensor, is::Vararg{Index,N}) where {N}
-  return Array{eltype(T),N}(T, is...)::Array{<:Number,N}
+function Array{ElT}(T::ITensor, is::Indices) where {ElT}
+  return Array{ElT,length(is)}(T, is)
 end
 
-function Array{<:Any,N}(T::ITensor, is::Vararg{Index,N}) where {N}
-  return Array(T, is...)
+function Array{ElT}(T::ITensor, is...) where {ElT}
+  return Array{ElT}(T, indices(is...))
+end
+
+function Array(T::ITensor, is...)
+  return Array{eltype(T)}(T, is...)
+end
+
+function Array{<:Any,N}(T::ITensor, is...) where {N}
+  return Array{eltype(T),N}(T, is...)
 end
 
 function Vector{ElT}(T::ITensor)::Vector{ElT} where {ElT}
@@ -1912,7 +1921,7 @@ end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
+function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number; β::Number=0)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
