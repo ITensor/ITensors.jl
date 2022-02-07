@@ -749,9 +749,9 @@ size(A::ITensor, d::Int) = size(tensor(A), d)
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 
 """
-    Array{ElT, N}(T::ITensor, is:Index...)
-    Array{ElT}(T::ITensor, is:Index...)
-    Array(T::ITensor, is:Index...)
+    Array{ElT, N}(T::ITensor, i:Index...)
+    Array{ElT}(T::ITensor, i:Index...)
+    Array(T::ITensor, i:Index...)
 
     Matrix{ElT}(T::ITensor, row_i:Index, col_i::Index)
     Matrix(T::ITensor, row_i:Index, col_i::Index)
