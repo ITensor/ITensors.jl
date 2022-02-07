@@ -239,7 +239,20 @@ function op(name::AbstractString, s::Index...; kwargs...)
 
   #
   # Try calling a function of the form:
-  #    op(::OpName, ::SiteType, ::Index; kwargs...)
+  #    op(::OpName, ::SiteType; kwargs...)
+  # which returns a Julia matrix
+  #
+  for st in common_stypes
+    op_mat = op(opn, st; kwargs...)
+    if !isnothing(op_mat)
+      rs = reverse(s)
+      return itensor(op_mat, prime.(rs)..., dag.(rs)...)
+    end
+  end
+
+  #
+  # otherwise try calling a function of the form:
+  #    op(::OpName, ::SiteType, ::Index...; kwargs...)
   #
   for st in common_stypes
     res = op(opn, st, s...; kwargs...)
@@ -249,26 +262,13 @@ function op(name::AbstractString, s::Index...; kwargs...)
   end
 
   # otherwise try calling a function of the form:
-  #    op!(::ITensor, ::OpName, ::SiteType, ::Index; kwargs...)
+  #    op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...)
   #
   Op = ITensor(prime.(s)..., dag.(s)...)
   for st in common_stypes
     op!(Op, opn, st, s...; kwargs...)
     if !isempty(Op)
       return Op
-    end
-  end
-
-  #
-  # otherwise try calling a function of the form:
-  #    op(::OpName, ::SiteType; kwargs...)
-  # which returns a Julia matrix
-  #
-  for st in common_stypes
-    op_mat = op(opn, st; kwargs...)
-    if !isnothing(op_mat)
-      rs = reverse(s)
-      return itensor(op_mat, prime.(rs)..., dag.(rs)...)
     end
   end
 
