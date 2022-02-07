@@ -567,6 +567,7 @@ using efficient MPS techniques. Returns the matrix C.
 
 # Optional Keyword Arguments
 - `site_range = 1:length(psi)`: compute correlations only for sites in the given range
+- `is_hermitian` = false : force indpendent calculation of above and below diag matrix elements.
 
 For a correlation matrix of size NxN and an MPS of typical
 bond dimension m, the scaling of this algorithm is N^2*m^3.
@@ -583,15 +584,15 @@ Czz = correlation_matrix(psi,"Sz","Sz")
 s = siteinds("Electron",N; conserve_qns=true)
 psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
 Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
-```
+``` 
 """
 function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString; kwargs...)
   N = length(psi)
   ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
 
-  Op1 = _Op1 #make copies into which we can insert "F" string operators.
-  Op2 = _Op2
+  Op1=_Op1 #make copies into which we can insert "F" string operators, and then restore.
+  Op2=_Op2
   onsiteOp = "$Op1*$Op2"
   fermionic1 = has_fermion_string(Op1, s[1])
   fermionic2 = has_fermion_string(Op2, s[1])
@@ -602,27 +603,27 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
   end
 
   # Decide if we need to calculate a non-hermitian corr. matrix which is roughly double the work.
-  isHermitian = false #Assume corr-matrix is non-hermitian
-  if haskey(kwargs, :isHermitian) #Did the user explicitly request something?
-    isHermitian = kwargs.isHermitian #Honour users request
+  is_cm_hermitian=false #Assume corr-matrix is non-hermitian
+  if haskey(kwargs, :is_hermitian) #Did the user explicitly request something?
+    is_cm_hermitian = kwargs.is_hermitian #Honour users request
   else
     O1 = op(Op1, s, 1)
     O2 = op(Op2, s, 1)
     O1 /= norm(O1)
     O2 /= norm(O2)
     #We need to decide if O1 ∝ O2 or O1 ∝ O2^dagger allowing for some round off errors.
-    eps = 1e-10
-    is_proprtional = norm(O1 - O2) < eps
-    is_hermitian = norm(O1 - dag(swapprime(O2, 0, 1))) < eps
-    if is_proprtional || is_hermitian
-      isHermitian = true
+    eps=1e-10
+    is_op_proportional=norm(O1 - O2)<eps;
+    is_op_hermitian   =norm(O1 - dag(swapprime(O2, 0, 1)))<eps;
+    if is_op_proportional || is_op_hermitian 
+      is_cm_hermitian=true
     end
     # finally if they are both fermionic and proportional then the corr matrix will
     # be anti symmetric insterad of Hermitian. Handle things like <C_i*C_j>
     # at this point we know fermionic2=fermionic1, but we put them both in the if
     # to clarify the meaning of what we are doing.
-    if is_proprtional && fermionic1 && fermionic2
-      isHermitian = false
+    if is_op_proportional && fermionic1 && fermionic2 
+      is_cm_hermitian=false
     end
   end
 
@@ -668,7 +669,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 
       val = (Li12 * op(Op2, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
       C[ci, cj] = scalar(val) / norm2_psi
-      if isHermitian
+      if is_cm_hermitian
         C[cj, ci] = conj(C[ci, cj])
       end
 
@@ -680,7 +681,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
     end #for j
     Op1 = _Op1 #"Restore Op1 with no Fs"
 
-    if !isHermitian #If isHermitian=false the we must calculate the below diag elements explicitly.
+    if !is_cm_hermitian #If isHermitian=false the we must calculate the below diag elements explicitly.
 
       #  Get j < i correlations by swapping the operators
       if !using_auto_fermion() && fermionic1
@@ -705,7 +706,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
         end
       end #for j
       Op2 = _Op2 #"Restore Op2 with no Fs"
-    end #if !isHermitian
+    end #if is_cm_hermitian
 
     L = (L * psi[i]) * dag(prime(psi[i], "Link"))
   end #for i
