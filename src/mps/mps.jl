@@ -591,8 +591,8 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
   ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
 
-  Op1=_Op1 #make copies into which we can insert "F" string operators, and then restore.
-  Op2=_Op2
+  Op1 = _Op1 #make copies into which we can insert "F" string operators, and then restore.
+  Op2 = _Op2
   onsiteOp = "$Op1*$Op2"
   fermionic1 = has_fermion_string(Op1, s[1])
   fermionic2 = has_fermion_string(Op2, s[1])
@@ -603,7 +603,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
   end
 
   # Decide if we need to calculate a non-hermitian corr. matrix which is roughly double the work.
-  is_cm_hermitian=false #Assume corr-matrix is non-hermitian
+  is_cm_hermitian = false #Assume corr-matrix is non-hermitian
   if haskey(kwargs, :is_hermitian) #Did the user explicitly request something?
     is_cm_hermitian = kwargs.is_hermitian #Honour users request
   else
@@ -612,18 +612,18 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
     O1 /= norm(O1)
     O2 /= norm(O2)
     #We need to decide if O1 ∝ O2 or O1 ∝ O2^dagger allowing for some round off errors.
-    eps=1e-10
-    is_op_proportional=norm(O1 - O2)<eps;
-    is_op_hermitian   =norm(O1 - dag(swapprime(O2, 0, 1)))<eps;
-    if is_op_proportional || is_op_hermitian 
-      is_cm_hermitian=true
+    eps = 1e-10
+    is_op_proportional = norm(O1 - O2) < eps
+    is_op_hermitian = norm(O1 - dag(swapprime(O2, 0, 1))) < eps
+    if is_op_proportional || is_op_hermitian
+      is_cm_hermitian = true
     end
     # finally if they are both fermionic and proportional then the corr matrix will
     # be anti symmetric insterad of Hermitian. Handle things like <C_i*C_j>
     # at this point we know fermionic2=fermionic1, but we put them both in the if
     # to clarify the meaning of what we are doing.
-    if is_op_proportional && fermionic1 && fermionic2 
-      is_cm_hermitian=false
+    if is_op_proportional && fermionic1 && fermionic2
+      is_cm_hermitian = false
     end
   end
 

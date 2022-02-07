@@ -481,9 +481,9 @@ function basicRandomMPS(N::Int; dim=4)
   return M
 end
 
-function test_correlation_matrix(psi::MPS,ops::Vector{Tuple{String, String}})
-  N=length(psi)
-  s=siteinds(psi)
+function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}})
+  N = length(psi)
+  s = siteinds(psi)
   for op in ops
     Cpm = correlation_matrix(psi, op[1], op[2])
     # Check using OpSum:
@@ -645,8 +645,8 @@ end
     # Non-fermionic real case - spin system with QNs (very restrictive on allowed ops)
     s = siteinds("S=1/2", N; conserve_qns=true)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
-    test_correlation_matrix(psi,[("S-","S+"),("S+","S-")])
-  
+    test_correlation_matrix(psi, [("S-", "S+"), ("S+", "S-")])
+
     s = siteinds("S=1/2", N; conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     test_correlation_matrix(
@@ -716,7 +716,7 @@ end
     #trigger unsupported error
     let err = nothing
       try
-        test_correlation_matrix(psi,[("Cup", "Aup")])
+        test_correlation_matrix(psi, [("Cup", "Aup")])
       catch err
       end
 
@@ -724,16 +724,15 @@ end
       @test sprint(showerror, err) ==
         "correlation_matrix: Mixed fermionic and bosonic operators are not supported yet."
     end
-    
+
     # Fermion case
     s = siteinds("Fermion", N)
     psi = randomMPS(s; linkdims=m)
-    test_correlation_matrix(psi,[("N","N"),("Cdag","C"),("C","Cdag"),("C","C")])
-   
+    test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
+
     s = siteinds("Fermion", N; conserve_qns=false)
     psi = randomMPS(s; linkdims=m)
-    test_correlation_matrix(psi,[("N","N"),("Cdag","C"),("C","Cdag"),("C","C")])
-    
+    test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
   end #testset
 
   @testset "expect regression test for in-place modification of input MPS" begin
