@@ -79,7 +79,7 @@ include("utils/circuit.jl")
     sweeps = Sweeps(5)
     setmaxdim!(sweeps, χ)
     fψmps, ψmps = dmrg(Hmpo, ψ₀mps, sweeps; outputlevel=0)
-    @test E(H, ψ) ≈ inner(ψmps, Hmpo, ψmps) / inner(ψmps, ψmps) rtol = 1e-2
+    @test E(H, ψ) ≈ inner(ψmps', Hmpo, ψmps) / inner(ψmps, ψmps) rtol = 1e-2
   end
 
   @testset "State preparation (full state)" begin
@@ -242,7 +242,7 @@ include("utils/circuit.jl")
       𝒰θ⃗ = variational_circuit(nsites, nlayers, θ⃗)
       Uθ⃗ = ops(𝒰θ⃗, s)
       ψθ⃗ = apply(Uθ⃗, ψ0; cutoff=1e-8)
-      return inner(ψθ⃗, H, ψθ⃗; cutoff=1e-8)
+      return inner(ψθ⃗', H, ψθ⃗; cutoff=1e-8)
     end
 
     Random.seed!(1234)
