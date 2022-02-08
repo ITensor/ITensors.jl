@@ -604,8 +604,8 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 
   # Decide if we need to calculate a non-hermitian corr. matrix which is roughly double the work.
   is_cm_hermitian = false #Assume corr-matrix is non-hermitian
-  if haskey(kwargs, :is_hermitian) #Did the user explicitly request something?
-    is_cm_hermitian = kwargs.is_hermitian #Honour users request
+  if haskey(kwargs, :ishermitian) #Did the user explicitly request something?
+    is_cm_hermitian::Bool = get(kwargs, :ishermitian, false) #Honour users request
   else
     O1 = op(Op1, s, 1)
     O2 = op(Op2, s, 1)

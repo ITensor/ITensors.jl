@@ -481,11 +481,11 @@ function basicRandomMPS(N::Int; dim=4)
   return M
 end
 
-function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}})
+function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kwargs...)
   N = length(psi)
   s = siteinds(psi)
   for op in ops
-    Cpm = correlation_matrix(psi, op[1], op[2])
+    Cpm = correlation_matrix(psi, op[1], op[2]; kwargs...)
     # Check using OpSum:
     for i in 1:N, j in 1:N
       a = OpSum()
@@ -639,8 +639,8 @@ end
   end
 
   @testset "Expected value and Correlations" begin
-    N = 8
-    m = 4
+    N = 4
+    m = 2
 
     # Non-fermionic real case - spin system with QNs (very restrictive on allowed ops)
     s = siteinds("S=1/2", N; conserve_qns=true)
@@ -664,7 +664,17 @@ end
         ("Sx", "iSy"),
       ],
     )
+
+    test_correlation_matrix(psi, [("Sz", "Sz")]; ishermitian=false)
+    test_correlation_matrix(psi, [("Sz", "Sz")]; ishermitian=true)
+    test_correlation_matrix(psi, [("Sz", "Sx")]; ishermitian=false)
+    # This will fail becuase Sz*Sx is not hermitian, so the below diagonla corr matrix
+    # need to be calculated explicitely.
+    #test_correlation_matrix(psi,[("Sz", "Sx")];ishermitian=true)
+
     #Test site_range feature
+    s = siteinds("S=1/2", 8; conserve_qns=false)
+    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     PM = expect(psi, "S+*S-")
     Cpm = correlation_matrix(psi, "S+", "S-")
     range = 3:7
@@ -674,7 +684,7 @@ end
     @test norm(PM[range] - expect(psi, "S+*S-"; site_range=range)) < 1E-8
 
     # With start_site, end_site arguments:
-    s = siteinds("S=1/2", N)
+    s = siteinds("S=1/2", 8)
     psi = randomMPS(ComplexF64, s; linkdims=m)
     ss, es = 3, 6
     Nb = es - ss + 1
