@@ -6,6 +6,13 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.2.14 Release Notes
+==============================
+
+- Fix ITensor rrule and generalize ITensor to Array conversion (#818)
+- Fix apply and inner rrules for complex and QN conserving MPS (#816)
+- Change ordering that `op` definitions get called (#816)
+
 ITensors v0.2.13 Release Notes
 ==============================
 

@@ -3,7 +3,7 @@
 # which currently doesn't work by overloading `ChainRulesCore.rrule`
 using ZygoteRules: @adjoint
 
-@adjoint function Base.adjoint(x::ITensor)
+@adjoint function Base.adjoint(x::Union{ITensor,MPS,MPO})
   y = prime(x)
   function adjoint_pullback(ȳ)
     x̄ = inv_op(prime, ȳ)

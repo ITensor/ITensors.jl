@@ -86,7 +86,7 @@ function svd(A::ITensor, Linds...; kwargs...)
   #  @warn "Keyword arguments `utags` and `vtags` are deprecated in favor of `leftags` and `righttags`."
   #end
 
-  Lis = commoninds(A, IndexSet(Linds...))
+  Lis = commoninds(A, indices(Linds))
   Ris = uniqueinds(A, Lis)
 
   if length(Lis) == 0 || length(Ris) == 0
@@ -102,7 +102,7 @@ function svd(A::ITensor, Linds...; kwargs...)
 
   cL = combinedind(CL)
   cR = combinedind(CR)
-  if inds(AC) != IndexSet(cL, cR)
+  if inds(AC) != (cL, cR)
     AC = permute(AC, cL, cR)
   end
 
@@ -251,8 +251,8 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
   end
 
   # Linds, Rinds may not have the correct directions
-  Lis = IndexSet(Linds...)
-  Ris = IndexSet(Rinds...)
+  Lis = indices(Linds)
+  Ris = indices(Rinds)
 
   # Ensure the indices have the correct directions,
   # QNs, etc.
@@ -279,7 +279,7 @@ function eigen(A::ITensor, Linds, Rinds; kwargs...)
 
   cL = combinedind(CL)
   cR = dag(combinedind(CR))
-  if inds(AC) != IndexSet(cL, cR)
+  if inds(AC) != (cL, cR)
     AC = permute(AC, cL, cR)
   end
 
@@ -331,7 +331,7 @@ qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 # call qr on the order-2 tensors directly
 function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
-  Lis = commoninds(A, IndexSet(Linds...))
+  Lis = commoninds(A, indices(Linds))
   Ris = uniqueinds(A, Lis)
   Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
   QT, RT = qr(tensor(A), Lpos, Rpos; kwargs...)
@@ -362,7 +362,7 @@ function factorize_qr(A::ITensor, Linds...; kwargs...)
   if ortho == "left"
     L, R, q = qr(A, Linds...; kwargs...)
   elseif ortho == "right"
-    Lis = uniqueinds(A, IndexSet(Linds...))
+    Lis = uniqueinds(A, indices(Linds))
     R, L, q = qr(A, Lis...; kwargs...)
   else
     error(
@@ -401,9 +401,9 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   delta_A2 = get(kwargs, :eigen_perturbation, nothing)
   if ortho == "left"
-    Lis = commoninds(A, IndexSet(Linds...))
+    Lis = commoninds(A, indices(Linds))
   elseif ortho == "right"
-    Lis = uniqueinds(A, IndexSet(Linds...))
+    Lis = uniqueinds(A, indices(Linds))
   else
     error(
       "In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.",
@@ -480,8 +480,7 @@ Note that the default is now `left`, meaning for the results L,R = factorize(A),
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
-
-  dL, dR = dim(IndexSet(Linds...)), dim(IndexSet(setdiff(inds(A), Linds)...))
+  dL, dR = dim(indices(Linds)), dim(indices(setdiff(inds(A), Linds)))
   maxdim = get(kwargs, :maxdim, min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
 

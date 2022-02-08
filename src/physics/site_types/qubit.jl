@@ -133,7 +133,9 @@ function ITensors.op(::OpName"Rn", ::SiteType"S=1/2"; θ::Real, ϕ::Real, λ::Re
   ]
 end
 
-ITensors.op(::OpName"Rn̂", t::SiteType"S=1/2"; kwargs...) = ITensors.op("Rn", t; kwargs...)
+function ITensors.op(::OpName"Rn̂", t::SiteType"S=1/2"; kwargs...)
+  return ITensors.op(OpName("Rn"), t; kwargs...)
+end
 
 #
 # 2-Qubit gates
