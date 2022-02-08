@@ -5,6 +5,8 @@ using ..ITensors
 
 include("zygoterules.jl")
 
+ITensors.dag(z::AbstractZero) = z
+
 function ChainRulesCore.rrule(::typeof(getindex), x::ITensor, I...)
   y = getindex(x, I...)
   function getindex_pullback(ȳ)
@@ -42,47 +44,47 @@ function inv_op(f::Function, args...; kwargs...)
   )
 end
 
-function inv_op(::typeof(prime), x::ITensor, n::Integer=1; kwargs...)
+function inv_op(::typeof(prime), x, n::Integer=1; kwargs...)
   return prime(x, -n; kwargs...)
 end
 
-function inv_op(::typeof(replaceprime), x::ITensor, n1n2::Pair; kwargs...)
+function inv_op(::typeof(replaceprime), x, n1n2::Pair; kwargs...)
   return replaceprime(x, reverse(n1n2); kwargs...)
 end
 
-function inv_op(::typeof(swapprime), x::ITensor, n1n2::Pair; kwargs...)
+function inv_op(::typeof(swapprime), x, n1n2::Pair; kwargs...)
   return swapprime(x, reverse(n1n2); kwargs...)
 end
 
-function inv_op(::typeof(addtags), x::ITensor, args...; kwargs...)
+function inv_op(::typeof(addtags), x, args...; kwargs...)
   return removetags(x, args...; kwargs...)
 end
 
-function inv_op(::typeof(removetags), x::ITensor, args...; kwargs...)
+function inv_op(::typeof(removetags), x, args...; kwargs...)
   return addtags(x, args...; kwargs...)
 end
 
-function inv_op(::typeof(replacetags), x::ITensor, n1n2::Pair; kwargs...)
+function inv_op(::typeof(replacetags), x, n1n2::Pair; kwargs...)
   return replacetags(x, reverse(n1n2); kwargs...)
 end
 
-function inv_op(::typeof(swaptags), x::ITensor, n1n2::Pair; kwargs...)
+function inv_op(::typeof(swaptags), x, n1n2::Pair; kwargs...)
   return swaptags(x, reverse(n1n2); kwargs...)
 end
 
-function inv_op(::typeof(replaceind), x::ITensor, n1n2::Pair; kwargs...)
+function inv_op(::typeof(replaceind), x, n1n2::Pair; kwargs...)
   return replaceind(x, reverse(n1n2); kwargs...)
 end
 
-function inv_op(::typeof(replaceinds), x::ITensor, n1n2::Pair; kwargs...)
+function inv_op(::typeof(replaceinds), x, n1n2::Pair; kwargs...)
   return replaceinds(x, reverse(n1n2); kwargs...)
 end
 
-function inv_op(::typeof(swapind), x::ITensor, args...; kwargs...)
+function inv_op(::typeof(swapind), x, args...; kwargs...)
   return swapind(x, reverse(args)...; kwargs...)
 end
 
-function inv_op(::typeof(swapinds), x::ITensor, args...; kwargs...)
+function inv_op(::typeof(swapinds), x, args...; kwargs...)
   return swapinds(x, reverse(args)...; kwargs...)
 end
 
@@ -103,7 +105,9 @@ for fname in (
   :swapinds,
 )
   @eval begin
-    function ChainRulesCore.rrule(f::typeof($fname), x::ITensor, a...; kwargs...)
+    function ChainRulesCore.rrule(
+      f::typeof($fname), x::Union{ITensor,MPS,MPO}, a...; kwargs...
+    )
       y = f(x, a...; kwargs...)
       function f_pullback(ȳ)
         x̄ = inv_op(f, unthunk(ȳ), a...; kwargs...)
@@ -221,7 +225,7 @@ function ChainRulesCore.rrule(::typeof(ITensor), x::Number)
   return y, ITensor_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(dag), x::ITensor)
+function ChainRulesCore.rrule(::typeof(dag), x)
   y = dag(x)
   function dag_pullback(ȳ)
     x̄ = dag(unthunk(ȳ))
@@ -287,7 +291,16 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
     x1x2dag = dag.(x1x2)
 
     # Apply circuit and store intermediates in the reverse direction
+
+    # XXX: Which one is correct?
+    # This works to optimize "Ry" but not "Rx"
+    #x1dag = [swapprime(x, 0 => 1) for x in x1]
+
+    # This fails to optimize "Ry" and "Rx"
+    #x1dag = [dag(x) for x in x1]
+
     x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
+
     x1dag_ȳ = Vector{MPS}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
@@ -309,9 +322,15 @@ end
 function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
   y = inner(x1, x2, x3; kwargs...)
   function inner_pullback(ȳ)
-    x̄1 = ȳ * dag(noprime(contract(x2, x3; kwargs...)))
-    x̄2 = ȳ * dag(_contract(MPO, x1', x3; kwargs...))
-    x̄3 = ȳ * dag(noprime(contract(x2, x1; kwargs...)))
+    x1dag = dag(x1)
+    x̄1 = ȳ * contract(x2, x3; kwargs...)
+    x̄2 = ȳ * dag(_contract(MPO, x1dag, x3; kwargs...))
+    x̄3 = ȳ * dag(contract(x2, x1dag; kwargs...))
+
+    @assert siteinds(x1) == siteinds(x̄1)
+    @assert hassameinds(siteinds, x2, x̄2)
+    @assert siteinds(x3) == siteinds(x̄3)
+
     return (NoTangent(), x̄1, x̄2, x̄3)
   end
   return y, inner_pullback
@@ -321,7 +340,8 @@ function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPS; kwargs...)
   y = inner(x1, x2)
   function inner_pullback(ȳ)
     x̄1 = ȳ * dag(x2)
-    x̄2 = dag(x1) * ȳ
+    # `dag` of `x1` gets reversed by `inner`
+    x̄2 = x1 * ȳ
     return (NoTangent(), x̄1, x̄2)
   end
   return y, inner_pullback

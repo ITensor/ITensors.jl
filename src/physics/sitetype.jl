@@ -239,23 +239,12 @@ function op(name::AbstractString, s::Index...; kwargs...)
 
   #
   # Try calling a function of the form:
-  #    op(::OpName, ::SiteType, ::Index; kwargs...)
+  #    op(::OpName, ::SiteType, ::Index...; kwargs...)
   #
   for st in common_stypes
     res = op(opn, st, s...; kwargs...)
     if !isnothing(res)
       return res
-    end
-  end
-
-  # otherwise try calling a function of the form:
-  #    op!(::ITensor, ::OpName, ::SiteType, ::Index; kwargs...)
-  #
-  Op = ITensor(prime.(s)..., dag.(s)...)
-  for st in common_stypes
-    op!(Op, opn, st, s...; kwargs...)
-    if !isempty(Op)
-      return Op
     end
   end
 
@@ -269,6 +258,17 @@ function op(name::AbstractString, s::Index...; kwargs...)
     if !isnothing(op_mat)
       rs = reverse(s)
       return itensor(op_mat, prime.(rs)..., dag.(rs)...)
+    end
+  end
+
+  # otherwise try calling a function of the form:
+  #    op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...)
+  #
+  Op = ITensor(prime.(s)..., dag.(s)...)
+  for st in common_stypes
+    op!(Op, opn, st, s...; kwargs...)
+    if !isempty(Op)
+      return Op
     end
   end
 
@@ -333,7 +333,7 @@ op(s::Index, opname::AbstractString; kwargs...) = op(opname, s; kwargs...)
 
 # To ease calling of other op overloads,
 # allow passing a string as the op name
-op(opname::AbstractString, t::SiteType) = op(OpName(opname), t)
+op(opname::AbstractString, t::SiteType; kwargs...) = op(OpName(opname), t; kwargs...)
 
 """
     op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)

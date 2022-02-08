@@ -1,4 +1,3 @@
-
 """
     space(::SiteType"Electron"; 
           conserve_qns = false,
@@ -87,173 +86,247 @@ alias(::OpName"ntot") = OpName("Ntot")
 alias(::OpName"F↑") = OpName("Fup")
 alias(::OpName"F↓") = OpName("Fdn")
 
-function ITensors.op!(Op::ITensor, ::OpName"Nup", ::SiteType"Electron", s::Index)
-  Op[s' => 2, s => 2] = 1.0
-  return Op[s' => 4, s => 4] = 1.0
+function ITensors.op(::OpName"Nup", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 1.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 1.0
+  ]
 end
-function ITensors.op!(Op::ITensor, on::OpName"n↑", st::SiteType"Electron", s::Index)
-  return op!(Op, alias(on), st, s)
-end
-
-function ITensors.op!(Op::ITensor, ::OpName"Ndn", ::SiteType"Electron", s::Index)
-  Op[s' => 3, s => 3] = 1.0
-  return Op[s' => 4, s => 4] = 1.0
-end
-function ITensors.op!(Op::ITensor, on::OpName"n↓", st::SiteType"Electron", s::Index)
-  return op!(Op, alias(on), st, s)
+function ITensors.op(on::OpName"n↑", st::SiteType"Electron")
+  return op(alias(on), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Nupdn", ::SiteType"Electron", s::Index)
-  return Op[s' => 4, s => 4] = 1.0
+function ITensors.op(::OpName"Ndn", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 1.0 0.0
+    0.0 0.0 0.0 1.0
+  ]
 end
-function ITensors.op!(Op::ITensor, on::OpName"n↑↓", st::SiteType"Electron", s::Index)
-  return op!(Op, alias(on), st, s)
-end
-
-function ITensors.op!(Op::ITensor, ::OpName"Ntot", ::SiteType"Electron", s::Index)
-  Op[s' => 2, s => 2] = 1.0
-  Op[s' => 3, s => 3] = 1.0
-  return Op[s' => 4, s => 4] = 2.0
-end
-function ITensors.op!(Op::ITensor, on::OpName"ntot", st::SiteType"Electron", s::Index)
-  return op!(Op, alias(on), st, s)
+function ITensors.op(on::OpName"n↓", st::SiteType"Electron")
+  return op(alias(on), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Cup", ::SiteType"Electron", s::Index)
-  Op[s' => 1, s => 2] = 1.0
-  return Op[s' => 3, s => 4] = 1.0
+function ITensors.op(::OpName"Nupdn", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 1.0
+  ]
 end
-function ITensors.op!(Op::ITensor, on::OpName"c↑", st::SiteType"Electron", s::Index)
-  return op!(Op, alias(on), st, s)
-end
-
-function ITensors.op!(Op::ITensor, ::OpName"Cdagup", ::SiteType"Electron", s::Index)
-  Op[s' => 2, s => 1] = 1.0
-  return Op[s' => 4, s => 3] = 1.0
-end
-function ITensors.op!(Op::ITensor, on::OpName"c†↑", st::SiteType"Electron", s::Index)
-  return op!(Op, alias(on), st, s)
+function ITensors.op(on::OpName"n↑↓", st::SiteType"Electron")
+  return op(alias(on), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Cdn", ::SiteType"Electron", s::Index)
-  Op[s' => 1, s => 3] = 1.0
-  return Op[s' => 2, s => 4] = -1.0
+function ITensors.op(::OpName"Ntot", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 1.0 0.0 0.0
+    0.0 0.0 1.0 0.0
+    0.0 0.0 0.0 2.0
+  ]
 end
-function ITensors.op!(Op::ITensor, on::OpName"c↓", st::SiteType"Electron", s::Index)
-  return op!(Op, alias(on), st, s)
-end
-
-function ITensors.op!(Op::ITensor, ::OpName"Cdagdn", ::SiteType"Electron", s::Index)
-  Op[s' => 3, s => 1] = 1.0
-  return Op[s' => 4, s => 2] = -1.0
-end
-function ITensors.op!(Op::ITensor, ::OpName"c†↓", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Cdagdn"), st, s)
+function ITensors.op(on::OpName"ntot", st::SiteType"Electron")
+  return op(alias(on), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Aup", ::SiteType"Electron", s::Index)
-  Op[s' => 1, s => 2] = 1.0
-  return Op[s' => 3, s => 4] = 1.0
+function ITensors.op(::OpName"Cup", ::SiteType"Electron")
+  return [
+    0.0 1.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 1.0
+    0.0 0.0 0.0 0.0
+  ]
 end
-function ITensors.op!(Op::ITensor, ::OpName"a↑", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Aup"), st, s)
-end
-
-function ITensors.op!(Op::ITensor, ::OpName"Adagup", ::SiteType"Electron", s::Index)
-  Op[s' => 2, s => 1] = 1.0
-  return Op[s' => 4, s => 3] = 1.0
-end
-function ITensors.op!(Op::ITensor, ::OpName"a†↑", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Adagup"), st, s)
+function ITensors.op(on::OpName"c↑", st::SiteType"Electron")
+  return op(alias(on), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Adn", ::SiteType"Electron", s::Index)
-  Op[s' => 1, s => 3] = 1.0
-  return Op[s' => 2, s => 4] = 1.0
+function ITensors.op(::OpName"Cdagup", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    1.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 1.0 0.0
+  ]
 end
-function ITensors.op!(Op::ITensor, ::OpName"a↓", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Adn"), st, s)
-end
-
-function ITensors.op!(Op::ITensor, ::OpName"Adagdn", ::SiteType"Electron", s::Index)
-  Op[s' => 3, s => 1] = 1.0
-  return Op[s' => 4, s => 2] = 1.0
-end
-function ITensors.op!(Op::ITensor, ::OpName"a†↓", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Adagdn"), st, s)
+function ITensors.op(on::OpName"c†↑", st::SiteType"Electron")
+  return op(alias(on), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"F", ::SiteType"Electron", s::Index)
-  Op[s' => 1, s => 1] = +1.0
-  Op[s' => 2, s => 2] = -1.0
-  Op[s' => 3, s => 3] = -1.0
-  return Op[s' => 4, s => 4] = +1.0
+function ITensors.op(::OpName"Cdn", ::SiteType"Electron")
+  return [
+    0.0 0.0 1.0 0.0
+    0.0 0.0 0.0 -1.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+  ]
+end
+function ITensors.op(on::OpName"c↓", st::SiteType"Electron")
+  return op(alias(on), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Fup", ::SiteType"Electron", s::Index)
-  Op[s' => 1, s => 1] = +1.0
-  Op[s' => 2, s => 2] = -1.0
-  Op[s' => 3, s => 3] = +1.0
-  return Op[s' => 4, s => 4] = -1.0
+function ITensors.op(::OpName"Cdagdn", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    1.0 0.0 0.0 0.0
+    0.0 -1.0 0.0 0.0
+  ]
 end
-function ITensors.op!(Op::ITensor, ::OpName"F↑", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Fup"), st, s)
-end
-
-function ITensors.op!(Op::ITensor, ::OpName"Fdn", ::SiteType"Electron", s::Index)
-  Op[s' => 1, s => 1] = +1.0
-  Op[s' => 2, s => 2] = +1.0
-  Op[s' => 3, s => 3] = -1.0
-  return Op[s' => 4, s => 4] = -1.0
-end
-function ITensors.op!(Op::ITensor, ::OpName"F↓", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Fdn"), st, s)
+function ITensors.op(::OpName"c†↓", st::SiteType"Electron")
+  return op(OpName("Cdagdn"), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Sz", ::SiteType"Electron", s::Index)
-  Op[s' => 2, s => 2] = +0.5
-  return Op[s' => 3, s => 3] = -0.5
+function ITensors.op(::OpName"Aup", ::SiteType"Electron")
+  return [
+    0.0 1.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 1.0
+    0.0 0.0 0.0 0.0
+  ]
+end
+function ITensors.op(::OpName"a↑", st::SiteType"Electron")
+  return op(OpName("Aup"), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Sᶻ", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Sz"), st, s)
+function ITensors.op(::OpName"Adagup", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    1.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 1.0 0.0
+  ]
+end
+function ITensors.op(::OpName"a†↑", st::SiteType"Electron")
+  return op(OpName("Adagup"), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Sx", ::SiteType"Electron", s::Index)
-  Op[s' => 2, s => 3] = 0.5
-  return Op[s' => 3, s => 2] = 0.5
+function ITensors.op(::OpName"Adn", ::SiteType"Electron")
+  return [
+    0.0 0.0 1.0 0.0
+    0.0 0.0 0.0 1.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+  ]
+end
+function ITensors.op(::OpName"a↓", st::SiteType"Electron")
+  return op(OpName("Adn"), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"Sˣ", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("Sx"), st, s)
+function ITensors.op(::OpName"Adagdn", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    1.0 0.0 0.0 0.0
+    0.0 1.0 0.0 0.0
+  ]
+end
+function ITensors.op(::OpName"a†↓", st::SiteType"Electron")
+  return op(OpName("Adagdn"), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"S+", ::SiteType"Electron", s::Index)
-  return Op[s' => 2, s => 3] = 1.0
+function ITensors.op(::OpName"F", ::SiteType"Electron")
+  return [
+    1.0 0.0 0.0 0.0
+    0.0 -1.0 0.0 0.0
+    0.0 0.0 -1.0 0.0
+    0.0 0.0 0.0 1.0
+  ]
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"S⁺", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("S+"), st, s)
+function ITensors.op(::OpName"Fup", ::SiteType"Electron")
+  return [
+    1.0 0.0 0.0 0.0
+    0.0 -1.0 0.0 0.0
+    0.0 0.0 1.0 0.0
+    0.0 0.0 0.0 -1.0
+  ]
 end
-function ITensors.op!(Op::ITensor, ::OpName"Sp", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("S+"), st, s)
-end
-function ITensors.op!(Op::ITensor, ::OpName"Splus", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("S+"), st, s)
-end
-
-function ITensors.op!(Op::ITensor, ::OpName"S-", ::SiteType"Electron", s::Index)
-  return Op[s' => 3, s => 2] = 1.0
+function ITensors.op(::OpName"F↑", st::SiteType"Electron")
+  return op(OpName("Fup"), st)
 end
 
-function ITensors.op!(Op::ITensor, ::OpName"S⁻", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("S-"), st, s)
+function ITensors.op(::OpName"Fdn", ::SiteType"Electron")
+  return [
+    1.0 0.0 0.0 0.0
+    0.0 1.0 0.0 0.0
+    0.0 0.0 -1.0 0.0
+    0.0 0.0 0.0 -1.0
+  ]
 end
-function ITensors.op!(Op::ITensor, ::OpName"Sm", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("S-"), st, s)
+function ITensors.op(::OpName"F↓", st::SiteType"Electron")
+  return op(OpName("Fdn"), st)
 end
-function ITensors.op!(Op::ITensor, ::OpName"Sminus", st::SiteType"Electron", s::Index)
-  return op!(Op, OpName("S-"), st, s)
+
+function ITensors.op(::OpName"Sz", ::SiteType"Electron")
+  #Op[s' => 2, s => 2] = +0.5
+  #return Op[s' => 3, s => 3] = -0.5
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 0.5 0.0 0.0
+    0.0 0.0 -0.5 0.0
+    0.0 0.0 0.0 0.0
+  ]
+end
+
+function ITensors.op(::OpName"Sᶻ", st::SiteType"Electron")
+  return op(OpName("Sz"), st)
+end
+
+function ITensors.op(::OpName"Sx", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.5 0.0
+    0.0 0.5 0.0 0.0
+    0.0 0.0 0.0 0.0
+  ]
+end
+
+function ITensors.op(::OpName"Sˣ", st::SiteType"Electron")
+  return op(OpName("Sx"), st)
+end
+
+function ITensors.op(::OpName"S+", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 0.0 1.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+  ]
+end
+
+function ITensors.op(::OpName"S⁺", st::SiteType"Electron")
+  return op(OpName("S+"), st)
+end
+function ITensors.op(::OpName"Sp", st::SiteType"Electron")
+  return op(OpName("S+"), st)
+end
+function ITensors.op(::OpName"Splus", st::SiteType"Electron")
+  return op(OpName("S+"), st)
+end
+
+function ITensors.op(::OpName"S-", ::SiteType"Electron")
+  return [
+    0.0 0.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+    0.0 1.0 0.0 0.0
+    0.0 0.0 0.0 0.0
+  ]
+end
+
+function ITensors.op(::OpName"S⁻", st::SiteType"Electron")
+  return op(OpName("S-"), st)
+end
+function ITensors.op(::OpName"Sm", st::SiteType"Electron")
+  return op(OpName("S-"), st)
+end
+function ITensors.op(::OpName"Sminus", st::SiteType"Electron")
+  return op(OpName("S-"), st)
 end
 
 ITensors.has_fermion_string(::OpName"Cup", ::SiteType"Electron") = true
