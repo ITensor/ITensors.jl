@@ -22,7 +22,7 @@ using ITensorVisualizationBase:
 
 using UnicodePlots: UnicodePlots
 
-import ITensorVisualizationBase: visualize
+import ITensorVisualizationBase: visualize, default_newlines
 
 function __init__()
   return ITensorVisualizationBase.set_backend!(Backend"UnicodePlots"())
