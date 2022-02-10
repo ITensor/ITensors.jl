@@ -1004,7 +1004,16 @@ function _log_or_not_dot(
     return log_inner_tot
   end
 
-  return O[]
+  dot_M1_M2 = O[]
+
+  T = promote_type(ITensors.promote_itensor_eltype(M1), ITensors.promote_itensor_eltype(M2))
+  _max_dot_warn = inv(eps(real(float(T))))
+
+  if dot_M1_M2 > _max_dot_warn
+    @warn "The inner product (or norm²) you are computing is very large: $dot_M1_M2, which is greater than $_max_dot_warn and may lead to floating point errors when used. You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. If you are trying to normalize your MPS/MPO, "
+  end
+
+  return dot_M1_M2
 end
 
 """
