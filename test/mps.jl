@@ -289,6 +289,23 @@ include("util.jl")
     @test norm(psi) ≈ factorial(N)
   end
 
+  @testset "normalize/normalize! MPS" begin
+    psi = randomMPS(sites; linkdims=10)
+    @test norm(psi) ≈ 1
+    @test norm(normalize(psi)) ≈ 1
+    α = 3.5
+    phi = α * psi
+    @test norm(phi) ≈ α
+    @test norm(normalize(phi)) ≈ 1
+    @test norm(psi) ≈ 1
+    @test inner(phi, psi) ≈ α
+    normalize!(phi)
+    @test norm(phi) ≈ 1
+    @test norm(normalize(phi)) ≈ 1
+    @test norm(psi) ≈ 1
+    @test inner(phi, psi) ≈ 1
+  end
+
   @testset "lognorm MPS" begin
     psi = randomMPS(sites; linkdims=10)
     for j in 1:N

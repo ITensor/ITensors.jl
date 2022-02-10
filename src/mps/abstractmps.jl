@@ -1091,6 +1091,38 @@ function lognorm(M::AbstractMPS)
   return 0.5 * logdot(M, M)
 end
 
+function _norm_warning()
+  return "!!! warning This method assumes the MPS or MPO has a finite norm density. If the norm diverges, such as in the case of an MPO representing a local Hamiltonian, you should make use of the function [`lognorm`](@ref)."
+end
+
+"""
+    normalize(A::MPS)
+    normalize(A::MPO)
+
+Return a new MPS or MPO `A` that is the same as the original MPS or MPO but with `norm(A) ≈ 1`.
+
+$(_norm_warning())
+
+See also [`normalize!`](@ref), [`norm`](@ref), [`lognorm`](@ref).
+"""
+function normalize(M::AbstractMPS)
+  return M / norm(M)
+end
+
+"""
+    normalize!(A::MPS)
+    normalize!(A::MPO)
+
+Change the MPS or MPO `A` in-place such that `norm(A) ≈ 1`
+
+$(_norm_warning())
+
+See also [`normalize`](@ref), [`norm`](@ref), [`lognorm`](@ref).
+"""
+function normalize!(M::AbstractMPS)
+  return _apply_to_orthocenter!(/, M, norm(M))
+end
+
 """
     dist(A::MPS, B::MPS)
     dist(A::MPO, B::MPO)
@@ -1365,6 +1397,26 @@ end
 # Make `*` and alias for `contract` of two `AbstractMPS`
 *(A::AbstractMPS, B::AbstractMPS; kwargs...) = contract(A, B; kwargs...)
 
+function _apply_to_orthocenter!(f, ψ::AbstractMPS, x)
+  limsψ = ortho_lims(ψ)
+  n = first(limsψ)
+  ψ[n] = f(ψ[n], x)
+  return ψ
+end
+
+function _apply_to_orthocenter(f, ψ::AbstractMPS, x)
+  return _apply_to_orthocenter!(f, copy(ψ), x)
+end
+
+"""
+    ψ::MPS/MPO * α::Number
+
+Scales the MPS or MPO by the provided number.
+
+Currently, this works by scaling one of the sites within the orthogonality limits.
+"""
+(ψ::AbstractMPS * α::Number) = _apply_to_orthocenter(*, ψ, α)
+
 """
     α::Number * ψ::MPS/MPO
 
@@ -1372,15 +1424,9 @@ Scales the MPS or MPO by the provided number.
 
 Currently, this works by scaling one of the sites within the orthogonality limits.
 """
-function (α::Number * ψ::AbstractMPS)
-  limsψ = ortho_lims(ψ)
-  n = first(limsψ)
-  αψ = copy(ψ)
-  αψ[n] = α * ψ[n]
-  return αψ
-end
+(α::Number * ψ::AbstractMPS) = ψ * α
 
-(ψ::AbstractMPS * α::Number) = α * ψ
+(ψ::AbstractMPS / α::Number) = _apply_to_orthocenter(/, ψ, α)
 
 -(ψ::AbstractMPS) = -1 * ψ
 
