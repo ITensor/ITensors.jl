@@ -287,6 +287,27 @@ include("util.jl")
     @test norm(psi) ≉ factorial(N)
     reset_ortho_lims!(psi)
     @test norm(psi) ≈ factorial(N)
+
+    # Test complex
+    psi = randomMPS(ComplexF64, sites; linkdims=10)
+
+    norm_psi = norm(psi)
+    @test norm_psi ≈ 1
+    @test isreal(norm_psi)
+
+    lognorm_psi = lognorm(psi)
+    @test lognorm_psi ≈ 0
+    @test isreal(lognorm_psi)
+
+    psi = psi .* 2
+
+    norm_psi = norm(psi)
+    @test norm_psi ≈ 2 ^ length(psi)
+    @test isreal(norm_psi)
+
+    lognorm_psi = lognorm(psi)
+    @test lognorm_psi ≈ log(2) * length(psi)
+    @test isreal(lognorm_psi)
   end
 
   @testset "normalize/normalize! MPS" begin

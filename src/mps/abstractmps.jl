@@ -1009,8 +1009,8 @@ function _log_or_not_dot(
   T = promote_type(ITensors.promote_itensor_eltype(M1), ITensors.promote_itensor_eltype(M2))
   _max_dot_warn = inv(eps(real(float(T))))
 
-  if dot_M1_M2 > _max_dot_warn
-    @warn "The inner product (or norm²) you are computing is very large: $dot_M1_M2, which is greater than $_max_dot_warn and may lead to floating point errors when used. You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. If you are trying to normalize your MPS/MPO, "
+  if abs(dot_M1_M2) > _max_dot_warn
+    @warn "The inner product (or norm²) you are computing is very large: $dot_M1_M2, which is greater than $_max_dot_warn and may lead to floating point errors when used. You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. If you are trying to normalize your MPS/MPO `A`, you can try `A ./ (exp(lognorm(A)) / length(A))"
   end
 
   return dot_M1_M2
@@ -1080,7 +1080,12 @@ function norm(M::AbstractMPS)
   if isortho(M)
     return norm(M[orthocenter(M)])
   end
-  return sqrt(dot(M, M))
+  norm2_M = dot(M, M)
+  rtol = 1e-15
+  if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol))
+    error("norm² is $norm2_M, which is not real up to a relative tolerance of $rtol")
+  end
+  return sqrt(real(norm2_M))
 end
 
 """
@@ -1097,7 +1102,12 @@ function lognorm(M::AbstractMPS)
   if isortho(M)
     return log(norm(M[orthocenter(M)]))
   end
-  return 0.5 * logdot(M, M)
+  lognorm2_M = logdot(M, M)
+  rtol = 1e-15
+  if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol))
+    error("log(norm²) is $lognorm2_M, which is not real up to a relative tolerance of $rtol")
+  end
+  return 0.5 * lognorm2_M
 end
 
 function _norm_warning()
