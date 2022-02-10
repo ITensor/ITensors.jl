@@ -567,7 +567,7 @@ using efficient MPS techniques. Returns the matrix C.
 
 # Optional Keyword Arguments
 - `site_range = 1:length(psi)`: compute correlations only for sites in the given range
-- `is_hermitian` = false : force indpendent calculation of above and below diag matrix elements.
+- `ishermitian = false` : if `false`, force independent calculations of the matrix elements above and below the diagonal, while if `true` assume they are complex conjugates.
 
 For a correlation matrix of size NxN and an MPS of typical
 bond dimension m, the scaling of this algorithm is N^2*m^3.
