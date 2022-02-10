@@ -302,7 +302,7 @@ include("util.jl")
     psi = psi .* 2
 
     norm_psi = norm(psi)
-    @test norm_psi ≈ 2 ^ length(psi)
+    @test norm_psi ≈ 2^length(psi)
     @test isreal(norm_psi)
 
     lognorm_psi = lognorm(psi)
