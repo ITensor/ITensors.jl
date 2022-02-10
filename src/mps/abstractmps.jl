@@ -1105,7 +1105,9 @@ function lognorm(M::AbstractMPS)
   lognorm2_M = logdot(M, M)
   rtol = 1e-15
   if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol))
-    error("log(norm²) is $lognorm2_M, which is not real up to a relative tolerance of $rtol")
+    error(
+      "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance of $rtol"
+    )
   end
   return 0.5 * lognorm2_M
 end
