@@ -38,7 +38,7 @@ using Test
   @test all(tn .== tn2)
 
   R = @visualize figR ELn0 * ψn1n2 * hn1 * hn2 * ERn2
-  R_tags = @visualize figR_tags ELn0 * ψn1n2 * hn1 * hn2 * ERn2 edge_labels=(tags=true,)
+  R_tags = @visualize figR_tags ELn0 * ψn1n2 * hn1 * hn2 * ERn2 edge_labels = (tags=true,)
   R1 = @visualize figR1 ELn0 * ψn1n2 * hn1
   R2 = @visualize figR2 R1 * hn2 * ERn2 vertex_labels = ["T1", "T2", "T3"]
 
