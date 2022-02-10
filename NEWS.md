@@ -6,6 +6,12 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.2.15 Release Notes
+==============================
+
+- Handle non-Hermitian `correlation_matrix` properly (#817)
+- Fix ElecK state definitions in example.
+
 ITensors v0.2.14 Release Notes
 ==============================
 
