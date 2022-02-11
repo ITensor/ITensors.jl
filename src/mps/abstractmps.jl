@@ -119,7 +119,9 @@ isortho(m::AbstractMPS) = leftlim(m) + 1 == rightlim(m) - 1
 
 # Could also define as `only(ortho_lims)`
 function orthocenter(m::AbstractMPS)
-  !isortho(m) && error("$(typeof(m)) has no well-defined orthogonality center, orthogonality center is on the range $(ortho_lims(m)).")
+  !isortho(m) && error(
+    "$(typeof(m)) has no well-defined orthogonality center, orthogonality center is on the range $(ortho_lims(m)).",
+  )
   return leftlim(m) + 1
 end
 
