@@ -1125,8 +1125,8 @@ function deepcopy_ortho_center(M::AbstractMPS)
 end
 
 """
-    normalize(A::MPS)
-    normalize(A::MPO)
+    normalize(A::MPS; (lognorm!)=[])
+    normalize(A::MPO; (lognorm!)=[])
 
 Return a new MPS or MPO `A` that is the same as the original MPS or MPO but with `norm(A) ≈ 1`.
 
@@ -1134,13 +1134,13 @@ In practice, this evenly spreads `lognorm(A)` over the tensors within the range 
 
 See also [`normalize!`](@ref), [`norm`](@ref), [`lognorm`](@ref).
 """
-function normalize(M::AbstractMPS)
-  return normalize!(deepcopy_ortho_center(M))
+function normalize(M::AbstractMPS; (lognorm!)=[])
+  return normalize!(deepcopy_ortho_center(M); (lognorm!)=lognorm!)
 end
 
 """
-    normalize!(A::MPS)
-    normalize!(A::MPO)
+    normalize!(A::MPS; (lognorm!)=[])
+    normalize!(A::MPO; (lognorm!)=[])
 
 Change the MPS or MPO `A` in-place such that `norm(A) ≈ 1`. This modifies the data of the tensors within the orthogonality center.
 
@@ -1148,9 +1148,11 @@ In practice, this evenly spreads `lognorm(A)` over the tensors within the range 
 
 See also [`normalize`](@ref), [`norm`](@ref), [`lognorm`](@ref).
 """
-function normalize!(M::AbstractMPS)
+function normalize!(M::AbstractMPS; (lognorm!)=[])
   c = ortho_lims(M)
-  z = exp(lognorm(M) / length(c))
+  lognorm_M = lognorm(M)
+  push!(lognorm!, lognorm_M)
+  z = exp(lognorm_M / length(c))
   # XXX: this is not modifying `M` in-place.
   # M[c] ./= z
   for n in c

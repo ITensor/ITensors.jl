@@ -366,6 +366,19 @@ include("util.jl")
     phi = normalize(phi)
 
     @test norm(phi) ≈ 1
+
+    # Output the lognorm
+    N = 30
+    α = 2
+    psi = randomMPS(siteinds("S=1/2", N); linkdims=10)
+    psi = α .* psi
+    @test norm(psi) ≈ α ^ N
+    @test lognorm(psi) ≈ length(psi) * log(α)
+    lognorm_psi = Float64[]
+    phi = normalize(psi; (lognorm!)=lognorm_psi)
+    @test lognorm_psi[end] ≈ lognorm(psi)
+    @test norm(phi) ≈ 1
+    @test lognorm(phi) ≈ 0 atol=1e-14
   end
 
   @testset "lognorm MPS" begin
