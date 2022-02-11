@@ -312,19 +312,39 @@ include("util.jl")
 
   @testset "normalize/normalize! MPS" begin
     psi = randomMPS(sites; linkdims=10)
+
     @test norm(psi) ≈ 1
     @test norm(normalize(psi)) ≈ 1
+
     α = 3.5
     phi = α * psi
     @test norm(phi) ≈ α
     @test norm(normalize(phi)) ≈ 1
     @test norm(psi) ≈ 1
     @test inner(phi, psi) ≈ α
+
     normalize!(phi)
     @test norm(phi) ≈ 1
     @test norm(normalize(phi)) ≈ 1
     @test norm(psi) ≈ 1
     @test inner(phi, psi) ≈ 1
+
+    # Large number of sites
+    N = 1000
+    psi = randomMPS(siteinds("S=1/2", N); linkdims=10)
+
+    @test norm(psi) ≈ 1.0
+    @test lognorm(psi) ≈ 0.0
+
+    α = 2
+    phi = α .* psi
+
+    @test isnan(norm(phi))
+    @test lognorm(phi) ≈ N * log(α)
+
+    phi = normalize(phi)
+
+    @test norm(phi) ≈ 1
   end
 
   @testset "lognorm MPS" begin
@@ -609,7 +629,7 @@ end
     orthogonalize!(psi, 3)
     @test_throws ErrorException sample(psi)
 
-    # Throws becase not normalized
+    # Throws because not normalized
     orthogonalize!(psi, 1)
     psi[1] *= (5.0 / norm(psi[1]))
     @test_throws ErrorException sample(psi)

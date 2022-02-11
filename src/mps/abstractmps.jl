@@ -119,7 +119,7 @@ isortho(m::AbstractMPS) = leftlim(m) + 1 == rightlim(m) - 1
 
 # Could also define as `only(ortho_lims)`
 function orthocenter(m::AbstractMPS)
-  !isortho(m) && error("$(typeof(m)) has no well-defined orthogonality center")
+  !isortho(m) && error("$(typeof(m)) has no well-defined orthogonality center, orthogonality center is on the range $(ortho_lims(m)).")
   return leftlim(m) + 1
 end
 
@@ -1009,8 +1009,8 @@ function _log_or_not_dot(
   T = promote_type(ITensors.promote_itensor_eltype(M1), ITensors.promote_itensor_eltype(M2))
   _max_dot_warn = inv(eps(real(float(T))))
 
-  if abs(dot_M1_M2) > _max_dot_warn
-    @warn "The inner product (or norm²) you are computing is very large: $dot_M1_M2, which is greater than $_max_dot_warn and may lead to floating point errors when used. You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. If you are trying to normalize your MPS/MPO `A`, you can try `A ./ (exp(lognorm(A)) / length(A))"
+  if isnan(dot_M1_M2) || isinf(dot_M1_M2) || abs(dot_M1_M2) > _max_dot_warn
+    @warn "The inner product (or norm²) you are computing is very large: $dot_M1_M2, which is greater than $_max_dot_warn and may lead to floating point errors when used. You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. For example if you are trying to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by `B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
   end
 
   return dot_M1_M2
@@ -1112,8 +1112,14 @@ function lognorm(M::AbstractMPS)
   return 0.5 * lognorm2_M
 end
 
-function _norm_warning()
-  return "!!! warning This method assumes the MPS or MPO has a finite norm density. If the norm diverges, such as in the case of an MPO representing a local Hamiltonian, you should make use of the function [`lognorm`](@ref)."
+# copy an MPS/MPO, but do a deep copy of the tensors in the
+# range of the orthogonality center.
+function deepcopy_ortho_center(M::AbstractMPS)
+  M = copy(M)
+  c = ortho_lims(M)
+  # TODO: define `getindex(::AbstractMPS, I)` to return `AbstractMPS`
+  M[c] = deepcopy(typeof(M)(M[c]))
+  return M
 end
 
 """
@@ -1122,26 +1128,33 @@ end
 
 Return a new MPS or MPO `A` that is the same as the original MPS or MPO but with `norm(A) ≈ 1`.
 
-$(_norm_warning())
+In practice, this evenly spreads `lognorm(A)` over the tensors within the range of the orthogonality center to avoid numerical overflow in the case of diverging norms.
 
 See also [`normalize!`](@ref), [`norm`](@ref), [`lognorm`](@ref).
 """
 function normalize(M::AbstractMPS)
-  return M / norm(M)
+  return normalize!(deepcopy_ortho_center(M))
 end
 
 """
     normalize!(A::MPS)
     normalize!(A::MPO)
 
-Change the MPS or MPO `A` in-place such that `norm(A) ≈ 1`
+Change the MPS or MPO `A` in-place such that `norm(A) ≈ 1`. This modifies the data of the tensors within the orthogonality center.
 
-$(_norm_warning())
+In practice, this evenly spreads `lognorm(A)` over the tensors within the range of the orthogonality center to avoid numerical overflow in the case of diverging norms.
 
 See also [`normalize`](@ref), [`norm`](@ref), [`lognorm`](@ref).
 """
 function normalize!(M::AbstractMPS)
-  return _apply_to_orthocenter!(/, M, norm(M))
+  c = ortho_lims(M)
+  z = exp(lognorm(M) / length(c))
+  # XXX: this is not modifying `M` in-place.
+  # M[c] ./= z
+  for n in c
+    M[n] ./= z
+  end
+  return M
 end
 
 """
