@@ -345,6 +345,27 @@ include("util.jl")
     phi = normalize(phi)
 
     @test norm(phi) ≈ 1
+
+    # Test scaling only a subset of sites
+    N = 10
+    psi = randomMPS(siteinds("S=1/2", N); linkdims=10)
+
+    @test norm(psi) ≈ 1.0
+    @test lognorm(psi) ≈ 0.0 atol=1e-15
+
+    α = 2
+    r = (N ÷ 2 - 1):(N ÷ 2 + 1)
+    phi = copy(psi)
+    for n in r
+      phi[n] = α * psi[n]
+    end
+
+    @test norm(phi) ≈ α^length(r)
+    @test lognorm(phi) ≈ length(r) * log(α)
+
+    phi = normalize(phi)
+
+    @test norm(phi) ≈ 1
   end
 
   @testset "lognorm MPS" begin
