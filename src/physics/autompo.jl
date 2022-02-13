@@ -533,12 +533,6 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
   H = MPO(sites)
 
-  # Constants which define MPO start/end scheme
-  rowShift = 2
-  colShift = 2
-  startState = 2
-  endState = 1
-
   for n in 1:N
     VL = Matrix{ValType}(undef, 1, 1)
     if n > 1
@@ -558,7 +552,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     finalMPO[idTerm] = zeros(ValType, dim(ll), dim(rl))
     idM = finalMPO[idTerm]
     idM[1, 1] = 1.0
-    idM[2, 2] = 1.0
+    idM[end, end] = 1.0
 
     defaultMat() = zeros(ValType, dim(ll), dim(rl))
 
@@ -572,21 +566,21 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
       ct = convert(ValType, coef(t))
       if A_row == -1 && A_col == -1 #onsite term
-        M[startState, endState] += ct
+        M[end, 1] += ct
       elseif A_row == -1 #term starting on site n
         for c in 1:size(VR, 2)
           z = ct * VR[A_col, c]
-          M[startState, colShift + c] += z
+          M[end, 1 + c] += z
         end
       elseif A_col == -1 #term ending on site n
         for r in 1:size(VL, 2)
           z = ct * conj(VL[A_row, r])
-          M[rowShift + r, endState] += z
+          M[1 + r, 1] += z
         end
       else
         for r in 1:size(VL, 2), c in 1:size(VR, 2)
           z = ct * conj(VL[A_row, r]) * VR[A_col, c]
-          M[rowShift + r, colShift + c] += z
+          M[1 + r, 1 + c] += z
         end
       end
     end
@@ -600,10 +594,10 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   end
 
   L = ITensor(llinks[1])
-  L[startState] = 1.0
+  L[end] = 1.0
 
   R = ITensor(llinks[N + 1])
-  R[endState] = 1.0
+  R[1] = 1.0
 
   H[1] *= L
   H[N] *= R
