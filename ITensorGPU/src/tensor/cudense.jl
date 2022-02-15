@@ -31,11 +31,6 @@ CuArray(x::CuDenseTensor{ElT,N}) where {ElT,N} = CuArray{ElT,N}(x)
 
 *(D::Dense{T,AT}, x::S) where {T,AT<:CuArray,S<:Number} = Dense(x .* data(D))
 
-function Base.:(==)(
-  ::Type{<:CuDense{ElT1,CVec1}}, ::Type{<:CuDense{ElT2,CVec2}}
-) where {ElT1,ElT2,CVec1,CVec2}
-  return (ElT1 == ElT2)
-end
 Base.getindex(D::CuDense{<:Number}) = collect(data(D))[]
 Base.getindex(D::CuDenseTensor{<:Number,0}) = store(D)[]
 LinearAlgebra.norm(T::CuDenseTensor) = norm(data(store(T)))
