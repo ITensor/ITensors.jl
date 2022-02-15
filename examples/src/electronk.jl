@@ -61,14 +61,14 @@ function space(
   return 4
 end
 
-state(::SiteType"ElecK", ::StateName"Emp") = 1
-state(::SiteType"ElecK", ::StateName"Up") = 2
-state(::SiteType"ElecK", ::StateName"Dn") = 3
-state(::SiteType"ElecK", ::StateName"UpDn") = 4
-state(st::SiteType"ElecK", ::StateName"0") = state(st, StateName("Emp"))
-state(st::SiteType"ElecK", ::StateName"↑") = state(st, StateName("Up"))
-state(st::SiteType"ElecK", ::StateName"↓") = state(st, StateName("Dn"))
-state(st::SiteType"ElecK", ::StateName"↑↓") = state(st, StateName("UpDn"))
+state(::StateName"Emp", ::SiteType"ElecK") = [1.0 0.0 0.0 0.0]
+state(::StateName"Up", ::SiteType"ElecK") = [0.0 1.0 0.0 0.0]
+state(::StateName"Dn", ::SiteType"ElecK") = [0.0 0.0 1.0 0.0]
+state(::StateName"UpDn", ::SiteType"ElecK") = [0.0 0.0 0.0 1.0]
+state(::StateName"0", st::SiteType"ElecK") = state(StateName("Emp"), st)
+state(::StateName"↑", st::SiteType"ElecK") = state(StateName("Up"), st)
+state(::StateName"↓", st::SiteType"ElecK") = state(StateName("Dn"), st)
+state(::StateName"↑↓", st::SiteType"ElecK") = state(StateName("UpDn"), st)
 
 function op!(Op::ITensor, ::OpName"Nup", ::SiteType"ElecK", s::Index)
   Op[s' => 2, s => 2] = 1.0
