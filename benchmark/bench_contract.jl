@@ -10,9 +10,15 @@ for d in 20:20:100
   A = randomITensor(i, i')
   B = randomITensor(i', i'')
   C = randomITensor(i, i'')
+  D = randomITensor(i, i', i'')
+  δ13 = δ(i', i''')
 
   suite["matmul_$d"] = @benchmarkable $A * $B
   suite["matmul_inplace_$d"] = @benchmarkable $C .= $A .* $B
+  suite["delta_replaceind_order_2_rightmul_$d"] = @benchmarkable $B * $δ13
+  suite["delta_replaceind_order_2_rightmul_$d"] = @benchmarkable $δ13 * $B
+  suite["delta_replaceind_order_3_leftmul_$d"] = @benchmarkable $D * $δ13
+  suite["delta_replaceind_order_3_leftmul_$d"] = @benchmarkable $δ13 * $D
 end
 
 let

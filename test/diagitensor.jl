@@ -494,6 +494,11 @@ using ITensors, Test
 
       @test D * A ≈ dense(D) * A
       @test A * D ≈ dense(D) * A
+
+      AD = A * D
+      x = randn()
+      AD[1, 1, 1, 1] == x
+      @test A[1, 1, 1, 1] ≠ x
     end
 
     @testset "Contraction (Diag uniform * Diag uniform, all contracted)" begin
@@ -516,8 +521,17 @@ using ITensors, Test
       D1 = δ(i, j)
       D2 = δ(k, l)
 
+      @test D1 * D2 ≈ δ(i, j, k, l)
       @test D1 * D2 ≈ dense(D1) * dense(D2)
       @test D2 * D1 ≈ dense(D1) * dense(D2)
+    end
+
+    @testset "Contracion (Diag uniform * Diag uniform, replace index)" begin
+      @test δ(i, j) * δ(j, k) ≈ δ(i, k)
+      @test δ(j, k) * δ(i, j) ≈ δ(i, k)
+      @test δ(i, j, k) * δ(j, l) ≈ δ(i, l, k)
+      @test δ(j, l) * δ(i, j, k) ≈ δ(i, l, k)
+      @test (2 * δ(i, j)) * δ(k, j, l) ≈ 2 * δ(k, i, l)
     end
   end
 end

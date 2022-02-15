@@ -408,6 +408,78 @@ function _contract!!(
   return R
 end
 
+# This represents a delta tensor that only replaces the
+# indices and potentially scales the tensor.
+function __contract!!(
+  R::Tensor{<:Number,N},
+  labelsR,
+  T1::Tensor{<:Number,N},
+  labelsT1,
+  T2::NDTensors.UniformDiagTensor{<:Number,2},
+  labelsT2,
+) where {N}
+  α = getdiagindex(T2, 1)
+  if isone(α)
+    return copy(T1)
+  end
+  return α * T1
+end
+
+function _contract!!(
+  R::Tensor{<:Number,N},
+  labelsR,
+  T1::Tensor{<:Number,N},
+  labelsT1,
+  T2::NDTensors.UniformDiagTensor{<:Number,2},
+  labelsT2,
+) where {N}
+  return __contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
+end
+
+function _contract!!(
+  R::UniformDiagTensor{<:Number,N},
+  labelsR,
+  T1::UniformDiagTensor{<:Number,2},
+  labelsT1,
+  T2::UniformDiagTensor{<:Number,N},
+  labelsT2,
+) where {N}
+  return __contract!!(R, labelsR, T2, labelsT2, T1, labelsT1)
+end
+
+function _contract!!(
+  R::Tensor{<:Number,N},
+  labelsR,
+  T1::UniformDiagTensor{<:Number,2},
+  labelsT1,
+  T2::Tensor{<:Number,N},
+  labelsT2,
+) where {N}
+  return __contract!!(R, labelsR, T2, labelsT2, T1, labelsT1)
+end
+
+function _contract!!(
+  R::UniformDiagTensor{<:Number,N},
+  labelsR,
+  T1::UniformDiagTensor{<:Number,N},
+  labelsT1,
+  T2::UniformDiagTensor{<:Number,2},
+  labelsT2,
+) where {N}
+  return __contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
+end
+
+function _contract!!(
+  R::UniformDiagTensor{<:Number,2},
+  labelsR,
+  T1::UniformDiagTensor{<:Number,2},
+  labelsT1,
+  T2::UniformDiagTensor{<:Number,2},
+  labelsT2,
+)
+  return __contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
+end
+
 function contract!(
   R::DiagTensor{ElR,NR},
   labelsR,
