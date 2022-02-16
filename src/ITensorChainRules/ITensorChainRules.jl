@@ -209,7 +209,8 @@ function ChainRulesCore.rrule(::typeof(ITensor), x::Array{<:Number}, a...)
   y = ITensor(x, a...)
   function ITensor_pullback(ȳ)
     # TODO: define `Array(::ITensor)` directly
-    x̄ = Array(unthunk(ȳ), a...)
+    uȳ = Array(unthunk(ȳ), a...)
+    x̄ = reshape(uȳ, size(x))
     ā = broadcast_notangent(a)
     return (NoTangent(), x̄, ā...)
   end

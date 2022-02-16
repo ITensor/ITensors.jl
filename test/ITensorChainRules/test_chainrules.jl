@@ -39,8 +39,10 @@ using Zygote: ZygoteRuleConfig
   test_rrule(swapinds, A, (i',), (i,); check_inferred=false)
   test_rrule(itensor, randn(2, 2), i', i; check_inferred=false)
   test_rrule(itensor, randn(2, 2), [i', i]; check_inferred=false)
+  test_rrule(itensor, randn(4), i', i; check_inferred=false)
   test_rrule(ITensor, randn(2, 2), i', i; check_inferred=false)
   test_rrule(ITensor, randn(2, 2), [i', i]; check_inferred=false)
+  test_rrule(ITensor, randn(4), i', i; check_inferred=false)
   test_rrule(ITensor, 2.3; check_inferred=false)
   test_rrule(dag, A; check_inferred=false)
   test_rrule(permute, A, reverse(inds(A)); check_inferred=false)
@@ -53,6 +55,10 @@ using Zygote: ZygoteRuleConfig
     return (BT * AT)[1]
   end
   args = (rand(2, 2), rand(2, 2))
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  args = (rand(4), rand(4))
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  args = (rand(4), rand(2, 2))
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
