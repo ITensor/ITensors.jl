@@ -889,7 +889,7 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
   return tensor(T)[]
 end
 
-# Defining this with the type signature `I::Vararg{Integer, N}` instead of `I::Integere...` is much faster:
+# Defining this with the type signature `I::Vararg{Integer, N}` instead of `I::Integer...` is much faster:
 #
 # 58.720 ns (1 allocation: 368 bytes)
 #
@@ -977,6 +977,13 @@ end
   T::ITensor, x::Number, I::Vararg{<:Any,N}
 ) where {N}
   return settensor!(T, _setindex!!(tensor(T), x, I...))
+end
+
+@propagate_inbounds @inline function setindex!(
+  T::ITensor, x::Number, I::Pair{<:Index,String}...
+)
+  Iv = map(i -> i.first => val(i.first, i.second), I)
+  return setindex!(T, x, Iv...)
 end
 
 # XXX: what is this definition for?

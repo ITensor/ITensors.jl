@@ -41,7 +41,22 @@ end
       @test !hascommoninds(A, C)
     end
 
-    @testset "Get element with end (lastindex, LastIndex)" begin
+    @testset "getindex with state string" begin
+      i₁ = Index(2, "S=1/2")
+      i₂ = Index(2, "S=1/2")
+      v = ITensor(i₁, i₂)
+      v[i₂ => "↑", i₁ => "↓"] = 1.0
+      @test v[1, 1] == 0.0
+      @test v[1, 2] == 0.0
+      @test v[2, 1] == 1.0
+      @test v[2, 2] == 0.0
+      @test v[i₁ => "↑", i₂ => "↑"] == 0.0
+      @test v[i₁ => "↑", i₂ => "↓"] == 0.0
+      @test v[i₁ => "↓", i₂ => "↑"] == 1.0
+      @test v[i₁ => "↓", i₂ => "↓"] == 0.0
+    end
+
+    @testset "getindex with end (lastindex, LastIndex)" begin
       a = Index(2)
       b = Index(3)
       A = randomITensor(a, b)
