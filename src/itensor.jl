@@ -980,10 +980,7 @@ end
 end
 
 @propagate_inbounds @inline function setindex!(
-  T::ITensor,
-  x::Number,
-  I1::Pair{<:Index,String},
-  I::Pair{<:Index,String}...
+  T::ITensor, x::Number, I1::Pair{<:Index,String}, I::Pair{<:Index,String}...
 )
   Iv = map(i -> i.first => val(i.first, i.second), (I1, I...))
   return setindex!(T, x, Iv...)
