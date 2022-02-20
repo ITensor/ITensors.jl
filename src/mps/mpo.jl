@@ -671,7 +671,7 @@ function sample(M::MPO)
       projn[s[n]] = 1.0
       pnc = (ρj * projn * prime(projn))[]
       if imag(pnc) > 1e-8
-        error("In sample, probability $pnc is complex.")
+        @warn "In sample, probability $pnc is complex."
       end
       pn = real(pnc)
       pdisc += pn

@@ -146,8 +146,12 @@ function Base.show(io::IO, op::MPOTerm)
   end
   for o in ops(op)
     print(io, "\"$(name(o))\"($(string_site_or_sites(o))) ")
+    !isempty(params(o)) && print(io, params(o))
   end
 end
+
+*(α::Number, op::MPOTerm) = MPOTerm(α * coef(op), ops(op))
+*(op::MPOTerm, α::Number) = α * op
 
 ############################
 ## OpSum                 #
@@ -202,6 +206,12 @@ function Base.deepcopy(ampo::OpSum)
 end
 
 Base.size(ampo::OpSum) = size(data(ampo))
+
+function Base.iterate(os::OpSum, state=1)
+  state > length(os) && return nothing
+  o = os[state]
+  return (o, state + 1)
+end
 
 """
     add!(ampo::OpSum,
@@ -297,6 +307,28 @@ function (ampo::OpSum - term::Tuple)
   ampo_plus_term = copy(ampo)
   subtract!(ampo_plus_term, term...)
   return ampo_plus_term
+end
+
+function +(o1::OpSum, o2::OpSum; kwargs...)
+  return prune!(sortmergeterms!(OpSum([o1..., o2...])), kwargs...)
+end
+
+*(α::Number, os::OpSum) = OpSum([α * o for o in os])
+
+-(o1::OpSum, o2::OpSum) = o1 + (-1) * o2
+
+"""
+    prune!(os::OpSum; cutoff = 1e-15)
+
+Remove any MPOTerm with norm(coef) < cutoff
+"""
+function prune!(os::OpSum; cutoff=1e-15)
+  OS = OpSum()
+  for o in os
+    norm(ITensors.coef(o)) > cutoff && push!(OS, o)
+  end
+  os = OS
+  return os
 end
 
 #
@@ -430,10 +462,10 @@ end
 
 function computeSiteProd(sites, ops::OpTerm)::ITensor
   i = site(ops[1])
-  T = op(sites[i], ops[1].name)
+  T = op(sites[i], ops[1].name; ops[1].params...)
   for j in 2:length(ops)
     (site(ops[j]) != i) && error("Mismatch of site number in computeSiteProd")
-    opj = op(sites[i], ops[j].name)
+    opj = op(sites[i], ops[j].name; ops[j].params...)
     T = product(T, opj)
   end
   return T
@@ -648,7 +680,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         for st in term
           op_tensor = get(op_cache, name(st) => site(st), nothing)
           if op_tensor === nothing
-            op_tensor = op(sites[site(st)], name(st))
+            op_tensor = op(sites[site(st)], name(st); params(st)...)
             op_cache[name(st) => site(st)] = op_tensor
           end
           q -= flux(op_tensor)
