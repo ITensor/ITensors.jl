@@ -554,7 +554,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
       t = el.val
       (abs(coef(t)) > eps()) || continue
 
-      M = zeros(ValType,dim(ll),dim(rl))
+      M = zeros(ValType, dim(ll), dim(rl))
 
       ct = convert(ValType, coef(t))
       if A_row == -1 && A_col == -1 #onsite term
