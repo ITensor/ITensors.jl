@@ -543,18 +543,10 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
     llinks[n + 1] = Index(2 + tdim, "Link,l=$n")
 
-    finalMPO = Dict{OpTerm,Matrix{ValType}}()
-
     ll = llinks[n]
     rl = llinks[n + 1]
 
-    idTerm = [SiteOp("Id", n)]
-    finalMPO[idTerm] = zeros(ValType, dim(ll), dim(rl))
-    idM = finalMPO[idTerm]
-    idM[1, 1] = 1.0
-    idM[end, end] = 1.0
-
-    defaultMat() = zeros(ValType, dim(ll), dim(rl))
+    H[n] = ITensor()
 
     for el in tempMPO[n]
       A_row = el.row
@@ -562,7 +554,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
       t = el.val
       (abs(coef(t)) > eps()) || continue
 
-      M = get!(finalMPO, ops(t), defaultMat())
+      M = zeros(ValType,dim(ll),dim(rl))
 
       ct = convert(ValType, coef(t))
       if A_row == -1 && A_col == -1 #onsite term
@@ -583,14 +575,20 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
           M[1 + r, 1 + c] += z
         end
       end
+
+      T = itensor(M, ll, rl)
+      H[n] += T * computeSiteProd(sites, ops(t))
     end
 
-    s = sites[n]
-    H[n] = ITensor()
-    for (op, M) in finalMPO
-      T = itensor(M, ll, rl)
-      H[n] += T * computeSiteProd(sites, op)
-    end
+    #
+    # Special handling of starting and 
+    # ending identity operators:
+    #
+    idM = zeros(ValType, dim(ll), dim(rl))
+    idM[1, 1] = 1.0
+    idM[end, end] = 1.0
+    T = itensor(idM, ll, rl)
+    H[n] += T * computeSiteProd(sites, SiteOp[SiteOp("Id", n)])
   end
 
   L = ITensor(llinks[1])
