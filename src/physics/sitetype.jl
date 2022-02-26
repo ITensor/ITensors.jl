@@ -217,13 +217,24 @@ s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
 """
-function op(name::AbstractString, s::Index...; kwargs...)
+function op(name::AbstractString, s::Index...; 
+    dag::Bool = false,
+    kwargs...)
   name = strip(name)
-
   # TODO: filter out only commons tags
   # if there are multiple indices
   commontags_s = commontags(s...)
 
+  # XXX this clashes with the S+ and S- for spins...
+  ## Interpret operator names joined by +
+  ## as acting sequentially on the same site
+  #pluspos = findfirst("+", name)
+  #if !isnothing(pluspos)
+  #  op1 = name[1:prevind(name, pluspos.start)]
+  #  op2 = name[nextind(name, pluspos.start):end]
+  #  return op(op1, s...; kwargs...) + op(op2, s...; kwargs...)
+  #end
+ 
   # Interpret operator names joined by *
   # as acting sequentially on the same site
   starpos = findfirst("*", name)
@@ -244,6 +255,7 @@ function op(name::AbstractString, s::Index...; kwargs...)
   for st in common_stypes
     res = op(opn, st, s...; kwargs...)
     if !isnothing(res)
+      dag && return swapprime(ITensors.dag(res), 0 => 1)
       return res
     end
   end
@@ -257,17 +269,21 @@ function op(name::AbstractString, s::Index...; kwargs...)
     op_mat = op(opn, st; kwargs...)
     if !isnothing(op_mat)
       rs = reverse(s)
-      return itensor(op_mat, prime.(rs)..., dag.(rs)...)
+      #return itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
+      res = itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
+      dag && return swapprime(ITensors.dag(res), 0 => 1)
+      return res
     end
   end
 
   # otherwise try calling a function of the form:
   #    op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...)
   #
-  Op = ITensor(prime.(s)..., dag.(s)...)
+  Op = ITensor(prime.(s)..., ITensors.dag.(s)...)
   for st in common_stypes
     op!(Op, opn, st, s...; kwargs...)
     if !isempty(Op)
+      dag && return swapprime(ITensors.dag(Op), 0 => 1)
       return Op
     end
   end
@@ -289,14 +305,16 @@ function op(name::AbstractString, s::Index...; kwargs...)
     for st in Iterators.product(stypes...)
       res = op(opn, st..., s...; kwargs...)
       if !isnothing(res)
+        dag && return swapprime(ITensors.dag(res), 0 => 1)
         return res
       end
     end
 
-    Op = ITensor(prime.(s)..., dag.(s)...)
+    Op = ITensor(prime.(s)..., ITensors.dag.(s)...)
     for st in Iterators.product(stypes...)
       op!(Op, opn, st..., s...; kwargs...)
       if !isempty(Op)
+        dag && return swapprime(ITensors.dag(Op), 0 => 1)
         return Op
       end
     end
@@ -316,6 +334,7 @@ function op(name::AbstractString, s::Index...; kwargs...)
   for st in common_stypes
     res = op(st, s[1], name; kwargs...)
     if !isnothing(res)
+      dag && return ITensors.dag(res)
       return res
     end
   end
@@ -327,6 +346,12 @@ function op(name::AbstractString, s::Index...; kwargs...)
   )
 end
 
+
+op(X::AbstractArray, s::Index...) = 
+  tensor(X, prime.([s...]), dag.([s...]))
+
+op(s::Index, X::AbstractArray; kwargs...) = op(X, s; kwargs...)
+
 # For backwards compatibility, version of `op`
 # taking the arguments in the other order:
 op(s::Index, opname::AbstractString; kwargs...) = op(opname, s; kwargs...)
@@ -334,6 +359,10 @@ op(s::Index, opname::AbstractString; kwargs...) = op(opname, s; kwargs...)
 # To ease calling of other op overloads,
 # allow passing a string as the op name
 op(opname::AbstractString, t::SiteType; kwargs...) = op(OpName(opname), t; kwargs...)
+
+op(f::Function, name::AbstractString, s::Index...; kwargs...)  = 
+  f(op(name, s...; kwargs...))
+  
 
 """
     op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
@@ -645,6 +674,8 @@ end
 # has_fermion_string system
 #
 #---------------------------------------
+
+has_fermion_string(operator::AbstractArray{<:Number}, s::Index; kwargs...)::Bool = false
 
 has_fermion_string(::OpName, ::SiteType) = nothing
 

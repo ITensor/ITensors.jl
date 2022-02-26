@@ -7,11 +7,15 @@
 # SiteOp                  # 
 ###########################
 
-struct SiteOp{N}
-  name::String
+struct SiteOp{O, N}
+  name::O
   site::NTuple{N,Int}
   params::NamedTuple
 end
+
+SiteOp(op::AbstractArray, site::Tuple) = SiteOp(op, site, NamedTuple())
+SiteOp(op::AbstractArray, site::Int...) = SiteOp(op, site)
+
 # Change NamedTuple() to (;) when we drop older Julia versions
 SiteOp(name::String, site::Tuple) = SiteOp(name, site, NamedTuple())
 SiteOp(name::String, site::Int...) = SiteOp(name, site)
@@ -21,7 +25,7 @@ end
 SiteOp(name::String, params::NamedTuple, site::Tuple) = SiteOp(name, site, params)
 SiteOp(name::String, params::NamedTuple, site::Int...) = SiteOp(name, site, params)
 
-convert(::Type{SiteOp}, op::Pair{String,Int}) = SiteOp(first(op), last(op))
+convert(::Type{SiteOp}, op::Pair{Union{String,AbstractArray},Int}) = SiteOp(first(op), last(op))
 
 name(s::SiteOp) = s.name
 site(s::SiteOp) = only(s.site)
@@ -114,9 +118,9 @@ function isless(t1::MPOTerm, t2::MPOTerm)
   return ops(t1) < ops(t2)
 end
 
-function MPOTerm(c::Number, op1::String, ops_rest...)
+function MPOTerm(c::Number, op1::Union{String, AbstractArray{<:Number}}, ops_rest...) #where T<:Number
   ops = (op1, ops_rest...)
-  starts = findall(x -> x isa String, ops)
+  starts = findall(x -> (x isa String) || (x isa AbstractArray{<:Number}), ops)
   N = length(starts)
   vop = OpTerm(undef, N)
   for n in 1:N
@@ -127,7 +131,8 @@ function MPOTerm(c::Number, op1::String, ops_rest...)
   return MPOTerm(c, vop)
 end
 
-function MPOTerm(op1::String, ops...)
+
+function MPOTerm(op1::Union{String,AbstractArray}, ops...)
   return MPOTerm(one(Float64), op1, ops...)
 end
 
@@ -933,14 +938,26 @@ function sorteachterm!(ampo::OpSum, sites)
   return ampo
 end
 
-function sortmergeterms!(ampo::OpSum)
-  sort!(data(ampo))
+function check_numerical_opsum(ampo::OpSum)
+  mpoterms = data(ampo)
+  for mpoterm in mpoterms
+    operators = ops(mpoterm)
+    for operator in name.(operators)
+      operator isa Array{<:Number} && return true
+    end
+  end
+  return false
+end
 
+function sortmergeterms!(ampo::OpSum)
+  check_numerical_opsum(ampo) && return ampo
+  sort!(data(ampo))
   # Merge (add) terms with same operators
   da = data(ampo)
   ndata = MPOTerm[]
   last_term = copy(da[1])
   for n in 2:length(da)
+    
     if ops(da[n]) == ops(last_term)
       last_term.coef += coef(da[n])
     else

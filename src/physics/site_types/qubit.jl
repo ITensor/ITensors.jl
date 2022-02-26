@@ -3,7 +3,7 @@
 #
 
 # Define Qubit space in terms of
-# S=1/2 space, but use different
+# Qubit/2 space, but use different
 # defaults for QN names
 
 """
@@ -46,65 +46,100 @@ ITensors.state(::StateName"0", ::SiteType"Qubit") = [1.0, 0.0]
 ITensors.state(::StateName"1", ::SiteType"Qubit") = [0.0, 1.0]
 ITensors.state(::StateName"+", ::SiteType"Qubit") = [1.0, 1.0] / √2
 ITensors.state(::StateName"-", ::SiteType"Qubit") = [1.0, -1.0] / √2
+ITensors.state(::StateName"i", ::SiteType"Qubit") = [1.0, im] / √2
+ITensors.state(::StateName"-i", ::SiteType"Qubit") = [1.0, -im] / √2
 
-# Use S=1/2 definition of any operators 
-# called using Qubit SiteType
-ITensors.op(o::OpName, ::SiteType"Qubit"; kwargs...) = op(o, SiteType("S=1/2"); kwargs...)
+# Pauli eingenstates
+ITensors.state(::StateName"X+", t::SiteType"Qubit") =
+  state(StateName("+"), t)
+ITensors.state(::StateName"X-", t::SiteType"Qubit") =
+  state(StateName("-"), t)
+
+ITensors.state(::StateName"Y+", t::SiteType"Qubit") =
+  state(StateName("i"), t)
+ITensors.state(::StateName"Y-", t::SiteType"Qubit") =
+  state(StateName("-i"), t)
+
+ITensors.state(::StateName"Z+", t::SiteType"Qubit") =
+  state(StateName("0"), t)
+ITensors.state(::StateName"Z-", t::SiteType"Qubit") =
+  state(StateName("1"), t)
 
 #
 # 1-Qubit gates
 #
+ITensors.op(::OpName"X", ::SiteType"Qubit") = [
+  0 1
+  1 0
+]
 
-ITensors.op(::OpName"σx", t::SiteType"S=1/2") = op("X", t)
+ITensors.op(::OpName"σx", t::SiteType"Qubit") = op("X", t)
 
-ITensors.op(::OpName"σ1", t::SiteType"S=1/2") = op("X", t)
+ITensors.op(::OpName"σ1", t::SiteType"Qubit") = op("X", t)
 
-function ITensors.op(::OpName"√NOT", ::SiteType"S=1/2")
+
+ITensors.op(::OpName"Y", ::SiteType"Qubit") = [
+  0.0 -1.0im
+  1.0im 0.0
+]
+
+ITensors.op(::OpName"σy", t::SiteType"Qubit") = op("Y", t)
+
+ITensors.op(::OpName"σ2", t::SiteType"Qubit") = op("Y", t)
+
+
+ITensors.op(::OpName"iY", ::SiteType"S=1/2") = [
+  0 1
+  -1 0
+]
+ITensors.op(::OpName"iσy", t::SiteType"Qubit") = op("iY", t)
+
+ITensors.op(::OpName"iσ2", t::SiteType"Qubit") = op("iY", t)
+
+ITensors.op(::OpName"Z", ::SiteType"Qubit") = [
+  1 0
+  0 -1
+]
+
+ITensors.op(::OpName"σz", t::SiteType"Qubit") = op("Z", t)
+
+ITensors.op(::OpName"σ3", t::SiteType"Qubit") = op("Z", t)
+
+
+function ITensors.op(::OpName"√NOT", ::SiteType"Qubit")
   return [
     (1 + im)/2 (1 - im)/2
     (1 - im)/2 (1 + im)/2
   ]
 end
 
-ITensors.op(::OpName"√X", t::SiteType"S=1/2") = op("√NOT", t)
+ITensors.op(::OpName"√X", t::SiteType"Qubit") = op("√NOT", t)
 
-ITensors.op(::OpName"σy", t::SiteType"S=1/2") = op("Y", t)
-
-ITensors.op(::OpName"σ2", t::SiteType"S=1/2") = op("Y", t)
-
-ITensors.op(::OpName"iσy", t::SiteType"S=1/2") = op("iY", t)
-
-ITensors.op(::OpName"iσ2", t::SiteType"S=1/2") = op("iY", t)
-
-ITensors.op(::OpName"σz", t::SiteType"S=1/2") = op("Z", t)
-
-ITensors.op(::OpName"σ3", t::SiteType"S=1/2") = op("Z", t)
-
-ITensors.op(::OpName"H", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"H", ::SiteType"Qubit") = [
   1/sqrt(2) 1/sqrt(2)
   1/sqrt(2) -1/sqrt(2)
 ]
 
 # Rϕ with ϕ = π/2
-ITensors.op(::OpName"Phase", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"Phase", ::SiteType"Qubit") = [
   1 0
   0 im
 ]
 
-ITensors.op(::OpName"P", t::SiteType"S=1/2") = op("Phase", t)
+ITensors.op(::OpName"P", t::SiteType"Qubit") = op("Phase", t)
 
-ITensors.op(::OpName"S", t::SiteType"S=1/2") = op("Phase", t)
+ITensors.op(::OpName"S", t::SiteType"Qubit") = op("Phase", t)
 
 ## Rϕ with ϕ = π/4
-ITensors.op(::OpName"π/8", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"π/8", ::SiteType"Qubit") = [
   1 0
   0 1 / sqrt(2)+im / sqrt(2)
 ]
 
-ITensors.op(::OpName"T", t::SiteType"S=1/2") = op("π/8", t)
+ITensors.op(::OpName"T", t::SiteType"Qubit") = op("π/8", t)
 
 # Rotation around X-axis
-function ITensors.op(::OpName"Rx", ::SiteType"S=1/2"; θ::Number)
+function ITensors.op(::OpName"Rx", ::SiteType"Qubit"; θ::Number)
   return [
     cos(θ / 2) -im*sin(θ / 2)
     -im*sin(θ / 2) cos(θ / 2)
@@ -112,7 +147,7 @@ function ITensors.op(::OpName"Rx", ::SiteType"S=1/2"; θ::Number)
 end
 
 # Rotation around Y-axis
-function ITensors.op(::OpName"Ry", ::SiteType"S=1/2"; θ::Number)
+function ITensors.op(::OpName"Ry", ::SiteType"Qubit"; θ::Number)
   return [
     cos(θ / 2) -sin(θ / 2)
     sin(θ / 2) cos(θ / 2)
@@ -120,20 +155,20 @@ function ITensors.op(::OpName"Ry", ::SiteType"S=1/2"; θ::Number)
 end
 
 # Rotation around Z-axis
-ITensors.op(::OpName"Rz", ::SiteType"S=1/2"; ϕ::Number) = [
-  1 0
-  0 exp(im * ϕ)
+ITensors.op(::OpName"Rz", ::SiteType"Qubit"; ϕ::Number) = [
+  exp(-im * ϕ / 2)  0
+  0          exp(im * ϕ / 2)
 ]
 
 # Rotation around generic axis n̂
-function ITensors.op(::OpName"Rn", ::SiteType"S=1/2"; θ::Real, ϕ::Real, λ::Real)
+function ITensors.op(::OpName"Rn", ::SiteType"Qubit"; θ::Real, ϕ::Real, λ::Real)
   return [
     cos(θ / 2) -exp(im * λ)*sin(θ / 2)
     exp(im * ϕ)*sin(θ / 2) exp(im * (ϕ + λ))*cos(θ / 2)
   ]
 end
 
-function ITensors.op(::OpName"Rn̂", t::SiteType"S=1/2"; kwargs...)
+function ITensors.op(::OpName"Rn̂", t::SiteType"Qubit"; kwargs...)
   return ITensors.op(OpName("Rn"), t; kwargs...)
 end
 
@@ -141,37 +176,85 @@ end
 # 2-Qubit gates
 #
 
-ITensors.op(::OpName"CNOT", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"CNOT", ::SiteType"Qubit") = [
   1 0 0 0
   0 1 0 0
   0 0 0 1
   0 0 1 0
 ]
 
-ITensors.op(::OpName"CX", t::SiteType"S=1/2") = op("CNOT", t)
+ITensors.op(::OpName"CX", t::SiteType"Qubit") = op("CNOT", t)
 
-ITensors.op(::OpName"CY", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"CY", ::SiteType"Qubit") = [
   1 0 0 0
   0 1 0 0
   0 0 0 -im
   0 0 im 0
 ]
 
-ITensors.op(::OpName"CZ", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"CZ", ::SiteType"Qubit") = [
   1 0 0 0
   0 1 0 0
   0 0 1 0
   0 0 0 -1
 ]
 
-ITensors.op(::OpName"SWAP", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"CPHASE", ::SiteType"Qubit"; ϕ::Number) = [
+  1 0 0 0
+  0 1 0 0
+  0 0 1 0
+  0 0 0 exp(im * ϕ)
+]
+ITensors.op(::OpName"Cphase", t::SiteType"Qubit"; kwargs...) = 
+  op("CPHASE", t; kwargs...)
+
+
+ITensors.op(::OpName"CRx", ::SiteType"Qubit"; θ::Number) = [
+  1 0 0 0 
+  0 1 0 0 
+  0 0 cos(θ / 2) -im*sin(θ / 2)
+  0 0 -im*sin(θ / 2) cos(θ / 2)
+]
+ITensors.op(::OpName"CRX", t::SiteType"Qubit"; kwargs...) = 
+  ITensors.op("CRx", t; kwargs...)
+
+
+ITensors.op(::OpName"CRy", ::SiteType"Qubit"; θ::Number) = [
+  1 0 0 0   
+  0 1 0 0 
+  0 0 cos(θ / 2) -sin(θ / 2)
+  0 0 sin(θ / 2) cos(θ / 2)
+]
+ITensors.op(::OpName"CRY", t::SiteType"Qubit"; kwargs...) = 
+  ITensors.op("CRy", t; kwargs...)
+
+ITensors.op(::OpName"CRz", ::SiteType"Qubit"; ϕ::Number) = [
+  1   0   0   0
+  0   1   0   0
+  0   0   exp(-im * ϕ / 2)    0
+  0   0   0     exp(im * ϕ / 2)
+]
+ITensors.op(::OpName"CRZ", t::SiteType"Qubit"; kwargs...) = 
+  ITensors.op("CRz", t; kwargs...)
+
+ITensors.op(::OpName"CRn", ::SiteType"Qubit"; θ::Number, ϕ::Number, λ::Number ) = [
+    1 0 0 0
+    0 1 0 0
+    0 0 cos(θ / 2) -exp(im * λ)*sin(θ / 2)
+    0 0 exp(im * ϕ)*sin(θ / 2) exp(im * (ϕ + λ))*cos(θ / 2)
+  ]
+ITensors.op(::OpName"CRn̂", t::SiteType"Qubit"; kwargs...) = 
+  ITensors.op("CRn", t; kwargs...)
+
+ITensors.op(::OpName"SWAP", ::SiteType"Qubit") = [
   1 0 0 0
   0 0 1 0
   0 1 0 0
   0 0 0 1
 ]
+ITensors.op(::OpName"Swap", t::SiteType"Qubit") = op("SWAP", t)
 
-function ITensors.op(::OpName"√SWAP", ::SiteType"S=1/2")
+function ITensors.op(::OpName"√SWAP", ::SiteType"Qubit")
   return [
     1 0 0 0
     0 (1 + im)/2 (1 - im)/2 0
@@ -179,19 +262,42 @@ function ITensors.op(::OpName"√SWAP", ::SiteType"S=1/2")
     0 0 0 1
   ]
 end
+ITensors.op(::OpName"√Swap", t::SiteType"Qubit") = op("√SWAP", t)
+
+ITensors.op(::OpName"iSWAP", t::SiteType"Qubit") = 
+[
+  1 0 0 0
+  0 0 im 0
+  0 im 0 0
+  0 0 0 1
+]
+ITensors.op(::OpName"iSwap", t::SiteType"Qubit") = op("iSWAP", t)
+
+function ITensors.op(::OpName"√iSWAP", t::SiteType"Qubit")
+  return [
+    1 0 0 0
+    0 1/√2 im/√2 0
+    0 im/2 1/√2 0
+    0 0 0 1
+  ]
+end
+ITensors.op(::OpName"√iSwap", t::SiteType"Qubit") = op("√iSWAP", t)
+
+
 
 # Ising (XX) coupling gate
-function ITensors.op(::OpName"XX", ::SiteType"S=1/2"; ϕ::Number)
-  return [
+ITensors.op(::OpName"Rxx", t::SiteType"Qubit"; ϕ::Number) = 
+[
     cos(ϕ) 0 0 -im*sin(ϕ)
     0 cos(ϕ) -im*sin(ϕ) 0
     0 -im*sin(ϕ) cos(ϕ) 0
     -im*sin(ϕ) 0 0 cos(ϕ)
   ]
-end
+ITensors.op(::OpName"RXX", t::SiteType"Qubit"; kwargs...) = 
+  op("Rxx", t; kwargs...)
 
 # Ising (YY) coupling gate
-function ITensors.op(::OpName"YY", ::SiteType"S=1/2"; ϕ::Number)
+function ITensors.op(::OpName"Ryy", ::SiteType"Qubit"; ϕ::Number)
   return [
     cos(ϕ) 0 0 im*sin(ϕ)
     0 cos(ϕ) -im*sin(ϕ) 0
@@ -199,9 +305,11 @@ function ITensors.op(::OpName"YY", ::SiteType"S=1/2"; ϕ::Number)
     im*sin(ϕ) 0 0 cos(ϕ)
   ]
 end
+ITensors.op(::OpName"RYY", t::SiteType"Qubit"; kwargs...) = 
+  op("Ryy", t; kwargs...)
 
 # Ising (ZZ) coupling gate
-function ITensors.op(::OpName"ZZ", ::SiteType"S=1/2"; ϕ::Number)
+function ITensors.op(::OpName"Rzz", ::SiteType"Qubit"; ϕ::Number)
   return [
     exp(-im * ϕ) 0 0 0
     0 exp(im * ϕ) 0 0
@@ -209,12 +317,14 @@ function ITensors.op(::OpName"ZZ", ::SiteType"S=1/2"; ϕ::Number)
     0 0 0 exp(-im * ϕ)
   ]
 end
+ITensors.op(::OpName"RZZ", t::SiteType"Qubit"; kwargs...) = 
+  op("Rzz", t; kwargs...)
 
 #
 # 3-Qubit gates
 #
 
-function ITensors.op(::OpName"Toffoli", ::SiteType"S=1/2")
+function ITensors.op(::OpName"Toffoli", ::SiteType"Qubit")
   return [
     1 0 0 0 0 0 0 0
     0 1 0 0 0 0 0 0
@@ -227,13 +337,13 @@ function ITensors.op(::OpName"Toffoli", ::SiteType"S=1/2")
   ]
 end
 
-ITensors.op(::OpName"CCNOT", t::SiteType"S=1/2") = op("Toffoli", t)
+ITensors.op(::OpName"CCNOT", t::SiteType"Qubit") = op("Toffoli", t)
 
-ITensors.op(::OpName"CCX", t::SiteType"S=1/2") = op("Toffoli", t)
+ITensors.op(::OpName"CCX", t::SiteType"Qubit") = op("Toffoli", t)
 
-ITensors.op(::OpName"TOFF", t::SiteType"S=1/2") = op("Toffoli", t)
+ITensors.op(::OpName"TOFF", t::SiteType"Qubit") = op("Toffoli", t)
 
-function ITensors.op(::OpName"Fredkin", ::SiteType"S=1/2")
+function ITensors.op(::OpName"Fredkin", ::SiteType"Qubit")
   return [
     1 0 0 0 0 0 0 0
     0 1 0 0 0 0 0 0
@@ -246,15 +356,16 @@ function ITensors.op(::OpName"Fredkin", ::SiteType"S=1/2")
   ]
 end
 
-ITensors.op(::OpName"CSWAP", t::SiteType"S=1/2") = op("Fredkin", t)
+ITensors.op(::OpName"CSWAP", t::SiteType"Qubit") = op("Fredkin", t)
+ITensors.op(::OpName"CSwap", t::SiteType"Qubit") = op("Fredkin", t)
 
-ITensors.op(::OpName"CS", t::SiteType"S=1/2") = op("Fredkin", t)
+ITensors.op(::OpName"CS", t::SiteType"Qubit") = op("Fredkin", t)
 
 #
 # 4-Qubit gates
 #
 
-function ITensors.op(::OpName"CCCNOT", ::SiteType"S=1/2")
+function ITensors.op(::OpName"CCCNOT", ::SiteType"Qubit")
   return [
     1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
     0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -274,3 +385,5 @@ function ITensors.op(::OpName"CCCNOT", ::SiteType"S=1/2")
     0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0
   ]
 end
+
+

@@ -73,3 +73,22 @@ _op(::OpName"n", st::SiteType"Qudit"; kwargs...) = _op(OpName"N"(), st; kwargs..
 function ITensors.op(on::OpName, st::SiteType"Qudit", s::Index)
   return itensor(_op(on, st; dim=dim(s)), s', dag(s))
 end
+
+
+#op(::OpName"a†a", ::SiteType"Qudit") = 
+#  kron(gate("a†", (dims[1],)),gate("a", (dims[2],)))
+#
+#op(::OpName"aa†", dims::Tuple = (2,2)) = 
+#  kron(gate("a", (dims[1],)),gate("a†", (dims[2],)))
+#
+#op(::OpName"aa", dims::Tuple = (2,2)) = 
+#  kron(gate("a", (dims[1],)),gate("a", (dims[2],)))
+#
+#op(::OpName"a†a†", dims::Tuple = (2,2)) = 
+#  kron(gate("a†", (dims[1],)),gate("a†", (dims[2],)))
+#
+
+@non_differentiable _op(::OpName"A", ::SiteType"Qudit")
+@non_differentiable _op(::OpName"Adag", ::SiteType"Qudit")
+@non_differentiable _op(::OpName"N", ::SiteType"Qudit")
+

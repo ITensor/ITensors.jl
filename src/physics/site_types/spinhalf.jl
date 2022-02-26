@@ -38,8 +38,8 @@ ITensors.val(::ValName"Dn", ::SiteType"S=1/2") = 2
 ITensors.val(::ValName"↑", st::SiteType"S=1/2") = 1
 ITensors.val(::ValName"↓", st::SiteType"S=1/2") = 2
 
-ITensors.val(::ValName"Z+", ::SiteType"S=1/2") = 1
-ITensors.val(::ValName"Z-", ::SiteType"S=1/2") = 2
+#ITensors.val(::ValName"Z+", ::SiteType"S=1/2") = 1
+#ITensors.val(::ValName"Z-", ::SiteType"S=1/2") = 2
 
 ITensors.state(::StateName"Up", ::SiteType"S=1/2") = [1.0, 0.0]
 ITensors.state(::StateName"Dn", ::SiteType"S=1/2") = [0.0, 1.0]
@@ -47,19 +47,12 @@ ITensors.state(::StateName"Dn", ::SiteType"S=1/2") = [0.0, 1.0]
 ITensors.state(::StateName"↑", st::SiteType"S=1/2") = [1.0, 0.0]
 ITensors.state(::StateName"↓", st::SiteType"S=1/2") = [0.0, 1.0]
 
-ITensors.state(::StateName"Z+", st::SiteType"S=1/2") = [1.0, 0.0]
-ITensors.state(::StateName"Z-", st::SiteType"S=1/2") = [0.0, 1.0]
+# Use Qubit  definition of any operator/state 
+# called using S=1/2 SiteType
+ITensors.op(o::OpName, ::SiteType"S=1/2"; kwargs...) = op(o, SiteType("Qubit"); kwargs...)
 
-ITensors.state(::StateName"X+", st::SiteType"S=1/2") = [1 / sqrt(2), 1 / sqrt(2)]
-ITensors.state(::StateName"X-", st::SiteType"S=1/2") = [1 / sqrt(2), -1 / sqrt(2)]
+ITensors.state(sn::StateName, ::SiteType"S=1/2"; kwargs...) = state(sn, SiteType("Qubit"); kwargs...)
 
-ITensors.state(::StateName"Y+", st::SiteType"S=1/2") = [1 / sqrt(2), im / sqrt(2)]
-ITensors.state(::StateName"Y-", st::SiteType"S=1/2") = [1 / sqrt(2), -im / sqrt(2)]
-
-ITensors.op(::OpName"Z", ::SiteType"S=1/2") = [
-  1 0
-  0 -1
-]
 
 ITensors.op(::OpName"Sz", ::SiteType"S=1/2") = [
   0.5 0.0
@@ -86,11 +79,6 @@ ITensors.op(::OpName"S⁻", t::SiteType"S=1/2") = op(OpName("S-"), t)
 
 ITensors.op(::OpName"Sminus", t::SiteType"S=1/2") = op(OpName("S-"), t)
 
-ITensors.op(::OpName"X", ::SiteType"S=1/2") = [
-  0 1
-  1 0
-]
-
 ITensors.op(::OpName"Sx", ::SiteType"S=1/2") = [
   0.0 0.5
   0.5 0.0
@@ -98,22 +86,12 @@ ITensors.op(::OpName"Sx", ::SiteType"S=1/2") = [
 
 ITensors.op(::OpName"Sˣ", t::SiteType"S=1/2") = op(OpName("Sx"), t)
 
-ITensors.op(::OpName"iY", ::SiteType"S=1/2") = [
-  0 1
-  -1 0
-]
-
 ITensors.op(::OpName"iSy", ::SiteType"S=1/2") = [
   0.0 0.5
   -0.5 0.0
 ]
 
 ITensors.op(::OpName"iSʸ", t::SiteType"S=1/2") = op(OpName("iSy"), t)
-
-ITensors.op(::OpName"Y", ::SiteType"S=1/2") = [
-  0.0 -1.0im
-  1.0im 0.0
-]
 
 ITensors.op(::OpName"Sy", ::SiteType"S=1/2") = [
   0.0 -0.5im
