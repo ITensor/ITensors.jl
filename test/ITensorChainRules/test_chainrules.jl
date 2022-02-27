@@ -10,6 +10,7 @@ using Zygote: ZygoteRuleConfig
 @testset "ChainRules rrules: basic ITensor operations" begin
   i = Index(2, "i")
   A = randomITensor(i', dag(i))
+  V = randomITensor(i)
   Ac = randomITensor(ComplexF64, i', dag(i))
   B = randomITensor(i', dag(i))
   C = ITensor(3.4)
@@ -47,6 +48,7 @@ using Zygote: ZygoteRuleConfig
   test_rrule(dag, A; check_inferred=false)
   test_rrule(permute, A, reverse(inds(A)); check_inferred=false)
 
+  test_rrule(ZygoteRuleConfig(), apply, A, V; rrule_f=rrule_via_ad, check_inferred=false)
   function f(A, B)
     i = Index(2)
     j = Index(2)
