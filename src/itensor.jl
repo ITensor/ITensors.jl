@@ -2299,7 +2299,7 @@ function product(A::ITensor, B::ITensor; apply_dag::Bool=false)
   elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
     # matrix-vector product
     apply_dag && error("apply_dag not supported for vector-matrix product")
-    return noprime(A * B; inds=!danglings_inds)
+    return replaceprime(A * B, 1 => 0; inds=!danglings_inds)
   end
 end
 
