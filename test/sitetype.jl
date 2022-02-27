@@ -337,13 +337,16 @@ using ITensors, Test
       n = parse(Int, String(N))
       st = zeros(dim(s))
       st[n + 1] = 1.0
-      return st
+      return return itensor(st, s)
     end
 
     s = siteind("MyQudit"; dim=3)
     v0 = state(s, "0")
     v1 = state(s, "1")
     v2 = state(s, "2")
+    @test v0 == state("0", s)
+    @test v1 == state("1", s)
+    @test v2 == state("2", s)
     @test dim(v0) == 3
     @test dim(v1) == 3
     @test dim(v2) == 3
