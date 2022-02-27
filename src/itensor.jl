@@ -2319,6 +2319,9 @@ end
 # Alias apply with product
 const apply = product
 
+inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
+inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
+
 #######################################################################
 #
 # In-place operations
