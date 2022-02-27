@@ -158,7 +158,9 @@ using ITensors, Test, Random
 
     h = 1.0
     H = MPO(ising(N; h=h), sites)
-    energy, psi = dmrg(H, psi0; nsweeps=5, maxdim=[10, 20], cutoff=1e-12, noise=1e-10, outputlevel=0)
+    energy, psi = dmrg(
+      H, psi0; nsweeps=5, maxdim=[10, 20], cutoff=1e-12, noise=1e-10, outputlevel=0
+    )
 
     energy_exact = 1.0 - 1.0 / sin(π / (4 * N + 2))
     @test abs((energy - energy_exact) / energy_exact) < 1e-4
