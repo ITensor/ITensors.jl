@@ -296,7 +296,7 @@ include("util.jl")
     @test isreal(norm_psi)
 
     lognorm_psi = lognorm(psi)
-    @test lognorm_psi ≈ 0
+    @test lognorm_psi ≈ 0 atol = 1e-15
     @test isreal(lognorm_psi)
 
     psi = psi .* 2
@@ -334,7 +334,7 @@ include("util.jl")
     psi = randomMPS(siteinds("S=1/2", N); linkdims=10)
 
     @test norm(psi) ≈ 1.0
-    @test lognorm(psi) ≈ 0.0
+    @test lognorm(psi) ≈ 0.0 atol = 1e-15
 
     α = 2
     phi = α .* psi
@@ -372,13 +372,13 @@ include("util.jl")
     α = 2
     psi = randomMPS(siteinds("S=1/2", N); linkdims=10)
     psi = α .* psi
-    @test norm(psi) ≈ α ^ N
+    @test norm(psi) ≈ α^N
     @test lognorm(psi) ≈ length(psi) * log(α)
     lognorm_psi = Float64[]
     phi = normalize(psi; (lognorm!)=lognorm_psi)
     @test lognorm_psi[end] ≈ lognorm(psi)
     @test norm(phi) ≈ 1
-    @test lognorm(phi) ≈ 0 atol=1e-14
+    @test lognorm(phi) ≈ 0 atol = 1e-14
   end
 
   @testset "lognorm MPS" begin
