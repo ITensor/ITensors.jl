@@ -5,7 +5,7 @@ using ChainRulesCore: rrule_via_ad
 
 include("utils/chainrulestestutils.jl")
 
-using Zygote: ZygoteRuleConfig
+using Zygote: ZygoteRuleConfig, gradient
 
 @testset "ChainRules rrules: basic ITensor operations" begin
   i = Index(2, "i")
@@ -210,6 +210,25 @@ using Zygote: ZygoteRuleConfig
   f = x -> prime(x; plev=1)[1, 1]
   args = (A,)
   @test_throws ErrorException f'(args...)
+end
+
+@testset "MPS rrules" begin
+  s = siteinds("S=1/2", 2)
+  ψ = randomMPS(s)
+
+  args = (ψ,)
+  f = x -> inner(x', x')
+  # TODO: Need to make MPS type compatible with FiniteDifferences.
+  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol=1e-15
+
+  args = (ψ,)
+  f = x -> inner(prime(x), prime(x))
+  # TODO: Need to make MPS type compatible with FiniteDifferences.
+  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol=1e-15
 end
 
 @testset "ChainRules rrules: op" begin
