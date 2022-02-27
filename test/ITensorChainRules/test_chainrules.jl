@@ -228,7 +228,7 @@ end
   # TODO: Need to make MPS type compatible with FiniteDifferences.
   #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   d_args = gradient(f, args...)
-  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol=1e-15
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-15
 end
 
 @testset "ChainRules rrules: op" begin
