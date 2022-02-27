@@ -468,7 +468,14 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
   # Try calling state(::StateName"Name",::SiteType"Tag",s::Index)
   for st in stypes
     v = state(sname, st, s; kwargs...)
-    !isnothing(v) && return v
+    if !isnothing(v)
+      if v isa ITensor
+        return v
+      else
+        # TODO: deprecate, only for backwards compatibility.
+        return itensor(v, s)
+      end
+    end
   end
 
   # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index)

@@ -337,10 +337,45 @@ using ITensors, Test
       n = parse(Int, String(N))
       st = zeros(dim(s))
       st[n + 1] = 1.0
-      return return itensor(st, s)
+      return itensor(st, s)
     end
 
     s = siteind("MyQudit"; dim=3)
+    v0 = state(s, "0")
+    v1 = state(s, "1")
+    v2 = state(s, "2")
+    @test v0 == state("0", s)
+    @test v1 == state("1", s)
+    @test v2 == state("2", s)
+    @test dim(v0) == 3
+    @test dim(v1) == 3
+    @test dim(v2) == 3
+    @test v0[s => 1] == 1
+    @test v0[s => 2] == 0
+    @test v0[s => 3] == 0
+    @test v1[s => 1] == 0
+    @test v1[s => 2] == 1
+    @test v1[s => 3] == 0
+    @test v2[s => 1] == 0
+    @test v2[s => 2] == 0
+    @test v2[s => 3] == 1
+    @test_throws BoundsError state(s, "3")
+  end
+
+  @testset "state with variable dimension (deprecated)" begin
+    ITensors.space(::SiteType"MyQudit2"; dim=2) = dim
+
+    # XXX: This syntax is deprecated, only testing for
+    # backwards compatibility. Should return the
+    # ITensor `itensor(st, s)`.
+    function ITensors.state(::StateName{N}, ::SiteType"MyQudit2", s::Index) where {N}
+      n = parse(Int, String(N))
+      st = zeros(dim(s))
+      st[n + 1] = 1.0
+      return st
+    end
+
+    s = siteind("MyQudit2"; dim=3)
     v0 = state(s, "0")
     v1 = state(s, "1")
     v2 = state(s, "2")
