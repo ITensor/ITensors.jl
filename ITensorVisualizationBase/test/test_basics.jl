@@ -28,15 +28,18 @@ using Test
   R1 = @visualize ELn0 * ψn1n2 * hn1
   R2 = @visualize R1 * hn2 * ERn2 vertex_labels = ["T1", "T2", "T3"]
   tn2 = @visualize tn
+  T = @visualize ELn0
 
   @test R ≈ ELn0 * ψn1n2 * hn1 * hn2 * ERn2
   @test R1 ≈ ELn0 * ψn1n2 * hn1
   @test R2 ≈ ELn0 * ψn1n2 * hn1 * hn2 * ERn2
   @test all(tn .== tn2)
+  @test T == ELn0
 
   R = @visualize figR ELn0 * ψn1n2 * hn1 * hn2 * ERn2
   R1 = @visualize figR1 ELn0 * ψn1n2 * hn1
   R2 = @visualize figR2 R1 * hn2 * ERn2 vertex_labels = ["T1", "T2", "T3"]
+  T = @visualize figT T
 
   fig_tn = @visualize_noeval tn
 
@@ -44,4 +47,5 @@ using Test
   @test isnothing(figR1)
   @test isnothing(figR2)
   @test isnothing(fig_tn)
+  @test isnothing(figT)
 end
