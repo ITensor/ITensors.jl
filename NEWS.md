@@ -6,6 +6,29 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.2.16 Release Notes
+==============================
+
+Bugs:
+
+- Fix `inner` `MPS` `rrule` for complex and QNs, add tests (#836)
+- Fix differentation of apply(::ITensor, ::ITensor) (#831)
+
+Enhancements:
+
+- Define `diag(::Tensor)`, `diag(::ITensor)` (#837)
+- Support indexing notation A[Up] (#839)
+- Allow dividing by scalar ITensor (#838)
+- Add `normalize[!](::MPS/MPO)` (#820)
+- More flexible `state` syntax (overloading and calling) (#833)
+    - `state` defined with Index now should return an `ITensor`, for consistency with how `op` definitions work (this PR supports backwards compatibility for the now-deprecated syntax which returns a Vector that gets automatically converted to an ITensor
+).
+    - Allow syntax like `state("Up", Index(2, "S=1/2"))` (previously only `state(Index(2, "S=1/2"), "Up")` worked).
+- Define inner(::ITensor, ::ITensor) (#835)
+- Add more compact kwarg sweeps syntax for DMRG (#834)
+- Fix prime/tag rrule for MPS/MPO (#830)
+- Simplify Dense AutoMPO Backend, output lower triangular MPO in dense case (#828)
+
 ITensors v0.2.15 Release Notes
 ==============================
 
