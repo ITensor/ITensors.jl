@@ -252,4 +252,3 @@ end
   args = (ψ,)
   @test_throws ErrorException gradient(f, args...)
 end
-
