@@ -339,11 +339,7 @@ end
 # (at least it is necessary for `diag(::DiagTensor)`).
 # TODO: Specialize this to the Tensor type, for example
 # block sparse to return a block sparse vector?
-function Base.similar(
-  T::Tensor,
-  ::Type{ElT},
-  dims::Tuple{Int}
-) where {ElT,N}
+function Base.similar(T::Tensor, ::Type{ElT}, dims::Tuple{Int}) where {ElT,N}
   return Tensor(ElT, dims)
 end
 
