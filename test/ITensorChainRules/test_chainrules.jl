@@ -223,14 +223,14 @@ end
   # TODO: Need to make MPS type compatible with FiniteDifferences.
   #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   d_args = gradient(f, args...)
-  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-15
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
 
   args = (ψ,)
   f = x -> inner(prime(x), prime(x))
   # TODO: Need to make MPS type compatible with FiniteDifferences.
   #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   d_args = gradient(f, args...)
-  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-15
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
 end
 
 @testset "ChainRules rrules: op" begin
@@ -258,12 +258,12 @@ end
   f = x -> inner(x, x)
   args = (ψ,)
   d_args = gradient(f, args...)
-  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-15
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
 
   f = x -> inner(x', H, x)
   args = (ψ,)
   d_args = gradient(f, args...)
-  @test norm(d_args[1]' - 2 * H * args[1]) ≈ 0 atol = 1e-15
+  @test norm(d_args[1]' - 2 * H * args[1]) ≈ 0 atol = 1e-13
 
   f = x -> inner(x', x)
   args = (ψ,)
