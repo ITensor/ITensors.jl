@@ -889,6 +889,19 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
   return tensor(T)[]
 end
 
+function _vals(is::Indices, I::String...)
+  return val.(is, I)
+end
+
+function _vals(T::ITensor, I::String...)
+  return _vals(inds(T), I...)
+end
+
+# Enable indexing with string values, like `A["Up"]`.
+function getindex(T::ITensor, I1::String, Is::String...)
+  return T[_vals(T, I1, Is...)...]
+end
+
 # Defining this with the type signature `I::Vararg{Integer, N}` instead of `I::Integer...` is much faster:
 #
 # 58.720 ns (1 allocation: 368 bytes)
@@ -1013,6 +1026,12 @@ function setindex!(T::ITensor, A::AbstractArray, ivs::Pair{<:Index}...)
   # from the ITensor indices.
   pvals = NDTensors.permute(vals, p)
   T[pvals...] = PermutedDimsArray(reshape(A, length.(vals)), p)
+  return T
+end
+
+# Enable indexing with string values, like `A["Up"]`.
+function setindex!(T::ITensor, x::Number, I1::String, Is::String...)
+  T[_vals(T, I1, Is...)...] = x
   return T
 end
 
