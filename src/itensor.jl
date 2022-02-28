@@ -1666,6 +1666,8 @@ end
 
 (A::ITensor / x::Number) = itensor(tensor(A) / x)
 
+(T1::ITensor / T2::ITensor) = T1 / T2[]
+
 -(A::ITensor) = itensor(-tensor(A))
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
