@@ -239,3 +239,37 @@ end
   args = (0.2,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 end
+
+@testset "MPS ($ElType)" for ElType in (Float64, ComplexF64)
+  n = 4
+  s = siteinds("S=1/2", n; conserve_qns=true)
+  function heisenberg(n)
+    os = OpSum()
+    for j in 1:(n - 1)
+      os += 0.5, "S+", j, "S-", j + 1
+      os += 0.5, "S-", j, "S+", j + 1
+      os += "Sz", j, "Sz", j + 1
+    end
+    return os
+  end
+  H = MPO(heisenberg(n), s)
+  ψ = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=2)
+
+  f = x -> inner(x, x)
+  args = (ψ,)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-15
+
+  f = x -> inner(x', H, x)
+  args = (ψ,)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1]' - 2 * H * args[1]) ≈ 0 atol = 1e-15
+
+  f = x -> inner(x', x)
+  args = (ψ,)
+  @test_throws ErrorException gradient(f, args...)
+
+  f = x -> inner(x, H, x)
+  args = (ψ,)
+  @test_throws ErrorException gradient(f, args...)
+end

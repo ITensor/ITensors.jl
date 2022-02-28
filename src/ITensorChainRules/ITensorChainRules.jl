@@ -327,12 +327,17 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
 end
 
 function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
+  if !hassameinds(siteinds, x1, (x2, x3)) || !hassameinds(siteinds, x3, (x2, x1))
+    error(
+      "Taking gradients of `inner(x::MPS, A::MPO, y::MPS)` is not supported if the site indices of the input MPS and MPO don't match. Try using if you input `inner(x, A, y), try `inner(x', A, y)` instead.",
+    )
+  end
+
   y = inner(x1, x2, x3; kwargs...)
   function inner_pullback(ȳ)
-    x1dag = dag(x1)
-    x̄1 = ȳ * contract(x2, x3; kwargs...)
-    x̄2 = ȳ * dag(_contract(MPO, x1dag, x3; kwargs...))
-    x̄3 = ȳ * dag(contract(x2, x1dag; kwargs...))
+    x̄1 = dag(ȳ) * contract(x2, x3; kwargs...)
+    x̄2 = ȳ * dag(_contract(MPO, dag(x1), x3; kwargs...))
+    x̄3 = contract(dag(x2), x1; kwargs...) * ȳ
 
     @assert siteinds(x1) == siteinds(x̄1)
     @assert hassameinds(siteinds, x2, x̄2)
@@ -344,9 +349,14 @@ function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs
 end
 
 function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPS; kwargs...)
+  if !hassameinds(siteinds, x1, x2)
+    error(
+      "Taking gradients of `inner(::MPS, ::MPS)` is not supported if the site indices of the input MPS don't match. If you input `inner(x, Ay)` where `Ay` is the result of something like `contract(A::MPO, y::MPS)`, try `inner(x', Ay)` or `inner(x, replaceprime(Ay, 1 => 0))`instead.",
+    )
+  end
   y = inner(x1, x2)
   function inner_pullback(ȳ)
-    x̄1 = ȳ * dag(x2)
+    x̄1 = dag(ȳ) * x2
     # `dag` of `x1` gets reversed by `inner`
     x̄2 = x1 * ȳ
     return (NoTangent(), x̄1, x̄2)
