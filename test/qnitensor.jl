@@ -1504,7 +1504,7 @@ Random.seed!(1234)
       for b in nzblocks(V)
         @test flux(V, b) == QN()
       end
-      @test U * S * V ≈ A atol = 1e-15
+      @test U * S * V ≈ A atol = 1e-13
     end
 
     @testset "SVD no truncate bug" begin

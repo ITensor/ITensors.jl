@@ -314,6 +314,20 @@ end
     @test eltype(ITensor(1.0f0, Index(2)) ./ 2.0) === Float64
   end
 
+  @testset "Division /" begin
+    i = Index(2)
+    A = randomITensor(i)
+    B = A / 2
+    C = A / ITensor(2)
+    @test B isa ITensor
+    @test C isa ITensor
+    @test B ≈ C
+    @test A[1] / 2 ≈ B[1]
+    @test A[2] / 2 ≈ B[2]
+    @test A[1] / 2 ≈ C[1]
+    @test A[2] / 2 ≈ C[2]
+  end
+
   @testset "Convert to complex" begin
     i = Index(2, "i")
     j = Index(2, "j")
