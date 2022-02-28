@@ -62,7 +62,7 @@ function update(U₀)
   ∇ = loss'(U₀)
   U₀∇ = dag(U₀) * prime(∇; inds=sr)
   ∇U₀ = swapprime(dag(U₀∇), 0 => 1)
-  ∇ᴿ = ∇ - 1/2 * noprime(U₀ * (U₀∇ + ∇U₀))
+  ∇ᴿ = ∇ - 1 / 2 * noprime(U₀ * (U₀∇ + ∇U₀))
   U = RSVD(U₀, -η * ∇ᴿ, s)
   return U
 end

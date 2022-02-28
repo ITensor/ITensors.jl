@@ -980,10 +980,7 @@ end
 end
 
 @propagate_inbounds @inline function setindex!(
-  T::ITensor,
-  x::Number,
-  I1::Pair{<:Index,String},
-  I::Pair{<:Index,String}...
+  T::ITensor, x::Number, I1::Pair{<:Index,String}, I::Pair{<:Index,String}...
 )
   Iv = map(i -> i.first => val(i.first, i.second), (I1, I...))
   return setindex!(T, x, Iv...)
@@ -2302,7 +2299,7 @@ function product(A::ITensor, B::ITensor; apply_dag::Bool=false)
   elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
     # matrix-vector product
     apply_dag && error("apply_dag not supported for vector-matrix product")
-    return noprime(A * B; inds=!danglings_inds)
+    return replaceprime(A * B, 1 => 0; inds=!danglings_inds)
   end
 end
 
@@ -2321,6 +2318,9 @@ end
 
 # Alias apply with product
 const apply = product
+
+inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
+inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
 
 #######################################################################
 #

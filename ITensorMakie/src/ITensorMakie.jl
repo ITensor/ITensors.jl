@@ -138,6 +138,9 @@ function visualize!(
     graphplot!(f, g; graphplot_kwargs...)
   end
 
+  # Set rotation of edge labels to 0.
+  axis_plot.plot.elabels_rotation[] = zeros(ne(g))
+
   if !overwrite_axis && (_ndims(layout) == 2)
     hidedecorations!(axis_plot.axis)
     # This would hide the box around the plot
