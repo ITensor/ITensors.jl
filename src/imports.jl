@@ -123,6 +123,7 @@ import ITensors.NDTensors:
   contract,
   dense,
   denseblocks,
+  diaglength,
   dim,
   dims,
   disable_tblis,
