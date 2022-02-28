@@ -1409,7 +1409,7 @@ end
     @test hassameinds(inds(is; plev=0), (i,))
   end
 
-  @testset "product" begin
+  @testset "product/apply" begin
     s1 = Index(2, "s1")
     s2 = Index(2, "s2")
     s3 = Index(2, "s3")
@@ -1502,6 +1502,18 @@ end
     A = randomITensor(dag(s1'), dag(s2'), lA, rA)
     B = randomITensor(s1', s2', lB, rB)
     @test_throws ErrorException product(A, B)
+  end
+
+  @testset "inner ($ElType)" for ElType in (Float64, ComplexF64)
+    i = Index(2)
+    j = Index(2)
+    A = randomITensor(ElType, i', j', i, j)
+    x = randomITensor(ElType, i, j)
+    y = randomITensor(ElType, i, j)
+    @test inner(x, y) ≈ (dag(x) * y)[]
+    @test inner(x', A, y) ≈ (dag(x)' * A * y)[]
+    # No automatic priming like in the MPS case
+    @test_throws DimensionMismatch inner(x, A, y)
   end
 
   @testset "hastags" begin
