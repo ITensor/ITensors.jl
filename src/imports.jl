@@ -92,6 +92,7 @@ import LinearAlgebra:
   lmul!,
   mul!,
   norm,
+  normalize,
   normalize!,
   qr,
   rmul!,

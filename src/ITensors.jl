@@ -13,6 +13,7 @@ module ITensors
 using ChainRulesCore
 using Compat
 using HDF5
+using IsApprox
 using KrylovKit
 using LinearAlgebra
 using NDTensors

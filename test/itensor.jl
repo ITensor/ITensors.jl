@@ -68,6 +68,21 @@ end
       @test v[i₁ => "↓", i₂ => "↓"] == 0.0
     end
 
+    @testset "getindex with state string" begin
+      i₁ = Index(2, "S=1/2")
+      i₂ = Index(2, "S=1/2")
+      v = ITensor(i₁, i₂)
+      v["↓", "↑"] = 1.0
+      @test v[1, 1] == 0.0
+      @test v[1, 2] == 0.0
+      @test v[2, 1] == 1.0
+      @test v[2, 2] == 0.0
+      @test v["↑", "↑"] == 0.0
+      @test v["↑", "↓"] == 0.0
+      @test v["↓", "↑"] == 1.0
+      @test v["↓", "↓"] == 0.0
+    end
+
     @testset "getindex with end (lastindex, LastIndex)" begin
       a = Index(2)
       b = Index(3)
@@ -324,6 +339,20 @@ end
     @test eltype(ITensor(1.0f0, Index(2)) .* 2.0) === Float64
     @test eltype(ITensor(1.0f0, Index(2)) / 2.0) === Float64
     @test eltype(ITensor(1.0f0, Index(2)) ./ 2.0) === Float64
+  end
+
+  @testset "Division /" begin
+    i = Index(2)
+    A = randomITensor(i)
+    B = A / 2
+    C = A / ITensor(2)
+    @test B isa ITensor
+    @test C isa ITensor
+    @test B ≈ C
+    @test A[1] / 2 ≈ B[1]
+    @test A[2] / 2 ≈ B[2]
+    @test A[1] / 2 ≈ C[1]
+    @test A[2] / 2 ≈ C[2]
   end
 
   @testset "Convert to complex" begin
