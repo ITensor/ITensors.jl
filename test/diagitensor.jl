@@ -1,4 +1,7 @@
-using ITensors, Test
+using ITensors
+using ITensors.NDTensors
+using LinearAlgebra
+using Test
 
 @testset "diagITensor" begin
   d = 3
@@ -53,6 +56,14 @@ using ITensors, Test
           @test D[i => ii, j => jj] == complex(0.0)
         end
       end
+    end
+
+    @testset "diag" for ElType in (Float64, ComplexF64)
+      A = diagITensor(randn(ElType, d), i, j)
+      dA = diag(A)
+      @test dA isa DenseTensor{ElType,1}
+      @test dA[1] == A[1, 1]
+      @test dA[2] == A[2, 2]
     end
 
     @testset "diagITensor constructor (vector, order 2)" begin
