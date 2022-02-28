@@ -31,7 +31,7 @@ function ITensors.state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
   n = parse(Int, String(N))
   st = zeros(dim(s))
   st[n + 1] = 1.0
-  return st
+  return itensor(st, s)
 end
 
 function _op(::OpName"Id", ::SiteType"Qudit"; dim=2)

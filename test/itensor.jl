@@ -41,7 +41,22 @@ end
       @test !hascommoninds(A, C)
     end
 
-    @testset "Get element with end (lastindex, LastIndex)" begin
+    @testset "getindex with state string" begin
+      i₁ = Index(2, "S=1/2")
+      i₂ = Index(2, "S=1/2")
+      v = ITensor(i₁, i₂)
+      v[i₂ => "↑", i₁ => "↓"] = 1.0
+      @test v[1, 1] == 0.0
+      @test v[1, 2] == 0.0
+      @test v[2, 1] == 1.0
+      @test v[2, 2] == 0.0
+      @test v[i₁ => "↑", i₂ => "↑"] == 0.0
+      @test v[i₁ => "↑", i₂ => "↓"] == 0.0
+      @test v[i₁ => "↓", i₂ => "↑"] == 1.0
+      @test v[i₁ => "↓", i₂ => "↓"] == 0.0
+    end
+
+    @testset "getindex with end (lastindex, LastIndex)" begin
       a = Index(2)
       b = Index(3)
       A = randomITensor(a, b)
@@ -1394,7 +1409,7 @@ end
     @test hassameinds(inds(is; plev=0), (i,))
   end
 
-  @testset "product" begin
+  @testset "product/apply" begin
     s1 = Index(2, "s1")
     s2 = Index(2, "s2")
     s3 = Index(2, "s3")
@@ -1487,6 +1502,18 @@ end
     A = randomITensor(dag(s1'), dag(s2'), lA, rA)
     B = randomITensor(s1', s2', lB, rB)
     @test_throws ErrorException product(A, B)
+  end
+
+  @testset "inner ($ElType)" for ElType in (Float64, ComplexF64)
+    i = Index(2)
+    j = Index(2)
+    A = randomITensor(ElType, i', j', i, j)
+    x = randomITensor(ElType, i, j)
+    y = randomITensor(ElType, i, j)
+    @test inner(x, y) ≈ (dag(x) * y)[]
+    @test inner(x', A, y) ≈ (dag(x)' * A * y)[]
+    # No automatic priming like in the MPS case
+    @test_throws DimensionMismatch inner(x, A, y)
   end
 
   @testset "hastags" begin

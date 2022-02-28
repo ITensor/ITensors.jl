@@ -141,6 +141,31 @@ using ITensors, Test, Random
     @test abs((energy - energy_exact) / energy_exact) < 1e-4
   end
 
+  @testset "Compact Sweeps syntax" begin
+    N = 32
+    sites = siteinds("S=1/2", N)
+    Random.seed!(432)
+    psi0 = randomMPS(sites)
+
+    function ising(N; h=1.0)
+      os = OpSum()
+      for j in 1:N
+        j < N && (os -= ("Z", j, "Z", j + 1))
+        os -= h, "X", j
+      end
+      return os
+    end
+
+    h = 1.0
+    H = MPO(ising(N; h=h), sites)
+    energy, psi = dmrg(
+      H, psi0; nsweeps=5, maxdim=[10, 20], cutoff=1e-12, noise=1e-10, outputlevel=0
+    )
+
+    energy_exact = 1.0 - 1.0 / sin(π / (4 * N + 2))
+    @test abs((energy - energy_exact) / energy_exact) < 1e-4
+  end
+
   @testset "Transverse field Ising, conserve Sz parity" begin
     N = 32
     sites = siteinds("S=1/2", N; conserve_szparity=true)

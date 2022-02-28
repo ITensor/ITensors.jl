@@ -889,7 +889,7 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
   return tensor(T)[]
 end
 
-# Defining this with the type signature `I::Vararg{Integer, N}` instead of `I::Integere...` is much faster:
+# Defining this with the type signature `I::Vararg{Integer, N}` instead of `I::Integer...` is much faster:
 #
 # 58.720 ns (1 allocation: 368 bytes)
 #
@@ -977,6 +977,13 @@ end
   T::ITensor, x::Number, I::Vararg{<:Any,N}
 ) where {N}
   return settensor!(T, _setindex!!(tensor(T), x, I...))
+end
+
+@propagate_inbounds @inline function setindex!(
+  T::ITensor, x::Number, I1::Pair{<:Index,String}, I::Pair{<:Index,String}...
+)
+  Iv = map(i -> i.first => val(i.first, i.second), (I1, I...))
+  return setindex!(T, x, Iv...)
 end
 
 # XXX: what is this definition for?
@@ -2292,7 +2299,7 @@ function product(A::ITensor, B::ITensor; apply_dag::Bool=false)
   elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
     # matrix-vector product
     apply_dag && error("apply_dag not supported for vector-matrix product")
-    return noprime(A * B; inds=!danglings_inds)
+    return replaceprime(A * B, 1 => 0; inds=!danglings_inds)
   end
 end
 
@@ -2311,6 +2318,9 @@ end
 
 # Alias apply with product
 const apply = product
+
+inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
+inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
 
 #######################################################################
 #
