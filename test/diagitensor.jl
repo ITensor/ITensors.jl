@@ -55,6 +55,16 @@ using ITensors, Test
       end
     end
 
+    @testset "diag" for ElType in (Float64, ComplexF64)
+      χ = 2
+      i, j = Index.(χ, ("i", "j"))
+      A = diagITensor(randn(ElType, χ), i, j)
+      d = diag(A)
+      @test d isa DenseTensor{ElType,1}
+      @test d[1] == A[1, 1]
+      @test d[2] == A[2, 2]
+    end
+
     @testset "diagITensor constructor (vector, order 2)" begin
       D = diagITensor(v, i, j)
 

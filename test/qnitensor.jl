@@ -1686,6 +1686,17 @@ Random.seed!(1234)
       @test expA ≈ exp(dense(A))
     end
 
+    @testset "diag" for ElType in (Float64, ComplexF64)
+      χ = [QN(0) => 1, QN(1) => 2]
+      i, j = Index.((χ,), ("i", "j"))
+      A = randomITensor(ElType, i, j) 
+      d = diag(A)
+      @test d isa DenseTensor{ElType,1}
+      for n in 1:dim(χ)
+        @test d[n] == A[n, n]
+      end
+    end
+
     @testset "Mixed arrows" begin
       i1 = Index([QN(0) => 1, QN(1) => 2], "i1")
       i2 = Index([QN(0) => 1, QN(1) => 2], "i2")

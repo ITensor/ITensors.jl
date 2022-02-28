@@ -49,6 +49,6 @@ import Base:
 
 import Base.Broadcast: Broadcasted, BroadcastStyle
 
-import LinearAlgebra: exp, norm
+import LinearAlgebra: diag, exp, norm
 
 import TupleTools: isperm

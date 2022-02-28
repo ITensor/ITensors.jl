@@ -84,6 +84,7 @@ import HDF5: read, write
 import LinearAlgebra:
   axpby!,
   axpy!,
+  diag,
   dot,
   eigen,
   exp,

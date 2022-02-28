@@ -1,6 +1,9 @@
 using ITensors
+using LinearAlgebra
 using Test
+
 using Combinatorics: permutations
+
 import Random: seed!
 
 # Enable debug checking for these tests
@@ -29,6 +32,15 @@ end
       i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = ITensor(i, j)
       @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
+    end
+
+    @testset "diag" for ElType in (Float64, ComplexF64)
+      i, j = Index.(2, ("i", "j"))
+      A = randomITensor(ElType, i, j)
+      d = diag(A)
+      @test d isa DenseTensor{ElType,1}
+      @test d[1] == A[1, 1]
+      @test d[2] == A[2, 2]
     end
 
     @testset "Index set operations" begin

@@ -1746,6 +1746,8 @@ iscombiner(T::ITensor)::Bool = (storage(T) isa Combiner)
 # TODO: add isdiag(::Tensor) to NDTensors
 isdiag(T::ITensor)::Bool = (storage(T) isa Diag || storage(T) isa DiagBlockSparse)
 
+diag(T::ITensor) = diag(tensor(T))
+
 function can_combine_contract(A::ITensor, B::ITensor)::Bool
   return hasqns(A) &&
          hasqns(B) &&
