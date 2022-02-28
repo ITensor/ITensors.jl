@@ -6,7 +6,20 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
-ITensors v0.1.0 Release Notes
-==============================
+ITensorMakie v0.1.1 Release Notes
+=================================
+
+Bugs:
+
+Enhancements:
+
+- Disable rotating edge labels with edge (#832)
+
+ITensorMakie v0.1.0 Release Notes
+=================================
+
+Bugs:
+
+Enhancements:
 
 - Register ITensorMakie package, code in ITensors.jl repository
