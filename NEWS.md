@@ -13,6 +13,9 @@ Bugs:
 
 - Fix `inner` `MPS` `rrule` for complex and QNs, add tests (#836)
 - Fix differentation of apply(::ITensor, ::ITensor) (#831)
+- Fix string indexing when setting elements (#826)
+    - Fix string indexing when setting elements, such as `T[i => "Up"] = 1.0`.
+    - Change `ITensor` `rrule` constructor signature from `typeof(ITensor)` to `Type{ITensor}`.
 
 Enhancements:
 
@@ -28,6 +31,8 @@ Enhancements:
 - Add more compact kwarg sweeps syntax for DMRG (#834)
 - Fix prime/tag rrule for MPS/MPO (#830)
 - Simplify Dense AutoMPO Backend, output lower triangular MPO in dense case (#828)
+- Fix `ITensor` `rrule` with `Array` reshaping (#824)
+- Add Riemannian optimization example
 
 ITensors v0.2.15 Release Notes
 ==============================

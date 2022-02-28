@@ -6,7 +6,20 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
-ITensors v0.0.1 Release Notes
-==============================
+ITensorGPU v0.0.2 Release Notes
+===============================
+
+Bugs:
+
+- Remove unnecessary `CuDense` type equality definition (#823)
+
+Enhancements:
+
+ITensorGPU v0.0.1 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
 
 - Register ITensorGPU package, code in ITensors.jl repository
