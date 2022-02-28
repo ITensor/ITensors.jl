@@ -106,7 +106,9 @@ visualize(ψ::MPS, args...; kwargs...) = visualize(data(ψ), args...; kwargs...)
 function visualize(tn::Tuple{ITensor,Vararg{ITensor}}, args...; kwargs...)
   return visualize(collect(tn), args...; kwargs...)
 end
-visualize(t1::ITensor, tn_tail::ITensor...; kwargs...) = visualize([t1, tn_tail...]; kwargs...)
+function visualize(t1::ITensor, tn_tail::ITensor...; kwargs...)
+  return visualize([t1, tn_tail...]; kwargs...)
+end
 
 # Special case single ITensor
 function visualize(t::ITensor, sequence=nothing; vertex_labels_prefix, kwargs...)
