@@ -1701,7 +1701,7 @@ Random.seed!(1234)
     @testset "diag" for ElType in (Float64, ComplexF64)
       χ = [QN(0) => 1, QN(1) => 2]
       i, j = Index.((χ,), ("i", "j"))
-      A = randomITensor(ElType, i, j) 
+      A = randomITensor(ElType, i, j)
       _, S, _ = svd(A, i)
       d = diag(S)
       @test d isa DenseTensor{real(ElType),1}
