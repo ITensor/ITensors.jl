@@ -5,11 +5,12 @@ using ChainRulesCore: rrule_via_ad
 
 include("utils/chainrulestestutils.jl")
 
-using Zygote: ZygoteRuleConfig
+using Zygote: ZygoteRuleConfig, gradient
 
 @testset "ChainRules rrules: basic ITensor operations" begin
   i = Index(2, "i")
   A = randomITensor(i', dag(i))
+  V = randomITensor(i)
   Ac = randomITensor(ComplexF64, i', dag(i))
   B = randomITensor(i', dag(i))
   C = ITensor(3.4)
@@ -47,6 +48,7 @@ using Zygote: ZygoteRuleConfig
   test_rrule(dag, A; check_inferred=false)
   test_rrule(permute, A, reverse(inds(A)); check_inferred=false)
 
+  test_rrule(ZygoteRuleConfig(), apply, A, V; rrule_f=rrule_via_ad, check_inferred=false)
   function f(A, B)
     i = Index(2)
     j = Index(2)
@@ -212,9 +214,62 @@ using Zygote: ZygoteRuleConfig
   @test_throws ErrorException f'(args...)
 end
 
+@testset "MPS rrules" begin
+  s = siteinds("S=1/2", 2)
+  ψ = randomMPS(s)
+
+  args = (ψ,)
+  f = x -> inner(x', x')
+  # TODO: Need to make MPS type compatible with FiniteDifferences.
+  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
+
+  args = (ψ,)
+  f = x -> inner(prime(x), prime(x))
+  # TODO: Need to make MPS type compatible with FiniteDifferences.
+  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
+end
+
 @testset "ChainRules rrules: op" begin
   s = siteinds("Qubit", 4)
   f = x -> op("Ry", s, 1; θ=x)[1, 2]
   args = (0.2,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+end
+
+@testset "MPS ($ElType)" for ElType in (Float64, ComplexF64)
+  n = 4
+  s = siteinds("S=1/2", n; conserve_qns=true)
+  function heisenberg(n)
+    os = OpSum()
+    for j in 1:(n - 1)
+      os += 0.5, "S+", j, "S-", j + 1
+      os += 0.5, "S-", j, "S+", j + 1
+      os += "Sz", j, "Sz", j + 1
+    end
+    return os
+  end
+  H = MPO(heisenberg(n), s)
+  ψ = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=2)
+
+  f = x -> inner(x, x)
+  args = (ψ,)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
+
+  f = x -> inner(x', H, x)
+  args = (ψ,)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1]' - 2 * H * args[1]) ≈ 0 atol = 1e-13
+
+  f = x -> inner(x', x)
+  args = (ψ,)
+  @test_throws ErrorException gradient(f, args...)
+
+  f = x -> inner(x, H, x)
+  args = (ψ,)
+  @test_throws ErrorException gradient(f, args...)
 end

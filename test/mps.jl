@@ -9,18 +9,17 @@ Random.seed!(1234)
 include("util.jl")
 
 @testset "MPS Basics" begin
-  N = 10
-  sites = [Index(2, "Site") for n in 1:N]
+  sites = [Index(2, "Site") for n in 1:10]
   psi = MPS(sites)
-  @test length(psi) == N
+  @test length(psi) == length(psi)
   @test length(MPS()) == 0
-  @test linkdims(psi) == fill(1, N - 1)
+  @test linkdims(psi) == fill(1, length(psi) - 1)
   @test isnothing(flux(psi))
 
   psi = MPS(sites; linkdims=3)
-  @test length(psi) == N
+  @test length(psi) == length(psi)
   @test length(MPS()) == 0
-  @test linkdims(psi) == fill(3, N - 1)
+  @test linkdims(psi) == fill(3, length(psi) - 1)
   @test isnothing(flux(psi))
 
   str = split(sprint(show, psi), '\n')
@@ -34,8 +33,8 @@ include("util.jl")
   @test hasind(psi[3], linkind(psi, 2))
   @test hasind(psi[3], linkind(psi, 3))
 
-  @test isnothing(linkind(psi, N))
-  @test isnothing(linkind(psi, N + 1))
+  @test isnothing(linkind(psi, length(psi)))
+  @test isnothing(linkind(psi, length(psi) + 1))
   @test isnothing(linkind(psi, 0))
   @test isnothing(linkind(psi, -1))
   @test linkind(psi, 3) == commonind(psi[3], psi[4])
@@ -52,112 +51,112 @@ include("util.jl")
   end
 
   @testset "Missing links" begin
-    psi = MPS([randomITensor(sites[i]) for i in 1:N])
+    psi = MPS([randomITensor(sites[i]) for i in 1:10])
     @test isnothing(linkind(psi, 1))
     @test isnothing(linkind(psi, 5))
-    @test isnothing(linkind(psi, N))
+    @test isnothing(linkind(psi, length(psi)))
     @test maxlinkdim(psi) == 1
     @test psi ⋅ psi ≈ *(dag(psi)..., psi...)[]
   end
 
   @testset "productMPS" begin
     @testset "vector of string input" begin
-      sites = siteinds("S=1/2", N)
-      state = fill("", N)
-      for j in 1:N
+      sites = siteinds("S=1/2", 10)
+      state = fill("", length(sites))
+      for j in 1:length(sites)
         state[j] = isodd(j) ? "Up" : "Dn"
       end
       psi = MPS(sites, state)
-      for j in 1:N
+      for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
       psi = productMPS(sites, state)
-      for j in 1:N
+      for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
-      @test_throws DimensionMismatch MPS(sites, fill("", N - 1))
-      @test_throws DimensionMismatch productMPS(sites, fill("", N - 1))
+      @test_throws DimensionMismatch MPS(sites, fill("", length(psi) - 1))
+      @test_throws DimensionMismatch productMPS(sites, fill("", length(psi) - 1))
     end
 
     @testset "String input" begin
-      sites = siteinds("S=1/2", N)
+      sites = siteinds("S=1/2", 10)
       psi = MPS(sites, "Dn")
-      for j in 1:N
+      for j in 1:length(psi)
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
       psi = productMPS(sites, "Dn")
-      for j in 1:N
+      for j in 1:length(psi)
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
 
       psi = MPS(sites, "X+")
-      for j in 1:N
+      for j in 1:length(psi)
         @test (psi[j] * op(sites, "X", j) * dag(prime(psi[j], "Site")))[] ≈ 1.0
       end
     end
 
     @testset "Int input" begin
-      sites = siteinds("S=1/2", N)
+      sites = siteinds("S=1/2", 10)
       psi = MPS(sites, 2)
-      for j in 1:N
+      for j in 1:length(psi)
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
       psi = productMPS(sites, 2)
-      for j in 1:N
+      for j in 1:length(psi)
         sign = -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
     end
 
     @testset "vector of int input" begin
-      sites = siteinds("S=1/2", N)
-      state = fill(0, N)
-      for j in 1:N
+      sites = siteinds("S=1/2", 10)
+      state = fill(0, length(sites))
+      for j in 1:length(sites)
         state[j] = isodd(j) ? 1 : 2
       end
       psi = MPS(sites, state)
-      for j in 1:N
+      for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
       psi = productMPS(sites, state)
-      for j in 1:N
+      for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
     end
 
     @testset "vector of ivals input" begin
-      sites = siteinds("S=1/2", N)
-      states = fill(0, N)
-      for j in 1:N
+      sites = siteinds("S=1/2", 10)
+      states = fill(0, length(sites))
+      for j in 1:length(sites)
         states[j] = isodd(j) ? 1 : 2
       end
       ivals = [sites[n] => states[n] for n in 1:length(sites)]
       psi = MPS(ivals)
-      for j in 1:N
+      for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
       psi = productMPS(ivals)
-      for j in 1:N
+      for j in 1:length(psi)
         sign = isodd(j) ? +1.0 : -1.0
         @test (psi[j] * op(sites, "Sz", j) * dag(prime(psi[j], "Site")))[] ≈ sign / 2
       end
 
       @testset "ComplexF64 eltype" begin
-        sites = siteinds("S=1/2", N)
-        psi = MPS(ComplexF64, sites, fill(1, N))
-        for j in 1:N
+        sites = siteinds("S=1/2", 10)
+        psi = MPS(ComplexF64, sites, fill(1, length(sites)))
+        for j in 1:length(psi)
           @test eltype(psi[j]) == ComplexF64
         end
-        psi = productMPS(ComplexF64, sites, fill(1, N))
-        for j in 1:N
+        psi = productMPS(ComplexF64, sites, fill(1, length(psi)))
+        for j in 1:length(psi)
           @test eltype(psi[j]) == ComplexF64
         end
         @test eltype(psi) == ITensor
@@ -202,12 +201,12 @@ include("util.jl")
     phi = randomMPS(sites)
     psi = randomMPS(sites)
     phipsi = dag(phi[1]) * psi[1]
-    for j in 2:N
+    for j in 2:length(psi)
       phipsi *= dag(phi[j]) * psi[j]
     end
     @test phipsi[] ≈ inner(phi, psi)
 
-    badsites = [Index(2) for n in 1:(N + 1)]
+    badsites = [Index(2) for n in 1:(length(psi) + 1)]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi, badpsi)
   end
@@ -258,7 +257,7 @@ include("util.jl")
     psidag = dag(psi)
     #ITensors.prime_linkinds!(psidag)
     psipsi = psidag[1] * psi[1]
-    for j in 2:N
+    for j in 2:length(psi)
       psipsi *= psidag[j] * psi[j]
     end
     @test psipsi[] ≈ inner(psi, psi)
@@ -268,45 +267,134 @@ include("util.jl")
     psi = randomMPS(sites; linkdims=10)
     psidag = sim(linkinds, dag(psi))
     psi² = ITensor(1)
-    for j in 1:N
+    for j in 1:length(psi)
       psi² *= psidag[j] * psi[j]
     end
     @test psi²[] ≈ psi ⋅ psi
     @test sqrt(psi²[]) ≈ norm(psi)
 
     psi = randomMPS(sites; linkdims=10)
-    psi .*= 1:N
-    @test norm(psi) ≈ factorial(N)
+    psi .*= 1:length(psi)
+    @test norm(psi) ≈ factorial(length(psi))
 
     psi = randomMPS(sites; linkdims=10)
-    for j in 1:N
+    for j in 1:length(psi)
       psi[j] .*= j
     end
     # This fails because it modifies the MPS ITensors
     # directly, which ruins the orthogonality
-    @test norm(psi) ≉ factorial(N)
+    @test norm(psi) ≉ factorial(length(psi))
     reset_ortho_lims!(psi)
-    @test norm(psi) ≈ factorial(N)
+    @test norm(psi) ≈ factorial(length(psi))
+
+    # Test complex
+    psi = randomMPS(ComplexF64, sites; linkdims=10)
+
+    norm_psi = norm(psi)
+    @test norm_psi ≈ 1
+    @test isreal(norm_psi)
+
+    lognorm_psi = lognorm(psi)
+    @test lognorm_psi ≈ 0 atol = 1e-15
+    @test isreal(lognorm_psi)
+
+    psi = psi .* 2
+
+    norm_psi = norm(psi)
+    @test norm_psi ≈ 2^length(psi)
+    @test isreal(norm_psi)
+
+    lognorm_psi = lognorm(psi)
+    @test lognorm_psi ≈ log(2) * length(psi)
+    @test isreal(lognorm_psi)
+  end
+
+  @testset "normalize/normalize! MPS" begin
+    psi = randomMPS(sites; linkdims=10)
+
+    @test norm(psi) ≈ 1
+    @test norm(normalize(psi)) ≈ 1
+
+    α = 3.5
+    phi = α * psi
+    @test norm(phi) ≈ α
+    @test norm(normalize(phi)) ≈ 1
+    @test norm(psi) ≈ 1
+    @test inner(phi, psi) ≈ α
+
+    normalize!(phi)
+    @test norm(phi) ≈ 1
+    @test norm(normalize(phi)) ≈ 1
+    @test norm(psi) ≈ 1
+    @test inner(phi, psi) ≈ 1
+
+    # Large number of sites
+    psi = randomMPS(siteinds("S=1/2", 1_000); linkdims=10)
+
+    @test norm(psi) ≈ 1.0
+    @test lognorm(psi) ≈ 0.0 atol = 1e-15
+
+    α = 2
+    phi = α .* psi
+
+    @test isnan(norm(phi))
+    @test lognorm(phi) ≈ length(psi) * log(α)
+
+    phi = normalize(phi)
+
+    @test norm(phi) ≈ 1
+
+    # Test scaling only a subset of sites
+    psi = randomMPS(siteinds("S=1/2", 10); linkdims=10)
+
+    @test norm(psi) ≈ 1.0
+    @test lognorm(psi) ≈ 0.0 atol = 1e-15
+
+    α = 2
+    r = (length(psi) ÷ 2 - 1):(length(psi) ÷ 2 + 1)
+    phi = copy(psi)
+    for n in r
+      phi[n] = α * psi[n]
+    end
+
+    @test norm(phi) ≈ α^length(r)
+    @test lognorm(phi) ≈ length(r) * log(α)
+
+    phi = normalize(phi)
+
+    @test norm(phi) ≈ 1
+
+    # Output the lognorm
+    α = 2
+    psi = randomMPS(siteinds("S=1/2", 30); linkdims=10)
+    psi = α .* psi
+    @test norm(psi) ≈ α^length(psi)
+    @test lognorm(psi) ≈ length(psi) * log(α)
+    lognorm_psi = Float64[]
+    phi = normalize(psi; (lognorm!)=lognorm_psi)
+    @test lognorm_psi[end] ≈ lognorm(psi)
+    @test norm(phi) ≈ 1
+    @test lognorm(phi) ≈ 0 atol = 1e-14
   end
 
   @testset "lognorm MPS" begin
     psi = randomMPS(sites; linkdims=10)
-    for j in 1:N
+    for j in eachindex(psi)
       psi[j] .*= j
     end
     psidag = sim(linkinds, dag(psi))
     psi² = ITensor(1)
-    for j in 1:N
+    for j in eachindex(psi)
       psi² *= psidag[j] * psi[j]
     end
     @test psi²[] ≈ psi ⋅ psi
     @test 0.5 * log(psi²[]) ≉ lognorm(psi)
-    @test lognorm(psi) ≉ log(factorial(N))
+    @test lognorm(psi) ≉ log(factorial(length(psi)))
     # Need to manually change the orthogonality
     # limits back to 1:length(psi)
     reset_ortho_lims!(psi)
     @test 0.5 * log(psi²[]) ≈ lognorm(psi)
-    @test lognorm(psi) ≈ log(factorial(N))
+    @test lognorm(psi) ≈ log(factorial(length(psi)))
   end
 
   @testset "scaling MPS" begin
@@ -350,10 +438,9 @@ include("util.jl")
   @testset "+ MPS with coefficients" begin
     Random.seed!(1234)
 
-    N = 20
     conserve_qns = true
 
-    s = siteinds("S=1/2", N; conserve_qns=conserve_qns)
+    s = siteinds("S=1/2", 20; conserve_qns=conserve_qns)
     state = n -> isodd(n) ? "↑" : "↓"
 
     ψ₁ = randomMPS(s, state; linkdims=4)
@@ -402,31 +489,31 @@ include("util.jl")
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
   end
 
-  sites = siteinds(2, N)
+  sites = siteinds(2, 10)
   psi = MPS(sites)
-  @test length(psi) == N # just make sure this works
-  @test length(siteinds(psi)) == N
+  @test length(psi) == 10 # just make sure this works
+  @test length(siteinds(psi)) == length(psi)
 
   psi = randomMPS(sites)
   l0s = linkinds(psi)
-  orthogonalize!(psi, N - 1)
+  orthogonalize!(psi, length(psi) - 1)
   ls = linkinds(psi)
   for (l0, l) in zip(l0s, ls)
     @test tags(l0) == tags(l)
   end
-  @test ITensors.leftlim(psi) == N - 2
-  @test ITensors.rightlim(psi) == N
+  @test ITensors.leftlim(psi) == length(psi) - 2
+  @test ITensors.rightlim(psi) == length(psi)
   orthogonalize!(psi, 2)
   @test ITensors.leftlim(psi) == 1
   @test ITensors.rightlim(psi) == 3
   psi = randomMPS(sites)
-  ITensors.setrightlim!(psi, N + 1) # do this to test qr 
+  ITensors.setrightlim!(psi, length(psi) + 1) # do this to test qr 
   # from rightmost tensor
-  orthogonalize!(psi, div(N, 2))
-  @test ITensors.leftlim(psi) == div(N, 2) - 1
-  @test ITensors.rightlim(psi) == div(N, 2) + 1
+  orthogonalize!(psi, div(length(psi), 2))
+  @test ITensors.leftlim(psi) == div(length(psi), 2) - 1
+  @test ITensors.rightlim(psi) == div(length(psi), 2) + 1
 
-  @test isnothing(linkind(MPS(fill(ITensor(), N), 0, N + 1), 1))
+  @test isnothing(linkind(MPS(fill(ITensor(), length(psi)), 0, length(psi) + 1), 1))
 
   @testset "replacebond!" begin
     # make sure factorization preserves the bond index tags
@@ -458,9 +545,8 @@ include("util.jl")
 end
 
 @testset "orthogonalize! with QNs" begin
-  N = 8
-  sites = siteinds("S=1/2", N; conserve_qns=true)
-  init_state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+  sites = siteinds("S=1/2", 8; conserve_qns=true)
+  init_state = [isodd(n) ? "Up" : "Dn" for n in 1:length(sites)]
   psi0 = MPS(sites, init_state)
   orthogonalize!(psi0, 4)
   @test ITensors.leftlim(psi0) == 3
@@ -498,11 +584,9 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
 end
 
 @testset "MPS gauging and truncation" begin
-  N = 30
-
   @testset "orthogonalize! method" begin
     c = 12
-    M = basicRandomMPS(N)
+    M = basicRandomMPS(30)
     orthogonalize!(M, c)
 
     @test ITensors.leftlim(M) == c - 1
@@ -519,10 +603,10 @@ end
     end
 
     # Test for right-orthogonality
-    R = M[N] * prime(M[N], "Link")
-    r = linkind(M, N - 1)
+    R = M[length(M)] * prime(M[length(M)], "Link")
+    r = linkind(M, length(M) - 1)
     @test norm(R - delta(r, r')) < 1E-12
-    for j in reverse((c + 1):(N - 1))
+    for j in reverse((c + 1):(length(M) - 1))
       R = R * M[j] * prime(M[j], "Link")
       r = linkind(M, j - 1)
       @test norm(R - delta(r, r')) < 1E-12
@@ -532,17 +616,17 @@ end
   end
 
   @testset "truncate! method" begin
-    M = basicRandomMPS(N; dim=10)
+    M = basicRandomMPS(10; dim=10)
     M0 = copy(M)
     truncate!(M; maxdim=5)
 
     @test ITensors.rightlim(M) == 2
 
     # Test for right-orthogonality
-    R = M[N] * prime(M[N], "Link")
-    r = linkind(M, N - 1)
+    R = M[length(M)] * prime(M[length(M)], "Link")
+    r = linkind(M, length(M) - 1)
     @test norm(R - delta(r, r')) < 1E-12
-    for j in reverse(2:(N - 1))
+    for j in reverse(2:(length(M) - 1))
       R = R * M[j] * prime(M[j], "Link")
       r = linkind(M, j - 1)
       @test norm(R - delta(r, r')) < 1E-12
@@ -554,16 +638,15 @@ end
 
 @testset "Other MPS methods" begin
   @testset "sample! method" begin
-    N = 10
-    sites = [Index(3, "Site,n=$n") for n in 1:N]
+    sites = [Index(3, "Site,n=$n") for n in 1:10]
     psi = randomMPS(sites; linkdims=3)
     nrm2 = inner(psi, psi)
     psi[1] *= (1.0 / sqrt(nrm2))
 
     s = sample!(psi)
 
-    @test length(s) == N
-    for n in 1:N
+    @test length(s) == length(psi)
+    for n in 1:length(psi)
       @test 1 <= s[n] <= 3
     end
 
@@ -571,7 +654,7 @@ end
     orthogonalize!(psi, 3)
     @test_throws ErrorException sample(psi)
 
-    # Throws becase not normalized
+    # Throws because not normalized
     orthogonalize!(psi, 1)
     psi[1] *= (5.0 / norm(psi[1]))
     @test_throws ErrorException sample(psi)
@@ -580,13 +663,12 @@ end
     orthogonalize!(psi, 1)
     psi[1] *= (1.0 / norm(psi[1]))
     s = sample(psi)
-    @test length(s) == N
+    @test length(s) == length(psi)
   end
 
   @testset "randomMPS with chi > 1" begin
-    N = 20
     chi = 8
-    sites = siteinds(2, N)
+    sites = siteinds(2, 20)
     M = randomMPS(sites; linkdims=chi)
 
     @test ITensors.leftlim(M) == 0
@@ -597,10 +679,10 @@ end
     @test maxlinkdim(M) == chi
 
     # Test for right-orthogonality
-    R = M[N] * prime(M[N], "Link")
-    r = linkind(M, N - 1)
+    R = M[length(M)] * prime(M[length(M)], "Link")
+    r = linkind(M, length(M) - 1)
     @test norm(R - delta(r, r')) < 1E-10
-    for j in reverse(2:(N - 1))
+    for j in reverse(2:(length(M) - 1))
       R = R * M[j] * prime(M[j], "Link")
       r = linkind(M, j - 1)
       @test norm(R - delta(r, r')) < 1E-10
@@ -612,12 +694,11 @@ end
   end
 
   @testset "randomMPS from initial state (QN case)" begin
-    N = 20
     chi = 8
-    sites = siteinds("S=1/2", N; conserve_qns=true)
+    sites = siteinds("S=1/2", 20; conserve_qns=true)
 
     # Make flux-zero random MPS
-    state = [isodd(n) ? 1 : 2 for n in 1:N]
+    state = [isodd(n) ? 1 : 2 for n in 1:length(sites)]
     M = randomMPS(sites, state; linkdims=chi)
     @test flux(M) == QN("Sz", 0)
 
@@ -639,15 +720,14 @@ end
   end
 
   @testset "Expected value and Correlations" begin
-    N = 4
     m = 2
 
     # Non-fermionic real case - spin system with QNs (very restrictive on allowed ops)
-    s = siteinds("S=1/2", N; conserve_qns=true)
+    s = siteinds("S=1/2", 4; conserve_qns=true)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     test_correlation_matrix(psi, [("S-", "S+"), ("S+", "S-")])
 
-    s = siteinds("S=1/2", N; conserve_qns=false)
+    s = siteinds("S=1/2", length(s); conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     test_correlation_matrix(
       psi,
@@ -699,13 +779,13 @@ end
     end
 
     # Electron case
-    s = siteinds("Electron", N)
+    s = siteinds("Electron", 8)
     psi = randomMPS(s; linkdims=m)
     test_correlation_matrix(
       psi, [("Cdagup", "Cup"), ("Cup", "Cdagup"), ("Cup", "Cdn"), ("Cdagdn", "Cdn")]
     )
 
-    s = siteinds("Electron", N; conserve_qns=false)
+    s = siteinds("Electron", 8; conserve_qns=false)
     psi = randomMPS(s; linkdims=m)
     test_correlation_matrix(
       psi,
@@ -736,11 +816,11 @@ end
     end
 
     # Fermion case
-    s = siteinds("Fermion", N)
+    s = siteinds("Fermion", 8)
     psi = randomMPS(s; linkdims=m)
     test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
 
-    s = siteinds("Fermion", N; conserve_qns=false)
+    s = siteinds("Fermion", 8; conserve_qns=false)
     psi = randomMPS(s; linkdims=m)
     test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
   end #testset
@@ -778,8 +858,7 @@ end
   end
 
   @testset "swapbondsites" begin
-    N = 5
-    sites = siteinds("S=1/2", N)
+    sites = siteinds("S=1/2", 5)
     ψ0 = randomMPS(sites)
     ψ = replacebond(ψ0, 3, ψ0[3] * ψ0[4]; swapsites=true, cutoff=1e-15)
     @test siteind(ψ, 1) == siteind(ψ0, 1)
@@ -801,8 +880,7 @@ end
   end
 
   @testset "map!" begin
-    N = 5
-    s = siteinds("S=½", N)
+    s = siteinds("S=½", 5)
     M0 = MPS(s, "↑")
 
     # Test map! with limits getting set
@@ -811,7 +889,7 @@ end
     @test ITensors.rightlim(M) == 2
     map!(prime, M)
     @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == N + 1
+    @test ITensors.rightlim(M) == length(M0) + 1
 
     # Test map! without limits getting set
     M = orthogonalize(M0, 1)
@@ -825,7 +903,7 @@ end
     @test ITensors.rightlim(M) == 2
     prime!(M; set_limits=true)
     @test ITensors.leftlim(M) == 0
-    @test ITensors.rightlim(M) == N + 1
+    @test ITensors.rightlim(M) == length(M0) + 1
 
     # Test prime! without limits getting set
     M = orthogonalize(M0, 1)
@@ -835,8 +913,7 @@ end
   end
 
   @testset "setindex!(::MPS, _, ::Colon)" begin
-    N = 4
-    s = siteinds("S=½", N)
+    s = siteinds("S=½", 4)
     ψ = randomMPS(s)
     ϕ = MPS(s, "↑")
     orthogonalize!(ϕ, 1)
@@ -849,7 +926,7 @@ end
     orthogonalize!(ϕ, 1)
     ψ[:] = ITensors.data(ϕ)
     @test ITensors.leftlim(ψ) == 0
-    @test ITensors.rightlim(ψ) == N + 1
+    @test ITensors.rightlim(ψ) == length(ψ) + 1
     @test inner(ψ, ϕ) ≈ 1
   end
 

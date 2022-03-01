@@ -889,6 +889,19 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
   return tensor(T)[]
 end
 
+function _vals(is::Indices, I::String...)
+  return val.(is, I)
+end
+
+function _vals(T::ITensor, I::String...)
+  return _vals(inds(T), I...)
+end
+
+# Enable indexing with string values, like `A["Up"]`.
+function getindex(T::ITensor, I1::String, Is::String...)
+  return T[_vals(T, I1, Is...)...]
+end
+
 # Defining this with the type signature `I::Vararg{Integer, N}` instead of `I::Integer...` is much faster:
 #
 # 58.720 ns (1 allocation: 368 bytes)
@@ -1013,6 +1026,12 @@ function setindex!(T::ITensor, A::AbstractArray, ivs::Pair{<:Index}...)
   # from the ITensor indices.
   pvals = NDTensors.permute(vals, p)
   T[pvals...] = PermutedDimsArray(reshape(A, length.(vals)), p)
+  return T
+end
+
+# Enable indexing with string values, like `A["Up"]`.
+function setindex!(T::ITensor, x::Number, I1::String, Is::String...)
+  T[_vals(T, I1, Is...)...] = x
   return T
 end
 
@@ -1666,6 +1685,8 @@ end
 
 (A::ITensor / x::Number) = itensor(tensor(A) / x)
 
+(T1::ITensor / T2::ITensor) = T1 / T2[]
+
 -(A::ITensor) = itensor(-tensor(A))
 
 _isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
@@ -1745,6 +1766,10 @@ iscombiner(T::ITensor)::Bool = (storage(T) isa Combiner)
 
 # TODO: add isdiag(::Tensor) to NDTensors
 isdiag(T::ITensor)::Bool = (storage(T) isa Diag || storage(T) isa DiagBlockSparse)
+
+diag(T::ITensor) = diag(tensor(T))
+
+diaglength(T::ITensor) = diaglength(tensor(T))
 
 function can_combine_contract(A::ITensor, B::ITensor)::Bool
   return hasqns(A) &&
@@ -2299,7 +2324,7 @@ function product(A::ITensor, B::ITensor; apply_dag::Bool=false)
   elseif !isempty(common_paired_indsA) && isempty(common_paired_indsB)
     # matrix-vector product
     apply_dag && error("apply_dag not supported for vector-matrix product")
-    return noprime(A * B; inds=!danglings_inds)
+    return replaceprime(A * B, 1 => 0; inds=!danglings_inds)
   end
 end
 
@@ -2318,6 +2343,9 @@ end
 
 # Alias apply with product
 const apply = product
+
+inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
+inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
 
 #######################################################################
 #

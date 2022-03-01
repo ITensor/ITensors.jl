@@ -84,6 +84,7 @@ import HDF5: read, write
 import LinearAlgebra:
   axpby!,
   axpy!,
+  diag,
   dot,
   eigen,
   exp,
@@ -91,6 +92,7 @@ import LinearAlgebra:
   lmul!,
   mul!,
   norm,
+  normalize,
   normalize!,
   qr,
   rmul!,
@@ -122,6 +124,7 @@ import ITensors.NDTensors:
   contract,
   dense,
   denseblocks,
+  diaglength,
   dim,
   dims,
   disable_tblis,

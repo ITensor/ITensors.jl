@@ -138,6 +138,8 @@ product(::Vector{ <: ITensor}, ::ITensors.AbstractMPS)
 dot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
 logdot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
 norm(::ITensors.AbstractMPS)
+normalize(::ITensors.AbstractMPS)
+normalize!(::ITensors.AbstractMPS)
 lognorm(::ITensors.AbstractMPS)
 +(::MPS, ::MPS)
 contract(::MPO, ::MPS)

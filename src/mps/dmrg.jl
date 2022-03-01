@@ -315,3 +315,20 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   end
   return (energy, psi)
 end
+
+function _dmrg_sweeps(; nsweeps, maxdim, mindim=1, cutoff=1e-8, noise=0.0, kwargs...)
+  sweeps = Sweeps(nsweeps)
+  setmaxdim!(sweeps, maxdim...)
+  setmindim!(sweeps, mindim...)
+  setcutoff!(sweeps, cutoff...)
+  setnoise!(sweeps, noise...)
+  return sweeps
+end
+
+function dmrg(x1, x2, psi0::MPS; kwargs...)
+  return dmrg(x1, x2, psi0, _dmrg_sweeps(; kwargs...); kwargs...)
+end
+
+function dmrg(x1, psi0::MPS; kwargs...)
+  return dmrg(x1, psi0, _dmrg_sweeps(; kwargs...); kwargs...)
+end

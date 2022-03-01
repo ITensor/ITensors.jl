@@ -48,7 +48,7 @@ end
 default_dims(b::Backend) = true
 default_tags(b::Backend) = false
 default_ids(b::Backend) = false
-default_plevs(b::Backend) = false
+default_plevs(b::Backend) = true
 default_qns(b::Backend) = false
 default_newlines(b::Backend) = true
 
@@ -137,8 +137,10 @@ function qnstring(i::QNIndex)
 end
 
 function label_string(i::Index; dims, tags, plevs, ids, qns)
+  showing_plev = plevs && (plev(i) > 0)
+
   str = ""
-  if any((tags, plevs, ids, qns))
+  if any((tags, showing_plev, ids, qns))
     str *= "("
   end
   if dims
@@ -156,7 +158,7 @@ function label_string(i::Index; dims, tags, plevs, ids, qns)
     end
     str *= tagsstring(i)
   end
-  if any((tags, plevs, ids, qns))
+  if any((tags, showing_plev, ids, qns))
     str *= ")"
   end
   if plevs
