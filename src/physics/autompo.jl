@@ -7,7 +7,7 @@
 # SiteOp                  # 
 ###########################
 
-struct SiteOp{O, N}
+struct SiteOp{O,N}
   name::O
   site::NTuple{N,Int}
   params::NamedTuple
@@ -25,7 +25,9 @@ end
 SiteOp(name::String, params::NamedTuple, site::Tuple) = SiteOp(name, site, params)
 SiteOp(name::String, params::NamedTuple, site::Int...) = SiteOp(name, site, params)
 
-convert(::Type{SiteOp}, op::Pair{Union{String,AbstractArray},Int}) = SiteOp(first(op), last(op))
+function convert(::Type{SiteOp}, op::Pair{Union{String,AbstractArray},Int})
+  return SiteOp(first(op), last(op))
+end
 
 name(s::SiteOp) = s.name
 site(s::SiteOp) = only(s.site)
@@ -92,7 +94,6 @@ end
 ###########################
 
 mutable struct MPOTerm
-  #f::Function
   coef::ComplexF64
   ops::OpTerm
 end
@@ -100,11 +101,6 @@ coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
 
 copy(t::MPOTerm) = MPOTerm(coef(t), copy(ops(t)))
-##XXX
-#f(op::MPOTerm) = op.f
-#MPOTerm(c::Number, op::OpTerm) = MPOTerm(x -> x, c, op) 
-#copy(t::MPOTerm) = MPOTerm(f(t), coef(t), copy(ops(t)))
-##XXX
 
 function (t1::MPOTerm == t2::MPOTerm)
   return coef(t1) ≈ coef(t2) && ops(t1) == ops(t2)
@@ -124,7 +120,7 @@ function isless(t1::MPOTerm, t2::MPOTerm)
   return ops(t1) < ops(t2)
 end
 
-function MPOTerm(c::Number, op1::Union{String, AbstractArray{<:Number}}, ops_rest...) #where T<:Number
+function MPOTerm(c::Number, op1::Union{String,AbstractArray{<:Number}}, ops_rest...) #where T<:Number
   ops = (op1, ops_rest...)
   starts = findall(x -> (x isa String) || (x isa AbstractArray{<:Number}), ops)
   N = length(starts)
@@ -954,7 +950,6 @@ function sortmergeterms!(ampo::OpSum)
   ndata = MPOTerm[]
   last_term = copy(da[1])
   for n in 2:length(da)
-    
     if ops(da[n]) == ops(last_term)
       last_term.coef += coef(da[n])
     else

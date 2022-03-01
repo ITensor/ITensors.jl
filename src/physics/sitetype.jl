@@ -217,9 +217,7 @@ s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
 """
-function op(name::AbstractString, s::Index...; 
-    dag::Bool = false,
-    kwargs...)
+function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
   name = strip(name)
   # TODO: filter out only commons tags
   # if there are multiple indices
@@ -234,7 +232,7 @@ function op(name::AbstractString, s::Index...;
   #  op2 = name[nextind(name, pluspos.start):end]
   #  return op(op1, s...; kwargs...) + op(op2, s...; kwargs...)
   #end
- 
+
   # Interpret operator names joined by *
   # as acting sequentially on the same site
   starpos = findfirst("*", name)
@@ -346,12 +344,9 @@ function op(name::AbstractString, s::Index...;
   )
 end
 
+op(X::AbstractArray, s::Vector{<:Index}) = op(X, s...)
 
-op(X::AbstractArray, s::Vector{<:Index}) =
-  op(X, s...)
-
-op(X::AbstractArray, s::Index...) = 
-  itensor(X, prime.([s...]), dag.([s...]))
+op(X::AbstractArray, s::Index...) = itensor(X, prime.([s...]), dag.([s...]))
 
 op(s::Index, X::AbstractArray; kwargs...) = op(X, s; kwargs...)
 

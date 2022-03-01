@@ -4,10 +4,8 @@ function op!(Op::ITensor, ::OpName"Id", ::SiteType"Generic", s::Index)
   end
 end
 
-op(::OpName"I", t::SiteType"Generic", s::Index) = 
-  op("Id", s)
+op(::OpName"I", t::SiteType"Generic", s::Index) = op("Id", s)
 
 function op!(Op::ITensor, ::OpName"F", st::SiteType"Generic", s::Index)
   return op!(Op, OpName("Id"), st, s)
 end
-
