@@ -57,7 +57,15 @@ _indices(is::Tuple{Vararg{Union{<:Vector,<:Index}}}) = vcat(is...)
 _indices(is::Tuple{Vararg{Union{<:Tuple,<:Index}}}) = tuple_vcat(is...)
 _indices(is::Tuple{Vararg{Union{<:Tuple,<:Vector,<:Index}}}) = indices(tuple_to_vector.(is))
 indices(is::Tuple{Vararg{<:Index}}) = is
-indices(is::Tuple) = _indices(is)
+function indices(is::Tuple)
+  inds = _indices(is)
+  if isempty(inds)
+    # Otherwise it outputs `Any[]`, which breaks
+    # some generic code like `dim`.
+    return Index[]
+  end
+  return inds
+end
 indices(is::Union{<:Tuple,<:Vector,<:Index}...) = indices(is)
 function indices(is::Vector)
   # This narrows the type. Also handles the empty case.

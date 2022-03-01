@@ -6,7 +6,7 @@
 
 |**Build Status**                                                                                |
 :-----------------------------------------------------------------------------------------------:|
-| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/Tests/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATests) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
+| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/TestITensors/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATestITensors) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
 
 |**Citation**                                                                    |
 |:-------------------------------------------------------------------------------:|

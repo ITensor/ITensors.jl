@@ -335,6 +335,14 @@ function getdiagindex(T::Tensor{<:Number,N}, ind::Int) where {N}
   return getindex(T, CartesianIndex(ntuple(_ -> ind, Val(N))))
 end
 
+# This helps make Julia's generic `diag` function work
+# (at least it is necessary for `diag(::DiagTensor)`).
+# TODO: Specialize this to the Tensor type, for example
+# block sparse to return a block sparse vector?
+function Base.similar(T::Tensor, ::Type{ElT}, dims::Tuple{Int}) where {ElT,N}
+  return Tensor(ElT, dims)
+end
+
 """
 setdiagindex!
 

@@ -106,6 +106,7 @@ let
   # for Nsteps steps and printing <Sz> on site c
   for step=1:Nsteps
     psi = apply(gates, psi; cutoff=cutoff)
+    normalize!(psi)
     t += tau
     Sz = expect(psi,"Sz";site_range=c:c)
     println("$t $Sz")
