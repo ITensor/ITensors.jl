@@ -103,10 +103,24 @@ function visualize(tn::Tuple{Vector{ITensor}}, args...; kwargs...)
   return visualize(only(tn), args...; kwargs...)
 end
 visualize(ψ::MPS, args...; kwargs...) = visualize(data(ψ), args...; kwargs...)
-function visualize(tn::Tuple{Vararg{ITensor}}, args...; kwargs...)
+function visualize(tn::Tuple{ITensor,Vararg{ITensor}}, args...; kwargs...)
   return visualize(collect(tn), args...; kwargs...)
 end
-visualize(tn::ITensor...; kwargs...) = visualize(collect(tn); kwargs...)
+function visualize(t1::ITensor, tn_tail::ITensor...; kwargs...)
+  return visualize([t1, tn_tail...]; kwargs...)
+end
+
+# Special case single ITensor
+function visualize(t::ITensor, sequence=nothing; vertex_labels_prefix, kwargs...)
+  tn = [t]
+  vertex_labels = [vertex_labels_prefix]
+  return visualize(MetaDiGraph(tn), sequence; vertex_labels=vertex_labels, kwargs...)
+end
+
+# Special case single ITensor
+function visualize(tn::Tuple{ITensor}, args...; kwargs...)
+  return visualize(only(tn), args...; kwargs...)
+end
 
 function visualize!(fig, g::AbstractGraph; backend=get_backend(), kwargs...)
   return visualize!(Backend(backend), fig, g; kwargs...)

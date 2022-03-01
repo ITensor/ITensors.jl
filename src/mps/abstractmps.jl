@@ -119,7 +119,9 @@ isortho(m::AbstractMPS) = leftlim(m) + 1 == rightlim(m) - 1
 
 # Could also define as `only(ortho_lims)`
 function orthocenter(m::AbstractMPS)
-  !isortho(m) && error("$(typeof(m)) has no well-defined orthogonality center")
+  !isortho(m) && error(
+    "$(typeof(m)) has no well-defined orthogonality center, orthogonality center is on the range $(ortho_lims(m)).",
+  )
   return leftlim(m) + 1
 end
 
@@ -1004,7 +1006,16 @@ function _log_or_not_dot(
     return log_inner_tot
   end
 
-  return O[]
+  dot_M1_M2 = O[]
+
+  T = promote_type(ITensors.promote_itensor_eltype(M1), ITensors.promote_itensor_eltype(M2))
+  _max_dot_warn = inv(eps(real(float(T))))
+
+  if isnan(dot_M1_M2) || isinf(dot_M1_M2) || abs(dot_M1_M2) > _max_dot_warn
+    @warn "The inner product (or norm²) you are computing is very large: $dot_M1_M2, which is greater than $_max_dot_warn and may lead to floating point errors when used. You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. For example if you are trying to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by `B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
+  end
+
+  return dot_M1_M2
 end
 
 """
@@ -1071,7 +1082,12 @@ function norm(M::AbstractMPS)
   if isortho(M)
     return norm(M[orthocenter(M)])
   end
-  return sqrt(dot(M, M))
+  norm2_M = dot(M, M)
+  rtol = 1e-15
+  if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol))
+    error("norm² is $norm2_M, which is not real up to a relative tolerance of $rtol")
+  end
+  return sqrt(real(norm2_M))
 end
 
 """
@@ -1088,7 +1104,61 @@ function lognorm(M::AbstractMPS)
   if isortho(M)
     return log(norm(M[orthocenter(M)]))
   end
-  return 0.5 * logdot(M, M)
+  lognorm2_M = logdot(M, M)
+  rtol = 1e-15
+  if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol))
+    error(
+      "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance of $rtol"
+    )
+  end
+  return 0.5 * lognorm2_M
+end
+
+# copy an MPS/MPO, but do a deep copy of the tensors in the
+# range of the orthogonality center.
+function deepcopy_ortho_center(M::AbstractMPS)
+  M = copy(M)
+  c = ortho_lims(M)
+  # TODO: define `getindex(::AbstractMPS, I)` to return `AbstractMPS`
+  M[c] = deepcopy(typeof(M)(M[c]))
+  return M
+end
+
+"""
+    normalize(A::MPS; (lognorm!)=[])
+    normalize(A::MPO; (lognorm!)=[])
+
+Return a new MPS or MPO `A` that is the same as the original MPS or MPO but with `norm(A) ≈ 1`.
+
+In practice, this evenly spreads `lognorm(A)` over the tensors within the range of the orthogonality center to avoid numerical overflow in the case of diverging norms.
+
+See also [`normalize!`](@ref), [`norm`](@ref), [`lognorm`](@ref).
+"""
+function normalize(M::AbstractMPS; (lognorm!)=[])
+  return normalize!(deepcopy_ortho_center(M); (lognorm!)=lognorm!)
+end
+
+"""
+    normalize!(A::MPS; (lognorm!)=[])
+    normalize!(A::MPO; (lognorm!)=[])
+
+Change the MPS or MPO `A` in-place such that `norm(A) ≈ 1`. This modifies the data of the tensors within the orthogonality center.
+
+In practice, this evenly spreads `lognorm(A)` over the tensors within the range of the orthogonality center to avoid numerical overflow in the case of diverging norms.
+
+See also [`normalize`](@ref), [`norm`](@ref), [`lognorm`](@ref).
+"""
+function normalize!(M::AbstractMPS; (lognorm!)=[])
+  c = ortho_lims(M)
+  lognorm_M = lognorm(M)
+  push!(lognorm!, lognorm_M)
+  z = exp(lognorm_M / length(c))
+  # XXX: this is not modifying `M` in-place.
+  # M[c] ./= z
+  for n in c
+    M[n] ./= z
+  end
+  return M
 end
 
 """
@@ -1365,6 +1435,26 @@ end
 # Make `*` and alias for `contract` of two `AbstractMPS`
 *(A::AbstractMPS, B::AbstractMPS; kwargs...) = contract(A, B; kwargs...)
 
+function _apply_to_orthocenter!(f, ψ::AbstractMPS, x)
+  limsψ = ortho_lims(ψ)
+  n = first(limsψ)
+  ψ[n] = f(ψ[n], x)
+  return ψ
+end
+
+function _apply_to_orthocenter(f, ψ::AbstractMPS, x)
+  return _apply_to_orthocenter!(f, copy(ψ), x)
+end
+
+"""
+    ψ::MPS/MPO * α::Number
+
+Scales the MPS or MPO by the provided number.
+
+Currently, this works by scaling one of the sites within the orthogonality limits.
+"""
+(ψ::AbstractMPS * α::Number) = _apply_to_orthocenter(*, ψ, α)
+
 """
     α::Number * ψ::MPS/MPO
 
@@ -1372,15 +1462,9 @@ Scales the MPS or MPO by the provided number.
 
 Currently, this works by scaling one of the sites within the orthogonality limits.
 """
-function (α::Number * ψ::AbstractMPS)
-  limsψ = ortho_lims(ψ)
-  n = first(limsψ)
-  αψ = copy(ψ)
-  αψ[n] = α * ψ[n]
-  return αψ
-end
+(α::Number * ψ::AbstractMPS) = ψ * α
 
-(ψ::AbstractMPS * α::Number) = α * ψ
+(ψ::AbstractMPS / α::Number) = _apply_to_orthocenter(/, ψ, α)
 
 -(ψ::AbstractMPS) = -1 * ψ
 
