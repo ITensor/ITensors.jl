@@ -347,8 +347,11 @@ function op(name::AbstractString, s::Index...;
 end
 
 
+op(X::AbstractArray, s::Vector{<:Index}) =
+  op(X, s...)
+
 op(X::AbstractArray, s::Index...) = 
-  tensor(X, prime.([s...]), dag.([s...]))
+  itensor(X, prime.([s...]), dag.([s...]))
 
 op(s::Index, X::AbstractArray; kwargs...) = op(X, s; kwargs...)
 
@@ -359,10 +362,6 @@ op(s::Index, opname::AbstractString; kwargs...) = op(opname, s; kwargs...)
 # To ease calling of other op overloads,
 # allow passing a string as the op name
 op(opname::AbstractString, t::SiteType; kwargs...) = op(OpName(opname), t; kwargs...)
-
-op(f::Function, name::AbstractString, s::Index...; kwargs...)  = 
-  f(op(name, s...; kwargs...))
-  
 
 """
     op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)

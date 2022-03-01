@@ -92,6 +92,7 @@ end
 ###########################
 
 mutable struct MPOTerm
+  #f::Function
   coef::ComplexF64
   ops::OpTerm
 end
@@ -99,6 +100,11 @@ coef(op::MPOTerm) = op.coef
 ops(op::MPOTerm) = op.ops
 
 copy(t::MPOTerm) = MPOTerm(coef(t), copy(ops(t)))
+##XXX
+#f(op::MPOTerm) = op.f
+#MPOTerm(c::Number, op::OpTerm) = MPOTerm(x -> x, c, op) 
+#copy(t::MPOTerm) = MPOTerm(f(t), coef(t), copy(ops(t)))
+##XXX
 
 function (t1::MPOTerm == t2::MPOTerm)
   return coef(t1) ≈ coef(t2) && ops(t1) == ops(t2)
@@ -130,7 +136,6 @@ function MPOTerm(c::Number, op1::Union{String, AbstractArray{<:Number}}, ops_res
   end
   return MPOTerm(c, vop)
 end
-
 
 function MPOTerm(op1::Union{String,AbstractArray}, ops...)
   return MPOTerm(one(Float64), op1, ops...)
