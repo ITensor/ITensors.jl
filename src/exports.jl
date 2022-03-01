@@ -230,6 +230,7 @@ export
   lognorm,
   movesite,
   movesites,
+  normalize,
   ortho_lims,
   reset_ortho_lims!,
   set_ortho_lims!,

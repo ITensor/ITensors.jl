@@ -7,11 +7,28 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
 NDTensors v0.1.34 Release Notes
-==============================
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Define `diag(::Tensor)`, `diag(::ITensor)` (#837) 
+
+NDTensors v0.1.34 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
 
 - Fix eltype promotion when dividing Tensor by scalar (#813)
 
 NDTensors v0.1.33 Release Notes
-==============================
+===============================
+
+Bugs:
+
+Enhancements:
 
 - Use registered subdir version of NDTensors (#780)

@@ -88,6 +88,10 @@ function inv_op(::typeof(swapinds), x, args...; kwargs...)
   return swapinds(x, reverse(args)...; kwargs...)
 end
 
+_check_inds(x::ITensor, y::ITensor) = hassameinds(x, y)
+_check_inds(x::MPS, y::MPS) = hassameinds(siteinds, x, y)
+_check_inds(x::MPO, y::MPO) = hassameinds(siteinds, x, y)
+
 for fname in (
   :prime,
   :setprime,
@@ -111,7 +115,7 @@ for fname in (
       y = f(x, a...; kwargs...)
       function f_pullback(ȳ)
         x̄ = inv_op(f, unthunk(ȳ), a...; kwargs...)
-        if !hassameinds(x, x̄)
+        if !_check_inds(x, x̄)
           error(
             "Trying to differentiate function `$f` with arguments $a and keyword arguments $kwargs. The forward pass indices $(inds(x)) do not match the reverse pass indices $(inds(x̄)). Likely this is because the priming/tagging operation you tried to perform is not invertible. Please write your code in a way where the index manipulation operation you are performing is invertible. For example, `prime(A::ITensor)` is invertible, with an inverse `prime(A, -1)`. However, `noprime(A)` is in general not invertible since the information about the prime levels of the original tensor are lost. Instead, you might try `prime(A, -1)` or `replaceprime(A, 1 => 0)` which are invertible.",
           )
@@ -258,6 +262,8 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 @non_differentiable SiteType(::Any)
 @non_differentiable ITensors._sitetypes(::Any)
 @non_differentiable addtags(::TagSet, ::Any)
+@non_differentiable ITensors.filter_inds_set_function(::Function, ::Function, ::Any...)
+@non_differentiable ITensors.filter_inds_set_function(::Function, ::Any...)
 
 #
 # MPO/MPS
@@ -321,12 +327,17 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
 end
 
 function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
+  if !hassameinds(siteinds, x1, (x2, x3)) || !hassameinds(siteinds, x3, (x2, x1))
+    error(
+      "Taking gradients of `inner(x::MPS, A::MPO, y::MPS)` is not supported if the site indices of the input MPS and MPO don't match. Try using if you input `inner(x, A, y), try `inner(x', A, y)` instead.",
+    )
+  end
+
   y = inner(x1, x2, x3; kwargs...)
   function inner_pullback(ȳ)
-    x1dag = dag(x1)
-    x̄1 = ȳ * contract(x2, x3; kwargs...)
-    x̄2 = ȳ * dag(_contract(MPO, x1dag, x3; kwargs...))
-    x̄3 = ȳ * dag(contract(x2, x1dag; kwargs...))
+    x̄1 = dag(ȳ) * contract(x2, x3; kwargs...)
+    x̄2 = ȳ * dag(_contract(MPO, dag(x1), x3; kwargs...))
+    x̄3 = contract(dag(x2), x1; kwargs...) * ȳ
 
     @assert siteinds(x1) == siteinds(x̄1)
     @assert hassameinds(siteinds, x2, x̄2)
@@ -338,9 +349,14 @@ function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs
 end
 
 function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPS; kwargs...)
+  if !hassameinds(siteinds, x1, x2)
+    error(
+      "Taking gradients of `inner(::MPS, ::MPS)` is not supported if the site indices of the input MPS don't match. If you input `inner(x, Ay)` where `Ay` is the result of something like `contract(A::MPO, y::MPS)`, try `inner(x', Ay)` or `inner(x, replaceprime(Ay, 1 => 0))`instead.",
+    )
+  end
   y = inner(x1, x2)
   function inner_pullback(ȳ)
-    x̄1 = ȳ * dag(x2)
+    x̄1 = dag(ȳ) * x2
     # `dag` of `x1` gets reversed by `inner`
     x̄2 = x1 * ȳ
     return (NoTangent(), x̄1, x̄2)

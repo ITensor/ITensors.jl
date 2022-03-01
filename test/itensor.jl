@@ -1,6 +1,9 @@
 using ITensors
+using LinearAlgebra
 using Test
+
 using Combinatorics: permutations
+
 import Random: seed!
 
 # Enable debug checking for these tests
@@ -31,6 +34,15 @@ end
       @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
     end
 
+    @testset "diag" for ElType in (Float64, ComplexF64)
+      i, j = Index.(2, ("i", "j"))
+      A = randomITensor(ElType, i, j)
+      d = diag(A)
+      @test d isa DenseTensor{ElType,1}
+      @test d[1] == A[1, 1]
+      @test d[2] == A[2, 2]
+    end
+
     @testset "Index set operations" begin
       i, j, k, l = Index.(2, ("i", "j", "k", "l"))
       A = randomITensor(i, j)
@@ -54,6 +66,21 @@ end
       @test v[i₁ => "↑", i₂ => "↓"] == 0.0
       @test v[i₁ => "↓", i₂ => "↑"] == 1.0
       @test v[i₁ => "↓", i₂ => "↓"] == 0.0
+    end
+
+    @testset "getindex with state string" begin
+      i₁ = Index(2, "S=1/2")
+      i₂ = Index(2, "S=1/2")
+      v = ITensor(i₁, i₂)
+      v["↓", "↑"] = 1.0
+      @test v[1, 1] == 0.0
+      @test v[1, 2] == 0.0
+      @test v[2, 1] == 1.0
+      @test v[2, 2] == 0.0
+      @test v["↑", "↑"] == 0.0
+      @test v["↑", "↓"] == 0.0
+      @test v["↓", "↑"] == 1.0
+      @test v["↓", "↓"] == 0.0
     end
 
     @testset "getindex with end (lastindex, LastIndex)" begin
@@ -312,6 +339,20 @@ end
     @test eltype(ITensor(1.0f0, Index(2)) .* 2.0) === Float64
     @test eltype(ITensor(1.0f0, Index(2)) / 2.0) === Float64
     @test eltype(ITensor(1.0f0, Index(2)) ./ 2.0) === Float64
+  end
+
+  @testset "Division /" begin
+    i = Index(2)
+    A = randomITensor(i)
+    B = A / 2
+    C = A / ITensor(2)
+    @test B isa ITensor
+    @test C isa ITensor
+    @test B ≈ C
+    @test A[1] / 2 ≈ B[1]
+    @test A[2] / 2 ≈ B[2]
+    @test A[1] / 2 ≈ C[1]
+    @test A[2] / 2 ≈ C[2]
   end
 
   @testset "Convert to complex" begin
@@ -1409,7 +1450,7 @@ end
     @test hassameinds(inds(is; plev=0), (i,))
   end
 
-  @testset "product" begin
+  @testset "product/apply" begin
     s1 = Index(2, "s1")
     s2 = Index(2, "s2")
     s3 = Index(2, "s3")
@@ -1502,6 +1543,18 @@ end
     A = randomITensor(dag(s1'), dag(s2'), lA, rA)
     B = randomITensor(s1', s2', lB, rB)
     @test_throws ErrorException product(A, B)
+  end
+
+  @testset "inner ($ElType)" for ElType in (Float64, ComplexF64)
+    i = Index(2)
+    j = Index(2)
+    A = randomITensor(ElType, i', j', i, j)
+    x = randomITensor(ElType, i, j)
+    y = randomITensor(ElType, i, j)
+    @test inner(x, y) ≈ (dag(x) * y)[]
+    @test inner(x', A, y) ≈ (dag(x)' * A * y)[]
+    # No automatic priming like in the MPS case
+    @test_throws DimensionMismatch inner(x, A, y)
   end
 
   @testset "hastags" begin

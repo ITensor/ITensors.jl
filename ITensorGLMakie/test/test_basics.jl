@@ -30,6 +30,12 @@ using Test
   R = @visualize figR ELn0 * ψn1n2 * hn1 * hn2 * ERn2
   R1 = @visualize figR1 ELn0 * ψn1n2 * hn1
   R2 = @visualize figR2 R1 * hn2 * ERn2 vertex_labels = ["T1", "T2", "T3"]
+  T = @visualize figT ELn0
+
+  @test R ≈ ELn0 * ψn1n2 * hn1 * hn2 * ERn2
+  @test R1 ≈ ELn0 * ψn1n2 * hn1
+  @test R2 ≈ ELn0 * ψn1n2 * hn1 * hn2 * ERn2
+  @test T == ELn0
 
   fig_tn = @visualize_noeval tn
 
@@ -39,6 +45,7 @@ using Test
   @test_reference "references/R1.$extension" figR1 by = by
   @test_reference "references/R2.$extension" figR2 by = by
   @test_reference "references/tn.$extension" fig_tn by = by
+  @test_reference "references/T.$extension" figT by = by
 
   R = @visualize fig_grid ELn0 * ψn1n2 * hn1 * hn2 * ERn2
   R1 = @visualize! fig_grid[1, 2] ELn0 * ψn1n2 * hn1

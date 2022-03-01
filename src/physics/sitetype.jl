@@ -458,6 +458,9 @@ state(::StateName, ::SiteType) = nothing
 state(::StateName, ::SiteType, ::Index) = nothing
 state!(::ITensor, ::StateName, ::SiteType, ::Index) = nothing
 
+# Syntax `state("Up", Index(2, "S=1/2"))`
+state(sn::String, i::Index) = state(i, sn)
+
 """
     state(s::Index, name::String; kwargs...)
 
@@ -494,7 +497,14 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
   # Try calling state(::StateName"Name",::SiteType"Tag",s::Index)
   for st in stypes
     v = state(sname, st, s; kwargs...)
-    !isnothing(v) && return itensor(v, s)
+    if !isnothing(v)
+      if v isa ITensor
+        return v
+      else
+        # TODO: deprecate, only for backwards compatibility.
+        return itensor(v, s)
+      end
+    end
   end
 
   # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index)
