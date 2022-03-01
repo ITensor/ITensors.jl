@@ -88,7 +88,7 @@ ITensors.op(::OpName"σy", t::SiteType"Qubit") = op("Y", t)
 
 ITensors.op(::OpName"σ2", t::SiteType"Qubit") = op("Y", t)
 
-ITensors.op(::OpName"iY", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"iY", ::SiteType"Qubit") = [
   0 1
   -1 0
 ]
@@ -446,9 +446,9 @@ ITensors.op(::OpName"ProjUp", ::SiteType"Qubit") = [
   0 0
 ]
 
-ITensors.op(::OpName"projUp", t::SiteType"S=1/2") = op(OpName("ProjUp"), t)
+ITensors.op(::OpName"projUp", t::SiteType"Qubit") = op(OpName("ProjUp"), t)
 
-ITensors.op(::OpName"ProjDn", ::SiteType"S=1/2") = [
+ITensors.op(::OpName"ProjDn", ::SiteType"Qubit") = [
   0 0
   0 1
 ]
