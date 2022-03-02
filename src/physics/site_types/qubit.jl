@@ -52,10 +52,10 @@ ITensors.state(::StateName"+", ::SiteType"Qubit") = [1.0, 1.0] / √2
 ITensors.state(::StateName"-", ::SiteType"Qubit") = [1.0, -1.0] / √2
 ITensors.state(::StateName"i", ::SiteType"Qubit") = [1.0, im] / √2
 ITensors.state(::StateName"-i", ::SiteType"Qubit") = [1.0, -im] / √2
-ITensors.state(::StateName"Up", ::SiteType"Qubit") = state(StateName("0"), t)
-ITensors.state(::StateName"Dn", ::SiteType"Qubit") = state(StateName("1"), t)
-ITensors.state(::StateName"↑", ::SiteType"Qubit") = state(StateName("0"), t) 
-ITensors.state(::StateName"↓", ::SiteType"Qubit") = state(StateName("1"), t)
+ITensors.state(::StateName"Up", t::SiteType"Qubit") = state(StateName("0"), t)
+ITensors.state(::StateName"Dn", t::SiteType"Qubit") = state(StateName("1"), t)
+ITensors.state(::StateName"↑",  t::SiteType"Qubit") = state(StateName("0"), t) 
+ITensors.state(::StateName"↓",  t::SiteType"Qubit") = state(StateName("1"), t)
 
 # Pauli eingenstates
 ITensors.state(::StateName"X+", t::SiteType"Qubit") = state(StateName("+"), t)
