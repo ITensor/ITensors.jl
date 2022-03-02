@@ -123,7 +123,7 @@ let
 
   h = 4.0
   
-  weight = 10*h # use a large weight
+  weight = 20*h # use a large weight
                 # since gap is expected to be large
 
 
@@ -134,14 +134,14 @@ let
   # Factors of 4 and 2 are to rescale
   # spin operators into Pauli matrices
   #
-  ampo = OpSum()
+  os = OpSum()
   for j=1:N-1
-    ampo += -4,&quot;Sz&quot;,j,&quot;Sz&quot;,j+1
+    os += -4,&quot;Sz&quot;,j,&quot;Sz&quot;,j+1
   end
   for j=1:N
-    ampo += -2*h,&quot;Sx&quot;,j;
+    os += -2*h,&quot;Sx&quot;,j;
   end
-  H = MPO(ampo,sites)
+  H = MPO(os,sites)
 
 
   #
@@ -156,17 +156,15 @@ let
   #
   # Compute the ground state psi0
   #
-  psi0_init = randomMPS(sites,2)
+  psi0_init = randomMPS(sites,linkdims=2)
   energy0,psi0 = dmrg(H,psi0_init,sweeps)
 
   println()
 
   #
   # Compute the first excited state psi1
-  # (Use ground state psi0 as initial state 
-  #  and as a &#39;penalty state&#39;)
   #
-  psi1_init = psi0
+  psi1_init = randomMPS(sites,linkdims=2)
   energy1,psi1 = dmrg(H,[psi0],psi1_init,sweeps; weight)
 
   # Check psi1 is orthogonal to psi0
@@ -177,7 +175,7 @@ let
   # The expected gap of the transverse field Ising
   # model is given by Eg = 2*|h-1|
   #
-  # (The DMRG gap will have finite-size corrections.)
+  # (The DMRG gap will have finite-size corrections)
   #
   println(&quot;DMRG energy gap = &quot;,energy1-energy0);
   println(&quot;Theoretical gap = &quot;,2*abs(h-1));
@@ -186,14 +184,13 @@ let
 
   #
   # Compute the second excited state psi2
-  # (Use ground state psi0 as initial state 
-  #  and [psi0,psi1] as &#39;penalty states&#39;)
   #
-  psi2_init = psi0
+  psi2_init = randomMPS(sites,linkdims=2)
   energy2,psi2 = dmrg(H,[psi0,psi1],psi2_init,sweeps;weight)
 
+  # Check psi2 is orthogonal to psi0 and psi1
   @show inner(psi2,psi0)
   @show inner(psi2,psi1)
 
   return
-end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="MPSandMPO.html">« MPS and MPO Examples</a><a class="docs-footer-nextpage" href="Physics.html">Physics (SiteType) System Examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Wednesday 2 March 2022 03:56">Wednesday 2 March 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="MPSandMPO.html">« MPS and MPO Examples</a><a class="docs-footer-nextpage" href="Physics.html">Physics (SiteType) System Examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Wednesday 2 March 2022 04:49">Wednesday 2 March 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
