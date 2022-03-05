@@ -1,5 +1,5 @@
 """
-ITensors is a library for rapidly creating correct and efficient tensor network algorithms.
+ITensor is a library for rapidly creating correct and efficient tensor network algorithms.
 
 An ITensor is a tensor whose interface is independent of its memory layout. ITensor indices are 'intelligent' meaning they carry extra information and 'recognize' each other automatically when contracting or adding ITensors.
 
