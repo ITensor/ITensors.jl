@@ -160,6 +160,7 @@ macro OpName_str(s)
 end
 
 # Default implementations of op and op!
+op(::OpName; kwargs...) = nothing
 op(::OpName, ::SiteType; kwargs...) = nothing
 op(::OpName, ::SiteType, ::Index...; kwargs...) = nothing
 function op(
@@ -259,6 +260,19 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
   end
 
   #
+  # Try calling a function of the form:
+  #    op(::OpName; kwargs...)
+  #  for backward compatibility with previous
+  #  gate system in PastaQ.jl
+  #
+  op_mat = op(opn; kwargs...)
+  if !isnothing(op_mat)
+    rs = reverse(s)
+    res = itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
+    dag && return swapprime(ITensors.dag(res), 0 => 1)
+    return res
+  end
+  #
   # otherwise try calling a function of the form:
   #    op(::OpName, ::SiteType; kwargs...)
   # which returns a Julia matrix
@@ -316,6 +330,8 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
         return Op
       end
     end
+    
+
     error(
       "Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::OpName, ::SiteType..., ::Index...)` or `op!(::ITensor, ::OpName, ::SiteType..., ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).",
     )
