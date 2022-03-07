@@ -270,7 +270,7 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 #
 
 # TODO: Define a more general version in ITensors.jl
-function _contract(::Type{ITensor}, ψ::MPS, ϕ::MPS; kwargs...)
+function _contract(::Type{ITensor}, ψ::Union{MPS,MPO}, ϕ::Union{MPS,MPO}; kwargs...)
   T = ITensor(1)
   for n in 1:length(ψ)
     T = T * ψ[n] * ϕ[n]
@@ -285,42 +285,73 @@ function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
 end
 
 function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwargs...)
-  y = apply(x1, x2; kwargs...)
+  #y = apply(x1, x2; kwargs...)
+  N = length(x1) + 1
+  
+  # Apply circuit and store intermediates in the forward direction
+  x1x2 = Vector{MPS}(undef, N)
+  x1x2[1] = x2
+  for n in 2:N
+    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, kwargs...)
+  end
+  y = x1x2[end]
+
   function apply_pullback(ȳ)
-    N = length(x1) + 1
-
-    # Apply circuit and store intermediates in the forward direction
-    x1x2 = Vector{MPS}(undef, N)
-    x1x2[1] = x2
-    for n in 2:N
-      x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=false)
-    end
     x1x2dag = dag.(x1x2)
-
     # Apply circuit and store intermediates in the reverse direction
-
-    # XXX: Which one is correct?
-    # This works to optimize "Ry" but not "Rx"
-    #x1dag = [swapprime(x, 0 => 1) for x in x1]
-
-    # This fails to optimize "Ry" and "Rx"
-    #x1dag = [dag(x) for x in x1]
-
     x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
 
     x1dag_ȳ = Vector{MPS}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
-      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; kwargs...)
+      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, kwargs...)
     end
 
     x̄1 = similar(x1)
     for n in 1:length(x1)
       x1dag_ȳ′ = prime(x1dag_ȳ[n + 1], inds(x1[n]; plev=0))
-      x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n]; kwargs...)
+      x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n])
     end
-    x̄2 = x1dag_ȳ[end]
+    #XXX double check this change
+    #x̄2 = x1dag_ȳ[end]
+    x̄2 = x1dag_ȳ[1]
 
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, apply_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPO; apply_dag::Bool = true, kwargs...)
+  N = length(x1) + 1
+  # Apply circuit and store intermediates in the forward direction
+  ϕ = Vector{MPO}(undef, N)
+  ϕ[1] = x2
+  for n in 2:N
+    ϕ[n] = apply(x1[n - 1], ϕ[n - 1]; move_sites_back=true, apply_dag = apply_dag, kwargs...)
+  end
+  y = ϕ[end]
+  function apply_pullback(ȳ)
+    ξdag = Vector{MPO}(undef, N)
+    ξdag[end] = ȳ
+    x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
+    for n in (N - 1):-1:1
+      ξdag[n] = apply(x1dag[n], ξdag[n+1]; move_sites_back=true, apply_dag = apply_dag, kwargs...) 
+    end
+    
+    x̄1 = similar(x1)
+    for n in 1:length(x1)
+      # XXX ϕdag for complex valued input states
+      ϕ̃ = apply(x1[n], ϕ[n]; move_sites_back=true, apply_dag = false)
+      
+      ϕ̃ = replaceprime(ϕ̃, 0 => 2)
+      gateinds = inds(x1[n]; plev = 1)
+      
+      ξ̃dag = replaceprime(ξdag[n+1]', 2 => 0;  inds = gateinds')
+      g = _contract(ITensor, ξ̃dag, ϕ̃)
+      
+      x̄1[n] = 2 * mapprime(g, 0 => 1, 2 => 0)
+    end
+    x̄2 = ξdag[end]
     return (NoTangent(), x̄1, x̄2)
   end
   return y, apply_pullback
@@ -364,4 +395,32 @@ function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPS; kwargs...)
   return y, inner_pullback
 end
 
+function ChainRulesCore.rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
+  y = *(x1, x2; kwargs...)
+  function contract_pullback(ȳ)
+    x̄1 = *(ȳ, dag(x2); kwargs...)
+    x̄2 = *(dag(x1), ȳ; kwargs...)
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, contract_pullback
 end
+
+function ChainRulesCore.rrule(::typeof(tr), x::MPO; kwargs...)
+  y = tr(x; kwargs...)
+  function contract_pullback(ȳ)
+    s = firstsiteinds(x)
+    x̄ = similar(x)
+    x̄[1] = op("Id", s[1]) * ITensor(1, commoninds(x[1],x[2]))
+    for j in 2:length(x̄)-1
+      x̄[j] = op("Id", s[j]) * ITensor(1, commoninds(x[j],x[j-1]))
+      x̄[j] = x̄[j] * ITensor(1, commoninds(x[j],x[j+1]))
+    end
+    j = length(x̄)
+    x̄[j] = op("Id", s[j]) * ITensor(1, commoninds(x[j],x[j-1]))
+    return (NoTangent(), ȳ * x̄)
+  end
+  return y, contract_pullback
+end
+
+end
+
