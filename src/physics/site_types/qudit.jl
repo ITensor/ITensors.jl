@@ -77,4 +77,3 @@ end
 @non_differentiable _op(::OpName"A", ::SiteType"Qudit")
 @non_differentiable _op(::OpName"Adag", ::SiteType"Qudit")
 @non_differentiable _op(::OpName"N", ::SiteType"Qudit")
-

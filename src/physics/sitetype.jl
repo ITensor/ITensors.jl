@@ -330,7 +330,6 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
         return Op
       end
     end
-    
 
     error(
       "Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::OpName, ::SiteType..., ::Index...)` or `op!(::ITensor, ::OpName, ::SiteType..., ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).",

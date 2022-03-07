@@ -54,8 +54,8 @@ ITensors.state(::StateName"i", ::SiteType"Qubit") = [1.0, im] / √2
 ITensors.state(::StateName"-i", ::SiteType"Qubit") = [1.0, -im] / √2
 ITensors.state(::StateName"Up", t::SiteType"Qubit") = state(StateName("0"), t)
 ITensors.state(::StateName"Dn", t::SiteType"Qubit") = state(StateName("1"), t)
-ITensors.state(::StateName"↑",  t::SiteType"Qubit") = state(StateName("0"), t) 
-ITensors.state(::StateName"↓",  t::SiteType"Qubit") = state(StateName("1"), t)
+ITensors.state(::StateName"↑", t::SiteType"Qubit") = state(StateName("0"), t)
+ITensors.state(::StateName"↓", t::SiteType"Qubit") = state(StateName("1"), t)
 
 # Pauli eingenstates
 ITensors.state(::StateName"X+", t::SiteType"Qubit") = state(StateName("+"), t)
@@ -70,18 +70,17 @@ ITensors.state(::StateName"Z-", t::SiteType"Qubit") = state(StateName("1"), t)
 # SIC-POVMs
 state(::StateName"Tetra1", t::SiteType"Qubit") = state(StateName("Z+"), t)
 state(::StateName"Tetra2", t::SiteType"Qubit") = [
-  1/√3
-  √2/√3
+  1 / √3
+  √2 / √3
 ]
 state(::StateName"Tetra3", t::SiteType"Qubit") = [
-  1/√3
-  √2/√3 * exp(im*2π/3)
+  1 / √3
+  √2 / √3 * exp(im * 2π / 3)
 ]
 state(::StateName"Tetra4", t::SiteType"Qubit") = [
-  1/√3
-  √2/√3 * exp(im*4π/3)
+  1 / √3
+  √2 / √3 * exp(im * 4π / 3)
 ]
-
 
 #
 # 1-Qubit gates
@@ -136,14 +135,14 @@ ITensors.op(::OpName"H", ::SiteType"Qubit") = [
 ]
 
 # Rϕ with ϕ = π/2
-ITensors.op(::OpName"Phase", ::SiteType"Qubit"; ϕ::Number = π/2) = [
+ITensors.op(::OpName"Phase", ::SiteType"Qubit"; ϕ::Number=π / 2) = [
   1 0
   0 exp(im * ϕ)
 ]
 
 ITensors.op(::OpName"P", t::SiteType"Qubit"; kwargs...) = op("Phase", t; kwargs...)
 
-ITensors.op(::OpName"S", t::SiteType"Qubit") = op("Phase", t; ϕ = π/2)
+ITensors.op(::OpName"S", t::SiteType"Qubit") = op("Phase", t; ϕ=π / 2)
 
 ## Rϕ with ϕ = π/4
 ITensors.op(::OpName"π/8", ::SiteType"Qubit") = [
