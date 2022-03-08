@@ -316,7 +316,9 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   return (energy, psi)
 end
 
-function _dmrg_sweeps(; nsweeps, maxdim, mindim=1, cutoff=1e-8, noise=0.0, kwargs...)
+function _dmrg_sweeps(;
+  nsweeps, maxdim=typemax(Int), mindim=1, cutoff=1E-8, noise=0.0, kwargs...
+)
   sweeps = Sweeps(nsweeps)
   setmaxdim!(sweeps, maxdim...)
   setmindim!(sweeps, mindim...)
