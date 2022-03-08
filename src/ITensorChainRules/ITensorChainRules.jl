@@ -324,34 +324,38 @@ end
 function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPO; apply_dag::Bool = true, kwargs...)
   N = length(x1) + 1
   # Apply circuit and store intermediates in the forward direction
-  ϕ = Vector{MPO}(undef, N)
-  ϕ[1] = x2
+  x1x2 = Vector{MPO}(undef, N)
+  x1x2[1] = x2
   for n in 2:N
-    ϕ[n] = apply(x1[n - 1], ϕ[n - 1]; move_sites_back=true, apply_dag = apply_dag, kwargs...)
+    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, apply_dag = apply_dag, kwargs...)
   end
-  y = ϕ[end]
+  y = x1x2[end]
   function apply_pullback(ȳ)
-    ξdag = Vector{MPO}(undef, N)
-    ξdag[end] = ȳ
+    x1dag_ȳ = Vector{MPO}(undef, N)
+    x1dag_ȳ[end] = ȳ
     x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
     for n in (N - 1):-1:1
-      ξdag[n] = apply(x1dag[n], ξdag[n+1]; move_sites_back=true, apply_dag = apply_dag, kwargs...) 
+      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n+1]; move_sites_back=true, apply_dag = apply_dag, kwargs...) 
     end
     
     x̄1 = similar(x1)
     for n in 1:length(x1)
-      # XXX ϕdag for complex valued input states
-      ϕ̃ = apply(x1[n], ϕ[n]; move_sites_back=true, apply_dag = false)
-      
-      ϕ̃ = replaceprime(ϕ̃, 0 => 2)
-      gateinds = inds(x1[n]; plev = 1)
-      
-      ξ̃dag = replaceprime(ξdag[n+1]', 2 => 0;  inds = gateinds')
-      g = _contract(ITensor, ξ̃dag, ϕ̃)
-      
-      x̄1[n] = 2 * mapprime(g, 0 => 1, 2 => 0)
+      # for now
+      if iseven(length(inds(x1[n])))
+        ϕ̃ = apply(x1[n], x1x2[n]; move_sites_back=true, apply_dag = false)
+        ϕ̃ = replaceprime(ϕ̃, 0 => 2)
+        
+        gateinds = inds(x1[n]; plev = 1)
+        ξ̃ = replaceprime(x1dag_ȳ[n+1]', 2 => 0;  inds = gateinds')
+        g = _contract(ITensor, ξ̃, ϕ̃)
+        
+        x̄1[n] = 2 * mapprime(g, 0 => 1, 2 => 0)
+      else
+        s = inds(x1[n])
+        x̄1[n] = itensor(zeros(dim.(s)), s...)
+      end
     end
-    x̄2 = ξdag[end]
+    x̄2 = x1dag_ȳ[end]
     return (NoTangent(), x̄1, x̄2)
   end
   return y, apply_pullback
@@ -409,18 +413,20 @@ function ChainRulesCore.rrule(::typeof(tr), x::MPO; kwargs...)
   y = tr(x; kwargs...)
   function contract_pullback(ȳ)
     s = firstsiteinds(x)
+    #return ȳ * MPO(s, "Id")
     x̄ = similar(x)
-    x̄[1] = op("Id", s[1]) * ITensor(1, commoninds(x[1],x[2]))
+    x̄[1] = 0.5 * op("Id", s[1]) * ITensor(1, commoninds(x[1],x[2]))
     for j in 2:length(x̄)-1
-      x̄[j] = op("Id", s[j]) * ITensor(1, commoninds(x[j],x[j-1]))
+      x̄[j] = 0.5 * op("Id", s[j]) * ITensor(1, commoninds(x[j],x[j-1]))
       x̄[j] = x̄[j] * ITensor(1, commoninds(x[j],x[j+1]))
     end
     j = length(x̄)
-    x̄[j] = op("Id", s[j]) * ITensor(1, commoninds(x[j],x[j-1]))
+    x̄[j] = 0.5 * op("Id", s[j]) * ITensor(1, commoninds(x[j],x[j-1]))
     return (NoTangent(), ȳ * x̄)
   end
   return y, contract_pullback
 end
+
 
 end
 
