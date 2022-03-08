@@ -331,6 +331,7 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPO; app
   end
   y = x1x2[end]
   function apply_pullback(ȳ)
+    x1x2dag = dag.(x1x2)
     x1dag_ȳ = Vector{MPO}(undef, N)
     x1dag_ȳ[end] = ȳ
     x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
@@ -340,16 +341,20 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPO; app
     
     x̄1 = similar(x1)
     for n in 1:length(x1)
-      # for now
       if iseven(length(inds(x1[n])))
-        ϕ̃ = apply(x1[n], x1x2[n]; move_sites_back=true, apply_dag = false)
-        ϕ̃ = replaceprime(ϕ̃, 0 => 2)
-        
         gateinds = inds(x1[n]; plev = 1)
-        ξ̃ = replaceprime(x1dag_ȳ[n+1]', 2 => 0;  inds = gateinds')
-        g = _contract(ITensor, ξ̃, ϕ̃)
-        
-        x̄1[n] = 2 * mapprime(g, 0 => 1, 2 => 0)
+        if apply_dag
+          ϕ̃ = swapprime(x1x2dag[n], 0 => 1)
+          ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag = false)
+          ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1) 
+          ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds = gateinds)
+          x̄1[n] = 2 * _contract(ITensor, dag(x1dag_ȳ[n+1])', ϕ̃)
+        else
+          ϕ̃ = mapprime(x1x2dag[n], 0 => 2)
+          ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds = gateinds)
+          ξ̃ = mapprime(x1dag_ȳ[n+1], 0 => 2)
+          x̄1[n] = _contract(ITensor, ξ̃, ϕ̃)
+        end
       else
         s = inds(x1[n])
         x̄1[n] = itensor(zeros(dim.(s)), s...)
