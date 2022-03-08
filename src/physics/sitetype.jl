@@ -388,8 +388,8 @@ op(os::Tuple{AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
 # TODO: consider overloading broadcast for `op` with the example
 # here: https://discourse.julialang.org/t/how-to-broadcast-over-only-certain-function-arguments/19274/5
 # so that `Ref` isn't needed.
-ops(s::Vector{<:Index}, os::AbstractArray) = op.(Ref(s), os)
-ops(os::AbstractVector, s::Vector{<:Index}) = op.(Ref(s), os)
+ops(s::Vector{<:Index}, os::AbstractArray) = [op(oₙ, s) for oₙ in os]
+ops(os::AbstractVector, s::Vector{<:Index}) = [op(oₙ, s) for oₙ in os]
 
 @doc """
     ops(s::Vector{<:Index}, os::Vector)
