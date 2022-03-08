@@ -234,31 +234,30 @@ end
 end
 
 @testset "ChainRules rrules: op" begin
-
   s = siteinds("Qubit", 4)
- 
+
   # RX
   args = (0.2,)
-  for σ in [1,2], σ′ in [1,2]
+  for σ in [1, 2], σ′ in [1, 2]
     f = x -> op("Rx", s, 1; θ=x)[σ, σ′]
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
   # RY
   args = (0.2,)
-  for σ in [1,2], σ′ in [1,2]
+  for σ in [1, 2], σ′ in [1, 2]
     f = x -> op("Ry", s, 1; θ=x)[σ, σ′]
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
   # RZ
   args = (0.2,)
-  for σ in [1,2], σ′ in [1,2]
+  for σ in [1, 2], σ′ in [1, 2]
     f = x -> op("Rz", s, 1; ϕ=x)[σ, σ′]
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
   # Rn
-  args = (0.2,0.3,0.4)
-  for σ in [1,2], σ′ in [1,2]
-    f = x -> op("Rn", s, 1; θ = x[1], ϕ=x[2], λ=x[3])[σ, σ′]
+  args = (0.2, 0.3, 0.4)
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> op("Rn", s, 1; θ=x[1], ϕ=x[2], λ=x[3])[σ, σ′]
     test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
   end
 
