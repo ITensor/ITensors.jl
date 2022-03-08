@@ -24,6 +24,10 @@ function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
   return Dense{ElT,VecT}(data)
 end
 
+function Dense(data::Array{ElT}) where {ElT}
+  return Dense{ElT,Vector{ElT}}(vec(data))
+end
+
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
   return ElT == ElR ? Dense(data) : Dense(ElR.(data))
 end
