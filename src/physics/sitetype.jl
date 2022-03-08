@@ -218,7 +218,7 @@ s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
 """
-function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
+function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   name = strip(name)
   # TODO: filter out only commons tags
   # if there are multiple indices
@@ -254,7 +254,7 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
   for st in common_stypes
     res = op(opn, st, s...; kwargs...)
     if !isnothing(res)
-      dag && return swapprime(ITensors.dag(res), 0 => 1)
+      adjoint && return swapprime(dag(res), 0 => 1)
       return res
     end
   end
@@ -269,7 +269,7 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
   if !isnothing(op_mat)
     rs = reverse(s)
     res = itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
-    dag && return swapprime(ITensors.dag(res), 0 => 1)
+    adjoint && return swapprime(dag(res), 0 => 1)
     return res
   end
   #
@@ -283,7 +283,7 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
       rs = reverse(s)
       #return itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
       res = itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
-      dag && return swapprime(ITensors.dag(res), 0 => 1)
+      adjoint && return swapprime(dag(res), 0 => 1)
       return res
     end
   end
@@ -295,7 +295,7 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
   for st in common_stypes
     op!(Op, opn, st, s...; kwargs...)
     if !isempty(Op)
-      dag && return swapprime(ITensors.dag(Op), 0 => 1)
+      adjoint && return swapprime(dag(Op), 0 => 1)
       return Op
     end
   end
@@ -317,7 +317,7 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
     for st in Iterators.product(stypes...)
       res = op(opn, st..., s...; kwargs...)
       if !isnothing(res)
-        dag && return swapprime(ITensors.dag(res), 0 => 1)
+        adjoint && return swapprime(dag(res), 0 => 1)
         return res
       end
     end
@@ -326,7 +326,7 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
     for st in Iterators.product(stypes...)
       op!(Op, opn, st..., s...; kwargs...)
       if !isempty(Op)
-        dag && return swapprime(ITensors.dag(Op), 0 => 1)
+        adjoint && return swapprime(dag(Op), 0 => 1)
         return Op
       end
     end
@@ -347,7 +347,7 @@ function op(name::AbstractString, s::Index...; dag::Bool=false, kwargs...)
   for st in common_stypes
     res = op(st, s[1], name; kwargs...)
     if !isnothing(res)
-      dag && return ITensors.dag(res)
+      adjoint && return dag(res)
       return res
     end
   end

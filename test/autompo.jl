@@ -263,6 +263,13 @@ end
     H2 = MPO(O2, sites)
     H = H1 - 2 * H2
     @test prod(MPO(O, sites)) ≈ prod(H)
+
+    O = O1 - O2 / 2
+    @test length(O) == 2 * n - 1
+    H1 = MPO(O1, sites)
+    H2 = MPO(O2, sites)
+    H = H1 - H2 / 2
+    @test prod(MPO(O, sites)) ≈ prod(H)
   end
 
   @testset "Single creation op" begin

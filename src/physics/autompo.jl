@@ -156,7 +156,8 @@ function Base.show(io::IO, op::MPOTerm)
   end
 end
 
-*(α::Number, op::MPOTerm) = MPOTerm(α * coef(op), ops(op))
+(α::Number * op::MPOTerm) = MPOTerm(α * coef(op), ops(op))
+/(op::MPOTerm, α::Number) = MPOTerm(coef(op) / α, ops(op))
 *(op::MPOTerm, α::Number) = α * op
 
 ############################
@@ -213,11 +214,7 @@ end
 
 Base.size(ampo::OpSum) = size(data(ampo))
 
-function Base.iterate(os::OpSum, state=1)
-  state > length(os) && return nothing
-  o = os[state]
-  return (o, state + 1)
-end
+Base.iterate(os::OpSum, args...) = iterate(data(os), args...)
 
 """
     add!(ampo::OpSum,
@@ -320,6 +317,7 @@ function +(o1::OpSum, o2::OpSum; kwargs...)
 end
 
 *(α::Number, os::OpSum) = OpSum([α * o for o in os])
+/(os::OpSum, α::Number) = OpSum([o / α for o in os])
 
 -(o1::OpSum, o2::OpSum) = o1 + (-1) * o2
 
