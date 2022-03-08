@@ -458,7 +458,7 @@ function ITensor(
     ),
   )
   data = Array{eltype}(as, A)
-  return itensor(Dense(vec(data)), inds)
+  return itensor(Dense(data), inds)
 end
 
 function ITensor(
@@ -1957,7 +1957,7 @@ function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
-    Tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), Tensor(B), _Tuple(labelsB), α, β
+    tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), tensor(B), _Tuple(labelsB), α, β
   )
   setstorage!(C, storage(CT))
   setinds!(C, inds(C))
@@ -1974,7 +1974,7 @@ end
 # This is necessary for now since not all types implement contract!!
 # with non-trivial α and β
 function contract!(C::ITensor, A::ITensor, B::ITensor)::ITensor
-  return settensor!(C, _contract!!(Tensor(C), tensor(A), Tensor(B)))
+  return settensor!(C, _contract!!(tensor(C), tensor(A), tensor(B)))
 end
 
 mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
@@ -2071,7 +2071,7 @@ function exp(A::ITensor, Linds, Rinds; kwargs...)
   CL = combiner(Lis...; dir=Out)
   CR = combiner(Ris...; dir=In)
   AC = A * CR * CL
-  expAT = ishermitian ? exp(Hermitian(Tensor(AC))) : exp(Tensor(AC))
+  expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
   return itensor(expAT) * dag(CR) * dag(CL)
 end
 
@@ -2098,7 +2098,7 @@ function hadamard_product!(R::ITensor, T1::ITensor, T2::ITensor)
   #if inds(A) ≠ inds(B)
   #  B = permute(B, inds(A))
   #end
-  #Tensor(C) .= tensor(A) .* Tensor(B)
+  #tensor(C) .= tensor(A) .* tensor(B)
   map!((t1, t2) -> *(t1, t2), R, T1, T2)
   return R
 end
