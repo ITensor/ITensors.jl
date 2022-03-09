@@ -422,18 +422,10 @@ function ChainRulesCore.rrule(::typeof(tr), x::MPO; kwargs...)
   y = tr(x; kwargs...)
   function contract_pullback(ȳ)
     s = noprime(firstsiteinds(x))
-    plev = get(kwargs, :plev, 0 => 1)
-
     n = length(s)
-    x̄ = similar(x)
-    newlinkinds = [Index(1; tags="Link,l=$j") for j in 1:(n - 1)]
+    x̄ = ȳ * MPO(s, "Id")
 
-    x̄[1] = op("Id", s[1]) * ITensor(1, newlinkinds[1])
-    for j in 2:(n - 1)
-      x̄[j] = op("Id", s[j]) * ITensor(1, newlinkinds[j - 1])
-      x̄[j] = x̄[j] * ITensor(1, newlinkinds[j])
-    end
-    x̄[n] = op("Id", s[n]) * ITensor(1, newlinkinds[n - 1])
+    plev = get(kwargs, :plev, 0 => 1)
     for j in 1:n
       x̄[j] = mapprime(x̄[j], 0 => first(plev), 1 => last(plev))
     end
