@@ -22,20 +22,14 @@ function trg(T::ITensor; χmax::Int, nsteps::Int, cutoff=0.0, svd_alg="divide_an
   κ = 1.0
   for n in 1:nsteps
     Fₕ, Fₕ′ = factorize(
-      T,
-      (sₕ', sᵥ');
-      ortho="none",
-      maxdim=χmax,
-      cutoff=cutoff,
-      tags=tags(sₕ),
-      svd_alg=svd_alg,
+      T, (sₕ', sᵥ'); ortho="none", maxdim=χmax, cutoff, tags=tags(sₕ), svd_alg
     )
 
     s̃ₕ = commonind(Fₕ, Fₕ′)
     Fₕ′ *= δ(dag(s̃ₕ), s̃ₕ')
 
     Fᵥ, Fᵥ′ = factorize(
-      T, (sₕ, sᵥ'); ortho="none", maxdim=χmax, cutoff=cutoff, tags=tags(sᵥ), svd_alg=svd_alg
+      T, (sₕ, sᵥ'); ortho="none", maxdim=χmax, cutoff, tags=tags(sᵥ), svd_alg
     )
 
     s̃ᵥ = commonind(Fᵥ, Fᵥ′)

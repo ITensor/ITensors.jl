@@ -19,7 +19,7 @@ function ctmrg(T::ITensor, Cₗᵤ::ITensor, Aₗ::ITensor; χmax::Int, cutoff=0
       (lₕ', sₕ'),
       (lᵥ', sᵥ');
       ishermitian=true,
-      cutoff=cutoff,
+      cutoff,
       maxdim=χmax,
       lefttags=tags(lₕ),
       righttags=tags(lᵥ),
