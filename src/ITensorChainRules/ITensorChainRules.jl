@@ -284,12 +284,14 @@ function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
   return contract(ψmat, ϕmat; kwargs...)
 end
 
-function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwargs...)
-  #y = apply(x1, x2; kwargs...)
+function ChainRulesCore.rrule(
+  ::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs...
+)
   N = length(x1) + 1
+  apply_dag = x2 isa MPO ? kwargs[:apply_dag] : nothing
 
   # Apply circuit and store intermediates in the forward direction
-  x1x2 = Vector{MPS}(undef, N)
+  x1x2 = Vector{typeof(x2)}(undef, N)
   x1x2[1] = x2
   for n in 2:N
     x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, kwargs...)
@@ -298,10 +300,10 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
 
   function apply_pullback(ȳ)
     x1x2dag = dag.(x1x2)
+    x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
+
     # Apply circuit and store intermediates in the reverse direction
-    x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
-
-    x1dag_ȳ = Vector{MPS}(undef, N)
+    x1dag_ȳ = Vector{typeof(x2)}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
       x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, kwargs...)
@@ -309,51 +311,27 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
 
     x̄1 = similar(x1)
     for n in 1:length(x1)
-      x1dag_ȳ′ = prime(x1dag_ȳ[n + 1], inds(x1[n]; plev=0))
-      x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n])
-    end
-    x̄2 = x1dag_ȳ[end]
-
-    return (NoTangent(), x̄1, x̄2)
-  end
-  return y, apply_pullback
-end
-
-function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPO; kwargs...)
-  apply_dag = kwargs[:apply_dag]
-  N = length(x1) + 1
-  # Apply circuit and store intermediates in the forward direction
-  x1x2 = Vector{MPO}(undef, N)
-  x1x2[1] = x2
-  for n in 2:N
-    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, kwargs...)
-  end
-  y = x1x2[end]
-  function apply_pullback(ȳ)
-    x1x2dag = dag.(x1x2)
-    x1dag_ȳ = Vector{MPO}(undef, N)
-    x1dag_ȳ[end] = ȳ
-    x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
-    for n in (N - 1):-1:1
-      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, kwargs...)
-    end
-
-    x̄1 = similar(x1)
-    for n in 1:length(x1)
+      # check if it's not a noisy gate (rank-3 tensor)
       if iseven(length(inds(x1[n])))
-        gateinds = inds(x1[n]; plev=1)
-        if apply_dag
-          ϕ̃ = swapprime(x1x2dag[n], 0 => 1)
-          ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag=false)
-          ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
-          ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds)
-          x̄1[n] = 2 * _contract(ITensor, dag(x1dag_ȳ[n + 1])', ϕ̃)
+        gateinds = inds(x1[n]; plev=0)
+        if x2 isa MPS
+          ξ̃ = prime(x1dag_ȳ[n + 1], gateinds)
+          ϕ̃ = x1x2dag[n]
         else
-          ϕ̃ = mapprime(x1x2dag[n], 0 => 2)
-          ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds)
-          ξ̃ = mapprime(x1dag_ȳ[n + 1], 0 => 2)
-          x̄1[n] = _contract(ITensor, ξ̃, ϕ̃)
+          # apply U on one side of the MPO
+          if apply_dag
+            ϕ̃ = swapprime(x1x2dag[n], 0 => 1)
+            ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag=false)
+            ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
+            ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
+            ξ̃ = 2 * dag(x1dag_ȳ[n + 1])'
+          else
+            ϕ̃ = mapprime(x1x2dag[n], 0 => 2)
+            ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
+            ξ̃ = mapprime(x1dag_ȳ[n + 1], 0 => 2)
+          end
         end
+        x̄1[n] = _contract(ITensor, ξ̃, ϕ̃)
       else
         s = inds(x1[n])
         x̄1[n] = itensor(zeros(dim.(s)), s...)

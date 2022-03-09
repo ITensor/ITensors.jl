@@ -261,56 +261,58 @@ end
     test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
   end
 
-  basis = vec(collect(Iterators.product(fill([1, 2], 2)...)))
-  # CRx
-  args = (0.2,)
-  for σ in basis, σ′ in basis
-    f = x -> op("CRx", s, (1, 2); θ=x)[σ..., σ′...]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
+  #basis = vec(collect(Iterators.product(fill([1, 2], 2)...)))
+  ## CRx
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("CRx", s, (1, 2); θ=x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
 
-  # CRy
-  args = (0.2,)
-  for σ in basis, σ′ in basis
-    f = x -> op("CRy", s, (1, 2); θ=x)[σ..., σ′...]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
+  ## CRy
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("CRy", s, (1, 2); θ=x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
 
-  # CRz
-  args = (0.2,)
-  for σ in basis, σ′ in basis
-    f = x -> op("CRz", s, (1, 2); ϕ=x)[σ..., σ′...]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
-  # Rn
-  args = (0.2, 0.3, 0.4)
-  for σ in basis, σ′ in basis
-    f = x -> op("CRn", s, (1, 2); θ=x[1], ϕ=x[2], λ=x[3])[σ..., σ′...]
-    test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
-  end
+  ## CRz
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("CRz", s, (1, 2); ϕ=x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ## Rn
+  #args = (0.2, 0.3, 0.4)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("CRn", s, (1, 2); θ=x[1], ϕ=x[2], λ=x[3])[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
 
-  # Rxx
-  args = (0.2,)
-  for σ in basis, σ′ in basis
-    f = x -> op("Rxx", s, (1, 2); ϕ=x)[σ..., σ′...]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
-  # Ryy
-  args = (0.2,)
-  for σ in basis, σ′ in basis
-    f = x -> op("Ryy", s, (1, 2); ϕ=x)[σ..., σ′...]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
-  # Rzz
-  args = (0.2,)
-  for σ in basis, σ′ in basis
-    f = x -> op("Rzz", s, (1, 2); ϕ=x)[σ..., σ′...]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
+  ## Rxx
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("Rxx", s, (1, 2); ϕ=x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ## Ryy
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("Ryy", s, (1, 2); ϕ=x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ## Rzz
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("Rzz", s, (1, 2); ϕ=x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
 end
 
 @testset "MPS ($ElType)" for ElType in (Float64, ComplexF64)
+  Random.seed!(1234)
   n = 4
+  ϵ = 1e-8
   s = siteinds("S=1/2", n; conserve_qns=true)
   function heisenberg(n)
     os = OpSum()
@@ -341,6 +343,20 @@ end
   f = x -> inner(x, H, x)
   args = (ψ,)
   @test_throws ErrorException gradient(f, args...)
+
+  # apply on MPS 
+  s = siteinds("S=1/2", n)
+  ϕ = randomMPS(ElType, s)
+  ψ = randomMPS(ElType, s)
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    ψθ = apply(U, ψ)
+    return real(inner(ϕ, ψθ))
+  end
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
 end
 
 @testset "MPO" begin
