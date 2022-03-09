@@ -319,17 +319,14 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
   return y, apply_pullback
 end
 
-function ChainRulesCore.rrule(
-  ::typeof(apply), x1::Vector{ITensor}, x2::MPO; apply_dag::Bool=true, kwargs...
-)
+function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPO; kwargs...)
+  apply_dag = get(kwargs, :apply_dag, true)
   N = length(x1) + 1
   # Apply circuit and store intermediates in the forward direction
   x1x2 = Vector{MPO}(undef, N)
   x1x2[1] = x2
   for n in 2:N
-    x1x2[n] = apply(
-      x1[n - 1], x1x2[n - 1]; move_sites_back=true, apply_dag=apply_dag, kwargs...
-    )
+    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, kwargs...)
   end
   y = x1x2[end]
   function apply_pullback(ȳ)
@@ -338,9 +335,7 @@ function ChainRulesCore.rrule(
     x1dag_ȳ[end] = ȳ
     x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
     for n in (N - 1):-1:1
-      x1dag_ȳ[n] = apply(
-        x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, apply_dag=apply_dag, kwargs...
-      )
+      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, kwargs...)
     end
 
     x̄1 = similar(x1)
