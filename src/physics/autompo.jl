@@ -326,10 +326,10 @@ end
 
 Remove any MPOTerm with norm(coef) < cutoff
 """
-function prune!(os::OpSum; cutoff=1e-15)
+function prune!(os::OpSum; atol=1e-15)
   OS = OpSum()
   for o in os
-    norm(ITensors.coef(o)) > cutoff && push!(OS, o)
+    norm(ITensors.coef(o)) > atol && push!(OS, o)
   end
   os = OS
   return os
