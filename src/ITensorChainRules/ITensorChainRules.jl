@@ -312,9 +312,7 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
       x1dag_ȳ′ = prime(x1dag_ȳ[n + 1], inds(x1[n]; plev=0))
       x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n])
     end
-    #XXX double check this change
-    #x̄2 = x1dag_ȳ[end]
-    x̄2 = x1dag_ȳ[1]
+    x̄2 = x1dag_ȳ[end]
 
     return (NoTangent(), x̄1, x̄2)
   end
@@ -423,16 +421,22 @@ end
 function ChainRulesCore.rrule(::typeof(tr), x::MPO; kwargs...)
   y = tr(x; kwargs...)
   function contract_pullback(ȳ)
-    s = firstsiteinds(x)
-    #return ȳ * MPO(s, "Id")
+    s = noprime(firstsiteinds(x))
+    plev = get(kwargs, :plev, 0 => 1)
+
+    n = length(s)
     x̄ = similar(x)
-    x̄[1] = 0.5 * op("Id", s[1]) * ITensor(1, commoninds(x[1], x[2]))
-    for j in 2:(length(x̄) - 1)
-      x̄[j] = 0.5 * op("Id", s[j]) * ITensor(1, commoninds(x[j], x[j - 1]))
-      x̄[j] = x̄[j] * ITensor(1, commoninds(x[j], x[j + 1]))
+    newlinkinds = [Index(1; tags="Link,l=$j") for j in 1:(n - 1)]
+
+    x̄[1] = op("Id", s[1]) * ITensor(1, newlinkinds[1])
+    for j in 2:(n - 1)
+      x̄[j] = op("Id", s[j]) * ITensor(1, newlinkinds[j - 1])
+      x̄[j] = x̄[j] * ITensor(1, newlinkinds[j])
     end
-    j = length(x̄)
-    x̄[j] = 0.5 * op("Id", s[j]) * ITensor(1, commoninds(x[j], x[j - 1]))
+    x̄[n] = op("Id", s[n]) * ITensor(1, newlinkinds[n - 1])
+    for j in 1:n
+      x̄[j] = mapprime(x̄[j], 0 => first(plev), 1 => last(plev))
+    end
     return (NoTangent(), ȳ * x̄)
   end
   return y, contract_pullback

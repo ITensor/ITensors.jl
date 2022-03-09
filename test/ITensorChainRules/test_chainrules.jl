@@ -343,3 +343,72 @@ end
   args = (ψ,)
   @test_throws ErrorException gradient(f, args...)
 end
+
+@testset "MPO" begin
+  Random.seed!(1234)
+  ϵ = 1e-8
+  n = 4
+  s = siteinds("Qubit", n)
+  function ising(n, h)
+    os = OpSum()
+    for j in 1:(n - 1)
+      os += -1, "Z", j, "Z", j + 1
+      os += -h, "X", j
+    end
+    os += -h, "X", n
+    return os
+  end
+  H = MPO(ising(n, 1.0), s)
+
+  # apply on MPO with apply_dag=true
+  ϕ = randomMPS(ComplexF64, s, 10)
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    Hθ = apply(U, H; apply_dag=true)
+    return real(inner(ϕ', Hθ, ϕ))
+  end
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
+
+  # apply on MPO with apply_dag=false
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    Hθ = apply(U, H; apply_dag=false)
+    return real(inner(ϕ', Hθ, ϕ))
+  end
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
+
+  # multiply two MPOs
+  V = randomMPO(s)
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    Hθ = apply(U, H; apply_dag=false)
+    X = replaceprime(V' * Hθ, 2 => 1)
+    return real(inner(ϕ', X, ϕ))
+  end
+
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
+
+  # trace(MPO) 
+  V1 = randomMPO(s)
+  V2 = randomMPO(s)
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    Hθ = apply(U, H; apply_dag=false)
+    X = V1''' * Hθ'' * V2' * Hθ
+    return real(tr(X; plev=4 => 0))
+  end
+
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
+end
