@@ -7,11 +7,15 @@
 # SiteOp                  # 
 ###########################
 
-struct SiteOp{N}
-  name::String
+struct SiteOp{O,N}
+  name::O
   site::NTuple{N,Int}
   params::NamedTuple
 end
+
+SiteOp(op::AbstractArray, site::Tuple) = SiteOp(op, site, NamedTuple())
+SiteOp(op::AbstractArray, site::Int...) = SiteOp(op, site)
+
 # Change NamedTuple() to (;) when we drop older Julia versions
 SiteOp(name::String, site::Tuple) = SiteOp(name, site, NamedTuple())
 SiteOp(name::String, site::Int...) = SiteOp(name, site)
@@ -21,7 +25,9 @@ end
 SiteOp(name::String, params::NamedTuple, site::Tuple) = SiteOp(name, site, params)
 SiteOp(name::String, params::NamedTuple, site::Int...) = SiteOp(name, site, params)
 
-convert(::Type{SiteOp}, op::Pair{String,Int}) = SiteOp(first(op), last(op))
+function convert(::Type{SiteOp}, op::Pair{Union{String,AbstractArray},Int})
+  return SiteOp(first(op), last(op))
+end
 
 name(s::SiteOp) = s.name
 site(s::SiteOp) = only(s.site)
@@ -114,9 +120,9 @@ function isless(t1::MPOTerm, t2::MPOTerm)
   return ops(t1) < ops(t2)
 end
 
-function MPOTerm(c::Number, op1::String, ops_rest...)
+function MPOTerm(c::Number, op1::Union{String,AbstractArray{<:Number}}, ops_rest...) #where T<:Number
   ops = (op1, ops_rest...)
-  starts = findall(x -> x isa String, ops)
+  starts = findall(x -> (x isa String) || (x isa AbstractArray{<:Number}), ops)
   N = length(starts)
   vop = OpTerm(undef, N)
   for n in 1:N
@@ -127,7 +133,7 @@ function MPOTerm(c::Number, op1::String, ops_rest...)
   return MPOTerm(c, vop)
 end
 
-function MPOTerm(op1::String, ops...)
+function MPOTerm(op1::Union{String,AbstractArray}, ops...)
   return MPOTerm(one(Float64), op1, ops...)
 end
 
@@ -146,8 +152,13 @@ function Base.show(io::IO, op::MPOTerm)
   end
   for o in ops(op)
     print(io, "\"$(name(o))\"($(string_site_or_sites(o))) ")
+    !isempty(params(o)) && print(io, params(o))
   end
 end
+
+(α::Number * op::MPOTerm) = MPOTerm(α * coef(op), ops(op))
+/(op::MPOTerm, α::Number) = MPOTerm(coef(op) / α, ops(op))
+*(op::MPOTerm, α::Number) = α * op
 
 ############################
 ## OpSum                 #
@@ -202,6 +213,8 @@ function Base.deepcopy(ampo::OpSum)
 end
 
 Base.size(ampo::OpSum) = size(data(ampo))
+
+Base.iterate(os::OpSum, args...) = iterate(data(os), args...)
 
 """
     add!(ampo::OpSum,
@@ -297,6 +310,29 @@ function (ampo::OpSum - term::Tuple)
   ampo_plus_term = copy(ampo)
   subtract!(ampo_plus_term, term...)
   return ampo_plus_term
+end
+
+function +(o1::OpSum, o2::OpSum; kwargs...)
+  return prune!(sortmergeterms!(OpSum([o1..., o2...])), kwargs...)
+end
+
+*(α::Number, os::OpSum) = OpSum([α * o for o in os])
+/(os::OpSum, α::Number) = OpSum([o / α for o in os])
+
+-(o1::OpSum, o2::OpSum) = o1 + (-1) * o2
+
+"""
+    prune!(os::OpSum; cutoff = 1e-15)
+
+Remove any MPOTerm with norm(coef) < cutoff
+"""
+function prune!(os::OpSum; atol=1e-15)
+  OS = OpSum()
+  for o in os
+    norm(ITensors.coef(o)) > atol && push!(OS, o)
+  end
+  os = OS
+  return os
 end
 
 #
@@ -430,10 +466,10 @@ end
 
 function computeSiteProd(sites, ops::OpTerm)::ITensor
   i = site(ops[1])
-  T = op(sites[i], ops[1].name)
+  T = op(sites[i], ops[1].name; ops[1].params...)
   for j in 2:length(ops)
     (site(ops[j]) != i) && error("Mismatch of site number in computeSiteProd")
-    opj = op(sites[i], ops[j].name)
+    opj = op(sites[i], ops[j].name; ops[j].params...)
     T = product(T, opj)
   end
   return T
@@ -640,7 +676,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         for st in term
           op_tensor = get(op_cache, name(st) => site(st), nothing)
           if op_tensor === nothing
-            op_tensor = op(sites[site(st)], name(st))
+            op_tensor = op(sites[site(st)], name(st); params(st)...)
             op_cache[name(st) => site(st)] = op_tensor
           end
           q -= flux(op_tensor)
@@ -893,9 +929,20 @@ function sorteachterm!(ampo::OpSum, sites)
   return ampo
 end
 
-function sortmergeterms!(ampo::OpSum)
-  sort!(data(ampo))
+function check_numerical_opsum(ampo::OpSum)
+  mpoterms = data(ampo)
+  for mpoterm in mpoterms
+    operators = ops(mpoterm)
+    for operator in name.(operators)
+      operator isa Array{<:Number} && return true
+    end
+  end
+  return false
+end
 
+function sortmergeterms!(ampo::OpSum)
+  check_numerical_opsum(ampo) && return ampo
+  sort!(data(ampo))
   # Merge (add) terms with same operators
   da = data(ampo)
   ndata = MPOTerm[]

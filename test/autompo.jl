@@ -239,6 +239,39 @@ end
     @test length(sprint(show, ampo)) > 1
   end
 
+  @testset "OpSum algebra" begin
+    n = 5
+    sites = siteinds("S=1/2", n)
+    O1 = OpSum()
+    for j in 1:(n - 1)
+      O1 += "Sz", j, "Sz", j + 1
+    end
+    O2 = OpSum()
+    for j in 1:n
+      O2 += "Sx", j
+    end
+    O = O1 + 2 * O2
+    @test length(O) == 2 * n - 1
+    H1 = MPO(O1, sites)
+    H2 = MPO(O2, sites)
+    H = H1 + 2 * H2
+    @test prod(MPO(O, sites)) ≈ prod(H)
+
+    O = O1 - 2 * O2
+    @test length(O) == 2 * n - 1
+    H1 = MPO(O1, sites)
+    H2 = MPO(O2, sites)
+    H = H1 - 2 * H2
+    @test prod(MPO(O, sites)) ≈ prod(H)
+
+    O = O1 - O2 / 2
+    @test length(O) == 2 * n - 1
+    H1 = MPO(O1, sites)
+    H2 = MPO(O2, sites)
+    H = H1 - H2 / 2
+    @test prod(MPO(O, sites)) ≈ prod(H)
+  end
+
   @testset "Single creation op" begin
     ampo = OpSum()
     add!(ampo, "Adagup", 3)
