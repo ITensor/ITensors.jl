@@ -261,53 +261,52 @@ end
     test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
   end
 
-  # XXX: need #843
-  #basis = vec(Iterators.product(fill([1,2],2)...)|>collect)
-  ## CRx
-  #args = (0.2,) 
-  #for σ in basis, σ′ in basis
-  #  f = x -> op("CRx", s, (1,2); θ = x)[σ...,σ′...]
-  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  #end
+  basis = vec(collect(Iterators.product(fill([1, 2], 2)...)))
+  # CRx
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("CRx", s, (1, 2); θ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
 
-  ## CRy
-  #args = (0.2,) 
-  #for σ in basis, σ′ in basis
-  #  f = x -> op("CRy", s, (1,2); θ = x)[σ...,σ′...]
-  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  #end
+  # CRy
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("CRy", s, (1, 2); θ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
 
-  ## CRz
-  #args = (0.2,) 
-  #for σ in basis, σ′ in basis
-  #  f = x -> op("CRz", s, (1,2); ϕ = x)[σ...,σ′...]
-  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  #end
-  ## Rn
-  #args = (0.2,0.3,0.4)
-  #for σ in basis, σ′ in basis
-  #  f = x -> op("CRn", s, (1,2); θ = x[1], ϕ=x[2], λ=x[3])[σ..., σ′...]
-  #  test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
-  #end
-  #
-  ## Rxx
-  #args = (0.2,) 
-  #for σ in basis, σ′ in basis
-  #  f = x -> op("Rxx", s, (1,2); ϕ = x)[σ...,σ′...]
-  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  #end
-  ## Ryy
-  #args = (0.2,) 
-  #for σ in basis, σ′ in basis
-  #  f = x -> op("Ryy", s, (1,2); ϕ = x)[σ...,σ′...]
-  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  #end
-  ## Rzz
-  #args = (0.2,) 
-  #for σ in basis, σ′ in basis
-  #  f = x -> op("Rzz", s, (1,2); ϕ = x)[σ...,σ′...]
-  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  #end
+  # CRz
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("CRz", s, (1, 2); ϕ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # Rn
+  args = (0.2, 0.3, 0.4)
+  for σ in basis, σ′ in basis
+    f = x -> op("CRn", s, (1, 2); θ=x[1], ϕ=x[2], λ=x[3])[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+
+  # Rxx
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("Rxx", s, (1, 2); ϕ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # Ryy
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("Ryy", s, (1, 2); ϕ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # Rzz
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("Rzz", s, (1, 2); ϕ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
 end
 
 @testset "MPS ($ElType)" for ElType in (Float64, ComplexF64)

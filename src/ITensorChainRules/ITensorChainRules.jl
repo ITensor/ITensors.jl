@@ -320,7 +320,7 @@ function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwa
 end
 
 function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPO; kwargs...)
-  apply_dag = get(kwargs, :apply_dag, true)
+  apply_dag = kwargs[:apply_dag]
   N = length(x1) + 1
   # Apply circuit and store intermediates in the forward direction
   x1x2 = Vector{MPO}(undef, N)
