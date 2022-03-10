@@ -24,6 +24,20 @@ using ITensors, Test
     @test SySy ≈ product(Sy, Sy)
   end
 
+  @testset "+/- in operator strings" begin
+    q = siteind("Qudit"; dim=5)
+    Amat = array(op("a", q))
+    Adagmat = array(op("a†", q))
+
+    x₁ = Adagmat * Adagmat * Amat * Amat
+    x₂ = Adagmat * Amat + Amat * Adagmat
+    x₃ = Amat - Adagmat
+    @test x₁ ≈ array(op("a† * a† * a * a", q))
+    @test x₁ ≈ array(op("a† * a† * a * a", q))
+    @test x₂ ≈ array(op("a† * a + a * a†", q))
+    @test x₃ ≈ array(op("a - a†", q))
+  end
+
   @testset "Custom SiteType using op" begin
     # Use "_Custom_" tag even though this example
     # is for S=3/2, because we might define the 

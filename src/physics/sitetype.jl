@@ -224,23 +224,19 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   # if there are multiple indices
   commontags_s = commontags(s...)
 
-  # XXX this clashes with the S+ and S- for spins...
-  ## Interpret operator names joined by +
-  ## as acting sequentially on the same site
-  #pluspos = findfirst("+", name)
-  #if !isnothing(pluspos)
-  #  op1 = name[1:prevind(name, pluspos.start)]
-  #  op2 = name[nextind(name, pluspos.start):end]
-  #  return op(op1, s...; kwargs...) + op(op2, s...; kwargs...)
-  #end
-
-  # Interpret operator names joined by *
-  # as acting sequentially on the same site
-  starpos = findfirst("*", name)
-  if !isnothing(starpos)
-    op1 = name[1:prevind(name, starpos.start)]
-    op2 = name[nextind(name, starpos.start):end]
-    return product(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
+  # some simple op algebra. Requires a space on both sides of the operator,
+  # to avoid accidental clashing.
+  for (label, algebraop) in [("+", +), ("-", -), ("*", product)]
+    oploc = findfirst(label, name)
+    if !isnothing(oploc)
+      op1 = name[1:prevind(name, oploc.start)]
+      op2 = name[nextind(name, oploc.start):end]
+      has_space_left = op1[end] == ' '
+      has_space_right = op2[1] == ' '
+      if label == "*" || (has_space_left && has_space_right)
+        return algebraop(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
+      end
+    end
   end
 
   common_stypes = _sitetypes(commontags_s)
