@@ -2070,9 +2070,9 @@ function exp(A::ITensor, Linds, Rinds; kwargs...)
 
   CL = combiner(Lis...; dir=Out)
   CR = combiner(Ris...; dir=In)
-  AC = A * CR * CL
+  AC = (A * CR) * CL
   expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
-  return itensor(expAT) * dag(CR) * dag(CL)
+  return (itensor(expAT) * dag(CR)) * dag(CL)
 end
 
 function exp(A::ITensor; kwargs...)

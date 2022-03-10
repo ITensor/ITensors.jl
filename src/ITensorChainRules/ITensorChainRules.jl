@@ -3,7 +3,13 @@ module ITensorChainRules
 using ChainRulesCore
 using ..ITensors
 
+using ITensors.NDTensors
+using ITensors: Indices
+
 include("zygoterules.jl")
+include("itensors_chainrules.jl")
+
+
 
 ITensors.dag(z::AbstractZero) = z
 
@@ -139,6 +145,8 @@ end
 #  return y, adjoint_pullback
 #end
 
+
+
 # Special case for contracting a pair of ITensors
 function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::ITensor)
   y = x1 * x2
@@ -230,6 +238,7 @@ function ChainRulesCore.rrule(::Type{ITensor}, x::Number)
   return y, ITensor_pullback
 end
 
+
 function ChainRulesCore.rrule(::typeof(dag), x)
   y = dag(x)
   function dag_pullback(ȳ)
@@ -264,6 +273,8 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 @non_differentiable addtags(::TagSet, ::Any)
 @non_differentiable ITensors.filter_inds_set_function(::Function, ::Function, ::Any...)
 @non_differentiable ITensors.filter_inds_set_function(::Function, ::Any...)
+
+
 
 #
 # MPO/MPS
