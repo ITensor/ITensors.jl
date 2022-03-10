@@ -21,7 +21,7 @@ mutable struct Sweeps
   noise::Vector{Float64}
 
   function Sweeps(nsw::Int; maxdim=typemax(Int), cutoff=1E-16, mindim=1, noise=0.0)
-    sw = new(nsw, fill(0, nsw), fill(0, nsw), fill(0, nsw), fill(0, nsw))
+    sw = new(nsw, fill(typemax(Int), nsw), fill(1E-16, nsw), fill(1, nsw), fill(0.0, nsw))
     setmaxdim!(sw, maxdim...)
     setmindim!(sw, mindim...)
     setcutoff!(sw, cutoff...)

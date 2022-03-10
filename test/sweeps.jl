@@ -126,6 +126,28 @@ using Test
     @test cutoff(sw, 3) ≈ 0.0
     @test cutoff(sw, 4) ≈ 1E-12
   end
+
+  @testset "Keyword args to constructor" begin
+    sw = Sweeps(5; maxdim=[4, 8, 16], mindim=1, cutoff=[1E-5, 1E-8])
+    @test maxdim(sw, 1) == 4
+    @test maxdim(sw, 2) == 8
+    @test maxdim(sw, 3) == 16
+    @test maxdim(sw, 4) == 16
+    @test maxdim(sw, 5) == 16
+
+    @test mindim(sw, 1) == 1
+    @test mindim(sw, 5) == 1
+
+    @test cutoff(sw, 1) ≈ 1E-5
+    @test cutoff(sw, 2) ≈ 1E-8
+    @test cutoff(sw, 3) ≈ 1E-8
+    @test cutoff(sw, 4) ≈ 1E-8
+    @test cutoff(sw, 5) ≈ 1E-8
+
+    sw = Sweeps(5; cutoff=1E-8)
+    @test maxdim(sw, 1) == typemax(Int)
+    @test maxdim(sw, 5) == typemax(Int)
+  end
 end
 
 nothing
