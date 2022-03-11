@@ -576,9 +576,10 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
     for i in 1:N, j in 1:N
       a = OpSum()
       a += op[1], i, op[2], j
+      X = MPO(a, s)
       @test inner(psi, MPO(a, s), psi) ≈ Cpm[i, j] atol = 5e-15
     end
-    PM = expect(psi, op[1] * "*" * op[2])
+    PM = expect(psi, op[1] * " * " * op[2])
     @test norm(PM - diag(Cpm)) < 1E-8
   end
 end
@@ -755,13 +756,13 @@ end
     #Test site_range feature
     s = siteinds("S=1/2", 8; conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
-    PM = expect(psi, "S+*S-")
+    PM = expect(psi, "S+ * S-")
     Cpm = correlation_matrix(psi, "S+", "S-")
     range = 3:7
     Cpm37 = correlation_matrix(psi, "S+", "S-"; site_range=range)
     @test norm(Cpm37 - Cpm[range, range]) < 1E-8
 
-    @test norm(PM[range] - expect(psi, "S+*S-"; site_range=range)) < 1E-8
+    @test norm(PM[range] - expect(psi, "S+ * S-"; site_range=range)) < 1E-8
 
     # With start_site, end_site arguments:
     s = siteinds("S=1/2", 8)
@@ -1145,41 +1146,40 @@ end
       @test maxlinkdim(ψ̃) == 1
     end
 
-    #for i in 1:N, j in 1:N, k in 1:N, l in 1:N
-    #  ns = [i, j, k, l]
-    #  !allunique(ns) && continue
-    #  min_ns = minimum(ns)
-    #  ns′ = collect(min_ns:min_ns+length(ns)-1)
-    #  ψ′ = movesites(ψ, ns .=> ns′; cutoff = 1e-15)
-    #  @test siteind(ψ′, min_ns) == siteind(ψ, i)
-    #  @test siteind(ψ′, min_ns+1) == siteind(ψ, j)
-    #  @test siteind(ψ′, min_ns+2) == siteind(ψ, k)
-    #  @test siteind(ψ′, min_ns+3) == siteind(ψ, l)
-    #  @test maxlinkdim(ψ′) == 1
-    #  ψ̃ = movesites(ψ′, ns′ .=> ns; cutoff = 1e-15)
-    #  for n in 1:N
-    #    @test siteind(ψ̃, n) == siteind(ψ, n)
-    #  end
-    #  @test maxlinkdim(ψ̃) == 1
-    #end
+    for i in 1:N, j in 1:N, k in 1:N, l in 1:N
+      ns = [i, j, k, l]
+      !allunique(ns) && continue
+      min_ns = minimum(ns)
+      ns′ = collect(min_ns:(min_ns + length(ns) - 1))
+      ψ′ = movesites(ψ, ns .=> ns′; cutoff=1e-15)
+      @test siteind(ψ′, min_ns) == siteind(ψ, i)
+      @test siteind(ψ′, min_ns + 1) == siteind(ψ, j)
+      @test siteind(ψ′, min_ns + 2) == siteind(ψ, k)
+      @test siteind(ψ′, min_ns + 3) == siteind(ψ, l)
+      @test maxlinkdim(ψ′) == 1
+      ψ̃ = movesites(ψ′, ns′ .=> ns; cutoff=1e-15)
+      for n in 1:N
+        @test siteind(ψ̃, n) == siteind(ψ, n)
+      end
+      @test maxlinkdim(ψ̃) == 1
+    end
 
-    #for i in 1:N, j in 1:N, k in 1:N, l in 1:N, m in 1:N
-    #  ns = [i, j, k, l, m]
-    #  !allunique(ns) && continue
-    #  min_ns = minimum(ns)
-    #  ns′ = collect(min_ns:min_ns+length(ns)-1)
-    #  ψ′ = movesites(ψ, ns .=> ns′; cutoff = 1e-15)
-    #  for n in 1:length(ns)
-    #    @test siteind(ψ′, min_ns+n-1) == siteind(ψ, ns[n])
-    #  end
-    #  @test maxlinkdim(ψ′) == 1
-    #  ψ̃ = movesites(ψ′, ns′ .=> ns; cutoff = 1e-15)
-    #  for n in 1:N
-    #    @test siteind(ψ̃, n) == siteind(ψ, n)
-    #  end
-    #  @test maxlinkdim(ψ̃) == 1
-    #end
-
+    for i in 1:N, j in 1:N, k in 1:N, l in 1:N, m in 1:N
+      ns = [i, j, k, l, m]
+      !allunique(ns) && continue
+      min_ns = minimum(ns)
+      ns′ = collect(min_ns:(min_ns + length(ns) - 1))
+      ψ′ = movesites(ψ, ns .=> ns′; cutoff=1e-15)
+      for n in 1:length(ns)
+        @test siteind(ψ′, min_ns + n - 1) == siteind(ψ, ns[n])
+      end
+      @test maxlinkdim(ψ′) == 1
+      ψ̃ = movesites(ψ′, ns′ .=> ns; cutoff=1e-15)
+      for n in 1:N
+        @test siteind(ψ̃, n) == siteind(ψ, n)
+      end
+      @test maxlinkdim(ψ̃) == 1
+    end
   end
 
   @testset "product(::Vector{ITensor}, ::MPS)" begin
@@ -1685,7 +1685,7 @@ end
       energy, ψ = dmrg(H, ψ0, sweeps; outputlevel=0)
 
       function ITensors.op(::OpName"CCup", ::SiteType"Electron", s1::Index, s2::Index)
-        return op("Adagup*F", s1) * op("Aup", s2)
+        return op("Adagup * F", s1) * op("Aup", s2)
       end
 
       for i in 1:(N - 1), j in (i + 1):N
