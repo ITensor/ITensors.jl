@@ -223,20 +223,54 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   # TODO: filter out only commons tags
   # if there are multiple indices
   commontags_s = commontags(s...)
+  
+  # first we handle the + and - algebra, which requires a space between ops to avoid clashing
+  name_split = nothing
+  @ignore_derivatives name_split = String.(split(name, " "))
+  oplocs = findall(x -> x == "+" || x == "-", name_split)
 
-  # some simple op algebra. Requires a space on both sides of the operator,
-  # to avoid accidental clashing.
-  for (label, algebraop) in [("+", +), ("-", -), ("*", product)]
-    oploc = findfirst(label, name)
-    if !isnothing(oploc)
+  if !isempty(oplocs)
+    @ignore_derivatives !isempty(kwargs) &&
+      error("Lazy algebra on parametric gates not allowed")
+
+    # the string representation of algebra ops: ex ["+", "-", "+"]
+    labels = name_split[oplocs]
+    # assign coefficients to each term: ex [+1, -1, +1]
+    coeffs = [1, [label == "+" ? 1 : -1 for label in labels]...]
+
+    # grad the name of each operator block separated by an algebra op, and do so by
+    # making sure blank spaces between opnames are kept when building the new block.
+    start, opnames = 0, String[]
+    for oploc in oplocs
+      finish = oploc
+      opnames = vcat(
+        opnames, [prod([name_split[k] * " " for k in (start + 1):(finish - 1)])]
+      )
+      start = oploc
+    end
+    opnames = vcat(
+      opnames, [prod([name_split[k] * " " for k in (start + 1):length(name_split)])]
+    )
+
+    # build the vector of blocks and sum
+    op_list = [
+      coeff * (op(opname, s...; kwargs...)) for (coeff, opname) in zip(coeffs, opnames)
+    ]
+    return sum(op_list)
+  end
+
+  # the the multiplication come after
+  oploc = findfirst("*", name)
+  if !isnothing(oploc)
+    op1, op2 = nothing, nothing
+    @ignore_derivatives begin
       op1 = name[1:prevind(name, oploc.start)]
       op2 = name[nextind(name, oploc.start):end]
-      has_space_left = op1[end] == ' '
-      has_space_right = op2[1] == ' '
-      if label == "*" || (has_space_left && has_space_right)
-        return algebraop(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
+      if !(op1[end] == ' ' && op2[1] == ' ')
+        @warn "composite op definition `A*B` deprecated: please use `A * B` instead (with spaces)"
       end
     end
+    return product(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
   end
 
   common_stypes = _sitetypes(commontags_s)

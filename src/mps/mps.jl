@@ -593,7 +593,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 
   Op1 = _Op1 #make copies into which we can insert "F" string operators, and then restore.
   Op2 = _Op2
-  onsiteOp = "$Op1*$Op2"
+  onsiteOp = "$Op1 * $Op2"
   fermionic1 = has_fermion_string(Op1, s[1])
   fermionic2 = has_fermion_string(Op2, s[1])
   if fermionic1 != fermionic2
@@ -659,7 +659,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 
     # Get j > i correlations
     if !using_auto_fermion() && fermionic2
-      Op1 = "$Op1*F"
+      Op1 = "$Op1 * F"
     end
     Li12 = (Li * op(Op1, s, i)) * dag(prime(psi[i]))
     for j in (i + 1):end_site
@@ -685,7 +685,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 
       #  Get j < i correlations by swapping the operators
       if !using_auto_fermion() && fermionic1
-        Op2 = "$Op2*F"
+        Op2 = "$Op2 * F"
       end
       Li21 = (Li * op(Op2, s, i)) * dag(prime(psi[i]))
       if !using_auto_fermion() && fermionic1

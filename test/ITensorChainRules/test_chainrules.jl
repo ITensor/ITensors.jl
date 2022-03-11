@@ -307,6 +307,60 @@ end
     f = x -> op("Rzz", s, (1, 2); ϕ=x)[σ..., σ′...]
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
+
+  # algebra with non-parametric gates
+  args = (0.2,)
+  # addition
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> x * op("H + Y", s[1])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  #subtraction
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> x * op("H - Y", s[1])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # product
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> x * op("H * Y", s[1])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # composite
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> x * op("H + X * Y", s[1])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+
+  ## algebra with parametric gates
+  #args = (0.2,)
+  ## addition
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("H + Rx", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ##subtraction
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("H - Rx", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ### product
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("Rx * Y", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ## composite
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("Rx * Y - Ry", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  #
+  ## two-qubit composite algebra with parametric gate
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("Rxx + CX * CZ - Ryy", s, (1, 2); ϕ = x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+
 end
 
 @testset "MPS ($ElType)" for ElType in (Float64, ComplexF64)
@@ -362,7 +416,7 @@ end
 @testset "MPO" begin
   Random.seed!(1234)
   ϵ = 1e-8
-  n = 4
+  n = 3
   s = siteinds("Qubit", n)
   function ising(n, h)
     os = OpSum()
