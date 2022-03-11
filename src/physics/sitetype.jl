@@ -223,11 +223,11 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   # TODO: filter out only commons tags
   # if there are multiple indices
   commontags_s = commontags(s...)
-  
+
   # first we handle the + and - algebra, which requires a space between ops to avoid clashing
   name_split = nothing
   @ignore_derivatives name_split = String.(split(name, " "))
-  oplocs = findall(x -> x == "+" || x == "-", name_split)
+  oplocs = findall(x -> x ∈ ("+", "-"), name_split)
 
   if !isempty(oplocs)
     @ignore_derivatives !isempty(kwargs) &&
@@ -236,7 +236,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
     # the string representation of algebra ops: ex ["+", "-", "+"]
     labels = name_split[oplocs]
     # assign coefficients to each term: ex [+1, -1, +1]
-    coeffs = [1, [label == "+" ? 1 : -1 for label in labels]...]
+    coeffs = [1, [(-1)^Int(label == "-") for label in labels]...]
 
     # grad the name of each operator block separated by an algebra op, and do so by
     # making sure blank spaces between opnames are kept when building the new block.
