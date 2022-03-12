@@ -17,7 +17,7 @@ end
 
 function exp_one_step(trotter::Trotter{1}, o::∑)
   # TODO: Customize broadcast of `∏`.
-  exp_o = ∏(exp.(o))
+  exp_o = ∏([exp(oₙ) for oₙ in o])
   return exp_o
 end
 

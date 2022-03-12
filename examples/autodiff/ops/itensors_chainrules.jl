@@ -2,9 +2,29 @@ using ChainRulesCore
 using ITensors
 using ITensors.NDTensors
 
-using ITensors: Indices
+using ITensors: AllowAlias, Indices
 
 import ChainRulesCore: rrule
+
+function rrule(::Type{ITensor}, x1::AllowAlias, x2::Tensor)
+  y = ITensor(x1, x2)
+  function ITensor_pullback(ȳ)
+    x̄1 = NoTangent()
+    x̄2 = Tensor(x1, ȳ)
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, ITensor_pullback
+end
+
+function rrule(f::Type{<:Tensor}, x1::AllowAlias, x2::ITensor)
+  y = f(x1, x2)
+  function Tensor_pullback(ȳ)
+    x̄1 = NoTangent()
+    x̄2 = ITensor(x1, ȳ)
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, Tensor_pullback
+end
 
 function rrule(::Type{ITensor}, x1::Tensor)
   y = ITensor(x1)
@@ -20,6 +40,16 @@ function rrule(::typeof(itensor), x1::Tensor)
   function itensor_pullback(ȳ)
     x̄1 = tensor(ȳ)
     return (NoTangent(), x̄1)
+  end
+  return y, itensor_pullback
+end
+
+function rrule(::typeof(itensor), x1::TensorStorage, x2)
+  y = itensor(x1, x2)
+  function itensor_pullback(ȳ)
+    x̄1 = storage(ȳ)
+    x̄2 = NoTangent()
+    return (NoTangent(), x̄1, x̄2)
   end
   return y, itensor_pullback
 end
