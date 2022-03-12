@@ -735,31 +735,38 @@ end
     res = expect(psi, "Sz")
     @test res ≈ eSz
 
-    res = expect(psi, "Sz"; site_range=2:4)
+    res = expect(psi, "Sz"; sites=2:4)
     @test res ≈ eSz[2:4]
+
+    res = expect(psi, "Sz"; sites=[2,4,8])
+    @test res[1] ≈ eSz[2]
+    @test res[2] ≈ eSz[4]
+    @test res[3] ≈ eSz[8]
 
     res = expect(psi, "Sz", "Sx")
     @test res[1] ≈ eSz
     @test res[2] ≈ eSx
 
-    res = expect(psi, "Sz"; site=3)
-    @test typeof(res) == Vector{Float64}
-    @test res ≈ [eSz[3]]
+    res = expect(psi, "Sz"; sites=3)
+    @test res isa Float64
+    @test res ≈ eSz[3]
 
-    res = expect(psi, "Sz", "Sx"; site=3)
-    @test typeof(res) == Tuple{Vector{Float64},Vector{Float64}}
-    @test res[1] ≈ [eSz[3]]
-    @test res[2] ≈ [eSx[3]]
+    res = expect(psi, "Sz", "Sx"; sites=3)
+    @test res isa Tuple{Float64,Float64}
+    @test res[1] ≈ eSz[3]
+    @test res[2] ≈ eSx[3]
 
     res = expect(psi, ("Sz", "Sx"))
-    @test typeof(res) == Tuple{Vector{Float64},Vector{Float64}}
+    @test res isa Tuple{Vector{Float64},Vector{Float64}}
     @test res[1] ≈ eSz
     @test res[2] ≈ eSx
 
-    res = expect(psi, ["Sz", "Sx"])
-    @test typeof(res) == Vector{Vector{Float64}}
-    @test res[1] ≈ eSz
-    @test res[2] ≈ eSx
+    res = expect(psi, ["Sz"  "Sx"; "Sx" "Sz"]; sites=3:7)
+    @test res isa Matrix{Vector{Float64}}
+    @test res[1,1] ≈ eSz[3:7]
+    @test res[2,1] ≈ eSx[3:7]
+    @test res[1,2] ≈ eSx[3:7]
+    @test res[2,2] ≈ eSz[3:7]
   end
 
   @testset "Expected value and Correlations" begin

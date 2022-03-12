@@ -759,38 +759,39 @@ function expect(psi::MPS, ops; kwargs...)
   psi = copy(psi)
   N = length(psi)
   ElT = real(promote_itensor_eltype(psi))
-  Nops = length(ops)
   s = siteinds(psi)
 
-  if haskey(kwargs, :site)
-    haskey(kwargs, :site_range) &&
-      error("Cannot pass both site and site_range keyword args to expect")
-    site = kwargs[:site]
-    site_range = site:site
+  if haskey(kwargs, :site_range)
+    @warn "The `site_range` keyword arg. to `expect` is deprecated: use the keyword `sites` instead"
+    sites = kwargs[:site_range]
   else
-    site_range::UnitRange{Int} = get(kwargs, :site_range, 1:N)
+    sites = get(kwargs, :sites, 1:N)
   end
+
+  site_range = collect(sites)
   Ns = length(site_range)
   start_site = first(site_range)
-  offset = start_site - 1
 
   orthogonalize!(psi, start_site)
   norm2_psi = norm(psi)^2
 
   ex = map(n -> zeros(ElT, Ns), ops)
-  for j in site_range
+  for (entry, j) in enumerate(site_range)
     orthogonalize!(psi, j)
-    for n in 1:Nops
-      ex[n][j - offset] =
-        real(scalar(psi[j] * op(ops[n], s[j]) * dag(prime(psi[j], s[j])))) / norm2_psi
+    for (n, opname) in enumerate(ops)
+      ex[n][entry] =
+        real(scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j])))) / norm2_psi
     end
   end
 
+  if sites isa Number
+    return map(arr -> arr[1], ex)
+  end
   return ex
 end
 
 function expect(psi::MPS, op::AbstractString; kwargs...)
-  return expect(psi, (op,); kwargs...)[1]
+  return first(expect(psi, (op,); kwargs...))
 end
 
 function expect(psi::MPS, op1::AbstractString, ops::AbstractString...; kwargs...)
