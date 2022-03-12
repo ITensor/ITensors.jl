@@ -738,7 +738,7 @@ end
     res = expect(psi, "Sz"; sites=2:4)
     @test res ≈ eSz[2:4]
 
-    res = expect(psi, "Sz"; sites=[2,4,8])
+    res = expect(psi, "Sz"; sites=[2, 4, 8])
     @test res[1] ≈ eSz[2]
     @test res[2] ≈ eSz[4]
     @test res[3] ≈ eSz[8]
@@ -761,12 +761,12 @@ end
     @test res[1] ≈ eSz
     @test res[2] ≈ eSx
 
-    res = expect(psi, ["Sz"  "Sx"; "Sx" "Sz"]; sites=3:7)
+    res = expect(psi, ["Sz" "Sx"; "Sx" "Sz"]; sites=3:7)
     @test res isa Matrix{Vector{Float64}}
-    @test res[1,1] ≈ eSz[3:7]
-    @test res[2,1] ≈ eSx[3:7]
-    @test res[1,2] ≈ eSx[3:7]
-    @test res[2,2] ≈ eSz[3:7]
+    @test res[1, 1] ≈ eSz[3:7]
+    @test res[2, 1] ≈ eSx[3:7]
+    @test res[1, 2] ≈ eSx[3:7]
+    @test res[2, 2] ≈ eSz[3:7]
   end
 
   @testset "Expected value and Correlations" begin
@@ -808,10 +808,10 @@ end
     PM = expect(psi, "S+*S-")
     Cpm = correlation_matrix(psi, "S+", "S-")
     range = 3:7
-    Cpm37 = correlation_matrix(psi, "S+", "S-"; site_range=range)
+    Cpm37 = correlation_matrix(psi, "S+", "S-"; sites=range)
     @test norm(Cpm37 - Cpm[range, range]) < 1E-8
 
-    @test norm(PM[range] - expect(psi, "S+*S-"; site_range=range)) < 1E-8
+    @test norm(PM[range] - expect(psi, "S+*S-"; sites=range)) < 1E-8
 
     # With start_site, end_site arguments:
     s = siteinds("S=1/2", 8)
