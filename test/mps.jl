@@ -719,6 +719,49 @@ end
     @test flux(M) == QN("Sz", -4)
   end
 
+  @testset "expect Function" begin
+    N = 8
+    s = siteinds("S=1/2", N; conserve_qns=false)
+    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
+
+    eSz = zeros(N)
+    eSx = zeros(N)
+    for j in 1:N
+      orthogonalize!(psi, j)
+      eSz[j] = scalar(dag(prime(psi[j], "Site")) * op("Sz", s[j]) * psi[j])
+      eSx[j] = scalar(dag(prime(psi[j], "Site")) * op("Sx", s[j]) * psi[j])
+    end
+
+    res = expect(psi, "Sz")
+    @test res ≈ eSz
+
+    res = expect(psi, "Sz"; site_range=2:4)
+    @test res ≈ eSz[2:4]
+
+    res = expect(psi, "Sz", "Sx")
+    @test res[1] ≈ eSz
+    @test res[2] ≈ eSx
+
+    res = expect(psi, "Sz"; site=3)
+    @test typeof(res) == Vector{Float64}
+    @test res ≈ [eSz[3]]
+
+    res = expect(psi, "Sz", "Sx"; site=3)
+    @test typeof(res) == Tuple{Vector{Float64},Vector{Float64}}
+    @test res[1] ≈ [eSz[3]]
+    @test res[2] ≈ [eSx[3]]
+
+    res = expect(psi, ("Sz", "Sx"))
+    @test typeof(res) == Tuple{Vector{Float64},Vector{Float64}}
+    @test res[1] ≈ eSz
+    @test res[2] ≈ eSx
+
+    res = expect(psi, ["Sz", "Sx"])
+    @test typeof(res) == Vector{Vector{Float64}}
+    @test res[1] ≈ eSz
+    @test res[2] ≈ eSx
+  end
+
   @testset "Expected value and Correlations" begin
     m = 2
 

@@ -722,15 +722,23 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 end
 
 """
-    expect(psi::MPS,ops::AbstractString...;kwargs...)
+    expect(psi::MPS,ops::AbstractString...; kwargs...)
+    expect(psi::MPS,ops; kwargs...)
 
-Given an MPS `psi` and an operator name, returns
+Given an MPS `psi` and a single operator name, returns
 a vector of the expected value of the operator on 
-each site of the MPS. If multiple operator names are
-provided, returns a tuple of expectation value vectors.
+each site of the MPS. 
+
+If multiple operator names are provided, returns a tuple 
+of expectation value vectors.
+
+If a container of operator names is provided, returns the
+same type of container with names replaced by vectors
+of expectation values.
 
 # Optional Keyword Arguments
 - `site_range = 1:length(psi)`: compute expected values only for sites in the given range
+- `site`: compute the expected value on a given site
 
 # Examples
 
@@ -747,14 +755,21 @@ dens = expect(psi,"Ntot")
 updens,dndens = expect(psi,"Nup","Ndn")
 ```
 """
-function expect(psi::MPS, ops::AbstractString...; kwargs...)
+function expect(psi::MPS, ops; kwargs...)
   psi = copy(psi)
   N = length(psi)
   ElT = real(promote_itensor_eltype(psi))
   Nops = length(ops)
   s = siteinds(psi)
 
-  site_range::UnitRange{Int} = get(kwargs, :site_range, 1:N)
+  if haskey(kwargs, :site)
+    haskey(kwargs, :site_range) &&
+      error("Cannot pass both site and site_range keyword args to expect")
+    site = kwargs[:site]
+    site_range = site:site
+  else
+    site_range::UnitRange{Int} = get(kwargs, :site_range, 1:N)
+  end
   Ns = length(site_range)
   start_site = first(site_range)
   offset = start_site - 1
@@ -762,7 +777,7 @@ function expect(psi::MPS, ops::AbstractString...; kwargs...)
   orthogonalize!(psi, start_site)
   norm2_psi = norm(psi)^2
 
-  ex = ntuple(n -> zeros(ElT, Ns), Nops)
+  ex = map(n -> zeros(ElT, Ns), ops)
   for j in site_range
     orthogonalize!(psi, j)
     for n in 1:Nops
@@ -771,11 +786,15 @@ function expect(psi::MPS, ops::AbstractString...; kwargs...)
     end
   end
 
-  if Nops == 1
-    return Ns == 1 ? ex[1][1] : ex[1]
-  else
-    return Ns == 1 ? [x[1] for x in ex] : ex
-  end
+  return ex
+end
+
+function expect(psi::MPS, op::AbstractString; kwargs...)
+  return expect(psi, (op,); kwargs...)[1]
+end
+
+function expect(psi::MPS, op1::AbstractString, ops::AbstractString...; kwargs...)
+  return expect(psi, (op1, ops...); kwargs...)
 end
 
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPS)
