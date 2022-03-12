@@ -1997,15 +1997,26 @@ function indpairs(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"
 end
 
 """
-    ishermitian(T::ITensor; eps = 1E-10)
+    transpose(T::ITensor)
+
+Treating an ITensor as a map from a set of indices
+of prime level 0 to a matching set of indices but
+of prime level 1 
+[for example: (i,j,k,...) -> (j',i',k',...)]
+return the ITensor which is the transpose of this map.
+"""
+transpose(T::ITensor) = swapprime(T, 0 => 1)
+
+"""
+    ishermitian(T::ITensor; kwargs...)
 
 Test whether an ITensor is a Hermitian operator,
-up to a numerical tolerance. To be considered an
-operator, an ITensor must have matching pairs
-of indices with prime level 0 and 1.
+that is whether taking `dag` of the ITensor and
+transposing its indices returns numerically 
+the same ITensor.
 """
 function ishermitian(T::ITensor; kwargs...)
-  return isapprox(T, dag(swapprime(T, 0, 1)); kwargs...)
+  return isapprox(T, dag(transpose(T)); kwargs...)
 end
 
 # Trace an ITensor over pairs of indices determined by

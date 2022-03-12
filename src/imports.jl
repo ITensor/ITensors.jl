@@ -98,7 +98,8 @@ import LinearAlgebra:
   qr,
   rmul!,
   svd,
-  tr
+  tr,
+  transpose
 
 using ITensors.NDTensors:
   EmptyNumber,

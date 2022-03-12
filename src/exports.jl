@@ -177,6 +177,7 @@ export
   swapprime!,
   settags!,
   swaptags!,
+  transpose,
   uniqueinds,
   uniqueind,
   unioninds,
