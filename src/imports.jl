@@ -89,6 +89,7 @@ import LinearAlgebra:
   eigen,
   exp,
   factorize,
+  ishermitian,
   lmul!,
   mul!,
   norm,

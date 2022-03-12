@@ -142,6 +142,7 @@ export
   ind,
   inds,
   insertblock!,
+  ishermitian,
   itensor,
   mul!,
   matrix,

@@ -1996,6 +1996,21 @@ function indpairs(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"
   return is_first .=> is_last
 end
 
+"""
+    ishermitian(T::ITensor; eps = 1E-10)
+
+Test whether an ITensor is a Hermitian operator,
+up to a numerical tolerance. To be considered an
+operator, an ITensor must have matching pairs
+of indices with prime level 0 and 1.
+
+# Optional Keyword Arguments
+- `eps = 1E-10`: the numerical tolerance to use 
+"""
+function ishermitian(T::ITensor; eps=1E-10)
+  return norm(T - dag(swapprime(T, 0, 1))) < eps
+end
+
 # Trace an ITensor over pairs of indices determined by
 # the prime levels and tags. Indices that are not in pairs
 # are not traced over, corresponding to a "batched" trace.
