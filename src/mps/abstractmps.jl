@@ -1350,6 +1350,11 @@ Either modify in-place with `orthogonalize!` or
 out-of-place with `orthogonalize`.
 """
 function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
+  @debug_check begin
+    if !(1 <= j <= length(M))
+      error("Input j=$j to `orthogonalize!` out of range (valid range = 1:$(length(M)))")
+    end
+  end
   while leftlim(M) < (j - 1)
     (leftlim(M) < 0) && setleftlim!(M, 0)
     b = leftlim(M) + 1
