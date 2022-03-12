@@ -722,7 +722,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 end
 
 """
-    expect(psi::MPS,ops::AbstractString...; kwargs...)
+    expect(psi::MPS,op::AbstractString...; kwargs...)
     expect(psi::MPS,ops; kwargs...)
 
 Given an MPS `psi` and a single operator name, returns
@@ -737,8 +737,7 @@ same type of container with names replaced by vectors
 of expectation values.
 
 # Optional Keyword Arguments
-- `site_range = 1:length(psi)`: compute expected values only for sites in the given range
-- `site`: compute the expected value on a given site
+- `sites = 1:length(psi)`: compute expected values only for sites in the given range
 
 # Examples
 
@@ -747,12 +746,13 @@ N = 10
 
 s = siteinds("S=1/2",N)
 psi = randomMPS(s; linkdims=8)
-Z = expect(psi,"Sz";site_range=2:6)
+Z = expect(psi,"Sz";sites=2:4) # compute for sites 2,3,4
+Z3 = expect(psi,"Sz";sites=3)  # compute for site 3 only (output will be a scalar)
 
 s = siteinds("Electron",N)
 psi = randomMPS(s; linkdims=8)
 dens = expect(psi,"Ntot")
-updens,dndens = expect(psi,"Nup","Ndn")
+updens,dndens = expect(psi,"Nup","Ndn") # pass more than one operator
 ```
 """
 function expect(psi::MPS, ops; kwargs...)
