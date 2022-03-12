@@ -34,7 +34,7 @@ function loss(h)
   𝒰ʰ = exp(-β * ℋ; alg=Trotter{1}(5))
   Uʰ = Prod{ITensor}(𝒰ʰ, s)
   Uʰψ = Uʰ(ψ)
-  return -abs(inner(Uᶠψ, Uʰψ)) ^ 2 / (norm(Uᶠψ) * norm(Uʰψ)) ^ 2
+  return -abs(inner(Uᶠψ, Uʰψ))^2 / (norm(Uᶠψ) * norm(Uʰψ))^2
 end
 
 h⁰ = [0.0]

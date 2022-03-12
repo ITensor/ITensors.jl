@@ -33,7 +33,7 @@ function loss(β)
   𝒰ᵝ = exp(-β[1] * ℋ; alg=Trotter{1}(5))
   Uᵝ = Prod{ITensor}(𝒰ᵝ, s)
   Uᵝψ = Uᵝ(ψ)
-  return -abs(inner(Uψ, Uᵝψ)) ^ 2 / (norm(Uψ) * norm(Uᵝψ)) ^ 2
+  return -abs(inner(Uψ, Uᵝψ))^2 / (norm(Uψ) * norm(Uᵝψ))^2
 end
 
 β⁰ = [0.0]
