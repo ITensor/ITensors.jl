@@ -772,7 +772,7 @@ function expect(psi::MPS, ops; kwargs...)
   Ns = length(site_range)
   start_site = first(site_range)
 
-  el_types = map(o -> ishermitian(op(o, s[start_site])) ? Float64 : ElT, ops)
+  el_types = map(o -> ishermitian(op(o, s[start_site])) ? real(ElT) : ElT, ops)
 
   orthogonalize!(psi, start_site)
   norm2_psi = norm(psi)^2
