@@ -2003,12 +2003,9 @@ Test whether an ITensor is a Hermitian operator,
 up to a numerical tolerance. To be considered an
 operator, an ITensor must have matching pairs
 of indices with prime level 0 and 1.
-
-# Optional Keyword Arguments
-- `eps = 1E-10`: the numerical tolerance to use 
 """
-function ishermitian(T::ITensor; eps=1E-10)
-  return norm(T - dag(swapprime(T, 0, 1))) < eps
+function ishermitian(T::ITensor; kwargs...)
+  return isapprox(T, dag(swapprime(T, 0, 1)); kwargs...)
 end
 
 # Trace an ITensor over pairs of indices determined by
