@@ -758,7 +758,7 @@ updens,dndens = expect(psi,"Nup","Ndn") # pass more than one operator
 function expect(psi::MPS, ops; kwargs...)
   psi = copy(psi)
   N = length(psi)
-  ElT = real(promote_itensor_eltype(psi))
+  ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
 
   if haskey(kwargs, :site_range)
@@ -772,15 +772,17 @@ function expect(psi::MPS, ops; kwargs...)
   Ns = length(site_range)
   start_site = first(site_range)
 
+  el_types = map(o -> ishermitian(op(o, s[start_site])) ? Float64 : ElT, ops)
+
   orthogonalize!(psi, start_site)
   norm2_psi = norm(psi)^2
 
-  ex = map(n -> zeros(ElT, Ns), ops)
+  ex = map((o, el_t) -> zeros(el_t, Ns), ops, el_types)
   for (entry, j) in enumerate(site_range)
     orthogonalize!(psi, j)
     for (n, opname) in enumerate(ops)
-      ex[n][entry] =
-        real(scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j])))) / norm2_psi
+      val = scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j]))) / norm2_psi
+      ex[n][entry] = convert(el_types[n], val)
     end
   end
 

@@ -767,6 +767,20 @@ end
     @test res[2, 1] ≈ eSx[3:7]
     @test res[1, 2] ≈ eSx[3:7]
     @test res[2, 2] ≈ eSz[3:7]
+
+    #
+    # Test handling of non-Hermitian operators
+    # for complex-valued MPS
+    #
+    # Real-valued MPS
+    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
+    res = expect(psi, ("S+", "Sx"))
+    @test res isa Tuple{Vector{Float64},Vector{Float64}}
+
+    # Complex-valued MPS
+    psi = randomMPS(ComplexF64, s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
+    res = expect(psi, ("S+", "Sx"))
+    @test res isa Tuple{Vector{ComplexF64},Vector{Float64}}
   end
 
   @testset "Expected value and Correlations" begin
