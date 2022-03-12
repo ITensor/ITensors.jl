@@ -3,6 +3,15 @@ module ITensorChainRules
 using ChainRulesCore
 using ..ITensors
 
+import ChainRulesCore: rrule
+
+include(joinpath("NDTensors", "tensor.jl"))
+include(joinpath("NDTensors", "dense.jl"))
+include("indexset.jl")
+include("itensor.jl")
+include(joinpath("physics", "sitetype.jl"))
+include(joinpath("LazyApply", "LazyApply.jl"))
+include(joinpath("Ops", "Ops.jl"))
 include("zygoterules.jl")
 
 ITensors.dag(z::AbstractZero) = z

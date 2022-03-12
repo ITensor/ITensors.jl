@@ -141,10 +141,6 @@ function MPOTerm(ops::Vector{Pair{String,Int}})
   return MPOTerm(Iterators.flatten(ops)...)
 end
 
-(o::MPOTerm / c::Number) = MPOTerm(o.coef / c, o.ops)
-(o::MPOTerm * c::Number) = MPOTerm(o.coef * c, o.ops)
-(c::Number * o::MPOTerm) = o * c
-
 function Base.show(io::IO, op::MPOTerm)
   c = coef(op)
   if iszero(imag(c))
@@ -161,8 +157,8 @@ function Base.show(io::IO, op::MPOTerm)
 end
 
 (α::Number * op::MPOTerm) = MPOTerm(α * coef(op), ops(op))
-/(op::MPOTerm, α::Number) = MPOTerm(coef(op) / α, ops(op))
-*(op::MPOTerm, α::Number) = α * op
+(op::MPOTerm * α::Number) = α * op
+(op::MPOTerm / α::Number) = MPOTerm(coef(op) / α, ops(op))
 
 ############################
 ## OpSum                 #
@@ -193,8 +189,6 @@ end
 
 length(os::OpSum) = length(data(os))
 getindex(os::OpSum, I::Int) = data(os)[I]
-
-iterate(os::OpSum, args...) = iterate(os.data, args...)
 
 const AutoMPO = OpSum
 
@@ -319,11 +313,6 @@ function +(o1::OpSum, o2::OpSum; kwargs...)
   return prune!(sortmergeterms!(OpSum([o1..., o2...])), kwargs...)
 end
 
-*(α::Number, os::OpSum) = OpSum([α * o for o in os])
-/(os::OpSum, α::Number) = OpSum([o / α for o in os])
-
--(o1::OpSum, o2::OpSum) = o1 + (-1) * o2
-
 """
     prune!(os::OpSum; cutoff = 1e-15)
 
@@ -367,9 +356,11 @@ function Base.copyto!(ampo, bc::Broadcast.Broadcasted{OpSumAddTermStyle,<:Any,ty
   return ampo
 end
 
-(o::OpSum / c::Number) = OpSum([oₙ / c for oₙ in o])
-(o::OpSum * c::Number) = OpSum([oₙ * c for oₙ in o])
-(c::Number * o::OpSum) = o * c
+(α::Number * os::OpSum) = OpSum([α * o for o in os])
+(os::OpSum * α::Number) = α * os
+(os::OpSum / α::Number) = OpSum([o / α for o in os])
+
+(o1::OpSum - o2::OpSum) = o1 + (-1) * o2
 
 function Base.show(io::IO, ampo::OpSum)
   println(io, "OpSum:")

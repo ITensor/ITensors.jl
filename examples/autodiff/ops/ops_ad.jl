@@ -2,12 +2,6 @@ using ITensors
 using ITensors.Ops
 using Zygote
 
-Base.size(o::Sum) = size(o.args[1])
-Base.size(o::Prod) = size(o.args[1])
-
-include("itensors_chainrules.jl")
-include("ops_chainrules.jl")
-
 s = siteinds("S=1/2", 4)
 
 function f1(x)

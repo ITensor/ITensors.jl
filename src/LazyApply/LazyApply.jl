@@ -17,6 +17,7 @@ import Base:
   convert,
   getindex,
   length,
+  size,
   iterate,
   lastindex
 
@@ -115,7 +116,8 @@ const Exp{T} = Applied{typeof(exp),Tuple{T}}
 
 coefficient(arg::Applied) = 𝟏
 
-length(arg::Union{Sum,Prod}) = length(arg.args...)
+length(arg::Union{Sum,Prod}) = length(only(arg.args))
+size(arg::Union{Sum,Prod}, args...) = size(only(arg.args), args...)
 lastindex(arg::Union{Sum,Prod}) = length(arg)
 getindex(arg::Union{Sum,Prod}, n) = getindex(arg.args..., n)
 iterate(arg::Union{Sum,Prod}, args...) = iterate(arg.args..., args...)
