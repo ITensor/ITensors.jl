@@ -1413,7 +1413,7 @@ end
 
       osRx = [("Rx", n, (θ=π,)) for n in 1:N]
 
-      osXX = [("XX", (n, n + 1), (ϕ=π / 8,)) for n in 1:(N - 1)]
+      osXX = [("Rxx", (n, n + 1), (ϕ=π / 8,)) for n in 1:(N - 1)]
 
       #os_noise = [("noise", n, n+2, n+4) for n in 1:N-4]
 

@@ -160,6 +160,7 @@ macro OpName_str(s)
 end
 
 # Default implementations of op and op!
+op(::OpName; kwargs...) = nothing
 op(::OpName, ::SiteType; kwargs...) = nothing
 op(::OpName, ::SiteType, ::Index...; kwargs...) = nothing
 function op(
@@ -217,12 +218,21 @@ s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
 """
-function op(name::AbstractString, s::Index...; kwargs...)
+function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   name = strip(name)
-
   # TODO: filter out only commons tags
   # if there are multiple indices
   commontags_s = commontags(s...)
+
+  # XXX this clashes with the S+ and S- for spins...
+  ## Interpret operator names joined by +
+  ## as acting sequentially on the same site
+  #pluspos = findfirst("+", name)
+  #if !isnothing(pluspos)
+  #  op1 = name[1:prevind(name, pluspos.start)]
+  #  op2 = name[nextind(name, pluspos.start):end]
+  #  return op(op1, s...; kwargs...) + op(op2, s...; kwargs...)
+  #end
 
   # Interpret operator names joined by *
   # as acting sequentially on the same site
@@ -244,10 +254,24 @@ function op(name::AbstractString, s::Index...; kwargs...)
   for st in common_stypes
     res = op(opn, st, s...; kwargs...)
     if !isnothing(res)
+      adjoint && return swapprime(dag(res), 0 => 1)
       return res
     end
   end
 
+  #
+  # Try calling a function of the form:
+  #    op(::OpName; kwargs...)
+  #  for backward compatibility with previous
+  #  gate system in PastaQ.jl
+  #
+  op_mat = op(opn; kwargs...)
+  if !isnothing(op_mat)
+    rs = reverse(s)
+    res = itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
+    adjoint && return swapprime(dag(res), 0 => 1)
+    return res
+  end
   #
   # otherwise try calling a function of the form:
   #    op(::OpName, ::SiteType; kwargs...)
@@ -257,17 +281,21 @@ function op(name::AbstractString, s::Index...; kwargs...)
     op_mat = op(opn, st; kwargs...)
     if !isnothing(op_mat)
       rs = reverse(s)
-      return itensor(op_mat, prime.(rs)..., dag.(rs)...)
+      #return itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
+      res = itensor(op_mat, prime.(rs)..., ITensors.dag.(rs)...)
+      adjoint && return swapprime(dag(res), 0 => 1)
+      return res
     end
   end
 
   # otherwise try calling a function of the form:
   #    op!(::ITensor, ::OpName, ::SiteType, ::Index...; kwargs...)
   #
-  Op = ITensor(prime.(s)..., dag.(s)...)
+  Op = ITensor(prime.(s)..., ITensors.dag.(s)...)
   for st in common_stypes
     op!(Op, opn, st, s...; kwargs...)
     if !isempty(Op)
+      adjoint && return swapprime(dag(Op), 0 => 1)
       return Op
     end
   end
@@ -289,17 +317,20 @@ function op(name::AbstractString, s::Index...; kwargs...)
     for st in Iterators.product(stypes...)
       res = op(opn, st..., s...; kwargs...)
       if !isnothing(res)
+        adjoint && return swapprime(dag(res), 0 => 1)
         return res
       end
     end
 
-    Op = ITensor(prime.(s)..., dag.(s)...)
+    Op = ITensor(prime.(s)..., ITensors.dag.(s)...)
     for st in Iterators.product(stypes...)
       op!(Op, opn, st..., s...; kwargs...)
       if !isempty(Op)
+        adjoint && return swapprime(dag(Op), 0 => 1)
         return Op
       end
     end
+
     error(
       "Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::OpName, ::SiteType..., ::Index...)` or `op!(::ITensor, ::OpName, ::SiteType..., ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).",
     )
@@ -316,6 +347,7 @@ function op(name::AbstractString, s::Index...; kwargs...)
   for st in common_stypes
     res = op(st, s[1], name; kwargs...)
     if !isnothing(res)
+      adjoint && return dag(res)
       return res
     end
   end
@@ -326,6 +358,12 @@ function op(name::AbstractString, s::Index...; kwargs...)
     ),
   )
 end
+
+op(X::AbstractArray, s::Vector{<:Index}) = op(X, s...)
+
+op(X::AbstractArray, s::Index...) = itensor(X, prime.([s...]), dag.([s...]))
+
+op(s::Index, X::AbstractArray; kwargs...) = op(X, s; kwargs...)
 
 # For backwards compatibility, version of `op`
 # taking the arguments in the other order:
@@ -655,6 +693,8 @@ end
 # has_fermion_string system
 #
 #---------------------------------------
+
+has_fermion_string(operator::AbstractArray{<:Number}, s::Index; kwargs...)::Bool = false
 
 has_fermion_string(::OpName, ::SiteType) = nothing
 
