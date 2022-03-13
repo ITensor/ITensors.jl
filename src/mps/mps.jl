@@ -768,7 +768,7 @@ function expect(psi::MPS, ops; kwargs...)
     sites = get(kwargs, :sites, 1:N)
   end
 
-  site_range = collect(sites)
+  site_range = (sites isa AbstractRange) ? sites : collect(sites)
   Ns = length(site_range)
   start_site = first(site_range)
 

@@ -738,6 +738,9 @@ end
     res = expect(psi, "Sz"; sites=2:4)
     @test res ≈ eSz[2:4]
 
+    res = expect(psi, "Sz"; sites=1:2:N)
+    @test res ≈ eSz[1:2:N]
+
     res = expect(psi, "Sz"; sites=[2, 4, 8])
     @test res[1] ≈ eSz[2]
     @test res[2] ≈ eSz[4]
