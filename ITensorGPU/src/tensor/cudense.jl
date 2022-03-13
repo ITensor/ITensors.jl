@@ -86,27 +86,6 @@ function outer!(R::CuDenseTensor, T1::CuDenseTensor, T2::CuDenseTensor)
   return R
 end
 
-function permutedims!!(
-  B::CuDenseTensor{ElT,0},
-  A::CuDenseTensor{ElT,0},
-  perm::NTuple{0,Int},
-  f=(r, t) -> permute!(r, t),
-) where {ElT<:Number}
-  Cs = f(B, A)
-  return Tensor(Dense(vec(Cs)), IndexSet{0}())
-end
-
-function permutedims!!(
-  B::CuDenseTensor{ElT,N},
-  A::CuDenseTensor{ElT,0},
-  perm::NTuple{N,Int},
-  f=(r, t) -> permute!(r, t),
-) where {N,ElT<:Number}
-  Cis = ITensors.NDTensors.permute(inds(B), perm)
-  Cs = f(B, A)
-  return Tensor(Dense(vec(Cs)), Cis)
-end
-
 function _contract_scalar!(
   R::CuDenseTensor{ElR},
   labelsR,
