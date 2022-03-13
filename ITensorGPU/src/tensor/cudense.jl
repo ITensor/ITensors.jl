@@ -87,26 +87,6 @@ function outer!(R::CuDenseTensor, T1::CuDenseTensor, T2::CuDenseTensor)
 end
 
 function _contract_scalar!(
-  R::CuDenseTensor{ElR},
-  labelsR,
-  T1::Number,
-  labelsT1,
-  T2::Number,
-  labelsT2,
-  α=one(ElR),
-  β=zero(ElR),
-) where {ElR}
-  if iszero(β)
-    copyto!(data(R), [α * T1 * T2])
-  elseif iszero(α)
-    copyto!(data(R), β .* data(R))
-  else
-    copyto!(data(R), [α * T1 * T2] .+ β .* data(R))
-  end
-  return R
-end
-
-function _contract_scalar!(
   R::CuDenseTensor{ElR,NR},
   labelsR,
   T₁::CuDenseTensor,
