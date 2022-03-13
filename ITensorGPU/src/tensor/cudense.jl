@@ -86,37 +86,6 @@ function outer!(R::CuDenseTensor, T1::CuDenseTensor, T2::CuDenseTensor)
   return R
 end
 
-function contract!!(
-  R::CuDenseTensor{<:Number,NR},
-  labelsR::NTuple{NR},
-  T1::CuDenseTensor{<:Number,N1},
-  labelsT1::NTuple{N1},
-  T2::CuDenseTensor{<:Number,N2},
-  labelsT2::NTuple{N2},
-) where {NR,N1,N2}
-  if N1 == 0
-    # TODO: replace with an add! function?
-    # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
-    perm = getperm(labelsR, labelsT2)
-    newT2 = Tensor(Dense(data(store(T1)) .* data(store(T2))), inds(T2))
-    permute!(R, newT2)
-  elseif N2 == 0
-    perm = getperm(labelsR, labelsT1)
-    newT1 = Tensor(Dense(data(store(T2)) .* data(store(T1))), inds(T1))
-    permute!(R, newT1)
-  elseif N1 + N2 == NR
-    # TODO: permute T1 and T2 appropriately first (can be more efficient
-    # then permuting the result of T1⊗T2)
-    # TODO: implement the in-place version directly
-    R = outer!!(R, T1, T2)
-    inds_outer = unioninds(inds(T1), inds(T2))
-    R = Tensor(store(R), inds_outer)
-  else
-    R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
-  end
-  return R
-end
-
 function permutedims!!(
   B::CuDenseTensor{ElT,0},
   A::CuDenseTensor{ElT,0},
