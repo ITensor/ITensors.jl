@@ -103,10 +103,10 @@ When DMRG is failing to converge, here are some of the steps you can take to imp
 ## How to do periodic boundary condition DMRG
 
 The short answer to how to do fully periodic boundary condition DMRG in ITensor is that
-you simply input a periodic Hamiltonian into our OpSum system and make the MPO
-form of your Hamiltonian as usual. For example, for a chain of N sites with nearest-neighbor
-interactions, you include a term that connects site 1 to site N. For an Ising model 
-chain this would look like:
+you simply input a **periodic Hamiltonian** into our OpSum system and make the MPO
+form of your Hamiltonian in the usual way. For example, for a chain of N sites with nearest-neighbor
+interactions, you include a term that connects site 1 to site N. For a one-dimensional Ising model 
+chain Hamiltonian this would look like:
 
 ```
 sites = siteinds("S=1/2",N)
@@ -120,10 +120,10 @@ hterms += "Sz",1,"Sz",N  # term 'wrapping' around the ring
 H = MPO(hterms,sites)
 ```
 
-For two-dimensional DMRG calculations, where it is common to use periodic boundary conditions
-in the y-direction only, and not in the x-direction, you do a similar step in making
-your OpSum input to ITensor DMRG: you include terms wrapping around the periodic cylinder
-in the y direction but not in the x direction.
+For two-dimensional DMRG calculations, where the most common approach is to use 
+periodic boundary conditions in the y-direction only, and not in the x-direction, 
+you do a similar step in making your OpSum input to ITensor DMRG: you include 
+terms wrapping around the periodic cylinder in the y direction but not in the x direction.
 
 However, fully periodic boundary conditions are only recommended for small systems 
 when absolutely needed, and in general are not recommended. For a longer discussion 
