@@ -144,16 +144,10 @@ function _contract_scalar!(
     props = ContractionProperties(labelsT₁, labelsT₂, labelsR)
     compute_contraction_properties!(props, T₁, T₂, R)
     R = _contract!(R, T₁, T₂, props, α, β)
-    #perm = getperm(labelsR,labelsT₂)
-    #newT2 = Tensor(Dense(data(store(T₁)).*data(store(T₂))), inds(T₂))
-    #permute!(R,newT2)
   elseif nnz(T₂) == 1
     props = ContractionProperties(labelsT₁, labelsT₂, labelsR)
     compute_contraction_properties!(props, T₁, T₂, R)
     R = _contract!(R, T₁, T₂, props, α, β)
-    #perm = getperm(labelsR,labelsT₁)
-    #newT1 = Tensor(Dense(data(store(T₁)).*data(store(T₂))), inds(T₁))
-    #permute!(R,newT1)
   else
     error("In _contract_scalar!, one tensor must be a scalar")
   end
