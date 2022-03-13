@@ -722,15 +722,22 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 end
 
 """
-    expect(psi::MPS,ops::AbstractString...;kwargs...)
+    expect(psi::MPS,op::AbstractString...; kwargs...)
+    expect(psi::MPS,ops; kwargs...)
 
-Given an MPS `psi` and an operator name, returns
+Given an MPS `psi` and a single operator name, returns
 a vector of the expected value of the operator on 
-each site of the MPS. If multiple operator names are
-provided, returns a tuple of expectation value vectors.
+each site of the MPS. 
+
+If multiple operator names are provided, returns a tuple 
+of expectation value vectors.
+
+If a container of operator names is provided, returns the
+same type of container with names replaced by vectors
+of expectation values.
 
 # Optional Keyword Arguments
-- `site_range = 1:length(psi)`: compute expected values only for sites in the given range
+- `sites = 1:length(psi)`: compute expected values only for sites in the given range
 
 # Examples
 
@@ -739,43 +746,58 @@ N = 10
 
 s = siteinds("S=1/2",N)
 psi = randomMPS(s; linkdims=8)
-Z = expect(psi,"Sz";site_range=2:6)
+Z = expect(psi,"Sz";sites=2:4) # compute for sites 2,3,4
+Z3 = expect(psi,"Sz";sites=3)  # compute for site 3 only (output will be a scalar)
 
 s = siteinds("Electron",N)
 psi = randomMPS(s; linkdims=8)
 dens = expect(psi,"Ntot")
-updens,dndens = expect(psi,"Nup","Ndn")
+updens,dndens = expect(psi,"Nup","Ndn") # pass more than one operator
 ```
 """
-function expect(psi::MPS, ops::AbstractString...; kwargs...)
+function expect(psi::MPS, ops; kwargs...)
   psi = copy(psi)
   N = length(psi)
-  ElT = real(promote_itensor_eltype(psi))
-  Nops = length(ops)
+  ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
 
-  site_range::UnitRange{Int} = get(kwargs, :site_range, 1:N)
+  if haskey(kwargs, :site_range)
+    @warn "The `site_range` keyword arg. to `expect` is deprecated: use the keyword `sites` instead"
+    sites = kwargs[:site_range]
+  else
+    sites = get(kwargs, :sites, 1:N)
+  end
+
+  site_range = collect(sites)
   Ns = length(site_range)
   start_site = first(site_range)
-  offset = start_site - 1
+
+  el_types = map(o -> ishermitian(op(o, s[start_site])) ? real(ElT) : ElT, ops)
 
   orthogonalize!(psi, start_site)
   norm2_psi = norm(psi)^2
 
-  ex = ntuple(n -> zeros(ElT, Ns), Nops)
-  for j in site_range
+  ex = map((o, el_t) -> zeros(el_t, Ns), ops, el_types)
+  for (entry, j) in enumerate(site_range)
     orthogonalize!(psi, j)
-    for n in 1:Nops
-      ex[n][j - offset] =
-        real(scalar(psi[j] * op(ops[n], s[j]) * dag(prime(psi[j], s[j])))) / norm2_psi
+    for (n, opname) in enumerate(ops)
+      val = scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j]))) / norm2_psi
+      ex[n][entry] = convert(el_types[n], val)
     end
   end
 
-  if Nops == 1
-    return Ns == 1 ? ex[1][1] : ex[1]
-  else
-    return Ns == 1 ? [x[1] for x in ex] : ex
+  if sites isa Number
+    return map(arr -> arr[1], ex)
   end
+  return ex
+end
+
+function expect(psi::MPS, op::AbstractString; kwargs...)
+  return first(expect(psi, (op,); kwargs...))
+end
+
+function expect(psi::MPS, op1::AbstractString, ops::AbstractString...; kwargs...)
+  return expect(psi, (op1, ops...); kwargs...)
 end
 
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPS)

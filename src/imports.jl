@@ -89,6 +89,7 @@ import LinearAlgebra:
   eigen,
   exp,
   factorize,
+  ishermitian,
   lmul!,
   mul!,
   norm,
@@ -97,7 +98,8 @@ import LinearAlgebra:
   qr,
   rmul!,
   svd,
-  tr
+  tr,
+  transpose
 
 using ITensors.NDTensors:
   EmptyNumber,
