@@ -8,7 +8,6 @@ include("utils/chainrulestestutils.jl")
 using Zygote: ZygoteRuleConfig, gradient
 
 @testset "ChainRules rrules: Ops" begin
-
   s = siteinds("S=1/2", 4)
 
   x = 2.4
