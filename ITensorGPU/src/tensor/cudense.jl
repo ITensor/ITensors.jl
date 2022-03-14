@@ -86,78 +86,6 @@ function outer!(R::CuDenseTensor, T1::CuDenseTensor, T2::CuDenseTensor)
   return R
 end
 
-function contract!!(
-  R::CuDenseTensor{<:Number,NR},
-  labelsR::NTuple{NR},
-  T1::CuDenseTensor{<:Number,N1},
-  labelsT1::NTuple{N1},
-  T2::CuDenseTensor{<:Number,N2},
-  labelsT2::NTuple{N2},
-) where {NR,N1,N2}
-  if N1 == 0
-    # TODO: replace with an add! function?
-    # What about doing `R .= T1[] .* PermutedDimsArray(T2,perm)`?
-    perm = getperm(labelsR, labelsT2)
-    newT2 = Tensor(Dense(data(store(T1)) .* data(store(T2))), inds(T2))
-    permute!(R, newT2)
-  elseif N2 == 0
-    perm = getperm(labelsR, labelsT1)
-    newT1 = Tensor(Dense(data(store(T2)) .* data(store(T1))), inds(T1))
-    permute!(R, newT1)
-  elseif N1 + N2 == NR
-    # TODO: permute T1 and T2 appropriately first (can be more efficient
-    # then permuting the result of T1⊗T2)
-    # TODO: implement the in-place version directly
-    R = outer!!(R, T1, T2)
-    inds_outer = unioninds(inds(T1), inds(T2))
-    R = Tensor(store(R), inds_outer)
-  else
-    R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
-  end
-  return R
-end
-
-function permutedims!!(
-  B::CuDenseTensor{ElT,0},
-  A::CuDenseTensor{ElT,0},
-  perm::NTuple{0,Int},
-  f=(r, t) -> permute!(r, t),
-) where {ElT<:Number}
-  Cs = f(B, A)
-  return Tensor(Dense(vec(Cs)), IndexSet{0}())
-end
-
-function permutedims!!(
-  B::CuDenseTensor{ElT,N},
-  A::CuDenseTensor{ElT,0},
-  perm::NTuple{N,Int},
-  f=(r, t) -> permute!(r, t),
-) where {N,ElT<:Number}
-  Cis = ITensors.NDTensors.permute(inds(B), perm)
-  Cs = f(B, A)
-  return Tensor(Dense(vec(Cs)), Cis)
-end
-
-function _contract_scalar!(
-  R::CuDenseTensor{ElR},
-  labelsR,
-  T1::Number,
-  labelsT1,
-  T2::Number,
-  labelsT2,
-  α=one(ElR),
-  β=zero(ElR),
-) where {ElR}
-  if iszero(β)
-    copyto!(data(R), [α * T1 * T2])
-  elseif iszero(α)
-    copyto!(data(R), β .* data(R))
-  else
-    copyto!(data(R), [α * T1 * T2] .+ β .* data(R))
-  end
-  return R
-end
-
 function _contract_scalar!(
   R::CuDenseTensor{ElR,NR},
   labelsR,
@@ -175,16 +103,10 @@ function _contract_scalar!(
     props = ContractionProperties(labelsT₁, labelsT₂, labelsR)
     compute_contraction_properties!(props, T₁, T₂, R)
     R = _contract!(R, T₁, T₂, props, α, β)
-    #perm = getperm(labelsR,labelsT₂)
-    #newT2 = Tensor(Dense(data(store(T₁)).*data(store(T₂))), inds(T₂))
-    #permute!(R,newT2)
   elseif nnz(T₂) == 1
     props = ContractionProperties(labelsT₁, labelsT₂, labelsR)
     compute_contraction_properties!(props, T₁, T₂, R)
     R = _contract!(R, T₁, T₂, props, α, β)
-    #perm = getperm(labelsR,labelsT₁)
-    #newT1 = Tensor(Dense(data(store(T₁)).*data(store(T₂))), inds(T₁))
-    #permute!(R,newT1)
   else
     error("In _contract_scalar!, one tensor must be a scalar")
   end

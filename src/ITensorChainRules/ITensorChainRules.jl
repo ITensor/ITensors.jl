@@ -279,7 +279,7 @@ broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
 #
 
 # TODO: Define a more general version in ITensors.jl
-function _contract(::Type{ITensor}, ψ::MPS, ϕ::MPS; kwargs...)
+function _contract(::Type{ITensor}, ψ::Union{MPS,MPO}, ϕ::Union{MPS,MPO}; kwargs...)
   T = ITensor(1)
   for n in 1:length(ψ)
     T = T * ψ[n] * ϕ[n]
@@ -293,43 +293,60 @@ function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
   return contract(ψmat, ϕmat; kwargs...)
 end
 
-function ChainRulesCore.rrule(::typeof(apply), x1::Vector{ITensor}, x2::MPS; kwargs...)
-  y = apply(x1, x2; kwargs...)
+function ChainRulesCore.rrule(
+  ::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs...
+)
+  N = length(x1) + 1
+  apply_dag = x2 isa MPO ? kwargs[:apply_dag] : nothing
+
+  # Apply circuit and store intermediates in the forward direction
+  x1x2 = Vector{typeof(x2)}(undef, N)
+  x1x2[1] = x2
+  for n in 2:N
+    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, kwargs...)
+  end
+  y = x1x2[end]
+
   function apply_pullback(ȳ)
-    N = length(x1) + 1
-
-    # Apply circuit and store intermediates in the forward direction
-    x1x2 = Vector{MPS}(undef, N)
-    x1x2[1] = x2
-    for n in 2:N
-      x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=false)
-    end
     x1x2dag = dag.(x1x2)
-
-    # Apply circuit and store intermediates in the reverse direction
-
-    # XXX: Which one is correct?
-    # This works to optimize "Ry" but not "Rx"
-    #x1dag = [swapprime(x, 0 => 1) for x in x1]
-
-    # This fails to optimize "Ry" and "Rx"
-    #x1dag = [dag(x) for x in x1]
-
     x1dag = [swapprime(dag(x), 0 => 1) for x in x1]
 
-    x1dag_ȳ = Vector{MPS}(undef, N)
+    # Apply circuit and store intermediates in the reverse direction
+    x1dag_ȳ = Vector{typeof(x2)}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
-      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; kwargs...)
+      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, kwargs...)
     end
 
     x̄1 = similar(x1)
     for n in 1:length(x1)
-      x1dag_ȳ′ = prime(x1dag_ȳ[n + 1], inds(x1[n]; plev=0))
-      x̄1[n] = _contract(ITensor, x1dag_ȳ′, x1x2dag[n]; kwargs...)
+      # check if it's not a noisy gate (rank-3 tensor)
+      if iseven(length(inds(x1[n])))
+        gateinds = inds(x1[n]; plev=0)
+        if x2 isa MPS
+          ξ̃ = prime(x1dag_ȳ[n + 1], gateinds)
+          ϕ̃ = x1x2dag[n]
+        else
+          # apply U on one side of the MPO
+          if apply_dag
+            ϕ̃ = swapprime(x1x2dag[n], 0 => 1)
+            ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag=false)
+            ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
+            ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
+            ξ̃ = 2 * dag(x1dag_ȳ[n + 1])'
+          else
+            ϕ̃ = mapprime(x1x2dag[n], 0 => 2)
+            ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
+            ξ̃ = mapprime(x1dag_ȳ[n + 1], 0 => 2)
+          end
+        end
+        x̄1[n] = _contract(ITensor, ξ̃, ϕ̃)
+      else
+        s = inds(x1[n])
+        x̄1[n] = itensor(zeros(dim.(s)), s...)
+      end
     end
     x̄2 = x1dag_ȳ[end]
-
     return (NoTangent(), x̄1, x̄2)
   end
   return y, apply_pullback
@@ -371,6 +388,32 @@ function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPS; kwargs...)
     return (NoTangent(), x̄1, x̄2)
   end
   return y, inner_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
+  y = *(x1, x2; kwargs...)
+  function contract_pullback(ȳ)
+    x̄1 = *(ȳ, dag(x2); kwargs...)
+    x̄2 = *(dag(x1), ȳ; kwargs...)
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, contract_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(tr), x::MPO; kwargs...)
+  y = tr(x; kwargs...)
+  function contract_pullback(ȳ)
+    s = noprime(firstsiteinds(x))
+    n = length(s)
+    x̄ = ȳ * MPO(s, "Id")
+
+    plev = get(kwargs, :plev, 0 => 1)
+    for j in 1:n
+      x̄[j] = mapprime(x̄[j], 0 => first(plev), 1 => last(plev))
+    end
+    return (NoTangent(), ȳ * x̄)
+  end
+  return y, contract_pullback
 end
 
 end

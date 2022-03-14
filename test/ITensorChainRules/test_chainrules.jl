@@ -235,13 +235,138 @@ end
 
 @testset "ChainRules rrules: op" begin
   s = siteinds("Qubit", 4)
-  f = x -> op("Ry", s, 1; θ=x)[1, 2]
+
+  # RX
   args = (0.2,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> op("Rx", s, 1; θ=x)[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # RY
+  args = (0.2,)
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> op("Ry", s, 1; θ=x)[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # RZ
+  args = (0.2,)
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> op("Rz", s, 1; ϕ=x)[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # Rn
+  args = (0.2, 0.3, 0.4)
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> op("Rn", s, 1; θ=x[1], ϕ=x[2], λ=x[3])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+
+  basis = vec(collect(Iterators.product(fill([1, 2], 2)...)))
+  # CRx
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("CRx", s, (1, 2); θ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+
+  # CRy
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("CRy", s, (1, 2); θ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+
+  # CRz
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("CRz", s, (1, 2); ϕ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # Rn
+  args = (0.2, 0.3, 0.4)
+  for σ in basis, σ′ in basis
+    f = x -> op("CRn", s, (1, 2); θ=x[1], ϕ=x[2], λ=x[3])[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+
+  # Rxx
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("Rxx", s, (1, 2); ϕ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # Ryy
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("Ryy", s, (1, 2); ϕ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # Rzz
+  args = (0.2,)
+  for σ in basis, σ′ in basis
+    f = x -> op("Rzz", s, (1, 2); ϕ=x)[σ..., σ′...]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+
+  # algebra with non-parametric gates
+  args = (0.2,)
+  # addition
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> x * op("H + Y", s[1])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  #subtraction
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> x * op("H - Y", s[1])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # product
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> x * op("H * Y", s[1])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+  # composite
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> x * op("H + X * Y", s[1])[σ, σ′]
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
+
+  ## algebra with parametric gates
+  #args = (0.2,)
+  ## addition
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("H + Rx", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ##subtraction
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("H - Rx", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ### product
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("Rx * Y", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ## composite
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("Rx * Y - Ry", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  #
+  ## two-qubit composite algebra with parametric gate
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("Rxx + CX * CZ - Ryy", s, (1, 2); ϕ = x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+
 end
 
 @testset "MPS ($ElType)" for ElType in (Float64, ComplexF64)
+  Random.seed!(1234)
   n = 4
+  ϵ = 1e-8
   s = siteinds("S=1/2", n; conserve_qns=true)
   function heisenberg(n)
     os = OpSum()
@@ -272,4 +397,87 @@ end
   f = x -> inner(x, H, x)
   args = (ψ,)
   @test_throws ErrorException gradient(f, args...)
+
+  # apply on MPS 
+  s = siteinds("S=1/2", n)
+  ϕ = randomMPS(ElType, s)
+  ψ = randomMPS(ElType, s)
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    ψθ = apply(U, ψ)
+    return real(inner(ϕ, ψθ))
+  end
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
+end
+
+@testset "MPO" begin
+  Random.seed!(1234)
+  ϵ = 1e-8
+  n = 3
+  s = siteinds("Qubit", n)
+  function ising(n, h)
+    os = OpSum()
+    for j in 1:(n - 1)
+      os += -1, "Z", j, "Z", j + 1
+      os += -h, "X", j
+    end
+    os += -h, "X", n
+    return os
+  end
+  H = MPO(ising(n, 1.0), s)
+
+  # apply on MPO with apply_dag=true
+  ϕ = randomMPS(ComplexF64, s, 10)
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    Hθ = apply(U, H; apply_dag=true)
+    return real(inner(ϕ', Hθ, ϕ))
+  end
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
+
+  # apply on MPO with apply_dag=false
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    Hθ = apply(U, H; apply_dag=false)
+    return real(inner(ϕ', Hθ, ϕ))
+  end
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
+
+  # multiply two MPOs
+  V = randomMPO(s)
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    Hθ = apply(U, H; apply_dag=false)
+    X = replaceprime(V' * Hθ, 2 => 1)
+    return real(inner(ϕ', X, ϕ))
+  end
+
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
+
+  # trace(MPO) 
+  V1 = randomMPO(s)
+  V2 = randomMPO(s)
+  f = function (x)
+    U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
+    Hθ = apply(U, H; apply_dag=false)
+    X = V1''' * Hθ'' * V2' * Hθ
+    return real(tr(X; plev=4 => 0))
+  end
+
+  θ = 0.5
+  ∇f = f'(θ)
+  ∇num = (f(θ + ϵ) - f(θ)) / ϵ
+  @test ∇f ≈ ∇num atol = 1e-5
 end

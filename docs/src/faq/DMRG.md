@@ -100,6 +100,44 @@ When DMRG is failing to converge, here are some of the steps you can take to imp
   not orthogonal to the ground state. After doing some amount of imaginary time evolution,
   use the resulting MPS as an initial state for DMRG obtain a higher-accuracy solution.
 
+## How to do periodic boundary condition DMRG
+
+The short answer to how to do fully periodic boundary condition DMRG in ITensor is that
+you simply input a **periodic Hamiltonian** into our OpSum system and make the MPO
+form of your Hamiltonian in the usual way. For example, for a chain of N sites with nearest-neighbor
+interactions, you include a term that connects site 1 to site N. For a one-dimensional Ising model 
+chain Hamiltonian this would look like:
+
+```
+sites = siteinds("S=1/2",N)
+
+hterms = OpSum()
+for j=1:(N-1)
+  hterms += "Sz",j,"Sz",j+1
+end
+hterms += "Sz",1,"Sz",N  # term 'wrapping' around the ring
+
+H = MPO(hterms,sites)
+```
+
+For two-dimensional DMRG calculations, where the most common approach is to use 
+periodic boundary conditions in the y-direction only, and not in the x-direction, 
+you do a similar step in making your OpSum input to ITensor DMRG: you include 
+terms wrapping around the periodic cylinder in the y direction but not in the x direction.
+
+However, fully periodic boundary conditions are only recommended for small systems 
+when absolutely needed, and in general are not recommended. For a longer discussion 
+of alternatives to using fully periodic boundaries, see the next section below.
+
+The reason fully periodic boundary conditions (periodic in x in 1D, and periodic in both x 
+and y in 2D) are not recommended in general is that the DMRG algorithm, as we are defining it
+here, optimizes an **open-boundary MPS**. So if you input a periodic-boundary Hamiltonian, there
+is a kind of "mismatch" that happens where you can still get the correct answer, but it 
+requires much more resources (a larger bond dimension and more sweeps) to get good 
+accuracy. There has been some research into "truly" periodic DMRG, [^Pippan] that is DMRG that
+optimizes an MPS with a ring-like topology, but it is not widely used, is still an
+open area of algorithm development, and is not currently available in ITensor.
+
 
 ## What boundary conditions should I choose: open, periodic, or infinite?
 

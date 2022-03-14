@@ -20,10 +20,17 @@ mutable struct Sweeps
   mindim::Vector{Int}
   noise::Vector{Float64}
 
-  function Sweeps(nsw::Int)
-    return new(nsw, fill(1, nsw), zeros(nsw), fill(1, nsw), zeros(nsw))
+  function Sweeps(nsw::Int; maxdim=typemax(Int), cutoff=1E-16, mindim=1, noise=0.0)
+    sw = new(nsw, fill(typemax(Int), nsw), fill(1E-16, nsw), fill(1, nsw), fill(0.0, nsw))
+    setmaxdim!(sw, maxdim...)
+    setmindim!(sw, mindim...)
+    setcutoff!(sw, cutoff...)
+    setnoise!(sw, noise...)
+    return sw
   end
 end
+
+Sweeps() = Sweeps(0)
 
 """
     Sweeps(d::AbstractMatrix)
@@ -90,6 +97,8 @@ by this sweeps object.
 nsweep(sw::Sweeps)::Int = sw.nsweep
 
 Base.length(sw::Sweeps)::Int = sw.nsweep
+
+Base.isempty(sw::Sweeps)::Bool = (sw.nsweep == 0)
 
 """
     maxdim(sw::Sweeps,n::Int)
