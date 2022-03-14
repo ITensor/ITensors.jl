@@ -5,6 +5,7 @@ using Test
 using Combinatorics: permutations
 
 import Random: seed!
+import ITensors.NDTensors: DenseTensor
 
 # Enable debug checking for these tests
 ITensors.enable_debug_checks()
@@ -1597,6 +1598,14 @@ end
         end
       end
     end
+  end
+
+  @testset "ishermitian" begin
+    s = Index(2, "s")
+    Sz = ITensor([0.5 0.0; 0.0 -0.5], s', s)
+    Sp = ITensor([0.0 1.0; 0.0 0.0], s', s)
+    @test ishermitian(Sz)
+    @test !ishermitian(Sp)
   end
 end # End Dense ITensor basic functionality
 
