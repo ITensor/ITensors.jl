@@ -904,7 +904,7 @@ function sorteachterm!(ampo::OpSum, sites)
         # Put local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
-        t.ops[n] = SiteOp("$(name(t.ops[n]))*F", site(t.ops[n]))
+        t.ops[n] = SiteOp("$(name(t.ops[n])) * F", site(t.ops[n]))
       end
       prevsite = currsite
 
