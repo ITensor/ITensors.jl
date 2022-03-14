@@ -355,7 +355,7 @@ end
       ampo1 += 0.5, "S-", j, "S+", j + 1
     end
     for j in 1:N
-      ampo1 += "Sz*Sz", j
+      ampo1 += "Sz * Sz", j
     end
     Ha1 = MPO(ampo1, sites)
 
@@ -370,7 +370,7 @@ end
     end
     Ha2 = MPO(ampo2, sites)
 
-    He = heisenbergMPO(sites, ones(N), "Sz*Sz")
+    He = heisenbergMPO(sites, ones(N), "Sz * Sz")
     psi = makeRandomMPS(sites)
     Oe = inner(psi, He, psi)
     Oa1 = inner(psi, Ha1, psi)
@@ -531,7 +531,7 @@ end
         ampo1 += 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:N
-        ampo1 += "Sz*Sz", j
+        ampo1 += "Sz * Sz", j
       end
       Ha1 = MPO(ampo1, sites)
 
@@ -546,7 +546,7 @@ end
       end
       Ha2 = MPO(ampo2, sites)
 
-      He = heisenbergMPO(sites, ones(N), "Sz*Sz")
+      He = heisenbergMPO(sites, ones(N), "Sz * Sz")
       psi = makeRandomMPS(sites)
       Oe = inner(psi, He, psi)
       Oa1 = inner(psi, Ha1, psi)
@@ -726,7 +726,7 @@ end
         ampo1 .+= 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:N
-        ampo1 .+= "Sz*Sz", j
+        ampo1 .+= "Sz * Sz", j
       end
       Ha1 = MPO(ampo1, sites)
 
@@ -741,7 +741,7 @@ end
       end
       Ha2 = MPO(ampo2, sites)
 
-      He = heisenbergMPO(sites, ones(N), "Sz*Sz")
+      He = heisenbergMPO(sites, ones(N), "Sz * Sz")
       psi = makeRandomMPS(sites)
       Oe = inner(psi, He, psi)
       Oa1 = inner(psi, Ha1, psi)
