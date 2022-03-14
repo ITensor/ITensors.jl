@@ -18,7 +18,15 @@ using Zygote: ZygoteRuleConfig, gradient
     return y[1, 1]
   end
   args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false, rtol = 1.0e-7, atol = 1.0e-7)
+  test_rrule(
+    ZygoteRuleConfig(),
+    f,
+    args...;
+    rrule_f=rrule_via_ad,
+    check_inferred=false,
+    rtol=1.0e-7,
+    atol=1.0e-7,
+  )
 
   f = function (x)
     y = exp(ITensor(Op("Ry", 1; θ=x), s))
