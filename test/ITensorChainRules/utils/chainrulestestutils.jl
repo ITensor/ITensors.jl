@@ -48,3 +48,7 @@ function ChainRulesTestUtils.rand_tangent(
 )
   return NoTangent()
 end
+
+function ChainRulesTestUtils.test_approx(::AbstractZero, x::Vector{<:Index}, msg; kwargs...)
+  return ChainRulesTestUtils.@test_msg msg true
+end

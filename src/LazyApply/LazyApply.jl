@@ -168,8 +168,8 @@ _mul(arg1, arg2::Number) = Mul(arg2, arg1)
 Mul(arg1::Number, arg2::Number) = arg1 * arg2
 Mul(arg1::Number, arg2::Scaled) = arg1 * arg2
 Mul(arg1::Scaled, arg2::Number) = arg1 * arg2
-(arg1::Number * arg2::Sum) = Sum([Mul(arg1, a) for a in arg2])
-(arg1::Number * arg2::Add) = Add([Mul(arg1, a) for a in arg2.args])
+(arg1::Number * arg2::Sum) = Sum(map(a -> Mul(arg1, a), arg2))
+(arg1::Number * arg2::Add) = Add(map(a -> Mul(arg1, a), arg2.args))
 
 # Types should implement `__sum`.
 _sum(arg1, arg2) = __sum(try_promote(arg1, arg2)...)

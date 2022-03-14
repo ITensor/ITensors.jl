@@ -212,6 +212,10 @@ using Zygote: ZygoteRuleConfig, gradient
   f = x -> prime(x; plev=1)[1, 1]
   args = (A,)
   @test_throws ErrorException f'(args...)
+
+  f = x -> inner(V', exp(x), V)
+  args = (A,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 end
 
 @testset "MPS rrules" begin
