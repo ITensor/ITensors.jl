@@ -26,6 +26,10 @@ function FiniteDifferences.to_vec(x::Tuple{Vararg{Index}})
   return (Bool[], _ -> x)
 end
 
+function FiniteDifferences.to_vec(x::Vector{<:Index})
+  return (Bool[], _ -> x)
+end
+
 function FiniteDifferences.to_vec(x::Pair{<:Tuple{Vararg{Index}},<:Tuple{Vararg{Index}}})
   return (Bool[], _ -> x)
 end
@@ -51,4 +55,15 @@ end
 
 function ChainRulesTestUtils.test_approx(::AbstractZero, x::Vector{<:Index}, msg; kwargs...)
   return ChainRulesTestUtils.@test_msg msg true
+end
+
+# The fallback version would convert to an Array with `collect`,
+# which would be incorrect if the indices had different orderings
+function ChainRulesTestUtils.test_approx(
+    actual::ITensor,
+    expected::ITensor,
+    msg="";
+    kwargs...,
+)
+    ChainRulesTestUtils.@test_msg msg isapprox(actual, expected; kwargs...)
 end
