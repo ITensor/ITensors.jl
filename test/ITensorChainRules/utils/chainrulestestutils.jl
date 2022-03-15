@@ -60,10 +60,7 @@ end
 # The fallback version would convert to an Array with `collect`,
 # which would be incorrect if the indices had different orderings
 function ChainRulesTestUtils.test_approx(
-    actual::ITensor,
-    expected::ITensor,
-    msg="";
-    kwargs...,
+  actual::ITensor, expected::ITensor, msg=""; kwargs...
 )
-    ChainRulesTestUtils.@test_msg msg isapprox(actual, expected; kwargs...)
+  ChainRulesTestUtils.@test_msg msg isapprox(actual, expected; kwargs...)
 end

@@ -215,7 +215,15 @@ using Zygote: ZygoteRuleConfig, gradient
 
   f = x -> inner(V', exp(x), V)
   args = (A,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false, rtol=1e-4, atol=1e-4)
+  test_rrule(
+    ZygoteRuleConfig(),
+    f,
+    args...;
+    rrule_f=rrule_via_ad,
+    check_inferred=false,
+    rtol=1e-4,
+    atol=1e-4,
+  )
 end
 
 @testset "MPS rrules" begin
