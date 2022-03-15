@@ -37,7 +37,7 @@ end
 # Extend the operator `o` to the sites `n`
 # by filling the rest of the sites with `op`.
 function insert_ids(o, n)
-  insert_n = setdiff(n, Ops.sites(o))
+  insert_n = @ignore_derivatives setdiff(n, Ops.sites(o))
   for i in insert_n
     o *= Op(I, i)
   end

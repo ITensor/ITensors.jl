@@ -213,7 +213,19 @@ using Zygote: ZygoteRuleConfig, gradient
   args = (A,)
   @test_throws ErrorException f'(args...)
 
+  f = x -> inner(V', exp(x), V)
+  args = (A,)
+  test_rrule(
+    ZygoteRuleConfig(),
+    f,
+    args...;
+    rrule_f=rrule_via_ad,
+    check_inferred=false,
+    rtol=1e-4,
+    atol=1e-4,
+  )
 end
+
 @testset "ChainRules rrules: op" begin
   s = siteinds("Qubit", 4)
 
@@ -312,35 +324,35 @@ end
     test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
 
-  # algebra with parametric gates
-  args = (0.2,)
-  # addition
-  for σ in [1, 2], σ′ in [1, 2]
-    f = x -> x * op("H + Rx", s[1]; θ = x)[σ, σ′]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
-  #subtraction
-  for σ in [1, 2], σ′ in [1, 2]
-    f = x -> x * op("H - Rx", s[1]; θ = x)[σ, σ′]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
-  ## product
-  for σ in [1, 2], σ′ in [1, 2]
-    f = x -> x * op("Rx * Y", s[1]; θ = x)[σ, σ′]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
-  # composite
-  for σ in [1, 2], σ′ in [1, 2]
-    f = x -> x * op("Rx * Y - Ry", s[1]; θ = x)[σ, σ′]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
-  
-  # two-qubit composite algebra with parametric gate
-  args = (0.2,)
-  for σ in basis, σ′ in basis
-    f = x -> op("Rxx + CX * CZ - Ryy", s, (1, 2); ϕ = x)[σ..., σ′...]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  end
+  ## algebra with parametric gates
+  #args = (0.2,)
+  ## addition
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("H + Rx", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ##subtraction
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("H - Rx", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ### product
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("Rx * Y", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  ## composite
+  #for σ in [1, 2], σ′ in [1, 2]
+  #  f = x -> x * op("Rx * Y - Ry", s[1]; θ = x)[σ, σ′]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
+  #
+  ## two-qubit composite algebra with parametric gate
+  #args = (0.2,)
+  #for σ in basis, σ′ in basis
+  #  f = x -> op("Rxx + CX * CZ - Ryy", s, (1, 2); ϕ = x)[σ..., σ′...]
+  #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #end
   
   # functions
   f = x -> exp(ITensor(Op("Ry", 1; θ = x), q))[1,1]
