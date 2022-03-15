@@ -17,6 +17,7 @@ import Base:
   convert,
   getindex,
   length,
+  size,
   iterate,
   lastindex
 
@@ -115,7 +116,8 @@ const Exp{T} = Applied{typeof(exp),Tuple{T}}
 
 coefficient(arg::Applied) = 𝟏
 
-length(arg::Union{Sum,Prod}) = length(arg.args...)
+length(arg::Union{Sum,Prod}) = length(only(arg.args))
+size(arg::Union{Sum,Prod}, args...) = size(only(arg.args), args...)
 lastindex(arg::Union{Sum,Prod}) = length(arg)
 getindex(arg::Union{Sum,Prod}, n) = getindex(arg.args..., n)
 iterate(arg::Union{Sum,Prod}, args...) = iterate(arg.args..., args...)
@@ -166,8 +168,8 @@ _mul(arg1, arg2::Number) = Mul(arg2, arg1)
 Mul(arg1::Number, arg2::Number) = arg1 * arg2
 Mul(arg1::Number, arg2::Scaled) = arg1 * arg2
 Mul(arg1::Scaled, arg2::Number) = arg1 * arg2
-(arg1::Number * arg2::Sum) = Sum(Mul.(arg1, arg2))
-(arg1::Number * arg2::Add) = Add(Mul.(arg1, arg2.args))
+(arg1::Number * arg2::Sum) = Sum(map(a -> Mul(arg1, a), arg2))
+(arg1::Number * arg2::Add) = Add(map(a -> Mul(arg1, a), arg2.args))
 
 # Types should implement `__sum`.
 _sum(arg1, arg2) = __sum(try_promote(arg1, arg2)...)
@@ -199,7 +201,7 @@ __sum(arg1, arg2::Sum) = Sum(vcat(arg1, arg2.args...))
 (arg1 + arg2::Add) = Add(arg1, arg2.args...)
 
 # Multiplication (general rules)
-(arg1::Applied * arg2::Applied) = Mul(arg1, arg2)
+(arg1::Applied * arg2::Applied) = Prod([arg1, arg2])
 
 # Multiplication (specialized rules)
 (arg1::Prod * arg2::Prod) = Prod(vcat(arg1.args..., arg2.args...))
