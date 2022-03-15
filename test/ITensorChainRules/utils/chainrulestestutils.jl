@@ -62,5 +62,5 @@ end
 function ChainRulesTestUtils.test_approx(
   actual::ITensor, expected::ITensor, msg=""; kwargs...
 )
-    ChainRulesTestUtils.@test_msg msg isapprox(actual, expected; kwargs...)
+  ChainRulesTestUtils.@test_msg msg isapprox(actual, expected; kwargs...)
 end
