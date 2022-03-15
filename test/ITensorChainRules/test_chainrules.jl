@@ -1,4 +1,5 @@
 using ITensors
+using Random
 using Test
 
 using ChainRulesCore: rrule_via_ad
@@ -7,8 +8,11 @@ include("utils/chainrulestestutils.jl")
 
 using Zygote: ZygoteRuleConfig, gradient
 
+Random.seed!(1234)
+
 @testset "ChainRules rrules: basic ITensor operations" begin
   i = Index(2, "i")
+  j = Index(2, "j")
   A = randomITensor(i', dag(i))
   V = randomITensor(i)
   Ac = randomITensor(ComplexF64, i', dag(i))
@@ -50,8 +54,6 @@ using Zygote: ZygoteRuleConfig, gradient
 
   test_rrule(ZygoteRuleConfig(), apply, A, V; rrule_f=rrule_via_ad, check_inferred=false)
   function f(A, B)
-    i = Index(2)
-    j = Index(2)
     AT = ITensor(A, i, j)
     BT = ITensor(B, j, i)
     return (BT * AT)[1]
@@ -64,7 +66,6 @@ using Zygote: ZygoteRuleConfig, gradient
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
-    j = Index(2, "j")
     b = itensor([0, 0, 1, 1], i, j)
     k = itensor([0, 1, 0, 0], i, j)
     T = itensor([0 x x^2 1; 0 0 sin(x) 0; 0 cos(x) 0 exp(x); x 0 0 0], i', j', i, j)
@@ -74,7 +75,6 @@ using Zygote: ZygoteRuleConfig, gradient
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
-    j = Index(2, "j")
     b = itensor([0, 0, 1, 1], i, j)
     k = itensor([0, 1, 0, 0], i, j)
     T = itensor([0 x x^2 1; 0 0 sin(x) 0; 0 cos(x) 0 exp(x); x 0 0 0], i, j, i', j')
@@ -182,7 +182,6 @@ using Zygote: ZygoteRuleConfig, gradient
   args = (2.12,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   f = function (x)
-    j = Index(2)
     T = itensor([x^2 sin(x); x^2 exp(-2x)], j', dag(j))
     return real((dag(T) * T)[])
   end
@@ -191,7 +190,6 @@ using Zygote: ZygoteRuleConfig, gradient
   args = (2.8 + 3.1im,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   f = function f(x)
-    j = Index(2)
     v = itensor([exp(-3.2x), cos(2x^2)], j)
     T = itensor([x^2 sin(x); x^2 exp(-2x)], j', dag(j))
     return real((dag(v') * T * v)[])
@@ -201,7 +199,6 @@ using Zygote: ZygoteRuleConfig, gradient
   args = (2.8 + 3.1im,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   f = function (x)
-    j = Index(2)
     return real((x^3 * ITensor([sin(x) exp(-2x); 3x^3 x+x^2], j', dag(j)))[1, 1])
   end
   args = (3.4 + 2.3im,)
@@ -212,6 +209,19 @@ using Zygote: ZygoteRuleConfig, gradient
   f = x -> prime(x; plev=1)[1, 1]
   args = (A,)
   @test_throws ErrorException f'(args...)
+
+  W = itensor([1 1] / √2, i)
+  f = x -> inner(W', exp(x), W)
+  args = (A,)
+  test_rrule(
+    ZygoteRuleConfig(),
+    f,
+    args...;
+    rrule_f=rrule_via_ad,
+    check_inferred=false,
+    rtol=1e-3,
+    atol=1e-3,
+  )
 end
 
 @testset "MPS rrules" begin
