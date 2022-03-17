@@ -267,7 +267,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
       op1 = name[1:prevind(name, oploc.start)]
       op2 = name[nextind(name, oploc.start):end]
       if !(op1[end] == ' ' && op2[1] == ' ')
-        @warn "composite op definition `A*B` deprecated: please use `A * B` instead (with spaces)"
+        @warn "($op1*$op2) composite op definition `A*B` deprecated: please use `A * B` instead (with spaces)"
       end
     end
     return product(op(op1, s...; kwargs...), op(op2, s...; kwargs...))

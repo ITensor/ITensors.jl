@@ -35,7 +35,7 @@ using ITensors, Test
     @test x ≈ array(op("a - a†", q))
     x = Amat * Adagmat - Adagmat
     @test x ≈ array(op("a * a† - a†", q))
-    @test x ≈ array(op("a*a† - a†", q))
+    @test x ≈ array(op("a * a† - a†", q))
     x = Adagmat * Adagmat * Amat * Amat
     @test x ≈ array(op("a† * a† * a * a", q))
 
@@ -53,10 +53,10 @@ using ITensors, Test
     @test x ≈ array(op("S+ - S- - S+", q))
     x = Sp * Sm + Sm * Sp
     @test x ≈ array(op("S+ * S- + S- * S+", q))
-    @test x ≈ array(op("S+*S- + S-*S+", q))
+    @test x ≈ array(op("S+ * S- + S-*S+", q))
     x = Sp * Sm - Sm * Sp
     @test x ≈ array(op("S+ * S- - S- * S+", q))
-    @test x ≈ array(op("S+* S- - S- * S+", q))
+    @test x ≈ array(op("S+ * S- - S- * S+", q))
     x = Sp * Sm + Sm * Sp + Sz * Sx * Sy
     @test x ≈ array(op("S+ * S- + S- * S+ + Sz * Sx * Sy", q))
     x = Sp * Sm - Sm * Sp + Sz * Sx * Sy

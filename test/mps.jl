@@ -580,7 +580,7 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
       Copsum[i, j] = inner(psi, MPO(a, s), psi)
     end
     @test Cpm ≈ Copsum atol = 5E-15
-    PM = expect(psi, op[1] * "*" * op[2])
+    PM = expect(psi, op[1] * " * " * op[2])
     @test norm(PM - diag(Cpm)) < 1E-8
   end
 end
@@ -880,7 +880,6 @@ end
     # Test non-contiguous sites input
     #
     C = correlation_matrix(psi, "N", "N")
-    display(C)
     non_contiguous = [1, 3, 8]
     Cs = correlation_matrix(psi, "N", "N"; sites=non_contiguous)
     for (ni, i) in enumerate(non_contiguous), (nj, j) in enumerate(non_contiguous)
