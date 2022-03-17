@@ -451,6 +451,27 @@ end
 # is a vector of tuples.
 op(s::Vector{<:Index}, os::Tuple{AbstractString,Vararg}) = op(s, os...)
 op(os::Tuple{AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
+op(os::Tuple{Function,AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
+
+op(f::Function, args...; kwargs...) = f(op(args...; kwargs...))
+
+function op(
+  s::Vector{<:Index},
+  f::Function,
+  opname::AbstractString,
+  ns::Tuple{Vararg{Integer}};
+  kwargs...,
+)
+  return f(op(opname, s, ns...; kwargs...))
+end
+
+function op(
+  s::Vector{<:Index}, f::Function, opname::AbstractString, ns::Integer...; kwargs...
+)
+  return f(op(opname, s, ns; kwargs...))
+end
+
+op(s::Vector{<:Index}, opdata::Tuple{Function,AbstractString,Vararg}) = op(s, opdata...)
 
 # Here, Ref is used to not broadcast over the vector of indices
 # TODO: consider overloading broadcast for `op` with the example
