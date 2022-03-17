@@ -573,13 +573,14 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
   for op in ops
     Cpm = correlation_matrix(psi, op[1], op[2]; kwargs...)
     # Check using OpSum:
+    Copsum = 0.0*Cpm
     for i in 1:N, j in 1:N
       a = OpSum()
       a += op[1], i, op[2], j
-      X = MPO(a, s)
-      @test inner(psi, MPO(a, s), psi) ≈ Cpm[i, j] atol = 5e-15
+      Copsum[i,j] = inner(psi, MPO(a, s), psi)
     end
-    PM = expect(psi, op[1] * " * " * op[2])
+    @test Cpm ≈ Copsum atol = 5E-15
+    PM = expect(psi, op[1] * "*" * op[2])
     @test norm(PM - diag(Cpm)) < 1E-8
   end
 end
@@ -803,13 +804,13 @@ end
     # need to be calculated explicitely.
     #test_correlation_matrix(psi,[("Sz", "Sx")];ishermitian=true)
 
-    #Test site_range feature
+    #Test sites feature
     s = siteinds("S=1/2", 8; conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     PM = expect(psi, "S+ * S-")
     Cpm = correlation_matrix(psi, "S+", "S-")
     range = 3:7
-    Cpm37 = correlation_matrix(psi, "S+", "S-"; site_range=range)
+    Cpm37 = correlation_matrix(psi, "S+", "S-"; sites=range)
     @test norm(Cpm37 - Cpm[range, range]) < 1E-8
 
     @test norm(PM[range] - expect(psi, "S+ * S-"; sites=range)) < 1E-8
@@ -819,8 +820,8 @@ end
     psi = randomMPS(ComplexF64, s; linkdims=m)
     ss, es = 3, 6
     Nb = es - ss + 1
-    Cpm = correlation_matrix(psi, "S+", "S-"; site_range=ss:es)
-    Czz = correlation_matrix(psi, "Sz", "Sz"; site_range=ss:es)
+    Cpm = correlation_matrix(psi, "S+", "S-"; sites=ss:es)
+    Czz = correlation_matrix(psi, "Sz", "Sz"; sites=ss:es)
     @test size(Cpm) == (Nb, Nb)
     # Check using OpSum:
     for i in ss:es, j in i:es
@@ -874,6 +875,21 @@ end
     s = siteinds("Fermion", 8; conserve_qns=false)
     psi = randomMPS(s; linkdims=m)
     test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
+
+    #
+    # Test non-contiguous sites input
+    #
+    C = correlation_matrix(psi,"N","N")
+    display(C)
+    non_contiguous = [1,3,8]
+    Cs = correlation_matrix(psi,"N","N";sites=non_contiguous)
+    for (ni,i) in enumerate(non_contiguous), (nj,j) in enumerate(non_contiguous)
+      @test Cs[ni,nj] ≈ C[i,j]
+    end
+
+    C2 = correlation_matrix(psi,"N","N";sites=2)
+    @test C2[1,1] ≈ C[2,2]
+
   end #testset
 
   @testset "expect regression test for in-place modification of input MPS" begin
