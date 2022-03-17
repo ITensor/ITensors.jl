@@ -363,24 +363,27 @@ end
   #  f = x -> op("Rxx + CX * CZ - Ryy", s, (1, 2); ϕ = x)[σ..., σ′...]
   #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   #end
-  
+
   # functions
-  f = x -> exp(ITensor(Op("Ry", 1; θ = x), q))[1,1]
+  f = x -> exp(ITensor(Op("Ry", 1; θ=x), q))[1, 1]
 
   # RX
   args = (0.2,)
   for σ in [1, 2], σ′ in [1, 2]
-    f = x -> exp(ITensor(Op("Rx", 1; θ = x), s))[σ, σ′]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false, atol = 1e-6)
+    f = x -> exp(ITensor(Op("Rx", 1; θ=x), s))[σ, σ′]
+    test_rrule(
+      ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false, atol=1e-6
+    )
   end
 
   # RY
   args = (0.2,)
   for σ in [1, 2], σ′ in [1, 2]
-    f = x -> exp(ITensor(Op("Ry", 1; θ = x), s))[σ, σ′]
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false, atol = 1e-6)
+    f = x -> exp(ITensor(Op("Ry", 1; θ=x), s))[σ, σ′]
+    test_rrule(
+      ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false, atol=1e-6
+    )
   end
-
 end
 
 @testset "MPS ($ElType)" for ElType in (Float64, ComplexF64)
@@ -433,7 +436,6 @@ end
   @test ∇f ≈ ∇num atol = 1e-5
 end
 
-
 @testset "MPS rrules" begin
   Random.seed!(1234)
   s = siteinds("S=1/2", 4)
@@ -451,7 +453,7 @@ end
   #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   d_args = gradient(f, args...)
   @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
-  
+
   ψ = randomMPS(ComplexF64, s)
   ψtensors = ITensors.data(ψ)
   ϕ = randomMPS(ComplexF64, s)
@@ -462,7 +464,7 @@ end
   end
   x = 0.5
   ϵ = 1e-10
-  @test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6 
+  @test f'(x) ≈ (f(x + ϵ) - f(x)) / ϵ atol = 1e-6
 
   ρ = randomMPO(s)
   f = function (x)
@@ -470,9 +472,8 @@ end
     ψ̃ = MPS(ψ̃tensors)
     return real(inner(ψ̃', ρ, ψ̃))
   end
-  @test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6 
+  @test f'(x) ≈ (f(x + ϵ) - f(x)) / ϵ atol = 1e-6
 end
-
 
 #@testset "MPO rules" begin
 #  Random.seed!(1234)

@@ -65,8 +65,6 @@ function rrule(::typeof(tensor), x1::ITensor)
   return y, tensor_pullback
 end
 
-<<<<<<< HEAD
-
 # Special case for contracting a pair of ITensors
 function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::ITensor)
   y = x1 * x2
