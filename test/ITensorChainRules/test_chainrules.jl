@@ -222,25 +222,18 @@ Random.seed!(1234)
     rtol=1e-3,
     atol=1e-3,
   )
-end
 
-@testset "MPS rrules" begin
-  s = siteinds("S=1/2", 2)
-  ψ = randomMPS(s)
-
-  args = (ψ,)
-  f = x -> inner(x', x')
-  # TODO: Need to make MPS type compatible with FiniteDifferences.
-  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  d_args = gradient(f, args...)
-  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
-
-  args = (ψ,)
-  f = x -> inner(prime(x), prime(x))
-  # TODO: Need to make MPS type compatible with FiniteDifferences.
-  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  d_args = gradient(f, args...)
-  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
+  f = x -> inner(V', exp(x), V)
+  args = (A,)
+  test_rrule(
+    ZygoteRuleConfig(),
+    f,
+    args...;
+    rrule_f=rrule_via_ad,
+    check_inferred=false,
+    rtol=1e-4,
+    atol=1e-4,
+  )
 end
 
 @testset "ChainRules rrules: op" begin
@@ -371,6 +364,26 @@ end
   #  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   #end
 
+  # functions
+  f = x -> exp(ITensor(Op("Ry", 1; θ=x), q))[1, 1]
+
+  # RX
+  args = (0.2,)
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> exp(ITensor(Op("Rx", 1; θ=x), s))[σ, σ′]
+    test_rrule(
+      ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false, atol=1e-6
+    )
+  end
+
+  # RY
+  args = (0.2,)
+  for σ in [1, 2], σ′ in [1, 2]
+    f = x -> exp(ITensor(Op("Ry", 1; θ=x), s))[σ, σ′]
+    test_rrule(
+      ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false, atol=1e-6
+    )
+  end
 end
 
 @testset "MPS ($ElType)" for ElType in (Float64, ComplexF64)
@@ -415,7 +428,7 @@ end
   f = function (x)
     U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
     ψθ = apply(U, ψ)
-    return real(inner(ϕ, ψθ))
+    return abs2(inner(ϕ, ψθ))
   end
   θ = 0.5
   ∇f = f'(θ)
@@ -423,7 +436,78 @@ end
   @test ∇f ≈ ∇num atol = 1e-5
 end
 
-@testset "MPO" begin
+@testset "MPS rrules" begin
+  Random.seed!(1234)
+  s = siteinds("S=1/2", 4)
+  ψ = randomMPS(s)
+  args = (ψ,)
+  f = x -> inner(x, x)
+  # TODO: Need to make MPS type compatible with FiniteDifferences.
+  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
+
+  args = (ψ,)
+  f = x -> inner(prime(x), prime(x))
+  # TODO: Need to make MPS type compatible with FiniteDifferences.
+  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  d_args = gradient(f, args...)
+  @test norm(d_args[1] - 2 * args[1]) ≈ 0 atol = 1e-13
+
+  ψ = randomMPS(ComplexF64, s)
+  ψtensors = ITensors.data(ψ)
+  ϕ = randomMPS(ComplexF64, s)
+  f = function (x)
+    ψ̃tensors = [x^j * ψtensors[j] for j in 1:length(ψtensors)]
+    ψ̃ = MPS(ψ̃tensors)
+    return abs2(inner(ϕ, ψ̃))
+  end
+  x = 0.5
+  ϵ = 1e-10
+  @test f'(x) ≈ (f(x + ϵ) - f(x)) / ϵ atol = 1e-6
+
+  ρ = randomMPO(s)
+  f = function (x)
+    ψ̃tensors = [x^j * ψtensors[j] for j in 1:length(ψtensors)]
+    ψ̃ = MPS(ψ̃tensors)
+    return real(inner(ψ̃', ρ, ψ̃))
+  end
+  @test f'(x) ≈ (f(x + ϵ) - f(x)) / ϵ atol = 1e-6
+end
+
+#@testset "MPO rules" begin
+#  Random.seed!(1234)
+#  s = siteinds("S=1/2", 2)
+#  
+#  #ρ = randomMPO(s)
+#  #ρtensors = ITensors.data(ρ)
+#  #ϕ = randomMPS(ComplexF64, s)
+#  #f = function (x)
+#  #  ρ̃tensors  = [2 * x * ρtensors[1],  log(x) * ρtensors[2]] 
+#  #  ρ̃ = MPO(ρ̃tensors)
+#  #  #@show typeof(ρ̃)
+#  #  return real(inner(ϕ', ρ̃, ϕ))
+#  #end
+#  #x = 3.0
+#  #ϵ = 1e-8
+#  #@show (f(x+ϵ) - f(x)) / ϵ
+#  #@show f'(x)
+#  ##@test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6 
+#  #
+#
+#  #ϕ = randomMPO(s)
+#  #f = function (x)
+#  #  ψ̃tensors  = [2 * x * ψtensors[1],  log(x) * ψtensors[2]] 
+#  #  ψ̃ = MPS(ψ̃tensors)
+#  #  return abs2(inner(ϕ, ψ̃))
+#  #end
+#  #x = 3.0
+#  #ϵ = 1e-8
+#  #@test f'(x) ≈ (f(x+ϵ) - f(x)) / ϵ atol = 1e-6 
+#
+#  #ρ = randomMPO(s)
+#end
+@testset "MPO: apply" begin
   Random.seed!(1234)
   ϵ = 1e-8
   n = 3
