@@ -196,6 +196,16 @@ include("util.jl")
     @test norm(phi[4]) ≈ 1.0
     @test norm(phic[4]) ≈ 1.0
   end
+  
+  @testset "randomCircuitMPS bond dimensions" begin
+    phi = randomCircuitMPS(ComplexF64,sites,32)
+    expected_dims = [2, 4, 8, 16, 32, 16, 8, 4, 2]
+
+    for i in 1:9
+      l = getfirst(x->hastags(x,"Link,l=$(i)"),inds(mps[i]))
+      @test dim(l) == expected_dims[i]
+    end
+  end
 
   @testset "inner different MPS" begin
     phi = randomMPS(sites)
