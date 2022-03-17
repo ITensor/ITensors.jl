@@ -653,11 +653,10 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
     lind = commonind(psi[start_site], psi[start_site - 1])
     L = delta(dag(lind), lind')
   end
-  pL = start_site-1
+  pL = start_site - 1
 
-  for (ni,i) in enumerate(sites[1:end-1])
-
-    while pL < i-1
+  for (ni, i) in enumerate(sites[1:(end - 1)])
+    while pL < i - 1
       pL += 1
       L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
     end
@@ -677,10 +676,10 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
     Li12 = (Li * op(Op1, s, i)) * dag(prime(psi[i]))
     pL12 = i
 
-    for (n,j) in enumerate(sites[ni+1:end])
-      nj = ni+n
+    for (n, j) in enumerate(sites[(ni + 1):end])
+      nj = ni + n
 
-      while pL12 < j-1
+      while pL12 < j - 1
         pL12 += 1
         if !using_auto_fermion() && fermionic2
           Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
@@ -721,10 +720,10 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
         Li21 = -Li21 #Required because we swapped fermionic ops, instead of sweeping right to left.
       end
 
-      for (n,j) in enumerate(sites[ni+1:end])
-        nj = ni+n
+      for (n, j) in enumerate(sites[(ni + 1):end])
+        nj = ni + n
 
-        while pL21 < j-1
+        while pL21 < j - 1
           pL21 += 1
           if !using_auto_fermion() && fermionic1
             Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
@@ -757,7 +756,7 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 
   # Get last diagonal element of C
   i = end_site
-  while pL < i-1
+  while pL < i - 1
     pL += 1
     L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
   end

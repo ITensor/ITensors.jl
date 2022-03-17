@@ -573,11 +573,11 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
   for op in ops
     Cpm = correlation_matrix(psi, op[1], op[2]; kwargs...)
     # Check using OpSum:
-    Copsum = 0.0*Cpm
+    Copsum = 0.0 * Cpm
     for i in 1:N, j in 1:N
       a = OpSum()
       a += op[1], i, op[2], j
-      Copsum[i,j] = inner(psi, MPO(a, s), psi)
+      Copsum[i, j] = inner(psi, MPO(a, s), psi)
     end
     @test Cpm ≈ Copsum atol = 5E-15
     PM = expect(psi, op[1] * "*" * op[2])
@@ -879,17 +879,16 @@ end
     #
     # Test non-contiguous sites input
     #
-    C = correlation_matrix(psi,"N","N")
+    C = correlation_matrix(psi, "N", "N")
     display(C)
-    non_contiguous = [1,3,8]
-    Cs = correlation_matrix(psi,"N","N";sites=non_contiguous)
-    for (ni,i) in enumerate(non_contiguous), (nj,j) in enumerate(non_contiguous)
-      @test Cs[ni,nj] ≈ C[i,j]
+    non_contiguous = [1, 3, 8]
+    Cs = correlation_matrix(psi, "N", "N"; sites=non_contiguous)
+    for (ni, i) in enumerate(non_contiguous), (nj, j) in enumerate(non_contiguous)
+      @test Cs[ni, nj] ≈ C[i, j]
     end
 
-    C2 = correlation_matrix(psi,"N","N";sites=2)
-    @test C2[1,1] ≈ C[2,2]
-
+    C2 = correlation_matrix(psi, "N", "N"; sites=2)
+    @test C2[1, 1] ≈ C[2, 2]
   end #testset
 
   @testset "expect regression test for in-place modification of input MPS" begin
