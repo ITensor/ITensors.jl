@@ -102,14 +102,20 @@ using ITensors,
 
   @testset "Test factorizations of a cuITensor" begin
     A = randomCuITensor(SType, i, j, k, l)
-
     @testset "Test SVD of a cuITensor" begin
       U, S, V = svd(A, (j, l))
       u = commonind(U, S)
       v = commonind(S, V)
-      @test cpu(A) ≈ cpu(U * S * dag(V))
+      @test cpu(A) ≈ cpu(U * S * V)
       @test cpu(U * dag(prime(U, u))) ≈ δ(SType, u, u') rtol = 1e-14
       @test cpu(V * dag(prime(V, v))) ≈ δ(SType, v, v') rtol = 1e-14
+    end
+
+    A = randomCuITensor(SType, i, j, k, l)
+    @testset "Test SVD consistency between CPU and GPU" begin
+      U_gpu, S_gpu, V_gpu = svd(A, (j, l))
+      U_cpu, S_cpu, V_cpu = svd(cpu(A), (j, l))
+      @test cpu(U_gpu) * cpu(S_gpu) * cpu(V_gpu) ≈ U_cpu * S_cpu * V_cpu
     end
 
     #=@testset "Test SVD truncation" begin 
