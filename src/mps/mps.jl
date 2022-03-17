@@ -782,7 +782,7 @@ function expect(psi::MPS, ops; kwargs...)
     orthogonalize!(psi, j)
     for (n, opname) in enumerate(ops)
       val = scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j]))) / norm2_psi
-      ex[n][entry] = convert(el_types[n], val)
+      ex[n][entry] = (el_types[n] <: Real) ? real(val) : val
     end
   end
 

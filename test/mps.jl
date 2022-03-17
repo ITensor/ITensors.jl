@@ -721,15 +721,15 @@ end
 
   @testset "expect Function" begin
     N = 8
-    s = siteinds("S=1/2", N; conserve_qns=false)
-    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
+    s = siteinds("S=1/2", N)
+    psi = randomMPS(ComplexF64, s; linkdims=2)
 
     eSz = zeros(N)
     eSx = zeros(N)
     for j in 1:N
       orthogonalize!(psi, j)
-      eSz[j] = scalar(dag(prime(psi[j], "Site")) * op("Sz", s[j]) * psi[j])
-      eSx[j] = scalar(dag(prime(psi[j], "Site")) * op("Sx", s[j]) * psi[j])
+      eSz[j] = real(scalar(dag(prime(psi[j], "Site")) * op("Sz", s[j]) * psi[j]))
+      eSx[j] = real(scalar(dag(prime(psi[j], "Site")) * op("Sx", s[j]) * psi[j]))
     end
 
     res = expect(psi, "Sz")
@@ -737,9 +737,6 @@ end
 
     res = expect(psi, "Sz"; sites=2:4)
     @test res ≈ eSz[2:4]
-
-    res = expect(psi, "Sz"; sites=1:2:N)
-    @test res ≈ eSz[1:2:N]
 
     res = expect(psi, "Sz"; sites=[2, 4, 8])
     @test res[1] ≈ eSz[2]
@@ -770,20 +767,6 @@ end
     @test res[2, 1] ≈ eSx[3:7]
     @test res[1, 2] ≈ eSx[3:7]
     @test res[2, 2] ≈ eSz[3:7]
-
-    #
-    # Test handling of non-Hermitian operators
-    # for complex-valued MPS
-    #
-    # Real-valued MPS
-    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
-    res = expect(psi, ("S+", "Sx"))
-    @test res isa Tuple{Vector{Float64},Vector{Float64}}
-
-    # Complex-valued MPS
-    psi = randomMPS(ComplexF64, s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
-    res = expect(psi, ("S+", "Sx"))
-    @test res isa Tuple{Vector{ComplexF64},Vector{Float64}}
   end
 
   @testset "Expected value and Correlations" begin
