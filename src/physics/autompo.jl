@@ -124,13 +124,13 @@ function MPOTerm(c::Number, op1::Union{String,AbstractArray{<:Number}}, ops_rest
   ops = (op1, ops_rest...)
   starts = findall(x -> (x isa String) || (x isa AbstractArray{<:Number}), ops)
   N = length(starts)
-  vop = OpTerm(undef, N)
+  vop = SiteOp[]
   for n in 1:N
     start = starts[n]
     stop = (n == N) ? lastindex(ops) : (starts[n + 1] - 1)
-    vop[n] = SiteOp(ops[start:stop]...)
+    vop = [vop; [SiteOp(ops[start:stop]...)]]
   end
-  return MPOTerm(c, vop)
+  return MPOTerm(c, OpTerm(vop))
 end
 
 function MPOTerm(op1::Union{String,AbstractArray}, ops...)
@@ -157,8 +157,8 @@ function Base.show(io::IO, op::MPOTerm)
 end
 
 (α::Number * op::MPOTerm) = MPOTerm(α * coef(op), ops(op))
-/(op::MPOTerm, α::Number) = MPOTerm(coef(op) / α, ops(op))
-*(op::MPOTerm, α::Number) = α * op
+(op::MPOTerm * α::Number) = α * op
+(op::MPOTerm / α::Number) = MPOTerm(coef(op) / α, ops(op))
 
 ############################
 ## OpSum                 #
@@ -188,7 +188,7 @@ mutable struct OpSum
 end
 
 length(os::OpSum) = length(data(os))
-getindex(os::OpSum, I...) = data(os)[I...]
+getindex(os::OpSum, I::Int) = data(os)[I]
 
 const AutoMPO = OpSum
 
@@ -294,17 +294,14 @@ subtract!(os::OpSum, args...) = add!(os, -MPOTerm(args...))
 
 -(t::MPOTerm) = MPOTerm(-coef(t), ops(t))
 
-function (ampo::OpSum + term::Tuple)
-  ampo_plus_term = copy(ampo)
-  add!(ampo_plus_term, term...)
-  return ampo_plus_term
-end
-
-function (ampo::OpSum + term::Vector{Pair{String,Int64}})
+function (ampo::OpSum + term::MPOTerm)
   ampo_plus_term = copy(ampo)
   add!(ampo_plus_term, term)
   return ampo_plus_term
 end
+
+(ampo::OpSum + term::Tuple) = ampo + MPOTerm(term...)
+(ampo::OpSum + term::Vector{Pair{String,Int64}}) = ampo + MPOTerm(term)
 
 function (ampo::OpSum - term::Tuple)
   ampo_plus_term = copy(ampo)
@@ -315,11 +312,6 @@ end
 function +(o1::OpSum, o2::OpSum; kwargs...)
   return prune!(sortmergeterms!(OpSum([o1..., o2...])), kwargs...)
 end
-
-*(α::Number, os::OpSum) = OpSum([α * o for o in os])
-/(os::OpSum, α::Number) = OpSum([o / α for o in os])
-
--(o1::OpSum, o2::OpSum) = o1 + (-1) * o2
 
 """
     prune!(os::OpSum; cutoff = 1e-15)
@@ -363,6 +355,12 @@ function Base.copyto!(ampo, bc::Broadcast.Broadcasted{OpSumAddTermStyle,<:Any,ty
   subtract!(ampo, bc.args[2]...)
   return ampo
 end
+
+(α::Number * os::OpSum) = OpSum([α * o for o in os])
+(os::OpSum * α::Number) = α * os
+(os::OpSum / α::Number) = OpSum([o / α for o in os])
+
+(o1::OpSum - o2::OpSum) = o1 + (-1) * o2
 
 function Base.show(io::IO, ampo::OpSum)
   println(io, "OpSum:")
@@ -904,7 +902,7 @@ function sorteachterm!(ampo::OpSum, sites)
         # Put local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
-        t.ops[n] = SiteOp("$(name(t.ops[n]))*F", site(t.ops[n]))
+        t.ops[n] = SiteOp("$(name(t.ops[n])) * F", site(t.ops[n]))
       end
       prevsite = currsite
 

@@ -224,22 +224,52 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   # if there are multiple indices
   commontags_s = commontags(s...)
 
-  # XXX this clashes with the S+ and S- for spins...
-  ## Interpret operator names joined by +
-  ## as acting sequentially on the same site
-  #pluspos = findfirst("+", name)
-  #if !isnothing(pluspos)
-  #  op1 = name[1:prevind(name, pluspos.start)]
-  #  op2 = name[nextind(name, pluspos.start):end]
-  #  return op(op1, s...; kwargs...) + op(op2, s...; kwargs...)
-  #end
+  # first we handle the + and - algebra, which requires a space between ops to avoid clashing
+  name_split = nothing
+  @ignore_derivatives name_split = String.(split(name, " "))
+  oplocs = findall(x -> x ∈ ("+", "-"), name_split)
 
-  # Interpret operator names joined by *
-  # as acting sequentially on the same site
-  starpos = findfirst("*", name)
-  if !isnothing(starpos)
-    op1 = name[1:prevind(name, starpos.start)]
-    op2 = name[nextind(name, starpos.start):end]
+  if !isempty(oplocs)
+    @ignore_derivatives !isempty(kwargs) &&
+      error("Lazy algebra on parametric gates not allowed")
+
+    # the string representation of algebra ops: ex ["+", "-", "+"]
+    labels = name_split[oplocs]
+    # assign coefficients to each term: ex [+1, -1, +1]
+    coeffs = [1, [(-1)^Int(label == "-") for label in labels]...]
+
+    # grad the name of each operator block separated by an algebra op, and do so by
+    # making sure blank spaces between opnames are kept when building the new block.
+    start, opnames = 0, String[]
+    for oploc in oplocs
+      finish = oploc
+      opnames = vcat(
+        opnames, [prod([name_split[k] * " " for k in (start + 1):(finish - 1)])]
+      )
+      start = oploc
+    end
+    opnames = vcat(
+      opnames, [prod([name_split[k] * " " for k in (start + 1):length(name_split)])]
+    )
+
+    # build the vector of blocks and sum
+    op_list = [
+      coeff * (op(opname, s...; kwargs...)) for (coeff, opname) in zip(coeffs, opnames)
+    ]
+    return sum(op_list)
+  end
+
+  # the the multiplication come after
+  oploc = findfirst("*", name)
+  if !isnothing(oploc)
+    op1, op2 = nothing, nothing
+    @ignore_derivatives begin
+      op1 = name[1:prevind(name, oploc.start)]
+      op2 = name[nextind(name, oploc.start):end]
+      if !(op1[end] == ' ' && op2[1] == ' ')
+        @warn "composite op definition `A*B` deprecated: please use `A * B` instead (with spaces)"
+      end
+    end
     return product(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
   end
 
@@ -421,13 +451,34 @@ end
 # is a vector of tuples.
 op(s::Vector{<:Index}, os::Tuple{AbstractString,Vararg}) = op(s, os...)
 op(os::Tuple{AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
+op(os::Tuple{Function,AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
+
+op(f::Function, args...; kwargs...) = f(op(args...; kwargs...))
+
+function op(
+  s::Vector{<:Index},
+  f::Function,
+  opname::AbstractString,
+  ns::Tuple{Vararg{Integer}};
+  kwargs...,
+)
+  return f(op(opname, s, ns...; kwargs...))
+end
+
+function op(
+  s::Vector{<:Index}, f::Function, opname::AbstractString, ns::Integer...; kwargs...
+)
+  return f(op(opname, s, ns; kwargs...))
+end
+
+op(s::Vector{<:Index}, opdata::Tuple{Function,AbstractString,Vararg}) = op(s, opdata...)
 
 # Here, Ref is used to not broadcast over the vector of indices
 # TODO: consider overloading broadcast for `op` with the example
 # here: https://discourse.julialang.org/t/how-to-broadcast-over-only-certain-function-arguments/19274/5
 # so that `Ref` isn't needed.
-ops(s::Vector{<:Index}, os::AbstractArray) = op.(Ref(s), os)
-ops(os::AbstractVector, s::Vector{<:Index}) = op.(Ref(s), os)
+ops(s::Vector{<:Index}, os::AbstractArray) = [op(oₙ, s) for oₙ in os]
+ops(os::AbstractVector, s::Vector{<:Index}) = [op(oₙ, s) for oₙ in os]
 
 @doc """
     ops(s::Vector{<:Index}, os::Vector)
