@@ -580,6 +580,7 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
       Copsum[i, j] = inner(psi, MPO(a, s), psi)
     end
     @test Cpm ≈ Copsum rtol = 1E-11
+
     PM = expect(psi, op[1] * " * " * op[2])
     @test norm(PM - diag(Cpm)) < 1E-8
   end
