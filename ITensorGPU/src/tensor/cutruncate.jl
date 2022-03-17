@@ -8,6 +8,11 @@ function truncate!(
   doRelCutoff::Bool = get(kwargs, :doRelCutoff, true)
   origm = length(P)
   docut = 0.0
+  # handle the case where nothing is to be cut off
+  minP = minimum(P)
+  if minP > cutoff
+    return 0.0, 0.0, P
+  end
   maxP = maximum(P)
   if maxP == 0.0
     P = CUDA.zeros(Float64, 1)
@@ -17,17 +22,11 @@ function truncate!(
     docut = maxP / 2
     return 0.0, docut, P[1:1]
   end
-
   @timeit "setup rP" begin
     #Zero out any negative weight
     #neg_z_f = (!signbit(x) ? x : 0.0)
     rP = map(x -> !signbit(x) ? x : 0.0, P)
     n = origm
-    truncerr = 0.0
-    if n > maxdim
-      truncerr = sum(rP[1:(n - maxdim)])
-      n = maxdim
-    end
   end
   @timeit "handle cutoff" begin
     if absoluteCutoff
@@ -37,10 +36,11 @@ function truncate!(
       err_rP = sub_arr ./ abs.(sub_arr)
       flags = reinterpret(Float64, (signbit.(err_rP) .<< 1 .& 2) .<< 61)
       cut_ind = CUDA.CUBLAS.iamax(length(err_rP), err_rP .* flags) - 1
-      n = min(maxdim, length(P) - cut_ind)
+      n = min(maxdim, cut_ind)
       n = max(n, mindim)
-      truncerr += sum(rP[(cut_ind + 1):end])
+      truncerr = sum(rP[(n + 1):end])
     else
+      truncerr = 0.0
       scale = 1.0
       @timeit "find scale" begin
         if doRelCutoff
@@ -48,31 +48,22 @@ function truncate!(
           scale = scale > 0.0 ? scale : 1.0
         end
       end
-
-      #Continue truncating until *sum* of discarded probability 
+      #Truncating until *sum* of discarded probability 
       #weight reaches cutoff reached (or m==mindim)
-      sub_arr = rP .+ truncerr .- cutoff * scale
+      csum_rp = CUDA.reverse(CUDA.cumsum(CUDA.reverse(rP)))
+      sub_arr = csum_rp .- cutoff * scale
       err_rP = sub_arr ./ abs.(sub_arr)
       flags = reinterpret(Float64, (signbit.(err_rP) .<< 1 .& 2) .<< 61)
-      cut_ind = CUDA.CUBLAS.iamax(length(err_rP), err_rP .* flags) - 1
+      cut_ind = (CUDA.CUBLAS.iamax(length(err_rP), err_rP .* flags) - 1)
       if cut_ind > 0
-        truncerr += sum(rP[(cut_ind + 1):end])
-        n = min(maxdim, length(P) - cut_ind)
+        n = min(maxdim, cut_ind)
         n = max(n, mindim)
-        if scale == 0.0
-          truncerr = 0.0
-        else
-          truncerr /= scale
-        end
-      else # all are above cutoff
-        truncerr += sum(rP[1:maxdim])
-        n = min(maxdim, length(P) - cut_ind)
-        n = max(n, mindim)
-        if scale == 0.0
-          truncerr = 0.0
-        else
-          truncerr /= scale
-        end
+        truncerr = sum(rP[(n + 1):end])
+      end
+      if scale == 0.0
+        truncerr = 0.0
+      else
+        truncerr /= scale
       end
     end
   end
