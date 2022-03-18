@@ -2600,8 +2600,21 @@ function expect(T::ITensor, s::Vector{<:Index}, ops; kwargs...)
   N = length(s)
   ElT = ITensors.promote_itensor_eltype([T])
 
-  #XXX check this one
-  is_operator = !isempty(inds(T; plev=1))
+  inds_plev0 = inds(T; plev=0)
+  inds_plev1 = inds(T; plev=1)
+
+  # XXX double check this
+  # if T has only unprimed indices and they match the input indices
+  # treat T as a wavefuntion
+  if isempty(inds_plev1) && all(inds_plev0 .== s)
+    is_operator = false
+    # if T has a set of matching primed and unprimed indices (also matching `s`),
+    # treat this an an operator.
+  elseif all(inds_plev0 .== noprime(inds_plev1)) && all(inds_plev0 .== s)
+    is_operator = true
+  else
+    error("Index structure of ITensor $T not compatible with expect")
+  end
 
   if haskey(kwargs, :site_range)
     @warn "The `site_range` keyword arg. to `expect` is deprecated: use the keyword `sites` instead"
