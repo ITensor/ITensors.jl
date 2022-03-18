@@ -698,6 +698,54 @@ function sample(M::MPO)
   return result
 end
 
+function correlation_matrix(rho::MPO, _Op1::AbstractString, _Op2::AbstractString; kwargs...)
+  return error("correlation matrix for MPOs not yet implemented")
+end
+
+function expect(rho::MPO, ops; kwargs...)
+  rho = copy(rho)
+  N = length(rho)
+  ElT = promote_itensor_eltype(rho)
+  s = firstsiteinds(rho)
+
+  if haskey(kwargs, :site_range)
+    @warn "The `site_range` keyword arg. to `expect` is deprecated: use the keyword `sites` instead"
+    sites = kwargs[:site_range]
+  else
+    sites = get(kwargs, :sites, 1:N)
+  end
+
+  site_range = (sites isa AbstractRange) ? sites : collect(sites)
+  Ns = length(site_range)
+  start_site = first(site_range)
+
+  el_types = map(o -> ishermitian(op(o, s[start_site])) ? real(ElT) : ElT, ops)
+
+  tr_rho = tr(rho)
+
+  ex = map((o, el_t) -> zeros(el_t, Ns), ops, el_types)
+  for (entry, j) in enumerate(site_range)
+    for (n, opname) in enumerate(ops)
+      T̃ = copy(rho)
+      T̃[j] = mapprime(op(opname, s[j])' * T̃[j], 2 => 1)
+      val = tr(T̃) / tr_rho
+      ex[n][entry] = (el_types[n] <: Real) ? real(val) : val
+    end
+  end
+  if sites isa Number
+    return map(arr -> arr[1], ex)
+  end
+  return ex
+end
+
+function expect(M::MPO, op::AbstractString; kwargs...)
+  return first(expect(M, (op,); kwargs...))
+end
+
+function expect(M::MPO, op1::AbstractString, ops::AbstractString...; kwargs...)
+  return expect(M, (op1, ops...); kwargs...)
+end
+
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPO)
   g = create_group(parent, name)
   attributes(g)["type"] = "MPO"

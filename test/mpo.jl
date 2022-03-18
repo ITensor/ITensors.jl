@@ -684,6 +684,56 @@ end
       @test d <= chi1 * chi2
     end
   end
+
+  @testset "expect Function" begin
+    N = 6
+    s = siteinds("S=1/2", N)
+    psi = randomMPS(ComplexF64, s; linkdims=2)
+    rho = outer(psi, psi)
+    eSz = zeros(N)
+    eSx = zeros(N)
+    rhoT = prod(rho)
+    for j in 1:N
+      eSz[j] = real(tr(mapprime(op("Sz", s[j])' * rhoT, 2 => 1; inds=s[j]'')))
+      eSx[j] = real(tr(mapprime(op("Sx", s[j])' * rhoT, 2 => 1; inds=s[j]'')))
+    end
+
+    res = expect(rho, "Sz")
+    @test res ≈ eSz
+
+    res = expect(rho, "Sz"; sites=2:4)
+    @test res ≈ eSz[2:4]
+
+    res = expect(rho, "Sz"; sites=[1, 3, 5])
+    @test res[1] ≈ eSz[1]
+    @test res[2] ≈ eSz[3]
+    @test res[3] ≈ eSz[5]
+
+    res = expect(rho, "Sz", "Sx")
+    @test res[1] ≈ eSz
+    @test res[2] ≈ eSx
+
+    res = expect(rho, "Sz"; sites=3)
+    @test res isa Float64
+    @test res ≈ eSz[3]
+
+    res = expect(rho, "Sz", "Sx"; sites=3)
+    @test res isa Tuple{Float64,Float64}
+    @test res[1] ≈ eSz[3]
+    @test res[2] ≈ eSx[3]
+
+    res = expect(rho, ("Sz", "Sx"))
+    @test res isa Tuple{Vector{Float64},Vector{Float64}}
+    @test res[1] ≈ eSz
+    @test res[2] ≈ eSx
+
+    res = expect(rho, ["Sz" "Sx"; "Sx" "Sz"]; sites=2:5)
+    @test res isa Matrix{Vector{Float64}}
+    @test res[1, 1] ≈ eSz[2:5]
+    @test res[2, 1] ≈ eSx[2:5]
+    @test res[1, 2] ≈ eSx[2:5]
+    @test res[2, 2] ≈ eSz[2:5]
+  end
 end
 
 nothing

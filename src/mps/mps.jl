@@ -839,12 +839,12 @@ function expect(psi::MPS, ops; kwargs...)
   return ex
 end
 
-function expect(psi::MPS, op::AbstractString; kwargs...)
-  return first(expect(psi, (op,); kwargs...))
+function expect(M::MPS, op::AbstractString; kwargs...)
+  return first(expect(M, (op,); kwargs...))
 end
 
-function expect(psi::MPS, op1::AbstractString, ops::AbstractString...; kwargs...)
-  return expect(psi, (op1, ops...); kwargs...)
+function expect(M::MPS, op1::AbstractString, ops::AbstractString...; kwargs...)
+  return expect(M, (op1, ops...); kwargs...)
 end
 
 function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, M::MPS)
