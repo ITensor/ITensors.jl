@@ -141,10 +141,6 @@ function slater_determinant_matrix(h::AbstractMatrix, Nf::Int)
   return u[:, 1:Nf]
 end
 
-function Base.:+(a1::AutoMPO, a2::AutoMPO)
-  return AutoMPO(vcat(a1.data, a2.data))
-end
-
 #
 # Correlation matrix diagonalization
 #
