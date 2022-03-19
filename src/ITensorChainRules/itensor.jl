@@ -76,6 +76,8 @@ function ChainRulesCore.rrule(::typeof(contract), x1::ITensor, x2::ITensor)
   return y, contract_pullback
 end
 
+@non_differentiable ITensors.optimal_contraction_sequence(::Any)
+
 function ChainRulesCore.rrule(::typeof(*), x1::Number, x2::ITensor)
   y = x1 * x2
   function contract_pullback(ȳ)
@@ -95,8 +97,6 @@ function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::Number)
   end
   return y, contract_pullback
 end
-
-@non_differentiable ITensors.optimal_contraction_sequence(::Any)
 
 function ChainRulesCore.rrule(::typeof(+), x1::ITensor, x2::ITensor)
   y = x1 + x2
