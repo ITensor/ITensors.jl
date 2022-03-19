@@ -65,6 +65,21 @@ Random.seed!(1234)
   args = (rand(4), rand(2, 2))
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
+  a, b, k, l, m, n, u, v = Index.([10, 50, 5, 2, 10, 12, 7, 50])
+  args = (
+    randomITensor(a, b, k),
+    randomITensor(a, l, m),
+    randomITensor(b, u, n),
+    randomITensor(u, v),
+    randomITensor(k, v),
+    randomITensor(l, m, n),
+  )
+  f(A, B, C, D, E, F) = (A * B * C * D * E * F)[] # Left associative
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  seq = ITensors.optimal_contraction_sequence([A, B, C, D, E, F])
+  f(A, B, C, D, E, F) = contract([A, B, C, D, E, F]; sequence=seq)[] # sequence
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+
   f = function (x)
     b = itensor([0, 0, 1, 1], i, j)
     k = itensor([0, 1, 0, 0], i, j)
