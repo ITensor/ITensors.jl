@@ -66,7 +66,7 @@ function rrule(::typeof(tensor), x1::ITensor)
 end
 
 # Special case for contracting a pair of ITensors
-function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::ITensor)
+function ChainRulesCore.rrule(::typeof(contract), x1::ITensor, x2::ITensor)
   y = x1 * x2
   function contract_pullback(ȳ)
     x̄1 = ȳ * dag(x2)
@@ -96,25 +96,7 @@ function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::Number)
   return y, contract_pullback
 end
 
-# TODO: use some contraction sequence optimization here
-function ChainRulesCore.rrule(::typeof(*), x1::ITensor, x2::ITensor, xs::ITensor...)
-  y = *(x1, x2, xs...)
-  function contract_pullback(ȳ)
-    tn = [x1, x2, xs...]
-    N = length(tn)
-    env_contracted = Vector{ITensor}(undef, N)
-    for n in 1:length(tn)
-      tn_left = tn[1:(n - 1)]
-      # TODO: define contract([]) = ITensor(1.0)
-      env_left = isempty(tn_left) ? ITensor(1.0) : contract(tn_left)
-      tn_right = tn[reverse((n + 1):end)]
-      env_right = isempty(tn_right) ? ITensor(1.0) : contract(tn_right)
-      env_contracted[n] = dag(env_left) * ȳ * dag(env_right)
-    end
-    return (NoTangent(), env_contracted...)
-  end
-  return y, contract_pullback
-end
+@non_differentiable ITensors.optimal_contraction_sequence(::Any)
 
 function ChainRulesCore.rrule(::typeof(+), x1::ITensor, x2::ITensor)
   y = x1 + x2
