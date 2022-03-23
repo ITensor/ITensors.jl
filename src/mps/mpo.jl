@@ -113,6 +113,18 @@ function MPO(A::ITensor, sites::Vector{<:Index}; kwargs...)
   return MPO(A, IndexSet.(prime.(sites), dag.(sites)); kwargs...)
 end
 
+function outer_mps_mps_deprecation_warning()
+  return "Calling `outer(ψ::MPS, ϕ::MPS)` for MPS `ψ` and `ϕ` with shared indices is deprecated. Currently, we automatically prime `ψ` to make sure the site indices don't clash, but that will no longer be the case in ITensors v0.4. To upgrade your code, call `outer(ψ', ϕ)`. Although the new interface seems less convenient, it will allow `outer` to accept more general outer products going forward, such as outer products where some indices are shared (a batched outer product) or outer products of MPS between site indices that aren't just related by a single prime level."
+end
+
+function deprecate_make_inds_unmatch(::typeof(outer), ψ::MPS, ϕ::MPS; kw...)
+  if hassameinds(siteinds, ψ, ϕ)
+    warn_once(outer_mps_mps_deprecation_warning(), :outer_mps_mps)
+    ψ = ψ'
+  end
+  return ψ, ϕ
+end
+
 """
     outer(x::MPS, y::MPS; <keyword argument>) -> MPO
 
@@ -130,7 +142,9 @@ the same arguments as `contract(::MPO, ::MPO; kw...)`.
 See also [`product`](@ref), [`contract`](@ref).
 """
 function outer(ψ::MPS, ϕ::MPS; kw...)
-  ψmat = convert(MPO, ψ')
+  ψ, ϕ = deprecate_make_inds_unmatch(outer, ψ, ϕ; kw...)
+
+  ψmat = convert(MPO, ψ)
   ϕmat = convert(MPO, dag(ϕ))
   return contract(ψmat, ϕmat; kw...)
 end
@@ -208,6 +222,65 @@ function hassameinds(::typeof(siteinds), ψ::MPS, Hϕ::Tuple{MPO,MPS})
   return true
 end
 
+function inner_mps_mpo_mps_deprecation_warning()
+  return  """
+  Calling `inner(x::MPS, A::MPO, y::MPS)` where the site indices of the `MPS` `x` and the `MPS` resulting from contracting `MPO` `A` with `MPS` `y` don't match is deprecated as of ITensors v0.3 and will result in an error in ITensors v0.4. The most common cause of this is something like the following:
+  ```julia
+  s = siteinds("S=1/2")
+  psi = randomMPS(s)
+  H = MPO(s, "Id")
+  inner(psi, H, psi)
+  ```
+  `psi` has the Index structure `-s-(psi)` and `H` has the Index structure `-s'-(H)-s-`, so the Index structure of would be `(dag(psi)-s- -s'-(H)-s-(psi)` unless the prime levels were fixed. Previously we tried fixing the prime level in situations like this, but we will no longer be doing that going forward.
+
+  There are a few ways to fix this. You can simply change:
+  ```julia
+  inner(psi, H, psi)
+  ```
+  to:
+  ```julia
+  inner(psi', H, psi)
+  ```
+  in which case the Index structure will be `(dag(psi)-s'-(H)-s-(psi)`.
+
+  Alternatively, you can use the `Apply` function:
+  ```julia
+  inner(psi, Apply(H, psi))
+  ```
+  In this case, `Apply(H, psi)` represents the "lazy" evaluation of `apply(H, psi)`. The function `apply(H, psi)` performs the contraction of `H` with `psi` and then unprimes the results, so this versions ensures that the prime levels of the inner product will match.
+
+  Although the new behavior seems less convenient, it makes it easier to generalize `inner(::MPS, ::MPO, ::MPS)` to other types of inputs, like `MPS` and `MPO` with different tag and prime conventions, multiple sites per tensor, `ITensor` inputs, etc.
+  """
+end
+
+function deprecate_make_inds_match!(
+  ::typeof(dot), ydag::MPS, A::MPO, x::MPS; make_inds_match::Bool=true
+ )
+  N = length(x)
+  if !hassameinds(siteinds, ydag, (A, x))
+    sAx = siteinds((A, x))
+    if any(s -> length(s) > 1, sAx)
+      n = findfirst(n -> !hassameinds(siteinds(ydag, n), siteinds((A, x), n)), 1:N)
+      error(
+        """Calling `dot(ϕ::MPS, H::MPO, ψ::MPS)` with multiple site indices per MPO/MPS tensor but the site indices don't match. Even with `make_inds_match = true`, the case of multiple site indices per MPO/MPS is not handled automatically. The sites with unmatched site indices are:
+
+            inds(ϕ[$n]) = $(inds(ydag[n]))
+
+            inds(H[$n]) = $(inds(A[n]))
+
+            inds(ψ[$n]) = $(inds(x[n]))
+
+        Make sure the site indices of your MPO/MPS match. You may need to prime one of the MPS, such as `dot(ϕ', H, ψ)`.""",
+      )
+    end
+    if !hassameinds(siteinds, ydag, (A, x)) && make_inds_match
+      warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mpo_mps)
+      replace_siteinds!(ydag, sAx)
+    end
+  end
+  return ydag, A, x
+end
+
 """
     dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
     inner(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
@@ -227,26 +300,7 @@ function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Num
   check_hascommoninds(siteinds, A, x)
   ydag = dag(y)
   sim!(linkinds, ydag)
-  if !hassameinds(siteinds, y, (A, x))
-    sAx = siteinds((A, x))
-    if any(s -> length(s) > 1, sAx)
-      n = findfirst(n -> !hassameinds(siteinds(y, n), siteinds((A, x), n)), 1:N)
-      error(
-        """Calling `dot(ϕ::MPS, H::MPO, ψ::MPS)` with multiple site indices per MPO/MPS tensor but the site indices don't match. Even with `make_inds_match = true`, the case of multiple site indices per MPO/MPS is not handled automatically. The sites with unmatched site indices are:
-
-            inds(ϕ[$n]) = $(inds(y[n]))
-
-            inds(H[$n]) = $(inds(A[n]))
-
-            inds(ψ[$n]) = $(inds(x[n]))
-
-        Make sure the site indices of your MPO/MPS match. You may need to prime one of the MPS, such as `dot(ϕ', H, ψ)`.""",
-      )
-    end
-    if make_inds_match
-      replace_siteinds!(ydag, sAx)
-    end
-  end
+  ydag, A, x = deprecate_make_inds_match!(dot, ydag, A, x; make_inds_match)
   check_hascommoninds(siteinds, A, y)
   O = ydag[1] * A[1] * x[1]
   for j in 2:N
@@ -256,6 +310,10 @@ function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Num
 end
 
 inner(y::MPS, A::MPO, x::MPS; kwargs...) = dot(y, A, x; kwargs...)
+
+function inner(y::MPS, Ax::Apply{MPO,MPS})
+  return inner(y', Ax.args[1], Ax.args[2])
+end
 
 """
     dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
@@ -376,6 +434,13 @@ function error_contract(y::MPS, A::MPO, x::MPS; kwargs...)
 end
 
 error_contract(y::MPS, x::MPS, A::MPO) = error_contract(y, A, x)
+
+function apply(A::MPO, ψ::MPS; kwargs...)
+  Aψ = contract(A, ψ; kwargs...)
+  return replaceprime(Aψ, 1 => 0)
+end
+
+(A::MPO)(ψ::MPS; kwargs...) = apply(A, ψ; kwargs...)
 
 function contract(A::MPO, ψ::MPS; kwargs...)
   method = get(kwargs, :method, "densitymatrix")

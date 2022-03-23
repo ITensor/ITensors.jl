@@ -21,17 +21,23 @@ import Base:
   iterate,
   lastindex
 
-export coefficient, expand, Sum, Prod, coefficient
+export coefficient, expand, Sum, Prod, coefficient, materialize, Applied
 
-struct Applied{F,Args}
+struct Applied{F,Args,Kwargs}
   f::F
   args::Args
-  function Applied{F,Args}(f, args::Tuple) where {F,Args}
-    return new{F,Args}(f, args)
+  kwargs::Kwargs
+  function Applied{F,Args,Kwargs}(f, args::Tuple, kwargs::NamedTuple) where {F,Args,Kwargs}
+    return new{F,Args,Kwargs}(f, args, kwargs)
   end
 end
+function Applied{F,Args}(f, args::Tuple) where {F,Args}
+  kwargs = NamedTuple()
+  return Applied{F,Args,typeof(kwargs)}(f, args, kwargs)
+end
 Applied(f, args::Tuple) = Applied{typeof(f),typeof(args)}(f, args)
-Applied(f, args...) = Applied(f, args)
+Applied(f, args::Tuple, kwargs::NamedTuple) = Applied{typeof(f),typeof(args),typeof(kwargs)}(f, args, kwargs)
+Applied(f, args...; kwargs...) = Applied(f, args, NamedTuple(kwargs))
 
 # TODO: This makes shorthands like `Add(1, 2)` work, but probably
 # it is bad to use `F.instance` to get the function from the type.
@@ -241,10 +247,11 @@ adjoint(arg::Prod) = ∏(reverse(adjoint.(arg)))
 reverse(arg::Prod) = Prod(reverse(arg.args...))
 
 # Materialize
+materialize(a) = a
 materialize(a::Number) = a
 materialize(a::AbstractString) = a
-materialize(a::Vector) = materialize.(a)
-materialize(a::Applied) = a.f(materialize.(a.args)...)
+materialize(a::Vector) = map(materialize, a)
+materialize(a::Applied) = a.f(map(materialize, a.args)...; a.kwargs...)
 
 function _expand(a1::Sum, a2::Sum)
   return ∑(vec([a1[i] * a2[j] for i in 1:length(a1), j in 1:length(a2)]))
@@ -280,7 +287,13 @@ function show(io::IO, m::MIME"text/plain", a::Applied)
       print(io, ", ")
     end
   end
+  if !isempty(a.kwargs)
+    print(io, ",\n")
+    print(io, a.kwargs)
+  end
   return print(io, "\n)")
 end
+
 show(io::IO, a::Applied) = show(io, MIME("text/plain"), a)
+
 end
