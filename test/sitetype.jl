@@ -35,7 +35,7 @@ using ITensors, Test
     @test x ≈ array(op("a - a†", q))
     x = Amat * Adagmat - Adagmat
     @test x ≈ array(op("a * a† - a†", q))
-    @test x ≈ array(op("a*a† - a†", q))
+    @test x ≈ array(op("a * a† - a†", q))
     x = Adagmat * Adagmat * Amat * Amat
     @test x ≈ array(op("a† * a† * a * a", q))
 
@@ -53,10 +53,10 @@ using ITensors, Test
     @test x ≈ array(op("S+ - S- - S+", q))
     x = Sp * Sm + Sm * Sp
     @test x ≈ array(op("S+ * S- + S- * S+", q))
-    @test x ≈ array(op("S+*S- + S-*S+", q))
+    @test x ≈ array(op("S+ * S- + S-*S+", q))
     x = Sp * Sm - Sm * Sp
     @test x ≈ array(op("S+ * S- - S- * S+", q))
-    @test x ≈ array(op("S+* S- - S- * S+", q))
+    @test x ≈ array(op("S+ * S- - S- * S+", q))
     x = Sp * Sm + Sm * Sp + Sz * Sx * Sy
     @test x ≈ array(op("S+ * S- + S- * S+ + Sz * Sx * Sy", q))
     x = Sp * Sm - Sm * Sp + Sz * Sx * Sy
@@ -453,6 +453,22 @@ using ITensors, Test
     end
     s = siteind("Xev")
     @test state(s, "0") ≈ ITensor([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], s)
+  end
+
+  @testset "function applied to a gate" begin
+    s = siteinds("Qubit", 2)
+
+    θ = 0.1
+    rx = array(op("Rx", s[1]; θ=0.1))
+    exp_rx = exp(rx)
+    gtest = op(x -> exp(x), "Rx", s[1]; θ=0.1)
+    @test exp_rx ≈ array(op(x -> exp(x), "Rx", s[1]; θ=0.1))
+    @test exp_rx ≈ array(op(x -> exp(x), ("Rx", 1, (θ=0.1,)), s))
+
+    cx = 0.1 * reshape(array(op("CX", s[1], s[2])), (4, 4))
+    exp_cx = reshape(exp(cx), (2, 2, 2, 2))
+    @test exp_cx ≈ array(op(x -> exp(0.1 * x), "CX", s[1], s[2]))
+    @test exp_cx ≈ array(op(x -> exp(0.1 * x), ("CX", (1, 2)), s))
   end
 end
 

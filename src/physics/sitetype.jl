@@ -267,7 +267,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
       op1 = name[1:prevind(name, oploc.start)]
       op2 = name[nextind(name, oploc.start):end]
       if !(op1[end] == ' ' && op2[1] == ' ')
-        @warn "composite op definition `A*B` deprecated: please use `A * B` instead (with spaces)"
+        @warn "($op1*$op2) composite op definition `A*B` deprecated: please use `A * B` instead (with spaces)"
       end
     end
     return product(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
@@ -451,6 +451,27 @@ end
 # is a vector of tuples.
 op(s::Vector{<:Index}, os::Tuple{AbstractString,Vararg}) = op(s, os...)
 op(os::Tuple{AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
+op(os::Tuple{Function,AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
+
+op(f::Function, args...; kwargs...) = f(op(args...; kwargs...))
+
+function op(
+  s::Vector{<:Index},
+  f::Function,
+  opname::AbstractString,
+  ns::Tuple{Vararg{Integer}};
+  kwargs...,
+)
+  return f(op(opname, s, ns...; kwargs...))
+end
+
+function op(
+  s::Vector{<:Index}, f::Function, opname::AbstractString, ns::Integer...; kwargs...
+)
+  return f(op(opname, s, ns; kwargs...))
+end
+
+op(s::Vector{<:Index}, opdata::Tuple{Function,AbstractString,Vararg}) = op(s, opdata...)
 
 # Here, Ref is used to not broadcast over the vector of indices
 # TODO: consider overloading broadcast for `op` with the example

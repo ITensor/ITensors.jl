@@ -627,16 +627,23 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
     end
   end
 
-  site_range::UnitRange{Int} = get(kwargs, :site_range, 1:N)
-  start_site = first(site_range)
-  end_site = last(site_range)
+  if haskey(kwargs, :site_range)
+    @warn "The `site_range` keyword arg. to `correlation_matrix` is deprecated: use the keyword `sites` instead"
+    sites_ = kwargs[:site_range]
+  else
+    sites_ = get(kwargs, :sites, 1:N)
+  end
+  sites = (sites_ isa AbstractRange) ? sites_ : collect(sites_)
+
+  start_site = first(sites)
+  end_site = last(sites)
 
   psi = copy(psi)
   orthogonalize!(psi, start_site)
   norm2_psi = norm(psi[start_site])^2
 
   # Nb = size of block of correlation matrix
-  Nb = end_site - start_site + 1
+  Nb = length(sites)
 
   C = zeros(ElT, Nb, Nb)
 
@@ -646,38 +653,58 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
     lind = commonind(psi[start_site], psi[start_site - 1])
     L = delta(dag(lind), lind')
   end
+  pL = start_site - 1
 
-  for i in start_site:(end_site - 1)
-    ci = i - start_site + 1
+  for (ni, i) in enumerate(sites[1:(end - 1)])
+    while pL < i - 1
+      pL += 1
+      L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+    end
 
     Li = L * psi[i]
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
-    C[ci, ci] =
+    C[ni, ni] =
       scalar((Li * op(onsiteOp, s, i)) * prime(dag(psi[i]), not(rind))) / norm2_psi
 
     # Get j > i correlations
     if !using_auto_fermion() && fermionic2
       Op1 = "$Op1 * F"
     end
+
     Li12 = (Li * op(Op1, s, i)) * dag(prime(psi[i]))
-    for j in (i + 1):end_site
-      cj = j - start_site + 1
+    pL12 = i
+
+    for (n, j) in enumerate(sites[(ni + 1):end])
+      nj = ni + n
+
+      while pL12 < j - 1
+        pL12 += 1
+        if !using_auto_fermion() && fermionic2
+          Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
+        else
+          Li12 *= dag(prime(psi[pL12], "Link"))
+        end
+        Li12 *= psi[pL12]
+      end
+
       lind = commonind(psi[j], Li12)
       Li12 *= psi[j]
 
       val = (Li12 * op(Op2, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
-      C[ci, cj] = scalar(val) / norm2_psi
+      C[ni, nj] = scalar(val) / norm2_psi
       if is_cm_hermitian
-        C[cj, ci] = conj(C[ci, cj])
+        C[nj, ni] = conj(C[ni, nj])
       end
 
+      pL12 += 1
       if !using_auto_fermion() && fermionic2
-        Li12 *= op("F", s, j) * dag(prime(psi[j]))
+        Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
       else
-        Li12 *= dag(prime(psi[j], "Link"))
+        Li12 *= dag(prime(psi[pL12], "Link"))
       end
+      @assert pL12 == j
     end #for j
     Op1 = _Op1 #"Restore Op1 with no Fs"
 
@@ -688,31 +715,51 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
         Op2 = "$Op2 * F"
       end
       Li21 = (Li * op(Op2, s, i)) * dag(prime(psi[i]))
+      pL21 = i
       if !using_auto_fermion() && fermionic1
         Li21 = -Li21 #Required because we swapped fermionic ops, instead of sweeping right to left.
       end
-      for j in (i + 1):end_site
-        cj = j - start_site + 1
+
+      for (n, j) in enumerate(sites[(ni + 1):end])
+        nj = ni + n
+
+        while pL21 < j - 1
+          pL21 += 1
+          if !using_auto_fermion() && fermionic1
+            Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
+          else
+            Li21 *= dag(prime(psi[pL21], "Link"))
+          end
+          Li21 *= psi[pL21]
+        end
+
         lind = commonind(psi[j], Li21)
         Li21 *= psi[j]
 
         val = (Li21 * op(Op1, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
-        C[cj, ci] = scalar(val) / norm2_psi
+        C[nj, ni] = scalar(val) / norm2_psi
 
+        pL21 += 1
         if !using_auto_fermion() && fermionic1
-          Li21 *= op("F", s, j) * dag(prime(psi[j]))
+          Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
         else
-          Li21 *= dag(prime(psi[j], "Link"))
+          Li21 *= dag(prime(psi[pL21], "Link"))
         end
+        @assert pL21 == j
       end #for j
       Op2 = _Op2 #"Restore Op2 with no Fs"
     end #if is_cm_hermitian
 
-    L = (L * psi[i]) * dag(prime(psi[i], "Link"))
+    pL += 1
+    L = Li * dag(prime(psi[i], "Link"))
   end #for i
 
   # Get last diagonal element of C
   i = end_site
+  while pL < i - 1
+    pL += 1
+    L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+  end
   lind = commonind(psi[i], psi[i - 1])
   C[Nb, Nb] =
     scalar(L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)) /
@@ -782,7 +829,7 @@ function expect(psi::MPS, ops; kwargs...)
     orthogonalize!(psi, j)
     for (n, opname) in enumerate(ops)
       val = scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j]))) / norm2_psi
-      ex[n][entry] = convert(el_types[n], val)
+      ex[n][entry] = (el_types[n] <: Real) ? real(val) : val
     end
   end
 

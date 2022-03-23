@@ -71,45 +71,40 @@ let
   tau = 0.1
   ttotal = 5.0
 
-  # Compute the number of steps to do
-  Nsteps = Int(ttotal/tau)
-
   # Make an array of 'site' indices
-  s = siteinds("S=1/2",N;conserve_qns=true)
+  s = siteinds("S=1/2", N; conserve_qns=true)
 
   # Make gates (1,2),(2,3),(3,4),...
   gates = ITensor[]
-  for j=1:N-1
+  for j in 1:(N - 1)
     s1 = s[j]
-    s2 = s[j+1]
-    hj =       op("Sz",s1) * op("Sz",s2) +
-         1/2 * op("S+",s1) * op("S-",s2) +
-         1/2 * op("S-",s1) * op("S+",s2)
-    Gj = exp(-1.0im * tau/2 * hj)
-    push!(gates,Gj)
+    s2 = s[j + 1]
+    hj =
+      op("Sz", s1) * op("Sz", s2) +
+      1 / 2 * op("S+", s1) * op("S-", s2) +
+      1 / 2 * op("S-", s1) * op("S+", s2)
+    Gj = exp(-im * tau / 2 * hj)
+    push!(gates, Gj)
   end
   # Include gates in reverse order too
   # (N,N-1),(N-1,N-2),...
-  append!(gates,reverse(gates))
+  append!(gates, reverse(gates))
 
   # Initialize psi to be a product state (alternating up and down)
   psi = productMPS(s, n -> isodd(n) ? "Up" : "Dn")
 
-  c = div(N,2) # center site
+  c = div(N, 2) # center site
 
-  # Compute and print initial <Sz> value on site c
-  t = 0.0
-  Sz = expect(psi,"Sz";site_range=c:c)
-  println("$t $Sz")
-
-  # Do the time evolution by applying the gates
-  # for Nsteps steps and printing <Sz> on site c
-  for step=1:Nsteps
-    psi = apply(gates, psi; cutoff=cutoff)
-    normalize!(psi)
-    t += tau
-    Sz = expect(psi,"Sz";site_range=c:c)
+  # Compute and print <Sz> at each time step
+  # then apply the gates to go to the next time
+  for t in 0.0:tau:ttotal
+    Sz = expect(psi, "Sz"; sites=c)
     println("$t $Sz")
+
+    t≈ttotal && break
+
+    psi = apply(gates, psi; cutoff)
+    normalize!(psi)
   end
 
   return
@@ -118,8 +113,7 @@ end
 
 **Steps of The Code**
 
-After setting some parameters, like the system size N and time step ``\tau`` to use,
-we compute the number of time evolution steps `Nsteps` that will be needed.
+First we setsome parameters, like the system size N and time step ``\tau`` to use.
 
 The line `s = siteinds("S=1/2",N;conserve_qns=true)` defines an array of 
 spin 1/2 tensor indices (Index objects) which will be the site or physical
@@ -153,7 +147,7 @@ a factor ``-i \tau/2`` and then append or push this onto the end of the
 gate array `gates`.
 
 ```julia
-Gj = exp(-1.0im * tau/2 * hj)
+Gj = exp(-im * tau/2 * hj)
 push!(gates,Gj)
 ```
 
@@ -164,24 +158,23 @@ formula. Here we can conveniently do that by just calling the Julia
 gates we have made so far. This can
 be done in a single line of code `append!(gates,reverse(gates))`.
 
-So that the code produces interesting output, we define a function
-called `measure_Sz` that we will pass our MPS into and which will
-return the expected value of ``S^z`` on a given site, which
-we will take to be near the center of the MPS. The details of this 
-function are outside the scope of this tutorial, but are explained in the
-example code for measuring MPS.
-
 The line of code `psi = productMPS(s, n -> isodd(n) ? "Up" : "Dn")`
 initializes our MPS `psi` as a product state of alternating 
-up and down spins. We call `measure_Sz` before starting the
-time evolution.
+up and down spins.
 
-Finally, to carry out the time evolution we loop over
-the step number `for step=1:Nsteps` and during each
-step call the function 
+To carry out the time evolution we loop over
+the range of times from 0.0 to `ttotal` in steps of `tau`,
+using the Julia range notation `0.0:tau:ttotal` to easily 
+set up this loop as `for t in 0.0:tau:ttotal`.
+
+Inside the loop, we use the `expect` function to measure
+the expected value of the `"Sz"` operator on the center 
+site.
+
+To evolve the MPS to the next time, we call the function 
 
 ```julia
-psi = apply(gates, psi; cutoff=cutoff)
+psi = apply(gates, psi; cutoff)
 ```
 
 which applies the array of ITensors called `gates` to our current

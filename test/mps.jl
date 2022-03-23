@@ -573,12 +573,14 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
   for op in ops
     Cpm = correlation_matrix(psi, op[1], op[2]; kwargs...)
     # Check using OpSum:
+    Copsum = 0.0 * Cpm
     for i in 1:N, j in 1:N
       a = OpSum()
       a += op[1], i, op[2], j
-      X = MPO(a, s)
-      @test inner(psi, MPO(a, s), psi) ≈ Cpm[i, j] atol = 5e-15
+      Copsum[i, j] = inner(psi, MPO(a, s), psi)
     end
+    @test Cpm ≈ Copsum rtol = 1E-11
+
     PM = expect(psi, op[1] * " * " * op[2])
     @test norm(PM - diag(Cpm)) < 1E-8
   end
@@ -722,15 +724,15 @@ end
 
   @testset "expect Function" begin
     N = 8
-    s = siteinds("S=1/2", N; conserve_qns=false)
-    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
+    s = siteinds("S=1/2", N)
+    psi = randomMPS(ComplexF64, s; linkdims=2)
 
     eSz = zeros(N)
     eSx = zeros(N)
     for j in 1:N
       orthogonalize!(psi, j)
-      eSz[j] = scalar(dag(prime(psi[j], "Site")) * op("Sz", s[j]) * psi[j])
-      eSx[j] = scalar(dag(prime(psi[j], "Site")) * op("Sx", s[j]) * psi[j])
+      eSz[j] = real(scalar(dag(prime(psi[j], "Site")) * op("Sz", s[j]) * psi[j]))
+      eSx[j] = real(scalar(dag(prime(psi[j], "Site")) * op("Sx", s[j]) * psi[j]))
     end
 
     res = expect(psi, "Sz")
@@ -738,9 +740,6 @@ end
 
     res = expect(psi, "Sz"; sites=2:4)
     @test res ≈ eSz[2:4]
-
-    res = expect(psi, "Sz"; sites=1:2:N)
-    @test res ≈ eSz[1:2:N]
 
     res = expect(psi, "Sz"; sites=[2, 4, 8])
     @test res[1] ≈ eSz[2]
@@ -771,20 +770,6 @@ end
     @test res[2, 1] ≈ eSx[3:7]
     @test res[1, 2] ≈ eSx[3:7]
     @test res[2, 2] ≈ eSz[3:7]
-
-    #
-    # Test handling of non-Hermitian operators
-    # for complex-valued MPS
-    #
-    # Real-valued MPS
-    psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
-    res = expect(psi, ("S+", "Sx"))
-    @test res isa Tuple{Vector{Float64},Vector{Float64}}
-
-    # Complex-valued MPS
-    psi = randomMPS(ComplexF64, s, n -> isodd(n) ? "Up" : "Dn"; linkdims=4)
-    res = expect(psi, ("S+", "Sx"))
-    @test res isa Tuple{Vector{ComplexF64},Vector{Float64}}
   end
 
   @testset "Expected value and Correlations" begin
@@ -820,13 +805,13 @@ end
     # need to be calculated explicitely.
     #test_correlation_matrix(psi,[("Sz", "Sx")];ishermitian=true)
 
-    #Test site_range feature
+    #Test sites feature
     s = siteinds("S=1/2", 8; conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     PM = expect(psi, "S+ * S-")
     Cpm = correlation_matrix(psi, "S+", "S-")
     range = 3:7
-    Cpm37 = correlation_matrix(psi, "S+", "S-"; site_range=range)
+    Cpm37 = correlation_matrix(psi, "S+", "S-"; sites=range)
     @test norm(Cpm37 - Cpm[range, range]) < 1E-8
 
     @test norm(PM[range] - expect(psi, "S+ * S-"; sites=range)) < 1E-8
@@ -836,8 +821,8 @@ end
     psi = randomMPS(ComplexF64, s; linkdims=m)
     ss, es = 3, 6
     Nb = es - ss + 1
-    Cpm = correlation_matrix(psi, "S+", "S-"; site_range=ss:es)
-    Czz = correlation_matrix(psi, "Sz", "Sz"; site_range=ss:es)
+    Cpm = correlation_matrix(psi, "S+", "S-"; sites=ss:es)
+    Czz = correlation_matrix(psi, "Sz", "Sz"; sites=ss:es)
     @test size(Cpm) == (Nb, Nb)
     # Check using OpSum:
     for i in ss:es, j in i:es
@@ -891,6 +876,20 @@ end
     s = siteinds("Fermion", 8; conserve_qns=false)
     psi = randomMPS(s; linkdims=m)
     test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
+
+    #
+    # Test non-contiguous sites input
+    #
+    C = correlation_matrix(psi, "N", "N")
+    non_contiguous = [1, 3, 8]
+    Cs = correlation_matrix(psi, "N", "N"; sites=non_contiguous)
+    for (ni, i) in enumerate(non_contiguous), (nj, j) in enumerate(non_contiguous)
+      @test Cs[ni, nj] ≈ C[i, j]
+    end
+
+    C2 = correlation_matrix(psi, "N", "N"; sites=2)
+    @test C2 isa Matrix
+    @test C2[1, 1] ≈ C[2, 2]
   end #testset
 
   @testset "expect regression test for in-place modification of input MPS" begin
