@@ -36,7 +36,9 @@ function Applied{F,Args}(f, args::Tuple) where {F,Args}
   return Applied{F,Args,typeof(kwargs)}(f, args, kwargs)
 end
 Applied(f, args::Tuple) = Applied{typeof(f),typeof(args)}(f, args)
-Applied(f, args::Tuple, kwargs::NamedTuple) = Applied{typeof(f),typeof(args),typeof(kwargs)}(f, args, kwargs)
+function Applied(f, args::Tuple, kwargs::NamedTuple)
+  return Applied{typeof(f),typeof(args),typeof(kwargs)}(f, args, kwargs)
+end
 Applied(f, args...; kwargs...) = Applied(f, args, NamedTuple(kwargs))
 
 # TODO: This makes shorthands like `Add(1, 2)` work, but probably

@@ -223,39 +223,39 @@ function hassameinds(::typeof(siteinds), ψ::MPS, Hϕ::Tuple{MPO,MPS})
 end
 
 function inner_mps_mpo_mps_deprecation_warning()
-  return  """
-  Calling `inner(x::MPS, A::MPO, y::MPS)` where the site indices of the `MPS` `x` and the `MPS` resulting from contracting `MPO` `A` with `MPS` `y` don't match is deprecated as of ITensors v0.3 and will result in an error in ITensors v0.4. The most common cause of this is something like the following:
-  ```julia
-  s = siteinds("S=1/2")
-  psi = randomMPS(s)
-  H = MPO(s, "Id")
-  inner(psi, H, psi)
-  ```
-  `psi` has the Index structure `-s-(psi)` and `H` has the Index structure `-s'-(H)-s-`, so the Index structure of would be `(dag(psi)-s- -s'-(H)-s-(psi)` unless the prime levels were fixed. Previously we tried fixing the prime level in situations like this, but we will no longer be doing that going forward.
+  return """
+ Calling `inner(x::MPS, A::MPO, y::MPS)` where the site indices of the `MPS` `x` and the `MPS` resulting from contracting `MPO` `A` with `MPS` `y` don't match is deprecated as of ITensors v0.3 and will result in an error in ITensors v0.4. The most common cause of this is something like the following:
+ ```julia
+ s = siteinds("S=1/2")
+ psi = randomMPS(s)
+ H = MPO(s, "Id")
+ inner(psi, H, psi)
+ ```
+ `psi` has the Index structure `-s-(psi)` and `H` has the Index structure `-s'-(H)-s-`, so the Index structure of would be `(dag(psi)-s- -s'-(H)-s-(psi)` unless the prime levels were fixed. Previously we tried fixing the prime level in situations like this, but we will no longer be doing that going forward.
 
-  There are a few ways to fix this. You can simply change:
-  ```julia
-  inner(psi, H, psi)
-  ```
-  to:
-  ```julia
-  inner(psi', H, psi)
-  ```
-  in which case the Index structure will be `(dag(psi)-s'-(H)-s-(psi)`.
+ There are a few ways to fix this. You can simply change:
+ ```julia
+ inner(psi, H, psi)
+ ```
+ to:
+ ```julia
+ inner(psi', H, psi)
+ ```
+ in which case the Index structure will be `(dag(psi)-s'-(H)-s-(psi)`.
 
-  Alternatively, you can use the `Apply` function:
-  ```julia
-  inner(psi, Apply(H, psi))
-  ```
-  In this case, `Apply(H, psi)` represents the "lazy" evaluation of `apply(H, psi)`. The function `apply(H, psi)` performs the contraction of `H` with `psi` and then unprimes the results, so this versions ensures that the prime levels of the inner product will match.
+ Alternatively, you can use the `Apply` function:
+ ```julia
+ inner(psi, Apply(H, psi))
+ ```
+ In this case, `Apply(H, psi)` represents the "lazy" evaluation of `apply(H, psi)`. The function `apply(H, psi)` performs the contraction of `H` with `psi` and then unprimes the results, so this versions ensures that the prime levels of the inner product will match.
 
-  Although the new behavior seems less convenient, it makes it easier to generalize `inner(::MPS, ::MPO, ::MPS)` to other types of inputs, like `MPS` and `MPO` with different tag and prime conventions, multiple sites per tensor, `ITensor` inputs, etc.
-  """
+ Although the new behavior seems less convenient, it makes it easier to generalize `inner(::MPS, ::MPO, ::MPS)` to other types of inputs, like `MPS` and `MPO` with different tag and prime conventions, multiple sites per tensor, `ITensor` inputs, etc.
+ """
 end
 
 function deprecate_make_inds_match!(
   ::typeof(dot), ydag::MPS, A::MPO, x::MPS; make_inds_match::Bool=true
- )
+)
   N = length(x)
   if !hassameinds(siteinds, ydag, (A, x))
     sAx = siteinds((A, x))
