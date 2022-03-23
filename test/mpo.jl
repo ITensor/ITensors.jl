@@ -683,6 +683,11 @@ end
     for d in dims
       @test d <= chi1 * chi2
     end
+
+    @test apply(A, psi) ≈ Apsi
+    @test materialize(Apply(A, psi)) ≈ Apsi
+    @test A(psi) ≈ Apsi
+    @test inner(Apsi, Apply(A, psi)) ≈ inner(Apsi, Apsi)
   end
 end
 
