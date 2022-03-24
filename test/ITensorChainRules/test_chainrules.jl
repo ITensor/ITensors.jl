@@ -21,7 +21,7 @@ Random.seed!(1234)
 
   test_rrule(getindex, ITensor(3.4); check_inferred=false)
   test_rrule(getindex, A, 1, 2; check_inferred=false)
-  test_rrule(*, A', A; check_inferred=false)
+  test_rrule(contract, A', A; check_inferred=false)
   test_rrule(*, 3.2, A; check_inferred=false)
   test_rrule(*, A, 4.3; check_inferred=false)
   test_rrule(+, A, B; check_inferred=false)
@@ -74,10 +74,10 @@ Random.seed!(1234)
     randomITensor(k, v),
     randomITensor(l, m, n),
   )
-  f(A, B, C, D, E, F) = (A * B * C * D * E * F)[] # Left associative
+  f(args...) = contract([args...])[] # Left associative
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  seq = ITensors.optimal_contraction_sequence([A, B, C, D, E, F])
-  f(A, B, C, D, E, F) = contract([A, B, C, D, E, F]; sequence=seq)[] # sequence
+  seq = ITensors.optimal_contraction_sequence([args...])
+  f(args...) = contract([args...]; sequence=seq)[] # sequence
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
