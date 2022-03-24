@@ -524,7 +524,7 @@ end
   H = MPO(ising(n, 1.0), s)
 
   # apply on MPO with apply_dag=true
-  ϕ = randomMPS(ComplexF64, s, 10)
+  ϕ = randomMPS(ComplexF64, s; linkdims=10)
   f = function (x)
     U = [op("Ry", s[2]; θ=x), op("CX", s[1], s[2]), op("Rx", s[3]; θ=x)]
     Hθ = apply(U, H; apply_dag=true)

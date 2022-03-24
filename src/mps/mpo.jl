@@ -164,7 +164,7 @@ the same as those accepted by `contract(::MPO, ::MPO; kw...)`.
 See also [`outer`](@ref), [`contract`](@ref).
 """
 function projector(ψ::MPS; normalize::Bool=true, kw...)
-  ψψᴴ = outer(ψ, ψ; kw...)
+  ψψᴴ = outer(ψ', ψ; kw...)
   if normalize
     normalize!(ψψᴴ[orthocenter(ψψᴴ)])
   end
@@ -428,7 +428,7 @@ function error_contract(y::MPS, A::MPO, x::MPS; kwargs...)
     )
   end
   iyy = dot(y, y; kwargs...)
-  iyax = dot(y, A, x; kwargs...)
+  iyax = dot(y', A, x; kwargs...)
   iaxax = dot(A, x, A, x; kwargs...)
   return sqrt(abs(1.0 + (iyy - 2 * real(iyax)) / iaxax))
 end

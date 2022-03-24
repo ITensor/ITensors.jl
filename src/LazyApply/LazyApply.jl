@@ -241,6 +241,7 @@ adjoint(arg::Prod) = ∏(reverse(adjoint.(arg)))
 reverse(arg::Prod) = Prod(reverse(arg.args...))
 
 # Materialize
+materialize(a) = a
 materialize(a::Number) = a
 materialize(a::AbstractString) = a
 materialize(a::Vector) = materialize.(a)
