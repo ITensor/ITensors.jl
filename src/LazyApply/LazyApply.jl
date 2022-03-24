@@ -21,7 +21,7 @@ import Base:
   iterate,
   lastindex
 
-export coefficient, expand, Sum, Prod, coefficient
+export coefficient, expand, Sum, Prod, coefficient, materialize
 
 struct Applied{F,Args}
   f::F
@@ -241,6 +241,7 @@ adjoint(arg::Prod) = ∏(reverse(adjoint.(arg)))
 reverse(arg::Prod) = Prod(reverse(arg.args...))
 
 # Materialize
+materialize(a) = a
 materialize(a::Number) = a
 materialize(a::AbstractString) = a
 materialize(a::Vector) = materialize.(a)

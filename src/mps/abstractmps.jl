@@ -16,6 +16,23 @@ size(m::AbstractMPS) = size(data(m))
 
 ndims(m::AbstractMPS) = ndims(data(m))
 
+function promote_itensor_eltype(m::Vector{ITensor})
+  T = isassigned(m, 1) ? eltype(m[1]) : Number
+  for n in 2:length(m)
+    Tn = isassigned(m, n) ? eltype(m[n]) : Number
+    T = promote_type(T, Tn)
+  end
+  return T
+end
+
+function LinearAlgebra.promote_leaf_eltypes(m::Vector{ITensor})
+  return promote_itensor_eltype(m)
+end
+
+function LinearAlgebra.promote_leaf_eltypes(m::AbstractMPS)
+  return LinearAlgebra.promote_leaf_eltypes(data(m))
+end
+
 """
     promote_itensor_eltype(m::MPS)
     promote_itensor_eltype(m::MPO)
@@ -26,16 +43,7 @@ if all tensors have type `Float64` then
 return `Float64`. But if one or more tensors
 have type `ComplexF64`, return `ComplexF64`.
 """
-promote_itensor_eltype(m::AbstractMPS) = promote_itensor_eltype(data(m))
-
-function promote_itensor_eltype(m::Vector{ITensor})
-  T = isassigned(m, 1) ? eltype(m[1]) : Number
-  for n in 2:length(m)
-    Tn = isassigned(m, n) ? eltype(m[n]) : Number
-    T = promote_type(T, Tn)
-  end
-  return T
-end
+promote_itensor_eltype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
 
 """
     eltype(m::MPS)
@@ -950,6 +958,85 @@ end
 
 linkdims(ψ::AbstractMPS) = [linkdim(ψ, b) for b in 1:(length(ψ) - 1)]
 
+function inner_mps_mps_deprecation_warning()
+  return """
+ Calling `inner(x::MPS, y::MPS)` where the site indices of the `MPS` `x` and `y` don't match is deprecated as of ITensor v0.3 and will result in an error in ITensor v0.4. Likely you are attempting to take the inner product of MPS that have site indices with mismatched prime levels. The most common cause of this is something like the following:
+ ```julia
+ s = siteinds("S=1/2")
+ psi = randomMPS(s)
+ H = MPO(s, "Id")
+ Hpsi = contract(H, psi; cutoff=1e-8) # or `Hpsi = *(H, psi; cutoff=1e-8)`
+ inner(psi, Hpsi)
+ ```
+ `psi` has the Index structure `-s-(psi)` and `H` has the Index structure `-s'-(H)-s-`, so the contraction follows as: `-s'-(H)-s-(psi) ≈ -s'-(Hpsi)`. Then, the prime levels of `Hpsi` and `psi` don't match in `inner(psi, Hpsi)`.
+
+ There are a few ways to fix this. You can simply change:
+ ```julia
+ inner(psi, Hpsi)
+ ```
+ to:
+ ```julia
+ inner(psi', Hpsi)
+ ```
+ in which case both `psi'` and `Hpsi` have primed site indices. Alternatively, you can use the `apply` function instead of the `contract` function, which calls `contract` and unprimes the resulting MPS:
+ ```julia
+ Hpsi = apply(H, psi; cutoff=1e-8) # or `Hpsi = H(psi; cutoff=1e-8)`
+ inner(psi, Hpsi)
+ ```
+ Finally, if you only compute `Hpsi` to pass to the `inner` function, consider using:
+ ```julia
+ inner(psi', H, psi)
+ ```
+ directly which is calculated exactly and is more efficient. Alternatively, you can use:
+ ```julia
+ inner(psi, Apply(H, psi))
+ ```
+ in which case `Apply(H, psi)` represents the "lazy" evaluation of `apply(H, psi)` and internally calls something equivalent to `inner(psi', H, psi)`.
+
+ Although the new behavior seems less convenient, it makes it easier to generalize `inner(::MPS, ::MPS)` to other types of inputs, like `MPS` with different tag and prime conventions, multiple sites per tensor, `ITensor` inputs, etc.
+ """
+end
+
+# Implement below, define here so it can be used in `deprecate_make_inds_match!`.
+function _log_or_not_dot end
+
+function deprecate_make_inds_match!(
+  ::typeof(_log_or_not_dot),
+  M1dag::MPST,
+  M2::MPST,
+  loginner::Bool;
+  make_inds_match::Bool=true,
+) where {MPST<:AbstractMPS}
+  siteindsM1dag = siteinds(all, M1dag)
+  siteindsM2 = siteinds(all, M2)
+  N = length(M2)
+  if any(n -> length(n) > 1, siteindsM1dag) ||
+    any(n -> length(n) > 1, siteindsM2) ||
+    !hassamenuminds(siteinds, M1dag, M2)
+    # If the MPS have more than one site Indices on any site or they don't have
+    # the same number of site indices on each site, don't try to make the
+    # indices match
+    if !hassameinds(siteinds, M1dag, M2)
+      n = findfirst(n -> !hassameinds(siteinds(M1dag, n), siteinds(M2, n)), 1:N)
+      error(
+        """Calling `dot(ϕ::MPS/MPO, ψ::MPS/MPO)` with multiple site indices per MPS/MPO tensor but the site indices don't match. Even with `make_inds_match = true`, the case of multiple site indices per MPS/MPO is not handled automatically. The sites with unmatched site indices are:
+
+            inds(ϕ[$n]) = $(inds(M1dag[n]))
+
+            inds(ψ[$n]) = $(inds(M2[n]))
+
+        Make sure the site indices of your MPO/MPS match. You may need to prime one of the MPS, such as `dot(ϕ', ψ)`.""",
+      )
+    end
+    make_inds_match = false
+  end
+  if !hassameinds(siteinds, M1dag, M2) && make_inds_match
+    warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mps)
+    replace_siteinds!(M1dag, siteindsM2)
+  end
+  return M1dag, M2
+end
+
 function _log_or_not_dot(
   M1::MPST, M2::MPST, loginner::Bool; make_inds_match::Bool=true
 )::Number where {MPST<:AbstractMPS}
@@ -959,31 +1046,10 @@ function _log_or_not_dot(
   end
   M1dag = dag(M1)
   sim!(linkinds, M1dag)
-  siteindsM1dag = siteinds(all, M1dag)
-  siteindsM2 = siteinds(all, M2)
-  if any(n -> length(n) > 1, siteindsM1dag) ||
-    any(n -> length(n) > 1, siteindsM2) ||
-    !hassamenuminds(siteinds, M1, M2)
-    # If the MPS have more than one site Indices on any site or they don't have
-    # the same number of site indices on each site, don't try to make the
-    # indices match
-    if !hassameinds(siteinds, M1, M2)
-      n = findfirst(n -> !hassameinds(siteinds(M1, n), siteinds(M2, n)), 1:N)
-      error(
-        """Calling `dot(ϕ::MPS/MPO, ψ::MPS/MPO)` with multiple site indices per MPS/MPO tensor but the site indices don't match. Even with `make_inds_match = true`, the case of multiple site indices per MPS/MPO is not handled automatically. The sites with unmatched site indices are:
-
-            inds(ϕ[$n]) = $(inds(M1[n]))
-
-            inds(ψ[$n]) = $(inds(M2[n]))
-
-        Make sure the site indices of your MPO/MPS match. You may need to prime one of the MPS, such as `dot(ϕ', ψ)`.""",
-      )
-    end
-    make_inds_match = false
-  end
-  if make_inds_match
-    replace_siteinds!(M1dag, siteindsM2)
-  end
+  M1dag, M2 = deprecate_make_inds_match!(
+    _log_or_not_dot, M1dag, M2, loginner; make_inds_match
+  )
+  check_hascommoninds(siteinds, M1dag, M2)
   O = M1dag[1] * M2[1]
 
   if loginner
@@ -1112,6 +1178,22 @@ function lognorm(M::AbstractMPS)
     )
   end
   return 0.5 * lognorm2_M
+end
+
+function isapprox(
+  x::AbstractMPS,
+  y::AbstractMPS;
+  atol::Real=0,
+  rtol::Real=Base.rtoldefault(
+    LinearAlgebra.promote_leaf_eltypes(x), LinearAlgebra.promote_leaf_eltypes(y), atol
+  ),
+)
+  d = norm(x - y)
+  if isfinite(d)
+    return d <= max(atol, rtol * max(norm(x), norm(y)))
+  else
+    error("In `isapprox(x::MPS, y::MPS)`, `norm(x - y)` is not finite")
+  end
 end
 
 # copy an MPS/MPO, but do a deep copy of the tensors in the

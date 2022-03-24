@@ -53,6 +53,7 @@ using ITensors, Test
     @test x ≈ array(op("S+ - S- - S+", q))
     x = Sp * Sm + Sm * Sp
     @test x ≈ array(op("S+ * S- + S- * S+", q))
+    # Deprecated syntax
     @test x ≈ array(op("S+ * S- + S-*S+", q))
     x = Sp * Sm - Sm * Sp
     @test x ≈ array(op("S+ * S- - S- * S+", q))

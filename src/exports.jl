@@ -116,6 +116,7 @@ export
   ⊙,
   addtags!,
   apply,
+  Apply,
   array,
   axpy!,
   blockoffsets,
@@ -204,10 +205,10 @@ export
   hastags,
 
   # LazyApply/LazyApply.jl
-  coefficient,
   Scaled,
   Sum,
   Prod,
+  coefficient,
 
   # mps/dmrg.jl
   dmrg,

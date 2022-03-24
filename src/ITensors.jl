@@ -66,6 +66,11 @@ using TimerOutputs
 using Zeros
 
 #####################################
+# General utility functions
+#
+include("utils.jl")
+
+#####################################
 # ContractionSequenceOptimization
 #
 include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
@@ -75,30 +80,13 @@ using .ContractionSequenceOptimization
 # LazyApply
 #
 include("LazyApply/LazyApply.jl")
-using .LazyApply: Applied, Sum, ∑, Prod, ∏, Scaled, α, coefficient
+using .LazyApply: Applied, Sum, ∑, Prod, ∏, Scaled, α, coefficient, materialize
 
 #####################################
 # Ops
 #
 include("Ops/Ops.jl")
 using .Ops
-
-#####################################
-# Directory helper functions (useful for
-# running examples)
-#
-src_dir() = dirname(pathof(@__MODULE__))
-pkg_dir() = joinpath(src_dir(), "..")
-examples_dir() = joinpath(pkg_dir(), "examples")
-
-#####################################
-# Determine version and uuid of the package
-#
-function _parse_project_toml(field::String)
-  return Pkg.TOML.parsefile(joinpath(pkg_dir(), "Project.toml"))[field]
-end
-version() = VersionNumber(_parse_project_toml("version"))
-uuid() = Base.UUID(_parse_project_toml("uuid"))
 
 #####################################
 # Exports

@@ -5,6 +5,8 @@ struct OneITensor end
 (::OneITensor * A::ITensor) = A
 (A::ITensor * ::OneITensor) = A
 
+inds(::OneITensor) = ()
+
 abstract type AbstractProjMPO end
 
 # This is to help with generic promote_type code

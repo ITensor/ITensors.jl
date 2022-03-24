@@ -1450,6 +1450,8 @@ function (A::ITensor == B::ITensor)
   return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
 end
 
+LinearAlgebra.promote_leaf_eltypes(A::ITensor) = eltype(A)
+
 function isapprox(A::ITensor, B::ITensor; kwargs...)
   if !hassameinds(A, B)
     error(
@@ -2366,6 +2368,8 @@ end
 
 # Alias apply with product
 const apply = product
+
+const Apply{Args} = Applied{typeof(apply),Args}
 
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
 inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
