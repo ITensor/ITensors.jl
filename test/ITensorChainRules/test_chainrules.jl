@@ -53,7 +53,7 @@ Random.seed!(1234)
   test_rrule(permute, A, reverse(inds(A)); check_inferred=false)
 
   test_rrule(ZygoteRuleConfig(), apply, A, V; rrule_f=rrule_via_ad, check_inferred=false)
-  function f(A, B)
+  f = function (A, B)
     AT = ITensor(A, i, j)
     BT = ITensor(B, j, i)
     return (BT * AT)[1]
@@ -74,10 +74,10 @@ Random.seed!(1234)
     randomITensor(k, v),
     randomITensor(l, m, n),
   )
-  f(args...) = contract([args...])[] # Left associative
+  f = (args...) -> contract([args...])[] # Left associative
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   seq = ITensors.optimal_contraction_sequence([args...])
-  f(args...) = contract([args...]; sequence=seq)[] # sequence
+  f = (args...) -> contract([args...]; sequence=seq)[] # sequence
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
