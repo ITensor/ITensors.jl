@@ -36,7 +36,7 @@ let
     Sz = expect(psi, "Sz"; sites=c)
     println("$t $Sz")
 
-    t≈ttotal && break
+    t ≈ ttotal && break
 
     psi = apply(gates, psi; cutoff)
     normalize!(psi)
