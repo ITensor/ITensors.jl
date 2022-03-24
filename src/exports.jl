@@ -209,7 +209,6 @@ export
   Sum,
   Prod,
   coefficient,
-  materialize,
 
   # mps/dmrg.jl
   dmrg,

@@ -1450,6 +1450,8 @@ function (A::ITensor == B::ITensor)
   return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
 end
 
+LinearAlgebra.promote_leaf_eltypes(A::ITensor) = eltype(A)
+
 function isapprox(A::ITensor, B::ITensor; kwargs...)
   if !hassameinds(A, B)
     error(

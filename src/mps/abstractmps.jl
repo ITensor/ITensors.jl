@@ -16,6 +16,23 @@ size(m::AbstractMPS) = size(data(m))
 
 ndims(m::AbstractMPS) = ndims(data(m))
 
+function promote_itensor_eltype(m::Vector{ITensor})
+  T = isassigned(m, 1) ? eltype(m[1]) : Number
+  for n in 2:length(m)
+    Tn = isassigned(m, n) ? eltype(m[n]) : Number
+    T = promote_type(T, Tn)
+  end
+  return T
+end
+
+function LinearAlgebra.promote_leaf_eltypes(m::Vector{ITensor})
+  return promote_itensor_eltype(m)
+end
+
+function LinearAlgebra.promote_leaf_eltypes(m::AbstractMPS)
+  return LinearAlgebra.promote_leaf_eltypes(data(m))
+end
+
 """
     promote_itensor_eltype(m::MPS)
     promote_itensor_eltype(m::MPO)
@@ -26,16 +43,7 @@ if all tensors have type `Float64` then
 return `Float64`. But if one or more tensors
 have type `ComplexF64`, return `ComplexF64`.
 """
-promote_itensor_eltype(m::AbstractMPS) = promote_itensor_eltype(data(m))
-
-function promote_itensor_eltype(m::Vector{ITensor})
-  T = isassigned(m, 1) ? eltype(m[1]) : Number
-  for n in 2:length(m)
-    Tn = isassigned(m, n) ? eltype(m[n]) : Number
-    T = promote_type(T, Tn)
-  end
-  return T
-end
+promote_itensor_eltype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
 
 """
     eltype(m::MPS)
@@ -1170,6 +1178,18 @@ function lognorm(M::AbstractMPS)
     )
   end
   return 0.5 * lognorm2_M
+end
+
+function isapprox(x::AbstractMPS, y::AbstractMPS;
+  atol::Real=0,
+  rtol::Real=Base.rtoldefault(LinearAlgebra.promote_leaf_eltypes(x), LinearAlgebra.promote_leaf_eltypes(y), atol),
+  )
+  d = norm(x - y)
+  if isfinite(d)
+    return d <= max(atol, rtol * max(norm(x), norm(y)))
+  else
+    error("In `isapprox(x::MPS, y::MPS)`, `norm(x - y)` is not finite")
+  end
 end
 
 # copy an MPS/MPO, but do a deep copy of the tensors in the

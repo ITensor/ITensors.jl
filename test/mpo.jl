@@ -202,7 +202,7 @@ end
     @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     psi_out = contract(K, psi; maxdim=1)
-    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
+    @test inner(phi, psi_out) ≈ inner(phi', K, psi)
     @test_throws ArgumentError contract(K, psi; method="fakemethod")
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
@@ -532,7 +532,7 @@ end
     M = A' * dag(A)
     ψ = MPS(A, [i, j])
     @test prod(ψ) ≈ A
-    ρ = outer(ψ, ψ)
+    ρ = outer(ψ', ψ)
     @test prod(ρ) ≈ M
     ρ = projector(ψ; normalize=false)
     @test prod(ρ) ≈ M
@@ -685,7 +685,7 @@ end
     end
 
     @test apply(A, psi) ≈ Apsi
-    @test materialize(Apply(A, psi)) ≈ Apsi
+    @test ITensors.materialize(Apply(A, psi)) ≈ Apsi
     @test A(psi) ≈ Apsi
     @test inner(Apsi, Apply(A, psi)) ≈ inner(Apsi, Apsi)
   end
