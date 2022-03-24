@@ -2367,7 +2367,7 @@ end
 # Alias apply with product
 const apply = product
 
-const Apply{Args,Kwargs} = Applied{typeof(apply),Tuple{Args,Kwargs}}
+const Apply{Args} = Applied{typeof(apply),Args}
 
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
 inner(y::ITensor, x::ITensor) = (dag(y) * x)[]

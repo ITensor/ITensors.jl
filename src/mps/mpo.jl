@@ -311,7 +311,7 @@ end
 
 inner(y::MPS, A::MPO, x::MPS; kwargs...) = dot(y, A, x; kwargs...)
 
-function inner(y::MPS, Ax::Apply{MPO,MPS})
+function inner(y::MPS, Ax::Apply{Tuple{MPO,MPS}})
   return inner(y', Ax.args[1], Ax.args[2])
 end
 
