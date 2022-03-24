@@ -1180,7 +1180,9 @@ function lognorm(M::AbstractMPS)
   return 0.5 * lognorm2_M
 end
 
-function isapprox(x::AbstractMPS, y::AbstractMPS;
+function isapprox(
+  x::AbstractMPS,
+  y::AbstractMPS;
   atol::Real=0,
   rtol::Real=Base.rtoldefault(LinearAlgebra.promote_leaf_eltypes(x), LinearAlgebra.promote_leaf_eltypes(y), atol),
   )
