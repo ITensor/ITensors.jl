@@ -1184,8 +1184,10 @@ function isapprox(
   x::AbstractMPS,
   y::AbstractMPS;
   atol::Real=0,
-  rtol::Real=Base.rtoldefault(LinearAlgebra.promote_leaf_eltypes(x), LinearAlgebra.promote_leaf_eltypes(y), atol),
-  )
+  rtol::Real=Base.rtoldefault(
+    LinearAlgebra.promote_leaf_eltypes(x), LinearAlgebra.promote_leaf_eltypes(y), atol
+  ),
+)
   d = norm(x - y)
   if isfinite(d)
     return d <= max(atol, rtol * max(norm(x), norm(y)))
