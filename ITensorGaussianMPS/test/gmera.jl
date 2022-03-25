@@ -35,7 +35,7 @@ end
 
   ns = round.(Int, n)
   @test sum(ns) == Nf
-  
+
   Λ = conj(Φ) * transpose(Φ)
   @test gmps * Λ * gmps' ≈ Diagonal(ns) rtol = 1e-2
   @test gmps' * Diagonal(ns) * gmps ≈ Λ rtol = 1e-2
@@ -124,24 +124,23 @@ end
   @test E ≈ energy
 end
 
-
 # Build 1-d SSH model
 function SSH1dModel(N::Int, t::Float64, vardelta::Float64)
   # N should be even
   s = siteinds("Fermion", N; conserve_qns=true)
-  limit = div(N-1,2)
-  t1 = -t * (1+vardelta/2)
-  t2 = -t * (1-vardelta/2)
+  limit = div(N - 1, 2)
+  t1 = -t * (1 + vardelta / 2)
+  t2 = -t * (1 - vardelta / 2)
   os = OpSum()
   for n in 1:limit
-      os .+= t1, "Cdag", 2*n-1, "C", 2*n
-      os .+= t1, "Cdag", 2*n, "C", 2*n-1
-      os .+= t2, "Cdag", 2*n, "C", 2*n+1
-      os .+= t2, "Cdag", 2*n+1, "C", 2*n
+    os .+= t1, "Cdag", 2 * n - 1, "C", 2 * n
+    os .+= t1, "Cdag", 2 * n, "C", 2 * n - 1
+    os .+= t2, "Cdag", 2 * n, "C", 2 * n + 1
+    os .+= t2, "Cdag", 2 * n + 1, "C", 2 * n
   end
   if N % 2 == 0
-      os .+= t1, "Cdag", N-1, "C", N
-      os .+= t1, "Cdag", N, "C", N-1
+    os .+= t1, "Cdag", N - 1, "C", N
+    os .+= t1, "Cdag", N, "C", N - 1
   end
   h = hopping_hamiltonian(os)
   H = MPO(os, s)
@@ -149,17 +148,16 @@ function SSH1dModel(N::Int, t::Float64, vardelta::Float64)
   return (h, H, s)
 end
 
-
 @testset "Energy" begin
   N = 2^4
-  Nf = div(N,2)
+  Nf = div(N, 2)
   t = 1.0
   gapsize = 0
   vardelta = gapsize / 2
-  h, H, s = SSH1dModel(N, t, vardelta) 
+  h, H, s = SSH1dModel(N, t, vardelta)
 
   Φ = slater_determinant_matrix(h, Nf)
-  E,V = eigen(h)
+  E, V = eigen(h)
   sort(E)
   Eana = sum(E[1:Nf])
 
@@ -172,11 +170,7 @@ end
   @test sum(round.(Int, nmera)) == sum(round.(Int, ngmps))
 
   U = ITensorGaussianMPS.UmatFromGates(V1, N)
-  Etest = ITensorGaussianMPS.EfromGates(h,U)
+  Etest = ITensorGaussianMPS.EfromGates(h, U)
 
   @test Eana ≈ Etest rtol = 1e-5
-
-  
-  
 end
-

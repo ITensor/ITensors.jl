@@ -62,7 +62,6 @@ function shiftByInds!(G::Circuit, inds::Vector{Int})
   return G
 end
 
-
 """
     correlation_matrix_to_gmera(Λ::AbstractMatrix{ElT}; eigval_cutoff::Float64 = 1e-8, maxblocksize::Int = size(Λ0, 1))
 Diagonalize a correlation matrix through MERA layers,
@@ -110,7 +109,6 @@ end
 function slater_determinant_to_gmera(Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_gmera(conj(Φ) * transpose(Φ); kwargs...)
 end
-
 
 function correlation_matrix_to_mera(
   s::Vector{<:Index},
