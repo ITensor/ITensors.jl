@@ -21,7 +21,7 @@ Random.seed!(1234)
 
   test_rrule(getindex, ITensor(3.4); check_inferred=false)
   test_rrule(getindex, A, 1, 2; check_inferred=false)
-  test_rrule(*, A', A; check_inferred=false)
+  test_rrule(contract, A', A; check_inferred=false)
   test_rrule(*, 3.2, A; check_inferred=false)
   test_rrule(*, A, 4.3; check_inferred=false)
   test_rrule(+, A, B; check_inferred=false)
@@ -53,7 +53,7 @@ Random.seed!(1234)
   test_rrule(permute, A, reverse(inds(A)); check_inferred=false)
 
   test_rrule(ZygoteRuleConfig(), apply, A, V; rrule_f=rrule_via_ad, check_inferred=false)
-  function f(A, B)
+  f = function (A, B)
     AT = ITensor(A, i, j)
     BT = ITensor(B, j, i)
     return (BT * AT)[1]
@@ -65,6 +65,21 @@ Random.seed!(1234)
   args = (rand(4), rand(2, 2))
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
+  a, b, k, l, m, n, u, v = Index.([10, 50, 5, 2, 10, 12, 7, 50])
+  args = (
+    randomITensor(a, b, k),
+    randomITensor(a, l, m),
+    randomITensor(b, u, n),
+    randomITensor(u, v),
+    randomITensor(k, v),
+    randomITensor(l, m, n),
+  )
+  f = (args...) -> contract([args...])[] # Left associative
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  seq = ITensors.optimal_contraction_sequence([args...])
+  f = (args...) -> contract([args...]; sequence=seq)[] # sequence
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+
   f = function (x)
     b = itensor([0, 0, 1, 1], i, j)
     k = itensor([0, 1, 0, 0], i, j)
@@ -74,14 +89,14 @@ Random.seed!(1234)
   args = (0.3,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-  f = function (x)
-    b = itensor([0, 0, 1, 1], i, j)
-    k = itensor([0, 1, 0, 0], i, j)
-    T = itensor([0 x x^2 1; 0 0 sin(x) 0; 0 cos(x) 0 exp(x); x 0 0 0], i, j, i', j')
-    return x * real((b' * T * k)[])
-  end
-  args = (0.3,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #f = function (x)
+  #  b = itensor([0, 0, 1, 1], i, j)
+  #  k = itensor([0, 1, 0, 0], i, j)
+  #  T = itensor([0 x x^2 1; 0 0 sin(x) 0; 0 cos(x) 0 exp(x); x 0 0 0], i, j, i', j')
+  #  return x * real((b' * T * k)[])
+  #end
+  #args = (0.3,)
+  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = x -> sin(scalar(x)^3)
   args = (C,)
@@ -189,15 +204,15 @@ Random.seed!(1234)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   args = (2.8 + 3.1im,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  f = function f(x)
+  f = function (x)
     v = itensor([exp(-3.2x), cos(2x^2)], j)
     T = itensor([x^2 sin(x); x^2 exp(-2x)], j', dag(j))
     return real((dag(v') * T * v)[])
   end
   args = (2.8,)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
-  args = (2.8 + 3.1im,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  #args = (2.8 + 3.1im,)
+  #test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   f = function (x)
     return real((x^3 * ITensor([sin(x) exp(-2x); 3x^3 x+x^2], j', dag(j)))[1, 1])
   end
