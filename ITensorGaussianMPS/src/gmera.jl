@@ -64,7 +64,7 @@ function shiftByInds!(G::Circuit, inds::Vector{Int})
 end
 
 # Combine gates for each MERA layer
-function correlation_matrix_to_gmera_tailed(
+function correlation_matrix_to_gmera(
   Λ0::AbstractMatrix{ElT}; eigval_cutoff::Float64=1e-8, maxblocksize::Int=size(Λ0, 1)
 ) where {ElT<:Number}
   Λ = Hermitian(Λ0)
@@ -109,7 +109,7 @@ function correlation_matrix_to_mera(
   kwargs...,
 )
   @assert size(Λ, 1) == size(Λ, 2)
-  Λdiag, C = correlation_matrix_to_gmera_tailed(
+  Λdiag, C = correlation_matrix_to_gmera(
     Λ; eigval_cutoff=eigval_cutoff, maxblocksize=maxblocksize
   )
   #@show C
