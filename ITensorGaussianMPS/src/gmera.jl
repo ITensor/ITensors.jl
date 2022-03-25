@@ -1,4 +1,3 @@
-
 # brick wall scanning for a single MERA layer with treatment to the tail
 function correlation_matrix_to_gmps_brickwall_tailed(
   Λ0::AbstractMatrix{ElT},
@@ -63,6 +62,12 @@ function shiftByInds!(G::Circuit, inds::Vector{Int})
   return G
 end
 
+
+"""
+    correlation_matrix_to_gmera(Λ::AbstractMatrix{ElT}; eigval_cutoff::Float64 = 1e-8, maxblocksize::Int = size(Λ0, 1))
+Diagonalize a correlation matrix through MERA layers,
+output gates and eigenvalues of the correlation matrix
+"""
 # Combine gates for each MERA layer
 function correlation_matrix_to_gmera(
   Λ0::AbstractMatrix{ElT}; eigval_cutoff::Float64=1e-8, maxblocksize::Int=size(Λ0, 1)
@@ -97,10 +102,16 @@ function correlation_matrix_to_gmera(
   shiftByInds!(C, inds)
   lmul!(C, V)
   Λ = V * Λ0 * V'
-  return Λ, V
+  ns = real.(diag(Λ))
+  return ns, V
 end
 
 # output the MPS based on the MERA gates
+function slater_determinant_to_gmera(Φ::AbstractMatrix; kwargs...)
+  return correlation_matrix_to_gmera(conj(Φ) * transpose(Φ); kwargs...)
+end
+
+
 function correlation_matrix_to_mera(
   s::Vector{<:Index},
   Λ::AbstractMatrix;
@@ -109,11 +120,9 @@ function correlation_matrix_to_mera(
   kwargs...,
 )
   @assert size(Λ, 1) == size(Λ, 2)
-  Λdiag, C = correlation_matrix_to_gmera(
+  ns, C = correlation_matrix_to_gmera(
     Λ; eigval_cutoff=eigval_cutoff, maxblocksize=maxblocksize
   )
-  #@show C
-  ns = diag(Λdiag)
   if all(hastags("Fermion"), s)
     U = [ITensor(s, g) for g in reverse(C.rotations)]
     ψ = MPS(s, n -> round(Int, ns[n]) + 1, U; kwargs...)
