@@ -344,6 +344,9 @@ end
     psi_kl_out = *(prime(K), *(L, psi; maxdim=1); maxdim=1)
     @test ⋅(psi'', KL, psi) ≈ dot(psi'', psi_kl_out) atol = 5e-3
 
+    @test_throws ErrorException K * L
+    @test_throws ErrorException contract(K, L)
+
     @test KL ≈ apply(K, L; maxdim=1)
     @test KL ≈ K(L; maxdim=1)
 
