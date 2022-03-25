@@ -1,4 +1,3 @@
-include("gmps.jl")
 
 # brick wall scanning for a single MERA layer with treatment to the tail
 function correlation_matrix_to_gmps_brickwall_tailed(
