@@ -13,6 +13,7 @@ Bugs:
 
 Enhancements:
 
+- Introduce `apply(::MPO, ::MPO)` (#880)
 - Make automatic differentiation work for `contract(::ITensor...)` (#878)
 - Deprecate automatically making indices match in `inner` and `outer` (#877)
   - Add test for `apply(::MPO, ::MPS) = noprime(contract(::MPO, ::MPS))` and lazy version `Apply(::MPO, ::MPS)`.
