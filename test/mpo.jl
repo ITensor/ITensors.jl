@@ -344,6 +344,9 @@ end
     psi_kl_out = *(prime(K), *(L, psi; maxdim=1); maxdim=1)
     @test ⋅(psi'', KL, psi) ≈ dot(psi'', psi_kl_out) atol = 5e-3
 
+    @test KL ≈ apply(K, L; maxdim=1)
+    @test KL ≈ K(L; maxdim=1)
+
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]
     othersitesl = [Index(2, "Site,bbb") for n in 1:N]

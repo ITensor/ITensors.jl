@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+NDTensors v0.1.35 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Allow general AbstractArray as data of `Dense` storage `Tensor`/`ITensor` (#848)
+
 NDTensors v0.1.34 Release Notes
 ===============================
 
