@@ -1555,6 +1555,8 @@ Currently, this works by scaling one of the sites within the orthogonality limit
 
 -(ψ::AbstractMPS) = -1 * ψ
 
+LinearAlgebra.rmul!(ψ::AbstractMPS, α::Number) = _apply_to_orthocenter!(*, ψ, α)
+
 """
     setindex!(::Union{MPS, MPO}, ::Union{MPS, MPO},
               r::UnitRange{Int64})
