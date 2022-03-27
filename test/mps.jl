@@ -454,6 +454,8 @@ include("util.jl")
 
     ψ = +(ψ₁, ψ₂; cutoff=0.0)
 
+    @test_throws ErrorException ψ₁ + ψ₂'
+
     @test inner(ψ, ψ) ≈ inner_add(ψ₁, ψ₂)
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
 

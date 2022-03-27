@@ -347,8 +347,8 @@ end
     @test_throws ErrorException K * L
     @test_throws ErrorException contract(K, L)
 
-    @test KL ≈ apply(K, L; maxdim=1)
-    @test KL ≈ K(L; maxdim=1)
+    @test replaceprime(KL, 2 => 1) ≈ apply(K, L; maxdim=1)
+    @test replaceprime(KL, 2 => 1) ≈ K(L; maxdim=1)
 
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]

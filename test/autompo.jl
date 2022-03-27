@@ -280,7 +280,7 @@ end
     psi = makeRandomMPS(sites)
     cdu_psi = copy(psi)
     cdu_psi[3] = noprime(cdu_psi[3] * op(sites, "Adagup", 3))
-    @test inner(psi, W, psi) ≈ inner(cdu_psi, psi)
+    @test inner(psi', W, psi) ≈ inner(cdu_psi, psi)
   end
 
   @testset "Ising" begin

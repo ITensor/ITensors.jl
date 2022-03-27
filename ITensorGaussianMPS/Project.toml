@@ -10,5 +10,5 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 
 [compat]
 Compat = "3.40.0"
-ITensors = "0.2.12"
+ITensors = "0.2.12, 0.3"
 julia = "1.6"

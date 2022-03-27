@@ -111,7 +111,7 @@ using ITensors, Test
   @testset "contract" begin
     @test maxlinkdim(K) == 1
     psi_out = contract(K, psi; maxdim=1)
-    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
+    @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     @test_throws ArgumentError contract(K, psi; method="fakemethod")
   end
 
