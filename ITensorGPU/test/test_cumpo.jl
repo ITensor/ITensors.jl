@@ -31,10 +31,10 @@ using ITensors, ITensorGPU, Test
     K = randomCuMPO(sites)
     orthogonalize!(phi, 1)
     orthogonalize!(K, 1)
-    orig_inner = inner(phi, K, phi)
+    orig_inner = inner(phi', K, phi)
     orthogonalize!(phi, div(N, 2))
     orthogonalize!(K, div(N, 2))
-    @test inner(phi, K, phi) ≈ orig_inner
+    @test inner(phi', K, phi) ≈ orig_inner
   end
 
   @testset "inner <y|A|x>" begin
@@ -48,11 +48,11 @@ using ITensors, ITensorGPU, Test
     for j in 2:N
       phiKpsi *= phidag[j] * K[j] * psi[j]
     end
-    @test phiKpsi[] ≈ inner(phi, K, psi)
+    @test phiKpsi[] ≈ inner(phi', K, psi)
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badpsi = randomCuMPS(badsites)
-    @test_throws DimensionMismatch inner(phi, K, badpsi)
+    @test_throws DimensionMismatch inner(phi', K, badpsi)
 
     # make bigger random MPO...
     for link_dim in 2:5
@@ -90,7 +90,7 @@ using ITensors, ITensorGPU, Test
       for j in 2:N
         phiKpsi *= phidag[j] * K[j] * psi[j]
       end
-      @test scalar(phiKpsi) ≈ inner(phi, K, psi)
+      @test scalar(phiKpsi) ≈ inner(phi', K, psi)
     end
   end
 
@@ -100,8 +100,8 @@ using ITensors, ITensorGPU, Test
     @test maxlinkdim(K) == 1
     psi = randomCuMPS(sites)
     psi_out = contract(K, psi; maxdim=1)
-    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
-    @test_throws ArgumentError contract(K, psi, method="fakemethod")
+    @test inner(phi', psi_out) ≈ inner(phi', K, psi)
+    @test_throws ArgumentError contract(K', psi, method="fakemethod")
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badpsi = randomCuMPS(badsites)
@@ -138,7 +138,7 @@ using ITensors, ITensorGPU, Test
       orthogonalize!(K, 1; maxdim=link_dim)
       orthogonalize!(phi, 1; normalize=true, maxdim=link_dim)
       psi_out = contract(deepcopy(K), deepcopy(psi); maxdim=10 * link_dim, cutoff=0.0)
-      @test inner(phi, psi_out) ≈ inner(phi, K, psi)
+      @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     end
   end
   @testset "add" begin
@@ -150,7 +150,7 @@ using ITensors, ITensorGPU, Test
     psi = randomCuMPS(shsites)
     k_psi = contract(K, psi; maxdim=1)
     l_psi = contract(L, psi; maxdim=1)
-    @test inner(psi, add(k_psi, l_psi)) ≈ inner(psi, M, psi) atol = 5e-3
+    @test inner(psi', add(k_psi, l_psi)) ≈ inner(psi', M, psi) atol = 5e-3
   end
   @testset "contract(::CuMPO, ::CuMPO)" begin
     psi = randomCuMPS(sites)
@@ -160,7 +160,7 @@ using ITensors, ITensorGPU, Test
     @test maxlinkdim(L) == 1
     KL = contract(prime(K), L; maxdim=1)
     psi_kl_out = contract(prime(K), contract(L, psi; maxdim=1); maxdim=1)
-    @test inner(psi, KL, psi) ≈ inner(psi, psi_kl_out) atol = 5e-3
+    @test inner(psi'', KL, psi) ≈ inner(psi'', psi_kl_out) atol = 5e-3
 
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]
