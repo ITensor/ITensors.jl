@@ -37,7 +37,9 @@ Development of ITensor is supported by the Flatiron Institute, a division of the
 
 ## News
 
-ITensors.jl v0.2 has been released, with a few breaking changes as well as a variety of bug fixes
+- March 25, 2022: ITensors.jl v0.3 has been released. The main breaking change is that we no longer support versions of Julia below 1.6. Julia 1.6 is the long term support version of Julia (LTS), which means that going forward versions below Julia 1.6 won't be as well supported with bug fixes and improvements. Additionally, Julia 1.6 introduced many improvements including syntax improvements that we would like to start using with ITensors.jl, which becomes challenging if we try to support Julia versions below 1.6. See [here](https://www.oxinabox.net/2021/02/13/Julia-1.6-what-has-changed-since-1.0.html) and [here](https://julialang.org/blog/2021/03/julia-1.6-highlights/) for some nice summaries of the Julia 1.6 release.
+
+-  Jun 09, 2021: ITensors.jl v0.2 has been released, with a few breaking changes as well as a variety of bug fixes
 and new features. Take a look at the [upgrade guide](https://itensor.github.io/ITensors.jl/stable/UpgradeGuide_0.1_to_0.2.html)
 for help upgrading your code as well as the [change log](https://github.com/ITensor/ITensors.jl/blob/main/NEWS.md)
 for a comprehensive list of changes.

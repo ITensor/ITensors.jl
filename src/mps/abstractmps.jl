@@ -1331,6 +1331,12 @@ println()
 function +(ψ⃗::MPST...; cutoff=1e-15, kwargs...) where {MPST<:AbstractMPS}
   # TODO: Check that the inputs have the same site indices
 
+  if !all(ψ -> hassameinds(siteinds, first(ψ⃗), ψ), ψ⃗)
+    error(
+      "In `+(::MPS/MPO...)`, the input `MPS` or `MPO` do not have the same site indices. For example, the site indices of the first site are $(siteinds.(ψ⃗, 1))",
+    )
+  end
+
   Nₘₚₛ = length(ψ⃗)
 
   @assert all(ψᵢ -> length(ψ⃗[1]) == length(ψᵢ), ψ⃗)

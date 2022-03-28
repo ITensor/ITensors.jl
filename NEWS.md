@@ -6,6 +6,38 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.0 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Introduce `apply(::MPO, ::MPO)` (#880)
+- Make automatic differentiation work for `contract(::ITensor...)` (#878)
+- Deprecate automatically making indices match in `inner` and `outer` (#877)
+  - Add test for `apply(::MPO, ::MPS) = noprime(contract(::MPO, ::MPS))` and lazy version `Apply(::MPO, ::MPS)`.
+  - Define `isapprox(::AbstractMPS, ::AbstractMPS)`.
+- correlation_matrix sites keyword (#868)
+  - Implement non-contiguous sites for correlation_matrix
+- rrule for MPS(Vector{::ITensor}) (#865)
+  - `rrule` for constructing an `MPS` from a `Vector{ITensor}`.
+  - Improve `op(::OpName ,::SiteType"Qudit")` for handling two-body ops.
+  - Add support for storing a `Function` in an `op` in the format `(f, opame, support, (params...))`.
+- Fix expect for complex MPS (#867)
+- Get some AD working for LazyApply and Ops (#859)
+- + and - in the op system (#857)
+- Rename expect site_range keyword to sites (#858)
+  - Allow more general sites collections to be passed including single site number that maps to scalar outputs.
+  - Add ishermitian for ITensors
+  - Improve handling of types and non-Hermitian operators in expect
+  - Define ITensor transpose
+- Improve Sweeps constructors with keyword arguments and default init (#856)
+- rrules for apply(U, ::MPO), `(::MPO * ::MPO)`, `tr(::MPO)` (#852)
+- Unification of PastaQ.gate and `ITensors.op`, new `OpSum` algebra functions (#843)
+- Change minimal required Julia version from 1.3 to 1.6 (#849)
+  - Add default `maxdim=typemax(Int)` in `dmrg`.
+
 ITensors v0.2.16 Release Notes
 ==============================
 

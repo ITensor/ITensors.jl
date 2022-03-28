@@ -280,7 +280,7 @@ end
     psi = makeRandomMPS(sites)
     cdu_psi = copy(psi)
     cdu_psi[3] = noprime(cdu_psi[3] * op(sites, "Adagup", 3))
-    @test inner(psi, W, psi) ≈ inner(cdu_psi, psi)
+    @test inner(psi', W, psi) ≈ inner(cdu_psi, psi)
   end
 
   @testset "Ising" begin
@@ -292,8 +292,8 @@ end
     Ha = MPO(ampo, sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
-    Oa = inner(psi, Ha, psi)
-    Oe = inner(psi, He, psi)
+    Oa = inner(psi', Ha, psi)
+    Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
   end
 
@@ -306,8 +306,8 @@ end
     Ha = MPO(ampo, sites)
     He = -isingMPO(sites)
     psi = makeRandomMPS(sites)
-    Oa = inner(psi, Ha, psi)
-    Oe = inner(psi, He, psi)
+    Oa = inner(psi', Ha, psi)
+    Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
   end
 
@@ -320,8 +320,8 @@ end
     Ha = MPO(ampo, sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
-    Oa = inner(psi, Ha, psi)
-    Oe = inner(psi, He, psi)
+    Oa = inner(psi', Ha, psi)
+    Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
   end
 
@@ -341,8 +341,8 @@ end
     Ha = MPO(ampo, sites)
     He = heisenbergMPO(sites, h)
     psi = makeRandomMPS(sites)
-    Oa = inner(psi, Ha, psi)
-    Oe = inner(psi, He, psi)
+    Oa = inner(psi', Ha, psi)
+    Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
   end
 
@@ -372,10 +372,10 @@ end
 
     He = heisenbergMPO(sites, ones(N), "Sz * Sz")
     psi = makeRandomMPS(sites)
-    Oe = inner(psi, He, psi)
-    Oa1 = inner(psi, Ha1, psi)
+    Oe = inner(psi', He, psi)
+    Oa1 = inner(psi', Ha1, psi)
     @test Oa1 ≈ Oe
-    Oa2 = inner(psi, Ha2, psi)
+    Oa2 = inner(psi', Ha2, psi)
     @test Oa2 ≈ Oe
   end
 
@@ -395,8 +395,8 @@ end
     Ha = MPO(ampo, sites)
     He = threeSiteIsingMPO(sites, h)
     psi = makeRandomMPS(sites)
-    Oa = inner(psi, Ha, psi)
-    Oe = inner(psi, He, psi)
+    Oa = inner(psi', Ha, psi)
+    Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
   end
 
@@ -409,8 +409,8 @@ end
     Ha = MPO(ampo, sites)
     He = fourSiteIsingMPO(sites)
     psi = makeRandomMPS(sites)
-    Oa = inner(psi, Ha, psi)
-    Oe = inner(psi, He, psi)
+    Oa = inner(psi', Ha, psi)
+    Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
   end
 
@@ -433,8 +433,8 @@ end
 
     He = NNheisenbergMPO(sites, J1, J2)
     psi = makeRandomMPS(sites)
-    Oa = inner(psi, Ha, psi)
-    Oe = inner(psi, He, psi)
+    Oa = inner(psi', Ha, psi)
+    Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
     #@test maxlinkdim(Ha) == 8
   end
@@ -470,7 +470,7 @@ end
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
       cdu_psi[3] = noprime(cdu_psi[3] * op(sites, "Adagup", 3))
-      @test inner(psi, W, psi) ≈ inner(cdu_psi, psi)
+      @test inner(psi', W, psi) ≈ inner(cdu_psi, psi)
     end
 
     @testset "Ising" begin
@@ -482,8 +482,8 @@ end
       Ha = MPO(ampo, sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -496,8 +496,8 @@ end
       Ha = MPO(ampo, sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -517,8 +517,8 @@ end
       Ha = MPO(ampo, sites)
       He = heisenbergMPO(sites, h)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -548,10 +548,10 @@ end
 
       He = heisenbergMPO(sites, ones(N), "Sz * Sz")
       psi = makeRandomMPS(sites)
-      Oe = inner(psi, He, psi)
-      Oa1 = inner(psi, Ha1, psi)
+      Oe = inner(psi', He, psi)
+      Oa1 = inner(psi', Ha1, psi)
       @test Oa1 ≈ Oe
-      Oa2 = inner(psi, Ha2, psi)
+      Oa2 = inner(psi', Ha2, psi)
       @test Oa2 ≈ Oe
     end
 
@@ -571,8 +571,8 @@ end
       Ha = MPO(ampo, sites)
       He = threeSiteIsingMPO(sites, h)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -585,8 +585,8 @@ end
       Ha = MPO(ampo, sites)
       He = fourSiteIsingMPO(sites)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -609,8 +609,8 @@ end
 
       He = NNheisenbergMPO(sites, J1, J2)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
       #@test maxlinkdim(Ha) == 8
     end
@@ -665,7 +665,7 @@ end
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
       cdu_psi[3] = noprime(cdu_psi[3] * op(sites, "Adagup", 3))
-      @test inner(psi, W, psi) ≈ inner(cdu_psi, psi)
+      @test inner(psi', W, psi) ≈ inner(cdu_psi, psi)
     end
 
     @testset "Ising" begin
@@ -677,8 +677,8 @@ end
       Ha = MPO(ampo, sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -691,8 +691,8 @@ end
       Ha = MPO(ampo, sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -712,8 +712,8 @@ end
       Ha = MPO(ampo, sites)
       He = heisenbergMPO(sites, h)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -743,10 +743,10 @@ end
 
       He = heisenbergMPO(sites, ones(N), "Sz * Sz")
       psi = makeRandomMPS(sites)
-      Oe = inner(psi, He, psi)
-      Oa1 = inner(psi, Ha1, psi)
+      Oe = inner(psi', He, psi)
+      Oa1 = inner(psi', Ha1, psi)
       @test Oa1 ≈ Oe
-      Oa2 = inner(psi, Ha2, psi)
+      Oa2 = inner(psi', Ha2, psi)
       @test Oa2 ≈ Oe
     end
 
@@ -766,8 +766,8 @@ end
       Ha = MPO(ampo, sites)
       He = threeSiteIsingMPO(sites, h)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -780,8 +780,8 @@ end
       Ha = MPO(ampo, sites)
       He = fourSiteIsingMPO(sites)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
     end
 
@@ -804,8 +804,8 @@ end
 
       He = NNheisenbergMPO(sites, J1, J2)
       psi = makeRandomMPS(sites)
-      Oa = inner(psi, Ha, psi)
-      Oe = inner(psi, He, psi)
+      Oa = inner(psi', Ha, psi)
+      Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
       #@test maxlinkdim(Ha) == 8
     end
@@ -888,10 +888,10 @@ end
     p00d = productMPS(s, [1, 1, 3, 1, 1])
     pd00 = productMPS(s, [3, 1, 1, 1, 1])
 
-    @test inner(puu0, M1, p0uu) ≈ -1.0
-    @test inner(pdu0, M2, p0ud) ≈ -1.0
-    @test inner(pu00, M1, p00u) ≈ +1.0
-    @test inner(pd00, M2, p00d) ≈ +1.0
+    @test inner(puu0', M1, p0uu) ≈ -1.0
+    @test inner(pdu0', M2, p0ud) ≈ -1.0
+    @test inner(pu00', M1, p00u) ≈ +1.0
+    @test inner(pd00', M2, p00d) ≈ +1.0
   end
 
   @testset "Complex OpSum Coefs" begin
@@ -907,8 +907,8 @@ end
       H = MPO(ampo, sites)
       psiud = productMPS(sites, [1, 2, 1, 2])
       psidu = productMPS(sites, [2, 1, 1, 2])
-      @test inner(psiud, H, psidu) ≈ +1im
-      @test inner(psidu, H, psiud) ≈ -1im
+      @test inner(psiud', H, psidu) ≈ +1im
+      @test inner(psidu', H, psiud) ≈ -1im
     end
   end
 
@@ -982,7 +982,7 @@ end
     end
     H = MPO(ampo, sites)
     psi0 = productMPS(sites, n -> isodd(n) ? "0" : "1")
-    @test abs(inner(psi0, H, psi0) - 0.00018) < 1E-10
+    @test abs(inner(psi0', H, psi0) - 0.00018) < 1E-10
   end
 end
 

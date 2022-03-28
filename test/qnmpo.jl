@@ -75,7 +75,7 @@ using ITensors, Test
     for j in 2:N
       phiKpsi *= phidag[j] * K[j] * psi[j]
     end
-    @test phiKpsi[] ≈ inner(phi, K, psi)
+    @test phiKpsi[] ≈ inner(phi', K, psi)
   end
 
   @testset "inner <By|A|x>" begin
@@ -103,7 +103,7 @@ using ITensors, Test
 
   @testset "error_contract" begin
     dist = sqrt(
-      abs(1 + (inner(phi, phi) - 2 * real(inner(phi, K, psi))) / inner(K, psi, K, psi))
+      abs(1 + (inner(phi, phi) - 2 * real(inner(phi', K, psi))) / inner(K, psi, K, psi))
     )
     @test dist ≈ error_contract(phi, K, psi)
   end
@@ -111,7 +111,7 @@ using ITensors, Test
   @testset "contract" begin
     @test maxlinkdim(K) == 1
     psi_out = contract(K, psi; maxdim=1)
-    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
+    @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     @test_throws ArgumentError contract(K, psi; method="fakemethod")
   end
 
@@ -122,8 +122,8 @@ using ITensors, Test
   #  @test length(M) == N
   #  k_psi = contract(K, psi, maxdim=1)
   #  l_psi = contract(L, psi, maxdim=1)
-  #  @test inner(psi, k_psi + l_psi) ≈ ⋅(psi, M, psi) atol=5e-3
-  #  @test inner(psi, sum([k_psi, l_psi])) ≈ dot(psi, M, psi) atol=5e-3
+  #  @test inner(psi', k_psi + l_psi) ≈ ⋅(psi', M, psi) atol=5e-3
+  #  @test inner(psi', sum([k_psi, l_psi])) ≈ dot(psi', M, psi) atol=5e-3
   #  for dim in 2:4
   #    shsites = siteinds("S=1/2",N)
   #    K = basicRandomMPO(N, shsites; dim=dim)
@@ -149,7 +149,7 @@ using ITensors, Test
     KL = contract(prime(K), L; maxdim=1)
     Lpsi = contract(L, psi; maxdim=1)
     psi_kl_out = contract(prime(K), Lpsi; maxdim=1)
-    @test inner(psi, KL, psi) ≈ inner(psi, psi_kl_out) atol = 5e-3
+    @test inner(psi'', KL, psi) ≈ inner(psi'', psi_kl_out) atol = 5e-3
   end
 
   @testset "*(::MPO, ::MPO)" begin
@@ -157,7 +157,7 @@ using ITensors, Test
     @test maxlinkdim(L) == 1
     KL = *(prime(K), L; maxdim=1)
     psi_kl_out = *(prime(K), *(L, psi; maxdim=1); maxdim=1)
-    @test ⋅(psi, KL, psi) ≈ dot(psi, psi_kl_out) atol = 5e-3
+    @test ⋅(psi'', KL, psi) ≈ dot(psi'', psi_kl_out) atol = 5e-3
   end
 
   sites = siteinds("S=1/2", N)
