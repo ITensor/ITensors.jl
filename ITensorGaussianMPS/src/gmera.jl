@@ -105,11 +105,13 @@ function correlation_matrix_to_gmera(
   return ns, V
 end
 
-# output the MPS based on the MERA gates
+# output the MERA gates and eigenvalues of correlation matrix from WF
 function slater_determinant_to_gmera(Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_gmera(conj(Φ) * transpose(Φ); kwargs...)
 end
 
+#=
+# ouput the MPS based on the MERA gates
 function correlation_matrix_to_mera(
   s::Vector{<:Index},
   Λ::AbstractMatrix;
@@ -151,10 +153,10 @@ function correlation_matrix_to_mera(
   end
   return ψ
 end
-
 function slater_determinant_to_mera(s::Vector{<:Index}, Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_mera(s, conj(Φ) * transpose(Φ); kwargs...)
 end
+=#
 
 # G the circuit from the gates, N is the total number of sites
 function UmatFromGates(G::Circuit, N::Int)

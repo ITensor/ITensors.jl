@@ -30,7 +30,7 @@ end
   @test h * Φ ≈ Φ * Diagonal(e[1:Nf])
 
   # Diagonalize the correlation matrix as a
-  # Gaussian MPS (GMPS)
+  # Gaussian MPS (GMPS) gates
   n, gmps = slater_determinant_to_gmera(Φ; maxblocksize=10)
 
   ns = round.(Int, n)
@@ -40,6 +40,7 @@ end
   @test gmps * Λ * gmps' ≈ Diagonal(ns) rtol = 1e-2
   @test gmps' * Diagonal(ns) * gmps ≈ Λ rtol = 1e-2
 
+  #=
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=true)
   ψ = slater_determinant_to_mps(s, Φ; blocksize=4)
@@ -64,6 +65,7 @@ end
   @test abs(inner(ψ, ψ̃)) ≈ 1 rtol = 1e-5
   @test inner(ψ̃, H, ψ̃) ≈ inner(ψ, H, ψ) rtol = 1e-5
   @test E ≈ energy
+  =#
 end
 
 @testset "Fermion (complex)" begin
@@ -97,6 +99,7 @@ end
   @test gmps * Λ * gmps' ≈ Diagonal(ns) rtol = 1e-2
   @test gmps' * Diagonal(ns) * gmps ≈ Λ rtol = 1e-2
 
+  #=
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=true)
   ψ = slater_determinant_to_mera(s, Φ; blocksize=4)
@@ -122,6 +125,7 @@ end
   @test abs(inner(ψ, ψ̃)) ≈ 1 rtol = 1e-5
   @test inner(ψ̃, H, ψ̃) ≈ inner(ψ, H, ψ) rtol = 1e-5
   @test E ≈ energy
+  =#
 end
 
 # Build 1-d SSH model
