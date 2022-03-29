@@ -1,6 +1,7 @@
+using BitIntegers
 
-const IntTag = UInt128  # An integer that can be cast to a Tag
-const MTagStorage = MVector{8,IntTag} # A mutable tag storage, holding 8 characters
+const IntTag = UInt256  # An integer that can be cast to a Tag
+const MTagStorage = MVector{16,IntTag} # A mutable tag storage, holding 16 characters
 const TagSetStorage{T,N} = SVector{N,T}
 const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 

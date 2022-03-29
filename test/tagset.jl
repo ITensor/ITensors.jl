@@ -66,10 +66,17 @@ using ITensors, Test
     @test ts[4] == ITensors.SmallString("αβγδϵζηθ")
   end
 
+  @testset "Tag long" begin
+    ts = TagSet("abcdefghijklmnop,ijklmnopqabcdefg")
+    @test length(ts) == 2
+    @test hastags(ts, "abcdefghijklmnop")
+    @test hastags(ts, "ijklmnopqabcdefg")
+  end
+
   @testset "Tag too long" begin
-    @test_throws ErrorException TagSet("ijklmnopq")
-    @test_throws ErrorException TagSet("abcd,ijklmnopq")
-    @test_throws ErrorException TagSet("ijklmnopqr,abcd")
+    @test_throws ErrorException TagSet("ijklmnopqabcdefgh")
+    @test_throws ErrorException TagSet("abcd,ijklmnopqabcdefgh")
+    @test_throws ErrorException TagSet("ijklmnopqabcdefgh,abcd")
   end
 
   @testset "Integer Tags" begin
