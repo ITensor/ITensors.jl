@@ -40,10 +40,9 @@ end
   @test gmps * Λ * gmps' ≈ Diagonal(ns) rtol = 1e-2
   @test gmps' * Diagonal(ns) * gmps ≈ Λ rtol = 1e-2
 
-  #=
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=true)
-  ψ = slater_determinant_to_mps(s, Φ; blocksize=4)
+  ψ = ITensorGaussianMPS.slater_determinant_to_mera(s, Φ; blocksize=4)
 
   os = OpSum()
   for i in 1:N, j in 1:N
@@ -65,7 +64,6 @@ end
   @test abs(inner(ψ, ψ̃)) ≈ 1 rtol = 1e-5
   @test inner(ψ̃, H, ψ̃) ≈ inner(ψ, H, ψ) rtol = 1e-5
   @test E ≈ energy
-  =#
 end
 
 @testset "Fermion (complex)" begin
@@ -99,10 +97,9 @@ end
   @test gmps * Λ * gmps' ≈ Diagonal(ns) rtol = 1e-2
   @test gmps' * Diagonal(ns) * gmps ≈ Λ rtol = 1e-2
 
-  #=
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=true)
-  ψ = slater_determinant_to_mera(s, Φ; blocksize=4)
+  ψ = ITensorGaussianMPS.slater_determinant_to_mera(s, Φ; blocksize=4)
 
   os = OpSum()
   for i in 1:N, j in 1:N
@@ -125,7 +122,6 @@ end
   @test abs(inner(ψ, ψ̃)) ≈ 1 rtol = 1e-5
   @test inner(ψ̃, H, ψ̃) ≈ inner(ψ, H, ψ) rtol = 1e-5
   @test E ≈ energy
-  =#
 end
 
 # Build 1-d SSH model
