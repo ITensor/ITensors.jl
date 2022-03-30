@@ -10,7 +10,7 @@ import LinearAlgebra: Givens
 export slater_determinant_to_mps,
   slater_determinant_to_gmps, hopping_hamiltonian, slater_determinant_matrix
 
-export G_R,G_G,G_L
+export G_R, G_G, G_L
 
 include("gmps.jl")
 include("dynamics.jl")
