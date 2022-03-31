@@ -8,9 +8,12 @@ using LinearAlgebra
 import LinearAlgebra: Givens
 
 export slater_determinant_to_mps,
-  slater_determinant_to_gmps, hopping_hamiltonian, slater_determinant_matrix
-
-export G_R, G_G, G_L
+  slater_determinant_to_gmps,
+  hopping_hamiltonian,
+  slater_determinant_matrix,
+  retarded_green_function,
+  lesser_green_function,
+  greater_green_function
 
 include("gmps.jl")
 include("dynamics.jl")

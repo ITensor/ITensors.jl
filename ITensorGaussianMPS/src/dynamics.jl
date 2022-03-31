@@ -16,11 +16,14 @@ function _compute_correlator(N::Int, f::Function; kwargs...)
 end
 
 """
+    retarded_green_function(t, ϕ, ϵ; kwargs...)
+
 Compute the retarded single-particle Green function
-G_R(t)_ij = -i θ(t) <ϕ|{cᵢ(t), c†ⱼ(0)}|ϕ>
-where ϕ is a Slater determinant
+GR(t)_ij = -i θ(t) <ϕ|{cᵢ(t), c†ⱼ(0)}|ϕ>
+at time t where |ϕ> is a Slater determinant determined by 
+the matrix of orbitals ϕ, with energies ϵ.
 """
-function G_R(t::Number, ϕ, ϵ::Vector{Float64}; kwargs...)
+function retarded_green_function(t::Number, ϕ, ϵ::Vector{Float64}; kwargs...)
   N = length(ϵ)
   @assert size(ϕ) == (N, N)
   function compute_GR(i, j)
@@ -34,11 +37,18 @@ function G_R(t::Number, ϕ, ϵ::Vector{Float64}; kwargs...)
 end
 
 """
+    greater_green_function(t, ϕ, ϵ; kwargs...)
+
 Compute the greater single-particle Green function
-G_G(t)_ij = G>(t)_ij = -i <ϕ|cᵢ(t), c†ⱼ(0)|ϕ>
-where ϕ is a Slater determinant
+G>(t)_ij = -i <ϕ|cᵢ(t) c†ⱼ(0)|ϕ>
+at time t where |ϕ> is a Slater determinant determined by 
+the matrix of orbitals ϕ, with energies ϵ.
+
+The keyword argument `Npart` can be used to specify the number
+of particles (number of occupied orbitals). Otherwise the number 
+of particles is determined by the number of negative energies in ϵ.
 """
-function G_G(t::Number, ϕ, ϵ::Vector{Float64}; kwargs...)
+function greater_green_function(t::Number, ϕ, ϵ::Vector{Float64}; kwargs...)
   N = length(ϵ)
   @assert size(ϕ) == (N, N)
   Nneg = count(en -> (en < 0), ϵ)
@@ -55,11 +65,18 @@ function G_G(t::Number, ϕ, ϵ::Vector{Float64}; kwargs...)
 end
 
 """
+    lesser_green_function(t, ϕ, ϵ; kwargs...)
+
 Compute the lesser single-particle Green function
-G_L(t)_ij = G<(t)_ij = +i <ϕ|c†ᵢ(0), cⱼ(t)|ϕ>
-where ϕ is a Slater determinant
+G<(t)_ij = +i <ϕ|c†ᵢ(0) cⱼ(t)|ϕ>
+at time t where |ϕ> is a Slater determinant determined by 
+the matrix of orbitals ϕ, with energies ϵ.
+
+The keyword argument `Npart` can be used to specify the number
+of particles (number of occupied orbitals). Otherwise the number 
+of particles is determined by the number of negative energies in ϵ.
 """
-function G_L(t::Number, ϕ, ϵ::Vector{Float64}; kwargs...)
+function lesser_green_function(t::Number, ϕ, ϵ::Vector{Float64}; kwargs...)
   N = length(ϵ)
   @assert size(ϕ) == (N, N)
   Nneg = count(en -> (en < 0), ϵ)

@@ -11,44 +11,54 @@ function diagonalize_h(N)
   end
 
   h = hopping_hamiltonian(hterms)
-  ϵ, phi = eigen(h)
-  return ϵ, phi
+  ϵ, ϕ = eigen(h)
+  return ϵ, ϕ
 end
 
 @testset "Green Function Properties" begin
   N = 20
-  ϵ, phi = diagonalize_h(N)
+  ϵ, ϕ = diagonalize_h(N)
 
   t = 1.0
 
-  Gr = G_R(t, phi, ϵ)
-  Gl = G_L(t, phi, ϵ)
-  Gg = G_G(t, phi, ϵ)
+  Gr = retarded_green_function(t, ϕ, ϵ)
+  Gl = lesser_green_function(t, ϕ, ϵ)
+  Gg = greater_green_function(t, ϕ, ϵ)
 
   @test Gr ≈ (Gg - Gl)
 
-  # Gr is -i at time zero:
-  @test G_R(0.0, phi, ϵ)[1, 1] ≈ -1.0im
+  # Gr is -im at time zero:
+  @test retarded_green_function(0.0, ϕ, ϵ)[1, 1] ≈ -im
+
+  # G< at t=0 is im times the correlation matrix
+  Npart = div(N, 2)
+  Gl0 = lesser_green_function(0, ϕ, ϵ; Npart)
+  ϕ_occ = ϕ[:, 1:Npart]
+  C = ϕ_occ * ϕ_occ'
+  @test Gl0 ≈ im * C
 end
 
 @testset "Sites Keyword" begin
   N = 20
-  ϵ, phi = diagonalize_h(N)
+  ϵ, ϕ = diagonalize_h(N)
 
   t = 1.0
 
-  G = G_R(t, phi, ϵ)
+  G = retarded_green_function(t, ϕ, ϵ)
 
-  G5_10 = G_R(t, phi, ϵ; sites=5:10)
+  G5_10 = retarded_green_function(t, ϕ, ϵ; sites=5:10)
   @test size(G5_10) == (6, 6)
   @test G5_10 ≈ G[5:10, 5:10]
 
-  g = G_R(t, phi, ϵ; sites=7)
-  @test g isa Number
+  g7 = retarded_green_function(t, ϕ, ϵ; sites=7)
+  @test g7 isa Number
 
   # Non-contiguous case
-  Gnc = G_R(t, phi, ϵ; sites=[5, 10, 15])
+  Gnc = retarded_green_function(t, ϕ, ϵ; sites=[5, 10, 15])
   @test size(Gnc) == (3, 3)
+  @test Gnc[1, 1] ≈ G[5, 5]
+  @test Gnc[1, 2] ≈ G[5, 10]
+  @test Gnc[2, 3] ≈ G[10, 15]
 end
 
 nothing
