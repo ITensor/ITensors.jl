@@ -479,18 +479,23 @@ end
 
 (A::MPO)(ψ::MPS; kwargs...) = apply(A, ψ; kwargs...)
 
-function contract(A::MPO, ψ::MPS; method="densitymatrix", kwargs...)
-  # Keyword argument deprecations
-  if method == "DensityMatrix"
-    @warn "In contract, method DensityMatrix is deprecated in favor of densitymatrix"
-    method = "densitymatrix"
-  end
-  if method == "Naive"
-    @warn "In contract, method Naive is deprecated in favor of naive"
-    method = "naive"
+function contract(A::MPO, ψ::MPS; alg="densitymatrix", kwargs...)
+  if haskey(kwargs, :method)
+    # Backwards compatibility, use `method`.
+    alg = get(kwargs, :method, "densitymatrix")
   end
 
-  return contract(Algorithm(method), A, ψ; kwargs...)
+  # Keyword argument deprecations
+  if alg == "DensityMatrix"
+    @warn "In contract, method DensityMatrix is deprecated in favor of densitymatrix"
+    alg = "densitymatrix"
+  end
+  if alg == "Naive"
+    @warn "In contract, `alg=\"Naive\"` is deprecated in favor of `alg=\"naive\"`"
+    alg = "naive"
+  end
+
+  return contract(Algorithm(alg), A, ψ; kwargs...)
 end
 
 contract_mpo_mps_doc = """

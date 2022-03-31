@@ -71,13 +71,6 @@ using Zeros
 include("utils.jl")
 
 #####################################
-# Algorithm type for selecting
-# different algorithm backends
-# (for internal or advanced usage)
-#
-include("algorithm.jl")
-
-#####################################
 # ContractionSequenceOptimization
 #
 include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
@@ -109,6 +102,13 @@ include("imports.jl")
 # Global Variables
 #
 include("global_variables.jl")
+
+#####################################
+# Algorithm type for selecting
+# different algorithm backends
+# (for internal or advanced usage)
+#
+include("algorithm.jl")
 
 #####################################
 # Index and IndexSet
