@@ -28,4 +28,12 @@ using Test
   B = copy(A)
   truncate!(B; alg="frobenius")
   @test A ≈ B
+
+  # Custom algorithm
+  function ITensors.truncate!(::ITensors.Algorithm"my_new_algorithm", A::MPO; cutoff=1e-15)
+    return "my_new_algorithm was called with cutoff $cutoff"
+  end
+  cutoff = 1e-5
+  res = truncate!(A; alg="my_new_algorithm", cutoff=cutoff)
+  @test res == "my_new_algorithm was called with cutoff $cutoff"
 end
