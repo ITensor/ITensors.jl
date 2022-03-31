@@ -25,5 +25,5 @@ adding methods to a function in ITensor that supports multiple algorithm
 backends (like contracting an MPO with an MPS).
 """
 macro Algorithm_str(s)
-  :(Algorithm{$(Expr(:quote, Symbol(s)))})
+  return :(Algorithm{$(Expr(:quote, Symbol(s)))})
 end
