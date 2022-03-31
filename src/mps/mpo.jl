@@ -479,28 +479,18 @@ end
 
 (A::MPO)(ψ::MPS; kwargs...) = apply(A, ψ; kwargs...)
 
-function contract(A::MPO, ψ::MPS; kwargs...)
-  method = get(kwargs, :method, "densitymatrix")
-
+function contract(A::MPO, ψ::MPS; method="densitymatrix", kwargs...)
   # Keyword argument deprecations
   if method == "DensityMatrix"
     @warn "In contract, method DensityMatrix is deprecated in favor of densitymatrix"
     method = "densitymatrix"
   end
-
   if method == "Naive"
     @warn "In contract, method Naive is deprecated in favor of naive"
     method = "naive"
   end
 
-  if method == "densitymatrix"
-    Aψ = _contract_densitymatrix(A, ψ; kwargs...)
-  elseif method == "naive"
-    Aψ = _contract_naive(A, ψ; kwargs...)
-  else
-    throw(ArgumentError("Method $method not supported"))
-  end
-  return Aψ
+  return contract(Algorithm(method), A, ψ; kwargs...)
 end
 
 contract_mpo_mps_doc = """
@@ -555,7 +545,7 @@ contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
 
 #@doc (@doc contract(::MPO, ::MPS)) *(::MPO, ::MPS)
 
-function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
+function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   n = length(A)
   n != length(ψ) &&
     throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(ψ))) do not match"))
@@ -636,7 +626,7 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   return ψ_out
 end
 
-function _contract_naive(A::MPO, ψ::MPS; kwargs...)::MPS
+function contract(::Algorithm"naive", A::MPO, ψ::MPS; kwargs...)::MPS
   truncate = get(kwargs, :truncate, true)
 
   N = length(A)

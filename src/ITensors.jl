@@ -71,6 +71,13 @@ using Zeros
 include("utils.jl")
 
 #####################################
+# Algorithm type for selecting
+# different algorithm backends
+# (for internal or advanced usage)
+#
+include("algorithm.jl")
+
+#####################################
 # ContractionSequenceOptimization
 #
 include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
