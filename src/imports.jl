@@ -48,6 +48,7 @@ import Base:
   map!,
   ndims,
   permutedims,
+  print,
   promote_rule,
   push!,
   resize!,
