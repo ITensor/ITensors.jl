@@ -43,7 +43,6 @@ function inv_op(::typeof(replaceprime), x, n1n2::Pair; kwargs...)
   return replaceprime(x, reverse(n1n2); kwargs...)
 end
 
-
 function inv_op(::typeof(addtags), x, args...; kwargs...)
   return removetags(x, args...; kwargs...)
 end
@@ -61,19 +60,10 @@ _check_inds(x::MPS, y::MPS) = hassameinds(siteinds, x, y)
 _check_inds(x::MPO, y::MPO) = hassameinds(siteinds, x, y)
 
 for fname in (
-  :prime,
-  :setprime,
-  :noprime,
-  :replaceprime,
-  :addtags,
-  :removetags,
-  :replacetags,
-  :settags,
+  :prime, :setprime, :noprime, :replaceprime, :addtags, :removetags, :replacetags, :settags
 )
   @eval begin
-    function ChainRulesCore.rrule(
-      f::typeof($fname), x::Union{MPS,MPO}, a...; kwargs...
-    )
+    function ChainRulesCore.rrule(f::typeof($fname), x::Union{MPS,MPO}, a...; kwargs...)
       y = f(x, a...; kwargs...)
       function f_pullback(ȳ)
         x̄ = inv_op(f, unthunk(ȳ), a...; kwargs...)
@@ -107,9 +97,7 @@ for fname in (
   :swapinds,
 )
   @eval begin
-    function ChainRulesCore.rrule(
-      f::typeof($fname), x::ITensor, a...; kwargs...
-    )
+    function ChainRulesCore.rrule(f::typeof($fname), x::ITensor, a...; kwargs...)
       y = f(x, a...; kwargs...)
       function f_pullback(ȳ)
         uȳ = unthunk(ȳ)

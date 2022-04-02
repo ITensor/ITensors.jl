@@ -48,7 +48,7 @@ Random.seed!(1234)
   )
   test_rrule(
     swaptags, randomITensor(Index(2, "i"), Index(2, "j")), "i", "j"; check_inferred=false
-  )  
+  )
   test_rrule(replaceind, A, i' => sim(i); check_inferred=false)
   test_rrule(replaceind, A, i', sim(i); check_inferred=false)
   test_rrule(replaceinds, A, (i, i') => (sim(i), sim(i)); check_inferred=false)
