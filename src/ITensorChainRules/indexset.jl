@@ -43,9 +43,6 @@ function inv_op(::typeof(replaceprime), x, n1n2::Pair; kwargs...)
   return replaceprime(x, reverse(n1n2); kwargs...)
 end
 
-function inv_op(::typeof(swapprime), x, n1n2::Pair; kwargs...)
-  return swapprime(x, reverse(n1n2); kwargs...)
-end
 
 function inv_op(::typeof(addtags), x, args...; kwargs...)
   return removetags(x, args...; kwargs...)
@@ -59,29 +56,39 @@ function inv_op(::typeof(replacetags), x, n1n2::Pair; kwargs...)
   return replacetags(x, reverse(n1n2); kwargs...)
 end
 
-function inv_op(::typeof(swaptags), x, n1n2::Pair; kwargs...)
-  return swaptags(x, reverse(n1n2); kwargs...)
-end
-
-function inv_op(::typeof(replaceind), x, n1n2::Pair; kwargs...)
-  return replaceind(x, reverse(n1n2); kwargs...)
-end
-
-function inv_op(::typeof(replaceinds), x, n1n2::Pair; kwargs...)
-  return replaceinds(x, reverse(n1n2); kwargs...)
-end
-
-function inv_op(::typeof(swapind), x, args...; kwargs...)
-  return swapind(x, reverse(args)...; kwargs...)
-end
-
-function inv_op(::typeof(swapinds), x, args...; kwargs...)
-  return swapinds(x, reverse(args)...; kwargs...)
-end
-
 _check_inds(x::ITensor, y::ITensor) = hassameinds(x, y)
 _check_inds(x::MPS, y::MPS) = hassameinds(siteinds, x, y)
 _check_inds(x::MPO, y::MPO) = hassameinds(siteinds, x, y)
+
+for fname in (
+  :prime,
+  :setprime,
+  :noprime,
+  :replaceprime,
+  :addtags,
+  :removetags,
+  :replacetags,
+  :settags,
+)
+  @eval begin
+    function ChainRulesCore.rrule(
+      f::typeof($fname), x::Union{MPS,MPO}, a...; kwargs...
+    )
+      y = f(x, a...; kwargs...)
+      function f_pullback(ȳ)
+        x̄ = inv_op(f, unthunk(ȳ), a...; kwargs...)
+        if !_check_inds(x, x̄)
+          error(
+            "Trying to differentiate function `$f` with arguments $a and keyword arguments $kwargs. The forward pass indices $(inds(x)) do not match the reverse pass indices $(inds(x̄)). Likely this is because the priming/tagging operation you tried to perform is not invertible. Please write your code in a way where the index manipulation operation you are performing is invertible. For example, `prime(A::ITensor)` is invertible, with an inverse `prime(A, -1)`. However, `noprime(A)` is in general not invertible since the information about the prime levels of the original tensor are lost. Instead, you might try `prime(A, -1)` or `replaceprime(A, 1 => 0)` which are invertible.",
+          )
+        end
+        ā = broadcast_notangent(a)
+        return (NoTangent(), x̄, ā...)
+      end
+      return y, f_pullback
+    end
+  end
+end
 
 for fname in (
   :prime,
@@ -101,16 +108,12 @@ for fname in (
 )
   @eval begin
     function ChainRulesCore.rrule(
-      f::typeof($fname), x::Union{ITensor,MPS,MPO}, a...; kwargs...
+      f::typeof($fname), x::ITensor, a...; kwargs...
     )
       y = f(x, a...; kwargs...)
       function f_pullback(ȳ)
-        x̄ = inv_op(f, unthunk(ȳ), a...; kwargs...)
-        if !_check_inds(x, x̄)
-          error(
-            "Trying to differentiate function `$f` with arguments $a and keyword arguments $kwargs. The forward pass indices $(inds(x)) do not match the reverse pass indices $(inds(x̄)). Likely this is because the priming/tagging operation you tried to perform is not invertible. Please write your code in a way where the index manipulation operation you are performing is invertible. For example, `prime(A::ITensor)` is invertible, with an inverse `prime(A, -1)`. However, `noprime(A)` is in general not invertible since the information about the prime levels of the original tensor are lost. Instead, you might try `prime(A, -1)` or `replaceprime(A, 1 => 0)` which are invertible.",
-          )
-        end
+        uȳ = unthunk(ȳ)
+        x̄ = replaceinds(uȳ, inds(y), inds(x))
         ā = broadcast_notangent(a)
         return (NoTangent(), x̄, ā...)
       end
