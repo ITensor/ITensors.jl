@@ -1,5 +1,6 @@
 using ITensors
 import ITensors: op
+using Printf
 
 function op(::OpName"expτSS", ::SiteType"S=1/2", s1::Index, s2::Index; τ)
   h =
@@ -9,7 +10,7 @@ function op(::OpName"expτSS", ::SiteType"S=1/2", s1::Index, s2::Index; τ)
   return exp(τ * h)
 end
 
-function main(; N=10, cutoff=1E-8, δτ=0.05, beta_max=2.0)
+function main(; N=10, cutoff=1E-8, δτ=0.1, beta_max=2.0)
   L = 2 * N
 
   # Make an array of 'site' indices
@@ -22,23 +23,8 @@ function main(; N=10, cutoff=1E-8, δτ=0.05, beta_max=2.0)
   # Include gates in reverse order to complete Trotter formula
   append!(gates, reverse(gates))
 
-  # Initialize psi to be a product of Bell pairs
-  psi = MPS(L)
-  for j in 1:2:(L - 1)
-    s1 = s[j]
-    s2 = s[j + 1]
-    bell = ITensor([0 1/√2; 1/√2 0], s1, s2)
-    # Restore MPS form
-    U, S, V = svd(bell, s1)
-    psi[j] = U * S
-    psi[j + 1] = V
-  end
-  # Put in remaining link indices
-  for j in 2:2:(L - 1)
-    l = Index([QN() => 1], "n=$j")
-    psi[j] *= dag(onehot(l => 1))
-    psi[j + 1] *= onehot(l => 1)
-  end
+  # Initial state is infinite-temperature mixed state
+  rho = MPO(s, "Id") ./ √2
 
   # Make H for measuring the energy
   terms = OpSum()
@@ -51,12 +37,11 @@ function main(; N=10, cutoff=1E-8, δτ=0.05, beta_max=2.0)
 
   # Do the time evolution by applying the gates
   # for Nsteps steps
-  for τ in 0:δτ:(beta_max / 2)
-    En = inner(psi', H, psi)
-    β = 2τ
-    println("β = $β energy = $En")
-    psi = apply(gates, psi; cutoff)
-    normalize!(psi)
+  for β in 0:δτ:beta_max
+    energy = inner(rho, H)
+    @printf("β = %.2f energy = %.8f\n", β, energy)
+    rho = apply(gates, rho; cutoff)
+    rho = rho / tr(rho)
   end
 
   return nothing
