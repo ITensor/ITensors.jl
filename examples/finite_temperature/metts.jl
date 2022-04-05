@@ -57,7 +57,7 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
     error("Time step δτ=$δτ not commensurate with beta/2=$(beta/2)")
   end
 
-  Ens = Float64[]
+  energies = Float64[]
 
   for step in 1:(Nwarm + NMETTS)
     if step <= Nwarm
@@ -76,16 +76,15 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
     # METTS have been made
     if step > Nwarm
       energy = inner(psi', H, psi)
-      push!(Ens, energy)
-      Nm = length(Ens)
-      @printf("  Energy of METTS %d = %.4f\n", Nm, energy)
-      a_En, err_En = avg_err(Ens)
+      push!(energies, energy)
+      @printf("  Energy of METTS %d = %.4f\n", step - Nwarm, energy)
+      a_E, err_E = avg_err(energies)
       @printf(
         "  Estimated Energy = %.4f +- %.4f  [%.4f,%.4f]\n",
-        a_En,
-        err_En,
-        a_En - err_En,
-        a_En + err_En
+        a_E,
+        err_E,
+        a_E - err_E,
+        a_E + err_E
       )
     end
 
