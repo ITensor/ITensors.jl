@@ -197,8 +197,8 @@ include("util.jl")
     @test norm(phic[4]) ≈ 1.0
   end
 
-  @testset "randomCircuitMPS bond dimensions" begin
-    phi = randomCircuitMPS(ComplexF64, sites, 32)
+  @testset "randomMPS bond dimensions" begin
+    phi = randomMPS(ComplexF64, sites)
     expected_dims = [2, 4, 8, 16, 32, 16, 8, 4, 2]
 
     for i in 1:9

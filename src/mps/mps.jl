@@ -127,7 +127,7 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
   end
 end
 
-function myRandomCircuitMPS(
+function randomCircuitMPS(
   ::Type{ElT}, sites::Vector{<:Index}, linkdim::Int; kwargs...
 ) where {ElT<:Number}
   _rmatrix(::Type{Float64}, n, m) = NDTensors.random_orthog(n, m)
