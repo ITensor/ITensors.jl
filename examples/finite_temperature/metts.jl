@@ -59,8 +59,6 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
 
   energies = Float64[]
 
-  sz_mat = zeros(NMETTS, N)
-
   for step in 1:(Nwarm + NMETTS)
     if step <= Nwarm
       println("Making warmup METTS number $step")
@@ -88,8 +86,6 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
         a_E - err_E,
         a_E + err_E
       )
-
-      sz_mat[step - Nwarm, :] = expect(psi, "Sz")
     end
 
     # Measure in X or Z basis on alternating steps
@@ -104,5 +100,5 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta=2.0, NMETTS=3000, Nwarm=10)
     psi = productMPS(s, new_state)
   end
 
-  return sz_mat
+  return nothing
 end
