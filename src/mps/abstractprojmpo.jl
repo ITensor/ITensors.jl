@@ -24,6 +24,8 @@ site indices of the ProjMPO object `P`
 """
 nsite(P::AbstractProjMPO) = P.nsite
 
+set_nsite!(::AbstractProjMPO, nsite) = error("Not implemented")
+
 # The range of center sites
 site_range(P::AbstractProjMPO) = (P.lpos + 1):(P.rpos - 1)
 
