@@ -45,21 +45,7 @@ function rproj(P::AbstractProjMPO)::Union{ITensor,OneITensor}
   return P.LR[P.rpos]
 end
 
-"""
-    product(P::ProjMPO,v::ITensor)::ITensor
-
-    (P::ProjMPO)(v::ITensor)
-
-Efficiently multiply the ProjMPO `P`
-by an ITensor `v` in the sense that the
-ProjMPO is a generalized square matrix
-or linear operator and `v` is a generalized
-vector in the space where it acts. The
-returned ITensor will have the same indices
-as `v`. The operator overload `P(v)` is
-shorthand for `product(P,v)`.
-"""
-function product(P::AbstractProjMPO, v::ITensor)::ITensor
+function contract(P::AbstractProjMPO, v::ITensor)::ITensor
   itensor_map = Union{ITensor,OneITensor}[lproj(P)]
   append!(itensor_map, P.H[site_range(P)])
   push!(itensor_map, rproj(P))
@@ -76,21 +62,38 @@ function product(P::AbstractProjMPO, v::ITensor)::ITensor
   for it in itensor_map
     Hv *= it
   end
+  return Hv
+end
 
-  if order(Hv) != order(v)
+"""
+    product(P::ProjMPO,v::ITensor)::ITensor
+
+    (P::ProjMPO)(v::ITensor)
+
+Efficiently multiply the ProjMPO `P`
+by an ITensor `v` in the sense that the
+ProjMPO is a generalized square matrix
+or linear operator and `v` is a generalized
+vector in the space where it acts. The
+returned ITensor will have the same indices
+as `v`. The operator overload `P(v)` is
+shorthand for `product(P,v)`.
+"""
+function product(P::AbstractProjMPO, v::ITensor)::ITensor
+  Pv = contract(P, v)
+  if order(Pv) != order(v)
     error(
       string(
         "The order of the ProjMPO-ITensor product P*v is not equal to the order of the ITensor v, ",
         "this is probably due to an index mismatch.\nCommon reasons for this error: \n",
         "(1) You are trying to multiply the ProjMPO with the $(nsite(P))-site wave-function at the wrong position.\n",
-        "(2) `orthognalize!` was called, changing the MPS without updating the ProjMPO.\n\n",
-        "P*v inds: $(inds(Hv)) \n\n",
+        "(2) `orthogonalize!` was called, changing the MPS without updating the ProjMPO.\n\n",
+        "P*v inds: $(inds(Pv)) \n\n",
         "v inds: $(inds(v))",
       ),
     )
   end
-
-  return noprime(Hv)
+  return noprime(Pv)
 end
 
 (P::AbstractProjMPO)(v::ITensor) = product(P, v)
