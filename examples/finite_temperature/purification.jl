@@ -1,8 +1,7 @@
 using ITensors
-import ITensors: op
 using Printf
 
-function op(::OpName"expτSS", ::SiteType"S=1/2", s1::Index, s2::Index; τ)
+function ITensors.op(::OpName"expτSS", ::SiteType"S=1/2", s1::Index, s2::Index; τ)
   h =
     1 / 2 * op("S+", s1) * op("S-", s2) +
     1 / 2 * op("S-", s1) * op("S+", s2) +
