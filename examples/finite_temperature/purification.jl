@@ -11,15 +11,12 @@ function op(::OpName"expτSS", ::SiteType"S=1/2", s1::Index, s2::Index; τ)
 end
 
 function main(; N=10, cutoff=1E-8, δτ=0.1, beta_max=2.0)
-  L = 2 * N
 
   # Make an array of 'site' indices
-  s = siteinds("S=1/2", L; conserve_qns=true)
+  s = siteinds("S=1/2", N; conserve_qns=true)
 
-  # Make gates (1,3),(3,5),(5,7),...
-  # Only on physical (odd numbered) sites
-  # Even sites are "ancilla" sites and have no Hamiltonian terms
-  gates = ops([("expτSS", (n, n + 2), (τ=-δτ / 2,)) for n in 1:2:(L - 2)], s)
+  # Make gates (1,2),(2,3),(3,4),...
+  gates = ops([("expτSS", (n, n + 1), (τ=-δτ / 2,)) for n in 1:(N - 1)], s)
   # Include gates in reverse order to complete Trotter formula
   append!(gates, reverse(gates))
 
@@ -28,10 +25,10 @@ function main(; N=10, cutoff=1E-8, δτ=0.1, beta_max=2.0)
 
   # Make H for measuring the energy
   terms = OpSum()
-  for j in 1:2:(L - 2)
-    terms += 1 / 2, "S+", j, "S-", j + 2
-    terms += 1 / 2, "S-", j, "S+", j + 2
-    terms += "Sz", j, "Sz", j + 2
+  for j in 1:(N - 1)
+    terms += 1 / 2, "S+", j, "S-", j + 1
+    terms += 1 / 2, "S-", j, "S+", j + 1
+    terms += "Sz", j, "Sz", j + 1
   end
   H = MPO(terms, s)
 
