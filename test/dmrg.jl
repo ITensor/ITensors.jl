@@ -138,7 +138,6 @@ using ITensors: nsite, set_nsite!
     psi = randomMPS(sites, state; linkdims=4)
     PH1 = ProjMPO(H1)
     PH = ProjMPOSum([H1, H2])
-    
     @test nsite(PH1) == 2
     @test nsite(PH) == 2
 
