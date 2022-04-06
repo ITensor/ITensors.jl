@@ -13,6 +13,7 @@ Bugs:
 
 Enhancements:
 
+- Introduce `set_nsite!` generic `AbstractProjMPO` function (#894)
 - Factorize out `contract(::ProjMPO, ::ITensor)` (#893)
 
 ITensors v0.3.1 Release Notes
