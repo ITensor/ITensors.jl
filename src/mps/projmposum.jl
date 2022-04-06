@@ -33,6 +33,13 @@ ProjMPOSum(Ms::MPO...) = ProjMPOSum([Ms...])
 
 nsite(P::ProjMPOSum) = nsite(P.pm[1])
 
+function set_nsite!(Ps::ProjMPOSum, nsite)
+  for P in Ps.pm
+    set_nsite!(P, nsite)
+  end
+  return Ps
+end
+
 Base.length(P::ProjMPOSum) = length(P.pm[1])
 
 """

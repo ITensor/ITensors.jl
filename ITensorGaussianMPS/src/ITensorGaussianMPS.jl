@@ -9,6 +9,7 @@ import LinearAlgebra: Givens
 
 export slater_determinant_to_mps,
   slater_determinant_to_gmps,
+  slater_determinant_to_gmera,
   hopping_hamiltonian,
   slater_determinant_matrix,
   retarded_green_function,
@@ -16,6 +17,7 @@ export slater_determinant_to_mps,
   greater_green_function
 
 include("gmps.jl")
+include("gmera.jl")
 include("dynamics.jl")
 
 end

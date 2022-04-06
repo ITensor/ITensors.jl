@@ -13,6 +13,14 @@ ProjMPO_MPS(H::MPO, Ms::MPS...; weight=1.0) = ProjMPO_MPS(H, [Ms...], weight)
 
 nsite(P::ProjMPO_MPS) = nsite(P.PH)
 
+function set_nsite!(Ps::ProjMPO_MPS, nsite)
+  set_nsite!(Ps.PH, nsite)
+  for P in Ps.pm
+    set_nsite!(P, nsite)
+  end
+  return Ps
+end
+
 Base.length(P::ProjMPO_MPS) = length(P.PH)
 
 function product(P::ProjMPO_MPS, v::ITensor)::ITensor

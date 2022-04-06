@@ -112,7 +112,7 @@ using ITensors, Test
     @test maxlinkdim(K) == 1
     psi_out = contract(K, psi; maxdim=1)
     @test inner(phi', psi_out) ≈ inner(phi', K, psi)
-    @test_throws ArgumentError contract(K, psi; method="fakemethod")
+    @test_throws MethodError contract(K, psi; method="fakemethod")
   end
 
   # TODO: implement add for QN MPOs and add this test back

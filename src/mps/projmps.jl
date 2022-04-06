@@ -10,6 +10,11 @@ end
 
 nsite(P::ProjMPS) = P.nsite
 
+function set_nsite!(P::ProjMPS, nsite)
+  P.nsite = nsite
+  return P
+end
+
 Base.length(P::ProjMPS) = length(P.M)
 
 function lproj(P::ProjMPS)

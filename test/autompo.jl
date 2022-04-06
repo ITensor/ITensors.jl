@@ -853,16 +853,16 @@ end
     p011 = productMPS(s, [1, 2, 2, 1, 1])
     p110 = productMPS(s, [2, 2, 1, 1, 1])
 
-    @test inner(p110, M1, p011) ≈ -1.0
-    @test inner(p110, M2, p011) ≈ -1.0
-    @test inner(p110, M3, p011) ≈ -1.0
+    @test inner(p110', M1, p011) ≈ -1.0
+    @test inner(p110', M2, p011) ≈ -1.0
+    @test inner(p110', M3, p011) ≈ -1.0
 
     p001 = productMPS(s, [1, 1, 2, 1, 1])
     p100 = productMPS(s, [2, 1, 1, 1, 1])
 
-    @test inner(p100, M1, p001) ≈ +1.0
-    @test inner(p100, M2, p001) ≈ +1.0
-    @test inner(p100, M3, p001) ≈ 0.0
+    @test inner(p100', M1, p001) ≈ +1.0
+    @test inner(p100', M2, p001) ≈ +1.0
+    @test inner(p100', M3, p001) ≈ 0.0
 
     #
     # Repeat similar test but

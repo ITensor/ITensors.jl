@@ -1500,7 +1500,11 @@ Perform a truncation of all bonds of an MPS/MPO,
 using the truncation parameters (cutoff,maxdim, etc.)
 provided as keyword arguments.
 """
-function truncate!(M::AbstractMPS; kwargs...)
+function truncate!(M::AbstractMPS; alg="frobenius", kwargs...)
+  return truncate!(Algorithm(alg), M; kwargs...)
+end
+
+function truncate!(::Algorithm"frobenius", M::AbstractMPS; kwargs...)
   N = length(M)
 
   # Left-orthogonalize all tensors to make
