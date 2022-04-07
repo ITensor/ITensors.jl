@@ -27,6 +27,8 @@ mutable struct ProjMPOSum
   pm::Vector{ProjMPO}
 end
 
+copy(P::ProjMPOSum) = ProjMPOSum(copy.(P.pm))
+
 ProjMPOSum(mpos::Vector{MPO}) = ProjMPOSum([ProjMPO(M) for M in mpos])
 
 ProjMPOSum(Ms::MPO...) = ProjMPOSum([Ms...])

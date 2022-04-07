@@ -1,9 +1,10 @@
-
 mutable struct ProjMPO_MPS
   PH::ProjMPO
   pm::Vector{ProjMPS}
   weight::Float64
 end
+
+copy(P::ProjMPO_MPS) = ProjMPO_MPS(copy(P.PH), copy.(P.pm), P.weight)
 
 function ProjMPO_MPS(H::MPO, mpsv::Vector{MPS}; weight=1.0)
   return ProjMPO_MPS(ProjMPO(H), [ProjMPS(m) for m in mpsv], weight)

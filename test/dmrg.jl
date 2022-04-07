@@ -99,6 +99,8 @@ using ITensors: nsite, set_nsite!
     psi = randomMPS(sites, state; linkdims=4)
     PH = ProjMPO(H)
 
+    PHc = copy(PH)
+
     n = 4
     orthogonalize!(psi, n)
     position!(PH, psi, n)
@@ -111,6 +113,8 @@ using ITensors: nsite, set_nsite!
     @test size(PH) == (3^2 * 4^2, 3^2 * 4^2)
     @test PH.lpos == n - 1
     @test PH.rpos == n + 2
+    @test PHc.lpos == 0
+    @test PHc.rpos == N + 1
     @test rproj(PH) ≈ rproj(PHdisk)
     @test PHdisk.LR isa ITensors.DiskVector{ITensor}
     @test PHdisk.LR[PHdisk.rpos] ≈ PHdisk.Rcache
@@ -138,14 +142,22 @@ using ITensors: nsite, set_nsite!
     psi = randomMPS(sites, state; linkdims=4)
     PH1 = ProjMPO(H1)
     PH = ProjMPOSum([H1, H2])
+    PH1c = copy(PH1)
+    PHc = copy(PH)
     @test nsite(PH1) == 2
     @test nsite(PH) == 2
+    @test nsite(PH1c) == 2
+    @test nsite(PHc) == 2
 
     set_nsite!(PH1, 3)
     @test nsite(PH1) == 3
+    @test nsite(PH1c) == 2
+    @test nsite(PHc) == 2
 
     set_nsite!(PH, 4)
     @test nsite(PH) == 4
+    @test nsite(PH1c) == 2
+    @test nsite(PHc) == 2
   end
 
   @testset "Transverse field Ising" begin
