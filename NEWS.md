@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.3 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Add `copy` for `AbstractProjMPO` (#895)
+
 ITensors v0.3.2 Release Notes
 =============================
 
