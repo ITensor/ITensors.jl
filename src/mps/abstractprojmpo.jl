@@ -9,6 +9,8 @@ inds(::OneITensor) = ()
 
 abstract type AbstractProjMPO end
 
+copy(::AbstractProjMPO) = error("Not implemented")
+
 # This is to help with generic promote_type code
 # in eltype(::AbstractProjMPO)
 eltype(::OneITensor) = Bool

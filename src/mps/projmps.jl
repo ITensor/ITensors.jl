@@ -5,8 +5,10 @@ mutable struct ProjMPS
   nsite::Int
   M::MPS
   LR::Vector{ITensor}
-  ProjMPS(M::MPS) = new(0, length(M) + 1, 2, M, Vector{ITensor}(undef, length(M)))
 end
+ProjMPS(M::MPS) = ProjMPS(0, length(M) + 1, 2, M, Vector{ITensor}(undef, length(M)))
+
+copy(P::ProjMPS) = ProjMPS(P.lpos, P.rpos, P.nsite, copy(P.M), copy(P.LR))
 
 nsite(P::ProjMPS) = P.nsite
 
