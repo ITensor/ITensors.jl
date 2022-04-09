@@ -236,7 +236,7 @@ Random.seed!(1234)
   test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   f = x -> prime(x; plev=1)[1, 1]
   args = (A,)
-  @test_throws ErrorException f'(args...)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   W = itensor([1 1] / √2, i)
   f = x -> inner(W', exp(x), W)
