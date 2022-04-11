@@ -78,10 +78,10 @@ end
 
 import ITensors.NDTensors: GemmBackend, auto_select_backend, _gemm!
 function backend_cutensor()
-    return gemm_backend[] = :CUTENSOR
+  return gemm_backend[] = :CUTENSOR
 end
 function backend_cublas()
-    return gemm_backend[] = :CUBLAS
+  return gemm_backend[] = :CUBLAS
 end
 
 @inline function auto_select_backend(
@@ -93,9 +93,7 @@ end
 end
 
 @inline function auto_select_backend(
-  ::Type{<:CuArray{<:BlasFloat}},
-  ::Type{<:CuArray{<:BlasFloat}},
-  ::Type{<:AbstractVecOrMat},
+  ::Type{<:CuArray{<:BlasFloat}}, ::Type{<:CuArray{<:BlasFloat}}, ::Type{<:AbstractVecOrMat}
 )
   return GemmBackend(:GenericCUDA)
 end
@@ -130,7 +128,7 @@ function _gemm!(
   B_ = tB == 'T' ? transpose(B) : B
   C_dat = mul!(C_dat, A_, B_, alpha, beta)
   copyto!(data(store(C)), C_dat)
-  return C 
+  return C
 end
 
 function _contract_scalar!(

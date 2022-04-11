@@ -1,4 +1,4 @@
-import ITensors.NDTensors: NeverAlias, AliasStyle, AllowAlias 
+import ITensors.NDTensors: NeverAlias, AliasStyle, AllowAlias
 import ITensors: ITensor
 import CUDA: CuArray
 
@@ -17,7 +17,6 @@ function cuITensor(x::S, inds::IndexSet{N}) where {S<:Number,N}
   return ITensor(Dense{S}(dat), inds)
 end
 cuITensor(x::S, inds::Index...) where {S<:Number} = cuITensor(x, IndexSet(inds...))
-
 
 function ITensor(
   as::AliasStyle,

@@ -58,7 +58,7 @@ using ITensors,
       dC = complex(dA)
       @test typeof(dC) !== typeof(dA)
       cdC = CuArray(dC)
-      hC  = collect(cdC)
+      hC = collect(cdC)
       ccA = complex.(A)
       @test hC == collect(ccA)
     end

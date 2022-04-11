@@ -344,7 +344,9 @@ function copyto!(
 end
 
 # If they are something more complicated like views, use Strided copyto!
-function copyto!(R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}) where {N, StoreT<:StridedArray}
+function copyto!(
+  R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}
+) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
   @strided RA .= TA
@@ -354,7 +356,7 @@ end
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function permutedims!(
   R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}, perm::NTuple{N,Int}
-) where {N, StoreT<:StridedArray}
+) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
   @strided RA .= permutedims(TA, perm)
@@ -378,7 +380,11 @@ function permutedims!(
   return R
 end
 
-function apply!(R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}, f::Function=(r, t) -> t) where {N,StoreT<:StridedArray}
+function apply!(
+  R::DenseTensor{<:Number,N,StoreT},
+  T::DenseTensor{<:Number,N,StoreT},
+  f::Function=(r, t) -> t,
+) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
   @strided RA .= f.(RA, TA)
@@ -394,7 +400,12 @@ end
 
 # Version that may overwrite the result or promote
 # and return the result
-function permutedims!!(R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}, perm::Tuple, f::Function=(r, t) -> t) where {N, StoreT<:StridedArray}
+function permutedims!!(
+  R::DenseTensor{<:Number,N,StoreT},
+  T::DenseTensor{<:Number,N,StoreT},
+  perm::Tuple,
+  f::Function=(r, t) -> t,
+) where {N,StoreT<:StridedArray}
   RR = convert(promote_type(typeof(R), typeof(T)), R)
   RA = ReshapedArray(data(RR), dims(RR), ())
   TA = ReshapedArray(data(T), dims(T), ())
