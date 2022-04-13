@@ -748,6 +748,28 @@ size(A::ITensor, d::Int) = size(tensor(A), d)
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 
+function convert_eltype(ElType::Type, T::ITensor)
+  if eltype(T) == ElType
+    return T
+  end
+  return itensor(ElType.(tensor(T)))
+end
+
+function convert_leaf_eltype(ElType::Type, T::ITensor)
+  return convert_eltype(ElType, T)
+end
+
+"""
+    convert_leaf_eltype(ElType::Type, A::Array)
+
+Convert the element type of the lowest level containers
+("leaves") of a recursive data structure, such as
+an Vector of Vectors.
+"""
+function convert_leaf_eltype(ElType::Type, A::Array)
+  return map(x -> convert_leaf_eltype(ElType, x), A)
+end
+
 """
     Array{ElT, N}(T::ITensor, i:Index...)
     Array{ElT}(T::ITensor, i:Index...)
@@ -1730,11 +1752,11 @@ function (A::ITensor - B::ITensor)
   return C
 end
 
-Base.real(T::ITensor)::ITensor = itensor(real(tensor(T)))
+real(T::ITensor)::ITensor = itensor(real(tensor(T)))
 
-Base.imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
+imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
 
-Base.conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
+conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
 
 # Function barrier
 function _contract(A::Tensor, B::Tensor)
@@ -2220,6 +2242,8 @@ function directsum(A::ITensor, B::ITensor, I, J; tags)
 end
 
 """
+    apply(A::ITensor, B::ITensor)
+    (A::ITensor)(B::ITensor)
     product(A::ITensor, B::ITensor)
 
 Get the product of ITensor `A` and ITensor `B`, which
@@ -2368,6 +2392,8 @@ end
 
 # Alias apply with product
 const apply = product
+
+(A::ITensor)(B::ITensor) = apply(A, B)
 
 const Apply{Args} = Applied{typeof(apply),Args}
 
@@ -2556,13 +2582,44 @@ isempty(T::ITensor) = isemptystorage(T)
 Given an ITensor `T`, returns
 an Array with a copy of the ITensor's elements,
 or a view in the case the the ITensor's storage is Dense.
+
 The ordering of the elements in the Array, in
 terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
-*Therefore this method is intended for developer use
-only and not recommended for use in ITensor applications.*
+
+!!! warning
+    This method is intended for developer use
+    only and not recommended for use in ITensor applications
+    unless you know what you are doing (for example
+    you are certain of the memory ordering of the ITensor
+    because you permuted the indices into a certain order).
+
+See also [`matrix`](@ref), [`vector`](@ref).
 """
 array(T::ITensor) = array(tensor(T))
+
+"""
+    array(T::ITensor, inds...)
+
+Convert an ITensor `T` to an Array.
+
+The ordering of the elements in the Array are specified
+by the input indices `inds`. This tries to avoid copying
+of possible (i.e. may return a view of the original
+data), for example if the ITensor's storage is Dense
+and the indices are already in the specified ordering
+so that no permutation is required.
+
+!!! warning
+    Note that in the future we may return specialized
+    AbstractArray types for certain storage types,
+    for example a `LinearAlgebra.Diagonal` type for
+    an ITensor with `Diag` storage. The specific storage
+    type shouldn't be relied upon.
+
+See also [`matrix`](@ref), [`vector`](@ref).
+"""
+array(T::ITensor, inds...) = array(permute(T, inds...; allow_alias=true))
 
 """
     matrix(T::ITensor)
@@ -2570,11 +2627,19 @@ array(T::ITensor) = array(tensor(T))
 Given an ITensor `T` with two indices, returns
 a Matrix with a copy of the ITensor's elements,
 or a view in the case the ITensor's storage is Dense.
+
 The ordering of the elements in the Matrix, in
 terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
-*Therefore this method is intended for developer use
-only and not recommended for use in ITensor applications.*
+
+!!! warning
+    This method is intended for developer use
+    only and not recommended for use in ITensor applications
+    unless you know what you are doing (for example
+    you are certain of the memory ordering of the ITensor
+    because you permuted the indices into a certain order).
+
+See also [`array`](@ref), [`vector`](@ref).
 """
 function matrix(T::ITensor)
   ndims(T) != 2 && throw(DimensionMismatch())
@@ -2582,16 +2647,65 @@ function matrix(T::ITensor)
 end
 
 """
+    matrix(T::ITensor, inds...)
+
+Convert an ITensor `T` to a Matrix.
+
+The ordering of the elements in the Matrix are specified
+by the input indices `inds`. This tries to avoid copying
+of possible (i.e. may return a view of the original
+data), for example if the ITensor's storage is Dense
+and the indices are already in the specified ordering
+so that no permutation is required.
+
+!!! warning
+    Note that in the future we may return specialized
+    AbstractArray types for certain storage types,
+    for example a `LinearAlgebra.Diagonal` type for
+    an ITensor with `Diag` storage. The specific storage
+    type shouldn't be relied upon.
+
+See also [`array`](@ref), [`vector`](@ref).
+"""
+matrix(T::ITensor, inds...) = matrix(permute(T, inds...; allow_alias=true))
+
+"""
     vector(T::ITensor)
 
 Given an ITensor `T` with one index, returns
 a Vector with a copy of the ITensor's elements,
 or a view in the case the ITensor's storage is Dense.
+
+See also [`array`](@ref), [`matrix`](@ref).
 """
 function vector(T::ITensor)
   ndims(T) != 1 && throw(DimensionMismatch())
   return array(tensor(T))
 end
+
+"""
+    vector(T::ITensor, inds...)
+
+Convert an ITensor `T` to an Vector.
+
+The ordering of the elements in the Array are specified
+by the input indices `inds`. This tries to avoid copying
+of possible (i.e. may return a view of the original
+data), for example if the ITensor's storage is Dense
+and the indices are already in the specified ordering
+so that no permutation is required.
+
+!!! warning
+    Note that in the future we may return specialized
+    AbstractArray types for certain storage types,
+    for example a `LinearAlgebra.Diagonal` type for
+    an ITensor with `Diag` storage. The specific storage
+    type shouldn't be relied upon.
+
+See also [`array`](@ref), [`matrix`](@ref).
+"""
+vector(T::ITensor, inds...) = vector(permute(T, inds...; allow_alias=true))
+
 #######################################################################
 #
 # Printing, reading and writing ITensors
