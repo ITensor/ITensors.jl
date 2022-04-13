@@ -56,6 +56,15 @@ use `promote_itensor_eltype`.
 """
 eltype(::AbstractMPS) = ITensor
 
+complex(ψ::AbstractMPS) = complex.(ψ)
+real(ψ::AbstractMPS) = real.(ψ)
+imag(ψ::AbstractMPS) = imag.(ψ)
+conj(ψ::AbstractMPS) = conj.(ψ)
+
+function convert_leaf_eltype(ElType::Type, ψ::AbstractMPS)
+  return set_data(ψ, convert_leaf_eltype(ElType, data(ψ)))
+end
+
 """
     ITensors.data(::MPS/MPO)
 
@@ -65,6 +74,8 @@ This is not exported and mostly for internal usage, please let us
 know if there is functionality not available for MPS/MPO you would like.
 """
 data(m::AbstractMPS) = m.data
+
+contract(ψ::AbstractMPS) = contract(data(ψ))
 
 leftlim(m::AbstractMPS) = m.llim
 
@@ -119,6 +130,10 @@ function set_ortho_lims!(ψ::AbstractMPS, r::UnitRange{Int})
   setleftlim!(ψ, first(r) - 1)
   setrightlim!(ψ, last(r) + 1)
   return ψ
+end
+
+function set_ortho_lims(ψ::AbstractMPS, r::UnitRange{Int})
+  return set_ortho_lims!(copy(ψ), r)
 end
 
 reset_ortho_lims!(ψ::AbstractMPS) = set_ortho_lims!(ψ, 1:length(ψ))

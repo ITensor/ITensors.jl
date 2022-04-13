@@ -748,6 +748,28 @@ size(A::ITensor, d::Int) = size(tensor(A), d)
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 
+function convert_eltype(ElType::Type, T::ITensor)
+  if eltype(T) == ElType
+    return T
+  end
+  return itensor(ElType.(tensor(T)))
+end
+
+function convert_leaf_eltype(ElType::Type, T::ITensor)
+  return convert_eltype(ElType, T)
+end
+
+"""
+    convert_leaf_eltype(ElType::Type, A::Array)
+
+Convert the element type of the lowest level containers
+("leaves") of a recursive data structure, such as
+an Vector of Vectors.
+"""
+function convert_leaf_eltype(ElType::Type, A::Array)
+  return map(x -> convert_leaf_eltype(ElType, x), A)
+end
+
 """
     Array{ElT, N}(T::ITensor, i:Index...)
     Array{ElT}(T::ITensor, i:Index...)
@@ -1730,11 +1752,11 @@ function (A::ITensor - B::ITensor)
   return C
 end
 
-Base.real(T::ITensor)::ITensor = itensor(real(tensor(T)))
+real(T::ITensor)::ITensor = itensor(real(tensor(T)))
 
-Base.imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
+imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
 
-Base.conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
+conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
 
 # Function barrier
 function _contract(A::Tensor, B::Tensor)
@@ -2220,6 +2242,8 @@ function directsum(A::ITensor, B::ITensor, I, J; tags)
 end
 
 """
+    apply(A::ITensor, B::ITensor)
+    (A::ITensor)(B::ITensor)
     product(A::ITensor, B::ITensor)
 
 Get the product of ITensor `A` and ITensor `B`, which
@@ -2368,6 +2392,8 @@ end
 
 # Alias apply with product
 const apply = product
+
+(A::ITensor)(B::ITensor) = apply(A, B)
 
 const Apply{Args} = Applied{typeof(apply),Args}
 

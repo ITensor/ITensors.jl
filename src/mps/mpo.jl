@@ -15,6 +15,8 @@ function MPO(A::Vector{<:ITensor}; ortho_lims::UnitRange=1:length(A))
   return MPO(A, first(ortho_lims) - 1, last(ortho_lims) + 1)
 end
 
+set_data(A::MPO, data::Vector{ITensor}) = MPO(data, A.llim, A.rlim)
+
 MPO() = MPO(ITensor[], 0, 0)
 
 function convert(::Type{MPS}, M::MPO)
