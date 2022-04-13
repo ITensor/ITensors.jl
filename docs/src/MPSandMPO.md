@@ -112,8 +112,8 @@ settags(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITen
 ## Operations
 
 ```@docs
-expect(::MPS,::AbstractString...)
-correlation_matrix(::MPS,::AbstractString,::AbstractString)
+expect(::MPS, ::Any)
+correlation_matrix(::MPS, ::AbstractString, ::AbstractString)
 dag(::ITensors.AbstractMPS)
 dense(::ITensors.AbstractMPS)
 movesite(::ITensors.AbstractMPS, ::Pair{Int, Int};orthocenter::Int,kwargs...)
@@ -135,8 +135,14 @@ product(::Vector{ <: ITensor}, ::ITensors.AbstractMPS)
 ## Algebra Operations
 
 ```@docs
+inner(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
 dot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
+loginner(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
 logdot(::MPST, ::MPST) where {MPST <: ITensors.AbstractMPS}
+inner(::MPS, ::MPO, ::MPS)
+dot(::MPS, ::MPO, ::MPS)
+inner(::MPO, ::MPS, ::MPO, ::MPS)
+dot(::MPO, ::MPS, ::MPO, ::MPS)
 norm(::ITensors.AbstractMPS)
 normalize(::ITensors.AbstractMPS)
 normalize!(::ITensors.AbstractMPS)
