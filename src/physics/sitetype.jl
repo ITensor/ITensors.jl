@@ -393,9 +393,9 @@ end
 # an ITensor with the given indices.
 op(X::AbstractArray, s::Index...) = itensor(X, prime.([s...]), dag.([s...]))
 
-op(opname, s::Vector{<:Index}; kwargs...) = op(X, s...)
+op(opname, s::Vector{<:Index}; kwargs...) = op(opname, s...)
 
-op(s::Vector{<:Index}, opname; kwargs...) = op(X, s...)
+op(s::Vector{<:Index}, opname; kwargs...) = op(opname, s...)
 
 # For backwards compatibility, version of `op`
 # taking the arguments in the other order:

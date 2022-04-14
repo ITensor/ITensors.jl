@@ -14,6 +14,12 @@ using ITensors, Test
     SySy = op(sites, "Sy * Sy", 2)
     @test SySy ≈ product(Sy, Sy)
 
+    Sz1 = op("Sz", sites, 1)
+    @test op("Sz", [sites[1]]) ≈ Sz1
+    @test op([sites[1]], "Sz") ≈ Sz1
+    @test op([1 0; 0 -1] / 2, [sites[1]]) ≈ Sz1
+    @test op([sites[1]], [1 0; 0 -1] / 2) ≈ Sz1
+
     sites = siteinds("S=1", N)
     #@test_throws ArgumentError op(sites, "Sp", 1)
     Sz = op(sites, "Sz", 2)
