@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensorGPU v0.0.4 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- `cu([[A, B], [C]])` -> `[[cu(A), cu(B)], [cu(C)]]` and same for cpu (#898).
+
 ITensorGPU v0.0.3 Release Notes
 ===============================
 
