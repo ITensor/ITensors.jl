@@ -843,7 +843,7 @@ function sample(M::MPO)
     pn = 0.0
     while n <= d
       projn = ITensor(s)
-      projn[s[n]] = 1.0
+      projn[s => n] = 1.0
       pnc = (ρj * projn * prime(projn))[]
       if imag(pnc) > 1e-8
         @warn "In sample, probability $pnc is complex."
