@@ -389,15 +389,17 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   )
 end
 
-op(X::AbstractArray, s::Vector{<:Index}) = op(X, s...)
-
+# If a Matrix is passed instead of a String, turn the Matrix into
+# an ITensor with the given indices.
 op(X::AbstractArray, s::Index...) = itensor(X, prime.([s...]), dag.([s...]))
 
-op(s::Index, X::AbstractArray; kwargs...) = op(X, s; kwargs...)
+op(opname, s::Vector{<:Index}; kwargs...) = op(X, s...)
+
+op(s::Vector{<:Index}, opname; kwargs...) = op(X, s...)
 
 # For backwards compatibility, version of `op`
 # taking the arguments in the other order:
-op(s::Index, opname::AbstractString; kwargs...) = op(opname, s; kwargs...)
+op(s::Index, opname; kwargs...) = op(opname, s; kwargs...)
 
 # To ease calling of other op overloads,
 # allow passing a string as the op name
@@ -418,40 +420,38 @@ Sz2 = op("Sz", s, 2)
 ```
 """
 function op(
-  opname::AbstractString, s::Vector{<:Index}, ns::NTuple{N,Integer}; kwargs...
+  opname, s::Vector{<:Index}, ns::NTuple{N,Integer}; kwargs...
 ) where {N}
   return op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
 end
 
-function op(opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...)
+function op(opname, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...)
   return op(opname, s, ns; kwargs...)
 end
 
 function op(
-  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}; kwargs...
+  s::Vector{<:Index}, opname, ns::Tuple{Vararg{Integer}}; kwargs...
 )
   return op(opname, s, ns...; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Integer...; kwargs...)
+function op(s::Vector{<:Index}, opname, ns::Integer...; kwargs...)
   return op(opname, s, ns; kwargs...)
 end
 
 function op(
-  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}, kwargs::NamedTuple
+  s::Vector{<:Index}, opname, ns::Tuple{Vararg{Integer}}, kwargs::NamedTuple
 )
   return op(opname, s, ns; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Integer, kwargs::NamedTuple)
+function op(s::Vector{<:Index}, opname, ns::Integer, kwargs::NamedTuple)
   return op(opname, s, (ns,); kwargs...)
 end
 
-# This version helps with call like `op.(Ref(s), os)` where `os`
-# is a vector of tuples.
-op(s::Vector{<:Index}, os::Tuple{AbstractString,Vararg}) = op(s, os...)
-op(os::Tuple{AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
-op(os::Tuple{Function,AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
+op(s::Vector{<:Index}, o::Tuple) = op(s, o...)
+
+op(o::Tuple, s::Vector{<:Index}) = op(s, o...)
 
 op(f::Function, args...; kwargs...) = f(op(args...; kwargs...))
 
@@ -470,8 +470,6 @@ function op(
 )
   return f(op(opname, s, ns; kwargs...))
 end
-
-op(s::Vector{<:Index}, opdata::Tuple{Function,AbstractString,Vararg}) = op(s, opdata...)
 
 # Here, Ref is used to not broadcast over the vector of indices
 # TODO: consider overloading broadcast for `op` with the example
