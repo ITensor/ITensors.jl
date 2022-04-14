@@ -419,9 +419,7 @@ s = siteinds("S=1/2", 4)
 Sz2 = op("Sz", s, 2)
 ```
 """
-function op(
-  opname, s::Vector{<:Index}, ns::NTuple{N,Integer}; kwargs...
-) where {N}
+function op(opname, s::Vector{<:Index}, ns::NTuple{N,Integer}; kwargs...) where {N}
   return op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
 end
 
@@ -429,9 +427,7 @@ function op(opname, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...)
   return op(opname, s, ns; kwargs...)
 end
 
-function op(
-  s::Vector{<:Index}, opname, ns::Tuple{Vararg{Integer}}; kwargs...
-)
+function op(s::Vector{<:Index}, opname, ns::Tuple{Vararg{Integer}}; kwargs...)
   return op(opname, s, ns...; kwargs...)
 end
 
@@ -439,9 +435,7 @@ function op(s::Vector{<:Index}, opname, ns::Integer...; kwargs...)
   return op(opname, s, ns; kwargs...)
 end
 
-function op(
-  s::Vector{<:Index}, opname, ns::Tuple{Vararg{Integer}}, kwargs::NamedTuple
-)
+function op(s::Vector{<:Index}, opname, ns::Tuple{Vararg{Integer}}, kwargs::NamedTuple)
   return op(opname, s, ns; kwargs...)
 end
 
