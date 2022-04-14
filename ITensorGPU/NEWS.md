@@ -14,6 +14,7 @@ Bugs:
 Enhancements:
 
 - `cu([[A, B], [C]])` -> `[[cu(A), cu(B)], [cu(C)]]` and same for cpu (#898).
+- Allow cutruncate to work for Float32s (#897).
 
 ITensorGPU v0.0.3 Release Notes
 ===============================
