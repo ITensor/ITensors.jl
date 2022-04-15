@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.7 Release Notes
+=============================
+
+Bugs:
+
+- Fix for performance issue when applying gates that skip sites (#900).
+
+Enhancements:
+
 ITensors v0.3.6 Release Notes
 =============================
 
