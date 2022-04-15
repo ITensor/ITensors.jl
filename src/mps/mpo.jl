@@ -15,6 +15,8 @@ function MPO(A::Vector{<:ITensor}; ortho_lims::UnitRange=1:length(A))
   return MPO(A, first(ortho_lims) - 1, last(ortho_lims) + 1)
 end
 
+set_data(A::MPO, data::Vector{ITensor}) = MPO(data, A.llim, A.rlim)
+
 MPO() = MPO(ITensor[], 0, 0)
 
 function convert(::Type{MPS}, M::MPO)
@@ -309,18 +311,9 @@ function deprecate_make_inds_match!(
 end
 
 """
-    dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
-    inner(y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
+    dot(y::MPS, A::MPO, x::MPS)
 
-Compute `<y|A|x> = <y|Ax>.
-
-If `make_inds_match = true`, the function attempts to make
-the site indices of `A*x` match with the site indices of `y`
-before contracting (so for example, the inputs `y` and `A*x` 
-can have different site indices, as long as they have the same 
-dimensions or QN blocks).
-
-`A` and `x` must have common site indices.
+Same as [`inner`](@ref).
 """
 function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
   N = length(A)
@@ -336,6 +329,30 @@ function dot(y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Num
   return O[]
 end
 
+"""
+    inner(y::MPS, A::MPO, x::MPS)
+
+Compute `⟨y|A|x⟩ = ⟨y|Ax⟩` efficiently and exactly without making any intermediate
+MPOs. In general it is more efficient and accurate than `inner(y, apply(A, x))`.
+
+This is helpful for computing the expectation value of an operator `A`, which would be:
+```julia
+inner(x, A, x)
+```
+assuming `x` is normalized.
+
+If you want to compute `⟨By|Ax⟩` you can use `inner(B::MPO, y::MPS, A::MPO, x::MPS)`.
+
+This is helpful for computing the variance of an operator `A`, which would be:
+```julia
+inner(A, x, A, x) - inner(x, A, x) ^ 2
+```
+assuming `x` is normalized.
+
+$(make_inds_match_docstring_warning())
+
+Same as [`dot`](@ref).
+"""
 inner(y::MPS, A::MPO, x::MPS; kwargs...) = dot(y, A, x; kwargs...)
 
 function inner(y::MPS, Ax::Apply{Tuple{MPO,MPS}})
@@ -343,19 +360,9 @@ function inner(y::MPS, Ax::Apply{Tuple{MPO,MPS}})
 end
 
 """
-    dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
-    inner(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool = true)
+    dot(B::MPO, y::MPS, A::MPO, x::MPS)
 
-Compute `<By|A|x> = <By|Ax>`.
-
-If `make_inds_match = true`, the function attempts to make
-the site indices of `A*x` match with the site indices of `B*y`
-before contracting (so for example, the inputs `B*y` and `A*x`
-can have different site indices, as long as they have the same
-dimensions or QN blocks).
-
-`A` and `x` must have common site indices, and `B` and `y`
-must have common site indices.
+Same as [`inner`](@ref).
 """
 function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
   !make_inds_match && error(
@@ -397,6 +404,21 @@ end
 # TODO: maybe make these into tuple inputs?
 # Also can generalize to:
 # inner((β, B, y), (α, A, x))
+"""
+    inner(B::MPO, y::MPS, A::MPO, x::MPS)
+
+Compute `⟨By|A|x⟩ = ⟨By|Ax⟩` efficiently and exactly without making any intermediate
+MPOs. In general it is more efficient and accurate than `inner(apply(B, y), apply(A, x))`.
+
+This is helpful for computing the variance of an operator `A`, which would be:
+```julia
+inner(A, x, A, x) - inner(x, A, x) ^ 2
+```
+
+$(make_inds_match_docstring_warning())
+
+Same as [`dot`](@ref).
+"""
 inner(B::MPO, y::MPS, A::MPO, x::MPS) = dot(B, y, A, x)
 
 function dot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
@@ -406,7 +428,7 @@ function dot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   return _log_or_not_dot(M1, M2, false; make_inds_match=make_inds_match)
 end
 
-# TODO: implement by combing the MPO indices and converting
+# TODO: implement by combining the MPO indices and converting
 # to MPS
 function logdot(M1::MPO, M2::MPO; make_inds_match::Bool=false, kwargs...)
   if make_inds_match
@@ -479,28 +501,23 @@ end
 
 (A::MPO)(ψ::MPS; kwargs...) = apply(A, ψ; kwargs...)
 
-function contract(A::MPO, ψ::MPS; kwargs...)
-  method = get(kwargs, :method, "densitymatrix")
+function contract(A::MPO, ψ::MPS; alg="densitymatrix", kwargs...)
+  if haskey(kwargs, :method)
+    # Backwards compatibility, use `method`.
+    alg = get(kwargs, :method, "densitymatrix")
+  end
 
   # Keyword argument deprecations
-  if method == "DensityMatrix"
+  if alg == "DensityMatrix"
     @warn "In contract, method DensityMatrix is deprecated in favor of densitymatrix"
-    method = "densitymatrix"
+    alg = "densitymatrix"
+  end
+  if alg == "Naive"
+    @warn "In contract, `alg=\"Naive\"` is deprecated in favor of `alg=\"naive\"`"
+    alg = "naive"
   end
 
-  if method == "Naive"
-    @warn "In contract, method Naive is deprecated in favor of naive"
-    method = "naive"
-  end
-
-  if method == "densitymatrix"
-    Aψ = _contract_densitymatrix(A, ψ; kwargs...)
-  elseif method == "naive"
-    Aψ = _contract_naive(A, ψ; kwargs...)
-  else
-    throw(ArgumentError("Method $method not supported"))
-  end
-  return Aψ
+  return contract(Algorithm(alg), A, ψ; kwargs...)
 end
 
 contract_mpo_mps_doc = """
@@ -555,7 +572,7 @@ contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
 
 #@doc (@doc contract(::MPO, ::MPS)) *(::MPO, ::MPS)
 
-function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
+function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   n = length(A)
   n != length(ψ) &&
     throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(ψ))) do not match"))
@@ -636,7 +653,7 @@ function _contract_densitymatrix(A::MPO, ψ::MPS; kwargs...)::MPS
   return ψ_out
 end
 
-function _contract_naive(A::MPO, ψ::MPS; kwargs...)::MPS
+function contract(::Algorithm"naive", A::MPO, ψ::MPS; kwargs...)::MPS
   truncate = get(kwargs, :truncate, true)
 
   N = length(A)
@@ -826,7 +843,7 @@ function sample(M::MPO)
     pn = 0.0
     while n <= d
       projn = ITensor(s)
-      projn[s[n]] = 1.0
+      projn[s => n] = 1.0
       pnc = (ρj * projn * prime(projn))[]
       if imag(pnc) > 1e-8
         @warn "In sample, probability $pnc is complex."

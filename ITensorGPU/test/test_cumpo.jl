@@ -101,7 +101,7 @@ using ITensors, ITensorGPU, Test
     psi = randomCuMPS(sites)
     psi_out = contract(K, psi; maxdim=1)
     @test inner(phi', psi_out) ≈ inner(phi', K, psi)
-    @test_throws ArgumentError contract(K', psi, method="fakemethod")
+    @test_throws MethodError contract(K', psi, method="fakemethod")
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badpsi = randomCuMPS(badsites)

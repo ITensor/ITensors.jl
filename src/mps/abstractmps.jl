@@ -56,6 +56,15 @@ use `promote_itensor_eltype`.
 """
 eltype(::AbstractMPS) = ITensor
 
+complex(ψ::AbstractMPS) = complex.(ψ)
+real(ψ::AbstractMPS) = real.(ψ)
+imag(ψ::AbstractMPS) = imag.(ψ)
+conj(ψ::AbstractMPS) = conj.(ψ)
+
+function convert_leaf_eltype(ElType::Type, ψ::AbstractMPS)
+  return set_data(ψ, convert_leaf_eltype(ElType, data(ψ)))
+end
+
 """
     ITensors.data(::MPS/MPO)
 
@@ -65,6 +74,8 @@ This is not exported and mostly for internal usage, please let us
 know if there is functionality not available for MPS/MPO you would like.
 """
 data(m::AbstractMPS) = m.data
+
+contract(ψ::AbstractMPS) = contract(data(ψ))
 
 leftlim(m::AbstractMPS) = m.llim
 
@@ -119,6 +130,10 @@ function set_ortho_lims!(ψ::AbstractMPS, r::UnitRange{Int})
   setleftlim!(ψ, first(r) - 1)
   setrightlim!(ψ, last(r) + 1)
   return ψ
+end
+
+function set_ortho_lims(ψ::AbstractMPS, r::UnitRange{Int})
+  return set_ortho_lims!(copy(ψ), r)
 end
 
 reset_ortho_lims!(ψ::AbstractMPS) = set_ortho_lims!(ψ, 1:length(ψ))
@@ -1085,51 +1100,72 @@ function _log_or_not_dot(
 end
 
 """
-    dot(A::MPS, B::MPS; make_inds_match = true)
-    inner(A::MPS, B::MPS; make_inds_match = true)
-
+    dot(A::MPS, B::MPS)
     dot(A::MPO, B::MPO)
-    inner(A::MPO, B::MPO)
 
-Compute the inner product `<A|B>`. If `A` and `B` are MPOs, computes the Frobenius inner product.
+Same as [`inner`](@ref).
 
-If `make_inds_match = true`, the function attempts to make
-the site indices match before contracting (so for example, the
-inputs can have different site indices, as long as they
-have the same dimensions or QN blocks).
-
-For now, `make_inds_match` is only supported for MPSs.
-
-See also `logdot`/`loginner`.
+See also [`loginner`](@ref), [`logdot`](@ref).
 """
 function dot(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
   return _log_or_not_dot(M1, M2, false; kwargs...)
 end
 
 """
-    logdot(A::MPS, B::MPS; make_inds_match = true)
-    loginner(A::MPS, B::MPS; make_inds_match = true)
-
+    logdot(A::MPS, B::MPS)
     logdot(A::MPO, B::MPO)
-    loginner(A::MPO, B::MPO)
 
-Compute the logarithm of the inner product `<A|B>`. If `A` and `B` are MPOs, computes the logarithm of the Frobenius inner product.
+Same as [`loginner`](@ref).
 
-This is useful for larger MPS/MPO, where in the limit of large numbers of sites the inner product can diverge or approach zero.
-
-If `make_inds_match = true`, the function attempts to make
-the site indices match before contracting (so for example, the
-inputs can have different site indices, as long as they
-have the same dimensions or QN blocks).
-
-For now, `make_inds_match` is only supported for MPSs.
+See also [`inner`](@ref), [`dot`](@ref).
 """
 function logdot(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
   return _log_or_not_dot(M1, M2, true; kwargs...)
 end
 
+function make_inds_match_docstring_warning()
+  return """
+  !!! compat "ITensors 0.3"
+    Before ITensors 0.3, `inner` had a keyword argument `make_inds_match` that default to `true`.
+    When true, the function attempted to make the site indices match before contracting. So for example, the
+    inputs could have different site indices, as long as they have the same dimensions or QN blocks.
+    This behavior was fragile since it only worked for MPS with single site indices per tensor,
+    and as of ITensors 0.3 has been deprecated. As of ITensors 0.3 you will need to make sure
+    the MPS or MPO you input have compatible site indices to contract over, such as by making
+    sure the prime levels match properly.
+  """
+end
+
+"""
+    inner(A::MPS, B::MPS)
+    inner(A::MPO, B::MPO)
+
+Compute the inner product `⟨A|B⟩`. If `A` and `B` are MPOs, computes the Frobenius inner product.
+
+Use [`loginner`](@ref) to avoid underflow/overflow for taking overlaps of large MPS or MPO.
+
+$(make_inds_match_docstring_warning())
+
+Same as [`dot`](@ref).
+
+See also [`loginner`](@ref), [`logdot`](@ref).
+"""
 inner(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS} = dot(M1, M2; kwargs...)
 
+"""
+    loginner(A::MPS, B::MPS)
+    loginner(A::MPO, B::MPO)
+
+Compute the logarithm of the inner product `⟨A|B⟩`. If `A` and `B` are MPOs, computes the logarithm of the Frobenius inner product.
+
+This is useful for larger MPS/MPO, where in the limit of large numbers of sites the inner product can diverge or approach zero.
+
+$(make_inds_match_docstring_warning())
+
+Same as [`logdot`](@ref).
+
+See also [`inner`](@ref), [`dot`](@ref).
+"""
 function loginner(M1::MPST, M2::MPST; kwargs...) where {MPST<:AbstractMPS}
   return logdot(M1, M2; kwargs...)
 end
@@ -1500,7 +1536,11 @@ Perform a truncation of all bonds of an MPS/MPO,
 using the truncation parameters (cutoff,maxdim, etc.)
 provided as keyword arguments.
 """
-function truncate!(M::AbstractMPS; kwargs...)
+function truncate!(M::AbstractMPS; alg="frobenius", kwargs...)
+  return truncate!(Algorithm(alg), M; kwargs...)
+end
+
+function truncate!(::Algorithm"frobenius", M::AbstractMPS; kwargs...)
   N = length(M)
 
   # Left-orthogonalize all tensors to make
@@ -2047,13 +2087,17 @@ expτH = ops(os, s)
 ```
 """
 function product(
-  As::Vector{<:ITensor}, ψ::AbstractMPS; move_sites_back::Bool=true, kwargs...
+  As::Vector{<:ITensor},
+  ψ::AbstractMPS;
+  move_sites_back_between_gates::Bool=true,
+  move_sites_back::Bool=true,
+  kwargs...,
 )
   Aψ = ψ
   for A in As
-    Aψ = product(A, Aψ; move_sites_back=false, kwargs...)
+    Aψ = product(A, Aψ; move_sites_back=move_sites_back_between_gates, kwargs...)
   end
-  if move_sites_back
+  if !move_sites_back_between_gates && move_sites_back
     s = siteinds(Aψ)
     ns = 1:length(ψ)
     ñs = [findsite(ψ, i) for i in s]

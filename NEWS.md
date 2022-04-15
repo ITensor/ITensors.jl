@@ -6,8 +6,82 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.7 Release Notes
+=============================
+
+Bugs:
+
+- Fix for performance issue when applying gates that skip sites (#900).
+
+Enhancements:
+
+ITensors v0.3.6 Release Notes
+=============================
+
+Bugs:
+
+- Fix bug in `op(opname, s::Vector{<:Index})` and `op(s::Vector{<:Index}, opname)`.
+
+Enhancements:
+
+ITensors v0.3.5 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Generalize `op` to handle `Matrix`/`String` inputs more generically (#899)
+
+ITensors v0.3.4 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Simplify rrules for Index manipulation of ITensors (#888)
+- Add some helper functions like converting element types of ITensors (#898)
+  - `cu([A, B])` -> `[cu(A), cu(B)]` (same for `cpu`).
+  - `cu([[A, B], [C]])` -> `[[cu(A), cu(B)], [cu(C)]]` (same for `cpu`).
+  - `convert_eltype(T::Type, A::ITensor)` - convert the element type of an ITensor to `T`.
+  - `convert_leaf_eltype(T, A::MPS)` - convert the element types of the ITensors of an MPS/MPO.
+  - `convert_leaf_eltype(T, [[A, B], C])` - convert the element types of ITensors `A`, `B`, `C` in a nested data structure (useful for layered gate structures used in PastaQ).
+  - `contract(A::MPS)` - contract the ITensors of an MPS/MPO into an ITensor (previously we used `prod` for that but I think using ` contract` is clearer).
+  - `array(A::ITensor, i::Index, j::Index, ...)` - convert the ITensor to an Array, first permuting into the Index ordering `i, j, ...`. Previously I used `array(permute(A, i, j, ...))` for this but this is more convenient.
+  - `A(x)` as a simpler syntax for `apply(A::ITensor, x::ITensor)`, treating `A` as an operator from unprimed to primed indices. I've already defined this syntax for `MPO` and `MPS` and I think it is pretty nice. I was holding off on doing this for a while to see if there might be a better meaning for `A(B)` but 
+  - Define `complex`, `real`, `imag`, and `conj` for MPS/MPO by applying them to the ITensors of the MPS/MPO. Maybe there is a better meaning for these, as in the MPS that is the real part of the MPS defined as a state?
+
+ITensors v0.3.3 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Add `copy` for `AbstractProjMPO` (#895)
+
+ITensors v0.3.2 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Introduce `set_nsite!` generic `AbstractProjMPO` function (#894)
+- Factorize out `contract(::ProjMPO, ::ITensor)` (#893)
+
+ITensors v0.3.1 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Introduce `Algorithm` type for selecting algorithm backends (#886)
+
 ITensors v0.3.0 Release Notes
-==============================
+=============================
 
 Bugs:
 

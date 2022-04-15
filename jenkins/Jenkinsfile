@@ -9,7 +9,7 @@ pipeline {
       parallel {
         stage('julia-1.6') {
 	  options {
-            timeout(time: 30, unit: 'MINUTES')
+            timeout(time: 45, unit: 'MINUTES')
           }
           agent {
             dockerfile {
@@ -36,7 +36,7 @@ pipeline {
         }
         stage('julia-1.7') {
 	  options {
-            timeout(time: 30, unit: 'MINUTES')
+            timeout(time: 45, unit: 'MINUTES')
           }
           agent {
             dockerfile {
