@@ -1644,7 +1644,7 @@ end
     res = expect(rho, "Sz", "Sx")
     @test all(expect(rho_mat, s, "Sz", "Sx") .≈ res)
   end
-                
+
   @testset "convert_eltype, convert_leaf_eltype, $new_eltype" for new_eltype in
                                                                   (Float32, ComplexF64)
     s = Index(2)
