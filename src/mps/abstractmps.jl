@@ -2089,15 +2089,15 @@ expτH = ops(os, s)
 function product(
   As::Vector{<:ITensor},
   ψ::AbstractMPS;
-  move_sites_back_between_gates::Bool=false,
+  move_sites_back_between_gates::Bool=true,
   move_sites_back::Bool=true,
-  kwargs...
+  kwargs...,
 )
   Aψ = ψ
   for A in As
     Aψ = product(A, Aψ; move_sites_back=move_sites_back_between_gates, kwargs...)
   end
-  if move_sites_back
+  if !move_sites_back_between_gates && move_sites_back
     s = siteinds(Aψ)
     ns = 1:length(ψ)
     ñs = [findsite(ψ, i) for i in s]
