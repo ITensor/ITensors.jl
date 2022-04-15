@@ -25,8 +25,6 @@ function ITensor(
   inds::Indices{Index{Int}};
   kwargs...,
 )
-  @show size(A)
-  @show dim(inds)
   length(A) ≠ dim(inds) && throw(
     DimensionMismatch(
       "In ITensor(::CuArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
