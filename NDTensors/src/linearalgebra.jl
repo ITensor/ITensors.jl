@@ -127,8 +127,23 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   #@timeit_debug timer "dense svd" begin
   if alg == "divide_and_conquer"
     MUSV = svd_catch_error(matrix(T); alg=LinearAlgebra.DivideAndConquer())
+    if isnothing(MUSV)
+      # If "divide_and_conquer" fails, try "qr_iteration"
+      alg = "qr_iteration"
+      MUSV = svd_catch_error(matrix(T); alg=LinearAlgebra.QRIteration())
+      if isnothing(MUSV)
+        # If "qr_iteration" fails, try "recursive"
+        alg = "recursive"
+        MUSV = svd_recursive(matrix(T))
+      end
+    end
   elseif alg == "qr_iteration"
     MUSV = svd_catch_error(matrix(T); alg=LinearAlgebra.QRIteration())
+    if isnothing(MUSV)
+      # If "qr_iteration" fails, try "recursive"
+      alg = "recursive"
+      MUSV = svd_recursive(matrix(T))
+    end
   elseif alg == "recursive"
     MUSV = svd_recursive(matrix(T))
   else

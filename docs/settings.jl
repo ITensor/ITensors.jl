@@ -47,6 +47,7 @@ settings = Dict(
       "DMRG FAQs" => "faq/DMRG.md",
       "ITensor Development FAQs" => "faq/Development.md",
       "Relationship of ITensor to other tensor libraries FAQs" => "faq/RelationshipToOtherLibraries.md",
+      "Julia Package Manager FAQs" => "faq/JuliaPkg.md",
     ],
     "Upgrade guides" => ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
     "ITensor indices and Einstein notation" => "Einsum.md",

@@ -454,6 +454,8 @@ include("util.jl")
 
     ψ = +(ψ₁, ψ₂; cutoff=0.0)
 
+    @test_throws ErrorException ψ₁ + ψ₂'
+
     @test inner(ψ, ψ) ≈ inner_add(ψ₁, ψ₂)
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
 
@@ -577,7 +579,7 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
     for i in 1:N, j in 1:N
       a = OpSum()
       a += op[1], i, op[2], j
-      Copsum[i, j] = inner(psi, MPO(a, s), psi)
+      Copsum[i, j] = inner(psi', MPO(a, s), psi)
     end
     @test Cpm ≈ Copsum rtol = 1E-11
 
@@ -828,7 +830,7 @@ end
     for i in ss:es, j in i:es
       a = OpSum()
       a += "S+", i, "S-", j
-      @test inner(psi, MPO(a, s), psi) ≈ Cpm[i - ss + 1, j - ss + 1]
+      @test inner(psi', MPO(a, s), psi) ≈ Cpm[i - ss + 1, j - ss + 1]
     end
 
     # Electron case
@@ -1831,16 +1833,20 @@ end
     N = 4
     s = siteinds("S=1/2", N)
     ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
-    ρ = outer(ψ, ψ)
+    ρ = outer(ψ', ψ)
     @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
-    @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
+    @test inner(ψ', ρ, ψ) ≈ inner(ψ, ψ)^2
 
     # Deprecated syntax
+    @test_deprecated outer(ψ, ψ)
+    @test_deprecated inner(ψ, ψ')
+    @test_deprecated inner(ψ, ρ, ψ)
+
     ρ = @test_deprecated MPO(ψ)
     @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
-    @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
+    @test inner(ψ', ρ, ψ) ≈ inner(ψ, ψ)^2
   end
 
   @testset "Truncate MPO with no link indices" begin

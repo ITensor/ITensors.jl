@@ -1,9 +1,10 @@
-
 mutable struct ProjMPO_MPS
   PH::ProjMPO
   pm::Vector{ProjMPS}
   weight::Float64
 end
+
+copy(P::ProjMPO_MPS) = ProjMPO_MPS(copy(P.PH), copy.(P.pm), P.weight)
 
 function ProjMPO_MPS(H::MPO, mpsv::Vector{MPS}; weight=1.0)
   return ProjMPO_MPS(ProjMPO(H), [ProjMPS(m) for m in mpsv], weight)
@@ -12,6 +13,14 @@ end
 ProjMPO_MPS(H::MPO, Ms::MPS...; weight=1.0) = ProjMPO_MPS(H, [Ms...], weight)
 
 nsite(P::ProjMPO_MPS) = nsite(P.PH)
+
+function set_nsite!(Ps::ProjMPO_MPS, nsite)
+  set_nsite!(Ps.PH, nsite)
+  for P in Ps.pm
+    set_nsite!(P, nsite)
+  end
+  return Ps
+end
 
 Base.length(P::ProjMPO_MPS) = length(P.PH)
 

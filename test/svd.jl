@@ -73,23 +73,23 @@ include("util.jl")
   end
 
   # TODO: remove this test, it takes a long time
-  @testset "Ill-conditioned matrix" begin
-    d = 5000
-    i = Index(d, "i")
-    T = itensor(make_illconditioned_matrix(dim(i)), i', i)
+  ## @testset "Ill-conditioned matrix" begin
+  ##   d = 5000
+  ##   i = Index(d, "i")
+  ##   T = itensor(make_illconditioned_matrix(dim(i)), i', i)
 
-    @suppress begin
-      F = svd(T, i'; alg="divide_and_conquer")
-    end
-    # Depending on the LAPACK implementation,
-    # this sometimes works so don't test it
-    #@test isnothing(F)
+  ##   @suppress begin
+  ##     F = svd(T, i'; alg="divide_and_conquer")
+  ##   end
+  ##   # Depending on the LAPACK implementation,
+  ##   # this sometimes works so don't test it
+  ##   #@test isnothing(F)
 
-    # XXX: This fails on Windows, removing for now.
-    # F = svd(T, i'; alg="qr_iteration")
-    # @test !isnothing(F)
-    # @test F.U * F.S * F.V ≈ T
-  end
+  ##   # XXX: This fails on Windows, removing for now.
+  ##   # F = svd(T, i'; alg="qr_iteration")
+  ##   # @test !isnothing(F)
+  ##   # @test F.U * F.S * F.V ≈ T
+  ## end
 end
 
 nothing

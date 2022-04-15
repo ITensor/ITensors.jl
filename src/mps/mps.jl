@@ -15,6 +15,8 @@ function MPS(A::Vector{<:ITensor}; ortho_lims::UnitRange=1:length(A))
   return MPS(A, first(ortho_lims) - 1, last(ortho_lims) + 1)
 end
 
+set_data(A::MPS, data::Vector{ITensor}) = MPS(data, A.llim, A.rlim)
+
 @doc """
     MPS(v::Vector{<:ITensor})
 

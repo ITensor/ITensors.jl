@@ -37,6 +37,7 @@ if Threads.nthreads() == 1
       "lattices.jl",
       "mps.jl",
       "mpo.jl",
+      "algorithm.jl",
       "sweeps.jl",
       "sweepnext.jl",
       "autompo.jl",

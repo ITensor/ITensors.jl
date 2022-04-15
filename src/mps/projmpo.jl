@@ -24,5 +24,12 @@ mutable struct ProjMPO <: AbstractProjMPO
   nsite::Int
   H::MPO
   LR::Vector{ITensor}
-  ProjMPO(H::MPO) = new(0, length(H) + 1, 2, H, Vector{ITensor}(undef, length(H)))
+end
+ProjMPO(H::MPO) = ProjMPO(0, length(H) + 1, 2, H, Vector{ITensor}(undef, length(H)))
+
+copy(P::ProjMPO) = ProjMPO(P.lpos, P.rpos, P.nsite, copy(P.H), copy(P.LR))
+
+function set_nsite!(P::ProjMPO, nsite)
+  P.nsite = nsite
+  return P
 end

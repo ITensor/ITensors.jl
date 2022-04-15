@@ -1249,6 +1249,25 @@ end
         array(permute(A, i, j, k)) + array(permute(B, i, j, k))
     end
 
+    @testset "Test array" begin
+      A = randomITensor(SType, i, j, k)
+      B = randomITensor(SType, i, j)
+      C = randomITensor(SType, i)
+
+      @test array(permute(A, j, i, k)) == array(A, j, i, k)
+      @test_throws DimensionMismatch matrix(A, j, i, k)
+      @test_throws DimensionMismatch vector(A, j, i, k)
+
+      @test array(permute(B, j, i)) == array(B, j, i)
+      @test matrix(permute(B, j, i)) == matrix(B, j, i)
+      @test_throws DimensionMismatch vector(B, j, i)
+
+      @test array(permute(C, i)) == array(C, i)
+      @test vector(permute(C, i)) == vector(C, i)
+      @test vector(C) == vector(C, i)
+      @test_throws DimensionMismatch matrix(C, i)
+    end
+
     @testset "Test factorizations of an ITensor" begin
       A = randomITensor(SType, i, j, k, l)
 
@@ -1624,6 +1643,36 @@ end
     @test expect(rho_mat, s, "Sz") ≈ res
     res = expect(rho, "Sz", "Sx")
     @test all(expect(rho_mat, s, "Sz", "Sx") .≈ res)
+  end
+                
+  @testset "convert_eltype, convert_leaf_eltype, $new_eltype" for new_eltype in
+                                                                  (Float32, ComplexF64)
+    s = Index(2)
+    A = randomITensor(s)
+    @test eltype(A) == Float64
+
+    Af32 = convert_eltype(new_eltype, A)
+    @test Af32 ≈ A
+    @test eltype(Af32) == new_eltype
+
+    Af32_2 = convert_leaf_eltype(new_eltype, A)
+    @test eltype(Af32_2) == new_eltype
+    @test Af32_2 ≈ A
+
+    As1 = [A, A]
+    As1_f32 = convert_leaf_eltype(new_eltype, As1)
+    @test length(As1_f32) == length(As1)
+    @test typeof(As1_f32) == typeof(As1)
+    @test eltype(As1_f32[1]) == new_eltype
+    @test eltype(As1_f32[2]) == new_eltype
+
+    As2 = [[A, A], [A]]
+    As2_f32 = convert_leaf_eltype(new_eltype, As2)
+    @test length(As2_f32) == length(As2)
+    @test typeof(As2_f32) == typeof(As2)
+    @test eltype(As2_f32[1][1]) == new_eltype
+    @test eltype(As2_f32[1][2]) == new_eltype
+    @test eltype(As2_f32[2][1]) == new_eltype
   end
 end # End Dense ITensor basic functionality
 

@@ -344,10 +344,29 @@ function copyto!(
 end
 
 # If they are something more complicated like views, use Strided copyto!
-function copyto!(R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}) where {N}
+function copyto!(
+  R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}
+) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
   @strided RA .= TA
+  return R
+end
+
+# TODO: call permutedims!(R,T,perm,(r,t)->t)?
+function permutedims!(
+  R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}, perm::NTuple{N,Int}
+) where {N,StoreT<:StridedArray}
+  RA = array(R)
+  TA = array(T)
+  @strided RA .= permutedims(TA, perm)
+  return R
+end
+
+function copyto!(R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}) where {N}
+  RA = array(R)
+  TA = array(T)
+  RA .= TA
   return R
 end
 
@@ -357,27 +376,55 @@ function permutedims!(
 ) where {N}
   RA = array(R)
   TA = array(T)
-  @strided RA .= permutedims(TA, perm)
+  RA .= permutedims(TA, perm)
   return R
 end
 
-function apply!(R::DenseTensor, T::DenseTensor, f::Function=(r, t) -> t)
+function apply!(
+  R::DenseTensor{<:Number,N,StoreT},
+  T::DenseTensor{<:Number,N,StoreT},
+  f::Function=(r, t) -> t,
+) where {N,StoreT<:StridedArray}
   RA = array(R)
   TA = array(T)
   @strided RA .= f.(RA, TA)
   return R
 end
 
+function apply!(R::DenseTensor, T::DenseTensor, f::Function=(r, t) -> t)
+  RA = array(R)
+  TA = array(T)
+  RA .= f.(RA, TA)
+  return R
+end
+
 # Version that may overwrite the result or promote
 # and return the result
-function permutedims!!(R::DenseTensor, T::DenseTensor, perm::Tuple, f::Function=(r, t) -> t)
+function permutedims!!(
+  R::DenseTensor{<:Number,N,StoreT},
+  T::DenseTensor{<:Number,N,StoreT},
+  perm::Tuple,
+  f::Function=(r, t) -> t,
+) where {N,StoreT<:StridedArray}
   RR = convert(promote_type(typeof(R), typeof(T)), R)
-  #RA = array(R)
-  #TA = array(T)
   RA = ReshapedArray(data(RR), dims(RR), ())
   TA = ReshapedArray(data(T), dims(T), ())
   if !is_trivial_permutation(perm)
     @strided RA .= f.(RA, permutedims(TA, perm))
+  else
+    # TODO: specialize for specific functions
+    RA .= f.(RA, TA)
+  end
+  return RR
+end
+
+function permutedims!!(R::DenseTensor, T::DenseTensor, perm::Tuple, f::Function=(r, t) -> t)
+  RR = convert(promote_type(typeof(R), typeof(T)), R)
+  RA = ReshapedArray(data(RR), dims(RR), ())
+  TA = ReshapedArray(data(T), dims(T), ())
+  if !is_trivial_permutation(perm)
+    TB = permutedims(TA, perm)
+    RA .= f.(RA, TB)
   else
     # TODO: specialize for specific functions
     RA .= f.(RA, TA)

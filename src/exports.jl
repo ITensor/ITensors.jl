@@ -116,6 +116,7 @@ export
   ⊙,
   addtags!,
   apply,
+  Apply,
   array,
   axpy!,
   blockoffsets,
@@ -124,6 +125,8 @@ export
   commonind,
   commoninds,
   complex!,
+  convert_eltype,
+  convert_leaf_eltype,
   delta,
   dense,
   denseblocks,
@@ -204,10 +207,10 @@ export
   hastags,
 
   # LazyApply/LazyApply.jl
-  coefficient,
   Scaled,
   Sum,
   Prod,
+  coefficient,
 
   # mps/dmrg.jl
   dmrg,
@@ -217,9 +220,10 @@ export
   @preserve_ortho,
   # Methods
   add,
-  contract,
   common_siteind,
   common_siteinds,
+  contract,
+  convert_eltype,
   dag!,
   findfirstsiteind,
   findfirstsiteinds,
