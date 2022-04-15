@@ -42,7 +42,7 @@ We list some of these with the most fundamental and important ones first:
 
   ```julia
   H2 = inner(H,psi,H,psi)
-  E = inner(psi,H,psi)
+  E = inner(psi',H,psi)
   var = H2-E^2
   @show var
   ```
