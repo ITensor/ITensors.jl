@@ -1627,6 +1627,24 @@ end
     @test !ishermitian(Sp)
   end
 
+  @testset "expect" begin
+    N = 6
+    s = siteinds("S=1/2", N)
+    psi = randomMPS(ComplexF64, s; linkdims=2)
+    psi_vec = prod(psi)
+    res = expect(psi, "Sz")
+    @test expect(psi_vec, s, "Sz") ≈ res
+    res = expect(psi, "Sz", "Sx")
+    @test all(expect(psi_vec, s, "Sz", "Sx") .≈ res)
+
+    rho = outer(psi, psi)
+    rho_mat = prod(rho)
+    res = expect(rho, "Sz")
+    @test expect(rho_mat, s, "Sz") ≈ res
+    res = expect(rho, "Sz", "Sx")
+    @test all(expect(rho_mat, s, "Sz", "Sx") .≈ res)
+  end
+
   @testset "convert_eltype, convert_leaf_eltype, $new_eltype" for new_eltype in
                                                                   (Float32, ComplexF64)
     s = Index(2)

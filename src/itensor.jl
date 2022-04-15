@@ -2706,6 +2706,77 @@ See also [`array`](@ref), [`matrix`](@ref).
 """
 vector(T::ITensor, inds...) = vector(permute(T, inds...; allow_alias=true))
 
+function correlation_matrix(
+  T::ITensor, s::Vector{<:Index}, _Op1::AbstractString, _Op2::AbstractString; kwargs...
+)
+  return error("correlation matrix for ITensor states not yet implemented")
+end
+
+function expect(T::ITensor, s::Vector{<:Index}, ops; kwargs...)
+  T = copy(T)
+  N = length(s)
+  ElT = ITensors.promote_itensor_eltype([T])
+
+  inds_plev0 = inds(T; plev=0)
+  inds_plev1 = inds(T; plev=1)
+
+  # XXX double check this
+  # if T has only unprimed indices and they match the input indices
+  # treat T as a wavefuntion
+  if isempty(inds_plev1) && all(inds_plev0 .== s)
+    is_operator = false
+    # if T has a set of matching primed and unprimed indices (also matching `s`),
+    # treat this an an operator.
+  elseif all(inds_plev0 .== noprime(inds_plev1)) && all(inds_plev0 .== s)
+    is_operator = true
+  else
+    error("Index structure of ITensor $T not compatible with expect")
+  end
+
+  if haskey(kwargs, :site_range)
+    @warn "The `site_range` keyword arg. to `expect` is deprecated: use the keyword `sites` instead"
+    sites = kwargs[:site_range]
+  else
+    sites = get(kwargs, :sites, 1:N)
+  end
+
+  site_range = (sites isa AbstractRange) ? sites : collect(sites)
+  Ns = length(site_range)
+  start_site = first(site_range)
+
+  el_types = map(o -> ishermitian(op(o, s[start_site])) ? real(ElT) : ElT, ops)
+
+  normalization = is_operator ? tr(T) : norm(T)^2
+
+  ex = map((o, el_t) -> zeros(el_t, Ns), ops, el_types)
+  for (entry, j) in enumerate(site_range)
+    for (n, opname) in enumerate(ops)
+      if is_operator
+        val = replaceprime(op(opname, s[j])' * T, 2 => 1; inds=s[j]'')
+        val = tr(val) / normalization
+      else
+        val = scalar(dag(T) * noprime(op(opname, s[j]) * T)) / normalization
+      end
+      ex[n][entry] = (el_types[n] <: Real) ? real(val) : val
+    end
+  end
+
+  if sites isa Number
+    return map(arr -> arr[1], ex)
+  end
+  return ex
+end
+
+function expect(T::ITensor, s::Vector{<:Index}, op::AbstractString; kwargs...)
+  return first(expect(T, s, (op,); kwargs...))
+end
+
+function expect(
+  T::ITensor, s::Vector{<:Index}, op1::AbstractString, ops::AbstractString...; kwargs...
+)
+  return expect(T, s, (op1, ops...); kwargs...)
+end
+
 #######################################################################
 #
 # Printing, reading and writing ITensors
