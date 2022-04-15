@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensorGPU v0.0.5 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Clean up `outer` and add GEMM routing for CUDA (#887)
+
 ITensorGPU v0.0.4 Release Notes
 ===============================
 
