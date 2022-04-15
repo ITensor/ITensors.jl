@@ -1,3 +1,7 @@
+import ITensors.NDTensors: NeverAlias, AliasStyle, AllowAlias
+import ITensors: ITensor
+import CUDA: CuArray
+
 function cuITensor(::Type{T}, inds::IndexSet) where {T<:Number}
   return ITensor(Dense{float(T)}(CUDA.zeros(float(T), dim(inds))), inds)
 end
@@ -14,6 +18,38 @@ function cuITensor(x::S, inds::IndexSet{N}) where {S<:Number,N}
 end
 cuITensor(x::S, inds::Index...) where {S<:Number} = cuITensor(x, IndexSet(inds...))
 
+function ITensor(
+  as::AliasStyle,
+  eltype::Type{<:Number},
+  A::CuArray{<:Number},
+  inds::Indices{Index{Int}};
+  kwargs...,
+)
+  length(A) ≠ dim(inds) && throw(
+    DimensionMismatch(
+      "In ITensor(::CuArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+    ),
+  )
+  data = CuArray{eltype}(as, A)
+  return itensor(Dense(data), inds)
+end
+# Helper functions for different view behaviors
+CuArray{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = CuArray{ElT,N}(A)
+function CuArray{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
+  return convert(CuArray{ElT,N}, A)
+end
+function CuArray{ElT}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {ElT,N,ElTA}
+  return CuArray{ElT,N}(as, A)
+end
+
+# TODO: Change to:
+# (Array{ElT, N} where {ElT})([...]) = [...]
+# once support for `VERSION < v"1.6"` is dropped.
+# Previous to Julia v1.6 `where` syntax couldn't be used in a function name
+function CuArray{<:Any,N}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {N,ElTA}
+  return CuArray{ElTA,N}(as, A)
+end
+
 #TODO: check that the size of the Array matches the Index dimensions
 function cuITensor(A::Array{S}, inds) where {S<:Number}
   return ITensor(Dense(CuArray{S}(A)), inds)
@@ -23,6 +59,7 @@ function cuITensor(A::CuArray{S}, inds::IndexSet) where {S<:Number}
 end
 cuITensor(A::Array{S}, inds::Index...) where {S<:Number} = cuITensor(A, IndexSet(inds...))
 cuITensor(A::CuArray{S}, inds::Index...) where {S<:Number} = cuITensor(A, IndexSet(inds...))
+
 function cuITensor(A::ITensor)
   return if storage(tensor(A)) isa ITensors.EmptyStorage
     cuITensor(zero(eltype(storage(tensor(A)))), inds(A)...)
