@@ -49,6 +49,7 @@ module ITensors
 #####################################
 # External packages
 #
+using BitIntegers
 using ChainRulesCore
 using Compat
 using HDF5
