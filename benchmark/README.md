@@ -31,15 +31,15 @@ You can do that by removing the Manifest.toml file, checking out the ITensors an
 ```julia
 julia> using ITensors
 
-julia> cd(joinpath(pkgdir(ITensors), "benchmarks"))
+julia> cd(joinpath(pkgdir(ITensors), "benchmark"))
 
 julia> rm("Manifest.toml")
 
 julia> Pkg.activate(".")
 
-julia> Pkg.develop("..") # Develop ITensors
+julia> Pkg.develop(path="..") # Develop ITensors
 
-julia> Pkg.develop(joinpath("..", "NDTensors")) # Develop NDTensors
+julia> Pkg.develop(path=joinpath("..", "NDTensors")) # Develop NDTensors
 
-julia> Pkg.resolve(".")
+julia> Pkg.resolve()
 ```
