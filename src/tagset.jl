@@ -7,10 +7,10 @@ const MTagSetStorage{T,N} = MVector{N,T}  # A mutable tag storage
 
 emptytag(::Type{IntTag}) = IntTag(0)
 function empty_storage(::Type{TagSetStorage{T,N}}) where {T,N}
-  return TagSetStorage(ntuple(_ -> emptytag(T), N))
+  return TagSetStorage(ntuple(_ -> emptytag(T), Val(N)))
 end
 function empty_storage(::Type{MTagSetStorage{T,N}}) where {T,N}
-  return MTagSetStorage(ntuple(_ -> emptytag(T), N))
+  return MTagSetStorage(ntuple(_ -> emptytag(T), Val(N)))
 end
 
 #TODO: decide which functions on TagSet should be made generic.
