@@ -21,7 +21,7 @@ The benchmark results will be stored in the "SUITE" object.
 
 Then you can run the benchmark suite using the [interface from BenchmarkTools](https://juliaci.github.io/BenchmarkTools.jl/stable/manual/#Tuning-and-running-a-BenchmarkGroup).
 
-Alternatively, you can run the benchmarks with the [BencharmCI interface](https://github.com/tkf/BenchmarkCI.jl#running-benchmarkci-interactively=).
+Alternatively, you can run the benchmarks with the [BencharmkCI interface](https://github.com/tkf/BenchmarkCI.jl#running-benchmarkci-interactively=).
 
 ## Development
 
