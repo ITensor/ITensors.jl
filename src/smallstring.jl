@@ -1,4 +1,3 @@
-using BitIntegers
 const IntChar = UInt16
 const IntSmallString = UInt256
 
