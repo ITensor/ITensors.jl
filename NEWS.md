@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.8 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Increase maximum TagSet size to 16 characters (#882)
+
 ITensors v0.3.7 Release Notes
 =============================
 
