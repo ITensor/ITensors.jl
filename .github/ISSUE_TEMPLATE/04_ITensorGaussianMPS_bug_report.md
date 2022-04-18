@@ -1,7 +1,7 @@
 ---
 name: ITensorGaussianMPS.jl bug report
 about: Create a bug report to help us improve ITensorGaussianMPS.jl
-title: "[ITensorGaussianMPS] [BUG]"
+title: "[ITensorGaussianMPS] [BUG] YOUR SHORT DESCRIPTION OF THE BUG HERE"
 labels: ["ITensorGaussianMPS", "bug"]
 assignees: ''
 
@@ -22,12 +22,14 @@ If you are unable to construct a minimal code that demonstrates the bug or unexp
 
 
 **Expected output or behavior**
+
 Describe what you expected to happen.
 
 If you provided a minimal code that can be run to demonstrate the bug or unexpected behavior, describe what you expected the output would be.
 
 
 **Actual output or behavior**
+
 Describe what actually happened.
 
 If you provided a minimal code that demonstrates the bug or unexpected behavior, provide the output you from that code. If the code leads to an error or warning, include the full error or warning below.
