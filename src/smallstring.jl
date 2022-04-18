@@ -1,9 +1,8 @@
-
 const IntChar = UInt16
-const IntSmallString = UInt128
+const IntSmallString = UInt256
 
 # XXX: remove smallLength as a global constant, bad for type inference
-const smallLength = 8
+const smallLength = 16
 const SmallStringStorage = SVector{smallLength,IntChar}
 const MSmallStringStorage = MVector{smallLength,IntChar}
 

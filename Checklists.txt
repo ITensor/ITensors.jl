@@ -24,3 +24,10 @@ Checklist for Updating the Version of Documenter.jl Used
   number for Documenter (under the [compat] section).
 - Create a new PR to confirm that the docs build correctly 
   with the new version.
+
+Checklist for Updating the Benchmark CI for New Dependencies
+----------------------------------------------------------
+- If you update the dependencies of the NDTensors or ITensors
+module, the changes need to get reflected in the benchmark
+CI setup.
+- See benchmark/README.md for detailed instructions.
