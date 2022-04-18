@@ -47,6 +47,8 @@ for package_name in package_names
 
     println("Replace $template_package_name with $package_name in $new_bug_report")
     replace_in_file(new_bug_report, template_package_name => package_name)
+
+    mv(new_bug_report, joinpath("..", new_bug_report); force=true)
   end
 
   template_feature_request = feature_request_file(template_package_name)
@@ -60,5 +62,7 @@ for package_name in package_names
 
     println("Replace $template_package_name with $package_name in $new_feature_request")
     replace_in_file(new_feature_request, template_package_name => package_name)
+
+    mv(new_feature_request, joinpath("..", new_feature_request); force=true)
   end
 end

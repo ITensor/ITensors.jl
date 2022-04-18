@@ -7,6 +7,10 @@ assignees: ''
 
 ---
 
+**Description of bug**
+
+Please give a brief description of the bug or unexpected behavior here.
+
 **Minimal code demonstrating the bug or unexpected behavior**
 
 If applicable, provide a minimal code that can be run to demonstrate the bug or unexpected behavior.
@@ -32,7 +36,7 @@ If you provided a minimal code that can be run to demonstrate the bug or unexpec
 
 Describe what actually happened.
 
-If you provided a minimal code that demonstrates the bug or unexpected behavior, provide the output you from that code. If the code leads to an error or warning, include the full error or warning below.
+If you provided a minimal code that demonstrates the bug or unexpected behavior, provide the output you get from that code. If the code leads to an error or warning, include the full error or warning below.
 
 <details><summary>Output of minimal runnable code</summary><p>
 
