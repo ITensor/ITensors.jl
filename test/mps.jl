@@ -333,9 +333,9 @@ include("util.jl")
     @test lognorm(0phi) == -Inf
 
     zero_phi = 0phi
-    lognorm = []
-    normalize!(zero_phi; (lognorm!)=lognorm)
-    @test lognorm![1] == -Inf
+    lognorm_zero_phi = []
+    normalize!(zero_phi; (lognorm!)=lognorm_zero_phi)
+    @test lognorm_zero_phi[1] == -Inf
     @test norm(zero_phi) == 0
     @test norm(normalize(0phi)) == 0
 
