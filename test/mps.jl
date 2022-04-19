@@ -785,8 +785,8 @@ end
     @test correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) ≈
       correlation_matrix(psi, "Sz", "Sz")
     @test expect(psi, [1/2 0; 0 -1/2]) ≈ expect(psi, "Sz")
-    @test expect(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) ≈ expect(psi, "Sz", "Sz")
-    @test all(expect(psi, [[1/2 0; 0 -1/2], [1/2 0; 0 -1/2]]) .≈ expect(psi, ["Sz", "Sz"]))
+    @test all(expect(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) .≈ expect(psi, "Sz", "Sz"))
+    @test expect(psi, [[1/2 0; 0 -1/2], [1/2 0; 0 -1/2]]) ≈ expect(psi, ["Sz", "Sz"])
 
     s = siteinds("S=1/2", length(s); conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
