@@ -339,7 +339,6 @@ include("util.jl")
     @test norm(zero_phi) == 0
     @test norm(normalize(0phi)) == 0
 
-
     # Large number of sites
     psi = randomMPS(siteinds("S=1/2", 1_000); linkdims=10)
 
