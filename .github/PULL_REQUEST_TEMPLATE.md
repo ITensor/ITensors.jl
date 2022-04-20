@@ -4,6 +4,22 @@ Please include a summary of the change and which issue is fixed (if applicable).
 
 Fixes #(issue)
 
+If practical and applicable, please include a minimal demonstration of the previous behavior and new behavior below.
+
+<details><summary>Minimal demonstration of previous behavior</summary><p>
+
+```julia
+[YOUR MINIMAL DEMONSTRATION OF PREVIOUS BEHAVIOR]
+```
+</p></details>
+
+<details><summary>Minimal demonstration of new behavior</summary><p>
+
+```julia
+[YOUR MINIMAL DEMONSTRATION OF NEW BEHAVIOR]
+```
+</p></details>
+
 # How Has This Been Tested?
 
 Please add tests that verify your changes to a file in the `test` directory.
