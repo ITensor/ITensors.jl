@@ -6,6 +6,18 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.9 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Haar random unitary gate and generalize identity operator to arbitrary number of sites (#903).
+- Improve error messages for op.
+- Return the original MPS/MPO when normalizing a zero MPS/MPO (#901).
+- Allow Matrix representations for operators in `expect` and `correlation_matrix` (#902).
+
 ITensors v0.3.8 Release Notes
 =============================
 
