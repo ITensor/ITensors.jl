@@ -363,6 +363,8 @@ export
   ops,
   OpName,
   @OpName_str,
+  ValName,
+  @ValName_str,
   state,
   TagType,
   @TagType_str,

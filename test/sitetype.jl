@@ -1,5 +1,10 @@
 using ITensors, Test
 
+function is_unitary(U::ITensor; kwargs...)
+  s = noprime(filterinds(U; plev=1))
+  return isapprox(transpose(dag(U))(U), op("I", s...))
+end
+
 @testset "SiteType" begin
   N = 10
 
@@ -131,7 +136,7 @@ using ITensors, Test
     @test α[s' => 4, t' => 1, s => 4, t => 2] ≈ -3 / 2
 
     s1 = Index(4, "_Custom1, __x")
-    @test_throws ErrorException op("α", s, s1)
+    @test_throws ArgumentError op("α", s, s1)
 
     s2 = Index(4, "_Custom2, __x")
     β = op("β", s1, s2)
@@ -139,7 +144,7 @@ using ITensors, Test
     @test β[s1' => 2, s2' => 1, s1 => 2, s2 => 2] ≈ +3 / 2
     @test β[s1' => 3, s2' => 3, s1 => 3, s2 => 4] ≈ -3 / 2
     @test β[s1' => 4, s2' => 1, s1 => 4, s2 => 2] ≈ -5 / 2
-    @test_throws ErrorException op("β", s2, s1)
+    @test_throws ArgumentError op("β", s2, s1)
   end
 
   @testset "Custom OpName with long name" begin
@@ -223,7 +228,7 @@ using ITensors, Test
     @test α[s' => 4, t' => 1, s => 4, t => 2] ≈ -3 / 2
 
     s1 = Index(4, "_Custom1, __x")
-    @test_throws ErrorException op("α", t, s1)
+    @test_throws ArgumentError op("α", t, s1)
 
     s2 = Index(4, "_Custom2, __x")
     β = op("β", s1, s2)
@@ -231,7 +236,7 @@ using ITensors, Test
     @test β[s1' => 2, s2' => 1, s1 => 2, s2 => 2] ≈ +3 / 2
     @test β[s1' => 3, s2' => 3, s1 => 3, s2 => 4] ≈ -3 / 2
     @test β[s1' => 4, s2' => 1, s1 => 4, s2 => 2] ≈ -5 / 2
-    @test_throws ErrorException op("β", s2, s1)
+    @test_throws ArgumentError op("β", s2, s1)
   end
 
   @testset "Custom SiteType using older op interface" begin
@@ -479,6 +484,30 @@ using ITensors, Test
     exp_cx = reshape(exp(cx), (2, 2, 2, 2))
     @test exp_cx ≈ array(op(x -> exp(0.1 * x), "CX", s[1], s[2]))
     @test exp_cx ≈ array(op(x -> exp(0.1 * x), ("CX", (1, 2)), s))
+  end
+
+  @testset "Haar-random unitary RandomUnitary" begin
+    s = siteinds(2, 3)
+
+    U = op("RandomUnitary", s, 1, 2)
+    @test eltype(U) == ComplexF64
+    @test order(U) == 4
+    @test is_unitary(U; rtol=1e-15)
+
+    U = op("RandomUnitary", s, 1, 2, 3)
+    @test eltype(U) == ComplexF64
+    @test order(U) == 6
+    @test is_unitary(U; rtol=1e-15)
+
+    U = op("RandomUnitary", s, 1, 2; eltype=Float64)
+    @test eltype(U) == Float64
+    @test order(U) == 4
+    @test is_unitary(U; rtol=1e-15)
+
+    U = op("RandomUnitary", s, 1, 2, 3; eltype=Float64)
+    @test eltype(U) == Float64
+    @test order(U) == 6
+    @test is_unitary(U; rtol=1e-15)
   end
 end
 

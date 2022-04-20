@@ -86,7 +86,7 @@ end
   end
 
   H_noninteracting = MPO(os_noninteracting, s)
-  @test tr(Φ_up' * h_up * Φ_up) + tr(Φ_dn' * h_dn * Φ_dn) ≈ inner(ψ0, H_noninteracting, ψ0) rtol =
+  @test tr(Φ_up' * h_up * Φ_up) + tr(Φ_dn' * h_dn * Φ_dn) ≈ inner(ψ0', H_noninteracting, ψ0) rtol =
     1e-3
 
   # The total interacting Hamiltonian
@@ -108,7 +108,7 @@ end
   @test flux(ψr) == QN(("Nf", Nf, -1), ("Sz", 0))
   @test flux(ψ0) == QN(("Nf", Nf, -1), ("Sz", 0))
 
-  @test inner(ψ0, H, ψ0) < inner(ψr, H, ψr)
+  @test inner(ψ0', H, ψ0) < inner(ψr', H, ψr)
 
   sweeps = Sweeps(3)
   setmaxdim!(sweeps, 10, 20, _maxlinkdim)
@@ -122,7 +122,7 @@ end
   setnoise!(sweeps, 1e-5, 1e-6, 1e-7, 0.0)
   e0, _ = dmrg(H, ψ0, sweeps; outputlevel=0)
 
-  @test e0 > inner(ψ0, H_noninteracting, ψ0)
+  @test e0 > inner(ψ0', H_noninteracting, ψ0)
   @test e0 < er
 end
 
@@ -147,7 +147,7 @@ end
   Φ_up = slater_determinant_matrix(h_up, Nf_up)
   Φ_dn = slater_determinant_matrix(h_dn, Nf_dn)
   ψ = slater_determinant_to_mps(s, Φ_up, Φ_dn; eigval_cutoff=0.0, cutoff=0.0)
-  @test inner(ψ, H, ψ) ≈ tr(Φ_up'h_up * Φ_up) + tr(Φ_dn'h_dn * Φ_dn)
+  @test inner(ψ', H, ψ) ≈ tr(Φ_up'h_up * Φ_up) + tr(Φ_dn'h_dn * Φ_dn)
   @test maxlinkdim(ψ) == 2
   @test flux(ψ) == QN(("Nf", 1, -1), ("Sz", 1))
   ns_up = expect_compat(ψ, "Nup")

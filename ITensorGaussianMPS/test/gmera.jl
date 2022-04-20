@@ -52,7 +52,7 @@ end
   end
   H = MPO(os, s)
 
-  @test inner(ψ, H, ψ) ≈ E rtol = 1e-5
+  @test inner(ψ', H, ψ) ≈ E rtol = 1e-5
 
   # Compare to DMRG
   sweeps = Sweeps(10)
@@ -62,7 +62,7 @@ end
 
   # Create an mps
   @test abs(inner(ψ, ψ̃)) ≈ 1 rtol = 1e-5
-  @test inner(ψ̃, H, ψ̃) ≈ inner(ψ, H, ψ) rtol = 1e-5
+  @test inner(ψ̃', H, ψ̃) ≈ inner(ψ', H, ψ) rtol = 1e-5
   @test E ≈ energy
 end
 
@@ -109,8 +109,8 @@ end
   end
   H = MPO(os, s)
 
-  @test inner(ψ, H, ψ) ≈ E rtol = 1e-5
-  @test inner(ψ, H, ψ) / norm(ψ) ≈ E rtol = 1e-5
+  @test inner(ψ', H, ψ) ≈ E rtol = 1e-5
+  @test inner(ψ', H, ψ) / norm(ψ) ≈ E rtol = 1e-5
 
   # Compare to DMRG
   sweeps = Sweeps(10)
@@ -120,7 +120,7 @@ end
 
   # Create an mps
   @test abs(inner(ψ, ψ̃)) ≈ 1 rtol = 1e-5
-  @test inner(ψ̃, H, ψ̃) ≈ inner(ψ, H, ψ) rtol = 1e-5
+  @test inner(ψ̃', H, ψ̃) ≈ inner(ψ', H, ψ) rtol = 1e-5
   @test E ≈ energy
 end
 
