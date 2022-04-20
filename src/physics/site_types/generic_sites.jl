@@ -4,7 +4,9 @@ function op(::OpName"Id", ::SiteType"Generic", s1::Index, sn::Index...; eltype=F
   return itensor(Matrix(one(eltype) * I, n, n), prime.(s)..., dag.(s)...)
 end
 
-op(::OpName"I", st::SiteType"Generic", s::Index...; kwargs...) = op(OpName("Id"), st, s...; kwargs...)
+function op(::OpName"I", st::SiteType"Generic", s::Index...; kwargs...)
+  return op(OpName("Id"), st, s...; kwargs...)
+end
 
 function op(::OpName"F", st::SiteType"Generic", s::Index; kwargs...)
   return op(OpName("Id"), st, s; kwargs...)
