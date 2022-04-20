@@ -61,10 +61,10 @@ using ITensors, Test
   @testset "orthogonalize!" begin
     orthogonalize!(phi, 1)
     orthogonalize!(K, 1)
-    orig_inner = ⋅(phi, K, phi)
+    orig_inner = ⋅(phi', K, phi)
     orthogonalize!(phi, div(N, 2))
     orthogonalize!(K, div(N, 2))
-    @test ⋅(phi, K, phi) ≈ orig_inner
+    @test ⋅(phi', K, phi) ≈ orig_inner
   end
 
   @testset "inner <y|A|x>" begin
