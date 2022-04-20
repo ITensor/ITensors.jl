@@ -361,8 +361,10 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
       end
     end
 
-    error(
-      "Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::OpName, ::SiteType..., ::Index...)` or `op!(::ITensor, ::OpName, ::SiteType..., ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).",
+    throw(
+      ArgumentError(
+        "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s)).",
+      ),
     )
   end
 
@@ -384,7 +386,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
 
   return throw(
     ArgumentError(
-      "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(commontags_s))",
+      "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s)).",
     ),
   )
 end
