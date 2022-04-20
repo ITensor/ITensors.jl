@@ -555,10 +555,18 @@ function sample(m::MPS)
   return result
 end
 
+_op_prod(o1::AbstractString, o2::AbstractString) = "$o1 * $o2"
+_op_prod(o1::Matrix{<:Number}, o2::Matrix{<:Number}) = o1 * o2
+
 """
     correlation_matrix(psi::MPS,
                        Op1::AbstractString,
                        Op2::AbstractString;
+                       kwargs...)
+
+    correlation_matrix(psi::MPS,
+                       Op1::Matrix{<:Number},
+                       Op2::Matrix{<:Number};
                        kwargs...)
 
 Given an MPS psi and two strings denoting
@@ -582,20 +590,21 @@ m = 4
 s = siteinds("S=1/2",N)
 psi = randomMPS(s; linkdims=m)
 Czz = correlation_matrix(psi,"Sz","Sz")
+Czz = correlation_matrix(psi,[1/2 0; 0 -1/2],[1/2 0; 0 -1/2]) # same as above
 
 s = siteinds("Electron",N; conserve_qns=true)
 psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
 Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
 ``` 
 """
-function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString; kwargs...)
+function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   N = length(psi)
   ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
 
   Op1 = _Op1 #make copies into which we can insert "F" string operators, and then restore.
   Op2 = _Op2
-  onsiteOp = "$Op1 * $Op2"
+  onsiteOp = _op_prod(Op1, Op2)
   fermionic1 = has_fermion_string(Op1, s[1])
   fermionic2 = has_fermion_string(Op2, s[1])
   if fermionic1 != fermionic2
@@ -771,8 +780,9 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 end
 
 """
-    expect(psi::MPS,op::AbstractString...; kwargs...)
-    expect(psi::MPS,ops; kwargs...)
+    expect(psi::MPS, op::AbstractString...; kwargs...)
+    expect(psi::MPS, op::Matrix{<:Number}...; kwargs...)
+    expect(psi::MPS, ops; kwargs...)
 
 Given an MPS `psi` and a single operator name, returns
 a vector of the expected value of the operator on 
@@ -795,8 +805,11 @@ N = 10
 
 s = siteinds("S=1/2",N)
 psi = randomMPS(s; linkdims=8)
+Z = expect(psi,"Sz") # compute for all sites
 Z = expect(psi,"Sz";sites=2:4) # compute for sites 2,3,4
 Z3 = expect(psi,"Sz";sites=3)  # compute for site 3 only (output will be a scalar)
+XZ = expect(psi,["Sx","Sz"]) # compute Sx and Sz for all sites
+Z = expect(psi,[1/2 0; 0 -1/2]) # same as expect(psi,"Sz")
 
 s = siteinds("Electron",N)
 psi = randomMPS(s; linkdims=8)
@@ -845,7 +858,15 @@ function expect(psi::MPS, op::AbstractString; kwargs...)
   return first(expect(psi, (op,); kwargs...))
 end
 
+function expect(psi::MPS, op::Matrix{<:Number}; kwargs...)
+  return first(expect(psi, (op,); kwargs...))
+end
+
 function expect(psi::MPS, op1::AbstractString, ops::AbstractString...; kwargs...)
+  return expect(psi, (op1, ops...); kwargs...)
+end
+
+function expect(psi::MPS, op1::Matrix{<:Number}, ops::Matrix{<:Number}...; kwargs...)
   return expect(psi, (op1, ops...); kwargs...)
 end
 

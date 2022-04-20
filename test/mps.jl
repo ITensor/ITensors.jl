@@ -328,6 +328,17 @@ include("util.jl")
     @test norm(psi) ≈ 1
     @test inner(phi, psi) ≈ 1
 
+    # Zero norm
+    @test norm(0phi) == 0
+    @test lognorm(0phi) == -Inf
+
+    zero_phi = 0phi
+    lognorm_zero_phi = []
+    normalize!(zero_phi; (lognorm!)=lognorm_zero_phi)
+    @test lognorm_zero_phi[1] == -Inf
+    @test norm(zero_phi) == 0
+    @test norm(normalize(0phi)) == 0
+
     # Large number of sites
     psi = randomMPS(siteinds("S=1/2", 1_000); linkdims=10)
 
@@ -781,6 +792,12 @@ end
     s = siteinds("S=1/2", 4; conserve_qns=true)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     test_correlation_matrix(psi, [("S-", "S+"), ("S+", "S-")])
+
+    @test correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) ≈
+      correlation_matrix(psi, "Sz", "Sz")
+    @test expect(psi, [1/2 0; 0 -1/2]) ≈ expect(psi, "Sz")
+    @test all(expect(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) .≈ expect(psi, "Sz", "Sz"))
+    @test expect(psi, [[1/2 0; 0 -1/2], [1/2 0; 0 -1/2]]) ≈ expect(psi, ["Sz", "Sz"])
 
     s = siteinds("S=1/2", length(s); conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
