@@ -1,4 +1,4 @@
-function op!(o::ITensors, ::OpName"Id", ::SiteType"Generic", s1::Index, sn::Index...; eltype=Float64)
+function op!(o::ITensor, ::OpName"Id", ::SiteType"Generic", s1::Index, sn::Index...; eltype=Float64)
   s = (s1, sn...)
   n = prod(dim.(s))
   t = itensor(Matrix(one(eltype) * I, n, n), prime.(s)..., dag.(s)...)
