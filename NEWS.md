@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.10 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Update installation instructions for Julia 1.7.
+
 ITensors v0.3.9 Release Notes
 =============================
 
