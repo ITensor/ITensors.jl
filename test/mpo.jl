@@ -399,7 +399,7 @@ end
     l = [Index(3, "left_$n") for n in 1:2]
     r = [Index(3, "right_$n") for n in 1:2]
 
-    sis = IndexSet.(prime.(s), s)
+    sis = [[sₙ', sₙ] for sₙ in s]
 
     A = randomITensor(s..., prime.(s)...)
     ψ = MPO(A, sis; orthocenter=4)
@@ -428,6 +428,10 @@ end
     @test prod(ψ) ≈ A
     @test ITensors.orthocenter(ψ) == 3
     @test maxlinkdim(ψ) == 1
+
+    # Use matrix
+    @test MPO(s, [1/2 0; 0 1/2]) ≈ MPO(s, "Id") ./ 2
+    @test MPO(s, _ -> [1/2 0; 0 1/2]) ≈ MPO(s, "Id") ./ 2
 
     ψ0 = MPO(s, "Id")
     A = prod(ψ0)
