@@ -8,7 +8,7 @@ qn(qnblock::QNBlock) = qnblock.first
 # Get the dimension of the specified block
 blockdim(qnblock::QNBlock) = qnblock.second
 
-NDTensors.resize(qnblock::QNBlock,newdim::Int64) = QNBlock(qnblock.first,newdim)
+NDTensors.resize(qnblock::QNBlock, newdim::Int64) = QNBlock(qnblock.first, newdim)
 
 # Get the dimension of the specified block
 blockdim(qnblocks::QNBlocks, b::Integer) = blockdim(qnblocks[b])
@@ -359,9 +359,9 @@ end
 # Make a new Index with the specified qn blocks
 replaceqns(i::QNIndex, qns::QNBlocks) = setspace(i, qns)
 
-NDTensors.block(i::QNIndex,n::Integer) = space(i)[n]
+NDTensors.block(i::QNIndex, n::Integer) = space(i)[n]
 
-NDTensors.addblock!(i::QNIndex,b::QNBlock) = push!(i.space,b)
+NDTensors.addblock!(i::QNIndex, b::QNBlock) = push!(i.space, b)
 
 function setblockdim!(i::QNIndex, newdim::Integer, n::Integer)
   qns = space(i)

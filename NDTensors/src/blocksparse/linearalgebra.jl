@@ -74,7 +74,7 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   dropblocks = Int[]
   if truncate
     truncerr, docut = truncate!(d; kwargs...)
-    for (n,blockT) in enumerate(nzblocksT)
+    for (n, blockT) in enumerate(nzblocksT)
       blockdim = _truncated_blockdim(Ss[n], docut; singular_values=true, truncate=truncate)
       if blockdim == 0
         push!(dropblocks, n)
@@ -95,19 +95,19 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   # Make indices of U and V 
   # that connect to S
   #
-  i1 = ind(T,1)
-  i2 = ind(T,2)
+  i1 = ind(T, 1)
+  i2 = ind(T, 2)
   uind = dag(sim(i1))
   vind = dag(sim(i2))
-  resize!(uind,0)
-  resize!(vind,0)
-  for (n,blockT) in enumerate(nzblocksT)
-    Udim = size(Us[n],2)
-    b1 = block(i1,blockT[1])
-    addblock!(uind,resize(b1,Udim))
-    Vdim = size(Vs[n],2)
-    b2 = block(i2,blockT[2])
-    addblock!(vind,resize(b2,Vdim))
+  resize!(uind, 0)
+  resize!(vind, 0)
+  for (n, blockT) in enumerate(nzblocksT)
+    Udim = size(Us[n], 2)
+    b1 = block(i1, blockT[1])
+    addblock!(uind, resize(b1, Udim))
+    Vdim = size(Vs[n], 2)
+    b2 = block(i2, blockT[2])
+    addblock!(vind, resize(b2, Vdim))
   end
 
   #
@@ -129,7 +129,7 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   nzblocksS = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksV = Vector{Block{2}}(undef, nnzblocksT)
 
-  for (n,blockT) in enumerate(nzblocksT)
+  for (n, blockT) in enumerate(nzblocksT)
     blockU = (blockT[1], UInt(n))
     nzblocksU[n] = blockU
 
