@@ -124,6 +124,7 @@ import ITensors.NDTensors:
   AllowAlias,
   NeverAlias,
   # Methods
+  addblock!,
   array,
   blockdim,
   blockoffsets,

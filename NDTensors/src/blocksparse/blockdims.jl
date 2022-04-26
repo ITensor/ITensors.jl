@@ -202,6 +202,12 @@ blockindex(T) = (), Block{0}()
 # This is to help with ITensor compatibility
 #
 
+block(i::BlockDim,n::Integer) = i[n]
+
+resize(n::Int,newdim::Int) = newdim
+
+addblock!(i::BlockDim,b::Int) = push!(i,b)
+
 setblockdim!(dim1::BlockDim, newdim::Int, n::Int) = setindex!(dim1, newdim, n)
 
 sim(dim::BlockDim) = copy(dim)
