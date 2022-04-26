@@ -70,11 +70,10 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   # that are not dropped
   nzblocksT = nzblocks(T)
 
-  truncerr, docut = 0.0, 0.0
   dropblocks = Int[]
   if truncate
     truncerr, docut = truncate!(d; kwargs...)
-    for (n, blockT) in enumerate(nzblocksT)
+    for n in 1:nnzblocks(T)
       blockdim = _truncated_blockdim(Ss[n], docut; singular_values=true, truncate=truncate)
       if blockdim == 0
         push!(dropblocks, n)
@@ -89,6 +88,8 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     deleteat!(Ss, dropblocks)
     deleteat!(Vs, dropblocks)
     deleteat!(nzblocksT, dropblocks)
+  else
+    truncerr, docut = 0.0, 0.0
   end
 
   #
