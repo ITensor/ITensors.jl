@@ -44,6 +44,10 @@ default_vertex_textsize(b::Backend, g) = 20
 default_edge_textsize(b::Backend) = 30
 
 function default_edge_labels(b::Backend, g::AbstractGraph)
+  return fill("", ne(g))
+end
+
+function default_edge_labels(b::Backend, g::AbstractMetaGraph)
   return IndexLabels(b)
 end
 
