@@ -361,7 +361,7 @@ replaceqns(i::QNIndex, qns::QNBlocks) = setspace(i, qns)
 
 NDTensors.block(i::QNIndex, n::Integer) = space(i)[n]
 
-NDTensors.addblock!(i::QNIndex, b::QNBlock) = push!(i.space, b)
+NDTensors.pushblock!(i::QNIndex, b::QNBlock) = push!(i.space, b)
 
 function setblockdim!(i::QNIndex, newdim::Integer, n::Integer)
   qns = space(i)
