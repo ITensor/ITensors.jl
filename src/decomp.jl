@@ -116,27 +116,6 @@ function svd(A::ITensor, Linds...; kwargs...)
   u = commonind(S, UC)
   v = commonind(S, VC)
 
-  if hasqns(A)
-    # Fix the flux of UC,S,VC
-    # such that flux(UC) == flux(VC) == QN()
-    # and flux(S) == flux(A)
-    for b in nzblocks(UC)
-      i1 = inds(UC)[1]
-      i2 = inds(UC)[2]
-      newqn = -dir(i2) * flux(i1 => Block(b[1]))
-      setblockqn!(i2, newqn, b[2])
-      setblockqn!(u, newqn, b[2])
-    end
-
-    for b in nzblocks(VC)
-      i1 = inds(VC)[1]
-      i2 = inds(VC)[2]
-      newqn = -dir(i2) * flux(i1 => Block(b[1]))
-      setblockqn!(i2, newqn, b[2])
-      setblockqn!(v, newqn, b[2])
-    end
-  end
-
   U = UC * dag(CL)
   V = VC * dag(CR)
 
