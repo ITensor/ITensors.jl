@@ -108,10 +108,10 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   for (n, blockT) in enumerate(nzblocksT)
     Udim = size(Us[n], 2)
     b1 = block(i1, blockT[1])
-    setblock!(uind, resize(b1, Udim),n)
+    setblock!(uind, resize(b1, Udim), n)
     Vdim = size(Vs[n], 2)
     b2 = block(i2, blockT[2])
-    setblock!(vind, resize(b2, Vdim),n)
+    setblock!(vind, resize(b2, Vdim), n)
   end
 
   #
