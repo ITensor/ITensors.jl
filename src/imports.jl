@@ -123,8 +123,6 @@ import ITensors.NDTensors:
   AliasStyle,
   AllowAlias,
   NeverAlias,
-  # Methods
-  addblock!,
   array,
   blockdim,
   blockoffsets,
@@ -154,6 +152,7 @@ import ITensors.NDTensors:
   permuteblocks,
   polar,
   scale!,
+  setblock!,
   setblockdim!,
   setinds,
   setstorage,

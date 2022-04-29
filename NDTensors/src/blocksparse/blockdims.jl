@@ -206,9 +206,9 @@ block(i::BlockDim, n::Integer) = i[n]
 
 resize(n::Int, newdim::Int) = newdim
 
-pushblock!(i::BlockDim, b::Int) = push!(i, b)
-
 setblockdim!(dim1::BlockDim, newdim::Int, n::Int) = setindex!(dim1, newdim, n)
+
+setblock!(i::BlockDim, b::Int, n::Integer) = (i[n] = b)
 
 sim(dim::BlockDim) = copy(dim)
 
