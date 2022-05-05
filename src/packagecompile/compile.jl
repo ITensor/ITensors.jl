@@ -147,18 +147,18 @@ function script_to_watch(;include_MKL::Bool=false, num_threads::Int=1, blockspar
 
     # consider two cases for multithreading:
     # 1. BlockSparse multithreading with QN conservation
-    if $(num_threads) > 1 && blocksparse_multithreading
+    if $(num_threads) > 1 && $(blocksparse_multithreading)
       BLAS.set_num_threads(1)
       ITensors.Strided.set_num_threads(1)
       ITensors.enable_threaded_blocksparse()
     # 2. BLAS multithreading
-    elseif $(num_threads) > 1 && !blocksparse_multithreading
+    elseif $(num_threads) > 1 && !$(blocksparse_multithreading)
       BLAS.set_num_threads(num_threads)
       ITensors.Strided.set_num_threads(1)
       ITensors.disable_threaded_blocksparse()
     end
     
-    contraction_sequence_optimization && ITensors.enable_contraction_sequence_optimization()
+    $(contraction_sequence_optimization) && ITensors.enable_contraction_sequence_optimization()
 
     # what follows is the basis script to be watched for compilation
     N = 6
