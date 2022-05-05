@@ -89,10 +89,10 @@ function compile(;
   # adaption from https://github.com/JuliaLang/PackageCompiler.jl/ 
   if num_threads > 1
     precompile_cmd = `$(get_julia_cmd()) -t $(num_threads) --compile=all --trace-compile=$tracefile $(precompile_file)`
-    build_args = `$(get(kwargs, :Cmd, ``)) -t $(num_threads)`
+    build_args = `$(get(kwargs, :AbstractString, "")) -t $(num_threads)`
   else
     precompile_cmd = `$(get_julia_cmd()) --compile=all --trace-compile=$tracefile $(precompile_file)`
-    build_args = get(kwargs, :Cmd,``)
+    build_args = get(kwargs, :Cmd, ``)
   end
 
   splitter = Sys.iswindows() ? ';' : ':'
@@ -104,15 +104,11 @@ function compile(;
 
   package_list = include_MKL == true ? [:ITensors, :MKL] : [:ITensors]
 
-  
-
-
-
-
   create_sysimage(
     package_list;
     sysimage_path=path,
-    precompile_execution_file=joinpath(@__DIR__, "precompile_itensors.jl"),
+    # precompile_execution_file=joinpath(@__DIR__, "precompile_itensors.jl"),
+    precompile_statements_file=tracefile,
     sysimage_build_args=build_args,
   )
   println(compile_note(; dir=dir, filename=filename))
