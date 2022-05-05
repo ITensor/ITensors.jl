@@ -92,7 +92,7 @@ function compile(;
     build_args = `$(get(kwargs, :AbstractString, "")) -t $(num_threads)`
   else
     precompile_cmd = `$(get_julia_cmd()) --compile=all --trace-compile=$tracefile $(precompile_file)`
-    build_args = get(kwargs, :Cmd, ``)
+    build_args = `$(get(kwargs, :AbstractString, ""))`
   end
 
   splitter = Sys.iswindows() ? ';' : ':'
