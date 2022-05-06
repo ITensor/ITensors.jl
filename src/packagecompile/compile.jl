@@ -120,7 +120,7 @@ end
 @doc """
     ITensors.compile(; dir = "$(default_compile_dir())",
                        filename = "$(default_compile_filename())",
-                       build_args::Cmd=`-t $(num_threads)`,
+                       build_args::Cmd=`-t <num_threads>`,
                        include_MKL::Bool = false,
                        num_threads::Int = 1,
                        blocksparse_multithreading::Bool = false,
