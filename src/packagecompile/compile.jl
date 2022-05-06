@@ -8,10 +8,15 @@ default_compile_path() = joinpath(default_compile_dir(), default_compile_filenam
 # SOURCE: https://github.com/JuliaLang/PackageCompiler.jl/blob/adbf1df36aadc245f95d1282dda02d8bbeccb32f/src/PackageCompiler.jl#L166
 function get_julia_cmd()
   julia_path = joinpath(Sys.BINDIR, Base.julia_exename())
-  color = Base.have_color === nothing ? "auto" : Base.have_color ? "yes" : "no"
+  color = if Base.have_color === nothing
+    "auto"
+  elseif Base.have_color
+    "yes"
+  else
+    "no"
+  end
   return `$julia_path --color=$color --startup-file=no`
 end
-
 
 function compile_note(; dir=default_compile_dir(), filename=default_compile_filename())
   path = joinpath(dir, filename)
@@ -38,8 +43,8 @@ end
 function compile(;
   dir::AbstractString=default_compile_dir(),
   filename::AbstractString=default_compile_filename(),
-  kwargs...
-  )
+  kwargs...,
+)
   if !isdir(dir)
     println("""The directory "$dir" doesn't exist yet, creating it now.""")
     println()
@@ -50,12 +55,12 @@ function compile(;
     """Creating the system image "$path" containing the compiled version of ITensors. This may take a few minutes.""",
   )
 
-  include_MKL::Bool = get(kwargs,:include_MKL,false)
-  num_threads::Int = get(kwargs,:num_threads,1)
-  blocksparse_multithreading::Bool = get(kwargs,:blocksparse_multithreading,false)
-  contraction_sequence_optimization::Bool = get(kwargs,:contraction_sequence_optimization,true)
-
-
+  include_MKL::Bool = get(kwargs, :include_MKL, false)
+  num_threads::Int = get(kwargs, :num_threads, 1)
+  blocksparse_multithreading::Bool = get(kwargs, :blocksparse_multithreading, false)
+  contraction_sequence_optimization::Bool = get(
+    kwargs, :contraction_sequence_optimization, true
+  )
 
   project = dirname(Base.active_project())
 
@@ -73,17 +78,18 @@ function compile(;
   # reflecting the user choice of multithreading enabled/disabled and or MKL, etc.
   # First convert Expr object of script_to_watch() to a string that can be written to disk
   open(precompile_file, "w") do fout
-    write(fout,string(script_to_watch(;
-                      include_MKL=include_MKL,
-                      num_threads=num_threads,
-                      blocksparse_multithreading=blocksparse_multithreading,
-                      contraction_sequence_optimization=contraction_sequence_optimization,
-                      )
-                    )
+    write(
+      fout,
+      string(
+        script_to_watch(;
+          include_MKL=include_MKL,
+          num_threads=num_threads,
+          blocksparse_multithreading=blocksparse_multithreading,
+          contraction_sequence_optimization=contraction_sequence_optimization,
+        ),
+      ),
     )
   end
-
-
 
   # Cruical advantage here: controlling the process that produces the tracefile and possibly enable multithreading
   # adaption from https://github.com/JuliaLang/PackageCompiler.jl/ 
@@ -104,10 +110,10 @@ function compile(;
   # Here, we optionally include the multithreading which is then quicker to 
   run(precompile_cmd)
 
-
   package_list = include_MKL == true ? [:ITensors, :MKL] : [:ITensors]
 
-  create_sysimage(package_list,
+  create_sysimage(
+    package_list;
     sysimage_path=path,
     # precompile_execution_file=joinpath(@__DIR__, "precompile_itensors.jl"),
     precompile_statements_file=tracefile,
@@ -148,14 +154,18 @@ $(compile_note())
 # this function is needed as we dynamically need to adapt the execution file
 # to reflect the multithreading features (or not)
 # script_to_watch() returns an `Expr` object
-function script_to_watch(;include_MKL::Bool=false, num_threads::Int=1, blocksparse_multithreading::Bool=false, contraction_sequence_optimization::Bool=true)
-
+function script_to_watch(;
+  include_MKL::Bool=false,
+  num_threads::Int=1,
+  blocksparse_multithreading::Bool=false,
+  contraction_sequence_optimization::Bool=true,
+)
   quote
     using ITensors, LinearAlgebra
-    $(include_MKL)==true && using MKL
+    $(include_MKL) == true && using MKL
 
     # check if num_threads is a positive integer
-    if $(num_threads) <=0
+    if $(num_threads) <= 0
       throw(ArgumentError("num_threads must be positive integer but is $(num_threads)!"))
     end
 
@@ -165,14 +175,15 @@ function script_to_watch(;include_MKL::Bool=false, num_threads::Int=1, blockspar
       BLAS.set_num_threads(1)
       ITensors.Strided.set_num_threads(1)
       ITensors.enable_threaded_blocksparse()
-    # 2. BLAS multithreading
+      # 2. BLAS multithreading
     elseif $(num_threads) > 1 && !$(blocksparse_multithreading)
       BLAS.set_num_threads(num_threads)
       ITensors.Strided.set_num_threads(1)
       ITensors.disable_threaded_blocksparse()
     end
-    
-    $(contraction_sequence_optimization) && ITensors.enable_contraction_sequence_optimization()
+
+    $(contraction_sequence_optimization) &&
+      ITensors.enable_contraction_sequence_optimization()
 
     # what follows is the basis script to be watched for compilation
     N = 6
@@ -200,6 +211,4 @@ function script_to_watch(;include_MKL::Bool=false, num_threads::Int=1, blockspar
     psi0_qn = randomMPS(sites_qn, [isodd(n) ? "Up" : "Dn" for n in 1:N]; linkdims=2)
     dmrg(H_qn, psi0_qn, sweeps)
   end
-
 end
-
