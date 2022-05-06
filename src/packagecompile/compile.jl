@@ -89,11 +89,11 @@ function compile(;
   # adaption from https://github.com/JuliaLang/PackageCompiler.jl/ 
   if num_threads > 1
     precompile_cmd = `$(get_julia_cmd()) -t $(num_threads) --compile=all --trace-compile=$tracefile $(precompile_file)`
-    build_args = `$(get(kwargs, :build_args, "")) -t $(num_threads)`
   else
     precompile_cmd = `$(get_julia_cmd()) --compile=all --trace-compile=$tracefile $(precompile_file)`
-    build_args = get(kwargs, :build_args, ``)
   end
+
+  build_args = get(kwargs, :build_args, `-t $(num_threads)`)
 
   # add splitted paths to PATH depending on system
   splitter = Sys.iswindows() ? ';' : ':'
@@ -120,7 +120,7 @@ end
 @doc """
     ITensors.compile(; dir = "$(default_compile_dir())",
                        filename = "$(default_compile_filename())",
-                       build_args::AbstractString="",
+                       build_args::Cmd=`-t $(num_threads)`,
                        include_MKL::Bool = false,
                        num_threads::Int = 1,
                        blocksparse_multithreading::Bool = false,
@@ -131,7 +131,7 @@ Compile ITensors.jl with [PackageCompiler](https://julialang.github.io/PackageCo
 
 This will create a system image containing the compiled version of ITensors located at `dir/filename`, by default `$(default_compile_path())`.
 
- - `build_args::AbstractString`: A set of command line options that is used in the Julia process building the sysimage, for example `"-O1"`.
+ - `build_args::AbstractString`: A set of command line options that is used in the Julia process building the sysimage, for example `"-O1"`. Note that if you specify it explicitely and want to use multithreading make sure to include `-t <num_threads>`.
  
  - `num_threads::Int` Sets the number of threads the functions in the system image are using. If `blocksparse_multithreading=false` then the set amount of threads are allocated to `BLAS.set_num_threads(num_threads)`, cf. below. Note ITensors.Strided multithreading is disabled.
 
