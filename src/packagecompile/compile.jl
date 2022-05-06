@@ -39,7 +39,7 @@ function compile(;
   dir::AbstractString=default_compile_dir(),
   filename::AbstractString=default_compile_filename(),
   kwargs...
-)
+  )
   if !isdir(dir)
     println("""The directory "$dir" doesn't exist yet, creating it now.""")
     println()
@@ -89,23 +89,25 @@ function compile(;
   # adaption from https://github.com/JuliaLang/PackageCompiler.jl/ 
   if num_threads > 1
     precompile_cmd = `$(get_julia_cmd()) -t $(num_threads) --compile=all --trace-compile=$tracefile $(precompile_file)`
-    build_args = `$(get(kwargs, :AbstractString, "")) -t $(num_threads)`
+    build_args = `$(get(kwargs, :build_args, "")) -t $(num_threads)`
   else
     precompile_cmd = `$(get_julia_cmd()) --compile=all --trace-compile=$tracefile $(precompile_file)`
-    build_args = `$(get(kwargs, :AbstractString, ""))`
+    build_args = get(kwargs, :build_args, ``)
   end
 
+  # add splitted paths to PATH depending on system
   splitter = Sys.iswindows() ? ';' : ':'
-
+  # add environment variables to execution command
   precompile_cmd = addenv(precompile_cmd, "JULIA_LOAD_PATH" => "$project$(splitter)@stdlib")
-
+  # run the julia process that generate the tracefile 
+  # which will be used to compile the system image.
+  # Here, we optionally include the multithreading which is then quicker to 
   run(precompile_cmd)
 
 
   package_list = include_MKL == true ? [:ITensors, :MKL] : [:ITensors]
 
-  create_sysimage(
-    package_list;
+  create_sysimage(package_list,
     sysimage_path=path,
     # precompile_execution_file=joinpath(@__DIR__, "precompile_itensors.jl"),
     precompile_statements_file=tracefile,
@@ -118,15 +120,27 @@ end
 @doc """
     ITensors.compile(; dir = "$(default_compile_dir())",
                        filename = "$(default_compile_filename())",
-                       build_args::Cmd=``
+                       build_args::AbstractString="",
+                       include_MKL::Bool = false,
+                       num_threads::Int = 1,
+                       blocksparse_multithreading::Bool = false,
+                       contraction_sequence_optimization::Bool = true
                        )
 
 Compile ITensors.jl with [PackageCompiler](https://julialang.github.io/PackageCompiler.jl/dev/). This will take some time, perhaps a few minutes.
 
 This will create a system image containing the compiled version of ITensors located at `dir/filename`, by default `$(default_compile_path())`.
 
- - `sysimage_build_args::Cmd`: A set of command line options that is used in the Julia process building the sysimage, for example `-O1 -t 4 `.
- Consider using multithreading argument `-t <nthreads>` especially when using multithreading with BlockSparse ITensors.
+ - `build_args::AbstractString`: A set of command line options that is used in the Julia process building the sysimage, for example `"-O1"`.
+ 
+ - `num_threads::Int` Sets the number of threads the functions in the system image are using. If `blocksparse_multithreading=false` then the set amount of threads are allocated to `BLAS.set_num_threads(num_threads)`, cf. below. Note ITensors.Strided multithreading is disabled.
+
+ - `include_MKL::Bool` Decide to include MKL.jl in the system image (`include_MKL=true`) or not (`include_MKL=false`).
+
+ - `blocksparse_multithreading::Bool` decide to use the multithreading features of BlockSparse ITensors when conserving QNs.
+    Note that this requires `num_threads>1`. If set `false` when `num_threads>1` then `BLAS.set_num_threads(num_threads)`. If set `true`, the blocksparse_multithreading will be enabled. Note Strided multithreading is disabled.
+
+ - `contraction_sequence_optimization::Bool` use `ITensors.enable_contraction_sequence_optimization()` in system image
 
 $(compile_note())
 """ compile
