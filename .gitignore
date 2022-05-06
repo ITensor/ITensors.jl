@@ -21,3 +21,5 @@ ITensorVisualizationBase/Manifest.toml
 ITensorVisualizationBase/test/Manifest.toml
 /Manifest.toml
 docs/Manifest.toml
+/src/packagecompile/script_to_watch.jl
+/src/packagecompile/tracefile.jl
