@@ -99,15 +99,15 @@ function compile(;
     precompile_cmd = `$(get_julia_cmd()) --compile=all --trace-compile=$tracefile $(precompile_file)`
   end
 
+  # change build arguments of sysimage accordingly
   build_args = get(kwargs, :build_args, `-t $(num_threads)`)
 
   # add splitted paths to PATH depending on system
   splitter = Sys.iswindows() ? ';' : ':'
   # add environment variables to execution command
   precompile_cmd = addenv(precompile_cmd, "JULIA_LOAD_PATH" => "$project$(splitter)@stdlib")
-  # run the julia process that generate the tracefile 
+  # run the julia process that generates the tracefile,
   # which will be used to compile the system image.
-  # Here, we optionally include the multithreading which is then quicker to 
   run(precompile_cmd)
 
   package_list = include_MKL == true ? [:ITensors, :MKL] : [:ITensors]
