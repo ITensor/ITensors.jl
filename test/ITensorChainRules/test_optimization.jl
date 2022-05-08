@@ -124,7 +124,7 @@ include("utils/circuit.jl")
   end
 
   @testset "State preparation (MPS)" begin
-    for gate in ["Ry"]#="Rx", =#
+    for gate in ["Ry"] #="Rx", =#
       nsites = 4 # Number of sites
       nlayers = 2 # Layers of gates in the ansatz
       gradtol = 1e-3 # Tolerance for stopping gradient descent
