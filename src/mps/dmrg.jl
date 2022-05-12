@@ -29,7 +29,7 @@ and the `sweeps` object determines the parameters used to
 control the DMRG algorithm.
 
 Returns:
-* `energy::Float64` - eigenvalue of the optimized MPS
+* `energy::Complex` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 
 Optional keyword arguments:
@@ -37,7 +37,7 @@ Optional keyword arguments:
 * `observer` - object implementing the [Observer](@ref observer) interface which can perform measurements and stop DMRG early
 * `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this value, begin saving tensors to disk to free memory in large calculations
 """
-function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
+function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   # Permute the indices to have a better memory layout
@@ -65,10 +65,10 @@ the set of MPOs [H1,H2,H3,..] is efficiently looped over at
 each step of the DMRG algorithm when optimizing the MPS.
 
 Returns:
-* `energy::Float64` - eigenvalue of the optimized MPS
+* `energy::Complex` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
+function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
   for H in Hs
     check_hascommoninds(siteinds, H, psi0)
     check_hascommoninds(siteinds, H, psi0')
@@ -95,12 +95,12 @@ and the `sweeps` object determines the parameters used to
 control the DMRG algorithm.
 
 Returns:
-* `energy::Float64` - eigenvalue of the optimized MPS
+* `energy::Complex` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
 function dmrg(
   H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...
-)::Tuple{Number,MPS}
+)::Tuple{Complex,MPS}
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   for M in Ms
@@ -113,7 +113,7 @@ function dmrg(
   return dmrg(PMM, psi0, sweeps; kwargs...)
 end
 
-function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
+function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
   if length(psi0) == 1
     error(
       "`dmrg` currently does not support system sizes of 1. You can diagonalize the MPO tensor directly with tools like `LinearAlgebra.eigen`, `KrylovKit.eigsolve`, etc.",
@@ -137,7 +137,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   )
 
   # eigsolve kwargs
-  eigsolve_tol::Float64 = get(kwargs, :eigsolve_tol, 1e-14)
+  eigsolve_tol::Number = get(kwargs, :eigsolve_tol, 1e-14)
   eigsolve_krylovdim::Int = get(kwargs, :eigsolve_krylovdim, 3)
   eigsolve_maxiter::Int = get(kwargs, :eigsolve_maxiter, 1)
   eigsolve_verbosity::Int = get(kwargs, :eigsolve_verbosity, 0)
@@ -182,7 +182,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
   @assert isortho(psi) && orthocenter(psi) == 1
 
   position!(PH, psi, 1)
-  energy = 0.0
+  energy = 0.0 + 0.0im
 
   for sw in 1:nsweep(sweeps)
     sw_time = @elapsed begin
@@ -216,7 +216,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
         @timeit_debug timer "dmrg: psi[b]*psi[b+1]" begin
           phi = psi[b] * psi[b + 1]
         end
-
+        
         @timeit_debug timer "dmrg: eigsolve" begin
           vals, vecs = eigsolve(
             PH,
@@ -229,7 +229,9 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
             maxiter=eigsolve_maxiter,
           )
         end
-        energy::Number = vals[1]
+        #energy::Complex = vals[1]
+        energy::Complex = vals[1]
+        
         phi::ITensor = vecs[1]
 
         ortho = ha == 1 ? "left" : "right"
@@ -283,7 +285,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
           )
           flush(stdout)
         end
-
+        
         sweep_is_done = (b == 1 && ha == 2)
         measure!(
           obs;
@@ -298,11 +300,13 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
         )
       end
     end
+####problema aca!
     if outputlevel >= 1
       @printf(
-        "After sweep %d energy=%.12f maxlinkdim=%d maxerr=%.2E time=%.3f\n",
+         "After sweep %d Real_energy=%.12f Im_energy=%.12f  maxlinkdim=%d maxerr=%.2E time=%.3f\n",
         sw,
-        energy,
+        real(energy),
+        imag(energy),
         maxlinkdim(psi),
         maxtruncerr,
         sw_time
@@ -310,11 +314,11 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Number,MPS}
       flush(stdout)
     end
     isdone = checkdone!(obs; energy=energy, psi=psi, sweep=sw, outputlevel=outputlevel)
-
     isdone && break
   end
   return (energy, psi)
 end
+
 
 function _dmrg_sweeps(;
   nsweeps, maxdim=typemax(Int), mindim=1, cutoff=1E-8, noise=0.0, kwargs...

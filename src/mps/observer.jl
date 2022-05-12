@@ -31,7 +31,8 @@ struct DMRGObserver <: AbstractObserver
   ops::Vector{String}
   sites::Vector{<:Index}
   measurements::Dict{String,DMRGMeasurement}
-  energies::Vector{Float64}
+  #energies::Vector{Float64}
+  energies::Vector{Complex}
   truncerrs::Vector{Float64}
   etol::Float64
   minsweeps::Int64
@@ -157,8 +158,9 @@ end
 function checkdone!(o::DMRGObserver; kwargs...)
   outputlevel = get(kwargs, :outputlevel, false)
   if (
-    length(energies(o)) > o.minsweeps &&
-    abs(energies(o)[end] - energies(o)[end - 1]) < o.etol
+    length(real(energies(o))) > o.minsweeps &&
+    #abs(energies(o)[end] - energies(o)[end - 1]) < o.etol
+    abs(real(energies(o))[end] - real(energies(o))[end - 1]) < o.etol
   )
     outputlevel > 0 && println("Energy difference less than $(o.etol), stopping DMRG")
     return true
