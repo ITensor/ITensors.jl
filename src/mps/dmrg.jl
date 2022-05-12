@@ -229,7 +229,6 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
             maxiter=eigsolve_maxiter,
           )
         end
-        #energy::Complex = vals[1]
         energy::Complex = vals[1]
         
         phi::ITensor = vecs[1]
