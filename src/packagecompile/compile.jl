@@ -66,21 +66,19 @@ function compile(;
 
   # define tracefile that contains the objects the PackageCompiler has to compile
   # tracefile = joinpath(@__DIR__, "tracefile.jl")
-  tracefile, io_tracefile = mktemp(;cleanup=false)
+  tracefile, io_tracefile = mktemp(; cleanup=false)
   close(io_tracefile)
-  
-
 
   # Define script from which a julia process will watch which objects are to be compiled in a new system image
   # key feature here is that we control the process itself that generates the tracefile,
   # which allows us to let the process be multithreaded (or not)
   # precompile_file = joinpath(@__DIR__, "script_to_watch.jl")
-  precompile_file, io_precompile_file = mktemp(;cleanup=false)
+  precompile_file, io_precompile_file = mktemp(; cleanup=false)
 
   # write the dynamically generated precompilation file to disk
   # reflecting the user choice of multithreading enabled/disabled and or MKL, etc.
   # First convert Expr object of script_to_watch() to a string that can be written to disk
-  
+
   write(
     io_precompile_file,
     string(
