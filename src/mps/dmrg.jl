@@ -37,7 +37,7 @@ Optional keyword arguments:
 * `observer` - object implementing the [Observer](@ref observer) interface which can perform measurements and stop DMRG early
 * `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this value, begin saving tensors to disk to free memory in large calculations
 """
-function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
+function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   # Permute the indices to have a better memory layout
@@ -68,7 +68,7 @@ Returns:
 * `energy::Complex` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
+function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
   for H in Hs
     check_hascommoninds(siteinds, H, psi0)
     check_hascommoninds(siteinds, H, psi0')
@@ -99,8 +99,7 @@ Returns:
 * `psi::MPS` - optimized MPS
 """
 function dmrg(
-  H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...
-)::Tuple{Complex,MPS}
+  H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   for M in Ms
@@ -113,7 +112,7 @@ function dmrg(
   return dmrg(PMM, psi0, sweeps; kwargs...)
 end
 
-function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
+function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   if length(psi0) == 1
     error(
       "`dmrg` currently does not support system sizes of 1. You can diagonalize the MPO tensor directly with tools like `LinearAlgebra.eigen`, `KrylovKit.eigsolve`, etc.",
@@ -182,7 +181,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
   @assert isortho(psi) && orthocenter(psi) == 1
 
   position!(PH, psi, 1)
-  energy = 0.0 + 0.0im
+  energy = 0.0 
 
   for sw in 1:nsweep(sweeps)
     sw_time = @elapsed begin
@@ -229,8 +228,8 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
             maxiter=eigsolve_maxiter,
           )
         end
-        energy::Complex = vals[1]
         
+        energy = vals[1]
         phi::ITensor = vecs[1]
 
         ortho = ha == 1 ? "left" : "right"
@@ -271,7 +270,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
 
         if outputlevel >= 2
           @printf(
-            "Sweep %d, half %d, bond (%d,%d) energy=%.12f\n", sw, ha, b, b + 1, energy
+            "Sweep %d, half %d, bond (%d,%d) energy=%s\n", sw, ha, b, b + 1, energy
           )
           @printf(
             "  Truncated using cutoff=%.1E maxdim=%d mindim=%d\n",
@@ -299,13 +298,11 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
         )
       end
     end
-####problema aca!
     if outputlevel >= 1
       @printf(
-         "After sweep %d Real_energy=%.12f Im_energy=%.12f  maxlinkdim=%d maxerr=%.2E time=%.3f\n",
+        "After sweep %d energy=%s  maxlinkdim=%d maxerr=%.2E time=%.3f\n",
         sw,
-        real(energy),
-        imag(energy),
+        energy,
         maxlinkdim(psi),
         maxtruncerr,
         sw_time
@@ -317,7 +314,6 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)::Tuple{Complex,MPS}
   end
   return (energy, psi)
 end
-
 
 function _dmrg_sweeps(;
   nsweeps, maxdim=typemax(Int), mindim=1, cutoff=1E-8, noise=0.0, kwargs...

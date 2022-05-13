@@ -31,7 +31,6 @@ struct DMRGObserver <: AbstractObserver
   ops::Vector{String}
   sites::Vector{<:Index}
   measurements::Dict{String,DMRGMeasurement}
-  #energies::Vector{Float64}
   energies::Vector{Complex}
   truncerrs::Vector{Float64}
   etol::Float64
