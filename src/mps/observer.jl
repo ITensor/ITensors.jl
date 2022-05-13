@@ -27,11 +27,11 @@ implements custom measurements and allows
 the `dmrg` function to return early if an
 energy convergence criterion is met.
 """
-struct DMRGObserver <: AbstractObserver
+struct DMRGObserver{T} <: AbstractObserver
   ops::Vector{String}
   sites::Vector{<:Index}
   measurements::Dict{String,DMRGMeasurement}
-  energies::Vector{Complex}
+  energies::Vector{T}
   truncerrs::Vector{Float64}
   etol::Float64
   minsweeps::Int64
@@ -39,20 +39,27 @@ end
 
 """
     DMRGObserver(;energy_tol=0.0,
-                  minsweeps=2)
+                  minsweeps=2,
+                  complex_energies=false)
 
 Construct a DMRGObserver by providing the energy
 tolerance used for early stopping, and minimum number
 of sweeps that must be done.
 
+Optional keyword arguments:
   - energy_tol: if the energy from one sweep to the
     next no longer changes by more than this amount,
     stop after the current sweep
   - minsweeps: do at least this many sweeps
+  - complex_energies: allow stored energies to be 
+    complex for non-Hermitian DMRG
 """
-function DMRGObserver(; energy_tol=0.0, minsweeps=2)
+function DMRGObserver(; energy_tol=0.0, minsweeps=2, complex_energies=false)
+  if complex_energies
+    return DMRGObserver([], Index[], Dict{String,DMRGMeasurement}(), ComplexF64[], Float64[], energy_tol, minsweeps)
+  end
   return DMRGObserver(
-    [], Index[], Dict{String,DMRGMeasurement}(), [], [], energy_tol, minsweeps
+    [], Index[], Dict{String,DMRGMeasurement}(), Float64[], Float64[], energy_tol, minsweeps
   )
 end
 
@@ -60,7 +67,8 @@ end
     DMRGObserver(ops::Vector{String}, 
                  sites::Vector{<:Index};
                  energy_tol=0.0,
-                 minsweeps=2)
+                 minsweeps=2,
+                 complex_energies=false)
 
 Construct a DMRGObserver, provide an array
 of `ops` of operator names which are strings 
@@ -76,16 +84,23 @@ Optionally, one can provide an energy
 tolerance used for early stopping, and minimum number
 of sweeps that must be done.
 
+Optional keyword arguments:
   - energy_tol: if the energy from one sweep to the
     next no longer changes by more than this amount,
     stop after the current sweep
   - minsweeps: do at least this many sweeps
+  - complex_energies: allow stored energies to be 
+    complex for non-Hermitian DMRG
 """
 function DMRGObserver(
-  ops::Vector{String}, sites::Vector{<:Index}; energy_tol=0.0, minsweeps=2
+  ops::Vector{String}, sites::Vector{<:Index}; 
+  energy_tol=0.0, minsweeps=2, complex_energies=false
 )
   measurements = Dict(o => DMRGMeasurement() for o in ops)
-  return DMRGObserver(ops, sites, measurements, [], [], energy_tol, minsweeps)
+  if complex_energies
+    return DMRGObserver(ops, sites, measurements, ComplexF64[], Float64[], energy_tol, minsweeps)
+  end
+  return DMRGObserver(ops, sites, measurements, Float64[], Float64[], energy_tol, minsweeps)
 end
 
 """
