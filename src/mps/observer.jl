@@ -55,7 +55,7 @@ Optional keyword arguments:
 """
 function DMRGObserver(; energy_tol=0.0, minsweeps=2, energy_type=Float64)
   return DMRGObserver(
-    [],
+    String[],
     Index[],
     Dict{String,DMRGMeasurement}(),
     energy_type[],
@@ -101,7 +101,9 @@ function DMRGObserver(
   energy_type=Float64,
 )
   measurements = Dict(o => DMRGMeasurement() for o in ops)
-  return DMRGObserver(ops, sites, measurements, energy_type[], Float64[], energy_tol, minsweeps)
+  return DMRGObserver{energy_type}(
+    ops, sites, measurements, energy_type[], Float64[], energy_tol, minsweeps
+  )
 end
 
 """
