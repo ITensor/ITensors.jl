@@ -65,8 +65,12 @@ function mergeblocks(qns::QNBlocks)
   return qnsC
 end
 
-function removeqn(space::QNBlocks, qn_name::String)
-  return QNBlocks([removeqn(qn_block, qn_name) for qn_block in space])
+function removeqn(space::QNBlocks, qn_name::String; mergeblocks=true)
+  space = QNBlocks([removeqn(qn_block, qn_name) for qn_block in space])
+  if mergeblocks
+    space = ITensors.mergeblocks(space)
+  end
+  return space
 end
 
 """
@@ -420,8 +424,8 @@ function combineblocks(i::QNIndex)
 end
 
 removeqns(i::QNIndex) = setdir(setspace(i, dim(i)), Neither)
-function removeqn(i::QNIndex, qn_name::String)
-  return setspace(i, removeqn(space(i), qn_name))
+function removeqn(i::QNIndex, qn_name::String; mergeblocks=true)
+  return setspace(i, removeqn(space(i), qn_name; mergeblocks))
 end
 mergeblocks(i::QNIndex) = setspace(i, mergeblocks(space(i)))
 

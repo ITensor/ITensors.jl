@@ -489,10 +489,7 @@ function removeqn(T::ITensor, qn_name::String; mergeblocks=true)
   if !hasqns(T)
     return T
   end
-  inds_R = removeqn(inds(T), qn_name)
-  if mergeblocks
-    inds_R = ITensors.mergeblocks(inds_R)
-  end
+  inds_R = removeqn(inds(T), qn_name; mergeblocks)
   R = ITensor(inds_R)
   for iv in eachindex(T)
     if !iszero(T[iv])

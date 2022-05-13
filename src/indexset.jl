@@ -596,7 +596,9 @@ end
 swapind(is::Indices, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
 removeqns(is::Indices) = map(removeqns, is)
-removeqn(is::Indices, qn_name::String) = map(i -> removeqn(i, qn_name), is)
+function removeqn(is::Indices, qn_name::String; mergeblocks=true)
+  return map(i -> removeqn(i, qn_name; mergeblocks), is)
+end
 mergeblocks(is::Indices) = map(mergeblocks, is)
 
 # Permute is1 to be in the order of is2
