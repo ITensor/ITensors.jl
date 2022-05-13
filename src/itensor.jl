@@ -2222,7 +2222,7 @@ function directsum(
 end
 
 function directsum(A::ITensor, B::ITensor, I, J; kwargs...)
-  tags = get(kwargs,:tags,["sum1","sum2"])
+  tags = get(kwargs, :tags, ["sum1", "sum2"])
   N = length(I)
   (N != length(J)) &&
     error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
