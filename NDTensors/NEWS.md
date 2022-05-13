@@ -14,6 +14,7 @@ Bugs:
 Enhancements:
 
 - Clean up QN `svd` code in `ITensors` by handling QN blocks better in `NDTensors` (#906)
+- Clean up `outer` and add GEMM routing for CUDA (#887)
 
 NDTensors v0.1.37 Release Notes
 ===============================
