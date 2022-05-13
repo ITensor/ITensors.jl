@@ -40,7 +40,7 @@ end
 """
     DMRGObserver(;energy_tol=0.0,
                   minsweeps=2,
-                  complex_energies=false)
+                  energy_type=Float64)
 
 Construct a DMRGObserver by providing the energy
 tolerance used for early stopping, and minimum number
@@ -51,15 +51,17 @@ Optional keyword arguments:
     next no longer changes by more than this amount,
     stop after the current sweep
   - minsweeps: do at least this many sweeps
-  - complex_energies: allow stored energies to be 
-    complex for non-Hermitian DMRG
+  - energy_type: type to use when storing energies at each step
 """
-function DMRGObserver(; energy_tol=0.0, minsweeps=2, complex_energies=false)
-  if complex_energies
-    return DMRGObserver([], Index[], Dict{String,DMRGMeasurement}(), ComplexF64[], Float64[], energy_tol, minsweeps)
-  end
+function DMRGObserver(; energy_tol=0.0, minsweeps=2, energy_type=Float64)
   return DMRGObserver(
-    [], Index[], Dict{String,DMRGMeasurement}(), Float64[], Float64[], energy_tol, minsweeps
+    [],
+    Index[],
+    Dict{String,DMRGMeasurement}(),
+    energy_type[],
+    Float64[],
+    energy_tol,
+    minsweeps,
   )
 end
 
@@ -68,7 +70,7 @@ end
                  sites::Vector{<:Index};
                  energy_tol=0.0,
                  minsweeps=2,
-                 complex_energies=false)
+                 energy_type=Float64)
 
 Construct a DMRGObserver, provide an array
 of `ops` of operator names which are strings 
@@ -89,18 +91,17 @@ Optional keyword arguments:
     next no longer changes by more than this amount,
     stop after the current sweep
   - minsweeps: do at least this many sweeps
-  - complex_energies: allow stored energies to be 
-    complex for non-Hermitian DMRG
+  - energy_type: type to use when storing energies at each step
 """
 function DMRGObserver(
-  ops::Vector{String}, sites::Vector{<:Index}; 
-  energy_tol=0.0, minsweeps=2, complex_energies=false
+  ops::Vector{String},
+  sites::Vector{<:Index};
+  energy_tol=0.0,
+  minsweeps=2,
+  energy_type=Float64,
 )
   measurements = Dict(o => DMRGMeasurement() for o in ops)
-  if complex_energies
-    return DMRGObserver(ops, sites, measurements, ComplexF64[], Float64[], energy_tol, minsweeps)
-  end
-  return DMRGObserver(ops, sites, measurements, Float64[], Float64[], energy_tol, minsweeps)
+  return DMRGObserver(ops, sites, measurements, energy_type[], Float64[], energy_tol, minsweeps)
 end
 
 """
