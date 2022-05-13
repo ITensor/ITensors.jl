@@ -90,6 +90,12 @@ include("Ops/Ops.jl")
 using .Ops
 
 #####################################
+# Ops2
+#
+# Next generation Ops
+include("Ops2/Ops2.jl")
+
+#####################################
 # Exports
 #
 include("exports.jl")
