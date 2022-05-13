@@ -98,8 +98,7 @@ Returns:
 * `energy::Complex` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 """
-function dmrg(
-  H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
+function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   check_hascommoninds(siteinds, H, psi0)
   check_hascommoninds(siteinds, H, psi0')
   for M in Ms
@@ -181,7 +180,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   @assert isortho(psi) && orthocenter(psi) == 1
 
   position!(PH, psi, 1)
-  energy = 0.0 
+  energy = 0.0
 
   for sw in 1:nsweep(sweeps)
     sw_time = @elapsed begin
@@ -215,7 +214,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         @timeit_debug timer "dmrg: psi[b]*psi[b+1]" begin
           phi = psi[b] * psi[b + 1]
         end
-        
+
         @timeit_debug timer "dmrg: eigsolve" begin
           vals, vecs = eigsolve(
             PH,
@@ -228,7 +227,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
             maxiter=eigsolve_maxiter,
           )
         end
-        
+
         energy = vals[1]
         phi::ITensor = vecs[1]
 
@@ -269,9 +268,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         end
 
         if outputlevel >= 2
-          @printf(
-            "Sweep %d, half %d, bond (%d,%d) energy=%s\n", sw, ha, b, b + 1, energy
-          )
+          @printf("Sweep %d, half %d, bond (%d,%d) energy=%s\n", sw, ha, b, b + 1, energy)
           @printf(
             "  Truncated using cutoff=%.1E maxdim=%d mindim=%d\n",
             cutoff(sweeps, sw),
@@ -283,7 +280,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
           )
           flush(stdout)
         end
-        
+
         sweep_is_done = (b == 1 && ha == 2)
         measure!(
           obs;
