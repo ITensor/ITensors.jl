@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+NDTensors v0.1.38 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Clean up QN `svd` code in `ITensors` by handling QN blocks better in `NDTensors` (#906)
+
 NDTensors v0.1.37 Release Notes
 ===============================
 
