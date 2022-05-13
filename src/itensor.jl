@@ -674,6 +674,8 @@ function dense(A::ITensor)
   return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
 end
 
+removeqns(T::ITensor) = dense(T)
+
 denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
 """
@@ -1071,6 +1073,14 @@ For example, for dense tensors this may return `1:length(A)`, while for sparse t
 it may return a Cartesian range.
 """
 eachindex(A::ITensor) = eachindex(tensor(A))
+
+"""
+    eachindval(A::ITensor)
+
+Create an iterable object for visiting each element of the ITensor `A` (including structually
+zero elements for sparse tensors) in terms of pairs of indices and values.
+"""
+eachindval(T::ITensor) = eachindval(inds(T))
 
 """
     iterate(A::ITensor, args...)

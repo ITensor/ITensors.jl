@@ -1,4 +1,3 @@
-
 # Represents a static order of an ITensor
 @eval struct Order{N}
   (OrderT::Type{<:Order})() = $(Expr(:new, :OrderT))
@@ -596,7 +595,9 @@ end
 
 swapind(is::Indices, i1::Index, i2::Index) = swapinds(is, (i1,), (i2,))
 
-removeqns(is::Indices) = is
+removeqns(is::Indices) = map(removeqns, is)
+removeqn(is::Indices, qn_name::String) = map(i -> removeqn(i, qn_name), is)
+mergeblocks(is::Indices) = map(mergeblocks, is)
 
 # Permute is1 to be in the order of is2
 # This is helpful when is1 and is2 have different directions, and

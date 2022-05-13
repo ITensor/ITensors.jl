@@ -37,12 +37,36 @@ function (qn1::QNBlock + qn2::QNBlock)
   return QNBlock(qn(qn1), blockdim(qn1) + blockdim(qn2))
 end
 
+function removeqn(qn_block::QNBlock, qn_name::String)
+  return removeqn(qn(qn_block), qn_name) => blockdim(qn_block)
+end
+
 function -(qns::QNBlocks)
   qns_new = copy(qns)
   for i in 1:length(qns_new)
     qns_new[i] = -qns_new[i]
   end
   return qns_new
+end
+
+function mergeblocks(qns::QNBlocks)
+  qnsC = [qns[1]]
+
+  # Which block this is, after combining
+  block_count = 1
+  for i in 2:nblocks(qns)
+    if qn(qns[i]) == qn(qns[i - 1])
+      qnsC[block_count] += qns[i]
+    else
+      push!(qnsC, qns[i])
+      block_count += 1
+    end
+  end
+  return qnsC
+end
+
+function removeqn(space::QNBlocks, qn_name::String)
+  return QNBlocks([removeqn(qn_block, qn_name) for qn_block in space])
 end
 
 """
@@ -396,6 +420,10 @@ function combineblocks(i::QNIndex)
 end
 
 removeqns(i::QNIndex) = setdir(setspace(i, dim(i)), Neither)
+function removeqn(i::QNIndex, qn_name::String)
+  return setspace(i, removeqn(space(i), qn_name))
+end
+mergeblocks(i::QNIndex) = setspace(i, mergeblocks(space(i)))
 
 function addqns(i::Index, qns::QNBlocks; dir::Arrow=Out)
   @assert dim(i) == dim(qns)
