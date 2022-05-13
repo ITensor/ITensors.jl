@@ -2221,7 +2221,8 @@ function directsum(
   )
 end
 
-function directsum(A::ITensor, B::ITensor, I, J; tags)
+function directsum(A::ITensor, B::ITensor, I, J; kwargs...)
+  tags = get(kwargs,:tags,["sum1","sum2"])
   N = length(I)
   (N != length(J)) &&
     error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
@@ -2229,8 +2230,8 @@ function directsum(A::ITensor, B::ITensor, I, J; tags)
   for n in 1:N
     In = I[n]
     Jn = J[n]
-    In = dir(A, In) != dir(In) ? dag(In) : In
-    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
+    In = dir(A, In.first) != dir(In) ? dag(In) : In
+    Jn = dir(B, Jn.first) != dir(Jn) ? dag(Jn) : Jn
     IJn = directsum(In, Jn; tags=tags[n])
     D1, D2 = directsum_itensors(In, Jn, IJn)
     IJ[n] = IJn
