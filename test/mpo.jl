@@ -430,7 +430,7 @@ end
     @test maxlinkdim(ψ) == 1
 
     # Use matrix
-    @test MPO(s, [1/2 0; 0 1/2]) ≈ MPO(s, "Id") ./ 2
+    @test_throws ErrorException MPO(s, [1/2 0; 0 1/2])
     @test MPO(s, _ -> [1/2 0; 0 1/2]) ≈ MPO(s, "Id") ./ 2
 
     ψ0 = MPO(s, "Id")
