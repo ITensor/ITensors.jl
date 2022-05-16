@@ -14,6 +14,7 @@ Bugs:
 Enhancements:
 
 - Fix `svd` and `qr` for empty input left or right indices (#917)
+- Add support for defining MPOs from operators represented as matrices (#904)
 
 ITensors v0.3.11 Release Notes
 ==============================
