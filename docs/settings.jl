@@ -32,6 +32,7 @@ settings = Dict(
       "MPS and MPO" => "MPSandMPO.md",
       "QN" => "QN.md",
       "SiteType and op, state, val functions" => "SiteType.md",
+      "SiteTypes Included with ITensor" => "IncludedSiteTypes.md",
       "DMRG" => [
         "DMRG.md",
         "Sweeps.md",

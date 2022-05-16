@@ -8,6 +8,8 @@ qn(qnblock::QNBlock) = qnblock.first
 # Get the dimension of the specified block
 blockdim(qnblock::QNBlock) = qnblock.second
 
+NDTensors.resize(qnblock::QNBlock, newdim::Int64) = QNBlock(qnblock.first, newdim)
+
 # Get the dimension of the specified block
 blockdim(qnblocks::QNBlocks, b::Integer) = blockdim(qnblocks[b])
 blockdim(qnblocks::QNBlocks, b::Block{1}) = blockdim(qnblocks[only(b)])
@@ -35,12 +37,40 @@ function (qn1::QNBlock + qn2::QNBlock)
   return QNBlock(qn(qn1), blockdim(qn1) + blockdim(qn2))
 end
 
+function removeqn(qn_block::QNBlock, qn_name::String)
+  return removeqn(qn(qn_block), qn_name) => blockdim(qn_block)
+end
+
 function -(qns::QNBlocks)
   qns_new = copy(qns)
   for i in 1:length(qns_new)
     qns_new[i] = -qns_new[i]
   end
   return qns_new
+end
+
+function mergeblocks(qns::QNBlocks)
+  qnsC = [qns[1]]
+
+  # Which block this is, after combining
+  block_count = 1
+  for i in 2:nblocks(qns)
+    if qn(qns[i]) == qn(qns[i - 1])
+      qnsC[block_count] += qns[i]
+    else
+      push!(qnsC, qns[i])
+      block_count += 1
+    end
+  end
+  return qnsC
+end
+
+function removeqn(space::QNBlocks, qn_name::String; mergeblocks=true)
+  space = QNBlocks([removeqn(qn_block, qn_name) for qn_block in space])
+  if mergeblocks
+    space = ITensors.mergeblocks(space)
+  end
+  return space
 end
 
 """
@@ -357,6 +387,8 @@ end
 # Make a new Index with the specified qn blocks
 replaceqns(i::QNIndex, qns::QNBlocks) = setspace(i, qns)
 
+NDTensors.block(i::QNIndex, n::Integer) = space(i)[n]
+
 function setblockdim!(i::QNIndex, newdim::Integer, n::Integer)
   qns = space(i)
   qns[n] = qn(qns[n]) => newdim
@@ -366,6 +398,12 @@ end
 function setblockqn!(i::QNIndex, newqn::QN, n::Integer)
   qns = space(i)
   qns[n] = newqn => blockdim(qns[n])
+  return i
+end
+
+function setblock!(i::QNIndex, b::QNBlock, n::Integer)
+  qns = space(i)
+  qns[n] = b
   return i
 end
 
@@ -386,6 +424,10 @@ function combineblocks(i::QNIndex)
 end
 
 removeqns(i::QNIndex) = setdir(setspace(i, dim(i)), Neither)
+function removeqn(i::QNIndex, qn_name::String; mergeblocks=true)
+  return setspace(i, removeqn(space(i), qn_name; mergeblocks))
+end
+mergeblocks(i::QNIndex) = setspace(i, mergeblocks(space(i)))
 
 function addqns(i::Index, qns::QNBlocks; dir::Arrow=Out)
   @assert dim(i) == dim(qns)

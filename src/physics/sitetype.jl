@@ -28,15 +28,16 @@ the notation: `SiteType("MyTag")`
 There are currently a few built-in site types
 recognized by `ITensors.jl`. The system is easily extensible
 by users. To add new operators to an existing site type,
-you can follow the instructions [here](http://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_extending).
-To create new site types, you can follow the instructions
-[here](https://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_basic) and 
-[here](https://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_qns).
+or to create new site types, you can follow the instructions
+[here](https://itensor.github.io/ITensors.jl/stable/examples/Physics.html).
 
 The current built-in site types are:
 
 - `SiteType"S=1/2"` (or `SiteType"S=½"`)
 - `SiteType"S=1"`
+- `SiteType"Qubit"`
+- `SiteType"Qudit"`
+- `SiteType"Boson"`
 - `SiteType"Fermion"`
 - `SiteType"tJ"`
 - `SiteType"Electron"`
@@ -217,6 +218,9 @@ operators to MPS.
 s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
+
+To see all of the operator names defined for the site types included with
+ITensor, please [view the source code for each site type](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types). Note that some site types such as "S=1/2" and "Qubit" are aliases for each other and share operator definitions.
 """
 function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   name = strip(name)

@@ -92,57 +92,37 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     truncerr, docut = 0.0, 0.0
   end
 
-  # The number of blocks of T remaining
-  nnzblocksT = nnzblocks(T) - length(dropblocks)
+  # The number of non-zero blocks of T remaining
+  nnzblocksT = length(nzblocksT)
+
+  #
+  # Make indices of U and V 
+  # that connect to S
+  #
+  i1 = ind(T, 1)
+  i2 = ind(T, 2)
+  uind = dag(sim(i1))
+  vind = dag(sim(i2))
+  resize!(uind, nnzblocksT)
+  resize!(vind, nnzblocksT)
+  for (n, blockT) in enumerate(nzblocksT)
+    Udim = size(Us[n], 2)
+    b1 = block(i1, blockT[1])
+    setblock!(uind, resize(b1, Udim), n)
+    Vdim = size(Vs[n], 2)
+    b2 = block(i2, blockT[2])
+    setblock!(vind, resize(b2, Vdim), n)
+  end
 
   #
   # Put the blocks into U,S,V
   # 
 
-  nb1_lt_nb2 = (
-    nblocks(T)[1] < nblocks(T)[2] ||
-    (nblocks(T)[1] == nblocks(T)[2] && dim(T, 1) < dim(T, 2))
-  )
-
-  if nb1_lt_nb2
-    uind = sim(ind(T, 1))
-  else
-    uind = sim(ind(T, 2))
-  end
-
-  deleteat!(uind, dropblocks)
-
-  # uind may have too many blocks
-  if nblocks(uind) > nnzblocksT
-    resize!(uind, nnzblocksT)
-  end
-
-  for n in 1:nnzblocksT
-    setblockdim!(uind, minimum(dims(Ss[n])), n)
-  end
-
-  if dir(uind) != dir(inds(T)[1])
-    uind = dag(uind)
-  end
-  indsU = setindex(inds(T), dag(uind), 2)
-
-  vind = sim(uind)
-  if dir(vind) != dir(inds(T)[2])
-    vind = dag(vind)
-  end
-  indsV = setindex(inds(T), dag(vind), 1)
-  indsV = permute(indsV, (2, 1))
-
-  indsS = setindex(inds(T), uind, 1)
-  indsS = setindex(indsS, vind, 2)
-
   nzblocksU = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksS = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksV = Vector{Block{2}}(undef, nnzblocksT)
 
-  for n in 1:nnzblocksT
-    blockT = nzblocksT[n]
-
+  for (n, blockT) in enumerate(nzblocksT)
     blockU = (blockT[1], UInt(n))
     nzblocksU[n] = blockU
 
@@ -152,6 +132,14 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     blockV = (blockT[2], UInt(n))
     nzblocksV[n] = blockV
   end
+
+  indsU = setindex(inds(T), uind, 2)
+
+  indsV = setindex(inds(T), vind, 1)
+  indsV = permute(indsV, (2, 1))
+
+  indsS = setindex(inds(T), dag(uind), 1)
+  indsS = setindex(indsS, dag(vind), 2)
 
   U = BlockSparseTensor(ElT, undef, nzblocksU, indsU)
   S = DiagBlockSparseTensor(real(ElT), undef, nzblocksS, indsS)
