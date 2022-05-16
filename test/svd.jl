@@ -73,7 +73,9 @@ include("util.jl")
   end
 
   @testset "svd with empty left or right indices" for space in
-    (2, [QN(0, 2) => 1, QN(1, 2) => 1]), cutoff in (nothing, 1e-15)
+                                                      (2, [QN(0, 2) => 1, QN(1, 2) => 1]),
+    cutoff in (nothing, 1e-15)
+
     i = Index(space)
     j = Index(space)
     A = randomITensor(i, j)
@@ -103,8 +105,11 @@ include("util.jl")
     @test_throws ErrorException svd(A)
   end
 
-  @testset "factorize with empty left or right indices" for space in
-    (2, [QN(0, 2) => 1, QN(1, 2) => 1]), cutoff in (nothing, 1e-15)
+  @testset "factorize with empty left or right indices" for space in (
+      2, [QN(0, 2) => 1, QN(1, 2) => 1]
+    ),
+    cutoff in (nothing, 1e-15)
+
     i = Index(space)
     j = Index(space)
     A = randomITensor(i, j)

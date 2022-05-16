@@ -37,6 +37,10 @@ The first three return arguments are `U`, `S`, and `V`, such that
 Whether or not the SVD performs a trunction depends on the keyword
 arguments provided. 
 
+If the left or right set of indices are empty, all input indices are
+put on `V` or `U` respectively. To specify an empty set of left indices,
+you must explicitly use `svd(A, ())` (`svd(A)` is currently undefined).
+
 # Examples
 
 ```julia

@@ -34,7 +34,7 @@ tuple_to_vector(t::Tuple) = collect(t)
 tuple_to_vector(t) = t
 
 function _narrow_eltype(v::Vector{T}) where {T}
-  return convert(Vector{mapreduce(typeof, promote_type, v; init=T)}, v)
+  return convert(Vector{mapreduce(typeof, promote_type, v; init = T)}, v)
 end
 narrow_eltype(v::Vector{T}) where {T} = isconcretetype(T) ? v : _narrow_eltype(v)
 

@@ -705,11 +705,11 @@ end
     Hortho = orthogonalize(H, 1)
     @test Hortho ≈ H
     @test linkdims(Hortho) == fill(1, length(s) - 1)
-    
+
     Htrunc = truncate(H; cutoff=1e-8)
     @test Htrunc ≈ H
     @test linkdims(Htrunc) == fill(1, length(s) - 1)
-    
+
     H² = apply(H, H; cutoff=1e-8)
     H̃² = MPO([apply(H[n], H[n]) for n in 1:length(s)])
     @test linkdims(H²) == fill(1, length(s) - 1)
