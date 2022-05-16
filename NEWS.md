@@ -14,6 +14,7 @@ Bugs:
 Enhancements:
 
 - Introduce `removeqn` function for removing a specified quantum number (#915)
+- Non-Hermitian `dmrg` (#913)
 - Clean up QN `svd` code in `ITensors` by handling QN blocks better in `NDTensors` (#906)
 
 ITensors v0.3.10 Release Notes
