@@ -495,7 +495,7 @@ end #remove_dups!
 
 function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   mindim::Int = get(kwargs, :mindim, 1)
-  maxdim::Int = get(kwargs, :maxdim, 10000)
+  maxdim::Int = get(kwargs, :maxdim, typemax(Int))
   cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
 
   N = length(sites)
@@ -503,7 +503,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   ValType = determineValType(data(ampo))
 
   Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
-  tempMPO = [MatElem{MPOTerm}[] for n in 1:N]
+  sparse_MPO = [MatElem{MPOTerm}[] for n in 1:N]
 
   crosses_bond(t::MPOTerm, n::Int) = (site(ops(t)[1]) <= n <= site(ops(t)[end]))
 
@@ -511,7 +511,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   next_rightmap = Dict{OpTerm,Int}()
 
   for n in 1:N
-    leftbond_coefs = MatElem{ValType}[]
+    h_sparse = MatElem{ValType}[]
 
     leftmap = Dict{OpTerm,Int}()
     for term in data(ampo)
@@ -527,7 +527,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         bond_row = posInLink!(leftmap, left)
         bond_col = posInLink!(rightmap, mult(onsite, right))
         bond_coef = convert(ValType, coef(term))
-        push!(leftbond_coefs, MatElem(bond_row, bond_col, bond_coef))
+        push!(h_sparse, MatElem(bond_row, bond_col, bond_coef))
       end
 
       A_row = bond_col
@@ -544,22 +544,21 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         end
       end
       el = MatElem(A_row, A_col, MPOTerm(site_coef, onsite))
-      push!(tempMPO[n], el)
+      push!(sparse_MPO[n], el)
     end
-    rightmap = next_rightmap
-    next_rightmap = Dict{OpTerm,Int}()
+    remove_dups!(sparse_MPO[n])
 
-    remove_dups!(tempMPO[n])
-
-    if n > 1 && !isempty(leftbond_coefs)
-      M = toMatrix(leftbond_coefs)
+    if n > 1 && !isempty(h_sparse)
+      M = toMatrix(h_sparse)
       U, S, V = svd(M)
       P = S .^ 2
-      truncate!(P; maxdim=maxdim, cutoff=cutoff, mindim=mindim)
+      truncate!(P; maxdim, cutoff, mindim)
       tdim = length(P)
-      nc = size(M, 2)
-      Vs[n - 1] = Matrix{ValType}(V[1:nc, 1:tdim])
+      Vs[n - 1] = Matrix{ValType}(V[:, 1:tdim])
     end
+
+    rightmap = next_rightmap
+    next_rightmap = Dict{OpTerm,Int}()
   end
 
   llinks = Vector{Index{Int}}(undef, N + 1)
@@ -582,7 +581,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
     H[n] = ITensor()
 
-    for el in tempMPO[n]
+    for el in sparse_MPO[n]
       A_row = el.row
       A_col = el.col
       t = el.val
@@ -639,7 +638,7 @@ end #svdMPO
 
 function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   mindim::Int = get(kwargs, :mindim, 1)
-  maxdim::Int = get(kwargs, :maxdim, 10000)
+  maxdim::Int = get(kwargs, :maxdim, typemax(Int))
   cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
 
   N = length(sites)
@@ -647,7 +646,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   ValType = determineValType(data(ampo))
 
   Vs = [Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
-  tempMPO = [QNMatElem{MPOTerm}[] for n in 1:N]
+  sparse_MPO = [QNMatElem{MPOTerm}[] for n in 1:N]
 
   crosses_bond(t::MPOTerm, n::Int) = (site(ops(t)[1]) <= n <= site(ops(t)[end]))
 
@@ -659,7 +658,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   op_cache = Dict{Pair{String,Int},ITensor}()
 
   for n in 1:N
-    leftbond_coefs = Dict{QN,Vector{MatElem{ValType}}}()
+    h_sparse = Dict{QN,Vector{MatElem{ValType}}}()
 
     leftmap = Dict{Pair{OpTerm,QN},Int}()
     for term in data(ampo)
@@ -690,8 +689,8 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         bond_row = posInLink!(leftmap, left => lqn)
         bond_col = posInLink!(rightmap, mult(onsite, right) => lqn)
         bond_coef = convert(ValType, coef(term))
-        q_leftbond_coefs = get!(leftbond_coefs, lqn, MatElem{ValType}[])
-        push!(q_leftbond_coefs, MatElem(bond_row, bond_col, bond_coef))
+        q_h_sparse = get!(h_sparse, lqn, MatElem{ValType}[])
+        push!(q_h_sparse, MatElem(bond_row, bond_col, bond_coef))
       end
 
       rqn = sqn + lqn
@@ -709,24 +708,23 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         end
       end
       el = QNMatElem(lqn, rqn, A_row, A_col, MPOTerm(site_coef, onsite))
-      push!(tempMPO[n], el)
+      push!(sparse_MPO[n], el)
     end
-    rightmap = next_rightmap
-    next_rightmap = Dict{Pair{OpTerm,QN},Int}()
+    remove_dups!(sparse_MPO[n])
 
-    remove_dups!(tempMPO[n])
-
-    if n > 1 && !isempty(leftbond_coefs)
-      for (q, mat) in leftbond_coefs
+    if n > 1 && !isempty(h_sparse)
+      for (q, mat) in h_sparse
         M = toMatrix(mat)
         U, S, V = svd(M)
         P = S .^ 2
-        truncate!(P; maxdim=maxdim, cutoff=cutoff, mindim=mindim)
+        truncate!(P; maxdim, cutoff, mindim)
         tdim = length(P)
-        nc = size(M, 2)
-        Vs[n][q] = Matrix{ValType}(V[1:nc, 1:tdim])
+        Vs[n][q] = Matrix{ValType}(V[:, 1:tdim])
       end
     end
+
+    rightmap = next_rightmap
+    next_rightmap = Dict{Pair{OpTerm,QN},Int}()
   end
 
   #
@@ -775,8 +773,6 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     rl = llinks[n + 1]
 
     function defaultMat(ll, rl, lqn, rqn)
-      #ldim = qnblockdim(ll,lqn)
-      #rdim = qnblockdim(rl,rqn)
       ldim = blockdim(ll, lqn)
       rdim = blockdim(rl, rqn)
       return zeros(ValType, ldim, rdim)
@@ -788,7 +784,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     idM[1, 1] = 1.0
     idM[2, 2] = 1.0
 
-    for el in tempMPO[n]
+    for el in sparse_MPO[n]
       t = el.val
       (abs(coef(t)) > eps()) || continue
       A_row = el.row
@@ -854,7 +850,6 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
       #TODO: wrap following 3 lines into a function
       _block = Block(rn, cn)
       T = BlockSparseTensor(ValType, [_block], (dag(ll), rl))
-      #blockview(T, _block) .= M
       T[_block] .= M
 
       IT = itensor(T)
