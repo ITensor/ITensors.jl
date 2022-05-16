@@ -1,4 +1,3 @@
-
 struct QNVal
   name::SmallString
   val::Int
@@ -355,6 +354,29 @@ function have_same_mods(qn1::QN, qn2::QN)
     modulus(qn1[n]) != modulus(qn2[n]) && return false
   end
   return true
+end
+
+function removeqn(qn::QN, qn_name::String)
+  ss_qn_name = SmallString(qn_name)
+
+  # Find the location of the QNVal to remove
+  n_qn = nothing
+  for n in 1:length(qn)
+    qnval = qn[n]
+    if name(qnval) == ss_qn_name
+      n_qn = n
+    end
+  end
+  if isnothing(n_qn)
+    return qn
+  end
+
+  qn_data = data(qn)
+  for j in n_qn:(length(qn) - 1)
+    qn_data = setindex(qn_data, qn_data[j + 1], j)
+  end
+  qn_data = setindex(qn_data, QNVal(), length(qn))
+  return QN(qn_data)
 end
 
 function show(io::IO, q::QN)

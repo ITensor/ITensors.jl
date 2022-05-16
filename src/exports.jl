@@ -69,6 +69,7 @@ export
   plev,
   prime,
   removetags,
+  removeqn,
   removeqns,
   replacetags,
   replacetags!,

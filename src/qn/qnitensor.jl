@@ -467,6 +467,9 @@ function δ_split(i1::Index, i2::Index)
 end
 
 function splitblocks(A::ITensor, is=inds(A); tol=0)
+  if !hasqns(A)
+    return A
+  end
   isA = filterinds(A; inds=is)
   for i in isA
     i_split = splitblocks(i)
@@ -480,4 +483,18 @@ function splitblocks(A::ITensor, is=inds(A); tol=0)
   end
   A = dropzeros(A; tol=tol)
   return A
+end
+
+function removeqn(T::ITensor, qn_name::String; mergeblocks=true)
+  if !hasqns(T)
+    return T
+  end
+  inds_R = removeqn(inds(T), qn_name; mergeblocks)
+  R = ITensor(inds_R)
+  for iv in eachindex(T)
+    if !iszero(T[iv])
+      R[iv] = T[iv]
+    end
+  end
+  return R
 end

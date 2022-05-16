@@ -29,8 +29,6 @@ function nzdiagblocks(qn::QN, inds::Indices)
   return blocks
 end
 
-removeqns(is::QNIndices) = map(i -> removeqns(i), is)
-
 anyfermionic(is::Indices) = any(isfermionic, is)
 
 allfermionic(is::Indices) = all(isfermionic, is)
