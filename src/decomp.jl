@@ -89,10 +89,19 @@ function svd(A::ITensor, Linds...; kwargs...)
   Lis = commoninds(A, indices(Linds))
   Ris = uniqueinds(A, Lis)
 
-  if length(Lis) == 0 || length(Ris) == 0
-    error(
-      "In `svd`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.",
-    )
+  Lis_original = Lis
+  Ris_original = Ris
+  if isempty(Lis_original)
+    α = trivial_index(Ris)
+    vLα = onehot(α => 1)
+    A *= vLα
+    Lis = [α]
+  end
+  if isempty(Ris_original)
+    α = trivial_index(Lis)
+    vRα = onehot(α => 1)
+    A *= vRα
+    Ris = [α]
   end
 
   CL = combiner(Lis...)
@@ -127,8 +136,17 @@ function svd(A::ITensor, Linds...; kwargs...)
   u = settags(u, utags)
   v = settags(v, vtags)
 
+  if isempty(Lis_original)
+    U *= dag(vLα)
+  end
+  if isempty(Ris_original)
+    V *= dag(vRα)
+  end
+
   return TruncSVD(U, S, V, spec, u, v)
 end
+
+svd(A::ITensor; kwargs...) = error("Must specify indices in `svd`")
 
 """
     TruncEigen
@@ -312,6 +330,22 @@ function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
   Lis = commoninds(A, indices(Linds))
   Ris = uniqueinds(A, Lis)
+
+  Lis_original = Lis
+  Ris_original = Ris
+  if isempty(Lis_original)
+    α = trivial_index(Ris)
+    vLα = onehot(α => 1)
+    A *= vLα
+    Lis = [α]
+  end
+  if isempty(Ris_original)
+    α = trivial_index(Lis)
+    vRα = onehot(α => 1)
+    A *= vRα
+    Ris = [α]
+  end
+
   Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
   QT, RT = qr(tensor(A), Lpos, Rpos; kwargs...)
   Q, R = itensor(QT), itensor(RT)
@@ -319,6 +353,14 @@ function qr(A::ITensor, Linds...; kwargs...)
   settags!(Q, tags, q)
   settags!(R, tags, q)
   q = settags(q, tags)
+
+  if isempty(Lis_original)
+    Q *= dag(vLα)
+  end
+  if isempty(Ris_original)
+    R *= dag(vRα)
+  end
+
   return Q, R, q
 end
 
