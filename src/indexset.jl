@@ -34,6 +34,9 @@ tuple_to_vector(t::Tuple) = collect(t)
 tuple_to_vector(t) = t
 
 function _narrow_eltype(v::Vector{T}) where {T}
+  if isempty(v)
+    return v
+  end
   return convert(Vector{mapreduce(typeof, promote_type, v)}, v)
 end
 narrow_eltype(v::Vector{T}) where {T} = isconcretetype(T) ? v : _narrow_eltype(v)
@@ -159,6 +162,13 @@ Make a new Indices with similar indices.
 You can also use the broadcast version `sim.(is)`.
 """
 sim(is::Indices) = map(i -> sim(i), is)
+
+function trivial_index(is::Indices)
+  if isempty(is)
+    return Index(1)
+  end
+  return trivial_index(first(is))
+end
 
 """
     mindim(is::Indices)
