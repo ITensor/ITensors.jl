@@ -753,10 +753,6 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
   H = MPO(N)
 
-  # Constants which define MPO start/end scheme
-  startState = 2
-  endState = 1
-
   # Find location where block of Index i
   # matches QN q, but *not* 1 or dim(i)
   # which are special ending/starting states
@@ -775,7 +771,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     begin_block = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
     cont_block = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
     end_block = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
-    onsite_block = Dict{OpTerm,Matrix{ValType}}()
+    onsite_block = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
 
     for el in sparse_MPO[n]
       t = el.val
@@ -790,7 +786,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
       if A_row == -1 && A_col == -1
         # Onsite term
-        M = get!(onsite_block, ops(t), zeros(ValType,1,1))
+        M = get!(onsite_block, (el.rowqn,ops(t)), zeros(ValType,1,1))
         M[1,1] += ct
       elseif A_row == -1
         # Operator beginning a term on site n
@@ -819,97 +815,43 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
     H[n] = ITensor()
 
-    for (op_prod, M) in onsite_block
-      Op = computeSiteProd(sites, op_prod)
+    # Helper functions to compute block locations
+    # of various blocks within the onsite blocks,
+    # begin blocks, etc.
+    loc_onsite(rq,cq) = Block(nblocks(ll),1)
+    loc_begin(rq,cq) = Block(nblocks(ll),qnblock(rl,cq))
+    loc_cont(rq,cq) = Block(qnblock(ll,rq),qnblock(rl,cq))
+    loc_end(rq,cq) = Block(qnblock(ll,rq),1)
 
-      rn = dim(ll)
-      b = Block(rn, 1)
-      T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
-      T[b] .= M
+    for (loc,block) in ((loc_onsite,onsite_block),
+                        (loc_begin,begin_block),
+                        (loc_end,end_block),
+                        (loc_cont,cont_block))
+      for (q_op, M) in block
+        op_prod = q_op[2]
+        Op = computeSiteProd(sites, op_prod)
 
-      H[n] += (itensor(T) * Op)
-    end
+        rq = q_op[1]
+        sq = flux(Op)
+        cq = rq - sq
 
-    for (q_op, M) in cont_block
-      op_prod = q_op[2]
-      Op = computeSiteProd(sites, op_prod)
-
-      rq = q_op[1]
-      sq = flux(Op)
-      cq = rq - sq
-
-      if using_auto_fermion()
-        # <fermions>:
-        # MPO is defined with Index order
-        # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
-        # so compute sign that would result by permuting cl from
-        # second position to last position:
-        if fparity(sq) == 1 && fparity(cq) == 1
-          Op .*= -1
+        if using_auto_fermion()
+          # <fermions>:
+          # MPO is defined with Index order
+          # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
+          # so compute sign that would result by permuting cl from
+          # second position to last position:
+          if fparity(sq) == 1 && fparity(cq) == 1
+            Op .*= -1
+          end
         end
+
+        b = loc(rq,cq)
+        T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+        T[b] .= M
+
+        H[n] += (itensor(T) * Op)
       end
-
-      rn = qnblock(ll, rq)
-      cn = qnblock(rl, cq)
-      b = Block(rn, cn)
-      T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
-      T[b] .= M
-
-      H[n] += (itensor(T) * Op)
-    end
-
-    for (q_op, M) in begin_block
-      op_prod = q_op[2]
-      Op = computeSiteProd(sites, op_prod)
-
-      rq = q_op[1]
-      sq = flux(Op)
-      cq = rq - sq
-
-      if using_auto_fermion()
-        # <fermions>:
-        # MPO is defined with Index order
-        # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
-        # so compute sign that would result by permuting cl from
-        # second position to last position:
-        if fparity(sq) == 1 && fparity(cq) == 1
-          Op .*= -1
-        end
-      end
-
-      cn = qnblock(rl, cq)
-      b = Block(nblocks(ll), cn)
-      T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
-      T[b] .= M
-
-      H[n] += (itensor(T) * Op)
-    end
-
-    for (q_op, M) in end_block
-      op_prod = q_op[2]
-      Op = computeSiteProd(sites, op_prod)
-
-      rq = q_op[1]
-      sq = flux(Op)
-      cq = rq - sq
-
-      if using_auto_fermion()
-        # <fermions>:
-        # MPO is defined with Index order
-        # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
-        # so compute sign that would result by permuting cl from
-        # second position to last position:
-        if fparity(sq) == 1 && fparity(cq) == 1
-          Op .*= -1
-        end
-      end
-
-      rn = qnblock(ll, rq)
-      b = Block(rn, 1)
-      T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
-      T[b] .= M
-
-      H[n] += (itensor(T) * Op)
     end
 
     # Put in ending identity operator
