@@ -27,11 +27,11 @@ implements custom measurements and allows
 the `dmrg` function to return early if an
 energy convergence criterion is met.
 """
-struct DMRGObserver <: AbstractObserver
+struct DMRGObserver{T} <: AbstractObserver
   ops::Vector{String}
   sites::Vector{<:Index}
   measurements::Dict{String,DMRGMeasurement}
-  energies::Vector{Float64}
+  energies::Vector{T}
   truncerrs::Vector{Float64}
   etol::Float64
   minsweeps::Int64
@@ -39,20 +39,29 @@ end
 
 """
     DMRGObserver(;energy_tol=0.0,
-                  minsweeps=2)
+                  minsweeps=2,
+                  energy_type=Float64)
 
 Construct a DMRGObserver by providing the energy
 tolerance used for early stopping, and minimum number
 of sweeps that must be done.
 
+Optional keyword arguments:
   - energy_tol: if the energy from one sweep to the
     next no longer changes by more than this amount,
     stop after the current sweep
   - minsweeps: do at least this many sweeps
+  - energy_type: type to use when storing energies at each step
 """
-function DMRGObserver(; energy_tol=0.0, minsweeps=2)
+function DMRGObserver(; energy_tol=0.0, minsweeps=2, energy_type=Float64)
   return DMRGObserver(
-    [], Index[], Dict{String,DMRGMeasurement}(), [], [], energy_tol, minsweeps
+    String[],
+    Index[],
+    Dict{String,DMRGMeasurement}(),
+    energy_type[],
+    Float64[],
+    energy_tol,
+    minsweeps,
   )
 end
 
@@ -60,7 +69,8 @@ end
     DMRGObserver(ops::Vector{String}, 
                  sites::Vector{<:Index};
                  energy_tol=0.0,
-                 minsweeps=2)
+                 minsweeps=2,
+                 energy_type=Float64)
 
 Construct a DMRGObserver, provide an array
 of `ops` of operator names which are strings 
@@ -76,16 +86,24 @@ Optionally, one can provide an energy
 tolerance used for early stopping, and minimum number
 of sweeps that must be done.
 
+Optional keyword arguments:
   - energy_tol: if the energy from one sweep to the
     next no longer changes by more than this amount,
     stop after the current sweep
   - minsweeps: do at least this many sweeps
+  - energy_type: type to use when storing energies at each step
 """
 function DMRGObserver(
-  ops::Vector{String}, sites::Vector{<:Index}; energy_tol=0.0, minsweeps=2
+  ops::Vector{String},
+  sites::Vector{<:Index};
+  energy_tol=0.0,
+  minsweeps=2,
+  energy_type=Float64,
 )
   measurements = Dict(o => DMRGMeasurement() for o in ops)
-  return DMRGObserver(ops, sites, measurements, [], [], energy_tol, minsweeps)
+  return DMRGObserver{energy_type}(
+    ops, sites, measurements, energy_type[], Float64[], energy_tol, minsweeps
+  )
 end
 
 """
@@ -157,8 +175,8 @@ end
 function checkdone!(o::DMRGObserver; kwargs...)
   outputlevel = get(kwargs, :outputlevel, false)
   if (
-    length(energies(o)) > o.minsweeps &&
-    abs(energies(o)[end] - energies(o)[end - 1]) < o.etol
+    length(real(energies(o))) > o.minsweeps &&
+    abs(real(energies(o))[end] - real(energies(o))[end - 1]) < o.etol
   )
     outputlevel > 0 && println("Energy difference less than $(o.etol), stopping DMRG")
     return true

@@ -119,7 +119,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
 
   maxdim::Int = get(kwargs, :maxdim, minimum(dims(T)))
   mindim::Int = get(kwargs, :mindim, 1)
-  cutoff::Float64 = get(kwargs, :cutoff, 0.0)
+  cutoff = get(kwargs, :cutoff, 0.0)
   use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
   alg::String = get(kwargs, :alg, "divide_and_conquer")

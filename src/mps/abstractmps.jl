@@ -2194,6 +2194,11 @@ function splitblocks(::typeof(linkinds), M::AbstractMPS; tol=0)
   return splitblocks!(linkinds, copy(M); tol=0)
 end
 
+removeqns(M::AbstractMPS) = map(removeqns, M; set_limits=false)
+function removeqn(M::AbstractMPS, qn_name::String)
+  return map(m -> removeqn(m, qn_name), M; set_limits=false)
+end
+
 #
 # Broadcasting
 #

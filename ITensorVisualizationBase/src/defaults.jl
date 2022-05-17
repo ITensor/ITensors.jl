@@ -21,6 +21,8 @@ function subscript(n::Integer)
   return ss
 end
 
+subscript(n) = string(n)
+
 default_vertex_labels_prefix(b::Backend, g) = "T"
 function default_vertex_labels(
   b::Backend, g::AbstractGraph, vertex_labels_prefix=default_vertex_labels_prefix(b)
@@ -42,6 +44,10 @@ default_vertex_textsize(b::Backend, g) = 20
 default_edge_textsize(b::Backend) = 30
 
 function default_edge_labels(b::Backend, g::AbstractGraph)
+  return fill("", ne(g))
+end
+
+function default_edge_labels(b::Backend, g::AbstractMetaGraph)
   return IndexLabels(b)
 end
 
@@ -80,6 +86,8 @@ function IndexLabels(
   return IndexLabels(dims, tags, ids, plevs, qns, newlines)
 end
 
+edge_labels(b::Backend, l::Vector{String}, g::AbstractGraph) = l
+
 function edge_labels(b::Backend, l::IndexLabels, g::AbstractGraph)
   return edge_labels(l, g)
 end
@@ -92,7 +100,7 @@ function edge_labels(b::Backend, params::NamedTuple, g::AbstractGraph)
   return IndexLabels(b; params...)(g)
 end
 
-function edge_label(l::IndexLabels, g::AbstractGraph, e)
+function edge_label(l::IndexLabels, g::AbstractMetaGraph, e)
   indsₑ = get_prop(g, e, :inds)
   return label_string(
     indsₑ;
@@ -106,12 +114,12 @@ function edge_label(l::IndexLabels, g::AbstractGraph, e)
   )
 end
 
-function _edge_label(l, g::Graph, e)
+function _edge_label(l, g::AbstractGraph, e)
   return string(e)
 end
 
-edge_label(l::IndexLabels, g::Graph, e) = _edge_label(l, g, e)
-edge_label(l, g::Graph, e) = _edge_label(l, g, e)
+edge_label(l::IndexLabels, g::AbstractGraph, e) = _edge_label(l, g, e)
+edge_label(l, g::AbstractGraph, e) = _edge_label(l, g, e)
 
 #function default_edge_labels(b::Backend, g; kwargs...)
 #  return [edge_label(g, e; kwargs...) for e in edges(g)]
@@ -194,12 +202,12 @@ function width(inds)
   return log2(dim(inds)) + 1
 end
 
-function default_edge_widths(b::Backend, g::AbstractGraph)
+function default_edge_widths(b::Backend, g::AbstractMetaGraph)
   return Float64[width(get_prop(g, e, :inds)) for e in edges(g)]
 end
 
-function default_edge_widths(b::Backend, g::Graph)
-  return [1.0 for e in edges(g)]
+function default_edge_widths(b::Backend, g::AbstractGraph)
+  return fill(one(Float64), ne(g))
 end
 
 #############################################################################
@@ -210,7 +218,7 @@ default_arrow_size(b::Backend, g) = 30
 
 _hasqns(tn::Vector{ITensor}) = any(hasqns, tn)
 
-function _hasqns(g::AbstractGraph)
+function _hasqns(g::AbstractMetaGraph)
   if iszero(ne(g))
     if has_prop(g, first(vertices(g)), :inds)
       return hasqns(get_prop(g, first(vertices(g)), :inds))
@@ -221,7 +229,7 @@ function _hasqns(g::AbstractGraph)
   return hasqns(get_prop(g, first(edges(g)), :inds))
 end
 
-_hasqns(g::Graph) = false
+_hasqns(g::AbstractGraph) = false
 
 default_arrow_show(b::Backend, g) = _hasqns(g)
 
