@@ -636,6 +636,7 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   return H
 end #svdMPO
 
+
 function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, typemax(Int))
@@ -650,12 +651,24 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
   crosses_bond(t::MPOTerm, n::Int) = (site(ops(t)[1]) <= n <= site(ops(t)[end]))
 
-  rightmap = Dict{Pair{OpTerm,QN},Int}()
-  next_rightmap = Dict{Pair{OpTerm,QN},Int}()
-
   # A cache of the ITensor operators on a certain site
   # of a certain type
   op_cache = Dict{Pair{String,Int},ITensor}()
+  function calcQN(term::OpTerm)
+    q = QN()
+    for st in term
+      op_tensor = get(op_cache, name(st) => site(st), nothing)
+      if op_tensor === nothing
+        op_tensor = op(sites[site(st)], name(st); params(st)...)
+        op_cache[name(st) => site(st)] = op_tensor
+      end
+      q -= flux(op_tensor)
+    end
+    return q
+  end
+
+  rightmap = Dict{Pair{OpTerm,QN},Int}()
+  next_rightmap = Dict{Pair{OpTerm,QN},Int}()
 
   for n in 1:N
     h_sparse = Dict{QN,Vector{MatElem{ValType}}}()
@@ -668,18 +681,6 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
       onsite::OpTerm = filter(t -> (site(t) == n), ops(term))
       right::OpTerm = filter(t -> (site(t) > n), ops(term))
 
-      function calcQN(term::OpTerm)
-        q = QN()
-        for st in term
-          op_tensor = get(op_cache, name(st) => site(st), nothing)
-          if op_tensor === nothing
-            op_tensor = op(sites[site(st)], name(st); params(st)...)
-            op_cache[name(st) => site(st)] = op_tensor
-          end
-          q -= flux(op_tensor)
-        end
-        return q
-      end
       lqn = calcQN(left)
       sqn = calcQN(onsite)
 
@@ -714,8 +715,8 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
 
     if n > 1 && !isempty(h_sparse)
       for (q, mat) in h_sparse
-        M = toMatrix(mat)
-        U, S, V = svd(M)
+        h = toMatrix(mat)
+        U, S, V = svd(h)
         P = S .^ 2
         truncate!(P; maxdim, cutoff, mindim)
         tdim = length(P)
@@ -730,33 +731,23 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   #
   # Make MPO link indices
   #
-  d0 = 2
   llinks = Vector{QNIndex}(undef, N + 1)
   # Set dir=In for fermionic ordering, avoid arrow sign
   # <fermions>:
   linkdir = using_auto_fermion() ? In : Out
-  llinks[1] = Index(QN() => d0; tags="Link,l=0", dir=linkdir)
+  llinks[1] = Index([QN() => 1,QN() => 1]; tags="Link,l=0", dir=linkdir)
   for n in 1:N
     qi = Vector{Pair{QN,Int}}()
-    if !haskey(Vs[n + 1], QN())
-      # Make sure QN=zero is first in list of sectors
-      push!(qi, QN() => d0)
-    end
+    push!(qi,QN()=>1)
     for (q, Vq) in Vs[n + 1]
       cols = size(Vq, 2)
-      if q == QN()
-        # Make sure QN=zero is first in list of sectors
-        insert!(qi, 1, q => d0 + cols)
+      if using_auto_fermion() # <fermions>
+        push!(qi, (-q) => cols)
       else
-        if using_auto_fermion() # <fermions>
-          push!(qi, (-q) => cols)
-        else
-          push!(qi, q => cols)
-        end
+        push!(qi, q => cols)
       end
     end
-    # Set dir=In for fermionic ordering, avoid arrow sign
-    # <fermions>:
+    push!(qi,QN()=>1)
     llinks[n + 1] = Index(qi...; tags="Link,l=$n", dir=linkdir)
   end
 
@@ -766,66 +757,80 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   startState = 2
   endState = 1
 
-  for n in 1:N
-    finalMPO = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
+  # Find location where block of Index i
+  # matches QN q, but *not* 1 or dim(i)
+  # which are special ending/starting states
+  function qnblock(i::Index,q::QN)
+    for b=2:nblocks(i)-1
+      flux(i,Block(b))==q && return b
+    end
+    error("Could not find block of QNIndex with matching QN")
+  end
+  qnblockdim(i::Index,q::QN) = blockdim(i,qnblock(i,q))
 
+  for n in 1:N
     ll = llinks[n]
     rl = llinks[n + 1]
 
-    function defaultMat(ll, rl, lqn, rqn)
-      ldim = blockdim(ll, lqn)
-      rdim = blockdim(rl, rqn)
-      return zeros(ValType, ldim, rdim)
-    end
-
-    idTerm = [SiteOp("Id", n)]
-    finalMPO[(QN(), idTerm)] = defaultMat(ll, rl, QN(), QN())
-    idM = finalMPO[(QN(), idTerm)]
-    idM[1, 1] = 1.0
-    idM[2, 2] = 1.0
+    begin_block = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
+    cont_block = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
+    end_block = Dict{Tuple{QN,OpTerm},Matrix{ValType}}()
+    onsite_block = Dict{OpTerm,Matrix{ValType}}()
 
     for el in sparse_MPO[n]
       t = el.val
       (abs(coef(t)) > eps()) || continue
       A_row = el.row
       A_col = el.col
-
-      M = get!(finalMPO, (el.rowqn, ops(t)), defaultMat(ll, rl, el.rowqn, el.colqn))
-
-      # rowShift and colShift account for
-      # special entries in the zero-QN sector
-      # of the MPO
-      rowShift = (el.rowqn == QN()) ? 2 : 0
-      colShift = (el.colqn == QN()) ? 2 : 0
-
       ct = convert(ValType, coef(t))
-      if A_row == -1 && A_col == -1 #onsite term
-        M[startState, endState] += ct
-      elseif A_row == -1 #term starting on site n
+
+      ldim = (A_row == -1) ? 1 : qnblockdim(ll,el.rowqn)
+      rdim = (A_col == -1) ? 1 : qnblockdim(rl,el.colqn)
+      zero_mat() = zeros(ValType,ldim,rdim)
+
+      if A_row == -1 && A_col == -1
+        # Onsite term
+        M = get!(onsite_block, ops(t), zeros(ValType,1,1))
+        M[1,1] += ct
+      elseif A_row == -1
+        # Operator beginning a term on site n
+        M = get!(begin_block, (el.rowqn, ops(t)), zero_mat())
         VR = Vs[n + 1][el.colqn]
         for c in 1:size(VR, 2)
-          z = ct * VR[A_col, c]
-          M[startState, colShift + c] += z
+          M[1,c] += ct * VR[A_col, c]
         end
-      elseif A_col == -1 #term ending on site n
+      elseif A_col == -1 
+        # Operator ending a term on site n
+        M = get!(end_block, (el.rowqn, ops(t)), zero_mat())
         VL = Vs[n][el.rowqn]
         for r in 1:size(VL, 2)
-          z = ct * conj(VL[A_row, r])
-          M[rowShift + r, endState] += z
+          M[r,1] += ct * conj(VL[A_row, r])
         end
       else
+        # Operator continuing a term on site n
+        M = get!(cont_block, (el.rowqn, ops(t)), zero_mat())
         VL = Vs[n][el.rowqn]
         VR = Vs[n + 1][el.colqn]
         for r in 1:size(VL, 2), c in 1:size(VR, 2)
-          z = ct * conj(VL[A_row, r]) * VR[A_col, c]
-          M[rowShift + r, colShift + c] += z
+          M[r,c] += ct * conj(VL[A_row, r]) * VR[A_col, c]
         end
       end
     end
 
-    s = sites[n]
     H[n] = ITensor()
-    for (q_op, M) in finalMPO
+
+    for (op_prod, M) in onsite_block
+      Op = computeSiteProd(sites, op_prod)
+
+      rn = dim(ll)
+      b = Block(rn, 1)
+      T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+      T[b] .= M
+
+      H[n] += (itensor(T) * Op)
+    end
+
+    for (q_op, M) in cont_block
       op_prod = q_op[2]
       Op = computeSiteProd(sites, op_prod)
 
@@ -844,26 +849,90 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         end
       end
 
-      rn = qnblocknum(ll, rq)
-      cn = qnblocknum(rl, cq)
+      rn = qnblock(ll, rq)
+      cn = qnblock(rl, cq)
+      b = Block(rn, cn)
+      T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+      T[b] .= M
 
-      #TODO: wrap following 3 lines into a function
-      _block = Block(rn, cn)
-      T = BlockSparseTensor(ValType, [_block], (dag(ll), rl))
-      T[_block] .= M
-
-      IT = itensor(T)
-      H[n] += IT * Op
+      H[n] += (itensor(T) * Op)
     end
-  end
+
+    for (q_op, M) in begin_block
+      op_prod = q_op[2]
+      Op = computeSiteProd(sites, op_prod)
+
+      rq = q_op[1]
+      sq = flux(Op)
+      cq = rq - sq
+
+      if using_auto_fermion()
+        # <fermions>:
+        # MPO is defined with Index order
+        # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
+        # so compute sign that would result by permuting cl from
+        # second position to last position:
+        if fparity(sq) == 1 && fparity(cq) == 1
+          Op .*= -1
+        end
+      end
+
+      cn = qnblock(rl, cq)
+      b = Block(nblocks(ll), cn)
+      T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+      T[b] .= M
+
+      H[n] += (itensor(T) * Op)
+    end
+
+    for (q_op, M) in end_block
+      op_prod = q_op[2]
+      Op = computeSiteProd(sites, op_prod)
+
+      rq = q_op[1]
+      sq = flux(Op)
+      cq = rq - sq
+
+      if using_auto_fermion()
+        # <fermions>:
+        # MPO is defined with Index order
+        # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
+        # so compute sign that would result by permuting cl from
+        # second position to last position:
+        if fparity(sq) == 1 && fparity(cq) == 1
+          Op .*= -1
+        end
+      end
+
+      rn = qnblock(ll, rq)
+      b = Block(rn, 1)
+      T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+      T[b] .= M
+
+      H[n] += (itensor(T) * Op)
+    end
+
+    # Put in ending identity operator
+    Id = op("Id",sites[n])
+    b = Block(1, 1)
+    T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+    T[b] = 1
+    H[n] += (itensor(T) * Id)
+
+    # Put in starting identity operator
+    b = Block(nblocks(ll), nblocks(rl))
+    T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
+    T[b] = 1
+    H[n] += (itensor(T) * Id)
+
+  end # for n in 1:N
 
   L = ITensor(llinks[1])
-  L[startState] = 1.0
+  L[llinks[1]=>end] = 1.0
+  H[1] *= L
 
   R = ITensor(dag(llinks[N + 1]))
-  R[endState] = 1.0
-
-  H[1] *= L
+  R[dag(llinks[N+1])=>1] = 1.0
   H[N] *= R
 
   return H
