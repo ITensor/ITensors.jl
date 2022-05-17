@@ -59,34 +59,40 @@ function NNheisenbergMPO(sites, J1::Float64, J2::Float64)::MPO
   H = MPO(sites)
   N = length(H)
   link = Vector{Index}(undef, N + 1)
-  for n in 1:(N + 1)
-    link[n] = Index(8, "Link,H,l=$(n-1)")
+  if hasqns(sites[1])
+    for n in 1:(N + 1)
+      link[n] = Index([QN()=>1,QN("Sz",-2)=>1,QN("Sz",+2)=>1,QN()=>1,QN("Sz",-2)=>1,QN("Sz",+2)=>1,QN()=>2], "Link,H,l=$(n-1)")
+    end
+  else
+    for n in 1:(N + 1)
+      link[n] = Index(8, "Link,H,l=$(n-1)")
+    end
   end
   for n in 1:N
     s = sites[n]
-    ll = link[n]
+    ll = dag(link[n])
     rl = link[n + 1]
-    H[n] = ITensor(ll, s, s', rl)
-    H[n] += setelt(ll => 1) * setelt(rl => 1) * op(sites, "Id", n)
-    H[n] += setelt(ll => 8) * setelt(rl => 8) * op(sites, "Id", n)
+    H[n] = ITensor(ll, dag(s), s', rl)
+    H[n] += onehot(ll => 1) * onehot(rl => 1) * op(sites, "Id", n)
+    H[n] += onehot(ll => 8) * onehot(rl => 8) * op(sites, "Id", n)
 
-    H[n] += setelt(ll => 2) * setelt(rl => 1) * op(sites, "S-", n)
-    H[n] += setelt(ll => 5) * setelt(rl => 2) * op(sites, "Id", n)
-    H[n] += setelt(ll => 8) * setelt(rl => 2) * op(sites, "S+", n) * J1 / 2
-    H[n] += setelt(ll => 8) * setelt(rl => 5) * op(sites, "S+", n) * J2 / 2
+    H[n] += onehot(ll => 2) * onehot(rl => 1) * op(sites, "S-", n)
+    H[n] += onehot(ll => 5) * onehot(rl => 2) * op(sites, "Id", n)
+    H[n] += onehot(ll => 8) * onehot(rl => 2) * op(sites, "S+", n) * J1 / 2
+    H[n] += onehot(ll => 8) * onehot(rl => 5) * op(sites, "S+", n) * J2 / 2
 
-    H[n] += setelt(ll => 3) * setelt(rl => 1) * op(sites, "S+", n)
-    H[n] += setelt(ll => 6) * setelt(rl => 3) * op(sites, "Id", n)
-    H[n] += setelt(ll => 8) * setelt(rl => 3) * op(sites, "S-", n) * J1 / 2
-    H[n] += setelt(ll => 8) * setelt(rl => 6) * op(sites, "S-", n) * J2 / 2
+    H[n] += onehot(ll => 3) * onehot(rl => 1) * op(sites, "S+", n)
+    H[n] += onehot(ll => 6) * onehot(rl => 3) * op(sites, "Id", n)
+    H[n] += onehot(ll => 8) * onehot(rl => 3) * op(sites, "S-", n) * J1 / 2
+    H[n] += onehot(ll => 8) * onehot(rl => 6) * op(sites, "S-", n) * J2 / 2
 
-    H[n] += setelt(ll => 4) * setelt(rl => 1) * op(sites, "Sz", n)
-    H[n] += setelt(ll => 7) * setelt(rl => 4) * op(sites, "Id", n)
-    H[n] += setelt(ll => 8) * setelt(rl => 4) * op(sites, "Sz", n) * J1
-    H[n] += setelt(ll => 8) * setelt(rl => 7) * op(sites, "Sz", n) * J2
+    H[n] += onehot(ll => 4) * onehot(rl => 1) * op(sites, "Sz", n)
+    H[n] += onehot(ll => 7) * onehot(rl => 4) * op(sites, "Id", n)
+    H[n] += onehot(ll => 8) * onehot(rl => 4) * op(sites, "Sz", n) * J1
+    H[n] += onehot(ll => 8) * onehot(rl => 7) * op(sites, "Sz", n) * J2
   end
-  H[1] *= setelt(link[1] => 8)
-  H[N] *= setelt(link[N + 1] => 1)
+  H[1] *= onehot(link[1] => 8)
+  H[N] *= onehot(dag(link[N + 1]) => 1)
   return H
 end
 
@@ -799,11 +805,11 @@ end
         ampo .+= J2 * 0.5, "S+", j, "S-", j + 2
         ampo .+= J2 * 0.5, "S-", j, "S+", j + 2
       end
-      sites = siteinds("S=1/2", N)
+      sites = siteinds("S=1/2", N; conserve_qns=true)
       Ha = MPO(ampo, sites)
 
       He = NNheisenbergMPO(sites, J1, J2)
-      psi = makeRandomMPS(sites)
+      psi = randomMPS(sites,[isodd(n) ? "Up" : "Dn" for n=1:N])
       Oa = inner(psi', Ha, psi)
       Oe = inner(psi', He, psi)
       @test Oa ≈ Oe
