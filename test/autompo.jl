@@ -918,6 +918,37 @@ end
     end
   end
 
+  @testset "Non-zero QN MPO" begin
+    N = 4
+    s = siteinds("Boson",N; conserve_qns=true)
+
+    j = 3
+    terms = OpSum()
+    terms += "Adag",j
+    W = MPO(terms,s)
+
+    function op_mpo(sites, which_op, j)
+      N = length(sites)
+      ops = [n < j ? "Id" : (n > j ? "Id" : which_op) for n in 1:N]
+      M = MPO([op(ops[n], sites[n]) for n in 1:length(sites)])
+      q = flux(op(which_op,sites[j]))
+      links = [Index([n<j ? q=>1 : QN()=>1],"Link,l=$n") for n=1:N]
+      for n=1:N-1
+        M[n] *= onehot(links[n]=>1)
+        M[n+1] *= onehot(dag(links[n])=>1)
+      end
+      return M
+    end
+    M = op_mpo(s,"Adag",j)
+
+    @test norm(prod(W)-prod(M)) < 1E-10
+
+    psi = randomMPS(s,[isodd(n) ? "1" : "0" for n=1:length(s)];linkdims=4)
+    Mpsi = apply(M,psi;alg="naive")
+    Wpsi = apply(M,psi;alg="naive")
+    @test abs(inner(Mpsi,Wpsi)/inner(Mpsi,Mpsi)-1.0) < 1E-10
+  end
+
   @testset "Fermion OpSum Issue 514 Regression Test" begin
     N = 4
     s = siteinds("Electron", N; conserve_qns=true)
