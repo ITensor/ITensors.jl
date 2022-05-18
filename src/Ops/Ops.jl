@@ -105,12 +105,12 @@ OpSum() = OpSum{Float64}()
 # 1.3 * Op("X", 1) * Op("X", 2)
 (co1::Scaled{C} * o2::Op) where {C} = co1 * (one(C) * o2)
 
-exp(o::Op) = Applied(exp, o)
+exp(o::Op) = Applied(exp, (o,))
 
-adjoint(o::Op) = Applied(adjoint, o)
+adjoint(o::Op) = Applied(adjoint, (o,))
 adjoint(o::LazyApply.Adjoint{Op}) = only(o.args)
 
-(o1::Exp{Op} * o2::Op) = Applied(prod, [o1, o2])
+(o1::Exp{Op} * o2::Op) = Applied(prod, ([o1, o2],))
 
 #
 # Tuple interface

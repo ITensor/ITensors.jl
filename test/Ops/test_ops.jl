@@ -74,12 +74,22 @@ end
   @test Sum{Op}() + ("X", 1, "Y", 2) + ("Y", 2) isa Sum{Prod{Op}}
   @test Sum{Op}() + ("X", 1, "Y", 2) + (1.2, "Y", 2) isa Sum{Scaled{Float64,Prod{Op}}}
 
+  N = 4
+  s = siteinds("Qubit", N)
+
+  @test ITensor(o1, s) ≈ op("X", s, 1)
+  @test ITensor(2 * o1, s) ≈ 2 * ITensor(o1, s)
+  @test ITensor(o1 * o2, s) ≈ ITensor(o1, s) * ITensor(o2, s)
+  @test ITensor(2 * o1 * o2, s) ≈ 2 * ITensor(o1, s) * ITensor(o2, s)
+  @test ITensor(2 * o1 * o2 + o1 * o2, s) ≈ 2 * ITensor(o1, s) * ITensor(o2, s) + ITensor(o1, s) * ITensor(o2, s)
+  @test ITensor(exp(o1), s) ≈ exp(ITensor(o1, s))
+  @test ITensor(exp(1.2 * o1), s) ≈ exp(1.2 * ITensor(o1, s))
+  @test ITensor(1.3 * exp(1.2 * o1), s) ≈ 1.3 * exp(1.2 * ITensor(o1, s))
+
   o = (2x1 * y2 - 2CX12) / 3
   @test coefficient(o[1]) ≈ 2 / 3
   @test coefficient(o[2]) ≈ -2 / 3
 
-  N = 4
-  s = siteinds("Qubit", N)
   t1 = ITensor(x1, s)
   @test hassameinds(t1, (s[1]', dag(s[1])))
   @test t1[1, 1] == 0

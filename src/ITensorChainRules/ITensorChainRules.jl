@@ -19,6 +19,7 @@ include("itensor.jl")
 include(joinpath("physics", "sitetype.jl"))
 include(joinpath("mps", "abstractmps.jl"))
 include(joinpath("mps", "mpo.jl"))
+include(joinpath("LazyApply", "LazyApply.jl"))
 include("zygoterules.jl")
 
 @non_differentiable broadcast_notangent(::Any)

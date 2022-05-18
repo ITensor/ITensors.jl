@@ -21,19 +21,12 @@ import Base:
 
 export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand
 
-struct Applied{F,Args,Kwargs}
+struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
   f::F
   args::Args
   kwargs::Kwargs
-  function Applied{F,Args}(f, args::Tuple, kwargs::NamedTuple) where {F,Args}
-    return new{F,Args,typeof(kwargs)}(f, args, kwargs)
-  end
 end
-function Applied{F,Args}(f, args::Tuple; kwargs...) where {F,Args}
-  return Applied{F,Args}(f, args, NamedTuple(kwargs))
-end
-Applied(f, args::Tuple; kwargs...) = Applied{typeof(f),typeof(args)}(f, args; kwargs...)
-Applied(f, args...; kwargs...) = Applied(f, args; kwargs...)
+Applied(f, args::Tuple) = Applied(f, args, (;))
 
 function (a1::Applied == a2::Applied)
   return a1.f == a2.f && a1.args == a2.args && a1.kwargs == a2.kwargs
@@ -79,13 +72,13 @@ end
 (a1::Sum{A} - a2::A) where {C,A} = a1 + (-a2)
 (a1::A - a2::Sum{A}) where {C,A} = a1 + (-a2)
 
-(a1::Prod{A} * a2::A) where {A} = Applied(prod, vcat(only(a1.args), [a2]))
-(a1::A * a2::Prod{A}) where {A} = Applied(prod, vcat([a1], only(a2.args)))
+(a1::Prod{A} * a2::A) where {A} = Applied(prod, (vcat(only(a1.args), [a2]),))
+(a1::A * a2::Prod{A}) where {A} = Applied(prod, (vcat([a1], only(a2.args)),))
 
 # Fixes ambiguity error with:
 # *(a1::Applied, a2::Sum)
 # *(os::Prod{A}, o::A)
-(a1::Prod{Sum{A}} * a2::Sum{A}) where {A} = Applied(prod, vcat(only(a1.args), [a2]))
+(a1::Prod{Sum{A}} * a2::Sum{A}) where {A} = Applied(prod, (vcat(only(a1.args), [a2]),))
 
 # 1.3 * Op("X", 1) + 1 * Op("X", 2)
 # 1.3 * Op("X", 1) * Op("X", 2) + 1 * Op("X", 3)
@@ -114,7 +107,7 @@ end
 # (Op("X", 1) * Op("X", 2) + Op("X", 3) * Op("X", 4)) + (Op("X", 5) * Op("X", 6) + Op("X", 7) * Op("X", 8))
 (os1::Sum{A} + os2::Sum{A}) where {A} = Applied(sum, (vcat(os1.args[1], os2.args[1]),))
 
-(a1::Prod{A} * a2::Prod{A}) where {A} = Applied(prod, vcat(only(a1.args), only(a2.args)))
+(a1::Prod{A} * a2::Prod{A}) where {A} = Applied(prod, (vcat(only(a1.args), only(a2.args)),))
 
 (os::Sum{Scaled{C,A}} + o::A) where {C,A} = os + one(C) * o
 (o::A + os::Sum{Scaled{C,A}}) where {C,A} = one(C) * o + os
@@ -128,12 +121,12 @@ end
 # 1.3 * (Op("X", 1) + Op("X", 2))
 (c::Number * os::Sum) = Applied(sum, (c * os.args[1],))
 
-(a1::Applied * a2::Sum) = Applied(sum, map(a -> a1 * a, only(a2.args)))
-(a1::Sum * a2::Applied) = Applied(sum, map(a -> a * a2, only(a1.args)))
-(a1::Sum * a2::Sum) = Applied(prod, [a1, a2])
+(a1::Applied * a2::Sum) = Applied(sum, (map(a -> a1 * a, only(a2.args)),))
+(a1::Sum * a2::Applied) = Applied(sum, (map(a -> a * a2, only(a1.args)),))
+(a1::Sum * a2::Sum) = Applied(prod, ([a1, a2],))
 
 function _expand(a1::Sum, a2::Sum)
-  return Applied(sum, vec([a1[i] * a2[j] for i in 1:length(a1), j in 1:length(a2)]))
+  return Applied(sum, (vec([a1[i] * a2[j] for i in 1:length(a1), j in 1:length(a2)]),))
 end
 
 function expand(a::Prod)
@@ -141,7 +134,7 @@ function expand(a::Prod)
     return a[1]
   elseif length(a) ≥ 2
     a12 = _expand(a[1], a[2])
-    return expand(Applied(prod, vcat([a12], a[3:end])))
+    return expand(Applied(prod, (vcat([a12], a[3:end]),)))
   end
 end
 
@@ -161,7 +154,7 @@ function (a1::Scaled - a2::Scaled) where {C,A}
 end
 
 function (a1::Prod{A} + a2::A) where {A}
-  return a1 + Applied(prod, [a2])
+  return a1 + Applied(prod, ([a2],))
 end
 
 function (a1::Sum{A} + a2::Prod{A}) where {A}
@@ -197,7 +190,7 @@ end
 #
 # is not being called.
 function (a1::Sum{Scaled{C,A}} + a2::Scaled{C,A}) where {C,A}
-  return Applied(sum, vcat(only(a1.args), [a2]))
+  return Applied(sum, (vcat(only(a1.args), [a2]),))
 end
 
 function (a1::Sum{Scaled{C,Prod{A}}} + a2::Sum{A}) where {C,A}
@@ -248,15 +241,15 @@ argument(a::Exp) = a.args[1]
 
 (c::Number * e::Exp) = Applied(*, (c, e))
 (e::Exp * c::Number) = c * e
-(e1::Exp * e2::Exp) = Applied(prod, [e1, e2])
-(e1::Applied * e2::Exp) = Applied(prod, [e1, e2])
-(e1::Exp * e2::Applied) = Applied(prod, [e1, e2])
+(e1::Exp * e2::Exp) = Applied(prod, ([e1, e2],))
+(e1::Applied * e2::Exp) = Applied(prod, ([e1, e2],))
+(e1::Exp * e2::Applied) = Applied(prod, ([e1, e2],))
 
 function reverse(a::Prod)
-  return Applied(prod, reverse(only(a.args)))
+  return Applied(prod, (reverse(only(a.args)),))
 end
 
-adjoint(a::Prod) = Applied(prod, map(adjoint, reverse(only(a.args))))
+adjoint(a::Prod) = Applied(prod, (map(adjoint, reverse(only(a.args))),))
 
 #
 # Convenient indexing

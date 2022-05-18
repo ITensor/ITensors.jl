@@ -12,11 +12,11 @@ function exp(o::Sum; alg::ExpAlgorithm=Exact())
 end
 
 function exp(::Exact, o::Sum)
-  return Applied(prod, [Applied(exp, o)])
+  return Applied(prod, ([Applied(exp, (o,))],))
 end
 
 function exp_one_step(trotter::Trotter{1}, o::Sum)
-  exp_o = Applied(prod, map(exp, only(o.args)))
+  exp_o = Applied(prod, (map(exp, only(o.args)),))
   return exp_o
 end
 
