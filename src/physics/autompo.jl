@@ -636,7 +636,6 @@ function svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   return H
 end #svdMPO
 
-
 function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   mindim::Int = get(kwargs, :mindim, 1)
   maxdim::Int = get(kwargs, :maxdim, typemax(Int))
@@ -667,7 +666,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     return q
   end
 
-  Hflux  = -calcQN(ops(first(data(ampo))))
+  Hflux = -calcQN(ops(first(data(ampo))))
 
   rightmap = Dict{Pair{OpTerm,QN},Int}()
   next_rightmap = Dict{Pair{OpTerm,QN},Int}()
@@ -737,10 +736,10 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   # Set dir=In for fermionic ordering, avoid arrow sign
   # <fermions>:
   linkdir = using_auto_fermion() ? In : Out
-  llinks[1] = Index([QN() => 1,Hflux => 1]; tags="Link,l=0", dir=linkdir)
+  llinks[1] = Index([QN() => 1, Hflux => 1]; tags="Link,l=0", dir=linkdir)
   for n in 1:N
     qi = Vector{Pair{QN,Int}}()
-    push!(qi,QN()=>1)
+    push!(qi, QN() => 1)
     for (q, Vq) in Vs[n + 1]
       cols = size(Vq, 2)
       if using_auto_fermion() # <fermions>
@@ -749,7 +748,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         push!(qi, q => cols)
       end
     end
-    push!(qi,Hflux=>1)
+    push!(qi, Hflux => 1)
     llinks[n + 1] = Index(qi...; tags="Link,l=$n", dir=linkdir)
   end
 
@@ -758,13 +757,13 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   # Find location where block of Index i
   # matches QN q, but *not* 1 or dim(i)
   # which are special ending/starting states
-  function qnblock(i::Index,q::QN)
-    for b=2:nblocks(i)-1
-      flux(i,Block(b))==q && return b
+  function qnblock(i::Index, q::QN)
+    for b in 2:(nblocks(i) - 1)
+      flux(i, Block(b)) == q && return b
     end
-    error("Could not find block of QNIndex with matching QN")
+    return error("Could not find block of QNIndex with matching QN")
   end
-  qnblockdim(i::Index,q::QN) = blockdim(i,qnblock(i,q))
+  qnblockdim(i::Index, q::QN) = blockdim(i, qnblock(i, q))
 
   for n in 1:N
     ll = llinks[n]
@@ -782,27 +781,27 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
       A_col = el.col
       ct = convert(ValType, coef(t))
 
-      ldim = (A_row == -1) ? 1 : qnblockdim(ll,el.rowqn)
-      rdim = (A_col == -1) ? 1 : qnblockdim(rl,el.colqn)
-      zero_mat() = zeros(ValType,ldim,rdim)
+      ldim = (A_row == -1) ? 1 : qnblockdim(ll, el.rowqn)
+      rdim = (A_col == -1) ? 1 : qnblockdim(rl, el.colqn)
+      zero_mat() = zeros(ValType, ldim, rdim)
 
       if A_row == -1 && A_col == -1
         # Onsite term
-        M = get!(onsite_block, (el.rowqn,ops(t)), zeros(ValType,1,1))
-        M[1,1] += ct
+        M = get!(onsite_block, (el.rowqn, ops(t)), zeros(ValType, 1, 1))
+        M[1, 1] += ct
       elseif A_row == -1
         # Operator beginning a term on site n
         M = get!(begin_block, (el.rowqn, ops(t)), zero_mat())
         VR = Vs[n + 1][el.colqn]
         for c in 1:size(VR, 2)
-          M[1,c] += ct * VR[A_col, c]
+          M[1, c] += ct * VR[A_col, c]
         end
-      elseif A_col == -1 
+      elseif A_col == -1
         # Operator ending a term on site n
         M = get!(end_block, (el.rowqn, ops(t)), zero_mat())
         VL = Vs[n][el.rowqn]
         for r in 1:size(VL, 2)
-          M[r,1] += ct * conj(VL[A_row, r])
+          M[r, 1] += ct * conj(VL[A_row, r])
         end
       else
         # Operator continuing a term on site n
@@ -810,7 +809,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         VL = Vs[n][el.rowqn]
         VR = Vs[n + 1][el.colqn]
         for r in 1:size(VL, 2), c in 1:size(VR, 2)
-          M[r,c] += ct * conj(VL[A_row, r]) * VR[A_col, c]
+          M[r, c] += ct * conj(VL[A_row, r]) * VR[A_col, c]
         end
       end
     end
@@ -820,15 +819,17 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     # Helper functions to compute block locations
     # of various blocks within the onsite blocks,
     # begin blocks, etc.
-    loc_onsite(rq,cq) = Block(nblocks(ll),1)
-    loc_begin(rq,cq) = Block(nblocks(ll),qnblock(rl,cq))
-    loc_cont(rq,cq) = Block(qnblock(ll,rq),qnblock(rl,cq))
-    loc_end(rq,cq) = Block(qnblock(ll,rq),1)
+    loc_onsite(rq, cq) = Block(nblocks(ll), 1)
+    loc_begin(rq, cq) = Block(nblocks(ll), qnblock(rl, cq))
+    loc_cont(rq, cq) = Block(qnblock(ll, rq), qnblock(rl, cq))
+    loc_end(rq, cq) = Block(qnblock(ll, rq), 1)
 
-    for (loc,block) in ((loc_onsite,onsite_block),
-                        (loc_begin,begin_block),
-                        (loc_end,end_block),
-                        (loc_cont,cont_block))
+    for (loc, block) in (
+      (loc_onsite, onsite_block),
+      (loc_begin, begin_block),
+      (loc_end, end_block),
+      (loc_cont, cont_block),
+    )
       for (q_op, M) in block
         op_prod = q_op[2]
         Op = computeSiteProd(sites, op_prod)
@@ -848,7 +849,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
           end
         end
 
-        b = loc(rq,cq)
+        b = loc(rq, cq)
         T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
         T[b] .= M
 
@@ -857,7 +858,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     end
 
     # Put in ending identity operator
-    Id = op("Id",sites[n])
+    Id = op("Id", sites[n])
     b = Block(1, 1)
     T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
     T[b] = 1
@@ -868,15 +869,14 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     T = BlockSparseTensor(ValType, [b], (dag(ll), rl))
     T[b] = 1
     H[n] += (itensor(T) * Id)
-
   end # for n in 1:N
 
   L = ITensor(llinks[1])
-  L[llinks[1]=>end] = 1.0
+  L[llinks[1] => end] = 1.0
   H[1] *= L
 
   R = ITensor(dag(llinks[N + 1]))
-  R[dag(llinks[N+1])=>1] = 1.0
+  R[dag(llinks[N + 1]) => 1] = 1.0
   H[N] *= R
 
   return H
