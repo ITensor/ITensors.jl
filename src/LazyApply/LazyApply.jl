@@ -212,6 +212,10 @@ function (a1::Sum{Scaled{C,Prod{A}}} + a2::A) where {C,A}
 end
 (a1::Sum{Scaled{C,Prod{A}}} - a2::A) where {C,A} = a1 + (-a2)
 
+function (a1::Sum{Scaled{C,Prod{A}}} + a2::Sum{Scaled{C,A}}) where {C,A}
+  return a1 + (Prod{A}() * a2)
+end
+
 function (o::A + os::Sum{Scaled{C,Prod{A}}}) where {C,A}
   return one(C) * o + os
 end

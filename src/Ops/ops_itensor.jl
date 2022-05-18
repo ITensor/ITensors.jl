@@ -54,14 +54,14 @@ function Prod{ITensor}(o::Scaled{C,Prod{Op}}, s::Vector{<:Index}) where {C}
   return Applied(prod, (vcat([t1], only(t.args)[2:end]),))
 end
 
-function apply(o::Prod{ITensor}, v::ITensor)
+function apply(o::Prod{ITensor}, v::ITensor; kwargs...)
   ov = v
   for oₙ in only(o.args)
-    ov = apply(oₙ, ov)
+    ov = apply(oₙ, ov; kwargs...)
   end
   return ov
 end
 
-function (o::Prod{ITensor})(v::ITensor)
-  return apply(o, v)
+function (o::Prod{ITensor})(v::ITensor; kwargs...)
+  return apply(o, v; kwargs...)
 end
