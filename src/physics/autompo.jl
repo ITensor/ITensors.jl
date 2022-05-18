@@ -667,6 +667,8 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
     return q
   end
 
+  Hflux  = -calcQN(ops(first(data(ampo))))
+
   rightmap = Dict{Pair{OpTerm,QN},Int}()
   next_rightmap = Dict{Pair{OpTerm,QN},Int}()
 
@@ -735,7 +737,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
   # Set dir=In for fermionic ordering, avoid arrow sign
   # <fermions>:
   linkdir = using_auto_fermion() ? In : Out
-  llinks[1] = Index([QN() => 1,QN() => 1]; tags="Link,l=0", dir=linkdir)
+  llinks[1] = Index([QN() => 1,Hflux => 1]; tags="Link,l=0", dir=linkdir)
   for n in 1:N
     qi = Vector{Pair{QN,Int}}()
     push!(qi,QN()=>1)
@@ -747,7 +749,7 @@ function qn_svdMPO(ampo::OpSum, sites; kwargs...)::MPO
         push!(qi, q => cols)
       end
     end
-    push!(qi,QN()=>1)
+    push!(qi,Hflux=>1)
     llinks[n + 1] = Index(qi...; tags="Link,l=$n", dir=linkdir)
   end
 
