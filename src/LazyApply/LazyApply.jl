@@ -206,6 +206,14 @@ function (a1::Sum{Scaled{C,Prod{A}}} + a2::Sum{A}) where {C,A}
   return a1 + one(C) * Prod{A}() * a2
 end
 
+function (a1::Sum{Prod{A}} + a2::A) where {A}
+  return a1 + (Prod{A}() * a2)
+end
+
+function (a1::Sum{Prod{A}} + a2::Scaled{C,A}) where {C,A}
+  return a1 + (Prod{A}() * a2)
+end
+
 function (a1::Sum{Scaled{C,Prod{A}}} + a2::A) where {C,A}
   return a1 + one(C) * a2
 end
@@ -271,10 +279,10 @@ length(a::Scaled{C,<:Prod}) where {C} = length(argument(a))
 
 function show(io::IO, ::MIME"text/plain", a::Sum)
   print(io, "sum(\n")
-  for n in eachindex(only(a.args))
-    print(io, "  ", only(a.args)[n])
-    if n < length(only(a.args))
-      print(io, ", \n")
+  for n in eachindex(a)
+    print(io, "  ", a[n])
+    if n ≠ lastindex(a)
+      print(io, "\n")
     end
   end
   print(io, "\n)")

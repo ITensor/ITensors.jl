@@ -169,6 +169,22 @@ function show(io::IO, ::MIME"text/plain", o::Op)
 end
 show(io::IO, o::Op) = show(io, MIME("text/plain"), o)
 
+function show(io::IO, ::MIME"text/plain", o::Prod{Op})
+  for oₙ in o
+    print(io, oₙ, " ")
+  end
+  return nothing
+end
+show(io::IO, o::Prod{Op}) where {C} = show(io, MIME("text/plain"), o)
+
+function show(io::IO, m::MIME"text/plain", o::Scaled{C,Prod{Op}}) where {C}
+  print(io, coefficient(o))
+  print(io, " ")
+  show(io, m, argument(o))
+  return nothing
+end
+show(io::IO, o::Scaled{C,Prod{Op}}) where {C} = show(io, MIME("text/plain"), o)
+
 function show(io::IO, ::MIME"text/plain", o::LazyApply.Adjoint{Op})
   print(io, o')
   print(io, "'")
