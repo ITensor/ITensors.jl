@@ -158,6 +158,15 @@ using Zygote: ZygoteRuleConfig, gradient
   f = function (x)
     y = exp(-x * Op("X", 1) * Op("X", 2))
     y *= exp(-x * Op("X", 1) * Op("X", 2))
+    U = ITensor(y, s)
+    return norm(U)
+  end
+  args = (x,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+
+  f = function (x)
+    y = exp(-x * Op("X", 1) * Op("X", 2))
+    y *= exp(-x * Op("X", 1) * Op("X", 2))
     U = Prod{ITensor}(y, s)
     return norm(U(V))
   end

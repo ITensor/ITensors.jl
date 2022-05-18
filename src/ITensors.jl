@@ -81,19 +81,13 @@ using .ContractionSequenceOptimization
 # LazyApply
 #
 include("LazyApply/LazyApply.jl")
-using .LazyApply: Applied, Sum, ∑, Prod, ∏, Scaled, α, coefficient, materialize
+using .LazyApply
 
 #####################################
 # Ops
 #
 include("Ops/Ops.jl")
 using .Ops
-
-#####################################
-# Ops2
-#
-# Next generation Ops
-include("Ops2/Ops2.jl")
 
 #####################################
 # Exports
