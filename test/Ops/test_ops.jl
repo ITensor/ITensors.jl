@@ -41,6 +41,39 @@ end
   @test 2x1 * y2 - 2CX12 isa Sum{<:Scaled{<:Number,Prod{Op}}}
   @test (2x1 * y2 - 2CX12) / 3 isa Sum{<:Scaled{<:Number,Prod{Op}}}
 
+  o1 = Op("X", 1)
+  o2 = Op("Y", 2)
+
+  @test o1 + o2 isa Sum{Op}
+  @test o1 - o2 isa Sum{Scaled{Int,Op}}
+  @test 1.3 * o1 isa Scaled{Float64,Op}
+  @test o1 * 1.4 isa Scaled{Float64,Op}
+  @test o1 + o2 + o2 isa Sum{Op}
+  @test 1.3o1 + 1.3o2 isa Sum{Scaled{Float64,Op}}
+  @test 1.3o1 + o2 isa Sum{Scaled{Float64,Op}}
+  @test (o1 + o2) + (o1 + o2) isa Sum{Op}
+  @test 1.3o1 + 1o2 isa Sum{Scaled{Float64,Op}}
+  @test 1.3 * (o1 + o2) isa Sum{Scaled{Float64,Op}}
+  @test o1 + o2 + 1.3o2 isa Sum{Scaled{Float64,Op}}
+  @test o1 * o2 isa Prod{Op}
+  @test o1 * o2 * o2 isa Prod{Op}
+  @test o1 * (o2 * o2) isa Prod{Op}
+  @test 1.3 * o1 * o2 isa Scaled{Float64,Prod{Op}}
+  @test 1.3 * (o1 * o2) isa Scaled{Float64,Prod{Op}}
+  @test 1.3 * o1 * o2 + o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test 1.3 * o1 * o2 + o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test 1.3 * o1 * o2 + 1.3 * o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test 1.3 * o1 * o2 + 1.3 * o1 * o2 + o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test 1.3 * o1 * o2 + 1.3 * o1 * o2 + 1.2 * o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Ops.OpSum() + o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Ops.OpSum() + 1.2 * o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Ops.OpSum() + (1.2 + 2.3im) * o1 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() + 1.2 * o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Ops.OpSum() + o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test o1 + o2 + 2.3 * o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Sum{Op}() + ("X", 1, "Y", 2) + ("Y", 2) isa Sum{Prod{Op}}
+  @test Sum{Op}() + ("X", 1, "Y", 2) + (1.2, "Y", 2) isa Sum{Scaled{Float64,Prod{Op}}}
+
   o = (2x1 * y2 - 2CX12) / 3
   @test coefficient(o[1]) ≈ 2 / 3
   @test coefficient(o[2]) ≈ -2 / 3
