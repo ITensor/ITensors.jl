@@ -1,6 +1,8 @@
 module ITensorChainRules
 
 using ITensors.NDTensors
+using ITensors.Ops
+
 using ITensors: Indices
 
 using ChainRulesCore
