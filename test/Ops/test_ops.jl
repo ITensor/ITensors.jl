@@ -81,7 +81,8 @@ end
   @test ITensor(2 * o1, s) ≈ 2 * ITensor(o1, s)
   @test ITensor(o1 * o2, s) ≈ ITensor(o1, s) * ITensor(o2, s)
   @test ITensor(2 * o1 * o2, s) ≈ 2 * ITensor(o1, s) * ITensor(o2, s)
-  @test ITensor(2 * o1 * o2 + o1 * o2, s) ≈ 2 * ITensor(o1, s) * ITensor(o2, s) + ITensor(o1, s) * ITensor(o2, s)
+  @test ITensor(2 * o1 * o2 + o1 * o2, s) ≈
+    2 * ITensor(o1, s) * ITensor(o2, s) + ITensor(o1, s) * ITensor(o2, s)
   @test ITensor(exp(o1), s) ≈ exp(ITensor(o1, s))
   @test ITensor(exp(1.2 * o1), s) ≈ exp(1.2 * ITensor(o1, s))
   @test ITensor(1.3 * exp(1.2 * o1), s) ≈ 1.3 * exp(1.2 * ITensor(o1, s))
