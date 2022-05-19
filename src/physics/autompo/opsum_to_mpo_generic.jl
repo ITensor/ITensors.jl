@@ -98,7 +98,8 @@ function sorteachterm(os::OpSum, sites)
   os = copy(os)
   isless_site(o1::Op, o2::Op) = site(o1) < site(o2)
   N = length(sites)
-  for t in os
+  for n in eachindex(os)
+    t = os[n]
     Nt = length(t)
     prevsite = N + 1 #keep track of whether we are switching
     #to a new site to make sure F string
@@ -122,7 +123,7 @@ function sorteachterm(os::OpSum, sites)
         # Put local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
-        t.ops[n] = Op("$(which_op(t[n])) * F", site(t[n]))
+        sequence(t)[n] = Op("$(which_op(t[n])) * F", only(site(t[n])))
       end
       prevsite = currsite
 
@@ -143,6 +144,7 @@ function sorteachterm(os::OpSum, sites)
     # and account for anti-commuting, fermionic operators 
     # during above sort; put resulting sign into coef
     t *= parity_sign(perm)
+    sequence(os)[n] = t
   end
   return os
 end
