@@ -1,3 +1,46 @@
+const AutoMPO = OpSum
+
+function add!(os::OpSum, o::Scaled{C,Prod{Op}}) where {C}
+  push!(sequence(os), o)
+  return os
+end
+add!(os::OpSum, o::Op) = add!(os, Prod{Op}() * o)
+add!(os::OpSum, o::Scaled{C,Op}) where {C} = add!(os, Prod{Op}() * o)
+add!(os::OpSum, o::Prod{Op}) = add!(os, one(Float64) * o)
+add!(os::OpSum, o::Tuple) = add!(os, Ops.op_term(o))
+subtract!(os::OpSum, o::Tuple) = add!(os, -Ops.op_term(o))
+
+#
+# Abuse broadcasting syntax for in-place addition:
+#
+# os .+= ("Sz",1)
+# os .-= ("Sz",1)
+#
+# TODO: Deprecate this syntax?
+#
+
+struct OpSumStyle <: Broadcast.BroadcastStyle end
+Base.BroadcastStyle(::Type{<:OpSum}) = OpSumStyle()
+
+struct OpSumAddTermStyle <: Broadcast.BroadcastStyle end
+
+Base.broadcastable(os::OpSum) = os
+
+Base.BroadcastStyle(::OpSumStyle, ::Broadcast.Style{Tuple}) = OpSumAddTermStyle()
+
+Broadcast.instantiate(bc::Broadcast.Broadcasted{OpSumAddTermStyle}) = bc
+
+function Base.copyto!(os, bc::Broadcast.Broadcasted{OpSumAddTermStyle,<:Any,typeof(+)})
+  add!(os, bc.args[2])
+  return os
+end
+
+function Base.copyto!(os, bc::Broadcast.Broadcasted{OpSumAddTermStyle,<:Any,typeof(-)})
+  subtract!(os, bc.args[2])
+  return os
+end
+
+# XXX: Create a new function name for this.
 isempty(op_qn::Pair{Vector{Op},QN}) = isempty(op_qn.first)
 
 # the key type is Prod{Op} for the dense case
