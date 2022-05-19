@@ -8,6 +8,8 @@ add!(os::OpSum, o::Op) = add!(os, Prod{Op}() * o)
 add!(os::OpSum, o::Scaled{C,Op}) where {C} = add!(os, Prod{Op}() * o)
 add!(os::OpSum, o::Prod{Op}) = add!(os, one(Float64) * o)
 add!(os::OpSum, o::Tuple) = add!(os, Ops.op_term(o))
+add!(os::OpSum, a1::String, args...) = add!(os, (a1, args...))
+add!(os::OpSum, a1::Number, args...) = add!(os, (a1, args...))
 subtract!(os::OpSum, o::Tuple) = add!(os, -Ops.op_term(o))
 
 #
