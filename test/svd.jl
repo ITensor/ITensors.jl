@@ -72,6 +72,101 @@ include("util.jl")
     @test norm(U * S * V - T) / norm(T) < 1E-10
   end
 
+  @testset "svd with empty left or right indices" for space in
+                                                      (2, [QN(0, 2) => 1, QN(1, 2) => 1]),
+    cutoff in (nothing, 1e-15)
+
+    i = Index(space)
+    j = Index(space)
+    A = randomITensor(i, j)
+
+    U, S, V = svd(A, i, j; cutoff)
+    @test U * S * V ≈ A
+    @test hassameinds(uniqueinds(U, S), A)
+    @test isempty(uniqueinds(V, S))
+    @test dim(U) == dim(A)
+    @test dim(S) == 1
+    @test dim(V) == 1
+    @test order(U) == order(A) + 1
+    @test order(S) == 2
+    @test order(V) == 1
+
+    U, S, V = svd(A, (); cutoff)
+    @test U * S * V ≈ A
+    @test hassameinds(uniqueinds(V, S), A)
+    @test isempty(uniqueinds(U, S))
+    @test dim(U) == 1
+    @test dim(S) == 1
+    @test dim(V) == dim(A)
+    @test order(U) == 1
+    @test order(S) == 2
+    @test order(V) == order(A) + 1
+
+    @test_throws ErrorException svd(A)
+  end
+
+  @testset "factorize with empty left or right indices" for space in (
+      2, [QN(0, 2) => 1, QN(1, 2) => 1]
+    ),
+    cutoff in (nothing, 1e-15)
+
+    i = Index(space)
+    j = Index(space)
+    A = randomITensor(i, j)
+
+    X, Y = factorize(A, i, j; cutoff)
+    @test X * Y ≈ A
+    @test hassameinds(uniqueinds(X, Y), A)
+    @test isempty(uniqueinds(Y, X))
+    @test dim(X) == dim(A)
+    @test dim(Y) == 1
+    @test order(X) == order(A) + 1
+    @test order(Y) == 1
+
+    X, Y = factorize(A, (); cutoff)
+    @test X * Y ≈ A
+    @test hassameinds(uniqueinds(Y, X), A)
+    @test isempty(uniqueinds(X, Y))
+    @test dim(X) == 1
+    @test dim(Y) == dim(A)
+    @test order(X) == 1
+    @test order(Y) == order(A) + 1
+
+    @test_throws ErrorException factorize(A)
+  end
+
+  @testset "svd with empty left and right indices" for cutoff in (nothing, 1e-15)
+    A = ITensor(3.4)
+
+    U, S, V = svd(A, (); cutoff)
+    @test U * S * V ≈ A
+    @test isempty(uniqueinds(U, S))
+    @test isempty(uniqueinds(V, S))
+    @test dim(U) == 1
+    @test dim(S) == 1
+    @test dim(V) == 1
+    @test order(U) == 1
+    @test order(S) == 2
+    @test order(V) == 1
+
+    @test_throws ErrorException svd(A)
+  end
+
+  @testset "factorize with empty left and right indices" for cutoff in (nothing, 1e-15)
+    A = ITensor(3.4)
+
+    X, Y = factorize(A, (); cutoff)
+    @test X * Y ≈ A
+    @test isempty(uniqueinds(X, Y))
+    @test isempty(uniqueinds(Y, X))
+    @test dim(X) == 1
+    @test dim(Y) == 1
+    @test order(X) == 1
+    @test order(Y) == 1
+
+    @test_throws ErrorException factorize(A)
+  end
+
   # TODO: remove this test, it takes a long time
   ## @testset "Ill-conditioned matrix" begin
   ##   d = 5000

@@ -1,6 +1,8 @@
 module ITensorChainRules
 
 using ITensors.NDTensors
+using ITensors.Ops
+
 using ITensors: Indices
 
 using ChainRulesCore
@@ -17,10 +19,9 @@ include(joinpath("NDTensors", "dense.jl"))
 include("indexset.jl")
 include("itensor.jl")
 include(joinpath("physics", "sitetype.jl"))
-include(joinpath("LazyApply", "LazyApply.jl"))
 include(joinpath("mps", "abstractmps.jl"))
 include(joinpath("mps", "mpo.jl"))
-include(joinpath("Ops", "Ops.jl"))
+include(joinpath("LazyApply", "LazyApply.jl"))
 include("zygoterules.jl")
 
 @non_differentiable broadcast_notangent(::Any)

@@ -470,6 +470,8 @@ hassameflux(::Index, ::QNIndex) = false
 # Split the blocks into blocks of size 1 with the same QNs
 splitblocks(i::Index) = setspace(i, splitblocks(space(i)))
 
+trivial_space(i::QNIndex) = [QN() => 1]
+
 function mutable_storage(::Type{Order{N}}, ::Type{IndexT}) where {N,IndexT<:QNIndex}
   return SizedVector{N,IndexT}(undef)
 end

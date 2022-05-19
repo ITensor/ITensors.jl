@@ -137,7 +137,7 @@ function MPOTerm(op1::Union{String,AbstractArray}, ops...)
   return MPOTerm(one(Float64), op1, ops...)
 end
 
-function MPOTerm(ops::Vector{Pair{String,Int}})
+function MPOTerm(ops::Vector{<:Pair})
   return MPOTerm(Iterators.flatten(ops)...)
 end
 
@@ -301,7 +301,7 @@ function (ampo::OpSum + term::MPOTerm)
 end
 
 (ampo::OpSum + term::Tuple) = ampo + MPOTerm(term...)
-(ampo::OpSum + term::Vector{Pair{String,Int64}}) = ampo + MPOTerm(term)
+(ampo::OpSum + term::Vector{<:Pair}) = ampo + MPOTerm(term)
 
 function (ampo::OpSum - term::Tuple)
   ampo_plus_term = copy(ampo)

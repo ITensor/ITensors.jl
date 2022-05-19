@@ -1,5 +1,6 @@
 using Test
 using ITensors
+using ITensors.Ops
 using LinearAlgebra
 
 @testset "Ops to MPO" begin
@@ -8,7 +9,7 @@ using LinearAlgebra
   ∑H += 2, "Z", 1
   ∑H += 2, "Z", 2
 
-  @test ∑H isa Sum{Scaled{Prod{Op},Float64}}
+  @test ∑H isa Sum{Scaled{Float64,Prod{Op}}}
 
   s = siteinds("Qubit", 2)
   H = MPO(∑H, s)
@@ -56,7 +57,7 @@ end
   os_old = heisenberg_old(N)
   os_new = heisenberg(N)
   @test os_old isa OpSum
-  @test os_new isa Sum{Scaled{Prod{Op},Float64}}
+  @test os_new isa Sum{Scaled{Float64,Prod{Op}}}
   Hold = MPO(os_old, s)
   Hnew = MPO(os_new, s)
   @test prod(Hold) ≈ prod(Hnew)

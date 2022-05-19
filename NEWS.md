@@ -6,6 +6,16 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.12 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Fix `svd` and `qr` for empty input left or right indices (#917)
+- Add support for defining MPOs from operators represented as matrices (#904)
+
 ITensors v0.3.11 Release Notes
 ==============================
 

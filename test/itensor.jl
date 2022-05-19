@@ -1420,9 +1420,8 @@ end
 
       @testset "Test error for bad decomposition inputs" begin
         @test_throws ErrorException svd(A)
-        @test_throws ErrorException svd(A, inds(A))
+        @test_throws ErrorException factorize(A)
         @test_throws ErrorException eigen(A, inds(A), inds(A))
-        #@test_throws ErrorException factorize(A)
       end
     end
   end # End Dense storage test
