@@ -8,5 +8,5 @@ test_files = filter(starts_and_ends_with("test_", ".jl"), readdir(test_path))
 @testset "$(last(splitpath(test_path)))" for file in test_files
   file_path = joinpath(test_path, file)
   println("Running test $(file_path)")
-  include(file_path)
+  #include(file_path)
 end

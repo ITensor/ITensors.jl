@@ -98,6 +98,11 @@ function randomU(s1::Index, s2::Index)
 end
 
 function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
+  if isone(length(sites))
+    randn!(M[1])
+    normalize!(M)
+    return M
+  end
   N = length(sites)
   c = div(N, 2)
   max_pass = 100
