@@ -1,6 +1,18 @@
 using ITensors
 using Printf
 
+#=
+
+This example code implements the minimally entangled typical thermal state (METTS).
+For more information on METTS, see the following references:
+- "Minimally entangled typical quantum states at finite temperature", Steven R. White,
+  Phys. Rev. Lett. 102, 190601 (2009)
+  and arxiv:0902.4475 (https://arxiv.org/abs/0902.4475)
+- "Minimally entangled typical thermal state algorithms", E M Stoudenmire and Steven R White,
+  New Journal of Physics 12, 055026 (2010) https://doi.org/10.1088/1367-2630/12/5/055026
+
+=#
+
 function ITensors.op(::OpName"expτSS", ::SiteType"S=1/2", s1::Index, s2::Index; τ)
   h =
     1 / 2 * op("S+", s1) * op("S-", s2) +
