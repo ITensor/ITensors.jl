@@ -1,4 +1,4 @@
-isempty(op_qn::Pair{Prod{Op},QN}) = isempty(op_qn.first)
+isempty(op_qn::Pair{Vector{Op},QN}) = isempty(op_qn.first)
 
 # the key type is Prod{Op} for the dense case
 # and is Pair{Prod{Op},QN} for the QN conserving case
