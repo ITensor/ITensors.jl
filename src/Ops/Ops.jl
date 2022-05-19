@@ -61,11 +61,11 @@ end
 
 function isless(o1::Scaled{C1,Prod{Op}}, o2::Scaled{C2,Prod{Op}}) where {C1,C2}
   if argument(o1) == argument(o2)
-    if coefficient(t1) ≈ coefficient(t2)
+    if coefficient(o1) ≈ coefficient(o2)
       return false
     else
-      c1 = coefficient(t1)
-      c2 = coefficient(t2)
+      c1 = coefficient(o1)
+      c2 = coefficient(o2)
       #"lexicographic" ordering on  complex numbers
       return real(c1) < real(c2) || (real(c1) ≈ real(c2) && imag(c1) < imag(c2))
     end
