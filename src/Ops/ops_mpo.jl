@@ -30,7 +30,9 @@ end
 ##   return OpSum(Sum{<:Scaled{<:Number,Prod{Op}}}(o))
 ## end
 
-function OpSum(o::Union{Op,Scaled{C,Op},Prod{Op},Sum{Op},Scaled{C,Prod{Op}},Sum{Scaled{Float64,Op}}}) where {C}
+function OpSum(
+  o::Union{Op,Scaled{C,Op},Prod{Op},Sum{Op},Scaled{C,Prod{Op}},Sum{Scaled{Float64,Op}}}
+) where {C}
   os = Sum{Scaled{Float64,Prod{Op}}}() + o
   return OpSum(os)
 end

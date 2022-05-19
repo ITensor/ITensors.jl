@@ -19,7 +19,7 @@ import Base:
   reverse,
   size
 
-export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand
+export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize
 
 struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
   f::F
@@ -27,6 +27,10 @@ struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
   kwargs::Kwargs
 end
 Applied(f, args::Tuple) = Applied(f, args, (;))
+
+function materialize(a::Applied)
+  return a.f(a.args...; a.kwargs...)
+end
 
 function (a1::Applied == a2::Applied)
   return a1.f == a2.f && a1.args == a2.args && a1.kwargs == a2.kwargs

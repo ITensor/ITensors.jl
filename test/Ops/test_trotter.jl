@@ -11,8 +11,10 @@ using ITensors.Ops
     expHᵉˣᵃᶜᵗ = ITensor(exp(H), s)
     @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{1}(nsteps)), s) rtol = 1 / nsteps
     @test expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{2}(nsteps)), s) rtol = (1 / nsteps)^2
-    @test_broken expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{4}(nsteps)), s) rtol = (1 / nsteps)^2
-    @test_broken expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{8}(nsteps)), s) rtol = (1 / nsteps)^2
+    @test_broken expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{4}(nsteps)), s) rtol =
+      (1 / nsteps)^2
+    @test_broken expHᵉˣᵃᶜᵗ ≈ ITensor(exp(H; alg=Trotter{8}(nsteps)), s) rtol =
+      (1 / nsteps)^2
 
     # Convert to ITensors
     t = 1.0

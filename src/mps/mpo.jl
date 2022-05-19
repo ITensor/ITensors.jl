@@ -510,6 +510,8 @@ end
 
 (A::MPO)(ψ::MPS; kwargs...) = apply(A, ψ; kwargs...)
 
+Apply(A::MPO, ψ::MPS; kwargs...) = Applied(apply, (A, ψ), NamedTuple(kwargs))
+
 function contract(A::MPO, ψ::MPS; alg="densitymatrix", kwargs...)
   if haskey(kwargs, :method)
     # Backwards compatibility, use `method`.
