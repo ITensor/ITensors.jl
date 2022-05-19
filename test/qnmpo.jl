@@ -185,15 +185,15 @@ end
 
   @test prod(H) ≈ prod(H̃)
 
-  @test nnz(H[1]) == 13
-  @test nnz(H[2]) == 51
-  @test nnz(H[3]) == 51
-  @test nnz(H[4]) == 13
+  @test nnz(H[1]) == 9
+  @test nnz(H[2]) == 18
+  @test nnz(H[3]) == 18
+  @test nnz(H[4]) == 9
 
-  @test nnzblocks(H[1]) == 7
-  @test nnzblocks(H[2]) == 11
-  @test nnzblocks(H[3]) == 11
-  @test nnzblocks(H[4]) == 7
+  @test nnzblocks(H[1]) == 9
+  @test nnzblocks(H[2]) == 18
+  @test nnzblocks(H[3]) == 18
+  @test nnzblocks(H[4]) == 9
 
   @test nnz(H̃[1]) == nnzblocks(H̃[1]) == count(≠(0), H[1]) == count(≠(0), H̃[1]) == 9
   @test nnz(H̃[2]) == nnzblocks(H̃[2]) == count(≠(0), H[2]) == count(≠(0), H̃[2]) == 18
