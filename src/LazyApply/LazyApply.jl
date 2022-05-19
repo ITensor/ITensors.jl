@@ -290,7 +290,9 @@ sequence(a::Scaled{C,<:Union{Sum,Prod}}) where {C} = sequence(argument(a))
 copy(a::Applied) = Applied(deepcopy(a.f), deepcopy(a.args), deepcopy(a.kwargs))
 Sum(a::Vector) = Applied(sum, (a,))
 Prod(a::Vector) = Applied(prod, (a,))
-isless(a1::Applied{F}, a2::Applied{F}) where {F} = (isless(a1.args, a2.args) && isless(a1.kwargs, a2.kwargs))
+function isless(a1::Applied{F}, a2::Applied{F}) where {F}
+  return (isless(a1.args, a2.args) && isless(a1.kwargs, a2.kwargs))
+end
 
 #
 # Printing

@@ -1,4 +1,5 @@
-using ITensors: parity_sign, using_auto_fermion
+using ITensors:
+  parity_sign, using_auto_fermion, QNIndex, Out, blockdim, qnblocknum, BlockSparseTensor
 
 import Base: +, -, *, ==, convert, copy, isempty, isless, length, push!
 import ITensors: MPO

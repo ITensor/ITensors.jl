@@ -10,7 +10,9 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
   Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
   tempMPO = [MatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
 
-  crosses_bond(t::Scaled{C,Prod{Op}}, n::Int) where {C} = (only(site(t[1])) <= n <= only(site(t[end])))
+  function crosses_bond(t::Scaled{C,Prod{Op}}, n::Int) where {C}
+    return (only(site(t[1])) <= n <= only(site(t[end])))
+  end
 
   rightmap = Dict{Vector{Op},Int}()
   next_rightmap = Dict{Vector{Op},Int}()

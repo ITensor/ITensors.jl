@@ -50,11 +50,11 @@ function remove_dups!(v::Vector{T}) where {T}
   return nothing
 end #remove_dups!
 
-function sorteachterm!(ampo::OpSum, sites)
-  ampo = copy(ampo)
+function sorteachterm!(os::OpSum, sites)
+  os = copy(os)
   isless_site(o1::SiteOp, o2::SiteOp) = site(o1) < site(o2)
   N = length(sites)
-  for t in data(ampo)
+  for t in data(os)
     Nt = length(t.ops)
     prevsite = N + 1 #keep track of whether we are switching
     #to a new site to make sure F string
@@ -100,11 +100,11 @@ function sorteachterm!(ampo::OpSum, sites)
     # during above sort; put resulting sign into coef
     t.coef *= parity_sign(perm)
   end
-  return ampo
+  return os
 end
 
-function check_numerical_opsum(ampo::OpSum)
-  mpoterms = data(ampo)
+function check_numerical_opsum(os::OpSum)
+  mpoterms = data(os)
   for mpoterm in mpoterms
     operators = ops(mpoterm)
     for operator in name.(operators)
@@ -114,11 +114,11 @@ function check_numerical_opsum(ampo::OpSum)
   return false
 end
 
-function sortmergeterms!(ampo::OpSum)
-  check_numerical_opsum(ampo) && return ampo
-  sort!(data(ampo))
+function sortmergeterms!(os::OpSum)
+  check_numerical_opsum(os) && return os
+  sort!(data(os))
   # Merge (add) terms with same operators
-  da = data(ampo)
+  da = data(os)
   ndata = MPOTerm[]
   last_term = copy(da[1])
   for n in 2:length(da)
@@ -131,14 +131,14 @@ function sortmergeterms!(ampo::OpSum)
   end
   push!(ndata, last_term)
 
-  setdata!(ampo, ndata)
-  return ampo
+  setdata!(os, ndata)
+  return os
 end
 
 """
-    MPO(ampo::OpSum,sites::Vector{<:Index};kwargs...)
+    MPO(os::OpSum,sites::Vector{<:Index};kwargs...)
        
-Convert an OpSum object `ampo` to an
+Convert an OpSum object `os` to an
 MPO, with indices given by `sites`. The
 resulting MPO will have the indices
 `sites[1], sites[1]', sites[2], sites[2]'`
@@ -149,24 +149,24 @@ the minimum possible bond dimension.
 
 # Examples
 ```julia
-ampo = OpSum()
-ampo += ("Sz",1,"Sz",2)
-ampo += ("Sz",2,"Sz",3)
-ampo += ("Sz",3,"Sz",4)
+os = OpSum()
+os += ("Sz",1,"Sz",2)
+os += ("Sz",2,"Sz",3)
+os += ("Sz",3,"Sz",4)
 
 sites = siteinds("S=1/2",4)
-H = MPO(ampo,sites)
+H = MPO(os,sites)
 ```
 """
-function MPO(ampo::OpSum, sites::Vector{<:Index}; kwargs...)::MPO
-  length(data(ampo)) == 0 && error("OpSum has no terms")
+function MPO(os::OpSum, sites::Vector{<:Index}; kwargs...)::MPO
+  length(data(os)) == 0 && error("OpSum has no terms")
 
-  ampo = deepcopy(ampo)
-  sorteachterm!(ampo, sites)
-  sortmergeterms!(ampo)
+  os = deepcopy(os)
+  sorteachterm!(os, sites)
+  sortmergeterms!(os)
 
   if hasqns(sites[1])
-    return qn_svdMPO(ampo, sites; kwargs...)
+    return qn_svdMPO(os, sites; kwargs...)
   end
-  return svdMPO(ampo, sites; kwargs...)
+  return svdMPO(os, sites; kwargs...)
 end
