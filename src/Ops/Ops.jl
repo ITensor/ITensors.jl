@@ -2,9 +2,9 @@ module Ops
 
 using ..LazyApply
 
-import Base: +, -, *, /, exp, show, adjoint
+import Base: +, -, *, /, exp, show, adjoint, isless
 
-export Op, sites, params, Applied, expand
+export Op, OpSum, which_op, site, sites, params, Applied, expand
 
 #####################################################################################
 # General functionality
@@ -29,35 +29,71 @@ end
 
 struct Op
   which_op
-  sites::Tuple
+  site::Tuple
   params::NamedTuple
-  function Op(which_op, sites::Tuple; kwargs...)
-    return new(which_op, sites, NamedTuple(kwargs))
+  function Op(which_op, site::Tuple; kwargs...)
+    return new(which_op, site, NamedTuple(kwargs))
   end
 end
-Op(which_op, sites...; kwargs...) = Op(which_op, sites; kwargs...)
+Op(which_op, site...; kwargs...) = Op(which_op, site; kwargs...)
+
+function isless(o1::Op, o2::Op)
+  if site(o1) ≠ site(o2)
+    return site(o1) < site(o2)
+  end
+  if which_op(o1) ≠ which_op(o2)
+    return which_op(o1) < which_op(o2)
+  end
+  return params(s1) < params(s2)
+end
+
+function isless(o1::Prod{Op}, o2::Prod{Op})
+  if length(o1) ≠ length(o2)
+    return length(o1) < length(o2)
+  end
+  for n in 1:length(o1)
+    if o1[n] ≠ o2[n]
+      return (o1[n] < o2[n])
+    end
+  end
+  return false
+end
+
+function isless(o1::Scaled{C1,Prod{Op}}, o2::Scaled{C2,Prod{Op}}) where {C1,C2}
+  if argument(o1) == argument(o2)
+    if coefficient(t1) ≈ coefficient(t2)
+      return false
+    else
+      c1 = coefficient(t1)
+      c2 = coefficient(t2)
+      #"lexicographic" ordering on  complex numbers
+      return real(c1) < real(c2) || (real(c1) ≈ real(c2) && imag(c1) < imag(c2))
+    end
+  end
+  return argument(o1) < argument(o2)
+end
 
 function Op(t::Tuple)
   which_op = first(t)
-  sites_params = Base.tail(t)
-  if last(sites_params) isa NamedTuple
-    sites = Base.front(sites_params)
-    params = last(sites_params)
+  site_params = Base.tail(t)
+  if last(site_params) isa NamedTuple
+    site = Base.front(site_params)
+    params = last(site_params)
   else
-    sites = sites_params
+    site = site_params
     params = (;)
   end
-  return Op(which_op, sites; params...)
+  return Op(which_op, site; params...)
 end
 
 which_op(o::Op) = o.which_op
-sites(o::Op) = o.sites
+site(o::Op) = o.site
 params(o::Op) = o.params
 
 function sites(a::Union{Sum,Prod})
   s = []
   for n in 1:length(a)
-    s = s ∪ sites(a[n])
+    s = s ∪ site(a[n])
   end
   return sort(map(identity, s))
 end
@@ -161,7 +197,7 @@ end
 
 function show(io::IO, ::MIME"text/plain", o::Op)
   print(io, which_op(o))
-  print(io, sites(o))
+  print(io, site(o))
   if !isempty(params(o))
     print(io, params(o))
   end

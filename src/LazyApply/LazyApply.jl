@@ -9,9 +9,11 @@ import Base:
   ^,
   exp,
   adjoint,
+  copy,
   show,
   getindex,
   length,
+  isless,
   iterate,
   firstindex,
   lastindex,
@@ -19,7 +21,7 @@ import Base:
   reverse,
   size
 
-export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize
+export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize, sequence
 
 struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
   f::F
@@ -66,7 +68,8 @@ function (a1::Prod{A} + a2::Prod{A}) where {A}
   return Sum{Prod{A}}() + a1 + a2
 end
 
-(c1::Number * co2::Scaled{C}) where {C} = (c1 * coefficient(co2)) * argument(co2)
+(c::Number * a::Scaled{C}) where {C} = (c * coefficient(a)) * argument(a)
+(a::Scaled{C} * c::Number) where {C} = (coefficient(a) * c) * argument(a)
 
 -(a::Scaled{C}) where {C} = (-one(C) * a)
 
@@ -273,6 +276,21 @@ keys(a::Union{Sum,Prod}) = 1:length(a)
 
 length(a::Scaled{C,<:Sum}) where {C} = length(argument(a))
 length(a::Scaled{C,<:Prod}) where {C} = length(argument(a))
+getindex(a::Scaled{C,<:Sum}, I...) where {C} = getindex(argument(a), I...)
+getindex(a::Scaled{C,<:Prod}, I...) where {C} = getindex(argument(a), I...)
+lastindex(a::Scaled{C,<:Sum}) where {C} = lastindex(argument(a))
+lastindex(a::Scaled{C,<:Prod}) where {C} = lastindex(argument(a))
+
+#
+# Functions convenient for AutoMPO code
+#
+
+sequence(a::Union{Sum,Prod}) = only(a.args)
+sequence(a::Scaled{C,<:Union{Sum,Prod}}) where {C} = sequence(argument(a))
+copy(a::Applied) = Applied(deepcopy(a.f), deepcopy(a.args), deepcopy(a.kwargs))
+Sum(a::Vector) = Applied(sum, (a,))
+Prod(a::Vector) = Applied(prod, (a,))
+isless(a1::Applied{F}, a2::Applied{F}) where {F} = (isless(a1.args, a2.args) && isless(a1.kwargs, a2.kwargs))
 
 #
 # Printing
