@@ -1,7 +1,6 @@
 using ITensors
 using Printf
 
-
 #=
 
 This example code implements the purification or "ancilla" method for 
