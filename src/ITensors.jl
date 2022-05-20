@@ -88,6 +88,7 @@ using .LazyApply
 #
 include("Ops/Ops.jl")
 using .Ops
+import .Ops: sites
 
 #####################################
 # Exports

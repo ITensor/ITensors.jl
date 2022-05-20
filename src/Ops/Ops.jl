@@ -29,17 +29,22 @@ end
 
 struct Op
   which_op
-  site::Tuple
+  sites::Tuple
   params::NamedTuple
-  function Op(which_op, site::Tuple; kwargs...)
+  function Op(which_op, site...; kwargs...)
     return new(which_op, site, NamedTuple(kwargs))
   end
 end
-Op(which_op, site...; kwargs...) = Op(which_op, site; kwargs...)
+
+which_op(o::Op) = o.which_op
+name(o::Op) = which_op(o)
+sites(o::Op) = o.sites
+site(o::Op) = only(sites(o))
+params(o::Op) = o.params
 
 function isless(o1::Op, o2::Op)
-  if site(o1) ≠ site(o2)
-    return site(o1) < site(o2)
+  if sites(o1) ≠ sites(o2)
+    return sites(o1) < sites(o2)
   end
   if which_op(o1) ≠ which_op(o2)
     return which_op(o1) < which_op(o2)
@@ -73,27 +78,30 @@ function isless(o1::Scaled{C1,Prod{Op}}, o2::Scaled{C2,Prod{Op}}) where {C1,C2}
   return argument(o1) < argument(o2)
 end
 
-function Op(t::Tuple)
-  which_op = first(t)
-  site_params = Base.tail(t)
-  if last(site_params) isa NamedTuple
-    site = Base.front(site_params)
-    params = last(site_params)
-  else
-    site = site_params
-    params = (;)
-  end
-  return Op(which_op, site; params...)
-end
+## function Op(t::Tuple)
+##   which_op = first(t)
+##   site_params = Base.tail(t)
+##   if last(site_params) isa NamedTuple
+##     site = Base.front(site_params)
+##     params = last(site_params)
+##   else
+##     site = site_params
+##     params = (;)
+##   end
+##   return Op(which_op, site; params...)
+## end
 
-which_op(o::Op) = o.which_op
-site(o::Op) = o.site
-params(o::Op) = o.params
+## function Op(t::Tuple{WhichOp,NamedTuple,Vararg}) where {WhichOp}
+##   params = t[2]
+##   which_op = t[1]
+##   sites = t[3:end]
+##   return Op(which_op, sites...; params...)
+## end
 
 function sites(a::Union{Sum,Prod})
   s = []
   for n in 1:length(a)
-    s = s ∪ site(a[n])
+    s = s ∪ sites(a[n])
   end
   return sort(map(identity, s))
 end
@@ -164,13 +172,26 @@ function op_term(a::Tuple{Number,Vararg})
   return c * op_term(Base.tail(a))
 end
 
+function op_site(which_op, params::NamedTuple, sites...)
+  return Op(which_op, sites...; params...)
+end
+
+function op_site(which_op, sites_params...)
+  if last(sites_params) isa NamedTuple
+    sites = Base.front(sites_params)
+    params = last(sites_params)
+    return Op(which_op, sites...; params...)
+  end
+  return Op(which_op, sites_params...)
+end
+
 function op_term(a::Tuple{Vararg})
   a_split = split(x -> x isa AbstractString, a)
   @assert isempty(first(a_split))
   a_split = Base.tail(a_split)
-  o = Op(first(a_split))
+  o = op_site(first(a_split)...)
   for aₙ in Base.tail(a_split)
-    o *= Op(aₙ)
+    o *= op_site(aₙ...)
   end
   return o
 end
@@ -197,7 +218,7 @@ end
 
 function show(io::IO, ::MIME"text/plain", o::Op)
   print(io, which_op(o))
-  print(io, site(o))
+  print(io, sites(o))
   if !isempty(params(o))
     print(io, params(o))
   end

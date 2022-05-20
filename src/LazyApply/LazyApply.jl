@@ -112,7 +112,8 @@ end
 
 # (Op("X", 1) + Op("X", 2)) + (Op("X", 3) + Op("X", 4))
 # (Op("X", 1) * Op("X", 2) + Op("X", 3) * Op("X", 4)) + (Op("X", 5) * Op("X", 6) + Op("X", 7) * Op("X", 8))
-(os1::Sum{A} + os2::Sum{A}) where {A} = Applied(sum, (vcat(os1.args[1], os2.args[1]),))
+(a1::Sum{A} + a2::Sum{A}) where {A} = Applied(sum, (vcat(a1.args[1], a2.args[1]),))
+(a1::Sum{A} - a2::Sum{A}) where {A} = a1 + (-a2)
 
 (a1::Prod{A} * a2::Prod{A}) where {A} = Applied(prod, (vcat(only(a1.args), only(a2.args)),))
 

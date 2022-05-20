@@ -168,8 +168,8 @@ end
 
   @testset "Multisite operator" begin
     os = OpSum()
-    os += ("CX", (1, 2))
-    os += (2.3, "R", (3, 4), "S", 2)
+    os += ("CX", 1, 2)
+    os += (2.3, "R", 3, 4, "S", 2)
     os += ("X", 3)
     @test length(os) == 3
     @test coefficient(os[1]) == 1
@@ -224,7 +224,7 @@ end
     @test ITensors.sites(os[1][2]) == (3, 4)
     @test ITensors.params(os[1][2]) == (θ=π / 2,)
 
-    os = OpSum() + ("CX", (1, 2), (ϕ=π / 3,))
+    os = OpSum() + ("CX", 1, 2, (ϕ=π / 3,))
     @test length(os) == 1
     @test coefficient(os[1]) == 1
     @test length(os[1]) == 1
@@ -240,7 +240,7 @@ end
     @test ITensors.sites(os[1][1]) == (1, 2)
     @test ITensors.params(os[1][1]) == (ϕ=π / 3,)
 
-    os = OpSum() + ("CRz", (ϕ=π / 3,), (1, 2))
+    os = OpSum() + ("CRz", (ϕ=π / 3,), 1, 2)
     @test length(os) == 1
     @test coefficient(os[1]) == 1
     @test length(os[1]) == 1
