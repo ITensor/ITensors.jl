@@ -63,7 +63,6 @@ struct Op
   end
 end
 
-
 which_op(o::Op) = o.which_op
 name(o::Op) = which_op(o)
 sites(o::Op) = o.sites

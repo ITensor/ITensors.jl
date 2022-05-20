@@ -7,7 +7,11 @@ function ITensor(o::Op, s::Vector{<:Index})
 end
 
 function ITensor(o::Scaled, s::Vector{<:Index})
-  return coefficient(o) * ITensor(argument(o), s)
+  c = coefficient(o)
+  if isreal(c)
+    c = real(c)
+  end
+  return c * ITensor(argument(o), s)
 end
 
 function ITensor(o::Prod, s::Vector{<:Index})

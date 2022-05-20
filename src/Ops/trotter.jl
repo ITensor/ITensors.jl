@@ -5,6 +5,7 @@ struct Exact <: ExpAlgorithm end
 struct Trotter{Order} <: ExpAlgorithm
   nsteps::Int
 end
+Trotter{Order}() where {Order} = Trotter{Order}(1)
 one(::Trotter{Order}) where {Order} = Trotter{Order}(1)
 
 function exp(o::Sum; alg::ExpAlgorithm=Exact())
