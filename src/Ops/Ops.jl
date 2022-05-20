@@ -17,15 +17,39 @@ export Op, OpSum, which_op, site, sites, params, Applied, expand
 # (1, "X", 1, 2, "Y", 2, "Z", 4)
 # 
 # julia> split(x -> x isa AbstractString, t)
-# ((1,), ("X", 1, 2), ("Y", 2), ("Z", 4))
+# [(1,), ("X", 1, 2), ("Y", 2), ("Z", 4)]
 # 
 function split(f, t::Tuple)
   n = findall(f, t)
-  ti = t[1:(first(n) - 1)]
-  ts = ntuple(i -> t[n[i]:(n[i + 1] - 1)], length(n) - 1)
-  tf = t[last(n):end]
-  return ti, ts..., tf
+  nsplit = length(n) + 1
+  s = Vector{Any}(undef, nsplit)
+  s[1] = t[1:(first(n) - 1)]
+  for i in 2:(nsplit - 1)
+    s[i] = t[n[i - 1]:(n[i] - 1)]
+  end
+  s[end] = t[last(n):end]
+  return s
 end
+
+## XXX: Very long compile times
+##
+## julia> using ITensors
+## 
+## julia> @time ITensors.Ops.split(x -> x isa String, ("X", 1))
+##   7.588123 seconds (2.34 M allocations: 100.919 MiB, 1.71% gc time, 100.00% compilation time)
+## ((), ("X", 1))
+## 
+## julia> @time ITensors.Ops.split(x -> x isa String, ("X", 1))
+##   0.042590 seconds (88.59 k allocations: 4.823 MiB, 19.13% gc time, 99.84% compilation time)
+## ((), ("X", 1))
+##
+## function split(f, t::Tuple)
+##   n = findall(f, t)
+##   ti = t[1:(first(n) - 1)]
+##   ts = ntuple(i -> t[n[i]:(n[i + 1] - 1)], length(n) - 1)
+##   tf = t[last(n):end]
+##   return ti, ts..., tf
+## end
 
 struct Op
   which_op
@@ -34,7 +58,11 @@ struct Op
   function Op(which_op, site...; kwargs...)
     return new(which_op, site, NamedTuple(kwargs))
   end
+  function Op(which_op, site::Tuple; kwargs...)
+    return new(which_op, site, NamedTuple(kwargs))
+  end
 end
+
 
 which_op(o::Op) = o.which_op
 name(o::Op) = which_op(o)
@@ -148,6 +176,9 @@ OpSum() = OpSum{ComplexF64}()
 # Op("X", 1) + 1.3 * Op("X", 2)
 (o1::Op + co2::Scaled{C}) where {C} = one(C) * o1 + co2
 
+(a1::Op * a2::Sum) = Applied(sum, (map(a -> a1 * a, only(a2.args)),))
+(a1::Sum * a2::Op) = Applied(sum, (map(a -> a * a2, only(a1.args)),))
+
 # 1.3 * Op("X", 1) + Op("X", 2) * Op("X", 3)
 # 1.3 * Op("X", 1) * Op("X", 2) + Op("X", 3) * Op("X", 4)
 (co1::Scaled{C} + o2::Prod{Op}) where {C} = co1 + one(C) * o2
@@ -167,6 +198,8 @@ adjoint(o::LazyApply.Adjoint{Op}) = only(o.args)
 #
 
 const OpSumLike{C} = Union{Sum{Op},Sum{Scaled{C,Op}},Sum{Prod{Op}},Sum{Scaled{C,Prod{Op}}}}
+
+const WhichOp = Union{AbstractString,Matrix{<:Number}}
 
 # Make a `Scaled{C,Prod{Op}}` from a `Tuple` input,
 # for example:
@@ -192,11 +225,12 @@ function op_site(which_op, sites_params...)
 end
 
 function op_term(a::Tuple{Vararg})
-  a_split = split(x -> x isa AbstractString, a)
+  a_split = split(x -> x isa WhichOp, a)
   @assert isempty(first(a_split))
-  a_split = Base.tail(a_split)
+  popfirst!(a_split)
   o = op_site(first(a_split)...)
-  for aₙ in Base.tail(a_split)
+  popfirst!(a_split)
+  for aₙ in a_split
     o *= op_site(aₙ...)
   end
   return o

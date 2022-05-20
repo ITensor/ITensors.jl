@@ -29,6 +29,14 @@ using LinearAlgebra
   @test prod(MPO(X(1) + Z(2), s)) ≈ T(X(1)) * T(Id(2)) + T(Id(1)) * T(Z(2))
   @test prod(MPO(X(1) + 3.3Z(2), s)) ≈ T(X(1)) * T(Id(2)) + 3.3T(Id(1)) * T(Z(2))
   @test prod(MPO((X(1) + Z(2)) / 2, s)) ≈ 0.5T(X(1)) * T(Id(2)) + 0.5T(Id(1)) * T(Z(2))
+
+  @testset "OpSum to MPO with repeated terms" begin
+    # Test with repeated terms
+    s = siteinds("S=1/2", 1)
+    ℋ = OpSum() + ("Z", 1) + ("Z", 1)
+    H = MPO(ℋ, s)
+    @test norm(contract(H) - 2 * op("Z", s, 1))
+  end
 end
 
 function heisenberg_old(N)

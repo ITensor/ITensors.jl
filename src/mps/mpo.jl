@@ -68,9 +68,9 @@ and operators `ops` on each site.
 """
 function MPO(::Type{ElT}, sites::Vector{<:Index}, ops::Vector) where {ElT<:Number}
   N = length(sites)
-  os = OpSum()
+  os = Prod{Op}()
   for n in 1:N
-    os += ops[n], n
+    os *= Op(ops[n], n)
   end
   M = MPO(os, sites)
 

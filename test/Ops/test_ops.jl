@@ -14,7 +14,7 @@ function heisenberg(N)
   return os
 end
 
-@testset "Ops" begin
+@testset "Basic Ops" begin
   x1 = Op("X", 1)
   x2 = Op("X", 2)
   I1 = Op(I, 1)
