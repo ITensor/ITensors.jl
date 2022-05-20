@@ -169,7 +169,7 @@ end
   @testset "Multisite operator" begin
     os = OpSum()
     os += ("CX", 1, 2)
-    os += (2.3, "R", 3, 4, "S", 2)
+    os += (2.3, "R", (3, 4), "S", 2)
     os += ("X", 3)
     @test length(os) == 3
     @test coefficient(os[1]) == 1
