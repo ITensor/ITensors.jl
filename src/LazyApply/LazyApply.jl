@@ -72,6 +72,7 @@ end
 (a::Scaled{C} * c::Number) where {C} = (coefficient(a) * c) * argument(a)
 
 -(a::Scaled{C}) where {C} = (-one(C) * a)
+-(a::Sum) = (-1 * a)
 
 (os::Sum{A} + o::A) where {A} = Applied(sum, (vcat(os.args[1], [o]),))
 (o::A + os::Sum{A}) where {A} = Applied(sum, (vcat([o], os.args[1]),))

@@ -2,7 +2,7 @@ module Ops
 
 using ..LazyApply
 
-import Base: +, -, *, /, exp, show, adjoint, isless
+import Base: +, -, *, /, convert, exp, show, adjoint, isless
 
 export Op, OpSum, which_op, site, sites, params, Applied, expand
 
@@ -118,9 +118,15 @@ params(a::Scaled{C,Op}) where {C} = params(argument(a))
 # Op algebra
 #
 
+function convert(::Type{Scaled{C1,Prod{Op}}}, o::Scaled{C2,Prod{Op}}) where {C1,C2}
+  c = convert(C1, coefficient(o))
+  return c * argument(o)
+end
+
 const OpSum{C} = Sum{Scaled{C,Prod{Op}}}
 
-OpSum() = OpSum{Float64}()
+# This helps with in-place operations
+OpSum() = OpSum{ComplexF64}()
 
 (o1::Op + o2::Op) = Applied(sum, ([o1, o2],))
 (o1::Op * o2::Op) = Applied(prod, ([o1, o2],))
