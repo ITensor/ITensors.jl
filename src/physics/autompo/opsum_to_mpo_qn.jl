@@ -62,7 +62,7 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
       rqn = sqn + lqn
       A_row = bond_col
       A_col = posInLink!(next_rightmap, right => rqn)
-      site_coef = 1.0 + 0.0im
+      site_coef = one(C)
       if A_row == -1
         site_coef = coefficient(term)
       end

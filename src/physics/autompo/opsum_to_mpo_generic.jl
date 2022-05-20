@@ -12,6 +12,16 @@ add!(os::OpSum, a1::String, args...) = add!(os, (a1, args...))
 add!(os::OpSum, a1::Number, args...) = add!(os, (a1, args...))
 subtract!(os::OpSum, o::Tuple) = add!(os, -Ops.op_term(o))
 
+function isfermionic(t::Vector{Op}, sites)
+  p = +1
+  for op in t
+    if has_fermion_string(name(op), sites[site(op)])
+      p *= -1
+    end
+  end
+  return (p == -1)
+end
+
 #
 # Abuse broadcasting syntax for in-place addition:
 #
