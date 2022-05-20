@@ -1,14 +1,14 @@
-function apply(o::Prod{ITensor}, v::Union{MPS,MPO}; kwargs...)
-  ov = v
-  for oₙ in only(o.args)
-    ov = apply(oₙ, ov; kwargs...)
-  end
-  return ov
-end
-
-function (o::Prod{ITensor})(v::Union{MPS,MPO}; kwargs...)
-  return apply(o, v; kwargs...)
-end
+## function apply(o::Prod{ITensor}, v::Union{MPS,MPO}; kwargs...)
+##   ov = v
+##   for oₙ in only(o.args)
+##     ov = apply(oₙ, ov; kwargs...)
+##   end
+##   return ov
+## end
+## 
+## function (o::Prod{ITensor})(v::Union{MPS,MPO}; kwargs...)
+##   return apply(o, v; kwargs...)
+## end
 
 #
 # Conversion to ITensors.OpSum and MPO

@@ -2099,7 +2099,7 @@ expτH = ops(os, s)
 ```
 """
 function product(
-  As::Vector{<:ITensor},
+  As::Vector{ITensor},
   ψ::AbstractMPS;
   move_sites_back_between_gates::Bool=true,
   move_sites_back::Bool=true,
@@ -2116,6 +2116,14 @@ function product(
     Aψ = movesites(Aψ, ns .=> ñs; kwargs...)
   end
   return Aψ
+end
+
+function product(o::Prod{ITensor}, ψ::AbstractMPS; kwargs...)
+  return product(sequence(o), ψ; kwargs...)
+end
+
+function (o::Prod{ITensor})(ψ::AbstractMPS; kwargs...)
+  return apply(o, ψ; kwargs...)
 end
 
 #
