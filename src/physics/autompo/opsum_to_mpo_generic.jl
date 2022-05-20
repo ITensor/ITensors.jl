@@ -173,24 +173,23 @@ end
 
 function sortmergeterms(os::OpSum{C}) where {C}
   check_numerical_opsum(os) && return os
-  os_data = sort(sequence(os))
+  os_sorted_sequence = sort(sequence(os))
+  os = Sum(os_sorted_sequence)
   # Merge (add) terms with same operators
-  ## da = sequence(os)
   merge_os_data = Scaled{C,Prod{Op}}[]
   last_term = copy(os[1])
   last_term_coef = coefficient(last_term)
   for n in 2:length(os)
     if argument(os[n]) == argument(last_term)
       last_term_coef += coefficient(os[n])
-    else
       last_term = last_term_coef * argument(last_term)
+    else
       push!(merge_os_data, last_term)
       last_term = os[n]
       last_term_coef = coefficient(last_term)
     end
   end
   push!(merge_os_data, last_term)
-  # setdata!(os, ndata)
   os = Sum(merge_os_data)
   return os
 end
