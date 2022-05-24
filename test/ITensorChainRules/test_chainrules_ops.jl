@@ -208,25 +208,29 @@ using Zygote: ZygoteRuleConfig, gradient
     return ITensor(exp(1.5 * H(x, x); alg=Trotter{1}(1)), s)[1, 1]
   end
   args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  @test central_fdm(5, 1)(f, args...) ≈ gradient(f, args...)[1]
+  ## test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
     return ITensor(exp(1.5 * H(x, x); alg=Trotter{2}(1)), s)[1, 1]
   end
   args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  @test central_fdm(5, 1)(f, args...) ≈ gradient(f, args...)[1]
+  ## test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
     return ITensor(exp(1.5 * H(x, x); alg=Trotter{2}(2)), s)[1, 1]
   end
   args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  @test central_fdm(5, 1)(f, args...) ≈ gradient(f, args...)[1]
+  ## test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
     return ITensor(exp(x * H(x, x); alg=Trotter{2}(2)), s)[1, 1]
   end
   args = (x,)
-  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  @test central_fdm(5, 1)(f, args...) ≈ gradient(f, args...)[1]
+  ## test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
     y = -x * (Op("X", 1) * Op("X", 2) + Op("Z", 1) * Op("Z", 2))
