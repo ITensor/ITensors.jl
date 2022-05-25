@@ -693,7 +693,7 @@ siteind(tag::String, n; kwargs...) = siteind(SiteType(tag), n; kwargs...)
 # Special case of `siteind` where integer (dim) provided
 # instead of a tag string
 #siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
-function siteind(d::Integer, n::Integer; addtags="", kwargs...) 
+function siteind(d::Integer, n::Integer; addtags="", kwargs...)
   return Index(d, "Site,n=$n, $addtags")
 end
 
