@@ -119,6 +119,25 @@ using ITensors, LinearAlgebra, Test
 
     @test flux(F.Vt) == QN("Sz", 0)
   end
+
+  @testset "SVD block_mindim keyword" begin
+    i = Index([QN("Sz",4) => 1, 
+               QN("Sz",2) => 4, 
+               QN("Sz",0) => 6, 
+               QN("Sz",-2) => 4, 
+               QN("Sz",-4) => 1],"i")
+    j = sim(i)
+    X = randomITensor(QN("Sz",0),i,j)
+
+    block_mindim = 2
+    U,S,V = svd(X,i; cutoff=1E-1,block_mindim)
+    u = commonind(S,U)
+
+    @test nblocks(u) == nblocks(i)
+    for b=1:nblocks(u)
+      @test blockdim(u,b) == blockdim(i,b) || blockdim(u,b) >= block_mindim
+    end
+  end
 end
 
 nothing

@@ -168,6 +168,18 @@ end
 
 dim(i::QNIndex) = dim(space(i))
 
+"""
+    nblocks(i::QNIndex)
+
+Returns the number of QN blocks, or subspaces, of the QNIndex `i`.
+
+### Example
+```
+julia> i = Index([QN("Sz",-1)=>2, QN("Sz",0)=>4, QN("Sz",1)=>2], "i")
+julia> nblocks(i)
+3
+```
+"""
 nblocks(i::QNIndex) = nblocks(space(i))
 # Define to be 1 for non-QN Index
 nblocks(i::Index) = 1

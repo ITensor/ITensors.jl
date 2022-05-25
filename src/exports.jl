@@ -381,6 +381,7 @@ export
   val,
 
   # qn/qnindex.jl
+  blockdim,
   flux,
   hasqns,
   nblocks,
