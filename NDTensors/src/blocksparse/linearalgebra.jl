@@ -4,18 +4,21 @@ const DiagBlockSparseMatrix{ElT,StoreT,IndsT} = DiagBlockSparseTensor{ElT,2,Stor
 const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 
 function _truncated_blockdim(
-  S::DiagMatrix, docut::Float64; singular_values=false, truncate=true
+  S::DiagMatrix, docut::Float64; singular_values=false, truncate=true, min_blockdim=0
 )
-  !truncate && return diaglength(S)
+  full_dim = diaglength(S)
+  !truncate && return full_dim
+  min_blockdim = min(min_blockdim, full_dim)
   newdim = 0
   val = singular_values ? getdiagindex(S, newdim + 1)^2 : abs(getdiagindex(S, newdim + 1))
-  while newdim + 1 ≤ diaglength(S) && val > docut
+  while newdim + 1 ≤ full_dim && val > docut
     newdim += 1
-    if newdim + 1 ≤ diaglength(S)
+    if newdim + 1 ≤ full_dim
       val =
         singular_values ? getdiagindex(S, newdim + 1)^2 : abs(getdiagindex(S, newdim + 1))
     end
   end
+  (newdim >= min_blockdim) || (newdim = min_blockdim)
   return newdim
 end
 
@@ -31,7 +34,7 @@ computed from the dense svds of seperate blocks.
 """
 function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   alg::String = get(kwargs, :alg, "divide_and_conquer")
-
+  min_blockdim::Int = get(kwargs, :min_blockdim, 0)
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 
   #@timeit_debug timer "block sparse svd" begin
@@ -74,7 +77,9 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   if truncate
     truncerr, docut = truncate!(d; kwargs...)
     for n in 1:nnzblocks(T)
-      blockdim = _truncated_blockdim(Ss[n], docut; singular_values=true, truncate=truncate)
+      blockdim = _truncated_blockdim(
+        Ss[n], docut; min_blockdim, singular_values=true, truncate
+      )
       if blockdim == 0
         push!(dropblocks, n)
       else
