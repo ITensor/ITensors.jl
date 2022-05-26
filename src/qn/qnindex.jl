@@ -173,6 +173,9 @@ dim(i::QNIndex) = dim(space(i))
 
 Returns the number of QN blocks, or subspaces, of the QNIndex `i`.
 
+To obtain the dimension of block number `b`, use `blockdim(i,b)`.
+To obtain the QN associated with block `b`, use `qn(i,b)`.
+
 ### Example
 ```
 julia> i = Index([QN("Sz",-1)=>2, QN("Sz",0)=>4, QN("Sz",1)=>2], "i")
@@ -213,6 +216,22 @@ qn(i::QNIndex, b::Block{1}) = qn(space(i), b)
 qn(ib::Pair{<:Index,Block{1}}) = qn(first(ib), last(ib))
 
 # XXX: deprecate the Integer version
+# Miles asks: isn't it pretty convenient to have it?
+"""
+    qn(i::QNIndex, b::Integer)
+
+Returns the QN associated with block number `b` of 
+a QNIndex `i`.
+
+### Example
+```
+julia> i = Index([QN("Sz",-1)=>2, QN("Sz",0)=>4, QN("Sz",1)=>2], "i")
+julia> qn(i,1)
+QN("Sz",-1)
+julia> qn(i,2)
+QN("Sz",0)
+```
+"""
 qn(i::QNIndex, b::Integer) = qn(i, Block(b))
 
 # Get the QN of the block the IndexVal lies in
@@ -233,7 +252,24 @@ end
 qnblocks(i::QNIndex) = space(i)
 
 # XXX: deprecate the Integer version
+# Miles asks: isn't the integer version very convenient?
 blockdim(i::QNIndex, b::Block) = blockdim(space(i), b)
+
+"""
+    blockdim(i::QNIndex, b::Integer)
+
+Returns the dimension of block number `b` of
+a QNIndex `i`.
+
+### Example
+```
+julia> i = Index([QN("Sz",-1)=>2, QN("Sz",0)=>4, QN("Sz",1)=>2], "i")
+julia> blockdim(i,1)
+2
+julia> blockdim(i,2)
+4
+```
+"""
 blockdim(i::QNIndex, b::Integer) = blockdim(i, Block(b))
 function blockdim(i::Index, b::Union{Block,Integer})
   return error(
