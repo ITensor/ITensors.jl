@@ -1563,7 +1563,8 @@ product of the dimensions of `i1,i2,i3`.
 Internally, a combiner ITensor uses a special storage type which
 means it does not hold actual tensor elements but just information
 about how to combine the indices into a single Index. Taking a product
-of a regular ITensor with a combiner uses special fast algorithms.
+of a regular ITensor with a combiner uses special fast algorithms to
+combine the indices.
 
 To obtain the new, combined Index that the combiner makes out of
 the indices it is given, use the `combinedind` function.
@@ -1587,18 +1588,18 @@ TT = dag(C) * CT
 # TT will be the same as T
 @show norm(TT - T) ≈ 0.0
 ```
-      
-      i  j  k
-      |  |  |
- T =  =======
+         
+              i  j  k
+              |  |  |
+     T   =    =======
 
-      ci  i  k
-      |   |  |
- C =  ========
-        
-          ci  j
-          |   |
- C * T =  =====
+              ci  i  k
+              |   |  |
+     C   =    ========
+              
+              ci  j
+              |   |
+     C * T =  =====
 
 """ combiner
 
