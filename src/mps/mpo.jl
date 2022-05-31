@@ -66,7 +66,7 @@ MPO(N::Int) = MPO(Vector{ITensor}(undef, N))
 Make an MPO with pairs of sites `s[i]` and `s[i]'`
 and operators `ops` on each site.
 """
-function MPO(::Type{ElT}, sites::Vector{<:Index}, ops::Vector{String}) where {ElT<:Number}
+function MPO(::Type{ElT}, sites::Vector{<:Index}, ops::Vector) where {ElT<:Number}
   N = length(sites)
   ampo = OpSum() + [ops[n] => n for n in 1:N]
   M = MPO(ampo, sites)
@@ -100,6 +100,15 @@ function MPO(::Type{ElT}, sites::Vector{<:Index}, op::String) where {ElT<:Number
 end
 
 MPO(sites::Vector{<:Index}, op::String) = MPO(Float64, sites, op)
+
+function MPO(::Type{ElT}, sites::Vector{<:Index}, op::Matrix{<:Number}) where {ElT<:Number}
+  # return MPO(ElT, sites, fill(op, length(sites)))
+  return error(
+    "Not defined on purpose because of potential ambiguity with `MPO(A::Array, sites::Vector)`. Pass the on-site matrices as functions like `MPO(sites, n -> [1 0; 0 1])` instead.",
+  )
+end
+
+MPO(sites::Vector{<:Index}, op::Matrix{ElT}) where {ElT<:Number} = MPO(ElT, sites, op)
 
 function randomMPO(sites::Vector{<:Index}, m::Int=1)
   M = MPO(sites, "Id")
@@ -501,6 +510,8 @@ end
 
 (A::MPO)(ψ::MPS; kwargs...) = apply(A, ψ; kwargs...)
 
+Apply(A::MPO, ψ::MPS; kwargs...) = Applied(apply, (A, ψ), NamedTuple(kwargs))
+
 function contract(A::MPO, ψ::MPS; alg="densitymatrix", kwargs...)
   if haskey(kwargs, :method)
     # Backwards compatibility, use `method`.
@@ -684,7 +695,7 @@ end
 function contract(A::MPO, B::MPO; kwargs...)
   if hassameinds(siteinds, A, B)
     error(
-      "In `contract(A::MPO, B::MPO)`, MPOs A and B have the same site indices. The indices of the MPOs in the contraction are taken literally, and therefore they should only share on site index per site so the contraction results in an MPO. You may want to use `replaceprime(contract(A', B), 2 => 1)` or `apply(A, B)` which automatically adjusts the prime levels assuming the input MPOs have pairs of primed and unprimed indices.",
+      "In `contract(A::MPO, B::MPO)`, MPOs A and B have the same site indices. The indices of the MPOs in the contraction are taken literally, and therefore they should only share one site index per site so the contraction results in an MPO. You may want to use `replaceprime(contract(A', B), 2 => 1)` or `apply(A, B)` which automatically adjusts the prime levels assuming the input MPOs have pairs of primed and unprimed indices.",
     )
   end
   cutoff::Float64 = get(kwargs, :cutoff, 1e-14)

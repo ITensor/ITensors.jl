@@ -1328,12 +1328,14 @@ end
     +(A::MPS/MPO...; kwargs...)
     add(A::MPS/MPO...; kwargs...)
 
-Add arbitrary numbers of MPS/MPO with each other, with some optional
-truncation.
+Add arbitrary numbers of MPS/MPO with each other, optionally truncating the results.
 
 A cutoff of 1e-15 is used by default, and in general users should set their own cutoff for their particular application.
 
-In the future we will give an interface for returning the truncation error.
+# Keywords
+
+- `cutoff::Real`: singular value truncation cutoff
+- `maxdim::Int`: maximum MPS/MPO bond dimension
 
 # Examples
 
@@ -1461,6 +1463,11 @@ add(A::T, B::T; kwargs...) where {T<:AbstractMPS} = +(A, B; kwargs...)
 
 Add multiple MPS/MPO with each other, with some optional
 truncation.
+
+# Keywords
+
+- `cutoff::Real`: singular value truncation cutoff
+- `maxdim::Int`: maximum MPS/MPO bond dimension
 """
 function sum(ψ⃗::Vector{T}; kwargs...) where {T<:AbstractMPS}
   length(ψ⃗) == 0 && return T()
@@ -2192,6 +2199,11 @@ end
 
 function splitblocks(::typeof(linkinds), M::AbstractMPS; tol=0)
   return splitblocks!(linkinds, copy(M); tol=0)
+end
+
+removeqns(M::AbstractMPS) = map(removeqns, M; set_limits=false)
+function removeqn(M::AbstractMPS, qn_name::String)
+  return map(m -> removeqn(m, qn_name), M; set_limits=false)
 end
 
 #

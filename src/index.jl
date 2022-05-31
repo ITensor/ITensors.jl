@@ -231,6 +231,9 @@ function sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
   return Index(rand(index_id_rng(), IDType), copy(space(i)), dir, tags, plev)
 end
 
+trivial_space(i::Index) = 1
+trivial_index(i::Index) = Index(trivial_space(i))
+
 """
     dag(i::Index)
 
@@ -516,6 +519,21 @@ hasqns(::Index) = false
 Removes the QNs from the Index, if it has any.
 """
 removeqns(i::Index) = i
+
+"""
+    removeqn(::Index, qn_name::String)
+
+Remove the specified QN from the Index, if it has any.
+"""
+removeqn(i::Index, qn_name::String) = i
+
+"""
+    mergeblocks(::Index)
+
+Merge the contiguous QN blocks if they have the same
+quantum numbers.
+"""
+mergeblocks(i::Index) = i
 
 # Keep partial backwards compatibility by defining IndexVal as follows:
 const IndexVal{IndexT} = Pair{IndexT,Int}

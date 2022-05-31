@@ -69,6 +69,7 @@ export
   plev,
   prime,
   removetags,
+  removeqn,
   removeqns,
   replacetags,
   replacetags!,
@@ -380,6 +381,7 @@ export
   val,
 
   # qn/qnindex.jl
+  blockdim,
   flux,
   hasqns,
   nblocks,

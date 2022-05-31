@@ -28,15 +28,16 @@ the notation: `SiteType("MyTag")`
 There are currently a few built-in site types
 recognized by `ITensors.jl`. The system is easily extensible
 by users. To add new operators to an existing site type,
-you can follow the instructions [here](http://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_extending).
-To create new site types, you can follow the instructions
-[here](https://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_basic) and 
-[here](https://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_qns).
+or to create new site types, you can follow the instructions
+[here](https://itensor.github.io/ITensors.jl/stable/examples/Physics.html).
 
 The current built-in site types are:
 
 - `SiteType"S=1/2"` (or `SiteType"S=½"`)
 - `SiteType"S=1"`
+- `SiteType"Qubit"`
+- `SiteType"Qudit"`
+- `SiteType"Boson"`
 - `SiteType"Fermion"`
 - `SiteType"tJ"`
 - `SiteType"Electron"`
@@ -217,6 +218,9 @@ operators to MPS.
 s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
+
+To see all of the operator names defined for the site types included with
+ITensor, please [view the source code for each site type](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types). Note that some site types such as "S=1/2" and "Qubit" are aliases for each other and share operator definitions.
 """
 function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   name = strip(name)
@@ -688,7 +692,10 @@ siteind(tag::String, n; kwargs...) = siteind(SiteType(tag), n; kwargs...)
 
 # Special case of `siteind` where integer (dim) provided
 # instead of a tag string
-siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
+#siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
+function siteind(d::Integer, n::Integer; addtags="", kwargs...)
+  return Index(d, "Site,n=$n, $addtags")
+end
 
 #---------------------------------------
 #
@@ -699,12 +706,19 @@ siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
 siteinds(::SiteType, N; kwargs...) = nothing
 
 """
-  siteinds(tag::String, N::Integer; kwargs...)
+    siteinds(tag::String, N::Integer; kwargs...)
 
 Create an array of `N` physical site indices of type `tag`.
 Keyword arguments can be used to specify quantum number conservation,
 see the `space` function corresponding to the site type `tag` for
 supported keyword arguments.
+
+# Example
+
+```julia
+N = 10
+s = siteinds("S=1/2", N; conserve_qns=true)
+```
 """
 function siteinds(tag::String, N::Integer; kwargs...)
   st = SiteType(tag)
@@ -718,7 +732,7 @@ function siteinds(tag::String, N::Integer; kwargs...)
 end
 
 """
-  siteinds(f::Function, N::Integer; kwargs...)
+    siteinds(f::Function, N::Integer; kwargs...)
 
 Create an array of `N` physical site indices where the site type at site `n` is given
 by `f(n)` (`f` should return a string).
@@ -729,6 +743,14 @@ end
 
 # Special case of `siteinds` where integer (dim)
 # provided instead of a tag string
+"""
+    siteinds(d::Integer, N::Integer; kwargs...)
+
+Create an array of `N` site indices, each of dimension `d`.
+
+# Keywords
+- `addtags::String`: additional tags to be added to all indices
+"""
 function siteinds(d::Integer, N::Integer; kwargs...)
   return [siteind(d, n; kwargs...) for n in 1:N]
 end

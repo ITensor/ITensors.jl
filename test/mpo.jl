@@ -399,7 +399,7 @@ end
     l = [Index(3, "left_$n") for n in 1:2]
     r = [Index(3, "right_$n") for n in 1:2]
 
-    sis = IndexSet.(prime.(s), s)
+    sis = [[sₙ', sₙ] for sₙ in s]
 
     A = randomITensor(s..., prime.(s)...)
     ψ = MPO(A, sis; orthocenter=4)
@@ -428,6 +428,10 @@ end
     @test prod(ψ) ≈ A
     @test ITensors.orthocenter(ψ) == 3
     @test maxlinkdim(ψ) == 1
+
+    # Use matrix
+    @test_throws ErrorException MPO(s, [1/2 0; 0 1/2])
+    @test MPO(s, _ -> [1/2 0; 0 1/2]) ≈ MPO(s, "Id") ./ 2
 
     ψ0 = MPO(s, "Id")
     A = prod(ψ0)
@@ -694,6 +698,29 @@ end
     @test ITensors.materialize(Apply(A, psi)) ≈ noprime(Apsi)
     @test A(psi) ≈ noprime(Apsi)
     @test inner(noprime(Apsi), Apply(A, psi)) ≈ inner(Apsi, Apsi)
+  end
+
+  @testset "MPO with no link indices" for conserve_qns in [false, true]
+    s = siteinds("S=1/2", 4; conserve_qns)
+    H = MPO([op("Id", sn) for sn in s])
+    @test linkinds(H) == fill(nothing, length(s) - 1)
+    @test norm(H) == √(2^length(s))
+
+    Hortho = orthogonalize(H, 1)
+    @test Hortho ≈ H
+    @test linkdims(Hortho) == fill(1, length(s) - 1)
+
+    Htrunc = truncate(H; cutoff=1e-8)
+    @test Htrunc ≈ H
+    @test linkdims(Htrunc) == fill(1, length(s) - 1)
+
+    H² = apply(H, H; cutoff=1e-8)
+    H̃² = MPO([apply(H[n], H[n]) for n in 1:length(s)])
+    @test linkdims(H²) == fill(1, length(s) - 1)
+    @test H² ≈ H̃²
+
+    e, ψ = dmrg(H, randomMPS(s, n -> isodd(n) ? "↑" : "↓"); nsweeps=2, outputlevel=0)
+    @test e ≈ 1
   end
 end
 
