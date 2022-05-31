@@ -206,7 +206,14 @@ adjoint(o::LazyApply.Adjoint{Op}) = only(o.args)
 # Tuple interface
 #
 
-const OpSumLike{C} = Union{Sum{Op},Sum{Scaled{C,Op}},Sum{Prod{Op}},Sum{Scaled{C,Prod{Op}}},Prod{Op},Scaled{C,Prod{Op}}}
+const OpSumLike{C} = Union{
+  Sum{Op},
+  Sum{Scaled{C,Op}},
+  Sum{Prod{Op}},
+  Sum{Scaled{C,Prod{Op}}},
+  Prod{Op},
+  Scaled{C,Prod{Op}},
+}
 
 const WhichOp = Union{AbstractString,AbstractMatrix{<:Number}}
 

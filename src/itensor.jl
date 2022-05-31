@@ -463,11 +463,7 @@ end
 
 # Convert `Adjoint` to `Matrix`
 function ITensor(
-  as::AliasStyle,
-  eltype::Type{<:Number},
-  A::Adjoint,
-  inds::Indices{Index{Int}};
-  kwargs...,
+  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
 )
   return ITensor(as, eltype, Matrix(A), inds; kwargs...)
 end
