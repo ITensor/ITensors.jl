@@ -45,11 +45,11 @@ function ITensor(o::LazyApply.Adjoint, s::Vector{<:Index})
 end
 
 function Sum{ITensor}(o::Sum, s::Vector{<:Index})
-  return Applied(sum, (map(oₙ -> ITensor(oₙ, s), o),))
+  return Applied(sum, (map(oₙ -> ITensor(oₙ, s), only(o.args)),))
 end
 
 function Prod{ITensor}(o::Prod, s::Vector{<:Index})
-  return Applied(prod, (map(oₙ -> ITensor(oₙ, s), o),))
+  return Applied(prod, (map(oₙ -> ITensor(oₙ, s), only(o.args)),))
 end
 
 function Prod{ITensor}(o::Scaled{C,Prod{Op}}, s::Vector{<:Index}) where {C}
@@ -60,7 +60,7 @@ end
 
 function apply(o::Prod{ITensor}, v::ITensor; kwargs...)
   ov = v
-  for oₙ in only(o.args)
+  for oₙ in reverse(only(o.args))
     ov = apply(oₙ, ov; kwargs...)
   end
   return ov

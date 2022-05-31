@@ -2118,8 +2118,21 @@ function product(
   return Aψ
 end
 
+# Apply in the reverse order for proper order of operations
+# For example:
+#
+# s = siteinds("Qubit", 1)
+# ψ = randomMPS(s)
+#
+# # U = Z₁X₁
+# U = Prod{Op}()
+# U = ("X", 1) * U
+# U = ("Z", 1) * U
+#
+# # U|ψ⟩ = Z₁X₁|ψ⟩
+# apply(U, 
 function product(o::Prod{ITensor}, ψ::AbstractMPS; kwargs...)
-  return product(sequence(o), ψ; kwargs...)
+  return product(reverse(terms(o)), ψ; kwargs...)
 end
 
 function (o::Prod{ITensor})(ψ::AbstractMPS; kwargs...)

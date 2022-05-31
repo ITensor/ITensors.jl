@@ -2,7 +2,7 @@ module Ops
 
 using ..LazyApply
 
-import Base: +, -, *, /, convert, exp, show, adjoint, isless
+import Base: ==, +, -, *, /, convert, exp, show, adjoint, isless
 
 export Op, OpSum, which_op, site, sites, params, Applied, expand
 
@@ -69,14 +69,24 @@ sites(o::Op) = o.sites
 site(o::Op) = only(sites(o))
 params(o::Op) = o.params
 
+function (o1::Op == o2::Op)
+  return o1.which_op == o2.which_op && o1.sites == o2.sites && o1.params == o2.params
+end
+
+# Version of `isless` defined for matrices
+_isless(a, b) = isless(a, b)
+_isless(a::AbstractMatrix, b::AbstractMatrix) = isless(hash(a), hash(b))
+_isless(a::AbstractString, b::AbstractMatrix) = true
+_isless(a::AbstractMatrix, b::AbstractString) = !_isless(b, a)
+
 function isless(o1::Op, o2::Op)
   if sites(o1) ≠ sites(o2)
     return sites(o1) < sites(o2)
   end
   if which_op(o1) ≠ which_op(o2)
-    return which_op(o1) < which_op(o2)
+    return _isless(which_op(o1), which_op(o2))
   end
-  return params(s1) < params(s2)
+  return params(o1) < params(o2)
 end
 
 function isless(o1::Prod{Op}, o2::Prod{Op})
@@ -175,8 +185,8 @@ OpSum() = OpSum{ComplexF64}()
 # Op("X", 1) + 1.3 * Op("X", 2)
 (o1::Op + co2::Scaled{C}) where {C} = one(C) * o1 + co2
 
-(a1::Op * a2::Sum) = Applied(sum, (map(a -> a1 * a, only(a2.args)),))
-(a1::Sum * a2::Op) = Applied(sum, (map(a -> a * a2, only(a1.args)),))
+(o1::Op * o2::Sum) = Applied(sum, (map(a -> o1 * a, only(o2.args)),))
+(o1::Sum * o2::Op) = Applied(sum, (map(a -> a * o2, only(o1.args)),))
 
 # 1.3 * Op("X", 1) + Op("X", 2) * Op("X", 3)
 # 1.3 * Op("X", 1) * Op("X", 2) + Op("X", 3) * Op("X", 4)
@@ -196,9 +206,9 @@ adjoint(o::LazyApply.Adjoint{Op}) = only(o.args)
 # Tuple interface
 #
 
-const OpSumLike{C} = Union{Sum{Op},Sum{Scaled{C,Op}},Sum{Prod{Op}},Sum{Scaled{C,Prod{Op}}}}
+const OpSumLike{C} = Union{Sum{Op},Sum{Scaled{C,Op}},Sum{Prod{Op}},Sum{Scaled{C,Prod{Op}}},Prod{Op},Scaled{C,Prod{Op}}}
 
-const WhichOp = Union{AbstractString,Matrix{<:Number}}
+const WhichOp = Union{AbstractString,AbstractMatrix{<:Number}}
 
 # Make a `Scaled{C,Prod{Op}}` from a `Tuple` input,
 # for example:
@@ -235,24 +245,28 @@ function op_term(a::Tuple{Vararg})
   return o
 end
 
-function (a1::OpSumLike + a2::Tuple)
-  return a1 + op_term(a2)
+function (o1::OpSumLike + o2::Tuple)
+  return o1 + op_term(o2)
 end
 
-function (a1::OpSumLike - a2::Tuple{Number,Vararg})
-  return a1 + (-first(a2), Base.tail(a2)...)
+function (o1::Tuple + o2::OpSumLike)
+  return op_term(o1) + o2
 end
 
-function (a1::OpSumLike - a2::Tuple{AbstractString,Vararg})
-  return a1 + (-true, a2...)
+function (o1::OpSumLike - o2::Tuple)
+  return o1 - op_term(o2)
 end
 
-function (a1::Prod{Op} * a2::Tuple)
-  return a1 * op_term(a2)
+function (o1::Tuple - o2::OpSumLike)
+  return op_term(o1) - o2
 end
 
-function (a1::Scaled{C,Prod{Op}} * a2::Tuple) where {C}
-  return a1 * op_term(a2)
+function (o1::OpSumLike * o2::Tuple)
+  return o1 * op_term(o2)
+end
+
+function (o1::Tuple * o2::OpSumLike)
+  return op_term(o1) * o2
 end
 
 function show(io::IO, ::MIME"text/plain", o::Op)
@@ -266,15 +280,22 @@ end
 show(io::IO, o::Op) = show(io, MIME("text/plain"), o)
 
 function show(io::IO, ::MIME"text/plain", o::Prod{Op})
-  for oₙ in o
-    print(io, oₙ, " ")
+  for n in 1:length(o)
+    print(io, o[n])
+    if n < length(o)
+      print(io, " ")
+    end
   end
   return nothing
 end
 show(io::IO, o::Prod{Op}) where {C} = show(io, MIME("text/plain"), o)
 
-function show(io::IO, m::MIME"text/plain", o::Scaled{C,Prod{Op}}) where {C}
-  print(io, coefficient(o))
+function show(io::IO, m::MIME"text/plain", o::Scaled{C,O}) where {C,O<:Union{Op,Prod{Op}}}
+  c = coefficient(o)
+  if isreal(c)
+    c = real(c)
+  end
+  print(io, c)
   print(io, " ")
   show(io, m, argument(o))
   return nothing

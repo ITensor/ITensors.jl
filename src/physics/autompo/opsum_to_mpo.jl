@@ -5,7 +5,7 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
   N = length(sites)
 
-  ValType = determineValType(sequence(os))
+  ValType = determineValType(terms(os))
 
   Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
   tempMPO = [MatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
@@ -24,9 +24,9 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
     for term in os
       crosses_bond(term, n) || continue
 
-      left = filter(t -> (only(site(t)) < n), sequence(term))
-      onsite = filter(t -> (only(site(t)) == n), sequence(term))
-      right = filter(t -> (only(site(t)) > n), sequence(term))
+      left = filter(t -> (only(site(t)) < n), terms(term))
+      onsite = filter(t -> (only(site(t)) == n), terms(term))
+      right = filter(t -> (only(site(t)) > n), terms(term))
 
       bond_row = -1
       bond_col = -1

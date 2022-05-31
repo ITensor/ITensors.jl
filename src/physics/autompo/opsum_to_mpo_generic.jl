@@ -1,7 +1,7 @@
 const AutoMPO = OpSum
 
 function add!(os::OpSum, o::Scaled{C,Prod{Op}}) where {C}
-  push!(sequence(os), o)
+  push!(terms(os), o)
   return os
 end
 add!(os::OpSum, o::Op) = add!(os, Prod{Op}() * o)
@@ -120,9 +120,9 @@ function sorteachterm(os::OpSum, sites)
     # Sort operators in t by site order,
     # and keep the permutation used, perm, for analysis below
     perm = Vector{Int}(undef, Nt)
-    sortperm!(perm, sequence(t); alg=InsertionSort, lt=isless_site)
+    sortperm!(perm, terms(t); alg=InsertionSort, lt=isless_site)
 
-    t = coefficient(t) * Prod(sequence(t)[perm])
+    t = coefficient(t) * Prod(terms(t)[perm])
 
     # Identify fermionic operators,
     # zeroing perm for bosonic operators,
@@ -135,7 +135,7 @@ function sorteachterm(os::OpSum, sites)
         # Put local piece of Jordan-Wigner string emanating
         # from fermionic operators to the right
         # (Remaining F operators will be put in by svdMPO)
-        sequence(t)[n] = Op("$(which_op(t[n])) * F", only(site(t[n])))
+        terms(t)[n] = Op("$(which_op(t[n])) * F", only(site(t[n])))
       end
       prevsite = currsite
 
@@ -156,25 +156,14 @@ function sorteachterm(os::OpSum, sites)
     # and account for anti-commuting, fermionic operators 
     # during above sort; put resulting sign into coef
     t *= parity_sign(perm)
-    sequence(os)[n] = t
+    terms(os)[n] = t
   end
   return os
 end
 
-function check_numerical_opsum(os::OpSum)
-  for mpoterm in os
-    operators = sequence(mpoterm)
-    for operator in which_op.(operators)
-      operator isa Array{<:Number} && return true
-    end
-  end
-  return false
-end
-
 function sortmergeterms(os::OpSum{C}) where {C}
-  check_numerical_opsum(os) && return os
-  os_sorted_sequence = sort(sequence(os))
-  os = Sum(os_sorted_sequence)
+  os_sorted_terms = sort(terms(os))
+  os = Sum(os_sorted_terms)
   # Merge (add) terms with same operators
   merge_os_data = Scaled{C,Prod{Op}}[]
   last_term = copy(os[1])
@@ -218,7 +207,7 @@ H = MPO(os,sites)
 ```
 """
 function MPO(os::OpSum, sites::Vector{<:Index}; kwargs...)::MPO
-  length(sequence(os)) == 0 && error("OpSum has no terms")
+  length(terms(os)) == 0 && error("OpSum has no terms")
 
   os = deepcopy(os)
   os = sorteachterm(os, sites)

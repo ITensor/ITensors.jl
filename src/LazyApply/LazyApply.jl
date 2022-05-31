@@ -21,7 +21,7 @@ import Base:
   reverse,
   size
 
-export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize, sequence
+export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize, terms
 
 struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
   f::F
@@ -287,8 +287,8 @@ lastindex(a::Scaled{C,<:Prod}) where {C} = lastindex(argument(a))
 # Functions convenient for AutoMPO code
 #
 
-sequence(a::Union{Sum,Prod}) = only(a.args)
-sequence(a::Scaled{C,<:Union{Sum,Prod}}) where {C} = sequence(argument(a))
+terms(a::Union{Sum,Prod}) = only(a.args)
+terms(a::Scaled{C,<:Union{Sum,Prod}}) where {C} = terms(argument(a))
 copy(a::Applied) = Applied(deepcopy(a.f), deepcopy(a.args), deepcopy(a.kwargs))
 Sum(a::Vector) = Applied(sum, (a,))
 Prod(a::Vector) = Applied(prod, (a,))
@@ -312,6 +312,32 @@ function show(io::IO, ::MIME"text/plain", a::Sum)
   return nothing
 end
 show(io::IO, a::Sum) = show(io, MIME("text/plain"), a)
+
+function show(io::IO, ::MIME"text/plain", a::Prod)
+  print(io, "prod(\n")
+  for n in eachindex(a)
+    print(io, "  ", a[n])
+    if n ≠ lastindex(a)
+      print(io, "\n")
+    end
+  end
+  print(io, "\n)")
+  return nothing
+end
+show(io::IO, a::Prod) = show(io, MIME("text/plain"), a)
+
+function show(io::IO, m::MIME"text/plain", a::Exp)
+  print(io, a.f, "(")
+  for n in 1:length(a.args)
+    print(io, a.args[n])
+    if n < length(a.args)
+      print(io, ", ")
+    end
+  end
+  print(io, ")")
+  return nothing
+end
+show(io::IO, a::Exp) = show(io, MIME("text/plain"), a)
 
 function show(io::IO, m::MIME"text/plain", a::Applied)
   print(io, a.f, "(\n")

@@ -5,7 +5,7 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
   N = length(sites)
 
-  ValType = determineValType(sequence(os))
+  ValType = determineValType(terms(os))
 
   Vs = [Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
   sparse_MPO = [QNMatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
@@ -30,7 +30,7 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
     return q
   end
 
-  Hflux = -calcQN(sequence(first(sequence(os))))
+  Hflux = -calcQN(terms(first(terms(os))))
 
   rightmap = Dict{Pair{Vector{Op},QN},Int}()
   next_rightmap = Dict{Pair{Vector{Op},QN},Int}()
@@ -42,9 +42,9 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
     for term in os
       crosses_bond(term, n) || continue
 
-      left = filter(t -> (only(site(t)) < n), sequence(term))
-      onsite = filter(t -> (only(site(t)) == n), sequence(term))
-      right = filter(t -> (only(site(t)) > n), sequence(term))
+      left = filter(t -> (only(site(t)) < n), terms(term))
+      onsite = filter(t -> (only(site(t)) == n), terms(term))
+      right = filter(t -> (only(site(t)) > n), terms(term))
 
       lqn = calcQN(left)
       sqn = calcQN(onsite)
@@ -151,25 +151,25 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
       if A_row == -1 && A_col == -1
         # Onsite term
-        M = get!(onsite_block, (el.rowqn, sequence(t)), zeros(ValType, 1, 1))
+        M = get!(onsite_block, (el.rowqn, terms(t)), zeros(ValType, 1, 1))
         M[1, 1] += ct
       elseif A_row == -1
         # Operator beginning a term on site n
-        M = get!(begin_block, (el.rowqn, sequence(t)), zero_mat())
+        M = get!(begin_block, (el.rowqn, terms(t)), zero_mat())
         VR = Vs[n + 1][el.colqn]
         for c in 1:size(VR, 2)
           M[1, c] += ct * VR[A_col, c]
         end
       elseif A_col == -1
         # Operator ending a term on site n
-        M = get!(end_block, (el.rowqn, sequence(t)), zero_mat())
+        M = get!(end_block, (el.rowqn, terms(t)), zero_mat())
         VL = Vs[n][el.rowqn]
         for r in 1:size(VL, 2)
           M[r, 1] += ct * conj(VL[A_row, r])
         end
       else
         # Operator continuing a term on site n
-        M = get!(cont_block, (el.rowqn, sequence(t)), zero_mat())
+        M = get!(cont_block, (el.rowqn, terms(t)), zero_mat())
         VL = Vs[n][el.rowqn]
         VR = Vs[n + 1][el.colqn]
         for r in 1:size(VL, 2), c in 1:size(VR, 2)
