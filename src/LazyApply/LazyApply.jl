@@ -73,12 +73,17 @@ end
 
 -(a::Scaled{C}) where {C} = (-one(C) * a)
 -(a::Sum) = (-1 * a)
+-(a::Prod) = (-1 * a)
 
 (os::Sum{A} + o::A) where {A} = Applied(sum, (vcat(os.args[1], [o]),))
 (o::A + os::Sum{A}) where {A} = Applied(sum, (vcat([o], os.args[1]),))
 
 (a1::Sum{A} - a2::A) where {C,A} = a1 + (-a2)
 (a1::A - a2::Sum{A}) where {C,A} = a1 + (-a2)
+
+(a1::Sum{A} - a2::Prod{A}) where {A} = a1 + (-a2)
+(a1::Sum{A} - a2::Scaled{C,Prod{A}}) where {C,A} = a1 + (-a2)
+(a1::Sum{A} - a2::Sum{Scaled{C,Prod{A}}}) where {C,A} = a1 + (-a2)
 
 (a1::Prod{A} * a2::A) where {A} = Applied(prod, (vcat(only(a1.args), [a2]),))
 (a1::A * a2::Prod{A}) where {A} = Applied(prod, (vcat([a1], only(a2.args)),))
@@ -170,12 +175,20 @@ function (a1::Sum{A} + a2::Prod{A}) where {A}
   return Prod{A}() * a1 + a2
 end
 
+function (a1::Sum{A} + a2::Sum{Scaled{C,Prod{A}}}) where {C,A}
+  return (one(C) * Prod{A}() * a1) + a2
+end
+
 function (a1::Prod{A} - a2::A) where {A}
   return a1 + (-a2)
 end
 
 function (co1::Sum{Scaled{C,Prod{A}}} + co2::Scaled{C,A}) where {C,A}
   return co1 + coefficient(co2) * Applied(prod, ([argument(co2)],))
+end
+
+function (a1::Sum{Scaled{C,Prod{A}}} - a2::Prod{A}) where {C,A}
+  return a1 + (-a2)
 end
 
 function (a1::Sum{A} + a2::Scaled{C,Prod{A}}) where {C,A}
