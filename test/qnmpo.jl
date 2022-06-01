@@ -1,5 +1,15 @@
 using ITensors, Test
 
+function op_mpo(sites, which_op, j)
+  left_ops = "Id"
+  right_ops = "Id"
+  if has_fermion_string(which_op, sites[j])
+    left_ops = "F"
+  end
+  ops = [n < j ? left_ops : (n > j ? right_ops : which_op) for n in 1:length(sites)]
+  return MPO([op(ops[n], sites[n]) for n in 1:length(sites)])
+end
+
 @testset "MPO Basics" begin
   N = 6
   sites = [Index(QN(-1) => 1, QN(1) => 1; tags="Site,n=$n") for n in 1:N]
@@ -150,6 +160,22 @@ using ITensors, Test
     Lpsi = contract(L, psi; maxdim=1)
     psi_kl_out = contract(prime(K), Lpsi; maxdim=1)
     @test inner(psi'', KL, psi) ≈ inner(psi'', psi_kl_out) atol = 5e-3
+  end
+
+  @testset "contract(::MPO, ::MPO) without truncation" begin
+    s = siteinds("Electron", 10; conserve_qns=true)
+    j1, j2 = 2, 4
+    Cdagup = op_mpo(s, "Cdagup", j1)
+    Cdagdn = op_mpo(s, "Cdagdn", j2)
+    Cdagmpo = apply(Cdagup, Cdagdn; alg="naive", truncate=false)
+    @test norm(Cdagmpo) ≈ 2^length(s) / 2
+    for j in 1:length(s)
+      if (j == j1) || (j == j2)
+        @test norm(Cdagmpo[j]) ≈ √2
+      else
+        @test norm(Cdagmpo[j]) ≈ 2
+      end
+    end
   end
 
   @testset "*(::MPO, ::MPO)" begin
