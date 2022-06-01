@@ -187,6 +187,10 @@ function (co1::Sum{Scaled{C,Prod{A}}} + co2::Scaled{C,A}) where {C,A}
   return co1 + coefficient(co2) * Applied(prod, ([argument(co2)],))
 end
 
+function (a1::Sum{Scaled{C1,Prod{A}}} - a2::Scaled{C2,A}) where {C1,C2,A}
+  return a1 + (-a2)
+end
+
 function (a1::Sum{Scaled{C,Prod{A}}} - a2::Prod{A}) where {C,A}
   return a1 + (-a2)
 end
