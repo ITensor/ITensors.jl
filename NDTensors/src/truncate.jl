@@ -3,7 +3,7 @@ export truncate!
 function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
   cutoff = get(kwargs, :cutoff, 0.0)
   if isnothing(cutoff)
-    return 0.0, 0.0
+    cutoff = -Inf
   end
 
   # Keyword argument deprecations
@@ -20,7 +20,7 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
 
   maxdim::Int = min(get(kwargs, :maxdim, length(P)), length(P))
   mindim::Int = max(get(kwargs, :mindim, 1), 1)
-  cutoff = max(cutoff, 0.0)
+
   use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
