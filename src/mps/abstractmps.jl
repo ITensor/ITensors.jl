@@ -2128,7 +2128,7 @@ expτH = ops(os, s)
 ```
 """
 function product(
-  As::Vector{ITensor},
+  As::Vector{<:ITensor},
   ψ::AbstractMPS;
   move_sites_back_between_gates::Bool=true,
   move_sites_back::Bool=true,
@@ -2145,27 +2145,6 @@ function product(
     Aψ = movesites(Aψ, ns .=> ñs; kwargs...)
   end
   return Aψ
-end
-
-# Apply in the reverse order for proper order of operations
-# For example:
-#
-# s = siteinds("Qubit", 1)
-# ψ = randomMPS(s)
-#
-# # U = Z₁X₁
-# U = Prod{Op}()
-# U = ("X", 1) * U
-# U = ("Z", 1) * U
-#
-# # U|ψ⟩ = Z₁X₁|ψ⟩
-# apply(U, 
-function product(o::Prod{ITensor}, ψ::AbstractMPS; kwargs...)
-  return product(reverse(terms(o)), ψ; kwargs...)
-end
-
-function (o::Prod{ITensor})(ψ::AbstractMPS; kwargs...)
-  return apply(o, ψ; kwargs...)
 end
 
 #
