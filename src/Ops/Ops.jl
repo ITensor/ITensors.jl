@@ -2,7 +2,7 @@ module Ops
 
 using ..LazyApply
 
-import Base: ==, +, -, *, /, convert, exp, show, adjoint, isless
+import Base: ==, +, -, *, /, convert, exp, show, adjoint, isless, hash
 
 export Op, OpSum, which_op, site, sites, params, Applied, expand
 
@@ -71,6 +71,10 @@ params(o::Op) = o.params
 
 function (o1::Op == o2::Op)
   return o1.which_op == o2.which_op && o1.sites == o2.sites && o1.params == o2.params
+end
+
+function hash(o::Op, h::UInt)
+  return hash(which_op(o), hash(sites(o), hash(params(o), hash(:Op, h))))
 end
 
 # Version of `isless` defined for matrices
