@@ -2227,7 +2227,7 @@ function directsum(
   tags=["sum$i" for i in 1:length(last(A_and_I))],
 )
   return directsum(
-    Pair(directsum(A_and_I, B_and_J; kwargs...)...), C_and_K, itensor_and_inds...; tags=tags
+    Pair(directsum(A_and_I, B_and_J; tags)...), C_and_K, itensor_and_inds...; tags
   )
 end
 
