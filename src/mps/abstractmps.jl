@@ -1378,9 +1378,9 @@ println()
       inner(ψ₃, ψ₁) + 2 * inner(ψ₃, ψ₂) + inner(ψ₃, ψ₃)
 ```
 """
-function +(ψ⃗::MPST...; cutoff=1e-15, kwargs...) where {MPST<:AbstractMPS}
-  # TODO: Check that the inputs have the same site indices
-
+function +(
+  ::Algorithm"densitymatrix", ψ⃗::MPST...; cutoff=1e-15, kwargs...
+) where {MPST<:AbstractMPS}
   if !all(ψ -> hassameinds(siteinds, first(ψ⃗), ψ), ψ⃗)
     error(
       "In `+(::MPS/MPO...)`, the input `MPS` or `MPO` do not have the same site indices. For example, the site indices of the first site are $(siteinds.(ψ⃗, 1))",
@@ -1446,6 +1446,46 @@ function +(ψ⃗::MPST...; cutoff=1e-15, kwargs...) where {MPST<:AbstractMPS}
   set_ortho_lims!(ψ, 1:1)
 
   return convert(MPST, ψ)
+end
+
+function +(::Algorithm"directsum", ψ⃗::MPST...) where {MPST<:AbstractMPS}
+  n = length(first(ψ⃗))
+  @assert all(ψᵢ -> length(first(ψ⃗)) == length(ψᵢ), ψ⃗)
+
+  # Output tensor
+  ϕ = MPS(n)
+
+  # Direct sum first tensor
+  j = 1
+  l⃗j = map(ψᵢ -> linkind(ψᵢ, j), ψ⃗)
+  ϕj, (lj,) = directsum(
+    (ψ⃗[i][j] => (l⃗j[i],) for i in 1:length(ψ⃗))...; tags=[tags(first(l⃗j))]
+  )
+  ljm_prev = lj
+  ϕ[j] = ϕj
+  for j in 2:(n - 1)
+    l⃗jm = map(ψᵢ -> linkind(ψᵢ, j - 1), ψ⃗)
+    l⃗j = map(ψᵢ -> linkind(ψᵢ, j), ψ⃗)
+    ϕj, (ljm, lj) = directsum(
+      (ψ⃗[i][j] => (l⃗jm[i], l⃗j[i]) for i in 1:length(ψ⃗))...;
+      tags=[tags(first(l⃗jm)), tags(first(l⃗j))],
+    )
+    ϕj = replaceind(ϕj, ljm => dag(ljm_prev))
+    ljm_prev = lj
+    ϕ[j] = ϕj
+  end
+  j = n
+  l⃗jm = map(ψᵢ -> linkind(ψᵢ, j - 1), ψ⃗)
+  ϕj, (ljm,) = directsum(
+    (ψ⃗[i][j] => (l⃗jm[i],) for i in 1:length(ψ⃗))...; tags=[tags(first(l⃗jm))]
+  )
+  ϕj = replaceind(ϕj, ljm => dag(ljm_prev))
+  ϕ[j] = ϕj
+  return ϕ
+end
+
+function +(ψ⃗::AbstractMPS...; alg=Algorithm"densitymatrix"(), kwargs...)
+  return +(Algorithm(alg), ψ⃗...; kwargs...)
 end
 
 +(ψ::AbstractMPS) = ψ
