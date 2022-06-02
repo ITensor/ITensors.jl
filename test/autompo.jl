@@ -6,9 +6,8 @@ function components_to_opsum(comps, n; reverse::Bool=true)
   opsum = OpSum()
   for (factor, operators, sites) in comps
     # reverse ordering for compatibility
-    sites = reverse ? (n+1) .- sites : sites
-    sites_and_ops =  [[Matrix(operator), site]
-                      for (operator, site) in zip(operators, sites)]
+    sites = reverse ? (n + 1) .- sites : sites
+    sites_and_ops = [[Matrix(operator), site] for (operator, site) in zip(operators, sites)]
     sites_and_ops = [vcat(sites_and_ops...)...]
     opsum += factor, sites_and_ops...
   end
