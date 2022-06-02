@@ -58,9 +58,6 @@ struct Op
   function Op(which_op, site...; kwargs...)
     return new(which_op, site, NamedTuple(kwargs))
   end
-  function Op(which_op, site::Tuple; kwargs...)
-    return new(which_op, site, NamedTuple(kwargs))
-  end
 end
 
 which_op(o::Op) = o.which_op

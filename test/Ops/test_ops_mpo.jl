@@ -32,13 +32,13 @@ using LinearAlgebra
 
   @testset "OpSum to MPO with repeated terms" begin
     ℋ = OpSum()
-    ℋ += ("Z", 1)
-    ℋ += ("Z", 1)
-    ℋ += ("X", 2)
-    ℋ += ("Z", 1)
-    ℋ += ("Z", 1)
-    ℋ += ("X", 2)
-    ℋ += ("X", 2)
+    ℋ += "Z", 1
+    ℋ += "Z", 1
+    ℋ += "X", 2
+    ℋ += "Z", 1
+    ℋ += "Z", 1
+    ℋ += "X", 2
+    ℋ += "X", 2
     ℋ_merged = OpSum()
     ℋ_merged += (4, "Z", 1)
     ℋ_merged += (3, "X", 2)

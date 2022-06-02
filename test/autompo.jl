@@ -169,7 +169,7 @@ end
   @testset "Multisite operator" begin
     os = OpSum()
     os += ("CX", 1, 2)
-    os += (2.3, "R", (3, 4), "S", 2)
+    os += (2.3, "R", 3, 4, "S", 2)
     os += ("X", 3)
     @test length(os) == 3
     @test coefficient(os[1]) == 1
@@ -193,6 +193,14 @@ end
     @test length(os[1]) == 1
     @test ITensors.which_op(os[1][1]) == "CX"
     @test ITensors.sites(os[1][1]) == (1, 2)
+
+    # Coordinate
+    os = OpSum() + ("X", (1, 2))
+    @test length(os) == 1
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 1
+    @test ITensors.which_op(os[1][1]) == "X"
+    @test ITensors.sites(os[1][1]) == ((1, 2),)
 
     os = OpSum() + ("CX", 1, 2, (ϕ=π / 3,))
     @test length(os) == 1
@@ -1031,6 +1039,41 @@ end
     H = MPO(os, sites)
     psi0 = productMPS(sites, n -> isodd(n) ? "0" : "1")
     @test abs(inner(psi0', H, psi0) - 0.00018) < 1E-10
+  end
+
+  @testset "Matrix operator representation" begin
+    dim = 4
+    op = rand(dim, dim)
+    opt = op'
+    s = [Index(dim), Index(dim)]
+    a = OpSum()
+    a += 1.0, op + opt, 1
+    a += 1.0, op + opt, 2
+    mpoa = MPO(a, s)
+    b = OpSum()
+    b += 1.0, op, 1
+    b += 1.0, opt, 1
+    b += 1.0, op, 2
+    b += 1.0, opt, 2
+    mpob = MPO(b, s)
+    @test mpoa ≈ mpob
+  end
+
+  @testset "Matrix operator representation - hashing bug" begin
+    n = 4
+    dim = 4
+    s = siteinds(dim, n)
+    o = rand(dim, dim)
+    os = OpSum()
+    for j in 1:(n - 1)
+      os += copy(o), j, copy(o), j + 1
+    end
+    H1 = MPO(os, s)
+    H2 = ITensor()
+    H2 += op(o, s[1]) * op(o, s[2]) * op("I", s[3]) * op("I", s[4])
+    H2 += op("I", s[1]) * op(o, s[2]) * op(o, s[3]) * op("I", s[4])
+    H2 += op("I", s[1]) * op("I", s[2]) * op(o, s[3]) * op(o, s[4])
+    @test contract(H1) ≈ H2
   end
 end
 
