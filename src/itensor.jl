@@ -646,6 +646,8 @@ const δ = delta
 """
     onehot(ivs...)
     setelt(ivs...)
+    onehot(::Type, ivs...)
+    setelt(::Type, ivs...)
 
 Create an ITensor with all zeros except the specified value,
 which is set to 1.
@@ -656,16 +658,23 @@ i = Index(2,"i")
 A = onehot(i=>2)
 # A[i=>2] == 1, all other elements zero
 
+# Specify the element type
+A = onehot(Float32, i=>2)
+
 j = Index(3,"j")
 B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function onehot(ivs::Pair{<:Index}...)
-  A = emptyITensor(ind.(ivs)...)
-  A[val.(ivs)...] = 1.0
+function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  A = ITensor(eltype, ind.(ivs)...)
+  A[val.(ivs)...] = one(eltype)
   return A
 end
+onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(eltype, ivs...)
+setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(eltype, ivs...)
+
+onehot(ivs::Pair{<:Index}...) = onehot(Float64, ivs...)
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 

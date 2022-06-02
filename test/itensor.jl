@@ -642,6 +642,16 @@ end
     @test T[j => 2, i => 1] ≈ 1.0
     @test T[j => 1, i => 2] ≈ 0.0
     @test T[j => 2, i => 2] ≈ 0.0
+
+    T = onehot(Float32, i => 1)
+    @test eltype(T) === Float32
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
+
+    T = onehot(ComplexF32, i => 1)
+    @test eltype(T) === ComplexF32
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
   end
 
   @testset "add, subtract, and axpy" begin
