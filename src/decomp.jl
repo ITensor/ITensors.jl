@@ -78,6 +78,7 @@ Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
   - `"recursive"` - ITensor's custom svd. Very reliable, but may be slow if high precision is needed. To get an `svd` of a matrix `A`, an eigendecomposition of ``A^{\\dagger} A`` is used to compute `U` and then a `qr` of ``A^{\\dagger} U`` is used to compute `V`. This is performed recursively to compute small singular values.
 - `use_absolute_cutoff::Bool = false`: set if all probability weights below the `cutoff` value should be discarded, rather than the sum of discarded weights.
 - `use_relative_cutoff::Bool = true`: set if the singular values should be normalized for the sake of truncation.
+- `min_blockdim::Int = 0`: for SVD of block-sparse or QN ITensors, require that the number of singular values kept be greater than or equal to this value when possible
 
 See also: [`factorize`](@ref), [`eigen`](@ref)
 """

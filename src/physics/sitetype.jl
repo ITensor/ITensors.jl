@@ -692,7 +692,10 @@ siteind(tag::String, n; kwargs...) = siteind(SiteType(tag), n; kwargs...)
 
 # Special case of `siteind` where integer (dim) provided
 # instead of a tag string
-siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
+#siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
+function siteind(d::Integer, n::Integer; addtags="", kwargs...)
+  return Index(d, "Site,n=$n, $addtags")
+end
 
 #---------------------------------------
 #
@@ -703,12 +706,19 @@ siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
 siteinds(::SiteType, N; kwargs...) = nothing
 
 """
-  siteinds(tag::String, N::Integer; kwargs...)
+    siteinds(tag::String, N::Integer; kwargs...)
 
 Create an array of `N` physical site indices of type `tag`.
 Keyword arguments can be used to specify quantum number conservation,
 see the `space` function corresponding to the site type `tag` for
 supported keyword arguments.
+
+# Example
+
+```julia
+N = 10
+s = siteinds("S=1/2", N; conserve_qns=true)
+```
 """
 function siteinds(tag::String, N::Integer; kwargs...)
   st = SiteType(tag)
@@ -722,7 +732,7 @@ function siteinds(tag::String, N::Integer; kwargs...)
 end
 
 """
-  siteinds(f::Function, N::Integer; kwargs...)
+    siteinds(f::Function, N::Integer; kwargs...)
 
 Create an array of `N` physical site indices where the site type at site `n` is given
 by `f(n)` (`f` should return a string).
@@ -733,6 +743,14 @@ end
 
 # Special case of `siteinds` where integer (dim)
 # provided instead of a tag string
+"""
+    siteinds(d::Integer, N::Integer; kwargs...)
+
+Create an array of `N` site indices, each of dimension `d`.
+
+# Keywords
+- `addtags::String`: additional tags to be added to all indices
+"""
 function siteinds(d::Integer, N::Integer; kwargs...)
   return [siteind(d, n; kwargs...) for n in 1:N]
 end
