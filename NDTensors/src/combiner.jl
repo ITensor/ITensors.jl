@@ -123,6 +123,10 @@ function contract!!(
   return contract!!(R, labelsR, T2, labelsT2, T1, labelsT1)
 end
 
+function contract(T1::DiagTensor, labelsT1, T2::CombinerTensor, labelsT2)
+  return contract(dense(T1), labelsT1, T2, labelsT2)
+end
+
 function show(io::IO, mime::MIME"text/plain", S::Combiner)
   println(io, "Permutation of blocks: ", S.perm)
   return println(io, "Combination of blocks: ", S.comb)

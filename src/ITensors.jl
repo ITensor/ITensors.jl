@@ -88,6 +88,7 @@ using .LazyApply
 #
 include("Ops/Ops.jl")
 using .Ops
+import .Ops: sites, name
 
 #####################################
 # Exports
@@ -178,12 +179,16 @@ include("physics/site_types/tj.jl")
 include("physics/site_types/qudit.jl") # EXPERIMENTAL
 include("physics/site_types/boson.jl") # EXPERIMENTAL
 include("physics/fermions.jl")
-include("physics/autompo.jl")
+include("physics/autompo/matelem.jl")
+include("physics/autompo/qnmatelem.jl")
+include("physics/autompo/opsum_to_mpo_generic.jl")
+include("physics/autompo/opsum_to_mpo.jl")
+include("physics/autompo/opsum_to_mpo_qn.jl")
 
 #####################################
 # Ops to MPO conversions
 #
-include("Ops/ops_mpo.jl")
+# include("Ops/ops_mpo.jl")
 
 #####################################
 # Trotter-Suzuki decomposition
@@ -226,6 +231,11 @@ include("packagecompile/compile.jl")
 # use only
 #
 include("developer_tools.jl")
+
+#####################################
+# Deprecated
+#
+include("Deprecated/Deprecated.jl")
 
 function __init__()
   return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object

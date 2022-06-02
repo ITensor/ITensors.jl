@@ -21,7 +21,7 @@ function rrule(::typeof(MPS), x::Vector{<:ITensor}; kwargs...)
   return y, MPS_pullback
 end
 
-function rrule(::typeof(inner), x1::MPS, x2::MPS; kwargs...)
+function rrule(::typeof(inner), x1::T, x2::T; kwargs...) where {T<:Union{MPS,MPO}}
   if !hassameinds(siteinds, x1, x2)
     error(
       "Taking gradients of `inner(::MPS, ::MPS)` is not supported if the site indices of the input MPS don't match. If you input `inner(x, Ay)` where `Ay` is the result of something like `contract(A::MPO, y::MPS)`, try `inner(x', Ay)` or `inner(x, replaceprime(Ay, 1 => 0))`instead.",
@@ -54,7 +54,7 @@ end
 
 function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs...)
   N = length(x1) + 1
-  apply_dag = x2 isa MPO ? kwargs[:apply_dag] : nothing
+  apply_dag = x2 isa MPO ? get(kwargs, :apply_dag, false) : nothing
 
   # Apply circuit and store intermediates in the forward direction
   x1x2 = Vector{typeof(x2)}(undef, N)

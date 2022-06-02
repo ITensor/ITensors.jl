@@ -68,8 +68,11 @@ and operators `ops` on each site.
 """
 function MPO(::Type{ElT}, sites::Vector{<:Index}, ops::Vector) where {ElT<:Number}
   N = length(sites)
-  ampo = OpSum() + [ops[n] => n for n in 1:N]
-  M = MPO(ampo, sites)
+  os = Prod{Op}()
+  for n in 1:N
+    os *= Op(ops[n], n)
+  end
+  M = MPO(os, sites)
 
   # Currently, OpSum does not output the optimally truncated
   # MPO (see https://github.com/ITensor/ITensors.jl/issues/526)

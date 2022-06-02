@@ -461,6 +461,13 @@ function ITensor(
   return itensor(Dense(data), inds)
 end
 
+# Convert `Adjoint` to `Matrix`
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
+)
+  return ITensor(as, eltype, Matrix(A), inds; kwargs...)
+end
+
 function ITensor(
   as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
 )
@@ -1928,7 +1935,9 @@ B = randomITensor(k,i,j)
 C = A * B # inner product of A and B, all indices contracted
 ```
 """
-(A::ITensor * B::ITensor)::ITensor = contract(A, B)
+function (A::ITensor * B::ITensor)::ITensor
+  return contract(A, B)
+end
 
 function contract(A::ITensor, B::ITensor)::ITensor
   NA::Int = ndims(A)
@@ -2114,10 +2123,8 @@ function ishermitian(T::ITensor; kwargs...)
   return isapprox(T, dag(transpose(T)); kwargs...)
 end
 
-# Trace an ITensor over pairs of indices determined by
-# the prime levels and tags. Indices that are not in pairs
-# are not traced over, corresponding to a "batched" trace.
-function tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
+# Fix for AD
+function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   trpairs = indpairs(T; plev=plev, tags=tags)
   Cᴸ = combiner(first.(trpairs))
   Cᴿ = combiner(last.(trpairs))
@@ -2129,6 +2136,13 @@ function tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
     return Tᶜ[]
   end
   return Tᶜ
+end
+
+# Trace an ITensor over pairs of indices determined by
+# the prime levels and tags. Indices that are not in pairs
+# are not traced over, corresponding to a "batched" trace.
+function tr(T::ITensor; kwargs...)
+  return _tr(T; kwargs...)
 end
 
 """

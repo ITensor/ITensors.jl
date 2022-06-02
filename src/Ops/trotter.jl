@@ -5,6 +5,7 @@ struct Exact <: ExpAlgorithm end
 struct Trotter{Order} <: ExpAlgorithm
   nsteps::Int
 end
+Trotter{Order}() where {Order} = Trotter{Order}(1)
 one(::Trotter{Order}) where {Order} = Trotter{Order}(1)
 
 function exp(o::Sum; alg::ExpAlgorithm=Exact())
@@ -16,13 +17,13 @@ function exp(::Exact, o::Sum)
 end
 
 function exp_one_step(trotter::Trotter{1}, o::Sum)
-  exp_o = Applied(prod, (map(exp, only(o.args)),))
+  exp_o = Applied(prod, (map(exp, reverse(only(o.args))),))
   return exp_o
 end
 
 function exp_one_step(trotter::Trotter{2}, o::Sum)
-  exp_o_order_1 = exp_one_step(Trotter{1}(1), o / 2)
-  exp_o = exp_o_order_1 * reverse(exp_o_order_1)
+  exp_o_order_1 = exp_one_step(Trotter{1}(), o / 2)
+  exp_o = reverse(exp_o_order_1) * exp_o_order_1
   return exp_o
 end
 
