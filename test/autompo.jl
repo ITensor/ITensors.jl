@@ -1,6 +1,19 @@
-using ITensors, Test, Random
+using ITensors, Test, Random, JLD2
 
 include("util.jl")
+
+function components_to_opsum(comps, n; reverse::Bool = true)
+  opsum = OpSum()
+  for (factor, operators, sites) in comps
+    # reverse ordering for compatibility
+    sites = reverse ? (n+1) .- sites : sites
+    sites_and_ops =  [[Matrix(operator), site]
+                      for (operator, site) in zip(operators, sites)]
+    sites_and_ops = [vcat(sites_and_ops...)...]
+    opsum += factor, sites_and_ops...
+  end
+  opsum
+end
 
 function isingMPO(sites)::MPO
   H = MPO(sites)
@@ -1074,6 +1087,18 @@ end
     H2 += op("I", s[1]) * op(o, s[2]) * op(o, s[3]) * op("I", s[4])
     H2 += op("I", s[1]) * op("I", s[2]) * op(o, s[3]) * op(o, s[4])
     @test contract(H1) ≈ H2
+  end
+
+  @testset "Matrix operator representation - hashing bug" begin
+    comps, n, dims = load("opsum_hash_bug.jld2", "comps", "n", "dims")
+    s = [Index(d) for d in dims]
+    for _ in 1:100
+      os = components_to_opsum(comps, n)
+      # Before defining `hash(::Op, h::UInt)`, this
+      # would randomly throw an error due to
+      # some hashing issue in `MPO(::OpSum, ...)`
+      MPO(os, s)
+    end
   end
 end
 
