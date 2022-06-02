@@ -2,7 +2,7 @@ using ITensors, Test, Random, JLD2
 
 include("util.jl")
 
-function components_to_opsum(comps, n; reverse::Bool = true)
+function components_to_opsum(comps, n; reverse::Bool=true)
   opsum = OpSum()
   for (factor, operators, sites) in comps
     # reverse ordering for compatibility
