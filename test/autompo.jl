@@ -11,7 +11,7 @@ function components_to_opsum(comps, n; reverse::Bool=true)
     sites_and_ops = [vcat(sites_and_ops...)...]
     opsum += factor, sites_and_ops...
   end
-  opsum
+  return opsum
 end
 
 function isingMPO(sites)::MPO
