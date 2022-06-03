@@ -197,6 +197,17 @@ include("util.jl")
     @test norm(phic[4]) ≈ 1.0
   end
 
+  @testset "randomMPS with chi>1" for linkdims in [1, 4]
+    phi = randomMPS(Float32, sites; linkdims)
+    @test LinearAlgebra.promote_leaf_eltypes(phi) === Float32
+    @test all(x -> eltype(x) === Float32, phi)
+    @test maxlinkdim(phi) == linkdims
+    phic = randomMPS(ComplexF32, sites; linkdims)
+    @test LinearAlgebra.promote_leaf_eltypes(phic) === ComplexF32
+    @test maxlinkdim(phic) == linkdims
+    @test all(x -> eltype(x) === ComplexF32, phic)
+  end
+
   @testset "inner different MPS" begin
     phi = randomMPS(sites)
     psi = randomMPS(sites)

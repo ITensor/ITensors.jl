@@ -34,9 +34,9 @@ end
 contains the (truncated) density matrix eigenvalue spectrum which is computed during a
 decomposition done by `svd` or `eigen`. In addition stores the truncation error.
 """
-struct Spectrum{VecT<:Union{AbstractVector,Nothing}}
+struct Spectrum{VecT<:Union{AbstractVector,Nothing},ElT<:Real}
   eigs::VecT
-  truncerr::Float64
+  truncerr::ElT
 end
 
 eigs(s::Spectrum) = s.eigs

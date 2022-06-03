@@ -4,7 +4,7 @@ const DiagBlockSparseMatrix{ElT,StoreT,IndsT} = DiagBlockSparseTensor{ElT,2,Stor
 const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 
 function _truncated_blockdim(
-  S::DiagMatrix, docut::Float64; singular_values=false, truncate=true, min_blockdim=0
+  S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=0
 )
   full_dim = diaglength(S)
   !truncate && return full_dim
