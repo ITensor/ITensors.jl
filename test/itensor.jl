@@ -628,6 +628,7 @@ end
     i = Index(2, "i")
 
     T = onehot(i => 1)
+    @test eltype(T) === Float64
     @test T[i => 1] ≈ 1.0
     @test T[i => 2] ≈ 0.0
 
