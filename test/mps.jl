@@ -463,15 +463,15 @@ include("util.jl")
 
     ϕ1 = +(ψ1, ψ2; alg="densitymatrix", cutoff=nothing)
     for j in 2:7
-      @show linkdim(ϕ1, j) == χ1 + χ2
+      @test linkdim(ϕ1, j) == χ1 + χ2
     end
-    @show inner(ϕ1, ψ1) + inner(ϕ1, ψ2) ≈ inner(ϕ1, ϕ1)
+    @test inner(ϕ1, ψ1) + inner(ϕ1, ψ2) ≈ inner(ϕ1, ϕ1)
 
     ϕ2 = +(ψ1, ψ2; alg="directsum")
     for j in 1:8
-      @show linkdim(ϕ2, j) == χ1 + χ2
+      @test linkdim(ϕ2, j) == χ1 + χ2
     end
-    @show inner(ϕ2, ψ1) + inner(ϕ2, ψ2) ≈ inner(ϕ2, ϕ2)
+    @test inner(ϕ2, ψ1) + inner(ϕ2, ψ2) ≈ inner(ϕ2, ϕ2)
   end
 
   @testset "+ MPS with coefficients" begin
