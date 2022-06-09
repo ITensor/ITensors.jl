@@ -1,6 +1,7 @@
 export
   # From external modules
   # LinearAlgebra
+  nullspace,
   tr,
 
   # Modules

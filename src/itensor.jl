@@ -114,6 +114,9 @@ ITensor(as::AliasStyle, is, st::TensorStorage)::ITensor = ITensor(as, st, is)
 ITensor(st::TensorStorage, is)::ITensor = itensor(Tensor(NeverAlias(), st, Tuple(is)))
 ITensor(is, st::TensorStorage)::ITensor = ITensor(NeverAlias(), st, is)
 
+itensor(T::ITensor) = T
+ITensor(T::ITensor) = copy(T)
+
 """
     itensor(args...; kwargs...)
 

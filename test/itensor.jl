@@ -1666,6 +1666,11 @@ end
     @test eltype(As2_f32[1][2]) == new_eltype
     @test eltype(As2_f32[2][1]) == new_eltype
   end
+
+  @testset "nullspace" for (ss, sl, sr) in [([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]),
+                                            (5, 2, 3)]
+
+  end
 end # End Dense ITensor basic functionality
 
 # Disable debug checking once tests are completed
