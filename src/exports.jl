@@ -116,6 +116,7 @@ export
   ITensor,
   # Methods
   ⊙,
+  ⊕,
   addtags!,
   apply,
   Apply,
@@ -135,6 +136,7 @@ export
   δ,
   diagitensor,
   diagITensor,
+  directsum,
   dot,
   eachnzblock,
   firstind,

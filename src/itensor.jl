@@ -2270,16 +2270,71 @@ function directsum_itensors(i::Index, j::Index, ij::Index)
   return D1, D2
 end
 
+function check_directsum_inds(A::ITensor, I, B::ITensor, J)
+  a = uniqueinds(A, I)
+  b = uniqueinds(B, J)
+  if !hassameinds(a, b)
+    error("""In directsum, attemptying to direct sum ITensors A and B with indices:
+
+          $(inds(A))
+
+          and
+
+          $(inds(B))
+
+          over the indices
+
+          $(I)
+
+          and
+
+          $(J)
+
+          The indices not being direct summed must match, however they are
+
+          $a
+
+          and
+
+          $b
+          """)
+  end
+end
+
+function _directsum(A::ITensor, I, B::ITensor, J; tags=["sum$i" for i in 1:length(I)])
+  N = length(I)
+  (N != length(J)) &&
+    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
+  check_directsum_inds(A, I, B, J)
+  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
+  for n in 1:N
+    In = I[n]
+    Jn = J[n]
+    In = dir(A, In) != dir(In) ? dag(In) : In
+    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
+    IJn = directsum(In, Jn; tags=tags[n])
+    D1, D2 = directsum_itensors(In, Jn, IJn)
+    IJ[n] = IJn
+    A *= D1
+    B *= D2
+  end
+  C = A + B
+  return C, IJ
+end
+
+function _directsum(A::ITensor, i::Index, B::ITensor, j::Index; tags="sum")
+  C, _ = _directsum(A, (i,), B, (j,); tags=[tags])
+  return C
+end
+
 function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
-  A, I = A_and_I
-  B, J = B_and_J
-  return directsum(A, B, I, J; kwargs...)
+  return _directsum(A_and_I..., B_and_J...; kwargs...)
 end
 
 """
     directsum(A::Pair{ITensor}, B::Pair{ITensor}, ...; tags)
 
-Given a list of pairs of ITensors and collections of indices, perform a partial
+Given a list of pairs of ITensors and indices, perform a partial
 direct sum of the tensors over the specified indices. Indices that are
 not specified to be summed must match between the tensors.
 
@@ -2301,9 +2356,23 @@ j1 = Index(4, "j1")
 i2 = Index(5, "i2")
 j2 = Index(6, "j2")
 
+A1 = randomITensor(x, i1)
+A2 = randomITensor(x, i2)
+S = directsum(A1 => i1, A2 => i2)
+s = uniqueind(S, A1)
+dim(s) == dim(i1) + dim(i2)
+
+A3 = randomITensor(x, j1)
+S = directsum(A1 => i1, A2 => i2, A3 => j1)
+s = uniqueind(S, A1)
+dim(s) == dim(i1) + dim(i2) + dim(j1)
+
 A1 = randomITensor(i1, x, j1)
 A2 = randomITensor(x, j2, i2)
-S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+S, s = directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+length(s) == 2
+dim(s[1]) == dim(i1) + dim(i2)
+dim(s[2]) == dim(j1) + dim(j2)
 ```
 """
 function directsum(
@@ -2318,25 +2387,21 @@ function directsum(
   )
 end
 
-function directsum(A::ITensor, B::ITensor, I, J; tags)
-  N = length(I)
-  (N != length(J)) &&
-    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
-  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
-  for n in 1:N
-    In = I[n]
-    Jn = J[n]
-    In = dir(A, In) != dir(In) ? dag(In) : In
-    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
-    IJn = directsum(In, Jn; tags=tags[n])
-    D1, D2 = directsum_itensors(In, Jn, IJn)
-    IJ[n] = IJn
-    A *= D1
-    B *= D2
-  end
-  C = A + B
-  return C, IJ
+function directsum(
+  A_and_I::Pair{ITensor,<:Index},
+  B_and_J::Pair{ITensor,<:Index},
+  C_and_K::Pair{ITensor,<:Index},
+  itensor_and_inds...;
+  tags="sum",
+)
+  AB = directsum(A_and_I, B_and_J; tags)
+  IJ = uniqueind(AB, first(A_and_I))
+  return directsum(
+    AB => IJ, C_and_K, itensor_and_inds...; tags
+  )
 end
+
+const ⊕ = directsum
 
 """
     apply(A::ITensor, B::ITensor)
