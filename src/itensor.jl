@@ -2396,9 +2396,7 @@ function directsum(
 )
   AB = directsum(A_and_I, B_and_J; tags)
   IJ = uniqueind(AB, first(A_and_I))
-  return directsum(
-    AB => IJ, C_and_K, itensor_and_inds...; tags
-  )
+  return directsum(AB => IJ, C_and_K, itensor_and_inds...; tags)
 end
 
 const ⊕ = directsum
