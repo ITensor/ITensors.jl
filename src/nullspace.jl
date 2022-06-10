@@ -42,22 +42,31 @@ function blocksparsetensor(blocks::Dict{B,TB}) where {B,TB}
   return T
 end
 
-default_atol() = 0.0
+default_atol(A::AbstractArray) = 0.0
+function default_rtol(A::AbstractArray, atol::Real)
+  return (min(size(A, 1), size(A, 2)) * eps(real(float(one(eltype(A)))))) * iszero(atol)
+end
 
-function _nullspace_hermitian(M::DenseTensor; atol::Real=default_atol())
-  tol = atol
+function _nullspace_hermitian(
+  M::DenseTensor; atol::Real=default_atol(M), rtol::Real=default_rtol(M, atol)
+)
+  # TODO: try this version
   #D, U = eigen(Hermitian(M))
   Dᵢₜ, Uᵢₜ = eigen(itensor(M); ishermitian=true)
   D = tensor(Dᵢₜ)
   U = tensor(Uᵢₜ)
+  tol = max(atol, abs(D[1, 1]) * rtol)
   indstart = sum(d -> abs(d) .> tol, storage(D)) + 1
   indstop = lastindex(U, 2)
   Nb = _getindex(U, :, indstart:indstop)
   return Nb
 end
 
-function _nullspace_hermitian(M::BlockSparseTensor; atol::Real=default_atol())
+function _nullspace_hermitian(
+  M::BlockSparseTensor; atol::Real=default_atol(M), rtol::Real=default_rtol(M, atol)
+)
   tol = atol
+  # TODO: try this version
   # Insert any missing diagonal blocks
   insert_diag_blocks!(M)
   #D, U = eigen(Hermitian(M))
@@ -69,6 +78,7 @@ function _nullspace_hermitian(M::BlockSparseTensor; atol::Real=default_atol())
     bM = Block(bU[1], bU[1])
     bD = Block(bU[2], bU[2])
     # Assume sorted from largest to smallest
+    tol = max(atol, abs(D[bD][1, 1]) * rtol)
     indstart = sum(d -> abs(d) .> tol, storage(D[bD])) + 1
     Ub = getblock_preserve_qns(U, bU)
     indstop = lastindex(Ub, 2)
@@ -79,8 +89,8 @@ function _nullspace_hermitian(M::BlockSparseTensor; atol::Real=default_atol())
   return blocksparsetensor(nullspace_blocks)
 end
 
-function LinearAlgebra.nullspace(M::Hermitian{<:Number,<:Tensor}; atol=default_atol())
-  return _nullspace_hermitian(parent(M); atol)
+function LinearAlgebra.nullspace(M::Hermitian{<:Number,<:Tensor}; kwargs...)
+  return _nullspace_hermitian(parent(M); kwargs...)
 end
 
 #
@@ -124,24 +134,24 @@ function matricize(T::ITensor, left_inds, right_inds)
   return M, CL, CR
 end
 
-function nullspace(::Order{2}, M::ITensor, left_inds, right_inds; atol=default_atol(), tags="n")
+function nullspace(::Order{2}, M::ITensor, left_inds, right_inds; tags="n", kwargs...)
   @assert order(M) == 2
   M² = prime(dag(M), right_inds) * M
   M² = permute(M², right_inds'..., right_inds...)
   M²ₜ = tensor(M²)
-  Nₜ = nullspace(Hermitian(M²ₜ); atol)
-  indsN = (Index(ind(Nₜ, 1); dir=ITensors.In), Index(ind(Nₜ, 2); dir=ITensors.In, tags))
-  N = dag(itensor(ITensors.setinds(Nₜ, indsN)))
+  Nₜ = nullspace(Hermitian(M²ₜ); kwargs...)
+  indsN = (Index(ind(Nₜ, 1); dir=ITensors.Out), Index(ind(Nₜ, 2); dir=ITensors.Out, tags))
+  N = itensor(ITensors.setinds(Nₜ, indsN))
   # Make the index match the input index
   Ñ = replaceinds(N, (ind(N, 1),) => right_inds)
   return Ñ
 end
 
-function nullspace(T::ITensor, is...; atol=default_atol(), tags="n")
+function nullspace(T::ITensor, is...; tags="n", kwargs...)
   M, CL, CR = matricize(T, is...)
   @assert order(M) == 2
   cL = commoninds(M, CL)
   cR = commoninds(M, CR)
-  N₂ = nullspace(Order(2), M, cL, cR; atol, tags)
+  N₂ = nullspace(Order(2), M, cL, cR; tags, kwargs...)
   return N₂ * CR
 end
