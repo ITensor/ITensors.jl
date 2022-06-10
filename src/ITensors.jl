@@ -141,6 +141,7 @@ include("qn/qn.jl")
 include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
+include("nullspace.jl")
 
 #####################################
 # Ops to ITensor conversions

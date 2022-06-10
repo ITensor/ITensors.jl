@@ -1666,6 +1666,26 @@ end
     @test eltype(As2_f32[1][2]) == new_eltype
     @test eltype(As2_f32[2][1]) == new_eltype
   end
+
+  @testset "nullspace $eltype" for (ss, sl, sr) in [
+      ([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]), (5, 2, 3)
+    ],
+    eltype in (Float32, Float64, ComplexF32, ComplexF64),
+    nullspace_kwargs in ((; atol=eps(real(eltype)) * 100), (;))
+
+    s, l, r = Index.((ss, sl, sr), ("s", "l", "r"))
+    A = randomITensor(eltype, dag(l), s, r)
+    N = nullspace(A, dag(l); nullspace_kwargs...)
+    @test Base.eltype(N) === eltype
+    n = uniqueind(N, A)
+    @test op("I", n) ≈ N * dag(prime(N, n))
+    @test hassameinds(N, (s, r, n))
+    @test norm(A * N) ≈ 0 atol = eps(real(eltype)) * 100
+    @test dim(l) + dim(n) == dim((s, r))
+    A′, (rn,) = ITensors.directsum(A => (l,), dag(N) => (n,); tags=["⊕"])
+    @test dim(rn) == dim((s, r))
+    @test norm(A * dag(prime(A, l))) ≈ norm(A * dag(A′))
+  end
 end # End Dense ITensor basic functionality
 
 # Disable debug checking once tests are completed

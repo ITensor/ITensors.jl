@@ -99,6 +99,7 @@ import LinearAlgebra:
   norm,
   normalize,
   normalize!,
+  nullspace,
   qr,
   rmul!,
   svd,
