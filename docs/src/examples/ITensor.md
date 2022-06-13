@@ -479,9 +479,13 @@ has only two indices:
 ```
 The first is the newly made combined Index, which was made for us by
 the `combiner` function and the second is the `j` Index of `T`
-which was not part of the combining process.
+which was not part of the combining process. To access the combined
+Index you can call the `combinedind` function on the combiner:
+```@example combiner
+ci = combinedind(C)
+```
 
-We can visualize the above steps as follows:
+We can visualize all of the steps above as follows:
 ![](combiner_itensor.png)
 
 Combining is not limited to two indices and you can
