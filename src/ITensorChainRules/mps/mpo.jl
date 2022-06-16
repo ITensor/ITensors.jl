@@ -33,6 +33,22 @@ function rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
   return y, contract_pullback
 end
 
+function ChainRulesCore.rrule(::typeof(+), x1::MPO, x2::MPO; kwargs...)
+  y = +(x1, x2; kwargs...)
+  function add_pullback(ȳ)
+    return (NoTangent(), ȳ, ȳ)
+  end
+  return y, add_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(-), x1::MPO, x2::MPO; kwargs...)
+  y = -(x1, x2; kwargs...)
+  function add_pullback(ȳ)
+    return (NoTangent(), ȳ, -ȳ)
+  end
+  return y, add_pullback
+end
+
 function rrule(::typeof(tr), x::MPO; kwargs...)
   y = tr(x; kwargs...)
   function contract_pullback(ȳ)
