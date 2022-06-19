@@ -73,7 +73,7 @@ Sample output:
  3: QN("Sz",-2) => 1
 ```
 
-In the sample output above, note than in addition to the dimension of these indices being 3, each of the three settings of the Index have a unique QN associated to them. The number after the QN on each line is the dimension of that subspace, which is 1 for each subspace of the Index objects above. Note also that `"Sz"` quantum numbers in ITensor are measured in units of ``1/2``, so `QN("Sz",2)` corresponds to ``S^z=1`` in conventional physics units.
+In the sample output above, note that in addition to the dimension of these indices being 3, each of the three settings of the Index have a unique QN associated to them. The number after the QN on each line is the dimension of that subspace, which is 1 for each subspace of the Index objects above. Note also that `"Sz"` quantum numbers in ITensor are measured in units of ``1/2``, so `QN("Sz",2)` corresponds to ``S^z=1`` in conventional physics units.
 
 **Change 2: Initial State**
 
