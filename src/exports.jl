@@ -40,6 +40,7 @@ export
   polar,
   qr,
   svd,
+  diag,
 
   # global_variables.jl
   # Methods
