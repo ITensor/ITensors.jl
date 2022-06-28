@@ -113,6 +113,13 @@ function sorteachterm(os::OpSum, sites)
   for n in eachindex(os)
     t = os[n]
     Nt = length(t)
+
+    if maximum(ITensors.sites(t)) > length(sites)
+      error(
+        "The OpSum contains a term $t that extends beyond the number of sites $(length(sites)).",
+      )
+    end
+
     prevsite = N + 1 #keep track of whether we are switching
     #to a new site to make sure F string
     #is only placed at most once for each site

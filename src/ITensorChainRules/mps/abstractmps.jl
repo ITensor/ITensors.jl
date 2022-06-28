@@ -87,7 +87,7 @@ function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs.
           # apply U on one side of the MPO
           if apply_dag
             ϕ̃ = swapprime(x1x2dag[n], 0 => 1)
-            ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag=false)
+            ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag=false, kwargs...)
             ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
             ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
             ξ̃ = 2 * dag(x1dag_ȳ[n + 1])'
@@ -97,7 +97,7 @@ function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs.
             ξ̃ = mapprime(x1dag_ȳ[n + 1], 0 => 2)
           end
         end
-        x̄1[n] = _contract(ITensor, ξ̃, ϕ̃)
+        x̄1[n] = _contract(ITensor, ξ̃, ϕ̃; kwargs...)
       else
         s = inds(x1[n])
         x̄1[n] = itensor(zeros(dim.(s)), s...)

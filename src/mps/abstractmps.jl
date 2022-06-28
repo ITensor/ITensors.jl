@@ -1084,6 +1084,9 @@ function _log_or_not_dot(
   end
 
   if loginner
+    if !isreal(O[]) || real(O[]) < 0
+      log_inner_tot += log(complex(O[]))
+    end
     return log_inner_tot
   end
 
