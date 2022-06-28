@@ -52,15 +52,14 @@ function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
   return contract(ψmat, ϕmat; kwargs...)
 end
 
-function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs...)
+function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; apply_dag=false, kwargs...)
   N = length(x1) + 1
-  apply_dag = x2 isa MPO ? get(kwargs, :apply_dag, false) : nothing
 
   # Apply circuit and store intermediates in the forward direction
   x1x2 = Vector{typeof(x2)}(undef, N)
   x1x2[1] = x2
   for n in 2:N
-    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, kwargs...)
+    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, apply_dag, kwargs...)
   end
   y = x1x2[end]
 
@@ -72,7 +71,7 @@ function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs.
     x1dag_ȳ = Vector{typeof(x2)}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
-      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, kwargs...)
+      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, apply_dag, kwargs...)
     end
 
     x̄1 = similar(x1)
