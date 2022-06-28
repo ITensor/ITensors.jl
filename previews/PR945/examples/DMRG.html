@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>DMRG Examples · ITensors.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script><link href="../assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../index.html"><img src="../assets/logo.png" alt="ITensors.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../index.html">ITensors.jl</a></span></div><form class="docs-search" action="../search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../index.html">Introduction</a></li><li><span class="tocitem">Getting Started with ITensor</span><ul><li><a class="tocitem" href="../getting_started/Installing.html">Installing Julia and ITensor</a></li><li><a class="tocitem" href="../getting_started/RunningCodes.html">Running ITensor and Julia Codes</a></li><li><a class="tocitem" href="../getting_started/DebugChecks.html">Enabling Debug Checks</a></li><li><a class="tocitem" href="../getting_started/NextSteps.html">Next Steps</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="../tutorials/DMRG.html">DMRG</a></li><li><a class="tocitem" href="../tutorials/QN_DMRG.html">Quantum Number Conserving DMRG</a></li><li><a class="tocitem" href="../tutorials/MPSTimeEvolution.html">MPS Time Evolution</a></li></ul></li><li><span class="tocitem">Code Examples</span><ul><li><a class="tocitem" href="ITensor.html">ITensor Examples</a></li><li><a class="tocitem" href="MPSandMPO.html">MPS and MPO Examples</a></li><li class="is-active"><a class="tocitem" href="DMRG.html">DMRG Examples</a><ul class="internal"><li><a class="tocitem" href="#Perform-a-basic-DMRG-calculation"><span>Perform a basic DMRG calculation</span></a></li><li><a class="tocitem" href="#Using-a-Custom-Observer-for-DMRG"><span>Using a Custom Observer for DMRG</span></a></li><li><a class="tocitem" href="#DMRG-Calculation-with-Mixed-Local-Hilbert-Space-Types"><span>DMRG Calculation with Mixed Local Hilbert Space Types</span></a></li><li><a class="tocitem" href="#Make-a-2D-Hamiltonian-for-DMRG"><span>Make a 2D Hamiltonian for DMRG</span></a></li><li><a class="tocitem" href="#Compute-excited-states-with-DMRG"><span>Compute excited states with DMRG</span></a></li></ul></li><li><a class="tocitem" href="Physics.html">Physics (SiteType) System Examples</a></li></ul></li><li><span class="tocitem">Documentation</span><ul><li><a class="tocitem" href="../IndexType.html">Index</a></li><li><a class="tocitem" href="../IndexSetType.html">Index collections</a></li><li><a class="tocitem" href="../ITensorType.html">ITensor</a></li><li><a class="tocitem" href="../MPSandMPO.html">MPS and MPO</a></li><li><a class="tocitem" href="../QN.html">QN</a></li><li><a class="tocitem" href="../SiteType.html">SiteType and op, state, val functions</a></li><li><a class="tocitem" href="../IncludedSiteTypes.html">SiteTypes Included with ITensor</a></li><li><input class="collapse-toggle" id="menuitem-5-8" type="checkbox"/><label class="tocitem" for="menuitem-5-8"><span class="docs-label">DMRG</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../DMRG.html">DMRG</a></li><li><a class="tocitem" href="../Sweeps.html">Sweeps</a></li><li><a class="tocitem" href="../ProjMPO.html">ProjMPO</a></li><li><a class="tocitem" href="../ProjMPOSum.html">ProjMPOSum</a></li><li><a class="tocitem" href="../Observer.html">Observer System for DMRG</a></li><li><a class="tocitem" href="../DMRGObserver.html">DMRGObserver</a></li></ul></li><li><a class="tocitem" href="../OpSum.html">OpSum (AutoMPO)</a></li></ul></li><li><span class="tocitem">Frequently Asked Questions</span><ul><li><a class="tocitem" href="../faq/JuliaAndCpp.html">Programming Language (Julia, C++, ...) FAQs</a></li><li><a class="tocitem" href="../faq/DMRG.html">DMRG FAQs</a></li><li><a class="tocitem" href="../faq/Development.html">ITensor Development FAQs</a></li><li><a class="tocitem" href="../faq/RelationshipToOtherLibraries.html">Relationship of ITensor to other tensor libraries FAQs</a></li><li><a class="tocitem" href="../faq/JuliaPkg.html">Julia Package Manager FAQs</a></li></ul></li><li><span class="tocitem">Upgrade guides</span><ul><li><a class="tocitem" href="../UpgradeGuide_0.1_to_0.2.html">Upgrading from 0.1 to 0.2</a></li></ul></li><li><a class="tocitem" href="../Einsum.html">ITensor indices and Einstein notation</a></li><li><span class="tocitem">Advanced usage guide</span><ul><li><a class="tocitem" href="../AdvancedUsageGuide.html">Advanced usage guide</a></li><li><a class="tocitem" href="../Multithreading.html">Multithreading</a></li><li><a class="tocitem" href="../QNTricks.html">Symmetric (QN conserving) tensors: background and usage</a></li><li><a class="tocitem" href="../CodeTiming.html">Timing and profiling</a></li><li><a class="tocitem" href="../ContractionSequenceOptimization.html">Contraction sequence optimization</a></li><li><a class="tocitem" href="../HDF5FileFormats.html">HDF5 File Formats</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Code Examples</a></li><li class="is-active"><a href="DMRG.html">DMRG Examples</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="DMRG.html">DMRG Examples</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ITensor/ITensors.jl/blob/master/docs/src/examples/DMRG.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="DMRG-Code-Examples"><a class="docs-heading-anchor" href="#DMRG-Code-Examples">DMRG Code Examples</a><a id="DMRG-Code-Examples-1"></a><a class="docs-heading-anchor-permalink" href="#DMRG-Code-Examples" title="Permalink"></a></h1><h2 id="Perform-a-basic-DMRG-calculation"><a class="docs-heading-anchor" href="#Perform-a-basic-DMRG-calculation">Perform a basic DMRG calculation</a><a id="Perform-a-basic-DMRG-calculation-1"></a><a class="docs-heading-anchor-permalink" href="#Perform-a-basic-DMRG-calculation" title="Permalink"></a></h2><p>Because tensor indices in ITensor have unique identities, before we can make a Hamiltonian or a wavefunction we need to construct a &quot;site set&quot; which will hold the site indices defining the physical Hilbert space:</p><pre><code class="language-julia">N = 100
+sites = siteinds(&quot;S=1&quot;,N)</code></pre><p>Here we have chosen to create a Hilbert space of N spin 1 sites. The string &quot;S=1&quot; denotes a special Index tag which hooks into a system that knows &quot;S=1&quot; indices have a dimension of 3 and how to create common physics operators like &quot;Sz&quot; for them.</p><p>Next we&#39;ll make our Hamiltonian matrix product operator (MPO). A very  convenient way to do this is to use the OpSum helper type which lets  us input a Hamiltonian (or any sum of local operators) in similar notation to pencil-and-paper notation:</p><pre><code class="language-julia">ampo = OpSum()
+for j=1:N-1
+  ampo += 0.5,&quot;S+&quot;,j,&quot;S-&quot;,j+1
+  ampo += 0.5,&quot;S-&quot;,j,&quot;S+&quot;,j+1
+  ampo += &quot;Sz&quot;,j,&quot;Sz&quot;,j+1
+end
+H = MPO(ampo,sites)</code></pre><p>In the last line above we convert the OpSum helper object to an actual MPO.</p><p>Before beginning the calculation, we need to specify how many DMRG sweeps to do and what schedule we would like for the parameters controlling the accuracy. These parameters are stored within a sweeps object:</p><pre><code class="language-julia">sweeps = Sweeps(5) # number of sweeps is 5
+maxdim!(sweeps,10,20,100,100,200) # gradually increase states kept
+cutoff!(sweeps,1E-10) # desired truncation error</code></pre><p>The random starting wavefunction <code>psi0</code> must be defined in the same Hilbert space as the Hamiltonian, so we construct it using the same collection of site indices:</p><pre><code class="language-julia">psi0 = randomMPS(sites,2)</code></pre><p>Here we have made a random MPS of bond dimension 2. We could have used a random product state instead, but choosing a slightly larger bond dimension can help DMRG avoid getting stuck in local minima. We could also set psi to some specific initial state using the  function <code>productMPS</code>, which is actually required if we were conserving QNs.</p><p>Finally, we are ready to call DMRG:</p><pre><code class="language-julia">energy,psi = dmrg(H,psi0,sweeps)</code></pre><p>When the algorithm is done, it returns the ground state energy as the variable <code>energy</code> and an MPS  approximation to the ground state as the variable <code>psi</code>.</p><p>Below you can find a complete working code that includes all of these steps:</p><pre><code class="language-julia">using ITensors
+
+let
+  N = 100
+  sites = siteinds(&quot;S=1&quot;,N)
+
+  ampo = OpSum()
+  for j=1:N-1
+    ampo += 0.5,&quot;S+&quot;,j,&quot;S-&quot;,j+1
+    ampo += 0.5,&quot;S-&quot;,j,&quot;S+&quot;,j+1
+    ampo += &quot;Sz&quot;,j,&quot;Sz&quot;,j+1
+  end
+  H = MPO(ampo,sites)
+
+  sweeps = Sweeps(5) # number of sweeps is 5
+  maxdim!(sweeps,10,20,100,100,200) # gradually increase states kept
+  cutoff!(sweeps,1E-10) # desired truncation error
+
+  psi0 = randomMPS(sites,2)
+
+  energy,psi = dmrg(H,psi0,sweeps)
+
+  return
+end</code></pre><h2 id="Using-a-Custom-Observer-for-DMRG"><a class="docs-heading-anchor" href="#Using-a-Custom-Observer-for-DMRG">Using a Custom Observer for DMRG</a><a id="Using-a-Custom-Observer-for-DMRG-1"></a><a class="docs-heading-anchor-permalink" href="#Using-a-Custom-Observer-for-DMRG" title="Permalink"></a></h2><p>An Observer is any object which can be used to perform custom measurements throughout a DMRG calculation and to stop a DMRG calculation early. Because an Observer has access to the entire wavefunction at every step, a wide range of customization is possible.</p><p>For detailed examples of making custom Observers, see the <a href="../Observer.html#observer">Observer</a> section of the documentation.</p><h2 id="DMRG-Calculation-with-Mixed-Local-Hilbert-Space-Types"><a class="docs-heading-anchor" href="#DMRG-Calculation-with-Mixed-Local-Hilbert-Space-Types">DMRG Calculation with Mixed Local Hilbert Space Types</a><a id="DMRG-Calculation-with-Mixed-Local-Hilbert-Space-Types-1"></a><a class="docs-heading-anchor-permalink" href="#DMRG-Calculation-with-Mixed-Local-Hilbert-Space-Types" title="Permalink"></a></h2><p>The following fully-working example shows how to set up a calculation mixing S=1/2 and S=1 spins on every other site of a 1D system. The  Hamiltonian involves Heisenberg spin interactions with adjustable couplings between sites of the same spin or different spin.</p><p>Note that the only difference from a regular ITensor DMRG calculation is that the <code>sites</code> array has Index objects which alternate in dimension and in which physical tag type they carry, whether <code>&quot;S=1/2&quot;</code> or <code>&quot;S=1&quot;</code>. (Try printing out the sites array to see!) These tags tell the OpSum system which local operators to use for these sites when building the Hamiltonian MPO.</p><pre><code class="language-julia">using ITensors
+
+let
+  N = 100
+
+  # Make an array of N Index objects with alternating
+  # &quot;S=1/2&quot; and &quot;S=1&quot; tags on odd versus even sites
+  # (The first argument n-&gt;isodd(n) ... is an 
+  # on-the-fly function mapping integers to strings)
+  sites = siteinds(n-&gt;isodd(n) ? &quot;S=1/2&quot; : &quot;S=1&quot;,N)
+
+  # Couplings between spin-half and
+  # spin-one sites:
+  Jho = 1.0 # half-one coupling
+  Jhh = 0.5 # half-half coupling
+  Joo = 0.5 # one-one coupling
+
+  ampo = OpSum()
+  for j=1:N-1
+    ampo += 0.5*Jho,&quot;S+&quot;,j,&quot;S-&quot;,j+1
+    ampo += 0.5*Jho,&quot;S-&quot;,j,&quot;S+&quot;,j+1
+    ampo += Jho,&quot;Sz&quot;,j,&quot;Sz&quot;,j+1
+  end
+  for j=1:2:N-2
+    ampo += 0.5*Jhh,&quot;S+&quot;,j,&quot;S-&quot;,j+2
+    ampo += 0.5*Jhh,&quot;S-&quot;,j,&quot;S+&quot;,j+2
+    ampo += Jhh,&quot;Sz&quot;,j,&quot;Sz&quot;,j+2
+  end
+  for j=2:2:N-2
+    ampo += 0.5*Joo,&quot;S+&quot;,j,&quot;S-&quot;,j+2
+    ampo += 0.5*Joo,&quot;S-&quot;,j,&quot;S+&quot;,j+2
+    ampo += Joo,&quot;Sz&quot;,j,&quot;Sz&quot;,j+2
+  end
+  H = MPO(ampo,sites)
+
+  sweeps = Sweeps(10)
+  maxdim!(sweeps,10,10,20,40,80,100,140,180,200)
+  cutoff!(sweeps,1E-8)
+
+  psi0 = randomMPS(sites,4)
+
+  energy,psi = dmrg(H,psi0,sweeps)
+
+  return
+end</code></pre><h2 id="Make-a-2D-Hamiltonian-for-DMRG"><a class="docs-heading-anchor" href="#Make-a-2D-Hamiltonian-for-DMRG">Make a 2D Hamiltonian for DMRG</a><a id="Make-a-2D-Hamiltonian-for-DMRG-1"></a><a class="docs-heading-anchor-permalink" href="#Make-a-2D-Hamiltonian-for-DMRG" title="Permalink"></a></h2><p>You can use the OpSum system to make 2D Hamiltonians much in the same way you make 1D Hamiltonians: by looping over all of the bonds and adding the interactions on these bonds to the OpSum. </p><p>To help with the logic of 2D lattices, ITensor pre-defines some helper functions which return an array of bonds. Each bond object has an &quot;s1&quot; field and an &quot;s2&quot; field which are the integers numbering the two sites the bond connects. (You can view the source for these functions at <a href="https://github.com/ITensor/ITensors.jl/blob/main/src/physics/lattices.jl">this link</a>.)</p><p>The two provided functions currently are <code>square_lattice</code> and  <code>triangular_lattice</code>. It is not hard to write your own similar lattice functions as all they have to do is define an array of <code>ITensors.LatticeBond</code> structs or even a custom struct type you wish to define. We welcome any user contributions of other lattices that ITensor does not currently offer.</p><p>Each lattice function takes an optional named argument &quot;yperiodic&quot; which lets you request that the lattice should have periodic boundary conditions around the y direction, making the geometry a cylinder.</p><p><strong>Full example code:</strong></p><pre><code class="language-julia">using ITensors
+
+let
+  Ny = 6
+  Nx = 12
+
+  N = Nx*Ny
+
+  sites = siteinds(&quot;S=1/2&quot;, N;
+                   conserve_qns = true)
+
+  # Obtain an array of LatticeBond structs
+  # which define nearest-neighbor site pairs
+  # on the 2D square lattice (wrapped on a cylinder)
+  lattice = square_lattice(Nx, Ny; yperiodic = false)
+
+  # Define the Heisenberg spin Hamiltonian on this lattice
+  ampo = OpSum()
+  for b in lattice
+    ampo .+= 0.5, &quot;S+&quot;, b.s1, &quot;S-&quot;, b.s2
+    ampo .+= 0.5, &quot;S-&quot;, b.s1, &quot;S+&quot;, b.s2
+    ampo .+=      &quot;Sz&quot;, b.s1, &quot;Sz&quot;, b.s2
+  end
+  H = MPO(ampo,sites)
+
+  state = [isodd(n) ? &quot;Up&quot; : &quot;Dn&quot; for n=1:N]
+  # Initialize wavefunction to a random MPS
+  # of bond-dimension 10 with same quantum
+  # numbers as `state`
+  psi0 = randomMPS(sites,state,20)
+
+  sweeps = Sweeps(10)
+  maxdim!(sweeps,20,60,100,100,200,400,800)
+  cutoff!(sweeps,1E-8)
+  @show sweeps
+
+  energy,psi = dmrg(H,psi0,sweeps)
+
+  return
+end</code></pre><h2 id="Compute-excited-states-with-DMRG"><a class="docs-heading-anchor" href="#Compute-excited-states-with-DMRG">Compute excited states with DMRG</a><a id="Compute-excited-states-with-DMRG-1"></a><a class="docs-heading-anchor-permalink" href="#Compute-excited-states-with-DMRG" title="Permalink"></a></h2><p>ITensor DMRG accepts additional MPS wavefunctions as a optional, extra argument. These additional &#39;penalty states&#39; are provided as an array of MPS just  after the Hamiltonian, like this:</p><pre><code class="language-julia">energy,psi3 = dmrg(H,[psi0,psi1,psi2],psi3_init,sweeps)</code></pre><p>Here the penalty states are <code>[psi0,psi1,psi2]</code>.  When these are provided, the DMRG code minimizes the energy of the current MPS while also reducing its overlap  (inner product) with the previously provided MPS. If these overlaps become sufficiently small, then the computed MPS is an excited state. So by finding the ground state, then providing it to DMRG as a &quot;penalty state&quot; or previous state one can compute the first excited state. Then providing both of these, one can get the second excited state, etc.</p><p>A  keyword argument called <code>weight</code> can also be provided to the <code>dmrg</code> function when penalizing overlaps to previous states. The  <code>weight</code> parameter is multiplied by the overlap with the previous states, so sets the size of the penalty. It should be chosen at least as large as the (estimated) gap between the ground and first excited states. Otherwise the optimal value of the weight parameter is not so obvious, and it is best to try various weights during initial test calculations.</p><p>Note that when the system has conserved quantum numbers, a superior way to find excited states can be to find ground states of quantum number (or symmetry) sectors other than the one containing the absolute ground state. In that context, the penalty method used below is a way to find higher excited states within the same quantum number sector.</p><p><strong>Full Example code:</strong></p><pre><code class="language-julia">using ITensors
+
+let
+  N = 20
+
+  sites = siteinds(&quot;S=1/2&quot;,N)
+
+  h = 4.0
+  
+  weight = 20*h # use a large weight
+                # since gap is expected to be large
+
+
+  #
+  # Use the OpSum feature to create the
+  # transverse field Ising model
+  #
+  # Factors of 4 and 2 are to rescale
+  # spin operators into Pauli matrices
+  #
+  os = OpSum()
+  for j=1:N-1
+    os += -4,&quot;Sz&quot;,j,&quot;Sz&quot;,j+1
+  end
+  for j=1:N
+    os += -2*h,&quot;Sx&quot;,j;
+  end
+  H = MPO(os,sites)
+
+
+  #
+  # Make sure to do lots of sweeps
+  # when finding excited states
+  #
+  sweeps = Sweeps(30)
+  maxdim!(sweeps,10,10,10,20,20,40,80,100,200,200)
+  cutoff!(sweeps,1E-8)
+  noise!(sweeps,1E-6)
+
+  #
+  # Compute the ground state psi0
+  #
+  psi0_init = randomMPS(sites,linkdims=2)
+  energy0,psi0 = dmrg(H,psi0_init,sweeps)
+
+  println()
+
+  #
+  # Compute the first excited state psi1
+  #
+  psi1_init = randomMPS(sites,linkdims=2)
+  energy1,psi1 = dmrg(H,[psi0],psi1_init,sweeps; weight)
+
+  # Check psi1 is orthogonal to psi0
+  @show inner(psi1,psi0)
+
+
+  #
+  # The expected gap of the transverse field Ising
+  # model is given by Eg = 2*|h-1|
+  #
+  # (The DMRG gap will have finite-size corrections)
+  #
+  println(&quot;DMRG energy gap = &quot;,energy1-energy0);
+  println(&quot;Theoretical gap = &quot;,2*abs(h-1));
+
+  println()
+
+  #
+  # Compute the second excited state psi2
+  #
+  psi2_init = randomMPS(sites,linkdims=2)
+  energy2,psi2 = dmrg(H,[psi0,psi1],psi2_init,sweeps;weight)
+
+  # Check psi2 is orthogonal to psi0 and psi1
+  @show inner(psi2,psi0)
+  @show inner(psi2,psi1)
+
+  return
+end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="MPSandMPO.html">« MPS and MPO Examples</a><a class="docs-footer-nextpage" href="Physics.html">Physics (SiteType) System Examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Tuesday 28 June 2022 20:52">Tuesday 28 June 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
