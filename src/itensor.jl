@@ -2380,9 +2380,7 @@ function directsum(
   itensor_and_inds...;
   tags=["sum$i" for i in 1:length(last(A_and_I))],
 )
-  return directsum(
-    directsum(A_and_I, B_and_J; tags), C_and_K, itensor_and_inds...; tags
-  )
+  return directsum(directsum(A_and_I, B_and_J; tags), C_and_K, itensor_and_inds...; tags)
 end
 
 const ⊕ = directsum
