@@ -2331,6 +2331,14 @@ function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
   return _directsum(A_and_I..., B_and_J...; kwargs...)
 end
 
+function default_directsum_tags(A_and_I::Pair{ITensor})
+  return ["sum$i" for i in 1:length(last(A_and_I))]
+end
+
+function default_directsum_tags(A_and_I::Pair{ITensor,<:Index})
+  return "sum"
+end
+
 """
     directsum(A::Pair{ITensor}, B::Pair{ITensor}, ...; tags)
 
@@ -2378,7 +2386,7 @@ function directsum(
   B_and_J::Pair{ITensor},
   C_and_K::Pair{ITensor},
   itensor_and_inds...;
-  tags=["sum$i" for i in 1:length(last(A_and_I))],
+  tags=default_directsum_tags(A_and_I),
 )
   return directsum(directsum(A_and_I, B_and_J; tags), C_and_K, itensor_and_inds...; tags)
 end
