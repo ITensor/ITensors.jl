@@ -2319,12 +2319,12 @@ function _directsum(A::ITensor, I, B::ITensor, J; tags=["sum$i" for i in 1:lengt
     B *= D2
   end
   C = A + B
-  return C, IJ
+  return C => IJ
 end
 
 function _directsum(A::ITensor, i::Index, B::ITensor, j::Index; tags="sum")
-  C, _ = _directsum(A, (i,), B, (j,); tags=[tags])
-  return C
+  C, (ij,) = _directsum(A, (i,), B, (j,); tags=[tags])
+  return C => ij
 end
 
 function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
@@ -2358,13 +2358,11 @@ j2 = Index(6, "j2")
 
 A1 = randomITensor(x, i1)
 A2 = randomITensor(x, i2)
-S = directsum(A1 => i1, A2 => i2)
-s = uniqueind(S, A1)
+S, s = directsum(A1 => i1, A2 => i2)
 dim(s) == dim(i1) + dim(i2)
 
 A3 = randomITensor(x, j1)
-S = directsum(A1 => i1, A2 => i2, A3 => j1)
-s = uniqueind(S, A1)
+S, s = directsum(A1 => i1, A2 => i2, A3 => j1)
 dim(s) == dim(i1) + dim(i2) + dim(j1)
 
 A1 = randomITensor(i1, x, j1)
@@ -2383,20 +2381,8 @@ function directsum(
   tags=["sum$i" for i in 1:length(last(A_and_I))],
 )
   return directsum(
-    Pair(directsum(A_and_I, B_and_J; tags)...), C_and_K, itensor_and_inds...; tags
+    directsum(A_and_I, B_and_J; tags), C_and_K, itensor_and_inds...; tags
   )
-end
-
-function directsum(
-  A_and_I::Pair{ITensor,<:Index},
-  B_and_J::Pair{ITensor,<:Index},
-  C_and_K::Pair{ITensor,<:Index},
-  itensor_and_inds...;
-  tags="sum",
-)
-  AB = directsum(A_and_I, B_and_J; tags)
-  IJ = uniqueind(AB, first(A_and_I))
-  return directsum(AB => IJ, C_and_K, itensor_and_inds...; tags)
 end
 
 const ⊕ = directsum

@@ -1634,25 +1634,21 @@ end
     B = randomITensor(i1, i2, k)
     C = randomITensor(i1, i2, l)
 
-    S = directsum(A => j, B => k)
-    s = uniqueind(S, A)
+    S, s = directsum(A => j, B => k)
     @test dim(s) == dim(j) + dim(k)
     @test hassameinds(S, (i1, i2, s))
 
-    S = (A => j) ⊕ (B => k)
-    s = uniqueind(S, A)
+    S, s = (A => j) ⊕ (B => k)
     @test dim(s) == dim(j) + dim(k)
     @test hassameinds(S, (i1, i2, s))
 
-    S = directsum(A => j, B => k, C => l)
-    s = uniqueind(S, A)
+    S, s = directsum(A => j, B => k, C => l)
     @test dim(s) == dim(j) + dim(k) + dim(l)
     @test hassameinds(S, (i1, i2, s))
 
     @test_throws ErrorException directsum(A => i2, B => i2)
 
-    S, ss = directsum(A => (j,), B => (k,))
-    s = only(ss)
+    S, (s,) = directsum(A => (j,), B => (k,))
     @test s == uniqueind(S, A)
     @test dim(s) == dim(j) + dim(k)
     @test hassameinds(S, (i1, i2, s))
