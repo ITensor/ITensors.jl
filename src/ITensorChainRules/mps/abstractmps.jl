@@ -73,7 +73,9 @@ function rrule(
     x1dag_ȳ = Vector{typeof(x2)}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
-      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, apply_dag, kwargs...)
+      x1dag_ȳ[n] = apply(
+        x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, apply_dag, kwargs...
+      )
     end
 
     x̄1 = similar(x1)
