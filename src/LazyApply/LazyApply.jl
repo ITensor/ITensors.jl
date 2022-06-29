@@ -195,6 +195,10 @@ function (a1::Sum{Scaled{C,Prod{A}}} - a2::Prod{A}) where {C,A}
   return a1 + (-a2)
 end
 
+function (a1::Sum{Scaled{C1,Prod{A}}} - a2::Scaled{C2,Prod{A}}) where {C1,C2,A}
+  return a1 + (-a2)
+end
+
 function (a1::Sum{A} + a2::Scaled{C,Prod{A}}) where {C,A}
   return Sum{Scaled{C,Prod{A}}}() + a1 + a2
 end

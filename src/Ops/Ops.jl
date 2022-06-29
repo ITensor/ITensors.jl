@@ -31,7 +31,8 @@ function split(f, t::Tuple)
   return s
 end
 
-## XXX: Very long compile times
+## XXX: Very long compile times:
+## https://github.com/JuliaLang/julia/issues/45545
 ##
 ## julia> using ITensors
 ## 
