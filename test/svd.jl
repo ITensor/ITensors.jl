@@ -167,6 +167,18 @@ include("util.jl")
     @test_throws ErrorException factorize(A)
   end
 
+  @testset "svd with single precision element type" for eltype in (Float32, ComplexF32),
+    space in (2, [QN(0) => 1, QN(1) => 1])
+
+    i = Index(space)
+    A = randomITensor(eltype, i', dag(i))
+    @test Base.eltype(A) === eltype
+    U, S, V = svd(A, i'; maxdim=1)
+    @test Base.eltype(U) === eltype
+    @test Base.eltype(S) === real(eltype)
+    @test Base.eltype(V) === eltype
+  end
+
   # TODO: remove this test, it takes a long time
   ## @testset "Ill-conditioned matrix" begin
   ##   d = 5000

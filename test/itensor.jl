@@ -628,6 +628,7 @@ end
     i = Index(2, "i")
 
     T = onehot(i => 1)
+    @test eltype(T) === Float64
     @test T[i => 1] ≈ 1.0
     @test T[i => 2] ≈ 0.0
 
@@ -642,6 +643,16 @@ end
     @test T[j => 2, i => 1] ≈ 1.0
     @test T[j => 1, i => 2] ≈ 0.0
     @test T[j => 2, i => 2] ≈ 0.0
+
+    T = onehot(Float32, i => 1)
+    @test eltype(T) === Float32
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
+
+    T = onehot(ComplexF32, i => 1)
+    @test eltype(T) === ComplexF32
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
   end
 
   @testset "add, subtract, and axpy" begin
@@ -1616,6 +1627,49 @@ end
         end
       end
     end
+
+    i1, i2, j, k, l = Index.((2, 3, 4, 5, 6), ("i1", "i2", "j", "k", "l"))
+
+    A = randomITensor(i1, i2, j)
+    B = randomITensor(i1, i2, k)
+    C = randomITensor(i1, i2, l)
+
+    S, s = directsum(A => j, B => k)
+    @test dim(s) == dim(j) + dim(k)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, s = (A => j) ⊕ (B => k)
+    @test dim(s) == dim(j) + dim(k)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, s = directsum(A => j, B => k, C => l)
+    @test dim(s) == dim(j) + dim(k) + dim(l)
+    @test hassameinds(S, (i1, i2, s))
+
+    @test_throws ErrorException directsum(A => i2, B => i2)
+
+    S, (s,) = directsum(A => (j,), B => (k,))
+    @test s == uniqueind(S, A)
+    @test dim(s) == dim(j) + dim(k)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, ss = directsum(A => (i2, j), B => (i2, k))
+    @test length(ss) == 2
+    @test dim(ss[1]) == dim(i2) + dim(i2)
+    @test hassameinds(S, (i1, ss...))
+
+    S, ss = directsum(A => (j,), B => (k,), C => (l,))
+    s = only(ss)
+    @test s == uniqueind(S, A)
+    @test dim(s) == dim(j) + dim(k) + dim(l)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, ss = directsum(A => (i2, i1, j), B => (i1, i2, k), C => (i1, i2, l))
+    @test length(ss) == 3
+    @test dim(ss[1]) == dim(i2) + dim(i1) + dim(i1)
+    @test dim(ss[2]) == dim(i1) + dim(i2) + dim(i2)
+    @test dim(ss[3]) == dim(j) + dim(k) + dim(l)
+    @test hassameinds(S, ss)
   end
 
   @testset "ishermitian" begin
@@ -1654,6 +1708,26 @@ end
     @test eltype(As2_f32[1][1]) == new_eltype
     @test eltype(As2_f32[1][2]) == new_eltype
     @test eltype(As2_f32[2][1]) == new_eltype
+  end
+
+  @testset "nullspace $eltype" for (ss, sl, sr) in [
+      ([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]), (5, 2, 3)
+    ],
+    eltype in (Float32, Float64, ComplexF32, ComplexF64),
+    nullspace_kwargs in ((; atol=eps(real(eltype)) * 100), (;))
+
+    s, l, r = Index.((ss, sl, sr), ("s", "l", "r"))
+    A = randomITensor(eltype, dag(l), s, r)
+    N = nullspace(A, dag(l); nullspace_kwargs...)
+    @test Base.eltype(N) === eltype
+    n = uniqueind(N, A)
+    @test op("I", n) ≈ N * dag(prime(N, n))
+    @test hassameinds(N, (s, r, n))
+    @test norm(A * N) ≈ 0 atol = eps(real(eltype)) * 100
+    @test dim(l) + dim(n) == dim((s, r))
+    A′, (rn,) = ITensors.directsum(A => (l,), dag(N) => (n,); tags=["⊕"])
+    @test dim(rn) == dim((s, r))
+    @test norm(A * dag(prime(A, l))) ≈ norm(A * dag(A′))
   end
 end # End Dense ITensor basic functionality
 

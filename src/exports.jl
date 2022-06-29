@@ -1,6 +1,7 @@
 export
   # From external modules
   # LinearAlgebra
+  nullspace,
   tr,
 
   # Modules
@@ -39,6 +40,7 @@ export
   polar,
   qr,
   svd,
+  diag,
 
   # global_variables.jl
   # Methods
@@ -115,6 +117,7 @@ export
   ITensor,
   # Methods
   ⊙,
+  ⊕,
   addtags!,
   apply,
   Apply,
@@ -134,6 +137,7 @@ export
   δ,
   diagitensor,
   diagITensor,
+  directsum,
   dot,
   eachnzblock,
   firstind,

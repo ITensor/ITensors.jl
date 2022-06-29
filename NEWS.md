@@ -6,6 +6,47 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.16 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Define `nullspace` for ITensors (#929)
+
+ITensors v0.3.15 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Fix `randomMPS` and `svd` for `Float32`/`ComplexF32` (#926)
+
+ITensors v0.3.14 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Add backend `alg="directsum"` for MPS/MPO addition (#925)
+- Add `alg="naive"` for MPO contraction (#925)
+- Add `svd`/`eigen` option `cutoff<0` or `cutoff=nothing`, indicating that no truncation should be performed based on a cutoff (previously you could only specify `cutoff=0.0` which still truncated eigenvalues of 0) (#925)
+- Fixes an issue that `mindim` wasn't be used in `eigen` (#925)
+- Remove `OpSum` in favor of `Ops.OpSum` (#920)
+
+ITensors v0.3.13 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Implement `min_blockdim` keyword for blocksparse SVD (#923)
+- Add support for non-zero flux MPOs to OpSum (#918)
+
 ITensors v0.3.12 Release Notes
 ==============================
 

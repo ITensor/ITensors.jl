@@ -54,7 +54,7 @@ function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:N
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   if N == 1
-    v[1] = emptyITensor(T, sites[1])
+    v[1] = ITensor(T, sites[1])
     return MPS(v)
   end
 
@@ -68,11 +68,11 @@ function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:N
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
-      v[ii] = emptyITensor(T, l[ii], s)
+      v[ii] = ITensor(T, l[ii], s)
     elseif ii == N
-      v[ii] = emptyITensor(T, dag(l[ii - 1]), s)
+      v[ii] = ITensor(T, dag(l[ii - 1]), s)
     else
-      v[ii] = emptyITensor(T, dag(l[ii - 1]), s, l[ii])
+      v[ii] = ITensor(T, dag(l[ii - 1]), s, l[ii])
     end
   end
   return MPS(v)
@@ -137,9 +137,6 @@ end
 function randomCircuitMPS(
   ::Type{ElT}, sites::Vector{<:Index}, linkdim::Int; kwargs...
 ) where {ElT<:Number}
-  _rmatrix(::Type{Float64}, n, m) = NDTensors.random_orthog(n, m)
-  _rmatrix(::Type{ComplexF64}, n, m) = NDTensors.random_unitary(n, m)
-
   N = length(sites)
   M = MPS(N)
 
@@ -154,23 +151,23 @@ function randomCircuitMPS(
   d = dim(sites[N])
   chi = min(linkdim, d)
   l[N - 1] = Index(chi, "Link,l=$(N-1)")
-  O = _rmatrix(ElT, chi, d)
+  O = NDTensors.random_unitary(ElT, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
   for j in (N - 1):-1:2
     chi *= dim(sites[j])
     chi = min(linkdim, chi)
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
-    O = _rmatrix(ElT, chi, dim(sites[j]) * dim(l[j]))
+    O = NDTensors.random_unitary(ElT, chi, dim(sites[j]) * dim(l[j]))
     T = reshape(O, (chi, dim(sites[j]), dim(l[j])))
     M[j] = itensor(T, l[j - 1], sites[j], l[j])
   end
 
-  O = _rmatrix(ElT, 1, dim(sites[1]) * dim(l[1]))
+  O = NDTensors.random_unitary(ElT, 1, dim(sites[1]) * dim(l[1]))
   l0 = Index(1, "Link,l=0")
   T = reshape(O, (1, dim(sites[1]), dim(l[1])))
   M[1] = itensor(T, l0, sites[1], l[1])
-  M[1] *= onehot(l0 => 1)
+  M[1] *= onehot(ElT, l0 => 1)
 
   M.llim = 0
   M.rlim = 2
@@ -244,7 +241,7 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
   M = MPS(N)
 
   if N == 1
-    M[1] = emptyITensor(T, ind(ivals[1]))
+    M[1] = ITensor(T, ind(ivals[1]))
     M[1][ivals[1]] = one(T)
     return M
   end
@@ -263,14 +260,14 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
     links = [Index(1, "Link,l=$n") for n in 1:(N - 1)]
   end
 
-  M[1] = emptyITensor(T, ind(ivals[1]), links[1])
+  M[1] = ITensor(T, ind(ivals[1]), links[1])
   M[1][ivals[1], links[1] => 1] = one(T)
   for n in 2:(N - 1)
     s = ind(ivals[n])
-    M[n] = emptyITensor(T, dag(links[n - 1]), s, links[n])
+    M[n] = ITensor(T, dag(links[n - 1]), s, links[n])
     M[n][links[n - 1] => 1, ivals[n], links[n] => 1] = one(T)
   end
-  M[N] = emptyITensor(T, dag(links[N - 1]), ind(ivals[N]))
+  M[N] = ITensor(T, dag(links[N - 1]), ind(ivals[N]))
   M[N][links[N - 1] => 1, ivals[N]] = one(T)
 
   return M

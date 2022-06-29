@@ -6,6 +6,25 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+NDTensors v0.1.41 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Fix `truncate!` for `Float32`/`ComplexF32` (#926)
+
+NDTensors v0.1.40 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Add support for `cutoff < 0` and `cutoff = nothing` for disabling truncating according to `cutoff` (#925)
+- Define contraction of Diag with Combiner (#920)
+
 NDTensors v0.1.39 Release Notes
 ===============================
 

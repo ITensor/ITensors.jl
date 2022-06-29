@@ -14,7 +14,7 @@ function heisenberg(N)
   return os
 end
 
-@testset "Ops" begin
+@testset "Basic Ops" begin
   x1 = Op("X", 1)
   x2 = Op("X", 2)
   I1 = Op(I, 1)
@@ -65,14 +65,16 @@ end
   @test 1.3 * o1 * o2 + 1.3 * o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
   @test 1.3 * o1 * o2 + 1.3 * o1 * o2 + o1 isa Sum{Scaled{Float64,Prod{Op}}}
   @test 1.3 * o1 * o2 + 1.3 * o1 * o2 + 1.2 * o1 isa Sum{Scaled{Float64,Prod{Op}}}
-  @test Ops.OpSum() + o1 isa Sum{Scaled{Float64,Prod{Op}}}
-  @test Ops.OpSum() + 1.2 * o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Ops.OpSum() + o1 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() + 1.2 * o1 isa Sum{Scaled{ComplexF64,Prod{Op}}}
   @test Ops.OpSum() + (1.2 + 2.3im) * o1 isa Sum{Scaled{ComplexF64,Prod{Op}}}
-  @test Ops.OpSum() + 1.2 * o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
-  @test Ops.OpSum() + o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Ops.OpSum() + 1.2 * o1 * o2 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() - 1.2 * o1 * o2 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() + o1 * o2 isa Sum{Scaled{ComplexF64,Prod{Op}}}
   @test o1 + o2 + 2.3 * o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
   @test Sum{Op}() + ("X", 1, "Y", 2) + ("Y", 2) isa Sum{Prod{Op}}
   @test Sum{Op}() + ("X", 1, "Y", 2) + (1.2, "Y", 2) isa Sum{Scaled{Float64,Prod{Op}}}
+  @test OpSum() - (0.5, "Z", 1, "Z", 2) isa Sum{Scaled{ComplexF64,Prod{Op}}}
 
   N = 4
   s = siteinds("Qubit", N)

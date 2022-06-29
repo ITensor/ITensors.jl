@@ -114,6 +114,9 @@ ITensor(as::AliasStyle, is, st::TensorStorage)::ITensor = ITensor(as, st, is)
 ITensor(st::TensorStorage, is)::ITensor = itensor(Tensor(NeverAlias(), st, Tuple(is)))
 ITensor(is, st::TensorStorage)::ITensor = ITensor(NeverAlias(), st, is)
 
+itensor(T::ITensor) = T
+ITensor(T::ITensor) = copy(T)
+
 """
     itensor(args...; kwargs...)
 
@@ -461,6 +464,13 @@ function ITensor(
   return itensor(Dense(data), inds)
 end
 
+# Convert `Adjoint` to `Matrix`
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
+)
+  return ITensor(as, eltype, Matrix(A), inds; kwargs...)
+end
+
 function ITensor(
   as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
 )
@@ -639,6 +649,8 @@ const δ = delta
 """
     onehot(ivs...)
     setelt(ivs...)
+    onehot(::Type, ivs...)
+    setelt(::Type, ivs...)
 
 Create an ITensor with all zeros except the specified value,
 which is set to 1.
@@ -649,16 +661,23 @@ i = Index(2,"i")
 A = onehot(i=>2)
 # A[i=>2] == 1, all other elements zero
 
+# Specify the element type
+A = onehot(Float32, i=>2)
+
 j = Index(3,"j")
 B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function onehot(ivs::Pair{<:Index}...)
-  A = emptyITensor(ind.(ivs)...)
-  A[val.(ivs)...] = 1.0
+function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  A = ITensor(eltype, ind.(ivs)...)
+  A[val.(ivs)...] = one(eltype)
   return A
 end
+onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(eltype, ivs...)
+setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(eltype, ivs...)
+
+onehot(ivs::Pair{<:Index}...) = onehot(Float64, ivs...)
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
@@ -1928,7 +1947,9 @@ B = randomITensor(k,i,j)
 C = A * B # inner product of A and B, all indices contracted
 ```
 """
-(A::ITensor * B::ITensor)::ITensor = contract(A, B)
+function (A::ITensor * B::ITensor)::ITensor
+  return contract(A, B)
+end
 
 function contract(A::ITensor, B::ITensor)::ITensor
   NA::Int = ndims(A)
@@ -2114,10 +2135,8 @@ function ishermitian(T::ITensor; kwargs...)
   return isapprox(T, dag(transpose(T)); kwargs...)
 end
 
-# Trace an ITensor over pairs of indices determined by
-# the prime levels and tags. Indices that are not in pairs
-# are not traced over, corresponding to a "batched" trace.
-function tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
+# Fix for AD
+function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   trpairs = indpairs(T; plev=plev, tags=tags)
   Cᴸ = combiner(first.(trpairs))
   Cᴿ = combiner(last.(trpairs))
@@ -2129,6 +2148,13 @@ function tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
     return Tᶜ[]
   end
   return Tᶜ
+end
+
+# Trace an ITensor over pairs of indices determined by
+# the prime levels and tags. Indices that are not in pairs
+# are not traced over, corresponding to a "batched" trace.
+function tr(T::ITensor; kwargs...)
+  return _tr(T; kwargs...)
 end
 
 """
@@ -2244,16 +2270,79 @@ function directsum_itensors(i::Index, j::Index, ij::Index)
   return D1, D2
 end
 
+function check_directsum_inds(A::ITensor, I, B::ITensor, J)
+  a = uniqueinds(A, I)
+  b = uniqueinds(B, J)
+  if !hassameinds(a, b)
+    error("""In directsum, attemptying to direct sum ITensors A and B with indices:
+
+          $(inds(A))
+
+          and
+
+          $(inds(B))
+
+          over the indices
+
+          $(I)
+
+          and
+
+          $(J)
+
+          The indices not being direct summed must match, however they are
+
+          $a
+
+          and
+
+          $b
+          """)
+  end
+end
+
+function _directsum(A::ITensor, I, B::ITensor, J; tags=["sum$i" for i in 1:length(I)])
+  N = length(I)
+  (N != length(J)) &&
+    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
+  check_directsum_inds(A, I, B, J)
+  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
+  for n in 1:N
+    In = I[n]
+    Jn = J[n]
+    In = dir(A, In) != dir(In) ? dag(In) : In
+    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
+    IJn = directsum(In, Jn; tags=tags[n])
+    D1, D2 = directsum_itensors(In, Jn, IJn)
+    IJ[n] = IJn
+    A *= D1
+    B *= D2
+  end
+  C = A + B
+  return C => IJ
+end
+
+function _directsum(A::ITensor, i::Index, B::ITensor, j::Index; tags="sum")
+  C, (ij,) = _directsum(A, (i,), B, (j,); tags=[tags])
+  return C => ij
+end
+
 function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
-  A, I = A_and_I
-  B, J = B_and_J
-  return directsum(A, B, I, J; kwargs...)
+  return _directsum(A_and_I..., B_and_J...; kwargs...)
+end
+
+function default_directsum_tags(A_and_I::Pair{ITensor})
+  return ["sum$i" for i in 1:length(last(A_and_I))]
+end
+
+function default_directsum_tags(A_and_I::Pair{ITensor,<:Index})
+  return "sum"
 end
 
 """
     directsum(A::Pair{ITensor}, B::Pair{ITensor}, ...; tags)
 
-Given a list of pairs of ITensors and collections of indices, perform a partial
+Given a list of pairs of ITensors and indices, perform a partial
 direct sum of the tensors over the specified indices. Indices that are
 not specified to be summed must match between the tensors.
 
@@ -2275,9 +2364,21 @@ j1 = Index(4, "j1")
 i2 = Index(5, "i2")
 j2 = Index(6, "j2")
 
+A1 = randomITensor(x, i1)
+A2 = randomITensor(x, i2)
+S, s = directsum(A1 => i1, A2 => i2)
+dim(s) == dim(i1) + dim(i2)
+
+A3 = randomITensor(x, j1)
+S, s = directsum(A1 => i1, A2 => i2, A3 => j1)
+dim(s) == dim(i1) + dim(i2) + dim(j1)
+
 A1 = randomITensor(i1, x, j1)
 A2 = randomITensor(x, j2, i2)
-S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+S, s = directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+length(s) == 2
+dim(s[1]) == dim(i1) + dim(i2)
+dim(s[2]) == dim(j1) + dim(j2)
 ```
 """
 function directsum(
@@ -2285,32 +2386,12 @@ function directsum(
   B_and_J::Pair{ITensor},
   C_and_K::Pair{ITensor},
   itensor_and_inds...;
-  tags=["sum$i" for i in 1:length(last(A_and_I))],
+  tags=default_directsum_tags(A_and_I),
 )
-  return directsum(
-    Pair(directsum(A_and_I, B_and_J; kwargs...)...), C_and_K, itensor_and_inds...; tags=tags
-  )
+  return directsum(directsum(A_and_I, B_and_J; tags), C_and_K, itensor_and_inds...; tags)
 end
 
-function directsum(A::ITensor, B::ITensor, I, J; tags)
-  N = length(I)
-  (N != length(J)) &&
-    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
-  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
-  for n in 1:N
-    In = I[n]
-    Jn = J[n]
-    In = dir(A, In) != dir(In) ? dag(In) : In
-    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
-    IJn = directsum(In, Jn; tags=tags[n])
-    D1, D2 = directsum_itensors(In, Jn, IJn)
-    IJ[n] = IJn
-    A *= D1
-    B *= D2
-  end
-  C = A + B
-  return C, IJ
-end
+const ⊕ = directsum
 
 """
     apply(A::ITensor, B::ITensor)

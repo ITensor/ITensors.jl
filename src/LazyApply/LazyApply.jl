@@ -9,9 +9,11 @@ import Base:
   ^,
   exp,
   adjoint,
+  copy,
   show,
   getindex,
   length,
+  isless,
   iterate,
   firstindex,
   lastindex,
@@ -19,7 +21,7 @@ import Base:
   reverse,
   size
 
-export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize
+export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize, terms
 
 struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
   f::F
@@ -66,15 +68,22 @@ function (a1::Prod{A} + a2::Prod{A}) where {A}
   return Sum{Prod{A}}() + a1 + a2
 end
 
-(c1::Number * co2::Scaled{C}) where {C} = (c1 * coefficient(co2)) * argument(co2)
+(c::Number * a::Scaled{C}) where {C} = (c * coefficient(a)) * argument(a)
+(a::Scaled{C} * c::Number) where {C} = (coefficient(a) * c) * argument(a)
 
 -(a::Scaled{C}) where {C} = (-one(C) * a)
+-(a::Sum) = (-1 * a)
+-(a::Prod) = (-1 * a)
 
 (os::Sum{A} + o::A) where {A} = Applied(sum, (vcat(os.args[1], [o]),))
 (o::A + os::Sum{A}) where {A} = Applied(sum, (vcat([o], os.args[1]),))
 
 (a1::Sum{A} - a2::A) where {C,A} = a1 + (-a2)
 (a1::A - a2::Sum{A}) where {C,A} = a1 + (-a2)
+
+(a1::Sum{A} - a2::Prod{A}) where {A} = a1 + (-a2)
+(a1::Sum{A} - a2::Scaled{C,Prod{A}}) where {C,A} = a1 + (-a2)
+(a1::Sum{A} - a2::Sum{Scaled{C,Prod{A}}}) where {C,A} = a1 + (-a2)
 
 (a1::Prod{A} * a2::A) where {A} = Applied(prod, (vcat(only(a1.args), [a2]),))
 (a1::A * a2::Prod{A}) where {A} = Applied(prod, (vcat([a1], only(a2.args)),))
@@ -109,7 +118,8 @@ end
 
 # (Op("X", 1) + Op("X", 2)) + (Op("X", 3) + Op("X", 4))
 # (Op("X", 1) * Op("X", 2) + Op("X", 3) * Op("X", 4)) + (Op("X", 5) * Op("X", 6) + Op("X", 7) * Op("X", 8))
-(os1::Sum{A} + os2::Sum{A}) where {A} = Applied(sum, (vcat(os1.args[1], os2.args[1]),))
+(a1::Sum{A} + a2::Sum{A}) where {A} = Applied(sum, (vcat(a1.args[1], a2.args[1]),))
+(a1::Sum{A} - a2::Sum{A}) where {A} = a1 + (-a2)
 
 (a1::Prod{A} * a2::Prod{A}) where {A} = Applied(prod, (vcat(only(a1.args), only(a2.args)),))
 
@@ -165,12 +175,28 @@ function (a1::Sum{A} + a2::Prod{A}) where {A}
   return Prod{A}() * a1 + a2
 end
 
+function (a1::Sum{A} + a2::Sum{Scaled{C,Prod{A}}}) where {C,A}
+  return (one(C) * Prod{A}() * a1) + a2
+end
+
 function (a1::Prod{A} - a2::A) where {A}
   return a1 + (-a2)
 end
 
 function (co1::Sum{Scaled{C,Prod{A}}} + co2::Scaled{C,A}) where {C,A}
   return co1 + coefficient(co2) * Applied(prod, ([argument(co2)],))
+end
+
+function (a1::Sum{Scaled{C1,Prod{A}}} - a2::Scaled{C2,A}) where {C1,C2,A}
+  return a1 + (-a2)
+end
+
+function (a1::Sum{Scaled{C,Prod{A}}} - a2::Prod{A}) where {C,A}
+  return a1 + (-a2)
+end
+
+function (a1::Sum{Scaled{C1,Prod{A}}} - a2::Scaled{C2,Prod{A}}) where {C1,C2,A}
+  return a1 + (-a2)
 end
 
 function (a1::Sum{A} + a2::Scaled{C,Prod{A}}) where {C,A}
@@ -273,6 +299,23 @@ keys(a::Union{Sum,Prod}) = 1:length(a)
 
 length(a::Scaled{C,<:Sum}) where {C} = length(argument(a))
 length(a::Scaled{C,<:Prod}) where {C} = length(argument(a))
+getindex(a::Scaled{C,<:Sum}, I...) where {C} = getindex(argument(a), I...)
+getindex(a::Scaled{C,<:Prod}, I...) where {C} = getindex(argument(a), I...)
+lastindex(a::Scaled{C,<:Sum}) where {C} = lastindex(argument(a))
+lastindex(a::Scaled{C,<:Prod}) where {C} = lastindex(argument(a))
+
+#
+# Functions convenient for AutoMPO code
+#
+
+terms(a::Union{Sum,Prod}) = only(a.args)
+terms(a::Scaled{C,<:Union{Sum,Prod}}) where {C} = terms(argument(a))
+copy(a::Applied) = Applied(deepcopy(a.f), deepcopy(a.args), deepcopy(a.kwargs))
+Sum(a::Vector) = Applied(sum, (a,))
+Prod(a::Vector) = Applied(prod, (a,))
+function isless(a1::Applied{F}, a2::Applied{F}) where {F}
+  return (isless(a1.args, a2.args) && isless(a1.kwargs, a2.kwargs))
+end
 
 #
 # Printing
@@ -290,6 +333,32 @@ function show(io::IO, ::MIME"text/plain", a::Sum)
   return nothing
 end
 show(io::IO, a::Sum) = show(io, MIME("text/plain"), a)
+
+function show(io::IO, ::MIME"text/plain", a::Prod)
+  print(io, "prod(\n")
+  for n in eachindex(a)
+    print(io, "  ", a[n])
+    if n ≠ lastindex(a)
+      print(io, "\n")
+    end
+  end
+  print(io, "\n)")
+  return nothing
+end
+show(io::IO, a::Prod) = show(io, MIME("text/plain"), a)
+
+function show(io::IO, m::MIME"text/plain", a::Exp)
+  print(io, a.f, "(")
+  for n in 1:length(a.args)
+    print(io, a.args[n])
+    if n < length(a.args)
+      print(io, ", ")
+    end
+  end
+  print(io, ")")
+  return nothing
+end
+show(io::IO, a::Exp) = show(io, MIME("text/plain"), a)
 
 function show(io::IO, m::MIME"text/plain", a::Applied)
   print(io, a.f, "(\n")

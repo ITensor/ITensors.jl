@@ -34,9 +34,9 @@ end
 contains the (truncated) density matrix eigenvalue spectrum which is computed during a
 decomposition done by `svd` or `eigen`. In addition stores the truncation error.
 """
-struct Spectrum{VecT<:Union{AbstractVector,Nothing}}
+struct Spectrum{VecT<:Union{AbstractVector,Nothing},ElT<:Real}
   eigs::VecT
-  truncerr::Float64
+  truncerr::ElT
 end
 
 eigs(s::Spectrum) = s.eigs
@@ -214,7 +214,7 @@ function LinearAlgebra.eigen(
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
   maxdim::Int = get(kwargs, :maxdim, minimum(dims(T)))
   mindim::Int = get(kwargs, :mindim, 1)
-  cutoff::Float64 = get(kwargs, :cutoff, 0.0)
+  cutoff::Union{Nothing,Float64} = get(kwargs, :cutoff, 0.0)
   use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
@@ -228,6 +228,7 @@ function LinearAlgebra.eigen(
   if truncate
     truncerr, _ = truncate!(
       DM;
+      mindim=mindim,
       maxdim=maxdim,
       cutoff=cutoff,
       use_absolute_cutoff=use_absolute_cutoff,

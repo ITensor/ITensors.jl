@@ -59,13 +59,19 @@ ITensors.state(::StateName"↓", t::SiteType"Qubit") = state(StateName("1"), t)
 
 # Pauli eingenstates
 ITensors.state(::StateName"X+", t::SiteType"Qubit") = state(StateName("+"), t)
+ITensors.state(::StateName"Xp", t::SiteType"Qubit") = state(StateName("+"), t)
 ITensors.state(::StateName"X-", t::SiteType"Qubit") = state(StateName("-"), t)
+ITensors.state(::StateName"Xm", t::SiteType"Qubit") = state(StateName("-"), t)
 
 ITensors.state(::StateName"Y+", t::SiteType"Qubit") = state(StateName("i"), t)
+ITensors.state(::StateName"Yp", t::SiteType"Qubit") = state(StateName("i"), t)
 ITensors.state(::StateName"Y-", t::SiteType"Qubit") = state(StateName("-i"), t)
+ITensors.state(::StateName"Ym", t::SiteType"Qubit") = state(StateName("-i"), t)
 
 ITensors.state(::StateName"Z+", t::SiteType"Qubit") = state(StateName("0"), t)
+ITensors.state(::StateName"Zp", t::SiteType"Qubit") = state(StateName("0"), t)
 ITensors.state(::StateName"Z-", t::SiteType"Qubit") = state(StateName("1"), t)
+ITensors.state(::StateName"Zm", t::SiteType"Qubit") = state(StateName("1"), t)
 
 # SIC-POVMs
 state(::StateName"Tetra1", t::SiteType"Qubit") = state(StateName("Z+"), t)

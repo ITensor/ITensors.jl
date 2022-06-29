@@ -68,8 +68,11 @@ and operators `ops` on each site.
 """
 function MPO(::Type{ElT}, sites::Vector{<:Index}, ops::Vector) where {ElT<:Number}
   N = length(sites)
-  ampo = OpSum() + [ops[n] => n for n in 1:N]
-  M = MPO(ampo, sites)
+  os = Prod{Op}()
+  for n in 1:N
+    os *= Op(ops[n], n)
+  end
+  M = MPO(os, sites)
 
   # Currently, OpSum does not output the optimally truncated
   # MPO (see https://github.com/ITensor/ITensors.jl/issues/526)
@@ -664,8 +667,11 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   return ψ_out
 end
 
-function contract(::Algorithm"naive", A::MPO, ψ::MPS; kwargs...)::MPS
+function _contract(::Algorithm"naive", A, ψ; kwargs...)
   truncate = get(kwargs, :truncate, true)
+
+  A = sim(linkinds, A)
+  ψ = sim(linkinds, ψ)
 
   N = length(A)
   if N != length(ψ)
@@ -678,11 +684,14 @@ function contract(::Algorithm"naive", A::MPO, ψ::MPS; kwargs...)::MPS
   end
 
   for b in 1:(N - 1)
-    Al = commonind(A[b], A[b + 1])
-    pl = commonind(ψ[b], ψ[b + 1])
-    C = combiner(Al, pl)
-    ψ_out[b] *= C
-    ψ_out[b + 1] *= dag(C)
+    Al = commoninds(A[b], A[b + 1])
+    ψl = commoninds(ψ[b], ψ[b + 1])
+    l = [Al..., ψl...]
+    if !isempty(l)
+      C = combiner(l)
+      ψ_out[b] *= C
+      ψ_out[b + 1] *= dag(C)
+    end
   end
 
   if truncate
@@ -692,7 +701,19 @@ function contract(::Algorithm"naive", A::MPO, ψ::MPS; kwargs...)::MPS
   return ψ_out
 end
 
-function contract(A::MPO, B::MPO; kwargs...)
+function contract(alg::Algorithm"naive", A::MPO, ψ::MPS; kwargs...)
+  return _contract(alg, A, ψ; kwargs...)
+end
+
+function contract(A::MPO, B::MPO; alg="zipup", kwargs...)
+  return contract(Algorithm(alg), A, B; kwargs...)
+end
+
+function contract(alg::Algorithm"naive", A::MPO, B::MPO; kwargs...)
+  return _contract(alg, A, B; kwargs...)
+end
+
+function contract(::Algorithm"zipup", A::MPO, B::MPO; kwargs...)
   if hassameinds(siteinds, A, B)
     error(
       "In `contract(A::MPO, B::MPO)`, MPOs A and B have the same site indices. The indices of the MPOs in the contraction are taken literally, and therefore they should only share one site index per site so the contraction results in an MPO. You may want to use `replaceprime(contract(A', B), 2 => 1)` or `apply(A, B)` which automatically adjusts the prime levels assuming the input MPOs have pairs of primed and unprimed indices.",
@@ -789,10 +810,22 @@ C = apply(A, B; cutoff=1e-12)
 ```
 which is the same as the code above.
 
+If you are contracting MPOs that have diverging norms, such as MPOs representing sums of local
+operators, the truncation can become numerically unstable (see https://arxiv.org/abs/1909.06341 for
+a more numerically stable alternative). For now, you can use the following options to contract
+MPOs like that:
+```julia
+C = contract(A, B; alg="naive", truncate=false)
+# Bring the indices back to pairs of primed and unprimed
+C = apply(A, B; alg="naive", truncate=false)
+```
+
 # Keywords
-- `cutoff::Float64=1e-13`: the cutoff value for truncating the density matrix eigenvalues. Note that the default is somewhat arbitrary and subject to change, in general you should set a `cutoff` value.
+- `cutoff::Float64=1e-14`: the cutoff value for truncating the density matrix eigenvalues. Note that the default is somewhat arbitrary and subject to change, in general you should set a `cutoff` value.
 - `maxdim::Int=maxlinkdim(A) * maxlinkdim(B))`: the maximal bond dimension of the results MPS.
 - `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
+- `alg="zipup"`: Either `"zipup"` or `"naive"`. `"zipup"` contracts pairs of site tensors and truncates with SVDs in a sweep across the sites, while `"naive"` first contracts pairs of tensor exactly and then truncates at the end if `truncate=true`.
+- `truncate=true`: Enable or disable truncation. If `truncate=false`, ignore other truncation parameters like `cutoff` and `maxdim`. This is most relevant for the `"naive"` version, if you just want to contract the tensors pairwise exactly. This can be useful if you are contracting MPOs that have diverging norms, such as MPOs originating from sums of local operators.
 
 See also [`apply`](@ref) for details about the arguments available.
 """

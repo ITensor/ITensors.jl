@@ -21,7 +21,7 @@ function rrule(::typeof(MPS), x::Vector{<:ITensor}; kwargs...)
   return y, MPS_pullback
 end
 
-function rrule(::typeof(inner), x1::MPS, x2::MPS; kwargs...)
+function rrule(::typeof(inner), x1::T, x2::T; kwargs...) where {T<:Union{MPS,MPO}}
   if !hassameinds(siteinds, x1, x2)
     error(
       "Taking gradients of `inner(::MPS, ::MPS)` is not supported if the site indices of the input MPS don't match. If you input `inner(x, Ay)` where `Ay` is the result of something like `contract(A::MPO, y::MPS)`, try `inner(x', Ay)` or `inner(x, replaceprime(Ay, 1 => 0))`instead.",
@@ -52,15 +52,16 @@ function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
   return contract(ψmat, ϕmat; kwargs...)
 end
 
-function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs...)
+function rrule(
+  ::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; apply_dag=false, kwargs...
+)
   N = length(x1) + 1
-  apply_dag = x2 isa MPO ? kwargs[:apply_dag] : nothing
 
   # Apply circuit and store intermediates in the forward direction
   x1x2 = Vector{typeof(x2)}(undef, N)
   x1x2[1] = x2
   for n in 2:N
-    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, kwargs...)
+    x1x2[n] = apply(x1[n - 1], x1x2[n - 1]; move_sites_back=true, apply_dag, kwargs...)
   end
   y = x1x2[end]
 
@@ -72,7 +73,9 @@ function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs.
     x1dag_ȳ = Vector{typeof(x2)}(undef, N)
     x1dag_ȳ[end] = ȳ
     for n in (N - 1):-1:1
-      x1dag_ȳ[n] = apply(x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, kwargs...)
+      x1dag_ȳ[n] = apply(
+        x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, apply_dag, kwargs...
+      )
     end
 
     x̄1 = similar(x1)
@@ -87,7 +90,7 @@ function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs.
           # apply U on one side of the MPO
           if apply_dag
             ϕ̃ = swapprime(x1x2dag[n], 0 => 1)
-            ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag=false)
+            ϕ̃ = apply(x1[n], ϕ̃; move_sites_back=true, apply_dag=false, kwargs...)
             ϕ̃ = mapprime(ϕ̃, 1 => 2, 0 => 1)
             ϕ̃ = replaceprime(ϕ̃, 1 => 0; inds=gateinds')
             ξ̃ = 2 * dag(x1dag_ȳ[n + 1])'
@@ -97,7 +100,7 @@ function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; kwargs.
             ξ̃ = mapprime(x1dag_ȳ[n + 1], 0 => 2)
           end
         end
-        x̄1[n] = _contract(ITensor, ξ̃, ϕ̃)
+        x̄1[n] = _contract(ITensor, ξ̃, ϕ̃; kwargs...)
       else
         s = inds(x1[n])
         x̄1[n] = itensor(zeros(dim.(s)), s...)

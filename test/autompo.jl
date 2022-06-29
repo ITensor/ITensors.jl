@@ -1,6 +1,18 @@
-using ITensors, Test, Random
+using ITensors, Test, Random, JLD2
 
 include("util.jl")
+
+function components_to_opsum(comps, n; reverse::Bool=true)
+  opsum = OpSum()
+  for (factor, operators, sites) in comps
+    # reverse ordering for compatibility
+    sites = reverse ? (n + 1) .- sites : sites
+    sites_and_ops = [[Matrix(operator), site] for (operator, site) in zip(operators, sites)]
+    sites_and_ops = [vcat(sites_and_ops...)...]
+    opsum += factor, sites_and_ops...
+  end
+  return opsum
+end
 
 function isingMPO(sites)::MPO
   H = MPO(sites)
@@ -161,99 +173,107 @@ end
   @test !ITensors.using_auto_fermion()
 
   @testset "Show MPOTerm" begin
-    ampo = OpSum()
-    add!(ampo, "Sz", 1, "Sz", 2)
-    @test length(sprint(show, ITensors.data(ampo)[1])) > 1
+    os = OpSum()
+    add!(os, "Sz", 1, "Sz", 2)
+    @test length(sprint(show, os[1])) > 1
   end
 
   @testset "Multisite operator" begin
     os = OpSum()
-    os += ("CX", (1, 2))
-    os += (2.3, "R", (3, 4), "S", 2)
+    os += ("CX", 1, 2)
+    os += (2.3, "R", 3, 4, "S", 2)
     os += ("X", 3)
     @test length(os) == 3
-    @test ITensors.coef(os[1]) == 1
-    @test length(ITensors.ops(os[1])) == 1
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.coef(os[2]) == 2.3
-    @test length(ITensors.ops(os[2])) == 2
-    @test ITensors.name(ITensors.ops(os[2])[1]) == "R"
-    @test ITensors.sites(ITensors.ops(os[2])[1]) == (3, 4)
-    @test ITensors.name(ITensors.ops(os[2])[2]) == "S"
-    @test ITensors.sites(ITensors.ops(os[2])[2]) == (2,)
-    @test ITensors.coef(os[3]) == 1
-    @test length(ITensors.ops(os[3])) == 1
-    @test ITensors.name(ITensors.ops(os[3])[1]) == "X"
-    @test ITensors.sites(ITensors.ops(os[3])[1]) == (3,)
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 1
+    @test ITensors.which_op(os[1][1]) == "CX"
+    @test ITensors.sites(os[1][1]) == (1, 2)
+    @test coefficient(os[2]) == 2.3
+    @test length(os[2]) == 2
+    @test ITensors.which_op(os[2][1]) == "R"
+    @test ITensors.sites(os[2][1]) == (3, 4)
+    @test ITensors.which_op(os[2][2]) == "S"
+    @test ITensors.sites(os[2][2]) == (2,)
+    @test coefficient(os[3]) == 1
+    @test length(os[3]) == 1
+    @test ITensors.which_op(os[3][1]) == "X"
+    @test ITensors.sites(os[3][1]) == (3,)
 
     os = OpSum() + ("CX", 1, 2)
     @test length(os) == 1
-    @test ITensors.coef(os[1]) == 1
-    @test length(ITensors.ops(os[1])) == 1
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 1
+    @test ITensors.which_op(os[1][1]) == "CX"
+    @test ITensors.sites(os[1][1]) == (1, 2)
+
+    # Coordinate
+    os = OpSum() + ("X", (1, 2))
+    @test length(os) == 1
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 1
+    @test ITensors.which_op(os[1][1]) == "X"
+    @test ITensors.sites(os[1][1]) == ((1, 2),)
 
     os = OpSum() + ("CX", 1, 2, (ϕ=π / 3,))
     @test length(os) == 1
-    @test ITensors.coef(os[1]) == 1
-    @test length(ITensors.ops(os[1])) == 1
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 1
+    @test ITensors.which_op(os[1][1]) == "CX"
+    @test ITensors.sites(os[1][1]) == (1, 2)
+    @test ITensors.params(os[1][1]) == (ϕ=π / 3,)
 
     os = OpSum() + ("CX", 1, 2, (ϕ=π / 3,), "CZ", 3, 4, (θ=π / 2,))
     @test length(os) == 1
-    @test ITensors.coef(os[1]) == 1
-    @test length(ITensors.ops(os[1])) == 2
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
-    @test ITensors.name(ITensors.ops(os[1])[2]) == "CZ"
-    @test ITensors.sites(ITensors.ops(os[1])[2]) == (3, 4)
-    @test ITensors.params(ITensors.ops(os[1])[2]) == (θ=π / 2,)
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 2
+    @test ITensors.which_op(os[1][1]) == "CX"
+    @test ITensors.sites(os[1][1]) == (1, 2)
+    @test ITensors.params(os[1][1]) == (ϕ=π / 3,)
+    @test ITensors.which_op(os[1][2]) == "CZ"
+    @test ITensors.sites(os[1][2]) == (3, 4)
+    @test ITensors.params(os[1][2]) == (θ=π / 2,)
 
     os = OpSum() + ("CX", (ϕ=π / 3,), 1, 2, "CZ", (θ=π / 2,), 3, 4)
     @test length(os) == 1
-    @test ITensors.coef(os[1]) == 1
-    @test length(ITensors.ops(os[1])) == 2
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
-    @test ITensors.name(ITensors.ops(os[1])[2]) == "CZ"
-    @test ITensors.sites(ITensors.ops(os[1])[2]) == (3, 4)
-    @test ITensors.params(ITensors.ops(os[1])[2]) == (θ=π / 2,)
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 2
+    @test ITensors.which_op(os[1][1]) == "CX"
+    @test ITensors.sites(os[1][1]) == (1, 2)
+    @test ITensors.params(os[1][1]) == (ϕ=π / 3,)
+    @test ITensors.which_op(os[1][2]) == "CZ"
+    @test ITensors.sites(os[1][2]) == (3, 4)
+    @test ITensors.params(os[1][2]) == (θ=π / 2,)
 
-    os = OpSum() + ("CX", (1, 2), (ϕ=π / 3,))
+    os = OpSum() + ("CX", 1, 2, (ϕ=π / 3,))
     @test length(os) == 1
-    @test ITensors.coef(os[1]) == 1
-    @test length(ITensors.ops(os[1])) == 1
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CX"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 1
+    @test ITensors.which_op(os[1][1]) == "CX"
+    @test ITensors.sites(os[1][1]) == (1, 2)
+    @test ITensors.params(os[1][1]) == (ϕ=π / 3,)
 
     os = OpSum() + (1 + 2im, "CRz", (ϕ=π / 3,), 1, 2)
     @test length(os) == 1
-    @test ITensors.coef(os[1]) == 1 + 2im
-    @test length(ITensors.ops(os[1])) == 1
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CRz"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
+    @test coefficient(os[1]) == 1 + 2im
+    @test length(os[1]) == 1
+    @test ITensors.which_op(os[1][1]) == "CRz"
+    @test ITensors.sites(os[1][1]) == (1, 2)
+    @test ITensors.params(os[1][1]) == (ϕ=π / 3,)
 
-    os = OpSum() + ("CRz", (ϕ=π / 3,), (1, 2))
+    os = OpSum() + ("CRz", (ϕ=π / 3,), 1, 2)
     @test length(os) == 1
-    @test ITensors.coef(os[1]) == 1
-    @test length(ITensors.ops(os[1])) == 1
-    @test ITensors.name(ITensors.ops(os[1])[1]) == "CRz"
-    @test ITensors.sites(ITensors.ops(os[1])[1]) == (1, 2)
-    @test ITensors.params(ITensors.ops(os[1])[1]) == (ϕ=π / 3,)
+    @test coefficient(os[1]) == 1
+    @test length(os[1]) == 1
+    @test ITensors.which_op(os[1][1]) == "CRz"
+    @test ITensors.sites(os[1][1]) == (1, 2)
+    @test ITensors.params(os[1][1]) == (ϕ=π / 3,)
   end
 
   @testset "Show OpSum" begin
-    ampo = OpSum()
-    add!(ampo, "Sz", 1, "Sz", 2)
-    add!(ampo, "Sz", 2, "Sz", 3)
-    @test length(sprint(show, ampo)) > 1
+    os = OpSum()
+    add!(os, "Sz", 1, "Sz", 2)
+    add!(os, "Sz", 2, "Sz", 3)
+    @test length(sprint(show, os)) > 1
   end
 
   @testset "OpSum algebra" begin
@@ -290,10 +310,10 @@ end
   end
 
   @testset "Single creation op" begin
-    ampo = OpSum()
-    add!(ampo, "Adagup", 3)
+    os = OpSum()
+    add!(os, "Adagup", 3)
     sites = siteinds("Electron", N)
-    W = MPO(ampo, sites)
+    W = MPO(os, sites)
     psi = makeRandomMPS(sites)
     cdu_psi = copy(psi)
     cdu_psi[3] = noprime(cdu_psi[3] * op(sites, "Adagup", 3))
@@ -301,12 +321,12 @@ end
   end
 
   @testset "Ising" begin
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += "Sz", j, "Sz", j + 1
+      os += "Sz", j, "Sz", j + 1
     end
     sites = siteinds("S=1/2", N)
-    Ha = MPO(ampo, sites)
+    Ha = MPO(os, sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
@@ -315,12 +335,12 @@ end
   end
 
   @testset "Ising" begin
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo -= "Sz", j, "Sz", j + 1
+      os -= "Sz", j, "Sz", j + 1
     end
     sites = siteinds("S=1/2", N)
-    Ha = MPO(ampo, sites)
+    Ha = MPO(os, sites)
     He = -isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
@@ -329,12 +349,12 @@ end
   end
 
   @testset "Ising-Different Order" begin
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += "Sz", j, "Sz", j + 1
+      os += "Sz", j, "Sz", j + 1
     end
     sites = siteinds("S=1/2", N)
-    Ha = MPO(ampo, sites)
+    Ha = MPO(os, sites)
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
@@ -343,19 +363,19 @@ end
   end
 
   @testset "Heisenberg" begin
-    ampo = OpSum()
+    os = OpSum()
     h = rand(N) #random magnetic fields
     for j in 1:(N - 1)
-      ampo += "Sz", j, "Sz", j + 1
-      ampo += 0.5, "S+", j, "S-", j + 1
-      ampo += 0.5, "S-", j, "S+", j + 1
+      os += "Sz", j, "Sz", j + 1
+      os += 0.5, "S+", j, "S-", j + 1
+      os += 0.5, "S-", j, "S+", j + 1
     end
     for j in 1:N
-      ampo += h[j], "Sz", j
+      os += h[j], "Sz", j
     end
 
     sites = siteinds("S=1/2", N)
-    Ha = MPO(ampo, sites)
+    Ha = MPO(os, sites)
     He = heisenbergMPO(sites, h)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
@@ -365,27 +385,27 @@ end
 
   @testset "Multiple Onsite Ops" begin
     sites = siteinds("S=1", N)
-    ampo1 = OpSum()
+    os1 = OpSum()
     for j in 1:(N - 1)
-      ampo1 += "Sz", j, "Sz", j + 1
-      ampo1 += 0.5, "S+", j, "S-", j + 1
-      ampo1 += 0.5, "S-", j, "S+", j + 1
+      os1 += "Sz", j, "Sz", j + 1
+      os1 += 0.5, "S+", j, "S-", j + 1
+      os1 += 0.5, "S-", j, "S+", j + 1
     end
     for j in 1:N
-      ampo1 += "Sz * Sz", j
+      os1 += "Sz * Sz", j
     end
-    Ha1 = MPO(ampo1, sites)
+    Ha1 = MPO(os1, sites)
 
-    ampo2 = OpSum()
+    os2 = OpSum()
     for j in 1:(N - 1)
-      ampo2 += "Sz", j, "Sz", j + 1
-      ampo2 += 0.5, "S+", j, "S-", j + 1
-      ampo2 += 0.5, "S-", j, "S+", j + 1
+      os2 += "Sz", j, "Sz", j + 1
+      os2 += 0.5, "S+", j, "S-", j + 1
+      os2 += 0.5, "S-", j, "S+", j + 1
     end
     for j in 1:N
-      ampo2 += "Sz", j, "Sz", j
+      os2 += "Sz", j, "Sz", j
     end
-    Ha2 = MPO(ampo2, sites)
+    Ha2 = MPO(os2, sites)
 
     He = heisenbergMPO(sites, ones(N), "Sz * Sz")
     psi = makeRandomMPS(sites)
@@ -397,19 +417,19 @@ end
   end
 
   @testset "Three-site ops" begin
-    ampo = OpSum()
+    os = OpSum()
     # To test version of add! taking a coefficient
-    add!(ampo, 1.0, "Sz", 1, "Sz", 2, "Sz", 3)
-    @test length(ITensors.data(ampo)) == 1
+    add!(os, 1.0, "Sz", 1, "Sz", 2, "Sz", 3)
+    @test length(os) == 1
     for j in 2:(N - 2)
-      add!(ampo, "Sz", j, "Sz", j + 1, "Sz", j + 2)
+      add!(os, "Sz", j, "Sz", j + 1, "Sz", j + 2)
     end
     h = ones(N)
     for j in 1:N
-      add!(ampo, h[j], "Sx", j)
+      add!(os, h[j], "Sx", j)
     end
     sites = siteinds("S=1/2", N)
-    Ha = MPO(ampo, sites)
+    Ha = MPO(os, sites)
     He = threeSiteIsingMPO(sites, h)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
@@ -418,12 +438,12 @@ end
   end
 
   @testset "Four-site ops" begin
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 3)
-      add!(ampo, "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3)
+      add!(os, "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3)
     end
     sites = siteinds("S=1/2", N)
-    Ha = MPO(ampo, sites)
+    Ha = MPO(os, sites)
     He = fourSiteIsingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
@@ -432,21 +452,21 @@ end
   end
 
   @testset "Next-neighbor Heisenberg" begin
-    ampo = OpSum()
+    os = OpSum()
     J1 = 1.0
     J2 = 0.5
     for j in 1:(N - 1)
-      add!(ampo, J1, "Sz", j, "Sz", j + 1)
-      add!(ampo, J1 * 0.5, "S+", j, "S-", j + 1)
-      add!(ampo, J1 * 0.5, "S-", j, "S+", j + 1)
+      add!(os, J1, "Sz", j, "Sz", j + 1)
+      add!(os, J1 * 0.5, "S+", j, "S-", j + 1)
+      add!(os, J1 * 0.5, "S-", j, "S+", j + 1)
     end
     for j in 1:(N - 2)
-      add!(ampo, J2, "Sz", j, "Sz", j + 2)
-      add!(ampo, J2 * 0.5, "S+", j, "S-", j + 2)
-      add!(ampo, J2 * 0.5, "S-", j, "S+", j + 2)
+      add!(os, J2, "Sz", j, "Sz", j + 2)
+      add!(os, J2 * 0.5, "S+", j, "S-", j + 2)
+      add!(os, J2 * 0.5, "S-", j, "S+", j + 2)
     end
     sites = siteinds("S=1/2", N)
-    Ha = MPO(ampo, sites)
+    Ha = MPO(os, sites)
 
     He = NNheisenbergMPO(sites, J1, J2)
     psi = makeRandomMPS(sites)
@@ -458,20 +478,20 @@ end
 
   @testset "Onsite Regression Test" begin
     sites = siteinds("S=1", 4)
-    ampo = OpSum()
-    add!(ampo, 0.5, "Sx", 1)
-    add!(ampo, 0.5, "Sy", 1)
-    H = MPO(ampo, sites)
+    os = OpSum()
+    add!(os, 0.5, "Sx", 1)
+    add!(os, 0.5, "Sy", 1)
+    H = MPO(os, sites)
     l = commonind(H[1], H[2])
     T = setelt(l => 1) * H[1]
     O = op(sites[1], "Sx") + op(sites[1], "Sy")
     @test norm(T - 0.5 * O) < 1E-8
 
     sites = siteinds("S=1", 2)
-    ampo = OpSum()
-    add!(ampo, 0.5im, "Sx", 1)
-    add!(ampo, 0.5, "Sy", 1)
-    H = MPO(ampo, sites)
+    os = OpSum()
+    add!(os, 0.5im, "Sx", 1)
+    add!(os, 0.5, "Sy", 1)
+    H = MPO(os, sites)
     T = H[1] * H[2]
     O =
       im * op(sites[1], "Sx") * op(sites[2], "Id") + op(sites[1], "Sy") * op(sites[2], "Id")
@@ -480,10 +500,10 @@ end
 
   @testset "+ syntax" begin
     @testset "Single creation op" begin
-      ampo = OpSum()
-      ampo += "Adagup", 3
+      os = OpSum()
+      os += "Adagup", 3
       sites = siteinds("Electron", N)
-      W = MPO(ampo, sites)
+      W = MPO(os, sites)
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
       cdu_psi[3] = noprime(cdu_psi[3] * op(sites, "Adagup", 3))
@@ -491,12 +511,12 @@ end
     end
 
     @testset "Ising" begin
-      ampo = OpSum()
+      os = OpSum()
       for j in 1:(N - 1)
-        ampo += "Sz", j, "Sz", j + 1
+        os += "Sz", j, "Sz", j + 1
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -505,12 +525,12 @@ end
     end
 
     @testset "Ising-Different Order" begin
-      ampo = OpSum()
+      os = OpSum()
       for j in 1:(N - 1)
-        ampo += "Sz", j + 1, "Sz", j
+        os += "Sz", j + 1, "Sz", j
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -519,19 +539,19 @@ end
     end
 
     @testset "Heisenberg" begin
-      ampo = OpSum()
+      os = OpSum()
       h = rand(N) #random magnetic fields
       for j in 1:(N - 1)
-        ampo += "Sz", j, "Sz", j + 1
-        ampo += 0.5, "S+", j, "S-", j + 1
-        ampo += 0.5, "S-", j, "S+", j + 1
+        os += "Sz", j, "Sz", j + 1
+        os += 0.5, "S+", j, "S-", j + 1
+        os += 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:N
-        ampo += h[j], "Sz", j
+        os += h[j], "Sz", j
       end
 
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = heisenbergMPO(sites, h)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -541,27 +561,27 @@ end
 
     @testset "Multiple Onsite Ops" begin
       sites = siteinds("S=1", N)
-      ampo1 = OpSum()
+      os1 = OpSum()
       for j in 1:(N - 1)
-        ampo1 += "Sz", j, "Sz", j + 1
-        ampo1 += 0.5, "S+", j, "S-", j + 1
-        ampo1 += 0.5, "S-", j, "S+", j + 1
+        os1 += "Sz", j, "Sz", j + 1
+        os1 += 0.5, "S+", j, "S-", j + 1
+        os1 += 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:N
-        ampo1 += "Sz * Sz", j
+        os1 += "Sz * Sz", j
       end
-      Ha1 = MPO(ampo1, sites)
+      Ha1 = MPO(os1, sites)
 
-      ampo2 = OpSum()
+      os2 = OpSum()
       for j in 1:(N - 1)
-        ampo2 += "Sz", j, "Sz", j + 1
-        ampo2 += 0.5, "S+", j, "S-", j + 1
-        ampo2 += 0.5, "S-", j, "S+", j + 1
+        os2 += "Sz", j, "Sz", j + 1
+        os2 += 0.5, "S+", j, "S-", j + 1
+        os2 += 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:N
-        ampo2 += "Sz", j, "Sz", j
+        os2 += "Sz", j, "Sz", j
       end
-      Ha2 = MPO(ampo2, sites)
+      Ha2 = MPO(os2, sites)
 
       He = heisenbergMPO(sites, ones(N), "Sz * Sz")
       psi = makeRandomMPS(sites)
@@ -573,19 +593,19 @@ end
     end
 
     @testset "Three-site ops" begin
-      ampo = OpSum()
+      os = OpSum()
       # To test version of add! taking a coefficient
-      ampo += 1.0, "Sz", 1, "Sz", 2, "Sz", 3
-      @test length(ITensors.data(ampo)) == 1
+      os += 1.0, "Sz", 1, "Sz", 2, "Sz", 3
+      @test length(os) == 1
       for j in 2:(N - 2)
-        ampo += "Sz", j, "Sz", j + 1, "Sz", j + 2
+        os += "Sz", j, "Sz", j + 1, "Sz", j + 2
       end
       h = ones(N)
       for j in 1:N
-        ampo += h[j], "Sx", j
+        os += h[j], "Sx", j
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = threeSiteIsingMPO(sites, h)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -594,12 +614,12 @@ end
     end
 
     @testset "Four-site ops" begin
-      ampo = OpSum()
+      os = OpSum()
       for j in 1:(N - 3)
-        ampo += "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3
+        os += "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = fourSiteIsingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -608,21 +628,21 @@ end
     end
 
     @testset "Next-neighbor Heisenberg" begin
-      ampo = OpSum()
+      os = OpSum()
       J1 = 1.0
       J2 = 0.5
       for j in 1:(N - 1)
-        ampo += J1, "Sz", j, "Sz", j + 1
-        ampo += J1 * 0.5, "S+", j, "S-", j + 1
-        ampo += J1 * 0.5, "S-", j, "S+", j + 1
+        os += J1, "Sz", j, "Sz", j + 1
+        os += J1 * 0.5, "S+", j, "S-", j + 1
+        os += J1 * 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:(N - 2)
-        ampo += J2, "Sz", j, "Sz", j + 2
-        ampo += J2 * 0.5, "S+", j, "S-", j + 2
-        ampo += J2 * 0.5, "S-", j, "S+", j + 2
+        os += J2, "Sz", j, "Sz", j + 2
+        os += J2 * 0.5, "S+", j, "S-", j + 2
+        os += J2 * 0.5, "S-", j, "S+", j + 2
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
 
       He = NNheisenbergMPO(sites, J1, J2)
       psi = makeRandomMPS(sites)
@@ -633,29 +653,29 @@ end
     end
 
     #@testset "-= syntax" begin
-    #  ampo = OpSum()
-    #  ampo += (-1,"Sz",1,"Sz",2)
-    #  ampo2 = OpSum()
-    #  ampo2 -= ("Sz",1,"Sz",2)
-    #  @test ampo == ampo2
+    #  os = OpSum()
+    #  os += (-1,"Sz",1,"Sz",2)
+    #  os2 = OpSum()
+    #  os2 -= ("Sz",1,"Sz",2)
+    #  @test os == os2
     #end
 
     @testset "Onsite Regression Test" begin
       sites = siteinds("S=1", 4)
-      ampo = OpSum()
-      ampo += 0.5, "Sx", 1
-      ampo += 0.5, "Sy", 1
-      H = MPO(ampo, sites)
+      os = OpSum()
+      os += 0.5, "Sx", 1
+      os += 0.5, "Sy", 1
+      H = MPO(os, sites)
       l = commonind(H[1], H[2])
       T = setelt(l => 1) * H[1]
       O = op(sites[1], "Sx") + op(sites[1], "Sy")
       @test norm(T - 0.5 * O) < 1E-8
 
       sites = siteinds("S=1", 2)
-      ampo = OpSum()
-      ampo += 0.5im, "Sx", 1
-      ampo += 0.5, "Sy", 1
-      H = MPO(ampo, sites)
+      os = OpSum()
+      os += 0.5im, "Sx", 1
+      os += 0.5, "Sy", 1
+      H = MPO(os, sites)
       T = H[1] * H[2]
       O =
         im * op(sites[1], "Sx") * op(sites[2], "Id") +
@@ -667,18 +687,18 @@ end
   @testset ".+= and .-= syntax" begin
 
     #@testset ".-= syntax" begin
-    #  ampo = OpSum()
-    #  ampo .+= (-1,"Sz",1,"Sz",2)
-    #  ampo2 = OpSum()
-    #  ampo2 .-= ("Sz",1,"Sz",2)
-    #  @test ampo == ampo2
+    #  os = OpSum()
+    #  os .+= (-1,"Sz",1,"Sz",2)
+    #  os2 = OpSum()
+    #  os2 .-= ("Sz",1,"Sz",2)
+    #  @test os == os2
     #end
 
     @testset "Single creation op" begin
-      ampo = OpSum()
-      ampo .+= "Adagup", 3
+      os = OpSum()
+      os .+= "Adagup", 3
       sites = siteinds("Electron", N)
-      W = MPO(ampo, sites)
+      W = MPO(os, sites)
       psi = makeRandomMPS(sites)
       cdu_psi = copy(psi)
       cdu_psi[3] = noprime(cdu_psi[3] * op(sites, "Adagup", 3))
@@ -686,12 +706,12 @@ end
     end
 
     @testset "Ising" begin
-      ampo = OpSum()
+      os = OpSum()
       for j in 1:(N - 1)
-        ampo .+= "Sz", j, "Sz", j + 1
+        os .+= "Sz", j, "Sz", j + 1
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -700,12 +720,12 @@ end
     end
 
     @testset "Ising-Different Order" begin
-      ampo = OpSum()
+      os = OpSum()
       for j in 1:(N - 1)
-        ampo .+= "Sz", j + 1, "Sz", j
+        os .+= "Sz", j + 1, "Sz", j
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = isingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -714,19 +734,19 @@ end
     end
 
     @testset "Heisenberg" begin
-      ampo = OpSum()
+      os = OpSum()
       h = rand(N) #random magnetic fields
       for j in 1:(N - 1)
-        ampo .+= "Sz", j, "Sz", j + 1
-        ampo .+= 0.5, "S+", j, "S-", j + 1
-        ampo .+= 0.5, "S-", j, "S+", j + 1
+        os .+= "Sz", j, "Sz", j + 1
+        os .+= 0.5, "S+", j, "S-", j + 1
+        os .+= 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:N
-        ampo .+= h[j], "Sz", j
+        os .+= h[j], "Sz", j
       end
 
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = heisenbergMPO(sites, h)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -736,27 +756,27 @@ end
 
     @testset "Multiple Onsite Ops" begin
       sites = siteinds("S=1", N)
-      ampo1 = OpSum()
+      os1 = OpSum()
       for j in 1:(N - 1)
-        ampo1 .+= "Sz", j, "Sz", j + 1
-        ampo1 .+= 0.5, "S+", j, "S-", j + 1
-        ampo1 .+= 0.5, "S-", j, "S+", j + 1
+        os1 .+= "Sz", j, "Sz", j + 1
+        os1 .+= 0.5, "S+", j, "S-", j + 1
+        os1 .+= 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:N
-        ampo1 .+= "Sz * Sz", j
+        os1 .+= "Sz * Sz", j
       end
-      Ha1 = MPO(ampo1, sites)
+      Ha1 = MPO(os1, sites)
 
-      ampo2 = OpSum()
+      os2 = OpSum()
       for j in 1:(N - 1)
-        ampo2 .+= "Sz", j, "Sz", j + 1
-        ampo2 .+= 0.5, "S+", j, "S-", j + 1
-        ampo2 .+= 0.5, "S-", j, "S+", j + 1
+        os2 .+= "Sz", j, "Sz", j + 1
+        os2 .+= 0.5, "S+", j, "S-", j + 1
+        os2 .+= 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:N
-        ampo2 .+= "Sz", j, "Sz", j
+        os2 .+= "Sz", j, "Sz", j
       end
-      Ha2 = MPO(ampo2, sites)
+      Ha2 = MPO(os2, sites)
 
       He = heisenbergMPO(sites, ones(N), "Sz * Sz")
       psi = makeRandomMPS(sites)
@@ -768,19 +788,19 @@ end
     end
 
     @testset "Three-site ops" begin
-      ampo = OpSum()
+      os = OpSum()
       # To test version of add! taking a coefficient
-      ampo .+= 1.0, "Sz", 1, "Sz", 2, "Sz", 3
-      @test length(ITensors.data(ampo)) == 1
+      os .+= 1.0, "Sz", 1, "Sz", 2, "Sz", 3
+      @test length(os) == 1
       for j in 2:(N - 2)
-        ampo .+= "Sz", j, "Sz", j + 1, "Sz", j + 2
+        os .+= "Sz", j, "Sz", j + 1, "Sz", j + 2
       end
       h = ones(N)
       for j in 1:N
-        ampo .+= h[j], "Sx", j
+        os .+= h[j], "Sx", j
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = threeSiteIsingMPO(sites, h)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -789,12 +809,12 @@ end
     end
 
     @testset "Four-site ops" begin
-      ampo = OpSum()
+      os = OpSum()
       for j in 1:(N - 3)
-        ampo .+= "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3
+        os .+= "Sz", j, "Sz", j + 1, "Sz", j + 2, "Sz", j + 3
       end
       sites = siteinds("S=1/2", N)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
       He = fourSiteIsingMPO(sites)
       psi = makeRandomMPS(sites)
       Oa = inner(psi', Ha, psi)
@@ -803,21 +823,21 @@ end
     end
 
     @testset "Next-neighbor Heisenberg" begin
-      ampo = OpSum()
+      os = OpSum()
       J1 = 1.0
       J2 = 0.5
       for j in 1:(N - 1)
-        ampo .+= J1, "Sz", j, "Sz", j + 1
-        ampo .+= J1 * 0.5, "S+", j, "S-", j + 1
-        ampo .+= J1 * 0.5, "S-", j, "S+", j + 1
+        os .+= J1, "Sz", j, "Sz", j + 1
+        os .+= J1 * 0.5, "S+", j, "S-", j + 1
+        os .+= J1 * 0.5, "S-", j, "S+", j + 1
       end
       for j in 1:(N - 2)
-        ampo .+= J2, "Sz", j, "Sz", j + 2
-        ampo .+= J2 * 0.5, "S+", j, "S-", j + 2
-        ampo .+= J2 * 0.5, "S-", j, "S+", j + 2
+        os .+= J2, "Sz", j, "Sz", j + 2
+        os .+= J2 * 0.5, "S+", j, "S-", j + 2
+        os .+= J2 * 0.5, "S-", j, "S+", j + 2
       end
       sites = siteinds("S=1/2", N; conserve_qns=true)
-      Ha = MPO(ampo, sites)
+      Ha = MPO(os, sites)
 
       He = NNheisenbergMPO(sites, J1, J2)
       psi = randomMPS(sites, [isodd(n) ? "Up" : "Dn" for n in 1:N])
@@ -829,20 +849,20 @@ end
 
     @testset "Onsite Regression Test" begin
       sites = siteinds("S=1", 4)
-      ampo = OpSum()
-      ampo .+= 0.5, "Sx", 1
-      ampo .+= 0.5, "Sy", 1
-      H = MPO(ampo, sites)
+      os = OpSum()
+      os .+= 0.5, "Sx", 1
+      os .+= 0.5, "Sy", 1
+      H = MPO(os, sites)
       l = commonind(H[1], H[2])
       T = setelt(l => 1) * H[1]
       O = op(sites[1], "Sx") + op(sites[1], "Sy")
       @test norm(T - 0.5 * O) < 1E-8
 
       sites = siteinds("S=1", 2)
-      ampo = OpSum()
-      ampo .+= 0.5im, "Sx", 1
-      ampo .+= 0.5, "Sy", 1
-      H = MPO(ampo, sites)
+      os = OpSum()
+      os .+= 0.5im, "Sx", 1
+      os .+= 0.5, "Sy", 1
+      H = MPO(os, sites)
       T = H[1] * H[2]
       O =
         im * op(sites[1], "Sx") * op(sites[2], "Id") +
@@ -916,12 +936,12 @@ end
 
     for use_qn in [false, true]
       sites = siteinds("S=1/2", N; conserve_qns=use_qn)
-      ampo = OpSum()
+      os = OpSum()
       for i in 1:(N - 1)
-        ampo += +1im, "S+", i, "S-", i + 1
-        ampo += -1im, "S-", i, "S+", i + 1
+        os += +1im, "S+", i, "S-", i + 1
+        os += -1im, "S-", i, "S+", i + 1
       end
-      H = MPO(ampo, sites)
+      H = MPO(os, sites)
       psiud = productMPS(sites, [1, 2, 1, 2])
       psidu = productMPS(sites, [2, 1, 1, 2])
       @test inner(psiud', H, psidu) ≈ +1im
@@ -963,14 +983,14 @@ end
   @testset "Fermion OpSum Issue 514 Regression Test" begin
     N = 4
     s = siteinds("Electron", N; conserve_qns=true)
-    ampo1 = OpSum()
-    ampo2 = OpSum()
+    os1 = OpSum()
+    os2 = OpSum()
 
-    ampo1 += "Nup", 1
-    ampo2 += "Cdagup", 1, "Cup", 1
+    os1 += "Nup", 1
+    os2 += "Cdagup", 1, "Cup", 1
 
-    M1 = MPO(ampo1, s)
-    M2 = MPO(ampo2, s)
+    M1 = MPO(os1, s)
+    M2 = MPO(os2, s)
 
     H1 = M1[1] * M1[2] * M1[3] * M1[4]
     H2 = M2[1] * M2[2] * M2[3] * M2[4]
@@ -981,16 +1001,16 @@ end
   @testset "OpSum in-place modification regression test" begin
     N = 2
     t = 1.0
-    ampo = OpSum()
+    os = OpSum()
     for n in 1:(N - 1)
-      ampo .+= -t, "Cdag", n, "C", n + 1
-      ampo .+= -t, "Cdag", n + 1, "C", n
+      os .+= -t, "Cdag", n, "C", n + 1
+      os .+= -t, "Cdag", n + 1, "C", n
     end
     s = siteinds("Fermion", N; conserve_qns=true)
-    ampo_original = deepcopy(ampo)
+    os_original = deepcopy(os)
     for i in 1:4
-      MPO(ampo, s)
-      @test ampo == ampo_original
+      MPO(os, s)
+      @test os == os_original
     end
   end
 
@@ -1019,18 +1039,65 @@ end
     N = 20
     sites = siteinds("HardCore", N)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += -t, "Adag", j, "A", j + 1
-      ampo += -t, "A", j, "Adag", j + 1
-      ampo += V1, "N", j, "N", j + 1
+      os += -t, "Adag", j, "A", j + 1
+      os += -t, "A", j, "Adag", j + 1
+      os += V1, "N", j, "N", j + 1
     end
     for j in 1:(N - 2)
-      ampo += V2, "N", j, "N", j + 2
+      os += V2, "N", j, "N", j + 2
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
     psi0 = productMPS(sites, n -> isodd(n) ? "0" : "1")
     @test abs(inner(psi0', H, psi0) - 0.00018) < 1E-10
+  end
+
+  @testset "Matrix operator representation" begin
+    dim = 4
+    op = rand(dim, dim)
+    opt = op'
+    s = [Index(dim), Index(dim)]
+    a = OpSum()
+    a += 1.0, op + opt, 1
+    a += 1.0, op + opt, 2
+    mpoa = MPO(a, s)
+    b = OpSum()
+    b += 1.0, op, 1
+    b += 1.0, opt, 1
+    b += 1.0, op, 2
+    b += 1.0, opt, 2
+    mpob = MPO(b, s)
+    @test mpoa ≈ mpob
+  end
+
+  @testset "Matrix operator representation - hashing bug" begin
+    n = 4
+    dim = 4
+    s = siteinds(dim, n)
+    o = rand(dim, dim)
+    os = OpSum()
+    for j in 1:(n - 1)
+      os += copy(o), j, copy(o), j + 1
+    end
+    H1 = MPO(os, s)
+    H2 = ITensor()
+    H2 += op(o, s[1]) * op(o, s[2]) * op("I", s[3]) * op("I", s[4])
+    H2 += op("I", s[1]) * op(o, s[2]) * op(o, s[3]) * op("I", s[4])
+    H2 += op("I", s[1]) * op("I", s[2]) * op(o, s[3]) * op(o, s[4])
+    @test contract(H1) ≈ H2
+  end
+
+  @testset "Matrix operator representation - hashing bug" begin
+    comps, n, dims = load("opsum_hash_bug.jld2", "comps", "n", "dims")
+    s = [Index(d) for d in dims]
+    for _ in 1:100
+      os = components_to_opsum(comps, n)
+      # Before defining `hash(::Op, h::UInt)`, this
+      # would randomly throw an error due to
+      # some hashing issue in `MPO(::OpSum, ...)`
+      MPO(os, s)
+    end
   end
 end
 

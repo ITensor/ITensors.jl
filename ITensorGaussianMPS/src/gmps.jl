@@ -91,19 +91,40 @@ ngates(G::Circuit) = length(G.rotations)
 # Free fermion tools
 #
 
+is_creation_operator(o::Op) = is_creation_operator(ITensors.name(o))
+is_creation_operator(o::String) = is_creation_operator(OpName(o))
+is_creation_operator(::OpName) = false
+is_creation_operator(::OpName"Cdag") = true
+is_creation_operator(::OpName"Cdagup") = true
+is_creation_operator(::OpName"Cdagdn") = true
+is_creation_operator(::OpName"c†") = true
+is_creation_operator(::OpName"c†↑") = true
+is_creation_operator(::OpName"c†↓") = true
+
+is_annihilation_operator(o::Op) = is_annihilation_operator(ITensors.name(o))
+is_annihilation_operator(o::String) = is_annihilation_operator(OpName(o))
+is_annihilation_operator(::OpName) = false
+is_annihilation_operator(::OpName"C") = true
+is_annihilation_operator(::OpName"Cup") = true
+is_annihilation_operator(::OpName"Cdn") = true
+is_annihilation_operator(::OpName"c") = true
+is_annihilation_operator(::OpName"c↑") = true
+is_annihilation_operator(::OpName"c↓") = true
+
 # Make a hopping Hamiltonian from quadratic Hamiltonian
-function hopping_hamiltonian(ampo::AutoMPO)
-  nterms = length(ampo.data)
+function hopping_hamiltonian(os::OpSum)
+  nterms = length(os)
   coefs = Vector{Number}(undef, nterms)
   sites = Vector{Tuple{Int,Int}}(undef, nterms)
   nsites = 0
   for n in 1:nterms
-    term = ampo.data[n]
-    coef = isreal(term.coef) ? real(term.coef) : term.coef
+    term = os[n]
+    coef = isreal(coefficient(term)) ? real(coefficient(term)) : term.coef
     coefs[n] = coef
-    ops = term.ops
-    length(ops) != 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
-    sites[n] = ntuple(n -> only(ops[n].site), Val(2))
+    length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
+    @assert is_creation_operator(term[1])
+    @assert is_annihilation_operator(term[2])
+    sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
     nsites = max(nsites, maximum(sites[n]))
   end
   ElT = all(isreal(coefs)) ? Float64 : ComplexF64
@@ -115,9 +136,9 @@ function hopping_hamiltonian(ampo::AutoMPO)
 end
 
 # Make a combined hopping Hamiltonian for spin up and down
-function hopping_hamiltonian(ampo_up::AutoMPO, ampo_dn::AutoMPO)
-  h_up = hopping_hamiltonian(ampo_up)
-  h_dn = hopping_hamiltonian(ampo_dn)
+function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum)
+  h_up = hopping_hamiltonian(os_up)
+  h_dn = hopping_hamiltonian(os_dn)
   @assert size(h_up) == size(h_dn)
   N = size(h_up, 1)
   ElT = promote_type(eltype(h_up), eltype(h_dn))
