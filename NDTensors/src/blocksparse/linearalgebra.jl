@@ -4,18 +4,21 @@ const DiagBlockSparseMatrix{ElT,StoreT,IndsT} = DiagBlockSparseTensor{ElT,2,Stor
 const DiagMatrix{ElT,StoreT,IndsT} = DiagTensor{ElT,2,StoreT,IndsT}
 
 function _truncated_blockdim(
-  S::DiagMatrix, docut::Float64; singular_values=false, truncate=true
+  S::DiagMatrix, docut::Real; singular_values=false, truncate=true, min_blockdim=0
 )
-  !truncate && return diaglength(S)
+  full_dim = diaglength(S)
+  !truncate && return full_dim
+  min_blockdim = min(min_blockdim, full_dim)
   newdim = 0
   val = singular_values ? getdiagindex(S, newdim + 1)^2 : abs(getdiagindex(S, newdim + 1))
-  while newdim + 1 ≤ diaglength(S) && val > docut
+  while newdim + 1 ≤ full_dim && val > docut
     newdim += 1
-    if newdim + 1 ≤ diaglength(S)
+    if newdim + 1 ≤ full_dim
       val =
         singular_values ? getdiagindex(S, newdim + 1)^2 : abs(getdiagindex(S, newdim + 1))
     end
   end
+  (newdim >= min_blockdim) || (newdim = min_blockdim)
   return newdim
 end
 
@@ -31,7 +34,7 @@ computed from the dense svds of seperate blocks.
 """
 function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   alg::String = get(kwargs, :alg, "divide_and_conquer")
-
+  min_blockdim::Int = get(kwargs, :min_blockdim, 0)
   truncate = haskey(kwargs, :maxdim) || haskey(kwargs, :cutoff)
 
   #@timeit_debug timer "block sparse svd" begin
@@ -74,7 +77,9 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
   if truncate
     truncerr, docut = truncate!(d; kwargs...)
     for n in 1:nnzblocks(T)
-      blockdim = _truncated_blockdim(Ss[n], docut; singular_values=true, truncate=truncate)
+      blockdim = _truncated_blockdim(
+        Ss[n], docut; min_blockdim, singular_values=true, truncate
+      )
       if blockdim == 0
         push!(dropblocks, n)
       else
@@ -92,57 +97,37 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     truncerr, docut = 0.0, 0.0
   end
 
-  # The number of blocks of T remaining
-  nnzblocksT = nnzblocks(T) - length(dropblocks)
+  # The number of non-zero blocks of T remaining
+  nnzblocksT = length(nzblocksT)
+
+  #
+  # Make indices of U and V 
+  # that connect to S
+  #
+  i1 = ind(T, 1)
+  i2 = ind(T, 2)
+  uind = dag(sim(i1))
+  vind = dag(sim(i2))
+  resize!(uind, nnzblocksT)
+  resize!(vind, nnzblocksT)
+  for (n, blockT) in enumerate(nzblocksT)
+    Udim = size(Us[n], 2)
+    b1 = block(i1, blockT[1])
+    setblock!(uind, resize(b1, Udim), n)
+    Vdim = size(Vs[n], 2)
+    b2 = block(i2, blockT[2])
+    setblock!(vind, resize(b2, Vdim), n)
+  end
 
   #
   # Put the blocks into U,S,V
   # 
 
-  nb1_lt_nb2 = (
-    nblocks(T)[1] < nblocks(T)[2] ||
-    (nblocks(T)[1] == nblocks(T)[2] && dim(T, 1) < dim(T, 2))
-  )
-
-  if nb1_lt_nb2
-    uind = sim(ind(T, 1))
-  else
-    uind = sim(ind(T, 2))
-  end
-
-  deleteat!(uind, dropblocks)
-
-  # uind may have too many blocks
-  if nblocks(uind) > nnzblocksT
-    resize!(uind, nnzblocksT)
-  end
-
-  for n in 1:nnzblocksT
-    setblockdim!(uind, minimum(dims(Ss[n])), n)
-  end
-
-  if dir(uind) != dir(inds(T)[1])
-    uind = dag(uind)
-  end
-  indsU = setindex(inds(T), dag(uind), 2)
-
-  vind = sim(uind)
-  if dir(vind) != dir(inds(T)[2])
-    vind = dag(vind)
-  end
-  indsV = setindex(inds(T), dag(vind), 1)
-  indsV = permute(indsV, (2, 1))
-
-  indsS = setindex(inds(T), uind, 1)
-  indsS = setindex(indsS, vind, 2)
-
   nzblocksU = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksS = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksV = Vector{Block{2}}(undef, nnzblocksT)
 
-  for n in 1:nnzblocksT
-    blockT = nzblocksT[n]
-
+  for (n, blockT) in enumerate(nzblocksT)
     blockU = (blockT[1], UInt(n))
     nzblocksU[n] = blockU
 
@@ -152,6 +137,14 @@ function LinearAlgebra.svd(T::BlockSparseMatrix{ElT}; kwargs...) where {ElT}
     blockV = (blockT[2], UInt(n))
     nzblocksV[n] = blockV
   end
+
+  indsU = setindex(inds(T), uind, 2)
+
+  indsV = setindex(inds(T), vind, 1)
+  indsV = permute(indsV, (2, 1))
+
+  indsS = setindex(inds(T), dag(uind), 1)
+  indsS = setindex(indsS, dag(vind), 2)
 
   U = BlockSparseTensor(ElT, undef, nzblocksU, indsU)
   S = DiagBlockSparseTensor(real(ElT), undef, nzblocksS, indsS)

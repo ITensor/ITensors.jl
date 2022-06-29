@@ -1,5 +1,15 @@
 using ITensors, Test
 
+function op_mpo(sites, which_op, j)
+  left_ops = "Id"
+  right_ops = "Id"
+  if has_fermion_string(which_op, sites[j])
+    left_ops = "F"
+  end
+  ops = [n < j ? left_ops : (n > j ? right_ops : which_op) for n in 1:length(sites)]
+  return MPO([op(ops[n], sites[n]) for n in 1:length(sites)])
+end
+
 @testset "MPO Basics" begin
   N = 6
   sites = [Index(QN(-1) => 1, QN(1) => 1; tags="Site,n=$n") for n in 1:N]
@@ -61,10 +71,10 @@ using ITensors, Test
   @testset "orthogonalize!" begin
     orthogonalize!(phi, 1)
     orthogonalize!(K, 1)
-    orig_inner = ⋅(phi, K, phi)
+    orig_inner = ⋅(phi', K, phi)
     orthogonalize!(phi, div(N, 2))
     orthogonalize!(K, div(N, 2))
-    @test ⋅(phi, K, phi) ≈ orig_inner
+    @test ⋅(phi', K, phi) ≈ orig_inner
   end
 
   @testset "inner <y|A|x>" begin
@@ -75,7 +85,7 @@ using ITensors, Test
     for j in 2:N
       phiKpsi *= phidag[j] * K[j] * psi[j]
     end
-    @test phiKpsi[] ≈ inner(phi, K, psi)
+    @test phiKpsi[] ≈ inner(phi', K, psi)
   end
 
   @testset "inner <By|A|x>" begin
@@ -103,7 +113,7 @@ using ITensors, Test
 
   @testset "error_contract" begin
     dist = sqrt(
-      abs(1 + (inner(phi, phi) - 2 * real(inner(phi, K, psi))) / inner(K, psi, K, psi))
+      abs(1 + (inner(phi, phi) - 2 * real(inner(phi', K, psi))) / inner(K, psi, K, psi))
     )
     @test dist ≈ error_contract(phi, K, psi)
   end
@@ -111,8 +121,8 @@ using ITensors, Test
   @testset "contract" begin
     @test maxlinkdim(K) == 1
     psi_out = contract(K, psi; maxdim=1)
-    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
-    @test_throws ArgumentError contract(K, psi; method="fakemethod")
+    @test inner(phi', psi_out) ≈ inner(phi', K, psi)
+    @test_throws MethodError contract(K, psi; method="fakemethod")
   end
 
   # TODO: implement add for QN MPOs and add this test back
@@ -122,8 +132,8 @@ using ITensors, Test
   #  @test length(M) == N
   #  k_psi = contract(K, psi, maxdim=1)
   #  l_psi = contract(L, psi, maxdim=1)
-  #  @test inner(psi, k_psi + l_psi) ≈ ⋅(psi, M, psi) atol=5e-3
-  #  @test inner(psi, sum([k_psi, l_psi])) ≈ dot(psi, M, psi) atol=5e-3
+  #  @test inner(psi', k_psi + l_psi) ≈ ⋅(psi', M, psi) atol=5e-3
+  #  @test inner(psi', sum([k_psi, l_psi])) ≈ dot(psi', M, psi) atol=5e-3
   #  for dim in 2:4
   #    shsites = siteinds("S=1/2",N)
   #    K = basicRandomMPO(N, shsites; dim=dim)
@@ -149,7 +159,23 @@ using ITensors, Test
     KL = contract(prime(K), L; maxdim=1)
     Lpsi = contract(L, psi; maxdim=1)
     psi_kl_out = contract(prime(K), Lpsi; maxdim=1)
-    @test inner(psi, KL, psi) ≈ inner(psi, psi_kl_out) atol = 5e-3
+    @test inner(psi'', KL, psi) ≈ inner(psi'', psi_kl_out) atol = 5e-3
+  end
+
+  @testset "contract(::MPO, ::MPO) without truncation" begin
+    s = siteinds("Electron", 10; conserve_qns=true)
+    j1, j2 = 2, 4
+    Cdagup = op_mpo(s, "Cdagup", j1)
+    Cdagdn = op_mpo(s, "Cdagdn", j2)
+    Cdagmpo = apply(Cdagup, Cdagdn; alg="naive", truncate=false)
+    @test norm(Cdagmpo) ≈ 2^length(s) / 2
+    for j in 1:length(s)
+      if (j == j1) || (j == j2)
+        @test norm(Cdagmpo[j]) ≈ √2
+      else
+        @test norm(Cdagmpo[j]) ≈ 2
+      end
+    end
   end
 
   @testset "*(::MPO, ::MPO)" begin
@@ -157,7 +183,7 @@ using ITensors, Test
     @test maxlinkdim(L) == 1
     KL = *(prime(K), L; maxdim=1)
     psi_kl_out = *(prime(K), *(L, psi; maxdim=1); maxdim=1)
-    @test ⋅(psi, KL, psi) ≈ dot(psi, psi_kl_out) atol = 5e-3
+    @test ⋅(psi'', KL, psi) ≈ dot(psi'', psi_kl_out) atol = 5e-3
   end
 
   sites = siteinds("S=1/2", N)
@@ -185,15 +211,15 @@ end
 
   @test prod(H) ≈ prod(H̃)
 
-  @test nnz(H[1]) == 13
-  @test nnz(H[2]) == 51
-  @test nnz(H[3]) == 51
-  @test nnz(H[4]) == 13
+  @test nnz(H[1]) == 9
+  @test nnz(H[2]) == 18
+  @test nnz(H[3]) == 18
+  @test nnz(H[4]) == 9
 
-  @test nnzblocks(H[1]) == 7
-  @test nnzblocks(H[2]) == 11
-  @test nnzblocks(H[3]) == 11
-  @test nnzblocks(H[4]) == 7
+  @test nnzblocks(H[1]) == 9
+  @test nnzblocks(H[2]) == 18
+  @test nnzblocks(H[3]) == 18
+  @test nnzblocks(H[4]) == 9
 
   @test nnz(H̃[1]) == nnzblocks(H̃[1]) == count(≠(0), H[1]) == count(≠(0), H̃[1]) == 9
   @test nnz(H̃[2]) == nnzblocks(H̃[2]) == count(≠(0), H[2]) == count(≠(0), H̃[2]) == 18

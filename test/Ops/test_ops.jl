@@ -2,10 +2,10 @@ using Test
 using ITensors
 using LinearAlgebra
 
-using ITensors.Ops: α, ∏, ∑, expand
+using ITensors.Ops #: Scaled, Prod, Sum, expand
 
 function heisenberg(N)
-  os = ∑{Op}()
+  os = Sum{Op}()
   for j in 1:(N - 1)
     os += "Sz", j, "Sz", j + 1
     os += 0.5, "S+", j, "S-", j + 1
@@ -14,7 +14,7 @@ function heisenberg(N)
   return os
 end
 
-@testset "Ops" begin
+@testset "Basic Ops" begin
   x1 = Op("X", 1)
   x2 = Op("X", 2)
   I1 = Op(I, 1)
@@ -24,29 +24,75 @@ end
   CX12 = Op("CX", 1, 2)
   Ry4 = Op("Ry", 4; θ=π / 3)
 
-  @test 2y2 isa α{Op}
+  @test 2y2 isa Scaled{<:Number,Op}
   @test coefficient(2y2) == 2
-  @test y2 / 2 isa α{Op}
+  @test y2 / 2 isa Scaled{<:Number,Op}
   @test coefficient(y2 / 2) ≈ 0.5
-  @test -y2 isa α{Op}
-  @test 1y2 + x1 isa ∑{<:α{Op}}
-  @test 1y2 + x1 isa ∑{α{Op,Int}}
-  @test x1 * y2 isa ∏{Op}
-  @test 2x1 * y2 isa α{∏{Op}}
-  @test x1 * y2 + CX12 isa ∑{∏{Op}}
-  @test x1 * y2 + x1 * CX12 isa ∑{∏{Op}}
-  @test x1 * y2 + 2CX12 isa ∑{<:α{∏{Op}}}
-  @test x1 * y2 - CX12 isa ∑{<:α{∏{Op}}}
-  @test 2x1 * y2 + 2CX12 isa ∑{<:α{∏{Op}}}
-  @test 2x1 * y2 - 2CX12 isa ∑{<:α{∏{Op}}}
-  @test (2x1 * y2 - 2CX12) / 3 isa ∑{<:α{∏{Op}}}
+  @test -y2 isa Scaled{<:Number,Op}
+  @test 1y2 + x1 isa Sum{<:Scaled{<:Number,Op}}
+  @test 1y2 + x1 isa Sum{Scaled{Int,Op}}
+  @test x1 * y2 isa Prod{Op}
+  @test 2x1 * y2 isa Scaled{<:Number,Prod{Op}}
+  @test x1 * y2 + CX12 isa Sum{Prod{Op}}
+  @test x1 * y2 + x1 * CX12 isa Sum{Prod{Op}}
+  @test x1 * y2 + 2CX12 isa Sum{<:Scaled{<:Number,Prod{Op}}}
+  @test x1 * y2 - CX12 isa Sum{<:Scaled{<:Number,Prod{Op}}}
+  @test 2x1 * y2 + 2CX12 isa Sum{<:Scaled{<:Number,Prod{Op}}}
+  @test 2x1 * y2 - 2CX12 isa Sum{<:Scaled{<:Number,Prod{Op}}}
+  @test (2x1 * y2 - 2CX12) / 3 isa Sum{<:Scaled{<:Number,Prod{Op}}}
+
+  o1 = Op("X", 1)
+  o2 = Op("Y", 2)
+
+  @test o1 + o2 isa Sum{Op}
+  @test o1 - o2 isa Sum{Scaled{Int,Op}}
+  @test 1.3 * o1 isa Scaled{Float64,Op}
+  @test o1 * 1.4 isa Scaled{Float64,Op}
+  @test o1 + o2 + o2 isa Sum{Op}
+  @test 1.3o1 + 1.3o2 isa Sum{Scaled{Float64,Op}}
+  @test 1.3o1 + o2 isa Sum{Scaled{Float64,Op}}
+  @test (o1 + o2) + (o1 + o2) isa Sum{Op}
+  @test 1.3o1 + 1o2 isa Sum{Scaled{Float64,Op}}
+  @test 1.3 * (o1 + o2) isa Sum{Scaled{Float64,Op}}
+  @test o1 + o2 + 1.3o2 isa Sum{Scaled{Float64,Op}}
+  @test o1 * o2 isa Prod{Op}
+  @test o1 * o2 * o2 isa Prod{Op}
+  @test o1 * (o2 * o2) isa Prod{Op}
+  @test 1.3 * o1 * o2 isa Scaled{Float64,Prod{Op}}
+  @test 1.3 * (o1 * o2) isa Scaled{Float64,Prod{Op}}
+  @test 1.3 * o1 * o2 + o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test 1.3 * o1 * o2 + o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test 1.3 * o1 * o2 + 1.3 * o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test 1.3 * o1 * o2 + 1.3 * o1 * o2 + o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test 1.3 * o1 * o2 + 1.3 * o1 * o2 + 1.2 * o1 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Ops.OpSum() + o1 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() + 1.2 * o1 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() + (1.2 + 2.3im) * o1 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() + 1.2 * o1 * o2 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() - 1.2 * o1 * o2 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test Ops.OpSum() + o1 * o2 isa Sum{Scaled{ComplexF64,Prod{Op}}}
+  @test o1 + o2 + 2.3 * o1 * o2 isa Sum{Scaled{Float64,Prod{Op}}}
+  @test Sum{Op}() + ("X", 1, "Y", 2) + ("Y", 2) isa Sum{Prod{Op}}
+  @test Sum{Op}() + ("X", 1, "Y", 2) + (1.2, "Y", 2) isa Sum{Scaled{Float64,Prod{Op}}}
+  @test OpSum() - (0.5, "Z", 1, "Z", 2) isa Sum{Scaled{ComplexF64,Prod{Op}}}
+
+  N = 4
+  s = siteinds("Qubit", N)
+
+  @test ITensor(o1, s) ≈ op("X", s, 1)
+  @test ITensor(2 * o1, s) ≈ 2 * ITensor(o1, s)
+  @test ITensor(o1 * o2, s) ≈ ITensor(o1, s) * ITensor(o2, s)
+  @test ITensor(2 * o1 * o2, s) ≈ 2 * ITensor(o1, s) * ITensor(o2, s)
+  @test ITensor(2 * o1 * o2 + o1 * o2, s) ≈
+    2 * ITensor(o1, s) * ITensor(o2, s) + ITensor(o1, s) * ITensor(o2, s)
+  @test ITensor(exp(o1), s) ≈ exp(ITensor(o1, s))
+  @test ITensor(exp(1.2 * o1), s) ≈ exp(1.2 * ITensor(o1, s))
+  @test ITensor(1.3 * exp(1.2 * o1), s) ≈ 1.3 * exp(1.2 * ITensor(o1, s))
 
   o = (2x1 * y2 - 2CX12) / 3
   @test coefficient(o[1]) ≈ 2 / 3
   @test coefficient(o[2]) ≈ -2 / 3
 
-  N = 4
-  s = siteinds("Qubit", N)
   t1 = ITensor(x1, s)
   @test hassameinds(t1, (s[1]', dag(s[1])))
   @test t1[1, 1] == 0
@@ -57,6 +103,7 @@ end
   @test ITensor(x1 + 2.3x1, s) ≈ 3.3t1
 
   @test ITensor(Op(I, 2), s) ≈ ITensor([1 0; 0 1], s[2]', dag(s[2]))
+  @test ITensor(Op(2I, 2), s) ≈ 2 * ITensor([1 0; 0 1], s[2]', dag(s[2]))
 
   c = x1 * y2 * CX12
   cdag = c'
@@ -75,7 +122,9 @@ end
   @test ITensor(y1 * x1, s) ≈ ITensor(Op([-im 0; 0 im], 1), s)
   @test ITensor(2x1 * x1 + y1, s) ≈
     ITensor(2 * [1 0; 0 1] + [0 -im; im 0], s[1]', dag(s[1]))
-  @test ITensor(2y1 * x2 + x1, s) ≈
+
+  # TODO: Need to add support for filling out with "Id" or "F"
+  @test_broken ITensor(2y1 * x2 + x1, s) ≈
     2 * ITensor(y1, s) * ITensor(x2, s) + ITensor(x1, s) * ITensor(I2, s)
 
   @test y1'' == y1
@@ -89,36 +138,38 @@ end
 
   @test ITensor(I1, s) ≈ ITensor([1 0; 0 1], s[1]', dag(s[1]))
 
-  @test exp(Op("X", 1)) * Op("Y", 2) isa ∏{Any}
+  @test exp(Op("X", 1)) * Op("Y", 2) isa Prod{Any}
   @test ITensor(exp(Op("X", 1)) * Op("Y", 1), s) ≈
     product(exp(ITensor(Op("X", 1), s)), ITensor(Op("Y", 1), s))
-  @test 2exp(Op("X", 1)) * Op("Y", 2) isa α{∏{Any}}
 
-  H = ∑{<:α{∏{Op}}}() - Op("X", 1)
-  @test H isa ∑
-  @test H isa ∑{<:α}
-  @test H isa ∑{<:α{<:∏}}
-  @test H isa ∑{<:α{∏{Op}}}
-  @test H isa ∑{α{∏{Op},T}} where {T}
-  @test H isa ∑{α{∏{Op},Int}}
+  # TODO: Need to define `(::Scaled * ::Op)::Scaled`
+  @test_broken 2exp(Op("X", 1)) * Op("Y", 2) isa Scaled{<:Number,Prod{Any}}
+
+  H = Sum{Scaled{Bool,Prod{Op}}}() - Op("X", 1)
+  @test H isa Sum
+  @test H isa Sum{<:Scaled}
+  @test H isa Sum{<:Scaled{<:Number,<:Prod}}
+  @test H isa Sum{<:Scaled{<:Number,Prod{Op}}}
+  @test H isa Sum{Scaled{T,Prod{Op}}} where {T}
+  @test H isa Sum{Scaled{Int,Prod{Op}}}
   @test length(H) == 1
   @test coefficient(H[1]) == -1
 
-  H = ∑{Op}() - Op("X", 1)
-  @test H isa ∑
-  @test H isa ∑{<:α}
-  @test H isa ∑{<:α{Op}}
-  @test H isa ∑{α{Op,T}} where {T}
-  @test H isa ∑{α{Op,Int}}
+  H = Sum{Op}() - Op("X", 1)
+  @test H isa Sum
+  @test H isa Sum{<:Scaled}
+  @test H isa Sum{<:Scaled{<:Number,Op}}
+  @test H isa Sum{Scaled{T,Op}} where {T}
+  @test H isa Sum{Scaled{Int,Op}}
   @test length(H) == 1
   @test coefficient(H[1]) == -1
 
   # MPO conversion
-  H = ∑{Op}()
+  H = Sum{Op}()
   H -= 2.3, "X", 1, "X", 2
   H += 1.2, "Z", 1
   H += 1.3, "Z", 2, (θ=π / 3,)
-  @test H isa ∑{α{∏{Op},Float64}}
+  @test H isa Sum{Scaled{Float64,Prod{Op}}}
   @test length(H) == 3
   @test coefficient(H[1]) == -2.3
   @test length(H[1]) == 2
@@ -131,14 +182,14 @@ end
   @test Ops.sites(H[3]) == [2]
   @test Ops.params(H[3]) == (θ=π / 3,)
 
-  @test ∑{Op}(("X", 1)) isa ∑{Op}
-  @test ∑{Op}((2.3, "X", 1)) isa ∑{α{Op,Float64}}
-  @test ∑{Op}("X", 1) isa ∑{Op}
-  @test ∑{Op}(2, "X", 1) isa ∑{α{Op,Int}}
-  @test ∑{Op}([Op("X", 1), 2Op("Y", 1)]) isa ∑
-  @test ∑{Op}([Op("X", 1), 2Op("Y", 1)]) isa ∑{<:α}
-  @test ∑{Op}([Op("X", 1), 2Op("Y", 1)]) isa ∑{<:α{Op}}
-  @test ∑{Op}([Op("X", 1), 2Op("Y", 1)]) isa ∑{α{Op,Int}}
+  @test_broken Sum{Op}(("X", 1)) isa Sum{Op}
+  @test_broken Sum{Op}((2.3, "X", 1)) isa Sum{Scaled{Float64,Op}}
+  @test_broken Sum{Op}("X", 1) isa Sum{Op}
+  @test_broken Sum{Op}(2, "X", 1) isa Sum{Scaled{Int,Op}}
+  @test_broken Sum{Op}([Op("X", 1), 2Op("Y", 1)]) isa Sum
+  @test_broken Sum{Op}([Op("X", 1), 2Op("Y", 1)]) isa Sum{<:Scaled}
+  @test_broken Sum{Op}([Op("X", 1), 2Op("Y", 1)]) isa Sum{<:Scaled{<:Number,Op}}
+  @test_broken Sum{Op}([Op("X", 1), 2Op("Y", 1)]) isa Sum{Scaled{Int,Op}}
 
   @testset "Expand expression, 2 products" begin
     expr = (Op("X", 1) + Op("Y", 2)) * (Op("Z", 1) + Op("W", 2))
@@ -172,7 +223,8 @@ end
 
   @testset "Conversion to Sum of ITensors" begin
     H = Sum{Op}() + ("X", 1) + ("Y", 2)
-    @test H == Sum{Op}([("X", 1), ("Y", 2)])
+    @test_broken H == Sum{Op}([("X", 1), ("Y", 2)])
+    @test H == Sum{Op}() + Op("X", 1) + Op("Y", 2)
     s = siteinds("Qubit", 2)
     Hₜ = Sum{ITensor}(H, s)
     @test Hₜ isa Sum{ITensor}
@@ -180,12 +232,14 @@ end
     @test Hₜ[2] ≈ ITensor(Op("Y", 2), s)
   end
 
-  @testset "Conversion to ∏ of ITensors" begin
-    C = ∏{Op}() * ("X", 1) * ("Y", 2)
-    @test C == ∏{Op}([("X", 1), ("Y", 2)])
+  @testset "Conversion to Prod of ITensors" begin
+    C = Prod{Op}() * ("X", 1) * ("Y", 2)
+    @test_broken C == Prod{Op}([("X", 1), ("Y", 2)])
+    @test C == Prod{Op}() * Op("X", 1) * Op("Y", 2)
+    @test C == Op("X", 1) * Op("Y", 2)
     s = siteinds("Qubit", 2)
-    Cₜ = ∏{ITensor}(C, s)
-    @test Cₜ isa ∏{ITensor}
+    Cₜ = Prod{ITensor}(C, s)
+    @test Cₜ isa Prod{ITensor}
     @test Cₜ[1] ≈ ITensor(Op("X", 1), s)
     @test Cₜ[2] ≈ ITensor(Op("Y", 2), s)
   end

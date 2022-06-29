@@ -1,17 +1,19 @@
 using ITensors, Test, Random
 
+using ITensors: nsite, set_nsite!
+
 @testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
     N = 10
     sites = siteinds("S=1", N)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      add!(ampo, "Sz", j, "Sz", j + 1)
-      add!(ampo, 0.5, "S+", j, "S-", j + 1)
-      add!(ampo, 0.5, "S-", j, "S+", j + 1)
+      add!(os, "Sz", j, "Sz", j + 1)
+      add!(os, 0.5, "S+", j, "S-", j + 1)
+      add!(os, 0.5, "S-", j, "S+", j + 1)
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     psi = randomMPS(sites)
 
@@ -31,13 +33,13 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N; conserve_qns=true)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += "Sz", j, "Sz", j + 1
-      ampo += 0.5, "S+", j, "S-", j + 1
-      ampo += 0.5, "S-", j, "S+", j + 1
+      os += "Sz", j, "Sz", j + 1
+      os += 0.5, "S+", j, "S-", j + 1
+      os += 0.5, "S-", j, "S+", j + 1
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
     psi = randomMPS(sites, state; linkdims=4)
@@ -58,13 +60,13 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N; conserve_qns=true)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += "Sz", j, "Sz", j + 1
-      ampo += 0.5, "S+", j, "S-", j + 1
-      ampo += 0.5, "S-", j, "S+", j + 1
+      os += "Sz", j, "Sz", j + 1
+      os += 0.5, "S+", j, "S-", j + 1
+      os += 0.5, "S-", j, "S+", j + 1
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
     psi = randomMPS(sites, state; linkdims=4)
@@ -85,17 +87,19 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N; conserve_qns=true)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += "Sz", j, "Sz", j + 1
-      ampo += 0.5, "S+", j, "S-", j + 1
-      ampo += 0.5, "S-", j, "S+", j + 1
+      os += "Sz", j, "Sz", j + 1
+      os += 0.5, "S+", j, "S-", j + 1
+      os += 0.5, "S-", j, "S+", j + 1
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
     psi = randomMPS(sites, state; linkdims=4)
     PH = ProjMPO(H)
+
+    PHc = copy(PH)
 
     n = 4
     orthogonalize!(psi, n)
@@ -109,11 +113,51 @@ using ITensors, Test, Random
     @test size(PH) == (3^2 * 4^2, 3^2 * 4^2)
     @test PH.lpos == n - 1
     @test PH.rpos == n + 2
+    @test PHc.lpos == 0
+    @test PHc.rpos == N + 1
     @test rproj(PH) ≈ rproj(PHdisk)
     @test PHdisk.LR isa ITensors.DiskVector{ITensor}
     @test PHdisk.LR[PHdisk.rpos] ≈ PHdisk.Rcache
     position!(PH, psi, N)
     @test PH.lpos == N - 1
+  end
+
+  @testset "ProjMPO: nsite" begin
+    N = 10
+    sites = siteinds("S=1", N)
+
+    os1 = OpSum()
+    for j in 1:(N - 1)
+      os1 += 0.5, "S+", j, "S-", j + 1
+      os1 += 0.5, "S-", j, "S+", j + 1
+    end
+    os2 = OpSum()
+    for j in 1:(N - 1)
+      os2 += "Sz", j, "Sz", j + 1
+    end
+    H1 = MPO(os1, sites)
+    H2 = MPO(os2, sites)
+
+    state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+    psi = randomMPS(sites, state; linkdims=4)
+    PH1 = ProjMPO(H1)
+    PH = ProjMPOSum([H1, H2])
+    PH1c = copy(PH1)
+    PHc = copy(PH)
+    @test nsite(PH1) == 2
+    @test nsite(PH) == 2
+    @test nsite(PH1c) == 2
+    @test nsite(PHc) == 2
+
+    set_nsite!(PH1, 3)
+    @test nsite(PH1) == 3
+    @test nsite(PH1c) == 2
+    @test nsite(PHc) == 2
+
+    set_nsite!(PH, 4)
+    @test nsite(PH) == 4
+    @test nsite(PH1c) == 2
+    @test nsite(PHc) == 2
   end
 
   @testset "Transverse field Ising" begin
@@ -122,12 +166,12 @@ using ITensors, Test, Random
     Random.seed!(432)
     psi0 = randomMPS(sites)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:N
-      j < N && add!(ampo, -1.0, "Z", j, "Z", j + 1)
-      add!(ampo, -1.0, "X", j)
+      j < N && add!(os, -1.0, "Z", j, "Z", j + 1)
+      add!(os, -1.0, "X", j)
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     sweeps = Sweeps(5)
     maxdim!(sweeps, 10, 20)
@@ -174,12 +218,12 @@ using ITensors, Test, Random
     state = [isodd(j) ? "↑" : "↓" for j in 1:N]
     psi0 = randomMPS(sites, state)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:N
-      j < N && add!(ampo, -1.0, "X", j, "X", j + 1)
-      add!(ampo, -1.0, "Z", j)
+      j < N && add!(os, -1.0, "X", j, "X", j + 1)
+      add!(os, -1.0, "Z", j)
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     sweeps = Sweeps(5)
     maxdim!(sweeps, 10, 20)
@@ -205,14 +249,14 @@ using ITensors, Test, Random
     Random.seed!(42)
     psi0 = randomMPS(sites)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += -1, "Sz", j, "Sz", j + 1
+      os += -1, "Sz", j, "Sz", j + 1
     end
     for j in 1:N
-      ampo += -0.2, "Sx", j
+      os += -0.2, "Sx", j
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     sweeps = Sweeps(3)
     maxdim!(sweeps, 10)
@@ -239,18 +283,18 @@ using ITensors, Test, Random
     N = 10
     sites = siteinds("S=1", N)
 
-    ampoZ = OpSum()
+    osZ = OpSum()
     for j in 1:(N - 1)
-      ampoZ += "Sz", j, "Sz", j + 1
+      osZ += "Sz", j, "Sz", j + 1
     end
-    HZ = MPO(ampoZ, sites)
+    HZ = MPO(osZ, sites)
 
-    ampoXY = OpSum()
+    osXY = OpSum()
     for j in 1:(N - 1)
-      ampoXY += 0.5, "S+", j, "S-", j + 1
-      ampoXY += 0.5, "S-", j, "S+", j + 1
+      osXY += 0.5, "S+", j, "S-", j + 1
+      osXY += 0.5, "S-", j, "S+", j + 1
     end
-    HXY = MPO(ampoXY, sites)
+    HXY = MPO(osXY, sites)
 
     psi = randomMPS(sites)
 
@@ -271,13 +315,13 @@ using ITensors, Test, Random
     sites[1] = Index(2, "S=1/2,n=1,Site")
     sites[N] = Index(2, "S=1/2,n=$N,Site")
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += "Sz", j, "Sz", j + 1
-      ampo += 0.5, "S+", j, "S-", j + 1
-      ampo += 0.5, "S-", j, "S+", j + 1
+      os += "Sz", j, "Sz", j + 1
+      os += 0.5, "S+", j, "S-", j + 1
+      os += 0.5, "S-", j, "S+", j + 1
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     psi0i = randomMPS(sites; linkdims=10)
 
@@ -312,17 +356,17 @@ using ITensors, Test, Random
     state[7] = 2
     psi0 = productMPS(s, state)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      ampo += -t1, "Cdag", j, "C", j + 1
-      ampo += -t1, "Cdag", j + 1, "C", j
-      ampo += V, "N", j, "N", j + 1
+      os += -t1, "Cdag", j, "C", j + 1
+      os += -t1, "Cdag", j + 1, "C", j
+      os += V, "N", j, "N", j + 1
     end
     for j in 1:(N - 2)
-      ampo += -t2, "Cdag", j, "C", j + 2
-      ampo += -t2, "Cdag", j + 2, "C", j
+      os += -t2, "Cdag", j, "C", j + 2
+      os += -t2, "Cdag", j + 2, "C", j
     end
-    H = MPO(ampo, s)
+    H = MPO(os, s)
 
     sweeps = Sweeps(5)
     maxdim!(sweeps, 10, 20, 100, 100, 200)
@@ -340,18 +384,18 @@ using ITensors, Test, Random
     U = 1.0
     V1 = 0.5
     sites = siteinds("Electron", N; conserve_qns=true)
-    ampo = OpSum()
+    os = OpSum()
     for i in 1:N
-      ampo += (U, "Nupdn", i)
+      os += (U, "Nupdn", i)
     end
     for b in 1:(N - 1)
-      ampo += -t1, "Cdagup", b, "Cup", b + 1
-      ampo += -t1, "Cdagup", b + 1, "Cup", b
-      ampo += -t1, "Cdagdn", b, "Cdn", b + 1
-      ampo += -t1, "Cdagdn", b + 1, "Cdn", b
-      ampo += V1, "Ntot", b, "Ntot", b + 1
+      os += -t1, "Cdagup", b, "Cup", b + 1
+      os += -t1, "Cdagup", b + 1, "Cup", b
+      os += -t1, "Cdagdn", b, "Cdn", b + 1
+      os += -t1, "Cdagdn", b + 1, "Cdn", b
+      os += V1, "Ntot", b, "Ntot", b + 1
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
     sweeps = Sweeps(6)
     maxdim!(sweeps, 50, 100, 200, 400, 800, 800)
     cutoff!(sweeps, 1E-10)
@@ -365,13 +409,13 @@ using ITensors, Test, Random
     N = 6
     sites = siteinds("S=1", N)
 
-    ampo = OpSum()
+    os = OpSum()
     for j in 1:(N - 1)
-      add!(ampo, "Sz", j, "Sz", j + 1)
-      add!(ampo, 0.5, "S+", j, "S-", j + 1)
-      add!(ampo, 0.5, "S-", j, "S+", j + 1)
+      add!(os, "Sz", j, "Sz", j + 1)
+      add!(os, 0.5, "S+", j, "S-", j + 1)
+      add!(os, 0.5, "S-", j, "S+", j + 1)
     end
-    H = MPO(ampo, sites)
+    H = MPO(os, sites)
 
     sweeps = Sweeps(1)
     maxdim!(sweeps, 10)

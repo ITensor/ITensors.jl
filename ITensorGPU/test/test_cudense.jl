@@ -37,8 +37,8 @@ using ITensors,
     B = [SType(0.0) for ii in 1:dim(j), jj in 1:dim(j)]
     dB = ITensorGPU.CuDense{SType,CuVector{SType}}(SType(0.0), dim(i) * dim(j))
     dC = permute!(dB, IndexSet(j, i), dA, IndexSet(i, j))
-    hC = collect(dC)
-    @test vec(transpose(A)) == hC
+    hC = cpu(dC)
+    @test transpose(A) == hC
   end
   @testset "Test move CuDense on/off GPU" begin
     A = [SType(1.0) for ii in 1:dim(i), jj in 1:dim(j)]

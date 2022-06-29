@@ -1,286 +1,376 @@
 module LazyApply
 
-using Compat
-using Zeros
-
 import Base:
-  *,
-  ^,
+  ==,
   +,
   -,
+  *,
   /,
+  ^,
   exp,
   adjoint,
-  reverse,
+  copy,
   show,
-  ==,
-  convert,
   getindex,
   length,
-  size,
+  isless,
   iterate,
-  lastindex
+  firstindex,
+  lastindex,
+  keys,
+  reverse,
+  size
 
-export coefficient, expand, Sum, Prod, coefficient
+export Applied, Scaled, Sum, Prod, Exp, coefficient, argument, expand, materialize, terms
 
-struct Applied{F,Args}
+struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
   f::F
   args::Args
-  function Applied{F,Args}(f, args::Tuple) where {F,Args}
-    return new{F,Args}(f, args)
-  end
+  kwargs::Kwargs
 end
-Applied(f, args::Tuple) = Applied{typeof(f),typeof(args)}(f, args)
-Applied(f, args...) = Applied(f, args)
+Applied(f, args::Tuple) = Applied(f, args, (;))
 
-# TODO: This makes shorthands like `Add(1, 2)` work, but probably
-# it is bad to use `F.instance` to get the function from the type.
-Applied{F,Args}(args::Tuple) where {F,Args} = Applied{F,Args}(F.instance, args)
-Applied{F,Args}(args...) where {F,Args} = Applied{F,Args}(args)
-Applied{F}(args::Tuple) where {F} = Applied{F,typeof(args)}(args)
-Applied{F}(args...) where {F} = Applied{F}(args)
-
-# if VERSION < v"1.6"
-const AppliedTupleAB{F} = Applied{F,Tuple{A,B}} where {A,B}
-const AppliedTupleA{F,B} = Applied{F,Tuple{A,B}} where {A}
-const AppliedTupleVector{F} = Applied{F,Tuple{Vector{T}}} where {T}
-
-# For `Scaled(3.2, "X")`
-## if VERSION > v"1.5"
-##   (Applied{F,Tuple{A,B}} where {A,B})(args::Tuple) where {F} = Applied{F}(args)
-##   (Applied{F,Tuple{A,B}} where {A,B})(args...) where {F} = Applied{F}(args)
-## else
-AppliedTupleAB{F}(args::Tuple) where {F} = Applied{F}(args)
-AppliedTupleAB{F}(args...) where {F} = Applied{F}(args)
-
-# For `Scaled{ComplexF64}(3.2, "X")`
-## if VERSION > v"1.5"
-##   function (Applied{F,Tuple{A,B}} where {A})(args::Tuple{Arg1,Arg2}) where {F,B,Arg1,Arg2}
-##     return Applied{F,Tuple{Arg1,B}}(args)
-##   end
-##   function (Applied{F,Tuple{A,B}} where {A})(args...) where {F,B}
-##     return (Applied{F,Tuple{A,B}} where {A})(args)
-##   end
-## end
-function AppliedTupleA{F,B}(args::Tuple{Arg1,Arg2}) where {F,B,Arg1,Arg2}
-  return Applied{F,Tuple{Arg1,B}}(args)
-end
-function AppliedTupleA{F,B}(args...) where {F,B}
-  return (Applied{F,Tuple{A,B}} where {A})(args)
+function materialize(a::Applied)
+  return a.f(a.args...; a.kwargs...)
 end
 
-# For `Sum([1, 2, 3])` and `Prod([1, 2, 3])`
-## (Applied{F,Tuple{Vector{T}}} where {T})(args::Vector) where {F} = Applied{F}((args,))
-AppliedTupleVector{F}(args::Vector) where {F} = Applied{F}((args,))
-
-_empty(::Type{T}) where {T} = error("_empty not implemented for type $T.")
-_empty(::Type{Tuple{T}}) where {T} = (_empty(T),)
-_empty(::Type{Vector{T}}) where {T} = Vector{T}()
-
-function Applied{F,Args}() where {F,Args}
-  return Applied{F,Args}(_empty(Args))
+function (a1::Applied == a2::Applied)
+  return a1.f == a2.f && a1.args == a2.args && a1.kwargs == a2.kwargs
 end
 
-_initialvalue_type(::Type{typeof(+)}) = Zero
-_initialvalue_type(::Type{typeof(sum)}) = Zero
-_initialvalue_type(::Type{typeof(*)}) = One
-_initialvalue_type(::Type{typeof(prod)}) = One
+#
+# Applied algebra
+#
 
-# For `Sum() == Sum{Zero}()` and `Prod() == Prod{One}()`
-## function (Applied{F,Tuple{Vector{T}}} where {T})() where {F}
-##   return Applied{F,Tuple{Vector{_initialvalue_type(F)}}}()
-## end
-function AppliedTupleVector{F}() where {F}
-  return Applied{F,Tuple{Vector{_initialvalue_type(F)}}}()
+# Used for dispatch
+const Scaled{C<:Number,A} = Applied{typeof(*),Tuple{C,A},NamedTuple{(),Tuple{}}}
+const Sum{A} = Applied{typeof(sum),Tuple{Vector{A}},NamedTuple{(),Tuple{}}}
+const Prod{A} = Applied{typeof(prod),Tuple{Vector{A}},NamedTuple{(),Tuple{}}}
+
+# Some convenient empty constructors
+Sum{A}() where {A} = Applied(sum, (A[],))
+Prod{A}() where {A} = Applied(prod, (A[],))
+
+coefficient(co::Scaled{C}) where {C} = co.args[1]
+argument(co::Scaled{C}) where {C} = co.args[2]
+
+#
+# Generic algebra
+#
+
+# 1.3 * Op("X", 1) + 1.3 * Op("X", 2)
+# 1.3 * Op("X", 1) * Op("X", 2) + 1.3 * Op("X", 3) * Op("X", 4)
+function (a1::Scaled{C,A} + a2::Scaled{C,A}) where {C,A}
+  return Sum{Scaled{C,A}}() + a1 + a2
 end
 
-function (arg1::Applied == arg2::Applied)
-  return (arg1.f == arg2.f) && (arg1.args == arg2.args)
+function (a1::Prod{A} + a2::Prod{A}) where {A}
+  return Sum{Prod{A}}() + a1 + a2
 end
 
-# Shorthands
-const Add{T} = Applied{typeof(+),T}
-const Mul{T} = Applied{typeof(*),T}
-# By default, `A` is the scalar, but the type constraint isn't
-# working for some reason.
-# A scaled operator scaled by a `Float64` of type `Scaled{Op,Float64}`.
-# A scaled operator with an unspecified scalar type is of type `Scaled{Op}`.
-const Scaled{B,A} = Applied{typeof(*),Tuple{A,B}}
-const Sum{T} = Applied{typeof(sum),Tuple{Vector{T}}}
-const Prod{T} = Applied{typeof(prod),Tuple{Vector{T}}}
-const ∑ = Sum
-const ∏ = Prod
-const α = Scaled
+(c::Number * a::Scaled{C}) where {C} = (c * coefficient(a)) * argument(a)
+(a::Scaled{C} * c::Number) where {C} = (coefficient(a) * c) * argument(a)
 
-const Exp{T} = Applied{typeof(exp),Tuple{T}}
+-(a::Scaled{C}) where {C} = (-one(C) * a)
+-(a::Sum) = (-1 * a)
+-(a::Prod) = (-1 * a)
 
-coefficient(arg::Applied) = 𝟏
+(os::Sum{A} + o::A) where {A} = Applied(sum, (vcat(os.args[1], [o]),))
+(o::A + os::Sum{A}) where {A} = Applied(sum, (vcat([o], os.args[1]),))
 
-length(arg::Union{Sum,Prod}) = length(only(arg.args))
-size(arg::Union{Sum,Prod}, args...) = size(only(arg.args), args...)
-lastindex(arg::Union{Sum,Prod}) = length(arg)
-getindex(arg::Union{Sum,Prod}, n) = getindex(arg.args..., n)
-iterate(arg::Union{Sum,Prod}, args...) = iterate(arg.args..., args...)
+(a1::Sum{A} - a2::A) where {C,A} = a1 + (-a2)
+(a1::A - a2::Sum{A}) where {C,A} = a1 + (-a2)
 
-length(arg::Scaled) = length(arg.args[2])
-getindex(arg::Scaled, n) = getindex(arg.args[2], n)
-coefficient(arg::Scaled) = arg.args[1]
-iterate(arg::Scaled, args...) = iterate(arg.args[2], args...)
+(a1::Sum{A} - a2::Prod{A}) where {A} = a1 + (-a2)
+(a1::Sum{A} - a2::Scaled{C,Prod{A}}) where {C,A} = a1 + (-a2)
+(a1::Sum{A} - a2::Sum{Scaled{C,Prod{A}}}) where {C,A} = a1 + (-a2)
 
-Base.convert(::Type{Applied{F,Args}}, arg::Applied{F,Args}) where {F,Args} = arg
+(a1::Prod{A} * a2::A) where {A} = Applied(prod, (vcat(only(a1.args), [a2]),))
+(a1::A * a2::Prod{A}) where {A} = Applied(prod, (vcat([a1], only(a2.args)),))
 
-# For some reasons this conversion isn't being done automatically.
-function convert(::Type{Applied{F,Args1}}, arg2::Applied{F,Args2}) where {F,Args1,Args2}
-  return Applied{F,Args1}(arg2.f, convert(Args1, arg2.args))
+# Fixes ambiguity error with:
+# *(a1::Applied, a2::Sum)
+# *(os::Prod{A}, o::A)
+(a1::Prod{Sum{A}} * a2::Sum{A}) where {A} = Applied(prod, (vcat(only(a1.args), [a2]),))
+
+# 1.3 * Op("X", 1) + 1 * Op("X", 2)
+# 1.3 * Op("X", 1) * Op("X", 2) + 1 * Op("X", 3)
+# 1.3 * Op("X", 1) * Op("X", 2) + 1 * Op("X", 3) * Op("X", 4)
+function (co1::Scaled{C1,A} + co2::Scaled{C2,A}) where {C1,C2,A}
+  c1, c2 = promote(coefficient(co1), coefficient(co2))
+  return c1 * argument(co1) + c2 * argument(co2)
 end
 
-# Just like `Base.promote`, but this doesn't error if
-# a conversion doesn't happen.
-function try_promote(x::T, y::S) where {T,S}
-  R = promote_type(T, S)
-  return (convert(R, x), convert(R, y))
+# (1.3 * Op("X", 1)) * (1.3 * Op("X", 2))
+function (co1::Scaled{C1} * co2::Scaled{C2}) where {C1,C2}
+  c = coefficient(co1) * coefficient(co2)
+  o = argument(co1) * argument(co2)
+  return c * o
 end
 
-# Conversion
-Sum(arg::Add) = Sum(collect(arg.args))
-Sum(arg::Sum) = arg
-
-# Scalar multiplication (general rules)
-_mul(arg1::Number, arg2) = Mul(arg1, arg2)
-(arg1::Number * arg2::Applied) = _mul(arg1, arg2)
-(arg1::Number * arg2::Prod) = _mul(arg1, arg2)
-
-# Scalar division
-(arg1::Applied / arg2::Number) = inv(arg2) * arg1
-
-# Put the scalar value first by convention
-_mul(arg1, arg2::Number) = Mul(arg2, arg1)
-(arg1::Applied * arg2::Number) = _mul(arg1, arg2)
-(arg1::Prod * arg2::Number) = _mul(arg1, arg2)
-
-# Scalar multiplication (specialized rules)
-(arg1::Number * arg2::Scaled) = Mul(arg1 * arg2.args[1], arg2.args[2])
-(arg1::Scaled * arg2::Scaled) =
-  Mul(arg1.args[1] * arg2.args[1], arg1.args[2] * arg2.args[2])
-(arg1::Scaled * arg2) = Mul(arg1.args[1], arg1.args[2] * arg2)
-(arg1 * arg2::Scaled) = Mul(arg2.args[1], arg1 * arg2.args[2])
-# Scalars are treated special for the sake of multiplication
-Mul(arg1::Number, arg2::Number) = arg1 * arg2
-Mul(arg1::Number, arg2::Scaled) = arg1 * arg2
-Mul(arg1::Scaled, arg2::Number) = arg1 * arg2
-(arg1::Number * arg2::Sum) = Sum(map(a -> Mul(arg1, a), arg2))
-(arg1::Number * arg2::Add) = Add(map(a -> Mul(arg1, a), arg2.args))
-
-# Types should implement `__sum`.
-_sum(arg1, arg2) = __sum(try_promote(arg1, arg2)...)
-
-# Addition (general rules)
-__sum(arg1, arg2) = Sum(vcat(arg1, arg2))
-(arg1::Applied + arg2::Applied) = _sum(arg1, arg2)
-(arg1::Applied + arg2) = _sum(arg1, arg2)
-(arg1 + arg2::Applied) = _sum(arg1, arg2)
-
-# Subtraction (general rules)
-_subtract(arg1, arg2) = _sum(arg1, Mul(-𝟏, arg2))
-(arg1::Applied - arg2::Applied) = _subtract(arg1, arg2)
-(arg1::Applied - arg2) = _subtract(arg1, arg2)
-(arg1 - arg2::Applied) = _subtract(arg1, arg2)
-
-# Addition (specialized rules)
-__sum(arg1::Sum, arg2::Sum) = Sum(vcat(arg1.args..., arg2.args...))
-(arg1::Sum + arg2::Sum) = _sum(arg1, arg2)
-(arg1::Add + arg2::Add) = Add(arg1.args..., arg2.args...)
-
-__sum(arg1::Sum, arg2) = Sum(vcat(arg1.args..., arg2))
-__sum(arg1, arg2::Sum) = Sum(vcat(arg1, arg2.args...))
-(arg1::Sum + arg2) = _sum(arg1, arg2)
-(arg1::Sum + arg2::Applied) = _sum(arg1, arg2)
-
-(arg1 + arg2::Sum) = _sum(arg1, arg2)
-(arg1::Add + arg2) = Add(arg1.args..., arg2)
-(arg1 + arg2::Add) = Add(arg1, arg2.args...)
-
-# Multiplication (general rules)
-(arg1::Applied * arg2::Applied) = Prod([arg1, arg2])
-
-# Multiplication (specialized rules)
-(arg1::Prod * arg2::Prod) = Prod(vcat(arg1.args..., arg2.args...))
-(arg1::Sum * arg2::Sum) = Prod([arg1, arg2])
-
-_prod(arg1::Prod{One}, arg2) = Prod(vcat(arg2))
-_prod(arg1::Prod{One}, arg2::Vector) = Prod(arg2)
-_prod(arg1::Prod, arg2) = Prod(vcat(arg1.args..., arg2))
-(arg1::Prod * arg2) = _prod(arg1, arg2)
-(arg1::Prod * arg2::Applied) = _prod(arg1, arg2)
-
-_prod(arg1, arg2::Prod) = Prod(vcat(arg1, arg2...))
-(arg1 * arg2::Prod) = _prod(arg1, arg2)
-(arg1::Applied * arg2::Prod) = _prod(arg1, arg2)
-
-# Generically make products
-(arg1::Applied * arg2) = Prod(vcat(arg1, arg2))
-(arg1 * arg2::Applied) = Prod(vcat(arg1, arg2))
-
-function (arg1::Applied^arg2::Integer)
-  res = ∏()
-  for n in 1:arg2
-    res *= arg1
-  end
-  return res
+function (a1::Prod{A} * a2::Scaled{C,A}) where {C,A}
+  return coefficient(a2) * (a1 * argument(a2))
 end
 
-# Other lazy operations
-exp(arg::Applied) = Applied(exp, arg)
+function (a1::Prod{A} + a2::Scaled{C,A}) where {C,A}
+  return one(C) * a1 + Prod{A}() * a2
+end
 
-# adjoint
-adjoint(arg::Applied) = Applied(adjoint, arg)
-adjoint(arg::Applied{typeof(adjoint)}) = only(arg.args)
-adjoint(arg::Prod) = ∏(reverse(adjoint.(arg)))
+# (Op("X", 1) + Op("X", 2)) + (Op("X", 3) + Op("X", 4))
+# (Op("X", 1) * Op("X", 2) + Op("X", 3) * Op("X", 4)) + (Op("X", 5) * Op("X", 6) + Op("X", 7) * Op("X", 8))
+(a1::Sum{A} + a2::Sum{A}) where {A} = Applied(sum, (vcat(a1.args[1], a2.args[1]),))
+(a1::Sum{A} - a2::Sum{A}) where {A} = a1 + (-a2)
 
-# reverse
-reverse(arg::Prod) = Prod(reverse(arg.args...))
+(a1::Prod{A} * a2::Prod{A}) where {A} = Applied(prod, (vcat(only(a1.args), only(a2.args)),))
 
-# Materialize
-materialize(a::Number) = a
-materialize(a::AbstractString) = a
-materialize(a::Vector) = materialize.(a)
-materialize(a::Applied) = a.f(materialize.(a.args)...)
+(os::Sum{Scaled{C,A}} + o::A) where {C,A} = os + one(C) * o
+(o::A + os::Sum{Scaled{C,A}}) where {C,A} = one(C) * o + os
+
+# Op("X", 1) + Op("X", 2) + 1.3 * Op("X", 3)
+(os::Sum{A} + co::Scaled{C,A}) where {C,A} = one(C) * os + co
+
+# 1.3 * Op("X", 1) + (Op("X", 2) + Op("X", 3))
+(co::Scaled{C,A} + os::Sum{A}) where {C,A} = co + one(C) * os
+
+# 1.3 * (Op("X", 1) + Op("X", 2))
+(c::Number * os::Sum) = Applied(sum, (c * os.args[1],))
+
+(a1::Applied * a2::Sum) = Applied(sum, (map(a -> a1 * a, only(a2.args)),))
+(a1::Sum * a2::Applied) = Applied(sum, (map(a -> a * a2, only(a1.args)),))
+(a1::Sum * a2::Sum) = Applied(prod, ([a1, a2],))
 
 function _expand(a1::Sum, a2::Sum)
-  return ∑(vec([a1[i] * a2[j] for i in 1:length(a1), j in 1:length(a2)]))
+  return Applied(sum, (vec([a1[i] * a2[j] for i in 1:length(a1), j in 1:length(a2)]),))
 end
 
-# Expression manipulation
-function expand(a::Prod{<:Sum})
+function expand(a::Prod)
   if length(a) == 1
     return a[1]
   elseif length(a) ≥ 2
     a12 = _expand(a[1], a[2])
-    return expand(∏(vcat(a12, a[3:end])))
+    return expand(Applied(prod, (vcat([a12], a[3:end]),)))
   end
 end
 
-_print(io::IO, args...) = print(io, args...)
-function _print(io::IO, a::AbstractVector, args...)
-  print(io, "[")
-  for n in 1:length(a)
-    _print(io, a[n], args...)
-    if n < length(a)
-      print(io, ",\n")
+# (Op("X", 1) + Op("X", 2)) * 1.3
+(os::Sum * c::Number) = c * os
+
+# (Op("X", 1) + Op("X", 2)) / 1.3
+(os::Sum / c::Number) = inv(c) * os
+
+# Promotions
+function (co1::Scaled{C,Prod{A}} + co2::Scaled{C,A}) where {C,A}
+  return co1 + coefficient(co2) * Applied(prod, ([argument(co2)],))
+end
+
+function (a1::Scaled - a2::Scaled) where {C,A}
+  return a1 + (-a2)
+end
+
+function (a1::Prod{A} + a2::A) where {A}
+  return a1 + Applied(prod, ([a2],))
+end
+
+function (a1::Sum{A} + a2::Prod{A}) where {A}
+  return Prod{A}() * a1 + a2
+end
+
+function (a1::Sum{A} + a2::Sum{Scaled{C,Prod{A}}}) where {C,A}
+  return (one(C) * Prod{A}() * a1) + a2
+end
+
+function (a1::Prod{A} - a2::A) where {A}
+  return a1 + (-a2)
+end
+
+function (co1::Sum{Scaled{C,Prod{A}}} + co2::Scaled{C,A}) where {C,A}
+  return co1 + coefficient(co2) * Applied(prod, ([argument(co2)],))
+end
+
+function (a1::Sum{Scaled{C1,Prod{A}}} - a2::Scaled{C2,A}) where {C1,C2,A}
+  return a1 + (-a2)
+end
+
+function (a1::Sum{Scaled{C,Prod{A}}} - a2::Prod{A}) where {C,A}
+  return a1 + (-a2)
+end
+
+function (a1::Sum{Scaled{C1,Prod{A}}} - a2::Scaled{C2,Prod{A}}) where {C1,C2,A}
+  return a1 + (-a2)
+end
+
+function (a1::Sum{A} + a2::Scaled{C,Prod{A}}) where {C,A}
+  return Sum{Scaled{C,Prod{A}}}() + a1 + a2
+end
+
+function (a1::Sum{Scaled{C1,Prod{A}}} + a2::Scaled{C2,A}) where {C1,C2,A}
+  C = promote_type(C1, C2)
+  return one(C) * a1 + one(C) * a2
+end
+
+# (::Sum{Scaled{Bool,Prod{Op}}} + ::Scaled{Float64,Prod{Op}})
+function (a1::Sum{Scaled{C1,A}} + a2::Scaled{C2,A}) where {C1,C2,A}
+  C = promote_type(C1, C2)
+  return one(C) * a1 + one(C) * a2
+end
+
+# TODO: Is this needed? It seems like:
+#
+# (a1::Sum{A} + a2::A)
+#
+# is not being called.
+function (a1::Sum{Scaled{C,A}} + a2::Scaled{C,A}) where {C,A}
+  return Applied(sum, (vcat(only(a1.args), [a2]),))
+end
+
+function (a1::Sum{Scaled{C,Prod{A}}} + a2::Sum{A}) where {C,A}
+  a2 = one(C) * a2
+  a2 = Prod{A}() * a2
+  return a1 + one(C) * Prod{A}() * a2
+end
+
+function (a1::Sum{Prod{A}} + a2::A) where {A}
+  return a1 + (Prod{A}() * a2)
+end
+
+function (a1::Sum{Prod{A}} + a2::Scaled{C,A}) where {C,A}
+  return a1 + (Prod{A}() * a2)
+end
+
+function (a1::Sum{Scaled{C,Prod{A}}} + a2::A) where {C,A}
+  return a1 + one(C) * a2
+end
+(a1::Sum{Scaled{C,Prod{A}}} - a2::A) where {C,A} = a1 + (-a2)
+
+function (a1::Sum{Scaled{C,Prod{A}}} + a2::Sum{Scaled{C,A}}) where {C,A}
+  return a1 + (Prod{A}() * a2)
+end
+
+function (o::A + os::Sum{Scaled{C,Prod{A}}}) where {C,A}
+  return one(C) * o + os
+end
+
+function (a::Sum^n::Int)
+  r = a
+  for _ in 2:n
+    r *= a
+  end
+  return r
+end
+
+function (a::Prod^n::Int)
+  r = a
+  for _ in 2:n
+    r *= a
+  end
+  return r
+end
+
+exp(a::Applied) = Applied(exp, (a,))
+
+const Exp{A} = Applied{typeof(exp),Tuple{A},NamedTuple{(),Tuple{}}}
+const Adjoint{A} = Applied{typeof(adjoint),Tuple{A},NamedTuple{(),Tuple{}}}
+
+argument(a::Exp) = a.args[1]
+
+(c::Number * e::Exp) = Applied(*, (c, e))
+(e::Exp * c::Number) = c * e
+(e1::Exp * e2::Exp) = Applied(prod, ([e1, e2],))
+(e1::Applied * e2::Exp) = Applied(prod, ([e1, e2],))
+(e1::Exp * e2::Applied) = Applied(prod, ([e1, e2],))
+
+function reverse(a::Prod)
+  return Applied(prod, (reverse(only(a.args)),))
+end
+
+adjoint(a::Prod) = Applied(prod, (map(adjoint, reverse(only(a.args))),))
+
+#
+# Convenient indexing
+#
+
+getindex(a::Union{Sum,Prod}, I...) = only(a.args)[I...]
+iterate(a::Union{Sum,Prod}, args...) = iterate(only(a.args), args...)
+size(a::Union{Sum,Prod}) = size(only(a.args))
+length(a::Union{Sum,Prod}) = length(only(a.args))
+firstindex(a::Union{Sum,Prod}) = 1
+lastindex(a::Union{Sum,Prod}) = length(a)
+keys(a::Union{Sum,Prod}) = 1:length(a)
+
+length(a::Scaled{C,<:Sum}) where {C} = length(argument(a))
+length(a::Scaled{C,<:Prod}) where {C} = length(argument(a))
+getindex(a::Scaled{C,<:Sum}, I...) where {C} = getindex(argument(a), I...)
+getindex(a::Scaled{C,<:Prod}, I...) where {C} = getindex(argument(a), I...)
+lastindex(a::Scaled{C,<:Sum}) where {C} = lastindex(argument(a))
+lastindex(a::Scaled{C,<:Prod}) where {C} = lastindex(argument(a))
+
+#
+# Functions convenient for AutoMPO code
+#
+
+terms(a::Union{Sum,Prod}) = only(a.args)
+terms(a::Scaled{C,<:Union{Sum,Prod}}) where {C} = terms(argument(a))
+copy(a::Applied) = Applied(deepcopy(a.f), deepcopy(a.args), deepcopy(a.kwargs))
+Sum(a::Vector) = Applied(sum, (a,))
+Prod(a::Vector) = Applied(prod, (a,))
+function isless(a1::Applied{F}, a2::Applied{F}) where {F}
+  return (isless(a1.args, a2.args) && isless(a1.kwargs, a2.kwargs))
+end
+
+#
+# Printing
+#
+
+function show(io::IO, ::MIME"text/plain", a::Sum)
+  print(io, "sum(\n")
+  for n in eachindex(a)
+    print(io, "  ", a[n])
+    if n ≠ lastindex(a)
+      print(io, "\n")
     end
   end
-  return print(io, "]")
+  print(io, "\n)")
+  return nothing
 end
+show(io::IO, a::Sum) = show(io, MIME("text/plain"), a)
 
-function show(io::IO, m::MIME"text/plain", a::Applied)
-  print(io, a.f, "(\n")
+function show(io::IO, ::MIME"text/plain", a::Prod)
+  print(io, "prod(\n")
+  for n in eachindex(a)
+    print(io, "  ", a[n])
+    if n ≠ lastindex(a)
+      print(io, "\n")
+    end
+  end
+  print(io, "\n)")
+  return nothing
+end
+show(io::IO, a::Prod) = show(io, MIME("text/plain"), a)
+
+function show(io::IO, m::MIME"text/plain", a::Exp)
+  print(io, a.f, "(")
   for n in 1:length(a.args)
-    _print(io, a.args[n])
+    print(io, a.args[n])
     if n < length(a.args)
       print(io, ", ")
     end
   end
-  return print(io, "\n)")
+  print(io, ")")
+  return nothing
+end
+show(io::IO, a::Exp) = show(io, MIME("text/plain"), a)
+
+function show(io::IO, m::MIME"text/plain", a::Applied)
+  print(io, a.f, "(\n")
+  for n in 1:length(a.args)
+    print(io, a.args[n])
+    if n < length(a.args)
+      print(io, ", ")
+    end
+  end
+  print(io, "\n)")
+  return nothing
 end
 show(io::IO, a::Applied) = show(io, MIME("text/plain"), a)
+
 end

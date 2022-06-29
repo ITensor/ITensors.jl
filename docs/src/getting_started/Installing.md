@@ -37,10 +37,15 @@ are assumed to be executed in your home directory):
 ```
 $ cd
 $ mkdir -p bin
-$ wget https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.5.3-linux-x86_64.tar.gz
-$ tar xvzf julia-1.5.3-linux-x86_64.tar.gz
-$ ln -s julia-1.5.3/bin/julia  bin/julia
+$ wget https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.2-linux-x86_64.tar.gz
+$ tar xvzf julia-1.7.2-linux-x86_64.tar.gz
+$ ln -s julia-1.7.2/bin/julia  bin/julia
 ```
+If you want to install Julia 1.6.6, you would change `1.7` to `1.6` and `1.7.2` to `1.6.6`.
+In general we recommend using the current stable release of Julia, which you can find out by
+going to [the Julia Downloads page](https://julialang.org/downloads/).
+We also don't recommend using versions of Julia below 1.6, which are no longer compatible
+with ITensors.jl as of ITensors 0.3.
 
 After these steps, you should be able to type `julia` from your terminal to run Julia 
 in interactive mode. If that works, then you have the Julia language and can run it in
@@ -51,7 +56,7 @@ Explanation of the sample commands above:
  - The first command `cd` goes to your home directory. 
  - The second command makes a new folder `bin/` under your home directory if it does not already exist. 
  - The third command downloads the Julia language as a compressed tar.gz file. (You may want to do this step and the follwing steps in a different folder of your choosing.) 
- - The fourth command uncompresses the tar.gz file into a folder called (in this example) `julia-1.5.3`. 
+ - The fourth command uncompresses the tar.gz file into a folder called (in this example) `julia-1.7.2`. 
  - The last command makes a soft link called `julia` in your `bin` directory which links to the Julia language binary within the folder you just unpacked containing the Julia language.
 
 ## Installing ITensor (ITensors.jl Package)

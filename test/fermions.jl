@@ -554,8 +554,8 @@ using ITensors, Test
         psiA = productMPS(sites, stateA)
         psiB = productMPS(sites, stateB)
 
-        @test inner(psiA, H, psiB) ≈ -t1
-        @test inner(psiB, H, psiA) ≈ -t1
+        @test inner(psiA', H, psiB) ≈ -t1
+        @test inner(psiB', H, psiA) ≈ -t1
       end
 
       for j in 1:(N - 1)
@@ -563,7 +563,7 @@ using ITensors, Test
         state[j] = 2
         state[j + 1] = 2
         psi = productMPS(sites, state)
-        @test inner(psi, H, psi) ≈ V1
+        @test inner(psi', H, psi) ≈ V1
       end
     end
 
@@ -598,13 +598,13 @@ using ITensors, Test
       state3[4] = 2
       psi3 = productMPS(s, state3)
 
-      @test inner(psi1, H, psi2) ≈ -t1
-      @test inner(psi2, H, psi1) ≈ -t1
-      @test inner(psi2, H, psi3) ≈ -t1
-      @test inner(psi3, H, psi2) ≈ -t1
+      @test inner(psi1', H, psi2) ≈ -t1
+      @test inner(psi2', H, psi1) ≈ -t1
+      @test inner(psi2', H, psi3) ≈ -t1
+      @test inner(psi3', H, psi2) ≈ -t1
 
-      @test inner(psi1, H, psi3) ≈ -t2
-      @test inner(psi3, H, psi1) ≈ -t2
+      @test inner(psi1', H, psi3) ≈ -t2
+      @test inner(psi3', H, psi1) ≈ -t2
 
       # Add stationary particle to site 2,
       # hopping over should change sign:
@@ -612,8 +612,8 @@ using ITensors, Test
       psi1 = productMPS(s, state1)
       state3[2] = 2
       psi3 = productMPS(s, state3)
-      @test inner(psi1, H, psi3) ≈ +t2
-      @test inner(psi3, H, psi1) ≈ +t2
+      @test inner(psi1', H, psi3) ≈ +t2
+      @test inner(psi3', H, psi1) ≈ +t2
     end
   end
 
@@ -796,7 +796,7 @@ using ITensors, Test
 
       energy, psi = dmrg(Ht, psi0, sweeps; outputlevel=0)
 
-      energy_inner = inner(psi, Ht, psi)
+      energy_inner = inner(psi', Ht, psi)
 
       C = correlation_matrix(psi, "Cdag", "C")
       C_energy =

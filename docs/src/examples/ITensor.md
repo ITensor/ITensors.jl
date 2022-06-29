@@ -442,6 +442,63 @@ Note the use of the optional `positive=true` keyword argument, which ensures tha
 the diagonal elements of `R` are non-negative. With this option, the QR factorization
 is *unique*, which can be useful in certain cases.
 
+## Combining Multiple Indices into One Index
+
+It can be very useful to combine or merge multiple indices of an ITensor into a 
+single Index. Say we have an ITensor with indices `i,j,k` and we want to combine
+Index `i` and Index `k` into a new Index. This new Index (call it `c`) will have
+a dimension whose size is the dimension of `i` times the dimension of `k`.
+
+To carry out this procedure we can make a special kind of ITensor: a combiner.
+To make a combiner, call the function `combiner`, passing the indices you
+want to combine:
+```@example combiner
+using ITensors # hide
+i = Index(4,"i") # hide
+j = Index(3,"j") # hide
+k = Index(2,"k") # hide
+C = combiner(i,k; tags="c")
+nothing # hide
+```
+
+Then if we have an ITensor
+```@example combiner
+T = randomITensor(i,j,k)
+@show inds(T)
+```
+we can combine indices `i` and `k` by contracting with the combiner:
+```@example combiner
+CT = C * T
+nothing # hide
+```
+
+Printing out the indices of the new ITensor `CT` we can see that it 
+has only two indices:
+```@example combiner
+@show inds(CT)
+```
+The first is the newly made combined Index, which was made for us by
+the `combiner` function and the second is the `j` Index of `T`
+which was not part of the combining process. To access the combined
+Index you can call the `combinedind` function on the combiner:
+```@example combiner
+ci = combinedind(C)
+```
+
+We can visualize all of the steps above as follows:
+![](combiner_itensor.png)
+
+Combining is not limited to two indices and you can
+combine any number of indices, in any order, using a combiner.
+
+To undo the combining process and uncombine the Index `c` back into `i,k`,
+just contract with the conjugate of the combiner ITensor `dag(C)`. 
+```@example combiner
+UT = dag(C) * CT
+@show inds(UT)
+```
+
+
 ## Write and Read an ITensor to Disk with HDF5
 
 Saving ITensors to disk can be very useful. For example, you

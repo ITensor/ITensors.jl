@@ -40,7 +40,10 @@ function LinearAlgebra.svd(T::CuDenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,
   @timeit "CUSOLVER svd" begin
     MU, MS, MV = CUSOLVER.svd!(aT)
   end
-  #conj!(MV)
+  # for consistency with cpu version, 
+  # ITensors.jl/NDTensors/src/linearalgebra.jl/svd
+  # need conj!(MV)
+  conj!(MV)
   P = MS .^ 2
   truncerr, docut, P = truncate!(
     P;

@@ -6,9 +6,6 @@ let
   tau = 0.1
   ttotal = 5.0
 
-  # Compute the number of steps to do
-  Nsteps = Int(ttotal / tau)
-
   # Make an array of 'site' indices
   s = siteinds("S=1/2", N; conserve_qns=true)
 
@@ -33,19 +30,16 @@ let
 
   c = div(N, 2) # center site
 
-  # Compute and print initial <Sz> value on site c
-  t = 0.0
-  Sz = expect(psi, "Sz"; site_range=c:c)
-  println("$t $Sz")
-
-  # Do the time evolution by applying the gates
-  # for Nsteps steps and printing <Sz> on site c
-  for step in 1:Nsteps
-    psi = apply(gates, psi; cutoff=cutoff)
-    normalize!(psi)
-    t += tau
-    Sz = expect(psi, "Sz"; site_range=c:c)
+  # Compute and print <Sz> at each time step
+  # then apply the gates to go to the next time
+  for t in 0.0:tau:ttotal
+    Sz = expect(psi, "Sz"; sites=c)
     println("$t $Sz")
+
+    t ≈ ttotal && break
+
+    psi = apply(gates, psi; cutoff)
+    normalize!(psi)
   end
 
   return nothing

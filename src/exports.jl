@@ -1,6 +1,7 @@
 export
   # From external modules
   # LinearAlgebra
+  nullspace,
   tr,
 
   # Modules
@@ -39,6 +40,7 @@ export
   polar,
   qr,
   svd,
+  diag,
 
   # global_variables.jl
   # Methods
@@ -69,6 +71,7 @@ export
   plev,
   prime,
   removetags,
+  removeqn,
   removeqns,
   replacetags,
   replacetags!,
@@ -114,8 +117,10 @@ export
   ITensor,
   # Methods
   ⊙,
+  ⊕,
   addtags!,
   apply,
+  Apply,
   array,
   axpy!,
   blockoffsets,
@@ -124,12 +129,15 @@ export
   commonind,
   commoninds,
   complex!,
+  convert_eltype,
+  convert_leaf_eltype,
   delta,
   dense,
   denseblocks,
   δ,
   diagitensor,
   diagITensor,
+  directsum,
   dot,
   eachnzblock,
   firstind,
@@ -204,10 +212,10 @@ export
   hastags,
 
   # LazyApply/LazyApply.jl
-  coefficient,
   Scaled,
   Sum,
   Prod,
+  coefficient,
 
   # mps/dmrg.jl
   dmrg,
@@ -217,9 +225,10 @@ export
   @preserve_ortho,
   # Methods
   add,
-  contract,
   common_siteind,
   common_siteinds,
+  contract,
+  convert_eltype,
   dag!,
   findfirstsiteind,
   findfirstsiteinds,
@@ -359,6 +368,8 @@ export
   ops,
   OpName,
   @OpName_str,
+  ValName,
+  @ValName_str,
   state,
   TagType,
   @TagType_str,
@@ -374,6 +385,7 @@ export
   val,
 
   # qn/qnindex.jl
+  blockdim,
   flux,
   hasqns,
   nblocks,

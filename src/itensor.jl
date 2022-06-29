@@ -114,6 +114,9 @@ ITensor(as::AliasStyle, is, st::TensorStorage)::ITensor = ITensor(as, st, is)
 ITensor(st::TensorStorage, is)::ITensor = itensor(Tensor(NeverAlias(), st, Tuple(is)))
 ITensor(is, st::TensorStorage)::ITensor = ITensor(NeverAlias(), st, is)
 
+itensor(T::ITensor) = T
+ITensor(T::ITensor) = copy(T)
+
 """
     itensor(args...; kwargs...)
 
@@ -461,6 +464,13 @@ function ITensor(
   return itensor(Dense(data), inds)
 end
 
+# Convert `Adjoint` to `Matrix`
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
+)
+  return ITensor(as, eltype, Matrix(A), inds; kwargs...)
+end
+
 function ITensor(
   as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
 )
@@ -639,6 +649,8 @@ const δ = delta
 """
     onehot(ivs...)
     setelt(ivs...)
+    onehot(::Type, ivs...)
+    setelt(::Type, ivs...)
 
 Create an ITensor with all zeros except the specified value,
 which is set to 1.
@@ -649,16 +661,23 @@ i = Index(2,"i")
 A = onehot(i=>2)
 # A[i=>2] == 1, all other elements zero
 
+# Specify the element type
+A = onehot(Float32, i=>2)
+
 j = Index(3,"j")
 B = onehot(i=>1,j=>3)
 # B[i=>1,j=>3] == 1, all other element zero
 ```
 """
-function onehot(ivs::Pair{<:Index}...)
-  A = emptyITensor(ind.(ivs)...)
-  A[val.(ivs)...] = 1.0
+function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  A = ITensor(eltype, ind.(ivs)...)
+  A[val.(ivs)...] = one(eltype)
   return A
 end
+onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(eltype, ivs...)
+setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(eltype, ivs...)
+
+onehot(ivs::Pair{<:Index}...) = onehot(Float64, ivs...)
 onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
@@ -673,6 +692,8 @@ filled with zeros except for the diagonal values.
 function dense(A::ITensor)
   return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
 end
+
+removeqns(T::ITensor) = dense(T)
 
 denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
@@ -747,6 +768,28 @@ size(T::ITensor) = dims(T)
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
+
+function convert_eltype(ElType::Type, T::ITensor)
+  if eltype(T) == ElType
+    return T
+  end
+  return itensor(ElType.(tensor(T)))
+end
+
+function convert_leaf_eltype(ElType::Type, T::ITensor)
+  return convert_eltype(ElType, T)
+end
+
+"""
+    convert_leaf_eltype(ElType::Type, A::Array)
+
+Convert the element type of the lowest level containers
+("leaves") of a recursive data structure, such as
+an Vector of Vectors.
+"""
+function convert_leaf_eltype(ElType::Type, A::Array)
+  return map(x -> convert_leaf_eltype(ElType, x), A)
+end
 
 """
     Array{ElT, N}(T::ITensor, i:Index...)
@@ -1049,6 +1092,14 @@ For example, for dense tensors this may return `1:length(A)`, while for sparse t
 it may return a Cartesian range.
 """
 eachindex(A::ITensor) = eachindex(tensor(A))
+
+"""
+    eachindval(A::ITensor)
+
+Create an iterable object for visiting each element of the ITensor `A` (including structually
+zero elements for sparse tensors) in terms of pairs of indices and values.
+"""
+eachindval(T::ITensor) = eachindval(inds(T))
 
 """
     iterate(A::ITensor, args...)
@@ -1450,6 +1501,8 @@ function (A::ITensor == B::ITensor)
   return norm(A - B) == zero(promote_type(eltype(A), eltype(B)))
 end
 
+LinearAlgebra.promote_leaf_eltypes(A::ITensor) = eltype(A)
+
 function isapprox(A::ITensor, B::ITensor; kwargs...)
   if !hassameinds(A, B)
     error(
@@ -1517,6 +1570,67 @@ function combiner(; kwargs...)
   return itensor(Combiner(), ())
 end
 
+@doc """
+    combiner(inds::Indices; kwargs...)
+
+Make a combiner ITensor which combines the indices (of type Index)
+into a single, new Index whose size is the product of the indices 
+given. For example, given indices `i1,i2,i3` the combiner will have 
+these three indices plus an additional one whose dimension is the 
+product of the dimensions of `i1,i2,i3`.
+
+Internally, a combiner ITensor uses a special storage type which
+means it does not hold actual tensor elements but just information
+about how to combine the indices into a single Index. Taking a product
+of a regular ITensor with a combiner uses special fast algorithms to
+combine the indices.
+
+To obtain the new, combined Index that the combiner makes out of
+the indices it is given, use the `combinedind` function.
+
+To undo or reverse the combining process, uncombining the Index back
+into the original ones, contract the tensor having the combined Index
+with the conjugate or `dag` of the combiner. (If the combiner is an ITensor 
+`C`, multiply by `dag(C)`.)
+
+### Example
+```
+# Combine indices i and k into a new Index ci
+T = randomITensor(i,j,k)
+C = combiner(i,k)
+CT = C * T
+ci = combinedind(C)
+
+# Uncombine ci back into i and k
+TT = dag(C) * CT
+
+# TT will be the same as T
+@show norm(TT - T) ≈ 0.0
+```
+         
+              i  j  k
+              |  |  |
+     T   =    =======
+
+              ci  i  k
+              |   |  |
+     C   =    ========
+              
+              ci  j
+              |   |
+     C * T =  =====
+
+""" combiner
+
+"""
+    combinedind(C::ITensor)
+
+Given a combiner ITensor, return the Index which is
+the "combined" index that is made out of merging
+the other indices given to the combiner when it is made
+
+For more information, see the `combiner` function.
+"""
 function combinedind(T::ITensor)
   if storage(T) isa Combiner && order(T) > 0
     return inds(T)[1]
@@ -1728,11 +1842,11 @@ function (A::ITensor - B::ITensor)
   return C
 end
 
-Base.real(T::ITensor)::ITensor = itensor(real(tensor(T)))
+real(T::ITensor)::ITensor = itensor(real(tensor(T)))
 
-Base.imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
+imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
 
-Base.conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
+conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
 
 # Function barrier
 function _contract(A::Tensor, B::Tensor)
@@ -1833,7 +1947,9 @@ B = randomITensor(k,i,j)
 C = A * B # inner product of A and B, all indices contracted
 ```
 """
-(A::ITensor * B::ITensor)::ITensor = contract(A, B)
+function (A::ITensor * B::ITensor)::ITensor
+  return contract(A, B)
+end
 
 function contract(A::ITensor, B::ITensor)::ITensor
   NA::Int = ndims(A)
@@ -2019,10 +2135,8 @@ function ishermitian(T::ITensor; kwargs...)
   return isapprox(T, dag(transpose(T)); kwargs...)
 end
 
-# Trace an ITensor over pairs of indices determined by
-# the prime levels and tags. Indices that are not in pairs
-# are not traced over, corresponding to a "batched" trace.
-function tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
+# Fix for AD
+function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   trpairs = indpairs(T; plev=plev, tags=tags)
   Cᴸ = combiner(first.(trpairs))
   Cᴿ = combiner(last.(trpairs))
@@ -2034,6 +2148,13 @@ function tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
     return Tᶜ[]
   end
   return Tᶜ
+end
+
+# Trace an ITensor over pairs of indices determined by
+# the prime levels and tags. Indices that are not in pairs
+# are not traced over, corresponding to a "batched" trace.
+function tr(T::ITensor; kwargs...)
+  return _tr(T; kwargs...)
 end
 
 """
@@ -2149,16 +2270,79 @@ function directsum_itensors(i::Index, j::Index, ij::Index)
   return D1, D2
 end
 
+function check_directsum_inds(A::ITensor, I, B::ITensor, J)
+  a = uniqueinds(A, I)
+  b = uniqueinds(B, J)
+  if !hassameinds(a, b)
+    error("""In directsum, attemptying to direct sum ITensors A and B with indices:
+
+          $(inds(A))
+
+          and
+
+          $(inds(B))
+
+          over the indices
+
+          $(I)
+
+          and
+
+          $(J)
+
+          The indices not being direct summed must match, however they are
+
+          $a
+
+          and
+
+          $b
+          """)
+  end
+end
+
+function _directsum(A::ITensor, I, B::ITensor, J; tags=["sum$i" for i in 1:length(I)])
+  N = length(I)
+  (N != length(J)) &&
+    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
+  check_directsum_inds(A, I, B, J)
+  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
+  for n in 1:N
+    In = I[n]
+    Jn = J[n]
+    In = dir(A, In) != dir(In) ? dag(In) : In
+    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
+    IJn = directsum(In, Jn; tags=tags[n])
+    D1, D2 = directsum_itensors(In, Jn, IJn)
+    IJ[n] = IJn
+    A *= D1
+    B *= D2
+  end
+  C = A + B
+  return C => IJ
+end
+
+function _directsum(A::ITensor, i::Index, B::ITensor, j::Index; tags="sum")
+  C, (ij,) = _directsum(A, (i,), B, (j,); tags=[tags])
+  return C => ij
+end
+
 function directsum(A_and_I::Pair{ITensor}, B_and_J::Pair{ITensor}; kwargs...)
-  A, I = A_and_I
-  B, J = B_and_J
-  return directsum(A, B, I, J; kwargs...)
+  return _directsum(A_and_I..., B_and_J...; kwargs...)
+end
+
+function default_directsum_tags(A_and_I::Pair{ITensor})
+  return ["sum$i" for i in 1:length(last(A_and_I))]
+end
+
+function default_directsum_tags(A_and_I::Pair{ITensor,<:Index})
+  return "sum"
 end
 
 """
     directsum(A::Pair{ITensor}, B::Pair{ITensor}, ...; tags)
 
-Given a list of pairs of ITensors and collections of indices, perform a partial
+Given a list of pairs of ITensors and indices, perform a partial
 direct sum of the tensors over the specified indices. Indices that are
 not specified to be summed must match between the tensors.
 
@@ -2180,9 +2364,21 @@ j1 = Index(4, "j1")
 i2 = Index(5, "i2")
 j2 = Index(6, "j2")
 
+A1 = randomITensor(x, i1)
+A2 = randomITensor(x, i2)
+S, s = directsum(A1 => i1, A2 => i2)
+dim(s) == dim(i1) + dim(i2)
+
+A3 = randomITensor(x, j1)
+S, s = directsum(A1 => i1, A2 => i2, A3 => j1)
+dim(s) == dim(i1) + dim(i2) + dim(j1)
+
 A1 = randomITensor(i1, x, j1)
 A2 = randomITensor(x, j2, i2)
-S, s = ITensors.directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+S, s = directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+length(s) == 2
+dim(s[1]) == dim(i1) + dim(i2)
+dim(s[2]) == dim(j1) + dim(j2)
 ```
 """
 function directsum(
@@ -2190,34 +2386,16 @@ function directsum(
   B_and_J::Pair{ITensor},
   C_and_K::Pair{ITensor},
   itensor_and_inds...;
-  tags=["sum$i" for i in 1:length(last(A_and_I))],
+  tags=default_directsum_tags(A_and_I),
 )
-  return directsum(
-    Pair(directsum(A_and_I, B_and_J; kwargs...)...), C_and_K, itensor_and_inds...; tags=tags
-  )
+  return directsum(directsum(A_and_I, B_and_J; tags), C_and_K, itensor_and_inds...; tags)
 end
 
-function directsum(A::ITensor, B::ITensor, I, J; tags)
-  N = length(I)
-  (N != length(J)) &&
-    error("In directsum(::ITensor, ::ITensor, ...), must sum equal number of indices")
-  IJ = Vector{Base.promote_eltype(I, J)}(undef, N)
-  for n in 1:N
-    In = I[n]
-    Jn = J[n]
-    In = dir(A, In) != dir(In) ? dag(In) : In
-    Jn = dir(B, Jn) != dir(Jn) ? dag(Jn) : Jn
-    IJn = directsum(In, Jn; tags=tags[n])
-    D1, D2 = directsum_itensors(In, Jn, IJn)
-    IJ[n] = IJn
-    A *= D1
-    B *= D2
-  end
-  C = A + B
-  return C, IJ
-end
+const ⊕ = directsum
 
 """
+    apply(A::ITensor, B::ITensor)
+    (A::ITensor)(B::ITensor)
     product(A::ITensor, B::ITensor)
 
 Get the product of ITensor `A` and ITensor `B`, which
@@ -2366,6 +2544,10 @@ end
 
 # Alias apply with product
 const apply = product
+
+(A::ITensor)(B::ITensor) = apply(A, B)
+
+const Apply{Args} = Applied{typeof(apply),Args}
 
 inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
 inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
@@ -2552,13 +2734,44 @@ isempty(T::ITensor) = isemptystorage(T)
 Given an ITensor `T`, returns
 an Array with a copy of the ITensor's elements,
 or a view in the case the the ITensor's storage is Dense.
+
 The ordering of the elements in the Array, in
 terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
-*Therefore this method is intended for developer use
-only and not recommended for use in ITensor applications.*
+
+!!! warning
+    This method is intended for developer use
+    only and not recommended for use in ITensor applications
+    unless you know what you are doing (for example
+    you are certain of the memory ordering of the ITensor
+    because you permuted the indices into a certain order).
+
+See also [`matrix`](@ref), [`vector`](@ref).
 """
 array(T::ITensor) = array(tensor(T))
+
+"""
+    array(T::ITensor, inds...)
+
+Convert an ITensor `T` to an Array.
+
+The ordering of the elements in the Array are specified
+by the input indices `inds`. This tries to avoid copying
+of possible (i.e. may return a view of the original
+data), for example if the ITensor's storage is Dense
+and the indices are already in the specified ordering
+so that no permutation is required.
+
+!!! warning
+    Note that in the future we may return specialized
+    AbstractArray types for certain storage types,
+    for example a `LinearAlgebra.Diagonal` type for
+    an ITensor with `Diag` storage. The specific storage
+    type shouldn't be relied upon.
+
+See also [`matrix`](@ref), [`vector`](@ref).
+"""
+array(T::ITensor, inds...) = array(permute(T, inds...; allow_alias=true))
 
 """
     matrix(T::ITensor)
@@ -2566,11 +2779,19 @@ array(T::ITensor) = array(tensor(T))
 Given an ITensor `T` with two indices, returns
 a Matrix with a copy of the ITensor's elements,
 or a view in the case the ITensor's storage is Dense.
+
 The ordering of the elements in the Matrix, in
 terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
-*Therefore this method is intended for developer use
-only and not recommended for use in ITensor applications.*
+
+!!! warning
+    This method is intended for developer use
+    only and not recommended for use in ITensor applications
+    unless you know what you are doing (for example
+    you are certain of the memory ordering of the ITensor
+    because you permuted the indices into a certain order).
+
+See also [`array`](@ref), [`vector`](@ref).
 """
 function matrix(T::ITensor)
   ndims(T) != 2 && throw(DimensionMismatch())
@@ -2578,16 +2799,65 @@ function matrix(T::ITensor)
 end
 
 """
+    matrix(T::ITensor, inds...)
+
+Convert an ITensor `T` to a Matrix.
+
+The ordering of the elements in the Matrix are specified
+by the input indices `inds`. This tries to avoid copying
+of possible (i.e. may return a view of the original
+data), for example if the ITensor's storage is Dense
+and the indices are already in the specified ordering
+so that no permutation is required.
+
+!!! warning
+    Note that in the future we may return specialized
+    AbstractArray types for certain storage types,
+    for example a `LinearAlgebra.Diagonal` type for
+    an ITensor with `Diag` storage. The specific storage
+    type shouldn't be relied upon.
+
+See also [`array`](@ref), [`vector`](@ref).
+"""
+matrix(T::ITensor, inds...) = matrix(permute(T, inds...; allow_alias=true))
+
+"""
     vector(T::ITensor)
 
 Given an ITensor `T` with one index, returns
 a Vector with a copy of the ITensor's elements,
 or a view in the case the ITensor's storage is Dense.
+
+See also [`array`](@ref), [`matrix`](@ref).
 """
 function vector(T::ITensor)
   ndims(T) != 1 && throw(DimensionMismatch())
   return array(tensor(T))
 end
+
+"""
+    vector(T::ITensor, inds...)
+
+Convert an ITensor `T` to an Vector.
+
+The ordering of the elements in the Array are specified
+by the input indices `inds`. This tries to avoid copying
+of possible (i.e. may return a view of the original
+data), for example if the ITensor's storage is Dense
+and the indices are already in the specified ordering
+so that no permutation is required.
+
+!!! warning
+    Note that in the future we may return specialized
+    AbstractArray types for certain storage types,
+    for example a `LinearAlgebra.Diagonal` type for
+    an ITensor with `Diag` storage. The specific storage
+    type shouldn't be relied upon.
+
+See also [`array`](@ref), [`matrix`](@ref).
+"""
+vector(T::ITensor, inds...) = vector(permute(T, inds...; allow_alias=true))
+
 #######################################################################
 #
 # Printing, reading and writing ITensors

@@ -6,6 +6,204 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.16 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Define `nullspace` for ITensors (#929)
+
+ITensors v0.3.15 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Fix `randomMPS` and `svd` for `Float32`/`ComplexF32` (#926)
+
+ITensors v0.3.14 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Add backend `alg="directsum"` for MPS/MPO addition (#925)
+- Add `alg="naive"` for MPO contraction (#925)
+- Add `svd`/`eigen` option `cutoff<0` or `cutoff=nothing`, indicating that no truncation should be performed based on a cutoff (previously you could only specify `cutoff=0.0` which still truncated eigenvalues of 0) (#925)
+- Fixes an issue that `mindim` wasn't be used in `eigen` (#925)
+- Remove `OpSum` in favor of `Ops.OpSum` (#920)
+
+ITensors v0.3.13 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Implement `min_blockdim` keyword for blocksparse SVD (#923)
+- Add support for non-zero flux MPOs to OpSum (#918)
+
+ITensors v0.3.12 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Fix `svd` and `qr` for empty input left or right indices (#917)
+- Add support for defining MPOs from operators represented as matrices (#904)
+
+ITensors v0.3.11 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Introduce `removeqn` function for removing a specified quantum number (#915)
+- Non-Hermitian `dmrg` (#913)
+- Clean up QN `svd` code in `ITensors` by handling QN blocks better in `NDTensors` (#906)
+
+ITensors v0.3.10 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Update installation instructions for Julia 1.7.
+
+ITensors v0.3.9 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Haar random unitary gate and generalize identity operator to arbitrary number of sites (#903).
+- Improve error messages for op.
+- Return the original MPS/MPO when normalizing a zero MPS/MPO (#901).
+- Allow Matrix representations for operators in `expect` and `correlation_matrix` (#902).
+
+ITensors v0.3.8 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Increase maximum TagSet size to 16 characters (#882)
+
+ITensors v0.3.7 Release Notes
+=============================
+
+Bugs:
+
+- Fix for performance issue when applying gates that skip sites (#900).
+
+Enhancements:
+
+ITensors v0.3.6 Release Notes
+=============================
+
+Bugs:
+
+- Fix bug in `op(opname, s::Vector{<:Index})` and `op(s::Vector{<:Index}, opname)`.
+
+Enhancements:
+
+ITensors v0.3.5 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Generalize `op` to handle `Matrix`/`String` inputs more generically (#899)
+
+ITensors v0.3.4 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Simplify rrules for Index manipulation of ITensors (#888)
+- Add some helper functions like converting element types of ITensors (#898)
+  - `cu([A, B])` -> `[cu(A), cu(B)]` (same for `cpu`).
+  - `cu([[A, B], [C]])` -> `[[cu(A), cu(B)], [cu(C)]]` (same for `cpu`).
+  - `convert_eltype(T::Type, A::ITensor)` - convert the element type of an ITensor to `T`.
+  - `convert_leaf_eltype(T, A::MPS)` - convert the element types of the ITensors of an MPS/MPO.
+  - `convert_leaf_eltype(T, [[A, B], C])` - convert the element types of ITensors `A`, `B`, `C` in a nested data structure (useful for layered gate structures used in PastaQ).
+  - `contract(A::MPS)` - contract the ITensors of an MPS/MPO into an ITensor (previously we used `prod` for that but I think using ` contract` is clearer).
+  - `array(A::ITensor, i::Index, j::Index, ...)` - convert the ITensor to an Array, first permuting into the Index ordering `i, j, ...`. Previously I used `array(permute(A, i, j, ...))` for this but this is more convenient.
+  - `A(x)` as a simpler syntax for `apply(A::ITensor, x::ITensor)`, treating `A` as an operator from unprimed to primed indices. I've already defined this syntax for `MPO` and `MPS` and I think it is pretty nice. I was holding off on doing this for a while to see if there might be a better meaning for `A(B)` but 
+  - Define `complex`, `real`, `imag`, and `conj` for MPS/MPO by applying them to the ITensors of the MPS/MPO. Maybe there is a better meaning for these, as in the MPS that is the real part of the MPS defined as a state?
+
+ITensors v0.3.3 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Add `copy` for `AbstractProjMPO` (#895)
+
+ITensors v0.3.2 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Introduce `set_nsite!` generic `AbstractProjMPO` function (#894)
+- Factorize out `contract(::ProjMPO, ::ITensor)` (#893)
+
+ITensors v0.3.1 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Introduce `Algorithm` type for selecting algorithm backends (#886)
+
+ITensors v0.3.0 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Introduce `apply(::MPO, ::MPO)` (#880)
+- Make automatic differentiation work for `contract(::ITensor...)` (#878)
+- Deprecate automatically making indices match in `inner` and `outer` (#877)
+  - Add test for `apply(::MPO, ::MPS) = noprime(contract(::MPO, ::MPS))` and lazy version `Apply(::MPO, ::MPS)`.
+  - Define `isapprox(::AbstractMPS, ::AbstractMPS)`.
+- correlation_matrix sites keyword (#868)
+  - Implement non-contiguous sites for correlation_matrix
+- rrule for MPS(Vector{::ITensor}) (#865)
+  - `rrule` for constructing an `MPS` from a `Vector{ITensor}`.
+  - Improve `op(::OpName ,::SiteType"Qudit")` for handling two-body ops.
+  - Add support for storing a `Function` in an `op` in the format `(f, opame, support, (params...))`.
+- Fix expect for complex MPS (#867)
+- Get some AD working for LazyApply and Ops (#859)
+- + and - in the op system (#857)
+- Rename expect site_range keyword to sites (#858)
+  - Allow more general sites collections to be passed including single site number that maps to scalar outputs.
+  - Add ishermitian for ITensors
+  - Improve handling of types and non-Hermitian operators in expect
+  - Define ITensor transpose
+- Improve Sweeps constructors with keyword arguments and default init (#856)
+- rrules for apply(U, ::MPO), `(::MPO * ::MPO)`, `tr(::MPO)` (#852)
+- Unification of PastaQ.gate and `ITensors.op`, new `OpSum` algebra functions (#843)
+- Change minimal required Julia version from 1.3 to 1.6 (#849)
+  - Add default `maxdim=typemax(Int)` in `dmrg`.
+
 ITensors v0.2.16 Release Notes
 ==============================
 

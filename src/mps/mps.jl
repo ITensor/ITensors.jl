@@ -15,6 +15,8 @@ function MPS(A::Vector{<:ITensor}; ortho_lims::UnitRange=1:length(A))
   return MPS(A, first(ortho_lims) - 1, last(ortho_lims) + 1)
 end
 
+set_data(A::MPS, data::Vector{ITensor}) = MPS(data, A.llim, A.rlim)
+
 @doc """
     MPS(v::Vector{<:ITensor})
 
@@ -52,7 +54,7 @@ function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:N
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   if N == 1
-    v[1] = emptyITensor(T, sites[1])
+    v[1] = ITensor(T, sites[1])
     return MPS(v)
   end
 
@@ -66,11 +68,11 @@ function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:N
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
-      v[ii] = emptyITensor(T, l[ii], s)
+      v[ii] = ITensor(T, l[ii], s)
     elseif ii == N
-      v[ii] = emptyITensor(T, dag(l[ii - 1]), s)
+      v[ii] = ITensor(T, dag(l[ii - 1]), s)
     else
-      v[ii] = emptyITensor(T, dag(l[ii - 1]), s, l[ii])
+      v[ii] = ITensor(T, dag(l[ii - 1]), s, l[ii])
     end
   end
   return MPS(v)
@@ -96,6 +98,11 @@ function randomU(s1::Index, s2::Index)
 end
 
 function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
+  if isone(length(sites))
+    randn!(M[1])
+    normalize!(M)
+    return M
+  end
   N = length(sites)
   c = div(N, 2)
   max_pass = 100
@@ -130,9 +137,6 @@ end
 function randomCircuitMPS(
   ::Type{ElT}, sites::Vector{<:Index}, linkdim::Int; kwargs...
 ) where {ElT<:Number}
-  _rmatrix(::Type{Float64}, n, m) = NDTensors.random_orthog(n, m)
-  _rmatrix(::Type{ComplexF64}, n, m) = NDTensors.random_unitary(n, m)
-
   N = length(sites)
   M = MPS(N)
 
@@ -161,22 +165,22 @@ function randomCircuitMPS(
   d = dim(sites[N])
   chi = maxdims[N - 1]
   l[N - 1] = Index(chi, "Link,l=$(N-1)")
-  O = _rmatrix(ElT, chi, d)
+  O = NDTensors.random_unitary(ElT, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
   for j in (N - 1):-1:2
     chi = maxdims[j - 1]
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
-    O = _rmatrix(ElT, chi, dim(sites[j]) * dim(l[j]))
+    O = NDTensors.random_unitary(ElT, chi, dim(sites[j]) * dim(l[j]))
     T = reshape(O, (chi, dim(sites[j]), dim(l[j])))
     M[j] = itensor(T, l[j - 1], sites[j], l[j])
   end
 
-  O = _rmatrix(ElT, 1, dim(sites[1]) * dim(l[1]))
+  O = NDTensors.random_unitary(ElT, 1, dim(sites[1]) * dim(l[1]))
   l0 = Index(1, "Link,l=0")
   T = reshape(O, (1, dim(sites[1]), dim(l[1])))
   M[1] = itensor(T, l0, sites[1], l[1])
-  M[1] *= onehot(l0 => 1)
+  M[1] *= onehot(ElT, l0 => 1)
 
   M.llim = 0
   M.rlim = 2
@@ -250,7 +254,7 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
   M = MPS(N)
 
   if N == 1
-    M[1] = emptyITensor(T, ind(ivals[1]))
+    M[1] = ITensor(T, ind(ivals[1]))
     M[1][ivals[1]] = one(T)
     return M
   end
@@ -269,14 +273,14 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
     links = [Index(1, "Link,l=$n") for n in 1:(N - 1)]
   end
 
-  M[1] = emptyITensor(T, ind(ivals[1]), links[1])
+  M[1] = ITensor(T, ind(ivals[1]), links[1])
   M[1][ivals[1], links[1] => 1] = one(T)
   for n in 2:(N - 1)
     s = ind(ivals[n])
-    M[n] = emptyITensor(T, dag(links[n - 1]), s, links[n])
+    M[n] = ITensor(T, dag(links[n - 1]), s, links[n])
     M[n][links[n - 1] => 1, ivals[n], links[n] => 1] = one(T)
   end
-  M[N] = emptyITensor(T, dag(links[N - 1]), ind(ivals[N]))
+  M[N] = ITensor(T, dag(links[N - 1]), ind(ivals[N]))
   M[N][links[N - 1] => 1, ivals[N]] = one(T)
 
   return M
@@ -566,10 +570,18 @@ function sample(m::MPS)
   return result
 end
 
+_op_prod(o1::AbstractString, o2::AbstractString) = "$o1 * $o2"
+_op_prod(o1::Matrix{<:Number}, o2::Matrix{<:Number}) = o1 * o2
+
 """
     correlation_matrix(psi::MPS,
                        Op1::AbstractString,
                        Op2::AbstractString;
+                       kwargs...)
+
+    correlation_matrix(psi::MPS,
+                       Op1::Matrix{<:Number},
+                       Op2::Matrix{<:Number};
                        kwargs...)
 
 Given an MPS psi and two strings denoting
@@ -593,20 +605,21 @@ m = 4
 s = siteinds("S=1/2",N)
 psi = randomMPS(s; linkdims=m)
 Czz = correlation_matrix(psi,"Sz","Sz")
+Czz = correlation_matrix(psi,[1/2 0; 0 -1/2],[1/2 0; 0 -1/2]) # same as above
 
 s = siteinds("Electron",N; conserve_qns=true)
 psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
 Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
 ``` 
 """
-function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString; kwargs...)
+function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   N = length(psi)
   ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
 
   Op1 = _Op1 #make copies into which we can insert "F" string operators, and then restore.
   Op2 = _Op2
-  onsiteOp = "$Op1 * $Op2"
+  onsiteOp = _op_prod(Op1, Op2)
   fermionic1 = has_fermion_string(Op1, s[1])
   fermionic2 = has_fermion_string(Op2, s[1])
   if fermionic1 != fermionic2
@@ -640,16 +653,23 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
     end
   end
 
-  site_range::UnitRange{Int} = get(kwargs, :site_range, 1:N)
-  start_site = first(site_range)
-  end_site = last(site_range)
+  if haskey(kwargs, :site_range)
+    @warn "The `site_range` keyword arg. to `correlation_matrix` is deprecated: use the keyword `sites` instead"
+    sites_ = kwargs[:site_range]
+  else
+    sites_ = get(kwargs, :sites, 1:N)
+  end
+  sites = (sites_ isa AbstractRange) ? sites_ : collect(sites_)
+
+  start_site = first(sites)
+  end_site = last(sites)
 
   psi = copy(psi)
   orthogonalize!(psi, start_site)
   norm2_psi = norm(psi[start_site])^2
 
   # Nb = size of block of correlation matrix
-  Nb = end_site - start_site + 1
+  Nb = length(sites)
 
   C = zeros(ElT, Nb, Nb)
 
@@ -659,38 +679,58 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
     lind = commonind(psi[start_site], psi[start_site - 1])
     L = delta(dag(lind), lind')
   end
+  pL = start_site - 1
 
-  for i in start_site:(end_site - 1)
-    ci = i - start_site + 1
+  for (ni, i) in enumerate(sites[1:(end - 1)])
+    while pL < i - 1
+      pL += 1
+      L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+    end
 
     Li = L * psi[i]
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
-    C[ci, ci] =
+    C[ni, ni] =
       scalar((Li * op(onsiteOp, s, i)) * prime(dag(psi[i]), not(rind))) / norm2_psi
 
     # Get j > i correlations
     if !using_auto_fermion() && fermionic2
       Op1 = "$Op1 * F"
     end
+
     Li12 = (Li * op(Op1, s, i)) * dag(prime(psi[i]))
-    for j in (i + 1):end_site
-      cj = j - start_site + 1
+    pL12 = i
+
+    for (n, j) in enumerate(sites[(ni + 1):end])
+      nj = ni + n
+
+      while pL12 < j - 1
+        pL12 += 1
+        if !using_auto_fermion() && fermionic2
+          Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
+        else
+          Li12 *= dag(prime(psi[pL12], "Link"))
+        end
+        Li12 *= psi[pL12]
+      end
+
       lind = commonind(psi[j], Li12)
       Li12 *= psi[j]
 
       val = (Li12 * op(Op2, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
-      C[ci, cj] = scalar(val) / norm2_psi
+      C[ni, nj] = scalar(val) / norm2_psi
       if is_cm_hermitian
-        C[cj, ci] = conj(C[ci, cj])
+        C[nj, ni] = conj(C[ni, nj])
       end
 
+      pL12 += 1
       if !using_auto_fermion() && fermionic2
-        Li12 *= op("F", s, j) * dag(prime(psi[j]))
+        Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
       else
-        Li12 *= dag(prime(psi[j], "Link"))
+        Li12 *= dag(prime(psi[pL12], "Link"))
       end
+      @assert pL12 == j
     end #for j
     Op1 = _Op1 #"Restore Op1 with no Fs"
 
@@ -701,31 +741,51 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
         Op2 = "$Op2 * F"
       end
       Li21 = (Li * op(Op2, s, i)) * dag(prime(psi[i]))
+      pL21 = i
       if !using_auto_fermion() && fermionic1
         Li21 = -Li21 #Required because we swapped fermionic ops, instead of sweeping right to left.
       end
-      for j in (i + 1):end_site
-        cj = j - start_site + 1
+
+      for (n, j) in enumerate(sites[(ni + 1):end])
+        nj = ni + n
+
+        while pL21 < j - 1
+          pL21 += 1
+          if !using_auto_fermion() && fermionic1
+            Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
+          else
+            Li21 *= dag(prime(psi[pL21], "Link"))
+          end
+          Li21 *= psi[pL21]
+        end
+
         lind = commonind(psi[j], Li21)
         Li21 *= psi[j]
 
         val = (Li21 * op(Op1, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
-        C[cj, ci] = scalar(val) / norm2_psi
+        C[nj, ni] = scalar(val) / norm2_psi
 
+        pL21 += 1
         if !using_auto_fermion() && fermionic1
-          Li21 *= op("F", s, j) * dag(prime(psi[j]))
+          Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
         else
-          Li21 *= dag(prime(psi[j], "Link"))
+          Li21 *= dag(prime(psi[pL21], "Link"))
         end
+        @assert pL21 == j
       end #for j
       Op2 = _Op2 #"Restore Op2 with no Fs"
     end #if is_cm_hermitian
 
-    L = (L * psi[i]) * dag(prime(psi[i], "Link"))
+    pL += 1
+    L = Li * dag(prime(psi[i], "Link"))
   end #for i
 
   # Get last diagonal element of C
   i = end_site
+  while pL < i - 1
+    pL += 1
+    L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+  end
   lind = commonind(psi[i], psi[i - 1])
   C[Nb, Nb] =
     scalar(L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)) /
@@ -735,8 +795,9 @@ function correlation_matrix(psi::MPS, _Op1::AbstractString, _Op2::AbstractString
 end
 
 """
-    expect(psi::MPS,op::AbstractString...; kwargs...)
-    expect(psi::MPS,ops; kwargs...)
+    expect(psi::MPS, op::AbstractString...; kwargs...)
+    expect(psi::MPS, op::Matrix{<:Number}...; kwargs...)
+    expect(psi::MPS, ops; kwargs...)
 
 Given an MPS `psi` and a single operator name, returns
 a vector of the expected value of the operator on 
@@ -759,8 +820,11 @@ N = 10
 
 s = siteinds("S=1/2",N)
 psi = randomMPS(s; linkdims=8)
+Z = expect(psi,"Sz") # compute for all sites
 Z = expect(psi,"Sz";sites=2:4) # compute for sites 2,3,4
 Z3 = expect(psi,"Sz";sites=3)  # compute for site 3 only (output will be a scalar)
+XZ = expect(psi,["Sx","Sz"]) # compute Sx and Sz for all sites
+Z = expect(psi,[1/2 0; 0 -1/2]) # same as expect(psi,"Sz")
 
 s = siteinds("Electron",N)
 psi = randomMPS(s; linkdims=8)
@@ -809,7 +873,15 @@ function expect(psi::MPS, op::AbstractString; kwargs...)
   return first(expect(psi, (op,); kwargs...))
 end
 
+function expect(psi::MPS, op::Matrix{<:Number}; kwargs...)
+  return first(expect(psi, (op,); kwargs...))
+end
+
 function expect(psi::MPS, op1::AbstractString, ops::AbstractString...; kwargs...)
+  return expect(psi, (op1, ops...); kwargs...)
+end
+
+function expect(psi::MPS, op1::Matrix{<:Number}, ops::Matrix{<:Number}...; kwargs...)
   return expect(psi, (op1, ops...); kwargs...)
 end
 
