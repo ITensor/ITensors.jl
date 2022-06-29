@@ -1,6 +1,6 @@
-function rrule(::typeof(MPS), x::Vector{<:ITensor}; kwargs...)
-  y = MPS(x; kwargs...)
-  function MPS_pullback(ȳ)
+function rrule(::Type{T}, x::Vector{<:ITensor}; kwargs...) where {T<:Union{MPS,MPO}}
+  y = T(x; kwargs...)
+  function T_pullback(ȳ)
     ȳtensors = ȳ.data
     n = length(ȳtensors)
     envL = [ȳtensors[1] * dag(x[1])]
@@ -18,7 +18,7 @@ function rrule(::typeof(MPS), x::Vector{<:ITensor}; kwargs...)
     push!(x̄, envL[n - 1] * ȳtensors[n])
     return (NoTangent(), x̄)
   end
-  return y, MPS_pullback
+  return y, T_pullback
 end
 
 function rrule(::typeof(inner), x1::T, x2::T; kwargs...) where {T<:Union{MPS,MPO}}
