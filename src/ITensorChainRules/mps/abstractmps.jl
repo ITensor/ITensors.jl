@@ -52,7 +52,9 @@ function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
   return contract(ψmat, ϕmat; kwargs...)
 end
 
-function rrule(::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; apply_dag=false, kwargs...)
+function rrule(
+  ::typeof(apply), x1::Vector{ITensor}, x2::Union{MPS,MPO}; apply_dag=false, kwargs...
+)
   N = length(x1) + 1
 
   # Apply circuit and store intermediates in the forward direction
