@@ -222,6 +222,19 @@ include("util.jl")
     @test_throws DimensionMismatch inner(phi, badpsi)
   end
 
+  @testset "loginner" begin
+    n = 4
+    c = 2
+
+    s = siteinds("S=1/2", n)
+    ψ = c .* randomMPS(s; linkdims=4)
+    @test exp(loginner(ψ, ψ)) ≈ c^(2n)
+    @test exp(loginner(ψ, -ψ)) ≈ -c^(2n)
+
+    α = randn(ComplexF64)
+    @test exp(loginner(ψ, α * ψ)) ≈ α * c^(2n)
+  end
+
   @testset "broadcasting" begin
     psi = randomMPS(sites)
     orthogonalize!(psi, 1)

@@ -1084,6 +1084,9 @@ function _log_or_not_dot(
   end
 
   if loginner
+    if !isreal(O[]) || real(O[]) < 0
+      log_inner_tot += log(complex(O[]))
+    end
     return log_inner_tot
   end
 
@@ -1213,7 +1216,7 @@ function lognorm(M::AbstractMPS)
       "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance of $rtol"
     )
   end
-  return 0.5 * lognorm2_M
+  return 0.5 * real(lognorm2_M)
 end
 
 function isapprox(
