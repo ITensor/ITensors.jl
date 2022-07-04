@@ -2305,7 +2305,7 @@ end
 # Printing functions
 #
 
-function Base.show(io::IO, M::AbstractMPS)
+function Base.show(io::IO, ::MIME"text/plain", M::AbstractMPS)
   print(io, "$(typeof(M))")
   (length(M) > 0) && print(io, "\n")
   for i in eachindex(M)
@@ -2322,7 +2322,20 @@ function Base.show(io::IO, M::AbstractMPS)
   end
 end
 
-#
+function Base.show(io::IO, M::AbstractMPS)
+  print(io, typeof(M), "(", length(M), ")")
+end
+
+macro show_verbose(exs...)
+  blk = Expr(:block)
+  for ex in exs
+    push!(blk.args, :(println($(sprint(Base.show_unquoted,ex)*" = "),
+                              repr("text/plain", begin local value = $(esc(ex)) end))))
+  end
+  isempty(exs) || push!(blk.args, :value)
+  return blk
+end
+
 # Old code for adding MPS/MPO
 #
 
