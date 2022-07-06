@@ -11,6 +11,7 @@ ITensors v0.3.18 Release Notes
 
 Bugs:
 
+- Extend `apply(::MPO, ::MPO)` to `apply(::MPO, ::MPO, ::MPO...)` (#949)
 - Fix AD for `apply(::MPO, ::MPO)` and `contract(::MPO, ::MPO)` (#949)
 - Properly use element type in `randomMPS` in the 1-site case (b66d1b7)
 - Fix bug in `tr(::MPO)` rrule where the derivative was being multiplied twice into the identity MPO (b66d1b7)
