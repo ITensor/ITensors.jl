@@ -1,11 +1,15 @@
-function rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
-  y = *(x1, x2; kwargs...)
+function ChainRulesCore.rrule(::typeof(contract), x1::MPO, x2::MPO; kwargs...)
+  y = contract(x1, x2; kwargs...)
   function contract_pullback(ȳ)
-    x̄1 = *(ȳ, dag(x2); kwargs...)
-    x̄2 = *(dag(x1), ȳ; kwargs...)
+    x̄1 = contract(ȳ, dag(x2); kwargs...)
+    x̄2 = contract(dag(x1), ȳ; kwargs...)
     return (NoTangent(), x̄1, x̄2)
   end
   return y, contract_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
+  return rrule(contract, x1, x2; kwargs...)
 end
 
 function ChainRulesCore.rrule(::typeof(+), x1::MPO, x2::MPO; kwargs...)
@@ -17,14 +21,10 @@ function ChainRulesCore.rrule(::typeof(+), x1::MPO, x2::MPO; kwargs...)
 end
 
 function ChainRulesCore.rrule(::typeof(-), x1::MPO, x2::MPO; kwargs...)
-  y = -(x1, x2; kwargs...)
-  function subtract_pullback(ȳ)
-    return (NoTangent(), ȳ, -ȳ)
-  end
-  return y, subtract_pullback
+  return rrule(+, x1, -x2; kwargs...)
 end
 
-function rrule(::typeof(tr), x::MPO; kwargs...)
+function ChainRulesCore.rrule(::typeof(tr), x::MPO; kwargs...)
   y = tr(x; kwargs...)
   function tr_pullback(ȳ)
     s = noprime(firstsiteinds(x))
@@ -40,7 +40,7 @@ function rrule(::typeof(tr), x::MPO; kwargs...)
   return y, tr_pullback
 end
 
-function rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
+function ChainRulesCore.rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
   if !hassameinds(siteinds, x1, (x2, x3)) || !hassameinds(siteinds, x3, (x2, x1))
     error(
       "Taking gradients of `inner(x::MPS, A::MPO, y::MPS)` is not supported if the site indices of the input MPS and MPO don't match. Try using if you input `inner(x, A, y), try `inner(x', A, y)` instead.",

@@ -627,3 +627,22 @@ end
   ∇num = (f(θ + ϵ) - f(θ)) / ϵ
   @test ∇f ≈ ∇num atol = 1e-5
 end
+
+@testset "contract/apply MPOs" begin
+  n = 2
+  s = siteinds("S=1/2", n)
+  x = (x -> outer(x', x))(randomMPS(s; linkdims=4))
+  x_itensor = contract(x)
+
+  f = x -> tr(apply(x, x))
+  @test f(x) ≈ f(x_itensor)
+  @test contract(f'(x)) ≈ f'(x_itensor)
+
+  f = x -> tr(replaceprime(contract(x', x), 2 => 1))
+  @test f(x) ≈ f(x_itensor)
+  @test contract(f'(x)) ≈ f'(x_itensor)
+
+  f = x -> tr(replaceprime(*(x', x), 2 => 1))
+  @test f(x) ≈ f(x_itensor)
+  @test contract(f'(x)) ≈ f'(x_itensor)
+end

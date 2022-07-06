@@ -44,5 +44,6 @@ include("zygoterules.jl")
 @non_differentiable ITensors.filter_inds_set_function(::Function, ::Any...)
 @non_differentiable ITensors.indpairs(::Any...)
 @non_differentiable onehot(::Any...)
+@non_differentiable Base.convert(::Type{TagSet}, str::String)
 
 end
