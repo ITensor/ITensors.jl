@@ -31,7 +31,6 @@ Enhancements:
 - Forward truncation arguments to more operations in `rrule` for `apply` (#945)
 - Add rrules for addition and subtraction of MPOs (#935)
 
-
 ITensors v0.3.17 Release Notes
 ==============================
 

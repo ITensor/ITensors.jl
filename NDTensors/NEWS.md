@@ -15,7 +15,7 @@ Enhancements:
 
 - Define `map` for Tensor and TensorStorage (b66d1b7)
 - Define `real` and `imag` for Tensor (b66d1b7)
--  (b66d1b7)
+- Throw error when trying to do an eigendecomposition of Tensor with Infs or NaNs (b66d1b7)
 
 NDTensors v0.1.41 Release Notes
 ===============================
