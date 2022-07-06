@@ -6,6 +6,17 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+NDTensors v0.1.42 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Define `map` for Tensor and TensorStorage (b66d1b7)
+- Define `real` and `imag` for Tensor (b66d1b7)
+-  (b66d1b7)
+
 NDTensors v0.1.41 Release Notes
 ===============================
 

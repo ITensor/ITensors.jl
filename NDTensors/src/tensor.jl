@@ -133,7 +133,9 @@ Base.similar(T::Tensor, args...) = similar(T, args...)
 
 function map(f, x::Tensor{T}) where {T}
   if !iszero(f(zero(T)))
-    error("map(f, ::Tensor) currently doesn't support functions that don't preserve zeros, while you passed a function such that f(0) = $(f(zero(T))). This isn't supported right now because it doesn't necessarily preserve the sparsity structure of the input tensor.")
+    error(
+      "map(f, ::Tensor) currently doesn't support functions that don't preserve zeros, while you passed a function such that f(0) = $(f(zero(T))). This isn't supported right now because it doesn't necessarily preserve the sparsity structure of the input tensor.",
+    )
   end
   return setstorage(x, map(f, storage(x)))
 end

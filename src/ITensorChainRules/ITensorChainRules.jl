@@ -12,7 +12,11 @@ import ChainRulesCore: rrule
 
 ITensors.dag(z::AbstractZero) = z
 
-map_notangent(a) = map(Returns(NoTangent()), a)
+if VERSION < v"1.7"
+  map_notangent(a) = map(_ -> NoTangent(), a)
+else
+  map_notangent(a) = map(Returns(NoTangent()), a)
+end
 
 include("projection.jl")
 include(joinpath("NDTensors", "tensor.jl"))
