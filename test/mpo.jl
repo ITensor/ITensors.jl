@@ -374,7 +374,8 @@ end
     ρ1 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
     ρ2 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
     ρ3 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
-    @test apply(ρ1, ρ2, ρ3; cutoff=1e-8) ≈ apply(apply(ρ1, ρ2; cutoff=1e-8), ρ3; cutoff=1e-8)
+    @test apply(ρ1, ρ2, ρ3; cutoff=1e-8) ≈
+      apply(apply(ρ1, ρ2; cutoff=1e-8), ρ3; cutoff=1e-8)
   end
 
   sites = siteinds("S=1/2", N)
