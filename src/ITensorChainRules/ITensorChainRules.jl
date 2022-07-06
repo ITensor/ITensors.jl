@@ -12,8 +12,9 @@ import ChainRulesCore: rrule
 
 ITensors.dag(z::AbstractZero) = z
 
-broadcast_notangent(a) = broadcast(_ -> NoTangent(), a)
+map_notangent(a) = map(Returns(NoTangent()), a)
 
+include("projection.jl")
 include(joinpath("NDTensors", "tensor.jl"))
 include(joinpath("NDTensors", "dense.jl"))
 include("indexset.jl")
@@ -24,7 +25,7 @@ include(joinpath("mps", "mpo.jl"))
 include(joinpath("LazyApply", "LazyApply.jl"))
 include("zygoterules.jl")
 
-@non_differentiable broadcast_notangent(::Any)
+@non_differentiable map_notangent(::Any)
 @non_differentiable Index(::Any...)
 @non_differentiable delta(::Any...)
 @non_differentiable dag(::Index)

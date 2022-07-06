@@ -72,6 +72,13 @@ Base.copyto!(S1::TensorStorage, S2::TensorStorage) = (copyto!(data(S1), data(S2)
 
 Random.randn!(S::TensorStorage) = (randn!(data(S)); S)
 
+function map(f, x::TensorStorage{T}) where {T}
+  if !iszero(f(zero(T)))
+    error("map(f, ::TensorStorage) currently doesn't support functions that don't preserve zeros, while you passed a function such that f(0) = $(f(zero(T))). This isn't supported right now because it doesn't necessarily preserve the sparsity structure of the input tensor.")
+  end
+  return setdata(x, map(f, data(x)))
+end
+
 Base.fill!(S::TensorStorage, v) = (fill!(data(S), v); S)
 
 LinearAlgebra.rmul!(S::TensorStorage, v::Number) = (rmul!(data(S), v); S)

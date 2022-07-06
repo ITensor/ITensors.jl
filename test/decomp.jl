@@ -74,6 +74,15 @@ using ITensors, LinearAlgebra, Test
     eigArr = eigen(array(A))
     @test diag(array(eigA.D), 0) ≈ eigArr.values
     @test diag(array(Dt), 0) == eigArr.values
+
+    @test_throws ArgumentError eigen(ITensor(NaN, i', i))
+    @test_throws ArgumentError eigen(ITensor(NaN, i', i); ishermitian=true)
+    @test_throws ArgumentError eigen(ITensor(complex(NaN), i', i))
+    @test_throws ArgumentError eigen(ITensor(complex(NaN), i', i); ishermitian=true)
+    @test_throws ArgumentError eigen(ITensor(Inf, i', i))
+    @test_throws ArgumentError eigen(ITensor(Inf, i', i); ishermitian=true)
+    @test_throws ArgumentError eigen(ITensor(complex(Inf), i', i))
+    @test_throws ArgumentError eigen(ITensor(complex(Inf), i', i); ishermitian=true)
   end
 
   @testset "exp function" begin

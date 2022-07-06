@@ -1,31 +1,6 @@
-function ChainRulesCore.rrule(::typeof(getindex), x::ITensor, I...)
-  y = getindex(x, I...)
-  function getindex_pullback(ȳ)
-    # TODO: add definition `ITensor(::Tuple{}) = ITensor()`
-    # to ITensors.jl so no splatting is needed here.
-    x̄ = ITensor(inds(x)...)
-    x̄[I...] = unthunk(ȳ)
-    Ī = broadcast_notangent(I)
-    return (NoTangent(), x̄, Ī...)
-  end
-  return y, getindex_pullback
-end
-
-# Specialized version in order to avoid call to `setindex!`
-# within the pullback, should be better for taking higher order
-# derivatives in Zygote.
-function ChainRulesCore.rrule(::typeof(getindex), x::ITensor)
-  y = x[]
-  function getindex_pullback(ȳ)
-    x̄ = ITensor(unthunk(ȳ))
-    return (NoTangent(), x̄)
-  end
-  return y, getindex_pullback
-end
-
 function setinds_pullback(ȳ, x, a...)
   x̄ = ITensors.setinds(ȳ, inds(x))
-  ā = broadcast_notangent(a)
+  ā = map_notangent(a)
   return (NoTangent(), x̄, ā...)
 end
 
@@ -72,7 +47,7 @@ for fname in (
             "Trying to differentiate function `$f` with arguments $a and keyword arguments $kwargs. The forward pass indices $(inds(x)) do not match the reverse pass indices $(inds(x̄)). Likely this is because the priming/tagging operation you tried to perform is not invertible. Please write your code in a way where the index manipulation operation you are performing is invertible. For example, `prime(A::ITensor)` is invertible, with an inverse `prime(A, -1)`. However, `noprime(A)` is in general not invertible since the information about the prime levels of the original tensor are lost. Instead, you might try `prime(A, -1)` or `replaceprime(A, 1 => 0)` which are invertible.",
           )
         end
-        ā = broadcast_notangent(a)
+        ā = map_notangent(a)
         return (NoTangent(), x̄, ā...)
       end
       return y, f_pullback
@@ -102,12 +77,31 @@ for fname in (
       function f_pullback(ȳ)
         uȳ = unthunk(ȳ)
         x̄ = replaceinds(uȳ, inds(y), inds(x))
-        ā = broadcast_notangent(a)
+        ā = map_notangent(a)
         return (NoTangent(), x̄, ā...)
       end
       return y, f_pullback
     end
   end
+end
+
+function ChainRulesCore.rrule(::typeof(adjoint), x::ITensor)
+  y = x'
+  function adjoint_pullback(ȳ)
+    uȳ = unthunk(ȳ)
+    x̄ = replaceinds(uȳ, inds(y), inds(x))
+    return (NoTangent(), x̄)
+  end
+  return y, adjoint_pullback
+end
+
+function ChainRulesCore.rrule(::typeof(adjoint), x::Union{MPS,MPO})
+  y = x'
+  function adjoint_pullback(ȳ)
+    x̄ = inv_op(prime, ȳ)
+    return (NoTangent(), x̄)
+  end
+  return y, adjoint_pullback
 end
 
 @non_differentiable permute(::Indices, ::Indices)

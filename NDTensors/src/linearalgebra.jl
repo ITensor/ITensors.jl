@@ -218,7 +218,13 @@ function LinearAlgebra.eigen(
   use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
-  DM, VM = eigen(matrix(T))
+  matrixT = matrix(T)
+  if any(!isfinite, matrixT)
+    display(matrixT)
+    throw(ArgumentError("Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"))
+  end
+
+  DM, VM = eigen(matrixT)
 
   # Sort by largest to smallest eigenvalues
   p = sortperm(DM; rev=true, by=abs)
@@ -343,7 +349,13 @@ function LinearAlgebra.eigen(
   use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
-  DM, VM = eigen(matrix(T))
+  matrixT = matrix(T)
+  if any(!isfinite, matrixT)
+    display(matrixT)
+    throw(ArgumentError("Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"))
+  end
+
+  DM, VM = eigen(matrixT)
 
   # Sort by largest to smallest eigenvalues
   #p = sortperm(DM; rev = true)

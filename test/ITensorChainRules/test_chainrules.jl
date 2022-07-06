@@ -262,6 +262,30 @@ Random.seed!(1234)
     rtol=1e-4,
     atol=1e-4,
   )
+
+  # https://github.com/ITensor/ITensors.jl/issues/933
+  f2 = function (x, a)
+    y = a + im * x
+    return real(dag(y) * y)[]
+  end
+  a = randomITensor()
+  f_itensor = x -> f2(x, a)
+  f_number = x -> f2(x, a[])
+  x = randomITensor()
+  @test f_number(x[]) ≈ f_itensor(x)
+  @test f_number'(x[]) ≈ f_itensor'(x)[]
+  @test isreal(f_itensor'(x))
+
+  # https://github.com/ITensor/ITensors.jl/issues/936
+  n = 2
+  s = siteinds("S=1/2", n)
+  x = randomMPS(s) |> x -> outer(x', x)
+  f1 = x -> tr(x)
+  f2 = x -> 2tr(x)
+  f3 = x -> -tr(x)
+  @test f1'(x) ≈ MPO(s, "I")
+  @test f2'(x) ≈ 2MPO(s, "I")
+  @test f3'(x) ≈ -MPO(s, "I")
 end
 
 @testset "ChainRules rrules: op" begin

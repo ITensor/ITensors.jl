@@ -42,6 +42,8 @@ import Base:
   isassigned,
   isempty,
   isless,
+  isreal,
+  iszero,
   iterate,
   keys,
   lastindex,

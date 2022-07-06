@@ -1,28 +1,3 @@
-#function rrule(::typeof(MPO), x::Vector{<:ITensor}; kwargs...)
-#  y = MPO(x; kwargs...)
-#  #@show y
-#  function MPO_pullback(ȳ)
-#    #@show ȳ
-#    return ȳ.data
-#    #ȳtensors = ȳ.data
-#    #n = length(ȳtensors)
-#    #envL = [ȳtensors[1] * dag(x[1]), ]
-#    #envR = [ȳtensors[n] * dag(x[n]), ]
-#    #for j in 2:n-1
-#    #  push!(envL, envL[j-1] * ȳtensors[j] * dag(x[j]))
-#    #  push!(envR, envR[j-1] * ȳtensors[n+1-j] * dag(x[n+1-j]))
-#    #end
-#    #x̄= ITensor[]
-#    #push!(x̄, ȳtensors[1]  * envR[n-1])
-#    #for j in 2:n-1
-#    # push!(x̄, envL[j-1] * ȳtensors[j] * envR[n-j])
-#    #end
-#    #push!(x̄, envL[n-1] * ȳtensors[n])
-#    #return (NoTangent(), x̄)
-#  end
-#  return y, MPO_pullback
-#end
-
 function rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
   y = *(x1, x2; kwargs...)
   function contract_pullback(ȳ)
@@ -43,18 +18,18 @@ end
 
 function ChainRulesCore.rrule(::typeof(-), x1::MPO, x2::MPO; kwargs...)
   y = -(x1, x2; kwargs...)
-  function add_pullback(ȳ)
+  function subtract_pullback(ȳ)
     return (NoTangent(), ȳ, -ȳ)
   end
-  return y, add_pullback
+  return y, subtract_pullback
 end
 
 function rrule(::typeof(tr), x::MPO; kwargs...)
   y = tr(x; kwargs...)
-  function contract_pullback(ȳ)
+  function tr_pullback(ȳ)
     s = noprime(firstsiteinds(x))
     n = length(s)
-    x̄ = ȳ * MPO(s, "Id")
+    x̄ = MPO(s, "Id")
 
     plev = get(kwargs, :plev, 0 => 1)
     for j in 1:n
@@ -62,7 +37,7 @@ function rrule(::typeof(tr), x::MPO; kwargs...)
     end
     return (NoTangent(), ȳ * x̄)
   end
-  return y, contract_pullback
+  return y, tr_pullback
 end
 
 function rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
