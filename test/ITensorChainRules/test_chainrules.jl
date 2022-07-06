@@ -279,7 +279,7 @@ Random.seed!(1234)
   # https://github.com/ITensor/ITensors.jl/issues/936
   n = 2
   s = siteinds("S=1/2", n)
-  x = randomMPS(s) |> x -> outer(x', x)
+  x = x -> outer(x', x)(randomMPS(s))
   f1 = x -> tr(x)
   f2 = x -> 2tr(x)
   f3 = x -> -tr(x)
