@@ -50,7 +50,9 @@ Optionally specify the link dimension with the keyword argument `linkdims`, whic
 In the future we may generalize `linkdims` to allow specifying each individual link dimension as a vector,
 and additionally allow specifying quantum numbers.
 """
-function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1) where {T<:Number}
+function MPS(
+  ::Type{T}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
+) where {T<:Number}
   _linkdims = _fill_linkdims(linkdims, sites)
   N = length(sites)
   v = Vector{ITensor}(undef, N)
