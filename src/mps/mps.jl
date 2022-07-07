@@ -228,7 +228,9 @@ function randomMPS(
   return randomMPS(Float64, sites, state; linkdims)
 end
 
-function randomMPS(ElType::Type, sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1)::MPS
+function randomMPS(
+  ElType::Type, sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
+)::MPS
   _linkdims = _fill_linkdims(linkdims, sites)
   M = MPS(ElType, sites, state)
   if any(>(1), _linkdims)
