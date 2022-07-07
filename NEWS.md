@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.19 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Simplify the `rrule`s for priming and tagging MPS/MPO
+
 ITensors v0.3.18 Release Notes
 ==============================
 
