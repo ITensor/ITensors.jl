@@ -12,7 +12,11 @@ import ChainRulesCore: rrule
 
 ITensors.dag(z::AbstractZero) = z
 
-map_notangent(a) = map(Returns(NoTangent()), a)
+if VERSION < v"1.7"
+  map_notangent(a) = map(_ -> NoTangent(), a)
+else
+  map_notangent(a) = map(Returns(NoTangent()), a)
+end
 
 include("projection.jl")
 include(joinpath("NDTensors", "tensor.jl"))
@@ -40,5 +44,6 @@ include("zygoterules.jl")
 @non_differentiable ITensors.filter_inds_set_function(::Function, ::Any...)
 @non_differentiable ITensors.indpairs(::Any...)
 @non_differentiable onehot(::Any...)
+@non_differentiable Base.convert(::Type{TagSet}, str::String)
 
 end

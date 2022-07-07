@@ -54,6 +54,39 @@ end
       @test !hascommoninds(A, C)
     end
 
+    @testset "isreal, iszero, real, imag" begin
+      i, j = Index.(2, ("i", "j"))
+      A = randomITensor(i, j)
+      Ac = randomITensor(ComplexF64, i, j)
+      Ar = real(Ac)
+      Ai = imag(Ac)
+      @test Ac ≈ Ar + im * Ai
+      @test isreal(A)
+      @test !isreal(Ac)
+      @test isreal(Ar)
+      @test isreal(Ai)
+      @test !iszero(A)
+      @test !iszero(real(A))
+      @test iszero(imag(A))
+      @test iszero(ITensor(0.0, i, j))
+      @test iszero(ITensor(i, j))
+    end
+
+    @testset "map" begin
+      A = randomITensor(Index(2))
+      @test eltype(A) == Float64
+      B = map(ComplexF64, A)
+      @test B ≈ A
+      @test eltype(B) == ComplexF64
+      B = map(Float32, A)
+      @test B ≈ A
+      @test eltype(B) == Float32
+      B = map(x -> 2x, A)
+      @test B ≈ 2A
+      @test eltype(B) == Float64
+      @test_throws ErrorException map(x -> x + 1, A)
+    end
+
     @testset "getindex with state string" begin
       i₁ = Index(2, "S=1/2")
       i₂ = Index(2, "S=1/2")

@@ -1624,7 +1624,7 @@ function truncate(ψ0::AbstractMPS; kwargs...)
   return ψ
 end
 
-# Make `*` and alias for `contract` of two `AbstractMPS`
+# Make `*` an alias for `contract` of two `AbstractMPS`
 *(A::AbstractMPS, B::AbstractMPS; kwargs...) = contract(A, B; kwargs...)
 
 function _apply_to_orthocenter!(f, ψ::AbstractMPS, x)
