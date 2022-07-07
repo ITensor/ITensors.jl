@@ -222,7 +222,9 @@ function randomMPS(sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Inte
   return randomMPS(Float64, sites; linkdims)
 end
 
-function randomMPS(sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1)
+function randomMPS(
+  sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
+)
   return randomMPS(Float64, sites, state; linkdims)
 end
 
