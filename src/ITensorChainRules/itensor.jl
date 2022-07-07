@@ -194,4 +194,13 @@ function ChainRulesCore.rrule(::typeof(permute), x::ITensor, a...)
   return y, permute_pullback
 end
 
+# Needed because by default it was calling the generic
+# `rrule` for `tr` inside ChainRules.
+# TODO: Raise an issue with ChainRules.
+function ChainRulesCore.rrule(
+  config::RuleConfig{>:HasReverseMode}, ::typeof(tr), x::ITensor; kwargs...
+)
+  return rrule_via_ad(config, ITensors._tr, x; kwargs...)
+end
+
 @non_differentiable combiner(::Indices)

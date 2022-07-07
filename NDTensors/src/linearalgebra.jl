@@ -220,8 +220,11 @@ function LinearAlgebra.eigen(
 
   matrixT = matrix(T)
   if any(!isfinite, matrixT)
-    display(matrixT)
-    throw(ArgumentError("Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"))
+    throw(
+      ArgumentError(
+        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+      ),
+    )
   end
 
   DM, VM = eigen(matrixT)
@@ -351,8 +354,11 @@ function LinearAlgebra.eigen(
 
   matrixT = matrix(T)
   if any(!isfinite, matrixT)
-    display(matrixT)
-    throw(ArgumentError("Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"))
+    throw(
+      ArgumentError(
+        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+      ),
+    )
   end
 
   DM, VM = eigen(matrixT)
