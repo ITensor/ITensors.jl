@@ -53,6 +53,7 @@ if Threads.nthreads() == 1
       "readwrite.jl",
       "readme.jl",
       "examples.jl",
+      "contractionorder.jl",
     ]
       println("Running $filename")
       @time include(filename)

@@ -65,6 +65,7 @@ using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
 using Zeros
+using OMEinsumContractionOrders
 
 #####################################
 # General utility functions
@@ -133,6 +134,10 @@ include("itensor.jl")
 include("broadcast.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
+
+#####################################
+# Contraction order optimization
+include("contractionorder.jl")
 
 #####################################
 # QNs
