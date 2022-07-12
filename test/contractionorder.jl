@@ -26,7 +26,7 @@ end
     n = 6
     vindices = [Index(2) for i=1:n, j=1:n]
     hindices = [Index(2) for i=1:n, j=1:n]
-    tensors = vec([randomITensor(hindices[i, j], hindices[mod1(i+1, n), j], vindices[i,mod1(j+1, n)], vindices[mod1(i+1,n), mod1(j+1,n)]) for i=1:n, j=1:n])
+    tensors = vec([randomITensor(hindices[i, j], hindices[mod1(i+1, n), j], vindices[i,j], vindices[i, mod1(j+1,n)]) for i=1:n, j=1:n])
     opt = optimize_code(tensors, TreeSA(ntrials=1))
     @test timespacereadwrite_complexity(opt)[2] <= 2n+1
 

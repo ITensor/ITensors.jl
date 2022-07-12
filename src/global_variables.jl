@@ -3,7 +3,7 @@
 # Warn about the order of the ITensor after contractions
 #
 
-const default_warn_order = 14
+const default_warn_order = 30
 
 const warn_order = Ref{Union{Int,Nothing}}(default_warn_order)
 
