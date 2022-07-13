@@ -160,7 +160,11 @@ function _makeL!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
   ll = max(ll, 0)
   L = lproj(P)
   while ll < k
-    L = L * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
+    # Only prime the site indices of `psi` the are shared with the
+    # Hamiltonian. This allows for `psi` to have multiple site indices
+    # where some may not be shared with the Hamiltonian.
+    s_dangling = uniqueinds(siteinds(psi, ll + 1), P.H[ll + 1])
+    L = L * psi[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1], !s_dangling))
     P.LR[ll + 1] = L
     ll += 1
   end
@@ -190,7 +194,11 @@ function _makeR!(P::AbstractProjMPO, psi::MPS, k::Int)::Union{ITensor,Nothing}
   rl = min(rl, N + 1)
   R = rproj(P)
   while rl > k
-    R = R * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
+    # Only prime the site indices of `psi` the are shared with the
+    # Hamiltonian. This allows for `psi` to have multiple site indices
+    # where some may not be shared with the Hamiltonian.
+    s_dangling = uniqueinds(siteinds(psi, rl - 1), P.H[rl - 1])
+    R = R * psi[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1], !s_dangling))
     P.LR[rl - 1] = R
     rl -= 1
   end
