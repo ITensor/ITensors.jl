@@ -202,7 +202,7 @@ include("util.jl")
     expected_dims = [2, 4, 8, 16, 32, 16, 8, 4, 2]
 
     for i in 1:9
-      l = getfirst(x -> hastags(x, "Link,l=$(i)"), inds(mps[i]))
+      l = linkind(phi, i)
       @test dim(l) == expected_dims[i]
     end
   end
