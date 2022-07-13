@@ -1544,6 +1544,16 @@ function randomITensor(::Type{S}, is...) where {S<:Number}
   return randomITensor(S, indices(is...))
 end
 
+# To fix ambiguity with QN version
+function randomITensor(::Type{ElT}, ::Tuple{}) where {ElT<:Number}
+  return randomITensor(ElT, Index{Int}[])
+end
+
+# To fix ambiguity with QN version
+function randomITensor(is::Tuple{})
+  return randomITensor(Float64, is)
+end
+
 # To fix ambiguity errors with QN version
 function randomITensor(::Type{ElT}) where {ElT<:Number}
   return randomITensor(ElT, ())
@@ -2598,6 +2608,8 @@ function map!(f::Function, R::ITensor, T1::ITensor, T2::ITensor)
   return settensor!(R, _map!!(f, tensor(R), tensor(T1), tensor(T2)))
 end
 
+map(f, x::ITensor) = itensor(map(f, tensor(x)))
+
 """
     axpy!(a::Number, v::ITensor, w::ITensor)
 ```
@@ -2722,6 +2734,9 @@ An ITensor with `EmptyStorage` storage always returns `true`.
 isemptystorage(T::ITensor) = isemptystorage(tensor(T))
 isemptystorage(T::Tensor) = isempty(T)
 isempty(T::ITensor) = isemptystorage(T)
+
+isreal(T::ITensor) = eltype(T) <: Real
+iszero(T::ITensor) = all(iszero, T)
 
 #######################################################################
 #

@@ -1092,11 +1092,8 @@ function _log_or_not_dot(
 
   dot_M1_M2 = O[]
 
-  T = promote_type(ITensors.promote_itensor_eltype(M1), ITensors.promote_itensor_eltype(M2))
-  _max_dot_warn = inv(eps(real(float(T))))
-
-  if isnan(dot_M1_M2) || isinf(dot_M1_M2) || abs(dot_M1_M2) > _max_dot_warn
-    @warn "The inner product (or norm²) you are computing is very large: $dot_M1_M2, which is greater than $_max_dot_warn and may lead to floating point errors when used. You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. For example if you are trying to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by `B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
+  if !isfinite(dot_M1_M2)
+    @warn "The inner product (or norm²) you are computing is very large ($dot_M1_M2). You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. For example if you are trying to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by `B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
   end
 
   return dot_M1_M2
@@ -1627,7 +1624,7 @@ function truncate(ψ0::AbstractMPS; kwargs...)
   return ψ
 end
 
-# Make `*` and alias for `contract` of two `AbstractMPS`
+# Make `*` an alias for `contract` of two `AbstractMPS`
 *(A::AbstractMPS, B::AbstractMPS; kwargs...) = contract(A, B; kwargs...)
 
 function _apply_to_orthocenter!(f, ψ::AbstractMPS, x)

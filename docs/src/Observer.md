@@ -97,7 +97,7 @@ which include:
    - psi: the current wavefunction MPS 
    - bond: the bond `b` that was just optimized, corresponding to sites `(b,b+1)` in the two-site DMRG algorihtm
    - sweep: the current sweep number
-   - sweep_is_done: true if at the end of the current sweep, otherwise false
+   - sweep\_is\_done: true if at the end of the current sweep, otherwise false
    - half_sweep: the half-sweep number, equal to 1 for a left-to-right, first half sweep, or 2 for the second, right-to-left half sweep
    - spec: the Spectrum object returned from factorizing the local superblock wavefunction tensor in two-site DMRG
    - outputlevel: an integer specifying the amount of output to show

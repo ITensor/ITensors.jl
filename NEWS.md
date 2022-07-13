@@ -6,6 +6,52 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.19 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Simplify the `rrule`s for priming and tagging MPS/MPO
+
+ITensors v0.3.18 Release Notes
+==============================
+
+Bugs:
+
+- Extend `apply(::MPO, ::MPO)` to `apply(::MPO, ::MPO, ::MPO...)` (#949)
+- Fix AD for `apply(::MPO, ::MPO)` and `contract(::MPO, ::MPO)` (#949)
+- Properly use element type in `randomMPS` in the 1-site case (b66d1b7)
+- Fix bug in `tr(::MPO)` rrule where the derivative was being multiplied twice into the identity MPO (b66d1b7)
+- Fix directsum when specifying a single `Index` (#930)
+- Fix bug in loginner when inner is negative or complex (#945)
+- Fix subtraction bug in `OpSum` (#945)
+
+Enhancements:
+
+- Define "I" for Qudit/Boson type (b66d1b7)
+- Only warn in `inner` if the result is `Inf` or `NaN` (b66d1b7)
+- Make sure `randomITensor(())` and `randomITensor(Float64, ())` returns a Dense storage type (b66d1b7)
+- Define `isreal` and `iszero` for ITensors (b66d1b7)
+- Project element type of ITensor in reverse pass of tensor-tensor or scalar-tensor contraction (b66d1b7)
+- Define reverse rules for ITensor subtraction and negation (b66d1b7)
+- Define `map` for ITensors (b66d1b7)
+- Throw error when performing eigendecomposition of tensor with NaN or Inf elements (b66d1b7)
+- Fix `rrule` for `MPO` constructor by generalizing the `rrule` for the `MPS` constructor (#946)
+- Forward truncation arguments to more operations in `rrule` for `apply` (#945)
+- Add rrules for addition and subtraction of MPOs (#935)
+
+ITensors v0.3.17 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Add Zp as alias for operator Z+, etc. (#942)
+- Export diag (#942)
+
 ITensors v0.3.16 Release Notes
 ==============================
 

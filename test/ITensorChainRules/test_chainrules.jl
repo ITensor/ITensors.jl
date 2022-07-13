@@ -262,6 +262,30 @@ Random.seed!(1234)
     rtol=1e-4,
     atol=1e-4,
   )
+
+  # https://github.com/ITensor/ITensors.jl/issues/933
+  f2 = function (x, a)
+    y = a + im * x
+    return real(dag(y) * y)[]
+  end
+  a = randomITensor()
+  f_itensor = x -> f2(x, a)
+  f_number = x -> f2(x, a[])
+  x = randomITensor()
+  @test f_number(x[]) ≈ f_itensor(x)
+  @test f_number'(x[]) ≈ f_itensor'(x)[]
+  @test isreal(f_itensor'(x))
+
+  # https://github.com/ITensor/ITensors.jl/issues/936
+  n = 2
+  s = siteinds("S=1/2", n)
+  x = (x -> outer(x', x))(randomMPS(s))
+  f1 = x -> tr(x)
+  f2 = x -> 2tr(x)
+  f3 = x -> -tr(x)
+  @test f1'(x) ≈ MPO(s, "I")
+  @test f2'(x) ≈ 2MPO(s, "I")
+  @test f3'(x) ≈ -MPO(s, "I")
 end
 
 @testset "ChainRules rrules: op" begin
@@ -602,4 +626,23 @@ end
   ∇f = f'(θ)
   ∇num = (f(θ + ϵ) - f(θ)) / ϵ
   @test ∇f ≈ ∇num atol = 1e-5
+end
+
+@testset "contract/apply MPOs" begin
+  n = 2
+  s = siteinds("S=1/2", n)
+  x = (x -> outer(x', x))(randomMPS(s; linkdims=4))
+  x_itensor = contract(x)
+
+  f = x -> tr(apply(x, x))
+  @test f(x) ≈ f(x_itensor)
+  @test contract(f'(x)) ≈ f'(x_itensor)
+
+  f = x -> tr(replaceprime(contract(x', x), 2 => 1))
+  @test f(x) ≈ f(x_itensor)
+  @test contract(f'(x)) ≈ f'(x_itensor)
+
+  f = x -> tr(replaceprime(*(x', x), 2 => 1))
+  @test f(x) ≈ f(x_itensor)
+  @test contract(f'(x)) ≈ f'(x_itensor)
 end

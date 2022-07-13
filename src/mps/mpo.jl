@@ -783,6 +783,10 @@ function apply(A::MPO, B::MPO; kwargs...)
   return replaceprime(AB, 2 => 1)
 end
 
+function apply(A1::MPO, A2::MPO, A3::MPO, As::MPO...; kwargs...)
+  return apply(apply(A1, A2; kwargs...), A3, As...; kwargs...)
+end
+
 (A::MPO)(B::MPO; kwargs...) = apply(A, B; kwargs...)
 
 contract_mpo_mpo_doc = """

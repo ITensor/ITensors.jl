@@ -1,4 +1,3 @@
-
 """
     space(::SiteType"Qudit";
           dim = 2,
@@ -42,6 +41,10 @@ function _op(::OpName"Id", ::SiteType"Qudit"; dim::Tuple=(2,))
     mat[k, k] = 1.0
   end
   return mat
+end
+
+function _op(::OpName"I", st::SiteType"Qudit"; kwargs...)
+  return _op(OpName"Id"(), st; kwargs...)
 end
 
 function _op(::OpName"Adag", ::SiteType"Qudit"; dim::Tuple=(2,))

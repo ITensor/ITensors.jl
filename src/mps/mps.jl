@@ -141,7 +141,7 @@ function randomCircuitMPS(
   M = MPS(N)
 
   if N == 1
-    M[1] = ITensor(randn(dim(sites[1])), sites[1])
+    M[1] = ITensor(randn(ElT, dim(sites[1])), sites[1])
     M[1] /= norm(M[1])
     return M
   end
