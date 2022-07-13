@@ -6,8 +6,26 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.1.4 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Generalize edge labels for more general vertices (#907)
+
+ITensors v0.1.3 Release Notes
+=============================
+
+Bugs:
+
+Enhancements:
+
+- Bump to ITensors 0.3 (#880)
+
 ITensors v0.1.2 Release Notes
-==============================
+=============================
 
 Bugs:
 
@@ -16,7 +34,7 @@ Enhancements:
 - Remove subscript from single tensor visualization. Show plevs by default. (#841)
 
 ITensors v0.1.1 Release Notes
-==============================
+=============================
 
 Bugs:
 
@@ -25,7 +43,7 @@ Enhancements:
 - Generalize `ITensorVisualizationBase.visualize` to make it easier to overload for new types (#802)
 
 ITensors v0.1.0 Release Notes
-==============================
+=============================
 
 Bugs:
 

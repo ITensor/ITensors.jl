@@ -37,6 +37,10 @@ The first three return arguments are `U`, `S`, and `V`, such that
 Whether or not the SVD performs a trunction depends on the keyword
 arguments provided. 
 
+If the left or right set of indices are empty, all input indices are
+put on `V` or `U` respectively. To specify an empty set of left indices,
+you must explicitly use `svd(A, ())` (`svd(A)` is currently undefined).
+
 # Examples
 
 ```julia
@@ -74,6 +78,7 @@ Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
   - `"recursive"` - ITensor's custom svd. Very reliable, but may be slow if high precision is needed. To get an `svd` of a matrix `A`, an eigendecomposition of ``A^{\\dagger} A`` is used to compute `U` and then a `qr` of ``A^{\\dagger} U`` is used to compute `V`. This is performed recursively to compute small singular values.
 - `use_absolute_cutoff::Bool = false`: set if all probability weights below the `cutoff` value should be discarded, rather than the sum of discarded weights.
 - `use_relative_cutoff::Bool = true`: set if the singular values should be normalized for the sake of truncation.
+- `min_blockdim::Int = 0`: for SVD of block-sparse or QN ITensors, require that the number of singular values kept be greater than or equal to this value when possible
 
 See also: [`factorize`](@ref), [`eigen`](@ref)
 """
@@ -89,10 +94,19 @@ function svd(A::ITensor, Linds...; kwargs...)
   Lis = commoninds(A, indices(Linds))
   Ris = uniqueinds(A, Lis)
 
-  if length(Lis) == 0 || length(Ris) == 0
-    error(
-      "In `svd`, the left or right indices are empty (the indices of `A` are ($(inds(A))), but the input indices are ($Lis)). For now, this is not supported. You may have accidentally input the wrong indices.",
-    )
+  Lis_original = Lis
+  Ris_original = Ris
+  if isempty(Lis_original)
+    α = trivial_index(Ris)
+    vLα = onehot(α => 1)
+    A *= vLα
+    Lis = [α]
+  end
+  if isempty(Ris_original)
+    α = trivial_index(Lis)
+    vRα = onehot(α => 1)
+    A *= vRα
+    Ris = [α]
   end
 
   CL = combiner(Lis...)
@@ -116,27 +130,6 @@ function svd(A::ITensor, Linds...; kwargs...)
   u = commonind(S, UC)
   v = commonind(S, VC)
 
-  if hasqns(A)
-    # Fix the flux of UC,S,VC
-    # such that flux(UC) == flux(VC) == QN()
-    # and flux(S) == flux(A)
-    for b in nzblocks(UC)
-      i1 = inds(UC)[1]
-      i2 = inds(UC)[2]
-      newqn = -dir(i2) * flux(i1 => Block(b[1]))
-      setblockqn!(i2, newqn, b[2])
-      setblockqn!(u, newqn, b[2])
-    end
-
-    for b in nzblocks(VC)
-      i1 = inds(VC)[1]
-      i2 = inds(VC)[2]
-      newqn = -dir(i2) * flux(i1 => Block(b[1]))
-      setblockqn!(i2, newqn, b[2])
-      setblockqn!(v, newqn, b[2])
-    end
-  end
-
   U = UC * dag(CL)
   V = VC * dag(CR)
 
@@ -148,8 +141,17 @@ function svd(A::ITensor, Linds...; kwargs...)
   u = settags(u, utags)
   v = settags(v, vtags)
 
+  if isempty(Lis_original)
+    U *= dag(vLα)
+  end
+  if isempty(Ris_original)
+    V *= dag(vRα)
+  end
+
   return TruncSVD(U, S, V, spec, u, v)
 end
+
+svd(A::ITensor; kwargs...) = error("Must specify indices in `svd`")
 
 """
     TruncEigen
@@ -333,6 +335,22 @@ function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
   Lis = commoninds(A, indices(Linds))
   Ris = uniqueinds(A, Lis)
+
+  Lis_original = Lis
+  Ris_original = Ris
+  if isempty(Lis_original)
+    α = trivial_index(Ris)
+    vLα = onehot(α => 1)
+    A *= vLα
+    Lis = [α]
+  end
+  if isempty(Ris_original)
+    α = trivial_index(Lis)
+    vRα = onehot(α => 1)
+    A *= vRα
+    Ris = [α]
+  end
+
   Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
   QT, RT = qr(tensor(A), Lpos, Rpos; kwargs...)
   Q, R = itensor(QT), itensor(RT)
@@ -340,6 +358,14 @@ function qr(A::ITensor, Linds...; kwargs...)
   settags!(Q, tags, q)
   settags!(R, tags, q)
   q = settags(q, tags)
+
+  if isempty(Lis_original)
+    Q *= dag(vLα)
+  end
+  if isempty(Ris_original)
+    R *= dag(vRα)
+  end
+
   return Q, R, q
 end
 

@@ -33,6 +33,25 @@ mutable struct DiskProjMPO <: AbstractProjMPO
   rposcache::Union{Int,Nothing}
 end
 
+function copy(P::DiskProjMPO)
+  return DiskProjMPO(
+    P.lpos,
+    P.rpos,
+    P.nsite,
+    copy(P.H),
+    copy(P.LR),
+    P.Lcache,
+    P.lposcache,
+    P.Rcache,
+    P.rposcache,
+  )
+end
+
+function set_nsite!(P::DiskProjMPO, nsite)
+  P.nsite = nsite
+  return P
+end
+
 function DiskProjMPO(H::MPO)
   return new(
     0,

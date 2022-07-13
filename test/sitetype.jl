@@ -1,5 +1,10 @@
 using ITensors, Test
 
+function is_unitary(U::ITensor; kwargs...)
+  s = noprime(filterinds(U; plev=1))
+  return isapprox(transpose(dag(U))(U), op("I", s...))
+end
+
 @testset "SiteType" begin
   N = 10
 
@@ -13,6 +18,15 @@ using ITensors, Test
     Sy = op(sites, "Sy", 2)
     SySy = op(sites, "Sy * Sy", 2)
     @test SySy ≈ product(Sy, Sy)
+
+    Sz1 = op("Sz", sites, 1)
+    @test op("Sz", [sites[1]]) ≈ Sz1
+    @test op([sites[1]], "Sz") ≈ Sz1
+    @test op([1 0; 0 -1] / 2, [sites[1]]) ≈ Sz1
+    @test op([sites[1]], [1 0; 0 -1] / 2) ≈ Sz1
+
+    @test op([sites[1]], "Ry"; θ=π / 2) ≈
+      itensor([1 -1; 1 1] / √2, sites[1]', dag(sites[1]))
 
     sites = siteinds("S=1", N)
     #@test_throws ArgumentError op(sites, "Sp", 1)
@@ -35,7 +49,7 @@ using ITensors, Test
     @test x ≈ array(op("a - a†", q))
     x = Amat * Adagmat - Adagmat
     @test x ≈ array(op("a * a† - a†", q))
-    @test x ≈ array(op("a*a† - a†", q))
+    @test x ≈ array(op("a * a† - a†", q))
     x = Adagmat * Adagmat * Amat * Amat
     @test x ≈ array(op("a† * a† * a * a", q))
 
@@ -53,10 +67,11 @@ using ITensors, Test
     @test x ≈ array(op("S+ - S- - S+", q))
     x = Sp * Sm + Sm * Sp
     @test x ≈ array(op("S+ * S- + S- * S+", q))
-    @test x ≈ array(op("S+*S- + S-*S+", q))
+    # Deprecated syntax
+    @test x ≈ array(op("S+ * S- + S-*S+", q))
     x = Sp * Sm - Sm * Sp
     @test x ≈ array(op("S+ * S- - S- * S+", q))
-    @test x ≈ array(op("S+* S- - S- * S+", q))
+    @test x ≈ array(op("S+ * S- - S- * S+", q))
     x = Sp * Sm + Sm * Sp + Sz * Sx * Sy
     @test x ≈ array(op("S+ * S- + S- * S+ + Sz * Sx * Sy", q))
     x = Sp * Sm - Sm * Sp + Sz * Sx * Sy
@@ -121,7 +136,7 @@ using ITensors, Test
     @test α[s' => 4, t' => 1, s => 4, t => 2] ≈ -3 / 2
 
     s1 = Index(4, "_Custom1, __x")
-    @test_throws ErrorException op("α", s, s1)
+    @test_throws ArgumentError op("α", s, s1)
 
     s2 = Index(4, "_Custom2, __x")
     β = op("β", s1, s2)
@@ -129,7 +144,7 @@ using ITensors, Test
     @test β[s1' => 2, s2' => 1, s1 => 2, s2 => 2] ≈ +3 / 2
     @test β[s1' => 3, s2' => 3, s1 => 3, s2 => 4] ≈ -3 / 2
     @test β[s1' => 4, s2' => 1, s1 => 4, s2 => 2] ≈ -5 / 2
-    @test_throws ErrorException op("β", s2, s1)
+    @test_throws ArgumentError op("β", s2, s1)
   end
 
   @testset "Custom OpName with long name" begin
@@ -213,7 +228,7 @@ using ITensors, Test
     @test α[s' => 4, t' => 1, s => 4, t => 2] ≈ -3 / 2
 
     s1 = Index(4, "_Custom1, __x")
-    @test_throws ErrorException op("α", t, s1)
+    @test_throws ArgumentError op("α", t, s1)
 
     s2 = Index(4, "_Custom2, __x")
     β = op("β", s1, s2)
@@ -221,7 +236,7 @@ using ITensors, Test
     @test β[s1' => 2, s2' => 1, s1 => 2, s2 => 2] ≈ +3 / 2
     @test β[s1' => 3, s2' => 3, s1 => 3, s2 => 4] ≈ -3 / 2
     @test β[s1' => 4, s2' => 1, s1 => 4, s2 => 2] ≈ -5 / 2
-    @test_throws ErrorException op("β", s2, s1)
+    @test_throws ArgumentError op("β", s2, s1)
   end
 
   @testset "Custom SiteType using older op interface" begin
@@ -453,6 +468,46 @@ using ITensors, Test
     end
     s = siteind("Xev")
     @test state(s, "0") ≈ ITensor([1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], s)
+  end
+
+  @testset "function applied to a gate" begin
+    s = siteinds("Qubit", 2)
+
+    θ = 0.1
+    rx = array(op("Rx", s[1]; θ=0.1))
+    exp_rx = exp(rx)
+    gtest = op(x -> exp(x), "Rx", s[1]; θ=0.1)
+    @test exp_rx ≈ array(op(x -> exp(x), "Rx", s[1]; θ=0.1))
+    @test exp_rx ≈ array(op(x -> exp(x), ("Rx", 1, (θ=0.1,)), s))
+
+    cx = 0.1 * reshape(array(op("CX", s[1], s[2])), (4, 4))
+    exp_cx = reshape(exp(cx), (2, 2, 2, 2))
+    @test exp_cx ≈ array(op(x -> exp(0.1 * x), "CX", s[1], s[2]))
+    @test exp_cx ≈ array(op(x -> exp(0.1 * x), ("CX", (1, 2)), s))
+  end
+
+  @testset "Haar-random unitary RandomUnitary" begin
+    s = siteinds(2, 3)
+
+    U = op("RandomUnitary", s, 1, 2)
+    @test eltype(U) == ComplexF64
+    @test order(U) == 4
+    @test is_unitary(U; rtol=1e-15)
+
+    U = op("RandomUnitary", s, 1, 2, 3)
+    @test eltype(U) == ComplexF64
+    @test order(U) == 6
+    @test is_unitary(U; rtol=1e-15)
+
+    U = op("RandomUnitary", s, 1, 2; eltype=Float64)
+    @test eltype(U) == Float64
+    @test order(U) == 4
+    @test is_unitary(U; rtol=1e-15)
+
+    U = op("RandomUnitary", s, 1, 2, 3; eltype=Float64)
+    @test eltype(U) == Float64
+    @test order(U) == 6
+    @test is_unitary(U; rtol=1e-15)
   end
 end
 

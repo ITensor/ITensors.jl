@@ -49,6 +49,7 @@ module ITensors
 #####################################
 # External packages
 #
+using BitIntegers
 using ChainRulesCore
 using Compat
 using HDF5
@@ -66,6 +67,11 @@ using TimerOutputs
 using Zeros
 
 #####################################
+# General utility functions
+#
+include("utils.jl")
+
+#####################################
 # ContractionSequenceOptimization
 #
 include("ContractionSequenceOptimization/ContractionSequenceOptimization.jl")
@@ -75,30 +81,14 @@ using .ContractionSequenceOptimization
 # LazyApply
 #
 include("LazyApply/LazyApply.jl")
-using .LazyApply: Applied, Sum, ∑, Prod, ∏, Scaled, α, coefficient
+using .LazyApply
 
 #####################################
 # Ops
 #
 include("Ops/Ops.jl")
 using .Ops
-
-#####################################
-# Directory helper functions (useful for
-# running examples)
-#
-src_dir() = dirname(pathof(@__MODULE__))
-pkg_dir() = joinpath(src_dir(), "..")
-examples_dir() = joinpath(pkg_dir(), "examples")
-
-#####################################
-# Determine version and uuid of the package
-#
-function _parse_project_toml(field::String)
-  return Pkg.TOML.parsefile(joinpath(pkg_dir(), "Project.toml"))[field]
-end
-version() = VersionNumber(_parse_project_toml("version"))
-uuid() = Base.UUID(_parse_project_toml("uuid"))
+import .Ops: sites, name
 
 #####################################
 # Exports
@@ -114,6 +104,13 @@ include("imports.jl")
 # Global Variables
 #
 include("global_variables.jl")
+
+#####################################
+# Algorithm type for selecting
+# different algorithm backends
+# (for internal or advanced usage)
+#
+include("algorithm.jl")
 
 #####################################
 # Index and IndexSet
@@ -144,6 +141,7 @@ include("qn/qn.jl")
 include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
+include("nullspace.jl")
 
 #####################################
 # Ops to ITensor conversions
@@ -182,12 +180,16 @@ include("physics/site_types/tj.jl")
 include("physics/site_types/qudit.jl") # EXPERIMENTAL
 include("physics/site_types/boson.jl") # EXPERIMENTAL
 include("physics/fermions.jl")
-include("physics/autompo.jl")
+include("physics/autompo/matelem.jl")
+include("physics/autompo/qnmatelem.jl")
+include("physics/autompo/opsum_to_mpo_generic.jl")
+include("physics/autompo/opsum_to_mpo.jl")
+include("physics/autompo/opsum_to_mpo_qn.jl")
 
 #####################################
 # Ops to MPO conversions
 #
-include("Ops/ops_mpo.jl")
+# include("Ops/ops_mpo.jl")
 
 #####################################
 # Trotter-Suzuki decomposition
@@ -230,6 +232,11 @@ include("packagecompile/compile.jl")
 # use only
 #
 include("developer_tools.jl")
+
+#####################################
+# Deprecated
+#
+include("Deprecated/Deprecated.jl")
 
 function __init__()
   return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object

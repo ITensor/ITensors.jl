@@ -1,6 +1,11 @@
 export truncate!
 
-function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
+function truncate!(P::Vector{ElT}; kwargs...)::Tuple{ElT,ElT} where {ElT}
+  cutoff::Union{Nothing,ElT} = get(kwargs, :cutoff, zero(ElT))
+  if isnothing(cutoff)
+    cutoff = typemin(ElT)
+  end
+
   # Keyword argument deprecations
   use_absolute_cutoff = false
   if haskey(kwargs, :absoluteCutoff)
@@ -15,12 +20,12 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
 
   maxdim::Int = min(get(kwargs, :maxdim, length(P)), length(P))
   mindim::Int = max(get(kwargs, :mindim, 1), 1)
-  cutoff::Float64 = max(get(kwargs, :cutoff, 0.0), 0.0)
+
   use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
   origm = length(P)
-  docut = 0.0
+  docut = zero(ElT)
 
   #if P[1] <= 0.0
   #  P[1] = 0.0
@@ -30,7 +35,7 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
 
   if origm == 1
     docut = abs(P[1]) / 2
-    return 0.0, docut
+    return zero(ElT), docut
   end
 
   s = sign(P[1])
@@ -38,12 +43,12 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
 
   #Zero out any negative weight
   for n in origm:-1:1
-    (P[n] >= 0.0) && break
-    P[n] = 0.0
+    (P[n] >= zero(ElT)) && break
+    P[n] = zero(ElT)
   end
 
   n = origm
-  truncerr = 0.0
+  truncerr = zero(ElT)
   while n > maxdim
     truncerr += P[n]
     n -= 1
@@ -57,10 +62,10 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
       n -= 1
     end
   else
-    scale = 1.0
+    scale = one(ElT)
     if use_relative_cutoff
       scale = sum(P)
-      (scale == 0.0) && (scale = 1.0)
+      (scale == zero(ElT)) && (scale = one(ElT))
     end
 
     #Continue truncating until *sum* of discarded probability 
@@ -79,8 +84,8 @@ function truncate!(P::Vector{Float64}; kwargs...)::Tuple{Float64,Float64}
 
   if n < origm
     docut = (P[n] + P[n + 1]) / 2
-    if abs(P[n] - P[n + 1]) < 1E-3 * P[n]
-      docut += 1E-3 * P[n]
+    if abs(P[n] - P[n + 1]) < ElT(1e-3) * P[n]
+      docut += ElT(1e-3) * P[n]
     end
   end
 

@@ -1,0 +1,701 @@
+#
+# Optimizations:
+#
+#  - replace leftmap, rightmap with sorted vectors
+# 
+
+## """
+##     prune!(os::OpSum; cutoff = 1e-15)
+## 
+## Remove any MPOTerm with norm(coef) < cutoff
+## """
+## function prune!(os::OpSum; atol=1e-15)
+##   OS = OpSum()
+##   for o in os
+##     norm(ITensors.coefficient(o)) > atol && push!(OS, o)
+##   end
+##   os = OS
+##   return os
+## end
+## 
+## #
+## # os .+= ("Sz",1) syntax using broadcasting
+## #
+## 
+## struct OpSumStyle <: Broadcast.BroadcastStyle end
+## Base.BroadcastStyle(::Type{<:OpSum}) = OpSumStyle()
+## 
+## struct OpSumAddTermStyle <: Broadcast.BroadcastStyle end
+## 
+## Base.broadcastable(os::OpSum) = os
+## 
+## Base.BroadcastStyle(::OpSumStyle, ::Broadcast.Style{Tuple}) = OpSumAddTermStyle()
+## 
+## Broadcast.instantiate(bc::Broadcast.Broadcasted{OpSumAddTermStyle}) = bc
+## 
+## function Base.copyto!(os, bc::Broadcast.Broadcasted{OpSumAddTermStyle,<:Any,typeof(+)})
+##   add!(os, bc.args[2]...)
+##   return os
+## end
+## 
+## #
+## # os .-= ("Sz",1) syntax using broadcasting
+## #
+## 
+## function Base.copyto!(os, bc::Broadcast.Broadcasted{OpSumAddTermStyle,<:Any,typeof(-)})
+##   subtract!(os, bc.args[2]...)
+##   return os
+## end
+## 
+## (α::Number * os::OpSum) = OpSum([α * o for o in os])
+## (os::OpSum * α::Number) = α * os
+## (os::OpSum / α::Number) = OpSum([o / α for o in os])
+## 
+## (o1::OpSum - o2::OpSum) = o1 + (-1) * o2
+## 
+## function Base.show(io::IO, os::OpSum)
+##   println(io, "OpSum:")
+##   for term in data(os)
+##     println(io, "  $term")
+##   end
+## end
+
+# TODO: Redefine this? Maybe call `arguments`?
+data(a::Prod{Op}) = only(a.args)
+data(a::Sum{Scaled{C,Prod{Op}}}) where {C} = only(a.args)
+data(a::Scaled{C,Prod{Op}}) where {C} = data(argument(a))
+copy(a::Applied) = Applied(deepcopy(a.f), deepcopy(a.args), deepcopy(a.kwargs))
+Sum(a::Vector) = Applied(sum, (a,))
+Prod(a::Vector) = Applied(prod, (a,))
+isless(a1::Applied{F}, a2::Applied{F}) where {F} = (isless(a1.args, a2.args) && isless(a1.kwargs, a2.kwargs))
+isless(o1::Op, o2::Op) = (isless(which_op(o1), which_op(o2)) && isless(site(o1), site(o2)) && isless(params(o1), params(o2)))
+
+##################################
+# MatElem (simple sparse matrix) #
+##################################
+
+struct MatElem{T}
+  row::Int
+  col::Int
+  val::T
+end
+
+#function Base.show(io::IO,m::MatElem)
+#  print(io,"($(m.row),$(m.col),$(m.val))")
+#end
+
+function toMatrix(els::Vector{MatElem{T}})::Matrix{T} where {T}
+  nr = 0
+  nc = 0
+  for el in els
+    nr = max(nr, el.row)
+    nc = max(nc, el.col)
+  end
+  M = zeros(T, nr, nc)
+  for el in els
+    M[el.row, el.col] = el.val
+  end
+  return M
+end
+
+function Base.:(==)(m1::MatElem{T}, m2::MatElem{T})::Bool where {T}
+  return (m1.row == m2.row && m1.col == m2.col && m1.val == m2.val)
+end
+
+function Base.isless(m1::MatElem{T}, m2::MatElem{T})::Bool where {T}
+  if m1.row != m2.row
+    return m1.row < m2.row
+  elseif m1.col != m2.col
+    return m1.col < m2.col
+  end
+  return m1.val < m2.val
+end
+
+struct QNMatElem{T}
+  rowqn::QN
+  colqn::QN
+  row::Int
+  col::Int
+  val::T
+end
+
+function Base.:(==)(m1::QNMatElem{T}, m2::QNMatElem{T})::Bool where {T}
+  return (
+    m1.row == m2.row &&
+    m1.col == m2.col &&
+    m1.val == m2.val &&
+    m1.rowqn == m2.rowqn &&
+    m1.colqn == m2.colqn
+  )
+end
+
+function Base.isless(m1::QNMatElem{T}, m2::QNMatElem{T})::Bool where {T}
+  if m1.rowqn != m2.rowqn
+    return m1.rowqn < m2.rowqn
+  elseif m1.colqn != m2.colqn
+    return m1.colqn < m2.colqn
+  elseif m1.row != m2.row
+    return m1.row < m2.row
+  elseif m1.col != m2.col
+    return m1.col < m2.col
+  end
+  return m1.val < m2.val
+end
+
+isempty(op_qn::Pair{Prod{Op},QN}) = isempty(op_qn.first)
+
+# the key type is Prod{Op} for the dense case
+# and is Pair{Prod{Op},QN} for the QN conserving case
+function posInLink!(linkmap::Dict{K,Int}, k::K)::Int where {K}
+  isempty(k) && return -1
+  pos = get(linkmap, k, -1)
+  if pos == -1
+    pos = length(linkmap) + 1
+    linkmap[k] = pos
+  end
+  return pos
+end
+
+# TODO: Define as `C`. Rename `coefficient_type`.
+function determineValType(terms::Vector{Scaled{C,Prod{Op}}}) where {C}
+  for t in terms
+    (!isreal(coefficient(t))) && return ComplexF64
+  end
+  return Float64
+end
+
+function computeSiteProd(sites, ops::Prod{Op})::ITensor
+  i = only(site(ops[1]))
+  T = op(sites[i], which_op(ops[1]); params(ops[1])...)
+  for j in 2:length(ops)
+    (only(site(ops[j])) != i) && error("Mismatch of site number in computeSiteProd")
+    opj = op(sites[i], which_op(ops[j]); params(ops[j])...)
+    T = product(T, opj)
+  end
+  return T
+end
+
+function remove_dups!(v::Vector{T}) where {T}
+  N = length(v)
+  (N == 0) && return nothing
+  sort!(v)
+  n = 1
+  u = 2
+  while u <= N
+    while u < N && v[u] == v[n]
+      u += 1
+    end
+    if v[u] != v[n]
+      v[n + 1] = v[u]
+      n += 1
+    end
+    u += 1
+  end
+  resize!(v, n)
+  return nothing
+end #remove_dups!
+
+function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+  mindim::Int = get(kwargs, :mindim, 1)
+  maxdim::Int = get(kwargs, :maxdim, 10000)
+  cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
+
+  N = length(sites)
+
+  ValType = determineValType(data(os))
+
+  Vs = [Matrix{ValType}(undef, 1, 1) for n in 1:N]
+  tempMPO = [MatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
+
+  crosses_bond(t::Scaled{C,Prod{Op}}, n::Int) where {C} = (only(site(t[1])) <= n <= only(site(t[end])))
+
+  rightmap = Dict{Prod{Op},Int}()
+  next_rightmap = Dict{Prod{Op},Int}()
+
+  for n in 1:N
+    leftbond_coefs = MatElem{ValType}[]
+
+    leftmap = Dict{Prod{Op},Int}()
+    for term in os
+      crosses_bond(term, n) || continue
+
+      left = Prod(filter(t -> (only(site(t)) < n), data(term)))
+      onsite = Prod(filter(t -> (only(site(t)) == n), data(term)))
+      right = Prod(filter(t -> (only(site(t)) > n), data(term)))
+
+      bond_row = -1
+      bond_col = -1
+      if !isempty(left)
+        bond_row = posInLink!(leftmap, left)
+        bond_col = posInLink!(rightmap, onsite * right)
+        bond_coef = convert(ValType, coefficient(term))
+        push!(leftbond_coefs, MatElem(bond_row, bond_col, bond_coef))
+      end
+
+      A_row = bond_col
+      A_col = posInLink!(next_rightmap, right)
+      site_coef = one(C)
+      if A_row == -1
+        site_coef = coefficient(term)
+      end
+      if isempty(onsite)
+        if !using_auto_fermion() && isfermionic(right, sites)
+          push!(onsite, Op("F", n))
+        else
+          push!(onsite, Op("Id", n))
+        end
+      end
+      el = MatElem(A_row, A_col, site_coef * onsite)
+      push!(tempMPO[n], el)
+    end
+    rightmap = next_rightmap
+    next_rightmap = Dict{Prod{Op},Int}()
+    remove_dups!(tempMPO[n])
+    if n > 1 && !isempty(leftbond_coefs)
+      M = toMatrix(leftbond_coefs)
+      U, S, V = svd(M)
+      P = S .^ 2
+      truncate!(P; maxdim=maxdim, cutoff=cutoff, mindim=mindim)
+      tdim = length(P)
+      nc = size(M, 2)
+      Vs[n - 1] = Matrix{ValType}(V[1:nc, 1:tdim])
+    end
+  end
+
+  llinks = Vector{Index{Int}}(undef, N + 1)
+  llinks[1] = Index(2, "Link,l=0")
+
+  H = MPO(sites)
+
+  for n in 1:N
+    VL = Matrix{ValType}(undef, 1, 1)
+    if n > 1
+      VL = Vs[n - 1]
+    end
+    VR = Vs[n]
+    tdim = size(VR, 2)
+
+    llinks[n + 1] = Index(2 + tdim, "Link,l=$n")
+
+    ll = llinks[n]
+    rl = llinks[n + 1]
+
+    H[n] = ITensor()
+
+    for el in tempMPO[n]
+      A_row = el.row
+      A_col = el.col
+      t = el.val
+      (abs(coefficient(t)) > eps()) || continue
+
+      M = zeros(ValType, dim(ll), dim(rl))
+
+      ct = convert(ValType, coefficient(t))
+      if A_row == -1 && A_col == -1 #onsite term
+        M[end, 1] += ct
+      elseif A_row == -1 #term starting on site n
+        for c in 1:size(VR, 2)
+          z = ct * VR[A_col, c]
+          M[end, 1 + c] += z
+        end
+      elseif A_col == -1 #term ending on site n
+        for r in 1:size(VL, 2)
+          z = ct * conj(VL[A_row, r])
+          M[1 + r, 1] += z
+        end
+      else
+        for r in 1:size(VL, 2), c in 1:size(VR, 2)
+          z = ct * conj(VL[A_row, r]) * VR[A_col, c]
+          M[1 + r, 1 + c] += z
+        end
+      end
+
+      T = itensor(M, ll, rl)
+      H[n] += T * computeSiteProd(sites, argument(t))
+    end
+
+    #
+    # Special handling of starting and 
+    # ending identity operators:
+    #
+    idM = zeros(ValType, dim(ll), dim(rl))
+    idM[1, 1] = 1.0
+    idM[end, end] = 1.0
+    T = itensor(idM, ll, rl)
+    H[n] += T * computeSiteProd(sites, Prod([Op("Id", n)]))
+  end
+
+  L = ITensor(llinks[1])
+  L[end] = 1.0
+
+  R = ITensor(llinks[N + 1])
+  R[1] = 1.0
+
+  H[1] *= L
+  H[N] *= R
+
+  return H
+end #svdMPO
+
+function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
+  mindim::Int = get(kwargs, :mindim, 1)
+  maxdim::Int = get(kwargs, :maxdim, 10000)
+  cutoff::Float64 = get(kwargs, :cutoff, 1E-15)
+
+  N = length(sites)
+
+  ValType = determineValType(data(os))
+
+  Vs = [Dict{QN,Matrix{ValType}}() for n in 1:(N + 1)]
+  tempMPO = [QNMatElem{Scaled{C,Prod{Op}}}[] for n in 1:N]
+
+  crosses_bond(t::Scaled{C,Prod{Op}}, n::Int) where {C} = (site(t[1]) <= n <= site(t[end]))
+
+  rightmap = Dict{Pair{Prod{Op},QN},Int}()
+  next_rightmap = Dict{Pair{Prod{Op},QN},Int}()
+
+  # A cache of the ITensor operators on a certain site
+  # of a certain type
+  op_cache = Dict{Pair{String,Int},ITensor}()
+
+  for n in 1:N
+    leftbond_coefs = Dict{QN,Vector{MatElem{ValType}}}()
+
+    leftmap = Dict{Pair{Prod{Op},QN},Int}()
+    for term in data(os)
+      crosses_bond(term, n) || continue
+
+      left::Prod{Op} = filter(t -> (site(t) < n), data(term))
+      onsite::Prod{Op} = filter(t -> (site(t) == n), data(term))
+      right::Prod{Op} = filter(t -> (site(t) > n), data(term))
+
+      function calcQN(term::Prod{Op})
+        q = QN()
+        for st in term
+          op_tensor = get(op_cache, name(st) => site(st), nothing)
+          if op_tensor === nothing
+            op_tensor = op(sites[site(st)], name(st); params(st)...)
+            op_cache[name(st) => site(st)] = op_tensor
+          end
+          q -= flux(op_tensor)
+        end
+        return q
+      end
+      lqn = calcQN(left)
+      sqn = calcQN(onsite)
+
+      bond_row = -1
+      bond_col = -1
+      if !isempty(left)
+        bond_row = posInLink!(leftmap, left => lqn)
+        bond_col = posInLink!(rightmap, onsite * right => lqn)
+        bond_coef = convert(ValType, coefficient(term))
+        q_leftbond_coefs = get!(leftbond_coefs, lqn, MatElem{ValType}[])
+        push!(q_leftbond_coefs, MatElem(bond_row, bond_col, bond_coef))
+      end
+
+      rqn = sqn + lqn
+      A_row = bond_col
+      A_col = posInLink!(next_rightmap, right => rqn)
+      site_coef = 1.0 + 0.0im
+      if A_row == -1
+        site_coef = coefficient(term)
+      end
+      if isempty(onsite)
+        if !using_auto_fermion() && isfermionic(right, sites)
+          push!(onsite, Op("F", n))
+        else
+          push!(onsite, Op("Id", n))
+        end
+      end
+      el = QNMatElem(lqn, rqn, A_row, A_col, MPOTerm(site_coef, onsite))
+      push!(tempMPO[n], el)
+    end
+    rightmap = next_rightmap
+    next_rightmap = Dict{Pair{Prod{Op},QN},Int}()
+
+    remove_dups!(tempMPO[n])
+
+    if n > 1 && !isempty(leftbond_coefs)
+      for (q, mat) in leftbond_coefs
+        M = toMatrix(mat)
+        U, S, V = svd(M)
+        P = S .^ 2
+        truncate!(P; maxdim=maxdim, cutoff=cutoff, mindim=mindim)
+        tdim = length(P)
+        nc = size(M, 2)
+        Vs[n][q] = Matrix{ValType}(V[1:nc, 1:tdim])
+      end
+    end
+  end
+
+  #
+  # Make MPO link indices
+  #
+  d0 = 2
+  llinks = Vector{QNIndex}(undef, N + 1)
+  # Set dir=In for fermionic ordering, avoid arrow sign
+  # <fermions>:
+  linkdir = using_auto_fermion() ? In : Out
+  llinks[1] = Index(QN() => d0; tags="Link,l=0", dir=linkdir)
+  for n in 1:N
+    qi = Vector{Pair{QN,Int}}()
+    if !haskey(Vs[n + 1], QN())
+      # Make sure QN=zero is first in list of sectors
+      push!(qi, QN() => d0)
+    end
+    for (q, Vq) in Vs[n + 1]
+      cols = size(Vq, 2)
+      if q == QN()
+        # Make sure QN=zero is first in list of sectors
+        insert!(qi, 1, q => d0 + cols)
+      else
+        if using_auto_fermion() # <fermions>
+          push!(qi, (-q) => cols)
+        else
+          push!(qi, q => cols)
+        end
+      end
+    end
+    # Set dir=In for fermionic ordering, avoid arrow sign
+    # <fermions>:
+    llinks[n + 1] = Index(qi...; tags="Link,l=$n", dir=linkdir)
+  end
+
+  H = MPO(N)
+
+  # Constants which define MPO start/end scheme
+  startState = 2
+  endState = 1
+
+  for n in 1:N
+    finalMPO = Dict{Tuple{QN,Prod{Op}},Matrix{ValType}}()
+
+    ll = llinks[n]
+    rl = llinks[n + 1]
+
+    function defaultMat(ll, rl, lqn, rqn)
+      #ldim = qnblockdim(ll,lqn)
+      #rdim = qnblockdim(rl,rqn)
+      ldim = blockdim(ll, lqn)
+      rdim = blockdim(rl, rqn)
+      return zeros(ValType, ldim, rdim)
+    end
+
+    idTerm = [Op("Id", n)]
+    finalMPO[(QN(), idTerm)] = defaultMat(ll, rl, QN(), QN())
+    idM = finalMPO[(QN(), idTerm)]
+    idM[1, 1] = 1.0
+    idM[2, 2] = 1.0
+
+    for el in tempMPO[n]
+      t = el.val
+      (abs(coefficient(t)) > eps()) || continue
+      A_row = el.row
+      A_col = el.col
+
+      M = get!(finalMPO, (el.rowqn, data(t)), defaultMat(ll, rl, el.rowqn, el.colqn))
+
+      # rowShift and colShift account for
+      # special entries in the zero-QN sector
+      # of the MPO
+      rowShift = (el.rowqn == QN()) ? 2 : 0
+      colShift = (el.colqn == QN()) ? 2 : 0
+
+      ct = convert(ValType, coefficient(t))
+      if A_row == -1 && A_col == -1 #onsite term
+        M[startState, endState] += ct
+      elseif A_row == -1 #term starting on site n
+        VR = Vs[n + 1][el.colqn]
+        for c in 1:size(VR, 2)
+          z = ct * VR[A_col, c]
+          M[startState, colShift + c] += z
+        end
+      elseif A_col == -1 #term ending on site n
+        VL = Vs[n][el.rowqn]
+        for r in 1:size(VL, 2)
+          z = ct * conj(VL[A_row, r])
+          M[rowShift + r, endState] += z
+        end
+      else
+        VL = Vs[n][el.rowqn]
+        VR = Vs[n + 1][el.colqn]
+        for r in 1:size(VL, 2), c in 1:size(VR, 2)
+          z = ct * conj(VL[A_row, r]) * VR[A_col, c]
+          M[rowShift + r, colShift + c] += z
+        end
+      end
+    end
+
+    s = sites[n]
+    H[n] = ITensor()
+    for (q_op, M) in finalMPO
+      op_prod = q_op[2]
+      Op = computeSiteProd(sites, op_prod)
+
+      rq = q_op[1]
+      sq = flux(Op)
+      cq = rq - sq
+
+      if using_auto_fermion()
+        # <fermions>:
+        # MPO is defined with Index order
+        # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
+        # so compute sign that would result by permuting cl from
+        # second position to last position:
+        if fparity(sq) == 1 && fparity(cq) == 1
+          Op .*= -1
+        end
+      end
+
+      rn = qnblocknum(ll, rq)
+      cn = qnblocknum(rl, cq)
+
+      #TODO: wrap following 3 lines into a function
+      _block = Block(rn, cn)
+      T = BlockSparseTensor(ValType, [_block], (dag(ll), rl))
+      #blockview(T, _block) .= M
+      T[_block] .= M
+
+      IT = itensor(T)
+      H[n] += IT * Op
+    end
+  end
+
+  L = ITensor(llinks[1])
+  L[startState] = 1.0
+
+  R = ITensor(dag(llinks[N + 1]))
+  R[endState] = 1.0
+
+  H[1] *= L
+  H[N] *= R
+
+  return H
+end #qn_svdMPO
+
+function sorteachterm(os::OpSum, sites)
+  os = copy(os)
+  isless_site(o1::Op, o2::Op) = site(o1) < site(o2)
+  N = length(sites)
+  for t in os
+
+    @show t
+
+    Nt = length(t)
+    prevsite = N + 1 #keep track of whether we are switching
+    #to a new site to make sure F string
+    #is only placed at most once for each site
+
+    # Sort operators in t by site order,
+    # and keep the permutation used, perm, for analysis below
+    perm = Vector{Int}(undef, Nt)
+    sortperm!(perm, data(t); alg=InsertionSort, lt=isless_site)
+
+    t = coefficient(t) * Prod(data(t)[perm])
+
+    # Identify fermionic operators,
+    # zeroing perm for bosonic operators,
+    # and inserting string "F" operators
+    parity = +1
+    for n in Nt:-1:1
+      currsite = site(t[n])
+      fermionic = has_fermion_string(which_op(t[n]), sites[only(site(t[n]))])
+      if !using_auto_fermion() && (parity == -1) && (currsite < prevsite)
+        # Put local piece of Jordan-Wigner string emanating
+        # from fermionic operators to the right
+        # (Remaining F operators will be put in by svdMPO)
+        t.ops[n] = Op("$(which_op(t[n])) * F", site(t[n]))
+      end
+      prevsite = currsite
+
+      if fermionic
+        parity = -parity
+      else
+        # Ignore bosonic operators in perm
+        # by zeroing corresponding entries
+        perm[n] = 0
+      end
+    end
+    if parity == -1
+      error("Parity-odd fermionic terms not yet supported by AutoMPO")
+    end
+
+    # Keep only fermionic op positions (non-zero entries)
+    filter!(!iszero, perm)
+    # and account for anti-commuting, fermionic operators 
+    # during above sort; put resulting sign into coef
+    t *= parity_sign(perm)
+  end
+  return os
+end
+
+function check_numerical_opsum(os::OpSum)
+  for mpoterm in os
+    operators = data(mpoterm)
+    for operator in which_op.(operators)
+      operator isa Array{<:Number} && return true
+    end
+  end
+  return false
+end
+
+function sortmergeterms(os::OpSum{C}) where {C}
+  check_numerical_opsum(os) && return os
+  os_data = sort(data(os))
+  # Merge (add) terms with same operators
+  ## da = data(os)
+  merge_os_data = Scaled{C,Prod{Op}}[]
+  last_term = copy(os[1])
+  last_term_coef = coefficient(last_term)
+  for n in 2:length(os)
+    if argument(os[n]) == argument(last_term)
+      last_term_coef += coefficient(os[n])
+    else
+      last_term = last_term_coef * argument(last_term)
+      push!(merge_os_data, last_term)
+      last_term = os[n]
+      last_term_coef = coefficient(last_term)
+    end
+  end
+  push!(merge_os_data, last_term)
+  # setdata!(os, ndata)
+  os = Sum(merge_os_data)
+  return os
+end
+
+"""
+    MPO(os::OpSum,sites::Vector{<:Index};kwargs...)
+       
+Convert an OpSum object `os` to an
+MPO, with indices given by `sites`. The
+resulting MPO will have the indices
+`sites[1], sites[1]', sites[2], sites[2]'`
+etc. The conversion is done by an algorithm
+that compresses the MPO resulting from adding
+the OpSum terms together, often achieving
+the minimum possible bond dimension.
+
+# Examples
+```julia
+os = OpSum()
+os += ("Sz",1,"Sz",2)
+os += ("Sz",2,"Sz",3)
+os += ("Sz",3,"Sz",4)
+
+sites = siteinds("S=1/2",4)
+H = MPO(os,sites)
+```
+"""
+function MPO(os::OpSum, sites::Vector{<:Index}; kwargs...)::MPO
+  length(data(os)) == 0 && error("OpSum has no terms")
+
+  os = deepcopy(os)
+  sorteachterm(os, sites)
+  os = sortmergeterms(os)
+
+  if hasqns(sites[1])
+    return qn_svdMPO(os, sites; kwargs...)
+  end
+  return svdMPO(os, sites; kwargs...)
+end

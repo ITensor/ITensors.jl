@@ -50,7 +50,10 @@ delta(::Type{<:Number}, ::QN, ::ITensors.Indices)
 ## Convert to Array
 
 ```@docs
-Array{ElT, N}(::ITensor, ::Vararg{Index, N}) where {ElT, N}
+Array{ElT, N}(::ITensor, ::ITensors.Indices) where {ElT, N}
+array(::ITensor, ::Any...)
+matrix(::ITensor, ::Any...)
+vector(::ITensor, ::Any...)
 array(::ITensor)
 matrix(::ITensor)
 vector(::ITensor)

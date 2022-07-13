@@ -206,6 +206,17 @@ include("util.jl")
       @test dim(l) == expected_dims[i]
     end
   end
+  
+  @testset "randomMPS with chi>1" for linkdims in [1, 4]
+    phi = randomMPS(Float32, sites; linkdims)
+    @test LinearAlgebra.promote_leaf_eltypes(phi) === Float32
+    @test all(x -> eltype(x) === Float32, phi)
+    @test maxlinkdim(phi) == linkdims
+    phic = randomMPS(ComplexF32, sites; linkdims)
+    @test LinearAlgebra.promote_leaf_eltypes(phic) === ComplexF32
+    @test maxlinkdim(phic) == linkdims
+    @test all(x -> eltype(x) === ComplexF32, phic)
+  end
 
   @testset "inner different MPS" begin
     phi = randomMPS(sites)
@@ -219,6 +230,19 @@ include("util.jl")
     badsites = [Index(2) for n in 1:(length(psi) + 1)]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(phi, badpsi)
+  end
+
+  @testset "loginner" begin
+    n = 4
+    c = 2
+
+    s = siteinds("S=1/2", n)
+    ψ = c .* randomMPS(s; linkdims=4)
+    @test exp(loginner(ψ, ψ)) ≈ c^(2n)
+    @test exp(loginner(ψ, -ψ)) ≈ -c^(2n)
+
+    α = randn(ComplexF64)
+    @test exp(loginner(ψ, α * ψ)) ≈ α * c^(2n)
   end
 
   @testset "broadcasting" begin
@@ -338,6 +362,17 @@ include("util.jl")
     @test norm(psi) ≈ 1
     @test inner(phi, psi) ≈ 1
 
+    # Zero norm
+    @test norm(0phi) == 0
+    @test lognorm(0phi) == -Inf
+
+    zero_phi = 0phi
+    lognorm_zero_phi = []
+    normalize!(zero_phi; (lognorm!)=lognorm_zero_phi)
+    @test lognorm_zero_phi[1] == -Inf
+    @test norm(zero_phi) == 0
+    @test norm(normalize(0phi)) == 0
+
     # Large number of sites
     psi = randomMPS(siteinds("S=1/2", 1_000); linkdims=10)
 
@@ -443,6 +478,23 @@ include("util.jl")
     K12 = Ks[1] + Ks[2]
     K123 = K12 + Ks[3]
     @test inner(sum(Ks), K123) ≈ inner(K123, K123)
+
+    χ1 = 2
+    χ2 = 3
+    ψ1 = randomMPS(sites; linkdims=χ1)
+    ψ2 = 0.0 * randomMPS(sites; linkdims=χ2)
+
+    ϕ1 = +(ψ1, ψ2; alg="densitymatrix", cutoff=nothing)
+    for j in 2:7
+      @test linkdim(ϕ1, j) == χ1 + χ2
+    end
+    @test inner(ϕ1, ψ1) + inner(ϕ1, ψ2) ≈ inner(ϕ1, ϕ1)
+
+    ϕ2 = +(ψ1, ψ2; alg="directsum")
+    for j in 1:8
+      @test linkdim(ϕ2, j) == χ1 + χ2
+    end
+    @test inner(ϕ2, ψ1) + inner(ϕ2, ψ2) ≈ inner(ϕ2, ϕ2)
   end
 
   @testset "+ MPS with coefficients" begin
@@ -463,6 +515,8 @@ include("util.jl")
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
 
     ψ = +(ψ₁, ψ₂; cutoff=0.0)
+
+    @test_throws ErrorException ψ₁ + ψ₂'
 
     @test inner(ψ, ψ) ≈ inner_add(ψ₁, ψ₂)
     @test maxlinkdim(ψ) ≤ maxlinkdim(ψ₁) + maxlinkdim(ψ₂)
@@ -583,12 +637,14 @@ function test_correlation_matrix(psi::MPS, ops::Vector{Tuple{String,String}}; kw
   for op in ops
     Cpm = correlation_matrix(psi, op[1], op[2]; kwargs...)
     # Check using OpSum:
+    Copsum = 0.0 * Cpm
     for i in 1:N, j in 1:N
       a = OpSum()
       a += op[1], i, op[2], j
-      X = MPO(a, s)
-      @test inner(psi, MPO(a, s), psi) ≈ Cpm[i, j] atol = 5e-15
+      Copsum[i, j] = inner(psi', MPO(a, s), psi)
     end
+    @test Cpm ≈ Copsum rtol = 1E-11
+
     PM = expect(psi, op[1] * " * " * op[2])
     @test norm(PM - diag(Cpm)) < 1E-8
   end
@@ -788,6 +844,12 @@ end
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     test_correlation_matrix(psi, [("S-", "S+"), ("S+", "S-")])
 
+    @test correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) ≈
+      correlation_matrix(psi, "Sz", "Sz")
+    @test expect(psi, [1/2 0; 0 -1/2]) ≈ expect(psi, "Sz")
+    @test all(expect(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) .≈ expect(psi, "Sz", "Sz"))
+    @test expect(psi, [[1/2 0; 0 -1/2], [1/2 0; 0 -1/2]]) ≈ expect(psi, ["Sz", "Sz"])
+
     s = siteinds("S=1/2", length(s); conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     test_correlation_matrix(
@@ -813,13 +875,13 @@ end
     # need to be calculated explicitely.
     #test_correlation_matrix(psi,[("Sz", "Sx")];ishermitian=true)
 
-    #Test site_range feature
+    #Test sites feature
     s = siteinds("S=1/2", 8; conserve_qns=false)
     psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
     PM = expect(psi, "S+ * S-")
     Cpm = correlation_matrix(psi, "S+", "S-")
     range = 3:7
-    Cpm37 = correlation_matrix(psi, "S+", "S-"; site_range=range)
+    Cpm37 = correlation_matrix(psi, "S+", "S-"; sites=range)
     @test norm(Cpm37 - Cpm[range, range]) < 1E-8
 
     @test norm(PM[range] - expect(psi, "S+ * S-"; sites=range)) < 1E-8
@@ -829,14 +891,14 @@ end
     psi = randomMPS(ComplexF64, s; linkdims=m)
     ss, es = 3, 6
     Nb = es - ss + 1
-    Cpm = correlation_matrix(psi, "S+", "S-"; site_range=ss:es)
-    Czz = correlation_matrix(psi, "Sz", "Sz"; site_range=ss:es)
+    Cpm = correlation_matrix(psi, "S+", "S-"; sites=ss:es)
+    Czz = correlation_matrix(psi, "Sz", "Sz"; sites=ss:es)
     @test size(Cpm) == (Nb, Nb)
     # Check using OpSum:
     for i in ss:es, j in i:es
       a = OpSum()
       a += "S+", i, "S-", j
-      @test inner(psi, MPO(a, s), psi) ≈ Cpm[i - ss + 1, j - ss + 1]
+      @test inner(psi', MPO(a, s), psi) ≈ Cpm[i - ss + 1, j - ss + 1]
     end
 
     # Electron case
@@ -884,6 +946,20 @@ end
     s = siteinds("Fermion", 8; conserve_qns=false)
     psi = randomMPS(s; linkdims=m)
     test_correlation_matrix(psi, [("N", "N"), ("Cdag", "C"), ("C", "Cdag"), ("C", "C")])
+
+    #
+    # Test non-contiguous sites input
+    #
+    C = correlation_matrix(psi, "N", "N")
+    non_contiguous = [1, 3, 8]
+    Cs = correlation_matrix(psi, "N", "N"; sites=non_contiguous)
+    for (ni, i) in enumerate(non_contiguous), (nj, j) in enumerate(non_contiguous)
+      @test Cs[ni, nj] ≈ C[i, j]
+    end
+
+    C2 = correlation_matrix(psi, "N", "N"; sites=2)
+    @test C2 isa Matrix
+    @test C2[1, 1] ≈ C[2, 2]
   end #testset
 
   @testset "expect regression test for in-place modification of input MPS" begin
@@ -1825,16 +1901,20 @@ end
     N = 4
     s = siteinds("S=1/2", N)
     ψ = MPS([itensor(randn(ComplexF64, 2), s[n]) for n in 1:N])
-    ρ = outer(ψ, ψ)
+    ρ = outer(ψ', ψ)
     @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
-    @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
+    @test inner(ψ', ρ, ψ) ≈ inner(ψ, ψ)^2
 
     # Deprecated syntax
+    @test_deprecated outer(ψ, ψ)
+    @test_deprecated inner(ψ, ψ')
+    @test_deprecated inner(ψ, ρ, ψ)
+
     ρ = @test_deprecated MPO(ψ)
     @test !ITensors.hasnolinkinds(ρ)
     @test inner(ρ, ρ) ≈ inner(ψ, ψ)^2
-    @test inner(ψ, ρ, ψ) ≈ inner(ψ, ψ)^2
+    @test inner(ψ', ρ, ψ) ≈ inner(ψ, ψ)^2
   end
 
   @testset "Truncate MPO with no link indices" begin

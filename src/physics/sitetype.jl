@@ -28,15 +28,16 @@ the notation: `SiteType("MyTag")`
 There are currently a few built-in site types
 recognized by `ITensors.jl`. The system is easily extensible
 by users. To add new operators to an existing site type,
-you can follow the instructions [here](http://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_extending).
-To create new site types, you can follow the instructions
-[here](https://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_basic) and 
-[here](https://itensor.org/docs.cgi?vers=julia&page=formulas/sitetype_qns).
+or to create new site types, you can follow the instructions
+[here](https://itensor.github.io/ITensors.jl/stable/examples/Physics.html).
 
 The current built-in site types are:
 
 - `SiteType"S=1/2"` (or `SiteType"S=½"`)
 - `SiteType"S=1"`
+- `SiteType"Qubit"`
+- `SiteType"Qudit"`
+- `SiteType"Boson"`
 - `SiteType"Fermion"`
 - `SiteType"tJ"`
 - `SiteType"Electron"`
@@ -217,6 +218,9 @@ operators to MPS.
 s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
+
+To see all of the operator names defined for the site types included with
+ITensor, please [view the source code for each site type](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types). Note that some site types such as "S=1/2" and "Qubit" are aliases for each other and share operator definitions.
 """
 function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   name = strip(name)
@@ -267,7 +271,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
       op1 = name[1:prevind(name, oploc.start)]
       op2 = name[nextind(name, oploc.start):end]
       if !(op1[end] == ' ' && op2[1] == ' ')
-        @warn "composite op definition `A*B` deprecated: please use `A * B` instead (with spaces)"
+        @warn "($op1*$op2) composite op definition `A*B` deprecated: please use `A * B` instead (with spaces)"
       end
     end
     return product(op(op1, s...; kwargs...), op(op2, s...; kwargs...))
@@ -361,8 +365,10 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
       end
     end
 
-    error(
-      "Older op interface does not support multiple indices with mixed site types. You may want to overload `op(::OpName, ::SiteType..., ::Index...)` or `op!(::ITensor, ::OpName, ::SiteType..., ::Index...) for the operator \"$name\" and Index tags $(tags.(s)).",
+    throw(
+      ArgumentError(
+        "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s)).",
+      ),
     )
   end
 
@@ -384,20 +390,22 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
 
   return throw(
     ArgumentError(
-      "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(commontags_s))",
+      "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s)).",
     ),
   )
 end
 
-op(X::AbstractArray, s::Vector{<:Index}) = op(X, s...)
-
+# If a Matrix is passed instead of a String, turn the Matrix into
+# an ITensor with the given indices.
 op(X::AbstractArray, s::Index...) = itensor(X, prime.([s...]), dag.([s...]))
 
-op(s::Index, X::AbstractArray; kwargs...) = op(X, s; kwargs...)
+op(opname, s::Vector{<:Index}; kwargs...) = op(opname, s...; kwargs...)
+
+op(s::Vector{<:Index}, opname; kwargs...) = op(opname, s...; kwargs...)
 
 # For backwards compatibility, version of `op`
 # taking the arguments in the other order:
-op(s::Index, opname::AbstractString; kwargs...) = op(opname, s; kwargs...)
+op(s::Index, opname; kwargs...) = op(opname, s; kwargs...)
 
 # To ease calling of other op overloads,
 # allow passing a string as the op name
@@ -417,40 +425,51 @@ s = siteinds("S=1/2", 4)
 Sz2 = op("Sz", s, 2)
 ```
 """
-function op(
-  opname::AbstractString, s::Vector{<:Index}, ns::NTuple{N,Integer}; kwargs...
-) where {N}
+function op(opname, s::Vector{<:Index}, ns::NTuple{N,Integer}; kwargs...) where {N}
   return op(opname, ntuple(n -> s[ns[n]], Val(N))...; kwargs...)
 end
 
-function op(opname::AbstractString, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...)
+function op(opname, s::Vector{<:Index}, ns::Vararg{Integer}; kwargs...)
   return op(opname, s, ns; kwargs...)
 end
 
-function op(
-  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}; kwargs...
-)
+function op(s::Vector{<:Index}, opname, ns::Tuple{Vararg{Integer}}; kwargs...)
   return op(opname, s, ns...; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Integer...; kwargs...)
+function op(s::Vector{<:Index}, opname, ns::Integer...; kwargs...)
   return op(opname, s, ns; kwargs...)
 end
 
-function op(
-  s::Vector{<:Index}, opname::AbstractString, ns::Tuple{Vararg{Integer}}, kwargs::NamedTuple
-)
+function op(s::Vector{<:Index}, opname, ns::Tuple{Vararg{Integer}}, kwargs::NamedTuple)
   return op(opname, s, ns; kwargs...)
 end
 
-function op(s::Vector{<:Index}, opname::AbstractString, ns::Integer, kwargs::NamedTuple)
+function op(s::Vector{<:Index}, opname, ns::Integer, kwargs::NamedTuple)
   return op(opname, s, (ns,); kwargs...)
 end
 
-# This version helps with call like `op.(Ref(s), os)` where `os`
-# is a vector of tuples.
-op(s::Vector{<:Index}, os::Tuple{AbstractString,Vararg}) = op(s, os...)
-op(os::Tuple{AbstractString,Vararg}, s::Vector{<:Index}) = op(s, os...)
+op(s::Vector{<:Index}, o::Tuple) = op(s, o...)
+
+op(o::Tuple, s::Vector{<:Index}) = op(s, o...)
+
+op(f::Function, args...; kwargs...) = f(op(args...; kwargs...))
+
+function op(
+  s::Vector{<:Index},
+  f::Function,
+  opname::AbstractString,
+  ns::Tuple{Vararg{Integer}};
+  kwargs...,
+)
+  return f(op(opname, s, ns...; kwargs...))
+end
+
+function op(
+  s::Vector{<:Index}, f::Function, opname::AbstractString, ns::Integer...; kwargs...
+)
+  return f(op(opname, s, ns; kwargs...))
+end
 
 # Here, Ref is used to not broadcast over the vector of indices
 # TODO: consider overloading broadcast for `op` with the example
@@ -673,7 +692,10 @@ siteind(tag::String, n; kwargs...) = siteind(SiteType(tag), n; kwargs...)
 
 # Special case of `siteind` where integer (dim) provided
 # instead of a tag string
-siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
+#siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
+function siteind(d::Integer, n::Integer; addtags="", kwargs...)
+  return Index(d, "Site,n=$n, $addtags")
+end
 
 #---------------------------------------
 #
@@ -684,12 +706,19 @@ siteind(d::Integer, n::Integer; kwargs...) = Index(d, "Site,n=$n")
 siteinds(::SiteType, N; kwargs...) = nothing
 
 """
-  siteinds(tag::String, N::Integer; kwargs...)
+    siteinds(tag::String, N::Integer; kwargs...)
 
 Create an array of `N` physical site indices of type `tag`.
 Keyword arguments can be used to specify quantum number conservation,
 see the `space` function corresponding to the site type `tag` for
 supported keyword arguments.
+
+# Example
+
+```julia
+N = 10
+s = siteinds("S=1/2", N; conserve_qns=true)
+```
 """
 function siteinds(tag::String, N::Integer; kwargs...)
   st = SiteType(tag)
@@ -703,7 +732,7 @@ function siteinds(tag::String, N::Integer; kwargs...)
 end
 
 """
-  siteinds(f::Function, N::Integer; kwargs...)
+    siteinds(f::Function, N::Integer; kwargs...)
 
 Create an array of `N` physical site indices where the site type at site `n` is given
 by `f(n)` (`f` should return a string).
@@ -714,6 +743,14 @@ end
 
 # Special case of `siteinds` where integer (dim)
 # provided instead of a tag string
+"""
+    siteinds(d::Integer, N::Integer; kwargs...)
+
+Create an array of `N` site indices, each of dimension `d`.
+
+# Keywords
+- `addtags::String`: additional tags to be added to all indices
+"""
 function siteinds(d::Integer, N::Integer; kwargs...)
   return [siteind(d, n; kwargs...) for n in 1:N]
 end

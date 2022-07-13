@@ -54,6 +54,39 @@ end
       @test !hascommoninds(A, C)
     end
 
+    @testset "isreal, iszero, real, imag" begin
+      i, j = Index.(2, ("i", "j"))
+      A = randomITensor(i, j)
+      Ac = randomITensor(ComplexF64, i, j)
+      Ar = real(Ac)
+      Ai = imag(Ac)
+      @test Ac ≈ Ar + im * Ai
+      @test isreal(A)
+      @test !isreal(Ac)
+      @test isreal(Ar)
+      @test isreal(Ai)
+      @test !iszero(A)
+      @test !iszero(real(A))
+      @test iszero(imag(A))
+      @test iszero(ITensor(0.0, i, j))
+      @test iszero(ITensor(i, j))
+    end
+
+    @testset "map" begin
+      A = randomITensor(Index(2))
+      @test eltype(A) == Float64
+      B = map(ComplexF64, A)
+      @test B ≈ A
+      @test eltype(B) == ComplexF64
+      B = map(Float32, A)
+      @test B ≈ A
+      @test eltype(B) == Float32
+      B = map(x -> 2x, A)
+      @test B ≈ 2A
+      @test eltype(B) == Float64
+      @test_throws ErrorException map(x -> x + 1, A)
+    end
+
     @testset "getindex with state string" begin
       i₁ = Index(2, "S=1/2")
       i₂ = Index(2, "S=1/2")
@@ -628,6 +661,7 @@ end
     i = Index(2, "i")
 
     T = onehot(i => 1)
+    @test eltype(T) === Float64
     @test T[i => 1] ≈ 1.0
     @test T[i => 2] ≈ 0.0
 
@@ -642,6 +676,16 @@ end
     @test T[j => 2, i => 1] ≈ 1.0
     @test T[j => 1, i => 2] ≈ 0.0
     @test T[j => 2, i => 2] ≈ 0.0
+
+    T = onehot(Float32, i => 1)
+    @test eltype(T) === Float32
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
+
+    T = onehot(ComplexF32, i => 1)
+    @test eltype(T) === ComplexF32
+    @test T[i => 1] ≈ 1.0
+    @test T[i => 2] ≈ 0.0
   end
 
   @testset "add, subtract, and axpy" begin
@@ -1249,6 +1293,25 @@ end
         array(permute(A, i, j, k)) + array(permute(B, i, j, k))
     end
 
+    @testset "Test array" begin
+      A = randomITensor(SType, i, j, k)
+      B = randomITensor(SType, i, j)
+      C = randomITensor(SType, i)
+
+      @test array(permute(A, j, i, k)) == array(A, j, i, k)
+      @test_throws DimensionMismatch matrix(A, j, i, k)
+      @test_throws DimensionMismatch vector(A, j, i, k)
+
+      @test array(permute(B, j, i)) == array(B, j, i)
+      @test matrix(permute(B, j, i)) == matrix(B, j, i)
+      @test_throws DimensionMismatch vector(B, j, i)
+
+      @test array(permute(C, i)) == array(C, i)
+      @test vector(permute(C, i)) == vector(C, i)
+      @test vector(C) == vector(C, i)
+      @test_throws DimensionMismatch matrix(C, i)
+    end
+
     @testset "Test factorizations of an ITensor" begin
       A = randomITensor(SType, i, j, k, l)
 
@@ -1401,9 +1464,8 @@ end
 
       @testset "Test error for bad decomposition inputs" begin
         @test_throws ErrorException svd(A)
-        @test_throws ErrorException svd(A, inds(A))
+        @test_throws ErrorException factorize(A)
         @test_throws ErrorException eigen(A, inds(A), inds(A))
-        #@test_throws ErrorException factorize(A)
       end
     end
   end # End Dense storage test
@@ -1598,6 +1660,49 @@ end
         end
       end
     end
+
+    i1, i2, j, k, l = Index.((2, 3, 4, 5, 6), ("i1", "i2", "j", "k", "l"))
+
+    A = randomITensor(i1, i2, j)
+    B = randomITensor(i1, i2, k)
+    C = randomITensor(i1, i2, l)
+
+    S, s = directsum(A => j, B => k)
+    @test dim(s) == dim(j) + dim(k)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, s = (A => j) ⊕ (B => k)
+    @test dim(s) == dim(j) + dim(k)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, s = directsum(A => j, B => k, C => l)
+    @test dim(s) == dim(j) + dim(k) + dim(l)
+    @test hassameinds(S, (i1, i2, s))
+
+    @test_throws ErrorException directsum(A => i2, B => i2)
+
+    S, (s,) = directsum(A => (j,), B => (k,))
+    @test s == uniqueind(S, A)
+    @test dim(s) == dim(j) + dim(k)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, ss = directsum(A => (i2, j), B => (i2, k))
+    @test length(ss) == 2
+    @test dim(ss[1]) == dim(i2) + dim(i2)
+    @test hassameinds(S, (i1, ss...))
+
+    S, ss = directsum(A => (j,), B => (k,), C => (l,))
+    s = only(ss)
+    @test s == uniqueind(S, A)
+    @test dim(s) == dim(j) + dim(k) + dim(l)
+    @test hassameinds(S, (i1, i2, s))
+
+    S, ss = directsum(A => (i2, i1, j), B => (i1, i2, k), C => (i1, i2, l))
+    @test length(ss) == 3
+    @test dim(ss[1]) == dim(i2) + dim(i1) + dim(i1)
+    @test dim(ss[2]) == dim(i1) + dim(i2) + dim(i2)
+    @test dim(ss[3]) == dim(j) + dim(k) + dim(l)
+    @test hassameinds(S, ss)
   end
 
   @testset "ishermitian" begin
@@ -1606,6 +1711,56 @@ end
     Sp = ITensor([0.0 1.0; 0.0 0.0], s', s)
     @test ishermitian(Sz)
     @test !ishermitian(Sp)
+  end
+
+  @testset "convert_eltype, convert_leaf_eltype, $new_eltype" for new_eltype in
+                                                                  (Float32, ComplexF64)
+    s = Index(2)
+    A = randomITensor(s)
+    @test eltype(A) == Float64
+
+    Af32 = convert_eltype(new_eltype, A)
+    @test Af32 ≈ A
+    @test eltype(Af32) == new_eltype
+
+    Af32_2 = convert_leaf_eltype(new_eltype, A)
+    @test eltype(Af32_2) == new_eltype
+    @test Af32_2 ≈ A
+
+    As1 = [A, A]
+    As1_f32 = convert_leaf_eltype(new_eltype, As1)
+    @test length(As1_f32) == length(As1)
+    @test typeof(As1_f32) == typeof(As1)
+    @test eltype(As1_f32[1]) == new_eltype
+    @test eltype(As1_f32[2]) == new_eltype
+
+    As2 = [[A, A], [A]]
+    As2_f32 = convert_leaf_eltype(new_eltype, As2)
+    @test length(As2_f32) == length(As2)
+    @test typeof(As2_f32) == typeof(As2)
+    @test eltype(As2_f32[1][1]) == new_eltype
+    @test eltype(As2_f32[1][2]) == new_eltype
+    @test eltype(As2_f32[2][1]) == new_eltype
+  end
+
+  @testset "nullspace $eltype" for (ss, sl, sr) in [
+      ([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]), (5, 2, 3)
+    ],
+    eltype in (Float32, Float64, ComplexF32, ComplexF64),
+    nullspace_kwargs in ((; atol=eps(real(eltype)) * 100), (;))
+
+    s, l, r = Index.((ss, sl, sr), ("s", "l", "r"))
+    A = randomITensor(eltype, dag(l), s, r)
+    N = nullspace(A, dag(l); nullspace_kwargs...)
+    @test Base.eltype(N) === eltype
+    n = uniqueind(N, A)
+    @test op("I", n) ≈ N * dag(prime(N, n))
+    @test hassameinds(N, (s, r, n))
+    @test norm(A * N) ≈ 0 atol = eps(real(eltype)) * 100
+    @test dim(l) + dim(n) == dim((s, r))
+    A′, (rn,) = ITensors.directsum(A => (l,), dag(N) => (n,); tags=["⊕"])
+    @test dim(rn) == dim((s, r))
+    @test norm(A * dag(prime(A, l))) ≈ norm(A * dag(A′))
   end
 end # End Dense ITensor basic functionality
 

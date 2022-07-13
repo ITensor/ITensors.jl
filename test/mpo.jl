@@ -53,10 +53,10 @@ end
     K = randomMPO(sites)
     orthogonalize!(phi, 1)
     orthogonalize!(K, 1)
-    orig_inner = ⋅(phi, K, phi)
+    orig_inner = ⋅(phi', K, phi)
     orthogonalize!(phi, div(N, 2))
     orthogonalize!(K, div(N, 2))
-    @test ⋅(phi, K, phi) ≈ orig_inner
+    @test ⋅(phi', K, phi) ≈ orig_inner
   end
 
   @testset "norm MPO" begin
@@ -102,11 +102,11 @@ end
     for j in 2:N
       phiKpsi *= phidag[j] * K[j] * psi[j]
     end
-    @test phiKpsi[] ≈ inner(phi, K, psi)
+    @test phiKpsi[] ≈ inner(phi', K, psi)
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badpsi = randomMPS(badsites)
-    @test_throws DimensionMismatch inner(phi, K, badpsi)
+    @test_throws DimensionMismatch inner(phi', K, badpsi)
 
     # make bigger random MPO...
     for link_dim in 2:5
@@ -142,7 +142,7 @@ end
       for j in 2:N
         phiKpsi *= phidag[j] * K[j] * psi[j]
       end
-      @test scalar(phiKpsi) ≈ inner(phi, K, psi)
+      @test scalar(phiKpsi) ≈ inner(phi', K, psi)
     end
   end
 
@@ -182,7 +182,7 @@ end
     psi = makeRandomMPS(sites)
 
     dist = sqrt(
-      abs(1 + (inner(phi, phi) - 2 * real(inner(phi, K, psi))) / inner(K, psi, K, psi))
+      abs(1 + (inner(phi, phi) - 2 * real(inner(phi', K, psi))) / inner(K, psi, K, psi))
     )
     @test dist ≈ error_contract(phi, K, psi)
 
@@ -190,7 +190,7 @@ end
     badpsi = randomMPS(badsites)
     # Apply K to phi and check that error_contract is close to 0.
     Kphi = contract(K, phi; method="naive", cutoff=1E-8)
-    @test error_contract(Kphi, K, phi) ≈ 0.0 atol = 1e-4
+    @test error_contract(noprime(Kphi), K, phi) ≈ 0.0 atol = 1e-4
 
     @test_throws DimensionMismatch contract(K, badpsi; method="naive", cutoff=1E-8)
     @test_throws DimensionMismatch error_contract(phi, K, badpsi)
@@ -202,8 +202,8 @@ end
     @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     psi_out = contract(K, psi; maxdim=1)
-    @test inner(phi, psi_out) ≈ inner(phi, K, psi)
-    @test_throws ArgumentError contract(K, psi; method="fakemethod")
+    @test inner(phi', psi_out) ≈ inner(phi', K, psi)
+    @test_throws MethodError contract(K, psi; method="fakemethod")
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badpsi = randomMPS(badsites)
@@ -238,7 +238,7 @@ end
       orthogonalize!(K, 1; maxdim=link_dim)
       orthogonalize!(phi, 1; normalize=true, maxdim=link_dim)
       psi_out = contract(deepcopy(K), deepcopy(psi); maxdim=10 * link_dim, cutoff=0.0)
-      @test inner(phi, psi_out) ≈ inner(phi, K, psi)
+      @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     end
   end
 
@@ -251,8 +251,8 @@ end
     psi = randomMPS(shsites)
     k_psi = contract(K, psi; maxdim=1)
     l_psi = contract(L, psi; maxdim=1)
-    @test inner(psi, k_psi + l_psi) ≈ ⋅(psi, M, psi) atol = 5e-3
-    @test inner(psi, sum([k_psi, l_psi])) ≈ dot(psi, M, psi) atol = 5e-3
+    @test inner(psi', k_psi + l_psi) ≈ ⋅(psi', M, psi) atol = 5e-3
+    @test inner(psi', sum([k_psi, l_psi])) ≈ dot(psi', M, psi) atol = 5e-3
     for dim in 2:4
       shsites = siteinds("S=1/2", N)
       K = basicRandomMPO(shsites; dim=dim)
@@ -262,13 +262,13 @@ end
       psi = randomMPS(shsites)
       k_psi = contract(K, psi)
       l_psi = contract(L, psi)
-      @test inner(psi, k_psi + l_psi) ≈ dot(psi, M, psi) atol = 5e-3
-      @test inner(psi, sum([k_psi, l_psi])) ≈ inner(psi, M, psi) atol = 5e-3
+      @test inner(psi', k_psi + l_psi) ≈ dot(psi', M, psi) atol = 5e-3
+      @test inner(psi', sum([k_psi, l_psi])) ≈ inner(psi', M, psi) atol = 5e-3
       psi = randomMPS(shsites)
       M = add(K, L; cutoff=1E-9)
       k_psi = contract(K, psi)
       l_psi = contract(L, psi)
-      @test inner(psi, k_psi + l_psi) ≈ inner(psi, M, psi) atol = 5e-3
+      @test inner(psi', k_psi + l_psi) ≈ inner(psi', M, psi) atol = 5e-3
     end
   end
 
@@ -312,7 +312,7 @@ end
     @test maxlinkdim(L) == 1
     KL = contract(prime(K), L; maxdim=1)
     psi_kl_out = contract(prime(K), contract(L, psi; maxdim=1); maxdim=1)
-    @test inner(psi, KL, psi) ≈ inner(psi, psi_kl_out) atol = 5e-3
+    @test inner(psi'', KL, psi) ≈ inner(psi'', psi_kl_out) atol = 5e-3
 
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]
@@ -342,7 +342,13 @@ end
     @test maxlinkdim(L) == 1
     KL = *(prime(K), L; maxdim=1)
     psi_kl_out = *(prime(K), *(L, psi; maxdim=1); maxdim=1)
-    @test ⋅(psi, KL, psi) ≈ dot(psi, psi_kl_out) atol = 5e-3
+    @test ⋅(psi'', KL, psi) ≈ dot(psi'', psi_kl_out) atol = 5e-3
+
+    @test_throws ErrorException K * L
+    @test_throws ErrorException contract(K, L)
+
+    @test replaceprime(KL, 2 => 1) ≈ apply(K, L; maxdim=1)
+    @test replaceprime(KL, 2 => 1) ≈ K(L; maxdim=1)
 
     # where both K and L have differently labelled sites
     othersitesk = [Index(2, "Site,aaa") for n in 1:N]
@@ -362,6 +368,14 @@ end
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badL = randomMPO(badsites)
     @test_throws DimensionMismatch K * badL
+  end
+
+  @testset "Multi-arg apply(::MPO...)" begin
+    ρ1 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
+    ρ2 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
+    ρ3 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
+    @test apply(ρ1, ρ2, ρ3; cutoff=1e-8) ≈
+      apply(apply(ρ1, ρ2; cutoff=1e-8), ρ3; cutoff=1e-8)
   end
 
   sites = siteinds("S=1/2", N)
@@ -393,7 +407,7 @@ end
     l = [Index(3, "left_$n") for n in 1:2]
     r = [Index(3, "right_$n") for n in 1:2]
 
-    sis = IndexSet.(prime.(s), s)
+    sis = [[sₙ', sₙ] for sₙ in s]
 
     A = randomITensor(s..., prime.(s)...)
     ψ = MPO(A, sis; orthocenter=4)
@@ -422,6 +436,10 @@ end
     @test prod(ψ) ≈ A
     @test ITensors.orthocenter(ψ) == 3
     @test maxlinkdim(ψ) == 1
+
+    # Use matrix
+    @test_throws ErrorException MPO(s, [1/2 0; 0 1/2])
+    @test MPO(s, _ -> [1/2 0; 0 1/2]) ≈ MPO(s, "Id") ./ 2
 
     ψ0 = MPO(s, "Id")
     A = prod(ψ0)
@@ -532,7 +550,7 @@ end
     M = A' * dag(A)
     ψ = MPS(A, [i, j])
     @test prod(ψ) ≈ A
-    ρ = outer(ψ, ψ)
+    ρ = outer(ψ', ψ)
     @test prod(ρ) ≈ M
     ρ = projector(ψ; normalize=false)
     @test prod(ρ) ≈ M
@@ -555,7 +573,7 @@ end
     Pψ = projector(ψ; normalize=false, cutoff=1e-8)
     Pψᴴ = swapprime(dag(Pψ), 0 => 1)
     @test maxlinkdim(Pψ) == χψ^2
-    @test sqrt(inner(Pψ, Pψ) + inner(ψ, ψ)^2 - inner(ψ, Pψ, ψ) - inner(ψ, Pψᴴ, ψ)) /
+    @test sqrt(inner(Pψ, Pψ) + inner(ψ, ψ)^2 - inner(ψ', Pψ, ψ) - inner(ψ', Pψᴴ, ψ)) /
           abs(inner(ψ, ψ)) ≈ 0 atol = 1e-5 * N
 
     normψ = norm(ψ)
@@ -563,15 +581,15 @@ end
     Pψᴴ = swapprime(dag(Pψ), 0 => 1)
     @test maxlinkdim(Pψ) == χψ^2
     @test sqrt(
-      inner(Pψ, Pψ) * normψ^4 + inner(ψ, ψ)^2 - inner(ψ, Pψ, ψ) * normψ^2 -
-      inner(ψ, Pψᴴ, ψ) * normψ^2,
+      inner(Pψ, Pψ) * normψ^4 + inner(ψ, ψ)^2 - inner(ψ', Pψ, ψ) * normψ^2 -
+      inner(ψ', Pψᴴ, ψ) * normψ^2,
     ) / abs(inner(ψ, ψ)) ≈ 0 atol = 1e-5 * N
 
-    ψϕ = outer(ψ, ϕ; cutoff=1e-8)
+    ψϕ = outer(ψ', ϕ; cutoff=1e-8)
     ϕψ = swapprime(dag(ψϕ), 0 => 1)
     @test maxlinkdim(ψϕ) == χψ * χϕ
     @test sqrt(
-      inner(ψϕ, ψϕ) + inner(ψ, ψ) * inner(ϕ, ϕ) - inner(ψ, ψϕ, ϕ) - inner(ϕ, ϕψ, ψ)
+      inner(ψϕ, ψϕ) + inner(ψ, ψ) * inner(ϕ, ϕ) - inner(ψ', ψϕ, ϕ) - inner(ϕ', ϕψ, ψ)
     ) / sqrt(inner(ψ, ψ) * inner(ϕ, ϕ)) ≈ 0 atol = 1e-5 * N
   end
 
@@ -683,6 +701,34 @@ end
     for d in dims
       @test d <= chi1 * chi2
     end
+
+    @test apply(A, psi) ≈ noprime(Apsi)
+    @test ITensors.materialize(Apply(A, psi)) ≈ noprime(Apsi)
+    @test A(psi) ≈ noprime(Apsi)
+    @test inner(noprime(Apsi), Apply(A, psi)) ≈ inner(Apsi, Apsi)
+  end
+
+  @testset "MPO with no link indices" for conserve_qns in [false, true]
+    s = siteinds("S=1/2", 4; conserve_qns)
+    H = MPO([op("Id", sn) for sn in s])
+    @test linkinds(H) == fill(nothing, length(s) - 1)
+    @test norm(H) == √(2^length(s))
+
+    Hortho = orthogonalize(H, 1)
+    @test Hortho ≈ H
+    @test linkdims(Hortho) == fill(1, length(s) - 1)
+
+    Htrunc = truncate(H; cutoff=1e-8)
+    @test Htrunc ≈ H
+    @test linkdims(Htrunc) == fill(1, length(s) - 1)
+
+    H² = apply(H, H; cutoff=1e-8)
+    H̃² = MPO([apply(H[n], H[n]) for n in 1:length(s)])
+    @test linkdims(H²) == fill(1, length(s) - 1)
+    @test H² ≈ H̃²
+
+    e, ψ = dmrg(H, randomMPS(s, n -> isodd(n) ? "↑" : "↓"); nsweeps=2, outputlevel=0)
+    @test e ≈ 1
   end
 end
 

@@ -1,3 +1,5 @@
+using LinearAlgebra: BlasFloat
+
 const CuDense{ElT,VecT} = Dense{ElT,VecT} where {VecT<:CuVector}
 const CuDenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:CuDense}
 
@@ -14,6 +16,7 @@ function Dense{T,S}(x::T, size::Integer) where {T,S<:CuArray{<:T}}
   return Dense{T,S}(arr)
 end
 cpu(x::CuDense{T}) where {T<:Number} = Dense(collect(x.data))
+cpu(x::CuDenseTensor{T}) where {T<:Number} = Tensor(inds(x), cpu(store(x)))
 function Base.complex(::Type{Dense{ElT,VT}}) where {ElT,VT<:CuArray}
   return Dense{complex(ElT),CuVector{complex(ElT)}}
 end
@@ -35,6 +38,13 @@ Base.getindex(D::CuDense{<:Number}) = collect(data(D))[]
 Base.getindex(D::CuDenseTensor{<:Number,0}) = store(D)[]
 LinearAlgebra.norm(T::CuDenseTensor) = norm(data(store(T)))
 
+function Base.copyto!(R::CuDenseTensor{<:Number,N}, T::CuDenseTensor{<:Number,N}) where {N}
+  RA = array(R)
+  TA = array(T)
+  RA .= TA
+  return R
+end
+
 # This is for type promotion for Scalar*Dense
 function Base.promote_rule(
   ::Type{<:Dense{ElT1,CuVector{ElT1}}}, ::Type{ElT2}
@@ -42,19 +52,6 @@ function Base.promote_rule(
   ElR = promote_type(ElT1, ElT2)
   VecR = CuVector{ElR}
   return Dense{ElR,VecR}
-end
-
-function Base.permutedims(T::CuDenseTensor{<:Number,N}, perm::NTuple{N,Int}) where {N}
-  Tp = NDTensors.similar(T, ITensors.NDTensors.permute(inds(T), perm))
-  #Tp = permute(T,perm; always_copy=true)
-  permute!(Tp, T)
-  return Tp
-end
-
-function Base.permutedims!(
-  R::CuDenseTensor{<:Number,N}, T::CuDenseTensor{<:Number,N}, perm::NTuple{N,Int}
-) where {N}
-  return permutedims!!(R, T, perm)
 end
 
 function permutedims!!(
@@ -79,11 +76,59 @@ function Base.similar(::Type{<:CuDenseTensor{ElT}}, inds) where {ElT}
   return Tensor(Dense(storage_arr), inds)
 end
 
-function outer!(R::CuDenseTensor, T1::CuDenseTensor, T2::CuDenseTensor)
-  R_dat = vec(array(T1)) * transpose(vec(array(T2)))
-  copyto!(data(store(R)), vec(R_dat))
-  inds_outer = unioninds(inds(T1), inds(T2))
-  return R
+import ITensors.NDTensors: GemmBackend, auto_select_backend, _gemm!
+function backend_cutensor()
+  return gemm_backend[] = :CUTENSOR
+end
+function backend_cublas()
+  return gemm_backend[] = :CUBLAS
+end
+
+@inline function auto_select_backend(
+  ::Type{<:CuArray{<:BlasFloat}},
+  ::Type{<:CuArray{<:BlasFloat}},
+  ::Type{<:CuArray{<:BlasFloat}},
+)
+  return GemmBackend(:CUBLAS)
+end
+
+@inline function auto_select_backend(
+  ::Type{<:CuArray{<:BlasFloat}}, ::Type{<:CuArray{<:BlasFloat}}, ::Type{<:AbstractVecOrMat}
+)
+  return GemmBackend(:GenericCUDA)
+end
+
+# CUBLAS matmul
+function _gemm!(
+  ::GemmBackend{:CUBLAS},
+  tA,
+  tB,
+  alpha,
+  A::AbstractVecOrMat,
+  B::AbstractVecOrMat,
+  beta,
+  C::AbstractVecOrMat,
+)
+  return CUBLAS.gemm!(tA, tB, alpha, A, B, beta, C)
+end
+
+# CUDA generic matmul
+function _gemm!(
+  ::GemmBackend{:GenericCUDA},
+  tA,
+  tB,
+  alpha,
+  A::AbstractVecOrMat,
+  B::AbstractVecOrMat,
+  beta,
+  C::CuDenseTensor,
+)
+  C_dat = reshape(data(store(C)), size(C))
+  A_ = tA == 'T' ? transpose(A) : A
+  B_ = tB == 'T' ? transpose(B) : B
+  C_dat = mul!(C_dat, A_, B_, alpha, beta)
+  copyto!(data(store(C)), C_dat)
+  return C
 end
 
 function _contract_scalar!(
@@ -485,7 +530,7 @@ function Base.permute!(B::CuDenseTensor, A::CuDenseTensor)
   Bdata = data(store(B))
   reshapeBdata = reshape(Bdata, dims(Bis)...)
   reshapeAdata = reshape(Adata, dims(Ais)...)
-  if ndims(A) < 12 # use CUTENSOR
+  if ndims(A) < 40 # use CUTENSOR
     ctainds = zeros(Int, length(Ais))
     ctbinds = zeros(Int, length(Bis))
     for (ii, ia) in enumerate(Ais)
@@ -510,7 +555,7 @@ function Base.permute!(B::CuDenseTensor, A::CuDenseTensor)
     @assert isperm(perm)
     permutedims!(reshapeBdata, reshapeAdata, invperm(perm))
   end
-  return vec(reshapeBdata)
+  return Tensor(inds(B), Dense(vec(reshapeBdata)))
 end
 
 function Base.permute!(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
@@ -538,7 +583,7 @@ function Base.permute!(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
     reshapeBdata,
     Vector{Char}(ctbinds),
   )
-  return vec(reshapeBdata)
+  return Tensor(Bis, Dense(vec(reshapeBdata)))
 end
 
 Base.:/(A::CuDenseTensor, x::Number) = A * inv(x)

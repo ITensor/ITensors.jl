@@ -418,7 +418,7 @@ sites = siteinds(psi) # Get site indices from your MPS
 H = MPO(ampo,sites)
 
 # Compute <psi|H|psi>
-energy_psi = inner(psi,H,psi)
+energy_psi = inner(psi',H,psi)
 ```
 
 

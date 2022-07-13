@@ -79,7 +79,9 @@ according to p, then return -1. Otherwise return +1.
 function compute_permfactor(p, iv_or_qn...; range=1:length(iv_or_qn))::Int
   using_auto_fermion() || return 1
   N = length(iv_or_qn)
-  oddp = @MVector zeros(Int, N)
+  # XXX: Bug https://github.com/ITensor/ITensors.jl/issues/931
+  # oddp = @MVector zeros(Int, N)
+  oddp = MVector((ntuple(Returns(0), Val(N))))
   n = 0
   @inbounds for j in range
     if fparity(iv_or_qn[p[j]]) == 1

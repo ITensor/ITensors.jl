@@ -74,6 +74,15 @@ using ITensors, LinearAlgebra, Test
     eigArr = eigen(array(A))
     @test diag(array(eigA.D), 0) ≈ eigArr.values
     @test diag(array(Dt), 0) == eigArr.values
+
+    @test_throws ArgumentError eigen(ITensor(NaN, i', i))
+    @test_throws ArgumentError eigen(ITensor(NaN, i', i); ishermitian=true)
+    @test_throws ArgumentError eigen(ITensor(complex(NaN), i', i))
+    @test_throws ArgumentError eigen(ITensor(complex(NaN), i', i); ishermitian=true)
+    @test_throws ArgumentError eigen(ITensor(Inf, i', i))
+    @test_throws ArgumentError eigen(ITensor(Inf, i', i); ishermitian=true)
+    @test_throws ArgumentError eigen(ITensor(complex(Inf), i', i))
+    @test_throws ArgumentError eigen(ITensor(complex(Inf), i', i); ishermitian=true)
   end
 
   @testset "exp function" begin
@@ -118,6 +127,30 @@ using ITensors, LinearAlgebra, Test
     F = eigen(R, (s[1], s[2]), (s[1]', s[2]'))
 
     @test flux(F.Vt) == QN("Sz", 0)
+  end
+
+  @testset "SVD block_mindim keyword" begin
+    i = Index(
+      [
+        QN("Sz", 4) => 1,
+        QN("Sz", 2) => 4,
+        QN("Sz", 0) => 6,
+        QN("Sz", -2) => 4,
+        QN("Sz", -4) => 1,
+      ],
+      "i",
+    )
+    j = sim(i)
+    X = randomITensor(QN("Sz", 0), i, j)
+
+    min_blockdim = 2
+    U, S, V = svd(X, i; cutoff=1E-1, min_blockdim)
+    u = commonind(S, U)
+
+    @test nblocks(u) == nblocks(i)
+    for b in 1:nblocks(u)
+      @test blockdim(u, b) == blockdim(i, b) || blockdim(u, b) >= min_blockdim
+    end
   end
 end
 

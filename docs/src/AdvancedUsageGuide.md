@@ -631,7 +631,7 @@ generated directory inside `~/.julia/packages`. You can find out what version yo
 ```julia
 julia> Pkg.status("ITensors")
       Status `~/.julia/environments/v1.7/Project.toml`
-  [9136182c] ITensors v0.2.12
+  [9136182c] ITensors v0.2.16
 ```
 and you can use [`pkgdir`](https://docs.julialang.org/en/v1/base/base/#Base.pkgdir-Tuple{Module})
 to find out the directory of the source code of a package that you have loaded:
@@ -643,30 +643,42 @@ julia> pkgdir(ITensors)
 ```
 The source code of a package loaded in this way is read-only, so you won't be able to modify it.
 
-If you want to modify the source code of ITensors.jl, you can check it out in development
-mode with `Pkg.develop`:
+If you want to modify the source code of `ITensors.jl`, you should check out the packages
+`NDTensors.jl` and `ITensors.jl` in development mode with `Pkg.develop`:
 ```julia
-julia> Pkg.develop("ITensors")
+julia> Pkg.develop(["NDTensors", "ITensors"])
+Path `/home/mfishman/.julia/dev/ITensors` exists and looks like the correct repo. Using existing path.
    Resolving package versions...
     Updating `~/.julia/environments/v1.7/Project.toml`
-  [9136182c] ~ ITensors v0.2.12 ⇒ v0.2.12 `~/.julia/dev/ITensors`
+  [9136182c] ~ ITensors v0.2.16 ⇒ v0.2.16 `~/.julia/dev/ITensors`
+  [23ae76d9] ~ NDTensors v0.1.35 ⇒ v0.1.35 `~/.julia/dev/ITensors/NDTensors`
     Updating `~/.julia/environments/v1.7/Manifest.toml`
-  [9136182c] ~ ITensors v0.2.12 ⇒ v0.2.12 `~/.julia/dev/ITensors`
+  [9136182c] ~ ITensors v0.2.16 ⇒ v0.2.16 `~/.julia/dev/ITensors`
+  [23ae76d9] ~ NDTensors v0.1.35 ⇒ v0.1.35 `~/.julia/dev/ITensors/NDTensors`
 
-julia> Pkg.status("ITensors")
+julia> Pkg.status(["NDTensors", "ITensors"])
       Status `~/.julia/environments/v1.7/Project.toml`
-  [9136182c] ITensors v0.2.12 `~/.julia/dev/ITensors`
+  [9136182c] ITensors v0.2.16 `~/.julia/dev/ITensors`
+  [23ae76d9] NDTensors v0.1.35 `~/.julia/dev/ITensors/NDTensors`
 ```
-Then, Julia will use the version of ITensors.jl living in the directory `~/.julia/dev/ITensors`.
-By default, you will have to restart Julia for modifications of the code in `~/.julia/dev/ITensors`
-to be reflected in practice.
+Then, Julia will use the version of `ITensors.jl` living in the directory `~/.julia/dev/ITensors`
+and the version of `NDTensors.jl` living in the directory `~/.julia/dev/ITensors/NDTensors`,
+though you may need to restart Julia for this to take affect.
 
+We recommend checking out the development versions of both `NDTensors.jl` and `ITensors.jl`
+since we often develop both packages tandem, so the development branch
+of `ITensors.jl` may rely on changes we make in `NDTensors.jl`.
+
+By default, when you modify code in `~/.julia/dev/ITensors` or `~/.julia/dev/ITensors/NDTensors`
+you will need to restart Julia for the changes to take affect.
 A way around this issue is the [Revise](https://timholy.github.io/Revise.jl/stable/) package.
 We highly recommend using the [Revise](https://timholy.github.io/Revise.jl/stable/) package
 when you are developing packages, which automatically detects changes you are making to
 a package you have checked out for development and edit code and not have to restart your Julia session.
-In short, if you have `Revise.jl` loaded, you can edit the code in `~/.julia/dev/ITensors` and
-the changes you make will be reflected on the fly as you use the package.
+In short, if you have `Revise.jl` loaded, you can edit the code in `~/.julia/dev/ITensors` 
+or `~/.julia/dev/ITensors/NDTensors` and the changes you make will be reflected on the fly as
+you use the package (there are some limitations, for example you will need to restart Julia
+if you change the definitions of types).
 
 Note that the code in `~/.julia/dev/ITensors` is just a git repository cloned from
 the repository https://github.com/ITensor/ITensors.jl, so you can do anything that
@@ -685,18 +697,21 @@ where you would replace `mtfishman` with your own Github username.
 Make the changes to the code in `~/.julia/dev/ITensors`, push the changes to your fork, and then
 [make a pull request](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request) to the [ITensors.jl Github repository](https://github.com/ITensor/ITensors.jl/compare).
 
-To go back to the official version of the ITensors.jl package, you can use the command `Pkg.free("ITensors")`:
+To go back to the official version of the `NDTensors.jl` and `ITensors.jl` packages, you can use the command `Pkg.free(["NDTensors", "ITensors"])`:
 ```julia
-julia> Pkg.free("ITensors")
+julia> Pkg.free(["NDTensors", "ITensors"])
    Resolving package versions...
     Updating `~/.julia/environments/v1.7/Project.toml`
-  [9136182c] ~ ITensors v0.2.12 `~/.julia/dev/ITensors` ⇒ v0.2.12
+  [9136182c] ~ ITensors v0.2.16 `~/.julia/dev/ITensors` ⇒ v0.2.16
+  [23ae76d9] ~ NDTensors v0.1.35 `~/.julia/dev/ITensors/NDTensors` ⇒ v0.1.35
     Updating `~/.julia/environments/v1.7/Manifest.toml`
-  [9136182c] ~ ITensors v0.2.12 `~/.julia/dev/ITensors` ⇒ v0.2.12
+  [9136182c] ~ ITensors v0.2.16 `~/.julia/dev/ITensors` ⇒ v0.2.16
+  [23ae76d9] ~ NDTensors v0.1.35 `~/.julia/dev/ITensors/NDTensors` ⇒ v0.1.35
 
-julia> Pkg.status("ITensors")
+julia> Pkg.status(["NDTensors", "ITensors"])
       Status `~/.julia/environments/v1.7/Project.toml`
-  [9136182c] ITensors v0.2.12
+  [9136182c] ITensors v0.2.16
+  [23ae76d9] NDTensors v0.1.35
 ```
 so it returns to the version of the package you would have just after installing with `Pkg.add`.
 
@@ -716,7 +731,7 @@ julia> using Pkg
 
 julia> Pkg.status("ITensors")
       Status `~/.julia/environments/v1.7/Project.toml`
-  [9136182c] ITensors v0.2.12 `~/.julia/dev/ITensors`
+  [9136182c] ITensors v0.2.16 `~/.julia/dev/ITensors`
 
 julia> using ITensors
 

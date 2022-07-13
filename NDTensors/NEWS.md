@@ -6,6 +6,82 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+NDTensors v0.1.42 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Define `map` for Tensor and TensorStorage (b66d1b7)
+- Define `real` and `imag` for Tensor (b66d1b7)
+- Throw error when trying to do an eigendecomposition of Tensor with Infs or NaNs (b66d1b7)
+
+NDTensors v0.1.41 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Fix `truncate!` for `Float32`/`ComplexF32` (#926)
+
+NDTensors v0.1.40 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Add support for `cutoff < 0` and `cutoff = nothing` for disabling truncating according to `cutoff` (#925)
+- Define contraction of Diag with Combiner (#920)
+
+NDTensors v0.1.39 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Fix `svd` and `qr` for empty input left or right indices (#917)
+
+NDTensors v0.1.38 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Clean up QN `svd` code in `ITensors` by handling QN blocks better in `NDTensors` (#906)
+- Clean up `outer` and add GEMM routing for CUDA (#887)
+
+NDTensors v0.1.37 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Add fallbacks for when LAPACK SVD fails (#885)
+
+NDTensors v0.1.36 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Change minimal required Julia version from 1.3 to 1.6 (#849)
+
+NDTensors v0.1.35 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Allow general AbstractArray as data of `Dense` storage `Tensor`/`ITensor` (#848)
+
 NDTensors v0.1.34 Release Notes
 ===============================
 

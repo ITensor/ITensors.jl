@@ -6,6 +6,36 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensorGPU v0.0.5 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Clean up `outer` and add GEMM routing for CUDA (#887)
+
+ITensorGPU v0.0.4 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- `cu([[A, B], [C]])` -> `[[cu(A), cu(B)], [cu(C)]]` and same for cpu (#898).
+- Allow cutruncate to work for Float32s (#897).
+
+ITensorGPU v0.0.3 Release Notes
+===============================
+
+Bugs:
+
+- Fix bugs in complex SVD on GPU (with and without truncations) (#871)
+
+Enhancements:
+
+- Remove some unnecessary contract code (#860)
+
 ITensorGPU v0.0.2 Release Notes
 ===============================
 

@@ -1779,6 +1779,72 @@ Random.seed!(1234)
     # increase the number of blocks of A's storage
     @test length(ITensors.blockoffsets(ITensors.tensor(A))) == 1
   end
+
+  @testset "removeqns and removeqn" begin
+    s = siteind("Electron"; conserve_qns=true)
+    T = op("c†↑", s)
+
+    @test hasqns(s)
+    @test hasqns(T)
+    @test qn(s, 1) == QN(("Nf", 0, -1), ("Sz", 0))
+    @test qn(s, 2) == QN(("Nf", 1, -1), ("Sz", 1))
+    @test qn(s, 3) == QN(("Nf", 1, -1), ("Sz", -1))
+    @test qn(s, 4) == QN(("Nf", 2, -1), ("Sz", 0))
+    @test blockdim(s, 1) == 1
+    @test blockdim(s, 2) == 1
+    @test blockdim(s, 3) == 1
+    @test blockdim(s, 4) == 1
+    @test nblocks(s) == 4
+    @test dim(s) == 4
+
+    s1 = removeqns(s)
+    T1 = removeqns(T)
+    @test !hasqns(s1)
+    @test !hasqns(T1)
+    @test nblocks(s1) == 1
+    @test dim(s1) == 4
+    for I in eachindex(T1)
+      @test T1[I] == T[I]
+    end
+
+    s2 = removeqn(s, "Sz")
+    T2 = removeqn(T, "Sz")
+    @test hasqns(s2)
+    @test hasqns(T2)
+    @test nnzblocks(T2) == 2
+    @test nblocks(s2) == 3
+    @test nblocks(T2) == (3, 3)
+    @test qn(s2, 1) == QN(("Nf", 0, -1))
+    @test qn(s2, 2) == QN(("Nf", 1, -1))
+    @test qn(s2, 3) == QN(("Nf", 2, -1))
+    @test blockdim(s2, 1) == 1
+    @test blockdim(s2, 2) == 2
+    @test blockdim(s2, 3) == 1
+    @test dim(s2) == 4
+    for I in eachindex(T2)
+      @test T2[I] == T[I]
+    end
+
+    s3 = removeqn(s, "Nf")
+    T3 = removeqn(T, "Nf")
+    @test hasqns(s3)
+    @test hasqns(T3)
+    @test nnzblocks(T3) == 2
+    @test nblocks(s3) == 4
+    @test nblocks(T3) == (4, 4)
+    @test qn(s3, 1) == QN(("Sz", 0))
+    @test qn(s3, 2) == QN(("Sz", 1))
+    @test qn(s3, 3) == QN(("Sz", -1))
+    @test qn(s3, 4) == QN(("Sz", 0))
+    @test blockdim(s3, 1) == 1
+    @test blockdim(s3, 2) == 1
+    @test blockdim(s3, 3) == 1
+    @test blockdim(s3, 4) == 1
+    @test dim(s3) == 4
+    for I in eachindex(T3)
+      @test T3[I] == T[I]
+    end
+  end
 end
 
 nothing

@@ -66,33 +66,24 @@ using ITensors
 
 ITensors.space(::SiteType"S=3/2") = 4
 
-function ITensors.op!(Op::ITensor,
-                      ::OpName"Sz",
-                      ::SiteType"S=3/2",
-                      s::Index)
-  Op[s'=>1,s=>1] = +3/2
-  Op[s'=>2,s=>2] = +1/2
-  Op[s'=>3,s=>3] = -1/2
-  Op[s'=>4,s=>4] = -3/2
-end
+ITensors.op(::OpName"Sz",::SiteType"S=3/2") =
+  [+3/2   0    0    0
+     0  +1/2   0    0 
+     0    0  -1/2   0
+     0    0    0  -3/2]
 
-function ITensors.op!(Op::ITensor,
-                      ::OpName"S+",
-                      ::SiteType"S=3/2",
-                      s::Index)
-  Op[s'=>1,s=>2] = sqrt(3)
-  Op[s'=>2,s=>3] = 2
-  Op[s'=>3,s=>4] = sqrt(3)
-end
+ITensors.op(::OpName"S+",::SiteType"S=3/2") =
+  [0  √3  0  0
+   0   0  2  0
+   0   0  0 √3
+   0   0  0  0] 
 
-function ITensors.op!(Op::ITensor,
-                      ::OpName"S-",
-                      ::SiteType"S=3/2",
-                      s::Index)
-  Op[s'=>2,s=>1] = sqrt(3)
-  Op[s'=>3,s=>2] = 2
-  Op[s'=>4,s=>3] = sqrt(3)
-end
+ITensors.op(::OpName"S-",::SiteType"S=3/2") =
+  [0   0  0   0
+   √3  0  0   0
+   0   2  0   0
+   0   0  √3  0] 
+
 ```
 
 Now let's look at each part of the code above.
@@ -169,23 +160,21 @@ operator as:
 
 ```@example S32
 using ITensors # hide
-function ITensors.op!(Op::ITensor,
-                      ::OpName"Sz",
-                      ::SiteType"S=3/2",
-                      s::Index)
-  Op[s'=>1,s=>1] = +3/2
-  Op[s'=>2,s=>2] = +1/2
-  Op[s'=>3,s=>3] = -1/2
-  Op[s'=>4,s=>4] = -3/2
-end
+
+ITensors.op(::OpName"Sz",::SiteType"S=3/2") =
+  [+3/2   0    0    0
+     0  +1/2   0    0 
+     0    0  -1/2   0
+     0    0    0  -3/2]
 ```
 
-As you can see, the function is passed an ITensor `Op` and an Index `s`. The other
-arguments are there to select which of the various functions named `op!` get called.
-It is guaranteed by the `op` system that the ITensor `Op` will have indices `s` and `s'`.
+As you can see, the function is passed two objects: an `OpName` and a `SiteType`.
+The strings `"Sz"` and `"S=3/2"` are also part of the type of these objects, and 
+have the meaning of which operator name we are defining and which site type these
+operators are defined for.
 
-The body of this overload of `ITensors.op!` is just setting the elements of the `Op`
-ITensor to the correct values that define the `"Sz"` operator for an ``S=3/2`` spin.
+The body of this overload of `ITensors.op` constructs and returns a Julia matrix
+which gives the matrix elements of the operator we are defining.
 
 Once this function is defined, and if you have an Index such as
 
@@ -204,7 +193,7 @@ println(Sz)
 Again, through the magic of the `SiteType`
 system, the ITensor library takes your Index, reads off its tags, 
 notices that one of them is `"S=3/2"`, and converts this into the type 
-`SiteType"S=3/2"` in order to call the specialized function `ITensors.op!` defined above.
+`SiteType"S=3/2"` in order to call the specialized function `ITensors.op` defined above.
 
 You can use the `op` function yourself with a set of site indices created from
 the `siteinds` function like this:
@@ -227,15 +216,14 @@ operator names into OpSum and it will know how to use these operators.
 **Further Steps**
 
 See how the built-in site types are defined inside the ITensor library:
-* [S=1/2 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinhalf.jl) - Dimension 2 local Hilbert space. Similar to the ``Qubit`` site type, shares many of the same operator definitions.
-* [Qubit sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/qubit.jl) - Dimension 2 local Hilbert space. Similar to the ``S=1/2`` site type, shares many of the same operator definitions.
+* [S=1/2 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinhalf.jl) - Dimension 2 local Hilbert space. Similar to the `"Qubit"` site type, shares many of the same operator definitions.
+* [Qubit sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/qubit.jl) - Dimension 2 local Hilbert space. Similar to the `"S=1/2"` site type, shares many of the same operator definitions.
 * [S=1 sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/spinone.jl) - Dimension 3 local Hilbert space.
 * [Fermion sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/fermion.jl) - Dimension 2 local Hilbert space. Spinless fermion site type.
 * [Electron sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/electron.jl) - Dimension 4 local Hilbert space. Spinfull fermion site type.
 * [tJ sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/tj.jl) - Dimension 3 local Hilbert space. Spinfull fermion site type but without a doubly occupied state in the Hilbert space.
-* [Boson sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/boson.jl) - General d-dimensional local Hilbert space. Shares the same operator definitions as the ``Qudit`` site type.
-* [Qudit sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/qudit.jl) - General d-dimensional local Hilbert space. Generalization of the ``Qubit`` site type, shares the same operator definitions as the ``Boson`` site type.
-
+* [Boson sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/boson.jl) - General d-dimensional local Hilbert space. Shares the same operator definitions as the `"Qudit"` site type.
+* [Qudit sites](https://github.com/ITensor/ITensors.jl/blob/main/src/physics/site_types/qudit.jl) - General d-dimensional local Hilbert space. Generalization of the `"Qubit"` site type, shares the same operator definitions as the ``Boson`` site type.
 
 
 ## Make a Custom Local Hilbert Space with QNs
@@ -269,33 +257,25 @@ function ITensors.space(::SiteType"S=3/2";
   return 4
 end
 
-function ITensors.op!(Op::ITensor,
-                      ::OpName"Sz",
-                      ::SiteType"S=3/2",
-                      s::Index)
-  Op[s'=>1,s=>1] = +3/2
-  Op[s'=>2,s=>2] = +1/2
-  Op[s'=>3,s=>3] = -1/2
-  Op[s'=>4,s=>4] = -3/2
-end
+ITensors.op(::OpName"Sz",::SiteType"S=3/2") =
+  [+3/2   0    0    0
+     0  +1/2   0    0 
+     0    0  -1/2   0
+     0    0    0  -3/2]
 
-function ITensors.op!(Op::ITensor,
-                      ::OpName"S+",
-                      ::SiteType"S=3/2",
-                      s::Index)
-  Op[s'=>1,s=>2] = sqrt(3)
-  Op[s'=>2,s=>3] = 2
-  Op[s'=>3,s=>4] = sqrt(3)
-end
+ITensors.op(::OpName"S+",::SiteType"S=3/2") =
+  [0  √3  0  0
+   0   0  2  0
+   0   0  0 √3
+   0   0  0  0] 
 
-function ITensors.op!(Op::ITensor,
-                      ::OpName"S-",
-                      ::SiteType"S=3/2",
-                      s::Index)
-  Op[s'=>2,s=>1] = sqrt(3)
-  Op[s'=>3,s=>2] = 2
-  Op[s'=>4,s=>3] = sqrt(3)
-end
+ITensors.op(::OpName"S-",::SiteType"S=3/2") =
+  [0   0  0   0
+   √3  0  0   0
+   0   2  0   0
+   0   0  √3  0] 
+
+
 ```
 
 Now let's look at each part of the code above.
@@ -337,9 +317,9 @@ to obtain an array of N `"S=3/2"` indices which carry quantum numbers.
 
 **The op Function in the Quantum Number Case**
 
-Note that the `op!` function overloads are exactly the same as for the
+Note that the `op` function overloads are exactly the same as for the
 more basic case of defining an `"S=3/2"` Index type that does not carry
-quantum numbers. There is no need to upgrade any of the `op!` functions 
+quantum numbers. There is no need to upgrade any of the `op` functions 
 for the QN-conserving case. 
 The reason is that all QN, block-sparse information
 about an ITensor is deduced from the indices of the tensor, and setting elements
@@ -354,7 +334,6 @@ since it alternately increases ``S^z`` or decreases ``S^z`` depending on the sta
 on, thus it does not have a well-defined QN flux. But it is perfectly fine to define an
 `op` overload for the "Sx" operator and to make this operator when working with dense, 
 non-QN-conserving ITensors or when ``S^z`` is not conserved.
-
 
 
 ## Extending an Existing Local Hilbert Space
@@ -410,12 +389,9 @@ code
 ```julia
 using ITensors
 
-function ITensors.op!(Op::ITensor,
-                      ::OpName"Pup",
-                      ::SiteType"S=1/2",
-                      s::Index)
-  Op[s'=>1,s=>1] = 1.0
-end
+ITensors.op(::OpName"Pup",::SiteType"S=1/2") =
+ [1 0
+  0 0]
 ```
 
 This code can be defined anywhere, such as in your own personal application code and does 
@@ -440,7 +416,6 @@ s = siteinds("S=1/2",N)
 Pup1 = op("Pup",s[1])
 Pup3 = op("Pup",s[3])
 ```
-
 
 **Using Custom Operators in OpSum (AutoMPO)**
 

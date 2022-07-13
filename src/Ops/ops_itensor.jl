@@ -1,112 +1,71 @@
-function itensor(I::UniformScaling, is...)
-  return ITensor(I, is...)
-end
-
-function ITensor(I::UniformScaling, is...)
-  return ITensor(I(isqrt(dim(is))), is...)
-end
-
-# Using ITensors.jl definitions
-function _ITensor(
-  which_op::AbstractString, sites::Tuple, params::NamedTuple, s::Vector{<:Index}
-)
-  return op(which_op, s, sites; params...)
-end
-
-function _ITensor(
-  which_op::Union{AbstractMatrix,UniformScaling},
-  sites::Tuple,
-  params::NamedTuple,
-  s::Vector{<:Index},
-)
-  sₙ = s[collect(sites)]
-  return itensor(which_op, sₙ', dag(sₙ))
-end
-
-function hassamesites(o)
-  if length(o) ∈ (0, 1)
-    return true
-  end
-  return reduce(issetequal, Ops.sites.(o))
+function op(I::UniformScaling, s::Index...)
+  return I.λ * op("Id", s...)
 end
 
 function ITensor(o::Op, s::Vector{<:Index})
-  return _ITensor(Tuple(o)..., s)
+  return op(o.which_op, map(n -> s[n], o.sites)...; o.params...)
 end
 
-# Extend the operator `o` to the sites `n`
-# by filling the rest of the sites with `op`.
-function insert_ids(o, n)
-  insert_n = @ignore_derivatives setdiff(n, Ops.sites(o))
-  for i in insert_n
-    o *= Op(I, i)
+function ITensor(o::Scaled, s::Vector{<:Index})
+  c = coefficient(o)
+  if isreal(c)
+    c = real(c)
   end
-  return o
+  return c * ITensor(argument(o), s)
 end
 
-# TODO: Merge these two.
-function insert_ids(o::∏)
-  n = Ops.sites(o)
-  return ∏([insert_ids(oₙ, n) for oₙ in o])
-end
-function insert_ids(o::∑)
-  n = Ops.sites(o)
-  return ∑([insert_ids(oₙ, n) for oₙ in o])
-end
-
-# TODO: Does this work for fermions?
-function ITensor(o::∏, s::Vector{<:Index})
-  o_id = insert_ids(o)
-  ∏layers = ∏([∏{ITensor}(oₙ, s) for oₙ in o_id])
-  res = ITensor(Op(I, Ops.sites(o)), s)
-  for layer in reverse(∏layers)
-    res = layer(res)
+function ITensor(o::Prod, s::Vector{<:Index})
+  T = ITensor(true)
+  for a in o.args[1]
+    Tₙ = ITensor(a, s)
+    # TODO: Implement this logic inside `apply`
+    if hascommoninds(T, Tₙ)
+      T = T(Tₙ)
+    else
+      T *= Tₙ
+    end
   end
-  return res
+  return T
 end
 
-function ITensor(o::∑{ITensor})
-  res = ITensor()
-  for oₙ in o
-    res += oₙ
+function ITensor(o::Sum, s::Vector{<:Index})
+  T = ITensor()
+  for a in o.args[1]
+    T += ITensor(a, s)
   end
-  return res
+  return T
 end
 
-function ITensor(o::∑, s::Vector{<:Index})
-  o_id = insert_ids(o)
-  ∑layers = ∑([ITensor(oₙ, s) for oₙ in o_id])
-  return ITensor(∑layers)
-  ## if hassamesites(o)
-  ##   return o.f([ITensor(arg, s) for arg in o])
-  ## end
-  ## return error("Trying to make an ITensor from operator expression $o. When making an ITensor from a sum of operators, the operators need to have the same sites.")
+function ITensor(o::Exp, s::Vector{<:Index})
+  return exp(ITensor(argument(o), s))
 end
 
-function ITensor(o::α, s::Vector{<:Index})
-  return coefficient(o) * ITensor(Ops.op(o), s)
+function ITensor(o::LazyApply.Adjoint, s::Vector{<:Index})
+  return swapprime(dag(ITensor(o', s)), 0 => 1)
 end
 
-function ITensor(o::Applied{typeof(exp)}, s::Vector{<:Index})
-  return o.f(ITensor(Ops.op(o), s))
+function Sum{ITensor}(o::Sum, s::Vector{<:Index})
+  return Applied(sum, (map(oₙ -> ITensor(oₙ, s), only(o.args)),))
 end
 
-itensor_adjoint(T::ITensor) = swapprime(dag(T), 0 => 1)
-
-function ITensor(o::Applied{typeof(adjoint)}, s::Vector{<:Index})
-  return itensor_adjoint(ITensor(Ops.op(o), s))
+function Prod{ITensor}(o::Prod, s::Vector{<:Index})
+  return Applied(prod, (map(oₙ -> ITensor(oₙ, s), only(o.args)),))
 end
 
-function ITensor(o::Applied, s::Vector{<:Index})
-  return error("Trying to make ITensor from expression $(o), not yet implemented.")
+function Prod{ITensor}(o::Scaled{C,Prod{Op}}, s::Vector{<:Index}) where {C}
+  t = Prod{ITensor}(argument(o), s)
+  t1 = coefficient(o) * only(t.args)[1]
+  return Applied(prod, (vcat([t1], only(t.args)[2:end]),))
 end
 
-∏{ITensor}(o::∏, s::Vector{<:Index}) = ∏([ITensor(oₙ, s) for oₙ in o])
-∏{ITensor}(o::Union{Op,Applied}, s::Vector{<:Index}) = ∏{ITensor}(∏([o]), s)
-∑{ITensor}(o::∑, s::Vector{<:Index}) = ∑([ITensor(oₙ, s) for oₙ in o])
-∑{ITensor}(o::Union{Op,Applied}, s::Vector{<:Index}) = ∑{ITensor}(∑([o]), s)
+function apply(o::Prod{ITensor}, v::ITensor; kwargs...)
+  ov = v
+  for oₙ in reverse(only(o.args))
+    ov = apply(oₙ, ov; kwargs...)
+  end
+  return ov
+end
 
-(o::∏{ITensor})(x; kwargs...) = apply(o, x; kwargs...)
-# Apply it in reverse to follow the linear algebra convention:
-# (O₁ * O₂)|x⟩ = O₁ * (O₂|x⟩)
-apply(o::∏{ITensor}, x; kwargs...) = apply([oₙ for oₙ in reverse(o)], x; kwargs...)
+function (o::Prod{ITensor})(v::ITensor; kwargs...)
+  return apply(o, v; kwargs...)
+end

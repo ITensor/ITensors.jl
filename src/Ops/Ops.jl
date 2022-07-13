@@ -1,17 +1,10 @@
 module Ops
 
-using Compat
-using LinearAlgebra
-using Zeros
 using ..LazyApply
 
-using ..LazyApply: ∑, ∏, α, coefficient, Applied
+import Base: ==, +, -, *, /, convert, exp, show, adjoint, isless, hash
 
-import ..LazyApply: coefficient
-
-import Base: show, *, /, +, -, Tuple, one, exp, adjoint, promote_rule, convert
-
-export Op, sites, params
+export Op, OpSum, which_op, site, sites, params, Applied, expand
 
 #####################################################################################
 # General functionality
@@ -24,361 +17,305 @@ export Op, sites, params
 # (1, "X", 1, 2, "Y", 2, "Z", 4)
 # 
 # julia> split(x -> x isa AbstractString, t)
-# ((1,), ("X", 1, 2), ("Y", 2), ("Z", 4))
+# [(1,), ("X", 1, 2), ("Y", 2), ("Z", 4)]
 # 
 function split(f, t::Tuple)
   n = findall(f, t)
-  ti = t[1:(first(n) - 1)]
-  ts = ntuple(i -> t[n[i]:(n[i + 1] - 1)], length(n) - 1)
-  tf = t[last(n):end]
-  return ti, ts..., tf
+  nsplit = length(n) + 1
+  s = Vector{Any}(undef, nsplit)
+  s[1] = t[1:(first(n) - 1)]
+  for i in 2:(nsplit - 1)
+    s[i] = t[n[i - 1]:(n[i] - 1)]
+  end
+  s[end] = t[last(n):end]
+  return s
 end
 
-#
-# General functionality
-#####################################################################################
-
-#####################################################################################
-# LazyApply extensions
-# TODO: Move to `LazyApply`
-#
-
-# Helper function for determing the cofficient type of an `Op` related type.
-coefficient_type(o::Type) = One
-coefficient_type(o::Type{<:α{<:Any,T}}) where {T} = T
-coefficient_type(o::Type{<:∑{T}}) where {T} = coefficient_type(T)
-
-coefficient_type(o::Applied) = coefficient_type(typeof(o))
-
-#
-# LazyApply extensions
-#####################################################################################
-
-const WhichOp = Union{String,AbstractMatrix,UniformScaling}
+## XXX: Very long compile times:
+## https://github.com/JuliaLang/julia/issues/45545
+##
+## julia> using ITensors
+## 
+## julia> @time ITensors.Ops.split(x -> x isa String, ("X", 1))
+##   7.588123 seconds (2.34 M allocations: 100.919 MiB, 1.71% gc time, 100.00% compilation time)
+## ((), ("X", 1))
+## 
+## julia> @time ITensors.Ops.split(x -> x isa String, ("X", 1))
+##   0.042590 seconds (88.59 k allocations: 4.823 MiB, 19.13% gc time, 99.84% compilation time)
+## ((), ("X", 1))
+##
+## function split(f, t::Tuple)
+##   n = findall(f, t)
+##   ti = t[1:(first(n) - 1)]
+##   ts = ntuple(i -> t[n[i]:(n[i + 1] - 1)], length(n) - 1)
+##   tf = t[last(n):end]
+##   return ti, ts..., tf
+## end
 
 struct Op
-  which_op::WhichOp
-  sites::Tuple{Vararg{Int}}
+  which_op
+  sites::Tuple
   params::NamedTuple
+  function Op(which_op, site...; kwargs...)
+    return new(which_op, site, NamedTuple(kwargs))
+  end
 end
+
 which_op(o::Op) = o.which_op
+name(o::Op) = which_op(o)
 sites(o::Op) = o.sites
+site(o::Op) = only(sites(o))
 params(o::Op) = o.params
-op(o::Op) = o
-coefficient_type(o::Op) = One
-coefficient(o::Op) = one(coefficient_type(o))
 
-params(o::Vector{Op}) = params(only(o))
-
-# exp
-exp(o::Op) = Applied(exp, o)
-
-# adjoint
-adjoint(o::Op) = Applied(adjoint, o)
-
-Tuple(o::Op) = (which_op(o), sites(o), params(o))
-
-const OpExpr = Union{Op,∑{Op},α{Op},∑{<:α{Op}},∏{Op},∑{∏{Op}},α{∏{Op}},∑{<:α{∏{Op}}}}
-
-# Type promotion and conversion
-convert(::Type{α{Op,T}}, o::Op) where {T} = one(T) * o
-convert(::Type{∏{Op}}, o::Op) = ∏([o])
-convert(::Type{∑{Op}}, o::Op) = ∑([o])
-convert(::Type{α{∏{Op},T}}, o::Op) where {T} = one(T) * convert(∏{Op}, o)
-function convert(::Type{∑{α{∏{Op},T}}}, o::Op) where {T}
-  return ∑([convert(α{∏{Op},T}, o)])
+function (o1::Op == o2::Op)
+  return o1.which_op == o2.which_op && o1.sites == o2.sites && o1.params == o2.params
 end
 
-# if VERSION < v"1.6"
-const ∑α∏Op = ∑{α{∏{Op},T}} where {T}
-const ∑α∏{S} = ∑{α{∏{S},T}} where {T}
-
-convert(O::Type{<:Op}, o::Tuple) = O(o)
-convert(O::Type{<:α{Op}}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{<:∏{Op}}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{<:∑{Op}}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{<:α{∏{Op}}}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{<:∑{α{∏{Op},T}} where {T}}, o::Tuple) = convert(O, Op(o))
-## convert(O::Type{∑{α{∏{Op},T}} where {T}}, o::Tuple) = convert(O, Op(o))
-convert(O::Type{∑α∏Op}, o::Tuple) = convert(O, Op(o))
-
-convert(::Type{∑{<:α{∏{Op}}}}, o) = convert(∑{α{∏{Op},T}} where {T}, o)
-∑{<:α{∏{Op}}}(o) = (∑{α{∏{Op},T}} where {T})(o)
-∑{<:α{∏{Op}}}() = (∑{α{∏{Op},T}} where {T})()
-
-# if VERSION > v"1.5"
-## function (∑{α{∏{Op},T}} where {T})(o::OpExpr)
-##   return convert(∑{α{∏{Op},T}} where {T}, o)
-## end
-## function (∑{α{∏{Op},T}} where {T})(o::Tuple)
-##   return convert(∑{α{∏{Op},T}} where {T}, o)
-## end
-## function (∑{α{∏{Op},T}} where {T})(o::Vector{<:Union{OpExpr,Tuple}})
-##   return reduce(+, o; init=(∑{α{∏{Op},T}} where {T})())
-## end
-## function (∑{α{∏{Op},T}} where {T})(o::WhichOp, args...)
-##   return convert(∑{α{∏{Op},T}} where {T}, Op(o, args...))
-## end
-## function (∑{α{∏{Op},T}} where {T})(c::Number, o::WhichOp, args...)
-##   return convert(∑{α{∏{Op},T}} where {T}, Op(c, o, args...))
-## end
-# if VERSION < v"1.6"
-function ∑α∏Op(o::OpExpr)
-  return convert(∑{α{∏{Op},T}} where {T}, o)
-end
-function ∑α∏Op(o::Tuple)
-  return convert(∑{α{∏{Op},T}} where {T}, o)
-end
-function ∑α∏Op(o::Vector{<:Union{OpExpr,Tuple}})
-  return reduce(+, o; init=(∑{α{∏{Op},T}} where {T})())
-end
-function ∑α∏Op(o::WhichOp, args...)
-  return convert(∑{α{∏{Op},T}} where {T}, Op(o, args...))
-end
-function ∑α∏Op(c::Number, o::WhichOp, args...)
-  return convert(∑{α{∏{Op},T}} where {T}, Op(c, o, args...))
+function hash(o::Op, h::UInt)
+  return hash(which_op(o), hash(sites(o), hash(params(o), hash(:Op, h))))
 end
 
-# Default constructors
-# if VERSION > v"1.5"
-## (∑{α{∏{S},T}} where {T})() where {S} = ∑{α{∏{S},Zero}}()
-## (∑{α{∏{Op},T}} where {T})(o) = convert(∑{α{∏{Op},T}} where {T}, o)
-# if VERSION < v"1.6"
-∑α∏{S}() where {S} = ∑{α{∏{S},Zero}}()
-∑α∏Op(o) = convert(∑{α{∏{Op},T}} where {T}, o)
+# Version of `isless` defined for matrices
+_isless(a, b) = isless(a, b)
+_isless(a::AbstractMatrix, b::AbstractMatrix) = isless(hash(a), hash(b))
+_isless(a::AbstractString, b::AbstractMatrix) = true
+_isless(a::AbstractMatrix, b::AbstractString) = !_isless(b, a)
 
-function convert(O::Type{α{∏{Op},T}}, o::α{Op}) where {T}
-  return convert(T, coefficient(o)) * ∏([op(o)])
-end
-function convert(O::Type{∑{T}}, o::α{Op}) where {T<:Union{α{Op},α{∏{Op}}}}
-  return ∑([convert(T, o)])
-end
-
-convert(O::Type{∑{∏{Op}}}, o::∏{Op}) = ∑([o])
-convert(O::Type{α{∏{Op},T}}, o::∏{Op}) where {T} = one(T) * o
-function convert(O::Type{∑{α{∏{Op},T}}}, o::∏{Op}) where {T}
-  return ∑([convert(α{∏{Op},T}, o)])
-end
-convert(O::Type{∑{α{∏{Op},T}}}, o::∑{∏{Op}}) where {T} = one(T) * o
-
-function convert(O::Type{∑{α{∏{Op},T}}}, o::α{∏{Op}}) where {T}
-  return ∑([convert(α{∏{Op},T}, o)])
+function isless(o1::Op, o2::Op)
+  if sites(o1) ≠ sites(o2)
+    return sites(o1) < sites(o2)
+  end
+  if which_op(o1) ≠ which_op(o2)
+    return _isless(which_op(o1), which_op(o2))
+  end
+  return params(o1) < params(o2)
 end
 
-# Versions where the type paramater is left out.
-function convert(O::Type{∑{α{∏{Op},T}} where {T}}, o)
-  return convert(∑{α{∏{Op},coefficient_type(o)}}, o)
-end
-
-#
-# Promotion rules.
-#
-# Rules for promoting Op-like objects when they are being added together.
-#
-# Should cover promotions between these types:
-#
-# Op
-# α{Op,T}
-# ∏{Op}
-# ∑{Op}
-# ∑{α{Op,T}}
-# α{∏{Op},T}}
-# ∑{∏{Op}}
-# ∑{α{∏{Op},T}}
-#
-
-# Conversion of `Op`
-promote_rule(::Type{Op}, O::Type{<:α{Op}}) = O
-promote_rule(::Type{Op}, O::Type{<:∏{Op}}) = O
-promote_rule(::Type{Op}, O::Type{<:∑{Op}}) = O
-promote_rule(::Type{Op}, O::Type{<:∑{α{Op}}}) = O
-promote_rule(::Type{Op}, O::Type{<:α{∏{Op}}}) = O
-promote_rule(::Type{Op}, O::Type{<:∑{∏{Op}}}) = O
-promote_rule(::Type{Op}, O::Type{<:∑{α{∏{Op}}}}) = O
-
-# Conversion of `α{Op}`
-function promote_rule(::Type{α{Op,T}}, ::Type{α{Op,S}}) where {T,S}
-  return α{Op,promote_type(T, S)}
-end
-promote_rule(::Type{α{Op,T}}, ::Type{∏{Op}}) where {T} = α{∏{Op},T}
-promote_rule(::Type{α{Op,T}}, ::Type{∑{Op}}) where {T} = ∑{α{Op,T}}
-function promote_rule(::Type{α{Op,T}}, ::Type{∑{α{Op,S}}}) where {T,S}
-  return ∑{α{Op,promote_type(T, S)}}
-end
-function promote_rule(::Type{α{Op,T}}, ::Type{α{∏{Op},S}}) where {T,S}
-  return α{∏{Op},promote_type(T, S)}
-end
-function promote_rule(::Type{α{Op,T}}, ::Type{∑{∏{Op}}}) where {T}
-  return ∑{α{∏{Op},T}}
-end
-function promote_rule(::Type{α{Op,T}}, ::Type{∑{α{∏{Op},S}}}) where {T,S}
-  return ∑{α{∏{Op},promote_type(T, S)}}
-end
-
-# Conversion of `∏{Op}`
-promote_rule(::Type{∏{Op}}, ::Type{∑{Op}}) = ∑{∏{Op}}
-function promote_rule(::Type{∏{Op}}, ::Type{∑{α{Op,S}}}) where {S}
-  return ∑{α{∏{Op},S}}
-end
-promote_rule(::Type{∏{Op}}, ::Type{α{∏{Op},S}}) where {S} = α{∏{Op},S}
-promote_rule(::Type{∏{Op}}, ::Type{∑{∏{Op}}}) = ∑{∏{Op}}
-function promote_rule(::Type{∏{Op}}, ::Type{∑{α{∏{Op},S}}}) where {S}
-  return ∑{α{∏{Op},S}}
-end
-
-# Conversion of `∑{Op}`
-promote_rule(::Type{∑{Op}}, ::Type{∑{α{Op,S}}}) where {S} = ∑{α{Op,S}}
-function promote_rule(::Type{∑{Op}}, ::Type{α{∏{Op},S}}) where {S}
-  return ∑{α{∏{Op},S}}
-end
-promote_rule(::Type{∑{Op}}, ::Type{∑{∏{Op}}}) = ∑{∏{Op}}
-function promote_rule(::Type{∑{Op}}, ::Type{∑{α{∏{Op},S}}}) where {S}
-  return ∑{α{∏{Op},S}}
-end
-
-# Conversion of `∑{α{Op,T}}`
-function promote_rule(::Type{∑{α{Op,T}}}, ::Type{∑{α{Op,S}}}) where {T,S}
-  return ∑{α{Op,promote_type(T, S)}}
-end
-function promote_rule(::Type{∑{α{Op,T}}}, ::Type{α{∏{Op},S}}) where {T,S}
-  return ∑{α{∏{Op},promote_type(T, S)}}
-end
-function promote_rule(::Type{∑{α{Op,T}}}, ::Type{∑{∏{Op}}}) where {T}
-  return ∑{α{∏{Op},T}}
-end
-function promote_rule(::Type{∑{α{Op,T}}}, ::Type{∑{α{∏{Op},S}}}) where {T,S}
-  return ∑{α{∏{Op},promote_type(T, S)}}
-end
-
-# Conversion of `α{∏{Op},T}`
-function promote_rule(::Type{α{∏{Op},T}}, ::Type{α{∏{Op},S}}) where {T,S}
-  return α{∏{Op},promote_type(T, S)}
-end
-function promote_rule(::Type{α{∏{Op},T}}, ::Type{∑{∏{Op}}}) where {T}
-  return ∑{α{∏{Op},T}}
-end
-function promote_rule(::Type{α{∏{Op},T}}, ::Type{∑{α{∏{Op},S}}}) where {T,S}
-  return ∑{α{∏{Op},promote_type(T, S)}}
-end
-
-# Conversion of `∑{∏{Op}}`
-function promote_rule(::Type{∑{∏{Op}}}, ::Type{∑{α{∏{Op},S}}}) where {S}
-  return ∑{α{∏{Op},S}}
-end
-
-# Conversion of `∑{α{∏{Op},T}}`
-function promote_rule(::Type{∑{α{∏{Op},T}}}, ::Type{∑{α{∏{Op},S}}}) where {T,S}
-  return ∑{α{∏{Op},promote_type(T, S)}}
-end
-
-op(o::α) = o.args[2]
-sites(o::α) = sites(op(o))
-
-which_op(o::α{Op}) = which_op(op(o))
-params(o::α{Op}) = params(op(o))
-one(o::α{Op}) = one(coefficient(o))
-
-sites(o::Union{∑,∏}) = unique(Iterators.flatten(Iterators.map(sites, o)))
-
-# General definition for single-tensor operations like `exp` or `adjoint`.
-# F: exp, adjoint, etc.
-op(o::Applied{F}) where {F} = o.args[1]
-sites(o::Applied{F}) where {F} = sites(op(o))
-which_op(o::Applied{F}) where {F} = which_op(op(o))
-params(o::Applied{F}) where {F} = params(op(o))
-
-const OpTuple = Union{Tuple{<:WhichOp,Vararg},Tuple{<:Number,<:WhichOp,Vararg}}
-
-# Conversion from Tuple
-Op(o::Tuple) = Op(o...)
-Op(which_op::WhichOp, sites::Tuple; kwargs...) = Op(which_op, sites, values(kwargs))
-Op(which_op::WhichOp, sites::Int...; kwargs...) = Op(which_op, sites; kwargs...)
-Op(which_op::WhichOp, sites::Vector{Int}; kwargs...) = Op(which_op, Tuple(sites); kwargs...)
-function Op(which_op::WhichOp, sites_params::Union{Int,<:NamedTuple}...)
-  return Op(which_op, Base.front(sites_params), last(sites_params))
-end
-Op(α::Number, which_op::WhichOp, args...; kwargs...) = α * Op(which_op, args...; kwargs...)
-function Op(which_op::WhichOp, sites_params::Union{Int,WhichOp,NamedTuple}...)
-  ts = split(x -> x isa WhichOp, (which_op, sites_params...))
-  args = filter(x -> !(x isa Tuple{}), ts)
-  return ∏(collect(Op.(args)))
-end
-
-# Conversion to `∑{Op}` (replacement for `OpSum`)
-∑{Op}(o::Vector{<:OpExpr}) = ∑(o)
-∑{Op}(o::OpExpr) = ∑{Op}() + o
-∑{Op}(o::OpTuple) = ∑{Op}(Op(o))
-∑{Op}(which_op::WhichOp, args...; kwargs...) = ∑{Op}(Op(which_op, args...; kwargs...))
-function ∑{Op}(α::Number, which_op::WhichOp, args...; kwargs...)
-  return ∑{Op}(Op(α, which_op, args...; kwargs...))
-end
-
-# Lazy operations with Op
-(arg1::Number * arg2::Op) = α(arg1, arg2)
-(arg1::Op / arg2::Number) = inv(arg2) * arg1
-(arg1::Op * arg2::Op) = ∏([arg1, arg2])
-(arg1::Op + arg2::Op) = ∑([arg1, arg2])
--(o::Op) = -𝟏 * o
-
-# Rules for adding, subtracting, and multiplying with Tuples
-(arg1::OpExpr + arg2::Tuple) = arg1 + Op(arg2)
-(arg1::Tuple + arg2::OpExpr) = Op(arg1) + arg2
-(arg1::OpExpr - arg2::Tuple) = arg1 - Op(arg2)
-(arg1::Tuple - arg2::OpExpr) = Op(arg1) - arg2
-(arg1::OpExpr * arg2::Tuple) = arg1 * Op(arg2)
-(arg1::Tuple * arg2::OpExpr) = Op(arg1) * arg2
-
-function print_sites(io::IO, sites)
-  nsites = length(sites)
-  for n in 1:nsites
-    print(io, sites[n])
-    if n < nsites
-      print(io, ", ")
+function isless(o1::Prod{Op}, o2::Prod{Op})
+  if length(o1) ≠ length(o2)
+    return length(o1) < length(o2)
+  end
+  for n in 1:length(o1)
+    if o1[n] ≠ o2[n]
+      return (o1[n] < o2[n])
     end
   end
+  return false
+end
+
+function isless(o1::Scaled{C1,Prod{Op}}, o2::Scaled{C2,Prod{Op}}) where {C1,C2}
+  if argument(o1) == argument(o2)
+    if coefficient(o1) ≈ coefficient(o2)
+      return false
+    else
+      c1 = coefficient(o1)
+      c2 = coefficient(o2)
+      #"lexicographic" ordering on  complex numbers
+      return real(c1) < real(c2) || (real(c1) ≈ real(c2) && imag(c1) < imag(c2))
+    end
+  end
+  return argument(o1) < argument(o2)
+end
+
+## function Op(t::Tuple)
+##   which_op = first(t)
+##   site_params = Base.tail(t)
+##   if last(site_params) isa NamedTuple
+##     site = Base.front(site_params)
+##     params = last(site_params)
+##   else
+##     site = site_params
+##     params = (;)
+##   end
+##   return Op(which_op, site; params...)
+## end
+
+## function Op(t::Tuple{WhichOp,NamedTuple,Vararg}) where {WhichOp}
+##   params = t[2]
+##   which_op = t[1]
+##   sites = t[3:end]
+##   return Op(which_op, sites...; params...)
+## end
+
+function sites(a::Union{Sum,Prod})
+  s = []
+  for n in 1:length(a)
+    s = s ∪ sites(a[n])
+  end
+  return sort(map(identity, s))
+end
+sites(a::Scaled{C,<:Sum}) where {C} = sites(argument(a))
+sites(a::Scaled{C,<:Prod}) where {C} = sites(argument(a))
+
+params(a::Scaled{C,<:Prod}) where {C} = params(only(argument(a)))
+
+which_op(a::Scaled{C,Op}) where {C} = which_op(argument(a))
+sites(a::Scaled{C,Op}) where {C} = sites(argument(a))
+params(a::Scaled{C,Op}) where {C} = params(argument(a))
+
+#
+# Op algebra
+#
+
+function convert(::Type{Scaled{C1,Prod{Op}}}, o::Scaled{C2,Prod{Op}}) where {C1,C2}
+  c = convert(C1, coefficient(o))
+  return c * argument(o)
+end
+
+const OpSum{C} = Sum{Scaled{C,Prod{Op}}}
+
+# This helps with in-place operations
+OpSum() = OpSum{ComplexF64}()
+
+(o1::Op + o2::Op) = Applied(sum, ([o1, o2],))
+(o1::Op * o2::Op) = Applied(prod, ([o1, o2],))
+-(o::Op) = -one(Int) * o
+(o1::Op - o2::Op) = o1 + (-o2)
+
+(c::Number * o::Op) = Applied(*, (c, o))
+(o::Op * c::Number) = Applied(*, (c, o))
+(o::Op / c::Number) = Applied(*, (inv(c), o))
+
+(c::Number * o::Prod{Op}) = Applied(*, (c, o))
+(o::Prod{Op} * c::Number) = Applied(*, (c, o))
+(o::Prod{Op} / c::Number) = Applied(*, (inv(c), o))
+
+# 1.3 * Op("X", 1) + Op("X", 2)
+# 1.3 * Op("X", 1) * Op("X", 2) + Op("X", 3)
+(co1::Scaled{C} + o2::Op) where {C} = co1 + one(C) * o2
+
+# Op("X", 1) + 1.3 * Op("X", 2)
+(o1::Op + co2::Scaled{C}) where {C} = one(C) * o1 + co2
+
+(o1::Op * o2::Sum) = Applied(sum, (map(a -> o1 * a, only(o2.args)),))
+(o1::Sum * o2::Op) = Applied(sum, (map(a -> a * o2, only(o1.args)),))
+
+# 1.3 * Op("X", 1) + Op("X", 2) * Op("X", 3)
+# 1.3 * Op("X", 1) * Op("X", 2) + Op("X", 3) * Op("X", 4)
+(co1::Scaled{C} + o2::Prod{Op}) where {C} = co1 + one(C) * o2
+
+# 1.3 * Op("X", 1) * Op("X", 2)
+(co1::Scaled{C} * o2::Op) where {C} = co1 * (one(C) * o2)
+
+exp(o::Op) = Applied(exp, (o,))
+
+adjoint(o::Op) = Applied(adjoint, (o,))
+adjoint(o::LazyApply.Adjoint{Op}) = only(o.args)
+
+(o1::Exp{Op} * o2::Op) = Applied(prod, ([o1, o2],))
+
+#
+# Tuple interface
+#
+
+const OpSumLike{C} = Union{
+  Sum{Op},
+  Sum{Scaled{C,Op}},
+  Sum{Prod{Op}},
+  Sum{Scaled{C,Prod{Op}}},
+  Prod{Op},
+  Scaled{C,Prod{Op}},
+}
+
+const WhichOp = Union{AbstractString,AbstractMatrix{<:Number}}
+
+# Make a `Scaled{C,Prod{Op}}` from a `Tuple` input,
+# for example:
+#
+# (1.2, "X", 1, "Y", 2) -> 1.2 * Op("X", 1) * Op("Y", 2)
+#
+function op_term(a::Tuple{Number,Vararg})
+  c = first(a)
+  return c * op_term(Base.tail(a))
+end
+
+function op_site(which_op, params::NamedTuple, sites...)
+  return Op(which_op, sites...; params...)
+end
+
+function op_site(which_op, sites_params...)
+  if last(sites_params) isa NamedTuple
+    sites = Base.front(sites_params)
+    params = last(sites_params)
+    return Op(which_op, sites...; params...)
+  end
+  return Op(which_op, sites_params...)
+end
+
+function op_term(a::Tuple{Vararg})
+  a_split = split(x -> x isa WhichOp, a)
+  @assert isempty(first(a_split))
+  popfirst!(a_split)
+  o = op_site(first(a_split)...)
+  popfirst!(a_split)
+  for aₙ in a_split
+    o *= op_site(aₙ...)
+  end
+  return o
+end
+
+function (o1::OpSumLike + o2::Tuple)
+  return o1 + op_term(o2)
+end
+
+function (o1::Tuple + o2::OpSumLike)
+  return op_term(o1) + o2
+end
+
+function (o1::OpSumLike - o2::Tuple)
+  return o1 - op_term(o2)
+end
+
+function (o1::Tuple - o2::OpSumLike)
+  return op_term(o1) - o2
+end
+
+function (o1::OpSumLike * o2::Tuple)
+  return o1 * op_term(o2)
+end
+
+function (o1::Tuple * o2::OpSumLike)
+  return op_term(o1) * o2
 end
 
 function show(io::IO, ::MIME"text/plain", o::Op)
-  print(io, which_op(o), "(")
-  print_sites(io, sites(o))
+  print(io, which_op(o))
+  print(io, sites(o))
   if !isempty(params(o))
-    print(io, ", ", params(o))
+    print(io, params(o))
   end
-  return print(io, ")")
+  return nothing
 end
+show(io::IO, o::Op) = show(io, MIME("text/plain"), o)
 
-function show(io::IO, ::MIME"text/plain", o::∏{Op})
+function show(io::IO, ::MIME"text/plain", o::Prod{Op})
   for n in 1:length(o)
     print(io, o[n])
     if n < length(o)
-      print(io, " * ")
+      print(io, " ")
     end
   end
+  return nothing
 end
+show(io::IO, o::Prod{Op}) where {C} = show(io, MIME("text/plain"), o)
 
-function print_coefficient(io::IO, o)
-  return print(io, o)
-end
-
-function print_coefficient(io::IO, o::Complex)
-  return print(io, "(", o, ")")
-end
-
-function show(io::IO, ::MIME"text/plain", o::Union{α{Op},α{∏{Op}}})
-  print_coefficient(io, coefficient(o))
+function show(io::IO, m::MIME"text/plain", o::Scaled{C,O}) where {C,O<:Union{Op,Prod{Op}}}
+  c = coefficient(o)
+  if isreal(c)
+    c = real(c)
+  end
+  print(io, c)
   print(io, " ")
-  return print(io, op(o))
+  show(io, m, argument(o))
+  return nothing
 end
+show(io::IO, o::Scaled{C,Prod{Op}}) where {C} = show(io, MIME("text/plain"), o)
 
-function show(io::IO, ::MIME"text/plain", o::Union{∑{Op},∑{<:α{Op}},∑{∏{Op}},∑{<:α{∏{Op}}}})
-  for n in 1:length(o)
-    print(io, o[n])
-    if n < length(o)
-      print(io, " +\n")
-    end
-  end
+function show(io::IO, ::MIME"text/plain", o::LazyApply.Adjoint{Op})
+  print(io, o')
+  print(io, "'")
+  return nothing
 end
-
-show(io::IO, o::OpExpr) = show(io, MIME("text/plain"), o)
+show(io::IO, o::LazyApply.Adjoint{Op}) = show(io, MIME("text/plain"), o)
 
 end
