@@ -39,11 +39,20 @@ end
 
 # TODO: Define a more general version in ITensors.jl
 function _contract(::Type{ITensor}, ψ::Union{MPS,MPO}, ϕ::Union{MPS,MPO}; kwargs...)
-  T = ITensor(1)
-  for n in 1:length(ψ)
-    T = T * ψ[n] * ϕ[n]
+  n = length(ψ)
+  @assert length(ϕ) == length(ψ)
+
+  jcenter = findfirst(j -> !hassameinds(siteinds(ψ, j), siteinds(ϕ, j)), 1:n)
+
+  Tᴸ = ITensor(1)
+  for j in 1:jcenter
+    Tᴸ = Tᴸ * ψ[j] * ϕ[j]
   end
-  return T
+  Tᴿ = ITensor(1)
+  for j in reverse((jcenter + 1):length(ψ))
+    Tᴿ = Tᴿ * ψ[j] * ϕ[j]
+  end
+  return Tᴸ * Tᴿ
 end
 
 function _contract(::Type{MPO}, ψ::MPS, ϕ::MPS; kwargs...)
