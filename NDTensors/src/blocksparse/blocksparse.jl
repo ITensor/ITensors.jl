@@ -88,6 +88,9 @@ eltype(::Type{BlockSparse{T}}) where {T} = eltype(T)
 
 dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
 
+can_contract(T1::Type{<:Dense}, T2::Type{<:BlockSparse}) = false
+can_contract(T1::Type{<:BlockSparse}, T2::Type{<:Dense}) = can_contract(T2, T1)
+
 function promote_rule(
   ::Type{<:BlockSparse{ElT1,VecT1,N}}, ::Type{<:BlockSparse{ElT2,VecT2,N}}
 ) where {ElT1,ElT2,VecT1,VecT2,N}

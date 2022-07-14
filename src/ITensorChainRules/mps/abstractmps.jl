@@ -120,3 +120,22 @@ function rrule(
   end
   return y, apply_pullback
 end
+
+function rrule(
+  config::RuleConfig{>:HasReverseMode},
+  ::typeof(map),
+  f,
+  x::Union{MPS,MPO};
+  set_limits::Bool=true,
+)
+  y_data, pullback_data = rrule_via_ad(config, map, f, ITensors.data(x))
+  function map_pullback(ȳ)
+    dmap, df, dx_data = pullback_data(ȳ)
+    return dmap, df, MPS(dx_data)
+  end
+  y = typeof(x)(y_data)
+  if !set_limits
+    y = ITensors.set_ortho_lims(y, ortho_lims(x))
+  end
+  return y, map_pullback
+end

@@ -8,6 +8,7 @@ using LinearAlgebra
 using StaticArrays
 using HDF5
 using Requires
+using SimpleTraits
 using Strided
 using TimerOutputs
 using TupleTools
@@ -33,6 +34,7 @@ include("tupletools.jl")
 include("dims.jl")
 include("tensorstorage.jl")
 include("tensor.jl")
+include("generic_tensor_operations.jl")
 include("contraction_logic.jl")
 include("dense.jl")
 include("symmetric.jl")

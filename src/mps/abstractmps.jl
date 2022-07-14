@@ -61,8 +61,8 @@ real(ψ::AbstractMPS) = real.(ψ)
 imag(ψ::AbstractMPS) = imag.(ψ)
 conj(ψ::AbstractMPS) = conj.(ψ)
 
-function convert_leaf_eltype(ElType::Type, ψ::AbstractMPS)
-  return set_data(ψ, convert_leaf_eltype(ElType, data(ψ)))
+function convert_leaf_eltype(eltype::Type, ψ::AbstractMPS)
+  return map(ψᵢ -> convert_leaf_eltype(eltype, ψᵢ), ψ; set_limits=false)
 end
 
 """
