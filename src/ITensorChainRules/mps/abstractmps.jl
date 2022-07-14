@@ -39,7 +39,6 @@ end
 
 # TODO: Define a more general version in ITensors.jl
 function _contract(::Type{ITensor}, ψ::Union{MPS,MPO}, ϕ::Union{MPS,MPO}; kwargs...)
-
   n = length(ψ)
   @assert length(ϕ) == length(ψ)
 
