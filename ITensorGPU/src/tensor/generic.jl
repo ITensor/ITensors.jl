@@ -1,4 +1,5 @@
 cpu(x::Vector) = x
+cpu(x::CuVector) = adapt(Vector{eltype(x)}, x)
 cpu(x::TensorStorage) = setdata(x, cpu(data(x)))
 cpu(x::Tensor) = setstorage(x, cpu(storage(x)))
 

@@ -1,6 +1,7 @@
 module ITensorGPU
 
 using CUDA
+using CUDA.Adapt
 using CUDA.CUTENSOR
 using CUDA.CUBLAS
 using CUDA.CUSOLVER
