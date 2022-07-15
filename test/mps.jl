@@ -197,6 +197,16 @@ include("util.jl")
     @test norm(phic[4]) ≈ 1.0
   end
 
+  @testset "randomMPS bond dimensions" begin
+    phi = randomMPS(ComplexF64, sites, 50)
+    expected_dims = [2, 4, 8, 16, 32, 16, 8, 4, 2]
+
+    for i in 1:9
+      l = linkind(phi, i)
+      @test dim(l) == expected_dims[i]
+    end
+  end
+  
   @testset "randomMPS with chi>1" for linkdims in [1, 4]
     phi = randomMPS(Float32, sites; linkdims)
     @test LinearAlgebra.promote_leaf_eltypes(phi) === Float32
@@ -482,7 +492,8 @@ include("util.jl")
 
     ϕ2 = +(ψ1, ψ2; alg="directsum")
     for j in 1:8
-      @test linkdim(ϕ2, j) == χ1 + χ2
+      #@test linkdim(ϕ2, j) == χ1 + χ2
+      @test linkdim(ϕ2, j) == linkdim(ψ1, j) + linkdim(ψ2, j)
     end
     @test inner(ϕ2, ψ1) + inner(ϕ2, ψ2) ≈ inner(ϕ2, ϕ2)
   end

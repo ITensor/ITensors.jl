@@ -148,15 +148,28 @@ function randomCircuitMPS(
 
   l = Vector{Index}(undef, N)
 
+  # Compute the bond dimension for each link.
+  # It should be the the minimum of the product of local
+  # Hilbert space dimensions taken from either end of the chain
+  # or the `linkdim`.
+  maxdims = Vector{Int}(undef, N - 1)
+  maxdims[1] = min(dim(sites[1]), linkdim)
+  for i in 2:(N - 1)
+    maxdims[i] = min(maxdims[i - 1] * dim(sites[i]), linkdim)
+  end
+  maxdims[N - 1] = min(dim(sites[N]), maxdims[N - 1])
+  for i in (N - 2):-1:1
+    maxdims[i] = min(dim(sites[i + 1]) * maxdims[i + 1], maxdims[i])
+  end
+
   d = dim(sites[N])
-  chi = min(linkdim, d)
+  chi = maxdims[N - 1]
   l[N - 1] = Index(chi, "Link,l=$(N-1)")
   O = NDTensors.random_unitary(ElT, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
   for j in (N - 1):-1:2
-    chi *= dim(sites[j])
-    chi = min(linkdim, chi)
+    chi = maxdims[j - 1]
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
     O = NDTensors.random_unitary(ElT, chi, dim(sites[j]) * dim(l[j]))
     T = reshape(O, (chi, dim(sites[j]), dim(l[j])))
