@@ -3,6 +3,12 @@
 julia_version = "1.7.3"
 manifest_format = "2.0"
 
+[[deps.Adapt]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "af92965fb30777147966f58acb05da51c5616b5f"
+uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
+version = "3.3.3"
+
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 
@@ -26,9 +32,9 @@ version = "0.2.6"
 
 [[deps.ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "ff38036fb7edc903de4e79f32067d8497508616b"
+git-tree-sha1 = "80ca332f6dcb2508adba68f22f551adb2d00a624"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.15.2"
+version = "1.15.3"
 
 [[deps.Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
@@ -70,6 +76,12 @@ version = "0.1.8"
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
+[[deps.Functors]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "a2657dd0f3e8a61dbe70fc7c122038bd33790af5"
+uuid = "d9f16b24-f501-4c13-a1f2-28368ffc5196"
+version = "0.3.0"
+
 [[deps.HDF5]]
 deps = ["Compat", "HDF5_jll", "Libdl", "Mmap", "Random", "Requires"]
 git-tree-sha1 = "9ffc57b9bb643bf3fce34f3daf9ff506ed2d8b7a"
@@ -83,7 +95,7 @@ uuid = "0234f1f7-429e-5d53-9886-15a909be8d59"
 version = "1.12.1+0"
 
 [[deps.ITensors]]
-deps = ["BitIntegers", "ChainRulesCore", "Compat", "Dictionaries", "HDF5", "IsApprox", "KrylovKit", "LinearAlgebra", "LinearMaps", "NDTensors", "PackageCompiler", "Pkg", "Printf", "Random", "Requires", "SerializedElementArrays", "SimpleTraits", "StaticArrays", "Strided", "TimerOutputs", "TupleTools", "Zeros", "ZygoteRules"]
+deps = ["Adapt", "BitIntegers", "ChainRulesCore", "Compat", "Dictionaries", "Functors", "HDF5", "IsApprox", "KrylovKit", "LinearAlgebra", "LinearMaps", "NDTensors", "PackageCompiler", "Pkg", "Printf", "Random", "Requires", "SerializedElementArrays", "SimpleTraits", "StaticArrays", "Strided", "TimerOutputs", "TupleTools", "Zeros", "ZygoteRules"]
 path = ".."
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 version = "0.3.18"
@@ -178,7 +190,7 @@ uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 uuid = "14a3606d-f60d-562e-9121-12d972cd8159"
 
 [[deps.NDTensors]]
-deps = ["Compat", "Dictionaries", "HDF5", "LinearAlgebra", "Random", "Requires", "SimpleTraits", "StaticArrays", "Strided", "TimerOutputs", "TupleTools"]
+deps = ["Adapt", "Compat", "Dictionaries", "Functors", "HDF5", "LinearAlgebra", "Random", "Requires", "SimpleTraits", "StaticArrays", "Strided", "TimerOutputs", "TupleTools"]
 path = "../NDTensors"
 uuid = "23ae76d9-e61a-49c4-8f12-3f1a16adf9cf"
 version = "0.1.42"
