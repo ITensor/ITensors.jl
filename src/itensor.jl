@@ -153,6 +153,8 @@ Return a view of the TensorStorage of the ITensor.
 """
 storage(T::ITensor)::TensorStorage = storage(tensor(T))
 
+storagetype(x::ITensor) = storagetype(tensor(x))
+
 """
     data(T::ITensor)
 
@@ -164,6 +166,9 @@ functionality for ITensors that you would like
 that is not currently available.
 """
 data(T::ITensor) = NDTensors.data(tensor(T))
+
+NDTensors.data(x::ITensor) = data(x)
+datatype(x::ITensor) = datatype(tensor(x))
 
 similar(T::ITensor, args...)::ITensor = itensor(NDTensors.similar(tensor(T), args...))
 
@@ -712,6 +717,7 @@ function complex!(T::ITensor)
 end
 
 eltype(T::ITensor) = eltype(tensor(T))
+scalartype(x::ITensor) = eltype(x)
 
 """
     order(A::ITensor)

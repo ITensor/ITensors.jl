@@ -5,6 +5,9 @@ is_cu(X::Type{<:TensorStorage}) = is_cu(NDTensors.datatype(X))
 is_cu(X::Type{<:Tensor}) = is_cu(NDTensors.storagetype(X))
 is_cu(::Type{ITensor}) = error("Unknown")
 
+# Special cases
+is_cu(X::Type{<:Combiner}) = false
+
 is_cu(x::CuArray) = is_cu(typeof(x))
 is_cu(x::Array) = is_cu(typeof(x))
 is_cu(x::TensorStorage) = is_cu(typeof(x))

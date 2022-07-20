@@ -49,9 +49,11 @@ module ITensors
 #####################################
 # External packages
 #
+using Adapt
 using BitIntegers
 using ChainRulesCore
 using Compat
+using Functors
 using HDF5
 using IsApprox
 using KrylovKit
@@ -133,6 +135,7 @@ include("itensor.jl")
 include("broadcast.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
+include("adapt.jl")
 
 #####################################
 # QNs
@@ -164,6 +167,7 @@ include("mps/projmps.jl")
 include("mps/projmpo_mps.jl")
 include("mps/observer.jl")
 include("mps/dmrg.jl")
+include("mps/adapt.jl")
 
 #####################################
 # Physics

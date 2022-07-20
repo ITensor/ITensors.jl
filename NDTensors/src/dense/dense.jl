@@ -76,10 +76,8 @@ similar(D::Dense) = Dense(similar(data(D)))
 
 similar(D::Dense, length::Int) = Dense(similar(data(D), length))
 
-function similar(
-  ::Type{<:Dense{ElT,VecT}}, length::Int
-) where {ElT,VecT<:AbstractArray{ElT}}
-  return Dense(similar(Vector{ElT}, length))
+function similar(storagetype::Type{<:Dense}, length::Int)
+  return Dense(similar(datatype(storagetype), length))
 end
 
 function similartype(::Type{StoreT}, ::Type{ElT}) where {StoreT<:Dense,ElT}
@@ -95,10 +93,12 @@ end
 
 similar(D::Dense, ::Type{T}) where {T<:Number} = Dense(similar(data(D), T))
 
-zeros(DenseT::Type{<:Dense{ElT}}, inds) where {ElT} = zeros(DenseT, dim(inds))
+zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
 
-# TODO: should this do something different for SubArray?
-zeros(::Type{<:Dense{ElT}}, dim::Int) where {ElT} = Dense{ElT}(dim)
+# Generic for handling `Vector` and `CuVector`
+function zeros(storagetype::Type{<:Dense}, dim::Int)
+  return fill!(similar(storagetype, dim), zero(eltype(storagetype)))
+end
 
 function promote_rule(
   ::Type{<:Dense{ElT1,VecT1}}, ::Type{<:Dense{ElT2,VecT2}}

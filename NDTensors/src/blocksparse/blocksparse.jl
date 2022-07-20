@@ -13,9 +13,17 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
 end
 
 function BlockSparse(
-  ::Type{ElT}, blockoffsets::BlockOffsets, dim::Integer; vargs...
-) where {ElT<:Number}
-  return BlockSparse(zeros(ElT, dim), blockoffsets; vargs...)
+  datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
+)
+  return BlockSparse(
+    fill!(similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
+  )
+end
+
+function BlockSparse(
+  eltype::Type{<:Number}, blockoffsets::BlockOffsets, dim::Integer; vargs...
+)
+  return BlockSparse(Vector{eltype}, blockoffsets, dim; vargs...)
 end
 
 function BlockSparse(x::Number, blockoffsets::BlockOffsets, dim::Integer; vargs...)

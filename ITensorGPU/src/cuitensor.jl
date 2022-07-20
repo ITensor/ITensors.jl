@@ -66,18 +66,7 @@ end
 
 cuITensor(A::Array{S}, inds...) where {S<:Number} = cu(ITensor(A, inds...))
 
-cu(A::ITensor) = itensor(cu(tensor(A)))
 cuITensor(A::ITensor) = cu(A)
-
-# Helpful for moving gate structures to GPU
-cu(A::Array{ITensor}) = map(cu, A)
-cu(A::Array{<:Array{ITensor}}) = map(cu, A)
-
-cpu(A::ITensor) = itensor(cpu(tensor(A)))
-
-# Helpful for moving gate structures to CPU
-cpu(A::Array{ITensor}) = map(cpu, A)
-cpu(A::Array{<:Array{ITensor}}) = map(cpu, A)
 
 function randomCuITensor(::Type{S}, inds::Indices) where {S<:Real}
   T = cuITensor(S, inds)

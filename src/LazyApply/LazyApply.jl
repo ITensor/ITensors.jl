@@ -30,8 +30,9 @@ struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
 end
 Applied(f, args::Tuple) = Applied(f, args, (;))
 
+materialize(x) = x
 function materialize(a::Applied)
-  return a.f(a.args...; a.kwargs...)
+  return a.f(materialize.(a.args)...; a.kwargs...)
 end
 
 function (a1::Applied == a2::Applied)
@@ -361,14 +362,23 @@ end
 show(io::IO, a::Exp) = show(io, MIME("text/plain"), a)
 
 function show(io::IO, m::MIME"text/plain", a::Applied)
-  print(io, a.f, "(\n")
-  for n in 1:length(a.args)
+  print(io, a.f, "(")
+  for n in eachindex(a.args)
     print(io, a.args[n])
     if n < length(a.args)
       print(io, ", ")
     end
   end
-  print(io, "\n)")
+  if !isempty(a.kwargs)
+    print(io, "; ")
+    for n in 1:length(a.kwargs)
+      print(io, keys(a.kwargs)[n], "=", a.kwargs[n])
+      if n < length(a.kwargs)
+        print(io, ", ")
+      end
+    end
+  end
+  print(io, ")")
   return nothing
 end
 show(io::IO, a::Applied) = show(io, MIME("text/plain"), a)

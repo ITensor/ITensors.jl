@@ -5,6 +5,7 @@ using CUDA.Adapt
 using CUDA.CUTENSOR
 using CUDA.CUBLAS
 using CUDA.CUSOLVER
+using Functors
 using LinearAlgebra
 using Random, Strided
 using TimerOutputs
@@ -15,7 +16,7 @@ using ITensors.NDTensors
 using Strided
 import CUDA: CuArray, CuMatrix, CuVector, cu
 import CUDA.CUTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
-
+import CUDA.Adapt: adapt_structure
 import CUDA.Mem: pin
 #=
 const devs = Ref{Vector{CUDAdrv.CuDevice}}()
@@ -86,12 +87,12 @@ import ITensors.NDTensors:
   _contract_scalar!,
   _contract_scalar_noperm!
 
-using ITensors.NDTensors: setdata, setstorage
+using ITensors.NDTensors: setdata, setstorage, cpu
 
 import Base.*, Base.permutedims!
 import Base: similar
 include("traits.jl")
-include("tensor/generic.jl")
+include("adapt.jl")
 include("tensor/cudense.jl")
 include("tensor/dense.jl")
 include("tensor/culinearalgebra.jl")

@@ -80,14 +80,14 @@ end
 
 MPS(sites::Vector{<:Index}, args...; kwargs...) = MPS(Float64, sites, args...; kwargs...)
 
-function randomU(s1::Index, s2::Index)
+function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)
     mdim = dim(s1) * dim(s2)
-    RM = randn(mdim, mdim)
+    RM = randn(eltype, mdim, mdim)
     Q, _ = NDTensors.qr_positive(RM)
     G = itensor(Q, dag(s1), dag(s2), s1', s2')
   else
-    M = randomITensor(QN(), s1', s2', dag(s1), dag(s2))
+    M = randomITensor(eltype, QN(), s1', s2', dag(s1), dag(s2))
     U, S, V = svd(M, (s1', s2'))
     u = commonind(U, S)
     v = commonind(S, V)
@@ -97,7 +97,7 @@ function randomU(s1::Index, s2::Index)
   return G
 end
 
-function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
+function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdim=1)
   if isone(length(sites))
     randn!(M[1])
     normalize!(M)
@@ -115,7 +115,13 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
     for b in brange
       s1 = sites[b]
       s2 = sites[b + db]
-      G = randomU(s1, s2)
+
+      @show eltype
+
+      G = randomU(eltype, s1, s2)
+
+      @show G
+
       T = noprime(G * M[b] * M[b + db])
       rinds = uniqueinds(M[b], M[b + db])
       U, S, V = svd(T, rinds; maxdim=linkdim, utags="Link,l=$(b-1)")
@@ -135,13 +141,13 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
 end
 
 function randomCircuitMPS(
-  ::Type{ElT}, sites::Vector{<:Index}, linkdim::Int; kwargs...
-) where {ElT<:Number}
+  eltype::Type{<:Number}, sites::Vector{<:Index}, linkdim::Int; kwargs...
+)
   N = length(sites)
   M = MPS(N)
 
   if N == 1
-    M[1] = ITensor(randn(ElT, dim(sites[1])), sites[1])
+    M[1] = ITensor(randn(eltype, dim(sites[1])), sites[1])
     M[1] /= norm(M[1])
     return M
   end
@@ -151,23 +157,23 @@ function randomCircuitMPS(
   d = dim(sites[N])
   chi = min(linkdim, d)
   l[N - 1] = Index(chi, "Link,l=$(N-1)")
-  O = NDTensors.random_unitary(ElT, chi, d)
+  O = NDTensors.random_unitary(eltype, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
   for j in (N - 1):-1:2
     chi *= dim(sites[j])
     chi = min(linkdim, chi)
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
-    O = NDTensors.random_unitary(ElT, chi, dim(sites[j]) * dim(l[j]))
+    O = NDTensors.random_unitary(eltype, chi, dim(sites[j]) * dim(l[j]))
     T = reshape(O, (chi, dim(sites[j]), dim(l[j])))
     M[j] = itensor(T, l[j - 1], sites[j], l[j])
   end
 
-  O = NDTensors.random_unitary(ElT, 1, dim(sites[1]) * dim(l[1]))
+  O = NDTensors.random_unitary(eltype, 1, dim(sites[1]) * dim(l[1]))
   l0 = Index(1, "Link,l=0")
   T = reshape(O, (1, dim(sites[1]), dim(l[1])))
   M[1] = itensor(T, l0, sites[1], l[1])
-  M[1] *= onehot(ElT, l0 => 1)
+  M[1] *= onehot(eltype, l0 => 1)
 
   M.llim = 0
   M.rlim = 2
@@ -211,10 +217,12 @@ function randomMPS(sites::Vector{<:Index}, state; linkdims::Integer=1)
   return randomMPS(Float64, sites, state; linkdims=linkdims)
 end
 
-function randomMPS(ElType::Type, sites::Vector{<:Index}, state; linkdims::Integer=1)::MPS
-  M = MPS(ElType, sites, state)
+function randomMPS(
+  eltype::Type{<:Number}, sites::Vector{<:Index}, state; linkdims::Integer=1
+)::MPS
+  M = MPS(eltype, sites, state)
   if linkdims > 1
-    randomizeMPS!(M, sites, linkdims)
+    randomizeMPS!(eltype, M, sites, linkdims)
   end
   return M
 end
@@ -309,7 +317,7 @@ psi = MPS(ComplexF64, sites, states)
 phi = MPS(sites, "Up")
 ```
 """
-function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
+function MPS(eltype::Type{<:Number}, sites::Vector{<:Index}, states_)
   if length(sites) != length(states_)
     throw(DimensionMismatch("Number of sites and and initial vals don't match"))
   end
@@ -318,7 +326,7 @@ function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
 
   if N == 1
     M[1] = state(sites[1], states_[1])
-    return M
+    return convert_leaf_eltype(eltype, M)
   end
 
   states = [state(sites[j], states_[j]) for j in 1:N]
@@ -337,16 +345,16 @@ function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
     links = [Index(1; tags="Link,l=$n") for n in 1:N]
   end
 
-  M[1] = ITensor(T, sites[1], links[1])
+  M[1] = ITensor(sites[1], links[1])
   M[1] += states[1] * state(links[1], 1)
   for n in 2:(N - 1)
-    M[n] = ITensor(T, dag(links[n - 1]), sites[n], links[n])
+    M[n] = ITensor(dag(links[n - 1]), sites[n], links[n])
     M[n] += state(dag(links[n - 1]), 1) * states[n] * state(links[n], 1)
   end
-  M[N] = ITensor(T, dag(links[N - 1]), sites[N])
+  M[N] = ITensor(dag(links[N - 1]), sites[N])
   M[N] += state(dag(links[N - 1]), 1) * states[N]
 
-  return M
+  return convert_leaf_eltype(eltype, M)
 end
 
 function MPS(
