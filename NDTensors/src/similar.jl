@@ -35,7 +35,9 @@ function similar(arraytype::Type{<:AbstractArray}, eltype::Type, size)
   return similar(similartype(arraytype, eltype), size)
 end
 
-similar(arraytype::Type{<:AbstractArray}, size) = similar(arraytype, eltype(arraytype), size)
+function similar(arraytype::Type{<:AbstractArray}, size)
+  return similar(arraytype, eltype(arraytype), size)
+end
 
 #
 # similartype returns the type of the object that would be returned by `similar`
