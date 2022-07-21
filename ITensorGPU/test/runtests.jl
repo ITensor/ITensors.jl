@@ -17,7 +17,7 @@ CUDA.allowscalar(false)
     "test_cumps.jl",
     "test_cuiterativesolvers.jl",
     "test_cutruncate.jl",
-    "test_pastaq.jl",
+    #"test_pastaq.jl",
   )
     println("Running $filename")
     include(filename)
