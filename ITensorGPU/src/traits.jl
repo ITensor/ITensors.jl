@@ -10,7 +10,9 @@ is_cu(::Type{<:Array}) = false
 is_cu(::Type{<:CuArray}) = true
 
 # Handle Array wrappers like `ReshapedArray`.
-@traitfn is_cu(arraytype::Type{T}) where {T;IsWrappedArray{T}} = is_cu(parenttype(arraytype))
+@traitfn function is_cu(arraytype::Type{T}) where {T; IsWrappedArray{T}}
+  return is_cu(parenttype(arraytype))
+end
 
 is_cu(X::Type{<:TensorStorage}) = is_cu(NDTensors.datatype(X))
 is_cu(X::Type{<:Tensor}) = is_cu(NDTensors.storagetype(X))

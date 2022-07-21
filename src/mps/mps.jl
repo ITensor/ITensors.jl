@@ -673,22 +673,25 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   for (ni, i) in enumerate(sites[1:(end - 1)])
     while pL < i - 1
       pL += 1
-      L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+      sᵢ = siteind(psi, pL)
+      L = (L * psi[pL]) * prime(dag(psi[pL]), sᵢ)
     end
 
     Li = L * psi[i]
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
-    C[ni, ni] =
-      scalar((Li * op(onsiteOp, s, i)) * prime(dag(psi[i]), not(rind))) / norm2_psi
+    oᵢ = adapt(datatype(Li), op(onsiteOp, s, i))
+    C[ni, ni] = (prime(dag(psi[i]), !rind) * oᵢ * Li)[] / norm2_psi
 
     # Get j > i correlations
     if !using_auto_fermion() && fermionic2
       Op1 = "$Op1 * F"
     end
 
-    Li12 = (Li * op(Op1, s, i)) * dag(prime(psi[i]))
+    oᵢ = adapt(datatype(Li), op(Op1, s, i))
+
+    Li12 = dag(psi[i])' * oᵢ * Li
     pL12 = i
 
     for (n, j) in enumerate(sites[(ni + 1):end])
@@ -697,9 +700,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       while pL12 < j - 1
         pL12 += 1
         if !using_auto_fermion() && fermionic2
-          Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
+          oᵢ = adapt(datatype(psi[pL12]), op("F", s[pL12]))
+          Li12 *= oᵢ * dag(psi[pL12])'
         else
-          Li12 *= dag(prime(psi[pL12], "Link"))
+          sᵢ = siteind(psi, pL12)
+          Li12 *= prime(dag(psi[pL12]), !sᵢ)
         end
         Li12 *= psi[pL12]
       end
@@ -707,7 +712,9 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       lind = commonind(psi[j], Li12)
       Li12 *= psi[j]
 
-      val = (Li12 * op(Op2, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
+      oⱼ = adapt(datatype(Li12), op(Op2, s, j))
+      sⱼ = siteind(psi, j)
+      val = prime(dag(psi[j]), (sⱼ, lind)) * (oⱼ * Li12)
       C[ni, nj] = scalar(val) / norm2_psi
       if is_cm_hermitian
         C[nj, ni] = conj(C[ni, nj])
@@ -715,9 +722,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
 
       pL12 += 1
       if !using_auto_fermion() && fermionic2
-        Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
+        oᵢ = adapt(datatype(psi[pL12]), op("F", s[pL12]))
+        Li12 *= oᵢ * dag(psi[pL12])'
       else
-        Li12 *= dag(prime(psi[pL12], "Link"))
+        sᵢ = siteind(psi, pL12)
+        Li12 *= prime(dag(psi[pL12]), !sᵢ)
       end
       @assert pL12 == j
     end #for j
@@ -729,7 +738,8 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       if !using_auto_fermion() && fermionic1
         Op2 = "$Op2 * F"
       end
-      Li21 = (Li * op(Op2, s, i)) * dag(prime(psi[i]))
+      oᵢ = adapt(datatype(psi[i]), op(Op2, s, i))
+      Li21 = (Li * oᵢ) * dag(psi[i])'
       pL21 = i
       if !using_auto_fermion() && fermionic1
         Li21 = -Li21 #Required because we swapped fermionic ops, instead of sweeping right to left.
@@ -741,9 +751,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
         while pL21 < j - 1
           pL21 += 1
           if !using_auto_fermion() && fermionic1
-            Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
+            oᵢ = adapt(datatype(psi[pL21]), op("F", s[pL21]))
+            Li21 *= oᵢ * dag(psi[pL21])'
           else
-            Li21 *= dag(prime(psi[pL21], "Link"))
+            sᵢ = siteind(psi, pL21)
+            Li21 *= prime(dag(si[pL21]), !sᵢ)
           end
           Li21 *= psi[pL21]
         end
@@ -751,14 +763,18 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
         lind = commonind(psi[j], Li21)
         Li21 *= psi[j]
 
-        val = (Li21 * op(Op1, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
-        C[nj, ni] = scalar(val) / norm2_psi
+        oⱼ = adapt(datatype(psi[j]), op(Op1, s, j))
+        sⱼ = siteind(psi, j)
+        val = (prime(dag(psi[j]), (sⱼ, lind)) * (oⱼ * Li21))[]
+        C[nj, ni] = val / norm2_psi
 
         pL21 += 1
         if !using_auto_fermion() && fermionic1
-          Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
+          oᵢ = adapt(datatype(psi[pL21]), op("F", s[pL21]))
+          Li21 *= oᵢ * dag(psi[pL21])'
         else
-          Li21 *= dag(prime(psi[pL21], "Link"))
+          sᵢ = siteind(psi, pL21)
+          Li21 *= prime(dag(psi[pL21]), !sᵢ)
         end
         @assert pL21 == j
       end #for j
@@ -766,19 +782,22 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
     end #if is_cm_hermitian
 
     pL += 1
-    L = Li * dag(prime(psi[i], "Link"))
+    sᵢ = siteind(psi, i)
+    L = Li * prime(dag(psi[i]), !sᵢ)
   end #for i
 
   # Get last diagonal element of C
   i = end_site
   while pL < i - 1
     pL += 1
-    L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+    sᵢ = siteind(psi, pL)
+    L = L * psi[pL] * prime(dag(psi[pL]), !sᵢ)
   end
   lind = commonind(psi[i], psi[i - 1])
-  C[Nb, Nb] =
-    scalar(L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)) /
-    norm2_psi
+  oᵢ = adapt(datatype(psi[i]), op(onsiteOp, s, i))
+  sᵢ = siteind(psi, i)
+  val = (L * (oᵢ * psi[i]) * prime(dag(psi[i]), (sᵢ, lind)))[]
+  C[Nb, Nb] = val / norm2_psi
 
   return C
 end
@@ -847,7 +866,8 @@ function expect(psi::MPS, ops; kwargs...)
   for (entry, j) in enumerate(site_range)
     orthogonalize!(psi, j)
     for (n, opname) in enumerate(ops)
-      val = scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j]))) / norm2_psi
+      oⱼ = adapt(datatype(psi[j]), op(opname, s[j]))
+      val = inner(psi[j], apply(oⱼ, psi[j])) / norm2_psi
       ex[n][entry] = (el_types[n] <: Real) ? real(val) : val
     end
   end

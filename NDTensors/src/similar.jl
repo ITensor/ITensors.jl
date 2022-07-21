@@ -40,7 +40,7 @@ parenttype(::Type{<:SubArray{<:Any,<:Any,P}}) where {P} = P
 
 # In general define NDTensors.similar = Base.similar
 similar(a::Array, args...) = Base.similar(a, args...)
-@traitfn similar(a::T, args...) where {T;IsWrappedArray{T}} = Base.similar(a, args...)
+@traitfn similar(a::T, args...) where {T; IsWrappedArray{T}} = Base.similar(a, args...)
 
 similar(::Type{<:Array{T}}, dims) where {T} = Array{T,length(dims)}(undef, dims)
 
@@ -61,14 +61,16 @@ end
 # This is to help with code that is generic to different storage types.
 similartype(arraytype::Type{<:Array}, eltype::Type) = Array{eltype,ndims(arraytype)}
 
-@traitfn function similartype(arraytype::Type{T}, eltype::Type, dims::Tuple) where {T;IsWrappedArray{T}}
+@traitfn function similartype(
+  arraytype::Type{T}, eltype::Type, dims::Tuple
+) where {T; IsWrappedArray{T}}
   return similartype(parenttype(arraytype), eltype, dims)
 end
 
-@traitfn function similartype(arraytype::Type{T}, eltype::Type) where {T;IsWrappedArray{T}}
+@traitfn function similartype(arraytype::Type{T}, eltype::Type) where {T; IsWrappedArray{T}}
   return similartype(parenttype(arraytype), eltype)
 end
 
-@traitfn function similartype(arraytype::Type{T}) where {T;IsWrappedArray{T}}
+@traitfn function similartype(arraytype::Type{T}) where {T; IsWrappedArray{T}}
   return similartype(parenttype(arraytype))
 end
