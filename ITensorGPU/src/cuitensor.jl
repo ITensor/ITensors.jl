@@ -64,7 +64,9 @@ function CuArray{<:Any,N}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {N,ElT
   return CuArray{ElTA,N}(as, A)
 end
 
-cuITensor(A::Array{S}, inds...) where {S<:Number} = cu(ITensor(A, inds...))
+cuITensor(data::Array, inds...) = cu(ITensor(data, inds...))
+
+cuITensor(data::CuArray, inds...) = ITensor(data, inds...)
 
 cuITensor(A::ITensor) = cu(A)
 
