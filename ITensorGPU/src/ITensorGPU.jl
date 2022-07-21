@@ -87,7 +87,7 @@ import ITensors.NDTensors:
   _contract_scalar!,
   _contract_scalar_noperm!
 
-using ITensors.NDTensors: setdata, setstorage, cpu
+using ITensors.NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
 
 import Base.*, Base.permutedims!
 import Base: similar

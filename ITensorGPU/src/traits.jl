@@ -1,26 +1,31 @@
+# Trait type indicating the object is either on CPU
+# or on a CUDA device (for example a type that doesn't
+# have any data, like a Combiner or uniform Diagonal
+# tensor).
 struct CPUorCUDA end
 
 is_cu(::Type{<:Number}) = CPUorCUDA()
-is_cu(::NoData) = CPUorCUDA()
+is_cu(::Type{NDTensors.NoData}) = CPUorCUDA()
 is_cu(::Type{<:Array}) = false
 is_cu(::Type{<:CuArray}) = true
+
+# Handle Array wrappers like `ReshapedArray`.
+@traitfn is_cu(arraytype::Type{T}) where {T;IsWrappedArray{T}} = is_cu(parenttype(arraytype))
 
 is_cu(X::Type{<:TensorStorage}) = is_cu(NDTensors.datatype(X))
 is_cu(X::Type{<:Tensor}) = is_cu(NDTensors.storagetype(X))
 is_cu(::Type{ITensor}) = error("Unknown")
 
-# Special cases
-is_cu(X::Type{<:Combiner}) = false
-
 is_cu(x::CuArray) = is_cu(typeof(x))
 is_cu(x::Array) = is_cu(typeof(x))
+
 is_cu(x::TensorStorage) = is_cu(typeof(x))
 is_cu(x::Tensor) = is_cu(typeof(x))
-is_cu(x::ITensor) = is_cu(tensor(x))
+is_cu(x::ITensor) = is_cu(typeof(tensor(x)))
 
-# mixed_cu_cpu(T1::Type, T2::Type{<:Combiner}) = false
-# mixed_cu_cpu(T1::Type{<:Combiner}, T2::Type) = mixed_cu_cpu(T2, T1)
-
+mixed_cu_cpu(::Bool, ::CPUorCUDA) = false
+mixed_cu_cpu(::CPUorCUDA, ::Bool) = false
+mixed_cu_cpu(::CPUorCUDA, ::CPUorCUDA) = false
 mixed_cu_cpu(is_cu1::Bool, is_cu2::Bool) = (is_cu1 ⊻ is_cu2)
 mixed_cu_cpu(T1::Type, T2::Type) = mixed_cu_cpu(is_cu(T1), is_cu(T2))
 

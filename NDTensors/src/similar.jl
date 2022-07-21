@@ -4,31 +4,44 @@
 # More extensive than Base.similar
 #
 
-# A union type of AbstractArrays that are wrappers that define `Base.parent`.
-const WrappedArray{T,AW} = Union{
-  ReshapedArray{T,<:Any,AW},
-  Transpose{T,AW},
-  Adjoint{T,AW},
-  Symmetric{T,AW},
-  Hermitian{T,AW},
-  UpperTriangular{T,AW},
-  LowerTriangular{T,AW},
-  UnitUpperTriangular{T,AW},
-  UnitLowerTriangular{T,AW},
-  Diagonal{T,AW},
-  SubArray{T,<:Any,AW},
-}
+# Trait indicating if the type is an array wrapper
+# Assumes that is implements `Base.parent`.
+
+@traitdef IsWrappedArray{T}
+
+#! format: off
+@traitimpl IsWrappedArray{T} <- is_wrapped_array(T)
+#! format: on
+
+is_wrapped_array(::Type) = false
+is_wrapped_array(::Type{<:ReshapedArray}) = true
+is_wrapped_array(::Type{<:Transpose}) = true
+is_wrapped_array(::Type{<:Adjoint}) = true
+is_wrapped_array(::Type{<:Symmetric}) = true
+is_wrapped_array(::Type{<:Hermitian}) = true
+is_wrapped_array(::Type{<:UpperTriangular}) = true
+is_wrapped_array(::Type{<:LowerTriangular}) = true
+is_wrapped_array(::Type{<:UnitUpperTriangular}) = true
+is_wrapped_array(::Type{<:UnitLowerTriangular}) = true
+is_wrapped_array(::Type{<:Diagonal}) = true
+is_wrapped_array(::Type{<:SubArray}) = true
+
+parenttype(::Type{<:ReshapedArray{<:Any,<:Any,P}}) where {P} = P
+parenttype(::Type{<:Transpose{<:Any,P}}) where {P} = P
+parenttype(::Type{<:Adjoint{<:Any,P}}) where {P} = P
+parenttype(::Type{<:Symmetric{<:Any,P}}) where {P} = P
+parenttype(::Type{<:Hermitian{<:Any,P}}) where {P} = P
+parenttype(::Type{<:UpperTriangular{<:Any,P}}) where {P} = P
+parenttype(::Type{<:LowerTriangular{<:Any,P}}) where {P} = P
+parenttype(::Type{<:UnitUpperTriangular{<:Any,P}}) where {P} = P
+parenttype(::Type{<:UnitLowerTriangular{<:Any,P}}) where {P} = P
+parenttype(::Type{<:Diagonal{<:Any,P}}) where {P} = P
+parenttype(::Type{<:SubArray{<:Any,<:Any,P}}) where {P} = P
 
 # In general define NDTensors.similar = Base.similar
 similar(a::Array, args...) = Base.similar(a, args...)
-similar(a::WrappedArray, args...) = Base.similar(a, args...)
+@traitfn similar(a::T, args...) where {T;IsWrappedArray{T}} = Base.similar(a, args...)
 
-# XXX: this is type piracy but why doesn't base have something like this?
-# This type piracy is pretty bad, consider making an internal `NDTensors.similar` function.
-# Currently Base gives:
-# julia> similar(Matrix{Float64}, 2)
-# ERROR: MethodError: no method matching Matrix{Float64}(::UndefInitializer, ::Tuple{Int64})
-# [...]
 similar(::Type{<:Array{T}}, dims) where {T} = Array{T,length(dims)}(undef, dims)
 
 function similar(arraytype::Type{<:AbstractArray}, eltype::Type, size)
@@ -48,18 +61,14 @@ end
 # This is to help with code that is generic to different storage types.
 similartype(arraytype::Type{<:Array}, eltype::Type) = Array{eltype,ndims(arraytype)}
 
-#similartype(::Type{LinearAlgebra.Adjoint{Float64, Matrix{Float64}}}, ::Type{Float64})
-
-parenttype(::Type{<:WrappedArray{<:Any,P}}) where {P} = P
-
-function similartype(arraytype::Type{<:WrappedArray}, eltype::Type, dims::Tuple)
+@traitfn function similartype(arraytype::Type{T}, eltype::Type, dims::Tuple) where {T;IsWrappedArray{T}}
   return similartype(parenttype(arraytype), eltype, dims)
 end
 
-function similartype(::Type{ArrayT}, eltype::Type) where {ArrayT<:WrappedArray}
-  return similartype(parenttype(ArrayT), eltype)
+@traitfn function similartype(arraytype::Type{T}, eltype::Type) where {T;IsWrappedArray{T}}
+  return similartype(parenttype(arraytype), eltype)
 end
 
-function similartype(::Type{ArrayT}) where {ArrayT<:WrappedArray}
-  return similartype(parenttype(ArrayT))
+@traitfn function similartype(arraytype::Type{T}) where {T;IsWrappedArray{T}}
+  return similartype(parenttype(arraytype))
 end
