@@ -115,13 +115,7 @@ function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, l
     for b in brange
       s1 = sites[b]
       s2 = sites[b + db]
-
-      @show eltype
-
       G = randomU(eltype, s1, s2)
-
-      @show G
-
       T = noprime(G * M[b] * M[b + db])
       rinds = uniqueinds(M[b], M[b + db])
       U, S, V = svd(T, rinds; maxdim=linkdim, utags="Link,l=$(b-1)")

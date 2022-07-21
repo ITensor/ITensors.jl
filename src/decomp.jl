@@ -98,13 +98,13 @@ function svd(A::ITensor, Linds...; kwargs...)
   Ris_original = Ris
   if isempty(Lis_original)
     α = trivial_index(Ris)
-    vLα = onehot(α => 1)
+    vLα = onehot(eltype(A), α => 1)
     A *= vLα
     Lis = [α]
   end
   if isempty(Ris_original)
     α = trivial_index(Lis)
-    vRα = onehot(α => 1)
+    vRα = onehot(eltype(A), α => 1)
     A *= vRα
     Ris = [α]
   end
@@ -340,13 +340,13 @@ function qr(A::ITensor, Linds...; kwargs...)
   Ris_original = Ris
   if isempty(Lis_original)
     α = trivial_index(Ris)
-    vLα = onehot(α => 1)
+    vLα = onehot(eltype(A), α => 1)
     A *= vLα
     Lis = [α]
   end
   if isempty(Ris_original)
     α = trivial_index(Lis)
-    vRα = onehot(α => 1)
+    vRα = onehot(eltype(A), α => 1)
     A *= vRα
     Ris = [α]
   end

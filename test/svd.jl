@@ -72,15 +72,19 @@ include("util.jl")
     @test norm(U * S * V - T) / norm(T) < 1E-10
   end
 
-  @testset "svd with empty left or right indices" for space in
-                                                      (2, [QN(0, 2) => 1, QN(1, 2) => 1]),
-    cutoff in (nothing, 1e-15)
+  @testset "svd with empty left or right indices" for
+    space in (2, [QN(0, 2) => 1, QN(1, 2) => 1]),
+    cutoff in (nothing, 1e-15),
+    _eltype in (Float32, Float64, ComplexF32, ComplexF64)
 
     i = Index(space)
     j = Index(space)
-    A = randomITensor(i, j)
+    A = randomITensor(_eltype, i, j)
 
     U, S, V = svd(A, i, j; cutoff)
+    @test eltype(U) <: _eltype
+    @test eltype(S) <: real(_eltype)
+    @test eltype(V) <: _eltype
     @test U * S * V ≈ A
     @test hassameinds(uniqueinds(U, S), A)
     @test isempty(uniqueinds(V, S))
@@ -92,6 +96,9 @@ include("util.jl")
     @test order(V) == 1
 
     U, S, V = svd(A, (); cutoff)
+    @test eltype(U) <: _eltype
+    @test eltype(S) <: real(_eltype)
+    @test eltype(V) <: _eltype
     @test U * S * V ≈ A
     @test hassameinds(uniqueinds(V, S), A)
     @test isempty(uniqueinds(U, S))
