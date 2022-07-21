@@ -4,48 +4,48 @@
 julia&gt; # This is a short code showing how a combiner
        # can be used to &quot;flip&quot; the direction of an Index
        i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)
-(dim=5|id=683|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=984|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; j = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;)
-(dim=5|id=394|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=564|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; A = randomITensor(i, dag(j))
 ITensor ord=2
-(dim=5|id=683|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=984|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=394|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=564|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
 
 julia&gt; C = combiner(i, dag(j); tags = &quot;c&quot;, dir = dir(i))
 ITensor ord=3
-(dim=25|id=141|&quot;c&quot;) &lt;Out&gt;
+(dim=25|id=362|&quot;c&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 6
  2: QN(0) =&gt; 13
  3: QN(1) =&gt; 6
-(dim=5|id=683|&quot;i&quot;) &lt;In&gt;
+(dim=5|id=984|&quot;i&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=394|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=564|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 NDTensors.Combiner
 
 julia&gt; inds(A)
-((dim=5|id=683|&quot;i&quot;) &lt;Out&gt;
+((dim=5|id=984|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3, (dim=5|id=394|&quot;j&quot;) &lt;In&gt;
+ 2: QN(1) =&gt; 3, (dim=5|id=564|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3)
 
 julia&gt; inds(A * C)
-((dim=25|id=141|&quot;c&quot;) &lt;Out&gt;
+((dim=25|id=362|&quot;c&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 6
  2: QN(0) =&gt; 13
  3: QN(1) =&gt; 6,)</code></pre><p>You can see that the combiner reshapes the indices of <code>A</code> into a single Index that contains the tensor product of the two input spaces. The spaces have size <code>QN(-1) =&gt; 2 * 3</code>, <code>QN(0) =&gt; 2 * 2 + 3 * 3</code>, and <code>QN(0) =&gt; 2 * 3</code> (determined from all of the combinations of combining the sectors of the different indices, where the QNs are added and the block dimensions are multiplied). The ordering of the sectors is determined internally by ITensors.jl.</p><p>You can also use a combiner on a single Index, which can be helpful for changing the direction of an Index or combining multiple sectors of the same symmetry into a single sector:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
@@ -53,51 +53,51 @@ julia&gt; inds(A * C)
 julia&gt; # This is a short code showing how a combiner
        # can be used to &quot;flip&quot; the direction of an Index
        i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)
-(dim=5|id=328|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=859|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; j = dag(Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;))
-(dim=5|id=192|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=20|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; A = randomITensor(i, j)
 ITensor ord=2
-(dim=5|id=328|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=859|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=192|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=20|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
 
 julia&gt; C = combiner(j; tags = &quot;jflip&quot;, dir = -dir(j))
 ITensor ord=2
-(dim=5|id=455|&quot;jflip&quot;) &lt;Out&gt;
+(dim=5|id=23|&quot;jflip&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 3
  2: QN(0) =&gt; 2
-(dim=5|id=192|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=20|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 NDTensors.Combiner
 
 julia&gt; inds(A)
-((dim=5|id=328|&quot;i&quot;) &lt;Out&gt;
+((dim=5|id=859|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3, (dim=5|id=192|&quot;j&quot;) &lt;In&gt;
+ 2: QN(1) =&gt; 3, (dim=5|id=20|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3)
 
 julia&gt; inds(A * C)
-((dim=5|id=455|&quot;jflip&quot;) &lt;Out&gt;
+((dim=5|id=23|&quot;jflip&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 3
- 2: QN(0) =&gt; 2, (dim=5|id=328|&quot;i&quot;) &lt;Out&gt;
+ 2: QN(0) =&gt; 2, (dim=5|id=859|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3)</code></pre><p>Unless you are writing very specialized custom code with symmetric tensors, this is generally not needed.</p><h2 id="Block-Sparsity-and-Quantum-Numbers"><a class="docs-heading-anchor" href="#Block-Sparsity-and-Quantum-Numbers">Block Sparsity and Quantum Numbers</a><a id="Block-Sparsity-and-Quantum-Numbers-1"></a><a class="docs-heading-anchor-permalink" href="#Block-Sparsity-and-Quantum-Numbers" title="Permalink"></a></h2><p>In general, not all blocks that are allowed according to the flux will actually exist in the tensor (which helps in many cases for efficiency). Usually this would happen when the tensor is first constructed and not all blocks are explicitly set:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
 
 julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])
-(dim=2|id=433) &lt;Out&gt;
+(dim=2|id=37) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 
@@ -107,10 +107,10 @@ julia&gt; A[2, 2] = 1.0;
 
 julia&gt; @show A;
 A = ITensor ord=2
-Dim 1: (dim=2|id=433)&#39; &lt;Out&gt;
+Dim 1: (dim=2|id=37)&#39; &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=2|id=433) &lt;In&gt;
+Dim 2: (dim=2|id=37) &lt;In&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
@@ -123,9 +123,9 @@ julia&gt; D, U = eigen(A; ishermitian=true);
 
 julia&gt; @show D;
 D = ITensor ord=2
-Dim 1: (dim=1|id=555|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
+Dim 1: (dim=1|id=142|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
  1: QN(1) =&gt; 1
-Dim 2: (dim=1|id=555|&quot;Link,eigen&quot;) &lt;In&gt;
+Dim 2: (dim=1|id=142|&quot;Link,eigen&quot;) &lt;In&gt;
  1: QN(1) =&gt; 1
 NDTensors.DiagBlockSparse{Float64, Vector{Float64}, 2}
  1×1
@@ -135,10 +135,10 @@ Block(1, 1)
 
 julia&gt; @show U;
 U = ITensor ord=2
-Dim 1: (dim=2|id=433) &lt;Out&gt;
+Dim 1: (dim=2|id=37) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=1|id=555|&quot;Link,eigen&quot;) &lt;In&gt;
+Dim 2: (dim=1|id=142|&quot;Link,eigen&quot;) &lt;In&gt;
  1: QN(1) =&gt; 1
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
  2×1
@@ -147,7 +147,7 @@ Block(2, 1)
  1.0</code></pre><p>If we had set <code>A[1, 1] = 0.0</code> as well, then all of the allowed blocks (according to the flux <code>QN(0)</code> would exist and would be included in the eigendecomposition:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
 
 julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])
-(dim=2|id=29) &lt;Out&gt;
+(dim=2|id=17) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 
@@ -159,10 +159,10 @@ julia&gt; A[1, 1] = 0.0;
 
 julia&gt; @show A;
 A = ITensor ord=2
-Dim 1: (dim=2|id=29)&#39; &lt;Out&gt;
+Dim 1: (dim=2|id=17)&#39; &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=2|id=29) &lt;In&gt;
+Dim 2: (dim=2|id=17) &lt;In&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
@@ -179,10 +179,10 @@ julia&gt; D, U = eigen(A; ishermitian=true);
 
 julia&gt; @show D;
 D = ITensor ord=2
-Dim 1: (dim=2|id=66|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
+Dim 1: (dim=2|id=385|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=2|id=66|&quot;Link,eigen&quot;) &lt;In&gt;
+Dim 2: (dim=2|id=385|&quot;Link,eigen&quot;) &lt;In&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 NDTensors.DiagBlockSparse{Float64, Vector{Float64}, 2}
@@ -197,10 +197,10 @@ Block(2, 2)
 
 julia&gt; @show U;
 U = ITensor ord=2
-Dim 1: (dim=2|id=29) &lt;Out&gt;
+Dim 1: (dim=2|id=17) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=2|id=66|&quot;Link,eigen&quot;) &lt;In&gt;
+Dim 2: (dim=2|id=385|&quot;Link,eigen&quot;) &lt;In&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
@@ -214,12 +214,12 @@ Block(2, 2)
  1.0</code></pre><p>&quot;Missing&quot; blocks can also occur with tensor contractions, since the final blocks of the output tensor are made from combinations of contractions of blocks from the input tensors, and there is no guarantee that all flux-consistent blocks will end up in the result:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
 
 julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])
-(dim=2|id=291) &lt;Out&gt;
+(dim=2|id=610) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 
 julia&gt; j = Index([QN(0) =&gt; 1])
-(dim=1|id=313) &lt;Out&gt;
+(dim=1|id=575) &lt;Out&gt;
  1: QN(0) =&gt; 1
 
 julia&gt; A = ITensor(i, dag(j));
@@ -228,10 +228,10 @@ julia&gt; A[2, 1] = 1.0;
 
 julia&gt; @show A;
 A = ITensor ord=2
-Dim 1: (dim=2|id=291) &lt;Out&gt;
+Dim 1: (dim=2|id=610) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=1|id=313) &lt;In&gt;
+Dim 2: (dim=1|id=575) &lt;In&gt;
  1: QN(0) =&gt; 1
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
  2×1
@@ -243,10 +243,10 @@ julia&gt; A2 = prime(A, i) * dag(A);
 
 julia&gt; @show A2;
 A2 = ITensor ord=2
-Dim 1: (dim=2|id=291)&#39; &lt;Out&gt;
+Dim 1: (dim=2|id=610)&#39; &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=2|id=291) &lt;In&gt;
+Dim 2: (dim=2|id=610) &lt;In&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
@@ -259,9 +259,9 @@ julia&gt; D, U = eigen(A2; ishermitian=true);
 
 julia&gt; @show D;
 D = ITensor ord=2
-Dim 1: (dim=1|id=635|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
+Dim 1: (dim=1|id=16|&quot;Link,eigen&quot;)&#39; &lt;Out&gt;
  1: QN(1) =&gt; 1
-Dim 2: (dim=1|id=635|&quot;Link,eigen&quot;) &lt;In&gt;
+Dim 2: (dim=1|id=16|&quot;Link,eigen&quot;) &lt;In&gt;
  1: QN(1) =&gt; 1
 NDTensors.DiagBlockSparse{Float64, Vector{Float64}, 2}
  1×1
@@ -271,13 +271,13 @@ Block(1, 1)
 
 julia&gt; @show U;
 U = ITensor ord=2
-Dim 1: (dim=2|id=291) &lt;Out&gt;
+Dim 1: (dim=2|id=610) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=1|id=635|&quot;Link,eigen&quot;) &lt;In&gt;
+Dim 2: (dim=1|id=16|&quot;Link,eigen&quot;) &lt;In&gt;
  1: QN(1) =&gt; 1
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
  2×1
 Block(2, 1)
  [2:2, 1:1]
- 1.0</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Thursday 21 July 2022 19:32">Thursday 21 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 1.0</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Thursday 21 July 2022 20:30">Thursday 21 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
