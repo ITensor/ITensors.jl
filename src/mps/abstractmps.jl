@@ -46,6 +46,8 @@ have type `ComplexF64`, return `ComplexF64`.
 promote_itensor_eltype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
 
 scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
+scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
+scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
 
 """
     eltype(m::MPS)

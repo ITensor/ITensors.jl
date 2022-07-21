@@ -779,7 +779,7 @@ function convert_eltype(ElType::Type, T::ITensor)
   if eltype(T) == ElType
     return T
   end
-  return itensor(ElType.(tensor(T)))
+  return itensor(adapt(ElType, tensor(T)))
 end
 
 function convert_leaf_eltype(ElType::Type, T::ITensor)
