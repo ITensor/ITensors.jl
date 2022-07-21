@@ -25,7 +25,10 @@ mixed_cu_cpu(is_cu1::Bool, is_cu2::Bool) = (is_cu1 ⊻ is_cu2)
 mixed_cu_cpu(T1::Type, T2::Type) = mixed_cu_cpu(is_cu(T1), is_cu(T2))
 
 @traitdef MixedCuCPU{T1,T2}
+
+#! format: off
 @traitimpl MixedCuCPU{T1,T2} <- mixed_cu_cpu(T1, T2)
+#! format: on
 
 @traitfn function can_contract(
   ::Type{T1}, ::Type{T2}

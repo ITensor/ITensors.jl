@@ -72,8 +72,8 @@ include("util.jl")
     @test norm(U * S * V - T) / norm(T) < 1E-10
   end
 
-  @testset "svd with empty left or right indices" for
-    space in (2, [QN(0, 2) => 1, QN(1, 2) => 1]),
+  @testset "svd with empty left or right indices" for space in
+                                                      (2, [QN(0, 2) => 1, QN(1, 2) => 1]),
     cutoff in (nothing, 1e-15),
     _eltype in (Float32, Float64, ComplexF32, ComplexF64)
 

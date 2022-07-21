@@ -1208,7 +1208,9 @@ end
     end
   end
 
-  @testset "ITensor, NDTensors.Dense{$SType} storage" for SType in (Float32, Float64, ComplexF32, ComplexF64)
+  @testset "ITensor, NDTensors.Dense{$SType} storage" for SType in (
+    Float32, Float64, ComplexF32, ComplexF64
+  )
     mi, mj, mk, ml, mα = 2, 3, 4, 5, 6, 7
     i = Index(mi, "i")
     j = Index(mj, "j")
