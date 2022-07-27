@@ -166,13 +166,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   P = MS .^ 2
   if truncate
     truncerr, _ = truncate!(
-      P;
-      mindim,
-      maxdim,
-      cutoff,
-      use_absolute_cutoff,
-      use_relative_cutoff,
-      kwargs...
+      P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
   else
     truncerr = 0.0
@@ -237,13 +231,7 @@ function LinearAlgebra.eigen(
 
   if truncate
     truncerr, _ = truncate!(
-      DM;
-      mindim,
-      maxdim,
-      cutoff,
-      use_absolute_cutoff,
-      use_relative_cutoff,
-      kwargs...
+      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
     dD = length(DM)
     if dD < size(VM, 2)
@@ -372,12 +360,7 @@ function LinearAlgebra.eigen(
 
   if truncate
     truncerr, _ = truncate!(
-      DM;
-      maxdim,
-      cutoff,
-      use_absolute_cutoff,
-      use_relative_cutoff,
-      kwargs...
+      DM; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
     dD = length(DM)
     if dD < size(VM, 2)
