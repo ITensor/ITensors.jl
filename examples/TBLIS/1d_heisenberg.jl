@@ -20,14 +20,9 @@ let
   H = MPO(ampo, sites)
   psi0 = randomMPS(sites, 10)
 
-  sweeps_compile = Sweeps(2)
-  maxdim!(sweeps_compile, 10)
-  cutoff!(sweeps_compile, 1E-15)
-
-  sweeps = Sweeps(6)
-  maxdim!(sweeps, 20, 100, 200, 300)
-  cutoff!(sweeps, 0.0)
-  @show sweeps
+  nsweeps = 6
+  maxdim = [20, 100, 200, 300]
+  cutoff = 1E-15
 
   #
   # Using BLAS backend
@@ -37,10 +32,10 @@ let
   BLAS.set_num_threads(nthreads)
 
   # Compile
-  dmrg(H, psi0, sweeps_compile; outputlevel=0)
+  dmrg(H, psi0; nsweeps=2, maxdim=10, outputlevel=0)
 
   println("Using BLAS with $nthreads threads\n")
-  energy, psi = @time dmrg(H, psi0, sweeps)
+  energy, psi = @time dmrg(H, psi0; nsweeps,maxdim,cutoff)
   @printf("Final energy = %.12f\n", energy)
   println()
 
@@ -53,9 +48,9 @@ let
   TBLIS.set_num_threads(nthreads)
 
   # Compile
-  dmrg(H, psi0, sweeps_compile; outputlevel=0)
+  dmrg(H, psi0; nsweeps=2, maxdim=10, outputlevel=0)
 
   println("Using TBLIS with $(TBLIS.get_num_threads()) threads (and 1 BLAS thread)\n")
-  energy, psi = @time dmrg(H, psi0, sweeps)
+  energy, psi = @time dmrg(H, psi0; nsweeps,maxdim,cutoff)
   @printf("Final energy = %.12f\n", energy)
 end
