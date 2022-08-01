@@ -170,11 +170,11 @@ let
   psi0 = productMPS(sites,state)
   @show flux(psi0)
 
-  sweeps = Sweeps(5)
-  setmaxdim!(sweeps, 10,20,100,100,200)
-  setcutoff!(sweeps, 1E-10)
+  nsweeps = 5
+  maxdim = [10,20,100,100,200]
+  cutoff = [1E-10]
 
-  energy, psi = dmrg(H,psi0, sweeps)
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
 
   return
 end

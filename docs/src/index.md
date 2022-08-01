@@ -123,13 +123,6 @@ julia> readdir()
  "input_files"
 
 julia> include("1d_heisenberg.jl")
-sweeps = Sweeps
-1 cutoff=1.0E-11, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-11, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-11, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-11, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-11, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-138.837988775764 maxlinkdim=10 time=13.760
 After sweep 2 energy=-138.937408365962 maxlinkdim=20 time=0.249
 After sweep 3 energy=-138.940084788852 maxlinkdim=100 time=1.867
@@ -342,27 +335,19 @@ let
   # setting maximum MPS internal dimensions
   # for each sweep and maximum truncation cutoff
   # used when adapting internal dimensions:
-  sweeps = Sweeps(5)
-  setmaxdim!(sweeps, 10,20,100,100,200)
-  setcutoff!(sweeps, 1E-10)
-  @show sweeps
+  nsweeps = 5
+  maxdim = [10,20,100,100,200]
+  cutoff = 1E-10
 
   # Run the DMRG algorithm, returning energy
   # (dominant eigenvalue) and optimized MPS
-  energy, psi = dmrg(H,psi0, sweeps)
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
   println("Final energy = $energy")
 
   nothing
 end
 
 # output
-
-sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
 
 After sweep 1 energy=-137.954199761732 maxlinkdim=9 maxerr=2.43E-16 time=9.356
 After sweep 2 energy=-138.935058943878 maxlinkdim=20 maxerr=4.97E-06 time=0.671
