@@ -30,5 +30,5 @@ let
 
   energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff)
 
-  return 
+  return nothing
 end

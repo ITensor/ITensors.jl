@@ -65,7 +65,9 @@ function main(;
 
   psi0 = randomMPS(sites, state, 10)
 
-  energy, psi = @time dmrg(H, psi0; nsweeps, maxdims, cutoff, noise, svd_alg="divide_and_conquer")
+  energy, psi = @time dmrg(
+    H, psi0; nsweeps, maxdims, cutoff, noise, svd_alg="divide_and_conquer"
+  )
   @show Nx, Ny
   @show t, U
   @show flux(psi)

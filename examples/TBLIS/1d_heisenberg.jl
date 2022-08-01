@@ -35,7 +35,7 @@ let
   dmrg(H, psi0; nsweeps=2, maxdim=10, outputlevel=0)
 
   println("Using BLAS with $nthreads threads\n")
-  energy, psi = @time dmrg(H, psi0; nsweeps,maxdim,cutoff)
+  energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff)
   @printf("Final energy = %.12f\n", energy)
   println()
 
@@ -51,6 +51,6 @@ let
   dmrg(H, psi0; nsweeps=2, maxdim=10, outputlevel=0)
 
   println("Using TBLIS with $(TBLIS.get_num_threads()) threads (and 1 BLAS thread)\n")
-  energy, psi = @time dmrg(H, psi0; nsweeps,maxdim,cutoff)
+  energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff)
   @printf("Final energy = %.12f\n", energy)
 end
