@@ -24,12 +24,11 @@ let
   # numbers as `state`
   psi0 = randomMPS(sites, state, 20)
 
-  sweeps = Sweeps(10)
-  setmaxdim!(sweeps, 20, 60, 100, 100, 200, 400, 800)
-  setcutoff!(sweeps, 1E-8)
-  @show sweeps
+  nsweeps = 10
+  maxdim = [20, 60, 100, 100, 200, 400, 800]
+  cutoff = [1E-8]
 
-  energy, psi = dmrg(H, psi0, sweeps)
+  energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff)
 
-  return nothing
+  return 
 end
