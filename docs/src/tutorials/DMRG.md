@@ -40,11 +40,11 @@ let
 
   psi0 = randomMPS(sites,10)
 
-  sweeps = Sweeps(5)
-  setmaxdim!(sweeps, 10,20,100,100,200)
-  setcutoff!(sweeps, 1E-10)
+  nsweeps = 5
+  maxdim = [10,20,100,100,200]
+  cutoff = [1E-10]
 
-  energy, psi = dmrg(H,psi0, sweeps)
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
 
   return
 end
@@ -102,20 +102,21 @@ This choice can help prevent the DMRG calculation from getting stuck in a local 
 The lines
 
 ```julia
-sweeps = Sweeps(5)
-setmaxdim!(sweeps, 10,20,100,100,200)
-setcutoff!(sweeps, 1E-10)
+nsweeps = 5
+maxdim = [10,20,100,100,200]
+cutoff = [1E-10]
 ```
 
-construct a `Sweeps` objects which is initialized to define 5 sweeps of DMRG. The
-call to `setmaxdim!` sets the maximum dimension allowed for each sweep and the call
-to `setcutoff!` sets the truncation error goal of each sweep (if fewer values are
+define the number of DMRG sweeps (five) we will instruct the code to do, as well as the
+parameters that will control the speed and accuracy of the DMRG algorithm within 
+each sweep. The array `maxdim` limits the maximum MPS bond dimension allowed during
+each sweep and `cutoff` defines the truncation error goal of each sweep (if fewer values are
 specified than sweeps, the last value is used for all remaining sweeps).
 
 Finally the call 
 
 ```julia
-energy, psi = dmrg(H,psi0,sweeps)
+energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
 ```
 
 runs the DMRG algorithm included in ITensor, using `psi0` as an

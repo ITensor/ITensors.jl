@@ -34,10 +34,9 @@ let
   end
   H = MPO(ampo, sites)
 
-  sweeps = Sweeps(6)
-  setmaxdim!(sweeps, 50, 100, 200, 400, 800, 800)
-  setcutoff!(sweeps, 1E-12)
-  @show sweeps
+  nsweeps = 6
+  maxdim = [50, 100, 200, 400, 800, 800]
+  cutoff = [1E-12]
 
   state = ["Emp" for n in 1:N]
   p = Npart
@@ -61,7 +60,7 @@ let
   @show flux(psi0)
 
   # Start DMRG calculation:
-  energy, psi = dmrg(H, psi0, sweeps)
+  energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff)
 
   upd = fill(0.0, N)
   dnd = fill(0.0, N)

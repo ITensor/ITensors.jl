@@ -3,11 +3,10 @@ using ITensors
 function main(; Nx=6, Ny=3, U=4.0, t=1.0)
   N = Nx * Ny
 
-  sweeps = Sweeps(10)
-  setmaxdim!(sweeps, 100, 200, 400, 800, 1600)
-  setcutoff!(sweeps, 1e-6)
-  setnoise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
-  @show sweeps
+  nsweeps = 10
+  maxdim = [100, 200, 400, 800, 1600]
+  cutoff = [1E-6]
+  noise = [1E-6, 1E-7, 1E-8, 0.0]
 
   sites = siteinds("Electron", N; conserve_qns=true)
 
@@ -33,7 +32,7 @@ function main(; Nx=6, Ny=3, U=4.0, t=1.0)
   # numbers as `state`
   psi0 = randomMPS(sites, state)
 
-  energy, psi = dmrg(H, psi0, sweeps)
+  energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, noise)
   @show t, U
   @show flux(psi)
   @show maxlinkdim(psi)

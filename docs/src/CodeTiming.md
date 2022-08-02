@@ -18,13 +18,6 @@ julis> using ITensors
 julia> using Profile
 
 julia> @profile include(joinpath(pkgdir(ITensors), "examples", "dmrg", "1d_heisenberg_conserve_spin.jl"))
-sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-137.995732867390 maxlinkdim=10 maxerr=1.93E-02 time=0.862
 After sweep 2 energy=-138.801057557054 maxlinkdim=20 maxerr=3.37E-05 time=1.126
 After sweep 3 energy=-138.940075984826 maxlinkdim=91 maxerr=9.99E-11 time=1.880
@@ -54,13 +47,6 @@ julia> using ITensors
 julia> using ProfileView
 
 julia> @profview include(joinpath(pkgdir(ITensors), "examples", "dmrg", "1d_heisenberg_conserve_spin.jl"));
-sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-137.995732867390 maxlinkdim=10 maxerr=1.93E-02 time=0.977
 After sweep 2 energy=-138.801057557054 maxlinkdim=20 maxerr=3.37E-05 time=1.252
 After sweep 3 energy=-138.940075984826 maxlinkdim=91 maxerr=9.99E-11 time=2.263
@@ -90,13 +76,6 @@ julia> ITensors.TimerOutputs.reset_timer!(ITensors.NDTensors.timer)
  ──────────────────────────────────────────────────────────────────
 
 julia> include("1d_heisenberg_conserve_spin.jl")
-sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-137.995732867390 maxlinkdim=10 maxerr=1.93E-02 time=0.597
 After sweep 2 energy=-138.801057557054 maxlinkdim=20 maxerr=3.37E-05 time=0.798
 After sweep 3 energy=-138.940075984826 maxlinkdim=91 maxerr=9.99E-11 time=1.285

@@ -30,14 +30,14 @@ let
   psi0 = randomMPS(sites, state, 10)
 
   # Plan to do 5 DMRG sweeps:
-  sweeps = Sweeps(5)
+  nsweeps = 5
   # Set maximum MPS bond dimensions for each sweep
-  setmaxdim!(sweeps, 10, 20, 100, 100, 200)
+  maxdim = [10, 20, 100, 100, 200]
   # Set maximum truncation error allowed when adapting bond dimensions
-  setcutoff!(sweeps, 1E-10)
+  cutoff = 1E-10
   @show sweeps
 
   # Run the DMRG algorithm, returning energy and optimized MPS
-  energy, psi = dmrg(H, psi0, sweeps; write_when_maxdim_exceeds=25)
+  energy, psi = dmrg(H, psi0; nsweeps, cutoff, maxdim, write_when_maxdim_exceeds=25)
   @printf("Final energy = %.12f\n", energy)
 end
