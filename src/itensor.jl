@@ -2150,7 +2150,7 @@ function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   trpairs = indpairs(T; plev=plev, tags=tags)
   Cᴸ = combiner(first.(trpairs))
   Cᴿ = combiner(last.(trpairs))
-  Tᶜ = T * Cᴸ * Cᴿ
+  Tᶜ = (T * Cᴸ) * Cᴿ
   cᴸ = uniqueind(Cᴸ, T)
   cᴿ = uniqueind(Cᴿ, T)
   Tᶜ *= δ(dag((cᴸ, cᴿ)))

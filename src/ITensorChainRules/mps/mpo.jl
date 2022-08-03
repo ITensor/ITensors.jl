@@ -1,3 +1,13 @@
+function rrule(::typeof(getindex), x::MPO, I::Int)
+  y = x[I]
+  function getindex_pullback(ȳ)
+    x̄ = false * x
+    x̄[I] = ȳ
+    return (NoTangent(), x̄, NoTangent())
+  end
+  return y, getindex_pullback
+end
+
 function rrule(::typeof(contract), x1::MPO, x2::MPO; kwargs...)
   y = contract(x1, x2; kwargs...)
   function contract_pullback(ȳ)
@@ -24,21 +34,28 @@ function rrule(::typeof(-), x1::MPO, x2::MPO; kwargs...)
   return rrule(+, x1, -x2; kwargs...)
 end
 
-function rrule(::typeof(tr), x::MPO; kwargs...)
-  y = tr(x; kwargs...)
-  function tr_pullback(ȳ)
-    s = noprime(firstsiteinds(x))
-    n = length(s)
-    x̄ = MPO(s, "Id")
-
-    plev = get(kwargs, :plev, 0 => 1)
-    for j in 1:n
-      x̄[j] = mapprime(x̄[j], 0 => first(plev), 1 => last(plev))
-    end
-    return (NoTangent(), ȳ * x̄)
-  end
-  return y, tr_pullback
+# Needed because by default it was calling the generic
+# `rrule` for `tr` inside ChainRules.
+# TODO: Raise an issue with ChainRules.
+function rrule(config::RuleConfig{>:HasReverseMode}, ::typeof(tr), x::MPO; kwargs...)
+  return rrule_via_ad(config, ITensors._tr, x; kwargs...)
 end
+
+# function rrule(::typeof(tr), x::MPO; kwargs...)
+#   y = tr(x; kwargs...)
+#   function tr_pullback(ȳ)
+#     s = noprime(firstsiteinds(x))
+#     n = length(s)
+#     x̄ = MPO(s, "Id")
+# 
+#     plev = get(kwargs, :plev, 0 => 1)
+#     for j in 1:n
+#       x̄[j] = mapprime(x̄[j], 0 => first(plev), 1 => last(plev))
+#     end
+#     return (NoTangent(), ȳ * x̄)
+#   end
+#   return y, tr_pullback
+# end
 
 function rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
   if !hassameinds(siteinds, x1, (x2, x3)) || !hassameinds(siteinds, x3, (x2, x1))
