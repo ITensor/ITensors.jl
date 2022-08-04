@@ -1763,7 +1763,8 @@ end
       ([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]), (5, 2, 3)
     ],
     eltype in (Float32, Float64, ComplexF32, ComplexF64),
-    nullspace_kwargs in ((; atol=eps(real(eltype)) * 100), (;))
+    nullspace_kwargs in ((;))
+    #nullspace_kwargs in ((; atol=eps(real(eltype)) * 100), (;))
 
     s, l, r = Index.((ss, sl, sr), ("s", "l", "r"))
     A = randomITensor(eltype, dag(l), s, r)
@@ -1777,6 +1778,21 @@ end
     A′, (rn,) = ITensors.directsum(A => (l,), dag(N) => (n,); tags=["⊕"])
     @test dim(rn) == dim((s, r))
     @test norm(A * dag(prime(A, l))) ≈ norm(A * dag(A′))
+  end
+
+  @testset "nullspace regression test" begin
+    # This is a case that failed before we raised
+    # the default atol value in the `nullspace` function
+    M = [
+      0.663934 0.713867 -0.458164 -1.79885 -0.83443
+      1.19064 -1.3474 -0.277555 -0.177408 0.408656
+    ]
+    i = Index(2)
+    j = Index(5)
+    A = ITensor(M, i, j)
+    N = nullspace(A, i)
+    n = uniqueindex(N, A)
+    @test dim(n) == dim(j) - dim(i)
   end
 end # End Dense ITensor basic functionality
 
