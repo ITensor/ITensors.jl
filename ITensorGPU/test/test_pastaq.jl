@@ -41,6 +41,7 @@ end
 
 @testset "PastaQ runcircuit on $device with element type $eltype" for device in (cpu, cu),
   eltype in (Float32, Float64)
+
   n = 4
   h = 0.5
   cutoff = 1e-5
