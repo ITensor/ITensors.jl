@@ -45,6 +45,10 @@ have type `ComplexF64`, return `ComplexF64`.
 """
 promote_itensor_eltype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
 
+scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
+scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
+scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
+
 """
     eltype(m::MPS)
     eltype(m::MPO)
@@ -61,8 +65,8 @@ real(ψ::AbstractMPS) = real.(ψ)
 imag(ψ::AbstractMPS) = imag.(ψ)
 conj(ψ::AbstractMPS) = conj.(ψ)
 
-function convert_leaf_eltype(ElType::Type, ψ::AbstractMPS)
-  return set_data(ψ, convert_leaf_eltype(ElType, data(ψ)))
+function convert_leaf_eltype(eltype::Type, ψ::AbstractMPS)
+  return map(ψᵢ -> convert_leaf_eltype(eltype, ψᵢ), ψ; set_limits=false)
 end
 
 """

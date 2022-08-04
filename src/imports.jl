@@ -86,6 +86,8 @@ import Base.Broadcast:
 import ITensors.ContractionSequenceOptimization:
   contraction_cost, optimal_contraction_sequence
 
+import Adapt: adapt_structure, adapt_storage
+
 import HDF5: read, write
 
 import LinearAlgebra:
@@ -131,10 +133,14 @@ using ITensors.NDTensors:
   _Tuple,
   _NTuple,
   blas_get_num_threads,
+  cpu,
+  cu,
+  double_precision,
   eachblock,
   eachdiagblock,
   fill!!,
   randn!!,
+  single_precision,
   timer
 
 import ITensors.NDTensors:
@@ -155,6 +161,7 @@ import ITensors.NDTensors:
   blockdim,
   blockoffsets,
   contract,
+  datatype,
   dense,
   denseblocks,
   diaglength,
@@ -179,6 +186,7 @@ import ITensors.NDTensors:
   outer,
   permuteblocks,
   polar,
+  scalartype,
   scale!,
   setblock!,
   setblockdim!,
@@ -186,6 +194,7 @@ import ITensors.NDTensors:
   setstorage,
   sim,
   storage,
+  storagetype,
   sum,
   tensor,
   truncate!,

@@ -44,11 +44,11 @@ function _contract(::Type{ITensor}, ψ::Union{MPS,MPO}, ϕ::Union{MPS,MPO}; kwar
 
   jcenter = findfirst(j -> !hassameinds(siteinds(ψ, j), siteinds(ϕ, j)), 1:n)
 
-  Tᴸ = ITensor(1)
+  Tᴸ = adapt(datatype(ψ[1]), ITensor(1))
   for j in 1:jcenter
     Tᴸ = Tᴸ * ψ[j] * ϕ[j]
   end
-  Tᴿ = ITensor(1)
+  Tᴿ = adapt(datatype(ψ[end]), ITensor(1))
   for j in reverse((jcenter + 1):length(ψ))
     Tᴿ = Tᴿ * ψ[j] * ϕ[j]
   end
@@ -119,4 +119,23 @@ function rrule(
     return (NoTangent(), x̄1, x̄2)
   end
   return y, apply_pullback
+end
+
+function rrule(
+  config::RuleConfig{>:HasReverseMode},
+  ::typeof(map),
+  f,
+  x::Union{MPS,MPO};
+  set_limits::Bool=true,
+)
+  y_data, pullback_data = rrule_via_ad(config, map, f, ITensors.data(x))
+  function map_pullback(ȳ)
+    dmap, df, dx_data = pullback_data(ȳ)
+    return dmap, df, MPS(dx_data)
+  end
+  y = typeof(x)(y_data)
+  if !set_limits
+    y = ITensors.set_ortho_lims(y, ortho_lims(x))
+  end
+  return y, map_pullback
 end

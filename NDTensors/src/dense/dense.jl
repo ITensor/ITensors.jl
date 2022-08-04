@@ -76,10 +76,8 @@ similar(D::Dense) = Dense(similar(data(D)))
 
 similar(D::Dense, length::Int) = Dense(similar(data(D), length))
 
-function similar(
-  ::Type{<:Dense{ElT,VecT}}, length::Int
-) where {ElT,VecT<:AbstractArray{ElT}}
-  return Dense(similar(Vector{ElT}, length))
+function similar(storagetype::Type{<:Dense}, length::Int)
+  return Dense(similar(datatype(storagetype), length))
 end
 
 function similartype(::Type{StoreT}, ::Type{ElT}) where {StoreT<:Dense,ElT}
@@ -95,10 +93,12 @@ end
 
 similar(D::Dense, ::Type{T}) where {T<:Number} = Dense(similar(data(D), T))
 
-zeros(DenseT::Type{<:Dense{ElT}}, inds) where {ElT} = zeros(DenseT, dim(inds))
+zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
 
-# TODO: should this do something different for SubArray?
-zeros(::Type{<:Dense{ElT}}, dim::Int) where {ElT} = Dense{ElT}(dim)
+# Generic for handling `Vector` and `CuVector`
+function zeros(storagetype::Type{<:Dense}, dim::Int)
+  return fill!(similar(storagetype, dim), zero(eltype(storagetype)))
+end
 
 function promote_rule(
   ::Type{<:Dense{ElT1,VecT1}}, ::Type{<:Dense{ElT2,VecT2}}
@@ -432,27 +432,6 @@ function permutedims!!(R::DenseTensor, T::DenseTensor, perm::Tuple, f::Function=
   return RR
 end
 
-# TODO: move to tensor.jl?
-function permutedims(T::Tensor{<:Number,N}, perm::NTuple{N,Int}) where {N}
-  Tp = similar(T, permute(inds(T), perm))
-  Tp = permutedims!!(Tp, T, perm)
-  return Tp
-end
-
-function permutedims(::Tensor, ::Tuple{Vararg{Int}})
-  return error("Permutation size must match tensor order")
-end
-
-# TODO: move to tensor.jl?
-function (x::Number * T::Tensor)
-  return tensor(x * storage(T), inds(T))
-end
-(T::Tensor * x::Number) = x * T
-
-function (T::Tensor / x::Number)
-  return tensor(storage(T) / x, inds(T))
-end
-
 function permutedims!(
   R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm, f::Function
 ) where {N}
@@ -571,24 +550,11 @@ function _gemm!(
   return C
 end
 
-function outer!!(R::Tensor, T1::Tensor, T2::Tensor)
-  outer!(R, T1, T2)
-  return R
-end
-
 # TODO: call outer!!, make this generic
 function outer(T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}) where {ElT1,ElT2}
   array_outer = vec(array(T1)) * transpose(vec(array(T2)))
   inds_outer = unioninds(inds(T1), inds(T2))
   return tensor(Dense{promote_type(ElT1, ElT2)}(vec(array_outer)), inds_outer)
-end
-const ⊗ = outer
-
-# TODO: move to tensor.jl?
-function contraction_output_type(
-  ::Type{TensorT1}, ::Type{TensorT2}, ::Type{IndsR}
-) where {TensorT1<:Tensor,TensorT2<:Tensor,IndsR}
-  return similartype(promote_type(TensorT1, TensorT2), IndsR)
 end
 
 function contraction_output(
@@ -596,78 +562,6 @@ function contraction_output(
 ) where {TensorT1<:DenseTensor,TensorT2<:DenseTensor,IndsR}
   TensorR = contraction_output_type(TensorT1, TensorT2, IndsR)
   return similar(TensorR, indsR)
-end
-
-# TODO: move to tensor.jl?
-function contraction_output(T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR)
-  indsR = contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
-  R = contraction_output(T1, T2, indsR)
-  return R
-end
-
-# Version where output labels aren't supplied
-function contract(T1::Tensor, labelsT1, T2::Tensor, labelsT2)
-  labelsR = contract_labels(labelsT1, labelsT2)
-  return contract(T1, labelsT1, T2, labelsT2, labelsR)
-end
-
-# TODO: move to tensor.jl?
-function contract(T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR)
-  #@timeit_debug timer "dense contract" begin
-  # TODO: put the contract_inds logic into contraction_output,
-  # call like R = contraction_ouput(T1,labelsT1,T2,labelsT2)
-  #indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
-  R = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
-  # contract!! version here since the output R may not
-  # be mutable (like UniformDiag)
-  R = contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
-  return R
-  #end @timeit
-end
-
-# Move to tensor.jl? Is this generic for all storage types?
-function contract!!(
-  R::Tensor, labelsR, T1::Tensor, labelsT1, T2::Tensor, labelsT2, α::Number=1, β::Number=0
-)
-  NR = ndims(R)
-  N1 = ndims(T1)
-  N2 = ndims(T2)
-  if (N1 ≠ 0) && (N2 ≠ 0) && (N1 + N2 == NR)
-    # Outer product
-    (α ≠ 1 || β ≠ 0) && error(
-      "contract!! not yet implemented for outer product tensor contraction with non-trivial α and β",
-    )
-    # TODO: permute T1 and T2 appropriately first (can be more efficient
-    # then permuting the result of T1⊗T2)
-    # TODO: implement the in-place version directly
-    R = outer!!(R, T1, T2)
-    labelsRp = (labelsT1..., labelsT2...)
-    perm = getperm(labelsR, labelsRp)
-    if !is_trivial_permutation(perm)
-      Rp = reshape(R, (inds(T1)..., inds(T2)...))
-      R = permutedims!!(R, copy(Rp), perm)
-    end
-  else
-    if α ≠ 1 || β ≠ 0
-      R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-    else
-      R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
-    end
-  end
-  return R
-end
-
-# Move to tensor.jl? Overload this function
-# for immutable storage types
-function _contract!!(
-  R::Tensor, labelsR, T1::Tensor, labelsT1, T2::Tensor, labelsT2, α::Number=1, β::Number=0
-)
-  if α ≠ 1 || β ≠ 0
-    contract!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-  else
-    contract!(R, labelsR, T1, labelsT1, T2, labelsT2)
-  end
-  return R
 end
 
 Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))

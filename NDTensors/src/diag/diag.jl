@@ -24,6 +24,8 @@ Diag(::Type{ElT}, n::Integer) where {ElT<:Number} = Diag(zeros(ElT, n))
 
 Diag(x::ElT, n::Integer) where {ElT<:Number} = Diag(fill(x, n))
 
+datatype(::Type{<:Diag{<:Any,DataT}}) where {DataT} = DataT
+
 copy(D::Diag) = Diag(copy(data(D)))
 
 const NonuniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:AbstractVector}
