@@ -35,13 +35,6 @@ julia&gt; readdir()
  &quot;input_files&quot;
 
 julia&gt; include(&quot;1d_heisenberg.jl&quot;)
-sweeps = Sweeps
-1 cutoff=1.0E-11, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-11, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-11, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-11, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-11, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-138.837988775764 maxlinkdim=10 time=13.760
 After sweep 2 energy=-138.937408365962 maxlinkdim=20 time=0.249
 After sweep 3 energy=-138.940084788852 maxlinkdim=100 time=1.867
@@ -173,14 +166,13 @@ let
   # setting maximum MPS internal dimensions
   # for each sweep and maximum truncation cutoff
   # used when adapting internal dimensions:
-  sweeps = Sweeps(5)
-  setmaxdim!(sweeps, 10,20,100,100,200)
-  setcutoff!(sweeps, 1E-10)
-  @show sweeps
+  nsweeps = 5
+  maxdim = [10,20,100,100,200]
+  cutoff = 1E-10
 
   # Run the DMRG algorithm, returning energy
   # (dominant eigenvalue) and optimized MPS
-  energy, psi = dmrg(H,psi0, sweeps)
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
   println(&quot;Final energy = $energy&quot;)
 
   nothing
@@ -188,16 +180,9 @@ end
 
 # output
 
-sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-137.954199761732 maxlinkdim=9 maxerr=2.43E-16 time=9.356
 After sweep 2 energy=-138.935058943878 maxlinkdim=20 maxerr=4.97E-06 time=0.671
 After sweep 3 energy=-138.940080155429 maxlinkdim=92 maxerr=1.00E-10 time=4.522
 After sweep 4 energy=-138.940086009318 maxlinkdim=100 maxerr=1.05E-10 time=11.644
 After sweep 5 energy=-138.940086058840 maxlinkdim=96 maxerr=1.00E-10 time=12.771
-Final energy = -138.94008605883985</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/Installing.html">Installing Julia and ITensor »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Thursday 21 July 2022 21:20">Thursday 21 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Final energy = -138.94008605883985</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/Installing.html">Installing Julia and ITensor »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Thursday 4 August 2022 13:30">Thursday 4 August 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
