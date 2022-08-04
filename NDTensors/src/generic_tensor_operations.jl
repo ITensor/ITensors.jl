@@ -32,7 +32,7 @@ end
 # Trait returning true if the two tensors or storage types can
 # contract with each other.
 @traitdef CanContract{X,Y}
-@traitimpl CanContract{X,Y} < -can_contract(X, Y)
+@traitimpl CanContract{X,Y} <- can_contract(X, Y)
 
 # Assume storage types can contract with each other
 can_contract(T1::Type, T2::Type) = true
