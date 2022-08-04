@@ -15,8 +15,7 @@ function Dense{T,S}(x::T, size::Integer) where {T,S<:CuArray{<:T}}
   fill!(arr, x)
   return Dense{T,S}(arr)
 end
-cpu(x::CuDense{T}) where {T<:Number} = Dense(collect(x.data))
-cpu(x::CuDenseTensor{T}) where {T<:Number} = Tensor(inds(x), cpu(store(x)))
+
 function Base.complex(::Type{Dense{ElT,VT}}) where {ElT,VT<:CuArray}
   return Dense{complex(ElT),CuVector{complex(ElT)}}
 end

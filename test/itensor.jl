@@ -35,7 +35,7 @@ end
       @test storage(A) isa NDTensors.EmptyStorage{NDTensors.EmptyNumber}
     end
 
-    @testset "diag" for ElType in (Float64, ComplexF64)
+    @testset "diag" for ElType in (Float32, Float64, ComplexF32, ComplexF64)
       i, j = Index.(2, ("i", "j"))
       A = randomITensor(ElType, i, j)
       d = diag(A)
@@ -399,26 +399,26 @@ end
     end
   end
 
-  @testset "Complex Number Operations" begin
+  @testset "Complex Number Operations" for _eltype in (Float32, Float64)
     i = Index(3, "i")
     j = Index(4, "j")
 
-    A = randomITensor(ComplexF64, i, j)
+    A = randomITensor(complex(_eltype), i, j)
 
     rA = real(A)
     iA = imag(A)
     @test norm(rA + 1im * iA - A) < 1E-8
-    @test eltype(rA) == Float64
-    @test eltype(iA) == Float64
+    @test eltype(rA) <: _eltype
+    @test eltype(iA) <: _eltype
 
     cA = conj(A)
-    @test eltype(cA) == ComplexF64
+    @test eltype(cA) <: complex(_eltype)
     @test norm(cA) ≈ norm(A)
 
-    B = randomITensor(Float64, i, j)
+    B = randomITensor(_eltype, i, j)
 
     cB = conj(B)
-    @test eltype(cB) == Float64
+    @test eltype(cB) <: _eltype
     @test norm(cB) ≈ norm(B)
   end
 
@@ -1191,16 +1191,16 @@ end
   end #End "ITensor other index operations"
 
   @testset "Converting Real and Complex Storage" begin
-    @testset "Add Real and Complex" begin
+    @testset "Add Real and Complex" for eltype in (Float32, Float64)
       i = Index(2, "i")
       j = Index(2, "j")
-      TC = randomITensor(ComplexF64, i, j)
-      TR = randomITensor(Float64, i, j)
+      TC = randomITensor(complex(eltype), i, j)
+      TR = randomITensor(eltype, i, j)
 
       S1 = TC + TR
       S2 = TR + TC
-      @test typeof(storage(S1)) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
-      @test typeof(storage(S2)) == NDTensors.Dense{ComplexF64,Vector{ComplexF64}}
+      @test typeof(storage(S1)) == NDTensors.Dense{complex(eltype),Vector{complex(eltype)}}
+      @test typeof(storage(S2)) == NDTensors.Dense{complex(eltype),Vector{complex(eltype)}}
       for ii in 1:dim(i), jj in 1:dim(j)
         @test S1[i => ii, j => jj] ≈ TC[i => ii, j => jj] + TR[i => ii, j => jj]
         @test S2[i => ii, j => jj] ≈ TC[i => ii, j => jj] + TR[i => ii, j => jj]
@@ -1208,13 +1208,18 @@ end
     end
   end
 
-  @testset "ITensor, NDTensors.Dense{$SType} storage" for SType in (Float64, ComplexF64)
+  @testset "ITensor, NDTensors.Dense{$SType} storage" for SType in (
+    Float32, Float64, ComplexF32, ComplexF64
+  )
     mi, mj, mk, ml, mα = 2, 3, 4, 5, 6, 7
     i = Index(mi, "i")
     j = Index(mj, "j")
     k = Index(mk, "k")
     l = Index(ml, "l")
     α = Index(mα, "alpha")
+
+    atol = eps(real(SType)) * 500
+
     @testset "Set and get values with IndexVals" begin
       A = ITensor(SType, i, j, k)
       for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
@@ -1317,30 +1322,30 @@ end
 
       @testset "Test SVD of an ITensor" begin
         U, S, V, spec, u, v = svd(A, (j, l))
-        @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+        @test storage(S) isa NDTensors.Diag{real(SType),Vector{real(SType)}}
         @test A ≈ U * S * V
-        @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
-        @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
+        @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = atol
+        @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = atol
       end
 
       @testset "Test SVD of an ITensor with different algorithms" begin
         U, S, V, spec, u, v = svd(A, j, l; alg="recursive")
-        @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+        @test storage(S) isa NDTensors.Diag{real(SType),Vector{real(SType)}}
         @test A ≈ U * S * V
-        @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
-        @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
+        @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = atol
+        @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = atol
 
         U, S, V, spec, u, v = svd(A, j, l; alg="divide_and_conquer")
-        @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+        @test storage(S) isa NDTensors.Diag{real(SType),Vector{real(SType)}}
         @test A ≈ U * S * V
-        @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
-        @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
+        @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = atol
+        @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = atol
 
         U, S, V, spec, u, v = svd(A, j, l; alg="qr_iteration")
-        @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
+        @test storage(S) isa NDTensors.Diag{real(SType),Vector{real(SType)}}
         @test A ≈ U * S * V
-        @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = 1e-13
-        @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = 1e-13
+        @test U * dag(prime(U, u)) ≈ δ(SType, u, u') atol = atol
+        @test V * dag(prime(V, v)) ≈ δ(SType, v, v') atol = atol
 
         @test_throws ErrorException svd(A, j, l; alg="bad_alg")
       end
@@ -1359,8 +1364,8 @@ end
       #  v = commonind(V, S)
       #  @test storage(S) isa NDTensors.Diag{Float64,Vector{Float64}}
       #  @test A≈U*S*V
-      #  @test U*dag(prime(U,u))≈δ(SType,u,u') atol=1e-13
-      #  @test V*dag(prime(V,v))≈δ(SType,v,v') atol=1e-13
+      #  @test U*dag(prime(U,u))≈δ(SType,u,u') atol = atol
+      #  @test V*dag(prime(V,v))≈δ(SType,v,v') atol = atol
       #end
 
       @testset "Test SVD truncation" begin
@@ -1373,10 +1378,21 @@ end
       end
 
       @testset "Test QR decomposition of an ITensor" begin
-        Q, R, q = qr(A, (i, l))
+        Q, R = qr(A, (i, l))
+        @test eltype(Q) <: eltype(A)
+        @test eltype(R) <: eltype(A)
         q = commonind(Q, R)
-        @test A ≈ Q * R atol = 1e-13
-        @test Q * dag(prime(Q, q)) ≈ δ(SType, q, q') atol = 1e-13
+        @test A ≈ Q * R atol = atol
+        @test Q * dag(prime(Q, q)) ≈ δ(SType, q, q') atol = atol
+
+        Q, R = qr(A, (i, j, k, l))
+        @test eltype(Q) <: eltype(A)
+        @test eltype(R) <: eltype(A)
+        q = commonind(Q, R)
+        @test hassameinds(Q, (q, i, j, k, l))
+        @test hassameinds(R, (q,))
+        @test A ≈ Q * R atol = atol
+        @test Q * dag(prime(Q, q)) ≈ δ(SType, q, q') atol = atol
       end
 
       @testset "Regression test for QR decomposition of an ITensor with all indices on one side" begin
@@ -1385,12 +1401,12 @@ end
         Vab = randomITensor(a, b)
         Q, R = qr(Vab, (a, b))
         @test hasinds(Q, (a, b))
-        @test Vab ≈ Q * R atol = 1e-13
+        @test Vab ≈ Q * R atol = atol
       end
 
       @testset "Test polar decomposition of an ITensor" begin
         U, P, u = polar(A, (k, l))
-        @test A ≈ U * P atol = 1e-13
+        @test A ≈ U * P atol = atol
         #Note: this is only satisfied when left dimensions
         #are greater than right dimensions
         UUᵀ = U * dag(prime(U, u))
@@ -1400,9 +1416,9 @@ end
         for ii in 1:dim(u[1]), jj in 1:dim(u[2]), iip in 1:dim(u[1]), jjp in 1:dim(u[2])
           val = UUᵀ[u[1] => ii, u[2] => jj, u[1]' => iip, u[2]' => jjp]
           if ii == iip && jj == jjp
-            @test val ≈ one(SType) atol = 1e-13
+            @test val ≈ one(SType) atol = atol
           else
-            @test val ≈ zero(SType) atol = 1e-13
+            @test val ≈ zero(SType) atol = atol
           end
         end
       end
@@ -1412,7 +1428,7 @@ end
         T = randomITensor(SType, is..., prime(is)...)
         T = T + swapprime(dag(T), 0, 1)
         D, U, spec, l, r = eigen(T; ishermitian=true)
-        @test T ≈ prime(U) * D * dag(U) atol = 1e-13
+        @test T ≈ prime(U) * D * dag(U) atol = atol
         UUᴴ = U * prime(dag(U), r)
         @test UUᴴ ≈ δ(r, r')
       end

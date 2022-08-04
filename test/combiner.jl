@@ -12,11 +12,11 @@ using Combinatorics: permutations
   @testset "Basic combiner properties" begin
     C = combiner(i, j, k)
     @test eltype(storage(C)) === Number
-    @test_throws ErrorException ITensors.data(C)
+    @test ITensors.data(C) isa NDTensors.NoData
     @test NDTensors.uncombinedinds(NDTensors.tensor(C)) == (i, j, k)
     C2 = copy(C)
     @test eltype(storage(C2)) === Number
-    @test_throws ErrorException ITensors.data(C2)
+    @test ITensors.data(C2) isa NDTensors.NoData
     @test NDTensors.uncombinedinds(NDTensors.tensor(C2)) == (i, j, k)
   end
 

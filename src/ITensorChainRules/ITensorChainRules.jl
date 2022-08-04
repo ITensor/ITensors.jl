@@ -1,9 +1,12 @@
 module ITensorChainRules
 
+using ITensors.Adapt
 using ITensors.NDTensors
 using ITensors.Ops
 
 using ITensors: Indices
+
+using ITensors.NDTensors: datatype
 
 using ChainRulesCore
 using ..ITensors

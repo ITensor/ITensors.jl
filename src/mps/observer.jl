@@ -134,7 +134,9 @@ truncerrors(obs::DMRGObserver) = obs.truncerrs
 
 function measurelocalops!(obs::DMRGObserver, wf::ITensor, i::Int)
   for o in ops(obs)
-    m = dot(wf, noprime(op(sites(obs), o, i) * wf))
+    # Moves to GPU if needed
+    oⱼ = adapt(datatype(wf), op(sites(obs), o, i))
+    m = dot(wf, apply(oⱼ, wf))
     imag(m) > 1e-8 && (@warn "encountered finite imaginary part when measuring $o")
     measurements(obs)[o][end][i] = real(m)
   end

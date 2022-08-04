@@ -1,13 +1,16 @@
 module NDTensors
 
+using Adapt
 using Base.Threads
 using Compat
 using Dictionaries
 using Random
 using LinearAlgebra
 using StaticArrays
+using Functors
 using HDF5
 using Requires
+using SimpleTraits
 using Strided
 using TimerOutputs
 using TupleTools
@@ -33,12 +36,15 @@ include("tupletools.jl")
 include("dims.jl")
 include("tensorstorage.jl")
 include("tensor.jl")
+include("adapt.jl")
+include("generic_tensor_operations.jl")
 include("contraction_logic.jl")
-include("dense.jl")
+include("dense/dense.jl")
+include("dense/adapt.jl")
 include("symmetric.jl")
 include("linearalgebra.jl")
-include("diag.jl")
-include("combiner.jl")
+include("diag/diag.jl")
+include("combiner/combiner.jl")
 include("truncate.jl")
 include("svd.jl")
 
@@ -53,11 +59,13 @@ include("blocksparse/blocksparsetensor.jl")
 include("blocksparse/diagblocksparse.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
+include("blocksparse/adapt.jl")
 
 #####################################
 # Empty
 #
-include("empty.jl")
+include("empty/empty.jl")
+include("empty/adapt.jl")
 
 #####################################
 # Deprecations
