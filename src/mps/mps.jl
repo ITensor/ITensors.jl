@@ -682,7 +682,7 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
     oᵢ = adapt(datatype(Li), op(onsiteOp, s, i))
-    C[ni, ni] = scalar((Li * oᵢ) * prime(dag(psi[i]), !rind)) / norm2_psi
+    C[ni, ni] = ((Li * oᵢ) * prime(dag(psi[i]), !rind))[] / norm2_psi
 
     # Get j > i correlations
     if !using_auto_fermion() && fermionic2
@@ -691,7 +691,7 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
 
     oᵢ = adapt(datatype(Li), op(Op1, s, i))
 
-    Li12 = dag(psi[i])' * oᵢ * Li
+    Li12 = (dag(psi[i])' * oᵢ) * Li
     pL12 = i
 
     for (n, j) in enumerate(sites[(ni + 1):end])
@@ -701,7 +701,7 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
         pL12 += 1
         if !using_auto_fermion() && fermionic2
           oᵢ = adapt(datatype(psi[pL12]), op("F", s[pL12]))
-          Li12 *= oᵢ * dag(psi[pL12])'
+          Li12 *= (oᵢ * dag(psi[pL12])')
         else
           sᵢ = siteind(psi, pL12)
           Li12 *= prime(dag(psi[pL12]), !sᵢ)
@@ -714,7 +714,12 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
 
       oⱼ = adapt(datatype(Li12), op(Op2, s, j))
       sⱼ = siteind(psi, j)
-      val = prime(dag(psi[j]), (sⱼ, lind)) * (oⱼ * Li12)
+      val = (Li12 * oⱼ) * prime(dag(psi[j]), (sⱼ, lind))
+
+      # XXX: This gives a different fermion sign with
+      # ITensors.enable_auto_fermion()
+      # val = prime(dag(psi[j]), (sⱼ, lind)) * (oⱼ * Li12)
+
       C[ni, nj] = scalar(val) / norm2_psi
       if is_cm_hermitian
         C[nj, ni] = conj(C[ni, nj])
@@ -723,7 +728,7 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       pL12 += 1
       if !using_auto_fermion() && fermionic2
         oᵢ = adapt(datatype(psi[pL12]), op("F", s[pL12]))
-        Li12 *= oᵢ * dag(psi[pL12])'
+        Li12 *= (oᵢ * dag(psi[pL12])')
       else
         sᵢ = siteind(psi, pL12)
         Li12 *= prime(dag(psi[pL12]), !sᵢ)
@@ -771,7 +776,7 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
         pL21 += 1
         if !using_auto_fermion() && fermionic1
           oᵢ = adapt(datatype(psi[pL21]), op("F", s[pL21]))
-          Li21 *= oᵢ * dag(psi[pL21])'
+          Li21 *= (oᵢ * dag(psi[pL21])')
         else
           sᵢ = siteind(psi, pL21)
           Li21 *= prime(dag(psi[pL21]), !sᵢ)
