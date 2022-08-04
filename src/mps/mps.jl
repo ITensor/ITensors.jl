@@ -674,7 +674,7 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
     while pL < i - 1
       pL += 1
       sᵢ = siteind(psi, pL)
-      L = (L * psi[pL]) * prime(dag(psi[pL]), sᵢ)
+      L = (L * psi[pL]) * prime(dag(psi[pL]), !sᵢ)
     end
 
     Li = L * psi[i]
@@ -682,7 +682,7 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
     oᵢ = adapt(datatype(Li), op(onsiteOp, s, i))
-    C[ni, ni] = scalar((Li * oᵢ) * prime(dag(psi[i]), not(rind))) / norm2_psi
+    C[ni, ni] = scalar((Li * oᵢ) * prime(dag(psi[i]), !rind)) / norm2_psi
 
     # Get j > i correlations
     if !using_auto_fermion() && fermionic2
