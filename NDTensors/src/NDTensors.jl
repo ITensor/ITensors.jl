@@ -8,6 +8,7 @@ using LinearAlgebra
 using StaticArrays
 using HDF5
 using Requires
+using SnoopPrecompile
 using Strided
 using TimerOutputs
 using TupleTools
@@ -63,6 +64,18 @@ include("empty.jl")
 # Deprecations
 #
 include("deprecated.jl")
+
+#####################################
+# Index
+#
+include(joinpath("index", "lastval.jl"))
+include(joinpath("index", "not.jl"))
+include(joinpath("index", "tagset.jl"))
+include(joinpath("index", "arrow.jl"))
+include(joinpath("index", "symmetrystyle.jl"))
+include(joinpath("index", "index.jl"))
+include(joinpath("index", "set_operations.jl"))
+include(joinpath("index", "indexset.jl"))
 
 #####################################
 # A global timer used with TimerOutputs.jl
@@ -181,6 +194,26 @@ function __init__()
   @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
     include("octavian.jl")
   end
+  resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
+
+  @precompile_all_calls begin
+    i = Index(2)
+    j = Index(2)
+    k = Index(2)
+    A = DenseTensor((i, j))
+    B = DenseTensor((j, k))
+    C = contract(A, (1, -1), B, (-1, 2), (1, 2))
+  end
+
+  return nothing
 end
+
+#####################################
+# Precompile certain functions
+#
+# if Base.VERSION >= v"1.4.2"
+#   include("precompile.jl")
+#   _precompile_()
+# end
 
 end # module NDTensors

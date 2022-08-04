@@ -69,9 +69,7 @@ sim(i::Int) = i
 #
 
 # More complicated definition makes Order(Ref(2)[]) faster
-@eval struct Order{N}
-  (OrderT::Type{<:Order})() = $(Expr(:new, :OrderT))
-end
+struct Order{N} end
 
 @doc """
     Order{N}

@@ -62,6 +62,7 @@ using Pkg
 using Printf
 using Random
 using SerializedElementArrays
+using SnoopPrecompile
 using StaticArrays
 using TimerOutputs
 using Zeros
@@ -115,16 +116,16 @@ include("algorithm.jl")
 #####################################
 # Index and IndexSet
 #
-include("lastval.jl")
-include("smallstring.jl") # Not currently using in TagSet
+# include("lastval.jl")
+# include("smallstring.jl") # Not currently using in TagSet
 include("readwrite.jl")
-include("not.jl")
-include("tagset.jl")
-include("arrow.jl")
-include("symmetrystyle.jl")
-include("index.jl")
-include("set_operations.jl")
-include("indexset.jl")
+# include("not.jl")
+# include("tagset.jl")
+# include("arrow.jl")
+# include("symmetrystyle.jl")
+# include("index.jl")
+# include("set_operations.jl")
+# include("indexset.jl")
 
 #####################################
 # ITensor
@@ -238,16 +239,21 @@ include("developer_tools.jl")
 #
 include("Deprecated/Deprecated.jl")
 
-function __init__()
-  return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
-end
-
 #####################################
 # Precompile certain functions
 #
-#if Base.VERSION >= v"1.4.2"
-#  include("precompile.jl")
-#  _precompile_()
-#end
+# if Base.VERSION >= v"1.4.2"
+#   include("precompile.jl")
+#   _precompile_()
+# end
+
+@precompile_all_calls begin
+  i = Index(2)
+  j = Index(2)
+  k = Index(2)
+  A = randomITensor(i, j)
+  B = randomITensor(j, k)
+  C = A * B
+end
 
 end # module ITensors

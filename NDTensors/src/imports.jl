@@ -11,6 +11,8 @@ import Base:
   -,
   *,
   /,
+  ==,
+  !,
   # Methods
   checkbounds,
   complex,
@@ -22,6 +24,7 @@ import Base:
   eltype,
   fill,
   fill!,
+  findfirst,
   getindex,
   hash,
   imag,

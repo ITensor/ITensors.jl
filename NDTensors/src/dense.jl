@@ -923,53 +923,53 @@ function contract!(
 
   _contract!(R, T1, T2, props, α, β)
   return R
-  #end
 end
 
-function _contract!(
-  CT::DenseTensor{El,NC},
-  AT::DenseTensor{El,NA},
-  BT::DenseTensor{El,NB},
+function reshape_to_matmul(
+  CT::DenseTensor{El},
+  AT::DenseTensor{El},
+  BT::DenseTensor{El},
   props::ContractionProperties,
-  α::Number=one(El),
-  β::Number=zero(El),
-) where {El,NC,NA,NB}
-  # TODO: directly use Tensor instead of Array
-  C = ReshapedArray(data(storage(CT)), dims(inds(CT)), ())
-  A = ReshapedArray(data(storage(AT)), dims(inds(AT)), ())
-  B = ReshapedArray(data(storage(BT)), dims(inds(BT)), ())
+) where {El}
+  C = reshape(data(storage(CT)), dims(inds(CT)))
+  A = reshape(data(storage(AT)), dims(inds(AT)))
+  B = reshape(data(storage(BT)), dims(inds(BT)))
+  return reshape_to_matmul(C, A, B, props)
+end
 
+function reshape_to_matmul(
+  C::Array{El},
+  A::Array{El},
+  B::Array{El},
+  props::ContractionProperties,
+) where {El}
   tA = 'N'
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
-    #@timeit_debug timer "_contract!: permutedims A" begin
-    @strided Ap = permutedims(A, pA)
-    #end # @timeit
-    AM = ReshapedArray(Ap, (props.dmid, props.dleft), ())
+    Ap = permutedims(A, pA)
+    AM = reshape(Ap, (props.dmid, props.dleft))
     tA = 'T'
   else
     #A doesn't have to be permuted
     if Atrans(props)
-      AM = ReshapedArray(A.parent, (props.dmid, props.dleft), ())
+      AM = reshape(A, (props.dmid, props.dleft))
       tA = 'T'
     else
-      AM = ReshapedArray(A.parent, (props.dleft, props.dmid), ())
+      AM = reshape(A, (props.dleft, props.dmid))
     end
   end
 
   tB = 'N'
   if props.permuteB
     pB = NTuple{NB,Int}(props.PB)
-    #@timeit_debug timer "_contract!: permutedims B" begin
-    @strided Bp = permutedims(B, pB)
-    #end # @timeit
-    BM = ReshapedArray(Bp, (props.dmid, props.dright), ())
+    Bp = permutedims(B, pB)
+    BM = reshape(Bp, (props.dmid, props.dright))
   else
     if Btrans(props)
-      BM = ReshapedArray(B.parent, (props.dright, props.dmid), ())
+      BM = reshape(B, (props.dright, props.dmid))
       tB = 'T'
     else
-      BM = ReshapedArray(B.parent, (props.dmid, props.dright), ())
+      BM = reshape(B, (props.dmid, props.dright))
     end
   end
 
@@ -977,27 +977,52 @@ function _contract!(
   if props.permuteC
     # Need to copy here since we will be permuting
     # into C later
-    CM = ReshapedArray(copy(C), (props.dleft, props.dright), ())
+    CM = reshape(copy(C), (props.dleft, props.dright))
   else
     if Ctrans(props)
-      CM = ReshapedArray(C.parent, (props.dright, props.dleft), ())
+      CM = reshape(C, (props.dright, props.dleft))
       (AM, BM) = (BM, AM)
       if tA == tB
         tA = tB = (tA == 'T' ? 'N' : 'T')
       end
     else
-      CM = ReshapedArray(C.parent, (props.dleft, props.dright), ())
+      CM = reshape(C, (props.dleft, props.dright))
     end
   end
+  return AM, tA, BM, tB, CM
+end
 
-  _gemm!(tA, tB, El(α), AM, BM, El(β), CM)
+# function _contract!(
+#   CT::DenseTensor{El},
+#   AT::DenseTensor{El},
+#   BT::DenseTensor{El},
+#   props::ContractionProperties,
+#   α::Number,
+#   β::Number,
+# ) where {El}
+#   return _contract!(CT, AT, BT, props, El(α), El(β))
+# end
+
+function _contract!(
+  CT::DenseTensor{El},
+  AT::DenseTensor{El},
+  BT::DenseTensor{El},
+  props::ContractionProperties,
+  α::El,
+  β::El,
+) where {El}
+  AM, tA, BM, tB, CM = reshape_to_matmul(CT, AT, BT, props)
+
+  # _gemm!(tA, tB, El(α), AM, BM, El(β), CM)
+  BLAS.gemm!(tA, tB, El(α), AM, BM, El(β), CM)
 
   if props.permuteC
     pC = NTuple{NC,Int}(props.PC)
-    Cr = ReshapedArray(CM.parent, props.newCrange, ())
+    Cr = reshape(CM, props.newCrange)
     # TODO: use invperm(pC) here?
     #@timeit_debug timer "_contract!: permutedims C" begin
-    @strided C .= permutedims(Cr, pC)
+    # @strided C .= permutedims(Cr, pC)
+    C .= permutedims(Cr, pC)
     #end # @timeit
   end
 

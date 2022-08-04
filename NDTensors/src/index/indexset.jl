@@ -1,20 +1,3 @@
-# Represents a static order of an ITensor
-@eval struct Order{N}
-  (OrderT::Type{<:Order})() = $(Expr(:new, :OrderT))
-end
-
-@doc """
-   Order{N}
-A value type representing the order of an ITensor.
-""" Order
-
-"""
-   Order(N) = Order{N}()
-Create an instance of the value type Order representing
-the order of an ITensor.
-"""
-Order(N) = Order{N}()
-
 # Helpful if we want code to work generically
 # for other Index-like types (such as IndexRange)
 const IndexSet{IndexT<:Index} = Vector{IndexT}
@@ -709,7 +692,7 @@ Return a new Indices with the last Index removed.
 pop(is::Indices) = (NDTensors.pop(Tuple(is)))
 
 # Overload the unexported NDTensors version
-NDTensors.pop(is::Indices) = pop(is)
+# NDTensors.pop(is::Indices) = pop(is)
 
 # TODO: don't convert to Tuple
 """
@@ -720,7 +703,7 @@ Return a new Indices with the first Index removed.
 popfirst(is::IndexSet) = (NDTensors.popfirst(Tuple(is)))
 
 # Overload the unexported NDTensors version
-NDTensors.popfirst(is::IndexSet) = popfirst(is)
+# NDTensors.popfirst(is::IndexSet) = popfirst(is)
 
 """
     push(is::Indices, i::Index)
@@ -731,7 +714,7 @@ at the end.
 push(is::IndexSet, i::Index) = NDTensors.push(is, i)
 
 # Overload the unexported NDTensors version
-NDTensors.push(is::IndexSet, i::Index) = push(is, i)
+# NDTensors.push(is::IndexSet, i::Index) = push(is, i)
 
 # TODO: deprecate in favor of `filterinds` (abuse of Base notation)
 filter(is::Indices, args...; kwargs...) = filter(fmatch(args...; kwargs...), is)
@@ -780,17 +763,17 @@ dirs(is::Indices) = dir.(is)
 
 hasqns(is::Indices) = any(hasqns, is)
 
-"""
-    getperm(col1, col2)
-
-Get the permutation that takes collection 2 to collection 1,
-such that `col2[p] .== col1`.
-"""
-function getperm(s1, s2)
-  N = length(s1)
-  r = Vector{Int}(undef, N)
-  return map!(i -> findfirst(==(s1[i]), s2), r, 1:length(s1))
-end
+## """
+##     getperm(col1, col2)
+## 
+## Get the permutation that takes collection 2 to collection 1,
+## such that `col2[p] .== col1`.
+## """
+## function getperm(s1, s2)
+##   N = length(s1)
+##   r = Vector{Int}(undef, N)
+##   return map!(i -> findfirst(==(s1[i]), s2), r, 1:length(s1))
+## end
 
 # TODO: define directly for Vector
 """
@@ -820,7 +803,7 @@ function NDTensors.nblocks(inds::NTuple{N,<:Index}) where {N}
   return ntuple(i -> nblocks(inds, i), Val(N))
 end
 
-ndiagblocks(inds) = minimum(nblocks(inds))
+# ndiagblocks(inds) = minimum(nblocks(inds))
 
 """
     flux(inds::Indices, block::Tuple{Vararg{Int}})

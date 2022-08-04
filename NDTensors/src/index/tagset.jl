@@ -1,5 +1,55 @@
 using BitIntegers
 
+const IntChar = UInt16
+const IntSmallString = UInt256
+const SmallStringStorage = SVector{16,IntChar}
+const MSmallStringStorage = MVector{16,IntChar}
+
+struct SmallString
+  data::SmallStringStorage
+  SmallString(sv::SmallStringStorage) = new(sv)
+end
+
+const Tag = SmallString
+
+function SmallString(i::IntSmallString)
+  mut_is = MVector{1,IntSmallString}(ntoh(i))
+  p = convert(Ptr{SmallStringStorage}, pointer_from_objref(mut_is))
+  return SmallString(unsafe_load(p))
+end
+
+isnull(s::SmallString) = @inbounds s[1] == IntChar(0)
+
+Base.getindex(s::SmallString, n::Int) = getindex(s.data, n)
+
+maxlength(s::SmallString) = length(s.data)
+maxlength(s::Type{<:SVector}) = length(s)
+maxlength(s::Type{SmallString}) = maxlength(SmallStringStorage)
+
+function SmallString(str::String)
+  length(str) > maxlength(SmallString) &&
+    error("String is too long for SmallString. Maximum length is $smallLength.")
+  mstore = MSmallStringStorage(ntuple(_ -> IntChar(0), Val(maxlength(SmallString))))
+  for (n, c) in enumerate(str)
+    mstore[n] = IntChar(c)
+  end
+  return SmallString(SmallStringStorage(mstore))
+end
+
+function Base.show(io::IO, s::SmallString)
+  n = 1
+  while n <= maxlength(s) && s[n] != IntChar(0)
+    print(io, Char(s[n]))
+    n += 1
+  end
+end
+
+function cast_to_uint(store)
+  mut_store = MSmallStringStorage(store)
+  storage_begin = convert(Ptr{IntSmallString}, pointer_from_objref(mut_store))
+  return ntoh(unsafe_load(storage_begin))
+end
+
 const IntTag = UInt256  # An integer that can be cast to a Tag
 const MTagStorage = MVector{16,IntTag} # A mutable tag storage, holding 16 characters
 const TagSetStorage{T,N} = SVector{N,T}

@@ -75,11 +75,11 @@ function SmallString(i::IntSmallString)
   return SmallString(unsafe_load(p))
 end
 
-function cast_to_uint(store)
-  mut_store = MSmallStringStorage(store)
-  storage_begin = convert(Ptr{IntSmallString}, pointer_from_objref(mut_store))
-  return ntoh(unsafe_load(storage_begin))
-end
+### function cast_to_uint(store)
+###   mut_store = MSmallStringStorage(store)
+###   storage_begin = convert(Ptr{IntSmallString}, pointer_from_objref(mut_store))
+###   return ntoh(unsafe_load(storage_begin))
+### end
 
 function IntSmallString(s::SmallString)
   return cast_to_uint(s.data)

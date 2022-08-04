@@ -15,6 +15,7 @@ import Base:
   <,
   >,
   !,
+  ^,
   # functions
   adjoint,
   allunique,
@@ -109,6 +110,23 @@ import LinearAlgebra:
   transpose
 
 using ITensors.NDTensors:
+  Index,
+  TagSet,
+  IDType,
+  LastVal,
+  Indices,
+  SymmetryStyle,
+  SmallString,
+  Tag,
+  Order,
+  IndexSet,
+  @ts_str,
+  tags,
+  indices,
+  compute_contraction_labels,
+  Arrow,
+  NonQN,
+  Out,
   EmptyNumber,
   _Tuple,
   _NTuple,
@@ -120,6 +138,13 @@ using ITensors.NDTensors:
   timer
 
 import ITensors.NDTensors:
+  hasqns,
+  addtags,
+  data,
+  dag,
+  commontags,
+  prime,
+  val,
   # Modules
   Strided, # to control threading
   # Types

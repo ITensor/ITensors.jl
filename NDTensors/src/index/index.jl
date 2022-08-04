@@ -135,7 +135,7 @@ Return the direction of an `Index` (`ITensors.In`, `ITensors.Out`, or `ITensors.
 dir(i::Index) = i.dir
 
 # Used for generic code in NDTensors
-NDTensors.dir(i::Index) = dir(i)
+# NDTensors.dir(i::Index) = dir(i)
 
 # Trait to determine if an Index, Index collection, Tensor, or ITensor
 # has symmetries
@@ -242,7 +242,7 @@ Copy an index `i` and reverse its direction.
 dag(i::Index) = Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
 
 # For internal use in NDTensors
-NDTensors.dag(i::Index) = dag(i)
+# NDTensors.dag(i::Index) = dag(i)
 
 """
     hastags(i::Index, ts::Union{AbstractString,TagSet})
