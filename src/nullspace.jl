@@ -169,6 +169,10 @@ For example, if `T` has the indices `i,j,k`, calling
 The index `n` can be obtained by calling
 `n = uniqueindex(N,T)`
 
+Note that the implementation of this function is subject to change in the future, in
+which case the precise `atol` value that gives a certain null space size may change
+in future versions of ITensor.
+
 Keyword arguments:
 - `atol::Float64=1E-12` - singular values of T†*T below this value define the null space
 - `tags::String="n"` - choose the tags of the index selecting elements of the null space
