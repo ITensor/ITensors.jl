@@ -167,7 +167,7 @@ that is not currently available.
 """
 data(T::ITensor) = NDTensors.data(tensor(T))
 
-NDTensors.data(x::ITensor) = data(x)
+# NDTensors.data(x::ITensor) = data(x)
 datatype(x::ITensor) = datatype(tensor(x))
 
 similar(T::ITensor, args...)::ITensor = itensor(NDTensors.similar(tensor(T), args...))

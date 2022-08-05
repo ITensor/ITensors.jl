@@ -445,611 +445,611 @@ function permutedims!(
   return R
 end
 
-function outer!(
-  R::DenseTensor{ElR}, T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}
-) where {ElR,ElT1,ElT2}
-  if ElT1 != ElT2
-    # TODO: use promote instead
-    # T1,T2 = promote(T1,T2)
-
-    ElT1T2 = promote_type(ElT1, ElT2)
-    if ElT1 != ElT1T2
-      # TODO: get this working
-      # T1 = ElR.(T1)
-      T1 = one(ElT1T2) * T1
-    end
-    if ElT2 != ElT1T2
-      # TODO: get this working
-      # T2 = ElR.(T2)
-      T2 = one(ElT1T2) * T2
-    end
-  end
-
-  v1 = data(T1)
-  v2 = data(T2)
-  RM = reshape(R, length(v1), length(v2))
-  #RM .= v1 .* transpose(v2)
-  #mul!(RM, v1, transpose(v2))
-  _gemm!('N', 'T', one(ElR), v1, v2, zero(ElR), RM)
-  return R
-end
-
-export backend_auto, backend_blas, backend_generic
-
-@eval struct GemmBackend{T}
-  (f::Type{<:GemmBackend})() = $(Expr(:new, :f))
-end
-GemmBackend(s) = GemmBackend{Symbol(s)}()
-macro GemmBackend_str(s)
-  return :(GemmBackend{$(Expr(:quote, Symbol(s)))})
-end
-
-const gemm_backend = Ref(:Auto)
-function backend_auto()
-  return gemm_backend[] = :Auto
-end
-function backend_blas()
-  return gemm_backend[] = :BLAS
-end
-function backend_generic()
-  return gemm_backend[] = :Generic
-end
-
-@inline function auto_select_backend(
-  ::Type{<:StridedVecOrMat{<:BlasFloat}},
-  ::Type{<:StridedVecOrMat{<:BlasFloat}},
-  ::Type{<:StridedVecOrMat{<:BlasFloat}},
-)
-  return GemmBackend(:BLAS)
-end
-
-@inline function auto_select_backend(
-  ::Type{<:AbstractVecOrMat}, ::Type{<:AbstractVecOrMat}, ::Type{<:AbstractVecOrMat}
-)
-  return GemmBackend(:Generic)
-end
-
-function _gemm!(
-  tA, tB, alpha, A::TA, B::TB, beta, C::TC
-) where {TA<:AbstractVecOrMat,TB<:AbstractVecOrMat,TC<:AbstractVecOrMat}
-  if gemm_backend[] == :Auto
-    _gemm!(auto_select_backend(TA, TB, TC), tA, tB, alpha, A, B, beta, C)
-  else
-    _gemm!(GemmBackend(gemm_backend[]), tA, tB, alpha, A, B, beta, C)
-  end
-end
-
-# BLAS matmul
-function _gemm!(
-  ::GemmBackend{:BLAS},
-  tA,
-  tB,
-  alpha,
-  A::AbstractVecOrMat,
-  B::AbstractVecOrMat,
-  beta,
-  C::AbstractVecOrMat,
-)
-  #@timeit_debug timer "BLAS.gemm!" begin
-  return BLAS.gemm!(tA, tB, alpha, A, B, beta, C)
-  #end # @timeit
-end
-
-# generic matmul
-function _gemm!(
-  ::GemmBackend{:Generic},
-  tA,
-  tB,
-  alpha::AT,
-  A::AbstractVecOrMat,
-  B::AbstractVecOrMat,
-  beta::BT,
-  C::AbstractVecOrMat,
-) where {AT,BT}
-  mul!(C, tA == 'T' ? transpose(A) : A, tB == 'T' ? transpose(B) : B, alpha, beta)
-  return C
-end
-
-# TODO: call outer!!, make this generic
-function outer(T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}) where {ElT1,ElT2}
-  array_outer = vec(array(T1)) * transpose(vec(array(T2)))
-  inds_outer = unioninds(inds(T1), inds(T2))
-  return tensor(Dense{promote_type(ElT1, ElT2)}(vec(array_outer)), inds_outer)
-end
-
-function contraction_output(
-  ::TensorT1, ::TensorT2, indsR::IndsR
-) where {TensorT1<:DenseTensor,TensorT2<:DenseTensor,IndsR}
-  TensorR = contraction_output_type(TensorT1, TensorT2, IndsR)
-  return similar(TensorR, indsR)
-end
-
-Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))
-
-# Both are scalar-like tensors
-function _contract_scalar!(
-  R::DenseTensor{ElR},
-  labelsR,
-  T1::Number,
-  labelsT1,
-  T2::Number,
-  labelsT2,
-  α=one(ElR),
-  β=zero(ElR),
-) where {ElR}
-  if iszero(β)
-    R[1] = α * T1 * T2
-  elseif iszero(α)
-    R[1] = β * R[1]
-  else
-    R[1] = α * T1 * T2 + β * R[1]
-  end
-  return R
-end
-
-# Trivial permutation
-# Version where R and T have different element types, so we can't call BLAS
-# Instead use Julia's broadcasting (maybe consider Strided in the future)
-function _contract_scalar_noperm!(
-  R::DenseTensor{ElR}, T::DenseTensor, α, β=zero(ElR)
-) where {ElR}
-  Rᵈ = data(R)
-  Tᵈ = data(T)
-  if iszero(β)
-    if iszero(α)
-      fill!(Rᵈ, 0)
-    else
-      Rᵈ .= α .* Tᵈ
-    end
-  elseif isone(β)
-    if iszero(α)
-      # No-op
-      # Rᵈ .= Rᵈ
-    else
-      Rᵈ .= α .* Tᵈ .+ Rᵈ
-    end
-  else
-    if iszero(α)
-      # Rᵈ .= β .* Rᵈ
-      BLAS.scal!(length(Rᵈ), β, Rᵈ, 1)
-    else
-      Rᵈ .= α .* Tᵈ .+ β .* Rᵈ
-    end
-  end
-  return R
-end
-
-# Trivial permutation
-# Version where R and T are the same element type, so we can
-# call BLAS
-function _contract_scalar_noperm!(
-  R::DenseTensor{ElR}, T::DenseTensor{ElR}, α, β=zero(ElR)
-) where {ElR}
-  Rᵈ = data(R)
-  Tᵈ = data(T)
-  if iszero(β)
-    if iszero(α)
-      fill!(Rᵈ, 0)
-    else
-      # Rᵈ .= α .* T₂ᵈ
-      BLAS.axpby!(α, Tᵈ, β, Rᵈ)
-    end
-  elseif isone(β)
-    if iszero(α)
-      # No-op
-      # Rᵈ .= Rᵈ
-    else
-      # Rᵈ .= α .* Tᵈ .+ Rᵈ
-      BLAS.axpy!(α, Tᵈ, Rᵈ)
-    end
-  else
-    if iszero(α)
-      # Rᵈ .= β .* Rᵈ
-      BLAS.scal!(length(Rᵈ), β, Rᵈ, 1)
-    else
-      # Rᵈ .= α .* Tᵈ .+ β .* Rᵈ
-      BLAS.axpby!(α, Tᵈ, β, Rᵈ)
-    end
-  end
-  return R
-end
-
-# Non-trivial permutation
-function _contract_scalar_perm!(
-  Rᵃ::AbstractArray{ElR}, Tᵃ::AbstractArray, perm, α, β=zero(ElR)
-) where {ElR}
-  if iszero(β)
-    if iszero(α)
-      fill!(Rᵃ, 0)
-    else
-      @strided Rᵃ .= α .* permutedims(Tᵃ, perm)
-    end
-  elseif isone(β)
-    if iszero(α)
-      # Rᵃ .= Rᵃ
-      # No-op
-    else
-      @strided Rᵃ .= α .* permutedims(Tᵃ, perm) .+ Rᵃ
-    end
-  else
-    if iszero(α)
-      # Rᵃ .= β .* Rᵃ
-      BLAS.scal!(length(Rᵃ), β, Rᵃ, 1)
-    else
-      Rᵃ .= α .* permutedims(Tᵃ, perm) .+ β .* Rᵃ
-    end
-  end
-  return Rᵃ
-end
-
-function drop_singletons(::Order{N}, labels, dims) where {N}
-  labelsᵣ = ntuple(zero, Val(N))
-  dimsᵣ = labelsᵣ
-  nkeep = 1
-  for n in 1:length(dims)
-    if dims[n] > 1
-      labelsᵣ = @inbounds setindex(labelsᵣ, labels[n], nkeep)
-      dimsᵣ = @inbounds setindex(dimsᵣ, dims[n], nkeep)
-      nkeep += 1
-    end
-  end
-  return labelsᵣ, dimsᵣ
-end
-
-function _contract_scalar_maybe_perm!(
-  ::Order{N}, R::DenseTensor{ElR,NR}, labelsR, T::DenseTensor, labelsT, α, β=zero(ElR)
-) where {ElR,NR,N}
-  labelsRᵣ, dimsRᵣ = drop_singletons(Order(N), labelsR, dims(R))
-  labelsTᵣ, dimsTᵣ = drop_singletons(Order(N), labelsT, dims(T))
-  perm = getperm(labelsRᵣ, labelsTᵣ)
-  if is_trivial_permutation(perm)
-    # trivial permutation
-    _contract_scalar_noperm!(R, T, α, β)
-  else
-    # non-trivial permutation
-    Rᵣ = ReshapedArray(data(R), dimsRᵣ, ())
-    Tᵣ = ReshapedArray(data(T), dimsTᵣ, ())
-    _contract_scalar_perm!(Rᵣ, Tᵣ, perm, α, β)
-  end
-  return R
-end
-
-function _contract_scalar_maybe_perm!(
-  R::DenseTensor{ElR,NR}, labelsR, T::DenseTensor, labelsT, α, β=zero(ElR)
-) where {ElR,NR}
-  N = count(≠(1), dims(R))
-  _contract_scalar_maybe_perm!(Order(N), R, labelsR, T, labelsT, α, β)
-  return R
-end
-
-# XXX: handle case of non-trivial permutation
-function _contract_scalar_maybe_perm!(
-  R::DenseTensor{ElR,NR},
-  labelsR,
-  T₁::DenseTensor,
-  labelsT₁,
-  T₂::DenseTensor,
-  labelsT₂,
-  α=one(ElR),
-  β=zero(ElR),
-) where {ElR,NR}
-  if nnz(T₁) == 1
-    _contract_scalar_maybe_perm!(R, labelsR, T₂, labelsT₂, α * T₁[1], β)
-  elseif nnz(T₂) == 1
-    _contract_scalar_maybe_perm!(R, labelsR, T₁, labelsT₁, α * T₂[1], β)
-  else
-    error("In _contract_scalar_perm!, one tensor must be a scalar")
-  end
-  return R
-end
-
-# At least one of the tensors is size 1
-function _contract_scalar!(
-  R::DenseTensor{ElR},
-  labelsR,
-  T1::DenseTensor,
-  labelsT1,
-  T2::DenseTensor,
-  labelsT2,
-  α=one(ElR),
-  β=zero(ElR),
-) where {ElR}
-  if nnz(T1) == nnz(T2) == 1
-    _contract_scalar!(R, labelsR, T1[1], labelsT1, T2[1], labelsT2, α, β)
-  else
-    _contract_scalar_maybe_perm!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-  end
-  return R
-end
-
-function contract!(
-  R::DenseTensor{ElR,NR},
-  labelsR,
-  T1::DenseTensor{ElT1,N1},
-  labelsT1,
-  T2::DenseTensor{ElT2,N2},
-  labelsT2,
-  α::Elα=one(ElR),
-  β::Elβ=zero(ElR),
-) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
-  # Special case for scalar tensors
-  if nnz(T1) == 1 || nnz(T2) == 1
-    _contract_scalar!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-    return R
-  end
-
-  if using_tblis() && ElR <: LinearAlgebra.BlasReal && (ElR == ElT1 == ElT2 == Elα == Elβ)
-    #@timeit_debug timer "TBLIS contract!" begin
-    contract!(Val(:TBLIS), R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-    #end
-    return R
-  end
-
-  if N1 + N2 == NR
-    outer!(R, T1, T2)
-    labelsRp = (labelsT1..., labelsT2...)
-    perm = getperm(labelsR, labelsRp)
-    if !is_trivial_permutation(perm)
-      permutedims!(R, copy(R), perm)
-    end
-    return R
-  end
-
-  props = ContractionProperties(labelsT1, labelsT2, labelsR)
-  compute_contraction_properties!(props, T1, T2, R)
-
-  if ElT1 != ElT2
-    # TODO: use promote instead
-    # T1, T2 = promote(T1, T2)
-
-    ElT1T2 = promote_type(ElT1, ElT2)
-    if ElT1 != ElR
-      # TODO: get this working
-      # T1 = ElR.(T1)
-      T1 = one(ElT1T2) * T1
-    end
-    if ElT2 != ElR
-      # TODO: get this working
-      # T2 = ElR.(T2)
-      T2 = one(ElT1T2) * T2
-    end
-  end
-
-  _contract!(R, T1, T2, props, α, β)
-  return R
-end
-
-function reshape_to_matmul(
-  CT::DenseTensor{El},
-  AT::DenseTensor{El},
-  BT::DenseTensor{El},
-  props::ContractionProperties,
-) where {El}
-  C = reshape(data(storage(CT)), dims(inds(CT)))
-  A = reshape(data(storage(AT)), dims(inds(AT)))
-  B = reshape(data(storage(BT)), dims(inds(BT)))
-  return reshape_to_matmul(C, A, B, props)
-end
-
-function reshape_to_matmul(
-  C::Array{El},
-  A::Array{El},
-  B::Array{El},
-  props::ContractionProperties,
-) where {El}
-  tA = 'N'
-  if props.permuteA
-    pA = NTuple{NA,Int}(props.PA)
-    Ap = permutedims(A, pA)
-    AM = reshape(Ap, (props.dmid, props.dleft))
-    tA = 'T'
-  else
-    #A doesn't have to be permuted
-    if Atrans(props)
-      AM = reshape(A, (props.dmid, props.dleft))
-      tA = 'T'
-    else
-      AM = reshape(A, (props.dleft, props.dmid))
-    end
-  end
-
-  tB = 'N'
-  if props.permuteB
-    pB = NTuple{NB,Int}(props.PB)
-    Bp = permutedims(B, pB)
-    BM = reshape(Bp, (props.dmid, props.dright))
-  else
-    if Btrans(props)
-      BM = reshape(B, (props.dright, props.dmid))
-      tB = 'T'
-    else
-      BM = reshape(B, (props.dmid, props.dright))
-    end
-  end
-
-  # TODO: this logic may be wrong
-  if props.permuteC
-    # Need to copy here since we will be permuting
-    # into C later
-    CM = reshape(copy(C), (props.dleft, props.dright))
-  else
-    if Ctrans(props)
-      CM = reshape(C, (props.dright, props.dleft))
-      (AM, BM) = (BM, AM)
-      if tA == tB
-        tA = tB = (tA == 'T' ? 'N' : 'T')
-      end
-    else
-      CM = reshape(C, (props.dleft, props.dright))
-    end
-  end
-  return AM, tA, BM, tB, CM
-end
-
-# function _contract!(
-#   CT::DenseTensor{El},
-#   AT::DenseTensor{El},
-#   BT::DenseTensor{El},
-#   props::ContractionProperties,
-#   α::Number,
-#   β::Number,
-# ) where {El}
-#   return _contract!(CT, AT, BT, props, El(α), El(β))
-# end
-
-function _contract!(
-  CT::DenseTensor{El},
-  AT::DenseTensor{El},
-  BT::DenseTensor{El},
-  props::ContractionProperties,
-  α::El,
-  β::El,
-) where {El}
-  AM, tA, BM, tB, CM = reshape_to_matmul(CT, AT, BT, props)
-
-  # _gemm!(tA, tB, El(α), AM, BM, El(β), CM)
-  BLAS.gemm!(tA, tB, El(α), AM, BM, El(β), CM)
-
-  if props.permuteC
-    pC = NTuple{NC,Int}(props.PC)
-    Cr = reshape(CM, props.newCrange)
-    # TODO: use invperm(pC) here?
-    #@timeit_debug timer "_contract!: permutedims C" begin
-    # @strided C .= permutedims(Cr, pC)
-    C .= permutedims(Cr, pC)
-    #end # @timeit
-  end
-
-  return CT
-end
-
-"""
-    NDTensors.permute_reshape(T::Tensor,pos...)
-
-Takes a permutation that is split up into tuples. Index positions
-within the tuples are combined.
-
-For example:
-
-permute_reshape(T,(3,2),1)
-
-First T is permuted as `permutedims(3,2,1)`, then reshaped such
-that the original indices 3 and 2 are combined.
-"""
-function permute_reshape(
-  T::DenseTensor{ElT,NT,IndsT}, pos::Vararg{<:Any,N}
-) where {ElT,NT,IndsT,N}
-  perm = flatten(pos...)
-
-  length(perm) ≠ NT && error("Index positions must add up to order of Tensor ($N)")
-  isperm(perm) || error("Index positions must be a permutation")
-
-  dimsT = dims(T)
-  indsT = inds(T)
-  if !is_trivial_permutation(perm)
-    T = permutedims(T, perm)
-  end
-  if all(p -> length(p) == 1, pos) && N == NT
-    return T
-  end
-  newdims = MVector(ntuple(_ -> eltype(IndsT)(1), Val(N)))
-  for i in 1:N
-    if length(pos[i]) == 1
-      # No reshape needed, just use the
-      # original index
-      newdims[i] = indsT[pos[i][1]]
-    else
-      newdim_i = 1
-      for p in pos[i]
-        newdim_i *= dimsT[p]
-      end
-      newdims[i] = eltype(IndsT)(newdim_i)
-    end
-  end
-  newinds = similartype(IndsT, Val{N})(Tuple(newdims))
-  return reshape(T, newinds)
-end
-
-# svd of an order-n tensor according to positions Lpos
-# and Rpos
-function LinearAlgebra.svd(
-  T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
-) where {N,IndsT,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  UM, S, VM, spec = svd(M; kwargs...)
-  u = ind(UM, 2)
-  v = ind(VM, 2)
-
-  Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
-  Uinds = push(Linds, u)
-
-  # TODO: do these positions need to be reversed?
-  Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
-  Vinds = push(Rinds, v)
-
-  U = reshape(UM, Uinds)
-  V = reshape(VM, Vinds)
-
-  return U, S, V, spec
-end
-
-# qr decomposition of an order-n tensor according to 
-# positions Lpos and Rpos
-function LinearAlgebra.qr(
-  T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
-) where {N,IndsT,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  QM, RM = qr(M; kwargs...)
-  q = ind(QM, 2)
-  r = ind(RM, 1)
-  # TODO: simplify this by permuting inds(T) by (Lpos,Rpos)
-  # then grab Linds,Rinds
-  Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
-  Qinds = push(Linds, r)
-  Q = reshape(QM, Qinds)
-  Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
-  Rinds = pushfirst(Rinds, r)
-  R = reshape(RM, Rinds)
-  return Q, R
-end
-
-# polar decomposition of an order-n tensor according to positions Lpos
-# and Rpos
-function polar(
-  T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}
-) where {N,IndsT,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  UM, PM = polar(M)
-
-  # TODO: turn these into functions
-  Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
-  Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
-
-  # Use sim to create "similar" indices, in case
-  # the indices have identifiers. If not this should
-  # act as an identity operator
-  simRinds = sim(Rinds)
-  Uinds = (Linds..., simRinds...)
-  Pinds = (simRinds..., Rinds...)
-
-  U = reshape(UM, Uinds)
-  P = reshape(PM, Pinds)
-  return U, P
-end
-
-function LinearAlgebra.exp(
-  T::DenseTensor{ElT,N}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; ishermitian::Bool=false
-) where {ElT,N,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  indsTp = permute(inds(T), (Lpos..., Rpos...))
-  if ishermitian
-    expM = parent(exp(Hermitian(matrix(M))))
-    return tensor(Dense{ElT}(vec(expM)), indsTp)
-  else
-    expM = exp(M)
-    return reshape(expM, indsTp)
-  end
-end
+## function outer!(
+##   R::DenseTensor{ElR}, T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}
+## ) where {ElR,ElT1,ElT2}
+##   if ElT1 != ElT2
+##     # TODO: use promote instead
+##     # T1,T2 = promote(T1,T2)
+## 
+##     ElT1T2 = promote_type(ElT1, ElT2)
+##     if ElT1 != ElT1T2
+##       # TODO: get this working
+##       # T1 = ElR.(T1)
+##       T1 = one(ElT1T2) * T1
+##     end
+##     if ElT2 != ElT1T2
+##       # TODO: get this working
+##       # T2 = ElR.(T2)
+##       T2 = one(ElT1T2) * T2
+##     end
+##   end
+## 
+##   v1 = data(T1)
+##   v2 = data(T2)
+##   RM = reshape(R, length(v1), length(v2))
+##   #RM .= v1 .* transpose(v2)
+##   #mul!(RM, v1, transpose(v2))
+##   _gemm!('N', 'T', one(ElR), v1, v2, zero(ElR), RM)
+##   return R
+## end
+## 
+## export backend_auto, backend_blas, backend_generic
+## 
+## @eval struct GemmBackend{T}
+##   (f::Type{<:GemmBackend})() = $(Expr(:new, :f))
+## end
+## GemmBackend(s) = GemmBackend{Symbol(s)}()
+## macro GemmBackend_str(s)
+##   return :(GemmBackend{$(Expr(:quote, Symbol(s)))})
+## end
+## 
+## const gemm_backend = Ref(:Auto)
+## function backend_auto()
+##   return gemm_backend[] = :Auto
+## end
+## function backend_blas()
+##   return gemm_backend[] = :BLAS
+## end
+## function backend_generic()
+##   return gemm_backend[] = :Generic
+## end
+## 
+## @inline function auto_select_backend(
+##   ::Type{<:StridedVecOrMat{<:BlasFloat}},
+##   ::Type{<:StridedVecOrMat{<:BlasFloat}},
+##   ::Type{<:StridedVecOrMat{<:BlasFloat}},
+## )
+##   return GemmBackend(:BLAS)
+## end
+## 
+## @inline function auto_select_backend(
+##   ::Type{<:AbstractVecOrMat}, ::Type{<:AbstractVecOrMat}, ::Type{<:AbstractVecOrMat}
+## )
+##   return GemmBackend(:Generic)
+## end
+## 
+## function _gemm!(
+##   tA, tB, alpha, A::TA, B::TB, beta, C::TC
+## ) where {TA<:AbstractVecOrMat,TB<:AbstractVecOrMat,TC<:AbstractVecOrMat}
+##   if gemm_backend[] == :Auto
+##     _gemm!(auto_select_backend(TA, TB, TC), tA, tB, alpha, A, B, beta, C)
+##   else
+##     _gemm!(GemmBackend(gemm_backend[]), tA, tB, alpha, A, B, beta, C)
+##   end
+## end
+## 
+## # BLAS matmul
+## function _gemm!(
+##   ::GemmBackend{:BLAS},
+##   tA,
+##   tB,
+##   alpha,
+##   A::AbstractVecOrMat,
+##   B::AbstractVecOrMat,
+##   beta,
+##   C::AbstractVecOrMat,
+## )
+##   #@timeit_debug timer "BLAS.gemm!" begin
+##   return BLAS.gemm!(tA, tB, alpha, A, B, beta, C)
+##   #end # @timeit
+## end
+## 
+## # generic matmul
+## function _gemm!(
+##   ::GemmBackend{:Generic},
+##   tA,
+##   tB,
+##   alpha::AT,
+##   A::AbstractVecOrMat,
+##   B::AbstractVecOrMat,
+##   beta::BT,
+##   C::AbstractVecOrMat,
+## ) where {AT,BT}
+##   mul!(C, tA == 'T' ? transpose(A) : A, tB == 'T' ? transpose(B) : B, alpha, beta)
+##   return C
+## end
+## 
+## # TODO: call outer!!, make this generic
+## function outer(T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}) where {ElT1,ElT2}
+##   array_outer = vec(array(T1)) * transpose(vec(array(T2)))
+##   inds_outer = unioninds(inds(T1), inds(T2))
+##   return tensor(Dense{promote_type(ElT1, ElT2)}(vec(array_outer)), inds_outer)
+## end
+## 
+## function contraction_output(
+##   ::TensorT1, ::TensorT2, indsR::IndsR
+## ) where {TensorT1<:DenseTensor,TensorT2<:DenseTensor,IndsR}
+##   TensorR = contraction_output_type(TensorT1, TensorT2, IndsR)
+##   return similar(TensorR, indsR)
+## end
+## 
+## Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))
+## 
+## # Both are scalar-like tensors
+## function _contract_scalar!(
+##   R::DenseTensor{ElR},
+##   labelsR,
+##   T1::Number,
+##   labelsT1,
+##   T2::Number,
+##   labelsT2,
+##   α=one(ElR),
+##   β=zero(ElR),
+## ) where {ElR}
+##   if iszero(β)
+##     R[1] = α * T1 * T2
+##   elseif iszero(α)
+##     R[1] = β * R[1]
+##   else
+##     R[1] = α * T1 * T2 + β * R[1]
+##   end
+##   return R
+## end
+## 
+## # Trivial permutation
+## # Version where R and T have different element types, so we can't call BLAS
+## # Instead use Julia's broadcasting (maybe consider Strided in the future)
+## function _contract_scalar_noperm!(
+##   R::DenseTensor{ElR}, T::DenseTensor, α, β=zero(ElR)
+## ) where {ElR}
+##   Rᵈ = data(R)
+##   Tᵈ = data(T)
+##   if iszero(β)
+##     if iszero(α)
+##       fill!(Rᵈ, 0)
+##     else
+##       Rᵈ .= α .* Tᵈ
+##     end
+##   elseif isone(β)
+##     if iszero(α)
+##       # No-op
+##       # Rᵈ .= Rᵈ
+##     else
+##       Rᵈ .= α .* Tᵈ .+ Rᵈ
+##     end
+##   else
+##     if iszero(α)
+##       # Rᵈ .= β .* Rᵈ
+##       BLAS.scal!(length(Rᵈ), β, Rᵈ, 1)
+##     else
+##       Rᵈ .= α .* Tᵈ .+ β .* Rᵈ
+##     end
+##   end
+##   return R
+## end
+## 
+## # Trivial permutation
+## # Version where R and T are the same element type, so we can
+## # call BLAS
+## function _contract_scalar_noperm!(
+##   R::DenseTensor{ElR}, T::DenseTensor{ElR}, α, β=zero(ElR)
+## ) where {ElR}
+##   Rᵈ = data(R)
+##   Tᵈ = data(T)
+##   if iszero(β)
+##     if iszero(α)
+##       fill!(Rᵈ, 0)
+##     else
+##       # Rᵈ .= α .* T₂ᵈ
+##       BLAS.axpby!(α, Tᵈ, β, Rᵈ)
+##     end
+##   elseif isone(β)
+##     if iszero(α)
+##       # No-op
+##       # Rᵈ .= Rᵈ
+##     else
+##       # Rᵈ .= α .* Tᵈ .+ Rᵈ
+##       BLAS.axpy!(α, Tᵈ, Rᵈ)
+##     end
+##   else
+##     if iszero(α)
+##       # Rᵈ .= β .* Rᵈ
+##       BLAS.scal!(length(Rᵈ), β, Rᵈ, 1)
+##     else
+##       # Rᵈ .= α .* Tᵈ .+ β .* Rᵈ
+##       BLAS.axpby!(α, Tᵈ, β, Rᵈ)
+##     end
+##   end
+##   return R
+## end
+## 
+## # Non-trivial permutation
+## function _contract_scalar_perm!(
+##   Rᵃ::AbstractArray{ElR}, Tᵃ::AbstractArray, perm, α, β=zero(ElR)
+## ) where {ElR}
+##   if iszero(β)
+##     if iszero(α)
+##       fill!(Rᵃ, 0)
+##     else
+##       @strided Rᵃ .= α .* permutedims(Tᵃ, perm)
+##     end
+##   elseif isone(β)
+##     if iszero(α)
+##       # Rᵃ .= Rᵃ
+##       # No-op
+##     else
+##       @strided Rᵃ .= α .* permutedims(Tᵃ, perm) .+ Rᵃ
+##     end
+##   else
+##     if iszero(α)
+##       # Rᵃ .= β .* Rᵃ
+##       BLAS.scal!(length(Rᵃ), β, Rᵃ, 1)
+##     else
+##       Rᵃ .= α .* permutedims(Tᵃ, perm) .+ β .* Rᵃ
+##     end
+##   end
+##   return Rᵃ
+## end
+## 
+## function drop_singletons(::Order{N}, labels, dims) where {N}
+##   labelsᵣ = ntuple(zero, Val(N))
+##   dimsᵣ = labelsᵣ
+##   nkeep = 1
+##   for n in 1:length(dims)
+##     if dims[n] > 1
+##       labelsᵣ = @inbounds setindex(labelsᵣ, labels[n], nkeep)
+##       dimsᵣ = @inbounds setindex(dimsᵣ, dims[n], nkeep)
+##       nkeep += 1
+##     end
+##   end
+##   return labelsᵣ, dimsᵣ
+## end
+## 
+## function _contract_scalar_maybe_perm!(
+##   ::Order{N}, R::DenseTensor{ElR,NR}, labelsR, T::DenseTensor, labelsT, α, β=zero(ElR)
+## ) where {ElR,NR,N}
+##   labelsRᵣ, dimsRᵣ = drop_singletons(Order(N), labelsR, dims(R))
+##   labelsTᵣ, dimsTᵣ = drop_singletons(Order(N), labelsT, dims(T))
+##   perm = getperm(labelsRᵣ, labelsTᵣ)
+##   if is_trivial_permutation(perm)
+##     # trivial permutation
+##     _contract_scalar_noperm!(R, T, α, β)
+##   else
+##     # non-trivial permutation
+##     Rᵣ = ReshapedArray(data(R), dimsRᵣ, ())
+##     Tᵣ = ReshapedArray(data(T), dimsTᵣ, ())
+##     _contract_scalar_perm!(Rᵣ, Tᵣ, perm, α, β)
+##   end
+##   return R
+## end
+## 
+## function _contract_scalar_maybe_perm!(
+##   R::DenseTensor{ElR,NR}, labelsR, T::DenseTensor, labelsT, α, β=zero(ElR)
+## ) where {ElR,NR}
+##   N = count(≠(1), dims(R))
+##   _contract_scalar_maybe_perm!(Order(N), R, labelsR, T, labelsT, α, β)
+##   return R
+## end
+## 
+## # XXX: handle case of non-trivial permutation
+## function _contract_scalar_maybe_perm!(
+##   R::DenseTensor{ElR,NR},
+##   labelsR,
+##   T₁::DenseTensor,
+##   labelsT₁,
+##   T₂::DenseTensor,
+##   labelsT₂,
+##   α=one(ElR),
+##   β=zero(ElR),
+## ) where {ElR,NR}
+##   if nnz(T₁) == 1
+##     _contract_scalar_maybe_perm!(R, labelsR, T₂, labelsT₂, α * T₁[1], β)
+##   elseif nnz(T₂) == 1
+##     _contract_scalar_maybe_perm!(R, labelsR, T₁, labelsT₁, α * T₂[1], β)
+##   else
+##     error("In _contract_scalar_perm!, one tensor must be a scalar")
+##   end
+##   return R
+## end
+## 
+## # At least one of the tensors is size 1
+## function _contract_scalar!(
+##   R::DenseTensor{ElR},
+##   labelsR,
+##   T1::DenseTensor,
+##   labelsT1,
+##   T2::DenseTensor,
+##   labelsT2,
+##   α=one(ElR),
+##   β=zero(ElR),
+## ) where {ElR}
+##   if nnz(T1) == nnz(T2) == 1
+##     _contract_scalar!(R, labelsR, T1[1], labelsT1, T2[1], labelsT2, α, β)
+##   else
+##     _contract_scalar_maybe_perm!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
+##   end
+##   return R
+## end
+## 
+## function contract!(
+##   R::DenseTensor{ElR,NR},
+##   labelsR,
+##   T1::DenseTensor{ElT1,N1},
+##   labelsT1,
+##   T2::DenseTensor{ElT2,N2},
+##   labelsT2,
+##   α::Elα=one(ElR),
+##   β::Elβ=zero(ElR),
+## ) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
+##   # Special case for scalar tensors
+##   if nnz(T1) == 1 || nnz(T2) == 1
+##     _contract_scalar!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
+##     return R
+##   end
+## 
+##   if using_tblis() && ElR <: LinearAlgebra.BlasReal && (ElR == ElT1 == ElT2 == Elα == Elβ)
+##     #@timeit_debug timer "TBLIS contract!" begin
+##     contract!(Val(:TBLIS), R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
+##     #end
+##     return R
+##   end
+## 
+##   if N1 + N2 == NR
+##     outer!(R, T1, T2)
+##     labelsRp = (labelsT1..., labelsT2...)
+##     perm = getperm(labelsR, labelsRp)
+##     if !is_trivial_permutation(perm)
+##       permutedims!(R, copy(R), perm)
+##     end
+##     return R
+##   end
+## 
+##   props = ContractionProperties(labelsT1, labelsT2, labelsR)
+##   compute_contraction_properties!(props, T1, T2, R)
+## 
+##   if ElT1 != ElT2
+##     # TODO: use promote instead
+##     # T1, T2 = promote(T1, T2)
+## 
+##     ElT1T2 = promote_type(ElT1, ElT2)
+##     if ElT1 != ElR
+##       # TODO: get this working
+##       # T1 = ElR.(T1)
+##       T1 = one(ElT1T2) * T1
+##     end
+##     if ElT2 != ElR
+##       # TODO: get this working
+##       # T2 = ElR.(T2)
+##       T2 = one(ElT1T2) * T2
+##     end
+##   end
+## 
+##   _contract!(R, T1, T2, props, α, β)
+##   return R
+## end
+## 
+## function reshape_to_matmul(
+##   CT::DenseTensor{El},
+##   AT::DenseTensor{El},
+##   BT::DenseTensor{El},
+##   props::ContractionProperties,
+## ) where {El}
+##   C = reshape(data(storage(CT)), dims(inds(CT)))
+##   A = reshape(data(storage(AT)), dims(inds(AT)))
+##   B = reshape(data(storage(BT)), dims(inds(BT)))
+##   return reshape_to_matmul(C, A, B, props)
+## end
+## 
+## function reshape_to_matmul(
+##   C::Array{El},
+##   A::Array{El},
+##   B::Array{El},
+##   props::ContractionProperties,
+## ) where {El}
+##   tA = 'N'
+##   if props.permuteA
+##     pA = NTuple{NA,Int}(props.PA)
+##     Ap = permutedims(A, pA)
+##     AM = reshape(Ap, (props.dmid, props.dleft))
+##     tA = 'T'
+##   else
+##     #A doesn't have to be permuted
+##     if Atrans(props)
+##       AM = reshape(A, (props.dmid, props.dleft))
+##       tA = 'T'
+##     else
+##       AM = reshape(A, (props.dleft, props.dmid))
+##     end
+##   end
+## 
+##   tB = 'N'
+##   if props.permuteB
+##     pB = NTuple{NB,Int}(props.PB)
+##     Bp = permutedims(B, pB)
+##     BM = reshape(Bp, (props.dmid, props.dright))
+##   else
+##     if Btrans(props)
+##       BM = reshape(B, (props.dright, props.dmid))
+##       tB = 'T'
+##     else
+##       BM = reshape(B, (props.dmid, props.dright))
+##     end
+##   end
+## 
+##   # TODO: this logic may be wrong
+##   if props.permuteC
+##     # Need to copy here since we will be permuting
+##     # into C later
+##     CM = reshape(copy(C), (props.dleft, props.dright))
+##   else
+##     if Ctrans(props)
+##       CM = reshape(C, (props.dright, props.dleft))
+##       (AM, BM) = (BM, AM)
+##       if tA == tB
+##         tA = tB = (tA == 'T' ? 'N' : 'T')
+##       end
+##     else
+##       CM = reshape(C, (props.dleft, props.dright))
+##     end
+##   end
+##   return AM, tA, BM, tB, CM
+## end
+## 
+## # function _contract!(
+## #   CT::DenseTensor{El},
+## #   AT::DenseTensor{El},
+## #   BT::DenseTensor{El},
+## #   props::ContractionProperties,
+## #   α::Number,
+## #   β::Number,
+## # ) where {El}
+## #   return _contract!(CT, AT, BT, props, El(α), El(β))
+## # end
+## 
+## function _contract!(
+##   CT::DenseTensor{El},
+##   AT::DenseTensor{El},
+##   BT::DenseTensor{El},
+##   props::ContractionProperties,
+##   α::El,
+##   β::El,
+## ) where {El}
+##   AM, tA, BM, tB, CM = reshape_to_matmul(CT, AT, BT, props)
+## 
+##   # _gemm!(tA, tB, El(α), AM, BM, El(β), CM)
+##   BLAS.gemm!(tA, tB, El(α), AM, BM, El(β), CM)
+## 
+##   if props.permuteC
+##     pC = NTuple{NC,Int}(props.PC)
+##     Cr = reshape(CM, props.newCrange)
+##     # TODO: use invperm(pC) here?
+##     #@timeit_debug timer "_contract!: permutedims C" begin
+##     # @strided C .= permutedims(Cr, pC)
+##     C .= permutedims(Cr, pC)
+##     #end # @timeit
+##   end
+## 
+##   return CT
+## end
+## 
+## """
+##     NDTensors.permute_reshape(T::Tensor,pos...)
+## 
+## Takes a permutation that is split up into tuples. Index positions
+## within the tuples are combined.
+## 
+## For example:
+## 
+## permute_reshape(T,(3,2),1)
+## 
+## First T is permuted as `permutedims(3,2,1)`, then reshaped such
+## that the original indices 3 and 2 are combined.
+## """
+## function permute_reshape(
+##   T::DenseTensor{ElT,NT,IndsT}, pos::Vararg{<:Any,N}
+## ) where {ElT,NT,IndsT,N}
+##   perm = flatten(pos...)
+## 
+##   length(perm) ≠ NT && error("Index positions must add up to order of Tensor ($N)")
+##   isperm(perm) || error("Index positions must be a permutation")
+## 
+##   dimsT = dims(T)
+##   indsT = inds(T)
+##   if !is_trivial_permutation(perm)
+##     T = permutedims(T, perm)
+##   end
+##   if all(p -> length(p) == 1, pos) && N == NT
+##     return T
+##   end
+##   newdims = MVector(ntuple(_ -> eltype(IndsT)(1), Val(N)))
+##   for i in 1:N
+##     if length(pos[i]) == 1
+##       # No reshape needed, just use the
+##       # original index
+##       newdims[i] = indsT[pos[i][1]]
+##     else
+##       newdim_i = 1
+##       for p in pos[i]
+##         newdim_i *= dimsT[p]
+##       end
+##       newdims[i] = eltype(IndsT)(newdim_i)
+##     end
+##   end
+##   newinds = similartype(IndsT, Val{N})(Tuple(newdims))
+##   return reshape(T, newinds)
+## end
+## 
+## # svd of an order-n tensor according to positions Lpos
+## # and Rpos
+## function LinearAlgebra.svd(
+##   T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
+## ) where {N,IndsT,NL,NR}
+##   M = permute_reshape(T, Lpos, Rpos)
+##   UM, S, VM, spec = svd(M; kwargs...)
+##   u = ind(UM, 2)
+##   v = ind(VM, 2)
+## 
+##   Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
+##   Uinds = push(Linds, u)
+## 
+##   # TODO: do these positions need to be reversed?
+##   Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
+##   Vinds = push(Rinds, v)
+## 
+##   U = reshape(UM, Uinds)
+##   V = reshape(VM, Vinds)
+## 
+##   return U, S, V, spec
+## end
+## 
+## # qr decomposition of an order-n tensor according to 
+## # positions Lpos and Rpos
+## function LinearAlgebra.qr(
+##   T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
+## ) where {N,IndsT,NL,NR}
+##   M = permute_reshape(T, Lpos, Rpos)
+##   QM, RM = qr(M; kwargs...)
+##   q = ind(QM, 2)
+##   r = ind(RM, 1)
+##   # TODO: simplify this by permuting inds(T) by (Lpos,Rpos)
+##   # then grab Linds,Rinds
+##   Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
+##   Qinds = push(Linds, r)
+##   Q = reshape(QM, Qinds)
+##   Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
+##   Rinds = pushfirst(Rinds, r)
+##   R = reshape(RM, Rinds)
+##   return Q, R
+## end
+## 
+## # polar decomposition of an order-n tensor according to positions Lpos
+## # and Rpos
+## function polar(
+##   T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}
+## ) where {N,IndsT,NL,NR}
+##   M = permute_reshape(T, Lpos, Rpos)
+##   UM, PM = polar(M)
+## 
+##   # TODO: turn these into functions
+##   Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
+##   Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
+## 
+##   # Use sim to create "similar" indices, in case
+##   # the indices have identifiers. If not this should
+##   # act as an identity operator
+##   simRinds = sim(Rinds)
+##   Uinds = (Linds..., simRinds...)
+##   Pinds = (simRinds..., Rinds...)
+## 
+##   U = reshape(UM, Uinds)
+##   P = reshape(PM, Pinds)
+##   return U, P
+## end
+## 
+## function LinearAlgebra.exp(
+##   T::DenseTensor{ElT,N}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; ishermitian::Bool=false
+## ) where {ElT,N,NL,NR}
+##   M = permute_reshape(T, Lpos, Rpos)
+##   indsTp = permute(inds(T), (Lpos..., Rpos...))
+##   if ishermitian
+##     expM = parent(exp(Hermitian(matrix(M))))
+##     return tensor(Dense{ElT}(vec(expM)), indsTp)
+##   else
+##     expM = exp(M)
+##     return reshape(expM, indsTp)
+##   end
+## end
 
 function HDF5.write(
   parent::Union{HDF5.File,HDF5.Group}, name::String, D::Store

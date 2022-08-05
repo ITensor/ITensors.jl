@@ -42,6 +42,7 @@ include("generic_tensor_operations.jl")
 include("contraction_logic.jl")
 include("dense/dense.jl")
 include("dense/adapt.jl")
+include("dense/contract.jl")
 include("symmetric.jl")
 include("linearalgebra.jl")
 include("diag/diag.jl")
@@ -84,6 +85,13 @@ include(joinpath("index", "symmetrystyle.jl"))
 include(joinpath("index", "index.jl"))
 include(joinpath("index", "set_operations.jl"))
 include(joinpath("index", "indexset.jl"))
+
+#####################################
+# QN
+#
+include(joinpath("index", "qn", "qn.jl"))
+include(joinpath("index", "qn", "qnindex.jl"))
+include(joinpath("index", "qn", "qnindexset.jl"))
 
 #####################################
 # A global timer used with TimerOutputs.jl
@@ -204,14 +212,14 @@ function __init__()
   end
   resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 
-  @precompile_all_calls begin
-    i = Index(2)
-    j = Index(2)
-    k = Index(2)
-    A = DenseTensor((i, j))
-    B = DenseTensor((j, k))
-    C = contract(A, (1, -1), B, (-1, 2), (1, 2))
-  end
+  # @precompile_all_calls begin
+  #   i = Index(2)
+  #   j = Index(2)
+  #   k = Index(2)
+  #   A = DenseTensor((i, j))
+  #   B = DenseTensor((j, k))
+  #   C = contract(A, (1, -1), B, (-1, 2), (1, 2))
+  # end
 
   return nothing
 end

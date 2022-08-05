@@ -60,65 +60,14 @@ end
 end
 
 function contract(T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR)
-  # TODO: put the contract_inds logic into contraction_output,
-  # call like R = contraction_ouput(T1,labelsT1,T2,labelsT2)
-  #indsR = contract_inds(inds(T1),labelsT1,inds(T2),labelsT2,labelsR)
   R = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
-  # contract!! version here since the output R may not
-  # be mutable (like UniformDiag)
-  R = contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
-  return R
+  return contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
 end
 
 # Overload this function for immutable storage types
-function _contract!!(
-  R::Tensor, labelsR, T1::Tensor, labelsT1, T2::Tensor, labelsT2, α::Number=1, β::Number=0
-)
-  if α ≠ 1 || β ≠ 0
-    contract!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-  else
-    contract!(R, labelsR, T1, labelsT1, T2, labelsT2)
-  end
-  return R
-end
-
-# Is this generic for all storage types?
 function contract!!(
-  R::Tensor, labelsR, T1::Tensor, labelsT1, T2::Tensor, labelsT2, α::Number=1, β::Number=0
+  R::Tensor, labelsR, T1::Tensor, labelsT1, T2::Tensor, labelsT2
 )
-  NR = ndims(R)
-  N1 = ndims(T1)
-  N2 = ndims(T2)
-  if (N1 ≠ 0) && (N2 ≠ 0) && (N1 + N2 == NR)
-    # Outer product
-    (α ≠ 1 || β ≠ 0) && error(
-      "contract!! not yet implemented for outer product tensor contraction with non-trivial α and β",
-    )
-    # TODO: permute T1 and T2 appropriately first (can be more efficient
-    # then permuting the result of T1⊗T2)
-    # TODO: implement the in-place version directly
-    R = outer!!(R, T1, T2)
-    labelsRp = (labelsT1..., labelsT2...)
-    perm = getperm(labelsR, labelsRp)
-    if !is_trivial_permutation(perm)
-      Rp = reshape(R, (inds(T1)..., inds(T2)...))
-      R = permutedims!!(R, copy(Rp), perm)
-    end
-  else
-    if α ≠ 1 || β ≠ 0
-      R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β)
-    else
-      R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
-    end
-  end
+  contract!(R, labelsR, T1, labelsT1, T2, labelsT2)
   return R
 end
-
-function outer!!(R::Tensor, T1::Tensor, T2::Tensor)
-  outer!(R, T1, T2)
-  return R
-end
-
-function outer end
-
-const ⊗ = outer

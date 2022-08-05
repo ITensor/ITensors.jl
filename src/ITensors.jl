@@ -141,9 +141,9 @@ include("adapt.jl")
 #####################################
 # QNs
 #
-include("qn/qn.jl")
-include("qn/qnindex.jl")
-include("qn/qnindexset.jl")
+# include("qn/qn.jl")
+# include("qn/qnindex.jl")
+# include("qn/qnindexset.jl")
 include("qn/qnitensor.jl")
 include("nullspace.jl")
 
@@ -251,13 +251,13 @@ include("Deprecated/Deprecated.jl")
 #   _precompile_()
 # end
 
-@precompile_all_calls begin
-  i = Index(2)
-  j = Index(2)
-  k = Index(2)
-  A = randomITensor(i, j)
-  B = randomITensor(j, k)
-  C = A * B
-end
+# @precompile_all_calls begin
+#   i = Index(2)
+#   j = Index(2)
+#   k = Index(2)
+#   A = randomITensor(i, j)
+#   B = randomITensor(j, k)
+#   C = A * B
+# end
 
 end # module ITensors

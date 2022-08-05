@@ -1,4 +1,3 @@
-
 const Labels{N} = NTuple{N,Int}
 
 # Automatically determine the output labels given
