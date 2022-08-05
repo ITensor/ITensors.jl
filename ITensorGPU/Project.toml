@@ -20,7 +20,7 @@ Strided = "5e0ebb24-38b0-5f93-81fe-25c709ecae67"
 TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [compat]
-Adapt = "3.3.1"
+Adapt = "3.3, 3.4"
 CUDA = "3.5.0"
 Combinatorics = "1.0.2"
 Functors = "0.3.0"
