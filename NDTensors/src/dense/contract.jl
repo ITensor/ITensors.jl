@@ -7,100 +7,202 @@ end
 
 Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))
 
-function contract!(
-  C::DenseTensor{ElT},
-  labelsC,
-  A::DenseTensor{ElT},
-  labelsA,
-  B::DenseTensor{ElT},
-  labelsB,
-) where {ElT}
-  props = ContractionProperties(labelsA, labelsB, labelsC)
-  compute_contraction_properties!(props, A, B, C)
-  contract!(C, A, B, props)
+import Base.tail
+
+# tuple setdiff, assumes b is completely contained in a
+tsetdiff(a::Tuple, b::Tuple{}) = a
+tsetdiff(a::Tuple{Any}, b::Tuple{Any}) = () #a[1] == b[1] ? () : tseterror()
+tsetdiff(a::Tuple, b::Tuple{Any}) = a[1] == b[1] ? tail(a) : (a[1], tsetdiff(tail(a), b)...)
+tsetdiff(a::Tuple, b::Tuple) = tsetdiff(tsetdiff(a, (b[1],)), tail(b))
+
+@noinline tseterror() = throw(ArgumentError("tuples did not meet requirements"))
+
+# tuple unique: assumes that every element appears exactly twice
+tunique(src::Tuple) = tunique(src, ())
+tunique(src::NTuple{N,Any}, dst::NTuple{N,Any}) where {N} = dst
+tunique(src::Tuple, dst::Tuple) = src[1] in dst ? tunique((tail(src)..., src[1]), dst) : tunique(tail(src), (dst..., src[1]))
+
+function contract_indices(IA::NTuple{NA,Any}, IB::NTuple{NB,Any}, IC::NTuple{NC,Any}) where {NA,NB,NC}
+  IAB = (IA..., IB...)
+  isodd(length(IAB)-length(IC)) && throw(IndexError("invalid contraction pattern: $IA and $IB to $IC"))
+  Icontract = tunique(tsetdiff(IAB, IC))
+  IopenA = tsetdiff(IA, Icontract)
+  IopenB = tsetdiff(IB, Icontract)
+  cindA = map(l->_findfirst(isequal(l), IA), Icontract)
+  cindB = map(l->_findfirst(isequal(l), IB), Icontract)
+  oindA = map(l->_findfirst(isequal(l), IA), IopenA)
+  oindB = map(l->_findfirst(isequal(l), IB), IopenB)
+  indCinoAB = map(l->_findfirst(isequal(l), (IopenA..., IopenB...)), IC)
+  if !isperm((oindA..., cindA...)) || !isperm((oindB..., cindB...)) || !isperm(indCinoAB)
+    throw(IndexError("invalid contraction pattern: $IA and $IB to $IC"))
+  end
+  return oindA, cindA, oindB, cindB, indCinoAB
+end
+
+_trivtuple(t::NTuple{N}) where {N} = ntuple(identity, Val(N))
+
+function contract!(C::DenseTensor, indsC::Tuple, A::DenseTensor, indsA::Tuple, B::DenseTensor, indsB::Tuple)
+  oindA, cindA, oindB, cindB, indCinoAB = contract_indices(indsA, indsB, indsC)
+  _contract!(C, A, B, oindA, cindA, oindB, cindB, indCinoAB)
   return C
 end
 
-function contract!(
-  C::DenseTensor{ElT},
-  A::DenseTensor{ElT},
-  B::DenseTensor{ElT},
-  props::ContractionProperties,
-) where {ElT}
-  contract!(array(C), array(A), array(B), props)
+function _contract!(C::Tensor, A::Tensor, B::Tensor, oindA::Tuple, cindA::Tuple, oindB::Tuple, cindB::Tuple, indCinoAB::Tuple)
+  ipC = TupleTools.invperm(indCinoAB)
+  oindAinC = TupleTools.getindices(ipC, _trivtuple(oindA))
+  oindBinC = TupleTools.getindices(ipC, length(oindA) .+ _trivtuple(oindB))
+  pA = (oindA...,cindA...)
+  pB = (oindB...,cindB...)
+  sizeA = size(A)
+  sizeB = size(B)
+  sizeC = size(C)
+  osizeA = TupleTools.getindices(sizeA, oindA)
+  csizeA = TupleTools.getindices(sizeA, cindA)
+  osizeB = TupleTools.getindices(sizeB, oindB)
+  csizeB = TupleTools.getindices(sizeB, cindB)
+  _blas_contract!(C, A, B,
+                  oindA, cindA, oindB, cindB, oindAinC, oindBinC,
+                  osizeA, csizeA, osizeB, csizeB)
   return C
 end
 
-function contract!(
-  C::Array{ElT},
-  A::Array{ElT},
-  B::Array{ElT},
-  props::ContractionProperties,
-) where {ElT}
-  AM, tA, BM, tB, CM = reshape_to_matmul(C, A, B, props)
-  BLAS.gemm!(tA, tB, one(ElT), AM, BM, zero(ElT), CM)
-  if props.permuteC
-    pC = NTuple{ndims(C),Int}(props.PC)
-    Cr = reshape(CM, props.newCrange)
-    C .= permutedims(Cr, pC)
+function _blas_contract!(C::Tensor, A::Tensor, B::Tensor, oindA::Tuple, cindA::Tuple, oindB::Tuple, cindB::Tuple, oindAinC::Tuple, oindBinC::Tuple, osizeA::Tuple, csizeA::Tuple, osizeB::Tuple, csizeB::Tuple)
+  _blas_contract!(array(C), array(A), array(B), oindA, cindA, oindB, cindB, oindAinC, oindBinC, osizeA, csizeA, osizeB, csizeB)
+  return C
+end
+
+# function _blas_contract!(C::AbstractArray, A::AbstractArray, B::AbstractArray,
+#   oindA, cindA, oindB, cindB, oindAinC, oindBinC,
+#   osizeA, csizeA, osizeB, csizeB)
+# 
+#   @show oindA, cindA
+#   @show cindB, oindB
+#   @show oindAinC, oindBinC
+# 
+#   A2 = @unsafe_strided A begin
+#     sreshape(permutedims(A, (oindA..., cindA...)), (prod(osizeA), prod(csizeA)))
+#   end
+#   B2 = @unsafe_strided B begin
+#     sreshape(permutedims(B, (cindB..., oindB...)), (prod(csizeB), prod(osizeB)))
+#   end
+#   C2 = @unsafe_strided C begin
+#     sreshape(permutedims(C, (oindAinC..., oindBinC...)), (prod(osizeA), prod(osizeB)))
+#   end
+# 
+#   display(A2)
+#   display(B2)
+#   display(C2)
+# 
+#   mul!(C2, A2, B2)
+#   return C
+# end
+
+function _blas_contract!(C::AbstractArray, A::AbstractArray, B::AbstractArray,
+  oindA, cindA, oindB, cindB, oindAinC, oindBinC,
+  osizeA, csizeA, osizeB, csizeB)
+  @unsafe_strided A B C begin
+    A2 = sreshape(permutedims(A, (oindA..., cindA...)), (prod(osizeA), prod(csizeA)))
+    B2 = sreshape(permutedims(B, (cindB..., oindB...)), (prod(csizeB), prod(osizeB)))
+    C2 = sreshape(permutedims(C, (oindAinC..., oindBinC...)), (prod(osizeA), prod(osizeB)))
+    mul!(C2, A2, B2)
   end
   return C
 end
 
-function reshape_to_matmul(
-  C::Array{ElT},
-  A::Array{ElT},
-  B::Array{ElT},
-  props::ContractionProperties,
-) where {ElT}
-  tA = 'N'
-  if props.permuteA
-    pA = NTuple{ndims(A),Int}(props.PA)
-    Ap = permutedims(A, pA)
-    AM = reshape(Ap, (props.dmid, props.dleft))
-    tA = 'T'
-  else
-    #A doesn't have to be permuted
-    if Atrans(props)
-      AM = reshape(A, (props.dmid, props.dleft))
-      tA = 'T'
-    else
-      AM = reshape(A, (props.dleft, props.dmid))
-    end
-  end
+# function contract!(
+#   C::DenseTensor{ElT},
+#   labelsC,
+#   A::DenseTensor{ElT},
+#   labelsA,
+#   B::DenseTensor{ElT},
+#   labelsB,
+# ) where {ElT}
+#   props = ContractionProperties(labelsA, labelsB, labelsC)
+#   compute_contraction_properties!(props, A, B, C)
+#   contract!(C, A, B, props)
+#   return C
+# end
 
-  tB = 'N'
-  if props.permuteB
-    pB = NTuple{ndims(B),Int}(props.PB)
-    Bp = permutedims(B, pB)
-    BM = reshape(Bp, (props.dmid, props.dright))
-  else
-    if Btrans(props)
-      BM = reshape(B, (props.dright, props.dmid))
-      tB = 'T'
-    else
-      BM = reshape(B, (props.dmid, props.dright))
-    end
-  end
-
-  # TODO: this logic may be wrong
-  if props.permuteC
-    # Need to copy here since we will be permuting
-    # into C later
-    CM = reshape(copy(C), (props.dleft, props.dright))
-  else
-    if Ctrans(props)
-      CM = reshape(C, (props.dright, props.dleft))
-      (AM, BM) = (BM, AM)
-      if tA == tB
-        tA = tB = (tA == 'T' ? 'N' : 'T')
-      end
-    else
-      CM = reshape(C, (props.dleft, props.dright))
-    end
-  end
-  return AM, tA, BM, tB, CM
-end
+## function contract!(
+##   C::DenseTensor{ElT},
+##   A::DenseTensor{ElT},
+##   B::DenseTensor{ElT},
+##   props::ContractionProperties,
+## ) where {ElT}
+##   contract!(array(C), array(A), array(B), props)
+##   return C
+## end
+## 
+## function contract!(
+##   C::Array{ElT},
+##   A::Array{ElT},
+##   B::Array{ElT},
+##   props::ContractionProperties,
+## ) where {ElT}
+##   AM, tA, BM, tB, CM = reshape_to_matmul(C, A, B, props)
+##   BLAS.gemm!(tA, tB, one(ElT), AM, BM, zero(ElT), CM)
+##   if props.permuteC
+##     pC = NTuple{ndims(C),Int}(props.PC)
+##     Cr = reshape(CM, props.newCrange)
+##     C .= permutedims(Cr, pC)
+##   end
+##   return C
+## end
+## 
+## function reshape_to_matmul(
+##   C::Array{ElT},
+##   A::Array{ElT},
+##   B::Array{ElT},
+##   props::ContractionProperties,
+## ) where {ElT}
+##   tA = 'N'
+##   if props.permuteA
+##     pA = NTuple{ndims(A),Int}(props.PA)
+##     Ap = permutedims(A, pA)
+##     AM = reshape(Ap, (props.dmid, props.dleft))
+##     tA = 'T'
+##   else
+##     #A doesn't have to be permuted
+##     if Atrans(props)
+##       AM = reshape(A, (props.dmid, props.dleft))
+##       tA = 'T'
+##     else
+##       AM = reshape(A, (props.dleft, props.dmid))
+##     end
+##   end
+## 
+##   tB = 'N'
+##   if props.permuteB
+##     pB = NTuple{ndims(B),Int}(props.PB)
+##     Bp = permutedims(B, pB)
+##     BM = reshape(Bp, (props.dmid, props.dright))
+##   else
+##     if Btrans(props)
+##       BM = reshape(B, (props.dright, props.dmid))
+##       tB = 'T'
+##     else
+##       BM = reshape(B, (props.dmid, props.dright))
+##     end
+##   end
+## 
+##   # TODO: this logic may be wrong
+##   if props.permuteC
+##     # Need to copy here since we will be permuting
+##     # into C later
+##     CM = reshape(copy(C), (props.dleft, props.dright))
+##   else
+##     if Ctrans(props)
+##       CM = reshape(C, (props.dright, props.dleft))
+##       (AM, BM) = (BM, AM)
+##       if tA == tB
+##         tA = tB = (tA == 'T' ? 'N' : 'T')
+##       end
+##     else
+##       CM = reshape(C, (props.dleft, props.dright))
+##     end
+##   end
+##   return AM, tA, BM, tB, CM
+## end
 
 ## function outer!(
 ##   R::DenseTensor{ElR}, T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}

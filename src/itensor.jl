@@ -1866,10 +1866,7 @@ conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
 
 # Function barrier
 function _contract(A::Tensor, B::Tensor)
-  labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
-  return contract(A, labelsA, B, labelsB)
-  # TODO: Alternative to try (`noncommoninds` is too slow right now)
-  #return _contract!!(EmptyTensor(Float64, _Tuple(noncommoninds(inds(A), inds(B)))), A, B)
+  return contract(A, inds(A), B, inds(B))
 end
 
 function _contract(A::ITensor, B::ITensor)::ITensor

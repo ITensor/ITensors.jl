@@ -43,12 +43,14 @@ end
 can_contract(t1::TensorStorage, t2::TensorStorage) = can_contract(typeof(t1), typeof(t2))
 can_contract(t1::Tensor, t2::Tensor) = can_contract(typeof(t1), typeof(t2))
 
+contract_labels(labels_t1, labels_t2) = tuple(symdiff(labels_t1, labels_t2)...)
+
 # Version where output labels aren't supplied
 @traitfn function contract(
   t1::T1, labels_t1, t2::T2, labels_t2
 ) where {T1<:Tensor,T2<:Tensor;CanContract{T1,T2}}
-  labelsR = contract_labels(labels_t1, labels_t2)
-  return contract(t1, labels_t1, t2, labels_t2, labelsR)
+  labels_R = contract_labels(labels_t1, labels_t2)
+  return contract(t1, labels_t1, t2, labels_t2, labels_R)
 end
 
 @traitfn function contract(
@@ -60,7 +62,7 @@ end
 end
 
 function contract(T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR)
-  R = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
+  R = contraction_output(T1, T2, labelsR)
   return contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)
 end
 
