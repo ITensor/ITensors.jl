@@ -327,11 +327,16 @@ end
     end
     sites = siteinds("S=1/2", N)
     Ha = MPO(os, sites)
+    @test ITensors.scalartype(Ha) <: Float64
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
     Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
+
+    H_complex = MPO(ComplexF64, os, sites)
+    @test ITensors.scalartype(H_complex) <: ComplexF64
+    @test H_complex ≈ Ha
   end
 
   @testset "Ising" begin

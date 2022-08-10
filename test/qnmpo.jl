@@ -203,13 +203,20 @@ end
     ampo .+= 0.5, "S-", j, "S+", j + 1
     ampo .+= "Sz", j, "Sz", j + 1
   end
-  H = MPO(ampo, sites)
+  H = MPO(ampo, sites; splitblocks=false)
 
   # Split the tensors to make them more sparse
   # Drops zero blocks by default
   H̃ = splitblocks(linkinds, H)
 
+  H̃2 = MPO(ampo, sites; splitblocks=true)
+
+  # Defaults to true
+  H̃3 = MPO(ampo, sites)
+
   @test prod(H) ≈ prod(H̃)
+  @test prod(H) ≈ prod(H̃2)
+  @test prod(H) ≈ prod(H̃3)
 
   @test nnz(H[1]) == 9
   @test nnz(H[2]) == 18
@@ -225,6 +232,16 @@ end
   @test nnz(H̃[2]) == nnzblocks(H̃[2]) == count(≠(0), H[2]) == count(≠(0), H̃[2]) == 18
   @test nnz(H̃[3]) == nnzblocks(H̃[3]) == count(≠(0), H[3]) == count(≠(0), H̃[3]) == 18
   @test nnz(H̃[4]) == nnzblocks(H̃[4]) == count(≠(0), H[4]) == count(≠(0), H̃[4]) == 9
+
+  @test nnz(H̃2[1]) == nnzblocks(H̃2[1]) == count(≠(0), H[1]) == count(≠(0), H̃2[1]) == 9
+  @test nnz(H̃2[2]) == nnzblocks(H̃2[2]) == count(≠(0), H[2]) == count(≠(0), H̃2[2]) == 18
+  @test nnz(H̃2[3]) == nnzblocks(H̃2[3]) == count(≠(0), H[3]) == count(≠(0), H̃2[3]) == 18
+  @test nnz(H̃2[4]) == nnzblocks(H̃2[4]) == count(≠(0), H[4]) == count(≠(0), H̃2[4]) == 9
+
+  @test nnz(H̃3[1]) == nnzblocks(H̃3[1]) == count(≠(0), H[1]) == count(≠(0), H̃3[1]) == 9
+  @test nnz(H̃3[2]) == nnzblocks(H̃3[2]) == count(≠(0), H[2]) == count(≠(0), H̃3[2]) == 18
+  @test nnz(H̃3[3]) == nnzblocks(H̃3[3]) == count(≠(0), H[3]) == count(≠(0), H̃3[3]) == 18
+  @test nnz(H̃3[4]) == nnzblocks(H̃3[4]) == count(≠(0), H[4]) == count(≠(0), H̃3[4]) == 9
 end
 
 @testset "MPO operations with one or two sites" begin

@@ -213,7 +213,7 @@ sites = siteinds("S=1/2",4)
 H = MPO(os,sites)
 ```
 """
-function MPO(os::OpSum, sites::Vector{<:Index}; kwargs...)::MPO
+function MPO(os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)::MPO
   length(terms(os)) == 0 && error("OpSum has no terms")
 
   os = deepcopy(os)
@@ -223,7 +223,15 @@ function MPO(os::OpSum, sites::Vector{<:Index}; kwargs...)::MPO
   if hasqns(sites[1])
     return qn_svdMPO(os, sites; kwargs...)
   end
-  return svdMPO(os, sites; kwargs...)
+  M = svdMPO(os, sites; kwargs...)
+  if splitblocks
+    M = ITensors.splitblocks(linkinds, M)
+  end
+  return M
+end
+
+function MPO(eltype::Type{<:Number}, os::OpSum, sites::Vector{<:Index}; kwargs...)
+  return NDTensors.convert_scalartype(eltype, MPO(os, sites; kwargs...))
 end
 
 # Conversion from other formats

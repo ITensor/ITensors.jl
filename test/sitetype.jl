@@ -179,6 +179,30 @@ end
     @test hassameinds(o, (prime.(s)..., s...))
   end
 
+  @testset "Custom Qudit/Boson op" begin
+    function ITensors.op(::OpName"my_qudit_op_1", ::SiteType"Qudit", dims::Tuple)
+      d = prod(dims)
+      return [i * j for i in 1:d, j in 1:d]
+    end
+    d = 4
+    s = siteinds("Qudit", 2; dim=d)
+    o = op("my_qudit_op_1", s, 1)
+    @test o ≈ itensor([i * j for i in 1:d, j in 1:d], s[1]', dag(s[1]))
+    o = op("my_qudit_op_1", s, 1, 2)
+    @test o ≈ itensor([i * j for i in 1:d, j in 1:d], s[2]', s[1]', dag(s[2]), dag(s[1]))
+
+    # Restrict to 1-site
+    function ITensors.op(::OpName"my_qudit_op_2", ::SiteType"Qudit", dims::Tuple{Int})
+      d = dims[1]
+      return [i * j for i in 1:d, j in 1:d]
+    end
+    d = 4
+    s = siteinds("Qudit", 2; dim=d)
+    o = op("my_qudit_op_2", s, 1)
+    @test o ≈ itensor([i * j for i in 1:d, j in 1:d], s[1]', dag(s[1]))
+    @test_throws MethodError op("my_qudit_op_2", s, 1, 2)
+  end
+
   @testset "Custom SiteType using op!" begin
     # Use "_Custom_" tag even though this example
     # is for S=3/2, because we might define the 
