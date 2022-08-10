@@ -40,15 +40,9 @@ function main(;
 
   N = Nx * Ny
 
-  sweeps = Sweeps(nsweeps)
   maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
-  maxdim!(sweeps, maxdims...)
-  cutoff!(sweeps, 1e-6)
-  noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
-
-  if outputlevel > 0
-    @show sweeps
-  end
+  cutoff = [1E-6]
+  noise = [1E-6, 1E-7, 1E-8, 0.0]
 
   sites = siteinds("ElecK", N; conserve_qns=true, conserve_ky=conserve_ky, modulus_ky=Ny)
 
@@ -96,7 +90,9 @@ function main(;
 
   psi0 = randomMPS(sites, state, 10)
 
-  energy, psi = @time dmrg(H, psi0, sweeps; outputlevel=outputlevel)
+  energy, psi = @time dmrg(
+    H, psi0; nsweeps, maxdims, cutoff, noise, outputlevel=outputlevel
+  )
 
   if outputlevel > 0
     @show Nx, Ny

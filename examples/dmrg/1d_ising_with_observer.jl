@@ -26,9 +26,9 @@ let
   psi0 = randomMPS(sites; linkdims=10)
 
   # define parameters for DMRG sweeps
-  sweeps = Sweeps(15)
-  setmaxdim!(sweeps, 10, 20, 100, 100, 200)
-  setcutoff!(sweeps, 1E-10)
+  nsweeps = 15
+  maxdim = [10, 20, 100, 100, 200]
+  cutoff = [1E-10]
 
   #=
   create observer which will measure Sᶻ at each
@@ -46,7 +46,7 @@ let
     println("Running DMRG for TFIM with h=0.1")
     println("================================")
     H = tfimMPO(sites, 0.1)
-    energy, psi = dmrg(H, psi0, sweeps; observer=Sz_observer)
+    energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, observer=Sz_observer)
 
     for (i, Szs) in enumerate(measurements(Sz_observer)["Sz"])
       println("<Σ Sz> after sweep $i = ", sum(Szs) / N)
@@ -58,7 +58,7 @@ let
     println("================================")
     Sz_observer = DMRGObserver(["Sz"], sites; energy_tol=1E-7)
     H = tfimMPO(sites, 1.0)
-    energy, psi = dmrg(H, psi0, sweeps; observer=Sz_observer)
+    energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, observer=Sz_observer)
 
     for (i, Szs) in enumerate(measurements(Sz_observer)["Sz"])
       println("<Σ Sz> after sweep $i = ", sum(Szs) / N)
@@ -70,7 +70,7 @@ let
     println("================================")
     Sz_Sx_observer = DMRGObserver(["Sz", "Sx"], sites; energy_tol=1E-7)
     H = tfimMPO(sites, 5.0)
-    energy, psi = dmrg(H, psi0, sweeps; observer=Sz_Sx_observer)
+    energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff, observer=Sz_Sx_observer)
 
     for (i, Szs) in enumerate(measurements(Sz_Sx_observer)["Sz"])
       println("<Σ Sz> after sweep $i = ", sum(Szs) / N)

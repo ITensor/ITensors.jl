@@ -1,14 +1,18 @@
-function rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
-  y = *(x1, x2; kwargs...)
+function rrule(::typeof(contract), x1::MPO, x2::MPO; kwargs...)
+  y = contract(x1, x2; kwargs...)
   function contract_pullback(ȳ)
-    x̄1 = *(ȳ, dag(x2); kwargs...)
-    x̄2 = *(dag(x1), ȳ; kwargs...)
+    x̄1 = contract(ȳ, dag(x2); kwargs...)
+    x̄2 = contract(dag(x1), ȳ; kwargs...)
     return (NoTangent(), x̄1, x̄2)
   end
   return y, contract_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(+), x1::MPO, x2::MPO; kwargs...)
+function rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
+  return rrule(contract, x1, x2; kwargs...)
+end
+
+function rrule(::typeof(+), x1::MPO, x2::MPO; kwargs...)
   y = +(x1, x2; kwargs...)
   function add_pullback(ȳ)
     return (NoTangent(), ȳ, ȳ)
@@ -16,12 +20,8 @@ function ChainRulesCore.rrule(::typeof(+), x1::MPO, x2::MPO; kwargs...)
   return y, add_pullback
 end
 
-function ChainRulesCore.rrule(::typeof(-), x1::MPO, x2::MPO; kwargs...)
-  y = -(x1, x2; kwargs...)
-  function subtract_pullback(ȳ)
-    return (NoTangent(), ȳ, -ȳ)
-  end
-  return y, subtract_pullback
+function rrule(::typeof(-), x1::MPO, x2::MPO; kwargs...)
+  return rrule(+, x1, -x2; kwargs...)
 end
 
 function rrule(::typeof(tr), x::MPO; kwargs...)

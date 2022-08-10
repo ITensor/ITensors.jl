@@ -18,8 +18,9 @@ Combiner() = Combiner(Int[], Int[], Int[1], false)
 
 Combiner(perm::Vector{Int}, comb::Vector{Int}) = Combiner(perm, comb, Int[1], false)
 
-data(::Combiner) = error("Combiner storage has no data")
-
+data(::Combiner) = NoData()
+datatype(::Type{<:Combiner}) = NoData
+setdata(C::Combiner, data::NoData) = C
 blockperm(C::Combiner) = C.perm
 blockcomb(C::Combiner) = C.comb
 cinds(C::Combiner) = C.cind

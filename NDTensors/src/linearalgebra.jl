@@ -166,12 +166,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   P = MS .^ 2
   if truncate
     truncerr, _ = truncate!(
-      P;
-      mindim=mindim,
-      maxdim=maxdim,
-      cutoff=cutoff,
-      use_absolute_cutoff=use_absolute_cutoff,
-      use_relative_cutoff=use_relative_cutoff,
+      P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
   else
     truncerr = 0.0
@@ -220,8 +215,11 @@ function LinearAlgebra.eigen(
 
   matrixT = matrix(T)
   if any(!isfinite, matrixT)
-    display(matrixT)
-    throw(ArgumentError("Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"))
+    throw(
+      ArgumentError(
+        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+      ),
+    )
   end
 
   DM, VM = eigen(matrixT)
@@ -233,12 +231,7 @@ function LinearAlgebra.eigen(
 
   if truncate
     truncerr, _ = truncate!(
-      DM;
-      mindim=mindim,
-      maxdim=maxdim,
-      cutoff=cutoff,
-      use_absolute_cutoff=use_absolute_cutoff,
-      use_relative_cutoff=use_relative_cutoff,
+      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
     dD = length(DM)
     if dD < size(VM, 2)
@@ -351,8 +344,11 @@ function LinearAlgebra.eigen(
 
   matrixT = matrix(T)
   if any(!isfinite, matrixT)
-    display(matrixT)
-    throw(ArgumentError("Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"))
+    throw(
+      ArgumentError(
+        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+      ),
+    )
   end
 
   DM, VM = eigen(matrixT)
@@ -364,11 +360,7 @@ function LinearAlgebra.eigen(
 
   if truncate
     truncerr, _ = truncate!(
-      DM;
-      maxdim=maxdim,
-      cutoff=cutoff,
-      use_absolute_cutoff=use_absolute_cutoff,
-      use_relative_cutoff=use_relative_cutoff,
+      DM; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
     dD = length(DM)
     if dD < size(VM, 2)

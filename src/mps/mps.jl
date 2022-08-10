@@ -83,14 +83,14 @@ end
 
 MPS(sites::Vector{<:Index}, args...; kwargs...) = MPS(Float64, sites, args...; kwargs...)
 
-function randomU(s1::Index, s2::Index)
+function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)
     mdim = dim(s1) * dim(s2)
-    RM = randn(mdim, mdim)
+    RM = randn(eltype, mdim, mdim)
     Q, _ = NDTensors.qr_positive(RM)
     G = itensor(Q, dag(s1), dag(s2), s1', s2')
   else
-    M = randomITensor(QN(), s1', s2', dag(s1), dag(s2))
+    M = randomITensor(eltype, QN(), s1', s2', dag(s1), dag(s2))
     U, S, V = svd(M, (s1', s2'))
     u = commonind(U, S)
     v = commonind(S, V)
@@ -100,7 +100,7 @@ function randomU(s1::Index, s2::Index)
   return G
 end
 
-function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdims::Vector{<:Integer})
+function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdim=1)
   if isone(length(sites))
     randn!(M[1])
     normalize!(M)
@@ -118,7 +118,7 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdims::Vector{<:Intege
     for b in brange
       s1 = sites[b]
       s2 = sites[b + db]
-      G = randomU(s1, s2)
+      G = randomU(eltype, s1, s2)
       T = noprime(G * M[b] * M[b + db])
       rinds = uniqueinds(M[b], M[b + db])
 
@@ -140,13 +140,13 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdims::Vector{<:Intege
 end
 
 function randomCircuitMPS(
-  ::Type{ElT}, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
-) where {ElT<:Number}
+  eltype::Type{<:Number}, sites::Vector{<:Index}, linkdim::Int; kwargs...
+)
   N = length(sites)
   M = MPS(N)
 
   if N == 1
-    M[1] = ITensor(randn(ElT, dim(sites[1])), sites[1])
+    M[1] = ITensor(randn(eltype, dim(sites[1])), sites[1])
     M[1] /= norm(M[1])
     return M
   end
@@ -156,23 +156,23 @@ function randomCircuitMPS(
   d = dim(sites[N])
   chi = min(linkdims[N - 1], d)
   l[N - 1] = Index(chi, "Link,l=$(N-1)")
-  O = NDTensors.random_unitary(ElT, chi, d)
+  O = NDTensors.random_unitary(eltype, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
   for j in (N - 1):-1:2
     chi *= dim(sites[j])
     chi = min(linkdims[j - 1], chi)
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
-    O = NDTensors.random_unitary(ElT, chi, dim(sites[j]) * dim(l[j]))
+    O = NDTensors.random_unitary(eltype, chi, dim(sites[j]) * dim(l[j]))
     T = reshape(O, (chi, dim(sites[j]), dim(l[j])))
     M[j] = itensor(T, l[j - 1], sites[j], l[j])
   end
 
-  O = NDTensors.random_unitary(ElT, 1, dim(sites[1]) * dim(l[1]))
+  O = NDTensors.random_unitary(eltype, 1, dim(sites[1]) * dim(l[1]))
   l0 = Index(1, "Link,l=0")
   T = reshape(O, (1, dim(sites[1]), dim(l[1])))
   M[1] = itensor(T, l0, sites[1], l[1])
-  M[1] *= onehot(ElT, l0 => 1)
+  M[1] *= onehot(eltype, l0 => 1)
 
   M.llim = 0
   M.rlim = 2
@@ -229,12 +229,11 @@ function randomMPS(
 end
 
 function randomMPS(
-  ElType::Type, sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
+  eltype::Type{<:Number}, sites::Vector{<:Index}, state; linkdims::Integer=1
 )::MPS
-  _linkdims = _fill_linkdims(linkdims, sites)
-  M = MPS(ElType, sites, state)
-  if any(>(1), _linkdims)
-    randomizeMPS!(M, sites, _linkdims)
+  M = MPS(eltype, sites, state)
+  if linkdims > 1
+    randomizeMPS!(eltype, M, sites, linkdims)
   end
   return M
 end
@@ -329,7 +328,7 @@ psi = MPS(ComplexF64, sites, states)
 phi = MPS(sites, "Up")
 ```
 """
-function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
+function MPS(eltype::Type{<:Number}, sites::Vector{<:Index}, states_)
   if length(sites) != length(states_)
     throw(DimensionMismatch("Number of sites and and initial vals don't match"))
   end
@@ -338,7 +337,7 @@ function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
 
   if N == 1
     M[1] = state(sites[1], states_[1])
-    return M
+    return convert_leaf_eltype(eltype, M)
   end
 
   states = [state(sites[j], states_[j]) for j in 1:N]
@@ -357,16 +356,16 @@ function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
     links = [Index(1; tags="Link,l=$n") for n in 1:N]
   end
 
-  M[1] = ITensor(T, sites[1], links[1])
+  M[1] = ITensor(sites[1], links[1])
   M[1] += states[1] * state(links[1], 1)
   for n in 2:(N - 1)
-    M[n] = ITensor(T, dag(links[n - 1]), sites[n], links[n])
+    M[n] = ITensor(dag(links[n - 1]), sites[n], links[n])
     M[n] += state(dag(links[n - 1]), 1) * states[n] * state(links[n], 1)
   end
-  M[N] = ITensor(T, dag(links[N - 1]), sites[N])
+  M[N] = ITensor(dag(links[N - 1]), sites[N])
   M[N] += state(dag(links[N - 1]), 1) * states[N]
 
-  return M
+  return convert_leaf_eltype(eltype, M)
 end
 
 function MPS(
@@ -691,22 +690,25 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   for (ni, i) in enumerate(sites[1:(end - 1)])
     while pL < i - 1
       pL += 1
-      L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+      sᵢ = siteind(psi, pL)
+      L = (L * psi[pL]) * prime(dag(psi[pL]), !sᵢ)
     end
 
     Li = L * psi[i]
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
-    C[ni, ni] =
-      scalar((Li * op(onsiteOp, s, i)) * prime(dag(psi[i]), not(rind))) / norm2_psi
+    oᵢ = adapt(datatype(Li), op(onsiteOp, s, i))
+    C[ni, ni] = ((Li * oᵢ) * prime(dag(psi[i]), !rind))[] / norm2_psi
 
     # Get j > i correlations
     if !using_auto_fermion() && fermionic2
       Op1 = "$Op1 * F"
     end
 
-    Li12 = (Li * op(Op1, s, i)) * dag(prime(psi[i]))
+    oᵢ = adapt(datatype(Li), op(Op1, s, i))
+
+    Li12 = (dag(psi[i])' * oᵢ) * Li
     pL12 = i
 
     for (n, j) in enumerate(sites[(ni + 1):end])
@@ -715,9 +717,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       while pL12 < j - 1
         pL12 += 1
         if !using_auto_fermion() && fermionic2
-          Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
+          oᵢ = adapt(datatype(psi[pL12]), op("F", s[pL12]))
+          Li12 *= (oᵢ * dag(psi[pL12])')
         else
-          Li12 *= dag(prime(psi[pL12], "Link"))
+          sᵢ = siteind(psi, pL12)
+          Li12 *= prime(dag(psi[pL12]), !sᵢ)
         end
         Li12 *= psi[pL12]
       end
@@ -725,7 +729,14 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       lind = commonind(psi[j], Li12)
       Li12 *= psi[j]
 
-      val = (Li12 * op(Op2, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
+      oⱼ = adapt(datatype(Li12), op(Op2, s, j))
+      sⱼ = siteind(psi, j)
+      val = (Li12 * oⱼ) * prime(dag(psi[j]), (sⱼ, lind))
+
+      # XXX: This gives a different fermion sign with
+      # ITensors.enable_auto_fermion()
+      # val = prime(dag(psi[j]), (sⱼ, lind)) * (oⱼ * Li12)
+
       C[ni, nj] = scalar(val) / norm2_psi
       if is_cm_hermitian
         C[nj, ni] = conj(C[ni, nj])
@@ -733,9 +744,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
 
       pL12 += 1
       if !using_auto_fermion() && fermionic2
-        Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
+        oᵢ = adapt(datatype(psi[pL12]), op("F", s[pL12]))
+        Li12 *= (oᵢ * dag(psi[pL12])')
       else
-        Li12 *= dag(prime(psi[pL12], "Link"))
+        sᵢ = siteind(psi, pL12)
+        Li12 *= prime(dag(psi[pL12]), !sᵢ)
       end
       @assert pL12 == j
     end #for j
@@ -747,7 +760,8 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       if !using_auto_fermion() && fermionic1
         Op2 = "$Op2 * F"
       end
-      Li21 = (Li * op(Op2, s, i)) * dag(prime(psi[i]))
+      oᵢ = adapt(datatype(psi[i]), op(Op2, s, i))
+      Li21 = (Li * oᵢ) * dag(psi[i])'
       pL21 = i
       if !using_auto_fermion() && fermionic1
         Li21 = -Li21 #Required because we swapped fermionic ops, instead of sweeping right to left.
@@ -759,9 +773,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
         while pL21 < j - 1
           pL21 += 1
           if !using_auto_fermion() && fermionic1
-            Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
+            oᵢ = adapt(datatype(psi[pL21]), op("F", s[pL21]))
+            Li21 *= oᵢ * dag(psi[pL21])'
           else
-            Li21 *= dag(prime(psi[pL21], "Link"))
+            sᵢ = siteind(psi, pL21)
+            Li21 *= prime(dag(si[pL21]), !sᵢ)
           end
           Li21 *= psi[pL21]
         end
@@ -769,14 +785,18 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
         lind = commonind(psi[j], Li21)
         Li21 *= psi[j]
 
-        val = (Li21 * op(Op1, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
-        C[nj, ni] = scalar(val) / norm2_psi
+        oⱼ = adapt(datatype(psi[j]), op(Op1, s, j))
+        sⱼ = siteind(psi, j)
+        val = (prime(dag(psi[j]), (sⱼ, lind)) * (oⱼ * Li21))[]
+        C[nj, ni] = val / norm2_psi
 
         pL21 += 1
         if !using_auto_fermion() && fermionic1
-          Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
+          oᵢ = adapt(datatype(psi[pL21]), op("F", s[pL21]))
+          Li21 *= (oᵢ * dag(psi[pL21])')
         else
-          Li21 *= dag(prime(psi[pL21], "Link"))
+          sᵢ = siteind(psi, pL21)
+          Li21 *= prime(dag(psi[pL21]), !sᵢ)
         end
         @assert pL21 == j
       end #for j
@@ -784,19 +804,22 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
     end #if is_cm_hermitian
 
     pL += 1
-    L = Li * dag(prime(psi[i], "Link"))
+    sᵢ = siteind(psi, i)
+    L = Li * prime(dag(psi[i]), !sᵢ)
   end #for i
 
   # Get last diagonal element of C
   i = end_site
   while pL < i - 1
     pL += 1
-    L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+    sᵢ = siteind(psi, pL)
+    L = L * psi[pL] * prime(dag(psi[pL]), !sᵢ)
   end
   lind = commonind(psi[i], psi[i - 1])
-  C[Nb, Nb] =
-    scalar(L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)) /
-    norm2_psi
+  oᵢ = adapt(datatype(psi[i]), op(onsiteOp, s, i))
+  sᵢ = siteind(psi, i)
+  val = (L * (oᵢ * psi[i]) * prime(dag(psi[i]), (sᵢ, lind)))[]
+  C[Nb, Nb] = val / norm2_psi
 
   return C
 end
@@ -865,7 +888,8 @@ function expect(psi::MPS, ops; kwargs...)
   for (entry, j) in enumerate(site_range)
     orthogonalize!(psi, j)
     for (n, opname) in enumerate(ops)
-      val = scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j]))) / norm2_psi
+      oⱼ = adapt(datatype(psi[j]), op(opname, s[j]))
+      val = inner(psi[j], apply(oⱼ, psi[j])) / norm2_psi
       ex[n][entry] = (el_types[n] <: Real) ? real(val) : val
     end
   end

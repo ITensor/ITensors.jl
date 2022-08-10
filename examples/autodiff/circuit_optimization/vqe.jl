@@ -73,9 +73,7 @@ algorithm = LBFGS(; gradtol=1e-3, verbosity=2)
 
 println("\nRun DMRG as a comparison")
 
-sweeps = Sweeps(5)
-setmaxdim!(sweeps, 10)
-e_dmrg, ψ_dmrg = dmrg(H, ψ0, sweeps)
+e_dmrg, ψ_dmrg = dmrg(H, ψ0; nsweeps=5, maxdim=10)
 
 println("\nCompare variational circuit energy to DMRG energy")
 @show loss(θ⃗ₒₚₜ), e_dmrg

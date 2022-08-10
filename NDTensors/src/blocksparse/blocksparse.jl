@@ -13,9 +13,17 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
 end
 
 function BlockSparse(
-  ::Type{ElT}, blockoffsets::BlockOffsets, dim::Integer; vargs...
-) where {ElT<:Number}
-  return BlockSparse(zeros(ElT, dim), blockoffsets; vargs...)
+  datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
+)
+  return BlockSparse(
+    fill!(similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
+  )
+end
+
+function BlockSparse(
+  eltype::Type{<:Number}, blockoffsets::BlockOffsets, dim::Integer; vargs...
+)
+  return BlockSparse(Vector{eltype}, blockoffsets, dim; vargs...)
 end
 
 function BlockSparse(x::Number, blockoffsets::BlockOffsets, dim::Integer; vargs...)
@@ -87,6 +95,9 @@ eltype(::BlockSparse{Nothing}) = Nothing
 eltype(::Type{BlockSparse{T}}) where {T} = eltype(T)
 
 dense(::Type{<:BlockSparse{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
+
+can_contract(T1::Type{<:Dense}, T2::Type{<:BlockSparse}) = false
+can_contract(T1::Type{<:BlockSparse}, T2::Type{<:Dense}) = can_contract(T2, T1)
 
 function promote_rule(
   ::Type{<:BlockSparse{ElT1,VecT1,N}}, ::Type{<:BlockSparse{ElT2,VecT2,N}}

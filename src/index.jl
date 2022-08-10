@@ -506,12 +506,14 @@ directsum(i::Index, j::Index; tags="sum") = Index(dim(i) + dim(j); tags=tags)
 # QN related functions
 #
 
+hasqns(::Integer) = false
+
 """
     hasqns(::Index)
 
 Checks of the Index has QNs or not.
 """
-hasqns(::Index) = false
+hasqns(i::Index) = hasqns(space(i))
 
 """
     removeqns(::Index)

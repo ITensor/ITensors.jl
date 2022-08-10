@@ -91,7 +91,7 @@ symmetrystyle(::NonQN, ::NonQN) = NonQN()
 symmetrystyle(::HasQNs, ::NonQN) = HasQNs()
 symmetrystyle(::NonQN, ::HasQNs) = HasQNs()
 
-hasqns(::QNIndex) = true
+hasqns(::QNBlocks) = true
 
 function have_same_qns(qnblocks::QNBlocks)
   qn1 = qn(qnblocks, 1)

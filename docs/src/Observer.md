@@ -183,14 +183,14 @@ let
   H = MPO(a,s)
   psi0 = randomMPS(s,4)
 
-  sweeps = Sweeps(5)
-  cutoff!(sweeps,1E-8)
-  maxdim!(sweeps,10,20,100)
+  nsweeps = 5
+  cutoff = 1E-8
+  maxdim = [10,20,100]
 
   obs = DemoObserver(etol)
 
   println("Starting DMRG")
-  energy, psi = dmrg(H,psi0,sweeps; observer=obs, outputlevel=1)
+  energy, psi = dmrg(H,psi0; nsweeps, cutoff, maxdim, observer=obs, outputlevel=1)
 
   return
 end
