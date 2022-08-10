@@ -4,13 +4,6 @@
 julia&gt; using Profile
 
 julia&gt; @profile include(joinpath(pkgdir(ITensors), &quot;examples&quot;, &quot;dmrg&quot;, &quot;1d_heisenberg_conserve_spin.jl&quot;))
-sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-137.995732867390 maxlinkdim=10 maxerr=1.93E-02 time=0.862
 After sweep 2 energy=-138.801057557054 maxlinkdim=20 maxerr=3.37E-05 time=1.126
 After sweep 3 energy=-138.940075984826 maxlinkdim=91 maxerr=9.99E-11 time=1.880
@@ -34,13 +27,6 @@ Overhead ╎ [+additional indent] Count File:Line; Function
 julia&gt; using ProfileView
 
 julia&gt; @profview include(joinpath(pkgdir(ITensors), &quot;examples&quot;, &quot;dmrg&quot;, &quot;1d_heisenberg_conserve_spin.jl&quot;));
-sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-137.995732867390 maxlinkdim=10 maxerr=1.93E-02 time=0.977
 After sweep 2 energy=-138.801057557054 maxlinkdim=20 maxerr=3.37E-05 time=1.252
 After sweep 3 energy=-138.940075984826 maxlinkdim=91 maxerr=9.99E-11 time=2.263
@@ -62,13 +48,6 @@ julia&gt; ITensors.TimerOutputs.reset_timer!(ITensors.NDTensors.timer)
  ──────────────────────────────────────────────────────────────────
 
 julia&gt; include(&quot;1d_heisenberg_conserve_spin.jl&quot;)
-sweeps = Sweeps
-1 cutoff=1.0E-10, maxdim=10, mindim=1, noise=0.0E+00
-2 cutoff=1.0E-10, maxdim=20, mindim=1, noise=0.0E+00
-3 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-4 cutoff=1.0E-10, maxdim=100, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-10, maxdim=200, mindim=1, noise=0.0E+00
-
 After sweep 1 energy=-137.995732867390 maxlinkdim=10 maxerr=1.93E-02 time=0.597
 After sweep 2 energy=-138.801057557054 maxlinkdim=20 maxerr=3.37E-05 time=0.798
 After sweep 3 energy=-138.940075984826 maxlinkdim=91 maxerr=9.99E-11 time=1.285
@@ -88,4 +67,4 @@ julia&gt; ITensors.NDTensors.timer
  dmrg: replacebond!         990    1.31s  20.2%  1.32ms   1.12GiB  12.2%  1.15MiB
  dmrg: position!            990    360ms  5.55%   364μs    571MiB  6.11%   590KiB
  dmrg: psi[b]*psi[b+1]      990    106ms  1.63%   107μs    182MiB  1.95%   188KiB
- ────────────────────────────────────────────────────────────────────────────────</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="QNTricks.html">« Symmetric (QN conserving) tensors: background and usage</a><a class="docs-footer-nextpage" href="ContractionSequenceOptimization.html">Contraction sequence optimization »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Thursday 7 July 2022 16:24">Thursday 7 July 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ ────────────────────────────────────────────────────────────────────────────────</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="QNTricks.html">« Symmetric (QN conserving) tensors: background and usage</a><a class="docs-footer-nextpage" href="ContractionSequenceOptimization.html">Contraction sequence optimization »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Wednesday 10 August 2022 18:18">Wednesday 10 August 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
