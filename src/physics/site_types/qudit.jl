@@ -35,17 +35,10 @@ end
 
 # one-body operators
 function op(::OpName"Id", ::SiteType"Qudit", dims::Tuple)
-  d = dims[1]
-  mat = zeros(d, d)
-  for k in 1:d
-    mat[k, k] = 1.0
-  end
-  return mat
+  d = prod(dims)
+  return Matrix(1.0I, d, d)
 end
-
-function op(::OpName"I", st::SiteType"Qudit"; kwargs...)
-  return op(OpName"Id"(), st; kwargs...)
-end
+op(on::OpName"I", st::SiteType"Qudit", dims::Tuple) = op(alias(on), st, dims)
 
 function op(::OpName"Adag", ::SiteType"Qudit", dims::Tuple)
   d = dims[1]

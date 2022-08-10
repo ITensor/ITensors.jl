@@ -3,6 +3,39 @@ using ITensors, Test
 @testset "Physics Sites" begin
   N = 10
 
+  @testset "Generic sites" for eltype in (Float32, Float64, ComplexF32, ComplexF64)
+    d1, d2 = 3, 4
+    i1, i2 = Index(d1), Index(d2)
+
+    o = op("I", i1; eltype)
+    @test o == itensor(Matrix(I, d1, d1), i1', dag(i1))
+    @test Base.eltype(o) <: eltype
+
+    o = op("Id", i1; eltype)
+    @test o == itensor(Matrix(I, d1, d1), i1', dag(i1))
+    @test Base.eltype(o) <: eltype
+
+    o = op("F", i1; eltype)
+    @test o == itensor(Matrix(I, d1, d1), i1', dag(i1))
+    @test Base.eltype(o) <: eltype
+
+    o = op("I", i1, i2; eltype)
+    @test o == itensor(Matrix(I, d1 * d2, d1 * d2), i2', i1', dag(i2), dag(i1))
+    @test Base.eltype(o) <: eltype
+
+    o = op("Id", i1, i2; eltype)
+    @test o == itensor(Matrix(I, d1 * d2, d1 * d2), i2', i1', dag(i2), dag(i1))
+    @test Base.eltype(o) <: eltype
+
+    U1 = op("RandomUnitary", i1)
+    @test hassameinds(U1, (i1', i1))
+    @test apply(transpose(dag(U1)), U1) ≈ itensor(Matrix(I, d1, d1), i1', dag(i1))
+
+    U12 = op("RandomUnitary", i1, i2)
+    @test hassameinds(U12, (i1', i2', i1, i2))
+    @test apply(transpose(dag(U12)), U12) ≈ itensor(Matrix(I, d1 * d2, d1 * d2), i2', i1', dag(i2), dag(i1))
+  end
+
   @testset "Qubit sites" begin
     s = siteind("Qubit")
     @test hastags(s, "Qubit,Site")
@@ -404,11 +437,12 @@ using ITensors, Test
   end
 
   @testset "$st" for st in ["Qudit", "Boson"]
-    s = siteinds(st, 4; dim=3)
-    @test dim(s[1]) == 3
-    @test dim(s[2]) == 3
-    @test dim(s[3]) == 3
-    @test dim(s[4]) == 3
+    d = 3
+    s = siteinds(st, 4; dim=d)
+    @test dim(s[1]) == d
+    @test dim(s[2]) == d
+    @test dim(s[3]) == d
+    @test dim(s[4]) == d
     v = state(s, 2, "0")
     @test v == itensor([1, 0, 0], s[2])
     v = state(s, 3, "1")
@@ -423,6 +457,9 @@ using ITensors, Test
     v = val(s, 4, "2")
     @test v == 3
     @test op(s, "Id", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
+    @test op(s, "I", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
+    @test op("Id", s, 1, 2) == itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+    @test op("I", s, 1, 2) == itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op(s, "N", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "n", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "Adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
@@ -432,10 +469,12 @@ using ITensors, Test
     @test op(s, "a", 2) ≈ itensor([0 1 0; 0 0 √2; 0 0 0], s[2]', dag(s[2]))
 
     # With QNs
-    s = siteinds(st, 4; dim=3, conserve_qns=true)
+    s = siteinds(st, 4; dim=d, conserve_qns=true)
     @test all(hasqns, s)
     @test op(s, "Id", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op(s, "I", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
+    @test op("Id", s, 1, 2) == itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+    @test op("I", s, 1, 2) == itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op(s, "N", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "n", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "Adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
