@@ -33,7 +33,8 @@ using ITensors, Test
 
     U12 = op("RandomUnitary", i1, i2)
     @test hassameinds(U12, (i1', i2', i1, i2))
-    @test apply(transpose(dag(U12)), U12) ≈ itensor(Matrix(I, d1 * d2, d1 * d2), i2', i1', dag(i2), dag(i1))
+    @test apply(transpose(dag(U12)), U12) ≈
+      itensor(Matrix(I, d1 * d2, d1 * d2), i2', i1', dag(i2), dag(i1))
   end
 
   @testset "Qubit sites" begin
@@ -458,8 +459,10 @@ using ITensors, Test
     @test v == 3
     @test op(s, "Id", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op(s, "I", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
-    @test op("Id", s, 1, 2) == itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
-    @test op("I", s, 1, 2) == itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+    @test op("Id", s, 1, 2) ==
+      itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+    @test op("I", s, 1, 2) ==
+      itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op(s, "N", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "n", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "Adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
@@ -473,8 +476,10 @@ using ITensors, Test
     @test all(hasqns, s)
     @test op(s, "Id", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op(s, "I", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
-    @test op("Id", s, 1, 2) == itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
-    @test op("I", s, 1, 2) == itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+    @test op("Id", s, 1, 2) ==
+      itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+    @test op("I", s, 1, 2) ==
+      itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op(s, "N", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "n", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "Adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
