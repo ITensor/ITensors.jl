@@ -1104,6 +1104,23 @@ end
       MPO(os, s)
     end
   end
+
+  @testset "Operator with empty blocks - issue #963" begin
+    sites = siteinds("Fermion", 2; conserve_qns=true)
+    opsum1 = OpSum()
+    for p in 1:2, q in 1:2, r in 1:2, s in 1:2
+      opsum1 += "c†", p, "c†", q, "c", r, "c", s
+    end
+    H1 = MPO(opsum1, sites)
+    opsum2 = OpSum()
+    for p in 1:2, q in 1:2, r in 1:2, s in 1:2
+      if !(p == q == r == s)
+        opsum2 += "c†", p, "c†", q, "c", r, "c", s
+      end
+    end
+    H2 = MPO(opsum2, sites)
+    @test H1 ≈ H2
+  end
 end
 
 nothing
