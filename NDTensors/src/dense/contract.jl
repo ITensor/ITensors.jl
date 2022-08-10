@@ -8,56 +8,75 @@ end
 Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))
 
 function contract!(
-  C::DenseTensor{ElT},
+  C::DenseTensor,
   labelsC,
-  A::DenseTensor{ElT},
+  A::DenseTensor,
   labelsA,
-  B::DenseTensor{ElT},
+  B::DenseTensor,
   labelsB,
-) where {ElT}
+  α::Number=true,
+  β::Number=false,
+) where {ElT<:Number}
   props = ContractionProperties(labelsA, labelsB, labelsC)
-  compute_contraction_properties!(props, A, B, C)
-  contract!(C, A, B, props)
+  compute_contraction_properties!(props, size(A), size(B), size(C))
+  contract!(props, C, A, B, α, β)
   return C
 end
 
 function contract!(
-  C::DenseTensor{ElT},
-  A::DenseTensor{ElT},
-  B::DenseTensor{ElT},
   props::ContractionProperties,
-) where {ElT}
-  contract!(array(C), array(A), array(B), props)
+  C::DenseTensor,
+  A::DenseTensor,
+  B::DenseTensor,
+  α::Number=true,
+  β::Number=false,
+) where {ElT<:Number}
+  contract!(props, array(C), array(A), array(B), α, β)
   return C
 end
 
 function contract!(
-  C::Array{ElT},
-  A::Array{ElT},
-  B::Array{ElT},
   props::ContractionProperties,
-) where {ElT}
-  AM, tA, BM, tB, CM = reshape_to_matmul(C, A, B, props)
-  BLAS.gemm!(tA, tB, one(ElT), AM, BM, zero(ElT), CM)
+  C::AbstractArray,
+  A::AbstractArray,
+  B::AbstractArray,
+  α::Number=true,
+  β::Number=false,
+)
+  T = promote_type(eltype(A), eltype(B))
+  A2 = convert(AbstractArray{T}, A)
+  B2 = convert(AbstractArray{T}, B)
+  contract!(props, C, A2, B2, α, β)
+end
+
+function contract!(
+  props::ContractionProperties,
+  C::AbstractArray{ElT},
+  A::AbstractArray{ElT},
+  B::AbstractArray{ElT},
+  α::Number=true,
+  β::Number=false,
+) where {ElT<:Number}
+  AM, tA, BM, tB, CM = reshape_to_matmul(props, C, A, B)
+  BLAS.gemm!(tA, tB, α, AM, BM, β, CM)
   if props.permuteC
-    pC = NTuple{ndims(C),Int}(props.PC)
-    Cr = reshape(CM, props.newCrange)
-    C .= permutedims(Cr, pC)
+    # pC = NTuple{ndims(C),Int}(props.PC)
+    # Cr = reshape(CM, props.newCrange)
+    permutedims!(C, reshape(CM, props.newCrange), props.PC)
   end
   return C
 end
 
 function reshape_to_matmul(
-  C::Array{ElT},
-  A::Array{ElT},
-  B::Array{ElT},
   props::ContractionProperties,
-) where {ElT}
+  C::AbstractArray,
+  A::AbstractArray,
+  B::AbstractArray,
+)
   tA = 'N'
   if props.permuteA
-    pA = NTuple{ndims(A),Int}(props.PA)
-    Ap = permutedims(A, pA)
-    AM = reshape(Ap, (props.dmid, props.dleft))
+    # pA = NTuple{ndims(A),Int}(props.PA)
+    AM = reshape(permutedims(A, props.PA), (props.dmid, props.dleft))
     tA = 'T'
   else
     #A doesn't have to be permuted
@@ -71,9 +90,8 @@ function reshape_to_matmul(
 
   tB = 'N'
   if props.permuteB
-    pB = NTuple{ndims(B),Int}(props.PB)
-    Bp = permutedims(B, pB)
-    BM = reshape(Bp, (props.dmid, props.dright))
+    # pB = NTuple{ndims(B),Int}(props.PB)
+    BM = reshape(permutedims(B, props.PB), (props.dmid, props.dright))
   else
     if Btrans(props)
       BM = reshape(B, (props.dright, props.dmid))

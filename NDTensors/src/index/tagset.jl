@@ -18,6 +18,8 @@ function SmallString(i::IntSmallString)
   return SmallString(unsafe_load(p))
 end
 
+SmallString(s::SmallString) = s
+
 isnull(s::SmallString) = @inbounds s[1] == IntChar(0)
 
 Base.getindex(s::SmallString, n::Int) = getindex(s.data, n)

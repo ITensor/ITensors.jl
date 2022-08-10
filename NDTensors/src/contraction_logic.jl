@@ -13,43 +13,43 @@ function contract_labels(T1labels::Labels{N1}, T2labels::Labels{N2}) where {N1,N
 end
 
 function contract_labels(
-  ::Type{Val{NR}}, T1labels::Labels{N1}, T2labels::Labels{N2}
-) where {NR,N1,N2}
+  ::Type{Val{NR}}, T1labels::Labels, T2labels::Labels
+) where {NR}
   Rlabels = MVector{NR,Int}(undef)
   u = 1
   # TODO: use Rlabels, don't assume ncon convention
-  for i in 1:N1
+  for i in eachindex(T1labels)
     if T1labels[i] > 0
-      @inbounds Rlabels[u] = T1labels[i]
+      Rlabels[u] = T1labels[i]
       u += 1
     end
   end
-  for i in 1:N2
+  for i in eachindex(T2labels)
     if T2labels[i] > 0
-      @inbounds Rlabels[u] = T2labels[i]
+      Rlabels[u] = T2labels[i]
       u += 1
     end
   end
-  return Labels{NR}(Rlabels)
+  return Tuple(Rlabels)
 end
 
 function _contract_inds!(
-  Ris, T1is, T1labels::Labels{N1}, T2is, T2labels::Labels{N2}, Rlabels::Labels{NR}
-) where {N1,N2,NR}
-  for n in 1:NR
-    Rlabel = @inbounds Rlabels[n]
+  Ris, T1is, T1labels::Labels, T2is, T2labels::Labels, Rlabels::Labels
+)
+  for n in eachindex(Rlabels)
+    Rlabel = Rlabels[n]
     found = false
-    for n1 in 1:N1
-      if Rlabel == @inbounds T1labels[n1]
-        @inbounds Ris[n] = @inbounds T1is[n1]
+    for n1 in eachindex(T1labels)
+      if Rlabel == T1labels[n1]
+        Ris[n] = T1is[n1]
         found = true
         break
       end
     end
     if !found
-      for n2 in 1:N2
-        if Rlabel == @inbounds T2labels[n2]
-          @inbounds Ris[n] = @inbounds T2is[n2]
+      for n2 in eachindex(T2labels)
+        if Rlabel == T2labels[n2]
+          Ris[n] = T2is[n2]
           break
         end
       end
@@ -281,7 +281,13 @@ Btrans(props::ContractionProperties) = !contractedB(props, 1)
 Ctrans(props::ContractionProperties) = props.ctrans
 
 function compute_contraction_properties!(
-  props::ContractionProperties{NA,NB,NC}, A, B, C
+  props::ContractionProperties, A::AbstractArray, B::AbstractArray, C::AbstractArray,
+)
+  return compute_contraction_properties!(props, size(A), size(B), size(C))
+end
+
+function compute_contraction_properties!(
+  props::ContractionProperties{NA,NB,NC}, sizeA::Tuple, sizeB::Tuple, sizeC::Tuple
 ) where {NA,NB,NC}
   compute_perms!(props)
 
@@ -309,18 +315,18 @@ function compute_contraction_properties!(
   for i in 1:NA
     #if !contractedA(props,i)
     if !(AtoC[i] < 1)
-      dleft *= size(A, i)
+      dleft *= sizeA[i]
       #props.PC[props.AtoC[i]] = c
       PC = setindex(PC, c, AtoC[i])
       c += 1
     else
-      dmid *= size(A, i)
+      dmid *= sizeA[i]
     end
   end
   for j in 1:NB
     #if !contractedB(props,j)
     if !(BtoC[j] < 1)
-      dright *= size(B, j)
+      dright *= sizeB[j]
       #props.PC[props.BtoC[j]] = c
       PC = setindex(PC, c, BtoC[j])
       c += 1
@@ -467,7 +473,7 @@ function compute_contraction_properties!(
       Austart = min(i, Austart)
     end
     #props.newArange = permute_extents([size(A)...],props.PA)
-    newArange = permute(size(A), PA) #[size(A)...][props.PA]
+    newArange = permute(sizeA, PA) #[size(A)...][props.PA]
   end
   props.Acstart = Acstart
   props.Austart = Austart
@@ -548,7 +554,7 @@ function compute_contraction_properties!(
     end
     #props.newBrange = permute_extents([size(B)...],props.PB)
     #props.newBrange = [size(B)...][props.PB]
-    props.newBrange = permute(size(B), PB)
+    props.newBrange = permute(sizeB, PB)
 
     props.BtoC = BtoC
     props.PB = PB
@@ -609,7 +615,7 @@ function compute_contraction_properties!(
       for i in 1:NA
         if !(AtoC[i] < 1)
           #push!(Rb,size(A,i))
-          Rb[k] = size(A, i)
+          Rb[k] = sizeA[i]
           k = k + 1
         end
       end
@@ -628,7 +634,7 @@ function compute_contraction_properties!(
       for j in 1:NB
         if !(BtoC[j] < 1)
           #push!(Rb,size(B,j))
-          Rb[k] = size(B, j)
+          Rb[k] = sizeB[j]
           k = k + 1
         end
       end

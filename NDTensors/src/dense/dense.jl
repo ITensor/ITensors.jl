@@ -376,7 +376,7 @@ function permutedims!(
 ) where {N}
   RA = array(R)
   TA = array(T)
-  RA .= permutedims(TA, perm)
+  permutedims!(RA, TA, perm)
   return R
 end
 

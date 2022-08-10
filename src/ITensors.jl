@@ -251,13 +251,33 @@ include("Deprecated/Deprecated.jl")
 #   _precompile_()
 # end
 
-# @precompile_all_calls begin
-#   i = Index(2)
-#   j = Index(2)
-#   k = Index(2)
-#   A = randomITensor(i, j)
-#   B = randomITensor(j, k)
-#   C = A * B
-# end
+@precompile_all_calls begin
+  for eltype in (Float32, Float64, ComplexF32, ComplexF64)
+    for space in (2, [QN(0) => 2, QN(1) => 2])
+      i = Index(space)
+      j = Index(space)
+      k = Index(space)
+      A = randomITensor(eltype, i, dag(j))
+      B = randomITensor(eltype, j, dag(k))
+      C = A * B
+      C = A * dag(A)
+      U, S, V = svd(A, i; maxdim=1)
+      U, S, V = svd(A, i; maxdim=1, alg="recursive")
+    end
+    for conserve_qns in (false, true)
+      n = 4
+      sites = siteinds("S=1/2", n; conserve_qns)
+      opsum = OpSum()
+      for j in 1:(n - 1)
+        opsum += "Sz", j, "Sz", j + 1
+        opsum += 0.5, "S+", j, "S-", j + 1
+        opsum += 0.5, "S-", j, "S+", j + 1
+      end
+      H = MPO(eltype, opsum, sites)
+      psi0 = randomMPS(eltype, sites, j -> isodd(j) ? "↑" : "↓"; linkdims=2)
+      energy, psi = dmrg(H, psi0; nsweeps=1, maxdim=10, cutoff=1e-4, outputlevel=1)
+    end
+  end
+end
 
 end # module ITensors

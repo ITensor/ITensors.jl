@@ -68,7 +68,7 @@ end
 function removeqn(space::QNBlocks, qn_name::String; mergeblocks=true)
   space = QNBlocks([removeqn(qn_block, qn_name) for qn_block in space])
   if mergeblocks
-    space = ITensors.mergeblocks(space)
+    space = NDTensors.mergeblocks(space)
   end
   return space
 end
@@ -297,7 +297,7 @@ end
 # `f` accepts a pair of `i => Block(n)` where `n`
 # runs over `nblocks(i)`.
 function findfirstblock(f, i::QNIndex)
-  for b in ITensors.eachblock(i)
+  for b in NDTensors.eachblock(i)
     if f(i => b)
       return b
     end
@@ -354,8 +354,8 @@ end
 (qn1::QNBlock * qn2::QNBlock) = QNBlock(qn(qn1) + qn(qn2), blockdim(qn1) * blockdim(qn2))
 
 # TODO: rename tensorproduct with ⊗ alias
-function outer(qn1::QNBlocks, qn2::QNBlocks)
-  qnR = ITensors.QNBlocks(undef, nblocks(qn1) * nblocks(qn2))
+function ⊗(qn1::QNBlocks, qn2::QNBlocks)
+  qnR = NDTensors.QNBlocks(undef, nblocks(qn1) * nblocks(qn2))
   for (i, t) in enumerate(Iterators.product(qn1, qn2))
     qnR[i] = prod(t)
   end
@@ -363,24 +363,24 @@ function outer(qn1::QNBlocks, qn2::QNBlocks)
 end
 
 # TODO: rename tensorproduct with ⊗ alias
-function outer(i1::QNIndex, i2::QNIndex; dir=nothing, tags="", plev::Integer=0)
+function ⊗(i1::QNIndex, i2::QNIndex; dir=nothing, tags="", plev::Integer=0)
   if isnothing(dir)
-    if ITensors.dir(i1) == ITensors.dir(i2)
-      dir = ITensors.dir(i1)
+    if NDTensors.dir(i1) == NDTensors.dir(i2)
+      dir = NDTensors.dir(i1)
     else
       dir = Out
     end
   end
-  newspace = dir * ((ITensors.dir(i1) * space(i1)) ⊗ (ITensors.dir(i2) * space(i2)))
+  newspace = dir * ((NDTensors.dir(i1) * space(i1)) ⊗ (NDTensors.dir(i2) * space(i2)))
   return Index(newspace; dir=dir, tags=tags, plev=plev)
 end
 
 # TODO: rename tensorproduct with ⊗ alias
-function outer(i::QNIndex; dir=nothing, tags="", plev::Integer=0)
+function ⊗(i::QNIndex; dir=nothing, tags="", plev::Integer=0)
   if isnothing(dir)
-    dir = ITensors.dir(i)
+    dir = NDTensors.dir(i)
   end
-  newspace = dir * (ITensors.dir(i) * space(i))
+  newspace = dir * (NDTensors.dir(i) * space(i))
   return Index(newspace; dir=dir, tags=tags, plev=plev)
 end
 

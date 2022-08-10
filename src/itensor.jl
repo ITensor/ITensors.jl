@@ -1176,14 +1176,14 @@ function filter_inds_set_function(
 end
 
 function filter_inds_set_function(fset::Function, A...; kwargs...)
-  return filter_inds_set_function(fmatch(; kwargs...), fset, A...)
+  return filter_inds_set_function(NDTensors.fmatch(; kwargs...), fset, A...)
 end
 
 for (finds, fset) in (
-  (:commoninds, :_intersect),
-  (:noncommoninds, :_symdiff),
-  (:uniqueinds, :_setdiff),
-  (:unioninds, :_union),
+  (:commoninds, :(NDTensors._intersect)),
+  (:noncommoninds, :(NDTensors._symdiff)),
+  (:uniqueinds, :(NDTensors._setdiff)),
+  (:unioninds, :(NDTensors._union)),
 )
   @eval begin
     $finds(args...; kwargs...) = filter_inds_set_function($fset, args...; kwargs...)

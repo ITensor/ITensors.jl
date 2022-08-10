@@ -594,6 +594,9 @@ function removeqn(is::Indices, qn_name::String; mergeblocks=true)
 end
 mergeblocks(is::Indices) = map(mergeblocks, is)
 
+_getindices(v, I::Tuple) = (v[I[1]], _getindices(v, Base.tail(I))...)
+_getindices(v, I::Tuple{}) = ()
+
 # Permute is1 to be in the order of is2
 # This is helpful when is1 and is2 have different directions, and
 # you want is1 to have the same directions as is2
@@ -608,7 +611,8 @@ function permute(is1::Indices, is2::Indices)
     ),
   )
   perm = getperm(is1, is2)
-  return is1[invperm(perm)]
+  # return is1[invperm(perm)]
+  return _getindices(is1, invperm(perm))
 end
 
 #
@@ -623,9 +627,9 @@ function compute_contraction_labels(Ais::Tuple, Bis::Tuple)
   Blabels = MVector{NB,Int}(ntuple(_ -> 0, Val(NB)))
 
   ncont = 0
-  for i in 1:NA, j in 1:NB
-    Ais_i = @inbounds Ais[i]
-    Bis_j = @inbounds Bis[j]
+  for i in eachindex(Ais), j in eachindex(Bis)
+    Ais_i = Ais[i]
+    Bis_j = Bis[j]
     if Ais_i == Bis_j
       if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
         error(

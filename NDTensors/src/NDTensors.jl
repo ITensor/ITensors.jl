@@ -212,14 +212,27 @@ function __init__()
   end
   resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 
-  # @precompile_all_calls begin
-  #   i = Index(2)
-  #   j = Index(2)
-  #   k = Index(2)
-  #   A = DenseTensor((i, j))
-  #   B = DenseTensor((j, k))
-  #   C = contract(A, (1, -1), B, (-1, 2), (1, 2))
-  # end
+  @precompile_all_calls begin
+    space = 2
+    i = Index(space)
+    j = Index(space)
+    k = Index(space)
+    A = DenseTensor((i, dag(j)))
+    B = DenseTensor((j, dag(k)))
+    C = contract(A, (1, -1), B, (-1, 2), (1, 2))
+    U, S, V = svd(A; maxdim=1)
+    U, S, V = svd(A; maxdim=1, alg="recursive")
+
+    space = [QN(0) => 2, QN(1) => 2]
+    i = Index(space)
+    j = Index(space)
+    k = Index(space)
+    A = BlockSparseTensor([Block(1, 1), Block(2, 2)], (i, dag(j)))
+    B = BlockSparseTensor([Block(1, 1), Block(2, 2)], (j, dag(k)))
+    C = contract(A, (1, -1), B, (-1, 2), (1, 2))
+    U, S, V = svd(A; maxdim=1)
+    U, S, V = svd(A; maxdim=1, alg="recursive")
+  end
 
   return nothing
 end
