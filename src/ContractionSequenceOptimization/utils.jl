@@ -62,7 +62,7 @@ import ITensors: dim
 
 # `is` could be Vector{Int} for BitSet
 function dim(is::IndexSetT, ind_dims::Vector) where {IndexSetT<:Union{Vector{Int},BitSet}}
-  isempty(is) && return one(eltype(inds_dims))
+  isempty(is) && return one(eltype(ind_dims))
   dim = one(eltype(ind_dims))
   for i in is
     dim *= ind_dims[i]
