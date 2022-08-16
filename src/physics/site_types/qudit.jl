@@ -34,73 +34,74 @@ function ITensors.state(::StateName{N}, ::SiteType"Qudit", s::Index) where {N}
 end
 
 # one-body operators
-function op(::OpName"Id", ::SiteType"Qudit", dims::Tuple)
-  d = prod(dims)
+function op(::OpName"Id", ::SiteType"Qudit", ds::Int...)
+  d = prod(ds)
   return Matrix(1.0I, d, d)
 end
-op(on::OpName"I", st::SiteType"Qudit", dims::Tuple) = op(alias(on), st, dims)
+op(on::OpName"I", st::SiteType"Qudit", ds::Int...) = op(alias(on), st, ds...)
 
-function op(::OpName"Adag", ::SiteType"Qudit", dims::Tuple)
-  d = dims[1]
+function op(::OpName"Adag", ::SiteType"Qudit", d::Int)
   mat = zeros(d, d)
   for k in 1:(d - 1)
     mat[k + 1, k] = √k
   end
   return mat
 end
-op(on::OpName"adag", st::SiteType"Qudit", dims::Tuple) = op(alias(on), st, dims)
-op(on::OpName"a†", st::SiteType"Qudit", dims::Tuple) = op(alias(on), st, dims)
+op(on::OpName"adag", st::SiteType"Qudit", d::Int) = op(alias(on), st, d)
+op(on::OpName"a†", st::SiteType"Qudit", d::Int) = op(alias(on), st, d)
 
-function op(::OpName"A", ::SiteType"Qudit", dims::Tuple)
-  d = dims[1]
+function op(::OpName"A", ::SiteType"Qudit", d::Int)
   mat = zeros(d, d)
   for k in 1:(d - 1)
     mat[k, k + 1] = √k
   end
   return mat
 end
-op(on::OpName"a", st::SiteType"Qudit", dims::Tuple) = op(alias(on), st, dims)
+op(on::OpName"a", st::SiteType"Qudit", d::Int) = op(alias(on), st, d)
 
-function op(::OpName"N", ::SiteType"Qudit", dims::Tuple)
-  d = dims[1]
+function op(::OpName"N", ::SiteType"Qudit", d::Int)
   mat = zeros(d, d)
   for k in 1:d
     mat[k, k] = k - 1
   end
   return mat
 end
-op(on::OpName"n", st::SiteType"Qudit", dims::Tuple) = op(alias(on), st, dims)
+op(on::OpName"n", st::SiteType"Qudit", d::Int) = op(alias(on), st, d)
 
 # two-body operators 
-function op(::OpName"ab", st::SiteType"Qudit", dims::Tuple)
-  return kron(op(OpName("a"), st, (dims[1],)), op(OpName("a"), st, (dims[2],)))
+function op(::OpName"ab", st::SiteType"Qudit", d1::Int, d2::Int)
+  return kron(op(OpName("a"), st, d1), op(OpName("a"), st, d2))
 end
 
-function op(::OpName"a†b", st::SiteType"Qudit", dims::Tuple)
-  return kron(op(OpName("a†"), st, (dims[1],)), op(OpName("a"), st, (dims[2],)))
+function op(::OpName"a†b", st::SiteType"Qudit", d1::Int, d2::Int)
+  return kron(op(OpName("a†"), st, d1), op(OpName("a"), st, d2))
 end
 
-function op(::OpName"ab†", st::SiteType"Qudit", dims::Tuple)
-  return kron(op(OpName("a"), st, (dims[1],)), op(OpName("a†"), st, (dims[2],)))
+function op(::OpName"ab†", st::SiteType"Qudit", d1::Int, d2::Int)
+  return kron(op(OpName("a"), st, d1), op(OpName("a†"), st, d2))
 end
 
-function op(::OpName"a†b†", st::SiteType"Qudit", dims::Tuple)
-  return kron(op(OpName("a†"), st, (dims[1],)), op(OpName("a†"), st, (dims[2],)))
+function op(::OpName"a†b†", st::SiteType"Qudit", d1::Int, d2::Int)
+  return kron(op(OpName("a†"), st, d1), op(OpName("a†"), st, d2))
 end
 
 # interface
-function op(on::OpName, st::SiteType"Qudit", s::Index...)
-  rs = reverse([s...])
-  d⃗ = dim.(Tuple(rs))
-  opmat = op(on, st, d⃗)
+function op(on::OpName, st::SiteType"Qudit", s1::Index, s_tail::Index...; kwargs...)
+  rs = reverse((s1, s_tail...))
+  ds = dim.(rs)
+  opmat = op(on, st, ds...; kwargs...)
   return ITensors.itensor(opmat, prime.(rs)..., dag.(rs)...)
 end
 
+# function op(on::OpName, st::SiteType"Qudit"; kwargs...)
+#   return error("`op` can't be called without indices or dimensions.")
+# end
+
 # Zygote
-@non_differentiable op(::OpName"ab", ::SiteType"Qudit", ::Tuple)
-@non_differentiable op(::OpName"a†b", ::SiteType"Qudit", ::Tuple)
-@non_differentiable op(::OpName"ab†", ::SiteType"Qudit", ::Tuple)
-@non_differentiable op(::OpName"a†b†", ::SiteType"Qudit", ::Tuple)
-@non_differentiable op(::OpName"a", ::SiteType"Qudit", ::Tuple)
-@non_differentiable op(::OpName"a†", ::SiteType"Qudit", ::Tuple)
-@non_differentiable op(::OpName"N", ::SiteType"Qudit", ::Tuple)
+@non_differentiable op(::OpName"ab", ::SiteType"Qudit", ::Int, ::Int)
+@non_differentiable op(::OpName"a†b", ::SiteType"Qudit", ::Int, ::Int)
+@non_differentiable op(::OpName"ab†", ::SiteType"Qudit", ::Int, ::Int)
+@non_differentiable op(::OpName"a†b†", ::SiteType"Qudit", ::Int, ::Int)
+@non_differentiable op(::OpName"a", ::SiteType"Qudit", ::Int)
+@non_differentiable op(::OpName"a†", ::SiteType"Qudit", ::Int)
+@non_differentiable op(::OpName"N", ::SiteType"Qudit", ::Int)
