@@ -131,5 +131,6 @@ factorize(::ITensor, ::Any...)
 
 ```@docs
 permute(::ITensor, ::Any)
+dense(::ITensor)
 ```
 
