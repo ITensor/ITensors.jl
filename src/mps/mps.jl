@@ -282,7 +282,7 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
     end
     links = Vector{QNIndex}(undef, N - 1)
     for j in (N - 1):-1:1
-      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
+      links[j] = dag(Index(lflux => 1; tags="Link,l=$j"))
       lflux -= qn(ivals[j])
     end
   else
@@ -359,7 +359,7 @@ function MPS(eltype::Type{<:Number}, sites::Vector{<:Index}, states_)
     end
     links = Vector{QNIndex}(undef, N - 1)
     for j in (N - 1):-1:1
-      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
+      links[j] = dag(Index(lflux => 1; tags="Link,l=$j"))
       lflux -= flux(states[j])
     end
   else

@@ -7,8 +7,8 @@ function op!(
   return settensor!(o, tensor(t))
 end
 
-function op!(o::ITensor, ::OpName"I", st::SiteType"Generic", s::Index...; kwargs...)
-  return op!(o, OpName("Id"), st, s...; kwargs...)
+function op!(o::ITensor, on::OpName"I", st::SiteType"Generic", s::Index...; kwargs...)
+  return op!(o, alias(on), st, s...; kwargs...)
 end
 
 function op!(o::ITensor, ::OpName"F", st::SiteType"Generic", s::Index; kwargs...)

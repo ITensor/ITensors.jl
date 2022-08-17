@@ -395,6 +395,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   )
 end
 
+op(name::AbstractString; kwargs...) = error("Must input indices when creating an `op`.")
+
 # If a Matrix is passed instead of a String, turn the Matrix into
 # an ITensor with the given indices.
 op(X::AbstractArray, s::Index...) = itensor(X, prime.([s...]), dag.([s...]))
@@ -512,12 +514,12 @@ macro StateName_str(s)
   return StateName{SmallString(s)}
 end
 
-state(::StateName, ::SiteType) = nothing
-state(::StateName, ::SiteType, ::Index) = nothing
-state!(::ITensor, ::StateName, ::SiteType, ::Index) = nothing
+state(::StateName, ::SiteType; kwargs...) = nothing
+state(::StateName, ::SiteType, ::Index; kwargs...) = nothing
+state!(::ITensor, ::StateName, ::SiteType, ::Index; kwargs...) = nothing
 
 # Syntax `state("Up", Index(2, "S=1/2"))`
-state(sn::String, i::Index) = state(i, sn)
+state(sn::String, i::Index; kwargs...) = state(i, sn; kwargs...)
 
 """
     state(s::Index, name::String; kwargs...)
@@ -552,7 +554,7 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
   stypes = _sitetypes(s)
   sname = StateName(name)
 
-  # Try calling state(::StateName"Name",::SiteType"Tag",s::Index)
+  # Try calling state(::StateName"Name",::SiteType"Tag",s::Index; kwargs...)
   for st in stypes
     v = state(sname, st, s; kwargs...)
     if !isnothing(v)
@@ -565,10 +567,10 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
     end
   end
 
-  # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index)
+  # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index;kwargs...)
   T = ITensor(s)
   for st in stypes
-    state!(T, sname, st, s)
+    state!(T, sname, st, s; kwargs...)
     !isempty(T) && return T
   end
 
@@ -578,7 +580,7 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
   # which returns a Julia vector
   #
   for st in stypes
-    v = state(sname, st)
+    v = state(sname, st; kwargs...)
     !isnothing(v) && return itensor(v, s)
   end
 
@@ -591,7 +593,7 @@ end
 
 state(s::Index, n::Integer) = onehot(s => n)
 
-state(sset::Vector{<:Index}, j::Integer, st) = state(sset[j], st)
+state(sset::Vector{<:Index}, j::Integer, st; kwargs...) = state(sset[j], st; kwargs...)
 
 #---------------------------------------
 #
