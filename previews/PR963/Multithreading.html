@@ -36,7 +36,7 @@ end</code></pre><p>Note that you need to start Julia with multiple threads. For 
 
 $ julia -t 4
 
-$ JULIA_NUM_THREADS=4 julia</code></pre><p>In addition, we have found that it is best to disable <code>BLAS</code> and <code>Strided</code> multithreading when using block sparse multithreading. You can do that with the commands <code>using LinearAlgebra; BLAS.set_num_threads(1)</code> and <code>ITensors.Strided.disable_threads()</code>.</p><p>See also: <code>ITensors.enable_threaded_blocksparse</code>, <code>ITensors.disable_threaded_blocksparse</code>, <code>ITensors.using_threaded_blocksparse</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/ITensor/ITensors.jl/blob/e2802dc3a6babbafad05a9ceb18c385e771cb261/src/global_variables.jl#L140-L167">source</a></section></article><p>Here is a simple example of using block sparse multithreading to speed up a sparse tensor contraction:</p><pre><code class="language-julia">using BenchmarkTools
+$ JULIA_NUM_THREADS=4 julia</code></pre><p>In addition, we have found that it is best to disable <code>BLAS</code> and <code>Strided</code> multithreading when using block sparse multithreading. You can do that with the commands <code>using LinearAlgebra; BLAS.set_num_threads(1)</code> and <code>ITensors.Strided.disable_threads()</code>.</p><p>See also: <code>ITensors.enable_threaded_blocksparse</code>, <code>ITensors.disable_threaded_blocksparse</code>, <code>ITensors.using_threaded_blocksparse</code>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/ITensor/ITensors.jl/blob/e7dc904a455f2466d376a732658dbadb690efede/src/global_variables.jl#L140-L167">source</a></section></article><p>Here is a simple example of using block sparse multithreading to speed up a sparse tensor contraction:</p><pre><code class="language-julia">using BenchmarkTools
 using ITensors
 using LinearAlgebra
 
@@ -99,7 +99,7 @@ include(joinpath(ITensors.examples_dir(), &quot;src&quot;, &quot;electronk.jl&qu
 include(joinpath(ITensors.examples_dir(), &quot;src&quot;, &quot;hubbard.jl&quot;))
 
 function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
-                maxdim::Int = 3000, conserve_ky = true, use_splitblocks = true,
+                maxdim::Int = 3000, conserve_ky = true, splitblocks = true,
                 nsweeps = 10, blas_num_threads = 1, strided_num_threads = 1,
                 use_threaded_blocksparse = true, outputlevel = 1,
                 seed = 1234)
@@ -130,20 +130,16 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
   sites = siteinds(&quot;ElecK&quot;, N; conserve_qns = true,
                    conserve_ky = conserve_ky, modulus_ky = Ny)
 
-  ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
-  H = MPO(ampo, sites)
-
   if outputlevel &gt; 0
-    @show use_splitblocks
+    # The splitblocks option makes the MPO more sparse but also
+    # introduces more blocks.
+    # It generally improves DMRG performance
+    # at large bond dimensions.
+    @show splitblocks
   end
 
-  # This step makes the MPO more sparse but also
-  # introduces more blocks.
-  # It generally improves DMRG performance
-  # at large bond dimensions.
-  if use_splitblocks
-    H = splitblocks(linkinds, H)
-  end
+  ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
+  H = MPO(ampo, sites; splitblocks=splitblocks)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
@@ -199,7 +195,7 @@ ITensors.blas_get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 ITensors.using_threaded_blocksparse() = false
 
-use_splitblocks = true
+splitblocks = true
 nnz(H[end ÷ 2]) = 67
 nnzblocks(H[end ÷ 2]) = 67
 After sweep 1 energy=-5.861157015737 maxlinkdim=78 time=0.633
@@ -227,7 +223,7 @@ ITensors.blas_get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 ITensors.using_threaded_blocksparse() = true
 
-use_splitblocks = true
+splitblocks = true
 nnz(H[end ÷ 2]) = 67
 nnzblocks(H[end ÷ 2]) = 67
 After sweep 1 energy=-5.861157015735 maxlinkdim=78 time=1.117
@@ -245,4 +241,4 @@ After sweep 10 energy=-13.716556326664 maxlinkdim=3000 time=18.446
 (t, U) = (1.0, 4.0)
 flux(psi) = QN((&quot;Ky&quot;,0,3),(&quot;Nf&quot;,18,-1),(&quot;Sz&quot;,0))
 maxlinkdim(psi) = 3000
-energy = -13.71655632666368</code></pre><p>Speedups should be greater for problems with tensors that are more sparse or have more blocks (for example larger system sizes).</p><p>In addition, we plan to add more threading to other parts of the code beyond contraction (such as SVD) and improve composibility with other forms of threading like BLAS and Strided, so stay tuned!</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AdvancedUsageGuide.html">« Advanced usage guide</a><a class="docs-footer-nextpage" href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Wednesday 17 August 2022 14:14">Wednesday 17 August 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+energy = -13.71655632666368</code></pre><p>Speedups should be greater for problems with tensors that are more sparse or have more blocks (for example larger system sizes).</p><p>In addition, we plan to add more threading to other parts of the code beyond contraction (such as SVD) and improve composibility with other forms of threading like BLAS and Strided, so stay tuned!</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="AdvancedUsageGuide.html">« Advanced usage guide</a><a class="docs-footer-nextpage" href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Wednesday 17 August 2022 15:02">Wednesday 17 August 2022</span>. Using Julia version 1.7.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
