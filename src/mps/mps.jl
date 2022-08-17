@@ -50,7 +50,10 @@ Optionally specify the link dimension with the keyword argument `linkdims`, whic
 In the future we may generalize `linkdims` to allow specifying each individual link dimension as a vector,
 and additionally allow specifying quantum numbers.
 """
-function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:Number}
+function MPS(
+  ::Type{T}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
+) where {T<:Number}
+  _linkdims = _fill_linkdims(linkdims, sites)
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   if N == 1
@@ -58,13 +61,13 @@ function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:N
     return MPS(v)
   end
 
-  space = if hasqns(sites)
-    [QN() => linkdims]
+  spaces = if hasqns(sites)
+    [[QN() => _linkdims[j]] for j in 1:(N - 1)]
   else
-    linkdims
+    [_linkdims[j] for j in 1:(N - 1)]
   end
 
-  l = [Index(space, "Link,l=$ii") for ii in 1:(N - 1)]
+  l = [Index(spaces[ii], "Link,l=$ii") for ii in 1:(N - 1)]
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
@@ -97,7 +100,8 @@ function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
   return G
 end
 
-function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdim=1)
+function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1)
+  _linkdims = _fill_linkdims(linkdims, sites)
   if isone(length(sites))
     randn!(M[1])
     normalize!(M)
@@ -118,24 +122,26 @@ function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, l
       G = randomU(eltype, s1, s2)
       T = noprime(G * M[b] * M[b + db])
       rinds = uniqueinds(M[b], M[b + db])
-      U, S, V = svd(T, rinds; maxdim=linkdim, utags="Link,l=$(b-1)")
+
+      b_dim = half == 1 ? b : b + db
+      U, S, V = svd(T, rinds; maxdim=_linkdims[b_dim], utags="Link,l=$(b-1)")
       M[b] = U
       M[b + db] = S * V
       M[b + db] /= norm(M[b + db])
     end
-    if half == 2 && dim(commonind(M[c], M[c + 1])) >= linkdim
+    if half == 2 && dim(commonind(M[c], M[c + 1])) >= _linkdims[c]
       break
     end
   end
   setleftlim!(M, 0)
   setrightlim!(M, 2)
-  if dim(commonind(M[c], M[c + 1])) < linkdim
-    @warn "MPS center bond dimension is less than requested (you requested $linkdim, but in practice it is $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities of truncating quantum number sectors."
+  if dim(commonind(M[c], M[c + 1])) < _linkdims[c]
+    @warn "MPS center bond dimension is less than requested (you requested $(_linkdims[c]), but in practice it is $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities of truncating quantum number sectors."
   end
 end
 
 function randomCircuitMPS(
-  eltype::Type{<:Number}, sites::Vector{<:Index}, linkdim::Int; kwargs...
+  eltype::Type{<:Number}, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
 )
   N = length(sites)
   M = MPS(N)
@@ -149,14 +155,14 @@ function randomCircuitMPS(
   l = Vector{Index}(undef, N)
 
   d = dim(sites[N])
-  chi = min(linkdim, d)
+  chi = min(linkdims[N - 1], d)
   l[N - 1] = Index(chi, "Link,l=$(N-1)")
   O = NDTensors.random_unitary(eltype, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
   for j in (N - 1):-1:2
     chi *= dim(sites[j])
-    chi = min(linkdim, chi)
+    chi = min(linkdims[j - 1], chi)
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
     O = NDTensors.random_unitary(eltype, chi, dim(sites[j]) * dim(l[j]))
     T = reshape(O, (chi, dim(sites[j]), dim(l[j])))
@@ -175,47 +181,71 @@ function randomCircuitMPS(
   return M
 end
 
-function randomCircuitMPS(sites::Vector{<:Index}, linkdim::Integer; kwargs...)
-  return randomCircuitMPS(Float64, sites, linkdim; kwargs...)
+function randomCircuitMPS(sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...)
+  return randomCircuitMPS(Float64, sites, linkdims; kwargs...)
+end
+
+function _fill_linkdims(linkdims::Vector{<:Integer}, sites::Vector{<:Index})
+  @assert length(linkdims) == length(sites) - 1
+  return linkdims
+end
+
+function _fill_linkdims(linkdims::Integer, sites::Vector{<:Index})
+  return fill(linkdims, length(sites) - 1)
 end
 
 """
-    randomMPS(::Type{ElT<:Number}, sites::Vector{<:Index}; linkdims=1)
+    randomMPS(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
 
-Construct a random MPS with link dimension `linkdims` of 
-type `ElT`.
+Construct a random MPS with link dimension `linkdims` of
+type `eltype`.
+
+`linkdims` can also accept a `Vector{Int}` with
+`length(linkdims) == length(sites) - 1` for constructing an
+MPS with non-uniform bond dimension.
 """
 function randomMPS(
-  ::Type{ElT}, sites::Vector{<:Index}; linkdims::Integer=1
+  ::Type{ElT}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
 ) where {ElT<:Number}
+  _linkdims = _fill_linkdims(linkdims, sites)
   if any(hasqns, sites)
     error("initial state required to use randomMPS with QNs")
   end
 
   # For non-QN-conserving MPS, instantiate
   # the random MPS directly as a circuit:
-  return randomCircuitMPS(ElT, sites, linkdims)
+  return randomCircuitMPS(ElT, sites, _linkdims)
 end
 
 """
     randomMPS(sites::Vector{<:Index}; linkdims=1)
+    randomMPS(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
 
-Construct a random MPS with link dimension `linkdim` of 
-type `Float64`.
+Construct a random MPS with link dimension `linkdims` which by
+default has element type `Float64`.
+
+`linkdims` can also accept a `Vector{Int}` with
+`length(linkdims) == length(sites) - 1` for constructing an
+MPS with non-uniform bond dimension.
 """
-function randomMPS(sites::Vector{<:Index}; linkdims::Integer=1)
-  return randomMPS(Float64, sites; linkdims=linkdims)
-end
-
-function randomMPS(sites::Vector{<:Index}, state; linkdims::Integer=1)
-  return randomMPS(Float64, sites, state; linkdims=linkdims)
+function randomMPS(sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1)
+  return randomMPS(Float64, sites; linkdims)
 end
 
 function randomMPS(
-  eltype::Type{<:Number}, sites::Vector{<:Index}, state; linkdims::Integer=1
+  sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
+)
+  return randomMPS(Float64, sites, state; linkdims)
+end
+
+function randomMPS(
+  eltype::Type{<:Number},
+  sites::Vector{<:Index},
+  state;
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
 )::MPS
   M = MPS(eltype, sites, state)
-  if linkdims > 1
+  if any(>(1), linkdims)
     randomizeMPS!(eltype, M, sites, linkdims)
   end
   return M
