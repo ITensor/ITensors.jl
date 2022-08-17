@@ -101,6 +101,7 @@ function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
 end
 
 function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1)
+  _linkdims = _fill_linkdims(linkdims, sites)
   if isone(length(sites))
     randn!(M[1])
     normalize!(M)
@@ -123,19 +124,19 @@ function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, l
       rinds = uniqueinds(M[b], M[b + db])
 
       b_dim = half == 1 ? b : b + db
-      U, S, V = svd(T, rinds; maxdim=linkdims[b_dim], utags="Link,l=$(b-1)")
+      U, S, V = svd(T, rinds; maxdim=_linkdims[b_dim], utags="Link,l=$(b-1)")
       M[b] = U
       M[b + db] = S * V
       M[b + db] /= norm(M[b + db])
     end
-    if half == 2 && dim(commonind(M[c], M[c + 1])) >= linkdims[c]
+    if half == 2 && dim(commonind(M[c], M[c + 1])) >= _linkdims[c]
       break
     end
   end
   setleftlim!(M, 0)
   setrightlim!(M, 2)
-  if dim(commonind(M[c], M[c + 1])) < linkdims[c]
-    @warn "MPS center bond dimension is less than requested (you requested $(linkdims[c]), but in practice it is $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities of truncating quantum number sectors."
+  if dim(commonind(M[c], M[c + 1])) < _linkdims[c]
+    @warn "MPS center bond dimension is less than requested (you requested $(_linkdims[c]), but in practice it is $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities of truncating quantum number sectors."
   end
 end
 
@@ -238,10 +239,10 @@ function randomMPS(
 end
 
 function randomMPS(
-  eltype::Type{<:Number}, sites::Vector{<:Index}, state; linkdims::Integer=1
+  eltype::Type{<:Number}, sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
 )::MPS
   M = MPS(eltype, sites, state)
-  if linkdims > 1
+  if any(>(1), linkdims)
     randomizeMPS!(eltype, M, sites, linkdims)
   end
   return M

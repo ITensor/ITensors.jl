@@ -214,6 +214,14 @@ include("util.jl")
     @test linkdims(phi) == _linkdims
   end
 
+  @testset "QN randomMPS" begin
+    s = siteinds("S=1/2", 5; conserve_qns=true)
+    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=2)
+    @test linkdims(ψ) == [2, 2, 2, 2]
+    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=[2, 3, 2, 2])
+    @test linkdims(ψ) == [2, 3, 2, 2]
+  end
+
   @testset "inner different MPS" begin
     phi = randomMPS(sites)
     psi = randomMPS(sites)
