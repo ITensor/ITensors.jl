@@ -141,7 +141,7 @@ function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, l
 end
 
 function randomCircuitMPS(
-  eltype::Type{<:Number}, sites::Vector{<:Index}, linkdim::Int; kwargs...
+  eltype::Type{<:Number}, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
 )
   N = length(sites)
   M = MPS(N)
