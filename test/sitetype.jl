@@ -429,7 +429,7 @@ end
   @testset "state with parameters" begin
     ITensors.state(::StateName"phase", ::SiteType"Qubit"; θ::Real) = [cos(θ), sin(θ)]
     s = siteind("Qubit")
-    @test state("phase", s; θ=π/6) ≈ itensor([cos(π/6), sin(π/6)], s)
+    @test state("phase", s; θ=π / 6) ≈ itensor([cos(π / 6), sin(π / 6)], s)
   end
 
   @testset "state with variable dimension (deprecated)" begin
