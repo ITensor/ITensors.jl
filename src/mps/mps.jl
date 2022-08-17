@@ -100,7 +100,7 @@ function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
   return G
 end
 
-function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdim=1)
+function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1)
   if isone(length(sites))
     randn!(M[1])
     normalize!(M)
