@@ -78,13 +78,6 @@ noise = args["noise"]
 #  @eval $(Symbol(arg)) = $val
 #end
 
-sweeps = Sweeps(nsweep)
-maxdim!(sweeps, maxdim...)
-mindim!(sweeps, mindim...)
-cutoff!(sweeps, cutoff...)
-noise!(sweeps, noise...)
-
-@show sweeps
 @show N, Npart
 
 sites = siteinds("Electron", N; conserve_qns=true)
@@ -130,7 +123,7 @@ psi0 = randomMPS(sites, state, 10)
 @show flux(psi0)
 
 # Start DMRG calculation:
-energy, psi = dmrg(H, psi0, sweeps)
+energy, psi = dmrg(H, psi0; nsweeps=nsweep, maxdim, mindim, cutoff, noise)
 
 upd = fill(0.0, N)
 dnd = fill(0.0, N)

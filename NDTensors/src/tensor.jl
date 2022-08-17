@@ -70,6 +70,7 @@ store(T::Tensor) = storage(T)
 data(T::Tensor) = data(storage(T))
 
 datatype(T::Tensor) = datatype(storage(T))
+datatype(tensortype::Type{<:Tensor}) = datatype(storagetype(tensortype))
 
 indstype(::Type{<:Tensor{<:Any,<:Any,<:Any,IndsT}}) where {IndsT} = IndsT
 indstype(T::Tensor) = indstype(typeof(T))
@@ -91,6 +92,7 @@ eachblock(T::Tensor) = eachblock(inds(T))
 eachdiagblock(T::Tensor) = eachdiagblock(inds(T))
 
 eltype(::Tensor{ElT}) where {ElT} = ElT
+scalartype(T::Tensor) = eltype(T)
 
 strides(T::Tensor) = dim_to_strides(inds(T))
 

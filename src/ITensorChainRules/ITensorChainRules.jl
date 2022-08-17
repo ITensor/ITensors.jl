@@ -1,9 +1,12 @@
 module ITensorChainRules
 
+using ITensors.Adapt
 using ITensors.NDTensors
 using ITensors.Ops
 
 using ITensors: Indices
+
+using ITensors.NDTensors: datatype
 
 using ChainRulesCore
 using ..ITensors
@@ -25,6 +28,7 @@ include("indexset.jl")
 include("itensor.jl")
 include(joinpath("physics", "sitetype.jl"))
 include(joinpath("mps", "abstractmps.jl"))
+include(joinpath("mps", "mps.jl"))
 include(joinpath("mps", "mpo.jl"))
 include(joinpath("LazyApply", "LazyApply.jl"))
 include("zygoterules.jl")

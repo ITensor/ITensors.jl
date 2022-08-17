@@ -1,19 +1,22 @@
 module ITensorGPU
 
 using CUDA
+using CUDA.Adapt
 using CUDA.CUTENSOR
 using CUDA.CUBLAS
 using CUDA.CUSOLVER
+using Functors
 using LinearAlgebra
 using Random, Strided
 using TimerOutputs
+using SimpleTraits
 using StaticArrays
 using ITensors
 using ITensors.NDTensors
 using Strided
 import CUDA: CuArray, CuMatrix, CuVector, cu
 import CUDA.CUTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
-
+import CUDA.Adapt: adapt_structure
 import CUDA.Mem: pin
 #=
 const devs = Ref{Vector{CUDAdrv.CuDevice}}()
@@ -48,6 +51,7 @@ import ITensors:
   BroadcastStyle,
   Indices
 import ITensors.NDTensors:
+  can_contract,
   similartype,
   ContractionProperties,
   contract!!,
@@ -82,8 +86,13 @@ import ITensors.NDTensors:
   Ctrans,
   _contract_scalar!,
   _contract_scalar_noperm!
+
+using ITensors.NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
+
 import Base.*, Base.permutedims!
 import Base: similar
+include("traits.jl")
+include("adapt.jl")
 include("tensor/cudense.jl")
 include("tensor/dense.jl")
 include("tensor/culinearalgebra.jl")
@@ -92,7 +101,6 @@ include("tensor/cucombiner.jl")
 include("tensor/cudiag.jl")
 include("cuitensor.jl")
 include("mps/cumps.jl")
-include("mps/cumpo.jl")
 
 #const ContractionPlans = Dict{String, Tuple{cutensorAlgo_t, cutensorContractionPlan_t}}()
 const ContractionPlans = Dict{String,cutensorAlgo_t}()

@@ -117,6 +117,7 @@ swapinds(::ITensor, ::Any...)
 ```@docs
 *(::ITensor, ::ITensor)
 exp(::ITensor, ::Any, ::Any)
+nullspace(::ITensor, ::Any...)
 ```
 
 ## Decompositions
