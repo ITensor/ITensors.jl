@@ -192,10 +192,14 @@ function _fill_linkdims(linkdims::Integer, sites::Vector{<:Index})
 end
 
 """
-    randomMPS(::Type{ElT<:Number}, sites::Vector{<:Index}; linkdims=1)
+    randomMPS(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
 
-Construct a random MPS with link dimension `linkdims` of 
-type `ElT`.
+Construct a random MPS with link dimension `linkdims` of
+type `eltype`.
+
+`linkdims` can also accept a `Vector{Int}` with
+`length(linkdims) == length(sites) - 1` for constructing an
+MPS with non-uniform bond dimension.
 """
 function randomMPS(
   ::Type{ElT}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
@@ -212,9 +216,14 @@ end
 
 """
     randomMPS(sites::Vector{<:Index}; linkdims=1)
+    randomMPS(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
 
-Construct a random MPS with link dimension `linkdim` of 
-type `Float64`.
+Construct a random MPS with link dimension `linkdims` which by
+default has element type `Float64`.
+
+`linkdims` can also accept a `Vector{Int}` with
+`length(linkdims) == length(sites) - 1` for constructing an
+MPS with non-uniform bond dimension.
 """
 function randomMPS(sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1)
   return randomMPS(Float64, sites; linkdims)

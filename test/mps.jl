@@ -208,6 +208,12 @@ include("util.jl")
     @test all(x -> eltype(x) === ComplexF32, phic)
   end
 
+  @testset "randomMPS with nonuniform dimensions" begin
+    _linkdims = [2, 3, 4, 2, 4, 3, 2, 2, 2]
+    phi = randomMPS(sites; linkdims=_linkdims)
+    @test linkdims(phi) == _linkdims
+  end
+
   @testset "inner different MPS" begin
     phi = randomMPS(sites)
     psi = randomMPS(sites)
