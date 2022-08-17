@@ -12,7 +12,7 @@ function main(;
   t::Float64=1.0,
   maxdim::Int=3000,
   conserve_ky=true,
-  use_splitblocks=true,
+  splitblocks=true,
   nsweeps=10,
   blas_num_threads=1,
   strided_num_threads=1,
@@ -46,20 +46,12 @@ function main(;
 
   sites = siteinds("ElecK", N; conserve_qns=true, conserve_ky=conserve_ky, modulus_ky=Ny)
 
-  ampo = hubbard(; Nx=Nx, Ny=Ny, t=t, U=U, ky=true)
-  H = MPO(ampo, sites)
-
   if outputlevel > 0
-    @show use_splitblocks
+    @show splitblocks
   end
 
-  # This step makes the MPO more sparse but also
-  # introduces more blocks.
-  # It generally improves DMRG performance
-  # at large bond dimensions.
-  if use_splitblocks
-    H = splitblocks(linkinds, H)
-  end
+  ampo = hubbard(; Nx=Nx, Ny=Ny, t=t, U=U, ky=true)
+  H = MPO(ampo, sites; splitblocks=splitblocks)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor

@@ -9,6 +9,8 @@ end
   N = 10
 
   @testset "Star in operator strings" begin
+    @test_throws ErrorException op("S=1/2")
+
     sites = siteinds("S=1/2", N)
     #@test_throws ArgumentError op(sites, "Sp", 1)
     @test sites[1] isa Index
@@ -177,6 +179,48 @@ end
     @test norm(o) > 0
     @test order(o) == 8
     @test hassameinds(o, (prime.(s)..., s...))
+  end
+
+  @testset "Custom Qudit/Boson op" begin
+    # Overload Qudit, implicitly defined for Boson as well
+    function ITensors.op(::OpName"Qudit_op_1", ::SiteType"Qudit", ds::Int...)
+      d = prod(ds)
+      return [i * j for i in 1:d, j in 1:d]
+    end
+    function ITensors.op(::OpName"Qudit_op_2", ::SiteType"Qudit", d::Int)
+      return [i * j for i in 1:d, j in 1:d]
+    end
+
+    # Overload Boson directly
+    function ITensors.op(::OpName"Boson_op_1", ::SiteType"Boson", ds::Int...)
+      d = prod(ds)
+      return [i * j for i in 1:d, j in 1:d]
+    end
+    function ITensors.op(::OpName"Boson_op_2", ::SiteType"Boson", d::Int)
+      return [i * j for i in 1:d, j in 1:d]
+    end
+
+    for st in ["Qudit", "Boson"], ot in ["Qudit", "Boson"]
+      if st == "Qudit" && ot == "Boson"
+        # Qudit site types don't see Boson overloads
+        continue
+      end
+      d = 4
+      s = siteinds(st, 2; dim=d)
+      o = op("$(ot)_op_1", s, 1)
+      @test o ≈ itensor([i * j for i in 1:d, j in 1:d], s[1]', dag(s[1]))
+
+      o = op("$(ot)_op_1", s, 1, 2)
+      @test o ≈ itensor(
+        [i * j for i in 1:(d^2), j in 1:(d^2)], s[2]', s[1]', dag(s[2]), dag(s[1])
+      )
+
+      d = 4
+      s = siteinds(st, 2; dim=d)
+      o = op("$(ot)_op_2", s, 1)
+      @test o ≈ itensor([i * j for i in 1:d, j in 1:d], s[1]', dag(s[1]))
+      @test_throws MethodError op("$(ot)_op_2", s, 1, 2)
+    end
   end
 
   @testset "Custom SiteType using op!" begin

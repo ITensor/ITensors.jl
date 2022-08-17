@@ -23,12 +23,6 @@ let
   end
   H = MPO(ampo, sites)
 
-  # This step makes the MPO more sparse.
-  # It generally improves DMRG performance
-  # at large bond dimensions but makes DMRG slower at
-  # small bond dimensions.
-  H = splitblocks(linkinds, H)
-
   state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
   psi0 = randomMPS(sites, state, 10)
 

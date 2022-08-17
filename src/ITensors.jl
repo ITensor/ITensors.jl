@@ -174,6 +174,7 @@ include("mps/adapt.jl")
 #
 include("physics/sitetype.jl")
 include("physics/lattices.jl")
+include("physics/site_types/aliases.jl")
 include("physics/site_types/generic_sites.jl")
 include("physics/site_types/qubit.jl")
 include("physics/site_types/spinhalf.jl")

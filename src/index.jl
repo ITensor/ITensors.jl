@@ -165,6 +165,7 @@ tags(i::Index) = i.tags
 
 commontags(is::Index...) = commontags(tags.(is)...)
 commontags(is::Index) = tags(is)
+commontags() = ts""
 
 """
     plev(i::Index)

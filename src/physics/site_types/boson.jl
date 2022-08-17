@@ -16,6 +16,19 @@ ITensors.space(st::SiteType"Boson"; kwargs...) = space(alias(st); kwargs...)
 
 ITensors.val(vn::ValName, st::SiteType"Boson") = val(vn, alias(st))
 
-ITensors.state(sn::StateName, st::SiteType"Boson", s::Index) = state(sn, alias(st), s)
+function ITensors.state(sn::StateName, st::SiteType"Boson", s::Index; kwargs...)
+  return state(sn, alias(st), s; kwargs...)
+end
 
-ITensors.op(on::OpName, st::SiteType"Boson", s::Index) = op(on, alias(st), s)
+function ITensors.op(on::OpName, st::SiteType"Boson", ds::Int...; kwargs...)
+  return op(on, alias(st), ds...; kwargs...)
+end
+
+function ITensors.op(
+  on::OpName, st::SiteType"Boson", s1::Index, s_tail::Index...; kwargs...
+)
+  rs = reverse((s1, s_tail...))
+  ds = dim.(rs)
+  opmat = op(on, st, ds...; kwargs...)
+  return itensor(opmat, prime.(rs)..., dag.(rs)...)
+end

@@ -200,16 +200,21 @@ function qn_svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
 
         rq = q_op[1]
         sq = flux(Op)
-        cq = rq - sq
+        cq = rq
+        if !isnothing(sq)
+          # By convention, if `Op` has no blocks it has a flux
+          # of `nothing`, catch this case
+          cq -= sq
 
-        if using_auto_fermion()
-          # <fermions>:
-          # MPO is defined with Index order
-          # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
-          # so compute sign that would result by permuting cl from
-          # second position to last position:
-          if fparity(sq) == 1 && fparity(cq) == 1
-            Op .*= -1
+          if using_auto_fermion()
+            # <fermions>:
+            # MPO is defined with Index order
+            # of (rl,s[n]',s[n],cl) where rl = row link, cl = col link
+            # so compute sign that would result by permuting cl from
+            # second position to last position:
+            if fparity(sq) == 1 && fparity(cq) == 1
+              Op .*= -1
+            end
           end
         end
 

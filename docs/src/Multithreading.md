@@ -161,7 +161,7 @@ include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 
 function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
-                maxdim::Int = 3000, conserve_ky = true, use_splitblocks = true,
+                maxdim::Int = 3000, conserve_ky = true, splitblocks = true,
                 nsweeps = 10, blas_num_threads = 1, strided_num_threads = 1,
                 use_threaded_blocksparse = true, outputlevel = 1,
                 seed = 1234)
@@ -192,20 +192,16 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
   sites = siteinds("ElecK", N; conserve_qns = true,
                    conserve_ky = conserve_ky, modulus_ky = Ny)
 
-  ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
-  H = MPO(ampo, sites)
-
   if outputlevel > 0
-    @show use_splitblocks
+    # The splitblocks option makes the MPO more sparse but also
+    # introduces more blocks.
+    # It generally improves DMRG performance
+    # at large bond dimensions.
+    @show splitblocks
   end
 
-  # This step makes the MPO more sparse but also
-  # introduces more blocks.
-  # It generally improves DMRG performance
-  # at large bond dimensions.
-  if use_splitblocks
-    H = splitblocks(linkinds, H)
-  end
+  ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
+  H = MPO(ampo, sites; splitblocks=splitblocks)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
@@ -266,7 +262,7 @@ ITensors.blas_get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 ITensors.using_threaded_blocksparse() = false
 
-use_splitblocks = true
+splitblocks = true
 nnz(H[end ÷ 2]) = 67
 nnzblocks(H[end ÷ 2]) = 67
 After sweep 1 energy=-5.861157015737 maxlinkdim=78 time=0.633
@@ -294,7 +290,7 @@ ITensors.blas_get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 ITensors.using_threaded_blocksparse() = true
 
-use_splitblocks = true
+splitblocks = true
 nnz(H[end ÷ 2]) = 67
 nnzblocks(H[end ÷ 2]) = 67
 After sweep 1 energy=-5.861157015735 maxlinkdim=78 time=1.117

@@ -11,9 +11,23 @@ ITensors v0.3.19 Release Notes
 
 Bugs:
 
+- Fix bug in MPO(::OpSum, ...) when on-site operators have no blocks (#963)
+
 Enhancements:
 
-- Simplify the `rrule`s for priming and tagging MPS/MPO
+- Add splitblocks keyword argument to `MPO(::OpSum, ...)` constructor, which defaults to `splitblocks=true` (#963)
+- Allow specifying the element type of the output MPO with MPO(::Type, ::OpSum, ...), for example MPO(Float32, opsum, sites) to use single precision (#963)
+- Improve overloading interface for "Qudit"/"Boson" types, overload `ITensors.op(::OpName"new_op", ::SiteType"Qudit", d::Int)` (#963)
+- Fix typo in contraction sequence optimization code for some cases with empty indices (#965)
+- Add keyword arguments support for `ITensors.state` (#964)
+- Document and tweak the tolerance of the `nullspace` function (#960)
+- Improve functionality for transferring data between CPU and GPU (#956)
+- Fix `expect` and `correlation_matrix` for MPS on GPU (#956)
+- Make sure QR and SVD preserve element type (i.e. single precision) in more cases (#956)
+- Remove Sweeps object in examples and docs (#959)
+- Pass kwargs through to truncate in Dense factorizations (#958)
+- Optimize apply `rrule` for MPS/MPO by improving contraction sequence when contracting forward and reverse MPS/MPO (#955)
+- Simplify the `rrule`s for priming and tagging MPS/MPO (#950)
 
 ITensors v0.3.18 Release Notes
 ==============================
