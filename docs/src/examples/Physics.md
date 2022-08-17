@@ -417,6 +417,23 @@ Pup1 = op("Pup",s[1])
 Pup3 = op("Pup",s[3])
 ```
 
+Note that for the `"Qudit"`/`"Boson"` site types, you have to define your overload
+of `op` with the dimension of the local Hilbert space, for example:
+```julia
+using ITensors
+
+function ITensors.op(::OpName"P1", ::SiteType"Boson", d::Int)
+  o = zeros(d, d)
+  o[1, 1] = 1
+  return o
+end
+```
+Alternatively you could use Julia's [array comprehension](https://docs.julialang.org/en/v1/manual/arrays/#man-comprehensions) syntax:
+```julia
+ITensors.op(::OpName"P1", ::SiteType"Boson", d::Int) =
+  [(i == j == 1) ? 1.0 : 0.0 for i in 1:d, j in 1:d]
+```
+
 **Using Custom Operators in OpSum (AutoMPO)**
 
 A key use of these `op` system extensions is allowing additional operator names to

@@ -90,12 +90,12 @@ function op(on::OpName, st::SiteType"Qudit", s1::Index, s_tail::Index...; kwargs
   rs = reverse((s1, s_tail...))
   ds = dim.(rs)
   opmat = op(on, st, ds...; kwargs...)
-  return ITensors.itensor(opmat, prime.(rs)..., dag.(rs)...)
+  return itensor(opmat, prime.(rs)..., dag.(rs)...)
 end
 
-# function op(on::OpName, st::SiteType"Qudit"; kwargs...)
-#   return error("`op` can't be called without indices or dimensions.")
-# end
+function op(on::OpName, st::SiteType"Qudit"; kwargs...)
+  return error("`op` can't be called without indices or dimensions.")
+end
 
 # Zygote
 @non_differentiable op(::OpName"ab", ::SiteType"Qudit", ::Int, ::Int)

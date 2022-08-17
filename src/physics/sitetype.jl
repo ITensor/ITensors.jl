@@ -395,6 +395,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   )
 end
 
+op(name::AbstractString; kwargs...) = error("Must input indices when creating an `op`.")
+
 # If a Matrix is passed instead of a String, turn the Matrix into
 # an ITensor with the given indices.
 op(X::AbstractArray, s::Index...) = itensor(X, prime.([s...]), dag.([s...]))

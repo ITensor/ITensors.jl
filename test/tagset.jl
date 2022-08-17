@@ -11,6 +11,11 @@ using ITensors, Test
   @test !hastags(ts, "t4")
   @test TagSet(ts) === ts
 
+  @test ITensors.commontags() == ts""
+  @test ITensors.commontags(ts"a,b", ts"a,c") == ts"a"
+  @test ITensors.commontags(Index(2, "a,b,x"), Index(3, "x,a,c"), Index(4, "x,a,z,w")) ==
+    ts"a,x"
+
   t1 = TagSet("t1")
   t2 = TagSet("t2")
   t3 = TagSet("t3")
