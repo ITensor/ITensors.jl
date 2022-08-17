@@ -15,6 +15,7 @@ Bugs:
 
 Enhancements:
 
+- Allow specifying non-uniform link dimensions in MPS constructors (#951)
 - Add splitblocks keyword argument to `MPO(::OpSum, ...)` constructor, which defaults to `splitblocks=true` (#963)
 - Allow specifying the element type of the output MPO with MPO(::Type, ::OpSum, ...), for example MPO(Float32, opsum, sites) to use single precision (#963)
 - Improve overloading interface for "Qudit"/"Boson" types, overload `ITensors.op(::OpName"new_op", ::SiteType"Qudit", d::Int)` (#963)
