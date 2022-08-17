@@ -239,7 +239,10 @@ function randomMPS(
 end
 
 function randomMPS(
-  eltype::Type{<:Number}, sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
+  eltype::Type{<:Number},
+  sites::Vector{<:Index},
+  state;
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
 )::MPS
   M = MPS(eltype, sites, state)
   if any(>(1), linkdims)
