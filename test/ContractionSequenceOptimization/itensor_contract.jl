@@ -11,6 +11,10 @@ using ITensors.ContractionSequenceOptimization: optimal_contraction_sequence, de
   i = Index(d, "i")
   A = randomITensor(i', dag(i))
 
+  # Low level functions
+  @test dim([1, 2], [4, 5, 6]) == 4 * 5
+  @test dim(Int[], [4, 5, 6]) == 1
+
   @test !ITensors.using_contraction_sequence_optimization()
 
   A2 = A' * A
