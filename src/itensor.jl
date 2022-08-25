@@ -1697,7 +1697,7 @@ function deprecated_keyword_argument(
 end
 
 """
-   dag(T::ITensor; allow_alias = true)
+    dag(T::ITensor; allow_alias = true)
 
 Complex conjugate the elements of the ITensor `T` and dagger the indices.
 
