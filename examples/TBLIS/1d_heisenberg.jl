@@ -11,13 +11,13 @@ let
 
   N = 100
   sites = siteinds("S=1", N)
-  ampo = OpSum()
+  os = OpSum()
   for j in 1:(N - 1)
-    ampo += 0.5, "S+", j, "S-", j + 1
-    ampo += 0.5, "S-", j, "S+", j + 1
-    ampo += "Sz", j, "Sz", j + 1
+    os += 0.5, "S+", j, "S-", j + 1
+    os += 0.5, "S-", j, "S+", j + 1
+    os += "Sz", j, "Sz", j + 1
   end
-  H = MPO(ampo, sites)
+  H = MPO(os, sites)
   psi0 = randomMPS(sites, 10)
 
   nsweeps = 6

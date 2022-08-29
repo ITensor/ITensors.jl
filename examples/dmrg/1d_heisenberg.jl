@@ -13,14 +13,14 @@ let
   #sites = siteinds("S=1/2",N)
 
   # Input operator terms which define a Hamiltonian
-  ampo = OpSum()
+  os = OpSum()
   for j in 1:(N - 1)
-    ampo += "Sz", j, "Sz", j + 1
-    ampo += 0.5, "S+", j, "S-", j + 1
-    ampo += 0.5, "S-", j, "S+", j + 1
+    os += "Sz", j, "Sz", j + 1
+    os += 0.5, "S+", j, "S-", j + 1
+    os += 0.5, "S-", j, "S+", j + 1
   end
   # Convert these terms to an MPO tensor network
-  H = MPO(ampo, sites)
+  H = MPO(os, sites)
 
   # Create an initial random matrix product state
   psi0 = randomMPS(sites, 10)

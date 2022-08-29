@@ -12,17 +12,17 @@ function main(; Nx=6, Ny=3, U=4.0, t=1.0)
 
   lattice = square_lattice(Nx, Ny; yperiodic=true)
 
-  ampo = OpSum()
+  os = OpSum()
   for b in lattice
-    ampo += -t, "Cdagup", b.s1, "Cup", b.s2
-    ampo += -t, "Cdagup", b.s2, "Cup", b.s1
-    ampo += -t, "Cdagdn", b.s1, "Cdn", b.s2
-    ampo += -t, "Cdagdn", b.s2, "Cdn", b.s1
+    os += -t, "Cdagup", b.s1, "Cup", b.s2
+    os += -t, "Cdagup", b.s2, "Cup", b.s1
+    os += -t, "Cdagdn", b.s1, "Cdn", b.s2
+    os += -t, "Cdagdn", b.s2, "Cdn", b.s1
   end
   for n in 1:N
-    ampo += U, "Nupdn", n
+    os += U, "Nupdn", n
   end
-  H = MPO(ampo, sites)
+  H = MPO(os, sites)
 
   # Half filling
   state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
