@@ -116,6 +116,7 @@ swapinds(::ITensor, ::Any...)
 
 ```@docs
 *(::ITensor, ::ITensor)
+dag(T::ITensor; kwargs...)
 exp(::ITensor, ::Any, ::Any)
 nullspace(::ITensor, ::Any...)
 ```

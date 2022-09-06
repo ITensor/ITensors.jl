@@ -82,24 +82,24 @@ noise!(sweeps, noise...)
 
 sites = siteinds("Electron", N; conserve_qns=true)
 
-ampo = OpSum()
+os = OpSum()
 for i in 1:N
-  ampo .+= U, "Nupdn", i
+  os .+= U, "Nupdn", i
 end
 for b in 1:(N - 1)
-  ampo .+= -t1, "Cdagup", b, "Cup", b + 1
-  ampo .+= -t1, "Cdagup", b + 1, "Cup", b
-  ampo .+= -t1, "Cdagdn", b, "Cdn", b + 1
-  ampo .+= -t1, "Cdagdn", b + 1, "Cdn", b
-  ampo .+= V1, "Ntot", b, "Ntot", b + 1
+  os .+= -t1, "Cdagup", b, "Cup", b + 1
+  os .+= -t1, "Cdagup", b + 1, "Cup", b
+  os .+= -t1, "Cdagdn", b, "Cdn", b + 1
+  os .+= -t1, "Cdagdn", b + 1, "Cdn", b
+  os .+= V1, "Ntot", b, "Ntot", b + 1
 end
 for b in 1:(N - 2)
-  ampo .+= -t2, "Cdagup", b, "Cup", b + 2
-  ampo .+= -t2, "Cdagup", b + 2, "Cup", b
-  ampo .+= -t2, "Cdagdn", b, "Cdn", b + 2
-  ampo .+= -t2, "Cdagdn", b + 2, "Cdn", b
+  os .+= -t2, "Cdagup", b, "Cup", b + 2
+  os .+= -t2, "Cdagup", b + 2, "Cup", b
+  os .+= -t2, "Cdagdn", b, "Cdn", b + 2
+  os .+= -t2, "Cdagdn", b + 2, "Cdn", b
 end
-H = MPO(ampo, sites)
+H = MPO(os, sites)
 
 state = ["Emp" for n in 1:N]
 p = Ref(Npart)

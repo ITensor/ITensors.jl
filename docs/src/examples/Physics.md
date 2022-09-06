@@ -1,5 +1,160 @@
 # Physics (SiteType) System Examples
 
+## Making a Custom op Definition
+
+The function `op` is used to obtain operators defined for a 
+given "site type". ITensor includes pre-defined site types such
+as "S=1/2", "S=1", "Electron" and others. Or you can define your own site type
+as discussed in detail in the code examples further below.
+
+**Extending op Function Definitions**
+
+Perhaps the most common part of the site type system one wishes to extend
+are the various `op` or `op!` function overloads which allow code like
+
+```julia
+s = siteind("S=1/2")
+Sz = op("Sz",s)
+```
+
+to automatically create the ``S^z`` operator for an Index `s` based on the 
+`"S=1/2"` tag it carries. A major reason to define such `op` overloads
+is to allow the OpSum system to recognize new operator names, as
+discussed more below.
+
+Let's see how to introduce a new operator name into the ITensor site type
+system for this existing site type of `"S=1/2"`. The operator we will
+introduce is the projector onto the up spin state ``P_\uparrow`` which
+we will denote with the string `"Pup"`. 
+
+As a matrix acting on the space ``\{ |\!\uparrow\rangle, |\!\downarrow\rangle \}``,
+the ``P_\uparrow`` operator is given by
+
+```math
+\begin{aligned}
+
+P_\uparrow &= 
+\begin{bmatrix}
+ 1 &  0 \\
+ 0  & 0 \\
+\end{bmatrix}
+
+\end{aligned}
+```
+
+To add this operator to the ITensor `op` system, we just need to introduce the following
+code
+
+```julia
+using ITensors
+
+ITensors.op(::OpName"Pup",::SiteType"S=1/2") =
+ [1 0
+  0 0]
+```
+
+This code can be defined anywhere, such as in your own personal application code and does 
+not have to be put into the ITensor library source code.
+
+Note that we have to name the function `ITensors.op` and not just `op` so that it overloads
+other functions of the name `op` inside the ITensors module. 
+
+Having defined the above code, we can now do things like
+
+```julia
+s = siteind("S=1/2")
+Pup = op("Pup",s)
+```
+
+to obtain the `"Pup"` operator for our `"S=1/2"` Index `s`. Or we can do a similar
+thing for an array of site indices:
+
+```julia
+N = 40
+s = siteinds("S=1/2",N)
+Pup1 = op("Pup",s[1])
+Pup3 = op("Pup",s[3])
+```
+
+Note that for the `"Qudit"`/`"Boson"` site types, you have to define your overload
+of `op` with the dimension of the local Hilbert space, for example:
+```julia
+using ITensors
+
+function ITensors.op(::OpName"P1", ::SiteType"Boson", d::Int)
+  o = zeros(d, d)
+  o[1, 1] = 1
+  return o
+end
+```
+Alternatively you could use Julia's [array comprehension](https://docs.julialang.org/en/v1/manual/arrays/#man-comprehensions) syntax:
+```julia
+ITensors.op(::OpName"P1", ::SiteType"Boson", d::Int) =
+  [(i == j == 1) ? 1.0 : 0.0 for i in 1:d, j in 1:d]
+```
+
+**Using Custom Operators in OpSum**
+
+A key use of these `op` system extensions is allowing additional operator names to
+be recognized by the OpSum system for constructing matrix product operator (MPO)
+tensor networks. With the code above defining the `"Pup"` operator, we are now 
+allowed to use this operator name in any OpSum code involving `"S=1/2"` site 
+indices.
+
+For example, we could now make an OpSum involving our custom operator such as:
+
+```julia
+N = 100
+sites = siteinds("S=1/2",N)
+os = OpSum()
+for n=1:N
+  os += "Pup",n
+end
+P = MPO(os,sites)
+```
+
+This code makes an MPO `P` which is just the sum of a spin-up projection operator
+acting on every site.
+
+
+## Making a Custom state Definition
+
+The function `state` is used to define states (single-site wavefunctions)
+that sites can be in. For example, the "Qubit" site type includes 
+definitions for the "0" and "1" states as well as the "+" (eigenstate of X operator)
+state. The "S=1/2" site type includes definitions for the "Up" and "Dn" (down) states.
+
+Say we want to define a new state for the "Electron" site type called "+", which has
+the meaning of one electron with its spin in the +X direction. First let's review
+the existing state definitions:
+```julia
+ITensors.state(::StateName"Emp", ::SiteType"Electron") = [1.0, 0, 0, 0]
+ITensors.state(::StateName"Up", ::SiteType"Electron") = [0.0, 1, 0, 0]
+ITensors.state(::StateName"Dn", ::SiteType"Electron") = [0.0, 0, 1, 0]
+ITensors.state(::StateName"UpDn", ::SiteType"Electron") = [0.0, 0, 0, 1]
+```
+As we can see, the four settings of an "Electron" index correspond to the states
+``|0\rangle, |\uparrow\rangle, |\downarrow\rangle, |\uparrow\downarrow\rangle``.
+
+So we can define our new state "+" as follows:
+```julia
+ITensors.state(::StateName"+", ::SiteType"Electron") = [0, 1/sqrt(2), 1/sqrt(2), 0]
+```
+which makes the state
+```math
+|+\rangle = \frac{1}{\sqrt{2}} |\uparrow\rangle + \frac{1}{\sqrt{2}} |\downarrow\rangle
+```
+
+Having defined this overload of `state`, if we have an Index of type "Electron"
+we can obtain our new state for it by doing
+```julia
+s = siteind("Electron")
+plus = state("+",s)
+```
+We can also use this new state definition in other ITensor features such as 
+the MPS constructor taking an array of state names.
+
+
 ## Make a Custom Local Hilbert Space / Physical Degree of Freedom
 
 ITensor provides support for a range of common local Hilbert space types, 
@@ -334,128 +489,5 @@ since it alternately increases ``S^z`` or decreases ``S^z`` depending on the sta
 on, thus it does not have a well-defined QN flux. But it is perfectly fine to define an
 `op` overload for the "Sx" operator and to make this operator when working with dense, 
 non-QN-conserving ITensors or when ``S^z`` is not conserved.
-
-
-## Extending an Existing Local Hilbert Space
-
-In the two previous examples above, we discussed the basics
-of how custom local Hilbert spaces a.k.a. site types can be defined from 
-scratch in ITensor. However, there are cases where a custom site type is 
-already designed for you, such as the site types `"S=1/2"`, `"S=1"`,
-`"Fermion"`, `"Electron"` and others included with ITensor.
-
-A nice feature of the ITensor `SiteType` system is that you can arbitrarily
-extend operator and other definitions, even of existing `SiteTypes` created
-in other code or by someone else.
-
-**Extending op Function Definitions**
-
-Perhaps the most common part of the `SiteType` system one wishes to extend
-are the various `op` or `op!` function overloads which allow code like
-
-```julia
-s = siteind("S=1/2")
-Sz = op("Sz",s)
-```
-
-to automatically create the ``S^z`` operator for an Index `s` based on the 
-`"S=1/2"` tag it carries. A major reason to define such `op` overloads
-is to allow the OpSum (formerly AutoMPO) system to recognize new operator names, as
-discussed more below.
-
-Let's see how to introduce a new operator name into the ITensor `SiteType`
-system for this existing site type of `"S=1/2"`. The operator we will
-introduce is the projector onto the up spin state ``P_\uparrow`` which
-we will denote with the string `"Pup"`. 
-
-As a matrix acting on the space ``\{ |\!\uparrow\rangle, |\!\downarrow\rangle \}``,
-the ``P_\uparrow`` operator is given by
-
-```math
-\begin{aligned}
-
-P_\uparrow &= 
-\begin{bmatrix}
- 1 &  0 \\
- 0  & 0 \\
-\end{bmatrix}
-
-\end{aligned}
-```
-
-To add this operator to the ITensor `op` system, we just need to introduce the following
-code
-
-```julia
-using ITensors
-
-ITensors.op(::OpName"Pup",::SiteType"S=1/2") =
- [1 0
-  0 0]
-```
-
-This code can be defined anywhere, such as in your own personal application code and does 
-not have to be put into the ITensor library source code.
-
-Note that we have to name the function `ITensors.op!` and not just `op!` so that it overloads
-other functions of the name `op!` inside the ITensors module. 
-
-Having defined the above code, we can now do things like
-
-```julia
-s = siteind("S=1/2")
-Pup = op("Pup",s)
-```
-
-to obtain the `"Pup"` operator for our `"S=1/2"` Index `s`. Or we can do a similar
-thing for an array of site indices:
-
-```julia
-N = 40
-s = siteinds("S=1/2",N)
-Pup1 = op("Pup",s[1])
-Pup3 = op("Pup",s[3])
-```
-
-Note that for the `"Qudit"`/`"Boson"` site types, you have to define your overload
-of `op` with the dimension of the local Hilbert space, for example:
-```julia
-using ITensors
-
-function ITensors.op(::OpName"P1", ::SiteType"Boson", d::Int)
-  o = zeros(d, d)
-  o[1, 1] = 1
-  return o
-end
-```
-Alternatively you could use Julia's [array comprehension](https://docs.julialang.org/en/v1/manual/arrays/#man-comprehensions) syntax:
-```julia
-ITensors.op(::OpName"P1", ::SiteType"Boson", d::Int) =
-  [(i == j == 1) ? 1.0 : 0.0 for i in 1:d, j in 1:d]
-```
-
-**Using Custom Operators in OpSum (AutoMPO)**
-
-A key use of these `op` system extensions is allowing additional operator names to
-be recognized by the OpSum (formerly AutoMPO) system for constructing matrix product operator (MPO)
-tensor networks. With the code above defining the `"Pup"` operator, we are now 
-allowed to use this operator name in any OpSum code involving `"S=1/2"` site 
-indices.
-
-For example, we could now make an OpSum involving our custom operator such as:
-
-```julia
-N = 100
-sites = siteinds("S=1/2",N)
-ampo = OpSum()
-for n=1:N
-  ampo += "Pup",n
-end
-P = MPO(ampo,sites)
-```
-
-This code makes an MPO `P` which is just the sum of a spin-up projection operator
-acting on every site.
-
 
 

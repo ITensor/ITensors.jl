@@ -9,15 +9,15 @@ using ITensors
 function tfimMPO(sites, h::Float64)
   # Input operator terms which define a Hamiltonian
   N = length(sites)
-  ampo = OpSum()
+  os = OpSum()
   for j in 1:(N - 1)
-    ampo += -1, "Z", j, "Z", j + 1
+    os += -1, "Z", j, "Z", j + 1
   end
   for j in 1:N
-    ampo += h, "X", j
+    os += h, "X", j
   end
   # Convert these terms to an MPO tensor network
-  return MPO(ampo, sites)
+  return MPO(os, sites)
 end
 
 let

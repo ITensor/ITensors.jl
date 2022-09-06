@@ -10,13 +10,13 @@ let
 
   lattice = square_lattice(Nx, Ny; yperiodic=false)
 
-  ampo = OpSum()
+  os = OpSum()
   for b in lattice
-    ampo .+= 0.5, "S+", b.s1, "S-", b.s2
-    ampo .+= 0.5, "S-", b.s1, "S+", b.s2
-    ampo .+= "Sz", b.s1, "Sz", b.s2
+    os .+= 0.5, "S+", b.s1, "S-", b.s2
+    os .+= 0.5, "S-", b.s1, "S+", b.s2
+    os .+= "Sz", b.s1, "Sz", b.s2
   end
-  H = MPO(ampo, sites)
+  H = MPO(os, sites)
 
   state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
   # Initialize wavefunction to a random MPS

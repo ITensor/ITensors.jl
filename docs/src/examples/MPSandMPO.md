@@ -119,7 +119,7 @@ See below for a visual depiction of what the above code is doing:
 ## Expected Value of Local Operators
 
 When using an MPS to represent a quantum wavefunction ``|\psi\rangle``
-a common operation is computed the expected value ``\langle\psi|\hat{A}_j|\psi\rangle``
+a common operation is computing the expected value ``\langle\psi|\hat{A}_j|\psi\rangle``
 of a local operator ``\hat{A}_j`` acting on site ``j``. This can be accomplished
 efficiently and conveniently using the [`expect`](@ref) function as:
 
@@ -151,6 +151,21 @@ end
 ```
 
 ![](mps_expect.png)
+
+## Expected Values of MPO Operators
+
+When using an MPS to represent a quantum wavefunction ``|\psi\rangle``
+another common operation is computing the expected value ``\langle\psi|W|\psi\rangle``
+of an operator ``W`` which is represented as a matrix product operator (MPO) tensor network.
+A key example could be the Hamiltonian defining a quantum system.
+
+Given an MPO `W` and an MPS `psi`, you can compute ``\langle\psi|W|\psi\rangle``
+by using the function `inner` as follows:
+```julia
+ex_W = inner(psi,W,psi)
+```
+which will return a scalar that may be either real or complex, depending on the properties of
+`psi` and `W`.
 
 ## Computing Correlation Functions
 
