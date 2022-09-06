@@ -141,7 +141,7 @@ be passed through a `Sweeps` object, though this interface is
 no longer preferred.
 
 Returns:
-* `energy::Complex` - eigenvalue of the optimized MPS
+* `energy` - eigenvalue of the optimized MPS
 * `psi::MPS` - optimized MPS
 
 Keyword arguments:
@@ -150,6 +150,7 @@ Keyword arguments:
 Optional keyword arguments:
 * `maxdim` - integer or array of integers specifying the maximum size allowed for the bond dimension or rank of the MPS being optimized
 * `cutoff` - float or array of floats specifying the truncation error cutoff or threshold to use for truncating the bond dimension or rank of the MPS
+* `ishermitian=true` - boolean specifying if dmrg should assume the MPO represents a Hermitian matrix
 * `noise` - float or array of floats specifying strength of the "noise term" to use to aid convergence
 * `mindim` - integer or array of integers specifying the minimum size of the bond dimension or rank, if possible
 * `outputlevel::Int = 1` - larger outputlevel values make DMRG print more information and 0 means no output
@@ -201,7 +202,6 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   eigsolve_maxiter::Int = get(kwargs, :eigsolve_maxiter, 1)
   eigsolve_verbosity::Int = get(kwargs, :eigsolve_verbosity, 0)
 
-  # TODO: add support for non-Hermitian DMRG
   ishermitian::Bool = get(kwargs, :ishermitian, true)
 
   # TODO: add support for targeting other states with DMRG
