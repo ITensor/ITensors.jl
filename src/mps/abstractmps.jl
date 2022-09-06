@@ -1605,13 +1605,14 @@ end
 
 function truncate!(::Algorithm"frobenius", M::AbstractMPS; kwargs...)
   N = length(M)
+  sites = get(kwargs, :site_range, 1:N)
 
   # Left-orthogonalize all tensors to make
   # truncations controlled
-  orthogonalize!(M, N)
+  orthogonalize!(M, last(sites))
 
   # Perform truncations in a right-to-left sweep
-  for j in reverse(2:N)
+  for j in reverse(first(sites)+1:last(sites))
     rinds = uniqueinds(M[j], M[j - 1])
     ltags = tags(commonind(M[j], M[j - 1]))
     U, S, V = svd(M[j], rinds; lefttags=ltags, kwargs...)
