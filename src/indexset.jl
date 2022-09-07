@@ -36,27 +36,29 @@ function narrow_eltype(v::Vector{T}; default_empty_eltype=T) where {T}
   return _narrow_eltype(v; default_empty_eltype)
 end
 
-indices() = ()
-indices(x::Index) = (x,)
-indices(x::Tuple) = x
-indices(x::Vector) = narrow_eltype(x; default_empty_eltype=Index)
+_indices() = ()
+_indices(x::Index) = (x,)
 
 # Tuples
-indices(x1::Tuple, x2::Tuple) = (x1..., x2...)
-indices(x1::Index, x2::Tuple) = (x1, x2...)
-indices(x1::Tuple, x2::Index) = (x1..., x2)
-indices(x1::Index, x2::Index) = (x1, x2)
+_indices(x1::Tuple, x2::Tuple) = (x1..., x2...)
+_indices(x1::Index, x2::Tuple) = (x1, x2...)
+_indices(x1::Tuple, x2::Index) = (x1..., x2)
+_indices(x1::Index, x2::Index) = (x1, x2)
 
 # Vectors
-indices(x1::Vector, x2::Vector) = indices(vcat(x1, x2))
+_indices(x1::Vector, x2::Vector) = narrow_eltype(vcat(x1, x2); default_empty_eltype=Index)
 
 # Mix vectors and tuples/elements
-indices(x1::Vector, x2) = indices(x1, [x2])
-indices(x1, x2::Vector) = indices([x1], x2)
-indices(x1::Vector, x2::Tuple) = indices(x1, [x2...])
-indices(x1::Tuple, x2::Vector) = indices([x1...], x2)
+_indices(x1::Vector, x2) = _indices(x1, [x2])
+_indices(x1, x2::Vector) = _indices([x1], x2)
+_indices(x1::Vector, x2::Tuple) = _indices(x1, [x2...])
+_indices(x1::Tuple, x2::Vector) = _indices([x1...], x2)
 
-indices(x1, x2, x3, xs...) = indices(indices(x1, x2), x3, xs...)
+indices(x::Vector{Index{S}}) where {S} = x
+indices(x::Vector{Index}) = narrow_eltype(x; default_empty_eltype=Index)
+indices(x::Tuple) = reduce(_indices, x; init=())
+indices(x::Vector) = reduce(_indices, x; init=Index[])
+indices(x...) = indices(x)
 
 # To help with backwards compatibility
 IndexSet(inds::IndexSet) = inds

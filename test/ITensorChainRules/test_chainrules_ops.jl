@@ -204,7 +204,7 @@ using Zygote: ZygoteRuleConfig, gradient
     return os
   end
 
-  if v"1.6" < VERSION < v"1.8"
+  if VERSION.minor == 7
     # For some reason this is broken in Julia 1.6 and 1.8?
     # Seems like a Zygote problem
     f = function (x)
