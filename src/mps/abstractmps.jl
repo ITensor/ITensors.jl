@@ -1612,7 +1612,7 @@ function truncate!(::Algorithm"frobenius", M::AbstractMPS; kwargs...)
   orthogonalize!(M, last(sites))
 
   # Perform truncations in a right-to-left sweep
-  for j in reverse(first(sites)+1:last(sites))
+  for j in reverse((first(sites) + 1):last(sites))
     rinds = uniqueinds(M[j], M[j - 1])
     ltags = tags(commonind(M[j], M[j - 1]))
     U, S, V = svd(M[j], rinds; lefttags=ltags, kwargs...)
