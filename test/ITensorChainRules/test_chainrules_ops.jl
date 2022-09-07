@@ -204,7 +204,9 @@ using Zygote: ZygoteRuleConfig, gradient
     return os
   end
 
-  if VERSION ≥ v"1.7"
+  if v"1.6" < VERSION < v"1.8"
+    # For some reason this is broken in Julia 1.6 and 1.8?
+    # Seems like a Zygote problem
     f = function (x)
       return ITensor(exp(1.5 * H(x, x); alg=Trotter{1}(1)), s)[1, 1]
     end

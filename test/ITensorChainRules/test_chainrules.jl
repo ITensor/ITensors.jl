@@ -363,13 +363,7 @@ Random.seed!(1234)
       return (x * d * y)[]
     end
     args = (A, B)
-    test_rrule(
-      ZygoteRuleConfig(),
-      f,
-      args...;
-      rrule_f=rrule_via_ad,
-      check_inferred=false,
-    )
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
   end
 end
 

@@ -166,7 +166,9 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   Ms .= permute.(Ms, Ref((linkind, siteinds, linkind)))
   weight = get(kwargs, :weight, 1.0)
   if weight <= 0.0
-    error("weight parameter should be > 0.0 in call to excited-state dmrg (value passed was weight=$weight)")
+    error(
+      "weight parameter should be > 0.0 in call to excited-state dmrg (value passed was weight=$weight)",
+    )
   end
   PMM = ProjMPO_MPS(H, Ms; weight=weight)
   return dmrg(PMM, psi0, sweeps; kwargs...)
