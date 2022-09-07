@@ -30,12 +30,13 @@ function _narrow_eltype(v::Vector{T}; default_empty_eltype=T) where {T}
   return convert(Vector{mapreduce(typeof, promote_type, v)}, v)
 end
 function narrow_eltype(v::Vector{T}; default_empty_eltype=T) where {T}
-  if isconcretetype(T) 
+  if isconcretetype(T)
     return v
   end
   return _narrow_eltype(v; default_empty_eltype)
 end
 
+indices() = ()
 indices(x::Index) = (x,)
 indices(x::Tuple) = x
 indices(x::Vector) = narrow_eltype(x; default_empty_eltype=Index)
