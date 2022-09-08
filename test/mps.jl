@@ -345,7 +345,6 @@ include("util.jl")
     lognorm_psi = lognorm(psi)
     @test lognorm_psi ≈ log(2) * length(psi)
     @test isreal(lognorm_psi)
-
   end
 
   @testset "lognorm checking real tolerance error regression test" begin
