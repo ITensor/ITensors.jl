@@ -355,7 +355,7 @@ include("util.jl")
     s = siteinds("S=1/2", 10)
     ψ = randomMPS(ComplexF64, s; linkdims=4)
     reset_ortho_lims!(ψ)
-    @test lognorm(ψ) ≈ 1
+    @test exp(lognorm(ψ)) ≈ 1
   end
 
   @testset "normalize/normalize! MPS" begin
