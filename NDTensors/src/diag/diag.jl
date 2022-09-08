@@ -452,7 +452,7 @@ function contract!(
   if all(i -> i < 0, Blabels)
     # If all of B is contracted
     # TODO: can also check NC+NB==NA
-    min_dim = minimum(dims(B))
+    min_dim = min(minimum(dims(A)), minimum(dims(B)))
     if length(Clabels) == 0
       # all indices are summed over, just add the product of the diagonal
       # elements of A and B

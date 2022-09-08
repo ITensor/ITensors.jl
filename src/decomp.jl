@@ -91,7 +91,7 @@ function svd(A::ITensor, Linds...; kwargs...)
   #  @warn "Keyword arguments `utags` and `vtags` are deprecated in favor of `leftags` and `righttags`."
   #end
 
-  Lis = commoninds(A, indices(Linds))
+  Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
 
   Lis_original = Lis
@@ -333,7 +333,7 @@ qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 # call qr on the order-2 tensors directly
 function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
-  Lis = commoninds(A, indices(Linds))
+  Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
 
   Lis_original = Lis
@@ -388,7 +388,7 @@ function factorize_qr(A::ITensor, Linds...; kwargs...)
   if ortho == "left"
     L, R, q = qr(A, Linds...; kwargs...)
   elseif ortho == "right"
-    Lis = uniqueinds(A, indices(Linds))
+    Lis = uniqueinds(A, indices(Linds...))
     R, L, q = qr(A, Lis...; kwargs...)
   else
     error(
@@ -427,9 +427,9 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
   ortho::String = get(kwargs, :ortho, "left")
   delta_A2 = get(kwargs, :eigen_perturbation, nothing)
   if ortho == "left"
-    Lis = commoninds(A, indices(Linds))
+    Lis = commoninds(A, indices(Linds...))
   elseif ortho == "right"
-    Lis = uniqueinds(A, indices(Linds))
+    Lis = uniqueinds(A, indices(Linds...))
   else
     error(
       "In factorize using eigen decomposition, ortho keyword $ortho not supported. Supported options are left or right.",
@@ -506,7 +506,8 @@ Note that the default is now `left`, meaning for the results L,R = factorize(A),
   # Determines when to use eigen vs. svd (eigen is less precise,
   # so eigen should only be used if a larger cutoff is requested)
   automatic_cutoff = 1e-12
-  dL, dR = dim(indices(Linds)), dim(indices(setdiff(inds(A), Linds)))
+  Lis = indices(Linds...)
+  dL, dR = dim(Lis), dim(indices(setdiff(inds(A), Lis)))
   maxdim = get(kwargs, :maxdim, min(dL, dR))
   might_truncate = !isnothing(cutoff) || maxdim < min(dL, dR)
 

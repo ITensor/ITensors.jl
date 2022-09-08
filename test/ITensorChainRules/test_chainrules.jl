@@ -352,6 +352,19 @@ Random.seed!(1234)
     @test f2'(x) ≈ 2MPO(s, "I")
     @test f3'(x) ≈ -MPO(s, "I")
   end
+
+  @testset "issue 969" begin
+    i = Index(2)
+    j = Index(3)
+    A = randomITensor(i)
+    B = randomITensor(j)
+    f = function (x, y)
+      d = δ(ind(x, 1), ind(y, 1))
+      return (x * d * y)[]
+    end
+    args = (A, B)
+    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  end
 end
 
 @testset "ChainRules rrules: op" begin
