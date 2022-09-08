@@ -345,6 +345,17 @@ include("util.jl")
     lognorm_psi = lognorm(psi)
     @test lognorm_psi ≈ log(2) * length(psi)
     @test isreal(lognorm_psi)
+
+  end
+
+  @testset "lognorm checking real tolerance error regression test" begin
+    # Test that lognorm doesn't throw an error when the norm isn't real
+    # up to a certain tolerance
+    Random.seed!(1234)
+    s = siteinds("S=1/2", 10)
+    ψ = randomMPS(ComplexF64, s; linkdims=4)
+    reset_ortho_lims!(ψ)
+    @test lognorm(ψ) ≈ 1
   end
 
   @testset "normalize/normalize! MPS" begin

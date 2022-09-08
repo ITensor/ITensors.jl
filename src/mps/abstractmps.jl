@@ -1189,9 +1189,10 @@ function norm(M::AbstractMPS)
     return norm(M[orthocenter(M)])
   end
   norm2_M = dot(M, M)
-  rtol = 1e-15
-  if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol))
-    error("norm² is $norm2_M, which is not real up to a relative tolerance of $rtol")
+  rtol = eps(real(scalartype(M))) * 10
+  atol = rtol
+  if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol, atol=atol))
+    @warn "norm² is $norm2_M, which is not real up to a relative tolerance of $rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
   return sqrt(real(norm2_M))
 end
@@ -1211,11 +1212,10 @@ function lognorm(M::AbstractMPS)
     return log(norm(M[orthocenter(M)]))
   end
   lognorm2_M = logdot(M, M)
-  rtol = 1e-15
-  if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol))
-    error(
-      "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance of $rtol"
-    )
+  rtol = eps(real(scalartype(M))) * 10
+  atol = rtol
+  if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol, atol=atol))
+    @warn "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance of $rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
   return 0.5 * real(lognorm2_M)
 end
