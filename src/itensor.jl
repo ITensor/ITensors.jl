@@ -1764,9 +1764,9 @@ T[1, 1, 1] == pT_alias[1, 1, 1]
 ```
 """
 function permute(T::ITensor, new_inds...; kwargs...)
-  if !hassameinds(T, indices(new_inds))
+  if !hassameinds(T, indices(new_inds...))
     error(
-      "In `permute(::ITensor, inds...)`, the input ITensor has indices: \n\n$(inds(T))\n\nbut the desired Index ordering is: \n\n$(indices(new_inds))",
+      "In `permute(::ITensor, inds...)`, the input ITensor has indices: \n\n$(inds(T))\n\nbut the desired Index ordering is: \n\n$(indices(new_inds...))",
     )
   end
   allow_alias = deprecated_keyword_argument(
