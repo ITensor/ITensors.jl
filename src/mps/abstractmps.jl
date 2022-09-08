@@ -1598,20 +1598,25 @@ end
 Perform a truncation of all bonds of an MPS/MPO,
 using the truncation parameters (cutoff,maxdim, etc.)
 provided as keyword arguments.
+
+Keyword arguments:
+* `site_range`=1:N - only truncate the MPS bonds between these sites
 """
 function truncate!(M::AbstractMPS; alg="frobenius", kwargs...)
   return truncate!(Algorithm(alg), M; kwargs...)
 end
 
-function truncate!(::Algorithm"frobenius", M::AbstractMPS; kwargs...)
+function truncate!(
+  ::Algorithm"frobenius", M::AbstractMPS; site_range=1:length(M), kwargs...
+)
   N = length(M)
 
   # Left-orthogonalize all tensors to make
   # truncations controlled
-  orthogonalize!(M, N)
+  orthogonalize!(M, last(site_range))
 
   # Perform truncations in a right-to-left sweep
-  for j in reverse(2:N)
+  for j in reverse((first(site_range) + 1):last(site_range))
     rinds = uniqueinds(M[j], M[j - 1])
     ltags = tags(commonind(M[j], M[j - 1]))
     U, S, V = svd(M[j], rinds; lefttags=ltags, kwargs...)

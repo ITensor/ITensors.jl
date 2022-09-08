@@ -705,6 +705,12 @@ end
 
     @test inner(M, M0) > 0.1
   end
+
+  @testset "truncate! with site_range" begin
+    M = basicRandomMPS(10; dim=10)
+    truncate!(M; site_range=3:7, maxdim=2)
+    @test linkdims(M) == [2, 4, 2, 2, 2, 2, 8, 4, 2]
+  end
 end
 
 @testset "Other MPS methods" begin
