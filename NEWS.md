@@ -6,6 +6,19 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+
+ITensors v0.3.20 Release Notes
+==============================
+
+Bugs:
+
+- Fix bug contracting rectangular Diag with Dense (#970)
+
+Enhancements:
+
+- `site_range` keyword for `truncate!` to only truncate part of an MPS (#971)
+- Fix issue with tolerance in `lognorm` when checking that the inner product is real (#973)
+
 ITensors v0.3.19 Release Notes
 ==============================
 
