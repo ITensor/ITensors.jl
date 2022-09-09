@@ -6,6 +6,15 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+NDTensors v0.1.44 Release Notes
+===============================
+
+Bugs:
+
+- Fix bug contracting rectangular Diag with Dense (#970)
+
+Enhancements:
+
 NDTensors v0.1.43 Release Notes
 ===============================
 
