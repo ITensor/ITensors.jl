@@ -155,7 +155,8 @@ Optional keyword arguments:
 * `mindim` - integer or array of integers specifying the minimum size of the bond dimension or rank, if possible
 * `outputlevel::Int = 1` - larger outputlevel values make DMRG print more information and 0 means no output
 * `observer` - object implementing the [Observer](@ref observer) interface which can perform measurements and stop DMRG early
-* `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this value, begin saving tensors to disk to free memory in large calculations
+* `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this value, begin saving tensors to disk to free RAM memory in large calculations
+* `write_path::String = tempdir()` - path to use to save files to disk (to save RAM) when maxdim exceeds the `write_when_maxdim_exceeds` option, if set
 """
 function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   check_hascommoninds(siteinds, H, psi0)
