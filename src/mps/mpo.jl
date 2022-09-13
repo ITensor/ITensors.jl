@@ -678,7 +678,7 @@ function _contract(::Algorithm"naive", A, ψ; kwargs...)
     throw(DimensionMismatch("lengths of MPO ($N) and MPS ($(length(ψ))) do not match"))
   end
 
-  ψ_out = MPS(N)
+  ψ_out = typeof(ψ)(N)
   for j in 1:N
     ψ_out[j] = A[j] * ψ[j]
   end
