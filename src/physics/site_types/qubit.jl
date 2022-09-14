@@ -469,9 +469,13 @@ ITensors.op(::OpName"ProjUp", ::SiteType"Qubit") = [
 
 ITensors.op(::OpName"projUp", t::SiteType"Qubit") = op(OpName("ProjUp"), t)
 
+ITensors.op(::OpName"Proj0", t::SiteType"Qubit") = op(OpName("ProjUp"), t)
+
 ITensors.op(::OpName"ProjDn", ::SiteType"Qubit") = [
   0 0
   0 1
 ]
 
 ITensors.op(::OpName"projDn", t::SiteType"Qubit") = op(OpName("ProjDn"), t)
+
+ITensors.op(::OpName"Proj1", t::SiteType"Qubit") = op(OpName("ProjDn"), t)

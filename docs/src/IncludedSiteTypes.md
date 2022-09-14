@@ -74,6 +74,8 @@ Single-qubit operators:
 - `"Ry"` (takes argument: θ) Rotation around y axis
 - `"Rz"` (takes argument: ϕ) Rotation around z axis
 - `"Rn"` (takes arguments: θ, ϕ, λ) (aliases: `"Rn̂"`) Rotation about axis n=(θ, ϕ, λ)
+- `"Proj0"` (aliases: `"ProjUp"`, `"projUp"`)
+- `"Proj1"` (aliases: `"ProjDn"`, `"projDn"`)
 
 Spin operators:
 - `"Sz"` (aliases: `"Sᶻ"`)
@@ -83,8 +85,8 @@ Spin operators:
 - `"iSy"` (aliases: `"iSʸ"`)
 - `"Sy"` (aliases: `"Sʸ"`)
 - `"S2"` (aliases: "S²"`)
-- `"ProjUp"` (aliases: `"projUp"`)
-- `"ProjDn"` (aliases: `"projDn"`)
+- `"ProjUp"` (aliases: `"projUp"`, `"Proj0"`)
+- `"ProjDn"` (aliases: `"projDn"`, `"Proj1"`)
 
 Two-qubit gates:
 - `"CNOT"` (aliases: `"CX"`) Controlled NOT gate
