@@ -708,6 +708,17 @@ end
     @test inner(noprime(Apsi), Apply(A, psi)) ≈ inner(Apsi, Apsi)
   end
 
+  @testset "Other MPO contract algorithms" begin
+    # Regression test - ensure that output of "naive" algorithm is an 
+    # MPO not an MPS
+    N = 8
+    s = siteinds(2, N)
+    A = randomMPO(s)
+    B = randomMPO(s)
+    C = apply(A, B; alg="naive")
+    @test C isa MPO
+  end
+
   @testset "MPO with no link indices" for conserve_qns in [false, true]
     s = siteinds("S=1/2", 4; conserve_qns)
     H = MPO([op("Id", sn) for sn in s])

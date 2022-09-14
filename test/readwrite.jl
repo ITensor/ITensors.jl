@@ -95,6 +95,43 @@ include("util.jl")
     @test norm(rT - T) / norm(T) < 1E-10
   end
 
+  @testset "Diag ITensor" begin
+    #
+    # Delta ITensor
+    #
+    fo = h5open("data.h5", "w")
+    Δ = δ(i, i')
+    cΔ = δ(ComplexF64, i, i')
+    fo["delta_tensor"] = Δ
+    fo["c_delta_tensor"] = cΔ
+    close(fo)
+
+    fi = h5open("data.h5", "r")
+    rΔ = read(fi, "delta_tensor", ITensor)
+    rcΔ = read(fi, "c_delta_tensor", ITensor)
+    close(fi)
+    @test rΔ ≈ Δ
+    @test rcΔ ≈ cΔ
+
+    #
+    # Diag ITensor
+    #
+    fo = h5open("data.h5", "w")
+    dk = dim(k)
+    D = diagITensor(randn(dk), k, k')
+    C = diagITensor(randn(ComplexF64, dk), k, k')
+    fo["diag_tensor"] = D
+    fo["c_diag_tensor"] = C
+    close(fo)
+
+    fi = h5open("data.h5", "r")
+    rD = read(fi, "diag_tensor", ITensor)
+    rC = read(fi, "c_diag_tensor", ITensor)
+    close(fi)
+    @test rD ≈ D
+    @test rC ≈ C
+  end
+
   @testset "QN ITensor" begin
     i = Index(QN("A", -1) => 3, QN("A", 0) => 4, QN("A", +1) => 3; tags="i")
     j = Index(QN("A", -2) => 2, QN("A", 0) => 3, QN("A", +2) => 2; tags="j")

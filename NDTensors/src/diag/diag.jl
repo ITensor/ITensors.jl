@@ -566,3 +566,39 @@ function show(io::IO, mime::MIME"text/plain", T::DiagTensor)
   summary(io, T)
   return print_tensor(io, T)
 end
+
+function HDF5.write(
+  parent::Union{HDF5.File,HDF5.Group}, name::String, D::Store
+) where {Store<:Diag}
+  g = create_group(parent, name)
+  attributes(g)["type"] = "Diag{$(eltype(Store)),$(datatype(Store))}"
+  attributes(g)["version"] = 1
+  if eltype(D) != Nothing
+    write(g, "data", D.data)
+  end
+end
+
+function HDF5.read(
+  parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{Store}
+) where {Store<:Diag}
+  g = open_group(parent, name)
+  ElT = eltype(Store)
+  VecT = datatype(Store)
+  typestr = "Diag{$ElT,$VecT}"
+  if read(attributes(g)["type"]) != typestr
+    error("HDF5 group or file does not contain $typestr data")
+  end
+  if ElT == Nothing
+    return Dense{Nothing}()
+  end
+  # Attribute __complex__ is attached to the "data" dataset
+  # by the h5 library used by C++ version of ITensor:
+  if haskey(attributes(g["data"]), "__complex__")
+    M = read(g, "data")
+    nelt = size(M, 1) * size(M, 2)
+    data = Vector(reinterpret(ComplexF64, reshape(M, nelt)))
+  else
+    data = read(g, "data")
+  end
+  return Diag{ElT,VecT}(data)
+end
