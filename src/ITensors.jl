@@ -138,6 +138,10 @@ include("iterativesolvers.jl")
 include("adapt.jl")
 
 #####################################
+# Experimental ITensor Functions
+#
+include("experimental/itensorcombiner.jl")
+#####################################
 # QNs
 #
 include("qn/qn.jl")
@@ -190,11 +194,6 @@ include("physics/autompo/qnmatelem.jl")
 include("physics/autompo/opsum_to_mpo_generic.jl")
 include("physics/autompo/opsum_to_mpo.jl")
 include("physics/autompo/opsum_to_mpo_qn.jl")
-
-#####################################
-# Ops to MPO conversions
-#
-# include("Ops/ops_mpo.jl")
 
 #####################################
 # Trotter-Suzuki decomposition
