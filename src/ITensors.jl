@@ -141,6 +141,8 @@ include("adapt.jl")
 # Experimental ITensor Functions
 #
 include("experimental/itensorcombiner.jl")
+# include("Ops/ops_mpo.jl") # Ops to MPO conversions
+
 #####################################
 # QNs
 #
