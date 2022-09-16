@@ -156,6 +156,7 @@ include("nullspace.jl")
 # Ops to ITensor conversions
 #
 include("Ops/ops_itensor.jl")
+include("Ops/permutations.jl")
 
 #####################################
 # MPS/MPO
