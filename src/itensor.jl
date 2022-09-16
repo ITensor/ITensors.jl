@@ -1,7 +1,7 @@
 """
     ITensor
 
-An ITensor is a tensor whose interface is 
+An ITensor is a tensor whose interface is
 independent of its memory layout. Therefore
 it is not necessary to know the ordering
 of an ITensor's indices, only which indices
@@ -300,7 +300,7 @@ Construct an ITensor filled with undefined elements having indices `inds` and el
 
 The storage will have `NDTensors.Dense` type.
 
-# Examples 
+# Examples
 
 ```julia
 i = Index(2,"index_i")
@@ -531,7 +531,7 @@ end
     diagITensor([::Type{ElT} = Float64, ]inds::Index...)
 
 Make a sparse ITensor of element type `ElT` with only elements
-along the diagonal stored. Defaults to having `zero(T)` along 
+along the diagonal stored. Defaults to having `zero(T)` along
 the diagonal.
 
 The storage will have `NDTensors.Diag` type.
@@ -549,7 +549,7 @@ diagITensor(is...) = diagITensor(indices(is...))
     diagITensor([ElT::Type, ]v::Vector, inds...)
     diagitensor([ElT::Type, ]v::Vector, inds...)
 
-Make a sparse ITensor with non-zero elements only along the diagonal. 
+Make a sparse ITensor with non-zero elements only along the diagonal.
 In general, the diagonal elements will be those stored in `v` and
 the ITensor will have element type `eltype(v)`, unless specified explicitly
 by `ElT`. The storage will have `NDTensors.Diag` type.
@@ -599,7 +599,7 @@ diagitensor(args...; kwargs...) = diagITensor(AllowAlias(), args...; kwargs...)
     diagITensor([ElT::Type, ]x::Number, inds...)
     diagitensor([ElT::Type, ]x::Number, inds...)
 
-Make a sparse ITensor with non-zero elements only along the diagonal. 
+Make a sparse ITensor with non-zero elements only along the diagonal.
 In general, the diagonal elements will be set to the value `x` and
 the ITensor will have element type `eltype(x)`, unless specified explicitly
 by `ElT`. The storage will have `NDTensors.Diag` type.
@@ -1318,7 +1318,7 @@ priming_tagging_doc = """
 Optionally, only modify the indices with the specified keyword arguments.
 
 # Arguments
-- `tags = nothing`: if specified, only modify Index `i` if `hastags(i, tags) == true`. 
+- `tags = nothing`: if specified, only modify Index `i` if `hastags(i, tags) == true`.
 - `plev = nothing`: if specified, only modify Index `i` if `hasplev(i, plev) == true`.
 
 The ITensor functions come in two versions, `f` and `f!`. The latter modifies the ITensor in-place. In both versions, the ITensor storage is not modified or copied (so it returns an ITensor with a view of the original storage).
@@ -1529,7 +1529,7 @@ end
 
 Construct an ITensor with type `ElT` and indices `inds`, whose elements are normally distributed random numbers. If the element type is not specified, it defaults to `Float64`.
 
-# Examples 
+# Examples
 
 ```julia
 i = Index(2,"index_i")
@@ -1570,89 +1570,6 @@ randomITensor(is...) = randomITensor(Float64, indices(is...))
 
 # To fix ambiguity errors with QN version
 randomITensor() = randomITensor(Float64, ())
-
-function combiner(is::Indices; kwargs...)
-  tags = get(kwargs, :tags, "CMB,Link")
-  new_ind = Index(prod(dims(is)), tags)
-  new_is = (new_ind, is...)
-  return itensor(Combiner(), new_is)
-end
-
-combiner(is...; kwargs...) = combiner(indices(is...); kwargs...)
-combiner(i::Index; kwargs...) = combiner((i,); kwargs...)
-
-# Special case when no indices are combined (useful for generic code)
-function combiner(; kwargs...)
-  return itensor(Combiner(), ())
-end
-
-@doc """
-    combiner(inds::Indices; kwargs...)
-
-Make a combiner ITensor which combines the indices (of type Index)
-into a single, new Index whose size is the product of the indices 
-given. For example, given indices `i1,i2,i3` the combiner will have 
-these three indices plus an additional one whose dimension is the 
-product of the dimensions of `i1,i2,i3`.
-
-Internally, a combiner ITensor uses a special storage type which
-means it does not hold actual tensor elements but just information
-about how to combine the indices into a single Index. Taking a product
-of a regular ITensor with a combiner uses special fast algorithms to
-combine the indices.
-
-To obtain the new, combined Index that the combiner makes out of
-the indices it is given, use the `combinedind` function.
-
-To undo or reverse the combining process, uncombining the Index back
-into the original ones, contract the tensor having the combined Index
-with the conjugate or `dag` of the combiner. (If the combiner is an ITensor 
-`C`, multiply by `dag(C)`.)
-
-### Example
-```
-# Combine indices i and k into a new Index ci
-T = randomITensor(i,j,k)
-C = combiner(i,k)
-CT = C * T
-ci = combinedind(C)
-
-# Uncombine ci back into i and k
-TT = dag(C) * CT
-
-# TT will be the same as T
-@show norm(TT - T) ≈ 0.0
-```
-         
-              i  j  k
-              |  |  |
-     T   =    =======
-
-              ci  i  k
-              |   |  |
-     C   =    ========
-              
-              ci  j
-              |   |
-     C * T =  =====
-
-""" combiner
-
-"""
-    combinedind(C::ITensor)
-
-Given a combiner ITensor, return the Index which is
-the "combined" index that is made out of merging
-the other indices given to the combiner when it is made
-
-For more information, see the `combiner` function.
-"""
-function combinedind(T::ITensor)
-  if storage(T) isa Combiner && order(T) > 0
-    return inds(T)[1]
-  end
-  return nothing
-end
 
 norm(T::ITensor) = norm(tensor(T))
 
@@ -1891,6 +1808,22 @@ _contract(T::ITensor, ::Nothing) = T
 
 dag(::Nothing) = nothing
 
+"""
+    combinedind(C::ITensor)
+
+Given a combiner ITensor, return the Index which is
+the "combined" index that is made out of merging
+the other indices given to the combiner when it is made
+
+For more information, see the `combiner` function.
+"""
+function combinedind(T::ITensor)
+  if storage(T) isa Combiner && order(T) > 0
+    return inds(T)[1]
+  end
+  return nothing
+end
+
 # TODO: add iscombiner(::Tensor) to NDTensors
 iscombiner(T::ITensor)::Bool = (storage(T) isa Combiner)
 
@@ -1933,11 +1866,11 @@ end
     A::ITensor * B::ITensor
     contract(A::ITensor, B::ITensor)
 
-Contract ITensors A and B to obtain a new ITensor. This 
+Contract ITensors A and B to obtain a new ITensor. This
 contraction `*` operator finds all matching indices common
-to A and B and sums over them, such that the result will 
+to A and B and sums over them, such that the result will
 have only the unique indices of A and B. To prevent
-indices from matching, their prime level or tags can be 
+indices from matching, their prime level or tags can be
 modified such that they no longer compare equal - for more
 information see the documentation on Index objects.
 
@@ -2133,7 +2066,7 @@ end
 
 Treating an ITensor as a map from a set of indices
 of prime level 0 to a matching set of indices but
-of prime level 1 
+of prime level 1
 [for example: (i,j,k,...) -> (j',i',k',...)]
 return the ITensor which is the transpose of this map.
 """
@@ -2144,7 +2077,7 @@ transpose(T::ITensor) = swapprime(T, 0 => 1)
 
 Test whether an ITensor is a Hermitian operator,
 that is whether taking `dag` of the ITensor and
-transposing its indices returns numerically 
+transposing its indices returns numerically
 the same ITensor.
 """
 function ishermitian(T::ITensor; kwargs...)
@@ -2423,17 +2356,17 @@ There are three main modes:
 
 1. Matrix-matrix product. In this case, ITensors `A`
 and `B` have shared indices that come in pairs of primed
-and unprimed indices. Then, `A` and `B` are multiplied 
+and unprimed indices. Then, `A` and `B` are multiplied
 together, treating them as matrices from the unprimed
 to primed indices, resulting in an ITensor `C` that
-has the same pairs of primed and unprimed indices. 
+has the same pairs of primed and unprimed indices.
 For example:
 ```
 s1'-<-----<-s1            s1'-<-----<-s1   s1'-<-----<-s1
       |C|      = product(       |A|              |B|      )
 s2'-<-----<-s2            s2'-<-----<-s2 , s2'-<-----<-s2
 ```
-Essentially, this is implemented as 
+Essentially, this is implemented as
 `C = mapprime(A', B, 2 => 1)`.
 If there are dangling indices that are not shared between
 `A` and `B`, a "batched" matrix multiplication is
@@ -2454,7 +2387,7 @@ s1'-<-----<-s1               s1'-<-----<-s1   s1'-<-----<-s1
       |C|      = Σⱼ product(       |A|              |B|      )
 s2'-<-----<-s2               s2'-<-----<-s2 , s2'-<-----<-s2
 ```
-where the sum is not performed as an explicitly 
+where the sum is not performed as an explicitly
 for-loop, but as part of a single tensor contraction.
 
 2. Matrix-vector product. In this case, ITensor `A`
@@ -2842,7 +2775,7 @@ end
 #    res = read(parent,"name",type_t)
 #    return res
 #  end
-#  return 
+#  return
 #end
 
 function HDF5.read(
@@ -2856,7 +2789,7 @@ function HDF5.read(
   inds = read(g, "inds", IndexSet)
 
   # check input file for key name of ITensor data
-  # ITensors.jl <= v0.1.x uses `store` as key 
+  # ITensors.jl <= v0.1.x uses `store` as key
   # whereas ITensors.jl >= v0.2.x uses `storage` as key
   for key in ["storage", "store"]
     if haskey(g, key)
