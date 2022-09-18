@@ -1573,69 +1573,6 @@ randomITensor() = randomITensor(Float64, ())
 
 norm(T::ITensor) = norm(tensor(T))
 
-function dag(as::AliasStyle, T::Tensor{ElT,N}) where {ElT,N}
-  if using_auto_fermion() && has_fermionic_subspaces(inds(T)) # <fermions>
-    CT = conj(NeverAlias(), T)
-    NDTensors.scale_blocks!(CT, block -> NDTensors.permfactor(reverse(1:N), block, inds(T)))
-    return setinds(CT, dag(inds(T)))
-  end
-  return setinds(conj(as, T), dag(inds(T)))
-end
-
-function dag(as::AliasStyle, T::ITensor)
-  return itensor(dag(as, tensor(T)))
-end
-
-# Helpful for generic code
-dag(x::Number) = conj(x)
-
-# Helper function for deprecating a keyword argument
-function deprecated_keyword_argument(
-  ::Type{T}, kwargs; new_kw, old_kw, default, funcsym, map=identity
-)::T where {T}
-  has_new_kw = haskey(kwargs, new_kw)
-  has_old_kw = haskey(kwargs, old_kw)
-  res::T = if has_old_kw
-    Base.depwarn(
-      "In `$func`, keyword argument `$old_kw` is deprecated in favor of `$new_kw`.", func
-    )
-    if has_new_kw
-      println(
-        "Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`.",
-      )
-      kwargs[new_kw]
-    else
-      map(kwargs[old_kw])
-    end
-  else
-    get(kwargs, new_kw, default)
-  end
-  return res
-end
-
-"""
-    dag(T::ITensor; allow_alias = true)
-
-Complex conjugate the elements of the ITensor `T` and dagger the indices.
-
-By default, an alias of the ITensor is returned (i.e. the output ITensor
-may share data with the input ITensor). If `allow_alias = false`,
-an alias is never returned.
-"""
-function dag(T::ITensor; kwargs...)
-  allow_alias::Bool = deprecated_keyword_argument(
-    Bool,
-    kwargs;
-    new_kw=:allow_alias,
-    old_kw=:always_copy,
-    default=true,
-    funcsym=:dag,
-    map=!,
-  )
-  aliasstyle::Union{AllowAlias,NeverAlias} = allow_alias ? AllowAlias() : NeverAlias()
-  return dag(aliasstyle, T)
-end
-
 """
     dir(A::ITensor, i::Index)
 
@@ -1725,8 +1662,6 @@ function _contract(A::ITensor, B::ITensor)::ITensor
 end
 
 _contract(T::ITensor, ::Nothing) = T
-
-dag(::Nothing) = nothing
 
 """
     combinedind(C::ITensor)
@@ -1982,28 +1917,12 @@ function indpairs(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"
 end
 
 """
-    transpose(T::ITensor)
-
-Treating an ITensor as a map from a set of indices
-of prime level 0 to a matching set of indices but
-of prime level 1
-[for example: (i,j,k,...) -> (j',i',k',...)]
-return the ITensor which is the transpose of this map.
+      tr(T::ITensor; kwargs)
+Trance of an ITensor over a pair of indices
+determined by the prime levels and tags. Indices
+that are not in pairs are not traced over, corresponding
+to a "batched" trace
 """
-transpose(T::ITensor) = swapprime(T, 0 => 1)
-
-"""
-    ishermitian(T::ITensor; kwargs...)
-
-Test whether an ITensor is a Hermitian operator,
-that is whether taking `dag` of the ITensor and
-transposing its indices returns numerically
-the same ITensor.
-"""
-function ishermitian(T::ITensor; kwargs...)
-  return isapprox(T, dag(transpose(T)); kwargs...)
-end
-
 # Fix for AD
 function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
   trpairs = indpairs(T; plev=plev, tags=tags)
@@ -2596,6 +2515,30 @@ isempty(T::ITensor) = isemptystorage(T)
 
 isreal(T::ITensor) = eltype(T) <: Real
 iszero(T::ITensor) = all(iszero, T)
+
+# Helper function for deprecating a keyword argument
+function deprecated_keyword_argument(
+  ::Type{T}, kwargs; new_kw, old_kw, default, funcsym, map=identity
+)::T where {T}
+  has_new_kw = haskey(kwargs, new_kw)
+  has_old_kw = haskey(kwargs, old_kw)
+  res::T = if has_old_kw
+    Base.depwarn(
+      "In `$func`, keyword argument `$old_kw` is deprecated in favor of `$new_kw`.", func
+    )
+    if has_new_kw
+      println(
+        "Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`.",
+      )
+      kwargs[new_kw]
+    else
+      map(kwargs[old_kw])
+    end
+  else
+    get(kwargs, new_kw, default)
+  end
+  return res
+end
 
 #######################################################################
 #
