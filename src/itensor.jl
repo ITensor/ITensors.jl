@@ -2297,19 +2297,6 @@ function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, T
   return write(g, "storage", storage(T))
 end
 
-#function HDF5.read(parent::Union{HDF5.File,HDF5.Group},
-#                   name::AbstractString)
-#  g = open_group(parent,name)
-#
-#  try
-#    typestr = read(attributes(g)["type"])
-#    type_t = eval(Meta.parse(typestr))
-#    res = read(parent,"name",type_t)
-#    return res
-#  end
-#  return
-#end
-
 function HDF5.read(
   parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, ::Type{ITensor}
 )
