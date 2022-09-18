@@ -132,6 +132,7 @@ include("indexset.jl")
 # ITensor
 #
 include("itensor.jl")
+include("OPS/tensor_algebra.jl")
 include("broadcast.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
@@ -155,8 +156,8 @@ include("nullspace.jl")
 #####################################
 # Ops to ITensor conversions
 #
-include("Ops/ops_itensor.jl")
 include("Ops/permutations.jl")
+include("Ops/ops_itensor.jl")
 
 #####################################
 # MPS/MPO
