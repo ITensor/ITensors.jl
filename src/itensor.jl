@@ -1493,13 +1493,6 @@ Check if all of the indices in the ITensor have the specified tags.
 """
 allhastags(A::ITensor, ts) = allhastags(inds(A), ts)
 
-"""
-    adjoint(A::ITensor)
-
-For `A'` notation to prime an ITensor by 1.
-"""
-adjoint(A::ITensor) = prime(A)
-
 dirs(A::ITensor, is) = dirs(inds(A), is)
 
 function (A::ITensor == B::ITensor)

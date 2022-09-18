@@ -143,3 +143,10 @@ the same ITensor.
 function ishermitian(T::ITensor; kwargs...)
   return isapprox(T, dag(transpose(T)); kwargs...)
 end
+
+"""
+    adjoint(A::ITensor)
+
+For `A'` notation to prime an ITensor by 1.
+"""
+adjoint(A::ITensor) = prime(A)
