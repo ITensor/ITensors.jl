@@ -1,2 +1,4 @@
 style = "blue"
 indent = 2
+#format_docstrings = true # This can run into some issues so it
+                        # should be maintained on a per new file basis
