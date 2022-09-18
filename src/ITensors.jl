@@ -180,6 +180,7 @@ include("mps/adapt.jl")
 #####################################
 # Physics
 #
+include("physics/flux.jl")
 include("physics/sitetype.jl")
 include("physics/lattices.jl")
 include("physics/site_types/aliases.jl")
