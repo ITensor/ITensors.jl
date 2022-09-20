@@ -132,7 +132,8 @@ include("indexset.jl")
 # ITensor
 #
 include("itensor.jl")
-include("OPS/tensor_algebra.jl")
+include("tensor_operations/tensor_algebra.jl")
+include("tensor_operations/permutations.jl")
 include("broadcast.jl")
 include("decomp.jl")
 include("iterativesolvers.jl")
@@ -141,12 +142,13 @@ include("adapt.jl")
 #####################################
 # Experimental ITensor Functions
 #
-include("experimental/itensorcombiner.jl")
+include("tensor_operations/itensorcombiner.jl")
 # include("Ops/ops_mpo.jl") # Ops to MPO conversions
 
 #####################################
 # QNs
 #
+include("qn/flux.jl")
 include("qn/qn.jl")
 include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
@@ -156,7 +158,6 @@ include("nullspace.jl")
 #####################################
 # Ops to ITensor conversions
 #
-include("Ops/permutations.jl")
 include("Ops/ops_itensor.jl")
 
 #####################################
@@ -180,7 +181,6 @@ include("mps/adapt.jl")
 #####################################
 # Physics
 #
-include("physics/flux.jl")
 include("physics/sitetype.jl")
 include("physics/lattices.jl")
 include("physics/site_types/aliases.jl")
