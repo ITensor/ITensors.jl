@@ -1689,7 +1689,8 @@ end
 
 """
       tr(T::ITensor; kwargs)
-  Trance of an ITensor over a pair of indices
+
+  Trace of an ITensor over a pair of indices
   determined by the prime levels and tags. Indices
   that are not in pairs are not traced over, corresponding
   to a "batched" trace
@@ -1837,6 +1838,7 @@ map(f, x::ITensor) = itensor(map(f, tensor(x)))
 
 """
     axpy!(a::Number, v::ITensor, w::ITensor)
+    
   ```
   w .+= a .* v
   ```
