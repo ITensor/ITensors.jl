@@ -4,7 +4,7 @@ using ITensors, LinearAlgebra, Test
   @testset "truncate!" begin
     a = [0.1, 0.01, 1e-13]
     @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
-      (1e-13, (0.01 + 1e-13) / 2)
+          (1e-13, (0.01 + 1e-13) / 2)
     @test length(a) == 2
 
     # Negative definite spectrum treated by taking 
@@ -15,7 +15,7 @@ using ITensors, LinearAlgebra, Test
 
     a = [-0.1, -0.01, -1e-13]
     @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
-      (1e-13, (0.01 + 1e-13) / 2)
+          (1e-13, (0.01 + 1e-13) / 2)
     @test length(a) == 2
   end
 

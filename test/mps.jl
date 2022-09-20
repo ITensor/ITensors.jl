@@ -865,7 +865,7 @@ end
     test_correlation_matrix(psi, [("S-", "S+"), ("S+", "S-")])
 
     @test correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) ≈
-      correlation_matrix(psi, "Sz", "Sz")
+          correlation_matrix(psi, "Sz", "Sz")
     @test expect(psi, [1/2 0; 0 -1/2]) ≈ expect(psi, "Sz")
     @test all(expect(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) .≈ expect(psi, "Sz", "Sz"))
     @test expect(psi, [[1/2 0; 0 -1/2], [1/2 0; 0 -1/2]]) ≈ expect(psi, ["Sz", "Sz"])
@@ -955,7 +955,7 @@ end
 
       @test err isa Exception
       @test sprint(showerror, err) ==
-        "correlation_matrix: Mixed fermionic and bosonic operators are not supported yet."
+            "correlation_matrix: Mixed fermionic and bosonic operators are not supported yet."
     end
 
     # Fermion case
@@ -1388,17 +1388,17 @@ end
     @test product(Z[1], X[1]) - product(X[1], Z[1]) ≈ 2 * im * Y[1]
 
     @test product([Y[1], X[1]], v0[1]) - product([X[1], Y[1]], v0[1]) ≈
-      2 * im * product(Z[1], v0[1])
+          2 * im * product(Z[1], v0[1])
     @test product([Y[1], X[1]], v1[1]) - product([X[1], Y[1]], v1[1]) ≈
-      2 * im * product(Z[1], v1[1])
+          2 * im * product(Z[1], v1[1])
     @test product([Z[1], Y[1]], v0[1]) - product([Y[1], Z[1]], v0[1]) ≈
-      2 * im * product(X[1], v0[1])
+          2 * im * product(X[1], v0[1])
     @test product([Z[1], Y[1]], v1[1]) - product([Y[1], Z[1]], v1[1]) ≈
-      2 * im * product(X[1], v1[1])
+          2 * im * product(X[1], v1[1])
     @test product([X[1], Z[1]], v0[1]) - product([Z[1], X[1]], v0[1]) ≈
-      2 * im * product(Y[1], v0[1])
+          2 * im * product(Y[1], v0[1])
     @test product([X[1], Z[1]], v1[1]) - product([Z[1], X[1]], v1[1]) ≈
-      2 * im * product(Y[1], v1[1])
+          2 * im * product(Y[1], v1[1])
 
     #
     # 2-qubit
@@ -1450,16 +1450,16 @@ end
     ψ = MPS(s, "0")
     @test prod(product(X[1], ψ)) ≈ prod(MPS(s, n -> n == 1 ? "1" : "0"))
     @test prod(product(X[1], product(X[2], ψ))) ≈
-      prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
     @test prod(product(X[1] * X[2], ψ)) ≈ prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
     @test prod(product([X[2], X[1]], ψ)) ≈ prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
     @test prod(product(CX[1, 2], ψ)) ≈ prod(MPS(s, "0"))
     @test prod(product(CX[1, 2], product(X[1], ψ))) ≈
-      prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
     @test prod(product(product(CX[1, 2], X[1]), ψ)) ≈
-      prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
     @test prod(product([X[1], CX[1, 2]], ψ)) ≈
-      prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
+          prod(MPS(s, n -> n == 1 || n == 2 ? "1" : "0"))
 
     for i in 1:N, j in 1:N
       !allunique((i, j)) && continue
@@ -1520,11 +1520,11 @@ end
       s = siteind("Qubit")
       Q = SiteType("Qubit")
       @test product(ops([s], [("Y", 1), ("X", 1)]), setelt(s => 1)) ≈
-        itensor(op("X", Q) * op("Y", Q) * [1; 0], s)
+            itensor(op("X", Q) * op("Y", Q) * [1; 0], s)
       @test product(ops([s], [("Y", 1), ("Z", 1)]), setelt(s => 1)) ≈
-        itensor(op("Z", Q) * op("Y", Q) * [1; 0], s)
+            itensor(op("Z", Q) * op("Y", Q) * [1; 0], s)
       @test product(ops([s], [("X", 1), ("Y", 1)]), setelt(s => 1)) ≈
-        itensor(op("Y", Q) * op("X", Q) * [1; 0], s)
+            itensor(op("Y", Q) * op("X", Q) * [1; 0], s)
     end
 
     @testset "Simple on-site state evolution" begin

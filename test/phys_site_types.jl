@@ -34,7 +34,7 @@ using ITensors, Test
     U12 = op("RandomUnitary", i1, i2)
     @test hassameinds(U12, (i1', i2', i1, i2))
     @test apply(transpose(dag(U12)), U12) ≈
-      itensor(Matrix(I, d1 * d2, d1 * d2), i2', i1', dag(i2), dag(i1))
+          itensor(Matrix(I, d1 * d2, d1 * d2), i2', i1', dag(i2), dag(i1))
   end
 
   @testset "Qubit sites" begin
@@ -69,7 +69,7 @@ using ITensors, Test
     @test_throws ArgumentError op(s, "Fake", 2)
     @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0; 0.0 1.0]
     @test Array(op("√NOT", s, 3), s[3]', s[3]) ≈
-      [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
+          [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
     @test Array(op("H", s, 3), s[3]', s[3]) ≈ [1/sqrt(2) 1/sqrt(2); 1/sqrt(2) -1/sqrt(2)]
     @test Array(op("Phase", s, 3), s[3]', s[3]) ≈ [1 0; 0 im]
     @test Array(op("P", s, 3), s[3]', s[3]) ≈ [1 0; 0 im]
@@ -78,7 +78,7 @@ using ITensors, Test
     @test Array(op("T", s, 3), s[3]', s[3]) ≈ [1 0; 0 (1 + im)/sqrt(2)]
     θ = randn()
     @test Array(op("Rx", s, 3; θ=θ), s[3]', s[3]) ≈
-      [cos(θ / 2) -im*sin(θ / 2); -im*sin(θ / 2) cos(θ / 2)]
+          [cos(θ / 2) -im*sin(θ / 2); -im*sin(θ / 2) cos(θ / 2)]
 
     # Test obtaining S=1/2 operators using Qubit tag
     @test Array(op("X", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 1.0 0.0]
@@ -142,7 +142,7 @@ using ITensors, Test
 
     # Test obtaining Qubit operators using S=1/2 tag:
     @test Array(op("√NOT", s, 3), s[3]', s[3]) ≈
-      [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
+          [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
   end
 
   @testset "Spin One sites" begin
@@ -461,9 +461,9 @@ using ITensors, Test
     @test op(s, "I", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op(s, "F", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op("Id", s, 1, 2) ==
-      itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+          itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op("I", s, 1, 2) ==
-      itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+          itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op(s, "N", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "n", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "Adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
@@ -478,9 +478,9 @@ using ITensors, Test
     @test op(s, "Id", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op(s, "I", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op("Id", s, 1, 2) ==
-      itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+          itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op("I", s, 1, 2) ==
-      itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
+          itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op(s, "N", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "n", 2) == itensor([0 0 0; 0 1 0; 0 0 2], s[2]', dag(s[2]))
     @test op(s, "Adag", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))

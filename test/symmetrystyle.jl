@@ -32,7 +32,7 @@ using Test
   @test @inferred(ITensors.symmetrystyle(i', i, iqn)) == ITensors.HasQNs()
   @test @inferred(ITensors.symmetrystyle((i', i, iqn))) == ITensors.HasQNs()
   @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle([i', i, iqn])) ==
-    ITensors.HasQNs()
+        ITensors.HasQNs()
 
   A = randomITensor(i', dag(i))
   Aqn = randomITensor(iqn', dag(iqn))
@@ -52,5 +52,5 @@ using Test
   psiqn = MPS(sqn)
   @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(psi)) == ITensors.NonQN()
   @test @inferred(ITensors.SymmetryStyle, ITensors.symmetrystyle(psiqn)) ==
-    ITensors.HasQNs()
+        ITensors.HasQNs()
 end

@@ -40,7 +40,7 @@ function isingMPO(sites)::MPO
   return H
 end
 
-function heisenbergMPO(sites, h::Vector{Float64}, onsite::String="Sz")::MPO
+function heisenbergMPO(sites, h::Vector{Float64}; onsite::String="Sz")::MPO
   H = MPO(sites)
   N = length(H)
   link = Vector{Index}(undef, N + 1)

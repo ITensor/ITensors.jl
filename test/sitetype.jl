@@ -28,7 +28,7 @@ end
     @test op([sites[1]], [1 0; 0 -1] / 2) ≈ Sz1
 
     @test op([sites[1]], "Ry"; θ=π / 2) ≈
-      itensor([1 -1; 1 1] / √2, sites[1]', dag(sites[1]))
+          itensor([1 -1; 1 1] / √2, sites[1]', dag(sites[1]))
 
     sites = siteinds("S=1", N)
     #@test_throws ArgumentError op(sites, "Sp", 1)

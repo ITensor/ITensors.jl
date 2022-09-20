@@ -13,7 +13,7 @@ using Test
   C = A * B
   @test hassameinds(C, (i, k))
   @test storage(C) isa
-    ITensors.EmptyStorage{ITensors.EmptyNumber,<:ITensors.Dense{ITensors.EmptyNumber}}
+        ITensors.EmptyStorage{ITensors.EmptyNumber,<:ITensors.Dense{ITensors.EmptyNumber}}
 
   A = ITensor(Float64, i, j)
   B = ITensor(j, k)

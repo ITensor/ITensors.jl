@@ -89,7 +89,7 @@ end
     R .= A .* B
     @test !any(isnan, R)
     @test reshape(array(R), 6, 2) ≈
-      reshape(permutedims(array(A), (2, 1, 3)), 6, 2) * array(B)
+          reshape(permutedims(array(A), (2, 1, 3)), 6, 2) * array(B)
 
     R .= NaN
     @test any(isnan, R)
@@ -97,6 +97,6 @@ end
     R .= B .* A
     @test !any(isnan, R)
     @test reshape(array(R), 6, 2) ≈
-      reshape(permutedims(array(A), (2, 1, 3)), 6, 2) * array(B)
+          reshape(permutedims(array(A), (2, 1, 3)), 6, 2) * array(B)
   end
 end

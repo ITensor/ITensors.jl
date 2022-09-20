@@ -84,7 +84,7 @@ end
   @test ITensor(o1 * o2, s) ≈ ITensor(o1, s) * ITensor(o2, s)
   @test ITensor(2 * o1 * o2, s) ≈ 2 * ITensor(o1, s) * ITensor(o2, s)
   @test ITensor(2 * o1 * o2 + o1 * o2, s) ≈
-    2 * ITensor(o1, s) * ITensor(o2, s) + ITensor(o1, s) * ITensor(o2, s)
+        2 * ITensor(o1, s) * ITensor(o2, s) + ITensor(o1, s) * ITensor(o2, s)
   @test ITensor(exp(o1), s) ≈ exp(ITensor(o1, s))
   @test ITensor(exp(1.2 * o1), s) ≈ exp(1.2 * ITensor(o1, s))
   @test ITensor(1.3 * exp(1.2 * o1), s) ≈ 1.3 * exp(1.2 * ITensor(o1, s))
@@ -121,11 +121,11 @@ end
   @test ITensor(x1 * y1, s) ≈ ITensor(Op([im 0; 0 -im], 1), s)
   @test ITensor(y1 * x1, s) ≈ ITensor(Op([-im 0; 0 im], 1), s)
   @test ITensor(2x1 * x1 + y1, s) ≈
-    ITensor(2 * [1 0; 0 1] + [0 -im; im 0], s[1]', dag(s[1]))
+        ITensor(2 * [1 0; 0 1] + [0 -im; im 0], s[1]', dag(s[1]))
 
   # TODO: Need to add support for filling out with "Id" or "F"
   @test_broken ITensor(2y1 * x2 + x1, s) ≈
-    2 * ITensor(y1, s) * ITensor(x2, s) + ITensor(x1, s) * ITensor(I2, s)
+               2 * ITensor(y1, s) * ITensor(x2, s) + ITensor(x1, s) * ITensor(I2, s)
 
   @test y1'' == y1
 
@@ -134,13 +134,13 @@ end
   @test ITensor(exp(x1), s) ≈ ITensor(Op(exp([0 1; 1 0]), 1), s)
   @test ITensor(exp(2x1 * x1), s) ≈ ITensor(exp(2 * [1 0; 0 1]), s[1]', dag(s[1]))
   @test ITensor(exp(2x1 * x1 + y1), s) ≈
-    ITensor(exp(2 * [1 0; 0 1] + [0 -im; im 0]), s[1]', dag(s[1]))
+        ITensor(exp(2 * [1 0; 0 1] + [0 -im; im 0]), s[1]', dag(s[1]))
 
   @test ITensor(I1, s) ≈ ITensor([1 0; 0 1], s[1]', dag(s[1]))
 
   @test exp(Op("X", 1)) * Op("Y", 2) isa Prod{Any}
   @test ITensor(exp(Op("X", 1)) * Op("Y", 1), s) ≈
-    product(exp(ITensor(Op("X", 1), s)), ITensor(Op("Y", 1), s))
+        product(exp(ITensor(Op("X", 1), s)), ITensor(Op("Y", 1), s))
 
   # TODO: Need to define `(::Scaled * ::Op)::Scaled`
   @test_broken 2exp(Op("X", 1)) * Op("Y", 2) isa Scaled{<:Number,Prod{Any}}
