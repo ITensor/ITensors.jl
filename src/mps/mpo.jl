@@ -2,7 +2,7 @@
 """
     MPO
 
-A finite size matrix product operator type. 
+A finite size matrix product operator type.
 Keeps track of the orthogonality center.
 """
 mutable struct MPO <: AbstractMPS
@@ -106,9 +106,9 @@ MPO(sites::Vector{<:Index}, op::String) = MPO(Float64, sites, op)
 
 function MPO(::Type{ElT}, sites::Vector{<:Index}, op::Matrix{<:Number}) where {ElT<:Number}
   # return MPO(ElT, sites, fill(op, length(sites)))
-  return error(
-    "Not defined on purpose because of potential ambiguity with `MPO(A::Array, sites::Vector)`. Pass the on-site matrices as functions like `MPO(sites, n -> [1 0; 0 1])` instead.",
-  )
+  return error("Not defined on purpose because of potential ambiguity with `MPO(A::Array,
+               sites::Vector)`. Pass the on-site matrices as functions like
+               `MPO(sites, n -> [1 0; 0 1])` instead.",)
 end
 
 MPO(sites::Vector{<:Index}, op::Matrix{ElT}) where {ElT<:Number} = MPO(ElT, sites, op)
@@ -128,7 +128,14 @@ function MPO(A::ITensor, sites::Vector{<:Index}; kwargs...)
 end
 
 function outer_mps_mps_deprecation_warning()
-  return "Calling `outer(ψ::MPS, ϕ::MPS)` for MPS `ψ` and `ϕ` with shared indices is deprecated. Currently, we automatically prime `ψ` to make sure the site indices don't clash, but that will no longer be the case in ITensors v0.4. To upgrade your code, call `outer(ψ', ϕ)`. Although the new interface seems less convenient, it will allow `outer` to accept more general outer products going forward, such as outer products where some indices are shared (a batched outer product) or outer products of MPS between site indices that aren't just related by a single prime level."
+  return "Calling `outer(ψ::MPS, ϕ::MPS)` for MPS `ψ` and `ϕ` with shared
+  indices is deprecated. Currently, we automatically prime `ψ` to make sure the
+  site indices don't clash, but that will no longer be the case in ITensors
+  v0.4. To upgrade your code, call `outer(ψ', ϕ)`. Although the new interface
+  seems less convenient, it will allow `outer` to accept more general outer
+  products going forward, such as outer products where some indices are shared
+  (a batched outer product) or outer products of MPS between site indices that
+  aren't just related by a single prime level."
 end
 
 function deprecate_make_inds_unmatch(::typeof(outer), ψ::MPS, ϕ::MPS; kw...)
@@ -154,6 +161,7 @@ of 1 and 0. If not, the site indices won't be unique which would
 not be an outer product.
 
 For example:
+
 ```julia
 s = siteinds("S=1/2", 5)
 x = randomMPS(s)
@@ -161,11 +169,13 @@ y = randomMPS(s)
 outer(x, y) # Incorrect! Site indices must be unique.
 outer(x', y) # Results in an MPO with pairs of primed and unprimed indices.
 ```
+
 This allows for more general outer products, such as more general
 MPO outputs which don't have pairs of primed and unprimed indices,
 or outer products where the input MPS are vectorizations of MPOs.
 
 For example:
+
 ```julia
 s = siteinds("S=1/2", 5)
 X = MPO(s, "Id")
@@ -193,14 +203,19 @@ end
 """
     projector(x::MPS; <keyword argument>) -> MPO
 
-Computes the projector onto the state `x`. In Dirac notation, this is the operation `|x⟩⟨x|/|⟨x|x⟩|²`.
+Computes the projector onto the state `x`. In Dirac notation,
+this is the operation `|x⟩⟨x|/|⟨x|x⟩|²`.
 
 Use keyword arguments to control the level of truncation, which are
 the same as those accepted by `contract(::MPO, ::MPO; kw...)`.
 
 # Keywords
-- `normalize::Bool=true`: whether or not to normalize the input MPS before forming the projector. If `normalize==false` and the input MPS is not already normalized, this function will not output a proper project, and simply outputs `outer(x, x) = |x⟩⟨x|`, i.e. the projector scaled by `norm(x)^2`.
-- truncation keyword arguments accepted by `contract(::MPO, ::MPO; kw...)`.
+
+  - `normalize::Bool=true`: whether or not to normalize the input MPS before
+    forming the projector. If `normalize==false` and the input MPS is not already
+    normalized, this function will not output a proper project, and simply
+    outputs `outer(x, x) = |x⟩⟨x|`, i.e. the projector scaled by `norm(x)^2`.
+  - truncation keyword arguments accepted by `contract(::MPO, ::MPO; kw...)`.
 
 See also [`outer`](@ref), [`contract`](@ref).
 """
@@ -217,7 +232,7 @@ end
     siteind(M::MPO, j::Int; plev = 0, kwargs...)
 
 Get the first site Index of the MPO found, by
-default with prime level 0. 
+default with prime level 0.
 """
 siteind(M::MPO, j::Int; kwargs...) = siteind(first, M, j; plev=0, kwargs...)
 
@@ -265,33 +280,54 @@ end
 
 function inner_mps_mpo_mps_deprecation_warning()
   return """
- Calling `inner(x::MPS, A::MPO, y::MPS)` where the site indices of the `MPS` `x` and the `MPS` resulting from contracting `MPO` `A` with `MPS` `y` don't match is deprecated as of ITensors v0.3 and will result in an error in ITensors v0.4. The most common cause of this is something like the following:
+ Calling `inner(x::MPS, A::MPO, y::MPS)` where the site indices of the
+ `MPS` `x` and the `MPS` resulting from contracting `MPO` `A` with `MPS`
+ `y` don't match is deprecated as of ITensors v0.3 and will result in an
+ error in ITensors v0.4. The most common cause of this is something like
+ the following:
+
  ```julia
  s = siteinds("S=1/2")
  psi = randomMPS(s)
  H = MPO(s, "Id")
  inner(psi, H, psi)
  ```
- `psi` has the Index structure `-s-(psi)` and `H` has the Index structure `-s'-(H)-s-`, so the Index structure of would be `(dag(psi)-s- -s'-(H)-s-(psi)` unless the prime levels were fixed. Previously we tried fixing the prime level in situations like this, but we will no longer be doing that going forward.
+
+ `psi` has the Index structure `-s-(psi)` and `H` has the Index structure
+ `-s'-(H)-s-`, so the Index structure of would be `(dag(psi)-s- -s'-(H)-s-(psi)`
+ unless the prime levels were fixed. Previously we tried fixing the prime level
+ in situations like this, but we will no longer be doing that going forward.
 
  There are a few ways to fix this. You can simply change:
+
  ```julia
  inner(psi, H, psi)
  ```
+
  to:
+
  ```julia
  inner(psi', H, psi)
  ```
+
  in which case the Index structure will be `(dag(psi)-s'-(H)-s-(psi)`.
 
  Alternatively, you can use the `Apply` function:
+
  ```julia
  inner(psi, Apply(H, psi))
  ```
- In this case, `Apply(H, psi)` represents the "lazy" evaluation of `apply(H, psi)`. The function `apply(H, psi)` performs the contraction of `H` with `psi` and then unprimes the results, so this versions ensures that the prime levels of the inner product will match.
 
- Although the new behavior seems less convenient, it makes it easier to generalize `inner(::MPS, ::MPO, ::MPS)` to other types of inputs, like `MPS` and `MPO` with different tag and prime conventions, multiple sites per tensor, `ITensor` inputs, etc.
- """
+ In this case, `Apply(H, psi)` represents the "lazy" evaluation of
+ `apply(H, psi)`. The function `apply(H, psi)` performs the contraction
+ of `H` with `psi` and then unprimes the results, so this versions ensures
+ that the prime levels of the inner product will match.
+
+ Although the new behavior seems less convenient, it makes it easier to
+ generalize `inner(::MPS, ::MPO, ::MPS)` to other types of inputs, like `MPS`
+ and `MPO` with different tag and prime conventions, multiple sites per
+ tensor, `ITensor` inputs, etc.
+"""
 end
 
 function deprecate_make_inds_match!(
@@ -302,17 +338,19 @@ function deprecate_make_inds_match!(
     sAx = siteinds((A, x))
     if any(s -> length(s) > 1, sAx)
       n = findfirst(n -> !hassameinds(siteinds(ydag, n), siteinds((A, x), n)), 1:N)
-      error(
-        """Calling `dot(ϕ::MPS, H::MPO, ψ::MPS)` with multiple site indices per MPO/MPS tensor but the site indices don't match. Even with `make_inds_match = true`, the case of multiple site indices per MPO/MPS is not handled automatically. The sites with unmatched site indices are:
+      error("""Calling `dot(ϕ::MPS, H::MPO, ψ::MPS)` with multiple site indices per
+            MPO/MPS tensor but the site indices don't match. Even with
+            `make_inds_match = true`, the case of multiple site indices per MPO/MPS
+            is not handled automatically. The sites with unmatched site indices are:
 
-            inds(ϕ[$n]) = $(inds(ydag[n]))
+                inds(ϕ[$n]) = $(inds(ydag[n]))
 
-            inds(H[$n]) = $(inds(A[n]))
+                inds(H[$n]) = $(inds(A[n]))
 
-            inds(ψ[$n]) = $(inds(x[n]))
+                inds(ψ[$n]) = $(inds(x[n]))
 
-        Make sure the site indices of your MPO/MPS match. You may need to prime one of the MPS, such as `dot(ϕ', H, ψ)`.""",
-      )
+            Make sure the site indices of your MPO/MPS match. You may need to prime
+            one of the MPS, such as `dot(ϕ', H, ψ)`.""",)
     end
     if !hassameinds(siteinds, ydag, (A, x)) && make_inds_match
       warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mpo_mps)
@@ -344,26 +382,32 @@ end
 """
     inner(y::MPS, A::MPO, x::MPS)
 
-Compute `⟨y|A|x⟩ = ⟨y|Ax⟩` efficiently and exactly without making any intermediate
-MPOs. In general it is more efficient and accurate than `inner(y, apply(A, x))`.
+  Compute `⟨y|A|x⟩ = ⟨y|Ax⟩` efficiently and exactly without making any
+  intermediate MPOs. In general it is more efficient and accurate than
+  `inner(y, apply(A, x))`.
 
-This is helpful for computing the expectation value of an operator `A`, which would be:
-```julia
-inner(x, A, x)
-```
-assuming `x` is normalized.
+  This is helpful for computing the expectation value of an operator `A`,
+  which would be:
 
-If you want to compute `⟨By|Ax⟩` you can use `inner(B::MPO, y::MPS, A::MPO, x::MPS)`.
+  ```julia
+  inner(x, A, x)
+  ```
 
-This is helpful for computing the variance of an operator `A`, which would be:
-```julia
-inner(A, x, A, x) - inner(x, A, x) ^ 2
-```
-assuming `x` is normalized.
+  assuming `x` is normalized.
 
-$(make_inds_match_docstring_warning())
+  If you want to compute `⟨By|Ax⟩` you can use `inner(B::MPO, y::MPS, A::MPO, x::MPS)`.
 
-Same as [`dot`](@ref).
+  This is helpful for computing the variance of an operator `A`, which would be:
+
+  ```julia
+  inner(A, x, A, x) - inner(x, A, x) ^ 2
+  ```
+
+  assuming `x` is normalized.
+
+  $(make_inds_match_docstring_warning())
+
+  Same as [`dot`](@ref).
 """
 inner(y::MPS, A::MPO, x::MPS; kwargs...) = dot(y, A, x; kwargs...)
 
@@ -377,16 +421,13 @@ end
 Same as [`inner`](@ref).
 """
 function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs...)::Number
-  !make_inds_match && error(
-    "make_inds_match = false not currently supported in dot(::MPO, ::MPS, ::MPO, ::MPS)"
-  )
+  !make_inds_match &&
+    error("make_inds_match = false not currently supported in dot(::MPO, ::MPS,
+          ::MPO, ::MPS)")
   N = length(B)
   if length(y) != N || length(x) != N || length(A) != N
-    throw(
-      DimensionMismatch(
-        "inner: mismatched lengths $N and $(length(x)) or $(length(y)) or $(length(A))"
-      ),
-    )
+    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))
+                            or $(length(A))"),)
   end
   ydag = dag(y)
   prime!(ydag, 2)
@@ -419,8 +460,9 @@ end
 """
     inner(B::MPO, y::MPS, A::MPO, x::MPS)
 
-Compute `⟨By|A|x⟩ = ⟨By|Ax⟩` efficiently and exactly without making any intermediate
-MPOs. In general it is more efficient and accurate than `inner(apply(B, y), apply(A, x))`.
+Compute `⟨By|A|x⟩ = ⟨By|Ax⟩` efficiently and exactly without making
+any intermediate MPOs. In general it is more efficient and accurate
+than `inner(apply(B, y), apply(A, x))`.
 
 This is helpful for computing the variance of an operator `A`, which would be:
 ```julia
@@ -477,16 +519,14 @@ end
 Compute the distance between A|x> and an approximation MPS y:
 `| |y> - A|x> |/| A|x> | = √(1 + (<y|y> - 2*real(<y|A|x>))/<Ax|A|x>)`.
 
-If `make_inds_match = true`, the function attempts match the site 
+If `make_inds_match = true`, the function attempts match the site
 indices of `y` with the site indices of `A` that are not common
 with `x`.
 """
 function error_contract(y::MPS, A::MPO, x::MPS; kwargs...)
   N = length(A)
   if length(y) != N || length(x) != N
-    throw(
-      DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))")
-    )
+    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
   end
   iyy = dot(y, y; kwargs...)
   iyax = dot(y', A, x; kwargs...)
@@ -499,8 +539,8 @@ error_contract(y::MPS, x::MPS, A::MPO) = error_contract(y, A, x)
 """
     apply(A::MPO, x::MPS; kwargs...)
 
-Contract the `MPO` `A` with the `MPS` `x` and then map the prime level of the resulting
-MPS back to 0.
+Contract the `MPO` `A` with the `MPS` `x` and then map the prime
+level of the resulting MPS back to 0.
 
 Equivalent to `replaceprime(contract(A, x; kwargs...), 2 => 1)`.
 
@@ -541,32 +581,40 @@ contract_mpo_mps_doc = """
     contract(A::MPO, ψ::MPS; kwargs...) -> MPS
     *(::MPO, ::MPS; kwargs...) -> MPS
 
-Contract the `MPO` `A` with the `MPS` `ψ`, returning an `MPS` with the unique
-site indices of the `MPO`.
+  Contract the `MPO` `A` with the `MPS` `ψ`, returning an `MPS` with the unique
+  site indices of the `MPO`.
 
-For example, for an MPO with site indices with prime levels of 1 and 0, such as
-`-s'-A-s-`, and an MPS with site indices with prime levels of 0, such as
-`-s-x`, the result is an MPS `y` with site indices with prime levels of 1,
-`-s'-y = -s'-A-s-x`.
+  For example, for an MPO with site indices with prime levels of 1 and 0, such as
+  `-s'-A-s-`, and an MPS with site indices with prime levels of 0, such as
+  `-s-x`, the result is an MPS `y` with site indices with prime levels of 1,
+  `-s'-y = -s'-A-s-x`.
 
-Since it is common to contract an MPO with prime levels of 1 and 0 with an MPS with
-prime level of 0 and want a resulting MPS with prime levels of 0, we provide a
-convenience function `apply`:
-```julia
-apply(A, x; kwargs...) = replaceprime(contract(A, x; kwargs...), 2 => 1)`.
-```
+  Since it is common to contract an MPO with prime levels of 1 and 0 with an MPS with
+  prime level of 0 and want a resulting MPS with prime levels of 0, we provide a
+  convenience function `apply`:
+  ```julia
+  apply(A, x; kwargs...) = replaceprime(contract(A, x; kwargs...), 2 => 1)`.
+  ```
 
-Choose the method with the `method` keyword, for example
-`"densitymatrix"` and `"naive"`.
+  Choose the method with the `method` keyword, for example
+  `"densitymatrix"` and `"naive"`.
 
-# Keywords
-- `cutoff::Float64=1e-13`: the cutoff value for truncating the density matrix eigenvalues. Note that the default is somewhat arbitrary and subject to change, in general you should set a `cutoff` value.
-- `maxdim::Int=maxlinkdim(A) * maxlinkdim(ψ))`: the maximal bond dimension of the results MPS.
-- `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
-- `normalize::Bool=false`: whether or not to normalize the resulting MPS.
-- `method::String="densitymatrix"`: the algorithm to use for the contraction. Currently the options are "densitymatrix", where the network formed by the MPO and MPS is squared and contracted down to a density matrix which is diagonalized iteratively at each site, and "naive", where the MPO and MPS tensor are contracted exactly at each site and then a truncation of the resulting MPS is performed.
+  # Keywords
+  - `cutoff::Float64=1e-13`: the cutoff value for truncating the density
+     matrix eigenvalues. Note that the default is somewhat arbitrary and subject
+     to change, in general you should set a `cutoff` value.
+  - `maxdim::Int=maxlinkdim(A) * maxlinkdim(ψ))`: the maximal bond dimension
+     of the results MPS.
+  - `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
+  - `normalize::Bool=false`: whether or not to normalize the resulting MPS.
+  - `method::String="densitymatrix"`: the algorithm to use for the contraction.
+     Currently the options are "densitymatrix", where the network formed by the
+     MPO and MPS is squared and contracted down to a density matrix which is
+     diagonalized iteratively at each site, and "naive", where the MPO and MPS
+     tensor are contracted exactly at each site and then a truncation of the
+     resulting MPS is performed.
 
-See also [`apply`](@ref).
+  See also [`apply`](@ref).
 """
 
 @doc """
@@ -588,8 +636,8 @@ contract(ψ::MPS, A::MPO; kwargs...) = contract(A, ψ; kwargs...)
 
 function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   n = length(A)
-  n != length(ψ) &&
-    throw(DimensionMismatch("lengths of MPO ($n) and MPS ($(length(ψ))) do not match"))
+  n != length(ψ) && throw(DimensionMismatch("lengths of MPO ($n) and MPS
+                    ($(length(ψ))) do not match"))
   if n == 1
     return MPS([A[1] * ψ[1]])
   end
@@ -601,7 +649,8 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   normalize::Bool = get(kwargs, :normalize, false)
 
   any(i -> isempty(i), siteinds(commoninds, A, ψ)) &&
-    error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
+    error("In `contract(A::MPO, x::MPS)`, `A` and `x` must
+    share a set of site indices")
 
   # In case A and ψ have the same link indices
   A = sim(linkinds, A)
@@ -675,7 +724,8 @@ function _contract(::Algorithm"naive", A, ψ; kwargs...)
 
   N = length(A)
   if N != length(ψ)
-    throw(DimensionMismatch("lengths of MPO ($N) and MPS ($(length(ψ))) do not match"))
+    throw(DimensionMismatch("lengths of MPO ($N) and MPS
+    ($(length(ψ))) do not match"))
   end
 
   ψ_out = typeof(ψ)(N)
@@ -715,17 +765,21 @@ end
 
 function contract(::Algorithm"zipup", A::MPO, B::MPO; kwargs...)
   if hassameinds(siteinds, A, B)
-    error(
-      "In `contract(A::MPO, B::MPO)`, MPOs A and B have the same site indices. The indices of the MPOs in the contraction are taken literally, and therefore they should only share one site index per site so the contraction results in an MPO. You may want to use `replaceprime(contract(A', B), 2 => 1)` or `apply(A, B)` which automatically adjusts the prime levels assuming the input MPOs have pairs of primed and unprimed indices.",
-    )
+    error("In `contract(A::MPO, B::MPO)`, MPOs A and B have the same site indices.
+          The indices of the MPOs in the contraction are taken literally, and
+          therefore they should only share one site index per site so the
+          contraction results in an MPO. You may want to use
+          `replaceprime(contract(A', B), 2 => 1)` or `apply(A, B)` which
+          automatically adjusts the prime levels assuming the input MPOs have
+          pairs of primed and unprimed indices.",)
   end
   cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
   resp_degen::Bool = get(kwargs, :respect_degenerate, true)
   maxdim::Int = get(kwargs, :maxdim, maxlinkdim(A) * maxlinkdim(B))
   mindim::Int = max(get(kwargs, :mindim, 1), 1)
   N = length(A)
-  N != length(B) &&
-    throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
+  N != length(B) && throw(DimensionMismatch("lengths of MPOs A ($N) and B
+                    ($(length(B))) do not match"))
   # Special case for a single site
   N == 1 && return MPO([A[1] * B[1]])
   A = orthogonalize(A, 1)
@@ -771,8 +825,9 @@ end
 """
     apply(A::MPO, B::MPO; kwargs...)
 
-Contract the `MPO` `A'` with the `MPO` `B` and then map the prime level of the resulting
-MPO back to having pairs of indices with prime levels of 1 and 0.
+Contract the `MPO` `A'` with the `MPO` `B` and then map the prime level
+of the resulting MPO back to having pairs of indices with prime
+levels of 1 and 0.
 
 Equivalent to `replaceprime(contract(A', B; kwargs...), 2 => 1)`.
 
@@ -793,45 +848,58 @@ contract_mpo_mpo_doc = """
     contract(A::MPO, B::MPO; kwargs...) -> MPO
     *(::MPO, ::MPO; kwargs...) -> MPO
 
-Contract the `MPO` `A` with the `MPO` `B`, returning an `MPO` with the 
-site indices that are not shared between `A` and `B`.
+  Contract the `MPO` `A` with the `MPO` `B`, returning an `MPO` with the
+  site indices that are not shared between `A` and `B`.
 
-If you are contracting two MPOs with the same sets of indices, likely you
-want to call something like:
-```julia
-C = contract(A', B; cutoff=1e-12)
-C = replaceprime(C, 2 => 1)
-```
-That is because if MPO `A` has the index structure `-s'-A-s-` and MPO `B`
-has the Index structure `-s'-B-s-`, if we only want to contract over
-on set of the indices, we would do `(-s'-A-s-)'-s'-B-s- = -s''-A-s'-s'-B-s- = -s''-C-s-`,
-and then map the prime levels back to pairs of primed and unprimed indices with:
-`replaceprime(-s''-C-s-, 2 => 1) = -s'-C-s-`.
+  If you are contracting two MPOs with the same sets of indices, likely you
+  want to call something like:
+  ```julia
+  C = contract(A', B; cutoff=1e-12)
+  C = replaceprime(C, 2 => 1)
+  ```
+  That is because if MPO `A` has the index structure `-s'-A-s-` and MPO `B`
+  has the Index structure `-s'-B-s-`, if we only want to contract over
+  on set of the indices, we would do `(-s'-A-s-)'-s'-B-s- = -s''-A-s'-s'-B-s- = -s''-C-s-`,
+  and then map the prime levels back to pairs of primed and unprimed indices with:
+  `replaceprime(-s''-C-s-, 2 => 1) = -s'-C-s-`.
 
-Since this is a common use case, you can use the convenience function:
-```julia
-C = apply(A, B; cutoff=1e-12)
-```
-which is the same as the code above.
+  Since this is a common use case, you can use the convenience function:
+  ```julia
+  C = apply(A, B; cutoff=1e-12)
+  ```
+  which is the same as the code above.
 
-If you are contracting MPOs that have diverging norms, such as MPOs representing sums of local
-operators, the truncation can become numerically unstable (see https://arxiv.org/abs/1909.06341 for
-a more numerically stable alternative). For now, you can use the following options to contract
-MPOs like that:
-```julia
-C = contract(A, B; alg="naive", truncate=false)
-# Bring the indices back to pairs of primed and unprimed
-C = apply(A, B; alg="naive", truncate=false)
-```
+  If you are contracting MPOs that have diverging norms, such as MPOs representing sums of local
+  operators, the truncation can become numerically unstable
+  (see https://arxiv.org/abs/1909.06341 for a more numerically stable alternative).
+  For now, you can use the following options to contract
+  MPOs like that:
 
-# Keywords
-- `cutoff::Float64=1e-14`: the cutoff value for truncating the density matrix eigenvalues. Note that the default is somewhat arbitrary and subject to change, in general you should set a `cutoff` value.
-- `maxdim::Int=maxlinkdim(A) * maxlinkdim(B))`: the maximal bond dimension of the results MPS.
-- `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
-- `alg="zipup"`: Either `"zipup"` or `"naive"`. `"zipup"` contracts pairs of site tensors and truncates with SVDs in a sweep across the sites, while `"naive"` first contracts pairs of tensor exactly and then truncates at the end if `truncate=true`.
-- `truncate=true`: Enable or disable truncation. If `truncate=false`, ignore other truncation parameters like `cutoff` and `maxdim`. This is most relevant for the `"naive"` version, if you just want to contract the tensors pairwise exactly. This can be useful if you are contracting MPOs that have diverging norms, such as MPOs originating from sums of local operators.
+  ```julia
+  C = contract(A, B; alg="naive", truncate=false)
+  # Bring the indices back to pairs of primed and unprimed
+  C = apply(A, B; alg="naive", truncate=false)
+  ```
 
-See also [`apply`](@ref) for details about the arguments available.
+  # Keywords
+  - `cutoff::Float64=1e-14`: the cutoff value for truncating the density matrix
+     eigenvalues. Note that the default is somewhat arbitrary and subject to
+     change, in general you should set a `cutoff` value.
+  - `maxdim::Int=maxlinkdim(A) * maxlinkdim(B))`: the maximal bond dimension
+     of the results MPS.
+  - `mindim::Int=1`: the minimal bond dimension of the resulting MPS.
+  - `alg="zipup"`: Either `"zipup"` or `"naive"`. `"zipup"` contracts pairs of
+     site tensors and truncates with SVDs in a sweep across the sites, while
+     `"naive"` first contracts pairs of tensor exactly and then truncates at
+     the end if `truncate=true`.
+  - `truncate=true`: Enable or disable truncation. If `truncate=false`, ignore
+     other truncation parameters like `cutoff` and `maxdim`. This is most
+     relevant for the `"naive"` version, if you just want to contract the
+       tensors pairwise exactly. This can be useful if you are contracting MPOs
+       that have diverging norms, such as MPOs originating from sums of local
+       operators.
+
+  See also [`apply`](@ref) for details about the arguments available.
 """
 
 @doc """

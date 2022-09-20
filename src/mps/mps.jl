@@ -2,8 +2,8 @@
 """
     MPS
 
-A finite size matrix product state type.
-Keeps track of the orthogonality center.
+  A finite size matrix product state type.
+  Keeps track of the orthogonality center.
 """
 mutable struct MPS <: AbstractMPS
   data::Vector{ITensor}
@@ -20,7 +20,7 @@ set_data(A::MPS, data::Vector{ITensor}) = MPS(data, A.llim, A.rlim)
 @doc """
     MPS(v::Vector{<:ITensor})
 
-Construct an MPS from a Vector of ITensors.
+  Construct an MPS from a Vector of ITensors.
 """ MPS(v::Vector{<:ITensor})
 
 """
@@ -43,12 +43,14 @@ end
 """
     MPS([::Type{ElT} = Float64, ]sites; linkdims=1)
 
-Construct an MPS filled with Empty ITensors of type `ElT` from a collection of indices.
+Construct an MPS filled with Empty ITensors of type `ElT` from a
+collection of indices.
 
-Optionally specify the link dimension with the keyword argument `linkdims`, which by default is 1.
+Optionally specify the link dimension with the keyword argument `linkdims`,
+which by default is 1.
 
-In the future we may generalize `linkdims` to allow specifying each individual link dimension as a vector,
-and additionally allow specifying quantum numbers.
+In the future we may generalize `linkdims` to allow specifying each individual
+link dimension as a vector, and additionally allow specifying quantum numbers.
 """
 function MPS(
   ::Type{T}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
@@ -136,7 +138,10 @@ function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, l
   setleftlim!(M, 0)
   setrightlim!(M, 2)
   if dim(commonind(M[c], M[c + 1])) < _linkdims[c]
-    @warn "MPS center bond dimension is less than requested (you requested $(_linkdims[c]), but in practice it is $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities of truncating quantum number sectors."
+    @warn "MPS center bond dimension is less than requested
+    (you requested $(_linkdims[c]), but in practice it is
+    $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities
+    of truncating quantum number sectors."
   end
 end
 
@@ -327,7 +332,7 @@ MPS(ivals::Vector{<:Pair{<:Index}}) = MPS(Float64, ivals)
 Construct a product state MPS of element type `T`, having
 site indices `sites`, and which corresponds to the initial
 state given by the array `states`. The input `states` may
-be an array of strings or an array of ints recognized by the 
+be an array of strings or an array of ints recognized by the
 `state` function defined for the relevant Index tag type.
 In addition, a single string or int can be input to create
 a uniform state.
@@ -398,7 +403,7 @@ end
 Construct a product state MPS having
 site indices `sites`, and which corresponds to the initial
 state given by the array `states`. The `states` array may
-consist of either an array of integers or strings, as 
+consist of either an array of integers or strings, as
 recognized by the `state` function defined for the relevant
 Index tag type.
 
@@ -604,14 +609,17 @@ _op_prod(o1::Matrix{<:Number}, o2::Matrix{<:Number}) = o1 * o2
                        kwargs...)
 
 Given an MPS psi and two strings denoting
-operators (as recognized by the `op` function), 
+operators (as recognized by the `op` function),
 computes the two-point correlation function matrix
 C[i,j] = <psi| Op1i Op2j |psi>
 using efficient MPS techniques. Returns the matrix C.
 
 # Optional Keyword Arguments
-- `site_range = 1:length(psi)`: compute correlations only for sites in the given range
-- `ishermitian = false` : if `false`, force independent calculations of the matrix elements above and below the diagonal, while if `true` assume they are complex conjugates.
+- `site_range = 1:length(psi)`: compute correlations only for sites in the
+   given range
+- `ishermitian = false` : if `false`, force independent calculations of the
+   matrix elements above and below the diagonal, while if `true` assume
+   they are complex conjugates.
 
 For a correlation matrix of size NxN and an MPS of typical
 bond dimension m, the scaling of this algorithm is N^2*m^3.
@@ -629,7 +637,7 @@ Czz = correlation_matrix(psi,[1/2 0; 0 -1/2],[1/2 0; 0 -1/2]) # same as above
 s = siteinds("Electron",N; conserve_qns=true)
 psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
 Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
-``` 
+```
 """
 function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   N = length(psi)
@@ -843,10 +851,10 @@ end
     expect(psi::MPS, ops; kwargs...)
 
 Given an MPS `psi` and a single operator name, returns
-a vector of the expected value of the operator on 
-each site of the MPS. 
+a vector of the expected value of the operator on
+each site of the MPS.
 
-If multiple operator names are provided, returns a tuple 
+If multiple operator names are provided, returns a tuple
 of expectation value vectors.
 
 If a container of operator names is provided, returns the
@@ -882,7 +890,8 @@ function expect(psi::MPS, ops; kwargs...)
   s = siteinds(psi)
 
   if haskey(kwargs, :site_range)
-    @warn "The `site_range` keyword arg. to `expect` is deprecated: use the keyword `sites` instead"
+    @warn "The `site_range` keyword arg. to `expect` is deprecated: use the
+      keyword `sites` instead"
     sites = kwargs[:site_range]
   else
     sites = get(kwargs, :sites, 1:N)

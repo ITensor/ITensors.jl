@@ -1,4 +1,4 @@
-
+# are these actually deprecated? They do not have the macro
 unique_siteind(A::AbstractMPS, B::AbstractMPS, j::Integer) = siteinds(uniqueind, A, B, j)
 
 unique_siteinds(A::AbstractMPS, B::AbstractMPS, j::Integer) = siteinds(uniqueinds, A, B, j)
