@@ -157,14 +157,14 @@ a tensor `N` acting on the right indices of `T` such that `T*N` is zero.
 The returned tensor `N` will also have a new index with the label "n" which
 indexes through the 'vectors' in the null space.
 
-For example, if `T` has the indices `i,j,k`, calling 
+For example, if `T` has the indices `i,j,k`, calling
 `N = nullspace(T,i,k)` returns `N` with index `j` such that
 
-           ___       ___
-      i --|   |     |   |
-          | T |--j--| N |--n  ≈ 0
-      k --|   |     |   |
-           ---       ---
+             ___       ___
+        i --|   |     |   |
+            | T |--j--| N |--n  ≈ 0
+        k --|   |     |   |
+             ---       ---
 
 The index `n` can be obtained by calling
 `n = uniqueindex(N,T)`
@@ -174,8 +174,9 @@ which case the precise `atol` value that gives a certain null space size may cha
 in future versions of ITensor.
 
 Keyword arguments:
-- `atol::Float64=1E-12` - singular values of T†*T below this value define the null space
-- `tags::String="n"` - choose the tags of the index selecting elements of the null space
+
+  - `atol::Float64=1E-12` - singular values of T†*T below this value define the null space
+  - `tags::String="n"` - choose the tags of the index selecting elements of the null space
 """
 function nullspace(T::ITensor, is...; tags="n", atol=1E-12, kwargs...)
   M, CL, CR = matricize(T, is...)

@@ -122,7 +122,7 @@ Base.:!(ts::TagSet) = Not(ts)
 not(ts::AbstractString) = Not(ts)
 
 """
-ITensors.data(T::TagSet)
+    ITensors.data(T::TagSet)
 
 Get the raw storage of the TagSet.
 
@@ -242,10 +242,13 @@ end
 Iterate over the Tag's in a TagSet.
 
 # Example
+
 ```jldoctest
 julia> using ITensors;
 
+
 julia> tagset = TagSet("l, tags");
+
 
 julia> for tag in tagset
          println(tag)

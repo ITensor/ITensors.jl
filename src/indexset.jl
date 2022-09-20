@@ -5,11 +5,13 @@ end
 
 @doc """
    Order{N}
-A value type representing the order of an ITensor.
+
+  A value type representing the order of an ITensor.
 """ Order
 
 """
-   Order(N) = Order{N}()
+Order(N) = Order{N}()
+
 Create an instance of the value type Order representing
 the order of an ITensor.
 """
@@ -129,13 +131,13 @@ function NDTensors.similartype(
 end
 
 ## # This is to help with some generic programming in the Tensor
-## # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the 
+## # code (it helps to construct an IndexSet(::NTuple{N,Index}) where the
 ## # only known thing for dispatch is a concrete type such
 ## # as IndexSet{4})
-## 
+##
 ## #NDTensors.similartype(::Type{<:IndexSet},
 ## #                      ::Val{N}) where {N} = IndexSet
-## 
+##
 ## #NDTensors.similartype(::Type{<:IndexSet},
 ## #                      ::Type{Val{N}}) where {N} = IndexSet
 
@@ -194,7 +196,7 @@ Return a TagSet of the tags that are common to all of the indices.
 """
 commontags(is::Indices) = commontags(is...)
 
-# 
+#
 # Set operations
 #
 
@@ -222,6 +224,7 @@ The function returns true if the Index matches
 the provided pattern, and false otherwise.
 
 For example:
+
 ```
 i = Index(2, "s")
 fmatch("s")(i) == true
@@ -251,7 +254,7 @@ fmatch(::Nothing) = ftrue
                       plev = nothing,
                       id = nothing) -> Function
 
-An internal function that returns a function 
+An internal function that returns a function
 that accepts an Index that checks if the
 Index matches the provided conditions.
 """
@@ -294,12 +297,12 @@ getfirst(is::Indices, args...; kwargs...) = getfirst(fmatch(args...; kwargs...),
 
 Base.findall(is::Indices, args...; kwargs...) = findall(fmatch(args...; kwargs...), is)
 
-# In general this isn't defined for Tuple but is 
+# In general this isn't defined for Tuple but is
 # defined for Vector
 """
     indexin(ais::Indices, bis::Indices)
 
-For collections of Indices, returns the first location in 
+For collections of Indices, returns the first location in
 `bis` for each value in `ais`.
 """
 function Base.indexin(ais::Indices, bis::Indices)
@@ -429,7 +432,7 @@ CartesianIndices(is::Indices) = CartesianIndices(_Tuple(dims(is)))
     eachval(is::Index...)
     eachval(is::Tuple{Vararg{Index}})
 
-Create an iterator whose values correspond to a 
+Create an iterator whose values correspond to a
 Cartesian indexing over the dimensions
 of the provided `Index` objects.
 """
@@ -443,12 +446,14 @@ eachval(is::Tuple{Vararg{Index}}) = CartesianIndices(dims(is))
 Create an iterator whose values are Index=>value pairs
 corresponding to a Cartesian indexing over the dimensions
 of the provided `Index` objects.
+
 # Example
+
 ```julia
-i = Index(3; tags = "i")
-j = Index(2; tags = "j")
-T = randomITensor(j,i)
-for iv in eachindval(i,j)
+i = Index(3; tags="i")
+j = Index(2; tags="j")
+T = randomITensor(j, i)
+for iv in eachindval(i, j)
   @show T[iv...]
 end
 ```
@@ -604,11 +609,8 @@ mergeblocks(is::Indices) = map(mergeblocks, is)
 # setdirs(is1::Indices, is2::Indices)
 #
 function permute(is1::Indices, is2::Indices)
-  length(is1) != length(is2) && throw(
-    ArgumentError(
-      "length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))",
-    ),
-  )
+  length(is1) != length(is2) &&
+    throw(ArgumentError("length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))",),)
   perm = getperm(is1, is2)
   return is1[invperm(perm)]
 end
@@ -630,9 +632,7 @@ function compute_contraction_labels(Ais::Tuple, Bis::Tuple)
     Bis_j = @inbounds Bis[j]
     if Ais_i == Bis_j
       if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
-        error(
-          "Attempting to contract IndexSet:\n\n$(Ais)\n\nwith IndexSet:\n\n$(Bis)\n\nQN indices must have opposite direction to contract, but indices:\n\n$(Ais_i)\n\nand:\n\n$(Bis_j)\n\ndo not have opposite directions.",
-        )
+        error("Attempting to contract IndexSet:\n\n$(Ais)\n\nwith IndexSet:\n\n$(Bis)\n\nQN indices must have opposite direction to contract, but indices:\n\n$(Ais_i)\n\nand:\n\n$(Bis_j)\n\ndo not have opposite directions.",)
       end
       Alabels[i] = Blabels[j] = -(1 + ncont)
       ncont += 1
@@ -664,17 +664,13 @@ function compute_contraction_labels(Cis::Tuple, Ais::Tuple, Bis::Tuple)
     locA = findfirst(==(Cis[i]), Ais)
     if !isnothing(locA)
       if Alabels[locA] < 0
-        error(
-          "The noncommon indices of $Ais and $Bis must be the same as the indices $Cis."
-        )
+        error("The noncommon indices of $Ais and $Bis must be the same as the indices $Cis.")
       end
       Clabels[i] = Alabels[locA]
     else
       locB = findfirst(==(Cis[i]), Bis)
       if isnothing(locB) || Blabels[locB] < 0
-        error(
-          "The noncommon indices of $Ais and $Bis must be the same as the indices $Cis."
-        )
+        error("The noncommon indices of $Ais and $Bis must be the same as the indices $Cis.")
       end
       Clabels[i] = Blabels[locB]
     end
@@ -749,7 +745,7 @@ end
 """
     dirs(is::Indices, inds)
 
-Return a tuple of the directions of the indices `inds` in 
+Return a tuple of the directions of the indices `inds` in
 the Indices `is`, in the order they are found in `inds`.
 """
 function dirs(is1::Indices, inds)
@@ -811,6 +807,7 @@ ndiagblocks(inds) = minimum(nblocks(inds))
     flux(inds::Indices, block::Tuple{Vararg{Int}})
 
 Get the flux of the specified block, for example:
+
 ```
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))
@@ -834,6 +831,7 @@ end
 
 Get the flux of the block that the specified
 index falls in.
+
 ```
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))
@@ -854,10 +852,10 @@ is subject to change.
 # Examples
 
 ```julia
-i = Index(QN(0)=>2, QN(1)=>2)
+i = Index(QN(0) => 2, QN(1) => 2)
 is = (i, dag(i'))
-ITensors.block(is, 3, 1) == (2,1)
-ITensors.block(is, 1, 2) == (1,1)
+ITensors.block(is, 3, 1) == (2, 1)
+ITensors.block(is, 1, 2) == (1, 1)
 ```
 """
 block(inds::Indices, vals::Integer...) = blockindex(inds, vals...)[2]

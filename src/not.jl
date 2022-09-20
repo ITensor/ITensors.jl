@@ -1,4 +1,5 @@
-
+### Should this be with the prime information?
+# Maybe better to have a prime.jl file?
 #
 # not syntax (to prime or tag the compliment
 # of the specified indices/pattern)

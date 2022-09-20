@@ -19,15 +19,17 @@ end
 @noinline _index_id_rng_length_assert() = @assert false "0 < tid <= length(INDEX_ID_RNGs)"
 
 """
-An `Index` represents a single tensor index with fixed dimension `dim`. Copies of an Index compare equal unless their 
-`tags` are different.
+An `Index` represents a single tensor index with fixed dimension `dim`.
+Copies of an Index compare equal unless their `tags` are different.
 
-An Index carries a `TagSet`, a set of tags which are small strings that specify properties of the `Index` to help 
-distinguish it from other Indices. There is a special tag which is referred to as the integer tag or prime 
-level which can be incremented or decremented with special priming functions.
+An Index carries a `TagSet`, a set of tags which are small strings that specify
+properties of the `Index` to help distinguish it from other Indices. There is a
+special tag which is referred to as the integer tag or prime level which can be
+incremented or decremented with special priming functions.
 
-Internally, an `Index` has a fixed `id` number, which is how the ITensor library knows two indices are copies of a 
-single original `Index`. `Index` objects must have the same `id`, as well as the `tags` to compare equal.
+Internally, an `Index` has a fixed `id` number, which is how the ITensor library
+knows two indices are copies of a single original `Index`. `Index` objects must
+have the same `id`, as well as the `tags` to compare equal.
 """
 struct Index{T}
   id::IDType
@@ -56,8 +58,9 @@ Create an `Index` with a unique `id`, a TagSet given by `tags`,
 and a prime level `plev`.
 
 # Examples
+
 ```jldoctest; filter=r"id=[0-9]{1,3}"
-julia> i = Index(2; tags = "l", plev = 1)
+julia> i = Index(2; tags="l", plev=1)
 (dim=2|id=818|"l")'
 
 julia> dim(i)
@@ -85,6 +88,7 @@ length(i::Index) = 1
 Create an `Index` with a unique `id` and a tagset given by `tags`.
 
 # Examples
+
 ```jldoctest; filter=r"id=[0-9]{1,3}"
 julia> i = Index(2, "l,tag")
 (dim=2|id=58|"l,tag")
@@ -130,7 +134,8 @@ space(i::Index) = i.space
 """
     dir(i::Index)
 
-Return the direction of an `Index` (`ITensors.In`, `ITensors.Out`, or `ITensors.Neither`).
+Return the direction of an `Index` (`ITensors.In`,
+`ITensors.Out`, or `ITensors.Neither`).
 """
 dir(i::Index) = i.dir
 
@@ -249,10 +254,11 @@ NDTensors.dag(i::Index) = dag(i)
     hastags(i::Index, ts::Union{AbstractString,TagSet})
 
 Check if an `Index` `i` has the provided tags,
-which can be a string of comma-separated tags or 
+which can be a string of comma-separated tags or
 a TagSet object.
 
 # Examples
+
 ```jldoctest; filter=r"id=[0-9]{1,3}"
 julia> i = Index(2, "SpinHalf,Site,n=3")
 (dim=2|id=861|"Site,SpinHalf,n=3")
@@ -274,6 +280,7 @@ hastags(ts::Union{AbstractString,TagSet}) = x -> hastags(x, ts)
 Check if an `Index` `i` has the provided prime level.
 
 # Examples
+
 ```jldoctest; filter=r"id=[0-9]{1,3}"
 julia> i = Index(2; plev=2)
 (dim=2|id=543)''
@@ -311,6 +318,7 @@ hasind(s::Index) = x -> hasind(x, s)
 Check if an `Index` `i` has the provided id.
 
 # Examples
+
 ```jldoctest; filter=r"id=[0-9]{1,3}"
 julia> i = Index(2)
 (dim=2|id=321)
@@ -334,10 +342,11 @@ hasid(i::IDType) = x -> hasid(x, i)
 
 Return a copy of Index `i` with
 tags replaced by the ones given
-The `ts` argument can be a comma-separated 
+The `ts` argument can be a comma-separated
 string of tags or a TagSet.
 
 # Examples
+
 ```jldoctest; filter=r"id=[0-9]{1,3}"
 julia> i = Index(2, "SpinHalf,Site,n=3")
 (dim=2|id=543|"Site,SpinHalf,n=3")
@@ -345,7 +354,7 @@ julia> i = Index(2, "SpinHalf,Site,n=3")
 julia> hastags(i, "Link")
 false
 
-julia> j = settags(i,"Link,n=4")
+julia> j = settags(i, "Link,n=4")
 (dim=2|id=543|"Link,n=4")
 
 julia> hastags(j, "Link")
@@ -364,7 +373,7 @@ setspace(i::Index, s) = Index(id(i), s, dir(i), tags(i), plev(i))
 
 Return a copy of Index `i` with the
 specified tags added to the existing ones.
-The `ts` argument can be a comma-separated 
+The `ts` argument can be a comma-separated
 string of tags or a TagSet.
 """
 addtags(i::Index, ts) = settags(i, addtags(tags(i), ts))
@@ -389,8 +398,9 @@ any other tags. The arguments `tsold` and `tsnew` can be
 comma-separated strings of tags, or TagSet objects.
 
 # Examples
+
 ```jldoctest; filter=r"id=[0-9]{1,3}"
-julia> i = Index(2; tags = "l,x", plev = 1)
+julia> i = Index(2; tags="l,x", plev=1)
 (dim=2|id=83|"l,x")'
 
 julia> replacetags(i, "l", "m")
@@ -443,7 +453,7 @@ Prime an Index using the notation `i^3`.
 Base.:^(i::Index, pl::Int) = prime(i, pl)
 
 """
-Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
+    Iterating over Index `I` gives the IndexVals `I(1)` through `I(dim(I))`.
 """
 function Base.iterate(i::Index, state::Int=1)
   Base.depwarn(
@@ -481,7 +491,7 @@ eachval(i::Index) = 1:dim(i)
 Create an iterator whose values are Pairs of
 the form `i=>n` with `n` from `1:dim(i)`.
 This iterator is useful for accessing elements of
-an ITensor in a loop without needing to know 
+an ITensor in a loop without needing to know
 the ordering of the indices. See also
 [`eachindval(is::Index...)`](@ref).
 """

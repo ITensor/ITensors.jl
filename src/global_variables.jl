@@ -10,7 +10,7 @@ const warn_order = Ref{Union{Int,Nothing}}(default_warn_order)
 """
     ITensors.get_warn_order()
 
-Return the threshold for the order of an ITensor above which 
+Return the threshold for the order of an ITensor above which
 ITensors will emit a warning.
 
 You can set the threshold with the function `set_warn_order!(N::Int)`.
@@ -26,7 +26,8 @@ that result in ITensors above the order `N`.
 This function returns the initial warning threshold (what it was
 set to before this function was called).
 
-You can get the current threshold with the function `ITensors.get_warn_order(N::Int)`. You can reset to the default value with
+You can get the current threshold with the function
+`ITensors.get_warn_order(N::Int)`. You can reset to the default value with
 `ITensors.reset_warn_order()`.
 """
 function set_warn_order(N::Union{Int,Nothing})
@@ -38,12 +39,12 @@ end
 """
     ITensors.reset_warn_order()
 
-After this is called, ITensor will warn about ITensor contractions
-that result in ITensors above the default order 
-$default_warn_order.
+  After this is called, ITensor will warn about ITensor contractions
+  that result in ITensors above the default order
+  $default_warn_order.
 
-This function returns the initial warning threshold (what it was
-set to before this function was called).
+  This function returns the initial warning threshold (what it was
+  set to before this function was called).
 """
 reset_warn_order() = set_warn_order(default_warn_order)
 
@@ -64,6 +65,7 @@ disable_warn_order() = set_warn_order(nothing)
 Disable warning about the ITensor order in a block of code.
 
 # Examples
+
 ```julia
 A = ITensor(IndexSet(_ -> Index(1), Order(8)))
 B = ITensor(IndexSet(_ -> Index(1), Order(8)))
@@ -90,6 +92,7 @@ Temporarily set the order threshold for warning about the ITensor
 order in a block of code.
 
 # Examples
+
 ```julia
 @set_warn_order 12 A * B
 
@@ -111,13 +114,13 @@ end
 """
     @reset_warn_order
 
-Temporarily sets the order threshold for warning about the ITensor
-order in a block of code to the default value $default_warn_order.
+  Temporarily sets the order threshold for warning about the ITensor
+  order in a block of code to the default value $default_warn_order.
 
-# Examples
-```julia
-@reset_warn_order A * B
-```
+  # Examples
+  ```julia
+  @reset_warn_order A * B
+  ```
 """
 macro reset_warn_order(block)
   quote
@@ -133,17 +136,17 @@ end
 #
 
 """
-$(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
+    $(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
 """
 using_threaded_blocksparse() = NDTensors._using_threaded_blocksparse[]
 
 """
-$(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
+    $(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
 """
 enable_threaded_blocksparse() = NDTensors._enable_threaded_blocksparse()
 
 """
-$(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
+    $(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
 """
 disable_threaded_blocksparse() = NDTensors._disable_threaded_blocksparse()
 
