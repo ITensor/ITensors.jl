@@ -257,15 +257,15 @@ function mera_2d_4_to_1(dχ; indlabels=indlabels)
   @show hassameinds(sequence_inds, noncommoninds(network...))
   @show sequence_cost
   @show 4dχ^26 +
-    2dχ^25 +
-    2dχ^23 +
-    3dχ^22 +
-    3dχ^20 +
-    dχ^16 +
-    dχ^14 +
-    dχ^13 +
-    dχ^12 +
-    4dχ^8 +
-    4dχ^7
+        2dχ^25 +
+        2dχ^23 +
+        3dχ^22 +
+        3dχ^20 +
+        dχ^16 +
+        dχ^14 +
+        dχ^13 +
+        dχ^12 +
+        4dχ^8 +
+        4dχ^7
   return (sequence=sequence, sequence_labels=sequence_labels, sequence_cost=sequence_cost)
 end

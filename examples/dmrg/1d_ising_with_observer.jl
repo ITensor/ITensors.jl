@@ -4,7 +4,7 @@
 using ITensors
 
 """
-  Get MPO of transverse field Ising model Hamiltonian with field strength h
+Get MPO of transverse field Ising model Hamiltonian with field strength h
 """
 function tfimMPO(sites, h::Float64)
   # Input operator terms which define a Hamiltonian

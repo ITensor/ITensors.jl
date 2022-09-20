@@ -6,15 +6,21 @@ settings = ArgParseSettings()
   help = "Number of sites"
   arg_type = Int
   default = 20
-  "--Npart"
+  """
+  --Npart
+  """
   help = "Number of particles"
   arg_type = Int
   default = 10
-  "--t1"
+  """
+  --t1
+  """
   help = "Nearest neighbor hopping"
   arg_type = Float64
   default = 1.0
-  "--t2"
+  """
+  --t2
+  """
   help = "Next-nearest neighbor hopping"
   arg_type = Float64
   default = 0.2
@@ -30,12 +36,16 @@ settings = ArgParseSettings()
   help = "Number of sweeps of DMRG"
   arg_type = Int64
   default = 6
-  "--maxdim"
+  """
+  --maxdim
+  """
   help = "Maximum bond dimension in DMRG"
   nargs = '+'
   arg_type = Int64
   default = [50, 100, 200, 400, 800]
-  "--mindim"
+  """
+  --mindim
+  """
   help = "Minimum bond dimension in DMRG"
   nargs = '+'
   arg_type = Int64
@@ -45,12 +55,16 @@ settings = ArgParseSettings()
   nargs = '+'
   arg_type = Float64
   default = [1e-12]
-  "--noise"
+  """
+  --noise
+  """
   help = "Magnitude of noise to add in DMRG"
   nargs = '+'
   arg_type = Float64
   default = [1e-7, 1e-8, 1e-10, 0, 1e-11, 0]
-  "input_file"
+  """
+  input_file
+  """
   help = "Input file"
   arg_type = String
 end
