@@ -599,9 +599,9 @@ end
 function reshape(blockT::Block{NT}, indsT, indsR) where {NT}
   nblocksT = nblocks(indsT)
   nblocksR = nblocks(indsR)
-  blockR = Tuple(
-    CartesianIndices(nblocksR)[LinearIndices(nblocksT)[CartesianIndex(blockT)]]
-  )
+  blockR = Tuple(CartesianIndices(nblocksR)[LinearIndices(nblocksT)[CartesianIndex(
+    blockT
+  )]])
   return blockR
 end
 
@@ -1175,9 +1175,9 @@ function reshape(boffsT::BlockOffsets{NT}, indsT, indsR) where {NT}
   nblocksT = nblocks(indsT)
   nblocksR = nblocks(indsR)
   for (blockT, offsetT) in pairs(boffsT)
-    blockR = Block(
-      CartesianIndices(nblocksR)[LinearIndices(nblocksT)[CartesianIndex(blockT)]]
-    )
+    blockR = Block(CartesianIndices(nblocksR)[LinearIndices(nblocksT)[CartesianIndex(
+      blockT
+    )]])
     insert!(boffsR, blockR, offsetT)
   end
   return boffsR

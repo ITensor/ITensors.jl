@@ -478,9 +478,7 @@ function contract!(
       contract!(C, Clabels, dense(A), Alabels, B, Blabels, α, β)
     else
       if !isone(α) || !iszero(β)
-        error(
-          "`contract!(::DenseTensor, ::DiagTensor, ::DenseTensor, α, β; convert_to_dense = false)` with `α ≠ 1` or `β ≠ 0` is not currently supported. You can call it with `convert_to_dense = true` instead.",
-        )
+        error("`contract!(::DenseTensor, ::DiagTensor, ::DenseTensor, α, β; convert_to_dense = false)` with `α ≠ 1` or `β ≠ 0` is not currently supported. You can call it with `convert_to_dense = true` instead.",)
       end
       astarts = zeros(Int, length(Alabels))
       bstart = 0

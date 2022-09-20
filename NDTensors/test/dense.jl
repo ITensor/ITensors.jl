@@ -220,7 +220,7 @@ using Test
     backend_auto()
     @test NDTensors.gemm_backend[] == :Auto
     @test NDTensors.auto_select_backend(typeof.((a, b, c))...) ==
-      NDTensors.GemmBackend(:BLAS)
+          NDTensors.GemmBackend(:BLAS)
     res1 = NDTensors._gemm!('N', 'N', 2.0, a, b, 0.2, copy(c))
     backend_blas()
     @test NDTensors.gemm_backend[] == :BLAS
@@ -238,7 +238,7 @@ using Test
     backend_auto()
     @test NDTensors.gemm_backend[] == :Auto
     @test NDTensors.auto_select_backend(typeof.((a, b, c))...) ==
-      NDTensors.GemmBackend(:BLAS)
+          NDTensors.GemmBackend(:BLAS)
     res1 = NDTensors._gemm!('N', 'N', 2.0, a, b, 0.2, copy(c))
     @test_throws UndefVarError backend_octavian()
     if VERSION >= v"1.5"

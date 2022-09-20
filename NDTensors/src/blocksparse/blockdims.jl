@@ -116,9 +116,7 @@ function blockdim(ind::BlockDim, i::Integer)
 end
 
 function blockdim(ind::Integer, i)
-  return error(
-    "`blockdim(i::Integer, b)` not currently defined for non-block index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.",
-  )
+  return error("`blockdim(i::Integer, b)` not currently defined for non-block index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.",)
 end
 
 """

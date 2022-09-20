@@ -54,9 +54,7 @@ end
 @traitfn function contract(
   t1::T1, labels_t1, t2::T2, labels_t2
 ) where {T1<:Tensor,T2<:Tensor;!CanContract{T1,T2}}
-  return error(
-    "Can't contract tensor of storage type $(storagetype(t1)) with tensor of storage type $(storagetype(t2)).",
-  )
+  return error("Can't contract tensor of storage type $(storagetype(t1)) with tensor of storage type $(storagetype(t2)).",)
 end
 
 function contract(T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR)
@@ -91,9 +89,8 @@ function contract!!(
   N2 = ndims(T2)
   if (N1 ≠ 0) && (N2 ≠ 0) && (N1 + N2 == NR)
     # Outer product
-    (α ≠ 1 || β ≠ 0) && error(
-      "contract!! not yet implemented for outer product tensor contraction with non-trivial α and β",
-    )
+    (α ≠ 1 || β ≠ 0) &&
+      error("contract!! not yet implemented for outer product tensor contraction with non-trivial α and β",)
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly
