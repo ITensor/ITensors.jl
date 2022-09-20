@@ -1,6 +1,6 @@
 
 """
-    space(::SiteType"Fermion"; 
+    space(::SiteType"Fermion";
           conserve_qns=false,
           conserve_nf=conserve_qns,
           conserve_nfparity=conserve_qns,
@@ -11,7 +11,8 @@
 
 Create the Hilbert space for a site of type "Fermion".
 
-Optionally specify the conserved symmetries and their quantum number labels.
+Optionally specify the conserved symmetries and their
+quantum number labels.
 """
 function ITensors.space(
   ::SiteType"Fermion";

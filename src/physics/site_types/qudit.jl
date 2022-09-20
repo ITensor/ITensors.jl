@@ -7,7 +7,8 @@
 
 Create the Hilbert space for a site of type "Qudit".
 
-Optionally specify the conserved symmetries and their quantum number labels.
+Optionally specify the conserved symmetries and their
+quantum number labels.
 """
 function ITensors.space(
   ::SiteType"Qudit";
@@ -69,7 +70,7 @@ function op(::OpName"N", ::SiteType"Qudit", d::Int)
 end
 op(on::OpName"n", st::SiteType"Qudit", d::Int) = op(alias(on), st, d)
 
-# two-body operators 
+# two-body operators
 function op(::OpName"ab", st::SiteType"Qudit", d1::Int, d2::Int)
   return kron(op(OpName("a"), st, d1), op(OpName("a"), st, d2))
 end

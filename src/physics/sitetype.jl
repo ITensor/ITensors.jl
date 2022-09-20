@@ -33,74 +33,77 @@ or to create new site types, you can follow the instructions
 
 The current built-in site types are:
 
-- `SiteType"S=1/2"` (or `SiteType"S=½"`)
-- `SiteType"S=1"`
-- `SiteType"Qubit"`
-- `SiteType"Qudit"`
-- `SiteType"Boson"`
-- `SiteType"Fermion"`
-- `SiteType"tJ"`
-- `SiteType"Electron"`
+    - `SiteType"S=1/2"` (or `SiteType"S=½"`)
+    - `SiteType"S=1"`
+    - `SiteType"Qubit"`
+    - `SiteType"Qudit"`
+    - `SiteType"Boson"`
+    - `SiteType"Fermion"`
+    - `SiteType"tJ"`
+    - `SiteType"Electron"`
 
 # Examples
 
-Tags on indices get turned into SiteTypes internally, and then
-we search for overloads of functions like `op` and `siteind`.
-For example:
-```julia
-julia> s = siteind("S=1/2")
-(dim=2|id=862|"S=1/2,Site")
+    Tags on indices get turned into SiteTypes internally, and then
+    we search for overloads of functions like `op` and `siteind`.
+    For example:
+    ```julia
+    julia> s = siteind("S=1/2")
+    (dim=2|id=862|"S=1/2,Site")
 
-julia> @show op("Sz", s);
-op(s, "Sz") = ITensor ord=2
-Dim 1: (dim=2|id=862|"S=1/2,Site")'
-Dim 2: (dim=2|id=862|"S=1/2,Site")
-NDTensors.Dense{Float64,Array{Float64,1}}
- 2×2
- 0.5   0.0
- 0.0  -0.5
+    julia> @show op("Sz", s);
+    op(s, "Sz") = ITensor ord=2
+    Dim 1: (dim=2|id=862|"S=1/2,Site")'
+    Dim 2: (dim=2|id=862|"S=1/2,Site")
+    NDTensors.Dense{Float64,Array{Float64,1}}
+     2×2
+     0.5   0.0
+     0.0  -0.5
 
-julia> @show op("Sx", s);
-op(s, "Sx") = ITensor ord=2
-Dim 1: (dim=2|id=862|"S=1/2,Site")'
-Dim 2: (dim=2|id=862|"S=1/2,Site")
-NDTensors.Dense{Float64,Array{Float64,1}}
- 2×2
- 0.0  0.5
- 0.5  0.0
+    julia> @show op("Sx", s);
+    op(s, "Sx") = ITensor ord=2
+    Dim 1: (dim=2|id=862|"S=1/2,Site")'
+    Dim 2: (dim=2|id=862|"S=1/2,Site")
+    NDTensors.Dense{Float64,Array{Float64,1}}
+     2×2
+     0.0  0.5
+     0.5  0.0
 
-julia> @show op("Sy", s);
-op(s, "Sy") = ITensor ord=2
-Dim 1: (dim=2|id=862|"S=1/2,Site")'
-Dim 2: (dim=2|id=862|"S=1/2,Site")
-NDTensors.Dense{Complex{Float64},Array{Complex{Float64},1}}
- 2×2
- 0.0 + 0.0im  -0.0 - 0.5im
- 0.0 + 0.5im   0.0 + 0.0im
+    julia> @show op("Sy", s);
+    op(s, "Sy") = ITensor ord=2
+    Dim 1: (dim=2|id=862|"S=1/2,Site")'
+    Dim 2: (dim=2|id=862|"S=1/2,Site")
+    NDTensors.Dense{Complex{Float64},Array{Complex{Float64},1}}
+     2×2
+     0.0 + 0.0im  -0.0 - 0.5im
+     0.0 + 0.5im   0.0 + 0.0im
 
-julia> s = siteind("Electron")
-(dim=4|id=734|"Electron,Site")
+    julia> s = siteind("Electron")
+    (dim=4|id=734|"Electron,Site")
 
-julia> @show op("Nup", s);
-op(s, "Nup") = ITensor ord=2
-Dim 1: (dim=4|id=734|"Electron,Site")'
-Dim 2: (dim=4|id=734|"Electron,Site")
-NDTensors.Dense{Float64,Array{Float64,1}}
- 4×4
- 0.0  0.0  0.0  0.0
- 0.0  1.0  0.0  0.0
- 0.0  0.0  0.0  0.0
- 0.0  0.0  0.0  1.0
-```
+    julia> @show op("Nup", s);
+    op(s, "Nup") = ITensor ord=2
+    Dim 1: (dim=4|id=734|"Electron,Site")'
+    Dim 2: (dim=4|id=734|"Electron,Site")
+    NDTensors.Dense{Float64,Array{Float64,1}}
+     4×4
+     0.0  0.0  0.0  0.0
+     0.0  1.0  0.0  0.0
+     0.0  0.0  0.0  0.0
+     0.0  0.0  0.0  1.0
+    ```
 
 Many operators are available, for example:
 
-- `SiteType"S=1/2"`: `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
-- `SiteType"Electron"`: `"Nup"`, `"Ndn"`, `"Nupdn"`, `"Ntot"`, `"Cup"`, `"Cdagup"`, `"Cdn"`, `"Cdagdn"`, `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
-- ...
+    - `SiteType"S=1/2"`: `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
+    - `SiteType"Electron"`: `"Nup"`, `"Ndn"`, `"Nupdn"`, `"Ntot"`,
+      `"Cup"`, `"Cdagup"`, `"Cdn"`, `"Cdagdn"`, `"Sz"`, `"Sx"`,
+      `"Sy"`, `"S+"`, `"S-"`, ...
+    - ...
 
 You can view the source code for the internal SiteType definitions
-and operators that are defined [here](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types).
+and operators that are defined
+[here](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types).
 """
 SiteType(s::AbstractString) = SiteType{Tag(s)}()
 
@@ -142,12 +145,12 @@ end
 OpName is a parameterized type which allows
 making strings into Julia types for the purpose
 of representing operator names.
-The main use of OpName is overloading the 
-`ITensors.op!` method which generates operators 
+The main use of OpName is overloading the
+`ITensors.op!` method which generates operators
 for indices with certain tags such as "S=1/2".
 
 To make a OpName type, you can use the string
-macro notation: `OpName"MyTag"`. 
+macro notation: `OpName"MyTag"`.
 
 To make an OpName value or object, you can use
 the notation: `OpName("myop")`
@@ -203,8 +206,8 @@ the Index `s` and an `OpName"opname"` argument
 that corresponds to the input operator name.
 
 Operator names can be combined using the `"*"`
-symbol, for example `"S+*S-"` or `"Sz*Sz*Sz"`. 
-The result is an ITensor made by forming each operator 
+symbol, for example `"S+*S-"` or `"Sz*Sz*Sz"`.
+The result is an ITensor made by forming each operator
 then contracting them together in a way corresponding
 to the usual operator product or matrix multiplication.
 
@@ -214,13 +217,17 @@ and can be used directly such as for applying
 operators to MPS.
 
 # Example
+
 ```julia
 s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
 
-To see all of the operator names defined for the site types included with
-ITensor, please [view the source code for each site type](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types). Note that some site types such as "S=1/2" and "Qubit" are aliases for each other and share operator definitions.
+To see all of the operator names defined for the site types
+included with ITensor, please view the
+[source code](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types)
+for each site type. Note that some site types such as "S=1/2"
+and "Qubit" are aliases for each other and share operator definitions.
 """
 function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   name = strip(name)
@@ -235,7 +242,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
 
   if !isempty(oplocs)
     @ignore_derivatives !isempty(kwargs) &&
-      error("Lazy algebra on parametric gates not allowed")
+                        error("Lazy algebra on parametric gates not allowed")
 
     # the string representation of algebra ops: ex ["+", "-", "+"]
     labels = name_split[oplocs]
@@ -365,11 +372,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
       end
     end
 
-    throw(
-      ArgumentError(
-        "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s)).",
-      ),
-    )
+    throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for
+                        operator name \"$name\" and Index tags: $(tags.(s)).",),)
   end
 
   #
@@ -388,11 +392,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
     end
   end
 
-  return throw(
-    ArgumentError(
-      "Overload of \"op\" or \"op!\" functions not found for operator name \"$name\" and Index tags: $(tags.(s)).",
-    ),
-  )
+  return throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for
+                             operator name \"$name\" and Index tags: $(tags.(s)).",),)
 end
 
 op(name::AbstractString; kwargs...) = error("Must input indices when creating an `op`.")
@@ -417,7 +418,7 @@ op(opname::AbstractString, t::SiteType; kwargs...) = op(OpName(opname), t; kwarg
     op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
 
 Return an ITensor corresponding to the operator
-named `opname` for the n'th Index in the array 
+named `opname` for the n'th Index in the array
 `sites`.
 
 # Example
@@ -484,16 +485,16 @@ ops(os::AbstractVector, s::Vector{<:Index}) = [op(oₙ, s) for oₙ in os]
     ops(s::Vector{<:Index}, os::Vector)
     ops(os::Vector, s::Vector{<:Index})
 
-Given a list of operators, create ITensors using the collection
-of indices.
+  Given a list of operators, create ITensors using the collection
+  of indices.
 
-# Examples
-```julia
-s = siteinds("Qubit", 4)
-os = [("H", 1), ("X", 2), ("CX", 2, 4)]
-# gates = ops(s, os)
-gates = ops(os, s)
-```
+  # Examples
+  ```julia
+  s = siteinds("Qubit", 4)
+  os = [("H", 1), ("X", 2), ("CX", 2, 4)]
+  # gates = ops(s, os)
+  gates = ops(os, s)
+  ```
 """ ops(::Vector{<:Index}, ::AbstractArray)
 
 #---------------------------------------
@@ -528,8 +529,8 @@ Return an ITensor corresponding to the state
 named `name` for the Index `s`. The returned
 ITensor will have `s` as its only index.
 
-The terminology here is based on the idea of a 
-single-site state or wavefunction in physics. 
+The terminology here is based on the idea of a
+single-site state or wavefunction in physics.
 
 The `state` function is implemented for various
 Index tags by overloading either the
@@ -542,12 +543,13 @@ The `state` system is used by the MPS type
 to construct product-state MPS and for other purposes.
 
 # Example
+
 ```julia
 s = Index(2, "Site,S=1/2")
-sup = state(s,"Up")
-sdn = state(s,"Dn")
-sxp = state(s,"X+")
-sxm = state(s,"X-")
+sup = state(s, "Up")
+sdn = state(s, "Dn")
+sxp = state(s, "X+")
+sxm = state(s, "X-")
 ```
 """
 function state(s::Index, name::AbstractString; kwargs...)::ITensor
@@ -584,11 +586,8 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
     !isnothing(v) && return itensor(v, s)
   end
 
-  return throw(
-    ArgumentError(
-      "Overload of \"state\" or \"state!\" functions not found for state name \"$name\" and Index tags $(tags(s))",
-    ),
-  )
+  return throw(ArgumentError("Overload of \"state\" or \"state!\" functions not found
+                             for state name \"$name\" and Index tags $(tags(s))",),)
 end
 
 state(s::Index, n::Integer) = onehot(s => n)
@@ -626,19 +625,20 @@ to specific integer values within the range `1:dim(s)`.
 
 The `val` function is implemented for various
 Index tags by overloading methods named `val`
-which take a `SiteType` argument corresponding to 
-one of the tags of the Index `s` and an `ValName"name"` 
+which take a `SiteType` argument corresponding to
+one of the tags of the Index `s` and an `ValName"name"`
 argument that corresponds to the input name.
 
 # Example
+
 ```julia
 s = Index(2, "Site,S=1/2")
-val(s,"Up") == 1
-val(s,"Dn") == 2
+val(s, "Up") == 1
+val(s, "Dn") == 2
 
 s = Index(2, "Site,Fermion")
-val(s,"Emp") == 1
-val(s,"Occ") == 2
+val(s, "Emp") == 1
+val(s, "Occ") == 2
 ```
 """
 function val(s::Index, name::AbstractString)::Int
@@ -651,9 +651,8 @@ function val(s::Index, name::AbstractString)::Int
     !isnothing(res) && return res
   end
 
-  return throw(
-    ArgumentError("Overload of \"val\" function not found for Index tags $(tags(s))")
-  )
+  return throw(ArgumentError("Overload of \"val\" function not found
+                             for Index tags $(tags(s))"))
 end
 
 val(s::Index, n::Integer) = n
@@ -671,7 +670,8 @@ space(st::SiteType; kwargs...) = nothing
 space(st::SiteType, n::Int; kwargs...) = space(st; kwargs...)
 
 function space_error_message(st::SiteType)
-  return "Overload of \"space\",\"siteind\", or \"siteinds\" functions not found for Index tag: $(tag(st))"
+  return "Overload of \"space\",\"siteind\", or
+  \"siteinds\" functions not found for Index tag: $(tag(st))"
 end
 
 function siteind(st::SiteType; addtags="", kwargs...)
@@ -751,7 +751,8 @@ end
 Create an array of `N` site indices, each of dimension `d`.
 
 # Keywords
-- `addtags::String`: additional tags to be added to all indices
+
+  - `addtags::String`: additional tags to be added to all indices
 """
 function siteinds(d::Integer, N::Integer; kwargs...)
   return [siteind(d, n; kwargs...) for n in 1:N]

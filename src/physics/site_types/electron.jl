@@ -1,5 +1,5 @@
 """
-    space(::SiteType"Electron"; 
+    space(::SiteType"Electron";
           conserve_qns = false,
           conserve_sz = conserve_qns,
           conserve_nf = conserve_qns,
@@ -10,7 +10,8 @@
 
 Create the Hilbert space for a site of type "Electron".
 
-Optionally specify the conserved symmetries and their quantum number labels.
+Optionally specify the conserved symmetries and their
+quantum number labels.
 """
 function ITensors.space(
   ::SiteType"Electron";

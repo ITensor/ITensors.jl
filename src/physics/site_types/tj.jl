@@ -11,7 +11,8 @@
 
 Create the Hilbert space for a site of type "tJ".
 
-Optionally specify the conserved symmetries and their quantum number labels.
+Optionally specify the conserved symmetries and their
+quantum number labels.
 """
 function ITensors.space(
   ::SiteType"tJ";

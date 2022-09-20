@@ -9,7 +9,8 @@
 
 Create the Hilbert space for a site of type "S=1/2".
 
-Optionally specify the conserved symmetries and their quantum number labels.
+Optionally specify the conserved symmetries and their
+quantum number labels.
 """
 function ITensors.space(
   ::SiteType"S=1/2";
@@ -32,7 +33,7 @@ function ITensors.space(
   return 2
 end
 
-# Use Qubit  definition of any operator/state 
+# Use Qubit  definition of any operator/state
 # called using S=1/2 SiteType
 function ITensors.val(vn::ValName, ::SiteType"S=1/2"; kwargs...)
   return val(vn, SiteType("Qubit"); kwargs...)

@@ -10,7 +10,8 @@ alias(::SiteType"Boson") = SiteType"Qudit"()
 
 Create the Hilbert space for a site of type "Boson".
 
-Optionally specify the conserved symmetries and their quantum number labels.
+Optionally specify the conserved symmetries and their
+quantum number labels.
 """
 ITensors.space(st::SiteType"Boson"; kwargs...) = space(alias(st); kwargs...)
 
