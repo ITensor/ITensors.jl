@@ -115,9 +115,7 @@ function sorteachterm(os::OpSum, sites)
     Nt = length(t)
 
     if maximum(ITensors.sites(t)) > length(sites)
-      error(
-        "The OpSum contains a term $t that extends beyond the number of sites $(length(sites)).",
-      )
+      error("The OpSum contains a term $t that extends beyond the number of sites $(length(sites)).",)
     end
 
     prevsite = N + 1 #keep track of whether we are switching
@@ -160,7 +158,7 @@ function sorteachterm(os::OpSum, sites)
 
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero, perm)
-    # and account for anti-commuting, fermionic operators 
+    # and account for anti-commuting, fermionic operators
     # during above sort; put resulting sign into coef
     t *= parity_sign(perm)
     terms(os)[n] = t
@@ -192,8 +190,9 @@ end
 
 """
     MPO(os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)
-    MPO(eltype::Type{<:Number}, os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)
-       
+    MPO(eltype::Type{<:Number}, os::OpSum, sites::Vector{<:Index};
+        splitblocks=true, kwargs...)
+
 Convert an OpSum object `os` to an
 MPO, with indices given by `sites`. The
 resulting MPO will have the indices
@@ -218,21 +217,22 @@ of the link dimensions are packed as much as
 possible according to common quantum numbers,
 making larger blocks. Before ITensors 0.3.19,
 this was the default output, but we have found
-that in general MPOs output with `splitblocks=true` 
+that in general MPOs output with `splitblocks=true`
 lead to better performance in algorithms like
 DMRG.
 
 # Examples
+
 ```julia
 os = OpSum()
-os += "Sz",1,"Sz",2
-os += "Sz",2,"Sz",3
-os += "Sz",3,"Sz",4
+os += "Sz", 1, "Sz", 2
+os += "Sz", 2, "Sz", 3
+os += "Sz", 3, "Sz", 4
 
-sites = siteinds("S=1/2",4)
-H = MPO(os,sites)
-H = MPO(Float32,os,sites)
-H = MPO(os,sites; splitblocks=false)
+sites = siteinds("S=1/2", 4)
+H = MPO(os, sites)
+H = MPO(Float32, os, sites)
+H = MPO(os, sites; splitblocks=false)
 ```
 """
 function MPO(os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)::MPO
