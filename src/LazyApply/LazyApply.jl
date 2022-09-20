@@ -28,7 +28,7 @@ struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
   args::Args
   kwargs::Kwargs
 end
-Applied(f, args::Tuple) = Applied(f, args, ())
+Applied(f, args::Tuple) = Applied(f, args, (;))
 
 materialize(x) = x
 function materialize(a::Applied)
