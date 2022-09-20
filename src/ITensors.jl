@@ -135,14 +135,14 @@ include("itensor.jl")
 include("tensor_operations/tensor_algebra.jl")
 include("tensor_operations/permutations.jl")
 include("broadcast.jl")
-include("decomp.jl")
+include("tensor_operations/matrix_decomposition.jl")
 include("iterativesolvers.jl")
 include("adapt.jl")
 
 #####################################
 # Experimental ITensor Functions
 #
-include("tensor_operations/itensorcombiner.jl")
+include("tensor_operations/itensor_combiner.jl")
 # include("Ops/ops_mpo.jl") # Ops to MPO conversions
 
 #####################################

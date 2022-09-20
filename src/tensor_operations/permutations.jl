@@ -1,46 +1,46 @@
 """
     permute(T::ITensor, inds...; allow_alias = false)
 
-Return a new ITensor `T` with indices permuted according
-to the input indices `inds`. The storage of the ITensor
-is permuted accordingly.
+  Return a new ITensor `T` with indices permuted according
+  to the input indices `inds`. The storage of the ITensor
+  is permuted accordingly.
 
-If called with `allow_alias = true`, it avoids
-copying data if possible. Therefore, it may return an alias
-of the input ITensor (an ITensor that shares the same data),
-such as if the permutation turns out to be trivial.
+  If called with `allow_alias = true`, it avoids
+  copying data if possible. Therefore, it may return an alias
+  of the input ITensor (an ITensor that shares the same data),
+  such as if the permutation turns out to be trivial.
 
-By default, `allow_alias = false`, and it never
-returns an alias of the input ITensor.
+  By default, `allow_alias = false`, and it never
+  returns an alias of the input ITensor.
 
-# Examples
+  # Examples
 
-```julia
-i = Index(2, "index_i"); j = Index(4, "index_j"); k = Index(3, "index_k");
-T = randomITensor(i, j, k)
+  ```julia
+  i = Index(2, "index_i"); j = Index(4, "index_j"); k = Index(3, "index_k");
+  T = randomITensor(i, j, k)
 
-pT_1 = permute(T, k, i, j)
-pT_2 = permute(T, j, i, k)
+  pT_1 = permute(T, k, i, j)
+  pT_2 = permute(T, j, i, k)
 
-pT_noalias_1 = permute(T, i, j, k)
-pT_noalias_1[1, 1, 1] = 12
-T[1, 1, 1] != pT_noalias_1[1, 1, 1]
+  pT_noalias_1 = permute(T, i, j, k)
+  pT_noalias_1[1, 1, 1] = 12
+  T[1, 1, 1] != pT_noalias_1[1, 1, 1]
 
-pT_noalias_2 = permute(T, i, j, k; allow_alias = false)
-pT_noalias_2[1, 1, 1] = 12
-T[1, 1, 1] != pT_noalias_1[1, 1, 1]
+  pT_noalias_2 = permute(T, i, j, k; allow_alias = false)
+  pT_noalias_2[1, 1, 1] = 12
+  T[1, 1, 1] != pT_noalias_1[1, 1, 1]
 
-pT_alias = permute(T, i, j, k; allow_alias = true)
-pT_alias[1, 1, 1] = 12
-T[1, 1, 1] == pT_alias[1, 1, 1]
-```
+  pT_alias = permute(T, i, j, k; allow_alias = true)
+  pT_alias[1, 1, 1] = 12
+  T[1, 1, 1] == pT_alias[1, 1, 1]
+  ```
 """
 
 function permute(T::ITensor, new_inds...; kwargs...)
   if !hassameinds(T, indices(new_inds...))
-    error(
-      "In `permute(::ITensor, inds...)`, the input ITensor has indices: \n\n$(inds(T))\n\nbut the desired Index ordering is: \n\n$(indices(new_inds...))",
-    )
+    error("In `permute(::ITensor, inds...)`, the input ITensor has indices:
+    \n\n$(inds(T))\n\nbut the desired Index ordering is:
+    \n\n$(indices(new_inds...))",)
   end
   allow_alias = deprecated_keyword_argument(
     Bool,
@@ -82,11 +82,11 @@ end
 """
     dag(T::ITensor; allow_alias = true)
 
-Complex conjugate the elements of the ITensor `T` and dagger the indices.
+  Complex conjugate the elements of the ITensor `T` and dagger the indices.
 
-By default, an alias of the ITensor is returned (i.e. the output ITensor
-may share data with the input ITensor). If `allow_alias = false`,
-an alias is never returned.
+  By default, an alias of the ITensor is returned (i.e. the output ITensor
+  may share data with the input ITensor). If `allow_alias = false`,
+  an alias is never returned.
 """
 
 function dag(as::AliasStyle, T::Tensor{ElT,N}) where {ElT,N}
@@ -151,7 +151,6 @@ For `A'` notation to prime an ITensor by 1.
 """
 adjoint(A::ITensor) = prime(A)
 
-
 #######################################################################
 #
 # Developer ITensor functions
@@ -169,6 +168,7 @@ terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
 
 !!! warning
+    
     This method is intended for developer use
     only and not recommended for use in ITensor applications
     unless you know what you are doing (for example
@@ -192,6 +192,7 @@ and the indices are already in the specified ordering
 so that no permutation is required.
 
 !!! warning
+    
     Note that in the future we may return specialized
     AbstractArray types for certain storage types,
     for example a `LinearAlgebra.Diagonal` type for
@@ -214,6 +215,7 @@ terms of which Index is treated as the row versus
 column, depends on the internal layout of the ITensor.
 
 !!! warning
+    
     This method is intended for developer use
     only and not recommended for use in ITensor applications
     unless you know what you are doing (for example
@@ -240,6 +242,7 @@ and the indices are already in the specified ordering
 so that no permutation is required.
 
 !!! warning
+    
     Note that in the future we may return specialized
     AbstractArray types for certain storage types,
     for example a `LinearAlgebra.Diagonal` type for
@@ -277,6 +280,7 @@ and the indices are already in the specified ordering
 so that no permutation is required.
 
 !!! warning
+    
     Note that in the future we may return specialized
     AbstractArray types for certain storage types,
     for example a `LinearAlgebra.Diagonal` type for

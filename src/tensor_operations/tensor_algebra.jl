@@ -10,9 +10,12 @@ function _contract(A::ITensor, B::ITensor)::ITensor
   C = itensor(_contract(tensor(A), tensor(B)))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
-    println(
-      "Contraction resulted in ITensor with $(order(C)) indices, which is greater than or equal to the ITensor order warning threshold $warnTensorOrder. You can modify the threshold with macros like `@set_warn_order N`, `@reset_warn_order`, and `@disable_warn_order` or functions like `ITensors.set_warn_order(N::Int)`, `ITensors.reset_warn_order()`, and `ITensors.disable_warn_order()`.",
-    )
+    println("Contraction resulted in ITensor with $(order(C)) indices, which
+    is greater than or equal to the ITensor order warning threshold
+    $warnTensorOrder. You can modify the threshold with macros like
+    `@set_warn_order N`, `@reset_warn_order`, and `@disable_warn_order`
+    or functions like `ITensors.set_warn_order(N::Int)`,
+    `ITensors.reset_warn_order()`, and `ITensors.disable_warn_order()`.",)
     # This prints a vector, not formatted well
     #show(stdout, MIME"text/plain"(), stacktrace())
     Base.show_backtrace(stdout, backtrace())
@@ -66,22 +69,24 @@ information see the documentation on Index objects.
 # Examples
 
 ```julia
-i = Index(2,"index_i"); j = Index(4,"index_j"); k = Index(3,"index_k")
+i = Index(2, "index_i");
+j = Index(4, "index_j");
+k = Index(3, "index_k");
 
-A = randomITensor(i,j)
-B = randomITensor(j,k)
+A = randomITensor(i, j)
+B = randomITensor(j, k)
 C = A * B # contract over Index j
 
-A = randomITensor(i,i')
-B = randomITensor(i,i'')
+A = randomITensor(i, i')
+B = randomITensor(i, i'')
 C = A * B # contract over Index i
 
 A = randomITensor(i)
 B = randomITensor(j)
 C = A * B # outer product of A and B, no contraction
 
-A = randomITensor(i,j,k)
-B = randomITensor(k,i,j)
+A = randomITensor(i, j, k)
+B = randomITensor(k, i, j)
 C = A * B # inner product of A and B, all indices contracted
 ```
 """
@@ -207,7 +212,7 @@ end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
+function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number; β::Number=0)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
@@ -363,6 +368,7 @@ See Section 2.3 of https://arxiv.org/abs/1405.7786 for a definition of a partial
 direct sum of tensors.
 
 # Examples
+
 ```julia
 x = Index(2, "x")
 i1 = Index(3, "i1")
@@ -381,7 +387,7 @@ dim(s) == dim(i1) + dim(i2) + dim(j1)
 
 A1 = randomITensor(i1, x, j1)
 A2 = randomITensor(x, j2, i2)
-S, s = directsum(A1 => (i1, j1), A2 => (i2, j2); tags = ["sum_i", "sum_j"])
+S, s = directsum(A1 => (i1, j1), A2 => (i2, j2); tags=["sum_i", "sum_j"])
 length(s) == 2
 dim(s[1]) == dim(i1) + dim(i2)
 dim(s[2]) == dim(j1) + dim(j2)
@@ -411,23 +417,26 @@ depending on the index structure.
 
 There are three main modes:
 
-1. Matrix-matrix product. In this case, ITensors `A`
-and `B` have shared indices that come in pairs of primed
-and unprimed indices. Then, `A` and `B` are multiplied
-together, treating them as matrices from the unprimed
-to primed indices, resulting in an ITensor `C` that
-has the same pairs of primed and unprimed indices.
-For example:
+ 1. Matrix-matrix product. In this case, ITensors `A`
+    and `B` have shared indices that come in pairs of primed
+    and unprimed indices. Then, `A` and `B` are multiplied
+    together, treating them as matrices from the unprimed
+    to primed indices, resulting in an ITensor `C` that
+    has the same pairs of primed and unprimed indices.
+    For example:
+
 ```
 s1'-<-----<-s1            s1'-<-----<-s1   s1'-<-----<-s1
       |C|      = product(       |A|              |B|      )
 s2'-<-----<-s2            s2'-<-----<-s2 , s2'-<-----<-s2
 ```
+
 Essentially, this is implemented as
 `C = mapprime(A', B, 2 => 1)`.
 If there are dangling indices that are not shared between
 `A` and `B`, a "batched" matrix multiplication is
 performed, i.e.:
+
 ```
        j                         j
        |                         |
@@ -435,8 +444,10 @@ s1'-<-----<-s1            s1'-<-----<-s1   s1'-<-----<-s1
       |C|      = product(       |A|              |B|      )
 s2'-<-----<-s2            s2'-<-----<-s2 , s2'-<-----<-s2
 ```
+
 In addition, if there are shared dangling indices,
 they are summed over:
+
 ```
                                     j                j
                                     |                |
@@ -444,49 +455,56 @@ s1'-<-----<-s1               s1'-<-----<-s1   s1'-<-----<-s1
       |C|      = Σⱼ product(       |A|              |B|      )
 s2'-<-----<-s2               s2'-<-----<-s2 , s2'-<-----<-s2
 ```
+
 where the sum is not performed as an explicitly
 for-loop, but as part of a single tensor contraction.
 
-2. Matrix-vector product. In this case, ITensor `A`
-has pairs of primed and unprimed indices, and ITensor
-`B` has unprimed indices that are shared with `A`.
-Then, `A` and `B` are multiplied as a matrix-vector
-product, and the result `C` has unprimed indices.
-For example:
+ 2. Matrix-vector product. In this case, ITensor `A`
+    has pairs of primed and unprimed indices, and ITensor
+    `B` has unprimed indices that are shared with `A`.
+    Then, `A` and `B` are multiplied as a matrix-vector
+    product, and the result `C` has unprimed indices.
+    For example:
+
 ```
 s1-<----            s1'-<-----<-s1   s1-<----
      |C| = product(       |A|             |B| )
 s2-<----            s2'-<-----<-s2 , s2-<----
 ```
+
 Again, like in the matrix-matrix product above, you can have
 dangling indices to do "batched" matrix-vector products, or
 sum over a batch of matrix-vector products.
 
-3. Vector-matrix product. In this case, ITensor `B`
-has pairs of primed and unprimed indices, and ITensor
-`A` has unprimed indices that are shared with `B`.
-Then, `B` and `A` are multiplied as a matrix-vector
-product, and the result `C` has unprimed indices.
-For example:
+ 3. Vector-matrix product. In this case, ITensor `B`
+    has pairs of primed and unprimed indices, and ITensor
+    `A` has unprimed indices that are shared with `B`.
+    Then, `B` and `A` are multiplied as a matrix-vector
+    product, and the result `C` has unprimed indices.
+    For example:
+
 ```
 ---<-s1            ----<-s1   s1'-<-----<-s1
 |C|     = product( |A|              |B|      )
 ---<-s2            ----<-s2 , s2'-<-----<-s2
 ```
+
 Again, like in the matrix-matrix product above, you can have
 dangling indices to do "batched" vector-matrix products, or
 sum over a batch of vector-matrix products.
 
-4. Vector-vector product. In this case, ITensors `A`
-and `B` share unprimed indices.
-Then, `B` and `A` are multiplied as a vector-vector
-product, and the result `C` is a scalar ITensor.
-For example:
+ 4. Vector-vector product. In this case, ITensors `A`
+    and `B` share unprimed indices.
+    Then, `B` and `A` are multiplied as a vector-vector
+    product, and the result `C` is a scalar ITensor.
+    For example:
+
 ```
 ---            ----<-s1   s1-<----
 |C| = product( |A|             |B| )
 ---            ----<-s2 , s2-<----
 ```
+
 Again, like in the matrix-matrix product above, you can have
 dangling indices to do "batched" vector-vector products, or
 sum over a batch of vector-vector products.
