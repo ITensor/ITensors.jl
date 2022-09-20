@@ -18,7 +18,7 @@ export Op, OpSum, which_op, site, sites, params, Applied, expand
 # 
 # julia> split(x -> x isa AbstractString, t)
 # [(1,), ("X", 1, 2), ("Y", 2), ("Z", 4)]
-# 
+#
 function split(f, t::Tuple)
   n = findall(f, t)
   nsplit = length(n) + 1
@@ -35,11 +35,11 @@ end
 ## https://github.com/JuliaLang/julia/issues/45545
 ##
 ## julia> using ITensors
-## 
+##
 ## julia> @time ITensors.Ops.split(x -> x isa String, ("X", 1))
 ##   7.588123 seconds (2.34 M allocations: 100.919 MiB, 1.71% gc time, 100.00% compilation time)
 ## ((), ("X", 1))
-## 
+##
 ## julia> @time ITensors.Ops.split(x -> x isa String, ("X", 1))
 ##   0.042590 seconds (88.59 k allocations: 4.823 MiB, 19.13% gc time, 99.84% compilation time)
 ## ((), ("X", 1))
