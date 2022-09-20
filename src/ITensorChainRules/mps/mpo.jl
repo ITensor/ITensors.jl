@@ -42,9 +42,9 @@ end
 
 function rrule(::typeof(inner), x1::MPS, x2::MPO, x3::MPS; kwargs...)
   if !hassameinds(siteinds, x1, (x2, x3)) || !hassameinds(siteinds, x3, (x2, x1))
-    error(
-      "Taking gradients of `inner(x::MPS, A::MPO, y::MPS)` is not supported if the site indices of the input MPS and MPO don't match. Try using if you input `inner(x, A, y), try `inner(x', A, y)` instead.",
-    )
+    error("Taking gradients of `inner(x::MPS, A::MPO, y::MPS)` is not supported
+    if the site indices of the input MPS and MPO don't match. Try using if you
+      input `inner(x, A, y), try `inner(x', A, y)` instead.",)
   end
 
   y = inner(x1, x2, x3; kwargs...)
