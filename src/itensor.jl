@@ -212,9 +212,9 @@ ITensor(::AliasStyle, args...; kwargs...)::ITensor =
     return itensor(Dense(ElT, undef, dim(inds)), indices(inds))
   end
 
-  function ITensor(::Type{ElT}, ::UndefInitializer, inds...) where {ElT<:Number}
-    return ITensor(ElT, undef, indices(inds...))
-  end
+function ITensor(::Type{ElT}, ::UndefInitializer, inds...) where {ElT<:Number}
+  return ITensor(ElT, undef, indices(inds...))
+end
 
   ITensor(::UndefInitializer, inds::Indices) = ITensor(Float64, undef, inds)
 
