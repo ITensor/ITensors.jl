@@ -2,7 +2,7 @@
 """
     TruncSVD
 
-ITensor factorization type for a truncated singular-value 
+ITensor factorization type for a truncated singular-value
 decomposition, returned by `svd`.
 """
 struct TruncSVD
@@ -35,7 +35,7 @@ The first three return arguments are `U`, `S`, and `V`, such that
 `A ≈ U * S * V`.
 
 Whether or not the SVD performs a trunction depends on the keyword
-arguments provided. 
+arguments provided.
 
 If the left or right set of indices are empty, all input indices are
 put on `V` or `U` respectively. To specify an empty set of left indices,
@@ -69,16 +69,28 @@ Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
 # Keywords
 - `maxdim::Int`: the maximum number of singular values to keep.
 - `mindim::Int`: the minimum number of singular values to keep.
-- `cutoff::Float64`: set the desired truncation error of the SVD, by default defined as the sum of the squares of the smallest singular values.
+- `cutoff::Float64`: set the desired truncation error of the SVD, by default
+   defined as the sum of the squares of the smallest singular values.
 - `lefttags::String = "Link,u"`: set the tags of the Index shared by `U` and `S`.
 - `righttags::String = "Link,v"`: set the tags of the Index shared by `S` and `V`.
 - `alg::String = "divide_and_conquer"`. Options:
-  - `"divide_and_conquer"` - A divide-and-conquer algorithm. LAPACK's gesdd. Fast, but may lead to some innacurate singular values for very ill-conditioned matrices. Also may sometimes fail to converge, leading to errors (in which case "qr_iteration" or "recursive" can be tried).
-  - `"qr_iteration"` - Typically slower but more accurate for very ill-conditioned matrices compared to `"divide_and_conquer"`. LAPACK's gesvd.
-  - `"recursive"` - ITensor's custom svd. Very reliable, but may be slow if high precision is needed. To get an `svd` of a matrix `A`, an eigendecomposition of ``A^{\\dagger} A`` is used to compute `U` and then a `qr` of ``A^{\\dagger} U`` is used to compute `V`. This is performed recursively to compute small singular values.
-- `use_absolute_cutoff::Bool = false`: set if all probability weights below the `cutoff` value should be discarded, rather than the sum of discarded weights.
-- `use_relative_cutoff::Bool = true`: set if the singular values should be normalized for the sake of truncation.
-- `min_blockdim::Int = 0`: for SVD of block-sparse or QN ITensors, require that the number of singular values kept be greater than or equal to this value when possible
+  - `"divide_and_conquer"` - A divide-and-conquer algorithm. LAPACK's gesdd.
+     Fast, but may lead to some innacurate singular values for very
+     ill-conditioned matrices. Also may sometimes fail to converge,
+     leading to errors (in which case "qr_iteration" or "recursive" can be tried).
+  - `"qr_iteration"` - Typically slower but more accurate for very
+     ill-conditioned matrices compared to `"divide_and_conquer"`. LAPACK's gesvd.
+  - `"recursive"` - ITensor's custom svd. Very reliable, but may be slow if
+     high precision is needed. To get an `svd` of a matrix `A`, an eigen
+     decomposition of ``A^{\\dagger} A`` is used to compute `U` and then a
+     `qr` of ``A^{\\dagger} U`` is used to compute `V`. This is performed
+     recursively to compute small singular values.
+- `use_absolute_cutoff::Bool = false`: set if all probability weights below the
+  `cutoff` value should be discarded, rather than the sum of discarded weights.
+- `use_relative_cutoff::Bool = true`: set if the singular values should be
+   normalized for the sake of truncation.
+- `min_blockdim::Int = 0`: for SVD of block-sparse or QN ITensors, require that
+   the number of singular values kept be greater than or equal to this value when possible
 
 See also: [`factorize`](@ref), [`eigen`](@ref)
 """
@@ -156,7 +168,7 @@ svd(A::ITensor; kwargs...) = error("Must specify indices in `svd`")
 """
     TruncEigen
 
-ITensor factorization type for a truncated eigenvalue 
+ITensor factorization type for a truncated eigenvalue
 decomposition, returned by `eigen`.
 """
 struct TruncEigen
@@ -193,24 +205,38 @@ as tensors, such that `A * U ∼ U * D` (more precisely they are approximately
 equal up to proper replacements of indices, see the example for details).
 
 Whether or not `eigen` performs a trunction depends on the keyword
-arguments provided. Note that truncation is only well defined for 
+arguments provided. Note that truncation is only well defined for
 positive semidefinite matrices.
 
 # Arguments
-- `maxdim::Int`: the maximum number of singular values to keep.
-- `mindim::Int`: the minimum number of singular values to keep.
-- `cutoff::Float64`: set the desired truncation error of the eigenvalues, by default defined as the sum of the squares of the smallest eigenvalues. For now truncation is only well defined for positive semi-definite eigenspectra.
-- `ishermitian::Bool = false`: specify if the matrix is Hermitian, in which case a specialized diagonalization routine will be used and it is guaranteed that real eigenvalues will be returned.
-- `plev::Int = 0`: set the prime level of the Indices of `D`. Default prime levels are subject to change.
-- `leftplev::Int = plev`: set the prime level of the Index unique to `D`. Default prime levels are subject to change.
-- `rightplev::Int = leftplev+1`: set the prime level of the Index shared by `D` and `U`. Default tags are subject to change.
-- `tags::String = "Link,eigen"`: set the tags of the Indices of `D`. Default tags are subject to change.
-- `lefttags::String = tags`: set the tags of the Index unique to `D`. Default tags are subject to change.
-- `righttags::String = tags`: set the tags of the Index shared by `D` and `U`. Default tags are subject to change.
-- `use_absolute_cutoff::Bool = false`: set if all probability weights below the `cutoff` value should be discarded, rather than the sum of discarded weights.
-- `use_relative_cutoff::Bool = true`: set if the singular values should be normalized for the sake of truncation.
+
+  - `maxdim::Int`: the maximum number of singular values to keep.
+  - `mindim::Int`: the minimum number of singular values to keep.
+  - `cutoff::Float64`: set the desired truncation error of the eigenvalues, by
+     default defined as the sum of the squares of the smallest eigenvalues.
+     For now truncation is only well defined for positive semi-definite eigenspectra.
+  - `ishermitian::Bool = false`: specify if the matrix is Hermitian, in which
+     case a specialized diagonalization routine will be used and it is guaranteed
+     that real eigenvalues will be returned.
+  - `plev::Int = 0`: set the prime level of the Indices of `D`. Default prime
+     levels are subject to change.
+  - `leftplev::Int = plev`: set the prime level of the Index unique to `D`.
+     Default prime levels are subject to change.
+  - `rightplev::Int = leftplev+1`: set the prime level of the Index shared by
+     `D` and `U`. Default tags are subject to change.
+  - `tags::String = "Link,eigen"`: set the tags of the Indices of `D`.
+     Default tags are subject to change.
+  - `lefttags::String = tags`: set the tags of the Index unique to `D`.
+     Default tags are subject to change.
+  - `righttags::String = tags`: set the tags of the Index shared by `D` and `U`.
+     Default tags are subject to change.
+  - `use_absolute_cutoff::Bool = false`: set if all probability weights below
+     the `cutoff` value should be discarded, rather than the sum of discarded weights.
+  - `use_relative_cutoff::Bool = true`: set if the singular values should be
+     normalized for the sake of truncation.
 
 # Examples
+
 ```julia
 i, j, k, l = Index(2, "i"), Index(2, "j"), Index(2, "k"), Index(2, "l")
 A = randomITensor(i, j, k, l)
@@ -462,16 +488,38 @@ factorize(A::ITensor; kwargs...) = error(noinds_error_message("factorize"))
 Perform a factorization of `A` into ITensors `L` and `R` such that `A ≈ L * R`.
 
 # Arguments
-- `ortho::String = "left"`: Choose orthogonality properties of the factorization.
-  - `"left"`: the left factor `L` is an orthogonal basis such that `L * dag(prime(L, commonind(L,R))) ≈ I`. 
-  - `"right"`: the right factor `R` forms an orthogonal basis. 
-  - `"none"`, neither of the factors form an orthogonal basis, and in general are made as symmetrically as possible (depending on the decomposition used).
-- `which_decomp::Union{String, Nothing} = nothing`: choose what kind of decomposition is used. 
-  - `nothing`: choose the decomposition automatically based on the other arguments. For example, when `nothing` is chosen and `ortho = "left"` or `"right"`, and a cutoff is provided, `svd` or `eigen` is used depending on the provided cutoff (`eigen` is only used when the cutoff is greater than `1e-12`, since it has a lower precision). When no truncation is requested `qr` is used for dense ITensors and `svd` for block-sparse ITensors (in the future `qr` will be used also for block-sparse ITensors in this case).
-  - `"svd"`: `L = U` and `R = S * V` for `ortho = "left"`, `L = U * S` and `R = V` for `ortho = "right"`, and `L = U * sqrt.(S)` and `R = sqrt.(S) * V` for `ortho = "none"`. To control which `svd` algorithm is choose, use the `svd_alg` keyword argument. See the documentation for `svd` for the supported algorithms, which are the same as those accepted by the `alg` keyword argument.
-  - `"eigen"`: `L = U` and ``R = U^{\\dagger} A`` where `U` is determined from the eigendecompositon ``A A^{\\dagger} = U D U^{\\dagger}`` for `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is not supported for `ortho = "none"`.
-  - `"qr"`: `L=Q` and `R` an upper-triangular matrix when `ortho = "left"`, and `R = Q` and `L` a lower-triangular matrix when `ortho = "right"` (currently supported for dense ITensors only).
-In the future, other decompositions like QR (for block-sparse ITensors), polar, cholesky, LU, etc. are expected to be supported.
+
+  - `ortho::String = "left"`: Choose orthogonality properties of the factorization.
+
+      + `"left"`: the left factor `L` is an orthogonal basis such that
+         `L * dag(prime(L, commonind(L,R))) ≈ I`.
+      + `"right"`: the right factor `R` forms an orthogonal basis.
+      + `"none"`, neither of the factors form an orthogonal basis, and in
+         general are made as symmetrically as possible (depending on the decomposition used).
+  - `which_decomp::Union{String, Nothing} = nothing`: choose what kind of decomposition is used.
+
+      + `nothing`: choose the decomposition automatically based on the other arguments.
+         For example, when `nothing` is chosen and `ortho = "left"` or `"right"`,
+         and a cutoff is provided, `svd` or `eigen` is used depending on the
+         provided cutoff (`eigen` is only used when the cutoff is greater than
+         `1e-12`, since it has a lower precision). When no truncation is requested
+         `qr` is used for dense ITensors and `svd` for block-sparse ITensors
+         (in the future `qr` will be used also for block-sparse ITensors in this case).
+      + `"svd"`: `L = U` and `R = S * V` for `ortho = "left"`, `L = U * S` and
+         `R = V` for `ortho = "right"`, and `L = U * sqrt.(S)` and `R = sqrt.(S) * V`
+         for `ortho = "none"`. To control which `svd` algorithm is choose, use
+         the `svd_alg` keyword argument. See the documentation for `svd` for the
+         supported algorithms, which are the same as those accepted by the `alg`
+         keyword argument.
+      + `"eigen"`: `L = U` and ``R = U^{\\dagger} A`` where `U` is determined
+         from the eigendecompositon ``A A^{\\dagger} = U D U^{\\dagger}`` for
+         `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is
+         not supported for `ortho = "none"`.
+      + `"qr"`: `L=Q` and `R` an upper-triangular matrix when `ortho = "left"`,
+         and `R = Q` and `L` a lower-triangular matrix when `ortho = "right"`
+         (currently supported for dense ITensors only).
+        In the future, other decompositions like QR (for block-sparse ITensors), 
+        polar, cholesky, LU, etc. are expected to be supported.
 
 For truncation arguments, see: [`svd`](@ref)
 """
