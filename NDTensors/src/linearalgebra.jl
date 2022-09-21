@@ -258,7 +258,7 @@ end
     random_unitary(::Type{ElT},n::Int,m::Int)::Matrix{ElT}
 
 Return a random matrix U of dimensions (n,m)
-such that if n >= m, U'*U is the identity, or if 
+such that if n >= m, U'*U is the identity, or if
 m > n U*U' is the identity. Optionally can pass a numeric
 type as the first argument to obtain a matrix of that type.
 
@@ -290,7 +290,7 @@ random_unitary(n::Int, m::Int) = random_unitary(ComplexF64, n, m)
     random_orthog(::Type{ElT},n::Int,m::Int)::Matrix{ElT}
 
 Return a random, real matrix O of dimensions (n,m)
-such that if n >= m, transpose(O)*O is the 
+such that if n >= m, transpose(O)*O is the
 identity, or if m > n O*transpose(O) is the
 identity. Optionally can pass a real number type
 as the first argument to obtain a matrix of that type.
