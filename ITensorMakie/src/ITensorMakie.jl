@@ -91,7 +91,7 @@ function visualize!(
       DimensionMismatch(
         "$(length(vertex_labels)) vertex labels $(vertex_labels) were specified
         but there are $(nv(g)) tensors in the diagram, please specify the
-        correct number of labels.",
+        correct number of labels."
       ),
     )
   end
