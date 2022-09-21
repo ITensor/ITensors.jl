@@ -8,15 +8,25 @@
      o--o--o-      -o--o--o--o--o--o |ΨA>
 ```
 """
-mutable struct ProjMPOMixed <: AbstractProjMPO
+mutable struct ProjMPOApply <: AbstractProjMPO
   lpos::Int
   rpos::Int
   nsite::Int
+  psi0::MPS
   H::MPO
   LR::Vector{ITensor}
 end
 
-function makeL!(P::ProjMPOMixed, psiA::MPS, psiB::MPS, k::Int)
+ProjMPOApply(psi0::MPS,H::MPO) = ProjMPO(0, length(H) + 1, 2, psi0, H, Vector{ITensor}(undef, length(H)))
+
+copy(P::ProjMPOApply) = ProjMPOApply(P.lpos, P.rpos, P.nsite, copy(P.psi0), copy(P.H), copy(P.LR))
+
+function set_nsite!(P::ProjMPOApply, nsite)
+  P.nsite = nsite
+  return P
+end
+
+function _makeL!(P::ProjMPOApply, psi::MPS, k::Int)
   # Save the last `L` that is made to help with caching
   # for DiskProjMPO
   ll = P.lpos
@@ -31,7 +41,7 @@ function makeL!(P::ProjMPOMixed, psiA::MPS, psiB::MPS, k::Int)
   ll = max(ll, 0)
   L = lproj(P)
   while ll < k
-    L = L * psiA[ll + 1] * P.H[ll + 1] * dag(prime(psiB[ll + 1]))
+    L = L * P.psi0[ll + 1] * P.H[ll + 1] * dag(prime(psi[ll + 1]))
     P.LR[ll + 1] = L
     ll += 1
   end
@@ -40,7 +50,7 @@ function makeL!(P::ProjMPOMixed, psiA::MPS, psiB::MPS, k::Int)
   return P
 end
 
-function makeR!(P::ProjMPOMixed, psiA::MPS, psiB::MPS, k::Int)
+function _makeR!(P::ProjMPOApply, psi::MPS, k::Int)
   # Save the last `R` that is made to help with caching
   # for DiskProjMPO
   rl = P.rpos
@@ -56,16 +66,10 @@ function makeR!(P::ProjMPOMixed, psiA::MPS, psiB::MPS, k::Int)
   rl = min(rl, N + 1)
   R = rproj(P)
   while rl > k
-    R = R * psiA[rl - 1] * P.H[rl - 1] * dag(prime(psiB[rl - 1]))
+    R = R * P.psi0[rl - 1] * P.H[rl - 1] * dag(prime(psi[rl - 1]))
     P.LR[rl - 1] = R
     rl -= 1
   end
   P.rpos = k
-  return P
-end
-
-function position!(P::ProjMPOMixed, psiA::MPS, psiB::MPS, pos::Int)
-  makeL!(P, psiA, psiB, pos - 1)
-  makeR!(P, psiA, psiB, pos + nsite(P))
-  return P
+  return R
 end

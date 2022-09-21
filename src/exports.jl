@@ -317,7 +317,7 @@ export
   ProjMPO_MPS,
 
   # mps/projmpo_mixed.jl
-  ProjMPOMixed,
+  ProjMPOApply,
 
   # mps/sweeps.jl
   Sweeps,
