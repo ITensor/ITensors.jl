@@ -79,9 +79,9 @@ function func_args_sequence_kwargs(ex, vis_kwargs...)
   sequence = get_kwarg(kwargs, :sequence)
   vertex_labels_kw, vertex_labels_arg = vertex_labels_kwargs(args, iscollection)
   # Merge labels kwarg with kwargs
-  vis_kwargs_dict = Dict(
-    [vis_kwarg.args[1] => vis_kwarg.args[2] for vis_kwarg in vis_kwargs]
-  )
+  vis_kwargs_dict = Dict([
+    vis_kwarg.args[1] => vis_kwarg.args[2] for vis_kwarg in vis_kwargs
+  ])
   vertex_labels_kwarg_dict = Dict(vertex_labels_kw => vertex_labels_arg)
   merged_kwargs_dict = merge(vertex_labels_kwarg_dict, vis_kwargs_dict)
   merged_kwargs_expr = [:($k = $v) for (k, v) in pairs(merged_kwargs_dict)]
