@@ -216,7 +216,7 @@ function ITensor(::Type{ElT}, ::UndefInitializer, inds...) where {ElT<:Number}
   return ITensor(ElT, undef, indices(inds...))
 end
 
-  ITensor(::UndefInitializer, inds::Indices) = ITensor(Float64, undef, inds)
+ITensor(::UndefInitializer, inds::Indices) = ITensor(Float64, undef, inds)
 
   ITensor(::UndefInitializer, inds...) = ITensor(Float64, undef, indices(inds...))
 
