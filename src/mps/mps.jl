@@ -327,16 +327,17 @@ MPS(ivals::Vector{<:Pair{<:Index}}) = MPS(Float64, ivals)
 Construct a product state MPS of element type `T`, having
 site indices `sites`, and which corresponds to the initial
 state given by the array `states`. The input `states` may
-be an array of strings or an array of ints recognized by the 
+be an array of strings or an array of ints recognized by the
 `state` function defined for the relevant Index tag type.
 In addition, a single string or int can be input to create
 a uniform state.
 
 # Examples
+
 ```julia
 N = 10
 sites = siteinds("S=1/2", N)
-states = [isodd(n) ? "Up" : "Dn" for n=1:N]
+states = [isodd(n) ? "Up" : "Dn" for n in 1:N]
 psi = MPS(ComplexF64, sites, states)
 phi = MPS(sites, "Up")
 ```
@@ -398,16 +399,17 @@ end
 Construct a product state MPS having
 site indices `sites`, and which corresponds to the initial
 state given by the array `states`. The `states` array may
-consist of either an array of integers or strings, as 
+consist of either an array of integers or strings, as
 recognized by the `state` function defined for the relevant
 Index tag type.
 
 # Examples
+
 ```julia
 N = 10
-sites = siteinds("S=1/2",N)
-states = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi = MPS(sites,states)
+sites = siteinds("S=1/2", N)
+states = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+psi = MPS(sites, states)
 ```
 """
 MPS(sites::Vector{<:Index}, states) = MPS(Float64, sites, states)
@@ -604,32 +606,36 @@ _op_prod(o1::Matrix{<:Number}, o2::Matrix{<:Number}) = o1 * o2
                        kwargs...)
 
 Given an MPS psi and two strings denoting
-operators (as recognized by the `op` function), 
+operators (as recognized by the `op` function),
 computes the two-point correlation function matrix
 C[i,j] = <psi| Op1i Op2j |psi>
 using efficient MPS techniques. Returns the matrix C.
 
 # Optional Keyword Arguments
-- `site_range = 1:length(psi)`: compute correlations only for sites in the given range
-- `ishermitian = false` : if `false`, force independent calculations of the matrix elements above and below the diagonal, while if `true` assume they are complex conjugates.
+
+  - `site_range = 1:length(psi)`: compute correlations only
+     for sites in the given range
+  - `ishermitian = false` : if `false`, force independent calculations of the
+     matrix elements above and below the diagonal, while if `true` assume they are complex conjugates.
 
 For a correlation matrix of size NxN and an MPS of typical
 bond dimension m, the scaling of this algorithm is N^2*m^3.
 
 # Examples
+
 ```julia
 N = 30
 m = 4
 
-s = siteinds("S=1/2",N)
+s = siteinds("S=1/2", N)
 psi = randomMPS(s; linkdims=m)
-Czz = correlation_matrix(psi,"Sz","Sz")
-Czz = correlation_matrix(psi,[1/2 0; 0 -1/2],[1/2 0; 0 -1/2]) # same as above
+Czz = correlation_matrix(psi, "Sz", "Sz")
+Czz = correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) # same as above
 
-s = siteinds("Electron",N; conserve_qns=true)
-psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
-Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
-``` 
+s = siteinds("Electron", N; conserve_qns=true)
+psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
+Cuu = correlation_matrix(psi, "Cdagup", "Cup"; site_range=2:8)
+```
 """
 function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   N = length(psi)
@@ -843,10 +849,10 @@ end
     expect(psi::MPS, ops; kwargs...)
 
 Given an MPS `psi` and a single operator name, returns
-a vector of the expected value of the operator on 
-each site of the MPS. 
+a vector of the expected value of the operator on
+each site of the MPS.
 
-If multiple operator names are provided, returns a tuple 
+If multiple operator names are provided, returns a tuple
 of expectation value vectors.
 
 If a container of operator names is provided, returns the
@@ -854,25 +860,26 @@ same type of container with names replaced by vectors
 of expectation values.
 
 # Optional Keyword Arguments
-- `sites = 1:length(psi)`: compute expected values only for sites in the given range
+
+  - `sites = 1:length(psi)`: compute expected values only for sites in the given range
 
 # Examples
 
 ```julia
 N = 10
 
-s = siteinds("S=1/2",N)
+s = siteinds("S=1/2", N)
 psi = randomMPS(s; linkdims=8)
-Z = expect(psi,"Sz") # compute for all sites
-Z = expect(psi,"Sz";sites=2:4) # compute for sites 2,3,4
-Z3 = expect(psi,"Sz";sites=3)  # compute for site 3 only (output will be a scalar)
-XZ = expect(psi,["Sx","Sz"]) # compute Sx and Sz for all sites
-Z = expect(psi,[1/2 0; 0 -1/2]) # same as expect(psi,"Sz")
+Z = expect(psi, "Sz") # compute for all sites
+Z = expect(psi, "Sz"; sites=2:4) # compute for sites 2,3,4
+Z3 = expect(psi, "Sz"; sites=3)  # compute for site 3 only (output will be a scalar)
+XZ = expect(psi, ["Sx", "Sz"]) # compute Sx and Sz for all sites
+Z = expect(psi, [1/2 0; 0 -1/2]) # same as expect(psi,"Sz")
 
-s = siteinds("Electron",N)
+s = siteinds("Electron", N)
 psi = randomMPS(s; linkdims=8)
-dens = expect(psi,"Ntot")
-updens,dndens = expect(psi,"Nup","Ndn") # pass more than one operator
+dens = expect(psi, "Ntot")
+updens, dndens = expect(psi, "Nup", "Ndn") # pass more than one operator
 ```
 """
 function expect(psi::MPS, ops; kwargs...)

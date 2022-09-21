@@ -79,9 +79,9 @@ function func_args_sequence_kwargs(ex, vis_kwargs...)
   sequence = get_kwarg(kwargs, :sequence)
   vertex_labels_kw, vertex_labels_arg = vertex_labels_kwargs(args, iscollection)
   # Merge labels kwarg with kwargs
-  vis_kwargs_dict = Dict([
-    vis_kwarg.args[1] => vis_kwarg.args[2] for vis_kwarg in vis_kwargs
-  ])
+  vis_kwargs_dict = Dict(
+    [vis_kwarg.args[1] => vis_kwarg.args[2] for vis_kwarg in vis_kwargs]
+  )
   vertex_labels_kwarg_dict = Dict(vertex_labels_kw => vertex_labels_arg)
   merged_kwargs_dict = merge(vertex_labels_kwarg_dict, vis_kwargs_dict)
   merged_kwargs_expr = [:($k = $v) for (k, v) in pairs(merged_kwargs_dict)]
@@ -112,6 +112,7 @@ Visualize a contraction of ITensors, returning the result of the contraction.
 The contraction should be written in terms of a series of ITensors contracted with `*`.
 
 # Examples
+
 ```julia
 using ITensors
 using ITensorUnicodePlots # Must load a backend or else no plots will be made
@@ -146,9 +147,12 @@ readline()
 ```
 
 # Keyword arguments:
-- `vertex_labels`: Custom tensor labels to display on the vertices of the digram. If not specified, they are determined automatically from the input to the macro.
-- `edge_labels=IndexLabels()`: A list of the edge labels or an `AbstractEdgeLabels` object specifying how they should be made.
-- `arrow_show`: Whether or not to show arrows on the edges.
+
+  - `vertex_labels`: Custom tensor labels to display on the vertices of the
+     digram. If not specified, they are determined automatically from the input to the macro.
+  - `edge_labels=IndexLabels()`: A list of the edge labels or an
+     `AbstractEdgeLabels` object specifying how they should be made.
+  - `arrow_show`: Whether or not to show arrows on the edges.
 """
 macro visualize(fig::Symbol, ex::Symbol, kwargs::Expr...)
   e = quote

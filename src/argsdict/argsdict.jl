@@ -16,7 +16,7 @@ auto_parse(::Type{String}, val) = String(strip(val))
     parse_type(valtype, default_type::Type = AutoType)
 
 Parse the type of `valtype`. If `valtype` has a type declaration,
-like `parse_type("2::ComplexF64")`, it gets parsed as that type 
+like `parse_type("2::ComplexF64")`, it gets parsed as that type
 declared, and returns `(ComplexF64, 2)`.
 
 If `val` doesn't have a type declaration, it gets parsed into

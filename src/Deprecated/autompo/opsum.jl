@@ -189,7 +189,7 @@ const AutoMPO = OpSum
 
 """
     OpSum()
-    
+
 Construct an empty `OpSum`.
 """
 OpSum() = OpSum(Vector{MPOTerm}())
@@ -232,7 +232,7 @@ Base.iterate(os::OpSum, args...) = iterate(data(os), args...)
 
     +(ampo:OpSum, term::Tuple)
 
-Add a single- or multi-site operator 
+Add a single- or multi-site operator
 term to the OpSum `ampo`. Each operator
 is specified by a name (String) and a
 site number (Int). The second version
@@ -251,6 +251,7 @@ which avoids reallocating the OpSum
 after each addition.
 
 # Examples
+
 ```julia
 ampo = OpSum()
 
