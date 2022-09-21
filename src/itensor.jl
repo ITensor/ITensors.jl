@@ -591,119 +591,19 @@ randomITensor(is...) = randomITensor(Float64, indices(is...))
 # To fix ambiguity errors with QN version
 randomITensor() = randomITensor(Float64, ())
 
-#########################
-# End ITensor constructors
-#
 """
-    inds(T::ITensor)
+    dense(T::ITensor)
 
-    Return the indices of the ITensor as a Tuple.
+Make a new ITensor where the storage is the closest Dense storage,
+avoiding allocating new data if possible.
+For example, an ITensor with Diag storage will become Dense storage,
+filled with zeros except for the diagonal values.
 """
-inds(T::ITensor) = inds(tensor(T))
-
-# Trait to check if the tensor has QN symmetry
-symmetrystyle(T::Tensor) = symmetrystyle(inds(T))
-symmetrystyle(T::ITensor)::SymmetryStyle = symmetrystyle(tensor(T))
-
-"""
-    ind(T::ITensor, i::Int)
-
-    Get the Index of the ITensor along dimension i.
-"""
-ind(T::ITensor, i::Int) = ind(tensor(T), i)
-
-"""
-    storage(T::ITensor)
-
-    Return a view of the TensorStorage of the ITensor.
-"""
-storage(T::ITensor)::TensorStorage = storage(tensor(T))
-
-storagetype(x::ITensor) = storagetype(tensor(x))
-
-"""
-    data(T::ITensor)
-
-Return a view of the raw data of the ITensor.
-
-This is mostly an internal ITensor function, please
-let the developers of ITensors.jl know if there is
-functionality for ITensors that you would like
-that is not currently available.
-"""
-data(T::ITensor) = NDTensors.data(tensor(T))
-
-NDTensors.data(x::ITensor) = data(x)
-datatype(x::ITensor) = datatype(tensor(x))
-
-similar(T::ITensor, args...)::ITensor = itensor(NDTensors.similar(tensor(T), args...))
-
-function settensor!(T::ITensor, t)::ITensor
-  T.tensor = t
-  return T
+function dense(A::ITensor)
+  return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
 end
 
-function setinds!(T::ITensor, is)::ITensor
-  # TODO: always convert to Tuple with Tensor type?
-  return settensor!(T, setinds(tensor(T), Tuple(is)))
-end
-
-function setstorage!(T::ITensor, st)::ITensor
-  return settensor!(T, setstorage(tensor(T), st))
-end
-
-function setinds(T::ITensor, is)::ITensor
-  # TODO: always convert to Tuple with Tensor type?
-  return itensor(setinds(tensor(T), Tuple(is)))
-end
-
-function setstorage(T::ITensor, st)::ITensor
-  return itensor(setstorage(tensor(T), st))
-end
-
-#
-# Iteration over ITensors
-#
-
-"""
-    CartesianIndices(A::ITensor)
-
-Create a CartesianIndices iterator for an ITensor. Helpful for
-iterating over all elements of the ITensor.
-
-julia> i = Index(2, "i")
-(dim=2|id=90|"i")
-
-julia> j = Index(3, "j")
-(dim=3|id=554|"j")
-
-julia> A = randomITensor(i, j)
-ITensor ord=2 (dim=2|id=90|"i") (dim=3|id=554|"j")
-Dense{Float64,Array{Float64,1}}
-
-julia> C = CartesianIndices(A)
-2×3 CartesianIndices{2,Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}}:
-CartesianIndex(1, 1)  CartesianIndex(1, 2)  CartesianIndex(1, 3)
-CartesianIndex(2, 1)  CartesianIndex(2, 2)  CartesianIndex(2, 3)
-
-julia> for c in C
-@show c, A[c]
-end
-(c, A[c]) = (CartesianIndex(1, 1), 0.9867887290267864)
-(c, A[c]) = (CartesianIndex(2, 1), -0.5967323222288754)
-(c, A[c]) = (CartesianIndex(1, 2), 0.9675791778518225)
-(c, A[c]) = (CartesianIndex(2, 2), 0.2842549524334651)
-(c, A[c]) = (CartesianIndex(1, 3), -0.023483276282564795)
-(c, A[c]) = (CartesianIndex(2, 3), -0.4877709982071688)
-
-!!! warning
-
-    Unlike standard `AbstractArray{T, N}` types, `ITensor`s do not have their
-    order as type paramater, and therefore iterating using `CartesianIndices`
-    is generally slow. If you are performing operations that use iterating over
-    individual elements of an ITensor it is best to convert to `NDTensors.Tensor`.
-"""
-CartesianIndices(A::ITensor) = CartesianIndices(tensor(A))
+denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
 """
     delta([::Type{ElT} = Float64, ]inds)
@@ -763,25 +663,9 @@ onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
 setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
 
 """
-    dense(T::ITensor)
-
-Make a new ITensor where the storage is the closest Dense storage,
-avoiding allocating new data if possible.
-For example, an ITensor with Diag storage will become Dense storage,
-filled with zeros except for the diagonal values.
-"""
-function dense(A::ITensor)
-  return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
-end
-
-removeqns(T::ITensor) = dense(T)
-
-denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
-
-"""
     complex(T::ITensor)
 
-    Convert to the complex version of the storage.
+Convert to the complex version of the storage.
 """
 complex(T::ITensor) = itensor(complex(tensor(T)))
 
@@ -791,6 +675,42 @@ function complex!(T::ITensor)
   setinds!(T, inds(ct))
   return T
 end
+
+copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
+
+#########################
+# End ITensor constructors
+#
+
+#########################
+# ITensor properties
+#
+
+"""
+    storage(T::ITensor)
+
+    Return a view of the TensorStorage of the ITensor.
+"""
+storage(T::ITensor)::TensorStorage = storage(tensor(T))
+
+storagetype(x::ITensor) = storagetype(tensor(x))
+
+"""
+    data(T::ITensor)
+
+Return a view of the raw data of the ITensor.
+
+This is mostly an internal ITensor function, please
+let the developers of ITensors.jl know if there is
+functionality for ITensors that you would like
+that is not currently available.
+"""
+data(T::ITensor) = NDTensors.data(tensor(T))
+
+NDTensors.data(x::ITensor) = data(x)
+datatype(x::ITensor) = datatype(tensor(x))
+
+similar(T::ITensor, args...)::ITensor = itensor(NDTensors.similar(tensor(T), args...))
 
 eltype(T::ITensor) = eltype(tensor(T))
 scalartype(x::ITensor) = eltype(x)
@@ -849,7 +769,26 @@ size(T::ITensor) = dims(T)
 
 size(A::ITensor, d::Int) = size(tensor(A), d)
 
-copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
+# XXX: rename isemptystorage?
+"""
+    isemptystorage(T::ITensor)
+
+Returns `true` if the ITensor contains no elements.
+
+An ITensor with `EmptyStorage` storage always returns `true`.
+"""
+isemptystorage(T::ITensor) = isemptystorage(tensor(T))
+isemptystorage(T::Tensor) = isempty(T)
+isempty(T::ITensor) = isemptystorage(T)
+
+isreal(T::ITensor) = eltype(T) <: Real
+iszero(T::ITensor) = all(iszero, T)
+
+removeqns(T::ITensor) = dense(T)
+
+# Trait to check if the tensor has QN symmetry
+symmetrystyle(T::Tensor) = symmetrystyle(inds(T))
+symmetrystyle(T::ITensor)::SymmetryStyle = symmetrystyle(tensor(T))
 
 function convert_eltype(ElType::Type, T::ITensor)
   if eltype(T) == ElType
@@ -871,6 +810,77 @@ an Vector of Vectors.
 """
 function convert_leaf_eltype(ElType::Type, A::Array)
   return map(x -> convert_leaf_eltype(ElType, x), A)
+end
+
+function isapprox(A::ITensor, B::ITensor; kwargs...)
+  if !hassameinds(A, B)
+    error("In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors
+    do not match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the
+    second ITensor has indices: \n\n$(inds(B))",)
+  end
+  B = permute(B, inds(A))
+  return isapprox(array(A), array(B); kwargs...)
+end
+
+_isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
+_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
+
+real(T::ITensor)::ITensor = itensor(real(tensor(T)))
+
+imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
+
+conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
+
+#
+# Block sparse related functions
+# (Maybe create fallback definitions for dense tensors)
+#
+
+hasqns(T::Union{Tensor,ITensor}) = hasqns(inds(T))
+
+eachnzblock(T::ITensor) = eachnzblock(tensor(T))
+
+nnz(T::ITensor) = nnz(tensor(T))
+
+nblocks(T::ITensor, args...) = nblocks(tensor(T), args...)
+
+nnzblocks(T::ITensor) = nnzblocks(tensor(T))
+
+nzblock(T::ITensor, args...) = nzblock(tensor(T), args...)
+
+nzblocks(T::ITensor) = nzblocks(tensor(T))
+
+blockoffsets(T::ITensor) = blockoffsets(tensor(T))
+
+#########################
+# End ITensor properties
+#
+
+#########################
+# ITensor Accessor Functions
+#
+
+function settensor!(T::ITensor, t)::ITensor
+  T.tensor = t
+  return T
+end
+
+function setinds!(T::ITensor, is)::ITensor
+  # TODO: always convert to Tuple with Tensor type?
+  return settensor!(T, setinds(tensor(T), Tuple(is)))
+end
+
+function setstorage!(T::ITensor, st)::ITensor
+  return settensor!(T, setstorage(tensor(T), st))
+end
+
+function setinds(T::ITensor, is)::ITensor
+  # TODO: always convert to Tuple with Tensor type?
+  return itensor(setinds(tensor(T), Tuple(is)))
+end
+
+function setstorage(T::ITensor, st)::ITensor
+  return itensor(setstorage(tensor(T), st))
 end
 
 """
@@ -934,6 +944,134 @@ Extract the element of an order zero ITensor.
 Same as `T[]`.
 """
 scalar(T::ITensor)::Any = T[]
+
+"""
+    fill!(T::ITensor, x::Number)
+
+Fill all values of the ITensor with the specified value.
+"""
+function fill!(T::ITensor, x::Number)
+  # Use broadcasting `T .= x`?
+  return settensor!(T, fill!!(tensor(T), x))
+end
+
+#
+# Block sparse related functions
+# (Maybe create fallback definitions for dense tensors)
+#
+
+function insertblock!(T::ITensor, args...)
+  (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
+    error("Block does not match current flux")
+  TR = insertblock!!(tensor(T), args...)
+  settensor!(T, TR)
+  return T
+end
+
+function insert_diag_blocks!(T::ITensor)
+  ## TODO: Add a check that all diag blocks
+  ## have the correct flux
+  ## (!isnothing(flux(T)) && check_diagblock_flux(T)) &&
+  ##   error("Block does not match current flux")
+  insert_diag_blocks!(tensor(T))
+  return T
+end
+
+#########################
+# End ITensor Accessor Functions
+#
+
+#########################
+# ITensor Iterators
+#
+
+"""
+    CartesianIndices(A::ITensor)
+
+Create a CartesianIndices iterator for an ITensor. Helpful for
+iterating over all elements of the ITensor.
+
+julia> i = Index(2, "i")
+(dim=2|id=90|"i")
+
+julia> j = Index(3, "j")
+(dim=3|id=554|"j")
+
+julia> A = randomITensor(i, j)
+ITensor ord=2 (dim=2|id=90|"i") (dim=3|id=554|"j")
+Dense{Float64,Array{Float64,1}}
+
+julia> C = CartesianIndices(A)
+2×3 CartesianIndices{2,Tuple{Base.OneTo{Int64},Base.OneTo{Int64}}}:
+CartesianIndex(1, 1)  CartesianIndex(1, 2)  CartesianIndex(1, 3)
+CartesianIndex(2, 1)  CartesianIndex(2, 2)  CartesianIndex(2, 3)
+
+julia> for c in C
+@show c, A[c]
+end
+(c, A[c]) = (CartesianIndex(1, 1), 0.9867887290267864)
+(c, A[c]) = (CartesianIndex(2, 1), -0.5967323222288754)
+(c, A[c]) = (CartesianIndex(1, 2), 0.9675791778518225)
+(c, A[c]) = (CartesianIndex(2, 2), 0.2842549524334651)
+(c, A[c]) = (CartesianIndex(1, 3), -0.023483276282564795)
+(c, A[c]) = (CartesianIndex(2, 3), -0.4877709982071688)
+
+!!! warning
+
+    Unlike standard `AbstractArray{T, N}` types, `ITensor`s do not have their
+    order as type paramater, and therefore iterating using `CartesianIndices`
+    is generally slow. If you are performing operations that use iterating over
+    individual elements of an ITensor it is best to convert to `NDTensors.Tensor`.
+"""
+CartesianIndices(A::ITensor) = CartesianIndices(tensor(A))
+
+"""
+    eachindex(A::ITensor)
+
+Create an iterable object for visiting each element of the ITensor `A` (including structually
+zero elements for sparse tensors).
+
+For example, for dense tensors this may return `1:length(A)`, while for sparse tensors
+it may return a Cartesian range.
+"""
+eachindex(A::ITensor) = eachindex(tensor(A))
+
+"""
+    eachindval(A::ITensor)
+
+Create an iterable object for visiting each element of the ITensor `A` (including structually
+zero elements for sparse tensors) in terms of pairs of indices and values.
+"""
+eachindval(T::ITensor) = eachindval(inds(T))
+
+"""
+    iterate(A::ITensor, args...)
+
+Iterate over the elements of an ITensor.
+"""
+iterate(A::ITensor, args...) = iterate(tensor(A), args...)
+
+#########################
+# End ITensor Iterators
+#
+
+#########################
+# ITensor Index Functions
+#
+
+"""
+    inds(T::ITensor)
+
+Return the indices of the ITensor as a Tuple.
+"""
+inds(T::ITensor) = inds(tensor(T))
+
+"""
+    ind(T::ITensor, i::Int)
+
+Get the Index of the ITensor along dimension i.
+"""
+ind(T::ITensor, i::Int) = ind(tensor(T), i)
 
 lastindex(A::ITensor, n::Int64) = LastVal()
 lastindex(A::ITensor) = LastVal()
@@ -1153,42 +1291,6 @@ end
 function setindex!(T::ITensor, x::Number, I1::String, Is::String...)
   T[_vals(T, I1, Is...)...] = x
   return T
-end
-
-"""
-    eachindex(A::ITensor)
-
-Create an iterable object for visiting each element of the ITensor `A` (including structually
-zero elements for sparse tensors).
-
-For example, for dense tensors this may return `1:length(A)`, while for sparse tensors
-it may return a Cartesian range.
-"""
-eachindex(A::ITensor) = eachindex(tensor(A))
-
-"""
-    eachindval(A::ITensor)
-
-Create an iterable object for visiting each element of the ITensor `A` (including structually
-zero elements for sparse tensors) in terms of pairs of indices and values.
-"""
-eachindval(T::ITensor) = eachindval(inds(T))
-
-"""
-    iterate(A::ITensor, args...)
-
-Iterate over the elements of an ITensor.
-"""
-iterate(A::ITensor, args...) = iterate(tensor(A), args...)
-
-"""
-    fill!(T::ITensor, x::Number)
-
-Fill all values of the ITensor with the specified value.
-"""
-function fill!(T::ITensor, x::Number)
-  # Use broadcasting `T .= x`?
-  return settensor!(T, fill!!(tensor(T), x))
 end
 
 # TODO: name this `inds` or `indscollection`?
@@ -1577,7 +1679,36 @@ Check if all of the indices in the ITensor have the specified tags.
 """
 allhastags(A::ITensor, ts) = allhastags(inds(A), ts)
 
+"""
+    dir(A::ITensor, i::Index)
+
+Return the direction of the Index `i` in the ITensor `A`.
+"""
+dir(A::ITensor, i::Index) = dir(inds(A), i)
+
 dirs(A::ITensor, is) = dirs(inds(A), is)
+
+# Returns a tuple of pairs of indices, where the pairs
+# are determined by the prime level pairs `plev` and
+# tag pairs `tags`.
+function indpairs(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
+  is1 = filterinds(T; plev=first(plev), tags=first(tags))
+  is2 = filterinds(T; plev=last(plev), tags=last(tags))
+  is2to1 = replacetags(mapprime(is2, last(plev) => first(plev)), last(tags) => first(tags))
+  is_first = commoninds(is1, is2to1)
+  is_last = replacetags(
+    mapprime(is_first, first(plev) => last(plev)), first(tags) => last(tags)
+  )
+  is_last = permute(commoninds(T, is_last), is_last)
+  return is_first .=> is_last
+end
+#########################
+# End ITensor Index Functions
+#
+
+#########################
+# ITensor Operations
+#
 
 function (A::ITensor == B::ITensor)
   !hassameinds(A, B) && return false
@@ -1586,28 +1717,11 @@ end
 
 LinearAlgebra.promote_leaf_eltypes(A::ITensor) = eltype(A)
 
-function isapprox(A::ITensor, B::ITensor; kwargs...)
-  if !hassameinds(A, B)
-    error("In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors
-    do not match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the
-    second ITensor has indices: \n\n$(inds(B))",)
-  end
-  B = permute(B, inds(A))
-  return isapprox(array(A), array(B); kwargs...)
-end
-
 function randn!(T::ITensor)
   return settensor!(T, randn!!(tensor(T)))
 end
 
 norm(T::ITensor) = norm(tensor(T))
-
-"""
-    dir(A::ITensor, i::Index)
-
-Return the direction of the Index `i` in the ITensor `A`.
-"""
-dir(A::ITensor, i::Index) = dir(inds(A), i)
 
 function (T::ITensor * x::Number)::ITensor
   return itensor(x * tensor(T))
@@ -1621,9 +1735,6 @@ end
 (T1::ITensor / T2::ITensor) = T1 / T2[]
 
 -(A::ITensor) = itensor(-tensor(A))
-
-_isemptyscalar(A::ITensor) = _isemptyscalar(tensor(A))
-_isemptyscalar(A::Tensor) = ndims(A) == 0 && isemptystorage(A) && eltype(A) === EmptyNumber
 
 function _add(A::Tensor, B::Tensor)
   if _isemptyscalar(A) && ndims(B) > 0
@@ -1661,31 +1772,6 @@ function (A::ITensor - B::ITensor)
   return C
 end
 
-real(T::ITensor)::ITensor = itensor(real(tensor(T)))
-
-imag(T::ITensor)::ITensor = itensor(imag(tensor(T)))
-
-conj(T::ITensor)::ITensor = itensor(conj(tensor(T)))
-
-"""
-    combinedind(C::ITensor)
-
-Given a combiner ITensor, return the Index which is
-the "combined" index that is made out of merging
-the other indices given to the combiner when it is made
-
-For more information, see the `combiner` function.
-"""
-function combinedind(T::ITensor)
-  if storage(T) isa Combiner && order(T) > 0
-    return inds(T)[1]
-  end
-  return nothing
-end
-
-# TODO: add iscombiner(::Tensor) to NDTensors
-iscombiner(T::ITensor)::Bool = (storage(T) isa Combiner)
-
 # TODO: add isdiag(::Tensor) to NDTensors
 isdiag(T::ITensor)::Bool = (storage(T) isa Diag || storage(T) isa DiagBlockSparse)
 
@@ -1696,127 +1782,6 @@ diaglength(T::ITensor) = diaglength(tensor(T))
 mul!(C::ITensor, A::ITensor, B::ITensor, args...)::ITensor = contract!(C, A, B, args...)
 
 dot(A::ITensor, B::ITensor) = (dag(A) * B)[]
-
-# Returns a tuple of pairs of indices, where the pairs
-# are determined by the prime level pairs `plev` and
-# tag pairs `tags`.
-function indpairs(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
-  is1 = filterinds(T; plev=first(plev), tags=first(tags))
-  is2 = filterinds(T; plev=last(plev), tags=last(tags))
-  is2to1 = replacetags(mapprime(is2, last(plev) => first(plev)), last(tags) => first(tags))
-  is_first = commoninds(is1, is2to1)
-  is_last = replacetags(
-    mapprime(is_first, first(plev) => last(plev)), first(tags) => last(tags)
-  )
-  is_last = permute(commoninds(T, is_last), is_last)
-  return is_first .=> is_last
-end
-
-"""
-      tr(T::ITensor; kwargs)
-
-  Trace of an ITensor over a pair of indices
-  determined by the prime levels and tags. Indices
-  that are not in pairs are not traced over, corresponding
-  to a "batched" trace
-"""
-# Fix for AD
-function _tr(T::ITensor; plev::Pair{Int,Int}=0 => 1, tags::Pair=ts"" => ts"")
-  trpairs = indpairs(T; plev=plev, tags=tags)
-  Cᴸ = combiner(first.(trpairs))
-  Cᴿ = combiner(last.(trpairs))
-  Tᶜ = T * Cᴸ * Cᴿ
-  cᴸ = uniqueind(Cᴸ, T)
-  cᴿ = uniqueind(Cᴿ, T)
-  Tᶜ *= δ(dag((cᴸ, cᴿ)))
-  if order(Tᶜ) == 0
-    return Tᶜ[]
-  end
-  return Tᶜ
-end
-
-# Trace an ITensor over pairs of indices determined by
-# the prime levels and tags. Indices that are not in pairs
-# are not traced over, corresponding to a "batched" trace.
-function tr(T::ITensor; kwargs...)
-  return _tr(T; kwargs...)
-end
-
-"""
-    exp(A::ITensor, Linds=Rinds', Rinds=inds(A,plev=0); ishermitian = false)
-
-Compute the exponential of the tensor `A` by treating it as a matrix ``A_{lr}`` with
-the left index `l` running over all indices in `Linds` and `r` running over all
-indices in `Rinds`.
-
-Only accepts index lists `Linds`,`Rinds` such that: (1) `length(Linds) + length(Rinds) == length(inds(A))`
-(2) `length(Linds) == length(Rinds)` (3) For each pair of indices
-`(Linds[n],Rinds[n])`, `Linds[n]` and `Rinds[n]` represent the same Hilbert space
-(the same QN structure in the QN case, or just the same length in the dense case),
-and appear in `A` with opposite directions.
-
-When `ishermitian=true` the exponential of `Hermitian(A_{lr})` is
-computed internally.
-"""
-function exp(A::ITensor, Linds, Rinds; kwargs...)
-  ishermitian = get(kwargs, :ishermitian, false)
-
-  @debug_check begin
-    if hasqns(A)
-      @assert flux(A) == QN()
-    end
-  end
-
-  N = ndims(A)
-  NL = length(Linds)
-  NR = length(Rinds)
-  NL != NR && error("Must have equal number of left and right indices")
-  N != NL + NR &&
-    error("Number of left and right indices must add up to total number of indices")
-
-  # Linds, Rinds may not have the correct directions
-  # TODO: does the need a conversion?
-  Lis = Linds
-  Ris = Rinds
-
-  # Ensure the indices have the correct directions,
-  # QNs, etc.
-  # First grab the indices in A, then permute them
-  # correctly.
-  Lis = permute(commoninds(A, Lis), Lis)
-  Ris = permute(commoninds(A, Ris), Ris)
-
-  for (l, r) in zip(Lis, Ris)
-    if space(l) != space(r)
-      error("In exp, indices must come in pairs with equal spaces.")
-    end
-    if hasqns(A)
-      if dir(l) == dir(r)
-        error("In exp, indices must come in pairs with opposite directions")
-      end
-    end
-  end
-
-  CL = combiner(Lis...; dir=Out)
-  CR = combiner(Ris...; dir=In)
-  AC = (A * CR) * CL
-  expAT = ishermitian ? exp(Hermitian(tensor(AC))) : exp(tensor(AC))
-  return (itensor(expAT) * dag(CR)) * dag(CL)
-end
-
-function exp(A::ITensor; kwargs...)
-  Ris = filterinds(A; plev=0)
-  Lis = Ris'
-  return exp(A, Lis, Ris; kwargs...)
-end
-
-inner(y::ITensor, A::ITensor, x::ITensor) = (dag(y) * A * x)[]
-inner(y::ITensor, x::ITensor) = (dag(y) * x)[]
-
-#######################################################################
-#
-# In-place operations
-#
 
 """
     normalize!(T::ITensor)
@@ -1905,58 +1870,9 @@ mul!(R::ITensor, α::Number, T::ITensor) = (R .= α .* T)
 
 mul!(R::ITensor, T::ITensor, α::Number) = (R .= T .* α)
 
+#########################
+# End ITensor Operations
 #
-# Block sparse related functions
-# (Maybe create fallback definitions for dense tensors)
-#
-
-hasqns(T::Union{Tensor,ITensor}) = hasqns(inds(T))
-
-eachnzblock(T::ITensor) = eachnzblock(tensor(T))
-
-nnz(T::ITensor) = nnz(tensor(T))
-
-nblocks(T::ITensor, args...) = nblocks(tensor(T), args...)
-
-nnzblocks(T::ITensor) = nnzblocks(tensor(T))
-
-nzblock(T::ITensor, args...) = nzblock(tensor(T), args...)
-
-nzblocks(T::ITensor) = nzblocks(tensor(T))
-
-blockoffsets(T::ITensor) = blockoffsets(tensor(T))
-
-function insertblock!(T::ITensor, args...)
-  (!isnothing(flux(T)) && flux(T) ≠ flux(T, args...)) &&
-    error("Block does not match current flux")
-  TR = insertblock!!(tensor(T), args...)
-  settensor!(T, TR)
-  return T
-end
-
-function insert_diag_blocks!(T::ITensor)
-  ## TODO: Add a check that all diag blocks
-  ## have the correct flux
-  ## (!isnothing(flux(T)) && check_diagblock_flux(T)) &&
-  ##   error("Block does not match current flux")
-  insert_diag_blocks!(tensor(T))
-  return T
-end
-
-# XXX: rename isemptystorage?
-"""
-    isemptystorage(T::ITensor)
-
-Returns `true` if the ITensor contains no elements.
-
-An ITensor with `EmptyStorage` storage always returns `true`.
-"""
-isemptystorage(T::ITensor) = isemptystorage(tensor(T))
-isemptystorage(T::Tensor) = isempty(T)
-isempty(T::ITensor) = isemptystorage(T)
-
-isreal(T::ITensor) = eltype(T) <: Real
-iszero(T::ITensor) = all(iszero, T)
 
 # Helper function for deprecating a keyword argument
 function deprecated_keyword_argument(
