@@ -13,6 +13,25 @@ function combiner(; kwargs...)
   return itensor(Combiner(), ())
 end
 
+"""
+    combinedind(C::ITensor)
+
+Given a combiner ITensor, return the Index which is
+the "combined" index that is made out of merging
+the other indices given to the combiner when it is made
+
+For more information, see the `combiner` function.
+"""
+function combinedind(T::ITensor)
+  if storage(T) isa Combiner && order(T) > 0
+    return inds(T)[1]
+  end
+  return nothing
+end
+
+# TODO: add iscombiner(::Tensor) to NDTensors
+iscombiner(T::ITensor)::Bool = (storage(T) isa Combiner)
+
 @doc """
     combiner(inds::Indices; kwargs...)
 
