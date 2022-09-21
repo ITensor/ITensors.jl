@@ -224,7 +224,7 @@ ITensor(::UndefInitializer, inds...) = ITensor(Float64, undef, indices(inds...))
     ITensor([ElT::Type, ]x::Number, inds)
     ITensor([ElT::Type, ]x::Number, inds::Index...)
 
-  Construct an ITensor with all elements set to `x` and indices `inds`.
+Construct an ITensor with all elements set to `x` and indices `inds`.
 
   If `x isa Int` or `x isa Complex{Int}` then the elements will be set to `float(x)`
   unless specified otherwise by the first input.
