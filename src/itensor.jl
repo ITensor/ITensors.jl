@@ -136,81 +136,85 @@ itensor(args...; kwargs...)::ITensor = ITensor(AllowAlias(), args...; kwargs...)
 ITensor(::AliasStyle, args...; kwargs...)::ITensor =
   error("ITensor constructor with input arguments of types `$(typeof.(args))` not defined.")
 
-  """
-      Tensor(::ITensor)
+"""
+    Tensor(::ITensor)
 
-  Create a `Tensor` that stores a copy of the storage and
-  indices of the input `ITensor`.
-  """
-  Tensor(T::ITensor)::Tensor = Tensor(NeverAlias(), T)
-  Tensor(as::NeverAlias, T::ITensor)::Tensor = Tensor(AllowAlias(), copy(T))
+Create a `Tensor` that stores a copy of the storage and
+indices of the input `ITensor`.
+"""
+Tensor(T::ITensor)::Tensor = Tensor(NeverAlias(), T)
+Tensor(as::NeverAlias, T::ITensor)::Tensor = Tensor(AllowAlias(), copy(T))
 
-  """
-      tensor(::ITensor)
+"""
+    tensor(::ITensor)
 
-  Convert the `ITensor` to a `Tensor` that shares the same
-  storage and indices as the `ITensor`.
-  """
-  Tensor(::AllowAlias, A::ITensor) = A.tensor
+Convert the `ITensor` to a `Tensor` that shares the same
+storage and indices as the `ITensor`.
+"""
+Tensor(::AllowAlias, A::ITensor) = A.tensor
 
-  """
-      ITensor([::Type{ElT} = Float64, ]inds)
-      ITensor([::Type{ElT} = Float64, ]inds::Index...)
+"""
+    ITensor([::Type{ElT} = Float64, ]inds)
+    ITensor([::Type{ElT} = Float64, ]inds::Index...)
 
-  Construct an ITensor filled with zeros having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`.
+Construct an ITensor filled with zeros having indices `inds` and element type
+`ElT`. If the element type is not specified, it defaults to `Float64`.
 
-  The storage will have `NDTensors.Dense` type.
+The storage will have `NDTensors.Dense` type.
 
-  # Examples
+# Examples
 
-  ```julia
-  i = Index(2,"index_i")
-  j = Index(4,"index_j")
-  k = Index(3,"index_k")
+```julia
+i = Index(2,"index_i")
+j = Index(4,"index_j")
+k = Index(3,"index_k")
 
-  A = ITensor(i,j)
-  B = ITensor(ComplexF64,k,j)
-  ```
-  """
-  function ITensor(eltype::Type{<:Number}, is::Indices)
-    return itensor(EmptyStorage(eltype), is)
-  end
+A = ITensor(i,j)
+B = ITensor(ComplexF64,k,j)
+```
+"""
+function ITensor(eltype::Type{<:Number}, is::Indices)
+  return itensor(EmptyStorage(eltype), is)
+end
 
-  ITensor(eltype::Type{<:Number}, is...) = ITensor(eltype, indices(is...))
+ITensor(eltype::Type{<:Number}, is...) = ITensor(eltype, indices(is...))
 
-  ITensor(is...) = ITensor(EmptyNumber, is...)
+ITensor(is...) = ITensor(EmptyNumber, is...)
 
-  # To fix ambiguity with QN Index version
-  # TODO: define as `emptyITensor(ElT)`
-  ITensor(eltype::Type{<:Number}=EmptyNumber) = ITensor(eltype, ())
+# To fix ambiguity with QN Index version
+# TODO: define as `emptyITensor(ElT)`
+ITensor(eltype::Type{<:Number}=EmptyNumber) = ITensor(eltype, ())
 
-  # TODO: define as `emptyITensor(ElT)`
-  function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
-    return ITensor(EmptyStorage(ElT), inds)
-  end
+# TODO: define as `emptyITensor(ElT)`
+function ITensor(::Type{ElT}, inds::Tuple{}) where {ElT<:Number}
+  return ITensor(EmptyStorage(ElT), inds)
+end
 
-  """
-      ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
-      ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::Index...)
+"""
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds)
+    ITensor([::Type{ElT} = Float64, ]::UndefInitializer, inds::Index...)
 
-  Construct an ITensor filled with undefined elements having indices `inds` and element type `ElT`. If the element type is not specified, it defaults to `Float64`. One purpose for using this constructor is that initializing the elements in an undefined way is faster than initializing them to a set value such as zero.
+Construct an ITensor filled with undefined elements having indices `inds` and
+element type `ElT`. If the element type is not specified, it defaults to `Float64`.
+One purpose for using this constructor is that initializing the elements in an
+  undefined way is faster than initializing them to a set value such as zero.
 
-  The storage will have `NDTensors.Dense` type.
+The storage will have `NDTensors.Dense` type.
 
-  # Examples
+# Examples
 
-  ```julia
-  i = Index(2,"index_i")
-  j = Index(4,"index_j")
-  k = Index(3,"index_k")
+```julia
+i = Index(2,"index_i")
+j = Index(4,"index_j")
+k = Index(3,"index_k")
 
-  A = ITensor(undef,i,j)
-  B = ITensor(ComplexF64,undef,k,j)
-  ```
-  """
-  function ITensor(::Type{ElT}, ::UndefInitializer, inds::Indices) where {ElT<:Number}
-    return itensor(Dense(ElT, undef, dim(inds)), indices(inds))
-  end
+A = ITensor(undef,i,j)
+B = ITensor(ComplexF64,undef,k,j)
+```
+"""
+function ITensor(::Type{ElT}, ::UndefInitializer, inds::Indices) where {ElT<:Number}
+  return itensor(Dense(ElT, undef, dim(inds)), indices(inds))
+end
 
 function ITensor(::Type{ElT}, ::UndefInitializer, inds...) where {ElT<:Number}
   return ITensor(ElT, undef, indices(inds...))
@@ -244,463 +248,465 @@ Construct an ITensor with all elements set to `x` and indices `inds`.
   !!! warning
       In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on.
   """
-  ITensor(eltype::Type{<:Number}, x::Number, is::Indices) = _ITensor(eltype, x, is)
+ITensor(eltype::Type{<:Number}, x::Number, is::Indices) = _ITensor(eltype, x, is)
 
-  # For disambiguation with QN version
-  ITensor(eltype::Type{<:Number}, x::Number, is::Tuple{}) = _ITensor(eltype, x, is)
+# For disambiguation with QN version
+ITensor(eltype::Type{<:Number}, x::Number, is::Tuple{}) = _ITensor(eltype, x, is)
 
-  function _ITensor(eltype::Type{<:Number}, x::Number, is::Indices)
-    return ITensor(Dense(convert(eltype, x), dim(is)), is)
-  end
+function _ITensor(eltype::Type{<:Number}, x::Number, is::Indices)
+  return ITensor(Dense(convert(eltype, x), dim(is)), is)
+end
 
-  ITensor(eltype::Type{<:Number}, x::Number, is...) = ITensor(eltype, x, indices(is...))
+ITensor(eltype::Type{<:Number}, x::Number, is...) = ITensor(eltype, x, indices(is...))
 
-  ITensor(x::Number, is...) = ITensor(eltype(x), x, is...)
+ITensor(x::Number, is...) = ITensor(eltype(x), x, is...)
 
-  const RealOrComplex{T} = Union{T,Complex{T}}
+const RealOrComplex{T} = Union{T,Complex{T}}
 
-  ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
+ITensor(x::RealOrComplex{Int}, is...) = ITensor(float(x), is...)
 
-  #
-  # EmptyStorage ITensor constructors
-  #
+#
+# EmptyStorage ITensor constructors
+#
 
-  # TODO: Deprecated!
-  """
-      emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds)
-      emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds::Index...)
+# TODO: Deprecated!
+"""
+    emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds)
+    emptyITensor([::Type{ElT} = NDTensors.EmptyNumber, ]inds::Index...)
 
-  Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.EmptyNumber`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
-  """
-  function emptyITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
-    return itensor(EmptyTensor(ElT, is))
-  end
+Construct an ITensor with storage type `NDTensors.EmptyStorage`, indices `inds`, and element type `ElT`. If the element type is not specified, it defaults to `NDTensors.EmptyNumber`, which represents a number type that can take on any value (for example, the type of the first value it is set to).
+"""
+function emptyITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
+  return itensor(EmptyTensor(ElT, is))
+end
 
-  function emptyITensor(::Type{ElT}, is...) where {ElT<:Number}
-    return emptyITensor(ElT, indices(is...))
-  end
+function emptyITensor(::Type{ElT}, is...) where {ElT<:Number}
+  return emptyITensor(ElT, indices(is...))
+end
 
-  emptyITensor(is::Indices) = emptyITensor(EmptyNumber, is)
+emptyITensor(is::Indices) = emptyITensor(EmptyNumber, is)
 
-  emptyITensor(is...) = emptyITensor(EmptyNumber, indices(is...))
+emptyITensor(is...) = emptyITensor(EmptyNumber, indices(is...))
 
-  function emptyITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number}
-    return itensor(EmptyTensor(ElT, ()))
-  end
+function emptyITensor(::Type{ElT}=EmptyNumber) where {ElT<:Number}
+  return itensor(EmptyTensor(ElT, ()))
+end
 
-  """
-      ITensor([ElT::Type, ]A::Array, inds)
-      ITensor([ElT::Type, ]A::Array, inds::Index...)
+"""
+    ITensor([ElT::Type, ]A::Array, inds)
+    ITensor([ElT::Type, ]A::Array, inds::Index...)
 
-      itensor([ElT::Type, ]A::Array, inds)
-      itensor([ElT::Type, ]A::Array, inds::Index...)
+    itensor([ElT::Type, ]A::Array, inds)
+    itensor([ElT::Type, ]A::Array, inds::Index...)
 
-  Construct an ITensor from an Array `A` and indices `inds`.
-  The ITensor will be a view of the Array data if possible (if
-  no conversion to a different element type is necessary).
+Construct an ITensor from an Array `A` and indices `inds`.
+The ITensor will be a view of the Array data if possible (if
+no conversion to a different element type is necessary).
 
-  If specified, the ITensor will have element type `ElT`.
+If specified, the ITensor will have element type `ElT`.
 
-  If the element type of `A` is `Int` or `Complex{Int}` and
-  the desired element type isn't specified, it will
-  be converted to `Float64` or `Complex{Float64}` automatically.
-  To keep the element type as an integer, specify it explicitly,
-  for example with:
-  ```julia
-  i = Index(2, "i")
-  A = [0 1; 1 0]
-  T = ITensor(eltype(A), A, i', dag(i))
-  ```
+If the element type of `A` is `Int` or `Complex{Int}` and
+the desired element type isn't specified, it will
+be converted to `Float64` or `Complex{Float64}` automatically.
+To keep the element type as an integer, specify it explicitly,
+for example with:
+```julia
+i = Index(2, "i")
+A = [0 1; 1 0]
+T = ITensor(eltype(A), A, i', dag(i))
+```
 
-  # Examples
+# Examples
 
-  ```julia
-  i = Index(2,"index_i")
-  j = Index(2,"index_j")
+```julia
+i = Index(2,"index_i")
+j = Index(2,"index_j")
 
-  M = [1. 2;
-       3 4]
-  T = ITensor(M, i, j)
-  T[i => 1, j => 1] = 3.3
-  M[1, 1] == 3.3
-  T[i => 1, j => 1] == 3.3
-  ```
+M = [1. 2;
+     3 4]
+T = ITensor(M, i, j)
+T[i => 1, j => 1] = 3.3
+M[1, 1] == 3.3
+T[i => 1, j => 1] == 3.3
+```
 
-  !!! warning
-      In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
-  """
-  function ITensor(
-    as::AliasStyle,
-    eltype::Type{<:Number},
-    A::AbstractArray{<:Number},
-    inds::Indices{Index{Int}};
-    kwargs...,
+!!! warning
+    In future versions this may not automatically convert `Int`/`Complex{Int}` inputs to floating point versions with `float` (once tensor operations using `Int`/`Complex{Int}` are natively as fast as floating point operations), and in that case the particular element type should not be relied on. To avoid extra conversions (and therefore allocations) it is best practice to directly construct with `itensor([0. 1; 1 0], i', dag(i))` if you want a floating point element type. The conversion is done as a performance optimization since often tensors are passed to BLAS/LAPACK and need to be converted to floating point types compatible with those libraries, but future projects in Julia may allow for efficient operations with more general element types (for example see https://github.com/JuliaLinearAlgebra/Octavian.jl).
+"""
+function ITensor(
+  as::AliasStyle,
+  eltype::Type{<:Number},
+  A::AbstractArray{<:Number},
+  inds::Indices{Index{Int}};
+  kwargs...,
+)
+  length(A) ≠ dim(inds) && throw(
+    DimensionMismatch(
+      "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+    ),
   )
-    length(A) ≠ dim(inds) && throw(
-      DimensionMismatch(
-        "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
-      ),
+  data = Array{eltype}(as, A)
+  return itensor(Dense(data), inds)
+end
+
+# Convert `Adjoint` to `Matrix`
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
+)
+  return ITensor(as, eltype, Matrix(A), inds; kwargs...)
+end
+
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
+)
+  return ITensor(as, eltype, A, indices(is...); kwargs...)
+end
+
+function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
+  return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
+end
+
+# For now, it's not well defined to construct an ITensor without indices
+# from a non-zero dimensional Array
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
+)
+  if length(A) > 1
+    error(
+      "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
     )
-    data = Array{eltype}(as, A)
-    return itensor(Dense(data), inds)
   end
+  return ITensor(eltype, A[]; kwargs...)
+end
 
-  # Convert `Adjoint` to `Matrix`
-  function ITensor(
-    as::AliasStyle, eltype::Type{<:Number}, A::Adjoint, inds::Indices{Index{Int}}; kwargs...
+function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
+  return ITensor(NeverAlias(), eltype, A; kwargs...)
+end
+function ITensor(A::AbstractArray{<:Number}; kwargs...)
+  return ITensor(NeverAlias(), eltype(A), A; kwargs...)
+end
+
+function ITensor(
+  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
+) where {ElT<:Number}
+  return ITensor(as, ElT, A, indices(is...); kwargs...)
+end
+
+function ITensor(
+  as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
+) where {ElT<:RealOrComplex{Int}}
+  return ITensor(as, float(ElT), A, is...; kwargs...)
+end
+
+function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
+  return ITensor(NeverAlias(), A, is...; kwargs...)
+end
+
+#
+# Diag ITensor constructors
+#
+
+"""
+    diagITensor([::Type{ElT} = Float64, ]inds)
+    diagITensor([::Type{ElT} = Float64, ]inds::Index...)
+
+Make a sparse ITensor of element type `ElT` with only elements
+along the diagonal stored. Defaults to having `zero(T)` along
+the diagonal.
+
+The storage will have `NDTensors.Diag` type.
+"""
+function diagITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
+  return itensor(Diag(ElT, mindim(is)), is)
+end
+
+diagITensor(::Type{ElT}, is...) where {ElT<:Number} = diagITensor(ElT, indices(is...))
+
+diagITensor(is::Indices) = diagITensor(Float64, is)
+diagITensor(is...) = diagITensor(indices(is...))
+
+"""
+    diagITensor([ElT::Type, ]v::Vector, inds...)
+    diagitensor([ElT::Type, ]v::Vector, inds...)
+
+Make a sparse ITensor with non-zero elements only along the diagonal.
+In general, the diagonal elements will be those stored in `v` and
+the ITensor will have element type `eltype(v)`, unless specified explicitly
+by `ElT`. The storage will have `NDTensors.Diag` type.
+
+In the case when `eltype(v) isa Union{Int, Complex{Int}}`, by default it will
+be converted to `float(v)`. Note that this behavior is subject to change
+in the future.
+
+The version `diagITensor` will never output an ITensor whose storage data
+is an alias of the input vector data.
+
+The version `diagitensor` might output an ITensor whose storage data
+is an alias of the input vector data in order to minimize operations.
+"""
+function diagITensor(
+  as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is::Indices
+)
+  length(v) ≠ mindim(is) && error(
+    "Length of vector for diagonal must equal minimum of the dimension of the input indices",
   )
-    return ITensor(as, eltype, Matrix(A), inds; kwargs...)
-  end
+  data = Vector{eltype}(as, v)
+  return itensor(Diag(data), is)
+end
 
-  function ITensor(
-    as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...
+function diagITensor(as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is...)
+  return diagITensor(as, eltype, v, indices(is...))
+end
+
+function diagITensor(as::AliasStyle, v::Vector, is...)
+  return diagITensor(as, eltype(v), v, is...)
+end
+
+function diagITensor(as::AliasStyle, v::Vector{<:RealOrComplex{Int}}, is...)
+  return diagITensor(AllowAlias(), float(eltype(v)), v, is...)
+end
+
+diagITensor(v::Vector{<:Number}, is...) = diagITensor(NeverAlias(), v, is...)
+function diagITensor(eltype::Type{<:Number}, v::Vector{<:Number}, is...)
+  return diagITensor(NeverAlias(), eltype, v, is...)
+end
+
+diagitensor(args...; kwargs...) = diagITensor(AllowAlias(), args...; kwargs...)
+
+# XXX TODO: explain conversion from Int
+# XXX TODO: proper conversion
+"""
+    diagITensor([ElT::Type, ]x::Number, inds...)
+    diagitensor([ElT::Type, ]x::Number, inds...)
+
+Make a sparse ITensor with non-zero elements only along the diagonal.
+In general, the diagonal elements will be set to the value `x` and
+the ITensor will have element type `eltype(x)`, unless specified explicitly
+by `ElT`. The storage will have `NDTensors.Diag` type.
+
+In the case when `x isa Union{Int, Complex{Int}}`, by default it will
+be converted to `float(x)`. Note that this behavior is subject to change
+in the future.
+"""
+function diagITensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is::Indices)
+  return diagITensor(AllowAlias(), eltype, fill(eltype(x), mindim(is)), is...)
+end
+
+function diagITensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is...)
+  return diagITensor(as, eltype, x, indices(is...))
+end
+
+function diagITensor(as::AliasStyle, x::Number, is...)
+  return diagITensor(as, typeof(x), x, is...)
+end
+
+function diagITensor(as::AliasStyle, x::RealOrComplex{Int}, is...)
+  return diagITensor(as, float(typeof(x)), x, is...)
+end
+
+function diagITensor(eltype::Type{<:Number}, x::Number, is...)
+  return diagITensor(NeverAlias(), eltype, x, is...)
+end
+
+diagITensor(x::Number, is...) = diagITensor(NeverAlias(), x, is...)
+
+"""
+    delta([::Type{ElT} = Float64, ]inds)
+    delta([::Type{ElT} = Float64, ]inds::Index...)
+
+Make a uniform diagonal ITensor with all diagonal elements
+`one(ElT)`. Only a single diagonal element is stored.
+
+This function has an alias `δ`.
+"""
+function delta(eltype::Type{<:Number}, is::Indices)
+  return itensor(Diag(one(eltype)), is)
+end
+
+function delta(eltype::Type{<:Number}, is...)
+  return delta(eltype, indices(is...))
+end
+
+delta(is...) = delta(Float64, is...)
+
+const δ = delta
+
+"""
+    onehot(ivs...)
+    setelt(ivs...)
+    onehot(::Type, ivs...)
+    setelt(::Type, ivs...)
+
+Create an ITensor with all zeros except the specified value,
+which is set to 1.
+
+# Examples
+```julia
+i = Index(2,"i")
+A = onehot(i=>2)
+# A[i=>2] == 1, all other elements zero
+
+# Specify the element type
+A = onehot(Float32, i=>2)
+
+j = Index(3,"j")
+B = onehot(i=>1,j=>3)
+# B[i=>1,j=>3] == 1, all other element zero
+```
+"""
+function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
+  A = ITensor(eltype, ind.(ivs)...)
+  A[val.(ivs)...] = one(eltype)
+  return A
+end
+onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(eltype, ivs...)
+setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(eltype, ivs...)
+
+onehot(ivs::Pair{<:Index}...) = onehot(Float64, ivs...)
+onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
+setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
+
+"""
+    dense(T::ITensor)
+
+Make a new ITensor where the storage is the closest Dense storage,
+avoiding allocating new data if possible.
+For example, an ITensor with Diag storage will become Dense storage,
+filled with zeros except for the diagonal values.
+"""
+function dense(A::ITensor)
+  return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
+end
+
+"""
+    randomITensor([::Type{ElT <: Number} = Float64, ]inds)
+    randomITensor([::Type{ElT <: Number} = Float64, ]inds::Index...)
+
+Construct an ITensor with type `ElT` and indices `inds`, whose elements are
+normally distributed random numbers. If the element type is not specified,
+it defaults to `Float64`.
+
+# Examples
+
+```julia
+i = Index(2,"index_i")
+j = Index(4,"index_j")
+k = Index(3,"index_k")
+
+A = randomITensor(i,j)
+B = randomITensor(ComplexF64,undef,k,j)
+```
+"""
+function randomITensor(::Type{S}, is::Indices) where {S<:Number}
+  T = ITensor(S, undef, is)
+  randn!(T)
+  return T
+end
+
+function randomITensor(::Type{S}, is...) where {S<:Number}
+  return randomITensor(S, indices(is...))
+end
+
+# To fix ambiguity with QN version
+function randomITensor(::Type{ElT}, ::Tuple{}) where {ElT<:Number}
+  return randomITensor(ElT, Index{Int}[])
+end
+
+# To fix ambiguity with QN version
+function randomITensor(is::Tuple{})
+  return randomITensor(Float64, is)
+end
+
+# To fix ambiguity errors with QN version
+function randomITensor(::Type{ElT}) where {ElT<:Number}
+  return randomITensor(ElT, ())
+end
+
+randomITensor(is::Indices) = randomITensor(Float64, is)
+randomITensor(is...) = randomITensor(Float64, indices(is...))
+
+# To fix ambiguity errors with QN version
+randomITensor() = randomITensor(Float64, ())
+
+copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
+
+#
+# Construct from Array
+#
+
+# Helper functions for different view behaviors
+Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = Array{ElT,N}(A)
+function Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
+  return convert(AbstractArray{ElT,N}, A)
+end
+function Array{ElT}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {ElT,N,ElTA}
+  return Array{ElT,N}(as, A)
+end
+
+# TODO: Change to:
+# (Array{ElT, N} where {ElT})([...]) = [...]
+# once support for `VERSION < v"1.6"` is dropped.
+# Previous to Julia v1.6 `where` syntax couldn't be used in a function name
+function Array{<:Any,N}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {N,ElTA}
+  return Array{ElTA,N}(as, A)
+end
+
+"""
+    Array{ElT, N}(T::ITensor, i:Index...)
+    Array{ElT}(T::ITensor, i:Index...)
+    Array(T::ITensor, i:Index...)
+
+    Matrix{ElT}(T::ITensor, row_i:Index, col_i::Index)
+    Matrix(T::ITensor, row_i:Index, col_i::Index)
+
+    Vector{ElT}(T::ITensor)
+    Vector(T::ITensor)
+
+Given an ITensor `T` with indices `i...`, returns
+an Array with a copy of the ITensor's elements. The
+order in which the indices are provided indicates
+the order of the data in the resulting Array.
+"""
+function Array{ElT,N}(T::ITensor, is::Indices) where {ElT,N}
+  ndims(T) != N && throw(
+    DimensionMismatch(
+      "cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."
+    ),
   )
-    return ITensor(as, eltype, A, indices(is...); kwargs...)
-  end
+  TT = tensor(permute(T, is))
+  return Array{ElT,N}(TT)::Array{ElT,N}
+end
 
-  function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}, is...; kwargs...)
-    return ITensor(NeverAlias(), eltype, A, is...; kwargs...)
-  end
+function Array{ElT,N}(T::ITensor, is...) where {ElT,N}
+  return Array{ElT,N}(T, indices(is...))
+end
 
-  # For now, it's not well defined to construct an ITensor without indices
-  # from a non-zero dimensional Array
-  function ITensor(
-    as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...
+function Array{ElT}(T::ITensor, is::Indices) where {ElT}
+  return Array{ElT,length(is)}(T, is)
+end
+
+function Array{ElT}(T::ITensor, is...) where {ElT}
+  return Array{ElT}(T, indices(is...))
+end
+
+function Array(T::ITensor, is...)
+  return Array{eltype(T)}(T, is...)
+end
+
+function Array{<:Any,N}(T::ITensor, is...) where {N}
+  return Array{eltype(T),N}(T, is...)
+end
+
+function Vector{ElT}(T::ITensor)::Vector{ElT} where {ElT}
+  ndims(T) != 1 && throw(
+    DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to a Vector.")
   )
-    if length(A) > 1
-      error(
-        "Trying to create an ITensor without any indices from Array $A of dimensions $(size(A)). Cannot construct an ITensor from an Array with more than one element without any indices.",
-      )
-    end
-    return ITensor(eltype, A[]; kwargs...)
-  end
-
-  function ITensor(eltype::Type{<:Number}, A::AbstractArray{<:Number}; kwargs...)
-    return ITensor(NeverAlias(), eltype, A; kwargs...)
-  end
-  function ITensor(A::AbstractArray{<:Number}; kwargs...)
-    return ITensor(NeverAlias(), eltype(A), A; kwargs...)
-  end
-
-  function ITensor(
-    as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
-  ) where {ElT<:Number}
-    return ITensor(as, ElT, A, indices(is...); kwargs...)
-  end
-
-  function ITensor(
-    as::AliasStyle, A::AbstractArray{ElT}, is...; kwargs...
-  ) where {ElT<:RealOrComplex{Int}}
-    return ITensor(as, float(ElT), A, is...; kwargs...)
-  end
-
-  function ITensor(A::AbstractArray{<:Number}, is...; kwargs...)
-    return ITensor(NeverAlias(), A, is...; kwargs...)
-  end
-
-  #
-  # Diag ITensor constructors
-  #
-
-  """
-      diagITensor([::Type{ElT} = Float64, ]inds)
-      diagITensor([::Type{ElT} = Float64, ]inds::Index...)
-
-  Make a sparse ITensor of element type `ElT` with only elements
-  along the diagonal stored. Defaults to having `zero(T)` along
-  the diagonal.
-
-  The storage will have `NDTensors.Diag` type.
-  """
-  function diagITensor(::Type{ElT}, is::Indices) where {ElT<:Number}
-    return itensor(Diag(ElT, mindim(is)), is)
-  end
-
-  diagITensor(::Type{ElT}, is...) where {ElT<:Number} = diagITensor(ElT, indices(is...))
-
-  diagITensor(is::Indices) = diagITensor(Float64, is)
-  diagITensor(is...) = diagITensor(indices(is...))
-
-  """
-      diagITensor([ElT::Type, ]v::Vector, inds...)
-      diagitensor([ElT::Type, ]v::Vector, inds...)
-
-  Make a sparse ITensor with non-zero elements only along the diagonal.
-  In general, the diagonal elements will be those stored in `v` and
-  the ITensor will have element type `eltype(v)`, unless specified explicitly
-  by `ElT`. The storage will have `NDTensors.Diag` type.
-
-  In the case when `eltype(v) isa Union{Int, Complex{Int}}`, by default it will
-  be converted to `float(v)`. Note that this behavior is subject to change
-  in the future.
-
-  The version `diagITensor` will never output an ITensor whose storage data
-  is an alias of the input vector data.
-
-  The version `diagitensor` might output an ITensor whose storage data
-  is an alias of the input vector data in order to minimize operations.
-  """
-  function diagITensor(
-    as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is::Indices
-  )
-    length(v) ≠ mindim(is) && error(
-      "Length of vector for diagonal must equal minimum of the dimension of the input indices",
-    )
-    data = Vector{eltype}(as, v)
-    return itensor(Diag(data), is)
-  end
-
-  function diagITensor(as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is...)
-    return diagITensor(as, eltype, v, indices(is...))
-  end
-
-  function diagITensor(as::AliasStyle, v::Vector, is...)
-    return diagITensor(as, eltype(v), v, is...)
-  end
-
-  function diagITensor(as::AliasStyle, v::Vector{<:RealOrComplex{Int}}, is...)
-    return diagITensor(AllowAlias(), float(eltype(v)), v, is...)
-  end
-
-  diagITensor(v::Vector{<:Number}, is...) = diagITensor(NeverAlias(), v, is...)
-  function diagITensor(eltype::Type{<:Number}, v::Vector{<:Number}, is...)
-    return diagITensor(NeverAlias(), eltype, v, is...)
-  end
-
-  diagitensor(args...; kwargs...) = diagITensor(AllowAlias(), args...; kwargs...)
-
-  # XXX TODO: explain conversion from Int
-  # XXX TODO: proper conversion
-  """
-      diagITensor([ElT::Type, ]x::Number, inds...)
-      diagitensor([ElT::Type, ]x::Number, inds...)
-
-  Make a sparse ITensor with non-zero elements only along the diagonal.
-  In general, the diagonal elements will be set to the value `x` and
-  the ITensor will have element type `eltype(x)`, unless specified explicitly
-  by `ElT`. The storage will have `NDTensors.Diag` type.
-
-  In the case when `x isa Union{Int, Complex{Int}}`, by default it will
-  be converted to `float(x)`. Note that this behavior is subject to change
-  in the future.
-  """
-  function diagITensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is::Indices)
-    return diagITensor(AllowAlias(), eltype, fill(eltype(x), mindim(is)), is...)
-  end
-
-  function diagITensor(as::AliasStyle, eltype::Type{<:Number}, x::Number, is...)
-    return diagITensor(as, eltype, x, indices(is...))
-  end
-
-  function diagITensor(as::AliasStyle, x::Number, is...)
-    return diagITensor(as, typeof(x), x, is...)
-  end
-
-  function diagITensor(as::AliasStyle, x::RealOrComplex{Int}, is...)
-    return diagITensor(as, float(typeof(x)), x, is...)
-  end
-
-  function diagITensor(eltype::Type{<:Number}, x::Number, is...)
-    return diagITensor(NeverAlias(), eltype, x, is...)
-  end
-
-  diagITensor(x::Number, is...) = diagITensor(NeverAlias(), x, is...)
-
-  """
-      delta([::Type{ElT} = Float64, ]inds)
-      delta([::Type{ElT} = Float64, ]inds::Index...)
-
-  Make a uniform diagonal ITensor with all diagonal elements
-  `one(ElT)`. Only a single diagonal element is stored.
-
-  This function has an alias `δ`.
-  """
-  function delta(eltype::Type{<:Number}, is::Indices)
-    return itensor(Diag(one(eltype)), is)
-  end
-
-  function delta(eltype::Type{<:Number}, is...)
-    return delta(eltype, indices(is...))
-  end
-
-  delta(is...) = delta(Float64, is...)
-
-  const δ = delta
-
-  """
-      onehot(ivs...)
-      setelt(ivs...)
-      onehot(::Type, ivs...)
-      setelt(::Type, ivs...)
-
-  Create an ITensor with all zeros except the specified value,
-  which is set to 1.
-
-  # Examples
-  ```julia
-  i = Index(2,"i")
-  A = onehot(i=>2)
-  # A[i=>2] == 1, all other elements zero
-
-  # Specify the element type
-  A = onehot(Float32, i=>2)
-
-  j = Index(3,"j")
-  B = onehot(i=>1,j=>3)
-  # B[i=>1,j=>3] == 1, all other element zero
-  ```
-  """
-  function onehot(eltype::Type{<:Number}, ivs::Pair{<:Index}...)
-    A = ITensor(eltype, ind.(ivs)...)
-    A[val.(ivs)...] = one(eltype)
-    return A
-  end
-  onehot(eltype::Type{<:Number}, ivs::Vector{<:Pair{<:Index}}) = onehot(eltype, ivs...)
-  setelt(eltype::Type{<:Number}, ivs::Pair{<:Index}...) = onehot(eltype, ivs...)
-
-  onehot(ivs::Pair{<:Index}...) = onehot(Float64, ivs...)
-  onehot(ivs::Vector{<:Pair{<:Index}}) = onehot(ivs...)
-  setelt(ivs::Pair{<:Index}...) = onehot(ivs...)
-
-  """
-      dense(T::ITensor)
-
-  Make a new ITensor where the storage is the closest Dense storage,
-  avoiding allocating new data if possible.
-  For example, an ITensor with Diag storage will become Dense storage,
-  filled with zeros except for the diagonal values.
-  """
-  function dense(A::ITensor)
-    return setinds(itensor(dense(tensor(A))), removeqns(inds(A)))
-  end
-
-  """
-      randomITensor([::Type{ElT <: Number} = Float64, ]inds)
-      randomITensor([::Type{ElT <: Number} = Float64, ]inds::Index...)
-
-  Construct an ITensor with type `ElT` and indices `inds`, whose elements are normally distributed random numbers. If the element type is not specified, it defaults to `Float64`.
-
-  # Examples
-
-  ```julia
-  i = Index(2,"index_i")
-  j = Index(4,"index_j")
-  k = Index(3,"index_k")
-
-  A = randomITensor(i,j)
-  B = randomITensor(ComplexF64,undef,k,j)
-  ```
-  """
-  function randomITensor(::Type{S}, is::Indices) where {S<:Number}
-    T = ITensor(S, undef, is)
-    randn!(T)
-    return T
-  end
-
-  function randomITensor(::Type{S}, is...) where {S<:Number}
-    return randomITensor(S, indices(is...))
-  end
-
-  # To fix ambiguity with QN version
-  function randomITensor(::Type{ElT}, ::Tuple{}) where {ElT<:Number}
-    return randomITensor(ElT, Index{Int}[])
-  end
-
-  # To fix ambiguity with QN version
-  function randomITensor(is::Tuple{})
-    return randomITensor(Float64, is)
-  end
-
-  # To fix ambiguity errors with QN version
-  function randomITensor(::Type{ElT}) where {ElT<:Number}
-    return randomITensor(ElT, ())
-  end
-
-  randomITensor(is::Indices) = randomITensor(Float64, is)
-  randomITensor(is...) = randomITensor(Float64, indices(is...))
-
-  # To fix ambiguity errors with QN version
-  randomITensor() = randomITensor(Float64, ())
-
-  copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
-
-  #
-  # Construct from Array
-  #
-
-  # Helper functions for different view behaviors
-  Array{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = Array{ElT,N}(A)
-  function Array{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
-    return convert(AbstractArray{ElT,N}, A)
-  end
-  function Array{ElT}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {ElT,N,ElTA}
-    return Array{ElT,N}(as, A)
-  end
-
-  # TODO: Change to:
-  # (Array{ElT, N} where {ElT})([...]) = [...]
-  # once support for `VERSION < v"1.6"` is dropped.
-  # Previous to Julia v1.6 `where` syntax couldn't be used in a function name
-  function Array{<:Any,N}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {N,ElTA}
-    return Array{ElTA,N}(as, A)
-  end
-
-  """
-      Array{ElT, N}(T::ITensor, i:Index...)
-      Array{ElT}(T::ITensor, i:Index...)
-      Array(T::ITensor, i:Index...)
-
-      Matrix{ElT}(T::ITensor, row_i:Index, col_i::Index)
-      Matrix(T::ITensor, row_i:Index, col_i::Index)
-
-      Vector{ElT}(T::ITensor)
-      Vector(T::ITensor)
-
-  Given an ITensor `T` with indices `i...`, returns
-  an Array with a copy of the ITensor's elements. The
-  order in which the indices are provided indicates
-  the order of the data in the resulting Array.
-  """
-  function Array{ElT,N}(T::ITensor, is::Indices) where {ElT,N}
-    ndims(T) != N && throw(
-      DimensionMismatch(
-        "cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."
-      ),
-    )
-    TT = tensor(permute(T, is))
-    return Array{ElT,N}(TT)::Array{ElT,N}
-  end
-
-  function Array{ElT,N}(T::ITensor, is...) where {ElT,N}
-    return Array{ElT,N}(T, indices(is...))
-  end
-
-  function Array{ElT}(T::ITensor, is::Indices) where {ElT}
-    return Array{ElT,length(is)}(T, is)
-  end
-
-  function Array{ElT}(T::ITensor, is...) where {ElT}
-    return Array{ElT}(T, indices(is...))
-  end
-
-  function Array(T::ITensor, is...)
-    return Array{eltype(T)}(T, is...)
-  end
-
-  function Array{<:Any,N}(T::ITensor, is...) where {N}
-    return Array{eltype(T),N}(T, is...)
-  end
-
-  function Vector{ElT}(T::ITensor)::Vector{ElT} where {ElT}
-    ndims(T) != 1 && throw(
-      DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to a Vector.")
-    )
-    return Array{ElT}(T, inds(T)...)
-  end
-
-  function Vector(T::ITensor)::Vector
-    return Array(T, inds(T)...)
-  end
+  return Array{ElT}(T, inds(T)...)
+end
+
+function Vector(T::ITensor)::Vector
+  return Array(T, inds(T)...)
+end
 #########################
 # End ITensor constructors
 #
@@ -899,7 +905,10 @@ julia> for c in C
 (c, A[c]) = (CartesianIndex(2, 3), -0.4877709982071688)
 
 !!! warning
-    Unlike standard `AbstractArray{T, N}` types, `ITensor`s do not have their order as type paramater, and therefore iterating using `CartesianIndices` is generally slow. If you are performing operations that use iterating over individual elements of an ITensor it is best to convert to `NDTensors.Tensor`.
+    Unlike standard `AbstractArray{T, N}` types, `ITensor`s do not have their
+    order as type paramater, and therefore iterating using `CartesianIndices`
+    is generally slow. If you are performing operations that use iterating over
+    individual elements of an ITensor it is best to convert to `NDTensors.Tensor`.
 """
 CartesianIndices(A::ITensor) = CartesianIndices(tensor(A))
 
@@ -1364,7 +1373,8 @@ end
 @doc """
     commoninds(A, B; kwargs...)
 
-Return a Vector with indices that are common between the indices of `A` and `B` (the set intersection, similar to `Base.intersect`).
+Return a Vector with indices that are common between the indices of `A` and `B`
+(the set intersection, similar to `Base.intersect`).
 """ commoninds
 
 # firstintersect
@@ -1380,7 +1390,8 @@ See also [`commoninds`](@ref).
 @doc """
     noncommoninds(A, B; kwargs...)
 
-Return a Vector with indices that are not common between the indices of `A` and `B` (the symmetric set difference, similar to `Base.symdiff`).
+Return a Vector with indices that are not common between the indices of `A` and
+`B` (the symmetric set difference, similar to `Base.symdiff`).
 """ noncommoninds
 
 # firstsymdiff
@@ -1396,7 +1407,8 @@ See also [`noncommoninds`](@ref).
 @doc """
     uniqueinds(A, B; kwargs...)
 
-Return Vector with indices that are unique to the set of indices of `A` and not in `B` (the set difference, similar to `Base.setdiff`).
+Return Vector with indices that are unique to the set of indices of `A` and not
+in `B` (the set difference, similar to `Base.setdiff`).
 """ uniqueinds
 
 # firstsetdiff
@@ -1412,7 +1424,8 @@ See also [`uniqueinds`](@ref).
 @doc """
     unioninds(A, B; kwargs...)
 
-Return a Vector with indices that are the union of the indices of `A` and `B` (the set union, similar to `Base.union`).
+Return a Vector with indices that are the union of the indices of `A` and `B`
+(the set union, similar to `Base.union`).
 """ unioninds
 
 # firstunion
@@ -1485,7 +1498,9 @@ Optionally, only modify the indices with the specified keyword arguments.
 - `tags = nothing`: if specified, only modify Index `i` if `hastags(i, tags) == true`.
 - `plev = nothing`: if specified, only modify Index `i` if `hasplev(i, plev) == true`.
 
-The ITensor functions come in two versions, `f` and `f!`. The latter modifies the ITensor in-place. In both versions, the ITensor storage is not modified or copied (so it returns an ITensor with a view of the original storage).
+The ITensor functions come in two versions, `f` and `f!`. The latter modifies
+the ITensor in-place. In both versions, the ITensor storage is not modified or
+copied (so it returns an ITensor with a view of the original storage).
 """
 
 @doc """
@@ -1527,7 +1542,8 @@ $priming_tagging_doc
     replaceprime(inds::IndexSet, plold => plnew; <keyword arguments>)
     mapprime(inds, <arguments>; <keyword arguments>)
 
-Set the prime level of the indices of an ITensor or collection of indices with prime level `plold` to `plnew`.
+Set the prime level of the indices of an ITensor or collection of indices with
+prime level `plold` to `plnew`.
 
 $priming_tagging_doc
 """ mapprime(::ITensor, ::Any...)
@@ -1539,7 +1555,8 @@ $priming_tagging_doc
     swapprime(inds, pl1::Int, pl2::Int; <keyword arguments>)
     swapprime(inds, pl1 => pl2; <keyword arguments>)
 
-Set the prime level of the indices of an ITensor or collection of indices with prime level `pl1` to `pl2`, and those with prime level `pl2` to `pl1`.
+Set the prime level of the indices of an ITensor or collection of indices with
+prime level `pl1` to `pl2`, and those with prime level `pl2` to `pl1`.
 
 $priming_tagging_doc
 """ swapprime(::ITensor, ::Any...)
@@ -1607,11 +1624,13 @@ The indices must have the same space (i.e. the same dimension and QNs, if applic
 
     replaceinds!(A::ITensor, inds1, inds2)
 
-Replace the Index `inds1[n]` with the Index `inds2[n]` in the ITensor, where `n` runs from `1` to `length(inds1) == length(inds2)`.
+Replace the Index `inds1[n]` with the Index `inds2[n]` in the ITensor, where `n`
+runs from `1` to `length(inds1) == length(inds2)`.
 
 The indices must have the same space (i.e. the same dimension and QNs, if applicable).
 
-The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
+The storage of the ITensor is not modified or copied (the output ITensor is a
+view of the input ITensor).
 """ replaceinds(::ITensor, ::Any...)
 
 @doc """
@@ -1629,11 +1648,13 @@ The indices must have the same space (i.e. the same dimension and QNs, if applic
 
     swapinds!(A::ITensor, inds1, inds2)
 
-Swap the Index `inds1[n]` with the Index `inds2[n]` in the ITensor, where `n` runs from `1` to `length(inds1) == length(inds2)`.
+Swap the Index `inds1[n]` with the Index `inds2[n]` in the ITensor, where `n`
+runs from `1` to `length(inds1) == length(inds2)`.
 
 The indices must have the same space (i.e. the same dimension and QNs, if applicable).
 
-The storage of the ITensor is not modified or copied (the output ITensor is a view of the input ITensor).
+The storage of the ITensor is not modified or copied (the output ITensor is a
+view of the input ITensor).
 """ swapinds(::ITensor, ::Any...)
 
 # XXX: rename to:
@@ -1685,7 +1706,9 @@ similar(T::ITensor, args...)::ITensor = itensor(NDTensors.similar(tensor(T), arg
 function isapprox(A::ITensor, B::ITensor; kwargs...)
   if !hassameinds(A, B)
     error(
-      "In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors do not match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the second ITensor has indices: \n\n$(inds(B))",
+      "In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors do not
+      match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the second
+      ITensor has indices: \n\n$(inds(B))",
     )
   end
   B = permute(B, inds(A))
@@ -2036,6 +2059,7 @@ function HDF5.read(
     end
   end
   return error(
-    "HDF5 file: $(g) does not contain correct ITensor data.\nNeither key `store` nor `storage` could be found.",
+    "HDF5 file: $(g) does not contain correct ITensor data.\nNeither key
+    `store` nor `storage` could be found.",
   )
 end

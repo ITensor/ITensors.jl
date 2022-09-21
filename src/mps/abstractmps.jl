@@ -1052,8 +1052,8 @@ function deprecate_make_inds_match!(
   siteindsM2 = siteinds(all, M2)
   N = length(M2)
   if any(n -> length(n) > 1, siteindsM1dag) ||
-    any(n -> length(n) > 1, siteindsM2) ||
-    !hassamenuminds(siteinds, M1dag, M2)
+     any(n -> length(n) > 1, siteindsM2) ||
+     !hassamenuminds(siteinds, M1dag, M2)
     # If the MPS have more than one site Indices on any site or they don't have
     # the same number of site indices on each site, don't try to make the
     # indices match
@@ -1070,7 +1070,7 @@ function deprecate_make_inds_match!(
             inds(ψ[$n]) = $(inds(M2[n]))
 
         Make sure the site indices of your MPO/MPS match. You may need to prime
-        one of the MPS, such as `dot(ϕ', ψ)`.""",
+        one of the MPS, such as `dot(ϕ', ψ)`."""
       )
     end
     make_inds_match = false
@@ -1124,10 +1124,10 @@ function _log_or_not_dot(
 
   if !isfinite(dot_M1_M2)
     @warn "The inner product (or norm²) you are computing is very large " *
-    "($dot_M1_M2). You should consider using `lognorm` or `loginner` instead, " *
-    "which will help avoid floating point errors. For example if you are trying "*
-    "to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by "*
-    "`B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
+          "($dot_M1_M2). You should consider using `lognorm` or `loginner` instead, " *
+          "which will help avoid floating point errors. For example if you are trying " *
+          "to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by " *
+          "`B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
   end
 
   return dot_M1_M2
@@ -1225,7 +1225,7 @@ function norm(M::AbstractMPS)
   atol = rtol
   if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol, atol=atol))
     @warn "norm² is $norm2_M, which is not real up to a relative tolerance of " *
-    "$rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
+          "$rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
   return sqrt(real(norm2_M))
 end
@@ -1250,7 +1250,7 @@ function lognorm(M::AbstractMPS)
   atol = rtol
   if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol, atol=atol))
     @warn "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance " *
-    "of $rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
+          "of $rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
   return 0.5 * real(lognorm2_M)
 end
@@ -1431,10 +1431,8 @@ function +(
   ::Algorithm"densitymatrix", ψ⃗::MPST...; cutoff=1e-15, kwargs...
 ) where {MPST<:AbstractMPS}
   if !all(ψ -> hassameinds(siteinds, first(ψ⃗), ψ), ψ⃗)
-    error(
-      "In `+(::MPS/MPO...)`, the input `MPS` or `MPO` do not have the same site
-      indices. For example, the site indices of the first site are $(siteinds.(ψ⃗, 1))",
-    )
+    error("In `+(::MPS/MPO...)`, the input `MPS` or `MPO` do not have the same site
+      indices. For example, the site indices of the first site are $(siteinds.(ψ⃗, 1))")
   end
 
   Nₘₚₛ = length(ψ⃗)
@@ -1853,16 +1851,16 @@ function setindex!(
         end
       elseif ψ isa MPO
         @warn "In setindex!(MPO, ::ITensor, ::UnitRange), " *
-          "fermionic signs are only not handled properly for non-trivial " *
-          "permutations of sites. Please inform the developers of ITensors " *
-          "if you require this feature (otherwise, fermionic signs can be " *
-          "put in manually with fermionic swap gates)."
+              "fermionic signs are only not handled properly for non-trivial " *
+              "permutations of sites. Please inform the developers of ITensors " *
+              "if you require this feature (otherwise, fermionic signs can be " *
+              "put in manually with fermionic swap gates)."
       else
         @warn "In setindex!(::Union{MPS, MPO}, ::ITensor, ::UnitRange), " *
-          "fermionic signs are only handled properly for permutations involving 2 sites. " *
-          "The original sites are $sites0, with a permutation $perm. " *
-          "To have the fermion sign handled correctly, we recommend performing your permutation " *
-          "pairwise."
+              "fermionic signs are only handled properly for permutations involving 2 sites. " *
+              "The original sites are $sites0, with a permutation $perm. " *
+              "To have the fermion sign handled correctly, we recommend performing your permutation " *
+              "pairwise."
       end
     end
   end

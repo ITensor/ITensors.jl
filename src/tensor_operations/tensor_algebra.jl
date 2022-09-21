@@ -9,14 +9,12 @@ function _contract(A::ITensor, B::ITensor)::ITensor
   C = itensor(_contract(tensor(A), tensor(B)))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
-    println(
-      "Contraction resulted in ITensor with $(order(C)) indices, which is greater
-      than or equal to the ITensor order warning threshold $warnTensorOrder.
-      You can modify the threshold with macros like `@set_warn_order N`,
-      `@reset_warn_order`, and `@disable_warn_order` or functions like
-      `ITensors.set_warn_order(N::Int)`, `ITensors.reset_warn_order()`, and
-      `ITensors.disable_warn_order()`.",
-    )
+    println("Contraction resulted in ITensor with $(order(C)) indices, which is greater
+            than or equal to the ITensor order warning threshold $warnTensorOrder.
+            You can modify the threshold with macros like `@set_warn_order N`,
+            `@reset_warn_order`, and `@disable_warn_order` or functions like
+            `ITensors.set_warn_order(N::Int)`, `ITensors.reset_warn_order()`, and
+            `ITensors.disable_warn_order()`.")
     # This prints a vector, not formatted well
     #show(stdout, MIME"text/plain"(), stacktrace())
     Base.show_backtrace(stdout, backtrace())
@@ -26,7 +24,6 @@ function _contract(A::ITensor, B::ITensor)::ITensor
 end
 
 _contract(T::ITensor, ::Nothing) = T
-
 
 function can_combine_contract(A::ITensor, B::ITensor)::Bool
   return hasqns(A) &&
@@ -212,7 +209,7 @@ end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
+function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number; β::Number=0)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
