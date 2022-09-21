@@ -93,7 +93,7 @@ using ITensors,
     B = cpu(dB)
     C = cpu(dA + dB)
     @test CuArray(permute(C, i, j, k)) ==
-        CuArray(permute(A, i, j, k)) + CuArray(permute(B, i, j, k))
+      CuArray(permute(A, i, j, k)) + CuArray(permute(B, i, j, k))
     for ii in 1:dim(i), jj in 1:dim(j), kk in 1:dim(k)
       @test C[i => ii, j => jj, k => kk] ==
           A[j => jj, i => ii, k => kk] + B[i => ii, k => kk, j => jj]
