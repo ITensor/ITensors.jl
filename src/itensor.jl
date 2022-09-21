@@ -218,7 +218,7 @@ end
 
 ITensor(::UndefInitializer, inds::Indices) = ITensor(Float64, undef, inds)
 
-  ITensor(::UndefInitializer, inds...) = ITensor(Float64, undef, indices(inds...))
+ITensor(::UndefInitializer, inds...) = ITensor(Float64, undef, indices(inds...))
 
   """
       ITensor([ElT::Type, ]x::Number, inds)
