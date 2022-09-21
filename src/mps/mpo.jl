@@ -108,7 +108,7 @@ function MPO(::Type{ElT}, sites::Vector{<:Index}, op::Matrix{<:Number}) where {E
   # return MPO(ElT, sites, fill(op, length(sites)))
   return error("Not defined on purpose because of potential ambiguity with `MPO(A::Array,
                sites::Vector)`. Pass the on-site matrices as functions like
-               `MPO(sites, n -> [1 0; 0 1])` instead.",)
+               `MPO(sites, n -> [1 0; 0 1])` instead.")
 end
 
 MPO(sites::Vector{<:Index}, op::Matrix{ElT}) where {ElT<:Number} = MPO(ElT, sites, op)
@@ -350,7 +350,7 @@ function deprecate_make_inds_match!(
                 inds(ψ[$n]) = $(inds(x[n]))
 
             Make sure the site indices of your MPO/MPS match. You may need to prime
-            one of the MPS, such as `dot(ϕ', H, ψ)`.""",)
+            one of the MPS, such as `dot(ϕ', H, ψ)`.""")
     end
     if !hassameinds(siteinds, ydag, (A, x)) && make_inds_match
       warn_once(inner_mps_mpo_mps_deprecation_warning(), :inner_mps_mpo_mps)
@@ -427,7 +427,7 @@ function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs.
   N = length(B)
   if length(y) != N || length(x) != N || length(A) != N
     throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))
-                            or $(length(A))"),)
+                            or $(length(A))"))
   end
   ydag = dag(y)
   prime!(ydag, 2)
@@ -526,7 +526,9 @@ with `x`.
 function error_contract(y::MPS, A::MPO, x::MPS; kwargs...)
   N = length(A)
   if length(y) != N || length(x) != N
-    throw(DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))"))
+    throw(
+      DimensionMismatch("inner: mismatched lengths $N and $(length(x)) or $(length(y))")
+    )
   end
   iyy = dot(y, y; kwargs...)
   iyax = dot(y', A, x; kwargs...)
@@ -771,7 +773,7 @@ function contract(::Algorithm"zipup", A::MPO, B::MPO; kwargs...)
           contraction results in an MPO. You may want to use
           `replaceprime(contract(A', B), 2 => 1)` or `apply(A, B)` which
           automatically adjusts the prime levels assuming the input MPOs have
-          pairs of primed and unprimed indices.",)
+          pairs of primed and unprimed indices.")
   end
   cutoff::Float64 = get(kwargs, :cutoff, 1e-14)
   resp_degen::Bool = get(kwargs, :respect_degenerate, true)

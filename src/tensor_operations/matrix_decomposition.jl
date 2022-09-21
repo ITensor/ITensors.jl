@@ -425,7 +425,7 @@ function factorize_qr(A::ITensor, Linds...; kwargs...)
     R, L, q = qr(A, Lis...; kwargs...)
   else
     error("In factorize using qr decomposition, ortho keyword
-    $ortho not supported. Supported options are left or right.",)
+    $ortho not supported. Supported options are left or right.")
   end
   return L, R
 end
@@ -449,7 +449,7 @@ function factorize_svd(A::ITensor, Linds...; kwargs...)
     replaceind!(L, v, u)
   else
     error("In factorize using svd decomposition, ortho keyword
-    $ortho not supported. Supported options are left, right, or none.",)
+    $ortho not supported. Supported options are left, right, or none.")
   end
   return L, R, spec
 end
@@ -463,7 +463,7 @@ function factorize_eigen(A::ITensor, Linds...; kwargs...)
     Lis = uniqueinds(A, indices(Linds...))
   else
     error("In factorize using eigen decomposition, ortho keyword
-    $ortho not supported. Supported options are left or right.",)
+    $ortho not supported. Supported options are left or right.")
   end
   simLis = sim(Lis)
   A2 = A * replaceinds(dag(A), Lis, simLis)
@@ -551,7 +551,7 @@ function factorize(A::ITensor, Linds...; kwargs...)
   if haskey(kwargs, :dir)
     error("""dir keyword in factorize has been replace by ortho.
     Note that the default is now `left`, meaning for the results
-    L,R = factorize(A), L forms an orthogonal basis.""",)
+    L,R = factorize(A), L forms an orthogonal basis.""")
   end
 
   if haskey(kwargs, :which_factorization)
@@ -591,7 +591,7 @@ function factorize(A::ITensor, Linds...; kwargs...)
     spec = Spectrum(nothing, 0.0)
   else
     throw(ArgumentError("""In factorize, factorization $which_decomp is not
-     currently supported. Use `"svd"`, `"eigen"`, `"qr"` or `nothing`.""",),)
+     currently supported. Use `"svd"`, `"eigen"`, `"qr"` or `nothing`."""))
   end
 
   # Set the tags and prime level

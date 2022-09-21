@@ -68,9 +68,9 @@ end
   B1 = T1[b]
   B2 = T2[b]
   BR = R[b]
-  @test @inferred( NDTensors.contract!(
-    BR, labelsR, B1, labelsT1, B2, labelsT2, 1.0, 0.0
-  )) isa DenseTensor
+  @test @inferred(
+    NDTensors.contract!(BR, labelsR, B1, labelsT1, B2, labelsT2, 1.0, 0.0)
+  ) isa DenseTensor
 end
 
 @testset "dmrg" begin

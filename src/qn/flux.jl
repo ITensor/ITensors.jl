@@ -18,7 +18,9 @@ function checkflux(T::Union{Tensor,ITensor}, flux_check)
   for b in nzblocks(T)
     fluxTb = flux(T, b)
     if fluxTb != flux_check
-      error("Block $b has flux $fluxTb that is inconsistent with the desired flux $flux_check")
+      error(
+        "Block $b has flux $fluxTb that is inconsistent with the desired flux $flux_check"
+      )
     end
   end
   return nothing

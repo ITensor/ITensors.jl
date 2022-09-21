@@ -8,7 +8,7 @@
           trying to set is in a block with flux $(flux(T, I...)), which is
           different from the flux $fluxT of the other blocks of the ITensor.
           You may be trying to create an ITensor that does not have a well
-          defined quantum number flux.",)
+          defined quantum number flux.")
   end
   return setindex!!(T, x, I...)
 end
@@ -298,8 +298,11 @@ function ITensor(
   ::AliasStyle, ::Type{ElT}, A::AbstractArray{<:Number}, inds::QNIndices; tol=0
 ) where {ElT<:Number}
   is = Tuple(inds)
-  length(A) ≠ dim(inds) &&
-    throw(DimensionMismatch("In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of the indices ($(dim(is)))",),)
+  length(A) ≠ dim(inds) && throw(
+    DimensionMismatch(
+      "In ITensor(::AbstractArray, inds), length of AbstractArray ($(length(A))) must match total dimension of the indices ($(dim(is)))",
+    ),
+  )
   T = emptyITensor(ElT, is)
   A = reshape(A, dims(is)...)
   for vs in eachindex(T)
@@ -326,7 +329,9 @@ end
 emptyITensor(inds::QNIndices) = emptyITensor(EmptyNumber, inds)
 
 function emptyITensor(eltype::Type{<:Number}, flux::QN, is...)
-  return error("Trying to create an empty ITensor with flux $flux, cannot create empty ITensor with a specified flux.",)
+  return error(
+    "Trying to create an empty ITensor with flux $flux, cannot create empty ITensor with a specified flux.",
+  )
 end
 emptyITensor(flux::QN, is...) = emptyITensor(EmptyNumber, flux, is...)
 

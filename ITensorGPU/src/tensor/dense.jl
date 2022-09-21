@@ -21,8 +21,9 @@ function contract!!(
     perm = getperm(labelsR, labelsT1)
     R = permutedims!!(R, T1, perm, (r, t1) -> T2[] * t1)
   elseif N1 + N2 == NR
-    (α ≠ 1 || β ≠ 0) &&
-      error("contract!! not yet implemented for outer product tensor contraction with non-trivial α and β",)
+    (α ≠ 1 || β ≠ 0) && error(
+      "contract!! not yet implemented for outer product tensor contraction with non-trivial α and β",
+    )
     # TODO: permute T1 and T2 appropriately first (can be more efficient
     # then permuting the result of T1⊗T2)
     # TODO: implement the in-place version directly

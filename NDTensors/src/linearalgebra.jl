@@ -112,7 +112,9 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   end
 
   if haskey(kwargs, :fastsvd) || haskey(kwargs, :fastSVD)
-    error("In svd, fastsvd/fastSVD keyword arguments are removed in favor of alg, see documentation for more details.",)
+    error(
+      "In svd, fastsvd/fastSVD keyword arguments are removed in favor of alg, see documentation for more details.",
+    )
   end
 
   maxdim::Int = get(kwargs, :maxdim, minimum(dims(T)))
@@ -145,7 +147,9 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   elseif alg == "recursive"
     MUSV = svd_recursive(matrix(T))
   else
-    error("svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.",)
+    error(
+      "svd algorithm $alg is not currently supported. Please see the documentation for currently supported algorithms.",
+    )
   end
   if isnothing(MUSV)
     if any(isnan, T)
@@ -211,7 +215,11 @@ function LinearAlgebra.eigen(
 
   matrixT = matrix(T)
   if any(!isfinite, matrixT)
-    throw(ArgumentError("Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"),)
+    throw(
+      ArgumentError(
+        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+      ),
+    )
   end
 
   DM, VM = eigen(matrixT)
@@ -336,7 +344,11 @@ function LinearAlgebra.eigen(
 
   matrixT = matrix(T)
   if any(!isfinite, matrixT)
-    throw(ArgumentError("Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"),)
+    throw(
+      ArgumentError(
+        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+      ),
+    )
   end
 
   DM, VM = eigen(matrixT)

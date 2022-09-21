@@ -181,9 +181,9 @@ end
 
     psi = makeRandomMPS(sites)
 
-    dist = sqrt(abs(
-      1 + (inner(phi, phi) - 2 * real(inner(phi', K, psi))) / inner(K, psi, K, psi)
-    ))
+    dist = sqrt(
+      abs(1 + (inner(phi, phi) - 2 * real(inner(phi', K, psi))) / inner(K, psi, K, psi))
+    )
     @test dist ≈ error_contract(phi, K, psi)
 
     badsites = [Index(2, "Site") for n in 1:(N + 1)]

@@ -609,8 +609,11 @@ mergeblocks(is::Indices) = map(mergeblocks, is)
 # setdirs(is1::Indices, is2::Indices)
 #
 function permute(is1::Indices, is2::Indices)
-  length(is1) != length(is2) &&
-    throw(ArgumentError("length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))",),)
+  length(is1) != length(is2) && throw(
+    ArgumentError(
+      "length of first index set, $(length(is1)) does not match length of second index set, $(length(is2))",
+    ),
+  )
   perm = getperm(is1, is2)
   return is1[invperm(perm)]
 end
@@ -632,7 +635,9 @@ function compute_contraction_labels(Ais::Tuple, Bis::Tuple)
     Bis_j = @inbounds Bis[j]
     if Ais_i == Bis_j
       if have_qns && (dir(Ais_i) ≠ -dir(Bis_j))
-        error("Attempting to contract IndexSet:\n\n$(Ais)\n\nwith IndexSet:\n\n$(Bis)\n\nQN indices must have opposite direction to contract, but indices:\n\n$(Ais_i)\n\nand:\n\n$(Bis_j)\n\ndo not have opposite directions.",)
+        error(
+          "Attempting to contract IndexSet:\n\n$(Ais)\n\nwith IndexSet:\n\n$(Bis)\n\nQN indices must have opposite direction to contract, but indices:\n\n$(Ais_i)\n\nand:\n\n$(Bis_j)\n\ndo not have opposite directions.",
+        )
       end
       Alabels[i] = Blabels[j] = -(1 + ncont)
       ncont += 1
@@ -664,13 +669,17 @@ function compute_contraction_labels(Cis::Tuple, Ais::Tuple, Bis::Tuple)
     locA = findfirst(==(Cis[i]), Ais)
     if !isnothing(locA)
       if Alabels[locA] < 0
-        error("The noncommon indices of $Ais and $Bis must be the same as the indices $Cis.")
+        error(
+          "The noncommon indices of $Ais and $Bis must be the same as the indices $Cis."
+        )
       end
       Clabels[i] = Alabels[locA]
     else
       locB = findfirst(==(Cis[i]), Bis)
       if isnothing(locB) || Blabels[locB] < 0
-        error("The noncommon indices of $Ais and $Bis must be the same as the indices $Cis.")
+        error(
+          "The noncommon indices of $Ais and $Bis must be the same as the indices $Cis."
+        )
       end
       Clabels[i] = Blabels[locB]
     end

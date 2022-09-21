@@ -121,13 +121,19 @@ function _enable_threaded_blocksparse()
   current_using_threaded_blocksparse = using_threaded_blocksparse()
   if !current_using_threaded_blocksparse
     if Threads.nthreads() == 1
-      println("WARNING: You are trying to enable block sparse multithreading, but you have started Julia with only a single thread. You can start Julia with `N` threads with `julia -t N`, and check the number of threads Julia can use with `Threads.nthreads()`. Your system has $(Sys.CPU_THREADS) threads available to use, which you can determine by running `Sys.CPU_THREADS`.\n",)
+      println(
+        "WARNING: You are trying to enable block sparse multithreading, but you have started Julia with only a single thread. You can start Julia with `N` threads with `julia -t N`, and check the number of threads Julia can use with `Threads.nthreads()`. Your system has $(Sys.CPU_THREADS) threads available to use, which you can determine by running `Sys.CPU_THREADS`.\n",
+      )
     end
     if blas_get_num_threads() > 1 && Threads.nthreads() > 1
-      println("WARNING: You are enabling block sparse multithreading, but BLAS $(BLAS.vendor()) is currently set to use $(blas_get_num_threads()) threads. When using block sparse multithreading, we recommend setting BLAS to use only a single thread, otherwise you may see suboptimal performance. You can set it with `using LinearAlgebra; BLAS.set_num_threads(1)`.\n",)
+      println(
+        "WARNING: You are enabling block sparse multithreading, but BLAS $(BLAS.vendor()) is currently set to use $(blas_get_num_threads()) threads. When using block sparse multithreading, we recommend setting BLAS to use only a single thread, otherwise you may see suboptimal performance. You can set it with `using LinearAlgebra; BLAS.set_num_threads(1)`.\n",
+      )
     end
     if Strided.get_num_threads() > 1
-      println("WARNING: You are enabling block sparse multithreading, but Strided.jl is currently set to use $(Strided.get_num_threads()) threads for performing dense tensor permutations. When using block sparse multithreading, we recommend setting Strided.jl to use only a single thread, otherwise you may see suboptimal performance. You can set it with `NDTensors.Strided.disable_threads()` and see the current number of threads it is using with `NDTensors.Strided.get_num_threads()`.\n",)
+      println(
+        "WARNING: You are enabling block sparse multithreading, but Strided.jl is currently set to use $(Strided.get_num_threads()) threads for performing dense tensor permutations. When using block sparse multithreading, we recommend setting Strided.jl to use only a single thread, otherwise you may see suboptimal performance. You can set it with `NDTensors.Strided.disable_threads()` and see the current number of threads it is using with `NDTensors.Strided.get_num_threads()`.\n",
+      )
     end
     _using_threaded_blocksparse[] = true
   end

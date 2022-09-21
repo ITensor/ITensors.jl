@@ -79,7 +79,9 @@ mutable struct ITensor
     @debug_check begin
       is = inds(T)
       if !allunique(is)
-        error("Trying to create ITensors with collection of indices $is. Indices must be unique.",)
+        error(
+          "Trying to create ITensors with collection of indices $is. Indices must be unique.",
+        )
       end
     end
     return new(T)
@@ -374,9 +376,12 @@ function ITensor(
   inds::Indices{Index{Int}};
   kwargs...,
 )
-  length(A) ≠ dim(inds) &&
-    throw(DimensionMismatch("In ITensor(::AbstractArray, inds), length of AbstractArray
-                            ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",),)
+  length(A) ≠ dim(inds) && throw(
+    DimensionMismatch(
+      "In ITensor(::AbstractArray, inds), length of AbstractArray
+      ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))"
+    ),
+  )
   data = Array{eltype}(as, A)
   return itensor(Dense(data), inds)
 end
@@ -406,7 +411,7 @@ function ITensor(
   if length(A) > 1
     error("Trying to create an ITensor without any indices from Array $A of
     dimensions $(size(A)). Cannot construct an ITensor from an Array with more
-    than one element without any indices.",)
+    than one element without any indices.")
   end
   return ITensor(eltype, A[]; kwargs...)
 end
@@ -479,8 +484,9 @@ is an alias of the input vector data in order to minimize operations.
 function diagITensor(
   as::AliasStyle, eltype::Type{<:Number}, v::Vector{<:Number}, is::Indices
 )
-  length(v) ≠ mindim(is) &&
-    error("Length of vector for diagonal must equal minimum of the dimension of the input indices",)
+  length(v) ≠ mindim(is) && error(
+    "Length of vector for diagonal must equal minimum of the dimension of the input indices",
+  )
   data = Vector{eltype}(as, v)
   return itensor(Diag(data), is)
 end
@@ -816,7 +822,7 @@ function isapprox(A::ITensor, B::ITensor; kwargs...)
   if !hassameinds(A, B)
     error("In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors
     do not match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the
-    second ITensor has indices: \n\n$(inds(B))",)
+    second ITensor has indices: \n\n$(inds(B))")
   end
   B = permute(B, inds(A))
   return isapprox(array(A), array(B); kwargs...)
@@ -900,8 +906,11 @@ order in which the indices are provided indicates
 the order of the data in the resulting Array.
 """
 function Array{ElT,N}(T::ITensor, is::Indices) where {ElT,N}
-  ndims(T) != N &&
-    throw(DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."),)
+  ndims(T) != N && throw(
+    DimensionMismatch(
+      "cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional Array."
+    ),
+  )
   TT = tensor(permute(T, is))
   return Array{ElT,N}(TT)::Array{ElT,N}
 end
@@ -927,8 +936,9 @@ function Array{<:Any,N}(T::ITensor, is...) where {N}
 end
 
 function Vector{ElT}(T::ITensor)::Vector{ElT} where {ElT}
-  ndims(T) != 1 &&
-    throw(DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to a Vector."))
+  ndims(T) != 1 && throw(
+    DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to a Vector.")
+  )
   return Array{ElT}(T, inds(T)...)
 end
 
@@ -1141,7 +1151,11 @@ A[i => 1, i' => 2] # 2.0, same as: A[i' => 2, i => 1]
 
 @propagate_inbounds function getindex(T::ITensor)::Any
   if order(T) != 0
-    throw(DimensionMismatch("In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."),)
+    throw(
+      DimensionMismatch(
+        "In scalar(T) or T[], ITensor T is not a scalar (it has indices $(inds(T)))."
+      ),
+    )
   end
   return tensor(T)[]
 end
@@ -1885,7 +1899,9 @@ function deprecated_keyword_argument(
       "In `$func`, keyword argument `$old_kw` is deprecated in favor of `$new_kw`.", func
     )
     if has_new_kw
-      println("Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`.",)
+      println(
+        "Warning: keyword arguments `$old_kw` and `$new_kw` are both specified, using `$new_kw`.",
+      )
       kwargs[new_kw]
     else
       map(kwargs[old_kw])
@@ -2005,5 +2021,7 @@ function HDF5.read(
       return itensor(storage, inds)
     end
   end
-  return error("HDF5 file: $(g) does not contain correct ITensor data.\nNeither key `store` nor `storage` could be found.",)
+  return error(
+    "HDF5 file: $(g) does not contain correct ITensor data.\nNeither key `store` nor `storage` could be found.",
+  )
 end

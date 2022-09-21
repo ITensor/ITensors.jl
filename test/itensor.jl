@@ -563,8 +563,8 @@ end
         is = [Index(n + 1, "i$n") for n in 1:6]
 
         for ais in permutations((1, 2, 3)),
-bis in permutations((2, 3, 4)),
-cis in permutations((1, 4))
+          bis in permutations((2, 3, 4)),
+          cis in permutations((1, 4))
 
           A = randomITensor(ntuple(i -> is[ais[i]], Val(length(ais))))
           B = randomITensor(ntuple(i -> is[bis[i]], Val(length(bis))))
@@ -576,8 +576,8 @@ cis in permutations((1, 4))
         end
 
         for ais in permutations((1, 2, 3)),
-bis in permutations((2, 3, 4, 5)),
-cis in permutations((1, 4, 5))
+          bis in permutations((2, 3, 4, 5)),
+          cis in permutations((1, 4, 5))
 
           A = randomITensor(ntuple(i -> is[ais[i]], Val(length(ais))))
           B = randomITensor(ntuple(i -> is[bis[i]], Val(length(bis))))
@@ -1760,10 +1760,10 @@ cis in permutations((1, 4, 5))
   end
 
   @testset "nullspace $eltype" for (ss, sl, sr) in [
-  ([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]), (5, 2, 3)
-],
-eltype in (Float32, Float64, ComplexF32, ComplexF64),
-nullspace_kwargs in (())
+      ([QN(-1) => 2, QN(1) => 3], [QN(-1) => 2], [QN(0) => 3]), (5, 2, 3)
+    ],
+    eltype in (Float32, Float64, ComplexF32, ComplexF64),
+    nullspace_kwargs in (())
     #nullspace_kwargs in ((; atol=eps(real(eltype)) * 100), (;))
 
     s, l, r = Index.((ss, sl, sr), ("s", "l", "r"))

@@ -205,7 +205,7 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   weight = get(kwargs, :weight, 1.0)
   if weight <= 0.0
     error("weight parameter should be > 0.0 in call to excited-state dmrg
-          (value passed was weight=$weight)",)
+          (value passed was weight=$weight)")
   end
   PMM = ProjMPO_MPS(H, Ms; weight=weight)
   return dmrg(PMM, psi0, sweeps; kwargs...)
@@ -215,7 +215,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   if length(psi0) == 1
     error("`dmrg` currently does not support system sizes of 1. You can diagonalize
           the MPO tensor directly with tools like `LinearAlgebra.eigen`,
-          `KrylovKit.eigsolve`, etc.",)
+          `KrylovKit.eigsolve`, etc.")
   end
 
   @debug_check begin
@@ -291,7 +291,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         if outputlevel >= 2
           println("write_when_maxdim_exceeds = $write_when_maxdim_exceeds and
                   maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment
-                  tensors to disk",)
+                  tensors to disk")
         end
         PH = disk(PH; path=write_path)
       end

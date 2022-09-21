@@ -15,7 +15,7 @@ function _contract(A::ITensor, B::ITensor)::ITensor
     $warnTensorOrder. You can modify the threshold with macros like
     `@set_warn_order N`, `@reset_warn_order`, and `@disable_warn_order`
     or functions like `ITensors.set_warn_order(N::Int)`,
-    `ITensors.reset_warn_order()`, and `ITensors.disable_warn_order()`.",)
+    `ITensors.reset_warn_order()`, and `ITensors.disable_warn_order()`.")
     # This prints a vector, not formatted well
     #show(stdout, MIME"text/plain"(), stacktrace())
     Base.show_backtrace(stdout, backtrace())

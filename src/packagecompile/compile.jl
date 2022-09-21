@@ -45,7 +45,7 @@ function compile(;
   end
   path = joinpath(dir, filename)
   println("""Creating the system image "$path" containing the compiled version of
-          ITensors. This may take a few minutes.""",)
+          ITensors. This may take a few minutes.""")
   create_sysimage(
     :ITensors;
     sysimage_path=path,

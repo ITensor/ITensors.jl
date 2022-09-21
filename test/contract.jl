@@ -192,7 +192,7 @@ digits(::Type{T}, i, j, k) where {T} = T(i * 10^2 + j * 10 + k)
     end
     @testset "Test contract ITensors (3-Tensor*3-Tensor -> 3-Tensor)" begin
       for inds_ijk in Combinatorics.permutations([i, j, k]),
-inds_jkl in Combinatorics.permutations([j, k, l])
+        inds_jkl in Combinatorics.permutations([j, k, l])
 
         Aijk = permute(Aijk, inds_ijk...)
         Ajkl = permute(Ajkl, inds_jkl...)
@@ -205,7 +205,7 @@ inds_jkl in Combinatorics.permutations([j, k, l])
     end
     @testset "Test contract ITensors (4-Tensor*3-Tensor -> 1-Tensor)" begin
       for inds_ijkl in Combinatorics.permutations([i, j, k, l]),
-inds_jkl in Combinatorics.permutations([j, k, l])
+        inds_jkl in Combinatorics.permutations([j, k, l])
 
         Aijkl = permute(Aijkl, inds_ijkl...)
         Ajkl = permute(Ajkl, inds_jkl...)
@@ -218,7 +218,7 @@ inds_jkl in Combinatorics.permutations([j, k, l])
     end
     @testset "Test contract ITensors (4-Tensor*3-Tensor -> 3-Tensor)" begin
       for inds_ijkl in Combinatorics.permutations([i, j, k, l]),
-inds_klα in Combinatorics.permutations([k, l, α])
+        inds_klα in Combinatorics.permutations([k, l, α])
 
         Aijkl = permute(Aijkl, inds_ijkl...)
         Aklα = permute(Aklα, inds_klα...)

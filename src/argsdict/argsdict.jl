@@ -83,9 +83,9 @@ function argsdict(
     if length(optval) == 1
       if save_positional
         val = only(optval)
-        parsed[KeyType("$prefix$narg")] = auto_parse(parse_type(
-          val, default_positional_type
-        )...)
+        parsed[KeyType("$prefix$narg")] = auto_parse(
+          parse_type(val, default_positional_type)...
+        )
         narg += 1
       else
         @warn "Ignoring argument $a since it does not have the delimiter \"$delim\"."
@@ -94,7 +94,9 @@ function argsdict(
     elseif length(optval) == 2
       opt, val = optval
     else
-      error("Argument $a has more than one delimiter \"$delim\", which is not well defined.")
+      error(
+        "Argument $a has more than one delimiter \"$delim\", which is not well defined."
+      )
     end
     ValType, key = parse_type(opt, default_named_type)
     key = strip(key)

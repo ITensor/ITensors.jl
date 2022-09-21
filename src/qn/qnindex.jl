@@ -249,7 +249,9 @@ flux(ib::Pair{<:Index,Block{1}}) = flux(first(ib), last(ib))
 flux(iv::Pair{<:Index}) = flux(ind(iv), block(iv))
 
 function flux(i::Index, b::Block)
-  return error("Cannot compute flux: Index has no QNs. Try setting conserve_qns=true in siteinds or constructing Index with QN subspaces.",)
+  return error(
+    "Cannot compute flux: Index has no QNs. Try setting conserve_qns=true in siteinds or constructing Index with QN subspaces.",
+  )
 end
 
 qnblocks(i::QNIndex) = space(i)
@@ -276,7 +278,9 @@ julia> blockdim(i,2)
 """
 blockdim(i::QNIndex, b::Integer) = blockdim(i, Block(b))
 function blockdim(i::Index, b::Union{Block,Integer})
-  return error("`blockdim(i::Index, b)` not currently defined for non-QN Index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.",)
+  return error(
+    "`blockdim(i::Index, b)` not currently defined for non-QN Index $i of type `$(typeof(i))`. In the future this may be defined for `b == Block(1)` or `b == 1` as `dim(i)` and error otherwise.",
+  )
 end
 
 dim(i::QNIndex, b::Block) = blockdim(space(i), b)
@@ -390,8 +394,9 @@ end
 function directsum(
   i::Index{Vector{Pair{QN,Int}}}, j::Index{Vector{Pair{QN,Int}}}; tags="sum"
 )
-  dir(i) ≠ dir(j) &&
-    error("To direct sum two indices, they must have the same direction. Trying to direct sum indices $i and $j.",)
+  dir(i) ≠ dir(j) && error(
+    "To direct sum two indices, they must have the same direction. Trying to direct sum indices $i and $j.",
+  )
   return Index(vcat(space(i), space(j)); dir=dir(i), tags=tags)
 end
 

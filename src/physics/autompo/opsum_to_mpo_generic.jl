@@ -115,7 +115,9 @@ function sorteachterm(os::OpSum, sites)
     Nt = length(t)
 
     if maximum(ITensors.sites(t)) > length(sites)
-      error("The OpSum contains a term $t that extends beyond the number of sites $(length(sites)).",)
+      error(
+        "The OpSum contains a term $t that extends beyond the number of sites $(length(sites)).",
+      )
     end
 
     prevsite = N + 1 #keep track of whether we are switching

@@ -52,7 +52,7 @@ using ITensors,
 end
 
 @testset "cuITensor $T1, $T2 Contractions" for T1 in (Float64, ComplexF64),
-T2 in (Float64, ComplexF64)
+  T2 in (Float64, ComplexF64)
 
   mi, mj, mk, ml, ma = 2, 3, 4, 5, 6, 7
   i = Index(mi, "i")

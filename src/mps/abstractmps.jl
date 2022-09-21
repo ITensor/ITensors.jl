@@ -146,8 +146,9 @@ isortho(m::AbstractMPS) = leftlim(m) + 1 == rightlim(m) - 1
 
 # Could also define as `only(ortho_lims)`
 function orthocenter(m::AbstractMPS)
-  !isortho(m) &&
-    error("$(typeof(m)) has no well-defined orthogonality center, orthogonality center is on the range $(ortho_lims(m)).",)
+  !isortho(m) && error(
+    "$(typeof(m)) has no well-defined orthogonality center, orthogonality center is on the range $(ortho_lims(m)).",
+  )
   return leftlim(m) + 1
 end
 
@@ -748,12 +749,17 @@ end
 function check_hascommoninds(::typeof(siteinds), A::AbstractMPS, B::AbstractMPS)
   N = length(A)
   if length(B) ≠ N
-    throw(DimensionMismatch("$(typeof(A)) and $(typeof(B)) have mismatched lengths $N and $(length(B))."),)
+    throw(
+      DimensionMismatch(
+        "$(typeof(A)) and $(typeof(B)) have mismatched lengths $N and $(length(B))."
+      ),
+    )
   end
   for n in 1:N
-    !hascommoninds(siteinds(A, n), siteinds(B, n)) &&
-      error("$(typeof(A)) A and $(typeof(B)) B must share site indices. On site $n,
-            A has site indices $(siteinds(A, n)) while B has site indices $(siteinds(B, n)).",)
+    !hascommoninds(siteinds(A, n), siteinds(B, n)) && error(
+      "$(typeof(A)) A and $(typeof(B)) B must share site indices. On site $n,
+      A has site indices $(siteinds(A, n)) while B has site indices $(siteinds(B, n))."
+    )
   end
   return nothing
 end
@@ -1082,7 +1088,7 @@ function deprecate_make_inds_match!(
                 inds(ψ[$n]) = $(inds(M2[n]))
 
             Make sure the site indices of your MPO/MPS match. You may need
-            to prime one of the MPS, such as `dot(ϕ', ψ)`.""",)
+            to prime one of the MPS, such as `dot(ϕ', ψ)`.""")
     end
     make_inds_match = false
   end
@@ -1468,7 +1474,7 @@ function +(
   if !all(ψ -> hassameinds(siteinds, first(ψ⃗), ψ), ψ⃗)
     error("In `+(::MPS/MPO...)`, the input `MPS` or `MPO` do not have
           the same site indices. For example, the site indices of the
-          first site are $(siteinds.(ψ⃗, 1))",)
+          first site are $(siteinds.(ψ⃗, 1))")
   end
 
   Nₘₚₛ = length(ψ⃗)

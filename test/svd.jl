@@ -74,8 +74,8 @@ include("util.jl")
 
   @testset "svd with empty left or right indices" for space in
                                                       (2, [QN(0, 2) => 1, QN(1, 2) => 1]),
-cutoff in (nothing, 1e-15),
-_eltype in (Float32, Float64, ComplexF32, ComplexF64)
+    cutoff in (nothing, 1e-15),
+    _eltype in (Float32, Float64, ComplexF32, ComplexF64)
 
     i = Index(space)
     j = Index(space)
@@ -113,9 +113,9 @@ _eltype in (Float32, Float64, ComplexF32, ComplexF64)
   end
 
   @testset "factorize with empty left or right indices" for space in (
-  2, [QN(0, 2) => 1, QN(1, 2) => 1]
-),
-cutoff in (nothing, 1e-15)
+      2, [QN(0, 2) => 1, QN(1, 2) => 1]
+    ),
+    cutoff in (nothing, 1e-15)
 
     i = Index(space)
     j = Index(space)
@@ -175,7 +175,7 @@ cutoff in (nothing, 1e-15)
   end
 
   @testset "svd with single precision element type" for eltype in (Float32, ComplexF32),
-space in (2, [QN(0) => 1, QN(1) => 1])
+    space in (2, [QN(0) => 1, QN(1) => 1])
 
     i = Index(space)
     A = randomITensor(eltype, i', dag(i))

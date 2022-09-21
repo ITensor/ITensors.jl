@@ -42,7 +42,9 @@ function pm(qv1::QNVal, qv2::QNVal, fac::Int)
     error("Cannot add QNVals with different names \"$(name(qv1))\", \"$(name(qv2))\"")
   end
   if modulus(qv1) != modulus(qv2)
-    error("QNVals with matching name \"$(name(qv1))\" cannot have different modulus values ")
+    error(
+      "QNVals with matching name \"$(name(qv1))\" cannot have different modulus values "
+    )
   end
   m1 = modulus(qv1)
   if m1 == 1 || m1 == -1

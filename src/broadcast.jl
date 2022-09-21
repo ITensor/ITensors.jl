@@ -135,7 +135,9 @@ find_type(::Type{T}, ::Tuple{}) where {T} = nothing
 
 function Base.copyto!(T::ITensor, bc::Broadcasted)
   @show typeof(bc)
-  return error("The broadcasting operation you are attempting is not yet implemented for ITensors, please raise an issue if you would like it to be supported.",)
+  return error(
+    "The broadcasting operation you are attempting is not yet implemented for ITensors, please raise an issue if you would like it to be supported.",
+  )
 end
 
 #
@@ -204,7 +206,9 @@ function Base.copyto!(
   elseif R === T2
     map!((t1, t2) -> *(t2, t1), R, T2, T1)
   else
-    error("When Hadamard producting two ITensors in-place, one must be the same as the output ITensor",)
+    error(
+      "When Hadamard producting two ITensors in-place, one must be the same as the output ITensor",
+    )
   end
   return R
 end
@@ -310,7 +314,9 @@ function Base.copyto!(
   elseif T === bc.args[2]
     A = bc.args[1]
   else
-    error("When subtracting two ITensors in-place, one must be the same as the output ITensor")
+    error(
+      "When subtracting two ITensors in-place, one must be the same as the output ITensor"
+    )
   end
   map!(fmap(bc), T, T, A)
   return T
@@ -419,7 +425,9 @@ function Base.copyto!(
   if A === T
     tensor(T) .= tensor(A) .+ α
   else
-    error("Currently, we don't support `B .= A .+ α` if `B !== A` (i.e. only `A .+= α` is supported",)
+    error(
+      "Currently, we don't support `B .= A .+ α` if `B !== A` (i.e. only `A .+= α` is supported",
+    )
   end
   return T
 end

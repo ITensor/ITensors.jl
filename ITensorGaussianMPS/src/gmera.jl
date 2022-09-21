@@ -126,11 +126,14 @@ function correlation_matrix_to_mera(
     U = [ITensor(s, g) for g in reverse(C.rotations)]
     ψ = MPS(s, n -> round(Int, ns[n]) + 1, U; kwargs...)
   elseif all(hastags("Electron"), s)
-    isodd(length(s)) &&
-      error("For Electron type, must have even number of sites of alternating up and down spins.",)
+    isodd(length(s)) && error(
+      "For Electron type, must have even number of sites of alternating up and down spins.",
+    )
     N = length(s)
     if isspinful(s)
-      error("correlation_matrix_to_mps(Λ::AbstractMatrix) currently only supports spinless Fermions or Electrons that do not conserve Sz. Use correlation_matrix_to_mps(Λ_up::AbstractMatrix, Λ_dn::AbstractMatrix) to use spinful Fermions/Electrons.",)
+      error(
+        "correlation_matrix_to_mps(Λ::AbstractMatrix) currently only supports spinless Fermions or Electrons that do not conserve Sz. Use correlation_matrix_to_mps(Λ_up::AbstractMatrix, Λ_dn::AbstractMatrix) to use spinful Fermions/Electrons.",
+      )
     else
       sf = siteinds("Fermion", 2 * N; conserve_qns=true)
     end

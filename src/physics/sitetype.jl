@@ -373,7 +373,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
     end
 
     throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for
-                        operator name \"$name\" and Index tags: $(tags.(s)).",),)
+                        operator name \"$name\" and Index tags: $(tags.(s))."))
   end
 
   #
@@ -393,7 +393,7 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   end
 
   return throw(ArgumentError("Overload of \"op\" or \"op!\" functions not found for
-                             operator name \"$name\" and Index tags: $(tags.(s)).",),)
+                             operator name \"$name\" and Index tags: $(tags.(s))."))
 end
 
 op(name::AbstractString; kwargs...) = error("Must input indices when creating an `op`.")
@@ -587,7 +587,7 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
   end
 
   return throw(ArgumentError("Overload of \"state\" or \"state!\" functions not found
-                             for state name \"$name\" and Index tags $(tags(s))",),)
+                             for state name \"$name\" and Index tags $(tags(s))"))
 end
 
 state(s::Index, n::Integer) = onehot(s => n)

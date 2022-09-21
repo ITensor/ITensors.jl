@@ -25,8 +25,11 @@ function ITensor(
   inds::Indices{Index{Int}};
   kwargs...,
 )
-  length(A) ≠ dim(inds) &&
-    throw(DimensionMismatch("In ITensor(::CuArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",),)
+  length(A) ≠ dim(inds) && throw(
+    DimensionMismatch(
+      "In ITensor(::CuArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+    ),
+  )
   data = CuArray{eltype}(as, A)
   return itensor(Dense(data), inds)
 end
@@ -35,8 +38,11 @@ end
 function ITensor(
   as::NDTensors.AliasStyle, eltype::Type{<:Number}, A::CuArray{<:Number}, inds::Tuple{}
 )
-  length(A) ≠ dim(inds) &&
-    throw(DimensionMismatch("In ITensor(::CuArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",),)
+  length(A) ≠ dim(inds) && throw(
+    DimensionMismatch(
+      "In ITensor(::CuArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+    ),
+  )
   data = CuArray{eltype}(as, A)
   return itensor(Dense(data), inds)
 end
@@ -85,8 +91,11 @@ randomCuITensor(inds::Index...) = randomCuITensor(Float64, IndexSet(inds...))
 CuArray(T::ITensor) = CuArray(tensor(T))
 
 function CuArray{ElT,N}(T::ITensor, is::Vararg{Index,N}) where {ElT,N}
-  ndims(T) != N &&
-    throw(DimensionMismatch("cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional CuArray."),)
+  ndims(T) != N && throw(
+    DimensionMismatch(
+      "cannot convert an $(ndims(T)) dimensional ITensor to an $N-dimensional CuArray."
+    ),
+  )
   TT = tensor(permute(T, is...; allow_alias=true))
   return CuArray{ElT,N}(TT)::CuArray{ElT,N}
 end

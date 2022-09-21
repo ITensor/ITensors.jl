@@ -86,18 +86,20 @@ shorthand for `product(P,v)`.
 function product(P::AbstractProjMPO, v::ITensor)::ITensor
   Pv = contract(P, v)
   if order(Pv) != order(v)
-    error(string(
-      "The order of the ProjMPO-ITensor product P*v is not equal
-       to the order of the ITensor v, ",
-      "this is probably due to an index mismatch.\nCommon reasons
-       for this error: \n",
-      "(1) You are trying to multiply the ProjMPO with the $(nsite(P))-site
-        wave-function at the wrong position.\n",
-      "(2) `orthogonalize!` was called, changing the MPS without
-        updating the ProjMPO.\n\n",
-      "P*v inds: $(inds(Pv)) \n\n",
-      "v inds: $(inds(v))",
-    ),)
+    error(
+      string(
+        "The order of the ProjMPO-ITensor product P*v is not equal
+         to the order of the ITensor v, ",
+        "this is probably due to an index mismatch.\nCommon reasons
+         for this error: \n",
+        "(1) You are trying to multiply the ProjMPO with the $(nsite(P))-site
+          wave-function at the wrong position.\n",
+        "(2) `orthogonalize!` was called, changing the MPS without
+          updating the ProjMPO.\n\n",
+        "P*v inds: $(inds(Pv)) \n\n",
+        "v inds: $(inds(v))",
+      ),
+    )
   end
   return noprime(Pv)
 end

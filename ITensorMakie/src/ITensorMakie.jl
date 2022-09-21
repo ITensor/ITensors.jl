@@ -76,16 +76,22 @@ function visualize!(
   siteinds_direction=default_siteinds_direction(b, g),
 )
   if ismissing(Makie.current_backend[])
-    error("""
-      You have not loaded a backend.  Please load one (`using GLMakie` or `using CairoMakie`)
-      before trying to visualize a graph.
-    """)
+    error(
+      """
+  You have not loaded a backend.  Please load one (`using GLMakie` or `using CairoMakie`)
+  before trying to visualize a graph.
+"""
+    )
   end
 
   edge_labels = ITensorVisualizationBase.edge_labels(b, edge_labels, g)
 
   if length(vertex_labels) ≠ nv(g)
-    throw(DimensionMismatch("$(length(vertex_labels)) vertex labels $(vertex_labels) were specified but there are $(nv(g)) tensors in the diagram, please specify the correct number of labels.",),)
+    throw(
+      DimensionMismatch(
+        "$(length(vertex_labels)) vertex labels $(vertex_labels) were specified but there are $(nv(g)) tensors in the diagram, please specify the correct number of labels.",
+      ),
+    )
   end
 
   graphplot_kwargs = (;

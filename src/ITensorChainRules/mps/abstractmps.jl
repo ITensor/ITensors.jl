@@ -26,7 +26,7 @@ function rrule(::typeof(inner), x1::T, x2::T; kwargs...) where {T<:Union{MPS,MPO
     error("Taking gradients of `inner(::MPS, ::MPS)` is not supported if the
     site indices of the input MPS don't match. If you input `inner(x, Ay)`
     where `Ay` is the result of something like `contract(A::MPO, y::MPS)`,
-    try `inner(x', Ay)` or `inner(x, replaceprime(Ay, 1 => 0))`instead.",)
+    try `inner(x', Ay)` or `inner(x, replaceprime(Ay, 1 => 0))`instead.")
   end
   y = inner(x1, x2)
   function inner_pullback(ȳ)
