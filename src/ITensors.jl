@@ -141,6 +141,7 @@ include("indexset.jl")
 #
 include("itensor.jl")
 include("tensor_operations/tensor_algebra.jl")
+include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
