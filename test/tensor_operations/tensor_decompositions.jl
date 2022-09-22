@@ -1,7 +1,7 @@
 using ITensors
 using Test
 
-let
+@testset "tensor_decompositons" begin
   i = Index(20, "i")
   j = Index(3, "j")
   k = Index(10, "k")
