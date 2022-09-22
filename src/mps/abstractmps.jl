@@ -1851,10 +1851,10 @@ function setindex!(
         end
       elseif ψ isa MPO
         @warn "In setindex!(MPO, ::ITensor, ::UnitRange), " *
-              "fermionic signs are only not handled properly for non-trivial " *
-              "permutations of sites. Please inform the developers of ITensors " *
-              "if you require this feature (otherwise, fermionic signs can be " *
-              "put in manually with fermionic swap gates)."
+          "fermionic signs are only not handled properly for non-trivial " *
+          "permutations of sites. Please inform the developers of ITensors " *
+          "if you require this feature (otherwise, fermionic signs can be " *
+          "put in manually with fermionic swap gates)."
       else
         @warn "In setindex!(::Union{MPS, MPO}, ::ITensor, ::UnitRange), " *
           "fermionic signs are only handled properly for permutations involving 2 sites. " *
