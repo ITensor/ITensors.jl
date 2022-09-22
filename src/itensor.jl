@@ -1042,28 +1042,6 @@ function insert_diag_blocks!(T::ITensor)
   return T
 end
 
-#########################
-# End ITensor Accessor Functions
-#
-
-#########################
-# ITensor Index Functions
-#
-
-"""
-    inds(T::ITensor)
-
-Return the indices of the ITensor as a Tuple.
-"""
-inds(T::ITensor) = inds(tensor(T))
-
-"""
-    ind(T::ITensor, i::Int)
-
-Get the Index of the ITensor along dimension i.
-"""
-ind(T::ITensor, i::Int) = ind(tensor(T), i)
-
 """
     getindex(T::ITensor, I::Int...)
 
@@ -1285,6 +1263,28 @@ end
 #function setindex!(::ITensor{Any}, ::Number, ivs...)
 #  error("Cannot set the element of an emptyITensor(). Must define indices to set elements")
 #end
+
+#########################
+# End ITensor Accessor Functions
+#
+
+#########################
+# ITensor Index Functions
+#
+
+"""
+    inds(T::ITensor)
+
+Return the indices of the ITensor as a Tuple.
+"""
+inds(T::ITensor) = inds(tensor(T))
+
+"""
+    ind(T::ITensor, i::Int)
+
+Get the Index of the ITensor along dimension i.
+"""
+ind(T::ITensor, i::Int) = ind(tensor(T), i)
 
 """
     eachindex(A::ITensor)
