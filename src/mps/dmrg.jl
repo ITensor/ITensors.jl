@@ -284,7 +284,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
       maxtruncerr = 0.0
 
       if !isnothing(write_when_maxdim_exceeds) &&
-         maxdim(sweeps, sw) > write_when_maxdim_exceeds
+        maxdim(sweeps, sw) > write_when_maxdim_exceeds
         if outputlevel >= 2
           println(
             "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and
