@@ -1225,7 +1225,7 @@ function norm(M::AbstractMPS)
   atol = rtol
   if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol, atol=atol))
     @warn "norm² is $norm2_M, which is not real up to a relative tolerance of " *
-          "$rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
+      "$rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
   return sqrt(real(norm2_M))
 end
