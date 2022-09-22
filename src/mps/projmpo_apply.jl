@@ -17,9 +17,13 @@ mutable struct ProjMPOApply <: AbstractProjMPO
   LR::Vector{ITensor}
 end
 
-ProjMPOApply(psi0::MPS,H::MPO) = ProjMPO(0, length(H) + 1, 2, psi0, H, Vector{ITensor}(undef, length(H)))
+function ProjMPOApply(psi0::MPS, H::MPO)
+  return ProjMPO(0, length(H) + 1, 2, psi0, H, Vector{ITensor}(undef, length(H)))
+end
 
-copy(P::ProjMPOApply) = ProjMPOApply(P.lpos, P.rpos, P.nsite, copy(P.psi0), copy(P.H), copy(P.LR))
+function copy(P::ProjMPOApply)
+  return ProjMPOApply(P.lpos, P.rpos, P.nsite, copy(P.psi0), copy(P.H), copy(P.LR))
+end
 
 function set_nsite!(P::ProjMPOApply, nsite)
   P.nsite = nsite
