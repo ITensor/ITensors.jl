@@ -141,6 +141,7 @@ include("tensor_operations/matrix_algebra.jl")
 include("tensor_operations/permutations.jl")
 include("broadcast.jl")
 include("tensor_operations/matrix_decomposition.jl")
+include("tensor_operations/tensor_decompositions.jl")
 include("iterativesolvers.jl")
 include("adapt.jl")
 
