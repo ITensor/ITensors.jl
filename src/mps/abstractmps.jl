@@ -1857,10 +1857,10 @@ function setindex!(
               "put in manually with fermionic swap gates)."
       else
         @warn "In setindex!(::Union{MPS, MPO}, ::ITensor, ::UnitRange), " *
-              "fermionic signs are only handled properly for permutations involving 2 sites. " *
-              "The original sites are $sites0, with a permutation $perm. " *
-              "To have the fermion sign handled correctly, we recommend performing your permutation " *
-              "pairwise."
+          "fermionic signs are only handled properly for permutations involving 2 sites. " *
+          "The original sites are $sites0, with a permutation $perm. " *
+          "To have the fermion sign handled correctly, we recommend performing your permutation " *
+          "pairwise."
       end
     end
   end
