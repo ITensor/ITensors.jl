@@ -1250,7 +1250,7 @@ function lognorm(M::AbstractMPS)
   atol = rtol
   if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol, atol=atol))
     @warn "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance " *
-          "of $rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
+      "of $rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
   return 0.5 * real(lognorm2_M)
 end
