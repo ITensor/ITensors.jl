@@ -1124,10 +1124,10 @@ function _log_or_not_dot(
 
   if !isfinite(dot_M1_M2)
     @warn "The inner product (or norm²) you are computing is very large " *
-          "($dot_M1_M2). You should consider using `lognorm` or `loginner` instead, " *
-          "which will help avoid floating point errors. For example if you are trying " *
-          "to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by " *
-          "`B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
+      "($dot_M1_M2). You should consider using `lognorm` or `loginner` instead, " *
+      "which will help avoid floating point errors. For example if you are trying " *
+      "to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by " *
+      "`B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
   end
 
   return dot_M1_M2
