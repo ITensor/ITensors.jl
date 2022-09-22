@@ -543,7 +543,6 @@ end
 # TODO: add ⊕ alias
 directsum(i::Index, j::Index; tags="sum") = Index(dim(i) + dim(j); tags=tags)
 
-
 #
 # QN related functions
 #
