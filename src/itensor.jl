@@ -1705,11 +1705,9 @@ similar(T::ITensor, args...)::ITensor = itensor(NDTensors.similar(tensor(T), arg
 
 function isapprox(A::ITensor, B::ITensor; kwargs...)
   if !hassameinds(A, B)
-    error(
-      "In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors do not
-      match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the second
-      ITensor has indices: \n\n$(inds(B))",
-    )
+    error("In `isapprox(::ITensor, ::ITensor)`, the indices of the ITensors do not
+          match. The first ITensor has indices: \n\n$(inds(A))\n\nbut the second
+          ITensor has indices: \n\n$(inds(B))")
   end
   B = permute(B, inds(A))
   return isapprox(array(A), array(B); kwargs...)
