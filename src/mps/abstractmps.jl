@@ -1052,8 +1052,8 @@ function deprecate_make_inds_match!(
   siteindsM2 = siteinds(all, M2)
   N = length(M2)
   if any(n -> length(n) > 1, siteindsM1dag) ||
-     any(n -> length(n) > 1, siteindsM2) ||
-     !hassamenuminds(siteinds, M1dag, M2)
+    any(n -> length(n) > 1, siteindsM2) ||
+    !hassamenuminds(siteinds, M1dag, M2)
     # If the MPS have more than one site Indices on any site or they don't have
     # the same number of site indices on each site, don't try to make the
     # indices match
