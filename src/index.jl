@@ -40,6 +40,10 @@ struct Index{T}
   end
 end
 
+#######################
+# Index Constructors
+#
+
 # Used in NDTensors for generic code,
 # mostly for internal usage
 Index{T}(dim::T) where {T} = Index(dim)
@@ -75,11 +79,6 @@ function Index(dim::Number; tags="", plev=0, dir=Neither)
   return Index(rand(index_id_rng(), IDType), dim, dir, tags, plev)
 end
 
-# TODO: decide if these are good definitions, using
-# them for generic code in ContractionSequenceOptimization
-Base.Int(i::Index) = dim(i)
-length(i::Index) = 1
-
 """
     Index(dim::Integer, tags::Union{AbstractString, TagSet}; plev::Int = 0)
 
@@ -104,6 +103,45 @@ julia> tags(i)
 function Index(dim::Number, tags::Union{AbstractString,TagSet}; plev::Int=0)
   return Index(dim; tags=tags, plev=plev)
 end
+
+# This is so that when IndexSets are converted
+# to Julia Base Sets, the hashing is done correctly
+#function Base.hash(i::Index, h::UInt)
+#  return hash((id(i), tags(i), plev(i)), h)
+#end
+
+"""
+    copy(i::Index)
+
+Create a copy of index `i` with identical `id`, `space`, `dir` and `tags`.
+"""
+copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
+
+"""
+    sim(i::Index; tags = tags(i), plev = plev(i), dir = dir(i))
+
+Produces an `Index` with the same properties (dimension or QN structure)
+but with a new `id`.
+"""
+function sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
+  return Index(rand(index_id_rng(), IDType), copy(space(i)), dir, tags, plev)
+end
+
+trivial_space(i::Index) = 1
+trivial_index(i::Index) = Index(trivial_space(i))
+
+#######################
+# End Index Constructors
+#
+
+#######################
+# Index properties
+#
+
+# TODO: decide if these are good definitions, using
+# them for generic code in ContractionSequenceOptimization
+Base.Int(i::Index) = dim(i)
+length(i::Index) = 1
 
 # Collect into a tuple
 Base.Tuple(i::Index) = (i,)
@@ -150,15 +188,6 @@ symmetrystyle(i::Index) = NonQN()
 symmetrystyle() = NonQN()
 
 """
-    setdir(i::Index, dir::Arrow)
-
-Create a copy of Index i with the specified direction.
-"""
-function setdir(i::Index, dir::Arrow)
-  return Index(id(i), copy(space(i)), dir, copy(tags(i)), plev(i))
-end
-
-"""
     tags(i::Index)
 
 Obtain the TagSet of an Index.
@@ -175,77 +204,6 @@ commontags() = ts""
 Obtain the prime level of an Index.
 """
 plev(i::Index) = i.plev
-
-"""
-    not(n::Int)
-
-Return Not{Int}(n).
-"""
-not(pl::Int) = Not(pl)
-
-"""
-    not(::IDType)
-
-Return Not{IDType}(n).
-"""
-not(id::IDType) = Not(id)
-
-# Information essential to the
-# identity of an Index.
-# Currently only used for hashing an Index.
-struct IndexID
-  id::IDType
-  tags::TagSet
-  plev::Int
-end
-IndexID(i::Index) = IndexID(id(i), tags(i), plev(i))
-hash(i::Index, h::UInt) = hash(IndexID(i), h)
-
-"""
-    ==(i1::Index, i1::Index)
-
-Compare indices for equality. First the id's are compared,
-then the prime levels are compared, and finally the
-tags are compared.
-"""
-(i1::Index == i2::Index) =
-  (id(i1) == id(i2)) && (plev(i1) == plev(i2)) && (tags(i1) == tags(i2))
-
-# This is so that when IndexSets are converted
-# to Julia Base Sets, the hashing is done correctly
-#function Base.hash(i::Index, h::UInt)
-#  return hash((id(i), tags(i), plev(i)), h)
-#end
-
-"""
-    copy(i::Index)
-
-Create a copy of index `i` with identical `id`, `space`, `dir` and `tags`.
-"""
-copy(i::Index) = Index(id(i), copy(space(i)), dir(i), tags(i), plev(i))
-
-"""
-    sim(i::Index; tags = tags(i), plev = plev(i), dir = dir(i))
-
-Produces an `Index` with the same properties (dimension or QN structure)
-but with a new `id`.
-"""
-function sim(i::Index; tags=copy(tags(i)), plev=plev(i), dir=dir(i))
-  return Index(rand(index_id_rng(), IDType), copy(space(i)), dir, tags, plev)
-end
-
-trivial_space(i::Index) = 1
-trivial_index(i::Index) = Index(trivial_space(i))
-
-"""
-    dag(i::Index)
-
-Copy an index `i` and reverse its direction.
-"""
-dag(i::Index) = Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
-
-# For internal use in NDTensors
-NDTensors.dag(i::Index) = dag(i)
 
 """
     hastags(i::Index, ts::Union{AbstractString,TagSet})
@@ -333,6 +291,81 @@ false
 hasid(ind::Index, i::IDType) = id(ind) == i
 
 hasid(i::IDType) = x -> hasid(x, i)
+
+#
+# QN related functions
+#
+
+hasqns(::Integer) = false
+
+"""
+    hasqns(::Index)
+
+Checks of the Index has QNs or not.
+"""
+hasqns(i::Index) = hasqns(space(i))
+
+#######################
+# End Index properties
+#
+
+#######################
+# Index operations
+#
+
+"""
+    setdir(i::Index, dir::Arrow)
+
+Create a copy of Index i with the specified direction.
+"""
+function setdir(i::Index, dir::Arrow)
+  return Index(id(i), copy(space(i)), dir, copy(tags(i)), plev(i))
+end
+
+"""
+    not(n::Int)
+
+Return Not{Int}(n).
+"""
+not(pl::Int) = Not(pl)
+
+"""
+    not(::IDType)
+
+Return Not{IDType}(n).
+"""
+not(id::IDType) = Not(id)
+
+# Information essential to the
+# identity of an Index.
+# Currently only used for hashing an Index.
+struct IndexID
+  id::IDType
+  tags::TagSet
+  plev::Int
+end
+IndexID(i::Index) = IndexID(id(i), tags(i), plev(i))
+hash(i::Index, h::UInt) = hash(IndexID(i), h)
+
+"""
+    ==(i1::Index, i1::Index)
+
+Compare indices for equality. First the id's are compared,
+then the prime levels are compared, and finally the
+tags are compared.
+"""
+(i1::Index == i2::Index) =
+  (id(i1) == id(i2)) && (plev(i1) == plev(i2)) && (tags(i1) == tags(i2))
+
+"""
+    dag(i::Index)
+
+Copy an index `i` and reverse its direction.
+"""
+dag(i::Index) = Index(id(i), copy(space(i)), -dir(i), tags(i), plev(i))
+
+# For internal use in NDTensors
+NDTensors.dag(i::Index) = dag(i)
 
 """
     settags(i::Index, ts)
@@ -510,18 +543,10 @@ end
 # TODO: add ⊕ alias
 directsum(i::Index, j::Index; tags="sum") = Index(dim(i) + dim(j); tags=tags)
 
+
 #
 # QN related functions
 #
-
-hasqns(::Integer) = false
-
-"""
-    hasqns(::Index)
-
-Checks of the Index has QNs or not.
-"""
-hasqns(i::Index) = hasqns(space(i))
 
 """
     removeqns(::Index)
@@ -544,6 +569,14 @@ Merge the contiguous QN blocks if they have the same
 quantum numbers.
 """
 mergeblocks(i::Index) = i
+
+#######################
+# End Index operations
+#
+
+#######################
+# IndexVal functions
+#
 
 # Keep partial backwards compatibility by defining IndexVal as follows:
 const IndexVal{IndexT} = Pair{IndexT,Int}
@@ -590,8 +623,12 @@ Base.adjoint(iv::Pair{<:Index}) = (prime(ind(iv)) => val(iv))
 
 dir(iv::Pair{<:Index}) = dir(ind(iv))
 
+#######################
+# End IndexVal functions
 #
-# Printing, reading, and writing
+
+#######################
+# Index IO
 #
 
 function primestring(plev)
