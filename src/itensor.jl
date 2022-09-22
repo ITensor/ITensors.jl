@@ -2056,7 +2056,6 @@ function HDF5.read(
       return itensor(storage, inds)
     end
   end
-  return error(
-    "HDF5 file: $(g) does not contain correct ITensor data.\nNeither key
-    `store` nor `storage` could be found.")
+  return error("HDF5 file: $(g) does not contain correct ITensor data.\nNeither key
+               `store` nor `storage` could be found.")
 end
