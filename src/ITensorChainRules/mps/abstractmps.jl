@@ -86,6 +86,7 @@ function rrule(
         x1dag[n], x1dag_ȳ[n + 1]; move_sites_back=true, apply_dag, kwargs...
       )
     end
+
     x̄1 = similar(x1)
     for n in 1:length(x1)
       # check if it's not a noisy gate (rank-3 tensor)
@@ -115,7 +116,6 @@ function rrule(
       end
     end
     x̄2 = x1dag_ȳ[1]
-    #x̄2 = apply(x1, ȳ) # TODO: this is not efficient
     return (NoTangent(), x̄1, x̄2)
   end
   return y, apply_pullback
