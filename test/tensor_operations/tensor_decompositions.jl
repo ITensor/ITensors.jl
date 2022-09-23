@@ -16,22 +16,19 @@ using Test
   # tagname = tags(inds(A)[1])
   # D, U = eigen(sq_factor, ishermitian = true, cutoff = 1e-2)
 
-  tucker_factors = tucker_HOSVD(A, threshold = 1e-8)
-  Atuck = pop!(tucker_factors)
-  Atuck = Atuck * tucker_factors[1] * tucker_factors[2] * tucker_factors[3];
+  tucker_factors, coreA = tucker_HOSVD(A, threshold = 1e-8)
+  coreA = coreA * tucker_factors[1] * tucker_factors[2] * tucker_factors[3];
 
-  @test A ≈ Atuck
+  @test A ≈ coreA
   #println(norm(A-Atuck) / norm(A))
 
-  tucker_factors = tucker_HOSVD(B, threshold = 1e-8)
-  Btuck = pop!(tucker_factors)
-  Btuck = Btuck * tucker_factors[1] * tucker_factors[2] * tucker_factors[3] * tucker_factors[4];
+  tucker_factors, coreB = tucker_HOSVD(B, threshold = 1e-8)
+  coreB = coreB * tucker_factors[1] * tucker_factors[2] * tucker_factors[3] * tucker_factors[4];
 
-  @test B ≈ Btuck
+  @test B ≈ coreB
 
-  tucker_factors = tucker_HOSVD(C, threshold = 1e-8)
-  Ctuck = pop!(tucker_factors)
-  Ctuck = Ctuck * tucker_factors[1] * tucker_factors[2] * tucker_factors[3] * tucker_factors[4] * tucker_factors[5];
+  tucker_factors, coreC = tucker_HOSVD(C, threshold = 1e-8)
+  coreC = coreC * tucker_factors[1] * tucker_factors[2] * tucker_factors[3] * tucker_factors[4] * tucker_factors[5];
 
-  @test C ≈ Ctuck
+  @test C ≈ coreC
 end

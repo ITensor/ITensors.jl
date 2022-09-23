@@ -26,6 +26,6 @@ function tucker_HOSVD(T::ITensor; threshold::Float64 = 1e-8)
       T = T * U
       push!(factors, U)
     end
-    push!(factors, T)
-    factors
+    #push!(factors, T)
+    return factors, T
 end
