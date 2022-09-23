@@ -18,7 +18,7 @@ mutable struct ProjMPOApply <: AbstractProjMPO
 end
 
 function ProjMPOApply(psi0::MPS, H::MPO)
-  return ProjMPO(0, length(H) + 1, 2, psi0, H, Vector{ITensor}(undef, length(H)))
+  return ProjMPOApply(0, length(H) + 1, 2, psi0, H, Vector{ITensor}(undef, length(H)))
 end
 
 function copy(P::ProjMPOApply)
