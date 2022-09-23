@@ -244,7 +244,8 @@ Alternative syntax `⊙` can be typed in the REPL with `\\odot <tab>`.
 """
 function hadamard_product!(R::ITensor, T1::ITensor, T2::ITensor)
   if !hassameinds(T1, T2)
-    error("ITensors must have some indices to perform Hadamard product")
+    error("Hadamard product is an elementwise operation. All tensors involved
+      must have common indices.")
   end
   # Permute the indices to the same order
   #if inds(A) ≠ inds(B)
@@ -262,6 +263,37 @@ function hadamard_product(A::ITensor, B::ITensor)
 end
 
 ⊙(A::ITensor, B::ITensor) = hadamard_product(A, B)
+
+"""
+    khatri_rao_product!(C::ITensor, A::ITensor, B::ITensor)
+    khatri_rao_product(A::ITensor, B::ITensor)
+    ♢ (A::ITensor, B::ITensor)
+
+Elementwise product of 2 ITensors with the same indices.
+
+Alternative syntax `♢` can be typed in the REPL with `\\diamondsuit <tab>`.
+"""
+function khatri_rao_product!(R::ITensor, T1::ITensor, T2::ITensor)
+  if !hascommoninds(T1, T2)
+    error("Khatri Rao product requires that tensors share at least one
+      common index.")
+  end
+  # Permute the indices to the same order
+  #if inds(A) ≠ inds(B)
+  #  B = permute(B, inds(A))
+  #end
+  #tensor(C) .= tensor(A) .* tensor(B)
+  map!((t1, t2) -> *(t1, t2), R, T1, T2)
+  return R
+end
+
+# TODO: instead of copy, use promote(A, B)
+function khatri_rao_product(A::ITensor, B::ITensor)
+  Ac = copy(A)
+  return hadamard_product!(Ac, Ac, B)
+end
+
+♢(A::ITensor, B::ITensor) = khatri_rao_product(A, B)
 
 # Helper tensors for performing a partial direct sum
 function directsum_itensors(i::Index, j::Index, ij::Index)
