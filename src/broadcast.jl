@@ -117,7 +117,9 @@ instantiate(bc::Broadcasted{ITensorStyle}) = bc
 # inputs in the argument list
 #
 
-"`A = find_type(::Type,As)` returns the first of type Type among the arguments."
+"""
+`A = find_type(::Type,As)` returns the first of type Type among the arguments.
+"""
 function find_type(::Type{T}, args::Tuple) where {T}
   return find_type(T, find_type(T, args[1]), Base.tail(args))
 end

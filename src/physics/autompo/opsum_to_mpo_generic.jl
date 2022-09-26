@@ -160,7 +160,7 @@ function sorteachterm(os::OpSum, sites)
 
     # Keep only fermionic op positions (non-zero entries)
     filter!(!iszero, perm)
-    # and account for anti-commuting, fermionic operators 
+    # and account for anti-commuting, fermionic operators
     # during above sort; put resulting sign into coef
     t *= parity_sign(perm)
     terms(os)[n] = t
@@ -193,7 +193,7 @@ end
 """
     MPO(os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)
     MPO(eltype::Type{<:Number}, os::OpSum, sites::Vector{<:Index}; splitblocks=true, kwargs...)
-       
+
 Convert an OpSum object `os` to an
 MPO, with indices given by `sites`. The
 resulting MPO will have the indices
@@ -218,11 +218,12 @@ of the link dimensions are packed as much as
 possible according to common quantum numbers,
 making larger blocks. Before ITensors 0.3.19,
 this was the default output, but we have found
-that in general MPOs output with `splitblocks=true` 
+that in general MPOs output with `splitblocks=true`
 lead to better performance in algorithms like
 DMRG.
 
 # Examples
+
 ```julia
 os = OpSum()
 os += "Sz",1,"Sz",2
