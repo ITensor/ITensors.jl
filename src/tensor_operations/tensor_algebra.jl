@@ -278,11 +278,8 @@ function khatri_rao_product!(R::ITensor, T1::ITensor, T2::ITensor)
     error("Khatri Rao product requires that tensors share at least one
       common index.")
   end
-  # Permute the indices to the same order
-  #if inds(A) ≠ inds(B)
-  #  B = permute(B, inds(A))
-  #end
-  #tensor(C) .= tensor(A) .* tensor(B)
+  commoninds(T1, T2)
+  tensor()
   map!((t1, t2) -> *(t1, t2), R, T1, T2)
   return R
 end
