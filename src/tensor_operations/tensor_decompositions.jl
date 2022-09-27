@@ -83,6 +83,7 @@ function cp_als(ref::ITensor, rank::Int64; kwargs...)
   norm_ref = norm(ref)
   factors=
 end
+
 let
   i = Index(20, "i")
   j = Index(3, "j")
@@ -91,12 +92,53 @@ let
   m = Index(18, "m")
 
   A = randomITensor(i,j,k)
-  core = copy(A)
-  factors = tucker_hosvd!(core)
-  @show inds(core)
-  @show inds(factors[1])
 
-  #core = core * factors[1] * factors[2] * factors[3]
+  r = Index(30, "rank")
+  r2 = Index(40, "test")
+  cp_facs = []
+  for i in inds(A)
+    push!(cp_facs, randomITensor(r,i, r2))
+  end
 
-  @show norm(A - core) / norm(A)
+  normA = norm(A)
+
+  # Working on making the khatri_rao_product (general version)
+  #Find matching inds
+  a = cp_facs[1]
+  b = cp_facs[2]
+  comm = commoninds(a,b)
+  uniq_a = uniqueinds(a,comm)
+  uniq_b = uniqueinds(b, comm)
+
+  ninds_a = vcat(comm, uniq_a)
+  ninds_b = vcat(comm, uniq_b)
+  final_inds = vcat(comm, uniq_a, uniq_b)
+
+  a = permute(a, ninds_a)
+  b = permute(b, ninds_b)
+
+  size_of_common = 1
+  for i = comm[:]
+    size_of_common *= dim(i)
+  end
+  size_outer_a = 1
+  size_outer_b = 1
+  for i = uniq_a[:]
+    size_outer_a *= dim(i)
+  end
+
+  for i = uniq_b[:]
+    size_outer_b *= dim(i)
+  end
+  final_size = size_outer_a * size_outer_b
+
+  result = ITensor(0, final_inds)
+  storage_a = storage(a)
+  storage_b = storage(b)
+  for i = range(1,size_of_common-1, step = 1)
+    start = i * size_outer_a
+    e = (i + 1) * size_outer_a
+    viewA = view(storage_a, [start:e])
+    #@show size(viewA)
+  end
 end
