@@ -64,6 +64,7 @@ end
 
 """
     correlation_matrix_to_gmera(Λ::AbstractMatrix{ElT}; eigval_cutoff::Float64 = 1e-8, maxblocksize::Int = size(Λ0, 1))
+
 Diagonalize a correlation matrix through MERA layers,
 output gates and eigenvalues of the correlation matrix
 """

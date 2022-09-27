@@ -242,10 +242,13 @@ end
 Iterate over the Tag's in a TagSet.
 
 # Example
+
 ```jldoctest
 julia> using ITensors;
 
+
 julia> tagset = TagSet("l, tags");
+
 
 julia> for tag in tagset
          println(tag)

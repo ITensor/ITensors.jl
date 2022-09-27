@@ -19,13 +19,15 @@ include("contraction_cost.jl")
 #
 # however in that limit it would be best to use
 # symbolic dimensions.
-# 
+#
 const DimT = UInt128
 
 """
     optimal_contraction_sequence(T)
 
-Returns a contraction sequence for contracting the tensors `T`. The sequence is generally optimal (currently, outer product contractions are skipped, but some optimal sequences require outer product contractions).
+Returns a contraction sequence for contracting the tensors `T`. The sequence is
+generally optimal (currently, outer product contractions are skipped, but some
+optimal sequences require outer product contractions).
 """
 function optimal_contraction_sequence(T)
   if length(T) == 1

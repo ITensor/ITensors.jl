@@ -64,6 +64,7 @@ disable_warn_order() = set_warn_order(nothing)
 Disable warning about the ITensor order in a block of code.
 
 # Examples
+
 ```julia
 A = ITensor(IndexSet(_ -> Index(1), Order(8)))
 B = ITensor(IndexSet(_ -> Index(1), Order(8)))
@@ -90,6 +91,7 @@ Temporarily set the order threshold for warning about the ITensor
 order in a block of code.
 
 # Examples
+
 ```julia
 @set_warn_order 12 A * B
 

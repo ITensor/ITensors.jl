@@ -7,11 +7,12 @@ or similar matrix product state (MPS) calculation.
 
 For a Sweeps object `sw` the available
 parameters are:
-* `nsweep(sw)` -- the number of sweeps to do
-* `maxdim(sw,n)` -- maximum MPS bond dimension for sweep n
-* `mindim(sw,n)` -- minimum MPS bond dimension for sweep n
-* `cutoff(sw,n)` -- truncation error cutoff for sweep n
-* `noise(sw,n)` -- noise term coefficient for sweep n
+
+  - `nsweep(sw)` -- the number of sweeps to do
+  - `maxdim(sw,n)` -- maximum MPS bond dimension for sweep n
+  - `mindim(sw,n)` -- minimum MPS bond dimension for sweep n
+  - `cutoff(sw,n)` -- truncation error cutoff for sweep n
+  - `noise(sw,n)` -- noise term coefficient for sweep n
 """
 mutable struct Sweeps
   nsweep::Int
@@ -46,23 +47,26 @@ If the number of sweeps are not specified, they
 are determined from the size of the input matrix.
 
 # Examples
+
 ```julia
-julia> Sweeps([
-         "maxdim" "mindim" "cutoff" "noise"
-          50       10       1e-12    1E-7
-          100      20       1e-12    1E-8
-          200      20       1e-12    1E-10
-          400      20       1e-12    0
-          800      20       1e-12    1E-11
-          800      20       1e-12    0
-         ])
+julia > Sweeps(
+  [
+    "maxdim" "mindim" "cutoff" "noise"
+    50 10 1e-12 1E-7
+    100 20 1e-12 1E-8
+    200 20 1e-12 1E-10
+    400 20 1e-12 0
+    800 20 1e-12 1E-11
+    800 20 1e-12 0
+  ],
+)
 Sweeps
-1 cutoff=1.0E-12, maxdim=50, mindim=10, noise=1.0E-07
-2 cutoff=1.0E-12, maxdim=100, mindim=20, noise=1.0E-08
-3 cutoff=1.0E-12, maxdim=200, mindim=20, noise=1.0E-10
-4 cutoff=1.0E-12, maxdim=400, mindim=20, noise=0.0E+00
-5 cutoff=1.0E-12, maxdim=800, mindim=20, noise=1.0E-11
-6 cutoff=1.0E-12, maxdim=800, mindim=20, noise=0.0E+00
+1cutoff = 1.0E-12, maxdim = 50, mindim = 10, noise = 1.0E-07
+2cutoff = 1.0E-12, maxdim = 100, mindim = 20, noise = 1.0E-08
+3cutoff = 1.0E-12, maxdim = 200, mindim = 20, noise = 1.0E-10
+4cutoff = 1.0E-12, maxdim = 400, mindim = 20, noise = 0.0E+00
+5cutoff = 1.0E-12, maxdim = 800, mindim = 20, noise = 1.0E-11
+6cutoff = 1.0E-12, maxdim = 800, mindim = 20, noise = 0.0E+00
 ```
 """
 function Sweeps(nsw::Int, d::AbstractMatrix)
@@ -227,7 +231,7 @@ end
 Returns an iterable object that evaluates
 to tuples of the form `(b,ha)` where `b`
 is the bond number and `ha` is the half-sweep
-number. Takes an optional named argument 
+number. Takes an optional named argument
 `ncenter` for use with an n-site MPS or DMRG
 algorithm, with a default of 2-site.
 """

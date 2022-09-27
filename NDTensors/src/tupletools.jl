@@ -169,6 +169,7 @@ end
 # Taken from TupleTools.jl
 """
     sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) -> ::Tuple
+
 Sorts the tuple `t`.
 """
 Base.sort(t::Tuple; lt=isless, by=identity, rev::Bool=false) = _sort(t, lt, by, rev)

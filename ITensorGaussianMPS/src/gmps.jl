@@ -171,6 +171,7 @@ end
 
 For a vector `v`, return the `length(v)-1`
 Givens rotations `g` and the norm `r` such that:
+
 ```julia
 g * v ≈ r * [n == 1 ? 1 : 0 for n in 1:length(v)]
 ```

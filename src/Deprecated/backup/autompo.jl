@@ -598,7 +598,7 @@ end
 
 """
     MPO(ampo::OpSum,sites::Vector{<:Index};kwargs...)
-       
+
 Convert an OpSum object `ampo` to an
 MPO, with indices given by `sites`. The
 resulting MPO will have the indices
@@ -609,6 +609,7 @@ the OpSum terms together, often achieving
 the minimum possible bond dimension.
 
 # Examples
+
 ```julia
 ampo = OpSum()
 ampo += ("Sz",1,"Sz",2)

@@ -1,9 +1,12 @@
 """
 ITensor is a library for rapidly creating correct and efficient tensor network algorithms.
 
-An ITensor is a tensor whose interface is independent of its memory layout. ITensor indices are 'intelligent' meaning they carry extra information and 'recognize' each other automatically when contracting or adding ITensors.
+An ITensor is a tensor whose interface is independent of its memory layout.
+ITensor indices are 'intelligent' meaning they carry extra information and
+'recognize' each other automatically when contracting or adding ITensors.
 
-The ITensor library includes composable and extensible algorithms for optimizing and transforming tensor networks, such as matrix product state and matrix product operators.
+The ITensor library includes composable and extensible algorithms for optimizing
+and transforming tensor networks, such as matrix product state and matrix product operators.
 
 # Example Usage
 
@@ -31,18 +34,19 @@ Add ITensors A and B together (ok that indices in different order)
 
 # Other Features of ITensor
 
-- Tools for **tensor networks**, such as matrix product states (MPS) / tensor trains (TT)
-- **Algorithms** for solving linear equations in MPS form (such as DMRG) or for integrating differential equations ("time evolving MPS")
-- ITensors can have **sparse data** internally, such as block sparsity or diagonal sparsity, while having the same interface as dense ITensors
-- ITensors can have **symmetry properties** (invariance or equivariance) under group transformations of the indices. In physics terminology such ITensors conserve quantum numbers.
+  - Tools for **tensor networks**, such as matrix product states (MPS) / tensor trains (TT)
+  - **Algorithms** for solving linear equations in MPS form (such as DMRG) or
+    for integrating differential equations ("time evolving MPS")
+  - ITensors can have **sparse data** internally, such as block sparsity or diagonal
+    sparsity, while having the same interface as dense ITensors
+  - ITensors can have **symmetry properties** (invariance or equivariance) under
+    group transformations of the indices. In physics terminology such ITensors conserve quantum numbers.
 
 # Documentation and Resources
 
 ITensor website: https://itensor.org/
 
 Documentation: https://itensor.github.io/ITensors.jl/stable/
-
-
 """
 module ITensors
 
@@ -132,14 +136,24 @@ include("indexset.jl")
 # ITensor
 #
 include("itensor.jl")
+include("tensor_operations/tensor_algebra.jl")
+include("tensor_operations/matrix_algebra.jl")
+include("tensor_operations/permutations.jl")
 include("broadcast.jl")
-include("decomp.jl")
+include("tensor_operations/matrix_decomposition.jl")
 include("iterativesolvers.jl")
 include("adapt.jl")
 
 #####################################
+# Experimental ITensor Functions
+#
+include("tensor_operations/itensor_combiner.jl")
+# include("experimental/ops_mpo.jl") #Ops to MPO conversions
+
+#####################################
 # QNs
 #
+include("qn/flux.jl")
 include("qn/qn.jl")
 include("qn/qnindex.jl")
 include("qn/qnindexset.jl")
@@ -190,11 +204,6 @@ include("physics/autompo/qnmatelem.jl")
 include("physics/autompo/opsum_to_mpo_generic.jl")
 include("physics/autompo/opsum_to_mpo.jl")
 include("physics/autompo/opsum_to_mpo_qn.jl")
-
-#####################################
-# Ops to MPO conversions
-#
-# include("Ops/ops_mpo.jl")
 
 #####################################
 # Trotter-Suzuki decomposition
