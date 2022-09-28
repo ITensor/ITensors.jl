@@ -1,11 +1,20 @@
 
 """
+A ProjMPOApply represents the application of an
+MPO `H` onto an MPS `psi0` but "projected" by
+the basis of a different MPS `psi` (which
+could be an approximation to H|psi>).
+
+As an implementation of the AbstractProjMPO
+type, it supports multiple `nsite` values for
+one- and two-site algorithms.
+
 ```
-     o--o--o-      -o--o--o--o--o--o <ΨB|
+     *--*--*-      -*--*--*--*--*--* <psi|
      |  |  |  |  |  |  |  |  |  |  |
-     o--o--o--o--o--o--o--o--o--o--o H  
+     h--h--h--h--h--h--h--h--h--h--h H  
      |  |  |  |  |  |  |  |  |  |  |
-     o--o--o-      -o--o--o--o--o--o |ΨA>
+     o--o--o-      -o--o--o--o--o--o |psi0>
 ```
 """
 mutable struct ProjMPOApply <: AbstractProjMPO
