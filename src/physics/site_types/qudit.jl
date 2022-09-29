@@ -39,6 +39,7 @@ function op(::OpName"Id", ::SiteType"Qudit", ds::Int...)
   return Matrix(1.0I, d, d)
 end
 op(on::OpName"I", st::SiteType"Qudit", ds::Int...) = op(alias(on), st, ds...)
+op(on::OpName"F", st::SiteType"Qudit", ds::Int...) = op(OpName"Id"(), st, ds...)
 
 function op(::OpName"Adag", ::SiteType"Qudit", d::Int)
   mat = zeros(d, d)

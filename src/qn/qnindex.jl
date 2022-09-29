@@ -75,7 +75,7 @@ end
 
 """
 A QN Index is an Index with QN block storage instead of
-just an integer dimension. The QN block storage is a 
+just an integer dimension. The QN block storage is a
 vector of pairs of QNs and block dimensions.
 The total dimension of a QN Index is the sum of the
 dimensions of the blocks of the Index.
@@ -114,7 +114,7 @@ end
                                              tags = "",
                                              plev::Integer = 0)
 
-Construct a QN Index from a Vector of pairs of QN and block 
+Construct a QN Index from a Vector of pairs of QN and block
 dimensions.
 
 Note: in the future, this may enforce that all blocks have the
@@ -122,6 +122,7 @@ same QNs (which would allow for some optimizations, for example
 when constructing random QN ITensors).
 
 # Example
+
 ```
 Index([QN("Sz", -1) => 1, QN("Sz", 1) => 1]; tags = "i")
 ```
@@ -137,10 +138,11 @@ end
     Index(qnblocks::Vector{Pair{QN, Int64}}, tags; dir::Arrow = Out,
                                                    plev::Integer = 0)
 
-Construct a QN Index from a Vector of pairs of QN and block 
+Construct a QN Index from a Vector of pairs of QN and block
 dimensions.
 
 # Example
+
 ```
 Index([QN("Sz", -1) => 1, QN("Sz", 1) => 1], "i"; dir = In)
 ```
@@ -154,10 +156,11 @@ end
                                         tags = "",
                                         plev::Integer = 0)
 
-Construct a QN Index from a list of pairs of QN and block 
+Construct a QN Index from a list of pairs of QN and block
 dimensions.
 
 # Example
+
 ```
 Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags = "i")
 ```
@@ -177,6 +180,7 @@ To obtain the dimension of block number `b`, use `blockdim(i,b)`.
 To obtain the QN associated with block `b`, use `qn(i,b)`.
 
 ### Example
+
 ```
 julia> i = Index([QN("Sz",-1)=>2, QN("Sz",0)=>4, QN("Sz",1)=>2], "i")
 julia> nblocks(i)
@@ -220,10 +224,11 @@ qn(ib::Pair{<:Index,Block{1}}) = qn(first(ib), last(ib))
 """
     qn(i::QNIndex, b::Integer)
 
-Returns the QN associated with block number `b` of 
+Returns the QN associated with block number `b` of
 a QNIndex `i`.
 
 ### Example
+
 ```
 julia> i = Index([QN("Sz",-1)=>2, QN("Sz",0)=>4, QN("Sz",1)=>2], "i")
 julia> qn(i,1)
@@ -262,6 +267,7 @@ Returns the dimension of block number `b` of
 a QNIndex `i`.
 
 ### Example
+
 ```
 julia> i = Index([QN("Sz",-1)=>2, QN("Sz",0)=>4, QN("Sz",1)=>2], "i")
 julia> blockdim(i,1)
@@ -311,9 +317,9 @@ end
 """
     qnblocknum(ind::QNIndex, q::QN)
 
-Given a QNIndex `ind` and QN `q`, return the 
-number of the block (from 1,...,nblocks(ind)) 
-of the QNIndex having QN equal to `q`. Assumes 
+Given a QNIndex `ind` and QN `q`, return the
+number of the block (from 1,...,nblocks(ind))
+of the QNIndex having QN equal to `q`. Assumes
 all blocks of `ind` have a unique QN.
 """
 function qnblocknum(ind::QNIndex, q::QN)
@@ -332,9 +338,9 @@ blockdim(ind::QNIndex, q::QN) = blockdim(ind, block(first, ind, q))
 """
     qnblockdim(ind::QNIndex, q::QN)
 
-Given a QNIndex `ind` and QN `q`, return the 
-dimension of the block of the QNIndex having 
-QN equal to `q`. Assumes all blocks of `ind` 
+Given a QNIndex `ind` and QN `q`, return the
+dimension of the block of the QNIndex having
+QN equal to `q`. Assumes all blocks of `ind`
 have a unique QN.
 """
 qnblockdim(ind::QNIndex, q::QN) = blockdim(ind, qnblocknum(ind, q))

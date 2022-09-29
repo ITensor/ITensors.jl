@@ -6,8 +6,8 @@ certain number of site indices of the MPO unprojected.
 Which sites are unprojected can be shifted by calling
 the `position!` method.
 
-Drawing of the network represented by a ProjMPO `P(H)`, 
-showing the case of `nsite(P)==2` and `position!(P,psi,4)` 
+Drawing of the network represented by a ProjMPO `P(H)`,
+showing the case of `nsite(P)==2` and `position!(P,psi,4)`
 for an MPS `psi`:
 
 ```

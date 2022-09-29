@@ -459,6 +459,7 @@ using ITensors, Test
     @test v == 3
     @test op(s, "Id", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op(s, "I", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
+    @test op(s, "F", 2) == itensor([1 0 0; 0 1 0; 0 0 1], s[2]', dag(s[2]))
     @test op("Id", s, 1, 2) ==
       itensor(Matrix(I, d^2, d^2), s[2]', s[1]', dag(s[2]), dag(s[1]))
     @test op("I", s, 1, 2) ==
