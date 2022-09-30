@@ -17,7 +17,7 @@ Graphs = "1.4.1"
 ITensorVisualizationBase = "0.1.0"
 NetworkLayout = "0.4.3"
 Reexport = "1.2.2"
-UnicodePlots = "2.5.0"
+UnicodePlots = "2.5.0, 3"
 julia = "1.6"
 
 [extras]
