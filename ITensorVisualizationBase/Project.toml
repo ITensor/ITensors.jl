@@ -17,7 +17,7 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 
 [compat]
 AbstractTrees = "0.3.4"
-Compat = "3.40.0"
+Compat = "3.40.0, 4"
 GeometryBasics = "0.4.1"
 Graphs = "1.4.1"
 ITensors = "0.2.12, 0.3"
