@@ -297,7 +297,7 @@ function show(io::IO, ::MIME"text/plain", o::Prod{Op})
   end
   return nothing
 end
-show(io::IO, o::Prod{Op}) where {C} = show(io, MIME("text/plain"), o)
+show(io::IO, o::Prod{Op}) = show(io, MIME("text/plain"), o)
 
 function show(io::IO, m::MIME"text/plain", o::Scaled{C,O}) where {C,O<:Union{Op,Prod{Op}}}
   c = coefficient(o)

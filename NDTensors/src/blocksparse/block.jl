@@ -40,7 +40,7 @@ Block(t::NTuple{N,UInt}) where {N} = Block{N}(t)
 
 Block(t::Tuple{Vararg{<:Any,N}}) where {N} = Block{N}(t)
 
-Block(::Tuple{}) where {N} = Block{0}(())
+Block(::Tuple{}) = Block{0}(())
 
 Block(I::Union{Integer,Block{1}}...) = Block(I)
 
@@ -56,7 +56,7 @@ convert(::Type{Block}, I::CartesianIndex{N}) where {N} = Block{N}(I.I)
 
 convert(::Type{Block{N}}, I::CartesianIndex{N}) where {N} = Block{N}(I.I)
 
-convert(::Type{Block}, t::Tuple) where {N} = Block(t)
+convert(::Type{Block}, t::Tuple) = Block(t)
 
 convert(::Type{Block{N}}, t::Tuple) where {N} = Block{N}(t)
 
