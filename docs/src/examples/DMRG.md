@@ -21,13 +21,13 @@ us input a Hamiltonian (or any sum of local operators) in similar notation
 to pencil-and-paper notation:
 
 ```julia
-ampo = OpSum()
+os = OpSum()
 for j=1:N-1
-  ampo += 0.5,"S+",j,"S-",j+1
-  ampo += 0.5,"S-",j,"S+",j+1
-  ampo += "Sz",j,"Sz",j+1
+  os += 0.5,"S+",j,"S-",j+1
+  os += 0.5,"S-",j,"S+",j+1
+  os += "Sz",j,"Sz",j+1
 end
-H = MPO(ampo,sites)
+H = MPO(os,sites)
 ```
 
 In the last line above we convert the OpSum helper object to an actual MPO.
@@ -72,13 +72,13 @@ let
   N = 100
   sites = siteinds("S=1",N)
 
-  ampo = OpSum()
+  os = OpSum()
   for j=1:N-1
-    ampo += 0.5,"S+",j,"S-",j+1
-    ampo += 0.5,"S-",j,"S+",j+1
-    ampo += "Sz",j,"Sz",j+1
+    os += 0.5,"S+",j,"S-",j+1
+    os += 0.5,"S-",j,"S+",j+1
+    os += "Sz",j,"Sz",j+1
   end
-  H = MPO(ampo,sites)
+  H = MPO(os,sites)
 
   nsweeps = 5 # number of sweeps is 5
   maxdim = [10,20,100,100,200] # gradually increase states kept
@@ -135,23 +135,23 @@ let
   Jhh = 0.5 # half-half coupling
   Joo = 0.5 # one-one coupling
 
-  ampo = OpSum()
+  os = OpSum()
   for j=1:N-1
-    ampo += 0.5*Jho,"S+",j,"S-",j+1
-    ampo += 0.5*Jho,"S-",j,"S+",j+1
-    ampo += Jho,"Sz",j,"Sz",j+1
+    os += 0.5*Jho,"S+",j,"S-",j+1
+    os += 0.5*Jho,"S-",j,"S+",j+1
+    os += Jho,"Sz",j,"Sz",j+1
   end
   for j=1:2:N-2
-    ampo += 0.5*Jhh,"S+",j,"S-",j+2
-    ampo += 0.5*Jhh,"S-",j,"S+",j+2
-    ampo += Jhh,"Sz",j,"Sz",j+2
+    os += 0.5*Jhh,"S+",j,"S-",j+2
+    os += 0.5*Jhh,"S-",j,"S+",j+2
+    os += Jhh,"Sz",j,"Sz",j+2
   end
   for j=2:2:N-2
-    ampo += 0.5*Joo,"S+",j,"S-",j+2
-    ampo += 0.5*Joo,"S-",j,"S+",j+2
-    ampo += Joo,"Sz",j,"Sz",j+2
+    os += 0.5*Joo,"S+",j,"S-",j+2
+    os += 0.5*Joo,"S-",j,"S+",j+2
+    os += Joo,"Sz",j,"Sz",j+2
   end
-  H = MPO(ampo,sites)
+  H = MPO(os,sites)
 
   nsweeps = 10
   maxdim = [10,10,20,40,80,100,140,180,200]
@@ -163,6 +163,21 @@ let
 
   return
 end
+```
+
+## Use a Sum of MPOs in DMRG
+
+One version of the ITensor `dmrg` function accepts an array of MPOs
+`[H1,H2,H3]` (or any number of MPOs you want). This version of DMRG
+will find the ground state of `H1+H2+H3`. Internally it does not
+actually sum these MPOs, but loops over them during each step of 
+the "eigensolver" at the core of the DMRG algorithm, so it is usually
+more efficient than if the MPOs had been summed together into a single MPO.
+
+To use this version of DMRG, say you have MPOs `H1`, `H2`, and `H3`. 
+Then call DMRG like this:
+```julia
+energy,psi = dmrg([H1,H2,H3],psi0; nsweeps, maxdim, cutoff)
 ```
 
 ## Make a 2D Hamiltonian for DMRG
@@ -210,13 +225,13 @@ let
   lattice = square_lattice(Nx, Ny; yperiodic = false)
 
   # Define the Heisenberg spin Hamiltonian on this lattice
-  ampo = OpSum()
+  os = OpSum()
   for b in lattice
-    ampo .+= 0.5, "S+", b.s1, "S-", b.s2
-    ampo .+= 0.5, "S-", b.s1, "S+", b.s2
-    ampo .+=      "Sz", b.s1, "Sz", b.s2
+    os .+= 0.5, "S+", b.s1, "S-", b.s2
+    os .+= 0.5, "S-", b.s1, "S+", b.s2
+    os .+=      "Sz", b.s1, "Sz", b.s2
   end
-  H = MPO(ampo,sites)
+  H = MPO(os,sites)
 
   state = [isodd(n) ? "Up" : "Dn" for n=1:N]
   # Initialize wavefunction to a random MPS
