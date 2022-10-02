@@ -204,31 +204,31 @@ using Zygote: ZygoteRuleConfig, gradient
     return os
   end
 
-    # These are broken in versions of Zygote after 0.6.43,
-    # See: https://github.com/FluxML/Zygote.jl/issues/1304
-    f = function (x)
-      return ITensor(exp(1.5 * H(x, x); alg=Trotter{1}(1)), s)[1, 1]
-    end
-    args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  # These are broken in versions of Zygote after 0.6.43,
+  # See: https://github.com/FluxML/Zygote.jl/issues/1304
+  f = function (x)
+    return ITensor(exp(1.5 * H(x, x); alg=Trotter{1}(1)), s)[1, 1]
+  end
+  args = (x,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-    f = function (x)
-      return ITensor(exp(1.5 * H(x, x); alg=Trotter{2}(1)), s)[1, 1]
-    end
-    args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  f = function (x)
+    return ITensor(exp(1.5 * H(x, x); alg=Trotter{2}(1)), s)[1, 1]
+  end
+  args = (x,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-    f = function (x)
-      return ITensor(exp(1.5 * H(x, x); alg=Trotter{2}(2)), s)[1, 1]
-    end
-    args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  f = function (x)
+    return ITensor(exp(1.5 * H(x, x); alg=Trotter{2}(2)), s)[1, 1]
+  end
+  args = (x,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
-    f = function (x)
-      return ITensor(exp(x * H(x, x); alg=Trotter{2}(2)), s)[1, 1]
-    end
-    args = (x,)
-    test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
+  f = function (x)
+    return ITensor(exp(x * H(x, x); alg=Trotter{2}(2)), s)[1, 1]
+  end
+  args = (x,)
+  test_rrule(ZygoteRuleConfig(), f, args...; rrule_f=rrule_via_ad, check_inferred=false)
 
   f = function (x)
     y = -x * (Op("X", 1) * Op("X", 2) + Op("Z", 1) * Op("Z", 2))
