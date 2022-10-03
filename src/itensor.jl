@@ -811,25 +811,10 @@ dir(A::ITensor, i::Index) = dir(inds(A), i)
 
 dirs(A::ITensor, is) = dirs(inds(A), is)
 
-# TODO: add iscombiner(::Tensor) to NDTensors
-iscombiner(T::ITensor)::Bool = (storage(T) isa Combiner)
-
 # TODO: add isdiag(::Tensor) to NDTensors
 isdiag(T::ITensor)::Bool = (storage(T) isa Diag || storage(T) isa DiagBlockSparse)
 
 diaglength(T::ITensor) = diaglength(tensor(T))
-
-"""
-    ishermitian(T::ITensor; kwargs...)
-
-Test whether an ITensor is a Hermitian operator,
-that is whether taking `dag` of the ITensor and
-transposing its indices returns numerically
-the same ITensor.
-"""
-function ishermitian(T::ITensor; kwargs...)
-  return isapprox(T, dag(transpose(T)); kwargs...)
-end
 
 #
 # Block sparse related functions

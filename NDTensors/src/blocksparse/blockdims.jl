@@ -176,7 +176,7 @@ end
 
 # Given a CartesianIndex in the range dims(T), get the block it is in
 # and the index within that block
-function blockindex(T, i::Vararg{Integer,N}) where {ElT,N}
+function blockindex(T, i::Vararg{Integer,N}) where {N}
   # Bounds check.
   # Do something more robust like:
   # @boundscheck Base.checkbounds_indices(Bool, map(Base.oneto, dims(T)), i) || throw_boundserror(T, i)
