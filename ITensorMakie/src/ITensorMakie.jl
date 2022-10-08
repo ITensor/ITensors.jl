@@ -89,7 +89,9 @@ function visualize!(
   if length(vertex_labels) ≠ nv(g)
     throw(
       DimensionMismatch(
-        "$(length(vertex_labels)) vertex labels $(vertex_labels) were specified but there are $(nv(g)) tensors in the diagram, please specify the correct number of labels.",
+        "$(length(vertex_labels)) vertex labels $(vertex_labels) were specified
+        but there are $(nv(g)) tensors in the diagram, please specify the
+        correct number of labels."
       ),
     )
   end
@@ -133,7 +135,8 @@ function visualize!(
   if isempty(contents(f))
     axis_plot = graphplot(f, g; graphplot_kwargs...)
   else
-    @warn "Visualizing a graph in the same axis as an existing graph. This feature is experimental and some features like interactivity might now work"
+    @warn "Visualizing a graph in the same axis as an existing graph. This
+    feature is experimental and some features like interactivity might now work"
     overwrite_axis = true
     graphplot!(f, g; graphplot_kwargs...)
   end

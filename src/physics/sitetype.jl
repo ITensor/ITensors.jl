@@ -47,6 +47,7 @@ The current built-in site types are:
 Tags on indices get turned into SiteTypes internally, and then
 we search for overloads of functions like `op` and `siteind`.
 For example:
+
 ```julia
 julia> s = siteind("S=1/2")
 (dim=2|id=862|"S=1/2,Site")
@@ -96,7 +97,8 @@ NDTensors.Dense{Float64,Array{Float64,1}}
 Many operators are available, for example:
 
 - `SiteType"S=1/2"`: `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
-- `SiteType"Electron"`: `"Nup"`, `"Ndn"`, `"Nupdn"`, `"Ntot"`, `"Cup"`, `"Cdagup"`, `"Cdn"`, `"Cdagup"`, `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
+- `SiteType"Electron"`: `"Nup"`, `"Ndn"`, `"Nupdn"`, `"Ntot"`, `"Cup"`,
+   `"Cdagup"`, `"Cdn"`, `"Cdagdn"`, `"Sz"`, `"Sx"`, `"Sy"`, `"S+"`, `"S-"`, ...
 - ...
 
 You can view the source code for the internal SiteType definitions
@@ -142,12 +144,12 @@ end
 OpName is a parameterized type which allows
 making strings into Julia types for the purpose
 of representing operator names.
-The main use of OpName is overloading the 
-`ITensors.op!` method which generates operators 
+The main use of OpName is overloading the
+`ITensors.op!` method which generates operators
 for indices with certain tags such as "S=1/2".
 
 To make a OpName type, you can use the string
-macro notation: `OpName"MyTag"`. 
+macro notation: `OpName"MyTag"`.
 
 To make an OpName value or object, you can use
 the notation: `OpName("myop")`
@@ -203,8 +205,8 @@ the Index `s` and an `OpName"opname"` argument
 that corresponds to the input operator name.
 
 Operator names can be combined using the `"*"`
-symbol, for example `"S+*S-"` or `"Sz*Sz*Sz"`. 
-The result is an ITensor made by forming each operator 
+symbol, for example `"S+*S-"` or `"Sz*Sz*Sz"`.
+The result is an ITensor made by forming each operator
 then contracting them together in a way corresponding
 to the usual operator product or matrix multiplication.
 
@@ -214,13 +216,16 @@ and can be used directly such as for applying
 operators to MPS.
 
 # Example
+
 ```julia
 s = Index(2, "Site,S=1/2")
 Sz = op("Sz", s)
 ```
 
 To see all of the operator names defined for the site types included with
-ITensor, please [view the source code for each site type](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types). Note that some site types such as "S=1/2" and "Qubit" are aliases for each other and share operator definitions.
+ITensor, please view the [source code](https://github.com/ITensor/ITensors.jl/tree/main/src/physics/site_types)
+for each site type. Note that some site types such as "S=1/2" and "Qubit"
+are aliases for each other and share operator definitions.
 """
 function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   name = strip(name)
@@ -395,6 +400,8 @@ function op(name::AbstractString, s::Index...; adjoint::Bool=false, kwargs...)
   )
 end
 
+op(name::AbstractString; kwargs...) = error("Must input indices when creating an `op`.")
+
 # If a Matrix is passed instead of a String, turn the Matrix into
 # an ITensor with the given indices.
 op(X::AbstractArray, s::Index...) = itensor(X, prime.([s...]), dag.([s...]))
@@ -415,7 +422,7 @@ op(opname::AbstractString, t::SiteType; kwargs...) = op(OpName(opname), t; kwarg
     op(opname::String,sites::Vector{<:Index},n::Int; kwargs...)
 
 Return an ITensor corresponding to the operator
-named `opname` for the n'th Index in the array 
+named `opname` for the n'th Index in the array
 `sites`.
 
 # Example
@@ -486,6 +493,7 @@ Given a list of operators, create ITensors using the collection
 of indices.
 
 # Examples
+
 ```julia
 s = siteinds("Qubit", 4)
 os = [("H", 1), ("X", 2), ("CX", 2, 4)]
@@ -512,12 +520,12 @@ macro StateName_str(s)
   return StateName{SmallString(s)}
 end
 
-state(::StateName, ::SiteType) = nothing
-state(::StateName, ::SiteType, ::Index) = nothing
-state!(::ITensor, ::StateName, ::SiteType, ::Index) = nothing
+state(::StateName, ::SiteType; kwargs...) = nothing
+state(::StateName, ::SiteType, ::Index; kwargs...) = nothing
+state!(::ITensor, ::StateName, ::SiteType, ::Index; kwargs...) = nothing
 
 # Syntax `state("Up", Index(2, "S=1/2"))`
-state(sn::String, i::Index) = state(i, sn)
+state(sn::String, i::Index; kwargs...) = state(i, sn; kwargs...)
 
 """
     state(s::Index, name::String; kwargs...)
@@ -526,8 +534,8 @@ Return an ITensor corresponding to the state
 named `name` for the Index `s`. The returned
 ITensor will have `s` as its only index.
 
-The terminology here is based on the idea of a 
-single-site state or wavefunction in physics. 
+The terminology here is based on the idea of a
+single-site state or wavefunction in physics.
 
 The `state` function is implemented for various
 Index tags by overloading either the
@@ -540,6 +548,7 @@ The `state` system is used by the MPS type
 to construct product-state MPS and for other purposes.
 
 # Example
+
 ```julia
 s = Index(2, "Site,S=1/2")
 sup = state(s,"Up")
@@ -552,7 +561,7 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
   stypes = _sitetypes(s)
   sname = StateName(name)
 
-  # Try calling state(::StateName"Name",::SiteType"Tag",s::Index)
+  # Try calling state(::StateName"Name",::SiteType"Tag",s::Index; kwargs...)
   for st in stypes
     v = state(sname, st, s; kwargs...)
     if !isnothing(v)
@@ -565,10 +574,10 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
     end
   end
 
-  # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index)
+  # Try calling state!(::ITensor,::StateName"Name",::SiteType"Tag",s::Index;kwargs...)
   T = ITensor(s)
   for st in stypes
-    state!(T, sname, st, s)
+    state!(T, sname, st, s; kwargs...)
     !isempty(T) && return T
   end
 
@@ -578,7 +587,7 @@ function state(s::Index, name::AbstractString; kwargs...)::ITensor
   # which returns a Julia vector
   #
   for st in stypes
-    v = state(sname, st)
+    v = state(sname, st; kwargs...)
     !isnothing(v) && return itensor(v, s)
   end
 
@@ -591,7 +600,7 @@ end
 
 state(s::Index, n::Integer) = onehot(s => n)
 
-state(sset::Vector{<:Index}, j::Integer, st) = state(sset[j], st)
+state(sset::Vector{<:Index}, j::Integer, st; kwargs...) = state(sset[j], st; kwargs...)
 
 #---------------------------------------
 #
@@ -624,11 +633,12 @@ to specific integer values within the range `1:dim(s)`.
 
 The `val` function is implemented for various
 Index tags by overloading methods named `val`
-which take a `SiteType` argument corresponding to 
-one of the tags of the Index `s` and an `ValName"name"` 
+which take a `SiteType` argument corresponding to
+one of the tags of the Index `s` and an `ValName"name"`
 argument that corresponds to the input name.
 
 # Example
+
 ```julia
 s = Index(2, "Site,S=1/2")
 val(s,"Up") == 1

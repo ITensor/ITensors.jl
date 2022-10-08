@@ -54,6 +54,18 @@ For example:
 sites = siteinds("Qubit",N; conserve_parity=true)
 ```
 
+#### "Qubit" and "S=1/2" States
+
+The available state names for "Qubit" sites are:
+- `"0"` (aliases: `"Z+"`, `"Zp"`, `"Up"`, `"↑"`) Qubit in the 0 state
+- `"1"` (aliases: `"Z-"`, `"Zm"`, `"Dn"`, `"↓"`) Qubit in the 1 state
+- `"+"` (aliases: `"X+"`, `"Xp"`) Qubit in the $|+\rangle$ state (+1 eigenvector of $\sigma_x$)
+- `"+"` (aliases: `"X-"`, `"Xm"`) Qubit in the $|-\rangle$ state (-1 eigenvector of $\sigma_x$)
+- `"i"` (aliases: `"Y+"`, `"Yp"`) Qubit in the $|i\rangle$ state (+1 eigenvector of $\sigma_y$)
+- `"-i"` (aliases: `"Y-"`, `"Ym"`) Qubit in the $|-i\rangle$ state (+1 eigenvector of $\sigma_y$)
+
+#### "Qubit" and "S=1/2" Operators
+
 Operators or gates associated with "Qubit" sites can be made using the `op` function,
 for example
 ```
@@ -74,17 +86,19 @@ Single-qubit operators:
 - `"Ry"` (takes argument: θ) Rotation around y axis
 - `"Rz"` (takes argument: ϕ) Rotation around z axis
 - `"Rn"` (takes arguments: θ, ϕ, λ) (aliases: `"Rn̂"`) Rotation about axis n=(θ, ϕ, λ)
+- `"Proj0"` (aliases: `"ProjUp"`, `"projUp"`) Operator $|0\rangle\langle 0|$
+- `"Proj1"` (aliases: `"ProjDn"`, `"projDn"`) Operator $|1\rangle\langle 1|$
 
 Spin operators:
-- `"Sz"` (aliases: `"Sᶻ"`)
-- `"S+"` (alises: `"S⁺"`, `"Splus"`)
-- `"S-"` (aliases: `"S⁻"`, `"Sminus"`)
-- `"Sx"` (alises: `"Sˣ"`)
-- `"iSy"` (aliases: `"iSʸ"`)
-- `"Sy"` (aliases: `"Sʸ"`)
-- `"S2"` (aliases: "S²"`)
-- `"ProjUp"` (aliases: `"projUp"`)
-- `"ProjDn"` (aliases: `"projDn"`)
+- `"Sz"` (aliases: `"Sᶻ"`) Spin z operator $S^z = \frac{1}{2} \sigma_z$
+- `"S+"` (alises: `"S⁺"`, `"Splus"`) Raising operator $S^+ = S^x + iS^y$
+- `"S-"` (aliases: `"S⁻"`, `"Sminus"`) Lowering operator $S^- = S^x - iS^y$
+- `"Sx"` (alises: `"Sˣ"`) Spin x operator $S^x = \frac{1}{2} \sigma_x$
+- `"iSy"` (aliases: `"iSʸ"`) i times spin y operator $iS^y = \frac{i}{2} \sigma_y$
+- `"Sy"` (aliases: `"Sʸ"`) Spin y operator $S^y = \frac{1}{2} \sigma_y$
+- `"S2"` (aliases: "S²"`) Square of spin vector operator $S^2=\vec{S}\cdot\vec{S}=\frac{3}{4} I$
+- `"ProjUp"` (aliases: `"projUp"`, `"Proj0"`) Operator $|\!↑\rangle\langle ↑\!|$
+- `"ProjDn"` (aliases: `"projDn"`, `"Proj1"`) Operator $|\!↓\rangle\langle ↓\!|$
 
 Two-qubit gates:
 - `"CNOT"` (aliases: `"CX"`) Controlled NOT gate
@@ -130,6 +144,8 @@ For example:
 sites = siteinds("S=1",N; conserve_sz=true, qnname_sz="TotalSz")
 ```
 
+#### "S=1" Operators
+
 Operators associated with "S=1" sites can be made using the `op` function,
 for example
 ```
@@ -172,6 +188,8 @@ For example:
 sites = siteinds("Qudit",N; conserve_number=true)
 ```
 
+#### "Qudit" and "Boson" Operators
+
 Operators associated with "Qudit" sites can be made using the `op` function,
 for example
 ```
@@ -213,6 +231,8 @@ For example:
 sites = siteinds("Fermion",N; conserve_nfparity=true)
 ```
 
+#### "Fermion" Operators
+
 Operators associated with "Fermion" sites can be made using the `op` function,
 for example
 ```
@@ -249,6 +269,8 @@ For example:
 ```
 sites = siteinds("Electron",N; conserve_nfparity=true)
 ```
+
+#### "Electron" Operators
 
 Operators associated with "Electron" sites can be made using the `op` function,
 for example
@@ -303,6 +325,8 @@ For example:
 ```
 sites = siteinds("tJ",N; conserve_nfparity=true)
 ```
+
+#### "tJ" Operators
 
 Operators associated with "tJ" sites can be made using the `op` function,
 for example

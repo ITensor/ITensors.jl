@@ -15,29 +15,28 @@ let
 
   sites = siteinds("Electron", N; conserve_qns=true)
 
-  ampo = OpSum()
+  os = OpSum()
   for b in 1:(N - 1)
-    ampo += -t1, "Cdagup", b, "Cup", b + 1
-    ampo += -t1, "Cdagup", b + 1, "Cup", b
-    ampo += -t1, "Cdagdn", b, "Cdn", b + 1
-    ampo += -t1, "Cdagdn", b + 1, "Cdn", b
-    ampo += V1, "Ntot", b, "Ntot", b + 1
+    os += -t1, "Cdagup", b, "Cup", b + 1
+    os += -t1, "Cdagup", b + 1, "Cup", b
+    os += -t1, "Cdagdn", b, "Cdn", b + 1
+    os += -t1, "Cdagdn", b + 1, "Cdn", b
+    os += V1, "Ntot", b, "Ntot", b + 1
   end
   for b in 1:(N - 2)
-    ampo += -t2, "Cdagup", b, "Cup", b + 2
-    ampo += -t2, "Cdagup", b + 2, "Cup", b
-    ampo += -t2, "Cdagdn", b, "Cdn", b + 2
-    ampo += -t2, "Cdagdn", b + 2, "Cdn", b
+    os += -t2, "Cdagup", b, "Cup", b + 2
+    os += -t2, "Cdagup", b + 2, "Cup", b
+    os += -t2, "Cdagdn", b, "Cdn", b + 2
+    os += -t2, "Cdagdn", b + 2, "Cdn", b
   end
   for i in 1:N
-    ampo += U, "Nupdn", i
+    os += U, "Nupdn", i
   end
-  H = MPO(ampo, sites)
+  H = MPO(os, sites)
 
-  sweeps = Sweeps(6)
-  setmaxdim!(sweeps, 50, 100, 200, 400, 800, 800)
-  setcutoff!(sweeps, 1E-12)
-  @show sweeps
+  nsweeps = 6
+  maxdim = [50, 100, 200, 400, 800, 800]
+  cutoff = [1E-12]
 
   state = ["Emp" for n in 1:N]
   p = Npart
@@ -61,7 +60,7 @@ let
   @show flux(psi0)
 
   # Start DMRG calculation:
-  energy, psi = dmrg(H, psi0, sweeps)
+  energy, psi = dmrg(H, psi0; nsweeps, maxdim, cutoff)
 
   upd = fill(0.0, N)
   dnd = fill(0.0, N)

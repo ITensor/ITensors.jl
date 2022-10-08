@@ -6,6 +6,36 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+NDTensors v0.1.44 Release Notes
+===============================
+
+Bugs:
+
+- Fix bug contracting rectangular Diag with Dense (#970)
+
+Enhancements:
+
+NDTensors v0.1.43 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Improve functionality for transferring data between CPU and GPU by adding Adapt.jl compatibility (#956)
+- Pass kwargs through to truncate in Dense factorizations (#958)
+
+NDTensors v0.1.42 Release Notes
+===============================
+
+Bugs:
+
+Enhancements:
+
+- Define `map` for Tensor and TensorStorage (b66d1b7)
+- Define `real` and `imag` for Tensor (b66d1b7)
+- Throw error when trying to do an eigendecomposition of Tensor with Infs or NaNs (b66d1b7)
+
 NDTensors v0.1.41 Release Notes
 ===============================
 

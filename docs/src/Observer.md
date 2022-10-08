@@ -97,7 +97,7 @@ which include:
    - psi: the current wavefunction MPS 
    - bond: the bond `b` that was just optimized, corresponding to sites `(b,b+1)` in the two-site DMRG algorihtm
    - sweep: the current sweep number
-   - sweep_is_done: true if at the end of the current sweep, otherwise false
+   - sweep\_is\_done: true if at the end of the current sweep, otherwise false
    - half_sweep: the half-sweep number, equal to 1 for a left-to-right, first half sweep, or 2 for the second, right-to-left half sweep
    - spec: the Spectrum object returned from factorizing the local superblock wavefunction tensor in two-site DMRG
    - outputlevel: an integer specifying the amount of output to show
@@ -183,14 +183,14 @@ let
   H = MPO(a,s)
   psi0 = randomMPS(s,4)
 
-  sweeps = Sweeps(5)
-  cutoff!(sweeps,1E-8)
-  maxdim!(sweeps,10,20,100)
+  nsweeps = 5
+  cutoff = 1E-8
+  maxdim = [10,20,100]
 
   obs = DemoObserver(etol)
 
   println("Starting DMRG")
-  energy, psi = dmrg(H,psi0,sweeps; observer=obs, outputlevel=1)
+  energy, psi = dmrg(H,psi0; nsweeps, cutoff, maxdim, observer=obs, outputlevel=1)
 
   return
 end

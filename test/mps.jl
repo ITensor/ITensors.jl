@@ -208,6 +208,20 @@ include("util.jl")
     @test all(x -> eltype(x) === ComplexF32, phic)
   end
 
+  @testset "randomMPS with nonuniform dimensions" begin
+    _linkdims = [2, 3, 4, 2, 4, 3, 2, 2, 2]
+    phi = randomMPS(sites; linkdims=_linkdims)
+    @test linkdims(phi) == _linkdims
+  end
+
+  @testset "QN randomMPS" begin
+    s = siteinds("S=1/2", 5; conserve_qns=true)
+    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=2)
+    @test linkdims(ψ) == [2, 2, 2, 2]
+    ψ = randomMPS(s, n -> isodd(n) ? "↑" : "↓"; linkdims=[2, 3, 2, 2])
+    @test linkdims(ψ) == [2, 3, 2, 2]
+  end
+
   @testset "inner different MPS" begin
     phi = randomMPS(sites)
     psi = randomMPS(sites)
@@ -331,6 +345,16 @@ include("util.jl")
     lognorm_psi = lognorm(psi)
     @test lognorm_psi ≈ log(2) * length(psi)
     @test isreal(lognorm_psi)
+  end
+
+  @testset "lognorm checking real tolerance error regression test" begin
+    # Test that lognorm doesn't throw an error when the norm isn't real
+    # up to a certain tolerance
+    Random.seed!(1234)
+    s = siteinds("S=1/2", 10)
+    ψ = randomMPS(ComplexF64, s; linkdims=4)
+    reset_ortho_lims!(ψ)
+    @test exp(lognorm(ψ)) ≈ 1
   end
 
   @testset "normalize/normalize! MPS" begin
@@ -690,6 +714,12 @@ end
     end
 
     @test inner(M, M0) > 0.1
+  end
+
+  @testset "truncate! with site_range" begin
+    M = basicRandomMPS(10; dim=10)
+    truncate!(M; site_range=3:7, maxdim=2)
+    @test linkdims(M) == [2, 4, 2, 2, 2, 2, 8, 4, 2]
   end
 end
 

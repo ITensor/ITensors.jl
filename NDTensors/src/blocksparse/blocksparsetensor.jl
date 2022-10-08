@@ -50,11 +50,15 @@ function BlockSparseTensor(::UndefInitializer, blockoffsets, inds)
 end
 
 function BlockSparseTensor(
-  ::Type{ElT}, blockoffsets::BlockOffsets{N}, inds
-) where {ElT<:Number,N}
+  datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, inds
+)
   nnz_tot = nnz(blockoffsets, inds)
-  storage = BlockSparse(ElT, blockoffsets, nnz_tot)
+  storage = BlockSparse(datatype, blockoffsets, nnz_tot)
   return tensor(storage, inds)
+end
+
+function BlockSparseTensor(eltype::Type{<:Number}, blockoffsets::BlockOffsets, inds)
+  return BlockSparseTensor(Vector{eltype}, blockoffsets, inds)
 end
 
 function BlockSparseTensor(blockoffsets::BlockOffsets, inds)
@@ -66,10 +70,14 @@ end
 
 Construct a block sparse tensor with no blocks.
 """
-BlockSparseTensor(inds) = BlockSparseTensor(BlockOffsets{length(inds)}(), inds)
+BlockSparseTensor(inds) = BlockSparseTensor(Float64, inds)
 
-function BlockSparseTensor(::Type{ElT}, inds) where {ElT<:Number,N}
-  return BlockSparseTensor(ElT, BlockOffsets{length(inds)}(), inds)
+function BlockSparseTensor(datatype::Type{<:AbstractArray}, inds)
+  return BlockSparseTensor(datatype, BlockOffsets{length(inds)}(), inds)
+end
+
+function BlockSparseTensor(eltype::Type{<:Number}, inds)
+  return BlockSparseTensor(Vector{eltype}, inds)
 end
 
 """
@@ -172,13 +180,11 @@ function zeros(
   return BlockSparseTensor(ElT, blockoffsets, inds)
 end
 
-function zeros(::BlockSparseTensor{ElT,N}, inds) where {ElT,N}
-  return BlockSparseTensor(ElT, inds)
+function zeros(tensortype::Type{<:BlockSparseTensor}, inds)
+  return BlockSparseTensor(datatype(tensortype), inds)
 end
 
-function zeros(::Type{<:BlockSparseTensor{ElT,N}}, inds) where {ElT,N}
-  return BlockSparseTensor(ElT, inds)
-end
+zeros(tensor::BlockSparseTensor, inds) = zeros(typeof(tensor), inds)
 
 # Basic functionality for AbstractArray interface
 IndexStyle(::Type{<:BlockSparseTensor}) = IndexCartesian()
@@ -240,6 +246,7 @@ function insertblock_offset!(T::BlockSparseTensor{ElT,N}, newblock::Block{N}) wh
   newoffset = nnz(T)
   insert!(blockoffsets(T), newblock, newoffset)
   # Insert new block into data
+  # TODO: Make GPU-friendly
   splice!(data(storage(T)), (newoffset + 1):newoffset, zeros(ElT, newdim))
   return newoffset
 end
@@ -400,7 +407,7 @@ function perm_blocks(blocks::Blocks{N}, dim::Int, perm) where {N}
 end
 
 # In the dimension dim, permute the block
-function perm_block(block::Block, dim::Int, perm) where {N}
+function perm_block(block::Block, dim::Int, perm)
   iperm = invperm(perm)
   return setindex(block, iperm[block[dim]], dim)
 end

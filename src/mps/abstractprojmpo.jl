@@ -122,11 +122,11 @@ end
 
 The size of a ProjMPO are its dimensions
 `(d,d)` when viewed as a matrix or linear operator
-acting on a space of dimension `d`. 
+acting on a space of dimension `d`.
 
-For example, if a ProjMPO maps from a space with 
-indices `(a,s1,s2,b)` to the space `(a',s1',s2',b')` 
-then the size is `(d,d)` where 
+For example, if a ProjMPO maps from a space with
+indices `(a,s1,s2,b)` to the space `(a',s1',s2',b')`
+then the size is `(d,d)` where
 `d = dim(a)*dim(s1)*dim(s1)*dim(b)`
 """
 function Base.size(P::AbstractProjMPO)::Tuple{Int,Int}
@@ -229,9 +229,9 @@ end
 Return a "noise term" or density matrix perturbation
 ITensor as proposed in Phys. Rev. B 72, 180403 for aiding
 convergence of DMRG calculations. The ITensor `phi`
-is the contracted product of MPS tensors acted on by the 
+is the contracted product of MPS tensors acted on by the
 ProjMPO `P`, and `ortho` is a String which can take
-the values `"left"` or `"right"` depending on the 
+the values `"left"` or `"right"` depending on the
 sweeping direction of the DMRG calculation.
 """
 function noiseterm(P::AbstractProjMPO, phi::ITensor, ortho::String)::ITensor

@@ -1,17 +1,20 @@
 using ITensorGPU, ITensors, Test, Random
 
+function heisenberg(n)
+  opsum = OpSum()
+  for j in 1:(n - 1)
+    opsum += 0.5, "S+", j, "S-", j + 1
+    opsum += 0.5, "S-", j, "S+", j + 1
+    opsum += "Sz", j, "Sz", j + 1
+  end
+  return opsum
+end
+
 @testset "Basic DMRG" begin
   @testset "Spin-one Heisenberg" begin
     N = 10
     sites = siteinds("S=1", N)
-
-    ampo = AutoMPO()
-    for j in 1:(N - 1)
-      add!(ampo, "Sz", j, "Sz", j + 1)
-      add!(ampo, 0.5, "S+", j, "S-", j + 1)
-      add!(ampo, 0.5, "S-", j, "S+", j + 1)
-    end
-    H = cuMPO(MPO(ampo, sites))
+    H = cuMPO(MPO(heisenberg(N), sites))
 
     psi = randomCuMPS(sites)
 
@@ -77,6 +80,21 @@ using ITensorGPU, ITensors, Test, Random
     # with open boundary conditions at criticality
     energy_exact = 0.25 - 0.25 / sin(π / (2 * (2 * N + 1)))
     @test abs((energy - energy_exact) / energy_exact) < 1e-2
+  end
+
+  @testset "DMRGObserver" begin
+    device = cu
+    n = 5
+    s = siteinds("S=1/2", n)
+
+    H = device(MPO(heisenberg(n), s))
+    ψ0 = device(randomMPS(s))
+
+    dmrg_params = (; nsweeps=4, maxdim=10, cutoff=1e-8, noise=1e-8, outputlevel=0)
+    observer = DMRGObserver(["Z"], s; energy_tol=1e-4, minsweeps=10)
+    E, ψ = dmrg(H, ψ0; observer=observer, dmrg_params...)
+    @test expect(ψ, "Z") ≈ observer.measurements["Z"][end]
+    @test correlation_matrix(ψ, "Z", "Z") ≈ correlation_matrix(cpu(ψ), "Z", "Z")
   end
 
   #=@testset "DMRGObserver" begin

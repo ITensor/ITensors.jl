@@ -45,6 +45,10 @@ have type `ComplexF64`, return `ComplexF64`.
 """
 promote_itensor_eltype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
 
+scalartype(m::AbstractMPS) = LinearAlgebra.promote_leaf_eltypes(m)
+scalartype(m::Array{ITensor}) = LinearAlgebra.promote_leaf_eltypes(m)
+scalartype(m::Array{<:Array{ITensor}}) = LinearAlgebra.promote_leaf_eltypes(m)
+
 """
     eltype(m::MPS)
     eltype(m::MPO)
@@ -61,8 +65,8 @@ real(ψ::AbstractMPS) = real.(ψ)
 imag(ψ::AbstractMPS) = imag.(ψ)
 conj(ψ::AbstractMPS) = conj.(ψ)
 
-function convert_leaf_eltype(ElType::Type, ψ::AbstractMPS)
-  return set_data(ψ, convert_leaf_eltype(ElType, data(ψ)))
+function convert_leaf_eltype(eltype::Type, ψ::AbstractMPS)
+  return map(ψᵢ -> convert_leaf_eltype(eltype, ψᵢ), ψ; set_limits=false)
 end
 
 """
@@ -439,7 +443,7 @@ end
 """
     dense(::MPS/MPO)
 
-Given an MPS (or MPO), return a new MPS (or MPO) 
+Given an MPS (or MPO), return a new MPS (or MPO)
 having called `dense` on each ITensor to convert each
 tensor to use dense storage and remove any QN or other
 sparse structure information, if it is not dense already.
@@ -524,7 +528,7 @@ keys(ψ::AbstractMPS) = keys(data(ψ))
 Return the first site of the MPS or MPO that has at least one
 Index in common with the Index or collection of indices `is`.
 
-To find all sites with common indices with `is`, use the 
+To find all sites with common indices with `is`, use the
 `findsites` function.
 
 # Examples
@@ -975,7 +979,11 @@ linkdims(ψ::AbstractMPS) = [linkdim(ψ, b) for b in 1:(length(ψ) - 1)]
 
 function inner_mps_mps_deprecation_warning()
   return """
- Calling `inner(x::MPS, y::MPS)` where the site indices of the `MPS` `x` and `y` don't match is deprecated as of ITensor v0.3 and will result in an error in ITensor v0.4. Likely you are attempting to take the inner product of MPS that have site indices with mismatched prime levels. The most common cause of this is something like the following:
+ Calling `inner(x::MPS, y::MPS)` where the site indices of the `MPS` `x` and `y`
+ don't match is deprecated as of ITensor v0.3 and will result in an error in ITensor
+v0.4. Likely you are attempting to take the inner product of MPS that have site indices
+with mismatched prime levels. The most common cause of this is something like the following:
+
  ```julia
  s = siteinds("S=1/2")
  psi = randomMPS(s)
@@ -983,32 +991,50 @@ function inner_mps_mps_deprecation_warning()
  Hpsi = contract(H, psi; cutoff=1e-8) # or `Hpsi = *(H, psi; cutoff=1e-8)`
  inner(psi, Hpsi)
  ```
- `psi` has the Index structure `-s-(psi)` and `H` has the Index structure `-s'-(H)-s-`, so the contraction follows as: `-s'-(H)-s-(psi) ≈ -s'-(Hpsi)`. Then, the prime levels of `Hpsi` and `psi` don't match in `inner(psi, Hpsi)`.
+
+ `psi` has the Index structure `-s-(psi)` and `H` has the Index structure
+ `-s'-(H)-s-`, so the contraction follows as: `-s'-(H)-s-(psi) ≈ -s'-(Hpsi)`.
+ Then, the prime levels of `Hpsi` and `psi` don't match in `inner(psi, Hpsi)`.
 
  There are a few ways to fix this. You can simply change:
+
  ```julia
  inner(psi, Hpsi)
  ```
+
  to:
+
  ```julia
  inner(psi', Hpsi)
  ```
- in which case both `psi'` and `Hpsi` have primed site indices. Alternatively, you can use the `apply` function instead of the `contract` function, which calls `contract` and unprimes the resulting MPS:
+
+ in which case both `psi'` and `Hpsi` have primed site indices. Alternatively,
+ you can use the `apply` function instead of the `contract` function, which
+ calls `contract` and unprimes the resulting MPS:
+
  ```julia
  Hpsi = apply(H, psi; cutoff=1e-8) # or `Hpsi = H(psi; cutoff=1e-8)`
  inner(psi, Hpsi)
  ```
+
  Finally, if you only compute `Hpsi` to pass to the `inner` function, consider using:
+
  ```julia
  inner(psi', H, psi)
  ```
+
  directly which is calculated exactly and is more efficient. Alternatively, you can use:
+
  ```julia
  inner(psi, Apply(H, psi))
  ```
- in which case `Apply(H, psi)` represents the "lazy" evaluation of `apply(H, psi)` and internally calls something equivalent to `inner(psi', H, psi)`.
 
- Although the new behavior seems less convenient, it makes it easier to generalize `inner(::MPS, ::MPS)` to other types of inputs, like `MPS` with different tag and prime conventions, multiple sites per tensor, `ITensor` inputs, etc.
+ in which case `Apply(H, psi)` represents the "lazy" evaluation of
+ `apply(H, psi)` and internally calls something equivalent to `inner(psi', H, psi)`.
+
+ Although the new behavior seems less convenient, it makes it easier to
+ generalize `inner(::MPS, ::MPS)` to other types of inputs, like `MPS` with
+ different tag and prime conventions, multiple sites per tensor, `ITensor` inputs, etc.
  """
 end
 
@@ -1034,13 +1060,17 @@ function deprecate_make_inds_match!(
     if !hassameinds(siteinds, M1dag, M2)
       n = findfirst(n -> !hassameinds(siteinds(M1dag, n), siteinds(M2, n)), 1:N)
       error(
-        """Calling `dot(ϕ::MPS/MPO, ψ::MPS/MPO)` with multiple site indices per MPS/MPO tensor but the site indices don't match. Even with `make_inds_match = true`, the case of multiple site indices per MPS/MPO is not handled automatically. The sites with unmatched site indices are:
+        """Calling `dot(ϕ::MPS/MPO, ψ::MPS/MPO)` with multiple site indices per
+        MPS/MPO tensor but the site indices don't match. Even with `make_inds_match = true`,
+        the case of multiple site indices per MPS/MPO is not handled automatically.
+        The sites with unmatched site indices are:
 
             inds(ϕ[$n]) = $(inds(M1dag[n]))
 
             inds(ψ[$n]) = $(inds(M2[n]))
 
-        Make sure the site indices of your MPO/MPS match. You may need to prime one of the MPS, such as `dot(ϕ', ψ)`.""",
+        Make sure the site indices of your MPO/MPS match. You may need to prime
+        one of the MPS, such as `dot(ϕ', ψ)`."""
       )
     end
     make_inds_match = false
@@ -1092,11 +1122,12 @@ function _log_or_not_dot(
 
   dot_M1_M2 = O[]
 
-  T = promote_type(ITensors.promote_itensor_eltype(M1), ITensors.promote_itensor_eltype(M2))
-  _max_dot_warn = inv(eps(real(float(T))))
-
-  if isnan(dot_M1_M2) || isinf(dot_M1_M2) || abs(dot_M1_M2) > _max_dot_warn
-    @warn "The inner product (or norm²) you are computing is very large: $dot_M1_M2, which is greater than $_max_dot_warn and may lead to floating point errors when used. You should consider using `lognorm` or `loginner` instead, which will help avoid floating point errors. For example if you are trying to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by `B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
+  if !isfinite(dot_M1_M2)
+    @warn "The inner product (or norm²) you are computing is very large " *
+      "($dot_M1_M2). You should consider using `lognorm` or `loginner` instead, " *
+      "which will help avoid floating point errors. For example if you are trying " *
+      "to normalize your MPS/MPO `A`, the normalized MPS/MPO `B` would be given by " *
+      "`B = A ./ z` where `z = exp(lognorm(A) / length(A))`."
   end
 
   return dot_M1_M2
@@ -1179,7 +1210,9 @@ end
 
 Compute the norm of the MPS or MPO.
 
-If the MPS or MPO has a well defined orthogonality center, this reduces to the norm of the orthogonality center tensor. Otherwise, it computes the norm with the full inner product of the MPS/MPO with itself.
+If the MPS or MPO has a well defined orthogonality center, this reduces to the
+norm of the orthogonality center tensor. Otherwise, it computes the norm with
+the full inner product of the MPS/MPO with itself.
 
 See also [`lognorm`](@ref).
 """
@@ -1188,9 +1221,11 @@ function norm(M::AbstractMPS)
     return norm(M[orthocenter(M)])
   end
   norm2_M = dot(M, M)
-  rtol = 1e-15
-  if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol))
-    error("norm² is $norm2_M, which is not real up to a relative tolerance of $rtol")
+  rtol = eps(real(scalartype(M))) * 10
+  atol = rtol
+  if !IsApprox.isreal(norm2_M, Approx(; rtol=rtol, atol=atol))
+    @warn "norm² is $norm2_M, which is not real up to a relative tolerance of " *
+      "$rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
   return sqrt(real(norm2_M))
 end
@@ -1199,9 +1234,10 @@ end
     lognorm(A::MPS)
     lognorm(A::MPO)
 
-Compute the logarithm of the norm of the MPS or MPO. 
+Compute the logarithm of the norm of the MPS or MPO.
 
-This is useful for larger MPS/MPO that are not gauged, where in the limit of large numbers of sites the norm can diverge or approach zero.
+This is useful for larger MPS/MPO that are not gauged, where in the limit of
+large numbers of sites the norm can diverge or approach zero.
 
 See also [`norm`](@ref), [`logdot`](@ref).
 """
@@ -1210,11 +1246,11 @@ function lognorm(M::AbstractMPS)
     return log(norm(M[orthocenter(M)]))
   end
   lognorm2_M = logdot(M, M)
-  rtol = 1e-15
-  if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol))
-    error(
-      "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance of $rtol"
-    )
+  rtol = eps(real(scalartype(M))) * 10
+  atol = rtol
+  if !IsApprox.isreal(lognorm2_M, Approx(; rtol=rtol, atol=atol))
+    @warn "log(norm²) is $lognorm2_M, which is not real up to a relative tolerance " *
+      "of $rtol and an absolute tolerance of $atol. Taking the real part, which may not be accurate."
   end
   return 0.5 * real(lognorm2_M)
 end
@@ -1251,7 +1287,8 @@ end
 
 Return a new MPS or MPO `A` that is the same as the original MPS or MPO but with `norm(A) ≈ 1`.
 
-In practice, this evenly spreads `lognorm(A)` over the tensors within the range of the orthogonality center to avoid numerical overflow in the case of diverging norms.
+In practice, this evenly spreads `lognorm(A)` over the tensors within the range
+of the orthogonality center to avoid numerical overflow in the case of diverging norms.
 
 See also [`normalize!`](@ref), [`norm`](@ref), [`lognorm`](@ref).
 """
@@ -1263,11 +1300,15 @@ end
     normalize!(A::MPS; (lognorm!)=[])
     normalize!(A::MPO; (lognorm!)=[])
 
-Change the MPS or MPO `A` in-place such that `norm(A) ≈ 1`. This modifies the data of the tensors within the orthogonality center.
+Change the MPS or MPO `A` in-place such that `norm(A) ≈ 1`. This modifies the
+data of the tensors within the orthogonality center.
 
-In practice, this evenly spreads `lognorm(A)` over the tensors within the range of the orthogonality center to avoid numerical overflow in the case of diverging norms.
+In practice, this evenly spreads `lognorm(A)` over the tensors within the range
+of the orthogonality center to avoid numerical overflow in the case of diverging norms.
 
-If the norm of the input MPS or MPO is 0, normalizing is ill-defined. In this case, we just return the original MPS or MPO. You can check for this case as follows:
+If the norm of the input MPS or MPO is 0, normalizing is ill-defined. In this
+case, we just return the original MPS or MPO. You can check for this case as follows:
+
 ```julia
 s = siteinds("S=1/2", 4)
 ψ = 0 * randomMPS(s)
@@ -1298,10 +1339,14 @@ end
     dist(A::MPS, B::MPS)
     dist(A::MPO, B::MPO)
 
-Compute the Euclidean distance between to MPS/MPO. Equivalent to `norm(A - B)` but done more efficiently as:
+Compute the Euclidean distance between to MPS/MPO. Equivalent to `norm(A - B)`
+but done more efficiently as:
+
 `sqrt(abs(inner(A, A) + inner(B, B) - 2 * real(inner(A, B))))`.
 
-Note that if the MPS/MPO are not normalized, the normalizations may diverge and this may not be accurate. For those cases, likely it is best to use `norm(A - B)` directly (or `lognorm(A - B)` if you expect the result may be very large).
+Note that if the MPS/MPO are not normalized, the normalizations may diverge and
+  this may not be accurate. For those cases, likely it is best to use `norm(A - B)`
+  directly (or `lognorm(A - B)` if you expect the result may be very large).
 """
 function dist(A::AbstractMPS, B::AbstractMPS)
   return sqrt(abs(inner(A, A) + inner(B, B) - 2 * real(inner(A, B))))
@@ -1333,7 +1378,8 @@ end
 
 Add arbitrary numbers of MPS/MPO with each other, optionally truncating the results.
 
-A cutoff of 1e-15 is used by default, and in general users should set their own cutoff for their particular application.
+A cutoff of 1e-15 is used by default, and in general users should set their own
+cutoff for their particular application.
 
 # Keywords
 
@@ -1385,9 +1431,8 @@ function +(
   ::Algorithm"densitymatrix", ψ⃗::MPST...; cutoff=1e-15, kwargs...
 ) where {MPST<:AbstractMPS}
   if !all(ψ -> hassameinds(siteinds, first(ψ⃗), ψ), ψ⃗)
-    error(
-      "In `+(::MPS/MPO...)`, the input `MPS` or `MPO` do not have the same site indices. For example, the site indices of the first site are $(siteinds.(ψ⃗, 1))",
-    )
+    error("In `+(::MPS/MPO...)`, the input `MPS` or `MPO` do not have the same site
+      indices. For example, the site indices of the first site are $(siteinds.(ψ⃗, 1))")
   end
 
   Nₘₚₛ = length(ψ⃗)
@@ -1597,20 +1642,25 @@ end
 Perform a truncation of all bonds of an MPS/MPO,
 using the truncation parameters (cutoff,maxdim, etc.)
 provided as keyword arguments.
+
+Keyword arguments:
+* `site_range`=1:N - only truncate the MPS bonds between these sites
 """
 function truncate!(M::AbstractMPS; alg="frobenius", kwargs...)
   return truncate!(Algorithm(alg), M; kwargs...)
 end
 
-function truncate!(::Algorithm"frobenius", M::AbstractMPS; kwargs...)
+function truncate!(
+  ::Algorithm"frobenius", M::AbstractMPS; site_range=1:length(M), kwargs...
+)
   N = length(M)
 
   # Left-orthogonalize all tensors to make
   # truncations controlled
-  orthogonalize!(M, N)
+  orthogonalize!(M, last(site_range))
 
   # Perform truncations in a right-to-left sweep
-  for j in reverse(2:N)
+  for j in reverse((first(site_range) + 1):last(site_range))
     rinds = uniqueinds(M[j], M[j - 1])
     ltags = tags(commonind(M[j], M[j - 1]))
     U, S, V = svd(M[j], rinds; lefttags=ltags, kwargs...)
@@ -1627,7 +1677,7 @@ function truncate(ψ0::AbstractMPS; kwargs...)
   return ψ
 end
 
-# Make `*` and alias for `contract` of two `AbstractMPS`
+# Make `*` an alias for `contract` of two `AbstractMPS`
 *(A::AbstractMPS, B::AbstractMPS; kwargs...) = contract(A, B; kwargs...)
 
 function _apply_to_orthocenter!(f, ψ::AbstractMPS, x)
@@ -1846,8 +1896,10 @@ by site according to the site indices `sites`.
 
 # Keywords
 
-- `leftinds = nothing`: optional left dangling indices. Indices that are not in `sites` and `leftinds` will be dangling off of the right side of the MPS/MPO.
-- `orthocenter::Integer = length(sites)`: the desired final orthogonality center of the output MPS/MPO.
+- `leftinds = nothing`: optional left dangling indices. Indices that are not
+   in `sites` and `leftinds` will be dangling off of the right side of the MPS/MPO.
+- `orthocenter::Integer = length(sites)`: the desired final orthogonality
+   center of the output MPS/MPO.
 - `cutoff`: the desired truncation error at each link.
 - `maxdim`: the maximum link dimension.
 """
@@ -1940,7 +1992,7 @@ function movesite(
   return ψ
 end
 
-# Helper function for permuting a vector for the 
+# Helper function for permuting a vector for the
 # movesites function.
 function _movesite(ns::Vector{Int}, n1n2::Pair{Int,Int})
   n1, n2 = n1n2
@@ -2020,8 +2072,10 @@ to false.
 
 - `cutoff::Real`: singular value truncation cutoff.
 - `maxdim::Int`: maximum MPS/MPO dimension.
-- `apply_dag::Bool = false`: apply the gate and the dagger of the gate (only relevant for MPO evolution).
-- `move_sites_back::Bool = true`: after the ITensors are applied to the MPS or MPO, move the sites of the MPS or MPO back to their original locations.
+- `apply_dag::Bool = false`: apply the gate and the dagger of the gate (only
+   relevant for MPO evolution).
+- `move_sites_back::Bool = true`: after the ITensors are applied to the MPS or
+   MPO, move the sites of the MPS or MPO back to their original locations.
 """
 function product(
   o::ITensor,
@@ -2062,18 +2116,22 @@ end
     apply(As::Vector{<:ITensor}, M::Union{MPS, MPO}; kwargs...)
     product([...])
 
-Apply the ITensors `As` to the MPS or MPO `M`, treating them as gates or matrices from pairs of prime or unprimed indices.
+Apply the ITensors `As` to the MPS or MPO `M`, treating them as gates or
+matrices from pairs of prime or unprimed indices.
 
 # Keywords
 
 - `cutoff::Real`: singular value truncation cutoff.
 - `maxdim::Int`: maximum MPS/MPO dimension.
-- `apply_dag::Bool = false`: apply the gate and the dagger of the gate (only relevant for MPO evolution).
-- `move_sites_back::Bool = true`: after the ITensor is applied to the MPS or MPO, move the sites of the MPS or MPO back to their original locations.
+- `apply_dag::Bool = false`: apply the gate and the dagger of the gate
+  (only relevant for MPO evolution).
+- `move_sites_back::Bool = true`: after the ITensor is applied to the MPS or
+   MPO, move the sites of the MPS or MPO back to their original locations.
 
 # Examples
 
 Apply one-site gates to an MPS:
+
 ```julia
 N = 3
 
@@ -2106,7 +2164,9 @@ prodψ = apply(gates, prod(ψ0))
 # σz₃ σz₂ σz₁ σx₃ σx₂ σx₁ |↑↑↑⟩ = -|↓↓↓⟩
 @show inner(ψ, MPS(s, "↓")) == -1
 ```
+
 Apply nonlocal two-site gates and one-site gates to an MPS:
+
 ```julia
 # 2-site gate
 function ITensors.op(::OpName"CX", ::SiteType"S=1/2", s1::Index, s2::Index)
@@ -2129,7 +2189,9 @@ os = [("CX", 1, 3), ("σz", 3)]
 ψ = apply(ops(os, s), ψ0; cutoff = 1e-15)
 @show inner(ψ, MPS(s, n -> n == 1 || n == 3 ? "↓" : "↑")) == -1
 ```
+
 Perform TEBD-like time evolution:
+
 ```julia
 # Define the nearest neighbor term `S⋅S` for the Heisenberg model
 function ITensors.op(::OpName"expS⋅S", ::SiteType"S=1/2",
@@ -2180,7 +2242,7 @@ end
 # U = ("Z", 1) * U
 #
 # # U|ψ⟩ = Z₁X₁|ψ⟩
-# apply(U, 
+# apply(U,
 function product(o::Prod{ITensor}, ψ::AbstractMPS; kwargs...)
   return product(reverse(terms(o)), ψ; kwargs...)
 end
@@ -2244,9 +2306,11 @@ end
 """
     splitblocks[!](::typeof(linkinds), M::AbstractMPS; tol = 0)
 
-Split the QN blocks of the links of the MPS or MPO into dimension 1 blocks. Then, only keep the blocks with `norm(b) > tol`.
+Split the QN blocks of the links of the MPS or MPO into dimension 1 blocks.
+Then, only keep the blocks with `norm(b) > tol`.
 
-This can make the ITensors of the MPS/MPO more sparse, and is particularly helpful as a preprocessing step on a local Hamiltonian MPO for DMRG.
+This can make the ITensors of the MPS/MPO more sparse, and is particularly
+helpful as a preprocessing step on a local Hamiltonian MPO for DMRG.
 """
 function splitblocks!(::typeof(linkinds), M::AbstractMPS; tol=0)
   for i in eachindex(M)[1:(end - 1)]
@@ -2321,57 +2385,3 @@ function Base.show(io::IO, M::AbstractMPS)
     end
   end
 end
-
-#
-# Old code for adding MPS/MPO
-#
-
-#function plussers(::Type{T},
-#                  left_ind::Index,
-#                  right_ind::Index,
-#                  sum_ind::Index) where {T<:Array}
-#  total_dim    = dim(left_ind) + dim(right_ind)
-#  total_dim    = max(total_dim, 1)
-#  # TODO: I am not sure if we should be using delta
-#  # tensors for this purpose? I think we should consider
-#  # not allowing them to be made with different index sizes
-#  #left_tensor  = δ(left_ind, sum_ind)
-#  left_tensor  = diagITensor(1.0,left_ind, sum_ind)
-#  right_tensor = ITensor(right_ind, sum_ind)
-#  for i in 1:dim(right_ind)
-#    right_tensor[right_ind(i), sum_ind(dim(left_ind) + i)] = 1
-#  end
-#  return left_tensor, right_tensor
-#end
-#
-#function Base.:+(A::T, B::T; kwargs...) where {T <: AbstractMPS}
-#  A = copy(A)
-#  B = copy(B)
-#  N = length(A)
-#  length(B) != N && throw(DimensionMismatch("lengths of MPOs A ($N) and B ($(length(B))) do not match"))
-#  orthogonalize!(A, 1; kwargs...)
-#  orthogonalize!(B, 1; kwargs...)
-#  C = similar(A)
-#  rand_plev = 13124
-#  lAs = [linkind(A, i) for i in 1:N-1]
-#  prime!(A, rand_plev, "Link")
-#
-#  first  = Vector{ITensor}(undef,N-1)
-#  second = Vector{ITensor}(undef,N-1)
-#  for i in 1:N-1
-#    lA = linkind(A, i)
-#    lB = linkind(B, i)
-#    r  = Index(dim(lA) + dim(lB), tags(lA))
-#    f, s = plussers(typeof(data(A[1])), lA, lB, r)
-#    first[i]  = f
-#    second[i] = s
-#  end
-#  C[1] = A[1] * first[1] + B[1] * second[1]
-#  for i in 2:N-1
-#      C[i] = dag(first[i-1]) * A[i] * first[i] + dag(second[i-1]) * B[i] * second[i]
-#  end
-#  C[N] = dag(first[N-1]) * A[N] + dag(second[N-1]) * B[N]
-#  prime!(C, -rand_plev, "Link")
-#  truncate!(C; kwargs...)
-#  return C
-#end

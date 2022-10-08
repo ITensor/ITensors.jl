@@ -13,8 +13,8 @@ Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
 Colors = "0.12.8"
+GraphMakie = "0.3.0, 0.4"
 Graphs = "1.4.1"
-GraphMakie = "0.3.0"
 ITensorVisualizationBase = "0.1.0"
 NetworkLayout = "0.4.3"
 Reexport = "1.2.2"

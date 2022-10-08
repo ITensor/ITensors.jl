@@ -327,11 +327,16 @@ end
     end
     sites = siteinds("S=1/2", N)
     Ha = MPO(os, sites)
+    @test ITensors.scalartype(Ha) <: Float64
     He = isingMPO(sites)
     psi = makeRandomMPS(sites)
     Oa = inner(psi', Ha, psi)
     Oe = inner(psi', He, psi)
     @test Oa ≈ Oe
+
+    H_complex = MPO(ComplexF64, os, sites)
+    @test ITensors.scalartype(H_complex) <: ComplexF64
+    @test H_complex ≈ Ha
   end
 
   @testset "Ising" begin
@@ -1098,6 +1103,23 @@ end
       # some hashing issue in `MPO(::OpSum, ...)`
       MPO(os, s)
     end
+  end
+
+  @testset "Operator with empty blocks - issue #963" begin
+    sites = siteinds("Fermion", 2; conserve_qns=true)
+    opsum1 = OpSum()
+    for p in 1:2, q in 1:2, r in 1:2, s in 1:2
+      opsum1 += "c†", p, "c†", q, "c", r, "c", s
+    end
+    H1 = MPO(opsum1, sites)
+    opsum2 = OpSum()
+    for p in 1:2, q in 1:2, r in 1:2, s in 1:2
+      if !(p == q == r == s)
+        opsum2 += "c†", p, "c†", q, "c", r, "c", s
+      end
+    end
+    H2 = MPO(opsum2, sites)
+    @test H1 ≈ H2
   end
 end
 

@@ -15,7 +15,8 @@ end
     ITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)
     ITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...)
 
-Construct an ITensor with BlockSparse storage filled with `zero(ElT)` where the nonzero blocks are determined by `flux`.
+Construct an ITensor with BlockSparse storage filled with `zero(ElT)`
+where the nonzero blocks are determined by `flux`.
 
 If `ElT` is not specified it defaults to `Float64`.
 
@@ -165,7 +166,11 @@ ITensor(is::QNIndex...) = emptyITensor(indices(is...))
     ITensor([::Type{ElT} = Float64,] ::UndefInitializer, flux::QN, inds)
     ITensor([::Type{ElT} = Float64,] ::UndefInitializer, flux::QN, inds::Index...)
 
-Construct an ITensor with indices `inds` and BlockSparse storage with undefined elements of type `ElT`, where the nonzero (allocated) blocks are determined by the provided QN `flux`. One purpose for using this constructor is that initializing the elements in an undefined way is faster than initializing them to a set value such as zero.
+Construct an ITensor with indices `inds` and BlockSparse storage with undefined
+elements of type `ElT`, where the nonzero (allocated) blocks are determined by
+the provided QN `flux`. One purpose for using this constructor is that
+initializing the elements in an undefined way is faster than initializing
+them to a set value such as zero.
 
 The storage will have `NDTensors.BlockSparse` type.
 
@@ -216,7 +221,8 @@ C = ITensor(ComplexF64, 4, QN(0), i', dag(i))
 ```
 
 !!! warning
-    In future versions this may not automatically convert integer inputs with `float`, and in that case the particular element type should not be relied on.
+    In future versions this may not automatically convert integer inputs with
+    `float`, and in that case the particular element type should not be relied on.
 """
 function ITensor(eltype::Type{<:Number}, x::Number, flux::QN, is::Indices)
   is_tuple = Tuple(is)
@@ -246,7 +252,7 @@ ITensor(eltype::Type{<:Number}, x::Number, is::QNIndices) = ITensor(eltype, x, Q
 """
     ITensor([ElT::Type, ]::AbstractArray, inds; tol = 0)
 
-Create a block sparse ITensor from the input Array, and collection 
+Create a block sparse ITensor from the input Array, and collection
 of QN indices. Zeros are dropped and nonzero blocks are determined
 from the zero values of the array.
 
@@ -323,7 +329,8 @@ emptyITensor(flux::QN, is...) = emptyITensor(EmptyNumber, flux, is...)
     randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds)
     randomITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]inds::Index...)
 
-Construct an ITensor with `NDTensors.BlockSparse` storage filled with random elements of type `ElT` where the nonzero blocks are determined by `flux`.
+Construct an ITensor with `NDTensors.BlockSparse` storage filled with random
+elements of type `ElT` where the nonzero blocks are determined by `flux`.
 
 If `ElT` is not specified it defaults to `Float64`. If the flux is not specified it defaults to `QN()`.
 """
@@ -373,9 +380,11 @@ end
     diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
     diagITensor([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
 
-Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements `zero(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`.
+Make an ITensor with storage type `NDTensors.DiagBlockSparse` with elements
+`zero(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`.
 
-If the element type is not specified, it defaults to `Float64`. If theflux is not specified, it defaults to `QN()`.
+If the element type is not specified, it defaults to `Float64`. If theflux
+is not specified, it defaults to `QN()`.
 """
 function diagITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   is = Tuple(inds)
@@ -421,9 +430,12 @@ end
     delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is)
     delta([::Type{ElT} = Float64, ][flux::QN = QN(), ]is::Index...)
 
-Make an ITensor with storage type `NDTensors.DiagBlockSparse` with uniform elements `one(ElT)`. The ITensor only has diagonal blocks consistent with the specified `flux`.
+Make an ITensor with storage type `NDTensors.DiagBlockSparse` with uniform
+elements `one(ElT)`. The ITensor only has diagonal blocks consistent with the
+specified `flux`.
 
-If the element type is not specified, it defaults to `Float64`. If theflux is not specified, it defaults to `QN()`.
+If the element type is not specified, it defaults to `Float64`. If theflux is
+not specified, it defaults to `QN()`.
 """
 function delta(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   is = Tuple(inds)

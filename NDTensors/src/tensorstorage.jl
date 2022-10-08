@@ -1,10 +1,19 @@
 abstract type TensorStorage{ElT} <: AbstractVector{ElT} end
 
+# Denotes when a storage type has no data
+struct NoData end
+
+size(::NoData) = (0,)
+length(::NoData) = 0
+
 data(S::TensorStorage) = S.data
+
+datatype(::Type{<:TensorStorage}) = error("Not implemented")
 
 datatype(S::TensorStorage) = typeof(data(S))
 
 Base.eltype(::TensorStorage{ElT}) where {ElT} = ElT
+scalartype(T::TensorStorage) = eltype(T)
 
 Base.eltype(::Type{<:TensorStorage{ElT}}) where {ElT} = ElT
 
@@ -71,6 +80,15 @@ Base.imag(S::TensorStorage) = setdata(S, imag(data(S)))
 Base.copyto!(S1::TensorStorage, S2::TensorStorage) = (copyto!(data(S1), data(S2)); S1)
 
 Random.randn!(S::TensorStorage) = (randn!(data(S)); S)
+
+function map(f, x::TensorStorage{T}) where {T}
+  if !iszero(f(zero(T)))
+    error(
+      "map(f, ::TensorStorage) currently doesn't support functions that don't preserve zeros, while you passed a function such that f(0) = $(f(zero(T))). This isn't supported right now because it doesn't necessarily preserve the sparsity structure of the input tensor.",
+    )
+  end
+  return setdata(x, map(f, data(x)))
+end
 
 Base.fill!(S::TensorStorage, v) = (fill!(data(S), v); S)
 

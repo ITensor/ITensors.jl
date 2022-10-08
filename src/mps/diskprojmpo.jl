@@ -6,8 +6,8 @@ certain number of site indices of the MPO unprojected.
 Which sites are unprojected can be shifted by calling
 the `position!` method.
 
-Drawing of the network represented by a ProjMPO `P(H)`, 
-showing the case of `nsite(P)==2` and `position!(P,psi,4)` 
+Drawing of the network represented by a ProjMPO `P(H)`,
+showing the case of `nsite(P)==2` and `position!(P,psi,4)`
 for an MPS `psi`:
 
 ```
@@ -66,12 +66,20 @@ function DiskProjMPO(H::MPO)
   )
 end
 
-function disk(pm::ProjMPO)
+function disk(pm::ProjMPO; kwargs...)
   return DiskProjMPO(
-    pm.lpos, pm.rpos, pm.nsite, pm.H, disk(pm.LR), lproj(pm), pm.lpos, rproj(pm), pm.rpos
+    pm.lpos,
+    pm.rpos,
+    pm.nsite,
+    pm.H,
+    disk(pm.LR; kwargs...),
+    lproj(pm),
+    pm.lpos,
+    rproj(pm),
+    pm.rpos,
   )
 end
-disk(pm::DiskProjMPO) = pm
+disk(pm::DiskProjMPO; kwargs...) = pm
 
 # Special overload of lproj which uses the cached
 # version of the left projected MPO, and if the

@@ -69,14 +69,15 @@ When DMRG is failing to converge, here are some of the steps you can take to imp
   To do this, just set the `noise` parameter of each sweep to a small, non-zero value, making
   this value very small (1E-11, say) or zero by the last sweep. (Experiment with different
   values on small systems to see which noise magnitudes help.) Here is an example of 
-  a `Sweeps` parameter object with setting the noise of each sweep:
+  defining DMRG accuracy or sweep parameters with a non-zero noise set for the first three sweeps:
 
   ```julia
-  sweeps = Sweeps(10)
-  setmaxdim!(sweeps, 100, 200, 400, 800, 1600)
-  setcutoff!(sweeps, 1e-6)
-  setnoise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
-  @show sweeps
+  nsweeps = 10
+  maxdim = [100, 200, 400, 800, 1600]
+  cutoff = [1E-6]
+  noise = [1E-6, 1E-7, 1E-8, 0.0]
+  ...
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff, noise)
   ```
 
 * Try using a initial MPS with properties close to the ground state you are looking for.

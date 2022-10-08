@@ -23,57 +23,42 @@ const IndexTuple{IndexT<:Index} = Tuple{Vararg{IndexT}}
 # Definition to help with generic code
 const Indices{IndexT<:Index} = Union{Vector{IndexT},Tuple{Vararg{IndexT}}}
 
-# Flatten combinations of tuples and vectors into a single collection
-# of indices
-tuple_vcat(t::Tuple) = t
-tuple_vcat() = ()
-tuple_vcat(t) = (t,)
-tuple_vcat(a, args...) = (tuple_vcat(a)..., tuple_vcat(args...)...)
-
-tuple_to_vector(t::Tuple) = collect(t)
-tuple_to_vector(t) = t
-
-function _narrow_eltype(v::Vector{T}) where {T}
+function _narrow_eltype(v::Vector{T}; default_empty_eltype=T) where {T}
   if isempty(v)
-    return v
+    return default_empty_eltype[]
   end
   return convert(Vector{mapreduce(typeof, promote_type, v)}, v)
 end
-narrow_eltype(v::Vector{T}) where {T} = isconcretetype(T) ? v : _narrow_eltype(v)
-
-push_or_append!(v, x::Union{Vector,Tuple}) = append!(v, x)
-push_or_append!(v, x) = push!(v, x)
-
-function _indices(is::Vector)
-  isempty(is) && return is
-  is_flat = Index[]
-  for i in is
-    push_or_append!(is_flat, i)
+function narrow_eltype(v::Vector{T}; default_empty_eltype=T) where {T}
+  if isconcretetype(T)
+    return v
   end
-  return narrow_eltype(is_flat)
+  return _narrow_eltype(v; default_empty_eltype)
 end
-indices(is::Vector{<:Index}) = narrow_eltype(is)
 
-_indices(is::Tuple{Vararg{<:Index}}) = is
-_indices(is::Tuple{Vararg{Union{<:Vector,<:Index}}}) = vcat(is...)
-_indices(is::Tuple{Vararg{Union{<:Tuple,<:Index}}}) = tuple_vcat(is...)
-_indices(is::Tuple{Vararg{Union{<:Tuple,<:Vector,<:Index}}}) = indices(tuple_to_vector.(is))
-indices(is::Tuple{Vararg{<:Index}}) = is
-function indices(is::Tuple)
-  inds = _indices(is)
-  if isempty(inds)
-    # Otherwise it outputs `Any[]`, which breaks
-    # some generic code like `dim`.
-    return Index[]
-  end
-  return inds
-end
-indices(is::Union{<:Tuple,<:Vector,<:Index}...) = indices(is)
-function indices(is::Vector)
-  # This narrows the type. Also handles the empty case.
-  all(i -> i isa Index, is) && return narrow_eltype(is)
-  return _indices(is)
-end
+_indices() = ()
+_indices(x::Index) = (x,)
+
+# Tuples
+_indices(x1::Tuple, x2::Tuple) = (x1..., x2...)
+_indices(x1::Index, x2::Tuple) = (x1, x2...)
+_indices(x1::Tuple, x2::Index) = (x1..., x2)
+_indices(x1::Index, x2::Index) = (x1, x2)
+
+# Vectors
+_indices(x1::Vector, x2::Vector) = narrow_eltype(vcat(x1, x2); default_empty_eltype=Index)
+
+# Mix vectors and tuples/elements
+_indices(x1::Vector, x2) = _indices(x1, [x2])
+_indices(x1, x2::Vector) = _indices([x1], x2)
+_indices(x1::Vector, x2::Tuple) = _indices(x1, [x2...])
+_indices(x1::Tuple, x2::Vector) = _indices([x1...], x2)
+
+indices(x::Vector{Index{S}}) where {S} = x
+indices(x::Vector{Index}) = narrow_eltype(x; default_empty_eltype=Index)
+indices(x::Tuple) = reduce(_indices, x; init=())
+indices(x::Vector) = reduce(_indices, x; init=Index[])
+indices(x...) = indices(x)
 
 # To help with backwards compatibility
 IndexSet(inds::IndexSet) = inds
@@ -237,6 +222,7 @@ The function returns true if the Index matches
 the provided pattern, and false otherwise.
 
 For example:
+
 ```
 i = Index(2, "s")
 fmatch("s")(i) == true
@@ -314,7 +300,7 @@ Base.findall(is::Indices, args...; kwargs...) = findall(fmatch(args...; kwargs..
 """
     indexin(ais::Indices, bis::Indices)
 
-For collections of Indices, returns the first location in 
+For collections of Indices, returns the first location in
 `bis` for each value in `ais`.
 """
 function Base.indexin(ais::Indices, bis::Indices)
@@ -444,7 +430,7 @@ CartesianIndices(is::Indices) = CartesianIndices(_Tuple(dims(is)))
     eachval(is::Index...)
     eachval(is::Tuple{Vararg{Index}})
 
-Create an iterator whose values correspond to a 
+Create an iterator whose values correspond to a
 Cartesian indexing over the dimensions
 of the provided `Index` objects.
 """
@@ -458,12 +444,14 @@ eachval(is::Tuple{Vararg{Index}}) = CartesianIndices(dims(is))
 Create an iterator whose values are Index=>value pairs
 corresponding to a Cartesian indexing over the dimensions
 of the provided `Index` objects.
+
 # Example
+
 ```julia
-i = Index(3; tags = "i")
-j = Index(2; tags = "j")
-T = randomITensor(j,i)
-for iv in eachindval(i,j)
+i = Index(3; tags="i")
+j = Index(2; tags="j")
+T = randomITensor(j, i)
+for iv in eachindval(i, j)
   @show T[iv...]
 end
 ```
@@ -764,7 +752,7 @@ end
 """
     dirs(is::Indices, inds)
 
-Return a tuple of the directions of the indices `inds` in 
+Return a tuple of the directions of the indices `inds` in
 the Indices `is`, in the order they are found in `inds`.
 """
 function dirs(is1::Indices, inds)
@@ -826,6 +814,7 @@ ndiagblocks(inds) = minimum(nblocks(inds))
     flux(inds::Indices, block::Tuple{Vararg{Int}})
 
 Get the flux of the specified block, for example:
+
 ```
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))
@@ -849,6 +838,7 @@ end
 
 Get the flux of the block that the specified
 index falls in.
+
 ```
 i = Index(QN(0)=>2, QN(1)=>2)
 is = (i, dag(i'))

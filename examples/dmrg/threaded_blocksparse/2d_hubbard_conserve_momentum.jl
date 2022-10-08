@@ -12,7 +12,7 @@ function main(;
   t::Float64=1.0,
   maxdim::Int=3000,
   conserve_ky=true,
-  use_splitblocks=true,
+  splitblocks=true,
   nsweeps=10,
   blas_num_threads=1,
   strided_num_threads=1,
@@ -40,32 +40,18 @@ function main(;
 
   N = Nx * Ny
 
-  sweeps = Sweeps(nsweeps)
   maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
-  maxdim!(sweeps, maxdims...)
-  cutoff!(sweeps, 1e-6)
-  noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
-
-  if outputlevel > 0
-    @show sweeps
-  end
+  cutoff = [1E-6]
+  noise = [1E-6, 1E-7, 1E-8, 0.0]
 
   sites = siteinds("ElecK", N; conserve_qns=true, conserve_ky=conserve_ky, modulus_ky=Ny)
 
-  ampo = hubbard(; Nx=Nx, Ny=Ny, t=t, U=U, ky=true)
-  H = MPO(ampo, sites)
-
   if outputlevel > 0
-    @show use_splitblocks
+    @show splitblocks
   end
 
-  # This step makes the MPO more sparse but also
-  # introduces more blocks.
-  # It generally improves DMRG performance
-  # at large bond dimensions.
-  if use_splitblocks
-    H = splitblocks(linkinds, H)
-  end
+  os = hubbard(; Nx=Nx, Ny=Ny, t=t, U=U, ky=true)
+  H = MPO(os, sites; splitblocks=splitblocks)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
@@ -96,7 +82,9 @@ function main(;
 
   psi0 = randomMPS(sites, state, 10)
 
-  energy, psi = @time dmrg(H, psi0, sweeps; outputlevel=outputlevel)
+  energy, psi = @time dmrg(
+    H, psi0; nsweeps, maxdims, cutoff, noise, outputlevel=outputlevel
+  )
 
   if outputlevel > 0
     @show Nx, Ny

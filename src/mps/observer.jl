@@ -15,7 +15,7 @@ struct NoObserver <: AbstractObserver end
 A DMRGMeasurement object is an alias for `Vector{Vector{Float64}}`,
 in other words an array of arrays of real numbers.
 
-Given a DMRGMeasurement `M`,the result for the 
+Given a DMRGMeasurement `M`,the result for the
 measurement on sweep `n` and site `i` as `M[n][i]`.
 """
 const DMRGMeasurement = Vector{Vector{Float64}}
@@ -47,6 +47,7 @@ tolerance used for early stopping, and minimum number
 of sweeps that must be done.
 
 Optional keyword arguments:
+
   - energy_tol: if the energy from one sweep to the
     next no longer changes by more than this amount,
     stop after the current sweep
@@ -73,10 +74,10 @@ end
                  energy_type=Float64)
 
 Construct a DMRGObserver, provide an array
-of `ops` of operator names which are strings 
+of `ops` of operator names which are strings
 recognized by the `op` function. Each of
 these operators will be measured on every site
-during every step of DMRG and the results 
+during every step of DMRG and the results
 recorded inside the DMRGOberver for later
 analysis. The array `sites` is the basis
 of sites used to define the MPS and MPO for
@@ -87,6 +88,7 @@ tolerance used for early stopping, and minimum number
 of sweeps that must be done.
 
 Optional keyword arguments:
+
   - energy_tol: if the energy from one sweep to the
     next no longer changes by more than this amount,
     stop after the current sweep
@@ -121,7 +123,7 @@ measurements(o::DMRGObserver) = o.measurements
     energies(o::DMRGObserver)
 
 After using a DMRGObserver object `o` within
-a DMRG calculation, retrieve an array of the 
+a DMRG calculation, retrieve an array of the
 energy after each sweep.
 """
 energies(o::DMRGObserver) = o.energies
@@ -134,7 +136,9 @@ truncerrors(obs::DMRGObserver) = obs.truncerrs
 
 function measurelocalops!(obs::DMRGObserver, wf::ITensor, i::Int)
   for o in ops(obs)
-    m = dot(wf, noprime(op(sites(obs), o, i) * wf))
+    # Moves to GPU if needed
+    oⱼ = adapt(datatype(wf), op(sites(obs), o, i))
+    m = dot(wf, apply(oⱼ, wf))
     imag(m) > 1e-8 && (@warn "encountered finite imaginary part when measuring $o")
     measurements(obs)[o][end][i] = real(m)
   end

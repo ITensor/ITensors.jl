@@ -21,25 +21,25 @@ us input a Hamiltonian (or any sum of local operators) in similar notation
 to pencil-and-paper notation:
 
 ```julia
-ampo = OpSum()
+os = OpSum()
 for j=1:N-1
-  ampo += 0.5,"S+",j,"S-",j+1
-  ampo += 0.5,"S-",j,"S+",j+1
-  ampo += "Sz",j,"Sz",j+1
+  os += 0.5,"S+",j,"S-",j+1
+  os += 0.5,"S-",j,"S+",j+1
+  os += "Sz",j,"Sz",j+1
 end
-H = MPO(ampo,sites)
+H = MPO(os,sites)
 ```
 
 In the last line above we convert the OpSum helper object to an actual MPO.
 
 Before beginning the calculation, we need to specify how many DMRG sweeps to do and
 what schedule we would like for the parameters controlling the accuracy.
-These parameters are stored within a sweeps object:
+These parameters can be specified as follows:
 
 ```julia
-sweeps = Sweeps(5) # number of sweeps is 5
-maxdim!(sweeps,10,20,100,100,200) # gradually increase states kept
-cutoff!(sweeps,1E-10) # desired truncation error
+nsweeps = 5 # number of sweeps is 5
+maxdim = [10,20,100,100,200] # gradually increase states kept
+cutoff = [1E-10] # desired truncation error
 ```
 
 The random starting wavefunction `psi0` must be defined in the same Hilbert space
@@ -57,7 +57,7 @@ function `productMPS`, which is actually required if we were conserving QNs.
 Finally, we are ready to call DMRG:
 
 ```julia
-energy,psi = dmrg(H,psi0,sweeps)
+energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
 ```
 
 When the algorithm is done, it returns the ground state energy as the variable `energy` and an MPS 
@@ -72,21 +72,21 @@ let
   N = 100
   sites = siteinds("S=1",N)
 
-  ampo = OpSum()
+  os = OpSum()
   for j=1:N-1
-    ampo += 0.5,"S+",j,"S-",j+1
-    ampo += 0.5,"S-",j,"S+",j+1
-    ampo += "Sz",j,"Sz",j+1
+    os += 0.5,"S+",j,"S-",j+1
+    os += 0.5,"S-",j,"S+",j+1
+    os += "Sz",j,"Sz",j+1
   end
-  H = MPO(ampo,sites)
+  H = MPO(os,sites)
 
-  sweeps = Sweeps(5) # number of sweeps is 5
-  maxdim!(sweeps,10,20,100,100,200) # gradually increase states kept
-  cutoff!(sweeps,1E-10) # desired truncation error
+  nsweeps = 5 # number of sweeps is 5
+  maxdim = [10,20,100,100,200] # gradually increase states kept
+  cutoff = [1E-10] # desired truncation error
 
   psi0 = randomMPS(sites,2)
 
-  energy,psi = dmrg(H,psi0,sweeps)
+  energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
 
   return
 end
@@ -135,34 +135,49 @@ let
   Jhh = 0.5 # half-half coupling
   Joo = 0.5 # one-one coupling
 
-  ampo = OpSum()
+  os = OpSum()
   for j=1:N-1
-    ampo += 0.5*Jho,"S+",j,"S-",j+1
-    ampo += 0.5*Jho,"S-",j,"S+",j+1
-    ampo += Jho,"Sz",j,"Sz",j+1
+    os += 0.5*Jho,"S+",j,"S-",j+1
+    os += 0.5*Jho,"S-",j,"S+",j+1
+    os += Jho,"Sz",j,"Sz",j+1
   end
   for j=1:2:N-2
-    ampo += 0.5*Jhh,"S+",j,"S-",j+2
-    ampo += 0.5*Jhh,"S-",j,"S+",j+2
-    ampo += Jhh,"Sz",j,"Sz",j+2
+    os += 0.5*Jhh,"S+",j,"S-",j+2
+    os += 0.5*Jhh,"S-",j,"S+",j+2
+    os += Jhh,"Sz",j,"Sz",j+2
   end
   for j=2:2:N-2
-    ampo += 0.5*Joo,"S+",j,"S-",j+2
-    ampo += 0.5*Joo,"S-",j,"S+",j+2
-    ampo += Joo,"Sz",j,"Sz",j+2
+    os += 0.5*Joo,"S+",j,"S-",j+2
+    os += 0.5*Joo,"S-",j,"S+",j+2
+    os += Joo,"Sz",j,"Sz",j+2
   end
-  H = MPO(ampo,sites)
+  H = MPO(os,sites)
 
-  sweeps = Sweeps(10)
-  maxdim!(sweeps,10,10,20,40,80,100,140,180,200)
-  cutoff!(sweeps,1E-8)
+  nsweeps = 10
+  maxdim = [10,10,20,40,80,100,140,180,200]
+  cutoff = [1E-8]
 
   psi0 = randomMPS(sites,4)
 
-  energy,psi = dmrg(H,psi0,sweeps)
+  energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
 
   return
 end
+```
+
+## Use a Sum of MPOs in DMRG
+
+One version of the ITensor `dmrg` function accepts an array of MPOs
+`[H1,H2,H3]` (or any number of MPOs you want). This version of DMRG
+will find the ground state of `H1+H2+H3`. Internally it does not
+actually sum these MPOs, but loops over them during each step of 
+the "eigensolver" at the core of the DMRG algorithm, so it is usually
+more efficient than if the MPOs had been summed together into a single MPO.
+
+To use this version of DMRG, say you have MPOs `H1`, `H2`, and `H3`. 
+Then call DMRG like this:
+```julia
+energy,psi = dmrg([H1,H2,H3],psi0; nsweeps, maxdim, cutoff)
 ```
 
 ## Make a 2D Hamiltonian for DMRG
@@ -210,13 +225,13 @@ let
   lattice = square_lattice(Nx, Ny; yperiodic = false)
 
   # Define the Heisenberg spin Hamiltonian on this lattice
-  ampo = OpSum()
+  os = OpSum()
   for b in lattice
-    ampo .+= 0.5, "S+", b.s1, "S-", b.s2
-    ampo .+= 0.5, "S-", b.s1, "S+", b.s2
-    ampo .+=      "Sz", b.s1, "Sz", b.s2
+    os .+= 0.5, "S+", b.s1, "S-", b.s2
+    os .+= 0.5, "S-", b.s1, "S+", b.s2
+    os .+=      "Sz", b.s1, "Sz", b.s2
   end
-  H = MPO(ampo,sites)
+  H = MPO(os,sites)
 
   state = [isodd(n) ? "Up" : "Dn" for n=1:N]
   # Initialize wavefunction to a random MPS
@@ -224,12 +239,11 @@ let
   # numbers as `state`
   psi0 = randomMPS(sites,state,20)
 
-  sweeps = Sweeps(10)
-  maxdim!(sweeps,20,60,100,100,200,400,800)
-  cutoff!(sweeps,1E-8)
-  @show sweeps
+  nsweeps = 10
+  maxdim = [20,60,100,100,200,400,800]
+  cutoff = [1E-8]
 
-  energy,psi = dmrg(H,psi0,sweeps)
+  energy,psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
 
   return
 end
@@ -242,7 +256,7 @@ These additional 'penalty states' are provided as an array of MPS just
 after the Hamiltonian, like this:
 
 ```julia
-energy,psi3 = dmrg(H,[psi0,psi1,psi2],psi3_init,sweeps)
+energy,psi3 = dmrg(H,[psi0,psi1,psi2],psi3_init; nsweeps, maxdim, cutoff)
 ```
 
 Here the penalty states are `[psi0,psi1,psi2]`. 
@@ -305,16 +319,16 @@ let
   # Make sure to do lots of sweeps
   # when finding excited states
   #
-  sweeps = Sweeps(30)
-  maxdim!(sweeps,10,10,10,20,20,40,80,100,200,200)
-  cutoff!(sweeps,1E-8)
-  noise!(sweeps,1E-6)
+  nsweeps = 30
+  maxdim = [10,10,10,20,20,40,80,100,200,200]
+  cutoff = [1E-8]
+  noise = [1E-6]
 
   #
   # Compute the ground state psi0
   #
   psi0_init = randomMPS(sites,linkdims=2)
-  energy0,psi0 = dmrg(H,psi0_init,sweeps)
+  energy0,psi0 = dmrg(H,psi0_init; nsweeps, maxdim, cutoff, noise)
 
   println()
 
@@ -322,7 +336,7 @@ let
   # Compute the first excited state psi1
   #
   psi1_init = randomMPS(sites,linkdims=2)
-  energy1,psi1 = dmrg(H,[psi0],psi1_init,sweeps; weight)
+  energy1,psi1 = dmrg(H,[psi0],psi1_init; nsweeps, maxdim, cutoff, noise, weight)
 
   # Check psi1 is orthogonal to psi0
   @show inner(psi1,psi0)
@@ -343,7 +357,7 @@ let
   # Compute the second excited state psi2
   #
   psi2_init = randomMPS(sites,linkdims=2)
-  energy2,psi2 = dmrg(H,[psi0,psi1],psi2_init,sweeps;weight)
+  energy2,psi2 = dmrg(H,[psi0,psi1],psi2_init; nsweeps, maxdim, cutoff, noise, weight)
 
   # Check psi2 is orthogonal to psi0 and psi1
   @show inner(psi2,psi0)

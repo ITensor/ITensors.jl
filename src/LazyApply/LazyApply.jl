@@ -30,8 +30,9 @@ struct Applied{F,Args<:Tuple,Kwargs<:NamedTuple}
 end
 Applied(f, args::Tuple) = Applied(f, args, (;))
 
+materialize(x) = x
 function materialize(a::Applied)
-  return a.f(a.args...; a.kwargs...)
+  return a.f(materialize.(a.args)...; a.kwargs...)
 end
 
 function (a1::Applied == a2::Applied)
@@ -78,8 +79,8 @@ end
 (os::Sum{A} + o::A) where {A} = Applied(sum, (vcat(os.args[1], [o]),))
 (o::A + os::Sum{A}) where {A} = Applied(sum, (vcat([o], os.args[1]),))
 
-(a1::Sum{A} - a2::A) where {C,A} = a1 + (-a2)
-(a1::A - a2::Sum{A}) where {C,A} = a1 + (-a2)
+(a1::Sum{A} - a2::A) where {A} = a1 + (-a2)
+(a1::A - a2::Sum{A}) where {A} = a1 + (-a2)
 
 (a1::Sum{A} - a2::Prod{A}) where {A} = a1 + (-a2)
 (a1::Sum{A} - a2::Scaled{C,Prod{A}}) where {C,A} = a1 + (-a2)
@@ -163,7 +164,7 @@ function (co1::Scaled{C,Prod{A}} + co2::Scaled{C,A}) where {C,A}
   return co1 + coefficient(co2) * Applied(prod, ([argument(co2)],))
 end
 
-function (a1::Scaled - a2::Scaled) where {C,A}
+function (a1::Scaled - a2::Scaled)
   return a1 + (-a2)
 end
 
@@ -361,14 +362,23 @@ end
 show(io::IO, a::Exp) = show(io, MIME("text/plain"), a)
 
 function show(io::IO, m::MIME"text/plain", a::Applied)
-  print(io, a.f, "(\n")
-  for n in 1:length(a.args)
+  print(io, a.f, "(")
+  for n in eachindex(a.args)
     print(io, a.args[n])
     if n < length(a.args)
       print(io, ", ")
     end
   end
-  print(io, "\n)")
+  if !isempty(a.kwargs)
+    print(io, "; ")
+    for n in 1:length(a.kwargs)
+      print(io, keys(a.kwargs)[n], "=", a.kwargs[n])
+      if n < length(a.kwargs)
+        print(io, ", ")
+      end
+    end
+  end
+  print(io, ")")
   return nothing
 end
 show(io::IO, a::Applied) = show(io, MIME("text/plain"), a)

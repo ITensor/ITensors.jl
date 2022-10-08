@@ -69,10 +69,6 @@ ITensors.state(::StateName"Occ", ::SiteType"Fermion") = [0.0 1.0]
 ITensors.state(::StateName"0", st::SiteType"Fermion") = state(StateName("Emp"), st)
 ITensors.state(::StateName"1", st::SiteType"Fermion") = state(StateName("Occ"), st)
 
-alias(::OpName"c") = OpName("C")
-alias(::OpName"c†") = OpName("Cdag")
-alias(::OpName"n") = OpName("N")
-
 function ITensors.op!(Op::ITensor, ::OpName"N", ::SiteType"Fermion", s::Index)
   return Op[s' => 2, s => 2] = 1.0
 end

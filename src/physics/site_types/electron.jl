@@ -75,17 +75,6 @@ ITensors.state(::StateName"↑", st::SiteType"Electron") = state(StateName("Up")
 ITensors.state(::StateName"↓", st::SiteType"Electron") = state(StateName("Dn"), st)
 ITensors.state(::StateName"↑↓", st::SiteType"Electron") = state(StateName("UpDn"), st)
 
-alias(::OpName"c↑") = OpName("Cup")
-alias(::OpName"c↓") = OpName("Cdn")
-alias(::OpName"c†↑") = OpName("Cdagup")
-alias(::OpName"c†↓") = OpName("Cdagdn")
-alias(::OpName"n↑") = OpName("Nup")
-alias(::OpName"n↓") = OpName("Ndn")
-alias(::OpName"n↑↓") = OpName("Nupdn")
-alias(::OpName"ntot") = OpName("Ntot")
-alias(::OpName"F↑") = OpName("Fup")
-alias(::OpName"F↓") = OpName("Fdn")
-
 function ITensors.op(::OpName"Nup", ::SiteType"Electron")
   return [
     0.0 0.0 0.0 0.0

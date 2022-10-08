@@ -72,6 +72,8 @@ prime(::typeof(linkinds), ::ITensors.AbstractMPS)
 prime(::typeof(siteinds), ::typeof(commoninds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
 prime(::typeof(siteinds), ::typeof(uniqueinds), ::ITensors.AbstractMPS, ::ITensors.AbstractMPS)
 
+swapprime(::ITensors.AbstractMPS, args...; kwargs...)
+
 setprime(::ITensors.AbstractMPS)
 setprime(::typeof(siteinds), ::ITensors.AbstractMPS)
 setprime(::typeof(linkinds), ::ITensors.AbstractMPS)

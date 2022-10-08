@@ -530,6 +530,18 @@ using Test
       @test D1 * D2 ≈ dense(D1) * dense(D2)
       @test D2 * D1 ≈ dense(D1) * dense(D2)
     end
+
+    @testset "Rectangular Diag * Dense regression test (#969)" begin
+      i = Index(3)
+      j = Index(2)
+      A = randomITensor(i)
+      B = delta(i, j)
+      C = A * B
+      @test hassameinds(C, j)
+      for n in 1:dim(j)
+        @test C[n] == A[n]
+      end
+    end
   end
 end
 

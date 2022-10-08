@@ -161,7 +161,7 @@ include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 
 function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
-                maxdim::Int = 3000, conserve_ky = true, use_splitblocks = true,
+                maxdim::Int = 3000, conserve_ky = true, splitblocks = true,
                 nsweeps = 10, blas_num_threads = 1, strided_num_threads = 1,
                 use_threaded_blocksparse = true, outputlevel = 1,
                 seed = 1234)
@@ -185,33 +185,23 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
 
   N = Nx * Ny
 
-  sweeps = Sweeps(nsweeps)
   maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
-  maxdim!(sweeps, maxdims...)
-  cutoff!(sweeps, 1e-6)
-  noise!(sweeps, 1e-6, 1e-7, 1e-8, 0.0)
-
-  if outputlevel > 0
-    @show sweeps
-  end
+  cutoff = 1E-6
+  noise = [1E-6, 1E-7, 1E-8, 0.0]
 
   sites = siteinds("ElecK", N; conserve_qns = true,
                    conserve_ky = conserve_ky, modulus_ky = Ny)
 
-  ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
-  H = MPO(ampo, sites)
-
   if outputlevel > 0
-    @show use_splitblocks
+    # The splitblocks option makes the MPO more sparse but also
+    # introduces more blocks.
+    # It generally improves DMRG performance
+    # at large bond dimensions.
+    @show splitblocks
   end
 
-  # This step makes the MPO more sparse but also
-  # introduces more blocks.
-  # It generally improves DMRG performance
-  # at large bond dimensions.
-  if use_splitblocks
-    H = splitblocks(linkinds, H)
-  end
+  ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
+  H = MPO(ampo, sites; splitblocks=splitblocks)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
@@ -242,7 +232,7 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
 
   psi0 = randomMPS(sites, state, 10)
 
-  energy, psi = @time dmrg(H, psi0, sweeps; outputlevel = outputlevel)
+  energy, psi = @time dmrg(H, psi0; nsweeps, maxdims, cutoff, noise, outputlevel = outputlevel)
 
   if outputlevel > 0
     @show Nx, Ny
@@ -272,19 +262,7 @@ ITensors.blas_get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 ITensors.using_threaded_blocksparse() = false
 
-sweeps = Sweeps
-1 cutoff=1.0E-06, maxdim=100, mindim=1, noise=1.0E-06
-2 cutoff=1.0E-06, maxdim=200, mindim=1, noise=1.0E-07
-3 cutoff=1.0E-06, maxdim=400, mindim=1, noise=1.0E-08
-4 cutoff=1.0E-06, maxdim=800, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-06, maxdim=2000, mindim=1, noise=0.0E+00
-6 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-7 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-8 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-9 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-10 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-
-use_splitblocks = true
+splitblocks = true
 nnz(H[end ÷ 2]) = 67
 nnzblocks(H[end ÷ 2]) = 67
 After sweep 1 energy=-5.861157015737 maxlinkdim=78 time=0.633
@@ -312,19 +290,7 @@ ITensors.blas_get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 ITensors.using_threaded_blocksparse() = true
 
-sweeps = Sweeps
-1 cutoff=1.0E-06, maxdim=100, mindim=1, noise=1.0E-06
-2 cutoff=1.0E-06, maxdim=200, mindim=1, noise=1.0E-07
-3 cutoff=1.0E-06, maxdim=400, mindim=1, noise=1.0E-08
-4 cutoff=1.0E-06, maxdim=800, mindim=1, noise=0.0E+00
-5 cutoff=1.0E-06, maxdim=2000, mindim=1, noise=0.0E+00
-6 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-7 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-8 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-9 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-10 cutoff=1.0E-06, maxdim=3000, mindim=1, noise=0.0E+00
-
-use_splitblocks = true
+splitblocks = true
 nnz(H[end ÷ 2]) = 67
 nnzblocks(H[end ÷ 2]) = 67
 After sweep 1 energy=-5.861157015735 maxlinkdim=78 time=1.117

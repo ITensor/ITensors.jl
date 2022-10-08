@@ -18,24 +18,50 @@ function permute(
 end
 
 """
+    dmrg(H::MPO,psi0::MPS;kwargs...)
     dmrg(H::MPO,psi0::MPS,sweeps::Sweeps;kwargs...)
-                    
+
 Use the density matrix renormalization group (DMRG) algorithm
 to optimize a matrix product state (MPS) such that it is the
 eigenvector of lowest eigenvalue of a Hermitian matrix H,
 represented as a matrix product operator (MPO).
-The MPS `psi0` is used to initialize the MPS to be optimized,
-and the `sweeps` object determines the parameters used to 
-control the DMRG algorithm.
+The MPS `psi0` is used to initialize the MPS to be optimized.
+
+The number of sweeps of thd DMRG algorithm is controlled by
+passing the `nsweeps` keyword argument. The keyword arguments
+`maxdim`, `cutoff`, `noise`, and `mindim` can also be passed
+to control the cost versus accuracy of the algorithm - see below
+for details.
+
+Alternatively the number of sweeps and accuracy parameters can
+be passed through a `Sweeps` object, though this interface is
+no longer preferred.
 
 Returns:
-* `energy::Complex` - eigenvalue of the optimized MPS
-* `psi::MPS` - optimized MPS
+
+  - `energy::Complex` - eigenvalue of the optimized MPS
+  - `psi::MPS` - optimized MPS
+
+Keyword arguments:
+
+  - `nsweeps::Int` - number of "sweeps" of DMRG to perform
 
 Optional keyword arguments:
-* `outputlevel::Int = 1` - larger outputlevel values make DMRG print more information and 0 means no output
-* `observer` - object implementing the [Observer](@ref observer) interface which can perform measurements and stop DMRG early
-* `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this value, begin saving tensors to disk to free memory in large calculations
+
+  - `maxdim` - integer or array of integers specifying the maximum size
+     allowed for the bond dimension or rank of the MPS being optimized
+  - `cutoff` - float or array of floats specifying the truncation error
+     cutoff or threshold to use for truncating the bond dimension or rank of the MPS
+  - `noise` - float or array of floats specifying strength of the "noise term"
+     to use to aid convergence
+  - `mindim` - integer or array of integers specifying the minimum size of the
+     bond dimension or rank, if possible
+  - `outputlevel::Int = 1` - larger outputlevel values make DMRG print more
+     information and 0 means no output
+  - `observer` - object implementing the [Observer](@ref observer) interface
+     which can perform measurements and stop DMRG early
+  - `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this
+     value, begin saving tensors to disk to free memory in large calculations
 """
 function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
   check_hascommoninds(siteinds, H, psi0)
@@ -48,25 +74,56 @@ function dmrg(H::MPO, psi0::MPS, sweeps::Sweeps; kwargs...)
 end
 
 """
+    dmrg(Hs::Vector{MPO},psi0::MPS;kwargs...)
     dmrg(Hs::Vector{MPO},psi0::MPS,sweeps::Sweeps;kwargs...)
-                    
+
 Use the density matrix renormalization group (DMRG) algorithm
 to optimize a matrix product state (MPS) such that it is the
 eigenvector of lowest eigenvalue of a Hermitian matrix H.
-The MPS `psi0` is used to initialize the MPS to be optimized,
-and the `sweeps` object determines the parameters used to 
-control the DMRG algorithm.
+The MPS `psi0` is used to initialize the MPS to be optimized.
+
+The number of sweeps of thd DMRG algorithm is controlled by
+passing the `nsweeps` keyword argument. The keyword arguments
+`maxdim`, `cutoff`, `noise`, and `mindim` can also be passed
+to control the cost versus accuracy of the algorithm - see below
+for details.
+
+Alternatively the number of sweeps and accuracy parameters can
+be passed through a `Sweeps` object, though this interface is
+no longer preferred.
 
 This version of `dmrg` accepts a representation of H as a
 Vector of MPOs, Hs = [H1,H2,H3,...] such that H is defined
 as H = H1+H2+H3+...
 Note that this sum of MPOs is not actually computed; rather
-the set of MPOs [H1,H2,H3,..] is efficiently looped over at 
+the set of MPOs [H1,H2,H3,..] is efficiently looped over at
 each step of the DMRG algorithm when optimizing the MPS.
 
 Returns:
-* `energy::Complex` - eigenvalue of the optimized MPS
-* `psi::MPS` - optimized MPS
+
+  - `energy::Complex` - eigenvalue of the optimized MPS
+  - `psi::MPS` - optimized MPS
+
+Keyword arguments:
+
+  - `nsweeps::Int` - number of "sweeps" of DMRG to perform
+
+Optional keyword arguments:
+
+  - `maxdim` - integer or array of integers specifying the maximum size allowed
+     for the bond dimension or rank of the MPS being optimized
+  - `cutoff` - float or array of floats specifying the truncation error cutoff
+     or threshold to use for truncating the bond dimension or rank of the MPS
+  - `noise` - float or array of floats specifying strength of the "noise term"
+     to use to aid convergence
+  - `mindim` - integer or array of integers specifying the minimum size of the
+     bond dimension or rank, if possible
+  - `outputlevel::Int = 1` - larger outputlevel values make DMRG print more
+     information and 0 means no output
+  - `observer` - object implementing the [Observer](@ref observer) interface
+     which can perform measurements and stop DMRG early
+  - `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this
+     value, begin saving tensors to disk to free memory in large calculations
 """
 function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
   for H in Hs
@@ -79,24 +136,59 @@ function dmrg(Hs::Vector{MPO}, psi0::MPS, sweeps::Sweeps; kwargs...)
 end
 
 """
+    dmrg(H::MPO,Ms::Vector{MPS},psi0::MPS;kwargs...)
     dmrg(H::MPO,Ms::Vector{MPS},psi0::MPS,sweeps::Sweeps;kwargs...)
-                    
+
 Use the density matrix renormalization group (DMRG) algorithm
 to optimize a matrix product state (MPS) such that it is the
 eigenvector of lowest eigenvalue of a Hermitian matrix H,
 subject to the constraint that the MPS is orthogonal to each
 of the MPS provided in the Vector `Ms`. The orthogonality
-constraint is approximately enforced by adding to H terms of 
+constraint is approximately enforced by adding to H terms of
 the form w|M1><M1| + w|M2><M2| + ... where Ms=[M1,M2,...] and
 w is the "weight" parameter, which can be adjusted through the
 optional `weight` keyword argument.
-The MPS `psi0` is used to initialize the MPS to be optimized,
-and the `sweeps` object determines the parameters used to 
-control the DMRG algorithm.
+The MPS `psi0` is used to initialize the MPS to be optimized.
+
+The number of sweeps of thd DMRG algorithm is controlled by
+passing the `nsweeps` keyword argument. The keyword arguments
+`maxdim`, `cutoff`, `noise`, and `mindim` can also be passed
+to control the cost versus accuracy of the algorithm - see below
+for details.
+
+Alternatively the number of sweeps and accuracy parameters can
+be passed through a `Sweeps` object, though this interface is
+no longer preferred.
 
 Returns:
-* `energy::Complex` - eigenvalue of the optimized MPS
-* `psi::MPS` - optimized MPS
+
+  - `energy` - eigenvalue of the optimized MPS
+  - `psi::MPS` - optimized MPS
+
+Keyword arguments:
+
+  - `nsweeps::Int` - number of "sweeps" of DMRG to perform
+
+Optional keyword arguments:
+
+  - `maxdim` - integer or array of integers specifying the maximum size allowed
+     for the bond dimension or rank of the MPS being optimized
+  - `cutoff` - float or array of floats specifying the truncation error cutoff
+     or threshold to use for truncating the bond dimension or rank of the MPS
+  - `ishermitian=true` - boolean specifying if dmrg should assume the MPO
+     represents a Hermitian matrix
+  - `noise` - float or array of floats specifying strength of the "noise term"
+     to use to aid convergence
+  - `mindim` - integer or array of integers specifying the minimum size of the
+     bond dimension or rank, if possible
+  - `outputlevel::Int = 1` - larger outputlevel values make DMRG print more
+     information and 0 means no output
+  - `observer` - object implementing the [Observer](@ref observer) interface
+     which can perform measurements and stop DMRG early
+  - `write_when_maxdim_exceeds::Int` - when the allowed maxdim exceeds this
+     value, begin saving tensors to disk to free RAM memory in large calculations
+  - `write_path::String = tempdir()` - path to use to save files to disk
+     (to save RAM) when maxdim exceeds the `write_when_maxdim_exceeds` option, if set
 """
 function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   check_hascommoninds(siteinds, H, psi0)
@@ -107,6 +199,11 @@ function dmrg(H::MPO, Ms::Vector{MPS}, psi0::MPS, sweeps::Sweeps; kwargs...)
   H = permute(H, (linkind, siteinds, linkind))
   Ms .= permute.(Ms, Ref((linkind, siteinds, linkind)))
   weight = get(kwargs, :weight, 1.0)
+  if weight <= 0.0
+    error(
+      "weight parameter should be > 0.0 in call to excited-state dmrg (value passed was weight=$weight)",
+    )
+  end
   PMM = ProjMPO_MPS(H, Ms; weight=weight)
   return dmrg(PMM, psi0, sweeps; kwargs...)
 end
@@ -133,6 +230,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   write_when_maxdim_exceeds::Union{Int,Nothing} = get(
     kwargs, :write_when_maxdim_exceeds, nothing
   )
+  write_path = get(kwargs, :write_path, tempdir())
 
   # eigsolve kwargs
   eigsolve_tol::Number = get(kwargs, :eigsolve_tol, 1e-14)
@@ -140,7 +238,6 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   eigsolve_maxiter::Int = get(kwargs, :eigsolve_maxiter, 1)
   eigsolve_verbosity::Int = get(kwargs, :eigsolve_verbosity, 0)
 
-  # TODO: add support for non-Hermitian DMRG
   ishermitian::Bool = get(kwargs, :ishermitian, true)
 
   # TODO: add support for targeting other states with DMRG
@@ -190,10 +287,11 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         maxdim(sweeps, sw) > write_when_maxdim_exceeds
         if outputlevel >= 2
           println(
-            "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk",
+            "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and
+            maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk"
           )
         end
-        PH = disk(PH)
+        PH = disk(PH; path=write_path)
       end
 
       for (b, ha) in sweepnext(N)

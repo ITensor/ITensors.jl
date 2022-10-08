@@ -59,6 +59,8 @@ end
 
 struct EmptyStorage{ElT,StoreT<:TensorStorage} <: TensorStorage{ElT} end
 
+data(S::EmptyStorage) = NoData()
+
 # Get the EmptyStorage version of the TensorStorage
 function emptytype(::Type{StoreT}) where {StoreT}
   return EmptyStorage{eltype(StoreT),StoreT}
@@ -80,6 +82,9 @@ similar(S::EmptyStorage) = S
 similar(S::EmptyStorage, ::Type{ElT}) where {ElT} = empty(similartype(fulltype(S), ElT))
 
 copy(S::EmptyStorage) = S
+
+size(::EmptyStorage) = (0,)
+length(::EmptyStorage) = 0
 
 isempty(::EmptyStorage) = true
 

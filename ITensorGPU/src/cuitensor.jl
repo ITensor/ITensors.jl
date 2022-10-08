@@ -33,6 +33,20 @@ function ITensor(
   data = CuArray{eltype}(as, A)
   return itensor(Dense(data), inds)
 end
+
+# Fix ambiguity error
+function ITensor(
+  as::NDTensors.AliasStyle, eltype::Type{<:Number}, A::CuArray{<:Number}, inds::Tuple{}
+)
+  length(A) ≠ dim(inds) && throw(
+    DimensionMismatch(
+      "In ITensor(::CuArray, inds), length of AbstractArray ($(length(A))) must match total dimension of IndexSet ($(dim(inds)))",
+    ),
+  )
+  data = CuArray{eltype}(as, A)
+  return itensor(Dense(data), inds)
+end
+
 # Helper functions for different view behaviors
 CuArray{ElT,N}(::NeverAlias, A::AbstractArray) where {ElT,N} = CuArray{ElT,N}(A)
 function CuArray{ElT,N}(::AllowAlias, A::AbstractArray) where {ElT,N}
@@ -50,38 +64,11 @@ function CuArray{<:Any,N}(as::AliasStyle, A::AbstractArray{ElTA,N}) where {N,ElT
   return CuArray{ElTA,N}(as, A)
 end
 
-#TODO: check that the size of the Array matches the Index dimensions
-function cuITensor(A::Array{S}, inds) where {S<:Number}
-  return ITensor(Dense(CuArray{S}(A)), inds)
-end
-function cuITensor(A::CuArray{S}, inds::IndexSet) where {S<:Number}
-  return ITensor(Dense(A), inds)
-end
-cuITensor(A::Array{S}, inds::Index...) where {S<:Number} = cuITensor(A, IndexSet(inds...))
-cuITensor(A::CuArray{S}, inds::Index...) where {S<:Number} = cuITensor(A, IndexSet(inds...))
+cuITensor(data::Array, inds...) = cu(ITensor(data, inds...))
 
-function cuITensor(A::ITensor)
-  return if storage(tensor(A)) isa ITensors.EmptyStorage
-    cuITensor(zero(eltype(storage(tensor(A)))), inds(A)...)
-  else
-    cuITensor(data(tensor(A)), inds(A)...)
-  end
-end
+cuITensor(data::CuArray, inds...) = ITensor(data, inds...)
 
-cu(A::ITensor) = cuITensor(A)
-
-# Helpful for moving gate structures to GPU
-cu(A::Array{ITensor}) = map(cu, A)
-cu(A::Array{<:Array{ITensor}}) = map(cu, A)
-
-function cpu(A::ITensor)
-  typeof(data(storage(A))) <: CuArray && return ITensor(cpu(storage(A)), inds(A))
-  return A
-end
-
-# Helpful for moving gate structures to CPU
-cpu(A::Array{ITensor}) = map(cpu, A)
-cpu(A::Array{<:Array{ITensor}}) = map(cpu, A)
+cuITensor(A::ITensor) = cu(A)
 
 function randomCuITensor(::Type{S}, inds::Indices) where {S<:Real}
   T = cuITensor(S, inds)

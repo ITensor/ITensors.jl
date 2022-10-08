@@ -70,6 +70,7 @@ store(T::Tensor) = storage(T)
 data(T::Tensor) = data(storage(T))
 
 datatype(T::Tensor) = datatype(storage(T))
+datatype(tensortype::Type{<:Tensor}) = datatype(storagetype(tensortype))
 
 indstype(::Type{<:Tensor{<:Any,<:Any,<:Any,IndsT}}) where {IndsT} = IndsT
 indstype(T::Tensor) = indstype(typeof(T))
@@ -91,6 +92,7 @@ eachblock(T::Tensor) = eachblock(inds(T))
 eachdiagblock(T::Tensor) = eachdiagblock(inds(T))
 
 eltype(::Tensor{ElT}) where {ElT} = ElT
+scalartype(T::Tensor) = eltype(T)
 
 strides(T::Tensor) = dim_to_strides(inds(T))
 
@@ -124,12 +126,21 @@ copyto!(R::Tensor, T::Tensor) = (copyto!(storage(R), storage(T)); R)
 
 complex(T::Tensor) = setstorage(T, complex(storage(T)))
 
-Base.real(T::Tensor) = setstorage(T, real(storage(T)))
+real(T::Tensor) = setstorage(T, real(storage(T)))
 
-Base.imag(T::Tensor) = setstorage(T, imag(storage(T)))
+imag(T::Tensor) = setstorage(T, imag(storage(T)))
 
 # Define Base.similar in terms of NDTensors.similar
 Base.similar(T::Tensor, args...) = similar(T, args...)
+
+function map(f, x::Tensor{T}) where {T}
+  if !iszero(f(zero(T)))
+    error(
+      "map(f, ::Tensor) currently doesn't support functions that don't preserve zeros, while you passed a function such that f(0) = $(f(zero(T))). This isn't supported right now because it doesn't necessarily preserve the sparsity structure of the input tensor.",
+    )
+  end
+  return setstorage(x, map(f, storage(x)))
+end
 
 #
 # Necessary to overload since the generic fallbacks are
@@ -339,7 +350,7 @@ end
 # (at least it is necessary for `diag(::DiagTensor)`).
 # TODO: Specialize this to the Tensor type, for example
 # block sparse to return a block sparse vector?
-function Base.similar(T::Tensor, ::Type{ElT}, dims::Tuple{Int}) where {ElT,N}
+function Base.similar(T::Tensor, ::Type{ElT}, dims::Tuple{Int}) where {ElT}
   return Tensor(ElT, dims)
 end
 

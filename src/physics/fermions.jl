@@ -2,12 +2,12 @@
 """
     parity_sign(P)
 
-Given an array or tuple of integers representing  
-a permutation or a subset of a permutation, 
-compute the parity sign defined as -1 for a 
-permutation consisting of an odd number of swaps 
-and +1 for an even number of swaps. This 
-implementation uses an O(n^2) algorithm and is 
+Given an array or tuple of integers representing
+a permutation or a subset of a permutation,
+compute the parity sign defined as -1 for a
+permutation consisting of an odd number of swaps
+and +1 for an even number of swaps. This
+implementation uses an O(n^2) algorithm and is
 intended for small permutations only.
 """
 function parity_sign(P)::Int
@@ -50,7 +50,7 @@ has_fermionic_subspaces(T) = has_fermionic_subspaces(inds(T))
     fparity(qn::IndexVal)
 
 Compute the fermion parity (0 or 1) of a QN of IndexVal,
-defined as the sum mod 2 of each of its fermionic 
+defined as the sum mod 2 of each of its fermionic
 QNVals (QNVals with negative modulus).
 """
 function fparity(qn::QN)
@@ -313,7 +313,7 @@ end #NDTensors.before_combiner_signs
 
 function NDTensors.after_combiner_signs(
   R, labelsR, indsR::NTuple{NR,QNIndex}, C, labelsC, indsC::NTuple{NC,QNIndex}
-) where {NC,NT,NR}
+) where {NC,NR}
   ci = NDTensors.cinds(store(C))[1]
   combining = (labelsC[ci] > 0)
   combining && error("NDTensors.after_combiner_signs only for uncombining")

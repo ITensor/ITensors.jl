@@ -9,7 +9,7 @@ export eigs, entropy, polar, random_orthog, random_unitary, Spectrum, svd, trunc
 
 function (
   T1::Tensor{ElT1,2,StoreT1} * T2::Tensor{ElT2,2,StoreT2}
-) where {ElT1,StoreT1<:Dense,IndsT1,ElT2,StoreT2<:Dense,IndsT2}
+) where {ElT1,StoreT1<:Dense,ElT2,StoreT2<:Dense}
   RM = matrix(T1) * matrix(T2)
   indsR = (ind(T1, 1), ind(T2, 2))
   return tensor(Dense(vec(RM)), indsR)
@@ -166,12 +166,7 @@ function LinearAlgebra.svd(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,In
   P = MS .^ 2
   if truncate
     truncerr, _ = truncate!(
-      P;
-      mindim=mindim,
-      maxdim=maxdim,
-      cutoff=cutoff,
-      use_absolute_cutoff=use_absolute_cutoff,
-      use_relative_cutoff=use_relative_cutoff,
+      P; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
   else
     truncerr = 0.0
@@ -218,7 +213,16 @@ function LinearAlgebra.eigen(
   use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
-  DM, VM = eigen(matrix(T))
+  matrixT = matrix(T)
+  if any(!isfinite, matrixT)
+    throw(
+      ArgumentError(
+        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+      ),
+    )
+  end
+
+  DM, VM = eigen(matrixT)
 
   # Sort by largest to smallest eigenvalues
   p = sortperm(DM; rev=true, by=abs)
@@ -227,12 +231,7 @@ function LinearAlgebra.eigen(
 
   if truncate
     truncerr, _ = truncate!(
-      DM;
-      mindim=mindim,
-      maxdim=maxdim,
-      cutoff=cutoff,
-      use_absolute_cutoff=use_absolute_cutoff,
-      use_relative_cutoff=use_relative_cutoff,
+      DM; mindim, maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
     dD = length(DM)
     if dD < size(VM, 2)
@@ -259,7 +258,7 @@ end
     random_unitary(::Type{ElT},n::Int,m::Int)::Matrix{ElT}
 
 Return a random matrix U of dimensions (n,m)
-such that if n >= m, U'*U is the identity, or if 
+such that if n >= m, U'*U is the identity, or if
 m > n U*U' is the identity. Optionally can pass a numeric
 type as the first argument to obtain a matrix of that type.
 
@@ -291,7 +290,7 @@ random_unitary(n::Int, m::Int) = random_unitary(ComplexF64, n, m)
     random_orthog(::Type{ElT},n::Int,m::Int)::Matrix{ElT}
 
 Return a random, real matrix O of dimensions (n,m)
-such that if n >= m, transpose(O)*O is the 
+such that if n >= m, transpose(O)*O is the
 identity, or if m > n O*transpose(O) is the
 identity. Optionally can pass a real number type
 as the first argument to obtain a matrix of that type.
@@ -343,7 +342,16 @@ function LinearAlgebra.eigen(
   use_absolute_cutoff::Bool = get(kwargs, :use_absolute_cutoff, use_absolute_cutoff)
   use_relative_cutoff::Bool = get(kwargs, :use_relative_cutoff, use_relative_cutoff)
 
-  DM, VM = eigen(matrix(T))
+  matrixT = matrix(T)
+  if any(!isfinite, matrixT)
+    throw(
+      ArgumentError(
+        "Trying to perform the eigendecomposition of a matrix containing NaNs or Infs"
+      ),
+    )
+  end
+
+  DM, VM = eigen(matrixT)
 
   # Sort by largest to smallest eigenvalues
   #p = sortperm(DM; rev = true)
@@ -352,11 +360,7 @@ function LinearAlgebra.eigen(
 
   if truncate
     truncerr, _ = truncate!(
-      DM;
-      maxdim=maxdim,
-      cutoff=cutoff,
-      use_absolute_cutoff=use_absolute_cutoff,
-      use_relative_cutoff=use_relative_cutoff,
+      DM; maxdim, cutoff, use_absolute_cutoff, use_relative_cutoff, kwargs...
     )
     dD = length(DM)
     if dD < size(VM, 2)

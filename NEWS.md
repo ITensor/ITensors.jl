@@ -6,6 +6,80 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+
+ITensors v0.3.20 Release Notes
+==============================
+
+Bugs:
+
+- Fix bug contracting rectangular Diag with Dense (#970)
+
+Enhancements:
+
+- `site_range` keyword for `truncate!` to only truncate part of an MPS (#971)
+- Fix issue with tolerance in `lognorm` when checking that the inner product is real (#973)
+
+ITensors v0.3.19 Release Notes
+==============================
+
+Bugs:
+
+- Fix bug in MPO(::OpSum, ...) when on-site operators have no blocks (#963)
+
+Enhancements:
+
+- Allow specifying non-uniform link dimensions in MPS constructors (#951)
+- Add splitblocks keyword argument to `MPO(::OpSum, ...)` constructor, which defaults to `splitblocks=true` (#963)
+- Allow specifying the element type of the output MPO with MPO(::Type, ::OpSum, ...), for example MPO(Float32, opsum, sites) to use single precision (#963)
+- Improve overloading interface for "Qudit"/"Boson" types, overload `ITensors.op(::OpName"new_op", ::SiteType"Qudit", d::Int)` (#963)
+- Fix typo in contraction sequence optimization code for some cases with empty indices (#965)
+- Add keyword arguments support for `ITensors.state` (#964)
+- Document and tweak the tolerance of the `nullspace` function (#960)
+- Improve functionality for transferring data between CPU and GPU (#956)
+- Fix `expect` and `correlation_matrix` for MPS on GPU (#956)
+- Make sure QR and SVD preserve element type (i.e. single precision) in more cases (#956)
+- Remove Sweeps object in examples and docs (#959)
+- Pass kwargs through to truncate in Dense factorizations (#958)
+- Optimize apply `rrule` for MPS/MPO by improving contraction sequence when contracting forward and reverse MPS/MPO (#955)
+- Simplify the `rrule`s for priming and tagging MPS/MPO (#950)
+
+ITensors v0.3.18 Release Notes
+==============================
+
+Bugs:
+
+- Extend `apply(::MPO, ::MPO)` to `apply(::MPO, ::MPO, ::MPO...)` (#949)
+- Fix AD for `apply(::MPO, ::MPO)` and `contract(::MPO, ::MPO)` (#949)
+- Properly use element type in `randomMPS` in the 1-site case (b66d1b7)
+- Fix bug in `tr(::MPO)` rrule where the derivative was being multiplied twice into the identity MPO (b66d1b7)
+- Fix directsum when specifying a single `Index` (#930)
+- Fix bug in loginner when inner is negative or complex (#945)
+- Fix subtraction bug in `OpSum` (#945)
+
+Enhancements:
+
+- Define "I" for Qudit/Boson type (b66d1b7)
+- Only warn in `inner` if the result is `Inf` or `NaN` (b66d1b7)
+- Make sure `randomITensor(())` and `randomITensor(Float64, ())` returns a Dense storage type (b66d1b7)
+- Define `isreal` and `iszero` for ITensors (b66d1b7)
+- Project element type of ITensor in reverse pass of tensor-tensor or scalar-tensor contraction (b66d1b7)
+- Define reverse rules for ITensor subtraction and negation (b66d1b7)
+- Define `map` for ITensors (b66d1b7)
+- Throw error when performing eigendecomposition of tensor with NaN or Inf elements (b66d1b7)
+- Fix `rrule` for `MPO` constructor by generalizing the `rrule` for the `MPS` constructor (#946)
+- Forward truncation arguments to more operations in `rrule` for `apply` (#945)
+- Add rrules for addition and subtraction of MPOs (#935)
+
+ITensors v0.3.17 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Add Zp as alias for operator Z+, etc. (#942)
+- Export diag (#942)
+
 ITensors v0.3.16 Release Notes
 ==============================
 

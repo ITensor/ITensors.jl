@@ -50,7 +50,10 @@ Optionally specify the link dimension with the keyword argument `linkdims`, whic
 In the future we may generalize `linkdims` to allow specifying each individual link dimension as a vector,
 and additionally allow specifying quantum numbers.
 """
-function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:Number}
+function MPS(
+  ::Type{T}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
+) where {T<:Number}
+  _linkdims = _fill_linkdims(linkdims, sites)
   N = length(sites)
   v = Vector{ITensor}(undef, N)
   if N == 1
@@ -58,13 +61,13 @@ function MPS(::Type{T}, sites::Vector{<:Index}; linkdims::Integer=1) where {T<:N
     return MPS(v)
   end
 
-  space = if hasqns(sites)
-    [QN() => linkdims]
+  spaces = if hasqns(sites)
+    [[QN() => _linkdims[j]] for j in 1:(N - 1)]
   else
-    linkdims
+    [_linkdims[j] for j in 1:(N - 1)]
   end
 
-  l = [Index(space, "Link,l=$ii") for ii in 1:(N - 1)]
+  l = [Index(spaces[ii], "Link,l=$ii") for ii in 1:(N - 1)]
   for ii in eachindex(sites)
     s = sites[ii]
     if ii == 1
@@ -80,14 +83,14 @@ end
 
 MPS(sites::Vector{<:Index}, args...; kwargs...) = MPS(Float64, sites, args...; kwargs...)
 
-function randomU(s1::Index, s2::Index)
+function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)
     mdim = dim(s1) * dim(s2)
-    RM = randn(mdim, mdim)
+    RM = randn(eltype, mdim, mdim)
     Q, _ = NDTensors.qr_positive(RM)
     G = itensor(Q, dag(s1), dag(s2), s1', s2')
   else
-    M = randomITensor(QN(), s1', s2', dag(s1), dag(s2))
+    M = randomITensor(eltype, QN(), s1', s2', dag(s1), dag(s2))
     U, S, V = svd(M, (s1', s2'))
     u = commonind(U, S)
     v = commonind(S, V)
@@ -97,7 +100,8 @@ function randomU(s1::Index, s2::Index)
   return G
 end
 
-function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
+function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1)
+  _linkdims = _fill_linkdims(linkdims, sites)
   if isone(length(sites))
     randn!(M[1])
     normalize!(M)
@@ -115,33 +119,35 @@ function randomizeMPS!(M::MPS, sites::Vector{<:Index}, linkdim=1)
     for b in brange
       s1 = sites[b]
       s2 = sites[b + db]
-      G = randomU(s1, s2)
+      G = randomU(eltype, s1, s2)
       T = noprime(G * M[b] * M[b + db])
       rinds = uniqueinds(M[b], M[b + db])
-      U, S, V = svd(T, rinds; maxdim=linkdim, utags="Link,l=$(b-1)")
+
+      b_dim = half == 1 ? b : b + db
+      U, S, V = svd(T, rinds; maxdim=_linkdims[b_dim], utags="Link,l=$(b-1)")
       M[b] = U
       M[b + db] = S * V
       M[b + db] /= norm(M[b + db])
     end
-    if half == 2 && dim(commonind(M[c], M[c + 1])) >= linkdim
+    if half == 2 && dim(commonind(M[c], M[c + 1])) >= _linkdims[c]
       break
     end
   end
   setleftlim!(M, 0)
   setrightlim!(M, 2)
-  if dim(commonind(M[c], M[c + 1])) < linkdim
-    @warn "MPS center bond dimension is less than requested (you requested $linkdim, but in practice it is $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities of truncating quantum number sectors."
+  if dim(commonind(M[c], M[c + 1])) < _linkdims[c]
+    @warn "MPS center bond dimension is less than requested (you requested $(_linkdims[c]), but in practice it is $(dim(commonind(M[c], M[c + 1]))). This is likely due to technicalities of truncating quantum number sectors."
   end
 end
 
 function randomCircuitMPS(
-  ::Type{ElT}, sites::Vector{<:Index}, linkdim::Int; kwargs...
-) where {ElT<:Number}
+  eltype::Type{<:Number}, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
+)
   N = length(sites)
   M = MPS(N)
 
   if N == 1
-    M[1] = ITensor(randn(dim(sites[1])), sites[1])
+    M[1] = ITensor(randn(eltype, dim(sites[1])), sites[1])
     M[1] /= norm(M[1])
     return M
   end
@@ -149,25 +155,25 @@ function randomCircuitMPS(
   l = Vector{Index}(undef, N)
 
   d = dim(sites[N])
-  chi = min(linkdim, d)
+  chi = min(linkdims[N - 1], d)
   l[N - 1] = Index(chi, "Link,l=$(N-1)")
-  O = NDTensors.random_unitary(ElT, chi, d)
+  O = NDTensors.random_unitary(eltype, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
   for j in (N - 1):-1:2
     chi *= dim(sites[j])
-    chi = min(linkdim, chi)
+    chi = min(linkdims[j - 1], chi)
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
-    O = NDTensors.random_unitary(ElT, chi, dim(sites[j]) * dim(l[j]))
+    O = NDTensors.random_unitary(eltype, chi, dim(sites[j]) * dim(l[j]))
     T = reshape(O, (chi, dim(sites[j]), dim(l[j])))
     M[j] = itensor(T, l[j - 1], sites[j], l[j])
   end
 
-  O = NDTensors.random_unitary(ElT, 1, dim(sites[1]) * dim(l[1]))
+  O = NDTensors.random_unitary(eltype, 1, dim(sites[1]) * dim(l[1]))
   l0 = Index(1, "Link,l=0")
   T = reshape(O, (1, dim(sites[1]), dim(l[1])))
   M[1] = itensor(T, l0, sites[1], l[1])
-  M[1] *= onehot(ElT, l0 => 1)
+  M[1] *= onehot(eltype, l0 => 1)
 
   M.llim = 0
   M.rlim = 2
@@ -175,46 +181,72 @@ function randomCircuitMPS(
   return M
 end
 
-function randomCircuitMPS(sites::Vector{<:Index}, linkdim::Integer; kwargs...)
-  return randomCircuitMPS(Float64, sites, linkdim; kwargs...)
+function randomCircuitMPS(sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...)
+  return randomCircuitMPS(Float64, sites, linkdims; kwargs...)
+end
+
+function _fill_linkdims(linkdims::Vector{<:Integer}, sites::Vector{<:Index})
+  @assert length(linkdims) == length(sites) - 1
+  return linkdims
+end
+
+function _fill_linkdims(linkdims::Integer, sites::Vector{<:Index})
+  return fill(linkdims, length(sites) - 1)
 end
 
 """
-    randomMPS(::Type{ElT<:Number}, sites::Vector{<:Index}; linkdims=1)
+    randomMPS(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
 
-Construct a random MPS with link dimension `linkdims` of 
-type `ElT`.
+Construct a random MPS with link dimension `linkdims` of
+type `eltype`.
+
+`linkdims` can also accept a `Vector{Int}` with
+`length(linkdims) == length(sites) - 1` for constructing an
+MPS with non-uniform bond dimension.
 """
 function randomMPS(
-  ::Type{ElT}, sites::Vector{<:Index}; linkdims::Integer=1
+  ::Type{ElT}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
 ) where {ElT<:Number}
+  _linkdims = _fill_linkdims(linkdims, sites)
   if any(hasqns, sites)
     error("initial state required to use randomMPS with QNs")
   end
 
   # For non-QN-conserving MPS, instantiate
   # the random MPS directly as a circuit:
-  return randomCircuitMPS(ElT, sites, linkdims)
+  return randomCircuitMPS(ElT, sites, _linkdims)
 end
 
 """
     randomMPS(sites::Vector{<:Index}; linkdims=1)
+    randomMPS(eltype::Type{<:Number}, sites::Vector{<:Index}; linkdims=1)
 
-Construct a random MPS with link dimension `linkdim` of 
-type `Float64`.
+Construct a random MPS with link dimension `linkdims` which by
+default has element type `Float64`.
+
+`linkdims` can also accept a `Vector{Int}` with
+`length(linkdims) == length(sites) - 1` for constructing an
+MPS with non-uniform bond dimension.
 """
-function randomMPS(sites::Vector{<:Index}; linkdims::Integer=1)
-  return randomMPS(Float64, sites; linkdims=linkdims)
+function randomMPS(sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1)
+  return randomMPS(Float64, sites; linkdims)
 end
 
-function randomMPS(sites::Vector{<:Index}, state; linkdims::Integer=1)
-  return randomMPS(Float64, sites, state; linkdims=linkdims)
+function randomMPS(
+  sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
+)
+  return randomMPS(Float64, sites, state; linkdims)
 end
 
-function randomMPS(ElType::Type, sites::Vector{<:Index}, state; linkdims::Integer=1)::MPS
-  M = MPS(ElType, sites, state)
-  if linkdims > 1
-    randomizeMPS!(M, sites, linkdims)
+function randomMPS(
+  eltype::Type{<:Number},
+  sites::Vector{<:Index},
+  state;
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
+)::MPS
+  M = MPS(eltype, sites, state)
+  if any(>(1), linkdims)
+    randomizeMPS!(eltype, M, sites, linkdims)
   end
   return M
 end
@@ -253,7 +285,7 @@ function MPS(::Type{T}, ivals::Vector{<:Pair{<:Index}}) where {T<:Number}
     end
     links = Vector{QNIndex}(undef, N - 1)
     for j in (N - 1):-1:1
-      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
+      links[j] = dag(Index(lflux => 1; tags="Link,l=$j"))
       lflux -= qn(ivals[j])
     end
   else
@@ -295,21 +327,22 @@ MPS(ivals::Vector{<:Pair{<:Index}}) = MPS(Float64, ivals)
 Construct a product state MPS of element type `T`, having
 site indices `sites`, and which corresponds to the initial
 state given by the array `states`. The input `states` may
-be an array of strings or an array of ints recognized by the 
+be an array of strings or an array of ints recognized by the
 `state` function defined for the relevant Index tag type.
 In addition, a single string or int can be input to create
 a uniform state.
 
 # Examples
+
 ```julia
 N = 10
 sites = siteinds("S=1/2", N)
-states = [isodd(n) ? "Up" : "Dn" for n=1:N]
+states = [isodd(n) ? "Up" : "Dn" for n in 1:N]
 psi = MPS(ComplexF64, sites, states)
 phi = MPS(sites, "Up")
 ```
 """
-function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
+function MPS(eltype::Type{<:Number}, sites::Vector{<:Index}, states_)
   if length(sites) != length(states_)
     throw(DimensionMismatch("Number of sites and and initial vals don't match"))
   end
@@ -318,7 +351,7 @@ function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
 
   if N == 1
     M[1] = state(sites[1], states_[1])
-    return M
+    return convert_leaf_eltype(eltype, M)
   end
 
   states = [state(sites[j], states_[j]) for j in 1:N]
@@ -330,23 +363,23 @@ function MPS(::Type{T}, sites::Vector{<:Index}, states_) where {T<:Number}
     end
     links = Vector{QNIndex}(undef, N - 1)
     for j in (N - 1):-1:1
-      links[j] = Index(lflux => 1; tags="Link,l=$j", dir=In)
+      links[j] = dag(Index(lflux => 1; tags="Link,l=$j"))
       lflux -= flux(states[j])
     end
   else
     links = [Index(1; tags="Link,l=$n") for n in 1:N]
   end
 
-  M[1] = ITensor(T, sites[1], links[1])
+  M[1] = ITensor(sites[1], links[1])
   M[1] += states[1] * state(links[1], 1)
   for n in 2:(N - 1)
-    M[n] = ITensor(T, dag(links[n - 1]), sites[n], links[n])
+    M[n] = ITensor(dag(links[n - 1]), sites[n], links[n])
     M[n] += state(dag(links[n - 1]), 1) * states[n] * state(links[n], 1)
   end
-  M[N] = ITensor(T, dag(links[N - 1]), sites[N])
+  M[N] = ITensor(dag(links[N - 1]), sites[N])
   M[N] += state(dag(links[N - 1]), 1) * states[N]
 
-  return M
+  return convert_leaf_eltype(eltype, M)
 end
 
 function MPS(
@@ -366,16 +399,17 @@ end
 Construct a product state MPS having
 site indices `sites`, and which corresponds to the initial
 state given by the array `states`. The `states` array may
-consist of either an array of integers or strings, as 
+consist of either an array of integers or strings, as
 recognized by the `state` function defined for the relevant
 Index tag type.
 
 # Examples
+
 ```julia
 N = 10
-sites = siteinds("S=1/2",N)
-states = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi = MPS(sites,states)
+sites = siteinds("S=1/2", N)
+states = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+psi = MPS(sites, states)
 ```
 """
 MPS(sites::Vector{<:Index}, states) = MPS(Float64, sites, states)
@@ -572,32 +606,36 @@ _op_prod(o1::Matrix{<:Number}, o2::Matrix{<:Number}) = o1 * o2
                        kwargs...)
 
 Given an MPS psi and two strings denoting
-operators (as recognized by the `op` function), 
+operators (as recognized by the `op` function),
 computes the two-point correlation function matrix
 C[i,j] = <psi| Op1i Op2j |psi>
 using efficient MPS techniques. Returns the matrix C.
 
 # Optional Keyword Arguments
-- `site_range = 1:length(psi)`: compute correlations only for sites in the given range
-- `ishermitian = false` : if `false`, force independent calculations of the matrix elements above and below the diagonal, while if `true` assume they are complex conjugates.
+
+  - `site_range = 1:length(psi)`: compute correlations only
+     for sites in the given range
+  - `ishermitian = false` : if `false`, force independent calculations of the
+     matrix elements above and below the diagonal, while if `true` assume they are complex conjugates.
 
 For a correlation matrix of size NxN and an MPS of typical
 bond dimension m, the scaling of this algorithm is N^2*m^3.
 
 # Examples
+
 ```julia
 N = 30
 m = 4
 
-s = siteinds("S=1/2",N)
+s = siteinds("S=1/2", N)
 psi = randomMPS(s; linkdims=m)
-Czz = correlation_matrix(psi,"Sz","Sz")
-Czz = correlation_matrix(psi,[1/2 0; 0 -1/2],[1/2 0; 0 -1/2]) # same as above
+Czz = correlation_matrix(psi, "Sz", "Sz")
+Czz = correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) # same as above
 
-s = siteinds("Electron",N; conserve_qns=true)
-psi = randomMPS(s, n->isodd(n) ? "Up" : "Dn"; linkdims=m)
-Cuu = correlation_matrix(psi,"Cdagup","Cup";site_range=2:8)
-``` 
+s = siteinds("Electron", N; conserve_qns=true)
+psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
+Cuu = correlation_matrix(psi, "Cdagup", "Cup"; site_range=2:8)
+```
 """
 function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   N = length(psi)
@@ -671,22 +709,25 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   for (ni, i) in enumerate(sites[1:(end - 1)])
     while pL < i - 1
       pL += 1
-      L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+      sᵢ = siteind(psi, pL)
+      L = (L * psi[pL]) * prime(dag(psi[pL]), !sᵢ)
     end
 
     Li = L * psi[i]
 
     # Get j == i diagonal correlations
     rind = commonind(psi[i], psi[i + 1])
-    C[ni, ni] =
-      scalar((Li * op(onsiteOp, s, i)) * prime(dag(psi[i]), not(rind))) / norm2_psi
+    oᵢ = adapt(datatype(Li), op(onsiteOp, s, i))
+    C[ni, ni] = ((Li * oᵢ) * prime(dag(psi[i]), !rind))[] / norm2_psi
 
     # Get j > i correlations
     if !using_auto_fermion() && fermionic2
       Op1 = "$Op1 * F"
     end
 
-    Li12 = (Li * op(Op1, s, i)) * dag(prime(psi[i]))
+    oᵢ = adapt(datatype(Li), op(Op1, s, i))
+
+    Li12 = (dag(psi[i])' * oᵢ) * Li
     pL12 = i
 
     for (n, j) in enumerate(sites[(ni + 1):end])
@@ -695,9 +736,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       while pL12 < j - 1
         pL12 += 1
         if !using_auto_fermion() && fermionic2
-          Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
+          oᵢ = adapt(datatype(psi[pL12]), op("F", s[pL12]))
+          Li12 *= (oᵢ * dag(psi[pL12])')
         else
-          Li12 *= dag(prime(psi[pL12], "Link"))
+          sᵢ = siteind(psi, pL12)
+          Li12 *= prime(dag(psi[pL12]), !sᵢ)
         end
         Li12 *= psi[pL12]
       end
@@ -705,7 +748,14 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       lind = commonind(psi[j], Li12)
       Li12 *= psi[j]
 
-      val = (Li12 * op(Op2, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
+      oⱼ = adapt(datatype(Li12), op(Op2, s, j))
+      sⱼ = siteind(psi, j)
+      val = (Li12 * oⱼ) * prime(dag(psi[j]), (sⱼ, lind))
+
+      # XXX: This gives a different fermion sign with
+      # ITensors.enable_auto_fermion()
+      # val = prime(dag(psi[j]), (sⱼ, lind)) * (oⱼ * Li12)
+
       C[ni, nj] = scalar(val) / norm2_psi
       if is_cm_hermitian
         C[nj, ni] = conj(C[ni, nj])
@@ -713,9 +763,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
 
       pL12 += 1
       if !using_auto_fermion() && fermionic2
-        Li12 *= op("F", s[pL12]) * dag(prime(psi[pL12]))
+        oᵢ = adapt(datatype(psi[pL12]), op("F", s[pL12]))
+        Li12 *= (oᵢ * dag(psi[pL12])')
       else
-        Li12 *= dag(prime(psi[pL12], "Link"))
+        sᵢ = siteind(psi, pL12)
+        Li12 *= prime(dag(psi[pL12]), !sᵢ)
       end
       @assert pL12 == j
     end #for j
@@ -727,7 +779,8 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       if !using_auto_fermion() && fermionic1
         Op2 = "$Op2 * F"
       end
-      Li21 = (Li * op(Op2, s, i)) * dag(prime(psi[i]))
+      oᵢ = adapt(datatype(psi[i]), op(Op2, s, i))
+      Li21 = (Li * oᵢ) * dag(psi[i])'
       pL21 = i
       if !using_auto_fermion() && fermionic1
         Li21 = -Li21 #Required because we swapped fermionic ops, instead of sweeping right to left.
@@ -739,9 +792,11 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
         while pL21 < j - 1
           pL21 += 1
           if !using_auto_fermion() && fermionic1
-            Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
+            oᵢ = adapt(datatype(psi[pL21]), op("F", s[pL21]))
+            Li21 *= oᵢ * dag(psi[pL21])'
           else
-            Li21 *= dag(prime(psi[pL21], "Link"))
+            sᵢ = siteind(psi, pL21)
+            Li21 *= prime(dag(si[pL21]), !sᵢ)
           end
           Li21 *= psi[pL21]
         end
@@ -749,14 +804,18 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
         lind = commonind(psi[j], Li21)
         Li21 *= psi[j]
 
-        val = (Li21 * op(Op1, s, j)) * dag(prime(prime(psi[j], "Site"), lind))
-        C[nj, ni] = scalar(val) / norm2_psi
+        oⱼ = adapt(datatype(psi[j]), op(Op1, s, j))
+        sⱼ = siteind(psi, j)
+        val = (prime(dag(psi[j]), (sⱼ, lind)) * (oⱼ * Li21))[]
+        C[nj, ni] = val / norm2_psi
 
         pL21 += 1
         if !using_auto_fermion() && fermionic1
-          Li21 *= op("F", s[pL21]) * dag(prime(psi[pL21]))
+          oᵢ = adapt(datatype(psi[pL21]), op("F", s[pL21]))
+          Li21 *= (oᵢ * dag(psi[pL21])')
         else
-          Li21 *= dag(prime(psi[pL21], "Link"))
+          sᵢ = siteind(psi, pL21)
+          Li21 *= prime(dag(psi[pL21]), !sᵢ)
         end
         @assert pL21 == j
       end #for j
@@ -764,19 +823,22 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
     end #if is_cm_hermitian
 
     pL += 1
-    L = Li * dag(prime(psi[i], "Link"))
+    sᵢ = siteind(psi, i)
+    L = Li * prime(dag(psi[i]), !sᵢ)
   end #for i
 
   # Get last diagonal element of C
   i = end_site
   while pL < i - 1
     pL += 1
-    L = (L * psi[pL]) * dag(prime(psi[pL], "Link"))
+    sᵢ = siteind(psi, pL)
+    L = L * psi[pL] * prime(dag(psi[pL]), !sᵢ)
   end
   lind = commonind(psi[i], psi[i - 1])
-  C[Nb, Nb] =
-    scalar(L * psi[i] * op(onsiteOp, s, i) * prime(prime(dag(psi[i]), "Site"), lind)) /
-    norm2_psi
+  oᵢ = adapt(datatype(psi[i]), op(onsiteOp, s, i))
+  sᵢ = siteind(psi, i)
+  val = (L * (oᵢ * psi[i]) * prime(dag(psi[i]), (sᵢ, lind)))[]
+  C[Nb, Nb] = val / norm2_psi
 
   return C
 end
@@ -787,10 +849,10 @@ end
     expect(psi::MPS, ops; kwargs...)
 
 Given an MPS `psi` and a single operator name, returns
-a vector of the expected value of the operator on 
-each site of the MPS. 
+a vector of the expected value of the operator on
+each site of the MPS.
 
-If multiple operator names are provided, returns a tuple 
+If multiple operator names are provided, returns a tuple
 of expectation value vectors.
 
 If a container of operator names is provided, returns the
@@ -798,25 +860,26 @@ same type of container with names replaced by vectors
 of expectation values.
 
 # Optional Keyword Arguments
-- `sites = 1:length(psi)`: compute expected values only for sites in the given range
+
+  - `sites = 1:length(psi)`: compute expected values only for sites in the given range
 
 # Examples
 
 ```julia
 N = 10
 
-s = siteinds("S=1/2",N)
+s = siteinds("S=1/2", N)
 psi = randomMPS(s; linkdims=8)
-Z = expect(psi,"Sz") # compute for all sites
-Z = expect(psi,"Sz";sites=2:4) # compute for sites 2,3,4
-Z3 = expect(psi,"Sz";sites=3)  # compute for site 3 only (output will be a scalar)
-XZ = expect(psi,["Sx","Sz"]) # compute Sx and Sz for all sites
-Z = expect(psi,[1/2 0; 0 -1/2]) # same as expect(psi,"Sz")
+Z = expect(psi, "Sz") # compute for all sites
+Z = expect(psi, "Sz"; sites=2:4) # compute for sites 2,3,4
+Z3 = expect(psi, "Sz"; sites=3)  # compute for site 3 only (output will be a scalar)
+XZ = expect(psi, ["Sx", "Sz"]) # compute Sx and Sz for all sites
+Z = expect(psi, [1/2 0; 0 -1/2]) # same as expect(psi,"Sz")
 
-s = siteinds("Electron",N)
+s = siteinds("Electron", N)
 psi = randomMPS(s; linkdims=8)
-dens = expect(psi,"Ntot")
-updens,dndens = expect(psi,"Nup","Ndn") # pass more than one operator
+dens = expect(psi, "Ntot")
+updens, dndens = expect(psi, "Nup", "Ndn") # pass more than one operator
 ```
 """
 function expect(psi::MPS, ops; kwargs...)
@@ -845,7 +908,8 @@ function expect(psi::MPS, ops; kwargs...)
   for (entry, j) in enumerate(site_range)
     orthogonalize!(psi, j)
     for (n, opname) in enumerate(ops)
-      val = scalar(psi[j] * op(opname, s[j]) * dag(prime(psi[j], s[j]))) / norm2_psi
+      oⱼ = adapt(datatype(psi[j]), op(opname, s[j]))
+      val = inner(psi[j], apply(oⱼ, psi[j])) / norm2_psi
       ex[n][entry] = (el_types[n] <: Real) ? real(val) : val
     end
   end

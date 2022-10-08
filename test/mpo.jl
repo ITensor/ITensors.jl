@@ -370,6 +370,14 @@ end
     @test_throws DimensionMismatch K * badL
   end
 
+  @testset "Multi-arg apply(::MPO...)" begin
+    ρ1 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
+    ρ2 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
+    ρ3 = (x -> outer(x', x; maxdim=4))(randomMPS(sites; linkdims=2))
+    @test apply(ρ1, ρ2, ρ3; cutoff=1e-8) ≈
+      apply(apply(ρ1, ρ2; cutoff=1e-8), ρ3; cutoff=1e-8)
+  end
+
   sites = siteinds("S=1/2", N)
   O = MPO(sites, "Sz")
   @test length(O) == N # just make sure this works
@@ -698,6 +706,17 @@ end
     @test ITensors.materialize(Apply(A, psi)) ≈ noprime(Apsi)
     @test A(psi) ≈ noprime(Apsi)
     @test inner(noprime(Apsi), Apply(A, psi)) ≈ inner(Apsi, Apsi)
+  end
+
+  @testset "Other MPO contract algorithms" begin
+    # Regression test - ensure that output of "naive" algorithm is an 
+    # MPO not an MPS
+    N = 8
+    s = siteinds(2, N)
+    A = randomMPO(s)
+    B = randomMPO(s)
+    C = apply(A, B; alg="naive")
+    @test C isa MPO
   end
 
   @testset "MPO with no link indices" for conserve_qns in [false, true]
