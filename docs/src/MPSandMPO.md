@@ -154,6 +154,7 @@ contract(::MPO, ::MPS)
 apply(::MPO, ::MPS)
 contract(::MPO, ::MPO)
 apply(::MPO, ::MPO)
+error_contract(y::MPS, A::MPO, x::MPS)
 outer(::MPS, ::MPS)
 projector(::MPS)
 ```
