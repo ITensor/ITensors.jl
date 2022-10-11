@@ -640,8 +640,8 @@ function contract(::Algorithm"densitymatrix", A::MPO, ψ::MPS; kwargs...)::MPS
   mindim::Int = max(get(kwargs, :mindim, 1), 1)
   normalize::Bool = get(kwargs, :normalize, false)
 
-  any(i -> isempty(i), siteinds(commoninds, A, ψ)) &&
-    error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
+  # any(i -> isempty(i), siteinds(commoninds, A, ψ)) &&
+  #   error("In `contract(A::MPO, x::MPS)`, `A` and `x` must share a set of site indices")
 
   # In case A and ψ have the same link indices
   A = sim(linkinds, A)
