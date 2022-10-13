@@ -266,11 +266,11 @@ function MPO(o::Scaled{C,Op}, s::Vector{<:Index}; kwargs...) where {C}
   return MPO(OpSum{C}() + o, s; kwargs...)
 end
 
-function MPO(o::Sum{Op}, s::Vector{<:Index}; kwargs...) where {C}
+function MPO(o::Sum{Op}, s::Vector{<:Index}; kwargs...)
   return MPO(OpSum{Float64}() + o, s; kwargs...)
 end
 
-function MPO(o::Prod{Op}, s::Vector{<:Index}; kwargs...) where {C}
+function MPO(o::Prod{Op}, s::Vector{<:Index}; kwargs...)
   return MPO(OpSum{Float64}() + o, s; kwargs...)
 end
 

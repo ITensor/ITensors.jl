@@ -426,11 +426,11 @@ So for example, to create an MPO from an OpSum which has the same site indices
 as your MPS `psi`, do the following:
 
 ```julia
-ampo = OpSum()
-# Then put operators into ampo...
+os = OpSum()
+# Then put operators into os...
 
 sites = siteinds(psi) # Get site indices from your MPS
-H = MPO(ampo,sites)
+H = MPO(os,sites)
 
 # Compute <psi|H|psi>
 energy_psi = inner(psi',H,psi)
