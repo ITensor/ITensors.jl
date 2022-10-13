@@ -313,7 +313,7 @@ end #NDTensors.before_combiner_signs
 
 function NDTensors.after_combiner_signs(
   R, labelsR, indsR::NTuple{NR,QNIndex}, C, labelsC, indsC::NTuple{NC,QNIndex}
-) where {NC,NT,NR}
+) where {NC,NR}
   ci = NDTensors.cinds(store(C))[1]
   combining = (labelsC[ci] > 0)
   combining && error("NDTensors.after_combiner_signs only for uncombining")
