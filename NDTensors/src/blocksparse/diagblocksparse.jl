@@ -461,7 +461,7 @@ end
 
 function permutedims(
   T::UniformDiagBlockSparseTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=identity
-) where {ElR,ElT,N}
+) where {ElT,N}
   R = tensor(DiagBlockSparse(f(getdiagindex(T, 1))), permute(inds(T), perm))
   return R
 end

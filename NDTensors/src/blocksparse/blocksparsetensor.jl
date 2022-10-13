@@ -407,7 +407,7 @@ function perm_blocks(blocks::Blocks{N}, dim::Int, perm) where {N}
 end
 
 # In the dimension dim, permute the block
-function perm_block(block::Block, dim::Int, perm) where {N}
+function perm_block(block::Block, dim::Int, perm)
   iperm = invperm(perm)
   return setindex(block, iperm[block[dim]], dim)
 end

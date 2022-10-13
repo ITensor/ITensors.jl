@@ -204,9 +204,9 @@ using Zygote: ZygoteRuleConfig, gradient
     return os
   end
 
-  if VERSION.minor == 7
-    # For some reason this is broken in Julia 1.6 and 1.8?
-    # Seems like a Zygote problem
+  # These are broken in versions of Zygote after 0.6.43,
+  # See: https://github.com/FluxML/Zygote.jl/issues/1304
+  @test_skip begin
     f = function (x)
       return ITensor(exp(1.5 * H(x, x); alg=Trotter{1}(1)), s)[1, 1]
     end

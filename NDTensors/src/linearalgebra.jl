@@ -9,7 +9,7 @@ export eigs, entropy, polar, random_orthog, random_unitary, Spectrum, svd, trunc
 
 function (
   T1::Tensor{ElT1,2,StoreT1} * T2::Tensor{ElT2,2,StoreT2}
-) where {ElT1,StoreT1<:Dense,IndsT1,ElT2,StoreT2<:Dense,IndsT2}
+) where {ElT1,StoreT1<:Dense,ElT2,StoreT2<:Dense}
   RM = matrix(T1) * matrix(T2)
   indsR = (ind(T1, 1), ind(T2, 2))
   return tensor(Dense(vec(RM)), indsR)
