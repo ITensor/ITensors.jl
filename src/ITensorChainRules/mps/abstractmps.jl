@@ -21,6 +21,16 @@ function rrule(::Type{T}, x::Vector{<:ITensor}; kwargs...) where {T<:Union{MPS,M
   return y, T_pullback
 end
 
+function rrule(::typeof(contract), x1::MPO, x2::MPS; kwargs...)
+  y = contract(x1, x2; kwargs...)
+  function contract_pullback(ȳ)
+    x̄1 = _contract(MPO, ȳ, dag(x2); kwargs...)
+    x̄2 = contract(dag(x1), ȳ; kwargs...)
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, contract_pullback
+end
+
 function rrule(::typeof(inner), x1::T, x2::T; kwargs...) where {T<:Union{MPS,MPO}}
   if !hassameinds(siteinds, x1, x2)
     error(
