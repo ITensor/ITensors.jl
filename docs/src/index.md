@@ -75,15 +75,33 @@ We recommend using ITensors.jl with Intel MKL in order to get the best possible 
 
 ## Citation
 
-If you use ITensor in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
+If you use ITensor in your work, for now please cite the [ITensor Paper](https://www.scipost.org/SciPostPhysCodeb.4):
 
 ```bib
-@misc{itensor,
-    title={The \mbox{ITensor} Software Library for Tensor Network Calculations},
-    author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
-    year={2020},
-    eprint={2007.14822},
-    archivePrefix={arXiv}
+@article{ITensor,
+	title={{The ITensor Software Library for Tensor Network Calculations}},
+	author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
+	journal={SciPost Phys. Codebases},
+	pages={4},
+	year={2022},
+	publisher={SciPost},
+	doi={10.21468/SciPostPhysCodeb.4},
+	url={https://scipost.org/10.21468/SciPostPhysCodeb.4},
+}
+```
+
+and associated "Codebase Release" for the version you have used. The current one is
+
+```bib
+@article{ITensor-r0.3,
+	title={{Codebase release 0.3 for ITensor}},
+	author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
+	journal={SciPost Phys. Codebases},
+	pages={4-r0.3},
+	year={2022},
+	publisher={SciPost},
+	doi={10.21468/SciPostPhysCodeb.4-r0.3},
+	url={https://scipost.org/10.21468/SciPostPhysCodeb.4-r0.3},
 }
 ```
 
