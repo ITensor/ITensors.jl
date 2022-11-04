@@ -150,6 +150,52 @@ function contraction_cost(As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
   return contraction_cost(indsAs; kwargs...)
 end
 
+function flatten_all(vec::Vector{ElT1}, newvec::Vector{ElT2}) where {ElT1,ElT2}
+  for i in vec
+    if typeof(i) == Vector{ElT1}
+      flatten_all(i, newvec)
+    else
+      push!(newvec, i)
+    end
+  end
+  return newvec
+end
+
+function compute_buffer_size(tn::AbstractVector, sequence = default_sequence())
+  buff_size = 0;
+  N = length(tn)
+  if sequence == "left_associative"
+    seq = [1]
+    for i = 2:N
+      push!(seq, i)
+    end
+  elseif sequence == "right_associative"
+    seq = [N]
+    for i in N-1:-1:1
+      push!(seq, i)
+    end
+  elseif sequence == "automatic"
+    seq = Vector{Int64}()
+    flatten_all(optimal_contraction_sequence(tn), seq)
+  else
+    seq = Vector{Int64}()
+    flatten_all(sequence, seq)
+  end
+
+  inter_itensor = inds(tn[seq[1]])
+  popfirst!(seq);
+  for i in seq
+    inter_size = 1
+    external_inds = noncommoninds(inter_itensor, tn[i])
+    for j in external_inds
+      inter_size *= dim(j)
+    end
+    buff_size = (inter_size > buff_size ? inter_size : buff_size)
+    inter_itensor = external_inds
+  end
+  
+  return buff_size
+end
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
 """
     *(As::ITensor...; sequence = default_sequence(), kwargs...)
