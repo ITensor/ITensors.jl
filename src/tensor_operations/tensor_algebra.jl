@@ -150,52 +150,58 @@ function contraction_cost(As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}};
   return contraction_cost(indsAs; kwargs...)
 end
 
-function flatten_all(vec::Vector{ElT1}, newvec::Vector{ElT2}) where {ElT1,ElT2}
-  for i in vec
-    if typeof(i) == Vector{ElT1}
-      flatten_all(i, newvec)
-    else
-      push!(newvec, i)
+#This is a function that takes an arbitrary sequence and computes the 
+# number of levels in the sequence and the number of loops per level
+function index_proccessing(idxset::AbstractArray{Vector{IdxT}}, seq::AbstractArray{ElT}, depth::Int64, num_loops_per_level::Vector{Int64}, buff_size, inter_itensor) where {ElT<:Int64, IdxT}
+  depth+= 1
+  push!(num_loops_per_level, 0)
+  for i in 1:length(seq)
+    if typeof(seq[i]) == Vector{ElT}
+      num_loops_per_level[depth]+=1
+      buff_size = index_proccessing(idxset, seq[i], depth, num_loops_per_level, buff_size, inter_itensor)
+      seq[i] = length(idxset)
     end
   end
-  return newvec
-end
+  # If there no internal networks in the current
+  # list find the largest intermediate for the subnetwork
+  # set and squash the network into its external inds
 
-function compute_buffer_size(tn::AbstractVector, sequence = default_sequence())
-  buff_size = 0;
-  N = length(tn)
-  if sequence == "left_associative"
-    seq = [1]
-    for i = 2:N
-      push!(seq, i)
-    end
-  elseif sequence == "right_associative"
-    seq = [N]
-    for i in N-1:-1:1
-      push!(seq, i)
-    end
-  elseif sequence == "automatic"
-    seq = Vector{Int64}()
-    flatten_all(optimal_contraction_sequence(tn), seq)
-  else
-    seq = Vector{Int64}()
-    flatten_all(sequence, seq)
-  end
-
-  inter_itensor = inds(tn[seq[1]])
-  popfirst!(seq);
-  for i in seq
+  @show idxset[seq[1]]
+  inter_itensor = idxset[seq[1]]
+  for i in 2 : length(seq)
     inter_size = 1
-    external_inds = noncommoninds(inter_itensor, tn[i])
+    @show seq[i]
+    external_inds = noncommoninds(inter_itensor, idxset[seq[i]])
     for j in external_inds
-      inter_size *= dim(j)
+       inter_size *= dim(j)
     end
     buff_size = (inter_size > buff_size ? inter_size : buff_size)
     inter_itensor = external_inds
-  end
-  
+   end
+   @show inter_itensor
+  push!(idxset, inter_itensor)
+
   return buff_size
 end
+
+function compute_buffer_size(tn::Union{Vector{ITensor},Tuple{Vararg{ITensor}}},
+  seq::AbstractArray{ElT}) where {ElT}
+  depth = 0
+  num_loops_per_level = Vector{Int64}()
+  buff_size = 0
+  inter_itensor = nothing
+
+  # take all of the indices of the tensors and make a temporary list
+  idxset = [IndexSet(inds(tn[1]))]
+  for i in 2: length(tn)
+    push!(idxset, IndexSet(inds(tn[i])))
+  end
+
+  index_proccessing(idxset, seq, depth, num_loops_per_level, buff_size, inter_itensor)
+
+  @show buff_size;
+end
+
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
 """
     *(As::ITensor...; sequence = default_sequence(), kwargs...)
