@@ -152,7 +152,7 @@ end
 
 #This is a function that takes an arbitrary sequence and computes the 
 # number of levels in the sequence and the number of loops per level
-function index_proccessing(idxset::AbstractArray{Vector{IdxT}}, seq::AbstractArray{ElT}, depth::Int64, num_loops_per_level::Vector{Int64}, buff_size, inter_itensor) where {ElT<:Int64, IdxT}
+function index_proccessing(idxset::AbstractArray{Vector{IdxT}}, seq::AbstractArray{ElT}, depth::Int64, num_loops_per_level::Vector{Int64}, buff_size, inter_itensor) where {ElT, IdxT}
   depth+= 1
   push!(num_loops_per_level, 0)
   for i in 1:length(seq)
@@ -166,11 +166,9 @@ function index_proccessing(idxset::AbstractArray{Vector{IdxT}}, seq::AbstractArr
   # list find the largest intermediate for the subnetwork
   # set and squash the network into its external inds
 
-  @show idxset[seq[1]]
   inter_itensor = idxset[seq[1]]
   for i in 2 : length(seq)
     inter_size = 1
-    @show seq[i]
     external_inds = noncommoninds(inter_itensor, idxset[seq[i]])
     for j in external_inds
        inter_size *= dim(j)
@@ -178,28 +176,41 @@ function index_proccessing(idxset::AbstractArray{Vector{IdxT}}, seq::AbstractArr
     buff_size = (inter_size > buff_size ? inter_size : buff_size)
     inter_itensor = external_inds
    end
-   @show inter_itensor
   push!(idxset, inter_itensor)
 
   return buff_size
 end
 
-function compute_buffer_size(tn::Union{Vector{ITensor},Tuple{Vararg{ITensor}}},
-  seq::AbstractArray{ElT}) where {ElT}
+  function compute_buffer_size(tn::Union{Vector{ITensor},Tuple{Vararg{ITensor}}},
+  sequence = default_sequence()) where {ElT}
   depth = 0
   num_loops_per_level = Vector{Int64}()
   buff_size = 0
   inter_itensor = nothing
+  seq = Vector{Int64}()
 
   # take all of the indices of the tensors and make a temporary list
   idxset = [IndexSet(inds(tn[1]))]
   for i in 2: length(tn)
     push!(idxset, IndexSet(inds(tn[i])))
   end
+  if typeof(sequence) == String
+    if sequence == "left_associative"
+      for i in 1 : length(tn)
+        push!(seq, i)
+      end
+    elseif sequence == "right_associative"
+      for i in 1 : length(tn)
+        push!(seq, length(tn) - i + 1)
+      end
+    else
+      seq = optimal_contraction_sequence(tn)
+    end
+  else
+    seq = sequence
+  end
 
-  index_proccessing(idxset, seq, depth, num_loops_per_level, buff_size, inter_itensor)
-
-  @show buff_size;
+  buff_size = index_proccessing(idxset, seq, depth, num_loops_per_level, buff_size, inter_itensor)
 end
 
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
