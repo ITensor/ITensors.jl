@@ -152,13 +152,22 @@ end
 
 #This is a function that takes an arbitrary sequence and computes the 
 # number of levels in the sequence and the number of loops per level
-function index_proccessing(idxset::AbstractArray{Vector{IdxT}}, seq::AbstractArray{ElT}, depth::Int64, num_loops_per_level::Vector{Int64}, buff_size, inter_itensor) where {ElT, IdxT}
-  depth+= 1
+function index_proccessing(
+  idxset::AbstractArray{Vector{IdxT}},
+  seq::AbstractArray{ElT},
+  depth::Int64,
+  num_loops_per_level::Vector{Int64},
+  buff_size,
+  inter_itensor,
+) where {ElT,IdxT}
+  depth += 1
   push!(num_loops_per_level, 0)
   for i in 1:length(seq)
     if typeof(seq[i]) == Vector{ElT}
-      num_loops_per_level[depth]+=1
-      buff_size = index_proccessing(idxset, seq[i], depth, num_loops_per_level, buff_size, inter_itensor)
+      num_loops_per_level[depth] += 1
+      buff_size = index_proccessing(
+        idxset, seq[i], depth, num_loops_per_level, buff_size, inter_itensor
+      )
       seq[i] = length(idxset)
     end
   end
@@ -167,22 +176,23 @@ function index_proccessing(idxset::AbstractArray{Vector{IdxT}}, seq::AbstractArr
   # set and squash the network into its external inds
 
   inter_itensor = idxset[seq[1]]
-  for i in 2 : length(seq)
+  for i in 2:length(seq)
     inter_size = 1
     external_inds = noncommoninds(inter_itensor, idxset[seq[i]])
     for j in external_inds
-       inter_size *= dim(j)
+      inter_size *= dim(j)
     end
     buff_size = (inter_size > buff_size ? inter_size : buff_size)
     inter_itensor = external_inds
-   end
+  end
   push!(idxset, inter_itensor)
 
   return buff_size
 end
 
-  function compute_buffer_size(tn::Union{Vector{ITensor},Tuple{Vararg{ITensor}}},
-  sequence = default_sequence()) where {ElT}
+function compute_buffer_size(
+  tn::Union{Vector{ITensor},Tuple{Vararg{ITensor}}}, sequence=default_sequence()
+) where {ElT}
   depth = 0
   num_loops_per_level = Vector{Int64}()
   buff_size = 0
@@ -191,16 +201,16 @@ end
 
   # take all of the indices of the tensors and make a temporary list
   idxset = [IndexSet(inds(tn[1]))]
-  for i in 2: length(tn)
+  for i in 2:length(tn)
     push!(idxset, IndexSet(inds(tn[i])))
   end
   if typeof(sequence) == String
     if sequence == "left_associative"
-      for i in 1 : length(tn)
+      for i in 1:length(tn)
         push!(seq, i)
       end
     elseif sequence == "right_associative"
-      for i in 1 : length(tn)
+      for i in 1:length(tn)
         push!(seq, length(tn) - i + 1)
       end
     else
@@ -210,7 +220,9 @@ end
     seq = sequence
   end
 
-  buff_size = index_proccessing(idxset, seq, depth, num_loops_per_level, buff_size, inter_itensor)
+  return buff_size = index_proccessing(
+    idxset, seq, depth, num_loops_per_level, buff_size, inter_itensor
+  )
 end
 
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
