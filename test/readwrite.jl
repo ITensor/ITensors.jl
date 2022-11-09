@@ -132,7 +132,6 @@ include("util.jl")
       @test rD ≈ D
       @test rC ≈ C
     end
-
   end
 
   @testset "QN ITensor" begin
@@ -195,7 +194,6 @@ include("util.jl")
 
   @testset "DownwardCompat" begin
     h5open("testfilev0.1.41.h5", "r") do fi
-
       ITensorName = "ITensorv0.1.41"
 
       # ITensor version <= v0.1.41 uses the `store` key for ITensor data storage
