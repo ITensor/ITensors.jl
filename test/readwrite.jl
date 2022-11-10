@@ -9,51 +9,51 @@ include("util.jl")
 
   @testset "TagSet" begin
     ts = TagSet("A,Site,n=2")
-    fo = h5open("data.h5", "w")
-    write(fo, "tags", ts)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "tags", ts)
+    end
 
-    fi = h5open("data.h5", "r")
-    rts = read(fi, "tags", TagSet)
-    close(fi)
-    @test rts == ts
+    h5open("data.h5", "r") do fi
+      rts = read(fi, "tags", TagSet)
+      @test rts == ts
+    end
   end
 
   @testset "Index" begin
     i = Index(3, "Site,S=1")
-    fo = h5open("data.h5", "w")
-    write(fo, "index", i)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "index", i)
+    end
 
-    fi = h5open("data.h5", "r")
-    ri = read(fi, "index", Index)
-    close(fi)
-    @test ri == i
+    h5open("data.h5", "r") do fi
+      ri = read(fi, "index", Index)
+      @test ri == i
+    end
 
     # primed Index
     i = Index(3, "Site,S=1")
     i = prime(i, 2)
-    fo = h5open("data.h5", "w")
-    write(fo, "index", i)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "index", i)
+    end
 
-    fi = h5open("data.h5", "r")
-    ri = read(fi, "index", Index)
-    close(fi)
-    @test ri == i
+    h5open("data.h5", "r") do fi
+      ri = read(fi, "index", Index)
+      @test ri == i
+    end
   end
 
   @testset "IndexSet" begin
     is = IndexSet(i, j, k)
 
-    fo = h5open("data.h5", "w")
-    write(fo, "inds", is)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "inds", is)
+    end
 
-    fi = h5open("data.h5", "r")
-    ris = read(fi, "inds", IndexSet)
-    close(fi)
-    @test ris == is
+    h5open("data.h5", "r") do fi
+      ris = read(fi, "inds", IndexSet)
+      @test ris == is
+    end
   end
 
   @testset "Dense ITensor" begin
@@ -61,75 +61,77 @@ include("util.jl")
     # default constructed case
     T = ITensor()
 
-    fo = h5open("data.h5", "w")
-    write(fo, "defaultT", T)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "defaultT", T)
+    end
 
-    fi = h5open("data.h5", "r")
-    rT = read(fi, "defaultT", ITensor)
-    close(fi)
-    @test typeof(storage(T)) == typeof(storage(ITensor()))
+    h5open("data.h5", "r") do fi
+      rT = read(fi, "defaultT", ITensor)
+      @test typeof(storage(T)) == typeof(storage(ITensor()))
+    end
 
     # real case
     T = randomITensor(i, j, k)
 
-    fo = h5open("data.h5", "w")
-    write(fo, "T", T)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "T", T)
+    end
 
-    fi = h5open("data.h5", "r")
-    rT = read(fi, "T", ITensor)
-    close(fi)
-    @test norm(rT - T) / norm(T) < 1E-10
+    h5open("data.h5", "r") do fi
+      rT = read(fi, "T", ITensor)
+      @test norm(rT - T) / norm(T) < 1E-10
+    end
 
     # complex case
     T = randomITensor(ComplexF64, i, j, k)
 
-    fo = h5open("data.h5", "w")
-    write(fo, "complexT", T)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "complexT", T)
+    end
 
-    fi = h5open("data.h5", "r")
-    rT = read(fi, "complexT", ITensor)
-    close(fi)
-    @test norm(rT - T) / norm(T) < 1E-10
+    h5open("data.h5", "r") do fi
+      rT = read(fi, "complexT", ITensor)
+      @test norm(rT - T) / norm(T) < 1E-10
+    end
   end
 
-  @testset "Diag ITensor" begin
+  @testset "Delta ITensor" begin
     #
     # Delta ITensor
     #
-    fo = h5open("data.h5", "w")
     Δ = δ(i, i')
     cΔ = δ(ComplexF64, i, i')
-    fo["delta_tensor"] = Δ
-    fo["c_delta_tensor"] = cΔ
-    close(fo)
+    h5open("data.h5", "w") do fo
+      fo["delta_tensor"] = Δ
+      fo["c_delta_tensor"] = cΔ
+    end
 
-    fi = h5open("data.h5", "r")
-    rΔ = read(fi, "delta_tensor", ITensor)
-    rcΔ = read(fi, "c_delta_tensor", ITensor)
-    close(fi)
-    @test rΔ ≈ Δ
-    @test rcΔ ≈ cΔ
+    h5open("data.h5", "r") do fi
+      rΔ = read(fi, "delta_tensor", ITensor)
+      rcΔ = read(fi, "c_delta_tensor", ITensor)
+      @test rΔ ≈ Δ
+      @test rcΔ ≈ cΔ
+    end
+  end
+  @testset "Diag ITensor" begin
 
     #
     # Diag ITensor
     #
-    fo = h5open("data.h5", "w")
     dk = dim(k)
     D = diagITensor(randn(dk), k, k')
     C = diagITensor(randn(ComplexF64, dk), k, k')
-    fo["diag_tensor"] = D
-    fo["c_diag_tensor"] = C
-    close(fo)
+    h5open("data.h5", "w") do fo
+      fo["diag_tensor"] = D
+      fo["c_diag_tensor"] = C
+    end
 
-    fi = h5open("data.h5", "r")
-    rD = read(fi, "diag_tensor", ITensor)
-    rC = read(fi, "c_diag_tensor", ITensor)
-    close(fi)
-    @test rD ≈ D
-    @test rC ≈ C
+    h5open("data.h5", "r") do fi
+      rD = read(fi, "diag_tensor", ITensor)
+      rC = read(fi, "c_diag_tensor", ITensor)
+      @test rD ≈ D
+      @test rC ≈ C
+    end
   end
 
   @testset "QN ITensor" begin
@@ -140,26 +142,26 @@ include("util.jl")
     # real case
     T = randomITensor(QN("A", 1), i, j, k)
 
-    fo = h5open("data.h5", "w")
-    write(fo, "T", T)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "T", T)
+    end
 
-    fi = h5open("data.h5", "r")
-    rT = read(fi, "T", ITensor)
-    close(fi)
-    @test rT ≈ T
+    h5open("data.h5", "r") do fi
+      rT = read(fi, "T", ITensor)
+      @test rT ≈ T
+    end
 
     # complex case
     T = randomITensor(ComplexF64, i, j, k)
 
-    fo = h5open("data.h5", "w")
-    write(fo, "complexT", T)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "complexT", T)
+    end
 
-    fi = h5open("data.h5", "r")
-    rT = read(fi, "complexT", ITensor)
-    close(fi)
-    @test rT ≈ T
+    h5open("data.h5", "r") do fi
+      rT = read(fi, "complexT", ITensor)
+      @test rT ≈ T
+    end
   end
 
   @testset "MPO/MPS" begin
@@ -169,37 +171,36 @@ include("util.jl")
     # MPO
     mpo = makeRandomMPO(sites)
 
-    fo = h5open("data.h5", "w")
-    write(fo, "mpo", mpo)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "mpo", mpo)
+    end
 
-    fi = h5open("data.h5", "r")
-    rmpo = read(fi, "mpo", MPO)
-    close(fi)
-    @test prod([norm(rmpo[i] - mpo[i]) / norm(mpo[i]) < 1E-10 for i in 1:N])
+    h5open("data.h5", "r") do fi
+      rmpo = read(fi, "mpo", MPO)
+      @test prod([norm(rmpo[i] - mpo[i]) / norm(mpo[i]) < 1E-10 for i in 1:N])
+    end
 
     # MPS
     mps = makeRandomMPS(sites)
-    fo = h5open("data.h5", "w")
-    write(fo, "mps", mps)
-    close(fo)
+    h5open("data.h5", "w") do fo
+      write(fo, "mps", mps)
+    end
 
-    fi = h5open("data.h5", "r")
-    rmps = read(fi, "mps", MPS)
-    close(fi)
-    @test prod([norm(rmps[i] - mps[i]) / norm(mps[i]) < 1E-10 for i in 1:N])
+    h5open("data.h5", "r") do fi
+      rmps = read(fi, "mps", MPS)
+      @test prod([norm(rmps[i] - mps[i]) / norm(mps[i]) < 1E-10 for i in 1:N])
+    end
   end
 
   @testset "DownwardCompat" begin
-    fi = h5open("testfilev0.1.41.h5", "r")
+    h5open("testfilev0.1.41.h5", "r") do fi
+      ITensorName = "ITensorv0.1.41"
 
-    ITensorName = "ITensorv0.1.41"
-
-    # ITensor version <= v0.1.41 uses the `store` key for ITensor data storage
-    # whereas v >= 0.2 uses `storage` as key
-    @test haskey(read(fi, ITensorName), "store")
-    @test read(fi, ITensorName, ITensor) isa ITensor
-    close(fi)
+      # ITensor version <= v0.1.41 uses the `store` key for ITensor data storage
+      # whereas v >= 0.2 uses `storage` as key
+      @test haskey(read(fi, ITensorName), "store")
+      @test read(fi, ITensorName, ITensor) isa ITensor
+    end
   end
 
   #
