@@ -360,6 +360,35 @@ function noinds_error_message(decomp::String)
    treating the ITensor as a matrix from the primed to the unprimed indices."
 end
 
+function add_trivial_index(A::ITensor,Ainds)
+  α = trivial_index(Ainds) #If Ainds[1] has no QNs makes Index(1), otherwise Index(QN()=>1)
+  vα = onehot(eltype(A), α => 1)
+  A *= vα
+  return A,vα,[α]
+end
+
+function add_trivial_index(A::ITensor,Linds,Rinds)
+  if isempty(Linds)
+    A,vα,Linds=add_trivial_index(A,Rinds)
+  elseif isempty(Rinds)
+    A,vα,Rinds=add_trivial_index(A,Linds)
+  else
+    vα=nothing
+  end
+  return A,vα,Linds,Rinds
+end
+
+function remove_trivial_index(Q::ITensor,R::ITensor,vα::ITensor)
+  if length(inds(Q))==2 #should have only dummy + qr,Link
+    Q*=dag(vα)
+  elseif length(inds(R))==2 #should have only dummy + qr,Link
+    R*=dag(vα)
+  else
+    @error "Should be impossible"
+  end
+  return Q,R
+end
+
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 
 # TODO: write this in terms of combiners and then
@@ -368,22 +397,12 @@ function qr(A::ITensor, Linds...; kwargs...)
   tags::TagSet = get(kwargs, :tags, "Link,qr")
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
-
-  Lis_original = Lis
-  Ris_original = Ris
-  if isempty(Lis_original)
-    α = trivial_index(Ris)
-    vLα = onehot(eltype(A), α => 1)
-    A *= vLα
-    Lis = [α]
-  end
-  if isempty(Ris_original)
-    α = trivial_index(Lis)
-    vRα = onehot(eltype(A), α => 1)
-    A *= vRα
-    Ris = [α]
-  end
-
+  lre = isempty(Lis) || isempty(Ris)
+  
+  # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
+  # be empty.  A essentially becomes 1D after collection.
+  if (lre) A,vα,Lis,Ris=add_trivial_index(A,Lis,Ris) end
+  
   Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
   QT, RT = qr(tensor(A), Lpos, Rpos; kwargs...)
   Q, R = itensor(QT), itensor(RT)
@@ -392,12 +411,7 @@ function qr(A::ITensor, Linds...; kwargs...)
   settags!(R, tags, q)
   q = settags(q, tags)
 
-  if isempty(Lis_original)
-    Q *= dag(vLα)
-  end
-  if isempty(Ris_original)
-    R *= dag(vRα)
-  end
+  if (lre) Q,R = remove_trivial_index(Q,R,vα) end
 
   return Q, R, q
 end
