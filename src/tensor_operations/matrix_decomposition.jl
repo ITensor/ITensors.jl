@@ -403,16 +403,32 @@ function qr(A::ITensor, Linds...; kwargs...)
   # be empty.  A essentially becomes 1D after collection.
   if (lre) A,vα,Lis,Ris=add_trivial_index(A,Lis,Ris) end
   
-  Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
-  QT, RT = qr(tensor(A), Lpos, Rpos; kwargs...)
-  Q, R = itensor(QT), itensor(RT)
+  CL = combiner(Lis...)
+  CR = combiner(Ris...)
+  AC = A * CR * CL
+  
+  cL = combinedind(CL)
+  cR = combinedind(CR)
+
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
+  end
+
+  QT, RT = qr(tensor(AC); kwargs...)
+  QC, RC = itensor(QT), itensor(RT)
+  Q = QC * dag(CL)
+  R = RC * dag(CR)
+
+  # Conditionally remove dummy index.
+  if (lre) Q,R = remove_trivial_index(Q,R,vα) end
+
+  
   q = commonind(Q, R)
   settags!(Q, tags, q)
   settags!(R, tags, q)
   q = settags(q, tags)
 
-  if (lre) Q,R = remove_trivial_index(Q,R,vα) end
-
+  
   return Q, R, q
 end
 
