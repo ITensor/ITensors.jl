@@ -362,6 +362,9 @@ end
 
 
 #QR a block sparse Rank 2 tensor.
+#
+#  This code thanks to Niklas Tausendpfund https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
+#
 function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where{ElT, StoreT,IndsT}
     
   # getting total number of blocks
