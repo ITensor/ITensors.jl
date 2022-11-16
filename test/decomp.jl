@@ -49,64 +49,72 @@ using ITensors, LinearAlgebra, Test
     )
   end
 
-  @testset "QR dense on MPS tensor with all possible collections on Q,R" for ninds in [0,1,2,3]  
+  @testset "QR dense on MPS tensor with all possible collections on Q,R" for ninds in
+                                                                             [0, 1, 2, 3]
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(10, "r")
     A = randomITensor(l, s, r)
-    Ainds=inds(A)
-    Q, R, q= qr(A,Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
-    @test length(inds(Q)) ==   ninds+1 #+1 to account for new qr,Link index.
-    @test length(inds(R)) == 3-ninds+1
+    Ainds = inds(A)
+    Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
 
-  @testset "QR dense on MP0 tensor with all possible collections on Q,R" for ninds in [0,1,2,3,4]  
+  @testset "QR dense on MP0 tensor with all possible collections on Q,R" for ninds in
+                                                                             [0, 1, 2, 3, 4]
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(10, "r")
     A = randomITensor(l, s, s', r)
-    Ainds=inds(A)
-    Q, R, q= qr(A,Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
-    @test length(inds(Q)) ==   ninds+1 #+1 to account for new qr,Link index.
-    @test length(inds(R)) == 4-ninds+1
+    Ainds = inds(A)
+    Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == 4 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
-  
-  @testset "QR block sparse on MPS tensor with all possible collections on Q,R" for ninds in [0,1,2,3]  
+
+  @testset "QR block sparse on MPS tensor with all possible collections on Q,R" for ninds in
+                                                                                    [
+    0, 1, 2, 3
+  ]
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
-    s = Index(QN("Sz",-1) => 1, QN("Sz",1) => 1; tags="s")
+    s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
     A = randomITensor(l, s, r)
-    Ainds=inds(A)
-    Q, R, q= qr(A,Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
-    @test length(inds(Q)) ==   ninds+1 #+1 to account for new qr,Link index.
-    @test length(inds(R)) == 3-ninds+1
+    Ainds = inds(A)
+    Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
-    @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
 
-  @testset "QR block sparse on MPO tensor with all possible collections on Q,R" for ninds in [0,1,2,3,4]  
+  @testset "QR block sparse on MPO tensor with all possible collections on Q,R" for ninds in
+                                                                                    [
+    0, 1, 2, 3, 4
+  ]
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
-    s = Index(QN("Sz",-1) => 1, QN("Sz",1) => 1; tags="s")
+    s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
     A = randomITensor(l, s, dag(s'), r)
-    Ainds=inds(A)
-    Q, R, q= qr(A,Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
-    @test length(inds(Q)) ==   ninds+1 #+1 to account for new qr,Link index.
-    @test length(inds(R)) == 4-ninds+1
+    Ainds = inds(A)
+    Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == 4 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
-    @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
- 
+
   @testset "QR Heisenberg MPO tensors" begin
     N = 4
     sites = siteinds("S=1", N; conserve_qns=true)
@@ -117,16 +125,16 @@ using ITensors, LinearAlgebra, Test
       ampo .+= "Sz", j, "Sz", j + 1
     end
     H = MPO(ampo, sites; splitblocks=false)
-    for n in 1:N-1
-      W=H[n]
-      ilr=filterinds(W,tags="l=$n")[1]
-      ilq=noncommoninds(W,ilr)
-      Q,R,q=qr(W,ilq)
+    for n in 1:(N - 1)
+      W = H[n]
+      ilr = filterinds(W; tags="l=$n")[1]
+      ilq = noncommoninds(W, ilr)
+      Q, R, q = qr(W, ilq)
       @test W ≈ Q * R atol = 1e-13
       # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
       # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
       # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
-      @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+      @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
     end
   end
   @testset "factorize with QR" begin

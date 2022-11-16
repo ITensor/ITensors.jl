@@ -360,36 +360,32 @@ function noinds_error_message(decomp::String)
    treating the ITensor as a matrix from the primed to the unprimed indices."
 end
 
-
-
-
-
-function add_trivial_index(A::ITensor,Ainds)
+function add_trivial_index(A::ITensor, Ainds)
   α = trivial_index(Ainds) #If Ainds[1] has no QNs makes Index(1), otherwise Index(QN()=>1)
   vα = onehot(eltype(A), α => 1)
   A *= vα
-  return A,vα,[α]
+  return A, vα, [α]
 end
 
-function add_trivial_index(A::ITensor,Linds,Rinds)
-  vαl,vαr=nothing,nothing
+function add_trivial_index(A::ITensor, Linds, Rinds)
+  vαl, vαr = nothing, nothing
   if isempty(Linds)
-    A,vαl,Linds=add_trivial_index(A,Rinds)
+    A, vαl, Linds = add_trivial_index(A, Rinds)
   end
   if isempty(Rinds)
-    A,vαr,Rinds=add_trivial_index(A,Linds)
+    A, vαr, Rinds = add_trivial_index(A, Linds)
   end
-  return A,vαl,vαr,Linds,Rinds
+  return A, vαl, vαr, Linds, Rinds
 end
 
-function remove_trivial_index(Q::ITensor,R::ITensor,vαl,vαr)
+function remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr)
   if !isnothing(vαl) #should have only dummy + qr,Link
-    Q*=dag(vαl)
+    Q *= dag(vαl)
   end
   if !isnothing(vαr) #should have only dummy + qr,Link
-    R*=dag(vαr)
+    R *= dag(vαr)
   end
-  return Q,R
+  return Q, R
 end
 
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
@@ -401,13 +397,15 @@ function qr(A::ITensor, Linds...; kwargs...)
   lre = isempty(Lis) || isempty(Ris)
   # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
   # be empty.  A essentially becomes 1D after collection.
-  if (lre) A,vαl,vαr,Lis,Ris=add_trivial_index(A,Lis,Ris) end
-  
+  if (lre)
+    A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
+  end
+
   #
   #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
   #
-  CL,CR = combiner(Lis...),combiner(Ris...)
-  cL,cR = combinedind(CL),combinedind(CR)
+  CL, CR = combiner(Lis...), combiner(Ris...)
+  cL, cR = combinedind(CL), combinedind(CR)
   AC = A * CR * CL
   #
   #  Make sure we don't accidentally pass the transpose into the matrix qr routine.
@@ -435,10 +433,12 @@ function qr(A::ITensor, Linds...; kwargs...)
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
-  Q, R = itensor(QT) * dag(CL), itensor(RT)* dag(CR)
- 
+  Q, R = itensor(QT) * dag(CL), itensor(RT) * dag(CR)
+
   # Conditionally remove dummy indices.
-  if (lre) Q,R = remove_trivial_index(Q,R,vαl,vαr) end
+  if (lre)
+    Q, R = remove_trivial_index(Q, R, vαl, vαr)
+  end
   #
   # fix up the tag name for the index between Q and R.
   #  

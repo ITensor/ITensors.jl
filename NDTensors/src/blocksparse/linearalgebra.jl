@@ -300,104 +300,98 @@ end
 #
 #  This code thanks to Niklas Tausendpfund https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where{ElT, StoreT,IndsT}
-    
+function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where {ElT,StoreT,IndsT}
+
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
-  nzblocksT  = nzblocks(T)
-  
+  nzblocksT = nzblocks(T)
+
   Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
   Rs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
-  
-  for (jj,b) in enumerate(eachnzblock(T))
-      blockT = blockview(T,b)
-      QRb = qr(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
-      
-      if(isnothing(QRb))
-          return nothing
-      end
-      
-      Q, R   = QRb
-      Qs[jj] = Q
-      Rs[jj] = R
-      
-  end   
-  
-  
+
+  for (jj, b) in enumerate(eachnzblock(T))
+    blockT = blockview(T, b)
+    QRb = qr(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+
+    if (isnothing(QRb))
+      return nothing
+    end
+
+    Q, R = QRb
+    Qs[jj] = Q
+    Rs[jj] = R
+  end
+
   nb1_lt_nb2 = (
-           nblocks(T)[1] < nblocks(T)[2] ||
-          (nblocks(T)[1] == nblocks(T)[2] && dim(T, 1) < dim(T, 2))
-        )
+    nblocks(T)[1] < nblocks(T)[2] ||
+    (nblocks(T)[1] == nblocks(T)[2] && dim(T, 1) < dim(T, 2))
+  )
 
   # setting the right index of the Q isometry, this should be
   # the smaller index of the two indices of of T
-  qindl = ind(T,1)
+  qindl = ind(T, 1)
   if nb1_lt_nb2
-      qindr = sim(ind(T, 1))
+    qindr = sim(ind(T, 1))
   else
-      qindr = sim(ind(T, 2))
+    qindr = sim(ind(T, 2))
   end
-  
+
   # can qindr have more blocks than T?
   if nblocks(qindr) > nnzblocksT
-      resize!(qindr, nnzblocksT)
+    resize!(qindr, nnzblocksT)
   end
-  
+
   for n in 1:nnzblocksT
-      q_dim_red = minimum(dims(Rs[n]))
-      NDTensors.setblockdim!(qindr, q_dim_red, n)
+    q_dim_red = minimum(dims(Rs[n]))
+    NDTensors.setblockdim!(qindr, q_dim_red, n)
   end
-  
+
   # correcting the direction of the arrow
   # since qind2r is basically a copy of qind1r
   # if one have to be corrected the other one 
   # should also be corrected
-  if(dir(qindr) != dir(qindl))
-      qindr = dag(qindr)
+  if (dir(qindr) != dir(qindl))
+    qindr = dag(qindr)
   end
-  
+
   indsQ = setindex(inds(T), dag(qindr), 2)
   indsR = setindex(inds(T), qindr, 1)
-  
+
   nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
-  
+
   for n in 1:nnzblocksT
-      blockT = nzblocksT[n]
-      
-      blockQ = (blockT[1], UInt(n))
-      nzblocksQ[n] = blockQ
-     
-      blockR = (UInt(n), blockT[2])
-      nzblocksR[n] = blockR
+    blockT = nzblocksT[n]
+
+    blockQ = (blockT[1], UInt(n))
+    nzblocksQ[n] = blockQ
+
+    blockR = (UInt(n), blockT[2])
+    nzblocksR[n] = blockR
   end
-  
+
   Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
   R = BlockSparseTensor(ElT, undef, nzblocksR, indsR)
-  
-  
+
   for n in 1:nnzblocksT
-      Qb, Rb = Qs[n], Rs[n]
-      blockQ = nzblocksQ[n]
-      blockR = nzblocksR[n]
-      
-       if VERSION < v"1.5"
-          # In v1.3 and v1.4 of Julia, Ub has
-          # a very complicated view wrapper that
-          # can't be handled efficiently
-          Qb = copy(Qb)
-          Rb  = copy(Vb)
-      end
-      
-      blockview(Q, blockQ) .= Qb
-      blockview(R, blockR) .= Rb
+    Qb, Rb = Qs[n], Rs[n]
+    blockQ = nzblocksQ[n]
+    blockR = nzblocksR[n]
+
+    if VERSION < v"1.5"
+      # In v1.3 and v1.4 of Julia, Ub has
+      # a very complicated view wrapper that
+      # can't be handled efficiently
+      Qb = copy(Qb)
+      Rb = copy(Vb)
+    end
+
+    blockview(Q, blockQ) .= Qb
+    blockview(R, blockR) .= Rb
   end
-  
-  
-  
+
   return Q, R
 end
-
 
 function exp(
   T::Union{BlockSparseMatrix{ElT},Hermitian{ElT,<:BlockSparseMatrix{ElT}}}
