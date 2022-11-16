@@ -75,39 +75,31 @@ using ITensors, LinearAlgebra, Test
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
   
-  @testset "QR block sparse with (l) collection on Q" begin  
-    l = Index(QN("Sz", 0) => 3; tags="l")
+  @testset "QR block sparse on MPS tensor with all possible collections on Q,R" for ninds in [0,1,2,3]  
+    l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz",-1) => 1, QN("Sz",1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
-    A = randomITensor(l, s,dag(s'), r)
-    @test flux(A)==QN("Sz", 0)
-    Q, R, q= qr(A,l) 
+    A = randomITensor(l, s, r)
+    Ainds=inds(A)
+    Q, R, q= qr(A,Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(Q)) ==   ninds+1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == 3-ninds+1
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
-  @testset "QR block sparse with (l,s) collection on Q" begin  
-    l = Index(QN("Sz", 0) => 3; tags="l")
+
+  @testset "QR block sparse on MPO tensor with all possible collections on Q,R" for ninds in [0,1,2,3,4]  
+    l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz",-1) => 1, QN("Sz",1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
-    A = randomITensor(l, s,dag(s'), r)
-    @test flux(A)==QN("Sz", 0)
-    Q, R, q= qr(A,l,s) 
-    @test A ≈ Q * R atol = 1e-13
-    # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
-    # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
-    # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
-    @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
-  end
-  @testset "QR block sparse with (l,s,r) collection on Q" begin  
-    l = Index(QN("Sz", 0) => 3; tags="l")
-    s = Index(QN("Sz",-1) => 1, QN("Sz",1) => 1; tags="s")
-    r = Index(QN("Sz", 0) => 3; tags="r")
-    A = randomITensor(l, s,dag(s'), r)
-    @test flux(A)==QN("Sz", 0)
-    Q, R, q= qr(A,l,s,r) 
+    A = randomITensor(l, s, dag(s'), r)
+    Ainds=inds(A)
+    Q, R, q= qr(A,Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(Q)) ==   ninds+1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == 4-ninds+1
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.

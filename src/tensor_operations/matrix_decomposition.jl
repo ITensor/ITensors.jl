@@ -363,8 +363,13 @@ end
 
 #QR a block sparse Rank 2 tensor.
 function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where{ElT, StoreT,IndsT}
-  Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
-  Rs = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
+    
+  # getting total number of blocks
+  nnzblocksT = nnzblocks(T)
+  nzblocksT  = nzblocks(T)
+  
+  Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+  Rs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
   
   for (jj,b) in enumerate(eachnzblock(T))
       blockT = blockview(T,b)
@@ -380,9 +385,6 @@ function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where{ElT, Stor
       
   end   
   
-  # getting total number of blocks
-  nnzblocksT = nnzblocks(T)
-  nzblocksT  = nzblocks(T)
   
   nb1_lt_nb2 = (
            nblocks(T)[1] < nblocks(T)[2] ||
@@ -417,16 +419,8 @@ function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where{ElT, Stor
   end
   
   indsQ = setindex(inds(T), dag(qindr), 2)
-  
-  # R left index
-  rindl = qindr
-  rindr = ind(T,2)
-  
-  # if(dir(rindl) != dir(rindr))
-  #     rindl = dag(rindl)
-  # end
-  
   indsR = setindex(inds(T), qindr, 1)
+  
   nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
   
@@ -436,10 +430,10 @@ function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where{ElT, Stor
       blockQ = (blockT[1], UInt(n))
       nzblocksQ[n] = blockQ
      
-      blockR = (blockT[2], UInt(n))
+      blockR = (UInt(n), blockT[2])
       nzblocksR[n] = blockR
   end
-
+  
   Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
   R = BlockSparseTensor(ElT, undef, nzblocksR, indsR)
   
@@ -476,6 +470,7 @@ function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where{ElT, Stor
   
   return Q, R
 end
+
 
 
 function add_trivial_index(A::ITensor,Ainds)
