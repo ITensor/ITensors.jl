@@ -106,7 +106,29 @@ using ITensors, LinearAlgebra, Test
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
-
+ 
+  @testset "QR Heisenberg MPO tensors" begin
+    N = 4
+    sites = siteinds("S=1", N; conserve_qns=true)
+    ampo = OpSum()
+    for j in 1:(N - 1)
+      ampo .+= 0.5, "S+", j, "S-", j + 1
+      ampo .+= 0.5, "S-", j, "S+", j + 1
+      ampo .+= "Sz", j, "Sz", j + 1
+    end
+    H = MPO(ampo, sites; splitblocks=false)
+    for n in 1:N-1
+      W=H[n]
+      ilr=filterinds(W,tags="l=$n")[1]
+      ilq=noncommoninds(W,ilr)
+      Q,R,q=qr(W,ilq)
+      @test W ≈ Q * R atol = 1e-13
+      # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
+      # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
+      # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
+      @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+    end
+  end
   @testset "factorize with QR" begin
     l = Index(5, "l")
     s = Index(2, "s")
