@@ -360,6 +360,124 @@ function noinds_error_message(decomp::String)
    treating the ITensor as a matrix from the primed to the unprimed indices."
 end
 
+
+#QR a block sparse Rank 2 tensor.
+function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where{ElT, StoreT,IndsT}
+  Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
+  Rs = Vector{DenseTensor{ElT,2}}(undef, nnzblocks(T))
+  
+  for (jj,b) in enumerate(eachnzblock(T))
+      blockT = blockview(T,b)
+      QRb = qr(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+      
+      if(isnothing(QRb))
+          return nothing
+      end
+      
+      Q, R   = QRb
+      Qs[jj] = Q
+      Rs[jj] = R
+      
+  end   
+  
+  # getting total number of blocks
+  nnzblocksT = nnzblocks(T)
+  nzblocksT  = nzblocks(T)
+  
+  nb1_lt_nb2 = (
+           nblocks(T)[1] < nblocks(T)[2] ||
+          (nblocks(T)[1] == nblocks(T)[2] && dim(T, 1) < dim(T, 2))
+        )
+
+  # setting the right index of the Q isometry, this should be
+  # the smaller index of the two indices of of T
+  qindl = ind(T,1)
+  if nb1_lt_nb2
+      qindr = sim(ind(T, 1))
+  else
+      qindr = sim(ind(T, 2))
+  end
+  
+  # can qindr have more blocks than T?
+  if nblocks(qindr) > nnzblocksT
+      resize!(qindr, nnzblocksT)
+  end
+  
+  for n in 1:nnzblocksT
+      q_dim_red = minimum(dims(Rs[n]))
+      NDTensors.setblockdim!(qindr, q_dim_red, n)
+  end
+  
+  # correcting the direction of the arrow
+  # since qind2r is basically a copy of qind1r
+  # if one have to be corrected the other one 
+  # should also be corrected
+  if(dir(qindr) != dir(qindl))
+      qindr = dag(qindr)
+  end
+  
+  indsQ = setindex(inds(T), dag(qindr), 2)
+  
+  # R left index
+  rindl = qindr
+  rindr = ind(T,2)
+  
+  # if(dir(rindl) != dir(rindr))
+  #     rindl = dag(rindl)
+  # end
+  
+  indsR = setindex(inds(T), qindr, 1)
+  nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
+  nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
+  
+  for n in 1:nnzblocksT
+      blockT = nzblocksT[n]
+      
+      blockQ = (blockT[1], UInt(n))
+      nzblocksQ[n] = blockQ
+     
+      blockR = (blockT[2], UInt(n))
+      nzblocksR[n] = blockR
+  end
+
+  Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
+  R = BlockSparseTensor(ElT, undef, nzblocksR, indsR)
+  
+  
+  for n in 1:nnzblocksT
+      Qb, Rb = Qs[n], Rs[n]
+      blockQ = nzblocksQ[n]
+      blockR = nzblocksR[n]
+      
+       if VERSION < v"1.5"
+          # In v1.3 and v1.4 of Julia, Ub has
+          # a very complicated view wrapper that
+          # can't be handled efficiently
+          Qb = copy(Qb)
+          Rb  = copy(Vb)
+      end
+      
+      blockview(Q, blockQ) .= Qb
+      blockview(R, blockR) .= Rb
+  end
+  
+  # correcting the fluxes of the 
+  # two tensors, such that 
+  # Q has 0 flux for all blocks
+  # and R has the total flux of the system
+  for b in nzblocks(Q)
+      i1 = inds(Q)[1]
+      i2 = inds(Q)[2]
+      r1 = inds(R)[1]
+      newqn = -dir(i2) * flux(i1 => Block(b[1]))
+      ITensors.setblockqn!(i2, newqn, b[2])
+      ITensors.setblockqn!(r1, newqn, b[2])
+  end
+  
+  return Q, R
+end
+
+
 function add_trivial_index(A::ITensor,Ainds)
   α = trivial_index(Ainds) #If Ainds[1] has no QNs makes Index(1), otherwise Index(QN()=>1)
   vα = onehot(eltype(A), α => 1)
@@ -368,67 +486,66 @@ function add_trivial_index(A::ITensor,Ainds)
 end
 
 function add_trivial_index(A::ITensor,Linds,Rinds)
+  vαl,vαr=nothing,nothing
   if isempty(Linds)
-    A,vα,Linds=add_trivial_index(A,Rinds)
-  elseif isempty(Rinds)
-    A,vα,Rinds=add_trivial_index(A,Linds)
-  else
-    vα=nothing
+    A,vαl,Linds=add_trivial_index(A,Rinds)
   end
-  return A,vα,Linds,Rinds
+  if isempty(Rinds)
+    A,vαr,Rinds=add_trivial_index(A,Linds)
+  end
+  return A,vαl,vαr,Linds,Rinds
 end
 
-function remove_trivial_index(Q::ITensor,R::ITensor,vα::ITensor)
-  if length(inds(Q))==2 #should have only dummy + qr,Link
-    Q*=dag(vα)
-  elseif length(inds(R))==2 #should have only dummy + qr,Link
-    R*=dag(vα)
-  else
-    @error "Should be impossible"
+function remove_trivial_index(Q::ITensor,R::ITensor,vαl,vαr)
+  if !isnothing(vαl) #should have only dummy + qr,Link
+    Q*=dag(vαl)
+  end
+  if !isnothing(vαr) #should have only dummy + qr,Link
+    R*=dag(vαr)
   end
   return Q,R
 end
 
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 
-# TODO: write this in terms of combiners and then
-# call qr on the order-2 tensors directly
 function qr(A::ITensor, Linds...; kwargs...)
-  tags::TagSet = get(kwargs, :tags, "Link,qr")
+  qtag::TagSet = get(kwargs, :tags, "Link,qr") #tag for new index between Q and R
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
   lre = isempty(Lis) || isempty(Ris)
-  
   # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
   # be empty.  A essentially becomes 1D after collection.
-  if (lre) A,vα,Lis,Ris=add_trivial_index(A,Lis,Ris) end
+  if (lre) A,vαl,vαr,Lis,Ris=add_trivial_index(A,Lis,Ris) end
   
-  CL = combiner(Lis...)
-  CR = combiner(Ris...)
+  #
+  #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
+  #
+  CL,CR = combiner(Lis...),combiner(Ris...)
+  cL,cR = combinedind(CL),combinedind(CR)
   AC = A * CR * CL
-  
-  cL = combinedind(CL)
-  cR = combinedind(CR)
-
+  #
+  #  Make sure we don't accidentally pass the transpose into the matrix qr routine.
+  #
   if inds(AC) != IndexSet(cL, cR)
     AC = permute(AC, cL, cR)
   end
-
+  # qr the matrix.
   QT, RT = qr(tensor(AC); kwargs...)
-  QC, RC = itensor(QT), itensor(RT)
-  Q = QC * dag(CL)
-  R = RC * dag(CR)
-
-  # Conditionally remove dummy index.
-  if (lre) Q,R = remove_trivial_index(Q,R,vα) end
-
-  
+  #
+  #  Undo the combine oepration, to recover all tensor indices.
+  #
+  Q, R = itensor(QT) * dag(CL), itensor(RT)* dag(CR)
+ 
+  # Conditionally remove dummy indices.
+  if (lre) Q,R = remove_trivial_index(Q,R,vαl,vαr) end
+  #
+  # fix up the tag name for the index between Q and R.
+  #  
   q = commonind(Q, R)
-  settags!(Q, tags, q)
-  settags!(R, tags, q)
-  q = settags(q, tags)
+  settags!(Q, qtag, q)
+  settags!(R, qtag, q)
+  q = settags(q, qtag)
 
-  
   return Q, R, q
 end
 

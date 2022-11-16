@@ -75,16 +75,45 @@ using ITensors, LinearAlgebra, Test
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
   
-  #= @testset "QR block sparse with (l,s) collection on Q" begin  
-    l = Index(QN("Sz", 0) => 5; tags="l")
+  @testset "QR block sparse with (l) collection on Q" begin  
+    l = Index(QN("Sz", 0) => 3; tags="l")
     s = Index(QN("Sz",-1) => 1, QN("Sz",1) => 1; tags="s")
-    r = Index(QN("Sz", 0) => 5; tags="r")
-    A = randomITensor(l, s, r)
-    @show A
+    r = Index(QN("Sz", 0) => 3; tags="r")
+    A = randomITensor(l, s,dag(s'), r)
+    @test flux(A)==QN("Sz", 0)
+    Q, R, q= qr(A,l) 
+    @test A ≈ Q * R atol = 1e-13
+    # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
+    # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
+    # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
+    @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+  end
+  @testset "QR block sparse with (l,s) collection on Q" begin  
+    l = Index(QN("Sz", 0) => 3; tags="l")
+    s = Index(QN("Sz",-1) => 1, QN("Sz",1) => 1; tags="s")
+    r = Index(QN("Sz", 0) => 3; tags="r")
+    A = randomITensor(l, s,dag(s'), r)
+    @test flux(A)==QN("Sz", 0)
     Q, R, q= qr(A,l,s) 
     @test A ≈ Q * R atol = 1e-13
-    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-  end =#
+    # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
+    # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
+    # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
+    @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+  end
+  @testset "QR block sparse with (l,s,r) collection on Q" begin  
+    l = Index(QN("Sz", 0) => 3; tags="l")
+    s = Index(QN("Sz",-1) => 1, QN("Sz",1) => 1; tags="s")
+    r = Index(QN("Sz", 0) => 3; tags="r")
+    A = randomITensor(l, s,dag(s'), r)
+    @test flux(A)==QN("Sz", 0)
+    Q, R, q= qr(A,l,s,r) 
+    @test A ≈ Q * R atol = 1e-13
+    # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
+    # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
+    # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
+    @test norm(dense(Q*dag(prime(Q, q)))-δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+  end
 
   @testset "factorize with QR" begin
     l = Index(5, "l")
