@@ -1,12 +1,20 @@
-function _contract(A::Tensor, B::Tensor)
-  labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
-  return contract(A, labelsA, B, labelsB)
+function _contract(A::Tensor, B::Tensor; kwargs...)
+  if haskey(kwargs,:buf)
+    cinds = noncommonind(A,B)
+    bufsize = dim(cinds);
+    C = tensor(Dense(view(kwargs[:buf], (1:bufsize))), cinds)
+    labelsC, labelsA, labelsB = compute_contraction_labels(inds(C),inds(A), inds(B))
+    NDTensors.contract!(C,labelsC,A,labelsA,B,labelsB,1.0,0.0; kwargs...);
+    return C
+  end
+    labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
+    return contract(A, labelsA, B, labelsB)
   # TODO: Alternative to try (`noncommoninds` is too slow right now)
   #return _contract!!(EmptyTensor(Float64, _Tuple(noncommoninds(inds(A), inds(B)))), A, B)
 end
 
-function _contract(A::ITensor, B::ITensor)::ITensor
-  C = itensor(_contract(tensor(A), tensor(B)))
+function _contract(A::ITensor, B::ITensor; kwargs...)::ITensor
+  C = itensor(_contract(tensor(A), tensor(B);kwargs...))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
     println("Contraction resulted in ITensor with $(order(C)) indices, which is greater
@@ -91,7 +99,7 @@ function (A::ITensor * B::ITensor)::ITensor
   return contract(A, B)
 end
 
-function contract(A::ITensor, B::ITensor)::ITensor
+function contract(A::ITensor, B::ITensor; kwargs...)::ITensor
   NA::Int = ndims(A)
   NB::Int = ndims(B)
   if NA == 0 && NB == 0
@@ -101,7 +109,7 @@ function contract(A::ITensor, B::ITensor)::ITensor
   elseif NB == 0
     return iscombiner(B) ? _contract(B, A) : B[] * A
   else
-    C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
+    C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B; kwargs...)
     return C
   end
 end
@@ -274,7 +282,7 @@ end
 
 contract(As::ITensor...; kwargs...)::ITensor = contract(As; kwargs...)
 
-_contract(As, sequence::Int) = As[sequence]
+_contract(As, sequence::Int; kwargs...) = As[sequence]
 
 # Given a contraction sequence, contract the tensors recursively according
 # to that sequence.
@@ -284,28 +292,28 @@ end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
+function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0; kwargs...)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
-    tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), tensor(B), _Tuple(labelsB), α, β
+    tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), tensor(B), _Tuple(labelsB), α, β; kwargs...
   )
   setstorage!(C, storage(CT))
   setinds!(C, inds(C))
   return C
 end
 
-function _contract!!(C::Tensor, A::Tensor, B::Tensor)
+function _contract!!(C::Tensor, A::Tensor, B::Tensor; kwargs...)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(C, labelsC, A, labelsA, B, labelsB)
+  CT = NDTensors.contract!!(C, labelsC, A, labelsA, B, labelsB; kwargs...)
   return CT
 end
 
 # This is necessary for now since not all types implement contract!!
 # with non-trivial α and β
-function contract!(C::ITensor, A::ITensor, B::ITensor)::ITensor
-  return settensor!(C, _contract!!(tensor(C), tensor(A), tensor(B)))
+function contract!(C::ITensor, A::ITensor, B::ITensor; kwargs...)::ITensor
+  return settensor!(C, _contract!!(tensor(C), tensor(A), tensor(B); kwargs...))
 end
 
 """
