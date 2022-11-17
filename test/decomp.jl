@@ -81,14 +81,19 @@ using ITensors, LinearAlgebra, Test
                                                                                     [
     0, 1, 2, 3
   ]
-    l = dag(Index(QN("Sz", 0) => 3; tags="l"))
+    expected_Qflux=[QN()      ,QN("Sz",0),QN("Sz", 2),QN("Sz",0)]
+    expected_Rflux=[QN("Sz",0),QN("Sz",0),QN("Sz",-2),QN()]
+    l = dag(Index(QN("Sz", 0) => 1,QN("Sz", 1) => 1,QN("Sz", -1) => 1; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
-    r = Index(QN("Sz", 0) => 3; tags="r")
+    r = Index(QN("Sz", 0) => 1,QN("Sz", 1) => 1,QN("Sz", -1) => 1; tags="r")
     A = randomITensor(l, s, r)
+    @test flux(A)==QN("Sz", 0)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 3 - ninds + 1
+    @test flux(Q)==expected_Qflux[ninds+1]
+    @test flux(R)==expected_Rflux[ninds+1]
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
@@ -100,14 +105,19 @@ using ITensors, LinearAlgebra, Test
                                                                                     [
     0, 1, 2, 3, 4
   ]
+    expected_Qflux=[QN()      ,QN("Sz",0),QN("Sz", 2),QN("Sz",0),QN("Sz",0)]
+    expected_Rflux=[QN("Sz",0),QN("Sz",0),QN("Sz",-2),QN("Sz",0),QN()]
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
     A = randomITensor(l, s, dag(s'), r)
+    @test flux(A)==QN("Sz", 0)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 4 - ninds + 1
+    @test flux(Q)==expected_Qflux[ninds+1]
+    @test flux(R)==expected_Rflux[ninds+1]
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
@@ -127,9 +137,12 @@ using ITensors, LinearAlgebra, Test
     H = MPO(ampo, sites; splitblocks=false)
     for n in 1:(N - 1)
       W = H[n]
+      @test flux(W)==QN("Sz", 0)
       ilr = filterinds(W; tags="l=$n")[1]
       ilq = noncommoninds(W, ilr)
       Q, R, q = qr(W, ilq)
+      @test flux(Q)==QN("Sz", 4)
+      @test flux(R)==QN("Sz",-4)
       @test W ≈ Q * R atol = 1e-13
       # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
       # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
