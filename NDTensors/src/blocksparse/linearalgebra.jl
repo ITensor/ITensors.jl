@@ -296,11 +296,10 @@ function LinearAlgebra.eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
-#QR a block sparse Rank 2 tensor.
-#
+# QR a block sparse Rank 2 tensor.
 #  This code thanks to Niklas Tausendpfund https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qr(T::BlockSparseTensor{ElT,2,StoreT,IndsT}; kwargs...) where {ElT,StoreT,IndsT}
+function LinearAlgebra.qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
 
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
