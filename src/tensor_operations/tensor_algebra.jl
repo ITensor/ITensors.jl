@@ -1,20 +1,20 @@
 function _contract(A::Tensor, B::Tensor; kwargs...)
-  if haskey(kwargs,:buf)
-    cinds = noncommonind(A,B)
-    bufsize = dim(cinds);
+  if haskey(kwargs, :buf)
+    cinds = noncommonind(A, B)
+    bufsize = dim(cinds)
     C = tensor(Dense(view(kwargs[:buf], (1:bufsize))), cinds)
-    labelsC, labelsA, labelsB = compute_contraction_labels(inds(C),inds(A), inds(B))
-    NDTensors.contract!(C,labelsC,A,labelsA,B,labelsB,1.0,0.0; kwargs...);
+    labelsC, labelsA, labelsB = compute_contraction_labels(inds(C), inds(A), inds(B))
+    NDTensors.contract!(C, labelsC, A, labelsA, B, labelsB, 1.0, 0.0; kwargs...)
     return C
   end
-    labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
-    return contract(A, labelsA, B, labelsB)
+  labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
+  return contract(A, labelsA, B, labelsB)
   # TODO: Alternative to try (`noncommoninds` is too slow right now)
   #return _contract!!(EmptyTensor(Float64, _Tuple(noncommoninds(inds(A), inds(B)))), A, B)
 end
 
 function _contract(A::ITensor, B::ITensor; kwargs...)::ITensor
-  C = itensor(_contract(tensor(A), tensor(B);kwargs...))
+  C = itensor(_contract(tensor(A), tensor(B); kwargs...))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
     println("Contraction resulted in ITensor with $(order(C)) indices, which is greater
@@ -292,11 +292,21 @@ end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0; kwargs...)::ITensor
+function contract!(
+  C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0; kwargs...
+)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
-    tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), tensor(B), _Tuple(labelsB), α, β; kwargs...
+    tensor(C),
+    _Tuple(labelsC),
+    tensor(A),
+    _Tuple(labelsA),
+    tensor(B),
+    _Tuple(labelsB),
+    α,
+    β;
+    kwargs...,
   )
   setstorage!(C, storage(CT))
   setinds!(C, inds(C))
