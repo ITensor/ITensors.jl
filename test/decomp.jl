@@ -1,4 +1,5 @@
 using ITensors, LinearAlgebra, Test
+import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this?
 
 @testset "ITensor Decompositions" begin
   @testset "truncate!" begin
@@ -49,8 +50,8 @@ using ITensors, LinearAlgebra, Test
     )
   end
 
-  @testset "QR/RQ dense on MPS tensor with all possible collections on Q,R" for ninds in
-                                                                             [0, 1, 2, 3]
+  @testset "QR/RQ/QL/LQ decomp on MPS dense tensor with all possible collections on Q/R/L" for ninds in
+                                                                             [0,1,2,3]
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(10, "r")
@@ -61,12 +62,32 @@ using ITensors, LinearAlgebra, Test
     @test length(inds(R)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test q==commonind(Q,R)
+    @test hastags(q,"qr")
 
     R, Q, q = rq(A, Ainds[1:ninds]) 
-    @test length(inds(R)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test q==commonind(Q,R)
+    @test hastags(q,"rq")
+
+    L, Q, q = lq(A,Ainds[1:ninds]) 
+    @test length(inds(L)) == ninds + 1 #+1 to account for new lq,Link index.
+    @test length(inds(Q)) == 3 - ninds + 1
+    @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test q==commonind(Q,L)
+    @test hastags(q,"lq")
+
+    Q, L, q = ITensors.ql(A,Ainds[1:ninds]) 
+    @test length(inds(Q)) == ninds + 1 #+1 to account for new lq,Link index.
+    @test length(inds(L)) == 3 - ninds + 1
+    @test A ≈ Q * L atol = 1e-13 
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    @test q==commonind(Q,L)
+    @test hastags(q,"ql")
   end
 
   @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in
@@ -83,7 +104,7 @@ using ITensors, LinearAlgebra, Test
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
     R, Q, q = rq(A, Ainds[1:ninds]) 
-    @test length(inds(R)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
@@ -114,7 +135,7 @@ using ITensors, LinearAlgebra, Test
     expected_Rflux=[QN()      ,QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0)]
     expected_Qflux=[QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0),QN()]
     R, Q, q = rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
-    @test length(inds(R)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test flux(Q)==expected_Qflux[ninds+1]
     @test flux(R)==expected_Rflux[ninds+1]
@@ -149,7 +170,7 @@ using ITensors, LinearAlgebra, Test
     expected_Qflux=[QN()      ,QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0)]
     expected_Rflux=[QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0),QN()]
     R, Q, q = rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
-    @test length(inds(R)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test flux(Q)==expected_Qflux[ninds+1]
     @test flux(R)==expected_Rflux[ninds+1]
