@@ -72,7 +72,15 @@ end
 
 # Overload this function for immutable storage types
 function _contract!!(
-  R::Tensor, labelsR, T1::Tensor, labelsT1, T2::Tensor, labelsT2, α::Number=1, β::Number=0; kwargs...
+  R::Tensor,
+  labelsR,
+  T1::Tensor,
+  labelsT1,
+  T2::Tensor,
+  labelsT2,
+  α::Number=1,
+  β::Number=0;
+  kwargs...,
 )
   if α ≠ 1 || β ≠ 0
     contract!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β; kwargs...)
@@ -84,7 +92,15 @@ end
 
 # Is this generic for all storage types?
 function contract!!(
-  R::Tensor, labelsR, T1::Tensor, labelsT1, T2::Tensor, labelsT2, α::Number=1, β::Number=0; kwargs...
+  R::Tensor,
+  labelsR,
+  T1::Tensor,
+  labelsT1,
+  T2::Tensor,
+  labelsT2,
+  α::Number=1,
+  β::Number=0;
+  kwargs...,
 )
   NR = ndims(R)
   N1 = ndims(T1)
@@ -108,7 +124,7 @@ function contract!!(
     if α ≠ 1 || β ≠ 0
       R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2, α, β; kwargs...)
     else
-      R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2;kwargs...)
+      R = _contract!!(R, labelsR, T1, labelsT1, T2, labelsT2; kwargs...)
     end
   end
   return R

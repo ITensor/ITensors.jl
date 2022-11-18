@@ -770,7 +770,9 @@ function contract!(
   T2::DenseTensor{ElT2,N2},
   labelsT2,
   α::Elα=one(ElR),
-  β::Elβ=zero(ElR),; kwargs...
+  β::Elβ=zero(ElR),
+  ;
+  kwargs...,
 ) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
   # Special case for scalar tensors
   if nnz(T1) == 1 || nnz(T2) == 1
@@ -826,7 +828,9 @@ function _contract!(
   BT::DenseTensor{El,NB},
   props::ContractionProperties,
   α::Number=one(El),
-  β::Number=zero(El),; kwargs...
+  β::Number=zero(El),
+  ;
+  kwargs...,
 ) where {El,NC,NA,NB}
   # TODO: directly use Tensor instead of Array
   C = ReshapedArray(data(storage(CT)), dims(inds(CT)), ())
