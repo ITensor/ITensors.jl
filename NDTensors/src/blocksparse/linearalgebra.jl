@@ -299,6 +299,100 @@ end
 # QR a block sparse Rank 2 tensor.
 #  This code thanks to Niklas Tausendpfund https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
+function rq(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
+
+  # getting total number of blocks
+  nnzblocksT = nnzblocks(T)
+  nzblocksT = nzblocks(T)
+
+  Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+  Rs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+
+  for (jj, b) in enumerate(eachnzblock(T))
+    blockT = blockview(T, b)
+    RQb = rq(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+
+    if (isnothing(RQb))
+      return nothing
+    end
+
+    R, Q = RQb
+    Qs[jj] = Q
+    Rs[jj] = R
+  end
+
+  nb1_lt_nb2 = (
+    nblocks(T)[1] < nblocks(T)[2] ||
+    (nblocks(T)[1] == nblocks(T)[2] && dim(T, 1) < dim(T, 2))
+  )
+
+  # setting the left index of the Q isometry, this should be
+  # the smaller index of the two indices of of T
+  qindr = ind(T, 2)
+  if nb1_lt_nb2
+    qindl = sim(ind(T, 1))
+  else
+    qindl = sim(ind(T, 2))
+  end
+
+  # can qindl have more blocks than T?
+  if nblocks(qindl) > nnzblocksT
+    resize!(qindl, nnzblocksT)
+  end
+
+  for n in 1:nnzblocksT
+    q_dim_red = minimum(dims(Rs[n]))
+    NDTensors.setblockdim!(qindl, q_dim_red, n)
+  end
+
+  # correcting the direction of the arrow
+  # if one have to be corrected the other one 
+  # should also be corrected
+  if (dir(qindl) != dir(qindr))
+    qindl = dag(qindl)
+  end
+
+  indsQ = setindex(inds(T), dag(qindl), 1)
+  indsR = setindex(inds(T), qindl, 2)
+
+  nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
+  nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
+
+  for n in 1:nnzblocksT
+    blockT = nzblocksT[n]
+
+    blockR = (blockT[1], UInt(n))
+    nzblocksR[n] = blockR
+
+    blockQ = (UInt(n), blockT[2])
+    nzblocksQ[n] = blockQ
+  end
+
+  Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
+  R = BlockSparseTensor(ElT, undef, nzblocksR, indsR)
+
+  for n in 1:nnzblocksT
+    Qb, Rb = Qs[n], Rs[n]
+    blockQ = nzblocksQ[n]
+    blockR = nzblocksR[n]
+
+    if VERSION < v"1.5"
+      # In v1.3 and v1.4 of Julia, Ub has
+      # a very complicated view wrapper that
+      # can't be handled efficiently
+      Qb = copy(Qb)
+      Rb = copy(Vb)
+    end
+
+    blockview(Q, blockQ) .= Qb
+    blockview(R, blockR) .= Rb
+  end
+
+  return R, Q
+end
+# QR a block sparse Rank 2 tensor.
+#  This code thanks to Niklas Tausendpfund https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
+#
 function LinearAlgebra.qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
 
   # getting total number of blocks
