@@ -38,7 +38,8 @@ export
   eigen,
   factorize,
   polar,
-  qr,
+  qr, 
+  rq,
   svd,
   diag,
 

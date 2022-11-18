@@ -76,6 +76,21 @@ using ITensors, LinearAlgebra, Test
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
+  
+  @testset "RQ dense on MPS tensor with all possible collections on R,Q" begin
+  #for ninds in [0, 1, 2, 3]
+  
+    l = Index(5, "l")
+    s = Index(2, "s")
+    r = Index(10, "r")
+    A = randomITensor(l, s, r)
+    #Ainds = inds(A)
+    R, Q, q = rq(A, l) 
+    # @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
+    # @test length(inds(R)) == 3 - ninds + 1
+    @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+  end
 
   @testset "QR block sparse on MPS tensor with all possible collections on Q,R" for ninds in
                                                                                     [
@@ -150,6 +165,7 @@ using ITensors, LinearAlgebra, Test
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
     end
   end
+
   @testset "factorize with QR" begin
     l = Index(5, "l")
     s = Index(2, "s")

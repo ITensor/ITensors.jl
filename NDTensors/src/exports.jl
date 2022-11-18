@@ -76,4 +76,7 @@ export
   tensor,
   inds,
   ind,
-  store
+  store,
+
+  # linearalgebra.jl
+  rq

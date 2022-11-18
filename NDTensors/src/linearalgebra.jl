@@ -398,9 +398,96 @@ function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,Ind
   q = dim(q) < dim(r) ? sim(q) : sim(r)
   Qinds = IndsT((ind(T, 1), q))
   Rinds = IndsT((q, ind(T, 2)))
-  Q = tensor(Dense(vec(Matrix(QM))), Qinds)
+  Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
   R = tensor(Dense(vec(RM)), Rinds)
   return Q, R
+end
+
+#
+#  Uses kwargs:positive to decide which rq method to call.
+#
+function rq(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
+  if get(kwargs, :positive, false)
+    RM, QM = rq_positive(matrix(T))
+  else
+    RM, QM = rq(matrix(T))
+  end
+  
+  # Make the new indices to go onto Q and R
+  r, q = inds(T)
+  q = dim(q) < dim(r) ? sim(q) : sim(r)
+  Qinds = IndsT((q,ind(T, 2)))
+  Linds = IndsT((ind(T, 1),q))
+  Q = NDTensors.tensor(NDTensors.Dense(vec(Matrix(QM))), Qinds) #Q was strided
+  R = NDTensors.tensor(NDTensors.Dense(vec(RM)), Linds)
+  return R, Q
+end
+
+#
+# Just flip signs between Q and R to get all the diagonals of R >=0.
+# For rectangular M the indexing for "diagonal" is non-trivial.
+#
+function rq_positive(M::AbstractMatrix)
+  R, sparseQ = rq(M)
+  Q = convert(Matrix, sparseQ)
+  nr,nc = size(R)
+  dr=nr>nc ? nr-nc : 0 #diag is shifted down by dr if nr>nc
+  for r in 1:nr
+    if r<=nc && real(R[r+dr, r]) < 0.0
+      R[1:r+dr, r] *= -1 
+      Q[r,:] *= -1
+    end
+  end
+  return (R, Q)
+end
+
+#
+#  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
+#  before letting lapack overwirte it. 
+#
+function rq(A::AbstractMatrix{T}; kwargs...) where T
+  Base.require_one_based_indexing(A)
+  AA = similar(A, LinearAlgebra._qreltype(T), size(A))
+  copyto!(AA, A)
+  return rq!(AA; kwargs...)
+end
+
+rq!(A::AbstractMatrix) = rq!(A)
+
+#
+# This is where the low level call to lapack actually occurs.  Most of the work is
+# about unpacking Q and R from the A matrix.
+#
+function rq!(A::StridedMatrix{<:LAPACK.BlasFloat})
+  tau=similar(A, Base.min(size(A)...))
+  x=LAPACK.gerqf!(A, tau)
+  
+  # Unpack R from the lower portion of A, before orgql! mangles it!
+  nr,nc=size(A)
+  mn=Base.min(nr,nc)
+  R=similar(A,(nr,mn))
+  for c in 1:mn
+    for r in 1:c+nr-mn
+      R[r,c]=A[r,c+nc-mn]
+    end
+    for r in c+1+nr-mn:nr
+      R[r,c]=0.0
+    end
+  end
+  #
+  # If nr>nc we need shift the orth vectors from the bottom of Q up to top before
+  # unpacking the reflectors.
+  #
+  if mn<nr
+    for c in 1:nc
+      for r in 1:mn
+        A[r,c]=A[r+nr-mn,c]
+      end
+    end
+    A=A[1:mn,:] #whack the extra rows in A or orgrq! will complain
+  end
+  LAPACK.orgrq!(A,tau)
+  return  R,A
 end
 
 # TODO: support alg keyword argument to choose the svd algorithm

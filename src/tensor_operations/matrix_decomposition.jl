@@ -449,6 +449,53 @@ function qr(A::ITensor, Linds...; kwargs...)
 
   return Q, R, q
 end
+rq(A::ITensor; kwargs...) = error(noinds_error_message("rq"))
+
+function rq(A::ITensor, Linds...; kwargs...)
+  qtag::TagSet = get(kwargs, :tags, "Link,qr") #tag for new index between Q and R
+  Lis = commoninds(A, indices(Linds...))
+  Ris = uniqueinds(A, Lis)
+  lre = isempty(Lis) || isempty(Ris)
+  # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
+  # be empty.  A essentially becomes 1D after collection.
+  if (lre)
+    A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
+  end
+
+  #
+  #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
+  #
+  CL, CR = combiner(Lis...), combiner(Ris...)
+  cL, cR = combinedind(CL), combinedind(CR)
+  AC = A * CR * CL
+  #
+  #  Make sure we don't accidentally pass the transpose into the matrix qr routine.
+  #
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
+  end
+  # qr the matrix.
+  RT, QT = NDTensors.rq(tensor(AC); kwargs...)
+
+    #
+  #  Undo the combine oepration, to recover all tensor indices.
+  #
+  R, Q = itensor(RT) * dag(CL), itensor(QT) * dag(CR)
+
+  # Conditionally remove dummy indices.
+  if (lre)
+    R, Q = remove_trivial_index(R, Q, vαl, vαr)
+  end
+  #
+  # fix up the tag name for the index between Q and R.
+  #  
+  q = commonind(Q, R)
+  settags!(Q, qtag, q)
+  settags!(R, qtag, q)
+  q = settags(q, qtag) 
+
+  return R, Q, q
+end
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
 
