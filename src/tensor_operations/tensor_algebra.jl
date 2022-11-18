@@ -1,6 +1,6 @@
 function _contract(A::Tensor, B::Tensor; kwargs...)
   if haskey(kwargs, :buf)
-    cinds = noncommonind(A, B)
+    cinds = noncommoninds(A, B)
     bufsize = dim(cinds)
     C = tensor(Dense(view(kwargs[:buf], (1:bufsize))), cinds)
     labelsC, labelsA, labelsB = compute_contraction_labels(inds(C), inds(A), inds(B))
