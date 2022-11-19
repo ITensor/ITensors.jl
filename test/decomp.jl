@@ -1,9 +1,5 @@
 using ITensors, LinearAlgebra, Test
-using Printf
-import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this?
-
-#brute force method to control the default float display format.
-Base.show(io::IO, f::Float64) = @printf(io, "%1.3f", f)
+import ITensors: rq,lq,ql #these are in exports.jl, so why the hell do we need this?
 
 #
 #  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
