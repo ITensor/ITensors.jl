@@ -16,6 +16,10 @@
 |:-------------------------------------------------------------------------------:|
 |[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|
 
+|**Download Statistics**
+|:-------------------------------------------------------------------------------:|
+|[![ITensor Downloads](https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/ITensors)](https://pkgs.genieframework.com?packages=ITensors)|
+
 ITensor is a library for rapidly creating correct and efficient
 tensor network algorithms.
 
