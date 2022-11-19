@@ -968,26 +968,6 @@ function LinearAlgebra.svd(
   return U, S, V, spec
 end
 
-# qr decomposition of an order-n tensor according to 
-# positions Lpos and Rpos
-function LinearAlgebra.qr(
-  T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
-) where {N,IndsT,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  QM, RM = qr(M; kwargs...)
-  q = ind(QM, 2)
-  r = ind(RM, 1)
-  # TODO: simplify this by permuting inds(T) by (Lpos,Rpos)
-  # then grab Linds,Rinds
-  Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
-  Qinds = push(Linds, r)
-  Q = reshape(QM, Qinds)
-  Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
-  Rinds = pushfirst(Rinds, r)
-  R = reshape(RM, Rinds)
-  return Q, R
-end
-
 # polar decomposition of an order-n tensor according to positions Lpos
 # and Rpos
 function polar(
