@@ -1,5 +1,76 @@
 using ITensors, LinearAlgebra, Test
+using Printf
 import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this?
+
+#brute force method to control the default float display format.
+Base.show(io::IO, f::Float64) = @printf(io, "%1.3f", f)
+
+#
+#  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
+#
+function is_upper(At::NDTensors.Tensor)::Bool
+  nr,nc=dims(At)
+  dc=Base.max(0,dim(nr)-dim(nc)) #column off set for rectangular matrices.
+  nzeros=0
+  for i in CartesianIndices(At)
+    if i[1]>i[2]+dc
+      if abs(At[i])>0.0 #row>col is lower triangle
+        return false
+      else
+        nzeros+=1
+      end
+    end
+  end
+  #
+  #  Debug code:  Make some noise if At is not a vector and we still found no zeros.
+  #
+  # if nzeros==0 && nr>1 && nc>1 
+  #   @show nr nc dc At
+  # end
+  return true
+end
+
+#
+#  A must be rank 2
+#
+function is_upper(l::Index,A::ITensor, r::Index)::Bool
+  @assert length(inds(A))==2 
+  if inds(A) != IndexSet(l, r)
+    A = permute(A, l, r)
+  end
+  return is_upper(NDTensors.tensor(A))
+end
+
+#
+#  With left index specified
+#
+function is_upper(l::Index,A::ITensor)::Bool
+  other=noncommoninds(A,l)
+  if (length(other)==1)
+    return is_upper(l,A,other[1])
+  else
+    # use combiner to gather all the "other" indices into one.
+    C=combiner(other...)
+    AC=A*C
+    return is_upper(l,AC,combinedind(C))
+  end
+end
+is_lower(l::Index,A::ITensor)::Bool = is_upper(A,l)
+
+#
+#  With right index specified
+#
+function is_upper(A::ITensor,r::Index)::Bool
+  other=noncommoninds(A,r)
+  if (length(other)==1)
+    return is_upper(other[1],A,r)
+  else
+    C=combiner(other...)
+    AC=A*C
+    return is_upper(combinedind(C),AC,r)
+  end
+end
+is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
 
 @testset "ITensor Decompositions" begin
   @testset "truncate!" begin
@@ -50,12 +121,11 @@ import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this
     )
   end
 
-  @testset "QR/RQ/QL/LQ decomp on MPS dense tensor with all possible collections on Q/R/L" for ninds in
-                                                                             [0,1,2,3]
+  @testset "QR/RQ/QL/LQ decomp on MPS dense $elt tensor with all possible collections on Q/R/L" for ninds in [0,1,2,3], elt in [Float64,ComplexF64]
     l = Index(5, "l")
     s = Index(2, "s")
-    r = Index(10, "r")
-    A = randomITensor(l, s, r)
+    r = Index(5, "r")
+    A = randomITensor(elt,l, s, r)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
@@ -64,6 +134,9 @@ import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     @test q==commonind(Q,R)
     @test hastags(q,"qr")
+    if (length(inds(R))>1)
+      @test is_upper(q,R) #specify the left index
+    end
 
     R, Q, q = rq(A, Ainds[1:ninds]) 
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
@@ -72,6 +145,9 @@ import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     @test q==commonind(Q,R)
     @test hastags(q,"rq")
+    if (length(inds(R))>1)
+      @test is_upper(R,q) #specify the right index
+    end
 
     L, Q, q = lq(A,Ainds[1:ninds]) 
     @test length(inds(L)) == ninds + 1 #+1 to account for new lq,Link index.
@@ -80,6 +156,9 @@ import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     @test q==commonind(Q,L)
     @test hastags(q,"lq")
+    if (length(inds(L))>1)
+      @test is_lower(L,q) #specify the right index
+    end
 
     Q, L, q = ITensors.ql(A,Ainds[1:ninds]) 
     @test length(inds(Q)) == ninds + 1 #+1 to account for new lq,Link index.
@@ -88,6 +167,9 @@ import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     @test q==commonind(Q,L)
     @test hastags(q,"ql")
+    if (length(inds(L))>1)
+      @test is_lower(q,L) #specify the right index
+    end
   end
 
   @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in
@@ -342,6 +424,7 @@ import ITensors: lq,ql #these are in exports.jl, so why the hell do we need this
       @test blockdim(u, b) == blockdim(i, b) || blockdim(u, b) >= min_blockdim
     end
   end
+
 end
 
 nothing
