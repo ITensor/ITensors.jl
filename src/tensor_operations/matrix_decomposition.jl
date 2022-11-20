@@ -501,7 +501,7 @@ function rq(A::ITensor, Linds...; kwargs...)
 end
 
 function lq(A::ITensor, Linds...; kwargs...)
-  Q, L, q = qr(A, uniqueinds(A, Linds...))
+  Q, L, q = qr(A, uniqueinds(A, Linds...);kwargs...)
   #
   # fix up the tag name for the index between Q and R.
   #  
@@ -514,7 +514,7 @@ function lq(A::ITensor, Linds...; kwargs...)
 end
 
 function ql(A::ITensor, Linds...; kwargs...)
-  Q, L, q = rq(A, uniqueinds(A, Linds...))
+  Q, L, q = rq(A, uniqueinds(A, Linds...);kwargs...)
   #
   # fix up the tag name for the index between Q and R.
   #  
