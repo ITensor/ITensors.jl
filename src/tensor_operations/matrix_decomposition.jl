@@ -379,10 +379,10 @@ function add_trivial_index(A::ITensor, Linds, Rinds)
 end
 
 function remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr)
-  if !isnothing(vαl) 
+  if !isnothing(vαl)
     Q *= dag(vαl)
   end
-  if !isnothing(vαr) 
+  if !isnothing(vαr)
     R *= dag(vαr)
   end
   return Q, R
@@ -480,7 +480,7 @@ function rq(A::ITensor, Linds...; kwargs...)
   # qr the matrix.
   RT, QT = NDTensors.rq(tensor(AC); kwargs...)
 
-    #
+  #
   #  Undo the combine oepration, to recover all tensor indices.
   #
   R, Q = itensor(RT) * dag(CL), itensor(QT) * dag(CR)
@@ -495,13 +495,13 @@ function rq(A::ITensor, Linds...; kwargs...)
   q = commonind(Q, R)
   settags!(Q, qtag, q)
   settags!(R, qtag, q)
-  q = settags(q, qtag) 
+  q = settags(q, qtag)
 
   return R, Q, q
 end
 
 function lq(A::ITensor, Linds...; kwargs...)
-  Q, L, q = qr(A, uniqueinds(A, Linds...);kwargs...)
+  Q, L, q = qr(A, uniqueinds(A, Linds...); kwargs...)
   #
   # fix up the tag name for the index between Q and R.
   #  
@@ -514,7 +514,7 @@ function lq(A::ITensor, Linds...; kwargs...)
 end
 
 function ql(A::ITensor, Linds...; kwargs...)
-  Q, L, q = rq(A, uniqueinds(A, Linds...);kwargs...)
+  Q, L, q = rq(A, uniqueinds(A, Linds...); kwargs...)
   #
   # fix up the tag name for the index between Q and R.
   #  
