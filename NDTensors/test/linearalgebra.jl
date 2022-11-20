@@ -1,7 +1,6 @@
 using NDTensors
 using LinearAlgebra
 using Test
-import NDTensors: rq #rq is in exports.jl, so why the hell do we need this?
 
 @testset "random_orthog" begin
   n, m = 10, 4
@@ -38,4 +37,24 @@ end
   @test array(Q) * array(Q)' ≈ Diagonal(fill(1.0,nm)) atol = 1e-13
 end
 
+@testset "Dense Rank revealing QR/RQ decomposition" begin
+  n, m = 4,8
+  A = randomTensor(n, m)
+  # make some columns lineary dependent
+  A[2,:]=A[1,:]*1.1
+  A[4,:]=A[1,:]*2.1
+  Q,R=qr(A;epsrr=1e-12)
+  @test dim(Q,2)==n-2 #make 2 columns actually got removed.
+  @test dim(R,1)==n-2 #make 2 rows actually got removed.
+  @test A ≈ Q * R  atol = 1e-12
+  nm=dim(Q,2)
+  @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0,nm)) atol = 1e-12
+
+  R,Q=rq(A;epsrr=1e-12)
+  @test dim(Q,1)==n-2 #make 2 rows actually got removed.
+  @test dim(R,2)==n-2 #make 2 columns actually got removed.
+  @test A ≈ R * Q  atol = 1e-12
+  nm=dim(Q,1)
+  @test array(Q) * array(Q)' ≈ Diagonal(fill(1.0,nm)) atol = 1e-12
+end
 nothing

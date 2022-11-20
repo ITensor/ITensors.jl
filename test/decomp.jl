@@ -1,5 +1,4 @@
 using ITensors, LinearAlgebra, Test
-import ITensors: rq,lq,ql #these are in exports.jl, so why the hell do we need this?
 
 #
 #  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
@@ -12,17 +11,9 @@ function is_upper(At::NDTensors.Tensor)::Bool
     if i[1]>i[2]+dc
       if abs(At[i])>0.0 #row>col is lower triangle
         return false
-      else
-        nzeros+=1
       end
     end
   end
-  #
-  #  Debug code:  Make some noise if At is not a vector and we still found no zeros.
-  #
-  # if nzeros==0 && nr>1 && nc>1 
-  #   @show nr nc dc At
-  # end
   return true
 end
 
@@ -67,6 +58,31 @@ function is_upper(A::ITensor,r::Index)::Bool
   end
 end
 is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
+
+#
+#  Makes all columns lineary depenedent but scaled differently.
+#
+function rank_fix(A::ITensor, Linds...)
+  Lis = commoninds(A, (Linds...))
+  Ris = uniqueinds(A, Lis)
+  #
+  #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
+  #
+  CL, CR = combiner(Lis...), combiner(Ris...)
+  cL, cR = combinedind(CL), combinedind(CR)
+  AC = A * CR * CL
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
+  end
+  At=tensor(AC)
+  nr,nc=dims(At)
+  @assert nc>=2
+  for c in 2:nc
+    At[:,c]=At[:,1]*1.05^c
+  end
+  return itensor(At) * dag(CL) * dag(CR)
+end
+
 
 @testset "ITensor Decompositions" begin
   @testset "truncate!" begin
@@ -117,6 +133,7 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
     )
   end
 
+  # Julia 1.6 makes it very difficult to split the exceedingly long line of code.
   @testset "QR/RQ/QL/LQ decomp on MPS dense $elt tensor with all possible collections on Q/R/L" for ninds in [0,1,2,3], elt in [Float64,ComplexF64]
     l = Index(5, "l")
     s = Index(2, "s")
@@ -134,7 +151,8 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
       @test is_upper(q,R) #specify the left index
     end
 
-    R, Q, q = rq(A, Ainds[1:ninds]) 
+    #Julia 1.6 seems to be very erratic about seeing exported symbols like rq.
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) 
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
@@ -168,6 +186,38 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
     end
   end
 
+  # Julia 1.6 makes it very difficult to split the exceedingly long line of code.
+  @testset "Rank revealing QR/RQ/QL/LQ decomp on MPS dense $elt tensor" for ninds in [1,2,3], elt in [Float64,ComplexF64]
+    l = Index(5, "l")
+    s = Index(2, "s")
+    r = Index(5, "r")
+    A = randomITensor(elt,l, s, s',r)
+  
+    Ainds = inds(A)
+    A=rank_fix(A,Ainds[1:ninds]) #make two sets of column linear dependent on column 1.
+    Q, R, q = qr(A, Ainds[1:ninds];epsrr=1e-12) #calling  qr(A) triggers not supported error.
+    @test dim(q)==1
+    @test A ≈ Q * R atol = 1e-13
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds];epsrr=1e-12) 
+    @test dim(q)==1
+    @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    
+    L, Q, q = lq(A,Ainds[1:ninds];epsrr=1e-12) 
+    @test dim(q)==1
+    @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+
+    Q, L, q = ITensors.ql(A,Ainds[1:ninds];epsrr=1e-12) 
+    @test dim(q)==1
+    @test A ≈ Q * L atol = 1e-13 
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    
+  end
+
+ 
   @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in
                                                                              [0, 1, 2, 3, 4]
     l = Index(5, "l")
@@ -181,7 +231,7 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = rq(A, Ainds[1:ninds]) 
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) 
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
@@ -212,7 +262,7 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
     expected_Rflux=[QN()      ,QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0)]
     expected_Qflux=[QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0),QN()]
-    R, Q, q = rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test flux(Q)==expected_Qflux[ninds+1]
@@ -247,7 +297,7 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
 
     expected_Qflux=[QN()      ,QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0)]
     expected_Rflux=[QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0),QN()]
-    R, Q, q = rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test flux(Q)==expected_Qflux[ninds+1]
@@ -266,7 +316,7 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
     @test min(diag(R)...)>0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    R, Q, q = rq(A, r;positive=true) 
+    R, Q, q = ITensors.rq(A, r;positive=true) 
     @test min(diag(R)...)>0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
@@ -280,7 +330,7 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
     Q, R, q = qr(A, l,s,s';positive=true) 
     @test min(diag(R)...)>0.0
     @test A ≈ Q * R atol = 1e-13
-    R, Q, q = rq(A, r;positive=true) 
+    R, Q, q = ITensors.rq(A, r;positive=true) 
     @test min(diag(R)...)>0.0
     @test A ≈ Q * R atol = 1e-13
   end
@@ -309,7 +359,7 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
       # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-      R, Q, q = rq(W, ilr)
+      R, Q, q = ITensors.rq(W, ilr)
       @test flux(Q)==QN("Sz",0)
       @test flux(R)==QN("Sz",0)
       @test W ≈ Q * R atol = 1e-13
@@ -421,6 +471,7 @@ is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
     end
   end
 
+ 
 end
 
 nothing
