@@ -1,12 +1,11 @@
-using ITensors, LinearAlgebra, Test
+using ITensors, NDTensors, LinearAlgebra, Test
 
 #
 #  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
 #
-function is_upper(At::NDTensors.Tensor)::Bool
+function is_upper(At::Tensor)::Bool
   nr, nc = dims(At)
   dc = Base.max(0, dim(nr) - dim(nc)) #column off set for rectangular matrices.
-  nzeros = 0
   for i in CartesianIndices(At)
     if i[1] > i[2] + dc
       if abs(At[i]) > 0.0 #row>col is lower triangle
@@ -75,7 +74,7 @@ function rank_fix(A::ITensor, Linds...)
     AC = permute(AC, cL, cR)
   end
   At=tensor(AC)
-  nr,nc=dims(At)
+  nc=dim(At,2)
   @assert nc>=2
   for c in 2:nc
     At[:,c]=At[:,1]*1.05^c
@@ -194,24 +193,24 @@ end
     A = randomITensor(elt,l, s, s',r)
   
     Ainds = inds(A)
-    A=rank_fix(A,Ainds[1:ninds]) #make two sets of column linear dependent on column 1.
+    A=rank_fix(A,Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
     Q, R, q = qr(A, Ainds[1:ninds];epsrr=1e-12) #calling  qr(A) triggers not supported error.
-    @test dim(q)==1
+    @test dim(q)==1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     
     R, Q, q = ITensors.rq(A, Ainds[1:ninds];epsrr=1e-12) 
-    @test dim(q)==1
+    @test dim(q)==1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     
     L, Q, q = lq(A,Ainds[1:ninds];epsrr=1e-12) 
-    @test dim(q)==1
+    @test dim(q)==1 #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
     Q, L, q = ITensors.ql(A,Ainds[1:ninds];epsrr=1e-12) 
-    @test dim(q)==1
+    @test dim(q)==1 #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     
