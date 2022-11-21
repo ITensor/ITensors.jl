@@ -4,12 +4,12 @@ using ITensors, LinearAlgebra, Test
 #  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
 #
 function is_upper(At::NDTensors.Tensor)::Bool
-  nr,nc=dims(At)
-  dc=Base.max(0,dim(nr)-dim(nc)) #column off set for rectangular matrices.
-  nzeros=0
+  nr, nc = dims(At)
+  dc = Base.max(0, dim(nr) - dim(nc)) #column off set for rectangular matrices.
+  nzeros = 0
   for i in CartesianIndices(At)
-    if i[1]>i[2]+dc
-      if abs(At[i])>0.0 #row>col is lower triangle
+    if i[1] > i[2] + dc
+      if abs(At[i]) > 0.0 #row>col is lower triangle
         return false
       end
     end
@@ -20,8 +20,8 @@ end
 #
 #  A must be rank 2
 #
-function is_upper(l::Index,A::ITensor, r::Index)::Bool
-  @assert length(inds(A))==2 
+function is_upper(l::Index, A::ITensor, r::Index)::Bool
+  @assert length(inds(A)) == 2
   if inds(A) != IndexSet(l, r)
     A = permute(A, l, r)
   end
@@ -31,33 +31,33 @@ end
 #
 #  With left index specified
 #
-function is_upper(l::Index,A::ITensor)::Bool
-  other=noncommoninds(A,l)
-  if (length(other)==1)
-    return is_upper(l,A,other[1])
+function is_upper(l::Index, A::ITensor)::Bool
+  other = noncommoninds(A, l)
+  if (length(other) == 1)
+    return is_upper(l, A, other[1])
   else
     # use combiner to gather all the "other" indices into one.
-    C=combiner(other...)
-    AC=A*C
-    return is_upper(l,AC,combinedind(C))
+    C = combiner(other...)
+    AC = A * C
+    return is_upper(l, AC, combinedind(C))
   end
 end
-is_lower(l::Index,A::ITensor)::Bool = is_upper(A,l)
+is_lower(l::Index, A::ITensor)::Bool = is_upper(A, l)
 
 #
 #  With right index specified
 #
-function is_upper(A::ITensor,r::Index)::Bool
-  other=noncommoninds(A,r)
-  if (length(other)==1)
-    return is_upper(other[1],A,r)
+function is_upper(A::ITensor, r::Index)::Bool
+  other = noncommoninds(A, r)
+  if (length(other) == 1)
+    return is_upper(other[1], A, r)
   else
-    C=combiner(other...)
-    AC=A*C
-    return is_upper(combinedind(C),AC,r)
+    C = combiner(other...)
+    AC = A * C
+    return is_upper(combinedind(C), AC, r)
   end
 end
-is_lower(A::ITensor,r::Index)::Bool = is_upper(r,A)
+is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
 
 #
 #  Makes all columns lineary depenedent but scaled differently.
@@ -138,17 +138,17 @@ end
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(5, "r")
-    A = randomITensor(elt,l, s, r)
+    A = randomITensor(elt, l, s, r)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    @test q==commonind(Q,R)
-    @test hastags(q,"qr")
-    if (length(inds(R))>1)
-      @test is_upper(q,R) #specify the left index
+    @test q == commonind(Q, R)
+    @test hastags(q, "qr")
+    if (length(inds(R)) > 1)
+      @test is_upper(q, R) #specify the left index
     end
 
     #Julia 1.6 seems to be very erratic about seeing exported symbols like rq.
@@ -157,32 +157,32 @@ end
     @test length(inds(Q)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    @test q==commonind(Q,R)
-    @test hastags(q,"rq")
-    if (length(inds(R))>1)
-      @test is_upper(R,q) #specify the right index
+    @test q == commonind(Q, R)
+    @test hastags(q, "rq")
+    if (length(inds(R)) > 1)
+      @test is_upper(R, q) #specify the right index
     end
 
-    L, Q, q = lq(A,Ainds[1:ninds]) 
+    L, Q, q = lq(A, Ainds[1:ninds])
     @test length(inds(L)) == ninds + 1 #+1 to account for new lq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    @test q==commonind(Q,L)
-    @test hastags(q,"lq")
-    if (length(inds(L))>1)
-      @test is_lower(L,q) #specify the right index
+    @test q == commonind(Q, L)
+    @test hastags(q, "lq")
+    if (length(inds(L)) > 1)
+      @test is_lower(L, q) #specify the right index
     end
 
-    Q, L, q = ITensors.ql(A,Ainds[1:ninds]) 
+    Q, L, q = ITensors.ql(A, Ainds[1:ninds])
     @test length(inds(Q)) == ninds + 1 #+1 to account for new lq,Link index.
     @test length(inds(L)) == 3 - ninds + 1
-    @test A ≈ Q * L atol = 1e-13 
+    @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    @test q==commonind(Q,L)
-    @test hastags(q,"ql")
-    if (length(inds(L))>1)
-      @test is_lower(q,L) #specify the right index
+    @test q == commonind(Q, L)
+    @test hastags(q, "ql")
+    if (length(inds(L)) > 1)
+      @test is_lower(q, L) #specify the right index
     end
   end
 
@@ -239,22 +239,22 @@ end
   end
 
   @testset "QR/RQ block sparse on MPS tensor with all possible collections on Q,R" for ninds in
-                                                                                    [
+                                                                                       [
     0, 1, 2, 3
   ]
-    expected_Qflux=[QN()      ,QN("Sz",0),QN("Sz", 2),QN("Sz",0)]
-    expected_Rflux=[QN("Sz",0),QN("Sz",0),QN("Sz",-2),QN()]
-    l = dag(Index(QN("Sz", 0) => 1,QN("Sz", 1) => 1,QN("Sz", -1) => 1; tags="l"))
+    expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", 2), QN("Sz", 0)]
+    expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", -2), QN()]
+    l = dag(Index(QN("Sz", 0) => 1, QN("Sz", 1) => 1, QN("Sz", -1) => 1; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
-    r = Index(QN("Sz", 0) => 1,QN("Sz", 1) => 1,QN("Sz", -1) => 1; tags="r")
+    r = Index(QN("Sz", 0) => 1, QN("Sz", 1) => 1, QN("Sz", -1) => 1; tags="r")
     A = randomITensor(l, s, r)
-    @test flux(A)==QN("Sz", 0)
+    @test flux(A) == QN("Sz", 0)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 3 - ninds + 1
-    @test flux(Q)==expected_Qflux[ninds+1]
-    @test flux(R)==expected_Rflux[ninds+1]
+    @test flux(Q) == expected_Qflux[ninds + 1]
+    @test flux(R) == expected_Rflux[ninds + 1]
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
@@ -265,30 +265,29 @@ end
     R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
-    @test flux(Q)==expected_Qflux[ninds+1]
-    @test flux(R)==expected_Rflux[ninds+1]
+    @test flux(Q) == expected_Qflux[ninds + 1]
+    @test flux(R) == expected_Rflux[ninds + 1]
     @test A ≈ Q * R atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
-  
 
   @testset "QR/RQ block sparse on MPO tensor with all possible collections on Q,R" for ninds in
-                                                                                    [
+                                                                                       [
     0, 1, 2, 3, 4
   ]
-    expected_Qflux=[QN()      ,QN("Sz",0),QN("Sz", 2),QN("Sz",0),QN("Sz",0)]
-    expected_Rflux=[QN("Sz",0),QN("Sz",0),QN("Sz",-2),QN("Sz",0),QN()]
+    expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", 2), QN("Sz", 0), QN("Sz", 0)]
+    expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", -2), QN("Sz", 0), QN()]
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
     A = randomITensor(l, s, dag(s'), r)
-    @test flux(A)==QN("Sz", 0)
+    @test flux(A) == QN("Sz", 0)
     Ainds = inds(A)
     Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 4 - ninds + 1
-    @test flux(Q)==expected_Qflux[ninds+1]
-    @test flux(R)==expected_Rflux[ninds+1]
+    @test flux(Q) == expected_Qflux[ninds + 1]
+    @test flux(R) == expected_Rflux[ninds + 1]
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
@@ -300,20 +299,19 @@ end
     R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
-    @test flux(Q)==expected_Qflux[ninds+1]
-    @test flux(R)==expected_Rflux[ninds+1]
+    @test flux(Q) == expected_Qflux[ninds + 1]
+    @test flux(R) == expected_Rflux[ninds + 1]
     @test A ≈ Q * R atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
-
   end
- 
+
   @testset "QR/RQ dense with positive R" begin
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(10, "r")
     A = randomITensor(l, s, s', r)
-    Q, R, q = qr(A, l,s,s';positive=true) 
-    @test min(diag(R)...)>0.0
+    Q, R, q = qr(A, l, s, s'; positive=true)
+    @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     R, Q, q = ITensors.rq(A, r;positive=true) 
@@ -321,14 +319,14 @@ end
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
-  
+
   @testset "QR/RQ block sparse with positive R" begin
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
     A = randomITensor(l, s, dag(s'), r)
-    Q, R, q = qr(A, l,s,s';positive=true) 
-    @test min(diag(R)...)>0.0
+    Q, R, q = qr(A, l, s, s'; positive=true)
+    @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     R, Q, q = ITensors.rq(A, r;positive=true) 
     @test min(diag(R)...)>0.0
@@ -347,12 +345,12 @@ end
     H = MPO(ampo, sites; splitblocks=false)
     for n in 1:(N - 1)
       W = H[n]
-      @test flux(W)==QN("Sz", 0)
+      @test flux(W) == QN("Sz", 0)
       ilr = filterinds(W; tags="l=$n")[1]
       ilq = noncommoninds(W, ilr)
       Q, R, q = qr(W, ilq)
-      @test flux(Q)==QN("Sz", 4)
-      @test flux(R)==QN("Sz",-4)
+      @test flux(Q) == QN("Sz", 4)
+      @test flux(R) == QN("Sz", -4)
       @test W ≈ Q * R atol = 1e-13
       # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
       # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.

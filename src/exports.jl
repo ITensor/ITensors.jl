@@ -38,7 +38,7 @@ export
   eigen,
   factorize,
   polar,
-  qr, 
+  qr,
   rq,
   lq,
   ql,
