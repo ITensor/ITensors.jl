@@ -389,12 +389,14 @@ function remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr)
 end
 
 #Force users to knowingly ask for zero indices using qr(A,()) syntax
-qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
+LinearAlgebra.qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 rq(A::ITensor; kwargs...) = error(noinds_error_message("rq"))
-lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
+LinearAlgebra.lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
 ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
 
-function qr(A::ITensor, Linds...; kwargs...)
+# qr is exported by the LinearAlgebra module so we need acknowledge that to avoid
+# intermitent run time errors.
+function LinearAlgebra.qr(A::ITensor, Linds...; kwargs...)
   qtag::TagSet = get(kwargs, :tags, "Link,qr") #tag for new index between Q and R
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
@@ -500,7 +502,9 @@ function rq(A::ITensor, Linds...; kwargs...)
   return R, Q, q
 end
 
-function lq(A::ITensor, Linds...; kwargs...)
+# lq is exported by the LinearAlgebra module so we need acknowledge that to avoid
+# intermitent run time errors.
+function LinearAlgebra.lq(A::ITensor, Linds...; kwargs...)
   Q, L, q = qr(A, uniqueinds(A, Linds...); kwargs...)
   #
   # fix up the tag name for the index between Q and R.
