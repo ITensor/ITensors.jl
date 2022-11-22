@@ -422,6 +422,7 @@ function permutedims!!(R::DenseTensor, T::DenseTensor, perm::Tuple, f::Function=
   RR = convert(promote_type(typeof(R), typeof(T)), R)
   RA = ReshapedArray(data(RR), dims(RR), ())
   TA = ReshapedArray(data(T), dims(T), ())
+
   if !is_trivial_permutation(perm)
     TB = permutedims(TA, perm)
     RA .= f.(RA, TB)
@@ -832,6 +833,18 @@ function _contract!(
   ;
   kwargs...,
 ) where {El,NC,NA,NB}
+  dictKwargs = Dict(kwargs)
+  if haskey(dictKwargs, :buf_a)
+    if length(kwargs[:buf_a]) < dim(AT)
+      kwargs[:buf_a] = Vector{El}(undef, dim(AT))
+    end
+  end
+  if haskey(dictKwargs, :buf_b)
+    if length(kwargs[:buf_b]) < dim(BT)
+      kwargs[:buf_b] = Vector{El}(undef, dim(BT))
+    end
+  end
+
   # TODO: directly use Tensor instead of Array
   C = ReshapedArray(data(storage(CT)), dims(inds(CT)), ())
   A = ReshapedArray(data(storage(AT)), dims(inds(AT)), ())
@@ -840,9 +853,14 @@ function _contract!(
   tA = 'N'
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
-    #@timeit_debug timer "_contract!: permutedims A" begin
-    @strided Ap = permutedims(A, pA)
-    #end # @timeit
+    if haskey(dictKwargs, :buf_a)
+      d = permute(collect(dims(inds(AT))), collect(pA))
+      temp = ReshapedArray(view(kwargs[:buf_a], dim(AT)), Tuple(d), ())
+      Base.permutedims!(temp, A, pA)
+      Ap = temp.parent
+    else
+      @strided Ap = permutedims(A, pA)
+    end
     AM = ReshapedArray(Ap, (props.dmid, props.dleft), ())
     tA = 'T'
   else
@@ -858,9 +876,16 @@ function _contract!(
   tB = 'N'
   if props.permuteB
     pB = NTuple{NB,Int}(props.PB)
-    #@timeit_debug timer "_contract!: permutedims B" begin
-    @strided Bp = permutedims(B, pB)
-    #end # @timeit
+    if haskey(dictKwargs, :buf_b)
+      d = permute(collect(dims(inds(BT))), collect(pB))
+      temp = ReshapedArray(view(kwargs[:buf_b], dim(BT)), Tuple(d), ())
+      Base.permutedims!(temp, B, pB)
+      Bp = temp.parent
+    else
+      #@timeit_debug timer "_contract!: permutedims B" begin
+      @strided Bp = permutedims(B, pB)
+      #end # @timeit
+    end
     BM = ReshapedArray(Bp, (props.dmid, props.dright), ())
   else
     if Btrans(props)
