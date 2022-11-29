@@ -21,7 +21,6 @@ function rrule(::Type{T}, x::Vector{<:ITensor}; kwargs...) where {T<:Union{MPS,M
   return y, T_pullback
 end
 
-
 function rrule(::typeof(inner), x1::T, x2::T; kwargs...) where {T<:Union{MPS,MPO}}
   if !hassameinds(siteinds, x1, x2)
     error(
