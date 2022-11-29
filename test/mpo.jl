@@ -173,6 +173,32 @@ end
     badsites = [Index(2, "Site") for n in 1:(N + 1)]
     badpsi = randomMPS(badsites)
     @test_throws DimensionMismatch inner(J, phi, K, badpsi)
+
+    # generic tags and prime levels
+    Kgen = replacetags(K, "Site" => "OpOut"; plev=1)
+    noprime!(replacetags!(Kgen, "Site" => "Kpsi"; plev=0))
+    ITensors.sim!(siteinds, Kgen)
+
+    Jgen = replacetags(J, "Site" => "OpOut"; plev=1)
+    noprime!(replacetags!(Jgen, "Site" => "Jphi"; plev=0))
+    ITensors.sim!(siteinds, Jgen)
+    # make sure operators share site indices
+    replaceinds!.(Jgen, siteinds(Jgen; tags="OpOut"), siteinds(Kgen; tags="OpOut"))
+
+    # make sure states share site indices with operators
+    psigen = replace_siteinds(psi, siteinds(Kgen; tags="Kpsi"))
+    phigen = replace_siteinds(phi, siteinds(Jgen; tags="Jphi"))
+
+    @test phiJdagKpsi[] ≈ inner(Jgen, phigen, Kgen, psigen)
+
+    badpsigen = replacetags(psigen, "Kpsi" => "notKpsi")
+    badphigen = sim(siteinds, phigen)
+    badKgen = replacetags(Kgen, "OpOut" => "notOpOut")
+    badJgen = sim(siteinds, Jgen)
+    @test_throws ErrorException inner(Jgen, phigen, Kgen, badpsigen)
+    @test_throws ErrorException inner(Jgen, badphigen, Kgen, psigen)
+    @test_throws ErrorException inner(Jgen, phigen, badKgen, psigen)
+    @test_throws ErrorException inner(badJgen, phigen, Kgen, psigen)
   end
 
   @testset "error_contract" begin

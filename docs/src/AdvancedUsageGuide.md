@@ -146,12 +146,12 @@ julia> N = 4;
 
 julia> sites = siteinds("S=1/2",N);
 
-julia> ampo = OpSum();
+julia> os = OpSum();
 
 julia> for j=1:N-1
-         ampo += "Sz", j, "Sz", j+1
+         os += "Sz", j, "Sz", j+1
        end
-ERROR: UndefVarError: ampo not defined
+ERROR: UndefVarError: os not defined
 Stacktrace:
  [1] top-level scope at ./REPL[16]:2
  [2] eval(::Module, ::Any) at ./boot.jl:331
@@ -159,8 +159,8 @@ Stacktrace:
  [4] run_backend(::REPL.REPLBackend) at /home/mfishman/.julia/packages/Revise/AMRie/src/Revise.jl:1023
  [5] top-level scope at none:0
 ```
-In this case, you can use `ampo .+= ("Sz", j, "Sz", j+1)`,
-`add!(ampo, "Sz", j, "Sz", j+1)`, or wrap your code in a let-block
+In this case, you can use `os .+= ("Sz", j, "Sz", j+1)`,
+`add!(os, "Sz", j, "Sz", j+1)`, or wrap your code in a let-block
 or function.
 
 Take a look at Julia's documentation [here](https://docs.julialang.org/en/v1/manual/variables-and-scoping/)

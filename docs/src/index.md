@@ -1,23 +1,45 @@
-# Introduction
-
-| **Documentation**                                                               |
-|:-------------------------------------------------------------------------------:|
-| [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://itensor.github.io/ITensors.jl/stable/) [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://itensor.github.io/ITensors.jl/dev/) |
-
-|**Build Status**                                                                                |
-:-----------------------------------------------------------------------------------------------:|
-| [![Tests](https://github.com/ITensor/ITensors.jl/workflows/TestITensors/badge.svg)](https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATestITensors) [![codecov](https://codecov.io/gh/ITensor/ITensors.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensors.jl) |
-
-|**Citation**                                                                    |
-|:-------------------------------------------------------------------------------:|
-|[![arXiv](https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg)](https://arxiv.org/abs/2007.14822)|
-
-|**Style Guide**
-|:-------------------------------------------------------------------------------:|
-|[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)|
+# ITensors.jl
 
 ITensor is a library for rapidly creating correct and efficient
 tensor network algorithms.
+
+| **Documentation**|**Citation**|**Build Status**|
+|:----------------:|:----------:|:--------------:|
+| [![docs-stable][docs-img]][docs-url] [![docs-dev][docsdev-img]][docsdev-url]|[![arXiv][bibarxiv-img]][bibarxiv-url] [![SciPost][bibscipost-img]][bibscipost-url]|[![Tests][test-img]][test-url] [![codecov][codecov-img]][codecov-url]|
+
+|**Version**|**Download Statistics**|**Style Guide**|**License**|
+|:---------:|:---------------------:|:-------------:|:---------:|
+|[![version][version-img]][version-url]|[![ITensor Downloads][downloads-img]][downloads-url]|[![Code Style: Blue][codestyle-img]][codestyle-url]|[![license][license-img]][license-url]|
+
+[docs-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-url]: https://itensor.github.io/ITensors.jl/stable/
+
+[docsdev-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docsdev-url]: https://itensor.github.io/ITensors.jl/dev/
+
+[bibarxiv-img]: https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg
+[bibarxiv-url]: https://arxiv.org/abs/2007.14822
+
+[bibscipost-img]: https://img.shields.io/badge/SciPost-10.21468-blue.svg
+[bibscipost-url]: https://scipost.org/SciPostPhysCodeb.4-r0.3
+
+[test-img]: https://github.com/ITensor/ITensors.jl/workflows/TestITensors/badge.svg
+[test-url]: https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATestITensors
+
+[codecov-img]: https://codecov.io/gh/ITensor/ITensors.jl/branch/main/graph/badge.svg
+[codecov-url]: https://codecov.io/gh/ITensor/ITensors.jl
+
+[version-img]: https://juliahub.com/docs/ITensors/version.svg
+[version-url]: https://juliahub.com/ui/Packages/ITensors/P3pqL
+
+[downloads-img]: https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/ITensors
+[downloads-url]: https://pkgs.genieframework.com?packages=ITensors
+
+[codestyle-img]: https://img.shields.io/badge/code%20style-blue-4495d1.svg
+[codestyle-url]: https://github.com/invenia/BlueStyle
+
+[license-img]: https://img.shields.io/badge/License-Apache_2.0-blue.svg
+[license-url]: ../../LICENSE
 
 The source code for ITensor can be found [on Github](https://github.com/ITensor/ITensors.jl).
 
@@ -75,15 +97,33 @@ We recommend using ITensors.jl with Intel MKL in order to get the best possible 
 
 ## Citation
 
-If you use ITensor in your work, for now please cite the [arXiv preprint](https://arxiv.org/abs/2007.14822):
+If you use ITensor in your work, for now please cite the [ITensor Paper](https://www.scipost.org/SciPostPhysCodeb.4):
 
 ```bib
-@misc{itensor,
-    title={The \mbox{ITensor} Software Library for Tensor Network Calculations},
-    author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
-    year={2020},
-    eprint={2007.14822},
-    archivePrefix={arXiv}
+@article{ITensor,
+	title={{The ITensor Software Library for Tensor Network Calculations}},
+	author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
+	journal={SciPost Phys. Codebases},
+	pages={4},
+	year={2022},
+	publisher={SciPost},
+	doi={10.21468/SciPostPhysCodeb.4},
+	url={https://scipost.org/10.21468/SciPostPhysCodeb.4},
+}
+```
+
+and associated "Codebase Release" for the version you have used. The current one is
+
+```bib
+@article{ITensor-r0.3,
+	title={{Codebase release 0.3 for ITensor}},
+	author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
+	journal={SciPost Phys. Codebases},
+	pages={4-r0.3},
+	year={2022},
+	publisher={SciPost},
+	doi={10.21468/SciPostPhysCodeb.4-r0.3},
+	url={https://scipost.org/10.21468/SciPostPhysCodeb.4-r0.3},
 }
 ```
 
@@ -320,13 +360,13 @@ let
   # a Hamiltonian matrix, and convert
   # these terms to an MPO tensor network
   # (here we make the 1D Heisenberg model)
-  ampo = OpSum()
+  os = OpSum()
   for j=1:N-1
-    ampo += "Sz",j,"Sz",j+1
-    ampo += 0.5,"S+",j,"S-",j+1
-    ampo += 0.5,"S-",j,"S+",j+1
+    os += "Sz",j,"Sz",j+1
+    os += 0.5,"S+",j,"S-",j+1
+    os += 0.5,"S-",j,"S+",j+1
   end
-  H = MPO(ampo,sites)
+  H = MPO(os,sites)
 
   # Create an initial random matrix product state
   psi0 = randomMPS(sites)

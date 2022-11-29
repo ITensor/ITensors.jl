@@ -420,19 +420,19 @@ function dot(B::MPO, y::MPS, A::MPO, x::MPS; make_inds_match::Bool=true, kwargs.
       ),
     )
   end
-  ydag = dag(y)
-  prime!(ydag, 2)
-  Bdag = dag(B)
-  prime!(Bdag)
-  # Swap prime levels 1 -> 2 and 2 -> 1.
-  for j in eachindex(Bdag)
-    Axcommon = commonind(A[j], x[j])
-    ABcommon = uniqueind(filterinds(A[j]; tags="Site"), IndexSet(Axcommon))
-    swapprime!(Bdag[j], 2, 3)
-    swapprime!(Bdag[j], 1, 2)
-    swapprime!(Bdag[j], 3, 1)
-    noprime!(Bdag[j], prime(ABcommon, 2))
+  check_hascommoninds(siteinds, A, x)
+  check_hascommoninds(siteinds, B, y)
+  for j in eachindex(B)
+    !hascommoninds(
+      uniqueinds(siteinds(A, j), siteinds(x, j)), uniqueinds(siteinds(B, j), siteinds(y, j))
+    ) && error(
+      "$(typeof(x)) Ax and $(typeof(y)) By must share site indices. On site $j, Ax has site indices $(uniqueinds(siteinds(A, j), (siteinds(x, j)))) while By has site indices $(uniqueinds(siteinds(B, j), siteinds(y, j))).",
+    )
   end
+  ydag = dag(y)
+  Bdag = dag(B)
+  sim!(linkinds, ydag)
+  sim!(linkinds, Bdag)
   yB = ydag[1] * Bdag[1]
   Ax = A[1] * x[1]
   O = yB * Ax
