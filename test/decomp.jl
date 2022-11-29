@@ -73,15 +73,26 @@ function rank_fix(A::ITensor, Linds...)
   if inds(AC) != IndexSet(cL, cR)
     AC = permute(AC, cL, cR)
   end
-  At=tensor(AC)
-  nc=dim(At,2)
-  @assert nc>=2
+  At = tensor(AC)
+  nc = dim(At, 2)
+  @assert nc >= 2
   for c in 2:nc
-    At[:,c]=At[:,1]*1.05^c
+    At[:, c] = At[:, 1] * 1.05^c
   end
   return itensor(At) * dag(CL) * dag(CR)
 end
 
+#
+# verify all QN directions were preserved for A=Q*R decompositions.
+#
+function test_directions(A::ITensor, Q::ITensor, R::ITensor, q::Index)
+  for i in noncommoninds(Q, q)
+    @test dir(findinds(A; tags=tags(i), plev=plev(i))[1]) == dir(i)
+  end
+  for i in noncommoninds(R, q)
+    @test dir(findinds(A; tags=tags(i), plev=plev(i))[1]) == dir(i)
+  end
+end
 
 @testset "ITensor Decompositions" begin
   @testset "truncate!" begin
@@ -133,7 +144,12 @@ end
   end
 
   # Julia 1.6 makes it very difficult to split the exceedingly long line of code.
-  @testset "QR/RQ/QL/LQ decomp on MPS dense $elt tensor with all possible collections on Q/R/L" for ninds in [0,1,2,3], elt in [Float64,ComplexF64]
+  @testset "QR/RQ/QL/LQ decomp on MPS dense $elt tensor with all possible collections on Q/R/L" for ninds in
+                                                                                                    [
+      0, 1, 2, 3
+    ],
+    elt in [Float64, ComplexF64]
+
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(5, "r")
@@ -151,7 +167,7 @@ end
     end
 
     #Julia 1.6 seems to be very erratic about seeing exported symbols like rq.
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) 
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds])
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
@@ -186,39 +202,41 @@ end
   end
 
   # Julia 1.6 makes it very difficult to split the exceedingly long line of code.
-  @testset "Rank revealing QR/RQ/QL/LQ decomp on MPS dense $elt tensor" for ninds in [1,2,3], elt in [Float64,ComplexF64]
+  @testset "Rank revealing QR/RQ/QL/LQ decomp on MPS dense $elt tensor" for ninds in
+                                                                            [1, 2, 3],
+    elt in [Float64, ComplexF64]
+
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(5, "r")
-    A = randomITensor(elt,l, s, s',r)
-  
+    A = randomITensor(elt, l, s, s', r)
+
     Ainds = inds(A)
-    A=rank_fix(A,Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q = qr(A, Ainds[1:ninds];epsrr=1e-12) #calling  qr(A) triggers not supported error.
-    @test dim(q)==1 #check that we found rank==1
+    A = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
+    Q, R, q = qr(A, Ainds[1:ninds]; epsrr=1e-12) #calling  qr(A) triggers not supported error.
+    @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds];epsrr=1e-12) 
-    @test dim(q)==1 #check that we found rank==1
+
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds]; epsrr=1e-12)
+    @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    
-    L, Q, q = lq(A,Ainds[1:ninds];epsrr=1e-12) 
-    @test dim(q)==1 #check that we found rank==1
+
+    L, Q, q = lq(A, Ainds[1:ninds]; epsrr=1e-12)
+    @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    Q, L, q = ITensors.ql(A,Ainds[1:ninds];epsrr=1e-12) 
-    @test dim(q)==1 #check that we found rank==1
-    @test A ≈ Q * L atol = 1e-13 
+    Q, L, q = ITensors.ql(A, Ainds[1:ninds]; epsrr=1e-12)
+    @test dim(q) == 1 #check that we found rank==1
+    @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    
   end
 
- 
-  @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in
-                                                                             [0, 1, 2, 3, 4]
+  @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in [
+    0, 1, 2, 3, 4
+  ]
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(10, "r")
@@ -230,7 +248,7 @@ end
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) 
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds])
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
@@ -254,18 +272,21 @@ end
     @test length(inds(R)) == 3 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
     @test flux(R) == expected_Rflux[ninds + 1]
+    test_directions(A, Q, R, q)
     @test A ≈ Q * R atol = 1e-13
+
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
-    expected_Rflux=[QN()      ,QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0)]
-    expected_Qflux=[QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0),QN()]
+    expected_Rflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
+    expected_Qflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN()]
     R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
     @test flux(R) == expected_Rflux[ninds + 1]
+    test_directions(A, Q, R, q)
     @test A ≈ Q * R atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
@@ -287,19 +308,21 @@ end
     @test length(inds(R)) == 4 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
     @test flux(R) == expected_Rflux[ninds + 1]
+    test_directions(A, Q, R, q)
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-    expected_Qflux=[QN()      ,QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0)]
-    expected_Rflux=[QN("Sz",0),QN("Sz",0),QN("Sz",0),QN("Sz",0),QN()]
+    expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
+    expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN()]
     R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
     @test flux(R) == expected_Rflux[ninds + 1]
+    test_directions(A, Q, R, q)
     @test A ≈ Q * R atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
@@ -313,8 +336,8 @@ end
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    R, Q, q = ITensors.rq(A, r;positive=true) 
-    @test min(diag(R)...)>0.0
+    R, Q, q = ITensors.rq(A, r; positive=true)
+    @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
@@ -326,9 +349,11 @@ end
     A = randomITensor(l, s, dag(s'), r)
     Q, R, q = qr(A, l, s, s'; positive=true)
     @test min(diag(R)...) > 0.0
+    test_directions(A, Q, R, q)
     @test A ≈ Q * R atol = 1e-13
-    R, Q, q = ITensors.rq(A, r;positive=true) 
-    @test min(diag(R)...)>0.0
+    R, Q, q = ITensors.rq(A, r; positive=true)
+    @test min(diag(R)...) > 0.0
+    test_directions(A, Q, R, q)
     @test A ≈ Q * R atol = 1e-13
   end
 
@@ -350,6 +375,7 @@ end
       Q, R, q = qr(W, ilq)
       @test flux(Q) == QN("Sz", 4)
       @test flux(R) == QN("Sz", -4)
+      test_directions(W, Q, R, q)
       @test W ≈ Q * R atol = 1e-13
       # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
       # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
@@ -357,9 +383,24 @@ end
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
       R, Q, q = ITensors.rq(W, ilr)
-      @test flux(Q)==QN("Sz",0)
-      @test flux(R)==QN("Sz",0)
+      @test flux(Q) == QN("Sz", 0)
+      @test flux(R) == QN("Sz", 0)
       @test W ≈ Q * R atol = 1e-13
+      test_directions(W, Q, R, q)
+      @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+      Q, L, q = ITensors.ql(W, ilq)
+      @test flux(Q) == QN("Sz", 0)
+      @test flux(L) == QN("Sz", 0)
+      @test W ≈ Q * L atol = 1e-13
+      test_directions(W, Q, L, q)
+      @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+      L, Q, q = ITensors.lq(W, ilr)
+      @test flux(Q) == QN("Sz", 4)
+      @test flux(L) == QN("Sz", -4)
+      @test W ≈ Q * L atol = 1e-13
+      test_directions(W, Q, L, q)
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
     end
   end
@@ -467,8 +508,6 @@ end
       @test blockdim(u, b) == blockdim(i, b) || blockdim(u, b) >= min_blockdim
     end
   end
-
- 
 end
 
 nothing
