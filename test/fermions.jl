@@ -8,7 +8,7 @@ using ITensors, Test
     # for dense tensors:
     n = 10
     s = siteinds("Electron", n)
-    psi = randomMPS(s, j -> isodd(j) ? "Up" : "Dn", linkdims=20)
+    psi = randomMPS(s, j -> isodd(j) ? "Up" : "Dn"; linkdims=20)
   end
 
   @testset "parity_sign function" begin
