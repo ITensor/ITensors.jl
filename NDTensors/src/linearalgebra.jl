@@ -386,15 +386,15 @@ end
 #
 #  QR rank reduction helpers
 #
-function find_zero_rows(R::AbstractMatrix,eps::Float64)::Array{Bool}  where {ElT,IndsT}
-  nr,nc=size(R)
-  zeros=falses(nr)
+function find_zero_rows(R::AbstractMatrix, eps::Float64)::Array{Bool} where {ElT,IndsT}
+  nr, nc = size(R)
+  zeros = falses(nr)
   for r in 1:nr
-    s=0.0
+    s = 0.0
     for c in 1:nc
-      s=max(s,abs(R[r, c]))
+      s = max(s, abs(R[r, c]))
     end
-    zeros[r]= (s<=eps)
+    zeros[r] = (s <= eps)
   end
   return zeros
 end
@@ -403,37 +403,37 @@ end
 #  Trim out zero rows of R within tolerance eps. Also trim the corresponding columns
 #  of Q.
 #
-function trim_rows(R::AbstractMatrix,Q::AbstractMatrix,eps::Float64) where {ElT,IndsT}
-  zeros=find_zero_rows(R,eps)
-  num_zero_rows=sum(zeros)
-  if num_zero_rows==0
-    return R,Q
+function trim_rows(R::AbstractMatrix, Q::AbstractMatrix, eps::Float64) where {ElT,IndsT}
+  zeros = find_zero_rows(R, eps)
+  num_zero_rows = sum(zeros)
+  if num_zero_rows == 0
+    return R, Q
   end
   #@printf "Rank Reveal removing %4i rows with epsrr=%.1e\n" num_zero_rows eps
-  Rnr,Rnc=size(R)
-  Qnr,Qnc=size(Q)
+  Rnr, Rnc = size(R)
+  Qnr, Qnc = size(Q)
   #@assert Rnr==Qnc Q is strided to we can't asume this
-  R1nr=Rnr-num_zero_rows
-  T=eltype(R)
-  R1=Matrix{T}(undef,R1nr,Rnc)
-  Q1=Matrix{T}(undef,Qnr ,R1nr)
-  r1=1
+  R1nr = Rnr - num_zero_rows
+  T = eltype(R)
+  R1 = Matrix{T}(undef, R1nr, Rnc)
+  Q1 = Matrix{T}(undef, Qnr, R1nr)
+  r1 = 1
   for r in 1:Rnr
-    if zeros[r]==false
-      R1[r1,:]=R[r,:] #transfer row
-      Q1[:,r1]=Q[:,r] #transfer column
-      r1+=1 #next row in rank reduces matrices.
+    if zeros[r] == false
+      R1[r1, :] = R[r, :] #transfer row
+      Q1[:, r1] = Q[:, r] #transfer column
+      r1 += 1 #next row in rank reduces matrices.
     end #if zero
   end #for r
-  return R1,Q1
+  return R1, Q1
 end
 #
 #  Trim out zero columnss of R within tolerance eps. Also trim the corresponding rows
 #  of Q.
 #
-function trim_columns(R::AbstractMatrix,Q::AbstractMatrix,eps::Float64) where {ElT,IndsT}
-  R,Q=trim_rows(transpose(R),transpose(Q),eps) 
-  return transpose(R),transpose(Q) 
+function trim_columns(R::AbstractMatrix, Q::AbstractMatrix, eps::Float64) where {ElT,IndsT}
+  R, Q = trim_rows(transpose(R), transpose(Q), eps)
+  return transpose(R), transpose(Q)
 end
 
 function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
@@ -448,14 +448,14 @@ function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,Ind
   #
   #  Do row removal for rank revealing RQ
   #
-  epsrr::Float64 = get(kwargs, :epsrr , -1.0)
-  if epsrr>=0.0 
-    RM,QM=trim_rows(RM,QM,epsrr) 
+  epsrr::Float64 = get(kwargs, :epsrr, -1.0)
+  if epsrr >= 0.0
+    RM, QM = trim_rows(RM, QM, epsrr)
   end
   #
   # Make the new indices to go onto Q and R
   #
-  IndexT=IndsT.parameters[1]
+  IndexT = IndsT.parameters[1]
   nq = IndexT(size(RM)[1]) #dim of the link index
   Qinds = IndsT((ind(T, 1), nq))
   Rinds = IndsT((nq, ind(T, 2)))
@@ -473,22 +473,21 @@ function rq(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   else
     RM, QM = rq(matrix(T))
   end
-  
-  
+
   #
   #  Do row removal for rank revealing RQ
   #
-  epsrr::Float64 = get(kwargs, :epsrr , -1.0)
-  if epsrr>=0.0 
-    RM,QM=trim_columns(RM,QM,epsrr) 
+  epsrr::Float64 = get(kwargs, :epsrr, -1.0)
+  if epsrr >= 0.0
+    RM, QM = trim_columns(RM, QM, epsrr)
   end
   #
   # Make the new indices to go onto Q and R
   #
-  IndexT=IndsT.parameters[1]
+  IndexT = IndsT.parameters[1]
   nq = IndexT(size(RM)[2]) #dim of the link index
-  Qinds = IndsT((nq,ind(T, 2)))
-  Rinds = IndsT((ind(T, 1),nq))
+  Qinds = IndsT((nq, ind(T, 2)))
+  Rinds = IndsT((ind(T, 1), nq))
   Q = NDTensors.tensor(NDTensors.Dense(vec(Matrix(QM))), Qinds) #Q was strided
   R = NDTensors.tensor(NDTensors.Dense(vec(RM)), Rinds)
   return R, Q
