@@ -34,7 +34,7 @@ end
 
 isfermionic(i::Index) = has_fermionic_subspaces(i)
 
-has_fermionic_subspaces(is::IndexSet) = false
+has_fermionic_subspaces(is::Union{IndexSet,NTuple{N,Index}}) where {N} = false
 
 function has_fermionic_subspaces(is::Union{QNIndexSet,NTuple{N,QNIndex}}) where {N}
   for i in is, b in 1:nblocks(i)
@@ -43,7 +43,7 @@ function has_fermionic_subspaces(is::Union{QNIndexSet,NTuple{N,QNIndex}}) where 
   return false
 end
 
-has_fermionic_subspaces(T) = has_fermionic_subspaces(inds(T))
+has_fermionic_subspaces(T::Tensor) = has_fermionic_subspaces(inds(T))
 
 """
     fparity(qn::QN)
