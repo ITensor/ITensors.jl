@@ -3,6 +3,14 @@ using ITensors, Test
 @testset "Fermions" begin
   ITensors.enable_auto_fermion()
 
+  @testset "Test system without QNs" begin
+    # Just testing that no bugs are encountered with enable_auto_fermion
+    # for dense tensors:
+    n = 10
+    s = siteinds("Electron", n)
+    psi = randomMPS(s, j -> isodd(j) ? "Up" : "Dn"; linkdims=20)
+  end
+
   @testset "parity_sign function" begin
 
     # Full permutations
