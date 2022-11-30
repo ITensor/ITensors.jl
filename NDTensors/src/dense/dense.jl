@@ -841,7 +841,10 @@ function _contract!(
   end
   if haskey(dictKwargs, :buf_b)
     if length(kwargs[:buf_b]) < dim(BT)
-      kwargs[:buf_b] = Vector{El}(undef, dim(BT))
+      bufb = kwargs[:buf_b]
+      #@show length(kwargs[:buf_b])
+      #bufb = Vector{El}(undef, dim(BT))
+      #@show length(kwargs[:buf_b])
     end
   end
 
@@ -855,7 +858,7 @@ function _contract!(
     pA = NTuple{NA,Int}(props.PA)
     if haskey(dictKwargs, :buf_a)
       d = permute(collect(dims(inds(AT))), collect(pA))
-      temp = ReshapedArray(view(kwargs[:buf_a], dim(AT)), Tuple(d), ())
+      temp = ReshapedArray(view(kwargs[:buf_a], (1:dim(AT))), Tuple(d), ())
       Base.permutedims!(temp, A, pA)
       Ap = temp.parent
     else
@@ -878,7 +881,7 @@ function _contract!(
     pB = NTuple{NB,Int}(props.PB)
     if haskey(dictKwargs, :buf_b)
       d = permute(collect(dims(inds(BT))), collect(pB))
-      temp = ReshapedArray(view(kwargs[:buf_b], dim(BT)), Tuple(d), ())
+      temp = ReshapedArray(view(kwargs[:buf_a], (1:dim(BT))), Tuple(d), ())
       Base.permutedims!(temp, B, pB)
       Bp = temp.parent
     else
