@@ -1094,7 +1094,8 @@ end
   end
 
   @testset "Matrix operator representation - hashing bug" begin
-    comps, n, dims = load("opsum_hash_bug.jld2", "comps", "n", "dims")
+    file_path = joinpath(pkgdir(ITensors), "test", "opsum_hash_bug.jld2")
+    comps, n, dims = load(file_path, "comps", "n", "dims")
     s = [Index(d) for d in dims]
     for _ in 1:100
       os = components_to_opsum(comps, n)
