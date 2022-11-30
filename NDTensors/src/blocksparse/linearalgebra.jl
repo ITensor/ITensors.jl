@@ -352,8 +352,8 @@ function rq(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
     qindl = dag(qindl)
   end
 
-  indsQ = setindex(inds(T), dag(qindl), 1)
-  indsR = setindex(inds(T), qindl, 2)
+  indsQ = setindex(inds(T), qindl, 1)
+  indsR = setindex(inds(T), dag(qindl), 2)
 
   nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
