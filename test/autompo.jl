@@ -1122,6 +1122,25 @@ end
     H2 = MPO(opsum2, sites)
     @test H1 ≈ H2
   end
+
+  @testset "One-site ops bond dimension test" begin
+    sites = siteinds("S=1/2", N)
+
+    # one-site operator on every site
+    os = OpSum()
+    for j in 1:N
+      os += "Z", j
+    end
+    H = MPO(os, sites)
+    @test all(linkdims(H) .== 2)
+
+    # one-site operator on a single site
+    os = OpSum()
+    os += "Z", rand(1:N)
+    H = MPO(os, sites)
+    @test all(linkdims(H) .<= 2)
+    @test_broken all(linkdims(H) .== 1)
+  end
 end
 
 nothing
