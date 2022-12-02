@@ -215,8 +215,8 @@ is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
-    expected_Rflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
-    expected_Qflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN()]
+    expected_Rflux = [QN(), QN("Sz", 2), QN("Sz", 2), QN("Sz", 0), QN("Sz", 0)]
+    expected_Qflux = [QN("Sz", 0), QN("Sz", -2), QN("Sz", -2), QN("Sz", 0), QN()]
     R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
@@ -249,8 +249,8 @@ is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-    expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
-    expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN()]
+    expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", -2), QN("Sz", 0), QN("Sz", 0)]
+    expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 2), QN("Sz", 0), QN()]
     R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
@@ -313,9 +313,23 @@ is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
       R, Q, q = ITensors.rq(W, ilr)
-      @test flux(Q) == QN("Sz", 0)
-      @test flux(R) == QN("Sz", 0)
+      @test flux(Q) == QN("Sz", -4)
+      @test flux(R) == QN("Sz", 4)
       @test W ≈ Q * R atol = 1e-13
+      @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+      Q, L, q = ITensors.ql(W, ilq)
+      @test flux(Q) == QN("Sz", -4)
+      @test flux(L) == QN("Sz", 4)
+      @test W ≈ Q * L atol = 1e-13
+      test_directions(W, Q, L, q)
+      @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+      L, Q, q = ITensors.lq(W, ilr)
+      @test flux(Q) == QN("Sz", 4)
+      @test flux(L) == QN("Sz", -4)
+      @test W ≈ Q * L atol = 1e-13
+      test_directions(W, Q, L, q)
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
     end
   end
