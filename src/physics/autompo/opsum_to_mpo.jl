@@ -14,8 +14,7 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
     return (only(site(t[1])) <= n <= only(site(t[end])))
   end
 
-  rightmap = Dict{Vector{Op},Int}()
-  next_rightmap = Dict{Vector{Op},Int}()
+  rightmaps = fill(Dict{Vector{Op},Int}(), N)
 
   for n in 1:N
     leftbond_coefs = MatElem{ValType}[]
@@ -32,13 +31,13 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
       bond_col = -1
       if !isempty(left)
         bond_row = posInLink!(leftmap, left)
-        bond_col = posInLink!(rightmap, vcat(onsite, right))
+        bond_col = posInLink!(rightmaps[n - 1], vcat(onsite, right))
         bond_coef = convert(ValType, coefficient(term))
         push!(leftbond_coefs, MatElem(bond_row, bond_col, bond_coef))
       end
 
       A_row = bond_col
-      A_col = posInLink!(next_rightmap, right)
+      A_col = posInLink!(rightmaps[n], right)
       site_coef = one(C)
       if A_row == -1
         site_coef = coefficient(term)
@@ -53,8 +52,6 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
       el = MatElem(A_row, A_col, site_coef * Prod(onsite))
       push!(tempMPO[n], el)
     end
-    rightmap = next_rightmap
-    next_rightmap = Dict{Vector{Op},Int}()
     remove_dups!(tempMPO[n])
     if n > 1 && !isempty(leftbond_coefs)
       M = toMatrix(leftbond_coefs)
@@ -78,7 +75,7 @@ function svdMPO(os::OpSum{C}, sites; kwargs...)::MPO where {C}
       VL = Vs[n - 1]
     end
     VR = Vs[n]
-    tdim = size(VR, 2)
+    tdim = isempty(rightmaps[n]) ? 0 : size(VR, 2)
 
     llinks[n + 1] = Index(2 + tdim, "Link,l=$n")
 
