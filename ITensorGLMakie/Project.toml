@@ -9,7 +9,7 @@ ITensorMakie = "72ca75eb-df6f-4d6b-80c5-d5eab17be3f9"
 Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
 
 [compat]
-GLMakie = "0.4.7, 0.6, 0.7"
+GLMakie = "0.4.7, 0.6, 0.7, 0.8"
 ITensorMakie = "0.1.0"
 Reexport = "1.2.2"
 julia = "1.6"

@@ -75,7 +75,7 @@ function visualize!(
   arrow_size=default_arrow_size(b, g),
   siteinds_direction=default_siteinds_direction(b, g),
 )
-  if ismissing(Makie.current_backend[])
+  if ismissing(Makie.current_backend())
     error(
       """
   You have not loaded a backend.  Please load one (`using GLMakie` or `using CairoMakie`)
