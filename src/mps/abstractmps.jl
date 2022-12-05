@@ -1083,8 +1083,7 @@ function deprecate_make_inds_match!(
 end
 
 function _log_or_not_dot(
-  M1::MPST, M2::MPST, loginner::Bool; make_inds_match::Bool=true,
-  use_buffer::Bool = false
+  M1::MPST, M2::MPST, loginner::Bool; make_inds_match::Bool=true, use_buffer::Bool=false
 )::Number where {MPST<:AbstractMPS}
   N = length(M1)
   if length(M2) != N
@@ -1108,7 +1107,8 @@ function _log_or_not_dot(
     tempinds = noncommoninds(O, M1dag[2])
     mpstElT = eltype(M1dag[1])
     storeTemp = Vector{mpstElT}(undef, dim(tempinds))
-    Abuf = similar(storeTemp); Bbuf = similar(storeTemp);
+    Abuf = similar(storeTemp)
+    Bbuf = similar(storeTemp)
     TempTensor = itensor(NDTensors.Dense(storeTemp), tempinds)
     m1inds = inds(M1dag[2])
     m2inds = inds(M2[1])
@@ -1122,15 +1122,17 @@ function _log_or_not_dot(
         end
         TempTensor = itensor(NDTensors.Dense(storeTemp), tempinds)
       end
-      contract!(TempTensor, O, M1dag[j]; buf_a = Abuf, buf_b = Bbuf)
-  
+      contract!(TempTensor, O, M1dag[j]; buf_a=Abuf, buf_b=Bbuf)
+
       curM2Inds = inds(M2[j])
       if curM2Inds != m2inds
         m2inds = curM2Inds
-        O = itensor(NDTensors.Dense(NDTensors.data(storage(O))), noncommoninds(TempTensor, curM2Inds))
+        O = itensor(
+          NDTensors.Dense(NDTensors.data(storage(O))), noncommoninds(TempTensor, curM2Inds)
+        )
       end
       #O = contract(TempTensor, M2[j]; buf_a = Abuf, buf_b = Bbuf)
-      contract!(O, TempTensor, M2[j]; buf_a = Abuf, buf_b = Bbuf)
+      contract!(O, TempTensor, M2[j]; buf_a=Abuf, buf_b=Bbuf)
 
       if loginner
         normO = norm(O)
