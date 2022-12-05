@@ -17,7 +17,7 @@ jobs:
           - '1.6'
           - '1'
         os:
-          - ubuntu-latest
+          - ubuntu-20.04
         threads:
           - '1'
         arch:
