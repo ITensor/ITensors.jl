@@ -61,6 +61,17 @@ end
 # Convert a tree to a graph
 #
 
+struct Tree
+  x::Any
+end
+function Base.getindex(tree::Tree, indices)
+  node = tree.x
+  for idx in indices
+    node = children(node)[idx]
+  end
+  return node
+end
+
 tree_to_graph(tr) = tree_to_graph(Tree(tr))
 
 function tree_to_graph(tr::Tree)
