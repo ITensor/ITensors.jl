@@ -1,7 +1,6 @@
 using NDTensors
 using LinearAlgebra
 using Test
-import NDTensors: rq #rq is in exports.jl, so why the hell do we need this?
 
 @testset "random_orthog" begin
   n, m = 10, 4

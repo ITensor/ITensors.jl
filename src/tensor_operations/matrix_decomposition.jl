@@ -389,14 +389,14 @@ function remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr)
 end
 
 #Force users to knowingly ask for zero indices using qr(A,()) syntax
-LinearAlgebra.qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
+qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 rq(A::ITensor; kwargs...) = error(noinds_error_message("rq"))
-LinearAlgebra.lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
+lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
 ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
 
 # qr is exported by the LinearAlgebra module so we need acknowledge that to avoid
 # intermitent run time errors.
-function LinearAlgebra.qr(A::ITensor, Linds...; kwargs...)
+function qr(A::ITensor, Linds...; kwargs...)
   qtag::TagSet = get(kwargs, :tags, "Link,qr") #tag for new index between Q and R
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
@@ -416,9 +416,7 @@ function LinearAlgebra.qr(A::ITensor, Linds...; kwargs...)
   #
   #  Make sure we don't accidentally pass the transpose into the matrix qr routine.
   #
-  if inds(AC) != IndexSet(cL, cR)
-    AC = permute(AC, cL, cR)
-  end
+  AC = permute(AC, cL, cR; allow_alias=true)
   # qr the matrix.
   QT, RT = qr(tensor(AC); kwargs...)
 
@@ -476,9 +474,7 @@ function rq(A::ITensor, Linds...; kwargs...)
   #
   #  Make sure we don't accidentally pass the transpose into the matrix qr routine.
   #
-  if inds(AC) != IndexSet(cL, cR)
-    AC = permute(AC, cL, cR)
-  end
+  AC = permute(AC, cL, cR; allow_alias=true)
   # qr the matrix.
   RT, QT = NDTensors.rq(tensor(AC); kwargs...)
 
@@ -504,7 +500,7 @@ end
 
 # lq is exported by the LinearAlgebra module so we need acknowledge that to avoid
 # intermitent run time errors.
-function LinearAlgebra.lq(A::ITensor, Linds...; kwargs...)
+function lq(A::ITensor, Linds...; kwargs...)
   Q, L, q = qr(A, uniqueinds(A, Linds...); kwargs...)
   #
   # fix up the tag name for the index between Q and R.
