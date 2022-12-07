@@ -6,6 +6,16 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+
+ITensorMakie v0.1.3 Release Notes
+=================================
+
+Bugs:
+
+Enhancements:
+
+- Bump GraphMakie compat to 0.5 (#1032)
+
 ITensorMakie v0.1.2 Release Notes
 =================================
 
