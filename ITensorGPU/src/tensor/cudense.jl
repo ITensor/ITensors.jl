@@ -462,11 +462,11 @@ function Base.:-(B::CuDenseTensor, A::CuDenseTensor)
   ctcinds = copy(ctbinds)
   C = CUDA.zeros(eltype(Bdata), dims(Bis))
   CUTENSOR.elementwiseBinary!(
-    one(eltype(Adata)),
+    -one(eltype(Adata)),
     reshapeAdata,
     ctainds,
     opA,
-    -one(eltype(Bdata)),
+    one(eltype(Bdata)),
     reshapeBdata,
     ctbinds,
     opC,
