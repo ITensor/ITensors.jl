@@ -26,8 +26,8 @@ using ITensors,
   @testset "Test2 add CuDense" begin
     for i1 in indices, i2 in indices
       i1 == i2 && continue
-      A = randomITensor(SType, i1,i2)
-      B = randomITensor(SType, i1,i2)
+      A = randomITensor(SType, i1, i2)
+      B = randomITensor(SType, i1, i2)
       cuA = cu(A)
       cuB = cu(B)
       C = A + B
@@ -53,8 +53,8 @@ using ITensors,
   @testset "Test2 subtract CuDense" begin
     for i1 in indices, i2 in indices
       i1 == i2 && continue
-      A = randomITensor(SType, i1,i2)
-      B = randomITensor(SType, i1,i2)
+      A = randomITensor(SType, i1, i2)
+      B = randomITensor(SType, i1, i2)
       cuA = cu(A)
       cuB = cu(B)
       C = A - B
