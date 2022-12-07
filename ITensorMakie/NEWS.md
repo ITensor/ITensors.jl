@@ -14,7 +14,7 @@ Bugs:
 
 Enhancements:
 
-- Bump GraphMakie compat to 0.5
+- Bump GraphMakie compat to 0.5 (#1032)
 
 ITensorMakie v0.1.2 Release Notes
 =================================
