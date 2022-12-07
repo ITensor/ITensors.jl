@@ -6,6 +6,20 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+NDTensors v0.1.45 Release Notes
+===============================
+
+Bugs:
+
+-  HDF5 Support for Diag Storage (#976) 
+
+Enhancements:
+
+- Fix variable declaration warnings (#994)
+- Bump compat to Functors 0.4 (#1031)
+- Bump compat to Compat 4 (4facffe)
+- Refactor and format (#980)
+
 NDTensors v0.1.44 Release Notes
 ===============================
 
