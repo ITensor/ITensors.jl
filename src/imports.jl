@@ -99,6 +99,7 @@ import LinearAlgebra:
   factorize,
   ishermitian,
   lmul!,
+  lq,
   mul!,
   norm,
   normalize,

@@ -436,7 +436,7 @@ function trim_columns(R::AbstractMatrix, Q::AbstractMatrix, eps::Float64) where 
   return transpose(R), transpose(Q)
 end
 
-function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
+function qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   positive = get(kwargs, :positive, false)
   # TODO: just call qr on T directly (make sure
   # that is fast)

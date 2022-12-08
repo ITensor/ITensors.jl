@@ -1,7 +1,6 @@
 using NDTensors
 using LinearAlgebra
 using Test
-import NDTensors: rq #Julia ignoring my export ... again!
 
 @testset "random_orthog" begin
   n, m = 10, 4

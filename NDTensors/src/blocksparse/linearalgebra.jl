@@ -376,14 +376,6 @@ function rq(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
     blockQ = nzblocksQ[n]
     blockR = nzblocksR[n]
 
-    if VERSION < v"1.5"
-      # In v1.3 and v1.4 of Julia, Ub has
-      # a very complicated view wrapper that
-      # can't be handled efficiently
-      Qb = copy(Qb)
-      Rb = copy(Vb)
-    end
-
     blockview(Q, blockQ) .= Qb
     blockview(R, blockR) .= Rb
   end
@@ -393,7 +385,7 @@ end
 # QR a block sparse Rank 2 tensor.
 #  This code thanks to Niklas Tausendpfund https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function LinearAlgebra.qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
+function qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
 
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
@@ -470,14 +462,6 @@ function LinearAlgebra.qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
     Qb, Rb = Qs[n], Rs[n]
     blockQ = nzblocksQ[n]
     blockR = nzblocksR[n]
-
-    if VERSION < v"1.5"
-      # In v1.3 and v1.4 of Julia, Ub has
-      # a very complicated view wrapper that
-      # can't be handled efficiently
-      Qb = copy(Qb)
-      Rb = copy(Vb)
-    end
 
     blockview(Q, blockQ) .= Qb
     blockview(R, blockR) .= Rb

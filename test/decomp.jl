@@ -402,6 +402,18 @@ end
       @test W ≈ Q * L atol = 1e-13
       test_directions(W, Q, L, q)
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+      Q, L, q = ITensors.ql(W, ilq)
+      @test flux(Q) == QN("Sz", -4)
+      @test flux(L) == QN("Sz", 4)
+      @test W ≈ Q * L atol = 1e-13
+      @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+      L, Q, q = ITensors.lq(W, ilr)
+      @test flux(Q) == QN("Sz", 4)
+      @test flux(L) == QN("Sz", -4)
+      @test W ≈ Q * L atol = 1e-13
+      @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
     end
   end
 
