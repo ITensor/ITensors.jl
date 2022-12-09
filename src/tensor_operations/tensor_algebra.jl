@@ -338,6 +338,55 @@ contract(As::ITensor...; kwargs...)::ITensor = contract(As; kwargs...)
 
 _contract(As, sequence::Int; kwargs...) = As[sequence]
 
+function _contract(As, seq::AbstractArray{Int}, buf_sequence::AbstractArray{Int}; kwargs...)
+  len = length(As)
+  #First set up the result buffers
+  @inbounds numtype = eltype(As[1])
+  numbufs = maximum(buf_sequence)
+  bsize = dim(noncommoninds(As[seq[1]], As[seq[2]]))
+  buf = [Vector{numtype}(undef, bsize)]
+  for i in 2:numbufs
+    push!(buf, Vector{numtype}(undef, bsize))
+  end
+  # Associate these buffers with an ITensor
+  @inbounds buf_tensors = [itensor(NDTensors.Dense(buf[1]), Index(0))]
+  for i in 2:numbufs
+    @inbounds push!(buf_tensors, itensor(NDTensors.Dense(buf[i]), Index(0) ) )
+  end
+  # Construct buffers for the transpositions
+  @inbounds buf_a = similar(NDTensors.data(storage(As[1])))
+  buf_b = similar(buf_a)
+
+  # Determine the number of contractions
+  num_contracts = length(buf_sequence)
+  # compute the first contraction
+  timer = TimerOutput()
+  @timeit timer "computing contractions after alloc" begin
+  @timeit timer "compute first contract" @inbounds contract(As[seq[1]], As[seq[2]]; buf = buf[1], buf_a=buf_a, buf_b = buf_b)
+  @inbounds setinds!(buf_tensors[1], noncommoninds(As[seq[1]], As[seq[2]]))
+  # for the remaining contractions need to check
+  # input inds. If one belongs to a buffer
+  for i in 2:num_contracts
+    threei = (i-1) * 3
+    @inbounds input1 = seq[threei + 1]
+    @inbounds input2 = seq[threei + 2]
+    @inbounds output = buf_sequence[seq[threei+ 3] - len]
+    
+    @inbounds A = (input1 > len ? buf_tensors[buf_sequence[input1 - len]] : As[input1])
+    @inbounds B = (input2 > len ? buf_tensors[buf_sequence[input2- len]] : As[input2])
+
+    @timeit timer "contract and set inds" begin
+    @inbounds _contract(A, B; buf=buf[output], buf_a = buf_a, buf_b = buf_b)
+    end
+    @inbounds setinds!(buf_tensors[output], noncommoninds(A,B))
+  end
+end
+println(timer)
+  @inbounds ret_tsr = buf_sequence[end]
+  @inbounds resize!(buf[ret_tsr], dim(buf_tensors[ret_tsr]))
+  return buf_tensors[ret_tsr]
+end
+
 # Given a contraction sequence, contract the tensors recursively according
 # to that sequence.
 function _contract(As, sequence::AbstractVector; kwargs...)::ITensor
