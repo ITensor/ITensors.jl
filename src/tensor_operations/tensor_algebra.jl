@@ -279,6 +279,60 @@ function contract(
     return _contract(As, sequence; kwargs...)
   end
 end
+function contract_sequence(
+  As::Union{Vector{ITensor}, Tuple{Vararg{ITensor}}}; sequence=default_sequence(), kwargs...
+)::ITensor
+  len = length(As)
+  # this describes the contraction sequence in a simple set of 
+  # three numbers (in, in, out, in in, out, ...)
+  num_triangle = len * (len - 1)
+  num_triangle = floor(Int, num_triangle * 0.5) + num_triangle % 2
+
+  seq = Vector{Int64}(undef, num_triangle * 3)
+  fill!(seq, 0)
+  # This described which buffer to use for each output 
+  # in the most simple case, a straight line, only 2 buffers are needed.
+  # Goal is to find the min set of buffers needed to contract the network
+  result_buf_set = Vector{Int64}(undef, num_triangle)
+  fill!(result_buf_set, 0)
+  if sequence == "left_associative"
+    # Walk through to build (1,2,len +1, len +1,3,len+2, ...)
+    #sets of 3 stipulate a_position * b_position = c_position
+    seq[1] = 1
+    seq[2] = 2
+    seq[3] = len + 1
+    result_buf_set[1] = 1
+    num_contracts = 1
+    for i in 1:len-2
+      threei = 3 * i;
+      seq[threei + 1] = len + (i)
+      seq[threei + 2] = 2 + i
+      seq[threei + 3] = len + (i) + 1
+      result_buf_set[i + 1] = i % 2 + 1 
+      num_contracts+=1;
+    end
+    resize!(seq, 3 * num_contracts)
+    resize!(result_buf_set, num_contracts)
+  elseif sequence == "right_associative"
+    seq[1] = len -1
+    seq[2] = len
+    seq[3] = len + 1
+    result_buf_set[1] = 1
+    num_contracts = 1
+    for i in 1:len-2
+      threei = 3 * i;
+      seq[threei + 1] = len - 1 - i
+      seq[threei + 2] = len + (i)
+      seq[threei + 3] = len + (i) + 1
+      result_buf_set[i + 1] = i % 2 + 1 
+      num_contracts += 1
+    end
+    resize!(seq, 3 * num_contracts)
+    resize!(result_buf_set, num_contracts)
+  end
+  
+  return _contract(As, seq, result_buf_set; kwargs)
+end
 
 contract(As::ITensor...; kwargs...)::ITensor = contract(As; kwargs...)
 
