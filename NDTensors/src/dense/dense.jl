@@ -881,7 +881,7 @@ function _contract!(
     pB = NTuple{NB,Int}(props.PB)
     if haskey(dictKwargs, :buf_b)
       d = permute(collect(dims(inds(BT))), collect(pB))
-      temp = ReshapedArray(view(kwargs[:buf_a], (1:dim(BT))), Tuple(d), ())
+      temp = ReshapedArray(view(kwargs[:buf_b], (1:dim(BT))), Tuple(d), ())
       Base.permutedims!(temp, B, pB)
       Bp = temp.parent
     else
