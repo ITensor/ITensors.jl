@@ -1070,7 +1070,7 @@ function deprecate_make_inds_match!(
             inds(ψ[$n]) = $(inds(M2[n]))
 
         Make sure the site indices of your MPO/MPS match. You may need to prime
-        one of the MPS, such as `dot(ϕ', ψ)`.""",
+        one of the MPS, such as `dot(ϕ', ψ)`."""
       )
     end
     make_inds_match = false
