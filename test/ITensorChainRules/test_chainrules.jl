@@ -725,3 +725,52 @@ end
   @test f(x) ≈ f(x_itensor)
   @test contract(f'(x)) ≈ f'(x_itensor)
 end
+
+@testset "contract/apply MPOs on MPSs" begin
+  n = 2
+  s = siteinds("S=1/2", n)
+  x = (x -> outer(x', x))(randomMPS(s; linkdims=4))
+  x_itensor = contract(x)
+  y = randomMPS(s; linkdims=4)
+  y_itensor = contract(y)
+
+  f = x -> inner(apply(x, y), apply(x, y))
+  g = x -> inner(apply(x, y_itensor), apply(x, y_itensor))
+  @test f(x) ≈ g(x_itensor)
+  @test contract(f'(x)) ≈ g'(x_itensor)
+
+  f = y -> inner(apply(x, y), apply(x, y))
+  g = y -> inner(apply(x_itensor, y), apply(x_itensor, y))
+  @test f(y) ≈ g(y_itensor)
+  @test contract(f'(y)) ≈ g'(y_itensor)
+
+  f = x -> inner(replaceprime(contract(x, y), 2 => 1), replaceprime(contract(x, y), 2 => 1))
+  g =
+    x -> inner(
+      replaceprime(contract(x, y_itensor), 2 => 1),
+      replaceprime(contract(x, y_itensor), 2 => 1),
+    )
+  @test f(x) ≈ g(x_itensor)
+  @test contract(f'(x)) ≈ g'(x_itensor)
+
+  f = y -> inner(replaceprime(contract(x, y), 2 => 1), replaceprime(contract(x, y), 2 => 1))
+  g =
+    y -> inner(
+      replaceprime(contract(x_itensor, y), 2 => 1),
+      replaceprime(contract(x_itensor, y), 2 => 1),
+    )
+  @test f(y) ≈ g(y_itensor)
+  @test contract(f'(y)) ≈ g'(y_itensor)
+
+  f = x -> inner(replaceprime(*(x, y), 2 => 1), replaceprime(*(x, y), 2 => 1))
+  g =
+    x -> inner(replaceprime(*(x, y_itensor), 2 => 1), replaceprime(*(x, y_itensor), 2 => 1))
+  @test f(x) ≈ g(x_itensor)
+  @test contract(f'(x)) ≈ g'(x_itensor)
+
+  f = y -> inner(replaceprime(*(x, y), 2 => 1), replaceprime(*(x, y), 2 => 1))
+  g =
+    y -> inner(replaceprime(*(x_itensor, y), 2 => 1), replaceprime(*(x_itensor, y), 2 => 1))
+  @test f(y) ≈ g(y_itensor)
+  @test contract(f'(y)) ≈ g'(y_itensor)
+end
