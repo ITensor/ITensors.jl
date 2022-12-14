@@ -2,7 +2,12 @@ function _contract(A::Tensor, B::Tensor; kwargs...)
   if haskey(kwargs, :buf)
     cinds = noncommoninds(A, B)
     bufsize = dim(cinds)
-    C = tensor(Dense(view(kwargs[:buf], (1:bufsize))), cinds)
+    if length(kwargs[:buf]) < bufsize
+      v = Vector{eltype(kwargs[:buf])}(undef, bufsize - length(kwargs[:buf]))
+      append!(kwargs[:buf], v)
+      #resize!(kwargs[:buf], bufsize)
+    end
+    C = tensor(Dense(kwargs[:buf]), cinds)
     labelsC, labelsA, labelsB = compute_contraction_labels(inds(C), inds(A), inds(B))
     NDTensors.contract!(C, labelsC, A, labelsA, B, labelsB, 1.0, 0.0; kwargs...)
     return C
@@ -279,6 +284,7 @@ function contract(
     return _contract(As, sequence; kwargs...)
   end
 end
+
 function contract_sequence(
   As::Union{Vector{ITensor}, Tuple{Vararg{ITensor}}}; sequence=default_sequence(), kwargs...
 )::ITensor
@@ -360,9 +366,7 @@ function _contract(As, seq::AbstractArray{Int}, buf_sequence::AbstractArray{Int}
   # Determine the number of contractions
   num_contracts = length(buf_sequence)
   # compute the first contraction
-  timer = TimerOutput()
-  @timeit timer "computing contractions after alloc" begin
-  @timeit timer "compute first contract" @inbounds contract(As[seq[1]], As[seq[2]]; buf = buf[1], buf_a=buf_a, buf_b = buf_b)
+  @inbounds contract(As[seq[1]], As[seq[2]]; buf = buf[1], buf_a=buf_a, buf_b = buf_b)
   @inbounds setinds!(buf_tensors[1], noncommoninds(As[seq[1]], As[seq[2]]))
   # for the remaining contractions need to check
   # input inds. If one belongs to a buffer
@@ -375,13 +379,9 @@ function _contract(As, seq::AbstractArray{Int}, buf_sequence::AbstractArray{Int}
     @inbounds A = (input1 > len ? buf_tensors[buf_sequence[input1 - len]] : As[input1])
     @inbounds B = (input2 > len ? buf_tensors[buf_sequence[input2- len]] : As[input2])
 
-    @timeit timer "contract and set inds" begin
     @inbounds _contract(A, B; buf=buf[output], buf_a = buf_a, buf_b = buf_b)
-    end
     @inbounds setinds!(buf_tensors[output], noncommoninds(A,B))
   end
-end
-println(timer)
   @inbounds ret_tsr = buf_sequence[end]
   @inbounds resize!(buf[ret_tsr], dim(buf_tensors[ret_tsr]))
   return buf_tensors[ret_tsr]
