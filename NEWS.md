@@ -6,6 +6,34 @@ Note that as of Julia v1.5, in order to see deprecation warnings you will need t
 
 After we release v1 of the package, we will start following [semantic versioning](https://semver.org).
 
+ITensors v0.3.22 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- `contract(::MPO, ::MPS)` rrule (#1025)
+
+ITensors v0.3.21 Release Notes
+==============================
+
+Bugs:
+
+Enhancements:
+
+- Document the write_path option for dmrg (df2a665)
+- Bump compats Functors 0.4, NDTensors 0.1.45 (#1031)
+- Fix auto fermion system for non-QN tensors (#1027)
+- MPOs constructed from sums of one-site operators now have bond dimension 2 (#1015)
+- Update readwrite test (#1007)
+- Generalize `inner(::MPO, ::MPS, ::MPO, ::MPS)` to other tag/prime conventions (#995)
+- Fix variable declaration warnings (#994)
+- Refactor (#980)
+- Add Proj0, Proj1 aliases for ProjUp, ProjDn (3d84a5e)
+- Define F operator for Qudit and Boson (#977)
+- HDF5 Support for Diag Storage (#976)
+- Allow user to set the path for disk (#975)
 
 ITensors v0.3.20 Release Notes
 ==============================

@@ -34,16 +34,16 @@ end
 
 isfermionic(i::Index) = has_fermionic_subspaces(i)
 
-has_fermionic_subspaces(is::IndexSet) = false
+has_fermionic_subspaces(is::Indices) = false
 
-function has_fermionic_subspaces(is::Union{QNIndexSet,NTuple{N,QNIndex}}) where {N}
+function has_fermionic_subspaces(is::QNIndices)
   for i in is, b in 1:nblocks(i)
     isfermionic(qn(i, b)) && (return true)
   end
   return false
 end
 
-has_fermionic_subspaces(T) = has_fermionic_subspaces(inds(T))
+has_fermionic_subspaces(T::Tensor) = has_fermionic_subspaces(inds(T))
 
 """
     fparity(qn::QN)
@@ -101,7 +101,7 @@ function NDTensors.permfactor(p, ivs::Vararg{Pair{QNIndex},N}; kwargs...) where 
 end
 
 function NDTensors.permfactor(
-  perm, block::NDTensors.Block{N}, inds::Union{QNIndexSet,NTuple{N,QNIndex}}; kwargs...
+  perm, block::NDTensors.Block{N}, inds::QNIndices; kwargs...
 ) where {N}
   using_auto_fermion() || return 1
   qns = ntuple(n -> qn(inds[n], block[n]), N)
@@ -137,8 +137,8 @@ end
   end
 
   # the "indsR" argument to compute_alpha from NDTensors
-  # may be a tuple of QNIndex, so convert to an IndexSet
-  indsR = IndexSet(input_indsR)
+  # may be a tuple of QNIndex, so convert to a Vector{Index}
+  indsR = collect(input_indsR)
 
   nlabelsT1 = NDTensors.sort(labelsT1; rev=true)
   nlabelsT2 = NDTensors.sort(labelsT2)

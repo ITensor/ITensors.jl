@@ -1,7 +1,7 @@
 name = "ITensorGPU"
 uuid = "d89171c1-af8f-46b3-badf-d2a472317c15"
 authors = ["Katharine Hyatt", "Matthew Fishman <mfishman@flatironinstitute.org>"]
-version = "0.0.6"
+version = "0.0.8"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
@@ -23,7 +23,7 @@ TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 Adapt = "3.3, 3.4"
 CUDA = "3.5.0"
 Combinatorics = "1.0.2"
-Functors = "0.2, 0.3"
+Functors = "0.2, 0.3, 0.4"
 GPUArrays = "8.1.2"
 GPUCompiler = "0.13.8, 0.16"
 HDF5 = "0.15.7, 0.16"

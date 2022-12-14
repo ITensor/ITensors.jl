@@ -200,8 +200,8 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
     @show splitblocks
   end
 
-  ampo = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
-  H = MPO(ampo, sites; splitblocks=splitblocks)
+  hubbard_ops = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
+  H = MPO(hubbard_ops, sites; splitblocks=splitblocks)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
