@@ -834,17 +834,19 @@ function _contract!(
   kwargs...,
 ) where {El,NC,NA,NB}
   dictKwargs = Dict(kwargs)
+  
   if haskey(dictKwargs, :buf_a)
-    if length(kwargs[:buf_a]) < dim(AT)
-      kwargs[:buf_a] = Vector{El}(undef, dim(AT))
+    bufsize = dim(AT)
+    if length(kwargs[:buf_a]) < bufsize
+      v = Vector{El}(undef, bufsize - length(kwargs[:buf_a]))
+      @strided append!(kwargs[:buf_a], v)
     end
   end
   if haskey(dictKwargs, :buf_b)
-    if length(kwargs[:buf_b]) < dim(BT)
-      bufb = kwargs[:buf_b]
-      #@show length(kwargs[:buf_b])
-      #bufb = Vector{El}(undef, dim(BT))
-      #@show length(kwargs[:buf_b])
+    bufsize = dim(BT)
+    if length(kwargs[:buf_b]) < bufsize
+      v = Vector{El}(undef, bufsize - length(kwargs[:buf_b]))
+      @strided append!(kwargs[:buf_b], v)
     end
   end
 
