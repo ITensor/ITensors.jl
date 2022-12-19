@@ -40,14 +40,14 @@ function diagrotation(f::T,g::T,i1::Int,i2::Int) where T<:AbstractFloat
   #determines angle of rotation of g such that it's parallel to f in the complex plane
   ##FIXME: for type stability it would be desirable to handle real and complex inputs separately, such that d is real (+-1) if f,g are real 
   theta=angle(g)-angle(f)
-  d=exp(-1im*theta/2.0)
+  d=exp(-1im*theta)
   return DiagRotation{T}(i1,i2,Real(d))
 end
 
 function diagrotation(f::Complex{T},g::Complex{T},i1::Int,i2::Int) where T<:AbstractFloat
   #determines angle of rotation of g such that it's parallel to f in the complex plane
   theta=angle(g)-angle(f)
-  d=exp(-1im*theta/2.0)
+  d=exp(-1im*theta)
   return DiagRotation{Complex{T}}(i1,i2,d)
 end
 
@@ -525,41 +525,6 @@ function correlation_matrix_to_gmps(
   return ns, V
 end
 
-function correlation_matrix_to_gmps(
-  Λ0::AbstractMatrix{ElT}; eigval_cutoff::Float64=1e-8, maxblocksize::Int=size(Λ0, 1)
-) where {ElT<:Number}
-  Λ = Hermitian(Λ0)
-  N = size(Λ, 1)
-  V = Circuit{ElT}([])
-  ns = Vector{real(ElT)}(undef, N)
-  err_tot = 0.0
-  for i in 1:N
-    blocksize = 0
-    n = 0.0
-    err = 0.0
-    p = Int[]
-    uB = 0.0
-    for blocksize in 1:maxblocksize
-      j = min(i + blocksize, N)
-      ΛB = @view Λ[i:j, i:j]
-      nB, uB = eigen(Hermitian(ΛB))
-      p = sortperm(nB; by=entropy)
-      n = nB[p[1]]
-      err = min(n, 1 - n)
-      err ≤ eigval_cutoff && break
-    end
-    err_tot += err
-    ns[i] = n
-    v = @view uB[:, p[1]]
-    g, _ = givens_rotations(v)
-    shift!(g, i - 1)
-    # In-place version of:
-    # V = g * V
-    lmul!(g, V)
-    Λ = Hermitian(g * Λ * g')
-  end
-  return ns, V
-end
 
 function slater_determinant_to_gmps(Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_gmps(conj(Φ) * transpose(Φ); kwargs...)
@@ -717,6 +682,25 @@ function interleave(xs...)
     end
   end
   return res
+end
+
+function interleave(M::AbstractMatrix)
+  @assert size(M,1)==size(M,2)
+  n=div(size(M,1),2)
+  first_half=Vector(1:n)
+  second_half=Vector(n+1:2*n)
+  interleaved_inds=interleave(first_half,second_half)
+  return M[interleaved_inds,interleaved_inds]
+end
+
+function reverse_interleave(M::AbstractMatrix)
+  @assert size(M,1)==size(M,2)
+  n=div(size(M,1),2)
+  first_half=Vector(1:n)
+  second_half=Vector(n+1:2*n)
+  interleaved_inds=interleave(first_half,second_half)
+  ordered_inds=sortperm(interleaved_inds)
+  return M[ordered_inds,ordered_inds]
 end
 
 function correlation_matrix_to_mps(
