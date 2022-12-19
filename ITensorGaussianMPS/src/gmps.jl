@@ -26,8 +26,61 @@ end
 # Rotations
 #
 
+
+
+struct DiagRotation{T} <: LinearAlgebra.AbstractRotation{T}
+  i1::Int
+  i2::Int
+  d::T    #exp(i/2θ)
+end
+
+LinearAlgebra.adjoint(G::DiagRotation) = DiagRotation(G.i1, G.i2, conj(G.d))
+
+function diagrotation(f::Real{T},g::Real{T},i1::Int,i2::Int) where T<:AbstractFloat
+  #determines angle of rotation of g such that it's parallel to f in the complex plane
+  ##FIXME: for type stability it would be desirable to handle real and complex inputs separately, such that d is real (+-1) if f,g are real 
+  theta=angle(g)-angle(f)
+  d=exp(-1im*theta/2.0)
+  return DiagRotation{Real{T}}(i1,i2,Real(d))
+end
+
+function diagrotation(f::Complex{T},g::Complex{T},i1::Int,i2::Int) where T<:AbstractFloat
+  #determines angle of rotation of g such that it's parallel to f in the complex plane
+  theta=angle(g)-angle(f)
+  d=exp(-1im*theta/2.0)
+  return DiagRotation{Complex{T}}(i1,i2,d)
+end
+
+@inline function LinearAlgebra.lmul!(G::DiagRotation, A::AbstractVecOrMat)
+  Base.require_one_based_indexing(A)
+  m, n = size(A, 1), size(A, 2)
+  if G.i2 > m
+      throw(DimensionMismatch("column indices for rotation are outside the matrix"))
+  end
+  @inbounds for i = 1:n
+      a1, a2 = A[G.i1,i], A[G.i2,i]
+      A[G.i1,i] =       a1
+      A[G.i2,i] = G.d*a2   ##figure this one out, conj proper here or not? probably not
+  end
+  return A
+end
+
+@inline function LinearAlgebra.rmul!(A::AbstractMatrix, G::DiagRotation)
+  Base.require_one_based_indexing(A)
+  m, n = size(A, 1), size(A, 2)
+  if G.i2 > n
+      throw(DimensionMismatch("column indices for rotation are outside the matrix"))
+  end
+  @inbounds for i = 1:m
+      a1, a2 = A[i,G.i1], A[i,G.i2]
+      A[i,G.i1] = a1
+      A[i,G.i2] = G.d * a2
+  end
+  return A
+end
+
 struct Circuit{T} <: LinearAlgebra.AbstractRotation{T}
-  rotations::Vector{Givens{T}}
+  rotations::Vector{Union{Givens{T},DiagRotation{T}}}
 end
 
 Base.adjoint(R::Circuit) = Adjoint(R)
@@ -41,7 +94,7 @@ function Base.copy(aR::Adjoint{<:Any,Circuit{T}}) where {T}
   return Circuit{T}(reverse!([r' for r in aR.parent.rotations]))
 end
 
-function LinearAlgebra.lmul!(G::Givens, R::Circuit)
+function LinearAlgebra.lmul!(G::Union{Givens,DiagRotation}, R::Circuit)
   push!(R.rotations, G)
   return R
 end
@@ -80,10 +133,15 @@ end
 
 function shift!(G::Circuit, i::Int)
   for (n, g) in enumerate(G.rotations)
-    G.rotations[n] = Givens(g.i1 + i, g.i2 + i, g.c, g.s)
+    if typeof(g)<:Givens
+      G.rotations[n] = Givens(g.i1 + i, g.i2 + i, g.c, g.s)
+    elseif typeof(g)<:DiagRotation
+      G.rotations[n] = DiagRotation(g.i1 + i, g.i2 + i, g.d)
+    end
   end
   return G
 end
+
 
 ngates(G::Circuit) = length(G.rotations)
 
