@@ -441,8 +441,8 @@ stored in a structure as a set of Givens rotations.
 The correlation matrix should be Hermitian, and will be treated as if it itensor
 in the algorithm.
 
-If `is_bcs`, the correlation matrix is assumed to be in interlaced annihilation operator followed by
-creation operator format
+If `is_bcs`, the correlation matrix is assumed to be in interlaced format:
+Λ[2*i-1:2*i,2*j-1:2*j]=[[c_i c_j^dagger , c_i c_j ], [c_i^dagger c_j^dagger,c_i^dagger c_j]]
 """
 function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix{ElT}; eigval_cutoff::Float64=1e-8, minblocksize::Int=1,maxblocksize::Int=size(Λ0, 1),is_bcs::Bool=false, do_checks::Bool=false
@@ -453,10 +453,12 @@ function correlation_matrix_to_gmps(
   err_tot = 0.0
   factor=is_bcs ? 2 : 1
   offset=factor-1
-  ns = Vector{real(ElT)}(undef,div(N,factor))
+  ns = Vector{real(ElT)}(undef,N)
   for i in 1:div(N,factor)
     blocksize = 0
     n = 0.0
+    n1= 0.0
+    n2=0.0
     err = 0.0
     p = Int[]
     uB = 0.0
@@ -469,7 +471,7 @@ function correlation_matrix_to_gmps(
         p=sortperm(nB)
         n1 = nB[first(p)]
         n2 = nB[last(p)]
-        err=n2
+        err=n1
         n=n1
         err ≤ eigval_cutoff && break
       else
@@ -479,7 +481,14 @@ function correlation_matrix_to_gmps(
         err ≤ eigval_cutoff && break
       end
     end
-    ns[i] = n
+    if is_bcs
+      @show n1, n2
+      ns[2*i] = n1
+      ns[2*i-1] = n2
+      
+    else
+      ns[i] = n
+    end
     err_tot += err
     v = @view uB[:, p[1]]
     if length(v)==2 && is_bcs # handle ordering of last two non-zero coefficients manually
@@ -487,11 +496,14 @@ function correlation_matrix_to_gmps(
         @assert i ==div(N,2)
       end
       if abs(v[1])>=abs(v[2])
+        #this seems generally to be the case for the last pair of sites, maybe due to boguliobov rotation?
         if do_checks
           @assert abs(v[2])<eigval_cutoff  
           @assert abs(v[1])>1-eigval_cutoff
         end
-        ns[i]=1-ns[i]   #necessary since we fix ordering instead of ordering by entropy in BCS case
+        #ns[i]=1-ns[i]   #necessary since we fix ordering instead of ordering by entropy in BCS case
+        ns[2*i] = n2
+        ns[2*i-1] = n1
       else
         if do_checks
           @assert abs(v[1])<eigval_cutoff
@@ -521,7 +533,12 @@ function correlation_matrix_to_gmps(
     #Λ = Hermitian(LinearAlgebra.lmul!(g,LinearAlgebra.rmul!(Matrix(Λ),g')))
     Λ = Hermitian(g*Matrix(Λ)*g')         
   end
-  #@show ns
+  @show ns
+  if is_bcs && do_checks ##compute occupations explicitly 
+    nscheck = real(diag(rmul!(lmul!(V,copy(Λ0)), V')))
+    @assert all(abs.(nscheck-ns).<=1e-8)
+  end
+  @show ns
   return ns, V
 end
 
@@ -561,11 +578,12 @@ end
 
 function ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index)
     U = [
-    sqrt(u.d) 0 0 0
-    0 sqrt(conj(u.d)) 0 0
-    0 0 sqrt(u.d) 0
-    0 0 0 sqrt(conj(u.d))
-    ]    
+    sqrt(conj(u.d)) 0 0 0
+    0 sqrt(u.d) 0 0
+    0 0 sqrt(conj(u.d)) 0
+    0 0 0 sqrt(u.d)
+    ]
+    ###ToDo: Check whether this is consistent with the convention chosen.    
   return itensor(U, s2', s1', dag(s2), dag(s1))
 end
 
@@ -618,48 +636,6 @@ function correlation_matrix_to_mps(
   Λ::AbstractMatrix;
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=size(Λ, 1),
-  kwargs...,
-)
-  @assert size(Λ, 1) == size(Λ, 2)
-  ns, C = correlation_matrix_to_gmps(
-    Λ; eigval_cutoff=eigval_cutoff, maxblocksize=maxblocksize
-  )
-  if all(hastags("Fermion"), s)
-    U = [ITensor(s, g) for g in reverse(C.rotations)]
-    ψ = MPS(s, n -> round(Int, ns[n]) + 1, U; kwargs...)
-  elseif all(hastags("Electron"), s)
-    isodd(length(s)) && error(
-      "For Electron type, must have even number of sites of alternating up and down spins.",
-    )
-    N = length(s)
-    if isspinful(s)
-      error(
-        "correlation_matrix_to_mps(Λ::AbstractMatrix) currently only supports spinless Fermions or Electrons that do not conserve Sz. Use correlation_matrix_to_mps(Λ_up::AbstractMatrix, Λ_dn::AbstractMatrix) to use spinful Fermions/Electrons.",
-      )
-    else
-      sf = siteinds("Fermion", 2 * N; conserve_qns=true)
-    end
-    U = [ITensor(sf, g) for g in reverse(C.rotations)]
-    ψf = MPS(sf, n -> round(Int, ns[n]) + 1, U; kwargs...)
-    ψ = MPS(N)
-    for n in 1:N
-      i, j = 2 * n - 1, 2 * n
-      C = combiner(sf[i], sf[j])
-      c = combinedind(C)
-      ψ[n] = ψf[i] * ψf[j] * C
-      ψ[n] *= δ(dag(c), s[n])
-    end
-  else
-    error("All sites must be Fermion or Electron type.")
-  end
-  return ψ
-end
-
-function correlation_matrix_to_mps(
-  s::Vector{<:Index},
-  Λ::AbstractMatrix;
-  eigval_cutoff::Float64=1e-8,
-  maxblocksize::Int=size(Λ, 1),
   minblocksize::Int=1,
   kwargs...,
 )
@@ -693,12 +669,9 @@ function correlation_matrix_to_mps(
           push!(condensed_U,swapprime(prime(U[2*i]) * U[2*i-1],2,1))
         end
         U=condensed_U
-        #safety check that eigenvalues (0,1) are handled properly
-        #nscheck = real(diag(rmul!(lmul!(C,copy(Λ0)), C')))
-        #@assert all(abs.(ns-nscheck[(1+Int(is_bcs)):(1+Int(is_bcs)):end]).<1e-10)
     end
-  ψ = MPS(ComplexF64,s, n -> round(Int, ns[n]) + 1)
-  ψ=apply(U,ψ; kwargs...)
+    ψ = MPS(ComplexF64,s, n -> round(Int, ns[is_bcs ? 2*n : n]) + 1)
+    ψ=apply(U,ψ; kwargs...)
   elseif all(hastags("Electron"), s)
     @assert is_bcs==false ###FIXME generalize above to this case
     isodd(length(s)) && error(
