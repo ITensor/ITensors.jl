@@ -544,10 +544,43 @@ function ITensors.ITensor(u::Givens, s1::Index, s2::Index)
   return itensor(U, s2', s1', dag(s2), dag(s1))
 end
 
-function ITensors.ITensor(sites::Vector{<:Index}, u::Givens)
+function ITensors.ITensor(u::Givens, s1::Index, s2::Index,is_boguliobov::Bool)
+  if is_boguliobov
+    U = [
+      u.c 0 0 u.s
+      0 1 0 0
+      0 0 1 0
+      -conj(u.s) 0 0 u.c
+     ]
+     return itensor(U, s2', s1', dag(s2), dag(s1))
+  else
+    U=ITensor(u,s1,s2)
+  end 
+end
+
+
+function ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index)
+    U = [
+    sqrt(u.d) 0 0 0
+    0 sqrt(conj(u.d)) 0 0
+    0 0 sqrt(u.d) 0
+    0 0 0 sqrt(conj(u.d))
+    ]    
+  return itensor(U, s2', s1', dag(s2), dag(s1))
+end
+
+ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index,is_boguliobov::Bool)=ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index)
+
+function ITensors.ITensor(sites::Vector{<:Index}, u::Union{Givens,DiagRotation})
   s1 = sites[u.i1]
   s2 = sites[u.i2]
   return ITensor(u, s1, s2)
+end
+
+function ITensors.ITensor(sites::Vector{<:Index}, u::Union{Givens,DiagRotation},is_boguliubov::Bool)
+  s1 = sites[u.i1]
+  s2 = sites[u.i2]
+  return ITensor(u, s1, s2,is_boguliobov)
 end
 
 """
@@ -595,6 +628,79 @@ function correlation_matrix_to_mps(
     U = [ITensor(s, g) for g in reverse(C.rotations)]
     ψ = MPS(s, n -> round(Int, ns[n]) + 1, U; kwargs...)
   elseif all(hastags("Electron"), s)
+    isodd(length(s)) && error(
+      "For Electron type, must have even number of sites of alternating up and down spins.",
+    )
+    N = length(s)
+    if isspinful(s)
+      error(
+        "correlation_matrix_to_mps(Λ::AbstractMatrix) currently only supports spinless Fermions or Electrons that do not conserve Sz. Use correlation_matrix_to_mps(Λ_up::AbstractMatrix, Λ_dn::AbstractMatrix) to use spinful Fermions/Electrons.",
+      )
+    else
+      sf = siteinds("Fermion", 2 * N; conserve_qns=true)
+    end
+    U = [ITensor(sf, g) for g in reverse(C.rotations)]
+    ψf = MPS(sf, n -> round(Int, ns[n]) + 1, U; kwargs...)
+    ψ = MPS(N)
+    for n in 1:N
+      i, j = 2 * n - 1, 2 * n
+      C = combiner(sf[i], sf[j])
+      c = combinedind(C)
+      ψ[n] = ψf[i] * ψf[j] * C
+      ψ[n] *= δ(dag(c), s[n])
+    end
+  else
+    error("All sites must be Fermion or Electron type.")
+  end
+  return ψ
+end
+
+function correlation_matrix_to_mps(
+  s::Vector{<:Index},
+  Λ::AbstractMatrix;
+  eigval_cutoff::Float64=1e-8,
+  maxblocksize::Int=size(Λ, 1),
+  minblocksize::Int=1,
+  kwargs...,
+)
+  Λ0=copy(Λ)
+  @assert size(Λ, 1) == size(Λ, 2)
+  
+  ##detect whether it's a bcs state or not based on dim(Λ)/length(s) == 1 or 2
+  if length(s)==size(Λ, 1)
+    is_bcs=false
+  elseif 2*length(s)==size(Λ, 1)
+    is_bcs=true
+  end
+  
+  ns, C = correlation_matrix_to_gmps(
+    Λ; eigval_cutoff=eigval_cutoff, minblocksize=minblocksize, maxblocksize=maxblocksize,is_bcs=is_bcs
+  )
+  if all(hastags("Fermion"), s)
+    if is_bcs
+      is_bog = g -> abs(g.i2-g.i1)==2 ? false : true
+      s1 = g -> div(g.i1-1,2)+1
+      s2 = g -> div(g.i2-1,2)+1
+      U = [ITensor(g,s[s1(g)],s[s2(g)],is_bog(g)) for g in reverse(C.rotations[begin:2:end])]
+    else
+      U = [ITensor(s,g) for g in reverse(C.rotations)]
+    end
+  
+    if is_bcs
+        #combine consecutive two-site gates on identical support 
+        condensed_U=ITensor[]
+        for i in 1:div(length(U),2)
+          push!(condensed_U,swapprime(prime(U[2*i]) * U[2*i-1],2,1))
+        end
+        U=condensed_U
+        #safety check that eigenvalues (0,1) are handled properly
+        #nscheck = real(diag(rmul!(lmul!(C,copy(Λ0)), C')))
+        #@assert all(abs.(ns-nscheck[(1+Int(is_bcs)):(1+Int(is_bcs)):end]).<1e-10)
+    end
+  ψ = MPS(ComplexF64,s, n -> round(Int, ns[n]) + 1)
+  ψ=apply(U,ψ; kwargs...)
+  elseif all(hastags("Electron"), s)
+    @assert is_bcs==false ###FIXME generalize above to this case
     isodd(length(s)) && error(
       "For Electron type, must have even number of sites of alternating up and down spins.",
     )
