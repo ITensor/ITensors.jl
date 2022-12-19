@@ -36,12 +36,12 @@ end
 
 LinearAlgebra.adjoint(G::DiagRotation) = DiagRotation(G.i1, G.i2, conj(G.d))
 
-function diagrotation(f::Real{T},g::Real{T},i1::Int,i2::Int) where T<:AbstractFloat
+function diagrotation(f::T,g::T,i1::Int,i2::Int) where T<:AbstractFloat
   #determines angle of rotation of g such that it's parallel to f in the complex plane
   ##FIXME: for type stability it would be desirable to handle real and complex inputs separately, such that d is real (+-1) if f,g are real 
   theta=angle(g)-angle(f)
   d=exp(-1im*theta/2.0)
-  return DiagRotation{Real{T}}(i1,i2,Real(d))
+  return DiagRotation{T}(i1,i2,Real(d))
 end
 
 function diagrotation(f::Complex{T},g::Complex{T},i1::Int,i2::Int) where T<:AbstractFloat
@@ -247,6 +247,111 @@ function givens_rotations(v::AbstractVector{ElT}) where {ElT}
 end
 
 """
+givens_rotation_real(v::AbstractVector)
+
+For a vector `v`, return the `2*length(v)-1`
+real Givens rotations `g` and the norm `r` such that:
+```julia
+g * v ≈ r * [n == 1 ? 1 : 0 for n in 1:length(v)]
+```
+with `g` being composed of diagonal rotation aligning pairs
+of complex numbers in the complex plane, and Givens Rotations
+with real arguments only.
+"""
+function givens_rotations_real(v0::AbstractVector{ElT}) where {ElT}
+  v=copy(v0)
+  N = length(v)
+  gs = Circuit{ElT}([])
+  r = v[1]
+  for n in reverse(1:(N - 1))
+    d=diagrotation(v[n],v[n+1],n,n+1)
+    v = d * v
+    lmul!(d, gs)
+    g, r = givens(convert.(ElT,abs.(v)), n, n + 1)
+    v = g * v
+    LinearAlgebra.lmul!(g, gs)
+  end
+  return gs,r
+end
+
+"""
+  generalized rotation(v::AbstractVector)
+  
+  For a vector `v` from a fermionic Gaussian state, return the `4*length(v)-1`
+  real Givens/Boguliobov rotations `g` and the norm `r` such that:
+  ```julia
+  g * v ≈ r * [n == 2 ? 1 : 0 for n in 1:length(v)]
+  ```
+  with `g` being composed of diagonal rotation aligning pairs
+  of complex numbers in the complex plane, and Givens/Boguliobov Rotations
+  with real arguments only, acting on the interlaced single-particle space of
+  annihilation and creation operator coefficients.
+  """
+  function generalized_rotations(v0::AbstractVector{ElT};do_boguliobov=true) where {ElT}
+    N = div(length(v0),2)
+    gs = Circuit{ElT}([])
+    v=copy(v0)
+    r = v[2]
+    #real Givens rotations for creation operator coefficients, applied to both
+    for n in reverse(1:(N-1))
+      d1 = diagrotation(v[2*n],v[2*(n+1)],2*n,2*(n+1))
+      d2 = DiagRotation(2*n - 1, 2*n+1,conj(d1.d))
+      v=d1*v
+      v=d2*v
+      
+      g1, r = givens(convert.(ElT,abs.(v)), 2*n, 2*(n + 1))
+      c,s=g1.c,g1.s
+      @assert isapprox(imag(s),0)
+      @assert isapprox(imag(c),0)
+      g2 = Givens(2*n - 1, 2*n+1, c, s)
+      v=g1*v
+      v=g2*v
+      LinearAlgebra.lmul!(d1,gs)
+      LinearAlgebra.lmul!(d2,gs)
+      LinearAlgebra.lmul!(g1,gs)
+      LinearAlgebra.lmul!(g2,gs)
+    end
+    #real Givens rotations for annihilation operator coefficients, applied to both
+    for n in reverse((1+Int(do_boguliobov)):(N-1))
+      #naming swapped to respect convention with respect to the definition of the angle θ 
+      d2 = diagrotation(v[2*n-1],v[2*n+1],2*n-1,2*n+1)
+      d1 = DiagRotation(2*n, 2*(n+1),conj(d2.d))  
+      v=d1*v
+      v=d2*v
+      
+      g1, r = givens(convert.(ElT,abs.(v)), 2*n-1, 2*n+1) 
+      c,s=g1.c,g1.s
+      @assert isapprox(imag(s),0)
+      @assert isapprox(imag(c),0)
+      g2 = Givens(2*n, 2*(n+1), c, s)
+      v=g2*v
+      v=g1*v
+      LinearAlgebra.lmul!(d1,gs)
+      LinearAlgebra.lmul!(d2,gs)
+      LinearAlgebra.lmul!(g2,gs)
+      LinearAlgebra.lmul!(g1,gs)
+    end
+    #Bogoliubov rotation
+    if do_boguliobov
+      d2=diagrotation(v[2],v[3],2,3)
+      d1=DiagRotation(1,4,conj(d2.d))
+      v = d1 * v #should have no effect
+      v = d2 * v
+      
+      g1, r = givens(convert.(ElT,abs.(v)), 2, 3)
+      g2=Givens(1,4,g1.c,g1.s)
+      v=g1*v
+      v=g2*v #should have no effect
+      LinearAlgebra.lmul!(d1,gs)
+      LinearAlgebra.lmul!(d2,gs)
+      LinearAlgebra.lmul!(g2,gs)
+      LinearAlgebra.lmul!(g1,gs)
+    end
+    return gs, v
+    
+  end
+
+"""
     correlation_matrix_to_gmps(Λ::AbstractMatrix{ElT}; eigval_cutoff::Float64 = 1e-8, maxblocksize::Int = size(Λ0, 1))
 
 Diagonalize a correlation matrix, returning the eigenvalues and eigenvectors
@@ -254,7 +359,91 @@ stored in a structure as a set of Givens rotations.
 
 The correlation matrix should be Hermitian, and will be treated as if it itensor
 in the algorithm.
+
+If `is_bcs`, the correlation matrix is assumed to be in interlaced annihilation operator followed by
+creation operator format
 """
+function correlation_matrix_to_gmps(
+  Λ0::AbstractMatrix{ElT}; eigval_cutoff::Float64=1e-8, minblocksize::Int=1,maxblocksize::Int=size(Λ0, 1),is_bcs::Bool=false, do_checks::Bool=false
+) where {ElT<:Number}
+  Λ = Hermitian(Λ0)
+  N = size(Λ, 1)
+  V = Circuit{ElT}([])
+  err_tot = 0.0
+  factor=is_bcs ? 2 : 1
+  offset=factor-1
+  ns = Vector{real(ElT)}(undef,div(N,factor))
+  for i in 1:div(N,factor)
+    blocksize = 0
+    n = 0.0
+    err = 0.0
+    p = Int[]
+    uB = 0.0
+    ΛB = 0.0
+    for blocksize in minblocksize:maxblocksize
+      j = min(factor*i + factor*blocksize, N)
+      ΛB = @view Λ[(factor*i-offset):j, (factor*i-offset):j]
+      nB, uB = eigen(Hermitian(ΛB))
+      if is_bcs
+        p=sortperm(nB)
+        n1 = nB[first(p)]
+        n2 = nB[last(p)]
+        err=n2
+        n=n1
+        err ≤ eigval_cutoff && break
+      else
+        p = sortperm(nB; by=entropy)
+        n = nB[p[1]]
+        err = min(n, 1 - n)
+        err ≤ eigval_cutoff && break
+      end
+    end
+    ns[i] = n
+    err_tot += err
+    v = @view uB[:, p[1]]
+    if length(v)==2 && is_bcs # handle ordering of last two non-zero coefficients manually
+      if do_checks
+        @assert i ==div(N,2)
+      end
+      if abs(v[1])>=abs(v[2])
+        if do_checks
+          @assert abs(v[2])<eigval_cutoff  
+          @assert abs(v[1])>1-eigval_cutoff
+        end
+        ns[i]=1-ns[i]   #necessary since we fix ordering instead of ordering by entropy in BCS case
+      else
+        if do_checks
+          @assert abs(v[1])<eigval_cutoff
+          @assert abs(v[2])>1-eigval_cutoff
+        end
+      end
+      break
+    end
+    if is_bcs
+      g, _ = generalized_rotations(copy(v))
+      if do_checks
+        vpp=copy(v)
+        vpp[1:2:end].=conj(v[2:2:end])
+        vpp[2:2:end].=conj(v[1:2:end])
+        #@show v
+        @assert isapprox(abs((g*v)[2]),1)
+        @assert isapprox(abs((g*vpp)[1]),1)
+      end
+    else
+      g, r = givens_rotations(v)
+    end
+    shift!(g, factor*(i - 1))
+    
+    # In-place version of:
+    # V = g * V
+    LinearAlgebra.lmul!(g, V)
+    #Λ = Hermitian(LinearAlgebra.lmul!(g,LinearAlgebra.rmul!(Matrix(Λ),g')))
+    Λ = Hermitian(g*Matrix(Λ)*g')         
+  end
+  #@show ns
+  return ns, V
+end
+
 function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix{ElT}; eigval_cutoff::Float64=1e-8, maxblocksize::Int=size(Λ0, 1)
 ) where {ElT<:Number}
