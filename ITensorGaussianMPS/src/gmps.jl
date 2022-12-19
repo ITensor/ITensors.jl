@@ -213,6 +213,87 @@ function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum)
   return Hermitian(h)
 end
 
+# Make a pairing Hamiltonian from quadratic pairing only Hamiltonian
+function pairing_hamiltonian(os::OpSum)
+  nterms = length(os)
+  coefs_a = Vector{Number}(undef, 0)
+  coefs_c = Vector{Number}(undef, 0)
+  
+  sites_a = Vector{Tuple{Int,Int}}(undef, 0)
+  sites_c = Vector{Tuple{Int,Int}}(undef, 0)
+  
+  nsites_a = 0
+  nsites_c = 0
+  
+  nterms_a = 0
+  nterms_c = 0
+  for n in 1:nterms
+    term = os[n]
+    coef = isreal(coefficient(term)) ? real(coefficient(term)) : term.coef
+    
+    length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
+    cc=is_creation_operator(term[1]) && is_creation_operator(term[2])
+    aa=is_annihilation_operator(term[1]) && is_annihilation_operator(term[2])
+    #@show(cc,aa,cc||aa)
+    @assert cc || aa 
+    #@assert is_annihilation_operator(term[2])
+    thesites=ntuple(n -> ITensors.site(term[n]), Val(2))
+    #@show thesites
+    if aa
+      nterms_a+=1
+      push!(coefs_a,coef)
+      push!(sites_a, thesites)
+      #@show last(sites_a)
+      nsites_a = max(nsites_a, maximum(last(sites_a)))
+    elseif cc
+      nterms_c+=1
+      push!(coefs_c, coef)
+      push!(sites_c,ntuple(n -> ITensors.site(term[n]), Val(2)))
+      nsites_c = max(nsites_c, maximum(last(sites_c)))
+    end
+  end
+  
+  ElT = all(isreal(coefs_a)) ? Float64 : ComplexF64
+  h_a = zeros(ElT, nsites_a, nsites_a)
+  for n in 1:nterms_a
+    h_a[sites_a[n]...] = coefs_a[n]
+  end
+  h_c = zeros(ElT, nsites_c, nsites_c)
+  for n in 1:nterms_c
+    h_c[sites_c[n]...] = coefs_c[n]
+  end
+  @assert isapprox(h_a,-conj(h_c))
+  #@assert isapprox(h_a,-transpose(h_a))
+  #@show h_a
+  #@show -transpose(h_a)
+  return h_a
+end
+
+"""
+pairing_hamiltonian(os_hop::OpSum,os_pair::OpSum)
+
+Assemble single-particle Hamiltonian from hopping and pairing terms.
+Returns Hamiltonian both in interlaced and blocked single particle format
+(first annhiliation operator, then creation operator)
+"""
+
+function pairing_hamiltonian(os_hop::OpSum,os_pair::OpSum)
+  hh=hopping_hamiltonian(os_hop)
+  hp=pairing_hamiltonian(os_pair)
+  @assert size(hh,1)==size(hh,2)
+  @assert eltype(hh)==eltype(hp)
+  Elt=eltype(hh)
+  H=zeros(Elt, 2*size(hh,1),2*size(hh,2))
+  HB=zeros(Elt, 2*size(hh,1),2*size(hh,2))
+  D=size(hh,1)
+  HB[1:D,1:D]=-conj(hh)
+  HB[1:D,D+1:2*D]=hp
+  HB[D+1:2*D,1:D]=-conj(hp)
+  HB[D+1:2*D,D+1:2*D]=hh
+  H.=interleave(HB)
+  return H,HB
+end
+
 # Make a Slater determinant matrix from a hopping Hamiltonian
 # h with Nf fermions.
 function slater_determinant_matrix(h::AbstractMatrix, Nf::Int)
