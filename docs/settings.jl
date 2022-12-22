@@ -52,14 +52,15 @@ settings = Dict(
     ],
     "Upgrade guides" => ["Upgrading from 0.1 to 0.2" => "UpgradeGuide_0.1_to_0.2.md"],
     "ITensor indices and Einstein notation" => "Einsum.md",
-    "Advanced usage guide" => [
-      "Advanced usage guide" => "AdvancedUsageGuide.md",
+    "Advanced Usage Guide" => [
+      "Advanced Usage Guide" => "AdvancedUsageGuide.md",
       "Multithreading" => "Multithreading.md",
       "Symmetric (QN conserving) tensors: background and usage" => "QNTricks.md",
       "Timing and profiling" => "CodeTiming.md",
       "Contraction sequence optimization" => "ContractionSequenceOptimization.md",
       "HDF5 File Formats" => "HDF5FileFormats.md",
     ],
+    "Developer Guide" => "DeveloperGuide.md",
   ],
   :format => Documenter.HTML(; assets=["assets/favicon.ico"], prettyurls=false),
   :doctest => true,
