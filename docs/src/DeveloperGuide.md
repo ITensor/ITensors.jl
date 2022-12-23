@@ -46,7 +46,7 @@ Best practices:
    list of keyword arguments, so as to ensure that an error is thrown if a keyword argument
    is misspelled or missing (if it has no default value).
 
-   Example: `fC` above is a leaf function and it does not have `kwargs...` in its signature.
+   Example: `fC` above is a leaf function and does not have `kwargs...` in its signature.
 
 3. **Use Functions to Set Defaults**:
    Keyword arguments can be made optional by providing default values. To avoid having explicit and
