@@ -41,7 +41,7 @@ Best practices:
    ```
 
 2. **Leaf Functions Should Not Take `kwargs...`**:
-   Functions which are at the bottom of the call stack (or call out to non-ITensor code)
+   Functions which are the last in the call stack to take any keyword arguments
    should not take keyword arguments by the `kwargs...` pattern. They should only take an explicit
    list of keyword arguments, so as to ensure that an error is thrown if a keyword argument
    is misspelled or missing (if it has no default value).
@@ -90,5 +90,11 @@ Best practices:
 
    ```
 
+5. **External (non-ITensor) Functions**:
+   Though it requires judgment in each case, if the keyword arguments an external 
+   (non-ITensor) function accepts are small in number, not expected to change, 
+   and known ahead of time, try to list them explicitly if possible (rather than forwarding
+   with `kwargs...`). Possible exceptions could be if you want to make use of defaults 
+   defined for keyword arguments of an external function.
 
 
