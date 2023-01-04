@@ -16,7 +16,9 @@ export slater_determinant_to_mps,
   slater_determinant_matrix,
   slater_determinant_to_gmera
 
+#include("gmps_bcs_cleaned.jl")
 include("gmps.jl")
+
 include("gmera.jl")
 
 end

@@ -1,7 +1,7 @@
 #
 # Single particle von Neumann entanglement entropy
 #
-
+using PyPlot
 function entropy(n::Number)
   (n ≤ 0 || n ≥ 1) && return 0
   return -(n * log(n) + (1 - n) * log(1 - n))
@@ -41,7 +41,7 @@ function diagrotation(f::T,g::T,i1::Int,i2::Int) where T<:AbstractFloat
   ##FIXME: for type stability it would be desirable to handle real and complex inputs separately, such that d is real (+-1) if f,g are real 
   theta=angle(g)-angle(f)
   d=exp(-1im*theta)
-  return DiagRotation{T}(i1,i2,Real(d))
+  return DiagRotation{T}(i1,i2,real(d))
 end
 
 function diagrotation(f::Complex{T},g::Complex{T},i1::Int,i2::Int) where T<:AbstractFloat
@@ -80,7 +80,7 @@ end
 end
 
 struct Circuit{T} <: LinearAlgebra.AbstractRotation{T}
-  rotations::Vector{Union{Givens{T},DiagRotation{T}}}
+  rotations::Array{Union{Givens{T},DiagRotation{T}},1}
 end
 
 Base.adjoint(R::Circuit) = Adjoint(R)
@@ -330,7 +330,7 @@ end
 """
 givens_rotation_real(v::AbstractVector)
 
-For a vector `v`, return the `2*length(v)-1`
+For a vector `v`, return the `2*(length(v)-1)`
 real Givens rotations `g` and the norm `r` such that:
 ```julia
 g * v ≈ r * [n == 1 ? 1 : 0 for n in 1:length(v)]
@@ -350,6 +350,7 @@ function givens_rotations_real(v0::AbstractVector{ElT}) where {ElT}
     lmul!(d, gs)
     g, r = givens(convert.(ElT,abs.(v)), n, n + 1)
     v = g * v
+    r=v[1]
     LinearAlgebra.lmul!(g, gs)
   end
   return gs,r
@@ -432,6 +433,20 @@ end
     
   end
 
+
+function check_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number}
+  paired=false
+  Λblocked=reverse_interleave(Λ0)
+  N=div(size(Λblocked,1),2)
+  if all(abs.(Λblocked[1:N,N+1:end]) .<= eps(Float64))
+    return paired, Λblocked[N+1:end,N+1:end]
+  else
+    paired=true
+    return paired, Λ0
+  end
+end
+
+
 """
     correlation_matrix_to_gmps(Λ::AbstractMatrix{ElT}; eigval_cutoff::Float64 = 1e-8, maxblocksize::Int = size(Λ0, 1))
 
@@ -443,14 +458,25 @@ in the algorithm.
 
 If `is_bcs`, the correlation matrix is assumed to be in interlaced format:
 Λ[2*i-1:2*i,2*j-1:2*j]=[[c_i c_j^dagger , c_i c_j ], [c_i^dagger c_j^dagger,c_i^dagger c_j]]
+Note that this is NOT the standard choice in the literature.
 """
 function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix{ElT}; eigval_cutoff::Float64=1e-8, minblocksize::Int=1,maxblocksize::Int=size(Λ0, 1),is_bcs::Bool=false, do_checks::Bool=false
 ) where {ElT<:Number}
   Λ = Hermitian(Λ0)
+
   N = size(Λ, 1)
   V = Circuit{ElT}([])
   err_tot = 0.0
+  if is_bcs
+    #if Λ0 is actually number-conserving despite having a correlation matrix of a non-number conserving state,
+    #fall back to number conserving implementation
+    @show size(Λ0)
+    is_bcs, Λ=check_pairing_correlations(Λ0)
+    N=size(Λ,1)
+  end
+  @show size(Λ0)
+  @show is_bcs
   factor=is_bcs ? 2 : 1
   offset=factor-1
   ns = Vector{real(ElT)}(undef,N)
@@ -471,7 +497,7 @@ function correlation_matrix_to_gmps(
         p=sortperm(nB)
         n1 = nB[first(p)]
         n2 = nB[last(p)]
-        err=n1
+        err=min(abs(n1),abs(n2))
         n=n1
         err ≤ eigval_cutoff && break
       else
@@ -482,7 +508,7 @@ function correlation_matrix_to_gmps(
       end
     end
     if is_bcs
-      @show n1, n2
+      #@show n1, n2
       ns[2*i] = n1
       ns[2*i-1] = n2
       
@@ -533,12 +559,12 @@ function correlation_matrix_to_gmps(
     #Λ = Hermitian(LinearAlgebra.lmul!(g,LinearAlgebra.rmul!(Matrix(Λ),g')))
     Λ = Hermitian(g*Matrix(Λ)*g')         
   end
-  @show ns
+  #@show ns
   if is_bcs && do_checks ##compute occupations explicitly 
     nscheck = real(diag(rmul!(lmul!(V,copy(Λ0)), V')))
     @assert all(abs.(nscheck-ns).<=1e-8)
   end
-  @show ns
+  #@show ns
   return ns, V
 end
 
@@ -576,15 +602,38 @@ function ITensors.ITensor(u::Givens, s1::Index, s2::Index,is_boguliobov::Bool)
 end
 
 
-function ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index)
+function ITensors.ITensor(u::DiagRotation{T}, s1::Index, s2::Index) where T<:AbstractFloat
+  if u.d>0.0
     U = [
-    sqrt(conj(u.d)) 0 0 0
-    0 sqrt(u.d) 0 0
-    0 0 sqrt(conj(u.d)) 0
-    0 0 0 sqrt(u.d)
+  1 0 0 0
+  0 1 0 0
+  0 0 1 0
+  0 0 0 1
     ]
-    ###ToDo: Check whether this is consistent with the convention chosen.    
-  return itensor(U, s2', s1', dag(s2), dag(s1))
+  else
+    U = [
+    1 0 0 0
+    0 -1 0 0
+    0 0 1 0
+    0 0 0 -1
+    ]
+  end
+  ###ToDo: Check whether this is consistent with the convention chosen.
+  ###Seems to give the correct sign for imaginary components now. Either consistent convention or cancellation of two times the wrong choice.
+return itensor(U, s2', s1', dag(s2), dag(s1))
+end
+
+function ITensors.ITensor(u::DiagRotation{Complex{T}}, s1::Index, s2::Index) where T<:AbstractFloat
+  Elt=Complex
+  U = [
+  sqrt(conj(Elt(u.d))) 0 0 0
+  0 sqrt(Elt(u.d)) 0 0
+  0 0 sqrt(conj(Elt(u.d))) 0
+  0 0 0 sqrt(Elt(u.d))
+  ]
+  ###ToDo: Check whether this is consistent with the convention chosen.
+  ###Seems to give the correct sign for imaginary components now. Either consistent convention or cancellation of two times the wrong choice.
+return itensor(U, s2', s1', dag(s2), dag(s1))
 end
 
 ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index,is_boguliobov::Bool)=ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index)
@@ -639,6 +688,11 @@ function correlation_matrix_to_mps(
   minblocksize::Int=1,
   kwargs...,
 )
+  if eltype(Λ)<:AbstractFloat
+    MPS_Elt=Float64
+  else
+    MPS_Elt=ComplexF64
+  end
   Λ0=copy(Λ)
   @assert size(Λ, 1) == size(Λ, 2)
   
@@ -648,10 +702,14 @@ function correlation_matrix_to_mps(
   elseif 2*length(s)==size(Λ, 1)
     is_bcs=true
   end
-  
   ns, C = correlation_matrix_to_gmps(
     Λ; eigval_cutoff=eigval_cutoff, minblocksize=minblocksize, maxblocksize=maxblocksize,is_bcs=is_bcs
   )
+  if length(s)==length(ns)  
+    #in case Λ looked like it had pairing correlations
+    #but they were vanishingly small, fall back to number-conserving implementation
+    is_bcs=false
+  end
   if all(hastags("Fermion"), s)
     if is_bcs
       is_bog = g -> abs(g.i2-g.i1)==2 ? false : true
@@ -670,7 +728,7 @@ function correlation_matrix_to_mps(
         end
         U=condensed_U
     end
-    ψ = MPS(ComplexF64,s, n -> round(Int, ns[is_bcs ? 2*n : n]) + 1)
+    ψ = MPS(MPS_Elt,s, n -> round(Int, ns[is_bcs ? 2*n : n]) + 1)
     ψ=apply(U,ψ; kwargs...)
   elseif all(hastags("Electron"), s)
     @assert is_bcs==false ###FIXME generalize above to this case
