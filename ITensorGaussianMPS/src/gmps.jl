@@ -471,12 +471,10 @@ function correlation_matrix_to_gmps(
   if is_bcs
     #if Λ0 is actually number-conserving despite having a correlation matrix of a non-number conserving state,
     #fall back to number conserving implementation
-    @show size(Λ0)
+    #@show size(Λ0)
     is_bcs, Λ=check_pairing_correlations(Λ0)
     N=size(Λ,1)
   end
-  @show size(Λ0)
-  @show is_bcs
   factor=is_bcs ? 2 : 1
   offset=factor-1
   ns = Vector{real(ElT)}(undef,N)
