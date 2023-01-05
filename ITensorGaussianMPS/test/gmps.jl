@@ -2,8 +2,6 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
-using F_utilities
-const Fu=F_utilities
 
 @testset "Basic" begin
   # Test Givens rotations
@@ -181,6 +179,7 @@ end
     ccdag=correlation_matrix(psi,"C","Cdag")
     cc=correlation_matrix(psi,"C","C")
     cblocked=ITensorGaussianMPS.reverse_interleave(c)
+    
     @test all( abs.(cblocked[N+1:end,N+1:end]-cdagc[:,:]) .< 1e-6 )
     @test all( abs.(cblocked[1:N,1:N]-ccdag[:,:]) .< 1e-6 )
     @test all( abs.(cblocked[1:N,N+1:end]-cc[:,:]) .< 1e-6 )

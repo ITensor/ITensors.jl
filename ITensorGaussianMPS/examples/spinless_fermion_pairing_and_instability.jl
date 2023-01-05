@@ -9,8 +9,6 @@ which is resolved by an infinitesimal perturbation.
 using LinearAlgebra
 using ITensors
 using ITensorGaussianMPS
-using PyPlot
-matplotlib.use("QtAgg")
 ITensors.disable_contraction_sequence_optimization()
 let 
 # Half filling
@@ -58,25 +56,24 @@ for i in 1:N
   end
 end
 H=ITensors.MPO(os_new,sites)
+
 #Get Ground state 
 E,V=eigen(Hermitian(h))
 Φ = V[:, 1:N]
 c=conj(Φ) * transpose(Φ)
+
+#Get (G)MPS
 Gamma=ITensorGaussianMPS.reverse_interleave(c)
 pert=1e-14*rand(2*N,2*N)
 sympert=0.5*(pert+transpose(pert))
-#matshow(imag.(Gamma))
-#show()
 psi=ITensorGaussianMPS.correlation_matrix_to_mps(sites,ITensorGaussianMPS.interleave(Complex.(Gamma));eigval_cutof=1e-10,maxblocksize=14,cutoff=1e-11)
 psi_perturbed=ITensorGaussianMPS.correlation_matrix_to_mps(sites,ITensorGaussianMPS.interleave(Complex.(Gamma))+sympert;eigval_cutof=1e-10,maxblocksize=14,cutoff=1e-11)
 @show eltype(psi[1])
 cdagc=correlation_matrix(psi,"C","Cdag")
-
 println("\nFree fermion starting energy")
 @show flux(psi)
 @show inner(psi, H, psi)
 @show inner(psi_perturbed, H, psi_perturbed)
-
 
 println("\nRun dmrg with GMPS starting state")
 sweeps = Sweeps(12)
@@ -84,12 +81,9 @@ setmaxdim!(sweeps, 10, 20, 40, _maxlinkdim)
 setcutoff!(sweeps, _cutoff)
 _,psidmrg=dmrg(H, copy(psi_perturbed), sweeps)
 @show inner(psidmrg, H, psidmrg)
-#matplotlib.use("QtAgg")
-#matshow(real.(Gamma[1:N,1:N]))
-#matshow(real.(cdagc))
-#PyPlot.show()
-
 @show(abs(inner(psidmrg,psi)))
+@show(abs(inner(psidmrg,psi_perturbed)))
+
 #return
 end
 nothing
