@@ -6,7 +6,13 @@ on:
       - main
     tags: '*'
   pull_request:
+    branches:
+      - main
+    tags: '*'
   workflow_dispatch:
+    branches:
+      - main
+    tags: '*'
 
 jobs:
   build:
