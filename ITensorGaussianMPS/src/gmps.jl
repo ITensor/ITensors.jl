@@ -1,7 +1,6 @@
 #
 # Single particle von Neumann entanglement entropy
 #
-using PyPlot
 function entropy(n::Number)
   (n ≤ 0 || n ≥ 1) && return 0
   return -(n * log(n) + (1 - n) * log(1 - n))
@@ -458,7 +457,8 @@ in the algorithm.
 
 If `is_bcs`, the correlation matrix is assumed to be in interlaced format:
 Λ[2*i-1:2*i,2*j-1:2*j]=[[c_i c_j^dagger , c_i c_j ], [c_i^dagger c_j^dagger,c_i^dagger c_j]]
-Note that this is NOT the standard choice in the literature.
+Note that this may not be the standard choice in the literature, but it is internally
+consistent with the format of single-particle Hamiltonians and Slater determinants employed.
 """
 function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix{ElT}; eigval_cutoff::Float64=1e-8, minblocksize::Int=1,maxblocksize::Int=size(Λ0, 1),is_bcs::Bool=false, do_checks::Bool=false
@@ -525,7 +525,7 @@ function correlation_matrix_to_gmps(
           @assert abs(v[2])<eigval_cutoff  
           @assert abs(v[1])>1-eigval_cutoff
         end
-        #ns[i]=1-ns[i]   #necessary since we fix ordering instead of ordering by entropy in BCS case
+        #necessary since we fix ordering instead of ordering by entropy in BCS case
         ns[2*i] = n2
         ns[2*i-1] = n1
       else
