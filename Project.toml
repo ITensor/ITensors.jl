@@ -1,7 +1,7 @@
 name = "ITensors"
 uuid = "9136182c-28ba-11e9-034c-db9fb085ebd5"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org>", "Miles Stoudenmire <mstoudenmire@flatironinstitute.org>"]
-version = "0.3.22"
+version = "0.3.23"
 
 [deps]
 Adapt = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
