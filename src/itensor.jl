@@ -350,11 +350,7 @@ function ITensor(
 end
 
 function ITensor(
-  as::AliasStyle,
-  eltype::Type{<:Number},
-  A::AbstractArray{<:Number},
-  inds;
-  kwargs...,
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
 )
   return error("Indices $inds are not valid for constructing an ITensor.")
 end
