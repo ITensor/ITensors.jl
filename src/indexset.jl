@@ -541,6 +541,10 @@ function replaceinds(is::Indices, rep_inds::Pair{<:Index,<:Index}...)
   return replaceinds(is, zip(rep_inds...)...)
 end
 
+# Handle case of empty indices being replaced
+replaceinds(is::Indices) = is
+replaceinds(is::Indices, rep_inds::Tuple{}) = is
+
 function replaceinds(is::Indices, rep_inds::Vector{<:Pair{<:Index,<:Index}})
   return replaceinds(is, rep_inds...)
 end

@@ -356,7 +356,11 @@ function ITensor(
   inds;
   kwargs...,
 )
-  return error("Indices $inds are not valid for constructing an ITensor.")
+  is = indices(inds)
+  if !isa(is, Indices)
+    error("Indices $inds are not valid for constructing an ITensor.")
+  end
+  return ITensor(as, eltype, A, is; kwargs...)
 end
 
 # Convert `Adjoint` to `Matrix`

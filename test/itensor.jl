@@ -1157,6 +1157,10 @@ end
       @test hasinds(rA1, s2, l, l')
       @test hasinds(A1, s1, l, l')
 
+      @test replaceinds(A1, [] => []) == A1
+      @test replaceinds(A1, ()) == A1
+      @test replaceinds(A1) == A1
+
       # Pair notation (like Julia's replace function)
       rA1 = replaceind(A1, s1 => s2)
       @test hasinds(rA1, s2, l, l')
