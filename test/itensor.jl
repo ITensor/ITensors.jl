@@ -835,6 +835,25 @@ end
     T[i => 1, j => 1] = 3.3
     @test M[1, 1] == 1
     @test T[i => 1, j => 1] == 3.3
+
+    # Empty indices
+    A = randn(1)
+    T = itensor(A, Index[])
+    @test A[] == T[]
+    T = itensor(A, Index[], Index[])
+    @test A[] == T[]
+    T = itensor(A, Any[])
+    @test A[] == T[]
+
+    A = randn(1, 1)
+    T = itensor(A, Index[])
+    @test A[] == T[]
+    T = itensor(A, Index[], Index[])
+    @test A[] == T[]
+    T = itensor(A, Any[], Any[])
+    @test A[] == T[]
+
+    @test_throws ErrorException itensor(rand(1), Int[1])
   end
 
   @testset "Construct from AbstractArray" begin

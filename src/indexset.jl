@@ -113,7 +113,9 @@ NDTensors.dim(is::IndexSet, pos::Int) = dim(is[pos])
 Return a new Indices with the indices daggered (flip
 all of the arrow directions).
 """
-dag(is::Indices) = map(i -> dag(i), is)
+function dag(is::Indices)
+  return isempty(is) ? is : map(i -> dag(i), is)
+end
 
 # TODO: move to NDTensors
 NDTensors.dim(is::Tuple, pos::Integer) = dim(is[pos])
