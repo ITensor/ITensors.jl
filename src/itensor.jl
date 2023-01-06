@@ -350,11 +350,7 @@ function ITensor(
 end
 
 function ITensor(
-  as::AliasStyle,
-  eltype::Type{<:Number},
-  A::AbstractArray{<:Number},
-  inds;
-  kwargs...,
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
 )
   is = indices(inds)
   if !isa(is, Indices)
