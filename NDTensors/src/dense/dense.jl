@@ -18,6 +18,10 @@ struct Dense{ElT,VecT<:AbstractArray} <: TensorStorage{ElT}
   function Dense{ElT,VecT}(data::Array) where {ElT,VecT<:AbstractArray{ElT}}
     return new{ElT,VecT}(vec(data))
   end
+
+  function Dense{ElT, VecT}() where {ElT, VecT<:AbstractArray{ElT}}
+    return new{ElT, VecT}(VecT(undef, 0))
+  end
 end
 
 function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
