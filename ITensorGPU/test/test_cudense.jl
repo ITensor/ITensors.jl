@@ -7,12 +7,13 @@ using ITensors,
 
 # gpu tests!
 @testset "cuITensor, Dense{$SType} storage" for SType in (Float64, ComplexF64)
-  mi, mj, mk, ml, ma = 2, 3, 4, 5, 6, 7
+  mi, mj, mk, ml, ma = 2, 3, 4, 5, 6
   i = Index(mi, "i")
   j = Index(mj, "j")
   k = Index(mk, "k")
   l = Index(ml, "l")
   a = Index(ma, "a")
+  indices = [i, j, k, l, a]
   @testset "Test add CuDense" begin
     A = [SType(1.0) for ii in 1:dim(i), jj in 1:dim(j)]
     dA = ITensorGPU.CuDense{SType,CuVector{SType}}(SType(1.0), dim(i) * dim(j))
@@ -22,6 +23,24 @@ using ITensors,
     hC = collect(dC)
     @test collect(A + B) ≈ hC
   end
+  @testset "Test2 add CuDense" begin
+    for i1 in indices, i2 in indices
+      i1 == i2 && continue
+      A = randomITensor(SType, i1, i2)
+      B = randomITensor(SType, i1, i2)
+      cuA = cu(A)
+      cuB = cu(B)
+      C = A + B
+      cuC = cuA + cuB
+      @test C ≈ cpu(cuC) #move to CPU to avoid scalar indexing error on GPU
+      @test A ≈ cpu(cuA) #check does operation `+` modify cuA
+      @test B ≈ cpu(cuB) #check does operation `+` modify cuB
+      cuA += cuB
+      @test cuC ≈ cuA
+      @test B ≈ cpu(cuB) #check does operation `+=`` modify cuB
+    end
+  end
+
   @testset "Test subtract CuDense" begin
     A = [SType(1.0) for ii in 1:dim(i), jj in 1:dim(j)]
     dA = ITensorGPU.CuDense{SType,CuVector{SType}}(SType(1.0), dim(i) * dim(j))
@@ -30,6 +49,24 @@ using ITensors,
     dC = -(dA, IndexSet(i, j), dB, IndexSet(i, j))
     hC = collect(dC)
     @test A - B ≈ hC
+  end
+  @testset "Test2 subtract CuDense" begin
+    for i1 in indices, i2 in indices
+      i1 == i2 && continue
+      A = randomITensor(SType, i1, i2)
+      B = randomITensor(SType, i1, i2)
+      cuA = cu(A)
+      cuB = cu(B)
+      C = A - B
+      cuC = cuA - cuB
+      @test C ≈ cpu(cuC) #move to CPU to avoid scalar indexing error on GPU
+      @test A ≈ cpu(cuA) #check does operation `-` modify cuA
+      @test B ≈ cpu(cuB) #check does operation `-` modify cuB
+      cuA -= cuB
+      @test cuC ≈ cuA
+      @test B ≈ cpu(cuB) #check does operation `-=`` modify cuB
+      #end
+    end
   end
   @testset "Test permute CuDense" begin
     A = [SType(ii * jj) for ii in 1:dim(i), jj in 1:dim(j)]
