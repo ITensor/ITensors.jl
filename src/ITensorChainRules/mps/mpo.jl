@@ -8,6 +8,16 @@ function rrule(::typeof(contract), x1::MPO, x2::MPO; kwargs...)
   return y, contract_pullback
 end
 
+function rrule(::typeof(contract), x1::MPO, x2::MPS; kwargs...)
+  y = contract(x1, x2; kwargs...)
+  function contract_pullback(ȳ)
+    x̄1 = _contract(MPO, ȳ, dag(x2); kwargs...)
+    x̄2 = contract(dag(x1), ȳ; kwargs...)
+    return (NoTangent(), x̄1, x̄2)
+  end
+  return y, contract_pullback
+end
+
 function rrule(::typeof(*), x1::MPO, x2::MPO; kwargs...)
   return rrule(contract, x1, x2; kwargs...)
 end

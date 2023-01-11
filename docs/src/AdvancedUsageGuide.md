@@ -1,5 +1,5 @@
 
-# Advanced ITensor usage guide
+# Advanced ITensor Usage Guide
 
 ## Installing and updating ITensors.jl
 
