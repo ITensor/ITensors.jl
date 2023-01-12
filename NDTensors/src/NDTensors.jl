@@ -31,6 +31,7 @@ include("imports.jl")
 # DenseTensor and DiagTensor
 #
 include("aliasstyle.jl")
+include("default_storage.jl")
 include("similar.jl")
 include("tupletools.jl")
 include("dims.jl")
