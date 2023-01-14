@@ -388,14 +388,13 @@ function remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr)
   return Q, R
 end
 
+import NDTensors: rq
 #Force users to knowingly ask for zero indices using qr(A,()) syntax
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 rq(A::ITensor; kwargs...) = error(noinds_error_message("rq"))
 lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
 ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
 
-# qr is exported by the LinearAlgebra module so we need acknowledge that to avoid
-# intermitent run time errors.
 function qr(A::ITensor, Linds...; kwargs...)
   qtag::TagSet = get(kwargs, :tags, "Link,qr") #tag for new index between Q and R
   Lis = commoninds(A, indices(Linds...))
@@ -498,8 +497,6 @@ function rq(A::ITensor, Linds...; kwargs...)
   return R, Q, q
 end
 
-# lq is exported by the LinearAlgebra module so we need acknowledge that to avoid
-# intermitent run time errors.
 function lq(A::ITensor, Linds...; kwargs...)
   Q, L, q = qr(A, uniqueinds(A, Linds...); kwargs...)
   #

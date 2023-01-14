@@ -392,16 +392,16 @@ function find_zero_rows(R::AbstractMatrix, rr_cutoff::Float64)::Array{Bool} wher
 end
 
 #
-#  Trim out zero rows of R within tolerance eps. Also trim the corresponding columns
+#  Trim out zero rows of R within tolerance rr_cutoff. Also trim the corresponding columns
 #  of Q.
 #
-function trim_rows(R::AbstractMatrix, Q::AbstractMatrix, eps::Float64) where {ElT,IndsT}
-  zeros = find_zero_rows(R, eps)
+function trim_rows(R::AbstractMatrix, Q::AbstractMatrix, rr_cutoff::Float64) where {ElT,IndsT}
+  zeros = find_zero_rows(R, rr_cutoff)
   num_zero_rows = sum(zeros)
   if num_zero_rows == 0
     return R, Q
   end
-  #@printf "Rank Reveal removing %4i rows with epsrr=%.1e\n" num_zero_rows eps
+  #@printf "Rank Reveal removing %4i rows with rr_cutoff=%.1e\n" num_zero_rows rr_cutoff
   Rnr, Rnc = size(R)
   Qnr, Qnc = size(Q)
   #@assert Rnr==Qnc Q is strided to we can't asume this
@@ -420,11 +420,11 @@ function trim_rows(R::AbstractMatrix, Q::AbstractMatrix, eps::Float64) where {El
   return R1, Q1
 end
 #
-#  Trim out zero columnss of R within tolerance eps. Also trim the corresponding rows
+#  Trim out zero columnss of R within tolerance rr_cutoff. Also trim the corresponding rows
 #  of Q.
 #
-function trim_columns(R::AbstractMatrix, Q::AbstractMatrix, eps::Float64) where {ElT,IndsT}
-  R, Q = trim_rows(transpose(R), transpose(Q), eps)
+function trim_columns(R::AbstractMatrix, Q::AbstractMatrix, rr_cutoff::Float64) where {ElT,IndsT}
+  R, Q = trim_rows(transpose(R), transpose(Q), rr_cutoff)
   return transpose(R), transpose(Q)
 end
 
@@ -440,9 +440,9 @@ function qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   #
   #  Do row removal for rank revealing RQ
   #
-  epsrr::Float64 = get(kwargs, :epsrr, -1.0)
-  if epsrr >= 0.0
-    RM, QM = trim_rows(RM, QM, epsrr)
+  rr_cutoff::Float64 = get(kwargs, :rr_cutoff, -1.0)
+  if rr_cutoff >= 0.0
+    RM, QM = trim_rows(RM, QM, rr_cutoff)
   end
   #
   # Make the new indices to go onto Q and R
@@ -469,9 +469,9 @@ function rq(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   #
   #  Do row removal for rank revealing RQ
   #
-  epsrr::Float64 = get(kwargs, :epsrr, -1.0)
-  if epsrr >= 0.0
-    RM, QM = trim_columns(RM, QM, epsrr)
+  rr_cutoff::Float64 = get(kwargs, :rr_cutoff, -1.0)
+  if rr_cutoff >= 0.0
+    RM, QM = trim_columns(RM, QM, rr_cutoff)
   end
   #
   # Make the new indices to go onto Q and R

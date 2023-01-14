@@ -43,14 +43,14 @@ end
   # make some columns lineary dependent
   A[2, :] = A[1, :] * 1.1
   A[4, :] = A[1, :] * 2.1
-  Q, R = qr(A; epsrr=1e-12)
+  Q, R = qr(A; rr_cutoff=1e-12)
   @test dim(Q, 2) == n - 2 #make 2 columns actually got removed.
   @test dim(R, 1) == n - 2 #make 2 rows actually got removed.
   @test A ≈ Q * R atol = 1e-12
   nm = dim(Q, 2)
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, nm)) atol = 1e-12
 
-  R, Q = rq(A; epsrr=1e-12)
+  R, Q = rq(A; rr_cutoff=1e-12)
   @test dim(Q, 1) == n - 2 #make 2 rows actually got removed.
   @test dim(R, 2) == n - 2 #make 2 columns actually got removed.
   @test A ≈ R * Q atol = 1e-12

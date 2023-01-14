@@ -167,7 +167,7 @@ end
     end
 
     #Julia 1.6 seems to be very erratic about seeing exported symbols like rq.
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds])
+    R, Q, q = rq(A, Ainds[1:ninds])
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
@@ -189,7 +189,7 @@ end
       @test is_lower(L, q) #specify the right index
     end
 
-    Q, L, q = ITensors.ql(A, Ainds[1:ninds])
+    Q, L, q = ql(A, Ainds[1:ninds])
     @test length(inds(Q)) == ninds + 1 #+1 to account for new lq,Link index.
     @test length(inds(L)) == 3 - ninds + 1
     @test A ≈ Q * L atol = 1e-13
@@ -213,22 +213,22 @@ end
 
     Ainds = inds(A)
     A = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q = qr(A, Ainds[1:ninds]; epsrr=1e-12) #calling  qr(A) triggers not supported error.
+    Q, R, q = qr(A, Ainds[1:ninds]; rr_cutoff=1e-12) #calling  qr(A) triggers not supported error.
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds]; epsrr=1e-12)
+    R, Q, q = rq(A, Ainds[1:ninds]; rr_cutoff=1e-12)
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    L, Q, q = lq(A, Ainds[1:ninds]; epsrr=1e-12)
+    L, Q, q = lq(A, Ainds[1:ninds]; rr_cutoff=1e-12)
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    Q, L, q = ITensors.ql(A, Ainds[1:ninds]; epsrr=1e-12)
+    Q, L, q = ql(A, Ainds[1:ninds]; rr_cutoff=1e-12)
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
@@ -248,7 +248,7 @@ end
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds])
+    R, Q, q = rq(A, Ainds[1:ninds])
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
@@ -281,7 +281,7 @@ end
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
     expected_Rflux = [QN(), QN("Sz", 2), QN("Sz", 2), QN("Sz", 0), QN("Sz", 0)]
     expected_Qflux = [QN("Sz", 0), QN("Sz", -2), QN("Sz", -2), QN("Sz", 0), QN()]
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    R, Q, q = rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
@@ -317,7 +317,7 @@ end
 
     expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", -2), QN("Sz", 0), QN("Sz", 0)]
     expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 2), QN("Sz", 0), QN()]
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    R, Q, q = rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
@@ -336,7 +336,7 @@ end
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    R, Q, q = ITensors.rq(A, r; positive=true)
+    R, Q, q = rq(A, r; positive=true)
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
@@ -351,7 +351,7 @@ end
     @test min(diag(R)...) > 0.0
     test_directions(A, Q, R, q)
     @test A ≈ Q * R atol = 1e-13
-    R, Q, q = ITensors.rq(A, r; positive=true)
+    R, Q, q = rq(A, r; positive=true)
     @test min(diag(R)...) > 0.0
     test_directions(A, Q, R, q)
     @test A ≈ Q * R atol = 1e-13
@@ -382,34 +382,34 @@ end
       # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-      R, Q, q = ITensors.rq(W, ilr)
+      R, Q, q = rq(W, ilr)
       @test flux(Q) == QN("Sz", -4)
       @test flux(R) == QN("Sz", 4)
       @test W ≈ Q * R atol = 1e-13
       test_directions(W, Q, R, q)
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-      Q, L, q = ITensors.ql(W, ilq)
+      Q, L, q = ql(W, ilq)
       @test flux(Q) == QN("Sz", -4)
       @test flux(L) == QN("Sz", 4)
       @test W ≈ Q * L atol = 1e-13
       test_directions(W, Q, L, q)
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-      L, Q, q = ITensors.lq(W, ilr)
+      L, Q, q = lq(W, ilr)
       @test flux(Q) == QN("Sz", 4)
       @test flux(L) == QN("Sz", -4)
       @test W ≈ Q * L atol = 1e-13
       test_directions(W, Q, L, q)
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-      Q, L, q = ITensors.ql(W, ilq)
+      Q, L, q = ql(W, ilq)
       @test flux(Q) == QN("Sz", -4)
       @test flux(L) == QN("Sz", 4)
       @test W ≈ Q * L atol = 1e-13
       @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-      L, Q, q = ITensors.lq(W, ilr)
+      L, Q, q = lq(W, ilr)
       @test flux(Q) == QN("Sz", 4)
       @test flux(L) == QN("Sz", -4)
       @test W ≈ Q * L atol = 1e-13

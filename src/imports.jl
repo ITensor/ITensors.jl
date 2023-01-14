@@ -123,6 +123,7 @@ using ITensors.NDTensors:
   eachdiagblock,
   fill!!,
   randn!!,
+  rq,
   single_precision,
   timer
 
