@@ -386,17 +386,9 @@ end
 #
 #  QR rank reduction helpers
 #
-function find_zero_rows(R::AbstractMatrix, eps::Float64)::Array{Bool} where {ElT,IndsT}
+function find_zero_rows(R::AbstractMatrix, rr_cutoff::Float64)::Array{Bool} where {ElT,IndsT}
   nr, nc = size(R)
-  zeros = falses(nr)
-  for r in 1:nr
-    s = 0.0
-    for c in 1:nc
-      s = max(s, abs(R[r, c]))
-    end
-    zeros[r] = (s <= eps)
-  end
-  return zeros
+  return map((r)->(maximum(abs.(R[r,1:nc])) <= rr_cutoff),1:nr )
 end
 
 #
