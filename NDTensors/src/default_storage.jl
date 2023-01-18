@@ -1,39 +1,19 @@
 ## This is a fil which specifies the default storage type provided some set of parameters
 ## The parameters are the element type and storage type
-function default_storage_type(
-  storetype::Type{<:TensorStorage}=Dense,
-  eltype::Type=Float64,
-  datatype::Type{<:AbstractArray}=Vector,
-  index=Tuple{Int},
-)
-  #TODO check if indices are block sparse or not
-  type = nothing
+default_datatype(eltype::Type{<:Number}) = Vector{eltype}
+default_eltype() = Float64
+
+default_storagetype(datatype::Type{<:AbstractArray{ElT}}) where {ElT} = Dense{ElT, datatype}
+
+default_storagetype(datatype::Type{<:AbstractArray}) = default_storagetype(datatype{default_eltype()})
+default_storagetype(eltype::Type{<:Number}) = default_storage_type(default_datatype(eltype))
+default_storagetype() = default_storagetype(default_datatype(default_eltype()))
+default_storage_type(storagetype::Type{<:TensorStorage}) = 
   try
-    type = storetype{eltype,datatype{eltype}}
+    storagetype{default_eltype(), default_datatype(default_eltype())}
   catch e
-    println("Cannot construct storetype", storetype)
+    println("Provided storage type cannot be constructed like a default TensorStorage object")
     throw(e)
   end
-  return type
-end
 
-default_storage_type(eltype::Type{<:Number}) = default_storage_type(Dense, eltype)
-
-function default_storage_type(datatype::Type{<:AbstractArray})
-  return default_storage_type(Dense, Float64, datatype)
-end
-
-## This function needs to be defined for each vector type
-function default_storage_type(datatype::Type{<:Vector{ElT}}) where {ElT}
-  return default_storage_type(Dense, ElT, Vector)
-end
-
-function default_storage_type(eltype::Type, datatype::Type{<:AbstractArray})
-  return default_storage_type(Dense, eltype, datatype)
-end
-
-function default_storage_type(datatype::Type{<:AbstractArray}, eltype::Type)
-  return default_storage_type(Dense, eltype, datatype)
-end
-
-default_storage_type(index) = default_storage_type(Dense, Float64, Vector, index)
+#default_storage_type(index) = default_storage_type(Dense, Float64, Vector, index)
