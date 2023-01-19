@@ -18,19 +18,16 @@ struct Dense{ElT,VecT<:AbstractArray} <: TensorStorage{ElT}
   function Dense{ElT,VecT}(data::Array) where {ElT,VecT<:AbstractArray{ElT}}
     return new{ElT,VecT}(vec(data))
   end
+end
 
-  function Dense{ElT, VecT}() where {ElT, VecT<:AbstractArray{ElT}}
-    return new{ElT, VecT}(VecT(undef, 0))
-  end
+function Dense{ElT, VecT}() where {ElT, VecT<:AbstractArray{ElT}}
+  return Dense{ElT, VecT}(VecT())
 end
 
 ## We need a general typeinfo constructor for Dense
-## This constructor will be called by all other versions
-Dense(eltype::Type, datatype::Type) = default_storage_type(Dense, eltype, datatype)
-
-Dense(datatype::Type{<:AbstractArray}) = Dense(Float64, datatype)
-
-Dense(eltype::Type{<:Number}) = Dense(eltype, Vector)
+default_Densetype(datatype::Type{<:AbstractArray{ElT}}) where {ElT} = default_storagetype(datatype)
+default_Densetype(eltype::Type{<:Number}) = default_Densetype(default_datatype(eltype))
+default_Densetype() = default_Densetype(default_datatype(default_eltype()))
 
 Dense(datatype::Type{<:AbstractArray}, eltype::Type{<:Number}) = Dense(eltype, datatype)
 
