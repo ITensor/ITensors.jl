@@ -20,51 +20,43 @@ struct Dense{ElT,VecT<:AbstractArray} <: TensorStorage{ElT}
   end
 end
 
-function Dense{ElT, VecT}() where {ElT, VecT<:AbstractArray{ElT}}
-  return Dense{ElT, VecT}(VecT())
-end
-
 ## We need a general typeinfo constructor for Dense
 default_Densetype(datatype::Type{<:AbstractArray{ElT}}) where {ElT} = default_storagetype(datatype)
 default_Densetype(eltype::Type{<:Number}) = default_Densetype(default_datatype(eltype))
 default_Densetype() = default_Densetype(default_datatype(default_eltype()))
-
-Dense(datatype::Type{<:AbstractArray}, eltype::Type{<:Number}) = Dense(eltype, datatype)
-
 ## End typeinfo based constructors 
 
-function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
-  return Dense{ElT,VecT}(data)
-end
-
-function Dense(data::Array{ElT}) where {ElT}
-  return Dense{ElT,Vector{ElT}}(vec(data))
-end
-
-function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
-  return ElT == ElR ? Dense(data) : Dense(ElR.(data))
+#Start with high information constructors and move to low information constructors
+function Dense{ElT, VecT}() where {ElT, VecT<:AbstractArray{ElT}}
+  return default_Densetype(VecT)(VecT())
 end
 
 # Construct from a set of indices
-function Dense{ElT,VecT}(inds) where {ElT,VecT<:AbstractArray{ElT}}
-  return Dense(VecT(dim(inds)))
+function Dense{ElT,VecT}(inds::Tuple) where {ElT,VecT<:AbstractArray{ElT}}
+  return default_Densetype(VecT)(VecT(undef, dim(inds)))
+  #eturn Dense(VecT(undef, dim(inds)))
 end
 
-Dense{ElT}(dim::Integer) where {ElT} = Dense(zeros(ElT, dim))
+# This function is ill-defined. It cannot transform a complex type to real...
+function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
+  return default_Densetype(ElR)(data)
+end
 
-Dense{ElT}(::UndefInitializer, dim::Integer) where {ElT} = Dense(Vector{ElT}(undef, dim))
+#Do we want this to be zero? 
+Dense{ElT}(dim::Integer) where {ElT} = default_Densetype(ElT)(default_datatype(ElT)(undef, dim))
+
+Dense{ElT}() where {ElT} = default_Densetype(ElT)()
+
+function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
+  return default_Densetype(VecT)(data)
+end
 
 Dense(::Type{ElT}, dim::Integer) where {ElT} = Dense{ElT}(dim)
 
-Dense(x::ElT, dim::Integer) where {ElT<:Number} = Dense(fill(x, dim))
+Dense(x::ElT, dim::Integer) where {ElT<:Number} = default_Densetype(ElT)((fill(x, dim)))
 
-Dense(dim::Integer) = Dense(Float64, dim)
+Dense(dim::Integer) = Dense(default_eltype(), dim)
 
-Dense(::Type{ElT}, ::UndefInitializer, dim::Integer) where {ElT} = Dense{ElT}(undef, dim)
-
-Dense(::UndefInitializer, dim::Integer) = Dense(Float64, undef, dim)
-
-Dense{ElT}() where {ElT} = Dense(ElT[])
 Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
 
 setdata(D::Dense, ndata) = Dense(ndata)
@@ -73,8 +65,9 @@ setdata(D::Dense, ndata) = Dense(ndata)
 # Random constructors
 #
 
-function randn(::Type{StoreT}, dim::Integer) where {StoreT<:Dense}
-  return Dense(randn(eltype(StoreT), dim))
+function randn(d::Type{StoreT}, dim::Integer) where {StoreT<:Dense}
+  return default_Densetype(datatype(d))(randn(eltype(StoreT), dim))
+  #Dense(randn(eltype(StoreT), dim))
 end
 
 copy(D::Dense) = Dense(copy(data(D)))
