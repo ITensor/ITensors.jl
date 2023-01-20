@@ -5,6 +5,6 @@ default_eltype() = Float64
 
 default_storagetype(datatype::Type{<:AbstractArray{ElT}}) where {ElT} = Dense{ElT, datatype}
 
-default_storagetype(datatype::Type{<:AbstractArray}) = default_storagetype(similar_type(datatype, default_eltype()))
+default_storagetype(datatype::Type{<:AbstractArray}) = default_storagetype(similartype(datatype, default_eltype()))
 default_storagetype(eltype::Type{<:Number}) = default_storagetype(default_datatype(eltype))
 default_storagetype() = default_storagetype(default_eltype())
