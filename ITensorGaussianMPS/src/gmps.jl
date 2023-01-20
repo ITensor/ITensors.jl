@@ -25,61 +25,9 @@ end
 # Rotations
 #
 
-struct DiagRotation{T} <: LinearAlgebra.AbstractRotation{T}
-  i1::Int
-  i2::Int
-  d::T    #exp(i/2θ)
-end
-
-LinearAlgebra.adjoint(G::DiagRotation) = DiagRotation(G.i1, G.i2, conj(G.d))
-
-function diagrotation(f::T, g::T, i1::Int, i2::Int) where {T<:AbstractFloat}
-  #determines angle of rotation of g such that it's parallel to f in the complex plane
-  ##FIXME: for type stability it would be desirable to handle real and complex inputs separately, such that d is real (+-1) if f,g are real 
-  theta = angle(g) - angle(f)
-  d = exp(-1im * theta)
-  return DiagRotation{T}(i1, i2, real(d))
-end
-
-function diagrotation(
-  f::Complex{T}, g::Complex{T}, i1::Int, i2::Int
-) where {T<:AbstractFloat}
-  #determines angle of rotation of g such that it's parallel to f in the complex plane
-  theta = angle(g) - angle(f)
-  d = exp(-1im * theta)
-  return DiagRotation{Complex{T}}(i1, i2, d)
-end
-
-@inline function LinearAlgebra.lmul!(G::DiagRotation, A::AbstractVecOrMat)
-  Base.require_one_based_indexing(A)
-  m, n = size(A, 1), size(A, 2)
-  if G.i2 > m
-    throw(DimensionMismatch("column indices for rotation are outside the matrix"))
-  end
-  @inbounds for i in 1:n
-    a1, a2 = A[G.i1, i], A[G.i2, i]
-    A[G.i1, i] = a1
-    A[G.i2, i] = G.d * a2   ##figure this one out, conj proper here or not? probably not
-  end
-  return A
-end
-
-@inline function LinearAlgebra.rmul!(A::AbstractMatrix, G::DiagRotation)
-  Base.require_one_based_indexing(A)
-  m, n = size(A, 1), size(A, 2)
-  if G.i2 > n
-    throw(DimensionMismatch("column indices for rotation are outside the matrix"))
-  end
-  @inbounds for i in 1:m
-    a1, a2 = A[i, G.i1], A[i, G.i2]
-    A[i, G.i1] = a1
-    A[i, G.i2] = G.d * a2
-  end
-  return A
-end
 
 struct Circuit{T} <: LinearAlgebra.AbstractRotation{T}
-  rotations::Array{Union{Givens{T},DiagRotation{T}},1}
+  rotations::Array{Givens{T},1}
 end
 
 Base.adjoint(R::Circuit) = Adjoint(R)
@@ -93,7 +41,7 @@ function Base.copy(aR::Adjoint{<:Any,Circuit{T}}) where {T}
   return Circuit{T}(reverse!([r' for r in aR.parent.rotations]))
 end
 
-function LinearAlgebra.lmul!(G::Union{Givens,DiagRotation}, R::Circuit)
+function LinearAlgebra.lmul!(G::Givens, R::Circuit)
   push!(R.rotations, G)
   return R
 end
@@ -132,11 +80,7 @@ end
 
 function shift!(G::Circuit, i::Int)
   for (n, g) in enumerate(G.rotations)
-    if typeof(g) <: Givens
-      G.rotations[n] = Givens(g.i1 + i, g.i2 + i, g.c, g.s)
-    elseif typeof(g) <: DiagRotation
-      G.rotations[n] = DiagRotation(g.i1 + i, g.i2 + i, g.d)
-    end
+    G.rotations[n] = Givens(g.i1 + i, g.i2 + i, g.c, g.s)
   end
   return G
 end
@@ -326,35 +270,6 @@ function givens_rotations(v::AbstractVector{ElT}) where {ElT}
 end
 
 """
-givens_rotation_real(v::AbstractVector)
-
-For a vector `v`, return the `2*(length(v)-1)`
-real Givens rotations `g` and the norm `r` such that:
-```julia
-g * v ≈ r * [n == 1 ? 1 : 0 for n in 1:length(v)]
-```
-with `g` being composed of diagonal rotation aligning pairs
-of complex numbers in the complex plane, and Givens Rotations
-with real arguments only.
-"""
-function givens_rotations_real(v0::AbstractVector{ElT}) where {ElT}
-  v = copy(v0)
-  N = length(v)
-  gs = Circuit{ElT}([])
-  r = v[1]
-  for n in reverse(1:(N - 1))
-    d = diagrotation(v[n], v[n + 1], n, n + 1)
-    v = d * v
-    lmul!(d, gs)
-    g, r = givens(convert.(ElT, abs.(v)), n, n + 1)
-    v = g * v
-    r = v[1]
-    LinearAlgebra.lmul!(g, gs)
-  end
-  return gs, r
-end
-
-"""
   generalized rotation(v::AbstractVector)
   
   For a vector `v` from a fermionic Gaussian state, return the `4*length(v)-1`
@@ -368,66 +283,43 @@ end
   annihilation and creation operator coefficients.
   """
 function generalized_rotations(v0::AbstractVector{ElT}; do_boguliobov=true) where {ElT}
-  N = div(length(v0), 2)
-  gs = Circuit{ElT}([])
-  v = copy(v0)
-  r = v[2]
-  #real Givens rotations for creation operator coefficients, applied to both
-  for n in reverse(1:(N - 1))
-    d1 = diagrotation(v[2 * n], v[2 * (n + 1)], 2 * n, 2 * (n + 1))
-    d2 = DiagRotation(2 * n - 1, 2 * n + 1, conj(d1.d))
-    v = d1 * v
-    v = d2 * v
-
-    g1, r = givens(convert.(ElT, abs.(v)), 2 * n, 2 * (n + 1))
-    c, s = g1.c, g1.s
-    @assert isapprox(imag(s), 0)
-    @assert isapprox(imag(c), 0)
-    g2 = Givens(2 * n - 1, 2 * n + 1, c, s)
-    v = g1 * v
-    v = g2 * v
-    LinearAlgebra.lmul!(d1, gs)
-    LinearAlgebra.lmul!(d2, gs)
-    LinearAlgebra.lmul!(g1, gs)
-    LinearAlgebra.lmul!(g2, gs)
-  end
-  #real Givens rotations for annihilation operator coefficients, applied to both
-  for n in reverse((1 + Int(do_boguliobov)):(N - 1))
-    #naming swapped to respect convention with respect to the definition of the angle θ 
-    d2 = diagrotation(v[2 * n - 1], v[2 * n + 1], 2 * n - 1, 2 * n + 1)
-    d1 = DiagRotation(2 * n, 2 * (n + 1), conj(d2.d))
-    v = d1 * v
-    v = d2 * v
-
-    g1, r = givens(convert.(ElT, abs.(v)), 2 * n - 1, 2 * n + 1)
-    c, s = g1.c, g1.s
-    @assert isapprox(imag(s), 0)
-    @assert isapprox(imag(c), 0)
-    g2 = Givens(2 * n, 2 * (n + 1), c, s)
-    v = g2 * v
-    v = g1 * v
-    LinearAlgebra.lmul!(d1, gs)
-    LinearAlgebra.lmul!(d2, gs)
-    LinearAlgebra.lmul!(g2, gs)
-    LinearAlgebra.lmul!(g1, gs)
-  end
-  #Bogoliubov rotation
-  if do_boguliobov
-    d2 = diagrotation(v[2], v[3], 2, 3)
-    d1 = DiagRotation(1, 4, conj(d2.d))
-    v = d1 * v #should have no effect
-    v = d2 * v
-
-    g1, r = givens(convert.(ElT, abs.(v)), 2, 3)
-    g2 = Givens(1, 4, g1.c, g1.s)
-    v = g1 * v
-    v = g2 * v #should have no effect
-    LinearAlgebra.lmul!(d1, gs)
-    LinearAlgebra.lmul!(d2, gs)
-    LinearAlgebra.lmul!(g2, gs)
-    LinearAlgebra.lmul!(g1, gs)
-  end
-  return gs, v
+    N = div(length(v0), 2)
+    gs = Circuit{ElT}([])
+    v = copy(v0)
+    r = v[2]
+    #real Givens rotations for creation operator coefficients, applied to both
+    for n in reverse(1:(N - 1))
+      g1, r = givens(convert.(ElT, v), 2 * n, 2 * (n + 1))
+      c, s = g1.c, g1.s
+      @assert isapprox(imag(c), 0)
+      g2 = Givens(2 * n - 1, 2 * n + 1, c, s')
+      v = g1 * v
+      v = g2 * v
+      LinearAlgebra.lmul!(g1, gs)
+      LinearAlgebra.lmul!(g2, gs)
+    end
+    #real Givens rotations for annihilation operator coefficients, applied to both
+    for n in reverse((1 + Int(do_boguliobov)):(N - 1))
+      #naming swapped to respect convention with respect to the definition of the angle θ 
+      g1, r = givens(convert.(ElT, v), 2 * n - 1, 2 * n + 1)
+      c, s = g1.c, g1.s
+      @assert isapprox(imag(c), 0)
+      g2 = Givens(2 * n, 2 * (n + 1), c, s')
+      v = g2 * v
+      v = g1 * v
+      LinearAlgebra.lmul!(g2, gs)
+      LinearAlgebra.lmul!(g1, gs)
+    end
+    #Bogoliubov rotation
+    if do_boguliobov
+      g1, r = givens(convert.(ElT, v), 2, 3)
+      g2 = Givens(1, 4, g1.c, g1.s')
+      v = g1 * v
+      v = g2 * v #should have no effect
+      LinearAlgebra.lmul!(g2, gs)
+      LinearAlgebra.lmul!(g1, gs)
+    end
+    return gs, v
 end
 
 function check_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number}
@@ -588,10 +480,10 @@ end
 function ITensors.ITensor(u::Givens, s1::Index, s2::Index, is_boguliobov::Bool)
   if is_boguliobov
     U = [
-      u.c 0 0 u.s
+      u.c 0 0 conj(u.s)
       0 1 0 0
       0 0 1 0
-      -conj(u.s) 0 0 u.c
+      -(u.s) 0 0 u.c
     ]
     return itensor(U, s2', s1', dag(s2), dag(s1))
   else
@@ -599,59 +491,21 @@ function ITensors.ITensor(u::Givens, s1::Index, s2::Index, is_boguliobov::Bool)
   end
 end
 
-function ITensors.ITensor(u::DiagRotation{T}, s1::Index, s2::Index) where {T<:AbstractFloat}
-  if u.d > 0.0
-    U = [
-      1 0 0 0
-      0 1 0 0
-      0 0 1 0
-      0 0 0 1
-    ]
-  else
-    U = [
-      1 0 0 0
-      0 -1 0 0
-      0 0 1 0
-      0 0 0 -1
-    ]
-  end
-  ###ToDo: Check whether this is consistent with the convention chosen.
-  ###Seems to give the correct sign for imaginary components now. Either consistent convention or cancellation of two times the wrong choice.
-  return itensor(U, s2', s1', dag(s2), dag(s1))
-end
 
-function ITensors.ITensor(
-  u::DiagRotation{Complex{T}}, s1::Index, s2::Index
-) where {T<:AbstractFloat}
-  Elt = Complex
-  U = [
-    sqrt(conj(Elt(u.d))) 0 0 0
-    0 sqrt(Elt(u.d)) 0 0
-    0 0 sqrt(conj(Elt(u.d))) 0
-    0 0 0 sqrt(Elt(u.d))
-  ]
-  ###ToDo: Check whether this is consistent with the convention chosen.
-  ###Seems to give the correct sign for imaginary components now. Either consistent convention or cancellation of two times the wrong choice.
-  return itensor(U, s2', s1', dag(s2), dag(s1))
-end
-
-function ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index, is_boguliobov::Bool)
-  return ITensors.ITensor(u::DiagRotation, s1::Index, s2::Index)
-end
-
-function ITensors.ITensor(sites::Vector{<:Index}, u::Union{Givens,DiagRotation})
+function ITensors.ITensor(sites::Vector{<:Index}, u::Givens)
   s1 = sites[u.i1]
   s2 = sites[u.i2]
   return ITensor(u, s1, s2)
 end
 
 function ITensors.ITensor(
-  sites::Vector{<:Index}, u::Union{Givens,DiagRotation}, is_boguliubov::Bool
+  sites::Vector{<:Index}, u::Givens, is_boguliubov::Bool
 )
   s1 = sites[u.i1]
   s2 = sites[u.i2]
   return ITensor(u, s1, s2, is_boguliobov)
 end
+
 
 """
     MPS(sites::Vector{<:Index}, state, U::Vector{<:ITensor}; kwargs...)
@@ -729,14 +583,6 @@ function correlation_matrix_to_mps(
       U = [ITensor(s, g) for g in reverse(C.rotations)]
     end
 
-    if is_bcs
-      #combine consecutive two-site gates on identical support 
-      condensed_U = ITensor[]
-      for i in 1:div(length(U), 2)
-        push!(condensed_U, swapprime(prime(U[2 * i]) * U[2 * i - 1], 2, 1))
-      end
-      U = condensed_U
-    end
     ψ = MPS(MPS_Elt, s, n -> round(Int, ns[is_bcs ? 2 * n : n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)

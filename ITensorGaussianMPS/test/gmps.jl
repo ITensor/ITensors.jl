@@ -8,9 +8,6 @@ using Test
   v = randn(6)
   g, r = ITensorGaussianMPS.givens_rotations(v)
   @test g * v ≈ r * [n == 1 ? 1 : 0 for n in 1:length(v)]
-  v = randn(6)
-  gr, r = ITensorGaussianMPS.givens_rotations_real(v)
-  @test gr * v ≈ r * [n == 1 ? 1 : 0 for n in 1:length(v)]
 end
 
 @testset "Fermion" begin
