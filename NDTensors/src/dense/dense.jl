@@ -53,24 +53,23 @@ function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
   Dense{ElR, similartype(typeof(data), ElR)}(data)
 end
 
-#Do we want this to be zero? 
 Dense{ElT}(dim::Integer) where {ElT <: Number} = default_storagetype(ElT)(zeros(default_datatype(ElT), dim))
 
 Dense{ElT}() where {ElT} = default_storagetype(ElT)()
 
-function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
-  return default_Densetype(VecT)(data)
-end
+Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT} = Dense{ElT, VecT}(data)
 
-Dense(VecT::Type{<:AbstractArray{ElT}}, dim::Integer) where ElT = Dense{ElT, VecT}(VecT(undef, dim))
+Dense(VecT::Type{<:AbstractArray{ElT}}, dim::Integer) where ElT = Dense{ElT, VecT}((dim,))
 
 Dense(::Type{ElT}, dim::Integer) where {ElT} = Dense{ElT}(dim)
 
-Dense(x::ElT, dim::Integer) where {ElT<:Number} = default_Densetype(ElT)((fill(x, dim)))
+Dense(x::ElT, dim::Integer) where {ElT<:Number} = Dense{ElT}((fill(x, dim)))
 
 Dense(dim::Integer) = Dense(default_eltype(), dim)
 
 Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
+
+## End Dense initializers
 
 setdata(D::Dense, ndata) = Dense(ndata)
 
