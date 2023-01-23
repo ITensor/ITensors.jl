@@ -85,6 +85,24 @@ function shift!(G::Circuit, i::Int)
   return G
 end
 
+function scale!(G::Circuit, i::Int)
+  for (n, g) in enumerate(G.rotations)
+    G.rotations[n] = Givens(g.i1 * i, g.i2 * i, g.c, g.s)
+  end
+  return G
+end
+
+function conj!(G::Circuit)
+  for (n, g) in enumerate(G.rotations)
+    G.rotations[n] = Givens(g.i1, g.i2, g.c, g.s')
+  end
+  return G
+end
+
+function copy(G::Circuit{Elt}) where Elt
+  return Circuit{Elt}(copy(G.rotations))
+end
+
 ngates(G::Circuit) = length(G.rotations)
 
 #
@@ -247,6 +265,15 @@ end
 # Correlation matrix diagonalization
 #
 
+
+struct Pairing{T}
+  data::T
+end
+
+struct ConservingNf{T}
+  data::T
+end
+
 """
     givens_rotations(v::AbstractVector)
 
@@ -269,6 +296,10 @@ function givens_rotations(v::AbstractVector{ElT}) where {ElT}
   return gs, r
 end
 
+givens_rotations(v::ConservingNf) = return givens_rotations(v.data)
+
+
+
 """
   generalized rotation(v::AbstractVector)
   
@@ -282,44 +313,45 @@ end
   with real arguments only, acting on the interlaced single-particle space of
   annihilation and creation operator coefficients.
   """
-function generalized_rotations(v0::AbstractVector{ElT}; do_boguliobov=true) where {ElT}
+function givens_rotations(_v0::Pairing;)
+    v0=_v0.data  
     N = div(length(v0), 2)
+    if N==1
+      error("Givens rotation on 2-element vector not allowed for Pairing-type calculations. This should have been caught elsewhere.")
+    end
+    ElT=eltype(v0)
     gs = Circuit{ElT}([])
     v = copy(v0)
     r = v[2]
-    #real Givens rotations for creation operator coefficients, applied to both
-    for n in reverse(1:(N - 1))
-      g1, r = givens(convert.(ElT, v), 2 * n, 2 * (n + 1))
-      c, s = g1.c, g1.s
-      @assert isapprox(imag(c), 0)
-      g2 = Givens(2 * n - 1, 2 * n + 1, c, s')
-      v = g1 * v
-      v = g2 * v
-      LinearAlgebra.lmul!(g1, gs)
-      LinearAlgebra.lmul!(g2, gs)
-    end
-    #real Givens rotations for annihilation operator coefficients, applied to both
-    for n in reverse((1 + Int(do_boguliobov)):(N - 1))
-      #naming swapped to respect convention with respect to the definition of the angle θ 
-      g1, r = givens(convert.(ElT, v), 2 * n - 1, 2 * n + 1)
-      c, s = g1.c, g1.s
-      @assert isapprox(imag(c), 0)
-      g2 = Givens(2 * n, 2 * (n + 1), c, s')
-      v = g2 * v
-      v = g1 * v
-      LinearAlgebra.lmul!(g2, gs)
-      LinearAlgebra.lmul!(g1, gs)
-    end
-    #Bogoliubov rotation
-    if do_boguliobov
-      g1, r = givens(convert.(ElT, v), 2, 3)
-      g2 = Givens(1, 4, g1.c, g1.s')
-      v = g1 * v
-      v = g2 * v #should have no effect
-      LinearAlgebra.lmul!(g2, gs)
-      LinearAlgebra.lmul!(g1, gs)
-    end
-    return gs, v
+    ##GIV creation
+    gscc,_=givens_rotations(v[2:2:end])
+    gscc=scale!(gscc,2)
+    gsca=copy(gscc)
+    gsca=shift!(gsca,-1)
+    gsca=conj!(gsca)
+    gsc=interleave(gscc,gsca)
+    v=gsc*v
+    LinearAlgebra.lmul!(gsc, gs)
+
+    ##GIV annihilation
+    gsaa,_=givens_rotations(v[3:2:end])
+    gsaa=scale!(gsaa,2)
+    gsaa=shift!(gsaa,+1)
+    gsac=copy(gsaa)
+    gsac=shift!(gsac,+1)
+    gsac=conj!(gsac)
+    gsa=interleave(gsac,gsaa)
+    v=gsa*v
+    LinearAlgebra.lmul!(gsa, gs)
+    
+    ##BOG
+    g1, r = givens(v, 2, 3)
+    g2 = Givens(1, 4, g1.c, g1.s')
+    v = g1 * v
+    v = g2 * v #should have no effect
+    LinearAlgebra.lmul!(g2, gs)
+    LinearAlgebra.lmul!(g1, gs)
+    return gs, r
 end
 
 function check_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number}
@@ -333,6 +365,100 @@ function check_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number
     return paired, Λ0
   end
 end
+
+function get_subblock(_Λ::Pairing, startind::Int;
+  eigval_cutoff::Float64=1e-8,
+  minblocksize::Int=1,
+  maxblocksize::Int=div(size(_Λ.data, 1),2),)
+  blocksize = 0
+  n = 0.0
+  n1 = 0.0
+  n2 = 0.0
+  err = 0.0
+  p = Int[]
+  nB = 0.0
+  uB = 0.0
+  ΛB = 0.0
+  i=startind
+  Λ=_Λ.data
+  N=size(Λ,1)
+  for blocksize in minblocksize:maxblocksize
+    j = min(2 * i + 2 * blocksize, N)
+    ΛB = @view Λ[(2 * i - 1):j, (2 * i - 1):j]
+    nB, uB = eigen(Hermitian(ΛB))
+    p = sortperm(nB)
+    n1 = nB[first(p)]
+    n2 = nB[last(p)]
+    err = min(abs(n1), abs(n2))
+    n = n1
+    err ≤ eigval_cutoff && break
+  end
+  v = @view uB[:, p[1]]
+  return Pairing(v),Pairing(nB),err
+end
+
+function get_subblock(_Λ::ConservingNf,startind::Int;
+  eigval_cutoff::Float64=1e-8,
+  minblocksize::Int=1,
+  maxblocksize::Int=size(_Λ.data, 1),)
+  blocksize = 0
+  n = 0.0
+  err = 0.0
+  p = Int[]
+  nB=0.0
+  uB = 0.0
+  ΛB = 0.0
+  i=startind
+  Λ=_Λ.data
+  N=size(Λ,1)
+  for blocksize in minblocksize:maxblocksize
+    j = min(i + blocksize, N)
+    ΛB = @view Λ[i:j, i:j]
+    nB, uB = eigen(Hermitian(ΛB))
+    p = sortperm(nB; by=entropy)
+    n = nB[p[1]]
+    err = min(n, 1 - n)
+    err ≤ eigval_cutoff && break
+  end
+  v = @view uB[:, p[1]]
+  return ConservingNf(v), ConservingNf(nB),err
+end
+
+
+function process_populations!(_ns::ConservingNf,_nB::ConservingNf,_v::ConservingNf,i::Int)
+  p = Int[]
+  ns=_ns.data
+  nB=_nB.data
+  v=_v.data
+
+  p = sortperm(nB; by=entropy)
+  ns[i] = nB[p[1]]
+  to_break=false
+  return ConservingNf(ns),to_break
+end
+
+function process_populations!(_ns::Pairing,_nB::Pairing,_v::Pairing,i::Int)
+  p = Int[]
+  ns=_ns.data
+  nB=_nB.data
+  v=_v.data
+  
+  p = sortperm(nB)
+  n1 = nB[first(p)]
+  n2 = nB[last(p)]
+  to_break=false
+  ns[2 * i] =  n1
+  ns[2 * i - 1] = n2
+  if length(v) == 2
+    to_break=true
+    if abs(v[1]) >= abs(v[2])
+      ns[2 * i] = n2
+      ns[2 * i - 1] = n1
+    end
+  end
+  return Pairing(ns),to_break
+end
+
 
 """
     correlation_matrix_to_gmps(Λ::AbstractMatrix{ElT}; eigval_cutoff::Float64 = 1e-8, maxblocksize::Int = size(Λ0, 1))
@@ -368,95 +494,36 @@ function correlation_matrix_to_gmps(
     is_bcs, Λ = check_pairing_correlations(Λ0)
     N = size(Λ, 1)
   end
+  if is_bcs
+    calctype=Pairing
+  else
+    calctype=ConservingNf
+  end
+  Λ=calctype(Λ)
   factor = is_bcs ? 2 : 1
   offset = factor - 1
-  ns = Vector{real(ElT)}(undef, N)
+  ns = calctype(Vector{real(ElT)}(undef, N))
+  #ns
   for i in 1:div(N, factor)
-    blocksize = 0
-    n = 0.0
-    n1 = 0.0
-    n2 = 0.0
     err = 0.0
-    p = Int[]
-    uB = 0.0
-    ΛB = 0.0
-    for blocksize in minblocksize:maxblocksize
-      j = min(factor * i + factor * blocksize, N)
-      ΛB = @view Λ[(factor * i - offset):j, (factor * i - offset):j]
-      nB, uB = eigen(Hermitian(ΛB))
-      if is_bcs
-        p = sortperm(nB)
-        n1 = nB[first(p)]
-        n2 = nB[last(p)]
-        err = min(abs(n1), abs(n2))
-        n = n1
-        err ≤ eigval_cutoff && break
-      else
-        p = sortperm(nB; by=entropy)
-        n = nB[p[1]]
-        err = min(n, 1 - n)
-        err ≤ eigval_cutoff && break
-      end
-    end
-    if is_bcs
-      #@show n1, n2
-      ns[2 * i] = n1
-      ns[2 * i - 1] = n2
-
-    else
-      ns[i] = n
-    end
-    err_tot += err
-    v = @view uB[:, p[1]]
-    if length(v) == 2 && is_bcs # handle ordering of last two non-zero coefficients manually
-      if do_checks
-        @assert i == div(N, 2)
-      end
-      if abs(v[1]) >= abs(v[2])
-        #this seems generally to be the case for the last pair of sites, maybe due to boguliobov rotation?
-        if do_checks
-          @assert abs(v[2]) < eigval_cutoff
-          @assert abs(v[1]) > 1 - eigval_cutoff
-        end
-        #necessary since we fix ordering instead of ordering by entropy in BCS case
-        ns[2 * i] = n2
-        ns[2 * i - 1] = n1
-      else
-        if do_checks
-          @assert abs(v[1]) < eigval_cutoff
-          @assert abs(v[2]) > 1 - eigval_cutoff
-        end
-      end
+    v,nB,err=get_subblock(Λ,i;
+    eigval_cutoff=eigval_cutoff,
+    minblocksize=minblocksize,
+    maxblocksize=maxblocksize)
+    ns,to_break=process_populations!(ns,nB,v,i)
+    if to_break
       break
     end
-    if is_bcs
-      g, _ = generalized_rotations(copy(v))
-      if do_checks
-        vpp = copy(v)
-        vpp[1:2:end] .= conj(v[2:2:end])
-        vpp[2:2:end] .= conj(v[1:2:end])
-        #@show v
-        @assert isapprox(abs((g * v)[2]), 1)
-        @assert isapprox(abs((g * vpp)[1]), 1)
-      end
-    else
-      g, r = givens_rotations(v)
-    end
+    g, _ = givens_rotations(v)
     shift!(g, factor * (i - 1))
 
     # In-place version of:
     # V = g * V
     LinearAlgebra.lmul!(g, V)
-    #Λ = Hermitian(LinearAlgebra.lmul!(g,LinearAlgebra.rmul!(Matrix(Λ),g')))
-    Λ = Hermitian(g * Matrix(Λ) * g')
+    Λ = calctype(Hermitian(g * Matrix(Λ.data) * g'))
   end
-  #@show ns
-  if is_bcs && do_checks ##compute occupations explicitly 
-    nscheck = real(diag(rmul!(lmul!(V, copy(Λ0)), V')))
-    @assert all(abs.(nscheck - ns) .<= 1e-8)
-  end
-  #@show ns
-  return ns, V
+  
+  return ns.data, V
 end
 
 function slater_determinant_to_gmps(Φ::AbstractMatrix; kwargs...)
@@ -683,6 +750,10 @@ function interleave(M::AbstractMatrix)
   second_half = Vector((n + 1):(2 * n))
   interleaved_inds = interleave(first_half, second_half)
   return M[interleaved_inds, interleaved_inds]
+end
+
+function interleave(g1::Circuit,g2::Circuit)
+  return Circuit(interleave(g1.rotations,g2.rotations))
 end
 
 function reverse_interleave(M::AbstractMatrix)
