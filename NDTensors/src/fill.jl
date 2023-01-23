@@ -1,18 +1,18 @@
 # This is a file to write generic fills for NDTensors.
 #  This includes random fills, zeros, ...
 
-function randn(StoreT::Type{<:Dense{ElT, VecT}}, dim::Integer) where {VecT<:AbstractArray{ElT}} where {ElT<:Number}
-    return StoreT(randn(ElT, dim))
+function randn(
+  StoreT::Type{<:Dense{ElT,VecT}}, dim::Integer
+) where {VecT<:AbstractArray{ElT}} where {ElT<:Number}
+  return StoreT(randn(ElT, dim))
 end
 
-
-
-function zeros(datatype::Type{<:AbstractArray{ElT}}, dim::Integer = 0) where {ElT<:Number}
-  fill!(datatype(undef, dim), zero(ElT))
+function zeros(datatype::Type{<:AbstractArray{ElT}}, dim::Integer=0) where {ElT<:Number}
+  return fill!(datatype(undef, dim), zero(ElT))
 end
 
-function zeros(datatype::Type{<:AbstractArray}, dim::Integer = 0)
-    zeros(datatype{default_eltype()}, dim)
+function zeros(datatype::Type{<:AbstractArray}, dim::Integer=0)
+  return zeros(datatype{default_eltype()}, dim)
 end
 
 zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
