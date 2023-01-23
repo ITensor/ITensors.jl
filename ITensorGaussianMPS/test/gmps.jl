@@ -15,7 +15,7 @@ end
   Nf = N ÷ 2
 
   # Hopping
-  θs = [0.0,π / 8]
+  θs = [0.0, π / 8]
   for θ in θs
     t = exp(im * θ)
 
@@ -74,11 +74,10 @@ end
   N = 10
   Nf = N ÷ 2
   t = 1.2
-  taus=[0.0,0.0,1.0]
-  Deltas=[0.5,0.0,0.5]
-  ElTs=[Real,Real,Complex]
-  for (tau,Delta,ElT) in zip(taus,Deltas,ElTs)
-    
+  taus = [0.0, 0.0, 1.0]
+  Deltas = [0.5, 0.0, 0.5]
+  ElTs = [Real, Real, Complex]
+  for (tau, Delta, ElT) in zip(taus, Deltas, ElTs)
     os_h = OpSum()
     for n in 1:(N - 1)
       os_h .+= -t, "Cdag", n, "C", n + 1
@@ -92,7 +91,7 @@ end
       os_p .+= -Delta / 2.0, "C", n, "C", n + 1
       os_p .+= Delta / 2.0, "C", n + 1, "C", n
     end
-    Delta2=Delta+0.2
+    Delta2 = Delta + 0.2
     os_p2 = OpSum()
     for n in 1:(N - 1)
       os_p2 .+= Delta2 / 2.0, "Cdag", n, "Cdag", n + 1
@@ -103,19 +102,19 @@ end
     h, hb = ITensorGaussianMPS.pairing_hamiltonian(os_h, os_p)
     h, hb = ITensorGaussianMPS.pairing_hamiltonian(os_h, os_p)
     h2, hb2 = ITensorGaussianMPS.pairing_hamiltonian(os_h, os_p2)
-  
+
     e, u = eigen(Hermitian(h))
     E = sum(e[1:N])
     Φ = u[:, 1:N]
     @test h * Φ ≈ Φ * Diagonal(e[1:N])
     c = conj(Φ) * transpose(Φ)
-    if tau!=0.0
+    if tau != 0.0
       Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
       c = Ud' * c * Ud
     end
     n, gmps = correlation_matrix_to_gmps(Pairing(ElT.(c)); maxblocksize=8)
     ns = round.(Int, n)
-    if Delta==0.0
+    if Delta == 0.0
       @test sum(ns) == Nf
     else
       @test sum(ns) == N
@@ -127,7 +126,9 @@ end
 
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=false)
-    psi = correlation_matrix_to_mps(s, Pairing(ElT.(c)); eigval_cutoff=1e-10, maxblocksize=10)
+    psi = correlation_matrix_to_mps(
+      s, Pairing(ElT.(c)); eigval_cutoff=1e-10, maxblocksize=10
+    )
 
     # compare entries of the correlation matrix
     cdagc = correlation_matrix(psi, "Cdag", "C")
@@ -140,8 +141,6 @@ end
     @test all(abs.(cblocked[1:N, 1:N] - ccdag[:, :]) .< 1e-6)
     @test all(abs.(cblocked[1:N, (N + 1):end] - cc[:, :]) .< 1e-6)
     @test all(abs.(cblocked[(N + 1):end, 1:N] - cdagcdag[:, :]) .< 1e-6)
-    @show "Completed test for: ", tau,Delta,ElT
+    @show "Completed test for: ", tau, Delta, ElT
   end
 end
-
-
