@@ -31,19 +31,20 @@ end
 
   # Diagonalize the correlation matrix as a
   # Gaussian MPS (GMPS)
-  n, gmps = slater_determinant_to_gmps(Φ; maxblocksize=4)
-
+  n, gmps = slater_determinant_to_gmps(ConservingNf(Φ); maxblocksize=4)
+  #@show gmps
   ns = round.(Int, n)
+  @show typeof(ns)
   @test sum(ns) == Nf
 
   Λ = conj(Φ) * transpose(Φ)
+  
   @test gmps * Λ * gmps' ≈ Diagonal(ns) rtol = 1e-2
   @test gmps' * Diagonal(ns) * gmps ≈ Λ rtol = 1e-2
 
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=true)
-  ψ = slater_determinant_to_mps(s, Φ; blocksize=4)
-
+  ψ = slater_determinant_to_mps(s, ConservingNf(Φ); blocksize=4)
   os = OpSum()
   for i in 1:N, j in 1:N
     if h[i, j] ≠ 0
@@ -88,7 +89,7 @@ end
 
   # Diagonalize the correlation matrix as a
   # Gaussian MPS (GMPS)
-  n, gmps = slater_determinant_to_gmps(Φ; maxblocksize=4)
+  n, gmps = slater_determinant_to_gmps(ConservingNf(Φ); maxblocksize=4)
 
   ns = round.(Int, n)
   @test sum(ns) == Nf
@@ -99,7 +100,7 @@ end
 
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=true)
-  ψ = slater_determinant_to_mps(s, Φ; blocksize=4)
+  ψ = slater_determinant_to_mps(s, ConservingNf(Φ); blocksize=4)
 
   os = OpSum()
   for i in 1:N, j in 1:N
@@ -157,7 +158,10 @@ end
   #c2=Fu.GS_gamma(LinearAlgebra.Diagonal(H_D),U_D)
   #println("The energy of the ground state is: ", Fu.Energy(c2,(H_D,U_D)))
   tau = 1.0
-  n, gmps = correlation_matrix_to_gmps(Real.(c); maxblocksize=8, is_bcs=true)
+  #using PyPlot
+  #matshow(c)
+  #show()
+  n, gmps = correlation_matrix_to_gmps(Pairing(Real.(c)); maxblocksize=8)
   ns = round.(Int, n)
   @test sum(ns) == N
 
@@ -167,7 +171,7 @@ end
 
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=false)
-  psi = correlation_matrix_to_mps(s, c; eigval_cutoff=1e-10, maxblocksize=10)
+  psi = correlation_matrix_to_mps(s, Pairing(Real.(c)); eigval_cutoff=1e-10, maxblocksize=10)
 
   # compare entries of the correlation matrix
   cdagc = correlation_matrix(psi, "Cdag", "C")
@@ -210,7 +214,7 @@ end
   @test h * Φ ≈ Φ * Diagonal(e[1:N])
   c = conj(Φ) * transpose(Φ)
   tau = 1.0
-  n, gmps = correlation_matrix_to_gmps(Real.(c); maxblocksize=8, is_bcs=true)
+  n, gmps = correlation_matrix_to_gmps(Pairing(Real.(c)); maxblocksize=8)
   ns = round.(Int, n)
   @test sum(ns) == Nf
   ##These tests don't work because the returned gmps is not designed to work on the full BCS-like correlation matrix
@@ -221,7 +225,7 @@ end
 
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=false)
-  psi = correlation_matrix_to_mps(s, Real.(c); eigval_cutoff=1e-10, maxblocksize=10)
+  psi = correlation_matrix_to_mps(s, Pairing(Real.(c)); eigval_cutoff=1e-10, maxblocksize=10)
   @test eltype(psi[1]) == eltype(Real.(c))
   # compare entries of the correlation matrix
   cdagc = correlation_matrix(psi, "Cdag", "C")
@@ -278,7 +282,7 @@ end
   Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
 
   c = Ud' * c * Ud
-  n, gmps = correlation_matrix_to_gmps(c; maxblocksize=8, is_bcs=true)
+  n, gmps = correlation_matrix_to_gmps(Pairing(c); maxblocksize=8)
   ns = round.(Int, n)
   @test sum(ns) == N
 
@@ -288,7 +292,7 @@ end
 
   # Form the MPS
   s = siteinds("Fermion", N; conserve_qns=false)
-  psi = correlation_matrix_to_mps(s, c; eigval_cutoff=1e-10, maxblocksize=10)
+  psi = correlation_matrix_to_mps(s, Pairing(c); eigval_cutoff=1e-10, maxblocksize=10)
 
   # compare entries of the correlation matrix
   cdagc = correlation_matrix(psi, "Cdag", "C")

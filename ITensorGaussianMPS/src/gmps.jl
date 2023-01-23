@@ -99,10 +99,10 @@ function conj!(G::Circuit)
   return G
 end
 
-function copy(G::Circuit{Elt}) where Elt
-  return Circuit{Elt}(copy(G.rotations))
-end
-
+#function copy(G::Circuit{Elt}) where Elt
+#  return Circuit{Elt}(copy(G.rotations))
+#end
+#length(G::Circuit) = length(G.rotations)
 ngates(G::Circuit) = length(G.rotations)
 
 #
@@ -266,12 +266,12 @@ end
 #
 
 
-struct Pairing{T}
-  data::T
+struct Pairing
+  data
 end
 
-struct ConservingNf{T}
-  data::T
+struct ConservingNf
+  data
 end
 
 """
@@ -326,7 +326,7 @@ function givens_rotations(_v0::Pairing;)
     ##GIV creation
     gscc,_=givens_rotations(v[2:2:end])
     gscc=scale!(gscc,2)
-    gsca=copy(gscc)
+    gsca=Circuit(copy(gscc.rotations))
     gsca=shift!(gsca,-1)
     gsca=conj!(gsca)
     gsc=interleave(gscc,gsca)
@@ -337,7 +337,7 @@ function givens_rotations(_v0::Pairing;)
     gsaa,_=givens_rotations(v[3:2:end])
     gsaa=scale!(gsaa,2)
     gsaa=shift!(gsaa,+1)
-    gsac=copy(gsaa)
+    gsac=Circuit(copy(gsaa.rotations))
     gsac=shift!(gsac,+1)
     gsac=conj!(gsac)
     gsa=interleave(gsac,gsaa)
@@ -365,6 +365,22 @@ function check_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number
     return paired, Λ0
   end
 end
+
+function check_pairing_correlations(Λ0::ConservingNf)
+  return Λ0
+end
+
+function check_pairing_correlations(Λ0::Pairing)
+  is_paired,Λ=check_pairing_correlations(Λ0.data)
+  if !is_paired
+    return ConservingNf(Λ)
+  else
+    return Pairing(Λ)
+  end
+end
+
+
+
 
 function get_subblock(_Λ::Pairing, startind::Int;
   eigval_cutoff::Float64=1e-8,
@@ -474,36 +490,22 @@ If `is_bcs`, the correlation matrix is assumed to be in interlaced format:
 Note that this may not be the standard choice in the literature, but it is internally
 consistent with the format of single-particle Hamiltonians and Slater determinants employed.
 """
+
 function correlation_matrix_to_gmps(
-  Λ0::AbstractMatrix{ElT};
+  Λ0::T;
   eigval_cutoff::Float64=1e-8,
   minblocksize::Int=1,
-  maxblocksize::Int=size(Λ0, 1),
-  is_bcs::Bool=false,
-  do_checks::Bool=false,
-) where {ElT<:Number}
-  Λ = Hermitian(Λ0)
-
-  N = size(Λ, 1)
+  maxblocksize::Int=size(Λ0.data, 1),
+) where T<:Union{Pairing,ConservingNf}
+  Λ = T(Hermitian(copy(Λ0.data)))
+  ElT = eltype(Λ.data)
   V = Circuit{ElT}([])
   err_tot = 0.0
-  if is_bcs
-    #if Λ0 is actually number-conserving despite having a correlation matrix of a non-number conserving state,
-    #fall back to number conserving implementation
-    #@show size(Λ0)
-    is_bcs, Λ = check_pairing_correlations(Λ0)
-    N = size(Λ, 1)
-  end
-  if is_bcs
-    calctype=Pairing
-  else
-    calctype=ConservingNf
-  end
-  Λ=calctype(Λ)
-  factor = is_bcs ? 2 : 1
-  offset = factor - 1
+  Λ = check_pairing_correlations(Λ)
+  N = size(Λ.data, 1)
+  calctype = typeof(Λ)
+  factor = calctype <: Pairing ? 2 : 1
   ns = calctype(Vector{real(ElT)}(undef, N))
-  #ns
   for i in 1:div(N, factor)
     err = 0.0
     v,nB,err=get_subblock(Λ,i;
@@ -522,13 +524,18 @@ function correlation_matrix_to_gmps(
     LinearAlgebra.lmul!(g, V)
     Λ = calctype(Hermitian(g * Matrix(Λ.data) * g'))
   end
-  
+
   return ns.data, V
 end
 
 function slater_determinant_to_gmps(Φ::AbstractMatrix; kwargs...)
-  return correlation_matrix_to_gmps(conj(Φ) * transpose(Φ); kwargs...)
+  return correlation_matrix_to_gmps(ConservingNf(conj(Φ) * transpose(Φ)); kwargs...)
 end
+
+function slater_determinant_to_gmps(Φ::T; kwargs...) where T<:Union{ConservingNf,Pairing}
+  return correlation_matrix_to_gmps(T(conj(Φ.data) * transpose(Φ.data)); kwargs...)
+end
+
 
 #
 # Turn circuit into MPS
@@ -573,6 +580,22 @@ function ITensors.ITensor(
   return ITensor(u, s1, s2, is_boguliobov)
 end
 
+function to_manybody_gates(s::Vector{<:Index},C::Pairing)
+  is_bog = g -> abs(g.i2 - g.i1) == 2 ? false : true
+  s1 = g -> div(g.i1 - 1, 2) + 1
+  s2 = g -> div(g.i2 - 1, 2) + 1
+  U = [
+    ITensor(g, s[s1(g)], s[s2(g)], is_bog(g)) for g in reverse(C.data.rotations[begin:2:end])
+  ]
+  return U
+end
+
+to_manybody_gates(sites::Vector{<:Index},C::ConservingNf)=to_manybody_gates(sites,C.data)
+function to_manybody_gates(s::Vector{<:Index},C::Circuit)
+  U = [ITensor(s, g) for g in reverse(C.rotations)]
+  return U
+end
+
 
 """
     MPS(sites::Vector{<:Index}, state, U::Vector{<:ITensor}; kwargs...)
@@ -604,53 +627,47 @@ a matrix product state (MPS).
 The correlation matrix should correspond to a pure state (have all eigenvalues
 of zero or one).
 """
-function correlation_matrix_to_mps(
+correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ::AbstractMatrix;
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=size(Λ, 1),
   minblocksize::Int=1,
   kwargs...,
+)=correlation_matrix_to_mps(
+  s,
+  ConservingNf(Λ0);
+  eigval_cutoff=eigval_cutoff,
+  maxblocksize=maxblocksize,
+  minblocksize=minblocksize,
+  kwargs...,
 )
-  if eltype(Λ) <: AbstractFloat
+
+function correlation_matrix_to_mps(
+  s::Vector{<:Index},
+  Λ0::T;
+  eigval_cutoff::Float64=1e-8,
+  maxblocksize::Int=size(Λ0.data, 1),
+  minblocksize::Int=1,
+  kwargs...,
+) where T<:Union{Pairing,ConservingNf}
+  if eltype(Λ0.data) <: AbstractFloat
     MPS_Elt = Float64
   else
     MPS_Elt = ComplexF64
   end
-  Λ0 = copy(Λ)
-  @assert size(Λ, 1) == size(Λ, 2)
-
-  ##detect whether it's a bcs state or not based on dim(Λ)/length(s) == 1 or 2
-  if length(s) == size(Λ, 1)
-    is_bcs = false
-  elseif 2 * length(s) == size(Λ, 1)
-    is_bcs = true
-  end
+  Λ=check_pairing_correlations(Λ0)
+  calctype=typeof(Λ)
+  @assert size(Λ.data, 1) == size(Λ.data, 2)
   ns, C = correlation_matrix_to_gmps(
     Λ;
     eigval_cutoff=eigval_cutoff,
     minblocksize=minblocksize,
     maxblocksize=maxblocksize,
-    is_bcs=is_bcs,
-  )
-  if length(s) == length(ns)
-    #in case Λ looked like it had pairing correlations
-    #but they were vanishingly small, fall back to number-conserving implementation
-    is_bcs = false
-  end
+    )
   if all(hastags("Fermion"), s)
-    if is_bcs
-      is_bog = g -> abs(g.i2 - g.i1) == 2 ? false : true
-      s1 = g -> div(g.i1 - 1, 2) + 1
-      s2 = g -> div(g.i2 - 1, 2) + 1
-      U = [
-        ITensor(g, s[s1(g)], s[s2(g)], is_bog(g)) for g in reverse(C.rotations[begin:2:end])
-      ]
-    else
-      U = [ITensor(s, g) for g in reverse(C.rotations)]
-    end
-
-    ψ = MPS(MPS_Elt, s, n -> round(Int, ns[is_bcs ? 2 * n : n]) + 1)
+    U = to_manybody_gates(s,calctype(C))
+    ψ = MPS(MPS_Elt, s, n -> round(Int, ns[calctype<:Pairing ? 2*n : n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)
     @assert is_bcs == false ###FIXME generalize above to this case
@@ -683,6 +700,10 @@ end
 
 function slater_determinant_to_mps(s::Vector{<:Index}, Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_mps(s, conj(Φ) * transpose(Φ); kwargs...)
+end
+
+function slater_determinant_to_mps(s::Vector{<:Index}, Φ::T; kwargs...) where T<:Union{Pairing,ConservingNf}
+  return correlation_matrix_to_mps(s, T(conj(Φ.data) * transpose(Φ.data)); kwargs...)
 end
 
 function slater_determinant_to_mps(
