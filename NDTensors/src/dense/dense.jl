@@ -22,28 +22,47 @@ end
 
 #Start with high information constructors and move to low information constructors
 function Dense{ElT, VecT}() where {ElT, VecT<:AbstractArray{ElT}}
-  return default_Densetype(VecT)(VecT())
+  return default_storagetype(VecT)(VecT())
 end
 
 # Construct from a set of indices
+# This will fail if zero(ElT) is not defined for the ElT
 function Dense{ElT,VecT}(inds::Tuple) where {ElT,VecT<:AbstractArray{ElT}}
-  return default_Densetype(VecT)(VecT(undef, dim(inds)))
-  #eturn Dense(VecT(undef, dim(inds)))
+  return default_storagetype(VecT)(zeros(VecT, dim(inds)))
+  #return default_storagetype(VecT)(VecT(undef, dim(inds)))
+end
+
+function Dense{ElT, VecT}(::UndefInitializer, inds::Tuple) where {ElT, VecT<:AbstractArray{ElT}}
+  return default_storagetype(VecT)(VecT(undef, dim(inds)))
+end
+
+function Dense{VecT}() where {VecT<:AbstractArray}
+  default_storagetype(VecT)()
+end
+
+function Dense{VecT}(inds::Tuple) where {VecT<:AbstractArray}
+  default_storagetype(VecT)(inds)
+end
+
+function Dense{VecT}(::UndefInitializer, inds::Tuple) where {VecT<:AbstractArray}
+  default_storagetype(VecT)(undef, inds)
 end
 
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
-  return default_Densetype(ElR)(data)
+  Dense{ElR, similartype(typeof(data), ElR)}(data)
 end
 
 #Do we want this to be zero? 
-Dense{ElT}(dim::Integer) where {ElT} = default_Densetype(ElT)(default_datatype(ElT)(undef, dim))
+Dense{ElT}(dim::Integer) where {ElT <: Number} = default_storagetype(ElT)(zeros(default_datatype(ElT), dim))
 
-Dense{ElT}() where {ElT} = default_Densetype(ElT)()
+Dense{ElT}() where {ElT} = default_storagetype(ElT)()
 
 function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
   return default_Densetype(VecT)(data)
 end
+
+Dense(VecT::Type{<:AbstractArray{ElT}}, dim::Integer) where ElT = Dense{ElT, VecT}(VecT(undef, dim))
 
 Dense(::Type{ElT}, dim::Integer) where {ElT} = Dense{ElT}(dim)
 
@@ -55,18 +74,14 @@ Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
 
 setdata(D::Dense, ndata) = Dense(ndata)
 
-#
-# Random constructors
-#
-
-function randn(d::Type{StoreT}, dim::Integer) where {StoreT<:Dense}
-  return default_Densetype(datatype(d))(randn(eltype(StoreT), dim))
-  #Dense(randn(eltype(StoreT), dim))
-end
-
 copy(D::Dense) = Dense(copy(data(D)))
 
-Base.real(::Type{Dense{ElT,Vector{ElT}}}) where {ElT} = Dense{real(ElT),Vector{real(ElT)}}
+#This is getting closer but is still broken...
+function Base.real(::Type{Dense{ElT,VecT}}) where {VecT<:AbstractArray{ElT}} where {ElT} 
+  @show adapt(real(ElT), VecT)
+  new_datatype =  adapt(real(ElT), VecT)
+   default_Densetype( adapt(real(ElT), VecT))
+end
 
 function complex(::Type{Dense{ElT,Vector{ElT}}}) where {ElT}
   return Dense{complex(ElT),Vector{complex(ElT)}}
@@ -92,13 +107,6 @@ function similar(::Type{StorageT}, ::Type{ElT}, length::Int) where {StorageT<:De
 end
 
 similar(D::Dense, ::Type{T}) where {T<:Number} = Dense(similar(data(D), T))
-
-zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
-
-# Generic for handling `Vector` and `CuVector`
-function zeros(storagetype::Type{<:Dense}, dim::Int)
-  return fill!(similar(storagetype, dim), zero(eltype(storagetype)))
-end
 
 function promote_rule(
   ::Type{<:Dense{ElT1,VecT1}}, ::Type{<:Dense{ElT2,VecT2}}
