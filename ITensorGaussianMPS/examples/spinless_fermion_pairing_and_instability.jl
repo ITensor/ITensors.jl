@@ -68,15 +68,15 @@ let
   sympert = 0.5 * (pert + transpose(pert))
   psi = ITensorGaussianMPS.correlation_matrix_to_mps(
     sites,
-    ITensorGaussianMPS.interleave(Complex.(Gamma));
-    eigval_cutof=1e-10,
+    Pairing(ITensorGaussianMPS.interleave(Complex.(Gamma)));
+    eigval_cutoff=1e-10,
     maxblocksize=14,
     cutoff=1e-11,
   )
   psi_perturbed = ITensorGaussianMPS.correlation_matrix_to_mps(
     sites,
-    ITensorGaussianMPS.interleave(Complex.(Gamma)) + sympert;
-    eigval_cutof=1e-10,
+    Pairing(ITensorGaussianMPS.interleave(Complex.(Gamma)) + sympert);
+    eigval_cutoff=1e-10,
     maxblocksize=14,
     cutoff=1e-11,
   )
