@@ -2,8 +2,10 @@ import ITensors.NDTensors: NeverAlias, AliasStyle, AllowAlias
 import ITensors: ITensor
 import CUDA: CuArray
 
-function cuITensor(::Type{T}, inds::IndexSet) where {T<:Number}
-  return ITensor(Dense{float(T)}(CUDA.zeros(float(T), dim(inds))), inds)
+function cuITensor(eltype::Type{<:Number}, inds::IndexSet)
+  d = Dense(CUDA.zeros(eltype, dim(inds)))
+  return itensor(d, inds)
+  #return ITensor(Dense{float(T)}(CUDA.zeros(float(T), dim(inds))), inds)
 end
 cuITensor(::Type{T}, inds::Index...) where {T<:Number} = cuITensor(T, IndexSet(inds...))
 
@@ -12,9 +14,10 @@ cuITensor(inds::Index...) = cuITensor(IndexSet(inds...))
 
 cuITensor() = ITensor()
 function cuITensor(x::S, inds::IndexSet{N}) where {S<:Number,N}
-  dat = CuVector{float(S)}(undef, dim(inds))
-  fill!(dat, float(x))
-  return ITensor(Dense{S}(dat), inds)
+  #dat = CuVector{float(S)}(undef, dim(inds))
+  #fill!(dat, float(x))
+  d = Dense{CuVector}(x, dim(inds))
+  return ITensor(d, inds)
 end
 cuITensor(x::S, inds::Index...) where {S<:Number} = cuITensor(x, IndexSet(inds...))
 
