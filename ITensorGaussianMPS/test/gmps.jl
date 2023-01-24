@@ -34,8 +34,7 @@ end
 
     # Diagonalize the correlation matrix as a
     # Gaussian MPS (GMPS)
-    n, gmps = slater_determinant_to_gmps(ConservingNf(Φ); maxblocksize=4)
-
+    n, gmps = slater_determinant_to_gmps(Φ; maxblocksize=4)
     ns = round.(Int, n)
     @test sum(ns) == Nf
 
@@ -45,7 +44,7 @@ end
 
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=true)
-    ψ = slater_determinant_to_mps(s, ConservingNf(Φ); blocksize=4)
+    ψ = slater_determinant_to_mps(s, ConservingNf(Φ); maxblocksize=4)
 
     os = OpSum()
     for i in 1:N, j in 1:N
@@ -121,14 +120,14 @@ end
       @test sum(ns) == N
     end
 
-    _,Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(Pairing(c))
+    Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(Pairing(c))
     @test gmps * Λ.data * gmps' ≈ Diagonal(ns) rtol = 1e-2
     @test gmps' * Diagonal(ns) * gmps ≈ Λ.data rtol = 1e-2
 
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=false)
     psi = correlation_matrix_to_mps(
-      s, Pairing(ElT.(c)); eigval_cutoff=1e-10, maxblocksize=10
+      s, ElT.(c); eigval_cutoff=1e-10, maxblocksize=10
     )
 
     # compare entries of the correlation matrix
