@@ -835,6 +835,25 @@ end
     T[i => 1, j => 1] = 3.3
     @test M[1, 1] == 1
     @test T[i => 1, j => 1] == 3.3
+
+    # Empty indices
+    A = randn(1)
+    T = itensor(A, Index[])
+    @test A[] == T[]
+    T = itensor(A, Index[], Index[])
+    @test A[] == T[]
+    T = itensor(A, Any[])
+    @test A[] == T[]
+
+    A = randn(1, 1)
+    T = itensor(A, Index[])
+    @test A[] == T[]
+    T = itensor(A, Index[], Index[])
+    @test A[] == T[]
+    T = itensor(A, Any[], Any[])
+    @test A[] == T[]
+
+    @test_throws ErrorException itensor(rand(1), Int[1])
   end
 
   @testset "Construct from AbstractArray" begin
@@ -1137,6 +1156,10 @@ end
       rA1 = replaceind(A1, s1, s2)
       @test hasinds(rA1, s2, l, l')
       @test hasinds(A1, s1, l, l')
+
+      @test replaceinds(A1, [] => []) == A1
+      @test replaceinds(A1, ()) == A1
+      @test replaceinds(A1) == A1
 
       # Pair notation (like Julia's replace function)
       rA1 = replaceind(A1, s1 => s2)

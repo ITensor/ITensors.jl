@@ -364,6 +364,13 @@ using Compat
       end
     end
   end
+
+  @testset "dag" begin
+    is = [Index(2), Index(3)]
+    @test is == dag(is)
+    is = Index[]
+    @test dag(is) == Index[]
+  end
 end
 
 nothing
