@@ -3,6 +3,7 @@ using ITensors
 using LinearAlgebra
 using Test
 
+const Pairing = ITensorGaussianMPS.ConservingNfParity
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)

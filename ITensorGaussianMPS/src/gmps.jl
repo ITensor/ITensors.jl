@@ -77,6 +77,17 @@ function LinearAlgebra.rmul!(A::AbstractMatrix, R::Circuit)
   return A
 end
 
+function map!(f, G::Circuit)
+  for i in eachindex(G.rotations)
+    G.rotations[i] = f(G.rotations[i])
+  end
+  return G
+end
+
+function map_indices!(f, G::Circuit)
+  return map!(g -> Givens(f(g.i1), f(g.i2), g.c, g.s))
+end
+
 function shift!(G::Circuit, i::Int)
   for (n, g) in enumerate(G.rotations)
     G.rotations[n] = Givens(g.i1 + i, g.i2 + i, g.c, g.s)
@@ -263,15 +274,22 @@ end
 #
 # Correlation matrix diagonalization
 #
-
-struct Pairing
-  data
+abstract type AbstractSymmetry
 end
 
-struct ConservingNf
-  data
+
+struct ConservingNfParity{T} <: AbstractSymmetry
+  data::T
 end
 
+struct ConservingNf{T} <: AbstractSymmetry
+  data::T
+end
+
+set_data(::ConservingNf, x) = ConservingNf(x)
+set_data(::ConservingNfParity, x) = ConservingNfParity(x)
+site_stride(::ConservingNf) = 1
+site_stride(::ConservingNfParity) = 2
 """
     givens_rotations(v::AbstractVector)
 
@@ -297,7 +315,7 @@ end
 givens_rotations(v::ConservingNf) = return givens_rotations(v.data)
 
 """
-  givens_rotations(_v0::Pairing)
+  givens_rotations(_v0::ConservingNfParity)
   
   For a vector
   ```julia
@@ -313,12 +331,12 @@ givens_rotations(v::ConservingNf) = return givens_rotations(v.data)
   with real arguments only, acting on the interlaced single-particle space of
   annihilation and creation operator coefficients.
   """
-function givens_rotations(_v0::Pairing;)
+function givens_rotations(_v0::ConservingNfParity;)
   v0 = _v0.data
   N = div(length(v0), 2)
   if N == 1
     error(
-      "Givens rotation on 2-element vector not allowed for Pairing-type calculations. This should have been caught elsewhere.",
+      "Givens rotation on 2-element vector not allowed for ConservingNfParity-type calculations. This should have been caught elsewhere.",
     )
   end
   ElT = eltype(v0)
@@ -372,17 +390,17 @@ function check_pairing_correlations(Λ0::ConservingNf)
   return Λ0
 end
 
-function check_pairing_correlations(Λ0::Pairing)
+function check_pairing_correlations(Λ0::ConservingNfParity)
   is_paired, Λ = check_pairing_correlations(Λ0.data)
   if !is_paired
     return ConservingNf(Λ)
   else
-    return Pairing(Λ)
+    return ConservingNfParity(Λ)
   end
 end
 
 function get_subblock(
-  _Λ::Pairing,
+  _Λ::ConservingNfParity,
   startind::Int;
   eigval_cutoff::Float64=1e-8,
   minblocksize::Int=1,
@@ -412,7 +430,7 @@ function get_subblock(
     err ≤ eigval_cutoff && break
   end
   v = @view uB[:, p[1]]
-  return Pairing(v), Pairing(nB), err
+  return ConservingNfParity(v), ConservingNfParity(nB), err
 end
 
 function get_subblock(
@@ -459,7 +477,7 @@ function process_populations!(
   return ConservingNf(ns), to_break
 end
 
-function process_populations!(_ns::Pairing, _nB::Pairing, _v::Pairing, i::Int)
+function process_populations!(_ns::ConservingNfParity, _nB::ConservingNfParity, _v::ConservingNfParity, i::Int)
   p = Int[]
   ns = _ns.data
   nB = _nB.data
@@ -478,7 +496,7 @@ function process_populations!(_ns::Pairing, _nB::Pairing, _v::Pairing, i::Int)
       ns[2 * i - 1] = n1
     end
   end
-  return Pairing(ns), to_break
+  return ConservingNfParity(ns), to_break
 end
 
 """
@@ -523,17 +541,16 @@ function correlation_matrix_to_gmps(
   eigval_cutoff::Float64=1e-8,
   minblocksize::Int=1,
   maxblocksize::Int=size(Λ0.data, 1),
-) where {T<:Union{Pairing,ConservingNf}}
+) where {T<:AbstractSymmetry}
   Λ = T(Hermitian(copy(Λ0.data)))
   ElT = eltype(Λ.data)
   V = Circuit{ElT}([])
   err_tot = 0.0
   Λ = check_pairing_correlations(Λ)
   N = size(Λ.data, 1)
-  calctype = typeof(Λ)
-  factor = calctype <: Pairing ? 2 : 1
-  ns = calctype(Vector{real(ElT)}(undef, N))
-  for i in 1:div(N, factor)
+  #calctype = typeof(Λ)
+  ns = set_data(Λ,Vector{real(ElT)}(undef, N))
+  for i in 1:div(N, site_stride(Λ))
     err = 0.0
     v, nB, err = get_subblock(
       Λ,
@@ -547,12 +564,12 @@ function correlation_matrix_to_gmps(
       break
     end
     g, _ = givens_rotations(v)
-    shift!(g, factor * (i - 1))
+    shift!(g, site_stride(Λ) * (i - 1))
 
     # In-place version of:
     # V = g * V
     LinearAlgebra.lmul!(g, V)
-    Λ = calctype(Hermitian(g * Matrix(Λ.data) * g'))
+    Λ = set_data(Λ,Hermitian(g * Matrix(Λ.data) * g'))
   end
   ###return non-wrapped populations for backwards compatibility
   return ns.data, V
@@ -562,8 +579,8 @@ function slater_determinant_to_gmps(Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_gmps(ConservingNf(conj(Φ) * transpose(Φ)); kwargs...)
 end
 
-function slater_determinant_to_gmps(Φ::T; kwargs...) where {T<:Union{ConservingNf,Pairing}}
-  return correlation_matrix_to_gmps(T(conj(Φ.data) * transpose(Φ.data)); kwargs...)
+function slater_determinant_to_gmps(Φ::T; kwargs...) where {T<:Union{ConservingNf,ConservingNfParity}}
+  return correlation_matrix_to_gmps(set_data(Φ,conj(Φ.data) * transpose(Φ.data)); kwargs...)
 end
 
 #
@@ -606,7 +623,7 @@ function ITensors.ITensor(sites::Vector{<:Index}, u::Givens, is_boguliubov::Bool
   return ITensor(u, s1, s2, is_boguliobov)
 end
 
-function to_manybody_gates(s::Vector{<:Index}, C::Pairing)
+function to_manybody_gates(s::Vector{<:Index}, C::ConservingNfParity)
   is_bog = g -> abs(g.i2 - g.i1) == 2 ? false : true
   s1 = g -> div(g.i1 - 1, 2) + 1
   s2 = g -> div(g.i2 - 1, 2) + 1
@@ -680,26 +697,25 @@ function correlation_matrix_to_mps(
   maxblocksize::Int=size(Λ0.data, 1),
   minblocksize::Int=1,
   kwargs...,
-) where {T<:Union{Pairing,ConservingNf}}
+) where {T<:Union{ConservingNfParity,ConservingNf}}
   if eltype(Λ0.data) <: AbstractFloat
     MPS_Elt = Float64
   else
     MPS_Elt = ComplexF64
   end
   Λ = check_pairing_correlations(Λ0)
-  calctype = typeof(Λ)
   @assert size(Λ.data, 1) == size(Λ.data, 2)
   ns, C = correlation_matrix_to_gmps(
     Λ; eigval_cutoff=eigval_cutoff, minblocksize=minblocksize, maxblocksize=maxblocksize
   )
   if all(hastags("Fermion"), s)
-    U = to_manybody_gates(s, calctype(C))
-    ψ = MPS(MPS_Elt, s, n -> round(Int, ns[calctype <: Pairing ? 2 * n : n]) + 1)
+    U = to_manybody_gates(s, set_data(Λ,C))
+    ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ) * n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)
     ###ToDo: Not tested, but seems to work so far at least for the conserving case
-    if calctype <: Pairing
-      error("Pairing + spinful fermions not tested/fully implemented yet. Exiting")
+    if Λ <: ConservingNfParity
+      error("ConservingNfParity + spinful fermions not tested/fully implemented yet. Exiting")
     end
     isodd(length(s)) && error(
       "For Electron type, must have even number of sites of alternating up and down spins.",
@@ -734,7 +750,7 @@ end
 
 function slater_determinant_to_mps(
   s::Vector{<:Index}, Φ::T; kwargs...
-) where {T<:Union{Pairing,ConservingNf}}
+) where {T<:Union{ConservingNfParity,ConservingNf}}
   return correlation_matrix_to_mps(s, T(conj(Φ.data) * transpose(Φ.data)); kwargs...)
 end
 
@@ -826,13 +842,13 @@ function correlation_matrix_to_mps(
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=min(size(Λ_up0, 1), size(Λ_dn0, 1)),
   kwargs...,
-) where {T<:Union{Pairing,ConservingNf}}
+) where {T<:Union{ConservingNfParity,ConservingNf}}
   @assert size(Λ_up.data, 1) == size(Λ_up.data, 2)
   @assert size(Λ_dn.data, 1) == size(Λ_dn.data, 2)
   Λ_up = check_pairing_correlations(Λ_up0)
   Λ_dn = check_pairing_correlations(Λ_dn0)
-  @assert typeof(Λ_up) == typeof(Λ_dn)
-  calctype = typeof(Λ_up)
+  #@assert Λ_up<:aT && Λ_dn<:aT where aT<:AbstractSymmetry  ##ToDo:implement this check
+  #calctype = typeof(Λ_up)
   N_up = size(Λ_up.data, 1)
   N_dn = size(Λ_dn.data, 1)
   N = N_up + N_dn
@@ -844,7 +860,7 @@ function correlation_matrix_to_mps(
   )
   C_up = mapindex(n -> 2n - 1, C_up)
   C_dn = mapindex(n -> 2n, C_dn)
-  if calctype <: Pairing
+  if Λ_up <: ConservingNfParity && Λ_dn <: ConservingNfParity
     C = Circuit(
       interleave(
         interleave(C_up.rotations[1:2:end], C_dn.rotations[1:2:end]),
@@ -854,13 +870,16 @@ function correlation_matrix_to_mps(
     ns = interleave(
       interleave(ns_up[1:2:end], ns_dn[1:2:end]), interleave(ns_up[2:2:end], ns_dn[2:2:end])
     )
-  else
+  elseif Λ_up <: ConservingNf && Λ_dn <: ConservingNf
     C = Circuit(interleave(C_up.rotations, C_dn.rotations))
     ns = interleave(ns_up, ns_dn)
+  else
+    error("Λ_up and Λ_dn have incompatible subtypes of AbstractSymmetry")
   end
+
   if all(hastags("Fermion"), s)
-    U = to_manybody_gates(s, calctype(C))
-    ψ = MPS(MPS_Elt, s, n -> round(Int, ns[calctype <: Pairing ? 2 * n : n]) + 1)
+    U = to_manybody_gates(s, set_data(Λ_up, C))
+    ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ_up) * n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)
     ###ToDo: Not sure what to do here yet. Just copied code from old interface below. 
