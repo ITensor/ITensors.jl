@@ -337,7 +337,7 @@ function ITensor(
   as::AliasStyle,
   eltype::Type{<:Number},
   A::AbstractArray{<:Number},
-  inds::Indices{Index{Int}};
+  inds::Indices;
   kwargs...,
 )
   length(A) ≠ dim(inds) && throw(
@@ -347,6 +347,16 @@ function ITensor(
   )
   data = Array{eltype}(as, A)
   return itensor(Dense(data), inds)
+end
+
+function ITensor(
+  as::AliasStyle, eltype::Type{<:Number}, A::AbstractArray{<:Number}, inds; kwargs...
+)
+  is = indices(inds)
+  if !isa(is, Indices)
+    error("Indices $inds are not valid for constructing an ITensor.")
+  end
+  return ITensor(as, eltype, A, is; kwargs...)
 end
 
 # Convert `Adjoint` to `Matrix`
