@@ -48,6 +48,8 @@ function Dense{VecT}(::UndefInitializer, inds::Tuple) where {VecT<:AbstractArray
   default_storagetype(VecT)(undef, inds)
 end
 
+Dense{VecT}(x::Number, dim::Integer) where {VecT<:AbstractArray} = Dense(fill!(VecT{typeof(x)}(undef, dim), x))
+
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
   Dense{ElR, similartype(typeof(data), ElR)}(data)
@@ -63,7 +65,9 @@ Dense(VecT::Type{<:AbstractArray{ElT}}, dim::Integer) where ElT = Dense{ElT, Vec
 
 Dense(::Type{ElT}, dim::Integer) where {ElT} = Dense{ElT}(dim)
 
-Dense(x::ElT, dim::Integer) where {ElT<:Number} = Dense{ElT}((fill(x, dim)))
+Dense(ElT::Type{<:Number}, ::UndefInitializer, dim::Integer) = Dense{ElT, default_datatype(ElT)}(undef, (dim,))
+
+Dense(x::Number, dim::Integer) = Dense(fill!(default_datatype(typeof(x))(undef, dim), x))
 
 Dense(dim::Integer) = Dense(default_eltype(), dim)
 
