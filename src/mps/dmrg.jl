@@ -287,8 +287,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         maxdim(sweeps, sw) > write_when_maxdim_exceeds
         if outputlevel >= 2
           println(
-            "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and
-            maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk"
+            "\nWriting environment tensors do disk (write_when_maxdim_exceeds = $write_when_maxdim_exceeds and maxdim(sweeps, sw) = $(maxdim(sweeps, sw))).\nFiles located at path=$write_path\n",
           )
         end
         PH = disk(PH; path=write_path)
