@@ -122,6 +122,32 @@ using ITensors: nsite, set_nsite!
     @test PH.lpos == N - 1
   end
 
+  @testset "ProjMPOSum DMRG with disk caching" begin
+    N = 10
+    sites = siteinds("S=1", N; conserve_qns=true)
+
+    osA = OpSum()
+    for j in 1:(N - 1)
+      osA += "Sz", j, "Sz", j + 1
+    end
+    HA = MPO(osA, sites)
+
+    osB = OpSum()
+    for j in 1:(N - 1)
+      osB += 0.5, "S+", j, "S-", j + 1
+      osB += 0.5, "S-", j, "S+", j + 1
+    end
+    HB = MPO(osB, sites)
+
+    state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
+    psi = randomMPS(sites, state; linkdims=4)
+
+    energy, psi = dmrg(
+      [HA, HB], psi; nsweeps=3, maxdim=[10, 20, 30], write_when_maxdim_exceeds=10
+    )
+    @test energy < -12.0
+  end
+
   @testset "ProjMPO: nsite" begin
     N = 10
     sites = siteinds("S=1", N)
