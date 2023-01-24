@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Advanced Usage Guide · ITensors.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="ITensors.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">ITensors.jl</a></span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="index.html">Introduction</a></li><li><span class="tocitem">Getting Started with ITensor</span><ul><li><a class="tocitem" href="getting_started/Installing.html">Installing Julia and ITensor</a></li><li><a class="tocitem" href="getting_started/RunningCodes.html">Running ITensor and Julia Codes</a></li><li><a class="tocitem" href="getting_started/DebugChecks.html">Enabling Debug Checks</a></li><li><a class="tocitem" href="getting_started/NextSteps.html">Next Steps</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/DMRG.html">DMRG</a></li><li><a class="tocitem" href="tutorials/QN_DMRG.html">Quantum Number Conserving DMRG</a></li><li><a class="tocitem" href="tutorials/MPSTimeEvolution.html">MPS Time Evolution</a></li></ul></li><li><span class="tocitem">Code Examples</span><ul><li><a class="tocitem" href="examples/ITensor.html">ITensor Examples</a></li><li><a class="tocitem" href="examples/MPSandMPO.html">MPS and MPO Examples</a></li><li><a class="tocitem" href="examples/DMRG.html">DMRG Examples</a></li><li><a class="tocitem" href="examples/Physics.html">Physics (SiteType) System Examples</a></li></ul></li><li><span class="tocitem">Documentation</span><ul><li><a class="tocitem" href="IndexType.html">Index</a></li><li><a class="tocitem" href="IndexSetType.html">Index collections</a></li><li><a class="tocitem" href="ITensorType.html">ITensor</a></li><li><a class="tocitem" href="MPSandMPO.html">MPS and MPO</a></li><li><a class="tocitem" href="QN.html">QN</a></li><li><a class="tocitem" href="SiteType.html">SiteType and op, state, val functions</a></li><li><a class="tocitem" href="IncludedSiteTypes.html">SiteTypes Included with ITensor</a></li><li><input class="collapse-toggle" id="menuitem-5-8" type="checkbox"/><label class="tocitem" for="menuitem-5-8"><span class="docs-label">DMRG</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="DMRG.html">DMRG</a></li><li><a class="tocitem" href="Sweeps.html">Sweeps</a></li><li><a class="tocitem" href="ProjMPO.html">ProjMPO</a></li><li><a class="tocitem" href="ProjMPOSum.html">ProjMPOSum</a></li><li><a class="tocitem" href="Observer.html">Observer System for DMRG</a></li><li><a class="tocitem" href="DMRGObserver.html">DMRGObserver</a></li></ul></li><li><a class="tocitem" href="OpSum.html">OpSum (AutoMPO)</a></li></ul></li><li><span class="tocitem">Frequently Asked Questions</span><ul><li><a class="tocitem" href="faq/JuliaAndCpp.html">Programming Language (Julia, C++, ...) FAQs</a></li><li><a class="tocitem" href="faq/DMRG.html">DMRG FAQs</a></li><li><a class="tocitem" href="faq/Development.html">ITensor Development FAQs</a></li><li><a class="tocitem" href="faq/RelationshipToOtherLibraries.html">Relationship of ITensor to other tensor libraries FAQs</a></li><li><a class="tocitem" href="faq/JuliaPkg.html">Julia Package Manager FAQs</a></li></ul></li><li><span class="tocitem">Upgrade guides</span><ul><li><a class="tocitem" href="UpgradeGuide_0.1_to_0.2.html">Upgrading from 0.1 to 0.2</a></li></ul></li><li><a class="tocitem" href="Einsum.html">ITensor indices and Einstein notation</a></li><li><span class="tocitem">Advanced Usage Guide</span><ul><li class="is-active"><a class="tocitem" href="AdvancedUsageGuide.html">Advanced Usage Guide</a><ul class="internal"><li><a class="tocitem" href="#Installing-and-updating-ITensors.jl"><span>Installing and updating ITensors.jl</span></a></li><li><a class="tocitem" href="#Using-ITensors.jl-in-the-REPL"><span>Using ITensors.jl in the REPL</span></a></li><li><a class="tocitem" href="#Finding-documentation-interactively"><span>Finding documentation interactively</span></a></li><li><a class="tocitem" href="#Make-a-small-project-based-on-ITensors.jl"><span>Make a small project based on ITensors.jl</span></a></li><li><a class="tocitem" href="#Make-a-Julia-package-based-on-ITensors.jl"><span>Make a Julia package based on ITensors.jl</span></a></li><li><a class="tocitem" href="#Developing-ITensors.jl"><span>Developing ITensors.jl</span></a></li><li><a class="tocitem" href="#Compiling-ITensors.jl"><span>Compiling ITensors.jl</span></a></li><li><a class="tocitem" href="#Benchmarking-and-profiling"><span>Benchmarking and profiling</span></a></li><li><a class="tocitem" href="#ITensor-type-design-and-writing-performant-code"><span>ITensor type design and writing performant code</span></a></li><li><a class="tocitem" href="#ITensor-in-place-operations"><span>ITensor in-place operations</span></a></li><li><a class="tocitem" href="#NDTensors-and-ITensors"><span>NDTensors and ITensors</span></a></li></ul></li><li><a class="tocitem" href="Multithreading.html">Multithreading</a></li><li><a class="tocitem" href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage</a></li><li><a class="tocitem" href="CodeTiming.html">Timing and profiling</a></li><li><a class="tocitem" href="ContractionSequenceOptimization.html">Contraction sequence optimization</a></li><li><a class="tocitem" href="HDF5FileFormats.html">HDF5 File Formats</a></li></ul></li><li><a class="tocitem" href="DeveloperGuide.html">Developer Guide</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Advanced Usage Guide</a></li><li class="is-active"><a href="AdvancedUsageGuide.html">Advanced Usage Guide</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="AdvancedUsageGuide.html">Advanced Usage Guide</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ITensor/ITensors.jl/blob/master/docs/src/AdvancedUsageGuide.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Advanced-ITensor-Usage-Guide"><a class="docs-heading-anchor" href="#Advanced-ITensor-Usage-Guide">Advanced ITensor Usage Guide</a><a id="Advanced-ITensor-Usage-Guide-1"></a><a class="docs-heading-anchor-permalink" href="#Advanced-ITensor-Usage-Guide" title="Permalink"></a></h1><h2 id="Installing-and-updating-ITensors.jl"><a class="docs-heading-anchor" href="#Installing-and-updating-ITensors.jl">Installing and updating ITensors.jl</a><a id="Installing-and-updating-ITensors.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Installing-and-updating-ITensors.jl" title="Permalink"></a></h2><p>The ITensors package can be installed with the Julia package manager. Assuming you have already downloaded Julia, which you can get <a href="https://julialang.org/downloads/">here</a>, from the Julia REPL,  type <code>]</code> to enter the Pkg REPL mode and run:</p><pre><code class="nohighlight">$ julia</code></pre><pre><code class="language-julia">julia&gt; ]
+
+pkg&gt; add ITensors</code></pre><p>Or, equivalently, via the <code>Pkg</code> API:</p><pre><code class="language-julia">julia&gt; import Pkg; Pkg.add(&quot;ITensors&quot;)</code></pre><p>We recommend using ITensors.jl with Intel MKL in order to get the  best possible performance. If you have not done so already, you can  replace the current BLAS and LAPACK implementation used by Julia with  MKL by using the MKL.jl package. Please follow the instructions  <a href="https://github.com/JuliaComputing/MKL.jl">here</a>.</p><p>To use the latest registered (stable) version of ITensors.jl, use <code>update ITensors</code> in <code>Pkg</code> mode or <code>import Pkg; Pkg.update(&quot;ITensors&quot;)</code>. We will commonly release new patch versions (such as updating from <code>v0.1.12</code> to  <code>v0.1.13</code>) with bug fixes and improvements. However, make sure to double check before updating between minor versions (such as from <code>v0.1.41</code> to <code>v0.2.0</code>) because new minor releases may be breaking.</p><p>Remember that if you are compiling system images of ITensors.jl, such as with the <code>ITensors.compile()</code> command, you will need to rerurn this command to compile the new version of ITensor after an update.</p><p>To try the &quot;development branch&quot; of ITensors.jl (for example, if  there is a feature or fix we added that hasn&#39;t been released yet),  you can do <code>add ITensors#main</code>. You can switch back to the latest released version with <code>add ITensors</code>. Using the development/main branch is generally not encouraged unless you know what you are doing.</p><h2 id="Using-ITensors.jl-in-the-REPL"><a class="docs-heading-anchor" href="#Using-ITensors.jl-in-the-REPL">Using ITensors.jl in the REPL</a><a id="Using-ITensors.jl-in-the-REPL-1"></a><a class="docs-heading-anchor-permalink" href="#Using-ITensors.jl-in-the-REPL" title="Permalink"></a></h2><p>There are many ways you can write code based on ITensors.jl, ranging  from using it in the REPL to writing a small script to making a  package that depends on it.</p><p>For example, you can just start the REPL from your command line like:</p><pre><code class="nohighlight">$ julia</code></pre><p>assuming you have an available version of Julia with the ITensors.jl package installed. Then just type:</p><pre><code class="language-julia">julia&gt; using ITensors</code></pre><p>and start typing ITensor commands. For example:</p><pre><code class="language-julia">julia&gt; i = Index(2, &quot;i&quot;)
+(dim=2|id=355|&quot;i&quot;)
+
+julia&gt; A = randomITensor(i, i&#39;)
+ITensor ord=2 (dim=2|id=355|&quot;i&quot;) (dim=2|id=355|&quot;i&quot;)&#39;
+NDTensors.Dense{Float64,Array{Float64,1}}
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=355|&quot;i&quot;)
+Dim 2: (dim=2|id=355|&quot;i&quot;)&#39;
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 1.2320011464276275  1.8504245734277216
+ 1.0763652402177477  0.030353720156277037
+
+julia&gt; (A*dag(A))[]
+3.9627443142240617</code></pre><p>Note that there are some &quot;gotchas&quot; with working in the REPL like this. Technically, all commands in the REPL are in the &quot;global scope&quot;. The global scope might not work as you would expect, for example:</p><pre><code class="language-julia">julia&gt; for _ in 1:3
+         A *= 2
+       end
+ERROR: UndefVarError: A not defined
+Stacktrace:
+ [1] top-level scope at ./REPL[12]:2
+ [2] eval(::Module, ::Any) at ./boot.jl:331
+ [3] eval_user_input(::Any, ::REPL.REPLBackend) at /home/mfishman/software/julia-1.4.0/share/julia/stdlib/v1.4/REPL/src/REPL.jl:86
+ [4] run_backend(::REPL.REPLBackend) at /home/mfishman/.julia/packages/Revise/AMRie/src/Revise.jl:1023
+ [5] top-level scope at none:0</code></pre><p>since the <code>A</code> inside the for-loop introduces a new local variable. Some alternatives are to wrap that part of the code in a let-block or a function:</p><pre><code class="language-julia">julia&gt; function f(A)
+         for _ in 1:3
+           A *= 2
+         end
+         A
+       end
+f (generic function with 1 method)
+
+julia&gt; A = f(A)
+ITensor ord=2 (dim=2|id=355|&quot;i&quot;) (dim=2|id=355|&quot;i&quot;)&#39;
+NDTensors.Dense{Float64,Array{Float64,1}}
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=355|&quot;i&quot;)
+Dim 2: (dim=2|id=355|&quot;i&quot;)&#39;
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 9.85600917142102   14.803396587421773
+ 8.610921921741982   0.2428297612502163</code></pre><p>In this particular case, you can alternatively modify the ITensor in-place:</p><pre><code class="language-julia">julia&gt; for _ in 1:3
+         A ./= 2
+       end
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=355|&quot;i&quot;)
+Dim 2: (dim=2|id=355|&quot;i&quot;)&#39;
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 1.2320011464276275  1.8504245734277216
+ 1.0763652402177477  0.030353720156277037</code></pre><p>A common place you might accidentally come across this is when you are creating a Hamiltonian with <code>OpSum</code>:</p><pre><code class="language-julia">julia&gt; N = 4;
+
+julia&gt; sites = siteinds(&quot;S=1/2&quot;,N);
+
+julia&gt; os = OpSum();
+
+julia&gt; for j=1:N-1
+         os += &quot;Sz&quot;, j, &quot;Sz&quot;, j+1
+       end
+ERROR: UndefVarError: os not defined
+Stacktrace:
+ [1] top-level scope at ./REPL[16]:2
+ [2] eval(::Module, ::Any) at ./boot.jl:331
+ [3] eval_user_input(::Any, ::REPL.REPLBackend) at /home/mfishman/software/julia-1.4.0/share/julia/stdlib/v1.4/REPL/src/REPL.jl:86
+ [4] run_backend(::REPL.REPLBackend) at /home/mfishman/.julia/packages/Revise/AMRie/src/Revise.jl:1023
+ [5] top-level scope at none:0</code></pre><p>In this case, you can use <code>os .+= (&quot;Sz&quot;, j, &quot;Sz&quot;, j+1)</code>, <code>add!(os, &quot;Sz&quot;, j, &quot;Sz&quot;, j+1)</code>, or wrap your code in a let-block or function.</p><p>Take a look at Julia&#39;s documentation <a href="https://docs.julialang.org/en/v1/manual/variables-and-scoping/">here</a> for rules on scoping. Also note that this behavior is particular to Julia v1.4 and below, and is expected to change in v1.5.</p><p>Note that the REPL is very useful for prototyping code quickly, but working directly in the REPL and outside of functions can cause sub-optimal performance. See Julia&#39;s <a href="https://docs.julialang.org/en/v1/manual/performance-tips/index.html">performance tips</a> for more information.</p><p>We recommend the package <a href="https://kristofferc.github.io/OhMyREPL.jl/latest/">OhMyREPL</a> which adds syntax highlighting to the Julia REPL.</p><h2 id="Finding-documentation-interactively"><a class="docs-heading-anchor" href="#Finding-documentation-interactively">Finding documentation interactively</a><a id="Finding-documentation-interactively-1"></a><a class="docs-heading-anchor-permalink" href="#Finding-documentation-interactively" title="Permalink"></a></h2><p>Julia provides many tools for searching for documentation interactively at the REPL. Say that you want to learn more about how to use an ITensor from the command line. You can start by typing <code>?</code> followed by <code>ITensor</code>:</p><pre><code class="language-julia">julia&gt; using ITensors
+
+julia&gt; ?ITensor
+search: ITensor ITensors itensor emptyITensor randomITensor
+
+  An ITensor is a tensor whose interface is independent of its
+  memory layout. Therefore it is not necessary to know the ordering
+  of an ITensor&#39;s indices, only which indices an ITensor has.
+  Operations like contraction and addition of ITensors automatically
+  handle any memory permutations.
+
+  Examples
+  ≡≡≡≡≡≡≡≡≡≡
+
+  julia&gt; i = Index(2, &quot;i&quot;)
+  (dim=2|id=287|&quot;i&quot;)
+  
+  julia&gt; A = randomITensor(i&#39;, i)
+  ITensor ord=2 (dim=2|id=287|&quot;i&quot;)&#39; (dim=2|id=287|&quot;i&quot;)
+  NDTensors.Dense{Float64,Array{Float64,1}}
+  
+  julia&gt; @show A;
+  A = ITensor ord=2
+  Dim 1: (dim=2|id=287|&quot;i&quot;)&#39;
+  Dim 2: (dim=2|id=287|&quot;i&quot;)
+  NDTensors.Dense{Float64,Array{Float64,1}}
+   2×2
+   0.28358594718392427   1.4342219756446355
+   1.6620103556283987   -0.40952231269251566
+  
+  julia&gt; @show inds(A);
+  inds(A) = IndexSet{2} (dim=2|id=287|&quot;i&quot;)&#39; (dim=2|id=287|&quot;i&quot;) 
+[...]</code></pre><p>(the specific output may be different for different versions of ITensors.jl as we update the docs). You can use the help prompt (which you get by typing <code>?</code> at the REPL) to print out documentation for types and methods.</p><p>Another way to get information about types is with the function <code>fieldnames</code>:</p><pre><code class="language-julia">julia&gt; fieldnames(ITensor)
+(:store, :inds)</code></pre><p>which shows the fields of a type. Note that in general the specific names of the fields and structures of types may change (we consider those to be internal details), however we often make functions to access the fields of a type that have the same name as the field, so it is a good place to get started. For example, you can access the storage and indices of an ITensor <code>A</code> with the functions <code>store(A)</code> and <code>inds(A)</code>.</p><p>Another helpful function is <code>apropos</code>, which search through all documentation for a string (ignoring the case) and prints a list of all types and methods with documentation that contain the string. For example:</p><pre><code class="language-julia">julia&gt; apropos(&quot;IndexSet&quot;)
+ITensors.IndexSet
+ITensors.push
+ITensors.insertat
+ITensors.getfirst
+ITensors.commoninds
+ITensors.pushfirst
+NDTensors.mindim
+[...]</code></pre><p>This can often return too much information. A helpful way to narrow down the search is with regular expressions, for example:</p><pre><code class="language-julia">julia&gt; apropos(r&quot;ITensor.*IndexSet&quot;)
+ITensors.block
+ITensors.hasinds
+ITensors.ITensor
+NDTensors.inds</code></pre><p>where the notation <code>r&quot;...&quot;</code> is Julia notation for making a string that will be interpreted as a <a href="https://docs.julialang.org/en/v1/manual/strings/#Regular-Expressions">regular expression</a>. Here, we are searching for any documentation that contains the string &quot;ITensor&quot; followed at some point by &quot;IndexSet&quot;. The notation <code>.*</code> is regular expression notation for matching any number of any type of character.</p><p>Based on the <code>apropos</code> function, we can make some helper functions that may be useful. For example:</p><pre><code class="language-julia">using ITensors
+
+function finddocs(s)
+  io = IOBuffer()
+  apropos(io, s)
+  v = chomp(String(take!(io)))
+  return split(v, &quot;\n&quot;)
+end
+
+function finddocs(s...)
+  intersect(finddocs.(s)...)
+end
+
+found_methods = finddocs(&quot;indices&quot;, &quot;set difference&quot;)
+display(found_methods)</code></pre><p>returns:</p><pre><code class="language-julia">3-element Array{SubString{String},1}:
+ &quot;ITensors.noncommoninds&quot;
+ &quot;Base.setdiff&quot;
+ &quot;ITensors.uniqueinds&quot;</code></pre><p>which are the functions that have docs that contain the strings <code>&quot;indices&quot;</code> and <code>&quot;set difference&quot;</code>. We can print the docs for <code>uniqueinds</code> to find:</p><pre><code class="language-julia">help?&gt; uniqueinds
+search: uniqueinds unique_siteinds uniqueind uniqueindex
+
+  uniqueinds(A, B; kwargs...)
+  uniqueinds(::Order{N}, A, B; kwargs...)
+
+
+  Return an IndexSet with indices that are unique to the set of
+  indices of A and not in B (the set difference).
+
+  Optionally, specify the desired number of indices as Order(N),
+  which adds a check and can be a bit more efficient.</code></pre><p>We can also filter the results to only specify functions from certain modules, for example:</p><pre><code class="language-julia">julia&gt; filter(x -&gt; startswith(x, &quot;ITensors&quot;), finddocs(&quot;indices&quot;, &quot;set difference&quot;))
+2-element Array{SubString{String},1}:
+ &quot;ITensors.noncommoninds&quot;
+ &quot;ITensors.uniqueinds&quot;
+
+julia&gt; filter(x -&gt; !startswith(x, &quot;ITensors&quot;), finddocs(&quot;indices&quot;, &quot;set difference&quot;))
+1-element Array{SubString{String},1}:
+ &quot;Base.setdiff&quot;</code></pre><p>Ideally we could have <code>apropos</code> do a &quot;smart&quot; Google-like search of the appropriate docstrings, but this is a pretty good start.</p><p>Additionally, the <code>names</code> function can be useful, which prints the names of all functions and types that are exported by a module. For example:</p><pre><code class="language-julia">julia&gt; names(ITensors)
+264-element Array{Symbol,1}:
+ Symbol(&quot;@OpName_str&quot;)
+ Symbol(&quot;@SiteType_str&quot;)
+ Symbol(&quot;@StateName_str&quot;)
+ Symbol(&quot;@TagType_str&quot;)
+ Symbol(&quot;@disable_warn_order&quot;)
+ Symbol(&quot;@reset_warn_order&quot;)
+ Symbol(&quot;@set_warn_order&quot;)
+ Symbol(&quot;@ts_str&quot;)
+ :AbstractObserver
+ :OpSum
+ :DMRGObserver
+ :ITensor
+ :ITensors
+ :Index
+[...]</code></pre><p>Of course this is a very long list (and the methods are returned as <code>Symbol</code>s, which are like strings but not as easy to work with). However, we can convert the list to strings and filter the strings to find functions we are interested in, for example:</p><pre><code class="language-julia">julia&gt; filter(x -&gt; contains(x, &quot;common&quot;) &amp;&amp; contains(x, &quot;ind&quot;), String.(names(ITensors)))
+8-element Array{String,1}:
+ &quot;common_siteind&quot;
+ &quot;common_siteinds&quot;
+ &quot;commonind&quot;
+ &quot;commonindex&quot;
+ &quot;commoninds&quot;
+ &quot;hascommoninds&quot;
+ &quot;noncommonind&quot;
+ &quot;noncommoninds&quot;</code></pre><p>Julia types do not have member functions, so people coming from object oriented programming languages may find that at first it is more difficult to find methods that are applicable to a certain type. However, Julia has many fantastic tools for introspection that we can use to make this task easier.</p><h2 id="Make-a-small-project-based-on-ITensors.jl"><a class="docs-heading-anchor" href="#Make-a-small-project-based-on-ITensors.jl">Make a small project based on ITensors.jl</a><a id="Make-a-small-project-based-on-ITensors.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Make-a-small-project-based-on-ITensors.jl" title="Permalink"></a></h2><p>Once you start to have longer code, you will want to put your code into one or more files. For example, you may have a short script with one or more functions based on ITensors.jl:</p><pre><code class="language-julia"># my_itensor_script.jl
+using ITensors
+
+function norm2(A::ITensor)
+  return (A*dag(A))[]
+end</code></pre><p>Then, in the same directory as your script <code>my_itensor_script.jl</code>, just type:</p><pre><code class="language-julia">julia&gt; include(&quot;my_itensor_script.jl&quot;);
+
+julia&gt; i = Index(2; tags=&quot;i&quot;);
+
+julia&gt; A = randomITensor(i&#39;, i);
+
+julia&gt; norm2(A)
+[...]</code></pre><p>As your code gets longer, you can split it into multiple files and <code>include</code> this files into one main project file, for example if you have two files with functions in them:</p><pre><code class="language-julia"># file1.jl
+
+function norm2(A::ITensor)
+  return (A*dag(A))[]
+end</code></pre><p>and</p><pre><code class="language-julia"># file2.jl
+
+function square(A::ITensor)
+  return A .^ 2
+end</code></pre><pre><code class="language-julia"># my_itensor_project.jl
+
+using ITensors
+
+include(&quot;file1.jl&quot;)
+
+include(&quot;file2.jl&quot;)</code></pre><p>Then, as before, you can use your functions at the Julia REPL by just including the file <code>my_itensor_project.jl</code>:</p><pre><code class="language-julia">julia&gt; include(&quot;my_itensor_project.jl&quot;);
+
+julia&gt; i = Index(2; tags=&quot;i&quot;);
+
+julia&gt; A = randomITensor(i&#39;, i);
+
+julia&gt; norm2(A)
+[...]
+
+julia&gt; square(A)
+[...]</code></pre><p>As your code gets more complicated and has more files, it is helpful to organize it into a package. That will be covered in the next section.</p><h2 id="Make-a-Julia-package-based-on-ITensors.jl"><a class="docs-heading-anchor" href="#Make-a-Julia-package-based-on-ITensors.jl">Make a Julia package based on ITensors.jl</a><a id="Make-a-Julia-package-based-on-ITensors.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Make-a-Julia-package-based-on-ITensors.jl" title="Permalink"></a></h2><p>In this section, we will describe how to make a Julia package based on ITensors.jl. This is useful to do when your project gets longer, since it helps with:</p><ul><li>Code organization.</li><li>Adding dependencies that will get automatically installed through Julia&#39;s package system.</li><li>Versioning.</li><li>Automated testing.</li><li>Code sharing and easier package installation.</li><li>Officially registering your package with Julia.</li></ul><p>and many more features that we will mention later.</p><p>Start up Julia and install <a href="https://invenia.github.io/PkgTemplates.jl/stable/">PkgTemplates</a></p><pre><code class="language-julia">$ julia
+
+julia&gt; ]
+
+pkg&gt; add PkgTemplates</code></pre><p>then press backspace and type:</p><pre><code class="nohighlight">julia&gt; using PkgTemplates
+
+julia&gt; t = Template(; user=&quot;your_github_username&quot;, plugins=[Git(; ssh=true),])
+
+julia&gt; t(&quot;MyITensorsPkg&quot;)</code></pre><p>You should put your Github account name instead of <code>&quot;your_github_username&quot;</code>, if you want to use Github to host your package.  The option <code>plugins=[Git(; ssh=true),]</code> sets the Github authentication to use ssh, which is generally more convenient. You can switch to https (where you have to type your username and password to push changes) by setting <code>ssh=false</code> or leaving off <code>plugins=[...]</code>. By default, the package will be located in the directory <code>~/.julia/dev</code>, you can change this with the keyword argument <code>dir=[...]</code>. However, <code>~/.julia/dev</code> is recommended since that is the directory Julia&#39;s package manager (and other packages like <code>Revise</code>) will look for development packages. Please see the <code>PkgTemplate</code> documentation for more customization options.</p><p>Then, we want to tell Julia about our new package. We do this as follows:</p><pre><code class="language-julia">julia&gt; ]
+
+pkg&gt; dev ~/.julia/dev/MyITensorsPkg</code></pre><p>then you can do:</p><pre><code class="language-julia">julia&gt; using MyITensorsPkg</code></pre><p>from any directory to use your new package. However, it doesn&#39;t  have any functions available yet. Additionally, there should be an empty test file already set up here:</p><pre><code class="nohighlight">~/.julia/dev/MyITensorsPkg/test/runtests.jl</code></pre><p>which you can run from any directory like:</p><pre><code class="language-julia">julia&gt; ]
+
+pkg&gt; test MyITensorsPkg</code></pre><p>It should show something like:</p><pre><code class="language-julia">[...]
+Test Summary:    |
+MyITensorsPkg.jl | No tests
+    Testing MyITensorsPkg tests passed </code></pre><p>since there are no tests yet.</p><p>First we want to add ITensors as a dependency of our package. We do this by &quot;activating&quot; our package environment and then adding ITensors:</p><pre><code class="language-julia">julia&gt; ]
+
+pkg&gt; activate MyITensorsPkg
+
+(MyITensorsPkg) pkg&gt; add ITensors</code></pre><p>This will edit the file <code>~/.julia/dev/MyITensorsPkg/Project.toml</code> and add the line</p><pre><code class="nohighlight">[deps]
+ITensors = &quot;9136182c-28ba-11e9-034c-db9fb085ebd5&quot;</code></pre><p>Because your package is under development, back in the main Pkg environment you should type <code>resolve</code>:</p><pre><code class="language-julia">(MyITensorsPkg) pkg&gt; activate
+
+pkg&gt; resolve</code></pre><p>Now, if you or someone else uses the package, it will automatically install ITensors.jl for you.</p><p>Now your package is set up to develop! Try editing the file <code>~/.julia/dev/MyITensorsPkg/src/MyITensorsPkg.jl</code> and add the  <code>norm2</code> function, which calculates the squared norm of an ITensor:</p><pre><code class="language-julia">module MyITensorsPkg
+
+using ITensors
+
+export norm2
+
+norm2(A::ITensor) = (A*dag(A))[]
+
+end</code></pre><p>The export command makes <code>norm2</code> available in the namespace without needing to type <code>MyITensorsPkg.norm2</code> when you do  <code>using MyITensorsPkg</code>. Now in a new Julia session you can do:</p><pre><code class="language-julia">julia&gt; using ITensors
+
+julia&gt; i = Index(2)
+(dim=2|id=263)
+
+julia&gt; A = randomITensor(i)
+ITensor ord=1 (dim=2|id=263)
+NDTensors.Dense{Float64,Array{Float64,1}}
+
+julia&gt; norm(A)^2
+6.884457016011188
+
+julia&gt; norm2(A)
+ERROR: UndefVarError: norm2 not defined
+[...]
+
+julia&gt; using MyITensorsPkg
+
+julia&gt; norm2(A)
+6.884457016011188</code></pre><p>Unfortunately, if you continue to edit the file <code>MyITensorsPkg.jl</code>, even if you type <code>using MyITensorsPkg</code> again, if you are in the same Julia session the changes will not be reflected, and you will have to restart your Julia session. The  <a href="https://timholy.github.io/Revise.jl/stable/">Revise</a> package will allow you to edit your package files and have the changes reflected in real time in your current Julia session, so you don&#39;t have to restart the session.</p><p>Now, we can add some tests for our new functionality. Edit the file <code>~/.julia/dev/MyITensorsPkg/test/runtests.jl</code> to look like:</p><pre><code class="language-julia">using MyITensorsPkg
+using ITensors
+using Test
+
+@testset &quot;MyITensorsPkg.jl&quot; begin
+  i = Index(2)
+  A = randomITensor(i)
+  @test isapprox(norm2(A), norm(A)^2)
+end</code></pre><p>Now when you test your package you should see:</p><pre><code class="language-julia">pkg&gt; test MyITensorsPkg
+[...]
+Test Summary:    | Pass  Total
+MyITensorsPkg.jl |    1      1
+    Testing MyITensorsPkg tests passed </code></pre><p>Your package should already be set up as a git repository by  the <code>PkgTemplates</code> commands we started with. We recommend using Github or similar versions control systems for your packages, especially if you plan to make them public and officially register them as Julia packages.</p><p>You can set up your local package as a Github repository by following the steps <a href="https://help.github.com/en/github/importing-your-projects-to-github/adding-an-existing-project-to-github-using-the-command-line">here</a>. Many of the steps may be unnecessary since they were already set up by <code>PkgTemplates</code>. You should be able to go to the website <a href="https://github.com/new">here</a>, create a new Github repository with the name <code>MyITensorsPkg.jl</code>, and then following the instructions under &quot;push an existing repository from the command line&quot;.</p><p>You may also want to switch between HTTPS and SSH authentication as described <a href="https://help.github.com/en/github/using-git/changing-a-remotes-url">here</a>, if you didn&#39;t choose your preferred authentication protocol with PkgTemplates.</p><p>There are many more features you can add to your package through  various Julia packages and Github, for example:</p><ul><li>Control of precompilation with tools like <a href="https://timholy.github.io/SnoopCompile.jl/stable/">SnoopCompile</a>.</li><li>Automatic testing of your package at every pull request/commit with Github Actions, Travis, or similar services.</li><li>Automated benchmarking of your package at every pull request with <a href="https://github.com/JuliaCI/BenchmarkTools.jl">BenchmarkTools</a>, <a href="https://juliaci.github.io/PkgBenchmark.jl/stable/">PkgBenchmark</a> and <a href="https://github.com/tkf/BenchmarkCI.jl">BenchmarkCI</a>.</li><li>Automated building of your documentation with <a href="https://juliadocs.github.io/Documenter.jl/stable/">Documenter</a>.</li><li>Compiling your package with <a href="https://julialang.github.io/PackageCompiler.jl/dev/">PackageCompiler</a>.</li><li>Automatically check what parts of your code your tests check with code coverage.</li><li>Officially register your Julia package so that others can easily install it and follow along with updated versions using the <a href="https://juliaregistries.github.io/Registrator.jl/stable/">Registrator</a>.</li></ul><p>You can take a look at the <a href="https://github.com/ITensor/ITensors.jl">ITensors</a>  Github page for inspiration on setting up some of these services and ideas for organizing your package.</p><h2 id="Developing-ITensors.jl"><a class="docs-heading-anchor" href="#Developing-ITensors.jl">Developing ITensors.jl</a><a id="Developing-ITensors.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Developing-ITensors.jl" title="Permalink"></a></h2><p>This section is for someone who is interested in modifying the source code of ITensors.jl, and then possibly contribute you changes to the official ITensors.jl package.</p><p>This should not be necessary for most people. If for whatever reason you think that the functionality of ITensors.jl needs to be modified, oftentimes you can add new functions outside of ITensors.jl or directly overload a function of ITensors.jl (for example with the <a href="https://docs.julialang.org/en/v1/manual/modules/#using-and-import-with-specific-identifiers,-and-adding-methods">import</a> keyword).</p><p>However, if you would like to only modify parts of the internals of an ITensors.jl function, and/or plan to contribute changes like bug fixes or new features to the official ITensors.jl package, this section is for you.</p><p>If you install a package like ITensors with the package manager using the standard <code>Pkg.add</code> command:</p><pre><code class="language-julia">julia&gt; using Pkg
+
+julia&gt; Pkg.add(&quot;ITensors&quot;)</code></pre><p>it will automatically clone the latest registered/tagged version of <code>ITensors</code> in a randomly generated directory inside <code>~/.julia/packages</code>. You can find out what version you are using with <code>Pkg.status</code>:</p><pre><code class="language-julia">julia&gt; Pkg.status(&quot;ITensors&quot;)
+      Status `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ITensors v0.2.16</code></pre><p>and you can use <a href="https://docs.julialang.org/en/v1/base/base/#Base.pkgdir-Tuple{Module}"><code>pkgdir</code></a> to find out the directory of the source code of a package that you have loaded:</p><pre><code class="language-julia">julia&gt; using ITensors
+
+julia&gt; pkgdir(ITensors)
+&quot;/home/mfishman/.julia/packages/ITensors/cu9Bo&quot;</code></pre><p>The source code of a package loaded in this way is read-only, so you won&#39;t be able to modify it.</p><p>If you want to modify the source code of <code>ITensors.jl</code>, you should check out the packages <code>NDTensors.jl</code> and <code>ITensors.jl</code> in development mode with <code>Pkg.develop</code>:</p><pre><code class="language-julia">julia&gt; Pkg.develop([&quot;NDTensors&quot;, &quot;ITensors&quot;])
+Path `/home/mfishman/.julia/dev/ITensors` exists and looks like the correct repo. Using existing path.
+   Resolving package versions...
+    Updating `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ~ ITensors v0.2.16 ⇒ v0.2.16 `~/.julia/dev/ITensors`
+  [23ae76d9] ~ NDTensors v0.1.35 ⇒ v0.1.35 `~/.julia/dev/ITensors/NDTensors`
+    Updating `~/.julia/environments/v1.7/Manifest.toml`
+  [9136182c] ~ ITensors v0.2.16 ⇒ v0.2.16 `~/.julia/dev/ITensors`
+  [23ae76d9] ~ NDTensors v0.1.35 ⇒ v0.1.35 `~/.julia/dev/ITensors/NDTensors`
+
+julia&gt; Pkg.status([&quot;NDTensors&quot;, &quot;ITensors&quot;])
+      Status `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ITensors v0.2.16 `~/.julia/dev/ITensors`
+  [23ae76d9] NDTensors v0.1.35 `~/.julia/dev/ITensors/NDTensors`</code></pre><p>Then, Julia will use the version of <code>ITensors.jl</code> living in the directory <code>~/.julia/dev/ITensors</code> and the version of <code>NDTensors.jl</code> living in the directory <code>~/.julia/dev/ITensors/NDTensors</code>, though you may need to restart Julia for this to take affect.</p><p>We recommend checking out the development versions of both <code>NDTensors.jl</code> and <code>ITensors.jl</code> since we often develop both packages tandem, so the development branch of <code>ITensors.jl</code> may rely on changes we make in <code>NDTensors.jl</code>.</p><p>By default, when you modify code in <code>~/.julia/dev/ITensors</code> or <code>~/.julia/dev/ITensors/NDTensors</code> you will need to restart Julia for the changes to take affect. A way around this issue is the <a href="https://timholy.github.io/Revise.jl/stable/">Revise</a> package. We highly recommend using the <a href="https://timholy.github.io/Revise.jl/stable/">Revise</a> package when you are developing packages, which automatically detects changes you are making to a package you have checked out for development and edit code and not have to restart your Julia session. In short, if you have <code>Revise.jl</code> loaded, you can edit the code in <code>~/.julia/dev/ITensors</code>  or <code>~/.julia/dev/ITensors/NDTensors</code> and the changes you make will be reflected on the fly as you use the package (there are some limitations, for example you will need to restart Julia if you change the definitions of types).</p><p>Note that the code in <code>~/.julia/dev/ITensors</code> is just a git repository cloned from the repository https://github.com/ITensor/ITensors.jl, so you can do anything that you would with any other git repository (use forks of the project, check out branches, push and pull changes, etc.).</p><p>The standard procedure for submitting a bug fix or new feature to ITensors.jl would then be to first <a href="https://docs.github.com/en/get-started/quickstart/fork-a-repo">fork the ITensors.jl repository</a>. Then, check out your fork for development with:</p><pre><code class="language-julia">julia&gt; using Pkg
+
+julia&gt; Pkg.develop(url=&quot;https://github.com/mtfishman/ITensors.jl&quot;)</code></pre><p>where you would replace <code>mtfishman</code> with your own Github username. Make the changes to the code in <code>~/.julia/dev/ITensors</code>, push the changes to your fork, and then <a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request">make a pull request</a> to the <a href="https://github.com/ITensor/ITensors.jl/compare">ITensors.jl Github repository</a>.</p><p>To go back to the official version of the <code>NDTensors.jl</code> and <code>ITensors.jl</code> packages, you can use the command <code>Pkg.free([&quot;NDTensors&quot;, &quot;ITensors&quot;])</code>:</p><pre><code class="language-julia">julia&gt; Pkg.free([&quot;NDTensors&quot;, &quot;ITensors&quot;])
+   Resolving package versions...
+    Updating `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ~ ITensors v0.2.16 `~/.julia/dev/ITensors` ⇒ v0.2.16
+  [23ae76d9] ~ NDTensors v0.1.35 `~/.julia/dev/ITensors/NDTensors` ⇒ v0.1.35
+    Updating `~/.julia/environments/v1.7/Manifest.toml`
+  [9136182c] ~ ITensors v0.2.16 `~/.julia/dev/ITensors` ⇒ v0.2.16
+  [23ae76d9] ~ NDTensors v0.1.35 `~/.julia/dev/ITensors/NDTensors` ⇒ v0.1.35
+
+julia&gt; Pkg.status([&quot;NDTensors&quot;, &quot;ITensors&quot;])
+      Status `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ITensors v0.2.16
+  [23ae76d9] NDTensors v0.1.35</code></pre><p>so it returns to the version of the package you would have just after installing with <code>Pkg.add</code>.</p><p>Some of the Julia package development workflow definitely takes some getting used to, but once you figure out the &quot;flow&quot; and have a picture of what is going on there are only a small set of commands you really need to use.</p><p>A small note is that we follow the <a href="https://github.com/invenia/BlueStyle">Blue style guide</a> for formatting the source code in ITensors.jl. To make this more automated, we use the wonderful package <a href="https://github.com/domluna/JuliaFormatter.jl">JuliaFormatter.jl</a>. To format your developed version of ITensors.jl, all you have to do is change your directory to <code>~/.julia/dev/ITensors</code> and run the command <code>format(&quot;.&quot;)</code> after loading the <code>JuliaFormatter</code> package:</p><pre><code class="language-julia">julia&gt; using Pkg
+
+julia&gt; Pkg.status(&quot;ITensors&quot;)
+      Status `~/.julia/environments/v1.7/Project.toml`
+  [9136182c] ITensors v0.2.16 `~/.julia/dev/ITensors`
+
+julia&gt; using ITensors
+
+julia&gt; pkgdir(ITensors)
+&quot;/home/mfishman/.julia/dev/ITensors&quot;
+
+julia&gt; cd(pkgdir(ITensors))
+
+julia&gt; using JuliaFormatter
+
+julia&gt; format(&quot;.&quot;)
+false
+
+julia&gt; format(&quot;.&quot;) # Check the formatting succeeded
+true</code></pre><p>This will automatically change the style of the code according to the <code>Blue</code> style guide. The <code>format</code> command returns <code>false</code> if the code was not already formatted (and therefore if the command made changes to the source code to follow the style guide), and returns <code>true</code> otherwise.</p><p>If you make changes to ITensors that you think will be useful to others, such as fixing bugs or adding new features, please consider making a <a href="https://github.com/ITensor/ITensors.jl/compare">pull request</a>. However, please ask us first before doing so – either by raising an <a href="https://github.com/ITensor/ITensors.jl/issues">issue on Github</a> or asking a question on the <a href="http://itensor.org/support/">ITensor support forum</a> – to make sure it is a change or addition that we will want to include or to check that it is not something we are currently working on. Coordinating with us in that way will help save your time and energy as well as ours!</p><p><a href="https://www.youtube.com/watch?v=QVmU29rCjaA">Here</a> is a great introduction to Julia package development as well as making pull requests to existing Julia packages by the irreplacable Chris Rackauckas.</p><h2 id="Compiling-ITensors.jl"><a class="docs-heading-anchor" href="#Compiling-ITensors.jl">Compiling ITensors.jl</a><a id="Compiling-ITensors.jl-1"></a><a class="docs-heading-anchor-permalink" href="#Compiling-ITensors.jl" title="Permalink"></a></h2><p>You might notice that the time to load ITensors.jl (with <code>using  ITensors</code>) and the time to run your first few ITensor commands is  slow. This is due to Julia&#39;s just-in-time (JIT) compilation. Julia is compiling special versions of each function that is being called based on the inputs that it gets at runtime. This allows it to have fast code, often nearly as fast as fully compiled languages like C++, while still being a dynamic language.</p><p>However, the long startup time can still be annoying. In this section, we will discuss some strategies that can be used to minimize this annoyance, for example:</p><ul><li>Precompilation.</li><li>Staying in the same Julia session with <a href="https://timholy.github.io/Revise.jl/stable/">Revise</a>.</li><li>Using <a href="https://julialang.github.io/PackageCompiler.jl/dev/">PackageCompiler</a> to compile ITensors.jl ahead of time.</li></ul><p>Precompilation is performed automatically when you first install ITensors.jl or update a version and run the command <code>using ITensors</code> for the first time. For example, when you first use ITensors after installation or updating, you will see:</p><pre><code class="language-julia">julia&gt; using ITensors
+[ Info: Precompiling ITensors [9136182c-28ba-11e9-034c-db9fb085ebd5]</code></pre><p>The process is done automatically, and puts some compiled binaries in your <code>~/.julia</code> directory. The goal is to decrease the time it takes when you first type <code>using ITensors</code> in your next Julia session, and also the time it takes for you to first run ITensor functions in a new Julia session. This helps the startup time, but currently doesn&#39;t help enough. This is something both ITensors.jl and the Julia language will try to improve over time.</p><p>To avoid this time, it is recommended that you work as much as you can in a single Julia session. You should not need to restart your Julia session very often. For example, if you are writing code in a script, just <code>include</code> the file again which will pull in the new changes to the script (the exception is if you change the definition of a type you made, which would requiring restarting the REPL).</p><p>If you are working on a project, we highly recommend using the <a href="https://timholy.github.io/Revise.jl/stable/">Revise</a> package which automatically detects changes you are making in your packages and reflects them real-time in your current REPL session. Using these strategies should minimize the number of times you need to restart your REPL session.</p><p>If you plan to use ITensors.jl directly from the command line (i.e. not from the REPL), and the startup time is an issue, you can try compiling ITensors.jl using <a href="https://julialang.github.io/PackageCompiler.jl/dev/">PackageCompiler</a>.</p><p>Before using PackageCompiler to compile ITensors, when we first start using ITensors.jl we might see:</p><pre><code class="language-julia">julia&gt; @time using ITensors
+  3.845253 seconds (10.96 M allocations: 618.071 MiB, 3.95% gc time)
+
+julia&gt; @time i = Index(2);
+  0.000684 seconds (23 allocations: 20.328 KiB)
+
+julia&gt; @time A = randomITensor(i&#39;, i);
+  0.071022 seconds (183.24 k allocations: 9.715 MiB)
+
+julia&gt; @time svd(A, i&#39;);
+  5.802053 seconds (24.56 M allocations: 1.200 GiB, 7.83% gc time)
+
+julia&gt; @time svd(A, i&#39;);
+  0.000177 seconds (450 allocations: 36.609 KiB)</code></pre><p>ITensors provides the command <code>ITensors.compile()</code> to create what is called a &quot;custom system image&quot;, a custom version of Julia that includes a compiled version of ITensors (see the <a href="https://julialang.github.io/PackageCompiler.jl/dev/">PackageCompiler documentation</a> for more details). Just run the command:</p><pre><code class="nohighlight">julia&gt; ITensors.compile()
+[...]</code></pre><p>By default, this will create the file <code>sys_itensors.so</code> in the directory <code>~/.julia/sysimages</code>. Then if we start julia with:</p><pre><code class="nohighlight">$ julia --sysimage ~/.julia/sysimages/sys_itensors.so</code></pre><p>then you should see something like:</p><pre><code class="language-julia">julia&gt; @time using ITensors
+  0.330587 seconds (977.61 k allocations: 45.807 MiB, 1.89% gc time)
+
+julia&gt; @time i = Index(2);
+  0.000656 seconds (23 allocations: 20.328 KiB)
+
+julia&gt; @time A = randomITensor(i&#39;, i);
+  0.000007 seconds (7 allocations: 576 bytes)
+
+julia&gt; @time svd(A, i&#39;);
+  0.263526 seconds (290.02 k allocations: 14.220 MiB)
+
+julia&gt; @time svd(A, i&#39;);
+  0.000135 seconds (350 allocations: 29.984 KiB)</code></pre><p>which is much better. </p><p>Note that you will have to recompile ITensors with the command  <code>ITensors.compile()</code> any time that you update the version of ITensors in order to keep the system image updated. We hope to make this process more automated in the future.</p><h2 id="Benchmarking-and-profiling"><a class="docs-heading-anchor" href="#Benchmarking-and-profiling">Benchmarking and profiling</a><a id="Benchmarking-and-profiling-1"></a><a class="docs-heading-anchor-permalink" href="#Benchmarking-and-profiling" title="Permalink"></a></h2><p>Julia has great built-in tools for benchmarking and profiling. For benchmarking fast code at the command line, you can use <a href="https://github.com/JuliaCI/BenchmarkTools.jl/blob/main/doc/manual.md">BenchmarkTools</a>:</p><pre><code class="language-julia">julia&gt; using ITensors;
+
+julia&gt; using BenchmarkTools;
+
+julia&gt; i = Index(100, &quot;i&quot;);
+
+julia&gt; A = randomITensor(i, i&#39;);
+
+julia&gt; @btime 2*$A;
+  4.279 μs (8 allocations: 78.73 KiB)</code></pre><p>We recommend packages like <a href="https://github.com/timholy/ProfileView.jl">ProfileView</a>  to get detailed profiles of your code, in order to pinpoint functions  or lines of code that are slower than they should be.</p><h2 id="ITensor-type-design-and-writing-performant-code"><a class="docs-heading-anchor" href="#ITensor-type-design-and-writing-performant-code">ITensor type design and writing performant code</a><a id="ITensor-type-design-and-writing-performant-code-1"></a><a class="docs-heading-anchor-permalink" href="#ITensor-type-design-and-writing-performant-code" title="Permalink"></a></h2><p>Advanced users might notice something strange about the definition of the ITensor type, that it is often not &quot;type stable&quot;. Some of  this is by design. The definition for ITensor is:</p><pre><code class="language-julia">mutable struct ITensor
+  inds::IndexSet
+  store::TensorStorage
+end</code></pre><p>These are both abstract types, which is something that is generally  discouraged for peformance.</p><p>This has a few disadvantages. Some code that you might expect to be  type stable, like <code>getindex</code>, is not, for example:</p><pre><code class="language-julia">julia&gt; i = Index(2, &quot;i&quot;);
+
+julia&gt; A = randomITensor(i, i&#39;);
+
+julia&gt; @code_warntype A[i=&gt;1, i&#39;=&gt;2]
+Variables
+  #self#::Core.Compiler.Const(getindex, false)
+  T::ITensor
+  ivs::Tuple{Pair{Index{Int64},Int64}}
+  p::Tuple{Union{Nothing, Int64}}
+  vals::Tuple{Any}
+
+Body::Number
+1 ─ %1  = NDTensors.getperm::Core.Compiler.Const(NDTensors.getperm, false)
+│   %2  = ITensors.inds(T)::IndexSet{1,IndexT,DataT} where DataT&lt;:Tuple where IndexT&lt;:Index
+│   %3  = Base.broadcasted(ITensors.ind, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(ind),Tuple{Tuple{Pair{Index{Int64},Int64}}}}
+│   %4  = Base.materialize(%3)::Tuple{Index{Int64}}
+│         (p = (%1)(%2, %4))
+│   %6  = NDTensors.permute::Core.Compiler.Const(NDTensors.permute, false)
+│   %7  = Base.broadcasted(ITensors.val, ivs)::Base.Broadcast.Broadcasted{Base.Broadcast.Style{Tuple},Nothing,typeof(val),Tuple{Tuple{Pair{Index{Int64},Int64}}}}
+│   %8  = Base.materialize(%7)::Tuple{Int64}
+│         (vals = (%6)(%8, p))
+│   %10 = Core.tuple(T)::Tuple{ITensor}
+│   %11 = Core._apply_iterate(Base.iterate, Base.getindex, %10, vals)::Number
+│   %12 = Core.typeassert(%11, ITensors.Number)::Number
+└──       return %12
+
+julia&gt; typeof(A[i=&gt;1, i&#39;=&gt;2])
+Float64</code></pre><p>Uh oh, that doesn&#39;t look good! Julia can&#39;t know ahead of time, based on  the inputs, what the type of the output is, besides that it will be a <code>Number</code> (though at runtime, the output has a concrete type, <code>Float64</code>).</p><p>So why is it designed this way? The main reason is to allow more  generic and dynamic code than traditional, statically-typed Arrays. This allows us to have code like:</p><pre><code class="language-julia">julia&gt; i = Index(2, &quot;i&quot;)
+(dim=2|id=811|&quot;i&quot;)
+
+julia&gt; A = emptyITensor(i&#39;, i);
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=811|&quot;i&quot;)&#39;
+Dim 2: (dim=2|id=811|&quot;i&quot;)
+NDTensors.Empty{Float64,NDTensors.Dense{Float64,Array{Float64,1}}}
+ 2×2
+
+
+
+julia&gt; A[i&#39; =&gt; 1, i =&gt; 2] = 1.2;
+
+julia&gt; @show A;
+A = ITensor ord=2
+Dim 1: (dim=2|id=811|&quot;i&quot;)&#39;
+Dim 2: (dim=2|id=811|&quot;i&quot;)
+NDTensors.Dense{Float64,Array{Float64,1}}
+ 2×2
+ 0.0  1.2
+ 0.0  0.0</code></pre><p>Here, the type of the storage of A is changed in-place. It starts as an <code>Empty</code> storage, a special trivial storage. When we set an element, we then allocate the appropriate storage. Allocations are performed only when needed, so if another element is set then no allocation is performed. More generally, this allows ITensors to have more generic in-place  functionality, so you can write code where you don&#39;t know what the storage is until runtime.</p><p>This can lead to certain types of code having perfomance problems,  for example looping through ITensors with many elements can be slow:</p><pre><code class="language-julia">julia&gt; function myscale!(A::ITensor, x::Number)
+         for n in 1:dim(A)
+           A[n] = x * A[n]
+         end
+       end;
+
+julia&gt; d = 10_000;
+
+julia&gt; i = Index(d);
+
+julia&gt; @btime myscale!(A, 2) setup = (A = randomITensor(i));
+  2.169 ms (117958 allocations: 3.48 MiB)</code></pre><p>However, this is fast:</p><pre><code class="nohighlight">julia&gt; function myscale!(A::Array, x::Number)
+         for n in 1:length(A)
+           A[n] = x * A[n]
+         end
+       end;
+
+julia&gt; @btime myscale!(A, 2) setup = (A = randn(d));
+  3.451 μs (0 allocations: 0 bytes)
+
+julia&gt; myscale2!(A::ITensor, x::Number) = myscale!(array(A), x)
+myscale2! (generic function with 1 method)
+
+julia&gt; @btime myscale2!(A, 2) setup = (A = randomITensor(i));
+  3.571 μs (2 allocations: 112 bytes)</code></pre><p>How does this work? It relies on a &quot;function barrier&quot; technique.  Julia compiles functions &quot;just-in-time&quot;, so that calls to an inner  function written in terms of a type-stable type are still fast. That inner function is compiled to very fast code. The main overhead is that Julia has to determine which function  to call at runtime.</p><p>Therefore, users should keep this in mind when they are writing  ITensors.jl code, and we warn that explicitly looping over large  ITensors by individual elements should be done with caution in  performance critical sections of your code.  However, be sure to benchmark and profile your code before  prematurely optimizing, since you may be surprised about  what are the fast and slow parts of your code.</p><p>Some strategies for avoiding ITensor loops are:</p><ul><li>Use broadcasting and other built-in ITensor functionality that makes use of function barriers.</li><li>Convert ITensors to type-stable collections like the Tensor type of NDTensors.jl and write functions in terms of the Tensor type (i.e. the function barrier techique that is used throughout ITensors.jl).</li><li>When initializing very large ITensors elementwise, use built-in ITensor constructors, or first construct an equivalent tensor as an Array or Tensor and then convert it to an ITensor.</li></ul><h2 id="ITensor-in-place-operations"><a class="docs-heading-anchor" href="#ITensor-in-place-operations">ITensor in-place operations</a><a id="ITensor-in-place-operations-1"></a><a class="docs-heading-anchor-permalink" href="#ITensor-in-place-operations" title="Permalink"></a></h2><p>In-place operations can help with optimizing code, when the memory of the output tensor of an operation is preallocated.</p><p>The main way to access this in ITensor is through broadcasting. For example:</p><pre><code class="language-julia">A = randomITensor(i, i&#39;)
+B = randomITensor(i&#39;, i)
+A .+= 2 .* B</code></pre><p>Internally, this is rewritten by Julia as a call to <code>broadcast!</code>. ITensors.jl overloads this call (or more specifically, a lower level function <code>copyto!</code> written in terms of a special lazy type that saves all of the objects and operations). Then, this call is  rewritten as</p><pre><code class="language-julia">map!((x,y) -&gt; x+2*y, A, A, B)</code></pre><p>This is mostly an optimization to use when you can preallocate storage that can be used multiple times.</p><p>Additionally, ITensors makes the unique choice that:</p><pre><code class="language-julia">C .= A .* B</code></pre><p>is interpreted as an in-place tensor contraction. What this means is that this calls a function:</p><pre><code class="language-julia">mul!(C, A, B)</code></pre><p>(likely to be given an alternative name <code>contract!</code>) which contracts <code>A</code> and <code>B</code> into the pre-allocated memory <code>C</code>.</p><p>Because of the design of the ITensor type (see the section above), there is some flexibility we take in allocating memory for users. For example, if the storage type is more narrow than the result, for convenience we might expand it in-place. If you are worried about memory allocations, we recommend using benchmarking and profiling to pinpoint slow parts of your code (often times, you may be surprised by what is actually slow).</p><h2 id="NDTensors-and-ITensors"><a class="docs-heading-anchor" href="#NDTensors-and-ITensors">NDTensors and ITensors</a><a id="NDTensors-and-ITensors-1"></a><a class="docs-heading-anchor-permalink" href="#NDTensors-and-ITensors" title="Permalink"></a></h2><p>ITensors.jl is built on top of another, more traditional tensor  library called NDTensors. NDTensors implements AbstractArrays with  a variety of sparse storage types, with more to come in the future.</p><p>NDTensors implements functionality like permutation of dimensions,  fast get and set index, broadcasting, and tensor contraction (where  labels of the dimensions must be specified).</p><p>For example:</p><pre><code class="language-julia">using ITensors
+using NDTensors
+
+T = Tensor(2,2,2)
+T[1,2,1] = 1.3  # Conventional element setting
+
+i = Index(2)
+T = Tensor((i,i&#39;,i&#39;))  # The identifiers are ignored, just interpreted as above
+T[1,2,1] = 1.3</code></pre><p>To make performant ITensor code (refer to the the previous section  on type stability and function barriers), ITensor storage data and  indices are passed by reference into Tensors, where the performance  critical operations are performed.</p><p>An example of a function barrier using NDTensors is the following:</p><pre><code class="language-julia">julia&gt; using NDTensors
+
+julia&gt; d = 10_000;
+
+julia&gt; i = Index(d);
+
+julia&gt; function myscale!(A::Tensor, x::Number)
+         for n in 1:dim(A)
+           A[n] = x * A[n]
+         end
+       end;
+
+julia&gt; @btime myscale!(A, 2) setup = (A = Tensor(d));
+  3.530 μs (0 allocations: 0 bytes)
+
+julia&gt; myscale2!(A::ITensor, x::Number) = myscale!(tensor(A), x)
+myscale2! (generic function with 1 method)
+
+julia&gt; @btime myscale2!(A, 2) setup = (A = randomITensor(i));
+  3.549 μs (2 allocations: 112 bytes)</code></pre><p>A very efficient function is written for the Tensor type. Then, the ITensor version just wraps the Tensor function by calling it after converting the ITensor to a Tensor (without any copying) with the <code>tensor</code> function. This is the basis for the design of all performance critical ITensors.jl functions.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Einsum.html">« ITensor indices and Einstein notation</a><a class="docs-footer-nextpage" href="Multithreading.html">Multithreading »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Tuesday 24 January 2023 20:55">Tuesday 24 January 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
