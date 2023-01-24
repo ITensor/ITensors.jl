@@ -26,7 +26,7 @@ end
 #
 
 struct Circuit{T} <: LinearAlgebra.AbstractRotation{T}
-  rotations::Array{Givens{T},1}
+  rotations::Vector{Givens{T}}
 end
 
 Base.adjoint(R::Circuit) = Adjoint(R)
@@ -77,36 +77,27 @@ function LinearAlgebra.rmul!(A::AbstractMatrix, R::Circuit)
   return A
 end
 
-function map!(f, G::Circuit)
+function replace!(f, G::Circuit)
   for i in eachindex(G.rotations)
     G.rotations[i] = f(G.rotations[i])
   end
   return G
 end
 
-function map_indices!(f, G::Circuit)
-  return map!(g -> Givens(f(g.i1), f(g.i2), g.c, g.s))
+function replace_indices!(f, G::Circuit)
+  return replace!(g -> Givens(f(g.i1), f(g.i2), g.c, g.s), G)
 end
 
 function shift!(G::Circuit, i::Int)
-  for (n, g) in enumerate(G.rotations)
-    G.rotations[n] = Givens(g.i1 + i, g.i2 + i, g.c, g.s)
-  end
-  return G
+  return replace_indices!(j -> j + i, G)
 end
 
 function scale!(G::Circuit, i::Int)
-  for (n, g) in enumerate(G.rotations)
-    G.rotations[n] = Givens(g.i1 * i, g.i2 * i, g.c, g.s)
-  end
-  return G
+  return replace_indices!(j -> j * i, G)
 end
 
 function conj!(G::Circuit)
-  for (n, g) in enumerate(G.rotations)
-    G.rotations[n] = Givens(g.i1, g.i2, g.c, g.s')
-  end
-  return G
+  return replace!(g -> Givens(g.i1, g.i2, g.c, g.s'), G)
 end
 
 #function copy(G::Circuit{Elt}) where Elt
@@ -274,9 +265,7 @@ end
 #
 # Correlation matrix diagonalization
 #
-abstract type AbstractSymmetry
-end
-
+abstract type AbstractSymmetry end
 
 struct ConservingNfParity{T} <: AbstractSymmetry
   data::T
@@ -286,10 +275,24 @@ struct ConservingNf{T} <: AbstractSymmetry
   data::T
 end
 
+struct Boguliobov
+  u::Givens
+end
+
 set_data(::ConservingNf, x) = ConservingNf(x)
 set_data(::ConservingNfParity, x) = ConservingNfParity(x)
 site_stride(::ConservingNf) = 1
 site_stride(::ConservingNfParity) = 2
+Base.copy(A::T) where {T<:AbstractSymmetry} = T(Base.copy(A.data))
+Base.size(A::T) where {T<:AbstractSymmetry} = Base.size(A.data)
+Base.size(A::T, dim::Int) where {T<:AbstractSymmetry} = Base.size(A.data, dim)
+
+Base.length(A::T) where {T<:AbstractSymmetry} = Base.length(A.data)
+Base.eltype(A::T) where {T<:AbstractSymmetry} = eltype(A.data)
+Hermitian(A::T) where {T<:AbstractSymmetry} = set_data(A, Hermitian(A.data))
+Base.conj(A::T) where {T<:AbstractSymmetry} = set_data(A, Base.conj(A.data))
+Base.transpose(A::T) where {T<:AbstractSymmetry} = set_data(A, Base.transpose(A.data))
+
 """
     givens_rotations(v::AbstractVector)
 
@@ -345,21 +348,22 @@ function givens_rotations(_v0::ConservingNfParity;)
   r = v[2]
   ##Given's rotations from creation-operator coefficients
   gscc, _ = givens_rotations(v[2:2:end])
-  gscc = scale!(gscc, 2)
+  replace_indices!(i -> 2 * i, gscc)
   gsca = Circuit(copy(gscc.rotations))
-  gsca = shift!(gsca, -1)
-  gsca = conj!(gsca)
+  replace_indices!(i -> i - 1, gsca)
+  conj!(gsca)
   gsc = interleave(gscc, gsca)
   v = gsc * v
   LinearAlgebra.lmul!(gsc, gs)
 
   ##Given's rotations from annihilation-operator coefficients
   gsaa, _ = givens_rotations(v[3:2:end])
-  gsaa = scale!(gsaa, 2)
-  gsaa = shift!(gsaa, +1)
+  replace_indices!(i -> 2 * i + 1, gsaa)
+  #scale!(gsaa, 2)
+  #gsaa = shift!(gsaa, +1)
   gsac = Circuit(copy(gsaa.rotations))
-  gsac = shift!(gsac, +1)
-  gsac = conj!(gsac)
+  replace_indices!(i -> i + 1, gsac)
+  conj!(gsac)
   gsa = interleave(gsac, gsaa)
   v = gsa * v
   LinearAlgebra.lmul!(gsa, gs)
@@ -374,98 +378,68 @@ function givens_rotations(_v0::ConservingNfParity;)
   return gs, r
 end
 
-function check_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number}
+function maybe_drop_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number}
   paired = false
   Λblocked = reverse_interleave(Λ0)
   N = div(size(Λblocked, 1), 2)
-  if all(abs.(Λblocked[1:N, (N + 1):end]) .<= eps(Float64))
-    return paired, Λblocked[(N + 1):end, (N + 1):end]
+  if all(x -> abs(x) <= eps(real(eltype(Λ0))), @view Λblocked[1:N, (N + 1):end])
+    return ConservingNf(Λblocked[(N + 1):end, (N + 1):end])
   else
-    paired = true
-    return paired, Λ0
+    return ConservingNfParity(Λ0)
   end
 end
 
-function check_pairing_correlations(Λ0::ConservingNf)
-  return Λ0
+maybe_drop_pairing_correlations(Λ0::ConservingNf) = Λ0
+function maybe_drop_pairing_correlations(Λ0::ConservingNfParity)
+  return maybe_drop_pairing_correlations(Λ0.data)
 end
 
-function check_pairing_correlations(Λ0::ConservingNfParity)
-  is_paired, Λ = check_pairing_correlations(Λ0.data)
-  if !is_paired
-    return ConservingNf(Λ)
-  else
-    return ConservingNfParity(Λ)
-  end
+sortperm(x::ConservingNfParity) = sortperm(x.data)
+sortperm(x::ConservingNf) = sortperm(x.data; by=entropy)
+
+function get_error(x::ConservingNf, perm)
+  n = x.data[first(perm)]
+  return min(abs(n), abs(1 - n))
+end
+function get_error(x::ConservingNfParity, perm)
+  n1 = x.data[first(perm)]
+  n2 = x.data[last(perm)]
+  return min(abs(n1), abs(n2))
 end
 
-function get_subblock(
-  _Λ::ConservingNfParity,
+function isolate_subblock_eig(
+  _Λ::AbstractSymmetry,
   startind::Int;
   eigval_cutoff::Float64=1e-8,
   minblocksize::Int=1,
   maxblocksize::Int=div(size(_Λ.data, 1), 2),
 )
   blocksize = 0
-  n = 0.0
-  n1 = 0.0
-  n2 = 0.0
   err = 0.0
   p = Int[]
-  nB = 0.0
+  nB = eltype(_Λ.data)[]
   uB = 0.0
   ΛB = 0.0
   i = startind
   Λ = _Λ.data
   N = size(Λ, 1)
   for blocksize in minblocksize:maxblocksize
-    j = min(2 * i + 2 * blocksize, N)
-    ΛB = @view Λ[(2 * i - 1):j, (2 * i - 1):j]
+    j = min(site_stride(_Λ) * i + site_stride(_Λ) * blocksize, N)
+    ΛB = @view Λ[
+      (site_stride(_Λ) * i + 1 - site_stride(_Λ)):j,
+      (site_stride(_Λ) * i + 1 - site_stride(_Λ)):j,
+    ]
     nB, uB = eigen(Hermitian(ΛB))
+    nB = set_data(_Λ, nB)
     p = sortperm(nB)
-    n1 = nB[first(p)]
-    n2 = nB[last(p)]
-    err = min(abs(n1), abs(n2))
-    n = n1
+    err = get_error(nB, p)
     err ≤ eigval_cutoff && break
   end
-  v = @view uB[:, p[1]]
-  return ConservingNfParity(v), ConservingNfParity(nB), err
+  v = set_data(_Λ, @view uB[:, p[1]])
+  return v, nB, err
 end
 
-function get_subblock(
-  _Λ::ConservingNf,
-  startind::Int;
-  eigval_cutoff::Float64=1e-8,
-  minblocksize::Int=1,
-  maxblocksize::Int=size(_Λ.data, 1),
-)
-  blocksize = 0
-  n = 0.0
-  err = 0.0
-  p = Int[]
-  nB = 0.0
-  uB = 0.0
-  ΛB = 0.0
-  i = startind
-  Λ = _Λ.data
-  N = size(Λ, 1)
-  for blocksize in minblocksize:maxblocksize
-    j = min(i + blocksize, N)
-    ΛB = @view Λ[i:j, i:j]
-    nB, uB = eigen(Hermitian(ΛB))
-    p = sortperm(nB; by=entropy)
-    n = nB[p[1]]
-    err = min(n, 1 - n)
-    err ≤ eigval_cutoff && break
-  end
-  v = @view uB[:, p[1]]
-  return ConservingNf(v), ConservingNf(nB), err
-end
-
-function process_populations!(
-  _ns::ConservingNf, _nB::ConservingNf, _v::ConservingNf, i::Int
-)
+function set_populations!(_ns::ConservingNf, _nB::ConservingNf, _v::ConservingNf, i::Int)
   p = Int[]
   ns = _ns.data
   nB = _nB.data
@@ -473,11 +447,12 @@ function process_populations!(
 
   p = sortperm(nB; by=entropy)
   ns[i] = nB[p[1]]
-  to_break = false
-  return ConservingNf(ns), to_break
+  return nothing
 end
 
-function process_populations!(_ns::ConservingNfParity, _nB::ConservingNfParity, _v::ConservingNfParity, i::Int)
+function set_populations!(
+  _ns::ConservingNfParity, _nB::ConservingNfParity, _v::ConservingNfParity, i::Int
+)
   p = Int[]
   ns = _ns.data
   nB = _nB.data
@@ -486,18 +461,21 @@ function process_populations!(_ns::ConservingNfParity, _nB::ConservingNfParity, 
   p = sortperm(nB)
   n1 = nB[first(p)]
   n2 = nB[last(p)]
-  to_break = false
   ns[2 * i] = n1
   ns[2 * i - 1] = n2
   if length(v) == 2
-    to_break = true
+    # For some reason the last populations are reversed, so take care of this conditionally here.
+    # ToDo: Fix this in givens_rotations instead.
     if abs(v[1]) >= abs(v[2])
       ns[2 * i] = n2
       ns[2 * i - 1] = n1
     end
   end
-  return ConservingNfParity(ns), to_break
+  return nothing
 end
+
+stop_gmps_sweep(v::ConservingNfParity) = length(v.data) == 2 ? true : false
+stop_gmps_sweep(v::ConservingNf) = false
 
 """
     correlation_matrix_to_gmps(Λ::AbstractMatrix{ElT}; eigval_cutoff::Float64 = 1e-8, maxblocksize::Int = size(Λ0, 1))
@@ -514,13 +492,12 @@ Note that this may not be the standard choice in the literature, but it is inter
 consistent with the format of single-particle Hamiltonians and Slater determinants employed.
 """
 ###Backward Compatibility
-function correlation_matrix_to_gmps(
-  Λ0::AbstractMatrix; eigval_cutoff::Float64=1e-8, maxblocksize::Int=size(Λ0.data, 1)
-)
-  return correlation_matrix_to_gmps(
-    Λ0; eigval_cutoff=eigval_cutoff, minblocksize=1, maxblocksize=maxblocksize
-  )
-end
+
+#correlation_matrix_to_gmps(
+#  Λ0::AbstractMatrix; eigval_cutoff::Float64=1e-8, maxblocksize::Int=size(Λ0.data, 1)
+#)= correlation_matrix_to_gmps(
+#    Λ0; eigval_cutoff=eigval_cutoff, minblocksize=1, maxblocksize=maxblocksize
+#  )
 
 function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix;
@@ -546,41 +523,53 @@ function correlation_matrix_to_gmps(
   ElT = eltype(Λ.data)
   V = Circuit{ElT}([])
   err_tot = 0.0
-  Λ = check_pairing_correlations(Λ)
+  Λ = maybe_drop_pairing_correlations(Λ)
   N = size(Λ.data, 1)
   #calctype = typeof(Λ)
-  ns = set_data(Λ,Vector{real(ElT)}(undef, N))
+  ns = set_data(Λ, Vector{real(ElT)}(undef, N))
   for i in 1:div(N, site_stride(Λ))
     err = 0.0
-    v, nB, err = get_subblock(
+    v, nB, err = isolate_subblock_eig(
       Λ,
       i;
       eigval_cutoff=eigval_cutoff,
       minblocksize=minblocksize,
       maxblocksize=maxblocksize,
     )
-    ns, to_break = process_populations!(ns, nB, v, i)
-    if to_break
+    set_populations!(ns, nB, v, i)
+    if stop_gmps_sweep(v)
       break
     end
     g, _ = givens_rotations(v)
-    shift!(g, site_stride(Λ) * (i - 1))
+    replace_indices!(j -> j + site_stride(Λ) * (i - 1), g)
 
     # In-place version of:
     # V = g * V
     LinearAlgebra.lmul!(g, V)
-    Λ = set_data(Λ,Hermitian(g * Matrix(Λ.data) * g'))
+    Λ = set_data(Λ, Hermitian(g * Matrix(Λ.data) * g'))
   end
   ###return non-wrapped populations for backwards compatibility
   return ns.data, V
 end
 
+##ToDo: This restricts the data of AbstractSymmetry to have same eltype, but could also promote eltypes
+(x::AbstractSymmetry * y::AbstractSymmetry) =
+  if (
+    typeof(x) == typeof(y) ||
+    typeof(transpose(x)) == typeof(y) ||
+    typeof(x) == typeof(transpose(y))
+  )
+    set_data(x, x.data * y.data)
+  else
+    error("Multiplying different concrete subtypes of AbstractSymmetry --- not allowed.")
+  end
+
 function slater_determinant_to_gmps(Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_gmps(ConservingNf(conj(Φ) * transpose(Φ)); kwargs...)
 end
 
-function slater_determinant_to_gmps(Φ::T; kwargs...) where {T<:Union{ConservingNf,ConservingNfParity}}
-  return correlation_matrix_to_gmps(set_data(Φ,conj(Φ.data) * transpose(Φ.data)); kwargs...)
+function slater_determinant_to_gmps(Φ::AbstractSymmetry; kwargs...)
+  return correlation_matrix_to_gmps(conj(Φ) * transpose(Φ); kwargs...)
 end
 
 #
@@ -597,18 +586,30 @@ function ITensors.ITensor(u::Givens, s1::Index, s2::Index)
   return itensor(U, s2', s1', dag(s2), dag(s1))
 end
 
-function ITensors.ITensor(u::Givens, s1::Index, s2::Index, is_boguliobov::Bool)
-  if is_boguliobov
-    U = [
-      u.c 0 0 conj(u.s)
-      0 1 0 0
-      0 0 1 0
-      -(u.s) 0 0 u.c
-    ]
-    return itensor(U, s2', s1', dag(s2), dag(s1))
+function ITensors.ITensor(b::Boguliobov, s1::Index, s2::Index)
+  U = [
+    b.u.c 0 0 conj(b.u.s)
+    0 1 0 0
+    0 0 1 0
+    -(b.u.s) 0 0 b.u.c
+  ]
+  return itensor(U, s2', s1', dag(s2), dag(s1))
+end
+
+function ITensors.ITensor(
+  sites::Vector{<:Index}, u::ConservingNfParity{Givens{T}}
+) where {T}
+  s1 = sites[div(u.data.i1 + 1, 2)]
+  s2 = sites[div(u.data.i2 + 1, 2)]
+  if abs(u.data.i2 - u.data.i1) % 2 == 1
+    return ITensor(Boguliobov(u.data), s1, s2)
   else
-    U = ITensor(u, s1, s2)
+    return ITensor(u.data, s1, s2)
   end
+end
+
+function ITensors.ITensor(sites::Vector{<:Index}, u::ConservingNf{Givens{T}}) where {T}
+  return ITensor(sites, u.data)
 end
 
 function ITensors.ITensor(sites::Vector{<:Index}, u::Givens)
@@ -617,27 +618,15 @@ function ITensors.ITensor(sites::Vector{<:Index}, u::Givens)
   return ITensor(u, s1, s2)
 end
 
-function ITensors.ITensor(sites::Vector{<:Index}, u::Givens, is_boguliubov::Bool)
-  s1 = sites[u.i1]
-  s2 = sites[u.i2]
-  return ITensor(u, s1, s2, is_boguliobov)
-end
-
-function to_manybody_gates(s::Vector{<:Index}, C::ConservingNfParity)
-  is_bog = g -> abs(g.i2 - g.i1) == 2 ? false : true
-  s1 = g -> div(g.i1 - 1, 2) + 1
-  s2 = g -> div(g.i2 - 1, 2) + 1
-  U = [
-    ITensor(g, s[s1(g)], s[s2(g)], is_bog(g)) for
-    g in reverse(C.data.rotations[begin:2:end])
-  ]
+function itensors(s::Vector{<:Index}, C::ConservingNfParity)
+  U = [ITensor(s, set_data(C, g)) for g in reverse(C.data.rotations[begin:2:end])]
   return U
 end
 
-function to_manybody_gates(sites::Vector{<:Index}, C::ConservingNf)
-  return to_manybody_gates(sites, C.data)
+function itensors(sites::Vector{<:Index}, C::ConservingNf)
+  return itensors(sites, C.data)
 end
-function to_manybody_gates(s::Vector{<:Index}, C::Circuit)
+function itensors(s::Vector{<:Index}, C::Circuit)
   U = [ITensor(s, g) for g in reverse(C.rotations)]
   return U
 end
@@ -672,50 +661,56 @@ a matrix product state (MPS).
 The correlation matrix should correspond to a pure state (have all eigenvalues
 of zero or one).
 """
-function correlation_matrix_to_mps(
+function convert_correlation_matrix(Λ::AbstractMatrix, s::Vector{<:Index})
+  return if Base.length(s) == size(Λ, 1)
+    ConservingNf(Λ)
+  elseif 2*Base.length(s) == size(Λ, 1)
+    ConservingNfParity(Λ)
+  else
+    error("Correlation matrix is not the same or twice the length of sites")
+  end
+end
+
+correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ::AbstractMatrix;
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=size(Λ, 1),
   minblocksize::Int=1,
   kwargs...,
-)
-  return correlation_matrix_to_mps(
+)=correlation_matrix_to_mps(
     s,
-    ConservingNf(Λ0);
+    convert_correlation_matrix(Λ,s);
     eigval_cutoff=eigval_cutoff,
     maxblocksize=maxblocksize,
     minblocksize=minblocksize,
     kwargs...,
   )
-end
 
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
-  Λ0::T;
+  Λ0::AbstractSymmetry;
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=size(Λ0.data, 1),
   minblocksize::Int=1,
   kwargs...,
-) where {T<:Union{ConservingNfParity,ConservingNf}}
-  if eltype(Λ0.data) <: AbstractFloat
-    MPS_Elt = Float64
-  else
-    MPS_Elt = ComplexF64
-  end
-  Λ = check_pairing_correlations(Λ0)
+)
+  MPS_Elt = eltype(Λ0.data)
+  Λ = maybe_drop_pairing_correlations(Λ0)
   @assert size(Λ.data, 1) == size(Λ.data, 2)
   ns, C = correlation_matrix_to_gmps(
     Λ; eigval_cutoff=eigval_cutoff, minblocksize=minblocksize, maxblocksize=maxblocksize
   )
   if all(hastags("Fermion"), s)
-    U = to_manybody_gates(s, set_data(Λ,C))
+    U = itensors(s, set_data(Λ, C))
     ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ) * n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)
     ###ToDo: Not tested, but seems to work so far at least for the conserving case
     if Λ <: ConservingNfParity
-      error("ConservingNfParity + spinful fermions not tested/fully implemented yet. Exiting")
+      error(
+        "ConservingNfParity + spinful fermions not tested/fully implemented yet. Exiting"
+      )
     end
     isodd(length(s)) && error(
       "For Electron type, must have even number of sites of alternating up and down spins.",
@@ -748,10 +743,8 @@ function slater_determinant_to_mps(s::Vector{<:Index}, Φ::AbstractMatrix; kwarg
   return correlation_matrix_to_mps(s, conj(Φ) * transpose(Φ); kwargs...)
 end
 
-function slater_determinant_to_mps(
-  s::Vector{<:Index}, Φ::T; kwargs...
-) where {T<:Union{ConservingNfParity,ConservingNf}}
-  return correlation_matrix_to_mps(s, T(conj(Φ.data) * transpose(Φ.data)); kwargs...)
+function slater_determinant_to_mps(s::Vector{<:Index}, Φ::AbstractSymmetry; kwargs...)
+  return correlation_matrix_to_mps(s, conj(Φ) * transpose(Φ); kwargs...)
 end
 
 function slater_determinant_to_mps(
@@ -837,16 +830,16 @@ end
 
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
-  Λ_up0::T,
-  Λ_dn0::T;
+  Λ_up0::AbstractSymmetry,
+  Λ_dn0::AbstractSymmetry;
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=min(size(Λ_up0, 1), size(Λ_dn0, 1)),
   kwargs...,
-) where {T<:Union{ConservingNfParity,ConservingNf}}
+)
   @assert size(Λ_up.data, 1) == size(Λ_up.data, 2)
   @assert size(Λ_dn.data, 1) == size(Λ_dn.data, 2)
-  Λ_up = check_pairing_correlations(Λ_up0)
-  Λ_dn = check_pairing_correlations(Λ_dn0)
+  Λ_up = maybe_drop_pairing_correlations(Λ_up0)
+  Λ_dn = maybe_drop_pairing_correlations(Λ_dn0)
   #@assert Λ_up<:aT && Λ_dn<:aT where aT<:AbstractSymmetry  ##ToDo:implement this check
   #calctype = typeof(Λ_up)
   N_up = size(Λ_up.data, 1)
@@ -878,7 +871,7 @@ function correlation_matrix_to_mps(
   end
 
   if all(hastags("Fermion"), s)
-    U = to_manybody_gates(s, set_data(Λ_up, C))
+    U = itensors(s, set_data(Λ_up, C))
     ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ_up) * n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)
