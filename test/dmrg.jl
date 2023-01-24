@@ -122,7 +122,6 @@ using ITensors: nsite, set_nsite!
     @test PH.lpos == N - 1
   end
 
-
   @testset "ProjMPOSum DMRG with disk caching" begin
     N = 10
     sites = siteinds("S=1", N; conserve_qns=true)
@@ -143,7 +142,9 @@ using ITensors: nsite, set_nsite!
     state = [isodd(n) ? "Up" : "Dn" for n in 1:N]
     psi = randomMPS(sites, state; linkdims=4)
 
-    energy, psi = dmrg([HA,HB], psi; nsweeps=3, maxdim=[10,20,30], write_when_maxdim_exceeds=10)
+    energy, psi = dmrg(
+      [HA, HB], psi; nsweeps=3, maxdim=[10, 20, 30], write_when_maxdim_exceeds=10
+    )
     @test energy < -12.0
   end
 
