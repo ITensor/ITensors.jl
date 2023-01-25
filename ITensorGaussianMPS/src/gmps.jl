@@ -132,7 +132,59 @@ is_annihilation_operator(::OpName"c") = true
 is_annihilation_operator(::OpName"c↑") = true
 is_annihilation_operator(::OpName"c↓") = true
 
+
+
+function quadrant(term)
+  if is_creation_operator(term[1]) && is_annihilation_operator(term[1])
+    q=(2,2)
+  elseif is_annihilation_operator(term[1]) && is_creation_operator(term[1])
+    q=(1,1)
+  elseif is_annihilation_operator(term[1]) && is_annihilation_operator(term[1])
+    q=(1,2)
+  elseif is_creation_operator(term[1]) && is_creation_operator(term[1])
+    q=(2,1)
+  end
+  return q 
+end
+
 # Make a hopping Hamiltonian from quadratic Hamiltonian
+function quadratic_hamiltonian(os::OpSum)
+  nterms = length(os)
+  coefs = Vector{Number}(undef, nterms)
+  sites = Vector{Tuple{Int,Int}}(undef, nterms)
+  quads = Vector{Tuple{Int,Int}}(undef, nterms)
+  nsites = 0
+  
+  for n in 1:nterms
+    term = os[n]
+    coef = isreal(coefficient(term)) ? real(coefficient(term)) : term.coef
+    coefs[n] = coef
+    quads[n]=quadrant(term)
+    length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
+    #@assert is_creation_operator(term[1])
+    #@assert is_annihilation_operator(term[2])
+    sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
+    nsites = max(nsites, maximum(sites[n]))
+  end
+  quadrants_present=unique(quads)
+  h = zeros(ElT, nsites, nsites)
+  
+  if (1,2) in quadrants_present || (2,1) in quadrants_present
+    nsites*=2
+    h = zeros(ElT, nsites, nsites)
+    for n in 1:nterms
+      quad=quads[n]
+      offsets = div(nsites,2) .* quad
+      h[(sites[n] .+ offsets)...] = coefs[n]
+    end
+  elseif (2,2) == quadrants_present
+    h = zeros(ElT, nsites, nsites)
+    h[sites[n]...] = coefs[n]
+  else
+    error("Either pass all terms (for non-number conserving) or only (Cdag,C) ones (number-conserving)")
+  end
+end
+
 function hopping_hamiltonian(os::OpSum)
   nterms = length(os)
   coefs = Vector{Number}(undef, nterms)
