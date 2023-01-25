@@ -1,12 +1,4 @@
-import Base:
-  sortperm,
-  size,
-  length,
-  eltype,
-  conj,
-  transpose,
-  copy,
-  *
+import Base: sortperm, size, length, eltype, conj, transpose, copy, *
 
 #
 # Single particle von Neumann entanglement entropy
@@ -404,10 +396,8 @@ function maybe_drop_pairing_correlations(Λ0::ConservesNfParity)
   return maybe_drop_pairing_correlations(Λ0.data)
 end
 
-
 sortperm(x::ConservesNf) = sortperm(x.data; by=entropy)
 sortperm(x::ConservesNfParity) = sortperm(x.data)
-
 
 function get_error(x::ConservesNf, perm)
   n = x.data[first(perm)]
@@ -505,8 +495,6 @@ consistent with the format of single-particle Hamiltonians and Slater determinan
 """
 ###Backward Compatibility
 
-
-
 function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix;
   eigval_cutoff::Float64=1e-8,
@@ -521,19 +509,20 @@ function correlation_matrix_to_gmps(
   )
 end
 
-correlation_matrix_to_gmps(
+function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix,
   Nsites::Int;
   eigval_cutoff::Float64=1e-8,
   minblocksize::Int=1,
   maxblocksize::Int=size(Λ0, 1),
-  )=
-  correlation_matrix_to_gmps(
-  symmetric_correlation_matrix(Λ0,Nsites);
-  eigval_cutoff=eigval_cutoff,
-  minblocksize=minblocksize,
-  maxblocksize=maxblocksize,
+)
+  return correlation_matrix_to_gmps(
+    symmetric_correlation_matrix(Λ0, Nsites);
+    eigval_cutoff=eigval_cutoff,
+    minblocksize=minblocksize,
+    maxblocksize=maxblocksize,
   )
+end
 
 function correlation_matrix_to_gmps(
   Λ0::T;
@@ -586,8 +575,8 @@ has_same_symmetry(::AbstractSymmetry, ::AbstractSymmetry) = false
 has_same_symmetry(::ConservesNf, ::ConservesNf) = true
 has_same_symmetry(::ConservesNfParity, ::ConservesNfParity) = true
 
-function slater_determinant_to_gmps(Φ::AbstractMatrix,N::Int; kwargs...)
-  return correlation_matrix_to_gmps(conj(Φ) * transpose(Φ),N; kwargs...)
+function slater_determinant_to_gmps(Φ::AbstractMatrix, N::Int; kwargs...)
+  return correlation_matrix_to_gmps(conj(Φ) * transpose(Φ), N; kwargs...)
 end
 
 function slater_determinant_to_gmps(Φ::AbstractMatrix; kwargs...)
@@ -622,9 +611,7 @@ function ITensors.ITensor(b::Boguliobov, s1::Index, s2::Index)
   return itensor(U, s2', s1', dag(s2), dag(s1))
 end
 
-function ITensors.ITensor(
-  sites::Vector{<:Index}, u::ConservesNfParity{Givens{T}}
-) where {T}
+function ITensors.ITensor(sites::Vector{<:Index}, u::ConservesNfParity{Givens{T}}) where {T}
   s1 = sites[div(u.data.i1 + 1, 2)]
   s2 = sites[div(u.data.i2 + 1, 2)]
   if abs(u.data.i2 - u.data.i1) % 2 == 1
@@ -691,7 +678,7 @@ of zero or one).
 function symmetric_correlation_matrix(Λ::AbstractMatrix, s::Vector{<:Index})
   if length(s) == size(Λ, 1)
     return ConservesNf(Λ)
-  elseif 2*length(s) == size(Λ, 1)
+  elseif 2 * length(s) == size(Λ, 1)
     return ConservesNfParity(Λ)
   else
     return error("Correlation matrix is not the same or twice the length of sites")
@@ -699,31 +686,32 @@ function symmetric_correlation_matrix(Λ::AbstractMatrix, s::Vector{<:Index})
 end
 
 function symmetric_correlation_matrix(Λ::AbstractMatrix, Nsites::Int)
-   if Nsites == size(Λ, 1)
+  if Nsites == size(Λ, 1)
     return ConservesNf(Λ)
-  elseif 2*Nsites == size(Λ, 1)
+  elseif 2 * Nsites == size(Λ, 1)
     return ConservesNfParity(Λ)
   else
     return error("Correlation matrix is not the same or twice the length of sites")
   end
 end
 
-
-correlation_matrix_to_mps(
+function correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ::AbstractMatrix;
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=size(Λ, 1),
   minblocksize::Int=1,
   kwargs...,
-)=correlation_matrix_to_mps(
+)
+  return correlation_matrix_to_mps(
     s,
-    symmetric_correlation_matrix(Λ,s);
+    symmetric_correlation_matrix(Λ, s);
     eigval_cutoff=eigval_cutoff,
     maxblocksize=maxblocksize,
     minblocksize=minblocksize,
     kwargs...,
   )
+end
 
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
@@ -843,12 +831,18 @@ function interleave(xs...)
   return res
 end
 
-interleave(a::ConservesNf{T},b::ConservesNf{T}) where T = set_data(a,interleave(a.data,b.data))
-function interleave(a::ConservesNfParity{T},b::{ConservesNfParity{T}}) where T
-  set_data(a,interleave(interleave(a.data[1:2:end],b.data[1:2:end]),interleave(a.data[2:2:end],b.data[2:2:end])))
+function interleave(a::ConservesNf{T}, b::ConservesNf{T}) where {T}
+  return set_data(a, interleave(a.data, b.data))
 end
-
-
+function interleave(a::ConservesNfParity{T}, b::ConservesNfParity{T}) where {T}
+  return set_data(
+    a,
+    interleave(
+      interleave(a.data[1:2:end], b.data[1:2:end]),
+      interleave(a.data[2:2:end], b.data[2:2:end]),
+    ),
+  )
+end
 
 function interleave(M::AbstractMatrix)
   @assert size(M, 1) == size(M, 2)

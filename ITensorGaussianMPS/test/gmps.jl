@@ -2,6 +2,7 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
+
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)
@@ -32,7 +33,7 @@ end
 
     # Diagonalize the correlation matrix as a
     # Gaussian MPS (GMPS)
-    n, gmps = slater_determinant_to_gmps(Φ,N; maxblocksize=4)
+    n, gmps = slater_determinant_to_gmps(Φ, N; maxblocksize=4)
     ns = round.(Int, n)
     @test sum(ns) == Nf
 
@@ -110,7 +111,7 @@ end
       Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
       c = Ud' * c * Ud
     end
-    n, gmps = correlation_matrix_to_gmps(ElT.(c)); maxblocksize=8)
+    n, gmps = correlation_matrix_to_gmps(ElT.(c); maxblocksize=8)
     ns = round.(Int, n)
     if Delta == 0.0
       @test sum(ns) == Nf
@@ -124,9 +125,7 @@ end
 
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=false)
-    psi = correlation_matrix_to_mps(
-      s, ElT.(c); eigval_cutoff=1e-10, maxblocksize=10
-    )
+    psi = correlation_matrix_to_mps(s, ElT.(c); eigval_cutoff=1e-10, maxblocksize=10)
 
     # compare entries of the correlation matrix
     cdagc = correlation_matrix(psi, "Cdag", "C")
