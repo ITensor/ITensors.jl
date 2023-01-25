@@ -119,7 +119,7 @@ end
       @test sum(ns) == N
     end
 
-    Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(Pairing(c))
+    Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(c)
     @show size(ns), size(Λ.data)
     @test gmps * Λ.data * gmps' ≈ Diagonal(ns) rtol = 1e-2
     @test gmps' * Diagonal(ns) * gmps ≈ Λ.data rtol = 1e-2
