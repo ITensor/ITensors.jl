@@ -111,7 +111,7 @@ end
       Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
       c = Ud' * c * Ud
     end
-    n, gmps = correlation_matrix_to_gmps(ElT.(c); maxblocksize=8)
+    n, gmps = correlation_matrix_to_gmps(ElT.(c),N; maxblocksize=8)
     ns = round.(Int, n)
     if Delta == 0.0
       @test sum(ns) == Nf
@@ -120,6 +120,7 @@ end
     end
 
     Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(Pairing(c))
+    @show size(ns), size(Λ.data)
     @test gmps * Λ.data * gmps' ≈ Diagonal(ns) rtol = 1e-2
     @test gmps' * Diagonal(ns) * gmps ≈ Λ.data rtol = 1e-2
 
