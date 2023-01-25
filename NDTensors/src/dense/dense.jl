@@ -89,8 +89,8 @@ function Base.real(::Type{Dense{ElT,DataT}}) where {DataT<:AbstractArray{ElT}} w
    default_Densetype( adapt(real(ElT), DataT))
 end
 
-function complex(::Type{Dense{ElT,DataT{ElT}}}) where {ElT}
-  return Dense{complex(ElT),DataT{complex(ElT)}}
+function complex(::Type{Dense{ElT,Vector{ElT}}}) where {ElT}
+  return Dense{complex(ElT),Vector{complex(ElT)}}
 end
 
 similar(D::Dense) = Dense(similar(data(D)))
