@@ -22,18 +22,18 @@ end
 
 #Start with high information constructors and move to low information constructors
 function Dense{ElT, VecT}() where {ElT, VecT<:AbstractArray{ElT}}
-  return default_storagetype(VecT)(VecT())
+  return Dense{ElT, VecT}(VecT())
 end
 
 # Construct from a set of indices
 # This will fail if zero(ElT) is not defined for the ElT
 function Dense{ElT,VecT}(inds::Tuple) where {ElT,VecT<:AbstractArray{ElT}}
-  return default_storagetype(VecT)(zeros(VecT, dim(inds)))
+  return Dense{ElT, VecT}(zeros(VecT, dim(inds)))
   #return default_storagetype(VecT)(VecT(undef, dim(inds)))
 end
 
 function Dense{ElT, VecT}(::UndefInitializer, inds::Tuple) where {ElT, VecT<:AbstractArray{ElT}}
-  return default_storagetype(VecT)(VecT(undef, dim(inds)))
+  return Dense{ElT, VecT}(VecT(undef, dim(inds)))
 end
 
 function Dense{VecT}() where {VecT<:AbstractArray}
@@ -59,7 +59,9 @@ Dense{ElT}(dim::Integer) where {ElT <: Number} = default_storagetype(ElT)(zeros(
 
 Dense{ElT}() where {ElT} = default_storagetype(ElT)()
 
-Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT} = Dense{ElT, VecT}(data)
+function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT} 
+  Dense{ElT, VecT}(data)
+end
 
 Dense(VecT::Type{<:AbstractArray{ElT}}, dim::Integer) where ElT = Dense{ElT, VecT}((dim,))
 
