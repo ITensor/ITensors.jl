@@ -2,8 +2,9 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
-
-const Pairing = ITensorGaussianMPS.ConservingNfParity
+import ITensorGaussianMPS.ConservesNf
+import ITensorGaussianMPS.ConservesNfParity
+const Pairing = ConservesNfParity
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)
@@ -44,7 +45,7 @@ end
 
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=true)
-    ψ = slater_determinant_to_mps(s, ConservingNf(Φ); maxblocksize=4)
+    ψ = slater_determinant_to_mps(s, ConservesNf(Φ); maxblocksize=4)
 
     os = OpSum()
     for i in 1:N, j in 1:N
