@@ -2,9 +2,6 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
-import ITensorGaussianMPS.ConservesNf
-import ITensorGaussianMPS.ConservesNfParity
-const Pairing = ConservesNfParity
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)
@@ -113,7 +110,7 @@ end
       Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
       c = Ud' * c * Ud
     end
-    n, gmps = correlation_matrix_to_gmps(Pairing(ElT.(c)); maxblocksize=8)
+    n, gmps = correlation_matrix_to_gmps(ElT.(c)); maxblocksize=8)
     ns = round.(Int, n)
     if Delta == 0.0
       @test sum(ns) == Nf

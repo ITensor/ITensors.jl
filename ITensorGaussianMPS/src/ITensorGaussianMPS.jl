@@ -14,10 +14,8 @@ export slater_determinant_to_mps,
   hopping_hamiltonian,
   pairing_hamiltonian,
   slater_determinant_matrix,
-  slater_determinant_to_gmera,
-  Pairing,
-  ConservingNf
-
+  slater_determinant_to_gmera
+  
 include("gmps.jl")
 include("gmera.jl")
 

@@ -293,15 +293,15 @@ set_data(::ConservesNf, x) = ConservesNf(x)
 set_data(::ConservesNfParity, x) = ConservesNfParity(x)
 site_stride(::ConservesNf) = 1
 site_stride(::ConservesNfParity) = 2
-copy(A::T) where {T<:AbstractSymmetry} = T(Base.copy(A.data))
-size(A::T) where {T<:AbstractSymmetry} = Base.size(A.data)
-size(A::T, dim::Int) where {T<:AbstractSymmetry} = Base.size(A.data, dim)
+copy(A::T) where {T<:AbstractSymmetry} = T(copy(A.data))
+size(A::T) where {T<:AbstractSymmetry} = size(A.data)
+size(A::T, dim::Int) where {T<:AbstractSymmetry} = size(A.data, dim)
 
-length(A::T) where {T<:AbstractSymmetry} = Base.length(A.data)
+length(A::T) where {T<:AbstractSymmetry} = length(A.data)
 eltype(A::T) where {T<:AbstractSymmetry} = eltype(A.data)
 Hermitian(A::T) where {T<:AbstractSymmetry} = set_data(A, Hermitian(A.data))
-conj(A::T) where {T<:AbstractSymmetry} = set_data(A, Base.conj(A.data))
-transpose(A::T) where {T<:AbstractSymmetry} = set_data(A, Base.transpose(A.data))
+conj(A::T) where {T<:AbstractSymmetry} = set_data(A, conj(A.data))
+transpose(A::T) where {T<:AbstractSymmetry} = set_data(A, transpose(A.data))
 
 """
     givens_rotations(v::AbstractVector)
@@ -451,7 +451,7 @@ function isolate_subblock_eig(
   return v, nB, err
 end
 
-function set_populations!(_ns::ConservesNf, _nB::ConservesNf, _v::ConservesNf, i::Int)
+function set_occupations!(_ns::ConservesNf, _nB::ConservesNf, _v::ConservesNf, i::Int)
   p = Int[]
   ns = _ns.data
   nB = _nB.data
@@ -462,7 +462,7 @@ function set_populations!(_ns::ConservesNf, _nB::ConservesNf, _v::ConservesNf, i
   return nothing
 end
 
-function set_populations!(
+function set_occupations!(
   _ns::ConservesNfParity, _nB::ConservesNfParity, _v::ConservesNfParity, i::Int
 )
   p = Int[]
@@ -476,7 +476,7 @@ function set_populations!(
   ns[2 * i] = n1
   ns[2 * i - 1] = n2
   if length(v) == 2
-    # For some reason the last populations are reversed, so take care of this conditionally here.
+    # For some reason the last occupations are reversed, so take care of this conditionally here.
     # ToDo: Fix this in givens_rotations instead.
     if abs(v[1]) >= abs(v[2])
       ns[2 * i] = n2
@@ -558,7 +558,7 @@ function correlation_matrix_to_gmps(
       minblocksize=minblocksize,
       maxblocksize=maxblocksize,
     )
-    set_populations!(ns, nB, v, i)
+    set_occupations!(ns, nB, v, i)
     if stop_gmps_sweep(v)
       break
     end
@@ -570,7 +570,7 @@ function correlation_matrix_to_gmps(
     LinearAlgebra.lmul!(g, V)
     Λ = set_data(Λ, Hermitian(g * Matrix(Λ.data) * g'))
   end
-  ###return non-wrapped populations for backwards compatibility
+  ###return non-wrapped occupations for backwards compatibility
   return ns.data, V
 end
 
@@ -689,9 +689,9 @@ The correlation matrix should correspond to a pure state (have all eigenvalues
 of zero or one).
 """
 function symmetric_correlation_matrix(Λ::AbstractMatrix, s::Vector{<:Index})
-  if Base.length(s) == size(Λ, 1)
+  if length(s) == size(Λ, 1)
     return ConservesNf(Λ)
-  elseif 2*Base.length(s) == size(Λ, 1)
+  elseif 2*length(s) == size(Λ, 1)
     return ConservesNfParity(Λ)
   else
     return error("Correlation matrix is not the same or twice the length of sites")
@@ -842,6 +842,13 @@ function interleave(xs...)
   end
   return res
 end
+
+interleave(a::ConservesNf{T},b::ConservesNf{T}) where T = set_data(a,interleave(a.data,b.data))
+function interleave(a::ConservesNfParity{T},b::{ConservesNfParity{T}}) where T
+  set_data(a,interleave(interleave(a.data[1:2:end],b.data[1:2:end]),interleave(a.data[2:2:end],b.data[2:2:end])))
+end
+
+
 
 function interleave(M::AbstractMatrix)
   @assert size(M, 1) == size(M, 2)
