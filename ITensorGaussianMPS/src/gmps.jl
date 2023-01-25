@@ -505,17 +505,13 @@ consistent with the format of single-particle Hamiltonians and Slater determinan
 """
 ###Backward Compatibility
 
-#correlation_matrix_to_gmps(
-#  Λ0::AbstractMatrix; eigval_cutoff::Float64=1e-8, maxblocksize::Int=size(Λ0.data, 1)
-#)= correlation_matrix_to_gmps(
-#    Λ0; eigval_cutoff=eigval_cutoff, minblocksize=1, maxblocksize=maxblocksize
-#  )
+
 
 function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix;
   eigval_cutoff::Float64=1e-8,
   minblocksize::Int=1,
-  maxblocksize::Int=size(Λ0.data, 1),
+  maxblocksize::Int=size(Λ0, 1),
 )
   return correlation_matrix_to_gmps(
     ConservesNf(Λ0);
@@ -524,6 +520,20 @@ function correlation_matrix_to_gmps(
     maxblocksize=maxblocksize,
   )
 end
+
+correlation_matrix_to_gmps(
+  Λ0::AbstractMatrix,
+  Nsites::Int;
+  eigval_cutoff::Float64=1e-8,
+  minblocksize::Int=1,
+  maxblocksize::Int=size(Λ0, 1),
+  )=
+  correlation_matrix_to_gmps(
+  symmetric_correlation_matrix(Λ0,Nsites);
+  eigval_cutoff=eigval_cutoff,
+  minblocksize=minblocksize,
+  maxblocksize=maxblocksize,
+  )
 
 function correlation_matrix_to_gmps(
   Λ0::T;
@@ -575,6 +585,10 @@ end
 has_same_symmetry(::AbstractSymmetry, ::AbstractSymmetry) = false
 has_same_symmetry(::ConservesNf, ::ConservesNf) = true
 has_same_symmetry(::ConservesNfParity, ::ConservesNfParity) = true
+
+function slater_determinant_to_gmps(Φ::AbstractMatrix,N::Int; kwargs...)
+  return correlation_matrix_to_gmps(conj(Φ) * transpose(Φ),N; kwargs...)
+end
 
 function slater_determinant_to_gmps(Φ::AbstractMatrix; kwargs...)
   return correlation_matrix_to_gmps(ConservesNf(conj(Φ) * transpose(Φ)); kwargs...)
@@ -638,6 +652,7 @@ end
 function itensors(sites::Vector{<:Index}, C::ConservesNf)
   return itensors(sites, C.data)
 end
+
 function itensors(s::Vector{<:Index}, C::Circuit)
   U = [ITensor(s, g) for g in reverse(C.rotations)]
   return U
@@ -674,14 +689,25 @@ The correlation matrix should correspond to a pure state (have all eigenvalues
 of zero or one).
 """
 function symmetric_correlation_matrix(Λ::AbstractMatrix, s::Vector{<:Index})
-  return if Base.length(s) == size(Λ, 1)
-    ConservesNf(Λ)
+  if Base.length(s) == size(Λ, 1)
+    return ConservesNf(Λ)
   elseif 2*Base.length(s) == size(Λ, 1)
-    ConservesNfParity(Λ)
+    return ConservesNfParity(Λ)
   else
-    error("Correlation matrix is not the same or twice the length of sites")
+    return error("Correlation matrix is not the same or twice the length of sites")
   end
 end
+
+function symmetric_correlation_matrix(Λ::AbstractMatrix, Nsites::Int)
+   if Nsites == size(Λ, 1)
+    return ConservesNf(Λ)
+  elseif 2*Nsites == size(Λ, 1)
+    return ConservesNfParity(Λ)
+  else
+    return error("Correlation matrix is not the same or twice the length of sites")
+  end
+end
+
 
 correlation_matrix_to_mps(
   s::Vector{<:Index},

@@ -35,7 +35,7 @@ end
 
     # Diagonalize the correlation matrix as a
     # Gaussian MPS (GMPS)
-    n, gmps = slater_determinant_to_gmps(Φ; maxblocksize=4)
+    n, gmps = slater_determinant_to_gmps(Φ,N; maxblocksize=4)
     ns = round.(Int, n)
     @test sum(ns) == Nf
 
@@ -45,7 +45,7 @@ end
 
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=true)
-    ψ = slater_determinant_to_mps(s, ConservesNf(Φ); maxblocksize=4)
+    ψ = slater_determinant_to_mps(s, Φ; maxblocksize=4)
 
     os = OpSum()
     for i in 1:N, j in 1:N
