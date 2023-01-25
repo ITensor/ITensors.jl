@@ -115,10 +115,10 @@ end
 similar(D::Dense, ::Type{T}) where {T<:Number} = Dense(similar(data(D), T))
 
 function promote_rule(
-  ::Type{<:Dense{ElT1,VecT1}}, ::Type{<:Dense{ElT2,VecT2}}
-) where {ElT1,VecT1,ElT2,VecT2}
+  ::Type{<:Dense{ElT1,DataT1}}, ::Type{<:Dense{ElT2,DataT2}}
+) where {ElT1,DataT1,ElT2,DataT2}
   ElR = promote_type(ElT1, ElT2)
-  VecR = promote_type(VecT1, VecT2)
+  VecR = promote_type(DataT1, DataT2)
   return Dense{ElR,VecR}
 end
 
