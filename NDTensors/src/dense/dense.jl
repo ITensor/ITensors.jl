@@ -21,56 +21,66 @@ struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
 end
 
 #Start with high information constructors and move to low information constructors
-function Dense{ElT, DataT}() where {ElT, DataT<:AbstractArray{ElT}}
-  return Dense{ElT, DataT}(DataT())
+function Dense{ElT,DataT}() where {ElT,DataT<:AbstractArray{ElT}}
+  return Dense{ElT,DataT}(DataT())
 end
 
 # Construct from a set of indices
 # This will fail if zero(ElT) is not defined for the ElT
 function Dense{ElT,DataT}(inds::Tuple) where {ElT,DataT<:AbstractArray{ElT}}
-  return Dense{ElT, DataT}(zeros(DataT, dim(inds)))
+  return Dense{ElT,DataT}(zeros(DataT, dim(inds)))
 end
 
-function Dense{ElT, DataT}(::UndefInitializer, inds::Tuple) where {ElT, DataT<:AbstractArray{ElT}}
-  return Dense{ElT, DataT}(DataT(undef, dim(inds)))
+function Dense{ElT,DataT}(
+  ::UndefInitializer, inds::Tuple
+) where {ElT,DataT<:AbstractArray{ElT}}
+  return Dense{ElT,DataT}(DataT(undef, dim(inds)))
 end
 
 function Dense{DataT}() where {DataT<:AbstractArray}
-  default_storagetype(DataT)()
+  return default_storagetype(DataT)()
 end
 
 function Dense{DataT}(inds::Tuple) where {DataT<:AbstractArray}
-  default_storagetype(DataT)(inds)
+  return default_storagetype(DataT)(inds)
 end
 
 function Dense{DataT}(::UndefInitializer, inds::Tuple) where {DataT<:AbstractArray}
-  default_storagetype(DataT)(undef, inds)
+  return default_storagetype(DataT)(undef, inds)
 end
 
-Dense{DataT}(x::Number, dim::Integer) where {DataT<:AbstractArray} = Dense(fill!(DataT{typeof(x)}(undef, dim), x))
+function Dense{DataT}(x::Number, dim::Integer) where {DataT<:AbstractArray}
+  return Dense(fill!(DataT{typeof(x)}(undef, dim), x))
+end
 
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
-  Dense{ElR, similartype(typeof(data), ElR)}(data)
+  return Dense{ElR,similartype(typeof(data), ElR)}(data)
 end
 
-Dense{ElT}(dim::Integer) where {ElT <: Number} = default_storagetype(ElT)(zeros(default_datatype(ElT), dim))
+function Dense{ElT}(dim::Integer) where {ElT<:Number}
+  return default_storagetype(ElT)(zeros(default_datatype(ElT), dim))
+end
 
 Dense{ElT}() where {ElT} = default_storagetype(ElT)()
 
-function Dense(data::DataT) where {DataT<:AbstractArray{ElT, N}} where {ElT, N} 
+function Dense(data::DataT) where {DataT<:AbstractArray{ElT,N}} where {ElT,N}
   if N > 1
     Dense(vec(data))
   else
-    Dense{ElT, DataT}(data)
+    Dense{ElT,DataT}(data)
   end
 end
 
-Dense(DataT::Type{<:AbstractArray{ElT}}, dim::Integer) where ElT = Dense{ElT, DataT}((dim,))
+function Dense(DataT::Type{<:AbstractArray{ElT}}, dim::Integer) where {ElT}
+  return Dense{ElT,DataT}((dim,))
+end
 
 Dense(::Type{ElT}, dim::Integer) where {ElT} = Dense{ElT}(dim)
 
-Dense(ElT::Type{<:Number}, ::UndefInitializer, dim::Integer) = Dense{ElT, default_datatype(ElT)}(undef, (dim,))
+function Dense(ElT::Type{<:Number}, ::UndefInitializer, dim::Integer)
+  return Dense{ElT,default_datatype(ElT)}(undef, (dim,))
+end
 
 Dense(x::Number, dim::Integer) = Dense(fill!(default_datatype(typeof(x))(undef, dim), x))
 
@@ -85,8 +95,8 @@ setdata(D::Dense, ndata) = Dense(ndata)
 copy(D::Dense) = Dense(copy(data(D)))
 
 #This is getting closer but is still broken...
-function Base.real(::Type{Dense{ElT,DataT}}) where {DataT<:AbstractArray{ElT}} where {ElT} 
-   default_Densetype( adapt(real(ElT), DataT))
+function Base.real(::Type{Dense{ElT,DataT}}) where {DataT<:AbstractArray{ElT}} where {ElT}
+  return default_Densetype(adapt(real(ElT), DataT))
 end
 
 function complex(::Type{Dense{ElT,Vector{ElT}}}) where {ElT}
