@@ -28,7 +28,7 @@ end
 # Construct from a set of indices
 # This will fail if zero(ElT) is not defined for the ElT
 function Dense{ElT,DataT}(inds::Tuple) where {ElT,DataT<:AbstractArray{ElT}}
-  return Dense{ElT,DataT}(zeros(DataT, dim(inds)))
+  return Dense{ElT,DataT}(generic_zeros(DataT, dim(inds)))
 end
 
 function Dense{ElT,DataT}(
@@ -46,7 +46,7 @@ function Dense{DataT}(inds::Tuple) where {DataT<:AbstractArray}
 end
 
 function Dense{DataT}(::UndefInitializer, inds::Tuple) where {DataT<:AbstractArray}
-  return default_storagetype(DataT)(undef, inds)
+  return default_storagetype(DataT)(undef, dim(inds))
 end
 
 function Dense{DataT}(x::Number, dim::Integer) where {DataT<:AbstractArray}
@@ -58,8 +58,12 @@ function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
   return Dense{ElR,similartype(typeof(data), ElR)}(data)
 end
 
+function Dense{ElT}(inds::Tuple) where ElT
+  return Dense{ElT}(dim(inds))
+end
+
 function Dense{ElT}(dim::Integer) where {ElT<:Number}
-  return default_storagetype(ElT)(zeros(default_datatype(ElT), dim))
+  return default_storagetype(ElT)(generic_zeros(default_datatype(ElT), dim))
 end
 
 Dense{ElT}() where {ElT} = default_storagetype(ElT)()
@@ -99,8 +103,9 @@ function Base.real(::Type{Dense{ElT,DataT}}) where {DataT<:AbstractArray{ElT}} w
   return default_Densetype(adapt(real(ElT), DataT))
 end
 
-function complex(::Type{Dense{ElT,Vector{ElT}}}) where {ElT}
-  return Dense{complex(ElT),Vector{complex(ElT)}}
+## TODO this currently works only for vector not cuvector because similartype fails
+function complex(T::Type{<:Dense})
+  return set_datatype(T, similartype(datatype(T), complex(eltype(T))))
 end
 
 similar(D::Dense) = Dense(similar(data(D)))
@@ -232,7 +237,7 @@ IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
 iterate(T::DenseTensor, args...) = iterate(storage(T), args...)
 
 function _zeros(TensorT::Type{<:DenseTensor}, inds)
-  return tensor(zeros(storagetype(TensorT), dim(inds)), inds)
+  return tensor(generic_zeros(storagetype(TensorT), dim(inds)), inds)
 end
 
 function zeros(TensorT::Type{<:DenseTensor}, inds)
