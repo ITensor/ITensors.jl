@@ -33,8 +33,8 @@ function randn(
 end
 
 function generic_zeros(
-  StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer=0
-) where {DataT<:AbstractArray{ElT}} where {ElT}
+  StoreT::Type{<:Dense{Any,DataT}}, dim::Integer=0
+) where {DataT<:AbstractArray}
   data = generic_zeros(DataT, dim)
   return StoreT(data)
 end
@@ -51,14 +51,3 @@ function generic_zeros(DataT::Type{<:AbstractArray}, dim::Integer=0)
   return generic_zeros(DataT{default_eltype()}, dim)
 end
 
-function zeros(datatype::Type{<:AbstractArray}, dim::Integer=0)
-  return zeros(datatype{default_eltype()}, dim)
-end
-
-zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
-
-# Generic for handling `Vector` and `CuVector`
-function zeros(storagetype::Type{<:Dense}, dim::Int)
-  vector = zeros(datatype(storagetype), dim)
-  return storagetype(vector)
-end
