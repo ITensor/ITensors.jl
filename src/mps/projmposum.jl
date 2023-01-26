@@ -1,23 +1,18 @@
-mutable struct ProjSum{T}
-  pm::Vector{T}
-end
 
-ProjSum{T}(mpos::Vector{MPO}) where {T} = ProjSum([T(M) for M in mpos])
+abstract type AbstractSum end
 
-ProjSum{T}(Ms::MPO...) where {T} = ProjSum{T}([Ms...])
+copy(P::AbstractSum) = AbstractSum(copy.(P.terms))
 
-copy(P::ProjSum) = ProjSum(copy.(P.pm))
+nsite(P::AbstractSum) = nsite(P.terms[1])
 
-nsite(P::ProjSum) = nsite(P.pm[1])
-
-function set_nsite!(Ps::ProjSum, nsite)
-  for P in Ps.pm
+function set_nsite!(Ps::AbstractSum, nsite)
+  for P in Ps.terms
     set_nsite!(P, nsite)
   end
   return Ps
 end
 
-Base.length(P::ProjSum) = length(P.pm[1])
+Base.length(P::AbstractSum) = length(P.terms[1])
 
 """
     product(P::ProjMPOSum,v::ITensor)
@@ -33,10 +28,10 @@ returned ITensor will have the same indices
 as `v`. The operator overload `P(v)` is
 shorthand for `product(P,v)`.
 """
-function product(P::ProjSum, v::ITensor)::ITensor
-  Pv = product(P.pm[1], v)
-  for n in 2:length(P.pm)
-    Pv += product(P.pm[n], v)
+function product(P::AbstractSum, v::ITensor)::ITensor
+  Pv = product(P.terms[1], v)
+  for n in 2:length(P.terms)
+    Pv += product(P.terms[n], v)
   end
   return Pv
 end
@@ -48,15 +43,15 @@ Deduce the element type (such as Float64
 or ComplexF64) of the tensors in the ProjMPOSum
 `P`.
 """
-function Base.eltype(P::ProjSum)
-  elT = eltype(P.pm[1])
-  for n in 2:length(P.pm)
-    elT = promote_type(elT, eltype(P.pm[n]))
+function Base.eltype(P::AbstractSum)
+  elT = eltype(P.terms[1])
+  for n in 2:length(P.terms)
+    elT = promote_type(elT, eltype(P.terms[n]))
   end
   return elT
 end
 
-(P::ProjSum)(v::ITensor) = product(P, v)
+(P::AbstractSum)(v::ITensor) = product(P, v)
 
 """
     size(P::ProjMPOSum)
@@ -70,7 +65,7 @@ indices `(a,s1,s2,b)` to the space `(a',s1',s2',b')`
 then the size is `(d,d)` where
 `d = dim(a)*dim(s1)*dim(s1)*dim(b)`
 """
-Base.size(P::ProjSum) = size(P.pm[1])
+Base.size(P::AbstractSum) = size(P.terms[1])
 
 """
     position!(P::ProjMPOSum, psi::MPS, pos::Int)
@@ -84,8 +79,8 @@ The MPS `psi` must have compatible bond indices with
 the previous projected MPO tensors for this
 operation to succeed.
 """
-function position!(P::ProjSum, psi::MPS, pos::Int)
-  for M in P.pm
+function position!(P::AbstractSum, psi::MPS, pos::Int)
+  for M in P.terms
     position!(M, psi, pos)
   end
 end
@@ -103,13 +98,25 @@ ProjMPOSum `P`, and `ortho` is a String which can take
 the values `"left"` or `"right"` depending on the
 sweeping direction of the DMRG calculation.
 """
-function noiseterm(P::ProjSum, phi::ITensor, dir::String)
-  nt = noiseterm(P.pm[1], phi, dir)
-  for n in 2:length(P.pm)
-    nt += noiseterm(P.pm[n], phi, dir)
+function noiseterm(P::AbstractSum, phi::ITensor, dir::String)
+  nt = noiseterm(P.terms[1], phi, dir)
+  for n in 2:length(P.terms)
+    nt += noiseterm(P.terms[n], phi, dir)
   end
   return nt
 end
+
+#
+# Definition of concrete, generic ProjSum type
+#
+
+mutable struct ProjSum{T} <: AbstractSum
+  terms::Vector{T}
+end
+
+ProjSum{T}(mpos::Vector{MPO}) where {T} = ProjSum([T(M) for M in mpos])
+
+ProjSum{T}(Ms::MPO...) where {T} = ProjSum{T}([Ms...])
 
 """
 A ProjMPOSum computes and stores the projection of an
@@ -152,7 +159,7 @@ which will automatically start caching most
 stored tensors onto the hard drive.
 """
 function disk(ps::ProjMPOSum; kwargs...)
-  return DiskProjMPOSum([disk(pm; kwargs...) for pm in ps.pm])
+  return DiskProjMPOSum([disk(pm; kwargs...) for pm in ps.terms])
 end
 
 disk(P::DiskProjMPOSum; kwargs...) = P
