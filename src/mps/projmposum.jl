@@ -2,7 +2,7 @@ mutable struct ProjSum{T}
   pm::Vector{T}
 end
 
-ProjSum{T}(mpos::Vector{T}) where {T} = ProjSum([T(M) for M in mpos])
+ProjSum{T}(mpos::Vector{MPO}) where {T} = ProjSum([T(M) for M in mpos])
 
 ProjSum{T}(Ms::MPO...) where {T} = ProjSum{T}([Ms...])
 
