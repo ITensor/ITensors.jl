@@ -2,32 +2,11 @@ mutable struct ProjSum{T}
   pm::Vector{T}
 end
 
-"""
-A ProjMPOSum computes and stores the projection of an
-implied sum of MPOs into a basis defined by an MPS,
-leaving a certain number of site indices of each MPO
-unprojected. Which sites are unprojected can be shifted
-by calling the `position!` method. The MPOs used as
-input to a ProjMPOSum are *not* added together beforehand;
-instead when the `product` method of a ProjMPOSum is invoked,
-each projected MPO in the set of MPOs is multiplied by
-the input tensor one-by-one in an efficient way.
+ProjSum{T}(mpos::Vector{T}) where {T} = ProjSum([T(M) for M in mpos])
 
-Drawing of the network represented by a ProjMPOSum
-`P([H1,H2,...])`, showing the case of `nsite(P)==2`
-and `position!(P,psi,4)` for an MPS `psi` (note the
-sum Σⱼ on the left):
+ProjSum{T}(Ms::MPO...) where {T} = ProjSum{T}([Ms...])
 
-```
-     o--o--o-      -o--o--o--o--o--o <psi|
-     |  |  |  |  |  |  |  |  |  |  |
- Σⱼ  o--o--o--o--o--o--o--o--o--o--o Hⱼ
-     |  |  |  |  |  |  |  |  |  |  |
-     o--o--o-      -o--o--o--o--o--o |psi>
-```
-"""
-
-copy(P::ProjSum{T}) where {T} = ProjSum{T}(copy.(P.pm))
+copy(P::ProjSum) = ProjSum(copy.(P.pm))
 
 nsite(P::ProjSum) = nsite(P.pm[1])
 
@@ -74,15 +53,49 @@ function noiseterm(P::ProjSum, phi::ITensor, dir::String)
   return nt
 end
 
+"""
+A ProjMPOSum computes and stores the projection of an
+implied sum of MPOs into a basis defined by an MPS,
+leaving a certain number of site indices of each MPO
+unprojected. Which sites are unprojected can be shifted
+by calling the `position!` method. The MPOs used as
+input to a ProjMPOSum are *not* added together beforehand;
+instead when the `product` method of a ProjMPOSum is invoked,
+each projected MPO in the set of MPOs is multiplied by
+the input tensor one-by-one in an efficient way.
+
+Drawing of the network represented by a ProjMPOSum
+`P([H1,H2,...])`, showing the case of `nsite(P)==2`
+and `position!(P,psi,4)` for an MPS `psi` (note the
+sum Σⱼ on the left):
+
+```
+     o--o--o-      -o--o--o--o--o--o <psi|
+     |  |  |  |  |  |  |  |  |  |  |
+ Σⱼ  o--o--o--o--o--o--o--o--o--o--o Hⱼ
+     |  |  |  |  |  |  |  |  |  |  |
+     o--o--o-      -o--o--o--o--o--o |psi>
+```
+"""
 const ProjMPOSum = ProjSum{ProjMPO}
 
-ProjMPOSum(mpos::Vector{MPO}) = ProjMPOSum([ProjMPO(M) for M in mpos])
 
-ProjMPOSum(Ms::MPO...) = ProjMPOSum([Ms...])
-
+"""
+A `DiskProjMPOSum` functions the same as a `ProjMPOSum`
+(see the docstring for `ProjMPOSum`) but automatically caches most of
+the tensors it stores onto the hard drive to save RAM memory.
+"""
 const DiskProjMPOSum = ProjSum{DiskProjMPO}
 
+"""
+    disk(ps::ProjMPOSum; kwargs...)
+
+Convert a ProjMPOSum into a DiskProjMPOSum,
+which will automatically start caching most 
+stored tensors onto the hard drive.
+"""
 function disk(ps::ProjMPOSum; kwargs...)
   return DiskProjMPOSum([disk(pm; kwargs...) for pm in ps.pm])
 end
+
 disk(P::DiskProjMPOSum; kwargs...) = P
