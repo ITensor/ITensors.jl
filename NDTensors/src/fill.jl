@@ -8,6 +8,10 @@ function generic_randn(
   return StoreT(data)
 end
 
+function generic_randn(StoreT::Type{<:Dense{ElT}}, dim::Integer = 0) where {ElT}
+  return generic_randn(default_storagetype(ElT), dim)
+end
+
 function generic_randn(StoreT::Type{<:Dense}, dim::Integer=0)
   return generic_randn(StoreT{default_eltype(),default_datatype(default_eltype())}, dim)
 end
@@ -33,8 +37,15 @@ function randn(
 end
 
 function generic_zeros(
-  StoreT::Type{<:Dense{Any,DataT}}, dim::Integer=0
-) where {DataT<:AbstractArray}
+  StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer=0
+) where {DataT<:AbstractArray} where {ElT}
+  data = generic_zeros(DataT{ElT}, dim)
+  return Dense(data)
+end
+
+function generic_zeros(
+  StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer=0
+) where {DataT<:AbstractArray{ElT}} where {ElT}
   data = generic_zeros(DataT, dim)
   return StoreT(data)
 end

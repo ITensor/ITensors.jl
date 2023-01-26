@@ -86,6 +86,10 @@ function Dense(ElT::Type{<:Number}, ::UndefInitializer, dim::Integer)
   return Dense{ElT,default_datatype(ElT)}(undef, (dim,))
 end
 
+function Dense(::UndefInitializer, dim::Integer)
+  return Dense{default_eltype(), default_datatype(default_eltype())}(undef, (dim,))
+end
+
 Dense(x::Number, dim::Integer) = Dense(fill!(default_datatype(typeof(x))(undef, dim), x))
 
 Dense(dim::Integer) = Dense(default_eltype(), dim)
@@ -206,7 +210,7 @@ Tensor(A::Array{<:Number,N}, inds::Dims{N}) where {N} = tensor(Dense(vec(A)), in
 #
 
 function randomDenseTensor(::Type{ElT}, inds) where {ElT}
-  return tensor(randn(Dense{ElT}, dim(inds)), inds)
+  return tensor(generic_randn(Dense{ElT}, dim(inds)), inds)
 end
 
 function randomDenseTensor(::Type{ElT}, inds::Int...) where {ElT}
