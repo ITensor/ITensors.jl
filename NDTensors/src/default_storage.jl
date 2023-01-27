@@ -3,12 +3,19 @@
 default_datatype(eltype::Type{<:Number}) = Vector{eltype}
 default_eltype() = Float64
 
-default_storagetype(datatype::Type{<:AbstractArray{ElT}}) where {ElT} = Dense{ElT,datatype}
-
-#currently similartype does not work for cuvector but the goal is for it to work with 
-# adapt_type...
-function default_storagetype(datatype::Type{<:AbstractArray})
-  return default_storagetype(similartype(datatype, default_eltype()))
+function default_storagetype(datatype::Type{<:AbstractArray}, inds::Tuple)
+  datatype = set_eltype_if_unspecified(datatype, default_eltype())
+  if eltype(inds) == Integer || length(inds) == 0
+    return Dense{eltype(datatype), datatype}
+  else 
+    ## return sparsetype
+    return BlockSparse{eltype(datatype), datatype}
+  end
 end
+
+function default_storagetype(datatype::Type{<:AbstractArray})
+  return default_storagetype(datatype, ())
+end
+
 default_storagetype(eltype::Type{<:Number}) = default_storagetype(default_datatype(eltype))
 default_storagetype() = default_storagetype(default_eltype())
