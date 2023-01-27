@@ -113,6 +113,7 @@ function position!(P::ProjMPOSum, psi::MPS, pos::Int)
   for M in P.pm
     position!(M, psi, pos)
   end
+  return P
 end
 
 """
