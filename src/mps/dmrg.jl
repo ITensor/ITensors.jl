@@ -276,7 +276,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   end
   @assert isortho(psi) && orthocenter(psi) == 1
 
-  position!(PH, psi, 1)
+  PH = position!(PH, psi, 1)
   energy = 0.0
 
   for sw in 1:nsweep(sweeps)
@@ -300,7 +300,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         end
 
         @timeit_debug timer "dmrg: position!" begin
-          position!(PH, psi, b)
+          PH = position!(PH, psi, b)
         end
 
         @debug_check begin

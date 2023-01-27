@@ -145,6 +145,23 @@ $(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
 enable_threaded_blocksparse() = NDTensors._enable_threaded_blocksparse()
 
 """
+    enable_threaded_blocksparse(enable::Bool)
+
+`enable_threaded_blocksparse(true)` enables threaded block sparse
+operations (equivalent to `enable_threaded_blocksparse()`).
+
+`enable_threaded_blocksparse(false)` disables threaded block sparse
+operations (equivalent to `enable_threaded_blocksparse()`).
+"""
+function enable_threaded_blocksparse(enable::Bool)
+  return if enable
+    enable_threaded_blocksparse()
+  else
+    disable_threaded_blocksparse()
+  end
+end
+
+"""
 $(NDTensors.enable_threaded_blocksparse_docstring(@__MODULE__))
 """
 disable_threaded_blocksparse() = NDTensors._disable_threaded_blocksparse()
