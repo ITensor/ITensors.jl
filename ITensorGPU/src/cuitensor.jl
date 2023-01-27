@@ -3,9 +3,7 @@ import ITensors: ITensor
 import CUDA: CuArray
 
 function cuITensor(eltype::Type{<:Number}, inds::IndexSet)
-  d = Dense(CUDA.zeros(eltype, dim(inds)))
-  return itensor(d, inds)
-  #return ITensor(Dense{float(T)}(CUDA.zeros(float(T), dim(inds))), inds)
+  return itensor(NDTensors.default_storagetype(CuVector{eltype})(dim(inds)), inds)
 end
 cuITensor(::Type{T}, inds::Index...) where {T<:Number} = cuITensor(T, IndexSet(inds...))
 
