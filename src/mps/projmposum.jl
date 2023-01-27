@@ -18,7 +18,7 @@ function set_nsite!(A::AbstractSum, nsite)
   return A
 end
 
-Base.length(A::AbstractSum) = length(terms(A)[1])
+length(A::AbstractSum) = length(terms(A)[1])
 
 """
     product(P::ProjMPOSum,v::ITensor)
@@ -49,7 +49,7 @@ Deduce the element type (such as Float64
 or ComplexF64) of the tensors in the ProjMPOSum
 `P`.
 """
-function Base.eltype(A::AbstractSum)
+function eltype(A::AbstractSum)
   elT = eltype(first(terms(A)))
   for n in 2:length(terms(A))
     elT = promote_type(elT, eltype(terms(A)[n]))
@@ -71,7 +71,7 @@ indices `(a,s1,s2,b)` to the space `(a',s1',s2',b')`
 then the size is `(d,d)` where
 `d = dim(a)*dim(s1)*dim(s1)*dim(b)`
 """
-Base.size(A::AbstractSum) = size(first(terms(A)))
+size(A::AbstractSum) = size(first(terms(A)))
 
 """
     position!(P::ProjMPOSum, psi::MPS, pos::Int)
@@ -89,6 +89,7 @@ function position!(A::AbstractSum, psi::MPS, pos::Int)
   for t in terms(A)
     position!(t, psi, pos)
   end
+  return A
 end
 
 """
