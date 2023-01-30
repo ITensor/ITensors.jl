@@ -775,7 +775,7 @@ function contract(::Algorithm"zipup", A::MPO, B::MPO; kwargs...)
   sB = siteinds(uniqueinds, B, A)
   C = MPO(N)
   lCᵢ = Index[]
-  R = ITensor(1)
+  R = ITensor(true)
   for i in 1:(N - 2)
     RABᵢ = R * A[i] * B[i]
     left_inds = [sA[i]..., sB[i]..., lCᵢ...]
