@@ -940,7 +940,16 @@ function _contract!(
 
       # <fermions>:
       α = compute_alpha(
-        eltype(R), labelsR, blockR, inds(R), labelsT1, blockT1, inds(T1), labelsT2, blockT2, inds(T2)
+        eltype(R),
+        labelsR,
+        blockR,
+        inds(R),
+        labelsT1,
+        blockT1,
+        inds(T1),
+        labelsT2,
+        blockT2,
+        inds(T2),
       )
 
       contract!(R[blockR], labelsR, T1[blockT1], labelsT1, T2[blockT2], labelsT2, α, β)
