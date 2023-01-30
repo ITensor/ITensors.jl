@@ -36,9 +36,16 @@ end
 ##TODO replace randn in ITensors with generic_randn
 ## and replace zeros with generic_zeros
 function generic_zeros(
-  StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer=0
-) where {DataT<:AbstractArray{ElT}} where {ElT}
-  data = generic_zeros(DataT, dim)
+  StoreT::Type{<:Dense{<:Number,DataT}}, dim::Integer=0
+) where {DataT<:AbstractArray}
+  ElT = eltype(StoreT)
+  ElTD = eltype(DataT);
+  if ElTD != Any && ElTD != ElT
+    println("Warning, Element provided to Dense does not match the datatype. Defaulting to Dense eltype.")
+  end
+  typedDataT = set_eltype_if_unspecified(DataT, ElT)
+  data = generic_zeros(typedDataT, dim)
+  StoreT = NDTensors.similartype(StoreT, ElT)
   return StoreT(data)
 end
 
