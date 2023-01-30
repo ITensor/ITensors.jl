@@ -4,6 +4,7 @@ using Adapt
 using Base.Threads
 using Compat
 using Dictionaries
+using Folds
 using Random
 using LinearAlgebra
 using StaticArrays
@@ -11,6 +12,7 @@ using Functors
 using HDF5
 using Requires
 using SimpleTraits
+using SplitApplyCombine
 using Strided
 using TimerOutputs
 using TupleTools
