@@ -1076,6 +1076,11 @@ end
 
 @propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
+  if N != ndims(T)
+    throw(
+      DimensionMismatch("$N index values passed to ITensor getindex, expected $(ndims(T))")
+    )
+  end
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
   fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
   return fac *
@@ -1136,6 +1141,11 @@ end
   ::SymmetryStyle, T::Tensor, x::Number, I::Vararg{Integer,N}
 ) where {N}
   # Generic version, doesn't check the flux
+  if N != ndims(T)
+    throw(
+      DimensionMismatch("$N index values passed to ITensor setindex!, expected $(ndims(T))")
+    )
+  end
   return setindex!!(T, x, I...)
 end
 
@@ -1199,6 +1209,11 @@ end
 ) where {N}
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
+  if N != ndims(T)
+    throw(
+      DimensionMismatch("$N index values passed to ITensor setindex!, expected $(ndims(T))")
+    )
+  end
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
   fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
   return _setindex!!(
