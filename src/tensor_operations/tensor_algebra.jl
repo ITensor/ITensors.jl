@@ -1,12 +1,25 @@
-function _contract(A::Tensor, B::Tensor)
+function _contract(A::Tensor, B::Tensor; kwargs...)
+  if haskey(kwargs, :buf)
+    cinds = noncommoninds(A, B)
+    bufsize = dim(cinds)
+    if length(kwargs[:buf]) < bufsize
+      v = Vector{eltype(kwargs[:buf])}(undef, bufsize - length(kwargs[:buf]))
+      append!(kwargs[:buf], v)
+      #resize!(kwargs[:buf], bufsize)
+    end
+    C = tensor(Dense(kwargs[:buf]), cinds)
+    labelsC, labelsA, labelsB = compute_contraction_labels(inds(C), inds(A), inds(B))
+    NDTensors.contract!(C, labelsC, A, labelsA, B, labelsB, 1.0, 0.0; kwargs...)
+    return C
+  end
   labelsA, labelsB = compute_contraction_labels(inds(A), inds(B))
   return contract(A, labelsA, B, labelsB)
   # TODO: Alternative to try (`noncommoninds` is too slow right now)
   #return _contract!!(EmptyTensor(Float64, _Tuple(noncommoninds(inds(A), inds(B)))), A, B)
 end
 
-function _contract(A::ITensor, B::ITensor)::ITensor
-  C = itensor(_contract(tensor(A), tensor(B)))
+function _contract(A::ITensor, B::ITensor; kwargs...)::ITensor
+  C = itensor(_contract(tensor(A), tensor(B); kwargs...))
   warnTensorOrder = get_warn_order()
   if !isnothing(warnTensorOrder) > 0 && order(C) >= warnTensorOrder
     println("Contraction resulted in ITensor with $(order(C)) indices, which is greater
@@ -91,7 +104,7 @@ function (A::ITensor * B::ITensor)::ITensor
   return contract(A, B)
 end
 
-function contract(A::ITensor, B::ITensor)::ITensor
+function contract(A::ITensor, B::ITensor; kwargs...)::ITensor
   NA::Int = ndims(A)
   NB::Int = ndims(B)
   if NA == 0 && NB == 0
@@ -101,7 +114,7 @@ function contract(A::ITensor, B::ITensor)::ITensor
   elseif NB == 0
     return iscombiner(B) ? _contract(B, A) : B[] * A
   else
-    C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B)
+    C = using_combine_contract() ? combine_contract(A, B) : _contract(A, B; kwargs...)
     return C
   end
 end
@@ -148,6 +161,81 @@ end
 function contraction_cost(As::Union{Vector{<:ITensor},Tuple{Vararg{<:ITensor}}}; kwargs...)
   indsAs = [inds(A) for A in As]
   return contraction_cost(indsAs; kwargs...)
+end
+
+#This is a function that takes an arbitrary sequence and computes the 
+# number of levels in the sequence and the number of loops per level
+function index_proccessing(
+  idxset::AbstractArray{Vector{IdxT}},
+  seq::AbstractArray{ElT},
+  depth::Int64,
+  num_loops_per_level::Vector{Int64},
+  buff_size,
+  inter_itensor,
+) where {ElT,IdxT}
+  depth += 1
+  push!(num_loops_per_level, 0)
+  for i in 1:length(seq)
+    if typeof(seq[i]) == Vector{ElT}
+      num_loops_per_level[depth] += 1
+      buff_size = index_proccessing(
+        idxset, seq[i], depth, num_loops_per_level, buff_size, inter_itensor
+      )
+      seq[i] = length(idxset)
+    end
+  end
+  # If there no internal networks in the current
+  # list find the largest intermediate for the subnetwork
+  # set and squash the network into its external inds
+
+  inter_itensor = idxset[seq[1]]
+  for i in 2:length(seq)
+    inter_size = 1
+    external_inds = noncommoninds(inter_itensor, idxset[seq[i]])
+    for j in external_inds
+      inter_size *= dim(j)
+    end
+    buff_size = (inter_size > buff_size ? inter_size : buff_size)
+    inter_itensor = external_inds
+  end
+  push!(idxset, inter_itensor)
+
+  return buff_size
+end
+
+function compute_buffer_size(
+  tn::Union{Vector{ITensor},Tuple{Vararg{ITensor}}}, sequence=default_sequence()
+) where {ElT}
+  depth = 0
+  num_loops_per_level = Vector{Int64}()
+  buff_size = 0
+  inter_itensor = nothing
+  seq = Vector{Int64}()
+
+  # take all of the indices of the tensors and make a temporary list
+  idxset = [IndexSet(inds(tn[1]))]
+  for i in 2:length(tn)
+    push!(idxset, IndexSet(inds(tn[i])))
+  end
+  if typeof(sequence) == String
+    if sequence == "left_associative"
+      for i in 1:length(tn)
+        push!(seq, i)
+      end
+    elseif sequence == "right_associative"
+      for i in 1:length(tn)
+        push!(seq, length(tn) - i + 1)
+      end
+    else
+      seq = optimal_contraction_sequence(tn)
+    end
+  else
+    seq = sequence
+  end
+
+  return buff_size = index_proccessing(
+    idxset, seq, depth, num_loops_per_level, buff_size, inter_itensor
+  )
 end
 
 # TODO: provide `contractl`/`contractr`/`*ˡ`/`*ʳ` as shorthands for left associative and right associative contractions.
@@ -197,9 +285,107 @@ function contract(
   end
 end
 
+function contract_sequence(
+  As::Union{Vector{ITensor}, Tuple{Vararg{ITensor}}}; sequence=default_sequence(), kwargs...
+)::ITensor
+  len = length(As)
+  # this describes the contraction sequence in a simple set of 
+  # three numbers (in, in, out, in in, out, ...)
+  num_triangle = len * (len - 1)
+  num_triangle = floor(Int, num_triangle * 0.5) + num_triangle % 2
+
+  seq = Vector{Int64}(undef, num_triangle * 3)
+  fill!(seq, 0)
+  # This described which buffer to use for each output 
+  # in the most simple case, a straight line, only 2 buffers are needed.
+  # Goal is to find the min set of buffers needed to contract the network
+  result_buf_set = Vector{Int64}(undef, num_triangle)
+  fill!(result_buf_set, 0)
+  if sequence == "left_associative"
+    # Walk through to build (1,2,len +1, len +1,3,len+2, ...)
+    #sets of 3 stipulate a_position * b_position = c_position
+    seq[1] = 1
+    seq[2] = 2
+    seq[3] = len + 1
+    result_buf_set[1] = 1
+    num_contracts = 1
+    for i in 1:len-2
+      threei = 3 * i;
+      seq[threei + 1] = len + (i)
+      seq[threei + 2] = 2 + i
+      seq[threei + 3] = len + (i) + 1
+      result_buf_set[i + 1] = i % 2 + 1 
+      num_contracts+=1;
+    end
+    resize!(seq, 3 * num_contracts)
+    resize!(result_buf_set, num_contracts)
+  elseif sequence == "right_associative"
+    seq[1] = len -1
+    seq[2] = len
+    seq[3] = len + 1
+    result_buf_set[1] = 1
+    num_contracts = 1
+    for i in 1:len-2
+      threei = 3 * i;
+      seq[threei + 1] = len - 1 - i
+      seq[threei + 2] = len + (i)
+      seq[threei + 3] = len + (i) + 1
+      result_buf_set[i + 1] = i % 2 + 1 
+      num_contracts += 1
+    end
+    resize!(seq, 3 * num_contracts)
+    resize!(result_buf_set, num_contracts)
+  end
+  
+  return _contract(As, seq, result_buf_set; kwargs)
+end
+
 contract(As::ITensor...; kwargs...)::ITensor = contract(As; kwargs...)
 
-_contract(As, sequence::Int) = As[sequence]
+_contract(As, sequence::Int; kwargs...) = As[sequence]
+
+function _contract(As, seq::AbstractArray{Int}, buf_sequence::AbstractArray{Int}; kwargs...)
+  len = length(As)
+  #First set up the result buffers
+  @inbounds numtype = eltype(As[1])
+  numbufs = maximum(buf_sequence)
+  bsize = dim(noncommoninds(As[seq[1]], As[seq[2]]))
+  buf = [Vector{numtype}(undef, bsize)]
+  for i in 2:numbufs
+    push!(buf, Vector{numtype}(undef, bsize))
+  end
+  # Associate these buffers with an ITensor
+  @inbounds buf_tensors = [itensor(NDTensors.Dense(buf[1]), Index(0))]
+  for i in 2:numbufs
+    @inbounds push!(buf_tensors, itensor(NDTensors.Dense(buf[i]), Index(0) ) )
+  end
+  # Construct buffers for the transpositions
+  @inbounds buf_a = similar(NDTensors.data(storage(As[1])))
+  buf_b = similar(buf_a)
+
+  # Determine the number of contractions
+  num_contracts = length(buf_sequence)
+  # compute the first contraction
+  @inbounds contract(As[seq[1]], As[seq[2]]; buf = buf[1], buf_a=buf_a, buf_b = buf_b)
+  @inbounds setinds!(buf_tensors[1], noncommoninds(As[seq[1]], As[seq[2]]))
+  # for the remaining contractions need to check
+  # input inds. If one belongs to a buffer
+  for i in 2:num_contracts
+    threei = (i-1) * 3
+    @inbounds input1 = seq[threei + 1]
+    @inbounds input2 = seq[threei + 2]
+    @inbounds output = buf_sequence[seq[threei+ 3] - len]
+    
+    @inbounds A = (input1 > len ? buf_tensors[buf_sequence[input1 - len]] : As[input1])
+    @inbounds B = (input2 > len ? buf_tensors[buf_sequence[input2- len]] : As[input2])
+
+    @inbounds _contract(A, B; buf=buf[output], buf_a = buf_a, buf_b = buf_b)
+    @inbounds setinds!(buf_tensors[output], noncommoninds(A,B))
+  end
+  @inbounds ret_tsr = buf_sequence[end]
+  @inbounds resize!(buf[ret_tsr], dim(buf_tensors[ret_tsr]))
+  return buf_tensors[ret_tsr]
+end
 
 # Given a contraction sequence, contract the tensors recursively according
 # to that sequence.
@@ -209,28 +395,38 @@ end
 
 *(As::ITensor...; kwargs...)::ITensor = contract(As...; kwargs...)
 
-function contract!(C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0)::ITensor
+function contract!(
+  C::ITensor, A::ITensor, B::ITensor, α::Number, β::Number=0; kwargs...
+)::ITensor
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
   CT = NDTensors.contract!!(
-    tensor(C), _Tuple(labelsC), tensor(A), _Tuple(labelsA), tensor(B), _Tuple(labelsB), α, β
+    tensor(C),
+    _Tuple(labelsC),
+    tensor(A),
+    _Tuple(labelsA),
+    tensor(B),
+    _Tuple(labelsB),
+    α,
+    β;
+    kwargs...,
   )
   setstorage!(C, storage(CT))
   setinds!(C, inds(C))
   return C
 end
 
-function _contract!!(C::Tensor, A::Tensor, B::Tensor)
+function _contract!!(C::Tensor, A::Tensor, B::Tensor; kwargs...)
   labelsCAB = compute_contraction_labels(inds(C), inds(A), inds(B))
   labelsC, labelsA, labelsB = labelsCAB
-  CT = NDTensors.contract!!(C, labelsC, A, labelsA, B, labelsB)
+  CT = NDTensors.contract!!(C, labelsC, A, labelsA, B, labelsB; kwargs...)
   return CT
 end
 
 # This is necessary for now since not all types implement contract!!
 # with non-trivial α and β
-function contract!(C::ITensor, A::ITensor, B::ITensor)::ITensor
-  return settensor!(C, _contract!!(tensor(C), tensor(A), tensor(B)))
+function contract!(C::ITensor, A::ITensor, B::ITensor; kwargs...)::ITensor
+  return settensor!(C, _contract!!(tensor(C), tensor(A), tensor(B); kwargs...))
 end
 
 """

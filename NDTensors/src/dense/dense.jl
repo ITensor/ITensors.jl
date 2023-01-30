@@ -422,6 +422,7 @@ function permutedims!!(R::DenseTensor, T::DenseTensor, perm::Tuple, f::Function=
   RR = convert(promote_type(typeof(R), typeof(T)), R)
   RA = ReshapedArray(data(RR), dims(RR), ())
   TA = ReshapedArray(data(T), dims(T), ())
+
   if !is_trivial_permutation(perm)
     TB = permutedims(TA, perm)
     RA .= f.(RA, TB)
@@ -771,6 +772,8 @@ function contract!(
   labelsT2,
   α::Elα=one(ElR),
   β::Elβ=zero(ElR),
+  ;
+  kwargs...,
 ) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
   # Special case for scalar tensors
   if nnz(T1) == 1 || nnz(T2) == 1
@@ -815,7 +818,7 @@ function contract!(
     end
   end
 
-  _contract!(R, T1, T2, props, α, β)
+  _contract!(R, T1, T2, props, α, β; kwargs...)
   return R
   #end
 end
@@ -827,7 +830,26 @@ function _contract!(
   props::ContractionProperties,
   α::Number=one(El),
   β::Number=zero(El),
+  ;
+  kwargs...,
 ) where {El,NC,NA,NB}
+  dictKwargs = Dict(kwargs)
+  
+  if haskey(dictKwargs, :buf_a)
+    bufsize = dim(AT)
+    if length(kwargs[:buf_a]) < bufsize
+      v = Vector{El}(undef, bufsize - length(kwargs[:buf_a]))
+      @strided append!(kwargs[:buf_a], v)
+    end
+  end
+  if haskey(dictKwargs, :buf_b)
+    bufsize = dim(BT)
+    if length(kwargs[:buf_b]) < bufsize
+      v = Vector{El}(undef, bufsize - length(kwargs[:buf_b]))
+      @strided append!(kwargs[:buf_b], v)
+    end
+  end
+
   # TODO: directly use Tensor instead of Array
   C = ReshapedArray(data(storage(CT)), dims(inds(CT)), ())
   A = ReshapedArray(data(storage(AT)), dims(inds(AT)), ())
@@ -836,9 +858,14 @@ function _contract!(
   tA = 'N'
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
-    #@timeit_debug timer "_contract!: permutedims A" begin
-    @strided Ap = permutedims(A, pA)
-    #end # @timeit
+    if haskey(dictKwargs, :buf_a)
+      d = permute(collect(dims(inds(AT))), collect(pA))
+      temp = ReshapedArray(view(kwargs[:buf_a], (1:dim(AT))), Tuple(d), ())
+      Base.permutedims!(temp, A, pA)
+      Ap = temp.parent
+    else
+      @strided Ap = permutedims(A, pA)
+    end
     AM = ReshapedArray(Ap, (props.dmid, props.dleft), ())
     tA = 'T'
   else
@@ -854,9 +881,16 @@ function _contract!(
   tB = 'N'
   if props.permuteB
     pB = NTuple{NB,Int}(props.PB)
-    #@timeit_debug timer "_contract!: permutedims B" begin
-    @strided Bp = permutedims(B, pB)
-    #end # @timeit
+    if haskey(dictKwargs, :buf_b)
+      d = permute(collect(dims(inds(BT))), collect(pB))
+      temp = ReshapedArray(view(kwargs[:buf_b], (1:dim(BT))), Tuple(d), ())
+      Base.permutedims!(temp, B, pB)
+      Bp = temp.parent
+    else
+      #@timeit_debug timer "_contract!: permutedims B" begin
+      @strided Bp = permutedims(B, pB)
+      #end # @timeit
+    end
     BM = ReshapedArray(Bp, (props.dmid, props.dright), ())
   else
     if Btrans(props)
