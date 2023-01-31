@@ -16,7 +16,7 @@ struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
       println("Data type of Dense is different than the data provided")
       throw(TypeError)
     end
-    return new{ElT,DataT}(data)
+    return new{ElT,typedDataT}(data)
   end
 
   # # Special case of Vector
