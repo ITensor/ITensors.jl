@@ -104,9 +104,7 @@ function randomU(rng::AbstractRNG, eltype::Type{<:Number}, s1::Index, s2::Index)
   return G
 end
 
-function randomizeMPS!(
-  eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1
-)
+function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1)
   return randomizeMPS!(Random.default_rng(), eltype, M, sites, linkdims)
 end
 
@@ -153,10 +151,7 @@ function randomizeMPS!(
 end
 
 function randomCircuitMPS(
-  eltype::Type{<:Number},
-  sites::Vector{<:Index},
-  linkdims::Vector{<:Integer};
-  kwargs...,
+  eltype::Type{<:Number}, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
 )
   return randomCircuitMPS(Random.default_rng(), eltype, sites, linkdims; kwargs...)
 end
@@ -206,9 +201,7 @@ function randomCircuitMPS(
   return M
 end
 
-function randomCircuitMPS(
-  sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
-)
+function randomCircuitMPS(sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...)
   return randomCircuitMPS(Random.default_rng(), sites, linkdims; kwargs...)
 end
 
@@ -238,9 +231,7 @@ type `eltype`.
 MPS with non-uniform bond dimension.
 """
 function randomMPS(
-  ::Type{ElT},
-  sites::Vector{<:Index};
-  linkdims::Union{Integer,Vector{<:Integer}}=1,
+  ::Type{ElT}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
 ) where {ElT<:Number}
   return randomMPS(Random.default_rng(), sites, linkdims)
 end
@@ -272,9 +263,7 @@ default has element type `Float64`.
 `length(linkdims) == length(sites) - 1` for constructing an
 MPS with non-uniform bond dimension.
 """
-function randomMPS(
-  sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
-)
+function randomMPS(sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1)
   return randomMPS(Random.default_rng(), sites; linkdims)
 end
 
@@ -285,9 +274,7 @@ function randomMPS(
 end
 
 function randomMPS(
-  sites::Vector{<:Index},
-  state;
-  linkdims::Union{Integer,Vector{<:Integer}}=1,
+  sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
 )
   return randomMPS(Random.default_rng(), sites, state; linkdims)
 end

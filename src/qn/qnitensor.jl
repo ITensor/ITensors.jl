@@ -334,9 +334,7 @@ elements of type `ElT` where the nonzero blocks are determined by `flux`.
 
 If `ElT` is not specified it defaults to `Float64`. If the flux is not specified it defaults to `QN()`.
 """
-function randomITensor(
-  ::Type{ElT}, flux::QN, inds::Indices
-) where {ElT<:Number}
+function randomITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   return randomITensor(Random.default_rng(), ElT, flux, inds)
 end
 

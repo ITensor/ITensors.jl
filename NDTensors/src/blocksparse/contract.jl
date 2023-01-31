@@ -119,14 +119,7 @@ function _contract_blockoffsets(
 end
 
 function _contract_blockoffsets_threaded(
-  boffs1::BlockOffsets,
-  inds1,
-  labels1,
-  boffs2::BlockOffsets,
-  inds2,
-  labels2,
-  indsR,
-  labelsR,
+  boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
 )
   ValNR = ValLength(labelsR)
   labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
