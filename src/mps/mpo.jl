@@ -113,10 +113,10 @@ end
 
 MPO(sites::Vector{<:Index}, op::Matrix{ElT}) where {ElT<:Number} = MPO(ElT, sites, op)
 
-function randomMPO(sites::Vector{<:Index}, m::Int=1)
+function randomMPO(rng::AbstractRNG, sites::Vector{<:Index}, m::Int=1)
   M = MPO(sites, "Id")
   for i in eachindex(sites)
-    randn!(M[i])
+    randn!(rng, M[i])
     normalize!(M[i])
   end
   m > 1 && throw(ArgumentError("randomMPO: currently only m==1 supported"))
@@ -913,7 +913,7 @@ treating the MPO as a density matrix.
 The MPO `M` should have an (approximately)
 positive spectrum.
 """
-function sample(M::MPO)
+function sample(rng::AbstractRNG, M::MPO)
   N = length(M)
   s = siteinds(M)
   R = Vector{ITensor}(undef, N)
@@ -937,7 +937,7 @@ function sample(M::MPO)
     # one-by-one and stop when the random
     # number r is below the total prob so far
     pdisc = 0.0
-    r = rand()
+    r = rand(rng)
     # Will need n, An, and pn below
     n = 1
     projn = ITensor()

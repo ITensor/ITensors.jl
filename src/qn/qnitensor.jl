@@ -334,33 +334,33 @@ elements of type `ElT` where the nonzero blocks are determined by `flux`.
 
 If `ElT` is not specified it defaults to `Float64`. If the flux is not specified it defaults to `QN()`.
 """
-function randomITensor(::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
+function randomITensor(rng::AbstractRNG, ::Type{ElT}, flux::QN, inds::Indices) where {ElT<:Number}
   T = ITensor(ElT, undef, flux, inds)
-  randn!(T)
+  randn!(rng, T)
   return T
 end
 
-function randomITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
-  return randomITensor(ElT, flux, indices(is...))
+function randomITensor(rng::AbstractRNG, ::Type{ElT}, flux::QN, is...) where {ElT<:Number}
+  return randomITensor(rng, ElT, flux, indices(is...))
 end
 
-function randomITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
-  return randomITensor(ElT, QN(), inds)
+function randomITensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndices) where {ElT<:Number}
+  return randomITensor(rng, ElT, QN(), inds)
 end
 
-randomITensor(flux::QN, inds::Indices) = randomITensor(Float64, flux, inds)
+randomITensor(rng::AbstractRNG, flux::QN, inds::Indices) = randomITensor(rng, Float64, flux, inds)
 
-randomITensor(flux::QN, is...) = randomITensor(Float64, flux, indices(is...))
+randomITensor(rng::AbstractRNG, flux::QN, is...) = randomITensor(rng, Float64, flux, indices(is...))
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-function randomITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number}
-  return randomITensor(ElT, QN(), inds)
+function randomITensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndex...) where {ElT<:Number}
+  return randomITensor(rng, ElT, QN(), inds)
 end
 
-randomITensor(inds::QNIndices) = randomITensor(Float64, QN(), inds)
+randomITensor(rng::AbstractRNG, inds::QNIndices) = randomITensor(rng, Float64, QN(), inds)
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
-randomITensor(inds::QNIndex...) = randomITensor(Float64, QN(), inds)
+randomITensor(rng::AbstractRNG, inds::QNIndex...) = randomITensor(rng, Float64, QN(), inds)
 
 function combiner(inds::QNIndices; kwargs...)
   # TODO: support combining multiple set of indices

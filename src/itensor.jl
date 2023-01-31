@@ -607,36 +607,36 @@ A = randomITensor(i,j)
 B = randomITensor(ComplexF64,undef,k,j)
 ```
 """
-function randomITensor(::Type{S}, is::Indices) where {S<:Number}
+function randomITensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S<:Number}
   T = ITensor(S, undef, is)
-  randn!(T)
+  randn!(rng, T)
   return T
 end
 
-function randomITensor(::Type{S}, is...) where {S<:Number}
-  return randomITensor(S, indices(is...))
+function randomITensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
+  return randomITensor(rng, S, indices(is...))
 end
 
 # To fix ambiguity with QN version
-function randomITensor(::Type{ElT}, ::Tuple{}) where {ElT<:Number}
-  return randomITensor(ElT, Index{Int}[])
+function randomITensor(rng::AbstractRNG, ::Type{ElT}, ::Tuple{}) where {ElT<:Number}
+  return randomITensor(rng, ElT, Index{Int}[])
 end
 
 # To fix ambiguity with QN version
-function randomITensor(is::Tuple{})
-  return randomITensor(Float64, is)
+function randomITensor(rng::AbstractRNG, is::Tuple{})
+  return randomITensor(rng, Float64, is)
 end
 
 # To fix ambiguity errors with QN version
-function randomITensor(::Type{ElT}) where {ElT<:Number}
-  return randomITensor(ElT, ())
+function randomITensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
+  return randomITensor(rng, ElT, ())
 end
 
-randomITensor(is::Indices) = randomITensor(Float64, is)
-randomITensor(is...) = randomITensor(Float64, indices(is...))
+randomITensor(rng::AbstractRNG, is::Indices) = randomITensor(rng, Float64, is)
+randomITensor(rng::AbstractRNG, is...) = randomITensor(rng, Float64, indices(is...))
 
 # To fix ambiguity errors with QN version
-randomITensor() = randomITensor(Float64, ())
+randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, ())
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 
@@ -1708,8 +1708,8 @@ function isapprox(A::ITensor, B::ITensor; kwargs...)
   return isapprox(array(A), array(B); kwargs...)
 end
 
-function randn!(T::ITensor)
-  return settensor!(T, randn!!(tensor(T)))
+function randn!(rng::AbstractRNG, T::ITensor)
+  return settensor!(T, randn!!(rng, tensor(T)))
 end
 
 norm(T::ITensor) = norm(tensor(T))

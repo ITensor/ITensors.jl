@@ -1,64 +1,70 @@
 using ITensors
+using LinearAlgebra
 using Random
 
 include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 
+"""
+Usage:
+```julia
+main(; Nx=8, Ny=4, U=4.0, t=1.0, maxdim=1000, threaded_blocksparse=false);
+main(; Nx=8, Ny=4, U=4.0, t=1.0, maxdim=1000, threaded_blocksparse=true);
+```
+"""
 function main(;
-  Nx::Int=6,
-  Ny::Int=3,
+  Nx::Int=8,
+  Ny::Int=4,
   U::Float64=4.0,
   t::Float64=1.0,
   maxdim::Int=3000,
   conserve_ky=true,
-  splitblocks=true,
+  threaded_blocksparse=false,
   seed=1234,
 )
-  Random.seed!(seed)
+  # Helps make results reproducible when comparing
+  # sequential vs. threaded.
+  itensor_rng = Xoshiro()
+  Random.seed!(itensor_rng, seed)
+
   @show Threads.nthreads()
+
+  # Disable other threading
+  BLAS.set_num_threads(1)
+  ITensors.Strided.set_num_threads(1)
+
+  ITensors.enable_threaded_blocksparse(threaded_blocksparse)
   @show ITensors.using_threaded_blocksparse()
 
   N = Nx * Ny
 
   nsweeps = 10
-  maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
-  cutoff = [1E-6]
-  noise = [1E-6, 1E-7, 1E-8, 0.0]
+  maxdim = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
+  cutoff = [1e-6]
+  noise = [1e-6, 1e-7, 1e-8, 0.0]
 
-  sites = siteinds("ElecK", N; conserve_qns=true, conserve_ky=conserve_ky, modulus_ky=Ny)
+  sites = siteinds("ElecK", N; conserve_qns=true, conserve_ky, modulus_ky=Ny)
 
-  os = hubbard(; Nx=Nx, Ny=Ny, t=t, U=U, ky=true)
-  H = MPO(os, sites; splitblocks=splitblocks)
+  os = hubbard(; Nx, Ny, t, U, ky=true)
+  H = MPO(os, sites)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
   @show nnz(H[end ÷ 2])
   @show nnzblocks(H[end ÷ 2])
 
-  # Create start state
-  state = Vector{String}(undef, N)
-  for i in 1:N
-    x = (i - 1) ÷ Ny
-    y = (i - 1) % Ny
-    if x % 2 == 0
-      if y % 2 == 0
-        state[i] = "Up"
-      else
-        state[i] = "Dn"
-      end
-    else
-      if y % 2 == 0
-        state[i] = "Dn"
-      else
-        state[i] = "Up"
-      end
-    end
+  # Create starting state with checkerboard
+  # pattern
+  state = map(CartesianIndices((Ny, Nx))) do I
+    return iseven(I[1]) ⊻ iseven(I[2]) ? "↓" : "↑"
   end
+  display(state)
 
-  psi0 = randomMPS(sites, state, 10)
+  psi0 = randomMPS(itensor_rng, sites, state; linkdims=2)
+  @time @show inner(psi0', H, psi0)
 
   energy, psi = @time dmrg(
-    H, psi0; nsweeps, maxdims, cutoff, noise, svd_alg="divide_and_conquer"
+    H, psi0; nsweeps, maxdim, cutoff, noise
   )
   @show Nx, Ny
   @show t, U

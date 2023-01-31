@@ -266,11 +266,11 @@ Sampling is based on https://arxiv.org/abs/math-ph/0609050
 such that in the case `n==m`, the unitary matrix will be sampled
 according to the Haar measure.
 """
-function random_unitary(::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
+function random_unitary(rng::AbstractRNG, ::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
   if n < m
-    return Matrix(random_unitary(ElT, m, n)')
+    return Matrix(random_unitary(rng, ElT, m, n)')
   end
-  F = qr(randn(ElT, n, m))
+  F = qr(randn(rng, ElT, n, m))
   Q = Matrix(F.Q)
   # The upper triangle of F.factors 
   # are the elements of R.

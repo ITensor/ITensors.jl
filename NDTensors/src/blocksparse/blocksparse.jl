@@ -53,9 +53,9 @@ setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
 #
 
 function randn(
-  ::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
+  rng::AbstractRNG, ::Type{<:BlockSparse{ElT}}, blockoffsets::BlockOffsets, dim::Integer
 ) where {ElT<:Number}
-  return BlockSparse(randn(ElT, dim), blockoffsets)
+  return BlockSparse(randn(rng, ElT, dim), blockoffsets)
 end
 
 #function BlockSparse{ElR}(data::VecT,offsets) where {ElR,VecT<:AbstractVector{ElT}} where {ElT}

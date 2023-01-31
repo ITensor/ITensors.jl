@@ -119,23 +119,23 @@ end
 #  = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
 function randn(
-  ::Type{<:BlockSparseTensor{ElT,N}}, blocks::Vector{<:BlockT}, inds
+  rng::AbstractRNG, ::Type{<:BlockSparseTensor{ElT,N}}, blocks::Vector{<:BlockT}, inds
 ) where {ElT,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
   boffs, nnz = blockoffsets(blocks, inds)
-  storage = randn(BlockSparse{ElT}, boffs, nnz)
+  storage = randn(rng, BlockSparse{ElT}, boffs, nnz)
   return tensor(storage, inds)
 end
 
 # XXX: use the syntax:
 # BlockSparseTensor(randn, ElT, blocks, inds)
 function randomBlockSparseTensor(
-  ::Type{ElT}, blocks::Vector{<:BlockT}, inds
+  rng::AbstractRNG, ::Type{ElT}, blocks::Vector{<:BlockT}, inds
 ) where {ElT,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
-  return randn(BlockSparseTensor{ElT,N}, blocks, inds)
+  return randn(rng, BlockSparseTensor{ElT,N}, blocks, inds)
 end
 
-function randomBlockSparseTensor(blocks::Vector, inds)
-  return randomBlockSparseTensor(Float64, blocks, inds)
+function randomBlockSparseTensor(rng::AbstractRNG, blocks::Vector, inds)
+  return randomBlockSparseTensor(rng, Float64, blocks, inds)
 end
 
 """
@@ -931,7 +931,8 @@ function _contract!(
   # must be performed sequentially to reduce over those
   # sets of contractions properly (and avoid race conditions).
   grouped_contraction_plan = group(last, contraction_plan)
-  Folds.map(grouped_contraction_plan.values, executor) do contraction_plan_group
+
+  @floop executor for contraction_plan_group in grouped_contraction_plan.values
     # Start by overwriting the block:
     # R .= α .* (T1 * T2)
     β = zero(eltype(R))
