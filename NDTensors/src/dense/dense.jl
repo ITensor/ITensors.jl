@@ -5,7 +5,17 @@ using LinearAlgebra: BlasFloat
 
 struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
   data::DataT
-  function Dense{ElT,DataT}(data::AbstractArray) where {ElT,DataT<:AbstractArray{ElT}}
+  function Dense{ElT,DataT}(data::AbstractArray) where {ElT,DataT<:AbstractArray}
+    typedDataT = set_eltype_if_unspecified(DataT, ElT)
+    if ElT != eltype(typedDataT) || ElT != eltype(data)
+      println("Element type of Dense doesn't match element type of the data")
+      throw(TypeError)
+    elseif typeof(data) != typedDataT
+      @show typeof(data) 
+      @show typedDataT
+      println("Data type of Dense is different than the data provided")
+      throw(TypeError)
+    end
     return new{ElT,DataT}(data)
   end
 
