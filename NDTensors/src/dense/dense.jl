@@ -8,16 +8,6 @@ struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
   function Dense{ElT,DataT}(data::AbstractArray) where {ElT,DataT<:AbstractArray}
     return new{ElT,DataT}(data)
   end
-
-  # # Special case of Vector
-  # function Dense{ElT,DataT}(data::Vector) where {ElT,DataT<:AbstractArray{ElT}}
-  #   return new{ElT,DataT}(data)
-  # end
-
-  # Special case of Array which gets turned into a Vector
-  # function Dense{ElT,DataT}(data::Array) where {ElT,DataT<:AbstractArray{ElT}}
-  #   return new{ElT,DataT}(vec(data))
-  # end
 end
 
 #Start with high information constructors and move to low information constructors
