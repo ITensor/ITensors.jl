@@ -5,47 +5,76 @@ using LinearAlgebra: BlasFloat
 
 struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
   data::DataT
-  function Dense{ElT,DataT}(data::AbstractArray) where {ElT,DataT<:AbstractArray}
+  function Dense{ElT,DataT}(data::DataT) where {ElT,DataT<:AbstractArray}
     return new{ElT,DataT}(data)
   end
 end
 
 #Start with high information constructors and move to low information constructors
-function Dense{ElT,DataT}() where {ElT,DataT<:AbstractArray{ElT}}
-  return Dense{ElT,DataT}(DataT())
+function Dense{ElT,DataT}() where {ElT,DataT<:AbstractArray}
+  typedDataT = set_eltype_if_unspecified(DataT, ElT)
+  return Dense{ElT,typedDataT}(typedDataT())
 end
 
 # Construct from a set of indices
 # This will fail if zero(ElT) is not defined for the ElT
-function Dense{ElT,DataT}(inds::Tuple) where {ElT,DataT<:AbstractArray{ElT}}
-  return Dense{ElT,DataT}(generic_zeros(DataT, dim(inds)))
+function Dense{ElT,DataT}(inds::Tuple) where {ElT,DataT<:AbstractArray{<:Any, N}} where {N}
+  typedDataT = set_eltype_if_unspecified(DataT, ElT)
+  if N > 1
+    println("Only Vector-based datatypes are currently supported.")
+    throw(TypeError)
+  end
+  
+  Dense{ElT, typedDataT}(generic_zeros(typedDataT, dim(inds)))
+end
+
+function Dense{ElT, DataT}(dim::Integer) where {ElT, DataT<:AbstractArray{<:Any, N}} where {N}
+  typedDataT = set_eltype_if_unspecified(DataT, ElT)
+  if N > 1
+    println("Only vector-based datatypes are currently supported.")
+    throw(TypeError)
+  end
+  Dense{ElT, typedDataT}(generic_zeros(typedDataT, dim))
 end
 
 function Dense{ElT,DataT}(
   ::UndefInitializer, inds::Tuple
-) where {ElT,DataT<:AbstractArray{ElT}}
-  return Dense{ElT,DataT}(DataT(undef, dim(inds)))
+) where {ElT,DataT<:AbstractArray{<:Any, N}} where {N}
+  typedDataT = set_eltype_if_unspecified(DataT, ElT)
+  if N > 1
+    println("Only Vector-based datatypes are currently supported.")
+    throw(TypeError)
+  end
+  return Dense{ElT,typedDataT}(similar(typedDataT, dim(inds)))
 end
 
 function Dense{DataT}() where {DataT<:AbstractArray}
-  return default_storagetype(DataT)()
+  typedDataT = set_eltype_if_unspecified(DataT,default_eltype())
+  ElT = eltype(typedDataT)
+  return Dense{ElT, typedDataT}()
 end
 
 function Dense{DataT}(inds::Tuple) where {DataT<:AbstractArray}
-  return default_storagetype(DataT)(inds)
+  typedDataT = set_eltype_if_unspecified(DataT)
+  ElT = eltype(typedDataT)
+  return Dense{ElT, typedDataT}(inds)
 end
 
 function Dense{DataT}(::UndefInitializer, inds::Tuple) where {DataT<:AbstractArray}
-  return default_storagetype(DataT)(undef, dim(inds))
+  typedDataT = set_eltype_if_unspecified(DataT)
+  ElT = eltype(typedDataT)
+  return Dense{ElT, typedDataT}(undef, inds)
 end
 
-function Dense{DataT}(x::Number, dim::Integer) where {DataT<:AbstractArray}
-  return Dense(fill!(DataT{typeof(x)}(undef, dim), x))
+function Dense{DataT}(x::Number, inds::Tuple) where {DataT<:AbstractArray}
+  typedDataT = set_eltype_if_unspecified(DataT, typeof(x))
+  ElT = eltype(typedDataT)
+  return Dense{ElT, typedDataT}(fill!(similar(typedDataT, dim(inds)), x))
 end
 
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
-  return Dense{ElR,similartype(typeof(data), ElR)}(data)
+  return Dense(similartype(typeof(data), ElR)(data))
 end
 
 function Dense{ElT}(inds::Tuple) where ElT
@@ -53,34 +82,40 @@ function Dense{ElT}(inds::Tuple) where ElT
 end
 
 function Dense{ElT}(dim::Integer) where {ElT<:Number}
-  return default_storagetype(ElT)(generic_zeros(default_datatype(ElT), dim))
+  return Dense{ElT, default_datatype(ElT)}(dim)
 end
 
-Dense{ElT}() where {ElT} = default_storagetype(ElT)()
+Dense{ElT}() where {ElT} = Dense{ElT, default_datatype(ElT)}()
 
-function Dense(data::DataT) where {DataT<:AbstractArray{ElT,N}} where {ElT,N}
+function Dense(data::DataT) where {DataT<:AbstractArray{<:Any,N}} where {N}
   if N > 1
     Dense(vec(data))
   else
-    Dense{ElT,DataT}(data)
+    Dense{eltype(DataT),DataT}(data)
   end
 end
 
-function Dense(DataT::Type{<:AbstractArray{ElT}}, dim::Integer) where {ElT}
-  return Dense{ElT,DataT}((dim,))
+function Dense(DataT::Type{<:AbstractArray{<:Any, N}}, dim::Integer) where {N}
+  if N > 1
+    println("Only vector-based datatypes are currently supported.")
+    throw(TypeError)
+  end
+  DataT = set_eltype_if_unspecified(DataT)
+  ElT = eltype(DataT)
+  return Dense{ElT,DataT}(dim)
 end
 
-Dense(::Type{ElT}, dim::Integer) where {ElT} = Dense{ElT}(dim)
+Dense(ElT::Type{<:Number}, dim::Integer) = Dense{ElT}(dim)
 
 function Dense(ElT::Type{<:Number}, ::UndefInitializer, dim::Integer)
-  return Dense{ElT,default_datatype(ElT)}(undef, (dim,))
+  return Dense{ElT, default_datatype(ElT)}(undef, (dim,))
 end
 
 function Dense(::UndefInitializer, dim::Integer)
   return Dense{default_eltype(), default_datatype(default_eltype())}(undef, (dim,))
 end
 
-Dense(x::Number, dim::Integer) = Dense(fill!(default_datatype(typeof(x))(undef, dim), x))
+Dense(x::Number, dim::Integer) = Dense(fill!(similar(default_datatype(typeof(x)), dim), x))
 
 Dense(dim::Integer) = Dense(default_eltype(), dim)
 
