@@ -25,7 +25,7 @@ end
 
 function generic_randn(DataT::Type{<:AbstractArray}, dim::Integer=0)
   DataT = NDTensors.set_eltype_if_unspecified(DataT)
-  data = DataT(undef, dim)
+  data = similar(DataT, dim)
   ElT = eltype(DataT)
   for i in 1:length(data)
      data[i] = randn(ElT)
@@ -61,6 +61,6 @@ end
 function generic_zeros(DataT::Type{<:AbstractArray}, dim::Integer=0)
   DataT = set_eltype_if_unspecified(DataT)
   ElT = eltype(DataT)
-  return fill!(DataT(undef, dim), zero(ElT))
+  return fill!(similar(DataT, dim), zero(ElT))
 end
 
