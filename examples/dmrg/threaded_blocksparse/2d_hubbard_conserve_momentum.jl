@@ -60,9 +60,7 @@ function main(;
 
   psi0 = randomMPS(sites, state; linkdim=10)
 
-  energy, psi = @time dmrg(
-    H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel
-  )
+  energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel)
 
   if outputlevel > 0
     @show Nx, Ny

@@ -143,10 +143,19 @@ function similar(T::EmptyTensor, ::Type{ElT}) where {ElT<:Number}
   return tensor(similar(storage(T), ElT), inds(T))
 end
 
+function randn!!(T::EmptyTensor)
+  return randn!!(Random.default_rng(), T)
+end
+
 function randn!!(rng::AbstractRNG, T::EmptyTensor)
   Tf = similar(fulltype(T), inds(T))
   randn!(rng, Tf)
   return Tf
+end
+
+# Default to Float64
+function randn!!(T::EmptyTensor{EmptyNumber})
+  return randn!!(Random.default_rng(), T)
 end
 
 # Default to Float64

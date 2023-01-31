@@ -113,6 +113,10 @@ end
 
 MPO(sites::Vector{<:Index}, op::Matrix{ElT}) where {ElT<:Number} = MPO(ElT, sites, op)
 
+function randomMPO(sites::Vector{<:Index}, m::Int=1)
+  return randomMPO(Random.default_rng(), sites, m)
+end
+
 function randomMPO(rng::AbstractRNG, sites::Vector{<:Index}, m::Int=1)
   M = MPO(sites, "Id")
   for i in eachindex(sites)
@@ -913,6 +917,10 @@ treating the MPO as a density matrix.
 The MPO `M` should have an (approximately)
 positive spectrum.
 """
+function sample(M::MPO)
+  return sample(Random.default_rng(), M)
+end
+
 function sample(rng::AbstractRNG, M::MPO)
   N = length(M)
   s = siteinds(M)

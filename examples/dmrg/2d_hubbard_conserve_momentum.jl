@@ -63,9 +63,7 @@ function main(;
   psi0 = randomMPS(itensor_rng, sites, state; linkdims=2)
   @time @show inner(psi0', H, psi0)
 
-  energy, psi = @time dmrg(
-    H, psi0; nsweeps, maxdim, cutoff, noise
-  )
+  energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff, noise)
   @show Nx, Ny
   @show t, U
   @show flux(psi)

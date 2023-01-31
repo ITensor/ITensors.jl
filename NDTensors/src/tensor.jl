@@ -152,7 +152,9 @@ norm(T::Tensor) = norm(storage(T))
 conj(as::AliasStyle, T::Tensor) = setstorage(T, conj(as, storage(T)))
 conj(T::Tensor) = conj(AllowAlias(), T)
 
+randn!!(T::Tensor) = randn!!(Random.default_rng(), T)
 randn!!(rng::AbstractRNG, T::Tensor) = (randn!(rng, T); T)
+Random.randn!(T::Tensor) = randn!(Random.default_rng(), T)
 Random.randn!(rng::AbstractRNG, T::Tensor) = (randn!(rng, storage(T)); T)
 
 LinearAlgebra.rmul!(T::Tensor, α::Number) = (rmul!(storage(T), α); T)

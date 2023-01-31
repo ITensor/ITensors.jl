@@ -83,6 +83,10 @@ end
 
 MPS(sites::Vector{<:Index}, args...; kwargs...) = MPS(Float64, sites, args...; kwargs...)
 
+function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
+  return randomU(Random.default_rng(), eltype, s1, s2)
+end
+
 function randomU(rng::AbstractRNG, eltype::Type{<:Number}, s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)
     mdim = dim(s1) * dim(s2)
@@ -100,7 +104,15 @@ function randomU(rng::AbstractRNG, eltype::Type{<:Number}, s1::Index, s2::Index)
   return G
 end
 
-function randomizeMPS!(rng::AbstractRNG, eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1)
+function randomizeMPS!(
+  eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1
+)
+  return randomizeMPS!(Random.default_rng(), eltype, M, sites, linkdims)
+end
+
+function randomizeMPS!(
+  rng::AbstractRNG, eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1
+)
   _linkdims = _fill_linkdims(linkdims, sites)
   if isone(length(sites))
     randn!(rng, M[1])
@@ -141,7 +153,20 @@ function randomizeMPS!(rng::AbstractRNG, eltype::Type{<:Number}, M::MPS, sites::
 end
 
 function randomCircuitMPS(
-  rng::AbstractRNG, eltype::Type{<:Number}, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
+  eltype::Type{<:Number},
+  sites::Vector{<:Index},
+  linkdims::Vector{<:Integer};
+  kwargs...,
+)
+  return randomCircuitMPS(Random.default_rng(), eltype, sites, linkdims; kwargs...)
+end
+
+function randomCircuitMPS(
+  rng::AbstractRNG,
+  eltype::Type{<:Number},
+  sites::Vector{<:Index},
+  linkdims::Vector{<:Integer};
+  kwargs...,
 )
   N = length(sites)
   M = MPS(N)
@@ -181,7 +206,15 @@ function randomCircuitMPS(
   return M
 end
 
-function randomCircuitMPS(rng::AbstractRNG, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...)
+function randomCircuitMPS(
+  sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
+)
+  return randomCircuitMPS(Random.default_rng(), sites, linkdims; kwargs...)
+end
+
+function randomCircuitMPS(
+  rng::AbstractRNG, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
+)
   return randomCircuitMPS(rng, Float64, sites, linkdims; kwargs...)
 end
 
@@ -205,7 +238,18 @@ type `eltype`.
 MPS with non-uniform bond dimension.
 """
 function randomMPS(
-  rng::AbstractRNG, ::Type{ElT}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
+  ::Type{ElT},
+  sites::Vector{<:Index};
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
+) where {ElT<:Number}
+  return randomMPS(Random.default_rng(), sites, linkdims)
+end
+
+function randomMPS(
+  rng::AbstractRNG,
+  ::Type{ElT},
+  sites::Vector{<:Index};
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
 ) where {ElT<:Number}
   _linkdims = _fill_linkdims(linkdims, sites)
   if any(hasqns, sites)
@@ -228,14 +272,42 @@ default has element type `Float64`.
 `length(linkdims) == length(sites) - 1` for constructing an
 MPS with non-uniform bond dimension.
 """
-function randomMPS(rng::AbstractRNG, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1)
+function randomMPS(
+  sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
+)
+  return randomMPS(Random.default_rng(), sites; linkdims)
+end
+
+function randomMPS(
+  rng::AbstractRNG, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
+)
   return randomMPS(rng, Float64, sites; linkdims)
 end
 
 function randomMPS(
-  rng::AbstractRNG, sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
+  sites::Vector{<:Index},
+  state;
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
+)
+  return randomMPS(Random.default_rng(), sites, state; linkdims)
+end
+
+function randomMPS(
+  rng::AbstractRNG,
+  sites::Vector{<:Index},
+  state;
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
 )
   return randomMPS(rng, Float64, sites, state; linkdims)
+end
+
+function randomMPS(
+  eltype::Type{<:Number},
+  sites::Vector{<:Index},
+  state;
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
+)
+  return randomMPS(Random.default_rng(), eltype, sites, state; linkdims)
 end
 
 function randomMPS(
@@ -261,7 +333,7 @@ made by randomizing an initial product state specified by
 QN-conserving random MPS (consisting of QNITensors). The initial
 `state` array provided determines the total QN of the resulting
 random MPS.
-""" randomMPS(::AbstractRNG, ::Vector{<:Index}, ::Any)
+""" randomMPS(::Vector{<:Index}, ::Any)
 
 """
     MPS(::Type{T<:Number}, ivals::Vector{<:Pair{<:Index}})
@@ -535,8 +607,12 @@ orthogonalize!(m,1) will be called before
 computing the sample.
 """
 function sample!(m::MPS)
+  return sample!(Random.default_rng(), m)
+end
+
+function sample!(rng::AbstractRNG, m::MPS)
   orthogonalize!(m, 1)
-  return sample(m)
+  return sample(rng, m)
 end
 
 """
@@ -549,6 +625,10 @@ probability distribution defined by
 squaring the components of the tensor
 that the MPS represents
 """
+function sample(m::MPS)
+  return sample(Random.default_rng(), m)
+end
+
 function sample(rng::AbstractRNG, m::MPS)
   N = length(m)
 

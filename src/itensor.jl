@@ -607,10 +607,18 @@ A = randomITensor(i,j)
 B = randomITensor(ComplexF64,undef,k,j)
 ```
 """
+function randomITensor(::Type{S}, is::Indices) where {S<:Number}
+  return randomITensor(Random.default_rng(), S, is)
+end
+
 function randomITensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S<:Number}
   T = ITensor(S, undef, is)
   randn!(rng, T)
   return T
+end
+
+function randomITensor(::Type{S}, is...) where {S<:Number}
+  return randomITensor(Random.default_rng(), S, is...)
 end
 
 function randomITensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
@@ -618,8 +626,18 @@ function randomITensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
 end
 
 # To fix ambiguity with QN version
-function randomITensor(rng::AbstractRNG, ::Type{ElT}, ::Tuple{}) where {ElT<:Number}
+function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return randomITensor(Random.default_rng(), ElT, is)
+end
+
+# To fix ambiguity with QN version
+function randomITensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
   return randomITensor(rng, ElT, Index{Int}[])
+end
+
+# To fix ambiguity with QN version
+function randomITensor(is::Tuple{})
+  return randomITensor(Random.default_rng(), is)
 end
 
 # To fix ambiguity with QN version
@@ -628,12 +646,22 @@ function randomITensor(rng::AbstractRNG, is::Tuple{})
 end
 
 # To fix ambiguity errors with QN version
+function randomITensor(::Type{ElT}) where {ElT<:Number}
+  return randomITensor(Random.default_rng(), ElT)
+end
+
+# To fix ambiguity errors with QN version
 function randomITensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
   return randomITensor(rng, ElT, ())
 end
 
+randomITensor(is::Indices) = randomITensor(Random.default_rng(), is)
 randomITensor(rng::AbstractRNG, is::Indices) = randomITensor(rng, Float64, is)
+randomITensor(is...) = randomITensor(Random.default_rng(), is...)
 randomITensor(rng::AbstractRNG, is...) = randomITensor(rng, Float64, indices(is...))
+
+# To fix ambiguity errors with QN version
+randomITensor() = randomITensor(Random.default_rng())
 
 # To fix ambiguity errors with QN version
 randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, ())
@@ -1706,6 +1734,10 @@ function isapprox(A::ITensor, B::ITensor; kwargs...)
   end
   B = permute(B, inds(A))
   return isapprox(array(A), array(B); kwargs...)
+end
+
+function randn!(T::ITensor)
+  return randn!(Random.default_rng(), T)
 end
 
 function randn!(rng::AbstractRNG, T::ITensor)

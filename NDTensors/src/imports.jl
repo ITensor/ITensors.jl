@@ -20,6 +20,7 @@ import Base:
   copyto!,
   eachindex,
   eltype,
+  empty,
   fill,
   fill!,
   getindex,

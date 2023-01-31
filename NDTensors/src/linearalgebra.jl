@@ -266,6 +266,10 @@ Sampling is based on https://arxiv.org/abs/math-ph/0609050
 such that in the case `n==m`, the unitary matrix will be sampled
 according to the Haar measure.
 """
+function random_unitary(::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
+  return random_unitary(Random.default_rng(), ElT, n, m)
+end
+
 function random_unitary(rng::AbstractRNG, ::Type{ElT}, n::Int, m::Int) where {ElT<:Number}
   if n < m
     return Matrix(random_unitary(rng, ElT, m, n)')
