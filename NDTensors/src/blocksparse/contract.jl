@@ -110,7 +110,15 @@ function contract_blockoffsets(args...)
 end
 
 function contract_blockoffsets(
-  ::Algorithm"sequential", boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
+  ::Algorithm"sequential",
+  boffs1::BlockOffsets,
+  inds1,
+  labels1,
+  boffs2::BlockOffsets,
+  inds2,
+  labels2,
+  indsR,
+  labelsR,
 )
   ValNR = ValLength(labelsR)
   labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
@@ -143,7 +151,15 @@ function contract_blockoffsets(
 end
 
 function contract_blockoffsets(
-  ::Algorithm"threaded", boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
+  ::Algorithm"threaded",
+  boffs1::BlockOffsets,
+  inds1,
+  labels1,
+  boffs2::BlockOffsets,
+  inds2,
+  labels2,
+  indsR,
+  labelsR,
 )
   ValNR = ValLength(labelsR)
   labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
