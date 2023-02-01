@@ -5,9 +5,11 @@ function generic_randn(
   StoreT::Type{<:Dense{<:Number,DataT}}, dim::Integer=0
 ) where {DataT<:AbstractArray}
   ElT = eltype(StoreT)
-  ElTD = eltype(DataT);
+  ElTD = eltype(DataT)
   if ElTD != Any && ElTD != ElT
-    println("Warning, Element provided to Dense does not match the datatype. Defaulting to Dense eltype.")
+    println(
+      "Warning, Element provided to Dense does not match the datatype. Defaulting to Dense eltype.",
+    )
   end
   typedDataT = set_eltype_if_unspecified(DataT, ElT)
   data = generic_randn(typedDataT, dim)
@@ -15,7 +17,7 @@ function generic_randn(
   return StoreT(data)
 end
 
-function generic_randn(StoreT::Type{<:Dense{ElT}}, dim::Integer = 0) where {ElT}
+function generic_randn(StoreT::Type{<:Dense{ElT}}, dim::Integer=0) where {ElT}
   return generic_randn(default_storagetype(ElT), dim)
 end
 
@@ -28,7 +30,7 @@ function generic_randn(DataT::Type{<:AbstractArray}, dim::Integer=0)
   data = similar(DataT, dim)
   ElT = eltype(DataT)
   for i in 1:length(data)
-     data[i] = randn(ElT)
+    data[i] = randn(ElT)
   end
   return data
 end
@@ -39,9 +41,11 @@ function generic_zeros(
   StoreT::Type{<:Dense{<:Number,DataT}}, dim::Integer=0
 ) where {DataT<:AbstractArray}
   ElT = eltype(StoreT)
-  ElTD = eltype(DataT);
+  ElTD = eltype(DataT)
   if ElTD != Any && ElTD != ElT
-    println("Warning, Element provided to Dense does not match the datatype. Defaulting to Dense eltype.")
+    println(
+      "Warning, Element provided to Dense does not match the datatype. Defaulting to Dense eltype.",
+    )
   end
   typedDataT = set_eltype_if_unspecified(DataT, ElT)
   data = generic_zeros(typedDataT, dim)
@@ -49,7 +53,7 @@ function generic_zeros(
   return StoreT(data)
 end
 
-function generic_zeros(StoreT::Type{<:Dense{ElT}}, dim::Integer = 0) where ElT
+function generic_zeros(StoreT::Type{<:Dense{ElT}}, dim::Integer=0) where {ElT}
   @show default_storagetype(eltype(StoreT))
   return generic_zeros(default_storagetype(eltype(StoreT)), dim)
 end
@@ -63,4 +67,3 @@ function generic_zeros(DataT::Type{<:AbstractArray}, dim::Integer=0)
   ElT = eltype(DataT)
   return fill!(similar(DataT, dim), zero(ElT))
 end
-
