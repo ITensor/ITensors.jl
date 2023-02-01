@@ -347,7 +347,7 @@ function randomITensor(
 end
 
 function randomITensor(::Type{ElT}, flux::QN, is...) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), flux, is...)
+  return randomITensor(Random.default_rng(), ElT, flux, is...)
 end
 
 function randomITensor(rng::AbstractRNG, ::Type{ElT}, flux::QN, is...) where {ElT<:Number}
@@ -355,7 +355,7 @@ function randomITensor(rng::AbstractRNG, ::Type{ElT}, flux::QN, is...) where {El
 end
 
 function randomITensor(::Type{ElT}, inds::QNIndices) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), inds)
+  return randomITensor(Random.default_rng(), ElT, inds)
 end
 
 function randomITensor(rng::AbstractRNG, ::Type{ElT}, inds::QNIndices) where {ElT<:Number}
@@ -380,7 +380,7 @@ end
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex
 function randomITensor(::Type{ElT}, inds::QNIndex...) where {ElT<:Number}
-  return randomITensor(Random.default_rng(), inds...)
+  return randomITensor(Random.default_rng(), ElT, inds...)
 end
 
 # TODO: generalize to list of Tuple, Vector, and QNIndex

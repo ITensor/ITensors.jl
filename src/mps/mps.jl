@@ -233,7 +233,7 @@ MPS with non-uniform bond dimension.
 function randomMPS(
   ::Type{ElT}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
 ) where {ElT<:Number}
-  return randomMPS(Random.default_rng(), sites, linkdims)
+  return randomMPS(Random.default_rng(), ElT, sites, linkdims)
 end
 
 function randomMPS(
