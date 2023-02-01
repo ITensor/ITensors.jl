@@ -5,6 +5,8 @@ function compute_alpha(
   return one(ElR)
 end
 
+## Utilities
+
 function contract_labels(labels1, labels2, labelsR)
   labels1_to_labels2 = find_matching_positions(labels1, labels2)
   labels1_to_labelsR = find_matching_positions(labels1, labelsR)
@@ -49,12 +51,33 @@ function are_blocks_contracted(block1::Block, block2::Block, labels1_to_labels2:
   return true
 end
 
+## Determine the contraction output and block contractions
+
 # TODO: complete this function: determine the output blocks from the input blocks
 # Also, save the contraction list (which block-offsets contract with which),
 # may not be generic with other contraction functions!
 function contraction_output(T1::BlockSparseTensor, T2::BlockSparseTensor, indsR)
   TensorR = contraction_output_type(typeof(T1), typeof(T2), typeof(indsR))
   return similar(TensorR, blockoffsetsR, indsR)
+end
+
+function contraction_output(
+  T1::BlockSparseTensor, labelsT1, T2::BlockSparseTensor, labelsT2, labelsR
+)
+  indsR = contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
+  TensorR = contraction_output_type(typeof(T1), typeof(T2), typeof(indsR))
+  blockoffsetsR, contraction_plan = contract_blockoffsets(
+    blockoffsets(T1),
+    inds(T1),
+    labelsT1,
+    blockoffsets(T2),
+    inds(T2),
+    labelsT2,
+    indsR,
+    labelsR,
+  )
+  R = similar(TensorR, blockoffsetsR, indsR)
+  return R, contraction_plan
 end
 
 function contract_blocks(
@@ -79,14 +102,15 @@ function contract_blocks(
 end
 
 function contract_blockoffsets(args...)
+  alg = Algorithm"sequential"()
   if using_threaded_blocksparse() && nthreads() > 1
-    return _contract_blockoffsets_threaded(args...)
+    alg = Algorithm"threaded"()
   end
-  return _contract_blockoffsets(args...)
+  return contract_blockoffsets(alg, args...)
 end
 
-function _contract_blockoffsets(
-  boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
+function contract_blockoffsets(
+  ::Algorithm"sequential", boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
 )
   ValNR = ValLength(labelsR)
   labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
@@ -118,8 +142,8 @@ function _contract_blockoffsets(
   return blockoffsetsR, contraction_plan
 end
 
-function _contract_blockoffsets_threaded(
-  boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
+function contract_blockoffsets(
+  ::Algorithm"sequential", boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
 )
   ValNR = ValLength(labelsR)
   labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
@@ -133,7 +157,7 @@ function _contract_blockoffsets_threaded(
   # ```julia
   # FLoops.@reduce(contraction_plans = append!(T[], [(block1, block2, blockR)]))
   # ```
-  # as a simpler alternative but it is too slow.
+  # as a simpler alternative but it is slower.
   contraction_plans = Vector{T}[Vector{T}() for _ in 1:nthreads()]
 
   # # Reserve some capacity.
@@ -183,24 +207,7 @@ function _contract_blockoffsets_threaded(
   return blockoffsetsR, contraction_plan
 end
 
-function contraction_output(
-  T1::BlockSparseTensor, labelsT1, T2::BlockSparseTensor, labelsT2, labelsR
-)
-  indsR = contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
-  TensorR = contraction_output_type(typeof(T1), typeof(T2), typeof(indsR))
-  blockoffsetsR, contraction_plan = contract_blockoffsets(
-    blockoffsets(T1),
-    inds(T1),
-    labelsT1,
-    blockoffsets(T2),
-    inds(T2),
-    labelsT2,
-    indsR,
-    labelsR,
-  )
-  R = similar(TensorR, blockoffsetsR, indsR)
-  return R, contraction_plan
-end
+## Perform the contraction
 
 function contract(
   T1::BlockSparseTensor,
@@ -223,17 +230,76 @@ function contract!(
   labelsT2,
   contraction_plan,
 )
+  alg = Algorithm"sequential"()
+  if isempty(contraction_plan)
+    alg = Algorithm"no_op"()
+  elseif using_threaded_blocksparse() && nthreads() > 1
+    alg = Algorithm"threaded"()
+  end
+  return contract!(alg, R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
+end
+
+function contract!(
+  ::Algorithm"sequential",
+  R::BlockSparseTensor,
+  labelsR,
+  T1::BlockSparseTensor,
+  labelsT1,
+  T2::BlockSparseTensor,
+  labelsT2,
+  contraction_plan,
+)
+  executor = SequentialEx()
+  return contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan, executor)
+end
+
+function contract!(
+  ::Algorithm"threaded",
+  R::BlockSparseTensor,
+  labelsR,
+  T1::BlockSparseTensor,
+  labelsT1,
+  T2::BlockSparseTensor,
+  labelsT2,
+  contraction_plan,
+)
+  executor = ThreadedEx()
+  return contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan, executor)
+end
+
+function contract!(
+  ::Algorithm"no_op",
+  R::BlockSparseTensor,
+  labelsR,
+  T1::BlockSparseTensor,
+  labelsT1,
+  T2::BlockSparseTensor,
+  labelsT2,
+  contraction_plan,
+)
+  return R
+end
+
+function contract!(
+  R::BlockSparseTensor,
+  labelsR,
+  T1::BlockSparseTensor,
+  labelsT1,
+  T2::BlockSparseTensor,
+  labelsT2,
+  contraction_plan,
+)
   if isempty(contraction_plan)
     return R
   end
+  alg = Algorithm"sequential"()
   executor = SequentialEx()
   if using_threaded_blocksparse() && nthreads() > 1
     executor = ThreadedEx()
   end
-  return _contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan, executor)
+  return contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan, executor)
 end
-
-function _contract!(
+function contract!(
   R::BlockSparseTensor,
   labelsR,
   T1::BlockSparseTensor,
@@ -286,124 +352,6 @@ function _contract!(
         # add into it:
         # R .= α .* (T1 * T2) .+ β .* R
         β = one(eltype(R))
-      end
-    end
-  end
-  return R
-end
-
-# Old version
-# TODO: DELETE
-function contract_deprecated!(
-  R::BlockSparseTensor{ElR,NR},
-  labelsR,
-  T1::BlockSparseTensor{ElT1,N1},
-  labelsT1,
-  T2::BlockSparseTensor{ElT2,N2},
-  labelsT2,
-  contraction_plan,
-) where {ElR,ElT1,ElT2,N1,N2,NR}
-  if isempty(contraction_plan)
-    return R
-  end
-  if using_threaded_blocksparse() && nthreads() > 1
-    _contract_threaded_deprecated!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
-    return R
-  end
-  already_written_to = Dict{Block{NR},Bool}()
-  indsR = inds(R)
-  indsT1 = inds(T1)
-  indsT2 = inds(T2)
-  # In R .= α .* (T1 * T2) .+ β .* R
-  for (block1, block2, blockR) in contraction_plan
-
-    #<fermions>
-    α = compute_alpha(
-      ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
-    )
-
-    T1block = T1[block1]
-    T2block = T2[block2]
-    Rblock = R[blockR]
-    β = one(ElR)
-    if !haskey(already_written_to, blockR)
-      already_written_to[blockR] = true
-      # Overwrite the block of R
-      β = zero(ElR)
-    end
-    contract!(Rblock, labelsR, T1block, labelsT1, T2block, labelsT2, α, β)
-  end
-  return R
-end
-
-# Old version
-# TODO: DELETE
-function _contract_threaded_deprecated!(
-  R::BlockSparseTensor{ElR,NR},
-  labelsR,
-  T1::BlockSparseTensor{ElT1,N1},
-  labelsT1,
-  T2::BlockSparseTensor{ElT2,N2},
-  labelsT2,
-  contraction_plan,
-) where {ElR,ElT1,ElT2,N1,N2,NR}
-  # Sort the contraction plan by the output blocks
-  # This is to help determine which output blocks are the result
-  # of multiple contractions
-  sort!(contraction_plan; by=last)
-
-  # Ranges of contractions to the same block
-  repeats = Vector{UnitRange{Int}}(undef, nnzblocks(R))
-  ncontracted = 1
-  posR = last(contraction_plan[1])
-  posR_unique = posR
-  for n in 1:(nnzblocks(R) - 1)
-    start = ncontracted
-    while posR == posR_unique
-      ncontracted += 1
-      posR = last(contraction_plan[ncontracted])
-    end
-    posR_unique = posR
-    repeats[n] = start:(ncontracted - 1)
-  end
-  repeats[end] = ncontracted:length(contraction_plan)
-
-  contraction_plan_blocks = Vector{Tuple{Tensor,Tensor,Tensor}}(
-    undef, length(contraction_plan)
-  )
-  for ncontracted in 1:length(contraction_plan)
-    block1, block2, blockR = contraction_plan[ncontracted]
-    T1block = T1[block1]
-    T2block = T2[block2]
-    Rblock = R[blockR]
-    contraction_plan_blocks[ncontracted] = (T1block, T2block, Rblock)
-  end
-
-  indsR = inds(R)
-  indsT1 = inds(T1)
-  indsT2 = inds(T2)
-
-  α = one(ElR)
-  @sync for repeats_partition in
-            Iterators.partition(repeats, max(1, length(repeats) ÷ nthreads()))
-    @spawn for ncontracted_range in repeats_partition
-      # Overwrite the block since it hasn't been written to
-      # R .= α .* (T1 * T2)
-      β = zero(ElR)
-      for ncontracted in ncontracted_range
-        blockT1, blockT2, blockR = contraction_plan_blocks[ncontracted]
-        # R .= α .* (T1 * T2) .+ β .* R
-
-        # <fermions>:
-        α = compute_alpha(
-          ElR, labelsR, blockR, indsR, labelsT1, blockT1, indsT1, labelsT2, blockT2, indsT2
-        )
-
-        contract!(blockR, labelsR, blockT1, labelsT1, blockT2, labelsT2, α, β)
-        # Now keep adding to the block, since it has
-        # been written to
-        # R .= α .* (T1 * T2) .+ R
-        β = one(ElR)
       end
     end
   end
