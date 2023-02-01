@@ -31,8 +31,9 @@ include("exports.jl")
 include("imports.jl")
 
 #####################################
-# DenseTensor and DiagTensor
+# General functionality
 #
+include("algorithm.jl")
 include("aliasstyle.jl")
 include("similar.jl")
 include("tupletools.jl")
@@ -42,6 +43,10 @@ include("tensor.jl")
 include("adapt.jl")
 include("generic_tensor_operations.jl")
 include("contraction_logic.jl")
+
+#####################################
+# DenseTensor and DiagTensor
+#
 include("dense/dense.jl")
 include("dense/adapt.jl")
 include("symmetric.jl")

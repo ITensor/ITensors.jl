@@ -112,13 +112,6 @@ include("imports.jl")
 include("global_variables.jl")
 
 #####################################
-# Algorithm type for selecting
-# different algorithm backends
-# (for internal or advanced usage)
-#
-include("algorithm.jl")
-
-#####################################
 # Index and IndexSet
 #
 include("lastval.jl")

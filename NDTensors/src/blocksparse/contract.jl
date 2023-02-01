@@ -143,7 +143,7 @@ function contract_blockoffsets(
 end
 
 function contract_blockoffsets(
-  ::Algorithm"sequential", boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
+  ::Algorithm"threaded", boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
 )
   ValNR = ValLength(labelsR)
   labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
@@ -280,25 +280,6 @@ function contract!(
   return R
 end
 
-function contract!(
-  R::BlockSparseTensor,
-  labelsR,
-  T1::BlockSparseTensor,
-  labelsT1,
-  T2::BlockSparseTensor,
-  labelsT2,
-  contraction_plan,
-)
-  if isempty(contraction_plan)
-    return R
-  end
-  alg = Algorithm"sequential"()
-  executor = SequentialEx()
-  if using_threaded_blocksparse() && nthreads() > 1
-    executor = ThreadedEx()
-  end
-  return contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan, executor)
-end
 function contract!(
   R::BlockSparseTensor,
   labelsR,

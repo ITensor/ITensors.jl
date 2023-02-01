@@ -12,9 +12,9 @@ use the same interface.
 struct Algorithm{Alg} end
 
 Algorithm(s) = Algorithm{Symbol(s)}()
-algorithm(::Algorithm{Alg}) where {Alg} = string(Alg)
+algorithm_string(::Algorithm{Alg}) where {Alg} = string(Alg)
 
-show(io::IO, alg::Algorithm) = print(io, "Algorithm type ", algorithm(alg))
+show(io::IO, alg::Algorithm) = print(io, "Algorithm type ", algorithm_string(alg))
 print(io::IO, ::Algorithm{Alg}) where {Alg} = print(io, Alg)
 
 """
