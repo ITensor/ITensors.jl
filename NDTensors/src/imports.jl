@@ -34,6 +34,7 @@ import Base:
   ndims,
   permutedims,
   permutedims!,
+  print,
   promote_rule,
   randn,
   real,
