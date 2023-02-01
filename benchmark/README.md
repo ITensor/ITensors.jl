@@ -33,7 +33,9 @@ julia> using ITensors
 
 julia> cd(joinpath(pkgdir(ITensors), "benchmark"))
 
-julia> rm("Manifest.toml")
+julia> rm("Manifest.toml"; force=true)
+
+julia> using Pkg
 
 julia> Pkg.activate(".")
 

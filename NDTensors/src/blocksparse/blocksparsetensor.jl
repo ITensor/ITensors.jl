@@ -145,7 +145,7 @@ function randomBlockSparseTensor(
 end
 
 function randomBlockSparseTensor(blocks::Vector, inds)
-  return randomBlockSparseTensor(Random.default_rng(), inds)
+  return randomBlockSparseTensor(Random.default_rng(), blocks, inds)
 end
 
 function randomBlockSparseTensor(rng::AbstractRNG, blocks::Vector, inds)
