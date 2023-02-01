@@ -48,11 +48,11 @@ function Dense{ElT,DataT}(
   return Dense{ElT,typedDataT}(similar(typedDataT, dim(inds)))
 end
 
-function Dense{ElR, DataT}(data::AbstractArray) where {ElR, DataT<:AbstractArray}
+function Dense{ElR,DataT}(data::AbstractArray) where {ElR,DataT<:AbstractArray}
   if eltype(data) != ElR
     data = similartype(typeof(data), ElR)(data)
   end
-  Dense{ElR, DataT}(data)
+  return Dense{ElR,DataT}(data)
 end
 
 function Dense{DataT}() where {DataT<:AbstractArray}
