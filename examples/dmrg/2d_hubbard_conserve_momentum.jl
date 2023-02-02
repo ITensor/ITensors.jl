@@ -8,8 +8,8 @@ include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 """
 Usage:
 ```julia
-main(; Nx=8, Ny=4, U=4.0, t=1.0, maxdim=1000, threaded_blocksparse=false);
-main(; Nx=8, Ny=4, U=4.0, t=1.0, maxdim=1000, threaded_blocksparse=true);
+main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threaded_blocksparse=false);
+main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threaded_blocksparse=true);
 ```
 """
 function main(;
@@ -20,6 +20,7 @@ function main(;
   maxdim::Int=3000,
   conserve_ky=true,
   threaded_blocksparse=false,
+  nsweeps=10,
   seed=1234,
 )
   # Helps make results reproducible when comparing
@@ -38,7 +39,6 @@ function main(;
 
   N = Nx * Ny
 
-  nsweeps = 10
   maxdim = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
   cutoff = [1e-6]
   noise = [1e-6, 1e-7, 1e-8, 0.0]

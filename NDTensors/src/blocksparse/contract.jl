@@ -213,7 +213,7 @@ function contract_blockoffsets(
 end
 
 # Function barrier to improve type stability,
-# since `@floop` is not type stable:
+# since `Folds`/`FLoops` is not type stable:
 # https://discourse.julialang.org/t/type-instability-in-floop-reduction/68598
 function _contract_blocks!(
   alg::Algorithm"threaded",
@@ -226,7 +226,7 @@ function _contract_blocks!(
   ValNR,
 )
   if nnzblocks(boffs1) > nnzblocks(boffs2)
-    @floop ThreadedEx() for block1 in eachnzblock(boffs1).values
+    Folds.foreach(eachnzblock(boffs1).values, ThreadedEx()) do block1
       for block2 in eachnzblock(boffs2)
         _maybe_contract_blocks!(
           alg,
@@ -241,7 +241,7 @@ function _contract_blocks!(
       end
     end
   else
-    @floop ThreadedEx() for block2 in eachnzblock(boffs2).values
+    Folds.foreach(eachnzblock(boffs2).values, ThreadedEx()) do block2
       for block1 in eachnzblock(boffs1)
         _maybe_contract_blocks!(
           alg,
@@ -379,7 +379,7 @@ function contract!(
 end
 
 # Function barrier to improve type stability,
-# since `@floop` is not type stable:
+# since `Folds`/`FLoops` is not type stable:
 # https://discourse.julialang.org/t/type-instability-in-floop-reduction/68598
 function _contract!(
   R::BlockSparseTensor,
@@ -391,7 +391,7 @@ function _contract!(
   grouped_contraction_plan,
   executor,
 )
-  @floop executor for contraction_plan_group in grouped_contraction_plan.values
+  Folds.foreach(grouped_contraction_plan.values, executor) do contraction_plan_group
     # Start by overwriting the block:
     # R .= α .* (T1 * T2)
     β = zero(eltype(R))
