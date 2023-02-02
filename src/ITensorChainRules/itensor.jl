@@ -84,6 +84,7 @@ end
 function rrule(::typeof(tensor), x1::ITensor)
   y = tensor(x1)
   function tensor_pullback(ȳ)
+    
     x̄1 = ITensor(typeof(storage(x1))(ȳ.storage.data), inds(x1))
     return (NoTangent(), x̄1)
   end
