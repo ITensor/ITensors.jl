@@ -57,10 +57,37 @@ end
   labelsT2 = (-1, 2)
   labelsR = (1, 2)
 
+  indsR = @inferred(
+    NDTensors.contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
+  )
+  @test indsR isa Tuple{Index{Vector{Pair{QN,Int}}},Index{Vector{Pair{QN,Int}}}}
+
+  TensorT = @inferred(
+    NDTensors.contraction_output_type(typeof(T1), typeof(T2), typeof(indsR))
+  )
+  @test TensorT <: Tensor{Float64,2,BlockSparse{Float64,Vector{Float64},2},typeof(indsR)}
+
+  blockoffsetsR, contraction_plan = @inferred(
+    NDTensors.contract_blockoffsets(
+      blockoffsets(T1),
+      inds(T1),
+      labelsT1,
+      blockoffsets(T2),
+      inds(T2),
+      labelsT2,
+      indsR,
+      labelsR,
+    )
+  )
+  @test blockoffsetsR isa BlockOffsets{2}
+  @test contraction_plan isa Vector{Tuple{Block{2},Block{2},Block{2}}}
+
   @test @inferred(NDTensors.contraction_output(T1, labelsT1, T2, labelsT2, labelsR)) isa
     Tuple{BlockSparseTensor,Vector{Tuple{Block{2},Block{2},Block{2}}}}
+
   @test @inferred(NDTensors.contract(T1, labelsT1, T2, labelsT2, labelsR)) isa
     BlockSparseTensor
+
   # TODO: this function doesn't exist yet
   #@test @inferred(NDTensors.contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)) isa BlockSparseTensor
 
