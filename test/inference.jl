@@ -85,8 +85,11 @@ end
   @test @inferred(NDTensors.contraction_output(T1, labelsT1, T2, labelsT2, labelsR)) isa
     Tuple{BlockSparseTensor,Vector{Tuple{Block{2},Block{2},Block{2}}}}
 
-  @test @inferred(NDTensors.contract(T1, labelsT1, T2, labelsT2, labelsR)) isa
-    BlockSparseTensor
+  if VERSION ≥ v"1.7"
+    # Only properly inferred in Julia 1.7 and later
+    @test @inferred(NDTensors.contract(T1, labelsT1, T2, labelsT2, labelsR)) isa
+      BlockSparseTensor
+  end
 
   # TODO: this function doesn't exist yet
   #@test @inferred(NDTensors.contract!!(R, labelsR, T1, labelsT1, T2, labelsT2)) isa BlockSparseTensor
