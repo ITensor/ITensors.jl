@@ -66,7 +66,9 @@ function similar(arraytype::Type{<:AbstractArray}, eltype::Type)
   return error("Must specify dimensions.")
 end
 # NDTensors.similar
-similar(arraytype::Type{<:AbstractArray}, dims) = similar(arraytype, eltype(arraytype), dims)
+function similar(arraytype::Type{<:AbstractArray}, dims)
+  return similar(arraytype, eltype(arraytype), dims)
+end
 
 function similartype(array::AbstractArray, eltype::Type, dims)
   return similartype(typeof(array), eltype, dims)
