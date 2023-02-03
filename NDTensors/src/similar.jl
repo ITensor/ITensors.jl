@@ -46,37 +46,37 @@ end
 leaf_parenttype(array::AbstractArray) = leaf_parenttype(typeof(array))
 
 # NDTensors.similar
-function similar(array::AbstractArray, eltype::Type, dims::Tuple)
+function similar(array::AbstractArray, eltype::Type, dims)
   return NDTensors.similar(similartype(array, eltype, dims), dims)
 end
 # NDTensors.similar
 similar(array::AbstractArray, eltype::Type) = NDTensors.similar(array, eltype, size(array))
 # NDTensors.similar
-similar(array::AbstractArray, dims::Tuple) = NDTensors.similar(array, eltype(array), dims)
+similar(array::AbstractArray, dims) = NDTensors.similar(array, eltype(array), dims)
 # NDTensors.similar
 similar(array::AbstractArray) = NDTensors.similar(array, eltype(array), size(array))
 
 # NDTensors.similar
-similar(arraytype::Type{<:AbstractArray}, dims::Tuple) = arraytype(undef, dims)
+# This function actually allocates the data.
+function similar(arraytype::Type{<:AbstractArray}, eltype::Type, dims)
+  return similartype(arraytype, eltype, dims)(undef, dims)
+end
+# NDTensors.similar
+function similar(arraytype::Type{<:AbstractArray}, eltype::Type)
+  return error("Must specify dimensions.")
+end
+# NDTensors.similar
+similar(arraytype::Type{<:AbstractArray}, dims) = similar(arraytype, eltype(arraytype), dims)
 
-function similartype(array::AbstractArray, eltype::Type, dims::Tuple)
+function similartype(array::AbstractArray, eltype::Type, dims)
   return similartype(typeof(array), eltype, dims)
 end
 similartype(array::AbstractArray, eltype::Type) = similartype(array, eltype, size(array))
-similartype(array::AbstractArray, dims::Tuple) = similartype(array, eltype(array), dims)
+similartype(array::AbstractArray, dims) = similartype(array, eltype(array), dims)
 
-function similartype(arraytype::Type{<:AbstractArray}, eltype::Type, dims::Tuple)
+function similartype(arraytype::Type{<:AbstractArray}, eltype::Type, dims)
   return similartype(similartype(arraytype, eltype), dims)
 end
-function similartype(arraytype::Type{<:AbstractArray}, eltype::Type)
-  return error("Must specify dimensions.")
-end
-function similartype(arraytype::Type{<:AbstractArray}, dims::Tuple)
-  return similartype(arraytype, eltype(arraytype), dims)
-end
-
-# similartype(arraytype::Type{<:AbstractArray}, eltype::Type) = error("Not implemented")
-similartype(arraytype::Type{<:AbstractArray}, dims::Tuple) = error("Not implemented")
 
 @traitfn function similartype(
   arraytype::Type{T}, eltype::Type
@@ -86,9 +86,9 @@ similartype(arraytype::Type{<:AbstractArray}, dims::Tuple) = error("Not implemen
   )
 end
 
-@traitfn function similartype(arraytype::Type{T}, dims::Tuple) where {T; !IsWrappedArray{T}}
+@traitfn function similartype(arraytype::Type{T}, dims) where {T; !IsWrappedArray{T}}
   return error(
-    "The function `similartype(::$T, dims::Tuple)` has not been implement for this data type. It is a required part of the NDTensors interface.",
+    "The function `similartype(::$T, dims)` has not been implement for this data type. It is a required part of the NDTensors interface.",
   )
 end
 
@@ -97,7 +97,7 @@ end
   return similartype(parenttype(arraytype), eltype)
 end
 
-@traitfn function similartype(arraytype::Type{T}, dims::Tuple) where {T; IsWrappedArray{T}}
+@traitfn function similartype(arraytype::Type{T}, dims) where {T; IsWrappedArray{T}}
   return similartype(parenttype(arraytype), eltype)
 end
 
@@ -106,6 +106,6 @@ function similartype(arraytype::Type{<:Array}, eltype::Type)
   return Array{eltype,ndims(arraytype)}
 end
 
-function similartype(arraytype::Type{<:Array}, dims::Tuple)
+function similartype(arraytype::Type{<:Array}, dims)
   return Array{eltype(arraytype),length(dims)}
 end

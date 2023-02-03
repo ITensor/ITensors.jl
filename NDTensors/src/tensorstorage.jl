@@ -40,8 +40,24 @@ end
 
 -(S::TensorStorage) = setdata(S, -data(S))
 
-similar(S::TensorStorage) = setdata(S, similar(data(S)))
-similar(S::TensorStorage, x) = setdata(S, similar(data(S), x))
+# NDTensors.similar
+similar(S::TensorStorage) = setdata(S, NDTensors.similar(data(S)))
+# NDTensors.similar
+similar(S::TensorStorage, eltype::Type) = setdata(S, NDTensors.similar(data(S), eltype))
+# NDTensors.similar
+similar(S::TensorStorage, dims) = setdata(S, NDTensors.similar(data(S), dims))
+# NDTensors.similar
+function similar(storagetype::Type{<:TensorStorage}, eltype::Type, dims)
+  return setdata(storagetype, NDTensors.similar(datatype(storagetype), eltype, dims))
+end
+# NDTensors.similar
+function similar(storagetype::Type{<:TensorStorage}, eltype::Type)
+  return error("Must specify dimensions.")
+end
+# NDTensors.similar
+function similar(storagetype::Type{<:TensorStorage}, dims)
+  return NDTensors.similar(storagetype, eltype(storagetype), dims)
+end
 
 # Define Base.similar in terms of NDTensors.similar
 Base.similar(t::TensorStorage, args...) = similar(t, args...)

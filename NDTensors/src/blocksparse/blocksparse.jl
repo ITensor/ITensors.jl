@@ -47,6 +47,7 @@ end
 copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 
 setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
+setdata(storagetype::Type{<:BlockSparse}, data) = error("Not implemented, must specify block offsets as well")
 
 #
 # Random

@@ -120,9 +120,6 @@ end
 # TODO: move to NDTensors
 NDTensors.dim(is::Tuple, pos::Integer) = dim(is[pos])
 
-# TODO: this fixes an ambiguity error with base, move to NDTensors
-NDTensors.similar(T::NDTensors.DenseTensor, inds::Tuple) = NDTensors._similar(T, inds)
-
 # TODO: this is a weird definition, fix it
 function NDTensors.similartype(
   ::Type{<:Tuple{Vararg{IndexT}}}, ::Type{Val{N}}

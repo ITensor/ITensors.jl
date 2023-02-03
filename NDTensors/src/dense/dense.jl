@@ -58,6 +58,7 @@ Dense{ElT}() where {ElT} = Dense(ElT[])
 Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
 
 setdata(D::Dense, ndata) = Dense(ndata)
+setdata(storagetype::Type{<:Dense}, data) = Dense(data)
 
 #
 # Random constructors
@@ -79,7 +80,7 @@ zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
 
 # Generic for handling `Vector` and `CuVector`
 function zeros(storagetype::Type{<:Dense}, dim::Int)
-  return fill!(similar(storagetype, dim), zero(eltype(storagetype)))
+  return fill!(NDTensors.similar(storagetype, dim), zero(eltype(storagetype)))
 end
 
 function promote_rule(
@@ -531,7 +532,7 @@ function contraction_output(
   ::TensorT1, ::TensorT2, indsR::IndsR
 ) where {TensorT1<:DenseTensor,TensorT2<:DenseTensor,IndsR}
   TensorR = contraction_output_type(TensorT1, TensorT2, IndsR)
-  return similar(TensorR, indsR)
+  return NDTensors.similar(TensorR, indsR)
 end
 
 Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))

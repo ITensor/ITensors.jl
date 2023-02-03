@@ -67,6 +67,7 @@ zeros(::Type{<:NonuniformDiag{ElT}}, dim::Int64) where {ElT} = Diag(zeros(ElT, d
 zeros(::Type{<:UniformDiag{ElT}}, dim::Int64) where {ElT} = Diag(zero(ElT))
 
 setdata(D::Diag, ndata) = Diag(ndata)
+setdata(storagetype::Type{<:Diag}, data) = Diag(data)
 
 #
 # Type promotions involving Diag
