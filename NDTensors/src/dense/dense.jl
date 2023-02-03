@@ -6,6 +6,7 @@ using LinearAlgebra: BlasFloat
 struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
   data::DataT
   function Dense{ElT,DataT}(data::DataT) where {ElT,DataT<:AbstractArray{<:Any, 1}}
+    @assert ElT == eltype(DataT)
     return new{ElT,DataT}(data)
   end
 
@@ -18,20 +19,17 @@ end
 
 #Start with high information constructors and move to low information constructors
 function Dense{ElT,DataT}() where {ElT,DataT<:AbstractArray}
-  typedDataT = set_eltype_if_unspecified(DataT, ElT)
-  return Dense{ElT,typedDataT}(typedDataT())
+  return Dense{ElT,DataT}(DataT())
 end
 
 # Construct from a set of indices
 # This will fail if zero(ElT) is not defined for the ElT
 function Dense{ElT,DataT}(inds::Tuple) where {ElT,DataT<:AbstractArray}
-  typedDataT = set_eltype_if_unspecified(DataT, ElT)
-  return Dense{ElT,typedDataT}(generic_zeros(typedDataT, dim(inds)))
+  return Dense{ElT,DataT}(generic_zeros(DataT, dim(inds)))
 end
 
 function Dense{ElT,DataT}(dim::Integer) where {ElT,DataT<:AbstractArray}
-  typedDataT = set_eltype_if_unspecified(DataT, ElT)
-  return Dense{ElT,typedDataT}(generic_zeros(typedDataT, dim))
+  return Dense{ElT,DataT}(generic_zeros(DataT, dim))
 end
 
 function Dense{ElT,DataT}(
@@ -40,6 +38,7 @@ function Dense{ElT,DataT}(
   typedDataT = set_eltype_if_unspecified(DataT, ElT)
   return Dense{ElT,typedDataT}(similar(typedDataT, dim(inds)))
 end
+
 
 function Dense{ElR,DataT}(data::AbstractArray) where {ElR,DataT<:AbstractArray}
   data = convert(DataT, data)
