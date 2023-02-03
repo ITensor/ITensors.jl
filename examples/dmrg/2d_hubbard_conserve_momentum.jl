@@ -10,6 +10,8 @@ Usage:
 ```julia
 main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threaded_blocksparse=false);
 main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threaded_blocksparse=true);
+main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, random_init=false, threaded_blocksparse=false);
+main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, random_init=false, threaded_blocksparse=true);
 ```
 """
 function main(;
@@ -21,6 +23,7 @@ function main(;
   conserve_ky=true,
   threaded_blocksparse=false,
   nsweeps=10,
+  random_init=true,
   seed=1234,
 )
   # Helps make results reproducible when comparing
@@ -60,7 +63,11 @@ function main(;
   end
   display(state)
 
-  psi0 = randomMPS(itensor_rng, sites, state; linkdims=2)
+  psi0 = if random_init
+    randomMPS(itensor_rng, sites, state; linkdims=2)
+  else
+    MPS(sites, state)
+  end
   @time @show inner(psi0', H, psi0)
 
   energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff, noise)
