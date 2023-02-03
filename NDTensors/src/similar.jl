@@ -46,7 +46,9 @@ end
 leaf_parenttype(array::AbstractArray) = leaf_parenttype(typeof(array))
 
 # NDTensors.similar
-similar(array::AbstractArray, eltype::Type, dims::Tuple) = NDTensors.similar(similartype(array, eltype, dims), dims)
+function similar(array::AbstractArray, eltype::Type, dims::Tuple)
+  return NDTensors.similar(similartype(array, eltype, dims), dims)
+end
 # NDTensors.similar
 similar(array::AbstractArray, eltype::Type) = NDTensors.similar(array, eltype, size(array))
 # NDTensors.similar
@@ -57,25 +59,37 @@ similar(array::AbstractArray) = NDTensors.similar(array, eltype(array), size(arr
 # NDTensors.similar
 similar(arraytype::Type{<:AbstractArray}, dims::Tuple) = arraytype(undef, dims)
 
-similartype(array::AbstractArray, eltype::Type, dims::Tuple) = similartype(typeof(array), eltype, dims)
+function similartype(array::AbstractArray, eltype::Type, dims::Tuple)
+  return similartype(typeof(array), eltype, dims)
+end
 similartype(array::AbstractArray, eltype::Type) = similartype(array, eltype, size(array))
 similartype(array::AbstractArray, dims::Tuple) = similartype(array, eltype(array), dims)
 
 function similartype(arraytype::Type{<:AbstractArray}, eltype::Type, dims::Tuple)
   return similartype(similartype(arraytype, eltype), dims)
 end
-similartype(arraytype::Type{<:AbstractArray}, eltype::Type) = error("Must specify dimensions.")
-similartype(arraytype::Type{<:AbstractArray}, dims::Tuple) = similartype(arraytype, eltype(arraytype), dims)
+function similartype(arraytype::Type{<:AbstractArray}, eltype::Type)
+  return error("Must specify dimensions.")
+end
+function similartype(arraytype::Type{<:AbstractArray}, dims::Tuple)
+  return similartype(arraytype, eltype(arraytype), dims)
+end
 
 # similartype(arraytype::Type{<:AbstractArray}, eltype::Type) = error("Not implemented")
 similartype(arraytype::Type{<:AbstractArray}, dims::Tuple) = error("Not implemented")
 
-@traitfn function similartype(arraytype::Type{T}, eltype::Type) where {T; !IsWrappedArray{T}}
-  return error("The function `similartype(::$T, eltype::Type)` has not been implement for this data type. It is a required part of the NDTensors interface.")
+@traitfn function similartype(
+  arraytype::Type{T}, eltype::Type
+) where {T; !IsWrappedArray{T}}
+  return error(
+    "The function `similartype(::$T, eltype::Type)` has not been implement for this data type. It is a required part of the NDTensors interface.",
+  )
 end
 
 @traitfn function similartype(arraytype::Type{T}, dims::Tuple) where {T; !IsWrappedArray{T}}
-  return error("The function `similartype(::$T, dims::Tuple)` has not been implement for this data type. It is a required part of the NDTensors interface.")
+  return error(
+    "The function `similartype(::$T, dims::Tuple)` has not been implement for this data type. It is a required part of the NDTensors interface.",
+  )
 end
 
 ## Wrapped arrays
