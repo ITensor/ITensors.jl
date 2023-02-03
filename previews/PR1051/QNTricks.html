@@ -4,43 +4,43 @@
 julia&gt; # This is a short code showing how a combiner
        # can be used to &quot;flip&quot; the direction of an Index
        i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)
-(dim=5|id=983|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=171|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; j = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;)
-(dim=5|id=403|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=784|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; A = randomITensor(i, dag(j))
 ITensor ord=2
-(dim=5|id=983|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=171|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=403|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=784|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
 
 julia&gt; C = combiner(i, dag(j); tags = &quot;c&quot;, dir = dir(i))
 ITensor ord=3
-(dim=25|id=113|&quot;c&quot;) &lt;Out&gt;
+(dim=25|id=851|&quot;c&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 6
  2: QN(0) =&gt; 13
  3: QN(1) =&gt; 6
-(dim=5|id=983|&quot;i&quot;) &lt;In&gt;
+(dim=5|id=171|&quot;i&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=403|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=784|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 NDTensors.Combiner
 
 julia&gt; inds(A)
-((dim=5|id=983|&quot;i&quot;) &lt;Out&gt;
+((dim=5|id=171|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3, (dim=5|id=403|&quot;j&quot;) &lt;In&gt;
+ 2: QN(1) =&gt; 3, (dim=5|id=784|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3)
 
@@ -56,39 +56,39 @@ Closest candidates are:
 julia&gt; # This is a short code showing how a combiner
        # can be used to &quot;flip&quot; the direction of an Index
        i = Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;i&quot;)
-(dim=5|id=190|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=783|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; j = dag(Index([QN(0) =&gt; 2, QN(1) =&gt; 3], &quot;j&quot;))
-(dim=5|id=935|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=945|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 
 julia&gt; A = randomITensor(i, j)
 ITensor ord=2
-(dim=5|id=190|&quot;i&quot;) &lt;Out&gt;
+(dim=5|id=783|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
-(dim=5|id=935|&quot;j&quot;) &lt;In&gt;
+(dim=5|id=945|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 NDTensors.BlockSparse{Float64, Vector{Float64}, 2}
 
 julia&gt; C = combiner(j; tags = &quot;jflip&quot;, dir = -dir(j))
 ITensor ord=2
-(dim=5|id=7|&quot;jflip&quot;) &lt;Out&gt;
+(dim=5|id=254|&quot;jflip&quot;) &lt;Out&gt;
  1: QN(-1) =&gt; 3
  2: QN(0) =&gt; 2
-(dim=5|id=935|&quot;j&quot;) &lt;Out&gt;
+(dim=5|id=945|&quot;j&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3
 NDTensors.Combiner
 
 julia&gt; inds(A)
-((dim=5|id=190|&quot;i&quot;) &lt;Out&gt;
+((dim=5|id=783|&quot;i&quot;) &lt;Out&gt;
  1: QN(0) =&gt; 2
- 2: QN(1) =&gt; 3, (dim=5|id=935|&quot;j&quot;) &lt;In&gt;
+ 2: QN(1) =&gt; 3, (dim=5|id=945|&quot;j&quot;) &lt;In&gt;
  1: QN(0) =&gt; 2
  2: QN(1) =&gt; 3)
 
@@ -102,7 +102,7 @@ Closest candidates are:
   ...</code></pre><p>Unless you are writing very specialized custom code with symmetric tensors, this is generally not needed.</p><h2 id="Block-Sparsity-and-Quantum-Numbers"><a class="docs-heading-anchor" href="#Block-Sparsity-and-Quantum-Numbers">Block Sparsity and Quantum Numbers</a><a id="Block-Sparsity-and-Quantum-Numbers-1"></a><a class="docs-heading-anchor-permalink" href="#Block-Sparsity-and-Quantum-Numbers" title="Permalink"></a></h2><p>In general, not all blocks that are allowed according to the flux will actually exist in the tensor (which helps in many cases for efficiency). Usually this would happen when the tensor is first constructed and not all blocks are explicitly set:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
 
 julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])
-(dim=2|id=862) &lt;Out&gt;
+(dim=2|id=33) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 
@@ -119,10 +119,10 @@ Closest candidates are:
 
 julia&gt; @show A;
 A = ITensor ord=2
-Dim 1: (dim=2|id=862)&#39; &lt;Out&gt;
+Dim 1: (dim=2|id=33)&#39; &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=2|id=862) &lt;In&gt;
+Dim 2: (dim=2|id=33) &lt;In&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 NDTensors.EmptyStorage{NDTensors.EmptyNumber, NDTensors.BlockSparse{NDTensors.EmptyNumber, Vector{NDTensors.EmptyNumber}, 2}}
@@ -140,7 +140,7 @@ julia&gt; @show U;
 ERROR: UndefVarError: U not defined</code></pre><p>If we had set <code>A[1, 1] = 0.0</code> as well, then all of the allowed blocks (according to the flux <code>QN(0)</code> would exist and would be included in the eigendecomposition:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
 
 julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])
-(dim=2|id=348) &lt;Out&gt;
+(dim=2|id=974) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 
@@ -166,10 +166,10 @@ Closest candidates are:
 
 julia&gt; @show A;
 A = ITensor ord=2
-Dim 1: (dim=2|id=348)&#39; &lt;Out&gt;
+Dim 1: (dim=2|id=974)&#39; &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=2|id=348) &lt;In&gt;
+Dim 2: (dim=2|id=974) &lt;In&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 NDTensors.EmptyStorage{NDTensors.EmptyNumber, NDTensors.BlockSparse{NDTensors.EmptyNumber, Vector{NDTensors.EmptyNumber}, 2}}
@@ -187,12 +187,12 @@ julia&gt; @show U;
 ERROR: UndefVarError: U not defined</code></pre><p>&quot;Missing&quot; blocks can also occur with tensor contractions, since the final blocks of the output tensor are made from combinations of contractions of blocks from the input tensors, and there is no guarantee that all flux-consistent blocks will end up in the result:</p><pre><code class="language-julia-repl">julia&gt; using ITensors
 
 julia&gt; i = Index([QN(0) =&gt; 1, QN(1) =&gt; 1])
-(dim=2|id=562) &lt;Out&gt;
+(dim=2|id=320) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 
 julia&gt; j = Index([QN(0) =&gt; 1])
-(dim=1|id=784) &lt;Out&gt;
+(dim=1|id=449) &lt;Out&gt;
  1: QN(0) =&gt; 1
 
 julia&gt; A = ITensor(i, dag(j));
@@ -208,10 +208,10 @@ Closest candidates are:
 
 julia&gt; @show A;
 A = ITensor ord=2
-Dim 1: (dim=2|id=562) &lt;Out&gt;
+Dim 1: (dim=2|id=320) &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=1|id=784) &lt;In&gt;
+Dim 2: (dim=1|id=449) &lt;In&gt;
  1: QN(0) =&gt; 1
 NDTensors.EmptyStorage{NDTensors.EmptyNumber, NDTensors.BlockSparse{NDTensors.EmptyNumber, Vector{NDTensors.EmptyNumber}, 2}}
  2×1
@@ -222,10 +222,10 @@ julia&gt; A2 = prime(A, i) * dag(A);
 
 julia&gt; @show A2;
 A2 = ITensor ord=2
-Dim 1: (dim=2|id=562)&#39; &lt;Out&gt;
+Dim 1: (dim=2|id=320)&#39; &lt;Out&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
-Dim 2: (dim=2|id=562) &lt;In&gt;
+Dim 2: (dim=2|id=320) &lt;In&gt;
  1: QN(0) =&gt; 1
  2: QN(1) =&gt; 1
 NDTensors.EmptyStorage{NDTensors.EmptyNumber, NDTensors.BlockSparse{NDTensors.EmptyNumber, Vector{NDTensors.EmptyNumber}, 2}}
@@ -240,4 +240,4 @@ julia&gt; @show D;
 ERROR: UndefVarError: D not defined
 
 julia&gt; @show U;
-ERROR: UndefVarError: U not defined</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Friday 3 February 2023 17:49">Friday 3 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ERROR: UndefVarError: U not defined</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="Multithreading.html">« Multithreading</a><a class="docs-footer-nextpage" href="CodeTiming.html">Timing and profiling »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Friday 3 February 2023 17:57">Friday 3 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
