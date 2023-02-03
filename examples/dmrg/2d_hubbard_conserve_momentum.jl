@@ -8,10 +8,24 @@ include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 """
 Usage:
 ```julia
-main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threaded_blocksparse=false);
-main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threaded_blocksparse=true);
-main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, random_init=false, threaded_blocksparse=false);
-main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, random_init=false, threaded_blocksparse=true);
+energy, H, psi = main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threaded_blocksparse=false);
+energy, H, psi = main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, threaded_blocksparse=true);
+energy, H, psi = main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, random_init=false, threaded_blocksparse=false);
+energy, H, psi = main(; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10, maxdim=3000, random_init=false, threaded_blocksparse=true);
+
+using ITensors.HDF5
+h5open("2d_hubbard_conserve_momentum.h5", "w") do fid
+  fid["energy"] = energy
+  fid["H"] = H
+  fid["psi"] = psi
+end;
+
+energy, H, psi = h5open("2d_hubbard_conserve_momentum.h5") do fid
+  energy = read(fid, "energy")
+  H = read(fid, "H", MPO)
+  psi = read(fid, "psi", MPS)
+  return energy, H, psi
+end;
 ```
 """
 function main(;

@@ -39,9 +39,9 @@ julia> using Pkg
 
 julia> Pkg.activate(".")
 
-julia> Pkg.develop(path="..") # Develop ITensors
-
 julia> Pkg.develop(path=joinpath("..", "NDTensors")) # Develop NDTensors
+
+julia> Pkg.develop(path="..") # Develop ITensors
 
 julia> Pkg.resolve()
 ```
