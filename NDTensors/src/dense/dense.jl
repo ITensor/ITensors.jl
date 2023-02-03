@@ -45,30 +45,6 @@ function Dense{ElR,DataT}(data::AbstractArray) where {ElR,DataT<:AbstractArray}
   return Dense{ElR,DataT}(data)
 end
 
-function Dense{DataT}() where {DataT<:AbstractArray}
-  typedDataT = set_eltype_if_unspecified(DataT, default_eltype())
-  ElT = eltype(typedDataT)
-  return Dense{ElT,typedDataT}()
-end
-
-function Dense{DataT}(inds::Tuple) where {DataT<:AbstractArray}
-  typedDataT = set_eltype_if_unspecified(DataT)
-  ElT = eltype(typedDataT)
-  return Dense{ElT,typedDataT}(inds)
-end
-
-function Dense{DataT}(::UndefInitializer, inds::Tuple) where {DataT<:AbstractArray}
-  typedDataT = set_eltype_if_unspecified(DataT)
-  ElT = eltype(typedDataT)
-  return Dense{ElT,typedDataT}(undef, inds)
-end
-
-function Dense{DataT}(x::Number, inds::Tuple) where {DataT<:AbstractArray}
-  typedDataT = set_eltype_if_unspecified(DataT, typeof(x))
-  ElT = eltype(typedDataT)
-  return Dense{ElT,typedDataT}(fill!(similar(typedDataT, dim(inds)), x))
-end
-
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
   d = convert(similartype(typeof(data), ElR),data)
