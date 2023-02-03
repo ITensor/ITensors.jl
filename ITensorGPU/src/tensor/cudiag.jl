@@ -53,7 +53,7 @@ end
 function contraction_output_type(
   TensorT1::Type{<:NonuniformCuDiagTensor}, TensorT2::Type{<:CuDenseTensor}, IndsR
 )
-  return similar_type(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), IndsR)
 end
 function contraction_output_type(
   TensorT1::Type{<:CuDenseTensor}, TensorT2::Type{<:NonuniformCuDiagTensor}, IndsR
@@ -66,7 +66,7 @@ function contraction_output_type(
   TensorT2::Type{<:DiagTensor{<:Number,<:CuDiag}},
   IndsR::Type,
 )
-  return similar_type(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), IndsR)
 end
 
 function contraction_output_type(
@@ -74,7 +74,7 @@ function contraction_output_type(
   TensorT2::Type{<:DiagTensor{<:Number,<:CuDiag}},
   IndsR::Type,
 )
-  return similar_type(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), IndsR)
 end
 function contraction_output_type(
   TensorT1::Type{<:DiagTensor{<:Number,<:CuDiag}},

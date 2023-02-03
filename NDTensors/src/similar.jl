@@ -1,30 +1,22 @@
+## Custom `NDTensors.similar` implementation.
+## More extensive than `Base.similar`.
 
-#
-# Custom NDTensors.similar implementation
-# More extensive than Base.similar
-#
-
-# Trait indicating if the type is an array wrapper
-# Assumes that is implements `Base.parent`.
-
+# Trait indicating if the AbstractArray type is an array wrapper.
+# Assumes that it implements `NDTensors.parenttype`.
 @traitdef IsWrappedArray{T}
 
 #! format: off
 @traitimpl IsWrappedArray{T} <- is_wrapped_array(T)
 #! format: on
 
-is_wrapped_array(::Type) = false
-is_wrapped_array(::Type{<:ReshapedArray}) = true
-is_wrapped_array(::Type{<:Transpose}) = true
-is_wrapped_array(::Type{<:Adjoint}) = true
-is_wrapped_array(::Type{<:Symmetric}) = true
-is_wrapped_array(::Type{<:Hermitian}) = true
-is_wrapped_array(::Type{<:UpperTriangular}) = true
-is_wrapped_array(::Type{<:LowerTriangular}) = true
-is_wrapped_array(::Type{<:UnitUpperTriangular}) = true
-is_wrapped_array(::Type{<:UnitLowerTriangular}) = true
-is_wrapped_array(::Type{<:Diagonal}) = true
-is_wrapped_array(::Type{<:SubArray}) = true
+is_wrapped_array(arraytype::Type{<:AbstractArray}) = (parenttype(arraytype) ≠ arraytype)
+
+# For working with instances, not used by
+# `SimpleTraits.jl` traits dispatch.
+is_wrapped_array(array::AbstractArray) = is_wrapped_array(typeof(array))
+
+# By default, the `parentype` of an array type is itself
+parenttype(arraytype::Type{<:AbstractArray}) = arraytype
 
 parenttype(::Type{<:ReshapedArray{<:Any,<:Any,P}}) where {P} = P
 parenttype(::Type{<:Transpose{<:Any,P}}) where {P} = P
@@ -38,39 +30,68 @@ parenttype(::Type{<:UnitLowerTriangular{<:Any,P}}) where {P} = P
 parenttype(::Type{<:Diagonal{<:Any,P}}) where {P} = P
 parenttype(::Type{<:SubArray{<:Any,<:Any,P}}) where {P} = P
 
-# In general define NDTensors.similar = Base.similar
-similar(a::Array, args...) = Base.similar(a, args...)
-@traitfn similar(a::T, args...) where {T; IsWrappedArray{T}} = Base.similar(a, args...)
+# For working with instances, not used by
+# `SimpleTraits.jl` traits dispatch.
+parenttype(array::AbstractArray) = parenttype(typeof(array))
 
-similar(::Type{<:Array{T}}, dims) where {T} = Array{T,length(dims)}(undef, dims)
-
-function similar(arraytype::Type{<:AbstractArray}, eltype::Type, size)
-  return similar(similartype(arraytype, eltype), size)
+@traitfn function leaf_parenttype(arraytype::Type{T}) where {T; IsWrappedArray{T}}
+  return leaf_parenttype(parenttype(arraytype))
 end
 
-function similar(arraytype::Type{<:AbstractArray}, size)
-  return similar(arraytype, eltype(arraytype), size)
+@traitfn function leaf_parenttype(arraytype::Type{T}) where {T; !IsWrappedArray{T}}
+  return arraytype
 end
 
-#
-# similartype returns the type of the object that would be returned by `similar`
-#
+# For working with instances.
+leaf_parenttype(array::AbstractArray) = leaf_parenttype(typeof(array))
 
-# TODO: extend to AbstractVector, returning the same type as `Base.similar` would
-# (make sure it handles views, CuArrays, etc. correctly)
-# This is to help with code that is generic to different storage types.
-similartype(arraytype::Type{<:Array}, eltype::Type) = Array{eltype,ndims(arraytype)}
+# NDTensors.similar
+similar(array::AbstractArray, eltype::Type, dims::Tuple) = NDTensors.similar(similartype(array, eltype, dims), dims)
+# NDTensors.similar
+similar(array::AbstractArray, eltype::Type) = NDTensors.similar(array, eltype, size(array))
+# NDTensors.similar
+similar(array::AbstractArray, dims::Tuple) = NDTensors.similar(array, eltype(array), dims)
+# NDTensors.similar
+similar(array::AbstractArray) = NDTensors.similar(array, eltype(array), size(array))
 
-@traitfn function similartype(
-  arraytype::Type{T}, eltype::Type, dims::Tuple
-) where {T; IsWrappedArray{T}}
-  return similartype(parenttype(arraytype), eltype, dims)
+# NDTensors.similar
+similar(arraytype::Type{<:AbstractArray}, dims::Tuple) = arraytype(undef, dims)
+
+similartype(array::AbstractArray, eltype::Type, dims::Tuple) = similartype(typeof(array), eltype, dims)
+similartype(array::AbstractArray, eltype::Type) = similartype(array, eltype, size(array))
+similartype(array::AbstractArray, dims::Tuple) = similartype(array, eltype(array), dims)
+
+function similartype(arraytype::Type{<:AbstractArray}, eltype::Type, dims::Tuple)
+  return similartype(similartype(arraytype, eltype), dims)
+end
+similartype(arraytype::Type{<:AbstractArray}, eltype::Type) = error("Must specify dimensions.")
+similartype(arraytype::Type{<:AbstractArray}, dims::Tuple) = similartype(arraytype, eltype(arraytype), dims)
+
+# similartype(arraytype::Type{<:AbstractArray}, eltype::Type) = error("Not implemented")
+similartype(arraytype::Type{<:AbstractArray}, dims::Tuple) = error("Not implemented")
+
+@traitfn function similartype(arraytype::Type{T}, eltype::Type) where {T; !IsWrappedArray{T}}
+  return error("The function `similartype(::$T, eltype::Type)` has not been implement for this data type. It is a required part of the NDTensors interface.")
 end
 
+@traitfn function similartype(arraytype::Type{T}, dims::Tuple) where {T; !IsWrappedArray{T}}
+  return error("The function `similartype(::$T, dims::Tuple)` has not been implement for this data type. It is a required part of the NDTensors interface.")
+end
+
+## Wrapped arrays
 @traitfn function similartype(arraytype::Type{T}, eltype::Type) where {T; IsWrappedArray{T}}
   return similartype(parenttype(arraytype), eltype)
 end
 
-@traitfn function similartype(arraytype::Type{T}) where {T; IsWrappedArray{T}}
-  return similartype(parenttype(arraytype))
+@traitfn function similartype(arraytype::Type{T}, dims::Tuple) where {T; IsWrappedArray{T}}
+  return similartype(parenttype(arraytype), eltype)
+end
+
+## Overloads needed for `Array`
+function similartype(arraytype::Type{<:Array}, eltype::Type)
+  return Array{eltype,ndims(arraytype)}
+end
+
+function similartype(arraytype::Type{<:Array}, dims::Tuple)
+  return Array{eltype(arraytype),length(dims)}
 end

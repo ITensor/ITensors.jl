@@ -20,6 +20,9 @@ struct Dense{ElT,VecT<:AbstractArray} <: TensorStorage{ElT}
   end
 end
 
+# TODO: make these more general, move to tensorstorage.jl
+datatype(::Type{<:Dense{<:Any,DataT}}) where {DataT} = DataT
+
 function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
   return Dense{ElT,VecT}(data)
 end
@@ -71,27 +74,6 @@ Base.real(::Type{Dense{ElT,Vector{ElT}}}) where {ElT} = Dense{real(ElT),Vector{r
 function complex(::Type{Dense{ElT,Vector{ElT}}}) where {ElT}
   return Dense{complex(ElT),Vector{complex(ElT)}}
 end
-
-similar(D::Dense) = Dense(similar(data(D)))
-
-similar(D::Dense, length::Int) = Dense(similar(data(D), length))
-
-function similar(storagetype::Type{<:Dense}, length::Int)
-  return Dense(similar(datatype(storagetype), length))
-end
-
-function similartype(::Type{StoreT}, ::Type{ElT}) where {StoreT<:Dense,ElT}
-  return Dense{ElT,similartype(datatype(StoreT), ElT)}
-end
-
-# TODO: make these more general, move to tensorstorage.jl
-datatype(::Type{<:Dense{<:Any,DataT}}) where {DataT} = DataT
-
-function similar(::Type{StorageT}, ::Type{ElT}, length::Int) where {StorageT<:Dense,ElT}
-  return Dense(similar(datatype(StorageT), ElT, length))
-end
-
-similar(D::Dense, ::Type{T}) where {T<:Number} = Dense(similar(data(D), T))
 
 zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
 
@@ -223,18 +205,6 @@ end
 function zeros(TensorT::Type{<:DenseTensor}, inds::Tuple{})
   return _zeros(TensorT, inds)
 end
-
-# To fix method ambiguity with similar(::AbstractArray,::Type)
-function similar(T::DenseTensor, ::Type{ElT}) where {ElT}
-  return tensor(similar(storage(T), ElT), inds(T))
-end
-
-_similar(T::DenseTensor, inds) = similar(typeof(T), inds)
-
-similar(T::DenseTensor, inds) = _similar(T, inds)
-
-# To fix method ambiguity with similar(::AbstractArray,::Tuple)
-similar(T::DenseTensor, inds::Dims) = _similar(T, inds)
 
 #
 # Single index
