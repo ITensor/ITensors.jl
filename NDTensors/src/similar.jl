@@ -56,18 +56,35 @@ similar(array::AbstractArray, dims) = NDTensors.similar(array, eltype(array), di
 # NDTensors.similar
 similar(array::AbstractArray) = NDTensors.similar(array, eltype(array), size(array))
 
-# NDTensors.similar
 # This function actually allocates the data.
-function similar(arraytype::Type{<:AbstractArray}, eltype::Type, dims)
-  return similartype(arraytype, eltype, dims)(undef, dims)
+# NDTensors.similar
+function similar(arraytype::Type{<:AbstractArray}, dims::Dims)
+  ## return similar(arraytype, eltype(arraytype), dims)
+  return arraytype(undef, dims)
 end
+
+# TODO: Also handle `AbstractUnitRange` inputs?
+# NDTensors.similar
+function similar(arraytype::Type{<:AbstractArray}, dims::Integer...)
+  return similar(arraytype, dims)
+end
+
+# Handles range inputs, `Base.to_shape` converts them to integer dimensions.
+# See Julia's `base/abstractarray.jl`.
+# NDTensors.similar
+function similar(arraytype::Type{<:AbstractArray}, shape::Tuple{Union{Integer,Base.OneTo},Vararg{Union{Integer,Base.OneTo}}})
+  return NDTensors.similar(arraytype, Base.to_shape(shape))
+end
+
+# NDTensors.similar
+function similar(arraytype::Type{<:AbstractArray}, eltype::Type, dims)
+  return NDTensors.similar(similartype(arraytype, eltype, dims), dims)
+end
+
+# TODO: Maybe makes an empty array, i.e. `similartype(arraytype, eltype)()`?
 # NDTensors.similar
 function similar(arraytype::Type{<:AbstractArray}, eltype::Type)
   return error("Must specify dimensions.")
-end
-# NDTensors.similar
-function similar(arraytype::Type{<:AbstractArray}, dims)
-  return similar(arraytype, eltype(arraytype), dims)
 end
 
 function similartype(array::AbstractArray, eltype::Type, dims)

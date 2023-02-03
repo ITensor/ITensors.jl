@@ -55,7 +55,11 @@ function similar(storagetype::Type{<:TensorStorage}, eltype::Type)
   return error("Must specify dimensions.")
 end
 # NDTensors.similar
-function similar(storagetype::Type{<:TensorStorage}, dims)
+function similar(storagetype::Type{<:TensorStorage}, dims::Dims)
+  return NDTensors.similar(storagetype, eltype(storagetype), dims)
+end
+# NDTensors.similar
+function similar(storagetype::Type{<:TensorStorage}, dims::Integer...)
   return NDTensors.similar(storagetype, eltype(storagetype), dims)
 end
 
