@@ -48,7 +48,6 @@ end
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
   d = convert(similartype(typeof(data), ElR),data)
-  @show typeof(d)
   return Dense{ElR}(d)
 end
 
@@ -56,9 +55,9 @@ function Dense{ElT}(data::AbstractArray{ElT}) where {ElT}
   Dense{ElT, typeof(data)}(data)
 end
 
-# function Dense{ElT}(inds::Tuple) where {ElT}
-#   return Dense{ElT}(dim(inds))
-# end
+function Dense{ElT}(inds::Tuple) where {ElT}
+  return Dense{ElT}(dim(inds))
+end
 
 function Dense{ElT}(dim::Integer) where {ElT}
   return Dense{ElT,default_datatype(ElT)}(dim)
@@ -77,7 +76,6 @@ function Dense(data::DataT) where {DataT<:AbstractArray{<:Any,N}} where {N}
 end
 
 function Dense(DataT::Type{<:AbstractArray}, dim::Integer)
-  DataT = set_eltype_if_unspecified(DataT)
   ElT = eltype(DataT)
   return Dense{ElT,DataT}(dim)
 end
