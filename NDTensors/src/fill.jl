@@ -3,7 +3,7 @@
 
 function generic_randn(
   StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer=0
-) where {DataT<:AbstractArray, ElT}
+) where {DataT<:AbstractArray,ElT}
   @assert ElT == eltype(DataT)
   data = generic_randn(DataT, dim)
   return StoreT(data)
@@ -31,7 +31,7 @@ end
 ## and replace zeros with generic_zeros
 function generic_zeros(
   StoreT::Type{<:Dense{ElT,DataT}}, dim::Integer=0
-) where {DataT<:AbstractArray, ElT}
+) where {DataT<:AbstractArray,ElT}
   @assert ElT == eltype(DataT)
   data = generic_zeros(DataT, dim)
   return StoreT(data)

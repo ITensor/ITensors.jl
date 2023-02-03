@@ -5,13 +5,13 @@ using LinearAlgebra: BlasFloat
 
 struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
   data::DataT
-  function Dense{ElT,DataT}(data::DataT) where {ElT,DataT<:AbstractArray{<:Any, 1}}
+  function Dense{ElT,DataT}(data::DataT) where {ElT,DataT<:AbstractArray{<:Any,1}}
     @assert ElT == eltype(DataT)
     return new{ElT,DataT}(data)
   end
 
   ## TODO ask matt if I should make a N function that fails when called with N > 1
-  function Dense{ElT,DataT}(data::DataT) where {ElT,DataT<:AbstractArray{<:Any, N}} where {N}
+  function Dense{ElT,DataT}(data::DataT) where {ElT,DataT<:AbstractArray{<:Any,N}} where {N}
     println("Only Vector-based datatypes are currently supported.")
     throw(TypeError)
   end
@@ -32,13 +32,10 @@ function Dense{ElT,DataT}(dim::Integer) where {ElT,DataT<:AbstractArray}
   return Dense{ElT,DataT}(generic_zeros(DataT, dim))
 end
 
-function Dense{ElT,DataT}(
-  ::UndefInitializer, inds::Tuple
-) where {ElT,DataT<:AbstractArray}
+function Dense{ElT,DataT}(::UndefInitializer, inds::Tuple) where {ElT,DataT<:AbstractArray}
   typedDataT = set_eltype_if_unspecified(DataT, ElT)
   return Dense{ElT,typedDataT}(similar(typedDataT, dim(inds)))
 end
-
 
 function Dense{ElR,DataT}(data::AbstractArray) where {ElR,DataT<:AbstractArray}
   data = convert(DataT, data)
@@ -47,12 +44,12 @@ end
 
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
-  d = convert(similartype(typeof(data), ElR),data)
+  d = convert(similartype(typeof(data), ElR), data)
   return Dense{ElR}(d)
 end
 
 function Dense{ElT}(data::AbstractArray{ElT}) where {ElT}
-  Dense{ElT, typeof(data)}(data)
+  return Dense{ElT,typeof(data)}(data)
 end
 
 function Dense{ElT}(inds::Tuple) where {ElT}
@@ -66,13 +63,13 @@ end
 Dense{ElT}() where {ElT} = Dense{ElT,default_datatype(ElT)}()
 
 function Dense(data::DataT) where {DataT<:AbstractArray{<:Any,1}}
-  Dense{eltype(DataT), DataT}(data)
+  return Dense{eltype(DataT),DataT}(data)
 end
 
 function Dense(data::DataT) where {DataT<:AbstractArray{<:Any,N}} where {N}
   #println("Warning: Only vector based datatypes are currenlty supported by Dense. The data structure provided will be vectorized.")
   vecData = vec(data)
-  Dense{eltype(vecData),typeof(vecData)}(vecData)
+  return Dense{eltype(vecData),typeof(vecData)}(vecData)
 end
 
 function Dense(DataT::Type{<:AbstractArray}, dim::Integer)
