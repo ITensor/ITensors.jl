@@ -758,7 +758,7 @@ function _contract_scalar!(
   return R
 end
 
-function contract!(
+function _contract!(
   R::DenseTensor{ElR,NR},
   labelsR,
   T1::DenseTensor{ElT1,N1},
@@ -1060,4 +1060,90 @@ end
 function show(io::IO, mime::MIME"text/plain", T::DenseTensor)
   summary(io, T)
   return print_tensor(io, T)
+end
+
+# Combine two neighboring labels
+function combine_labels(labels::Vector{Int}, firstlabel::Int, newlabel::Int, sizes::Vector{Int})::Tuple{Vector{Int},Vector{Int}}
+    pos = findfirst(isequal(firstlabel), labels)
+    if isnothing(pos)
+        return labels, sizes
+    end
+    return [labels[1:pos-1]..., newlabel, labels[pos+2:end]...], [sizes[1:pos-1]..., sizes[pos] * sizes[pos+1], sizes[pos+2:end]...]
+end
+
+
+# Combine two neighboring labels in ai, bi, ci
+function _combine_alllabels(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
+    for pa in 1:(length(ai)-1)
+        label_a = ai[pa]
+        next_labels = Int[ai[pa+1]]
+        pb = findfirst(isequal(label_a), bi)
+        pc = findfirst(isequal(label_a), ci)
+        bounderror = false
+        if !isnothing(pb)
+            if pb < length(bi)
+              push!(next_labels, bi[pb+1])
+            else
+              bounderror = true
+            end
+        end
+        if !isnothing(pc)
+          if pc < length(ci)
+            push!(next_labels, ci[pc+1])
+          else
+            bounderror = true
+          end
+        end
+        if !bounderror && length(next_labels) > 1 && length(unique(next_labels)) == 1
+            newlabel = label_a
+            ai_, sizea_ = combine_labels(ai, label_a, newlabel, sizea)
+            bi_, sizeb_ = combine_labels(bi, label_a, newlabel, sizeb)
+            ci_, sizec_ = combine_labels(ci, label_a, newlabel, sizec)
+            return ai_, bi_, ci_, sizea_, sizeb_, sizec_, true
+        end
+    end
+    return ai, bi, ci, sizea, sizeb, sizec, false
+end
+
+
+# Combine all neighboring labels in ai, bi, ci
+function combine_alllabels(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
+    while true
+        ai, bi, ci, sizea, sizeb, sizec, replaced1 = _combine_alllabels(ai, bi, ci, sizea, sizeb, sizec)
+        bi, ai, ci, sizeb, sizea, sizec, replaced2 = _combine_alllabels(bi, ai, ci, sizeb, sizea, sizec)
+        if !replaced1 && !replaced2
+            break
+        end
+    end
+    return ai, bi, ci, sizea, sizeb, sizec
+end
+
+
+function contract!(
+    R::DenseTensor{ElR,NR},
+    labelsR,
+    T1::DenseTensor{ElT1,N1},
+    labelsT1,
+    T2::DenseTensor{ElT2,N2},
+    labelsT2,
+    α::Elα=one(ElR),
+    β::Elβ=zero(ElR),
+  ) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
+
+  labelsT1_, labelsT2_, labelsR_, sizeT1_, sizeT2_, sizeR_ = combine_alllabels(
+      collect(labelsT1),
+      collect(labelsT2),
+      collect(labelsR),
+      collect(size(T1)),
+      collect(size(T2)),
+      collect(size(R))
+    )
+  R_ = reshape((R), sizeR_...)
+  T1_ = reshape((T1), sizeT1_...)
+  T2_ = reshape((T2), sizeT2_...)
+
+  _contract!(R_, Tuple(labelsR_), T1_, Tuple(labelsT1_), T2_, Tuple(labelsT2_), α, β)
+
+  R = reshape(R_, size(R)...)
+  return R
 end
