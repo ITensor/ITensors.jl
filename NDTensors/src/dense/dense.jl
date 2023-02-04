@@ -1131,12 +1131,12 @@ function contract!(
   ) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
 
   labelsT1_, labelsT2_, labelsR_, sizeT1_, sizeT2_, sizeR_ = combine_alllabels(
-      collect(labelsT1),
-      collect(labelsT2),
-      collect(labelsR),
-      collect(size(T1)),
-      collect(size(T2)),
-      collect(size(R))
+      collect(Int, labelsT1),
+      collect(Int, labelsT2),
+      collect(Int, labelsR),
+      collect(Int, size(T1)),
+      collect(Int, size(T2)),
+      collect(Int, size(R))
     )
   R_ = reshape((R), sizeR_...)
   T1_ = reshape((T1), sizeT1_...)
