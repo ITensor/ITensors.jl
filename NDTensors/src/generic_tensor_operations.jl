@@ -38,8 +38,12 @@ function contraction_output_type(
   return similartype(promote_type(tensortype1, tensortype2), inds)
 end
 
-function contraction_output(tensor1::Tensor, labelstensor1, tensor2::Tensor, labelstensor2, labelsoutput_tensor)
-  indsoutput_tensor = contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsoutput_tensor)
+function contraction_output(
+  tensor1::Tensor, labelstensor1, tensor2::Tensor, labelstensor2, labelsoutput_tensor
+)
+  indsoutput_tensor = contract_inds(
+    inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsoutput_tensor
+  )
   output_tensor = contraction_output(tensor1, tensor2, indsoutput_tensor)
   return output_tensor
 end
@@ -57,8 +61,12 @@ function can_contract(tensor1::Type{<:Tensor}, tensor2::Type{<:Tensor})
   return can_contract(storagetype(tensor1), storagetype(tensor2))
 end
 
-can_contract(tensor1::TensorStorage, tensor2::TensorStorage) = can_contract(typeof(tensor1), typeof(tensor2))
-can_contract(tensor1::Tensor, tensor2::Tensor) = can_contract(typeof(tensor1), typeof(tensor2))
+function can_contract(tensor1::TensorStorage, tensor2::TensorStorage)
+  return can_contract(typeof(tensor1), typeof(tensor2))
+end
+function can_contract(tensor1::Tensor, tensor2::Tensor)
+  return can_contract(typeof(tensor1), typeof(tensor2))
+end
 
 # Version where output labels aren't supplied
 @traitfn function contract(
@@ -76,32 +84,63 @@ end
   )
 end
 
-function contract(tensor1::Tensor, labelstensor1, tensor2::Tensor, labelstensor2, labelsoutput_tensor)
+function contract(
+  tensor1::Tensor, labelstensor1, tensor2::Tensor, labelstensor2, labelsoutput_tensor
+)
   # TODO: put the contract_inds logic into contraction_output,
   # call like output_tensor = contraction_ouput(tensor1,labelstensor1,tensor2,labelstensor2)
   #indsoutput_tensor = contract_inds(inds(tensor1),labelstensor1,inds(tensor2),labelstensor2,labelsoutput_tensor)
-  output_tensor = contraction_output(tensor1, labelstensor1, tensor2, labelstensor2, labelsoutput_tensor)
+  output_tensor = contraction_output(
+    tensor1, labelstensor1, tensor2, labelstensor2, labelsoutput_tensor
+  )
   # contract!! version here since the output output_tensor may not
   # be mutable (like UniformDiag)
-  output_tensor = contract!!(output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2)
+  output_tensor = contract!!(
+    output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2
+  )
   return output_tensor
 end
 
 # Overload this function for immutable storage types
 function _contract!!(
-  output_tensor::Tensor, labelsoutput_tensor, tensor1::Tensor, labelstensor1, tensor2::Tensor, labelstensor2, α::Number=1, β::Number=0
+  output_tensor::Tensor,
+  labelsoutput_tensor,
+  tensor1::Tensor,
+  labelstensor1,
+  tensor2::Tensor,
+  labelstensor2,
+  α::Number=1,
+  β::Number=0,
 )
   if α ≠ 1 || β ≠ 0
-    contract!(output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2, α, β)
+    contract!(
+      output_tensor,
+      labelsoutput_tensor,
+      tensor1,
+      labelstensor1,
+      tensor2,
+      labelstensor2,
+      α,
+      β,
+    )
   else
-    contract!(output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2)
+    contract!(
+      output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2
+    )
   end
   return output_tensor
 end
 
 # Is this generic for all storage types?
 function contract!!(
-  output_tensor::Tensor, labelsoutput_tensor, tensor1::Tensor, labelstensor1, tensor2::Tensor, labelstensor2, α::Number=1, β::Number=0
+  output_tensor::Tensor,
+  labelsoutput_tensor,
+  tensor1::Tensor,
+  labelstensor1,
+  tensor2::Tensor,
+  labelstensor2,
+  α::Number=1,
+  β::Number=0,
 )
   Noutput_tensor = ndims(output_tensor)
   N1 = ndims(tensor1)
@@ -123,9 +162,20 @@ function contract!!(
     end
   else
     if α ≠ 1 || β ≠ 0
-      output_tensor = _contract!!(output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2, α, β)
+      output_tensor = _contract!!(
+        output_tensor,
+        labelsoutput_tensor,
+        tensor1,
+        labelstensor1,
+        tensor2,
+        labelstensor2,
+        α,
+        β,
+      )
     else
-      output_tensor = _contract!!(output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2)
+      output_tensor = _contract!!(
+        output_tensor, labelsoutput_tensor, tensor1, labelstensor1, tensor2, labelstensor2
+      )
     end
   end
   return output_tensor

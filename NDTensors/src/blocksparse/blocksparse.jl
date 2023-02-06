@@ -12,6 +12,24 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   end
 end
 
+# TODO: Implement as `fieldtype(storagetype, :data)`.
+datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
+# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
+ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
+blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
+
+function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
+  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
+end
+
+function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
+  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
+end
+
+# TODO: Write as `(::Type{<:BlockSparse})()`.
+BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
+
 function BlockSparse(
   datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
@@ -65,8 +83,6 @@ end
 #  ElT == ElR ? BlockSparse(data,offsets) : BlockSparse(ElR.(data),offsets)
 #end
 #BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
-
-datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
 
 # TODO: check the offsets are the same?
 function copyto!(D1::BlockSparse, D2::BlockSparse)

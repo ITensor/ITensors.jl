@@ -5,8 +5,12 @@ similar(tensor::Tensor) = setstorage(tensor, similar(storage(tensor)))
 similar(tensor::Tensor, eltype::Type) = setstorage(tensor, similar(storage(tensor), eltype))
 
 # NDTensors.similar
-similar(tensor::Tensor, dims::Tuple) = setinds(setstorage(tensor, similar(storage(tensor), dims)), dims)
-similar(tensor::Tensor, dims::Dims) = setinds(setstorage(tensor, similar(storage(tensor), dims)), dims)
+function similar(tensor::Tensor, dims::Tuple)
+  return setinds(setstorage(tensor, similar(storage(tensor), dims)), dims)
+end
+function similar(tensor::Tensor, dims::Dims)
+  return setinds(setstorage(tensor, similar(storage(tensor), dims)), dims)
+end
 
 # NDTensors.similar
 function similar(tensor::Tensor, eltype::Type, dims::Tuple)

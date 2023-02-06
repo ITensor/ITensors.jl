@@ -20,6 +20,19 @@ struct DiagBlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   end
 end
 
+function setdata(storagetype::Type{<:DiagBlockSparse}, data::AbstractArray)
+  error("Must specify `diagblockoffsets`.")
+  return DiagBlockSparse(data, diagblockoffsetstype(storagetype)())
+end
+
+datatype(::Type{<:DiagBlockSparse{<:Any,DataT}}) where {DataT} = DataT
+
+function set_datatype(
+  storagetype::Type{<:DiagBlockSparse}, datatype::Type{<:AbstractVector}
+)
+  return DiagBlockSparse{eltype(datatype),datatype,ndims(storagetype)}
+end
+
 function DiagBlockSparse(
   ::Type{ElT}, boffs::BlockOffsets, diaglength::Integer
 ) where {ElT<:Number}

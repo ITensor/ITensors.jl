@@ -9,12 +9,14 @@ end
 
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, dims::Tuple)
-  return error("Not implemented, must specify block offsets as well")
+  # Create an empty BlockSparse storage
+  return similartype(storagetype, dims)()
 end
 
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, dims::Dims)
-  return error("Not implemented, must specify block offsets as well")
+  # Create an empty BlockSparse storage
+  return similartype(storagetype, dims)()
 end
 
 ## TODO: Is there a way to make this generic?

@@ -66,7 +66,6 @@ include("blocksparse/diagblocksparse.jl")
 include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
-include("blocksparse/adapt.jl")
 
 #####################################
 # Empty
