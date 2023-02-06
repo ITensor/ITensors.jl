@@ -68,8 +68,7 @@ end
 
 function Dense(data::DataT) where {DataT<:AbstractArray{<:Any,N}} where {N}
   #println("Warning: Only vector based datatypes are currenlty supported by Dense. The data structure provided will be vectorized.")
-  vecData = vec(data)
-  return Dense{eltype(vecData),typeof(vecData)}(vecData)
+  Dense(vec(data))
 end
 
 function Dense(DataT::Type{<:AbstractArray}, dim::Integer)
