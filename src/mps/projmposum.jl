@@ -1,26 +1,24 @@
 
-abstract type SequentialSum end
+abstract type AbstractSum end
 
-terms(sum::SequentialSum) = sum.terms
+terms(sum::AbstractSum) = sum.terms
 
-function set_terms(sum::SequentialSum, terms)
-  return error(
-    "Please implement `set_terms` for the `SequentialSum` type `$(typeof(sum))`."
-  )
+function set_terms(sum::AbstractSum, terms)
+  return error("Please implement `set_terms` for the `AbstractSum` type `$(typeof(sum))`.")
 end
 
-copy(P::SequentialSum) = typeof(P)(copy.(terms(P)))
+copy(P::AbstractSum) = typeof(P)(copy.(terms(P)))
 
-function nsite(P::SequentialSum)
+function nsite(P::AbstractSum)
   @assert allequal(nsite.(terms(P)))
   return nsite(first(terms(P)))
 end
 
-function set_nsite!(A::SequentialSum, nsite)
+function set_nsite!(A::AbstractSum, nsite)
   return set_terms(A, map(term -> set_nsite!(term, nsite), terms(A)))
 end
 
-function length(A::SequentialSum)
+function length(A::AbstractSum)
   @assert allequal(length.(terms(P)))
   return length(first(terms(A)))
 end
@@ -39,7 +37,7 @@ returned ITensor will have the same indices
 as `v`. The operator overload `P(v)` is
 shorthand for `product(P,v)`.
 """
-product(A::SequentialSum, v::ITensor) = sum(t -> product(t, v), terms(A))
+product(A::AbstractSum, v::ITensor) = sum(t -> product(t, v), terms(A))
 
 """
     eltype(P::ProjMPOSum)
@@ -48,9 +46,9 @@ Deduce the element type (such as Float64
 or ComplexF64) of the tensors in the ProjMPOSum
 `P`.
 """
-eltype(A::SequentialSum) = mapreduce(eltype, promote_type, terms(A))
+eltype(A::AbstractSum) = mapreduce(eltype, promote_type, terms(A))
 
-(A::SequentialSum)(v::ITensor) = product(A, v)
+(A::AbstractSum)(v::ITensor) = product(A, v)
 
 """
     size(P::ProjMPOSum)
@@ -64,7 +62,7 @@ indices `(a,s1,s2,b)` to the space `(a',s1',s2',b')`
 then the size is `(d,d)` where
 `d = dim(a)*dim(s1)*dim(s1)*dim(b)`
 """
-function size(A::SequentialSum)
+function size(A::AbstractSum)
   @assert allequal(size.(terms(P)))
   return size(first(terms(A)))
 end
@@ -81,7 +79,7 @@ The MPS `psi` must have compatible bond indices with
 the previous projected MPO tensors for this
 operation to succeed.
 """
-function position!(A::SequentialSum, psi::MPS, pos::Int)
+function position!(A::AbstractSum, psi::MPS, pos::Int)
   new_terms = map(term -> position!(term, psi, pos), terms(A))
   return set_terms(A, new_terms)
 end
@@ -99,17 +97,17 @@ ProjMPOSum `P`, and `ortho` is a String which can take
 the values `"left"` or `"right"` depending on the
 sweeping direction of the DMRG calculation.
 """
-function noiseterm(A::SequentialSum, phi::ITensor, dir::String)
+function noiseterm(A::AbstractSum, phi::ITensor, dir::String)
   return sum(t -> noiseterm(t, phi, dir), terms(A))
 end
 
 """
-    disk(ps::SequentialSum; kwargs...)
+    disk(ps::AbstractSum; kwargs...)
 
-Call `disk` on each term of an SequentialSum, to enable
+Call `disk` on each term of an AbstractSum, to enable
 saving of cached data to hard disk.
 """
-function disk(sum::SequentialSum; disk_kwargs...)
+function disk(sum::AbstractSum; disk_kwargs...)
   return set_terms(sum, map(t -> disk(t; disk_kwargs...), terms(sum)))
 end
 
@@ -117,15 +115,15 @@ end
 # Definition of concrete, generic SequentialSum type
 #
 
-struct SequentialSum{T} <: SequentialSum
+struct SequentialSum{T} <: AbstractSum
   terms::Vector{T}
 end
 
-function SequentialSum{T<:AbstractProjMPO}(mpos::Vector{MPO}) where {T}
+function SequentialSum{T}(mpos::Vector{MPO}) where {T<:AbstractProjMPO}
   return SequentialSum([T(M) for M in mpos])
 end
 
-SequentialSum{T<:AbstractProjMPO}(Ms::MPO...) where {T} = SequentialSum{T}([Ms...])
+SequentialSum{T}(Ms::MPO...) where {T<:AbstractProjMPO} = SequentialSum{T}([Ms...])
 
 set_terms(sum::SequentialSum, terms) = SequentialSum(terms)
 
