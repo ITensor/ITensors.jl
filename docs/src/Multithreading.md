@@ -116,9 +116,9 @@ function main(; d = 20, order = 4)
 
   println("Threaded contract:")
   @disable_warn_order begin
-    ITensors.enable_threaded_blocksparse()
+    ITensors.enable_threaded_blocksparse(true)
     C_threaded_contract = @btime $A' * $B samples = 5
-    ITensors.disable_threaded_blocksparse()
+    ITensors.enable_threaded_blocksparse(false)
   end
   println()
   @show C_contract ≈ C_threaded_contract
@@ -168,11 +168,7 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
   Random.seed!(seed)
   ITensors.Strided.set_num_threads(strided_num_threads)
   BLAS.set_num_threads(blas_num_threads)
-  if use_threaded_blocksparse
-    ITensors.enable_threaded_blocksparse()
-  else
-    ITensors.disable_threaded_blocksparse()
-  end
+  ITensors.enable_threaded_blocksparse(use_threaded_blocksparse)
 
   if outputlevel > 0
     @show Threads.nthreads()
