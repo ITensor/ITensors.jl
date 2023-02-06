@@ -61,7 +61,7 @@ end
 # dimensions specified by integers with `Base.to_shape`.
 # NDTensors.similar
 function similar(arraytype::Type{<:AbstractArray}, dims::Dims)
-  return arraytype(undef, dims)
+  return similartype(arraytype, dims)(undef, dims)
 end
 
 # NDTensors.similar

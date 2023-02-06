@@ -91,27 +91,6 @@ eltype(::Type{<:DiagBlockSparse{ElT}}) where {ElT} = ElT
 
 size(D::DiagBlockSparse) = size(data(D))
 
-# TODO: write in terms of ::Int, not inds
-similar(D::NonuniformDiagBlockSparse) = setdata(D, similar(data(D)))
-
-similar(D::NonuniformDiagBlockSparse, ::Type{S}) where {S} = setdata(D, similar(data(D), S))
-#similar(D::NonuniformDiagBlockSparse,inds) = DiagBlockSparse(similar(data(D),minimum(dims(inds))), diagblockoffsets(D))
-#function similar(D::Type{<:NonuniformDiagBlockSparse{ElT,VecT}},inds) where {ElT,VecT}
-#  return DiagBlockSparse(similar(VecT,diaglength(inds)), diagblockoffsets(D))
-#end
-
-similar(D::UniformDiagBlockSparse) = setdata(D, zero(eltype(D)))
-similar(D::UniformDiagBlockSparse, inds) = similar(D)
-function similar(::Type{<:UniformDiagBlockSparse{ElT}}, inds) where {ElT}
-  return DiagBlockSparse(zero(ElT), diagblockoffsets(D))
-end
-
-similar(D::DiagBlockSparse, n::Int) = setdata(D, similar(data(D), n))
-
-function similar(D::DiagBlockSparse, ::Type{ElR}, n::Int) where {ElR}
-  return setdata(D, similar(data(D), ElR, n))
-end
-
 # TODO: make this work for other storage besides Vector
 function zeros(::Type{<:NonuniformDiagBlockSparse{ElT}}, dim::Int64) where {ElT}
   return DiagBlockSparse(zeros(ElT, dim))
@@ -309,13 +288,6 @@ function Array(T::DiagBlockSparseTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
 end
 
-# Needed to get slice of DiagBlockSparseTensor like T[1:3,1:3]
-function similar(
-  T::DiagBlockSparseTensor{<:Number,N}, ::Type{ElR}, inds::Dims{N}
-) where {ElR<:Number,N}
-  return tensor(similar(storage(T), ElR, minimum(inds)), inds)
-end
-
 getdiagindex(T::DiagBlockSparseTensor{<:Number}, ind::Int) = storage(T)[ind]
 
 # XXX: handle case of missing diagonal blocks
@@ -451,13 +423,14 @@ function permutedims!(
   return R
 end
 
-function permutedims(
-  T::DiagBlockSparseTensor{<:Number,N}, perm::NTuple{N,Int}, f::Function=identity
-) where {N}
-  R = similar(T, permute(inds(T), perm))
-  permutedims!(R, T, perm, f)
-  return R
-end
+## TODO: DELETE. Now implemented by generic `Tensor` version.
+## function permutedims(
+##   T::DiagBlockSparseTensor{<:Number,N}, perm::NTuple{N,Int}, f::Function=identity
+## ) where {N}
+##   R = NDTensors.similar(T, permute(inds(T), perm))
+##   permutedims!(R, T, perm, f)
+##   return R
+## end
 
 function permutedims(
   T::UniformDiagBlockSparseTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=identity

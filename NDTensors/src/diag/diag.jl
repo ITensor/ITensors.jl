@@ -32,6 +32,13 @@ const NonuniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:AbstractVector}
 
 const UniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:Number}
 
+# Special printing for uniform Diag
+function show(io::IO, mime::MIME"text/plain", diag::UniformDiag)
+  println(io, typeof(diag))
+  println(io, "Diag storage with uniform diagonal value:")
+  println(io, diag[1])
+end
+
 getindex(D::UniformDiag, i::Int) = data(D)
 
 function setindex!(D::UniformDiag, val, i::Int)

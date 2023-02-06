@@ -8,31 +8,46 @@ end
 
 # NDTensors.similar
 function similar(storage::TensorStorage, dims::Tuple)
-  return setdata(storage, NDTensors.similar(data(storage), dims))
+  # TODO: Don't convert to an `AbstractVector` with `vec`, once we support
+  # more general data types.
+  # return setdata(storage, NDTensors.similar(data(storage), dims))
+  return setdata(storage, vec(NDTensors.similar(data(storage), dims)))
 end
 
 # NDTensors.similar
 function similar(storagetype::Type{<:TensorStorage}, eltype::Type, dims::Tuple)
-  return setdata(storagetype, NDTensors.similar(datatype(storagetype), eltype, dims))
+  return similar(similartype(storagetype, eltype), dims)
 end
+
 # NDTensors.similar
 function similar(storagetype::Type{<:TensorStorage}, eltype::Type)
   return error("Must specify dimensions.")
 end
-# NDTensors.similar
-function similar(storagetype::Type{<:TensorStorage}, dims::Tuple)
-  return NDTensors.similar(storagetype, eltype(storagetype), dims)
-end
 
 # NDTensors.similar
-function similar(storagetype::Type{<:TensorStorage}, dims::DimOrInd...)
-  return NDTensors.similar(storagetype, eltype(storagetype), dims)
+function similar(storagetype::Type{<:TensorStorage}, dims::Tuple)
+  return setdata(storagetype, NDTensors.similar(datatype(storagetype), dims))
 end
 
 # NDTensors.similar
 function similar(storagetype::Type{<:TensorStorage}, dims::Dims)
-  return NDTensors.similar(storagetype, eltype(storagetype), dims)
+  # TODO: Don't convert to an `AbstractVector` with `prod`, once we support
+  # more general data types.
+  # return setdata(storagetype, NDTensors.similar(datatype(storagetype), dims))
+  return setdata(storagetype, NDTensors.similar(datatype(storagetype), prod(dims)))
 end
+
+# NDTensors.similar
+function similar(storagetype::Type{<:TensorStorage}, dims::DimOrInd...)
+  return similar(storagetype, NDTensors.to_shape(dims))
+end
+
+# Define Base.similar in terms of NDTensors.similar
+Base.similar(storage::TensorStorage) = NDTensors.similar(storage)
+Base.similar(storage::TensorStorage, eltype::Type) = NDTensors.similar(storage, eltype)
+## Base.similar(storage::TensorStorage, dims::Tuple) = NDTensors.similar(storage, dims)
+## Base.similar(storage::TensorStorage, dims::Dims...) = NDTensors.similar(storage, dims...)
+## Base.similar(storage::TensorStorage, dims::DimOrInd...) = NDTensors.similar(storage, dims...)
 
 function similartype(storagetype::Type{<:TensorStorage}, eltype::Type)
   # TODO: Don't convert to an `AbstractVector` with `set_ndims(datatype, 1)`, once we support
@@ -42,9 +57,3 @@ function similartype(storagetype::Type{<:TensorStorage}, eltype::Type)
     storagetype, set_ndims(NDTensors.similartype(datatype(storagetype), eltype), 1)
   )
 end
-
-## # Define Base.similar in terms of NDTensors.similar
-## Base.similar(t::TensorStorage) = NDTensors.similar(t)
-## Base.similar(t::TensorStorage, eltype::Type) = NDTensors.similar(t, eltype)
-## Base.similar(t::TensorStorage, dims::Tuple) = NDTensors.similar(t, dims)
-## Base.similar(t::TensorStorage, dims::DimOrInd...) = NDTensors.similar(t, dims)
