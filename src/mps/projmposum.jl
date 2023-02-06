@@ -4,19 +4,23 @@ abstract type SequentialSum end
 terms(sum::SequentialSum) = sum.terms
 
 function set_terms(sum::SequentialSum, terms)
-  return error("Please implement `set_terms` for the `SequentialSum` type `$(typeof(sum))`.")
+  return error(
+    "Please implement `set_terms` for the `SequentialSum` type `$(typeof(sum))`."
+  )
 end
 
 copy(P::SequentialSum) = typeof(P)(copy.(terms(P)))
 
-function nsite(P::SequentialSum) 
+function nsite(P::SequentialSum)
   @assert allequal(nsite.(terms(P)))
   return nsite(first(terms(P)))
 end
 
-set_nsite!(A::SequentialSum, nsite) = set_terms(A, map(term -> set_nsite!(term, nsite), terms(A))
+function set_nsite!(A::SequentialSum, nsite)
+  return set_terms(A, map(term -> set_nsite!(term, nsite), terms(A)))
+end
 
-function length(A::SequentialSum) 
+function length(A::SequentialSum)
   @assert allequal(length.(terms(P)))
   return length(first(terms(A)))
 end
@@ -35,7 +39,7 @@ returned ITensor will have the same indices
 as `v`. The operator overload `P(v)` is
 shorthand for `product(P,v)`.
 """
-product(A::SequentialSum, v::ITensor) = sum(t -> product(t,v), terms(A))
+product(A::SequentialSum, v::ITensor) = sum(t -> product(t, v), terms(A))
 
 """
     eltype(P::ProjMPOSum)
@@ -44,7 +48,7 @@ Deduce the element type (such as Float64
 or ComplexF64) of the tensors in the ProjMPOSum
 `P`.
 """
-eltype(A::SequentialSum) = mapreduce(eltype,promote_type,terms(A))
+eltype(A::SequentialSum) = mapreduce(eltype, promote_type, terms(A))
 
 (A::SequentialSum)(v::ITensor) = product(A, v)
 
@@ -60,7 +64,7 @@ indices `(a,s1,s2,b)` to the space `(a',s1',s2',b')`
 then the size is `(d,d)` where
 `d = dim(a)*dim(s1)*dim(s1)*dim(b)`
 """
-function size(A::SequentialSum) 
+function size(A::SequentialSum)
   @assert allequal(size.(terms(P)))
   return size(first(terms(A)))
 end
@@ -95,7 +99,9 @@ ProjMPOSum `P`, and `ortho` is a String which can take
 the values `"left"` or `"right"` depending on the
 sweeping direction of the DMRG calculation.
 """
-noiseterm(A::SequentialSum, phi::ITensor, dir::String) = sum(t -> noiseterm(t,phi,dir),terms(A))
+function noiseterm(A::SequentialSum, phi::ITensor, dir::String)
+  return sum(t -> noiseterm(t, phi, dir), terms(A))
+end
 
 """
     disk(ps::SequentialSum; kwargs...)
@@ -104,7 +110,7 @@ Call `disk` on each term of an SequentialSum, to enable
 saving of cached data to hard disk.
 """
 function disk(sum::SequentialSum; disk_kwargs...)
-  return set_terms(sum, map(t -> disk(t; disk_kwargs...),terms(sum)))
+  return set_terms(sum, map(t -> disk(t; disk_kwargs...), terms(sum)))
 end
 
 #
@@ -115,7 +121,9 @@ struct SequentialSum{T} <: SequentialSum
   terms::Vector{T}
 end
 
-SequentialSum{T<:AbstractProjMPO}(mpos::Vector{MPO}) where {T} = SequentialSum([T(M) for M in mpos])
+function SequentialSum{T<:AbstractProjMPO}(mpos::Vector{MPO}) where {T}
+  return SequentialSum([T(M) for M in mpos])
+end
 
 SequentialSum{T<:AbstractProjMPO}(Ms::MPO...) where {T} = SequentialSum{T}([Ms...])
 
