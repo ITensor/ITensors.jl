@@ -62,8 +62,8 @@ end
 
 Dense{ElT}() where {ElT} = Dense{ElT,default_datatype(ElT)}()
 
-function Dense(data::DataT) where {DataT<:AbstractArray{<:Any,1}}
-  return Dense{eltype(DataT),DataT}(data)
+function Dense(data::AbstractVector)
+  Dense{eltype(data)}(data)
 end
 
 function Dense(data::DataT) where {DataT<:AbstractArray{<:Any,N}} where {N}
