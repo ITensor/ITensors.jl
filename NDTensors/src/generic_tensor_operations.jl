@@ -36,7 +36,7 @@ function (T::Tensor / x::Number)
 end
 
 function contraction_output_type(
-  tensortype1::Type{<:Tensor}, tensortype2::Type{<:Tensor}, inds::Tuple
+  tensortype1::Type{<:Tensor}, tensortype2::Type{<:Tensor}, inds
 )
   return similartype(promote_type(tensortype1, tensortype2), inds)
 end

@@ -26,11 +26,27 @@ Diag(x::ElT, n::Integer) where {ElT<:Number} = Diag(fill(x, n))
 
 datatype(::Type{<:Diag{<:Any,DataT}}) where {DataT} = DataT
 
+function set_eltype(storagetype::Type{<:Diag}, eltype::Type)
+  return set_datatype(storagetype, set_eltype(datatype(storagetype), eltype))
+end
+
+function set_datatype(storagetype::Type{<:Diag}, datatype::Type{<:AbstractVector})
+  return Diag{eltype(datatype),datatype}
+end
+
 copy(D::Diag) = Diag(copy(data(D)))
 
 const NonuniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:AbstractVector}
 
 const UniformDiag{ElT,VecT} = Diag{ElT,VecT} where {VecT<:Number}
+
+function set_eltype(storagetype::Type{<:UniformDiag}, eltype::Type)
+  return Diag{eltype,eltype}
+end
+
+function set_datatype(storagetype::Type{<:UniformDiag}, datatype::Type)
+  return Diag{datatype,datatype}
+end
 
 # Special printing for uniform Diag
 function show(io::IO, mime::MIME"text/plain", diag::UniformDiag)
@@ -150,14 +166,14 @@ convert(::Type{Diagonal}, D::DiagTensor{<:Number,2}) = Diagonal(data(D))
 # These are rules for determining the output of a pairwise contraction of NDTensors
 # (given the indices of the output tensors)
 function contraction_output_type(
-  TensorT1::Type{<:DiagTensor}, TensorT2::Type{<:DenseTensor}, indsR::Tuple
+  tensortype1::Type{<:DiagTensor}, tensortype2::Type{<:DenseTensor}, indsR
 )
-  return similartype(promote_type(TensorT1, TensorT2), indsR)
+  return similartype(promote_type(tensortype1, tensortype2), indsR)
 end
 function contraction_output_type(
-  TensorT1::Type{<:DenseTensor}, TensorT2::Type{<:DiagTensor}, indsR::Tuple
+  tensortype1::Type{<:DenseTensor}, tensortype2::Type{<:DiagTensor}, indsR
 )
-  return contraction_output_type(TensorT2, TensorT1, indsR)
+  return contraction_output_type(tensortype2, tensortype1, indsR)
 end
 
 # This performs the logic that DiagTensor*DiagTensor -> DiagTensor if it is not an outer
@@ -167,16 +183,16 @@ end
 # result in a DiagTensor, for efficiency and type stability? What about a general
 # SparseTensor result?
 function contraction_output_type(
-  TensorT1::Type{<:DiagTensor{<:Number,N1}},
-  TensorT2::Type{<:DiagTensor{<:Number,N2}},
-  indsR::Tuple,
-) where {N1,N2}
-  if ValLength(IndsR) === Val{N1 + N2}
+  tensortype1::Type{<:DiagTensor},
+  tensortype2::Type{<:DiagTensor},
+  indsR,
+)
+  if length(indsR) == ndims(tensortype1) + ndims(tensortype2)
     # Turn into is_outer(inds1,inds2,indsR) function?
     # How does type inference work with arithmatic of compile time values?
-    return similartype(dense(promote_type(TensorT1, TensorT2)), indsR)
+    return similartype(dense(promote_type(tensortype1, tensortype2)), indsR)
   end
-  return similartype(promote_type(TensorT1, TensorT2), indsR)
+  return similartype(promote_type(tensortype1, tensortype2), indsR)
 end
 
 # The output must be initialized as zero since it is sparse, cannot be undefined
@@ -189,11 +205,11 @@ function contraction_output(T1::DiagTensor, T2::DiagTensor, indsR)
   return zero_contraction_output(T1, T2, indsR)
 end
 
-function array(T::DiagTensor{ElT,N}) where {ElT,N}
-  return array(dense(T))
+function array(tensor::DiagTensor)
+  return array(dense(tensor))
 end
-matrix(T::DiagTensor{<:Number,2}) = array(T)
-vector(T::DiagTensor{<:Number,1}) = array(T)
+matrix(T::DiagTensor{<:Any,2}) = array(T)
+vector(T::DiagTensor{<:Any,1}) = array(T)
 
 function Array{ElT,N}(T::DiagTensor{ElT,N}) where {ElT,N}
   return array(T)
@@ -203,12 +219,12 @@ function Array(T::DiagTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
 end
 
-function zeros(TensorT::Type{<:DiagTensor}, inds)
-  return tensor(zeros(storagetype(TensorT), mindim(inds)), inds)
+function zeros(tensortype::Type{<:DiagTensor}, inds)
+  return tensor(zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
-function zeros(TensorT::Type{<:DiagTensor}, inds::Tuple{})
-  return tensor(zeros(storagetype(TensorT), mindim(inds)), inds)
+function zeros(tensortype::Type{<:DiagTensor}, inds::Tuple{})
+  return tensor(zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
 # Needed to get slice of DiagTensor like T[1:3,1:3]
@@ -216,6 +232,15 @@ function similar(
   T::DiagTensor{<:Number,N}, ::Type{ElR}, inds::Dims{N}
 ) where {ElR<:Number,N}
   return tensor(similar(storage(T), ElR, minimum(inds)), inds)
+end
+
+function diag(tensor::DiagTensor)
+  tensor_diag = NDTensors.similar(dense(typeof(tensor)), (diaglength(tensor),))
+  # TODO: Define `eachdiagindex`.
+  for j in 1:diaglength(tensor)
+    tensor_diag[j] = getdiagindex(tensor, j)
+  end
+  return tensor_diag
 end
 
 """
