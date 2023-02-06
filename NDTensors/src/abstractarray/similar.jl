@@ -127,17 +127,13 @@ end
 @traitfn function similartype(
   arraytype::Type{ArrayT}, eltype::Type
 ) where {ArrayT; !IsWrappedArray{ArrayT}}
-  return error(
-    "The function `similartype(arraytype::Type, eltype::Type)` has not been implement for `arraytype=$arraytype` and `dims=$dims`. It is a required part of the NDTensors interface.",
-  )
+  return set_eltype(arraytype, eltype)
 end
 
 @traitfn function similartype(
   arraytype::Type{ArrayT}, dims::Tuple
 ) where {ArrayT; !IsWrappedArray{ArrayT}}
-  return error(
-    "The function `similartype(arraytype::Type, dims::Tuple)` has not been implement for `arraytype=$arraytype` and `dims=$dims`. It is a required part of the NDTensors interface.",
-  )
+  return set_indstype(arraytype, dims)
 end
 
 function similartype(arraytype::Type{<:AbstractArray}, dims::DimOrInd...)
