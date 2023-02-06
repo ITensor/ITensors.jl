@@ -19,7 +19,9 @@ end
 
 ## TODO: Is there a way to make this generic?
 # NDTensors.similar
-function similar(tensortype::Type{<:BlockSparseTensor}, blockoffsets::BlockOffsets, dims::Tuple)
+function similar(
+  tensortype::Type{<:BlockSparseTensor}, blockoffsets::BlockOffsets, dims::Tuple
+)
   return Tensor(similar(storagetype(tensortype), blockoffsets, dims), dims)
 end
 

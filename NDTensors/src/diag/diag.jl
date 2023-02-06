@@ -53,6 +53,7 @@ function show(io::IO, mime::MIME"text/plain", diag::UniformDiag)
   println(io, typeof(diag))
   println(io, "Diag storage with uniform diagonal value:")
   println(io, diag[1])
+  return nothing
 end
 
 getindex(D::UniformDiag, i::Int) = data(D)
@@ -183,9 +184,7 @@ end
 # result in a DiagTensor, for efficiency and type stability? What about a general
 # SparseTensor result?
 function contraction_output_type(
-  tensortype1::Type{<:DiagTensor},
-  tensortype2::Type{<:DiagTensor},
-  indsR,
+  tensortype1::Type{<:DiagTensor}, tensortype2::Type{<:DiagTensor}, indsR
 )
   if length(indsR) == ndims(tensortype1) + ndims(tensortype2)
     # Turn into is_outer(inds1,inds2,indsR) function?
@@ -597,7 +596,8 @@ end
 
 function show(io::IO, mime::MIME"text/plain", T::DiagTensor)
   summary(io, T)
-  return print_tensor(io, T)
+  print_tensor(io, T)
+  return nothing
 end
 
 function HDF5.write(
