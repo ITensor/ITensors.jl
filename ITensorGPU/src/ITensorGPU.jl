@@ -90,7 +90,8 @@ import ITensors.NDTensors:
 using ITensors.NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
 
 import Base.*, Base.permutedims!
-include("similar.jl")
+
+include("cuarray/set_types.jl")
 include("traits.jl")
 include("adapt.jl")
 include("tensor/cudense.jl")

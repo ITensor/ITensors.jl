@@ -143,14 +143,14 @@ convert(::Type{Diagonal}, D::DiagTensor{<:Number,2}) = Diagonal(data(D))
 # These are rules for determining the output of a pairwise contraction of NDTensors
 # (given the indices of the output tensors)
 function contraction_output_type(
-  TensorT1::Type{<:DiagTensor}, TensorT2::Type{<:DenseTensor}, IndsR::Type
+  TensorT1::Type{<:DiagTensor}, TensorT2::Type{<:DenseTensor}, indsR::Tuple
 )
-  return similartype(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), indsR)
 end
 function contraction_output_type(
-  TensorT1::Type{<:DenseTensor}, TensorT2::Type{<:DiagTensor}, IndsR::Type
+  TensorT1::Type{<:DenseTensor}, TensorT2::Type{<:DiagTensor}, indsR::Tuple
 )
-  return contraction_output_type(TensorT2, TensorT1, IndsR)
+  return contraction_output_type(TensorT2, TensorT1, indsR)
 end
 
 # This performs the logic that DiagTensor*DiagTensor -> DiagTensor if it is not an outer
@@ -162,14 +162,14 @@ end
 function contraction_output_type(
   TensorT1::Type{<:DiagTensor{<:Number,N1}},
   TensorT2::Type{<:DiagTensor{<:Number,N2}},
-  IndsR::Type,
+  indsR::Tuple,
 ) where {N1,N2}
   if ValLength(IndsR) === Val{N1 + N2}
     # Turn into is_outer(inds1,inds2,indsR) function?
     # How does type inference work with arithmatic of compile time values?
-    return similartype(dense(promote_type(TensorT1, TensorT2)), IndsR)
+    return similartype(dense(promote_type(TensorT1, TensorT2)), indsR)
   end
-  return similartype(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), indsR)
 end
 
 # The output must be initialized as zero since it is sparse, cannot be undefined

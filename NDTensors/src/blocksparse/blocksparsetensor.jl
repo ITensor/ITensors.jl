@@ -766,9 +766,9 @@ end
 # Also, save the contraction list (which block-offsets contract with which),
 # may not be generic with other contraction functions!
 function contraction_output(
-  T1::TensorT1, T2::TensorT2, indsR::IndsR
-) where {TensorT1<:BlockSparseTensor,TensorT2<:BlockSparseTensor,IndsR}
-  TensorR = contraction_output_type(TensorT1, TensorT2, IndsR)
+  T1::TensorT1, T2::TensorT2, indsR
+) where {TensorT1<:BlockSparseTensor,TensorT2<:BlockSparseTensor}
+  TensorR = contraction_output_type(TensorT1, TensorT2, indsR)
   return similar(TensorR, blockoffsetsR, indsR)
 end
 
@@ -962,7 +962,7 @@ function contraction_output(
   T1::TensorT1, labelsT1, T2::TensorT2, labelsT2, labelsR
 ) where {TensorT1<:BlockSparseTensor,TensorT2<:BlockSparseTensor}
   indsR = contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
-  TensorR = contraction_output_type(TensorT1, TensorT2, typeof(indsR))
+  TensorR = contraction_output_type(TensorT1, TensorT2, indsR)
   blockoffsetsR, contraction_plan = contract_blockoffsets(
     blockoffsets(T1),
     inds(T1),

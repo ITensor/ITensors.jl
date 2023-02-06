@@ -253,15 +253,15 @@ end
 # These are rules for determining the output of a pairwise contraction of NDTensors
 # (given the indices of the output tensors)
 function contraction_output_type(
-  TensorT1::Type{<:DiagBlockSparseTensor}, TensorT2::Type{<:BlockSparseTensor}, IndsR::Type
+  TensorT1::Type{<:DiagBlockSparseTensor}, TensorT2::Type{<:BlockSparseTensor}, indsR::Tuple
 )
-  return similartype(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), indsR)
 end
 
 function contraction_output_type(
-  TensorT1::Type{<:BlockSparseTensor}, TensorT2::Type{<:DiagBlockSparseTensor}, IndsR::Type
+  TensorT1::Type{<:BlockSparseTensor}, TensorT2::Type{<:DiagBlockSparseTensor}, indsR::Tuple
 )
-  return contraction_output_type(TensorT2, TensorT1, IndsR)
+  return contraction_output_type(TensorT2, TensorT1, indsR)
 end
 
 # This performs the logic that DiagBlockSparseTensor*DiagBlockSparseTensor -> DiagBlockSparseTensor if it is not an outer
@@ -273,14 +273,14 @@ end
 function contraction_output_type(
   TensorT1::Type{<:DiagBlockSparseTensor{<:Number,N1}},
   TensorT2::Type{<:DiagBlockSparseTensor{<:Number,N2}},
-  IndsR::Type,
+  indsR::Tuple,
 ) where {N1,N2}
   if ValLength(IndsR) === Val{N1 + N2}
     # Turn into is_outer(inds1,inds2,indsR) function?
     # How does type inference work with arithmatic of compile time values?
-    return similartype(dense(promote_type(TensorT1, TensorT2)), IndsR)
+    return similartype(dense(promote_type(TensorT1, TensorT2)), indsR)
   end
-  return similartype(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), indsR)
 end
 
 # The output must be initialized as zero since it is sparse, cannot be undefined
@@ -535,7 +535,7 @@ function contraction_output(
   T1::TensorT1, labelsT1, T2::TensorT2, labelsT2, labelsR
 ) where {TensorT1<:BlockSparseTensor,TensorT2<:DiagBlockSparseTensor}
   indsR = contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
-  TensorR = contraction_output_type(TensorT1, TensorT2, typeof(indsR))
+  TensorR = contraction_output_type(TensorT1, TensorT2, indsR)
   blockoffsetsR, contraction_plan = contract_blockoffsets(
     blockoffsets(T1),
     inds(T1),

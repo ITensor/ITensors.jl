@@ -1,11 +1,26 @@
-function permutedims(T::Tensor{<:Number,N}, perm::NTuple{N,Int}) where {N}
-  Tp = similar(T, permute(inds(T), perm))
-  Tp = permutedims!!(Tp, T, perm)
-  return Tp
+function permutedims(T::Tensor, perm)
+  (ndims(T) == length(perm) && isperm(perm)) || throw(ArgumentError("no valid permutation of dimensions"))
+  R = similar(T, permute(inds(T), perm))
+  return permutedims!!(R, T, perm)
 end
 
-function permutedims(::Tensor, ::Tuple{Vararg{Int}})
-  return error("Permutation size must match tensor order")
+# Version that may overwrite the result or allocate
+# and return the result of the permutation.
+# Similar to `BangBang.jl` notation:
+# https://juliafolds.github.io/BangBang.jl/stable/.
+function permutedims!!(R::Tensor, T::Tensor, perm, f::Function=(r, t) -> t)
+  Base.checkdims_perm(R, T, perm)
+  ## RR = convert(promote_type(typeof(R), typeof(T)), R)
+  ## permutedims!(RR, T, perm, f)
+  ## return RR
+  permutedims!(R, T, perm, f)
+  return R
+end
+
+function permutedims!(R::Tensor, T::Tensor, perm, f::Function=(r, t) -> t)
+  Base.checkdims_perm(R, T, perm)
+  error("`perutedims!(R::Tensor, T::Tensor, perm, f::Function=(r, t) -> t)` not implemented for `typeof(R) = $(typeof(R))`, `typeof(T) = $(typeof(T))`, `perm = $perm`, and `f = $f`.")
+  return R
 end
 
 function (x::Number * T::Tensor)
@@ -18,9 +33,9 @@ function (T::Tensor / x::Number)
 end
 
 function contraction_output_type(
-  ::Type{TensorT1}, ::Type{TensorT2}, ::Type{IndsR}
-) where {TensorT1<:Tensor,TensorT2<:Tensor,IndsR}
-  return similartype(promote_type(TensorT1, TensorT2), IndsR)
+  tensortype1::Type{<:Tensor}, tensortype2::Type{<:Tensor}, inds::Tuple
+)
+  return similartype(promote_type(tensortype1, tensortype2), inds)
 end
 
 function contraction_output(T1::Tensor, labelsT1, T2::Tensor, labelsT2, labelsR)
