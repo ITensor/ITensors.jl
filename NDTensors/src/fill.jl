@@ -6,6 +6,7 @@ function generic_randn(
 ) where {DataT<:AbstractArray,ElT}
   @assert ElT == eltype(DataT)
   data = generic_randn(DataT, dim)
+  StoreT = set_datatype(StoreT, typeof(data))
   return StoreT(data)
 end
 
@@ -34,6 +35,7 @@ function generic_zeros(
 ) where {DataT<:AbstractArray,ElT}
   @assert ElT == eltype(DataT)
   data = generic_zeros(DataT, dim)
+  StoreT = NDTensors.set_datatype(StoreT, typeof(data))
   return StoreT(data)
 end
 
