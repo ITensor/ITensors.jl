@@ -32,9 +32,7 @@ function Dense{ElT,DataT}(dim::Integer) where {ElT,DataT<:AbstractArray}
   return Dense{ElT,DataT}(generic_zeros(DataT, dim))
 end
 
-function Dense{ElT,DataT}(
-  ::UndefInitializer, inds::Tuple
-) where {ElT,DataT<:AbstractArray}
+function Dense{ElT,DataT}(::UndefInitializer, inds::Tuple) where {ElT,DataT<:AbstractArray}
   return Dense{ElT,DataT}(similar(DataT, dim(inds)))
 end
 
@@ -45,11 +43,11 @@ end
 
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
-  return Dense{ElR}(convert(similartype(typeof(data), ElR),data))
+  return Dense{ElR}(convert(similartype(typeof(data), ElR), data))
 end
 
 function Dense{ElT}(data::AbstractArray{ElT}) where {ElT}
-  return Dense{ElT, typeof(data)}(data)
+  return Dense{ElT,typeof(data)}(data)
 end
 
 function Dense{ElT}(inds::Tuple) where {ElT}
