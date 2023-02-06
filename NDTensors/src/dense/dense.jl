@@ -101,8 +101,8 @@ setdata(D::Dense, ndata) = Dense(ndata)
 copy(D::Dense) = Dense(copy(data(D)))
 
 #This is getting closer but is still broken...
-function Base.real(T::Type{Dense})
-  return set_datatype(T, similartype(datatype(T), complex(eltype(T))))
+function Base.real(T::Type{<:Dense})
+  return set_datatype(T, similartype(datatype(T), real(eltype(T))))
 end
 
 ## TODO this currently works only for vector not cuvector because similartype fails
