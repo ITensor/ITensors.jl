@@ -54,9 +54,13 @@ function Tensor{ElT,N,StoreT,IndsT}(
 end
 
 # Allow the storage and indices to be input in opposite ordering
-(tensortype::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage) = tensortype(as, storage, inds)
+function (tensortype::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage)
+  return tensortype(as, storage, inds)
+end
 
-function Tensor{ElT,N,StoreT,IndsT}(::UndefInitializer, inds::Tuple) where {ElT,N,StoreT,IndsT}
+function Tensor{ElT,N,StoreT,IndsT}(
+  ::UndefInitializer, inds::Tuple
+) where {ElT,N,StoreT,IndsT}
   return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), NDTensors.similar(StoreT, inds), inds)
 end
 

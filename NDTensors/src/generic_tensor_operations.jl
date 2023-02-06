@@ -1,5 +1,6 @@
 function permutedims(T::Tensor, perm)
-  (ndims(T) == length(perm) && isperm(perm)) || throw(ArgumentError("no valid permutation of dimensions"))
+  (ndims(T) == length(perm) && isperm(perm)) ||
+    throw(ArgumentError("no valid permutation of dimensions"))
   R = similar(T, permute(inds(T), perm))
   return permutedims!!(R, T, perm)
 end
@@ -19,7 +20,9 @@ end
 
 function permutedims!(R::Tensor, T::Tensor, perm, f::Function=(r, t) -> t)
   Base.checkdims_perm(R, T, perm)
-  error("`perutedims!(R::Tensor, T::Tensor, perm, f::Function=(r, t) -> t)` not implemented for `typeof(R) = $(typeof(R))`, `typeof(T) = $(typeof(T))`, `perm = $perm`, and `f = $f`.")
+  error(
+    "`perutedims!(R::Tensor, T::Tensor, perm, f::Function=(r, t) -> t)` not implemented for `typeof(R) = $(typeof(R))`, `typeof(T) = $(typeof(T))`, `perm = $perm`, and `f = $f`.",
+  )
   return R
 end
 

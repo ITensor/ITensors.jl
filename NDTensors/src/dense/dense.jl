@@ -28,7 +28,9 @@ function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVecto
 end
 
 function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray})
-  return error("Setting the `datatype` of the storage type `$storagetype` to a $(ndims(datatype))-dimsional array of type `$datatype` is not currently supported, use an `AbstractVector` instead.")
+  return error(
+    "Setting the `datatype` of the storage type `$storagetype` to a $(ndims(datatype))-dimsional array of type `$datatype` is not currently supported, use an `AbstractVector` instead.",
+  )
 end
 
 function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
@@ -335,12 +337,7 @@ end
 # Maybe allocate output data.
 # TODO: Remove this in favor of `map!`
 # applied to `PermutedDimsArray`.
-function permutedims!!(
-  R::DenseTensor,
-  T::DenseTensor,
-  perm,
-  f::Function=(r, t) -> t,
-)
+function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function=(r, t) -> t)
   Base.checkdims_perm(R, T, perm)
   RR = convert(promote_type(typeof(R), typeof(T)), R)
   permutedims!(RR, T, perm, f)
@@ -588,9 +585,7 @@ function outer(T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}) where {ElT1,ElT2}
   return tensor(Dense{promote_type(ElT1, ElT2)}(vec(array_outer)), inds_outer)
 end
 
-function contraction_output(
-  tensor1::DenseTensor, tensor2::DenseTensor, indsR
-)
+function contraction_output(tensor1::DenseTensor, tensor2::DenseTensor, indsR)
   tensortypeR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
   return NDTensors.similar(tensortypeR, indsR)
 end

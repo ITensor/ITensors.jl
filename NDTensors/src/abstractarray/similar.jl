@@ -34,11 +34,15 @@ parenttype(::Type{<:SubArray{<:Any,<:Any,P}}) where {P} = P
 # `SimpleTraits.jl` traits dispatch.
 parenttype(array::AbstractArray) = parenttype(typeof(array))
 
-@traitfn function leaf_parenttype(arraytype::Type{ArrayT}) where {ArrayT; IsWrappedArray{ArrayT}}
+@traitfn function leaf_parenttype(
+  arraytype::Type{ArrayT}
+) where {ArrayT; IsWrappedArray{ArrayT}}
   return leaf_parenttype(parenttype(arraytype))
 end
 
-@traitfn function leaf_parenttype(arraytype::Type{ArrayT}) where {ArrayT; !IsWrappedArray{ArrayT}}
+@traitfn function leaf_parenttype(
+  arraytype::Type{ArrayT}
+) where {ArrayT; !IsWrappedArray{ArrayT}}
   return arraytype
 end
 
@@ -106,7 +110,9 @@ similar(array::AbstractArray, dims::Tuple) = NDTensors.similar(typeof(array), di
 
 # Use the `size` to determine the dimensions
 # NDTensors.similar
-similar(array::AbstractArray, eltype::Type) = NDTensors.similar(typeof(array), eltype, size(array))
+function similar(array::AbstractArray, eltype::Type)
+  return NDTensors.similar(typeof(array), eltype, size(array))
+end
 
 # Use the `size` to determine the dimensions
 # NDTensors.similar
@@ -126,7 +132,9 @@ end
   )
 end
 
-@traitfn function similartype(arraytype::Type{ArrayT}, dims::Tuple) where {ArrayT; !IsWrappedArray{ArrayT}}
+@traitfn function similartype(
+  arraytype::Type{ArrayT}, dims::Tuple
+) where {ArrayT; !IsWrappedArray{ArrayT}}
   return error(
     "The function `similartype(arraytype::Type, dims::Tuple)` has not been implement for `arraytype=$arraytype` and `dims=$dims`. It is a required part of the NDTensors interface.",
   )
@@ -141,11 +149,15 @@ function similartype(arraytype::Type{<:AbstractArray})
 end
 
 ## Wrapped arrays
-@traitfn function similartype(arraytype::Type{ArrayT}, eltype::Type) where {ArrayT; IsWrappedArray{ArrayT}}
+@traitfn function similartype(
+  arraytype::Type{ArrayT}, eltype::Type
+) where {ArrayT; IsWrappedArray{ArrayT}}
   return similartype(parenttype(arraytype), eltype)
 end
 
-@traitfn function similartype(arraytype::Type{ArrayT}, dims::Tuple) where {ArrayT; IsWrappedArray{ArrayT}}
+@traitfn function similartype(
+  arraytype::Type{ArrayT}, dims::Tuple
+) where {ArrayT; IsWrappedArray{ArrayT}}
   return similartype(parenttype(arraytype), dims)
 end
 
