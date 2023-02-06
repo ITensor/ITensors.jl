@@ -49,14 +49,6 @@ end
 # For working with instances.
 leaf_parenttype(array::AbstractArray) = leaf_parenttype(typeof(array))
 
-# Like `Base.to_shape` but more general, can return
-# `Index`, etc. Customize for an array/tensor
-# with custom index types.
-# NDTensors.to_shape
-function to_shape(arraytype::Type{<:AbstractArray}, shape::Tuple)
-  return Base.to_shape(shape)
-end
-
 # This function actually allocates the data.
 # NDTensors.similar
 function similar(arraytype::Type{<:AbstractArray}, dims::Tuple)
@@ -74,7 +66,7 @@ end
 
 # NDTensors.similar
 function similar(arraytype::Type{<:AbstractArray}, dims::DimOrInd...)
-  return similar(arraytype, Base.to_shape(dims))
+  return similar(arraytype, NDTensors.to_shape(dims))
 end
 
 # Handles range inputs, `Base.to_shape` converts them to integer dimensions.
@@ -84,7 +76,7 @@ function similar(
   arraytype::Type{<:AbstractArray},
   shape::Tuple{Union{Integer,OneTo},Vararg{Union{Integer,OneTo}}},
 )
-  return NDTensors.similar(arraytype, Base.to_shape(shape))
+  return NDTensors.similar(arraytype, NDTensors.to_shape(shape))
 end
 
 # NDTensors.similar

@@ -32,6 +32,7 @@ include("exports.jl")
 #
 include("aliasstyle.jl")
 include("abstractarray/set_types.jl")
+include("abstractarray/to_shape.jl")
 include("abstractarray/similar.jl")
 include("array/set_types.jl")
 include("tupletools.jl")
