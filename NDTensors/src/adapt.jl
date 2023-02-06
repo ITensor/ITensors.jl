@@ -37,8 +37,8 @@ to_vector_type(arraytype::Type{Array}) = Vector
 to_vector_type(arraytype::Type{Array{T}}) where {T} = Vector{T}
 
 function set_eltype_if_unspecified(
-  arraytype::Type{<:AbstractArray{T,N}}, eltype::Type=default_eltype()
-) where {T,N}
+  arraytype::Type{<:AbstractArray{T}}, eltype::Type=default_eltype()
+) where {T}
   return arraytype
 end
 function set_eltype_if_unspecified(
