@@ -33,6 +33,9 @@ function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray
   )
 end
 
+# TODO: Define a generic `dense` for `Tensor`, `TensorStorage`.
+dense(storagetype::Type{<:Dense}) = storagetype
+
 function Dense(data::VecT) where {VecT<:AbstractArray{ElT}} where {ElT}
   return Dense{ElT,VecT}(data)
 end
@@ -131,6 +134,9 @@ end
 const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Dense}
 
 DenseTensor(::Type{ElT}, inds) where {ElT} = tensor(Dense(ElT, dim(inds)), inds)
+
+# TODO: Define a generic `dense` for `Tensor`, `TensorStorage`.
+dense(tensortype::Type{<:DenseTensor}) = tensortype
 
 # Special convenience function for Int
 # dimensions

@@ -8,14 +8,24 @@ similar(tensor::Tensor, eltype::Type) = setstorage(tensor, similar(storage(tenso
 function similar(tensor::Tensor, dims::Tuple)
   return setinds(setstorage(tensor, similar(storage(tensor), dims)), dims)
 end
+
+# NDTensors.similar
 function similar(tensor::Tensor, dims::Dims)
   return setinds(setstorage(tensor, similar(storage(tensor), dims)), dims)
+end
+
+# NDTensors.similar
+function similar(tensortype::Type{<:Tensor}, dims::Tuple)
+  # TODO: Is there a better constructor pattern for this?
+  return similartype(tensortype, dims)(AllowAlias(), similar(storagetype(tensortype), dims), dims)
 end
 
 # NDTensors.similar
 function similar(tensor::Tensor, eltype::Type, dims::Tuple)
   return setinds(setstorage(tensor, similar(storage(tensor), eltype, dims)), dims)
 end
+
+# NDTensors.similar
 function similar(tensor::Tensor, eltype::Type, dims::Dims)
   return setinds(setstorage(tensor, similar(storage(tensor), eltype, dims)), dims)
 end
