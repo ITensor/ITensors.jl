@@ -204,11 +204,11 @@ function contraction_output(T1::DiagTensor, T2::DiagTensor, indsR)
   return zero_contraction_output(T1, T2, indsR)
 end
 
-function array(tensor::DiagTensor)
-  return array(dense(tensor))
-end
-matrix(T::DiagTensor{<:Any,2}) = array(T)
-vector(T::DiagTensor{<:Any,1}) = array(T)
+## function array(tensor::DiagTensor)
+##   return array(dense(tensor))
+## end
+## matrix(T::DiagTensor{<:Any,2}) = array(T)
+## vector(T::DiagTensor{<:Any,1}) = array(T)
 
 function Array{ElT,N}(T::DiagTensor{ElT,N}) where {ElT,N}
   return array(T)
