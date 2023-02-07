@@ -18,7 +18,7 @@ using Strided
 using TimerOutputs
 using TupleTools
 
-using Base: @propagate_inbounds, ReshapedArray
+using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
 using Base.Cartesian: @nexprs
 
@@ -27,19 +27,25 @@ using Base.Threads: @spawn
 #####################################
 # Imports and exports
 #
-include("exports.jl")
 include("imports.jl")
+include("exports.jl")
 
 #####################################
 # General functionality
 #
 include("algorithm.jl")
 include("aliasstyle.jl")
-include("similar.jl")
+include("abstractarray/set_types.jl")
+include("abstractarray/to_shape.jl")
+include("abstractarray/similar.jl")
+include("array/set_types.jl")
 include("tupletools.jl")
 include("dims.jl")
 include("tensorstorage.jl")
+include("tensorstorage/similar.jl")
 include("tensor.jl")
+include("tensor/set_types.jl")
+include("tensor/similar.jl")
 include("adapt.jl")
 include("generic_tensor_operations.jl")
 include("contraction_logic.jl")
@@ -48,10 +54,10 @@ include("contraction_logic.jl")
 # DenseTensor and DiagTensor
 #
 include("dense/dense.jl")
-include("dense/adapt.jl")
 include("symmetric.jl")
 include("linearalgebra.jl")
 include("diag/diag.jl")
+include("diag/similar.jl")
 include("combiner/combiner.jl")
 include("truncate.jl")
 include("svd.jl")
@@ -67,9 +73,9 @@ include("blocksparse/blocksparsetensor.jl")
 include("blocksparse/contract.jl")
 include("blocksparse/contract_deprecated.jl")
 include("blocksparse/diagblocksparse.jl")
+include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
-include("blocksparse/adapt.jl")
 
 #####################################
 # Empty

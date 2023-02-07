@@ -92,6 +92,12 @@ Index(is::Indices) = is[]
 
 NDTensors.dims(is::IndexSet) = dim.(is)
 
+# Helps with generic code in `NDTensors`,
+# for example with `NDTensors.similar`.
+# Converts a set of Indices to a shape
+# for allocating data.
+Base.to_shape(inds::Tuple{Vararg{Index}}) = dims(inds)
+
 """
     dim(is::Indices)
 
@@ -119,9 +125,6 @@ end
 
 # TODO: move to NDTensors
 NDTensors.dim(is::Tuple, pos::Integer) = dim(is[pos])
-
-# TODO: this fixes an ambiguity error with base, move to NDTensors
-NDTensors.similar(T::NDTensors.DenseTensor, inds::Tuple) = NDTensors._similar(T, inds)
 
 # TODO: this is a weird definition, fix it
 function NDTensors.similartype(

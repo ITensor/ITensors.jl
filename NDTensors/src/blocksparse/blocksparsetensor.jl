@@ -7,22 +7,6 @@ const BlockSparseTensor{ElT,N,StoreT,IndsT} =
 
 nonzeros(T::Tensor) = data(T)
 
-# Special version for BlockSparseTensor
-# Generic version doesn't work since BlockSparse us parametrized by
-# the Tensor order
-function similartype(
-  ::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}}, ::Type{IndsR}
-) where {NT,ElT,VecT,IndsR}
-  NR = length(IndsR)
-  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
-end
-
-function similartype(
-  ::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}}, ::Type{IndsR}
-) where {NT,ElT,VecT,IndsR<:NTuple{NR}} where {NR}
-  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
-end
-
 function BlockSparseTensor(
   ::Type{ElT}, ::UndefInitializer, boffs::BlockOffsets, inds
 ) where {ElT<:Number}
@@ -165,23 +149,6 @@ function BlockSparseTensor(
   return BlockSparseTensor(blocks, inds)
 end
 
-function similar(
-  ::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
-) where {ElT,N}
-  return BlockSparseTensor(ElT, undef, blockoffsets, inds)
-end
-
-function similar(
-  ::Type{<:BlockSparseTensor{ElT,N}}, blockoffsets::BlockOffsets{N}, inds
-) where {ElT,N}
-  return BlockSparseTensor(ElT, undef, blockoffsets, inds)
-end
-
-# This version of similar creates a tensor with no blocks
-function similar(::Type{TensorT}, inds::Tuple) where {TensorT<:BlockSparseTensor}
-  return similar(TensorT, BlockOffsets{ndims(TensorT)}(), inds)
-end
-
 function zeros(
   ::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
 ) where {ElT,N}
@@ -273,7 +240,7 @@ end
 insertblock!(T::BlockSparseTensor, block) = insertblock!(T, Block(block))
 
 # Insert missing diagonal blocks as zero blocks
-function insert_diag_blocks!(T::AbstractArray{ElT}) where {ElT}
+function insert_diag_blocks!(T::AbstractArray)
   for b in eachdiagblock(T)
     blockT = blockview(T, b)
     if isnothing(blockT)
@@ -281,16 +248,6 @@ function insert_diag_blocks!(T::AbstractArray{ElT}) where {ElT}
       insertblock!(T, b)
     end
   end
-end
-
-# TODO: add support for off-diagonals, return
-# block sparse vector instead of dense.
-function diag(T::BlockSparseTensor{ElT}) where {ElT}
-  d = Base.similar(T, ElT, (diaglength(T),))
-  for n in 1:diaglength(T)
-    d[n] = T[n, n]
-  end
-  return d
 end
 
 # TODO: Add a checkbounds
@@ -372,7 +329,7 @@ end
 
 function permutedims(T::BlockSparseTensor{<:Number,N}, perm::NTuple{N,Int}) where {N}
   blockoffsetsR, indsR = permutedims(blockoffsets(T), inds(T), perm)
-  R = similar(T, blockoffsetsR, indsR)
+  R = NDTensors.similar(T, blockoffsetsR, indsR)
   permutedims!(R, T, perm)
   return R
 end
