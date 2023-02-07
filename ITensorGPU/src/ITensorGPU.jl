@@ -2,7 +2,7 @@ module ITensorGPU
 
 using CUDA
 using CUDA.Adapt
-using CUDA.CUTENSOR
+using cuTENSOR
 using CUDA.CUBLAS
 using CUDA.CUSOLVER
 using Functors
@@ -15,7 +15,7 @@ using ITensors
 using ITensors.NDTensors
 using Strided
 import CUDA: CuArray, CuMatrix, CuVector, cu
-import CUDA.CUTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
+import cuTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
 import CUDA.Adapt: adapt_structure
 import CUDA.Mem: pin
 #=

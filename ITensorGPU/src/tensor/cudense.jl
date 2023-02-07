@@ -261,7 +261,7 @@ function _contract!(
   for (ii, ic) in enumerate(Cinds)
     ctcinds[ii] = findfirst(x -> x == ic, ind_dict)
   end
-  id_op = CUDA.CUTENSOR.CUTENSOR.CUTENSOR_OP_IDENTITY
+  id_op = cuTENSOR.CUTENSOR.CUTENSOR_OP_IDENTITY
   dict_key = ""
   for cc in zip(ctcinds, Cdims)
     dict_key *= string(cc[1]) * "," * string(cc[2]) * ","
@@ -277,7 +277,7 @@ function _contract!(
       dict_val = ContractionPlans[dict_key]
       algo = dict_val
       #plan  = dict_val[2]
-      Cdata = CUDA.CUTENSOR.contraction!(
+      Cdata = cuTENSOR.contraction!(
         α,
         Adata,
         Vector{Char}(ctainds),
@@ -300,13 +300,13 @@ function _contract!(
       best_plan = nothing
       best_algo = nothing
       max_algos = Ref{Int32}(C_NULL)
-      CUDA.CUTENSOR.cutensorContractionMaxAlgos(max_algos)
+      cuTENSOR.cutensorContractionMaxAlgos(max_algos)
       # fix once the other options are documented
-      #algos = collect(Cint(CUDA.CUTENSOR.CUTENSOR_ALGO_GETT):Cint(max_algos[] - 1))
-      algos = collect(Cint(CUDA.CUTENSOR.CUTENSOR_ALGO_GETT):Cint(-1))
+      #algos = collect(Cint(cuTENSOR.CUTENSOR_ALGO_GETT):Cint(max_algos[] - 1))
+      algos = collect(Cint(cuTENSOR.CUTENSOR_ALGO_GETT):Cint(-1))
       for algo in reverse(algos)
         try
-          Cdata, this_time, bytes, gctime, memallocs = @timed CUDA.CUTENSOR.contraction!(
+          Cdata, this_time, bytes, gctime, memallocs = @timed cuTENSOR.contraction!(
             α,
             Adata,
             Vector{Char}(ctainds),
@@ -319,12 +319,12 @@ function _contract!(
             Vector{Char}(ctcinds),
             id_op,
             id_op;
-            algo=CUDA.CUTENSOR.cutensorAlgo_t(algo),
+            algo=cuTENSOR.cutensorAlgo_t(algo),
           )
           if this_time < best_time
             best_time = this_time
             #best_plan = this_plan
-            best_algo = CUDA.CUTENSOR.cutensorAlgo_t(algo)
+            best_algo = cuTENSOR.cutensorAlgo_t(algo)
           end
         catch err
           @warn "Algorithm $algo not supported"
@@ -333,7 +333,7 @@ function _contract!(
       ContractionPlans[dict_key] = best_algo
     end
   else
-    Cdata = CUDA.CUTENSOR.contraction!(
+    Cdata = cuTENSOR.contraction!(
       α,
       Adata,
       Vector{Char}(ctainds),
@@ -523,7 +523,7 @@ function Base.permute!(B::CuDenseTensor, A::CuDenseTensor)
     for (ii, ib) in enumerate(Bis)
       ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
     end
-    CUDA.CUTENSOR.permutation!(
+    cuTENSOR.permutation!(
       one(eltype(Adata)),
       reshapeAdata,
       Vector{Char}(ctainds),
@@ -560,7 +560,7 @@ function Base.permute!(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
     ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
   end
 
-  CUDA.CUTENSOR.permutation!(
+  cuTENSOR.permutation!(
     one(eltype(Adata)),
     reshapeAdata,
     Vector{Char}(ctainds),
