@@ -25,6 +25,16 @@ function similar(tensortype::Type{<:Tensor}, dims::Tuple)
 end
 
 # NDTensors.similar
+function similar(tensortype::Type{<:Tensor}, dims::Dims)
+  # TODO: Is there a better constructor pattern for this?
+  # Maybe use `setstorage(::Type{<:Tensor}, ...)` and
+  # `setinds(::Type{<:Tensor}, ...)`?
+  return similartype(tensortype, dims)(
+    AllowAlias(), similar(storagetype(tensortype), dims), dims
+  )
+end
+
+# NDTensors.similar
 function similar(tensor::Tensor, eltype::Type, dims::Tuple)
   return setinds(setstorage(tensor, similar(storage(tensor), eltype, dims)), dims)
 end
