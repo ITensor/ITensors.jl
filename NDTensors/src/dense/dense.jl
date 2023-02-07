@@ -42,7 +42,7 @@ end
 
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
-  return ElT == ElR ? Dense(data) : Dense(ElR.(data))
+  Dense{ElR}(convert(similartype(typeof(data), ElR), data))
 end
 
 function Dense{ElT}(data::AbstractArray{ElT}) where {ElT}
