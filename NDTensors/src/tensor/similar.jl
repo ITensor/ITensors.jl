@@ -17,7 +17,9 @@ end
 # NDTensors.similar
 function similar(tensortype::Type{<:Tensor}, dims::Tuple)
   # TODO: Is there a better constructor pattern for this?
-  return similartype(tensortype, dims)(AllowAlias(), similar(storagetype(tensortype), dims), dims)
+  return similartype(tensortype, dims)(
+    AllowAlias(), similar(storagetype(tensortype), dims), dims
+  )
 end
 
 # NDTensors.similar
