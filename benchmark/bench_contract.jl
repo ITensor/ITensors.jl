@@ -48,13 +48,11 @@ let
   Load the ground state energy `energy`, Hamiltonian MPO `H`, and ground state MPS `psi` resulting from running:
   ```julia
   using Pkg
-
-  # TODO: Change to v0.3.26
-  # Pkg.add(; name="ITensors", version="0.3.26")
-
   Pkg.add(; name="ITensors", version="0.3.25")
 
-  example_path = joinpath(pkgdir(ITensors), "examples", "2d_hubbard_conserve_momentum.jl")
+  using ITensors
+
+  example_path = joinpath(pkgdir(ITensors), "examples", "dmrg", "2d_hubbard_conserve_momentum.jl")
   include(example_path)
   kwargs = (; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10,
     maxdim=3000, random_init=false, threaded_blocksparse=true)
