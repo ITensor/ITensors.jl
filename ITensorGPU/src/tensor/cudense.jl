@@ -20,11 +20,6 @@ function Base.complex(::Type{Dense{ElT,VT}}) where {ElT,VT<:CuArray}
   return Dense{complex(ElT),CuVector{complex(ElT)}}
 end
 
-similartype(::Type{<:CuArray{<:Any,N}}, eltype::Type) where {N} = CuArray{eltype,N}
-function NDTensors.similar(::Type{<:CuArray{T}}, dims) where {T}
-  return CuArray{T,length(dims)}(undef, dims)
-end
-
 CuArray(x::CuDense{ElT}) where {ElT} = CuVector{ElT}(data(x))
 function CuArray{ElT,N}(x::CuDenseTensor{ElT,N}) where {ElT,N}
   return CuArray{ElT,N}(reshape(data(store(x)), dims(inds(x))...))
@@ -63,16 +58,6 @@ function permutedims!!(
   Bis = ITensors.NDTensors.permute(inds(A), perm)
   B = f(B, A)
   return B
-end
-
-function Base.similar(::Type{<:CuDenseTensor{ElT}}, inds::Dims) where {ElT}
-  storage_arr = CuVector{ElT}(undef, dim(inds))
-  return Tensor(Dense(storage_arr), inds)
-end
-
-function Base.similar(::Type{<:CuDenseTensor{ElT}}, inds) where {ElT}
-  storage_arr = CuVector{ElT}(undef, dim(inds))
-  return Tensor(Dense(storage_arr), inds)
 end
 
 import ITensors.NDTensors: GemmBackend, auto_select_backend, _gemm!

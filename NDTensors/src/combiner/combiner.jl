@@ -54,9 +54,9 @@ blockperm(C::CombinerTensor) = blockperm(storage(C))
 blockcomb(C::CombinerTensor) = blockcomb(storage(C))
 
 function contraction_output(
-  ::TensorT1, ::TensorT2, indsR::IndsR
-) where {TensorT1<:CombinerTensor,TensorT2<:DenseTensor,IndsR}
-  TensorR = contraction_output_type(TensorT1, TensorT2, IndsR)
+  ::TensorT1, ::TensorT2, indsR::Tuple
+) where {TensorT1<:CombinerTensor,TensorT2<:DenseTensor}
+  TensorR = contraction_output_type(TensorT1, TensorT2, indsR)
   return similar(TensorR, indsR)
 end
 

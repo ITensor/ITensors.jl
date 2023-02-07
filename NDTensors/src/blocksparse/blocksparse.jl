@@ -12,11 +12,29 @@ struct BlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   end
 end
 
+# TODO: Implement as `fieldtype(storagetype, :data)`.
+datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
+# TODO: Implement as `ndims(blockoffsetstype(storagetype))`.
+ndims(storagetype::Type{<:BlockSparse{<:Any,<:Any,N}}) where {N} = N
+# TODO: Implement as `fieldtype(storagetype, :blockoffsets)`.
+blockoffsetstype(storagetype::Type{<:BlockSparse}) = BlockOffsets{ndims(storagetype)}
+
+function set_datatype(storagetype::Type{<:BlockSparse}, datatype::Type{<:AbstractVector})
+  return BlockSparse{eltype(datatype),datatype,ndims(storagetype)}
+end
+
+function set_ndims(storagetype::Type{<:BlockSparse}, ndims)
+  return BlockSparse{eltype(storagetype),datatype(storagetype),ndims}
+end
+
+# TODO: Write as `(::Type{<:BlockSparse})()`.
+BlockSparse{ElT,DataT,N}() where {ElT,DataT,N} = BlockSparse(DataT(), BlockOffsets{N}())
+
 function BlockSparse(
   datatype::Type{<:AbstractArray}, blockoffsets::BlockOffsets, dim::Integer; vargs...
 )
   return BlockSparse(
-    fill!(similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
+    fill!(NDTensors.similar(datatype, dim), zero(eltype(datatype))), blockoffsets; vargs...
   )
 end
 
@@ -47,6 +65,9 @@ end
 copy(D::BlockSparse) = BlockSparse(copy(data(D)), copy(blockoffsets(D)))
 
 setdata(B::BlockSparse, ndata) = BlockSparse(ndata, blockoffsets(B))
+function setdata(storagetype::Type{<:BlockSparse}, data)
+  return error("Not implemented, must specify block offsets as well")
+end
 
 #
 # Random
@@ -62,17 +83,6 @@ end
 #  ElT == ElR ? BlockSparse(data,offsets) : BlockSparse(ElR.(data),offsets)
 #end
 #BlockSparse{ElT}() where {ElT} = BlockSparse(ElT[],BlockOffsets())
-
-datatype(::Type{<:BlockSparse{<:Any,DataT}}) where {DataT} = DataT
-
-similar(D::BlockSparse) = setdata(D, similar(data(D)))
-
-# TODO: test this function
-similar(D::BlockSparse, ::Type{ElT}) where {ElT} = setdata(D, similar(data(D), ElT))
-
-function similartype(::Type{StoreT}, ::Type{ElT}) where {StoreT<:BlockSparse,ElT}
-  return BlockSparse{ElT,similartype(datatype(StoreT), ElT),ndims(StoreT)}
-end
 
 # TODO: check the offsets are the same?
 function copyto!(D1::BlockSparse, D2::BlockSparse)

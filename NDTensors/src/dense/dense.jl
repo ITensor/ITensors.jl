@@ -10,7 +10,6 @@ struct Dense{ElT,DataT<:AbstractArray} <: TensorStorage{ElT}
     return new{ElT,DataT}(data)
   end
 
-  ## TODO ask matt if I should make a N function that fails when called with N > 1
   function Dense{ElT,DataT}(data::DataT) where {ElT,DataT<:AbstractArray}
     println("Only Vector-based datatypes are currently supported.")
     throw(TypeError)
@@ -43,7 +42,7 @@ end
 
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
-  return Dense{ElR}(convert(similartype(typeof(data), ElR), data))
+  return ElT == ElR ? Dense(data) : Dense(ElR.(data))
 end
 
 function Dense{ElT}(data::AbstractArray{ElT}) where {ElT}
@@ -94,6 +93,7 @@ Dense(::Type{ElT}) where {ElT} = Dense{ElT}()
 ## End Dense initializers
 
 setdata(D::Dense, ndata) = Dense(ndata)
+setdata(storagetype::Type{<:Dense}, data) = Dense(data)
 
 copy(D::Dense) = Dense(copy(data(D)))
 
@@ -107,26 +107,25 @@ function complex(T::Type{<:Dense})
   return set_datatype(T, similartype(datatype(T), complex(eltype(T))))
 end
 
-similar(D::Dense) = Dense(similar(data(D)))
-
-similar(D::Dense, length::Int) = Dense(similar(data(D), length))
-
-function similar(storagetype::Type{<:Dense}, length::Int)
-  return Dense(similar(datatype(storagetype), length))
+function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVector})
+  return Dense{eltype(datatype),datatype}
 end
 
-function similartype(::Type{StoreT}, ::Type{ElT}) where {StoreT<:Dense,ElT}
-  return Dense{ElT,similartype(datatype(StoreT), ElT)}
+function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray})
+  return error(
+    "Setting the `datatype` of the storage type `$storagetype` to a $(ndims(datatype))-dimsional array of type `$datatype` is not currently supported, use an `AbstractVector` instead.",
+  )
 end
 
 # TODO: make these more general, move to tensorstorage.jl
 datatype(::Type{<:Dense{<:Any,DataT}}) where {DataT} = DataT
 
-function similar(::Type{StorageT}, ::Type{ElT}, length::Int) where {StorageT<:Dense,ElT}
-  return Dense(similar(datatype(StorageT), ElT, length))
-end
+zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
 
-similar(D::Dense, ::Type{T}) where {T<:Number} = Dense(similar(data(D), T))
+# # Generic for handling `Vector` and `CuVector`
+# function zeros(storagetype::Type{<:Dense}, dim::Int)
+#   return fill!(NDTensors.similar(storagetype, dim), zero(eltype(storagetype)))
+# end
 
 function promote_rule(
   ::Type{<:Dense{ElT1,DataT1}}, ::Type{<:Dense{ElT2,DataT2}}
@@ -166,6 +165,9 @@ end
 const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Dense}
 
 DenseTensor(::Type{ElT}, inds) where {ElT} = tensor(Dense(ElT, dim(inds)), inds)
+
+# TODO: Define a generic `dense` for `Tensor`, `TensorStorage`.
+dense(storagetype::Type{<:Dense}) = storagetype
 
 # Special convenience function for Int
 # dimensions
@@ -251,18 +253,6 @@ end
 function zeros(TensorT::Type{<:DenseTensor}, inds::Tuple{})
   return _zeros(TensorT, inds)
 end
-
-# To fix method ambiguity with similar(::AbstractArray,::Type)
-function similar(T::DenseTensor, ::Type{ElT}) where {ElT}
-  return tensor(similar(storage(T), ElT), inds(T))
-end
-
-_similar(T::DenseTensor, inds) = similar(typeof(T), inds)
-
-similar(T::DenseTensor, inds) = _similar(T, inds)
-
-# To fix method ambiguity with similar(::AbstractArray,::Tuple)
-similar(T::DenseTensor, inds::Dims) = _similar(T, inds)
 
 #
 # Single index
@@ -381,6 +371,16 @@ function copyto!(
   return R
 end
 
+# Maybe allocate output data.
+# TODO: Remove this in favor of `map!`
+# applied to `PermutedDimsArray`.
+function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function=(r, t) -> t)
+  Base.checkdims_perm(R, T, perm)
+  RR = convert(promote_type(typeof(R), typeof(T)), R)
+  permutedims!(RR, T, perm, f)
+  return RR
+end
+
 # TODO: call permutedims!(R,T,perm,(r,t)->t)?
 function permutedims!(
   R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}, perm::NTuple{N,Int}
@@ -424,40 +424,6 @@ function apply!(R::DenseTensor, T::DenseTensor, f::Function=(r, t) -> t)
   TA = array(T)
   RA .= f.(RA, TA)
   return R
-end
-
-# Version that may overwrite the result or promote
-# and return the result
-function permutedims!!(
-  R::DenseTensor{<:Number,N,StoreT},
-  T::DenseTensor{<:Number,N,StoreT},
-  perm::Tuple,
-  f::Function=(r, t) -> t,
-) where {N,StoreT<:StridedArray}
-  RR = convert(promote_type(typeof(R), typeof(T)), R)
-  RA = ReshapedArray(data(RR), dims(RR), ())
-  TA = ReshapedArray(data(T), dims(T), ())
-  if !is_trivial_permutation(perm)
-    @strided RA .= f.(RA, permutedims(TA, perm))
-  else
-    # TODO: specialize for specific functions
-    RA .= f.(RA, TA)
-  end
-  return RR
-end
-
-function permutedims!!(R::DenseTensor, T::DenseTensor, perm::Tuple, f::Function=(r, t) -> t)
-  RR = convert(promote_type(typeof(R), typeof(T)), R)
-  RA = ReshapedArray(data(RR), dims(RR), ())
-  TA = ReshapedArray(data(T), dims(T), ())
-  if !is_trivial_permutation(perm)
-    TB = permutedims(TA, perm)
-    RA .= f.(RA, TB)
-  else
-    # TODO: specialize for specific functions
-    RA .= f.(RA, TA)
-  end
-  return RR
 end
 
 function permutedims!(
@@ -585,11 +551,9 @@ function outer(T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}) where {ElT1,ElT2}
   return tensor(Dense{promote_type(ElT1, ElT2)}(vec(array_outer)), inds_outer)
 end
 
-function contraction_output(
-  ::TensorT1, ::TensorT2, indsR::IndsR
-) where {TensorT1<:DenseTensor,TensorT2<:DenseTensor,IndsR}
-  TensorR = contraction_output_type(TensorT1, TensorT2, IndsR)
-  return similar(TensorR, indsR)
+function contraction_output(tensor1::DenseTensor, tensor2::DenseTensor, indsR)
+  tensortypeR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
+  return NDTensors.similar(tensortypeR, indsR)
 end
 
 Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))

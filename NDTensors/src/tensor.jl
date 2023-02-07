@@ -27,6 +27,26 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   end
 end
 
+ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
+
+function set_storagetype(tensortype::Type{<:Tensor}, storagetype)
+  return Tensor{eltype(tensortype),ndims(tensortype),storagetype,indstype(tensortype)}
+end
+
+# TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
+# TODO: Make a version that accepts `indstype::Type`?
+function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
+  return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
+end
+
+# Like `Base.to_shape` but more general, can return
+# `Index`, etc. Customize for an array/tensor
+# with custom index types.
+# NDTensors.to_shape
+function to_shape(arraytype::Type{<:Tensor}, shape::Tuple)
+  return shape
+end
+
 function Tensor{ElT,N,StoreT,IndsT}(
   ::NeverAlias, storage::TensorStorage, inds
 ) where {ElT,N,StoreT<:TensorStorage,IndsT}
@@ -34,7 +54,19 @@ function Tensor{ElT,N,StoreT,IndsT}(
 end
 
 # Allow the storage and indices to be input in opposite ordering
-(T::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage) = T(as, storage, inds)
+function (tensortype::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage)
+  return tensortype(as, storage, inds)
+end
+
+function Tensor{ElT,N,StoreT,IndsT}(
+  ::UndefInitializer, inds::Tuple
+) where {ElT,N,StoreT,IndsT}
+  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), NDTensors.similar(StoreT, inds), inds)
+end
+
+## function (tensortype::Type{<:Tensor})(::UndefInitializer, inds::Tuple)
+##   error("Not implemented!!!")
+## end
 
 """
     Tensor(storage::TensorStorage, inds)
@@ -130,9 +162,6 @@ real(T::Tensor) = setstorage(T, real(storage(T)))
 
 imag(T::Tensor) = setstorage(T, imag(storage(T)))
 
-# Define Base.similar in terms of NDTensors.similar
-Base.similar(T::Tensor, args...) = similar(T, args...)
-
 function map(f, x::Tensor{T}) where {T}
   if !iszero(f(zero(T)))
     error(
@@ -162,56 +191,6 @@ fill!!(T::Tensor, α::Number) = fill!(T, α)
 fill!(T::Tensor, α::Number) = (fill!(storage(T), α); T)
 
 -(T::Tensor) = setstorage(T, -storage(T))
-
-#function similar(::Type{<:Tensor{ElT,N,StoreT}},dims) where {ElT,N,StoreT}
-#  return tensor(similar(StoreT,dim(dims)),dims)
-#end
-
-# TODO: make sure these are implemented correctly
-#similar(T::Type{<:Tensor},::Type{S}) where {S} = tensor(similar(storage(T),S),inds(T))
-#similar(T::Type{<:Tensor},::Type{S},dims) where {S} = tensor(similar(storage(T),S),dims)
-
-similar(T::Tensor) = setstorage(T, similar(storage(T)))
-
-# TODO: for BlockSparse, this needs to include the offsets
-# TODO: for Diag, the storage is not just the total dimension
-similar(T::Tensor, dims::Tuple) = _similar_from_dims(T, dims)
-function similar(::Type{TensorT}, dims::Tuple) where {TensorT<:Tensor}
-  return _similar_from_dims(TensorT, dims)
-end
-function similar(::Type{TensorT}, dims::Tuple{}) where {TensorT<:Tensor}
-  return _similar_from_dims(TensorT, dims)
-end
-
-# To handle method ambiguity with AbstractArray
-#similar(T::Tensor,dims::Dims) = _similar_from_dims(T,dims)
-
-similar(T::Tensor, ::Type{S}) where {S} = setstorage(T, similar(storage(T), S))
-
-function similar(::Type{TensorT}, ::Type{S}, dims) where {TensorT<:Tensor,S<:Number}
-  return _similar_from_dims(TensorT, S, dims)
-end
-
-similar(T::Tensor, ::Type{S}, dims) where {S<:Number} = _similar_from_dims(T, S, dims)
-
-# To handle method ambiguity with AbstractArray
-similar(T::Tensor, ::Type{S}, dims::Dims) where {S<:Number} = _similar_from_dims(T, S, dims)
-
-_similar_from_dims(T::Tensor, dims) = tensor(similar(storage(T), dim(dims)), dims)
-
-function _similar_from_dims(T::Tensor, ::Type{S}, dims) where {S<:Number}
-  return tensor(similar(storage(T), S, dim(dims)), dims)
-end
-
-function _similar_from_dims(::Type{TensorT}, dims) where {TensorT<:Tensor}
-  return _similar_from_dims(TensorT, eltype(TensorT), dims)
-end
-
-function _similar_from_dims(
-  ::Type{TensorT}, ::Type{S}, dims
-) where {TensorT<:Tensor,S<:Number}
-  return tensor(similar(storagetype(TensorT), S, dim(dims)), dims)
-end
 
 function convert(
   ::Type{<:Tensor{<:Number,N,StoreR,Inds}}, T::Tensor{<:Number,N,<:Any,Inds}
@@ -246,18 +225,6 @@ function dense(::Type{<:Tensor{ElT,NT,StoreT,IndsT}}) where {ElT,NT,StoreT,IndsT
 end
 
 dense(T::Tensor) = setstorage(T, dense(storage(T)))
-
-function similartype(
-  ::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}}, ::Type{IndsR}
-) where {ElT,StoreT,IndsR}
-  return Tensor{ElT,length(IndsR),StoreT,IndsR}
-end
-
-function similartype(
-  ::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}}, ::Type{IndsR}
-) where {ElT,StoreT,IndsR<:NTuple{NR}} where {NR}
-  return Tensor{ElT,NR,StoreT,IndsR}
-end
 
 # Convert to Array, avoiding copying if possible
 array(T::Tensor) = array(dense(T))
@@ -346,12 +313,17 @@ function getdiagindex(T::Tensor{<:Number,N}, ind::Int) where {N}
   return getindex(T, CartesianIndex(ntuple(_ -> ind, Val(N))))
 end
 
-# This helps make Julia's generic `diag` function work
-# (at least it is necessary for `diag(::DiagTensor)`).
-# TODO: Specialize this to the Tensor type, for example
-# block sparse to return a block sparse vector?
-function Base.similar(T::Tensor, ::Type{ElT}, dims::Tuple{Int}) where {ElT}
-  return Tensor(ElT, dims)
+# TODO: add support for off-diagonals, return
+# block sparse vector instead of dense.
+function diag(tensor::Tensor)
+  ## d = NDTensors.similar(T, ElT, (diaglength(T),))
+  tensordiag = NDTensors.similar(
+    dense(typeof(tensor)), eltype(tensor), (diaglength(tensor),)
+  )
+  for n in 1:diaglength(tensor)
+    tensordiag[n] = tensor[n, n]
+  end
+  return tensordiag
 end
 
 """
@@ -371,7 +343,7 @@ end
 function zero_contraction_output(
   T1::TensorT1, T2::TensorT2, indsR::IndsR
 ) where {TensorT1<:Tensor,TensorT2<:Tensor,IndsR}
-  return zeros(contraction_output_type(TensorT1, TensorT2, IndsR), indsR)
+  return zeros(contraction_output_type(TensorT1, TensorT2, indsR), indsR)
 end
 
 #
@@ -384,7 +356,7 @@ function Base.similar(
   bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}}, ::Type{ElT}
 ) where {T<:Tensor,ElT}
   A = find_tensor(bc)
-  return similar(A, ElT)
+  return NDTensors.similar(A, ElT)
 end
 
 "`A = find_tensor(As)` returns the first Tensor among the arguments."
