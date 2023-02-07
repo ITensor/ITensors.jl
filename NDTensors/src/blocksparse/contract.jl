@@ -1,6 +1,15 @@
 # <fermions>
 function compute_alpha(
-  ElR, labelsR, blockR, indsR, labelstensor1, blocktensor1, indstensor1, labelstensor2, blocktensor2, indstensor2
+  ElR,
+  labelsR,
+  blockR,
+  indsR,
+  labelstensor1,
+  blocktensor1,
+  indstensor1,
+  labelstensor2,
+  blocktensor2,
+  indstensor2,
 )
   return one(ElR)
 end
@@ -62,7 +71,11 @@ function contraction_output(tensor1::BlockSparseTensor, tensor2::BlockSparseTens
 end
 
 function contraction_output(
-  tensor1::BlockSparseTensor, labelstensor1, tensor2::BlockSparseTensor, labelstensor2, labelsR
+  tensor1::BlockSparseTensor,
+  labelstensor1,
+  tensor2::BlockSparseTensor,
+  labelstensor2,
+  labelsR,
 )
   indsR = contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsR)
   TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
@@ -286,8 +299,12 @@ function contract(
   labelstensor2,
   labelsR=contract_labels(labelstensor1, labelstensor2),
 )
-  R, contraction_plan = contraction_output(tensor1, labelstensor1, tensor2, labelstensor2, labelsR)
-  R = contract!(R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan)
+  R, contraction_plan = contraction_output(
+    tensor1, labelstensor1, tensor2, labelstensor2, labelsR
+  )
+  R = contract!(
+    R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan
+  )
   return R
 end
 
@@ -306,7 +323,9 @@ function contract!(
   elseif using_threaded_blocksparse() && nthreads() > 1
     alg = Algorithm"threaded"()
   end
-  return contract!(alg, R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan)
+  return contract!(
+    alg, R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan
+  )
 end
 
 function contract!(
@@ -320,7 +339,9 @@ function contract!(
   contraction_plan,
 )
   executor = SequentialEx()
-  return contract!(R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor)
+  return contract!(
+    R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor
+  )
 end
 
 function contract!(
@@ -334,7 +355,9 @@ function contract!(
   contraction_plan,
 )
   executor = ThreadedEx()
-  return contract!(R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor)
+  return contract!(
+    R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor
+  )
 end
 
 function contract!(
@@ -374,7 +397,16 @@ function contract!(
   for block_contraction in contraction_plan
     push!(grouped_contraction_plan[last(block_contraction)], block_contraction)
   end
-  _contract!(R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, grouped_contraction_plan, executor)
+  _contract!(
+    R,
+    labelsR,
+    tensor1,
+    labelstensor1,
+    tensor2,
+    labelstensor2,
+    grouped_contraction_plan,
+    executor,
+  )
   return R
 end
 
@@ -412,7 +444,16 @@ function _contract!(
         inds(tensor2),
       )
 
-      contract!(R[blockR], labelsR, tensor1[blocktensor1], labelstensor1, tensor2[blocktensor2], labelstensor2, α, β)
+      contract!(
+        R[blockR],
+        labelsR,
+        tensor1[blocktensor1],
+        labelstensor1,
+        tensor2[blocktensor2],
+        labelstensor2,
+        α,
+        β,
+      )
 
       if iszero(β)
         # After the block has been overwritten,
