@@ -40,6 +40,10 @@ function Dense{ElR,DataT}(data::AbstractArray) where {ElR,DataT<:AbstractArray}
   return Dense{ElR,DataT}(data)
 end
 
+function Dense{ElT, DataT}(x::ElT, Inds::Tuple) where {ElT, DataT<:AbstractArray}
+  return Dense{ElT, DataT}(fill!(similar(DataT, dim(inds))),x)
+end
+
 # This function is ill-defined. It cannot transform a complex type to real...
 function Dense{ElR}(data::AbstractArray{ElT}) where {ElR,ElT}
   return ElT == ElR ? Dense(data) : Dense(ElR.(data))
