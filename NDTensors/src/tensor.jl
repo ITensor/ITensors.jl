@@ -162,9 +162,6 @@ real(T::Tensor) = setstorage(T, real(storage(T)))
 
 imag(T::Tensor) = setstorage(T, imag(storage(T)))
 
-## # Define Base.similar in terms of NDTensors.similar
-## Base.similar(T::Tensor, args...) = similar(T, args...)
-
 function map(f, x::Tensor{T}) where {T}
   if !iszero(f(zero(T)))
     error(
@@ -228,18 +225,6 @@ function dense(::Type{<:Tensor{ElT,NT,StoreT,IndsT}}) where {ElT,NT,StoreT,IndsT
 end
 
 dense(T::Tensor) = setstorage(T, dense(storage(T)))
-
-## function similartype(
-##   ::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}}, ::Type{IndsR}
-## ) where {ElT,StoreT,IndsR}
-##   return Tensor{ElT,length(IndsR),StoreT,IndsR}
-## end
-## 
-## function similartype(
-##   ::Type{<:Tensor{ElT,<:Any,StoreT,<:Any}}, ::Type{IndsR}
-## ) where {ElT,StoreT,IndsR<:NTuple{NR}} where {NR}
-##   return Tensor{ElT,NR,StoreT,IndsR}
-## end
 
 # Convert to Array, avoiding copying if possible
 array(T::Tensor) = array(dense(T))
@@ -371,7 +356,7 @@ function Base.similar(
   bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{T}}, ::Type{ElT}
 ) where {T<:Tensor,ElT}
   A = find_tensor(bc)
-  return similar(A, ElT)
+  return NDTensors.similar(A, ElT)
 end
 
 "`A = find_tensor(As)` returns the first Tensor among the arguments."

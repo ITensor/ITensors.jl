@@ -29,48 +29,7 @@ function similar(tensor::BlockSparseTensor, blockoffsets::BlockOffsets, dims::Tu
   return similar(typeof(tensor), blockoffsets, dims)
 end
 
-## similar(D::BlockSparse) = setdata(D, similar(data(D)))
-## 
-## # TODO: test this function
-## similar(D::BlockSparse, ::Type{ElT}) where {ElT} = setdata(D, similar(data(D), ElT))
-## 
-## function similartype(::Type{StoreT}, ::Type{ElT}) where {StoreT<:BlockSparse,ElT}
-##   return BlockSparse{ElT,similartype(datatype(StoreT), ElT),ndims(StoreT)}
-## end
-## 
-## function similar(
-##   ::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
-## ) where {ElT,N}
-##   return BlockSparseTensor(ElT, undef, blockoffsets, inds)
-## end
-## 
-## function similar(
-##   ::Type{<:BlockSparseTensor{ElT,N}}, blockoffsets::BlockOffsets{N}, inds
-## ) where {ElT,N}
-##   return BlockSparseTensor(ElT, undef, blockoffsets, inds)
-## end
-## 
-## # This version of similar creates a tensor with no blocks
-## function similar(::Type{TensorT}, inds::Tuple) where {TensorT<:BlockSparseTensor}
-##   return similar(TensorT, BlockOffsets{ndims(TensorT)}(), inds)
-## end
-## 
-## # Special version for BlockSparseTensor
-## # Generic version doesn't work since BlockSparse us parametrized by
-## # the Tensor order
-## function similartype( 
-##   ::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}}, indsR
-## ) where {NT,ElT,VecT}
-##   NR = length(indsR)
-##   return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},typeof(indsR)}
-## end
-## 
-## function similartype(
-##   ::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}}, indsR
-## ) where {NT,ElT,VecT,IndsR<:NTuple{NR}} where {NR}
-##   return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},typeof(indsR)}
-## end
-## 
+## ## TODO: Determine if the methods below are needed.
 ## similar(D::DiagBlockSparse, n::Int) = setdata(D, similar(data(D), n))
 ## 
 ## function similar(D::DiagBlockSparse, ::Type{ElR}, n::Int) where {ElR}

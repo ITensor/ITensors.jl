@@ -12,6 +12,19 @@ struct Diag{ElT,VecT} <: TensorStorage{ElT}
   end
 end
 
+datatype(::Type{<:Diag{<:Any,DataT}}) where {DataT} = DataT
+
+setdata(D::Diag, ndata) = Diag(ndata)
+setdata(storagetype::Type{<:Diag}, data) = Diag(data)
+
+function set_eltype(storagetype::Type{<:Diag}, eltype::Type)
+  return set_datatype(storagetype, set_eltype(datatype(storagetype), eltype))
+end
+
+function set_datatype(storagetype::Type{<:Diag}, datatype::Type{<:AbstractVector})
+  return Diag{eltype(datatype),datatype}
+end
+
 Diag(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = Diag{ElT,VecT}(data)
 
 Diag(data::ElT) where {ElT<:Number} = Diag{ElT,ElT}(data)
@@ -23,16 +36,6 @@ end
 Diag(::Type{ElT}, n::Integer) where {ElT<:Number} = Diag(zeros(ElT, n))
 
 Diag(x::ElT, n::Integer) where {ElT<:Number} = Diag(fill(x, n))
-
-datatype(::Type{<:Diag{<:Any,DataT}}) where {DataT} = DataT
-
-function set_eltype(storagetype::Type{<:Diag}, eltype::Type)
-  return set_datatype(storagetype, set_eltype(datatype(storagetype), eltype))
-end
-
-function set_datatype(storagetype::Type{<:Diag}, datatype::Type{<:AbstractVector})
-  return Diag{eltype(datatype),datatype}
-end
 
 copy(D::Diag) = Diag(copy(data(D)))
 
@@ -71,27 +74,9 @@ complex(::Type{Diag{ElT,ElT}}) where {ElT} = Diag{complex(ElT),complex(ElT)}
 # Deal with uniform Diag conversion
 convert(::Type{<:Diag{ElT,VecT}}, D::Diag) where {ElT,VecT} = Diag(convert(VecT, data(D)))
 
-# TODO: write in terms of ::Int, not inds
-similar(D::NonuniformDiag) = Diag(similar(data(D)))
-#similar(D::NonuniformDiag,inds) = Diag(similar(data(D),minimum(dims(inds))))
-#function similar(D::Type{<:NonuniformDiag{ElT,VecT}},inds) where {ElT,VecT}
-#  return Diag(similar(VecT,diaglength(inds)))
-#end
-
-similar(D::UniformDiag{ElT}) where {ElT} = Diag(zero(ElT))
-similar(D::UniformDiag, inds) = similar(D)
-similar(::Type{<:UniformDiag{ElT}}, inds) where {ElT} = Diag(zero(ElT))
-
-similar(D::Diag, n::Int) = Diag(similar(data(D), n))
-
-similar(D::Diag, ::Type{ElR}, n::Int) where {ElR} = Diag(similar(data(D), ElR, n))
-
 # TODO: make this work for other storage besides Vector
 zeros(::Type{<:NonuniformDiag{ElT}}, dim::Int64) where {ElT} = Diag(zeros(ElT, dim))
 zeros(::Type{<:UniformDiag{ElT}}, dim::Int64) where {ElT} = Diag(zero(ElT))
-
-setdata(D::Diag, ndata) = Diag(ndata)
-setdata(storagetype::Type{<:Diag}, data) = Diag(data)
 
 #
 # Type promotions involving Diag
@@ -204,12 +189,6 @@ function contraction_output(T1::DiagTensor, T2::DiagTensor, indsR)
   return zero_contraction_output(T1, T2, indsR)
 end
 
-## function array(tensor::DiagTensor)
-##   return array(dense(tensor))
-## end
-## matrix(T::DiagTensor{<:Any,2}) = array(T)
-## vector(T::DiagTensor{<:Any,1}) = array(T)
-
 function Array{ElT,N}(T::DiagTensor{ElT,N}) where {ElT,N}
   return array(T)
 end
@@ -224,13 +203,6 @@ end
 
 function zeros(tensortype::Type{<:DiagTensor}, inds::Tuple{})
   return tensor(zeros(storagetype(tensortype), mindim(inds)), inds)
-end
-
-# Needed to get slice of DiagTensor like T[1:3,1:3]
-function similar(
-  T::DiagTensor{<:Number,N}, ::Type{ElR}, inds::Dims{N}
-) where {ElR<:Number,N}
-  return tensor(similar(storage(T), ElR, minimum(inds)), inds)
 end
 
 function diag(tensor::DiagTensor)
@@ -358,7 +330,7 @@ end
 function permutedims(
   T::DiagTensor{<:Number,N}, perm::NTuple{N,Int}, f::Function=identity
 ) where {N}
-  R = similar(T, permute(inds(T), perm))
+  R = NDTensors.similar(T, permute(inds(T), perm))
   g(r, t) = f(t)
   permutedims!(R, T, perm, g)
   return R

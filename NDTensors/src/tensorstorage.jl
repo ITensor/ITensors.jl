@@ -40,35 +40,6 @@ end
 
 -(S::TensorStorage) = setdata(S, -data(S))
 
-## # NDTensors.similar
-## similar(S::TensorStorage) = setdata(S, NDTensors.similar(data(S)))
-## # NDTensors.similar
-## similar(S::TensorStorage, eltype::Type) = setdata(S, NDTensors.similar(data(S), eltype))
-## # NDTensors.similar
-## similar(S::TensorStorage, dims::Tuple) = setdata(S, NDTensors.similar(data(S), dims))
-## # NDTensors.similar
-## function similar(storagetype::Type{<:TensorStorage}, eltype::Type, dims::Tuple)
-##   return setdata(storagetype, NDTensors.similar(datatype(storagetype), eltype, dims))
-## end
-## # NDTensors.similar
-## function similar(storagetype::Type{<:TensorStorage}, eltype::Type)
-##   return error("Must specify dimensions.")
-## end
-## # NDTensors.similar
-## function similar(storagetype::Type{<:TensorStorage}, dims::Tuple)
-##   return NDTensors.similar(storagetype, eltype(storagetype), dims)
-## end
-## # NDTensors.similar
-## function similar(storagetype::Type{<:TensorStorage}, dims::DimOrInd...)
-##   return NDTensors.similar(storagetype, eltype(storagetype), dims)
-## end
-## 
-## # Define Base.similar in terms of NDTensors.similar
-## Base.similar(t::TensorStorage) = NDTensors.similar(t)
-## Base.similar(t::TensorStorage, eltype::Type) = NDTensors.similar(t, eltype)
-## Base.similar(t::TensorStorage, dims::Tuple) = NDTensors.similar(t, dims)
-## Base.similar(t::TensorStorage, dims::DimOrInd...) = NDTensors.similar(t, dims)
-
 # Needed for passing Tensor{T,2} to BLAS/LAPACK
 function Base.unsafe_convert(::Type{Ptr{ElT}}, T::TensorStorage{ElT}) where {ElT}
   return Base.unsafe_convert(Ptr{ElT}, data(T))

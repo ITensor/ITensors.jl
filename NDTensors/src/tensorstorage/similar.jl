@@ -53,6 +53,7 @@ end
 # Define Base.similar in terms of NDTensors.similar
 Base.similar(storage::TensorStorage) = NDTensors.similar(storage)
 Base.similar(storage::TensorStorage, eltype::Type) = NDTensors.similar(storage, eltype)
+## TODO: Are these methods needed?
 ## Base.similar(storage::TensorStorage, dims::Tuple) = NDTensors.similar(storage, dims)
 ## Base.similar(storage::TensorStorage, dims::Dims...) = NDTensors.similar(storage, dims...)
 ## Base.similar(storage::TensorStorage, dims::DimOrInd...) = NDTensors.similar(storage, dims...)

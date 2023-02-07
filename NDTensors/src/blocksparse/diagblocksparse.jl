@@ -444,15 +444,6 @@ function permutedims!(
   return R
 end
 
-## TODO: DELETE. Now implemented by generic `Tensor` version.
-## function permutedims(
-##   T::DiagBlockSparseTensor{<:Number,N}, perm::NTuple{N,Int}, f::Function=identity
-## ) where {N}
-##   R = NDTensors.similar(T, permute(inds(T), perm))
-##   permutedims!(R, T, perm, f)
-##   return R
-## end
-
 function permutedims(
   T::UniformDiagBlockSparseTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=identity
 ) where {ElT,N}
