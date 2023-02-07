@@ -28,11 +28,14 @@ for conserve_qns in (false, true)
   nsweeps = 5
   maxdim = [10, 20, 100, 100, 200]
   cutoff = 1e-10
+  kwargs = (; nsweeps, cutoff, maxdim, outputlevel=0)
 
   # Precompile
-  dmrg(H, psi; nsweeps, cutoff, maxdim, outputlevel=0)
+  dmrg(H, psi; kwargs...)
 
-  suite["1d_S=1_heisenberg"]["conserve_qns_$conserve_qns"] = @benchmarkable dmrg($H, $psi, $sweeps; nsweeps, cutoff, maxdim, outputlevel=0)
+  suite["1d_S=1_heisenberg"]["conserve_qns_$conserve_qns"] = @benchmarkable begin
+    dmrg($H, $psi; $kwargs...)
+  end
 end
 
 end
