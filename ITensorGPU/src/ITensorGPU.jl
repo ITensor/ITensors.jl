@@ -51,46 +51,49 @@ import ITensors:
   BroadcastStyle,
   Indices
 import ITensors.NDTensors:
-  can_contract,
-  similartype,
+  Atrans,
+  Btrans,
+  CombinerTensor,
   ContractionProperties,
-  contract!!,
+  Combiner,
+  Ctrans,
+  Diag,
+  DiagTensor,
+  Dense,
+  DenseTensor,
+  NonuniformDiag,
+  NonuniformDiagTensor,
+  Tensor,
+  UniformDiag,
+  UniformDiagTensor,
   _contract!!,
   _contract!,
+  _contract_scalar!,
+  _contract_scalar_noperm!,
+  can_contract,
+  compute_contraction_properties!,
+  contract!!,
   contract!,
   contract,
   contraction_output,
-  UniformDiagTensor,
-  CombinerTensor,
   contraction_output_type,
-  UniformDiag,
-  Diag,
-  DiagTensor,
-  NonuniformDiag,
-  NonuniformDiagTensor,
-  zero_contraction_output,
-  outer!,
-  outer!!,
-  is_trivial_permutation,
-  ind,
-  permutedims!!,
-  Dense,
-  DenseTensor,
-  Combiner,
-  Tensor,
   data,
   getperm,
-  compute_contraction_properties!,
-  Atrans,
-  Btrans,
-  Ctrans,
-  _contract_scalar!,
-  _contract_scalar_noperm!
+  ind,
+  is_trivial_permutation,
+  outer!,
+  outer!!,
+  permutedims!!,
+  set_eltype,
+  set_ndims,
+  similartype,
+  zero_contraction_output
 
 using ITensors.NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
 
 import Base.*, Base.permutedims!
-import Base: similar
+
+include("cuarray/set_types.jl")
 include("traits.jl")
 include("adapt.jl")
 include("tensor/cudense.jl")
