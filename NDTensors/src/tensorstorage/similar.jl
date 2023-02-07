@@ -15,6 +15,14 @@ function similar(storage::TensorStorage, dims::Tuple)
 end
 
 # NDTensors.similar
+function similar(storage::TensorStorage, eltype::Type, dims::Tuple)
+  # TODO: Don't convert to an `AbstractVector` with `vec`, once we support
+  # more general data types.
+  # return setdata(storage, NDTensors.similar(data(storage), eltype, dims))
+  return setdata(storage, vec(NDTensors.similar(data(storage), eltype, dims)))
+end
+
+# NDTensors.similar
 function similar(storagetype::Type{<:TensorStorage}, eltype::Type, dims::Tuple)
   return similar(similartype(storagetype, eltype), dims)
 end

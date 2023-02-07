@@ -84,6 +84,34 @@ function similar(arraytype::Type{<:AbstractArray}, eltype::Type, dims::Tuple)
   return NDTensors.similar(similartype(arraytype, eltype, dims), dims)
 end
 
+# TODO: Add an input `structure` which can store things like the nonzero
+# structure of a sparse/block sparse tensor.
+# NDTensors.similar
+# function similar(arraytype::Type{<:AbstractArray}, structure)
+#   return NDTensors.similar(similartype(arraytype, structure), structure)
+# end
+
+# TODO: Add an input `structure` which can store things like the nonzero
+# structure of a sparse/block sparse tensor.
+# NDTensors.similar
+# function similar(arraytype::Type{<:AbstractArray}, eltype::Type, structure)
+#   return NDTensors.similar(similartype(arraytype, eltype, structure), structure)
+# end
+
+# TODO: Add an input `structure` which can store things like the nonzero
+# structure of a sparse/block sparse tensor.
+# NDTensors.similar
+# function similar(arraytype::Type{<:AbstractArray}, structure, dims::Tuple)
+#   return NDTensors.similar(similartype(arraytype, structure, dims), structure, dims)
+# end
+
+# TODO: Add an input `structure` which can store things like the nonzero
+# structure of a sparse/block sparse tensor.
+# NDTensors.similar
+# function similar(arraytype::Type{<:AbstractArray}, eltype::Type, structure, dims::Tuple)
+#   return NDTensors.similar(similartype(arraytype, eltype, structure, dims), structure, dims)
+# end
+
 # TODO: Maybe makes an empty array, i.e. `similartype(arraytype, eltype)()`?
 # NDTensors.similar
 function similar(arraytype::Type{<:AbstractArray}, eltype::Type)
@@ -94,7 +122,7 @@ end
 
 # NDTensors.similar
 function similar(array::AbstractArray, eltype::Type, dims::Tuple)
-  return NDTensors.similar(typeof(array), eltype, dims)
+  return NDTensors.similar(similartype(typeof(array), eltype), dims)
 end
 
 # NDTensors.similar

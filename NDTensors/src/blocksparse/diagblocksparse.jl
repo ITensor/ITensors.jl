@@ -3,6 +3,8 @@ export DiagBlockSparse, DiagBlockSparseTensor
 # DiagBlockSparse can have either Vector storage, in which case
 # it is a general DiagBlockSparse tensor, or scalar storage,
 # in which case the diagonal has a uniform value
+# TODO: Define as an `AbstractBlockSparse`, or
+# `GenericBlockSparse` parametrized by `Dense` or `Diag`.
 struct DiagBlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
   diagblockoffsets::BlockOffsets{N}  # Block number-offset pairs
@@ -20,12 +22,17 @@ struct DiagBlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   end
 end
 
+# Data and type accessors.
+datatype(storage::DiagBlockSparse) = datatype(typeof(storage))
+datatype(storagetype::Type{<:DiagBlockSparse}) = fieldtype(storagetype, :data)
+blockoffsets(storage::DiagBlockSparse) = getfield(storage, :diagblockoffsets)
+blockoffsetstype(storage::DiagBlockSparse) = blockoffsetstype(typeof(storage))
+blockoffsetstype(storagetype::Type{<:DiagBlockSparse}) = fieldtype(storagetype, :diagblockoffsets)
+
 function setdata(storagetype::Type{<:DiagBlockSparse}, data::AbstractArray)
   error("Must specify `diagblockoffsets`.")
-  return DiagBlockSparse(data, diagblockoffsetstype(storagetype)())
+  return DiagBlockSparse(data, blockoffsetstype(storagetype)())
 end
-
-datatype(::Type{<:DiagBlockSparse{<:Any,DataT}}) where {DataT} = DataT
 
 function set_datatype(
   storagetype::Type{<:DiagBlockSparse}, datatype::Type{<:AbstractVector}
