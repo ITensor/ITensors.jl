@@ -261,7 +261,7 @@ function _contract!(
   for (ii, ic) in enumerate(Cinds)
     ctcinds[ii] = findfirst(x -> x == ic, ind_dict)
   end
-  id_op = cuTENSOR.CUTENSOR.CUTENSOR_OP_IDENTITY
+  id_op = cuTENSOR.CUTENSOR_OP_IDENTITY
   dict_key = ""
   for cc in zip(ctcinds, Cdims)
     dict_key *= string(cc[1]) * "," * string(cc[2]) * ","
@@ -352,9 +352,9 @@ function _contract!(
 end
 
 function Base.:+(B::CuDenseTensor, A::CuDenseTensor)
-  opC = CUTENSOR.CUTENSOR_OP_IDENTITY
-  opA = CUTENSOR.CUTENSOR_OP_IDENTITY
-  opAC = CUTENSOR.CUTENSOR_OP_ADD
+  opC = cuTENSOR.CUTENSOR_OP_IDENTITY
+  opA = cuTENSOR.CUTENSOR_OP_IDENTITY
+  opAC = cuTENSOR.CUTENSOR_OP_ADD
   Ais = inds(A)
   Bis = inds(B)
   ind_dict = Vector{Index}()
@@ -375,7 +375,7 @@ function Base.:+(B::CuDenseTensor, A::CuDenseTensor)
   end
   ctcinds = copy(ctbinds)
   C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
-  CUTENSOR.elementwiseBinary!(
+  cuTENSOR.elementwiseBinary!(
     one(eltype(Adata)),
     reshapeAdata,
     ctainds,
@@ -393,9 +393,9 @@ function Base.:+(B::CuDenseTensor, A::CuDenseTensor)
 end
 
 function Base.:+(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
-  opA = CUTENSOR.CUTENSOR_OP_IDENTITY
-  opC = CUTENSOR.CUTENSOR_OP_IDENTITY
-  opAC = CUTENSOR.CUTENSOR_OP_ADD
+  opA = cuTENSOR.CUTENSOR_OP_IDENTITY
+  opC = cuTENSOR.CUTENSOR_OP_IDENTITY
+  opAC = cuTENSOR.CUTENSOR_OP_ADD
   ind_dict = Vector{Index}()
   for (idx, i) in enumerate(Ais)
     push!(ind_dict, i)
@@ -415,7 +415,7 @@ function Base.:+(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
   ctcinds = copy(ctbinds)
   C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
   Cis = Bis
-  C = CUTENSOR.elementwiseBinary!(
+  C = cuTENSOR.elementwiseBinary!(
     1, reshapeAdata, ctainds, opA, 1, reshapeBdata, ctbinds, opC, C, ctcinds, opAC
   )
   copyto!(data(B), vec(C))
@@ -423,9 +423,9 @@ function Base.:+(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
 end
 
 function Base.:-(B::CuDenseTensor, A::CuDenseTensor)
-  opC = CUTENSOR.CUTENSOR_OP_IDENTITY
-  opA = CUTENSOR.CUTENSOR_OP_IDENTITY
-  opAC = CUTENSOR.CUTENSOR_OP_ADD
+  opC = cuTENSOR.CUTENSOR_OP_IDENTITY
+  opA = cuTENSOR.CUTENSOR_OP_IDENTITY
+  opAC = cuTENSOR.CUTENSOR_OP_ADD
   Ais = inds(A)
   Bis = inds(B)
   ind_dict = Vector{Index}()
@@ -446,7 +446,7 @@ function Base.:-(B::CuDenseTensor, A::CuDenseTensor)
   end
   ctcinds = copy(ctbinds)
   C = CUDA.zeros(eltype(Bdata), dims(Bis))
-  CUTENSOR.elementwiseBinary!(
+  cuTENSOR.elementwiseBinary!(
     -one(eltype(Adata)),
     reshapeAdata,
     ctainds,
@@ -464,9 +464,9 @@ function Base.:-(B::CuDenseTensor, A::CuDenseTensor)
 end
 
 function Base.:-(A::CuDense, Ais::IndexSet, B::CuDense, Bis::IndexSet)
-  opA = CUTENSOR.CUTENSOR_OP_IDENTITY
-  opC = CUTENSOR.CUTENSOR_OP_IDENTITY
-  opAC = CUTENSOR.CUTENSOR_OP_ADD
+  opA = cuTENSOR.CUTENSOR_OP_IDENTITY
+  opC = cuTENSOR.CUTENSOR_OP_IDENTITY
+  opAC = cuTENSOR.CUTENSOR_OP_ADD
   ind_dict = Vector{Index}()
   for (idx, i) in enumerate(Ais)
     push!(ind_dict, i)
@@ -486,7 +486,7 @@ function Base.:-(A::CuDense, Ais::IndexSet, B::CuDense, Bis::IndexSet)
   ctcinds = copy(ctbinds)
   C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
   Cis = Bis
-  C = CUTENSOR.elementwiseBinary!(
+  C = cuTENSOR.elementwiseBinary!(
     one(eltype(Adata)),
     reshapeAdata,
     ctainds,
