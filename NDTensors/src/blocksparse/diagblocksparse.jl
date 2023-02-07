@@ -27,7 +27,12 @@ datatype(storage::DiagBlockSparse) = datatype(typeof(storage))
 datatype(storagetype::Type{<:DiagBlockSparse}) = fieldtype(storagetype, :data)
 blockoffsets(storage::DiagBlockSparse) = getfield(storage, :diagblockoffsets)
 blockoffsetstype(storage::DiagBlockSparse) = blockoffsetstype(typeof(storage))
-blockoffsetstype(storagetype::Type{<:DiagBlockSparse}) = fieldtype(storagetype, :diagblockoffsets)
+function blockoffsetstype(storagetype::Type{<:DiagBlockSparse})
+  return fieldtype(storagetype, :diagblockoffsets)
+end
+
+# TODO: Deprecate?
+diagblockoffsets(storage::DiagBlockSparse) = blockoffsets(storage)
 
 function setdata(storagetype::Type{<:DiagBlockSparse}, data::AbstractArray)
   error("Must specify `diagblockoffsets`.")
@@ -59,10 +64,6 @@ end
 function DiagBlockSparse(::UndefInitializer, boffs::BlockOffsets, diaglength::Integer)
   return DiagBlockSparse(Float64, undef, boffs, diaglength)
 end
-
-diagblockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
-
-blockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
 
 function findblock(
   D::DiagBlockSparse{<:Number,<:Union{Number,AbstractVector},N}, block::Block{N}; vargs...

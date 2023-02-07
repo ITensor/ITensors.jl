@@ -236,17 +236,6 @@ function insert_diag_blocks!(T::AbstractArray)
   end
 end
 
-# TODO: add support for off-diagonals, return
-# block sparse vector instead of dense.
-function diag(T::BlockSparseTensor)
-  ## d = NDTensors.similar(T, ElT, (diaglength(T),))
-  d = NDTensors.similar(dense(typeof(T)), eltype(T), (diaglength(T),))
-  for n in 1:diaglength(T)
-    d[n] = T[n, n]
-  end
-  return d
-end
-
 # TODO: Add a checkbounds
 @propagate_inbounds function setindex!(
   T::BlockSparseTensor{ElT,N}, val, i::Vararg{Int,N}

@@ -1,9 +1,6 @@
 # NDTensors.similar
 function similar(storagetype::Type{<:BlockSparse}, blockoffsets::BlockOffsets, dims::Tuple)
-  # TODO: Don't convert to an `AbstractVector` with `vec`, once we support
-  # more general data types.
-  # data = similar(datatype(storagetype), dims)
-  data = vec(similar(datatype(storagetype), dims))
+  data = similar(datatype(storagetype), nnz(blockoffsets, dims))
   return BlockSparse(data, blockoffsets)
 end
 
