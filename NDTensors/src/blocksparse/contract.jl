@@ -1,6 +1,6 @@
 # <fermions>
 function compute_alpha(
-  ElR, labelsR, blockR, indsR, labelsT1, blockT1, indsT1, labelsT2, blockT2, indsT2
+  ElR, labelsR, blockR, indsR, labelstensor1, blocktensor1, indstensor1, labelstensor2, blocktensor2, indstensor2
 )
   return one(ElR)
 end
@@ -56,23 +56,23 @@ end
 # TODO: complete this function: determine the output blocks from the input blocks
 # Also, save the contraction list (which block-offsets contract with which),
 # may not be generic with other contraction functions!
-function contraction_output(T1::BlockSparseTensor, T2::BlockSparseTensor, indsR)
-  TensorR = contraction_output_type(typeof(T1), typeof(T2), typeof(indsR))
+function contraction_output(tensor1::BlockSparseTensor, tensor2::BlockSparseTensor, indsR)
+  TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
   return similar(TensorR, blockoffsetsR, indsR)
 end
 
 function contraction_output(
-  T1::BlockSparseTensor, labelsT1, T2::BlockSparseTensor, labelsT2, labelsR
+  tensor1::BlockSparseTensor, labelstensor1, tensor2::BlockSparseTensor, labelstensor2, labelsR
 )
-  indsR = contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
-  TensorR = contraction_output_type(typeof(T1), typeof(T2), typeof(indsR))
+  indsR = contract_inds(inds(tensor1), labelstensor1, inds(tensor2), labelstensor2, labelsR)
+  TensorR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
   blockoffsetsR, contraction_plan = contract_blockoffsets(
-    blockoffsets(T1),
-    inds(T1),
-    labelsT1,
-    blockoffsets(T2),
-    inds(T2),
-    labelsT2,
+    blockoffsets(tensor1),
+    inds(tensor1),
+    labelstensor1,
+    blockoffsets(tensor2),
+    inds(tensor2),
+    labelstensor2,
     indsR,
     labelsR,
   )
@@ -280,24 +280,24 @@ end
 ## Perform the contraction
 
 function contract(
-  T1::BlockSparseTensor,
-  labelsT1,
-  T2::BlockSparseTensor,
-  labelsT2,
-  labelsR=contract_labels(labelsT1, labelsT2),
+  tensor1::BlockSparseTensor,
+  labelstensor1,
+  tensor2::BlockSparseTensor,
+  labelstensor2,
+  labelsR=contract_labels(labelstensor1, labelstensor2),
 )
-  R, contraction_plan = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
-  R = contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
+  R, contraction_plan = contraction_output(tensor1, labelstensor1, tensor2, labelstensor2, labelsR)
+  R = contract!(R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan)
   return R
 end
 
 function contract!(
   R::BlockSparseTensor,
   labelsR,
-  T1::BlockSparseTensor,
-  labelsT1,
-  T2::BlockSparseTensor,
-  labelsT2,
+  tensor1::BlockSparseTensor,
+  labelstensor1,
+  tensor2::BlockSparseTensor,
+  labelstensor2,
   contraction_plan,
 )
   alg = Algorithm"sequential"()
@@ -306,45 +306,45 @@ function contract!(
   elseif using_threaded_blocksparse() && nthreads() > 1
     alg = Algorithm"threaded"()
   end
-  return contract!(alg, R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
+  return contract!(alg, R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan)
 end
 
 function contract!(
   ::Algorithm"sequential",
   R::BlockSparseTensor,
   labelsR,
-  T1::BlockSparseTensor,
-  labelsT1,
-  T2::BlockSparseTensor,
-  labelsT2,
+  tensor1::BlockSparseTensor,
+  labelstensor1,
+  tensor2::BlockSparseTensor,
+  labelstensor2,
   contraction_plan,
 )
   executor = SequentialEx()
-  return contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan, executor)
+  return contract!(R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor)
 end
 
 function contract!(
   ::Algorithm"threaded",
   R::BlockSparseTensor,
   labelsR,
-  T1::BlockSparseTensor,
-  labelsT1,
-  T2::BlockSparseTensor,
-  labelsT2,
+  tensor1::BlockSparseTensor,
+  labelstensor1,
+  tensor2::BlockSparseTensor,
+  labelstensor2,
   contraction_plan,
 )
   executor = ThreadedEx()
-  return contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan, executor)
+  return contract!(R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, contraction_plan, executor)
 end
 
 function contract!(
   ::Algorithm"no_op",
   R::BlockSparseTensor,
   labelsR,
-  T1::BlockSparseTensor,
-  labelsT1,
-  T2::BlockSparseTensor,
-  labelsT2,
+  tensor1::BlockSparseTensor,
+  labelstensor1,
+  tensor2::BlockSparseTensor,
+  labelstensor2,
   contraction_plan,
 )
   return R
@@ -353,10 +353,10 @@ end
 function contract!(
   R::BlockSparseTensor,
   labelsR,
-  T1::BlockSparseTensor,
-  labelsT1,
-  T2::BlockSparseTensor,
-  labelsT2,
+  tensor1::BlockSparseTensor,
+  labelstensor1,
+  tensor2::BlockSparseTensor,
+  labelstensor2,
   contraction_plan,
   executor,
 )
@@ -374,7 +374,7 @@ function contract!(
   for block_contraction in contraction_plan
     push!(grouped_contraction_plan[last(block_contraction)], block_contraction)
   end
-  _contract!(R, labelsR, T1, labelsT1, T2, labelsT2, grouped_contraction_plan, executor)
+  _contract!(R, labelsR, tensor1, labelstensor1, tensor2, labelstensor2, grouped_contraction_plan, executor)
   return R
 end
 
@@ -384,19 +384,19 @@ end
 function _contract!(
   R::BlockSparseTensor,
   labelsR,
-  T1::BlockSparseTensor,
-  labelsT1,
-  T2::BlockSparseTensor,
-  labelsT2,
+  tensor1::BlockSparseTensor,
+  labelstensor1,
+  tensor2::BlockSparseTensor,
+  labelstensor2,
   grouped_contraction_plan,
   executor,
 )
   Folds.foreach(grouped_contraction_plan.values, executor) do contraction_plan_group
     # Start by overwriting the block:
-    # R .= α .* (T1 * T2)
+    # R .= α .* (tensor1 * tensor2)
     β = zero(eltype(R))
     for block_contraction in contraction_plan_group
-      blockT1, blockT2, blockR = block_contraction
+      blocktensor1, blocktensor2, blockR = block_contraction
 
       # <fermions>:
       α = compute_alpha(
@@ -404,20 +404,20 @@ function _contract!(
         labelsR,
         blockR,
         inds(R),
-        labelsT1,
-        blockT1,
-        inds(T1),
-        labelsT2,
-        blockT2,
-        inds(T2),
+        labelstensor1,
+        blocktensor1,
+        inds(tensor1),
+        labelstensor2,
+        blocktensor2,
+        inds(tensor2),
       )
 
-      contract!(R[blockR], labelsR, T1[blockT1], labelsT1, T2[blockT2], labelsT2, α, β)
+      contract!(R[blockR], labelsR, tensor1[blocktensor1], labelstensor1, tensor2[blocktensor2], labelstensor2, α, β)
 
       if iszero(β)
         # After the block has been overwritten,
         # add into it:
-        # R .= α .* (T1 * T2) .+ β .* R
+        # R .= α .* (tensor1 * tensor2) .+ β .* R
         β = one(eltype(R))
       end
     end
