@@ -277,7 +277,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   @assert isortho(psi) && orthocenter(psi) == 1
 
   if !isnothing(write_when_maxdim_exceeds)
-    if (maxlinkdim(psi) > write_when_maxdim_exceeds) || 
+    if (maxlinkdim(psi) > write_when_maxdim_exceeds) ||
       (maxdim(sweeps, 1) > write_when_maxdim_exceeds)
       PH = disk(PH; path=write_path)
     end
