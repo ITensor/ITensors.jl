@@ -3,7 +3,7 @@ import ITensors: ITensor
 import CUDA: CuArray
 
 function cuITensor(eltype::Type{<:Number}, inds::IndexSet)
-  return itensor(NDTensors.default_storagetype(CuVector{eltype})(dim(inds)), inds)
+  return itensor(NDTensors.default_storagetype(CuVector{eltype, default_buffertype()})(dim(inds)), inds)
 end
 cuITensor(::Type{T}, inds::Index...) where {T<:Number} = cuITensor(T, IndexSet(inds...))
 
@@ -12,7 +12,8 @@ cuITensor(inds::Index...) = cuITensor(IndexSet(inds...))
 
 cuITensor() = ITensor()
 function cuITensor(x::S, inds::IndexSet{N}) where {S<:Number,N}
-  d = NDTensors.Dense{S, CuVector{S}}(x, dim(inds))
+  d = NDTensors.Dense{S, CuVector{S, default_buffertype()}}(
+    fill!(CuVector{S, default_buffertype()}(undef, dim(inds)),x))
   return ITensor(d, inds)
 end
 cuITensor(x::S, inds::Index...) where {S<:Number} = cuITensor(x, IndexSet(inds...))
