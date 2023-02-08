@@ -41,6 +41,8 @@ function set_eltype_if_unspecified(
 ) where {T}
   return arraytype
 end
+
+#TODO transition to set_eltype when working for wrapped types
 function set_eltype_if_unspecified(
   arraytype::Type{<:AbstractArray}, eltype::Type=default_eltype()
 )
