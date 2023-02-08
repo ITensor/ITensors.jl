@@ -946,5 +946,5 @@ function HDF5.read(
     error("HDF5 group or file does not contain IndexSet data")
   end
   N = read(g, "length")
-  return T(n -> read(g, "index_$n", Index), N)
+  return T([read(g, "index_$n", Index) for n in 1:N])
 end

@@ -44,7 +44,7 @@ end
 
 suite["heff_2site"]["blocksparse"] = BenchmarkGroup()
 let
-  #=
+  """
   Load the ground state energy `energy`, Hamiltonian MPO `H`, and ground state MPS `psi` resulting from running:
   ```julia
   using Pkg
@@ -52,8 +52,9 @@ let
 
   using ITensors
 
+  filename_base = "2d_hubbard_conserve_momentum"
   example_dir = joinpath(pkgdir(ITensors), "examples", "dmrg")
-  include(joinpath(example_dir, "2d_hubbard_conserve_momentum.jl"))
+  include(joinpath(example_dir, filename_base * ".jl"))
   kwargs = (; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10,
     maxdim=3000, random_init=false, threaded_blocksparse=true)
   energy, H, psi = main(; kwargs...);
@@ -71,39 +72,36 @@ let
   end
 
   tn = get_effective_hamiltonian(H, psi);
+  tn_fluxes = flux.(tn);
+  tn_inds = inds.(tn);
 
   using ITensors.HDF5
   file_dir = joinpath(pkgdir(ITensors), "benchmark", "artifacts")
-  h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum_energy.h5"), "w") do fid
-    fid["energy"] = energy
-  end
-  h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum_ntensors.h5"), "w") do fid
+  mkpath(file_dir)
+  h5open(joinpath(file_dir, filename_base * ".h5"), "w") do fid
     fid["ntensors"] = length(tn)
-  end
-  for j in eachindex(tn)
-    h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum_tensor_" * string(j) * ".h5"), "w") do fid
-      fid["tensor"] = tn[j]
+    for j in eachindex(tn)
+      fid["flux[" * string(j) * "]"] = tn_fluxes[j]
+      fid["inds[" * string(j) * "]"] = tn_inds[j]
     end
   end
   ```
-  =#
-  file_path = joinpath(pkgdir(ITensors), "benchmark", "artifacts")
-  file_name(suffix) = "2d_hubbard_conserve_momentum_$(suffix).h5"
-  energy = h5open(joinpath(file_path, file_name("energy"))) do fid
-    return read(fid, "energy")
-  end
-  ntensors = h5open(joinpath(file_path, file_name("ntensors"))) do fid
-    return read(fid, "ntensors")
-  end
-  tn = Vector{ITensor}(undef, ntensors)
-  for j in eachindex(tn)
-    tn[j] = h5open(joinpath(file_path, file_name("tensor_$(j)"))) do fid
-      return read(fid, "tensor", ITensor)
+  """
+  file_dir = joinpath(pkgdir(ITensors), "benchmark", "artifacts")
+  tn = h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum.h5")) do fid
+    ntensors = read(fid, "ntensors")
+    tn_fluxes = Vector{QN}(undef, ntensors)
+    tn_inds = Vector{Vector{Index{Vector{Pair{QN,Int64}}}}}(undef, ntensors)
+    for j in 1:ntensors
+      tn_fluxes[j] = read(fid, "flux[" * string(j) * "]", QN)
+      tn_inds[j] = read(fid, "inds[" * string(j) * "]", Vector{Index{Vector{Pair{QN,Int64}}}})
     end
+    tn = [randomITensor(tn_fluxes[j], tn_inds[j]) for j in 1:ntensors]
+    return tn
   end
 
   # Correctness check
-  @assert contract([tn; dag(first(tn)')])[] ≈ energy
+  @assert contract([tn; dag(first(tn)')])[] isa Number
 
   suite["heff_2site"]["blocksparse"]["sequential"] = @benchmarkable begin
     ITensors.enable_threaded_blocksparse(false)
