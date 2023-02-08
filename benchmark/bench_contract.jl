@@ -44,7 +44,7 @@ end
 
 suite["heff_2site"]["blocksparse"] = BenchmarkGroup()
 let
-  """
+  #=
   Load the ground state energy `energy`, Hamiltonian MPO `H`, and ground state MPS `psi` resulting from running:
   ```julia
   using Pkg
@@ -74,25 +74,32 @@ let
 
   using ITensors.HDF5
   file_dir = joinpath(pkgdir(ITensors), "benchmark", "artifacts")
-  h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum.h5"), "w") do fid
+  h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum_energy.h5"), "w") do fid
     fid["energy"] = energy
+  end
+  h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum_ntensors.h5"), "w") do fid
     fid["ntensors"] = length(tn)
-    for j in eachindex(tn)
-      fid["tn[" * string(j) * "]"] = tn[j]
+  end
+  for j in eachindex(tn)
+    h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum_tensor_" * string(j) * ".h5"), "w") do fid
+      fid["tensor"] = tn[j]
     end
   end
   ```
-  """
+  =#
   file_path = joinpath(pkgdir(ITensors), "benchmark", "artifacts")
-  file_name = "2d_hubbard_conserve_momentum.h5"
-  energy, tn = h5open(joinpath(file_path, file_name)) do fid
-    energy = read(fid, "energy")
-    ntensors = read(fid, "ntensors")
-    tn = Vector{ITensor}(undef, ntensors)
-    for j in eachindex(tn)
-      tn[j] = read(fid, "tn[" * string(j) * "]", ITensor)
+  file_name(suffix) = "2d_hubbard_conserve_momentum_$(suffix).h5"
+  energy = h5open(joinpath(file_path, file_name("energy"))) do fid
+    return read(fid, "energy")
+  end
+  ntensors = h5open(joinpath(file_path, file_name("ntensors"))) do fid
+    return read(fid, "ntensors")
+  end
+  tn = Vector{ITensor}(undef, ntensors)
+  for j in eachindex(tn)
+    tn[j] = h5open(joinpath(file_path, file_name("tensor_$(j)"))) do fid
+      return read(fid, "tensor", ITensor)
     end
-    return energy, tn
   end
 
   # Correctness check
