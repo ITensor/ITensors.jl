@@ -35,6 +35,10 @@ function Dense{ElT,DataT}(::UndefInitializer, inds::Tuple) where {ElT,DataT<:Abs
   return Dense{ElT,DataT}(similar(DataT, dim(inds)))
 end
 
+function Dense{ElT, DataT}(x::ElT, dim::Integer) where {ElT, DataT<:AbstractVector}
+  return Dense{ElT, DataT}(fill!(similar(DataT, dim,), x))
+end
+
 function Dense{ElR,DataT}(data::AbstractArray) where {ElR,DataT<:AbstractArray}
   data = convert(DataT, data)
   return Dense{ElR,DataT}(data)
