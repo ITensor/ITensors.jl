@@ -1,4 +1,6 @@
 buffertype(::Type{<:CuArray{<:Any,<:Any,B}}) where {B} = B
+buffertype(::Type{<:CuArray}) = default_buffertype()
+default_buffertype() = CUDA.Mem.DeviceBuffer
 
 function set_eltype(arraytype::Type{<:CuArray}, eltype::Type)
   return CuArray{eltype,ndims(arraytype),buffertype(arraytype)}
