@@ -52,8 +52,8 @@ let
 
   using ITensors
 
-  example_path = joinpath(pkgdir(ITensors), "examples", "dmrg", "2d_hubbard_conserve_momentum.jl")
-  include(example_path)
+  example_dir = joinpath(pkgdir(ITensors), "examples", "dmrg")
+  include(joinpath(example_dir, "2d_hubbard_conserve_momentum.jl"))
   kwargs = (; Nx=8, Ny=4, U=4.0, t=1.0, nsweeps=10,
     maxdim=3000, random_init=false, threaded_blocksparse=true)
   energy, H, psi = main(; kwargs...);
@@ -73,8 +73,8 @@ let
   tn = get_effective_hamiltonian(H, psi);
 
   using ITensors.HDF5
-  file_path = joinpath(pkgdir(ITensors), "benchmark", "artifacts")
-  h5open(joinpath(file_dir, "artifacts", "2d_hubbard_conserve_momentum.h5"), "w") do fid
+  file_dir = joinpath(pkgdir(ITensors), "benchmark", "artifacts")
+  h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum.h5"), "w") do fid
     fid["energy"] = energy
     fid["ntensors"] = length(tn)
     for j in eachindex(tn)
