@@ -938,6 +938,12 @@ function HDF5.write(parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, i
   end
 end
 
+# Catch if the `eltype` is specified or unspecified, and
+# set a default if it isn't fully specified.
+_default_eltype(arraytype::Type{<:AbstractArray}) = eltype(arraytype)
+_default_eltype(arraytype::Type{<:AbstractArray{Index{SpaceT}}}) where {SpaceT} = arraytype
+_default_eltype(arraytype::Type{<:AbstractArray{<:Index}}) = Index
+
 function HDF5.read(
   parent::Union{HDF5.File,HDF5.Group}, name::AbstractString, T::Type{<:Indices}
 )
@@ -945,6 +951,6 @@ function HDF5.read(
   if read(attributes(g)["type"]) != "IndexSet"
     error("HDF5 group or file does not contain IndexSet data")
   end
-  N = read(g, "length")
-  return T(eltype(T)[read(g, "index_$n", Index) for n in 1:N])
+  n = read(g, "length")
+  return T(_default_eltype(T)[read(g, "index_$j", Index) for j in 1:n])
 end
