@@ -84,7 +84,7 @@ function LinearAlgebra.svd(T::CuDenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,
   dsi = diagind(reshape(Sdata, dS, dS), 0)
   Sdata[dsi] = MS
   S = tensor(Dense(Sdata), Sinds)
-  V = tensor(Dense(vec(copy(MV))), Vinds)
+  V = tensor(Dense(vec(MV)), Vinds)
   return U, S, V, spec
 end
 
