@@ -13,7 +13,9 @@ using SimpleTraits
 using StaticArrays
 using Strided
 using TimerOutputs
-using cuTENSOR
+
+# using cuTENSOR
+const cuTENSOR = CUDA.CUTENSOR
 
 using NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
 
