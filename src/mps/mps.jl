@@ -520,12 +520,6 @@ end
 
 replace_siteinds(M::MPS, sites) = replace_siteinds!(copy(M), sites)
 
-# Allows overloading `replacebond!` based on the projected
-# MPO type. By default just calls `replacebond!` on the MPS.
-function replacebond!(PH, M::MPS, b::Int, phi::ITensor; kwargs...)
-  return replacebond!(M, b, phi; kwargs...)
-end
-
 """
     replacebond!(M::MPS, b::Int, phi::ITensor; kwargs...)
 
