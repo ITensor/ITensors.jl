@@ -13,10 +13,7 @@ using SimpleTraits
 using StaticArrays
 using Strided
 using TimerOutputs
-
-# TODO: Change this when we update to CUDA.jl v4
-# using cuTENSOR
-const cuTENSOR = CUDA.CUTENSOR
+using cuTENSOR
 
 using NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
 
@@ -80,9 +77,7 @@ import NDTensors:
   set_ndims,
   similartype,
   zero_contraction_output
-# TODO: Change this when we update to CUDA.jl v4
-# import cuTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
-import CUDA.CUTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
+import cuTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
 
 #const ContractionPlans = Dict{String, Tuple{cutensorAlgo_t, cutensorContractionPlan_t}}()
 const ContractionPlans = Dict{String,cutensorAlgo_t}()
