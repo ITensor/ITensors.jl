@@ -94,7 +94,9 @@ let
     tn_inds = Vector{Vector{Index{Vector{Pair{QN,Int64}}}}}(undef, ntensors)
     for j in 1:ntensors
       tn_fluxes[j] = read(fid, "flux[" * string(j) * "]", QN)
-      tn_inds[j] = read(fid, "inds[" * string(j) * "]", Vector{Index{Vector{Pair{QN,Int64}}}})
+      tn_inds[j] = read(
+        fid, "inds[" * string(j) * "]", Vector{Index{Vector{Pair{QN,Int64}}}}
+      )
     end
     tn = [randomITensor(tn_fluxes[j], tn_inds[j]) for j in 1:ntensors]
     return tn
