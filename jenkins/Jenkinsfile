@@ -27,7 +27,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="NDTensorGPU"); Pkg.test("ITensorGPU");'
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
             '''
           }
         }
@@ -51,7 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="NDTensorGPU"); Pkg.test("ITensorGPU");'
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
             '''
           }
         }
@@ -75,7 +75,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="NDTensorGPU"); Pkg.test("ITensorGPU");'
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
             '''
           }
         }
