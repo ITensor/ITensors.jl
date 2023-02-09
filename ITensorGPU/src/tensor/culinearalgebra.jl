@@ -83,8 +83,8 @@ function LinearAlgebra.svd(T::CuDenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,
   Sdata = CUDA.zeros(ElT, dS * dS)
   dsi = diagind(reshape(Sdata, dS, dS), 0)
   Sdata[dsi] = MS
-  S = Tensor(Dense(Sdata), Sinds)
-  V = Tensor(Dense(vec(copy(MV))), Vinds)
+  S = tensor(Dense(Sdata), Sinds)
+  V = tensor(Dense(vec(copy(MV))), Vinds)
   return U, S, V, spec
 end
 
