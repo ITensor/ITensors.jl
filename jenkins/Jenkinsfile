@@ -27,9 +27,6 @@ pipeline {
           }
           steps {
             sh '''
-              rm Manifest.toml
-            '''
-            sh '''
               julia --project=monorepo -e 'using Pkg; pkg"dev ./NDTensors . ./ITensorGPU";'
             '''
             sh '''
@@ -57,9 +54,6 @@ pipeline {
           }
           steps {
             sh '''
-              rm Manifest.toml
-            '''
-            sh '''
               julia --project=monorepo -e 'using Pkg; pkg"dev ./NDTensors . ./ITensorGPU";'
             '''
             sh '''
@@ -86,9 +80,6 @@ pipeline {
             JULIA_NUM_THREADS = 4
           }
           steps {
-            sh '''
-              rm Manifest.toml
-            '''
             sh '''
               julia --project=monorepo -e 'using Pkg; pkg"dev ./NDTensors . ./ITensorGPU";'
             '''
