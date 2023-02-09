@@ -1,6 +1,6 @@
 ## This is a fil which specifies the default storage type provided some set of parameters
 ## The parameters are the element type and storage type
-default_datatype(eltype::Type=default_datatype()) = Vector{eltype}
+default_datatype(eltype::Type=default_eltype()) = Vector{eltype}
 default_eltype() = Float64
 
 ## TODO use multiple dispace to make this pick between dense and blocksparse
