@@ -6,7 +6,7 @@ To run the benchmarks, you should go to the benchmark folder and activate the be
 ```julia
 julia> using ITensors
 
-julia> cd(joinpath(pkgdir(ITensors), "benchmarks"))
+julia> cd(joinpath(pkgdir(ITensors), "benchmark"))
 
 julia> using Pkg
 

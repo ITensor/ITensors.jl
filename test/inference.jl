@@ -62,9 +62,7 @@ end
   )
   @test indsR isa Tuple{Index{Vector{Pair{QN,Int}}},Index{Vector{Pair{QN,Int}}}}
 
-  TensorT = @inferred(
-    NDTensors.contraction_output_type(typeof(T1), typeof(T2), indsR)
-  )
+  TensorT = @inferred(NDTensors.contraction_output_type(typeof(T1), typeof(T2), indsR))
   @test TensorT <: Tensor{Float64,2,BlockSparse{Float64,Vector{Float64},2},typeof(indsR)}
 
   blockoffsetsR, contraction_plan = @inferred(
