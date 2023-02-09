@@ -21,7 +21,7 @@ TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [compat]
 Adapt = "3.5"
-CUDA = "3.13" # "4.0"
+CUDA = "3.5" # "4.0"
 Combinatorics = "1.0.2"
 Functors = "0.2, 0.3, 0.4"
 HDF5 = "0.15.7, 0.16"
