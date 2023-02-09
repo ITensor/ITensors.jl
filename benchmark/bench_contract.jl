@@ -91,16 +91,14 @@ let
   tn = h5open(joinpath(file_dir, "2d_hubbard_conserve_momentum.h5")) do fid
     ntensors = read(fid, "ntensors")
     tn_fluxes = Vector{QN}(undef, ntensors)
-    tn_inds = Vector{Vector{Index{Vector{Pair{QN,Int64}}}}}(undef, ntensors)
+    tn_inds = Vector{Vector{Index}}(undef, ntensors)
     for j in 1:ntensors
       tn_fluxes[j] = read(fid, "flux[" * string(j) * "]", QN)
-      tn_inds[j] = read(
-        fid, "inds[" * string(j) * "]", Vector{Index{Vector{Pair{QN,Int64}}}}
-      )
+      tn_inds[j] = read(fid, "inds[" * string(j) * "]", Vector{<:Index})
     end
     tn = [randomITensor(tn_fluxes[j], tn_inds[j]) for j in 1:ntensors]
     return tn
-  end
+  end;
 
   # Correctness check
   @assert contract([tn; dag(first(tn)')])[] isa Number
