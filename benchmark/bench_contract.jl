@@ -98,7 +98,7 @@ let
     end
     tn = [randomITensor(tn_fluxes[j], tn_inds[j]) for j in 1:ntensors]
     return tn
-  end;
+  end
 
   # Correctness check
   @assert contract([tn; dag(first(tn)')])[] isa Number
