@@ -350,7 +350,6 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
         @timeit_debug timer "dmrg: replacebond!" begin
           spec = replacebond!(
-            PH,
             psi,
             b,
             phi;
