@@ -14,6 +14,22 @@ function compute_alpha(
   return one(ElR)
 end
 
+function maybe_contract_blocks!(
+  contraction_plan,
+  block1,
+  block2,
+  labels1_to_labels2,
+  labels1_to_labelsR,
+  labels2_to_labelsR,
+  ValNR,
+)
+  if are_blocks_contracted(block1, block2, labels1_to_labels2)
+    blockR = contract_blocks(block1, labels1_to_labelsR, block2, labels2_to_labelsR, ValNR)
+    push!(contraction_plan, (block1, block2, blockR))
+  end
+  return nothing
+end
+
 function contract_labels(labels1, labels2, labelsR)
   labels1_to_labels2 = find_matching_positions(labels1, labels2)
   labels1_to_labelsR = find_matching_positions(labels1, labelsR)

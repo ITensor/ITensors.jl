@@ -1,36 +1,15 @@
 # TODO: This seems to be faster than the newer version using `Folds.jl`
 # in `contract_folds.jl`, investigate why.
-function contract_blockoffsets(
+function contract_blocks!(
   alg::Algorithm"threaded_threads",
-  boffs1::BlockOffsets,
-  inds1,
-  labels1,
-  boffs2::BlockOffsets,
-  inds2,
-  labels2,
-  indsR,
-  labelsR,
+  contraction_plans,
+  boffs1,
+  boffs2,
+  labels1_to_labels2,
+  labels1_to_labelsR,
+  labels2_to_labelsR,
+  ValNR,
 )
-  N1 = ndims(boffs1)
-  N2 = ndims(boffs2)
-  NR = length(labelsR)
-  ValNR = ValLength(labelsR)
-  labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
-    labels1, labels2, labelsR
-  )
-  contraction_plans = Vector{Tuple{Block{N1},Block{N2},Block{NR}}}[
-    Tuple{Block{N1},Block{N2},Block{NR}}[] for _ in 1:nthreads()
-  ]
-
-  #
-  # Reserve some capacity
-  # In theory the maximum is length(boffs1) * length(boffs2)
-  # but in practice that is too much
-  #for contraction_plan in contraction_plans
-  #  sizehint!(contraction_plan, max(length(boffs1), length(boffs2)))
-  #end
-  #
-
   blocks1 = keys(boffs1)
   blocks2 = keys(boffs2)
   if length(blocks1) > length(blocks2)
@@ -38,12 +17,15 @@ function contract_blockoffsets(
               Iterators.partition(blocks1, max(1, length(blocks1) ÷ nthreads()))
       @spawn for block1 in blocks1_partition
         for block2 in blocks2
-          if are_blocks_contracted(block1, block2, labels1_to_labels2)
-            blockR = contract_blocks(
-              block1, labels1_to_labelsR, block2, labels2_to_labelsR, ValNR
-            )
-            push!(contraction_plans[threadid()], (block1, block2, blockR))
-          end
+          maybe_contract_blocks!(
+            contraction_plans[threadid()],
+            block1,
+            block2,
+            labels1_to_labels2,
+            labels1_to_labelsR,
+            labels2_to_labelsR,
+            ValNR,
+          )
         end
       end
     end
@@ -52,28 +34,20 @@ function contract_blockoffsets(
               Iterators.partition(blocks2, max(1, length(blocks2) ÷ nthreads()))
       @spawn for block2 in blocks2_partition
         for block1 in blocks1
-          if are_blocks_contracted(block1, block2, labels1_to_labels2)
-            blockR = contract_blocks(
-              block1, labels1_to_labelsR, block2, labels2_to_labelsR, ValNR
-            )
-            push!(contraction_plans[threadid()], (block1, block2, blockR))
-          end
+          maybe_contract_blocks!(
+            contraction_plans[threadid()],
+            block1,
+            block2,
+            labels1_to_labels2,
+            labels1_to_labelsR,
+            labels2_to_labelsR,
+            ValNR,
+          )
         end
       end
     end
   end
-
-  contraction_plan = reduce(vcat, contraction_plans)
-  blockoffsetsR = BlockOffsets{NR}()
-  nnzR = 0
-  for (_, _, blockR) in contraction_plan
-    if !isassigned(blockoffsetsR, blockR)
-      insert!(blockoffsetsR, blockR, nnzR)
-      nnzR += blockdim(indsR, blockR)
-    end
-  end
-
-  return blockoffsetsR, contraction_plan
+  return nothing
 end
 
 ###########################################################################
