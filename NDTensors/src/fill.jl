@@ -19,7 +19,7 @@ function generic_randn(StoreT::Type{<:Dense}, dim::Integer=0)
 end
 
 function generic_randn(DataT::Type{<:AbstractArray}, dim::Integer=0)
-  DataT = NDTensors.set_eltype_if_unspecified(DataT)
+  DataT = set_eltype_if_unspecified(DataT)
   data = similar(DataT, dim)
   ElT = eltype(DataT)
   for i in 1:length(data)
@@ -35,7 +35,7 @@ function generic_zeros(
 ) where {DataT<:AbstractArray,ElT}
   @assert ElT == eltype(DataT)
   data = generic_zeros(DataT, dim)
-  StoreT = NDTensors.set_datatype(StoreT, typeof(data))
+  StoreT = set_datatype(StoreT, typeof(data))
   return StoreT(data)
 end
 
