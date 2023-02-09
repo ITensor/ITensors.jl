@@ -36,9 +36,21 @@ function LinearAlgebra.svd(T::CuDenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,
   absoluteCutoff::Bool = get(kwargs, :absoluteCutoff, false)
   doRelCutoff::Bool = get(kwargs, :doRelCutoff, true)
   fastSVD::Bool = get(kwargs, :fastSVD, false)
-  aT = array(T)
+  # Safer to use `Array`, which ensures
+  # no views/aliases are made, since
+  # we are using in-place `CUSOLVER.svd!` below.
+  aT = Array(T)
   @timeit "CUSOLVER svd" begin
     MU, MS, MV = CUSOLVER.svd!(aT)
+  end
+  if !(MV isa CuMatrix)
+    # Materialize any array wrappers,
+    # for now, since `Adjoint` wrappers
+    # seem to cause issues throughout
+    # CUDA.jl, for example with slicing,
+    # reshaping and then copying, etc.
+    # TODO: Fix this in a more robust way.
+    MV = copy(MV)
   end
   # for consistency with cpu version, 
   # ITensors.jl/NDTensors/src/linearalgebra.jl/svd
@@ -72,7 +84,7 @@ function LinearAlgebra.svd(T::CuDenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,
   dsi = diagind(reshape(Sdata, dS, dS), 0)
   Sdata[dsi] = MS
   S = tensor(Dense(Sdata), Sinds)
-  V = tensor(Dense(vec(copy(MV))), Vinds)
+  V = tensor(Dense(vec(MV)), Vinds)
   return U, S, V, spec
 end
 
