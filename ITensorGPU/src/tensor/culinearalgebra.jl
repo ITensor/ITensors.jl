@@ -12,19 +12,19 @@ function Base.:*(
   RM = matrix(T1) * matrix(T2)
   indsR = IndsT1(ind(T1, 1), ind(T2, 2))
   pT = promote_type(ElT1, ElT2)
-  return Tensor(Dense(vec(RM)), indsR)
+  return tensor(Dense(RM), indsR)
 end
 #= FIX ME
 function LinearAlgebra.exp(T::CuDenseTensor{ElT,2}) where {ElT,IndsT}
   expTM = exp(matrix(T))
-  return Tensor(Dense(vec(expTM)),inds(T))
+  return tensor(Dense(expTM),inds(T))
 end
 
 function expHermitian(T::CuDenseTensor{ElT,2}) where {ElT,IndsT}
   # exp(::Hermitian/Symmetric) returns Hermitian/Symmetric,
   # so extract the parent matrix
   expTM = parent(exp(Hermitian(matrix(T))))
-  return Tensor(Dense(vec(expTM)),inds(T))
+  return tensor(Dense(expTM),inds(T))
 end
 =#
 
@@ -67,12 +67,12 @@ function LinearAlgebra.svd(T::CuDenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,
   Uinds = IndsT((ind(T, 1), u))
   Sinds = IndsT((u, v))
   Vinds = IndsT((ind(T, 2), v))
-  U = Tensor(Dense(vec(MU)), Uinds)
+  U = tensor(Dense(MU), Uinds)
   Sdata = CUDA.zeros(ElT, dS * dS)
   dsi = diagind(reshape(Sdata, dS, dS), 0)
   Sdata[dsi] = MS
-  S = Tensor(Dense(Sdata), Sinds)
-  V = Tensor(Dense(vec(MV)), Vinds)
+  S = tensor(Dense(Sdata), Sinds)
+  V = tensor(Dense(MV), Vinds)
   return U, S, V, spec
 end
 
@@ -114,8 +114,8 @@ function LinearAlgebra.eigen(
   r = eltype(IndsT)(dD)
   Vinds = IndsT((dag(ind(T, 2)), dag(r)))
   Dinds = IndsT((l, dag(r)))
-  U = Tensor(Dense(vec(dV)), Vinds)
-  D = Tensor(Diag(real.(DM)), Dinds)
+  U = tensor(Dense(dV), Vinds)
+  D = tensor(Diag(real.(DM)), Dinds)
   return D, U, spec
 end
 
@@ -127,8 +127,8 @@ function LinearAlgebra.qr(T::CuDenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,I
   Qinds = IndsT((ind(T, 1), q))
   Rinds = IndsT((q, ind(T, 2)))
   QM = CuMatrix(QM)
-  Q = Tensor(Dense(vec(QM)), Qinds)
-  R = Tensor(Dense(vec(RM)), Rinds)
+  Q = tensor(Dense(QM), Qinds)
+  R = tensor(Dense(RM), Rinds)
   return Q, R
 end
 
@@ -141,7 +141,7 @@ function polar(T::CuDenseTensor{ElT,2,IndsT}) where {ElT,IndsT}
   # call here
   Qinds = IndsT((ind(T, 1), q))
   Rinds = IndsT((q, ind(T, 2)))
-  Q = Tensor(Dense(vec(QM)), Qinds)
-  R = Tensor(Dense(vec(RM)), Rinds)
+  Q = tensor(Dense(QM), Qinds)
+  R = tensor(Dense(RM), Rinds)
   return Q, R
 end
