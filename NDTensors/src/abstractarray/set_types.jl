@@ -31,3 +31,7 @@ like `OffsetArrays` or named indices
 function set_indstype(arraytype::Type{<:AbstractArray}, dims::Tuple)
   return set_ndims(arraytype, length(dims))
 end
+
+set_properties_if_unspecified(arraytype::Type{<:AbstractArray{ElT, N}}, eltype::Type = default_eltype(), ndims::Integer = 1) where {ElT, N} = arraytype
+set_properties_if_unspecified(arraytype::Type{<:AbstractArray{ElT}}, eltype::Type = default_eltype(), ndims::Integer = 1) where {ElT} = set_ndims(arraytype, ndims)
+set_properties_if_unspecified(arraytype::Type{<:AbstractArray}, eltype::Type = default_eltype(), ndims::Integer = 1) = set_eltype(set_ndims(arraytype, ndims), eltype)
