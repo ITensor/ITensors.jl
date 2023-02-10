@@ -4,6 +4,8 @@ using Adapt
 using Base.Threads
 using Compat
 using Dictionaries
+using FLoops
+using Folds
 using Random
 using LinearAlgebra
 using StaticArrays
@@ -11,6 +13,7 @@ using Functors
 using HDF5
 using Requires
 using SimpleTraits
+using SplitApplyCombine
 using Strided
 using TimerOutputs
 using TupleTools
@@ -28,8 +31,9 @@ include("imports.jl")
 include("exports.jl")
 
 #####################################
-# DenseTensor and DiagTensor
+# General functionality
 #
+include("algorithm.jl")
 include("aliasstyle.jl")
 include("abstractarray/set_types.jl")
 include("abstractarray/to_shape.jl")
@@ -46,6 +50,10 @@ include("tensor/similar.jl")
 include("adapt.jl")
 include("generic_tensor_operations.jl")
 include("contraction_logic.jl")
+
+#####################################
+# DenseTensor and DiagTensor
+#
 include("dense/dense.jl")
 #include("dense/adapt.jl")
 include("fill.jl")
@@ -65,6 +73,12 @@ include("blocksparse/block.jl")
 include("blocksparse/blockoffsets.jl")
 include("blocksparse/blocksparse.jl")
 include("blocksparse/blocksparsetensor.jl")
+include("blocksparse/contract.jl")
+include("blocksparse/contract_utilities.jl")
+include("blocksparse/contract_generic.jl")
+include("blocksparse/contract_sequential.jl")
+include("blocksparse/contract_folds.jl")
+include("blocksparse/contract_threads.jl")
 include("blocksparse/diagblocksparse.jl")
 include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
@@ -91,7 +105,7 @@ const timer = TimerOutput()
 # Optional block sparse multithreading
 #
 
-include("blas_get_num_threads.jl")
+blas_get_num_threads() = BLAS.get_num_threads()
 
 const _using_threaded_blocksparse = Ref(false)
 
@@ -134,9 +148,9 @@ function _enable_threaded_blocksparse()
         "WARNING: You are trying to enable block sparse multithreading, but you have started Julia with only a single thread. You can start Julia with `N` threads with `julia -t N`, and check the number of threads Julia can use with `Threads.nthreads()`. Your system has $(Sys.CPU_THREADS) threads available to use, which you can determine by running `Sys.CPU_THREADS`.\n",
       )
     end
-    if blas_get_num_threads() > 1 && Threads.nthreads() > 1
+    if BLAS.get_num_threads() > 1 && Threads.nthreads() > 1
       println(
-        "WARNING: You are enabling block sparse multithreading, but BLAS $(BLAS.vendor()) is currently set to use $(blas_get_num_threads()) threads. When using block sparse multithreading, we recommend setting BLAS to use only a single thread, otherwise you may see suboptimal performance. You can set it with `using LinearAlgebra; BLAS.set_num_threads(1)`.\n",
+        "WARNING: You are enabling block sparse multithreading, but your BLAS configuration $(BLAS.get_config()) is currently set to use $(BLAS.get_num_threads()) threads. When using block sparse multithreading, we recommend setting BLAS to use only a single thread, otherwise you may see suboptimal performance. You can set it with `using LinearAlgebra; BLAS.set_num_threads(1)`.\n",
       )
     end
     if Strided.get_num_threads() > 1

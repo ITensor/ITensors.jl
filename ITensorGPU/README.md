@@ -1,6 +1,6 @@
 # ITensorGPU: Intelligent Tensors with GPU acceleration
 
-[![codecov](https://codecov.io/gh/ITensor/ITensorGPU.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensorGPU.jl)
+[![codecov](https://codecov.io/gh/ITensor/ITensorGPU.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/ITensor/ITensorGPU.jl)
 
 [![gitlab-ci](https://gitlab.com/JuliaGPU/ITensorGPU-jl/badges/master/pipeline.svg)](https://gitlab.com/JuliaGPU/ITensorGPU-jl/commits/master)
 

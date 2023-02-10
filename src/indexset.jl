@@ -563,6 +563,32 @@ end
 # Check that the QNs are all the same
 hassameflux(i1::Index, i2::Index) = (dim(i1) == dim(i2))
 
+function replaceinds_space_error(is, inds1, inds2, i1, i2)
+  return error("""
+               Attempting to replace the Indices
+
+               $(inds1)
+
+               with
+
+               $(inds2)
+
+               in the Index collection
+
+               $(is).
+
+               However, the Index
+
+               $(i1)
+
+               has a different space from the Index
+
+               $(i2).
+
+               They must have the same spaces to be replaced.
+               """)
+end
+
 function replaceinds(is::Indices, inds1, inds2)
   is1 = inds1
   poss = indexin(is1, is)
@@ -572,7 +598,9 @@ function replaceinds(is::Indices, inds1, inds2)
     i1 = is_tuple[pos]
     i2 = inds2[j]
     i2 = setdir(i2, dir(i1))
-    space(i1) ≠ space(i2) && error("Indices must have the same spaces to be replaced")
+    if space(i1) ≠ space(i2)
+      replaceinds_space_error(is, inds1, inds2, i1, i2)
+    end
     is_tuple = setindex(is_tuple, i2, pos)
   end
   return (is_tuple)
@@ -917,6 +945,6 @@ function HDF5.read(
   if read(attributes(g)["type"]) != "IndexSet"
     error("HDF5 group or file does not contain IndexSet data")
   end
-  N = read(g, "length")
-  return T(n -> read(g, "index_$n", Index), N)
+  n = read(g, "length")
+  return T(Index[read(g, "index_$j", Index) for j in 1:n])
 end

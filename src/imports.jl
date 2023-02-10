@@ -111,6 +111,8 @@ import LinearAlgebra:
   transpose
 
 using ITensors.NDTensors:
+  Algorithm,
+  @Algorithm_str,
   EmptyNumber,
   _Tuple,
   _NTuple,

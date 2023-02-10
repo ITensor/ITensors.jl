@@ -14,7 +14,7 @@ function main(; d=20, order=4)
 
   @show Threads.nthreads()
   @show Sys.CPU_THREADS
-  @show ITensors.blas_get_num_threads()
+  @show BLAS.get_num_threads()
   @show ITensors.Strided.get_num_threads()
   println()
 
