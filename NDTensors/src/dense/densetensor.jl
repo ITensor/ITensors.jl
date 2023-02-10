@@ -34,18 +34,18 @@ DenseTensor(::UndefInitializer, inds::Int...) = DenseTensor(undef, inds)
 #
 
 function randomDenseTensor(::Type{ElT}, inds) where {ElT}
-    return tensor(generic_randn(Dense{ElT}, dim(inds)), inds)
-  end
-  
-  function randomDenseTensor(::Type{ElT}, inds::Int...) where {ElT}
-    return randomDenseTensor(ElT, inds)
-  end
-  
-  randomDenseTensor(inds) = randomDenseTensor(Float64, inds)
-  
-  randomDenseTensor(inds::Int...) = randomDenseTensor(Float64, inds)
+  return tensor(generic_randn(Dense{ElT}, dim(inds)), inds)
+end
 
-  # Basic functionality for AbstractArray interface
+function randomDenseTensor(::Type{ElT}, inds::Int...) where {ElT}
+  return randomDenseTensor(ElT, inds)
+end
+
+randomDenseTensor(inds) = randomDenseTensor(Float64, inds)
+
+randomDenseTensor(inds::Int...) = randomDenseTensor(Float64, inds)
+
+# Basic functionality for AbstractArray interface
 IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
 
 # Override CartesianIndices iteration to iterate
@@ -76,14 +76,13 @@ convert(::Type{Array}, T::DenseTensor) = reshape(data(storage(T)), dims(inds(T))
 array(T::DenseTensor) = convert(Array, T)
 
 function Array{ElT,N}(T::DenseTensor{ElT,N}) where {ElT,N}
-    return copy(array(T))
-  end
-  
-  function Array(T::DenseTensor{ElT,N}) where {ElT,N}
-    return Array{ElT,N}(T)
-  end
+  return copy(array(T))
+end
 
-  
+function Array(T::DenseTensor{ElT,N}) where {ElT,N}
+  return Array{ElT,N}(T)
+end
+
 #
 # Single index
 #
@@ -168,94 +167,94 @@ end
 
 # If the storage data are regular Vectors, use Base.copyto!
 function copyto!(
-    R::Tensor{<:Number,N,<:Dense{<:Number,<:Vector}},
-    T::Tensor{<:Number,N,<:Dense{<:Number,<:Vector}},
-  ) where {N}
-    RA = array(R)
-    TA = array(T)
-    RA .= TA
-    return R
-  end
-  
-  # If they are something more complicated like views, use Strided copyto!
-  function copyto!(
-    R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}
-  ) where {N,StoreT<:StridedArray}
-    RA = array(R)
-    TA = array(T)
-    @strided RA .= TA
-    return R
-  end
-  
-  # Maybe allocate output data.
-  # TODO: Remove this in favor of `map!`
-  # applied to `PermutedDimsArray`.
-  function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function=(r, t) -> t)
-    Base.checkdims_perm(R, T, perm)
-    RR = convert(promote_type(typeof(R), typeof(T)), R)
-    permutedims!(RR, T, perm, f)
-    return RR
-  end
-  
-  # TODO: call permutedims!(R,T,perm,(r,t)->t)?
-  function permutedims!(
-    R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}, perm::NTuple{N,Int}
-  ) where {N,StoreT<:StridedArray}
-    RA = array(R)
-    TA = array(T)
-    @strided RA .= permutedims(TA, perm)
-    return R
-  end
-  
-  function copyto!(R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}) where {N}
-    RA = array(R)
-    TA = array(T)
-    RA .= TA
-    return R
-  end
-  
-  # TODO: call permutedims!(R,T,perm,(r,t)->t)?
-  function permutedims!(
-    R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm::NTuple{N,Int}
-  ) where {N}
-    RA = array(R)
-    TA = array(T)
-    RA .= permutedims(TA, perm)
-    return R
-  end
-  
-  function apply!(
-    R::DenseTensor{<:Number,N,StoreT},
-    T::DenseTensor{<:Number,N,StoreT},
-    f::Function=(r, t) -> t,
-  ) where {N,StoreT<:StridedArray}
-    RA = array(R)
-    TA = array(T)
-    @strided RA .= f.(RA, TA)
-    return R
-  end
-  
-  function apply!(R::DenseTensor, T::DenseTensor, f::Function=(r, t) -> t)
-    RA = array(R)
-    TA = array(T)
-    RA .= f.(RA, TA)
-    return R
-  end
-  
-  function permutedims!(
-    R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm, f::Function
-  ) where {N}
-    if nnz(R) == 1 && nnz(T) == 1
-      R[1] = f(R[1], T[1])
-      return R
-    end
-    RA = array(R)
-    TA = array(T)
-    @strided RA .= f.(RA, permutedims(TA, perm))
-    return R
-  end
+  R::Tensor{<:Number,N,<:Dense{<:Number,<:Vector}},
+  T::Tensor{<:Number,N,<:Dense{<:Number,<:Vector}},
+) where {N}
+  RA = array(R)
+  TA = array(T)
+  RA .= TA
+  return R
+end
 
-  """
+# If they are something more complicated like views, use Strided copyto!
+function copyto!(
+  R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}
+) where {N,StoreT<:StridedArray}
+  RA = array(R)
+  TA = array(T)
+  @strided RA .= TA
+  return R
+end
+
+# Maybe allocate output data.
+# TODO: Remove this in favor of `map!`
+# applied to `PermutedDimsArray`.
+function permutedims!!(R::DenseTensor, T::DenseTensor, perm, f::Function=(r, t) -> t)
+  Base.checkdims_perm(R, T, perm)
+  RR = convert(promote_type(typeof(R), typeof(T)), R)
+  permutedims!(RR, T, perm, f)
+  return RR
+end
+
+# TODO: call permutedims!(R,T,perm,(r,t)->t)?
+function permutedims!(
+  R::DenseTensor{<:Number,N,StoreT}, T::DenseTensor{<:Number,N,StoreT}, perm::NTuple{N,Int}
+) where {N,StoreT<:StridedArray}
+  RA = array(R)
+  TA = array(T)
+  @strided RA .= permutedims(TA, perm)
+  return R
+end
+
+function copyto!(R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}) where {N}
+  RA = array(R)
+  TA = array(T)
+  RA .= TA
+  return R
+end
+
+# TODO: call permutedims!(R,T,perm,(r,t)->t)?
+function permutedims!(
+  R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm::NTuple{N,Int}
+) where {N}
+  RA = array(R)
+  TA = array(T)
+  RA .= permutedims(TA, perm)
+  return R
+end
+
+function apply!(
+  R::DenseTensor{<:Number,N,StoreT},
+  T::DenseTensor{<:Number,N,StoreT},
+  f::Function=(r, t) -> t,
+) where {N,StoreT<:StridedArray}
+  RA = array(R)
+  TA = array(T)
+  @strided RA .= f.(RA, TA)
+  return R
+end
+
+function apply!(R::DenseTensor, T::DenseTensor, f::Function=(r, t) -> t)
+  RA = array(R)
+  TA = array(T)
+  RA .= f.(RA, TA)
+  return R
+end
+
+function permutedims!(
+  R::DenseTensor{<:Number,N}, T::DenseTensor{<:Number,N}, perm, f::Function
+) where {N}
+  if nnz(R) == 1 && nnz(T) == 1
+    R[1] = f(R[1], T[1])
+    return R
+  end
+  RA = array(R)
+  TA = array(T)
+  @strided RA .= f.(RA, permutedims(TA, perm))
+  return R
+end
+
+"""
     NDTensors.permute_reshape(T::Tensor,pos...)
 
 Takes a permutation that is split up into tuples. Index positions
@@ -303,6 +302,6 @@ function permute_reshape(
 end
 
 function show(io::IO, mime::MIME"text/plain", T::DenseTensor)
-    summary(io, T)
-    return print_tensor(io, T)
-  end
+  summary(io, T)
+  return print_tensor(io, T)
+end

@@ -162,7 +162,6 @@ function convert(::Type{<:Dense{ElR,VecR}}, D::Dense) where {ElR,VecR}
   return Dense(convert(VecR, data(D)))
 end
 
-
 # For convenience, direct Tensor constructors default to Dense
 Tensor(::Type{ElT}, inds...) where {ElT} = DenseTensor(ElT, inds...)
 
@@ -175,7 +174,6 @@ end
 Tensor(::UndefInitializer, inds...) = DenseTensor(undef, inds...)
 
 Tensor(A::Array{<:Number,N}, inds::Dims{N}) where {N} = tensor(Dense(vec(A)), inds)
-
 
 function randomTensor(::Type{ElT}, inds) where {ElT}
   return randomDenseTensor(ElT, inds)
@@ -223,5 +221,3 @@ function HDF5.read(
   end
   return Dense{ElT}(data)
 end
-
-
