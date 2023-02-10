@@ -55,15 +55,7 @@ function contract_blockoffsets(
     # alg = Algorithm"threaded_folds"()
   end
   return contract_blockoffsets(
-    alg,
-    boffs1,
-    inds1,
-    labels1,
-    boffs2,
-    inds2,
-    labels2,
-    indsR,
-    labelsR,
+    alg, boffs1, inds1, labels1, boffs2, inds2, labels2, indsR, labelsR
   )
 end
 
