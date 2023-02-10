@@ -20,8 +20,18 @@ julia> SUITE
 The benchmark results will be stored in the "SUITE" object.
 
 Then you can run the benchmark suite using the [interface from BenchmarkTools](https://juliaci.github.io/BenchmarkTools.jl/stable/manual/#Tuning-and-running-a-BenchmarkGroup).
+```julia
+tune!(SUITE);
+results = run(SUITE; verbose=true, seconds=1)
+```
 
 Alternatively, you can run the benchmarks with the [BencharmkCI interface](https://github.com/tkf/BenchmarkCI.jl#running-benchmarkci-interactively=).
+```julia
+cd(pkgdir(ITensors))
+using BenchmarkCI
+BenchmarkCI.judge()
+BenchmarkCI.displayjudgement()
+```
 
 ## Development
 
