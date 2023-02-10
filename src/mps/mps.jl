@@ -521,6 +521,12 @@ function replacebond(M0::MPS, b::Int, phi::ITensor; kwargs...)
   return M
 end
 
+# Allows overloading `replacebond!` based on the projected
+# MPO type. By default just calls `replacebond!` on the MPS.
+function replacebond!(PH, M::MPS, b::Int, phi::ITensor; kwargs...)
+  return replacebond!(M, b, phi; kwargs...)
+end
+
 """
     sample!(m::MPS)
 
