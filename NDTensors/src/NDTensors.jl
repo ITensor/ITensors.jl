@@ -55,6 +55,8 @@ include("contraction_logic.jl")
 # DenseTensor and DiagTensor
 #
 include("dense/dense.jl")
+include("dense/densetensor.jl")
+include("dense/dense_algebra.jl")
 #include("dense/adapt.jl")
 include("fill.jl")
 include("symmetric.jl")
