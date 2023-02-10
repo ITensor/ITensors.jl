@@ -23,29 +23,13 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   function Tensor{ElT,N,StoreT,IndsT}(
     ::AllowAlias, storage::TensorStorage, inds::Tuple
   ) where {ElT,N,StoreT<:TensorStorage,IndsT}
+    @assert ElT == eltype(StoreT)
+    @assert length(inds) == N
     return new{ElT,N,StoreT,IndsT}(storage, inds)
   end
 end
 
-ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
-
-function set_storagetype(tensortype::Type{<:Tensor}, storagetype)
-  return Tensor{eltype(tensortype),ndims(tensortype),storagetype,indstype(tensortype)}
-end
-
-# TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
-# TODO: Make a version that accepts `indstype::Type`?
-function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
-  return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
-end
-
-# Like `Base.to_shape` but more general, can return
-# `Index`, etc. Customize for an array/tensor
-# with custom index types.
-# NDTensors.to_shape
-function to_shape(arraytype::Type{<:Tensor}, shape::Tuple)
-  return shape
-end
+## Tensor constructors
 
 function Tensor{ElT,N,StoreT,IndsT}(
   ::NeverAlias, storage::TensorStorage, inds
@@ -53,20 +37,11 @@ function Tensor{ElT,N,StoreT,IndsT}(
   return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), copy(storage), inds)
 end
 
-# Allow the storage and indices to be input in opposite ordering
-function (tensortype::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage)
-  return tensortype(as, storage, inds)
-end
-
 function Tensor{ElT,N,StoreT,IndsT}(
   ::UndefInitializer, inds::Tuple
 ) where {ElT,N,StoreT,IndsT}
   return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), NDTensors.similar(StoreT, inds), inds)
 end
-
-## function (tensortype::Type{<:Tensor})(::UndefInitializer, inds::Tuple)
-##   error("Not implemented!!!")
-## end
 
 """
     Tensor(storage::TensorStorage, inds)
@@ -93,6 +68,33 @@ end
 tensor(args...; kwargs...) = Tensor(AllowAlias(), args...; kwargs...)
 Tensor(storage::TensorStorage, inds) = Tensor(NeverAlias(), storage, inds)
 Tensor(inds, storage::TensorStorage) = Tensor(storage, inds)
+
+## End Tensor constructors
+
+ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
+
+function set_storagetype(tensortype::Type{<:Tensor}, storagetype)
+  return Tensor{eltype(tensortype),ndims(tensortype),storagetype,indstype(tensortype)}
+end
+
+# TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
+# TODO: Make a version that accepts `indstype::Type`?
+function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
+  return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
+end
+
+# Like `Base.to_shape` but more general, can return
+# `Index`, etc. Customize for an array/tensor
+# with custom index types.
+# NDTensors.to_shape
+function to_shape(arraytype::Type{<:Tensor}, shape::Tuple)
+  return shape
+end
+
+# Allow the storage and indices to be input in opposite ordering
+function (tensortype::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage)
+  return tensortype(as, storage, inds)
+end
 
 storage(T::Tensor) = T.storage
 
