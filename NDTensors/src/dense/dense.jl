@@ -1062,8 +1062,8 @@ function show(io::IO, mime::MIME"text/plain", T::DenseTensor)
   return print_tensor(io, T)
 end
 
-# Combine two neighboring labels
-function combine_labels(labels::Vector{Int}, firstlabel::Int, newlabel::Int, sizes::Vector{Int})::Tuple{Vector{Int},Vector{Int}}
+# Fuse two NN labels
+function _fuse_NN_labels(labels::Vector{Int}, firstlabel::Int, newlabel::Int, sizes::Vector{Int})::Tuple{Vector{Int},Vector{Int}}
     pos = findfirst(isequal(firstlabel), labels)
     if isnothing(pos)
         return labels, sizes
@@ -1072,8 +1072,8 @@ function combine_labels(labels::Vector{Int}, firstlabel::Int, newlabel::Int, siz
 end
 
 
-# Combine two neighboring labels in ai, bi, ci
-function _combine_alllabels(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
+# Fuse two neighboring labels in ai, bi, ci
+function _fuse_labels_ai(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
     for pa in 1:(length(ai)-1)
         label_a = ai[pa]
         next_labels = Int[ai[pa+1]]
@@ -1096,9 +1096,9 @@ function _combine_alllabels(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, s
         end
         if !bounderror && length(next_labels) > 1 && length(unique(next_labels)) == 1
             newlabel = label_a
-            ai_, sizea_ = combine_labels(ai, label_a, newlabel, sizea)
-            bi_, sizeb_ = combine_labels(bi, label_a, newlabel, sizeb)
-            ci_, sizec_ = combine_labels(ci, label_a, newlabel, sizec)
+            ai_, sizea_ = _fuse_NN_labels(ai, label_a, newlabel, sizea)
+            bi_, sizeb_ = _fuse_NN_labels(bi, label_a, newlabel, sizeb)
+            ci_, sizec_ = _fuse_NN_labels(ci, label_a, newlabel, sizec)
             return ai_, bi_, ci_, sizea_, sizeb_, sizec_, true
         end
     end
@@ -1106,11 +1106,11 @@ function _combine_alllabels(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, s
 end
 
 
-# Combine all neighboring labels in ai, bi, ci
-function combine_alllabels(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
+# Fuse all neighboring labels in ai, bi, ci
+function _fuse_labels(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
     while true
-        ai, bi, ci, sizea, sizeb, sizec, replaced1 = _combine_alllabels(ai, bi, ci, sizea, sizeb, sizec)
-        bi, ai, ci, sizeb, sizea, sizec, replaced2 = _combine_alllabels(bi, ai, ci, sizeb, sizea, sizec)
+        ai, bi, ci, sizea, sizeb, sizec, replaced1 = _fuse_labels_ai(ai, bi, ci, sizea, sizeb, sizec)
+        bi, ai, ci, sizeb, sizea, sizec, replaced2 = _fuse_labels_ai(bi, ai, ci, sizeb, sizea, sizec)
         if !replaced1 && !replaced2
             break
         end
@@ -1130,7 +1130,7 @@ function contract!(
     β::Elβ=zero(ElR),
   ) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
 
-  labelsT1_, labelsT2_, labelsR_, sizeT1_, sizeT2_, sizeR_ = combine_alllabels(
+  labelsT1_, labelsT2_, labelsR_, sizeT1_, sizeT2_, sizeR_ = _fuse_labels(
       collect(Int, labelsT1),
       collect(Int, labelsT2),
       collect(Int, labelsR),
