@@ -1886,6 +1886,19 @@ end
 # in the future.
 function _map!!(f::Function, R::Tensor, T1::Tensor, T2::Tensor)
   perm = NDTensors.getperm(inds(R), inds(T2))
+  if !isperm(perm)
+    error("""
+          You are trying to add an ITensor with indices:
+
+          $(inds(T2))
+
+          into an ITensor with indices:
+
+          $(inds(R))
+
+          but the indices are not permutations of each other.
+          """)
+  end
   if hasqns(T2) && hasqns(R)
     # Check that Index arrows match
     for (n, p) in enumerate(perm)

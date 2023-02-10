@@ -1629,6 +1629,12 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
   return M
 end
 
+# Allows overloading `orthogonalize!` based on the projected
+# MPO type. By default just calls `orthogonalize!` on the MPS.
+function orthogonalize!(PH, M::AbstractMPS, j::Int; kwargs...)
+  return orthogonalize!(M, j; kwargs...)
+end
+
 function orthogonalize(ψ0::AbstractMPS, args...; kwargs...)
   ψ = copy(ψ0)
   orthogonalize!(ψ, args...; kwargs...)
