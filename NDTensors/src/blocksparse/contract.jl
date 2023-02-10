@@ -39,14 +39,7 @@ function contraction_output(
 end
 
 function contract_blockoffsets(
-  boffs1::BlockOffsets,
-  inds1,
-  labels1,
-  boffs2::BlockOffsets,
-  inds2,
-  labels2,
-  indsR,
-  labelsR,
+  boffs1::BlockOffsets, inds1, labels1, boffs2::BlockOffsets, inds2, labels2, indsR, labelsR
 )
   alg = Algorithm"sequential"()
   if using_threaded_blocksparse() && nthreads() > 1
@@ -55,15 +48,7 @@ function contract_blockoffsets(
     # alg = Algorithm"threaded_folds"()
   end
   return contract_blockoffsets(
-    alg,
-    boffs1,
-    inds1,
-    labels1,
-    boffs2,
-    inds2,
-    labels2,
-    indsR,
-    labelsR,
+    alg, boffs1, inds1, labels1, boffs2, inds2, labels2, indsR, labelsR
   )
 end
 
