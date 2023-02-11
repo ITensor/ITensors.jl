@@ -257,8 +257,8 @@ using Test
     end
   end
 
-  @testset "Combine labels" begin
-    ai, bi, ci, sizea, sizeb, sizec = NDTensors.combine_alllabels([2,3,4,5], [1,2,3], [1,4,5], [20,30,40,50], [10,20,30], [10,40,50])
+  @testset "Fuse labels" begin
+    ai, bi, ci, sizea, sizeb, sizec = NDTensors._fuse_labels([2,3,4,5], [1,2,3], [1,4,5], [20,30,40,50], [10,20,30], [10,40,50])
 
     @test ai == [2, 4]
     @test bi == [1, 2]
@@ -268,16 +268,16 @@ using Test
     @test sizec == [10, 2000]
   end
 
-  @testset "contract with combining labels" begin
+  @testset "contract with fusion of labels" begin
     R = randomTensor(2, 2, 1, 1, 1)
     R2 = randomTensor(2, 2, 1, 1, 1)
     T1 = randomTensor(2, 3, 3, 1, 1, 1)
     T2 = randomTensor(3, 3, 2)
 
-    # without combining indices
+    # without fusing indices
     NDTensors._contract!(R, (1, 2, 3, 4, 5), T1, (1, -1, -2, 3, 4, 5), T2, (-1, -2, 2))
 
-    # with combining indices
+    # with fusing indices
     NDTensors.contract!(R2, (1, 2, 3, 4, 5), T1, (1, -1, -2, 3, 4, 5), T2, (-1, -2, 2))
 
     @test R ≈ R2
