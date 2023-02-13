@@ -272,10 +272,16 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   N = length(psi)
 
   if !isortho(psi) || orthocenter(psi) != 1
-    orthogonalize!(psi, 1)
+    psi = orthogonalize!(PH, psi, 1)
   end
   @assert isortho(psi) && orthocenter(psi) == 1
 
+  if !isnothing(write_when_maxdim_exceeds)
+    if (maxlinkdim(psi) > write_when_maxdim_exceeds) ||
+      (maxdim(sweeps, 1) > write_when_maxdim_exceeds)
+      PH = disk(PH; path=write_path)
+    end
+  end
   PH = position!(PH, psi, 1)
   energy = 0.0
 
@@ -344,6 +350,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
         @timeit_debug timer "dmrg: replacebond!" begin
           spec = replacebond!(
+            PH,
             psi,
             b,
             phi;
