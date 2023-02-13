@@ -37,10 +37,22 @@ function Tensor{ElT,N,StoreT,IndsT}(
   return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), copy(storage), inds)
 end
 
+# Constructs with undef
 function Tensor{ElT,N,StoreT,IndsT}(
   ::UndefInitializer, inds::Tuple
-) where {ElT,N,StoreT,IndsT}
-  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), NDTensors.similar(StoreT, inds), inds)
+) where {ElT,N,StoreT<:TensorStorage,IndsT}
+  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), similar(StoreT, inds), inds)
+end
+
+# constructs with the value x
+function Tensor{ElT, N, StoreT, IndsT}(
+  x::S, inds::Tuple) where {S, ElT, N, StoreT<:TensorStorage, IndsT}
+  return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), fill!(similar(StoreT, inds), x), inds)
+end
+
+# constructs with zeros
+function Tensor{ElT, N, StoreT, IndsT}(inds::Tuple) where {ElT, N, StoreT<:TensorStorage, IndsT}
+  return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), StoreT(dim(inds)), inds)
 end
 
 """
