@@ -768,7 +768,8 @@ end
     @test e ≈ 1
   end
 
-  @testset "consistent precision of apply" for T in (Float32, Float64, ComplexF32, ComplexF64)
+  @testset "consistent precision of apply" for T in
+                                               (Float32, Float64, ComplexF32, ComplexF64)
     sites = siteinds("S=1/2", 4)
     A = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
     B = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
