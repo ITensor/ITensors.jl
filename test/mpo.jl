@@ -767,6 +767,26 @@ end
     e, ψ = dmrg(H, randomMPS(s, n -> isodd(n) ? "↑" : "↓"); nsweeps=2, outputlevel=0)
     @test e ≈ 1
   end
+
+  @testset "consistent precision type of apply for real" for T in (Float32, Float64)
+    sites = siteinds("S=1/2", 4)
+    A = randomMPO(sites)
+    B = randomMPO(sites)
+
+    A = convert_leaf_eltype(T, A)
+    B = convert_leaf_eltype(T, B)
+    @test ITensors.scalartype(apply(A, B)) == T
+  end
+
+  @testset "consistent precision type of apply for complex" for T in (ComplexF32, ComplexF64)
+    sites = siteinds("S=1/2", 4)
+    A = 1.0*im*randomMPO(sites)
+    B = 1.0*im*randomMPO(sites)
+
+    A = convert_leaf_eltype(T, A)
+    B = convert_leaf_eltype(T, B)
+    @test ITensors.scalartype(apply(A, B)) == T
+  end
 end
 
 nothing
