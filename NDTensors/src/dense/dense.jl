@@ -1072,34 +1072,27 @@ function _fuse_NN_labels(labels::Vector{Int}, firstlabel::Int, newlabel::Int, si
 end
 
 
+function _check_nextlabel(labels, target_label, nextlabel)
+  p = findfirst(isequal(target_label), labels)
+  if p == length(labels)
+    return false
+  elseif isnothing(p)
+    return true
+  else
+    return labels[p+1] == nextlabel
+  end
+end
+
 # Fuse two neighboring labels in ai, bi, ci
 function _fuse_labels_ai(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
     for pa in 1:(length(ai)-1)
-        label_a = ai[pa]
-        next_labels = Int[ai[pa+1]]
-        pb = findfirst(isequal(label_a), bi)
-        pc = findfirst(isequal(label_a), ci)
-        bounderror = false
-        if !isnothing(pb)
-            if pb < length(bi)
-              push!(next_labels, bi[pb+1])
-            else
-              bounderror = true
-            end
-        end
-        if !isnothing(pc)
-          if pc < length(ci)
-            push!(next_labels, ci[pc+1])
-          else
-            bounderror = true
-          end
-        end
-        if !bounderror && length(next_labels) > 1 && length(unique(next_labels)) == 1
-            newlabel = label_a
-            ai_, sizea_ = _fuse_NN_labels(ai, label_a, newlabel, sizea)
-            bi_, sizeb_ = _fuse_NN_labels(bi, label_a, newlabel, sizeb)
-            ci_, sizec_ = _fuse_NN_labels(ci, label_a, newlabel, sizec)
-            return ai_, bi_, ci_, sizea_, sizeb_, sizec_, true
+        if _check_nextlabel(bi, ai[pa], ai[pa+1]) && 
+          _check_nextlabel(ci, ai[pa], ai[pa+1])
+          label_a, newlabel = ai[pa], ai[pa]
+          ai_, sizea_ = _fuse_NN_labels(ai, label_a, newlabel, sizea)
+          bi_, sizeb_ = _fuse_NN_labels(bi, label_a, newlabel, sizeb)
+          ci_, sizec_ = _fuse_NN_labels(ci, label_a, newlabel, sizec)
+          return ai_, bi_, ci_, sizea_, sizeb_, sizec_, true
         end
     end
     return ai, bi, ci, sizea, sizeb, sizec, false
@@ -1138,12 +1131,9 @@ function contract!(
       collect(Int, size(T2)),
       collect(Int, size(R))
     )
-  R_ = reshape((R), sizeR_...)
-  T1_ = reshape((T1), sizeT1_...)
-  T2_ = reshape((T2), sizeT2_...)
-
-  _contract!(R_, Tuple(labelsR_), T1_, Tuple(labelsT1_), T2_, Tuple(labelsT2_), α, β)
-
-  R = reshape(R_, size(R)...)
-  return R
+  _contract!(
+    reshape(R, sizeR_...), Tuple(labelsR_),
+    reshape(T1, sizeT1_...), Tuple(labelsT1_),
+    reshape(T2, sizeT2_...), Tuple(labelsT2_), α, β)
+  return reshape(R, size(R)...)
 end
