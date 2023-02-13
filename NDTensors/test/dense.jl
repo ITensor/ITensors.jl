@@ -258,7 +258,9 @@ using Test
   end
 
   @testset "Fuse labels" begin
-    ai, bi, ci, sizea, sizeb, sizec = NDTensors._fuse_labels([2,3,4,5], [1,2,3], [1,4,5], [20,30,40,50], [10,20,30], [10,40,50])
+    ai, bi, ci, sizea, sizeb, sizec = NDTensors._fuse_labels(
+      [2, 3, 4, 5], [1, 2, 3], [1, 4, 5], [20, 30, 40, 50], [10, 20, 30], [10, 40, 50]
+    )
 
     @test ai == [2, 4]
     @test bi == [1, 2]

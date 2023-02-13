@@ -1063,14 +1063,16 @@ function show(io::IO, mime::MIME"text/plain", T::DenseTensor)
 end
 
 # Fuse two NN labels
-function _fuse_NN_labels(labels::Vector{Int}, firstlabel::Int, newlabel::Int, sizes::Vector{Int})::Tuple{Vector{Int},Vector{Int}}
-    pos = findfirst(isequal(firstlabel), labels)
-    if isnothing(pos)
-        return labels, sizes
-    end
-    return [labels[1:pos-1]..., newlabel, labels[pos+2:end]...], [sizes[1:pos-1]..., sizes[pos] * sizes[pos+1], sizes[pos+2:end]...]
+function _fuse_NN_labels(
+  labels::Vector{Int}, firstlabel::Int, newlabel::Int, sizes::Vector{Int}
+)::Tuple{Vector{Int},Vector{Int}}
+  pos = findfirst(isequal(firstlabel), labels)
+  if isnothing(pos)
+    return labels, sizes
+  end
+  return [labels[1:(pos - 1)]..., newlabel, labels[(pos + 2):end]...],
+  [sizes[1:(pos - 1)]..., sizes[pos] * sizes[pos + 1], sizes[(pos + 2):end]...]
 end
-
 
 function _check_nextlabel(labels, target_label, nextlabel)
   p = findfirst(isequal(target_label), labels)
@@ -1079,61 +1081,81 @@ function _check_nextlabel(labels, target_label, nextlabel)
   elseif isnothing(p)
     return true
   else
-    return labels[p+1] == nextlabel
+    return labels[p + 1] == nextlabel
   end
 end
 
 # Fuse two neighboring labels in ai, bi, ci
-function _fuse_labels_ai(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
-    for pa in 1:(length(ai)-1)
-        if _check_nextlabel(bi, ai[pa], ai[pa+1]) && 
-          _check_nextlabel(ci, ai[pa], ai[pa+1])
-          label_a, newlabel = ai[pa], ai[pa]
-          ai_, sizea_ = _fuse_NN_labels(ai, label_a, newlabel, sizea)
-          bi_, sizeb_ = _fuse_NN_labels(bi, label_a, newlabel, sizeb)
-          ci_, sizec_ = _fuse_NN_labels(ci, label_a, newlabel, sizec)
-          return ai_, bi_, ci_, sizea_, sizeb_, sizec_, true
-        end
+function _fuse_labels_ai(
+  ai::Vector{Int},
+  bi::Vector{Int},
+  ci::Vector{Int},
+  sizea::Vector{Int},
+  sizeb::Vector{Int},
+  sizec::Vector{Int},
+)
+  for pa in 1:(length(ai) - 1)
+    if _check_nextlabel(bi, ai[pa], ai[pa + 1]) && _check_nextlabel(ci, ai[pa], ai[pa + 1])
+      label_a, newlabel = ai[pa], ai[pa]
+      ai_, sizea_ = _fuse_NN_labels(ai, label_a, newlabel, sizea)
+      bi_, sizeb_ = _fuse_NN_labels(bi, label_a, newlabel, sizeb)
+      ci_, sizec_ = _fuse_NN_labels(ci, label_a, newlabel, sizec)
+      return ai_, bi_, ci_, sizea_, sizeb_, sizec_, true
     end
-    return ai, bi, ci, sizea, sizeb, sizec, false
+  end
+  return ai, bi, ci, sizea, sizeb, sizec, false
 end
-
 
 # Fuse all neighboring labels in ai, bi, ci
-function _fuse_labels(ai::Vector{Int}, bi::Vector{Int}, ci::Vector{Int}, sizea::Vector{Int}, sizeb::Vector{Int}, sizec::Vector{Int})
-    while true
-        ai, bi, ci, sizea, sizeb, sizec, replaced1 = _fuse_labels_ai(ai, bi, ci, sizea, sizeb, sizec)
-        bi, ai, ci, sizeb, sizea, sizec, replaced2 = _fuse_labels_ai(bi, ai, ci, sizeb, sizea, sizec)
-        if !replaced1 && !replaced2
-            break
-        end
+function _fuse_labels(
+  ai::Vector{Int},
+  bi::Vector{Int},
+  ci::Vector{Int},
+  sizea::Vector{Int},
+  sizeb::Vector{Int},
+  sizec::Vector{Int},
+)
+  while true
+    ai, bi, ci, sizea, sizeb, sizec, replaced1 = _fuse_labels_ai(
+      ai, bi, ci, sizea, sizeb, sizec
+    )
+    bi, ai, ci, sizeb, sizea, sizec, replaced2 = _fuse_labels_ai(
+      bi, ai, ci, sizeb, sizea, sizec
+    )
+    if !replaced1 && !replaced2
+      break
     end
-    return ai, bi, ci, sizea, sizeb, sizec
+  end
+  return ai, bi, ci, sizea, sizeb, sizec
 end
 
-
 function contract!(
-    R::DenseTensor{ElR,NR},
-    labelsR,
-    T1::DenseTensor{ElT1,N1},
-    labelsT1,
-    T2::DenseTensor{ElT2,N2},
-    labelsT2,
-    α::Elα=one(ElR),
-    β::Elβ=zero(ElR),
-  ) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
-
+  R::DenseTensor{ElR,NR},
+  labelsR,
+  T1::DenseTensor{ElT1,N1},
+  labelsT1,
+  T2::DenseTensor{ElT2,N2},
+  labelsT2,
+  α::Elα=one(ElR),
+  β::Elβ=zero(ElR),
+) where {Elα,Elβ,ElR,ElT1,ElT2,NR,N1,N2}
   labelsT1_, labelsT2_, labelsR_, sizeT1_, sizeT2_, sizeR_ = _fuse_labels(
-      collect(Int, labelsT1),
-      collect(Int, labelsT2),
-      collect(Int, labelsR),
-      collect(Int, size(T1)),
-      collect(Int, size(T2)),
-      collect(Int, size(R))
-    )
+    collect(Int, labelsT1),
+    collect(Int, labelsT2),
+    collect(Int, labelsR),
+    collect(Int, size(T1)),
+    collect(Int, size(T2)),
+    collect(Int, size(R)),
+  )
   _contract!(
-    reshape(R, sizeR_...), Tuple(labelsR_),
-    reshape(T1, sizeT1_...), Tuple(labelsT1_),
-    reshape(T2, sizeT2_...), Tuple(labelsT2_), α, β)
+    reshape(R, sizeR_...),
+    Tuple(labelsR_),
+    reshape(T1, sizeT1_...),
+    Tuple(labelsT1_),
+    reshape(T2, sizeT2_...),
+    Tuple(labelsT2_),
+    α,
+    β,
+  )
   return reshape(R, size(R)...)
 end
