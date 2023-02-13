@@ -45,14 +45,15 @@ function Tensor{ElT,N,StoreT,IndsT}(
 end
 
 # constructs with the value x
-function Tensor{ElT, N, StoreT, IndsT}(
-  x::S, inds::Tuple) where {S, ElT, N, StoreT<:TensorStorage, IndsT}
-  return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), fill!(similar(StoreT, inds), x), inds)
+function Tensor{ElT,N,StoreT,IndsT}(
+  x::S, inds::Tuple
+) where {S,ElT,N,StoreT<:TensorStorage,IndsT}
+  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), fill!(similar(StoreT, inds), x), inds)
 end
 
 # constructs with zeros
-function Tensor{ElT, N, StoreT, IndsT}(inds::Tuple) where {ElT, N, StoreT<:TensorStorage, IndsT}
-  return Tensor{ElT, N, StoreT, IndsT}(AllowAlias(), StoreT(dim(inds)), inds)
+function Tensor{ElT,N,StoreT,IndsT}(inds::Tuple) where {ElT,N,StoreT<:TensorStorage,IndsT}
+  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), StoreT(dim(inds)), inds)
 end
 
 """
