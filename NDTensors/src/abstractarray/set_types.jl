@@ -45,17 +45,17 @@ function set_eltype_if_unspecified(
   return similartype(arraytype, eltype)
 end
 
-function set_properties_if_unspecified(
+function set_parameter_if_unspecified(
   arraytype::Type{<:AbstractArray{ElT,N}}, eltype::Type=default_eltype(), ndims::Integer=1
 ) where {ElT,N}
   return arraytype
 end
-function set_properties_if_unspecified(
+function set_parameter_if_unspecified(
   arraytype::Type{<:AbstractArray{ElT}}, eltype::Type=default_eltype(), ndims::Integer=1
 ) where {ElT}
   return set_ndims(arraytype, ndims)
 end
-function set_properties_if_unspecified(
+function set_parameter_if_unspecified(
   arraytype::Type{<:AbstractArray}, eltype::Type=default_eltype(), ndims::Integer=1
 )
   return set_eltype(set_ndims(arraytype, ndims), eltype)
