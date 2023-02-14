@@ -6,17 +6,13 @@ default_eltype() = Float64
 ## TODO use multiple dispace to make this pick between dense and blocksparse
 function default_storagetype(datatype::Type{<:AbstractArray}, inds::Tuple)
   datatype = set_parameter_if_unspecified(datatype)
-  if eltype(inds) == Integer || length(inds) == 0
     return Dense{eltype(datatype),datatype}
-  else
-    ## return sparsetype
-    return BlockSparse{eltype(datatype),datatype}
-  end
 end
 
 function default_storagetype(datatype::Type{<:AbstractArray})
   return default_storagetype(datatype, ())
 end
 
-default_storagetype(eltype::Type{<:Number}) = default_storagetype(default_datatype(eltype))
+default_storagetype(eltype::Type) = default_storagetype(default_datatype(eltype))
+default_storagetype(eltype::Type, inds::Tuple) = default_storagetype(default_datatype(eltype), inds)
 default_storagetype() = default_storagetype(default_eltype())

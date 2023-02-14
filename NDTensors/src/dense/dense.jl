@@ -101,12 +101,10 @@ setdata(storagetype::Type{<:Dense}, data) = Dense(data)
 
 copy(D::Dense) = Dense(copy(data(D)))
 
-#This is getting closer but is still broken...
 function Base.real(T::Type{<:Dense})
   return set_datatype(T, similartype(datatype(T), real(eltype(T))))
 end
 
-## TODO this currently works only for vector not cuvector because similartype fails
 function complex(T::Type{<:Dense})
   return set_datatype(T, similartype(datatype(T), complex(eltype(T))))
 end
@@ -147,19 +145,6 @@ end
 function convert(::Type{<:Dense{ElR,VecR}}, D::Dense) where {ElR,VecR}
   return Dense(convert(VecR, data(D)))
 end
-
-# For convenience, direct Tensor constructors default to Dense
-Tensor(::Type{ElT}, inds...) where {ElT} = DenseTensor(ElT, inds...)
-
-Tensor(inds...) = Tensor(Float64, inds...)
-
-function Tensor(::Type{ElT}, ::UndefInitializer, inds...) where {ElT}
-  return DenseTensor(ElT, undef, inds...)
-end
-
-Tensor(::UndefInitializer, inds...) = DenseTensor(undef, inds...)
-
-Tensor(A::Array{<:Number,N}, inds::Dims{N}) where {N} = tensor(Dense(vec(A)), inds)
 
 function randomTensor(::Type{ElT}, inds) where {ElT}
   return randomDenseTensor(ElT, inds)
