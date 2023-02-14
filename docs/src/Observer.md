@@ -101,6 +101,7 @@ which include:
    - half_sweep: the half-sweep number, equal to 1 for a left-to-right, first half sweep, or 2 for the second, right-to-left half sweep
    - spec: the Spectrum object returned from factorizing the local superblock wavefunction tensor in two-site DMRG
    - outputlevel: an integer specifying the amount of output to show
+   - operator: linear operator H (e.g. Hamiltonian) passed to `dmrg`
    - projected_operator: projection of the linear operator into the current MPS basis
 
 For our minimal `DemoObserver` example here, we will just make a `measure!` function

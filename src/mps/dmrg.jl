@@ -388,6 +388,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         measure!(
           obs;
           energy=energy,
+          operator=H,
           psi=psi,
           projected_operator=PH,
           bond=b,
