@@ -8,13 +8,17 @@ end
 """
 Set multiple type parameters starting from `position`.
 """
-set_parameters(type::Type, position::Position, parameters...) = set_parameters(set_parameters, type, position, parameters...)
+function set_parameters(type::Type, position::Position, parameters...)
+  return set_parameters(set_parameters, type, position, parameters...)
+end
 
 # Generic case of 1 parameter. This is the base case, and types should overload:
 # ```julia
 # set_parameter(type::Type, position::Position, parameter)
 # ```
-set_parameters(type::Type, position::Position, parameter) = set_parameter(type, position, parameter)
+function set_parameters(type::Type, position::Position, parameter)
+  return set_parameter(type, position, parameter)
+end
 
 # Generic case of no parameters
 set_parameters(type::Type, position::Position) = type

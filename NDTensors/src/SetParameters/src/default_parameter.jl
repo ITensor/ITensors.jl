@@ -32,14 +32,18 @@ DefaultParameters(nparameters) = DefaultParameters(Val(nparameters))
 
 # `SetParameters` overload.
 get_parameter(type::Type{<:DefaultParameters{P1}}, position::Position{1}) where {P1} = P1
-set_parameter(type::Type{<:DefaultParameters}, position::Position{1}, P1) = DefaultParameters{P1}
+function set_parameter(type::Type{<:DefaultParameters}, position::Position{1}, P1)
+  return DefaultParameters{P1}
+end
 
 """
 `DefaultParameter` represents a single default parameter.
 """
 const DefaultParameter = DefaultParameters{1}
 
-(parameter::DefaultParameter)(type::Type, position::Position) = default_parameter(type, position)
+function (parameter::DefaultParameter)(type::Type, position::Position)
+  return default_parameter(type, position)
+end
 
 function Base.iterate(parameters::DefaultParameters, state=1)
   if state > get_parameter(parameters)
@@ -60,7 +64,9 @@ end
 
 # Specify the number of parameters.
 # TODO: Check if this is type stable!
-function set_nparameters(parameters::DefaultParameters{Any}, nparameters::Val, position::Position)
+function set_nparameters(
+  parameters::DefaultParameters{Any}, nparameters::Val, position::Position
+)
   ndefault_parameters = Val(get_parameter(nparameters) - get_parameter(position) + 1)
   return set_parameter(typeof(parameters), ndefault_parameters)()
 end
@@ -69,6 +75,8 @@ function set_nparameters(parameters::DefaultParameters, type::Type, position::Po
   return parameters
 end
 
-function set_nparameters(parameters::DefaultParameters, nparameters::Val, position::Position)
+function set_nparameters(
+  parameters::DefaultParameters, nparameters::Val, position::Position
+)
   return parameters
 end

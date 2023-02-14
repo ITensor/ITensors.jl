@@ -4,11 +4,15 @@ function set_unspecified_parameters(type::Type, position::Position, parameter)
   return replace_unspecified_parameters(type, position, current_parameter, parameter)
 end
 
-function replace_unspecified_parameters(type::Type, position::Position, current_parameter::Type{<:UnspecifiedParameter}, parameter)
+function replace_unspecified_parameters(
+  type::Type, position::Position, current_parameter::Type{<:UnspecifiedParameter}, parameter
+)
   return set_parameters(type, position, parameter)
 end
 
-function replace_unspecified_parameters(type::Type, position::Position, current_parameter, parameter)
+function replace_unspecified_parameters(
+  type::Type, position::Position, current_parameter, parameter
+)
   return type
 end
 
