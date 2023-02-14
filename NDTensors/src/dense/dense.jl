@@ -111,25 +111,11 @@ function complex(T::Type{<:Dense})
   return set_datatype(T, similartype(datatype(T), complex(eltype(T))))
 end
 
-function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractVector})
-  return Dense{eltype(datatype),datatype}
-end
-
-function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray})
-  return error(
-    "Setting the `datatype` of the storage type `$storagetype` to a $(ndims(datatype))-dimsional array of type `$datatype` is not currently supported, use an `AbstractVector` instead.",
-  )
-end
+# TODO: Define a generic `dense` for `Tensor`, `TensorStorage`.
+dense(storagetype::Type{<:Dense}) = storagetype
 
 # TODO: make these more general, move to tensorstorage.jl
-datatype(::Type{<:Dense{<:Any,DataT}}) where {DataT} = DataT
-
-zeros(DenseT::Type{<:Dense}, inds) = zeros(DenseT, dim(inds))
-
-# # Generic for handling `Vector` and `CuVector`
-# function zeros(storagetype::Type{<:Dense}, dim::Int)
-#   return fill!(NDTensors.similar(storagetype, dim), zero(eltype(storagetype)))
-# end
+datatype(storetype::Type{<:Dense{<:Any,DataT}}) where {DataT} = DataT
 
 function promote_rule(
   ::Type{<:Dense{ElT1,DataT1}}, ::Type{<:Dense{ElT2,DataT2}}

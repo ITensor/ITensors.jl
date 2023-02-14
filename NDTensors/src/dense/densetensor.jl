@@ -6,9 +6,6 @@ const DenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT
 
 DenseTensor(::Type{ElT}, inds) where {ElT} = tensor(Dense(ElT, dim(inds)), inds)
 
-# TODO: Define a generic `dense` for `Tensor`, `TensorStorage`.
-dense(storagetype::Type{<:Dense}) = storagetype
-
 # Special convenience function for Int
 # dimensions
 DenseTensor(::Type{ElT}, inds::Int...) where {ElT} = DenseTensor(ElT, inds)
