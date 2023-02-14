@@ -82,21 +82,27 @@ tensor(args...; kwargs...) = Tensor(AllowAlias(), args...; kwargs...)
 Tensor(storage::TensorStorage, inds) = Tensor(NeverAlias(), storage, inds)
 Tensor(inds, storage::TensorStorage) = Tensor(storage, inds)
 
-Tensor(eltype::Type, inds::Tuple) = Tensor(AllowAlias(), default_storagetype(eltype, inds)(dim(inds)), inds)
+function Tensor(eltype::Type, inds::Tuple)
+  return Tensor(AllowAlias(), default_storagetype(eltype, inds)(dim(inds)), inds)
+end
 
-function Tensor(eltype::Type, idx1::Integer, inds...) 
+function Tensor(eltype::Type, idx1::Integer, inds...)
   TupInds = [idx1]
   for ind in inds
     @assert ind isa Integer
     append!(TupInds, ind)
   end
   TupInds = Tuple(TupInds)
-  Tensor(eltype, TupInds)
+  return Tensor(eltype, TupInds)
 end
 
 Tensor(inds::Tuple) = Tensor(default_eltype(), inds)
 
-Tensor(eltype::Type, ::UndefInitializer, inds::Tuple) = Tensor(AllowAlias(), default_storagetype(default_datatype(eltype), inds)(undef, inds), inds)
+function Tensor(eltype::Type, ::UndefInitializer, inds::Tuple)
+  return Tensor(
+    AllowAlias(), default_storagetype(default_datatype(eltype), inds)(undef, inds), inds
+  )
+end
 
 Tensor(::UndefInitializer, inds::Tuple) = Tensor(default_eltype(), undef, inds)
 
@@ -108,7 +114,7 @@ function Tensor(::UndefInitializer, idx1::Integer, inds...)
   end
   TupInds = Tuple(TupInds)
 
-  Tensor(undef, TupInds)
+  return Tensor(undef, TupInds)
 end
 
 function Tensor(eltype::Type, ::UndefInitializer, idx1::Integer, inds...)
@@ -119,11 +125,10 @@ function Tensor(eltype::Type, ::UndefInitializer, idx1::Integer, inds...)
   end
   TupInds = Tuple(TupInds)
 
-  Tensor(eltype, undef, TupInds)
+  return Tensor(eltype, undef, TupInds)
 end
 
 function Tensor(idx1::Integer, inds...)
-   
   TupInds = [idx1]
   for i in inds
     @assert i isa Integer
@@ -131,15 +136,15 @@ function Tensor(idx1::Integer, inds...)
   end
   TupInds = Tuple(TupInds)
 
-  Tensor(TupInds)
+  return Tensor(TupInds)
 end
 
-function Tensor(data::AbstractArray{<:Any, 1}, inds::Tuple)
-  Tensor(AllowAlias(), default_storagetype(typeof(data), inds)(data), inds)
+function Tensor(data::AbstractArray{<:Any,1}, inds::Tuple)
+  return Tensor(AllowAlias(), default_storagetype(typeof(data), inds)(data), inds)
 end
 
-function Tensor(data::AbstractArray{<:Any, N}, inds::Tuple) where {N}
-  Tensor(vec(data), inds)
+function Tensor(data::AbstractArray{<:Any,N}, inds::Tuple) where {N}
+  return Tensor(vec(data), inds)
 end
 
 ## End Tensor constructors
