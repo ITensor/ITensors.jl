@@ -79,8 +79,8 @@ function Tensor(as::AliasStyle, storage::TensorStorage, inds)
 end
 
 tensor(args...; kwargs...) = Tensor(AllowAlias(), args...; kwargs...)
-Tensor(storage::TensorStorage, inds) = Tensor(NeverAlias(), storage, inds)
-Tensor(inds, storage::TensorStorage) = Tensor(storage, inds)
+Tensor(storage::TensorStorage, inds::Tuple) = Tensor(NeverAlias(), storage, inds)
+Tensor(inds::Tuple, storage::TensorStorage) = Tensor(storage, inds)
 
 function Tensor(eltype::Type, inds::Tuple)
   return Tensor(AllowAlias(), default_storagetype(eltype, inds)(dim(inds)), inds)
