@@ -12,7 +12,8 @@ jobs:
      env:
        JULIA_NUM_THREADS: 2
     steps:
-      - uses: khan/pull-request-comment-trigger@v1.1.0
+      - name: Pull Request Comment Trigger
+        uses: Khan/pull-request-comment-trigger@1.0.0
         id: check
         with:
           trigger: '[benchmark]'
@@ -23,17 +24,17 @@ jobs:
           version: 1
       - run: 'echo [benchmark] trigger detected.'
         if: steps.check.outputs.triggered == 'true'
-      - name: Install dependencies
-        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
-        if: steps.check.outputs.triggered == 'true'
-      - name: Run benchmarks
-        run: julia -e 'using Pkg; using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
-        if: steps.check.outputs.triggered == 'true'
-      - name: Post results
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
-        if: steps.check.outputs.triggered == 'true'
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+##      - name: Install dependencies
+##        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+##        if: steps.check.outputs.triggered == 'true'
+##      - name: Run benchmarks
+##        run: julia -e 'using Pkg; using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
+##        if: steps.check.outputs.triggered == 'true'
+##      - name: Post results
+##        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
+##        if: steps.check.outputs.triggered == 'true'
+##        env:
+##          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
 
 ## on:
 ##   pull_request:
