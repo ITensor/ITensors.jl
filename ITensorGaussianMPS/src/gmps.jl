@@ -135,13 +135,13 @@ is_annihilation_operator(::OpName"c↓") = true
 
 
 function quadrant(term)
-  if is_creation_operator(term[1]) && is_annihilation_operator(term[1])
+  if is_creation_operator(term[1]) && is_annihilation_operator(term[2])
     q=(2,2)
-  elseif is_annihilation_operator(term[1]) && is_creation_operator(term[1])
+  elseif is_annihilation_operator(term[1]) && is_creation_operator(term[2])
     q=(1,1)
-  elseif is_annihilation_operator(term[1]) && is_annihilation_operator(term[1])
+  elseif is_annihilation_operator(term[1]) && is_annihilation_operator(term[2])
     q=(1,2)
-  elseif is_creation_operator(term[1]) && is_creation_operator(term[1])
+  elseif is_creation_operator(term[1]) && is_creation_operator(term[2])
     q=(2,1)
   end
   return q 
@@ -167,22 +167,35 @@ function quadratic_hamiltonian(os::OpSum)
     nsites = max(nsites, maximum(sites[n]))
   end
   quadrants_present=unique(quads)
-  h = zeros(ElT, nsites, nsites)
+  ###currently compatible formats 
+  #[(2,2)] -> hopping only
+  #[(1,2),(2,2)] -> hopping and pairing
+  @show quadrants_present
+  ElT = all(isreal(coefs)) ? Float64 : ComplexF64
   
-  if (1,2) in quadrants_present || (2,1) in quadrants_present
+  if Set([(2,2),(1,2)]) == Set(quadrants_present)
+    println("quadratic hamiltonian with pairing")
     nsites*=2
     h = zeros(ElT, nsites, nsites)
     for n in 1:nterms
       quad=quads[n]
-      offsets = div(nsites,2) .* quad
-      h[(sites[n] .+ offsets)...] = coefs[n]
+      offsets = div(nsites,2) .* (quad .- 1)
+      h[(sites[n] .+ offsets)...] += coefs[n]
     end
-  elseif (2,2) == quadrants_present
+    N=div(nsites,2)
+    ##fill in the other quadrants
+    h[1:N,1:N].=-conj.(h[N+1:end,N+1:end])
+    h[N+1:end,1:N].=-conj.(h[1:N,N+1:end])
+  elseif [(2,2)] == quadrants_present
+    println("quadratic hamiltonian without pairing")
     h = zeros(ElT, nsites, nsites)
-    h[sites[n]...] = coefs[n]
+    for n in 1:nterms
+      h[sites[n]...] += coefs[n]
+    end
   else
     error("Either pass all terms (for non-number conserving) or only (Cdag,C) ones (number-conserving)")
   end
+  return h
 end
 
 function hopping_hamiltonian(os::OpSum)
