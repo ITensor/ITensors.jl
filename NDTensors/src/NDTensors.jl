@@ -18,6 +18,9 @@ using Strided
 using TimerOutputs
 using TupleTools
 
+include("SetParameters/src/SetParameters.jl")
+using .SetParameters
+
 using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
 using Base.Cartesian: @nexprs
