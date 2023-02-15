@@ -206,11 +206,11 @@ end</code></pre><p>The <code>measure!</code> function grabs certain helpful keyw
 mutable struct SizeObserver &lt;: AbstractObserver
 end
 
-function ITensors.measure!(o::SizeObserver; bond, half_sweep, psi, projected_operator, kwargs...)
+function ITensors.measure!(o::SizeObserver; bond, sweep, half_sweep, psi, projected_operator, kwargs...)
   if bond==1 &amp;&amp; half_sweep==2
     psi_size =  Base.format_bytes(Base.summarysize(psi))
     PH_size =  Base.format_bytes(Base.summarysize(projected_operator))
-    println(&quot;|psi| = $psi_size, |PH| = $PH_size&quot;)
+    println(&quot;After sweep $sweep, |psi| = $psi_size, |PH| = $PH_size&quot;)
   end
 end
 
@@ -237,4 +237,13 @@ let
   energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff, observer=obs)
 
   return
-end</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="MPSandMPO.html">« MPS and MPO Examples</a><a class="docs-footer-nextpage" href="Physics.html">Physics (SiteType) System Examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Wednesday 15 February 2023 14:17">Wednesday 15 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><p>Example output:</p><pre><code class="nohighlight">After sweep 1, |psi| = 211.312 KiB, |PH| = 593.984 KiB
+After sweep 1 energy=-43.95323393592883  maxlinkdim=10 maxerr=8.26E-06 time=0.098
+After sweep 2, |psi| = 641.000 KiB, |PH| = 1.632 MiB
+After sweep 2 energy=-44.10791340895817  maxlinkdim=20 maxerr=7.39E-07 time=0.132
+After sweep 3, |psi| = 1.980 MiB, |PH| = 5.066 MiB
+After sweep 3 energy=-44.12593605906466  maxlinkdim=44 maxerr=9.96E-09 time=0.256
+After sweep 4, |psi| = 2.863 MiB, |PH| = 7.246 MiB
+After sweep 4 energy=-44.127710946536645  maxlinkdim=56 maxerr=9.99E-09 time=0.445
+After sweep 5, |psi| = 3.108 MiB, |PH| = 7.845 MiB
+After sweep 5 energy=-44.127736798226536  maxlinkdim=57 maxerr=9.98E-09 time=0.564</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="MPSandMPO.html">« MPS and MPO Examples</a><a class="docs-footer-nextpage" href="Physics.html">Physics (SiteType) System Examples »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Wednesday 15 February 2023 14:40">Wednesday 15 February 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
