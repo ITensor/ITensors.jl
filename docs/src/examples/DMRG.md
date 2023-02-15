@@ -404,11 +404,11 @@ using ITensors
 mutable struct SizeObserver <: AbstractObserver
 end
 
-function ITensors.measure!(o::SizeObserver; bond, half_sweep, psi, projected_operator, kwargs...)
+function ITensors.measure!(o::SizeObserver; bond, sweep, half_sweep, psi, projected_operator, kwargs...)
   if bond==1 && half_sweep==2
     psi_size =  Base.format_bytes(Base.summarysize(psi))
     PH_size =  Base.format_bytes(Base.summarysize(projected_operator))
-    println("|psi| = $psi_size, |PH| = $PH_size")
+    println("After sweep $sweep, |psi| = $psi_size, |PH| = $PH_size")
   end
 end
 
@@ -436,4 +436,18 @@ let
 
   return
 end
+```
+
+Example output:
+```
+After sweep 1, |psi| = 211.312 KiB, |PH| = 593.984 KiB
+After sweep 1 energy=-43.95323393592883  maxlinkdim=10 maxerr=8.26E-06 time=0.098
+After sweep 2, |psi| = 641.000 KiB, |PH| = 1.632 MiB
+After sweep 2 energy=-44.10791340895817  maxlinkdim=20 maxerr=7.39E-07 time=0.132
+After sweep 3, |psi| = 1.980 MiB, |PH| = 5.066 MiB
+After sweep 3 energy=-44.12593605906466  maxlinkdim=44 maxerr=9.96E-09 time=0.256
+After sweep 4, |psi| = 2.863 MiB, |PH| = 7.246 MiB
+After sweep 4 energy=-44.127710946536645  maxlinkdim=56 maxerr=9.99E-09 time=0.445
+After sweep 5, |psi| = 3.108 MiB, |PH| = 7.845 MiB
+After sweep 5 energy=-44.127736798226536  maxlinkdim=57 maxerr=9.98E-09 time=0.564
 ```
