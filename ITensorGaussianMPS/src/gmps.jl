@@ -102,10 +102,6 @@ function conj!(G::Circuit)
   return replace!(g -> Givens(g.i1, g.i2, g.c, g.s'), G)
 end
 
-#function copy(G::Circuit{Elt}) where Elt
-#  return Circuit{Elt}(copy(G.rotations))
-#end
-#length(G::Circuit) = length(G.rotations)
 ngates(G::Circuit) = length(G.rotations)
 
 #
@@ -132,7 +128,12 @@ is_annihilation_operator(::OpName"c") = true
 is_annihilation_operator(::OpName"c↑") = true
 is_annihilation_operator(::OpName"c↓") = true
 
-
+interlaced_hamiltonian(h::ConservesNfParity)=interleave(h.data)
+blocked_hamiltonian(h::ConservesNfParity)=h.data
+interlaced_hamiltonian(h::ConservesNf)=error("Interlaced and blocked only applicable to non-number conserving Hamiltonians")
+blocked_hamiltonian(h::ConservesNf)=error("Interlaced and blocked only applicable to non-number conserving Hamiltonians")
+hamiltonian(h::ConservesNfParity)=interlaced_hamiltonian(h)
+hamiltonian(h::ConservesNf)=h.data
 
 function quadrant(term)
   if is_creation_operator(term[1]) && is_annihilation_operator(term[2])
@@ -147,7 +148,7 @@ function quadrant(term)
   return q 
 end
 
-# Make a hopping Hamiltonian from quadratic Hamiltonian
+# Make a quadratic Hamiltonian (matrix representation) from quadratic OpSum
 function quadratic_hamiltonian(os::OpSum)
   nterms = length(os)
   coefs = Vector{Number}(undef, nterms)
@@ -161,19 +162,17 @@ function quadratic_hamiltonian(os::OpSum)
     coefs[n] = coef
     quads[n]=quadrant(term)
     length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
-    #@assert is_creation_operator(term[1])
-    #@assert is_annihilation_operator(term[2])
     sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
     nsites = max(nsites, maximum(sites[n]))
   end
   quadrants_present=unique(quads)
-  ###currently compatible formats 
-  #[(2,2)] -> hopping only
-  #[(1,2),(2,2)] -> hopping and pairing
+  # currently compatible formats:
+  # [(2,2)] -> hopping only
+  # [(1,2),(2,2)] -> hopping and pairing
   @show quadrants_present
   ElT = all(isreal(coefs)) ? Float64 : ComplexF64
-  
-  if Set([(2,2),(1,2)]) == Set(quadrants_present)
+  # account for both pairing+hopping, and pairing only
+  if (Set([(2,2),(1,2)]) == Set(quadrants_present)) || (Set([(1,2),]) == Set(quadrants_present))
     println("quadratic hamiltonian with pairing")
     nsites*=2
     h = zeros(ElT, nsites, nsites)
@@ -183,48 +182,63 @@ function quadratic_hamiltonian(os::OpSum)
       h[(sites[n] .+ offsets)...] += coefs[n]
     end
     N=div(nsites,2)
-    ##fill in the other quadrants
+    # fill in the other quadrants
     h[1:N,1:N].=-conj.(h[N+1:end,N+1:end])
     h[N+1:end,1:N].=-conj.(h[1:N,N+1:end])
+    h=ConservesNfParity(h)  ###storage in blocked format here
   elseif [(2,2)] == quadrants_present
     println("quadratic hamiltonian without pairing")
     h = zeros(ElT, nsites, nsites)
     for n in 1:nterms
       h[sites[n]...] += coefs[n]
     end
+    h=ConservesNf(h)
   else
     error("Either pass all terms (for non-number conserving) or only (Cdag,C) ones (number-conserving)")
   end
   return h
 end
 
-function hopping_hamiltonian(os::OpSum)
-  nterms = length(os)
-  coefs = Vector{Number}(undef, nterms)
-  sites = Vector{Tuple{Int,Int}}(undef, nterms)
-  nsites = 0
-  for n in 1:nterms
-    term = os[n]
-    coef = isreal(coefficient(term)) ? real(coefficient(term)) : term.coef
-    coefs[n] = coef
-    length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
-    @assert is_creation_operator(term[1])
-    @assert is_annihilation_operator(term[2])
-    sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
-    nsites = max(nsites, maximum(sites[n]))
+function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
+  h_up=quadratic_hamiltonian(os_up)
+  h_dn=quadratic_hamiltonian(os_dn)
+  if h_up<:ConservesNf && h_dn<:ConservesNf
+    #not ideal since recomputing above, but symmetry check implemented above only
+    return ConservesNf(hopping_hamiltonian(os_up,os_dn))    
+  elseif h_up<:ConservesNfParity && h_dn<:ConservesNfParity
+    N=size(h_up.data,1)
+    h=zeros(eltype(h_up.data),2*N)
+    n=div(N,2)
+    # interlace the blocks of both quadratic hamiltonians
+    h_up=blocked_hamiltonian(h_up)
+    h_dn=blocked_hamiltonian(h_dn)
+    # super-quadrant (1,1)
+    h[1:n,1:n]=[1:n,1:n]
+    h[n+1:2*n,n+1:2*n]=h_dn[1:n,1:n]
+    # super-quadrant (2,1)
+    h[N+1:N+n,1:n]=h_up[n+1:2*n,1:n]
+    h[N+n+1:N+2*n,n+1:2*n]=h_dn[n+1:2*n,1:n]
+    # super-quadrant (2,2)
+    h[N+1:N+n,N+1:N+n]=h_up[n+1:N,n+1:N]
+    h[N+n+1:2*N,N+n+1:2*N]=h_dn[n+1:N,n+1:N]
+    # super-quadrant (1,2)
+    h[1:n,N+1:N+n]=h_up[1:n,n+1:2*n]
+    h[n+1:2*n,N+n+1:2*N]=h_dn[1:n,n+1:2*n]
+    return ConservesNfParity(h)
+  else
+    error("h_up and h_dn need to be of same AbstractSymmetry")
   end
-  ElT = all(isreal(coefs)) ? Float64 : ComplexF64
-  h = zeros(ElT, nsites, nsites)
-  for n in 1:nterms
-    h[sites[n]...] = coefs[n]
-  end
-  return h
+  
 end
 
+hopping_hamiltonian(os::OpSum)=quadratic_hamiltonian(os).data
 # Make a combined hopping Hamiltonian for spin up and down
 function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum)
-  h_up = hopping_hamiltonian(os_up)
-  h_dn = hopping_hamiltonian(os_dn)
+  h_up = quadratic_hamiltonian(os_up)
+  h_dn = quadratic_hamiltonian(os_dn)
+  @assert h_up<:ConservesNf && h_dn<:ConservesNf
+  h_up = h_up.data
+  h_dn = h_dn.data
   @assert size(h_up) == size(h_dn)
   N = size(h_up, 1)
   ElT = promote_type(eltype(h_up), eltype(h_dn))
@@ -241,85 +255,10 @@ function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum)
   return Hermitian(h)
 end
 
-# Make a pairing Hamiltonian from quadratic pairing only Hamiltonian
+#for backward compatibility, may be removed
 function pairing_hamiltonian(os::OpSum)
-  nterms = length(os)
-  coefs_a = Vector{Number}(undef, 0)
-  coefs_c = Vector{Number}(undef, 0)
-
-  sites_a = Vector{Tuple{Int,Int}}(undef, 0)
-  sites_c = Vector{Tuple{Int,Int}}(undef, 0)
-
-  nsites_a = 0
-  nsites_c = 0
-
-  nterms_a = 0
-  nterms_c = 0
-  for n in 1:nterms
-    term = os[n]
-    coef = isreal(coefficient(term)) ? real(coefficient(term)) : term.coef
-
-    length(term) ≠ 2 && error("Must create hopping Hamiltonian from quadratic Hamiltonian")
-    cc = is_creation_operator(term[1]) && is_creation_operator(term[2])
-    aa = is_annihilation_operator(term[1]) && is_annihilation_operator(term[2])
-    #@show(cc,aa,cc||aa)
-    @assert cc || aa
-    #@assert is_annihilation_operator(term[2])
-    thesites = ntuple(n -> ITensors.site(term[n]), Val(2))
-    #@show thesites
-    if aa
-      nterms_a += 1
-      push!(coefs_a, coef)
-      push!(sites_a, thesites)
-      #@show last(sites_a)
-      nsites_a = max(nsites_a, maximum(last(sites_a)))
-    elseif cc
-      nterms_c += 1
-      push!(coefs_c, coef)
-      push!(sites_c, ntuple(n -> ITensors.site(term[n]), Val(2)))
-      nsites_c = max(nsites_c, maximum(last(sites_c)))
-    end
-  end
-
-  ElT = all(isreal(coefs_a)) ? Float64 : ComplexF64
-  h_a = zeros(ElT, nsites_a, nsites_a)
-  for n in 1:nterms_a
-    h_a[sites_a[n]...] = coefs_a[n]
-  end
-  h_c = zeros(ElT, nsites_c, nsites_c)
-  for n in 1:nterms_c
-    h_c[sites_c[n]...] = coefs_c[n]
-  end
-  @assert isapprox(h_a, -conj(h_c))
-  #@assert isapprox(h_a,-transpose(h_a))
-  #@show h_a
-  #@show -transpose(h_a)
-  return h_a
-end
-
-"""
-pairing_hamiltonian(os_hop::OpSum,os_pair::OpSum)
-
-Assemble single-particle Hamiltonian from hopping and pairing terms.
-Returns Hamiltonian both in interlaced and blocked single particle format
-(first annhiliation operator, then creation operator)
-"""
-
-function pairing_hamiltonian(os_hop::OpSum, os_pair::OpSum)
-  hh = hopping_hamiltonian(os_hop)
-  hp = pairing_hamiltonian(os_pair)
-  @assert size(hh, 1) == size(hh, 2)
-  @assert eltype(hh) == eltype(hp)
-  Elt = eltype(hh)
-  H = zeros(Elt, 2 * size(hh, 1), 2 * size(hh, 2))
-  HB = zeros(Elt, 2 * size(hh, 1), 2 * size(hh, 2))
-  D = size(hh, 1)
-  HB[1:D, 1:D] = -conj(hh)
-  HB[1:D, (D + 1):(2 * D)] = hp
-  HB[(D + 1):(2 * D), 1:D] = -conj(hp)
-  HB[(D + 1):(2 * D), (D + 1):(2 * D)] = hh
-  H .= interleave(HB)
-  return H, HB
+  h=quadratic_hamiltonian(os)
+  return interlaced_hamiltonian(h),blocked_hamiltonian(h)
 end
 
 # Make a Slater determinant matrix from a hopping Hamiltonian
