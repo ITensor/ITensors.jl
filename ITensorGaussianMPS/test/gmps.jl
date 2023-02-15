@@ -11,45 +11,43 @@ end
 
 @testset "Hamiltonians" begin
   # Test Givens rotations
-  N=8
-  t=-0.8 ###nearest neighbor hopping
-  mu=0.0 ###on-site chemical potential
-  pairing=1.2
+  N = 8
+  t = -0.8 ###nearest neighbor hopping
+  mu = 0.0 ###on-site chemical potential
+  pairing = 1.2
   os = OpSum()
   for i in 1:N
-    if 1<i<N
-      js=[i-1,i+1]
-    elseif i==1
-      js=[i+1,]
+    if 1 < i < N
+      js = [i - 1, i + 1]
+    elseif i == 1
+      js = [i + 1]
     else
-      js=[i-1,]
+      js = [i - 1]
     end
     for j in js
       os .+= t, "Cdag", i, "C", j
     end
   end
-  h_hop=ITensorGaussianMPS.quadratic_hamiltonian(os)
+  h_hop = ITensorGaussianMPS.quadratic_hamiltonian(os)
   for i in 1:N
-    if 1<i<N
-      js=[i-1,i+1]
-    elseif i==1
-      js=[i+1,]
+    if 1 < i < N
+      js = [i - 1, i + 1]
+    elseif i == 1
+      js = [i + 1]
     else
-      js=[i-1,]
+      js = [i - 1]
     end
     for j in js
       #os .+= pairing, "Cdag", i, "Cdag", j
       os .+= -conj(pairing), "C", i, "C", j
     end
   end
-  
-  h_hopandpair=ITensorGaussianMPS.quadratic_hamiltonian(os)
 
-  h_hopandpair_spinful=ITensorGaussianMPS.quadratic_hamiltonian(os, os)
-  @test all(abs.(h_hopandpair.data[N+1:end,N+1:end] - h_hop.data) .< eps(Float32))
-    
+  h_hopandpair = ITensorGaussianMPS.quadratic_hamiltonian(os)
+
+  h_hopandpair_spinful = ITensorGaussianMPS.quadratic_hamiltonian(os, os)
+  @test all(abs.(h_hopandpair.data[(N + 1):end, (N + 1):end] - h_hop.data) .< eps(Float32))
 end
-
 
 @testset "Fermion (real and complex)" begin
   N = 10
@@ -153,7 +151,7 @@ end
       Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
       c = Ud' * c * Ud
     end
-    n, gmps = correlation_matrix_to_gmps(ElT.(c),N; maxblocksize=8)
+    n, gmps = correlation_matrix_to_gmps(ElT.(c), N; maxblocksize=8)
     ns = round.(Int, n)
     if Delta == 0.0
       @test sum(ns) == Nf
