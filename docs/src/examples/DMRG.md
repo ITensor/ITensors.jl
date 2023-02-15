@@ -366,3 +366,74 @@ let
   return
 end
 ```
+
+
+## Monitoring the Memory Usage of DMRG
+
+To monitor how much memory (RAM) a DMRG calculation is using while it is running,
+you can use the [Observer](@ref observer) system to make a custom observer object that prints out
+this information. Also the `Base.summarysize` function, which returns the size 
+in bytes of any Julia object is very helpful here.
+
+First we define our custom observer type, `SizeObserver`, and overload the `measure!` function
+for it:
+
+```julia
+mutable struct SizeObserver <: AbstractObserver
+end
+
+function ITensors.measure!(o::SizeObserver; bond, half_sweep, psi, projected_operator, kwargs...)
+  if bond==1 && half_sweep==2
+    psi_size =  Base.format_bytes(Base.summarysize(psi))
+    PH_size =  Base.format_bytes(Base.summarysize(projected_operator))
+    println("|psi| = $psi_size, |PH| = $PH_size")
+  end
+end
+```
+
+The `measure!` function grabs certain helpful keywords passed to it by DMRG, checking 
+`if bond==1 && half_sweep==2` so that it only runs when at the end of a full sweep.
+
+When it runs, it calls `Base.summarysize` on the wavefunction `psi` object and the `projected_operator` object. The `projected_operator`, which is the matrix (Hamiltonian) wrapped into the current MPS basis, is usually the largest-sized object in a DMRG calculation. The code also uses `Base.format_bytes` to turn an integer representing bytes into a human-readable string.
+
+Here is a complete sample code including constructing the observer and passing it to DMRG:
+
+```julia
+using ITensors
+
+mutable struct SizeObserver <: AbstractObserver
+end
+
+function ITensors.measure!(o::SizeObserver; bond, half_sweep, psi, projected_operator, kwargs...)
+  if bond==1 && half_sweep==2
+    psi_size =  Base.format_bytes(Base.summarysize(psi))
+    PH_size =  Base.format_bytes(Base.summarysize(projected_operator))
+    println("|psi| = $psi_size, |PH| = $PH_size")
+  end
+end
+
+let
+  N = 100
+
+  s = siteinds("S=1/2",N)
+
+  a = OpSum()
+  for n=1:N-1
+    a += "Sz",n,"Sz",n+1
+    a += 0.5,"S+",n,"S-",n+1
+    a += 0.5,"S-",n,"S+",n+1
+  end
+  H = MPO(a,s)
+  psi0 = randomMPS(s,linkdims=4)
+
+  nsweeps = 5
+  maxdim = [10,20,80,160]
+  cutoff = 1E-8
+
+  obs = SizeObserver()
+
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff, observer=obs)
+
+  return
+end
+```
