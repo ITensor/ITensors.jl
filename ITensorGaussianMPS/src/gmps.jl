@@ -1,5 +1,13 @@
 import Base: sortperm, size, length, eltype, conj, transpose, copy, *
+abstract type AbstractSymmetry end
 
+struct ConservesNfParity{T} <: AbstractSymmetry
+  data::T
+end
+
+struct ConservesNf{T} <: AbstractSymmetry
+  data::T
+end
 #
 # Single particle von Neumann entanglement entropy
 #
@@ -202,18 +210,18 @@ end
 function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
   h_up=quadratic_hamiltonian(os_up)
   h_dn=quadratic_hamiltonian(os_dn)
-  if h_up<:ConservesNf && h_dn<:ConservesNf
+  if typeof(h_up)<:ConservesNf && typeof(h_dn)<:ConservesNf
     #not ideal since recomputing above, but symmetry check implemented above only
     return ConservesNf(hopping_hamiltonian(os_up,os_dn))    
-  elseif h_up<:ConservesNfParity && h_dn<:ConservesNfParity
+  elseif typeof(h_up)<:ConservesNfParity && typeof(h_dn)<:ConservesNfParity
     N=size(h_up.data,1)
-    h=zeros(eltype(h_up.data),2*N)
+    h=zeros(eltype(h_up.data),(2*N,2*N))
     n=div(N,2)
     # interlace the blocks of both quadratic hamiltonians
     h_up=blocked_hamiltonian(h_up)
     h_dn=blocked_hamiltonian(h_dn)
     # super-quadrant (1,1)
-    h[1:n,1:n]=[1:n,1:n]
+    h[1:n,1:n]=h_up[1:n,1:n]
     h[n+1:2*n,n+1:2*n]=h_dn[1:n,1:n]
     # super-quadrant (2,1)
     h[N+1:N+n,1:n]=h_up[n+1:2*n,1:n]
@@ -271,15 +279,7 @@ end
 #
 # Correlation matrix diagonalization
 #
-abstract type AbstractSymmetry end
 
-struct ConservesNfParity{T} <: AbstractSymmetry
-  data::T
-end
-
-struct ConservesNf{T} <: AbstractSymmetry
-  data::T
-end
 
 struct Boguliobov
   u::Givens
