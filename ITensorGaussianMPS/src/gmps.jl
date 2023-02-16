@@ -136,20 +136,8 @@ is_annihilation_operator(::OpName"c") = true
 is_annihilation_operator(::OpName"c↑") = true
 is_annihilation_operator(::OpName"c↓") = true
 
-interlaced_hamiltonian(h::ConservesNfParity) = interleave(h.data)
-blocked_hamiltonian(h::ConservesNfParity) = h.data
-function interlaced_hamiltonian(h::ConservesNf)
-  return error(
-    "Interlaced and blocked only applicable to non-number conserving Hamiltonians"
-  )
-end
-function blocked_hamiltonian(h::ConservesNf)
-  return error(
-    "Interlaced and blocked only applicable to non-number conserving Hamiltonians"
-  )
-end
-hamiltonian(h::ConservesNfParity) = interlaced_hamiltonian(h)
-hamiltonian(h::ConservesNf) = h.data
+#interlaced_hamiltonian(h::AbstractMatrix) = h
+#blocked_hamiltonian(h::AbstractMatrix) = Hermitian(reverse_interleave(Matrix(h)))
 
 function quadrant(term)
   if is_creation_operator(term[1]) && is_annihilation_operator(term[2])
@@ -164,14 +152,16 @@ function quadrant(term)
   return q
 end
 
-# Make a quadratic Hamiltonian (matrix representation) from quadratic OpSum
 function quadratic_hamiltonian(os::OpSum)
+  os = deepcopy(os)
+  #os = ITensors.sorteachterm(os, sites)
+  os = ITensors.sortmergeterms(os)
+
   nterms = length(os)
-  coefs = Vector{Number}(undef, nterms)
+  coefs=Vector{Number}(undef,nterms)
   sites = Vector{Tuple{Int,Int}}(undef, nterms)
   quads = Vector{Tuple{Int,Int}}(undef, nterms)
-  nsites = 0
-
+  nsites=0
   for n in 1:nterms
     term = os[n]
     coef = isreal(coefficient(term)) ? real(coefficient(term)) : term.coef
@@ -181,82 +171,61 @@ function quadratic_hamiltonian(os::OpSum)
     sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
     nsites = max(nsites, maximum(sites[n]))
   end
-  quadrants_present = unique(quads)
-  # currently compatible formats:
-  # [(2,2)] -> hopping only
-  # [(1,2),(2,2)] -> hopping and pairing
-  @show quadrants_present
   ElT = all(isreal(coefs)) ? Float64 : ComplexF64
-  # account for both pairing+hopping, and pairing only
-  if (Set([(2, 2), (1, 2)]) == Set(quadrants_present)) ||
-    (Set([(1, 2)]) == Set(quadrants_present))
-    println("quadratic hamiltonian with pairing")
-    nsites *= 2
-    h = zeros(ElT, nsites, nsites)
-    for n in 1:nterms
-      quad = quads[n]
-      offsets = div(nsites, 2) .* (quad .- 1)
-      h[(sites[n] .+ offsets)...] += coefs[n]
-    end
-    N = div(nsites, 2)
-    # fill in the other quadrants
-    h[1:N, 1:N] .= -conj.(h[(N + 1):end, (N + 1):end])
-    h[(N + 1):end, 1:N] .= -conj.(h[1:N, (N + 1):end])
-    h = ConservesNfParity(h)  ###storage in blocked format here
-  elseif [(2, 2)] == quadrants_present
-    println("quadratic hamiltonian without pairing")
-    h = zeros(ElT, nsites, nsites)
-    for n in 1:nterms
-      h[sites[n]...] += coefs[n]
-    end
-    h = ConservesNf(h)
-  else
-    error(
-      "Either pass all terms (for non-number conserving) or only (Cdag,C) ones (number-conserving)",
-    )
+  h = zeros(ElT, 2*nsites, 2*nsites)
+  other_quad = i -> i==2 ? 1 : 2
+  for n in 1:nterms
+    quad = quads[n]
+    offsets = nsites .* (quad .- 1)
+    h[(sites[n] .+ offsets)...] += coefs[n]
+    other_offsets = nsites .* (other_quad.(quad) .- 1)
+    h[(sites[n] .+ other_offsets)...] += -conj(coefs[n])
   end
-  return h
+  return Hermitian(interleave(h))
 end
+
 
 function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
   h_up = quadratic_hamiltonian(os_up)
   h_dn = quadratic_hamiltonian(os_dn)
-  if typeof(h_up) <: ConservesNf && typeof(h_dn) <: ConservesNf
-    #not ideal since recomputing above, but symmetry check implemented above only
-    return ConservesNf(hopping_hamiltonian(os_up, os_dn))
-  elseif typeof(h_up) <: ConservesNfParity && typeof(h_dn) <: ConservesNfParity
-    N = size(h_up.data, 1)
-    h = zeros(eltype(h_up.data), (2 * N, 2 * N))
-    n = div(N, 2)
-    # interlace the blocks of both quadratic hamiltonians
-    h_up = blocked_hamiltonian(h_up)
-    h_dn = blocked_hamiltonian(h_dn)
-    # super-quadrant (1,1)
-    h[1:n, 1:n] = h_up[1:n, 1:n]
-    h[(n + 1):(2 * n), (n + 1):(2 * n)] = h_dn[1:n, 1:n]
-    # super-quadrant (2,1)
-    h[(N + 1):(N + n), 1:n] = h_up[(n + 1):(2 * n), 1:n]
-    h[(N + n + 1):(N + 2 * n), (n + 1):(2 * n)] = h_dn[(n + 1):(2 * n), 1:n]
-    # super-quadrant (2,2)
-    h[(N + 1):(N + n), (N + 1):(N + n)] = h_up[(n + 1):N, (n + 1):N]
-    h[(N + n + 1):(2 * N), (N + n + 1):(2 * N)] = h_dn[(n + 1):N, (n + 1):N]
-    # super-quadrant (1,2)
-    h[1:n, (N + 1):(N + n)] = h_up[1:n, (n + 1):(2 * n)]
-    h[(n + 1):(2 * n), (N + n + 1):(2 * N)] = h_dn[1:n, (n + 1):(2 * n)]
-    return ConservesNfParity(h)
-  else
-    error("h_up and h_dn need to be of same AbstractSymmetry")
-  end
+  @assert size(h_up) == size(h_dn)
+  N = size(h_up, 1)
+  h = zeros(eltype(h_up), (2 * N, 2 * N))
+  n = div(N, 2)
+  # interlace the blocks of both quadratic hamiltonians
+  h_up = reverse_interleave(Matrix(h_up))
+  h_dn = reverse_interleave(Matrix(h_dn))
+  # super-quadrant (1,1)
+  h[1:n, 1:n] = h_up[1:n, 1:n]
+  h[(n + 1):(2 * n), (n + 1):(2 * n)] = h_dn[1:n, 1:n]
+  # super-quadrant (2,1)
+  h[(N + 1):(N + n), 1:n] = h_up[(n + 1):(2 * n), 1:n]
+  h[(N + n + 1):(N + 2 * n), (n + 1):(2 * n)] = h_dn[(n + 1):(2 * n), 1:n]
+  # super-quadrant (2,2)
+  h[(N + 1):(N + n), (N + 1):(N + n)] = h_up[(n + 1):N, (n + 1):N]
+  h[(N + n + 1):(2 * N), (N + n + 1):(2 * N)] = h_dn[(n + 1):N, (n + 1):N]
+  # super-quadrant (1,2)
+  h[1:n, (N + 1):(N + n)] = h_up[1:n, (n + 1):(2 * n)]
+  h[(n + 1):(2 * n), (N + n + 1):(2 * N)] = h_dn[1:n, (n + 1):(2 * n)]
+  
+  return Hermitian(interleave(h))
 end
 
-hopping_hamiltonian(os::OpSum) = quadratic_hamiltonian(os).data
-# Make a combined hopping Hamiltonian for spin up and down
+function hopping_hamiltonian(os::OpSum) 
+  # convert to blocked format
+  h=reverse_interleave(Matrix(quadratic_hamiltonian(os)))
+  # check that offdiagonal blocks are 0
+  N=div(size(h,1),2)
+  if ! all(abs.(h[1:N,N+1:2*N]) .< eps(real(eltype(h))))
+    error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
+  end
+  return Hermitian(h[N+1:2*N,N+1:2*N])
+end
+
+  # Make a combined hopping Hamiltonian for spin up and down
 function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum)
-  h_up = quadratic_hamiltonian(os_up)
-  h_dn = quadratic_hamiltonian(os_dn)
-  @assert h_up <: ConservesNf && h_dn <: ConservesNf
-  h_up = h_up.data
-  h_dn = h_dn.data
+  h_up = hopping_hamiltonian(os_up)
+  h_dn = hopping_hamitlonian(os_dn)
   @assert size(h_up) == size(h_dn)
   N = size(h_up, 1)
   ElT = promote_type(eltype(h_up), eltype(h_dn))
@@ -276,9 +245,10 @@ end
 #for backward compatibility, may be removed
 function pairing_hamiltonian(os::OpSum)
   h = quadratic_hamiltonian(os)
-  return interlaced_hamiltonian(h), blocked_hamiltonian(h)
+  return h, reverse_interleave(h)
 end
-
+### DEPRECATE: This dispatch collides with two opsum for two spin species in other places.
+pairing_hamiltonian(os_h::OpSum,os_p::OpSum)=pairing_hamiltonian(os_h+os_p)
 # Make a Slater determinant matrix from a hopping Hamiltonian
 # h with Nf fermions.
 function slater_determinant_matrix(h::AbstractMatrix, Nf::Int)

@@ -2,6 +2,8 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
+using PyPlot
+matplotlib.use("QtAgg")
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)
@@ -28,7 +30,7 @@ end
       os .+= t, "Cdag", i, "C", j
     end
   end
-  h_hop = ITensorGaussianMPS.quadratic_hamiltonian(os)
+  h_hop = ITensorGaussianMPS.hopping_hamiltonian(os)
   for i in 1:N
     if 1 < i < N
       js = [i - 1, i + 1]
@@ -44,9 +46,14 @@ end
   end
 
   h_hopandpair = ITensorGaussianMPS.quadratic_hamiltonian(os)
-
+  matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair)))
+  show()
   h_hopandpair_spinful = ITensorGaussianMPS.quadratic_hamiltonian(os, os)
-  @test all(abs.(h_hopandpair.data[(N + 1):end, (N + 1):end] - h_hop.data) .< eps(Float32))
+
+  matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair_spinful)))
+  show()
+  @test all(abs.(ITensorGaussianMPS.reverse_interleave(Matrix(h_hopandpair))[(N + 1):end, (N + 1):end] - h_hop) .< eps(Float32))
+
 end
 
 @testset "Fermion (real and complex)" begin
@@ -83,7 +90,7 @@ end
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=true)
     ψ = slater_determinant_to_mps(s, Φ; maxblocksize=4)
-    if true
+    if false
       os = OpSum()
       for i in 1:N, j in 1:N
         if h[i, j] ≠ 0
