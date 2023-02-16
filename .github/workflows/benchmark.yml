@@ -1,19 +1,23 @@
 name: Run benchmarks
+
 on:
   pull_request:
-    types: [opened]
-  issue_comment:
-    types: [created, synchronize]
+
 jobs:
-  deploy:
+  Benchmark:
     runs-on: ubuntu-latest
+    env:
+      JULIA_NUM_THREADS: 2
     steps:
-      - name: Pull Request Comment Trigger
-        uses: Khan/pull-request-comment-trigger@v1.1.0
-        id: check
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
         with:
-          trigger: '[benchmark]'
+          version: 1
+      - name: Install dependencies
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+      - name: Run benchmarks
+        run: julia -e 'using Pkg; using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
+      - name: Post results
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-      - run: 'echo [benchmark] trigger detected.'
-        if: steps.check.outputs.triggered == 'true'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
