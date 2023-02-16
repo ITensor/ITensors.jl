@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Pull Request Comment Trigger
-        uses: Khan/pull-request-comment-trigger@v1.0.0
+        uses: Khan/pull-request-comment-trigger@v1.1.0
         id: check
         with:
           trigger: '[benchmark]'
