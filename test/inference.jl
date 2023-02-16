@@ -20,9 +20,9 @@ end
 
 @testset "NDTensors Dense contract" begin
   i = Index(2)
-  T1 = randomTensor((i'', i'))
-  T2 = randomTensor((i', i))
-  R = randomTensor((i'', i))
+  T1 = randomDenseTensor((i'', i'))
+  T2 = randomDenseTensor((i', i))
+  R = randomDenseTensor((i'', i))
 
   labelsT1 = (1, -1)
   labelsT2 = (-1, 2)

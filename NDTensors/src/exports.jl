@@ -43,7 +43,6 @@ export
   # Symbols
   ⊗,
   # Methods
-  randomTensor,
   randomDenseTensor,
   array,
   contract,

@@ -145,19 +145,6 @@ end
 function convert(::Type{<:Dense{ElR,VecR}}, D::Dense) where {ElR,VecR}
   return Dense(convert(VecR, data(D)))
 end
-
-function randomTensor(::Type{ElT}, inds) where {ElT}
-  return randomDenseTensor(ElT, inds)
-end
-
-function randomTensor(::Type{ElT}, inds::Int...) where {ElT}
-  return randomDenseTensor(ElT, inds...)
-end
-
-randomTensor(inds) = randomDenseTensor(Float64, inds)
-
-randomTensor(inds::Int...) = randomDenseTensor(Float64, inds)
-
 function HDF5.write(
   parent::Union{HDF5.File,HDF5.Group}, name::String, D::Store
 ) where {Store<:Dense}
