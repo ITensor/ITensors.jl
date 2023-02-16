@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened]
   issue_comment:
-    types: [created]
+    types: [created, synchronize]
 jobs:
   deploy:
     runs-on: ubuntu-latest
