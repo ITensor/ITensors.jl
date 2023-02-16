@@ -20,6 +20,7 @@ jobs:
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      if: steps.check.outputs.triggered == 'true'
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
