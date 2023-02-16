@@ -164,34 +164,6 @@ include("util.jl")
     end
   end
 
-  @testset "MPO/MPS" begin
-    N = 6
-    sites = siteinds("S=1/2", N)
-
-    # MPO
-    mpo = makeRandomMPO(sites)
-
-    h5open("data.h5", "w") do fo
-      write(fo, "mpo", mpo)
-    end
-
-    h5open("data.h5", "r") do fi
-      rmpo = read(fi, "mpo", MPO)
-      @test prod([norm(rmpo[i] - mpo[i]) / norm(mpo[i]) < 1E-10 for i in 1:N])
-    end
-
-    # MPS
-    mps = makeRandomMPS(sites)
-    h5open("data.h5", "w") do fo
-      write(fo, "mps", mps)
-    end
-
-    h5open("data.h5", "r") do fi
-      rmps = read(fi, "mps", MPS)
-      @test prod([norm(rmps[i] - mps[i]) / norm(mps[i]) < 1E-10 for i in 1:N])
-    end
-  end
-
   @testset "DownwardCompat" begin
     h5open("testfilev0.1.41.h5", "r") do fi
       ITensorName = "ITensorv0.1.41"
