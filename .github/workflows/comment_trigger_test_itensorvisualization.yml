@@ -32,17 +32,20 @@ jobs:
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-      if: steps.check.outputs.triggered == 'true'
       - uses: actions/checkout@v2
+        if: steps.check.outputs.triggered == 'true'
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+        if: steps.check.outputs.triggered == 'true'
       - name: Install Julia dependencies
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
           pkg"dev ./NDTensors . ./ITensorVisualizationBase"
+        if: steps.check.outputs.triggered == 'true'
       - name: Run the tests
         run: |
           julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorVisualizationBase")'
+        if: steps.check.outputs.triggered == 'true'
