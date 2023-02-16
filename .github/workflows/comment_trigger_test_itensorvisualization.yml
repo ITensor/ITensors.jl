@@ -28,7 +28,7 @@ jobs:
         uses: Khan/pull-request-comment-trigger@v1.1.0
         id: check
         with:
-          trigger: '/visualization'
+          trigger: '[visualization]'
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
