@@ -1,7 +1,10 @@
-name: Run benchmarks
+name: Run benchmarks from comment trigger
 
 on:
   pull_request:
+    types: [opened]
+  issue_comment:
+    types: [created]
 
 jobs:
   Benchmark:
@@ -9,10 +12,20 @@ jobs:
     env:
       JULIA_NUM_THREADS: 2
     steps:
+      - name: Pull Request Comment Trigger
+        uses: Khan/pull-request-comment-trigger@v1.1.0
+        id: check
+        with:
+          trigger: '[benchmark]'
+          reaction: rocket
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
         with:
           version: 1
+      - run: 'echo [benchmark] trigger detected.'
+        if: steps.check.outputs.triggered == 'true'
       - name: Install dependencies
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
       - name: Run benchmarks
