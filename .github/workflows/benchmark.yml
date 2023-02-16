@@ -1,22 +1,19 @@
 name: Run benchmarks
-
 on:
   pull_request:
     types: [opened]
   issue_comment:
     types: [created]
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Pull Request Comment Trigger
-        uses: khan/pull-request-comment-trigger@v1.0.0
+        uses: Khan/pull-request-comment-trigger@v1.0.0
         id: check
         with:
-          trigger: '@deploy'
-          reaction: rocket
+          trigger: '[benchmark]'
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-      - run: 'echo Found it!'
+      - run: 'echo [benchmark] trigger detected.'
         if: steps.check.outputs.triggered == 'true'
