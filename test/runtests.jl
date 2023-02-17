@@ -24,7 +24,9 @@ ITensors.disable_threaded_blocksparse()
     end
   end
   if isempty(ARGS) || "all" in ARGS || "mps" in ARGS
-    println("""\nArguments ARGS = $(ARGS) are empty, or contain `"all"` or `"mps"`. Running MPS/MPO ITensors tests.""")
+    println(
+      """\nArguments ARGS = $(ARGS) are empty, or contain `"all"` or `"mps"`. Running MPS/MPO ITensors tests.""",
+    )
     dir = "ITensorLegacyMPS"
     println("\nTest $(@__DIR__)/$(dir)")
     @time include(joinpath(@__DIR__, dir, "runtests.jl"))
