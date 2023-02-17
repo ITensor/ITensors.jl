@@ -2,7 +2,8 @@ using Test
 using ITensors.LazyApply: LazyApply, Sum, Prod, Scaled, materialize
 
 @testset "LazyApply general functionality" begin
-  @test (materialize ∘ materialize ∘ materialize)(exp(Prod([1, 2, Sum([3, 4])]))) == exp(prod([1, 2, sum([3 + 4])]))
+  @test (materialize ∘ materialize ∘ materialize)(exp(Prod([1, 2, Sum([3, 4])]))) ==
+    exp(prod([1, 2, sum([3 + 4])]))
   @test_broken materialize(2 * Sum([1, 2, Prod([3, 4])])) == 2 * sum([1, 2, prod([3, 4])])
   @test 2 * Sum([1, 2, Prod([3, 4])]) == Sum([2, 4, 2Prod([3, 4])])
   @test 2 * Sum([1, 2, Prod([3, 4])]) isa Sum
@@ -17,7 +18,8 @@ using ITensors.LazyApply: LazyApply, Sum, Prod, Scaled, materialize
   @test 2 * Prod([1, 2]) isa Prod{Int}
   @test Prod([1, 2]) + Prod([3, 4]) == Sum([Prod([1, 2]), Prod([3, 4])])
   @test Prod([1, 2]) + Prod([3, 4]) isa Sum
-  @test_broken materialize(Sum(Prod([1, 2]) + Prod([3, 4]))) == sum([prod([1, 2]), prod([3, 4])])
+  @test_broken materialize(Sum(Prod([1, 2]) + Prod([3, 4]))) ==
+    sum([prod([1, 2]), prod([3, 4])])
   @test Prod([1, 2]) + Prod([3, 4]) == Sum([Prod([1, 2]), Prod([3, 4])])
   @test Prod([1, 2]) + Prod([3, 4]) isa Sum
   @test_broken Prod([1, 2]) - Prod([3, 4]) isa Sum

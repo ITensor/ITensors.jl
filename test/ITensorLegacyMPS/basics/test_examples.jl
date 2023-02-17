@@ -14,7 +14,9 @@ using ITensors, Test, Suppressor
   @testset "Package Compile Code" begin
     @test_nowarn begin
       @capture_out begin
-        include(joinpath(pkgdir(ITensors), "src", "packagecompile", "precompile_itensors.jl"))
+        include(
+          joinpath(pkgdir(ITensors), "src", "packagecompile", "precompile_itensors.jl")
+        )
       end
     end
   end
