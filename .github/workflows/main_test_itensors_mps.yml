@@ -1,4 +1,4 @@
-name: Run ITensors tests on push to main
+name: Run ITensors mps tests on push to main
 
 on:
   push:

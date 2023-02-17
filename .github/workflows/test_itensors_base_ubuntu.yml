@@ -1,4 +1,4 @@
-name: Run ITensors base tests
+name: Run ITensors base tests (Ubuntu)
 
 on:
   push:

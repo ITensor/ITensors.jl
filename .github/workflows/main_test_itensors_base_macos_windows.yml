@@ -1,11 +1,9 @@
-name: Run ITensors basic tests
+name: Run ITensors base tests (macOS and Windows)
 
 on:
   push:
     branches:
       - main
-    tags: '*'
-  pull_request:
 
 jobs:
   test:
@@ -43,7 +41,7 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          Pkg.test("ITensors"; coverage=true, test_args=["basics"])
+          Pkg.test("ITensors"; coverage=true, test_args=["base"])
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
