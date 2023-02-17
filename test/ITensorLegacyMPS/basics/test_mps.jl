@@ -6,7 +6,7 @@ using Test
 
 Random.seed!(1234)
 
-include("util.jl")
+include(joinpath(@__DIR__, "utils", "util.jl"))
 
 @testset "MPS Basics" begin
   sites = [Index(2, "Site") for n in 1:10]

@@ -1,6 +1,6 @@
 using ITensors, HDF5, Test
 
-include("util.jl")
+include(joinpath(@__DIR__, "utils", "util.jl"))
 
 @testset "HDF5 Read and Write" begin
   @testset "MPO/MPS" begin

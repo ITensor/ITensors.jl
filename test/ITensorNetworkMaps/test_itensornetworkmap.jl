@@ -4,7 +4,7 @@ using ITensors.ITensorNetworkMaps
 using KrylovKit
 using LinearAlgebra
 
-include("utils.jl")
+include(joinpath(@__DIR__, "utils", "utils.jl"))
 
 @testset "ITensorNetworkMaps.jl" begin
   N = 3 # Number of sites in the unit cell
