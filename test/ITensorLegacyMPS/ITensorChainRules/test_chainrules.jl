@@ -246,7 +246,8 @@ Random.seed!(1234)
     @test f(y) ≈ g(y_itensor)
     @test contract(f'(y)) ≈ g'(y_itensor)
 
-    f = x -> inner(replaceprime(contract(x, y), 2 => 1), replaceprime(contract(x, y), 2 => 1))
+    f =
+      x -> inner(replaceprime(contract(x, y), 2 => 1), replaceprime(contract(x, y), 2 => 1))
     g =
       x -> inner(
         replaceprime(contract(x, y_itensor), 2 => 1),
@@ -255,7 +256,8 @@ Random.seed!(1234)
     @test f(x) ≈ g(x_itensor)
     @test contract(f'(x)) ≈ g'(x_itensor)
 
-    f = y -> inner(replaceprime(contract(x, y), 2 => 1), replaceprime(contract(x, y), 2 => 1))
+    f =
+      y -> inner(replaceprime(contract(x, y), 2 => 1), replaceprime(contract(x, y), 2 => 1))
     g =
       y -> inner(
         replaceprime(contract(x_itensor, y), 2 => 1),
@@ -266,13 +268,15 @@ Random.seed!(1234)
 
     f = x -> inner(replaceprime(*(x, y), 2 => 1), replaceprime(*(x, y), 2 => 1))
     g =
-      x -> inner(replaceprime(*(x, y_itensor), 2 => 1), replaceprime(*(x, y_itensor), 2 => 1))
+      x ->
+        inner(replaceprime(*(x, y_itensor), 2 => 1), replaceprime(*(x, y_itensor), 2 => 1))
     @test f(x) ≈ g(x_itensor)
     @test contract(f'(x)) ≈ g'(x_itensor)
 
     f = y -> inner(replaceprime(*(x, y), 2 => 1), replaceprime(*(x, y), 2 => 1))
     g =
-      y -> inner(replaceprime(*(x_itensor, y), 2 => 1), replaceprime(*(x_itensor, y), 2 => 1))
+      y ->
+        inner(replaceprime(*(x_itensor, y), 2 => 1), replaceprime(*(x_itensor, y), 2 => 1))
     @test f(y) ≈ g(y_itensor)
     @test contract(f'(y)) ≈ g'(y_itensor)
   end
