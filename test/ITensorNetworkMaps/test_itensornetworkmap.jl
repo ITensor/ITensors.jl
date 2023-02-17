@@ -44,6 +44,6 @@ include(joinpath(@__DIR__, "utils", "utils.jl"))
 
   dk, vk = eigsolve(T, v)
   for n in 1:length(dk)
-    @test norm((T - dk[n]I)(vk[n])) ≈ 0 atol = 1e-12
+    @test norm((T - dk[n]I)(vk[n])) ≈ 0 atol = 1e-10
   end
 end

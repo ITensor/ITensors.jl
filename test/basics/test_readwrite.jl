@@ -1,6 +1,6 @@
 using ITensors, HDF5, Test
 
-include(joinpath($(@__DIR__), "utils", "util.jl"))
+include(joinpath(@__DIR__, "utils", "util.jl"))
 
 @testset "HDF5 Read and Write" begin
   i = Index(2, "i")

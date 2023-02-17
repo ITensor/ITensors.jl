@@ -7,6 +7,6 @@ using Test
     "basics",
   ]
   for dir in dirs
-    @time include(joinpath($(@__DIR__), dir, "runtests.jl"))
+    @time include(joinpath(@__DIR__, dir, "runtests.jl"))
   end
 end
