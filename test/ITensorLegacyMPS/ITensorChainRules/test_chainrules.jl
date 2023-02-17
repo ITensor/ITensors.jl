@@ -3,8 +3,6 @@ using Random
 using Test
 using Zygote
 
-# include("utils/chainrulestestutils.jl")
-
 Random.seed!(1234)
 
 @testset "ChainRules/Zygote AD tests for MPS/MPO" begin

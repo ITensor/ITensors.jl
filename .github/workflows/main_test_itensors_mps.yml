@@ -1,11 +1,9 @@
-name: Run ITensors tests
+name: Run ITensors tests on push to main
 
 on:
   push:
     branches:
       - main
-    tags: '*'
-  pull_request:
 
 jobs:
   test:
@@ -20,10 +18,8 @@ jobs:
           - '1'
         os:
           - ubuntu-latest
-          # - windows-latest # windows tests are failing for an unknow reason, disable for now
-          - macOS-latest
         threads:
-          - '1'
+          - '2'
         arch:
           - x64
         exclude:
@@ -44,7 +40,8 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          Pkg.test("ITensors"; coverage=true)
+          # https://github.com/JuliaLang/Pkg.jl/pull/1226
+          Pkg.test("ITensors"; coverage=true, test_args=["mps"])
       - uses: julia-actions/julia-uploadcodecov@latest
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

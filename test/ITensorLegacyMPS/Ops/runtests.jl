@@ -1,4 +1,9 @@
+using ITensors
 using Test
+
+ITensors.Strided.disable_threads()
+ITensors.BLAS.set_num_threads(1)
+ITensors.disable_threaded_blocksparse()
 
 @testset "$(@__DIR__)" begin
   filenames = filter(readdir(@__DIR__)) do f

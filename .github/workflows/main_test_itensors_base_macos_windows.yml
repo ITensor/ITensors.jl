@@ -1,4 +1,4 @@
-name: Run threaded ITensors tests
+name: Run ITensors basic tests
 
 on:
   push:
@@ -19,11 +19,15 @@ jobs:
           - '1.6'
           - '1'
         os:
-          - ubuntu-latest
+          # - windows-latest # windows tests are failing for an unknow reason, disable for now
+          - macOS-latest
         threads:
           - '2'
         arch:
           - x64
+        exclude:
+          # MacOS not available on x86
+          - {os: 'macOS-latest', arch: 'x86'}
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@latest
@@ -36,5 +40,10 @@ jobs:
           using Pkg;
           pkg"dev ./NDTensors ."
       - name: Run the tests
+        shell: julia --project=monorepo {0}
         run: |
-          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensors")'
+          using Pkg;
+          Pkg.test("ITensors"; coverage=true, test_args=["basics"])
+      - uses: julia-actions/julia-uploadcodecov@latest
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
