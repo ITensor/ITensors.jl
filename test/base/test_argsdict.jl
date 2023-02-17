@@ -2,9 +2,10 @@ using ITensors
 using Test
 
 @testset "Test argsdict function" begin
-  empty!(ARGS)
+  args_copy = copy(ARGS)
+  empty!(args_copy)
   push!(
-    ARGS,
+    args_copy,
     "x",
     "n = 1",
     "nf :: Float64 = 2",
@@ -24,8 +25,8 @@ using Test
     "--stringtype",
     "y",
   )
-  args = argsdict()
-  empty!(ARGS)
+  args = argsdict(args_copy)
+  empty!(args_copy)
 
   @test args["_arg1"] == "x"
   @test args["nf"] == 2.0
@@ -45,7 +46,7 @@ using Test
   @test args["_arg5"] == "y"
 
   push!(
-    ARGS,
+    args_copy,
     "x",
     "n -> 1",
     "nf :: Float64 -> 2",
@@ -65,7 +66,7 @@ using Test
     "--stringtype",
     "y",
   )
-  args = argsdict(;
+  args = argsdict(args_copy;
     first_arg=2,
     delim="->",
     as_symbols=true,
@@ -73,7 +74,7 @@ using Test
     default_positional_type=ITensors.AutoType,
     prefix="test",
   )
-  empty!(ARGS)
+  empty!(args_copy)
 
   @test args[:nf] == 2.0
   @test args[:ni] == 2
@@ -95,19 +96,19 @@ using Test
   # Check for some syntax errors
   #
 
-  push!(ARGS, "x y=2")
-  @test_throws ErrorException argsdict()
-  empty!(ARGS)
+  push!(args_copy, "x y=2")
+  @test_throws ErrorException argsdict(args_copy)
+  empty!(args_copy)
 
-  push!(ARGS, "x=y=2")
-  @test_throws ErrorException argsdict()
-  empty!(ARGS)
+  push!(args_copy, "x=y=2")
+  @test_throws ErrorException argsdict(args_copy)
+  empty!(args_copy)
 
-  push!(ARGS, "x::MyType = 2")
-  @test_throws UndefVarError argsdict()
-  empty!(ARGS)
+  push!(args_copy, "x::MyType = 2")
+  @test_throws UndefVarError argsdict(args_copy)
+  empty!(args_copy)
 
-  push!(ARGS, "x = y")
-  @test_throws UndefVarError argsdict()
-  empty!(ARGS)
+  push!(args_copy, "x = y")
+  @test_throws UndefVarError argsdict(args_copy)
+  empty!(args_copy)
 end

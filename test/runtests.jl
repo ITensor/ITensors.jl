@@ -6,8 +6,7 @@ ITensors.BLAS.set_num_threads(1)
 ITensors.disable_threaded_blocksparse()
 
 @testset "ITensors tests" begin
-  # Make a copy, since it seems that one of the ITensors base
-  # tests modifies `ARGS` and makes them empty.
+  # Make a copy in case a test modifies it.
   test_args = copy(ARGS)
   println("Passed arguments ARGS = $(test_args) to tests.")
   if isempty(test_args) || "all" in test_args || "base" in test_args
@@ -26,6 +25,10 @@ ITensors.disable_threaded_blocksparse()
     @time for dir in dirs
       println("\nTest $(@__DIR__)/$(dir)")
       @time include(joinpath(@__DIR__, dir, "runtests.jl"))
+      if ARGS ≠ test_args
+        # Fix ARGS in case a test modifies it.
+        append!(empty!(ARGS), test_args)
+      end
     end
   end
   if isempty(test_args) || "all" in test_args || "mps" in test_args
@@ -35,5 +38,9 @@ ITensors.disable_threaded_blocksparse()
     dir = "ITensorLegacyMPS"
     println("\nTest $(@__DIR__)/$(dir)")
     @time include(joinpath(@__DIR__, dir, "runtests.jl"))
+    if ARGS ≠ test_args
+      # Fix ARGS in case a test modifies it.
+      append!(empty!(ARGS), test_args)
+    end
   end
 end
