@@ -1,11 +1,9 @@
-name: Run threaded ITensors tests
+name: Run ITensorGaussianMPS tests on push to main
 
 on:
   push:
     branches:
       - main
-    tags: '*'
-  pull_request:
 
 jobs:
   test:
@@ -21,7 +19,7 @@ jobs:
         os:
           - ubuntu-latest
         threads:
-          - '2'
+          - '1'
         arch:
           - x64
     steps:
@@ -34,7 +32,7 @@ jobs:
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
-          pkg"dev ./NDTensors ."
+          pkg"dev ./NDTensors . ./ITensorGaussianMPS"
       - name: Run the tests
-        run: |
-          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensors")'
+        run: >
+          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGaussianMPS")'

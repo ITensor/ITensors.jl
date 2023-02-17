@@ -1,10 +1,12 @@
-name: TestNDTensors
+name: Run NDTensors tests
+
 on:
   push:
     branches:
       - main
     tags: '*'
   pull_request:
+
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)

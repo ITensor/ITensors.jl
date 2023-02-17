@@ -28,20 +28,24 @@ jobs:
         uses: Khan/pull-request-comment-trigger@v1.1.0
         id: check
         with:
-          trigger: '[test visualization]'
+          trigger: '[visualization]'
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
       - uses: actions/checkout@v2
+        if: steps.check.outputs.triggered == 'true'
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+        if: steps.check.outputs.triggered == 'true'
       - name: Install Julia dependencies
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
           pkg"dev ./NDTensors . ./ITensorVisualizationBase"
+        if: steps.check.outputs.triggered == 'true'
       - name: Run the tests
         run: |
           julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorVisualizationBase")'
+        if: steps.check.outputs.triggered == 'true'
