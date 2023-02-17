@@ -10,12 +10,17 @@ using Test
     "ITensorNetworkMaps",
   ]
   for dir in dirs
+    println("\nTest $(@__DIR__)/$(dir)")
     @time include(joinpath(@__DIR__, dir, "runtests.jl"))
   end
 
   # TODO: Make optional (if `Threads.nthreads() > 1`)
-  @time include(joinpath(@__DIR__, "threading", "runtests.jl"))
+  dir = "threading"
+  println("\nTest $(@__DIR__)/$(dir)")
+  @time include(joinpath(@__DIR__, dir, "runtests.jl"))
 
   # TODO: Make optional
-  @time include(joinpath(@__DIR__, "ITensorLegacyMPS", "runtests.jl"))
+  dir = "ITensorLegacyMPS"
+  println("\nTest $(@__DIR__)/$(dir)")
+  @time include(joinpath(@__DIR__, dir, "runtests.jl"))
 end
