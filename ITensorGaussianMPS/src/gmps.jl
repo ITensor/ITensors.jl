@@ -252,7 +252,8 @@ pairing_hamiltonian(os_h::OpSum,os_p::OpSum)=pairing_hamiltonian(os_h+os_p)
 # Make a Slater determinant matrix from a hopping Hamiltonian
 # h with Nf fermions.
 function slater_determinant_matrix(h::AbstractMatrix, Nf::Int)
-  _, u = eigen(h)
+  e, u = eigen(h)
+  @show e
   return u[:, 1:Nf]
 end
 
@@ -546,7 +547,6 @@ function correlation_matrix_to_gmps(
   return ns.data, V
 end
 
-##ToDo: This restricts the data of AbstractSymmetry to have same eltype, but could also promote eltypes
 function (x::AbstractSymmetry * y::AbstractSymmetry)
   if !has_same_symmetry(x, y)
     error("Can't multiply two symmetric objects with different symmetries.")
@@ -622,7 +622,7 @@ end
 function itensors(sites::Vector{<:Index}, C::ConservesNf)
   return itensors(sites, C.data)
 end
-
+###CHECK: is reverse here reasonable default behaviour?
 function itensors(s::Vector{<:Index}, C::Circuit)
   U = [ITensor(s, g) for g in reverse(C.rotations)]
   return U
@@ -715,12 +715,7 @@ function correlation_matrix_to_mps(
     ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ) * n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)
-    ###ToDo: Not tested, but seems to work so far at least for the conserving case
-    if Λ <: ConservesNfParity
-      error(
-        "ConservesNfParity + spinful fermions not tested/fully implemented yet. Exiting"
-      )
-    end
+    ###FIXME: isodd is not correct here, there shouldn't be any restrictions on the number of electronic sites.
     isodd(length(s)) && error(
       "For Electron type, must have even number of sites of alternating up and down spins.",
     )
@@ -729,11 +724,14 @@ function correlation_matrix_to_mps(
       error(
         "correlation_matrix_to_mps(Λ::AbstractMatrix) currently only supports spinless Fermions or Electrons that do not conserve Sz. Use correlation_matrix_to_mps(Λ_up::AbstractMatrix, Λ_dn::AbstractMatrix) to use spinful Fermions/Electrons.",
       )
-    else
+    elseif typeof(Λ0) <: ConservesNf
       sf = siteinds("Fermion", 2 * N; conserve_qns=true)
+    elseif typeof(Λ0) <: ConservesNfParity
+      sf = siteinds("Fermion", 2 * N; conserve_qns=false,conserve_nfparity=true)
     end
-    U = [ITensor(sf, g) for g in reverse(C.rotations)]
-    ψf = MPS(sf, n -> round(Int, ns[n]) + 1, U; kwargs...)
+    U = itensors(sf, set_data(Λ, C))
+    ψ = MPS(MPS_Elt, sf, n -> round(Int, ns[site_stride(Λ) * n]) + 1)
+    ψ = apply(U, ψ; kwargs...)
     ψ = MPS(N)
     for n in 1:N
       i, j = 2 * n - 1, 2 * n
@@ -850,6 +848,7 @@ function reverse_interleave(M::AbstractMatrix)
   return M[ordered_inds, ordered_inds]
 end
 
+
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ_up0::AbstractSymmetry,
@@ -858,14 +857,18 @@ function correlation_matrix_to_mps(
   maxblocksize::Int=min(size(Λ_up0, 1), size(Λ_dn0, 1)),
   kwargs...,
 )
-  @assert size(Λ_up.data, 1) == size(Λ_up.data, 2)
-  @assert size(Λ_dn.data, 1) == size(Λ_dn.data, 2)
+  @show typeof(Λ_up0)
+  MPS_Elt = promote_type(eltype(Λ_up0.data),eltype(Λ_dn0.data))
   Λ_up = maybe_drop_pairing_correlations(Λ_up0)
   Λ_dn = maybe_drop_pairing_correlations(Λ_dn0)
-  #@assert Λ_up<:aT && Λ_dn<:aT where aT<:AbstractSymmetry  ##ToDo:implement this check
-  #calctype = typeof(Λ_up)
-  N_up = size(Λ_up.data, 1)
-  N_dn = size(Λ_dn.data, 1)
+  @assert size(Λ_up.data, 1) == size(Λ_up.data, 2)
+  @assert size(Λ_dn.data, 1) == size(Λ_dn.data, 2)
+  
+  if ! ((typeof(Λ_up) <: ConservesNfParity && typeof(Λ_dn) <: ConservesNfParity) ||  (typeof(Λ_up) <: ConservesNf && typeof(Λ_dn) <: ConservesNf))
+    error("Λ_up and Λ_dn have incompatible subtypes of AbstractSymmetry")
+  end
+  N_up = div(size(Λ_up.data, 1),site_stride(Λ_up))
+  N_dn = div(size(Λ_dn.data, 1),site_stride(Λ_up))
   N = N_up + N_dn
   ns_up, C_up = correlation_matrix_to_gmps(
     Λ_up; eigval_cutoff=eigval_cutoff, maxblocksize=maxblocksize
@@ -875,23 +878,12 @@ function correlation_matrix_to_mps(
   )
   C_up = mapindex(n -> 2n - 1, C_up)
   C_dn = mapindex(n -> 2n, C_dn)
-  if Λ_up <: ConservesNfParity && Λ_dn <: ConservesNfParity
-    C = Circuit(
-      interleave(
-        interleave(C_up.rotations[1:2:end], C_dn.rotations[1:2:end]),
-        interleave(C_up.rotations[2:2:end], C_dn.rotations[2:2:end]),
-      ),
-    )
-    ns = interleave(
-      interleave(ns_up[1:2:end], ns_dn[1:2:end]), interleave(ns_up[2:2:end], ns_dn[2:2:end])
-    )
-  elseif Λ_up <: ConservesNf && Λ_dn <: ConservesNf
-    C = Circuit(interleave(C_up.rotations, C_dn.rotations))
-    ns = interleave(ns_up, ns_dn)
-  else
-    error("Λ_up and Λ_dn have incompatible subtypes of AbstractSymmetry")
-  end
-
+  C_up_rot=set_data(Λ_up,C_up.rotations)
+  C_dn_rot=set_data(Λ_dn,C_dn.rotations)
+  ns_up=set_data(Λ_up,ns_up)
+  ns_dn=set_data(Λ_dn,ns_dn)
+  C=Circuit(interleave(C_up_rot,C_dn_rot).data)
+  ns=interleave(ns_up,ns_dn).data
   if all(hastags("Fermion"), s)
     U = itensors(s, set_data(Λ_up, C))
     ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ_up) * n]) + 1)
@@ -901,16 +893,29 @@ function correlation_matrix_to_mps(
     @assert length(s) == N_up
     @assert length(s) == N_dn
     if isspinful(s)
-      space_up = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", 1)) => 1]
-      space_dn = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", -1)) => 1]
+      if typeof(Λ_up)<:ConservesNf
+        space_up = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", 1)) => 1]
+        space_dn = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", -1)) => 1]
+      elseif typeof(Λ_up)<:ConservesNfParity
+        ###should probably lead to an exception since parity-only contradicts spinfulness
+        space_up = [QN(("NfParity", 0, 2),) => 1, QN(("NfParity", 1, 2),) => 1]
+        space_dn = [QN(("NfParity", 0, 2),) => 1, QN(("NfParity", 1, 2),) => 1]
+      end
       sf_up = [Index(space_up, "Fermion,Site,n=$(2n-1)") for n in 1:N_up]
       sf_dn = [Index(space_dn, "Fermion,Site,n=$(2n)") for n in 1:N_dn]
       sf = collect(Iterators.flatten(zip(sf_up, sf_dn)))
     else
-      sf = siteinds("Fermion", N; conserve_qns=true, conserve_sz=false)
+      if typeof(Λ_up)<:ConservesNf
+        sf = siteinds("Fermion", N; conserve_qns=true, conserve_sz=false)
+      elseif typeof(Λ_up)<:ConservesNfParity
+        sf = siteinds("Fermion", N; conserve_qns=false, conserve_sz=false,conserve_nfparity=true)
+      end
     end
-    U = [ITensor(sf, g) for g in reverse(C.rotations)]
-    ψf = MPS(sf, n -> round(Int, ns[n]) + 1, U; kwargs...)
+    U = itensors(sf, set_data(Λ_up, C))
+    ψf = MPS(MPS_Elt, sf, n -> round(Int, ns[site_stride(Λ_up) * n]) + 1)
+    @show norm(ψf)
+    ψf = apply(U, ψf; kwargs...)
+    @show norm(ψf)
     ψ = MPS(N_up)
     for n in 1:N_up
       i, j = 2 * n - 1, 2 * n
@@ -922,6 +927,9 @@ function correlation_matrix_to_mps(
   else
     error("All sites must be Fermion or Electron type.")
   end
+  @show norm(ψ)
+    
+  return ψ
 end
 
 function correlation_matrix_to_mps(
@@ -930,54 +938,30 @@ function correlation_matrix_to_mps(
   Λ_dn::AbstractMatrix;
   eigval_cutoff::Float64=1e-8,
   maxblocksize::Int=min(size(Λ_up, 1), size(Λ_dn, 1)),
+  minblocksize::Int=1,
   kwargs...,
 )
-  @assert size(Λ_up, 1) == size(Λ_up, 2)
-  @assert size(Λ_dn, 1) == size(Λ_dn, 2)
-  N_up = size(Λ_up, 1)
-  N_dn = size(Λ_dn, 1)
-  @assert N_up == N_dn
-  # Total number of fermion sites
-  N = N_up + N_dn
-  ns_up, C_up = correlation_matrix_to_gmps(
-    Λ_up; eigval_cutoff=eigval_cutoff, maxblocksize=maxblocksize
-  )
-  ns_dn, C_dn = correlation_matrix_to_gmps(
-    Λ_dn; eigval_cutoff=eigval_cutoff, maxblocksize=maxblocksize
-  )
-  # map the up spins to the odd sites and the even spins to the even sites
-  C_up = mapindex(n -> 2n - 1, C_up)
-  C_dn = mapindex(n -> 2n, C_dn)
-  C = Circuit(interleave(C_up.rotations, C_dn.rotations))
-  ns = interleave(ns_up, ns_dn)
-  if all(hastags("Fermion"), s)
-    @assert length(s) == N
-    U = [ITensor(s, g) for g in reverse(C.rotations)]
-    ψ = MPS(s, n -> round(Int, ns[n]) + 1, U; kwargs...)
-  elseif all(hastags("Electron"), s)
-    @assert length(s) == N_up
-    @assert length(s) == N_dn
-    if isspinful(s)
-      space_up = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", 1)) => 1]
-      space_dn = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", -1)) => 1]
-      sf_up = [Index(space_up, "Fermion,Site,n=$(2n-1)") for n in 1:N_up]
-      sf_dn = [Index(space_dn, "Fermion,Site,n=$(2n)") for n in 1:N_dn]
-      sf = collect(Iterators.flatten(zip(sf_up, sf_dn)))
-    else
-      sf = siteinds("Fermion", N; conserve_qns=true, conserve_sz=false)
-    end
-    U = [ITensor(sf, g) for g in reverse(C.rotations)]
-    ψf = MPS(sf, n -> round(Int, ns[n]) + 1, U; kwargs...)
-    ψ = MPS(N_up)
-    for n in 1:N_up
-      i, j = 2 * n - 1, 2 * n
-      C = combiner(sf[i], sf[j])
-      c = combinedind(C)
-      ψ[n] = ψf[i] * ψf[j] * C
-      ψ[n] *= identity_blocks_itensor(dag(c), s[n])
-    end
-  else
-    error("All sites must be Fermion or Electron type.")
+  if all(hastags("Electron"), s)
+    return correlation_matrix_to_mps(
+      s,
+      symmetric_correlation_matrix(Λ_up, s),
+      symmetric_correlation_matrix(Λ_dn, s);
+      eigval_cutoff=eigval_cutoff,
+      maxblocksize=maxblocksize,
+      minblocksize=minblocksize,
+      kwargs...,
+    )
+  elseif all(hastags("Fermion"),s)
+    #equivalent number of electrons
+    n_electrons=div(length(s),2)
+    return correlation_matrix_to_mps(
+      s,
+      symmetric_correlation_matrix(Λ_up, n_electrons),
+      symmetric_correlation_matrix(Λ_dn, n_electrons);
+      eigval_cutoff=eigval_cutoff,
+      maxblocksize=maxblocksize,
+      minblocksize=minblocksize,
+      kwargs...,
+    )
   end
-  return ψ
 end
