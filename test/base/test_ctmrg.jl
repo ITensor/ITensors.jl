@@ -1,12 +1,12 @@
 using ITensors
 using Test
 
-src_dir = joinpath(@__DIR__, "..", "examples", "src")
+src_dir = joinpath(pkgdir(ITensors), "examples", "src")
 include(joinpath(src_dir, "ctmrg_isotropic.jl"))
 include(joinpath(src_dir, "2d_classical_ising.jl"))
 
 @testset "ctmrg" begin
-  # Make Ising model MPO
+  # Make Ising model partition function
   β = 1.1 * βc
   d = 2
   s = Index(d, "Site")

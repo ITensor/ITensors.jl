@@ -1,6 +1,6 @@
 using ITensors, Test, Random, JLD2
 
-include("util.jl")
+include(joinpath(@__DIR__, "utils", "util.jl"))
 
 function components_to_opsum(comps, n; reverse::Bool=true)
   opsum = OpSum()
@@ -1094,7 +1094,7 @@ end
   end
 
   @testset "Matrix operator representation - hashing bug" begin
-    file_path = joinpath(pkgdir(ITensors), "test", "opsum_hash_bug.jld2")
+    file_path = joinpath(@__DIR__, "utils", "opsum_hash_bug.jld2")
     comps, n, dims = load(file_path, "comps", "n", "dims")
     s = [Index(d) for d in dims]
     for _ in 1:100

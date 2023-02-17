@@ -1,14 +1,14 @@
 using ITensors
 using Test
-import Random: seed!
+using Random
 
-seed!(12345)
+Random.seed!(12345)
 
-include(joinpath(@__DIR__, "..", "examples", "src", "trg.jl"))
-include(joinpath(@__DIR__, "..", "examples", "src", "2d_classical_ising.jl"))
+include(joinpath(pkgdir(ITensors), "examples", "src", "trg.jl"))
+include(joinpath(pkgdir(ITensors), "examples", "src", "2d_classical_ising.jl"))
 
 @testset "trg" begin
-  # Make Ising model MPO
+  # Make Ising model partition function
   β = 1.1 * βc
   d = 2
   s = Index(d)
@@ -22,5 +22,3 @@ include(joinpath(@__DIR__, "..", "examples", "src", "2d_classical_ising.jl"))
 
   @test κ ≈ exp(-β * ising_free_energy(β)) atol = 1e-4
 end
-
-nothing

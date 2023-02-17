@@ -2,7 +2,7 @@ using Combinatorics
 using ITensors
 using Test
 
-include("util.jl")
+include(joinpath(@__DIR__, "utils", "util.jl"))
 
 function basicRandomMPO(sites; dim=4)
   M = MPO(sites)
