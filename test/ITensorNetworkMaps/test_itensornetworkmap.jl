@@ -1,7 +1,7 @@
 using Test
 using ITensors
 using ITensors.ITensorNetworkMaps
-using KrylovKit
+using KrylovKit: eigsolve
 using LinearAlgebra
 
 include(joinpath(@__DIR__, "utils", "utils.jl"))
