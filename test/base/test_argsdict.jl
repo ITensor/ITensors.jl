@@ -66,7 +66,8 @@ using Test
     "--stringtype",
     "y",
   )
-  args = argsdict(args_copy;
+  args = argsdict(
+    args_copy;
     first_arg=2,
     delim="->",
     as_symbols=true,
