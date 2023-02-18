@@ -131,7 +131,8 @@ truncate!
 ## Gate evolution
 
 ```@docs
-product(::Vector{ <: ITensor}, ::ITensors.AbstractMPS)
+product(::ITensor, ::ITensors.AbstractMPS)
+product(::Vector{ITensor}, ::ITensors.AbstractMPS)
 ```
 
 ## Algebra Operations
