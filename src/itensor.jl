@@ -1102,7 +1102,8 @@ end
 # CartesianIndices
 @propagate_inbounds getindex(T::ITensor, I::CartesianIndex)::Any = T[Tuple(I)...]
 
-@propagate_inbounds @inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
+@propagate_inbounds
+@inline function _getindex(T::Tensor, ivs::Vararg{<:Any,N}) where {N}
   # Tried ind.(ivs), val.(ivs) but it is slower
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
   fac = NDTensors.permfactor(p, ivs...) #<fermions> possible sign
@@ -1160,23 +1161,24 @@ end
 #
 # for some reason! Maybe it helps with inlining?
 #
-@propagate_inbounds @inline function _setindex!!(
+@propagate_inbounds
+@inline function _setindex!!(
   ::SymmetryStyle, T::Tensor, x::Number, I::Vararg{Integer,N}
 ) where {N}
   # Generic version, doesn't check the flux
   return setindex!!(T, x, I...)
 end
 
-@propagate_inbounds @inline function _setindex!!(
-  T::Tensor, x::Number, I::Vararg{Integer,N}
-) where {N}
+@propagate_inbounds
+@inline function _setindex!!(T::Tensor, x::Number, I::Vararg{Integer,N}) where {N}
   # Use type trait dispatch to split off between QN version that checks the flux
   # and non-QN version that doesn't
 
   return _setindex!!(symmetrystyle(T), T, x, I...)
 end
 
-@propagate_inbounds @inline function _setindex!!(
+@propagate_inbounds
+@inline function _setindex!!(
   T::Tensor, x::Number, I::Vararg{Union{Integer,LastVal},N}
 ) where {N}
   return _setindex!!(T, x, lastval_to_int(T, I)...)
@@ -1208,9 +1210,8 @@ A[i => 2, i' => :] = [2.0 3.0]
 A[2, :] = [2.0 3.0]
 ```
 """
-@propagate_inbounds @inline function setindex!(
-  T::ITensor, x::Number, I::Vararg{Integer,N}
-) where {N}
+@propagate_inbounds
+@inline function setindex!(T::ITensor, x::Number, I::Vararg{Integer,N}) where {N}
   # XXX: for some reason this is slow (257.467 ns (6 allocations: 1.14 KiB) for `A[1, 1, 1] = 1`)
   # Calling `setindex!` directly here is faster (56.635 ns (1 allocation: 368 bytes) for `A[1, 1, 1] = 1`)
   # but of course less generic. Can't figure out how to optimize it,
@@ -1222,9 +1223,8 @@ end
   return setindex!(T, x, Tuple(I)...)
 end
 
-@propagate_inbounds @inline function _setindex!!(
-  T::Tensor, x::Number, ivs::Vararg{<:Any,N}
-) where {N}
+@propagate_inbounds
+@inline function _setindex!!(T::Tensor, x::Number, ivs::Vararg{<:Any,N}) where {N}
   # Would be nice to split off the functions for extracting the `ind` and `val` as Tuples,
   # but it was slower.
   p = NDTensors.getperm(inds(T), ntuple(n -> ind(@inbounds ivs[n]), Val(N)))
@@ -1234,13 +1234,13 @@ end
   )
 end
 
-@propagate_inbounds @inline function setindex!(
-  T::ITensor, x::Number, I::Vararg{<:Any,N}
-) where {N}
+@propagate_inbounds
+@inline function setindex!(T::ITensor, x::Number, I::Vararg{<:Any,N}) where {N}
   return settensor!(T, _setindex!!(tensor(T), x, I...))
 end
 
-@propagate_inbounds @inline function setindex!(
+@propagate_inbounds
+@inline function setindex!(
   T::ITensor, x::Number, I1::Pair{<:Index,String}, I::Pair{<:Index,String}...
 )
   Iv = map(i -> i.first => val(i.first, i.second), (I1, I...))

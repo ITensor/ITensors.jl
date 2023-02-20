@@ -1,7 +1,6 @@
 
-@propagate_inbounds @inline function _setindex!!(
-  ::HasQNs, T::Tensor, x::Number, I::Integer...
-)
+@propagate_inbounds
+@inline function _setindex!!(::HasQNs, T::Tensor, x::Number, I::Integer...)
   fluxT = flux(T)
   if !isnothing(fluxT) && fluxT != flux(T, I...)
     error(
