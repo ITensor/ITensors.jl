@@ -567,9 +567,6 @@ function Base.permute!(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
     reshapeBdata,
     Vector{Char}(ctbinds),
   )
-  @show Tuple(Bis)
-  d = Dense(reshapeBdata)
-  @show typeof(d)
   return Tensor(Tuple(Bis), Dense(reshapeBdata))
 end
 
