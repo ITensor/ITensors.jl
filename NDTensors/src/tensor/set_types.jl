@@ -13,3 +13,13 @@ function set_ndims(arraytype::Type{<:Tensor}, ndims)
     "Setting the number dimensions of the array type `$arraytype` (to `$ndims`) is not currently defined.",
   )
 end
+
+function set_storagetype(tensortype::Type{<:Tensor}, storagetype)
+  return Tensor{eltype(tensortype),ndims(tensortype),storagetype,indstype(tensortype)}
+end
+
+# TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
+# TODO: Make a version that accepts `indstype::Type`?
+function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
+  return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
+end

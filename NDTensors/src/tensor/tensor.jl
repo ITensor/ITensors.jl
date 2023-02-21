@@ -151,16 +151,6 @@ end
 
 ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
 
-function set_storagetype(tensortype::Type{<:Tensor}, storagetype)
-  return Tensor{eltype(tensortype),ndims(tensortype),storagetype,indstype(tensortype)}
-end
-
-# TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
-# TODO: Make a version that accepts `indstype::Type`?
-function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
-  return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
-end
-
 # Like `Base.to_shape` but more general, can return
 # `Index`, etc. Customize for an array/tensor
 # with custom index types.
@@ -216,13 +206,6 @@ setinds(T, ninds) = tensor(storage(T), ninds)
 # Generic Tensor functions
 #
 
-# The size is obtained from the indices
-dims(T::Tensor) = dims(inds(T))
-dim(T::Tensor) = dim(inds(T))
-dim(T::Tensor, i::Int) = dim(inds(T), i)
-maxdim(T::Tensor) = maxdim(inds(T))
-mindim(T::Tensor) = mindim(inds(T))
-diaglength(T::Tensor) = mindim(T)
 size(T::Tensor) = dims(T)
 size(T::Tensor, i::Int) = dim(T, i)
 
