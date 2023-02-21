@@ -1655,7 +1655,7 @@ end
     y = randomITensor(ElType, i, j)
     @test inner(x, y) ≈ (dag(x) * y)[]
     @test inner(x', A, y) ≈ (dag(x)' * A * y)[]
-    # No automatic priming like in the MPS case
+    # No automatic priming
     @test_throws DimensionMismatch inner(x, A, y)
   end
 

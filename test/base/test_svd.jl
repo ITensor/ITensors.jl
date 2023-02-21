@@ -2,7 +2,7 @@ using ITensors
 using Test
 using Suppressor
 
-include("util.jl")
+include(joinpath(@__DIR__, "utils", "util.jl"))
 
 @testset "SVD Algorithms" begin
   @testset "Matrix With Zero Sing Val" begin

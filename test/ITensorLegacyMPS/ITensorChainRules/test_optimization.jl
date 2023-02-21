@@ -1,10 +1,10 @@
 using ITensors
 using OptimKit
 using Random
-using Zygote
 using Test
+using Zygote
 
-include("utils/circuit.jl")
+include(joinpath(@__DIR__, "utils", "circuit.jl"))
 
 @testset "optimization" begin
   @testset "Energy minimization" begin

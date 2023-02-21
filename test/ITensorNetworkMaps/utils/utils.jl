@@ -1,15 +1,15 @@
 using ITensors
 using ITensors.ITensorNetworkMaps
 
-struct InfMPS
+struct InfTN
   data::Vector{ITensor}
 end
-Base.length(m::InfMPS) = length(m.data)
-Base.copy(m::InfMPS) = InfMPS(copy(m.data))
-Base.reverse(m::InfMPS) = InfMPS(reverse(m.data))
-Base.iterate(m::InfMPS, args...) = iterate(m.data, args...)
-Base.getindex(m::InfMPS, args...) = getindex(m.data, args...)
-Base.setindex!(m::InfMPS, args...) = setindex!(m.data, args...)
+Base.length(m::InfTN) = length(m.data)
+Base.copy(m::InfTN) = InfTN(copy(m.data))
+Base.reverse(m::InfTN) = InfTN(reverse(m.data))
+Base.iterate(m::InfTN, args...) = iterate(m.data, args...)
+Base.getindex(m::InfTN, args...) = getindex(m.data, args...)
+Base.setindex!(m::InfTN, args...) = setindex!(m.data, args...)
 
 function infmps(N; χ⃗, d)
   n⃗ = 1:N
@@ -18,11 +18,11 @@ function infmps(N; χ⃗, d)
   l⃗ = Dict([e .=> linkindex(χ⃗, e) for e in e⃗])
   s⃗ = [Index(d, "s=$n") for n in n⃗]
   neigbhors(n, N) = [mod1(n - 1, N) => n, n => mod1(n + 1, N)]
-  return InfMPS([ITensor(getindex.(Ref(l⃗), neigbhors(n, N))..., s⃗[n]) for n in n⃗])
+  return InfTN([ITensor(getindex.(Ref(l⃗), neigbhors(n, N))..., s⃗[n]) for n in n⃗])
 end
 
-ITensors.dag(tn::InfMPS) = InfMPS(dag.(tn.data))
-function ITensors.prime(::typeof(linkinds), tn::InfMPS)
+ITensors.dag(tn::InfTN) = InfTN(dag.(tn.data))
+function ITensors.prime(::typeof(linkinds), tn::InfTN)
   tn_p = copy(tn)
   N = length(tn)
   for i in 1:N, j in (i + 1):N
@@ -35,11 +35,11 @@ end
 
 interleave(x::Vector, y::Vector) = permutedims([x y])[:]
 
-function ITensors.linkind(tn::InfMPS, e)
+function ITensors.linkind(tn::InfTN, e)
   return commonind(tn[e[1]], tn[e[2]])
 end
 
-function transfer_matrix(ψ::InfMPS)
+function transfer_matrix(ψ::InfTN)
   N = length(ψ)
   ψ′ = prime(linkinds, dag(ψ))
   tn = interleave(reverse(ψ.data), reverse(ψ′.data))
@@ -49,7 +49,7 @@ function transfer_matrix(ψ::InfMPS)
   return T
 end
 
-function transfer_matrices(ψ::InfMPS)
+function transfer_matrices(ψ::InfTN)
   N = length(ψ)
   ψ′ = prime(linkinds, dag(ψ))
   # Build from individual transfer matrices
