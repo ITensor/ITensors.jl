@@ -63,11 +63,11 @@ function Array(T::DiagTensor{ElT,N}) where {ElT,N}
 end
 
 function zeros(tensortype::Type{<:DiagTensor}, inds)
-  return tensor(zeros(storagetype(tensortype), mindim(inds)), inds)
+  return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
 function zeros(tensortype::Type{<:DiagTensor}, inds::Tuple{})
-  return tensor(zeros(storagetype(tensortype), mindim(inds)), inds)
+  return tensor(generic_zeros(storagetype(tensortype), mindim(inds)), inds)
 end
 
 function diag(tensor::DiagTensor)
@@ -174,7 +174,7 @@ end
 # Right an in-place version
 function outer(T1::DiagTensor{ElT1,N1}, T2::DiagTensor{ElT2,N2}) where {ElT1,ElT2,N1,N2}
   indsR = unioninds(inds(T1), inds(T2))
-  R = tensor(Dense(zeros(promote_type(ElT1, ElT2), dim(indsR))), indsR)
+  R = tensor(Dense(generic_zeros(promote_type(ElT1, ElT2), dim(indsR))), indsR)
   outer!(R, T1, T2)
   return R
 end
