@@ -21,8 +21,8 @@ Diag(data::VecT) where {VecT<:AbstractVector{ElT}} where {ElT} = Diag{ElT,VecT}(
 
 Diag(data::ElT) where {ElT<:Number} = Diag{ElT,ElT}(data)
 
-function Diag{ElR}(data::AbstractVector{ElT}) where {ElR<:Number,ElT<:Number}
-  return ElT == ElR ? Diag(data) : Diag(ElR.(data))
+function Diag{ElR}(data::AbstractVector{ElT}) where {ElR,ElT}
+  return Diag(convert(similartype(typeof(data), ElR), data))
 end
 
 Diag(::Type{ElT}, n::Integer) where {ElT<:Number} = Diag(zeros(ElT, n))
