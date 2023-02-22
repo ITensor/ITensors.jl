@@ -31,7 +31,6 @@ Diag(x::ElT, n::Integer) where {ElT<:Number} = Diag(fill(x, n))
 
 # End Diag constructors 
 
-
 datatype(::Type{<:Diag{<:Any,DataT}}) where {DataT} = DataT
 
 setdata(D::Diag, ndata) = Diag(ndata)
@@ -78,18 +77,27 @@ complex(::Type{Diag{ElT,ElT}}) where {ElT} = Diag{complex(ElT),complex(ElT)}
 # Deal with uniform Diag conversion
 convert(::Type{<:Diag{ElT,VecT}}, D::Diag) where {ElT,VecT} = Diag(convert(VecT, data(D)))
 
-generic_zeros(diagT::Type{<:NonuniformDiag{ElT}}, dim::Integer) where {ElT} = diagT(generic_zeros(datatype(diagT), dim))
+function generic_zeros(diagT::Type{<:NonuniformDiag{ElT}}, dim::Integer) where {ElT}
+  return diagT(generic_zeros(datatype(diagT), dim))
+end
 
-generic_zeros_nonunif(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = generic_zeros(diagT{default_datatype(ElT)}, dim)
+function generic_zeros_nonunif(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT}
+  return generic_zeros(diagT{default_datatype(ElT)}, dim)
+end
 
-generic_zeros_nonunif(diagT::Type{<:Diag}, dim::Integer) = generic_zeros_nonunif(diagT{default_eltype()}, dim)
+function generic_zeros_nonunif(diagT::Type{<:Diag}, dim::Integer)
+  return generic_zeros_nonunif(diagT{default_eltype()}, dim)
+end
 
 generic_zeros(diagT::Type{<:UniformDiag{ElT}}, dim::Integer) where {ElT} = diagT(zero(ElT))
-generic_zeros_unif(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = generic_zeros(diagT{ElT}, dim)
-generic_zeros_unif(diagT::Type{<:Diag}, dim::Integer) = generic_zeros_unif(diagT{default_eltype()}, dim)
+function generic_zeros_unif(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT}
+  return generic_zeros(diagT{ElT}, dim)
+end
+function generic_zeros_unif(diagT::Type{<:Diag}, dim::Integer)
+  return generic_zeros_unif(diagT{default_eltype()}, dim)
+end
 
 generic_zeros(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = throw(TypeError)
-
 
 #
 # Type promotions involving Diag
