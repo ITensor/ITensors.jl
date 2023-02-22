@@ -78,9 +78,18 @@ complex(::Type{Diag{ElT,ElT}}) where {ElT} = Diag{complex(ElT),complex(ElT)}
 # Deal with uniform Diag conversion
 convert(::Type{<:Diag{ElT,VecT}}, D::Diag) where {ElT,VecT} = Diag(convert(VecT, data(D)))
 
-# TODO: make this work for other storage besides Vector
-zeros(::Type{<:NonuniformDiag{ElT}}, dim::Int64) where {ElT} = Diag(zeros(ElT, dim))
-zeros(::Type{<:UniformDiag{ElT}}, dim::Int64) where {ElT} = Diag(zero(ElT))
+generic_zeros(diagT::Type{<:NonuniformDiag{ElT}}, dim::Integer) where {ElT} = diagT(generic_zeros(datatype(diagT), dim))
+
+generic_zeros_nonunif(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = generic_zeros(diagT{default_datatype(ElT)}, dim)
+
+generic_zeros_nonunif(diagT::Type{<:Diag}, dim::Integer) = generic_zeros_nonunif(diagT{default_eltype()}, dim)
+
+generic_zeros(diagT::Type{<:UniformDiag{ElT}}, dim::Integer) where {ElT} = diagT(zero(ElT))
+generic_zeros_unif(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = generic_zeros(diagT{ElT}, dim)
+generic_zeros_unif(diagT::Type{<:Diag}, dim::Integer) = generic_zeros_unif(diagT{default_eltype()}, dim)
+
+generic_zeros(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = throw(TypeError)
+
 
 #
 # Type promotions involving Diag
