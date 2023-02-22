@@ -152,7 +152,7 @@ end
 
 # Convert a Diag storage type to the closest Dense storage type
 dense(::Type{<:NonuniformDiag{ElT,VecT}}) where {ElT,VecT} = Dense{ElT,VecT}
-dense(::Type{<:UniformDiag{ElT}}) where {ElT} = Dense{ElT,Vector{ElT}}
+dense(::Type{<:UniformDiag{ElT}}) where {ElT} = Dense{ElT,default_datatype{ElT}}
 
 function HDF5.write(
   parent::Union{HDF5.File,HDF5.Group}, name::String, D::Store
