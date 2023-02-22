@@ -81,23 +81,11 @@ function generic_zeros(diagT::Type{<:NonuniformDiag{ElT}}, dim::Integer) where {
   return diagT(generic_zeros(datatype(diagT), dim))
 end
 
-function generic_zeros_nonunif(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT}
-  return generic_zeros(diagT{default_datatype(ElT)}, dim)
-end
-
-function generic_zeros_nonunif(diagT::Type{<:Diag}, dim::Integer)
-  return generic_zeros_nonunif(diagT{default_eltype()}, dim)
-end
-
 generic_zeros(diagT::Type{<:UniformDiag{ElT}}, dim::Integer) where {ElT} = diagT(zero(ElT))
-function generic_zeros_unif(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT}
-  return generic_zeros(diagT{ElT}, dim)
-end
-function generic_zeros_unif(diagT::Type{<:Diag}, dim::Integer)
-  return generic_zeros_unif(diagT{default_eltype()}, dim)
-end
 
-generic_zeros(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = throw(TypeError)
+generic_zeros(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = generic_zeros(diagT{default_datatype(ElT)}, dim)
+
+generic_zeros(diagT::Type{<:Diag}, dim::Integer) = generic_zeros(diagT{default_eltype()}, dim)
 
 #
 # Type promotions involving Diag
