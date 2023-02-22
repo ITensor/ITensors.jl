@@ -83,9 +83,13 @@ end
 
 generic_zeros(diagT::Type{<:UniformDiag{ElT}}, dim::Integer) where {ElT} = diagT(zero(ElT))
 
-generic_zeros(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT} = generic_zeros(diagT{default_datatype(ElT)}, dim)
+function generic_zeros(diagT::Type{<:Diag{ElT}}, dim::Integer) where {ElT}
+  return generic_zeros(diagT{default_datatype(ElT)}, dim)
+end
 
-generic_zeros(diagT::Type{<:Diag}, dim::Integer) = generic_zeros(diagT{default_eltype()}, dim)
+function generic_zeros(diagT::Type{<:Diag}, dim::Integer)
+  return generic_zeros(diagT{default_eltype()}, dim)
+end
 
 #
 # Type promotions involving Diag
