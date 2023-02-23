@@ -1,0 +1,49 @@
+name: Run ITensorGLMakie tests on push to main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)
+    runs-on: ${{ matrix.os }}
+    env:
+      JULIA_NUM_THREADS: ${{ matrix.threads }}
+    strategy:
+      matrix:
+        version:
+          - '1.6'
+          - '1'
+        os:
+          - ubuntu-20.04
+        threads:
+          - '1'
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v2
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - uses: actions/cache@v1
+        env:
+          cache-name: cache-artifacts
+        with:
+          path: ~/.julia/artifacts
+          key: ${{ runner.os }}-test-${{ env.cache-name }}-${{ hashFiles('**/Project.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-test-${{ env.cache-name }}-
+            ${{ runner.os }}-test-
+            ${{ runner.os }}-
+      - run: sudo apt-get update && sudo apt-get install -y xorg-dev mesa-utils xvfb libgl1 freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxext-dev
+      - name: Install Julia dependencies
+        shell: julia --project=monorepo {0}
+        run: |
+          using Pkg;
+          pkg"dev ./NDTensors . ./ITensorVisualizationBase ./ITensorMakie ./ITensorGLMakie"
+      - name: Run the tests
+        run: |
+          DISPLAY=:0 xvfb-run -s '-screen 0 1024x768x24' julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGLMakie")'

@@ -164,7 +164,7 @@ end
   @test length(H) == 1
   @test coefficient(H[1]) == -1
 
-  # MPO conversion
+  # OpSum conversion
   H = Sum{Op}()
   H -= 2.3, "X", 1, "X", 2
   H += 1.2, "Z", 1

@@ -390,6 +390,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
           obs;
           energy=energy,
           psi=psi,
+          projected_operator=PH,
           bond=b,
           sweep=sw,
           half_sweep=ha,

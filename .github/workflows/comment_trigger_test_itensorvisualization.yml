@@ -1,0 +1,51 @@
+name: Run ITensorVisualizationBase tests from comment trigger
+
+on:
+  pull_request:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)
+    runs-on: ${{ matrix.os }}
+    env:
+      JULIA_NUM_THREADS: ${{ matrix.threads }}
+    strategy:
+      matrix:
+        version:
+          - '1.6'
+          - '1'
+        os:
+          - ubuntu-latest
+        threads:
+          - '1'
+        arch:
+          - x64
+    steps:
+      - name: Pull Request Comment Trigger
+        uses: Khan/pull-request-comment-trigger@v1.1.0
+        id: check
+        with:
+          trigger: '[visualization]'
+          reaction: rocket
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+      - uses: actions/checkout@v2
+        if: steps.check.outputs.triggered == 'true'
+      - uses: julia-actions/setup-julia@latest
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+        if: steps.check.outputs.triggered == 'true'
+      - name: Install Julia dependencies
+        shell: julia --project=monorepo {0}
+        run: |
+          using Pkg;
+          pkg"dev ./NDTensors . ./ITensorVisualizationBase"
+        if: steps.check.outputs.triggered == 'true'
+      - name: Run the tests
+        run: |
+          julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorVisualizationBase")'
+        if: steps.check.outputs.triggered == 'true'

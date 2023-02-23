@@ -1558,8 +1558,8 @@ truncation.
 - `maxdim::Int`: maximum MPS/MPO bond dimension
 """
 function sum(ψ⃗::Vector{T}; kwargs...) where {T<:AbstractMPS}
-  length(ψ⃗) == 0 && return T()
-  length(ψ⃗) == 1 && return A[1]
+  iszero(length(ψ⃗)) && return T()
+  isone(length(ψ⃗)) && return copy(only(ψ⃗))
   return +(ψ⃗...; kwargs...)
 end
 

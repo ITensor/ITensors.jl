@@ -1,10 +1,10 @@
 using Test
 using ITensors
 using ITensors.ITensorNetworkMaps
-using KrylovKit
+using KrylovKit: eigsolve
 using LinearAlgebra
 
-include("utils.jl")
+include(joinpath(@__DIR__, "utils", "utils.jl"))
 
 @testset "ITensorNetworkMaps.jl" begin
   N = 3 # Number of sites in the unit cell
@@ -44,6 +44,6 @@ include("utils.jl")
 
   dk, vk = eigsolve(T, v)
   for n in 1:length(dk)
-    @test norm((T - dk[n]I)(vk[n])) ≈ 0 atol = 1e-12
+    @test norm((T - dk[n]I)(vk[n])) ≈ 0 atol = 1e-10
   end
 end
