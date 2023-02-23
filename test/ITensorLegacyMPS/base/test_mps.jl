@@ -480,6 +480,8 @@ include(joinpath(@__DIR__, "utils", "util.jl"))
     K12 = add(Ks[1], Ks[2])
     K123 = add(K12, Ks[3])
     @test inner(sum(Ks), K123) ≈ inner(K123, K123)
+    # https://github.com/ITensor/ITensors.jl/issues/1000
+    @test sum([psi]) ≈ psi
   end
 
   @testset "+ MPS" begin
