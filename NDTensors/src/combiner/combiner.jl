@@ -235,31 +235,31 @@ function invalid_combiner_contraction_error(
   tensor::Tensor, tensor_labels, combiner_tensor::CombinerTensor, combiner_tensor_labels
 )
   return error(
-"""
-Trying to contract a tensor with indices:
+    """
+    Trying to contract a tensor with indices:
 
-$(inds(tensor))
+    $(inds(tensor))
 
-and labels:
+    and labels:
 
-$(tensor_labels)
+    $(tensor_labels)
 
-with a combiner tensor with indices:
+    with a combiner tensor with indices:
 
-$(inds(combiner_tensor))
+    $(inds(combiner_tensor))
 
-and labels:
+    and labels:
 
-$(combiner_tensor_labels).
+    $(combiner_tensor_labels).
 
-This is not a valid combiner contraction.
+    This is not a valid combiner contraction.
 
-If you are combining, the combined index of the combiner should be the only one uncontracted.
+    If you are combining, the combined index of the combiner should be the only one uncontracted.
 
-If you are uncombining, the combined index of the combiner should be the only one contracted.
+    If you are uncombining, the combined index of the combiner should be the only one contracted.
 
-By convention, the combined index should be the index in position $(combinedind_position(combiner_tensor)) of the combiner tensor.
-"""
+    By convention, the combined index should be the index in position $(combinedind_position(combiner_tensor)) of the combiner tensor.
+    """,
   )
 end
 

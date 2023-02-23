@@ -12,7 +12,7 @@ using ITensors: QN, Index
     combiner_tensor_inds = (d^2, d, d)
     output_tensor_inds = (d, d^2)
 
-    input_tensor = tensor(Dense(randn(input_tensor_inds)),  input_tensor_inds)
+    input_tensor = tensor(Dense(randn(input_tensor_inds)), input_tensor_inds)
     combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
 
     output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
@@ -25,18 +25,15 @@ using ITensors: QN, Index
     # Test uncombining
     new_input_tensor = contract(output_tensor, (1, -1), combiner_tensor, (-1, 2, 3))
     @test new_input_tensor == input_tensor
- 
+
     # Catch invalid combining
     input_tensor_inds = (d,)
-    input_tensor = tensor(Dense(randn(input_tensor_inds)),  input_tensor_inds)
+    input_tensor = tensor(Dense(randn(input_tensor_inds)), input_tensor_inds)
     combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
     @test_throws ErrorException contract(input_tensor, (-1,), combiner_tensor, (1, -1, -2))
   end
 
-  ind_constructors = (
-    dim -> [dim],
-    dim -> Index([QN() => dim]),
-  )
+  ind_constructors = (dim -> [dim], dim -> Index([QN() => dim]))
   @testset "BlockSparse * Combiner" for ind_constructor in ind_constructors
     d = 2
     i, j, k = map(ind_constructor, (d, d, d))
@@ -46,7 +43,10 @@ using ITensors: QN, Index
     combiner_tensor_inds = (c, j, k)
     output_tensor_inds = (c, i)
 
-    input_tensor = tensor(BlockSparse(randn(dim(input_tensor_inds)), BlockOffsets{3}([Block(1, 1, 1)], [0])), input_tensor_inds)
+    input_tensor = tensor(
+      BlockSparse(randn(dim(input_tensor_inds)), BlockOffsets{3}([Block(1, 1, 1)], [0])),
+      input_tensor_inds,
+    )
     combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
 
     output_tensor = contract(input_tensor, (1, -1, -2), combiner_tensor, (2, -1, -2))
@@ -64,9 +64,13 @@ using ITensors: QN, Index
 
     # Catch invalid combining
     invalid_input_tensor_inds = (k,)
-    invalid_input_tensor = tensor(BlockSparse(randn(dim(invalid_input_tensor_inds)), BlockOffsets{1}([Block(1)], [0])), invalid_input_tensor_inds)
+    invalid_input_tensor = tensor(
+      BlockSparse(randn(dim(invalid_input_tensor_inds)), BlockOffsets{1}([Block(1)], [0])),
+      invalid_input_tensor_inds,
+    )
     combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
-    @test_throws ErrorException contract(invalid_input_tensor, (-1,), combiner_tensor, (1, 2, -1))
+    @test_throws ErrorException contract(
+      invalid_input_tensor, (-1,), combiner_tensor, (1, 2, -1)
+    )
   end
-
 end
