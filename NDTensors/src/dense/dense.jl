@@ -140,7 +140,6 @@ function promote_rule(
   return Dense{ElR,VecR}
 end
 
-
 # This is for type promotion for Scalar*Dense
 function promote_rule(
   ::Type{<:Dense{ElT1,Vector{ElT1}}}, ::Type{ElT2}
