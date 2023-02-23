@@ -88,7 +88,7 @@ by the lines
 
 ```julia
 state = [isodd(n) ? "Up" : "Dn" for n=1:N]
-psi0 = productMPS(sites,state)
+psi0 = MPS(sites,state)
 ```
 
 The first line of the new code above makes an array of strings which 
@@ -123,13 +123,13 @@ computing the quantum-number flux of `psi0`
     use the initial state:
     ```julia
     state = ["Up" for n=1:N]
-    psi0 = productMPS(sites,state)
+    psi0 = MPS(sites,state)
     ```
     Or to initialize this 10-site system to have a total "Sz" of +16
     in ITensor units (``S^z=8`` in physical units):
     ```julia
     state = ["Dn","Up","Up","Up","Up","Up","Up","Up","Up","Up"]
-    psi0 = productMPS(sites,state)
+    psi0 = MPS(sites,state)
     ```
     would work (as would any `state` with one "Dn" and nine "Up"'s
     in any order).
@@ -137,7 +137,7 @@ computing the quantum-number flux of `psi0`
     in ITensor units (``S^z=9`` in physical units) as
     ```julia
     state = ["Z0","Up","Up","Up","Up","Up","Up","Up","Up","Up"]
-    psi0 = productMPS(sites,state)
+    psi0 = MPS(sites,state)
     ```
     where "Z0" refers to the ``S^z=0`` state of a spin-one spin.
 
@@ -167,7 +167,7 @@ let
   H = MPO(os,sites)
 
   state = [isodd(n) ? "Up" : "Dn" for n=1:N]
-  psi0 = productMPS(sites,state)
+  psi0 = MPS(sites,state)
   @show flux(psi0)
 
   nsweeps = 5

@@ -144,6 +144,13 @@ For example:
 sites = siteinds("S=1",N; conserve_sz=true, qnname_sz="TotalSz")
 ```
 
+#### "S=1" States
+
+The available state names for "S=1" sites are:
+- `"Up"` (aliases: `"Z+"`, `"↑"`) spin in the up state
+- `"Z0"` (aliases: `"0"`) spin in the Sz=0 state
+- `"Dn"` (aliases: `"Z-"`, `"↓"`) spin in the Sz=0 state
+
 #### "S=1" Operators
 
 Operators associated with "S=1" sites can be made using the `op` function,
@@ -231,6 +238,12 @@ For example:
 sites = siteinds("Fermion",N; conserve_nfparity=true)
 ```
 
+#### "Fermion" States
+
+The available state names for "Fermion" sites are:
+- `"0"` (aliases: `"Emp"`) unoccupied fermion site
+- `"1"` (aliases: `"Occ"`) occupied fermion site
+
 #### "Fermion" Operators
 
 Operators associated with "Fermion" sites can be made using the `op` function,
@@ -269,6 +282,14 @@ For example:
 ```
 sites = siteinds("Electron",N; conserve_nfparity=true)
 ```
+
+#### "Electron" States
+
+The available state names for "Electron" sites are:
+- `"Emp"` (aliases: `"0"`) unoccupied electron site
+- `"Up"` (aliases: `"↑"`) electron site occupied with one up electron
+- `"Dn"` (aliases: `"↓"`) electron site occupied with one down electron
+- `"UpDn"` (aliases: `"↑↓"`) electron site occupied with two electrons (one up, one down)
 
 #### "Electron" Operators
 
@@ -325,6 +346,13 @@ For example:
 ```
 sites = siteinds("tJ",N; conserve_nfparity=true)
 ```
+
+#### "tJ" States
+
+The available state names for "tJ" sites are:
+- `"Emp"` (aliases: `"0"`) unoccupied site
+- `"Up"` (aliases: `"↑"`) site occupied with one up electron
+- `"Dn"` (aliases: `"↓"`) site occupied with one down electron
 
 #### "tJ" Operators
 

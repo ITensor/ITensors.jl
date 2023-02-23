@@ -52,7 +52,7 @@ psi0 = randomMPS(sites,2)
 Here we have made a random MPS of bond dimension 2. We could have used a random product
 state instead, but choosing a slightly larger bond dimension can help DMRG avoid getting
 stuck in local minima. We could also set psi to some specific initial state using the 
-function `productMPS`, which is actually required if we were conserving QNs.
+`MPS` constructor, which is actually required if we were conserving QNs.
 
 Finally, we are ready to call DMRG:
 
