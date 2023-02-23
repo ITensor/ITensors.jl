@@ -47,8 +47,25 @@ conj(::NeverAlias, C::Combiner) = conj(AllowAlias(), copy(C))
 const CombinerTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:Combiner}
 
-combinedindex(T::CombinerTensor) = inds(T)[1]
-uncombinedinds(T::CombinerTensor) = popfirst(inds(T))
+# The position of the combined index/dimension.
+# By convention, it is the first one.
+combinedind_position(combiner_tensor::CombinerTensor) = 1
+
+function combinedind(combiner_tensor::CombinerTensor)
+  return inds(combiner_tensor)[combinedind_position(combiner_tensor)]
+end
+# TODO: Rewrite in terms of `combinedind_position`.
+function uncombinedinds(combiner_tensor::CombinerTensor)
+  return deleteat(inds(combiner_tensor), combinedind_position(combiner_tensor))
+end
+
+function combinedind_label(combiner_tensor::CombinerTensor, combiner_tensor_labels)
+  return combiner_tensor_labels[combinedind_position(combiner_tensor)]
+end
+
+function uncombinedind_labels(combiner_tensor::CombinerTensor, combiner_tensor_labels)
+  return deleteat(combiner_tensor_labels, combinedind_position(combiner_tensor))
+end
 
 blockperm(C::CombinerTensor) = blockperm(storage(C))
 blockcomb(C::CombinerTensor) = blockcomb(storage(C))
@@ -66,64 +83,184 @@ function contraction_output(
   return contraction_output(T2, T1, indsR)
 end
 
-function contract!!(R::Tensor, labelsR, T1::CombinerTensor, labelsT1, T2::Tensor, labelsT2)
-  NR = ndims(R)
-  N1 = ndims(T1)
-  N2 = ndims(T2)
-  if N1 ≤ 1
+function contract!!(
+  output_tensor::Tensor,
+  output_tensor_labels,
+  combiner_tensor::CombinerTensor,
+  combiner_tensor_labels,
+  tensor::Tensor,
+  tensor_labels,
+)
+  if ndims(combiner_tensor) ≤ 1
     # Empty combiner, acts as multiplying by 1
-    R = permutedims!!(R, T2, getperm(labelsR, labelsT2))
-    return R
-  elseif N1 + N2 == NR
-    error("Cannot perform outer product involving a combiner")
-  elseif count_common(labelsT1, labelsT2) == 1 && N1 == 2
-    # This is the case of index replacement
-    ui = setdiff(labelsT1, labelsT2)[]
-    newind = inds(T1)[findfirst(==(ui), labelsT1)]
-    cpos1, cpos2 = intersect_positions(labelsT1, labelsT2)
-    storeR = copy(storage(T2))
-    indsR = setindex(inds(T2), newind, cpos2)
-    return tensor(storeR, indsR)
-  elseif count_common(labelsT1, labelsT2) == 1 && length(inds(T1)) != 2
-    # This is the case of uncombining
-    cpos1, cpos2 = intersect_positions(labelsT1, labelsT2)
-    storeR = copy(storage(T2))
-    indsC = deleteat(inds(T1), cpos1)
-    indsR = insertat(inds(T2), indsC, cpos2)
-    return tensor(storeR, indsR)
-  elseif is_combiner(labelsT1, labelsT2)
-    # This is the case of combining
-    Alabels, Blabels = labelsT2, labelsT1
+    output_tensor = permutedims!!(
+      output_tensor, tensor, getperm(output_tensor_labels, tensor_labels)
+    )
+    return output_tensor
+  end
+  if is_index_replacement(tensor, tensor_labels, combiner_tensor, combiner_tensor_labels)
+    ui = setdiff(combiner_tensor_labels, tensor_labels)[]
+    newind = inds(combiner_tensor)[findfirst(==(ui), combiner_tensor_labels)]
+    cpos1, cpos2 = intersect_positions(combiner_tensor_labels, tensor_labels)
+    output_tensor_storage = copy(storage(tensor))
+    output_tensor_inds = setindex(inds(tensor), newind, cpos2)
+    return NDTensors.tensor(output_tensor_storage, output_tensor_inds)
+  end
+  is_combining_contraction = is_combining(
+    tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
+  )
+  if is_combining_contraction
+    Alabels, Blabels = tensor_labels, combiner_tensor_labels
     final_labels = contract_labels(Blabels, Alabels)
-    final_labels_n = contract_labels(labelsT1, labelsT2)
-    indsR = inds(R)
+    final_labels_n = contract_labels(combiner_tensor_labels, tensor_labels)
+    output_tensor_inds = inds(output_tensor)
     if final_labels != final_labels_n
       perm = getperm(final_labels_n, final_labels)
-      indsR = permute(inds(R), perm)
-      labelsR = permute(labelsR, perm)
+      output_tensor_inds = permute(inds(output_tensor), perm)
+      output_tensor_labels = permute(output_tensor_labels, perm)
     end
-    cpos1, cposR = intersect_positions(labelsT1, labelsR)
-    labels_comb = deleteat(labelsT1, cpos1)
-    vlR = [labelsR...]
+    cpos1, output_tensor_cpos = intersect_positions(
+      combiner_tensor_labels, output_tensor_labels
+    )
+    labels_comb = deleteat(combiner_tensor_labels, cpos1)
+    output_tensor_vl = [output_tensor_labels...]
     for (ii, li) in enumerate(labels_comb)
-      insert!(vlR, cposR + ii, li)
+      insert!(output_tensor_vl, output_tensor_cpos + ii, li)
     end
-    deleteat!(vlR, cposR)
-    labels_perm = tuple(vlR...)
-    perm = getperm(labels_perm, labelsT2)
-    T2p = reshape(R, permute(inds(T2), perm))
-    permutedims!(T2p, T2, perm)
-    R = reshape(T2p, indsR)
+    deleteat!(output_tensor_vl, output_tensor_cpos)
+    labels_perm = tuple(output_tensor_vl...)
+    perm = getperm(labels_perm, tensor_labels)
+    tensorp = reshape(output_tensor, permute(inds(tensor), perm))
+    permutedims!(tensorp, tensor, perm)
+    return reshape(tensorp, output_tensor_inds)
+  else # Uncombining
+    cpos1, cpos2 = intersect_positions(combiner_tensor_labels, tensor_labels)
+    output_tensor_storage = copy(storage(tensor))
+    indsC = deleteat(inds(combiner_tensor), cpos1)
+    output_tensor_inds = insertat(inds(tensor), indsC, cpos2)
+    return NDTensors.tensor(output_tensor_storage, output_tensor_inds)
   end
-  return R
+  return invalid_combiner_contraction_error(
+    tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
+  )
 end
 
-function contract!!(R::Tensor, labelsR, T1::Tensor, labelsT1, T2::CombinerTensor, labelsT2)
-  return contract!!(R, labelsR, T2, labelsT2, T1, labelsT1)
+function contract!!(
+  output_tensor::Tensor,
+  output_tensor_labels,
+  tensor::Tensor,
+  tensor_labels,
+  combiner_tensor::CombinerTensor,
+  combiner_tensor_labels,
+)
+  return contract!!(
+    output_tensor,
+    output_tensor_labels,
+    combiner_tensor,
+    combiner_tensor_labels,
+    tensor,
+    tensor_labels,
+  )
 end
 
-function contract(T1::DiagTensor, labelsT1, T2::CombinerTensor, labelsT2)
-  return contract(dense(T1), labelsT1, T2, labelsT2)
+function contract(
+  diag_tensor::DiagTensor,
+  diag_tensor_labels,
+  combiner_tensor::CombinerTensor,
+  combiner_tensor_labels,
+)
+  return contract(
+    dense(diag_tensor), diag_tensor_labels, combiner_tensor, combiner_tensor_labels
+  )
+end
+
+function is_index_replacement(
+  tensor::Tensor, tensor_labels, combiner_tensor::CombinerTensor, combiner_tensor_labels
+)
+  return (ndims(combiner_tensor) == 2) &&
+         isone(count(∈(tensor_labels), combiner_tensor_labels))
+end
+
+# Return if the combiner contraction is combining or uncombining.
+# Check for valid contractions, for example when combining,
+# only the combined index should be uncontracted, and when uncombining,
+# only the combined index should be contracted.
+function is_combining(
+  tensor::Tensor, tensor_labels, combiner_tensor::CombinerTensor, combiner_tensor_labels
+)
+  is_combining = is_combining_no_check(
+    tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
+  )
+  check_valid_combiner_contraction(
+    is_combining, tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
+  )
+  return is_combining
+end
+
+function is_combining_no_check(
+  tensor::Tensor, tensor_labels, combiner_tensor::CombinerTensor, combiner_tensor_labels
+)
+  return combinedind_label(combiner_tensor, combiner_tensor_labels) ∉ tensor_labels
+end
+
+function check_valid_combiner_contraction(
+  is_combining::Bool,
+  tensor::Tensor,
+  tensor_labels,
+  combiner_tensor::CombinerTensor,
+  combiner_tensor_labels,
+)
+  if !is_valid_combiner_contraction(
+    is_combining, tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
+  )
+    return invalid_combiner_contraction_error(
+      tensor, tensor_labels, combiner_tensor, combiner_tensor_labels
+    )
+  end
+  return nothing
+end
+
+function is_valid_combiner_contraction(
+  is_combining::Bool,
+  tensor::Tensor,
+  tensor_labels,
+  combiner_tensor::CombinerTensor,
+  combiner_tensor_labels,
+)
+  in_tensor_labels_op = is_combining ? ∉(tensor_labels) : ∈(tensor_labels)
+  return isone(count(in_tensor_labels_op, combiner_tensor_labels))
+end
+
+function invalid_combiner_contraction_error(
+  tensor::Tensor, tensor_labels, combiner_tensor::CombinerTensor, combiner_tensor_labels
+)
+  return error(
+"""
+Trying to contract a tensor with indices:
+
+$(inds(tensor))
+
+and labels:
+
+$(tensor_labels)
+
+with a combiner tensor with indices:
+
+$(inds(combiner_tensor))
+
+and labels:
+
+$(combiner_tensor_labels).
+
+This is not a valid combiner contraction.
+
+If you are combining, the combined index of the combiner should be the only one uncontracted.
+
+If you are uncombining, the combined index of the combiner should be the only one contracted.
+
+By convention, the combined index should be the index in position $(combinedind_position(combiner_tensor)) of the combiner tensor.
+"""
+  )
 end
 
 function show(io::IO, mime::MIME"text/plain", S::Combiner)
