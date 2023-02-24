@@ -129,7 +129,7 @@ function promote_rule(
   ::Type{<:Dense{ElT1,DataT}}, ::Type{ElT2}
 ) where {DataT,ElT1,ElT2<:Number}
   ElR = promote_type(ElT1, ElT2)
-  DataR = set_eltype(DataR, ElR)
+  DataR = set_eltype(DataT, ElR)
   return Dense{ElR,DataR}
 end
 
