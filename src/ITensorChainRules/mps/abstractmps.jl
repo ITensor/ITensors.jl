@@ -115,7 +115,7 @@ function rrule(
         x̄1[n] = itensor(zeros(dim.(s)), s...)
       end
     end
-    x̄2 = x1dag_ȳ[end]
+    x̄2 = x1dag_ȳ[1]
     return (NoTangent(), x̄1, x̄2)
   end
   return y, apply_pullback
