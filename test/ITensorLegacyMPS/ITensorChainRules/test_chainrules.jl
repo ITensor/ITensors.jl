@@ -280,4 +280,49 @@ Random.seed!(1234)
     @test f(y) ≈ g(y_itensor)
     @test contract(f'(y)) ≈ g'(y_itensor)
   end
+  @testset "Calling apply multiple times (ITensors #924 regression test)" begin
+    n=1
+    θ=3.0
+    p=2
+
+    s = siteinds("S=1/2", n)
+
+    ψ₀ₘₚₛ = MPS(s, "↑")
+    ψ₀ = contract(ψ₀ₘₚₛ)
+
+    U(θ) = [θ * op("Z", s, 1)]
+
+    function f(θ, ψ)
+      ψθ = ψ
+      Uθ = U(θ)
+      for _ in 1:p
+        ψθ = apply(Uθ, ψθ)
+      end
+      return inner(ψ, ψθ)
+    end
+
+    function g(θ, ψ)
+      Uθ = U(θ)
+      Utot = Uθ
+      for _ in 2:p
+        Utot = [Utot; Uθ]
+      end
+      ψθ = apply(Utot, ψ)
+      return inner(ψ, ψθ)
+    end
+
+    f_itensor(θ) = f(θ, ψ₀)
+    f_mps(θ) = f(θ, ψ₀ₘₚₛ)
+    g_itensor(θ) = g(θ, ψ₀)
+    g_mps(θ) = g(θ, ψ₀ₘₚₛ)
+
+    @test f_itensor(θ) ≈ θ^p
+    @test f_mps(θ) ≈ θ^p
+    @test f_itensor'(θ) ≈ p * θ^(p - 1)
+    @test f_mps'(θ) ≈ p * θ^(p - 1)
+    @test g_itensor(θ) ≈ θ^p
+    @test g_mps(θ) ≈ θ^p
+    @test g_itensor'(θ) ≈ p * θ^(p - 1)
+    @test g_mps'(θ) ≈ p * θ^(p - 1)
+  end
 end
