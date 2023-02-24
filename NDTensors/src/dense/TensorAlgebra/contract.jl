@@ -1,32 +1,3 @@
-function outer!(
-  R::DenseTensor{ElR}, T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}
-) where {ElR,ElT1,ElT2}
-  if ElT1 != ElT2
-    # TODO: use promote instead
-    # T1,T2 = promote(T1,T2)
-
-    ElT1T2 = promote_type(ElT1, ElT2)
-    if ElT1 != ElT1T2
-      # TODO: get this working
-      # T1 = ElR.(T1)
-      T1 = one(ElT1T2) * T1
-    end
-    if ElT2 != ElT1T2
-      # TODO: get this working
-      # T2 = ElR.(T2)
-      T2 = one(ElT1T2) * T2
-    end
-  end
-
-  v1 = data(T1)
-  v2 = data(T2)
-  RM = reshape(R, length(v1), length(v2))
-  #RM .= v1 .* transpose(v2)
-  #mul!(RM, v1, transpose(v2))
-  _gemm!('N', 'T', one(ElR), v1, v2, zero(ElR), RM)
-  return R
-end
-
 export backend_auto, backend_blas, backend_generic
 
 @eval struct GemmBackend{T}
@@ -103,19 +74,10 @@ function _gemm!(
   return C
 end
 
-# TODO: call outer!!, make this generic
-function outer(T1::DenseTensor{ElT1}, T2::DenseTensor{ElT2}) where {ElT1,ElT2}
-  array_outer = vec(array(T1)) * transpose(vec(array(T2)))
-  inds_outer = unioninds(inds(T1), inds(T2))
-  return tensor(Dense{promote_type(ElT1, ElT2)}(vec(array_outer)), inds_outer)
-end
-
 function contraction_output(tensor1::DenseTensor, tensor2::DenseTensor, indsR)
   tensortypeR = contraction_output_type(typeof(tensor1), typeof(tensor2), indsR)
   return NDTensors.similar(tensortypeR, indsR)
 end
-
-Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))
 
 # Both are scalar-like tensors
 function _contract_scalar!(
@@ -231,20 +193,6 @@ function _contract_scalar_perm!(
     end
   end
   return Rᵃ
-end
-
-function drop_singletons(::Order{N}, labels, dims) where {N}
-  labelsᵣ = ntuple(zero, Val(N))
-  dimsᵣ = labelsᵣ
-  nkeep = 1
-  for n in 1:length(dims)
-    if dims[n] > 1
-      labelsᵣ = @inbounds setindex(labelsᵣ, labels[n], nkeep)
-      dimsᵣ = @inbounds setindex(dimsᵣ, dims[n], nkeep)
-      nkeep += 1
-    end
-  end
-  return labelsᵣ, dimsᵣ
 end
 
 function _contract_scalar_maybe_perm!(
@@ -447,85 +395,4 @@ function _contract!(
   end
 
   return CT
-end
-
-# svd of an order-n tensor according to positions Lpos
-# and Rpos
-function LinearAlgebra.svd(
-  T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
-) where {N,IndsT,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  UM, S, VM, spec = svd(M; kwargs...)
-  u = ind(UM, 2)
-  v = ind(VM, 2)
-
-  Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
-  Uinds = push(Linds, u)
-
-  # TODO: do these positions need to be reversed?
-  Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
-  Vinds = push(Rinds, v)
-
-  U = reshape(UM, Uinds)
-  V = reshape(VM, Vinds)
-
-  return U, S, V, spec
-end
-
-# qr decomposition of an order-n tensor according to 
-# positions Lpos and Rpos
-function LinearAlgebra.qr(
-  T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; kwargs...
-) where {N,IndsT,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  QM, RM = qr(M; kwargs...)
-  q = ind(QM, 2)
-  r = ind(RM, 1)
-  # TODO: simplify this by permuting inds(T) by (Lpos,Rpos)
-  # then grab Linds,Rinds
-  Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
-  Qinds = push(Linds, r)
-  Q = reshape(QM, Qinds)
-  Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
-  Rinds = pushfirst(Rinds, r)
-  R = reshape(RM, Rinds)
-  return Q, R
-end
-
-# polar decomposition of an order-n tensor according to positions Lpos
-# and Rpos
-function polar(
-  T::DenseTensor{<:Number,N,IndsT}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}
-) where {N,IndsT,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  UM, PM = polar(M)
-
-  # TODO: turn these into functions
-  Linds = similartype(IndsT, Val{NL})(ntuple(i -> inds(T)[Lpos[i]], Val(NL)))
-  Rinds = similartype(IndsT, Val{NR})(ntuple(i -> inds(T)[Rpos[i]], Val(NR)))
-
-  # Use sim to create "similar" indices, in case
-  # the indices have identifiers. If not this should
-  # act as an identity operator
-  simRinds = sim(Rinds)
-  Uinds = (Linds..., simRinds...)
-  Pinds = (simRinds..., Rinds...)
-
-  U = reshape(UM, Uinds)
-  P = reshape(PM, Pinds)
-  return U, P
-end
-
-function LinearAlgebra.exp(
-  T::DenseTensor{ElT,N}, Lpos::NTuple{NL,Int}, Rpos::NTuple{NR,Int}; ishermitian::Bool=false
-) where {ElT,N,NL,NR}
-  M = permute_reshape(T, Lpos, Rpos)
-  indsTp = permute(inds(T), (Lpos..., Rpos...))
-  if ishermitian
-    expM = parent(exp(Hermitian(matrix(M))))
-    return tensor(Dense{ElT}(vec(expM)), indsTp)
-  else
-    expM = exp(M)
-    return reshape(expM, indsTp)
-  end
 end
