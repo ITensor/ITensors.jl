@@ -136,8 +136,7 @@ function promote_rule(
 ) where {ElT1,DataT1,ElT2,DataT2}
   ElR = promote_type(ElT1, ElT2)
   VecR = promote_type(DataT1, DataT2)
-  VecR = set_eltype(VecR, ElR)
-  #VecR = NDTensors.set_parameter(VecR, Position(1), ElR)
+  VecR = set_parameter(VecR, Position(1), ElR)
   return Dense{ElR,VecR}
 end
 
