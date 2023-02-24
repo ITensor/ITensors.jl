@@ -281,9 +281,9 @@ Random.seed!(1234)
     @test contract(f'(y)) ≈ g'(y_itensor)
   end
   @testset "Calling apply multiple times (ITensors #924 regression test)" begin
-    n=1
-    θ=3.0
-    p=2
+    n = 1
+    θ = 3.0
+    p = 2
 
     s = siteinds("S=1/2", n)
 
