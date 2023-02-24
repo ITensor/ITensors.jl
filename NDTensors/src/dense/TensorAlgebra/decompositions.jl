@@ -1,6 +1,4 @@
 
-
-
 Strided.StridedView(T::DenseTensor) = StridedView(convert(Array, T))
 
 function drop_singletons(::Order{N}, labels, dims) where {N}
@@ -16,7 +14,6 @@ function drop_singletons(::Order{N}, labels, dims) where {N}
   end
   return labelsᵣ, dimsᵣ
 end
-
 
 # svd of an order-n tensor according to positions Lpos
 # and Rpos

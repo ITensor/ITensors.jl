@@ -75,7 +75,9 @@ complex(::Type{Diag{ElT,Vector{ElT}}}) where {ElT} = Diag{complex(ElT),Vector{co
 complex(::Type{Diag{ElT,ElT}}) where {ElT} = Diag{complex(ElT),complex(ElT)}
 
 # Deal with uniform Diag conversion
-convert(::Type{<:Diag{ElT,DataT}}, D::Diag) where {ElT,DataT} = Diag(convert(DataT, data(D)))
+function convert(::Type{<:Diag{ElT,DataT}}, D::Diag) where {ElT,DataT}
+  return Diag(convert(DataT, data(D)))
+end
 
 function generic_zeros(diagT::Type{<:NonuniformDiag{ElT}}, dim::Integer) where {ElT}
   return diagT(generic_zeros(datatype(diagT), dim))
