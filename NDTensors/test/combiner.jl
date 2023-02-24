@@ -30,7 +30,7 @@ using ITensors: QN, Index
     input_tensor_inds = (d,)
     input_tensor = tensor(Dense(randn(input_tensor_inds)), input_tensor_inds)
     combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
-    @test_throws ErrorException contract(input_tensor, (-1,), combiner_tensor, (1, -1, -2))
+    @test_throws Returns(true) contract(input_tensor, (-1,), combiner_tensor, (1, -1, -2))
   end
 
   ind_constructors = (dim -> [dim], dim -> Index([QN() => dim]))
@@ -69,7 +69,7 @@ using ITensors: QN, Index
       invalid_input_tensor_inds,
     )
     combiner_tensor = tensor(Combiner([1], [1]), combiner_tensor_inds)
-    @test_throws ErrorException contract(
+    @test_throws Returns(true) contract(
       invalid_input_tensor, (-1,), combiner_tensor, (1, 2, -1)
     )
   end
