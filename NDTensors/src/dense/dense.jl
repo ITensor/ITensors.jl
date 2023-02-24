@@ -119,9 +119,9 @@ function promote_rule(
   ::Type{<:Dense{ElT1,DataT1}}, ::Type{<:Dense{ElT2,DataT2}}
 ) where {ElT1,DataT1,ElT2,DataT2}
   ElR = promote_type(ElT1, ElT2)
-  VecR = promote_type(DataT1, DataT2)
-  VecR = set_parameter(VecR, Parameter(1), ElR)
-  return Dense{ElR,VecR}
+  DataR = promote_type(DataT1, DataT2)
+  DataR = set_eltype(DataR, ElR)
+  return Dense{ElR,DataR}
 end
 
 # This is for type promotion for Scalar*Dense
@@ -129,7 +129,7 @@ function promote_rule(
   ::Type{<:Dense{ElT1,DataT}}, ::Type{ElT2}
 ) where {DataT,ElT1,ElT2<:Number}
   ElR = promote_type(ElT1, ElT2)
-  DataR = set_parameter(DataT, Parameter(1), ElR)
+  DataR = set_eltype(DataR, ElR)
   return Dense{ElR,DataR}
 end
 
