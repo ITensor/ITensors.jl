@@ -120,31 +120,23 @@ function promote_rule(
 ) where {ElT1,DataT1,ElT2,DataT2}
   ElR = promote_type(ElT1, ElT2)
   VecR = promote_type(DataT1, DataT2)
-  return Dense{ElR,VecR}
-end
-
-# This is to get around the issue in Julia that:
-# promote_type(Vector{ComplexF32},Vector{Float64}) == Vector{T} where T
-function promote_rule(
-  ::Type{<:Dense{ElT1,Vector{ElT1}}}, ::Type{<:Dense{ElT2,Vector{ElT2}}}
-) where {ElT1,ElT2}
-  ElR = promote_type(ElT1, ElT2)
-  VecR = Vector{ElR}
+  VecR = set_parameter(VecR, Parameter(1), ElR)
   return Dense{ElR,VecR}
 end
 
 # This is for type promotion for Scalar*Dense
 function promote_rule(
-  ::Type{<:Dense{ElT1,Vector{ElT1}}}, ::Type{ElT2}
-) where {ElT1,ElT2<:Number}
+  ::Type{<:Dense{ElT1,DataT}}, ::Type{ElT2}
+) where {DataT,ElT1,ElT2<:Number}
   ElR = promote_type(ElT1, ElT2)
-  VecR = Vector{ElR}
-  return Dense{ElR,VecR}
+  DataR = set_parameter(DataT, Parameter(1), ElR)
+  return Dense{ElR,DataR}
 end
 
-function convert(::Type{<:Dense{ElR,VecR}}, D::Dense) where {ElR,VecR}
-  return Dense(convert(VecR, data(D)))
+function convert(::Type{<:Dense{ElR,DataT}}, D::Dense) where {ElR,DataT}
+  return Dense(convert(DataT, data(D)))
 end
+
 function HDF5.write(
   parent::Union{HDF5.File,HDF5.Group}, name::String, D::Store
 ) where {Store<:Dense}
