@@ -175,13 +175,16 @@ function ITensors.op(::OpName"Ry", ::SiteType"Qubit"; θ::Number)
 end
 
 # Rotation around Z-axis
-function ITensors.op(::OpName"Rz", ::SiteType"Qubit"; θ::Number)
+function ITensors.op(::OpName"Rz", ::SiteType"Qubit"; θ=nothing, ϕ=nothing)
+  isone(count(isnothing, (θ, ϕ))) || error(
+    "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating an Rz gate, but not both.",
+  )
+  isnothing(ϕ) && (ϕ = θ)
   return [
-    exp(-im * θ / 2) 0
-    0 exp(im * θ / 2)
+    exp(-im * ϕ / 2) 0
+    0 exp(im * ϕ / 2)
   ]
 end
-ITensors.op(::OpName"Rz", t::SiteType"Qubit"; ϕ::Number) = op(OpName("Rz"), t; θ=ϕ)
 
 # Rotation around generic axis n̂
 function ITensors.op(::OpName"Rn", ::SiteType"Qubit"; θ::Real, ϕ::Real, λ::Real)

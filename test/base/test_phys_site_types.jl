@@ -122,7 +122,7 @@ using ITensors, LinearAlgebra, Test
       im*sin(θ) 0 0 cos(θ)
     ]
     @test reshape(Array(op("RXY", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
-      [1 0 0 0; 0 cos(θ) im*sin(θ) 0; 0 im*sin(θ) cos(θ) 0; 0 0 0 1]
+      [1 0 0 0; 0 cos(θ) -im*sin(θ) 0; 0 -im*sin(θ) cos(θ) 0; 0 0 0 1]
     @test reshape(Array(op("RZZ", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
       [exp(-im * θ) 0 0 0; 0 exp(im * θ) 0 0; 0 0 exp(im * θ) 0; 0 0 0 exp(-im * θ)]
 
