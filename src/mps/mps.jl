@@ -687,7 +687,7 @@ using efficient MPS techniques. Returns the matrix C.
 
 # Optional Keyword Arguments
 
-  - `site_range = 1:length(psi)`: compute correlations only
+  - `sites = 1:length(psi)`: compute correlations only
      for sites in the given range
   - `ishermitian = false` : if `false`, force independent calculations of the
      matrix elements above and below the diagonal, while if `true` assume they are complex conjugates.
@@ -708,10 +708,23 @@ Czz = correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) # same as above
 
 s = siteinds("Electron", N; conserve_qns=true)
 psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
-Cuu = correlation_matrix(psi, "Cdagup", "Cup"; site_range=2:8)
+Cuu = correlation_matrix(psi, "Cdagup", "Cup"; sites=2:8)
 ```
 """
-function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
+function correlation_matrix(
+  psi::MPS, _Op1, _Op2; sites=1:length(psi), site_range=nothing, ishermitian=nothing
+)
+  if !isnothing(site_range)
+    @warn "The `site_range` keyword arg. to `correlation_matrix` is deprecated: use the keyword `sites` instead"
+    sites = site_range
+  end
+  if !(sites isa AbstractRange)
+    sites = collect(sites)
+  end
+
+  start_site = first(sites)
+  end_site = last(sites)
+
   N = length(psi)
   ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
@@ -719,21 +732,21 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   Op1 = _Op1 #make copies into which we can insert "F" string operators, and then restore.
   Op2 = _Op2
   onsiteOp = _op_prod(Op1, Op2)
-  fermionic1 = has_fermion_string(Op1, s[1])
-  fermionic2 = has_fermion_string(Op2, s[1])
+  fermionic1 = has_fermion_string(Op1, s[start_site])
+  fermionic2 = has_fermion_string(Op2, s[end_site])
   if fermionic1 != fermionic2
     error(
       "correlation_matrix: Mixed fermionic and bosonic operators are not supported yet."
     )
   end
 
-  # Decide if we need to calculate a non-hermitian corr. matrix which is roughly double the work.
-  is_cm_hermitian = false #Assume corr-matrix is non-hermitian
-  if haskey(kwargs, :ishermitian) #Did the user explicitly request something?
-    is_cm_hermitian::Bool = get(kwargs, :ishermitian, false) #Honour users request
-  else
-    O1 = op(Op1, s, 1)
-    O2 = op(Op2, s, 1)
+  # Decide if we need to calculate a non-hermitian corr. matrix, which is roughly double the work.
+  is_cm_hermitian = ishermitian
+  if isnothing(is_cm_hermitian)
+    # Assume correlation matrix is non-hermitian
+    is_cm_hermitian = false
+    O1 = op(Op1, s, start_site)
+    O2 = op(Op2, s, start_site)
     O1 /= norm(O1)
     O2 /= norm(O2)
     #We need to decide if O1 ∝ O2 or O1 ∝ O2^dagger allowing for some round off errors.
@@ -751,17 +764,6 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       is_cm_hermitian = false
     end
   end
-
-  if haskey(kwargs, :site_range)
-    @warn "The `site_range` keyword arg. to `correlation_matrix` is deprecated: use the keyword `sites` instead"
-    sites_ = kwargs[:site_range]
-  else
-    sites_ = get(kwargs, :sites, 1:N)
-  end
-  sites = (sites_ isa AbstractRange) ? sites_ : collect(sites_)
-
-  start_site = first(sites)
-  end_site = last(sites)
 
   psi = copy(psi)
   orthogonalize!(psi, start_site)
