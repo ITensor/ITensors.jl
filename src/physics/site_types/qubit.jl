@@ -179,10 +179,10 @@ function ITensors.op(::OpName"Rz", ::SiteType"Qubit"; θ=nothing, ϕ=nothing)
   isone(count(isnothing, (θ, ϕ))) || error(
     "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating an Rz gate, but not both.",
   )
-  isnothing(ϕ) && (ϕ = θ)
+  isnothing(θ) && (θ = ϕ)
   return [
-    exp(-im * ϕ / 2) 0
-    0 exp(im * ϕ / 2)
+    exp(-im * θ / 2) 0
+    0 exp(im * θ / 2)
   ]
 end
 
