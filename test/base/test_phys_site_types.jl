@@ -1,4 +1,4 @@
-using ITensors, Test
+using ITensors, LinearAlgebra, Test
 
 @testset "Physics Sites" begin
   N = 10
@@ -70,6 +70,17 @@ using ITensors, Test
     @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0; 0.0 1.0]
     @test Array(op("√NOT", s, 3), s[3]', s[3]) ≈
       [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
+    @test Array(op("√X", s, 3), s[3]', s[3]) ≈
+      [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
+    @test Array(op("σx", s, 3), s[3]', s[3]) ≈ [0 1; 1 0]
+    @test Array(op("σ1", s, 3), s[3]', s[3]) ≈ [0 1; 1 0]
+    @test Array(op("σy", s, 3), s[3]', s[3]) ≈ [0 -im; im 0]
+    @test Array(op("σ2", s, 3), s[3]', s[3]) ≈ [0 -im; im 0]
+    @test Array(op("iY", s, 3), s[3]', s[3]) ≈ [0 1; -1 0]
+    @test Array(op("iσy", s, 3), s[3]', s[3]) ≈ [0 1; -1 0]
+    @test Array(op("iσ2", s, 3), s[3]', s[3]) ≈ [0 1; -1 0]
+    @test Array(op("σz", s, 3), s[3]', s[3]) ≈ [1 0; 0 -1]
+    @test Array(op("σ3", s, 3), s[3]', s[3]) ≈ [1 0; 0 -1]
     @test Array(op("H", s, 3), s[3]', s[3]) ≈ [1/sqrt(2) 1/sqrt(2); 1/sqrt(2) -1/sqrt(2)]
     @test Array(op("Phase", s, 3), s[3]', s[3]) ≈ [1 0; 0 im]
     @test Array(op("P", s, 3), s[3]', s[3]) ≈ [1 0; 0 im]
@@ -79,9 +90,42 @@ using ITensors, Test
     θ = randn()
     @test Array(op("Rx", s, 3; θ=θ), s[3]', s[3]) ≈
       [cos(θ / 2) -im*sin(θ / 2); -im*sin(θ / 2) cos(θ / 2)]
+    @test Array(op("Ry", s, 3; θ=θ), s[3]', s[3]) ≈
+      [cos(θ / 2) -sin(θ / 2); sin(θ / 2) cos(θ / 2)]
+    @test Array(op("Rz", s, 3; θ=θ), s[3]', s[3]) ≈ [exp(-im * θ / 2) 0; 0 exp(im * θ / 2)]
+    λ = randn()
+    φ = randn()
+    @test Array(op("Rn", s, 3; θ=θ, λ=λ, ϕ=φ), s[3]', s[3]) ≈ [
+      cos(θ / 2) -exp(im * λ)*sin(θ / 2)
+      exp(im * φ)*sin(θ / 2) exp(im * (φ + λ))*cos(θ / 2)
+    ]
+    @test reshape(Array(op("√SWAP", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [1 0 0 0; 0 (1 + im)/2 (1 - im)/2 0; 0 (1 - im)/2 (1 + im)/2 0; 0 0 0 1]
+    @test reshape(Array(op("√iSWAP", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [1 0 0 0; 0 1/√2 im/√2 0; 0 im/√2 1/√2 0; 0 0 0 1]
+    @test reshape(Array(op("iSWAP", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [1 0 0 0; 0 0 im 0; 0 im 0 0; 0 0 0 1]
+    @test reshape(Array(op("Cphase", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 exp(im * θ)]
+    @test reshape(Array(op("RXX", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈ [
+      cos(θ) 0 0 -im*sin(θ)
+      0 cos(θ) -im*sin(θ) 0
+      0 -im*sin(θ) cos(θ) 0
+      -im*sin(θ) 0 0 cos(θ)
+    ]
+    @test reshape(Array(op("RYY", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈ [
+      cos(θ) 0 0 im*sin(θ)
+      0 cos(θ) -im*sin(θ) 0
+      0 -im*sin(θ) cos(θ) 0
+      im*sin(θ) 0 0 cos(θ)
+    ]
+    @test reshape(Array(op("RXY", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [1 0 0 0; 0 cos(θ) im*sin(θ) 0; 0 im*sin(θ) cos(θ) 0; 0 0 0 1]
+    @test reshape(Array(op("RZZ", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [exp(-im * θ) 0 0 0; 0 exp(im * θ) 0 0; 0 0 exp(im * θ) 0; 0 0 0 exp(-im * θ)]
 
     # Test obtaining S=1/2 operators using Qubit tag
-    @test Array(op("X", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 1.0 0.0]
+    @test Matrix(op("X", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 1.0 0.0]
   end
 
   @testset "Spin Half sites" begin
