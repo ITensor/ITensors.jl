@@ -93,6 +93,8 @@ using ITensors, LinearAlgebra, Test
     @test Array(op("Ry", s, 3; θ=θ), s[3]', s[3]) ≈
       [cos(θ / 2) -sin(θ / 2); sin(θ / 2) cos(θ / 2)]
     @test Array(op("Rz", s, 3; θ=θ), s[3]', s[3]) ≈ [exp(-im * θ / 2) 0; 0 exp(im * θ / 2)]
+    # fallback
+    @test Array(op("Rz", s, 3; ϕ=θ), s[3]', s[3]) ≈ [exp(-im * θ / 2) 0; 0 exp(im * θ / 2)]
     λ = randn()
     φ = randn()
     @test Array(op("Rn", s, 3; θ=θ, λ=λ, ϕ=φ), s[3]', s[3]) ≈ [

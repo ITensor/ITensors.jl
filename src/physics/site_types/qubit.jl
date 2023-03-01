@@ -181,6 +181,7 @@ function ITensors.op(::OpName"Rz", ::SiteType"Qubit"; θ::Number)
     0 exp(im * θ / 2)
   ]
 end
+ITensors.op(::OpName"Rz", t::SiteType"Qubit"; ϕ::Number) = op(OpName("Rz"), t; θ=ϕ)
 
 # Rotation around generic axis n̂
 function ITensors.op(::OpName"Rn", ::SiteType"Qubit"; θ::Real, ϕ::Real, λ::Real)
@@ -335,8 +336,8 @@ ITensors.op(::OpName"RYY", t::SiteType"Qubit"; kwargs...) = op("Ryy", t; kwargs.
 function ITensors.op(::OpName"Rxy", t::SiteType"Qubit"; ϕ::Number)
   return [
     1 0 0 0
-    0 cos(ϕ) im*sin(ϕ) 0
-    0 im*sin(ϕ) cos(ϕ) 0
+    0 cos(ϕ) -im*sin(ϕ) 0
+    0 -im*sin(ϕ) cos(ϕ) 0
     0 0 0 1
   ]
 end
