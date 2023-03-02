@@ -387,15 +387,10 @@ function add_trivial_index(A::ITensor, Linds, Rinds)
   return A, vαl, vαr, Linds, Rinds
 end
 
-function remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr)
-  if !isnothing(vαl)
-    Q *= dag(vαl)
-  end
-  if !isnothing(vαr)
-    R *= dag(vαr)
-  end
-  return Q, R
-end
+remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr) = (Q*dag(vαl), R*dag(vαr))
+remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, vαr) = (Q, R*dag(vαr))
+remove_trivial_index(Q::ITensor, R::ITensor, vαl, ::Nothing) = (Q*dag(vαl), R)
+remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, ::Nothing)=(Q,R)
 
 #Force users to knowingly ask for zero indices using qr(A,()) syntax
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
@@ -409,12 +404,9 @@ function qr(A::ITensor, Linds...; kwargs...)
   qtag::TagSet = get(kwargs, :tags, "Link,qr") #tag for new index between Q and R
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
-  lre = isempty(Lis) || isempty(Ris)
-  # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
+  # Make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
   # be empty.  A essentially becomes 1D after collection.
-  if (lre)
-    A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
-  end
+  A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
 
   #
   #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
@@ -448,16 +440,14 @@ function qr(A::ITensor, Linds...; kwargs...)
   #
   Q, R = itensor(QT) * dag(CL), itensor(RT) * dag(CR)
 
-  # Conditionally remove dummy indices.
-  if (lre)
-    Q, R = remove_trivial_index(Q, R, vαl, vαr)
-  end
+  # Remove dummy indices.  No-op if vαl and vαr are Nothing
+  Q, R = remove_trivial_index(Q, R, vαl, vαr)
   #
   # fix up the tag name for the index between Q and R.
   #  
   q = commonind(Q, R)
-  settags!(Q, qtag, q)
-  settags!(R, qtag, q)
+  Q = settags(Q, qtag, q)
+  R = settags(R, qtag, q)
   q = settags(q, qtag)
 
   return Q, R, q
@@ -467,13 +457,10 @@ function rq(A::ITensor, Linds...; kwargs...)
   qtag::TagSet = get(kwargs, :tags, "Link,rq") #tag for new index between Q and R
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
-  lre = isempty(Lis) || isempty(Ris)
   # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
   # be empty.  A essentially becomes 1D after collection.
-  if (lre)
-    A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
-  end
-
+  A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
+  
   #
   #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
   #
@@ -506,16 +493,14 @@ function rq(A::ITensor, Linds...; kwargs...)
   #
   R, Q = itensor(RT) * dag(CL), itensor(QT) * dag(CR)
   
-    # Conditionally remove dummy indices.
-  if (lre)
-    R, Q = remove_trivial_index(R, Q, vαl, vαr)
-  end
+  # Conditionally remove dummy indices.
+  R, Q = remove_trivial_index(R, Q, vαl, vαr)
   #
   # fix up the tag name for the index between Q and R.
   #  
   q = commonind(Q, R)
-  settags!(Q, qtag, q)
-  settags!(R, qtag, q)
+  Q = settags(Q, qtag, q)
+  R = settags(R, qtag, q)
   q = settags(q, qtag)
 
   return R, Q, q
@@ -529,8 +514,8 @@ function lq(A::ITensor, Linds...; kwargs...)
   # fix up the tag name for the index between Q and R.
   #  
   qtag::TagSet = get(kwargs, :tags, "Link,lq") #tag for new index between Q and R
-  settags!(Q, qtag, q)
-  settags!(L, qtag, q)
+  Q = settags(Q, qtag, q)
+  L = settags(L, qtag, q)
   q = settags(q, qtag)
 
   return L, Q, q
@@ -542,8 +527,8 @@ function ql(A::ITensor, Linds...; kwargs...)
   # fix up the tag name for the index between Q and R.
   #  
   qtag::TagSet = get(kwargs, :tags, "Link,ql") #tag for new index between Q and R
-  settags!(Q, qtag, q)
-  settags!(L, qtag, q)
+  Q = settags(Q, qtag, q)
+  L = settags(L, qtag, q)
   q = settags(q, qtag)
 
   return L, Q, q

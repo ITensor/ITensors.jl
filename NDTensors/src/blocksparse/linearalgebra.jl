@@ -342,7 +342,7 @@ function rq(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
 
   for n in 1:nnzblocksT
     q_dim_red = minimum(dims(Rs[n]))
-    NDTensors.setblockdim!(qindl, q_dim_red, n)
+    setblockdim!(qindl, q_dim_red, n)
   end
 
   # correcting the direction of the arrow
@@ -428,7 +428,7 @@ function qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
 
   for n in 1:nnzblocksT
     q_dim_red = minimum(dims(Rs[n]))
-    NDTensors.setblockdim!(qindr, q_dim_red, n)
+    setblockdim!(qindr, q_dim_red, n)
   end
 
   # correcting the direction of the arrow
