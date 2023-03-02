@@ -6,7 +6,7 @@ To run the benchmarks, you should go to the benchmark folder and activate the be
 ```julia
 julia> using ITensors
 
-julia> cd(joinpath(pkgdir(ITensors), "benchmarks"))
+julia> cd(joinpath(pkgdir(ITensors), "benchmark"))
 
 julia> using Pkg
 
@@ -20,8 +20,18 @@ julia> SUITE
 The benchmark results will be stored in the "SUITE" object.
 
 Then you can run the benchmark suite using the [interface from BenchmarkTools](https://juliaci.github.io/BenchmarkTools.jl/stable/manual/#Tuning-and-running-a-BenchmarkGroup).
+```julia
+tune!(SUITE);
+results = run(SUITE; verbose=true, seconds=1)
+```
 
 Alternatively, you can run the benchmarks with the [BencharmkCI interface](https://github.com/tkf/BenchmarkCI.jl#running-benchmarkci-interactively=).
+```julia
+cd(pkgdir(ITensors))
+using BenchmarkCI
+BenchmarkCI.judge()
+BenchmarkCI.displayjudgement()
+```
 
 ## Development
 
@@ -33,13 +43,15 @@ julia> using ITensors
 
 julia> cd(joinpath(pkgdir(ITensors), "benchmark"))
 
-julia> rm("Manifest.toml")
+julia> rm("Manifest.toml"; force=true)
+
+julia> using Pkg
 
 julia> Pkg.activate(".")
 
-julia> Pkg.develop(path="..") # Develop ITensors
-
 julia> Pkg.develop(path=joinpath("..", "NDTensors")) # Develop NDTensors
+
+julia> Pkg.develop(path="..") # Develop ITensors
 
 julia> Pkg.resolve()
 ```

@@ -84,13 +84,17 @@ end
 MPS(sites::Vector{<:Index}, args...; kwargs...) = MPS(Float64, sites, args...; kwargs...)
 
 function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
+  return randomU(Random.default_rng(), eltype, s1, s2)
+end
+
+function randomU(rng::AbstractRNG, eltype::Type{<:Number}, s1::Index, s2::Index)
   if !hasqns(s1) && !hasqns(s2)
     mdim = dim(s1) * dim(s2)
-    RM = randn(eltype, mdim, mdim)
+    RM = randn(rng, eltype, mdim, mdim)
     Q, _ = NDTensors.qr_positive(RM)
     G = itensor(Q, dag(s1), dag(s2), s1', s2')
   else
-    M = randomITensor(eltype, QN(), s1', s2', dag(s1), dag(s2))
+    M = randomITensor(rng, eltype, QN(), s1', s2', dag(s1), dag(s2))
     U, S, V = svd(M, (s1', s2'))
     u = commonind(U, S)
     v = commonind(S, V)
@@ -101,9 +105,15 @@ function randomU(eltype::Type{<:Number}, s1::Index, s2::Index)
 end
 
 function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1)
+  return randomizeMPS!(Random.default_rng(), eltype, M, sites, linkdims)
+end
+
+function randomizeMPS!(
+  rng::AbstractRNG, eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, linkdims=1
+)
   _linkdims = _fill_linkdims(linkdims, sites)
   if isone(length(sites))
-    randn!(M[1])
+    randn!(rng, M[1])
     normalize!(M)
     return M
   end
@@ -119,7 +129,7 @@ function randomizeMPS!(eltype::Type{<:Number}, M::MPS, sites::Vector{<:Index}, l
     for b in brange
       s1 = sites[b]
       s2 = sites[b + db]
-      G = randomU(eltype, s1, s2)
+      G = randomU(rng, eltype, s1, s2)
       T = noprime(G * M[b] * M[b + db])
       rinds = uniqueinds(M[b], M[b + db])
 
@@ -143,11 +153,21 @@ end
 function randomCircuitMPS(
   eltype::Type{<:Number}, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
 )
+  return randomCircuitMPS(Random.default_rng(), eltype, sites, linkdims; kwargs...)
+end
+
+function randomCircuitMPS(
+  rng::AbstractRNG,
+  eltype::Type{<:Number},
+  sites::Vector{<:Index},
+  linkdims::Vector{<:Integer};
+  kwargs...,
+)
   N = length(sites)
   M = MPS(N)
 
   if N == 1
-    M[1] = ITensor(randn(eltype, dim(sites[1])), sites[1])
+    M[1] = ITensor(randn(rng, eltype, dim(sites[1])), sites[1])
     M[1] /= norm(M[1])
     return M
   end
@@ -157,19 +177,19 @@ function randomCircuitMPS(
   d = dim(sites[N])
   chi = min(linkdims[N - 1], d)
   l[N - 1] = Index(chi, "Link,l=$(N-1)")
-  O = NDTensors.random_unitary(eltype, chi, d)
+  O = NDTensors.random_unitary(rng, eltype, chi, d)
   M[N] = itensor(O, l[N - 1], sites[N])
 
   for j in (N - 1):-1:2
     chi *= dim(sites[j])
     chi = min(linkdims[j - 1], chi)
     l[j - 1] = Index(chi, "Link,l=$(j-1)")
-    O = NDTensors.random_unitary(eltype, chi, dim(sites[j]) * dim(l[j]))
+    O = NDTensors.random_unitary(rng, eltype, chi, dim(sites[j]) * dim(l[j]))
     T = reshape(O, (chi, dim(sites[j]), dim(l[j])))
     M[j] = itensor(T, l[j - 1], sites[j], l[j])
   end
 
-  O = NDTensors.random_unitary(eltype, 1, dim(sites[1]) * dim(l[1]))
+  O = NDTensors.random_unitary(rng, eltype, 1, dim(sites[1]) * dim(l[1]))
   l0 = Index(1, "Link,l=0")
   T = reshape(O, (1, dim(sites[1]), dim(l[1])))
   M[1] = itensor(T, l0, sites[1], l[1])
@@ -182,7 +202,13 @@ function randomCircuitMPS(
 end
 
 function randomCircuitMPS(sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...)
-  return randomCircuitMPS(Float64, sites, linkdims; kwargs...)
+  return randomCircuitMPS(Random.default_rng(), sites, linkdims; kwargs...)
+end
+
+function randomCircuitMPS(
+  rng::AbstractRNG, sites::Vector{<:Index}, linkdims::Vector{<:Integer}; kwargs...
+)
+  return randomCircuitMPS(rng, Float64, sites, linkdims; kwargs...)
 end
 
 function _fill_linkdims(linkdims::Vector{<:Integer}, sites::Vector{<:Index})
@@ -207,6 +233,15 @@ MPS with non-uniform bond dimension.
 function randomMPS(
   ::Type{ElT}, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
 ) where {ElT<:Number}
+  return randomMPS(Random.default_rng(), ElT, sites; linkdims)
+end
+
+function randomMPS(
+  rng::AbstractRNG,
+  ::Type{ElT},
+  sites::Vector{<:Index};
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
+) where {ElT<:Number}
   _linkdims = _fill_linkdims(linkdims, sites)
   if any(hasqns, sites)
     error("initial state required to use randomMPS with QNs")
@@ -214,7 +249,7 @@ function randomMPS(
 
   # For non-QN-conserving MPS, instantiate
   # the random MPS directly as a circuit:
-  return randomCircuitMPS(ElT, sites, _linkdims)
+  return randomCircuitMPS(rng, ElT, sites, _linkdims)
 end
 
 """
@@ -229,13 +264,28 @@ default has element type `Float64`.
 MPS with non-uniform bond dimension.
 """
 function randomMPS(sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1)
-  return randomMPS(Float64, sites; linkdims)
+  return randomMPS(Random.default_rng(), sites; linkdims)
+end
+
+function randomMPS(
+  rng::AbstractRNG, sites::Vector{<:Index}; linkdims::Union{Integer,Vector{<:Integer}}=1
+)
+  return randomMPS(rng, Float64, sites; linkdims)
 end
 
 function randomMPS(
   sites::Vector{<:Index}, state; linkdims::Union{Integer,Vector{<:Integer}}=1
 )
-  return randomMPS(Float64, sites, state; linkdims)
+  return randomMPS(Random.default_rng(), sites, state; linkdims)
+end
+
+function randomMPS(
+  rng::AbstractRNG,
+  sites::Vector{<:Index},
+  state;
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
+)
+  return randomMPS(rng, Float64, sites, state; linkdims)
 end
 
 function randomMPS(
@@ -243,10 +293,20 @@ function randomMPS(
   sites::Vector{<:Index},
   state;
   linkdims::Union{Integer,Vector{<:Integer}}=1,
+)
+  return randomMPS(Random.default_rng(), eltype, sites, state; linkdims)
+end
+
+function randomMPS(
+  rng::AbstractRNG,
+  eltype::Type{<:Number},
+  sites::Vector{<:Index},
+  state;
+  linkdims::Union{Integer,Vector{<:Integer}}=1,
 )::MPS
   M = MPS(eltype, sites, state)
   if any(>(1), linkdims)
-    randomizeMPS!(eltype, M, sites, linkdims)
+    randomizeMPS!(rng, eltype, M, sites, linkdims)
   end
   return M
 end
@@ -521,6 +581,12 @@ function replacebond(M0::MPS, b::Int, phi::ITensor; kwargs...)
   return M
 end
 
+# Allows overloading `replacebond!` based on the projected
+# MPO type. By default just calls `replacebond!` on the MPS.
+function replacebond!(PH, M::MPS, b::Int, phi::ITensor; kwargs...)
+  return replacebond!(M, b, phi; kwargs...)
+end
+
 """
     sample!(m::MPS)
 
@@ -534,8 +600,12 @@ orthogonalize!(m,1) will be called before
 computing the sample.
 """
 function sample!(m::MPS)
+  return sample!(Random.default_rng(), m)
+end
+
+function sample!(rng::AbstractRNG, m::MPS)
   orthogonalize!(m, 1)
-  return sample(m)
+  return sample(rng, m)
 end
 
 """
@@ -549,6 +619,10 @@ squaring the components of the tensor
 that the MPS represents
 """
 function sample(m::MPS)
+  return sample(Random.default_rng(), m)
+end
+
+function sample(rng::AbstractRNG, m::MPS)
   N = length(m)
 
   if orthocenter(m) != 1
@@ -568,7 +642,7 @@ function sample(m::MPS)
     # one-by-one and stop when the random
     # number r is below the total prob so far
     pdisc = 0.0
-    r = rand()
+    r = rand(rng)
     # Will need n,An, and pn below
     n = 1
     An = ITensor()
@@ -613,7 +687,7 @@ using efficient MPS techniques. Returns the matrix C.
 
 # Optional Keyword Arguments
 
-  - `site_range = 1:length(psi)`: compute correlations only
+  - `sites = 1:length(psi)`: compute correlations only
      for sites in the given range
   - `ishermitian = false` : if `false`, force independent calculations of the
      matrix elements above and below the diagonal, while if `true` assume they are complex conjugates.
@@ -634,10 +708,23 @@ Czz = correlation_matrix(psi, [1/2 0; 0 -1/2], [1/2 0; 0 -1/2]) # same as above
 
 s = siteinds("Electron", N; conserve_qns=true)
 psi = randomMPS(s, n -> isodd(n) ? "Up" : "Dn"; linkdims=m)
-Cuu = correlation_matrix(psi, "Cdagup", "Cup"; site_range=2:8)
+Cuu = correlation_matrix(psi, "Cdagup", "Cup"; sites=2:8)
 ```
 """
-function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
+function correlation_matrix(
+  psi::MPS, _Op1, _Op2; sites=1:length(psi), site_range=nothing, ishermitian=nothing
+)
+  if !isnothing(site_range)
+    @warn "The `site_range` keyword arg. to `correlation_matrix` is deprecated: use the keyword `sites` instead"
+    sites = site_range
+  end
+  if !(sites isa AbstractRange)
+    sites = collect(sites)
+  end
+
+  start_site = first(sites)
+  end_site = last(sites)
+
   N = length(psi)
   ElT = promote_itensor_eltype(psi)
   s = siteinds(psi)
@@ -645,21 +732,21 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
   Op1 = _Op1 #make copies into which we can insert "F" string operators, and then restore.
   Op2 = _Op2
   onsiteOp = _op_prod(Op1, Op2)
-  fermionic1 = has_fermion_string(Op1, s[1])
-  fermionic2 = has_fermion_string(Op2, s[1])
+  fermionic1 = has_fermion_string(Op1, s[start_site])
+  fermionic2 = has_fermion_string(Op2, s[end_site])
   if fermionic1 != fermionic2
     error(
       "correlation_matrix: Mixed fermionic and bosonic operators are not supported yet."
     )
   end
 
-  # Decide if we need to calculate a non-hermitian corr. matrix which is roughly double the work.
-  is_cm_hermitian = false #Assume corr-matrix is non-hermitian
-  if haskey(kwargs, :ishermitian) #Did the user explicitly request something?
-    is_cm_hermitian::Bool = get(kwargs, :ishermitian, false) #Honour users request
-  else
-    O1 = op(Op1, s, 1)
-    O2 = op(Op2, s, 1)
+  # Decide if we need to calculate a non-hermitian corr. matrix, which is roughly double the work.
+  is_cm_hermitian = ishermitian
+  if isnothing(is_cm_hermitian)
+    # Assume correlation matrix is non-hermitian
+    is_cm_hermitian = false
+    O1 = op(Op1, s, start_site)
+    O2 = op(Op2, s, start_site)
     O1 /= norm(O1)
     O2 /= norm(O2)
     #We need to decide if O1 ∝ O2 or O1 ∝ O2^dagger allowing for some round off errors.
@@ -677,17 +764,6 @@ function correlation_matrix(psi::MPS, _Op1, _Op2; kwargs...)
       is_cm_hermitian = false
     end
   end
-
-  if haskey(kwargs, :site_range)
-    @warn "The `site_range` keyword arg. to `correlation_matrix` is deprecated: use the keyword `sites` instead"
-    sites_ = kwargs[:site_range]
-  else
-    sites_ = get(kwargs, :sites, 1:N)
-  end
-  sites = (sites_ isa AbstractRange) ? sites_ : collect(sites_)
-
-  start_site = first(sites)
-  end_site = last(sites)
 
   psi = copy(psi)
   orthogonalize!(psi, start_site)

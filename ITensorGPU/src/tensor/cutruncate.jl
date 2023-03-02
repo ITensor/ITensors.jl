@@ -8,11 +8,7 @@ function truncate!(P::CuVector{T}; kwargs...)::Tuple{T,T,CuVector{T}} where {T<:
   doRelCutoff::Bool = get(kwargs, :doRelCutoff, true)
   origm = length(P)
   docut = zero(T)
-  # handle the case where nothing is to be cut off
-  minP = minimum(P)
-  if minP > cutoff
-    return zero(T), zero(T), P
-  end
+
   maxP = maximum(P)
   if maxP == zero(T)
     P = CUDA.zeros(T, 1)
@@ -36,8 +32,12 @@ function truncate!(P::CuVector{T}; kwargs...)::Tuple{T,T,CuVector{T}} where {T<:
       err_rP = sub_arr ./ abs.(sub_arr)
       flags = reinterpret(Float64, (signbit.(err_rP) .<< 1 .& 2) .<< 61)
       cut_ind = CUDA.CUBLAS.iamax(length(err_rP), err_rP .* flags) - 1
-      n = min(maxdim, cut_ind)
-      n = max(n, mindim)
+      if cut_ind > 0
+        n = min(maxdim, cut_ind)
+        n = max(n, mindim)
+      else
+        n = maxdim
+      end
       truncerr = T(sum(rP[(n + 1):end]))
     else
       truncerr = zero(T)
@@ -58,8 +58,10 @@ function truncate!(P::CuVector{T}; kwargs...)::Tuple{T,T,CuVector{T}} where {T<:
       if cut_ind > 0
         n = min(maxdim, cut_ind)
         n = max(n, mindim)
-        truncerr = sum(rP[(n + 1):end])
+      else
+        n = maxdim
       end
+      truncerr = sum(rP[(n + 1):end])
       if scale == zero(T)
         truncerr = zero(T)
       else

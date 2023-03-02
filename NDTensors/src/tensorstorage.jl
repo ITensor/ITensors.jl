@@ -40,17 +40,6 @@ end
 
 -(S::TensorStorage) = setdata(S, -data(S))
 
-similar(S::TensorStorage) = setdata(S, similar(data(S)))
-similar(S::TensorStorage, x) = setdata(S, similar(data(S), x))
-
-# Define Base.similar in terms of NDTensors.similar
-Base.similar(t::TensorStorage, args...) = similar(t, args...)
-# To fix method ambiguity
-Base.similar(t::TensorStorage) = similar(t)
-Base.similar(t::TensorStorage, T::Type) = similar(t, T)
-Base.similar(t::TensorStorage, d::Tuple) = similar(t, d)
-Base.similar(t::TensorStorage, d::Vararg{Union{Integer,AbstractUnitRange}}) = similar(t, d)
-
 # Needed for passing Tensor{T,2} to BLAS/LAPACK
 function Base.unsafe_convert(::Type{Ptr{ElT}}, T::TensorStorage{ElT}) where {ElT}
   return Base.unsafe_convert(Ptr{ElT}, data(T))
@@ -79,7 +68,8 @@ Base.imag(S::TensorStorage) = setdata(S, imag(data(S)))
 
 Base.copyto!(S1::TensorStorage, S2::TensorStorage) = (copyto!(data(S1), data(S2)); S1)
 
-Random.randn!(S::TensorStorage) = (randn!(data(S)); S)
+Random.randn!(S::TensorStorage) = randn!(Random.default_rng(), S)
+Random.randn!(rng::AbstractRNG, S::TensorStorage) = (randn!(rng, data(S)); S)
 
 function map(f, x::TensorStorage{T}) where {T}
   if !iszero(f(zero(T)))

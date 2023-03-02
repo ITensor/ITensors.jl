@@ -36,5 +36,15 @@ to_vector_type(arraytype::Type{<:AbstractVector}) = arraytype
 to_vector_type(arraytype::Type{Array}) = Vector
 to_vector_type(arraytype::Type{Array{T}}) where {T} = Vector{T}
 
-set_eltype_if_unspecified(arraytype::Type{Vector{T}}, eltype::Type) where {T} = arraytype
-set_eltype_if_unspecified(arraytype::Type{Vector}, eltype::Type) = Vector{eltype}
+function set_eltype_if_unspecified(
+  arraytype::Type{<:AbstractArray{T}}, eltype::Type=default_eltype()
+) where {T}
+  return arraytype
+end
+
+#TODO transition to set_eltype when working for wrapped types
+function set_eltype_if_unspecified(
+  arraytype::Type{<:AbstractArray}, eltype::Type=default_eltype()
+)
+  return similartype(arraytype, eltype)
+end

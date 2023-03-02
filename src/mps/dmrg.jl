@@ -272,11 +272,17 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
   N = length(psi)
 
   if !isortho(psi) || orthocenter(psi) != 1
-    orthogonalize!(psi, 1)
+    psi = orthogonalize!(PH, psi, 1)
   end
   @assert isortho(psi) && orthocenter(psi) == 1
 
-  position!(PH, psi, 1)
+  if !isnothing(write_when_maxdim_exceeds)
+    if (maxlinkdim(psi) > write_when_maxdim_exceeds) ||
+      (maxdim(sweeps, 1) > write_when_maxdim_exceeds)
+      PH = disk(PH; path=write_path)
+    end
+  end
+  PH = position!(PH, psi, 1)
   energy = 0.0
 
   for sw in 1:nsweep(sweeps)
@@ -287,8 +293,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         maxdim(sweeps, sw) > write_when_maxdim_exceeds
         if outputlevel >= 2
           println(
-            "write_when_maxdim_exceeds = $write_when_maxdim_exceeds and
-            maxdim(sweeps, sw) = $(maxdim(sweeps, sw)), writing environment tensors to disk"
+            "\nWriting environment tensors do disk (write_when_maxdim_exceeds = $write_when_maxdim_exceeds and maxdim(sweeps, sw) = $(maxdim(sweeps, sw))).\nFiles located at path=$write_path\n",
           )
         end
         PH = disk(PH; path=write_path)
@@ -301,7 +306,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
         end
 
         @timeit_debug timer "dmrg: position!" begin
-          position!(PH, psi, b)
+          PH = position!(PH, psi, b)
         end
 
         @debug_check begin
@@ -345,6 +350,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
 
         @timeit_debug timer "dmrg: replacebond!" begin
           spec = replacebond!(
+            PH,
             psi,
             b,
             phi;
@@ -384,6 +390,7 @@ function dmrg(PH, psi0::MPS, sweeps::Sweeps; kwargs...)
           obs;
           energy=energy,
           psi=psi,
+          projected_operator=PH,
           bond=b,
           sweep=sw,
           half_sweep=ha,

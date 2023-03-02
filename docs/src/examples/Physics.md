@@ -1,5 +1,43 @@
 # Physics (SiteType) System Examples
 
+## Obtaining a Predefined Operator
+
+Given an Index carrying a "physical" tag such as "Qubit", "S=1/2", "Boson", etc.
+there are a set of pre-defined operators for each tag. The entire set of operators
+can be found in the section [SiteTypes Included with ITensor](@ref).
+
+If you have an Index `s` carrying a "S=1/2" tag, for example, you can obtain the "Sz"
+operator like this:
+```julia
+op("Sz",s)
+```
+
+Usually indices with physical tags come from an array of indices returned from the `siteinds` function
+```julia
+sites = siteinds("S=1/2",N)
+```
+in which case one might want the "Sz" operator on site 4
+```julia
+Sz4 = op("Sz",sites[4])
+```
+
+## Make a Custom Operator from a Matrix
+
+The `op` function can be passed any matrix, as long as it has the correct dimensions,
+and it will make this into an ITensor representing the operator with the corresponding
+matrix elements.
+
+For example, if we have a two-dimensional Index `s` we could make the "Sz" operator ourselves from
+the matrix
+```julia
+M = [1/2 0 ; 0 -1/2]
+```
+by calling
+```julia
+Sz = op(M,s)
+```
+
+
 ## Making a Custom op Definition
 
 The function `op` is used to obtain operators defined for a 

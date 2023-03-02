@@ -52,7 +52,7 @@ psi0 = randomMPS(sites,2)
 Here we have made a random MPS of bond dimension 2. We could have used a random product
 state instead, but choosing a slightly larger bond dimension can help DMRG avoid getting
 stuck in local minima. We could also set psi to some specific initial state using the 
-function `productMPS`, which is actually required if we were conserving QNs.
+`MPS` constructor, which is actually required if we were conserving QNs.
 
 Finally, we are ready to call DMRG:
 
@@ -365,4 +365,89 @@ let
 
   return
 end
+```
+
+
+## Monitoring the Memory Usage of DMRG
+
+To monitor how much memory (RAM) a DMRG calculation is using while it is running,
+you can use the [Observer](@ref observer) system to make a custom observer object that prints out
+this information. Also the `Base.summarysize` function, which returns the size 
+in bytes of any Julia object is very helpful here.
+
+First we define our custom observer type, `SizeObserver`, and overload the `measure!` function
+for it:
+
+```julia
+mutable struct SizeObserver <: AbstractObserver
+end
+
+function ITensors.measure!(o::SizeObserver; bond, half_sweep, psi, projected_operator, kwargs...)
+  if bond==1 && half_sweep==2
+    psi_size =  Base.format_bytes(Base.summarysize(psi))
+    PH_size =  Base.format_bytes(Base.summarysize(projected_operator))
+    println("|psi| = $psi_size, |PH| = $PH_size")
+  end
+end
+```
+
+The `measure!` function grabs certain helpful keywords passed to it by DMRG, checking 
+`if bond==1 && half_sweep==2` so that it only runs when at the end of a full sweep.
+
+When it runs, it calls `Base.summarysize` on the wavefunction `psi` object and the `projected_operator` object. The `projected_operator`, which is the matrix (Hamiltonian) wrapped into the current MPS basis, is usually the largest-sized object in a DMRG calculation. The code also uses `Base.format_bytes` to turn an integer representing bytes into a human-readable string.
+
+Here is a complete sample code including constructing the observer and passing it to DMRG:
+
+```julia
+using ITensors
+
+mutable struct SizeObserver <: AbstractObserver
+end
+
+function ITensors.measure!(o::SizeObserver; bond, sweep, half_sweep, psi, projected_operator, kwargs...)
+  if bond==1 && half_sweep==2
+    psi_size =  Base.format_bytes(Base.summarysize(psi))
+    PH_size =  Base.format_bytes(Base.summarysize(projected_operator))
+    println("After sweep $sweep, |psi| = $psi_size, |PH| = $PH_size")
+  end
+end
+
+let
+  N = 100
+
+  s = siteinds("S=1/2",N)
+
+  a = OpSum()
+  for n=1:N-1
+    a += "Sz",n,"Sz",n+1
+    a += 0.5,"S+",n,"S-",n+1
+    a += 0.5,"S-",n,"S+",n+1
+  end
+  H = MPO(a,s)
+  psi0 = randomMPS(s,linkdims=4)
+
+  nsweeps = 5
+  maxdim = [10,20,80,160]
+  cutoff = 1E-8
+
+  obs = SizeObserver()
+
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff, observer=obs)
+
+  return
+end
+```
+
+Example output:
+```
+After sweep 1, |psi| = 211.312 KiB, |PH| = 593.984 KiB
+After sweep 1 energy=-43.95323393592883  maxlinkdim=10 maxerr=8.26E-06 time=0.098
+After sweep 2, |psi| = 641.000 KiB, |PH| = 1.632 MiB
+After sweep 2 energy=-44.10791340895817  maxlinkdim=20 maxerr=7.39E-07 time=0.132
+After sweep 3, |psi| = 1.980 MiB, |PH| = 5.066 MiB
+After sweep 3 energy=-44.12593605906466  maxlinkdim=44 maxerr=9.96E-09 time=0.256
+After sweep 4, |psi| = 2.863 MiB, |PH| = 7.246 MiB
+After sweep 4 energy=-44.127710946536645  maxlinkdim=56 maxerr=9.99E-09 time=0.445
+After sweep 5, |psi| = 3.108 MiB, |PH| = 7.845 MiB
+After sweep 5 energy=-44.127736798226536  maxlinkdim=57 maxerr=9.98E-09 time=0.564
 ```

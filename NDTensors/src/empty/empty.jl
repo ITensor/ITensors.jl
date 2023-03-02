@@ -144,14 +144,23 @@ function similar(T::EmptyTensor, ::Type{ElT}) where {ElT<:Number}
 end
 
 function randn!!(T::EmptyTensor)
+  return randn!!(Random.default_rng(), T)
+end
+
+function randn!!(rng::AbstractRNG, T::EmptyTensor)
   Tf = similar(fulltype(T), inds(T))
-  randn!(Tf)
+  randn!(rng, Tf)
   return Tf
 end
 
 # Default to Float64
 function randn!!(T::EmptyTensor{EmptyNumber})
-  return randn!!(similar(T, Float64))
+  return randn!!(Random.default_rng(), T)
+end
+
+# Default to Float64
+function randn!!(rng::AbstractRNG, T::EmptyTensor{EmptyNumber})
+  return randn!!(rng, similar(T, Float64))
 end
 
 function _fill!!(::Type{ElT}, T::EmptyTensor, α::Number) where {ElT}
@@ -315,25 +324,25 @@ function promote_rule(::Type{T1}, ::Type{T2}) where {T1<:EmptyStorage,T2<:Tensor
   return promote_type(similartype(T2, eltype(T1)), T2)
 end
 
-function contraction_output(T1::EmptyTensor, T2::EmptyTensor, is)
-  fulltypeR = contraction_output_type(fulltype(T1), fulltype(T2), typeof(is))
+function contraction_output(T1::EmptyTensor, T2::EmptyTensor, indsR::Tuple)
+  fulltypeR = contraction_output_type(fulltype(T1), fulltype(T2), indsR)
   storagetypeR = storagetype(fulltypeR)
   emptystoragetypeR = emptytype(storagetypeR)
-  return Tensor(emptystoragetypeR(), is)
+  return Tensor(emptystoragetypeR(), indsR)
 end
 
-function contraction_output(T1::Tensor, T2::EmptyTensor, is)
-  fulltypeR = contraction_output_type(typeof(T1), fulltype(T2), typeof(is))
+function contraction_output(T1::Tensor, T2::EmptyTensor, indsR)
+  fulltypeR = contraction_output_type(typeof(T1), fulltype(T2), indsR)
   storagetypeR = storagetype(fulltypeR)
   emptystoragetypeR = emptytype(storagetypeR)
-  return Tensor(emptystoragetypeR(), is)
+  return Tensor(emptystoragetypeR(), indsR)
 end
 
-function contraction_output(T1::EmptyTensor, T2::Tensor, is)
-  fulltypeR = contraction_output_type(fulltype(T1), typeof(T2), typeof(is))
+function contraction_output(T1::EmptyTensor, T2::Tensor, indsR)
+  fulltypeR = contraction_output_type(fulltype(T1), typeof(T2), indsR)
   storagetypeR = storagetype(fulltypeR)
   emptystoragetypeR = emptytype(storagetypeR)
-  return Tensor(emptystoragetypeR(), is)
+  return Tensor(emptystoragetypeR(), indsR)
 end
 
 function permutedims!!(R::Tensor, T::EmptyTensor, perm::Tuple, f::Function=(r, t) -> t)
