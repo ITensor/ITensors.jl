@@ -422,8 +422,8 @@ function rq(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   q = dim(q) < dim(r) ? sim(q) : sim(r)
   Qinds = IndsT((q, ind(T, 2)))
   Linds = IndsT((ind(T, 1), q))
-  Q = NDTensors.tensor(NDTensors.Dense(vec(Matrix(QM))), Qinds) #Q was strided
-  R = NDTensors.tensor(NDTensors.Dense(vec(RM)), Linds)
+  Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
+  R = tensor(Dense(vec(RM)), Linds)
   return R, Q
 end
 
