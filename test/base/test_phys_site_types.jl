@@ -580,6 +580,35 @@ using ITensors, LinearAlgebra, Test
     @test op(s, "a†", 2) ≈ itensor([0 0 0; 1 0 0; 0 √2 0], s[2]', dag(s[2]))
     @test op(s, "A", 2) ≈ itensor([0 1 0; 0 0 √2; 0 0 0], s[2]', dag(s[2]))
     @test op(s, "a", 2) ≈ itensor([0 1 0; 0 0 √2; 0 0 0], s[2]', dag(s[2]))
+    @test op(s, "a†b†", 2, 3) ≈ itensor(
+      kron([0 0 0; 1 0 0; 0 √2 0], [0 0 0; 1 0 0; 0 √2 0]),
+      s[3]',
+      s[2]',
+      dag(s[3]),
+      dag(s[2]),
+    )
+    @test op(s, "a†b", 2, 3) ≈ itensor(
+      kron([0 0 0; 1 0 0; 0 √2 0], [0 1 0; 0 0 √2; 0 0 0]),
+      s[3]',
+      s[2]',
+      dag(s[3]),
+      dag(s[2]),
+    )
+    @test op(s, "ab†", 2, 3) ≈ itensor(
+      kron([0 1 0; 0 0 √2; 0 0 0], [0 0 0; 1 0 0; 0 √2 0]),
+      s[3]',
+      s[2]',
+      dag(s[3]),
+      dag(s[2]),
+    )
+    @test op(s, "ab", 2, 3) ≈ itensor(
+      kron([0 1 0; 0 0 √2; 0 0 0], [0 1 0; 0 0 √2; 0 0 0]),
+      s[3]',
+      s[2]',
+      dag(s[3]),
+      dag(s[2]),
+    )
+    @test_throws ErrorException op(ITensors.OpName("ab"), ITensors.SiteType(st))
 
     # With QNs
     s = siteinds(st, 4; dim=d, conserve_qns=true)
