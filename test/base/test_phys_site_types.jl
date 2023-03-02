@@ -200,7 +200,7 @@ using ITensors, LinearAlgebra, Test
     ]
     @test reshape(
       Array(op("CRn", s, 3, 5; θ=θ, λ=λ, ϕ=φ), s[5]', s[3]', s[5], s[3]), (4, 4)
-      ) ≈ [
+    ) ≈ [
       1 0 0 0
       0 1 0 0
       0 0 cos(θ / 2) -exp(im * λ)*sin(θ / 2)
