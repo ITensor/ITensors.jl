@@ -150,7 +150,8 @@ end
 
 ITensors.space(::SiteType"SpinOne"; kwargs...) = space(SiteType("S=1"); kwargs...)
 
-ITensors.state(::SiteType"SpinOne", st::AbstractString) = state(SiteType("S=1"), st)
+ITensors.state(name::StateName, ::SiteType"SpinOne") = state(name, SiteType("S=1"))
+ITensors.val(name::ValName, ::SiteType"SpinOne") = val(name, SiteType("S=1"))
 
 function ITensors.op!(Op::ITensor, o::OpName, ::SiteType"SpinOne", s::Index)
   return op!(Op, o, SiteType("S=1"), s)
