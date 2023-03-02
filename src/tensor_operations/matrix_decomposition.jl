@@ -428,20 +428,20 @@ function qr(A::ITensor, Linds...; kwargs...)
   AC = permute(AC, cL, cR; allow_alias=true)
   # qr the matrix.
   QT, RT = qr(tensor(AC); kwargs...)
-
-  # We need a use case that fails without this code.
-  # correcting the fluxes of the two tensors, such that Q has 0 flux for all blocks
+  #
+  # correct the fluxes of the two tensors, such that Q has 0 flux for all blocks
   # and R has the total flux of the system
-  # if hasqns(AC)
-  # for b in nzblocks(QT)
-  #     i1 = inds(QT)[1]
-  #     i2 = inds(QT)[2]
-  #     r1 = inds(RT)[1]
-  #     newqn = -dir(i2) * flux(i1 => Block(b[1]))
-  #     ITensors.setblockqn!(i2, newqn, b[2])
-  #     ITensors.setblockqn!(r1, newqn, b[2])
-  # end
-  # end
+  # 
+  if hasqns(AC)
+    for b in nzblocks(QT)
+        i1 = inds(QT)[1]
+        i2 = inds(QT)[2]
+        r1 = inds(RT)[1]
+        newqn = -dir(i2) * flux(i1 => Block(b[1]))
+        ITensors.setblockqn!(i2, newqn, b[2])
+        ITensors.setblockqn!(r1, newqn, b[2])
+    end
+  end
 
   #
   #  Undo the combine oepration, to recover all tensor indices.
@@ -486,13 +486,27 @@ function rq(A::ITensor, Linds...; kwargs...)
   AC = permute(AC, cL, cR; allow_alias=true)
   # qr the matrix.
   RT, QT = NDTensors.rq(tensor(AC); kwargs...)
-
+  #
+  # correct the fluxes of the two tensors, such that Q has 0 flux for all blocks
+  # and R has the total flux of the system
+  # 
+  if hasqns(AC)
+    for b in nzblocks(QT)
+        
+        i1 = inds(QT)[1]
+        i2 = inds(QT)[2]
+        r2 = inds(RT)[2]
+        newqn = -dir(i1) * flux(i2 => Block(b[2]))
+        ITensors.setblockqn!(i1, newqn, b[1])
+        ITensors.setblockqn!(r2, newqn, b[1])
+    end
+  end
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
   R, Q = itensor(RT) * dag(CL), itensor(QT) * dag(CR)
-
-  # Conditionally remove dummy indices.
+  
+    # Conditionally remove dummy indices.
   if (lre)
     R, Q = remove_trivial_index(R, Q, vαl, vαr)
   end
