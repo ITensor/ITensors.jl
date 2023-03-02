@@ -608,35 +608,63 @@ B = randomITensor(ComplexF64,undef,k,j)
 ```
 """
 function randomITensor(::Type{S}, is::Indices) where {S<:Number}
+  return randomITensor(Random.default_rng(), S, is)
+end
+
+function randomITensor(rng::AbstractRNG, ::Type{S}, is::Indices) where {S<:Number}
   T = ITensor(S, undef, is)
-  randn!(T)
+  randn!(rng, T)
   return T
 end
 
 function randomITensor(::Type{S}, is...) where {S<:Number}
-  return randomITensor(S, indices(is...))
+  return randomITensor(Random.default_rng(), S, is...)
+end
+
+function randomITensor(rng::AbstractRNG, ::Type{S}, is...) where {S<:Number}
+  return randomITensor(rng, S, indices(is...))
 end
 
 # To fix ambiguity with QN version
-function randomITensor(::Type{ElT}, ::Tuple{}) where {ElT<:Number}
-  return randomITensor(ElT, Index{Int}[])
+function randomITensor(::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return randomITensor(Random.default_rng(), ElT, is)
+end
+
+# To fix ambiguity with QN version
+function randomITensor(rng::AbstractRNG, ::Type{ElT}, is::Tuple{}) where {ElT<:Number}
+  return randomITensor(rng, ElT, Index{Int}[])
 end
 
 # To fix ambiguity with QN version
 function randomITensor(is::Tuple{})
-  return randomITensor(Float64, is)
+  return randomITensor(Random.default_rng(), is)
+end
+
+# To fix ambiguity with QN version
+function randomITensor(rng::AbstractRNG, is::Tuple{})
+  return randomITensor(rng, Float64, is)
 end
 
 # To fix ambiguity errors with QN version
 function randomITensor(::Type{ElT}) where {ElT<:Number}
-  return randomITensor(ElT, ())
+  return randomITensor(Random.default_rng(), ElT)
 end
 
-randomITensor(is::Indices) = randomITensor(Float64, is)
-randomITensor(is...) = randomITensor(Float64, indices(is...))
+# To fix ambiguity errors with QN version
+function randomITensor(rng::AbstractRNG, ::Type{ElT}) where {ElT<:Number}
+  return randomITensor(rng, ElT, ())
+end
+
+randomITensor(is::Indices) = randomITensor(Random.default_rng(), is)
+randomITensor(rng::AbstractRNG, is::Indices) = randomITensor(rng, Float64, is)
+randomITensor(is...) = randomITensor(Random.default_rng(), is...)
+randomITensor(rng::AbstractRNG, is...) = randomITensor(rng, Float64, indices(is...))
 
 # To fix ambiguity errors with QN version
-randomITensor() = randomITensor(Float64, ())
+randomITensor() = randomITensor(Random.default_rng())
+
+# To fix ambiguity errors with QN version
+randomITensor(rng::AbstractRNG) = randomITensor(rng, Float64, ())
 
 copy(T::ITensor)::ITensor = itensor(copy(tensor(T)))
 
@@ -955,6 +983,16 @@ end
 
 removeqns(T::ITensor) = dense(T)
 
+"""
+    denseblocks(T::ITensor)
+
+Make a new ITensor where any blocks which have a sparse format, such
+as diagonal sparsity, are made dense while still preserving the outer
+block-sparse structure. This method avoids allocating new data if possible.
+
+For example, an ITensor with DiagBlockSparse storage will have BlockSparse storage
+afterwards.
+"""
 denseblocks(D::ITensor) = itensor(denseblocks(tensor(D)))
 
 """
@@ -1709,7 +1747,11 @@ function isapprox(A::ITensor, B::ITensor; kwargs...)
 end
 
 function randn!(T::ITensor)
-  return settensor!(T, randn!!(tensor(T)))
+  return randn!(Random.default_rng(), T)
+end
+
+function randn!(rng::AbstractRNG, T::ITensor)
+  return settensor!(T, randn!!(rng, tensor(T)))
 end
 
 norm(T::ITensor) = norm(tensor(T))
@@ -1854,6 +1896,19 @@ end
 # in the future.
 function _map!!(f::Function, R::Tensor, T1::Tensor, T2::Tensor)
   perm = NDTensors.getperm(inds(R), inds(T2))
+  if !isperm(perm)
+    error("""
+          You are trying to add an ITensor with indices:
+
+          $(inds(T2))
+
+          into an ITensor with indices:
+
+          $(inds(R))
+
+          but the indices are not permutations of each other.
+          """)
+  end
   if hasqns(T2) && hasqns(R)
     # Check that Index arrows match
     for (n, p) in enumerate(perm)

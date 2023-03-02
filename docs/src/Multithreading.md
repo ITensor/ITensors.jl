@@ -36,12 +36,12 @@ julia> BLAS.vendor()  # Check which BLAS you are using
 
 julia> using ITensors
 
-julia> ITensors.blas_get_num_threads()
+julia> BLAS.get_num_threads()
 6
 
 julia> BLAS.set_num_threads(4)
 
-julia> ITensors.blas_get_num_threads()
+julia> BLAS.get_num_threads()
 4
 ```
 Note that in Julia v1.6, you will be able to use the command `using LinearAlgebra; BLAS.get_num_threads()`.
@@ -106,7 +106,7 @@ function main(; d = 20, order = 4)
   A = randomITensor(is'..., dag(is)...)
   B = randomITensor(is'..., dag(is)...)
 
-  ITensors.disable_threaded_blocksparse()
+  ITensors.enable_threaded_blocksparse(false)
 
   println("Serial contract:")
   @disable_warn_order begin
@@ -116,9 +116,9 @@ function main(; d = 20, order = 4)
 
   println("Threaded contract:")
   @disable_warn_order begin
-    ITensors.enable_threaded_blocksparse()
+    ITensors.enable_threaded_blocksparse(true)
     C_threaded_contract = @btime $A' * $B samples = 5
-    ITensors.disable_threaded_blocksparse()
+    ITensors.enable_threaded_blocksparse(false)
   end
   println()
   @show C_contract ≈ C_threaded_contract
@@ -138,7 +138,7 @@ julia> main(d = 20, order = 4)
 
 Threads.nthreads() = 5
 Sys.CPU_THREADS = 6
-ITensors.blas_get_num_threads() = 1
+BLAS.get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 
 Serial contract:
@@ -160,24 +160,20 @@ using Random
 include(joinpath(ITensors.examples_dir(), "src", "electronk.jl"))
 include(joinpath(ITensors.examples_dir(), "src", "hubbard.jl"))
 
-function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
-                maxdim::Int = 3000, conserve_ky = true, splitblocks = true,
-                nsweeps = 10, blas_num_threads = 1, strided_num_threads = 1,
-                use_threaded_blocksparse = true, outputlevel = 1,
-                seed = 1234)
+function main(; Nx::Int=6, Ny::Int=3, U::Float64=4.0, t::Float64=1.0,
+                maxdim::Int=3000, conserve_ky=true,
+                nsweeps=10, blas_num_threads=1, strided_num_threads=1,
+                threaded_blocksparse=true, outputlevel=1,
+                seed=1234)
   Random.seed!(seed)
   ITensors.Strided.set_num_threads(strided_num_threads)
   BLAS.set_num_threads(blas_num_threads)
-  if use_threaded_blocksparse
-    ITensors.enable_threaded_blocksparse()
-  else
-    ITensors.disable_threaded_blocksparse()
-  end
+  ITensors.enable_threaded_blocksparse(threaded_blocksparse)
 
   if outputlevel > 0
     @show Threads.nthreads()
     @show Sys.CPU_THREADS
-    @show ITensors.blas_get_num_threads()
+    @show BLAS.get_num_threads()
     @show ITensors.Strided.get_num_threads()
     @show ITensors.using_threaded_blocksparse()
     println()
@@ -185,23 +181,15 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
 
   N = Nx * Ny
 
-  maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
+  maxdim = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
   cutoff = 1E-6
   noise = [1E-6, 1E-7, 1E-8, 0.0]
 
-  sites = siteinds("ElecK", N; conserve_qns = true,
-                   conserve_ky = conserve_ky, modulus_ky = Ny)
+  sites = siteinds("ElecK", N; conserve_qns=true,
+                   conserve_ky, modulus_ky=Ny)
 
-  if outputlevel > 0
-    # The splitblocks option makes the MPO more sparse but also
-    # introduces more blocks.
-    # It generally improves DMRG performance
-    # at large bond dimensions.
-    @show splitblocks
-  end
-
-  hubbard_ops = hubbard(Nx = Nx, Ny = Ny, t = t, U = U, ky = true)
-  H = MPO(hubbard_ops, sites; splitblocks=splitblocks)
+  hubbard_ops = hubbard(Nx, Ny, t, U, ky=true)
+  H = MPO(hubbard_ops, sites)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
@@ -210,29 +198,16 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
     @show nnzblocks(H[end÷2])
   end
 
-  # Create start state
-  state = Vector{String}(undef, N)
-  for i in 1:N
-    x = (i - 1) ÷ Ny
-    y = (i - 1) % Ny
-    if x % 2 == 0
-      if y % 2 == 0
-        state[i] = "Up"
-      else
-        state[i] = "Dn"
-      end
-    else
-      if y % 2 == 0
-        state[i] = "Dn"
-      else
-        state[i] = "Up"
-      end
-    end
+  # Create starting state with checkerboard
+  # pattern
+  state = map(CartesianIndices((Ny, Nx))) do I
+    return iseven(I[1]) ⊻ iseven(I[2]) ? "↓" : "↑"
   end
+  display(state)
 
-  psi0 = randomMPS(sites, state, 10)
+  psi0 = randomMPS(sites, state; linkdims=10)
 
-  energy, psi = @time dmrg(H, psi0; nsweeps, maxdims, cutoff, noise, outputlevel = outputlevel)
+  energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel)
 
   if outputlevel > 0
     @show Nx, Ny
@@ -245,10 +220,10 @@ function main(; Nx::Int = 6, Ny::Int = 3, U::Float64 = 4.0, t::Float64 = 1.0,
 end
 
 println("Without threaded block sparse:\n")
-main(nsweeps = 10, use_threaded_blocksparse = false)
+main(; nsweeps=10, threaded_blocksparse=false)
 println()
 println("With threaded block sparse:\n")
-main(nsweeps = 10, use_threaded_blocksparse = true)
+main(; nsweeps=10, threaded_blocksparse=true)
 println()
 ```
 which when run on a laptop with 6 cores gives (after running once
@@ -258,7 +233,7 @@ Without threaded block sparse:
 
 Threads.nthreads() = 5
 Sys.CPU_THREADS = 6
-ITensors.blas_get_num_threads() = 1
+BLAS.get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 ITensors.using_threaded_blocksparse() = false
 
@@ -286,7 +261,7 @@ With threaded block sparse:
 
 Threads.nthreads() = 5
 Sys.CPU_THREADS = 6
-ITensors.blas_get_num_threads() = 1
+BLAS.get_num_threads() = 1
 ITensors.Strided.get_num_threads() = 1
 ITensors.using_threaded_blocksparse() = true
 

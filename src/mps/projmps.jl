@@ -113,5 +113,6 @@ function position!(P::ProjMPS, psi::MPS, pos::Int)
   #These next two lines are needed 
   #when moving lproj and rproj backward
   P.lpos = pos - 1
-  return P.rpos = pos + nsite(P)
+  P.rpos = pos + nsite(P)
+  return P
 end
