@@ -58,6 +58,13 @@ using ITensors, LinearAlgebra, Test
     @test qn(s, 1) == QN("Parity", 0, 2)
     @test qn(s, 2) == QN("Parity", 1, 2)
 
+    s = siteind("Qubit"; conserve_number=true)
+    @test hastags(s, "Qubit,Site")
+    @test dim(s) == 2
+    @test nblocks(s) == 2
+    @test qn(s, 1) == QN("Number", 0)
+    @test qn(s, 2) == QN("Number", 1)
+
     s = siteind("Qubit"; conserve_number=true, conserve_parity=true)
     @test hastags(s, "Qubit,Site")
     @test dim(s) == 2
@@ -130,6 +137,10 @@ using ITensors, LinearAlgebra, Test
       cos(θ / 2) -exp(im * λ)*sin(θ / 2)
       exp(im * φ)*sin(θ / 2) exp(im * (φ + λ))*cos(θ / 2)
     ]
+    @test Array(op("Rn̂", s, 3; θ=θ, λ=λ, ϕ=φ), s[3]', s[3]) ≈ [
+      cos(θ / 2) -exp(im * λ)*sin(θ / 2)
+      exp(im * φ)*sin(θ / 2) exp(im * (φ + λ))*cos(θ / 2)
+    ]
     @test Array(op("Splus", s, 3), s[3]', s[3]) ≈ [0 1; 0 0]
     @test Array(op("Sminus", s, 3), s[3]', s[3]) ≈ [0 0; 1 0]
     @test Array(op("S²", s, 3), s[3]', s[3]) ≈ [0.75 0; 0 0.75]
@@ -186,6 +197,22 @@ using ITensors, LinearAlgebra, Test
       0 1 0 0
       0 0 exp(-im * θ / 2) 0
       0 0 0 exp(im * θ / 2)
+    ]
+    @test reshape(
+      Array(op("CRn", s, 3, 5; θ=θ, λ=λ, ϕ=φ), s[5]', s[3]', s[5], s[3]), (4, 4)
+    ) ≈ [
+      1 0 0 0
+      0 1 0 0
+      0 0 cos(θ / 2) -exp(im * λ)*sin(θ / 2)
+      0 0 exp(im * φ)*sin(θ / 2) exp(im * (φ + λ))*cos(θ / 2)
+    ]
+    @test reshape(
+      Array(op("CRn̂", s, 3, 5; θ=θ, λ=λ, ϕ=φ), s[5]', s[3]', s[5], s[3]), (4, 4)
+    ) ≈ [
+      1 0 0 0
+      0 1 0 0
+      0 0 cos(θ / 2) -exp(im * λ)*sin(θ / 2)
+      0 0 exp(im * φ)*sin(θ / 2) exp(im * (φ + λ))*cos(θ / 2)
     ]
     @test reshape(Array(op("CX", s, 3, 5), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈ [
       1 0 0 0
