@@ -198,7 +198,7 @@ using ITensors, LinearAlgebra, Test
       0 0 exp(-im * θ / 2) 0
       0 0 0 exp(im * θ / 2)
     ]
-    @test reshape(Array(op("CRn", s, 3; θ=θ, λ=λ, ϕ=φ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈
+    @test reshape(Array(op("CRn", s, 3, 5; θ=θ, λ=λ, ϕ=φ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈
       [
       1 0 0 0
       0 1 0 0
@@ -206,7 +206,7 @@ using ITensors, LinearAlgebra, Test
       0 0 exp(im * φ)*sin(θ / 2) exp(im * (φ + λ))*cos(θ / 2)
     ]
     @test reshape(
-      Array(op("CRn̂", s, 3; θ=θ, λ=λ, ϕ=φ), s[5]', s[3]', s[5], s[3]), (4, 4)
+      Array(op("CRn̂", s, 3;, 5 θ=θ, λ=λ, ϕ=φ), s[5]', s[3]', s[5], s[3]), (4, 4)
     ) ≈ [
       1 0 0 0
       0 1 0 0
