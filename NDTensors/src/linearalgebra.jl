@@ -463,7 +463,7 @@ rq!(A::AbstractMatrix) = rq!(A)
 # about unpacking Q and R from the A matrix.
 #
 function rq!(A::StridedMatrix{<:LAPACK.BlasFloat})
-  tau = similar(A, Base.min(size(A)...))
+  tau = Base.similar(A, Base.min(size(A)...))
   x = LAPACK.gerqf!(A, tau)
 
   # Unpack R from the lower portion of A, before orgql! mangles it!
