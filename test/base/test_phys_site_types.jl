@@ -392,6 +392,8 @@ using ITensors, LinearAlgebra, Test
     @test C ≈ [0.0 1; 0 0]
     Cdag = Array(op(s, "Cdag"), s', s)
     @test Cdag ≈ [0.0 0; 1 0]
+    Cdag = Array(op(s, "cdag"), s', s)
+    @test Cdag ≈ [0.0 0; 1 0]
     Cdag = Array(op(s, "c†"), s', s)
     @test Cdag ≈ [0.0 0; 1 0]
     F = Array(op(s, "F"), s', s)
@@ -400,6 +402,7 @@ using ITensors, LinearAlgebra, Test
     @test has_fermion_string("C", s)
     @test has_fermion_string("c", s)
     @test has_fermion_string("Cdag", s)
+    @test has_fermion_string("cdag", s)
     @test has_fermion_string("c†", s)
     @test has_fermion_string("C*F", s)
     @test has_fermion_string("c*F", s)
@@ -414,6 +417,9 @@ using ITensors, LinearAlgebra, Test
     @test qn(s, 1) == QN("Nf", 0, -1)
     @test qn(s, 2) == QN("Nf", 1, -1)
     s = siteind("Fermion"; conserve_nfparity=true)
+    @test qn(s, 1) == QN("NfParity", 0, -2)
+    @test qn(s, 2) == QN("NfParity", 1, -2)
+    s = siteind("Fermion"; conserve_parity=true)
     @test qn(s, 1) == QN("NfParity", 0, -2)
     @test qn(s, 2) == QN("NfParity", 1, -2)
     s = siteind("Fermion"; conserve_qns=false)
@@ -575,6 +581,10 @@ using ITensors, LinearAlgebra, Test
     @test qn(s, 3) == QN(("Sz", -1), ("NfParity", 1, -2))
     @test qn(s, 4) == QN(("Sz", 0), ("NfParity", 0, -2))
     s = siteind("Electron"; conserve_nfparity=true)
+    @test qn(s, 1) == QN("NfParity", 0, -2)
+    @test qn(s, 2) == QN("NfParity", 1, -2)
+    @test qn(s, 3) == QN("NfParity", 0, -2)
+    s = siteind("Electron"; conserve_parity=true)
     @test qn(s, 1) == QN("NfParity", 0, -2)
     @test qn(s, 2) == QN("NfParity", 1, -2)
     @test qn(s, 3) == QN("NfParity", 0, -2)
