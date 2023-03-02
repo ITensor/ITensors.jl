@@ -66,6 +66,27 @@ using ITensors, LinearAlgebra, Test
     Z = op("Z", s, 5)
     @test hasinds(Z, s[5]', s[5])
 
+    @test Vector(state("+", s[3])) ≈ (1 / √2) * [1, 1]
+    @test Vector(state("X+", s[3])) ≈ (1 / √2) * [1, 1]
+    @test Vector(state("Xp", s[3])) ≈ (1 / √2) * [1, 1]
+    @test Vector(state("-", s[3])) ≈ (1 / √2) * [1, -1]
+    @test Vector(state("X-", s[3])) ≈ (1 / √2) * [1, -1]
+    @test Vector(state("Xm", s[3])) ≈ (1 / √2) * [1, -1]
+    @test Vector(state("i", s[3])) ≈ (1 / √2) * [1, im]
+    @test Vector(state("Yp", s[3])) ≈ (1 / √2) * [1, im]
+    @test Vector(state("Y+", s[3])) ≈ (1 / √2) * [1, im]
+    @test Vector(state("-i", s[3])) ≈ (1 / √2) * [1, -im]
+    @test Vector(state("Y-", s[3])) ≈ (1 / √2) * [1, -im]
+    @test Vector(state("Ym", s[3])) ≈ (1 / √2) * [1, -im]
+    @test Vector(state("Z+", s[3])) ≈ [1, 0]
+    @test Vector(state("Zp", s[3])) ≈ [1, 0]
+    @test Vector(state("Z-", s[3])) ≈ [0, 1]
+    @test Vector(state("Zm", s[3])) ≈ [0, 1]
+    @test Vector(state("Tetra1", s[3])) ≈ [1, 0]
+    @test Vector(state("Tetra2", s[3])) ≈ (1 / √3) * [1, √2]
+    @test Vector(state("Tetra3", s[3])) ≈ (1 / √3) * [1, √2 * exp(im * 2π / 3)]
+    @test Vector(state("Tetra4", s[3])) ≈ (1 / √3) * [1, √2 * exp(im * 4π / 3)]
+
     @test_throws ArgumentError op(s, "Fake", 2)
     @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0; 0.0 1.0]
     @test Array(op("√NOT", s, 3), s[3]', s[3]) ≈
@@ -101,11 +122,22 @@ using ITensors, LinearAlgebra, Test
       cos(θ / 2) -exp(im * λ)*sin(θ / 2)
       exp(im * φ)*sin(θ / 2) exp(im * (φ + λ))*cos(θ / 2)
     ]
+    @test Array(op("Splus", s, 3), s[3]', s[3]) ≈ [0 1; 0 0]
+    @test Array(op("Sminus", s, 3), s[3]', s[3]) ≈ [0 0; 1 0]
+    @test Array(op("S²", s, 3), s[3]', s[3]) ≈ [0.75 0; 0 0.75]
+    @test Array(op("Proj0", s, 3), s[3]', s[3]) ≈ [1 0; 0 0]
+    @test Array(op("Proj1", s, 3), s[3]', s[3]) ≈ [0 0; 0 1]
     @test reshape(Array(op("√SWAP", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [1 0 0 0; 0 (1 + im)/2 (1 - im)/2 0; 0 (1 - im)/2 (1 + im)/2 0; 0 0 0 1]
+    @test reshape(Array(op("√Swap", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
       [1 0 0 0; 0 (1 + im)/2 (1 - im)/2 0; 0 (1 - im)/2 (1 + im)/2 0; 0 0 0 1]
     @test reshape(Array(op("√iSWAP", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
       [1 0 0 0; 0 1/√2 im/√2 0; 0 im/√2 1/√2 0; 0 0 0 1]
+    @test reshape(Array(op("√iSwap", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [1 0 0 0; 0 1/√2 im/√2 0; 0 im/√2 1/√2 0; 0 0 0 1]
     @test reshape(Array(op("iSWAP", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
+      [1 0 0 0; 0 0 im 0; 0 im 0 0; 0 0 0 1]
+    @test reshape(Array(op("iSwap", s, 3, 5), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
       [1 0 0 0; 0 0 im 0; 0 im 0 0; 0 0 0 1]
     @test reshape(Array(op("Cphase", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
       [1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 exp(im * θ)]
@@ -125,7 +157,38 @@ using ITensors, LinearAlgebra, Test
       [1 0 0 0; 0 cos(θ) -im*sin(θ) 0; 0 -im*sin(θ) cos(θ) 0; 0 0 0 1]
     @test reshape(Array(op("RZZ", s, 3, 5; ϕ=θ), s[3]', s[5]', s[3], s[5]), (4, 4)) ≈
       [exp(-im * θ) 0 0 0; 0 exp(im * θ) 0 0; 0 0 exp(im * θ) 0; 0 0 0 exp(-im * θ)]
+    @test reshape(Array(op("CRX", s, 3, 5; θ=θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈ [
+      1 0 0 0
+      0 1 0 0
+      0 0 cos(θ / 2) -im*sin(θ / 2)
+      0 0 -im*sin(θ / 2) cos(θ / 2)
+    ]
+    @test reshape(Array(op("CRY", s, 3, 5; θ=θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈ [
+      1 0 0 0
+      0 1 0 0
+      0 0 cos(θ / 2) -sin(θ / 2)
+      0 0 sin(θ / 2) cos(θ / 2)
+    ]
+    @test reshape(Array(op("CRZ", s, 3, 5; θ=θ), s[5]', s[3]', s[5], s[3]), (4, 4)) ≈ [
+      1 0 0 0
+      0 1 0 0
+      0 0 exp(-im * θ / 2) 0
+      0 0 0 exp(im * θ / 2)
+    ]
 
+    toff_mat = diagm(ones(8))
+    toff_mat[7:8, 7:8] .= [0 1; 1 0]
+    @test reshape(
+      Array(op("TOFF", s, 3, 4, 5), s[5]', s[4]', s[3]', s[5], s[4], s[3]), (8, 8)
+    ) ≈ toff_mat
+    fred_mat = diagm(ones(8))
+    fred_mat[6:7, 6:7] .= [0 1; 1 0]
+    @test reshape(
+      Array(op("CS", s, 3, 4, 5), s[5]', s[4]', s[3]', s[5], s[4], s[3]), (8, 8)
+    ) ≈ fred_mat
+    @test reshape(
+      Array(op("CSwap", s, 3, 4, 5), s[5]', s[4]', s[3]', s[5], s[4], s[3]), (8, 8)
+    ) ≈ fred_mat
     # Test obtaining S=1/2 operators using Qubit tag
     @test Matrix(op("X", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 1.0 0.0]
   end
