@@ -388,8 +388,7 @@ function LinearAlgebra.eigen(
   return D, V, spec
 end
 
-function qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
-  positive = get(kwargs, :positive, false)
+function qr(T::DenseTensor{ElT,2,IndsT}; positive=false, kwargs...) where {ElT,IndsT}
   # TODO: just call qr on T directly (make sure
   # that is fast)
   if positive
@@ -410,8 +409,8 @@ end
 #
 #  Uses kwargs:positive to decide which rq method to call.
 #
-function rq(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
-  if get(kwargs, :positive, false)
+function rq(T::DenseTensor{ElT,2,IndsT}; positive=false, kwargs...) where {ElT,IndsT}
+  if positive
     RM, QM = rq_positive(matrix(T))
   else
     RM, QM = rq(matrix(T))

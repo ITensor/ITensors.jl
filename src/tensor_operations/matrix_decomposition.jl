@@ -400,8 +400,8 @@ ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
 
 # qr is exported by the LinearAlgebra module so we need acknowledge that to avoid
 # intermitent run time errors.
-function qr(A::ITensor, Linds...; kwargs...)
-  qtag::TagSet = get(kwargs, :tags, "Link,qr") #tag for new index between Q and R
+function qr(A::ITensor, Linds...; tags=ts"Link,qr", kwargs...)
+  qtag = TagSet(tags) #tag for new index between Q and R
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
   # Make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
@@ -453,8 +453,8 @@ function qr(A::ITensor, Linds...; kwargs...)
   return Q, R, q
 end
 
-function rq(A::ITensor, Linds...; kwargs...)
-  qtag::TagSet = get(kwargs, :tags, "Link,rq") #tag for new index between Q and R
+function rq(A::ITensor, Linds...; tags=ts"Link,rq", kwargs...)
+  qtag = TagSet(tags) #tag for new index between Q and R
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
   # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
@@ -507,12 +507,12 @@ end
 
 # lq is exported by the LinearAlgebra module so we need acknowledge that to avoid
 # intermitent run time errors.
-function lq(A::ITensor, Linds...; kwargs...)
+function lq(A::ITensor, Linds...; tags=ts"Link,lq", kwargs...)
   Q, L, q = qr(A, uniqueinds(A, Linds...); kwargs...)
   #
   # fix up the tag name for the index between Q and R.
   #  
-  qtag::TagSet = get(kwargs, :tags, "Link,lq") #tag for new index between Q and R
+  qtag = TagSet(tags)
   Q = settags(Q, qtag, q)
   L = settags(L, qtag, q)
   q = settags(q, qtag)
@@ -520,12 +520,12 @@ function lq(A::ITensor, Linds...; kwargs...)
   return L, Q, q
 end
 
-function ql(A::ITensor, Linds...; kwargs...)
+function ql(A::ITensor, Linds...; tags=ts"Link,ql", kwargs...)
   Q, L, q = rq(A, uniqueinds(A, Linds...); kwargs...)
   #
   # fix up the tag name for the index between Q and R.
   #  
-  qtag::TagSet = get(kwargs, :tags, "Link,ql") #tag for new index between Q and R
+  qtag = TagSet(tags)
   Q = settags(Q, qtag, q)
   L = settags(L, qtag, q)
   q = settags(q, qtag)
