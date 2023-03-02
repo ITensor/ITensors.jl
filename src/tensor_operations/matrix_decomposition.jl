@@ -387,10 +387,10 @@ function add_trivial_index(A::ITensor, Linds, Rinds)
   return A, vαl, vαr, Linds, Rinds
 end
 
-remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr) = (Q*dag(vαl), R*dag(vαr))
-remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, vαr) = (Q, R*dag(vαr))
-remove_trivial_index(Q::ITensor, R::ITensor, vαl, ::Nothing) = (Q*dag(vαl), R)
-remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, ::Nothing)=(Q,R)
+remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr) = (Q * dag(vαl), R * dag(vαr))
+remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, vαr) = (Q, R * dag(vαr))
+remove_trivial_index(Q::ITensor, R::ITensor, vαl, ::Nothing) = (Q * dag(vαl), R)
+remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, ::Nothing) = (Q, R)
 
 #Force users to knowingly ask for zero indices using qr(A,()) syntax
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
@@ -426,12 +426,12 @@ function qr(A::ITensor, Linds...; kwargs...)
   # 
   if hasqns(AC)
     for b in nzblocks(QT)
-        i1 = inds(QT)[1]
-        i2 = inds(QT)[2]
-        r1 = inds(RT)[1]
-        newqn = -dir(i2) * flux(i1 => Block(b[1]))
-        ITensors.setblockqn!(i2, newqn, b[2])
-        ITensors.setblockqn!(r1, newqn, b[2])
+      i1 = inds(QT)[1]
+      i2 = inds(QT)[2]
+      r1 = inds(RT)[1]
+      newqn = -dir(i2) * flux(i1 => Block(b[1]))
+      ITensors.setblockqn!(i2, newqn, b[2])
+      ITensors.setblockqn!(r1, newqn, b[2])
     end
   end
 
@@ -460,7 +460,7 @@ function rq(A::ITensor, Linds...; kwargs...)
   # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
   # be empty.  A essentially becomes 1D after collection.
   A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
-  
+
   #
   #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
   #
@@ -479,20 +479,19 @@ function rq(A::ITensor, Linds...; kwargs...)
   # 
   if hasqns(AC)
     for b in nzblocks(QT)
-        
-        i1 = inds(QT)[1]
-        i2 = inds(QT)[2]
-        r2 = inds(RT)[2]
-        newqn = -dir(i1) * flux(i2 => Block(b[2]))
-        ITensors.setblockqn!(i1, newqn, b[1])
-        ITensors.setblockqn!(r2, newqn, b[1])
+      i1 = inds(QT)[1]
+      i2 = inds(QT)[2]
+      r2 = inds(RT)[2]
+      newqn = -dir(i1) * flux(i2 => Block(b[2]))
+      ITensors.setblockqn!(i1, newqn, b[1])
+      ITensors.setblockqn!(r2, newqn, b[1])
     end
   end
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
   R, Q = itensor(RT) * dag(CL), itensor(QT) * dag(CR)
-  
+
   # Conditionally remove dummy indices.
   R, Q = remove_trivial_index(R, Q, vαl, vαr)
   #
