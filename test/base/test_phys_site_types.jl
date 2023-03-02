@@ -268,118 +268,129 @@ using ITensors, LinearAlgebra, Test
   end
 
   @testset "Spin Half sites" begin
-    s = siteind("S=1/2")
-    @test hastags(s, "S=1/2,Site")
-    @test dim(s) == 2
+    for name in ("S=1/2", "SpinHalf", "S=½")
+      s = siteind(name)
+      @test hastags(s, name * ",Site")
+      @test dim(s) == 2
 
-    s = siteind("S=1/2"; conserve_qns=true)
-    @test hastags(s, "S=1/2,Site")
-    @test dim(s) == 2
-    @test nblocks(s) == 2
-    @test qn(s, 1) == QN("Sz", +1)
-    @test qn(s, 2) == QN("Sz", -1)
+      s = siteind(name; conserve_qns=true)
+      @test hastags(s, name * ",Site")
+      @test dim(s) == 2
+      @test nblocks(s) == 2
+      @test qn(s, 1) == QN("Sz", +1)
+      @test qn(s, 2) == QN("Sz", -1)
 
-    s = siteind("S=1/2"; conserve_szparity=true)
-    @test hastags(s, "S=1/2,Site")
-    @test dim(s) == 2
-    @test nblocks(s) == 2
-    @test qn(s, 1) == QN("SzParity", 1, 2)
-    @test qn(s, 2) == QN("SzParity", 0, 2)
+      s = siteind(name; conserve_szparity=true)
+      @test hastags(s, name * ",Site")
+      @test dim(s) == 2
+      @test nblocks(s) == 2
+      @test qn(s, 1) == QN("SzParity", 1, 2)
+      @test qn(s, 2) == QN("SzParity", 0, 2)
 
-    s = siteind("S=1/2"; conserve_sz=true, conserve_szparity=true)
-    @test hastags(s, "S=1/2,Site")
-    @test dim(s) == 2
-    @test nblocks(s) == 2
-    @test qn(s, 1) == QN(("SzParity", 1, 2), ("Sz", +1))
-    @test qn(s, 2) == QN(("SzParity", 0, 2), ("Sz", -1))
+      s = siteind(name; conserve_sz=true, conserve_szparity=true)
+      @test hastags(s, name * ",Site")
+      @test dim(s) == 2
+      @test nblocks(s) == 2
+      @test qn(s, 1) == QN(("SzParity", 1, 2), ("Sz", +1))
+      @test qn(s, 2) == QN(("SzParity", 0, 2), ("Sz", -1))
 
-    s = siteinds("S=1/2", N)
-    @test val(s[1], "Up") == 1
-    @test val(s[1], "↑") == 1
-    @test val(s[1], "Dn") == 2
-    @test val(s[1], "↓") == 2
-    @test_throws ArgumentError val(s[1], "Fake")
+      s = siteinds(name, N)
+      @test val(s[1], "Up") == 1
+      @test val(s[1], "↑") == 1
+      @test val(s[1], "Dn") == 2
+      @test val(s[1], "↓") == 2
+      @test_throws ArgumentError val(s[1], "Fake")
 
-    Sz5 = op("Sz", s, 5)
-    @test hasinds(Sz5, s[5]', s[5])
+      Sz5 = op("Sz", s, 5)
+      @test hasinds(Sz5, s[5]', s[5])
 
-    @test_throws ArgumentError op(s, "Fake", 2)
-    @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0; 0.0 1.0]
-    @test Array(op("F", s, 3), s[3]', s[3]) ≈ [1.0 0.0; 0.0 1.0]
-    @test Array(op("S+", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 0.0 0.0]
-    @test Array(op("S⁺", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 0.0 0.0]
-    @test Array(op("S-", s, 4), s[4]', s[4]) ≈ [0.0 0.0; 1.0 0.0]
-    @test Array(op("S⁻", s, 4), s[4]', s[4]) ≈ [0.0 0.0; 1.0 0.0]
-    @test Array(op("Sx", s, 2), s[2]', s[2]) ≈ [0.0 0.5; 0.5 0.0]
-    @test Array(op("Sˣ", s, 2), s[2]', s[2]) ≈ [0.0 0.5; 0.5 0.0]
-    @test Array(op("iSy", s, 2), s[2]', s[2]) ≈ [0.0 0.5; -0.5 0.0]
-    @test Array(op("iSʸ", s, 2), s[2]', s[2]) ≈ [0.0 0.5; -0.5 0.0]
-    @test Array(op("Sy", s, 2), s[2]', s[2]) ≈ [0.0 -0.5im; 0.5im 0.0]
-    @test Array(op("Sʸ", s, 2), s[2]', s[2]) ≈ [0.0 -0.5im; 0.5im 0.0]
-    @test Array(op("Sz", s, 2), s[2]', s[2]) ≈ [0.5 0.0; 0.0 -0.5]
-    @test Array(op("Sᶻ", s, 2), s[2]', s[2]) ≈ [0.5 0.0; 0.0 -0.5]
-    @test Array(op("ProjUp", s, 2), s[2]', s[2]) ≈ [1.0 0.0; 0.0 0.0]
-    @test Array(op("projUp", s, 2), s[2]', s[2]) ≈ [1.0 0.0; 0.0 0.0]
-    @test Array(op("ProjDn", s, 2), s[2]', s[2]) ≈ [0.0 0.0; 0.0 1.0]
-    @test Array(op("projDn", s, 2), s[2]', s[2]) ≈ [0.0 0.0; 0.0 1.0]
+      @test Vector(state("Up", s[1])) ≈ [1, 0]
+      @test Vector(state("↑", s[1])) ≈ [1, 0]
+      @test Vector(state("Dn", s[1])) ≈ [0, 1]
+      @test Vector(state("↓", s[1])) ≈ [0, 1]
+      @test Vector(state("X+", s[1])) ≈ (1 / √2) * [1, 1]
+      @test Vector(state("X-", s[1])) ≈ (1 / √2) * [1, -1]
 
-    # Test obtaining Qubit operators using S=1/2 tag:
-    @test Array(op("√NOT", s, 3), s[3]', s[3]) ≈
-      [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
+      @test_throws ArgumentError op(s, "Fake", 2)
+      @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0; 0.0 1.0]
+      @test Array(op("F", s, 3), s[3]', s[3]) ≈ [1.0 0.0; 0.0 1.0]
+      @test Array(op("S+", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 0.0 0.0]
+      @test Array(op("S⁺", s, 3), s[3]', s[3]) ≈ [0.0 1.0; 0.0 0.0]
+      @test Array(op("S-", s, 4), s[4]', s[4]) ≈ [0.0 0.0; 1.0 0.0]
+      @test Array(op("S⁻", s, 4), s[4]', s[4]) ≈ [0.0 0.0; 1.0 0.0]
+      @test Array(op("Sx", s, 2), s[2]', s[2]) ≈ [0.0 0.5; 0.5 0.0]
+      @test Array(op("Sˣ", s, 2), s[2]', s[2]) ≈ [0.0 0.5; 0.5 0.0]
+      @test Array(op("iSy", s, 2), s[2]', s[2]) ≈ [0.0 0.5; -0.5 0.0]
+      @test Array(op("iSʸ", s, 2), s[2]', s[2]) ≈ [0.0 0.5; -0.5 0.0]
+      @test Array(op("Sy", s, 2), s[2]', s[2]) ≈ [0.0 -0.5im; 0.5im 0.0]
+      @test Array(op("Sʸ", s, 2), s[2]', s[2]) ≈ [0.0 -0.5im; 0.5im 0.0]
+      @test Array(op("Sz", s, 2), s[2]', s[2]) ≈ [0.5 0.0; 0.0 -0.5]
+      @test Array(op("Sᶻ", s, 2), s[2]', s[2]) ≈ [0.5 0.0; 0.0 -0.5]
+      @test Array(op("ProjUp", s, 2), s[2]', s[2]) ≈ [1.0 0.0; 0.0 0.0]
+      @test Array(op("projUp", s, 2), s[2]', s[2]) ≈ [1.0 0.0; 0.0 0.0]
+      @test Array(op("ProjDn", s, 2), s[2]', s[2]) ≈ [0.0 0.0; 0.0 1.0]
+      @test Array(op("projDn", s, 2), s[2]', s[2]) ≈ [0.0 0.0; 0.0 1.0]
+
+      # Test obtaining Qubit operators using S=1/2 tag:
+      @test Array(op("√NOT", s, 3), s[3]', s[3]) ≈
+        [(1 + im)/2 (1 - im)/2; (1 - im)/2 (1 + im)/2]
+    end
   end
 
   @testset "Spin One sites" begin
-    s = siteinds("S=1", N)
+    for name in ("S=1", "SpinOne")
+      s = siteinds(name, N)
 
-    @test val(s[1], "Up") == 1
-    @test val(s[1], "↑") == 1
-    @test val(s[1], "0") == 2
-    @test val(s[1], "Dn") == 3
-    @test val(s[1], "↓") == 3
-    @test val(s[1], "Z+") == 1
-    @test val(s[1], "Z-") == 3
-    @test_throws ArgumentError val(s[1], "Fake")
+      @test val(s[1], "Up") == 1
+      @test val(s[1], "↑") == 1
+      @test val(s[1], "0") == 2
+      @test val(s[1], "Dn") == 3
+      @test val(s[1], "↓") == 3
+      @test val(s[1], "Z+") == 1
+      @test val(s[1], "Z-") == 3
+      @test_throws ArgumentError val(s[1], "Fake")
 
-    @test Vector(state("Up", s[1])) ≈ [1, 0, 0]
-    @test Vector(state("↑", s[1])) ≈ [1, 0, 0]
-    @test Vector(state("Z+", s[1])) ≈ [1, 0, 0]
-    @test Vector(state("Z0", s[1])) ≈ [0, 1, 0]
-    @test Vector(state("0", s[1])) ≈ [0, 1, 0]
-    @test Vector(state("Dn", s[1])) ≈ [0, 0, 1]
-    @test Vector(state("↓", s[1])) ≈ [0, 0, 1]
-    @test Vector(state("Z-", s[1])) ≈ [0, 0, 1]
-    @test Vector(state("X+", s[1])) ≈ [1 / 2, 1 / √2, 1 / 2]
-    @test Vector(state("X0", s[1])) ≈ [-1 / √2, 0, 1 / √2]
-    @test Vector(state("X-", s[1])) ≈ [1 / 2, -1 / √2, 1 / 2]
-    @test Vector(state("Y+", s[1])) ≈ [-1 / 2, -im / √2, 1 / 2]
-    @test Vector(state("Y0", s[1])) ≈ [1 / √2, 0, 1 / √2]
-    @test Vector(state("Y-", s[1])) ≈ [-1 / 2, im / √2, 1 / 2]
+      @test Vector(state("Up", s[1])) ≈ [1, 0, 0]
+      @test Vector(state("↑", s[1])) ≈ [1, 0, 0]
+      @test Vector(state("Z+", s[1])) ≈ [1, 0, 0]
+      @test Vector(state("Z0", s[1])) ≈ [0, 1, 0]
+      @test Vector(state("0", s[1])) ≈ [0, 1, 0]
+      @test Vector(state("Dn", s[1])) ≈ [0, 0, 1]
+      @test Vector(state("↓", s[1])) ≈ [0, 0, 1]
+      @test Vector(state("Z-", s[1])) ≈ [0, 0, 1]
+      @test Vector(state("X+", s[1])) ≈ [1 / 2, 1 / √2, 1 / 2]
+      @test Vector(state("X0", s[1])) ≈ [-1 / √2, 0, 1 / √2]
+      @test Vector(state("X-", s[1])) ≈ [1 / 2, -1 / √2, 1 / 2]
+      @test Vector(state("Y+", s[1])) ≈ [-1 / 2, -im / √2, 1 / 2]
+      @test Vector(state("Y0", s[1])) ≈ [1 / √2, 0, 1 / √2]
+      @test Vector(state("Y-", s[1])) ≈ [-1 / 2, im / √2, 1 / 2]
 
-    Sz5 = op("Sz", s, 5)
-    @test hasinds(Sz5, s[5]', s[5])
+      Sz5 = op("Sz", s, 5)
+      @test hasinds(Sz5, s[5]', s[5])
 
-    @test_throws ArgumentError op(s, "Fake", 2)
-    @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
-    @test Array(op("S+", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
-    @test Array(op("S⁺", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
-    @test Array(op("Sp", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
-    @test Array(op("Splus", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
-    @test Array(op("S-", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
-    @test Array(op("S⁻", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
-    @test Array(op("Sm", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
-    @test Array(op("Sminus", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
-    @test Array(op("Sx", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
-    @test Array(op("Sˣ", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
-    @test Array(op("iSy", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
-    @test Array(op("iSʸ", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
-    @test Array(op("Sy", s, 3), s[3]', s[3]) ≈ (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
-    @test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
-    #@test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ [0 +1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
-    @test Array(op("Sz", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
-    @test Array(op("Sᶻ", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
-    @test Array(op("Sz2", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 +1.0]
-    @test Array(op("Sx2", s, 2), s[2]', s[2]) ≈ [0.5 0 0.5; 0 1.0 0; 0.5 0 0.5]
-    @test Array(op("Sy2", s, 2), s[2]', s[2]) ≈ [0.5 0 -0.5; 0 1.0 0; -0.5 0 0.5]
+      @test_throws ArgumentError op(s, "Fake", 2)
+      @test Array(op("Id", s, 3), s[3]', s[3]) ≈ [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
+      @test Array(op("S+", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
+      @test Array(op("S⁺", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
+      @test Array(op("Sp", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
+      @test Array(op("Splus", s, 3), s[3]', s[3]) ≈ [0 √2 0; 0 0 √2; 0 0 0]
+      @test Array(op("S-", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
+      @test Array(op("S⁻", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
+      @test Array(op("Sm", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
+      @test Array(op("Sminus", s, 3), s[3]', s[3]) ≈ [0 0 0; √2 0 0; 0.0 √2 0]
+      @test Array(op("Sx", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
+      @test Array(op("Sˣ", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; 1/√2 0 1/√2; 0 1/√2 0]
+      @test Array(op("iSy", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
+      @test Array(op("iSʸ", s, 3), s[3]', s[3]) ≈ [0 1/√2 0; -1/√2 0 1/√2; 0 -1/√2 0]
+      @test Array(op("Sy", s, 3), s[3]', s[3]) ≈ (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
+      @test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ (1 / (√2im)) * [0 +1 0; -1 0 +1; 0 -1 0]
+      #@test Array(op("Sʸ", s, 3), s[3]', s[3]) ≈ [0 +1/√2im 0; +1/√2im 0 -1/√2im; 0 +1/√2im 0]
+      @test Array(op("Sz", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
+      @test Array(op("Sᶻ", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 -1.0]
+      @test Array(op("Sz2", s, 2), s[2]', s[2]) ≈ [1.0 0 0; 0 0 0; 0 0 +1.0]
+      @test Array(op("Sx2", s, 2), s[2]', s[2]) ≈ [0.5 0 0.5; 0 1.0 0; 0.5 0 0.5]
+      @test Array(op("Sy2", s, 2), s[2]', s[2]) ≈ [0.5 0 -0.5; 0 1.0 0; -0.5 0 0.5]
+    end
   end
 
   @testset "Fermion sites" begin
@@ -408,6 +419,8 @@ using ITensors, LinearAlgebra, Test
     @test C ≈ [0.0 1; 0 0]
     Cdag = Array(op(s, "Cdag"), s', s)
     @test Cdag ≈ [0.0 0; 1 0]
+    Cdag = Array(op(s, "cdag"), s', s)
+    @test Cdag ≈ [0.0 0; 1 0]
     Cdag = Array(op(s, "c†"), s', s)
     @test Cdag ≈ [0.0 0; 1 0]
     F = Array(op(s, "F"), s', s)
@@ -416,6 +429,7 @@ using ITensors, LinearAlgebra, Test
     @test has_fermion_string("C", s)
     @test has_fermion_string("c", s)
     @test has_fermion_string("Cdag", s)
+    @test has_fermion_string("cdag", s)
     @test has_fermion_string("c†", s)
     @test has_fermion_string("C*F", s)
     @test has_fermion_string("c*F", s)
@@ -430,6 +444,9 @@ using ITensors, LinearAlgebra, Test
     @test qn(s, 1) == QN("Nf", 0, -1)
     @test qn(s, 2) == QN("Nf", 1, -1)
     s = siteind("Fermion"; conserve_nfparity=true)
+    @test qn(s, 1) == QN("NfParity", 0, -2)
+    @test qn(s, 2) == QN("NfParity", 1, -2)
+    s = siteind("Fermion"; conserve_parity=true)
     @test qn(s, 1) == QN("NfParity", 0, -2)
     @test qn(s, 2) == QN("NfParity", 1, -2)
     s = siteind("Fermion"; conserve_qns=false)
@@ -594,12 +611,48 @@ using ITensors, LinearAlgebra, Test
     @test qn(s, 1) == QN("NfParity", 0, -2)
     @test qn(s, 2) == QN("NfParity", 1, -2)
     @test qn(s, 3) == QN("NfParity", 0, -2)
+    s = siteind("Electron"; conserve_parity=true)
+    @test qn(s, 1) == QN("NfParity", 0, -2)
+    @test qn(s, 2) == QN("NfParity", 1, -2)
+    @test qn(s, 3) == QN("NfParity", 0, -2)
     s = siteind("Electron"; conserve_qns=false)
     @test dim(s) == 4
   end
 
   @testset "tJ sites" begin
+    s = siteind("tJ"; conserve_parity=true)
+    @test hastags(s, "tJ,Site")
+    @test dim(s) == 3
+    @test nblocks(s) == 2
+    @test qn(s, 1) == QN(("NfParity", 0, -2))
+    @test qn(s, 2) == QN(("NfParity", 1, -2))
+
+    s = siteind("tJ"; conserve_nf=true)
+    @test hastags(s, "tJ,Site")
+    @test dim(s) == 3
+    @test nblocks(s) == 2
+    @test qn(s, 1) == QN(("Nf", 0, -1))
+    @test qn(s, 2) == QN(("Nf", 1, -1))
+
+    s = siteind("tJ"; conserve_sz=true)
+    @test hastags(s, "tJ,Site")
+    @test dim(s) == 3
+    @test nblocks(s) == 3
+    @test qn(s, 1) == QN(("Sz", 0), ("NfParity", 0, -2))
+    @test qn(s, 2) == QN(("Sz", 1), ("NfParity", 1, -2))
+    @test qn(s, 3) == QN(("Sz", -1), ("NfParity", 1, -2))
+
+    s = siteind("tJ"; conserve_sz=true, conserve_nf=true)
+    @test hastags(s, "tJ,Site")
+    @test dim(s) == 3
+    @test nblocks(s) == 3
+    @test qn(s, 1) == QN(("Nf", 0, -1), ("Sz", 0))
+    @test qn(s, 2) == QN(("Nf", 1, -1), ("Sz", 1))
+    @test qn(s, 3) == QN(("Nf", 1, -1), ("Sz", -1))
+
     s = siteind("tJ")
+    @test hastags(s, "tJ,Site")
+    @test dim(s) == 3
 
     @test val(s, "Emp") == 1
     @test val(s, "0") == 1
@@ -651,19 +704,19 @@ using ITensors, LinearAlgebra, Test
     @test Cddn ≈ [0 0 0; 0.0 0 0; 1 0 0]
     Aup = Array(op(s, "Aup"), s', s)
     @test Aup ≈ [0.0 1 0; 0 0 0; 0 0 0]
-    Aup = Array(op(s, "c↑"), s', s)
+    Aup = Array(op(s, "a↑"), s', s)
     @test Aup ≈ [0.0 1 0; 0 0 0; 0 0 0]
     Adup = Array(op(s, "Adagup"), s', s)
     @test Adup ≈ [0 0 0; 1.0 0 0; 0 0 0]
-    Adup = Array(op(s, "c†↑"), s', s)
+    Adup = Array(op(s, "a†↑"), s', s)
     @test Adup ≈ [0 0 0; 1.0 0 0; 0 0 0]
     Adn = Array(op(s, "Adn"), s', s)
     @test Adn ≈ [0.0 0.0 1; 0 0 0; 0 0 0]
-    Adn = Array(op(s, "c↓"), s', s)
+    Adn = Array(op(s, "a↓"), s', s)
     @test Adn ≈ [0.0 0.0 1; 0 0 0; 0 0 0]
     Addn = Array(op(s, "Adagdn"), s', s)
     @test Addn ≈ [0 0 0; 0.0 0 0; 1 0 0]
-    Addn = Array(op(s, "c†↓"), s', s)
+    Addn = Array(op(s, "a†↓"), s', s)
     @test Addn ≈ [0 0 0; 0.0 0 0; 1 0 0]
     FP = Array(op(s, "F"), s', s)
     @test FP ≈ [1.0 0.0 0; 0 -1.0 0; 0 0 -1.0]
