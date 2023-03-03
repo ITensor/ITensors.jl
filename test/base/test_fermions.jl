@@ -36,6 +36,7 @@ using ITensors, Test
 
     p = QN("P", 1, -2)
     @test fparity(p) == 1
+    @test isodd(p)
     @test fparity(p + p) == 0
     @test fparity(p + p + p) == 1
   end
@@ -44,6 +45,8 @@ using ITensors, Test
     sn = Index([QN("Nf", 0, -1) => 1, QN("Nf", 1, -1) => 1], "sn")
     @test fparity(sn => 1) == 0
     @test fparity(sn => 2) == 1
+    @test !isodd(sn => 1)
+    @test isodd(sn => 2)
 
     sp = Index([QN("Nfp", 0, -2) => 1, QN("Nfp", 1, -2) => 1], "sp")
     @test fparity(sp => 1) == 0
