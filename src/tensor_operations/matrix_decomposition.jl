@@ -421,21 +421,6 @@ function qr(A::ITensor, Linds...; tags=ts"Link,qr", kwargs...)
   # qr the matrix.
   QT, RT = qr(tensor(AC); kwargs...)
   #
-  # correct the fluxes of the two tensors, such that Q has 0 flux for all blocks
-  # and R has the total flux of the system
-  # 
-  if hasqns(AC)
-    for b in nzblocks(QT)
-      i1 = inds(QT)[1]
-      i2 = inds(QT)[2]
-      r1 = inds(RT)[1]
-      newqn = -dir(i2) * flux(i1 => Block(b[1]))
-      ITensors.setblockqn!(i2, newqn, b[2])
-      ITensors.setblockqn!(r1, newqn, b[2])
-    end
-  end
-
-  #
   #  Undo the combine oepration, to recover all tensor indices.
   #
   Q, R = itensor(QT) * dag(CL), itensor(RT) * dag(CR)
@@ -446,6 +431,7 @@ function qr(A::ITensor, Linds...; tags=ts"Link,qr", kwargs...)
   # fix up the tag name for the index between Q and R.
   #  
   q = commonind(Q, R)
+
   Q = settags(Q, qtag, q)
   R = settags(R, qtag, q)
   q = settags(q, qtag)
@@ -473,20 +459,6 @@ function rq(A::ITensor, Linds...; tags=ts"Link,rq", kwargs...)
   AC = permute(AC, cL, cR; allow_alias=true)
   # qr the matrix.
   RT, QT = NDTensors.rq(tensor(AC); kwargs...)
-  #
-  # correct the fluxes of the two tensors, such that Q has 0 flux for all blocks
-  # and R has the total flux of the system
-  # 
-  if hasqns(AC)
-    for b in nzblocks(QT)
-      i1 = inds(QT)[1]
-      i2 = inds(QT)[2]
-      r2 = inds(RT)[2]
-      newqn = -dir(i1) * flux(i2 => Block(b[2]))
-      ITensors.setblockqn!(i1, newqn, b[1])
-      ITensors.setblockqn!(r2, newqn, b[1])
-    end
-  end
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #

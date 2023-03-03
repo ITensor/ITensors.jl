@@ -321,39 +321,20 @@ function rq(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
     Rs[jj] = R
   end
 
-  nb1_lt_nb2 = (
-    nblocks(T)[1] < nblocks(T)[2] ||
-    (nblocks(T)[1] == nblocks(T)[2] && dim(T, 1) < dim(T, 2))
-  )
-
-  # setting the left index of the Q isometry, this should be
-  # the smaller index of the two indices of of T
-  qindr = ind(T, 2)
-  if nb1_lt_nb2
-    qindl = sim(ind(T, 1))
-  else
-    qindl = sim(ind(T, 2))
+  #
+  # Make the new index connecting R and Q  
+  #
+  itl = ind(T, 1) #left index of T
+  irq = dag(sim(itl)) #start with similar to the left index of T
+  resize!(irq, nnzblocksT) #adjust the size to match the block count
+  for (n, blockT) in enumerate(nzblocksT)
+    Rdim = size(Rs[n], 2)
+    b2 = block(itl, blockT[1])
+    setblock!(irq, resize(b2, Rdim), n)
   end
-
-  # can qindl have more blocks than T?
-  if nblocks(qindl) > nnzblocksT
-    resize!(qindl, nnzblocksT)
-  end
-
-  for n in 1:nnzblocksT
-    q_dim_red = minimum(dims(Rs[n]))
-    setblockdim!(qindl, q_dim_red, n)
-  end
-
-  # correcting the direction of the arrow
-  # if one have to be corrected the other one 
-  # should also be corrected
-  if (dir(qindl) != dir(qindr))
-    qindl = dag(qindl)
-  end
-
-  indsQ = setindex(inds(T), qindl, 1)
-  indsR = setindex(inds(T), dag(qindl), 2)
+  
+  indsQ = setindex(inds(T), dag(irq), 1) #inds(Q)=(irq_dagger,inds(T)[2])
+  indsR = setindex(inds(T), irq, 2) #inds(R)=(inds(T)[1],irq)
 
   nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
@@ -407,41 +388,21 @@ function qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
     Rs[jj] = R
   end
 
-  nb1_lt_nb2 = (
-    nblocks(T)[1] < nblocks(T)[2] ||
-    (nblocks(T)[1] == nblocks(T)[2] && dim(T, 1) < dim(T, 2))
-  )
-
-  # setting the right index of the Q isometry, this should be
-  # the smaller index of the two indices of of T
-  qindl = ind(T, 1)
-  if nb1_lt_nb2
-    qindr = sim(ind(T, 1))
-  else
-    qindr = sim(ind(T, 2))
+  #
+  # Make the new index connecting Q and R  
+  #
+  itl=ind(T, 1) #left index of T
+  iqr = dag(sim(itl)) #start with similar to the left index of T
+  resize!(iqr, nnzblocksT)  #adjust the size to match the block count
+  for (n, blockT) in enumerate(nzblocksT)
+    Qdim = size(Qs[n], 2) #get the block dim on right side of Q.
+    b1 = block(itl, blockT[1])
+    setblock!(iqr, resize(b1, Qdim), n)
   end
-
-  # can qindr have more blocks than T?
-  if nblocks(qindr) > nnzblocksT
-    resize!(qindr, nnzblocksT)
-  end
-
-  for n in 1:nnzblocksT
-    q_dim_red = minimum(dims(Rs[n]))
-    setblockdim!(qindr, q_dim_red, n)
-  end
-
-  # correcting the direction of the arrow
-  # since qind2r is basically a copy of qind1r
-  # if one have to be corrected the other one 
-  # should also be corrected
-  if (dir(qindr) != dir(qindl))
-    qindr = dag(qindr)
-  end
-
-  indsQ = setindex(inds(T), dag(qindr), 2)
-  indsR = setindex(inds(T), qindr, 1)
-
+ 
+  indsQ = setindex(inds(T), iqr, 2) #inds(Q)=(inds(T)[1],iqr)
+  indsR = setindex(inds(T), dag(iqr), 1) #inds(R)=(iqr_dagger,inds(T)[2])
+  
   nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
 
