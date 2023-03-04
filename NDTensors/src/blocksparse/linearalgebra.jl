@@ -332,7 +332,7 @@ function rq(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
     b2 = block(itl, blockT[1])
     setblock!(irq, resize(b2, Rdim), n)
   end
-  
+
   indsQ = setindex(inds(T), dag(irq), 1) #inds(Q)=(irq_dagger,inds(T)[2])
   indsR = setindex(inds(T), irq, 2) #inds(R)=(inds(T)[1],irq)
 
@@ -391,7 +391,7 @@ function qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
   #
   # Make the new index connecting Q and R  
   #
-  itl=ind(T, 1) #left index of T
+  itl = ind(T, 1) #left index of T
   iqr = dag(sim(itl)) #start with similar to the left index of T
   resize!(iqr, nnzblocksT)  #adjust the size to match the block count
   for (n, blockT) in enumerate(nzblocksT)
@@ -399,10 +399,10 @@ function qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
     b1 = block(itl, blockT[1])
     setblock!(iqr, resize(b1, Qdim), n)
   end
- 
+
   indsQ = setindex(inds(T), iqr, 2) #inds(Q)=(inds(T)[1],iqr)
   indsR = setindex(inds(T), dag(iqr), 1) #inds(R)=(iqr_dagger,inds(T)[2])
-  
+
   nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
 
