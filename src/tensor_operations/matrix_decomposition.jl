@@ -493,7 +493,7 @@ function lq(A::ITensor, Linds...; tags=ts"Link,lq", kwargs...)
 end
 
 function ql(A::ITensor, Linds...; tags=ts"Link,ql", kwargs...)
-  Q, L, q = rq(A, uniqueinds(A, Linds...); kwargs...)
+  L, Q, q = rq(A, uniqueinds(A, Linds...); kwargs...)
   #
   # fix up the tag name for the index between Q and R.
   #  
@@ -502,7 +502,7 @@ function ql(A::ITensor, Linds...; tags=ts"Link,ql", kwargs...)
   L = settags(L, qtag, q)
   q = settags(q, qtag)
 
-  return L, Q, q
+  return Q, L, q
 end
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
