@@ -296,140 +296,71 @@ function LinearAlgebra.eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
-# QR a block sparse Rank 2 tensor.
-#  This code thanks to Niklas Tausendpfund https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
+ql(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT} = qx(ql,T;kwargs...)
+qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT} = qx(qr,T;kwargs...)
 #
-function rq(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
+#  Generic function to implelement blocks sparse qr/ql decomposition.  It calls
+#  the dense qr or ql for each block. The X tensor = R or L. 
+#  This code thanks to Niklas Tausendpfund 
+#  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
+#
+function qx(qx::Function,T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
 
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
   nzblocksT = nzblocks(T)
 
   Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
-  Rs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+  Xs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
 
   for (jj, b) in enumerate(eachnzblock(T))
     blockT = blockview(T, b)
-    RQb = rq(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+    QXb = qx(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
 
-    if (isnothing(RQb))
+    if (isnothing(QXb))
       return nothing
     end
 
-    R, Q = RQb
+    Q, X = QXb
     Qs[jj] = Q
-    Rs[jj] = R
-  end
-
-  #
-  # Make the new index connecting R and Q  
-  #
-  itl = ind(T, 1) #left index of T
-  irq = dag(sim(itl)) #start with similar to the left index of T
-  resize!(irq, nnzblocksT) #adjust the size to match the block count
-  for (n, blockT) in enumerate(nzblocksT)
-    Rdim = size(Rs[n], 2)
-    b2 = block(itl, blockT[1])
-    setblock!(irq, resize(b2, Rdim), n)
-  end
-
-  indsQ = setindex(inds(T), dag(irq), 1) #inds(Q)=(irq_dagger,inds(T)[2])
-  indsR = setindex(inds(T), irq, 2) #inds(R)=(inds(T)[1],irq)
-
-  nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
-  nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
-
-  for n in 1:nnzblocksT
-    blockT = nzblocksT[n]
-
-    blockR = (blockT[1], UInt(n))
-    nzblocksR[n] = blockR
-
-    blockQ = (UInt(n), blockT[2])
-    nzblocksQ[n] = blockQ
-  end
-
-  Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
-  R = BlockSparseTensor(ElT, undef, nzblocksR, indsR)
-
-  for n in 1:nnzblocksT
-    Qb, Rb = Qs[n], Rs[n]
-    blockQ = nzblocksQ[n]
-    blockR = nzblocksR[n]
-
-    blockview(Q, blockQ) .= Qb
-    blockview(R, blockR) .= Rb
-  end
-
-  return R, Q
-end
-# QR a block sparse Rank 2 tensor.
-#  This code thanks to Niklas Tausendpfund https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
-#
-function qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
-
-  # getting total number of blocks
-  nnzblocksT = nnzblocks(T)
-  nzblocksT = nzblocks(T)
-
-  Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
-  Rs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
-
-  for (jj, b) in enumerate(eachnzblock(T))
-    blockT = blockview(T, b)
-    QRb = qr(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
-
-    if (isnothing(QRb))
-      return nothing
-    end
-
-    Q, R = QRb
-    Qs[jj] = Q
-    Rs[jj] = R
+    Xs[jj] = X
   end
 
   #
   # Make the new index connecting Q and R  
   #
   itl = ind(T, 1) #left index of T
-  iqr = dag(sim(itl)) #start with similar to the left index of T
-  resize!(iqr, nnzblocksT)  #adjust the size to match the block count
+  iq = dag(sim(itl)) #start with similar to the left index of T
+  resize!(iq, nnzblocksT)  #adjust the size to match the block count
   for (n, blockT) in enumerate(nzblocksT)
     Qdim = size(Qs[n], 2) #get the block dim on right side of Q.
     b1 = block(itl, blockT[1])
-    setblock!(iqr, resize(b1, Qdim), n)
+    setblock!(iq, resize(b1, Qdim), n)
   end
 
-  indsQ = setindex(inds(T), iqr, 2) #inds(Q)=(inds(T)[1],iqr)
-  indsR = setindex(inds(T), dag(iqr), 1) #inds(R)=(iqr_dagger,inds(T)[2])
+  indsQ = setindex(inds(T), iq, 2) 
+  indsX = setindex(inds(T), dag(iq), 1) 
 
   nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
-  nzblocksR = Vector{Block{2}}(undef, nnzblocksT)
+  nzblocksX = Vector{Block{2}}(undef, nnzblocksT)
 
   for n in 1:nnzblocksT
     blockT = nzblocksT[n]
-
-    blockQ = (blockT[1], UInt(n))
-    nzblocksQ[n] = blockQ
-
-    blockR = (UInt(n), blockT[2])
-    nzblocksR[n] = blockR
+    nzblocksQ[n] = (blockT[1], UInt(n))
+    nzblocksX[n] = (UInt(n), blockT[2])
   end
 
   Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
-  R = BlockSparseTensor(ElT, undef, nzblocksR, indsR)
+  X = BlockSparseTensor(ElT, undef, nzblocksX, indsX)
 
   for n in 1:nnzblocksT
-    Qb, Rb = Qs[n], Rs[n]
-    blockQ = nzblocksQ[n]
-    blockR = nzblocksR[n]
-
-    blockview(Q, blockQ) .= Qb
-    blockview(R, blockR) .= Rb
+    blockview(Q, nzblocksQ[n]) .= Qs[n]
+    blockview(X, nzblocksX[n]) .= Xs[n]
   end
 
-  return Q, R
+  return Q, X
 end
+
 
 function exp(
   T::Union{BlockSparseMatrix{ElT},Hermitian{ElT,<:BlockSparseMatrix{ElT}}}

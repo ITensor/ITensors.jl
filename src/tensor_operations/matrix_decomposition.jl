@@ -398,10 +398,16 @@ rq(A::ITensor; kwargs...) = error(noinds_error_message("rq"))
 lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
 ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
 
-# qr is exported by the LinearAlgebra module so we need acknowledge that to avoid
-# intermitent run time errors.
-function qr(A::ITensor, Linds...; tags=ts"Link,qr", kwargs...)
-  qtag = TagSet(tags) #tag for new index between Q and R
+
+qr(A::ITensor, Linds...; qtags=ts"Link,qr", kwargs...)=qx(qr,qtags,A,Linds...;kwargs...)
+ql(A::ITensor, Linds...; qtags=ts"Link,ql", kwargs...)=qx(NDTensors.ql,qtags,A,Linds...;kwargs...)
+rq(A::ITensor, Linds...; qtags=ts"Link,rq", kwargs...)=xq(ql,qtags,A,Linds...;kwargs...)
+lq(A::ITensor, Linds...; qtags=ts"Link,lq", kwargs...)=xq(qr,qtags,A,Linds...;kwargs...)
+
+#
+#  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
+#
+function qx(qx::Function, qtags, A::ITensor, Linds...; kwargs...)
   Lis = commoninds(A, indices(Linds...))
   Ris = uniqueinds(A, Lis)
   # Make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
@@ -419,91 +425,41 @@ function qr(A::ITensor, Linds...; tags=ts"Link,qr", kwargs...)
   #
   AC = permute(AC, cL, cR; allow_alias=true)
   # qr the matrix.
-  QT, RT = qr(tensor(AC); kwargs...)
+  QT, XT = qx(tensor(AC); kwargs...)
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
-  Q, R = itensor(QT) * dag(CL), itensor(RT) * dag(CR)
+  Q, X = itensor(QT) * dag(CL), itensor(XT) * dag(CR)
 
   # Remove dummy indices.  No-op if vαl and vαr are Nothing
-  Q, R = remove_trivial_index(Q, R, vαl, vαr)
+  Q, X = remove_trivial_index(Q, X, vαl, vαr)
   #
   # fix up the tag name for the index between Q and R.
   #  
-  q = commonind(Q, R)
+  q = commonind(Q, X)
+  Q = settags(Q, qtags, q)
+  X = settags(X, qtags, q)
+  q = settags(q, qtags)
 
-  Q = settags(Q, qtag, q)
-  R = settags(R, qtag, q)
-  q = settags(q, qtag)
-
-  return Q, R, q
+  return Q, X, q
 end
 
-function rq(A::ITensor, Linds...; tags=ts"Link,rq", kwargs...)
-  qtag = TagSet(tags) #tag for new index between Q and R
-  Lis = commoninds(A, indices(Linds...))
-  Ris = uniqueinds(A, Lis)
-  # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
-  # be empty.  A essentially becomes 1D after collection.
-  A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
-
+#
+#  Generic function implementing both rq and lq decomposition. Implemented using qr/ql combinedind
+#  with swapping the left and right indices.  The X tensor = R or L. 
+#
+function xq(qx::Function, qtags::TagSet,A::ITensor, Linds...;kwargs...)
+  Q, X, q = qx(A, uniqueinds(A, Linds...); kwargs...)
   #
-  #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
-  #
-  CL, CR = combiner(Lis...), combiner(Ris...)
-  cL, cR = combinedind(CL), combinedind(CR)
-  AC = A * CR * CL
-  #
-  #  Make sure we don't accidentally pass the transpose into the matrix qr routine.
-  #
-  AC = permute(AC, cL, cR; allow_alias=true)
-  # qr the matrix.
-  RT, QT = NDTensors.rq(tensor(AC); kwargs...)
-  #
-  #  Undo the combine oepration, to recover all tensor indices.
-  #
-  R, Q = itensor(RT) * dag(CL), itensor(QT) * dag(CR)
-
-  # Conditionally remove dummy indices.
-  R, Q = remove_trivial_index(R, Q, vαl, vαr)
-  #
-  # fix up the tag name for the index between Q and R.
+  # fix up the tag name for the index between Q and L.
   #  
-  q = commonind(Q, R)
-  Q = settags(Q, qtag, q)
-  R = settags(R, qtag, q)
-  q = settags(q, qtag)
+  Q = settags(Q, qtags, q)
+  X = settags(X, qtags, q)
+  q = settags(q, qtags)
 
-  return R, Q, q
+  return X, Q, q
 end
 
-# lq is exported by the LinearAlgebra module so we need acknowledge that to avoid
-# intermitent run time errors.
-function lq(A::ITensor, Linds...; tags=ts"Link,lq", kwargs...)
-  Q, L, q = qr(A, uniqueinds(A, Linds...); kwargs...)
-  #
-  # fix up the tag name for the index between Q and R.
-  #  
-  qtag = TagSet(tags)
-  Q = settags(Q, qtag, q)
-  L = settags(L, qtag, q)
-  q = settags(q, qtag)
-
-  return L, Q, q
-end
-
-function ql(A::ITensor, Linds...; tags=ts"Link,ql", kwargs...)
-  L, Q, q = rq(A, uniqueinds(A, Linds...); kwargs...)
-  #
-  # fix up the tag name for the index between Q and R.
-  #  
-  qtag = TagSet(tags)
-  Q = settags(Q, qtag, q)
-  L = settags(L, qtag, q)
-  q = settags(q, qtag)
-
-  return Q, L, q
-end
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
 

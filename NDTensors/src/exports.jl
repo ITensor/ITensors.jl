@@ -79,4 +79,4 @@ export
   store,
 
   # linearalgebra.jl
-  rq
+  ql

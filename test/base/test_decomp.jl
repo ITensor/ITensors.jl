@@ -238,7 +238,7 @@ end
     0, 1, 2, 3
   ]
     expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
-    expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", -0), QN()]
+    expected_RLflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", -0), QN()]
     l = dag(Index(QN("Sz", 0) => 1, QN("Sz", 1) => 1, QN("Sz", -1) => 1; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 1, QN("Sz", 1) => 1, QN("Sz", -1) => 1; tags="r")
@@ -249,29 +249,43 @@ end
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 3 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
-    @test flux(R) == expected_Rflux[ninds + 1]
+    @test flux(R) == expected_RLflux[ninds + 1]
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
-    expected_Rflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
-    expected_Qflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN()]
+    
+    Q, L, q = ITensors.ql(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(L)) == 3-ninds + 1 #+1 to account for new rq,Link index.
+    @test length(inds(Q)) == ninds + 1
+    @test flux(Q) == expected_Qflux[ninds + 1]
+    @test flux(L) == expected_RLflux[ninds + 1]
+    @test A ≈ Q * L atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
     R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
-    @test flux(R) == expected_Rflux[ninds + 1]
+    @test flux(R) == expected_RLflux[ninds + 1]
     @test A ≈ Q * R atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+    L, Q, q = ITensors.lq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(L)) == ninds + 1 #+1 to account for new rq,Link index.
+    @test length(inds(Q)) == 3 - ninds + 1
+    @test flux(Q) == expected_Qflux[ninds + 1]
+    @test flux(L) == expected_RLflux[ninds + 1]
+    @test A ≈ Q * L atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
 
-  @testset "QR/RQ block sparse on MPO tensor with all possible collections on Q,R" for ninds in
-                                                                                       [
+  @testset "QR/QL block sparse on MPO tensor with all possible collections on Q,R" for ninds in [
     0, 1, 2, 3, 4
   ]
     expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
-    expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN()]
+    expected_RLflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN()]
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
@@ -282,25 +296,23 @@ end
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 4 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
-    @test flux(R) == expected_Rflux[ninds + 1]
+    @test flux(R) == expected_RLflux[ninds + 1]
     @test A ≈ Q * R atol = 1e-13
     # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-    expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
-    expected_Rflux = [QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN()]
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
-    @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
-    @test length(inds(Q)) == 4 - ninds + 1
+    Q, L, q = ql(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
+    @test length(inds(L)) == 4 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
-    @test flux(R) == expected_Rflux[ninds + 1]
-    @test A ≈ Q * R atol = 1e-13
+    @test flux(L) == expected_RLflux[ninds + 1]
+    @test A ≈ Q * L atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
 
-  @testset "QR/RQ dense with positive R" begin
+  @testset "QR/QL/RQ/LQ dense with positive R" begin
     l = Index(5, "l")
     s = Index(2, "s")
     r = Index(10, "r")
@@ -309,13 +321,23 @@ end
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    Q, L, q = ITensors.ql(A, l, s, s'; positive=true)
+    @test min(diag(L)...) > 0.0
+    @test A ≈ Q * L atol = 1e-13
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+
     R, Q, q = ITensors.rq(A, r; positive=true)
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+    L, Q, q = ITensors.lq(A, r; positive=true)
+    @test min(diag(L)...) > 0.0
+    @test A ≈ Q * L atol = 1e-13
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+
   end
 
-  @testset "QR/RQ block sparse with positive R" begin
+  @testset "QR/QL block sparse with positive R" begin
     l = dag(Index(QN("Sz", 0) => 3; tags="l"))
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
@@ -323,9 +345,9 @@ end
     Q, R, q = qr(A, l, s, s'; positive=true)
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
-    R, Q, q = ITensors.rq(A, r; positive=true)
-    @test min(diag(R)...) > 0.0
-    @test A ≈ Q * R atol = 1e-13
+    Q, L, q = ITensors.ql(A, l, s, s'; positive=true)
+    @test min(diag(L)...) > 0.0
+    @test A ≈ Q * L atol = 1e-13
   end
 
   test_combos = [(make_Heisenberg_AutoMPO, "S=1/2"), (make_Hubbard_AutoMPO, "Electron")]
