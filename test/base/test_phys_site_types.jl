@@ -77,6 +77,9 @@ using ITensors, LinearAlgebra, Test
     Z = op("Z", s, 5)
     @test hasinds(Z, s[5]', s[5])
 
+    @test_throws ArgumentError(
+      "Overload of \"state\" or \"state!\" functions not found for state name \"Fake\" and Index tags $(tags(s[3]))",
+    ) state("Fake", s[3])
     @test Vector(state("Up", s[3])) ≈ [1, 0]
     @test Vector(state("↑", s[3])) ≈ [1, 0]
     @test Vector(state("Dn", s[3])) ≈ [0, 1]
