@@ -1,3 +1,43 @@
+# These are rules for determining the output of a pairwise contraction of NDTensors
+# (given the indices of the output tensors)
+function contraction_output_type(
+  tensortype1::Type{<:DiagTensor}, tensortype2::Type{<:DenseTensor}, indsR
+)
+  return similartype(promote_type(tensortype1, tensortype2), indsR)
+end
+function contraction_output_type(
+  tensortype1::Type{<:DenseTensor}, tensortype2::Type{<:DiagTensor}, indsR
+)
+  return contraction_output_type(tensortype2, tensortype1, indsR)
+end
+
+# This performs the logic that DiagTensor*DiagTensor -> DiagTensor if it is not an outer
+# product but -> DenseTensor if it is
+# TODO: if the tensors are both order 2 (or less), or if there is an Index replacement,
+# then they remain diagonal. Should we limit DiagTensor*DiagTensor to cases that
+# result in a DiagTensor, for efficiency and type stability? What about a general
+# SparseTensor result?
+function contraction_output_type(
+  tensortype1::Type{<:DiagTensor}, tensortype2::Type{<:DiagTensor}, indsR
+)
+  if length(indsR) == ndims(tensortype1) + ndims(tensortype2)
+    # Turn into is_outer(inds1,inds2,indsR) function?
+    # How does type inference work with arithmatic of compile time values?
+    return similartype(dense(promote_type(tensortype1, tensortype2)), indsR)
+  end
+  return similartype(promote_type(tensortype1, tensortype2), indsR)
+end
+
+# The output must be initialized as zero since it is sparse, cannot be undefined
+function contraction_output(T1::DiagTensor, T2::Tensor, indsR)
+  return zero_contraction_output(T1, T2, indsR)
+end
+contraction_output(T1::Tensor, T2::DiagTensor, indsR) = contraction_output(T2, T1, indsR)
+
+function contraction_output(T1::DiagTensor, T2::DiagTensor, indsR)
+  return zero_contraction_output(T1, T2, indsR)
+end
+
 function _contract!!(
   R::UniformDiagTensor{ElR,NR},
   labelsR,
