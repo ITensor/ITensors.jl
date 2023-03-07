@@ -100,6 +100,7 @@ include("blocksparse/linearalgebra.jl")
 # Empty
 #
 include("empty/empty.jl")
+include("empty/EmptyTensor.jl")
 include("empty/adapt.jl")
 
 #####################################
