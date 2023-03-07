@@ -293,4 +293,84 @@ end
   end
 end
 
+#
+#  Build up Hamiltonians with non trival QN spaces in the link indices and further neighbour interactions.
+#
+function make_Heisenberg_AutoMPO(sites, NNN::Int64; J::Float64=1.0, kwargs...)::MPO
+  N = length(sites)
+  @assert N >= NNN
+  ampo = OpSum()
+  for dj in 1:NNN
+    f = J / dj
+    for j in 1:(N - dj)
+      add!(ampo, f, "Sz", j, "Sz", j + dj)
+      add!(ampo, f * 0.5, "S+", j, "S-", j + dj)
+      add!(ampo, f * 0.5, "S-", j, "S+", j + dj)
+    end
+  end
+  return MPO(ampo, sites; kwargs...)
+end
+
+function make_Hubbard_AutoMPO(
+  sites, NNN::Int64; U::Float64=1.0, t::Float64=1.0, V::Float64=0.5, kwargs...
+)::MPO
+  N = length(sites)
+  @assert(N >= NNN)
+  os = OpSum()
+  for i in 1:N
+    os += (U, "Nupdn", i)
+  end
+  for dn in 1:NNN
+    tj, Vj = t / dn, V / dn
+    for n in 1:(N - dn)
+      os += -tj, "Cdagup", n, "Cup", n + dn
+      os += -tj, "Cdagup", n + dn, "Cup", n
+      os += -tj, "Cdagdn", n, "Cdn", n + dn
+      os += -tj, "Cdagdn", n + dn, "Cdn", n
+      os += Vj, "Ntot", n, "Ntot", n + dn
+    end
+  end
+  return MPO(os, sites; kwargs...)
+end
+
+test_combos = [(make_Heisenberg_AutoMPO, "S=1/2"), (make_Hubbard_AutoMPO, "Electron")]
+
+@testset "QR/QL MPO tensors with complex block structures, H=$(test_combo[1])" for test_combo in
+                                                                                   test_combos
+  N, NNN = 10, 7 #10 lattice site, up 7th neight interactions
+  sites = siteinds(test_combo[2], N; conserve_qns=true)
+  H = test_combo[1](sites, NNN)
+  for n in 1:N-1
+    W = H[n]
+    @test flux(W) == QN("Sz", 0)
+    ilr = filterinds(W; tags="l=$n")[1]
+    ilq = noncommoninds(W, ilr)
+    Q, R, q = qr(W, ilq)
+    @test flux(Q) == QN("Sz", 0) #qr should move all flux on W (0 in this case) onto R
+    @test flux(R) == QN("Sz", 0) #this effectively removes all flux between Q and R in thie case.
+    @test W ≈ Q * R atol = 1e-13
+    # blocksparse - diag is not supported so we must convert Q*Q_dagger to dense.
+    # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
+    # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+    R, Q, q = ITensors.rq(W, ilr)
+    @test flux(Q) == QN("Sz", 0)
+    @test flux(R) == QN("Sz", 0)
+    @test W ≈ Q * R atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+    Q, L, q = ITensors.ql(W, ilq)
+    @test flux(Q) == QN("Sz", 0)
+    @test flux(L) == QN("Sz", 0)
+    @test W ≈ Q * L atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+
+    L, Q, q = ITensors.lq(W, ilr)
+    @test flux(Q) == QN("Sz", 0)
+    @test flux(L) == QN("Sz", 0)
+    @test W ≈ Q * L atol = 1e-13
+    @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
+  end
+end
 nothing
