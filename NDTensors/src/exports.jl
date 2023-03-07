@@ -50,6 +50,7 @@ export
   matrix,
   outer,
   permutedims!!,
+  ql,
   read,
   vector,
   write,
@@ -79,4 +80,4 @@ export
   store,
 
   # linearalgebra.jl
-  ql
+  qr

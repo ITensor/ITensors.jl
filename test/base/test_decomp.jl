@@ -167,18 +167,26 @@ end
     r = Index(5, "r")
     A = randomITensor(elt, l, s, r)
     Ainds = inds(A)
-    Q, R, q = qr(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    Linds=Ainds[1:ninds]
+    Rinds=uniqueinds(A, Linds...)
+    Q, R, q = qr(A, Linds;tags="Link,qr1") #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     @test q == commonind(Q, R)
-    @test hastags(q, "qr")
+    @test hastags(q, "qr1")
     if (length(inds(R)) > 1)
       @test is_upper(q, R) #specify the left index
     end
-
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds])
+    Q1, R1, q1 = qr(A, Linds, Rinds;tags="Link,myqr") #make sure the same call with both L & R indices give the same answer.
+    Q1=replaceind(Q1,q1,q)
+    R1=replaceind(R1,q1,q)
+    @test norm(Q-Q1)==0.0
+    @test norm(R-R1)==0.0
+    @test hastags(q1, "Link,myqr")
+ 
+    R, Q, q = rq(A, Linds)
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
@@ -188,8 +196,15 @@ end
     if (length(inds(R)) > 1)
       @test is_upper(R, q) #specify the right index
     end
+    R1, Q1, q1 = rq(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
+    Q1=replaceind(Q1,q1,q)
+    R1=replaceind(R1,q1,q)
+    @test norm(Q-Q1)==0.0
+    @test norm(R-R1)==0.0
+    # @test hastags(q, "myrq")
+    # @test hastags(q, "Link")
 
-    L, Q, q = lq(A, Ainds[1:ninds])
+    L, Q, q = lq(A, Linds)
     @test length(inds(L)) == ninds + 1 #+1 to account for new lq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
@@ -199,8 +214,13 @@ end
     if (length(inds(L)) > 1)
       @test is_lower(L, q) #specify the right index
     end
+    L1, Q1, q1 = lq(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
+    Q1=replaceind(Q1,q1,q)
+    L1=replaceind(L1,q1,q)
+    @test norm(Q-Q1)==0.0
+    @test norm(L-L1)==0.0
 
-    Q, L, q = ITensors.ql(A, Ainds[1:ninds])
+    Q, L, q = ql(A, Linds)
     @test length(inds(Q)) == ninds + 1 #+1 to account for new lq,Link index.
     @test length(inds(L)) == 3 - ninds + 1
     @test A ≈ Q * L atol = 1e-13
@@ -210,10 +230,14 @@ end
     if (length(inds(L)) > 1)
       @test is_lower(q, L) #specify the right index
     end
+    Q1, L1, q1 = ql(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
+    Q1=replaceind(Q1,q1,q)
+    L1=replaceind(L1,q1,q)
+    @test norm(Q-Q1)==0.0
+    @test norm(L-L1)==0.0
   end
 
-  @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in [
-    0, 1, 2, 3, 4
+  @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in [0, 1, 2, 3, 4
   ]
     l = Index(5, "l")
     s = Index(2, "s")
@@ -342,10 +366,10 @@ end
     s = Index(QN("Sz", -1) => 1, QN("Sz", 1) => 1; tags="s")
     r = Index(QN("Sz", 0) => 3; tags="r")
     A = randomITensor(l, s, dag(s'), r)
-    Q, R, q = qr(A, l, s, s'; positive=true)
+    Q, R, q = qr(A, l, s, dag(s'); positive=true)
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
-    Q, L, q = ITensors.ql(A, l, s, s'; positive=true)
+    Q, L, q = ITensors.ql(A, l, s, dag(s'); positive=true)
     @test min(diag(L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
   end
