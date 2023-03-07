@@ -50,7 +50,7 @@ function set_eltype(storagetype::Type{<:UniformDiag}, eltype::Type)
   return Diag{eltype,eltype}
 end
 
-function set_datatype(storagetype::Type{<:UniformDiag}, datatype::Type)
+function set_datatype(storagetype::Type{<:NonuniformDiag}, datatype::Type)
   return Diag{datatype,datatype}
 end
 
@@ -67,12 +67,6 @@ getindex(D::UniformDiag, i::Int) = data(D)
 function setindex!(D::UniformDiag, val, i::Int)
   return error("Cannot set elements of a uniform Diag storage")
 end
-
-Base.real(::Type{Diag{ElT,Vector{ElT}}}) where {ElT} = Diag{real(ElT),Vector{real(ElT)}}
-Base.real(::Type{Diag{ElT,ElT}}) where {ElT} = Diag{real(ElT),real(ElT)}
-
-complex(::Type{Diag{ElT,Vector{ElT}}}) where {ElT} = Diag{complex(ElT),Vector{complex(ElT)}}
-complex(::Type{Diag{ElT,ElT}}) where {ElT} = Diag{complex(ElT),complex(ElT)}
 
 # Deal with uniform Diag conversion
 function convert(::Type{<:Diag{ElT,DataT}}, D::Diag) where {ElT,DataT}
