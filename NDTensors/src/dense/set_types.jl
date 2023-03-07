@@ -30,3 +30,7 @@ function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray
     "Setting the `datatype` of the storage type `$storagetype` to a $(ndims(datatype))-dimsional array of type `$datatype` is not currently supported, use an `AbstractVector` instead.",
   )
 end
+
+function set_eltype(storagetype::Type{<:Dense{ElT, DataT}})  where {ElT, DataT<:AbstractArray}
+  return Dense{ElT, similartype(DataT, ElT)}
+end
