@@ -340,7 +340,7 @@ test_combos = [(make_Heisenberg_AutoMPO, "S=1/2"), (make_Hubbard_AutoMPO, "Elect
   N, NNN = 10, 7 #10 lattice site, up 7th neight interactions
   sites = siteinds(test_combo[2], N; conserve_qns=true)
   H = test_combo[1](sites, NNN)
-  for n in 1:N-1
+  for n in 1:(N - 1)
     W = H[n]
     @test flux(W) == QN("Sz", 0)
     ilr = filterinds(W; tags="l=$n")[1]
