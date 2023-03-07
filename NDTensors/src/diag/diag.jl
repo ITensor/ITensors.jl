@@ -36,23 +36,7 @@ datatype(::Type{<:Diag{<:Any,DataT}}) where {DataT} = DataT
 setdata(D::Diag, ndata) = Diag(ndata)
 setdata(storagetype::Type{<:Diag}, data) = Diag(data)
 
-function set_eltype(storagetype::Type{<:Diag}, eltype::Type)
-  return set_datatype(storagetype, set_eltype(datatype(storagetype), eltype))
-end
-
-function set_datatype(storagetype::Type{<:Diag}, datatype::Type{<:AbstractVector})
-  return Diag{eltype(datatype),datatype}
-end
-
 copy(D::Diag) = Diag(copy(data(D)))
-
-function set_eltype(storagetype::Type{<:UniformDiag}, eltype::Type)
-  return Diag{eltype,eltype}
-end
-
-function set_datatype(storagetype::Type{<:NonuniformDiag}, datatype::Type)
-  return Diag{datatype,datatype}
-end
 
 # Special printing for uniform Diag
 function show(io::IO, mime::MIME"text/plain", diag::UniformDiag)
@@ -69,7 +53,13 @@ function setindex!(D::UniformDiag, val, i::Int)
 end
 
 # Deal with uniform Diag conversion
-function convert(::Type{<:Diag{ElT,DataT}}, D::Diag) where {ElT,DataT}
+function convert(::Type{<:Diag{ElT,DataT}}, D::Diag) where {ElT,DataT<:AbstractArray}
+  @assert data(D) isa AbstractArray
+  return Diag(convert(DataT, data(D)))
+end
+
+function convert(::Type{<:Diag{ElT,DataT}}, D::Diag) where {ElT,DataT<:Number}
+  @assert data(D) isa Number
   return Diag(convert(DataT, data(D)))
 end
 
@@ -119,9 +109,10 @@ end
 # TODO: how do we make this work more generally for T2<:AbstractVector{S2}?
 # Make a similartype(AbstractVector{S2},T1) -> AbstractVector{T1} function?
 function promote_rule(
-  ::Type{<:UniformDiag{ElT1,DataT1}}, ::Type{<:NonuniformDiag{ElT2,Vector{ElT2}}}
+  ::Type{<:UniformDiag{ElT1,DataT1}}, ::Type{<:NonuniformDiag{ElT2,AbstractArray{ElT2}}}
 ) where {ElT1,DataT1<:Number,ElT2}
   ElR = promote_type(ElT1, ElT2)
+  
   VecR = Vector{ElR}
   return Diag{ElR,VecR}
 end
