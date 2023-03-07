@@ -438,6 +438,10 @@ end
 #  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
 #
 function qx(qx::Function, qtags, A::ITensor, Linds::Indices, Rinds::Indices; kwargs...)
+  # Strip out any extra indices that are not in A.
+  # Unit test test/base/test_itensor.jl line 1469 will fail without this.
+  Linds=commoninds(A,Linds)
+  #Rinds=commoninds(A,Rinds) #if the user supplied Rinds they could have the same problem?
   #
   # Make a dummy index with dim=1 and incorporate into A so the Linds & Rinds can never
   # be empty.  A essentially becomes 1D after collection.
