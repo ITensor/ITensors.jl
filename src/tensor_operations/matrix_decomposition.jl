@@ -407,25 +407,33 @@ ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
 #
 # Use supplied only left indices as a tuple or vector.
 #
-qr(A::ITensor, Linds::Indices;  kwargs...)=qr(A,Linds,uniqueinds(A, Linds);kwargs...)
-ql(A::ITensor, Linds::Indices;  kwargs...)=ql(A,Linds,uniqueinds(A, Linds);kwargs...)
-rq(A::ITensor, Linds::Indices;  kwargs...)=rq(A,Linds,uniqueinds(A, Linds);kwargs...)
-lq(A::ITensor, Linds::Indices;  kwargs...)=lq(A,Linds,uniqueinds(A, Linds);kwargs...)
+qr(A::ITensor, Linds::Indices; kwargs...) = qr(A, Linds, uniqueinds(A, Linds); kwargs...)
+ql(A::ITensor, Linds::Indices; kwargs...) = ql(A, Linds, uniqueinds(A, Linds); kwargs...)
+rq(A::ITensor, Linds::Indices; kwargs...) = rq(A, Linds, uniqueinds(A, Linds); kwargs...)
+lq(A::ITensor, Linds::Indices; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs...)
 #
 # User supplied only left indices as as vararg
 #
-qr(A::ITensor, Linds...; kwargs...)=qr(A,Linds,uniqueinds(A, Linds);kwargs...)
-ql(A::ITensor, Linds...; kwargs...)=ql(A,Linds,uniqueinds(A, Linds);kwargs...)
-rq(A::ITensor, Linds...; kwargs...)=rq(A,Linds,uniqueinds(A, Linds);kwargs...)
-lq(A::ITensor, Linds...; kwargs...)=lq(A,Linds,uniqueinds(A, Linds);kwargs...)
+qr(A::ITensor, Linds...; kwargs...) = qr(A, Linds, uniqueinds(A, Linds); kwargs...)
+ql(A::ITensor, Linds...; kwargs...) = ql(A, Linds, uniqueinds(A, Linds); kwargs...)
+rq(A::ITensor, Linds...; kwargs...) = rq(A, Linds, uniqueinds(A, Linds); kwargs...)
+lq(A::ITensor, Linds...; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs...)
 #
 # Core function where both left and right indices are supplied as tuples of vectors
 # Handle default tags and dispatch to generic qx/xq functions.
 #
-qr(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", kwargs...)=qx(qr,tags,A,Linds,Rinds;kwargs...)
-ql(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,ql", kwargs...)=qx(ql,tags,A,Linds,Rinds;kwargs...)
-rq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,rq", kwargs...)=xq(ql,tags,A,Linds,Rinds;kwargs...)
-lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", kwargs...)=xq(qr,tags,A,Linds,Rinds;kwargs...)
+function qr(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", kwargs...)
+  return qx(qr, tags, A, Linds, Rinds; kwargs...)
+end
+function ql(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,ql", kwargs...)
+  return qx(ql, tags, A, Linds, Rinds; kwargs...)
+end
+function rq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,rq", kwargs...)
+  return xq(ql, tags, A, Linds, Rinds; kwargs...)
+end
+function lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", kwargs...)
+  return xq(qr, tags, A, Linds, Rinds; kwargs...)
+end
 #
 #  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
 #
@@ -445,7 +453,7 @@ function qx(qx::Function, qtags, A::ITensor, Linds::Indices, Rinds::Indices; kwa
   #  Make sure we don't accidentally pass the transpose into the matrix qr/ql routine.
   #
   AC = permute(AC, cL, cR; allow_alias=true)
-  
+
   QT, XT = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
   #
   #  Undo the combine oepration, to recover all tensor indices.
@@ -469,7 +477,9 @@ end
 #  Generic function implementing both rq and lq decomposition. Implemented using qr/ql 
 #  with swapping the left and right indices.  The X tensor = R or L. 
 #
-function xq(qx::Function, qtags::TagSet,A::ITensor, Linds::Indices, Rinds::Indices;kwargs...)
+function xq(
+  qx::Function, qtags::TagSet, A::ITensor, Linds::Indices, Rinds::Indices; kwargs...
+)
   Q, X, q = qx(A, Rinds, Linds; kwargs...)
   #
   # fix up the tag name for the index between Q and L.
@@ -480,7 +490,6 @@ function xq(qx::Function, qtags::TagSet,A::ITensor, Linds::Indices, Rinds::Indic
 
   return X, Q, q
 end
-
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
 

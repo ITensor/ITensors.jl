@@ -303,7 +303,6 @@ random_orthog(::Type{ElT}, n::Int, m::Int) where {ElT<:Real} = random_unitary(El
 
 random_orthog(n::Int, m::Int) = random_orthog(Float64, n, m)
 
-
 function LinearAlgebra.eigen(
   T::DenseTensor{ElT,2,IndsT}; kwargs...
 ) where {ElT<:Union{Real,Complex},IndsT}
@@ -368,21 +367,20 @@ function LinearAlgebra.eigen(
   return D, V, spec
 end
 
-
-function qr(T::DenseTensor{ElT,2,IndsT}; positive=false, kwargs...) where {ElT,IndsT} 
-  qxf= positive ? qr_positive : qr
-  return qx(qxf,T;kwargs...)
+function qr(T::DenseTensor{ElT,2,IndsT}; positive=false, kwargs...) where {ElT,IndsT}
+  qxf = positive ? qr_positive : qr
+  return qx(qxf, T; kwargs...)
 end
-function ql(T::DenseTensor{ElT,2,IndsT}; positive=false, kwargs...) where {ElT,IndsT} 
-  qxf= positive ? ql_positive : ql
-  return qx(qxf,T;kwargs...)
+function ql(T::DenseTensor{ElT,2,IndsT}; positive=false, kwargs...) where {ElT,IndsT}
+  qxf = positive ? ql_positive : ql
+  return qx(qxf, T; kwargs...)
 end
 
 #
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function,T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
+function qx(qx::Function, T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
   QM, XM = qx(matrix(T))
   # Make the new indices to go onto Q and R
   q, r = inds(T)
@@ -430,12 +428,12 @@ matrix is unique. Returns a tuple (Q,L).
 function ql_positive(M::AbstractMatrix)
   sparseQ, L = ql(M)
   Q = convert(Matrix, sparseQ)
-  nr,nc = size(Q)
-  dc=nc>nr ? nc-nr : 0 #diag is shifted over by dc if nc>nr
+  nr, nc = size(Q)
+  dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
   for c in 1:nc
-    if c<=nr && real(L[c, c+dc]) < 0.0
-      L[c, 1:c+dc] *= -1 #only fip non-zero portion of the column.
-      Q[:,c] *= -1
+    if c <= nr && real(L[c, c + dc]) < 0.0
+      L[c, 1:(c + dc)] *= -1 #only fip non-zero portion of the column.
+      Q[:, c] *= -1
     end
   end
   return (Q, L)
@@ -445,7 +443,7 @@ end
 #  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
 #  before letting lapack overwirte it. 
 #
-function ql(A::AbstractMatrix{T}; kwargs...) where T
+function ql(A::AbstractMatrix{T}; kwargs...) where {T}
   Base.require_one_based_indexing(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
   copyto!(AA, A)
@@ -456,35 +454,34 @@ end
 # about unpacking Q and L from the A matrix.
 #
 function ql!(A::StridedMatrix{<:LAPACK.BlasFloat})
-  tau=Base.similar(A, min(size(A)...))
-  x=LAPACK.geqlf!(A, tau)
+  tau = Base.similar(A, min(size(A)...))
+  x = LAPACK.geqlf!(A, tau)
   #save L from the lower portion of A, before orgql! mangles it!
-  nr,nc=size(A)
-  mn=min(nr,nc)
-  L=similar(A,(mn,nc))
+  nr, nc = size(A)
+  mn = min(nr, nc)
+  L = similar(A, (mn, nc))
   for r in 1:mn
-    for c in 1:r+nc-mn
-      L[r,c]=A[r+nr-mn,c]
+    for c in 1:(r + nc - mn)
+      L[r, c] = A[r + nr - mn, c]
     end
-    for c in r+1+nc-mn:nc
-      L[r,c]=0.0
+    for c in (r + 1 + nc - mn):nc
+      L[r, c] = 0.0
     end
   end
   # Now we need shift the orth vectors from the right side of Q over the left side, before
-  if (mn<nc)
-      for r in 1:nr
-        for c in 1:mn
-            A[r,c]=A[r,c+nc-mn];
-        end
+  if (mn < nc)
+    for r in 1:nr
+      for c in 1:mn
+        A[r, c] = A[r, c + nc - mn]
       end
-      for r in 1:nr
-        A = A[:,1:mn] #whack the extra columns in A.
-      end
+    end
+    for r in 1:nr
+      A = A[:, 1:mn] #whack the extra columns in A.
+    end
   end
-  LAPACK.orgql!(A,tau)
-  return  A,L
+  LAPACK.orgql!(A, tau)
+  return A, L
 end
-
 
 # TODO: support alg keyword argument to choose the svd algorithm
 function polar(T::DenseTensor{ElT,2,IndsT}) where {ElT,IndsT}

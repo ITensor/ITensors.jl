@@ -167,9 +167,9 @@ end
     r = Index(5, "r")
     A = randomITensor(elt, l, s, r)
     Ainds = inds(A)
-    Linds=Ainds[1:ninds]
-    Rinds=uniqueinds(A, Linds...)
-    Q, R, q = qr(A, Linds;tags="Link,qr1") #calling  qr(A) triggers not supported error.
+    Linds = Ainds[1:ninds]
+    Rinds = uniqueinds(A, Linds...)
+    Q, R, q = qr(A, Linds; tags="Link,qr1") #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
@@ -179,13 +179,13 @@ end
     if (length(inds(R)) > 1)
       @test is_upper(q, R) #specify the left index
     end
-    Q1, R1, q1 = qr(A, Linds, Rinds;tags="Link,myqr") #make sure the same call with both L & R indices give the same answer.
-    Q1=replaceind(Q1,q1,q)
-    R1=replaceind(R1,q1,q)
-    @test norm(Q-Q1)==0.0
-    @test norm(R-R1)==0.0
+    Q1, R1, q1 = qr(A, Linds, Rinds; tags="Link,myqr") #make sure the same call with both L & R indices give the same answer.
+    Q1 = replaceind(Q1, q1, q)
+    R1 = replaceind(R1, q1, q)
+    @test norm(Q - Q1) == 0.0
+    @test norm(R - R1) == 0.0
     @test hastags(q1, "Link,myqr")
- 
+
     R, Q, q = rq(A, Linds)
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
@@ -197,10 +197,10 @@ end
       @test is_upper(R, q) #specify the right index
     end
     R1, Q1, q1 = rq(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
-    Q1=replaceind(Q1,q1,q)
-    R1=replaceind(R1,q1,q)
-    @test norm(Q-Q1)==0.0
-    @test norm(R-R1)==0.0
+    Q1 = replaceind(Q1, q1, q)
+    R1 = replaceind(R1, q1, q)
+    @test norm(Q - Q1) == 0.0
+    @test norm(R - R1) == 0.0
     # @test hastags(q, "myrq")
     # @test hastags(q, "Link")
 
@@ -215,10 +215,10 @@ end
       @test is_lower(L, q) #specify the right index
     end
     L1, Q1, q1 = lq(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
-    Q1=replaceind(Q1,q1,q)
-    L1=replaceind(L1,q1,q)
-    @test norm(Q-Q1)==0.0
-    @test norm(L-L1)==0.0
+    Q1 = replaceind(Q1, q1, q)
+    L1 = replaceind(L1, q1, q)
+    @test norm(Q - Q1) == 0.0
+    @test norm(L - L1) == 0.0
 
     Q, L, q = ql(A, Linds)
     @test length(inds(Q)) == ninds + 1 #+1 to account for new lq,Link index.
@@ -231,13 +231,14 @@ end
       @test is_lower(q, L) #specify the right index
     end
     Q1, L1, q1 = ql(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
-    Q1=replaceind(Q1,q1,q)
-    L1=replaceind(L1,q1,q)
-    @test norm(Q-Q1)==0.0
-    @test norm(L-L1)==0.0
+    Q1 = replaceind(Q1, q1, q)
+    L1 = replaceind(L1, q1, q)
+    @test norm(Q - Q1) == 0.0
+    @test norm(L - L1) == 0.0
   end
 
-  @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in [0, 1, 2, 3, 4
+  @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in [
+    0, 1, 2, 3, 4
   ]
     l = Index(5, "l")
     s = Index(2, "s")
@@ -279,9 +280,9 @@ end
     # Also fails with error in permutedims so below we use norm(a-b)≈ 0.0 instead.
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
-    
+
     Q, L, q = ITensors.ql(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
-    @test length(inds(L)) == 3-ninds + 1 #+1 to account for new rq,Link index.
+    @test length(inds(L)) == 3 - ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
     @test flux(L) == expected_RLflux[ninds + 1]
@@ -305,7 +306,8 @@ end
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
 
-  @testset "QR/QL block sparse on MPO tensor with all possible collections on Q,R" for ninds in [
+  @testset "QR/QL block sparse on MPO tensor with all possible collections on Q,R" for ninds in
+                                                                                       [
     0, 1, 2, 3, 4
   ]
     expected_Qflux = [QN(), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0), QN("Sz", 0)]
@@ -358,7 +360,6 @@ end
     @test min(diag(L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-
   end
 
   @testset "QR/QL block sparse with positive R" begin

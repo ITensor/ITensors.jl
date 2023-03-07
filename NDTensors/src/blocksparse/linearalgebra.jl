@@ -296,15 +296,15 @@ function LinearAlgebra.eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
-ql(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT} = qx(ql,T;kwargs...)
-qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT} = qx(qr,T;kwargs...)
+ql(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT} = qx(ql, T; kwargs...)
+qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT} = qx(qr, T; kwargs...)
 #
 #  Generic function to implelement blocks sparse qr/ql decomposition.  It calls
 #  the dense qr or ql for each block. The X tensor = R or L. 
 #  This code thanks to Niklas Tausendpfund 
 #  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qx(qx::Function,T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
+function qx(qx::Function, T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
 
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
@@ -338,8 +338,8 @@ function qx(qx::Function,T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
     setblock!(iq, resize(b1, Qdim), n)
   end
 
-  indsQ = setindex(inds(T), iq, 2) 
-  indsX = setindex(inds(T), dag(iq), 1) 
+  indsQ = setindex(inds(T), iq, 2)
+  indsX = setindex(inds(T), dag(iq), 1)
 
   nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
   nzblocksX = Vector{Block{2}}(undef, nnzblocksT)
@@ -360,7 +360,6 @@ function qx(qx::Function,T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
 
   return Q, X
 end
-
 
 function exp(
   T::Union{BlockSparseMatrix{ElT},Hermitian{ElT,<:BlockSparseMatrix{ElT}}}
