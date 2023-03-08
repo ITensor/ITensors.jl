@@ -1,7 +1,7 @@
 name = "ITensorGaussianMPS"
 uuid = "2be41995-7c9f-4653-b682-bfa4e7cebb93"
 authors = ["Matthew Fishman <mfishman@flatironinstitute.org> and contributors"]
-version = "0.0.4"
+version = "0.0.5"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"

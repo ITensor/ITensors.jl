@@ -8,11 +8,11 @@ A package for creating the matrix product state of a free fermion (Gaussian) sta
 
 ## Installation
 
-The package is currently unregistered. To install it, first install Julia, start the Julia REPL by typing `julia` at your command line, and run the command:
+To install this package, first install Julia, start the Julia REPL by typing `julia` at your command line, and run the command:
 ```julia
 julia>]
 
-pkg> add https://github.com/ITensor/ITensorGaussianMPS.jl#main
+pkg> add ITensorGaussianMPS
 ```
 
 ## Examples

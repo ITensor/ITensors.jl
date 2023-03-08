@@ -28,12 +28,12 @@ end
   @test A ≈ Q * R atol = 1e-13
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, nm)) atol = 1e-13
 end
-@testset "Dense RQ decomposition" begin
+@testset "Dense LQ decomposition" begin
   n, m = 4, 8
   nm = min(n, m)
   A = randomTensor(n, m)
-  R, Q = rq(A)
-  @test A ≈ R * Q atol = 1e-13
+  Q, L = ql(A)
+  @test A ≈ Q * L atol = 1e-13
   @test array(Q) * array(Q)' ≈ Diagonal(fill(1.0, nm)) atol = 1e-13
 end
 

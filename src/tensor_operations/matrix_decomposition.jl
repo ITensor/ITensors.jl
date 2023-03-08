@@ -26,76 +26,85 @@ iterate(S::TruncSVD, ::Val{:done}) = nothing
 @doc """
     svd(A::ITensor, inds::Index...; <keyword arguments>)
 
-  Singular value decomposition (SVD) of an ITensor `A`, computed
-  by treating the "left indices" provided collectively
-  as a row index, and the remaining "right indices" as a
-  column index (matricization of a tensor).
+Singular value decomposition (SVD) of an ITensor `A`, computed
+by treating the "left indices" provided collectively
+as a row index, and the remaining "right indices" as a
+column index (matricization of a tensor).
 
-  The first three return arguments are `U`, `S`, and `V`, such that
-  `A ≈ U * S * V`.
+The first three return arguments are `U`, `S`, and `V`, such that
+`A ≈ U * S * V`.
 
-  Whether or not the SVD performs a trunction depends on the keyword
-  arguments provided.
+Whether or not the SVD performs a trunction depends on the keyword
+arguments provided.
 
-  If the left or right set of indices are empty, all input indices are
-  put on `V` or `U` respectively. To specify an empty set of left indices,
-  you must explicitly use `svd(A, ())` (`svd(A)` is currently undefined).
+If the left or right set of indices are empty, all input indices are
+put on `V` or `U` respectively. To specify an empty set of left indices,
+you must explicitly use `svd(A, ())` (`svd(A)` is currently undefined).
 
-  # Examples
+# Examples
 
-  ```julia
-  i = Index(2)
-  j = Index(5)
-  k = Index(2)
+Computing the SVD of an order-three ITensor, such that the indices
+i and k end up on U and j ends up on V
 
-  A = randomITensor(i, j, k)
-  U, S, V = svd(A, i, k);
-  @show norm(A - U * S * V) <= 10 * eps() * norm(A)
+```
+i = Index(2)
+j = Index(5)
+k = Index(2)
+A = randomITensor(i, j, k)
+U, S, V = svd(A, i, k);
+@show norm(A - U * S * V) <= 10 * eps() * norm(A)
+```
 
-  # This will truncate the last 2 singular values.
-  # The norm of the difference with the original tensor
-  # will be the sqrt root of the sum of the squares of the
-  # singular values that get truncated.
-  Utrunc, Strunc, Vtrunc = svd(A, i, k; maxdim=2);
-  @show norm(A - Utrunc * Strunc * Vtrunc) ≈ sqrt(S[3, 3]^2 + S[4, 4]^2)
+The following code will truncate the last 2 singular values,
+since the total number of singular values is 4.
+The norm of the difference with the original tensor
+will be the sqrt root of the sum of the squares of the
+singular values that get truncated.
 
-  # Alternatively we can specify that we want to truncate
-  # the weights of the singular values up to a certain cutoff,
-  # so the error will be no larger than the cutoff.
-  Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
-  @show norm(A - Utrunc2 * Strunc2 * Vtrunc2) <= 1e-10
-  ```
+```
+trunc, Strunc, Vtrunc = svd(A, i, k; maxdim=2);
+@show norm(A - Utrunc * Strunc * Vtrunc) ≈ sqrt(S[3, 3]^2 + S[4, 4]^2)
+```
 
-  # Keywords
-  - `maxdim::Int`: the maximum number of singular values to keep.
-  - `mindim::Int`: the minimum number of singular values to keep.
-  - `cutoff::Float64`: set the desired truncation error of the SVD,
-     by default defined as the sum of the squares of the smallest singular values.
-  - `lefttags::String = "Link,u"`: set the tags of the Index shared by `U` and `S`.
-  - `righttags::String = "Link,v"`: set the tags of the Index shared by `S` and `V`.
-  - `alg::String = "divide_and_conquer"`. Options:
-  - `"divide_and_conquer"` - A divide-and-conquer algorithm.
-       LAPACK's gesdd. Fast, but may lead to some innacurate singular values
-       for very ill-conditioned matrices. Also may sometimes fail to converge,
-       leading to errors (in which case "qr_iteration" or "recursive" can be tried).
-    - `"qr_iteration"` - Typically slower but more accurate for very
-       ill-conditioned matrices compared to `"divide_and_conquer"`.
-       LAPACK's gesvd.
-    - `"recursive"` - ITensor's custom svd. Very reliable, but may be slow if
-       high precision is needed. To get an `svd` of a matrix `A`, an
-       eigendecomposition of ``A^{\\dagger} A`` is used to compute `U` and then
-       a `qr` of ``A^{\\dagger} U`` is used to compute `V`. This is performed
-       recursively to compute small singular values.
-  - `use_absolute_cutoff::Bool = false`: set if all probability weights below
-     the `cutoff` value should be discarded, rather than the sum of discarded
-     weights.
-  - `use_relative_cutoff::Bool = true`: set if the singular values should be
-     normalized for the sake of truncation.
-  - `min_blockdim::Int = 0`: for SVD of block-sparse or QN ITensors, require
-     that the number of singular values kept be greater than or equal to
-     this value when possible
+Alternatively we can specify that we want to truncate
+the weights of the singular values up to a certain cutoff,
+so the total error will be no larger than the cutoff.
 
-  See also: [`factorize`](@ref), [`eigen`](@ref)
+```
+Utrunc2, Strunc2, Vtrunc2 = svd(A, i, k; cutoff=1e-10);
+@show norm(A - Utrunc2 * Strunc2 * Vtrunc2) <= 1e-10
+```
+
+# Keywords
+- `maxdim::Int`: the maximum number of singular values to keep.
+- `mindim::Int`: the minimum number of singular values to keep.
+- `cutoff::Float64`: set the desired truncation error of the SVD,
+   by default defined as the sum of the squares of the smallest singular values.
+- `lefttags::String = "Link,u"`: set the tags of the Index shared by `U` and `S`.
+- `righttags::String = "Link,v"`: set the tags of the Index shared by `S` and `V`.
+- `alg::String = "divide_and_conquer"`. Options:
+- `"divide_and_conquer"` - A divide-and-conquer algorithm.
+     LAPACK's gesdd. Fast, but may lead to some innacurate singular values
+     for very ill-conditioned matrices. Also may sometimes fail to converge,
+     leading to errors (in which case "qr_iteration" or "recursive" can be tried).
+  - `"qr_iteration"` - Typically slower but more accurate for very
+     ill-conditioned matrices compared to `"divide_and_conquer"`.
+     LAPACK's gesvd.
+  - `"recursive"` - ITensor's custom svd. Very reliable, but may be slow if
+     high precision is needed. To get an `svd` of a matrix `A`, an
+     eigendecomposition of ``A^{\\dagger} A`` is used to compute `U` and then
+     a `qr` of ``A^{\\dagger} U`` is used to compute `V`. This is performed
+     recursively to compute small singular values.
+- `use_absolute_cutoff::Bool = false`: set if all probability weights below
+   the `cutoff` value should be discarded, rather than the sum of discarded
+   weights.
+- `use_relative_cutoff::Bool = true`: set if the singular values should be
+   normalized for the sake of truncation.
+- `min_blockdim::Int = 0`: for SVD of block-sparse or QN ITensors, require
+   that the number of singular values kept be greater than or equal to
+   this value when possible
+
+See also: [`factorize`](@ref), [`eigen`](@ref)
 """
 function svd(A::ITensor, Linds...; kwargs...)
   utags::TagSet = get(kwargs, :lefttags, get(kwargs, :utags, "Link,u"))
@@ -354,12 +363,11 @@ function eigen(A::ITensor; kwargs...)
   return eigen(A, Lis, Ris; kwargs...)
 end
 
-function noinds_error_message(decomp::String)
-  return "$decomp without any input indices is currently not defined.
-   In the future it may be defined as performing a $decomp decomposition
-   treating the ITensor as a matrix from the primed to the unprimed indices."
-end
+# ----------------------------- QR/RQ/QL/LQ decompositions ------------------------------
 
+#
+#  Helper functions for handleing cases where zero indices are requested on Q or R.
+#
 function add_trivial_index(A::ITensor, Ainds)
   α = trivial_index(Ainds) #If Ainds[1] has no QNs makes Index(1), otherwise Index(QN()=>1)
   vα = onehot(eltype(A), α => 1)
@@ -378,149 +386,113 @@ function add_trivial_index(A::ITensor, Linds, Rinds)
   return A, vαl, vαr, Linds, Rinds
 end
 
-function remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr)
-  if !isnothing(vαl)
-    Q *= dag(vαl)
-  end
-  if !isnothing(vαr)
-    R *= dag(vαr)
-  end
-  return Q, R
+remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr) = (Q * dag(vαl), R * dag(vαr))
+remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, vαr) = (Q, R * dag(vαr))
+remove_trivial_index(Q::ITensor, R::ITensor, vαl, ::Nothing) = (Q * dag(vαl), R)
+remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, ::Nothing) = (Q, R)
+
+#
+#  Force users to knowingly ask for zero indices using qr(A,()) syntax
+#
+function noinds_error_message(decomp::String)
+  return "$decomp without any input indices is currently not defined.
+   In the future it may be defined as performing a $decomp decomposition
+   treating the ITensor as a matrix from the primed to the unprimed indices."
 end
 
-import NDTensors: rq
-#Force users to knowingly ask for zero indices using qr(A,()) syntax
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
 rq(A::ITensor; kwargs...) = error(noinds_error_message("rq"))
 lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
 ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
-
-function qr(A::ITensor, Linds...; kwargs...)
-  qtag::TagSet = get(kwargs, :tags, "Link,qr") #tag for new index between Q and R
-  Lis = commoninds(A, indices(Linds...))
-  Ris = uniqueinds(A, Lis)
-  lre = isempty(Lis) || isempty(Ris)
-  # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
+#
+# Use supplied only left indices as a tuple or vector.
+#
+qr(A::ITensor, Linds::Indices; kwargs...) = qr(A, Linds, uniqueinds(A, Linds); kwargs...)
+ql(A::ITensor, Linds::Indices; kwargs...) = ql(A, Linds, uniqueinds(A, Linds); kwargs...)
+rq(A::ITensor, Linds::Indices; kwargs...) = rq(A, Linds, uniqueinds(A, Linds); kwargs...)
+lq(A::ITensor, Linds::Indices; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs...)
+#
+# User supplied only left indices as as vararg
+#
+qr(A::ITensor, Linds...; kwargs...) = qr(A, Linds, uniqueinds(A, Linds); kwargs...)
+ql(A::ITensor, Linds...; kwargs...) = ql(A, Linds, uniqueinds(A, Linds); kwargs...)
+rq(A::ITensor, Linds...; kwargs...) = rq(A, Linds, uniqueinds(A, Linds); kwargs...)
+lq(A::ITensor, Linds...; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs...)
+#
+# Core function where both left and right indices are supplied as tuples of vectors
+# Handle default tags and dispatch to generic qx/xq functions.
+#
+function qr(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", kwargs...)
+  return qx(qr, tags, A, Linds, Rinds; kwargs...)
+end
+function ql(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,ql", kwargs...)
+  return qx(ql, tags, A, Linds, Rinds; kwargs...)
+end
+function rq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,rq", kwargs...)
+  return xq(ql, tags, A, Linds, Rinds; kwargs...)
+end
+function lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", kwargs...)
+  return xq(qr, tags, A, Linds, Rinds; kwargs...)
+end
+#
+#  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
+#
+function qx(qx::Function, qtags, A::ITensor, Linds::Indices, Rinds::Indices; kwargs...)
+  # Strip out any extra indices that are not in A.
+  # Unit test test/base/test_itensor.jl line 1469 will fail without this.
+  Linds = commoninds(A, Linds)
+  #Rinds=commoninds(A,Rinds) #if the user supplied Rinds they could have the same problem?
+  #
+  # Make a dummy index with dim=1 and incorporate into A so the Linds & Rinds can never
   # be empty.  A essentially becomes 1D after collection.
-  if (lre)
-    A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
-  end
-
   #
-  #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
+  A, vαl, vαr, Linds, Rinds = add_trivial_index(A, Linds, Rinds)
   #
-  CL, CR = combiner(Lis...), combiner(Ris...)
+  #  Use combiners to render A down to a rank 2 tensor ready for matrix QR/QL routine.
+  #
+  CL, CR = combiner(Linds...), combiner(Rinds...)
   cL, cR = combinedind(CL), combinedind(CR)
   AC = A * CR * CL
   #
-  #  Make sure we don't accidentally pass the transpose into the matrix qr routine.
+  #  Make sure we don't accidentally pass the transpose into the matrix qr/ql routine.
   #
   AC = permute(AC, cL, cR; allow_alias=true)
-  # qr the matrix.
-  QT, RT = qr(tensor(AC); kwargs...)
 
-  # We need a use case that fails without this code.
-  # correcting the fluxes of the two tensors, such that Q has 0 flux for all blocks
-  # and R has the total flux of the system
-  # if hasqns(AC)
-  # for b in nzblocks(QT)
-  #     i1 = inds(QT)[1]
-  #     i2 = inds(QT)[2]
-  #     r1 = inds(RT)[1]
-  #     newqn = -dir(i2) * flux(i1 => Block(b[1]))
-  #     ITensors.setblockqn!(i2, newqn, b[2])
-  #     ITensors.setblockqn!(r1, newqn, b[2])
-  # end
-  # end
-
+  QT, XT = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
   #
   #  Undo the combine oepration, to recover all tensor indices.
   #
-  Q, R = itensor(QT) * dag(CL), itensor(RT) * dag(CR)
+  Q, X = itensor(QT) * dag(CL), itensor(XT) * dag(CR)
 
-  # Conditionally remove dummy indices.
-  if (lre)
-    Q, R = remove_trivial_index(Q, R, vαl, vαr)
-  end
+  # Remove dummy indices.  No-op if vαl and vαr are Nothing
+  Q, X = remove_trivial_index(Q, X, vαl, vαr)
   #
-  # fix up the tag name for the index between Q and R.
+  # fix up the tag name for the index between Q and X.
   #  
-  q = commonind(Q, R)
-  settags!(Q, qtag, q)
-  settags!(R, qtag, q)
-  q = settags(q, qtag)
+  q = commonind(Q, X)
+  Q = settags(Q, qtags, q)
+  X = settags(X, qtags, q)
+  q = settags(q, qtags)
 
-  return Q, R, q
+  return Q, X, q
 end
 
-function rq(A::ITensor, Linds...; kwargs...)
-  qtag::TagSet = get(kwargs, :tags, "Link,rq") #tag for new index between Q and R
-  Lis = commoninds(A, indices(Linds...))
-  Ris = uniqueinds(A, Lis)
-  lre = isempty(Lis) || isempty(Ris)
-  # make a dummy index with dim=1 and incorporate into A so the Lis & Ris can never
-  # be empty.  A essentially becomes 1D after collection.
-  if (lre)
-    A, vαl, vαr, Lis, Ris = add_trivial_index(A, Lis, Ris)
-  end
-
+#
+#  Generic function implementing both rq and lq decomposition. Implemented using qr/ql 
+#  with swapping the left and right indices.  The X tensor = R or L. 
+#
+function xq(
+  qx::Function, qtags::TagSet, A::ITensor, Linds::Indices, Rinds::Indices; kwargs...
+)
+  Q, X, q = qx(A, Rinds, Linds; kwargs...)
   #
-  #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
-  #
-  CL, CR = combiner(Lis...), combiner(Ris...)
-  cL, cR = combinedind(CL), combinedind(CR)
-  AC = A * CR * CL
-  #
-  #  Make sure we don't accidentally pass the transpose into the matrix qr routine.
-  #
-  AC = permute(AC, cL, cR; allow_alias=true)
-  # qr the matrix.
-  RT, QT = NDTensors.rq(tensor(AC); kwargs...)
-
-  #
-  #  Undo the combine oepration, to recover all tensor indices.
-  #
-  R, Q = itensor(RT) * dag(CL), itensor(QT) * dag(CR)
-
-  # Conditionally remove dummy indices.
-  if (lre)
-    R, Q = remove_trivial_index(R, Q, vαl, vαr)
-  end
-  #
-  # fix up the tag name for the index between Q and R.
+  # fix up the tag name for the index between Q and L.
   #  
-  q = commonind(Q, R)
-  settags!(Q, qtag, q)
-  settags!(R, qtag, q)
-  q = settags(q, qtag)
+  Q = settags(Q, qtags, q)
+  X = settags(X, qtags, q)
+  q = settags(q, qtags)
 
-  return R, Q, q
-end
-
-function lq(A::ITensor, Linds...; kwargs...)
-  Q, L, q = qr(A, uniqueinds(A, Linds...); kwargs...)
-  #
-  # fix up the tag name for the index between Q and R.
-  #  
-  qtag::TagSet = get(kwargs, :tags, "Link,lq") #tag for new index between Q and R
-  settags!(Q, qtag, q)
-  settags!(L, qtag, q)
-  q = settags(q, qtag)
-
-  return L, Q, q
-end
-
-function ql(A::ITensor, Linds...; kwargs...)
-  Q, L, q = rq(A, uniqueinds(A, Linds...); kwargs...)
-  #
-  # fix up the tag name for the index between Q and R.
-  #  
-  qtag::TagSet = get(kwargs, :tags, "Link,ql") #tag for new index between Q and R
-  settags!(Q, qtag, q)
-  settags!(L, qtag, q)
-  q = settags(q, qtag)
-
-  return L, Q, q
+  return X, Q, q
 end
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))
@@ -614,41 +586,39 @@ Perform a factorization of `A` into ITensors `L` and `R` such that `A ≈ L * R`
 
 # Arguments
 
-    - `ortho::String = "left"`: Choose orthogonality
-       properties of the factorization.
-
-        + `"left"`: the left factor `L` is an orthogonal basis
-           such that `L * dag(prime(L, commonind(L,R))) ≈ I`.
-        + `"right"`: the right factor `R` forms an orthogonal basis.
-        + `"none"`, neither of the factors form an orthogonal basis,
-            and in general are made as symmetrically as possible
-            (depending on the decomposition used).
-    - `which_decomp::Union{String, Nothing} = nothing`: choose what kind
-       of decomposition is used.
-
-        + `nothing`: choose the decomposition automatically based on
-           the other arguments. For example, when `nothing` is chosen and
-           `ortho = "left"` or `"right"`, and a cutoff is provided, `svd` or
-           `eigen` is used depending on the provided cutoff (`eigen` is only
-           used when the cutoff is greater than `1e-12`, since it has a lower
-           precision). When no truncation is requested `qr` is used for dense
-           ITensors and `svd` for block-sparse ITensors (in the future `qr`
-           will be used also for block-sparse ITensors in this case).
-        + `"svd"`: `L = U` and `R = S * V` for `ortho = "left"`, `L = U * S`
-           and `R = V` for `ortho = "right"`, and `L = U * sqrt.(S)` and
-           `R = sqrt.(S) * V` for `ortho = "none"`. To control which `svd`
-           algorithm is choose, use the `svd_alg` keyword argument. See the
-           documentation for `svd` for the supported algorithms, which are the
-           same as those accepted by the `alg` keyword argument.
-        + `"eigen"`: `L = U` and ``R = U^{\\dagger} A`` where `U` is determined
-           from the eigendecompositon ``A A^{\\dagger} = U D U^{\\dagger}`` for
-           `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is
-           not supported for `ortho = "none"`.
-        + `"qr"`: `L=Q` and `R` an upper-triangular matrix when
-           `ortho = "left"`, and `R = Q` and `L` a lower-triangular matrix
-           when `ortho = "right"` (currently supported for dense ITensors only).
-          In the future, other decompositions like QR (for block-sparse ITensors),
-          polar, cholesky, LU, etc. are expected to be supported.
+- `ortho::String = "left"`: Choose orthogonality
+   properties of the factorization.
+    + `"left"`: the left factor `L` is an orthogonal basis
+       such that `L * dag(prime(L, commonind(L,R))) ≈ I`.
+    + `"right"`: the right factor `R` forms an orthogonal basis.
+    + `"none"`, neither of the factors form an orthogonal basis,
+        and in general are made as symmetrically as possible
+        (depending on the decomposition used).
+- `which_decomp::Union{String, Nothing} = nothing`: choose what kind
+   of decomposition is used.
+    + `nothing`: choose the decomposition automatically based on
+       the other arguments. For example, when `nothing` is chosen and
+       `ortho = "left"` or `"right"`, and a cutoff is provided, `svd` or
+       `eigen` is used depending on the provided cutoff (`eigen` is only
+       used when the cutoff is greater than `1e-12`, since it has a lower
+       precision). When no truncation is requested `qr` is used for dense
+       ITensors and `svd` for block-sparse ITensors (in the future `qr`
+       will be used also for block-sparse ITensors in this case).
+    + `"svd"`: `L = U` and `R = S * V` for `ortho = "left"`, `L = U * S`
+       and `R = V` for `ortho = "right"`, and `L = U * sqrt.(S)` and
+       `R = sqrt.(S) * V` for `ortho = "none"`. To control which `svd`
+       algorithm is choose, use the `svd_alg` keyword argument. See the
+       documentation for `svd` for the supported algorithms, which are the
+       same as those accepted by the `alg` keyword argument.
+    + `"eigen"`: `L = U` and ``R = U^{\\dagger} A`` where `U` is determined
+       from the eigendecompositon ``A A^{\\dagger} = U D U^{\\dagger}`` for
+       `ortho = "left"` (and vice versa for `ortho = "right"`). `"eigen"` is
+       not supported for `ortho = "none"`.
+    + `"qr"`: `L=Q` and `R` an upper-triangular matrix when
+       `ortho = "left"`, and `R = Q` and `L` a lower-triangular matrix
+       when `ortho = "right"` (currently supported for dense ITensors only).
+      In the future, other decompositions like QR (for block-sparse ITensors),
+      polar, cholesky, LU, etc. are expected to be supported.
 
 For truncation arguments, see: [`svd`](@ref)
 """

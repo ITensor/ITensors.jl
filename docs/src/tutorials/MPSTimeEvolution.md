@@ -91,7 +91,7 @@ let
   append!(gates, reverse(gates))
 
   # Initialize psi to be a product state (alternating up and down)
-  psi = productMPS(s, n -> isodd(n) ? "Up" : "Dn")
+  psi = MPS(s, n -> isodd(n) ? "Up" : "Dn")
 
   c = div(N, 2) # center site
 
@@ -158,7 +158,7 @@ formula. Here we can conveniently do that by just calling the Julia
 gates we have made so far. This can
 be done in a single line of code `append!(gates,reverse(gates))`.
 
-The line of code `psi = productMPS(s, n -> isodd(n) ? "Up" : "Dn")`
+The line of code `psi = MPS(s, n -> isodd(n) ? "Up" : "Dn")`
 initializes our MPS `psi` as a product state of alternating 
 up and down spins.
 
