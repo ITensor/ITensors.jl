@@ -1,5 +1,7 @@
 using ITensors, LinearAlgebra, Test
 
+using Printf
+Base.show(io::IO, f::Float64) = @printf(io, "%1.3f", f)
 #
 #  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
 #
@@ -66,6 +68,27 @@ function is_upper(A::ITensor, r::Index)::Bool
   end
 end
 is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
+
+function diag_upper(l::Index, A::ITensor)
+  At = tensor(A * combiner(noncommoninds(A, l)...))
+  if size(At) == (1,)
+    return At
+  end
+  @assert length(size(At)) == 2
+  return diag(At)
+end
+
+function diag_lower(l::Index, A::ITensor)
+  At = tensor(A * combiner(noncommoninds(A, l)...)) #render down ot order 2
+  if size(At) == (1,)
+    return At
+  end
+  @assert length(size(At)) == 2
+  nr, nc = size(At)
+  dc = Base.max(0, nc - nr) #diag starts dc+1 columns out from the left
+  At1 = At[:, (dc + 1):nc] #chop out the first dc columns
+  return diag(At1) #now we can use the stock diag function.
+end
 
 @testset "ITensor Decompositions" begin
   @testset "truncate!" begin
@@ -302,26 +325,28 @@ is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
 
-  @testset "QR/QL/RQ/LQ dense with positive R" begin
-    l = Index(5, "l")
-    s = Index(2, "s")
-    r = Index(10, "r")
+  @testset "QR/QL/RQ/LQ dense with positive R" for ninds in [0, 1, 2, 3]
+    l = Index(3, "l")
+    s = Index(5, "s")
+    r = Index(7, "r")
     A = randomITensor(l, s, s', r)
-    Q, R, q = qr(A, l, s, s'; positive=true)
-    @test min(diag(R)...) > 0.0
+    Ainds = inds(A)
+
+    Q, R, q = qr(A, Ainds[1:ninds]; positive=true)
+    @test min(diag_upper(q, R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    Q, L, q = ITensors.ql(A, l, s, s'; positive=true)
-    @test min(diag(L)...) > 0.0
+    Q, L, q = ITensors.ql(A, Ainds[1:ninds]; positive=true)
+    @test min(diag_lower(q, L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = ITensors.rq(A, r; positive=true)
-    @test min(diag(R)...) > 0.0
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds]; positive=true)
+    @test min(diag_lower(q, R)...) > 0.0 #transpose R is lower
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    L, Q, q = ITensors.lq(A, r; positive=true)
-    @test min(diag(L)...) > 0.0
+    L, Q, q = ITensors.lq(A, Ainds[1:ninds]; positive=true)
+    @test min(diag_upper(q, L)...) > 0.0 #transpose L is upper
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
