@@ -31,6 +31,6 @@ function set_datatype(storagetype::Type{<:Dense}, datatype::Type{<:AbstractArray
   )
 end
 
-function set_eltype(storagetype::Type{<:Dense{ElT, DataT}})  where {ElT, DataT<:AbstractArray}
-  return Dense{ElT, similartype(DataT, ElT)}
+function set_eltype(storagetype::Type{<:Dense{ElT, DataT}}, ElR::Type)  where {ElT, DataT<:AbstractArray}
+  return Dense{ElR, similartype(DataT, ElR)}
 end
