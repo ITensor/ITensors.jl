@@ -549,12 +549,15 @@ end
 
 function uncombine_output(
   T::BlockSparseTensor{ElT,N},
+  T_labels,
   is,
+  is_labels,
   combdim::Int,
   blockperm::Vector{Int},
   blockcomb::Vector{Int},
 ) where {ElT<:Number,N}
-  ind_uncomb_perm = ⊗(setdiff(is, inds(T))...)
+  labels_uncomb_perm = setdiff(is_labels, T_labels)
+  ind_uncomb_perm = ⊗(is[map(x -> findfirst(==(x), is_labels), labels_uncomb_perm)]...)
   inds_uncomb_perm = insertat(inds(T), ind_uncomb_perm, combdim)
   # Uncombine the blocks of T
   blocks_uncomb = uncombine_blocks(nzblocks(T), combdim, blockcomb)
@@ -578,18 +581,20 @@ end
 
 function uncombine(
   T::BlockSparseTensor{<:Number,NT},
+  T_labels,
   is,
+  is_labels,
   combdim::Int,
   blockperm::Vector{Int},
   blockcomb::Vector{Int},
 ) where {NT}
   NR = length(is)
-  R = uncombine_output(T, is, combdim, blockperm, blockcomb)
+  R = uncombine_output(T, T_labels, is, is_labels, combdim, blockperm, blockcomb)
   invblockperm = invperm(blockperm)
-
   # This is needed for reshaping the block
-  # It is already calculated in uncombine_output, use it from there
-  ind_uncomb_perm = ⊗(setdiff(is, inds(T))...)
+  # TODO: It is already calculated in uncombine_output, use it from there
+  labels_uncomb_perm = setdiff(is_labels, T_labels)
+  ind_uncomb_perm = ⊗(is[map(x -> findfirst(==(x), is_labels), labels_uncomb_perm)]...)
   ind_uncomb = permuteblocks(ind_uncomb_perm, blockperm)
   # Same as inds(T) but with the blocks uncombined
   inds_uncomb = insertat(inds(T), ind_uncomb, combdim)

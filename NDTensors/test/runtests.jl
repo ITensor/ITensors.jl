@@ -10,6 +10,7 @@ using NDTensors
     "diag.jl",
     "emptynumber.jl",
     "emptystorage.jl",
+    "combiner.jl",
   ]
     println("Running $filename")
     include(filename)

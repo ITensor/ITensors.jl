@@ -984,6 +984,36 @@ end
     @test C2[1, 1] ≈ C[2, 2]
   end #testset
 
+  @testset "correlation_matrix with dangling bonds" begin
+    l01 = Index(3)
+    l̃01 = sim(l01)
+    l12 = Index(3)
+    l23 = Index(3)
+    l34 = Index(3)
+    l̃34 = sim(l34)
+    s1 = Index(2, "Qubit")
+    s2 = Index(2, "Qubit")
+    s3 = Index(2, "Qubit")
+    b01 = randomITensor(l01, l̃01)
+    A1 = randomITensor(l̃01, s1, l12)
+    A2 = randomITensor(l12, s2, l23)
+    A3 = randomITensor(l23, s3, l̃34)
+    b34 = randomITensor(l̃34, l34)
+    ψ = MPS([b01, A1, A2, A3, b34])
+    sites = 1:3
+    C = correlation_matrix(ψ, "Z", "Z"; sites=(sites .+ 1))
+    siteinds = [l01, s1, s2, s3, l34]
+    ψψ = inner(ψ, ψ)
+    zz = map(Iterators.product(sites .+ 1, sites .+ 1)) do I
+      i, j = I
+      ZiZj = MPO(OpSum() + ("Z", i, "Z", j), siteinds)
+      return inner(ψ', ZiZj, ψ) / ψψ
+    end
+    for I in eachindex(C)
+      @test C[I] ≈ zz[I]
+    end
+  end
+
   @testset "expect regression test for in-place modification of input MPS" begin
     s = siteinds("S=1/2", 5)
     psi = randomMPS(s; linkdims=3)

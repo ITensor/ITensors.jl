@@ -165,6 +165,9 @@ end
     @test Sz[s' => 1, s => 2] ≈ 0.12
     @test Sz[s' => 2, s => 1] ≈ 0.21
     @test Sz[s' => 2, s => 2] ≈ 0.22
+
+    @test OpName(:myop) == OpName("myop")
+    @test ITensors.name(OpName(:myop)) == :myop
   end
 
   @testset "op with more than two indices" begin
@@ -509,6 +512,11 @@ end
     @test v2[s => 2] == 0
     @test v2[s => 3] == 1
     @test_throws BoundsError state(s, "3")
+  end
+
+  @testset "StateName methods" begin
+    @test StateName(ITensors.SmallString("a")) == StateName("a")
+    @test ITensors.name(StateName("a")) == ITensors.SmallString("a")
   end
 
   @testset "Regression test for state overload" begin

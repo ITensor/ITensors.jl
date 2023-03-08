@@ -1836,6 +1836,8 @@ Random.seed!(1234)
     @test qn(s3, 2) == QN(("Sz", 1))
     @test qn(s3, 3) == QN(("Sz", -1))
     @test qn(s3, 4) == QN(("Sz", 0))
+    @test blockdim([QN(0) => 1, QN(1) => 2], 1) == 1
+    @test blockdim([QN(0) => 1, QN(1) => 2], 2) == 2
     @test blockdim(s3, 1) == 1
     @test blockdim(s3, 2) == 1
     @test blockdim(s3, 3) == 1
@@ -1844,6 +1846,8 @@ Random.seed!(1234)
     for I in eachindex(T3)
       @test T3[I] == T[I]
     end
+    @test -[QN(0) => 1, QN(1) => 2] == [QN(0) => 1, QN(-1) => 2]
+    @test !ITensors.have_same_qns([QN(0) => 1, QN(0) => 2, QN(("Sz", 2)) => 1])
   end
 end
 
