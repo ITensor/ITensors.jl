@@ -1,3 +1,4 @@
+# COV_EXCL_START
 const __bodyfunction__ = Dict{Method,Any}()
 
 # Find keyword "body functions" (the function that contains the body
@@ -3961,3 +3962,4 @@ function _precompile_()
     },
   )
 end
+# COV_EXCL_STOP

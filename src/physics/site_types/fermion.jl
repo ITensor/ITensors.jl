@@ -89,6 +89,9 @@ end
 function ITensors.op!(Op::ITensor, on::OpName"c†", st::SiteType"Fermion", s::Index)
   return op!(Op, alias(on), st, s)
 end
+function ITensors.op!(Op::ITensor, on::OpName"cdag", st::SiteType"Fermion", s::Index)
+  return op!(Op, alias(on), st, s)
+end
 
 function ITensors.op!(Op::ITensor, ::OpName"F", ::SiteType"Fermion", s::Index)
   Op[s' => 1, s => 1] = +1.0
@@ -101,5 +104,8 @@ function ITensors.has_fermion_string(on::OpName"c", st::SiteType"Fermion")
 end
 ITensors.has_fermion_string(::OpName"Cdag", ::SiteType"Fermion") = true
 function ITensors.has_fermion_string(on::OpName"c†", st::SiteType"Fermion")
+  return has_fermion_string(alias(on), st)
+end
+function ITensors.has_fermion_string(on::OpName"cdag", st::SiteType"Fermion")
   return has_fermion_string(alias(on), st)
 end

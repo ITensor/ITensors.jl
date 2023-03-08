@@ -255,12 +255,16 @@ function ITensors.op(::OpName"CRy", ::SiteType"Qubit"; θ::Number)
 end
 ITensors.op(::OpName"CRY", t::SiteType"Qubit"; kwargs...) = ITensors.op("CRy", t; kwargs...)
 
-function ITensors.op(::OpName"CRz", ::SiteType"Qubit"; ϕ::Number)
+function ITensors.op(::OpName"CRz", ::SiteType"Qubit"; ϕ=nothing, θ=nothing)
+  isone(count(isnothing, (θ, ϕ))) || error(
+    "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating a CRz gate, but not both.",
+  )
+  isnothing(θ) && (θ = ϕ)
   return [
     1 0 0 0
     0 1 0 0
-    0 0 exp(-im * ϕ / 2) 0
-    0 0 0 exp(im * ϕ / 2)
+    0 0 exp(-im * θ / 2) 0
+    0 0 0 exp(im * θ / 2)
   ]
 end
 ITensors.op(::OpName"CRZ", t::SiteType"Qubit"; kwargs...) = ITensors.op("CRz", t; kwargs...)
