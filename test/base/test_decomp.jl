@@ -156,13 +156,13 @@ is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
     if (length(inds(R)) > 1)
       @test is_upper(R, q) #specify the right index
     end
-    R1, Q1, q1 = rq(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
+    R1, Q1, q1 = rq(A, Linds, Rinds; tags="Link,myrq") #make sure the same call with both L & R indices give the same answer.
     Q1 = replaceind(Q1, q1, q)
     R1 = replaceind(R1, q1, q)
     @test norm(Q - Q1) == 0.0
     @test norm(R - R1) == 0.0
-    # @test hastags(q, "myrq")
-    # @test hastags(q, "Link")
+    @test hastags(q1, "myrq")
+    @test hastags(q1, "Link")
 
     L, Q, q = lq(A, Linds)
     @test length(inds(L)) == ninds + 1 #+1 to account for new lq,Link index.
@@ -174,11 +174,13 @@ is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
     if (length(inds(L)) > 1)
       @test is_lower(L, q) #specify the right index
     end
-    L1, Q1, q1 = lq(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
+    L1, Q1, q1 = lq(A, Linds, Rinds; tags="Link,mylq") #make sure the same call with both L & R indices give the same answer.
     Q1 = replaceind(Q1, q1, q)
     L1 = replaceind(L1, q1, q)
     @test norm(Q - Q1) == 0.0
     @test norm(L - L1) == 0.0
+    @test hastags(q1, "mylq")
+    @test hastags(q1, "Link")
 
     Q, L, q = ql(A, Linds)
     @test length(inds(Q)) == ninds + 1 #+1 to account for new lq,Link index.
@@ -190,11 +192,13 @@ is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
     if (length(inds(L)) > 1)
       @test is_lower(q, L) #specify the right index
     end
-    Q1, L1, q1 = ql(A, Linds, Rinds) #make sure the same call with both L & R indices give the same answer.
+    Q1, L1, q1 = ql(A, Linds, Rinds; tags="Link,myql") #make sure the same call with both L & R indices give the same answer.
     Q1 = replaceind(Q1, q1, q)
     L1 = replaceind(L1, q1, q)
     @test norm(Q - Q1) == 0.0
     @test norm(L - L1) == 0.0
+    @test hastags(q1, "myql")
+    @test hastags(q1, "Link")
   end
 
   @testset "QR/RQ dense on MP0 tensor with all possible collections on Q,R" for ninds in [

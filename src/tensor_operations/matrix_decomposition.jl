@@ -482,7 +482,7 @@ end
 #  with swapping the left and right indices.  The X tensor = R or L. 
 #
 function xq(
-  qx::Function, qtags::TagSet, A::ITensor, Linds::Indices, Rinds::Indices; kwargs...
+  qx::Function, qtags, A::ITensor, Linds::Indices, Rinds::Indices; kwargs...
 )
   Q, X, q = qx(A, Rinds, Linds; kwargs...)
   #
