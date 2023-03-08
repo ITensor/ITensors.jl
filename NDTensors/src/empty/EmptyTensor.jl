@@ -13,7 +13,7 @@ end
 
 # XXX TODO: add bounds checking
 getindex(T::EmptyTensor, I::Integer...) = zero(eltype(T))
-getindex(T::EmptyTensor{EmptyNumber}, I::Integer...) = EmptyNumber()
+
 function getindex(T::EmptyTensor{Complex{EmptyNumber}}, I::Integer...)
   return Complex(NDTensors.EmptyNumber(), NDTensors.EmptyNumber())
 end
