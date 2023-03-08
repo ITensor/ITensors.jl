@@ -34,11 +34,13 @@ import ITensors: nactive
     @test length(sprint(show, q)) > 1
     @test isactive(q[1])
     @test val(q, "Sz") == 1
+    @test !isfermionic(q)
 
     q = QN("Sz", 1)
     @test length(sprint(show, q)) > 1
     @test isactive(q[1])
     @test val(q, "Sz") == 1
+    @test !isfermionic(q)
 
     q = QN("P", 1, 2)
     @test length(sprint(show, q)) > 1

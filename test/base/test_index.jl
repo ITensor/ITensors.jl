@@ -8,10 +8,15 @@ import ITensors: In, Out, Neither
   @testset "Index with dim" begin
     i = Index(2)
     @test id(i) != 0
+    @test hasid(i, id(i))
     @test dim(i) == 2
     @test dir(i) == Neither
     @test plev(i) == 0
     @test tags(i) == TagSet("")
+    @test Int(i) == 2
+    @test length(i) == 1
+    @test Tuple(i) == (i,)
+    @test collect(i)[] === i
   end
   @testset "Index with all args" begin
     i = Index(1, 2, In, "Link", 1)
@@ -47,6 +52,7 @@ import ITensors: In, Out, Neither
   @testset "IndexVal" begin
     i = Index(2)
     @test_deprecated i[1]
+    @test_deprecated i(1)
     @test val(i => 1) == 1
     @test ind(i => 1) == i
     @test isindequal(i, i => 2)
@@ -58,6 +64,7 @@ import ITensors: In, Out, Neither
     @test plev(i => 2) == 0
     @test plev(i' => 2) == 1
     @test prime(i => 2) == (i' => 2)
+    @test IndexVal(i, 1) == Pair(i, 1)
     iv = i => 2
     ĩv = sim(i => 2)
     @test ind(iv) ≠ ind(ĩv)

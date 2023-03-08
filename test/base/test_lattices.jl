@@ -9,6 +9,8 @@ end
 @testset "Triangular lattice" begin
   tL = triangular_lattice(3, 4)
   @test length(tL) == 23
+  tL = triangular_lattice(3, 4; yperiodic=true)
+  @test length(tL) == 28 # inc. periodic vertical bonds
 end
 
 nothing
