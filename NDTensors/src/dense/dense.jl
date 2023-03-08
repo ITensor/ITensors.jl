@@ -35,8 +35,8 @@ function Dense{ElT,DataT}(::UndefInitializer, inds::Tuple) where {ElT,DataT<:Abs
   return Dense{ElT,DataT}(similar(DataT, dim(inds)))
 end
 
-function Dense{ElT,DataT}(x::ElT, dim::Integer) where {ElT,DataT<:AbstractVector}
-  return Dense{ElT,DataT}(fill!(similar(DataT, dim), x))
+function Dense{ElT,DataT}(x, dim::Integer) where {ElT,DataT<:AbstractVector}
+  return Dense{ElT,DataT}(fill!(similar(DataT, dim), ElT(x)))
 end
 
 function Dense{ElR,DataT}(data::AbstractArray) where {ElR,DataT<:AbstractArray}
@@ -88,7 +88,10 @@ function Dense(::UndefInitializer, dim::Integer)
   return Dense{eltype(datatype),datatype}(undef, (dim,))
 end
 
-Dense(x::Number, dim::Integer) = Dense(fill!(similar(default_datatype(typeof(x)), dim), x))
+function Dense(x::Number, dim::Integer)
+  ElT = typeof(x)
+  Dense{ElT, default_datatype(ElT)}(x, dim)
+end
 
 Dense(dim::Integer) = Dense(default_eltype(), dim)
 
