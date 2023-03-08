@@ -369,16 +369,18 @@ end
 #
 #  QR rank reduction helpers
 #
-function find_zero_rows(R::AbstractMatrix, rr_cutoff::Float64)::Array{Bool} where {ElT,IndsT}
+function find_zero_rows(R::AbstractMatrix, rr_cutoff::Float64)::Array{Bool} 
   nr, nc = size(R)
-  return map((r)->(maximum(abs.(R[r,1:nc])) <= rr_cutoff),1:nr )
+  return map((r) -> (maximum(abs.(R[r, 1:nc])) <= rr_cutoff), 1:nr)
 end
 
 #
 #  Trim out zero rows of R within tolerance rr_cutoff. Also trim the corresponding columns
 #  of Q.
 #
-function trim_rows(R::AbstractMatrix, Q::AbstractMatrix, rr_cutoff::Float64) where {ElT,IndsT}
+function trim_rows(
+  R::AbstractMatrix, Q::AbstractMatrix, rr_cutoff::Float64
+) where {ElT,IndsT}
   zeros = find_zero_rows(R, rr_cutoff)
   num_zero_rows = sum(zeros)
   if num_zero_rows == 0
@@ -387,7 +389,7 @@ function trim_rows(R::AbstractMatrix, Q::AbstractMatrix, rr_cutoff::Float64) whe
   #@printf "Rank Reveal removing %4i rows with rr_cutoff=%.1e\n" num_zero_rows rr_cutoff
   Rnr, Rnc = size(R)
   Qnr, Qnc = size(Q)
-  #@assert Rnr==Qnc Q is strided to we can't asume this
+  #@assert Rnr==Qnc Q is strided so we can't asume this
   R1nr = Rnr - num_zero_rows
   T = eltype(R)
   R1 = Matrix{T}(undef, R1nr, Rnc)
@@ -397,46 +399,12 @@ function trim_rows(R::AbstractMatrix, Q::AbstractMatrix, rr_cutoff::Float64) whe
     if zeros[r] == false
       R1[r1, :] = R[r, :] #transfer row
       Q1[:, r1] = Q[:, r] #transfer column
-      r1 += 1 #next row in rank reduces matrices.
+      r1 += 1 #next row in rank reduced matrices.
     end #if zero
   end #for r
   return R1, Q1
 end
-#
-#  Trim out zero columnss of R within tolerance rr_cutoff. Also trim the corresponding rows
-#  of Q.
-#
-function trim_columns(R::AbstractMatrix, Q::AbstractMatrix, rr_cutoff::Float64) where {ElT,IndsT}
-  R, Q = trim_rows(transpose(R), transpose(Q), rr_cutoff)
-  return transpose(R), transpose(Q)
-end
 
-function qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
-  positive = get(kwargs, :positive, false)
-  # TODO: just call qr on T directly (make sure
-  # that is fast)
-  if positive
-    QM, RM = qr_positive(matrix(T))
-  else
-    QM, RM = qr(matrix(T))
-  end
-  #
-  #  Do row removal for rank revealing RQ
-  #
-  rr_cutoff::Float64 = get(kwargs, :rr_cutoff, -1.0)
-  if rr_cutoff >= 0.0
-    RM, QM = trim_rows(RM, QM, rr_cutoff)
-  end
-  #
-  # Make the new indices to go onto Q and R
-  #
-  IndexT = IndsT.parameters[1]
-  nq = IndexT(size(RM)[1]) #dim of the link index
-  Qinds = IndsT((ind(T, 1), nq))
-  Rinds = IndsT((nq, ind(T, 2)))
-  Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
-  R = tensor(Dense(vec(RM)), Rinds)
-  return Q, R
 function qr(T::DenseTensor{ElT,2,IndsT}; positive=false, kwargs...) where {ElT,IndsT}
   qxf = positive ? qr_positive : qr
   return qx(qxf, T; kwargs...)
@@ -450,11 +418,19 @@ end
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
+function qx(qx::Function, T::DenseTensor{ElT,2,IndsT}; rr_cutoff=-1.0, kwargs...) where {ElT,IndsT}
   QM, XM = qx(matrix(T))
-  # Make the new indices to go onto Q and R
-  q, r = inds(T)
-  q = dim(q) < dim(r) ? sim(q) : sim(r)
+  #
+  #  Do row removal for rank revealing RQ
+  #
+  if rr_cutoff >= 0.0
+    XM, QM = trim_rows(XM, QM, rr_cutoff)
+  end
+  #
+  # Make the new indices to go onto Q and X
+  #
+  IndexT = IndsT.parameters[1] #establish the index type.
+  q = IndexT(size(XM)[1]) #create the Q--X link index.
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
   Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided

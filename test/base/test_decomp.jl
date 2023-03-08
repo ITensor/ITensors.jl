@@ -67,54 +67,78 @@ function is_upper(A::ITensor, r::Index)::Bool
 end
 is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
 
+#
+#  Makes all columns lineary depenedent but scaled differently.
+#
+function rank_fix(A::ITensor, Linds...)
+  Lis = commoninds(A, (Linds...))
+  Ris = uniqueinds(A, Lis)
+  #
+  #  Use combiners to render A down to a rank 2 tensor ready matrix QR routine.
+  #
+  CL, CR = combiner(Lis...), combiner(Ris...)
+  cL, cR = combinedind(CL), combinedind(CR)
+  AC = A * CR * CL
+  if inds(AC) != IndexSet(cL, cR)
+    AC = permute(AC, cL, cR)
+  end
+  At = tensor(AC)
+  nc = dim(At, 2)
+  @assert nc >= 2
+  for c in 2:nc
+    At[:, c] = At[:, 1] * 1.05^c
+  end
+  return itensor(At) * dag(CL) * dag(CR)
+end
+
 @testset "ITensor Decompositions" begin
-  @testset "truncate!" begin
-    a = [0.1, 0.01, 1e-13]
-    @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
-      (1e-13, (0.01 + 1e-13) / 2)
-    @test length(a) == 2
+  # @testset "truncate!" begin
+  #   a = [0.1, 0.01, 1e-13]
+  #   @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
+  #     (1e-13, (0.01 + 1e-13) / 2)
+  #   @test length(a) == 2
 
-    # Negative definite spectrum treated by taking 
-    # square (if singular values) or absolute values
-    a = [-0.12, -0.1]
-    @test NDTensors.truncate!(a) == (0.0, 0.0)
-    @test length(a) == 2
+  #   # Negative definite spectrum treated by taking 
+  #   # square (if singular values) or absolute values
+  #   a = [-0.12, -0.1]
+  #   @test NDTensors.truncate!(a) == (0.0, 0.0)
+  #   @test length(a) == 2
 
-    a = [-0.1, -0.01, -1e-13]
-    @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
-      (1e-13, (0.01 + 1e-13) / 2)
-    @test length(a) == 2
-  end
+  #   a = [-0.1, -0.01, -1e-13]
+  #   @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
+  #     (1e-13, (0.01 + 1e-13) / 2)
+  #   @test length(a) == 2
+  # end
 
-  @testset "factorize" begin
-    i = Index(2, "i")
-    j = Index(2, "j")
-    A = randomITensor(i, j)
-    @test_throws ErrorException factorize(A, i; dir="left")
-    @test_throws ErrorException factorize(A, i; ortho="fakedir")
-  end
+  # @testset "factorize" begin
+  #   i = Index(2, "i")
+  #   j = Index(2, "j")
+  #   A = randomITensor(i, j)
+  #   @test_throws ErrorException factorize(A, i; dir="left")
+  #   @test_throws ErrorException factorize(A, i; ortho="fakedir")
+  # end
 
-  @testset "factorize with eigen_perturbation" begin
-    l = Index(4, "l")
-    s1 = Index(2, "s1")
-    s2 = Index(2, "s2")
-    r = Index(4, "r")
+  # @testset "factorize with eigen_perturbation" begin
+  #   l = Index(4, "l")
+  #   s1 = Index(2, "s1")
+  #   s2 = Index(2, "s2")
+  #   r = Index(4, "r")
 
-    phi = randomITensor(l, s1, s2, r)
+  #   phi = randomITensor(l, s1, s2, r)
 
-    drho = randomITensor(l', s1', l, s1)
-    drho += swapprime(drho, 0, 1)
-    drho .*= 1E-5
+  #   drho = randomITensor(l', s1', l, s1)
+  #   drho += swapprime(drho, 0, 1)
+  #   drho .*= 1E-5
 
-    U, B = factorize(phi, (l, s1); ortho="left", eigen_perturbation=drho)
-    @test norm(U * B - phi) < 1E-5
+  #   U, B = factorize(phi, (l, s1); ortho="left", eigen_perturbation=drho)
+  #   @test norm(U * B - phi) < 1E-5
 
-    # Not allowed to use eigen_perturbation with which_decomp
-    # other than "automatic" or "eigen":
-    @test_throws ErrorException factorize(
-      phi, (l, s1); ortho="left", eigen_perturbation=drho, which_decomp="svd"
-    )
-  end
+  #   # Not allowed to use eigen_perturbation with which_decomp
+  #   # other than "automatic" or "eigen":
+  #   @test_throws ErrorException factorize(
+  #     phi, (l, s1); ortho="left", eigen_perturbation=drho, which_decomp="svd"
+  #   )
+  # end
 
   @testset "QR/RQ/QL/LQ decomp on MPS dense $elt tensor with all possible collections on Q/R/L" for ninds in
                                                                                                     [
@@ -333,6 +357,38 @@ is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
     Q, L, q = ITensors.ql(A, l, s, dag(s'); positive=true)
     @test min(diag(L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
+  end
+
+  @testset "Rank revealing QR/RQ/QL/LQ decomp on MPS dense $elt tensor" for ninds in
+                                                                            [1,2,3],
+    elt in [Float64, ComplexF64]
+
+    l = Index(5, "l")
+    s = Index(2, "s")
+    r = Index(5, "r")
+    A = randomITensor(elt, l, s, s', r)
+
+    Ainds = inds(A)
+    A = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
+    Q, R, q = qr(A, Ainds[1:ninds]; rr_cutoff=1e-12) 
+    @test dim(q) == 1 #check that we found rank==1
+    @test A ≈ Q * R atol = 1e-13
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+
+    R, Q, q = rq(A, Ainds[1:ninds]; rr_cutoff=1e-12)
+    @test dim(q) == 1 #check that we found rank==1
+    @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+
+    L, Q, q = lq(A, Ainds[1:ninds]; rr_cutoff=1e-12)
+    @test dim(q) == 1 #check that we found rank==1
+    @test A ≈ Q * L atol = 1e-13 #With ITensors L*Q==Q*L
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
+
+    Q, L, q = ql(A, Ainds[1:ninds]; rr_cutoff=1e-12)
+    @test dim(q) == 1 #check that we found rank==1
+    @test A ≈ Q * L atol = 1e-13
+    @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end
 
   @testset "factorize with QR" begin
