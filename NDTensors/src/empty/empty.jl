@@ -40,7 +40,9 @@ function similartype(StoreT::Type{<:TensorStorage{EmptyNumber}}, ElT::Type)
   return set_eltype(StoreT, ElT)
 end
 
-function similartype(StoreT::Type{<:TensorStorage{EmptyNumber}}, DataT::Type{<:AbstractArray})
+function similartype(
+  StoreT::Type{<:TensorStorage{EmptyNumber}}, DataT::Type{<:AbstractArray}
+)
   return set_datatype(StoreT, DataT)
 end
 
@@ -110,7 +112,6 @@ end
 real(S::EmptyStorage) = real(typeof(S))()
 
 complex(S::EmptyStorage) = complex(typeof(S))()
-
 
 function show(io::IO, mime::MIME"text/plain", S::EmptyStorage)
   return println(io, typeof(S))

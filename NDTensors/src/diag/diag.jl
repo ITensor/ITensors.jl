@@ -112,7 +112,7 @@ function promote_rule(
   ::Type{<:UniformDiag{ElT1,DataT1}}, ::Type{<:NonuniformDiag{ElT2,AbstractArray{ElT2}}}
 ) where {ElT1,DataT1<:Number,ElT2}
   ElR = promote_type(ElT1, ElT2)
-  
+
   VecR = Vector{ElR}
   return Diag{ElR,VecR}
 end
