@@ -34,13 +34,9 @@ function randomDenseTensor(::Type{ElT}, inds) where {ElT}
   return tensor(generic_randn(Dense{ElT}, dim(inds)), inds)
 end
 
-function randomDenseTensor(::Type{ElT}, inds::Int...) where {ElT}
-  return randomDenseTensor(ElT, inds)
-end
+randomDenseTensor(inds) = randomDenseTensor(default_eltype(), inds)
 
-randomDenseTensor(inds) = randomDenseTensor(Float64, inds)
-
-randomDenseTensor(inds::Int...) = randomDenseTensor(Float64, inds)
+## End Random Dense Tensor constructor
 
 # Basic functionality for AbstractArray interface
 IndexStyle(::Type{<:DenseTensor}) = IndexLinear()
