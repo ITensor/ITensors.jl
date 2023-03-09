@@ -1,7 +1,7 @@
 using ITensors, LinearAlgebra, Test
 
 #
-#  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
+#  Decide if rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
 #
 function is_upper(At::NDTensors.Tensor)::Bool
   nr, nc = dims(At)
@@ -82,7 +82,7 @@ function rank_fix(A::ITensor, Linds...)
   if inds(AC) != IndexSet(cL, cR)
     AC = permute(AC, cL, cR)
   end
-  At = tensor(AC)
+  At = NDTensors.tensor(AC)
   nc = dim(At, 2)
   @assert nc >= 2
   for c in 2:nc
@@ -91,54 +91,75 @@ function rank_fix(A::ITensor, Linds...)
   return itensor(At) * dag(CL) * dag(CR)
 end
 
+function diag_upper(l::Index, A::ITensor)
+  At = NDTensors.tensor(A * combiner(noncommoninds(A, l)...))
+  if size(At) == (1,)
+    return At
+  end
+  @assert length(size(At)) == 2
+  return diag(At)
+end
+
+function diag_lower(l::Index, A::ITensor)
+  At = NDTensors.tensor(A * combiner(noncommoninds(A, l)...)) #render down ot order 2
+  if size(At) == (1,)
+    return At
+  end
+  @assert length(size(At)) == 2
+  nr, nc = size(At)
+  dc = Base.max(0, nc - nr) #diag starts dc+1 columns out from the left
+  At1 = At[:, (dc + 1):nc] #chop out the first dc columns
+  return diag(At1) #now we can use the stock diag function.
+end
+
 @testset "ITensor Decompositions" begin
-  # @testset "truncate!" begin
-  #   a = [0.1, 0.01, 1e-13]
-  #   @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
-  #     (1e-13, (0.01 + 1e-13) / 2)
-  #   @test length(a) == 2
+  @testset "truncate!" begin
+    a = [0.1, 0.01, 1e-13]
+    @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
+      (1e-13, (0.01 + 1e-13) / 2)
+    @test length(a) == 2
 
-  #   # Negative definite spectrum treated by taking 
-  #   # square (if singular values) or absolute values
-  #   a = [-0.12, -0.1]
-  #   @test NDTensors.truncate!(a) == (0.0, 0.0)
-  #   @test length(a) == 2
+    # Negative definite spectrum treated by taking 
+    # square (if singular values) or absolute values
+    a = [-0.12, -0.1]
+    @test NDTensors.truncate!(a) == (0.0, 0.0)
+    @test length(a) == 2
 
-  #   a = [-0.1, -0.01, -1e-13]
-  #   @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
-  #     (1e-13, (0.01 + 1e-13) / 2)
-  #   @test length(a) == 2
-  # end
+    a = [-0.1, -0.01, -1e-13]
+    @test NDTensors.truncate!(a; use_absolute_cutoff=true, cutoff=1e-5) ==
+      (1e-13, (0.01 + 1e-13) / 2)
+    @test length(a) == 2
+  end
 
-  # @testset "factorize" begin
-  #   i = Index(2, "i")
-  #   j = Index(2, "j")
-  #   A = randomITensor(i, j)
-  #   @test_throws ErrorException factorize(A, i; dir="left")
-  #   @test_throws ErrorException factorize(A, i; ortho="fakedir")
-  # end
+  @testset "factorize" begin
+    i = Index(2, "i")
+    j = Index(2, "j")
+    A = randomITensor(i, j)
+    @test_throws ErrorException factorize(A, i; dir="left")
+    @test_throws ErrorException factorize(A, i; ortho="fakedir")
+  end
 
-  # @testset "factorize with eigen_perturbation" begin
-  #   l = Index(4, "l")
-  #   s1 = Index(2, "s1")
-  #   s2 = Index(2, "s2")
-  #   r = Index(4, "r")
+  @testset "factorize with eigen_perturbation" begin
+    l = Index(4, "l")
+    s1 = Index(2, "s1")
+    s2 = Index(2, "s2")
+    r = Index(4, "r")
 
-  #   phi = randomITensor(l, s1, s2, r)
+    phi = randomITensor(l, s1, s2, r)
 
-  #   drho = randomITensor(l', s1', l, s1)
-  #   drho += swapprime(drho, 0, 1)
-  #   drho .*= 1E-5
+    drho = randomITensor(l', s1', l, s1)
+    drho += swapprime(drho, 0, 1)
+    drho .*= 1E-5
 
-  #   U, B = factorize(phi, (l, s1); ortho="left", eigen_perturbation=drho)
-  #   @test norm(U * B - phi) < 1E-5
+    U, B = factorize(phi, (l, s1); ortho="left", eigen_perturbation=drho)
+    @test norm(U * B - phi) < 1E-5
 
-  #   # Not allowed to use eigen_perturbation with which_decomp
-  #   # other than "automatic" or "eigen":
-  #   @test_throws ErrorException factorize(
-  #     phi, (l, s1); ortho="left", eigen_perturbation=drho, which_decomp="svd"
-  #   )
-  # end
+    # Not allowed to use eigen_perturbation with which_decomp
+    # other than "automatic" or "eigen":
+    @test_throws ErrorException factorize(
+      phi, (l, s1); ortho="left", eigen_perturbation=drho, which_decomp="svd"
+    )
+  end
 
   @testset "QR/RQ/QL/LQ decomp on MPS dense $elt tensor with all possible collections on Q/R/L" for ninds in
                                                                                                     [
@@ -326,26 +347,28 @@ end
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
   end
 
-  @testset "QR/QL/RQ/LQ dense with positive R" begin
-    l = Index(5, "l")
-    s = Index(2, "s")
-    r = Index(10, "r")
+  @testset "QR/QL/RQ/LQ dense with positive R" for ninds in [0, 1, 2, 3]
+    l = Index(3, "l")
+    s = Index(5, "s")
+    r = Index(7, "r")
     A = randomITensor(l, s, s', r)
-    Q, R, q = qr(A, l, s, s'; positive=true)
-    @test min(diag(R)...) > 0.0
+    Ainds = inds(A)
+
+    Q, R, q = qr(A, Ainds[1:ninds]; positive=true)
+    @test min(diag_upper(q, R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    Q, L, q = ITensors.ql(A, l, s, s'; positive=true)
-    @test min(diag(L)...) > 0.0
+    Q, L, q = ITensors.ql(A, Ainds[1:ninds]; positive=true)
+    @test min(diag_lower(q, L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = ITensors.rq(A, r; positive=true)
-    @test min(diag(R)...) > 0.0
+    R, Q, q = ITensors.rq(A, Ainds[1:ninds]; positive=true)
+    @test min(diag_lower(q, R)...) > 0.0 #transpose R is lower
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    L, Q, q = ITensors.lq(A, r; positive=true)
-    @test min(diag(L)...) > 0.0
+    L, Q, q = ITensors.lq(A, Ainds[1:ninds]; positive=true)
+    @test min(diag_upper(q, L)...) > 0.0 #transpose L is upper
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
   end

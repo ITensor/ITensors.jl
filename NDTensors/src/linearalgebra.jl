@@ -474,9 +474,9 @@ matrix is unique. Returns a tuple (Q,L).
 function ql_positive(M::AbstractMatrix)
   sparseQ, L = ql(M)
   Q = convert(Matrix, sparseQ)
-  nr, nc = size(Q)
+  nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
-  for c in 1:nc
+  for c in 1:(nc - dc)
     if c <= nr && real(L[c, c + dc]) < 0.0
       L[c, 1:(c + dc)] *= -1 #only fip non-zero portion of the column.
       Q[:, c] *= -1
