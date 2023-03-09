@@ -105,6 +105,21 @@ end
 
 ## End Tensor constructors
 
+## Random Tensor
+
+## TODO make something like this work.
+# function randomTensor(storeT::Type{<:TensorStorage}, inds::Tuple)
+#   return tensor(generic_randn(storeT, dim(inds)), inds)
+# end
+
+function randomTensor(::Type{ElT}, inds::Tuple) where {ElT}
+  return tensor(generic_randn(default_storagetype(default_datatype(ElT)), dim(inds)), inds)
+end
+
+randomTensor(inds::Tuple) = randomDenseTensor(default_eltype(), inds)
+
+## End Random Tensor
+
 ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
 
 # Like `Base.to_shape` but more general, can return
