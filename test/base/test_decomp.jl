@@ -1,4 +1,4 @@
-using ITensors, LinearAlgebra, Test, NDTensors
+using ITensors, LinearAlgebra, Test
 
 #
 #  Decide if rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
@@ -68,7 +68,7 @@ end
 is_lower(A::ITensor, r::Index)::Bool = is_upper(r, A)
 
 function diag_upper(l::Index, A::ITensor)
-  At = tensor(A * combiner(noncommoninds(A, l)...))
+  At = NDTensors.tensor(A * combiner(noncommoninds(A, l)...))
   if size(At) == (1,)
     return At
   end
@@ -77,7 +77,7 @@ function diag_upper(l::Index, A::ITensor)
 end
 
 function diag_lower(l::Index, A::ITensor)
-  At = tensor(A * combiner(noncommoninds(A, l)...)) #render down ot order 2
+  At = NDTensors.tensor(A * combiner(noncommoninds(A, l)...)) #render down ot order 2
   if size(At) == (1,)
     return At
   end
