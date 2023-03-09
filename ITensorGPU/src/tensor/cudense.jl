@@ -567,7 +567,7 @@ function Base.permute!(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
     reshapeBdata,
     Vector{Char}(ctbinds),
   )
-  return Tensor(Tuple(Bis), Dense(reshapeBdata))
+  return Tensor(Dense(reshapeBdata), Tuple(Bis))
 end
 
 Base.:/(A::CuDenseTensor, x::Number) = A * inv(x)
