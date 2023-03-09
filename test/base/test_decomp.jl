@@ -1,7 +1,5 @@
 using ITensors, LinearAlgebra, Test
 
-using Printf
-Base.show(io::IO, f::Float64) = @printf(io, "%1.3f", f)
 #
 #  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
 #
