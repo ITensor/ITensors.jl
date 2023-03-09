@@ -80,20 +80,9 @@ end
 
 tensor(args...; kwargs...) = Tensor(AllowAlias(), args...; kwargs...)
 Tensor(storage::TensorStorage, inds::Tuple) = Tensor(NeverAlias(), storage, inds)
-Tensor(inds::Tuple, storage::TensorStorage) = Tensor(storage, inds)
 
 function Tensor(eltype::Type, inds::Tuple)
   return Tensor(AllowAlias(), default_storagetype(eltype, inds)(dim(inds)), inds)
-end
-
-function Tensor(eltype::Type, idx1::Integer, inds...)
-  TupInds = [idx1]
-  for ind in inds
-    @assert ind isa Integer
-    append!(TupInds, ind)
-  end
-  TupInds = Tuple(TupInds)
-  return Tensor(eltype, TupInds)
 end
 
 Tensor(inds::Tuple) = Tensor(default_eltype(), inds)
@@ -105,39 +94,6 @@ function Tensor(eltype::Type, ::UndefInitializer, inds::Tuple)
 end
 
 Tensor(::UndefInitializer, inds::Tuple) = Tensor(default_eltype(), undef, inds)
-
-function Tensor(::UndefInitializer, idx1::Integer, inds...)
-  TupInds = [idx1]
-  for i in inds
-    @assert i isa Integer
-    append!(TupInds, i)
-  end
-  TupInds = Tuple(TupInds)
-
-  return Tensor(undef, TupInds)
-end
-
-function Tensor(eltype::Type, ::UndefInitializer, idx1::Integer, inds...)
-  TupInds = [idx1]
-  for i in inds
-    @assert i isa Integer
-    append!(TupInds, i)
-  end
-  TupInds = Tuple(TupInds)
-
-  return Tensor(eltype, undef, TupInds)
-end
-
-function Tensor(idx1::Integer, inds...)
-  TupInds = [idx1]
-  for i in inds
-    @assert i isa Integer
-    append!(TupInds, i)
-  end
-  TupInds = Tuple(TupInds)
-
-  return Tensor(TupInds)
-end
 
 function Tensor(data::AbstractArray{<:Any,1}, inds::Tuple)
   return Tensor(AllowAlias(), default_storagetype(typeof(data), inds)(data), inds)
