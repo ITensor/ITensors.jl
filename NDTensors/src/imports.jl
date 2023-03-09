@@ -31,7 +31,6 @@ import Base:
   iterate,
   length,
   map,
-  #ndims,
   permutedims,
   permutedims!,
   print,
