@@ -90,7 +90,7 @@ end
 
 function Dense(x::Number, dim::Integer)
   ElT = typeof(x)
-  Dense{ElT, default_datatype(ElT)}(x, dim)
+  return Dense{ElT,default_datatype(ElT)}(x, dim)
 end
 
 Dense(dim::Integer) = Dense(default_eltype(), dim)

@@ -5,19 +5,19 @@
 const EmptyTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:EmptyStorage}
 
-  ## Start constructors
-  function EmptyTensor(::Type{ElT}, inds) where {ElT<:Number}
-    return tensor(EmptyStorage(ElT), inds)
-  end
-  
-  function EmptyTensor(::Type{StoreT}, inds) where {StoreT<:TensorStorage}
-    return tensor(empty(StoreT), inds)
-  end
-  
-  function EmptyBlockSparseTensor(::Type{ElT}, inds) where {ElT<:Number}
-    StoreT = BlockSparse{ElT,Vector{ElT},length(inds)}
-    return EmptyTensor(StoreT, inds)
-  end
+## Start constructors
+function EmptyTensor(::Type{ElT}, inds) where {ElT<:Number}
+  return tensor(EmptyStorage(ElT), inds)
+end
+
+function EmptyTensor(::Type{StoreT}, inds) where {StoreT<:TensorStorage}
+  return tensor(empty(StoreT), inds)
+end
+
+function EmptyBlockSparseTensor(::Type{ElT}, inds) where {ElT<:Number}
+  StoreT = BlockSparse{ElT,Vector{ElT},length(inds)}
+  return EmptyTensor(StoreT, inds)
+end
 ## End constructors
 
 fulltype(::Type{EmptyStorage{ElT,StoreT}}) where {ElT,StoreT} = StoreT
