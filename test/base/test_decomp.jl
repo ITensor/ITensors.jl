@@ -1,7 +1,7 @@
-using ITensors, LinearAlgebra, Test
+using ITensors, LinearAlgebra, Test, NDTensors
 
 #
-#  Decide of rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
+#  Decide if rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.
 #
 function is_upper(At::NDTensors.Tensor)::Bool
   nr, nc = dims(At)
