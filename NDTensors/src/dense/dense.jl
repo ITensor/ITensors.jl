@@ -136,16 +136,7 @@ function promote_rule(
 ) where {ElT1,DataT1,ElT2,DataT2}
   ElR = promote_type(ElT1, ElT2)
   VecR = promote_type(DataT1, DataT2)
-  return Dense{ElR,VecR}
-end
-
-# This is to get around the issue in Julia that:
-# promote_type(Vector{ComplexF32},Vector{Float64}) == Vector{T} where T
-function promote_rule(
-  ::Type{<:Dense{ElT1,Vector{ElT1}}}, ::Type{<:Dense{ElT2,Vector{ElT2}}}
-) where {ElT1,ElT2}
-  ElR = promote_type(ElT1, ElT2)
-  VecR = Vector{ElR}
+  VecR = similartype(VecR, ElR)
   return Dense{ElR,VecR}
 end
 
