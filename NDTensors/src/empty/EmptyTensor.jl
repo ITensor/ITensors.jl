@@ -5,6 +5,39 @@
 const EmptyTensor{ElT,N,StoreT,IndsT} =
   Tensor{ElT,N,StoreT,IndsT} where {StoreT<:EmptyStorage}
 
+  ## Start constructors
+  function EmptyTensor(::Type{ElT}, inds) where {ElT<:Number}
+    return tensor(EmptyStorage(ElT), inds)
+  end
+  
+  function EmptyTensor(::Type{StoreT}, inds) where {StoreT<:TensorStorage}
+    return tensor(empty(StoreT), inds)
+  end
+  
+  function EmptyBlockSparseTensor(::Type{ElT}, inds) where {ElT<:Number}
+    StoreT = BlockSparse{ElT,Vector{ElT},length(inds)}
+    return EmptyTensor(StoreT, inds)
+  end
+## End constructors
+
+fulltype(::Type{EmptyStorage{ElT,StoreT}}) where {ElT,StoreT} = StoreT
+fulltype(T::EmptyStorage) = fulltype(typeof(T))
+
+fulltype(T::Tensor) = fulltype(typeof(T))
+
+# From an EmptyTensor, return the closest Tensor type
+function fulltype(::Type{TensorT}) where {TensorT<:Tensor}
+  return Tensor{
+    eltype(TensorT),ndims(TensorT),fulltype(storetype(TensorT)),indstype(TensorT)
+  }
+end
+
+function fulltype(
+  ::Type{ElR}, ::Type{<:Tensor{ElT,N,EStoreT,IndsT}}
+) where {ElR,ElT<:Number,N,EStoreT<:EmptyStorage{ElT,StoreT},IndsT} where {StoreT}
+  return Tensor{ElR,N,similartype(StoreT, ElR),IndsT}
+end
+
 function emptytype(::Type{TensorT}) where {TensorT<:Tensor}
   return Tensor{
     eltype(TensorT),ndims(TensorT),emptytype(storagetype(TensorT)),indstype(TensorT)
@@ -55,37 +88,6 @@ fill!!(T::EmptyTensor, α::Number) = _fill!!(eltype(T), T, α)
 fill!!(T::EmptyTensor{EmptyNumber}, α::Number) = _fill!!(eltype(α), T, α)
 
 isempty(::EmptyTensor) = true
-
-function EmptyTensor(::Type{ElT}, inds) where {ElT<:Number}
-  return tensor(EmptyStorage(ElT), inds)
-end
-
-function EmptyTensor(::Type{StoreT}, inds) where {StoreT<:TensorStorage}
-  return tensor(empty(StoreT), inds)
-end
-
-function EmptyBlockSparseTensor(::Type{ElT}, inds) where {ElT<:Number}
-  StoreT = BlockSparse{ElT,Vector{ElT},length(inds)}
-  return EmptyTensor(StoreT, inds)
-end
-
-fulltype(::Type{EmptyStorage{ElT,StoreT}}) where {ElT,StoreT} = StoreT
-fulltype(T::EmptyStorage) = fulltype(typeof(T))
-
-fulltype(T::Tensor) = fulltype(typeof(T))
-
-# From an EmptyTensor, return the closest Tensor type
-function fulltype(::Type{TensorT}) where {TensorT<:Tensor}
-  return Tensor{
-    eltype(TensorT),ndims(TensorT),fulltype(storetype(TensorT)),indstype(TensorT)
-  }
-end
-
-function fulltype(
-  ::Type{ElR}, ::Type{<:Tensor{ElT,N,EStoreT,IndsT}}
-) where {ElR,ElT<:Number,N,EStoreT<:EmptyStorage{ElT,StoreT},IndsT} where {StoreT}
-  return Tensor{ElR,N,similartype(StoreT, ElR),IndsT}
-end
 
 function zeros(T::TensorT) where {TensorT<:EmptyTensor}
   TensorR = fulltype(TensorT)
