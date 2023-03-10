@@ -386,7 +386,7 @@ function trim_rows(
   if num_zero_rows == 0
     return R, Q
   end
-  #@printf "Rank Reveal removing %4i rows with rr_cutoff=%.1e\n" num_zero_rows rr_cutoff
+  #println("Rank Reveal removing $num_zero_rows rows with log10(rr_cutoff)=$(log10(rr_cutoff))")
   Rnr, Rnc = size(R)
   Qnr, Qnc = size(Q)
   #@assert Rnr==Qnc Q is strided so we can't asume this
@@ -421,7 +421,7 @@ end
 function qx(qx::Function, T::DenseTensor{ElT,2,IndsT}; rr_cutoff=-1.0, kwargs...) where {ElT,IndsT}
   QM, XM = qx(matrix(T))
   #
-  #  Do row removal for rank revealing RQ
+  #  Do row removal for rank revealing QR/QL
   #
   if rr_cutoff >= 0.0
     XM, QM = trim_rows(XM, QM, rr_cutoff)
