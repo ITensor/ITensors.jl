@@ -539,7 +539,7 @@ function Base.permute!(B::CuDenseTensor, A::CuDenseTensor)
     @assert isperm(perm)
     permutedims!(reshapeBdata, reshapeAdata, invperm(perm))
   end
-  return Tensor(inds(B), Dense(vec(reshapeBdata)))
+  return Tensor(Dense(vec(reshapeBdata)), inds(B))
 end
 
 function Base.permute!(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
