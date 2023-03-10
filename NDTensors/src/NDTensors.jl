@@ -53,17 +53,17 @@ include("dims.jl")
 include("tensor/set_types.jl")
 include("tensor/similar.jl")
 include("adapt.jl")
-include("linearalgebra/generic_tensor_operations.jl")
-include("linearalgebra/contraction_logic.jl")
+include("tensoralgebra/generic_tensor_operations.jl")
+include("tensoralgebra/contraction_logic.jl")
 
 #####################################
 # DenseTensor and DiagTensor
 #
 include("dense/dense.jl")
 include("dense/densetensor.jl")
-include("dense/tensoralgebra/contract.jl")
-include("dense/tensoralgebra/decompositions.jl")
-include("dense/tensoralgebra/outer.jl")
+include("dense/linearalgebra/contract.jl")
+include("dense/linearalgebra/decompositions.jl")
+include("dense/linearalgebra/outer.jl")
 include("dense/set_types.jl")
 include("dense/fill.jl")
 include("linearalgebra/symmetric.jl")
