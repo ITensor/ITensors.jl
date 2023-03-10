@@ -61,9 +61,9 @@ include("tensoralgebra/contraction_logic.jl")
 #
 include("dense/dense.jl")
 include("dense/densetensor.jl")
-include("dense/linearalgebra/contract.jl")
+include("dense/tensoralgebra/contract.jl")
 include("dense/linearalgebra/decompositions.jl")
-include("dense/linearalgebra/outer.jl")
+include("dense/tensoralgebra/outer.jl")
 include("dense/set_types.jl")
 include("dense/fill.jl")
 include("linearalgebra/symmetric.jl")
@@ -223,7 +223,7 @@ end
 function __init__()
   @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin
     enable_tblis()
-    include("linearalgebra/tblis.jl")
+    include("tensoralgebra/tblis.jl")
   end
   @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
     include("linearalgebra/octavian.jl")
