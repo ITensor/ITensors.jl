@@ -20,21 +20,43 @@ end
   @test norm(U2 * U2' - Diagonal(fill(1.0, m))) < 1E-14
 end
 
-@testset "Dense QR decomposition" begin
+
+Base.eps(::Type{Complex{T}}) where T <: AbstractFloat = eps(T)
+
+@testset "Dense $qx decomposition, elt=$elt, positve=$positive" for qx in [qr,ql], elt in [ Float64, ComplexF64, Float32, ComplexF32], positive in [false,true]
+  eps=Base.eps(elt)*30 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
   n, m = 4, 8
-  nm = min(n, m)
-  A = randomTensor(n, m)
-  Q, R = qr(A)
-  @test A ≈ Q * R atol = 1e-13
-  @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, nm)) atol = 1e-13
+  Id=Diagonal(fill(1.0, min(n, m)))
+  #
+  # Wide matrix (more columns than rows)
+  #
+  A = randomTensor(elt, n, m)
+  Q, X = qx(A,positive=positive) #X is R or L.
+  @test A ≈ Q * X atol = eps
+  @test array(Q)' * array(Q) ≈ Id atol = eps
+  @test array(Q) * array(Q)' ≈ Id atol = eps
+  if positive 
+    nr,nc=size(X)
+    dr=qx==ql ? Base.max(0,nc-nr) : 0
+    diagX=diag(X[:,1+dr:end]) #location of diag(L) is shifted dr columns over the right.
+    @test all(real(diagX).>=0.0) 
+    @test all(imag(diagX).==0.0)
+  end
+  #
+  # Tall matrix (more rows than cols)
+  #
+  A = randomTensor(elt, m, n) #Tall array
+  Q, X = qx(A,positive=positive)
+  @test A ≈ Q * X atol = eps
+  @test array(Q)' * array(Q) ≈ Id atol = eps
+  if positive
+    nr,nc=size(X)
+    dr=qx==ql ? Base.max(0,nc-nr) : 0
+    diagX=diag(X[:,1+dr:end]) #location of diag(L) is shifted dr columns over the right.
+    @test all(real(diagX).>=0.0) 
+    @test all(imag(diagX).==0.0)
+  end
 end
-@testset "Dense LQ decomposition" begin
-  n, m = 4, 8
-  nm = min(n, m)
-  A = randomTensor(n, m)
-  Q, L = ql(A)
-  @test A ≈ Q * L atol = 1e-13
-  @test array(Q) * array(Q)' ≈ Diagonal(fill(1.0, nm)) atol = 1e-13
-end
+
 
 nothing
