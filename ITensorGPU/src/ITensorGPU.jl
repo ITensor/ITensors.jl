@@ -14,6 +14,7 @@ using StaticArrays
 using Strided
 using TimerOutputs
 using cuTENSOR
+using Metal
 
 using NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
 
@@ -93,6 +94,7 @@ include("tensor/cucombiner.jl")
 include("tensor/cudiag.jl")
 include("cuitensor.jl")
 include("mps/cumps.jl")
+include("mtlarray/set_types.jl")
 
 export cu,
   cpu, cuITensor, randomCuITensor, cuMPS, randomCuMPS, productCuMPS, randomCuMPO, cuMPO
