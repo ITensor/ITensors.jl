@@ -409,9 +409,10 @@ function qr_positive(M::AbstractMatrix)
   Q = convert(Matrix, sparseQ)
   nc = size(Q, 2)
   for c in 1:nc
-    if real(R[c, c]) < 0.0
-      R[c, c:end] *= -1 #only fip non-zero portion of the row.
-      Q[:, c] *= -1
+    sign_Rc = sign(R[c, c])
+    if !isone(sign_Rc)
+      R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
+      Q[:, c] *= sign_Rc
     end
   end
   return (Q, R)
@@ -431,9 +432,10 @@ function ql_positive(M::AbstractMatrix)
   nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
   for c in 1:(nc - dc)
-    if c <= nr && real(L[c, c + dc]) < 0.0
-      L[c, 1:(c + dc)] *= -1 #only fip non-zero portion of the column.
-      Q[:, c] *= -1
+    sign_Lc = sign(L[c, c + dc])
+    if c <= nr && !isone(sign_Lc)
+      L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
+      Q[:, c] *= conj(sign_Lc)
     end
   end
   return (Q, L)
