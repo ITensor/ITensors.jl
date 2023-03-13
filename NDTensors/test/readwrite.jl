@@ -5,7 +5,7 @@ using HDF5
   @testset "HDF5 readwrite Dense storage" begin
     # Real case
 
-    D = randomDenseTensor(3, 4)
+    D = randomTensor(3, 4)
 
     fo = h5open("data.h5", "w")
     write(fo, "D", D.store)
@@ -18,7 +18,7 @@ using HDF5
 
     # Complex case
 
-    D = randomDenseTensor(ComplexF64, 3, 4)
+    D = randomTensor(ComplexF64, 3, 4)
 
     fo = h5open("data.h5", "w")
     write(fo, "D", D.store)
