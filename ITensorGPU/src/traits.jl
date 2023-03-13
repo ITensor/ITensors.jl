@@ -24,7 +24,7 @@ is_cu(x::Array) = is_cu(typeof(x))
 is_cu(x::TensorStorage) = is_cu(typeof(x))
 is_cu(x::Tensor) = is_cu(typeof(x))
 is_cu(x::ITensor) = is_cu(typeof(tensor(x)))
-is_cu(x::MPS) = all(is_cu, x)
+is_cu(x::ITensors.MPS) = all(is_cu, x)
 is_cu(x::MPO) = all(is_cu, x)
 
 mixed_cu_cpu(::Bool, ::CPUorCUDA) = false

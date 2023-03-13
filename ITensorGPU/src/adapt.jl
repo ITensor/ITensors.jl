@@ -19,7 +19,7 @@ end
 
 # Overload `CUDA.cu` for convenience
 const ITensorType = Union{
-  TensorStorage,Tensor,ITensor,Array{ITensor},Array{<:Array{ITensor}},MPS,MPO
+  TensorStorage,Tensor,ITensor,Array{ITensor},Array{<:Array{ITensor}},ITensors.MPS,MPO
 }
 CUDA.cu(x::ITensorType) = NDTensors.cu(x)
 CUDA.cu(eltype::Type{<:Number}, x::ITensorType) = NDTensors.cu(eltype, x)

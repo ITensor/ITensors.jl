@@ -1,7 +1,7 @@
 # cu(ψ::Union{MPS,MPO}) = map(cu, ψ)
 # cpu(ψ::Union{MPS,MPO}) = map(cpu, ψ)
 
-cuMPS(ψ::MPS) = cu(ψ)
+cuMPS(ψ::ITensors.MPS) = cu(ψ)
 cuMPS(args...; kwargs...) = cu(MPS(args...; kwargs...))
 randomCuMPS(args...; kwargs...) = cu(randomMPS(args...; kwargs...))
 
