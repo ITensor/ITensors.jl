@@ -31,6 +31,7 @@ end
   N = 6
   sites = [Index(2, "Site,n=$n") for n in 1:N]
   @test length(MPO()) == 0
+  @test length(MPO(Index{Int}[])) == 0
   O = MPO(sites)
   @test length(O) == N
 
@@ -217,6 +218,7 @@ end
     # Apply K to phi and check that error_contract is close to 0.
     Kphi = contract(K, phi; method="naive", cutoff=1E-8)
     @test error_contract(noprime(Kphi), K, phi) ≈ 0.0 atol = 1e-4
+    @test error_contract(noprime(Kphi), phi, K) ≈ 0.0 atol = 1e-4
 
     @test_throws DimensionMismatch contract(K, badpsi; method="naive", cutoff=1E-8)
     @test_throws DimensionMismatch error_contract(phi, K, badpsi)
@@ -228,6 +230,10 @@ end
     @test maxlinkdim(K) == 1
     psi = randomMPS(sites)
     psi_out = contract(K, psi; maxdim=1)
+    @test inner(phi', psi_out) ≈ inner(phi', K, psi)
+    psi_out = contract(psi, K; maxdim=1)
+    @test inner(phi', psi_out) ≈ inner(phi', K, psi)
+    psi_out = psi * K
     @test inner(phi', psi_out) ≈ inner(phi', K, psi)
     @test_throws MethodError contract(K, psi; method="fakemethod")
 
@@ -657,6 +663,15 @@ end
     @test_throws ErrorException dmrg([H1, H2], psi1, sweeps)
   end
 
+  @testset "unsupported kwarg in dot, logdot" begin
+    N = 6
+    sites = [Index(2, "Site,n=$n") for n in 1:N]
+    K = randomMPO(sites)
+    L = randomMPO(sites)
+    @test_throws ErrorException dot(K, L, make_inds_match=true)
+    @test_throws ErrorException logdot(K, L, make_inds_match=true)
+  end
+
   @testset "MPO*MPO contraction with multiple site indices" begin
     N = 8
     s = siteinds("S=1/2", N)
@@ -774,6 +789,16 @@ end
     A = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
     B = randn(T) * convert_leaf_eltype(T, randomMPO(sites))
     @test ITensors.scalartype(apply(A, B)) == T
+  end
+  @testset "sample" begin
+    N = 6
+    sites = [Index(2, "Site,n=$n") for n in 1:N]
+    seed = 623
+    mt = MersenneTwister(seed)
+    K = randomMPS(mt, sites)
+    L = MPO(K)
+    result = sample(mt, L)
+    @test result ≈ [1, 2, 1, 1, 2, 2]
   end
 end
 
