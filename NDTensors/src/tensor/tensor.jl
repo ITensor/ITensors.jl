@@ -23,29 +23,13 @@ struct Tensor{ElT,N,StoreT<:TensorStorage,IndsT} <: AbstractArray{ElT,N}
   function Tensor{ElT,N,StoreT,IndsT}(
     ::AllowAlias, storage::TensorStorage, inds::Tuple
   ) where {ElT,N,StoreT<:TensorStorage,IndsT}
+    @assert ElT == eltype(StoreT)
+    @assert length(inds) == N
     return new{ElT,N,StoreT,IndsT}(storage, inds)
   end
 end
 
-ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
-
-function set_storagetype(tensortype::Type{<:Tensor}, storagetype)
-  return Tensor{eltype(tensortype),ndims(tensortype),storagetype,indstype(tensortype)}
-end
-
-# TODO: Modify the `storagetype` according to `inds`, such as the dimensions?
-# TODO: Make a version that accepts `indstype::Type`?
-function set_indstype(tensortype::Type{<:Tensor}, inds::Tuple)
-  return Tensor{eltype(tensortype),length(inds),storagetype(tensortype),typeof(inds)}
-end
-
-# Like `Base.to_shape` but more general, can return
-# `Index`, etc. Customize for an array/tensor
-# with custom index types.
-# NDTensors.to_shape
-function to_shape(arraytype::Type{<:Tensor}, shape::Tuple)
-  return shape
-end
+## Tensor constructors
 
 function Tensor{ElT,N,StoreT,IndsT}(
   ::NeverAlias, storage::TensorStorage, inds
@@ -53,20 +37,24 @@ function Tensor{ElT,N,StoreT,IndsT}(
   return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), copy(storage), inds)
 end
 
-# Allow the storage and indices to be input in opposite ordering
-function (tensortype::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage)
-  return tensortype(as, storage, inds)
-end
-
+# Constructs with undef
 function Tensor{ElT,N,StoreT,IndsT}(
   ::UndefInitializer, inds::Tuple
-) where {ElT,N,StoreT,IndsT}
-  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), NDTensors.similar(StoreT, inds), inds)
+) where {ElT,N,StoreT<:TensorStorage,IndsT}
+  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), similar(StoreT, inds), inds)
 end
 
-## function (tensortype::Type{<:Tensor})(::UndefInitializer, inds::Tuple)
-##   error("Not implemented!!!")
-## end
+# constructs with the value x
+function Tensor{ElT,N,StoreT,IndsT}(
+  x::S, inds::Tuple
+) where {S,ElT,N,StoreT<:TensorStorage,IndsT}
+  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), fill!(similar(StoreT, inds), x), inds)
+end
+
+# constructs with zeros
+function Tensor{ElT,N,StoreT,IndsT}(inds::Tuple) where {ElT,N,StoreT<:TensorStorage,IndsT}
+  return Tensor{ElT,N,StoreT,IndsT}(AllowAlias(), StoreT(dim(inds)), inds)
+end
 
 """
     Tensor(storage::TensorStorage, inds)
@@ -91,8 +79,68 @@ function Tensor(as::AliasStyle, storage::TensorStorage, inds)
 end
 
 tensor(args...; kwargs...) = Tensor(AllowAlias(), args...; kwargs...)
-Tensor(storage::TensorStorage, inds) = Tensor(NeverAlias(), storage, inds)
-Tensor(inds, storage::TensorStorage) = Tensor(storage, inds)
+Tensor(storage::TensorStorage, inds::Tuple) = Tensor(NeverAlias(), storage, inds)
+
+function Tensor(eltype::Type, inds::Tuple)
+  return Tensor(AllowAlias(), default_storagetype(eltype, inds)(dim(inds)), inds)
+end
+
+Tensor(inds::Tuple) = Tensor(default_eltype(), inds)
+
+function Tensor(eltype::Type, ::UndefInitializer, inds::Tuple)
+  return Tensor(
+    AllowAlias(), default_storagetype(default_datatype(eltype), inds)(undef, inds), inds
+  )
+end
+
+Tensor(::UndefInitializer, inds::Tuple) = Tensor(default_eltype(), undef, inds)
+
+function Tensor(data::AbstractArray{<:Any,1}, inds::Tuple)
+  return Tensor(AllowAlias(), default_storagetype(typeof(data), inds)(data), inds)
+end
+
+function Tensor(data::AbstractArray{<:Any,N}, inds::Tuple) where {N}
+  return Tensor(vec(data), inds)
+end
+
+## End Tensor constructors
+
+## Random Tensor
+
+## TODO make something like this work.
+# function randomTensor(storeT::Type{<:TensorStorage}, inds::Tuple)
+#   return tensor(generic_randn(storeT, dim(inds)), inds)
+# end
+
+function randomTensor(::Type{ElT}, inds::Tuple) where {ElT}
+  return tensor(generic_randn(default_storagetype(default_datatype(ElT)), dim(inds)), inds)
+end
+
+randomTensor(inds::Tuple) = randomDenseTensor(default_eltype(), inds)
+
+function randomTensor(DataT::Type{<:AbstractArray}, inds::Tuple)
+  return tensor(generic_randn(default_storagetype(DataT), dim(inds)), inds)
+end
+
+function randomTensor(StoreT::Type{<:TensorStorage}, inds::Tuple)
+  return tensor(generic_randn(StoreT, dim(inds)), inds)
+end
+## End Random Tensor
+
+ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
+
+# Like `Base.to_shape` but more general, can return
+# `Index`, etc. Customize for an array/tensor
+# with custom index types.
+# NDTensors.to_shape
+function to_shape(arraytype::Type{<:Tensor}, shape::Tuple)
+  return shape
+end
+
+# Allow the storage and indices to be input in opposite ordering
+function (tensortype::Type{<:Tensor})(as::AliasStyle, inds, storage::TensorStorage)
+  return tensortype(as, storage, inds)
+end
 
 storage(T::Tensor) = T.storage
 
@@ -136,13 +184,6 @@ setinds(T, ninds) = tensor(storage(T), ninds)
 # Generic Tensor functions
 #
 
-# The size is obtained from the indices
-dims(T::Tensor) = dims(inds(T))
-dim(T::Tensor) = dim(inds(T))
-dim(T::Tensor, i::Int) = dim(inds(T), i)
-maxdim(T::Tensor) = maxdim(inds(T))
-mindim(T::Tensor) = mindim(inds(T))
-diaglength(T::Tensor) = mindim(T)
 size(T::Tensor) = dims(T)
 size(T::Tensor, i::Int) = dim(T, i)
 
