@@ -1,5 +1,5 @@
 using ITensors
-using NDTensors
+using .NDTensors
 using LinearAlgebra
 using Test
 
