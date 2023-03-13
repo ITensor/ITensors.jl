@@ -107,13 +107,13 @@ using Test
   end
 
   @testset "Random constructor" begin
-    T = randomDenseTensor((2, 2))
+    T = randomTensor((2, 2))
     @test dims(T) == (2, 2)
     @test eltype(T) == Float64
     @test T[1, 1] ≉ 0
     @test norm(T) ≉ 0
 
-    Tc = randomDenseTensor(ComplexF64, (2, 2))
+    Tc = randomTensor(ComplexF64, (2, 2))
     @test dims(Tc) == (2, 2)
     @test eltype(Tc) == ComplexF64
     @test Tc[1, 1] ≉ 0
@@ -122,7 +122,7 @@ using Test
 
   @testset "Complex Valued Tensors" begin
     d1, d2, d3 = 2, 3, 4
-    T = randomDenseTensor(ComplexF64, (d1, d2, d3))
+    T = randomTensor(ComplexF64, (d1, d2, d3))
 
     rT = real(T)
     iT = imag(T)
@@ -152,7 +152,7 @@ using Test
     @test T[2, 1, 2] == 1.21
     @test norm(T) == 1.21
 
-    T = randomDenseTensor(ComplexF64, (MyInd(4), MyInd(3)))
+    T = randomTensor(ComplexF64, (MyInd(4), MyInd(3)))
     @test store(T) isa Dense
     @test eltype(T) == ComplexF64
     @test norm(T) > 0
@@ -196,8 +196,8 @@ using Test
       R = Tensor(ComplexF64, (2, 2, 1))
       fill!(R, NaN)
       @test any(isnan, R)
-      T1 = randomDenseTensor((2, 2, 1))
-      T2 = randomDenseTensor(ComplexF64, (1, 1))
+      T1 = randomTensor((2, 2, 1))
+      T2 = randomTensor(ComplexF64, (1, 1))
       NDTensors.contract!(R, (1, 2, 3), T1, (1, 2, -1), T2, (-1, 1))
       @test !any(isnan, R)
       @test convert(Array, R) ≈ convert(Array, T1) * T2[1]
@@ -207,8 +207,8 @@ using Test
       R = Tensor(ComplexF64, (2, 2, 1))
       fill!(R, NaN)
       @test any(isnan, R)
-      T1 = randomDenseTensor((2, 2, 1))
-      T2 = randomDenseTensor(ComplexF64, (1, 1))
+      T1 = randomTensor((2, 2, 1))
+      T2 = randomTensor(ComplexF64, (1, 1))
       NDTensors.contract!(R, (2, 1, 3), T1, (1, 2, -1), T2, (-1, 1))
       @test !any(isnan, R)
       @test convert(Array, R) ≈ permutedims(convert(Array, T1), (2, 1, 3)) * T2[1]
