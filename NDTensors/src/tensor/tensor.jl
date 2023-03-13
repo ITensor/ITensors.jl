@@ -118,6 +118,13 @@ end
 
 randomTensor(inds::Tuple) = randomDenseTensor(default_eltype(), inds)
 
+function randomTensor(DataT::Type{<:AbstractArray}, inds::Tuple)
+  return tensor(generic_randn(default_storagetype(DataT), dim(inds)), inds)
+end
+
+function randomTensor(StoreT::Type{<:TensorStorage}, inds::Tuple)
+  return tensor(generic_randn(StoreT, dim(inds)), inds)
+end
 ## End Random Tensor
 
 ndims(::Type{<:Tensor{<:Any,N}}) where {N} = N
