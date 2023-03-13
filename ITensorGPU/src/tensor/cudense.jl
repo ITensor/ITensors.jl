@@ -235,7 +235,7 @@ function _contract!(
   contracted = commoninds(Ainds, Binds)
   A_only = uniqueinds(Ainds, Binds)
   B_only = uniqueinds(Binds, Ainds)
-  ind_dict = Vector{Index}()
+  ind_dict = Vector{Union{Index,Int}}()
   for (idx, i) in enumerate(contracted)
     push!(ind_dict, i)
   end
