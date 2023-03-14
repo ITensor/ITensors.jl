@@ -53,7 +53,7 @@ using ITensors,
     dB = ITensorGPU.CuDense{SType,CuVector{SType,ITensorGPU.default_buffertype()}}(
       SType(2.0), dim(i) * dim(j)
     )
-      dC = -(dA, dB)
+    dC = -(dA, dB)
     @test vec(A - B) ≈ dC
   end
 
@@ -100,7 +100,9 @@ using ITensors,
     @test NDTensors.Dense{SType,CuVector{SType,ITensorGPU.default_buffertype()}}(10) isa
       ITensorGPU.CuDense{SType}
     @test complex(NDTensors.Dense{SType,CuVector{SType,ITensorGPU.default_buffertype()}}) ==
-      NDTensors.Dense{complex(SType),CuVector{complex(SType),ITensorGPU.default_buffertype()}}
+      NDTensors.Dense{
+      complex(SType),CuVector{complex(SType),ITensorGPU.default_buffertype()}
+    }
   end
   if SType == Float64
     @testset "Test CuDense complex" begin
