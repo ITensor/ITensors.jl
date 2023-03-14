@@ -44,7 +44,6 @@ export
   ⊗,
   # Methods
   randomTensor,
-  randomDenseTensor,
   array,
   contract,
   matrix,
