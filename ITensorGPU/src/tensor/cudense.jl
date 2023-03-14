@@ -9,39 +9,8 @@ function CuArray{ElT,N}(x::CuDenseTensor{ElT,N}) where {ElT,N}
 end
 CuArray(x::CuDenseTensor{ElT,N}) where {ElT,N} = CuArray{ElT,N}(x)
 
-*(D::Dense{T,AT}, x::S) where {T,AT<:CuArray,S<:Number} = Dense(x .* data(D))
-
 Base.getindex(D::CuDense{<:Number}) = collect(data(D))[]
 Base.getindex(D::CuDenseTensor{<:Number,0}) = store(D)[]
-LinearAlgebra.norm(T::CuDenseTensor) = norm(data(store(T)))
-
-function Base.copyto!(R::CuDenseTensor{<:Number,N}, T::CuDenseTensor{<:Number,N}) where {N}
-  RA = array(R)
-  TA = array(T)
-  RA .= TA
-  return R
-end
-
-# This is for type promotion for Scalar*Dense
-function Base.promote_rule(
-  ::Type{<:Dense{ElT1,CuVector{ElT1}}}, ::Type{ElT2}
-) where {ElT1,ElT2<:Number}
-  ElR = promote_type(ElT1, ElT2)
-  VecR = CuVector{ElR}
-  return Dense{ElR,VecR}
-end
-
-function permutedims!!(
-  B::Tensor{ElT,N,StoreT,IndsB},
-  A::Tensor{ElT,N,StoreT,IndsA},
-  perm::NTuple{N,Int},
-  f::Function=(r, t) -> permute!(r, t),
-) where {N,ElT,IndsB,IndsA,StoreT<:CuDense{ElT}}
-  Ais = inds(A)
-  Bis = ITensors.NDTensors.permute(inds(A), perm)
-  B = f(B, A)
-  return B
-end
 
 import ITensors.NDTensors: GemmBackend, auto_select_backend, _gemm!
 function backend_cutensor()
@@ -334,157 +303,157 @@ function _contract!(
   return parent(Cdata)
 end
 
-function Base.:+(B::CuDenseTensor, A::CuDenseTensor)
-  opC = cuTENSOR.CUTENSOR_OP_IDENTITY
-  opA = cuTENSOR.CUTENSOR_OP_IDENTITY
-  opAC = cuTENSOR.CUTENSOR_OP_ADD
-  Ais = inds(A)
-  Bis = inds(B)
-  ind_dict = Vector{Index}()
-  for (idx, i) in enumerate(inds(A))
-    push!(ind_dict, i)
-  end
-  Adata = data(store(A))
-  Bdata = data(store(B))
-  reshapeBdata = reshape(Bdata, dims(Bis)...)
-  reshapeAdata = reshape(Adata, dims(Ais)...)
-  ctainds = zeros(Int, length(Ais))
-  ctbinds = zeros(Int, length(Bis))
-  for (ii, ia) in enumerate(Ais)
-    ctainds[ii] = findfirst(x -> x == ia, ind_dict)
-  end
-  for (ii, ib) in enumerate(Bis)
-    ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
-  end
-  ctcinds = copy(ctbinds)
-  C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
-  cuTENSOR.elementwiseBinary!(
-    one(eltype(Adata)),
-    reshapeAdata,
-    ctainds,
-    opA,
-    one(eltype(Bdata)),
-    reshapeBdata,
-    ctbinds,
-    opC,
-    C,
-    ctcinds,
-    opAC,
-  )
-  copyto!(data(store(B)), vec(C))
-  return B
-end
+# function Base.:+(B::CuDenseTensor, A::CuDenseTensor)
+#   opC = cuTENSOR.CUTENSOR_OP_IDENTITY
+#   opA = cuTENSOR.CUTENSOR_OP_IDENTITY
+#   opAC = cuTENSOR.CUTENSOR_OP_ADD
+#   Ais = inds(A)
+#   Bis = inds(B)
+#   ind_dict = Vector{Index}()
+#   for (idx, i) in enumerate(inds(A))
+#     push!(ind_dict, i)
+#   end
+#   Adata = data(store(A))
+#   Bdata = data(store(B))
+#   reshapeBdata = reshape(Bdata, dims(Bis)...)
+#   reshapeAdata = reshape(Adata, dims(Ais)...)
+#   ctainds = zeros(Int, length(Ais))
+#   ctbinds = zeros(Int, length(Bis))
+#   for (ii, ia) in enumerate(Ais)
+#     ctainds[ii] = findfirst(x -> x == ia, ind_dict)
+#   end
+#   for (ii, ib) in enumerate(Bis)
+#     ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
+#   end
+#   ctcinds = copy(ctbinds)
+#   C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
+#   cuTENSOR.elementwiseBinary!(
+#     one(eltype(Adata)),
+#     reshapeAdata,
+#     ctainds,
+#     opA,
+#     one(eltype(Bdata)),
+#     reshapeBdata,
+#     ctbinds,
+#     opC,
+#     C,
+#     ctcinds,
+#     opAC,
+#   )
+#   copyto!(data(store(B)), vec(C))
+#   return B
+# end
 
-function Base.:+(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
-  opA = cuTENSOR.CUTENSOR_OP_IDENTITY
-  opC = cuTENSOR.CUTENSOR_OP_IDENTITY
-  opAC = cuTENSOR.CUTENSOR_OP_ADD
-  ind_dict = Vector{Index}()
-  for (idx, i) in enumerate(Ais)
-    push!(ind_dict, i)
-  end
-  Adata = data(A)
-  Bdata = data(B)
-  reshapeBdata = reshape(Bdata, dims(Bis)...)
-  reshapeAdata = reshape(Adata, dims(Ais)...)
-  ctainds = zeros(Int, length(Ais))
-  ctbinds = zeros(Int, length(Bis))
-  for (ii, ia) in enumerate(Ais)
-    ctainds[ii] = findfirst(x -> x == ia, ind_dict)
-  end
-  for (ii, ib) in enumerate(Bis)
-    ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
-  end
-  ctcinds = copy(ctbinds)
-  C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
-  Cis = Bis
-  C = cuTENSOR.elementwiseBinary!(
-    1, reshapeAdata, ctainds, opA, 1, reshapeBdata, ctbinds, opC, C, ctcinds, opAC
-  )
-  copyto!(data(B), vec(C))
-  return C
-end
+# function Base.:+(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
+#   opA = cuTENSOR.CUTENSOR_OP_IDENTITY
+#   opC = cuTENSOR.CUTENSOR_OP_IDENTITY
+#   opAC = cuTENSOR.CUTENSOR_OP_ADD
+#   ind_dict = Vector{Index}()
+#   for (idx, i) in enumerate(Ais)
+#     push!(ind_dict, i)
+#   end
+#   Adata = data(A)
+#   Bdata = data(B)
+#   reshapeBdata = reshape(Bdata, dims(Bis)...)
+#   reshapeAdata = reshape(Adata, dims(Ais)...)
+#   ctainds = zeros(Int, length(Ais))
+#   ctbinds = zeros(Int, length(Bis))
+#   for (ii, ia) in enumerate(Ais)
+#     ctainds[ii] = findfirst(x -> x == ia, ind_dict)
+#   end
+#   for (ii, ib) in enumerate(Bis)
+#     ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
+#   end
+#   ctcinds = copy(ctbinds)
+#   C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
+#   Cis = Bis
+#   C = cuTENSOR.elementwiseBinary!(
+#     1, reshapeAdata, ctainds, opA, 1, reshapeBdata, ctbinds, opC, C, ctcinds, opAC
+#   )
+#   copyto!(data(B), vec(C))
+#   return C
+# end
 
-function Base.:-(B::CuDenseTensor, A::CuDenseTensor)
-  opC = cuTENSOR.CUTENSOR_OP_IDENTITY
-  opA = cuTENSOR.CUTENSOR_OP_IDENTITY
-  opAC = cuTENSOR.CUTENSOR_OP_ADD
-  Ais = inds(A)
-  Bis = inds(B)
-  ind_dict = Vector{Index}()
-  for (idx, i) in enumerate(inds(A))
-    push!(ind_dict, i)
-  end
-  Adata = data(store(A))
-  Bdata = data(store(B))
-  reshapeBdata = reshape(Bdata, dims(Bis)...)
-  reshapeAdata = reshape(Adata, dims(Ais)...)
-  ctainds = zeros(Int, length(Ais))
-  ctbinds = zeros(Int, length(Bis))
-  for (ii, ia) in enumerate(Ais)
-    ctainds[ii] = findfirst(x -> x == ia, ind_dict)
-  end
-  for (ii, ib) in enumerate(Bis)
-    ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
-  end
-  ctcinds = copy(ctbinds)
-  C = CUDA.zeros(eltype(Bdata), dims(Bis))
-  cuTENSOR.elementwiseBinary!(
-    -one(eltype(Adata)),
-    reshapeAdata,
-    ctainds,
-    opA,
-    one(eltype(Bdata)),
-    reshapeBdata,
-    ctbinds,
-    opC,
-    C,
-    ctcinds,
-    opAC,
-  )
-  copyto!(data(store(B)), vec(C))
-  return B
-end
+# function Base.:-(B::CuDenseTensor, A::CuDenseTensor)
+#   opC = cuTENSOR.CUTENSOR_OP_IDENTITY
+#   opA = cuTENSOR.CUTENSOR_OP_IDENTITY
+#   opAC = cuTENSOR.CUTENSOR_OP_ADD
+#   Ais = inds(A)
+#   Bis = inds(B)
+#   ind_dict = Vector{Index}()
+#   for (idx, i) in enumerate(inds(A))
+#     push!(ind_dict, i)
+#   end
+#   Adata = data(store(A))
+#   Bdata = data(store(B))
+#   reshapeBdata = reshape(Bdata, dims(Bis)...)
+#   reshapeAdata = reshape(Adata, dims(Ais)...)
+#   ctainds = zeros(Int, length(Ais))
+#   ctbinds = zeros(Int, length(Bis))
+#   for (ii, ia) in enumerate(Ais)
+#     ctainds[ii] = findfirst(x -> x == ia, ind_dict)
+#   end
+#   for (ii, ib) in enumerate(Bis)
+#     ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
+#   end
+#   ctcinds = copy(ctbinds)
+#   C = CUDA.zeros(eltype(Bdata), dims(Bis))
+#   cuTENSOR.elementwiseBinary!(
+#     -one(eltype(Adata)),
+#     reshapeAdata,
+#     ctainds,
+#     opA,
+#     one(eltype(Bdata)),
+#     reshapeBdata,
+#     ctbinds,
+#     opC,
+#     C,
+#     ctcinds,
+#     opAC,
+#   )
+#   copyto!(data(store(B)), vec(C))
+#   return B
+# end
 
-function Base.:-(A::CuDense, Ais::IndexSet, B::CuDense, Bis::IndexSet)
-  opA = cuTENSOR.CUTENSOR_OP_IDENTITY
-  opC = cuTENSOR.CUTENSOR_OP_IDENTITY
-  opAC = cuTENSOR.CUTENSOR_OP_ADD
-  ind_dict = Vector{Index}()
-  for (idx, i) in enumerate(Ais)
-    push!(ind_dict, i)
-  end
-  Adata = data(A)
-  Bdata = data(B)
-  reshapeBdata = reshape(Bdata, dims(Bis)...)
-  reshapeAdata = reshape(Adata, dims(Ais)...)
-  ctainds = zeros(Int, length(Ais))
-  ctbinds = zeros(Int, length(Bis))
-  for (ii, ia) in enumerate(Ais)
-    ctainds[ii] = findfirst(x -> x == ia, ind_dict)
-  end
-  for (ii, ib) in enumerate(Bis)
-    ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
-  end
-  ctcinds = copy(ctbinds)
-  C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
-  Cis = Bis
-  C = cuTENSOR.elementwiseBinary!(
-    one(eltype(Adata)),
-    reshapeAdata,
-    ctainds,
-    opA,
-    -one(eltype(Bdata)),
-    reshapeBdata,
-    ctbinds,
-    opC,
-    C,
-    ctcinds,
-    opAC,
-  )
-  copyto!(data(B), vec(C))
-  return C
-end
+# function Base.:-(A::CuDense, Ais::IndexSet, B::CuDense, Bis::IndexSet)
+#   opA = cuTENSOR.CUTENSOR_OP_IDENTITY
+#   opC = cuTENSOR.CUTENSOR_OP_IDENTITY
+#   opAC = cuTENSOR.CUTENSOR_OP_ADD
+#   ind_dict = Vector{Index}()
+#   for (idx, i) in enumerate(Ais)
+#     push!(ind_dict, i)
+#   end
+#   Adata = data(A)
+#   Bdata = data(B)
+#   reshapeBdata = reshape(Bdata, dims(Bis)...)
+#   reshapeAdata = reshape(Adata, dims(Ais)...)
+#   ctainds = zeros(Int, length(Ais))
+#   ctbinds = zeros(Int, length(Bis))
+#   for (ii, ia) in enumerate(Ais)
+#     ctainds[ii] = findfirst(x -> x == ia, ind_dict)
+#   end
+#   for (ii, ib) in enumerate(Bis)
+#     ctbinds[ii] = findfirst(x -> x == ib, ind_dict)
+#   end
+#   ctcinds = copy(ctbinds)
+#   C = CUDA.zeros(eltype(Bdata), dims(Bis)...)
+#   Cis = Bis
+#   C = cuTENSOR.elementwiseBinary!(
+#     one(eltype(Adata)),
+#     reshapeAdata,
+#     ctainds,
+#     opA,
+#     -one(eltype(Bdata)),
+#     reshapeBdata,
+#     ctbinds,
+#     opC,
+#     C,
+#     ctcinds,
+#     opAC,
+#   )
+#   copyto!(data(B), vec(C))
+#   return C
+# end
 
 function Base.permute!(B::CuDenseTensor, A::CuDenseTensor)
   Ais = inds(A)
@@ -553,4 +522,14 @@ function Base.permute!(B::CuDense, Bis::IndexSet, A::CuDense, Ais::IndexSet)
   return Tensor(Dense(reshapeBdata), Tuple(Bis))
 end
 
-Base.:/(A::CuDenseTensor, x::Number) = A * inv(x)
+function permutedims!!(
+  B::Tensor{ElT,N,StoreT,IndsB},
+  A::Tensor{ElT,N,StoreT,IndsA},
+  perm::NTuple{N,Int},
+  f::Function=(r, t) -> permute!(r, t),
+) where {N,ElT,IndsB,IndsA,StoreT<:CuDense{ElT}}
+  Ais = inds(A)
+  Bis = ITensors.NDTensors.permute(inds(A), perm)
+  B = f(B, A)
+  return B
+end

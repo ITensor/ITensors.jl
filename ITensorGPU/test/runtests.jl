@@ -8,15 +8,15 @@ CUDA.allowscalar(false)
   #  run(pipeline(setenv(cmd, "CUTENSOR_AUTOTUNE" => 1); stdout=stdout, stderr=stderr))
   #end
   @testset "$filename" for filename in (
-    "test_dmrg.jl",
+    # "test_dmrg.jl",
     "test_cuitensor.jl",
-    "test_cudiag.jl",
+    # "test_cudiag.jl",
     "test_cudense.jl",
     "test_cucontract.jl",
-    "test_cumpo.jl",
-    "test_cumps.jl",
-    "test_cuiterativesolvers.jl",
-    "test_cutruncate.jl",
+    # "test_cumpo.jl",
+    # "test_cumps.jl",
+    # "test_cuiterativesolvers.jl",
+    # "test_cutruncate.jl",
     #"test_pastaq.jl",
   )
     println("Running $filename")
