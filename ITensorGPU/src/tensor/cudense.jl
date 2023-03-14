@@ -3,23 +3,6 @@ using LinearAlgebra: BlasFloat
 const CuDense{ElT,VecT} = Dense{ElT,VecT} where {VecT<:CuVector}
 const CuDenseTensor{ElT,N,StoreT,IndsT} = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:CuDense}
 
-# function Dense{T,SA}(x::Dense{T,SB}) where {T<:Number,SA<:CuArray,SB<:Array}
-#   return Dense{T,SA}(CuArray(x))
-# end
-# function Dense{T,SA}(x::Dense{T,SB}) where {T<:Number,SA<:Array,SB<:CuArray}
-#   return Dense{T,SA}(collect(x.data))
-# end
-# Dense{T,S}(size::Integer) where {T,S<:CuArray{<:T}} = Dense{T,S}(CUDA.zeros(T, size))
-# function Dense{T,S}(x::T, size::Integer) where {T,S<:CuArray{<:T}}
-#   arr = CuArray{T}(undef, size)
-#   fill!(arr, x)
-#   return Dense{T,S}(arr)
-# end
-
-function Base.complex(::Type{Dense{ElT,VT}}) where {ElT,VT<:CuArray}
-  return Dense{complex(ElT),CuVector{complex(ElT)}}
-end
-
 CuArray(x::CuDense{ElT}) where {ElT} = CuVector{ElT}(data(x))
 function CuArray{ElT,N}(x::CuDenseTensor{ElT,N}) where {ElT,N}
   return CuArray{ElT,N}(reshape(data(store(x)), dims(inds(x))...))
