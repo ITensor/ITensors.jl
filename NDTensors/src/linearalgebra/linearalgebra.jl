@@ -367,11 +367,11 @@ function LinearAlgebra.eigen(
   return D, V, spec
 end
 
-function qr(T::DenseTensor{<:Any,2,IndsT}; positive=false, kwargs...) where {IndsT}
+function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? qr_positive : qr
   return qx(qxf, T; kwargs...)
 end
-function ql(T::DenseTensor{<:Any,2,IndsT}; positive=false, kwargs...) where {IndsT}
+function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? ql_positive : ql
   return qx(qxf, T; kwargs...)
 end
@@ -380,11 +380,12 @@ end
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{<:Any,2,IndsT}; kwargs...) where {IndsT}
+function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
   QM, XM = qx(matrix(T))
   # Make the new indices to go onto Q and R
   q, r = inds(T)
   q = dim(q) < dim(r) ? sim(q) : sim(r)
+  IndsT = indstype(T) #get the index type
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
   Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
