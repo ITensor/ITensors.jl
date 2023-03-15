@@ -240,7 +240,19 @@ include("packagecompile/compile.jl")
 #
 include("developer_tools.jl")
 
+using Requires
 function __init__()
+  @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+    using CUDA
+    using cuTENSOR
+    using CUDA.CUBLAS
+    using CUDA.CUSOLVER
+    println("Now using cuda")
+    #include("../ext/NDTensorsGPU/CUDA/NDTensorsCUDA.jl")
+  end
+  @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
+    #include("../ext/NDTensorsGPU/Metal/NDTensorsMetal.jl")
+  end
   return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object
 end
 
