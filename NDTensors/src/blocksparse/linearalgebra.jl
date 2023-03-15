@@ -304,8 +304,8 @@ qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #  This code thanks to Niklas Tausendpfund 
 #  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...) 
-  ElT=eltype(T)
+function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
+  ElT = eltype(T)
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
   nzblocksT = nzblocks(T)

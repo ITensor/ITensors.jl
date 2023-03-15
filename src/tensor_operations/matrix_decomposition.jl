@@ -405,7 +405,7 @@ rq(A::ITensor; kwargs...) = error(noinds_error_message("rq"))
 lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
 ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
 #
-# Use supplied only left indices as a tuple or vector.
+# User supplied only left indices as a tuple or vector.
 #
 qr(A::ITensor, Linds::Indices; kwargs...) = qr(A, Linds, uniqueinds(A, Linds); kwargs...)
 ql(A::ITensor, Linds::Indices; kwargs...) = ql(A, Linds, uniqueinds(A, Linds); kwargs...)
@@ -419,25 +419,25 @@ ql(A::ITensor, Linds...; kwargs...) = ql(A, Linds, uniqueinds(A, Linds); kwargs.
 rq(A::ITensor, Linds...; kwargs...) = rq(A, Linds, uniqueinds(A, Linds); kwargs...)
 lq(A::ITensor, Linds...; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs...)
 #
-# Core function where both left and right indices are supplied as tuples of vectors
+# Core function where both left and right indices are supplied as tuples or vectors
 # Handle default tags and dispatch to generic qx/xq functions.
 #
 function qr(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", kwargs...)
-  return qx(qr, tags, A, Linds, Rinds; kwargs...)
+  return qx(qr, A, Linds, Rinds; tags, kwargs...)
 end
 function ql(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,ql", kwargs...)
-  return qx(ql, tags, A, Linds, Rinds; kwargs...)
+  return qx(ql, A, Linds, Rinds; tags, kwargs...)
 end
 function rq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,rq", kwargs...)
-  return xq(ql, tags, A, Linds, Rinds; kwargs...)
+  return xq(ql, A, Linds, Rinds; tags, kwargs...)
 end
 function lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", kwargs...)
-  return xq(qr, tags, A, Linds, Rinds; kwargs...)
+  return xq(qr, A, Linds, Rinds; tags, kwargs...)
 end
 #
 #  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
 #
-function qx(qx::Function, qtags, A::ITensor, Linds::Indices, Rinds::Indices; kwargs...)
+function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
   # Strip out any extra indices that are not in A.
   # Unit test test/base/test_itensor.jl line 1469 will fail without this.
   Linds = commoninds(A, Linds)
@@ -470,9 +470,9 @@ function qx(qx::Function, qtags, A::ITensor, Linds::Indices, Rinds::Indices; kwa
   # fix up the tag name for the index between Q and X.
   #  
   q = commonind(Q, X)
-  Q = settags(Q, qtags, q)
-  X = settags(X, qtags, q)
-  q = settags(q, qtags)
+  Q = settags(Q, tags, q)
+  X = settags(X, tags, q)
+  q = settags(q, tags)
 
   return Q, X, q
 end
@@ -481,14 +481,14 @@ end
 #  Generic function implementing both rq and lq decomposition. Implemented using qr/ql 
 #  with swapping the left and right indices.  The X tensor = R or L. 
 #
-function xq(qx::Function, qtags, A::ITensor, Linds::Indices, Rinds::Indices; kwargs...)
+function xq(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
   Q, X, q = qx(A, Rinds, Linds; kwargs...)
   #
   # fix up the tag name for the index between Q and L.
   #  
-  Q = settags(Q, qtags, q)
-  X = settags(X, qtags, q)
-  q = settags(q, qtags)
+  Q = settags(Q, tags, q)
+  X = settags(X, tags, q)
+  q = settags(q, tags)
 
   return X, Q, q
 end
