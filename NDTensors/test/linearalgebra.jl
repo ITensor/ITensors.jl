@@ -20,13 +20,11 @@ end
   @test norm(U2 * U2' - Diagonal(fill(1.0, m))) < 1E-14
 end
 
-Base.eps(::Type{Complex{T}}) where {T<:AbstractFloat} = eps(T)
-
 @testset "Dense $qx decomposition, elt=$elt, positve=$positive" for qx in [qr, ql],
   elt in [Float64, ComplexF64, Float32, ComplexF32],
   positive in [false, true]
 
-  eps = Base.eps(elt) * 30 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
+  eps = Base.eps(real(elt)) * 30 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
   n, m = 4, 8
   Id = Diagonal(fill(1.0, min(n, m)))
   #
