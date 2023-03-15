@@ -30,7 +30,7 @@ end
   #
   # Wide matrix (more columns than rows)
   #
-  A = randomTensor(elt, n, m)
+  A = randomTensor(elt, (n, m))
   Q, X = qx(A; positive=positive) #X is R or L.
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Id atol = eps
@@ -45,7 +45,7 @@ end
   #
   # Tall matrix (more rows than cols)
   #
-  A = randomTensor(elt, m, n) #Tall array
+  A = randomTensor(elt, (m, n)) #Tall array
   Q, X = qx(A; positive=positive)
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Id atol = eps
