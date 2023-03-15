@@ -41,32 +41,43 @@ include("aliasstyle.jl")
 include("abstractarray/set_types.jl")
 include("abstractarray/to_shape.jl")
 include("abstractarray/similar.jl")
+include("abstractarray/ndims.jl")
+include("abstractarray/fill.jl")
 include("array/set_types.jl")
 include("tupletools.jl")
-include("dims.jl")
-include("tensorstorage.jl")
-include("default_storage.jl")
+include("tensorstorage/tensorstorage.jl")
+include("tensorstorage/default_storage.jl")
 include("tensorstorage/similar.jl")
-include("tensor.jl")
+include("tensor/tensor.jl")
+include("dims.jl")
 include("tensor/set_types.jl")
 include("tensor/similar.jl")
 include("adapt.jl")
-include("generic_tensor_operations.jl")
-include("contraction_logic.jl")
+include("tensoralgebra/generic_tensor_operations.jl")
+include("tensoralgebra/contraction_logic.jl")
 
 #####################################
 # DenseTensor and DiagTensor
 #
 include("dense/dense.jl")
-#include("dense/adapt.jl")
-include("fill.jl")
-include("symmetric.jl")
-include("linearalgebra.jl")
+include("dense/densetensor.jl")
+include("dense/tensoralgebra/contract.jl")
+include("dense/linearalgebra/decompositions.jl")
+include("dense/tensoralgebra/outer.jl")
+include("dense/set_types.jl")
+include("dense/fill.jl")
+include("linearalgebra/symmetric.jl")
+include("linearalgebra/linearalgebra.jl")
 include("diag/diag.jl")
+include("diag/set_types.jl")
+include("diag/diagtensor.jl")
 include("diag/similar.jl")
+include("diag/tensoralgebra/contract.jl")
+include("diag/tensoralgebra/outer.jl")
 include("combiner/combiner.jl")
+include("combiner/contract.jl")
 include("truncate.jl")
-include("svd.jl")
+include("linearalgebra/svd.jl")
 
 #####################################
 # BlockSparseTensor
@@ -91,6 +102,8 @@ include("blocksparse/linearalgebra.jl")
 # Empty
 #
 include("empty/empty.jl")
+include("empty/EmptyTensor.jl")
+include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
 
 #####################################
@@ -210,10 +223,10 @@ end
 function __init__()
   @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin
     enable_tblis()
-    include("tblis.jl")
+    include("tensoralgebra/tblis.jl")
   end
   @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
-    include("octavian.jl")
+    include("linearalgebra/octavian.jl")
   end
 end
 
