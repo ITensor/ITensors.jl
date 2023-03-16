@@ -405,11 +405,12 @@ function trim_rows(
   return R1, Q1
 end
 
-function qr(T::DenseTensor{<:Any,2,IndsT}; positive=false, kwargs...) where {IndsT}
-    qxf = positive ? qr_positive : qr
+function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
+  qxf = positive ? qr_positive : qr
   return qx(qxf, T; kwargs...)
 end
-function ql(T::DenseTensor{<:Any,2,IndsT}; positive=false, kwargs...) where {IndsT}
+
+function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
   qxf = positive ? ql_positive : ql
   return qx(qxf, T; kwargs...)
 end
@@ -418,9 +419,11 @@ end
 #  Generic function for qr and ql decomposition of dense matrix.
 #  The X tensor = R or L.
 #
-function qx(qx::Function, T::DenseTensor{<:Any,2,IndsT}; rr_cutoff=-1.0, kwargs...) where {IndsT}
+function qx(qx::Function, T::DenseTensor{<:Any,2}; rr_cutoff=-1.0, kwargs...)
   QM1, XM = qx(matrix(T))
   QM=convert(Matrix, QM1)
+  # Be aware that if positive==false, then typeof(QM)=LinearAlgebra.QRCompactWYQ, not Matrix
+  # It gets converted to matrix below.
   #
   #  Do row removal for rank revealing QR/QL
   #
@@ -430,6 +433,7 @@ function qx(qx::Function, T::DenseTensor{<:Any,2,IndsT}; rr_cutoff=-1.0, kwargs.
   #
   # Make the new indices to go onto Q and X
   #
+  IndsT = indstype(T) #get the index type
   IndexT = IndsT.parameters[1] #establish the index type.
   q = IndexT(size(XM)[1]) #create the Q--X link index.
   Qinds = IndsT((ind(T, 1), q))
@@ -456,10 +460,12 @@ function qr_positive(M::AbstractMatrix)
   Q = convert(Matrix, sparseQ)
   nc = size(Q, 2)
   for c in 1:nc
-    sign_Rc = R[c, c]==0.0 ? 1.0 : sign(R[c, c])
-    if !isone(sign_Rc)
-      R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
-      Q[:, c] *= sign_Rc
+    if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Rc = sign(R[c, c])
+      if !isone(sign_Rc)
+        R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
+        Q[:, c] *= sign_Rc
+      end
     end
   end
   return (Q, R)
@@ -479,10 +485,12 @@ function ql_positive(M::AbstractMatrix)
   nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
   for c in 1:(nc - dc)
-    sign_Lc = L[c, c + dc]==0.0 ? 1.0 : sign(L[c, c + dc])
-    if c <= nr && !isone(sign_Lc)
-      L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
-      Q[:, c] *= conj(sign_Lc)
+    if L[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Lc = sign(L[c, c + dc])
+      if c <= nr && !isone(sign_Lc)
+        L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
+        Q[:, c] *= conj(sign_Lc)
+      end
     end
   end
   return (Q, L)
@@ -492,8 +500,9 @@ end
 #  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
 #  before letting lapack overwirte it. 
 #
-function ql(A::AbstractMatrix{T}; kwargs...) where {T}
+function ql(A::AbstractMatrix; kwargs...)
   Base.require_one_based_indexing(A)
+  T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
   copyto!(AA, A)
   return ql!(AA; kwargs...)
