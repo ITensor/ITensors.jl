@@ -162,6 +162,7 @@ function quadratic_hamiltonian(os::OpSum)
   sites = Vector{Tuple{Int,Int}}(undef, nterms)
   quads = Vector{Tuple{Int,Int}}(undef, nterms)
   nsites=0
+  # detect terms and size of lattice
   for n in 1:nterms
     term = os[n]
     coef = isreal(coefficient(term)) ? real(coefficient(term)) : term.coef
@@ -171,7 +172,13 @@ function quadratic_hamiltonian(os::OpSum)
     sites[n] = ntuple(n -> ITensors.site(term[n]), Val(2))
     nsites = max(nsites, maximum(sites[n]))
   end
-  ElT = all(isreal(coefs)) ? Float64 : ComplexF64
+  # detect coefficient type 
+  coef_type=typeof(coefs[1])
+  for coef in coefs[2:end]
+    coef_type=Base.promote_typeof(coef_type(1),coef)
+  end
+  ElT = all(isreal(coefs)) ? real(coef_type) : coef_type
+  # fill Hamiltonian matrix with elements
   h = zeros(ElT, 2*nsites, 2*nsites)
   other_quad = i -> i==2 ? 1 : 2
   for n in 1:nterms
