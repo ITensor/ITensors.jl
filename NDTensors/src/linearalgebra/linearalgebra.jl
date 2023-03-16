@@ -452,8 +452,9 @@ end
 #  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
 #  before letting lapack overwirte it. 
 #
-function ql(A::AbstractMatrix{T}; kwargs...) where {T}
+function ql(A::AbstractMatrix; kwargs...) 
   Base.require_one_based_indexing(A)
+  T=eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
   copyto!(AA, A)
   return ql!(AA; kwargs...)
