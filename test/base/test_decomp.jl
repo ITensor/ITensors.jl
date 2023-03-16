@@ -174,13 +174,13 @@ end
     Ainds = inds(A)
     Linds = Ainds[1:ninds]
     Rinds = uniqueinds(A, Linds...)
-    Q, R, q = qr(A, Linds; tags="Link,qr1") #calling  qr(A) triggers not supported error.
+    Q, R, q = qr(A, Linds) #calling  qr(A) triggers not supported error.
     @test length(inds(Q)) == ninds + 1 #+1 to account for new qr,Link index.
     @test length(inds(R)) == 3 - ninds + 1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
     @test q == commonind(Q, R)
-    @test hastags(q, "qr1")
+    @test hastags(q, "Link,qr")
     if (length(inds(R)) > 1)
       @test is_upper(q, R) #specify the left index
     end
@@ -260,7 +260,7 @@ end
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds])
+    R, Q, q = rq(A, Ainds[1:ninds])
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 4 - ninds + 1
     @test A ≈ Q * R atol = 1e-13 #With ITensors R*Q==Q*R
@@ -290,7 +290,7 @@ end
     # @test dense(Q*dag(prime(Q, q))) ≈ δ(Float64, q, q') atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-    Q, L, q = ITensors.ql(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    Q, L, q = ql(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(L)) == 3 - ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
@@ -298,7 +298,7 @@ end
     @test A ≈ Q * L atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    R, Q, q = rq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(R)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
@@ -306,7 +306,7 @@ end
     @test A ≈ Q * R atol = 1e-13
     @test norm(dense(Q * dag(prime(Q, q))) - δ(Float64, q, q')) ≈ 0.0 atol = 1e-13
 
-    L, Q, q = ITensors.lq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
+    L, Q, q = lq(A, Ainds[1:ninds]) #calling  qr(A) triggers not supported error.
     @test length(inds(L)) == ninds + 1 #+1 to account for new rq,Link index.
     @test length(inds(Q)) == 3 - ninds + 1
     @test flux(Q) == expected_Qflux[ninds + 1]
@@ -358,16 +358,16 @@ end
     @test min(diag_upper(q, R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    Q, L, q = ITensors.ql(A, Ainds[1:ninds]; positive=true)
+    Q, L, q = ql(A, Ainds[1:ninds]; positive=true)
     @test min(diag_lower(q, L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
 
-    R, Q, q = ITensors.rq(A, Ainds[1:ninds]; positive=true)
+    R, Q, q = rq(A, Ainds[1:ninds]; positive=true)
     @test min(diag_lower(q, R)...) > 0.0 #transpose R is lower
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
-    L, Q, q = ITensors.lq(A, Ainds[1:ninds]; positive=true)
+    L, Q, q = lq(A, Ainds[1:ninds]; positive=true)
     @test min(diag_upper(q, L)...) > 0.0 #transpose L is upper
     @test A ≈ Q * L atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13
@@ -381,7 +381,7 @@ end
     Q, R, q = qr(A, l, s, dag(s'); positive=true)
     @test min(diag(R)...) > 0.0
     @test A ≈ Q * R atol = 1e-13
-    Q, L, q = ITensors.ql(A, l, s, dag(s'); positive=true)
+    Q, L, q = ql(A, l, s, dag(s'); positive=true)
     @test min(diag(L)...) > 0.0
     @test A ≈ Q * L atol = 1e-13
   end

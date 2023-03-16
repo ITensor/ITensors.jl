@@ -296,16 +296,16 @@ function LinearAlgebra.eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
-ql(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT} = qx(ql, T; kwargs...)
-qr(T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT} = qx(qr, T; kwargs...)
+ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
+qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
 #
 #  Generic function to implelement blocks sparse qr/ql decomposition.  It calls
 #  the dense qr or ql for each block. The X tensor = R or L. 
 #  This code thanks to Niklas Tausendpfund 
 #  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
 #
-function qx(qx::Function, T::BlockSparseTensor{ElT,2}; kwargs...) where {ElT}
-
+function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
+  ElT = eltype(T)
   # getting total number of blocks
   nnzblocksT = nnzblocks(T)
   nzblocksT = nzblocks(T)
