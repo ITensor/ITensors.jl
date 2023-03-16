@@ -2,8 +2,8 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
-using PyPlot
-matplotlib.use("QtAgg")
+#using PyPlot
+#matplotlib.use("QtAgg")
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)
@@ -46,12 +46,12 @@ end
   end
 
   h_hopandpair = ITensorGaussianMPS.quadratic_hamiltonian(os)
-  matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair)))
-  show()
+  #matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair)))
+  #show()
   h_hopandpair_spinful = ITensorGaussianMPS.quadratic_hamiltonian(os, os)
 
-  matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair_spinful)))
-  show()
+  #matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair_spinful)))
+  #show()
   @test all(abs.(ITensorGaussianMPS.reverse_interleave(Matrix(h_hopandpair))[(N + 1):end, (N + 1):end] - h_hop) .< eps(Float32))
 
 end
@@ -90,29 +90,27 @@ end
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=true)
     ψ = slater_determinant_to_mps(s, Φ; maxblocksize=4)
-    if false
-      os = OpSum()
-      for i in 1:N, j in 1:N
-        if h[i, j] ≠ 0
-          os .+= h[i, j], "Cdag", i, "C", j
-        end
+    os = OpSum()
+    for i in 1:N, j in 1:N
+      if h[i, j] ≠ 0
+        os .+= h[i, j], "Cdag", i, "C", j
       end
-      H = MPO(os, s)
-
-      @test inner(ψ', H, ψ) ≈ E rtol = 1e-5
-      @test inner(ψ', H, ψ) / norm(ψ) ≈ E rtol = 1e-5
-
-      # Compare to DMRG
-      sweeps = Sweeps(10)
-      setmaxdim!(sweeps, 10, 20, 40, 60)
-      setcutoff!(sweeps, 1E-12)
-      energy, ψ̃ = dmrg(H, productMPS(s, n -> n ≤ Nf ? "1" : "0"), sweeps; outputlevel=0)
-
-      # Create an mps
-      @test abs(inner(ψ, ψ̃)) ≈ 1 rtol = 1e-5
-      @test inner(ψ̃', H, ψ̃) ≈ inner(ψ', H, ψ) rtol = 1e-5
-      @test E ≈ energy
     end
+    H = MPO(os, s)
+
+    @test inner(ψ', H, ψ) ≈ E rtol = 1e-5
+    @test inner(ψ', H, ψ) / norm(ψ) ≈ E rtol = 1e-5
+
+    # Compare to DMRG
+    sweeps = Sweeps(10)
+    setmaxdim!(sweeps, 10, 20, 40, 60)
+    setcutoff!(sweeps, 1E-12)
+    energy, ψ̃ = dmrg(H, productMPS(s, n -> n ≤ Nf ? "1" : "0"), sweeps; outputlevel=0)
+
+    # Create an mps
+    @test abs(inner(ψ, ψ̃)) ≈ 1 rtol = 1e-5
+    @test inner(ψ̃', H, ψ̃) ≈ inner(ψ', H, ψ) rtol = 1e-5
+    @test E ≈ energy
   end
 end
 
@@ -145,9 +143,8 @@ end
       os_p2 .+= -Delta2 / 2.0, "C", n, "C", n + 1
       os_p2 .+= Delta2 / 2.0, "C", n + 1, "C", n
     end
-    h, hb = ITensorGaussianMPS.pairing_hamiltonian(os_h, os_p)
-    h, hb = ITensorGaussianMPS.pairing_hamiltonian(os_h, os_p)
-    h2, hb2 = ITensorGaussianMPS.pairing_hamiltonian(os_h, os_p2)
+    h = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p)
+    h2 = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p2)
 
     e, u = eigen(Hermitian(h))
     E = sum(e[1:N])
