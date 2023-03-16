@@ -412,13 +412,13 @@ function qr_positive(M::AbstractMatrix)
   Q = convert(Matrix, sparseQ)
   nc = size(Q, 2)
   for c in 1:nc
-    if R[c, c]!=0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+    if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
       sign_Rc = sign(R[c, c])
       if !isone(sign_Rc)
         R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
         Q[:, c] *= sign_Rc
       end
-  end
+    end
   end
   return (Q, R)
 end
@@ -437,13 +437,13 @@ function ql_positive(M::AbstractMatrix)
   nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
   for c in 1:(nc - dc)
-    if L[c, c + dc]!=0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+    if L[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
       sign_Lc = sign(L[c, c + dc])
       if c <= nr && !isone(sign_Lc)
         L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
         Q[:, c] *= conj(sign_Lc)
       end
-  end
+    end
   end
   return (Q, L)
 end
@@ -452,9 +452,9 @@ end
 #  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
 #  before letting lapack overwirte it. 
 #
-function ql(A::AbstractMatrix; kwargs...) 
+function ql(A::AbstractMatrix; kwargs...)
   Base.require_one_based_indexing(A)
-  T=eltype(A)
+  T = eltype(A)
   AA = similar(A, LinearAlgebra._qreltype(T), size(A))
   copyto!(AA, A)
   return ql!(AA; kwargs...)

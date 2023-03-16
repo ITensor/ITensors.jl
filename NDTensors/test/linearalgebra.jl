@@ -20,7 +20,10 @@ end
   @test norm(U2 * U2' - Diagonal(fill(1.0, m))) < 1E-14
 end
 
-@testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular" for qx in [qr, ql],
+@testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular" for qx in
+                                                                                        [
+    qr, ql
+  ],
   elt in [Float64, ComplexF64, Float32, ComplexF32],
   positive in [false, true],
   singular in [false, true]
@@ -35,7 +38,7 @@ end
   # We want to test 0.0 on the diagonal.  We need make all roaw equal to gaurantee this with numerical roundoff.
   if singular
     for i in 2:n
-      A[i,:]=A[1,:]
+      A[i, :] = A[1, :]
     end
   end
   Q, X = qx(A; positive=positive) #X is R or L.
@@ -56,7 +59,7 @@ end
   # We want to test 0.0 on the diagonal.  We need make all rows equal to gaurantee this with numerical roundoff.
   if singular
     for i in 2:m
-      A[i,:]=A[1,:]
+      A[i, :] = A[1, :]
     end
   end
   Q, X = qx(A; positive=positive)
