@@ -67,6 +67,7 @@ using PackageCompiler
 using Pkg
 using Printf
 using Random
+using Requires
 using SerializedElementArrays
 using StaticArrays
 using TimerOutputs
@@ -240,15 +241,13 @@ include("packagecompile/compile.jl")
 #
 include("developer_tools.jl")
 
-using Requires
 function __init__()
   @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+    println("Now using cuda")
     using CUDA
     using cuTENSOR
-    using CUDA.CUBLAS
-    using CUDA.CUSOLVER
-    println("Now using cuda")
-    #include("../ext/NDTensorsGPU/CUDA/NDTensorsCUDA.jl")
+    @show CUDA.functional()
+    include("../ext/NDTensorsGPU/CUDA/NDTensorsCUDA.jl")
   end
   @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
     #include("../ext/NDTensorsGPU/Metal/NDTensorsMetal.jl")
