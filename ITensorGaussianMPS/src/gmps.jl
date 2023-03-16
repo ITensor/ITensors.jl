@@ -196,64 +196,48 @@ function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
   h_up = reverse_interleave(Matrix(h_up))
   h_dn = reverse_interleave(Matrix(h_dn))
   # super-quadrant (1,1)
-  h[1:n, 1:n] = h_up[1:n, 1:n]
-  h[(n + 1):(2 * n), (n + 1):(2 * n)] = h_dn[1:n, 1:n]
+  h[1:2:N, 1:2:N] = h_up[1:n, 1:n]
+  h[2:2:N, 2:2:N] = h_dn[1:n, 1:n]
   # super-quadrant (2,1)
-  h[(N + 1):(N + n), 1:n] = h_up[(n + 1):(2 * n), 1:n]
-  h[(N + n + 1):(N + 2 * n), (n + 1):(2 * n)] = h_dn[(n + 1):(2 * n), 1:n]
+  h[(N + 1):2:2*N, 1:2:N] = h_up[(n + 1):(2 * n), 1:n]
+  h[(N + 2):2:2*N, 2:2:N] = h_dn[(n + 1):(2 * n), 1:n]
   # super-quadrant (2,2)
-  h[(N + 1):(N + n), (N + 1):(N + n)] = h_up[(n + 1):N, (n + 1):N]
-  h[(N + n + 1):(2 * N), (N + n + 1):(2 * N)] = h_dn[(n + 1):N, (n + 1):N]
+  h[(N + 1):2:2*N, (N + 1):2:2*N] = h_up[(n + 1):N, (n + 1):N]
+  h[(N + 2):2:2*N,(N + 2):2:2*N] = h_dn[(n + 1):N, (n + 1):N]
   # super-quadrant (1,2)
-  h[1:n, (N + 1):(N + n)] = h_up[1:n, (n + 1):(2 * n)]
-  h[(n + 1):(2 * n), (N + n + 1):(2 * N)] = h_dn[1:n, (n + 1):(2 * n)]
+  h[1:2:N, (N + 1):2:2*N] = h_up[1:n, (n + 1):(2 * n)]
+  h[2:2:N, (N + 2):2:2*N] = h_dn[1:n, (n + 1):(2 * n)]
   
+  #convert from blocked to interlaced format. Odd base-rows are spin-up, even are spin-down.
   return Hermitian(interleave(h))
 end
 
-function hopping_hamiltonian(os::OpSum) 
+function hopping_hamiltonian(os::OpSum;extract=false) 
   # convert to blocked format
   h=reverse_interleave(Matrix(quadratic_hamiltonian(os)))
   # check that offdiagonal blocks are 0
-  N=div(size(h,1),2)
-  if ! all(abs.(h[1:N,N+1:2*N]) .< eps(real(eltype(h))))
+  N=div(size(h,1),2) 
+  if (! extract && ! all(abs.(h[1:N,N+1:2*N]) .< eps(real(eltype(h)))))
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
   return Hermitian(h[N+1:2*N,N+1:2*N])
 end
 
+
   # Make a combined hopping Hamiltonian for spin up and down
-function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum)
-  h_up = hopping_hamiltonian(os_up)
-  h_dn = hopping_hamitlonian(os_dn)
-  @assert size(h_up) == size(h_dn)
-  N = size(h_up, 1)
-  ElT = promote_type(eltype(h_up), eltype(h_dn))
-  h = zeros(ElT, 2 * N, 2 * N)
-  for i in 1:(2 * N), j in 1:(2 * N)
-    if isodd(i) && isodd(j)
-      i_up, j_up = (i + 1) ÷ 2, (j + 1) ÷ 2
-      h[i, j] = h_up[i_up, j_up]
-    elseif iseven(i) && iseven(j)
-      i_dn, j_dn = i ÷ 2, j ÷ 2
-      h[i, j] = h_dn[i_dn, j_dn]
-    end
+function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum;extract=false)
+  # convert to blocked format
+  h=reverse_interleave(Matrix(quadratic_hamiltonian(os_up,os_dn)))
+  # check that offdiagonal blocks are 0
+  N=div(size(h,1),2)
+  if (! extract && ! all(abs.(h[1:N,N+1:2*N]) .< eps(real(eltype(h)))))
+    error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
-  return Hermitian(h)
+  return Hermitian(h[N+1:2*N,N+1:2*N])
 end
 
-#for backward compatibility, may be removed
-function pairing_hamiltonian(os::OpSum)
-  h = quadratic_hamiltonian(os)
-  return h, reverse_interleave(h)
-end
-### DEPRECATE: This dispatch collides with two opsum for two spin species in other places.
-pairing_hamiltonian(os_h::OpSum,os_p::OpSum)=pairing_hamiltonian(os_h+os_p)
-# Make a Slater determinant matrix from a hopping Hamiltonian
-# h with Nf fermions.
 function slater_determinant_matrix(h::AbstractMatrix, Nf::Int)
-  e, u = eigen(h)
-  @show e
+  _, u = eigen(h)
   return u[:, 1:Nf]
 end
 
@@ -345,8 +329,6 @@ function givens_rotations(_v0::ConservesNfParity;)
   ##Given's rotations from annihilation-operator coefficients
   gsaa, _ = givens_rotations(v[3:2:end])
   replace_indices!(i -> 2 * i + 1, gsaa)
-  #scale!(gsaa, 2)
-  #gsaa = shift!(gsaa, +1)
   gsac = Circuit(copy(gsaa.rotations))
   replace_indices!(i -> i + 1, gsac)
   conj!(gsac)
@@ -365,7 +347,6 @@ function givens_rotations(_v0::ConservesNfParity;)
 end
 
 function maybe_drop_pairing_correlations(Λ0::AbstractMatrix{ElT}) where {ElT<:Number}
-  paired = false
   Λblocked = reverse_interleave(Λ0)
   N = div(size(Λblocked, 1), 2)
   if all(x -> abs(x) <= eps(real(eltype(Λ0))), @view Λblocked[1:N, (N + 1):end])
@@ -429,8 +410,6 @@ function set_occupations!(_ns::ConservesNf, _nB::ConservesNf, _v::ConservesNf, i
   p = Int[]
   ns = _ns.data
   nB = _nB.data
-  v = _v.data
-
   p = sortperm(nB; by=entropy)
   ns[i] = nB[p[1]]
   return nothing
@@ -477,8 +456,8 @@ If `is_bcs`, the correlation matrix is assumed to be in interlaced format:
 Note that this may not be the standard choice in the literature, but it is internally
 consistent with the format of single-particle Hamiltonians and Slater determinants employed.
 """
-###Backward Compatibility
 
+# Default to ConservesNf if no further arguments are given for backward compatibility
 function correlation_matrix_to_gmps(
   Λ0::AbstractMatrix;
   eigval_cutoff::Float64=1e-8,
@@ -517,10 +496,9 @@ function correlation_matrix_to_gmps(
   Λ = T(Hermitian(copy(Λ0.data)))
   ElT = eltype(Λ.data)
   V = Circuit{ElT}([])
-  err_tot = 0.0
+  err_tot = 0.0 ### FIXME: keep track of error below
   Λ = maybe_drop_pairing_correlations(Λ)
   N = size(Λ.data, 1)
-  #calctype = typeof(Λ)
   ns = set_data(Λ, Vector{real(ElT)}(undef, N))
   for i in 1:div(N, site_stride(Λ))
     err = 0.0
@@ -622,7 +600,7 @@ end
 function itensors(sites::Vector{<:Index}, C::ConservesNf)
   return itensors(sites, C.data)
 end
-###CHECK: is reverse here reasonable default behaviour?
+
 function itensors(s::Vector{<:Index}, C::Circuit)
   U = [ITensor(s, g) for g in reverse(C.rotations)]
   return U
@@ -646,18 +624,8 @@ function isspinful(s::Vector{<:Index})
   return all(isspinful, s)
 end
 
-"""
-    correlation_matrix_to_mps(s::Vector{<:Index}, Λ::AbstractMatrix{ElT};
-                              eigval_cutoff::Float64 = 1e-8,
-                              maxblocksize::Int = size(Λ, 1),
-                              kwargs...)
-
-Return an approximation to the state represented by the correlation matrix as
-a matrix product state (MPS).
-
-The correlation matrix should correspond to a pure state (have all eigenvalues
-of zero or one).
-"""
+# Checks whether correlation matrix is of a number conserving system and returns AbstractSymmetry wrapper around correlation matrix
+# ToDo: Behaviour assumes (spinless) "Fermion" sites, handle "Electron" sites separately for cases where correlation matrix does not factorize.
 function symmetric_correlation_matrix(Λ::AbstractMatrix, s::Vector{<:Index})
   if length(s) == size(Λ, 1)
     return ConservesNf(Λ)
@@ -678,6 +646,7 @@ function symmetric_correlation_matrix(Λ::AbstractMatrix, Nsites::Int)
   end
 end
 
+
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ::AbstractMatrix;
@@ -696,6 +665,18 @@ function correlation_matrix_to_mps(
   )
 end
 
+"""
+    correlation_matrix_to_mps(s::Vector{<:Index}, Λ::AbstractMatrix{ElT};
+                              eigval_cutoff::Float64 = 1e-8,
+                              maxblocksize::Int = size(Λ, 1),
+                              kwargs...)
+
+Return an approximation to the state represented by the correlation matrix as
+a matrix product state (MPS).
+
+The correlation matrix should correspond to a pure state (have all eigenvalues
+of zero or one).
+"""
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ0::AbstractSymmetry;
@@ -715,18 +696,22 @@ function correlation_matrix_to_mps(
     ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ) * n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)
-    ###FIXME: isodd is not correct here, there shouldn't be any restrictions on the number of electronic sites.
+    # ToDo: This is not tested properly, Electron sitetype tests currently assume interface with two AbstractSymmetry (correlation matrix) arguments
+    # FIXME: isodd is not correct here, there shouldn't be any restrictions on the number of electronic sites.
     isodd(length(s)) && error(
       "For Electron type, must have even number of sites of alternating up and down spins.",
     )
     N = length(s)
     if isspinful(s)
+      # FIXME: Can we lift this restriction now, at least for ConservesNf?
       error(
         "correlation_matrix_to_mps(Λ::AbstractMatrix) currently only supports spinless Fermions or Electrons that do not conserve Sz. Use correlation_matrix_to_mps(Λ_up::AbstractMatrix, Λ_dn::AbstractMatrix) to use spinful Fermions/Electrons.",
       )
-    elseif typeof(Λ0) <: ConservesNf
+    elseif typeof(Λ) <: ConservesNf
       sf = siteinds("Fermion", 2 * N; conserve_qns=true)
-    elseif typeof(Λ0) <: ConservesNfParity
+    elseif typeof(Λ) <: ConservesNfParity
+      # FIXME: Does this also break, even if it doesn't make use of identity blocks? To be safe, issue error.
+      error("ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.")
       sf = siteinds("Fermion", 2 * N; conserve_qns=false,conserve_nfparity=true)
     end
     U = itensors(sf, set_data(Λ, C))
@@ -738,7 +723,7 @@ function correlation_matrix_to_mps(
       C = combiner(sf[i], sf[j])
       c = combinedind(C)
       ψ[n] = ψf[i] * ψf[j] * C
-      ψ[n] *= δ(dag(c), s[n])
+      ψ[n] *= δ(dag(c), s[n]) ###This back conversion to Electron will likely not work reliably for ConservesNfParity
     end
   else
     error("All sites must be Fermion or Electron type.")
@@ -771,6 +756,7 @@ function mapindex(f::Function, g::Givens)
 end
 
 function identity_blocks!(T::Tensor)
+  # FIXME: This is not generic logic. Only works reliably for QN subspace sizes = 1.
   for b in nzblocks(T)
     T[b] = Matrix{Float64}(I, dims(T[b]))
   end
@@ -780,6 +766,7 @@ end
 # Creates an ITensor with the specified flux where each nonzero block
 # is identity
 # TODO: make a special constructor for this.
+# TODO: Introduce a modified combiner which keeps track of state-ordering/spaces.
 function identity_blocks_itensor(flux::QN, i1::Index, i2::Index)
   A = ITensor(flux, i1, i2)
   identity_blocks!(tensor(A))
@@ -857,7 +844,6 @@ function correlation_matrix_to_mps(
   maxblocksize::Int=min(size(Λ_up0, 1), size(Λ_dn0, 1)),
   kwargs...,
 )
-  @show typeof(Λ_up0)
   MPS_Elt = promote_type(eltype(Λ_up0.data),eltype(Λ_dn0.data))
   Λ_up = maybe_drop_pairing_correlations(Λ_up0)
   Λ_dn = maybe_drop_pairing_correlations(Λ_dn0)
@@ -867,6 +853,7 @@ function correlation_matrix_to_mps(
   if ! ((typeof(Λ_up) <: ConservesNfParity && typeof(Λ_dn) <: ConservesNfParity) ||  (typeof(Λ_up) <: ConservesNf && typeof(Λ_dn) <: ConservesNf))
     error("Λ_up and Λ_dn have incompatible subtypes of AbstractSymmetry")
   end
+  
   N_up = div(size(Λ_up.data, 1),site_stride(Λ_up))
   N_dn = div(size(Λ_dn.data, 1),site_stride(Λ_up))
   N = N_up + N_dn
@@ -889,7 +876,6 @@ function correlation_matrix_to_mps(
     ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ_up) * n]) + 1)
     ψ = apply(U, ψ; kwargs...)
   elseif all(hastags("Electron"), s)
-    ###ToDo: Not sure what to do here yet. Just copied code from old interface below. 
     @assert length(s) == N_up
     @assert length(s) == N_dn
     if isspinful(s)
@@ -897,9 +883,10 @@ function correlation_matrix_to_mps(
         space_up = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", 1)) => 1]
         space_dn = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", -1)) => 1]
       elseif typeof(Λ_up)<:ConservesNfParity
-        ###should probably lead to an exception since parity-only contradicts spinfulness
-        space_up = [QN(("NfParity", 0, 2),) => 1, QN(("NfParity", 1, 2),) => 1]
-        space_dn = [QN(("NfParity", 0, 2),) => 1, QN(("NfParity", 1, 2),) => 1]
+        error("ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.")
+        # FIXME: issue with combiner-logic for subspace-size > 1 in identity_blocks_itensor, see below
+        space_up = [QN(("NfParity", 0, -2),) => 1, QN(("NfParity", 1, -2),) => 1]
+        space_dn = [QN(("NfParity", 0, -2),) => 1, QN(("NfParity", 1, -2),) => 1]
       end
       sf_up = [Index(space_up, "Fermion,Site,n=$(2n-1)") for n in 1:N_up]
       sf_dn = [Index(space_dn, "Fermion,Site,n=$(2n)") for n in 1:N_dn]
@@ -908,26 +895,25 @@ function correlation_matrix_to_mps(
       if typeof(Λ_up)<:ConservesNf
         sf = siteinds("Fermion", N; conserve_qns=true, conserve_sz=false)
       elseif typeof(Λ_up)<:ConservesNfParity
+        error("ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.")
         sf = siteinds("Fermion", N; conserve_qns=false, conserve_sz=false,conserve_nfparity=true)
       end
     end
     U = itensors(sf, set_data(Λ_up, C))
     ψf = MPS(MPS_Elt, sf, n -> round(Int, ns[site_stride(Λ_up) * n]) + 1)
-    @show norm(ψf)
     ψf = apply(U, ψf; kwargs...)
-    @show norm(ψf)
     ψ = MPS(N_up)
     for n in 1:N_up
       i, j = 2 * n - 1, 2 * n
       C = combiner(sf[i], sf[j])
       c = combinedind(C)
       ψ[n] = ψf[i] * ψf[j] * C
+      # FIXME: combiner looses track of state ordering for QN subspaces > 1 in identity_blocks_itensor
       ψ[n] *= identity_blocks_itensor(dag(c), s[n])
     end
   else
     error("All sites must be Fermion or Electron type.")
   end
-  @show norm(ψ)
     
   return ψ
 end
@@ -952,7 +938,7 @@ function correlation_matrix_to_mps(
       kwargs...,
     )
   elseif all(hastags("Fermion"),s)
-    #equivalent number of electrons
+    # equivalent number of electrons
     n_electrons=div(length(s),2)
     return correlation_matrix_to_mps(
       s,

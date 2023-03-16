@@ -1,21 +1,12 @@
-"""
-This script shows a minimal example of the GMPS-MPS conversion
-of the ground state of quadratic fermionic Hamiltonian with pairing terms.
-It also provides an example for an instability of the GMPS-MPS conversion
-for certain correlation matrices (presumably measure 0),
-which is resolved by an infinitesimal perturbation.
-"""
-
+# This script shows a minimal example of the GMPS-MPS conversion
+# of the ground state of quadratic fermionic Hamiltonian with pairing terms.
 using LinearAlgebra
 using ITensors
 using ITensorGaussianMPS
+
 ITensors.disable_contraction_sequence_optimization()
 let
-  # Half filling
   N = 10
-  Nf = N ÷ 2
-  #Nf= 
-  @show N
   sites = siteinds("Fermion", N; conserve_qns=false)
   _maxlinkdim = 100
   # DMRG cutoff
@@ -41,9 +32,9 @@ let
     os_p .+= Delta / 2.0, "C", n + 1, "C", n
   end
   os = os_h + os_p
-  h, hb = ITensorGaussianMPS.pairing_hamiltonian(os_h, os_p)
-
-  # Make MPO from free fermion Hamiltonian
+  h = quadratic_hamiltonian(os)
+  hb = ITensorGaussianMPS.reverse_interleave(h)
+  # Make MPO from free fermion Hamiltonian in blocked format
   os_new = OpSum()
   for i in 1:N
     for j in 1:N
@@ -63,38 +54,24 @@ let
   c = conj(Φ) * transpose(Φ)
 
   #Get (G)MPS
-  Gamma = ITensorGaussianMPS.reverse_interleave(c)
-  pert = 1e-14 * rand(2 * N, 2 * N)
-  sympert = 0.5 * (pert + transpose(pert))
   psi = ITensorGaussianMPS.correlation_matrix_to_mps(
     sites,
-    Pairing(ITensorGaussianMPS.interleave(Complex.(Gamma)));
+    c;
     eigval_cutoff=1e-10,
     maxblocksize=14,
     cutoff=1e-11,
   )
-  psi_perturbed = ITensorGaussianMPS.correlation_matrix_to_mps(
-    sites,
-    Pairing(ITensorGaussianMPS.interleave(Complex.(Gamma)) + sympert);
-    eigval_cutoff=1e-10,
-    maxblocksize=14,
-    cutoff=1e-11,
-  )
-  @show eltype(psi[1])
   cdagc = correlation_matrix(psi, "C", "Cdag")
   println("\nFree fermion starting energy")
   @show flux(psi)
   @show inner(psi, H, psi)
-  @show inner(psi_perturbed, H, psi_perturbed)
-
   println("\nRun dmrg with GMPS starting state")
   sweeps = Sweeps(12)
   setmaxdim!(sweeps, 10, 20, 40, _maxlinkdim)
   setcutoff!(sweeps, _cutoff)
-  _, psidmrg = dmrg(H, copy(psi_perturbed), sweeps)
+  _, psidmrg = dmrg(H, psi, sweeps)
   @show inner(psidmrg, H, psidmrg)
   @show(abs(inner(psidmrg, psi)))
-  @show(abs(inner(psidmrg, psi_perturbed)))
 
   #return
 end
