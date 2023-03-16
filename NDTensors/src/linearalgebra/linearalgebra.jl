@@ -382,6 +382,8 @@ end
 #
 function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
   QM, XM = qx(matrix(T))
+  # Be aware that if positive==false, then typeof(QM)=LinearAlgebra.QRCompactWYQ, not Matrix
+  # It gets converted to matrix below.
   # Make the new indices to go onto Q and R
   q, r = inds(T)
   q = dim(q) < dim(r) ? sim(q) : sim(r)
@@ -410,11 +412,13 @@ function qr_positive(M::AbstractMatrix)
   Q = convert(Matrix, sparseQ)
   nc = size(Q, 2)
   for c in 1:nc
-    sign_Rc = sign(R[c, c])
-    if !isone(sign_Rc)
-      R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
-      Q[:, c] *= sign_Rc
-    end
+    if R[c, c]!=0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Rc = sign(R[c, c])
+      if !isone(sign_Rc)
+        R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
+        Q[:, c] *= sign_Rc
+      end
+  end
   end
   return (Q, R)
 end
@@ -433,11 +437,13 @@ function ql_positive(M::AbstractMatrix)
   nr, nc = size(L)
   dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
   for c in 1:(nc - dc)
-    sign_Lc = sign(L[c, c + dc])
-    if c <= nr && !isone(sign_Lc)
-      L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
-      Q[:, c] *= conj(sign_Lc)
-    end
+    if L[c, c + dc]!=0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Lc = sign(L[c, c + dc])
+      if c <= nr && !isone(sign_Lc)
+        L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
+        Q[:, c] *= conj(sign_Lc)
+      end
+  end
   end
   return (Q, L)
 end
