@@ -11,7 +11,6 @@ using LinearAlgebra
 using StaticArrays
 using Functors
 using HDF5
-using Requires
 using SimpleTraits
 using SplitApplyCombine
 using Strided
@@ -203,8 +202,12 @@ $(enable_threaded_blocksparse_docstring(@__MODULE__))
 disable_threaded_blocksparse() = _disable_threaded_blocksparse()
 
 #####################################
-# Optional TBLIS contraction backend
+# Optional backends
 #
+
+if !isdefined(Base, :get_extension)
+  using Requires
+end
 
 const _using_tblis = Ref(false)
 
@@ -221,6 +224,7 @@ function disable_tblis()
 end
 
 function __init__()
+  @static if !isdefined(Base, :get_extension)
   @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin
     enable_tblis()
     include("tensoralgebra/tblis.jl")
@@ -230,10 +234,17 @@ function __init__()
   end
 
   @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+    println("NDTensors has CUDA")
     include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
+    # import 
+    #   buffertype,
+    #   default_buffertype,
+    #   set_eltype,
+    #   set_ndims
   end
   @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
     include("../ext/NDTensorMetal/NDTensorMetal.jl")
+  end
   end
 end
 
