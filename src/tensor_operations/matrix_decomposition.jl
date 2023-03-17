@@ -363,6 +363,37 @@ function eigen(A::ITensor; kwargs...)
   return eigen(A, Lis, Ris; kwargs...)
 end
 
+# ----------------------------- QR/RQ/QL/LQ decompositions ------------------------------
+
+#
+#  Helper functions for handleing cases where zero indices are requested on Q or R.
+#
+function add_trivial_index(A::ITensor, Ainds)
+  α = trivial_index(Ainds) #If Ainds[1] has no QNs makes Index(1), otherwise Index(QN()=>1)
+  vα = onehot(eltype(A), α => 1)
+  A *= vα
+  return A, vα, [α]
+end
+
+function add_trivial_index(A::ITensor, Linds, Rinds)
+  vαl, vαr = nothing, nothing
+  if isempty(Linds)
+    A, vαl, Linds = add_trivial_index(A, Rinds)
+  end
+  if isempty(Rinds)
+    A, vαr, Rinds = add_trivial_index(A, Linds)
+  end
+  return A, vαl, vαr, Linds, Rinds
+end
+
+remove_trivial_index(Q::ITensor, R::ITensor, vαl, vαr) = (Q * dag(vαl), R * dag(vαr))
+remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, vαr) = (Q, R * dag(vαr))
+remove_trivial_index(Q::ITensor, R::ITensor, vαl, ::Nothing) = (Q * dag(vαl), R)
+remove_trivial_index(Q::ITensor, R::ITensor, ::Nothing, ::Nothing) = (Q, R)
+
+#
+#  Force users to knowingly ask for zero indices using qr(A,()) syntax
+#
 function noinds_error_message(decomp::String)
   return "$decomp without any input indices is currently not defined.
    In the future it may be defined as performing a $decomp decomposition
@@ -370,45 +401,96 @@ function noinds_error_message(decomp::String)
 end
 
 qr(A::ITensor; kwargs...) = error(noinds_error_message("qr"))
+rq(A::ITensor; kwargs...) = error(noinds_error_message("rq"))
+lq(A::ITensor; kwargs...) = error(noinds_error_message("lq"))
+ql(A::ITensor; kwargs...) = error(noinds_error_message("ql"))
+#
+# User supplied only left indices as a tuple or vector.
+#
+qr(A::ITensor, Linds::Indices; kwargs...) = qr(A, Linds, uniqueinds(A, Linds); kwargs...)
+ql(A::ITensor, Linds::Indices; kwargs...) = ql(A, Linds, uniqueinds(A, Linds); kwargs...)
+rq(A::ITensor, Linds::Indices; kwargs...) = rq(A, Linds, uniqueinds(A, Linds); kwargs...)
+lq(A::ITensor, Linds::Indices; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs...)
+#
+# User supplied only left indices as as vararg
+#
+qr(A::ITensor, Linds...; kwargs...) = qr(A, Linds, uniqueinds(A, Linds); kwargs...)
+ql(A::ITensor, Linds...; kwargs...) = ql(A, Linds, uniqueinds(A, Linds); kwargs...)
+rq(A::ITensor, Linds...; kwargs...) = rq(A, Linds, uniqueinds(A, Linds); kwargs...)
+lq(A::ITensor, Linds...; kwargs...) = lq(A, Linds, uniqueinds(A, Linds); kwargs...)
+#
+# Core function where both left and right indices are supplied as tuples or vectors
+# Handle default tags and dispatch to generic qx/xq functions.
+#
+function qr(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,qr", kwargs...)
+  return qx(qr, A, Linds, Rinds; tags, kwargs...)
+end
+function ql(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,ql", kwargs...)
+  return qx(ql, A, Linds, Rinds; tags, kwargs...)
+end
+function rq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,rq", kwargs...)
+  return xq(ql, A, Linds, Rinds; tags, kwargs...)
+end
+function lq(A::ITensor, Linds::Indices, Rinds::Indices; tags=ts"Link,lq", kwargs...)
+  return xq(qr, A, Linds, Rinds; tags, kwargs...)
+end
+#
+#  Generic function implementing both qr and ql decomposition. The X tensor = R or L. 
+#
+function qx(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
+  # Strip out any extra indices that are not in A.
+  # Unit test test/base/test_itensor.jl line 1469 will fail without this.
+  Linds = commoninds(A, Linds)
+  #Rinds=commoninds(A,Rinds) #if the user supplied Rinds they could have the same problem?
+  #
+  # Make a dummy index with dim=1 and incorporate into A so the Linds & Rinds can never
+  # be empty.  A essentially becomes 1D after collection.
+  #
+  A, vαl, vαr, Linds, Rinds = add_trivial_index(A, Linds, Rinds)
+  #
+  #  Use combiners to render A down to a rank 2 tensor ready for matrix QR/QL routine.
+  #
+  CL, CR = combiner(Linds...), combiner(Rinds...)
+  cL, cR = combinedind(CL), combinedind(CR)
+  AC = A * CR * CL
+  #
+  #  Make sure we don't accidentally pass the transpose into the matrix qr/ql routine.
+  #
+  AC = permute(AC, cL, cR; allow_alias=true)
 
-# TODO: write this in terms of combiners and then
-# call qr on the order-2 tensors directly
-function qr(A::ITensor, Linds...; kwargs...)
-  tags::TagSet = get(kwargs, :tags, "Link,qr")
-  Lis = commoninds(A, indices(Linds...))
-  Ris = uniqueinds(A, Lis)
+  QT, XT = qx(tensor(AC); kwargs...) #pass order(AC)==2 matrix down to the NDTensors level where qr/ql are implemented.
+  #
+  #  Undo the combine oepration, to recover all tensor indices.
+  #
+  Q, X = itensor(QT) * dag(CL), itensor(XT) * dag(CR)
 
-  Lis_original = Lis
-  Ris_original = Ris
-  if isempty(Lis_original)
-    α = trivial_index(Ris)
-    vLα = onehot(eltype(A), α => 1)
-    A *= vLα
-    Lis = [α]
-  end
-  if isempty(Ris_original)
-    α = trivial_index(Lis)
-    vRα = onehot(eltype(A), α => 1)
-    A *= vRα
-    Ris = [α]
-  end
-
-  Lpos, Rpos = NDTensors.getperms(inds(A), Lis, Ris)
-  QT, RT = qr(tensor(A), Lpos, Rpos; kwargs...)
-  Q, R = itensor(QT), itensor(RT)
-  q = commonind(Q, R)
-  settags!(Q, tags, q)
-  settags!(R, tags, q)
+  # Remove dummy indices.  No-op if vαl and vαr are Nothing
+  Q, X = remove_trivial_index(Q, X, vαl, vαr)
+  #
+  # fix up the tag name for the index between Q and X.
+  #  
+  q = commonind(Q, X)
+  Q = settags(Q, tags, q)
+  X = settags(X, tags, q)
   q = settags(q, tags)
 
-  if isempty(Lis_original)
-    Q *= dag(vLα)
-  end
-  if isempty(Ris_original)
-    R *= dag(vRα)
-  end
+  return Q, X, q
+end
 
-  return Q, R, q
+#
+#  Generic function implementing both rq and lq decomposition. Implemented using qr/ql 
+#  with swapping the left and right indices.  The X tensor = R or L. 
+#
+function xq(qx::Function, A::ITensor, Linds::Indices, Rinds::Indices; tags, kwargs...)
+  Q, X, q = qx(A, Rinds, Linds; kwargs...)
+  #
+  # fix up the tag name for the index between Q and L.
+  #  
+  Q = settags(Q, tags, q)
+  X = settags(X, tags, q)
+  q = settags(q, tags)
+
+  return X, Q, q
 end
 
 polar(A::ITensor; kwargs...) = error(noinds_error_message("polar"))

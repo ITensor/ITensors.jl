@@ -296,6 +296,71 @@ function LinearAlgebra.eigen(
   return D, V, Spectrum(d, truncerr)
 end
 
+ql(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(ql, T; kwargs...)
+qr(T::BlockSparseTensor{<:Any,2}; kwargs...) = qx(qr, T; kwargs...)
+#
+#  Generic function to implelement blocks sparse qr/ql decomposition.  It calls
+#  the dense qr or ql for each block. The X tensor = R or L. 
+#  This code thanks to Niklas Tausendpfund 
+#  https://github.com/ntausend/variance_iTensor/blob/main/Hubig_variance_test.ipynb
+#
+function qx(qx::Function, T::BlockSparseTensor{<:Any,2}; kwargs...)
+  ElT = eltype(T)
+  # getting total number of blocks
+  nnzblocksT = nnzblocks(T)
+  nzblocksT = nzblocks(T)
+
+  Qs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+  Xs = Vector{DenseTensor{ElT,2}}(undef, nnzblocksT)
+
+  for (jj, b) in enumerate(eachnzblock(T))
+    blockT = blockview(T, b)
+    QXb = qx(blockT; kwargs...) #call dense qr at src/linearalgebra.jl 387
+
+    if (isnothing(QXb))
+      return nothing
+    end
+
+    Q, X = QXb
+    Qs[jj] = Q
+    Xs[jj] = X
+  end
+
+  #
+  # Make the new index connecting Q and R  
+  #
+  itl = ind(T, 1) #left index of T
+  iq = dag(sim(itl)) #start with similar to the left index of T
+  resize!(iq, nnzblocksT)  #adjust the size to match the block count
+  for (n, blockT) in enumerate(nzblocksT)
+    Qdim = size(Qs[n], 2) #get the block dim on right side of Q.
+    b1 = block(itl, blockT[1])
+    setblock!(iq, resize(b1, Qdim), n)
+  end
+
+  indsQ = setindex(inds(T), iq, 2)
+  indsX = setindex(inds(T), dag(iq), 1)
+
+  nzblocksQ = Vector{Block{2}}(undef, nnzblocksT)
+  nzblocksX = Vector{Block{2}}(undef, nnzblocksT)
+
+  for n in 1:nnzblocksT
+    blockT = nzblocksT[n]
+    nzblocksQ[n] = (blockT[1], UInt(n))
+    nzblocksX[n] = (UInt(n), blockT[2])
+  end
+
+  Q = BlockSparseTensor(ElT, undef, nzblocksQ, indsQ)
+  X = BlockSparseTensor(ElT, undef, nzblocksX, indsX)
+
+  for n in 1:nnzblocksT
+    blockview(Q, nzblocksQ[n]) .= Qs[n]
+    blockview(X, nzblocksX[n]) .= Xs[n]
+  end
+
+  return Q, X
+end
+
 function exp(
   T::Union{BlockSparseMatrix{ElT},Hermitian{ElT,<:BlockSparseMatrix{ElT}}}
 ) where {ElT<:Union{Real,Complex}}
