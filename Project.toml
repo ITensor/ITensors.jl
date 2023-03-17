@@ -30,10 +30,6 @@ TupleTools = "9d95972d-f1c8-5527-a6e0-b4b365fa01f6"
 Zeros = "bd1ec220-6eb4-527a-9b49-e79c3db6233b"
 ZygoteRules = "700de1a5-db45-46bc-99cf-38207098b444"
 
-[extras]
-CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
-cuTENSOR = "011b41b2-24ef-40a8-b3eb-fa098493e9e1"
-
 [compat]
 Adapt = "3.5"
 BitIntegers = "0.2"
@@ -56,6 +52,4 @@ TimerOutputs = "0.5.5"
 TupleTools = "1.2"
 Zeros = "0.3.0"
 ZygoteRules = "0.2.2"
-CUDA = "4.0"
-cuTENSOR = "1.0.1"
 julia = "1.6"
