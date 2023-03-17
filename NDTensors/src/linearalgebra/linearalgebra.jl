@@ -303,27 +303,6 @@ random_orthog(::Type{ElT}, n::Int, m::Int) where {ElT<:Real} = random_unitary(El
 
 random_orthog(n::Int, m::Int) = random_orthog(Float64, n, m)
 
-"""
-    qr_positive(M::AbstractMatrix)
-
-Compute the QR decomposition of a matrix M
-such that the diagonal elements of R are
-non-negative. Such a QR decomposition of a
-matrix is unique. Returns a tuple (Q,R).
-"""
-function qr_positive(M::AbstractMatrix)
-  sparseQ, R = qr(M)
-  Q = convert(Matrix, sparseQ)
-  nc = size(Q, 2)
-  for c in 1:nc
-    if real(R[c, c]) < 0.0
-      R[c, c:end] *= -1
-      Q[:, c] *= -1
-    end
-  end
-  return (Q, R)
-end
-
 function LinearAlgebra.eigen(
   T::DenseTensor{ElT,2,IndsT}; kwargs...
 ) where {ElT<:Union{Real,Complex},IndsT}
@@ -388,23 +367,130 @@ function LinearAlgebra.eigen(
   return D, V, spec
 end
 
-function LinearAlgebra.qr(T::DenseTensor{ElT,2,IndsT}; kwargs...) where {ElT,IndsT}
-  positive = get(kwargs, :positive, false)
-  # TODO: just call qr on T directly (make sure
-  # that is fast)
-  if positive
-    QM, RM = qr_positive(matrix(T))
-  else
-    QM, RM = qr(matrix(T))
-  end
+function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
+  qxf = positive ? qr_positive : qr
+  return qx(qxf, T; kwargs...)
+end
+function ql(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
+  qxf = positive ? ql_positive : ql
+  return qx(qxf, T; kwargs...)
+end
+
+#
+#  Generic function for qr and ql decomposition of dense matrix.
+#  The X tensor = R or L.
+#
+function qx(qx::Function, T::DenseTensor{<:Any,2}; kwargs...)
+  QM, XM = qx(matrix(T))
+  # Be aware that if positive==false, then typeof(QM)=LinearAlgebra.QRCompactWYQ, not Matrix
+  # It gets converted to matrix below.
   # Make the new indices to go onto Q and R
   q, r = inds(T)
   q = dim(q) < dim(r) ? sim(q) : sim(r)
+  IndsT = indstype(T) #get the index type
   Qinds = IndsT((ind(T, 1), q))
-  Rinds = IndsT((q, ind(T, 2)))
-  Q = tensor(Dense(vec(Matrix(QM))), Qinds)
-  R = tensor(Dense(vec(RM)), Rinds)
-  return Q, R
+  Xinds = IndsT((q, ind(T, 2)))
+  Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
+  X = tensor(Dense(vec(XM)), Xinds)
+  return Q, X
+end
+
+#
+# Just flip signs between Q and R to get all the diagonals of R >=0.
+# For rectangular M the indexing for "diagonal" is non-trivial.
+#
+"""
+    qr_positive(M::AbstractMatrix)
+
+Compute the QR decomposition of a matrix M
+such that the diagonal elements of R are
+non-negative. Such a QR decomposition of a
+matrix is unique. Returns a tuple (Q,R).
+"""
+function qr_positive(M::AbstractMatrix)
+  sparseQ, R = qr(M)
+  Q = convert(Matrix, sparseQ)
+  nc = size(Q, 2)
+  for c in 1:nc
+    if R[c, c] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Rc = sign(R[c, c])
+      if !isone(sign_Rc)
+        R[c, c:end] *= conj(sign_Rc) #only fip non-zero portion of the row.
+        Q[:, c] *= sign_Rc
+      end
+    end
+  end
+  return (Q, R)
+end
+
+"""
+    ql_positive(M::AbstractMatrix)
+
+Compute the QL decomposition of a matrix M
+such that the diagonal elements of L are
+non-negative. Such a QL decomposition of a
+matrix is unique. Returns a tuple (Q,L).
+"""
+function ql_positive(M::AbstractMatrix)
+  sparseQ, L = ql(M)
+  Q = convert(Matrix, sparseQ)
+  nr, nc = size(L)
+  dc = nc > nr ? nc - nr : 0 #diag is shifted over by dc if nc>nr
+  for c in 1:(nc - dc)
+    if L[c, c + dc] != 0.0 #sign(0.0)==0.0 so we don't want to zero out a column of Q.
+      sign_Lc = sign(L[c, c + dc])
+      if c <= nr && !isone(sign_Lc)
+        L[c, 1:(c + dc)] *= sign_Lc #only fip non-zero portion of the column.
+        Q[:, c] *= conj(sign_Lc)
+      end
+    end
+  end
+  return (Q, L)
+end
+
+#
+#  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
+#  before letting lapack overwirte it. 
+#
+function ql(A::AbstractMatrix; kwargs...)
+  Base.require_one_based_indexing(A)
+  T = eltype(A)
+  AA = similar(A, LinearAlgebra._qreltype(T), size(A))
+  copyto!(AA, A)
+  return ql!(AA; kwargs...)
+end
+#
+# This is where the low level call to lapack actually occurs.  Most of the work is
+# about unpacking Q and L from the A matrix.
+#
+function ql!(A::StridedMatrix{<:LAPACK.BlasFloat})
+  tau = Base.similar(A, min(size(A)...))
+  x = LAPACK.geqlf!(A, tau)
+  #save L from the lower portion of A, before orgql! mangles it!
+  nr, nc = size(A)
+  mn = min(nr, nc)
+  L = similar(A, (mn, nc))
+  for r in 1:mn
+    for c in 1:(r + nc - mn)
+      L[r, c] = A[r + nr - mn, c]
+    end
+    for c in (r + 1 + nc - mn):nc
+      L[r, c] = 0.0
+    end
+  end
+  # Now we need shift the orth vectors from the right side of Q over the left side, before
+  if (mn < nc)
+    for r in 1:nr
+      for c in 1:mn
+        A[r, c] = A[r, c + nc - mn]
+      end
+    end
+    for r in 1:nr
+      A = A[:, 1:mn] #whack the extra columns in A.
+    end
+  end
+  LAPACK.orgql!(A, tau)
+  return A, L
 end
 
 # TODO: support alg keyword argument to choose the svd algorithm

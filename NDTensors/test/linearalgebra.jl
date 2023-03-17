@@ -20,4 +20,58 @@ end
   @test norm(U2 * U2' - Diagonal(fill(1.0, m))) < 1E-14
 end
 
+@testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular" for qx in
+                                                                                        [
+    qr, ql
+  ],
+  elt in [Float64, ComplexF64, Float32, ComplexF32],
+  positive in [false, true],
+  singular in [false, true]
+
+  eps = Base.eps(real(elt)) * 30 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
+  n, m = 4, 8
+  Id = Diagonal(fill(1.0, min(n, m)))
+  #
+  # Wide matrix (more columns than rows)
+  #
+  A = randomTensor(elt, (n, m))
+  # We want to test 0.0 on the diagonal.  We need make all roaw equal to gaurantee this with numerical roundoff.
+  if singular
+    for i in 2:n
+      A[i, :] = A[1, :]
+    end
+  end
+  Q, X = qx(A; positive=positive) #X is R or L.
+  @test A ≈ Q * X atol = eps
+  @test array(Q)' * array(Q) ≈ Id atol = eps
+  @test array(Q) * array(Q)' ≈ Id atol = eps
+  if positive
+    nr, nc = size(X)
+    dr = qx == ql ? Base.max(0, nc - nr) : 0
+    diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
+    @test all(real(diagX) .>= 0.0)
+    @test all(imag(diagX) .== 0.0)
+  end
+  #
+  # Tall matrix (more rows than cols)
+  #
+  A = randomTensor(elt, (m, n)) #Tall array
+  # We want to test 0.0 on the diagonal.  We need make all rows equal to gaurantee this with numerical roundoff.
+  if singular
+    for i in 2:m
+      A[i, :] = A[1, :]
+    end
+  end
+  Q, X = qx(A; positive=positive)
+  @test A ≈ Q * X atol = eps
+  @test array(Q)' * array(Q) ≈ Id atol = eps
+  if positive
+    nr, nc = size(X)
+    dr = qx == ql ? Base.max(0, nc - nr) : 0
+    diagX = diag(X[:, (1 + dr):end]) #location of diag(L) is shifted dr columns over the right.
+    @test all(real(diagX) .>= 0.0)
+    @test all(imag(diagX) .== 0.0)
+  end
+end
+
 nothing
