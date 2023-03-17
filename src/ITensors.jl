@@ -112,13 +112,6 @@ include("imports.jl")
 include("global_variables.jl")
 
 #####################################
-# Algorithm type for selecting
-# different algorithm backends
-# (for internal or advanced usage)
-#
-include("algorithm.jl")
-
-#####################################
 # Index and IndexSet
 #
 include("lastval.jl")
@@ -177,7 +170,6 @@ include("mps/abstractprojmpo.jl")
 include("mps/projmpo.jl")
 include("mps/diskprojmpo.jl")
 include("mps/projmposum.jl")
-include("mps/diskprojmposum.jl")
 include("mps/projmps.jl")
 include("mps/projmpo_mps.jl")
 include("mps/observer.jl")
@@ -247,11 +239,6 @@ include("packagecompile/compile.jl")
 # use only
 #
 include("developer_tools.jl")
-
-#####################################
-# Deprecated
-#
-include("Deprecated/Deprecated.jl")
 
 function __init__()
   return resize!(empty!(INDEX_ID_RNGs), Threads.nthreads()) # ensures that we didn't save a bad object

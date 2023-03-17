@@ -175,10 +175,14 @@ function ITensors.op(::OpName"Ry", ::SiteType"Qubit"; θ::Number)
 end
 
 # Rotation around Z-axis
-function ITensors.op(::OpName"Rz", ::SiteType"Qubit"; ϕ::Number)
+function ITensors.op(::OpName"Rz", ::SiteType"Qubit"; θ=nothing, ϕ=nothing)
+  isone(count(isnothing, (θ, ϕ))) || error(
+    "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating an Rz gate, but not both.",
+  )
+  isnothing(θ) && (θ = ϕ)
   return [
-    exp(-im * ϕ / 2) 0
-    0 exp(im * ϕ / 2)
+    exp(-im * θ / 2) 0
+    0 exp(im * θ / 2)
   ]
 end
 
@@ -251,12 +255,16 @@ function ITensors.op(::OpName"CRy", ::SiteType"Qubit"; θ::Number)
 end
 ITensors.op(::OpName"CRY", t::SiteType"Qubit"; kwargs...) = ITensors.op("CRy", t; kwargs...)
 
-function ITensors.op(::OpName"CRz", ::SiteType"Qubit"; ϕ::Number)
+function ITensors.op(::OpName"CRz", ::SiteType"Qubit"; ϕ=nothing, θ=nothing)
+  isone(count(isnothing, (θ, ϕ))) || error(
+    "Must specify the keyword argument `θ` (or the deprecated `ϕ`) when creating a CRz gate, but not both.",
+  )
+  isnothing(θ) && (θ = ϕ)
   return [
     1 0 0 0
     0 1 0 0
-    0 0 exp(-im * ϕ / 2) 0
-    0 0 0 exp(im * ϕ / 2)
+    0 0 exp(-im * θ / 2) 0
+    0 0 0 exp(im * θ / 2)
   ]
 end
 ITensors.op(::OpName"CRZ", t::SiteType"Qubit"; kwargs...) = ITensors.op("CRz", t; kwargs...)
@@ -303,7 +311,7 @@ function ITensors.op(::OpName"√iSWAP", t::SiteType"Qubit")
   return [
     1 0 0 0
     0 1/√2 im/√2 0
-    0 im/2 1/√2 0
+    0 im/√2 1/√2 0
     0 0 0 1
   ]
 end
@@ -330,6 +338,17 @@ function ITensors.op(::OpName"Ryy", ::SiteType"Qubit"; ϕ::Number)
   ]
 end
 ITensors.op(::OpName"RYY", t::SiteType"Qubit"; kwargs...) = op("Ryy", t; kwargs...)
+
+# Ising (XY) coupling gate
+function ITensors.op(::OpName"Rxy", t::SiteType"Qubit"; ϕ::Number)
+  return [
+    1 0 0 0
+    0 cos(ϕ) -im*sin(ϕ) 0
+    0 -im*sin(ϕ) cos(ϕ) 0
+    0 0 0 1
+  ]
+end
+ITensors.op(::OpName"RXY", t::SiteType"Qubit"; kwargs...) = op("Rxy", t; kwargs...)
 
 # Ising (ZZ) coupling gate
 function ITensors.op(::OpName"Rzz", ::SiteType"Qubit"; ϕ::Number)

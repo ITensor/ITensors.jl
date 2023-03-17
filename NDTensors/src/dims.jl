@@ -86,3 +86,12 @@ Create an instance of the value type Order representing
 the order of an ITensor.
 """
 Order(N) = Order{N}()
+
+#dims for tensor
+# The size is obtained from the indices
+dims(T::Tensor) = dims(inds(T))
+dim(T::Tensor) = dim(inds(T))
+dim(T::Tensor, i::Int) = dim(inds(T), i)
+maxdim(T::Tensor) = maxdim(inds(T))
+mindim(T::Tensor) = mindim(inds(T))
+diaglength(T::Tensor) = mindim(T)

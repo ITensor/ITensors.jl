@@ -7,22 +7,6 @@ const BlockSparseTensor{ElT,N,StoreT,IndsT} =
 
 nonzeros(T::Tensor) = data(T)
 
-# Special version for BlockSparseTensor
-# Generic version doesn't work since BlockSparse us parametrized by
-# the Tensor order
-function similartype(
-  ::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}}, ::Type{IndsR}
-) where {NT,ElT,VecT,IndsR}
-  NR = length(IndsR)
-  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
-end
-
-function similartype(
-  ::Type{<:Tensor{ElT,NT,<:BlockSparse{ElT,VecT},<:Any}}, ::Type{IndsR}
-) where {NT,ElT,VecT,IndsR<:NTuple{NR}} where {NR}
-  return Tensor{ElT,NR,BlockSparse{ElT,VecT,NR},IndsR}
-end
-
 function BlockSparseTensor(
   ::Type{ElT}, ::UndefInitializer, boffs::BlockOffsets, inds
 ) where {ElT<:Number}
@@ -119,23 +103,37 @@ end
 #  = Tensor{ElT,N,StoreT,IndsT} where {StoreT<:BlockSparse}
 
 function randn(
-  ::Type{<:BlockSparseTensor{ElT,N}}, blocks::Vector{<:BlockT}, inds
+  TensorT::Type{<:BlockSparseTensor{ElT,N}}, blocks::Vector{<:BlockT}, inds
+) where {ElT,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
+  return randn(Random.default_rng(), TensorT, blocks, inds)
+end
+
+function randn(
+  rng::AbstractRNG, ::Type{<:BlockSparseTensor{ElT,N}}, blocks::Vector{<:BlockT}, inds
 ) where {ElT,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
   boffs, nnz = blockoffsets(blocks, inds)
-  storage = randn(BlockSparse{ElT}, boffs, nnz)
+  storage = randn(rng, BlockSparse{ElT}, boffs, nnz)
   return tensor(storage, inds)
 end
 
-# XXX: use the syntax:
-# BlockSparseTensor(randn, ElT, blocks, inds)
 function randomBlockSparseTensor(
   ::Type{ElT}, blocks::Vector{<:BlockT}, inds
 ) where {ElT,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
-  return randn(BlockSparseTensor{ElT,N}, blocks, inds)
+  return randomBlockSparseTensor(Random.default_rng(), ElT, blocks, inds)
+end
+
+function randomBlockSparseTensor(
+  rng::AbstractRNG, ::Type{ElT}, blocks::Vector{<:BlockT}, inds
+) where {ElT,BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
+  return randn(rng, BlockSparseTensor{ElT,N}, blocks, inds)
 end
 
 function randomBlockSparseTensor(blocks::Vector, inds)
-  return randomBlockSparseTensor(Float64, blocks, inds)
+  return randomBlockSparseTensor(Random.default_rng(), blocks, inds)
+end
+
+function randomBlockSparseTensor(rng::AbstractRNG, blocks::Vector, inds)
+  return randomBlockSparseTensor(rng, Float64, blocks, inds)
 end
 
 """
@@ -149,23 +147,6 @@ function BlockSparseTensor(
   blocks::Vector{BlockT}, inds::Vararg{BlockDim,N}
 ) where {BlockT<:Union{Block{N},NTuple{N,<:Integer}}} where {N}
   return BlockSparseTensor(blocks, inds)
-end
-
-function similar(
-  ::BlockSparseTensor{ElT,N}, blockoffsets::BlockOffsets{N}, inds
-) where {ElT,N}
-  return BlockSparseTensor(ElT, undef, blockoffsets, inds)
-end
-
-function similar(
-  ::Type{<:BlockSparseTensor{ElT,N}}, blockoffsets::BlockOffsets{N}, inds
-) where {ElT,N}
-  return BlockSparseTensor(ElT, undef, blockoffsets, inds)
-end
-
-# This version of similar creates a tensor with no blocks
-function similar(::Type{TensorT}, inds::Tuple) where {TensorT<:BlockSparseTensor}
-  return similar(TensorT, BlockOffsets{ndims(TensorT)}(), inds)
 end
 
 function zeros(
@@ -259,7 +240,7 @@ end
 insertblock!(T::BlockSparseTensor, block) = insertblock!(T, Block(block))
 
 # Insert missing diagonal blocks as zero blocks
-function insert_diag_blocks!(T::AbstractArray{ElT}) where {ElT}
+function insert_diag_blocks!(T::AbstractArray)
   for b in eachdiagblock(T)
     blockT = blockview(T, b)
     if isnothing(blockT)
@@ -267,16 +248,6 @@ function insert_diag_blocks!(T::AbstractArray{ElT}) where {ElT}
       insertblock!(T, b)
     end
   end
-end
-
-# TODO: add support for off-diagonals, return
-# block sparse vector instead of dense.
-function diag(T::BlockSparseTensor{ElT}) where {ElT}
-  d = Base.similar(T, ElT, (diaglength(T),))
-  for n in 1:diaglength(T)
-    d[n] = T[n, n]
-  end
-  return d
 end
 
 # TODO: Add a checkbounds
@@ -358,7 +329,7 @@ end
 
 function permutedims(T::BlockSparseTensor{<:Number,N}, perm::NTuple{N,Int}) where {N}
   blockoffsetsR, indsR = permutedims(blockoffsets(T), inds(T), perm)
-  R = similar(T, blockoffsetsR, indsR)
+  R = NDTensors.similar(T, blockoffsetsR, indsR)
   permutedims!(R, T, perm)
   return R
 end
@@ -578,12 +549,15 @@ end
 
 function uncombine_output(
   T::BlockSparseTensor{ElT,N},
+  T_labels,
   is,
+  is_labels,
   combdim::Int,
   blockperm::Vector{Int},
   blockcomb::Vector{Int},
 ) where {ElT<:Number,N}
-  ind_uncomb_perm = ⊗(setdiff(is, inds(T))...)
+  labels_uncomb_perm = setdiff(is_labels, T_labels)
+  ind_uncomb_perm = ⊗(is[map(x -> findfirst(==(x), is_labels), labels_uncomb_perm)]...)
   inds_uncomb_perm = insertat(inds(T), ind_uncomb_perm, combdim)
   # Uncombine the blocks of T
   blocks_uncomb = uncombine_blocks(nzblocks(T), combdim, blockcomb)
@@ -607,18 +581,20 @@ end
 
 function uncombine(
   T::BlockSparseTensor{<:Number,NT},
+  T_labels,
   is,
+  is_labels,
   combdim::Int,
   blockperm::Vector{Int},
   blockcomb::Vector{Int},
 ) where {NT}
   NR = length(is)
-  R = uncombine_output(T, is, combdim, blockperm, blockcomb)
+  R = uncombine_output(T, T_labels, is, is_labels, combdim, blockperm, blockcomb)
   invblockperm = invperm(blockperm)
-
   # This is needed for reshaping the block
-  # It is already calculated in uncombine_output, use it from there
-  ind_uncomb_perm = ⊗(setdiff(is, inds(T))...)
+  # TODO: It is already calculated in uncombine_output, use it from there
+  labels_uncomb_perm = setdiff(is_labels, T_labels)
+  ind_uncomb_perm = ⊗(is[map(x -> findfirst(==(x), is_labels), labels_uncomb_perm)]...)
   ind_uncomb = permuteblocks(ind_uncomb_perm, blockperm)
   # Same as inds(T) but with the blocks uncombined
   inds_uncomb = insertat(inds(T), ind_uncomb, combdim)
@@ -754,362 +730,6 @@ function permutedims!(
       fac_f = (r, t) -> f(r, pfac * t)
       permutedims!(Rblock, Tblock, perm, fac_f)
     end
-  end
-  return R
-end
-
-#
-# Contraction
-#
-
-# TODO: complete this function: determine the output blocks from the input blocks
-# Also, save the contraction list (which block-offsets contract with which),
-# may not be generic with other contraction functions!
-function contraction_output(
-  T1::TensorT1, T2::TensorT2, indsR::IndsR
-) where {TensorT1<:BlockSparseTensor,TensorT2<:BlockSparseTensor,IndsR}
-  TensorR = contraction_output_type(TensorT1, TensorT2, IndsR)
-  return similar(TensorR, blockoffsetsR, indsR)
-end
-
-"""
-find_matching_positions(t1,t2) -> t1_to_t2
-
-In a tuple of length(t1), store the positions in t2
-where the element of t1 is found. Otherwise, store 0
-to indicate that the element of t1 is not in t2.
-
-For example, for all t1[pos1] == t2[pos2], t1_to_t2[pos1] == pos2,
-otherwise t1_to_t2[pos1] == 0.
-"""
-function find_matching_positions(t1, t2)
-  t1_to_t2 = @MVector zeros(Int, length(t1))
-  for pos1 in 1:length(t1)
-    for pos2 in 1:length(t2)
-      if t1[pos1] == t2[pos2]
-        t1_to_t2[pos1] = pos2
-      end
-    end
-  end
-  return Tuple(t1_to_t2)
-end
-
-function contract_labels(labels1, labels2, labelsR)
-  labels1_to_labels2 = find_matching_positions(labels1, labels2)
-  labels1_to_labelsR = find_matching_positions(labels1, labelsR)
-  labels2_to_labelsR = find_matching_positions(labels2, labelsR)
-  return labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR
-end
-
-function are_blocks_contracted(
-  block1::Block{N1}, block2::Block{N2}, labels1_to_labels2::NTuple{N1,Int}
-) where {N1,N2}
-  t1 = Tuple(block1)
-  t2 = Tuple(block2)
-  for i1 in 1:N1
-    i2 = @inbounds labels1_to_labels2[i1]
-    if i2 > 0
-      # This dimension is contracted
-      if @inbounds t1[i1] != @inbounds t2[i2]
-        return false
-      end
-    end
-  end
-  return true
-end
-
-function contract_blocks(
-  block1::Block{N1}, labels1_to_labelsR, block2::Block{N2}, labels2_to_labelsR, ::Val{NR}
-) where {N1,N2,NR}
-  blockR = ntuple(_ -> UInt(0), Val(NR))
-  t1 = Tuple(block1)
-  t2 = Tuple(block2)
-  for i1 in 1:N1
-    iR = @inbounds labels1_to_labelsR[i1]
-    if iR > 0
-      blockR = @inbounds setindex(blockR, t1[i1], iR)
-    end
-  end
-  for i2 in 1:N2
-    iR = @inbounds labels2_to_labelsR[i2]
-    if iR > 0
-      blockR = @inbounds setindex(blockR, t2[i2], iR)
-    end
-  end
-  return Block{NR}(blockR)
-end
-
-function _contract_blockoffsets(
-  boffs1::BlockOffsets{N1},
-  inds1,
-  labels1,
-  boffs2::BlockOffsets{N2},
-  inds2,
-  labels2,
-  indsR,
-  labelsR,
-) where {N1,N2}
-  NR = length(labelsR)
-  ValNR = ValLength(labelsR)
-  labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
-    labels1, labels2, labelsR
-  )
-  blockoffsetsR = BlockOffsets{NR}()
-  nnzR = 0
-  contraction_plan = Tuple{Block{N1},Block{N2},Block{NR}}[]
-  # Reserve some capacity
-  # In theory the maximum is length(boffs1) * length(boffs2)
-  # but in practice that is too much
-  sizehint!(contraction_plan, max(length(boffs1), length(boffs2)))
-  for block1 in keys(boffs1)
-    for block2 in keys(boffs2)
-      if are_blocks_contracted(block1, block2, labels1_to_labels2)
-        blockR = contract_blocks(
-          block1, labels1_to_labelsR, block2, labels2_to_labelsR, ValNR
-        )
-        push!(contraction_plan, (block1, block2, blockR))
-        if !isassigned(blockoffsetsR, blockR)
-          insert!(blockoffsetsR, blockR, nnzR)
-          nnzR += blockdim(indsR, blockR)
-        end
-      end
-    end
-  end
-  return blockoffsetsR, contraction_plan
-end
-
-function _threaded_contract_blockoffsets(
-  boffs1::BlockOffsets{N1},
-  inds1,
-  labels1,
-  boffs2::BlockOffsets{N2},
-  inds2,
-  labels2,
-  indsR,
-  labelsR,
-) where {N1,N2}
-  NR = length(labelsR)
-  ValNR = ValLength(labelsR)
-  labels1_to_labels2, labels1_to_labelsR, labels2_to_labelsR = contract_labels(
-    labels1, labels2, labelsR
-  )
-  contraction_plans = Vector{Tuple{Block{N1},Block{N2},Block{NR}}}[
-    Tuple{Block{N1},Block{N2},Block{NR}}[] for _ in 1:nthreads()
-  ]
-
-  #
-  # Reserve some capacity
-  # In theory the maximum is length(boffs1) * length(boffs2)
-  # but in practice that is too much
-  #for contraction_plan in contraction_plans
-  #  sizehint!(contraction_plan, max(length(boffs1), length(boffs2)))
-  #end
-  #
-
-  blocks1 = keys(boffs1)
-  blocks2 = keys(boffs2)
-  if length(blocks1) > length(blocks2)
-    @sync for blocks1_partition in
-              Iterators.partition(blocks1, max(1, length(blocks1) ÷ nthreads()))
-      @spawn for block1 in blocks1_partition
-        for block2 in blocks2
-          if are_blocks_contracted(block1, block2, labels1_to_labels2)
-            blockR = contract_blocks(
-              block1, labels1_to_labelsR, block2, labels2_to_labelsR, ValNR
-            )
-            push!(contraction_plans[threadid()], (block1, block2, blockR))
-          end
-        end
-      end
-    end
-  else
-    @sync for blocks2_partition in
-              Iterators.partition(blocks2, max(1, length(blocks2) ÷ nthreads()))
-      @spawn for block2 in blocks2_partition
-        for block1 in blocks1
-          if are_blocks_contracted(block1, block2, labels1_to_labels2)
-            blockR = contract_blocks(
-              block1, labels1_to_labelsR, block2, labels2_to_labelsR, ValNR
-            )
-            push!(contraction_plans[threadid()], (block1, block2, blockR))
-          end
-        end
-      end
-    end
-  end
-
-  contraction_plan = reduce(vcat, contraction_plans)
-  blockoffsetsR = BlockOffsets{NR}()
-  nnzR = 0
-  for (_, _, blockR) in contraction_plan
-    if !isassigned(blockoffsetsR, blockR)
-      insert!(blockoffsetsR, blockR, nnzR)
-      nnzR += blockdim(indsR, blockR)
-    end
-  end
-
-  return blockoffsetsR, contraction_plan
-end
-
-function contract_blockoffsets(args...)
-  if using_threaded_blocksparse() && nthreads() > 1
-    return _threaded_contract_blockoffsets(args...)
-  end
-  return _contract_blockoffsets(args...)
-end
-
-function contraction_output(
-  T1::TensorT1, labelsT1, T2::TensorT2, labelsT2, labelsR
-) where {TensorT1<:BlockSparseTensor,TensorT2<:BlockSparseTensor}
-  indsR = contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
-  TensorR = contraction_output_type(TensorT1, TensorT2, typeof(indsR))
-  blockoffsetsR, contraction_plan = contract_blockoffsets(
-    blockoffsets(T1),
-    inds(T1),
-    labelsT1,
-    blockoffsets(T2),
-    inds(T2),
-    labelsT2,
-    indsR,
-    labelsR,
-  )
-  R = similar(TensorR, blockoffsetsR, indsR)
-  return R, contraction_plan
-end
-
-function contract(
-  T1::BlockSparseTensor{<:Any,N1},
-  labelsT1,
-  T2::BlockSparseTensor{<:Any,N2},
-  labelsT2,
-  labelsR=contract_labels(labelsT1, labelsT2),
-) where {N1,N2}
-  #@timeit_debug timer "Block sparse contract" begin
-  R, contraction_plan = contraction_output(T1, labelsT1, T2, labelsT2, labelsR)
-  R = contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
-  return R
-  #end
-end
-
-# <fermions>
-function compute_alpha(
-  ElR, labelsR, blockR, indsR, labelsT1, blockT1, indsT1, labelsT2, blockT2, indsT2
-)
-  return one(ElR)
-end
-
-# XXX: this is not thread safe, divide into groups of
-# contractions that contract into the same block
-function _threaded_contract!(
-  R::BlockSparseTensor{ElR,NR},
-  labelsR,
-  T1::BlockSparseTensor{ElT1,N1},
-  labelsT1,
-  T2::BlockSparseTensor{ElT2,N2},
-  labelsT2,
-  contraction_plan,
-) where {ElR,ElT1,ElT2,N1,N2,NR}
-  # Sort the contraction plan by the output blocks
-  # This is to help determine which output blocks are the result
-  # of multiple contractions
-  sort!(contraction_plan; by=last)
-
-  # Ranges of contractions to the same block
-  repeats = Vector{UnitRange{Int}}(undef, nnzblocks(R))
-  ncontracted = 1
-  posR = last(contraction_plan[1])
-  posR_unique = posR
-  for n in 1:(nnzblocks(R) - 1)
-    start = ncontracted
-    while posR == posR_unique
-      ncontracted += 1
-      posR = last(contraction_plan[ncontracted])
-    end
-    posR_unique = posR
-    repeats[n] = start:(ncontracted - 1)
-  end
-  repeats[end] = ncontracted:length(contraction_plan)
-
-  contraction_plan_blocks = Vector{Tuple{Tensor,Tensor,Tensor}}(
-    undef, length(contraction_plan)
-  )
-  for ncontracted in 1:length(contraction_plan)
-    block1, block2, blockR = contraction_plan[ncontracted]
-    T1block = T1[block1]
-    T2block = T2[block2]
-    Rblock = R[blockR]
-    contraction_plan_blocks[ncontracted] = (T1block, T2block, Rblock)
-  end
-
-  indsR = inds(R)
-  indsT1 = inds(T1)
-  indsT2 = inds(T2)
-
-  α = one(ElR)
-  @sync for repeats_partition in
-            Iterators.partition(repeats, max(1, length(repeats) ÷ nthreads()))
-    @spawn for ncontracted_range in repeats_partition
-      # Overwrite the block since it hasn't been written to
-      # R .= α .* (T1 * T2)
-      β = zero(ElR)
-      for ncontracted in ncontracted_range
-        blockT1, blockT2, blockR = contraction_plan_blocks[ncontracted]
-        # R .= α .* (T1 * T2) .+ β .* R
-
-        # <fermions>:
-        α = compute_alpha(
-          ElR, labelsR, blockR, indsR, labelsT1, blockT1, indsT1, labelsT2, blockT2, indsT2
-        )
-
-        contract!(blockR, labelsR, blockT1, labelsT1, blockT2, labelsT2, α, β)
-        # Now keep adding to the block, since it has
-        # been written to
-        # R .= α .* (T1 * T2) .+ R
-        β = one(ElR)
-      end
-    end
-  end
-  return R
-end
-
-function contract!(
-  R::BlockSparseTensor{ElR,NR},
-  labelsR,
-  T1::BlockSparseTensor{ElT1,N1},
-  labelsT1,
-  T2::BlockSparseTensor{ElT2,N2},
-  labelsT2,
-  contraction_plan,
-) where {ElR,ElT1,ElT2,N1,N2,NR}
-  if isempty(contraction_plan)
-    return R
-  end
-  if using_threaded_blocksparse() && nthreads() > 1
-    _threaded_contract!(R, labelsR, T1, labelsT1, T2, labelsT2, contraction_plan)
-    return R
-  end
-  already_written_to = Dict{Block{NR},Bool}()
-  indsR = inds(R)
-  indsT1 = inds(T1)
-  indsT2 = inds(T2)
-  # In R .= α .* (T1 * T2) .+ β .* R
-  for (block1, block2, blockR) in contraction_plan
-
-    #<fermions>
-    α = compute_alpha(
-      ElR, labelsR, blockR, indsR, labelsT1, block1, indsT1, labelsT2, block2, indsT2
-    )
-
-    T1block = T1[block1]
-    T2block = T2[block2]
-    Rblock = R[blockR]
-    β = one(ElR)
-    if !haskey(already_written_to, blockR)
-      already_written_to[blockR] = true
-      # Overwrite the block of R
-      β = zero(ElR)
-    end
-    contract!(Rblock, labelsR, T1block, labelsT1, T2block, labelsT2, α, β)
   end
   return R
 end

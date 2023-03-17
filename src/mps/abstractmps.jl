@@ -1558,8 +1558,8 @@ truncation.
 - `maxdim::Int`: maximum MPS/MPO bond dimension
 """
 function sum(ψ⃗::Vector{T}; kwargs...) where {T<:AbstractMPS}
-  length(ψ⃗) == 0 && return T()
-  length(ψ⃗) == 1 && return A[1]
+  iszero(length(ψ⃗)) && return T()
+  isone(length(ψ⃗)) && return copy(only(ψ⃗))
   return +(ψ⃗...; kwargs...)
 end
 
@@ -1627,6 +1627,12 @@ function orthogonalize!(M::AbstractMPS, j::Int; kwargs...)
     end
   end
   return M
+end
+
+# Allows overloading `orthogonalize!` based on the projected
+# MPO type. By default just calls `orthogonalize!` on the MPS.
+function orthogonalize!(PH, M::AbstractMPS, j::Int; kwargs...)
+  return orthogonalize!(M, j; kwargs...)
 end
 
 function orthogonalize(ψ0::AbstractMPS, args...; kwargs...)

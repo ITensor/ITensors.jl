@@ -3,6 +3,8 @@ export DiagBlockSparse, DiagBlockSparseTensor
 # DiagBlockSparse can have either Vector storage, in which case
 # it is a general DiagBlockSparse tensor, or scalar storage,
 # in which case the diagonal has a uniform value
+# TODO: Define as an `AbstractBlockSparse`, or
+# `GenericBlockSparse` parametrized by `Dense` or `Diag`.
 struct DiagBlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   data::VecT
   diagblockoffsets::BlockOffsets{N}  # Block number-offset pairs
@@ -18,6 +20,29 @@ struct DiagBlockSparse{ElT,VecT,N} <: TensorStorage{ElT}
   function DiagBlockSparse(data::VecT, blockoffsets::BlockOffsets{N}) where {VecT<:Number,N}
     return new{VecT,VecT,N}(data, blockoffsets)
   end
+end
+
+# Data and type accessors.
+datatype(storage::DiagBlockSparse) = datatype(typeof(storage))
+datatype(storagetype::Type{<:DiagBlockSparse}) = fieldtype(storagetype, :data)
+blockoffsets(storage::DiagBlockSparse) = getfield(storage, :diagblockoffsets)
+blockoffsetstype(storage::DiagBlockSparse) = blockoffsetstype(typeof(storage))
+function blockoffsetstype(storagetype::Type{<:DiagBlockSparse})
+  return fieldtype(storagetype, :diagblockoffsets)
+end
+
+# TODO: Deprecate?
+diagblockoffsets(storage::DiagBlockSparse) = blockoffsets(storage)
+
+function setdata(storagetype::Type{<:DiagBlockSparse}, data::AbstractArray)
+  error("Must specify `diagblockoffsets`.")
+  return DiagBlockSparse(data, blockoffsetstype(storagetype)())
+end
+
+function set_datatype(
+  storagetype::Type{<:DiagBlockSparse}, datatype::Type{<:AbstractVector}
+)
+  return DiagBlockSparse{eltype(datatype),datatype,ndims(storagetype)}
 end
 
 function DiagBlockSparse(
@@ -39,10 +64,6 @@ end
 function DiagBlockSparse(::UndefInitializer, boffs::BlockOffsets, diaglength::Integer)
   return DiagBlockSparse(Float64, undef, boffs, diaglength)
 end
-
-diagblockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
-
-blockoffsets(D::DiagBlockSparse) = D.diagblockoffsets
 
 function findblock(
   D::DiagBlockSparse{<:Number,<:Union{Number,AbstractVector},N}, block::Block{N}; vargs...
@@ -90,27 +111,6 @@ eltype(::Type{<:DiagBlockSparse{ElT}}) where {ElT} = ElT
 #convert(::Type{<:DiagBlockSparse{ElT,VecT}},D::DiagBlockSparse) where {ElT,VecT} = DiagBlockSparse(convert(VecT,data(D)))
 
 size(D::DiagBlockSparse) = size(data(D))
-
-# TODO: write in terms of ::Int, not inds
-similar(D::NonuniformDiagBlockSparse) = setdata(D, similar(data(D)))
-
-similar(D::NonuniformDiagBlockSparse, ::Type{S}) where {S} = setdata(D, similar(data(D), S))
-#similar(D::NonuniformDiagBlockSparse,inds) = DiagBlockSparse(similar(data(D),minimum(dims(inds))), diagblockoffsets(D))
-#function similar(D::Type{<:NonuniformDiagBlockSparse{ElT,VecT}},inds) where {ElT,VecT}
-#  return DiagBlockSparse(similar(VecT,diaglength(inds)), diagblockoffsets(D))
-#end
-
-similar(D::UniformDiagBlockSparse) = setdata(D, zero(eltype(D)))
-similar(D::UniformDiagBlockSparse, inds) = similar(D)
-function similar(::Type{<:UniformDiagBlockSparse{ElT}}, inds) where {ElT}
-  return DiagBlockSparse(zero(ElT), diagblockoffsets(D))
-end
-
-similar(D::DiagBlockSparse, n::Int) = setdata(D, similar(data(D), n))
-
-function similar(D::DiagBlockSparse, ::Type{ElR}, n::Int) where {ElR}
-  return setdata(D, similar(data(D), ElR, n))
-end
 
 # TODO: make this work for other storage besides Vector
 function zeros(::Type{<:NonuniformDiagBlockSparse{ElT}}, dim::Int64) where {ElT}
@@ -253,15 +253,15 @@ end
 # These are rules for determining the output of a pairwise contraction of NDTensors
 # (given the indices of the output tensors)
 function contraction_output_type(
-  TensorT1::Type{<:DiagBlockSparseTensor}, TensorT2::Type{<:BlockSparseTensor}, IndsR::Type
+  TensorT1::Type{<:DiagBlockSparseTensor}, TensorT2::Type{<:BlockSparseTensor}, indsR::Tuple
 )
-  return similartype(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), indsR)
 end
 
 function contraction_output_type(
-  TensorT1::Type{<:BlockSparseTensor}, TensorT2::Type{<:DiagBlockSparseTensor}, IndsR::Type
+  TensorT1::Type{<:BlockSparseTensor}, TensorT2::Type{<:DiagBlockSparseTensor}, indsR::Tuple
 )
-  return contraction_output_type(TensorT2, TensorT1, IndsR)
+  return contraction_output_type(TensorT2, TensorT1, indsR)
 end
 
 # This performs the logic that DiagBlockSparseTensor*DiagBlockSparseTensor -> DiagBlockSparseTensor if it is not an outer
@@ -273,14 +273,14 @@ end
 function contraction_output_type(
   TensorT1::Type{<:DiagBlockSparseTensor{<:Number,N1}},
   TensorT2::Type{<:DiagBlockSparseTensor{<:Number,N2}},
-  IndsR::Type,
+  indsR::Tuple,
 ) where {N1,N2}
   if ValLength(IndsR) === Val{N1 + N2}
     # Turn into is_outer(inds1,inds2,indsR) function?
     # How does type inference work with arithmatic of compile time values?
-    return similartype(dense(promote_type(TensorT1, TensorT2)), IndsR)
+    return similartype(dense(promote_type(TensorT1, TensorT2)), indsR)
   end
-  return similartype(promote_type(TensorT1, TensorT2), IndsR)
+  return similartype(promote_type(TensorT1, TensorT2), indsR)
 end
 
 # The output must be initialized as zero since it is sparse, cannot be undefined
@@ -307,13 +307,6 @@ end
 
 function Array(T::DiagBlockSparseTensor{ElT,N}) where {ElT,N}
   return Array{ElT,N}(T)
-end
-
-# Needed to get slice of DiagBlockSparseTensor like T[1:3,1:3]
-function similar(
-  T::DiagBlockSparseTensor{<:Number,N}, ::Type{ElR}, inds::Dims{N}
-) where {ElR<:Number,N}
-  return tensor(similar(storage(T), ElR, minimum(inds)), inds)
 end
 
 getdiagindex(T::DiagBlockSparseTensor{<:Number}, ind::Int) = storage(T)[ind]
@@ -452,14 +445,6 @@ function permutedims!(
 end
 
 function permutedims(
-  T::DiagBlockSparseTensor{<:Number,N}, perm::NTuple{N,Int}, f::Function=identity
-) where {N}
-  R = similar(T, permute(inds(T), perm))
-  permutedims!(R, T, perm, f)
-  return R
-end
-
-function permutedims(
   T::UniformDiagBlockSparseTensor{ElT,N}, perm::NTuple{N,Int}, f::Function=identity
 ) where {ElT,N}
   R = tensor(DiagBlockSparse(f(getdiagindex(T, 1))), permute(inds(T), perm))
@@ -535,7 +520,7 @@ function contraction_output(
   T1::TensorT1, labelsT1, T2::TensorT2, labelsT2, labelsR
 ) where {TensorT1<:BlockSparseTensor,TensorT2<:DiagBlockSparseTensor}
   indsR = contract_inds(inds(T1), labelsT1, inds(T2), labelsT2, labelsR)
-  TensorR = contraction_output_type(TensorT1, TensorT2, typeof(indsR))
+  TensorR = contraction_output_type(TensorT1, TensorT2, indsR)
   blockoffsetsR, contraction_plan = contract_blockoffsets(
     blockoffsets(T1),
     inds(T1),

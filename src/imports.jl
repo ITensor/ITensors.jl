@@ -111,6 +111,8 @@ import LinearAlgebra:
   transpose
 
 using ITensors.NDTensors:
+  Algorithm,
+  @Algorithm_str,
   EmptyNumber,
   _Tuple,
   _NTuple,
@@ -179,7 +181,7 @@ import ITensors.NDTensors:
   addblock!,
   store
 
-import ITensors.Ops: Prod, Sum
+import ITensors.Ops: Prod, Sum, terms
 
 import Random: randn!
 

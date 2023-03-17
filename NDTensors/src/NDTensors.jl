@@ -4,6 +4,8 @@ using Adapt
 using Base.Threads
 using Compat
 using Dictionaries
+using FLoops
+using Folds
 using Random
 using LinearAlgebra
 using StaticArrays
@@ -11,11 +13,15 @@ using Functors
 using HDF5
 using Requires
 using SimpleTraits
+using SplitApplyCombine
 using Strided
 using TimerOutputs
 using TupleTools
 
-using Base: @propagate_inbounds, ReshapedArray
+include("SetParameters/src/SetParameters.jl")
+using .SetParameters
+
+using Base: @propagate_inbounds, ReshapedArray, DimOrInd, OneTo
 
 using Base.Cartesian: @nexprs
 
@@ -24,29 +30,54 @@ using Base.Threads: @spawn
 #####################################
 # Imports and exports
 #
-include("exports.jl")
 include("imports.jl")
+include("exports.jl")
+
+#####################################
+# General functionality
+#
+include("algorithm.jl")
+include("aliasstyle.jl")
+include("abstractarray/set_types.jl")
+include("abstractarray/to_shape.jl")
+include("abstractarray/similar.jl")
+include("abstractarray/ndims.jl")
+include("abstractarray/fill.jl")
+include("array/set_types.jl")
+include("tupletools.jl")
+include("tensorstorage/tensorstorage.jl")
+include("tensorstorage/default_storage.jl")
+include("tensorstorage/similar.jl")
+include("tensor/tensor.jl")
+include("dims.jl")
+include("tensor/set_types.jl")
+include("tensor/similar.jl")
+include("adapt.jl")
+include("tensoralgebra/generic_tensor_operations.jl")
+include("tensoralgebra/contraction_logic.jl")
 
 #####################################
 # DenseTensor and DiagTensor
 #
-include("aliasstyle.jl")
-include("similar.jl")
-include("tupletools.jl")
-include("dims.jl")
-include("tensorstorage.jl")
-include("tensor.jl")
-include("adapt.jl")
-include("generic_tensor_operations.jl")
-include("contraction_logic.jl")
 include("dense/dense.jl")
-include("dense/adapt.jl")
-include("symmetric.jl")
-include("linearalgebra.jl")
+include("dense/densetensor.jl")
+include("dense/tensoralgebra/contract.jl")
+include("dense/linearalgebra/decompositions.jl")
+include("dense/tensoralgebra/outer.jl")
+include("dense/set_types.jl")
+include("dense/fill.jl")
+include("linearalgebra/symmetric.jl")
+include("linearalgebra/linearalgebra.jl")
 include("diag/diag.jl")
+include("diag/set_types.jl")
+include("diag/diagtensor.jl")
+include("diag/similar.jl")
+include("diag/tensoralgebra/contract.jl")
+include("diag/tensoralgebra/outer.jl")
 include("combiner/combiner.jl")
+include("combiner/contract.jl")
 include("truncate.jl")
-include("svd.jl")
+include("linearalgebra/svd.jl")
 
 #####################################
 # BlockSparseTensor
@@ -56,15 +87,23 @@ include("blocksparse/block.jl")
 include("blocksparse/blockoffsets.jl")
 include("blocksparse/blocksparse.jl")
 include("blocksparse/blocksparsetensor.jl")
+include("blocksparse/contract.jl")
+include("blocksparse/contract_utilities.jl")
+include("blocksparse/contract_generic.jl")
+include("blocksparse/contract_sequential.jl")
+include("blocksparse/contract_folds.jl")
+include("blocksparse/contract_threads.jl")
 include("blocksparse/diagblocksparse.jl")
+include("blocksparse/similar.jl")
 include("blocksparse/combiner.jl")
 include("blocksparse/linearalgebra.jl")
-include("blocksparse/adapt.jl")
 
 #####################################
 # Empty
 #
 include("empty/empty.jl")
+include("empty/EmptyTensor.jl")
+include("empty/tensoralgebra/contract.jl")
 include("empty/adapt.jl")
 
 #####################################
@@ -82,7 +121,7 @@ const timer = TimerOutput()
 # Optional block sparse multithreading
 #
 
-include("blas_get_num_threads.jl")
+blas_get_num_threads() = BLAS.get_num_threads()
 
 const _using_threaded_blocksparse = Ref(false)
 
@@ -125,9 +164,9 @@ function _enable_threaded_blocksparse()
         "WARNING: You are trying to enable block sparse multithreading, but you have started Julia with only a single thread. You can start Julia with `N` threads with `julia -t N`, and check the number of threads Julia can use with `Threads.nthreads()`. Your system has $(Sys.CPU_THREADS) threads available to use, which you can determine by running `Sys.CPU_THREADS`.\n",
       )
     end
-    if blas_get_num_threads() > 1 && Threads.nthreads() > 1
+    if BLAS.get_num_threads() > 1 && Threads.nthreads() > 1
       println(
-        "WARNING: You are enabling block sparse multithreading, but BLAS $(BLAS.vendor()) is currently set to use $(blas_get_num_threads()) threads. When using block sparse multithreading, we recommend setting BLAS to use only a single thread, otherwise you may see suboptimal performance. You can set it with `using LinearAlgebra; BLAS.set_num_threads(1)`.\n",
+        "WARNING: You are enabling block sparse multithreading, but your BLAS configuration $(BLAS.get_config()) is currently set to use $(BLAS.get_num_threads()) threads. When using block sparse multithreading, we recommend setting BLAS to use only a single thread, otherwise you may see suboptimal performance. You can set it with `using LinearAlgebra; BLAS.set_num_threads(1)`.\n",
       )
     end
     if Strided.get_num_threads() > 1
@@ -184,10 +223,10 @@ end
 function __init__()
   @require TBLIS = "48530278-0828-4a49-9772-0f3830dfa1e9" begin
     enable_tblis()
-    include("tblis.jl")
+    include("tensoralgebra/tblis.jl")
   end
   @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
-    include("octavian.jl")
+    include("linearalgebra/octavian.jl")
   end
 end
 

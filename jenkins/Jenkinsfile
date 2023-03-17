@@ -27,14 +27,11 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; pkg"dev ./NDTensors . ./ITensorGPU";'
-            '''
-            sh '''
-              julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGPU")'
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
             '''
           }
         }
-        stage('julia-1.7') {
+        stage('julia-1.8') {
 	  options {
             timeout(time: 45, unit: 'MINUTES')
           }
@@ -43,7 +40,7 @@ pipeline {
               label 'gpu&&v100'
               filename 'Dockerfile'
               dir 'jenkins'
-              additionalBuildArgs  '--build-arg JULIA=1.7'
+              additionalBuildArgs  '--build-arg JULIA=1.8'
               args '--gpus "device=1"'
             }
           }
@@ -54,10 +51,7 @@ pipeline {
           }
           steps {
             sh '''
-              julia --project=monorepo -e 'using Pkg; pkg"dev ./NDTensors . ./ITensorGPU";'
-            '''
-            sh '''
-              julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorGPU")'
+              julia --project=monorepo -e 'using Pkg; Pkg.Registry.update(); Pkg.develop(; path="./NDTensors"); Pkg.develop(; path="."); Pkg.develop(; path="./ITensorGPU"); Pkg.test("ITensorGPU");'
             '''
           }
         }

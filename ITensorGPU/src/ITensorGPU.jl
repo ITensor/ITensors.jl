@@ -1,37 +1,26 @@
 module ITensorGPU
 
+using Adapt
 using CUDA
-using CUDA.Adapt
-using CUDA.CUTENSOR
 using CUDA.CUBLAS
 using CUDA.CUSOLVER
 using Functors
+using ITensors
 using LinearAlgebra
-using Random, Strided
-using TimerOutputs
+using NDTensors
+using Random
 using SimpleTraits
 using StaticArrays
-using ITensors
-using ITensors.NDTensors
 using Strided
+using TimerOutputs
+using cuTENSOR
+
+using NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
+
+import Adapt: adapt_structure
+import Base: *, permutedims!
 import CUDA: CuArray, CuMatrix, CuVector, cu
-import CUDA.CUTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
-import CUDA.Adapt: adapt_structure
 import CUDA.Mem: pin
-#=
-const devs = Ref{Vector{CUDAdrv.CuDevice}}()
-const dev_rows = Ref{Int}(0)
-const dev_cols = Ref{Int}(0)
-function __init__()
-  voltas    = filter(dev->occursin("V100", CUDAdrv.name(dev)), collect(CUDAdrv.devices()))
-  pascals    = filter(dev->occursin("P100", CUDAdrv.name(dev)), collect(CUDAdrv.devices()))
-  devs[] = voltas[1:1]
-  #devs[] = pascals[1:2]
-  CUBLASMG.cublasMgDeviceSelect(CUBLASMG.mg_handle(), length(devs[]), devs[])
-  dev_rows[] = 1
-  dev_cols[] = 1
-end
-=#
 import ITensors:
   randn!,
   compute_contraction_labels,
@@ -50,47 +39,50 @@ import ITensors:
   permute,
   BroadcastStyle,
   Indices
-import ITensors.NDTensors:
-  can_contract,
-  similartype,
+import NDTensors:
+  Atrans,
+  Btrans,
+  CombinerTensor,
   ContractionProperties,
-  contract!!,
+  Combiner,
+  Ctrans,
+  Diag,
+  DiagTensor,
+  Dense,
+  DenseTensor,
+  NonuniformDiag,
+  NonuniformDiagTensor,
+  Tensor,
+  UniformDiag,
+  UniformDiagTensor,
   _contract!!,
   _contract!,
+  _contract_scalar!,
+  _contract_scalar_noperm!,
+  can_contract,
+  compute_contraction_properties!,
+  contract!!,
   contract!,
   contract,
   contraction_output,
-  UniformDiagTensor,
-  CombinerTensor,
   contraction_output_type,
-  UniformDiag,
-  Diag,
-  DiagTensor,
-  NonuniformDiag,
-  NonuniformDiagTensor,
-  zero_contraction_output,
-  outer!,
-  outer!!,
-  is_trivial_permutation,
-  ind,
-  permutedims!!,
-  Dense,
-  DenseTensor,
-  Combiner,
-  Tensor,
   data,
   getperm,
-  compute_contraction_properties!,
-  Atrans,
-  Btrans,
-  Ctrans,
-  _contract_scalar!,
-  _contract_scalar_noperm!
+  ind,
+  is_trivial_permutation,
+  outer!,
+  outer!!,
+  permutedims!!,
+  set_eltype,
+  set_ndims,
+  similartype,
+  zero_contraction_output
+import cuTENSOR: cutensorContractionPlan_t, cutensorAlgo_t
 
-using ITensors.NDTensors: setdata, setstorage, cpu, IsWrappedArray, parenttype
+#const ContractionPlans = Dict{String, Tuple{cutensorAlgo_t, cutensorContractionPlan_t}}()
+const ContractionPlans = Dict{String,cutensorAlgo_t}()
 
-import Base.*, Base.permutedims!
-import Base: similar
+include("cuarray/set_types.jl")
 include("traits.jl")
 include("adapt.jl")
 include("tensor/cudense.jl")
@@ -102,10 +94,21 @@ include("tensor/cudiag.jl")
 include("cuitensor.jl")
 include("mps/cumps.jl")
 
-#const ContractionPlans = Dict{String, Tuple{cutensorAlgo_t, cutensorContractionPlan_t}}()
-const ContractionPlans = Dict{String,cutensorAlgo_t}()
-
 export cu,
   cpu, cuITensor, randomCuITensor, cuMPS, randomCuMPS, productCuMPS, randomCuMPO, cuMPO
+
+## TODO: Is this needed?
+## const devs = Ref{Vector{CUDAdrv.CuDevice}}()
+## const dev_rows = Ref{Int}(0)
+## const dev_cols = Ref{Int}(0)
+## function __init__()
+##   voltas    = filter(dev->occursin("V100", CUDAdrv.name(dev)), collect(CUDAdrv.devices()))
+##   pascals    = filter(dev->occursin("P100", CUDAdrv.name(dev)), collect(CUDAdrv.devices()))
+##   devs[] = voltas[1:1]
+##   #devs[] = pascals[1:2]
+##   CUBLASMG.cublasMgDeviceSelect(CUBLASMG.mg_handle(), length(devs[]), devs[])
+##   dev_rows[] = 1
+##   dev_cols[] = 1
+## end
 
 end #module

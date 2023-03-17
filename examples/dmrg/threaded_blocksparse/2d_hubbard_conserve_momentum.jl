@@ -12,27 +12,22 @@ function main(;
   t::Float64=1.0,
   maxdim::Int=3000,
   conserve_ky=true,
-  splitblocks=true,
   nsweeps=10,
   blas_num_threads=1,
   strided_num_threads=1,
-  use_threaded_blocksparse=true,
+  threaded_blocksparse=false,
   outputlevel=1,
   seed=1234,
 )
   Random.seed!(seed)
   ITensors.Strided.set_num_threads(strided_num_threads)
   BLAS.set_num_threads(blas_num_threads)
-  if use_threaded_blocksparse
-    ITensors.enable_threaded_blocksparse()
-  else
-    ITensors.disable_threaded_blocksparse()
-  end
+  ITensors.enable_threaded_blocksparse(threaded_blocksparse)
 
   if outputlevel > 0
     @show Threads.nthreads()
     @show Sys.CPU_THREADS
-    @show ITensors.blas_get_num_threads()
+    @show BLAS.get_num_threads()
     @show ITensors.Strided.get_num_threads()
     @show ITensors.using_threaded_blocksparse()
     println()
@@ -40,18 +35,14 @@ function main(;
 
   N = Nx * Ny
 
-  maxdims = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
+  maxdim = min.([100, 200, 400, 800, 2000, 3000, maxdim], maxdim)
   cutoff = [1E-6]
   noise = [1E-6, 1E-7, 1E-8, 0.0]
 
-  sites = siteinds("ElecK", N; conserve_qns=true, conserve_ky=conserve_ky, modulus_ky=Ny)
+  sites = siteinds("ElecK", N; conserve_qns=true, conserve_ky, modulus_ky=Ny)
 
-  if outputlevel > 0
-    @show splitblocks
-  end
-
-  os = hubbard(; Nx=Nx, Ny=Ny, t=t, U=U, ky=true)
-  H = MPO(os, sites; splitblocks=splitblocks)
+  os = hubbard(; Nx, Ny, t, U, ky=true)
+  H = MPO(os, sites)
 
   # Number of structural nonzero elements in a bulk
   # Hamiltonian MPO tensor
@@ -60,31 +51,16 @@ function main(;
     @show nnzblocks(H[end ÷ 2])
   end
 
-  # Create start state
-  state = Vector{String}(undef, N)
-  for i in 1:N
-    x = (i - 1) ÷ Ny
-    y = (i - 1) % Ny
-    if x % 2 == 0
-      if y % 2 == 0
-        state[i] = "Up"
-      else
-        state[i] = "Dn"
-      end
-    else
-      if y % 2 == 0
-        state[i] = "Dn"
-      else
-        state[i] = "Up"
-      end
-    end
+  # Create starting state with checkerboard
+  # pattern
+  state = map(CartesianIndices((Ny, Nx))) do I
+    return iseven(I[1]) ⊻ iseven(I[2]) ? "↓" : "↑"
   end
+  display(state)
 
-  psi0 = randomMPS(sites, state, 10)
+  psi0 = randomMPS(sites, state; linkdim=10)
 
-  energy, psi = @time dmrg(
-    H, psi0; nsweeps, maxdims, cutoff, noise, outputlevel=outputlevel
-  )
+  energy, psi = @time dmrg(H, psi0; nsweeps, maxdim, cutoff, noise, outputlevel)
 
   if outputlevel > 0
     @show Nx, Ny
@@ -100,10 +76,10 @@ println("################################")
 println("Compilation")
 println("################################")
 println("Without threaded block sparse:\n")
-main(; nsweeps=2, use_threaded_blocksparse=false, outputlevel=0)
+main(; nsweeps=2, threaded_blocksparse=false, outputlevel=0)
 println()
 println("With threaded block sparse:\n")
-main(; nsweeps=2, use_threaded_blocksparse=true, outputlevel=0)
+main(; nsweeps=2, threaded_blocksparse=true, outputlevel=0)
 println()
 
 println("################################")
@@ -111,8 +87,8 @@ println("Runtime")
 println("################################")
 println()
 println("Without threaded block sparse:\n")
-main(; nsweeps=10, use_threaded_blocksparse=false)
+main(; nsweeps=10, threaded_blocksparse=false)
 println()
 println("With threaded block sparse:\n")
-main(; nsweeps=10, use_threaded_blocksparse=true)
+main(; nsweeps=10, threaded_blocksparse=true)
 println()

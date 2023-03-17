@@ -35,6 +35,3 @@ to_vector_type(arraytype::Type{<:AbstractVector}) = arraytype
 
 to_vector_type(arraytype::Type{Array}) = Vector
 to_vector_type(arraytype::Type{Array{T}}) where {T} = Vector{T}
-
-set_eltype_if_unspecified(arraytype::Type{Vector{T}}, eltype::Type) where {T} = arraytype
-set_eltype_if_unspecified(arraytype::Type{Vector}, eltype::Type) = Vector{eltype}
