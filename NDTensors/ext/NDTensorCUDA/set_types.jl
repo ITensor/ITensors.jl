@@ -12,14 +12,14 @@ function set_eltype(arraytype::Type{<:CuArray}, eltype::Type)
   return CuArray{eltype,ndims(arraytype),buffertype(arraytype)}
 end
 
-function set_ndims(arraytype::Type{<:CuArray{T, <:Any, <:Any}}, ndims) where {T}
-    return CuArray{eltype(arraytype),ndims,buffertype(arraytype)}
-  end
-  
-  function set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where {T}
-    return CuArray{eltype(arraytype), ndims, default_buffertype()}
-  end
-  
-  function set_ndims(arraytype::Type{<:CuArray}, ndims)
-    return CuArray{NDTensors.default_eltype(), ndims, default_buffertype()}
-  end
+function set_ndims(arraytype::Type{<:CuArray{T,<:Any,<:Any}}, ndims) where {T}
+  return CuArray{eltype(arraytype),ndims,buffertype(arraytype)}
+end
+
+function set_ndims(arraytype::Type{<:CuArray{T}}, ndims) where {T}
+  return CuArray{eltype(arraytype),ndims,default_buffertype()}
+end
+
+function set_ndims(arraytype::Type{<:CuArray}, ndims)
+  return CuArray{NDTensors.default_eltype(),ndims,default_buffertype()}
+end

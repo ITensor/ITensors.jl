@@ -2,9 +2,9 @@ module NDTensorCUDA
 
 using NDTensors
 if isdefined(Base, :get_extension)
-    using CUDA
+  using CUDA
 else
-    using ..CUDA
+  using ..CUDA
 end
 
 include("imports.jl")
