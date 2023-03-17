@@ -218,24 +218,26 @@ function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
   return Hermitian(interleave(h))
 end
 
-function hopping_hamiltonian(os::OpSum; extract=false)
+function hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=0.0)
   # convert to blocked format
   h = reverse_interleave(Matrix(quadratic_hamiltonian(os)))
   # check that offdiagonal blocks are 0
   N = div(size(h, 1), 2)
-  if (!extract && !all(abs.(h[1:N, (N + 1):(2 * N)]) .< eps(real(eltype(h)))))
+  tol=max(drop_pairing_terms_tol,eps(real(eltype(h))))
+  if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< tol)
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
   return Hermitian(h[(N + 1):(2 * N), (N + 1):(2 * N)])
 end
 
 # Make a combined hopping Hamiltonian for spin up and down
-function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; extract=false)
+function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=0.0)
   # convert to blocked format
   h = reverse_interleave(Matrix(quadratic_hamiltonian(os_up, os_dn)))
   # check that offdiagonal blocks are 0
   N = div(size(h, 1), 2)
-  if (!extract && !all(abs.(h[1:N, (N + 1):(2 * N)]) .< eps(real(eltype(h)))))
+  tol=max(drop_pairing_terms_tol,eps(real(eltype(h))))
+  if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< tol)
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
   return Hermitian(h[(N + 1):(2 * N), (N + 1):(2 * N)])
