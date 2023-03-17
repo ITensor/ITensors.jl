@@ -173,11 +173,8 @@ function quadratic_hamiltonian(os::OpSum)
     nsites = max(nsites, maximum(sites[n]))
   end
   # detect coefficient type 
-  coef_type = typeof(coefs[1])
-  for coef in coefs[2:end]
-    coef_type = Base.promote_typeof(coef_type(1), coef)
-  end
-  ElT = all(isreal(coefs)) ? real(coef_type) : coef_type
+  coef_type=mapreduce(typeof,promote_type,coefs)
+  ElT = isreal(coefs) ? real(coef_type) : coef_type
   # fill Hamiltonian matrix with elements
   h = zeros(ElT, 2 * nsites, 2 * nsites)
   other_quad = i -> i == 2 ? 1 : 2
