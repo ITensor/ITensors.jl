@@ -55,11 +55,7 @@ let
 
   #Get (G)MPS
   psi = ITensorGaussianMPS.correlation_matrix_to_mps(
-    sites,
-    c;
-    eigval_cutoff=1e-10,
-    maxblocksize=14,
-    cutoff=1e-11,
+    sites, c; eigval_cutoff=1e-10, maxblocksize=14, cutoff=1e-11
   )
   cdagc = correlation_matrix(psi, "C", "Cdag")
   println("\nFree fermion starting energy")

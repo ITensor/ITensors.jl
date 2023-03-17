@@ -64,12 +64,12 @@ end
   # Hopping Hamiltonians for the up and down spins
   h_up = hopping_hamiltonian(os_up)
   h_dn = hopping_hamiltonian(os_dn)
-  h_combined = hopping_hamiltonian(os_up,os_dn)
-  
+  h_combined = hopping_hamiltonian(os_up, os_dn)
+
   # Get the Slater determinant
   Φ_up = slater_determinant_matrix(h_up, Nf_up)
   Φ_dn = slater_determinant_matrix(h_dn, Nf_dn)
-  
+
   # Create an MPS from the slater determinants.
   s = siteinds("Electron", N; conserve_qns=true)
   ψ0 = slater_determinant_to_mps(
@@ -163,10 +163,10 @@ end
 @testset "Electron - Pairing (currently inactive)" begin
   # Keep this testset for when the Electron-sites + pairing bug is fixed  
   # But skip the tests for now.
-  is_implemented=false
-  if ! is_implemented
+  is_implemented = false
+  if !is_implemented
     nothing
-  else 
+  else
     # Half filling
     N = 40
     Nf_up = N ÷ 2
@@ -190,9 +190,9 @@ end
     for n in 1:(N - 1)
       os_up .+= -t, "Cdagup", n, "Cup", n + 1
       os_up .+= -t, "Cdagup", n + 1, "Cup", n
-      os_up .+= -pairing, "Cdagup", n+1,"Cdagup", n
-      os_up .+= -pairing, "Cup", n,"Cup", n+1
-      
+      os_up .+= -pairing, "Cdagup", n + 1, "Cdagup", n
+      os_up .+= -pairing, "Cup", n, "Cup", n + 1
+
       #os_up .+= -pairing, "Cdagup", n+1,"Cdagup", n
     end
 
@@ -201,24 +201,24 @@ end
     for n in 1:(N - 1)
       os_dn .+= -t, "Cdagdn", n, "Cdn", n + 1
       os_dn .+= -t, "Cdagdn", n + 1, "Cdn", n
-      os_dn .+= -pairing, "Cdn", n, "Cdn", n+1
-      os_dn .+= -pairing, "Cdagdn", n+1, "Cdagdn", n
-      
+      os_dn .+= -pairing, "Cdn", n, "Cdn", n + 1
+      os_dn .+= -pairing, "Cdagdn", n + 1, "Cdagdn", n
     end
 
     # Hopping Hamiltonians for the up and down spins
     h_up = quadratic_hamiltonian(os_up)
     h_dn = quadratic_hamiltonian(os_dn)
-    
+
     # Get the Slater determinant, N*2 because of pairing (should pass chemical potential as arg later)
-    Φ_up = slater_determinant_matrix(h_up, Nf_up*2)
-    Φ_dn = slater_determinant_matrix(h_dn, Nf_dn*2)
-    
+    Φ_up = slater_determinant_matrix(h_up, Nf_up * 2)
+    Φ_dn = slater_determinant_matrix(h_dn, Nf_dn * 2)
+
     # Create an MPS from the slater determinants.
-    s = siteinds("Electron", N; conserve_qns=false, conserve_nfparity=true,conserve_nf=false)
-    H_ni_up=MPO(os_up,s)
-    
-    
+    s = siteinds(
+      "Electron", N; conserve_qns=false, conserve_nfparity=true, conserve_nf=false
+    )
+    H_ni_up = MPO(os_up, s)
+
     ψ0 = slater_determinant_to_mps(
       s, Φ_up, Φ_dn; eigval_cutoff=1e-4, cutoff=_cutoff, maxdim=_maxlinkdim
     )
@@ -226,22 +226,24 @@ end
     @test maxlinkdim(ψ0) ≤ _maxlinkdim
 
     # The total non-interacting part of the Hamiltonian
-    os_noninteracting= OpSum()
+    os_noninteracting = OpSum()
     for n in 1:(N - 1)
       os_noninteracting .+= -t, "Cdagdn", n, "Cdn", n + 1
       os_noninteracting .+= -t, "Cdagdn", n + 1, "Cdn", n
-      os_noninteracting .+= -pairing, "Cdn", n, "Cdn", n+1
-      os_noninteracting .+= -pairing, "Cdagdn", n+1, "Cdagdn", n
+      os_noninteracting .+= -pairing, "Cdn", n, "Cdn", n + 1
+      os_noninteracting .+= -pairing, "Cdagdn", n + 1, "Cdagdn", n
       os_noninteracting .+= -t, "Cdagup", n, "Cup", n + 1
       os_noninteracting .+= -t, "Cdagup", n + 1, "Cup", n
-      os_noninteracting .+= -pairing, "Cdagup", n+1,"Cdagup", n
-      os_noninteracting .+= -pairing, "Cup", n,"Cup", n+1
+      os_noninteracting .+= -pairing, "Cdagup", n + 1, "Cdagup", n
+      os_noninteracting .+= -pairing, "Cup", n, "Cup", n + 1
     end
 
     H_noninteracting = MPO(os_noninteracting, s)
-    @show tr(Φ_up' * h_up * Φ_up) , tr(Φ_dn' * h_dn * Φ_dn) ,inner(ψ0', H_noninteracting, ψ0),inner(ψ0', H_ni_up, ψ0) 
-    @test tr(Φ_up' * h_up * Φ_up) + tr(Φ_dn' * h_dn * Φ_dn) ≈ inner(ψ0', H_noninteracting, ψ0) rtol =
-      1e-3
+    @show tr(Φ_up' * h_up * Φ_up),
+    tr(Φ_dn' * h_dn * Φ_dn), inner(ψ0', H_noninteracting, ψ0),
+    inner(ψ0', H_ni_up, ψ0)
+    @test tr(Φ_up' * h_up * Φ_up) + tr(Φ_dn' * h_dn * Φ_dn) ≈
+      inner(ψ0', H_noninteracting, ψ0) rtol = 1e-3
 
     # The total interacting Hamiltonian
     os_interacting = copy(os_noninteracting)
@@ -253,7 +255,7 @@ end
 
     # Random starting state
     ψr = randomMPS(s, n -> n ≤ Nf ? (isodd(n) ? "↑" : "↓") : "0")
-    @show flux(ψr),flux(ψ0)
+    @show flux(ψr), flux(ψ0)
     #@test flux(ψr) == QN(("Nf", Nf, -1), ("Sz", 0))
     #@test flux(ψ0) == QN(("Nf", Nf, -1), ("Sz", 0))
 

@@ -158,10 +158,10 @@ function quadratic_hamiltonian(os::OpSum)
   os = ITensors.sortmergeterms(os)
 
   nterms = length(os)
-  coefs=Vector{Number}(undef,nterms)
+  coefs = Vector{Number}(undef, nterms)
   sites = Vector{Tuple{Int,Int}}(undef, nterms)
   quads = Vector{Tuple{Int,Int}}(undef, nterms)
-  nsites=0
+  nsites = 0
   # detect terms and size of lattice
   for n in 1:nterms
     term = os[n]
@@ -173,14 +173,14 @@ function quadratic_hamiltonian(os::OpSum)
     nsites = max(nsites, maximum(sites[n]))
   end
   # detect coefficient type 
-  coef_type=typeof(coefs[1])
+  coef_type = typeof(coefs[1])
   for coef in coefs[2:end]
-    coef_type=Base.promote_typeof(coef_type(1),coef)
+    coef_type = Base.promote_typeof(coef_type(1), coef)
   end
   ElT = all(isreal(coefs)) ? real(coef_type) : coef_type
   # fill Hamiltonian matrix with elements
-  h = zeros(ElT, 2*nsites, 2*nsites)
-  other_quad = i -> i==2 ? 1 : 2
+  h = zeros(ElT, 2 * nsites, 2 * nsites)
+  other_quad = i -> i == 2 ? 1 : 2
   for n in 1:nterms
     quad = quads[n]
     offsets = nsites .* (quad .- 1)
@@ -190,7 +190,6 @@ function quadratic_hamiltonian(os::OpSum)
   end
   return Hermitian(interleave(h))
 end
-
 
 function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
   h_up = quadratic_hamiltonian(os_up)
@@ -206,41 +205,40 @@ function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
   h[1:2:N, 1:2:N] = h_up[1:n, 1:n]
   h[2:2:N, 2:2:N] = h_dn[1:n, 1:n]
   # super-quadrant (2,1)
-  h[(N + 1):2:2*N, 1:2:N] = h_up[(n + 1):(2 * n), 1:n]
-  h[(N + 2):2:2*N, 2:2:N] = h_dn[(n + 1):(2 * n), 1:n]
+  h[(N + 1):2:(2 * N), 1:2:N] = h_up[(n + 1):(2 * n), 1:n]
+  h[(N + 2):2:(2 * N), 2:2:N] = h_dn[(n + 1):(2 * n), 1:n]
   # super-quadrant (2,2)
-  h[(N + 1):2:2*N, (N + 1):2:2*N] = h_up[(n + 1):N, (n + 1):N]
-  h[(N + 2):2:2*N,(N + 2):2:2*N] = h_dn[(n + 1):N, (n + 1):N]
+  h[(N + 1):2:(2 * N), (N + 1):2:(2 * N)] = h_up[(n + 1):N, (n + 1):N]
+  h[(N + 2):2:(2 * N), (N + 2):2:(2 * N)] = h_dn[(n + 1):N, (n + 1):N]
   # super-quadrant (1,2)
-  h[1:2:N, (N + 1):2:2*N] = h_up[1:n, (n + 1):(2 * n)]
-  h[2:2:N, (N + 2):2:2*N] = h_dn[1:n, (n + 1):(2 * n)]
-  
+  h[1:2:N, (N + 1):2:(2 * N)] = h_up[1:n, (n + 1):(2 * n)]
+  h[2:2:N, (N + 2):2:(2 * N)] = h_dn[1:n, (n + 1):(2 * n)]
+
   #convert from blocked to interlaced format. Odd base-rows are spin-up, even are spin-down.
   return Hermitian(interleave(h))
 end
 
-function hopping_hamiltonian(os::OpSum;extract=false) 
+function hopping_hamiltonian(os::OpSum; extract=false)
   # convert to blocked format
-  h=reverse_interleave(Matrix(quadratic_hamiltonian(os)))
+  h = reverse_interleave(Matrix(quadratic_hamiltonian(os)))
   # check that offdiagonal blocks are 0
-  N=div(size(h,1),2) 
-  if (! extract && ! all(abs.(h[1:N,N+1:2*N]) .< eps(real(eltype(h)))))
+  N = div(size(h, 1), 2)
+  if (!extract && !all(abs.(h[1:N, (N + 1):(2 * N)]) .< eps(real(eltype(h)))))
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
-  return Hermitian(h[N+1:2*N,N+1:2*N])
+  return Hermitian(h[(N + 1):(2 * N), (N + 1):(2 * N)])
 end
 
-
-  # Make a combined hopping Hamiltonian for spin up and down
-function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum;extract=false)
+# Make a combined hopping Hamiltonian for spin up and down
+function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; extract=false)
   # convert to blocked format
-  h=reverse_interleave(Matrix(quadratic_hamiltonian(os_up,os_dn)))
+  h = reverse_interleave(Matrix(quadratic_hamiltonian(os_up, os_dn)))
   # check that offdiagonal blocks are 0
-  N=div(size(h,1),2)
-  if (! extract && ! all(abs.(h[1:N,N+1:2*N]) .< eps(real(eltype(h)))))
+  N = div(size(h, 1), 2)
+  if (!extract && !all(abs.(h[1:N, (N + 1):(2 * N)]) .< eps(real(eltype(h)))))
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
-  return Hermitian(h[N+1:2*N,N+1:2*N])
+  return Hermitian(h[(N + 1):(2 * N), (N + 1):(2 * N)])
 end
 
 function slater_determinant_matrix(h::AbstractMatrix, Nf::Int)
@@ -653,7 +651,6 @@ function symmetric_correlation_matrix(Λ::AbstractMatrix, Nsites::Int)
   end
 end
 
-
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ::AbstractMatrix;
@@ -718,8 +715,10 @@ function correlation_matrix_to_mps(
       sf = siteinds("Fermion", 2 * N; conserve_qns=true)
     elseif typeof(Λ) <: ConservesNfParity
       # FIXME: Does this also break, even if it doesn't make use of identity blocks? To be safe, issue error.
-      error("ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.")
-      sf = siteinds("Fermion", 2 * N; conserve_qns=false,conserve_nfparity=true)
+      error(
+        "ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.",
+      )
+      sf = siteinds("Fermion", 2 * N; conserve_qns=false, conserve_nfparity=true)
     end
     U = itensors(sf, set_data(Λ, C))
     ψ = MPS(MPS_Elt, sf, n -> round(Int, ns[site_stride(Λ) * n]) + 1)
@@ -842,7 +841,6 @@ function reverse_interleave(M::AbstractMatrix)
   return M[ordered_inds, ordered_inds]
 end
 
-
 function correlation_matrix_to_mps(
   s::Vector{<:Index},
   Λ_up0::AbstractSymmetry,
@@ -851,18 +849,21 @@ function correlation_matrix_to_mps(
   maxblocksize::Int=min(size(Λ_up0, 1), size(Λ_dn0, 1)),
   kwargs...,
 )
-  MPS_Elt = promote_type(eltype(Λ_up0.data),eltype(Λ_dn0.data))
+  MPS_Elt = promote_type(eltype(Λ_up0.data), eltype(Λ_dn0.data))
   Λ_up = maybe_drop_pairing_correlations(Λ_up0)
   Λ_dn = maybe_drop_pairing_correlations(Λ_dn0)
   @assert size(Λ_up.data, 1) == size(Λ_up.data, 2)
   @assert size(Λ_dn.data, 1) == size(Λ_dn.data, 2)
-  
-  if ! ((typeof(Λ_up) <: ConservesNfParity && typeof(Λ_dn) <: ConservesNfParity) ||  (typeof(Λ_up) <: ConservesNf && typeof(Λ_dn) <: ConservesNf))
+
+  if !(
+    (typeof(Λ_up) <: ConservesNfParity && typeof(Λ_dn) <: ConservesNfParity) ||
+    (typeof(Λ_up) <: ConservesNf && typeof(Λ_dn) <: ConservesNf)
+  )
     error("Λ_up and Λ_dn have incompatible subtypes of AbstractSymmetry")
   end
-  
-  N_up = div(size(Λ_up.data, 1),site_stride(Λ_up))
-  N_dn = div(size(Λ_dn.data, 1),site_stride(Λ_up))
+
+  N_up = div(size(Λ_up.data, 1), site_stride(Λ_up))
+  N_dn = div(size(Λ_dn.data, 1), site_stride(Λ_up))
   N = N_up + N_dn
   ns_up, C_up = correlation_matrix_to_gmps(
     Λ_up; eigval_cutoff=eigval_cutoff, maxblocksize=maxblocksize
@@ -872,12 +873,12 @@ function correlation_matrix_to_mps(
   )
   C_up = mapindex(n -> 2n - 1, C_up)
   C_dn = mapindex(n -> 2n, C_dn)
-  C_up_rot=set_data(Λ_up,C_up.rotations)
-  C_dn_rot=set_data(Λ_dn,C_dn.rotations)
-  ns_up=set_data(Λ_up,ns_up)
-  ns_dn=set_data(Λ_dn,ns_dn)
-  C=Circuit(interleave(C_up_rot,C_dn_rot).data)
-  ns=interleave(ns_up,ns_dn).data
+  C_up_rot = set_data(Λ_up, C_up.rotations)
+  C_dn_rot = set_data(Λ_dn, C_dn.rotations)
+  ns_up = set_data(Λ_up, ns_up)
+  ns_dn = set_data(Λ_dn, ns_dn)
+  C = Circuit(interleave(C_up_rot, C_dn_rot).data)
+  ns = interleave(ns_up, ns_dn).data
   if all(hastags("Fermion"), s)
     U = itensors(s, set_data(Λ_up, C))
     ψ = MPS(MPS_Elt, s, n -> round(Int, ns[site_stride(Λ_up) * n]) + 1)
@@ -886,11 +887,13 @@ function correlation_matrix_to_mps(
     @assert length(s) == N_up
     @assert length(s) == N_dn
     if isspinful(s)
-      if typeof(Λ_up)<:ConservesNf
+      if typeof(Λ_up) <: ConservesNf
         space_up = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", 1)) => 1]
         space_dn = [QN(("Nf", 0, -1), ("Sz", 0)) => 1, QN(("Nf", 1, -1), ("Sz", -1)) => 1]
-      elseif typeof(Λ_up)<:ConservesNfParity
-        error("ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.")
+      elseif typeof(Λ_up) <: ConservesNfParity
+        error(
+          "ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.",
+        )
         # FIXME: issue with combiner-logic for subspace-size > 1 in identity_blocks_itensor, see below
         space_up = [QN(("NfParity", 0, -2),) => 1, QN(("NfParity", 1, -2),) => 1]
         space_dn = [QN(("NfParity", 0, -2),) => 1, QN(("NfParity", 1, -2),) => 1]
@@ -899,11 +902,15 @@ function correlation_matrix_to_mps(
       sf_dn = [Index(space_dn, "Fermion,Site,n=$(2n)") for n in 1:N_dn]
       sf = collect(Iterators.flatten(zip(sf_up, sf_dn)))
     else
-      if typeof(Λ_up)<:ConservesNf
+      if typeof(Λ_up) <: ConservesNf
         sf = siteinds("Fermion", N; conserve_qns=true, conserve_sz=false)
-      elseif typeof(Λ_up)<:ConservesNfParity
-        error("ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.")
-        sf = siteinds("Fermion", N; conserve_qns=false, conserve_sz=false,conserve_nfparity=true)
+      elseif typeof(Λ_up) <: ConservesNfParity
+        error(
+          "ConservesNfParity and Electron site type currently not supported. Please use Fermion sites instead.",
+        )
+        sf = siteinds(
+          "Fermion", N; conserve_qns=false, conserve_sz=false, conserve_nfparity=true
+        )
       end
     end
     U = itensors(sf, set_data(Λ_up, C))
@@ -921,7 +928,7 @@ function correlation_matrix_to_mps(
   else
     error("All sites must be Fermion or Electron type.")
   end
-    
+
   return ψ
 end
 
@@ -944,9 +951,9 @@ function correlation_matrix_to_mps(
       minblocksize=minblocksize,
       kwargs...,
     )
-  elseif all(hastags("Fermion"),s)
+  elseif all(hastags("Fermion"), s)
     # equivalent number of electrons
-    n_electrons=div(length(s),2)
+    n_electrons = div(length(s), 2)
     return correlation_matrix_to_mps(
       s,
       symmetric_correlation_matrix(Λ_up, n_electrons),

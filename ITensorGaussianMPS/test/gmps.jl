@@ -52,8 +52,13 @@ end
 
   #matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair_spinful)))
   #show()
-  @test all(abs.(ITensorGaussianMPS.reverse_interleave(Matrix(h_hopandpair))[(N + 1):end, (N + 1):end] - h_hop) .< eps(Float32))
-
+  @test all(
+    abs.(
+      ITensorGaussianMPS.reverse_interleave(Matrix(h_hopandpair))[
+        (N + 1):end, (N + 1):end
+      ] - h_hop
+    ) .< eps(Float32),
+  )
 end
 
 @testset "Fermion (real and complex)" begin
