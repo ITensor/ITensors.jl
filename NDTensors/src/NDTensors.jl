@@ -228,6 +228,13 @@ function __init__()
   @require Octavian = "6fd5a793-0b7e-452c-907f-f8bfe9c57db4" begin
     include("linearalgebra/octavian.jl")
   end
+
+  @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
+    include("../ext/NDTensorCUDA/NDTensorCUDA.jl")
+  end
+  @require Metal = "dde4c033-4e86-420c-a63e-0dd931031962" begin
+    include("../ext/NDTensorMetal/NDTensorMetal.jl")
+  end
 end
 
 end # module NDTensors
