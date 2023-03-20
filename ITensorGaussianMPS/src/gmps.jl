@@ -173,7 +173,7 @@ function quadratic_hamiltonian(os::OpSum)
     nsites = max(nsites, maximum(sites[n]))
   end
   # detect coefficient type 
-  coef_type=mapreduce(typeof,promote_type,coefs)
+  coef_type = mapreduce(typeof, promote_type, coefs)
   ElT = isreal(coefs) ? real(coef_type) : coef_type
   # fill Hamiltonian matrix with elements
   h = zeros(ElT, 2 * nsites, 2 * nsites)
@@ -215,26 +215,30 @@ function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
   return Hermitian(interleave(h))
 end
 
-function hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=0.0)
+function hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=nothing)
   # convert to blocked format
   h = reverse_interleave(Matrix(quadratic_hamiltonian(os)))
   # check that offdiagonal blocks are 0
   N = div(size(h, 1), 2)
-  tol=max(drop_pairing_terms_tol,eps(real(eltype(h))))
-  if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< tol)
+  if isnothing(drop_pairing_terms_tol)
+    drop_pairing_terms_tol = eps(real(eltype(h)))
+  end
+  if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< drop_pairing_terms_tol)
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
   return Hermitian(h[(N + 1):(2 * N), (N + 1):(2 * N)])
 end
 
 # Make a combined hopping Hamiltonian for spin up and down
-function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=0.0)
+function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=nothing)
   # convert to blocked format
   h = reverse_interleave(Matrix(quadratic_hamiltonian(os_up, os_dn)))
   # check that offdiagonal blocks are 0
   N = div(size(h, 1), 2)
-  tol=max(drop_pairing_terms_tol,eps(real(eltype(h))))
-  if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< tol)
+  if isnothing(drop_pairing_terms_tol)
+    drop_pairing_terms_tol = eps(real(eltype(h)))
+  end
+  if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< drop_pairing_terms_tol)
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
   return Hermitian(h[(N + 1):(2 * N), (N + 1):(2 * N)])
