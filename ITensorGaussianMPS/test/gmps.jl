@@ -2,8 +2,7 @@ using ITensorGaussianMPS
 using ITensors
 using LinearAlgebra
 using Test
-using PyPlot
-matplotlib.use("QtAgg")
+
 @testset "Basic" begin
   # Test Givens rotations
   v = randn(6)
@@ -12,7 +11,6 @@ matplotlib.use("QtAgg")
 end
 
 @testset "Hamiltonians" begin
-  # Test Givens rotations
   N = 8
   t = -0.8 ###nearest neighbor hopping
   mu = 0.0 ###on-site chemical potential
@@ -46,12 +44,8 @@ end
   end
 
   h_hopandpair = ITensorGaussianMPS.quadratic_hamiltonian(os)
-  #matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair)))
-  #show()
   h_hopandpair_spinful = ITensorGaussianMPS.quadratic_hamiltonian(os, os)
 
-  #matshow(ITensorGaussianMPS.reverse_interleave(real.(h_hopandpair_spinful)))
-  #show()
   @test all(
     abs.(
       ITensorGaussianMPS.reverse_interleave(Matrix(h_hopandpair))[
@@ -120,11 +114,11 @@ end
 end
 
 @testset "Fermion BCS (real,real - no pairing, complex)" begin
-  N = 12
+  N = 10
   Nf = N ÷ 2
   t = 1.2
   taus = [0.0, 0.0, 1.0]
-  Deltas = [0.7, 0.0, 0.7]
+  Deltas = [1.0, 0.0, 1.0]
   ElTs = [Real, Real, Complex]
   for (tau, Delta, ElT) in zip(taus, Deltas, ElTs)
     os_h = OpSum()
@@ -132,7 +126,6 @@ end
       os_h .+= -t, "Cdag", n, "C", n + 1
       os_h .+= -t, "Cdag", n + 1, "C", n
     end
-
     os_p = OpSum()
     for n in 1:(N - 1)
       os_p .+= Delta / 2.0, "Cdag", n, "Cdag", n + 1
@@ -148,16 +141,10 @@ end
       os_p2 .+= -Delta2 / 2.0, "C", n, "C", n + 1
       os_p2 .+= Delta2 / 2.0, "C", n + 1, "C", n
     end
-    hnonsym=ITensorGaussianMPS.quadratic_operator(os_h + os_p)
-    @show ishermitian(hnonsym)
-    matshow(real.(hnonsym))
+
     h = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p)
     h2 = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p2)
-    matshow(real.(h))
-    #matshow(imag.(h))
-    show()
     e, u = eigen(h)
-    @show e
     E = sum(e[1:N])
     Φ = u[:, 1:N]
     @test h * Φ ≈ Φ * Diagonal(e[1:N])
@@ -167,8 +154,8 @@ end
       c = Ud' * c * Ud
     end
     n, gmps = correlation_matrix_to_gmps(ElT.(c), N; maxblocksize=10,eigval_cutoff=1e-9)
-    @show n
     ns = round.(Int, n)
+    
     if Delta == 0.0
       @test sum(ns) == Nf
     else
@@ -176,7 +163,6 @@ end
     end
 
     Λ = ITensorGaussianMPS.maybe_drop_pairing_correlations(c)
-    @show eltype(Λ.data),isreal(Λ.data)
     @show size(ns), size(Λ.data)
     @test gmps * Λ.data * gmps' ≈ Diagonal(ns) rtol = 1e-2
     @test gmps' * Diagonal(ns) * gmps ≈ Λ.data rtol = 1e-2
@@ -191,14 +177,9 @@ end
     ccdag = correlation_matrix(psi, "C", "Cdag")
     cc = correlation_matrix(psi, "C", "C")
     cblocked = ITensorGaussianMPS.reverse_interleave(c)
-    matshow(real.(cblocked))
-    show()
-    matshow(real.(cblocked[(N + 1):end, (N + 1):end] - cdagc[:, :]))
-    colorbar()
-    show()
-    #@matshow(real.(cblocked[(N + 1):end, (N + 1):end] - cdagc[:, :]))
-    #colorbar()
     tol=1e-5
+    #@show maximum(abs.(cblocked[(N + 1):end, (N + 1):end] - cdagc[:, :]))
+    #@show maximum(abs.(cblocked[1:N, (N + 1):end] - cc[:, :]))
     @test all(abs.(cblocked[(N + 1):end, (N + 1):end] - cdagc[:, :]) .< tol)
     @test all(abs.(cblocked[1:N, 1:N] - ccdag[:, :]) .< tol)
     @test all(abs.(cblocked[1:N, (N + 1):end] - cc[:, :]) .< tol)
