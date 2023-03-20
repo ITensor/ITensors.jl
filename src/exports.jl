@@ -34,11 +34,14 @@ export
   # argsdict/argsdict.jl
   argsdict,
 
-  # decomp.jl
+  # tensor_operations/matrix_decomposition.jl
   eigen,
   factorize,
   polar,
   qr,
+  rq,
+  lq,
+  ql,
   svd,
   diag,
 
