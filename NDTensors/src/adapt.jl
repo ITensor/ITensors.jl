@@ -4,8 +4,10 @@ adapt_structure(to, x::Tensor) = setstorage(x, adapt(to, storage(x)))
 cpu(eltype::Type{<:Number}, x) = fmap(x -> adapt(Array{eltype}, x), x)
 cpu(x) = fmap(x -> adapt(Array, x), x)
 
-# Implemented in `ITensorGPU`
+# Implemented in `ITensorGPU` and `ext/NDTensorCUDA`
 function cu end
+# Implemented in `ext/NDTensorMetal`
+function mtl end
 
 adapt_structure(to::Type{<:Number}, x::TensorStorage) = setdata(x, convert.(to, data(x)))
 

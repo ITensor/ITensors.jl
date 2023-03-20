@@ -4,3 +4,5 @@ import NDTensors:
   mtl
 
 import Adapt: adapt_structure
+
+import Metal: mtl
