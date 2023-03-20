@@ -5,20 +5,17 @@
 NDTensors.cu(eltype::Type{<:Number}, x) = Functors.fmap(x -> Adapt.adapt(CuArray{eltype}, x), x)
 NDTensors.cu(x) = Functors.fmap(x -> Adapt.adapt(CuArray, x), x)
 
+to_vector_type(arraytype::Type{CuArray}) = CuVector
+to_vector_type(arraytype::Type{CuArray{T}}) where {T} = CuVector{T}
+
 function adapt_storagetype(to::CUDA.CuArrayAdaptor, x::Type{<:TensorStorage})
+  @show to
   return set_datatype(x, set_eltype_if_unspecified(to_vector_type(to), eltype(x)))
 end
 
 function adapt_storagetype(to::CUDA.CuArrayAdaptor, x::Type{<:EmptyStorage})
-  return emptytype(adapt_storagetype(to, fulltype(x)))
+  return emptytype(adapt_storagetype(to, NDTensors.fulltype(x)))
 end
-
-function adapt_storagetype(to::Type{<:CuArray}, x::Type{<:EmptyStorage})
-  return emptytype(adapt_storagetype(to, fulltype(x)))
-end
-
-NDTensors.to_vector_type(arraytype::Type{CuArray}) = CuVector
-NDTensors.to_vector_type(arraytype::Type{CuArray{T}}) where {T} = CuVector{T}
 
 function NDTensors.set_eltype_if_unspecified(
   arraytype::Type{CuVector{T}}, eltype::Type

@@ -3,4 +3,6 @@ import NDTensors:
   set_eltype,
   cpu, 
   IsWrappedArray, 
-  parenttype
+  parenttype,
+  adapt_storagetype,
+  to_vector_type
