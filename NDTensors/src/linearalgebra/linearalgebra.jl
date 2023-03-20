@@ -367,42 +367,45 @@ function LinearAlgebra.eigen(
   return D, V, spec
 end
 #
-#  QR rank reduction helpers
-#
-function find_zero_rows(R::AbstractMatrix, rr_cutoff::Float64)::Array{Bool} 
-  nr, nc = size(R)
-  return map((r) -> (maximum(abs.(R[r, 1:nc])) <= rr_cutoff), 1:nr)
-end
-
-#
-#  Trim out zero rows of R within tolerance rr_cutoff. Also trim the corresponding columns
-#  of Q.
+#  Trim out zero rows of R/X within tolerance rr_cutoff. Also trim the corresponding columns
+#  of Q.  X = R or L
 #
 function trim_rows(
-  R::AbstractMatrix, Q::AbstractMatrix, rr_cutoff::Float64
-) where {ElT,IndsT}
-  zeros = find_zero_rows(R, rr_cutoff)
+  Q::AbstractMatrix, X::AbstractMatrix, rr_cutoff::Float64
+) 
+  #
+  #  Find and count the zero rows.  Bail out if there are none.
+  #
+  Xnr, Xnc = size(X)
+  Qnr, Qnc = size(Q)
+  @assert Xnr==Qnc #Sanity check.
+  zeros = map((r) -> (maximum(abs.(X[r, 1:Xnc])) <= rr_cutoff), 1:Xnr)
   num_zero_rows = sum(zeros)
   if num_zero_rows == 0
-    return R, Q
+    return Q, X
   end
-  #println("Rank Reveal removing $num_zero_rows rows with log10(rr_cutoff)=$(log10(rr_cutoff))")
-  Rnr, Rnc = size(R)
-  Qnr, Qnc = size(Q)
-  #@assert Rnr==Qnc Q is strided so we can't asume this
-  R1nr = Rnr - num_zero_rows
-  T = eltype(R)
-  R1 = Matrix{T}(undef, R1nr, Rnc)
-  Q1 = Matrix{T}(undef, Qnr, R1nr)
-  r1 = 1
-  for r in 1:Rnr
+  #
+  # Debug info
+  # println("Rank Reveal removing $num_zero_rows rows with log10(rr_cutoff)=$(log10(rr_cutoff))")
+  #
+  # Create new Q & X martrices with reduced size.
+  #
+  X1nr = Xnr - num_zero_rows #new dim between Q & X
+  T = eltype(X)
+  X1 = Matrix{T}(undef, X1nr, Xnc)
+  Q1 = Matrix{T}(undef, Qnr, X1nr)
+  #
+  #  Transfer non-zero rows of X and corresponding columns of Q.
+  #
+  r1 = 1 #Row/col counter in new reduced Q & X
+  for r in 1:Xnr
     if zeros[r] == false
-      R1[r1, :] = R[r, :] #transfer row
+      X1[r1, :] = X[r, :] #transfer row
       Q1[:, r1] = Q[:, r] #transfer column
       r1 += 1 #next row in rank reduced matrices.
     end #if zero
   end #for r
-  return R1, Q1
+  return Q1, X1
 end
 
 function qr(T::DenseTensor{<:Any,2}; positive=false, kwargs...)
@@ -421,27 +424,25 @@ end
 #
 function qx(qx::Function, T::DenseTensor{<:Any,2}; rr_cutoff=-1.0, kwargs...)
   QM1, XM = qx(matrix(T))
-  QM=convert(Matrix, QM1)
-  # Be aware that if positive==false, then typeof(QM)=LinearAlgebra.QRCompactWYQ, not Matrix
-  # It gets converted to matrix below.
+  # When qx=qr typeof(QM1)==LinearAlgebra.QRCompactWYQ
+  # When qx=ql typeof(QM1)==Matrix and this should be a no-op
+  QM=Matrix(QM1) 
   #
   #  Do row removal for rank revealing QR/QL
   #
   if rr_cutoff >= 0.0
-    XM, QM = trim_rows(XM, QM, rr_cutoff)
+    QM, XM = trim_rows(QM, XM, rr_cutoff)
   end
   #
   # Make the new indices to go onto Q and X
   #
-  IndsT = indstype(T) #get the index type
-  IndexT = IndsT.parameters[1] #establish the index type.
+  IndsT = indstype(T) #get the indices type
+  @assert IndsT.parameters[1]==IndsT.parameters[2] #they better be the same!
+  IndexT = IndsT.parameters[1] #establish the single index type.
   q = IndexT(size(XM)[1]) #create the Q--X link index.
-  # q, r = inds(T)
-  # q = dim(q) < dim(r) ? sim(q) : sim(r)
-  IndsT = indstype(T) #get the index type
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
-  Q = tensor(Dense(vec(Matrix(QM))), Qinds) #Q was strided
+  Q = tensor(Dense(vec(QM)), Qinds) 
   X = tensor(Dense(vec(XM)), Xinds)
   return Q, X
 end
@@ -500,7 +501,7 @@ function ql_positive(M::AbstractMatrix)
 end
 
 #
-#  Lapack replaces A with Q & R carefully packed together.  So here we just copy a
+#  Lapack replaces A with Q & L carefully packed together.  So here we just copy a
 #  before letting lapack overwirte it. 
 #
 function ql(A::AbstractMatrix; kwargs...)

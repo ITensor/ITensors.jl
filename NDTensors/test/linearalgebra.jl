@@ -20,31 +20,35 @@ end
   @test norm(U2 * U2' - Diagonal(fill(1.0, m))) < 1E-14
 end
 
-@testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular" for qx in
+@testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular, rank_reveal=$rank_reveal" for qx in
                                                                                         [
     qr, ql
   ],
   elt in [Float64, ComplexF64, Float32, ComplexF32],
   positive in [false, true],
-  singular in [false, true]
+  singular in [false, true],
+  rank_reveal in [false,true],
 
   eps = Base.eps(real(elt)) * 30 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
+  rr_cutoff = rank_reveal ? eps*1.0 : -1.0
   n, m = 4, 8
-  Id = Diagonal(fill(1.0, min(n, m)))
   #
   # Wide matrix (more columns than rows)
   #
   A = randomTensor(elt, (n, m))
-  # We want to test 0.0 on the diagonal.  We need make all roaw equal to gaurantee this with numerical roundoff.
+  # We want to test 0.0 on the diagonal.  We need make all rows linearly dependent 
+  # gaurantee this with numerical roundoff.
   if singular
     for i in 2:n
-      A[i, :] = A[1, :]
+      A[i, :] = A[1, :]*1.05^n
     end
   end
-  Q, X = qx(A; positive=positive) #X is R or L.
+  Q, X = qx(A; positive=positive, rr_cutoff=rr_cutoff) #X is R or L.
   @test A ≈ Q * X atol = eps
-  @test array(Q)' * array(Q) ≈ Id atol = eps
-  @test array(Q) * array(Q)' ≈ Id atol = eps
+  @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
+  if dim(Q, 1)==dim(Q, 2)
+    @test array(Q) * array(Q)' ≈ Diagonal(fill(1.0, min(n, m))) atol = eps
+  end
   if positive
     nr, nc = size(X)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
@@ -52,6 +56,10 @@ end
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
+  if rr_cutoff>0 && singular
+    @test dim(Q, 2)==1 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
+    @test dim(X ,1)==1 #Redundant?
+   end
   #
   # Tall matrix (more rows than cols)
   #
@@ -62,9 +70,10 @@ end
       A[i, :] = A[1, :]
     end
   end
-  Q, X = qx(A; positive=positive)
+  Q, X = qx(A; positive=positive, rr_cutoff=rr_cutoff)
   @test A ≈ Q * X atol = eps
-  @test array(Q)' * array(Q) ≈ Id atol = eps
+  @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
+  #@test array(Q) * array(Q)' no such relationship for tall matrices.
   if positive
     nr, nc = size(X)
     dr = qx == ql ? Base.max(0, nc - nr) : 0
@@ -72,26 +81,10 @@ end
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
+  if rr_cutoff>0 && singular
+    @test dim(Q, 2)==1 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
+    @test dim(X ,1)==1 #Redundant?
+  end
 end
 
-@testset "Dense Rank revealing QR/RQ decomposition" begin
-  n, m = 4, 8
-  A = randomTensor(Float64,(n, m))
-  # make some columns lineary dependent
-  A[2, :] = A[1, :] * 1.1
-  A[4, :] = A[1, :] * 2.1
-  Q, R = qr(A; rr_cutoff=1e-12)
-  @test dim(Q, 2) == n - 2 #make 2 columns actually got removed.
-  @test dim(R, 1) == n - 2 #make 2 rows actually got removed.
-  @test A ≈ Q * R atol = 1e-12
-  nm = dim(Q, 2)
-  @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, nm)) atol = 1e-12
-
-  Q, L = ql(A; rr_cutoff=1e-12)
-  @test dim(Q, 2) == n - 2 #make 2 rows actually got removed.
-  @test dim(L, 1) == n - 2 #make 2 columns actually got removed.
-  @test A ≈ Q * L atol = 1e-12
-  nm = dim(Q, 2)
-  @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, nm)) atol = 1e-12
-end
 nothing
