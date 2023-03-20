@@ -152,7 +152,7 @@ function quadrant(term)
   return q
 end
 
-function quadratic_hamiltonian(os::OpSum)
+function quadratic_operator(os::OpSum)
   os = deepcopy(os)
   #os = ITensors.sorteachterm(os, sites)
   os = ITensors.sortmergeterms(os)
@@ -182,15 +182,17 @@ function quadratic_hamiltonian(os::OpSum)
     quad = quads[n]
     offsets = nsites .* (quad .- 1)
     h[(sites[n] .+ offsets)...] += coefs[n]
-    other_offsets = nsites .* (other_quad.(quad) .- 1)
-    h[(sites[n] .+ other_offsets)...] += -conj(coefs[n])
+    if quad[1]==quad[2]
+      other_offsets = nsites .* (other_quad.(quad) .- 1)
+      h[(sites[n] .+ other_offsets)...] += -conj(coefs[n])
+    end
   end
-  return Hermitian(interleave(h))
+  return interleave(h)
 end
 
-function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
-  h_up = quadratic_hamiltonian(os_up)
-  h_dn = quadratic_hamiltonian(os_dn)
+function quadratic_operator(os_up::OpSum, os_dn::OpSum)
+  h_up = quadratic_operator(os_up)
+  h_dn = quadratic_operator(os_dn)
   @assert size(h_up) == size(h_dn)
   N = size(h_up, 1)
   h = zeros(eltype(h_up), (2 * N, 2 * N))
@@ -210,12 +212,14 @@ function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
   # super-quadrant (1,2)
   h[1:2:N, (N + 1):2:(2 * N)] = h_up[1:n, (n + 1):(2 * n)]
   h[2:2:N, (N + 2):2:(2 * N)] = h_dn[1:n, (n + 1):(2 * n)]
-
   #convert from blocked to interlaced format. Odd base-rows are spin-up, even are spin-down.
-  return Hermitian(interleave(h))
+  return interleave(h)
 end
 
-function hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=nothing)
+quadratic_hamiltonian(os::OpSum) = Hermitian(quadratic_operator(os))
+quadratic_hamiltonian(os_up::OpSum,os_dn::OpSum) = Hermitian(quadratic_operator(os_up, os_dn))
+
+function hopping_operator(os::OpSum; drop_pairing_terms_tol=nothing)
   # convert to blocked format
   h = reverse_interleave(Matrix(quadratic_hamiltonian(os)))
   # check that offdiagonal blocks are 0
@@ -226,11 +230,11 @@ function hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=nothing)
   if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< drop_pairing_terms_tol)
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
-  return Hermitian(h[(N + 1):(2 * N), (N + 1):(2 * N)])
+  return h[(N + 1):(2 * N), (N + 1):(2 * N)]
 end
 
 # Make a combined hopping Hamiltonian for spin up and down
-function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=nothing)
+function hopping_operator(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=nothing)
   # convert to blocked format
   h = reverse_interleave(Matrix(quadratic_hamiltonian(os_up, os_dn)))
   # check that offdiagonal blocks are 0
@@ -241,8 +245,12 @@ function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=
   if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< drop_pairing_terms_tol)
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
-  return Hermitian(h[(N + 1):(2 * N), (N + 1):(2 * N)])
+  return h[(N + 1):(2 * N), (N + 1):(2 * N)]
 end
+
+hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=nothing)=Hermitian(hopping_operator(os;drop_pairing_terms_tol))
+hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=nothing)=Hermitian(hopping_operator(os_up,os_dn;drop_pairing_terms_tol))
+
 
 function slater_determinant_matrix(h::AbstractMatrix, Nf::Int)
   _, u = eigen(h)
