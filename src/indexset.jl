@@ -557,7 +557,7 @@ function replaceinds(is::Indices, rep_inds::Tuple{Vararg{Pair{<:Index,<:Index}}}
 end
 
 function replaceinds(is::Indices, rep_inds::Pair)
-  return replaceinds(is, Tuple(first(rep_inds)) .=> Tuple(last(rep_inds)))
+  return replaceinds(is, Tuple(first(rep_inds) .=> last(rep_inds)))
 end
 
 # Check that the QNs are all the same
