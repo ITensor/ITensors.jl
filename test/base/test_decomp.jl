@@ -387,7 +387,7 @@ end
   end
 
   @testset "Rank revealing QR/RQ/QL/LQ decomp on MPS dense $elt tensor" for ninds in
-                                                                            [1,2,3],
+                                                                            [1, 2, 3],
     elt in [Float64, ComplexF64]
 
     l = Index(5, "l")
@@ -397,7 +397,7 @@ end
 
     Ainds = inds(A)
     A = rank_fix(A, Ainds[1:ninds]) #make all columns linear dependent on column 1, so rank==1.
-    Q, R, q = qr(A, Ainds[1:ninds]; rr_cutoff=1e-12) 
+    Q, R, q = qr(A, Ainds[1:ninds]; rr_cutoff=1e-12)
     @test dim(q) == 1 #check that we found rank==1
     @test A ≈ Q * R atol = 1e-13
     @test Q * dag(prime(Q, q)) ≈ δ(Float64, q, q') atol = 1e-13

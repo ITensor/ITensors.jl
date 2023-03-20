@@ -371,22 +371,27 @@ end
 #  of Q.  X = R or L
 #
 function trim_rows(
-  Q::AbstractMatrix, X::AbstractMatrix, rr_cutoff::Float64
-) 
+  Q::AbstractMatrix, X::AbstractMatrix, rr_cutoff::Float64; rr_verbose=false, kwargs...
+)
   #
   #  Find and count the zero rows.  Bail out if there are none.
   #
   Xnr, Xnc = size(X)
   Qnr, Qnc = size(Q)
-  @assert Xnr==Qnc #Sanity check.
+  @assert Xnr == Qnc #Sanity check.
   zeros = map((r) -> (maximum(abs.(X[r, 1:Xnc])) <= rr_cutoff), 1:Xnr)
   num_zero_rows = sum(zeros)
   if num_zero_rows == 0
     return Q, X
   end
   #
-  # Debug info
-  # println("Rank Reveal removing $num_zero_rows rows with log10(rr_cutoff)=$(log10(rr_cutoff))")
+  # Useful output for trouble shooting.
+  #
+  if rr_verbose
+    println(
+      "Rank Reveal removing $num_zero_rows rows with log10(rr_cutoff)=$(log10(rr_cutoff))"
+    )
+  end
   #
   # Create new Q & X martrices with reduced size.
   #
@@ -426,23 +431,23 @@ function qx(qx::Function, T::DenseTensor{<:Any,2}; rr_cutoff=-1.0, kwargs...)
   QM1, XM = qx(matrix(T))
   # When qx=qr typeof(QM1)==LinearAlgebra.QRCompactWYQ
   # When qx=ql typeof(QM1)==Matrix and this should be a no-op
-  QM=Matrix(QM1) 
+  QM = Matrix(QM1)
   #
-  #  Do row removal for rank revealing QR/QL
+  #  Do row removal for rank revealing QR/QL.  Probably not worth it to elminate the if statement
   #
   if rr_cutoff >= 0.0
-    QM, XM = trim_rows(QM, XM, rr_cutoff)
+    QM, XM = trim_rows(QM, XM, rr_cutoff; kwargs...)
   end
   #
   # Make the new indices to go onto Q and X
   #
   IndsT = indstype(T) #get the indices type
-  @assert IndsT.parameters[1]==IndsT.parameters[2] #they better be the same!
+  @assert IndsT.parameters[1] == IndsT.parameters[2] #they better be the same!
   IndexT = IndsT.parameters[1] #establish the single index type.
   q = IndexT(size(XM)[1]) #create the Q--X link index.
   Qinds = IndsT((ind(T, 1), q))
   Xinds = IndsT((q, ind(T, 2)))
-  Q = tensor(Dense(vec(QM)), Qinds) 
+  Q = tensor(Dense(vec(QM)), Qinds)
   X = tensor(Dense(vec(XM)), Xinds)
   return Q, X
 end

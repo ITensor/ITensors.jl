@@ -21,16 +21,17 @@ end
 end
 
 @testset "Dense $qx decomposition, elt=$elt, positve=$positive, singular=$singular, rank_reveal=$rank_reveal" for qx in
-                                                                                        [
+                                                                                                                  [
     qr, ql
   ],
   elt in [Float64, ComplexF64, Float32, ComplexF32],
   positive in [false, true],
   singular in [false, true],
-  rank_reveal in [false,true],
+  rank_reveal in [false, true],
 
-  eps = Base.eps(real(elt)) * 30 #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
-  rr_cutoff = rank_reveal ? eps*1.0 : -1.0
+  eps in Base.eps(real(elt)) * 30
+  #this is set rather tight, so if you increase/change m,n you may have open up the tolerance on eps.
+  rr_cutoff = rank_reveal ? eps * 1.0 : -1.0
   n, m = 4, 8
   #
   # Wide matrix (more columns than rows)
@@ -40,13 +41,14 @@ end
   # gaurantee this with numerical roundoff.
   if singular
     for i in 2:n
-      A[i, :] = A[1, :]*1.05^n
+      A[i, :] = A[1, :] * 1.05^n
     end
   end
-  Q, X = qx(A; positive=positive, rr_cutoff=rr_cutoff) #X is R or L.
+  # you can set rr_verbose=true if you want to get debug output on rank reduction.
+  Q, X = qx(A; positive=positive, rr_cutoff=rr_cutoff, rr_verbose=false) #X is R or L. 
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
-  if dim(Q, 1)==dim(Q, 2)
+  if dim(Q, 1) == dim(Q, 2)
     @test array(Q) * array(Q)' ≈ Diagonal(fill(1.0, min(n, m))) atol = eps
   end
   if positive
@@ -56,10 +58,10 @@ end
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
-  if rr_cutoff>0 && singular
-    @test dim(Q, 2)==1 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
-    @test dim(X ,1)==1 #Redundant?
-   end
+  if rr_cutoff > 0 && singular
+    @test dim(Q, 2) == 1 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
+    @test dim(X, 1) == 1 #Redundant?
+  end
   #
   # Tall matrix (more rows than cols)
   #
@@ -70,7 +72,7 @@ end
       A[i, :] = A[1, :]
     end
   end
-  Q, X = qx(A; positive=positive, rr_cutoff=rr_cutoff)
+  Q, X = qx(A; positive=positive, rr_cutoff=rr_cutoff, rr_verbose=false)
   @test A ≈ Q * X atol = eps
   @test array(Q)' * array(Q) ≈ Diagonal(fill(1.0, dim(Q, 2))) atol = eps
   #@test array(Q) * array(Q)' no such relationship for tall matrices.
@@ -81,9 +83,9 @@ end
     @test all(real(diagX) .>= 0.0)
     @test all(imag(diagX) .== 0.0)
   end
-  if rr_cutoff>0 && singular
-    @test dim(Q, 2)==1 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
-    @test dim(X ,1)==1 #Redundant?
+  if rr_cutoff > 0 && singular
+    @test dim(Q, 2) == 1 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
+    @test dim(X, 1) == 1 #Redundant?
   end
 end
 
