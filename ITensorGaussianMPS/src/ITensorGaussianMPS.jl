@@ -12,7 +12,9 @@ export slater_determinant_to_mps,
   slater_determinant_to_gmps,
   correlation_matrix_to_gmps,
   hopping_hamiltonian,
+  hopping_operator,
   quadratic_hamiltonian,
+  quadratic_operator,
   slater_determinant_matrix,
   slater_determinant_to_gmera
 
