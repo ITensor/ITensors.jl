@@ -38,8 +38,8 @@ end
       js = [i - 1]
     end
     for j in js
-      os .+= pairing/2.0, "Cdag", i, "Cdag", j
-      os .+= -conj(pairing/2.0), "C", i, "C", j
+      os .+= pairing / 2.0, "Cdag", i, "Cdag", j
+      os .+= -conj(pairing / 2.0), "C", i, "C", j
     end
   end
 
@@ -153,9 +153,9 @@ end
       Ud = exp(-tau * 1im * h2) ##generate complex state by time-evolving with perturbed Hamiltonian
       c = Ud' * c * Ud
     end
-    n, gmps = correlation_matrix_to_gmps(ElT.(c), N; maxblocksize=10,eigval_cutoff=1e-9)
+    n, gmps = correlation_matrix_to_gmps(ElT.(c), N; maxblocksize=10, eigval_cutoff=1e-9)
     ns = round.(Int, n)
-    
+
     if Delta == 0.0
       @test sum(ns) == Nf
     else
@@ -177,7 +177,7 @@ end
     ccdag = correlation_matrix(psi, "C", "Cdag")
     cc = correlation_matrix(psi, "C", "C")
     cblocked = ITensorGaussianMPS.reverse_interleave(c)
-    tol=1e-5
+    tol = 1e-5
     #@show maximum(abs.(cblocked[(N + 1):end, (N + 1):end] - cdagc[:, :]))
     #@show maximum(abs.(cblocked[1:N, (N + 1):end] - cc[:, :]))
     @test all(abs.(cblocked[(N + 1):end, (N + 1):end] - cdagc[:, :]) .< tol)

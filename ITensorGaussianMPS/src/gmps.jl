@@ -182,7 +182,7 @@ function quadratic_operator(os::OpSum)
     quad = quads[n]
     offsets = nsites .* (quad .- 1)
     h[(sites[n] .+ offsets)...] += coefs[n]
-    if quad[1]==quad[2]
+    if quad[1] == quad[2]
       other_offsets = nsites .* (other_quad.(quad) .- 1)
       h[(sites[n] .+ other_offsets)...] += -conj(coefs[n])
     end
@@ -217,7 +217,9 @@ function quadratic_operator(os_up::OpSum, os_dn::OpSum)
 end
 
 quadratic_hamiltonian(os::OpSum) = Hermitian(quadratic_operator(os))
-quadratic_hamiltonian(os_up::OpSum,os_dn::OpSum) = Hermitian(quadratic_operator(os_up, os_dn))
+function quadratic_hamiltonian(os_up::OpSum, os_dn::OpSum)
+  return Hermitian(quadratic_operator(os_up, os_dn))
+end
 
 function hopping_operator(os::OpSum; drop_pairing_terms_tol=nothing)
   # convert to blocked format
@@ -248,9 +250,12 @@ function hopping_operator(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=not
   return h[(N + 1):(2 * N), (N + 1):(2 * N)]
 end
 
-hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=nothing)=Hermitian(hopping_operator(os;drop_pairing_terms_tol))
-hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=nothing)=Hermitian(hopping_operator(os_up,os_dn;drop_pairing_terms_tol))
-
+function hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=nothing)
+  return Hermitian(hopping_operator(os; drop_pairing_terms_tol))
+end
+function hopping_hamiltonian(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=nothing)
+  return Hermitian(hopping_operator(os_up, os_dn; drop_pairing_terms_tol))
+end
 
 function slater_determinant_matrix(h::AbstractMatrix, Nf::Int)
   _, u = eigen(h)
