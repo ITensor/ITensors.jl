@@ -10,7 +10,6 @@ else
   using ..Metal
 end
 
-
 include("imports.jl")
 
 include("adapt.jl")

@@ -13,3 +13,12 @@ end
 function set_ndims(arraytype::Type{<:MtlArray}, ndims)
   return MtlArray{NDTensors.default_eltype(),ndims}
 end
+
+function NDTensors.set_eltype_if_unspecified(
+  arraytype::Type{MtlArray{T}}, eltype::Type
+) where {T}
+  return arraytype
+end
+function NDTensors.set_eltype_if_unspecified(arraytype::Type{MtlArray}, eltype::Type)
+  return MtlVector{eltype}
+end

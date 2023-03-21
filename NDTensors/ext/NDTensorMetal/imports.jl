@@ -1,8 +1,1 @@
-import NDTensors:
-  set_ndims,
-  set_eltype,
-  mtl
-
-import Adapt: adapt_structure
-
-import Metal: mtl
+import NDTensors: set_ndims, set_eltype, to_vector_type, set_eltype_if_unspecified

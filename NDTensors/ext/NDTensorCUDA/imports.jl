@@ -1,8 +1,1 @@
-import NDTensors:
-  set_ndims,
-  set_eltype,
-  cpu, 
-  IsWrappedArray, 
-  parenttype,
-  adapt_storagetype,
-  to_vector_type
+import NDTensors: set_ndims, set_eltype, to_vector_type, set_eltype_if_unspecified

@@ -23,3 +23,12 @@ end
 function set_ndims(arraytype::Type{<:CuArray}, ndims)
   return CuArray{NDTensors.default_eltype(),ndims,default_buffertype()}
 end
+
+function NDTensors.set_eltype_if_unspecified(
+  arraytype::Type{CuVector{T}}, eltype::Type
+) where {T}
+  return arraytype
+end
+function NDTensors.set_eltype_if_unspecified(arraytype::Type{CuVector}, eltype::Type)
+  return CuVector{eltype}
+end
