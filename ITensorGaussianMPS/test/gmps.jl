@@ -168,21 +168,23 @@ end
 
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=false)
-    h_mpo=MPO(os_h+os_p,s)
-    
-    psi = correlation_matrix_to_mps(s, ElT.(c); eigval_cutoff=1e-10, maxblocksize=14, cutoff=1e-11)
-    if tau==0.0
+    h_mpo = MPO(os_h + os_p, s)
+
+    psi = correlation_matrix_to_mps(
+      s, ElT.(c); eigval_cutoff=1e-10, maxblocksize=14, cutoff=1e-11
+    )
+    if tau == 0.0
       sweeps = Sweeps(5)
-      _maxlinkdim=60
-      _cutoff=1e-10
+      _maxlinkdim = 60
+      _cutoff = 1e-10
       setmaxdim!(sweeps, 10, 20, 40, _maxlinkdim)
       setcutoff!(sweeps, _cutoff)
-      E_dmrg, psidmrg = dmrg(h_mpo, psi, sweeps;outputlevel = 0 )
-      E_ni_mpo=inner(psi',h_mpo,psi)
+      E_dmrg, psidmrg = dmrg(h_mpo, psi, sweeps; outputlevel=0)
+      E_ni_mpo = inner(psi', h_mpo, psi)
       #@test E_dmrg*2 ≈ E rtol = 1e-4
       @test E_dmrg ≈ E_ni_mpo rtol = 1e-4
-      
-      @test inner(psidmrg,psi) ≈ 1 rtol = 1e-4
+
+      @test inner(psidmrg, psi) ≈ 1 rtol = 1e-4
     end
 
     # compare entries of the correlation matrix

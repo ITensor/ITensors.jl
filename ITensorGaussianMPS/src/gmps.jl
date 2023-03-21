@@ -184,9 +184,9 @@ function quadratic_operator(os::OpSum)
     if quad[1] != quad[2]
       h[(sites[n] .+ offsets)...] += coefs[n]
     else
-      h[(sites[n] .+ offsets)...] += 0.5*coefs[n]
+      h[(sites[n] .+ offsets)...] += 0.5 * coefs[n]
       other_offsets = nsites .* (other_quad.(quad) .- 1)
-      h[(sites[n] .+ other_offsets)...] += -0.5*conj(coefs[n])
+      h[(sites[n] .+ other_offsets)...] += -0.5 * conj(coefs[n])
     end
   end
   return interleave(h)

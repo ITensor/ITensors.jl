@@ -41,12 +41,12 @@ let
       if abs(hb[i, j]) > 1e-8
         os_new .+= -t, "Cdag", i, "C", j
         os_new .+= t, "C", i, "Cdag", j
-        os_new .+= Delta/2.0 * sign(i-j), "C", i, "C", j
-        os_new .+= -Delta/2.0 * sign(i-j), "Cdag", i, "Cdag", j
+        os_new .+= Delta / 2.0 * sign(i - j), "C", i, "C", j
+        os_new .+= -Delta / 2.0 * sign(i - j), "Cdag", i, "Cdag", j
       end
     end
   end
-  H = ITensors.MPO(os_h+os_p, sites)
+  H = ITensors.MPO(os_h + os_p, sites)
 
   #Get Ground state 
   E, V = eigen(Hermitian(h))
