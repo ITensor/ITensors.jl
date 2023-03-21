@@ -1,4 +1,6 @@
-using ITensors, LinearAlgebra, Test
+using ITensors, LinearAlgebra, Test, Random
+
+Random.seed!(314159)
 
 #
 #  Decide if rank 2 tensor is upper triangular, i.e. all zeros below the diagonal.

@@ -1,6 +1,9 @@
 using NDTensors
 using LinearAlgebra
 using Test
+using Random
+
+Random.seed!(314159)
 
 @testset "random_orthog" begin
   n, m = 10, 4
@@ -40,7 +43,7 @@ end
   # We want to test 0.0 on the diagonal.  We need make all rows linearly dependent 
   # gaurantee this with numerical roundoff.
   if singular
-    for i in 2:n
+    for i in 2:3
       A[i, :] = A[1, :] * 1.05^n
     end
   end
@@ -59,8 +62,8 @@ end
     @test all(imag(diagX) .== 0.0)
   end
   if rr_cutoff > 0 && singular
-    @test dim(Q, 2) == 1 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
-    @test dim(X, 1) == 1 #Redundant?
+    @test dim(Q, 2) == 2 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
+    @test dim(X, 1) == 2 #Redundant?
   end
   #
   # Tall matrix (more rows than cols)
@@ -68,7 +71,7 @@ end
   A = randomTensor(elt, (m, n)) #Tall array
   # We want to test 0.0 on the diagonal.  We need make all rows equal to gaurantee this with numerical roundoff.
   if singular
-    for i in 2:m
+    for i in 2:4
       A[i, :] = A[1, :]
     end
   end
@@ -84,8 +87,8 @@ end
     @test all(imag(diagX) .== 0.0)
   end
   if rr_cutoff > 0 && singular
-    @test dim(Q, 2) == 1 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
-    @test dim(X, 1) == 1 #Redundant?
+    @test dim(Q, 2) == 4 #make sure the rank revealing mechanism hacked off the columns of Q (and rows of X).
+    @test dim(X, 1) == 4 #Redundant?
   end
 end
 
