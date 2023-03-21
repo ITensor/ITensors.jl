@@ -1,9 +1,10 @@
 using NDTensors
 using LinearAlgebra
 using Test
-using Random
 
-Random.seed!(314159)
+# Not available on CI machine that test NDTensors.
+# using Random
+# Random.seed!(314159)
 
 @testset "random_orthog" begin
   n, m = 10, 4
