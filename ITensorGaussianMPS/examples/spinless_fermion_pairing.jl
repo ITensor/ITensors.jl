@@ -46,10 +46,11 @@ let
       end
     end
   end
-  H = ITensors.MPO(os_new, sites)
+  H = ITensors.MPO(os_h+os_p, sites)
 
   #Get Ground state 
   E, V = eigen(Hermitian(h))
+  @show E
   Φ = V[:, 1:N]
   c = conj(Φ) * transpose(Φ)
 

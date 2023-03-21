@@ -116,9 +116,9 @@ end
 @testset "Fermion BCS (real,real - no pairing, complex)" begin
   N = 10
   Nf = N ÷ 2
-  t = 1.2
+  t = -1.2
   taus = [0.0, 0.0, 1.0]
-  Deltas = [1.0, 0.0, 1.0]
+  Deltas = [0.7, 0.0, 0.7]
   ElTs = [Real, Real, Complex]
   for (tau, Delta, ElT) in zip(taus, Deltas, ElTs)
     os_h = OpSum()
@@ -141,7 +141,6 @@ end
       os_p2 .+= -Delta2 / 2.0, "C", n, "C", n + 1
       os_p2 .+= Delta2 / 2.0, "C", n + 1, "C", n
     end
-
     h = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p)
     h2 = ITensorGaussianMPS.quadratic_hamiltonian(os_h + os_p2)
     e, u = eigen(h)
@@ -169,7 +168,22 @@ end
 
     # Form the MPS
     s = siteinds("Fermion", N; conserve_qns=false)
-    psi = correlation_matrix_to_mps(s, ElT.(c); eigval_cutoff=1e-10, maxblocksize=10)
+    h_mpo=MPO(os_h+os_p,s)
+    
+    psi = correlation_matrix_to_mps(s, ElT.(c); eigval_cutoff=1e-10, maxblocksize=14, cutoff=1e-11)
+    if tau==0.0
+      sweeps = Sweeps(5)
+      _maxlinkdim=60
+      _cutoff=1e-10
+      setmaxdim!(sweeps, 10, 20, 40, _maxlinkdim)
+      setcutoff!(sweeps, _cutoff)
+      E_dmrg, psidmrg = dmrg(h_mpo, psi, sweeps;outputlevel = 0 )
+      E_ni_mpo=inner(psi',h_mpo,psi)
+      #@test E_dmrg*2 ≈ E rtol = 1e-4
+      @test E_dmrg ≈ E_ni_mpo rtol = 1e-4
+      
+      @test inner(psidmrg,psi) ≈ 1 rtol = 1e-4
+    end
 
     # compare entries of the correlation matrix
     cdagc = correlation_matrix(psi, "Cdag", "C")
