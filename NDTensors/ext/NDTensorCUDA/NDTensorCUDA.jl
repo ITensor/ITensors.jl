@@ -3,6 +3,7 @@ module NDTensorCUDA
 using NDTensors
 using Adapt
 using Functors
+using LinearAlgebra: BlasFloat
 
 if isdefined(Base, :get_extension)
   using CUDA
@@ -10,12 +11,13 @@ if isdefined(Base, :get_extension)
   using CUDA.CUSOLVER
 else
   using ..CUDA
-  using ..CUDA.CUBLAS
-  using ..CUDA.CUSOLVER
+  using .CUBLAS
+  using .CUSOLVER
 end
 
 include("imports.jl")
 
 include("set_types.jl")
 include("adapt.jl")
+include("contract.jl")
 end
