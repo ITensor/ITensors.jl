@@ -1,5 +1,7 @@
 module ITensorUnicodePlots
 
+error("An error in ITensorUnicodePlots!")
+
 using Graphs
 using NetworkLayout
 using Reexport
