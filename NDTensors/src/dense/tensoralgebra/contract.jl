@@ -328,27 +328,29 @@ function _contract!(
   β::Number=zero(El),
 ) where {El,NC,NA,NB}
   # TODO: directly use Tensor instead of Array
-  C = ReshapedArray(data(storage(CT)), dims(inds(CT)), ())
-  A = ReshapedArray(data(storage(AT)), dims(inds(AT)), ())
-  B = ReshapedArray(data(storage(BT)), dims(inds(BT)), ())
+  # C = ReshapedArray(data(storage(CT)), dims(inds(CT)), ())
+  # A = ReshapedArray(data(storage(AT)), dims(inds(AT)), ())
+  # B = ReshapedArray(data(storage(BT)), dims(inds(BT)), ())
 
   tA = 'N'
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
     #@timeit_debug timer "_contract!: permutedims A" begin
-    @strided Ap = permutedims(A, pA)
+    @strided Ap = permutedims(AT, pA)
     #end # @timeit
     AM = ReshapedArray(Ap, (props.dmid, props.dleft), ())
     tA = 'T'
   else
     #A doesn't have to be permuted
     if Atrans(props)
-      AM = ReshapedArray(A.parent, (props.dmid, props.dleft), ())
+      @show Atrans(props)
+      AM = ReshapedArray(AT, (props.dmid, props.dleft), ())
       tA = 'T'
     else
-      AM = ReshapedArray(A.parent, (props.dleft, props.dmid), ())
+      AM = ReshapedArray(AT, (props.dleft, props.dmid), ())
     end
   end
+  @show inds(AM.parent)
 
   tB = 'N'
   if props.permuteB
@@ -362,7 +364,7 @@ function _contract!(
       BM = ReshapedArray(B.parent, (props.dright, props.dmid), ())
       tB = 'T'
     else
-      BM = ReshapedArray(B.parent, (props.dmid, props.dright), ())
+      BM = ReshapedArray(BT, (props.dmid, props.dright), ())
     end
   end
 
@@ -379,12 +381,12 @@ function _contract!(
         tA = tB = (tA == 'T' ? 'N' : 'T')
       end
     else
-      CM = ReshapedArray(C.parent, (props.dleft, props.dright), ())
+      CM = ReshapedArray(CT, (props.dleft, props.dright), ())
     end
   end
 
-  _gemm!(tA, tB, El(α), AM, BM, El(β), CM)
-
+  #_gemm!(tA, tB, El(α), AM, BM, El(β), CM)
+  mul!(CM, AM, BM, α, β)
   if props.permuteC
     pC = NTuple{NC,Int}(props.PC)
     Cr = ReshapedArray(CM.parent, props.newCrange, ())
