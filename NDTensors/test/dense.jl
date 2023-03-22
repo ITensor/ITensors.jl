@@ -109,13 +109,13 @@ using Test
     end
 
     @testset "Random constructor" begin
-      T = cu(randomTensor((2, 2)))
+      T = op(randomTensor((2, 2)))
       @test dims(T) == (2, 2)
       @test eltype(T) == Float64
       @test T[1, 1] ≉ 0
       @test norm(T) ≉ 0
 
-      Tc = cu(randomTensor(ComplexF64, (2, 2)))
+      Tc = op(randomTensor(ComplexF64, (2, 2)))
       @test dims(Tc) == (2, 2)
       @test eltype(Tc) == ComplexF64
       @test Tc[1, 1] ≉ 0
