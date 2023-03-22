@@ -339,19 +339,16 @@ function _contract!(
     @strided Ap = permutedims(AT, pA)
     #end # @timeit
     AM = ReshapedArray(Ap, (props.dmid, props.dleft), ())
-    tA = 'T'
   else
     #A doesn't have to be permuted
     if Atrans(props)
-      @show Atrans(props)
-      AM = ReshapedArray(AT, (props.dmid, props.dleft), ())
-      tA = 'T'
+      AM = transpose(ReshapedArray(AT, (props.dmid, props.dleft), ()))
     else
       AM = ReshapedArray(AT, (props.dleft, props.dmid), ())
     end
   end
-  @show inds(AM.parent)
-
+  
+  
   tB = 'N'
   if props.permuteB
     pB = NTuple{NB,Int}(props.PB)
@@ -361,8 +358,7 @@ function _contract!(
     BM = ReshapedArray(Bp, (props.dmid, props.dright), ())
   else
     if Btrans(props)
-      BM = ReshapedArray(B.parent, (props.dright, props.dmid), ())
-      tB = 'T'
+      BM = transpose(ReshapedArray(B.parent, (props.dright, props.dmid), ()))
     else
       BM = ReshapedArray(BT, (props.dmid, props.dright), ())
     end
