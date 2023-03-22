@@ -3,7 +3,7 @@ using NDTensors
 import Pkg
 Pkg.add("Requires")
 using Requires
-use_cuda = true
+use_cuda = false
 if use_cuda
   Pkg.add("CUDA")
   using CUDA
