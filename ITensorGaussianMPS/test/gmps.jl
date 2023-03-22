@@ -48,9 +48,9 @@ end
 
   @test all(
     abs.(
-      ITensorGaussianMPS.reverse_interleave(Matrix(h_hopandpair))[
+      (2 .* ITensorGaussianMPS.reverse_interleave(Matrix(h_hopandpair))[
         (N + 1):end, (N + 1):end
-      ] - h_hop
+      ]) - h_hop
     ) .< eps(Float32),
   )
 end
