@@ -222,44 +222,6 @@ using Test
         @test reshape(blockAp, size(blockB)) == blockB
       end
     end
-
-    @testset "svd" begin
-      @testset "svd example 1" begin
-        A = op(BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=1e-14)
-      end
-
-      @testset "svd example 2" begin
-        A = op(BlockSparseTensor([(1, 2), (2, 3)], [2, 2], [3, 2, 3]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14)
-      end
-
-      @testset "svd example 3" begin
-        A = op(BlockSparseTensor([(2, 1), (3, 2)], [3, 2, 3], [2, 2]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14)
-      end
-
-      @testset "svd example 4" begin
-        A = op(BlockSparseTensor([(2, 1), (3, 2)], [2, 3, 4], [5, 6]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13)
-      end
-
-      @testset "svd example 5" begin
-        A = op(BlockSparseTensor([(1, 2), (2, 3)], [5, 6], [2, 3, 4]))
-        randn!(A)
-        U, S, V = svd(A)
-        @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13)
-      end
-    end
-
   end
   @testset "BlockSparseTensor setindex! add block" begin
     T = BlockSparseTensor([2, 3], [4, 5])
@@ -315,26 +277,63 @@ using Test
     @test isblocknz(T, (2, 2))
   end
 
-    # @testset "exp" begin
-    #   A = BlockSparseTensor([(1, 1), (2, 2)], [2, 4], [2, 4])
-    #   randn!(A)
-    #   expT = exp(A)
-    #   @test isapprox(norm(array(expT) - exp(array(A))), 0.0; atol=1e-13)
+  @testset "svd" begin
+    @testset "svd example 1" begin
+      A = BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2])
+      randn!(A)
+      U, S, V = svd(A)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0; atol=1e-14)
+    end
 
-    #   # Hermitian case
-    #   A = BlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
-    #   randn!(A)
-    #   Ah = BlockSparseTensor(ComplexF64, undef, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
-    #   for bA in eachnzblock(A)
-    #     b = blockview(A, bA)
-    #     blockview(Ah, bA) .= b + b'
-    #   end
-    #   expTh = exp(Hermitian(Ah))
-    #   @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = 1e-13
+    @testset "svd example 2" begin
+      A = BlockSparseTensor([(1, 2), (2, 3)], [2, 2], [3, 2, 3])
+      randn!(A)
+      U, S, V = svd(A)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14)
+    end
 
-    #   A = BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2])
-    #   @test_throws ErrorException exp(A)
-    # end
+    @testset "svd example 3" begin
+      A = BlockSparseTensor([(2, 1), (3, 2)], [3, 2, 3], [2, 2])
+      randn!(A)
+      U, S, V = svd(A)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-14)
+    end
+
+    @testset "svd example 4" begin
+      A = BlockSparseTensor([(2, 1), (3, 2)], [2, 3, 4], [5, 6])
+      randn!(A)
+      U, S, V = svd(A)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13)
+    end
+
+    @testset "svd example 5" begin
+      A = BlockSparseTensor([(1, 2), (2, 3)], [5, 6], [2, 3, 4])
+      randn!(A)
+      U, S, V = svd(A)
+      @test isapprox(norm(array(U) * array(S) * array(V)' - array(A)), 0.0; atol=1e-13)
+    end
+  end
+
+  @testset "exp" begin
+    A = BlockSparseTensor([(1, 1), (2, 2)], [2, 4], [2, 4])
+    randn!(A)
+    expT = exp(A)
+    @test isapprox(norm(array(expT) - exp(array(A))), 0.0; atol=1e-13)
+
+    # Hermitian case
+    A = BlockSparseTensor(ComplexF64, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+    randn!(A)
+    Ah = BlockSparseTensor(ComplexF64, undef, [(1, 1), (2, 2)], ([2, 2], [2, 2]))
+    for bA in eachnzblock(A)
+      b = blockview(A, bA)
+      blockview(Ah, bA) .= b + b'
+    end
+    expTh = exp(Hermitian(Ah))
+    @test array(expTh) ≈ exp(Hermitian(array(Ah))) rtol = 1e-13
+
+    A = BlockSparseTensor([(2, 1), (1, 2)], [2, 2], [2, 2])
+    @test_throws ErrorException exp(A)
+  end
 end
 
 nothing
