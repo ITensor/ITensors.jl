@@ -9,6 +9,8 @@ cpu(x) = fmap(x -> adapt(Array, x), x)
 ## works fine!
 function cu end
 
+function mtl end
+
 adapt_structure(to::Type{<:Number}, x::TensorStorage) = setdata(x, convert.(to, data(x)))
 
 convert_scalartype(eltype::Type{<:Number}, x) = fmap(x -> adapt(eltype, x), x)
