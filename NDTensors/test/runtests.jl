@@ -1,9 +1,9 @@
 using Test
 using NDTensors
-import Pkg
+using Pkg: Pkg
 Pkg.add("Requires")
 using Requires
-use_cuda = false
+use_cuda = true
 if use_cuda
   Pkg.add("CUDA")
   using CUDA
@@ -14,7 +14,7 @@ ops[1] = NDTensors.cpu
 @require CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba" begin
   CUDA.allowscalar()
   if CUDA.functional()
-    push!(ops, cu)
+    push!(ops, NDTensors.cu)
   end
 end
 
@@ -28,7 +28,7 @@ end
     "emptynumber.jl",
     "emptystorage.jl",
     "combiner.jl",
-   ]
+  ]
     println("Running $filename")
     include(filename)
   end

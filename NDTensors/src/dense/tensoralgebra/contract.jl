@@ -347,8 +347,7 @@ function _contract!(
       AM = ReshapedArray(AT, (props.dleft, props.dmid), ())
     end
   end
-  
-  
+
   tB = 'N'
   if props.permuteB
     pB = NTuple{NB,Int}(props.PB)
