@@ -5,6 +5,7 @@ TODO: Use `Accessors.jl` notation:
 ```
 """
 function set_eltype(arraytype::Type{<:Array}, eltype::Type)
+  bittyp
   return Array{eltype,ndims(arraytype)}
 end
 
