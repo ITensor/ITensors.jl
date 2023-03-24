@@ -149,7 +149,7 @@ end
   Φ_up = slater_determinant_matrix(h_up, Nf_up)
   Φ_dn = slater_determinant_matrix(h_dn, Nf_dn)
   ψ = slater_determinant_to_mps(s, Φ_up, Φ_dn; eigval_cutoff=0.0, cutoff=0.0)
-  @test inner(ψ', H, ψ) ≈ tr(Φ_up'h_up * Φ_up) + tr(Φ_dn'h_dn * Φ_dn)
+  @test inner(ψ', H, ψ) ≈ tr(Φ_up' * h_up * Φ_up) + tr(Φ_dn' * h_dn * Φ_dn)
   @test maxlinkdim(ψ) == 2
   @test flux(ψ) == QN(("Nf", 1, -1), ("Sz", 1))
   ns_up = expect_compat(ψ, "Nup")

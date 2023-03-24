@@ -234,7 +234,7 @@ function hopping_operator(os::OpSum; drop_pairing_terms_tol=nothing)
   if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< drop_pairing_terms_tol)
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
-  return h[(N + 1):(2 * N), (N + 1):(2 * N)]
+  return 2 .* h[(N + 1):(2 * N), (N + 1):(2 * N)]
 end
 
 # Make a combined hopping Hamiltonian for spin up and down
@@ -249,7 +249,7 @@ function hopping_operator(os_up::OpSum, os_dn::OpSum; drop_pairing_terms_tol=not
   if !all(abs.(h[1:N, (N + 1):(2 * N)]) .< drop_pairing_terms_tol)
     error("Trying to convert hamiltonian with pairing terms to hopping hamiltonian!")
   end
-  return h[(N + 1):(2 * N), (N + 1):(2 * N)]
+  return 2 .* h[(N + 1):(2 * N), (N + 1):(2 * N)]
 end
 
 function hopping_hamiltonian(os::OpSum; drop_pairing_terms_tol=nothing)
