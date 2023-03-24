@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Introduction · ITensors.jl</title><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script><link href="assets/favicon.ico" rel="icon" type="image/x-icon"/></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="index.html"><img src="assets/logo.png" alt="ITensors.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="index.html">ITensors.jl</a></span></div><form class="docs-search" action="search.html"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href="index.html">Introduction</a><ul class="internal"><li><a class="tocitem" href="#News"><span>News</span></a></li><li><a class="tocitem" href="#Installation"><span>Installation</span></a></li><li><a class="tocitem" href="#Documentation"><span>Documentation</span></a></li><li><a class="tocitem" href="#Citation"><span>Citation</span></a></li><li><a class="tocitem" href="#Full-Example-Codes"><span>Full Example Codes</span></a></li><li><a class="tocitem" href="#ITensor-Code-Samples"><span>ITensor Code Samples</span></a></li></ul></li><li><span class="tocitem">Getting Started with ITensor</span><ul><li><a class="tocitem" href="getting_started/Installing.html">Installing Julia and ITensor</a></li><li><a class="tocitem" href="getting_started/RunningCodes.html">Running ITensor and Julia Codes</a></li><li><a class="tocitem" href="getting_started/DebugChecks.html">Enabling Debug Checks</a></li><li><a class="tocitem" href="getting_started/NextSteps.html">Next Steps</a></li></ul></li><li><span class="tocitem">Tutorials</span><ul><li><a class="tocitem" href="tutorials/DMRG.html">DMRG</a></li><li><a class="tocitem" href="tutorials/QN_DMRG.html">Quantum Number Conserving DMRG</a></li><li><a class="tocitem" href="tutorials/MPSTimeEvolution.html">MPS Time Evolution</a></li></ul></li><li><span class="tocitem">Code Examples</span><ul><li><a class="tocitem" href="examples/ITensor.html">ITensor Examples</a></li><li><a class="tocitem" href="examples/MPSandMPO.html">MPS and MPO Examples</a></li><li><a class="tocitem" href="examples/DMRG.html">DMRG Examples</a></li><li><a class="tocitem" href="examples/Physics.html">Physics (SiteType) System Examples</a></li></ul></li><li><span class="tocitem">Documentation</span><ul><li><a class="tocitem" href="IndexType.html">Index</a></li><li><a class="tocitem" href="IndexSetType.html">Index collections</a></li><li><a class="tocitem" href="ITensorType.html">ITensor</a></li><li><a class="tocitem" href="MPSandMPO.html">MPS and MPO</a></li><li><a class="tocitem" href="QN.html">QN</a></li><li><a class="tocitem" href="SiteType.html">SiteType and op, state, val functions</a></li><li><a class="tocitem" href="IncludedSiteTypes.html">SiteTypes Included with ITensor</a></li><li><input class="collapse-toggle" id="menuitem-5-8" type="checkbox"/><label class="tocitem" for="menuitem-5-8"><span class="docs-label">DMRG</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="DMRG.html">DMRG</a></li><li><a class="tocitem" href="Sweeps.html">Sweeps</a></li><li><a class="tocitem" href="ProjMPO.html">ProjMPO</a></li><li><a class="tocitem" href="ProjMPOSum.html">ProjMPOSum</a></li><li><a class="tocitem" href="Observer.html">Observer System for DMRG</a></li><li><a class="tocitem" href="DMRGObserver.html">DMRGObserver</a></li></ul></li><li><a class="tocitem" href="OpSum.html">OpSum (AutoMPO)</a></li></ul></li><li><span class="tocitem">Frequently Asked Questions</span><ul><li><a class="tocitem" href="faq/JuliaAndCpp.html">Programming Language (Julia, C++, ...) FAQs</a></li><li><a class="tocitem" href="faq/DMRG.html">DMRG FAQs</a></li><li><a class="tocitem" href="faq/Development.html">ITensor Development FAQs</a></li><li><a class="tocitem" href="faq/RelationshipToOtherLibraries.html">Relationship of ITensor to other tensor libraries FAQs</a></li><li><a class="tocitem" href="faq/JuliaPkg.html">Julia Package Manager FAQs</a></li></ul></li><li><span class="tocitem">Upgrade guides</span><ul><li><a class="tocitem" href="UpgradeGuide_0.1_to_0.2.html">Upgrading from 0.1 to 0.2</a></li></ul></li><li><a class="tocitem" href="Einsum.html">ITensor indices and Einstein notation</a></li><li><span class="tocitem">Advanced Usage Guide</span><ul><li><a class="tocitem" href="AdvancedUsageGuide.html">Advanced Usage Guide</a></li><li><a class="tocitem" href="Multithreading.html">Multithreading</a></li><li><a class="tocitem" href="QNTricks.html">Symmetric (QN conserving) tensors: background and usage</a></li><li><a class="tocitem" href="CodeTiming.html">Timing and profiling</a></li><li><a class="tocitem" href="ContractionSequenceOptimization.html">Contraction sequence optimization</a></li><li><a class="tocitem" href="HDF5FileFormats.html">HDF5 File Formats</a></li></ul></li><li><a class="tocitem" href="DeveloperGuide.html">Developer Guide</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="index.html">Introduction</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="index.html">Introduction</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ITensor/ITensors.jl/blob/master/docs/src/index.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="ITensors.jl"><a class="docs-heading-anchor" href="#ITensors.jl">ITensors.jl</a><a id="ITensors.jl-1"></a><a class="docs-heading-anchor-permalink" href="#ITensors.jl" title="Permalink"></a></h1><p>ITensor is a library for rapidly creating correct and efficient tensor network algorithms.</p><table><tr><th style="text-align: center"><strong>Documentation</strong></th><th style="text-align: center"><strong>Citation</strong></th><th style="text-align: center"><strong>Build Status</strong></th></tr><tr><td style="text-align: center"><a href="https://itensor.github.io/ITensors.jl/stable/"><img src="https://img.shields.io/badge/docs-stable-blue.svg" alt="docs-stable"/></a> <a href="https://itensor.github.io/ITensors.jl/dev/"><img src="https://img.shields.io/badge/docs-dev-blue.svg" alt="docs-dev"/></a></td><td style="text-align: center"><a href="https://scipost.org/SciPostPhysCodeb.4"><img src="https://img.shields.io/badge/SciPost-10.21468-blue.svg" alt="SciPost"/></a> <a href="https://arxiv.org/abs/2007.14822"><img src="https://img.shields.io/badge/arXiv-2007.14822-b31b1b.svg" alt="arXiv"/></a></td><td style="text-align: center"><a href="https://github.com/ITensor/ITensors.jl/actions?query=workflow%3ATestITensors"><img src="https://github.com/ITensor/ITensors.jl/workflows/TestITensors/badge.svg" alt="Tests"/></a> <a href="https://app.codecov.io/gh/ITensor/ITensors.jl/tree/main"><img src="https://codecov.io/gh/ITensor/ITensors.jl/tree/main/graph/badge.svg" alt="codecov"/></a></td></tr></table><table><tr><th style="text-align: center"><strong>Version</strong></th><th style="text-align: center"><strong>Download Statistics</strong></th><th style="text-align: center"><strong>Style Guide</strong></th><th style="text-align: center"><strong>License</strong></th></tr><tr><td style="text-align: center"><a href="https://juliahub.com/ui/Packages/ITensors/P3pqL"><img src="https://juliahub.com/docs/ITensors/version.svg" alt="version"/></a></td><td style="text-align: center"><a href="https://pkgs.genieframework.com?packages=ITensors"><img src="https://shields.io/endpoint?url=https://pkgs.genieframework.com/api/v1/badge/ITensors" alt="ITensor Downloads"/></a></td><td style="text-align: center"><a href="https://github.com/invenia/BlueStyle"><img src="https://img.shields.io/badge/code%20style-blue-4495d1.svg" alt="Code Style: Blue"/></a></td><td style="text-align: center"><a href="../../LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="license"/></a></td></tr></table><p>The source code for ITensor can be found <a href="https://github.com/ITensor/ITensors.jl">on Github</a>.</p><p>Additional documentation can be found on the ITensor website <a href="https://itensor.org/">itensor.org</a>.</p><p>An ITensor is a tensor whose interface is independent of its memory layout. ITensor indices are objects which carry extra information and which &#39;recognize&#39; each other (compare equal to each other).</p><p>The ITensor library also includes composable and extensible algorithms for optimizing and transforming tensor networks, such as matrix product state and matrix product operators, such as the DMRG algorithm.</p><p>Development of ITensor is supported by the Flatiron Institute, a division of the Simons Foundation.</p><h2 id="News"><a class="docs-heading-anchor" href="#News">News</a><a id="News-1"></a><a class="docs-heading-anchor-permalink" href="#News" title="Permalink"></a></h2><ul><li><p>March 25, 2022: ITensors.jl v0.3 has been released. The main breaking change is that we no longer support versions of Julia below 1.6. Julia 1.6 is the long term support version of Julia (LTS), which means that going forward versions below Julia 1.6 won&#39;t be as well supported with bug fixes and improvements. Additionally, Julia 1.6 introduced many improvements including syntax improvements that we would like to start using with ITensors.jl, which becomes challenging if we try to support Julia versions below 1.6. See <a href="https://www.oxinabox.net/2021/02/13/Julia-1.6-what-has-changed-since-1.0.html">here</a> and <a href="https://julialang.org/blog/2021/03/julia-1.6-highlights/">here</a> for some nice summaries of the Julia 1.6 release.</p></li><li><p>Jun 09, 2021: ITensors.jl v0.2 has been released, with a few breaking changes as well as a variety of bug fixes</p></li></ul><p>and new features. Take a look at the <a href="https://itensor.github.io/ITensors.jl/stable/UpgradeGuide_0.1_to_0.2.html">upgrade guide</a> for help upgrading your code as well as the <a href="https://github.com/ITensor/ITensors.jl/blob/main/NEWS.md">change log</a> for a comprehensive list of changes.</p><h2 id="Installation"><a class="docs-heading-anchor" href="#Installation">Installation</a><a id="Installation-1"></a><a class="docs-heading-anchor-permalink" href="#Installation" title="Permalink"></a></h2><p>The ITensors package can be installed with the Julia package manager. From the Julia REPL, type <code>]</code> to enter the Pkg REPL mode and run:</p><pre><code class="nohighlight">~ julia</code></pre><pre><code class="language-julia">julia&gt; ]
+
+pkg&gt; add ITensors</code></pre><p>Or, equivalently, via the <code>Pkg</code> API:</p><pre><code class="language-julia">julia&gt; import Pkg; Pkg.add(&quot;ITensors&quot;)</code></pre><p>Please note that right now, ITensors.jl requires that you use Julia v1.3 or later (since ITensors.jl relies on a feature that was introduced in Julia v1.3).</p><p>We recommend using ITensors.jl with Intel MKL in order to get the best possible performance. If you have not done so already, you can replace your current BLAS and LAPACK implementation with MKL by using the MKL.jl package. Please follow the instructions <a href="https://github.com/JuliaComputing/MKL.jl">here</a>.</p><h2 id="Documentation"><a class="docs-heading-anchor" href="#Documentation">Documentation</a><a id="Documentation-1"></a><a class="docs-heading-anchor-permalink" href="#Documentation" title="Permalink"></a></h2><ul><li><a href="https://itensor.github.io/ITensors.jl/stable/"><strong>STABLE</strong></a> –  <strong>documentation of the most recently tagged version.</strong></li><li><a href="https://itensor.github.io/ITensors.jl/dev/"><strong>DEVEL</strong></a> – <em>documentation of the in-development version.</em></li></ul><h2 id="Citation"><a class="docs-heading-anchor" href="#Citation">Citation</a><a id="Citation-1"></a><a class="docs-heading-anchor-permalink" href="#Citation" title="Permalink"></a></h2><p>If you use ITensor in your work, please cite the <a href="https://www.scipost.org/SciPostPhysCodeb.4">ITensor Paper</a>:</p><pre><code class="language-bib">@article{ITensor,
+	title={{The ITensor Software Library for Tensor Network Calculations}},
+	author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
+	journal={SciPost Phys. Codebases},
+	pages={4},
+	year={2022},
+	publisher={SciPost},
+	doi={10.21468/SciPostPhysCodeb.4},
+	url={https://scipost.org/10.21468/SciPostPhysCodeb.4},
+}</code></pre><p>and associated &quot;Codebase Release&quot; for the version you have used. The current one is</p><pre><code class="language-bib">@article{ITensor-r0.3,
+	title={{Codebase release 0.3 for ITensor}},
+	author={Matthew Fishman and Steven R. White and E. Miles Stoudenmire},
+	journal={SciPost Phys. Codebases},
+	pages={4-r0.3},
+	year={2022},
+	publisher={SciPost},
+	doi={10.21468/SciPostPhysCodeb.4-r0.3},
+	url={https://scipost.org/10.21468/SciPostPhysCodeb.4-r0.3},
+}</code></pre><h2 id="Full-Example-Codes"><a class="docs-heading-anchor" href="#Full-Example-Codes">Full Example Codes</a><a id="Full-Example-Codes-1"></a><a class="docs-heading-anchor-permalink" href="#Full-Example-Codes" title="Permalink"></a></h2><p>The ITensors.jl package contains a directory of examples, which we will continue to add to. You can find them online <a href="https://github.com/ITensor/ITensors.jl/tree/main/examples">here</a>. Additionally, once you have installed ITensors.jl you can find a local version of the examples in the directory <code>ITensors.examples_dir()</code>, and you can run them as follows from the Julia REPL:</p><pre><code class="language-julia">julia&gt; using ITensors
+
+julia&gt; cd(ITensors.examples_dir())
+
+julia&gt; readdir()
+7-element Array{String,1}:
+ &quot;basic_ops&quot;
+ &quot;ctmrg&quot;
+ &quot;dmrg&quot;
+ &quot;gate_evolution&quot;
+ &quot;krylov_methods&quot;
+ &quot;src&quot;
+ &quot;trg&quot;
+
+julia&gt; cd(&quot;dmrg&quot;)
+
+julia&gt; readdir()
+8-element Array{String,1}:
+ &quot;1d_heisenberg.jl&quot;
+ &quot;1d_heisenberg_conserve_spin.jl&quot;
+ &quot;1d_hubbard_extended.jl&quot;
+ &quot;1d_ising_with_observer.jl&quot;
+ &quot;2d_heisenberg_conserve_spin.jl&quot;
+ &quot;2d_hubbard_conserve_momentum.jl&quot;
+ &quot;2d_hubbard_conserve_particles.jl&quot;
+ &quot;input_files&quot;
+
+julia&gt; include(&quot;1d_heisenberg.jl&quot;)
+After sweep 1 energy=-138.837988775764 maxlinkdim=10 time=13.760
+After sweep 2 energy=-138.937408365962 maxlinkdim=20 time=0.249
+After sweep 3 energy=-138.940084788852 maxlinkdim=100 time=1.867
+After sweep 4 energy=-138.940086091070 maxlinkdim=100 time=3.824
+After sweep 5 energy=-138.940086113999 maxlinkdim=122 time=4.527
+Final energy = -138.940086113999
+
+julia&gt; pwd()
+&quot;[path_to_package_installation]/ITensors/examples/dmrg&quot;</code></pre><p>You can use your favorite text editor to view these examples. If you would like to modify them, either copy them into your own directory, or checkout ITensors.jl in development mode using the instructions in <a href="AdvancedUsageGuide.html#Developing-ITensors.jl">Developing ITensors.jl</a>.</p><h2 id="ITensor-Code-Samples"><a class="docs-heading-anchor" href="#ITensor-Code-Samples">ITensor Code Samples</a><a id="ITensor-Code-Samples-1"></a><a class="docs-heading-anchor-permalink" href="#ITensor-Code-Samples" title="Permalink"></a></h2><h3 id="Basic-Overview"><a class="docs-heading-anchor" href="#Basic-Overview">Basic Overview</a><a id="Basic-Overview-1"></a><a class="docs-heading-anchor-permalink" href="#Basic-Overview" title="Permalink"></a></h3><p>ITensor construction, setting of elements, contraction, and addition. Before constructing an ITensor, one constructs Index objects representing tensor indices.</p><pre><code class="language-julia">using ITensors
+let
+  i = Index(3)
+  j = Index(5)
+  k = Index(2)
+  l = Index(7)
+
+  A = ITensor(i,j,k)
+  B = ITensor(j,l)
+
+  # Set elements of A
+  A[i=&gt;1,j=&gt;1,k=&gt;1] = 11.1
+  A[i=&gt;2,j=&gt;1,k=&gt;2] = -21.2
+  A[k=&gt;1,i=&gt;3,j=&gt;1] = 31.1  # can provide Index values in any order
+  # ...
+
+  # Contract over shared index j
+  C = A * B
+
+  @show hasinds(C,i,k,l) # = true
+
+  D = randomITensor(k,j,i) # ITensor with random elements
+
+  # Add two ITensors
+  # must have same set of indices
+  # but can be in any order
+  R = A + D
+
+  nothing
+end
+
+# output
+
+hasinds(C, i, k, l) = true</code></pre><h3 id="Singular-Value-Decomposition-(SVD)-of-a-Matrix"><a class="docs-heading-anchor" href="#Singular-Value-Decomposition-(SVD)-of-a-Matrix">Singular Value Decomposition (SVD) of a Matrix</a><a id="Singular-Value-Decomposition-(SVD)-of-a-Matrix-1"></a><a class="docs-heading-anchor-permalink" href="#Singular-Value-Decomposition-(SVD)-of-a-Matrix" title="Permalink"></a></h3><p>In this example, we create a random 10x20 matrix and compute its SVD. The resulting factors can be simply multiplied back together using the ITensor <code>*</code> operation, which automatically recognizes the matching indices between U and S, and between S and V and contracts (sums over) them.</p><pre><code class="language-julia">using ITensors
+let
+  i = Index(10)           # index of dimension 10
+  j = Index(20)           # index of dimension 20
+  M = randomITensor(i,j)  # random matrix, indices i,j
+  U,S,V = svd(M,i)        # compute SVD with i as row index
+  @show M ≈ U*S*V         # = true
+
+  nothing
+end
+
+# output
+
+M ≈ U * S * V = true</code></pre><h3 id="Singular-Value-Decomposition-(SVD)-of-a-Tensor"><a class="docs-heading-anchor" href="#Singular-Value-Decomposition-(SVD)-of-a-Tensor">Singular Value Decomposition (SVD) of a Tensor</a><a id="Singular-Value-Decomposition-(SVD)-of-a-Tensor-1"></a><a class="docs-heading-anchor-permalink" href="#Singular-Value-Decomposition-(SVD)-of-a-Tensor" title="Permalink"></a></h3><p>In this example, we create a random 4x4x4x4 tensor and compute its SVD, temporarily treating the indices i and k together as the &quot;row&quot; index and j and l as the &quot;column&quot; index for the purposes of the SVD. The resulting factors can be simply multiplied back together using the ITensor <code>*</code> operation, which automatically recognizes the matching indices between U and S, and between S and V and contracts (sums over) them.</p><p><img src="svd_tensor.png" alt/></p><pre><code class="language-julia">using ITensors
+let
+  i = Index(4,&quot;i&quot;)
+  j = Index(4,&quot;j&quot;)
+  k = Index(4,&quot;k&quot;)
+  l = Index(4,&quot;l&quot;)
+  T = randomITensor(i,j,k,l)
+  U,S,V = svd(T,i,k)   # compute SVD with (i,k) as row indices (indices of U)
+  @show hasinds(U,i,k) # = true
+  @show hasinds(V,j,l) # = true
+  @show T ≈ U*S*V      # = true
+
+  nothing
+end
+
+# output
+
+hasinds(U, i, k) = true
+hasinds(V, j, l) = true
+T ≈ U * S * V = true</code></pre><h3 id="Tensor-Indices:-Tags-and-Prime-Levels"><a class="docs-heading-anchor" href="#Tensor-Indices:-Tags-and-Prime-Levels">Tensor Indices: Tags and Prime Levels</a><a id="Tensor-Indices:-Tags-and-Prime-Levels-1"></a><a class="docs-heading-anchor-permalink" href="#Tensor-Indices:-Tags-and-Prime-Levels" title="Permalink"></a></h3><p>Before making an ITensor, you have to define its indices. Tensor Index objects carry extra information beyond just their dimension.</p><p>All Index objects carry a permanent, immutable id number which is determined when it is constructed, and allow it to be matched (compare equal) with copies of itself.</p><p>Additionally, an Index can have up to four tag strings, and an integer primelevel. If two Index objects have different tags or different prime levels, they do not compare equal even if they have the same id.</p><p>Tags are also useful for identifying Index objects when printing tensors, and for performing certain Index manipulations (e.g. priming indices having certain sets of tags).</p><pre><code class="language-julia">using ITensors
+let
+  i = Index(3)     # Index of dimension 3
+  @show dim(i)     # = 3
+  @show id(i)      # = 0x5d28aa559dd13001 or similar
+
+  ci = copy(i)
+  @show ci == i    # = true
+
+  j = Index(5,&quot;j&quot;) # Index with a tag &quot;j&quot;
+
+  @show j == i     # = false
+
+  s = Index(2,&quot;n=1,Site&quot;) # Index with two tags,
+                          # &quot;Site&quot; and &quot;n=1&quot;
+  @show hastags(s,&quot;Site&quot;) # = true
+  @show hastags(s,&quot;n=1&quot;)  # = true
+
+  i1 = prime(i) # i1 has a &quot;prime level&quot; of 1
+                # but otherwise same properties as i
+  @show i1 == i # = false, prime levels do not match
+
+  nothing
+end
+
+# output
+
+dim(i) = 3
+id(i) = 0x5d28aa559dd13001
+ci == i = true
+j == i = false
+hastags(s, &quot;Site&quot;) = true
+hastags(s, &quot;n=1&quot;) = true
+i1 == i = false</code></pre><h3 id="DMRG-Calculation"><a class="docs-heading-anchor" href="#DMRG-Calculation">DMRG Calculation</a><a id="DMRG-Calculation-1"></a><a class="docs-heading-anchor-permalink" href="#DMRG-Calculation" title="Permalink"></a></h3><p>DMRG is an iterative algorithm for finding the dominant eigenvector of an exponentially large, Hermitian matrix. It originates in physics with the purpose of finding eigenvectors of Hamiltonian (energy) matrices which model the behavior of quantum systems.</p><pre><code class="language-julia">using ITensors
+let
+  # Create 100 spin-one indices
+  N = 100
+  sites = siteinds(&quot;S=1&quot;,N)
+
+  # Input operator terms which define
+  # a Hamiltonian matrix, and convert
+  # these terms to an MPO tensor network
+  # (here we make the 1D Heisenberg model)
+  os = OpSum()
+  for j=1:N-1
+    os += &quot;Sz&quot;,j,&quot;Sz&quot;,j+1
+    os += 0.5,&quot;S+&quot;,j,&quot;S-&quot;,j+1
+    os += 0.5,&quot;S-&quot;,j,&quot;S+&quot;,j+1
+  end
+  H = MPO(os,sites)
+
+  # Create an initial random matrix product state
+  psi0 = randomMPS(sites)
+
+  # Plan to do 5 passes or &#39;sweeps&#39; of DMRG,
+  # setting maximum MPS internal dimensions
+  # for each sweep and maximum truncation cutoff
+  # used when adapting internal dimensions:
+  nsweeps = 5
+  maxdim = [10,20,100,100,200]
+  cutoff = 1E-10
+
+  # Run the DMRG algorithm, returning energy
+  # (dominant eigenvalue) and optimized MPS
+  energy, psi = dmrg(H,psi0; nsweeps, maxdim, cutoff)
+  println(&quot;Final energy = $energy&quot;)
+
+  nothing
+end
+
+# output
+
+After sweep 1 energy=-137.954199761732 maxlinkdim=9 maxerr=2.43E-16 time=9.356
+After sweep 2 energy=-138.935058943878 maxlinkdim=20 maxerr=4.97E-06 time=0.671
+After sweep 3 energy=-138.940080155429 maxlinkdim=92 maxerr=1.00E-10 time=4.522
+After sweep 4 energy=-138.940086009318 maxlinkdim=100 maxerr=1.05E-10 time=11.644
+After sweep 5 energy=-138.940086058840 maxlinkdim=96 maxerr=1.00E-10 time=12.771
+Final energy = -138.94008605883985</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="getting_started/Installing.html">Installing Julia and ITensor »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.3 on <span class="colophon-date" title="Friday 24 March 2023 13:00">Friday 24 March 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
