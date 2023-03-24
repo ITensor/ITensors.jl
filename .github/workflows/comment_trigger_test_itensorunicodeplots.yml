@@ -1,14 +1,13 @@
 name: Run ITensorUnicodePlots tests from comment trigger
 
 on:
-  pull_request:
-    types: [opened]
   issue_comment:
     types: [created]
 
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.threads }} thread(s)
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '[test ITensorUnicodePlots]')
     runs-on: ${{ matrix.os }}
     env:
       JULIA_NUM_THREADS: ${{ matrix.threads }}
@@ -20,32 +19,59 @@ jobs:
         os:
           - ubuntu-latest
         threads:
-          - '1'
+          - '2'
         arch:
           - x64
     steps:
-      - name: Pull Request Comment Trigger
-        uses: Khan/pull-request-comment-trigger@v1.1.0
-        id: check
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
         with:
-          trigger: '[unicodeplots]'
-          reaction: rocket
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-      - uses: actions/checkout@v2
-        if: steps.check.outputs.triggered == 'true'
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
+      - name: Setup Node.js 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-        if: steps.check.outputs.triggered == 'true'
       - name: Install Julia dependencies
         shell: julia --project=monorepo {0}
         run: |
           using Pkg;
           pkg"dev ./NDTensors . ./ITensorVisualizationBase ./ITensorUnicodePlots"
-        if: steps.check.outputs.triggered == 'true'
       - name: Run the tests
-        run: >
+        run: |
           julia --project=monorepo --depwarn=yes -e 'using Pkg; Pkg.test("ITensorUnicodePlots")'
-        if: steps.check.outputs.triggered == 'true'
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+      - name: Add comment to PR
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          script: |
+            const name = '${{ github.workflow   }}';
+            const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+            const success = '${{ job.status }}' === 'success';
+            const body = `${name}: ${success ? 'succeeded ✅' : 'failed ❌'}\n${url}`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            })
