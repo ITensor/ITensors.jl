@@ -1,5 +1,7 @@
 name: Run ITensorGLMakie tests from comment trigger
 
+# https://dev.to/zirkelc/trigger-github-workflow-for-comment-on-pull-request-45l2
+
 on:
   issue_comment:
     types: [created]
@@ -35,7 +37,8 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ steps.comment-branch.outputs.head_ref }}
+          # https://github.com/actions/checkout/issues/331#issuecomment-1438220926
+          ref: refs/pull/${{ github.event.issue.number }}/head
       - name: Setup Node.js 16
         uses: actions/setup-node@v3
         with:
