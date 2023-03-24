@@ -328,7 +328,7 @@ function _contract!(
   β::Number=zero(El),
 ) where {El,NC,NA,NB}
   # TODO: directly use Tensor instead of Array
-  
+
   tA = 'N'
   if props.permuteA
     pA = NTuple{NA,Int}(props.PA)
