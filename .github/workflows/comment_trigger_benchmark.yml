@@ -1,39 +1,41 @@
 name: Run benchmarks from comment trigger
 
 on:
-  pull_request:
-    types: [opened]
   issue_comment:
     types: [created]
 
 jobs:
   benchmark:
+    if: github.event.issue.pull_request && contains(github.event.comment.body, '[benchmark]')
     runs-on: ubuntu-latest
     env:
       JULIA_NUM_THREADS: 2
     steps:
-      - name: Pull Request Comment Trigger
-        uses: Khan/pull-request-comment-trigger@v1.1.0
-        id: check
+      - name: Get PR branch
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
         with:
-          trigger: '[benchmark]'
-          reaction: rocket
-        env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-      - uses: actions/checkout@v2
-        if: steps.check.outputs.triggered == 'true'
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_ref }}
+      - name: Setup Node.js 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
       - uses: julia-actions/setup-julia@latest
         with:
           version: 1
-        if: steps.check.outputs.triggered == 'true'
       - name: Install dependencies
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
-        if: steps.check.outputs.triggered == 'true'
       - name: Run benchmarks
         run: julia -e 'using Pkg; using BenchmarkCI; BenchmarkCI.judge(; baseline="origin/main")'
-        if: steps.check.outputs.triggered == 'true'
       - name: Post results
         run: julia -e 'using BenchmarkCI; BenchmarkCI.postjudge()'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: steps.check.outputs.triggered == 'true'
