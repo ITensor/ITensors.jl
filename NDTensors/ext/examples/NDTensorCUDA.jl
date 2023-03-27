@@ -13,8 +13,7 @@ dim1 = (i, j, l)
 dim2 = (j, k)
 
 NDTensors.generic_randn(CuVector, 20)
-@which ITensor(NDTensors.generic_randn(CuVector, dim(dim1)), dim1)
-Array{Float64}(NDTensors.NeverAlias(), NDTensors.generic_randn(CuVector, 20))
+
 A = ITensor(NDTensors.generic_randn(CuVector, dim(dim1)), dim1)
 B = ITensor(NDTensors.generic_randn(CuVector, dim(dim2)), dim2)
 C = A * B
@@ -35,14 +34,14 @@ dim4 = (i,)
 C = ITensor(NDTensors.generic_randn(CuVector, dim(dim3)), dim3)
 D = ITensor(Tensor(CuVector, dim4))
 fill!(D, randn())
-E = A * B * C
-storage(E)
-storage(D)
-D * E
 
-f(A, B, C) = (A * B * C)[]
+f(A, B, C, D) = (A * B * C * D)[]
 using Zygote
-gradient(f, A, B, C)
+
+grad = gradient(f, A, B, C, D)
+grad[1]
+grad[2]
+grad[3]
 
 @show data(storage(B))
 svd(B, (j))
